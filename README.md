@@ -3454,7 +3454,7 @@ Next Order
 
 ---
 
-# 101. 3D FLOATING VISUAL LAYOUT AND ADMIN IMAGE UPLOAD
+# 101. NORMAL DOCUMENT FLOW LAYOUT AND ADMIN IMAGE UPLOAD (v3.1)
 
 > เพิ่มตาม Change Management (#91) เมื่อ 2026-09-14 — รายละเอียดฉบับเต็ม: `docs/COMPONENT_SPEC_UI.md`
 
