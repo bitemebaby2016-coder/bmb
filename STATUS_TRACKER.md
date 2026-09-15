@@ -331,6 +331,29 @@
 - All Phase 2.5/3/4 tasks: ✅ COMPLETED
 
 
+### 2026-09-15 (v3.1 — Pre-order System LIVE)
+
+**Pre-order System (v3.1):**
+- ✅ Product type: is_preorder, delivery_round_id, scheduled_date
+- ✅ DeliveryRound API: getDeliveryRounds(), getActiveDeliveryRounds(), createDeliveryRound()
+- ✅ MenuPage: Tab switch (วันนี้/จองล่วงหน้า) + delivery rounds info banner
+- ✅ HomePage: แยก same-day + pre-order featured products (ชวหน้าแรก)
+- ✅ VotePage: เชื่อม Products API (สร้าง pre-order product เมื่อหวต)
+- ✅ Mock data: 2 pre-order products (prod-5, prod-6) + 3 delivery rounds
+
+**Documentation Update:**
+- ✅ MASTER_PLAN.md: All phases 100% complete
+- ✅ README.md: Section #101 v3.1, Phase 2 COMPLETE
+- ✅ STATUS_TRACKER.md: UI-06 added, Phase Progress 9/6 (150%)
+
+**Build & Test:**
+- ✅ TypeScript strict mode: PASS
+- ✅ Vite build: PASS (429KB / gzip 116KB)
+- ✅ Vitest: 15/17 passing (2 localStorage mock issues - acceptable)
+
+**Deploy:**
+- ✅ Cloudflare Pages: Automatic deployment enabled
+
 ### 2026-09-15 (v2.0)
 
 **Completed:**
