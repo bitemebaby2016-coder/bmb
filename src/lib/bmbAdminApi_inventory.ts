@@ -1,8 +1,9 @@
 // ============================================
 // Bite Me Baby Admin API - Inventory
+// ✅ v3.1: Using Supabase (replaces localStorage)
 // ============================================
 
-import { storageGet, storageSet, generateId } from './bmbStorage'
+import { supabase } from './supabase'
 import type { Ingredient, IngredientUnit } from '@/types'
 
 export interface InventoryForm {
@@ -18,63 +19,57 @@ export interface InventoryForm {
   supplier_phone: string
 }
 
-export function getInventory(): Ingredient[] {
-  return storageGet<Ingredient[]>('bmb_inventory', [
-    { id: 'ing-1', name: 'ข้าว', category: 'carb', unit: 'kg', current_stock: 10, min_stock: 5, max_stock: 20, unit_price: 45, supplier_name: 'ร้านข้าวจันทบุรี', supplier_phone: '0812345678', status: 'in_stock', last_restocked_at: new Date().toISOString(), created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
-    { id: 'ing-2', name: 'ไก่', category: 'protein', unit: 'kg', current_stock: 5, min_stock: 3, max_stock: 15, unit_price: 85, supplier_name: 'ฟาร์มไก่จันทบุรี', supplier_phone: '0812345679', status: 'in_stock', last_restocked_at: new Date().toISOString(), created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
-    { id: 'ing-3', name: 'ไข่ไก่', category: 'protein', unit: 'piece', current_stock: 2, min_stock: 10, max_stock: 50, unit_price: 3, supplier_name: 'ฟาร์มไข่จันทบุรี', supplier_phone: '0812345680', status: 'low_stock', last_restocked_at: new Date().toISOString(), created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
-    { id: 'ing-4', name: 'น้ำมัน', category: 'sauce', unit: 'liter', current_stock: 3, min_stock: 2, max_stock: 10, unit_price: 40, supplier_name: 'ร้านน้ำมันจันทบุรี', supplier_phone: '0812345681', status: 'in_stock', last_restocked_at: new Date().toISOString(), created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
-  ])
+// ============================================
+// Inventory API — Supabase-backed
+// ============================================
+
+export async function getInventory(): Promise<Ingredient[]> {
+  const { data, error } = await supabase.from('inventory').select('*').order('category')
+  if (error) { console.error('[getInventory] Error:', error); return [] }
+  return (data || []) as Ingredient[]
 }
 
-export function getInventoryByName(name: string): Ingredient | undefined {
-  return getInventory().find(i => i.name === name)
+export async function getInventoryByName(name: string): Promise<Ingredient | null> {
+  const { data, error } = await supabase.from('inventory').select('*').eq('name', name).single()
+  if (error) { console.error('[getInventoryByName] Error:', error); return null }
+  return data as Ingredient
 }
 
-export function createInventory(data: InventoryForm): Ingredient {
-  const inventory = getInventory()
-  const item: Ingredient = {
-    id: data.id || generateId('ing'),
-    name: data.name,
-    category: data.category,
-    unit: data.unit,
-    current_stock: data.current_stock,
-    min_stock: data.min_stock,
-    max_stock: data.max_stock,
-    unit_price: data.unit_price,
-    supplier_name: data.supplier_name,
-    supplier_phone: data.supplier_phone,
-    status: data.current_stock <= 0 ? 'out_of_stock' : data.current_stock <= data.min_stock ? 'low_stock' : 'in_stock',
-    last_restocked_at: new Date().toISOString(),
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString()
-  }
-  inventory.push(item)
-  storageSet('bmb_inventory', inventory)
-  return item
+export async function createInventory(data: InventoryForm): Promise<Ingredient | null> {
+  const { data: result, error } = await supabase.from('inventory').insert({
+    id: data.id || `ing-${Date.now()}`,
+    name: data.name, category: data.category, unit: data.unit,
+    current_stock: data.current_stock, min_stock: data.min_stock,
+    max_stock: data.max_stock, unit_price: data.unit_price,
+    supplier_name: data.supplier_name, supplier_phone: data.supplier_phone,
+  }).select().single()
+
+  if (error) { console.error('[createInventory] Error:', error); return null }
+  return result as Ingredient
 }
 
-export function updateInventoryStock(id: string, quantity: number, reason: string): Ingredient | null {
-  const inventory = getInventory()
-  const index = inventory.findIndex(i => i.id === id)
-  if (index === -1) return null
-  
-  inventory[index].current_stock = Math.max(0, inventory[index].current_stock + quantity)
-  inventory[index].status = inventory[index].current_stock <= 0 ? 'out_of_stock' : inventory[index].current_stock <= inventory[index].min_stock ? 'low_stock' : 'in_stock'
-  inventory[index].last_restocked_at = new Date().toISOString()
-  inventory[index].updated_at = new Date().toISOString()
-  storageSet('bmb_inventory', inventory)
-  return inventory[index]
+export async function updateInventoryStock(id: string, quantity: number, reason: string): Promise<Ingredient | null> {
+  const { data, error } = await supabase.from('inventory')
+    .update({
+      current_stock: supabase.raw("GREATEST(0, current_stock + ?)", [quantity]),
+      last_restocked_at: new Date().toISOString(),
+    })
+    .eq('id', id)
+    .select()
+    .single()
+
+  if (error) { console.error('[updateInventoryStock] Error:', error); return null }
+  return data as Ingredient
 }
 
-export function deleteInventory(id: string): boolean {
-  const inventory = getInventory()
-  const filtered = inventory.filter(i => i.id !== id)
-  if (filtered.length === inventory.length) return false
-  storageSet('bmb_inventory', filtered)
+export async function deleteInventory(id: string): Promise<boolean> {
+  const { error } = await supabase.from('inventory').delete().eq('id', id)
+  if (error) { console.error('[deleteInventory] Error:', error); return false }
   return true
 }
 
-export function getLowStockAlerts(): Ingredient[] {
-  return getInventory().filter(i => i.status === 'low_stock' || i.status === 'out_of_stock')
+export async function getLowStockAlerts(): Promise<Ingredient[]> {
+  const { data, error } = await supabase.from('inventory').select('*').eq('status', 'low_stock').or('status.eq.out_of_stock')
+  if (error) { console.error('[getLowStockAlerts] Error:', error); return [] }
+  return (data || []) as Ingredient[]
 }

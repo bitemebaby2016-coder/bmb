@@ -1,8 +1,9 @@
 // ============================================
 // Bite Me Baby Admin API - Products & Categories
+// ✅ v3.1: Using Supabase (replaces localStorage)
 // ============================================
 
-import { storageGet, storageSet, generateId } from './bmbStorage'
+import { supabase } from './supabase'
 import type { Product, ProductCategory, RoundPeriod, DeliveryRound } from '@/types'
 
 export interface ProductForm {
@@ -14,51 +15,79 @@ export interface ProductForm {
   image_url: string
   is_available: boolean
   is_featured: boolean
-  is_preorder?: boolean           // ✅ v3.1: Pre-order menu
+  is_preorder?: boolean
   prep_minutes: number
   sort_order?: number
-  delivery_round_id?: string      // ✅ v3.1: Delivery round ID
-  scheduled_date?: string         // ✅ v3.1: Scheduled delivery date
+  delivery_round_id?: string
+  scheduled_date?: string
 }
 
-export function getProducts(): Product[] {
-  return storageGet<Product[]>('bmb_products', [
-    // ✅ Same-day products (ขายวันนี้)
-    { id: 'prod-1', name: 'ผัดไทยกุ้งสด', description: 'ผัดไทยกุ้งสดสดใหม่', price: 65, category_id: 'cat-1', image_url: '', is_available: true, is_featured: true, is_preorder: false, prep_minutes: 15, sort_order: 1, created_at: new Date().toISOString() },
-    { id: 'prod-2', name: 'ข้าวหมูทอดกระเทียม', description: 'ข้าวหมูทอดกระเทียมหอมๆ', price: 70, category_id: 'cat-2', image_url: '', is_available: true, is_featured: false, is_preorder: false, prep_minutes: 10, sort_order: 2, created_at: new Date().toISOString() },
-    { id: 'prod-3', name: 'แกงเขียวหวานไก่', description: 'แกงเขียวหวานไก่ creamy', price: 75, category_id: 'cat-3', image_url: '', is_available: true, is_featured: true, is_preorder: false, prep_minutes: 20, sort_order: 3, created_at: new Date().toISOString() },
-    { id: 'prod-4', name: 'กาแฟเย็น', description: 'กาแฟเย็นหอมๆ', price: 35, category_id: 'cat-4', image_url: '', is_available: true, is_featured: false, is_preorder: false, prep_minutes: 5, sort_order: 4, created_at: new Date().toISOString() },
-    // ✅ Pre-order products (จองล่วงหน้า / โหวต)
-    { id: 'prod-5', name: 'เมนูโหวต: ต้มยำกุ้งสด', description: 'โหวตเมนูนี้เพื่อจองล่วงหน้า — ส่งรอบหน้า', price: 85, category_id: 'cat-1', image_url: '', is_available: true, is_featured: true, is_preorder: true, prep_minutes: 25, sort_order: 5, delivery_round_id: 'round-2', scheduled_date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], created_at: new Date().toISOString() },
-    { id: 'prod-6', name: 'เมนูใหม่: ผัดไทยทะเล', description: 'โหวตเมนูนี้เพื่อจองล่วงหน้า — ส่งรอบหน้า', price: 95, category_id: 'cat-1', image_url: '', is_available: true, is_featured: true, is_preorder: true, prep_minutes: 20, sort_order: 6, delivery_round_id: 'round-3', scheduled_date: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], created_at: new Date().toISOString() },
-  ])
+// ============================================
+// Products API — Supabase-backed
+// ============================================
+
+export async function getProducts(): Promise<Product[]> {
+  const { data, error } = await supabase.from('products').select('*').order('sort_order', { ascending: true })
+  if (error) { console.error('[getProducts] Error:', error); return [] }
+  return (data || []) as Product[]
 }
 
-export function getProduct(id: string): Product | undefined {
-  return getProducts().find(p => p.id === id)
+export async function getProductsAdmin(): Promise<Product[]> {
+  const { data, error } = await supabase.from('products').select('*').order('sort_order', { ascending: true })
+  if (error) { console.error('[getProductsAdmin] Error:', error); return [] }
+  return (data || []) as Product[]
 }
 
-export function createProduct(data: ProductForm): Product {
-  const products = getProducts()
-  const product: Product = {
-    id: data.id || generateId('prod'),
-    name: data.name,
-    description: data.description,
-    price: data.price,
-    category_id: data.category_id,
-    image_url: data.image_url,
-    is_available: data.is_available,
-    is_featured: data.is_featured,
-    is_preorder: data.is_preorder ?? false,  // ✅ v3.1: Default false
-    prep_minutes: data.prep_minutes,
-    sort_order: data.sort_order || products.length,
-    delivery_round_id: data.delivery_round_id,  // ✅ v3.1: Optional
-    scheduled_date: data.scheduled_date,        // ✅ v3.1: Optional
-    created_at: new Date().toISOString()
+export async function getProduct(id: string): Promise<Product | null> {
+  const { data, error } = await supabase.from('products').select('*').eq('id', id).single()
+  if (error) { console.error('[getProduct] Error:', error); return null }
+  return data as Product
+}
+
+export async function getSameDayProducts(): Promise<Product[]> {
+  const { data, error } = await supabase.from('products').select('*').eq('is_available', true).eq('is_preorder', false).order('sort_order', { ascending: true })
+  if (error) { console.error('[getSameDayProducts] Error:', error); return [] }
+  return (data || []) as Product[]
+}
+
+export async function getPreorderProducts(): Promise<Product[]> {
+  const { data, error } = await supabase.from('products').select('*').eq('is_available', true).eq('is_preorder', true).order('sort_order', { ascending: true })
+  if (error) { console.error('[getPreorderProducts] Error:', error); return [] }
+  return (data || []) as Product[]
+}
+
+export async function getFeaturedProducts(): Promise<Product[]> {
+  const { data, error } = await supabase.from('products').select('*').eq('is_available', true).eq('is_featured', true).order('sort_order', { ascending: true })
+  if (error) { console.error('[getFeaturedProducts] Error:', error); return [] }
+  return (data || []) as Product[]
+}
+
+export async function createProduct(data: ProductForm): Promise<Product | null> {
+  const productData = {
+    id: data.id || `prod-${Date.now()}`,
+    name: data.name, description: data.description, price: data.price,
+    category_id: data.category_id, image_url: data.image_url,
+    is_available: data.is_available, is_featured: data.is_featured,
+    is_preorder: data.is_preorder ?? false, prep_minutes: data.prep_minutes,
+    sort_order: data.sort_order || 0, delivery_round_id: data.delivery_round_id,
+    scheduled_date: data.scheduled_date,
   }
-  products.push(product)
-  storageSet('bmb_products', products)
-  return product
+  const { data: result, error } = await supabase.from('products').insert(productData).select().single()
+  if (error) { console.error('[createProduct] Error:', error); return null }
+  return result as Product
+}
+
+export async function updateProduct(id: string, data: Partial<ProductForm>): Promise<Product | null> {
+  const updateData: any = { ...data }
+  const { data: result, error } = await supabase.from('products').update(updateData).eq('id', id).select().single()
+  if (error) { console.error('[updateProduct] Error:', error); return null }
+  return result as Product
+}
+
+export async function deleteProduct(id: string): Promise<boolean> {
+  const { error } = await supabase.from('products').delete().eq('id', id)
+  if (error) { console.error('[deleteProduct] Error:', error); return false }
+  return true
 }
 
 export function updateProduct(id: string, data: Partial<ProductForm>): Product | null {
@@ -166,44 +195,76 @@ export interface CategoryForm {
   is_active: boolean
 }
 
-export function getCategories(): ProductCategory[] {
-  return storageGet<ProductCategory[]>('bmb_categories', [
-    { id: 'cat-1', name: 'จานเดียว', slug: 'dish', icon: '🍜', sort_order: 1, is_active: true },
-    { id: 'cat-2', name: 'ข้าว', slug: 'rice', icon: '🍚', sort_order: 2, is_active: true },
-    { id: 'cat-3', name: 'แกง', slug: 'curry', icon: '🍛', sort_order: 3, is_active: true },
-    { id: 'cat-4', name: 'เครื่องดื่ม', slug: 'drink', icon: '🥤', sort_order: 4, is_active: true },
-    { id: 'cat-5', name: 'ของหวาน', slug: 'dessert', icon: '🍰', sort_order: 5, is_active: true },
-  ])
+// ============================================
+// Categories API — Supabase-backed
+// ============================================
+
+export async function getCategories(): Promise<ProductCategory[]> {
+  const { data, error } = await supabase.from('product_categories').select('*').eq('is_active', true).order('sort_order', { ascending: true })
+  if (error) { console.error('[getCategories] Error:', error); return [] }
+  return (data || []) as ProductCategory[]
 }
 
-export function createCategory(data: CategoryForm): ProductCategory {
-  const categories = getCategories()
-  const category: ProductCategory = {
-    id: data.id || generateId('cat'),
-    name: data.name,
-    slug: data.slug || data.name.toLowerCase().replace(/\s+/g, '-'),
-    icon: data.icon,
-    sort_order: data.sort_order || categories.length,
-    is_active: data.is_active
-  }
-  categories.push(category)
-  storageSet('bmb_categories', categories)
-  return category
+export async function getCategoriesAdmin(): Promise<ProductCategory[]> {
+  const { data, error } = await supabase.from('product_categories').select('*').order('sort_order', { ascending: true })
+  if (error) { console.error('[getCategoriesAdmin] Error:', error); return [] }
+  return (data || []) as ProductCategory[]
 }
 
-export function updateCategory(id: string, data: Partial<CategoryForm>): ProductCategory | null {
-  const categories = getCategories()
-  const index = categories.findIndex(c => c.id === id)
-  if (index === -1) return null
-  categories[index] = { ...categories[index], ...data }
-  storageSet('bmb_categories', categories)
-  return categories[index]
+export async function createCategory(data: { id?: string; name: string; slug: string; icon: string; sort_order: number; is_active: boolean }): Promise<ProductCategory | null> {
+  const { data: result, error } = await supabase.from('product_categories').insert({ id: data.id || `cat-${Date.now()}`, name: data.name, slug: data.slug, icon: data.icon, sort_order: data.sort_order, is_active: data.is_active }).select().single()
+  if (error) { console.error('[createCategory] Error:', error); return null }
+  return result as ProductCategory
 }
 
-export function deleteCategory(id: string): boolean {
-  const categories = getCategories()
-  const filtered = categories.filter(c => c.id !== id)
-  if (filtered.length === categories.length) return false
-  storageSet('bmb_categories', filtered)
+export async function updateCategory(id: string, data: Partial<{ name: string; icon: string; sort_order: number; is_active: boolean }>): Promise<ProductCategory | null> {
+  const { data: result, error } = await supabase.from('product_categories').update(data).eq('id', id).select().single()
+  if (error) { console.error('[updateCategory] Error:', error); return null }
+  return result as ProductCategory
+}
+
+export async function deleteCategory(id: string): Promise<boolean> {
+  const { error } = await supabase.from('product_categories').delete().eq('id', id)
+  if (error) { console.error('[deleteCategory] Error:', error); return false }
   return true
+}
+
+// ============================================
+// Delivery Rounds API — Supabase-backed
+// ============================================
+
+export interface DeliveryRoundForm {
+  id?: string
+  round_key: RoundPeriod
+  display_name: string
+  cutoff_time: string
+  delivery_start: string
+  delivery_end: string
+  max_capacity: number
+  date: string
+}
+
+export async function getDeliveryRounds(): Promise<DeliveryRound[]> {
+  const { data, error } = await supabase.from('delivery_rounds').select('*').order('date').order('round_key', { ascending: true })
+  if (error) { console.error('[getDeliveryRounds] Error:', error); return [] }
+  return (data || []) as DeliveryRound[]
+}
+
+export async function getActiveDeliveryRounds(): Promise<DeliveryRound[]> {
+  const today = new Date().toISOString().split('T')[0]
+  const { data, error } = await supabase.from('delivery_rounds').select('*').eq('date', today).eq('status', 'active').order('round_key', { ascending: true })
+  if (error) { console.error('[getActiveDeliveryRounds] Error:', error); return [] }
+  return (data || []) as DeliveryRound[]
+}
+
+export async function createDeliveryRound(data: DeliveryRoundForm): Promise<DeliveryRound | null> {
+  const { data: result, error } = await supabase.from('delivery_rounds').insert({ id: data.id || `round-${Date.now()}`, round_key: data.round_key, display_name: data.display_name, cutoff_time: data.cutoff_time, delivery_start: data.delivery_start, delivery_end: data.delivery_end, max_capacity: data.max_capacity, date: data.date, status: 'active', current_count: 0 }).select().single()
+  if (error) { console.error('[createDeliveryRound] Error:', error); return null }
+  return result as DeliveryRound
+}
+
+export async function closeDeliveryRound(id: string): Promise<DeliveryRound | null> {
+  const { data: result, error } = await supabase.from('delivery_rounds').update({ status: 'closed' }).eq('id', id).select().single()
+  if (error) { console.error('[closeDeliveryRound] Error:', error); return null }
+  return result as DeliveryRound
 }

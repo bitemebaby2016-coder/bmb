@@ -333,7 +333,7 @@ CREATE POLICY "order_items_select" ON order_items FOR SELECT TO authenticated
   USING (order_id IN (SELECT id FROM orders WHERE customer_id IN (SELECT id FROM customers WHERE user_id = auth.uid())));
 CREATE POLICY "order_items_insert" ON order_items FOR INSERT TO authenticated WITH CHECK (true);
 CREATE POLICY "order_items_update" ON order_items FOR UPDATE TO authenticated 
-  USING (order_id IN (SELECT id FROM orders WHERE customer_id IN (SELECT id FROM customers WHERE user_id = auth.uid())))) 
+  USING (order_id IN (SELECT id FROM orders WHERE customer_id IN (SELECT id FROM customers WHERE user_id = auth.uid()))) 
   WITH CHECK (true);
 CREATE POLICY "order_items_delete" ON order_items FOR DELETE TO authenticated 
   USING (order_id IN (SELECT id FROM orders WHERE customer_id IN (SELECT id FROM customers WHERE user_id = auth.uid())));
