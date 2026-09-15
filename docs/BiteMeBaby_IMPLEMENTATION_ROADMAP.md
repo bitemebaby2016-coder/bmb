@@ -1,4 +1,4 @@
-
+﻿
 ## Phase 3: Optimization & Growth (4-6 สัปดาห์)
 
 ### เป้าหมายหลัก

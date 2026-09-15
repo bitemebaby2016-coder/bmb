@@ -1,8 +1,8 @@
-# Component Specification: 3D Floating Visual Layout (UI / PWA Home & Menu)
+# Component Specification: Normal Document Flow Layout (UI / PWA Home & Menu)
 
 > **Document role:** Single Source of Truth สำหรับหน้าตา UI ใหม่ (Home/Menu), Micro-interactions, Business Rules ของปุ่มสั่งซื้อ และช่องทาง Admin อัปโหลดรูปอาหาร  
 > **Applies to:** `src/components/FoodMenuCard.tsx`, โซน Featured บน HomePage, กริดเมนูบน MenuPage และทุก surface ฝั่งลูกค้าของ PWA ที่เรนเดอร์การ์ดสินค้า  
-> **Created:** 2026-09-14 · **Version:** 2.0 (Image Pipeline → Manual Upload)  
+> **Created:** 2026-09-14 · **Updated:** 2026-09-15 · **Version:** 3.0 (Normal Document Flow — Fixed Layout)  
 > **Status:** ✅ APPROVED — Implementasi Ready  
 > **Process:** จัดทำตาม README #78 DEVELOPMENT DOCUMENTATION GATE (D0 → D1 → D2 → D3 → D4) และ #89 SOURCE OF TRUTH HIERARCHY
 
@@ -11,7 +11,7 @@
 ## 0. สิ่งที่ขออนุมัติ (Approval Scope)
 
 1. **Admin Image Upload** — Admin อัปโหลด/แก้ไขรูปอาหารผ่าน Products Management (ไม่ใช่ AI Pipeline)
-2. **FoodMenuCard 3D Floating UI** — คอมโพเนนต์การ์ดเมนูใหม่สำหรับหน้า Home/Menu (`src/components/`)
+2. **FoodMenuCard Normal Document Flow UI** — คอมโพเนนต์การ์ดเมนูใหม่สำหรับหน้า Home/Menu (`src/components/`) — v3.0 ใช้ vertical flexbox, ไม่มี overlap
 3. **Business Rules** — ปุ่ม Same-day / Pre-order แยก Action และแยก Log เด็ดขาด
 
 > ⚠️ ห้ามเริ่ม Step 2 (Implementation) ก่อนเจ้าของโปรเจกต์อนุมัติเอกสารฉบับนี้
@@ -20,14 +20,27 @@
 
 ## 1. Purpose & Scope
 
-เอกสารนี้กำหนดวิธีที่ Bite Me Baby เรนเดอร์สินค้าอาหารบน PWA ฝั่งลูกค้าในสไตล์ **"3D Floating Visual Layout"** โดย Admin เป็นคนอัปโหลดและแก้ไขรูปอาหารเองทั้งหมดผ่าน Products Management (ไม่ใช้ AI Image Generation)
+เอกสารนี้กำหนดวิธีที่ Bite Me Baby เรนเดอร์สินค้าอาหารบน PWA ฝั่งลูกค้าในสไตล์ **"Normal Document Flow with Vertical Flexbox"** โดย Admin เป็นคนอัปโหลดและแก้ไขรูปอาหารเองทั้งหมดผ่าน Products Management (ไม่ใช้ AI Image Generation)
+
+**v3.0 Update (2026-09-15):** เปลี่ยนจาก 3D Floating (negative margin, absolute positioning) เป็น Normal Document Flow — ลบ overlap issues, ใช้ vertical stacking ที่ชัดเจน
 
 ครอบคลุม:
 
-- ข้อกำหนด 3D Floating UI (Layering, เงาซ้อนเลเยอร์, Glassmorphism)
-- พฤติกรรม Micro-interaction Animation
+- ข้อกำหนด Normal Document Flow Layout (Vertical Flexbox, 3 Sections: Image → Info → Actions)
+- พฤติกรรม Micro-interaction Animation (scale hover, shadow transition)
 - การบังคับใช้ Business Rule ของปุ่ม Same-day / Pre-order
 - Props Interface ของ `FoodMenuCard` และ Cross-document Audit กับตาราง `products` บน Supabase
+
+### v3.0 Layout Changes (จาก v2.0)
+
+| Aspect | v2.0 (3D Floating) | v3.0 (Normal Document Flow) |
+|--------|-------------------|---------------------------|
+| **Layout Method** | Negative margin + absolute positioning | Vertical flexbox (flex-col) |
+| **Image Position** | ล้นขอบการ์ด (mb-[-1.5rem]) | Within card (mb-4, centered) |
+| **Badges/Status** | Absolute positioned | Inline (normal flow) |
+| **Shadow on Image** | drop-shadow ซ้อนเลเยอร์ | shadow-lg (simple) |
+| **Hover Effect** | translateY(-16px) + scale | scale(1.05) only |
+| **Overlap Risk** | สูง (absolute + negative margin) | ไม่มี (document flow) |
 
 ---
 
@@ -63,29 +76,53 @@ FoodMenuCard แสดงผลรูปภาพอัตโนมัติ (�
 
 - `product.image_url` คือแหล่งภาพเดียวที่ใช้แสดง
 - หากไม่มีรูป (empty string) จะแสดง placeholder emoji 🍽️ แทน
-- Hover บนการ์ด → ภาพจะลอยสูงกว่าขอบการ์ด + ขยาย scale 105%
+- Hover บน image container → ภาพจะขยาย scale 105% (ไม่มีลอยเหนือขอบการ์ด)
 
 ---
 
-## 3. 3D Floating Visual Layout Specification
+## 3. Normal Document Flow Layout Specification (v3.0)
 
 ### 3.1 Card Container
 
 | Property | Value | Notes |
 |----------|-------|-------|
-| Background | Glassmorphism / Soft UI | `bg-brand-surface` พร้อม border สีอ่อน |
+| Background | White | `bg-white` พร้อม border สีอ่อน |
 | Border Radius | `rounded-2xl` (24px) | มุมโค้งพรีเมียม |
-| Shadow (default) | `var(--shadow-md)` | เงาเบา |
-| Shadow (hover) | `group-hover:shadow-xl` | เงาฟุ้งเมื่่อชี้ |
-| Scale (active) | `group-active:scale-[0.99]` | กดแล้วยุบเล็กน้อย |
-| Z-index | `100` (inline style) | อยู่บนสุดของการ์ด |
+| Shadow (default) | `shadow-md` | เงาเบา |
+| Shadow (hover) | `hover:shadow-xl` | เงาฟุ้งเมื่่อชี้ |
+| Scale (hover) | `group-hover:scale-105` | ขยายเล็กน้อยเมื่่อชี้ (บน image container) |
+| Layout | `flex flex-col items-center` | Vertical stacking |
+| Overflow | `overflow-hidden` | ตัดขอบไม่ให้อອก |
 
-### 3.2 Image Layering (Negative Margin + Drop-shadow)
+### 3.2 Three-Section Structure (Vertical Flexbox)
+
+**v3.0 ใช้ 3 sections ที่ชัดเจน ไม่ overlap กัน:**
+
+| Section | Content | Styling |
+|---------|---------|---------|
+| **TOP: Image Container** | Category badge, Status pill, Food image | `bg-gradient-to-b from-orange-50 to-white py-6 px-4` |
+| **MIDDLE: Info** | Name, Description, Price + Prep time | `px-5 py-4 flex flex-col items-center gap-3` |
+| **BOTTOM: Actions** | Same-day button, Pre-order button | `px-5 pb-5 flex flex-col gap-2` |
+
+### 3.3 Image Container (Fixed Size, Centered)
 
 | Property | Value | Notes |
 |----------|-------|-------|
-| Negative Margin | `mb-[-1.5rem]` (+margin-top สำหรับลอยเลยขอบ) | รูปทะลุล้นขอบการ์ด |
-| Filter | `drop-shadow(0 20px 14px rgba(146, 64, 14, 0.20)) drop-shadow(0 8px 8px rgba(0, 0, 0, 0.12))` | เงาซ้อนเลเยอร์ — **ห้ามใช้ `box-shadow` บนรูปอาหารเด็ดขาด** |
+| Size | `w-48 h-48` (192x192px) | ขนาดคงที่ |
+| Position | `mx-auto mb-4` | กึ่งกลาง, มี margin ล่าง |
+| Image Shape | `rounded-full` | วงกลม |
+| Shadow | `shadow-lg` | เงาแบบ simple |
+| Hover | `group-hover:scale-105 transition-transform` | ขยาย 5% เมื่่อชี้ |
+| Placeholder | Gradient orange + emoji 🍽️ | เมื่อไม่มีรูป |
+
+### 3.4 Badges & Status (Inline, Not Absolute)
+
+| Element | Position | Styling |
+|---------|----------|---------|
+| Category Badge | Inline (above image) | `inline-flex rounded-full px-3 py-1 text-xs bg-brand-primary text-white mb-3` |
+| Status Pill | Inline (above image, if not available) | `inline-flex rounded-full px-3 py-1 text-xs bg-red-100 text-red-700 mb-3` |
+
+> **v3.0 Change:** เปลี่ยนจาก `position: absolute` เป็น `inline-flex` — ไม่มี overlap กับเนื้อหา
 | Dimensions | `w-48 h-48` (192×192px) | สี่เหลี่ยมจัตุรัส — ปรับได้ผ่าน design token |
 | Overflow container | `overflow-visible` | **สำคัญ** — ไม่มี `overflow-hidden` เพื่อให้รูป hover ลอยเลยขอบได้ |
 | Object fit | `object-contain` | แสดงรูปเต็ม ไม่ตัด |
@@ -394,10 +431,10 @@ export interface PreOrderPayload {
 
 | ไฟล์ | การกระทำ | เนื้อหา |
 |------|----------|---------|
-| `src/components/FoodMenuCard.tsx` | UPDATE | 3D Floating card ครบตาม §3–§6, ไม่มี `any`, ไม่มี `box-shadow` บนรูปอาหาร, overflow-visible ให้รูป hover ลอยเลยขอบ + z-60 อยู่เหนือหัวข้อเมนู |
+| `src/components/FoodMenuCard.tsx` | UPDATE | Normal Document Flow card ครบตาม §3–§6 (v3.0), ไม่มี `any`, ไม่มี `box-shadow` บนรูปอาหาร, vertical flexbox stacking |
 | `src/pages/MenuPage.tsx` | REWRITE (โซนกริด) | ตัด mock `any[]`, ใช้ `Product[]` + `FoodMenuCard` |
 | `src/pages/HomePage.tsx` | REWRITE (โซน Featured) | ใช้ `FoodMenuCard` |
-| `src/components/ui/FoodPlaceholder.tsx` | EXTEND | เป็น fallback ของภาพเมื่อ pipeline ล้มเหลว |
+| `src/components/ui/FoodPlaceholder.tsx` | EXTEND | เป็น fallback ของภาพเมื่อไม่มีรูป |
 | `src/index.css` | EXTEND | keyframes / reduced-motion ที่จำเป็น |
 | `src/lib/aiService.ts` | REFACTOR | key → `.env` (P0 SEC-01) |
 | `.env` / `.env.example` | CREATE | `VITE_OPENROUTER_API_KEY` + model vars |
@@ -405,11 +442,12 @@ export interface PreOrderPayload {
 
 ---
 
-## 9. Acceptance Criteria
+## 9. Acceptance Criteria (v3.0)
 
 - [ ] รูปอาหารที่ Admin อัปโหลดแสดงถูกต้องบน FoodMenuCard ผ่าน `product.image_url`
-- [ ] ภาพอาหารลอยเหลื่อมขอบบนการ์ดด้วย negative margin + `drop-shadow` ซ้อนเลเยอร์
-- [ ] Hover ยกภาพ `-translate-y-4` + `scale-105`; กดแล้วการ์ดยุบ `scale-[0.99]` พร้อมเงาฟุ้ง
+- [ ] Layout เป็น Normal Document Flow (vertical flexbox) — ไม่มี negative margin, ไม่มี absolute positioning
+- [ ] 3 sections ชัดเจน: Image (top) → Info (middle) → Actions (bottom) — ไม่มี overlap
+- [ ] Hover บน image container → ขยาย `scale-105` (ไม่มี `-translate-y`)
 - [ ] ปุ่ม Same-day แสดงเฉพาะ `is_available = true` ผ่าน Live Availability Engine
 - [ ] Same-day และ Pre-order แยก handler + log append-only คนละรายการ
 - [ ] ไม่มี `box-shadow` บนองค์ประกอบรูปอาหาร
