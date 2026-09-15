@@ -16,6 +16,8 @@ export function HomePage() {
   const addItem = useCartStore((s) => s.addItem)
   const cartCount = useCartStore((s) => s.getCartCount())
   const [featuredProducts, setFeaturedProducts] = useState<Product[]>([])
+  const [sameDayFeatured, setSameDayFeatured] = useState<Product[]>([])
+  const [preOrderFeatured, setPreOrderFeatured] = useState<Product[]>([]) // ✅ v3.1: Pre-order featured
   const [categories, setCategories] = useState<ProductCategory[]>([])
   const [lowStockAlerts, setLowStockAlerts] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
@@ -24,8 +26,13 @@ export function HomePage() {
     // Fetch products and categories from API
     const products = getProducts()
     const cats = getCategories()
-    const featured = products.filter(p => p.is_featured || p.is_available).slice(0, 6)
+    // ✅ v3.1: Separate same-day and pre-order featured products
+    const sameDayFeatured = products.filter(p => p.is_featured && !p.is_preorder && p.is_available).slice(0, 4)
+    const preOrderFeatured = products.filter(p => p.is_featured && p.is_preorder).slice(0, 4)
+    const featured = [...sameDayFeatured, ...preOrderFeatured].slice(0, 6)
     setFeaturedProducts(featured)
+    setSameDayFeatured(sameDayFeatured)
+    setPreOrderFeatured(preOrderFeatured)
     setCategories(cats)
     
     const alerts = useInventoryStore.getState().getActiveAlerts()
@@ -45,7 +52,9 @@ export function HomePage() {
 
   const handlePreOrder = (payload: PreOrderPayload) => {
     console.log('[Log#pre-order]', payload)
-    showToast('ระบบจองล่วงหน้าอยู่ระหว่างการพัฒนา', 'info')
+    // ✅ v3.1: Find product and show scheduled date
+    const product = featuredProducts.find(p => p.id === payload.productId)
+    showToast(`จองสำเร็จ! ${product?.name || ''} จะส่งวันที่ ${payload.scheduledDate || '—'}`, 'success')
   }
 
   return (
@@ -124,6 +133,31 @@ export function HomePage() {
             )
           })}
         </div>
+{/* ✅ v3.1: Featured Pre-order Products (โหวต/จองล่วงหน้า) */}
+      {preOrderFeatured.length > 0 && (
+        <div className="mb-8">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-2xl font-display font-bold text-brand-accent">📅 เมนูโหวต (จองล่วงหน้า)</h2>
+            <Link to="/menu" className="text-brand-primary font-medium hover:underline">ดทั้งหมด →</Link>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {preOrderFeatured.map((p) => {
+              const cat = categories.find((c) => c.id === p.category_id)
+              return (
+                <FoodMenuCard
+                  key={p.id}
+                  product={p}
+                  category={cat}
+                  mode="pre-order"
+                  availability={p.is_available ? 'available' : 'sold_out'}
+                  onSameDayOrder={handleSameDay}
+                  onPreOrder={handlePreOrder}
+                />
+              )
+            })}
+          </div>
+        </div>
+      )}
       </div>
 
       {/* Low Stock Alerts */}

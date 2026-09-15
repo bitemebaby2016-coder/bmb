@@ -5,8 +5,8 @@
 
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import type { Product, ProductCategory, SameDayOrderPayload, PreOrderPayload, AvailabilityState, OrderMode } from '@/types'
-import { getProducts, getCategories } from '@/lib/bmbAdminApi_products'
+import type { Product, ProductCategory, SameDayOrderPayload, PreOrderPayload, AvailabilityState, OrderMode, DeliveryRound } from '@/types'
+import { getProducts, getCategories, getDeliveryRounds } from '@/lib/bmbAdminApi_products'
 import { useCartStore } from '@/store/cartStore'
 import { showToast } from '@/components/ui/ToastContainer'
 import { FoodMenuCard } from '@/components/FoodMenuCard'
@@ -16,20 +16,28 @@ const CATEGORY_ICONS = { all: '\uD83D\uDF3D', dish: '\uD83C\uDF5C', rice: '\uD83
 export function MenuPage() {
   const [selectedCategory, setSelectedCategory] = useState('all')
   const [searchQuery, setSearchQuery] = useState('')
+  const [menuTab, setMenuTab] = useState<'same-day' | 'pre-order'>('same-day') // ✅ v3.1: Tab switch
   const [products, setProducts] = useState<Product[]>([])
   const [categories, setCategories] = useState<ProductCategory[]>([])
+  const [deliveryRounds, setDeliveryRounds] = useState<DeliveryRound[]>([]) // ✅ v3.1: Delivery rounds
   const addItem = useCartStore((s) => s.addItem)
 
-  useEffect(() => { setProducts(getProducts()); setCategories(getCategories()) }, [])
+  useEffect(() => {
+    setProducts(getProducts())
+    setCategories(getCategories())
+    setDeliveryRounds(getDeliveryRounds()) // ✅ v3.1: Load delivery rounds
+  }, [])
 
+  // ✅ v3.1: Filter by tab (same-day vs pre-order)
   const filtered = products.filter((p) => {
+    if (menuTab === 'same-day' && p.is_preorder) return false
+    if (menuTab === 'pre-order' && !p.is_preorder) return false
     const matchCat = selectedCategory === 'all' || String(p.category_id).includes(selectedCategory.slice(0, 3))
     return matchCat && p.name.toLowerCase().includes(searchQuery.toLowerCase())
   })
 
   const handleSameDay = (payload: SameDayOrderPayload) => {
     console.log('[Log#same-day]', payload)
-    // Find the actual product by ID from our products list
     const product = products.find(p => p.id === payload.productId)
     if (product) {
       addItem(product, payload.quantity)
@@ -41,15 +49,36 @@ export function MenuPage() {
 
   const handlePreOrder = (payload: PreOrderPayload) => {
     console.log('[Log#pre-order]', payload)
-    showToast('จองล่วงหน้าสำเร็จ!', 'success')
+    const product = products.find(p => p.id === payload.productId)
+    const round = deliveryRounds.find(r => r.id === payload.deliveryRoundId)
+    showToast(`จองสำเร็จ! จะส่งวันที่ ${payload.scheduledDate || '—'} (${round?.display_name || ''})`, 'success')
   }
 
   const availableCats = categories.filter((c) => c.is_active)
+  const sameDayCount = products.filter(p => !p.is_preorder && p.is_available).length
+  const preOrderCount = products.filter(p => p.is_preorder).length
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-6 bg-brand-bg min-h-screen">
       <div className="mb-6">
         <h1 className="text-3xl font-display font-bold text-brand-accent mb-4">เมนูอาหาร</h1>
+
+        {/* ✅ v3.1: Tab switch (Same-day / Pre-order) */}
+        <div className="flex gap-2 mb-4 bg-white p-1 rounded-xl">
+          <button
+            onClick={() => setMenuTab('same-day')}
+            className={`flex-1 py-2.5 px-4 rounded-lg font-semibold transition-all ${menuTab === 'same-day' ? 'bg-brand-primary text-white shadow-md' : 'text-brand-accent hover:bg-orange-50'}`}
+          >
+            🍽️ วันนี้ ({sameDayCount})
+          </button>
+          <button
+            onClick={() => setMenuTab('pre-order')}
+            className={`flex-1 py-2.5 px-4 rounded-lg font-semibold transition-all ${menuTab === 'pre-order' ? 'bg-brand-primary text-white shadow-md' : 'text-brand-accent hover:bg-orange-50'}`}
+          >
+            📅 จองล่วงหน้า ({preOrderCount})
+          </button>
+        </div>
+
         <div className="relative mb-4">
           <input type="text" placeholder="ค้นเมนู..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-stone-200 bg-white focus:border-brand-primary outline-none transition-all" />
           <svg className="absolute left-3 top-3 w-5 h-5 text-brand-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
@@ -61,15 +90,52 @@ export function MenuPage() {
           ))}
         </div>
       </div>
+
+      {/* ✅ v3.1: Pre-order info banner */}
+      {menuTab === 'pre-order' && (
+        <div className="mb-6 bg-blue-50 border-2 border-blue-200 p-4 rounded-xl">
+          <div className="flex items-start gap-3">
+            <span className="text-2xl">📅</span>
+            <div>
+              <h3 className="font-bold text-blue-900 mb-1">จองล่วงหน้า (Pre-order)</h3>
+              <p className="text-sm text-blue-700">เมนูที่โหวตแล้วจะส่งในรอบถัดไป — เลือกวันที่ต้องการรับอาหาร</p>
+              {deliveryRounds.length > 0 && (
+                <div className="flex gap-2 mt-2 flex-wrap">
+                  {deliveryRounds.map((round) => (
+                    <span key={round.id} className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">{round.display_name}</span>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
         {filtered.map((product) => {
           const cat = categories.find((c) => c.id === product.category_id)
+          // ✅ v3.1: Use correct mode based on product.is_preorder
+          const mode: OrderMode = product.is_preorder ? 'pre-order' : 'same-day'
           return (
-            <FoodMenuCard key={product.id} product={product} category={cat} mode="same-day" availability={product.is_available ? 'available' : 'sold_out'} onSameDayOrder={handleSameDay} onPreOrder={handlePreOrder} />
+            <FoodMenuCard
+              key={product.id}
+              product={product}
+              category={cat}
+              mode={mode}
+              availability={product.is_available ? 'available' : 'sold_out'}
+              onSameDayOrder={handleSameDay}
+              onPreOrder={handlePreOrder}
+            />
           )
         })}
       </div>
-      {filtered.length === 0 && <div className="text-center py-16"><div className="text-6xl mb-4">🔍</div><h3 className="text-xl font-display font-bold text-brand-accent mb-2">ไม่พบเมนู</h3><p className="text-brand-muted">ลองเปลี่ยนคำค้นหาหรือหมวดหมู่</p></div>}
+      {filtered.length === 0 && (
+        <div className="text-center py-16">
+          <div className="text-6xl mb-4">🔍</div>
+          <h3 className="text-xl font-display font-bold text-brand-accent mb-2">ไม่พบเมนู</h3>
+          <p className="text-brand-muted">ลองเปลี่ยนคำค้นหาหรือหมวดหมู่</p>
+        </div>
+      )}
     </div>
   )
 }

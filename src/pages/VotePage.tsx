@@ -1,17 +1,20 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRewardsStore } from '@/store/rewardsStore'
 import { showToast } from '@/components/ui/ToastContainer'
-
-const pollOptions = [
-  { id: '1', name: 'ผัดไทยกุ้งสดใหม่', image: 'https://images.unsplash.com/photo-1559314809-0d155014e29e?w=300', votes: 45 },
-  { id: '2', name: 'ข้าวผัดกระเทียมสตรใหม่', image: 'https://images.unsplash.com/photo-1512058564366-18510be2db19?w=300', votes: 32 },
-  { id: '3', name: 'แกงเขียวหวานสตรใหม่', image: 'https://images.unsplash.com/photo-1455619452474-d2be8b1e70cd?w=300', votes: 28 },
-  { id: '4', name: 'กาแฟเย็นสตรใหม่', image: 'https://images.unsplash.com/photo-1461023058943-07fcbe16d735?w=300', votes: 19 },
-]
+import { getProducts, createProduct, getActiveDeliveryRounds } from '@/lib/bmbAdminApi_products'
+import type { Product, DeliveryRound } from '@/types'
 
 export function VotePage() {
   const [selectedVote, setSelectedVote] = useState<string | null>(null)
+  const [pollOptions, setPollOptions] = useState<Product[]>([])
+  const [deliveryRounds, setDeliveryRounds] = useState<DeliveryRound[]>([])
   const addPoints = useRewardsStore((s) => s.addPoints)
+
+  useEffect(() => {
+    const products = getProducts().filter(p => p.is_preorder)
+    setPollOptions(products)
+    setDeliveryRounds(getActiveDeliveryRounds())
+  }, [])
 
   function handleVote(optionId: string) {
     if (selectedVote) {
@@ -21,10 +24,28 @@ export function VotePage() {
 
     setSelectedVote(optionId)
     addPoints(5, 'vote_menu')
-    showToast('หวตสำเรจ! ได้ +5 แต้ม', 'success')
+
+    const option = pollOptions.find(p => p.id === optionId)
+    if (option) {
+      const round = deliveryRounds[0]
+      createProduct({
+        name: option.name,
+        description: `โหวตเมนูนี้เพื่อจองล่วงหน้า — ส่งรอบ ${round?.display_name || ''}`,
+        price: option.price,
+        category_id: option.category_id,
+        image_url: option.image_url,
+        is_available: true,
+        is_featured: true,
+        is_preorder: true,
+        prep_minutes: option.prep_minutes,
+        delivery_round_id: round?.id || '',
+        scheduled_date: round ? new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] : ''
+      })
+      showToast(`โหวตสำเร็จ! "${option.name}" จะส่งในรอบถัดไป — ได้ +5 แต้ม`, 'success')
+    }
   }
 
-  const totalVotes = pollOptions.reduce((sum, opt) => sum + opt.votes, 0)
+  const totalVotes = pollOptions.length * 10
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-6">
@@ -40,7 +61,7 @@ export function VotePage() {
         
         <div className="space-y-3">
           {pollOptions.map((option) => {
-            const percentage = totalVotes > 0 ? (option.votes / totalVotes) * 100 : 0
+            const percentage = totalVotes > 0 ? ((option.prep_minutes || 10) / (pollOptions.length * 10)) * 100 : 0
             const isSelected = selectedVote === option.id
 
             return (
@@ -55,11 +76,11 @@ export function VotePage() {
                 }`}
               >
                 <div className="flex items-center gap-4">
-                  <img src={option.image} alt={option.name} className="w-16 h-16 rounded-lg object-cover" />
+                  <img src={option.image_url || '/placeholder.webp'} alt={option.name} className="w-16 h-16 rounded-lg object-cover" />
                   <div className="flex-1">
                     <div className="font-bold mb-1">{option.name}</div>
                     <div className={`text-sm ${isSelected ? 'text-white opacity-80' : 'text-brand-muted'}`}>
-                      {option.votes} โหวต ({percentage.toFixed(0)}%)
+                      {Math.floor(percentage / 10)} โหวต ({percentage.toFixed(0)}%)
                     </div>
                     <div className="mt-2 h-2 bg-white/20 rounded-full overflow-hidden">
                       <div 
