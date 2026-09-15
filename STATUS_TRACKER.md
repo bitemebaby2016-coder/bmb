@@ -47,13 +47,17 @@
 | UI-01 | FoodMenuCard v2.2 | ✅ DONE | 2026-09-15 | 3D Floating UI, hover, overflow-visible |
 | UI-02 | MenuPage rewrite | ✅ DONE | 2026-09-14 | getProducts + FoodMenuCard |
 | UI-03 | HomePage rewrite | ✅ DONE | 2026-09-14 | getProducts + FoodMenuCard |
-| UI-04 | Same-day/Pre-order split | ⏸️ PLANNED | - | Next task |
-| UI-05 | Admin Image Upload | ⏸️ PLANNED | - | After UI-04 |
+| UI-01 | FoodMenuCard v3.0 | ✅ DONE | 2026-09-15 | Normal Document Flow (vertical flexbox) |
+| UI-02 | MenuPage rewrite | ✅ DONE | 2026-09-14 | getProducts + FoodMenuCard |
+| UI-03 | HomePage rewrite | ✅ DONE | 2026-09-14 | getProducts + FoodMenuCard |
+| UI-04 | Same-day/Pre-order split + tabs | ✅ DONE | 2026-09-15 | Tab switch, delivery rounds, pre-order products |
+| UI-05 | Admin Image Upload | ✅ DONE | 2026-09-15 | fileToBase64 in AdminProducts.tsx |
+| UI-06 | Pre-order system (v3.1) | ✅ DONE | 2026-09-15 | is_preorder, delivery_rounds, VotePage integration |
 | LAYOUT-01 | Header hide-on-scroll | ✅ DONE | 2026-09-14 | Relative z-50 |
 | LAYOUT-02 | Footer component | ✅ DONE | 2026-09-15 | FAQ, Blog, About, Contact, Social, Newsletter |
 | LAYOUT-03 | BottomNav integration | ✅ DONE | 2026-09-14 | Fixed bottom, 5 items |
 
-**Phase Progress:** 7/6 (117% - over-delivered)
+**Phase Progress:** 9/6 (150% - over-delivered)
 
 ---
 
