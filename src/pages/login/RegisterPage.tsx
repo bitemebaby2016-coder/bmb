@@ -1,0 +1,149 @@
+import { useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
+import { createUser } from '@/lib/bmbAdminApi_users'
+import { useAuthStore } from '@/store/authStore'
+import { showToast } from '@/components/ui/ToastContainer'
+
+export function RegisterPage() {
+  const navigate = useNavigate()
+  const setCustomer = useAuthStore((s) => s.setCustomer)
+  const setIsAuthenticated = useAuthStore((s) => s.setIsAuthenticated)
+  
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    password: '',
+    confirmPassword: ''
+  })
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState('')
+
+  async function handleRegister(e: React.FormEvent) {
+    e.preventDefault()
+    setIsLoading(true)
+    setError('')
+    
+    if (formData.password !== formData.confirmPassword) {
+      setError('รหัสผ่านไม่ตรงกัน')
+      setIsLoading(false)
+      return
+    }
+    
+    if (formData.password.length < 6) {
+      setError('รหัสผ่านต้อง至少有 6 ตัวอักษร')
+      setIsLoading(false)
+      return
+    }
+    
+    try {
+      const user = createUser({
+        email: formData.email,
+        phone: formData.phone,
+        name: formData.name,
+        password: formData.password
+      })
+      
+      if (!user) {
+        setError('อีเมลหรือเบอร์โทรนี้ถูกใช้แล้ว')
+        setIsLoading(false)
+        return
+      }
+      
+      setCustomer({
+        id: user.id,
+        email: user.email,
+        phone: user.phone,
+        name: user.name,
+        line_id: '',
+        default_latitude: 0,
+        default_longitude: 0,
+        default_address_detail: '',
+        loyalty_points: 0,
+        total_orders: 0,
+        total_spent: 0,
+        created_at: user.created_at,
+        updated_at: user.created_at
+      })
+      setIsAuthenticated(true)
+      
+      showToast('สมัครสมาชิกสำเร็จ! ยินดีต้อนรับ', 'success')
+      navigate('/')
+    } catch (err) {
+      console.error('Register error:', err)
+      setError('เกิดข้อผิดพลาด กรุณาลองใหม่')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
+    setFormData({ ...formData, [e.target.name]: e.target.value })
+  }
+
+  return (
+    <div className="min-h-screen bg-brand-bg flex items-center justify-center p-4">
+      <div className="max-w-md w-full">
+        <div className="text-center mb-8">
+          <div className="text-6xl mb-4">🧡</div>
+          <h1 className="text-4xl font-bold text-brand-accent font-display">Bite Me Baby</h1>
+          <p className="text-brand-muted mt-2">มากกว่าคำว่าอร่อย</p>
+        </div>
+
+        <div className="card bg-brand-surface">
+          <h2 className="text-2xl font-bold text-brand-accent mb-6 text-center">สมัครสมาชิก</h2>
+          
+          {error && (
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4">
+              {error}
+            </div>
+          )}
+          
+          <form onSubmit={handleRegister} className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-brand-accent mb-2">ชื่อ-นามสกุล</label>
+              <input type="text" name="name" value={formData.name} onChange={handleChange} className="input" placeholder="ชื่อของคุณ" required />
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-brand-accent mb-2">อีเมล</label>
+              <input type="email" name="email" value={formData.email} onChange={handleChange} className="input" placeholder="your@email.com" required />
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-brand-accent mb-2">เบอร์โทรศัพท์</label>
+              <input type="tel" name="phone" value={formData.phone} onChange={handleChange} className="input" placeholder="0812345678" required />
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-brand-accent mb-2">รหัสผ่าน</label>
+              <input type="password" name="password" value={formData.password} onChange={handleChange} className="input" placeholder="至少有 6 ตัวอักษร" required minLength={6} />
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-brand-accent mb-2">ยืนยันรหัสผ่าน</label>
+              <input type="password" name="confirmPassword" value={formData.confirmPassword} onChange={handleChange} className="input" placeholder="กรอกอีกครั้ง" required />
+            </div>
+            
+            <button type="submit" disabled={isLoading} className={`btn btn-primary w-full ${isLoading ? 'btn-disabled' : ''}`}>
+              {isLoading ? 'กำลังสมัคร...' : 'สมัครสมาชิก'}
+            </button>
+          </form>
+          
+          <div className="mt-6 text-center">
+            <p className="text-brand-muted text-sm">
+              มีบัญชีแล้ว?{' '}
+              <Link to="/login" className="text-brand-primary font-medium hover:underline">
+                เข้าสู่ระบบ
+              </Link>
+            </p>
+          </div>
+        </div>
+        
+        <div className="text-center mt-6">
+          <Link to="/" className="text-brand-primary hover:underline">← กลับหน้าแรก</Link>
+        </div>
+      </div>
+    </div>
+  )
+}

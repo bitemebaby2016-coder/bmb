@@ -1,0 +1,19 @@
+{
+  "name": "Bite Me Baby - สั่งอาหารจัดส่งเมืองจันทบุรี",
+  "short_name": "BiteMeBaby",
+  "description": "สั่งอาหารจัดส่งเมืองจันทบุรี รัศมี 5 กม. จัดส่งด้วยรถไฟฟ้า รอบเช้า กลางวัน เย็น",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "theme_color": "#F97316",
+  "background_color": "#FFF7ED",
+  "lang": "th-TH",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+# robots.txt for Bite Me Baby
+User-agent: *
+Allow: /
+Allow: /menu
+Allow: /about
+Allow: /blog
+Allow: /faq
+Allow: /contact
+Allow: /promotions
+
+Sitemap: https://bitemebaby.com/sitemap.xml
+
+# Disallow admin/private routes
+Disallow: /admin*
+Disallow: /api*
+Disallow: /track/*
+Disallow: /profile*

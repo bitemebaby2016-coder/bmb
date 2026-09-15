@@ -1,0 +1,173 @@
+import { useState, useRef, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { AiAvatar } from '@/components/ai/AiAvatar'
+import { showToast } from '@/components/ui/ToastContainer'
+import { chatWithAI, resetConversation as resetAiConversation } from '@/lib/aiService'
+
+interface Message {
+  id: string
+  role: 'user' | 'assistant'
+  content: string
+  timestamp: string
+}
+
+export function AiChatPage() {
+  const navigate = useNavigate()
+  const [messages, setMessages] = useState<Message[]>([
+    {
+      id: '1',
+      role: 'assistant',
+      content: 'สวัสดีค่ะ! ไบต์นะคะ 🧡 วันนี้คุณต้องการให้ช่วยอะไรดีคะ? สั่งอาหาร แนะนำเมนู หรือถามอะไรก็ได้ค่ะ',
+      timestamp: new Date().toISOString()
+    }
+  ])
+  const [input, setInput] = useState('')
+  const [isTyping, setIsTyping] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
+  const messagesEndRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }, [messages])
+
+  async function handleSend() {
+    if (!input.trim() || isLoading) return
+    
+    const userMessage: Message = {
+      id: Date.now().toString(),
+      role: 'user',
+      content: input,
+      timestamp: new Date().toISOString()
+    }
+    
+    setMessages(prev => [...prev, userMessage])
+    setInput('')
+    setIsTyping(true)
+    setIsLoading(true)
+    
+    try {
+      const aiResponse = await chatWithAI(userMessage.content)
+      
+      const assistantMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        role: 'assistant',
+        content: aiResponse,
+        timestamp: new Date().toISOString()
+      }
+      setMessages(prev => [...prev, assistantMessage])
+    } catch (error) {
+      console.error('Chat error:', error)
+      const errorMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        role: 'assistant',
+        content: 'ขอโทษค่ะ เกิดข้อผิดพลาด กรุณาลองอีกครั้งนะ 🙏',
+        timestamp: new Date().toISOString()
+      }
+      setMessages(prev => [...prev, errorMessage])
+      showToast('เกิดข้อผิดพลาดในการตอบกลับ', 'error')
+    } finally {
+      setIsTyping(false)
+      setIsLoading(false)
+    }
+  }
+
+  function handleResetChat() {
+    setMessages([{
+      id: Date.now().toString(),
+      role: 'assistant',
+      content: 'สวัสดีค่ะ! ไบต์นะคะ 🧡 วันนี้คุณต้องการให้ช่วยอะไรดีคะ?',
+      timestamp: new Date().toISOString()
+    }])
+    resetAiConversation()
+    showToast('เริ่มการสนทนาใหม่แล้ว', 'info')
+  }
+
+  return (
+    <div className="max-w-4xl mx-auto px-4 py-6 h-screen flex flex-col">
+      <div className="flex items-center gap-4 mb-4 pb-4 border-b border-brand-border">
+        <AiAvatar state="talking" />
+        <div className="flex-1">
+          <h1 className="text-2xl font-bold text-brand-accent">ไบต์ AI</h1>
+          <p className="text-sm text-brand-muted">บริกร AI ของ Bite Me Baby</p>
+        </div>
+        <button onClick={handleResetChat} className="btn btn-outline text-sm">🔄 เริ่มใหม่</button>
+        <button onClick={() => navigate(-1)} className="btn btn-outline text-sm">← กลับ</button>
+      </div>
+
+      <div className="flex-1 overflow-y-auto mb-4 space-y-4">
+        {messages.map((message) => (
+          <div key={message.id} className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+            <div className={`max-w-[80%] ${message.role === 'user' ? 'order-1' : ''}`}>
+              {message.role === 'assistant' && (
+                <div className="flex items-start gap-3">
+                  <AiAvatar state="talking" />
+                  <div className="card bg-brand-surface">
+                    <p className="text-brand-text">{message.content}</p>
+                    <p className="text-xs text-brand-muted mt-2">
+                      {new Date(message.timestamp).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })}
+                    </p>
+                  </div>
+                </div>
+              )}
+              {message.role === 'user' && (
+                <div className="card bg-brand-primary text-white">
+                  <p>{message.content}</p>
+                  <p className="text-xs opacity-90 mt-2">
+                    {new Date(message.timestamp).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })}
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+        ))}
+        
+        {isTyping && (
+          <div className="flex justify-start">
+            <div className="card bg-brand-surface flex items-center gap-3">
+              <AiAvatar state="thinking" />
+              <div className="flex gap-1">
+                <div className="w-2 h-2 bg-brand-primary rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+                <div className="w-2 h-2 bg-brand-primary rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+                <div className="w-2 h-2 bg-brand-primary rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+              </div>
+            </div>
+          </div>
+        )}
+        
+        <div ref={messagesEndRef} />
+      </div>
+
+      {/* Quick Actions */}
+      <div className="flex gap-2 mb-4 overflow-x-auto no-scrollbar">
+        {['สั่งอาหาร', 'แนะนำเมนู', 'ตรวจสอบสถานะ', 'ถามไบต์'].map((action) => (
+          <button
+            key={action}
+            onClick={() => setInput(action)}
+            className="px-4 py-2 bg-brand-bg text-brand-accent rounded-full text-sm font-medium whitespace-nowrap hover:bg-brand-secondary transition-colors"
+          >
+            {action}
+          </button>
+        ))}
+      </div>
+
+      {/* Input */}
+      <div className="flex gap-2">
+        <input
+          type="text"
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          onKeyDown={(e) => e.key === 'Enter' && handleSend()}
+          placeholder="พิมพ์คำถามหรือสั่งอาหาร..."
+          className="input flex-1"
+        />
+        <button
+          onClick={handleSend}
+          disabled={!input.trim()}
+          className={`btn btn-primary ${!input.trim() ? 'btn-disabled' : ''}`}
+        >
+          ส่ง
+        </button>
+      </div>
+    </div>
+  )
+}

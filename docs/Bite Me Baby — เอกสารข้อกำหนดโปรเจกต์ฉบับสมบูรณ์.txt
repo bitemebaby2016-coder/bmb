@@ -1,0 +1,1443 @@
+Bite Me Baby — เอกสารข้อกำหนดโปรเจกต์ฉบับสมบูรณ์
+📋 สารบัญ
+Executive Summary
+
+Brand Identity
+
+AI Service Staff "ไบต์"
+
+Customer Journey
+
+Delivery System
+
+Order Tracking (ติดตามสถานะส่ง)
+
+Driver Workflow
+
+Admin Dashboard
+
+Pre-order System (สั่งล่วงหน้า)
+
+Technical Architecture
+
+Database Schema
+
+Design System
+
+Implementation Roadmap
+
+Success Metrics
+
+Risks & Mitigation
+
+Appendix
+
+17. Image Production Pipeline & 3D Floating UI (Addendum v1.1 — 2026-09-14)
+
+1. EXECUTIVE SUMMARY
+1.1 Project Overview
+text
+PROJECT          : Bite Me Baby
+TYPE             : Cloud Kitchen / Direct Ordering PWA
+LOCATION         : Chanthaburi, Thailand
+PRIMARY GOAL     : สร้างช่องทางสั่งอาหารตรงของ Bite Me Baby
+                   ให้ลูกค้ารู้สึกเหมือนใช้ Mobile Food App
+                   ลด dependency ต่อ marketplace
+                   และสร้างระบบหลังบ้านที่ช่วยบริหารร้าน + delivery ได้จริง
+1.2 Core Business Model
+รายการ	รายละเอียด
+Direct Order	ลูกค้าสั่งผ่าน Bite Me Baby PWA
+Delivery Zone ≤ 5 km	Bite Me Baby จัดส่งเอง (รถไฟฟ้า)
+Delivery Zone > 5 km	Delivery Provider ภายนอก (Grab/LINE MAN)
+Order Rounds	Morning (06:00-09:00, cutoff 08:00)
+Midday (11:00-14:00, cutoff 10:30)
+Evening (17:00-20:00, cutoff 16:00)
+1.3 Product Principles
+text
+Bite Me Baby is:
+
+"An owned food commerce + delivery system,
+not simply a restaurant website."
+
+Every feature should improve:
+1. Conversion
+2. Average Order Value
+3. Repeat Purchase
+4. Delivery Efficiency
+5. Operating Margin
+1.4 PWA Requirements
+ติดตั้งบนมือถือได้ (Mobile Installable)
+
+Offline Support
+
+Push Notification
+
+ภาษาไทยทั้งหมด
+
+1.5 Core Features Summary
+#	Feature	Status
+1	AI บริกร "ไบต์" + มาสคอต	✅
+2	Avatar ไบต์ (หลายสถานะ)	✅
+3	Hybrid AI Entry (Floating + Bottom Tab)	✅
+4	Voice Input + Output	✅
+5	ติดตามสถานะส่ง (6 สถานะ + แผนที่ + ETA)	✅
+6	หน้าแรก AI Hero	✅
+7	Animation (Fade, Stagger, Countdown, Float, Wave)	✅
+8	Bottom Nav 5 Tabs (🏠 🍽️ 📦 🧡 👤)	✅
+9	สีจากโลโก้ (Orange/Yellow/Cream/Brown)	✅
+10	ภาษาไทยทั้งหมด	✅
+11	PWA (ติดตั้งมือถือได้)	✅
+2. BRAND IDENTITY
+2.1 Brand Essence
+มิติ	รายละเอียด
+ชื่อ	Bite Me Baby
+สโลแกน	"มากกว่าคำว่าอร่อย"
+บุคลิก	Warm / Playful / Modern
+ภาษา	ไทย (หลัก) / อังกฤษ (รอง)
+กลุ่มเป้าหมาย	คนจันทบุรี อ.เมือง และใกล้เคียง
+2.2 Color Palette
+text
+🧡 Primary    : #F97316  (Orange)
+💛 Secondary  : #FBBF24  (Yellow)
+🤍 Background : #FFF7ED  (Cream)
+🤎 Accent     : #92400E  (Brown)
+⬛ Text       : #1C1917  (Dark)
+⬜ Surface    : #FFFFFF  (White)
+2.3 Typography
+ใช้งาน	Font	Weight
+Display/Header	Nunito	700-900
+Body	Quicksand	400-700
+2.4 Design Style
+text
+Style: Minimalist Modern + Warm Thai Vibe
+Feeling: เหมือนร้านอาหารข้างทาง แต่ทันสมัย
+
+Key Elements:
+- Rounded corners
+- Soft shadows
+- Warm gradients
+- Playful illustrations
+- Mobile-first
+2.5 Brand Personality
+Warm — ให้ความรู้สึกอบอุ่นเหมือนกินข้าวบ้าน
+
+Playful — มีชีวิตชีวา ไม่น่าเบื่อ
+
+Modern — ทันสมัย ใช้งานง่าย
+
+Thai Vibe — รากเหง้าความเป็นไทย แต่อยู่ในรูปแบบใหม่
+
+3. AI SERVICE STAFF "ไบต์"
+3.1 ตัวตนของไบต์
+text
+🤖 ชื่อ        : ไบต์ (Bite)
+👧 บทบาท      : บริกร AI + มาสคอตประจำ PWA
+🎭 บุคลิก      : อบอุ่น, ขี้เล่น, เป็นกันเอง, รู้จักร้านดี
+🗣️ เสียง      : หญิงไทย, เป็นธรรมชาติ, มีชีวิตชีวา
+💬 คำพูดติดปาก : "จ้า", "เลยค่ะ", "นะคะ"
+
+"ไบต์" ต้องเป็นตัวตนของ Bite Me Baby
+อยู่คู่กับแบรนด์ตลอดไป
+3.2 ภาพลักษณ์ไบต์ (Avatar)
+Attribute	Specification
+Style	2D Cartoon + Gradient (เหมือน LINE MAN / Grab)
+Face	หน้ากลม ตากลมโต ยิ้มแย้ม
+Outfit	หมวก Chef + ผ้ากันเปื้อนขาว
+Prop	ถือจานอาหาร / ทัพพี / ชาม
+Format	SVG (ใช้ทุกขนาด)
+Animation	Lottie JSON สำหรับเคลื่อนไหว
+3.3 Avatar States
+สถานะ	ลักษณะ	Animation
+🧡 ทักทาย	ยิ้มกว้าง	Float + Wave
+🤔 คิด	จับคาง	เอียงหัว
+😊 พูด	ขยับปาก	Pulse
+🎉 ดีใจ	หัวใจลอย	Bounce + Confetti
+😅 งง	เอียงหัว	เอียงซ้าย-ขวา
+👋 อำลา	โบกมือ	Slide + Fade
+⏳ รอ	นิ่ง	Slow Pulse
+🍲 แนะนำ	ชี้ไปที่เมนู	Point
+3.4 บทบาทของไบต์
+จุดที่ปรากฏ	บทบาท
+หน้าแรก (Hero)	ทักทาย, แนะนำเมนู, ช่วยตัดสินใจ
+Floating Button	Quick Chat (พิมพ์/พูดสั้นๆ)
+Bottom Nav Tab	Full AI Chat Experience
+ระหว่างสั่งอาหาร	ช่วยเลือกเมนู, ตรวจสอบรอบ
+ระหว่างรอส่ง	อัปเดตสถานะออเดอร์
+หลังส่งสำเร็จ	ขอรีวิว, ขอบคุณ
+Notification	แจ้งเตือนด้วยข้อความจากไบต์
+3.5 AI Capabilities
+text
+✅ ทักทายลูกค้า
+✅ แนะนำเมนู
+✅ ตอบคำถามเกี่ยวกับอาหาร
+✅ ช่วยเลือกเมนู
+✅ แนะนำ combo
+✅ แจ้ง promotion
+✅ ตรวจสอบ availability
+✅ ช่วยสร้าง order
+✅ ช่วยแก้ไข order
+✅ ช่วยตอบเรื่อง delivery
+✅ ตรวจสอบสถานะ order
+✅ ช่วยลูกค้าตัดสินใจ
+✅ รองรับภาษาไทยเป็นหลัก
+✅ รองรับเสียงพูด (Voice In + Voice Out)
+3.6 Voice Interaction Flow
+text
+👤 Customer: "วันนี้กินอะไรดี" (พูด)
+         ↓
+🎙️ Speech-to-Text: "วันนี้กินอะไรดี" → Text
+         ↓
+🤖 AI Service Staff: คิด...
+         ↓
+🗣️ Text-to-Speech: "ถ้าหิวแบบอิ่มกำลังดี
+                      วันนี้ลองลุยสวนกับ Cold Brew ไหมคะ"
+         ↓
+🎨 UI: Avatar ขยับปาก + คลื่นเสียง + ข้อความ
+3.7 AI Safety / Business Control
+text
+🚫 AI ห้าม:
+- เปลี่ยนราคาเอง
+- แจก coupon เองโดยไม่มี rule
+- ยืนยัน order โดยไม่ผ่าน validation
+- สั่ง delivery โดยไม่ผ่าน delivery service
+- override inventory
+- override payment
+- override order state
+
+✅ ทุก action:
+AI → Tool → Validation → Service → Database
+และบันทึก AI tool call เพื่อ audit
+3.8 AI Entry Points (Hybrid)
+text
+┌─────────────────────────────────────────────────────────────────────┐
+│                                                                     │
+│  1. FLOATING BUTTON (Quick Chat)                                  │
+│     ┌──────────────┐                                              │
+│     │ 🧡 ถามไบต์   │  ← ทุกหน้า, Overlay ไม่เปลี่ยนหน้า        │
+│     │    🎙️       │  ← พิมพ์/พูดสั้นๆ                          │
+│     └──────────────┘                                              │
+│                                                                     │
+│  2. BOTTOM NAV TAB (Full Chat)                                    │
+│     🏠  🍽️  📦  🧡  👤                                         │
+│                 ⬆                                                 │
+│              หน้าแชทเต็มจอ                                        │
+│              คุยยาว, สั่งอาหารผ่าน AI, ดูประวัติ                 │
+│                                                                     │
+└─────────────────────────────────────────────────────────────────────┘
+3.9 Model Selection
+Component	Selection	Reason
+LLM	GPT-4o-mini (primary)	เร็ว, ถูก, ไทยดี, tool calling
+GPT-4o (fallback)	เมื่อ mini ให้คำตอบไม่ดี
+STT	Google Speech-to-Text	ไทยดี, ถูก, real-time
+TTS	Google TTS (Studio)	ไทยเป็นธรรมชาติ
+Fallback	Whisper + ElevenLabs	สำรอง
+3.10 Cost Estimate
+text
+ต่อ 1 บทสนทนา (เฉลี่ย 5 ตอบโต้):
+- STT : ~$0.002
+- LLM : ~$0.005
+- TTS : ~$0.003
+- รวม: ~$0.01-0.015 (~0.35-0.50 บาท)
+
+ต่อเดือน (1,000 คน × 3 บทสนทนา):
+~1,500-2,500 บาท/เดือน
+3.11 AI Tool Calling
+typescript
+// Tools ที่ AI เรียกใช้ได้
+const tools = {
+  // MENU
+  get_menu_categories: { ... },
+  get_menu_items: { ... },
+  get_menu_item_detail: { ... },
+  get_recommendations: { ... },
+  
+  // CART
+  add_to_cart: { ... },
+  remove_from_cart: { ... },
+  update_cart_quantity: { ... },
+  view_cart: { ... },
+  
+  // DELIVERY
+  get_delivery_zones: { ... },
+  get_delivery_rounds: { ... },
+  get_delivery_fee: { ... },
+  get_order_status: { ... },
+  
+  // PROMOTION
+  get_active_promotions: { ... },
+  apply_promotion: { ... },
+  
+  // ORDER
+  create_order: { ... },
+}
+3.12 Token / Context Management
+text
+Context Hierarchy:
+
+00_MASTER_CONTEXT.md (ALWAYS LOADED)
+├── Brand identity
+├── Core business rules
+└── Current state
+
+01_BRAND.md (LOAD ON DEMAND)
+02_BUSINESS_RULES.md (LOAD ON DEMAND)
+03_PRODUCT_SPEC.md (LOAD ON DEMAND)
+04_ARCHITECTURE.md (LOAD ON DEMAND)
+05_DELIVERY_SYSTEM.md (LOAD ON DEMAND)
+06_AI_SERVICE_STAFF.md (LOAD WHEN AI TASK)
+07_CURRENT_STATE.md (ALWAYS LOADED)
+08_BACKLOG.md (LOAD ON DEMAND)
+09_CHANGELOG.md (LOAD ON DEMAND)
+
+Token Budget:
+- Menu recommendation : 4k
+- Order assistance   : 6k
+- Delivery query     : 6k
+- Inventory check    : 4k
+- Pre-order          : 8k
+- New feature design : 12k
+4. CUSTOMER JOURNEY
+4.1 Complete Journey Flow
+text
+Landing / Home
+    ↓
+🤖 AI Service Staff (ไบต์)
+    ↓
+Menu
+    ↓
+Product
+    ↓
+Cart
+    ↓
+Address
+    ↓
+Delivery Zone Check (≤5km / >5km)
+    ↓
+Delivery Round (Morning/Midday/Evening)
+    ↓
+Promotion
+    ↓
+Payment (PromptPay / COD)
+    ↓
+Order Confirmation
+    ↓
+📦 Order Tracking (Real-time)
+    ↓
+Delivery
+    ↓
+Review
+    ↓
+Reorder
+4.2 AI Touchpoints
+AI สามารถเข้ามาได้ทุกจุดใน Customer Journey แต่ไม่ควรบังคับให้ทุกคนใช้ AI
+
+จุด	AI สามารถช่วย
+หน้าแรก	ทักทาย, แนะนำเมนู
+เลือกเมนู	แนะนำตามความชอบ, จับคู่
+ตะกร้า	เช็คโปรโมชัน, แนะนำเพิ่ม
+ที่อยู่	ตรวจสอบโซน, แจ้งรอบ
+ชำระเงิน	แนะนำวิธีชำระ
+ติดตาม	อัปเดตสถานะ
+หลังส่ง	ขอรีวิว, ขอบคุณ
+5. DELIVERY SYSTEM
+5.1 Delivery Zone
+text
+DELIVERY ZONE (≤ 5 km from kitchen)
+                ┌─────────────────┐
+                │   KITCHEN       │
+                │  (lat, long)    │
+                └─────────────────┘
+                ╔═══════════════════════╗
+                ║     5 km RADIUS       ║
+                ║                       ║
+                ║  ┌─────────────────┐ ║
+                ║  │  SELF DELIVERY │ ║
+                ║  │  (inside)      │ ║
+                ║  └─────────────────┘ ║
+                ║                       ║
+                ║  ┌─────────────────┐ ║
+                ║  │  EXTERNAL       │ ║
+                ║  │  (>5 km)        │ ║
+                ║  └─────────────────┘ ║
+                ╚═══════════════════════╝
+5.2 Round Batching
+Round	Order Window	Cutoff	Delivery Window
+🌅 Morning	06:00–09:00	08:00	06:00–09:00
+☀️ Midday	11:00–14:00	10:30	11:00–14:00
+🌙 Evening	17:00–20:00	16:00	17:00–20:00
+5.3 Self vs External Decision
+text
+Order placed
+    ↓
+Calculate distance from kitchen
+    ↓
+> 5 km? → EXTERNAL PROVIDER
+    ↓
+≤ 5 km?
+    ↓
+Check number of orders in same round
+    ↓
+< 2 orders? → [Economy Check]
+    → ถ้าคุ้ม (margin > delivery cost) → SELF
+    → ถ้าไม่คุ้ม → EXTERNAL
+    ↓
+≥ 2 orders? → SELF
+    ↓
+Check driver availability
+    → Driver available → SELF
+    → Driver not available → EXTERNAL
+    ↓
+Final decision → SELF / EXTERNAL
+5.4 Route Optimization
+text
+DeliveryRound
+    ↓
+RoutePlanner Service
+    ↓
+┌──────────────────────────────────────────┐
+│ Routing Provider Abstraction             │
+├──────────────────────────────────────────┤
+│  Google Routes API (primary)             │
+│  Mapbox Directions API (fallback)        │
+│  OSRM / OpenRouteService (free)          │
+└──────────────────────────────────────────┘
+5.5 Route Optimization Logic
+text
+Input:
+  - Kitchen location (origin)
+  - List of orders (destinations)
+  - Each order: { id, lat, lng, ready_time, delivery_window }
+
+Step 1: Fetch driving distances + times (Google Distance Matrix)
+Step 2: Sort by readiness (ready_time ascending)
+Step 3: Apply time window constraints
+Step 4: Solve TSP with heuristics
+Step 5: Return optimized sequence
+
+Algorithm: 
+  - Nearest Neighbor (fast, < 10 orders)
+  - OR-Tools (Google) for optimal (> 10 orders)
+5.6 Weighted Optimization
+text
+Cost = α × distance + β × waiting_time + γ × window_penalty
+
+α = 0.4 (distance weight)
+β = 0.4 (waiting time weight)
+γ = 0.2 (window penalty weight)
+5.7 Kitchen Capacity Management
+typescript
+interface KitchenCapacity {
+  round_type: 'morning' | 'midday' | 'evening'
+  date: string
+  max_orders_per_round: number
+  prep_time_buffer_minutes: number
+  current_utilization: number
+  remaining_capacity: number
+  estimated_prep_time: number
+}
+5.8 External Rider Scheduling
+typescript
+interface ExternalRiderSchedule {
+  order_id: string
+  provider: 'grab' | 'lineman' | 'foodpanda'
+  kitchen_ready_time: string
+  rider_pickup_time: string
+  buffer_minutes: 15
+  status: 'scheduled' | 'dispatched' | 'picked_up' | 'delivered'
+}
+6. ORDER TRACKING (ติดตามสถานะส่ง)
+6.1 6 สถานะออเดอร์
+#	สถานะ	ไอคอน	คำอธิบาย	แจ้งเตือน
+1	ยืนยันออเดอร์	✅	รับออเดอร์แล้ว	Push + แชท
+2	กำลังเตรียม	👨‍🍳	ครัวกำลังทำ	Push + แชท
+3	อาหารพร้อม	🍲	พร้อมส่ง	Push + แชท
+4	กำลังส่ง	🛵	คนขับกำลังมา	Push + แชท + แผนที่
+5	ถึงแล้ว	📍	คนขับถึงหน้าร้าน	Push + แชท
+6	สำเร็จ	🧡	รับอาหารแล้ว	Push + แชท + ขอรีวิว
+6.2 Tracking Features
+Feature	รายละเอียด
+Real-time Map	เห็นตำแหน่งคนขับบนแผนที่
+ETA	เวลาคาดว่าถึง (อัปเดตทุก 30 วินาที)
+Stop Number	"กำลังส่งออเดอร์ที่ 3/5"
+Call Driver	กดโทรหาคนขับได้
+Open Map	เปิด Google Maps ดูเส้นทาง
+AI Update	ไบต์อัปเดตสถานะเป็นข้อความ
+Push Notification	แจ้งเตือนทุกสถานะเปลี่ยน
+Share Tracking	แชร์ลิงก์ให้คนอื่นดูได้
+6.3 Tracking UI
+text
+┌─────────────────────────────────────────────────────────────────────┐
+│  📦 ติดตามออเดอร์ #BMB-1234                                       │
+│                                                                     │
+│  🧡 "ออเดอร์คุณกำลังมาหาแล้วนะคะ 🛵"                             │
+│                                                                     │
+│  ✅━━━━━━━━━━━🔵━━━━━━━━━━━○━━━━━━━━━━━○                       │
+│  ยืนยัน      กำลังทำ      กำลังส่ง      สำเร็จ                   │
+│  10:30       10:45        11:15        11:45 (คาด)              │
+│                                                                     │
+│  ┌─────────────────────────────────────────────────────────────┐   │
+│  │  🗺️ [แผนที่แสดงตำแหน่งคนขับ + เส้นทาง]                    │   │
+│  │  📍 คนขับ: 3.2 กม. ⏱️ ETA: 11:28 🚗 หยุดที่ 2/5          │   │
+│  │  ┌────────────┐  ┌────────────┐                           │   │
+│  │  │ 📞 โทรคนขับ │  │ 📍 ดูแผนที่ │                           │   │
+│  │  └────────────┘  └────────────┘                           │   │
+│  └─────────────────────────────────────────────────────────────┘   │
+│                                                                     │
+├─────────────────────────────────────────────────────────────────────┤
+│  🏠  🍽️  📦  🧡  👤                                            │
+└─────────────────────────────────────────────────────────────────────┘
+7. DRIVER WORKFLOW
+7.1 Driver Journey
+text
+LOGIN
+  → ตรวจสอบรอบวันนี้
+  → เลือกรอบที่ได้รับมอบหมาย
+
+START ROUTE
+  → ดู route ทั้งหมด
+  → กด "เริ่มส่ง"
+
+NAVIGATE
+  → เปิด navigation (Google Maps / Waze)
+  → ดู stop ถัดไป
+
+ARRIVED
+  → กด "ถึงแล้ว"
+  → ระบบแจ้งลูกค้า (notification)
+
+DELIVERED
+  → กด "ส่งสำเร็จ"
+  → ระบบ update order status
+  → ขึ้น stop ถัดไป
+
+CUSTOMER UNAVAILABLE
+  → รอ 5 นาที
+  → โทรหาลูกค้า
+  → ถ้าไม่ติด → Mark as "unavailable"
+  → ส่งต่อรอบเย็น / กลับร้าน
+
+FAILED DELIVERY
+  → สาเหตุ (ที่อยู่ผิด, ไม่มีคนรับ)
+  → ระบบแจ้ง admin
+  → ต้องจัดการคืนเงิน / re-delivery
+7.2 Driver UI
+text
+┌─────────────────────────────────────────────────────────────────────┐
+│  🛵 รอบกลางวัน (11:00-14:00)                                      │
+│  5 ORDERS                                                          │
+│                                                                     │
+│  ┌─────────────────────────────────────────────────────────────┐   │
+│  │  01  ลูกค้า A                                               │   │
+│  │  📍 1.2 km  ⏱️ ETA 11:18                                 │   │
+│  │  [📞 โทร]  [🗺️ นำทาง]  [✅ ถึงแล้ว]                    │   │
+│  ├─────────────────────────────────────────────────────────────┤   │
+│  │  02  ลูกค้า B                                               │   │
+│  │  📍 0.8 km  ⏱️ ETA 11:27                                 │   │
+│  │  [📞 โทร]  [🗺️ นำทาง]  [⏳ กำลังไป]                    │   │
+│  ├─────────────────────────────────────────────────────────────┤   │
+│  │  03  ลูกค้า C                                               │   │
+│  │  📍 3.4 km  ⏱️ ETA 11:45                                 │   │
+│  └─────────────────────────────────────────────────────────────┘   │
+│                                                                     │
+│  📊 สรุป: 5.4 km  ⏱️ 45 นาที  🛵 5 จุด                          │
+│                                                                     │
+├─────────────────────────────────────────────────────────────────────┤
+│  🏠  🍽️  📦  🧡  👤                                            │
+└─────────────────────────────────────────────────────────────────────┘
+8. ADMIN DASHBOARD
+8.1 Admin Sections
+text
+Dashboard
+├── Orders
+│   ├── Today's Orders
+│   ├── Order Queue
+│   └── Order History
+├── Kitchen
+│   ├── Capacity Management
+│   ├── Prep Status
+│   └── Order Readiness
+├── Delivery
+│   ├── Today's Rounds
+│   ├── Route Management
+│   ├── Driver Assignment
+│   └── Delivery Status
+├── Routes
+│   ├── Route Optimization
+│   ├── ETA Calculation
+│   └── Route History
+├── Menu
+│   ├── Products
+│   ├── Categories
+│   └── Add-ons
+├── Inventory
+│   ├── Stock Levels
+│   ├── Low Stock Alerts
+│   ├── Purchase Orders
+│   └── Stock History
+├── Promotions
+│   ├── Active Promotions
+│   ├── Create Promotion
+│   └── Promotion Analytics
+├── Customers
+│   ├── Customer List
+│   ├── Order History
+│   └── Loyalty Points
+└── Reports
+    ├── Sales Report
+    ├── Delivery Report
+    └── Inventory Report
+8.2 Today's Rounds View
+text
+┌─────────────────────────────────────────────────────────────────────┐
+│  📅 วันนี้ 25 พฤษภาคม 2566                                        │
+│                                                                     │
+│  ┌─────────────────────────────────────────────────────────────┐   │
+│  │  🌅 รอบเช้า (6:00-9:00)                                    │   │
+│  │  ✅ 12/15 orders  |  🛵 2 drivers  |  📦 8 delivered      │   │
+│  │  [ดูรายละเอียด]                                            │   │
+│  ├─────────────────────────────────────────────────────────────┤   │
+│  │  ☀️ รอบเที่ยง (11:00-14:00)                                │   │
+│  │  🔵 8/20 orders  |  🛵 3 drivers  |  ⏳ 5 preparing       │   │
+│  │  [ดูรายละเอียด]                                            │   │
+│  ├─────────────────────────────────────────────────────────────┤   │
+│  │  🌙 รอบเย็น (17:00-20:00)                                  │   │
+│  │  ⚪ 0/15 orders  |  🛵 1 driver  |  ⏳ 0 preparing        │   │
+│  │  [ดูรายละเอียด]                                            │   │
+│  └─────────────────────────────────────────────────────────────┘   │
+│                                                                     │
+│  🔔 แจ้งเตือน:                                                    │
+│  ⚠️ ข้าวมันไก่เหลือ 3 ชุด (Low Stock)                            │
+│  ⚠️ รอบเที่ยง capacity 70% (14/20 orders)                       │
+│                                                                     │
+├─────────────────────────────────────────────────────────────────────┤
+│  🏠  🍽️  📦  🧡  👤                                            │
+└─────────────────────────────────────────────────────────────────────┘
+8.3 Kitchen View
+text
+┌─────────────────────────────────────────────────────────────────────┐
+│  👨‍🍳 KITCHEN DASHBOARD                                           │
+│                                                                     │
+│  🕐 10:30 AM                                                       │
+│                                                                     │
+│  ┌─────────────────────────────────────────────────────────────┐   │
+│  │  🌅 MORNING ROUND (6:00-9:00)                              │   │
+│  │  ✅ 12 orders completed                                    │   │
+│  │  ⏳ 3 orders preparing                                     │   │
+│  │  📦 2 orders ready for dispatch                            │   │
+│  └─────────────────────────────────────────────────────────────┘   │
+│                                                                     │
+│  ┌─────────────────────────────────────────────────────────────┐   │
+│  │  ☀️ MIDDAY ROUND (11:00-14:00)                             │   │
+│  │  ⏳ 8 orders prep started                                  │   │
+│  │  📦 0 orders ready (จะพร้อม 11:00)                        │   │
+│  │  🔴 3 orders ยังไม่ได้ทำ (ขาดวัตถุดิบ: ไข่ไก่)            │   │
+│  └─────────────────────────────────────────────────────────────┘   │
+│                                                                     │
+│  🔔 วัตถุดิบใกล้หมด:                                              │
+│  • ไข่ไก่ (เหลือ 12 ฟอง)                                         │
+│  • แป้ง (เหลือ 2 กก.)                                            │
+│  • น้ำมัน (เหลือ 3 ลิตร)                                         │
+│                                                                     │
+│  [สั่งวัตถุดิบ] [ดูสตอกทั้งหมด]                                    │
+│                                                                     │
+├─────────────────────────────────────────────────────────────────────┤
+│  🏠  🍽️  📦  🧡  👤                                            │
+└─────────────────────────────────────────────────────────────────────┘
+9. PRE-ORDER SYSTEM (สั่งล่วงหน้า)
+9.1 Features
+text
+✅ สั่งล่วงหน้าได้สูงสุด 7 วัน
+✅ เลือกรอบ (เช้า/เที่ยง/เย็น) + วันที่ต้องการ
+✅ ระบบตรวจสอบกำลังการผลิตของครัว (Kitchen Capacity)
+✅ ระบบตรวจสอบวัตถุดิบเพียงพอไหม (Inventory Check)
+✅ แจ้งเตือนเมื่อรอบนั้นเต็ม (Capacity Full)
+✅ สร้าง Pre-order Queue ให้ครัวเห็นล่วงหน้า
+✅ แจ้งเตือนครัวล่วงหน้าเพื่อเตรียมวัตถุดิบ
+✅ ลูกค้าสามารถดู/แก้ไข/ยกเลิก Pre-order ได้
+9.2 Pre-order Flow
+text
+1. ลูกค้าเลือกเมนู
+2. เลือกวันที่ + รอบ
+3. ระบบตรวจสอบ Capacity
+4. ระบบตรวจสอบ Inventory
+5. ถ้าผ่าน → จอง Pre-order
+6. ครัวเห็น Pre-order ใน Queue
+7. ครัวเตรียมวัตถุดิบล่วงหน้า
+8. วันที่ถึง → Pre-order เปลี่ยนเป็น Order
+9. ดำเนินการตามรอบปกติ
+9.3 UI Components
+Pre-order Calendar (เลือกวันที่)
+
+Round Selector (เช้า/เที่ยง/เย็น)
+
+Capacity Indicator (แสดงจำนวนที่เหลือ)
+
+Pre-order List (หน้า Orders)
+
+Kitchen Pre-order Queue (Admin)
+
+Pre-order Confirmation with ETA
+
+9.4 Edge Functions
+check-preorder-availability — ตรวจสอบ Capacity + Inventory
+
+create-preorder — สร้าง Pre-order
+
+get-preorder-queue — ดึง Queue สำหรับครัว
+
+convert-preorder-to-order — เปลี่ยนเป็น Order อัตโนมัติ
+
+10. TECHNICAL ARCHITECTURE
+10.1 High-Level Architecture
+text
+┌─────────────────────────────────────────────────────────────────────┐
+│                        PWA (React)                                 │
+│  - Customer App                                                    │
+│  - Driver App                                                      │
+│  - Admin Dashboard                                                 │
+└─────────────────────────────────────────────────────────────────────┘
+                            │
+                            ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│                    API Layer (Next.js / Node)                      │
+│  - REST API                                                        │
+│  - WebSocket (Realtime)                                           │
+└─────────────────────────────────────────────────────────────────────┘
+                            │
+                            ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│                     Service Layer                                  │
+│  ┌─────────────┬─────────────┬─────────────┐                     │
+│  │ Order       │ Delivery    │ Payment     │                     │
+│  │ Service     │ Service     │ Service     │                     │
+│  ├─────────────┼─────────────┼─────────────┤                     │
+│  │ Menu        │ Route       │ Notification│                     │
+│  │ Service     │ Service     │ Service     │                     │
+│  ├─────────────┼─────────────┼─────────────┤                     │
+│  │ Promotion   │ Inventory   │ AI          │                     │
+│  │ Service     │ Service     │ Service     │                     │
+│  └─────────────┴─────────────┴─────────────┘                     │
+└─────────────────────────────────────────────────────────────────────┘
+                            │
+                            ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│                       Supabase                                     │
+│  - PostgreSQL                                                      │
+│  - Auth                                                            │
+│  - Realtime                                                        │
+│  - Storage                                                         │
+│  - Edge Functions                                                  │
+└─────────────────────────────────────────────────────────────────────┘
+10.2 Service Layer Details
+typescript
+// OrderService
+- createOrder()
+- getOrder()
+- updateOrderStatus()
+- getOrdersByRound()
+- getOrderHistory()
+- cancelOrder()
+- getPreOrders()
+
+// DeliveryService
+- checkZone()
+- getAvailableRounds()
+- assignRound()
+- assignDriver()
+- updateDeliveryStatus()
+- getSelfDeliveryEligibility()
+- getExternalProviderQuote()
+
+// RouteService
+- calculateRoute()
+- getOptimizedStops()
+- getETA()
+- getDistanceMatrix()
+- getRouteWithTraffic()
+
+// PaymentService
+- createPromptPayQR()
+- verifyPayment()
+- confirmCOD()
+- refundPayment()
+
+// InventoryService
+- checkStock()
+- updateStock()
+- getLowStockAlerts()
+- createPurchaseOrder()
+- getInventoryHistory()
+
+// AIService
+- processMessage()
+- processVoice()
+- generateResponse()
+- trackConversation()
+- handleHandoff()
+10.3 Tech Stack
+Layer	Technology	Version
+Frontend	React	19
+TypeScript	5.x
+Vite	5.x
+Tailwind CSS	4.x
+Framer Motion	11.x
+React Router DOM	7.x
+Zustand	5.x
+Vite PWA Plugin	0.20.x
+Backend	Supabase	Latest
+Edge Functions	Deno
+Realtime	Latest
+AI	OpenAI API	GPT-4o-mini
+Google Speech-to-Text	v2
+Google TTS	Studio
+Routing	Google Routes API	v2
+Mapbox Directions	v5
+Payment	PromptPay API	-
+Analytics	Custom	-
+10.4 AI Architecture
+text
+Voice Input
+    ↓
+Speech-to-Text (Google STT)
+    ↓
+AI Service Staff (GPT-4o-mini)
+    ↓
+Tool / Function Calling
+    ↓
+Commerce Services
+    ↓
+Supabase
+    ↓
+Response
+    ↓
+Text-to-Speech (Google TTS)
+    ↓
+Customer
+11. DATABASE SCHEMA
+11.1 Core Tables
+sql
+-- customers
+id uuid primary key
+email text unique
+phone text
+name text
+addresses jsonb[]
+created_at timestamp
+
+-- menu_categories
+id uuid primary key
+name text
+slug text unique
+display_order integer
+is_active boolean
+
+-- menu_items
+id uuid primary key
+category_id uuid references menu_categories
+name text
+description text
+price integer -- in satang
+image_url text
+is_available boolean
+prep_time_minutes integer
+created_at timestamp
+
+-- orders
+id uuid primary key
+customer_id uuid references customers
+order_number text unique
+status text -- draft | confirmed | preparing | ready | delivering | delivered | cancelled
+delivery_round text -- morning | midday | evening
+delivery_date date
+delivery_address jsonb
+total_amount integer
+payment_method text -- promptpay | cod
+payment_status text -- pending | paid | failed
+delivery_provider text -- self | external
+delivery_fee integer
+driver_id uuid references drivers
+notes text
+created_at timestamp
+updated_at timestamp
+
+-- order_items
+id uuid primary key
+order_id uuid references orders
+menu_item_id uuid references menu_items
+quantity integer
+unit_price integer
+total_price integer
+notes text
+
+-- delivery_rounds
+id uuid primary key
+round_type text -- morning | midday | evening
+date date
+start_time time
+end_time time
+cutoff_time time
+status text -- open | closed | in_progress | completed
+driver_id uuid references drivers
+total_orders integer
+total_distance_km numeric
+total_duration_minutes numeric
+
+-- delivery_assignments
+id uuid primary key
+order_id uuid references orders
+delivery_round_id uuid references delivery_rounds
+stop_number integer
+estimated_arrival_time timestamp
+actual_arrival_time timestamp
+delivery_status text -- pending | assigned | picked_up | en_route | arrived | delivered | failed
+
+-- delivery_route_stops
+id uuid primary key
+delivery_round_id uuid references delivery_rounds
+order_id uuid references orders
+stop_number integer
+address text
+lat numeric
+lng numeric
+distance_from_previous_km numeric
+estimated_travel_time_minutes integer
+estimated_arrival time
+actual_arrival time
+
+-- delivery_events (audit)
+id uuid primary key
+order_id uuid references orders
+event_type text -- assigned | picked_up | en_route | arrived | delivered | failed
+event_data jsonb
+created_at timestamp
+
+-- drivers
+id uuid primary key
+name text
+phone text
+is_active boolean
+current_lat numeric
+current_lng numeric
+assigned_round_id uuid
+
+-- inventory_ingredients
+id uuid primary key
+name text
+category text -- protein | vegetable | carb | sauce | seasoning | beverage
+unit text -- kg | g | l | ml | piece
+current_stock numeric
+min_stock numeric
+max_stock numeric
+reorder_quantity numeric
+unit_cost numeric
+supplier_id uuid
+created_at timestamp
+
+-- inventory_transactions
+id uuid primary key
+ingredient_id uuid references inventory_ingredients
+transaction_type text -- in | out | adjustment | waste
+quantity numeric
+note text
+order_id uuid references orders
+created_at timestamp
+
+-- reorder_alerts
+id uuid primary key
+ingredient_id uuid references inventory_ingredients
+alert_type text -- low | critical | reorder
+status text -- pending | resolved
+created_at timestamp
+
+-- ai_conversations
+id uuid primary key
+customer_id uuid references customers
+started_at timestamp
+ended_at timestamp
+status text -- active | completed | abandoned
+rounds_used integer
+total_tokens integer
+
+-- ai_messages
+id uuid primary key
+conversation_id uuid references ai_conversations
+role text -- user | assistant | system
+content text
+tool_calls jsonb
+tool_call_results jsonb
+created_at timestamp
+
+-- ai_customer_context (cache)
+customer_id uuid references customers
+last_conversation_id uuid
+preferred_address_id uuid
+favorite_categories text[]
+recent_orders jsonb
+last_updated timestamp
+11.2 Pre-order Tables
+sql
+-- pre_orders
+CREATE TABLE pre_orders (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  customer_id uuid REFERENCES customers(id) NOT NULL,
+  round_type text NOT NULL CHECK (round_type IN ('morning', 'midday', 'evening')),
+  delivery_date date NOT NULL,
+  items jsonb NOT NULL,
+  status text DEFAULT 'reserved' CHECK (status IN ('reserved', 'confirmed', 'preparing', 'ready', 'delivered', 'cancelled')),
+  kitchen_capacity_used integer DEFAULT 0,
+  total_amount integer DEFAULT 0,
+  notes text,
+  reserved_at timestamp DEFAULT now(),
+  confirmed_at timestamp,
+  converted_at timestamp,
+  created_at timestamp DEFAULT now(),
+  updated_at timestamp DEFAULT now()
+);
+
+-- kitchen_capacity
+CREATE TABLE kitchen_capacity (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  round_type text NOT NULL CHECK (round_type IN ('morning', 'midday', 'evening')),
+  date date NOT NULL,
+  max_orders integer DEFAULT 20,
+  current_orders integer DEFAULT 0,
+  pre_orders_count integer DEFAULT 0,
+  prep_time_buffer_minutes integer DEFAULT 15,
+  is_holiday boolean DEFAULT false,
+  notes text,
+  created_at timestamp DEFAULT now(),
+  updated_at timestamp DEFAULT now(),
+  UNIQUE(round_type, date)
+);
+
+-- pre_order_items
+CREATE TABLE pre_order_items (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  pre_order_id uuid REFERENCES pre_orders(id) ON DELETE CASCADE,
+  menu_item_id uuid REFERENCES menu_items(id),
+  quantity integer DEFAULT 1,
+  unit_price integer DEFAULT 0,
+  total_price integer DEFAULT 0,
+  notes text,
+  created_at timestamp DEFAULT now()
+);
+11.3 Indexes
+sql
+-- orders
+CREATE INDEX idx_orders_customer_id ON orders(customer_id);
+CREATE INDEX idx_orders_delivery_round ON orders(delivery_round, delivery_date);
+CREATE INDEX idx_orders_status ON orders(status);
+CREATE INDEX idx_orders_driver_id ON orders(driver_id);
+
+-- delivery_rounds
+CREATE INDEX idx_delivery_rounds_date ON delivery_rounds(date);
+CREATE INDEX idx_delivery_rounds_status ON delivery_rounds(status);
+
+-- menu_items
+CREATE INDEX idx_menu_items_category_id ON menu_items(category_id);
+CREATE INDEX idx_menu_items_is_available ON menu_items(is_available);
+
+-- inventory
+CREATE INDEX idx_inventory_ingredients_name ON inventory_ingredients(name);
+CREATE INDEX idx_inventory_transactions_ingredient_id ON inventory_transactions(ingredient_id);
+
+-- ai_conversations
+CREATE INDEX idx_ai_conversations_customer_id ON ai_conversations(customer_id);
+CREATE INDEX idx_ai_conversations_status ON ai_conversations(status);
+
+-- pre_orders
+CREATE INDEX idx_pre_orders_customer_id ON pre_orders(customer_id);
+CREATE INDEX idx_pre_orders_delivery_date ON pre_orders(delivery_date, round_type);
+CREATE INDEX idx_pre_orders_status ON pre_orders(status);
+12. DESIGN SYSTEM
+12.1 UI Components
+Component	Usage	Style
+Button Primary	CTA หลัก	ส้ม (#F97316), ขอบมน, Hover เข้มขึ้น
+Button Secondary	CTA รอง	เหลือง (#FBBF24), ขอบมน
+Button Outline	ตัวเลือก	ขอบส้ม, พื้นใส
+Card	แสดงข้อมูล	ขาว, เงา, ขอบมน
+Badge	แท็กสถานะ	สีตามประเภท
+Input	กรอกข้อมูล	ขอบครีม, ขอบมน
+Bottom Nav	เมนูหลัก	5 tabs, ไอคอน + label
+Floating Button	AI Entry	กลม, ส้ม, เงา
+Hero Section	หน้าแรก	AI Avatar + ข้อความ
+Product Card	แสดงเมนู	รูป, ชื่อ, ราคา, badge
+Order Card	แสดงออเดอร์	สถานะ, จำนวน, ราคา
+Map	Tracking	Google Maps embed
+Modal	Popup	ขาว, เงา, ปุ่มปิด
+Toast	Notification	มุมล่าง, สไลด์ขึ้น
+12.2 Layout
+text
+Mobile-first design
+Width: 100% (max 480px)
+Padding: 16px
+Gap: 12px
+Safe area: ไม่มี notch overlap
+12.3 Animation Guidelines
+Animation	Usage	Duration
+Fade In	หน้าโหลด, เปลี่ยนข้อความ	300ms
+Slide Up	Modal, Sheet	400ms
+Stagger	Menu Cards	100ms/อัน
+Pulse	CTA, Stock warning	1s
+Float	Floating Button	2s loop
+Wave	Voice	Real-time
+Countdown	Round timer	Real-time
+Bounce	Button click	200ms
+Confetti	Promotion	2s
+Morph	Category switch	300ms
+12.4 Bottom Navigation (5 Tabs)
+Tab	ไอคอน	Label	หน้าที่
+1	🏠	หน้าแรก	Home + AI Hero
+2	🍽️	เมนู	Menu + Categories
+3	📦	ออเดอร์	Order Tracking
+4	🧡	ไบต์	Full AI Chat
+5	👤	โปรไฟล์	Profile + Settings
+13. IMPLEMENTATION ROADMAP
+13.1 Priority Levels
+text
+P0 (ต้องมีก่อน Launch)
+├── PWA Setup
+├── Menu + Cart + Checkout
+├── Payment (PromptPay + COD)
+├── Delivery Zone + Round
+├── Self Delivery (≤5km)
+├── Order Tracking (6 statuses)
+├── Driver Workflow
+└── Admin Dashboard
+
+P0.5 (ทันทีหลัง Launch)
+├── Route Calculation (Google Routes)
+├── Delivery Route Dashboard
+├── Driver Route View
+└── ETA Calculation
+
+P1 (2-3 เดือนหลัง Launch)
+├── AI Service Staff (text)
+├── Voice Input/Output
+├── AI Menu Recommendation
+├── AI Order Assistance
+├── Pre-order System
+├── Kitchen Capacity Management
+├── Inventory System
+└── Loyalty + Promotion
+
+P2 (3-6 เดือนหลัง Launch)
+├── External Rider Integration
+├── Advanced Route Optimization
+├── Customer Personalization
+└── Inventory Integration
+
+P3 (6+ เดือน)
+├── AI Promotion Intelligence
+├── Demand Forecasting
+├── Advanced Inventory Prediction
+└── Advanced Driver Optimization
+13.2 Phase 0: Setup (Week 1)
+Task	Owner	Duration
+Supabase project setup	Backend	1 day
+Authentication (email + phone)	Backend	1 day
+PWA boilerplate (React + Vite)	Frontend	1 day
+Design system + UI theme	Frontend	2 days
+Deploy to Vercel/Netlify	DevOps	1 day
+13.3 Phase 1: Core Commerce (Week 2-3)
+Task	Owner	Duration
+Menu API + categories	Backend	2 days
+Menu UI (list, detail, categories)	Frontend	3 days
+Cart API (add/update/remove)	Backend	2 days
+Cart UI + state management	Frontend	3 days
+Checkout API (create order)	Backend	2 days
+Checkout UI (address, round, payment)	Frontend	3 days
+PromptPay QR generation	Backend	1 day
+COD confirmation	Backend	1 day
+Order confirmation page	Frontend	2 days
+13.4 Phase 2: Delivery Core (Week 4)
+Task	Owner	Duration
+Delivery zone check API	Backend	1 day
+Round assignment logic	Backend	2 days
+Admin: Orders list + status update	Frontend	2 days
+Admin: Round management	Frontend	2 days
+Driver view: Today's rounds	Frontend	2 days
+Driver view: Order list per round	Frontend	2 days
+Driver actions (start, arrived, delivered)	Backend + Frontend	2 days
+Order status tracking (customer)	Frontend	2 days
+13.5 Phase 3: Route + ETA (P0.5) (Week 5-6)
+Task	Owner	Duration
+Google Routes API integration	Backend	2 days
+Distance matrix calculation	Backend	1 day
+Route optimization (nearest neighbor)	Backend	2 days
+Admin: Route dashboard	Frontend	2 days
+Driver: Route view + navigation	Frontend	2 days
+ETA calculation + display	Backend + Frontend	2 days
+Delivery status webhook	Backend	1 day
+13.6 Phase 4: AI (P1) (Week 7-8+)
+Task	Owner	Duration
+AI Service Staff architecture	Backend	2 days
+GPT-4o-mini + tool calling setup	Backend	2 days
+STT (Google Speech) integration	Backend	2 days
+TTS (Google TTS) integration	Backend	1 day
+AI chat UI + voice button	Frontend	3 days
+Tool calling implementation	Backend	3 days
+Conversation memory + context	Backend	2 days
+Handoff to human	Backend + Frontend	2 days
+Testing + refinement	QA	3 days
+13.7 Team & Roles
+Role	Responsibility	Headcount
+Frontend	PWA (React), UI/UX	1-2
+Backend	API, Services, Supabase	1-2
+DevOps	Deployment, Monitoring	0.5
+UI/UX	Design, Prototyping	0.5
+QA	Testing	0.5
+13.8 Estimated Timeline
+text
+Week 1    : Setup + Design System
+Week 2-3  : Commerce Core (Menu, Cart, Checkout, Payment)
+Week 4    : Delivery Core (Zone, Round, Driver Workflow, Tracking)
+Week 5-6  : Route + ETA (P0.5)
+Week 7-8+ : AI Integration (P1)
+14. SUCCESS METRICS
+14.1 P0 Metrics
+Metric	Target
+Order completion rate	> 85%
+Cart abandonment rate	< 40%
+Delivery within round window	> 95%
+Driver route efficiency	< 15 min deviation
+Customer satisfaction (NPS)	> 50
+System uptime	> 99.5%
+Page load time	< 2 sec
+14.2 Business Metrics
+Metric	Target
+Conversion rate	> 10%
+Average Order Value	> 200 บาท
+Repeat purchase rate (30 days)	> 40%
+Delivery cost per order	< 50 บาท
+Operating margin	> 20%
+Customer acquisition cost	< 50 บาท
+Customer lifetime value	> 1,500 บาท
+15. RISKS & MITIGATION
+Risk	Impact	Mitigation
+Google Routes API ต้นทุนสูง	Cost	ใช้ Mapbox fallback + monitor usage
+Driver ไม่มี phone	Delivery	Driver app ใช้ web-based PWA ได้
+AI hallucination	Trust	Tool calling + validation + audit
+STT ผิดพลาด	UX	Fallback to text + clear feedback
+ระบบล่มช่วง peak	Sales	Auto-scaling + Edge Functions
+รอบ delivery ใกล้เคียงกัน	Conflict	Smart round assignment + buffer
+External rider integration	Scope	ตัด P1 (ไม่ทำ P0)
+Inventory ผิดพลาด	Operations	Audit trail + manual override
+16. APPENDIX
+16.1 Navigation Map
+Customer App:
+
+text
+🏠 Home
+  ├── AI Hero Section
+  ├── Categories
+  └── Menu Grid
+
+🍽️ Menu
+  ├── Categories
+  ├── Menu Grid
+  └── Product Detail
+
+📦 Orders
+  ├── Order List
+  ├── Order Detail
+  └── Order Tracking
+
+🧡 AI Chat
+  ├── Conversation
+  ├── Quick Actions
+  └── History
+
+👤 Profile
+  ├── Personal Info
+  ├── Addresses
+  ├── Loyalty Points
+  └── Coupons
+Driver App:
+
+text
+🛵 Today's Rounds
+  ├── Round List
+  ├── Route Overview
+  └── Stop Actions
+Admin Dashboard:
+
+text
+📊 Dashboard
+  ├── Orders
+  ├── Kitchen
+  ├── Delivery
+  ├── Routes
+  ├── Menu
+  ├── Inventory
+  ├── Promotions
+  ├── Customers
+  └── Reports
+16.2 Quick Reference: Color Codes
+text
+🧡 Primary    : #F97316  (Orange)
+💛 Secondary  : #FBBF24  (Yellow)
+🤍 Background : #FFF7ED  (Cream)
+🤎 Accent     : #92400E  (Brown)
+⬛ Text       : #1C1917  (Dark)
+⬜ Surface    : #FFFFFF  (White)
+16.3 Quick Reference: AI Personality
+text
+Name          : ไบต์ (Bite)
+Role          : บริกร AI + มาสคอต
+Style         : อบอุ่น, ขี้เล่น, เป็นกันเอง
+Voice         : หญิงไทย, ธรรมชาติ
+Catchphrase   : "จ้า", "เลยค่ะ", "นะคะ"
+16.4 Quick Reference: Rounds
+text
+🌅 Morning   : 06:00-09:00 (cutoff 08:00)
+☀️ Midday   : 11:00-14:00 (cutoff 10:30)
+🌙 Evening  : 17:00-20:00 (cutoff 16:00)
+16.5 Quick Reference: Delivery
+text
+≤ 5 km : Self Delivery (รถไฟฟ้า)
+> 5 km : External Provider (Grab/LINE MAN)
+16.6 Quick Reference: Order Status
+text
+1. ยืนยันออเดอร์   ✅
+2. กำลังเตรียม     👨‍🍳
+3. อาหารพร้อม     🍲
+4. กำลังส่ง       🛵
+5. ถึงแล้ว         📍
+6. สำเร็จ         🧡
+📝 สรุปภาพรวม
+text
+┌─────────────────────────────────────────────────────────────────────┐
+│                                                                     │
+│   🧡 Bite Me Baby                                                  │
+│   "มากกว่าคำว่าอร่อย"                                              │
+│                                                                     │
+│   ===============================================================  │
+│                                                                     │
+│   ✅ PWA บนมือถือ (ติดตั้งได้)                                    │
+│   ✅ AI บริกร "ไบต์" (Voice + Text)                              │
+│   ✅ มาสคอต "ไบต์" (Avatar ทุกหน้า)                              │
+│   ✅ Hybrid AI Entry (Floating + Bottom Tab)                      │
+│   ✅ ติดตามสถานะส่ง Real-time (6 สถานะ + แผนที่)               │
+│   ✅ จัดส่งเอง 5 กม. + เรียกไรเดอร์นอก                           │
+│   ✅ 3 รอบ: เช้า/เที่ยง/เย็น                                      │
+│   ✅ Route Optimization (Google Routes)                          │
+│   ✅ Pre-order System + Kitchen Capacity                         │
+│   ✅ Inventory Management                                        │
+│   ✅ Admin Dashboard + Driver App                                │
+│                                                                     │
+│   ===============================================================  │
+│                                                                     │
+│   🎨 สี: ส้ม (#F97316) + เหลือง (#FBBF24) + ครีม (#FFF7ED)      │
+│        + น้ำตาล (#92400E)                                        │
+│                                                                     │
+│   🗣️ ภาษา: ไทย (หลัก)                                            │
+│                                                                     │
+│   🔧 Tech: React + Vite + Supabase + OpenAI + Google APIs        │
+│                                                                     │
+│   🕐 Timeline: 6-8 weeks (P0)                                    │
+│                                                                     │
+│   👥 Team: 1-2 FE + 1-2 BE + 0.5 DevOps + 0.5 QA               │
+│                                                                     │
+└─────────────────────────────────────────────────────────────────────┘
+✅ Final Checklist
+#	รายการ	สถานะ
+1	Executive Summary	✅
+2	Brand Identity (Colors, Fonts, Style)	✅
+3	AI Service Staff "ไบต์" (Personality, Avatar, Voice)	✅
+4	Customer Journey (Complete Flow)	✅
+5	Delivery System (Zone, Rounds, Self vs External)	✅
+6	Order Tracking (6 Statuses, Map, ETA)	✅
+7	Driver Workflow (Full Journey)	✅
+8	Admin Dashboard (All Sections)	✅
+9	Pre-order System	✅
+10	Technical Architecture (Full Stack)	✅
+11	Database Schema (All Tables)	✅
+12	Design System (Components, Layout, Animation)	✅
+13	Implementation Roadmap (Phases, Timeline)	✅
+14	Success Metrics	✅
+15	Risks & Mitigation	✅
+16	Appendix (Navigation, Quick Reference)	✅
+เอกสารนี้เป็นเอกสารฉบับสมบูรณ์สำหรับการพัฒนา PWA "Bite Me Baby"
+🧡 Bite Me Baby — มากกว่าคำว่าอร่อย
+
+
+================================================================================
+17. ADDENDUM v1.1 (2026-09-14): 3D FLOATING VISUAL LAYOUT + IMAGE PRODUCTION PIPELINE
+================================================================================
+
+> Section นี้เพิ่มใหม่ตามแผนพัฒนาล่าสุด (Documentation Gate สเตปที่ 1)
+> เอกสารหลักฉบับเต็ม: docs/COMPONENT_SPEC_UI.md (v1.1) และ README.md Section #101
+> หมายเหตุ: ศัพท์ "Crown Kitchen" ในเอกสารฉบับนี้เลิกใช้แล้วตาม README #92 — ใช้ "Bite Me Baby Cloud Kitchen" แทน
+
+17.1 เป้าหมาย
+text
+ปรับปรุงการจัดการรูปภาพและหน้าตา UI บนหน้า PWA (Home/Menu)
+ให้เป็นสไตล์ "3D Floating Visual Layout" ที่มีภาพอาหารและไอคอนลอยนูน
+มีแอนิเมชันตอบสนอง และใช้ระบบอัตโนมัติแปลงภาพถ่ายจากร้านจริง
+ให้เป็นภาพโปรดักชันสตูดิโอเดียวกันโดยใช้ OpenRouter API
+
+17.2 Image Production Pipeline (หลังบ้าน)
+text
+ภาพถ่ายร้านจริง (อาหารในกล่องบรรจุภัณฑ์)
+    ↓
+OpenRouter Image Endpoint (Image-to-Image — ใช้ภาพเดิมเป็น Input Reference)
+    ↓
+ลบกล่อง/ฝาพลาสติก/ช้อน + รักษาเนื้ออาหารจริง 100% (Character Consistency:
+กุ้งสด / ไข่กุ้ง / หมูสามชั้นลวก ห้ามเปลี่ยนหรือเติมวัตถุดิบใหม่)
+    ↓
+เรนเดอร์ลงกล่องอาหารคราฟท์บอกซ์ + กล่องอาหาร PP สีดำ (ตามชุดตัวอย่างที่อนุมัติ)
+    ↓
+มุมกล้องเฉียง 45 องศา (Isometric) + โทนแสง Vivid Warm Studio Soft-box
+    ↓
+พื้นหลังสีขาวล้วน → แปลงเป็นไฟล์โปร่งใส .WebP
+    ↓
+PWA Fast App Shell (Home/Menu)
+
+17.3 Model Configuration (OpenRouter — config ผ่าน env ห้าม hardcode)
+text
+VITE_OPENROUTER_API_KEY              : key เดิมของโปรเจกต์ (ย้ายจาก aiService.ts เข้า .env)
+VITE_OPENROUTER_IMAGE_MODEL          : google/nano-banana-2-lite (โมเดลหลัก ประหยัด/คุ้มค่า)
+VITE_OPENROUTER_IMAGE_MODEL_FALLBACK : bytedance/seedream-4.5 (โมเดลสำรอง)
+
+17.4 3D Floating UI Specification
+text
+- Layering  : ภาพอาหารเหลื่อมหลุดจากขอบบนการ์ด (Negative Margin -mt-6 / -mt-8)
+- Depth     : CSS filter drop-shadow ซ้อนเลเยอร์ (Soft UI / Glassmorphism)
+              ⛔ ห้ามใช้ box-shadow บนรูปอาหารเด็ดขาด
+- Surface   : การ์ดกระจกฝ้า (translucent + backdrop-blur)
+- Token     : ใช้สีแบรนด์เดิม #F97316 / #FBBF24 / #FFF7ED / #92400E
+
+17.5 Micro-interactions Animation
+text
+Hover/Touch ภาพอาหาร : group-hover:-translate-y-4  group-hover:scale-105
+กด/แตะ การ์ด         : group-active:scale-[0.99] + เงาฟุ้งกระจาย
+Timing               : duration-300 / ease-out + will-change-transform
+Accessibility        : เคารพ prefers-reduced-motion, touch target >= 44px
+
+17.6 Business Rules Enforcement
+text
+- ปุ่ม "Same-day Order" (สั่งเลยวันนี้) แสดงผลเมื่อ products.is_available = true
+  ผ่านระบบ Live Availability Engine เท่านั้น
+  (AVAILABLE / LIMITED / SOLD_OUT / TEMPORARILY_UNAVAILABLE / STORE_CLOSED /
+   DELIVERY_UNAVAILABLE) — ถ้าขายไม่ได้ปุ่มต้องไม่ถูก render
+- ปุ่ม "Pre-order" (จองล่วงหน้า) เปิดให้เลือกส่งตามรอบการผลิต (Delivery Round:
+  morning / midday / evening / future batch)
+- ทั้งสองปุ่มต้องแยก Action และเก็บ Log แยกกันเด็ดขาด (append-only,
+  orderMode = 'same-day' / 'pre-order', หนึ่งการแตะห้ามเกิดสอง log)
+- Props ของ FoodMenuCard ต้อง Type-safe — ห้ามใช้ any
+
+17.7 ความสอดคล้องกับ Design System (Section 12)
+text
+- การ์ดใหม่ใช้สี/ฟอนต์/มุมโค้งเดิมของแบรนด์ (Nunito, Quicksand, rounded-2xl/3xl)
+- เพิ่มเฉพาะเทคนิค 3D Floating (negative margin + drop-shadow ซ้อนเลเยอร์)
+- ภาพอาหารใช้ไฟล์ .webp โปร่งใสจาก Image Pipeline แทนภาพสี่เหลี่ยมปกติ
+
+17.8 เอกสารอ้างอิงฉบับล่าสุด
+- docs/COMPONENT_SPEC_UI.md (v1.1 — เอกสารหลักของงานนี้)
+- README.md (#13 Live Availability Engine, #78 Documentation Gate,
+  #89 Source of Truth Hierarchy, #101 Image Pipeline & 3D Floating UI)
+- docs/BiteMeBaby_IMPLEMENTATION_ROADMAP.md (Phase 2.5)
+
+🧡 Bite Me Baby — มากกว่าคำว่าอร่อย
+

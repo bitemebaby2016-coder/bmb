@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bodyGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#F97316"/>
+      <stop offset="100%" style="stop-color:#FBBF24"/>
+    </linearGradient>
+    <linearGradient id="hatGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#FFFFFF"/>
+      <stop offset="100%" style="stop-color:#FEF3C7"/>
+    </linearGradient>
+    <radialGradient id="cheekPink" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" style="stop-color:#FDA4AF;stop-opacity:0.6"/>
+      <stop offset="100%" style="stop-color:#FDA4AF;stop-opacity:0"/>
+    </radialGradient>
+    <filter id="shadow" x="-10%" y="-10%" width="130%" height="130%">
+      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#92400E" flood-opacity="0.15"/>
+    </filter>
+    <filter id="softShadow" x="-10%" y="-10%" width="130%" height="130%">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#92400E" flood-opacity="0.1"/>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <circle cx="256" cy="256" r="248" fill="#FFF7ED" opacity="0.4"/>
+
+  <!-- Left Arm -->
+  <ellipse cx="148" cy="310" rx="42" ry="22" transform="rotate(-25 148 310)" fill="url(#bodyGrad)" stroke="#EA580C" stroke-width="1.5"/>
+  <circle cx="120" cy="322" r="18" fill="url(#bodyGrad)" stroke="#EA580C" stroke-width="1.5"/>
+  <!-- Right Arm -->
+  <ellipse cx="364" cy="310" rx="42" ry="22" transform="rotate(25 364 310)" fill="url(#bodyGrad)" stroke="#EA580C" stroke-width="1.5"/>
+  <circle cx="392" cy="322" r="18" fill="url(#bodyGrad)" stroke="#EA580C" stroke-width="1.5"/>
+
+  <!-- Body -->
+  <g filter="url(#shadow)">
+    <ellipse cx="256" cy="340" rx="100" ry="95" fill="url(#bodyGrad)" stroke="#EA580C" stroke-width="2"/>
+  </g>
+  <ellipse cx="256" cy="345" rx="60" ry="55" fill="#FDBA74" opacity="0.3"/>
+
+  <!-- Chef Hat -->
+  <g filter="url(#shadow)">
+    <rect x="196" y="82" width="120" height="32" rx="16" fill="url(#hatGrad)" stroke="#E5E7EB" stroke-width="1.5"/>
+    <circle cx="220" cy="65" r="35" fill="url(#hatGrad)" stroke="#E5E7EB" stroke-width="1.5"/>
+    <circle cx="256" cy="50" r="40" fill="url(#hatGrad)" stroke="#E5E7EB" stroke-width="1.5"/>
+    <circle cx="292" cy="65" r="35" fill="url(#hatGrad)" stroke="#E5E7EB" stroke-width="1.5"/>
+    <circle cx="238" cy="42" r="28" fill="#FFFFFF" stroke="#E5E7EB" stroke-width="1.5"/>
+    <circle cx="274" cy="42" r="28" fill="#FFFFFF" stroke="#E5E7EB" stroke-width="1.5"/>
+    <ellipse cx="240" cy="55" rx="12" ry="8" fill="#FFFFFF" opacity="0.5"/>
+  </g>
+
+  <!-- Apron -->
+  <g filter="url(#softShadow)">
+    <path d="M200,295 Q200,280 220,280 L292,280 Q312,280 312,295 L315,400 Q315,410 305,410 L207,410 Q197,410 197,400 Z" fill="#FFFFFF" stroke="#E5E7EB" stroke-width="1.5"/>
+    <path d="M230,320 L282,320 Q288,320 288,326 L288,355 Q288,361 282,361 L230,361 Q224,361 224,355 L224,326 Q224,320 230,320 Z" fill="#FEF2F2" stroke="#FECACA" stroke-width="1"/>
+    <path d="M256,335 C256,330 250,328 248,332 C246,336 252,342 256,346 C260,342 266,336 264,332 C262,328 256,330 256,335 Z" fill="#FDA4AF" opacity="0.7"/>
+    <path d="M220,280 Q218,265 225,255" fill="none" stroke="#E5E7EB" stroke-width="2" stroke-linecap="round"/>
+    <path d="M292,280 Q294,265 287,255" fill="none" stroke="#E5E7EB" stroke-width="2" stroke-linecap="round"/>
+  </g>
+
+  <!-- FACE -->
+  <ellipse cx="256" cy="220" rx="72" ry="68" fill="url(#bodyGrad)" stroke="#EA580C" stroke-width="2"/>
+  <!-- Left Eye -->
+  <g>
+    <ellipse cx="228" cy="210" rx="18" ry="22" fill="#FFFFFF" stroke="#92400E" stroke-width="2"/>
+    <ellipse cx="230" cy="212" rx="12" ry="15" fill="#1E293B"/>
+    <circle cx="232" cy="210" r="7" fill="#0F172A"/>
+    <circle cx="236" cy="204" r="4" fill="#FFFFFF"/>
+    <circle cx="227" cy="217" r="2" fill="#FFFFFF" opacity="0.7"/>
+  </g>
+  <!-- Right Eye -->
+  <g>
+    <ellipse cx="284" cy="210" rx="18" ry="22" fill="#FFFFFF" stroke="#92400E" stroke-width="2"/>
+    <ellipse cx="286" cy="212" rx="12" ry="15" fill="#1E293B"/>
+    <circle cx="288" cy="210" r="7" fill="#0F172A"/>
+    <circle cx="292" cy="204" r="4" fill="#FFFFFF"/>
+    <circle cx="283" cy="217" r="2" fill="#FFFFFF" opacity="0.7"/>
+  </g>
+  <path d="M210,190 Q220,182 235,186" fill="none" stroke="#92400E" stroke-width="2.5" stroke-linecap="round"/>
+  <path d="M277,186 Q292,182 302,190" fill="none" stroke="#92400E" stroke-width="2.5" stroke-linecap="round"/>
+  <circle cx="206" cy="235" r="16" fill="url(#cheekPink)"/>
+  <circle cx="306" cy="235" r="16" fill="url(#cheekPink)"/>
+  <path d="M232,240 Q256,268 280,240" fill="none" stroke="#92400E" stroke-width="3" stroke-linecap="round"/>
+  <path d="M228,238 Q226,242 230,246" fill="none" stroke="#92400E" stroke-width="1.5" stroke-linecap="round" opacity="0.5"/>
+  <path d="M284,238 Q286,242 282,246" fill="none" stroke="#92400E" stroke-width="1.5" stroke-linecap="round" opacity="0.5"/>
+  <ellipse cx="256" cy="230" rx="4" ry="3" fill="#92400E" opacity="0.6"/>
+
+  <!-- Food Plate -->
+  <g filter="url(#shadow)">
+    <ellipse cx="256" cy="370" rx="85" ry="18" fill="#F1F5F9" stroke="#CBD5E1" stroke-width="2"/>
+    <ellipse cx="256" cy="360" rx="50" ry="12" fill="#FCA5A5" stroke="#F87171" stroke-width="1.5"/>
+    <path d="M206,360 L206,340 Q206,332 256,332 Q306,332 306,340 L306,360" fill="#FCA5A5" stroke="#F87171" stroke-width="1.5"/>
+    <ellipse cx="256" cy="340" rx="50" ry="14" fill="#FEE2E2" stroke="#F87171" stroke-width="1.5"/>
+    <path d="M215,340 Q220,330 235,335 Q250,328 260,335 Q275,330 290,338" fill="none" stroke="#FCD34D" stroke-width="4" stroke-linecap="round"/>
+    <path d="M220,345 Q230,335 245,340 Q260,333 270,340 Q280,335 288,345" fill="none" stroke="#FBBF24" stroke-width="3" stroke-linecap="round"/>
+    <path d="M225,348 Q240,342 255,346 Q270,342 283,348" fill="none" stroke="#F59E0B" stroke-width="2.5" stroke-linecap="round"/>
+    <path d="M270,330 Q278,322 282,330" fill="#EF4444" stroke="#DC2626" stroke-width="1"/>
+    <path d="M282,330 Q284,335 280,338" fill="#22C55E" stroke="#16A34A" stroke-width="0.8"/>
+    <circle cx="225" cy="332" r="8" fill="#86EFAC" stroke="#22C55E" stroke-width="1.5"/>
+    <ellipse cx="245" cy="337" rx="4" ry="2.5" fill="#D4A574" transform="rotate(-15 245 337)"/>
+    <ellipse cx="265" cy="336" rx="3.5" ry="2" fill="#D4A574" transform="rotate(10 265 336)"/>
+    <ellipse cx="255" cy="333" rx="3" ry="2" fill="#D4A574" transform="rotate(-25 255 333)"/>
+    <path d="M235,338 Q240,328 248,335" fill="#FB923C" stroke="#F97316" stroke-width="1"/>
+    <path d="M272,338 Q276,330 282,336" fill="#FB923C" stroke="#F97316" stroke-width="1"/>
+    <path d="M240,315 Q238,305 242,298" fill="none" stroke="#E2E8F0" stroke-width="2" stroke-linecap="round" opacity="0.5"/>
+    <path d="M256,312 Q258,302 254,295" fill="none" stroke="#E2E8F0" stroke-width="2" stroke-linecap="round" opacity="0.5"/>
+    <path d="M270,316 Q272,306 268,298" fill="none" stroke="#E2E8F0" stroke-width="2" stroke-linecap="round" opacity="0.5"/>
+  </g>
+
+  <!-- Name Tag -->
+  <g>
+    <circle cx="290" cy="305" r="14" fill="#FCA5A5" stroke="#EF4444" stroke-width="1.5"/>
+    <text x="290" y="309" text-anchor="middle" font-family="sans-serif" font-size="10" font-weight="bold" fill="#7F1D1D">ไบท</text>
+  </g>
+
+  <!-- Stars -->
+  <g opacity="0.6">
+    <polygon points="130,100 133,110 143,110 135,116 138,126 130,120 122,126 125,116 117,110 127,110" fill="#FBBF24"/>
+    <polygon points="390,130 392,137 399,137 393,142 395,149 390,145 385,149 387,142 381,137 388,137" fill="#F97316"/>
+    <polygon points="110,200 112,206 118,206 113,210 115,216 110,212 105,216 107,210 102,206 108,206" fill="#FBBF24"/>
+    <polygon points="410,220 412,226 418,226 413,230 415,236 410,232 405,236 407,230 402,226 408,226" fill="#F97316"/>
+  </g>
+  <g opacity="0.5">
+    <path d="M105,160 C105,155 98,153 96,158 C94,164 101,170 105,174 C109,170 116,164 114,158 C112,153 105,155 105,160 Z" fill="#FDA4AF"/>
+    <path d="M400,180 C400,176 395,174 393,178 C391,183 396,188 400,191 C404,188 409,183 407,178 C405,174 400,176 400,180 Z" fill="#FDA4AF"/>
+  </g>
+</svg>
