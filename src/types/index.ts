@@ -25,8 +25,11 @@ export interface Product {
   image_url: string;
   is_available: boolean;
   is_featured: boolean;
+  is_preorder: boolean;           // ✅ v3.1: Pre-order menu (โหวต/จองล่วงหน้า)
   prep_minutes: number;
   sort_order: number;
+  delivery_round_id?: string;     // ✅ v3.1: Delivery round ID (สำหรับ pre-order)
+  scheduled_date?: string;        // ✅ v3.1: Scheduled delivery date (สำหรับ pre-order)
   created_at: string;
 }
 
