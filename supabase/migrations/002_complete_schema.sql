@@ -59,9 +59,11 @@ CREATE TABLE delivery_rounds (
   updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 
--- Table: customers
+-- Table: customers (FIX: Removed FK to auth.users to allow seed data without real users)
+-- Added user_id column (nullable) for linking to auth.users when available
 CREATE TABLE customers (
-  id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID REFERENCES auth.users(id) ON DELETE SET NULL,  -- Nullable link to auth user
   full_name VARCHAR(255) NOT NULL,
   phone VARCHAR(20),
   email VARCHAR(255),
@@ -70,6 +72,9 @@ CREATE TABLE customers (
   created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
+
+-- Index on user_id for queries linking customers to auth users
+CREATE INDEX IF NOT EXISTS idx_customers_user_id ON customers(user_id);
 
 -- Table: products
 CREATE TABLE products (
@@ -251,11 +256,12 @@ INSERT INTO products (category_id, name, description, price, type) VALUES
   ((SELECT id FROM product_categories WHERE name = 'Standard Products'), 'Standard Tote Bag', 'Eco-friendly canvas tote', 250.00, 'standard'),
   ((SELECT id FROM product_categories WHERE name = 'Promotional Items'), 'Promotional Sticker Pack', 'Set of 10 stickers', 50.00, 'promotional');
 
--- FIX #3: Seed customer data (use sample auth user UUIDs)
--- NOTE: In production, replace with actual auth.users(id) from your database
-INSERT INTO customers (id, full_name, phone, email, address, loyalty_points) VALUES
-  ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'สมชาย รักดี', '0812345678', 'somchai@example.com', '123 สุขสันต์ ซอย 1 กรุงเทพฯ 10100', 50),
-  ('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', 'สมหญิง ดีใจ', '0898765432', 'somying@example.com', '456 ใหม่ ถนนเพชรบุรี กรุงเทพฯ 10400', 120);
+-- FIX #3: Seed customer data (id is auto-generated, user_id is optional)
+-- NOTE: To link customers to real auth users, update user_id column after creation:
+--   UPDATE customers SET user_id = 'auth-user-uuid-here' WHERE id = 'customer-id-here';
+INSERT INTO customers (full_name, phone, email, address, loyalty_points) VALUES
+  ('สมชาย รักดี', '0812345678', 'somchai@example.com', '123 สุขสันต์ ซอย 1 กรุงเทพฯ 10100', 50),
+  ('สมหญิง ดีใจ', '0898765432', 'somying@example.com', '456 ใหม่ ถนนเพชรบุรี กรุงเทพฯ 10400', 120);
 
 -- Seed delivery rounds customers can reference
 INSERT INTO delivery_rounds (name, scheduled_date, pickup_location) VALUES
@@ -311,20 +317,26 @@ CREATE POLICY "products_insert" ON products FOR INSERT TO authenticated WITH CHE
 CREATE POLICY "products_update" ON products FOR UPDATE TO authenticated USING (true) WITH CHECK (true);
 CREATE POLICY "products_delete" ON products FOR DELETE TO authenticated USING (true);
 
--- RLS Policies: orders (own orders only)
-CREATE POLICY "orders_select_own" ON orders FOR SELECT TO authenticated USING (auth.uid() = customer_id);
-CREATE POLICY "orders_insert_own" ON orders FOR INSERT TO authenticated WITH CHECK (auth.uid() = customer_id);
-CREATE POLICY "orders_update_own" ON orders FOR UPDATE TO authenticated USING (auth.uid() = customer_id) WITH CHECK (auth.uid() = customer_id);
-CREATE POLICY "orders_delete_own" ON orders FOR DELETE TO authenticated USING (auth.uid() = customer_id);
+-- RLS Policies: orders (own orders only - linked via customers.user_id)
+CREATE POLICY "orders_select_own" ON orders FOR SELECT TO authenticated 
+  USING (customer_id IN (SELECT id FROM customers WHERE user_id = auth.uid()));
+CREATE POLICY "orders_insert_own" ON orders FOR INSERT TO authenticated 
+  WITH CHECK (customer_id IN (SELECT id FROM customers WHERE user_id = auth.uid()));
+CREATE POLICY "orders_update_own" ON orders FOR UPDATE TO authenticated 
+  USING (customer_id IN (SELECT id FROM customers WHERE user_id = auth.uid())) 
+  WITH CHECK (customer_id IN (SELECT id FROM customers WHERE user_id = auth.uid()));
+CREATE POLICY "orders_delete_own" ON orders FOR DELETE TO authenticated 
+  USING (customer_id IN (SELECT id FROM customers WHERE user_id = auth.uid()));
 
 -- RLS Policies: order_items (FIX #7: Tied to customer's own orders for security)
 CREATE POLICY "order_items_select" ON order_items FOR SELECT TO authenticated 
-  USING (order_id IN (SELECT id FROM orders WHERE customer_id = auth.uid()));
+  USING (order_id IN (SELECT id FROM orders WHERE customer_id IN (SELECT id FROM customers WHERE user_id = auth.uid())));
 CREATE POLICY "order_items_insert" ON order_items FOR INSERT TO authenticated WITH CHECK (true);
 CREATE POLICY "order_items_update" ON order_items FOR UPDATE TO authenticated 
-  USING (order_id IN (SELECT id FROM orders WHERE customer_id = auth.uid())) WITH CHECK (true);
+  USING (order_id IN (SELECT id FROM orders WHERE customer_id IN (SELECT id FROM customers WHERE user_id = auth.uid())))) 
+  WITH CHECK (true);
 CREATE POLICY "order_items_delete" ON order_items FOR DELETE TO authenticated 
-  USING (order_id IN (SELECT id FROM orders WHERE customer_id = auth.uid()));
+  USING (order_id IN (SELECT id FROM orders WHERE customer_id IN (SELECT id FROM customers WHERE user_id = auth.uid())));
 
 -- RLS Policies: inventory (admin only)
 CREATE POLICY "inventory_select" ON inventory FOR SELECT TO authenticated USING (true);
@@ -338,19 +350,29 @@ CREATE POLICY "inventory_transactions_insert" ON inventory_transactions FOR INSE
 
 -- RLS Policies: preorder_votes (own votes only)
 CREATE POLICY "preorder_votes_select" ON preorder_votes FOR SELECT TO authenticated USING (true);
-CREATE POLICY "preorder_votes_insert_own" ON preorder_votes FOR INSERT TO authenticated WITH CHECK (auth.uid() = customer_id);
-CREATE POLICY "preorder_votes_delete_own" ON preorder_votes FOR DELETE TO authenticated USING (auth.uid() = customer_id);
+CREATE POLICY "preorder_votes_insert_own" ON preorder_votes FOR INSERT TO authenticated 
+  WITH CHECK (customer_id IN (SELECT id FROM customers WHERE user_id = auth.uid()));
+CREATE POLICY "preorder_votes_delete_own" ON preorder_votes FOR DELETE TO authenticated 
+  USING (customer_id IN (SELECT id FROM customers WHERE user_id = auth.uid()));
 
 -- RLS Policies: reviews (own reviews only)
 CREATE POLICY "reviews_select" ON reviews FOR SELECT TO authenticated USING (true);
-CREATE POLICY "reviews_insert_own" ON reviews FOR INSERT TO authenticated WITH CHECK (auth.uid() = customer_id);
-CREATE POLICY "reviews_update_own" ON reviews FOR UPDATE TO authenticated USING (auth.uid() = customer_id) WITH CHECK (auth.uid() = customer_id);
-CREATE POLICY "reviews_delete_own" ON reviews FOR DELETE TO authenticated USING (auth.uid() = customer_id);
+CREATE POLICY "reviews_insert_own" ON reviews FOR INSERT TO authenticated 
+  WITH CHECK (customer_id IN (SELECT id FROM customers WHERE user_id = auth.uid()));
+CREATE POLICY "reviews_update_own" ON reviews FOR UPDATE TO authenticated 
+  USING (customer_id IN (SELECT id FROM customers WHERE user_id = auth.uid())) 
+  WITH CHECK (customer_id IN (SELECT id FROM customers WHERE user_id = auth.uid()));
+CREATE POLICY "reviews_delete_own" ON reviews FOR DELETE TO authenticated 
+  USING (customer_id IN (SELECT id FROM customers WHERE user_id = auth.uid()));
 
 -- RLS Policies: loyalty_points (own points only)
-CREATE POLICY "loyalty_points_select_own" ON loyalty_points FOR SELECT TO authenticated USING (auth.uid() = customer_id);
-CREATE POLICY "loyalty_points_insert" ON loyalty_points FOR INSERT TO authenticated WITH CHECK (auth.uid() = customer_id);
-CREATE POLICY "loyalty_points_update" ON loyalty_points FOR UPDATE TO authenticated USING (auth.uid() = customer_id) WITH CHECK (auth.uid() = customer_id);
+CREATE POLICY "loyalty_points_select_own" ON loyalty_points FOR SELECT TO authenticated 
+  USING (customer_id IN (SELECT id FROM customers WHERE user_id = auth.uid()));
+CREATE POLICY "loyalty_points_insert" ON loyalty_points FOR INSERT TO authenticated 
+  WITH CHECK (customer_id IN (SELECT id FROM customers WHERE user_id = auth.uid()));
+CREATE POLICY "loyalty_points_update" ON loyalty_points FOR UPDATE TO authenticated 
+  USING (customer_id IN (SELECT id FROM customers WHERE user_id = auth.uid())) 
+  WITH CHECK (customer_id IN (SELECT id FROM customers WHERE user_id = auth.uid()));
 
 -- RLS Policies: promotions (public read)
 CREATE POLICY "promotions_select" ON promotions FOR SELECT TO authenticated USING (true);
@@ -359,19 +381,29 @@ CREATE POLICY "promotions_update" ON promotions FOR UPDATE TO authenticated USIN
 CREATE POLICY "promotions_delete" ON promotions FOR DELETE TO authenticated USING (true);
 
 -- RLS Policies: notifications (own notifications only)
-CREATE POLICY "notifications_select_own" ON notifications FOR SELECT TO authenticated USING (auth.uid() = customer_id);
-CREATE POLICY "notifications_insert" ON notifications FOR INSERT TO authenticated WITH CHECK (auth.uid() = customer_id);
-CREATE POLICY "notifications_update_own" ON notifications FOR UPDATE TO authenticated USING (auth.uid() = customer_id) WITH CHECK (auth.uid() = customer_id);
-CREATE POLICY "notifications_delete_own" ON notifications FOR DELETE TO authenticated USING (auth.uid() = customer_id);
+CREATE POLICY "notifications_select_own" ON notifications FOR SELECT TO authenticated 
+  USING (customer_id IN (SELECT id FROM customers WHERE user_id = auth.uid()));
+CREATE POLICY "notifications_insert" ON notifications FOR INSERT TO authenticated 
+  WITH CHECK (customer_id IN (SELECT id FROM customers WHERE user_id = auth.uid()));
+CREATE POLICY "notifications_update_own" ON notifications FOR UPDATE TO authenticated 
+  USING (customer_id IN (SELECT id FROM customers WHERE user_id = auth.uid())) 
+  WITH CHECK (customer_id IN (SELECT id FROM customers WHERE user_id = auth.uid()));
+CREATE POLICY "notifications_delete_own" ON notifications FOR DELETE TO authenticated 
+  USING (customer_id IN (SELECT id FROM customers WHERE user_id = auth.uid()));
 
 -- RLS Policies: ai_conversations (own conversations only)
-CREATE POLICY "ai_conversations_select_own" ON ai_conversations FOR SELECT TO authenticated USING (auth.uid() = customer_id);
-CREATE POLICY "ai_conversations_insert_own" ON ai_conversations FOR INSERT TO authenticated WITH CHECK (auth.uid() = customer_id);
-CREATE POLICY "ai_conversations_delete_own" ON ai_conversations FOR DELETE TO authenticated USING (auth.uid() = customer_id);
+CREATE POLICY "ai_conversations_select_own" ON ai_conversations FOR SELECT TO authenticated 
+  USING (customer_id IN (SELECT id FROM customers WHERE user_id = auth.uid()));
+CREATE POLICY "ai_conversations_insert_own" ON ai_conversations FOR INSERT TO authenticated 
+  WITH CHECK (customer_id IN (SELECT id FROM customers WHERE user_id = auth.uid()));
+CREATE POLICY "ai_conversations_delete_own" ON ai_conversations FOR DELETE TO authenticated 
+  USING (customer_id IN (SELECT id FROM customers WHERE user_id = auth.uid()));
 
 -- RLS Policies: ai_recommendations (own recommendations only)
-CREATE POLICY "ai_recommendations_select_own" ON ai_recommendations FOR SELECT TO authenticated USING (auth.uid() = customer_id);
-CREATE POLICY "ai_recommendations_insert" ON ai_recommendations FOR INSERT TO authenticated WITH CHECK (auth.uid() = customer_id);
+CREATE POLICY "ai_recommendations_select_own" ON ai_recommendations FOR SELECT TO authenticated 
+  USING (customer_id IN (SELECT id FROM customers WHERE user_id = auth.uid()));
+CREATE POLICY "ai_recommendations_insert" ON ai_recommendations FOR INSERT TO authenticated 
+  WITH CHECK (customer_id IN (SELECT id FROM customers WHERE user_id = auth.uid()));
 CREATE POLICY "ai_recommendations_delete" ON ai_recommendations FOR DELETE TO authenticated USING (true);
 
 -- Business Logic: Order Validation Function (ตรวจงานก่อนส่ง)
