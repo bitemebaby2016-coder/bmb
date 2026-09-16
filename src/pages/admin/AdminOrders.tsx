@@ -8,22 +8,21 @@ export function AdminOrders() {
   const [orders, setOrders] = useState<OrderForm[]>([])
   const [filterStatus, setFilterStatus] = useState('all')
 
-  useEffect(() => {
-    loadOrders()
-  }, [])
+  useEffect(() => { loadOrders() }, [])
 
-  function loadOrders() {
-    setOrders(getOrders())
+  async function loadOrders() {
+    const orders = await getOrders()
+    setOrders(orders)
   }
 
-  function handleStatusUpdate(orderNumber: string, newStatus: string) {
-    updateOrderStatus(orderNumber, newStatus)
+  async function handleStatusUpdate(orderNumber: string, newStatus: string) {
+    await updateOrderStatus(orderNumber, newStatus)
     loadOrders()
     showToast(`อัปเดตสถานะ ${newStatus} สำเร็จ`, 'success')
   }
 
-  function handlePaymentUpdate(orderNumber: string, paymentStatus: string) {
-    updateOrderPayment(orderNumber, paymentStatus)
+  async function handlePaymentUpdate(orderNumber: string, paymentStatus: string) {
+    await updateOrderPayment(orderNumber, paymentStatus)
     loadOrders()
     showToast('อัปเดตการชำระเงินสำเร็จ', 'success')
   }
@@ -70,7 +69,7 @@ export function AdminOrders() {
                 <div>
                   <div className="font-bold text-brand-accent">{order.order_number}</div>
                   <div className="text-sm text-brand-muted">
-                    {order.customer_name} • {order.customer_phone} • {order.delivery_round} • {new Date(order.created_at).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })}
+                    {order.customer_name} • {order.customer_phone} • รอบ{order.delivery_round_id || 'เช้า'} • {new Date(order.created_at).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })}
                   </div>
                 </div>
               </div>

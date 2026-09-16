@@ -49,17 +49,30 @@ export function generateId(prefix: string = 'id'): string {
   return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`
 }
 
-// Simple hash for passwords (NOT for production - use bcrypt on server)
-export function hashPassword(password: string): string {
-  let hash = 0
-  for (let i = 0; i < password.length; i++) {
-    const char = password.charCodeAt(i)
-    hash = ((hash << 5) - hash) + char
-    hash = hash & hash // Convert to 32bit integer
-  }
-  return `h_${Math.abs(hash).toString(36)}_${password.length}`
+// ============================================
+// Secure Password Hashing using bcrypt
+// Production-ready password security
+// ============================================
+import bcrypt from 'bcryptjs'
+
+const SALT_ROUNDS = 12
+
+/**
+ * Hash a password using bcrypt with configurable salt rounds
+ * @param password - Plain text password to hash
+ * @returns bcrypt hashed password (with embedded salt)
+ */
+export async function hashPassword(password: string): Promise<string> {
+  const salt = await bcrypt.genSalt(SALT_ROUNDS)
+  return await bcrypt.hash(password, salt)
 }
 
-export function verifyPassword(password: string, hash: string): boolean {
-  return hashPassword(password) === hash
+/**
+ * Verify a password against a bcrypt hash
+ * @param password - Plain text password to verify
+ * @param hash - bcrypt hash to compare against
+ * @returns true if password matches the hash
+ */
+export async function verifyPassword(password: string, hash: string): Promise<boolean> {
+  return await bcrypt.compare(password, hash)
 }

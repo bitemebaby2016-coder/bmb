@@ -23,9 +23,17 @@ export function MenuPage() {
   const addItem = useCartStore((s) => s.addItem)
 
   useEffect(() => {
-    setProducts(getProducts())
-    setCategories(getCategories())
-    setDeliveryRounds(getDeliveryRounds()) // ✅ v3.1: Load delivery rounds
+    async function loadData() {
+      try {
+        const [products, cats, rounds] = await Promise.all([getProducts(), getCategories(), getDeliveryRounds()])
+        setProducts(products)
+        setCategories(cats)
+        setDeliveryRounds(rounds)
+      } catch (err) {
+        console.error('[MenuPage] Load error:', err)
+      }
+    }
+    loadData()
   }, [])
 
   // ✅ v3.1: Filter by tab (same-day vs pre-order)

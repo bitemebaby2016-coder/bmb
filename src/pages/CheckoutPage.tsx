@@ -4,6 +4,7 @@ import { useCartStore } from '@/store/cartStore'
 import { useAuthStore } from '@/store/authStore'
 import { showToast } from '@/components/ui/ToastContainer'
 import { createOrder, type OrderForm } from '@/lib/bmbAdminApi_orders'
+import { writeAuditLog } from '@/lib/auditLog'
 
 export function CheckoutPage() {
   const navigate = useNavigate()
@@ -18,7 +19,7 @@ export function CheckoutPage() {
   const [paymentMethod, setPaymentMethod] = useState<'promptpay_qr' | 'cash_on_delivery'>('promptpay_qr')
   const [isProcessing, setIsProcessing] = useState(false)
 
-  function handlePlaceOrder() {
+  async function handlePlaceOrder() {
     if (!deliveryAddress.detail) {
       showToast('กรุณาใส่ที่อยู่จัดส่ง', 'warning')
       return
@@ -36,16 +37,17 @@ export function CheckoutPage() {
 
     const today = new Date()
     const orderData: OrderForm = {
+      id: `ord-${Date.now()}`,
       order_number: `BMB-${today.toISOString().slice(0, 10).replace(/-/g, '')}-${String(Math.floor(Math.random() * 999) + 1).padStart(3, '0')}`,
       customer_id: customer?.id || 'guest',
       customer_name: customer?.name || 'Guest',
       customer_phone: customer?.phone || '',
-      delivery_round: selectedRound,
+      delivery_round_id: selectedRound,
       status: 'pending',
       total_amount: total,
       delivery_fee: deliveryFee,
       payment_method: paymentMethod,
-      payment_status: paymentMethod === 'cash_on_delivery' ? 'pending' : 'paid',
+      payment_status: paymentMethod === 'promptpay_qr' ? 'pending' : 'pending',
       delivery_address: deliveryAddress.detail,
       dropoff_latitude: deliveryAddress.latitude,
       dropoff_longitude: deliveryAddress.longitude,
@@ -54,7 +56,21 @@ export function CheckoutPage() {
       updated_at: new Date().toISOString()
     }
 
-    const order = createOrder(orderData)
+    const order = await createOrder(orderData)
+    if (!order) {
+      showToast('สร้างออเดอร์ล้มเหลว กรุณาลองใหม่', 'error')
+      setIsProcessing(false)
+      return
+    }
+
+    // Audit log: order created
+    writeAuditLog({
+      action: 'order_create',
+      entity_type: 'order',
+      entity_id: order.order_number,
+      description: `ออเดอร์ใหม่ #${order.order_number} โดย ${customer?.name || customer?.email || 'Guest'} รวม ${total.toFixed(2)} บาท`,
+      metadata: { itemCount: items.length, totalAmount: total, paymentMethod: paymentMethod }
+    })
 
     showToast(`สั่งซื้อสำเร็จ! เลขที่ ${order.order_number}`, 'success')
     

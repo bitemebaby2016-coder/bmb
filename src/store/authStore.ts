@@ -43,7 +43,7 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
   },
 
   login: async (email: string, password: string) => {
-    const user = authenticateUser(email, password)
+    const user = await authenticateUser(email, password)
     if (!user) return false
     
     const customer: Customer = {
@@ -67,7 +67,7 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
   },
 
   loginByPhone: async (phone: string, password: string) => {
-    const user = authenticateUserByPhone(phone, password)
+    const user = await authenticateUserByPhone(phone, password)
     if (!user) return false
     
     const customer: Customer = {

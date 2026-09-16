@@ -97,8 +97,27 @@ export async function createOrder(data: OrderForm): Promise<OrderForm | null> {
 }
 
 export async function updateOrderStatus(orderNumber: string, status: string): Promise<OrderForm | null> {
-  const { data, error } = await supabase.from('orders').update({ status }).eq('order_number', orderNumber).select().single()
+  const oldOrder = await getOrder(orderNumber)
+  
+  const { data, error } = await supabase.from('orders').update({ 
+    status,
+    updated_at: new Date().toISOString()
+  }).eq('order_number', orderNumber).select().single()
+  
   if (error) { console.error('[updateOrderStatus] Error:', error); return null }
+  
+  // Audit log for order status change
+  if (oldOrder && status !== oldOrder.status) {
+    const { writeAuditLog } = await import('@/lib/auditLog')
+    writeAuditLog({
+      action: 'order_status_change' as any,
+      entity_type: 'order',
+      entity_id: orderNumber,
+      description: `สถานะออเดอร์ #${orderNumber} เปลี่ยนจาก "${oldOrder.status}" → "${status}"`,
+      metadata: { fromStatus: oldOrder.status, toStatus: status }
+    })
+  }
+  
   return data as OrderForm
 }
 

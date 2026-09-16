@@ -34,24 +34,29 @@ export function getUserById(id: string): User | undefined {
   return getUsers().find(u => u.id === id)
 }
 
-export function createUser(data: {
+/**
+ * Create a new user with bcrypt-hashed password
+ */
+export async function createUser(data: {
   email: string
   phone: string
   name: string
   password: string
   role?: 'customer' | 'admin'
-}): User | null {
+}): Promise<User | null> {
   const users = getUsers()
   
   if (users.find(u => u.email === data.email)) return null
   if (users.find(u => u.phone === data.phone)) return null
+  
+  const hashedPassword = await hashPassword(data.password)
   
   const user: User = {
     id: generateId('user'),
     email: data.email,
     phone: data.phone,
     name: data.name,
-    password_hash: hashPassword(data.password),
+    password_hash: hashedPassword,
     role: data.role || 'customer',
     is_active: true,
     created_at: new Date().toISOString()
@@ -61,17 +66,25 @@ export function createUser(data: {
   return user
 }
 
-export function authenticateUser(email: string, password: string): User | null {
+/**
+ * Authenticate user by email with bcrypt verification
+ */
+export async function authenticateUser(email: string, password: string): Promise<User | null> {
   const user = getUserByEmail(email)
   if (!user) return null
-  if (!verifyPassword(password, user.password_hash)) return null
+  const isValid = await verifyPassword(password, user.password_hash)
+  if (!isValid) return null
   return user
 }
 
-export function authenticateUserByPhone(phone: string, password: string): User | null {
+/**
+ * Authenticate user by phone with bcrypt verification
+ */
+export async function authenticateUserByPhone(phone: string, password: string): Promise<User | null> {
   const user = getUserByPhone(phone)
   if (!user) return null
-  if (!verifyPassword(password, user.password_hash)) return null
+  const isValid = await verifyPassword(password, user.password_hash)
+  if (!isValid) return null
   return user
 }
 
@@ -84,24 +97,37 @@ export function updateUser(id: string, data: Partial<User>): User | null {
   return users[index]
 }
 
-export function initializeAdmin(): void {
-  const users = getUsers()
-  if (!users.find(u => u.email === 'admin@bmb.co.th')) {
-    users.push({
+/**
+ * Initialize admin account with bcrypt-hashed password
+ * Called once at app startup
+ */
+export async function initializeAdmin(): Promise<void> {
+  try {
+    const existingUsers = getUsers()
+    const hasAdmin = existingUsers.find(u => u.email === 'admin@bmb.co.th')
+    
+    if (hasAdmin) return // Admin already exists
+    
+    const hashedPassword = await hashPassword('admin123')
+    
+    const adminUser: User = {
       id: 'admin-001',
       email: 'admin@bmb.co.th',
       phone: '0812345678',
       name: 'Admin Bite Me Baby',
-      password_hash: hashPassword('admin123'),
+      password_hash: hashedPassword,
       role: 'admin',
       is_active: true,
       created_at: new Date().toISOString()
-    })
+    }
+    
+    const users = [...existingUsers, adminUser]
     storageSet('bmb_users', users)
+    console.log('[BMB] Admin account initialized with bcrypt hash')
+  } catch (error) {
+    console.error('[BMB] Failed to initialize admin:', error)
   }
 }
-
-initializeAdmin()
 
 export interface DashboardStats {
   todayOrders: number
@@ -114,9 +140,8 @@ export interface DashboardStats {
   totalCustomers: number
 }
 
-export function getDashboardStats(): DashboardStats {
-  const orders = getOrders()
-  const inventory = getInventory()
+export async function getDashboardStats(): Promise<DashboardStats> {
+  const [orders, inventory] = await Promise.all([getOrders(), getInventory()])
   const users = getUsers()
   
   const today = new Date().toISOString().slice(0, 10)

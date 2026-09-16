@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { createUser } from '@/lib/bmbAdminApi_users'
 import { useAuthStore } from '@/store/authStore'
 import { showToast } from '@/components/ui/ToastContainer'
+import { writeAuditLog } from '@/lib/auditLog'
 
 export function RegisterPage() {
   const navigate = useNavigate()
@@ -37,7 +38,7 @@ export function RegisterPage() {
     }
     
     try {
-      const user = createUser({
+      const user = await createUser({
         email: formData.email,
         phone: formData.phone,
         name: formData.name,
@@ -68,6 +69,15 @@ export function RegisterPage() {
       setIsAuthenticated(true)
       
       showToast('สมัครสมาชิกสำเร็จ! ยินดีต้อนรับ', 'success')
+      
+      // Audit log: user registered
+      writeAuditLog({
+        action: 'user_register',
+        entity_type: 'user',
+        entity_id: user.id,
+        description: `ผู้ใช้ใหม่ ${formData.name} (${formData.email}) ลงทะเบียนสำเร็จ`
+      })
+      
       navigate('/')
     } catch (err) {
       console.error('Register error:', err)

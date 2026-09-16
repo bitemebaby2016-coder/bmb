@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { authenticateUser } from '@/lib/bmbAdminApi_users'
 import { useAuthStore } from '@/store/authStore'
 import { showToast } from '@/components/ui/ToastContainer'
+import { writeAuditLog } from '@/lib/auditLog'
 
 export function LoginPage() {
   const navigate = useNavigate()
@@ -20,7 +21,7 @@ export function LoginPage() {
     setError('')
     
     try {
-      const user = authenticateUser(email, password)
+      const user = await authenticateUser(email, password)
       if (!user) {
         setError('อีเมลหรือรหัสผ่านไม่ถูกต้อง')
         setIsLoading(false)
@@ -33,7 +34,17 @@ export function LoginPage() {
         return
       }
       
-      // Set auth state
+      // Set auth state & admin role flag for routing
+      localStorage.setItem('bmb_admin_role', user.role === 'admin' ? 'true' : 'false')
+      
+      // Audit log: successful login
+      writeAuditLog({
+        action: 'user_login',
+        entity_type: 'user',
+        entity_id: user.id,
+        description: `${user.name} (${user.email}) เข้าสู่ระบบสำเร็จ`
+      })
+      
       setCustomer({
         id: user.id,
         email: user.email,

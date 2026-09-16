@@ -1,0 +1,23 @@
+// Audit log action labels for display
+export const ACTION_LABELS: Record<string, string> = {
+  user_login: 'เข้าสู่ระบบ',
+  user_register: 'สมัครสมาชิก',
+  user_logout: 'ออกจากระบบ',
+  admin_dashboard_view: 'ดูแดชบอร์ด',
+  order_create: 'สร้างออเดอร์',
+  order_approve: 'ยืนยันออเดอร์',
+  order_reject: 'ปฏิเสธออเดอร์',
+  order_status_change: 'เปลี่ยนสถานะออเดอร์',
+  product_create: 'เพิ่มสินค้า',
+  product_update: 'แก้ไขสินค้า',
+  product_delete: 'ลบสินค้า',
+  inventory_update: 'แก้ไขสต็อก',
+  inventory_low_stock_alert: 'สต็อกต่ำ',
+  profile_update: 'แก้ไขโปรไฟล์',
+  settings_change: 'เปลี่ยนการตั้งค่า',
+  data_export: 'ส่งออกข้อมูล',
+  payment_processed: 'ชำระเงินสำเร็จ',
+  payment_refund: 'คืนเงิน',
+  delivery_assigned: 'จัดส่งโดยไรเดอร์',
+  delivery_status_change: 'เปลี่ยนสถานะจัดส่ง',
+}

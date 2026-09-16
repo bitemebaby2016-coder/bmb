@@ -21,35 +21,33 @@ export function AdminProducts() {
     prep_minutes: 10
   })
 
-  useEffect(() => {
-    loadProducts()
-    loadCategories()
-  }, [])
+  useEffect(() => { loadAll() }, [])
 
-  async function loadProducts() {
-    setProducts(getProducts())
-  }
-
-  function loadCategories() {
-    setCategories(getCategories())
+  async function loadAll() {
+    try {
+      const [products, cats] = await Promise.all([getProducts(), getCategories()])
+      setProducts(products)
+      setCategories(cats)
+    } catch (err) {
+      console.error('[AdminProducts] Load error:', err)
+    }
   }
 
   async function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     if (!file) return
-    
     const base64 = await fileToBase64(file)
     setFormData({ ...formData, image_url: base64 })
   }
 
-  function handleAddProduct() {
+  async function handleAddProduct() {
     if (!formData.name || !formData.price || !formData.category_id) {
       showToast('กรุณากรอกข้อมูลให้ครบ', 'warning')
       return
     }
     
-    createProduct(formData)
-    loadProducts()
+    await createProduct(formData)
+    loadAll()
     resetForm()
     setShowAddForm(false)
     showToast('เพิ่มเมนูสำเร็จ!', 'success')
@@ -70,11 +68,11 @@ export function AdminProducts() {
     setShowAddForm(true)
   }
 
-  function handleUpdateProduct() {
+  async function handleUpdateProduct() {
     if (!editingProduct) return
     
-    updateProduct(editingProduct.id, formData)
-    loadProducts()
+    await updateProduct(editingProduct.id, formData)
+    loadAll()
     resetForm()
     setShowAddForm(false)
     showToast('อัปเดตเมนูสำเร็จ!', 'success')
@@ -83,7 +81,7 @@ export function AdminProducts() {
   function handleDeleteProduct(id: string) {
     if (confirm('ต้องการลบเมนูนี้ใช่หรือไม่?')) {
       deleteProduct(id)
-      loadProducts()
+      loadAll()
       showToast('ลบเมนูสำเร็จ!', 'success')
     }
   }

@@ -38,6 +38,47 @@
 
 ---
 
+### 🆕 Phase 3: D1 GAP MAP Verification (Code-First Inspection) (2026-09-16)
+
+**หลักการ:** __D1 GAP MAP__ — "ห้าม AI สรุปจาก README ว่ามี Feature จริง" ต้อง inspect production code ก่อนแล้วจัดประเภทให้ถูกต้อง
+
+**เอกสารที่สร้างใหม่:**
+- 🆕 `docs/BiteMeBaby_GAP_ANALYSIS_IMPLEMENTATION_PLAN.md` — Gap Analysis & Implementation Plan ฉบับเต็ม (Code-First Inspection)
+  - Inspect ทุกไฟล์ใน `src/lib/`, `src/store/`, `src/pages/`, `src/components/`, `src/types/` โดยตรง
+  - จัดประเภท 72 features ด้วยระบบ: LIVE / SKELETON / PARTIAL / MISSING
+  - P0 Critical Gaps (3 items): Password hash, API Key fallback, Admin auth
+  - P1 High Gaps (6 items): Payment gateway, External providers, Route optimization, Delivery tracking, Recipe-inventory, Batch planning
+  - P2 Medium Gaps (11 items): AI Memory, Recommendations, Tool calling, Customer Intelligence, Forecasting, etc.
+  - P3 Low Gaps (3 items): PWA offline, Code splitting, TS strict mode
+  - ✅ Live Features (22 fully verified working)
+  - Implementation Roadmap 6 สัปดาห์ (~27 tasks)
+
+**การตรวจสอบที่ทำ:**
+| ไฟล์ | ประเภท | สถานะจริง |
+|------|--------|----------|
+| `aiService.ts` | AI Chat + Recommendation | ✅ LIVE chatWithAI() / 🦴 SKELETON recommendations |
+| `aiMemory.ts` | AI Memory System | 🦴 SKELETON — functions exist, no component calls |
+| `aiToolCalling.ts` | AI Function Calling | 🦴 SKELETON — full system but never called |
+| `bmbAdminApi_orders.ts` | Orders API | ✅ LIVE — Supabase-backed CRUD |
+| `bmbAdminApi_products.ts` | Products API | ✅ LIVE — Supabase-backed CRUD |
+| `bmbAdminApi_inventory.ts` | Inventory API | ⚠️ Partial — CRUD exists but no recipe linking |
+| `routeOptimization.ts` | Route Algorithms | 🦴 SKELETON — algorithms complete, no UI |
+| `externalProviders.ts` | Provider Integration | 🦴 SKELETON — calc cost but no real API calls |
+| `reviewApi.ts` | Review System | 🔧 PARTIAL — localStorage only |
+| `customerIntelligence.ts` | Customer Analytics | 🦴 SKELETON — functions exist, no dashboard |
+| `demandForecasting.ts` | Demand Prediction | 🦴 SKELETON — logic exists, no visualization |
+| `inventoryPrediction.ts` | Smart Reorder | 🦴 SKELETON — prediction logic, no UI integration |
+| `promotionIntelligence.ts` | Promotions | 🦴 SKELETON — CRUD works, no analytics dashboard |
+| `contentAutomation.ts` | AI Content Gen | 🦴 SKELETON — all gen functions, not connected |
+| `supabase.ts` | Database Client | ✅ LIVE — createClient + helpers |
+| `bmbStorage.ts` | Storage Layer | ✅ LIVE — localStorage wrapper |
+| `AuthStore` | Auth Management | ✅ LIVE — login/logout/checkAuth |
+| `CartStore` | Cart Management | ✅ LIVE — addItem/removeItem/recalculate |
+| `NotificationStore` | Notifications | 🦴 SKELETON — store + UI but no triggers |
+| `RewardsStore` | Loyalty Program | ✅ LIVE — points/badges/streaks |
+
+---
+
 # 0. DOCUMENT STATUS
 
 **Document:** `README.md`

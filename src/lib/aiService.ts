@@ -4,14 +4,15 @@
 
 import type { Message, Product } from '@/types'
 
-const OPENROUTER_API_KEY = import.meta.env.VITE_OPENROUTER_API_KEY || 'sk-or-v1-fallback-key'
+const OPENROUTER_API_KEY = import.meta.env.VITE_OPENROUTER_API_KEY
 const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions'
 const OPENROUTER_MODEL = import.meta.env.VITE_OPENROUTER_MODEL || 'qwen/qwen3.7-flash'
 
-if (!OPENROUTER_API_KEY || OPENROUTER_API_KEY === 'sk-or-v1-fallback-key') {
-  console.warn(
-    '[Bite Me Baby] VITE_OPENROUTER_API_KEY is not set. AI chat will fail.\n' +
-      'Copy .env.example → .env and fill in your OpenRouter API key.'
+if (!OPENROUTER_API_KEY) {
+  console.error(
+    '[Bite Me Baby] ⛔ VITE_OPENROUTER_API_KEY is REQUIRED but NOT SET.\n' +
+      'Copy .env.example → .env.local and fill in your OpenRouter API key.\n' +
+      'The app cannot run without a valid API key — no fallback keys allowed for security.'
   )
 }
 

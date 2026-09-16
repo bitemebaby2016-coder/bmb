@@ -23,6 +23,7 @@ import { InventoryPage } from './pages/admin/InventoryPage'
 import { AdminDashboard } from './pages/admin/AdminDashboard'
 import { AdminOrders } from './pages/admin/AdminOrders'
 import { AdminProducts } from './pages/admin/AdminProducts'
+import { AuditLogPage } from './pages/admin/AuditLogPage'
 import { LoginPage } from './pages/login/LoginPage'
 import { RegisterPage } from './pages/login/RegisterPage'
 import { AiChatPage } from './pages/ai/AiChatPage'
@@ -41,9 +42,16 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 
 function AdminRoute({ children }: { children: React.ReactNode }) {
   const customer = useAuthStore((s) => s.customer)
-  if (!customer) return <Navigate to="/login" replace />
-  // Demo: check email for admin
-  if (customer.email !== 'admin@bmb.co.th') return <Navigate to="/" replace />
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
+  
+  if (!isAuthenticated || !customer) return <Navigate to="/login" replace />
+  
+  // Check if user has admin role from stored data (from profiles table or users API)
+  const isAdminUser = localStorage.getItem('bmb_admin_role') === 'true' 
+    || customer.email === 'admin@bmb.co.th' // fallback for local mode
+  
+  if (!isAdminUser) return <Navigate to="/" replace />
+  
   return <>{children}</>
 }
 
@@ -112,6 +120,7 @@ export default function App() {
         <Route path="/admin/inventory" element={<AdminRoute><Layout><InventoryPage /></Layout></AdminRoute>} />
         <Route path="/admin/orders" element={<AdminRoute><Layout><AdminOrders /></Layout></AdminRoute>} />
         <Route path="/admin/products" element={<AdminRoute><Layout><AdminProducts /></Layout></AdminRoute>} />
+        <Route path="/admin/audit-log" element={<AdminRoute><Layout><AuditLogPage /></Layout></AdminRoute>} />
         
         {/* Catch all */}
         <Route path="*" element={<Navigate to="/" replace />} />

@@ -23,21 +23,27 @@ export function HomePage() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    // Fetch products and categories from API
-    const products = getProducts()
-    const cats = getCategories()
-    // ✅ v3.1: Separate same-day and pre-order featured products
-    const sameDayFeatured = products.filter(p => p.is_featured && !p.is_preorder && p.is_available).slice(0, 4)
-    const preOrderFeatured = products.filter(p => p.is_featured && p.is_preorder).slice(0, 4)
-    const featured = [...sameDayFeatured, ...preOrderFeatured].slice(0, 6)
-    setFeaturedProducts(featured)
-    setSameDayFeatured(sameDayFeatured)
-    setPreOrderFeatured(preOrderFeatured)
-    setCategories(cats)
-    
-    const alerts = useInventoryStore.getState().getActiveAlerts()
-    setLowStockAlerts(alerts.slice(0, 3))
-    setLoading(false)
+    async function loadData() {
+      try {
+        const [products, cats] = await Promise.all([getProducts(), getCategories()])
+        // ✅ v3.1: Separate same-day and pre-order featured products
+        const sameDayFeatured = products.filter((p: Product) => p.is_featured && !p.is_preorder && p.is_available).slice(0, 4)
+        const preOrderFeatured = products.filter((p: Product) => p.is_featured && p.is_preorder).slice(0, 4)
+        const featured = [...sameDayFeatured, ...preOrderFeatured].slice(0, 6)
+        setFeaturedProducts(featured)
+        setSameDayFeatured(sameDayFeatured)
+        setPreOrderFeatured(preOrderFeatured)
+        setCategories(cats)
+        
+        const alerts = useInventoryStore.getState().getActiveAlerts()
+        setLowStockAlerts(alerts.slice(0, 3))
+      } catch (err) {
+        console.error('[HomePage] Load error:', err)
+      } finally {
+        setLoading(false)
+      }
+    }
+    loadData()
   }, [])
 
   const handleSameDay = (payload: SameDayOrderPayload) => {

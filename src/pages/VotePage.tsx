@@ -11,9 +11,16 @@ export function VotePage() {
   const addPoints = useRewardsStore((s) => s.addPoints)
 
   useEffect(() => {
-    const products = getProducts().filter(p => p.is_preorder)
-    setPollOptions(products)
-    setDeliveryRounds(getActiveDeliveryRounds())
+    async function loadData() {
+      try {
+        const [products, rounds] = await Promise.all([getProducts(), getActiveDeliveryRounds()])
+        setPollOptions(products.filter((p: Product) => p.is_preorder))
+        setDeliveryRounds(rounds)
+      } catch (err) {
+        console.error('[VotePage] Load error:', err)
+      }
+    }
+    loadData()
   }, [])
 
   function handleVote(optionId: string) {
