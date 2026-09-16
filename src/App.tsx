@@ -24,9 +24,11 @@ import { AdminDashboard } from './pages/admin/AdminDashboard'
 import { AdminOrders } from './pages/admin/AdminOrders'
 import { AdminProducts } from './pages/admin/AdminProducts'
 import { AuditLogPage } from './pages/admin/AuditLogPage'
+import { DeliveryManagement } from './pages/admin/DeliveryManagement'
 import { LoginPage } from './pages/login/LoginPage'
 import { RegisterPage } from './pages/login/RegisterPage'
 import { AiChatPage } from './pages/ai/AiChatPage'
+import { PaymentConfirmationPage } from './pages/PaymentConfirmationPage'
 import { AboutPage } from './pages/AboutPage'
 import { FaqPage } from './pages/FaqPage'
 import { BlogPage } from './pages/BlogPage'
@@ -66,6 +68,7 @@ export default function App() {
         <Route path="/cart" element={<SeoHelmet seo={getCartMeta()} />} />
         <Route path="/checkout" element={<SeoHelmet seo={getCheckoutMeta()} />} />
         <Route path="/track/:orderNumber" element={<SeoHelmet seo={getOrderTrackMeta(':orderNumber')} />} />
+        <Route path="/payment/:orderNumber" element={<SeoHelmet seo={getCheckoutMeta()} />} />
         <Route path="/about" element={<SeoHelmet seo={getAboutMeta()} />} />
         <Route path="/faq" element={<SeoHelmet seo={getFaqMeta()} />} />
         <Route path="/blog" element={<SeoHelmet seo={getBlogMeta()} />} />
@@ -93,6 +96,7 @@ export default function App() {
         <Route path="/cart" element={<Layout><CartPage /></Layout>} />
         <Route path="/checkout" element={<Layout><CheckoutPage /></Layout>} />
         <Route path="/track/:orderNumber" element={<Layout><OrderTrackPage /></Layout>} />
+        <Route path="/payment/:orderNumber" element={<Layout><PaymentConfirmationPage /></Layout>} />
         <Route path="/promotions" element={<Layout><PromotionsPage /></Layout>} />
         <Route path="/reviews/:productId" element={<Layout><ReviewPage /></Layout>} />
         <Route path="/vote" element={<Layout><VotePage /></Layout>} />
@@ -121,6 +125,7 @@ export default function App() {
         <Route path="/admin/orders" element={<AdminRoute><Layout><AdminOrders /></Layout></AdminRoute>} />
         <Route path="/admin/products" element={<AdminRoute><Layout><AdminProducts /></Layout></AdminRoute>} />
         <Route path="/admin/audit-log" element={<AdminRoute><Layout><AuditLogPage /></Layout></AdminRoute>} />
+        <Route path="/admin/delivery" element={<AdminRoute><Layout><DeliveryManagement /></Layout></AdminRoute>} />
         
         {/* Catch all */}
         <Route path="*" element={<Navigate to="/" replace />} />

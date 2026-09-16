@@ -81,6 +81,11 @@ export function AdminDashboard() {
           <div className="font-bold text-brand-accent text-lg">โปรโมชั่น</div>
           <div className="text-sm text-brand-muted mt-1">สร้างและจัดการโปรโมชั่น</div>
         </Link>
+        <Link to="/admin/delivery" className="card text-center hover:scale-105 transition-all hover:shadow-xl bg-gradient-to-br from-cyan-50 to-blue-50 border-2 border-cyan-200">
+          <div className="text-4xl mb-3">🛵</div>
+          <div className="font-bold text-brand-accent text-lg">จัดจัดส่ง</div>
+          <div className="text-sm text-brand-muted mt-1">Route optimization + ผู้ให้บริการ</div>
+        </Link>
       </div>
 
       {/* Overview Summary - Premium Style */}
