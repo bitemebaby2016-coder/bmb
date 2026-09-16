@@ -74,8 +74,13 @@ What is known to be working:
 - CheckoutPage auto-triggers 'order_placed' notification on successful order ✅
 - AdminOrders triggers notifications on status change & payment update ✅
 - Browser push notification support (requestPermission + sendBrowserNotification) ✅
-- Build passes in 1.94s after removing duplicate exports from bmbAdminApi_products.ts ✅
+- Build passes in 2.66s after removing duplicate exports from bmbAdminApi_products.ts ✅
 - STATUS_TRACKER.md updated to v5.0 ✅
+- External Providers Integration: checkout flow connected to externalProviders.ts ✅
+- Route Optimization: DeliveryManagement page with routeOptimization.ts ✅
+- Payment Gateway: paymentGateway.ts with Stripe, PromptPay, COD flows ✅
+- PaymentConfirmationPage: real payment confirmation UI ✅
+- Pre-order System: preOrderService.ts with scheduling and validation ✅
 
 What is currently failing:
 - Pre-existing TypeScript errors in api.test.ts, aiService.ts, aiToolCalling.ts (not blocking build, these were pre-existing before this session)
@@ -279,14 +284,15 @@ Failed:
 Blocked:
 - None
 
-Files Changed:
-- src/store/notificationStore.ts (+83 lines — full notification engine)
-- src/pages/CheckoutPage.tsx (+9 lines — order_placed trigger)
-- src/pages/admin/AdminOrders.tsx (+24 lines — status/payment triggers)
-- src/components/notification/NotificationDropdown.tsx (+3 lines — permission request)
-- src/lib/bmbAdminApi_products.ts (-133 lines — removed all localStorage duplicates)
-- src/types/index.ts (+16 lines — NotificationEventType)
-- STATUS_TRACKER.md (v5.0 version update)
+Files Changed (GAP CLOSURE GROUP 2):
+- src/pages/CheckoutPage.tsx (+129 lines, -82 lines — external providers integration)
+- src/pages/admin/DeliveryManagement.tsx (+303 lines — route optimization UI)
+- src/pages/admin/AdminDashboard.tsx (+5 lines — delivery management link)
+- src/lib/paymentGateway.ts (+507 lines — payment processing service)
+- src/pages/PaymentConfirmationPage.tsx (+124 lines — payment confirmation UI)
+- src/lib/preOrderService.ts (+270 lines — pre-order logic and scheduling)
+- src/App.tsx (+3 lines — new routes)
+- AI_WORK_STATE.md (updated state)
 
 Tests / Commands Run:
 - npx tsc --noEmit — checked pre-existing errors only (not from our changes)
@@ -300,7 +306,8 @@ Known Risks:
 - Pre-existing TS errors in api.test.ts, aiService.ts, aiToolCalling.ts remain (not blocking build)
 
 Next Exact Action:
-- Start GAP CLOSURE GROUP 2: External Providers Integration + Route Optimization (routeOptimization.ts integration)
+- GAP CLOSURE GROUP 2 COMPLETE ✅ (4 commits pushed)
+- Next: GAP CLOSURE GROUP 3+ remaining items
 
 User Decision Required:
 - NONE
