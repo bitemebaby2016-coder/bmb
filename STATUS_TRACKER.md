@@ -140,7 +140,7 @@
 
 ## DEPLOYMENT STATUS
 
-- **Build**: TypeScript PASS (0 errors), Vite PASS (~1.1s) ✅ | Bundle: 705.68 KB JS + 51.94 KB CSS | gzip: 190.40 KB
+- **Build**: TypeScript PASS (0 errors), Vite PASS (~1.1s) ✅ | Bundle: 322.39 KB JS + 51.94 KB CSS | gzip: 190.40 KB
 - **Tests**: Vitest 9/17 passing (53%) — 8 fail due to Supabase DB schema mismatch, NOT code bugs ✅
 - **PWA**: Service Worker + Manifest generated ✅
 - **Cloudflare Pages**: Automatic deployment enabled ✅

@@ -1,41 +1,59 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { HelmetProvider } from 'react-helmet-async'
+import { lazy, Suspense } from 'react'
 import { useAuthStore } from './store/authStore'
 import { Layout } from './components/layout/Layout'
 import { ErrorBoundary } from './components/ErrorBoundary'
 import { FloatingAiButton } from './components/ai/FloatingAiButton'
 import { SeoHelmet } from './components/SeoHelmet'
 import { getHomeMeta, getMenuMeta, getCartMeta, getCheckoutMeta, getOrderTrackMeta, getAboutMeta, getFaqMeta, getBlogMeta, getContactMeta, getPrivacyMeta, getTermsMeta, getPromotionsMeta, getRewardsMeta, getVoteMeta, getRandomMenuMeta, getShareMeta, getViralMeta, getProfileMeta, getAdminMeta, getLoginMeta } from './lib/seo'
+
+// Core pages (must load immediately)
 import { HomePage } from './pages/HomePage'
 import { MenuPage } from './pages/MenuPage'
 import { CartPage } from './pages/CartPage'
 import { CheckoutPage } from './pages/CheckoutPage'
 import { OrderTrackPage } from './pages/OrderTrackPage'
-import { ProfilePage } from './pages/ProfilePage'
 import { PromotionsPage } from './pages/PromotionsPage'
 import { ReviewPage } from './pages/ReviewPage'
 import { VotePage } from './pages/VotePage'
 import { RandomMenuPage } from './pages/RandomMenuPage'
-import { RewardsPage } from './pages/RewardsPage'
 import { SharePage } from './pages/SharePage'
-import { ViralPage } from './pages/ViralPage'
-import { InventoryPage } from './pages/admin/InventoryPage'
-import { AdminDashboard } from './pages/admin/AdminDashboard'
-import { AdminOrders } from './pages/admin/AdminOrders'
-import { AdminProducts } from './pages/admin/AdminProducts'
-import { AuditLogPage } from './pages/admin/AuditLogPage'
-import { DeliveryManagement } from './pages/admin/DeliveryManagement'
-import { RouteOptimizationPage } from './pages/admin/RouteOptimizationPage'
 import { LoginPage } from './pages/login/LoginPage'
 import { RegisterPage } from './pages/login/RegisterPage'
-import { AiChatPage } from './pages/ai/AiChatPage'
 import { PaymentConfirmationPage } from './pages/PaymentConfirmationPage'
-import { AboutPage } from './pages/AboutPage'
-import { FaqPage } from './pages/FaqPage'
-import { BlogPage } from './pages/BlogPage'
-import { ContactPage } from './pages/ContactPage'
-import { PrivacyPage } from './pages/PrivacyPage'
-import { TermsPage } from './pages/TermsPage'
+
+// Lazy loaded: Admin routes (7 pages)
+const InventoryPage = lazy(() => import('./pages/admin/InventoryPage').then(m => ({ default: m.InventoryPage })))
+const AdminDashboard = lazy(() => import('./pages/admin/AdminDashboard').then(m => ({ default: m.AdminDashboard })))
+const AdminOrders = lazy(() => import('./pages/admin/AdminOrders').then(m => ({ default: m.AdminOrders })))
+const AdminProducts = lazy(() => import('./pages/admin/AdminProducts').then(m => ({ default: m.AdminProducts })))
+const AuditLogPage = lazy(() => import('./pages/admin/AuditLogPage').then(m => ({ default: m.AuditLogPage })))
+const DeliveryManagement = lazy(() => import('./pages/admin/DeliveryManagement').then(m => ({ default: m.DeliveryManagement })))
+const RouteOptimizationPage = lazy(() => import('./pages/admin/RouteOptimizationPage').then(m => ({ default: m.RouteOptimizationPage })))
+
+// Lazy loaded: Protected pages (4 pages)
+const ProfilePage = lazy(() => import('./pages/ProfilePage').then(m => ({ default: m.ProfilePage })))
+const RewardsPage = lazy(() => import('./pages/RewardsPage').then(m => ({ default: m.RewardsPage })))
+const ViralPage = lazy(() => import('./pages/ViralPage').then(m => ({ default: m.ViralPage })))
+const AiChatPage = lazy(() => import('./pages/ai/AiChatPage').then(m => ({ default: m.AiChatPage })))
+
+// Lazy loaded: Info pages (6 pages)
+const AboutPage = lazy(() => import('./pages/AboutPage').then(m => ({ default: m.AboutPage })))
+const FaqPage = lazy(() => import('./pages/FaqPage').then(m => ({ default: m.FaqPage })))
+const BlogPage = lazy(() => import('./pages/BlogPage').then(m => ({ default: m.BlogPage })))
+const ContactPage = lazy(() => import('./pages/ContactPage').then(m => ({ default: m.ContactPage })))
+const PrivacyPage = lazy(() => import('./pages/PrivacyPage').then(m => ({ default: m.PrivacyPage })))
+const TermsPage = lazy(() => import('./pages/TermsPage').then(m => ({ default: m.TermsPage })))
+
+// Loading component for Suspense
+function LoadingSpinner() {
+  return (
+    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '200px' }}>
+      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500"></div>
+    </div>
+  )
+}
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
@@ -104,30 +122,30 @@ export default function App() {
         <Route path="/random-menu" element={<Layout><RandomMenuPage /></Layout>} />
         <Route path="/share" element={<Layout><SharePage /></Layout>} />
         
-        {/* Info Pages (SEO/GEO/AEO) */}
-        <Route path="/about" element={<Layout><AboutPage /></Layout>} />
-        <Route path="/faq" element={<Layout><FaqPage /></Layout>} />
-        <Route path="/blog" element={<Layout><BlogPage /></Layout>} />
-        <Route path="/contact" element={<Layout><ContactPage /></Layout>} />
-        <Route path="/privacy" element={<Layout><PrivacyPage /></Layout>} />
-        <Route path="/terms" element={<Layout><TermsPage /></Layout>} />
+        {/* Info Pages (SEO/GEO/AEO) — Lazy Loaded */}
+        <Route path="/about" element={<Suspense fallback={<LoadingSpinner />}><Layout><AboutPage /></Layout></Suspense>} />
+        <Route path="/faq" element={<Suspense fallback={<LoadingSpinner />}><Layout><FaqPage /></Layout></Suspense>} />
+        <Route path="/blog" element={<Suspense fallback={<LoadingSpinner />}><Layout><BlogPage /></Layout></Suspense>} />
+        <Route path="/contact" element={<Suspense fallback={<LoadingSpinner />}><Layout><ContactPage /></Layout></Suspense>} />
+        <Route path="/privacy" element={<Suspense fallback={<LoadingSpinner />}><Layout><PrivacyPage /></Layout></Suspense>} />
+        <Route path="/terms" element={<Suspense fallback={<LoadingSpinner />}><Layout><TermsPage /></Layout></Suspense>} />
         
-        {/* Protected Routes */}
-        <Route path="/profile" element={<ProtectedRoute><Layout><ProfilePage /></Layout></ProtectedRoute>} />
-        <Route path="/rewards" element={<ProtectedRoute><Layout><RewardsPage /></Layout></ProtectedRoute>} />
-        <Route path="/viral" element={<ProtectedRoute><Layout><ViralPage /></Layout></ProtectedRoute>} />
+        {/* Protected Routes — Lazy Loaded */}
+        <Route path="/profile" element={<Suspense fallback={<LoadingSpinner />}><ProtectedRoute><Layout><ProfilePage /></Layout></ProtectedRoute></Suspense>} />
+        <Route path="/rewards" element={<Suspense fallback={<LoadingSpinner />}><ProtectedRoute><Layout><RewardsPage /></Layout></ProtectedRoute></Suspense>} />
+        <Route path="/viral" element={<Suspense fallback={<LoadingSpinner />}><ProtectedRoute><Layout><ViralPage /></Layout></ProtectedRoute></Suspense>} />
         
-        {/* AI Routes */}
-        <Route path="/ai-chat" element={<ProtectedRoute><Layout><AiChatPage /></Layout></ProtectedRoute>} />
+        {/* AI Routes — Lazy Loaded */}
+        <Route path="/ai-chat" element={<Suspense fallback={<LoadingSpinner />}><ProtectedRoute><Layout><AiChatPage /></Layout></ProtectedRoute></Suspense>} />
         
-        {/* Admin Routes */}
-        <Route path="/admin" element={<AdminRoute><Layout><AdminDashboard /></Layout></AdminRoute>} />
-        <Route path="/admin/inventory" element={<AdminRoute><Layout><InventoryPage /></Layout></AdminRoute>} />
-        <Route path="/admin/orders" element={<AdminRoute><Layout><AdminOrders /></Layout></AdminRoute>} />
-        <Route path="/admin/products" element={<AdminRoute><Layout><AdminProducts /></Layout></AdminRoute>} />
-        <Route path="/admin/audit-log" element={<AdminRoute><Layout><AuditLogPage /></Layout></AdminRoute>} />
-        <Route path="/admin/delivery" element={<AdminRoute><Layout><DeliveryManagement /></Layout></AdminRoute>} />
-        <Route path="/admin/route-optimization" element={<AdminRoute><Layout><RouteOptimizationPage /></Layout></AdminRoute>} />
+        {/* Admin Routes — Lazy Loaded */}
+        <Route path="/admin" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminDashboard /></Layout></AdminRoute></Suspense>} />
+        <Route path="/admin/inventory" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><InventoryPage /></Layout></AdminRoute></Suspense>} />
+        <Route path="/admin/orders" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminOrders /></Layout></AdminRoute></Suspense>} />
+        <Route path="/admin/products" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminProducts /></Layout></AdminRoute></Suspense>} />
+        <Route path="/admin/audit-log" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AuditLogPage /></Layout></AdminRoute></Suspense>} />
+        <Route path="/admin/delivery" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><DeliveryManagement /></Layout></AdminRoute></Suspense>} />
+        <Route path="/admin/route-optimization" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><RouteOptimizationPage /></Layout></AdminRoute></Suspense>} />
         
         {/* Catch all */}
         <Route path="*" element={<Navigate to="/" replace />} />

@@ -1,7 +1,7 @@
-# 🎯 Bite Me Baby — Master Plan & Status Tracker
+﻿# 🎯 Bite Me Baby — Master Plan & Status Tracker
 
 > **Last Updated:** 2026-09-16  
-> **Version:** 4.0 (Real Status Verified — Docs Aligned to Code)  
+> **Version:** 5.0 (Bundle Optimized — Code Splitting Active)  
 > **Status:** ✅ BUILD PASS / ⚠️ TESTS NEED DB MIGRATION  
 
 ---
@@ -14,9 +14,9 @@
 | **Completed** | 48 (100%) — code implementation done |
 | **In Progress** | 0 (0%) |
 | **Pending** | 0 (0%) |
-| **Build Status** | ✅ PASS (tsc 0 errors + vite build 1.36s) |
+| **Build Status** | ✅ PASS (tsc 0 errors + vite build 1.07s) |
 | **Test Status** | ⚠️ 9/17 passing (53%) — 8 fail due to Supabase DB migration not run |
-| **Bundle Size** | 705.68 KB JS (+ 51.94 KB CSS) |
+| **Bundle Size** | ✅ 322.39 KB JS (+ 51.94 KB CSS) | gzip: 91.30 KB — OPTIMIZED |
 | **DB Migration** | ✅ Scripts ready (001→002→003) — not yet applied to live Supabase |
 
 ---
