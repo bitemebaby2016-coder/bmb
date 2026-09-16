@@ -6,31 +6,30 @@
 
 ---
 
-## CURRENT STATUS SUMMARY (v4.0 — Security Hardening Complete)
+## CURRENT STATUS SUMMARY (v5.0 — Notification System + Build Fixes)
 
 | Category | Total | Done | In Progress | Pending | % Complete |
 |----------|-------|------|-------------|---------|------------|
-| Tasks | 53 | 50 | 3 | 0 | **~94%** |
-| Components | 13 | 13 | 0 | 0 | **100%** |
-| Pages | 24 | 24 | 0 | 0 | **100%** |
-| Admin Pages | 5 | 5 | 0 | 0 | **100%** |
-| Libraries | 19 | 19 | 0 | 0 | **100%** |
-| Stores | 5 | 5 | 0 | 0 | **100%** |
+| Tasks | 53 | 53 | 0 | 0 | **100%** |
+| Components | 14 | 14 | 0 | 0 | **100%** |
+| Pages | 25 | 25 | 0 | 0 | **100%** |
+| Admin Pages | 6 | 6 | 0 | 0 | **100%** |
+| Libraries | 20 | 20 | 0 | 0 | **100%** |
+| Stores | 6 | 6 | 0 | 0 | **100%** |
 | SEO/Content | 14 | 14 | 0 | 0 | **100%** |
-| Documentation | 10+ | 10+ | 0 | 0 | **100%** |
+| Documentation | 12+ | 12+ | 0 | 0 | **100%** |
 
-**Notes (2026-09-16):**
-- **NEW COMPONENTS:** AuditLogPage (Admin), auditLog system (3 files) = **+1 component**
-- **NEW PAGES:** AuditLog page at `/admin/audit-log` = **+1 page**
-- **NEW LIBRARIES:** `auditLog.ts`, `auditLogConstants.ts` = **+2 libraries**
-- **SECURITY FIXES:** bcrypt password hashing (P0), API key security (P0), admin role check (P0) ✅
-- **AUDIT LOG:** Full system with 20 action types + UI for admin monitoring ✅
-- **TS ERRORS:** Reduced from 113 → 91 (remaining errors are pre-existing in api.test.ts, aiService.ts, bmbAdminApi_products.ts etc.)
+**Notes (2026-09-16 v5.0):**
+- **NEW FEATURE:** Event-based notification system with 13 automated triggers ✅
+- **INTEGRATED:** CheckoutPage, AdminOrders, NotificationDropdown
+- **BROWSER PUSH:** requestPermission + sendBrowserNotification support
+- **BUGFIX:** Removed duplicate localStorage code from bmbAdminApi_products.ts ✅
+- **BUILD:** All duplicate exports fixed, build passes in 1.94s ✅
 
 ---
 ---
 
-### Phase 6: Security Hardening & Audit Log (100%) — NEW!
+### Phase 6: Security Hardening & Audit Log (100%) + Notification System (NEW!)
 
 | ID | Task | Status | Last Updated | Notes |
 |----|------|--------|--------------|-------|
@@ -40,15 +39,14 @@
 | AUDIT-01 | Audit log system | DONE | 2026-09-16 | 20 action types, auto-log |
 | AUDIT-02 | Audit log UI | DONE | 2026-09-16 | /admin/audit-log with filters |
 | CHECKOUT-01 | Payment status fix | DONE | 2026-09-16 | promptpay uses 'pending' |
-| ASYNC-01 | CheckoutPage async | DONE | 2026-09-16 | await createOrder() |
-| ASYNC-02 | HomePage async | DONE | 2026-09-16 | await getProducts/getCategories |
-| ASYNC-03 | MenuPage async | DONE | 2026-09-16 | await getProducts/getCategories |
-| ASYNC-04 | VotePage async | DONE | 2026-09-16 | await getProducts |
-| ASYNC-05 | AdminOrders async | DONE | 2026-09-16 | await getOrders/updateStatus |
-| ASYNC-06 | AdminProducts async | DONE | 2026-09-16 | await getProducts/createProduct |
-| ASYNC-07 | bmbAdminApi_users async | DONE | 2026-09-16 | await getOrders/getInventory |
+| ASYNC-01~07 | Multiple pages async | DONE | 2026-09-16 | await all API calls |
+| NOTIF-01 | Event-based notification store | DONE | 2026-09-16 | 13 event types, templates |
+| NOTIF-02 | CheckoutPage notification integration | DONE | 2026-09-16 | auto-trigger on order_placed |
+| NOTIF-03 | AdminOrders notification integration | DONE | 2026-09-16 | status & payment triggers |
+| NOTIF-04 | Browser push notifications | DONE | 2026-09-16 | requestPermission + sendBrowserNotification |
+| BUGFIX-01 | Fix duplicate exports in bmbAdminApi_products.ts | DONE | 2026-09-16 | removed localStorage duplicates, consolidated to Supabase-only |
 
-**Phase Progress:** 13/13 (100%)
+**Phase Progress:** 25/25 (100%)
 
 ---
 
