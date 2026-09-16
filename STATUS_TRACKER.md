@@ -1,12 +1,12 @@
 ﻿# Bite Me Baby Status Tracker
 
 > **Last Updated:** 2026-09-16
-> **Version:** v7.0 (Real Status Aligned — Bug Fixes + Docs Updated)
+> **Version:** v8.0 (Tests Green Offline + Migration 004 Fix)
 > **Purpose:** Real-time status of all tasks, components, and features
 
 ---
 
-## CURRENT STATUS SUMMARY (v7.0 — Real Status Aligned)
+## CURRENT STATUS SUMMARY (v8.0 — All Green Offline)
 
 | Category | Total | Done | In Progress | Pending | % Complete |
 |----------|-------|------|-------------|---------|------------|
@@ -21,7 +21,7 @@
 
 **Notes (2026-09-16 v6.0):**
 - **STORAGE BUGFIX:** `storageClear()` jsdom mock fix ✅ (bmbStorage.ts) — Root cause: Object.keys(localStorage) enumerates mock methods not store keys. Solution: use localStorage.length + key(i) pattern.
-- **TESTS:** 9/17 passing (53%) — 8 fail due to Supabase DB schema mismatch (`is_featured`, `delivery_fee` columns missing on live DB). **These are deployment issues, NOT code bugs.** Migrations ready in supabase/migrations/ (001→002→003).
+- **TESTS:** ✅ 17/17 passing (100%) — OFFLINE via in-memory Supabase mock (`src/__tests__/helpers/supabaseMock.ts`). Live Supabase migration is DEFERRED: owner will reset/rebuild the DB later from 001→002→003→004 (`004` = UUID→TEXT PK fix + full FK set + seed).
 - **ASYNC/AWAIT:** All Supabase API callers now properly await results ✅
 - **TYPE FIXES:** OrderForm extended, supabase.raw() replaced, type mismatches fixed ✅
 - **TESTS:** All API tests made async with await ✅
@@ -141,10 +141,10 @@
 ## DEPLOYMENT STATUS
 
 - **Build**: TypeScript PASS (0 errors), Vite PASS (~1.1s) ✅ | Bundle: 322.39 KB JS + 51.94 KB CSS | gzip: 190.40 KB
-- **Tests**: Vitest 9/17 passing (53%) — 8 fail due to Supabase DB schema mismatch, NOT code bugs ✅
+- **Tests**: Vitest 17/17 passing (100%) — OFFLINE (in-memory Supabase mock) ✅
 - **PWA**: Service Worker + Manifest generated ✅
 - **Cloudflare Pages**: Automatic deployment enabled ✅
-- **DB Migration**: Ready to execute (all 8 issues fixed) ✅
+- **DB Migration**: Ready to execute (001→002→003→004). Live DB reset/rebuild planned by owner — 004 fixes UUID→TEXT PK mismatch (drops dependent FKs dynamically, restores the canonical 13-FK set, creates pre_orders/payment_intents, seeds data) ✅
 - **Git**: 2 commits pushed (4cce7f1, f2415ec) to origin/main ✅
 
 ---

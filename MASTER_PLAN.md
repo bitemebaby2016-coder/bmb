@@ -1,8 +1,8 @@
 ﻿# 🎯 Bite Me Baby — Master Plan & Status Tracker
 
 > **Last Updated:** 2026-09-16  
-> **Version:** 5.0 (Bundle Optimized — Code Splitting Active)  
-> **Status:** ✅ BUILD PASS / ⚠️ TESTS NEED DB MIGRATION  
+> **Version:** 5.1 (Tests Green Offline — In-Memory Supabase Mock)  
+> **Status:** ✅ BUILD PASS / ✅ TESTS PASS (17/17, offline mock)  
 
 ---
 
@@ -15,18 +15,26 @@
 | **In Progress** | 0 (0%) |
 | **Pending** | 0 (0%) |
 | **Build Status** | ✅ PASS (tsc 0 errors + vite build 1.07s) |
-| **Test Status** | ⚠️ 9/17 passing (53%) — 8 fail due to Supabase DB migration not run |
+| **Test Status** | ✅ 17/17 passing (100%) — offline in-memory Supabase mock (no live DB required) |
 | **Bundle Size** | ✅ 322.39 KB JS (+ 51.94 KB CSS) | gzip: 91.30 KB — OPTIMIZED |
-| **DB Migration** | ✅ Scripts ready (001→002→003) — not yet applied to live Supabase |
+| **DB Migration** | ✅ Scripts ready (001→002→003→004 UUID→TEXT fix) — live Supabase reset/rebuild planned by owner |
 
 ---
 
-### ⚠️ Critical Note — Test Results Do Not Reflect Code Quality
+### ✅ Note — Tests Green Offline (2026-09-16 v5.1)
 
-All 8 test failures are caused by **Supabase schema mismatch**: the connected database instance lacks columns (`is_featured`, `delivery_fee`, etc.) that the frontend API layer expects. This is a **deployment/ops issue**, not a code bug.
+The full test suite now passes **17/17 offline** using an in-memory Supabase mock
+(`src/__tests__/helpers/supabaseMock.ts`), seeded with the canonical 004 data.
+The mock implements the postgrest-js chain surface (`from().select().eq().order()
+.insert().update().delete().single()`) so the real API layer code is exercised
+deterministically without a live database.
 
-**Migrations ready:** 001_initial_schema.sql → 002_complete_schema.sql → 003_add_missing_columns.sql  
-**To fix tests:** Run these SQL migrations on the live Supabase instance.
+**Supabase live DB is intentionally DEFERRED.** The owner will reset/delete the
+Supabase project and rebuild it later from the migration chain:
+001_initial_schema.sql → 002_complete_schema.sql → 003_add_missing_columns.sql
+→ 004_fix_uuid_to_text.sql (idempotent, TEXT PKs, full FK set, seed data).
+Until then the app + tests run fully offline; API writes to a real DB are the
+only thing not exercised.
 
 
 ---
@@ -151,29 +159,18 @@ All 8 test failures are caused by **Supabase schema mismatch**: the connected da
 | Service Worker | ✅ Generated |
 | PWA Manifest | ✅ Generated |
 
-### Test Failure Breakdown (2026-09-16 v4.0)
+### Test Results (2026-09-16 v5.1 — ALL GREEN OFFLINE)
 
-| Tests Passing | Reason |
-|---------------|--------|
-| Orders API > should get orders | ✅ |
-| Orders API > should update order status | ✅ (conditional, runs only if orders exist) |
-| Cart Store > should add item to cart | ✅ |
-| Cart Store > should clear cart | ✅ |
-| Rewards Store > should add loyalty points | ✅ |
-| Rewards Store > should redeem points | ✅ |
-| Storage Layer > should set and get values | ✅ |
-| Storage Layer > should return default value | ✅ |
-| Storage Layer > should clear storage | ✅ (FIXED in this session) |
-| Products API > should get products | ❌ Supabase returns null (`is_featured` column missing) |
-| Products API > should get product by id | ❌ Same |
-| Products API > should create product | ❌ Same |
-| Products API > should update product | ❌ Same |
-| Products API > should delete product | ❌ Same |
-| Categories API > should get categories | ❌ Supabase returns [] (empty table) |
-| Categories API > should have required fields | ❌ Same |
-| Orders API > should create order | ❌ Supabase returns null (`delivery_fee` column missing) |
+| Test Suite | Result |
+|------------|--------|
+| Products API (get/get-by-id/create/update/delete) | ✅ 5/5 |
+| Categories API (get fields) | ✅ 2/2 |
+| Orders API (get/create/update status) | ✅ 3/3 (createOrder now uses seeded round `round-1`; order items carry TEXT ids) |
+| Storage Layer (set/get/default/clear) | ✅ 4/4 |
+| Cart Store (add/clear) | ✅ 2/2 |
+| Rewards Store (add/redeem) | ✅ 2/2 |
 
-**All 8 failures are identical root cause:** connected Supabase instance hasn't had migrations applied yet. Migrations ARE ready in `supabase/migrations/`.
+**17/17 PASS (100%)** — runs fully offline via `supabaseMock.ts` (in-memory PostgREST-style fake seeded from migration 004). Live Supabase migration is deferred: owner will reset/rebuild the DB later using 001→002→003→004.
 
 ### 2026-09-16 (v4.0 — Real Status Verification & Bug Fix)
 
@@ -207,6 +204,24 @@ All 8 test failures are caused by **Supabase schema mismatch**: the connected da
 ---
 
 ## 📅 Change Log
+
+### 2026-09-16 (v5.1 — Tests Green Offline + Migration 004 UUID→TEXT Fix)
+**Migrations:**
+- ✅ `004_fix_uuid_to_text.sql` (NEW): dynamic, idempotent UUID→TEXT PK conversion for the 7 core tables + all UUID child FK columns; drops every dependent FK via `pg_constraint` (fixes the `2BP01 cannot drop constraint products_pkey` failure); re-creates the full canonical FK set (13 guarded constraints); creates `pre_orders`/`payment_intents` with TEXT keys; seeds canonical Thai data.
+- ✅ 004 drops any `gen_random_uuid()`-style id default before the type cast (defensive against the old destructive 002); conversion loop is table-driven so missing tables are skipped.
+
+**Tests (offline — no live DB):**
+- ✅ NEW `src/__tests__/helpers/supabaseMock.ts` — in-memory PostgREST-style fake (`from/select/eq/order/insert/update/delete/single`) seeded exactly like migration 004.
+- ✅ `api.test.ts` now mocks `@/lib/supabase` → **17/17 pass**.
+- ✅ Fixed latent test bugs: delete-product count assertion (create+delete nets to baseline) and `delivery_round_id: 'morning'` → `'round-1'` (FK targets `delivery_rounds.id`).
+
+**App bug fixes on the TEXT PK schema:**
+- ✅ `createProduct` id: `prod-${Date.now()}-${rand}` — `Date.now()` alone collided within the same ms (duplicate PK).
+- ✅ `createOrder` order items now carry `id` (`oi-<orderId>-<idx>`) — TEXT PK had no default.
+
+**Supabase live DB:** intentionally DEFERRED — owner will reset/rebuild from 001→002→003→004.
+
+---
 
 ### 2026-09-16 (v3.0 — Database Schema v2 Migration Fixed)
 **Database Migration Fixes:**

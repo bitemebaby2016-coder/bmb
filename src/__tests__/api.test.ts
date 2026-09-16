@@ -2,7 +2,25 @@
 // Bite Me Baby — Basic Tests (Vitest)
 // ============================================
 
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
+
+// Offline DB mock: replace the real Supabase client with an in-memory fake
+// (seeded exactly like migration 004) so these API tests run without a live
+// database. The user will reset/rebuild the Supabase project separately; until
+// then all tests must be green offline.
+vi.mock('@/lib/supabase', async () => {
+  const { createSupabaseMock } = await import('./helpers/supabaseMock')
+  return {
+    supabase: createSupabaseMock(),
+    supabaseAdmin: null,
+    getCurrentUser: async () => null,
+    isAdmin: async () => false,
+    subscribeToTable: () => ({ unsubscribe: vi.fn() }),
+    unsubscribeFromChannel: () => {},
+    default: null,
+  }
+})
+
 import { getProducts, getProduct, createProduct, updateProduct, deleteProduct } from '@/lib/bmbAdminApi_products'
 import { getOrders, createOrder, updateOrderStatus } from '@/lib/bmbAdminApi_orders'
 import { getCategories } from '@/lib/bmbAdminApi_products'
@@ -63,7 +81,9 @@ describe('Products API', () => {
     const deleted = await deleteProduct(newProduct!.id)
     expect(deleted).toBe(true)
     const productsAfter = await getProducts()
-    expect(productsAfter.length).toBe(productsBefore.length - 1)
+    // create + delete nets to the baseline (the same 'Test Product' from the
+    // create test above is still present in both counts)
+    expect(productsAfter.length).toBe(productsBefore.length)
   })
 })
 
@@ -98,7 +118,9 @@ describe('Orders API', () => {
       customer_id: 'test-user',
       customer_name: 'Test User',
       customer_phone: '0812345678',
-      delivery_round_id: 'morning',
+      // seeded delivery round id (delivery_rounds.id = round-1/2/3);
+      // 'morning' is the round_key/name alias, not the FK target
+      delivery_round_id: 'round-1',
       status: 'pending',
       total_amount: 200,
       delivery_fee: 30,

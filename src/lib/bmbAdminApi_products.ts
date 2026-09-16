@@ -64,7 +64,9 @@ export async function getFeaturedProducts(): Promise<Product[]> {
 
 export async function createProduct(data: ProductForm): Promise<Product | null> {
   const productData = {
-    id: data.id || `prod-${Date.now()}`,
+    // Unique even for rapid consecutive creations (Date.now() alone can
+    // collide within the same millisecond → duplicate TEXT PK error).
+    id: data.id || `prod-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
     name: data.name, description: data.description, price: data.price,
     category_id: data.category_id, image_url: data.image_url,
     is_available: data.is_available, is_featured: data.is_featured,

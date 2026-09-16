@@ -84,7 +84,8 @@ export async function createOrder(data: OrderForm): Promise<OrderForm | null> {
 
   // Insert order items
   if (data.items && data.items.length > 0) {
-    const itemsData = data.items.map(item => ({
+    const itemsData = data.items.map((item, idx) => ({
+      id: `oi-${order!.id}-${idx}`,
       order_id: order!.id,
       product_id: item.product_id,
       product_name: item.product_name,

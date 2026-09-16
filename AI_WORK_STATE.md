@@ -149,3 +149,18 @@ P1-1: Review API Supabase migration created (bmbAdminApi_reviews.ts)
 P1-2: Route Optimization UI created (RouteOptimizationPage.tsx + App.tsx route)
 DB Migration: supabase/migrations/003_add_missing_columns.sql created
 Build: tsc PASS (0 errors) + vite build PASS (4.27s) [VERIFIED]
+=== CLO-004 SESSION COMPLETED (2026-09-16) ===
+Task: Fix migration chain + make the suite green OFFLINE (live Supabase DB deferred by owner)
+- NEW supabase/migrations/004_fix_uuid_to_text.sql: idempotent UUID-to-TEXT PK conversion
+  (7 core tables + all UUID child FK columns), dynamic FK drop via pg_constraint
+  (fixes 2BP01 cannot drop constraint products_pkey), full canonical 13-FK re-create (guarded),
+  pre_orders/payment_intents with TEXT keys, canonical Thai seed, drops id DEFAULT before cast
+  (gen_random_uuid insurance), table-driven conversion loop (missing tables skipped safely).
+- NEW src/__tests__/helpers/supabaseMock.ts: in-memory PostgREST-style fake (from/select/eq/order/insert/update/delete/single)
+  seeded exactly like migration 004. api.test.ts now mocks @/lib/supabase -> npm test = 17/17 PASS [VERIFIED] offline.
+- App fixes on TEXT-PK schema: createProduct id = prod-${Date.now()}-${rand} (Date.now() collided within same ms);
+  createOrder order items now carry id = oi-<orderId>-<idx> (TEXT PK has no default).
+- Test fixes: delete-product count assertion (create+delete nets to baseline); createOrder delivery_round_id 'morning' -> 'round-1'.
+- Docs: MASTER_PLAN.md v5.1, STATUS_TRACKER.md v8.0, REALITY_MAP v3.1, CLOSURE_BOOK v3.1, AI SESSION CONTRACT v1.1.
+- LIVE SUPABASE DB: NOT migrated yet (owner decision) - reset/rebuild later from 001->002->003->004.
+- Build: tsc PASS (0 errors) + vite build PASS [VERIFIED].
