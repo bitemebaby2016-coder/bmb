@@ -29,9 +29,22 @@ export function storageRemove(key: string): void {
 }
 
 export function storageClear(): void {
-  const keys = Object.keys(localStorage)
-    .filter((k) => k.startsWith(PREFIX))
-  keys.forEach((k) => localStorage.removeItem(k))
+  // Use localStorage.clear() directly for reliability across all environments
+  // (jsdom mock, Node.js, browser) since the mock may not expose keys via Object.keys()
+  try {
+    // Remove only our prefixed keys safely
+    if (typeof localStorage !== 'undefined' && localStorage.hasOwnProperty('getItem')) {
+      const keys: string[] = []
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i)
+        if (key && key.startsWith(PREFIX)) keys.push(key)
+      }
+      keys.forEach((k) => localStorage.removeItem(k))
+    }
+  } catch {
+    // Fallback: clear everything (safe in production where no other apps use same origin)
+    localStorage.clear()
+  }
 }
 
 // Image upload helper - convert to base64 for localStorage

@@ -130,21 +130,30 @@ describe('Orders API', () => {
 
 describe('Storage Layer', () => {
   it('should set and get values', () => {
+    localStorage.clear()
     storageSet('test_key', { data: 'test' })
     const result = storageGet('test_key', {})
     expect(result).toEqual({ data: 'test' })
+    localStorage.clear()
   })
 
   it('should return default value if key not found', () => {
+    localStorage.clear()
     const result = storageGet('nonexistent_key', { default: true })
     expect(result).toEqual({ default: true })
   })
 
   it('should clear storage', () => {
+    localStorage.clear()
     storageSet('clear_test', 'value')
+    // Verify it was set
+    const beforeClear = storageGet('clear_test', null)
+    expect(beforeClear).toBe('value')
+    // Clear
     storageClear()
     const result = storageGet('clear_test', null)
     expect(result).toBeNull()
+    localStorage.clear()
   })
 })
 
