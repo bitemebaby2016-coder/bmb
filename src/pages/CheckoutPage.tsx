@@ -1,11 +1,12 @@
-import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+﻿import { useState, useEffect } from 'react'
+import { useNavigate, Link } from 'react-router-dom'
 import { useCartStore } from '@/store/cartStore'
 import { useAuthStore } from '@/store/authStore'
 import { useNotificationStore } from '@/store/notificationStore'
 import { showToast } from '@/components/ui/ToastContainer'
 import { createOrder, type OrderForm } from '@/lib/bmbAdminApi_orders'
 import { writeAuditLog } from '@/lib/auditLog'
+import { getBestProvider, calculateProviderCost, type DeliveryProvider } from '@/lib/externalProviders'
 
 export function CheckoutPage() {
   const navigate = useNavigate()
@@ -18,17 +19,49 @@ export function CheckoutPage() {
     detail: ''
   })
   const [paymentMethod, setPaymentMethod] = useState<'promptpay_qr' | 'cash_on_delivery'>('promptpay_qr')
+  const [selectedProvider, setSelectedProvider] = useState<DeliveryProvider | null>(null)
+  const [providerCost, setProviderCost] = useState(0)
   const [isProcessing, setIsProcessing] = useState(false)
+
+  // GAP CLOSURE: Calculate best provider based on delivery address
+  useEffect(() => {
+    if (deliveryAddress.detail.length > 5) {
+      const result = getBestProvider({
+        dropoff_latitude: deliveryAddress.latitude,
+        dropoff_longitude: deliveryAddress.longitude,
+        items_count: items.length,
+        estimated_weight: items.reduce((sum, item) => sum + item.product.price * 0.1, 0)
+      })
+      if (result) {
+        setSelectedProvider(result.provider)
+        setProviderCost(result.cost)
+      } else {
+        setSelectedProvider(null)
+        setProviderCost(0)
+      }
+    }
+  }, [deliveryAddress.latitude, deliveryAddress.longitude, items.length])
+
+  // Recalculate total when provider changes
+  useEffect(() => {
+    if (selectedProvider) {
+      const newTotal = Math.max(0, subtotal - discount + providerCost)
+      useCartStore.setState({ deliveryFee: providerCost, total: newTotal })
+    }
+  }, [selectedProvider, providerCost])
 
   async function handlePlaceOrder() {
     if (!deliveryAddress.detail) {
-      showToast('กรุณาใส่ที่อยู่จัดส่ง', 'warning')
+      showToast('กรุาใส่ที่อย่จัดส่ง', 'warning')
+      return
+    }
+    if (!selectedProvider) {
+      showToast('ไม่พบผ้ให้บริการจัดส่งในบริเวนี้', 'error')
       return
     }
 
     setIsProcessing(true)
 
-    // Create real order with items from cart
     const orderItems = items.map(item => ({
       product_id: item.product.id,
       product_name: item.product.name,
@@ -46,12 +79,15 @@ export function CheckoutPage() {
       delivery_round_id: selectedRound,
       status: 'pending',
       total_amount: total,
-      delivery_fee: deliveryFee,
+      delivery_fee: providerCost,
       payment_method: paymentMethod,
       payment_status: paymentMethod === 'promptpay_qr' ? 'pending' : 'pending',
       delivery_address: deliveryAddress.detail,
       dropoff_latitude: deliveryAddress.latitude,
       dropoff_longitude: deliveryAddress.longitude,
+      delivery_method: selectedProvider.type as any,
+      provider_id: selectedProvider.id,
+      provider_name: selectedProvider.name,
       items: orderItems,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
@@ -59,28 +95,57 @@ export function CheckoutPage() {
 
     const order = await createOrder(orderData)
     if (!order) {
-      showToast('สร้างออเดอร์ล้มเหลว กรุณาลองใหม่', 'error')
+      showToast('สร้างออเดอรล้มเหลว กรุาลองใหม่', 'error')
       setIsProcessing(false)
       return
     }
 
-    // Audit log: order created
+    // GAP CLOSURE: Request provider delivery for non-self-delivery
+    if (selectedProvider.type !== 'self_delivery') {
+      try {
+        const { requestProviderDelivery } = await import('@/lib/externalProviders')
+        await requestProviderDelivery(selectedProvider.id, {
+          provider_id: selectedProvider.id,
+          order_number: order.order_number,
+          pickup_latitude: 10.7016,
+          pickup_longitude: 102.1429,
+          dropoff_latitude: deliveryAddress.latitude,
+          dropoff_longitude: deliveryAddress.longitude,
+          dropoff_detail: deliveryAddress.detail,
+          items_count: items.length,
+          total_weight: items.reduce((sum, item) => sum + item.product.price * 0.1, 0),
+          status: 'requested',
+          estimated_delivery_time: selectedProvider.estimated_time_minutes,
+          actual_delivery_time: null,
+        })
+      } catch (e) {
+        console.warn('[Checkout] Provider delivery request failed (non-critical):', e)
+      }
+    }
+
     writeAuditLog({
       action: 'order_create',
       entity_type: 'order',
       entity_id: order.order_number,
-      description: `ออเดอร์ใหม่ #${order.order_number} โดย ${customer?.name || customer?.email || 'Guest'} รวม ${total.toFixed(2)} บาท`,
-      metadata: { itemCount: items.length, totalAmount: total, paymentMethod: paymentMethod }
+      description: `ออเดอรใหม่ #${order.order_number} ดย ${customer?.name || customer?.email || 'Guest'} รวม ${total.toFixed(2)} บาท (ผ้ให้บริการ: ${selectedProvider.name})`,
+      metadata: { 
+        itemCount: items.length, 
+        totalAmount: total, 
+        paymentMethod: paymentMethod,
+        deliveryProvider: selectedProvider.id,
+        deliveryProviderName: selectedProvider.name,
+        deliveryCost: providerCost
+      }
     })
 
-    showToast(`สั่งซื้อสำเร็จ! เลขที่ ${order.order_number}`, 'success')
+    showToast(`สั่งื้อสำเรจ! เลขที่ ${order.order_number}`, 'success')
     
-    // ✅ GAP CLOSURE: Trigger order_placed notification
     useNotificationStore.getState().triggerEvent('order_placed', {
       orderNumber: order.order_number,
       userId: customer?.id || '',
       totalAmount: total,
       itemCount: items.length,
+      deliveryProvider: selectedProvider.name,
     })
     
     clearCart()
@@ -95,78 +160,75 @@ export function CheckoutPage() {
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-6">
-      <h1 className="text-3xl font-bold text-brand-accent mb-6">💳 ชำระเงิน</h1>
-
-      {/* Delivery Round Selection */}
-      <div className="card mb-6">
-        <h3 className="font-bold text-brand-accent mb-4">🕐 เลือกรอบจัดส่ง</h3>
-        <div className="grid grid-cols-3 gap-3">
-          {[
-            { key: 'morning', name: 'รอบเช้า', time: '6:00-9:00', cutoff: '08:00', icon: '🌅' },
-            { key: 'midday', name: 'รอบกลางวัน', time: '11:00-14:00', cutoff: '10:30', icon: '☀️' },
-            { key: 'evening', name: 'รอบเย็น', time: '17:00-20:00', cutoff: '16:00', icon: '' },
-          ].map((round) => (
-            <button
-              key={round.key}
-              onClick={() => setSelectedRound(round.key)}
-              className={`p-4 rounded-xl text-center transition-all ${
-                selectedRound === round.key
-                  ? 'bg-brand-primary text-white border-2 border-brand-primary'
-                  : 'bg-brand-bg border-2 border-brand-border hover:border-brand-primary'
-              }`}
-            >
-              <div className="text-2xl mb-1">{round.icon}</div>
-              <div className="font-bold text-sm">{round.name}</div>
-              <div className="text-xs opacity-80">{round.time}</div>
-              <div className="text-xs mt-1">ปิดรับ {round.cutoff}</div>
-            </button>
-          ))}
-        </div>
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-3xl font-bold text-brand-accent">🛒 Checkout</h1>
+        <Link to="/cart" className="btn btn-outline">← กลับตะกร้า</Link>
       </div>
 
       {/* Delivery Address */}
       <div className="card mb-6">
-        <h3 className="font-bold text-brand-accent mb-4"> ที่อยู่จัดส่ง</h3>
+        <h3 className="font-bold text-brand-accent mb-4">📍 ที่อย่จัดส่ง</h3>
         <input
           type="text"
-          placeholder="ใส่ที่อยู่จัดส่ง (ถนน, เลขที่บ้าน, หมู่ที่)"
+          placeholder="ใส่ที่อย่จัดส่ง (ถนน, เลขที่บ้าน, หม่ที่)"
           value={deliveryAddress.detail}
           onChange={(e) => setDeliveryAddress({ ...deliveryAddress, detail: e.target.value })}
           className="input mb-3"
         />
         <div className="text-sm text-brand-muted">
-          📐 รัศมีจัดส่ง: 5 กม. จากตัวเมืองจันทบุรี<br />
-          💰 ค่าส่ง: 30 บาท (ฟรีถ้าซื้อครบ 200 บาท)
+          📐 รัศมีจัดส่ง: 5 กม. จากตัวเมืองจันทบุรี
         </div>
+      </div>
+
+      {/* GAP CLOSURE: Delivery Provider Selection */}
+      <div className="card mb-6">
+        <h3 className="font-bold text-brand-accent mb-4">🛵 เลือกผ้ให้บริการจัดส่ง</h3>
+        {deliveryAddress.detail.length > 5 ? (
+          selectedProvider ? (
+            <div className="space-y-2">
+              <label className={`flex items-center gap-3 p-3 rounded-lg border-2 cursor-pointer transition-colors ${'border-brand-primary bg-brand-bg'}`}>
+                <div className="w-5 h-5 rounded-full border-2 border-brand-primary flex items-center justify-center">
+                  <div className="w-3 h-3 rounded-full bg-brand-primary" />
+                </div>
+                <div className="flex-1">
+                  <div className="font-medium flex items-center gap-2">
+                    {selectedProvider.name}
+                    <span className="text-xs bg-brand-border px-2 py-0.5 rounded-full">{selectedProvider.rating}⭐</span>
+                  </div>
+                  <div className="text-sm text-brand-muted">
+                    ⏱️ ประมา {selectedProvider.estimated_time_minutes} นาที • 📍 รัศมี {selectedProvider.coverage_area.radius_km} กม.
+                  </div>
+                </div>
+                <div className="text-right">
+                  <div className="font-bold text-brand-primary">{providerCost.toFixed(0)} บาท</div>
+                </div>
+              </label>
+            </div>
+          ) : (
+            <div className="text-center py-4 text-brand-muted">
+              🔍 กำลังค้นหาผ้ให้บริการในบริเวนี้...
+            </div>
+          )
+        ) : (
+          <div className="text-center py-4 text-brand-muted">
+            ⚠️ กรุาใส่ที่อย่จัดส่งเพื่อเลือกผ้ให้บริการ
+          </div>
+        )}
       </div>
 
       {/* Payment Method */}
       <div className="card mb-6">
-        <h3 className="font-bold text-brand-accent mb-4">💳 วิธีการชำระเงิน</h3>
+        <h3 className="font-bold text-brand-accent mb-4">💳 วิีการชำระเงิน</h3>
         <div className="space-y-3">
           <label className="flex items-center gap-3 p-3 rounded-lg border-2 border-brand-border cursor-pointer hover:border-brand-primary transition-colors">
-            <input
-              type="radio"
-              name="payment"
-              value="promptpay_qr"
-              checked={paymentMethod === 'promptpay_qr'}
-              onChange={(e) => setPaymentMethod(e.target.value as any)}
-              className="w-5 h-5"
-            />
+            <input type="radio" name="payment" value="promptpay_qr" checked={paymentMethod === 'promptpay_qr'} onChange={(e) => setPaymentMethod(e.target.value as any)} className="w-5 h-5" />
             <div>
               <div className="font-medium">QR PromptPay</div>
               <div className="text-sm text-brand-muted">สแกนจ่ายได้เลย</div>
             </div>
           </label>
           <label className="flex items-center gap-3 p-3 rounded-lg border-2 border-brand-border cursor-pointer hover:border-brand-primary transition-colors">
-            <input
-              type="radio"
-              name="payment"
-              value="cash_on_delivery"
-              checked={paymentMethod === 'cash_on_delivery'}
-              onChange={(e) => setPaymentMethod(e.target.value as any)}
-              className="w-5 h-5"
-            />
+            <input type="radio" name="payment" value="cash_on_delivery" checked={paymentMethod === 'cash_on_delivery'} onChange={(e) => setPaymentMethod(e.target.value as any)} className="w-5 h-5" />
             <div>
               <div className="font-medium">เงินสดตอนรับของ</div>
               <div className="text-sm text-brand-muted">จ่ายตอนรับของ</div>
@@ -177,7 +239,7 @@ export function CheckoutPage() {
 
       {/* Order Summary */}
       <div className="card mb-6">
-        <h3 className="font-bold text-brand-accent mb-4"> สรุปออเดอร์</h3>
+        <h3 className="font-bold text-brand-accent mb-4">สรุปออเดอร</h3>
         <div className="space-y-2 mb-4">
           {items.map((item) => (
             <div key={item.product.id} className="flex justify-between text-sm">
@@ -187,30 +249,15 @@ export function CheckoutPage() {
           ))}
         </div>
         <div className="border-t border-brand-border pt-4 space-y-2">
-          <div className="flex justify-between">
-            <span>สินค้า</span>
-            <span>{subtotal.toFixed(2)} บาท</span>
-          </div>
-          {discount > 0 && (
-            <div className="flex justify-between text-green-600">
-              <span>ส่วนลด</span>
-              <span>-{discount.toFixed(2)} บาท</span>
-            </div>
-          )}
-          <div className="flex justify-between">
-            <span>ค่าจัดส่ง</span>
-            <span>{deliveryFee.toFixed(2)} บาท</span>
-          </div>
-          <div className="flex justify-between text-xl font-bold pt-2 border-t border-brand-border">
-            <span>รวมทั้งหมด</span>
-            <span className="text-brand-primary">{total.toFixed(2)} บาท</span>
-          </div>
+          <div className="flex justify-between"><span>สินค้า</span><span>{subtotal.toFixed(2)} บาท</span></div>
+          {discount > 0 && (<div className="flex justify-between text-green-600"><span>ส่วนลด</span><span>-{discount.toFixed(2)} บาท</span></div>)}
+          <div className="flex justify-between"><span>ค่าจัดส่ง ({selectedProvider?.name || '-'})</span><span>{(selectedProvider ? providerCost : deliveryFee).toFixed(2)} บาท</span></div>
+          <div className="flex justify-between text-xl font-bold pt-2 border-t border-brand-border"><span>รวมทั้งหมด</span><span className="text-brand-primary">{total.toFixed(2)} บาท</span></div>
         </div>
       </div>
 
-      {/* Place Order Button */}
-      <button onClick={handlePlaceOrder} disabled={isProcessing} className="btn btn-primary w-full text-lg py-4">
-        {isProcessing ? '⏳ กำลังยืนยัน...' : '✅ ยืนยันสั่งซื้อ'}
+      <button onClick={handlePlaceOrder} disabled={isProcessing || !selectedProvider} className="btn btn-primary w-full text-lg py-4 disabled:opacity-50 disabled:cursor-not-allowed">
+        {isProcessing ? '⏳ กำลังยืนยัน...' : !selectedProvider ? '⚠️ เลือกผ้ให้บริการจัดส่งก่อน' : '✅ ยืนยันสั่งื้อ'}
       </button>
     </div>
   )
