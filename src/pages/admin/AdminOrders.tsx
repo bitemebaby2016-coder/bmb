@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
+import { useNotificationStore } from '@/store/notificationStore'
 import { showToast } from '@/components/ui/ToastContainer'
 import { getOrders, createOrder, updateOrderStatus, updateOrderPayment } from '@/lib/bmbAdminApi_orders'
 import type { OrderForm } from '@/lib/bmbAdminApi_orders'
@@ -15,15 +16,38 @@ export function AdminOrders() {
     setOrders(orders)
   }
 
+  const statusEventMap: Record<string, 'order_confirmed' | 'order_preparing' | 'order_ready_for_dispatch' | 'order_dispatched' | 'order_delivered'> = {
+    confirmed: 'order_confirmed',
+    preparing: 'order_preparing',
+    ready_for_dispatch: 'order_ready_for_dispatch',
+    dispatched: 'order_dispatched',
+    delivered: 'order_delivered',
+  }
+
   async function handleStatusUpdate(orderNumber: string, newStatus: string) {
     await updateOrderStatus(orderNumber, newStatus)
     loadOrders()
+    
+    // ✅ GAP CLOSURE: Trigger order status notification
+    const eventType = statusEventMap[newStatus]
+    if (eventType) {
+      useNotificationStore.getState().triggerEvent(eventType, { orderNumber })
+    }
+    
     showToast(`อัปเดตสถานะ ${newStatus} สำเร็จ`, 'success')
   }
 
   async function handlePaymentUpdate(orderNumber: string, paymentStatus: string) {
     await updateOrderPayment(orderNumber, paymentStatus)
     loadOrders()
+    
+    // ✅ GAP CLOSURE: Trigger payment notification
+    if (paymentStatus === 'paid') {
+      useNotificationStore.getState().triggerEvent('payment_confirmed', { orderNumber })
+    } else if (paymentStatus === 'pending') {
+      useNotificationStore.getState().triggerEvent('payment_pending', { orderNumber })
+    }
+    
     showToast('อัปเดตการชำระเงินสำเร็จ', 'success')
   }
 

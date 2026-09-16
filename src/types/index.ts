@@ -414,6 +414,22 @@ export interface PurchaseOrderItem {
 
 export type NotificationType = 'order_status' | 'promo' | 'reminder' | 'inventory_alert' | 'achievement' | 'system';
 
+// Event-based notification triggers for automation
+export type NotificationEventType = 
+  | 'order_placed'
+  | 'order_confirmed'
+  | 'order_preparing'
+  | 'order_ready_for_dispatch'
+  | 'order_dispatched'
+  | 'order_delivered'
+  | 'payment_confirmed'
+  | 'payment_pending'
+  | 'low_stock_alert'
+  | 'promotion_expired'
+  | 'referral_awarded'
+  | 'loyalty_points_earned'
+  | 'system_announcement';
+
 export interface Notification {
   id: string;
   user_id: string;

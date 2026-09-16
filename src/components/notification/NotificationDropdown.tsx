@@ -18,6 +18,9 @@ export function NotificationDropdown() {
   const [open, setOpen] = useState(false)
 
   useEffect(() => {
+    // ✅ GAP CLOSURE: Request browser notification permission on mount
+    useNotificationStore.getState().requestBrowserPermission()
+
     if (notifications.length === 0) {
       useNotificationStore.getState().addNotification({
         type: 'system' as any,

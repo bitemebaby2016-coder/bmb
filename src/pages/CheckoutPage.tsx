@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useCartStore } from '@/store/cartStore'
 import { useAuthStore } from '@/store/authStore'
+import { useNotificationStore } from '@/store/notificationStore'
 import { showToast } from '@/components/ui/ToastContainer'
 import { createOrder, type OrderForm } from '@/lib/bmbAdminApi_orders'
 import { writeAuditLog } from '@/lib/auditLog'
@@ -73,6 +74,14 @@ export function CheckoutPage() {
     })
 
     showToast(`สั่งซื้อสำเร็จ! เลขที่ ${order.order_number}`, 'success')
+    
+    // ✅ GAP CLOSURE: Trigger order_placed notification
+    useNotificationStore.getState().triggerEvent('order_placed', {
+      orderNumber: order.order_number,
+      userId: customer?.id || '',
+      totalAmount: total,
+      itemCount: items.length,
+    })
     
     clearCart()
     navigate(`/track/${order.order_number}`)
