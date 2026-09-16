@@ -95,15 +95,19 @@ export interface OrderItem {
 
 export interface DeliveryRound {
   id: string;
-  round_key: RoundPeriod;
+  round_key: RoundPeriod;         // TypeScript property (DB column: 'name')
   display_name: string;
   cutoff_time: string;
   delivery_start: string;
   delivery_end: string;
   max_capacity: number;
   current_count: number;
-  date: string;
+  date: string;                   // TypeScript property (DB column: 'scheduled_date')
   status: string;
+  // Note: Supabase returns DB column names as object keys:
+  // - 'scheduled_date' (not 'date')
+  // - 'name' (not 'round_key')
+  // Access via: data.scheduled_date, data.name
 }
 
 // ============================================

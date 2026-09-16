@@ -106,20 +106,23 @@ export interface DeliveryRoundForm {
 }
 
 export async function getDeliveryRounds(): Promise<DeliveryRound[]> {
-  const { data, error } = await supabase.from('delivery_rounds').select('*').order('date').order('round_key', { ascending: true })
+  // DB columns: scheduled_date (not 'date'), name (not 'round_key')
+  const { data, error } = await supabase.from('delivery_rounds').select('*').order('scheduled_date').order('name', { ascending: true })
   if (error) { console.error('[getDeliveryRounds] Error:', error); return [] }
   return (data || []) as DeliveryRound[]
 }
 
 export async function getActiveDeliveryRounds(): Promise<DeliveryRound[]> {
   const today = new Date().toISOString().split('T')[0]
-  const { data, error } = await supabase.from('delivery_rounds').select('*').eq('date', today).eq('status', 'active').order('round_key', { ascending: true })
+  // DB columns: scheduled_date (not 'date'), name (not 'round_key')
+  const { data, error } = await supabase.from('delivery_rounds').select('*').eq('scheduled_date', today).eq('status', 'active').order('name', { ascending: true })
   if (error) { console.error('[getActiveDeliveryRounds] Error:', error); return [] }
   return (data || []) as DeliveryRound[]
 }
 
 export async function createDeliveryRound(data: DeliveryRoundForm): Promise<DeliveryRound | null> {
-  const { data: result, error } = await supabase.from('delivery_rounds').insert({ id: data.id || `round-${Date.now()}`, round_key: data.round_key, display_name: data.display_name, cutoff_time: data.cutoff_time, delivery_start: data.delivery_start, delivery_end: data.delivery_end, max_capacity: data.max_capacity, date: data.date, status: 'active', current_count: 0 }).select().single()
+  // DB columns: scheduled_date (not 'date'), name/round_key (not 'round_key')
+  const { data: result, error } = await supabase.from('delivery_rounds').insert({ id: data.id || `round-${Date.now()}`, name: data.round_key, round_key: data.round_key, display_name: data.display_name, cutoff_time: data.cutoff_time, delivery_start: data.delivery_start, delivery_end: data.delivery_end, max_capacity: data.max_capacity, scheduled_date: data.date, date: data.date, status: 'active', current_count: 0 }).select().single()
   if (error) { console.error('[createDeliveryRound] Error:', error); return null }
   return result as DeliveryRound
 }

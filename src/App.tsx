@@ -25,6 +25,7 @@ import { AdminOrders } from './pages/admin/AdminOrders'
 import { AdminProducts } from './pages/admin/AdminProducts'
 import { AuditLogPage } from './pages/admin/AuditLogPage'
 import { DeliveryManagement } from './pages/admin/DeliveryManagement'
+import { RouteOptimizationPage } from './pages/admin/RouteOptimizationPage'
 import { LoginPage } from './pages/login/LoginPage'
 import { RegisterPage } from './pages/login/RegisterPage'
 import { AiChatPage } from './pages/ai/AiChatPage'
@@ -126,6 +127,7 @@ export default function App() {
         <Route path="/admin/products" element={<AdminRoute><Layout><AdminProducts /></Layout></AdminRoute>} />
         <Route path="/admin/audit-log" element={<AdminRoute><Layout><AuditLogPage /></Layout></AdminRoute>} />
         <Route path="/admin/delivery" element={<AdminRoute><Layout><DeliveryManagement /></Layout></AdminRoute>} />
+        <Route path="/admin/route-optimization" element={<AdminRoute><Layout><RouteOptimizationPage /></Layout></AdminRoute>} />
         
         {/* Catch all */}
         <Route path="*" element={<Navigate to="/" replace />} />
