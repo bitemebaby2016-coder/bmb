@@ -58,7 +58,7 @@ export function DeliveryManagement() {
 
     // Convert to DeliveryOrder format
     const deliveryOrders: DeliveryOrder[] = pendingOrders.map(order => ({
-      id: order.id,
+      id: order.id || '',
       order_number: order.order_number,
       dropoff_latitude: order.dropoff_latitude || 10.7016,
       dropoff_longitude: order.dropoff_longitude || 102.1429,
@@ -87,7 +87,7 @@ export function DeliveryManagement() {
     // Update driver status
     const updatedDrivers = drivers.map(driver => ({
       ...driver,
-      status: optimizedRoutes.some(r => r.driver_id === driver.id) ? 'busy' : 'available'
+      status: (optimizedRoutes.some(r => r.driver_id === driver.id) ? 'busy' : 'available') as DeliveryDriver['status'],
     }))
     setDrivers(updatedDrivers)
 

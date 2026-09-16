@@ -49,9 +49,19 @@ export async function createInventory(data: InventoryForm): Promise<Ingredient |
 }
 
 export async function updateInventoryStock(id: string, quantity: number, reason: string): Promise<Ingredient | null> {
+  const { data: existing, error: fetchError } = await supabase.from('inventory')
+    .select('current_stock')
+    .eq('id', id)
+    .single()
+
+  if (fetchError) { console.error('[updateInventoryStock] Fetch Error:', fetchError); return null }
+  if (!existing) return null
+
+  const newStock = Math.max(0, (existing as any).current_stock + quantity)
+
   const { data, error } = await supabase.from('inventory')
     .update({
-      current_stock: supabase.raw("GREATEST(0, current_stock + ?)", [quantity]),
+      current_stock: newStock,
       last_restocked_at: new Date().toISOString(),
     })
     .eq('id', id)

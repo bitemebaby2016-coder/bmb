@@ -8,19 +8,19 @@ interface SimpleNotification {
 }
 
 const NOTIFICATION_TEMPLATES = {
-  order_placed: { title: 'Order Placed', bodyFn: (d) => `Order ${d.orderNumber} created!` },
-  order_confirmed: { title: 'Order Confirmed', bodyFn: (d) => `Order ${d.orderNumber} confirmed.` },
-  order_preparing: { title: 'Preparing Food', bodyFn: (d) => `Order ${d.orderNumber} being prepared.` },
-  order_ready_for_dispatch: { title: 'Ready to Ship', bodyFn: (d) => `Order ${d.orderNumber} ready.` },
-  order_dispatched: { title: 'Out for Delivery', bodyFn: (d) => `Order ${d.orderNumber} on its way!` },
-  order_delivered: { title: 'Delivered!', bodyFn: (d) => `Order ${d.orderNumber} delivered. Thank you!` },
-  payment_confirmed: { title: 'Payment Confirmed', bodyFn: (d) => `Payment for ${d.orderNumber} confirmed.` },
-  payment_pending: { title: 'Payment Pending', bodyFn: (d) => `Order ${d.orderNumber} awaiting payment.` },
-  low_stock_alert: { title: 'Low Stock Alert', bodyFn: (d) => `${d.itemName} running low.` },
-  promotion_expired: { title: 'Promotion Expired', bodyFn: (d) => `Promo "${d.promotionName}" expired.` },
-  referral_awarded: { title: 'Referral Bonus', bodyFn: (d) => `You earned ${d.points} points!` },
-  loyalty_points_earned: { title: 'Loyalty Points', bodyFn: (d) => `Earned ${d.points} points from #${d.orderNumber}` },
-  system_announcement: { title: 'System Announcement', bodyFn: (d) => d.message || 'Announcement' },
+  order_placed: { title: 'Order Placed', bodyFn: (d: Record<string, any>) => `Order ${d.orderNumber} created!` },
+  order_confirmed: { title: 'Order Confirmed', bodyFn: (d: Record<string, any>) => `Order ${d.orderNumber} confirmed.` },
+  order_preparing: { title: 'Preparing Food', bodyFn: (d: Record<string, any>) => `Order ${d.orderNumber} being prepared.` },
+  order_ready_for_dispatch: { title: 'Ready to Ship', bodyFn: (d: Record<string, any>) => `Order ${d.orderNumber} ready.` },
+  order_dispatched: { title: 'Out for Delivery', bodyFn: (d: Record<string, any>) => `Order ${d.orderNumber} on its way!` },
+  order_delivered: { title: 'Delivered!', bodyFn: (d: Record<string, any>) => `Order ${d.orderNumber} delivered. Thank you!` },
+  payment_confirmed: { title: 'Payment Confirmed', bodyFn: (d: Record<string, any>) => `Payment for ${d.orderNumber} confirmed.` },
+  payment_pending: { title: 'Payment Pending', bodyFn: (d: Record<string, any>) => `Order ${d.orderNumber} awaiting payment.` },
+  low_stock_alert: { title: 'Low Stock Alert', bodyFn: (d: Record<string, any>) => `${d.itemName} running low.` },
+  promotion_expired: { title: 'Promotion Expired', bodyFn: (d: Record<string, any>) => `Promo "${d.promotionName}" expired.` },
+  referral_awarded: { title: 'Referral Bonus', bodyFn: (d: Record<string, any>) => `You earned ${d.points} points!` },
+  loyalty_points_earned: { title: 'Loyalty Points', bodyFn: (d: Record<string, any>) => `Earned ${d.points} points from #${d.orderNumber}` },
+  system_announcement: { title: 'System Announcement', bodyFn: (d: Record<string, any>) => d.message || 'Announcement' },
 }
 
 interface NotificationStore {

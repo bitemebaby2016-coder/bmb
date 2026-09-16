@@ -12,6 +12,9 @@ export interface OrderForm {
   customer_name: string
   customer_phone: string
   delivery_round_id: string
+  delivery_method?: string
+  provider_id?: string
+  provider_name?: string
   status: string
   total_amount: number
   delivery_fee: number

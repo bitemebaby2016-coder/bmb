@@ -4,6 +4,7 @@
 // ============================================
 
 import { chatWithAI } from './aiService'
+import type { Product } from '@/types'
 import { getProducts, getProduct } from './bmbAdminApi_products'
 import { getOrders, getOrder } from './bmbAdminApi_orders'
 import { getReviews, getAverageRating } from './reviewApi'
@@ -60,22 +61,22 @@ const TOOLS = {
 export async function executeToolCall(toolName: string, args: Record<string, any>): Promise<any> {
   switch (toolName) {
     case 'get_menu': {
-      const products = getProducts()
+      const products = await getProducts()
       let filtered = products
       
       if (args.category) {
-        filtered = filtered.filter(p => p.category_id === args.category)
+        filtered = filtered.filter((p: Product) => p.category_id === args.category)
       }
       if (args.available !== undefined) {
-        filtered = filtered.filter(p => p.is_available === args.available)
+        filtered = filtered.filter((p: Product) => p.is_available === args.available)
       }
       if (args.featured) {
-        filtered = filtered.filter(p => p.is_featured)
+        filtered = filtered.filter((p: Product) => p.is_featured)
       }
       
       return {
         success: true,
-        data: filtered.map(p => ({
+        data: filtered.map((p: Product) => ({
           id: p.id,
           name: p.name,
           price: p.price,

@@ -25,15 +25,15 @@ export interface HistoricalData {
 }
 
 // Get historical order data
-export function getHistoricalData(days: number = 30): HistoricalData[] {
-  const orders = getOrders()
+export async function getHistoricalData(days: number = 30): Promise<HistoricalData[]> {
+  const orders = await getOrders()
   const historical: HistoricalData[] = []
   const today = new Date()
 
   // Group orders by date, day, and round
   const grouped: Record<string, { count: number; revenue: number }> = {}
 
-  orders.forEach(order => {
+  orders.forEach((order: any) => {
     const orderDate = new Date(order.created_at)
     const daysDiff = Math.floor((today.getTime() - orderDate.getTime()) / (1000 * 60 * 60 * 24))
     
@@ -69,26 +69,26 @@ export function getHistoricalData(days: number = 30): HistoricalData[] {
 }
 
 // Calculate demand forecast
-export function calculateDemandForecast(
+export async function calculateDemandForecast(
   date: string = new Date().toISOString().slice(0, 10),
   deliveryRound: 'morning' | 'midday' | 'evening' = 'evening'
-): DemandForecast {
-  const historical = getHistoricalData(30)
+): Promise<DemandForecast> {
+  const historical = await getHistoricalData(30)
   const today = new Date(date)
   const dayOfWeek = today.toLocaleDateString('en-US', { weekday: 'long' })
 
   // Get historical data for same day of week and round
-  const similarData = historical.filter(h => 
+  const similarData = historical.filter((h: HistoricalData) => 
     h.dayOfWeek === dayOfWeek && h.deliveryRound === deliveryRound
   )
 
   // Calculate average
   const avgOrders = similarData.length > 0 
-    ? similarData.reduce((sum, h) => sum + h.orderCount, 0) / similarData.length 
+    ? similarData.reduce((sum: number, h: HistoricalData) => sum + h.orderCount, 0) / similarData.length 
     : 10 // Default if no data
   
   const avgRevenue = similarData.length > 0 
-    ? similarData.reduce((sum, h) => sum + h.revenue, 0) / similarData.length 
+    ? similarData.reduce((sum: number, h: HistoricalData) => sum + h.revenue, 0) / similarData.length 
     : 3000
 
   // Calculate confidence (based on data availability)
@@ -126,20 +126,21 @@ export function calculateDemandForecast(
 }
 
 // Generate daily forecast report
-export function generateDailyForecast(date: string = new Date().toISOString().slice(0, 10)): DemandForecast[] {
+export async function generateDailyForecast(date: string = new Date().toISOString().slice(0, 10)): Promise<DemandForecast[]> {
   const rounds: ('morning' | 'midday' | 'evening')[] = ['morning', 'midday', 'evening']
   
-  return rounds.map(round => calculateDemandForecast(date, round))
+  const results = await Promise.all(rounds.map(round => calculateDemandForecast(date, round)))
+  return results
 }
 
 // Get production recommendations
-export function getProductionRecommendations(date: string = new Date().toISOString().slice(0, 10)): {
+export async function getProductionRecommendations(date: string = new Date().toISOString().slice(0, 10)): Promise<{
   totalRecommended: number
   byCategory: Record<string, number>
   byRound: DemandForecast[]
   alerts: string[]
-} {
-  const forecasts = generateDailyForecast(date)
+}> {
+  const forecasts = await generateDailyForecast(date)
   const totalRecommended = forecasts.reduce((sum, f) => sum + f.recommendedPrep, 0)
 
   // Category distribution (simplified - in real app would analyze order history)
@@ -171,10 +172,10 @@ export function getProductionRecommendations(date: string = new Date().toISOStri
 }
 
 // Calculate inventory requirements based on forecast
-export function calculateInventoryRequirements(
+export async function calculateInventoryRequirements(
   forecast: DemandForecast,
   menuItems: Array<{ id: string; name: string; ingredients: string[] }>
-): Record<string, number> {
+): Promise<Record<string, number>> {
   // Simplified - in real app would map menu items to ingredients
   const requirements: Record<string, number> = {}
   

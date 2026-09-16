@@ -10,7 +10,19 @@ export function AdminDashboard() {
   })
 
   useEffect(() => {
-    setStats(getDashboardStats())
+    (async () => {
+      const stats = await getDashboardStats()
+      setStats({
+        todayOrders: stats.todayOrders,
+        todayRevenue: stats.todayRevenue,
+        pendingOrders: stats.pendingOrders,
+        completionRate: stats.completionRate,
+        lowStockItems: stats.lowStockItems,
+        totalOrders: stats.totalOrders,
+        totalRevenue: stats.totalRevenue,
+        totalCustomers: stats.totalCustomers,
+      })
+    })()
   }, [])
 
   return (

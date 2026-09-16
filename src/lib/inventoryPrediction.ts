@@ -193,10 +193,10 @@ function calculateStockStatus(current: number, min: number, max: number): Invent
   return 'in_stock'
 }
 
-export function predictInventoryNeeds(days: number = 7): ReorderRecommendation[] {
+export async function predictInventoryNeeds(days: number = 7): Promise<ReorderRecommendation[]> {
   const items = getInventoryItems()
-  const forecast = calculateDemandForecast()
-  const productionRec = getProductionRecommendations()
+  const forecast = await calculateDemandForecast()
+  const productionRec = await getProductionRecommendations()
   
   const recommendations: ReorderRecommendation[] = []
 
@@ -268,17 +268,17 @@ export function calculateInventoryValue(): number {
   return items.reduce((sum: number, item: InventoryItem) => sum + (item.current_stock * item.unit_price), 0)
 }
 
-export function generateInventoryReport(): {
+export async function generateInventoryReport(): Promise<{
   totalItems: number
   totalValue: number
   lowStockCount: number
   outOfStockCount: number
   reorderRecommendations: ReorderRecommendation[]
   dailyUsage: Record<string, number>
-} {
+}> {
   const items = getInventoryItems()
   const alerts = getLowStockAlerts()
-  const forecast = calculateDemandForecast()
+  const forecast = await calculateDemandForecast()
   
   const dailyUsage: Record<string, number> = {}
   items.forEach((item: InventoryItem) => {
@@ -290,18 +290,18 @@ export function generateInventoryReport(): {
     totalValue: calculateInventoryValue(),
     lowStockCount: alerts.length,
     outOfStockCount: items.filter((i: InventoryItem) => i.status === 'out_of_stock').length,
-    reorderRecommendations: predictInventoryNeeds(7),
+    reorderRecommendations: await predictInventoryNeeds(7),
     dailyUsage
   }
 }
 
-export function simulateOrderImpact(orderItems: Array<{ product_id: string; quantity: number }>): {
+export async function simulateOrderImpact(orderItems: Array<{ product_id: string; quantity: number }>): Promise<{
   ingredients_affected: string[]
   stockDecrease: Record<string, number>
   potential_out_of_stock: string[]
-} {
+}> {
   const items = getInventoryItems()
-  const products = getProducts()
+  const products = await getProducts()
   
   const stockDecrease: Record<string, number> = {}
   const ingredientsAffected: string[] = []

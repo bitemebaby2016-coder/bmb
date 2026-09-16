@@ -48,8 +48,8 @@ export interface CustomerIntelligence {
 const INTELLIGENCE_PREFIX = 'bmb_customer_intelligence_'
 
 // Calculate customer intelligence from raw data
-export function calculateCustomerIntelligence(customerId: string): CustomerIntelligence {
-  const orders = getOrders().filter((o: any) => o.customer_id === customerId)
+export async function calculateCustomerIntelligence(customerId: string): Promise<CustomerIntelligence> {
+  const orders = (await getOrders()).filter((o: any) => o.customer_id === customerId)
   const allReviews = storageGet<Review[]>('bmb_reviews', [])
   const reviews = allReviews.filter((r: Review) => r.customer_id === customerId)
   const memory = null as CustomerMemory | null
@@ -144,8 +144,8 @@ export function getAllCustomerIntelligence(): CustomerIntelligence[] {
 }
 
 // Generate customer insights for AI
-export function generateCustomerInsights(customerId: string): string {
-  const intelligence = calculateCustomerIntelligence(customerId)
+export async function generateCustomerInsights(customerId: string): Promise<string> {
+  const intelligence = await calculateCustomerIntelligence(customerId)
   const memory = null as CustomerMemory | null
 
   const insights: string[] = []
@@ -183,8 +183,8 @@ export function generateCustomerInsights(customerId: string): string {
 }
 
 // Get recommendations based on customer intelligence
-export function getCustomerRecommendations(customerId: string): string[] {
-  const intelligence = calculateCustomerIntelligence(customerId)
+export async function getCustomerRecommendations(customerId: string): Promise<string[]> {
+  const intelligence = await calculateCustomerIntelligence(customerId)
   const recommendations: string[] = []
   
   if (intelligence.order_frequency === 'new_customer') {

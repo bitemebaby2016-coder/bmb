@@ -6,6 +6,7 @@
 import { storageGet, storageSet } from './bmbStorage'
 import { getOrders } from './bmbAdminApi_orders'
 import { getProducts } from './bmbAdminApi_products'
+import type { Product } from '@/types'
 
 export interface Promotion {
   id: string
@@ -167,12 +168,12 @@ export function applyPromotion(
 }
 
 // Get promotion insights
-export function getPromotionInsights(): PromotionInsight[] {
+export async function getPromotionInsights(): Promise<PromotionInsight[]> {
   const promotions = getPromotions()
-  const orders = getOrders()
+  const orders = await getOrders()
   const insights: PromotionInsight[] = []
 
-  promotions.forEach(promo => {
+  promotions.forEach((promo: Promotion) => {
     // Count orders using this promotion (simplified)
     const usageCount = promo.usage_count
     const conversionRate = usageCount > 0 ? (usageCount / orders.length) * 100 : 0
@@ -181,7 +182,7 @@ export function getPromotionInsights(): PromotionInsight[] {
     const avgDiscount = promo.type === 'percentage_discount' 
       ? promo.discount_value / 100 
       : promo.discount_value / 1000
-    const revenueImpact = usageCount * (orders.reduce((sum, o) => sum + o.total_amount, 0) / orders.length || 0) * avgDiscount
+    const revenueImpact = usageCount * (orders.reduce((sum: number, o: any) => sum + o.total_amount, 0) / orders.length || 0) * avgDiscount
 
     // Determine performance
     let performance: 'excellent' | 'good' | 'average' | 'poor' = 'average'
@@ -215,14 +216,14 @@ export function getPromotionInsights(): PromotionInsight[] {
 }
 
 // AI recommends new promotions
-export function recommendPromotions(): Array<{
+export async function recommendPromotions(): Promise<Array<{
   type: string
   description: string
   expectedConversion: number
   expectedRevenue: number
-}> {
-  const orders = getOrders()
-  const products = getProducts()
+}> > {
+  const orders = await getOrders()
+  const products = await getProducts()
   const insights = getPromotionInsights()
 
   const recommendations: Array<{
@@ -234,7 +235,7 @@ export function recommendPromotions(): Array<{
 
   // Analyze order patterns
   const avgOrderValue = orders.length > 0 
-    ? orders.reduce((sum, o) => sum + o.total_amount, 0) / orders.length 
+    ? orders.reduce((sum: number, o: any) => sum + o.total_amount, 0) / orders.length 
     : 200
 
   // Recommendation 1: Spend threshold for free shipping
@@ -248,7 +249,7 @@ export function recommendPromotions(): Array<{
   }
 
   // Recommendation 2: Flash sale for slow-moving items
-  const featuredProducts = products.filter(p => p.is_featured)
+  const featuredProducts = products.filter((p: Product) => p.is_featured)
   if (featuredProducts.length > 0) {
     recommendations.push({
       type: 'flash_sale',
@@ -267,8 +268,8 @@ export function recommendPromotions(): Array<{
   })
 
   // Recommendation 4: Combo deal
-  const dishCount = products.filter(p => p.category_id === 'cat-1').length
-  const drinkCount = products.filter(p => p.category_id === 'cat-4').length
+  const dishCount = products.filter((p: Product) => p.category_id === 'cat-1').length
+  const drinkCount = products.filter((p: Product) => p.category_id === 'cat-4').length
   
   if (dishCount > 0 && drinkCount > 0) {
     recommendations.push({

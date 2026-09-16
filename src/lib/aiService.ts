@@ -103,7 +103,8 @@ export async function getMenuRecommendations(
   history: string[] = []
 ): Promise<Product[]> {
   try {
-    const products = (await import('@/lib/bmbAdminApi_products')).getProducts()
+    const apiModule = await import('@/lib/bmbAdminApi_products')
+    const products = await apiModule.getProducts()
     
     const prompt = `คุณคือ AI Recommendation Engine สำหรับ Bite Me Baby
     ผู้ใช้ต้องการ: ${JSON.stringify(preferences)}
@@ -152,7 +153,8 @@ export async function getMenuRecommendations(
     return products.filter(p => p.is_available).slice(0, 3)
   } catch (error) {
     console.error('Recommendation API Error:', error)
-    return (await import('@/lib/bmbAdminApi_products')).getProducts()
+    const apiModule = await import('@/lib/bmbAdminApi_products')
+    return (await apiModule.getProducts())
       .filter(p => p.is_available)
       .slice(0, 3)
   }
