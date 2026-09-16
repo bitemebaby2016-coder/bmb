@@ -12,6 +12,7 @@
 -- ============================================
 
 -- 1. Add sort_order to products table (missing from 002_complete_schema.sql)
+--    products.id is UUID, so sort_order must be a separate INTEGER column
 ALTER TABLE products ADD COLUMN IF NOT EXISTS sort_order INTEGER NOT NULL DEFAULT 0;
 
 -- 2. Add date column to delivery_rounds (alias for scheduled_date)
@@ -20,30 +21,26 @@ ALTER TABLE delivery_rounds ADD COLUMN IF NOT EXISTS date DATE;
 -- 3. Add round_key column to delivery_rounds (alias for name)
 ALTER TABLE delivery_rounds ADD COLUMN IF NOT EXISTS round_key TEXT;
 
--- 4. Populate new columns from existing data
+-- 4. Populate new columns from existing data (idempotent — safe to re-run)
 UPDATE delivery_rounds SET date = scheduled_date;
 UPDATE delivery_rounds SET round_key = name;
 
 -- 5. Add indexes for the new columns
 CREATE INDEX IF NOT EXISTS idx_products_sort_order ON products(sort_order);
-CREATE INDEX IF NOT EXISTS idx_delivery_rounds_date_new ON delivery_rounds(date);
+CREATE INDEX IF NOT EXISTS idx_delivery_rounds_date ON delivery_rounds(date);
 CREATE INDEX IF NOT EXISTS idx_delivery_rounds_round_key ON delivery_rounds(round_key);
 
--- 6. Seed data for existing rounds (if date/round_key are still null)
-UPDATE delivery_rounds
-SET date = scheduled_date,
-    round_key = CASE
-        WHEN name ILIKE '%เช้า%' OR name ILIKE 'morning' THEN 'morning'
-        WHEN name ILIKE '%เที่ยง%' OR name ILIKE 'midday' THEN 'midday'
-        WHEN name ILIKE '%เย็น%' OR name ILIKE 'evening' THEN 'evening'
-        ELSE name
-    END
-WHERE date IS NULL OR round_key IS NULL;
+-- 6. Seed sort_order for existing products using ROW_NUMBER()
+--    products.id is UUID (not integer), so we CANNOT do id::text::int
+--    Instead, assign sequential sort_order based on creation order
+UPDATE products SET sort_order = sub.rn
+FROM (
+    SELECT id, ROW_NUMBER() OVER (ORDER BY created_at ASC) AS rn
+    FROM products
+) sub
+WHERE products.id = sub.id AND products.sort_order = 0;
 
--- 7. Seed sort_order for existing products
-UPDATE products SET sort_order = id::text::int WHERE sort_order = 0 AND id ~ '^\d+$';
-
--- 8. Update RLS policies to allow the new columns
+-- 7. Add CHECK constraint to prevent negative sort_order values
 ALTER TABLE products ADD CONSTRAINT products_sort_order_check CHECK (sort_order >= 0);
 
 -- Done
