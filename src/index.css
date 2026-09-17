@@ -324,3 +324,316 @@ p { color: var(--color-brand-text-secondary); }
   animation: floatFood 3s ease-in-out infinite;
 }
 
+/* ============================================
+   2.5D/3D Hybrid Glassmorphism — Customer Review Card (UI v4.0)
+   Architecture Target: Social Proof Review Feed (HomePage)
+   @see docs/COMPONENT_SPEC_UI.md §12
+   ============================================ */
+
+/* --- Card Container: 2.5D tilt (desktop hover) --- */
+.review-card-3d {
+  position: relative;
+  border-radius: var(--radius-2xl);
+  overflow: hidden;
+  box-shadow: var(--shadow-lg);
+  transform-style: preserve-3d;
+  transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.35s ease;
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  background: var(--color-brand-bg-warm);
+  will-change: transform;
+  /* ภาพอาหารเห็นด้านบน, glass ปิดด้านล่าง */
+  aspect-ratio: 4 / 5;
+}
+
+.review-card-3d:hover {
+  transform: perspective(1100px) rotateX(3deg) rotateY(-3deg) translateY(-4px);
+  box-shadow: var(--shadow-xl);
+}
+
+/* --- Background: ภาพอาหาร WebP ความละเอียดสูง (Lazy Loading) --- */
+.review-card-bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+
+.review-card-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform: scale(1.02);
+  transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.review-card-3d:hover .review-card-img {
+  transform: scale(1.08);
+}
+
+.review-card-bg-fallback {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 4.5rem;
+  background: linear-gradient(135deg, var(--color-brand-bg-warm) 0%, var(--color-brand-primary-light) 100%);
+}
+
+/* --- Glassmorphism Overlay (backdrop blur) — ปิดครึ่งล่างการ์ด --- */
+.review-card-glass {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  top: 36%;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  padding: 1.1rem 1.25rem 1.15rem;
+  background: rgba(255, 251, 245, 0.72);
+  -webkit-backdrop-filter: blur(14px) saturate(160%);
+  backdrop-filter: blur(14px) saturate(160%);
+  border-top: 1px solid rgba(255, 255, 255, 0.7);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  border-radius: 0 0 var(--radius-2xl) var(--radius-2xl);
+}
+
+/* --- Source Badge (โลโก้จริง Facebook / GrabFood) --- */
+.review-source-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.15rem 0.65rem 0.15rem 0.35rem;
+  border-radius: var(--radius-full);
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: var(--color-brand-text);
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  letter-spacing: 0.02em;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+}
+
+.review-source-logo {
+  width: 15px;
+  height: 15px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.review-date {
+  font-size: 0.78rem;
+  color: var(--color-brand-muted);
+  white-space: nowrap;
+}
+
+/* --- 3D Star Rating (Glow / Pulse micro-animation) --- */
+.star-rating-3d {
+  display: flex;
+  align-items: center;
+  gap: 0.15rem;
+}
+
+.star-3d {
+  display: inline-block;
+  font-size: 1.35rem;
+  line-height: 1;
+  color: #facc15;
+  text-shadow:
+    0 2px 0 rgba(146, 64, 14, 0.35),
+    0 0 6px rgba(250, 204, 21, 0.45);
+  animation:
+    starPop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both,
+    starPulse 2.4s ease-in-out infinite;
+  animation-delay: calc(var(--star-i, 0) * 90ms);
+}
+
+.star-3d.is-empty {
+  color: rgba(120, 113, 108, 0.55);
+  text-shadow: none;
+  animation: starPop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+.star-num {
+  margin-left: 0.4rem;
+  font-weight: 800;
+  font-size: 0.95rem;
+  color: var(--color-brand-accent);
+}
+
+/* Star.webp — 3D Star Rating (image-based) */
+.star-3d-img {
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
+  margin-right: 0.05rem;
+  filter: drop-shadow(0 2px 3px rgba(146, 64, 14, 0.4));
+  background: transparent;
+  animation:
+    starPop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both,
+    starPulse 2.4s ease-in-out infinite;
+  animation-delay: calc(var(--star-i, 0) * 90ms);
+}
+
+.star-3d-img.is-empty {
+  filter: grayscale(1) opacity(0.45);
+  animation: starPop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+@keyframes starPop {
+  from { transform: scale(0) rotate(-60deg); opacity: 0; }
+  to   { transform: scale(1) rotate(0deg); opacity: 1; }
+}
+
+@keyframes starPulse {
+  0%, 100% { filter: drop-shadow(0 0 3px rgba(250, 204, 21, 0.5));  transform: scale(1); }
+  50%      { filter: drop-shadow(0 0 9px rgba(250, 204, 21, 0.95)); transform: scale(1.12); }
+}
+
+/* --- Review body --- */
+.review-comment {
+  font-size: 0.95rem;
+  line-height: 1.55;
+  color: var(--color-brand-accent);
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  margin: 0;
+}
+
+.review-customer {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  margin-top: auto;
+}
+
+.review-avatar {
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  border-radius: 9999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  color: #fff;
+  background: linear-gradient(135deg, var(--color-brand-primary), var(--color-brand-primary-dark));
+  box-shadow: 0 3px 8px rgba(249, 115, 22, 0.35);
+}
+
+.review-name {
+  font-weight: 800;
+  font-size: 0.9rem;
+  color: var(--color-brand-accent);
+}
+
+.review-food {
+  font-size: 0.8rem;
+  color: var(--color-brand-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.review-soldout {
+  margin-left: auto;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--color-brand-danger);
+  background: var(--color-brand-danger-light);
+  padding: 0.15rem 0.5rem;
+  border-radius: var(--radius-full);
+  white-space: nowrap;
+}
+
+/* --- CTA — Deep Link ตรงเข้า Cart/Checkout ตาม Mode --- */
+.review-cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.7rem 1rem;
+  border-radius: var(--radius-full);
+  background: linear-gradient(135deg, var(--color-brand-primary), var(--color-brand-primary-dark));
+  color: #fff;
+  font-weight: 800;
+  font-size: 0.9rem;
+  text-decoration: none;
+  box-shadow: 0 4px 10px rgba(249, 115, 22, 0.35);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.review-cta:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 16px rgba(249, 115, 22, 0.45);
+}
+
+.review-cta-arrow {
+  transition: transform 0.2s ease;
+}
+
+.review-cta:hover .review-cta-arrow {
+  transform: translateX(4px);
+}
+
+/* --- 3D Mascot "น้อง Bite" จิ๋ว มุมล่างการ์ด --- */
+.mascot-mini {
+  position: absolute;
+  right: 10px;
+  bottom: 64px;
+  width: 52px;
+  height: 52px;
+  object-fit: contain;
+  z-index: 3;
+  filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.25));
+  transform: translateZ(28px);
+  pointer-events: none;
+  animation: mascotWobble 3.2s ease-in-out infinite;
+}
+
+@keyframes mascotWobble {
+  0%, 100% { transform: translateZ(28px) translateY(0) rotate(-3deg); }
+  50%      { transform: translateZ(28px) translateY(-5px) rotate(3deg); }
+}
+
+/* --- MascotBadge (Reusable — Mascot Asset System v1.0) --- */
+.mascot-badge {
+  display: block;
+  object-fit: contain;
+  pointer-events: none;          /* ไม่บดบังปุ่ม CTA ของผู้ใช้ */
+  -webkit-user-select: none;
+  user-select: none;
+  filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.22));
+}
+
+.mascot-badge--sm { width: 52px; height: 52px; }
+.mascot-badge--md { width: 72px; height: 72px; }
+.mascot-badge--lg { width: 104px; height: 104px; }
+
+/* --- LazyVideo (Menu Highlight ≤ 2 คลิป) --- */
+.lazy-video {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border-radius: var(--radius-lg);
+  background: var(--color-brand-bg-warm);
+  object-fit: cover;
+}
+
+/* --- Mobile + Accessibility: ปิด 2.5D tilt / ลด animation --- */
+@media (hover: none) {
+  .review-card-3d:hover {
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .star-3d,
+  .mascot-mini {
+    animation: none;
+  }
+}
+

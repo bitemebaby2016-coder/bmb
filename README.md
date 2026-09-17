@@ -8,6 +8,27 @@
 
 ## 📋 Documentation Status Update (2026-09-13)
 
+### 🆕 Phase 4: Social Proof Review Feed + 2.5D/3D Hybrid Glassmorphism (2026-09-17)
+
+**เป้าหมาย:** Refactor หน้า HomePage ตาม **Architecture Target ล่าสุด (2.5D/3D Hybrid Glassmorphism)** — เพิ่ม "Social Proof Review Feed" และกำหนด **Section Layout Flow ใหม่** (ดู #102)
+
+```text
+[1 Hero Mascot] -> [2 Delivery Rounds] -> [3 Social Proof Review Feed]
+-> [4 Same-Day Menu] -> [5 Pre-Order Menu] -> [6 Promotions/Viral]
+```
+
+**เอกสาร/โค้ดที่อัปเดต (Phase 4):**
+- 🆕 `src/components/CustomerReviewCard.tsx` — การ์ดรีวิว Glassmorphism (`backdrop-filter: blur()`) + 3D Star Rating (Glow/Pulse) + Mascot "น้อง Bite" + CTA Deep Link ตาม Mode
+- 🆕 `src/components/LazyVideo.tsx` — Short Video Lazy Streaming (IntersectionObserver) — ใช้ได้เฉพาะ Menu Highlight ≤ 2 คลิป
+- 🆕 `src/lib/socialProofReviews.ts` — curated reviews จาก Facebook / GrabFood (6 รายการ) + video policy config
+- 🆕 `src/components/MascotBadge.tsx` — Mascot Asset System: 8 ท่าทางน้อง Bite + Scale (sm/md/lg/fluid) + `/public/assets/mascot/` mapping
+- ♻️ `docs/COMPONENT_SPEC_UI.md` v4.0 — §12 CustomerReviewCard + Glassmorphism Spec, §13–§17 (Layout Flow / Acceptance / Impact / Work Plan)
+- ♻️ `README.md` #102 — HOME PAGE LAYOUT FLOW (v4.0)
+- ♻️ `STATUS_TRACKER.md` v9.1 — Phase 7 (UI v4.0) 100%
+- ♻️ `BITEMEBABY_PRODUCT_REALITY_MAP.md` — UI-07
+
+**สถานะ:** ✅ เสร็จ 100% — `tsc --noEmit` 0 errors / Vitest **19/19 PASS** / `vite build` PASS (2026-09-17)
+
 ### ✅ Phase 1: Core Documentation + Gap Analysis + Roadmap Created
 
 **เอกสารที่สร้างเสร็จแล้ว:**
@@ -3531,3 +3552,70 @@ Active การ์ด     : group-active:scale-[0.99] + เงาฟุ้ง�
 
 **Bite Me Baby Cloud Kitchen**
 **Cloud Kitchen Operating Platform**
+
+---
+
+# 102. HOME PAGE LAYOUT FLOW (2.5D/3D Hybrid Glassmorphism — v4.0)
+
+> **เพิ่ม:** 2026-09-17 · **Spec:** `docs/COMPONENT_SPEC_UI.md` §12–§17 (v4.0) · **โค้ด:** `src/pages/HomePage.tsx`, `src/components/CustomerReviewCard.tsx`, `src/components/LazyVideo.tsx`, `src/lib/socialProofReviews.ts`
+
+## 102.1 ลำดับ Section บน HomePage (v4.0)
+
+```text
+[1 Hero Mascot]
+        ↓
+[2 Delivery Rounds]                    (รอบเช้า / กลางวัน / เย็น — Selector)
+        ↓
+[3 Social Proof Review Feed]           (CustomerReviewCard ×6 — Facebook / GrabFood)
+        ↓
+[4 Same-Day Menu]                      (เมนูวันนี้ + Menu Highlight: Short Video ≤ 2 คลิป, Lazy)
+        ↓
+[5 Pre-Order Menu]                     (เมนูโหวต / จองล่วงหน้า)
+        ↓
+[6 Promotions / Viral]                 (โปรโมชั่น + Quick Actions + Share)
+```
+
+## 102.2 กฎ Performance (บังคับ)
+
+```text
+ห้ามวิดีโอในเซกชั่นรีวิว (Social Proof Review Feed)     ← รักษา LCP / Mobile Performance
+ภาพนิ่ง WebP ความละเอียดสูงเป็นหลัก (loading="lazy" + decoding="async")
+Short Video ใช้ได้เฉพาะ "เมนู Highlight" ≤ 2 คลิป
+   → ผ่าน <LazyVideo /> (IntersectionObserver + preload="none" — สตรีมเมื่อ scroll ถึงเท่านั้น)
+ทุก animation เคารพ prefers-reduced-motion: reduce
+```
+
+## 102.3 CTA Deep Link ตาม Mode (same-day / pre-order)
+
+| Mode | Deep Link | CTA Label | พฤติกรรม |
+|------|-----------|-----------|----------|
+| `same-day` | `/cart?mode=same-day` | 🛒 สั่งเมนูนี้ | `addItem(product, 1)` → ตรงเข้า Cart |
+| `pre-order` | `/checkout?mode=pre-order` | 📅 จองเมนูนี้ | `addItem(product, 1)` → ตรงเข้า Checkout (จองล่วงหน้า) |
+
+> สัญญา Deep Link ตาม #48 — query params เป็น **open-linking** (facilitates UX) ไม่ใช่ business rule; ระบบต้อง validate ใหม่ที่จุดสั่งจริง
+
+## 102.4 Cross-document
+
+- `docs/COMPONENT_SPEC_UI.md` v4.0 — §12 (CustomerReviewCard + Glassmorphism Spec), §13 (Layout Flow), §14 (Acceptance Criteria), §15 (File Impact Map), §16 (Work Plan 100%), §17 (Related Docs)
+- `STATUS_TRACKER.md` v9.1 — Phase 7 (UI v4.0) 100%
+- `BITEMEBABY_PRODUCT_REALITY_MAP.md` — UI-07 Social Proof Review Feed, UI-08 Mascot Asset System
+
+## 102.5 Mascot Asset System — ท่าทางน้อง Bite (Scale & Placement Guide)
+
+> Asset Mapping Directive — ใช้ `<MascotBadge pose="..." size="sm|md|lg|fluid" />` (Detail: `docs/COMPONENT_SPEC_UI.md` §18)
+
+| # | Pose | ไฟล์ Asset (`/public/assets/mascot/`) | จุดใช้งานบน UI |
+|---|------|--------------------------------------|----------------|
+| 1 | greeting | `bite_hero_greeting.webp` | Hero Banner Header / Splash Screen |
+| 2 | heart | `bite_badge_mini_heart.webp` | Customer Review Cards (มุมขวาล่างการ์ด) |
+| 3 | thumbsup | `bite_badge_thumbsup.webp` | Featured Menu Badges |
+| 4 | running | `bite_delivery_run.webp` | Delivery Round Cards / Tracking |
+| 5 | pointing | `bite_pointing.webp` | Call-to-Action Buttons |
+| 6 | peeking | `bite_peeking.webp` | Glassmorphism Overlay Cards |
+| 7 | thinking | `bite_thinking.webp` | Random Menu Feature |
+| 8 | empty | `bite_empty_sad.webp` | Empty Cart / Sold Out State |
+
+**กฎบังคับ:**
+- Asset เก็บที่ `/public/assets/mascot/` ตั้งชื่อตาม State/Pose
+- `<MascotBadge />` ต้อง `pointer-events: none` + `drop-shadow` นุ่ม ๆ (2.5D) — **ห้ามบดบังปุ่ม CTA**
+- สถานะปัจจุบัน: 8 ไฟล์เป็น placeholder (vector เดิม) — 3D render จริงจากทีมดีไซน์จะทับชื่อไฟล์เดิมแล้วใช้ได้ทันที

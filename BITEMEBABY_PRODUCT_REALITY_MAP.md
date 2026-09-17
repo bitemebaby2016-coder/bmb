@@ -1,6 +1,6 @@
 # 🗺️ Bite Me Baby — Product Reality Map
 
-> **Version:** 4.0 (Closure Round — Model A = GLM 5.2 free / Fallback Qwen 3.7 Flash)
+> **Version:** 4.1 (UI v4.0 — Social Proof Review Feed + 2.5D/3D Hybrid Glassmorphism · Model A = GLM 5.2 free / Fallback Qwen 3.7 Flash)
 > **Last Updated:** 2026-09-17
 > **Status:** ✅ ALL PHASES CLOSED (verified ไม่มี mockup) — BUILD PASS / TESTS 19/19 PASS / Lighthouse attached
 > **Rules:** เอกสารนี้เขียนทับสถานะเดิมตามผลตรวจจริง (source of truth: code > DB/migration > API > test evidence > docs)
@@ -11,7 +11,7 @@
 
 | รายการ | Target | Reality (verified) | สถานะ |
 |--------|--------|--------------------|--------|
-| Features ทั้งหมด | 45 | 45 | ✅ 100% CLOSED |
+| Features ทั้งหมด | 46 | 46 | ✅ 100% CLOSED |
 | Routes ใน `App.tsx` | — | 31 paths (23 public + 7 admin + 1 catch-all) | ✅ CLOSED |
 | Libraries (`src/lib/`) | — | 24 ไฟล์ (รวม `aiModels.ts` ใหม่) | ✅ CLOSED |
 | Stores (`src/store/`) | — | 5 (auth, cart, inventory, notification, rewards) | ✅ CLOSED |
@@ -76,7 +76,7 @@ built in 1.35s
 | DB-03 | ✅ DONE | Storage abstraction — `src/lib/bmbStorage.ts` (prefix `bmb_`) |
 | DB-04 | ✅ DONE | RLS policies อยู่ใน migration 004 (`pre_orders`, `payment_intents`, `profiles` ENABLE ROW LEVEL SECURITY) — จะ active เมื่อ owner ลง migration จริง |
 
-### Phase 2: Core Features — CLOSED (9/9)
+### Phase 2: Core Features — CLOSED (10/10)
 
 | ID | Status | Implementation (จริง) |
 |----|--------|----------------------|
@@ -86,6 +86,8 @@ built in 1.35s
 | UI-04 | ✅ DONE | split same-day / pre-order buttons + tabs |
 | UI-05 | ✅ DONE | Admin image upload (fileToBase64) — AdminProducts |
 | UI-06 | ✅ DONE | Pre-order system — `delivery_rounds` + `VotePage` |
+| UI-07 | ✅ DONE | Social Proof Review Feed — `src/components/CustomerReviewCard.tsx` (2.5D/3D Glassmorphism + 3D Star Rating + Mascot + CTA Deep Link ตาม Mode) + `src/lib/socialProofReviews.ts` + `LazyVideo.tsx` (menu highlight ≤ 2 คลิป) + HomePage Layout Flow ใหม่ (README #102) |
+| UI-08 | ✅ DONE | Mascot Asset System — `src/components/MascotBadge.tsx` (8 poses + sm/md/lg/fluid + fallback vector) + `/public/assets/mascot/` mapping + Pose Map (COMPONENT_SPEC_UI §18 / README #102.5) |
 | LAYOUT-01 | ✅ DONE | Header hide-on-scroll — `src/components/layout/Header.tsx` |
 | LAYOUT-02 | ✅ DONE | Footer (FAQ/Blog/About/Contact) — `src/components/layout/Footer.tsx` |
 | LAYOUT-03 | ✅ DONE | BottomNav — `src/components/layout/BottomNav.tsx` |

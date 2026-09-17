@@ -533,6 +533,50 @@ export type AvailabilityState =
   | 'store_closed'
   | 'delivery_unavailable';
 
+// ============================================
+// Social Proof Review Feed Types (UI v4.0)
+// @see docs/COMPONENT_SPEC_UI.md §12 CustomerReviewCard + Glassmorphism Spec
+// ============================================
+
+export type SocialProofSource = 'facebook' | 'grabfood' | 'website';
+
+export interface SocialProofReview {
+  id: string;
+  customerName: string;
+  rating: number;              // 1-5 (curated integers — whole stars for 3D rating)
+  comment: string;             // real review copy from Facebook / GrabFood
+  source: SocialProofSource;
+  sourceLabel: string;         // e.g. "Facebook", "GrabFood"
+  dateLabel: string;           // e.g. "2 สัปดาห์ที่แล้ว"
+  foodName: string;            // อะไรของร้านที่ลูกค้าสั่ง
+  productId: string;           // deep link → real product (products.id)
+}
+
+export interface MenuHighlightClip {
+  id: string;
+  title: string;
+  subtitle?: string;
+  videoUrl: string;            // mp4/webm — short clip only (max 2 clips, see video policy)
+  posterUrl?: string;          // WebP poster (lazy)
+}
+
+// ============================================
+// Mascot "น้อง Bite" — Pose System (Mascot Asset System v1.0)
+// @see docs/COMPONENT_SPEC_UI.md §18 Mascot Asset System (Scale & Placement Guide)
+// ============================================
+
+export type MascotPose =
+  | 'greeting'  // ถือถาดอาหาร / กวักมือทักทาย — Hero Banner Header / Splash
+  | 'heart'     // Mini Heart — Customer Review Cards (มุมการ์ดรีวิว)
+  | 'thumbsup'  // การันตีความอร่อย — Featured Menu Badges
+  | 'running'   // ถือกล่องอาหาร / วิ่งส่งของ — Delivery Round Cards / Tracking
+  | 'pointing'  // ชี้ไปที่ปุ่ม — Call-to-Action Buttons
+  | 'peeking'   // โผล่มาจากมุมการ์ด — Glassmorphism Overlay Cards
+  | 'thinking'  // ถือลูกเต๋า 3D ครุ่นคิด — Random Menu Feature
+  | 'empty';    // หน้าหงอย / จานว่าง — Empty Cart / Sold Out State
+
+export type MascotSize = 'sm' | 'md' | 'lg' | 'fluid'
+
 export interface FoodMenuCardProps {
   product: Product;
   category?: ProductCategory;

@@ -1,26 +1,35 @@
 ﻿// ============================================
-// Bite Me Baby — Home Page (v3: Real API Data)
-// @see docs/COMPONENT_SPEC_UI.md v1.1 spec
+// Bite Me Baby — Home Page (v4.0: 2.5D/3D Hybrid Glassmorphism)
+// Section Layout Flow:
+//   [1 Hero Mascot] -> [2 Delivery Rounds] -> [3 Social Proof Review Feed]
+//   -> [4 Same-Day Menu] -> [5 Pre-Order Menu] -> [6 Promotions/Viral]
+// @see docs/COMPONENT_SPEC_UI.md §12 CustomerReviewCard + Glassmorphism Spec
 // ============================================
 
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useCartStore } from '@/store/cartStore'
 import { useInventoryStore } from '@/store/inventoryStore'
 import { useEffect, useState } from 'react'
 import { getProducts, getCategories } from '@/lib/bmbAdminApi_products'
 import { FoodMenuCard } from '@/components/FoodMenuCard'
+import { CustomerReviewCard } from '@/components/CustomerReviewCard'
+import { MascotBadge } from '@/components/MascotBadge'
+import { LazyVideo } from '@/components/LazyVideo'
+import { getSocialProofReviews, MENU_HIGHLIGHT_CLIPS } from '@/lib/socialProofReviews'
 import { showToast } from '@/components/ui/ToastContainer'
-import type { Product, ProductCategory, SameDayOrderPayload, PreOrderPayload, AvailabilityState, OrderMode } from '@/types'
+import type { Product, ProductCategory, SameDayOrderPayload, PreOrderPayload, AvailabilityState, OrderMode, SocialProofReview } from '@/types'
 
 export function HomePage() {
   const addItem = useCartStore((s) => s.addItem)
   const cartCount = useCartStore((s) => s.getCartCount())
-  const [featuredProducts, setFeaturedProducts] = useState<Product[]>([])
+  const navigate = useNavigate() // ✅ v4.0: Deep Link CTA (Social Proof Review Feed)
+  const [products, setProducts] = useState<Product[]>([])
   const [sameDayFeatured, setSameDayFeatured] = useState<Product[]>([])
   const [preOrderFeatured, setPreOrderFeatured] = useState<Product[]>([]) // ✅ v3.1: Pre-order featured
   const [categories, setCategories] = useState<ProductCategory[]>([])
   const [lowStockAlerts, setLowStockAlerts] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
+  const socialReviews = getSocialProofReviews() // ✅ v4.0: Social Proof Review Feed (curated Facebook/GrabFood)
 
   useEffect(() => {
     async function loadData() {
@@ -29,8 +38,7 @@ export function HomePage() {
         // ✅ v3.1: Separate same-day and pre-order featured products
         const sameDayFeatured = products.filter((p: Product) => p.is_featured && !p.is_preorder && p.is_available).slice(0, 4)
         const preOrderFeatured = products.filter((p: Product) => p.is_featured && p.is_preorder).slice(0, 4)
-        const featured = [...sameDayFeatured, ...preOrderFeatured].slice(0, 6)
-        setFeaturedProducts(featured)
+        setProducts(products) // ✅ v4.0: ใช้ map review.productId → Product (รูปเมนู WebP จริง)
         setSameDayFeatured(sameDayFeatured)
         setPreOrderFeatured(preOrderFeatured)
         setCategories(cats)
@@ -48,8 +56,8 @@ export function HomePage() {
 
   const handleSameDay = (payload: SameDayOrderPayload) => {
     console.log('[Log#same-day]', payload)
-    // Find product from featuredProducts
-    const product = featuredProducts.find(p => p.id === payload.productId)
+    // Find product from full products list
+    const product = products.find(p => p.id === payload.productId)
     if (product) {
       addItem(product, payload.quantity)
       showToast('เพิ่มลงตะกร้าแล้ว!', 'success')
@@ -59,8 +67,19 @@ export function HomePage() {
   const handlePreOrder = (payload: PreOrderPayload) => {
     console.log('[Log#pre-order]', payload)
     // ✅ v3.1: Find product and show scheduled date
-    const product = featuredProducts.find(p => p.id === payload.productId)
+    const product = products.find(p => p.id === payload.productId)
     showToast(`จองสำเร็จ! ${product?.name || ''} จะส่งวันที่ ${payload.scheduledDate || '—'}`, 'success')
+  }
+
+  // ✅ v4.0: Social Proof CTA — Deep Link ตรงเข้า Cart/Checkout ตาม Mode (same-day / pre-order)
+  const handleReviewCta = (review: SocialProofReview) => {
+    const product = products.find((p) => p.id === review.productId)
+    const mode: OrderMode = product?.is_preorder ? 'pre-order' : 'same-day'
+    if (product) {
+      addItem(product, 1)
+      showToast('เพิ่มลงตะกร้าแล้ว!', 'success')
+    }
+    navigate(mode === 'pre-order' ? '/checkout?mode=pre-order' : '/cart?mode=same-day')
   }
 
   return (
@@ -84,11 +103,12 @@ export function HomePage() {
             </div>
           </div>
           
-          {/* Mascot Image */}
+          {/* Mascot Image — MascotBadge pose=greeting */}
           <div className="w-48 h-48 flex-shrink-0 animate-float">
-            <img 
-              src="/mascot_Bite_Main.webp" 
-              alt="Bite Me Baby Mascot" 
+            <MascotBadge
+              pose="greeting"
+              size="fluid"
+              alt="Bite Me Baby Mascot — น้อง Bite ทักทาย"
               className="w-full h-full object-contain drop-shadow-lg"
             />
           </div>
@@ -98,53 +118,119 @@ export function HomePage() {
       {/* Delivery Rounds */}
       <div className="grid grid-cols-3 gap-4 mb-8">
         <div className="card text-center cursor-pointer hover:scale-105 transition-transform">
-          <div className="text-3xl mb-2">🌅</div>
+          <MascotBadge pose="running" size="sm" alt="น้อง Bite วิ่งส่งของ รอบเช้า" className="mx-auto mb-2" />
           <h3 className="font-bold text-brand-accent">รอบเช้า</h3>
           <p className="text-sm text-brand-muted">ส่ง 6:00-9:00</p>
           <p className="text-xs text-brand-primary mt-1">ปิดรับ 08:00</p>
         </div>
         <div className="card text-center cursor-pointer hover:scale-105 transition-transform">
-          <div className="text-3xl mb-2">☀️</div>
+          <MascotBadge pose="running" size="sm" alt="น้อง Bite วิ่งส่งของ รอบกลางวัน" className="mx-auto mb-2" />
           <h3 className="font-bold text-brand-accent">รอบกลางวัน</h3>
           <p className="text-sm text-brand-muted">ส่ง 11:00-14:00</p>
           <p className="text-xs text-brand-primary mt-1">ปิดรับ 10:30</p>
         </div>
         <div className="card text-center cursor-pointer hover:scale-105 transition-transform">
-          <div className="text-3xl mb-2">🌙</div>
+          <MascotBadge pose="running" size="sm" alt="น้อง Bite วิ่งส่งของ รอบเย็น" className="mx-auto mb-2" />
           <h3 className="font-bold text-brand-accent">รอบเยน</h3>
           <p className="text-sm text-brand-muted">ส่ง 17:00-20:00</p>
           <p className="text-xs text-brand-primary mt-1">ปิดรับ 16:00</p>
         </div>
       </div>
 
-      {/* Featured Products — Real API Data */}
-      <div className="mb-8">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-2xl font-display font-bold text-brand-accent">🔥 เมนแนะนำ</h2>
-          <Link to="/menu" className="text-brand-primary font-medium hover:underline">ดทั้งหมด →</Link>
+      {/* ================================================ */}
+      {/* 3. Social Proof Review Feed (UI v4.0) */}
+      {/* ตำแหน่ง: ต่อจาก Delivery Rounds ก่อน Same-Day Menu */}
+      <section className="mb-10 scroll-mt-20" aria-labelledby="social-proof-heading">
+        <div className="flex items-center justify-between mb-2">
+          <h2
+            id="social-proof-heading"
+            className="text-2xl font-display font-bold text-brand-accent flex items-center gap-2"
+          >
+            ⭐ รีวิวจากลูกค้าจริง
+          </h2>
+          <Link to="/reviews" className="text-brand-primary font-medium hover:underline">รีวิวทั้งหมด →</Link>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {featuredProducts.map((p) => {
-            const cat = categories.find((c) => c.id === p.category_id)
+        <p className="text-sm text-brand-muted mb-5">
+          จาก Facebook &amp; GrabFood — ลูกค้าบอกต่อโดยตรง • ภาพเมนูจริง (ไม่ใช้วิดีโอ เพื่อความเร็วบนมือถือ)
+        </p>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {socialReviews.map((review) => {
+            const product = products.find((p) => p.id === review.productId)
+            const mode: OrderMode = product?.is_preorder ? 'pre-order' : 'same-day'
             return (
-              <FoodMenuCard 
-                key={p.id} 
-                product={p} 
-                category={cat}
-                mode="same-day" 
-                availability={p.is_available ? 'available' : 'sold_out'} 
-                onSameDayOrder={handleSameDay} 
-                onPreOrder={handlePreOrder} 
+              <CustomerReviewCard
+                key={review.id}
+                review={review}
+                product={product}
+                mode={mode}
+                deepLinkTo={mode === 'pre-order' ? '/checkout?mode=pre-order' : '/cart?mode=same-day'}
+                ctaLabel={product ? (mode === 'pre-order' ? '📅 จองเมนูนี้' : '🛒 สั่งเมนูนี้') : '🍽️ ดูเมนู'}
+                onCta={() => handleReviewCta(review)}
               />
             )
           })}
         </div>
-{/* ✅ v3.1: Featured Pre-order Products (โหวต/จองล่วงหน้า) */}
+      </section>
+
+      {/* ================================================ */}
+      {/* 4. Same-Day Menu (เมนูวันนี้) + Menu Highlight  */}
+      {/* ================================================ */}
+      <div className="mb-10">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <h2 className="text-2xl font-display font-bold text-brand-accent">🔥 เมนูวันนี้ (Same-day)</h2>
+            <MascotBadge pose="thumbsup" size="sm" alt="น้อง Bite การันตีเมนูแนะนำ" />
+          </div>
+          <Link to="/menu" className="text-brand-primary font-medium hover:underline">ดูทั้งหมด →</Link>
+        </div>
+
+        {/* Menu Highlight — Short Video ≤ 2 คลิป (Lazy Streaming เมื่อ scroll ถึง) */}
+        {MENU_HIGHLIGHT_CLIPS.length > 0 && (
+          <div className="mb-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {MENU_HIGHLIGHT_CLIPS.slice(0, 2).map((clip) => (
+                <div key={clip.id} className="card p-3">
+                  <h3 className="font-bold text-brand-accent mb-1 text-lg">{clip.title}</h3>
+                  {clip.subtitle && <p className="text-sm text-brand-muted mb-3">{clip.subtitle}</p>}
+                  <LazyVideo src={clip.videoUrl} poster={clip.posterUrl} title={clip.title} />
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {sameDayFeatured.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {sameDayFeatured.map((p) => {
+              const cat = categories.find((c) => c.id === p.category_id)
+              return (
+                <FoodMenuCard
+                  key={p.id}
+                  product={p}
+                  category={cat}
+                  mode="same-day"
+                  availability={p.is_available ? 'available' : 'sold_out'}
+                  onSameDayOrder={handleSameDay}
+                  onPreOrder={handlePreOrder}
+                />
+              )
+            })}
+          </div>
+        ) : (
+          <div className="text-center py-10 text-brand-muted">
+            ไม่พบเมนูวันนี้ — กรุณากลับมาใหม่เร็ว ๆ นี้
+          </div>
+        )}
+      </div>
+
+      {/* ================================================ */}
+      {/* 5. Pre-Order Menu (เมนูโหวต / จองล่วงหน้า)       */}
+      {/* ================================================ */}
       {preOrderFeatured.length > 0 && (
-        <div className="mb-8">
+        <div className="mb-10">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-2xl font-display font-bold text-brand-accent">📅 เมนูโหวต (จองล่วงหน้า)</h2>
-            <Link to="/menu" className="text-brand-primary font-medium hover:underline">ดทั้งหมด →</Link>
+            <h2 className="text-2xl font-display font-bold text-brand-accent">📅 เมนูจองล่วงหน้า (Pre-order)</h2>
+            <Link to="/menu" className="text-brand-primary font-medium hover:underline">ดูทั้งหมด →</Link>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {preOrderFeatured.map((p) => {
@@ -164,7 +250,6 @@ export function HomePage() {
           </div>
         </div>
       )}
-      </div>
 
       {/* Low Stock Alerts */}
       {lowStockAlerts.length > 0 && (
@@ -222,7 +307,7 @@ export function HomePage() {
           <p className="text-sm text-brand-muted">ช่วยเลือกเมนูใหม่</p>
         </Link>
         <Link to="/random-menu" className="card text-center hover:scale-105 transition-transform">
-          <div className="text-3xl mb-2">🎲</div>
+          <MascotBadge pose="thinking" size="sm" alt="น้อง Bite ครุ่นคิด คิดไม่ออก?" className="mx-auto mb-2" />
           <h3 className="font-bold text-brand-accent">คิดไม่ออก?</h3>
           <p className="text-sm text-brand-muted">สุ่มเมนูให้เลย</p>
         </Link>

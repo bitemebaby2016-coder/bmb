@@ -1,5 +1,5 @@
 ﻿import { useState, useEffect } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
+import { useNavigate, Link, useSearchParams } from 'react-router-dom'
 import { useCartStore } from '@/store/cartStore'
 import { useAuthStore } from '@/store/authStore'
 import { useNotificationStore } from '@/store/notificationStore'
@@ -11,9 +11,11 @@ import { getBestProvider, calculateProviderCost, type DeliveryProvider } from '@
 
 export function CheckoutPage() {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams() // ✅ v4.0: Deep Link — ?mode= (same-day/pre-order) & ?round=
   const { items, subtotal, discount, deliveryFee, total, clearCart } = useCartStore()
   const customer = useAuthStore((s) => s.customer)
-  const [selectedRound, setSelectedRound] = useState('morning')
+  const [selectedRound, setSelectedRound] = useState(searchParams.get('round') || 'morning')
+  const deepLinkMode: 'same-day' | 'pre-order' = searchParams.get('mode') === 'pre-order' ? 'pre-order' : 'same-day'
   const [deliveryAddress, setDeliveryAddress] = useState({
     latitude: 10.7016,
     longitude: 102.1429,
@@ -165,6 +167,14 @@ export function CheckoutPage() {
         <h1 className="text-3xl font-bold text-brand-accent">🛒 Checkout</h1>
         <Link to="/cart" className="btn btn-outline">← กลับตะกร้า</Link>
       </div>
+
+      {/* ✅ v4.0: Deep Link จาก Social Proof CTA (CustomerReviewCard) */}
+      {deepLinkMode === 'pre-order' && (
+        <div className="mb-6 bg-blue-50 border-2 border-blue-200 p-4 rounded-xl">
+          <h3 className="font-bold text-blue-900 mb-1">📅 Deep Link — Checkout แบบ Pre-order</h3>
+          <p className="text-sm text-blue-700">คุณมาจากรีวิวลูกค้าจริง — เลือก Delivery Round ถัดไปเพื่อจองเมนูนี้ล่วงหน้า</p>
+        </div>
+      )}
 
       {/* Delivery Address */}
       <div className="card mb-6">

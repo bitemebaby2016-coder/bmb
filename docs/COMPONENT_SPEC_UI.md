@@ -1,8 +1,8 @@
 # Component Specification: Normal Document Flow Layout (UI / PWA Home & Menu)
 
 > **Document role:** Single Source of Truth สำหรับหน้าตา UI ใหม่ (Home/Menu), Micro-interactions, Business Rules ของปุ่มสั่งซื้อ และช่องทาง Admin อัปโหลดรูปอาหาร  
-> **Applies to:** `src/components/FoodMenuCard.tsx`, โซน Featured บน HomePage, กริดเมนูบน MenuPage และทุก surface ฝั่งลูกค้าของ PWA ที่เรนเดอร์การ์ดสินค้า  
-> **Created:** 2026-09-14 · **Updated:** 2026-09-15 · **Version:** 3.0 (Normal Document Flow — Fixed Layout)  
+> **Applies to:** `src/components/FoodMenuCard.tsx`, `src/components/CustomerReviewCard.tsx`, `src/components/LazyVideo.tsx`, โซน Social Proof Review Feed + Featured บน HomePage, กริดเมนูบน MenuPage และทุก surface ฝั่งลูกค้าของ PWA ที่เรนเดอร์การ์ดสินค้า  
+> **Created:** 2026-09-14 · **Updated:** 2026-09-17 · **Version:** 4.0 (Normal Document Flow + CustomerReviewCard — 2.5D/3D Hybrid Glassmorphism)  
 > **Status:** ✅ APPROVED — Implementasi Ready  
 > **Process:** จัดทำตาม README #78 DEVELOPMENT DOCUMENTATION GATE (D0 → D1 → D2 → D3 → D4) และ #89 SOURCE OF TRUTH HIERARCHY
 
@@ -473,4 +473,237 @@ export interface PreOrderPayload {
 
 > ✅ **สถานะ: อนุมัติแล้ว — Implementasi Ready**
 >
-> `src/components/FoodMenuCard.tsx` พร้อมใช้งาน — Admin อัปโหลดรูปเองผ่าน Products Management ได้เลย
+> `src/components/FoodMenuCard.tsx` พร้อมใช้งาน — Admin อัปโหลดรูปเองผ่าน Products Management ได้เลย (ดู §8 v3.0 + §15 v4.0)
+>
+---
+
+## 12. CustomerReviewCard + Social Proof Review Feed (UI v4.0 — 2.5D/3D Hybrid Glassmorphism)
+
+> เพิ่มเมื่อ 2026-09-17 ตาม Change Management (#91) — Architecture Target ล่าสุดคือ **2.5D/3D Hybrid Glassmorphism**
+> เอกสารอ้างอิงหลัก: `README.md` #102 HOME PAGE LAYOUT FLOW (v4.0) · `src/lib/socialProofReviews.ts` · `src/components/CustomerReviewCard.tsx`
+
+## 12.1 ตำแหน่งใน Section Layout Flow
+
+```text
+[1 Hero Mascot] -> [2 Delivery Rounds] -> [3 Social Proof Review Feed] -> [4 Same-Day Menu] -> [5 Pre-Order Menu] -> [6 Promotions/Viral]
+```
+
+- **Social Proof Review Feed** อยู่ต่อจาก **Delivery Rounds Selector** และ **ก่อน** โซนเมนูขาย (Same-Day Menu)
+- แสดงรีวิวจริงจาก **Facebook / GrabFood** (curated) ผูกกับ `products.id` จริง (ดู seed: `prod-1`..`prod-6`)
+
+## 12.2 Glassmorphism Spec (`CustomerReviewCard`)
+
+| องค์ประกอบ | Spec |
+|------------|------|
+| **Background** | ภาพอาหาร WebP ความละเอียดสูงจาก `product.image_url` — `loading="lazy"` + `decoding="async"` |
+| **Fallback** | Gradient ตาม brand + emoji 🍜 เมื่อไม่มีรูป (ไม่ block การเรนเดอร์) |
+| **Glass Overlay** | `backdrop-filter: blur(14px) saturate(160%)` / background `rgba(255,251,245,0.72)` + border แนว glass |
+| **Radius** | `rounded-2xl` (24px) มุมโค้งพรีเมียม |
+| **Shadow** | `shadow-lg` → `hover:shadow-xl` ฟุ้งขึ้นเมื่อชี้ |
+| **2.5D Tilt** | Hover (desktop): `transform: perspective(1100px) rotateX(3deg) rotateY(-3deg) translateY(-4px)` — ปิดเมื่อ `@media (hover: none)` |
+| **Depth** | `transform-style: preserve-3d` + Mascot `translateZ(28px)` ลอยเหนือ glass layer |
+| **Hover Image** | ขยาย `scale(1.02 → 1.08)` อย่างนุ่มนวล |
+| **Source Badge** | โลโก้จริง `Facebook Logo.webp` / `Grab Food Logo.webp` (badge พื้นขาว) + ข้อความสี brand |
+
+## 12.3 3D Star Rating — Asset `public/Star.webp` (CSS Micro-animation)
+
+- 5 ดาว + ตัวเลขคะแนน (เช่น `5.0`) — icon ดาวจากไฟล์จริง **`public/Star.webp`** (ไม่ใช่ emoji)
+- ใช้ class `.star-3d-img` กับ CSS Variables `--star-i` สำหรับ **staggered pop-in** (StarPop scale+rotate จาก 0) + `loading="lazy"`
+- **Glow / Pulse:** keyframes `starPulse` — `drop-shadow` สว่างขึ้น + `scale(1.12)` กึ่งรอบ (2.4s infinite)
+- ดาวที่ไม่ได้คะแนน → class `.is-empty` (grayscale + opacity 0.45, ไม่ pulse)
+- เคารพ `prefers-reduced-motion: reduce` — ระบบหยุด animation ทั้งหมด
+
+## 12.4 3D Mascot "น้อง Bite" จิ๋ว (MascotBadge pose="heart")
+
+- ใช้ `<MascotBadge pose="heart" size="sm" className="mascot-mini" />` (ดู **§18 Mascot Asset System**) — ท่า Mini Heart มุมล่างการ์ดรีวิว
+- `position: absolute; right/bottom` + `z-index` สูงสุด + `translateZ(28px)`
+- Micro-animation: `mascotWobble` (ลอยขึ้นลง + หมุน -3deg/+3deg, 3.2s infinite)
+- Asset ตัวจริง (`bite_badge_mini_heart.webp`) จะแทนที่ placeholder (`/mascot_Bite_Main.webp`) อัตโนมัติเมื่อทีมดีไซน์ส่งมา (fallback `onError`)
+
+## 12.5 CTA — Deep Link ตรงเข้า Cart/Checkout ตาม Mode
+
+| Mode | Deep Link | CTA Label | พฤติกรรม |
+|------|-----------|-----------|----------|
+| `same-day` | `/cart?mode=same-day` | 🛒 สั่งเมนูนี้ | `onCta` → `addItem(product, 1)` แล้วเข้า Cart → ไป Checkout วันนี้ |
+| `pre-order` | `/checkout?mode=pre-order` | 📅 จองเมนูนี้ | `onCta` → `addItem(product, 1)` แล้วตรงเข้า Checkout แบบจองล่วงหน้า |
+
+- CheckoutPage รองรับ query params (`mode`, `round`) — ตามสัญญา **README #48 DEEP LINK**
+- Query parameter ไม่ใช่ Business Rule — ระบบต้อง validate ใหม่ที่จุดสั่งจริง
+
+## 12.6 Props Interface (`CustomerReviewCardProps`)
+
+```typescript
+interface CustomerReviewCardProps {
+  review: SocialProofReview;   // @/types — content แบบ Type-safe
+  product?: Product;           // ผูกกับ products.id (สำหรับ image_url WebP + is_available)
+  mode: OrderMode;             // 'same-day' | 'pre-order'
+  deepLinkTo: string;          // เป้าหมาย Deep Link (คำนวณที่ HomePage ตาม Mode)
+  ctaLabel?: string;
+  onCta?: () => void;          // เตรียมของ (addItem) ก่อน navigate
+}
+```
+
+- **ห้ามใช้ `any`** — ทุก prop Type-safe (ตรวจผ่าน `tsc --noEmit` = 0 errors)
+
+## 12.7 Video Policy (Performance — LCP / Mobile)
+
+```text
+ห้ามวิดีโอในเซกชั่นรีวิว (Social Proof Review Feed)
+↓
+ภาพนิ่ง WebP เป็นหลัก (ภาพเดียวกับเมนูจริง)
+↓
+Short Video อนุญาตเฉพาะ "เมนู Highlight" ไม่เกิน 1-2 คลิป
+   - ใช้ <LazyVideo /> (IntersectionObserver)
+   - preload="none" + src ถูกใส่เมื่อ scroll มาถึงเท่านั้น (Lazy Streaming)
+   - poster เป็น WebP — Data Saver (navigator.connection.saveData) → ไม่ autoplay
+```
+
+- Config คลิป: `MENU_HIGHLIGHT_CLIPS` ใน `src/lib/socialProofReviews.ts` — **เริ่มต้นว่าง = ไม่แสดง video section** (policy-safe)
+
+## 12.8 Data Source
+
+- `src/lib/socialProofReviews.ts` — `SOCIAL_PROOF_REVIEWS` (curated 6 รายการ, productId ตรง seed) + `getSocialProofReviews()`
+- รูปเมนูอ่านจาก `products.image_url` ที่ runtime → สอดคล้องกับหลัก "Real API Data"
+
+---
+
+## 13. HomePage Section Layout Flow (v4.0)
+
+> รายละเอียดเต็มใน `README.md` #102
+
+```text
+Section 1 — Hero Mascot              (hero-section เดิม)
+Section 2 — Delivery Rounds          (รอบเช้า / กลางวัน / เย็น)
+Section 3 — Social Proof Review Feed (CustomerReviewCard x6)
+Section 4 — Same-Day Menu             (เมนูวันนี้ + Menu Highlight LazyVideo ≤ 2 คลิป)
+Section 5 — Pre-Order Menu            (เมนูโหวต/จองล่วงหน้า)
+Section 6 — Promotions / Viral        (โปรโมชั่น + Quick Actions + Share)
+```
+
+---
+
+## 14. Acceptance Criteria — Social Proof Review Feed (v4.0)
+
+- [ ] Social Proof Review Feed แสดงหลัง Delivery Rounds และก่อน Same-Day Menu
+- [ ] `CustomerReviewCard` ใช้ Glassmorphism (`backdrop-filter: blur()`) + ภาพ WebP Lazy Loading
+- [ ] 3D Star Rating มี Glow/Pulse micro-animation และเคารพ `prefers-reduced-motion`
+- [ ] Mascot "น้อง Bite" จิ๋วแสดงมุมล่างการ์ด (translateZ ลอยเหนือ glass)
+- [ ] CTA Deep Link ถูกต้องตาม Mode: same-day → `/cart?mode=same-day`, pre-order → `/checkout?mode=pre-order`
+- [ ] ไม่มี `<video>` ในเซกชั่นรีวิวเด็ดขาด
+- [ ] Menu Highlight ใช้ `LazyVideo` เท่านั้น และ ≤ 2 คลิป
+- [ ] ไม่มี type `any` ใน `CustomerReviewCard.tsx` / `LazyVideo.tsx`
+- [ ] `npm test` 19/19 PASS + `npm run build` PASS (ยืนยันแล้ว 2026-09-17)
+
+---
+
+## 15. File Impact Map (v4.0 — ทำแล้ว)
+
+| ไฟล์ | การกระทำ | เนื้อหา |
+|------|----------|---------|
+| `src/types/index.ts` | EXTEND | `SocialProofReview`, `SocialProofSource`, `MenuHighlightClip` |
+| `src/lib/socialProofReviews.ts` | 🆕 CREATE | curated reviews (6) + `MENU_HIGHLIGHT_CLIPS` + video policy |
+| `src/components/CustomerReviewCard.tsx` | 🆕 CREATE | 2.5D/3D Glassmorphism review card + CTA Deep Link ตาม Mode |
+| `src/components/MascotBadge.tsx` | 🆕 CREATE | Reusable Mascot Asset System — 8 poses + sizes (sm/md/lg/fluid) + vector fallback |
+| `src/components/LazyVideo.tsx` | 🆕 CREATE | IntersectionObserver lazy streaming (menu highlight ≤ 2 คลิป) |
+| `src/pages/HomePage.tsx` | REWRITE (sections) | ลำดับ v4.0 + Social Proof Review Feed + Same-Day/Pre-Order แยก section |
+| `src/index.css` | EXTEND | `.review-card-3d`, `.review-card-glass`, `.star-3d`, `.mascot-mini`, `.lazy-video` |
+| `src/pages/CheckoutPage.tsx` | EXTEND | รองรับ Deep Link `?mode=` / `?round=` |
+| `README.md` | EXTEND | #102 HOME PAGE LAYOUT FLOW (v4.0) |
+| `STATUS_TRACKER.md` | UPDATE | v9.1 + Phase 7 (UI v4.0) 100% |
+| `BITEMEBABY_PRODUCT_REALITY_MAP.md` | UPDATE | UI-07 Social Proof Review Feed |
+
+---
+
+## 16. Work Plan — Closure 100% (v4.0)
+
+| # | งาน | สถานะ |
+|---|-----|--------|
+| 1 | เพิ่ม Type Social Proof + MenuHighlightClip | ✅ DONE (tsc 0 errors) |
+| 2 | สร้าง `socialProofReviews.ts` (curated reviews + video policy config) | ✅ DONE |
+| 3 | สร้าง `CustomerReviewCard.tsx` (Glassmorphism + 3D stars + Mascot + CTA Deep Link) | ✅ DONE |
+| 4 | สร้าง `LazyVideo.tsx` (Lazy Streaming) | ✅ DONE |
+| 5 | Refactor `HomePage.tsx` เป็น Section Layout Flow v4.0 | ✅ DONE |
+| 6 | CSS Glassmorphism Spec (`index.css`) | ✅ DONE |
+| 7 | CheckoutPage รองรับ Deep Link params | ✅ DONE |
+| 8 | ทดสอบ: `tsc --noEmit` 0 errors / vitest 19/19 / vite build PASS | ✅ DONE |
+| 9 | อัปเดต docs ให้ตรงกัน (README #102, STATUS_TRACKER v9.1, Reality Map UI-07, เอกสารฉบับนี้) | ✅ DONE |
+| 10 | Mascot Asset System — `MascotBadge.tsx` + `/public/assets/mascot/` mapping + วางตาม Pose Map (Hero/Rounds/Reviews/Menu/Random) | ✅ DONE |
+
+> **เป้าหมาย: ปิดงาน UI v4.0 ให้ 100%** — ทุกรายการในแผนนี้ทำเสร็จและยืนยันด้วย test evidence แล้ว
+---
+
+## 17. Related Documents (v4.0 เพิ่มเติม)
+
+- `README.md` (#48 DEEP LINK, #101 Normal Document Flow, #102 HOME PAGE LAYOUT FLOW v4.0)
+- `src/lib/socialProofReviews.ts` (Social Proof Data + Video Policy)
+- `STATUS_TRACKER.md` (Phase 7 — UI v4.0)
+- `BITEMEBABY_PRODUCT_REALITY_MAP.md` (UI-07)
+
+---
+
+## 18. Mascot Asset System — ท่าทางน้อง Bite (Scale & Placement Guide)
+
+> ตามคำสั่งเพิ่มเติม (Asset Mapping Directive) — Dev ต้องรู้ว่าท่าทางใดเก็บไว้ที่ใด และนำไปลดสเกลใช้บน UI จุดใด
+
+### 18.1 ท่าทางน้อง Bite (Pose Concept) & จุดนำไปใช้งาน
+
+| # | ท่าทาง (Pose Concept) | รายละเอียดท่าทาง (Visual Details) | จุดนำไปลดสเกลใช้งานบน UI (UI Placement) |
+|---|------------------------|-----------------------------------|-------------------------------------------|
+| 1 | Greeting & Welcome | ถือถาดอาหาร / กวักมือทักทาย ยิ้มสดใส | Hero Banner Header (README §39 / §40) และหน้า Splash Screen |
+| 2 | Mini Heart / Love | ชูมือทำท่า Mini Heart สเกลขนาดจิ๋ว | Customer Review Cards (มุมขวาล่างของการ์ดรีวิว) |
+| 3 | Thumbs Up / Guarantee | ยกนิ้วโป้งการันตีความอร่อย | Featured Menu Badges (ติดบนเมนูขายดี / เมนูแนะนำ) |
+| 4 | Fast Delivery / Running | ถือกล่องอาหาร / วิ่งส่งของ | Delivery Round Cards (รอบเช้า/กลางวัน/เย็น) และหน้า Tracking |
+| 5 | Pointing / Guide | ชี้นิ้วไปทางข้าง ๆ หรือชี้ลง | Call-to-Action Buttons (ชี้ไปที่ปุ่มสั่งซื้อ หรือปุ่มสุ่มเมนู) |
+| 6 | Peeking / Corner | โผล่หน้าและมือมาจากขอบมุมการ์ด | Glassmorphism Overlay Cards (เกาะมุมกล่องรีวิว / โปรโมชั่น) |
+| 7 | Thinking / Dice | ถือลูกเต๋า 3D ทำท่าครุ่นคิด | Random Menu Feature (ปุ่มสุ่มเมนูคิดไม่ออก) |
+| 8 | Empty / Sad Bite | ทำหน้าหงอย หรือถือจานว่างเปล่า | Empty Cart / Sold Out State (เมื่อสินค้าหมด หรือตะกร้าว่าง) |
+
+### 18.2 Asset Directory & Naming (Asset Mapping Directive)
+
+```text
+/public/assets/mascot/
+├── bite_hero_greeting.webp      (Hero Header / Splash)
+├── bite_badge_mini_heart.webp   (Review Card Badge — มุมล่างการ์ด)
+├── bite_badge_thumbsup.webp     (Featured Product Badge)
+├── bite_delivery_run.webp       (Delivery Rounds & Order Status / Tracking)
+├── bite_pointing.webp           (CTA Buttons)
+├── bite_peeking.webp            (Glassmorphism Overlay Cards)
+├── bite_thinking.webp           (Random Menu)
+└── bite_empty_sad.webp          (Empty Cart / Sold Out)
+```
+
+> ⚠️ **สถานะปัจจุบัน:** ทั้ง 8 ไฟล์เป็น **placeholder** = คัดลอกจากเวกเตอร์เดิม (`/mascot_Bite_Welcome|Main|Thinking|Good bye.webp`) เพื่อให้ UI ทำงานได้ทันที — เมื่อทีมดีไซน์ส่ง **3D render จริง** ให้ทับไฟล์ที่ชื่อเดียวกัน โค้ดจะใช้เองทันที (fallback `onError` ใน `MascotBadge`)
+
+### 18.3 Reusable Component: `<MascotBadge />`
+
+```typescript
+export interface MascotBadgeProps {
+  pose: MascotPose;                  // 8 poses — types/index.ts
+  size?: 'sm' | 'md' | 'lg' | 'fluid'; // sm=52px, md=72px, lg=104px, fluid=ตาม container
+  alt?: string;
+  className?: string;                // ต่อท้าย เช่น `mascot-mini`, `mx-auto`, `w-full h-full`
+  loading?: 'lazy' | 'eager';
+}
+```
+
+```tsx
+<MascotBadge pose="heart"    size="sm"    className="mascot-mini" />                      // review card มุมล่าง
+<MascotBadge pose="running"  size="sm"    className="mx-auto mb-2" />                     // delivery rounds
+<MascotBadge pose="thumbsup" size="sm" />                                                 // featured menu badge
+<MascotBadge pose="thinking" size="sm"    className="mx-auto mb-2" />                     // random menu
+<MascotBadge pose="greeting" size="fluid" className="w-full h-full object-contain" />     // hero banner
+```
+
+### 18.4 CSS Rules (บังคับ)
+
+```css
+.mascot-badge {
+  pointer-events: none;   /* ⛔ ต้องไม่บดบังการกดปุ่ม Call-to-Action ของผู้ใช้ */
+  user-select: none;
+  filter: drop-shadow(...); /* 2.5D นุ่ม ๆ */
+}
+```
+
+- ทุก `<MascotBadge />` เคารพ `prefers-reduced-motion: reduce`
+- ห้ามใช้ `pointer-events: auto` บน badge — กันการบัง CTA
+- การวางตำแหน่ง (absolute/มุมการ์ด) ควบคุมผ่าน `className` (เช่น `mascot-mini`) ไม่ใช่ภายใน component
