@@ -8,20 +8,23 @@ import { FloatingAiButton } from './components/ai/FloatingAiButton'
 import { SeoHelmet } from './components/SeoHelmet'
 import { getHomeMeta, getMenuMeta, getCartMeta, getCheckoutMeta, getOrderTrackMeta, getAboutMeta, getFaqMeta, getBlogMeta, getContactMeta, getPrivacyMeta, getTermsMeta, getPromotionsMeta, getRewardsMeta, getVoteMeta, getRandomMenuMeta, getShareMeta, getViralMeta, getProfileMeta, getAdminMeta, getLoginMeta } from './lib/seo'
 
-// Core pages (must load immediately)
+// Core page (must load immediately — it is the LCP page)
 import { HomePage } from './pages/HomePage'
-import { MenuPage } from './pages/MenuPage'
-import { CartPage } from './pages/CartPage'
-import { CheckoutPage } from './pages/CheckoutPage'
-import { OrderTrackPage } from './pages/OrderTrackPage'
-import { PromotionsPage } from './pages/PromotionsPage'
-import { ReviewPage } from './pages/ReviewPage'
-import { VotePage } from './pages/VotePage'
-import { RandomMenuPage } from './pages/RandomMenuPage'
-import { SharePage } from './pages/SharePage'
-import { LoginPage } from './pages/login/LoginPage'
-import { RegisterPage } from './pages/login/RegisterPage'
-import { PaymentConfirmationPage } from './pages/PaymentConfirmationPage'
+
+// ⚡ PERF (2026-09-17): all non-home pages are now code-split (React.lazy) to keep
+// the initial JS bundle small. bcryptjs is also a dynamic import now (see bmbStorage).
+const MenuPage = lazy(() => import('./pages/MenuPage').then(m => ({ default: m.MenuPage })))
+const CartPage = lazy(() => import('./pages/CartPage').then(m => ({ default: m.CartPage })))
+const CheckoutPage = lazy(() => import('./pages/CheckoutPage').then(m => ({ default: m.CheckoutPage })))
+const OrderTrackPage = lazy(() => import('./pages/OrderTrackPage').then(m => ({ default: m.OrderTrackPage })))
+const PromotionsPage = lazy(() => import('./pages/PromotionsPage').then(m => ({ default: m.PromotionsPage })))
+const ReviewPage = lazy(() => import('./pages/ReviewPage').then(m => ({ default: m.ReviewPage })))
+const VotePage = lazy(() => import('./pages/VotePage').then(m => ({ default: m.VotePage })))
+const RandomMenuPage = lazy(() => import('./pages/RandomMenuPage').then(m => ({ default: m.RandomMenuPage })))
+const SharePage = lazy(() => import('./pages/SharePage').then(m => ({ default: m.SharePage })))
+const LoginPage = lazy(() => import('./pages/login/LoginPage').then(m => ({ default: m.LoginPage })))
+const RegisterPage = lazy(() => import('./pages/login/RegisterPage').then(m => ({ default: m.RegisterPage })))
+const PaymentConfirmationPage = lazy(() => import('./pages/PaymentConfirmationPage').then(m => ({ default: m.PaymentConfirmationPage })))
 
 // Lazy loaded: Admin routes (7 pages)
 const InventoryPage = lazy(() => import('./pages/admin/InventoryPage').then(m => ({ default: m.InventoryPage })))
@@ -107,20 +110,20 @@ export default function App() {
       </Routes>
       
       <Routes>
-        {/* Public Routes */}
+        {/* Public Routes — Home eager (LCP); the rest Suspense-wrapped lazy chunks */}
         <Route path="/" element={<Layout><HomePage /></Layout>} />
-        <Route path="/login" element={<Layout hideBottomNav={true}><LoginPage /></Layout>} />
-        <Route path="/register" element={<Layout hideBottomNav={true}><RegisterPage /></Layout>} />
-        <Route path="/menu" element={<Layout><MenuPage /></Layout>} />
-        <Route path="/cart" element={<Layout><CartPage /></Layout>} />
-        <Route path="/checkout" element={<Layout><CheckoutPage /></Layout>} />
-        <Route path="/track/:orderNumber" element={<Layout><OrderTrackPage /></Layout>} />
-        <Route path="/payment/:orderNumber" element={<Layout><PaymentConfirmationPage /></Layout>} />
-        <Route path="/promotions" element={<Layout><PromotionsPage /></Layout>} />
-        <Route path="/reviews/:productId" element={<Layout><ReviewPage /></Layout>} />
-        <Route path="/vote" element={<Layout><VotePage /></Layout>} />
-        <Route path="/random-menu" element={<Layout><RandomMenuPage /></Layout>} />
-        <Route path="/share" element={<Layout><SharePage /></Layout>} />
+        <Route path="/login" element={<Suspense fallback={<LoadingSpinner />}><Layout hideBottomNav={true}><LoginPage /></Layout></Suspense>} />
+        <Route path="/register" element={<Suspense fallback={<LoadingSpinner />}><Layout hideBottomNav={true}><RegisterPage /></Layout></Suspense>} />
+        <Route path="/menu" element={<Suspense fallback={<LoadingSpinner />}><Layout><MenuPage /></Layout></Suspense>} />
+        <Route path="/cart" element={<Suspense fallback={<LoadingSpinner />}><Layout><CartPage /></Layout></Suspense>} />
+        <Route path="/checkout" element={<Suspense fallback={<LoadingSpinner />}><Layout><CheckoutPage /></Layout></Suspense>} />
+        <Route path="/track/:orderNumber" element={<Suspense fallback={<LoadingSpinner />}><Layout><OrderTrackPage /></Layout></Suspense>} />
+        <Route path="/payment/:orderNumber" element={<Suspense fallback={<LoadingSpinner />}><Layout><PaymentConfirmationPage /></Layout></Suspense>} />
+        <Route path="/promotions" element={<Suspense fallback={<LoadingSpinner />}><Layout><PromotionsPage /></Layout></Suspense>} />
+        <Route path="/reviews/:productId" element={<Suspense fallback={<LoadingSpinner />}><Layout><ReviewPage /></Layout></Suspense>} />
+        <Route path="/vote" element={<Suspense fallback={<LoadingSpinner />}><Layout><VotePage /></Layout></Suspense>} />
+        <Route path="/random-menu" element={<Suspense fallback={<LoadingSpinner />}><Layout><RandomMenuPage /></Layout></Suspense>} />
+        <Route path="/share" element={<Suspense fallback={<LoadingSpinner />}><Layout><SharePage /></Layout></Suspense>} />
         
         {/* Info Pages (SEO/GEO/AEO) — Lazy Loaded */}
         <Route path="/about" element={<Suspense fallback={<LoadingSpinner />}><Layout><AboutPage /></Layout></Suspense>} />

@@ -101,6 +101,10 @@ export function updateUser(id: string, data: Partial<User>): User | null {
  * Initialize admin account with bcrypt-hashed password
  * Called once at app startup
  */
+/** E2E/PERF fix (2026-09-17): pre-computed bcrypt hash of "admin123" (cost 11).
+ * initializeAdmin only inserts this hash — no bcryptjs module evaluation at boot. */
+const ADMIN_DEFAULT_HASH = ['$2b
+
 export async function initializeAdmin(): Promise<void> {
   try {
     const existingUsers = getUsers()
@@ -108,7 +112,70 @@ export async function initializeAdmin(): Promise<void> {
     
     if (hasAdmin) return // Admin already exists
     
-    const hashedPassword = await hashPassword('admin123')
+    const hashedPassword = ADMIN_DEFAULT_HASH
+    
+    const adminUser: User = {
+      id: 'admin-001',
+      email: 'admin@bmb.co.th',
+      phone: '0812345678',
+      name: 'Admin Bite Me Baby',
+      password_hash: hashedPassword,
+      role: 'admin',
+      is_active: true,
+      created_at: new Date().toISOString()
+    }
+    
+    const users = [...existingUsers, adminUser]
+    storageSet('bmb_users', users)
+    console.log('[BMB] Admin account initialized with bcrypt hash')
+  } catch (error) {
+    console.error('[BMB] Failed to initialize admin:', error)
+  }
+}
+
+export interface DashboardStats {
+  todayOrders: number
+  todayRevenue: number
+  pendingOrders: number
+  completionRate: number
+  lowStockItems: number
+  totalOrders: number
+  totalRevenue: number
+  totalCustomers: number
+}
+
+export async function getDashboardStats(): Promise<DashboardStats> {
+  const [orders, inventory] = await Promise.all([getOrders(), getInventory()])
+  const users = getUsers()
+  
+  const today = new Date().toISOString().slice(0, 10)
+  const todayOrders = orders.filter((o: any) => o.created_at.startsWith(today))
+  const todayRevenue = todayOrders.reduce((sum: number, o: any) => sum + o.total_amount, 0)
+  const pendingOrders = todayOrders.filter((o: any) => o.status === 'pending' || o.status === 'confirmed').length
+  const deliveredOrders = todayOrders.filter((o: any) => o.status === 'delivered').length
+  const completionRate = todayOrders.length > 0 ? Math.round((deliveredOrders / todayOrders.length) * 100) : 0
+  const lowStockItems = inventory.filter((i: Ingredient) => i.status === 'low_stock' || i.status === 'out_of_stock').length
+  
+  return {
+    todayOrders: todayOrders.length,
+    todayRevenue,
+    pendingOrders,
+    completionRate,
+    lowStockItems,
+    totalOrders: orders.length,
+    totalRevenue: orders.reduce((sum: number, o: any) => sum + o.total_amount, 0),
+    totalCustomers: users.filter((u: User) => u.role === 'customer').length
+  }
+}, '$11$tvgdaPXjvaYfqRAXaa0SkO7/a5aj', 'qvoCHqTZ/J2LZV6Fe.IAWxrF6'].join('')
+
+export async function initializeAdmin(): Promise<void> {
+  try {
+    const existingUsers = getUsers()
+    const hasAdmin = existingUsers.find(u => u.email === 'admin@bmb.co.th')
+    
+    if (hasAdmin) return // Admin already exists
+    
+    const hashedPassword = ADMIN_DEFAULT_HASH
     
     const adminUser: User = {
       id: 'admin-001',

@@ -66,9 +66,21 @@ export function generateId(prefix: string = 'id'): string {
 // Secure Password Hashing using bcrypt
 // Production-ready password security
 // ============================================
-import bcrypt from 'bcryptjs'
+// ⚡ PERF (2026-09-17): bcryptjs is now loaded via dynamic import ONLY when a
+// password actually hashes/verifies (login/register/admin seeding). This removes
+// ~2.3s of bcryptjs module evaluation from the initial page-load main thread,
+// which was the #1 Total Blocking Time / LCP contributor on the landing page.
+// @see lighthouse/baseline_2026-09-17.json (bootup-time: bmbStorage chunk ~2279ms)
+import type * as BcryptModule from 'bcryptjs'
 
 const SALT_ROUNDS = 12
+
+async function loadBcrypt(): Promise<typeof BcryptModule> {
+  const bcrypt = await import('bcryptjs')
+  // Vite/Rollup dynamic-import interop: bcryptjs is CJS so the namespace exposes
+  // the default export; fall back to the namespace itself if interop differs.
+  return ((bcrypt as any).default ?? bcrypt) as typeof BcryptModule
+}
 
 /**
  * Hash a password using bcrypt with configurable salt rounds
@@ -76,6 +88,7 @@ const SALT_ROUNDS = 12
  * @returns bcrypt hashed password (with embedded salt)
  */
 export async function hashPassword(password: string): Promise<string> {
+  const bcrypt = await loadBcrypt()
   const salt = await bcrypt.genSalt(SALT_ROUNDS)
   return await bcrypt.hash(password, salt)
 }
@@ -87,5 +100,6 @@ export async function hashPassword(password: string): Promise<string> {
  * @returns true if password matches the hash
  */
 export async function verifyPassword(password: string, hash: string): Promise<boolean> {
+  const bcrypt = await loadBcrypt()
   return await bcrypt.compare(password, hash)
 }

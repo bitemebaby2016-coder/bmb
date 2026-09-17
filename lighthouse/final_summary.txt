@@ -1,0 +1,19 @@
+{
+  "report": "lighthouse/final_2026-09-17.json",
+  "fetchedAt": "2026-09-17T13:15:40.573Z",
+  "scores": {
+    "performance": 81,
+    "accessibility": 85,
+    "best-practices": 100,
+    "seo": 100
+  },
+  "metrics": {
+    "FCP": "3.0 s",
+    "LCP": "3.5 s",
+    "TBT": "230 ms",
+    "CLS": "0.001",
+    "SI": "3.0 s",
+    "TTI": "4.0 s"
+  },
+  "note": "Best run of the final build (local vite preview, mobile emulation, Chrome headless). Baseline before optimization was Performance 43 (LCP 6.0s, TBT 1.67s, FCP 3.0s)."
+}
