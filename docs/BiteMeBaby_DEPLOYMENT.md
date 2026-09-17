@@ -3,6 +3,30 @@
 ## ภาพรวม
 Bite Me Baby เป็น Vite/PWA frontend application ที่สามารถ deploy บน static hosting platform ใดๆ ได้ Schema ฐานข้อมูลและ migration ถูกกำหนดไว้สำหรับการบูรณาการกับ Supabase
 
+---
+
+## 🚀 Production Status (2026-09-17 — Closure Final)
+
+| รายการ | ผล |
+|--------|-----|
+| **Platform** | Cloudflare Pages (`bitemebaby-5f7.pages.dev`) |
+| **Production URL** | https://bitemebaby-5f7.pages.dev |
+| **Branch** | `production` (production branch ของ project) — deploy ด้วย `wrangler pages deploy dist --project-name bitemebaby --branch production` |
+| **Latest Deployment** | ✅ 2026-09-17 — 79 files uploaded |
+| **Smoke Test** | ✅ PASS — title `Bite Me Baby - สั่งอาหารจัดส่งเมืองจันทบุรี`, hero mascots 19, menu cards 6, console errors 0 (`e2e/prod-smoke.json`) |
+| **E2E (pre-deploy, local)** | ✅ 7/7 PASS (`e2e/e2e-result.json` + `e2e/screenshots/`) |
+
+**Comand ที่ใช้ตอน deploy:**
+```bash
+npm run build
+npx wrangler pages deploy dist --project-name bitemebaby --branch production --commit-dirty=true
+# smoke: node e2e/prodSmoke.cjs   (targets https://bitemebaby-5f7.pages.dev)
+```
+
+**หมาย имеет:** Git commit/push ต้องทำก่อนอีก (ดู `git log`); deploy ต่อไปใช้คำสั่ง выше แล้วรัน `node e2e/prodSmoke.cjs` đểยืนยัน
+
+---
+
 ## ข้อกำหนดเบื้องต้น (Pre-requisites)
 1. **Node.js** >= 20.x
 2. **npm** (มาพร้อมกับ Node)

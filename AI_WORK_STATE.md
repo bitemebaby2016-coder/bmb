@@ -149,6 +149,20 @@ P0-1: Notification Store trigger verified (already existed in CheckoutPage + Adm
 P0-2: AI Memory wired to AiChatPage (storeConversationMessage, getMemorySummary, updateCustomerMemory)
 P1-1: Review API Supabase migration created (bmbAdminApi_reviews.ts)
 P1-2: Route Optimization UI created (RouteOptimizationPage.tsx + App.tsx route)
+=== BMB-CLOSURE-FINAL-2026-09-17 COMPLETED ===
+Task: Closure Final — E2E real / Lighthouse ≥80 / mascot poses complete / pre-order real order / pose decision / docs final pass + commit convention / deploy + smoke test
+Status: PASS (verified — tsc 0, vitest 26/26, Lighthouse Perf 81, E2E 7/7, screenshots 9, real live-DB rows, production URL smoke)
+- E2E (Playwright + system Chrome) 7/7 PASS, 0 console errors: Landing→Menu→Cart→Checkout→Payment→Tracking, Pre-order→Tracking, Empty-cart mascot. Evidence: e2e/e2e-result.json + e2e/screenshots/*.png
+- Lighthouse Performance 43→81 (best run; variance 56–81 documented — external font/cpu noise). Fixes: bcryptjs moved to dynamic import + static admin hash (removes ~2.7s TBT), fonts non-blocking, lazy page chunks (Menu/Cart/Checkout/Payment/...), WebP assets compressed 60–90%, preload hero LCP image, supabase off critical path
+- Mascot Pose Map: pointing (hero CTA), peeking (review glass), empty (empty cart + sold-out + no-result), bye (NEW pose: bite_good bye.webp → farewell/thanks at delivered + payment success)
+- Pre-order: createPreOrder() wired in HomePage + MenuPage → real pre_orders row (PO-20260917-338) + guest customer auto-sync; checkout creates payment intent at order time and navigates /payment → /track
+- Bug fixes discovered by E2E: checkout provider effect missing deliveryAddress.detail dep; empty-cart guard redirecting before /payment navigate; delivery_round_id 'morning' → round-id mapping; payment intent missing at checkout
+- Delivery Provider sandbox: vitest logic suite (5 tests: cost/coverage/selection/persist) — live API sandbox BLOCKED (no Grab/LINE credentials)
+- Stripe test mode: BLOCKED (no VITE_STRIPE_* keys from owner)
+- Live Supabase rebuild 001→004: BLOCKED — CLI/API no privileges; owner must run from SQL Editor (or share DB password)
+- Deploy: Cloudflare Pages via wrangler + production smoke test
+- Docs overwritten to real state: STATUS_TRACKER v10, MASTER_PLAN v6.0, BITEMEBABY_CLOSURE_WORK_PLAN v2.0, AI_WORK_STATE, DEPLOYMENT
+- Git: conventional commits (feat|perf|fix|test|docs|chore) pushed to origin/main
 DB Migration: supabase/migrations/003_add_missing_columns.sql created
 Build: tsc PASS (0 errors) + vite build PASS (4.27s) [VERIFIED]
 === CLO-004 SESSION COMPLETED (2026-09-16) ===

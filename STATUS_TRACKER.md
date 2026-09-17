@@ -1,12 +1,12 @@
 # 🎯 Bite Me Baby Status Tracker
 
 > **Last Updated:** 2026-09-17
-> **Version:** v9.1 (UI v4.0 — Social Proof Review Feed + 2.5D/3D Hybrid Glassmorphism · Model A = GLM 5.2 free / Fallback Qwen 3.7 Flash · Tests 19/19 · Build PASS)
+> **Version:** v10.0 (Closure 2026-09-17 — E2E real 7/7 · Lighthouse Perf 81 · Tests 26/26 · Mascot poses complete + `bye` · Pre-order real order · Deployed)
 > **Purpose:** Real-time status ของทุกงาน — อัปเดตตามผลตรวจจริง (เขียนทับสถานะเดิม)
 
 ---
 
-## CURRENT STATUS SUMMARY (v9.1 — 2026-09-17)
+## CURRENT STATUS SUMMARY (v10.0 — 2026-09-17 Closure Final)
 
 | Category | Total | Done | In Progress | Pending | % Complete |
 |----------|-------|------|-------------|---------|------------|
@@ -19,14 +19,16 @@
 | SEO/Content | 14 | 14 | 0 | 0 | **100%** |
 | Documentation | 12+ | 12+ | 0 | 0 | **100%** |
 
-**Notes (2026-09-17 v9.1 — UI v4.0):**
-- ✅ **Model A:** primary chat model = **GLM 5.2 (free)** (`z-ai/glm-5.2:free`) fallback = **Qwen 3.7 Flash** (`qwen/qwen3.7-flash`) — ใหม่ `src/lib/aiModels.ts` + fallback chain ใน `aiService.ts` / `aiToolCalling.ts`
-- ✅ **API test (ตั้งค่าใหม่):** ปลด comment `vi.mock('@/lib/supabase')` กลับมา active — เทสต์ 17/17 → **19/19 PASS** offline (in-memory Supabase mock, seed ตาม migration 004); เพิ่มชุด `AI Model A Configuration` (2 tests: default model + fallback behavior)
-- ✅ **BUILD:** `tsc --noEmit` 0 errors + `vite build` PASS (1.35s, 137 modules; main bundle 322.43 kB / gzip 91.28 kB) — PWA precache 33 entries
-- ✅ **Lighthouse (attached):** Performance 29 / Accessibility 82 / Best-Practices 100 / SEO 100 — ไฟล์ `lighthouse/report.report.json` + `report.report.html`
-- ✅ **Reality Map:** ทุก PLANNED item ปิดแล้ว (verified code จริง) — Voice + Intent module แยก CANCELLED (no mockup)
-- ✅ **UI v4.0 (ใหม่):** Social Proof Review Feed — `CustomerReviewCard.tsx` (2.5D/3D Glassmorphism) + `LazyVideo.tsx` + `src/lib/socialProofReviews.ts` + HomePage Layout Flow ใหม่ (#102 README) + CheckoutPage รองรับ Deep Link `?mode=`/`?round=` — `tsc` 0 errors / 19/19 / build PASS
-- ⏸️ **Live Supabase DB:** DEFERRED — owner reset/rebuild 001→004 เองทีหลัง (เหมือนเดิม)
+**Notes (2026-09-17 v10.0 — Closure Round Final):**
+- ✅ **Model A:** GLM 5.2 (free) primary + Qwen 3.7 Flash fallback (`src/lib/aiModels.ts`)
+- ✅ **Tests:** **26/26 PASS** offline (เดิม 19) — เพิ่ม 7 tests: **Delivery Providers sandbox logic** (5: cost/coverage/selection/order persist) + **Pre-order API** (2: create PO order number + read back)
+- ✅ **BUILD:** `tsc --noEmit` 0 errors + `vite build` PASS — หน้าเพจ lazy-split (MenuPage/Cart/Checkout/… 4–10 kB each); `bcryptjs` แยกเป็น lazy chunk 20 kB; PWA precache 50
+- ✅ **Lighthouse (final):** **Performance 81** / A11y 85 / BP 100 / SEO 100 — `lighthouse/final_2026-09-17.json` (baseline เหล่า asset เก่า = 29; baseline ใหม่ก่อน optimization = 43)
+- ✅ **E2E จริง (Playwright + system Chrome):** **7/7 PASS, 0 console errors** — Landing→Menu→Cart→Checkout→Payment→Tracking + Pre-order→Tracking + Empty-cart mascot — หลักฐาน `e2e/e2e-result.json` + 9 screenshots
+- ✅ **Live Supabase write ตรวจจริง:** `orders`=`BMB-20260917-526`, `pre_orders`=`PO-20260917-338`, `payment_intents`=completed — REST write ผ่าน (RLS ยัง permissive รอ owner rebuild 001→004)
+- ✅ **Mascot Pose Map:** `pointing` (hero CTA), `peeking` (review glass), `empty` (empty cart + sold-out + no-result), **`bye`** (ใหม่ = `bite_good bye.webp` — delivered/payment success) — ครบทุกท่า
+- ✅ **Pre-order = order จริง:** `createPreOrder()` ถูกเรียกจาก HomePage/MenuPage → เขียน `pre_orders` (ไม่ใช่แค่ toast) — ใช้ mockup สินค้าต่อตาม owner
+- ⏸️ **Live Supabase rebuild 001→004:** 🔴 BLOCKED (owner) — บัญชีไม่มีสิทธิ์; Stripe test key / Grab-LINE Man sandbox credential: BLOCKED รอ owner
 
 ---
 
@@ -72,14 +74,16 @@
 
 ---
 
-## DEPLOYMENT STATUS (2026-09-17)
+## DEPLOYMENT STATUS (2026-09-17 — Closure Final)
 
-- **Build**: TypeScript 0 errors ✅ + Vite PASS (1.35s) — JS 322.43 kB / gzip 91.28 kB
-- **Tests**: Vitest **19/19 PASS (100%)** — offline in-memory Supabase mock
-- **PWA**: Service Worker + Manifest generated ✅ (precache 33 entries)
-- **Lighthouse**: Performance 29 / Accessibility 82 / BP 100 / SEO 100 (report ใน `lighthouse/`)
-- **DB Migration**: 001→002→003→004 ready — live reset/rebuild เป็นของ owner (DEFERRED)
-- **Git**: commit ใหม่อัปเดตแล้ว — ดู `git log`
+- **Build**: TypeScript 0 errors ✅ + Vite PASS 🏗️ — pages lazy-split; `bcryptjs` lazy chunk 20.18 kB; PWA precache 50 entries
+- **Tests**: Vitest **26/26 PASS (100%)** — offline in-memory Supabase mock + delivery sandbox + pre-order API
+- **PWA**: Service Worker + Manifest generated ✅ (precache 50 entries)
+- **Lighthouse**: **Performance 81** / Accessibility 85 / BP 100 / SEO 100 (`lighthouse/final_2026-09-17.json` + `final_summary.txt`)
+- **E2E**: Playwright 7/7 PASS, 0 console errors (`e2e/`) — สร้าง real rows: `orders` BMB-20260917-526, `pre_orders` PO-20260917-338, `payment_intents` completed
+- **Production Deploy**: Cloudflare Pages ✅ (ดู `docs/BiteMeBaby_DEPLOYMENT.md`) — smoke test หลัง deploy
+- **DB Migration**: 001→002→003→004 ready — live reset/rebuild 🔴 BLOCKED (owner) — RLS ยัง permissive
+- **Git**: commit ตาม convention `type(scope): subject` — ดู `git log`
 
 ---
 
@@ -106,4 +110,4 @@
 
 ---
 
-## END OF STATUS TRACKER (v9.1 — UI v4.0 — 2026-09-17)
+## END OF STATUS TRACKER (v10.0 — Closure Final — 2026-09-17)

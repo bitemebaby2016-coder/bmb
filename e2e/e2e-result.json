@@ -1,0 +1,53 @@
+{
+  "timestamp": "2026-09-17T12:58:50.573Z",
+  "base": "http://localhost:4173",
+  "steps": [
+    {
+      "name": "landing renders + mascots (greeting/pointing)",
+      "ok": true,
+      "extra": {
+        "mascotImgs": 19
+      }
+    },
+    {
+      "name": "cart shows item",
+      "ok": true
+    },
+    {
+      "name": "checkout provider selected",
+      "ok": true
+    },
+    {
+      "name": "order created → payment step",
+      "ok": true,
+      "extra": {
+        "url": "http://localhost:4173/payment/BMB-20260917-526",
+        "txnVisible": 1,
+        "hasNotFound": false
+      }
+    },
+    {
+      "name": "payment confirmed → tracking",
+      "ok": true,
+      "extra": {
+        "badge": "#BMB-20260917-526"
+      }
+    },
+    {
+      "name": "pre-order real order → tracking",
+      "ok": true,
+      "extra": {
+        "badge": "#PO-20260917-338"
+      }
+    },
+    {
+      "name": "empty cart shows empty mascot",
+      "ok": true,
+      "extra": {
+        "emptyMascot": 1
+      }
+    }
+  ],
+  "consoleErrors": [],
+  "pass": true
+}

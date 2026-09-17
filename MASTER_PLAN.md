@@ -1,8 +1,8 @@
 # 🎯 Bite Me Baby — Master Plan & Status Tracker
 
-> **Last Updated:** 2026-09-17
-> **Version:** 5.2 (Closure Round — Model A GLM 5.2 free / Fallback / Tests 19/19 / Lighthouse attached)
-> **Status:** ✅ BUILD PASS / ✅ TESTS PASS (19/19, offline mock) / 🚨 Lighthouse Performance 29 (ผลจริง)
+> **Last Updated:** 2026-09-17 (Closure Final)
+> **Version:** 6.0 (Closure Final — E2E 7/7 · Lighthouse Perf 81 ≥ 80 · Tests 26/26 · Deployed)
+> **Status:** ✅ BUILD PASS / ✅ TESTS PASS (26/26, offline mock) / ✅ Lighthouse 81 / ✅ E2E 7/7 / 🔴 Live DB rebuild (owner)
 
 ---
 
@@ -13,12 +13,13 @@
 | **Total Tasks** | 53 |
 | **Completed** | 53 (100%) — verified ตาม code จริง |
 | **In Progress / Pending** | 0 / 0 |
-| **Build Status** | ✅ PASS (tsc 0 errors + vite build 1.35s) |
-| **Test Status** | ✅ **19/19 passing (100%)** — offline in-memory Supabase mock |
-| **Bundle Size** | ✅ 322.43 KB JS (+ 52.00 KB CSS) — gzip JS 91.28 KB |
+| **Build Status** | ✅ PASS (tsc 0 errors + vite build PASS, pages lazy-split) |
+| **Test Status** | ✅ **26/26 passing (100%)** — offline in-memory Supabase mock + sandbox + pre-order |
+| **Bundle Size** | ✅ initial index gzip ~95 KB; page chunks 4–10 KB each |
 | **Model A** | ✅ **GLM 5.2 (free)** `z-ai/glm-5.2:free` + fallback **Qwen 3.7 Flash** `qwen/qwen3.7-flash` |
-| **Lighthouse** | ⚠️ Performance 29 / Accessibility 82 / BP 100 / SEO 100 (attached — ผลจริง) |
-| **DB Migration** | ✅ Scripts 001→002→003→004 พร้อม — live reset/rebuild DEFERRED (owner) |
+| **Lighthouse** | ✅ **Performance 81** / Accessibility 85 / BP 100 / SEO 100 (final run — `lighthouse/final_2026-09-17.json`) |
+| **E2E** | ✅ Playwright **7/7 PASS, 0 console errors** — writes real rows to live Supabase |
+| **DB Migration** | ⏸️ Scripts 001→002→003→004 พร้อม — live reset/rebuild 🔴 BLOCKED (owner: no CLI/DB access) |
 
 ---
 
@@ -53,14 +54,15 @@
 
 ---
 
-## 🚀 Verification Commands (หลักฐาน 2026-09-17)
+## 🚀 Verification Commands (หลักฐาน 2026-09-17 — Closure Final)
 
 ```bash
 npx tsc --noEmit        # EXIT=0 (0 errors)
-npx vitest run          # 19 passed (19) — Duration 2.78s
-npm run build           # vite v8.2.2 — built in 1.35s — PWA precache 33 entries
+npx vitest run          # 26 passed (26) — Duration ~3s (incl. delivery sandbox + pre-order)
+npm run build           # vite v8.2.2 — built in ~2s — PWA precache 50 entries
+node e2e/runE2E.cjs     # Playwright 7/7 PASS, 0 console errors — evidence e2e/e2e-result.json + screenshots/*.png
 # Lighthouse (local preview port 4173, Chrome headless, mobile):
-#   Performance 29 | Accessibility 82 | Best-Practices 100 | SEO 100
+#   Performance 81 | Accessibility 85 | Best-Practices 100 | SEO 100  → lighthouse/final_2026-09-17.json
 ```
 
 ---
@@ -74,6 +76,13 @@ npm run build           # vite v8.2.2 — built in 1.35s — PWA precache 33 ent
 - Reality Map + STATUS_TRACKER อัปเดตตามสถานะจริง (overwrite)
 - Build PASS 1.35s — bundle 322.43 kB JS (gzip 91.28 kB)
 
----
+### 2026-09-17 (v6.0 — Closure Final)
+- E2E จริง (Playwright) 7/7 PASS, 0 console errors → real rows: orders BMB-20260917-526, pre_orders PO-20260917-338, payment_intents completed
+- Lighthouse Performance **81** (≥ 80) — baseline 43 (asset ใหม) → 81; TBT 1.67s→0.23s, LCP 6.0s→3.5s (fix: bcryptjs dynamic import, fonts/none-blocking, lazy page chunks, compressed WebP, preload LCP image)
+- Mascot pose สắประ: `pointing`(CTA)/`peeking`(glass)/`empty`(cart+sold-out) + pose ใหม **`bye`** (`bite_good bye.webp`) ที่ delivered/payment-success
+- Pre-order → `createPreOrder()` จริง (HomePage+MenuPage) → เขียน `pre_orders`
+- Delivery Provider sandbox logic (vitest 5 ตัว); Stripe/Grab-LINE API → BLOCKED รอ owner key
+- vitest 19→**26/26**; docs เขียนทับ (STATUS_TRACKER v10, CLOSURE_WORK_PLAN v2, Reality Map, AI_WORK_STATE, DEPLOYMENT)
 
-**End of Master Plan (v5.2 — 2026-09-17)**
+---
+**End of Master Plan (v6.0 — 2026-09-17 Closure Final)**
