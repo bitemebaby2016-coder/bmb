@@ -64,7 +64,7 @@
 | 7 | Pre-order → สร้าง order จริง | ✅ **CLOSED** | `pre_orders` มี `PO-20260917-338` จริง + vitest 2 ตัว |
 | 8 | ตัดสินใจ pose `bite_good bye.webp` | ✅ **CLOSED** | = pose `bye` (farewell/thanks) — implemented |
 | 9 | Documentation final pass + commit convention | ✅ **CLOSED** | เอกสารชุดนี้เขียนทับ + State Tracker/Master Plan/Reality Map อัปเดต |
-| 10 | Production deploy + smoke test | ⏳ **ดำเนินการเซสชั่นนี้** | ตาม `docs/BiteMeBaby_DEPLOYMENT.md` |
+| 10 | Production deploy + smoke test | ✅ **CLOSED** | Cloudflare Pages `https://bitemebaby-5f7.pages.dev` (branch production) — smoke PASS: hero mascots 19, menu cards 6, console errors 0 (`e2e/prod-smoke.json`); deploy command ใน `docs/BiteMeBaby_DEPLOYMENT.md` |
 ---
 
 ## 4. Commit Convention (บันทึกเพิ่มเติม 2026-09-17 — ตาม README #98/#99)
