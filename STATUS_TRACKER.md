@@ -1,7 +1,7 @@
-# 🎯 Bite Me Baby Status Tracker
+﻿# 🎯 Bite Me Baby Status Tracker
 
-> **Last Updated:** 2026-09-17
-> **Version:** v10.0 (Closure 2026-09-17 — E2E real 7/7 · Lighthouse Perf 81 · Tests 26/26 · Mascot poses complete + `bye` · Pre-order real order · Deployed)
+> **Last Updated:** 2026-09-17 22:10 (Build Fix v10.1)
+> **Version:** v10.1 (Build Fix — TypeScript 5.9.3 + Cloudflare Pages CI compatible · E2E 7/7 · Lighthouse 81 · Tests 26/26)
 > **Purpose:** Real-time status ของทุกงาน — อัปเดตตามผลตรวจจริง (เขียนทับสถานะเดิม)
 
 ---
@@ -19,10 +19,12 @@
 | SEO/Content | 14 | 14 | 0 | 0 | **100%** |
 | Documentation | 12+ | 12+ | 0 | 0 | **100%** |
 
-**Notes (2026-09-17 v10.0 — Closure Round Final):**
+**Notes (2026-09-17 v10.1 — Build Fix):**
 - ✅ **Model A:** GLM 5.2 (free) primary + Qwen 3.7 Flash fallback (`src/lib/aiModels.ts`)
 - ✅ **Tests:** **26/26 PASS** offline (เดิม 19) — เพิ่ม 7 tests: **Delivery Providers sandbox logic** (5: cost/coverage/selection/order persist) + **Pre-order API** (2: create PO order number + read back)
-- ✅ **BUILD:** `tsc --noEmit` 0 errors + `vite build` PASS — หน้าเพจ lazy-split (MenuPage/Cart/Checkout/… 4–10 kB each); `bcryptjs` แยกเป็น lazy chunk 20 kB; PWA precache 50
+- ✅ **BUILD (v10.1):** `tsc --noEmit` 0 errors + `vite build` PASS — TypeScript **5.9.3** (downgrade จาก 6.0.2 เพราะ Cloudflare Pages ใช้ Node.js 20) — หน้าเพจ lazy-split (MenuPage/Cart/Checkout/… 4–10 kB each); `bcryptjs` แยกเป็น lazy chunk 20.18 kB; PWA precache 52 entries
+- ✅ **BUILD Fix:** แก้ `ADMIN_DEFAULT_HASH` syntax error ใน `src/lib/bmbAdminApi_users.ts` (bad merge ใน commit `1b30122`) + ลบ `"ignoreDeprecations": "6.0"` จาก `tsconfig.json`
+- ✅ **Cloudflare Pages CI:** บิลด์ล้ม 2 ครั้ง (`1dbf988`, `9f58150`) → แก้แล้ว commit `3723d17` — รอ deploy ใหม่
 - ✅ **Lighthouse (final):** **Performance 81** / A11y 85 / BP 100 / SEO 100 — `lighthouse/final_2026-09-17.json` (baseline เหล่า asset เก่า = 29; baseline ใหม่ก่อน optimization = 43)
 - ✅ **E2E จริง (Playwright + system Chrome):** **7/7 PASS, 0 console errors** — Landing→Menu→Cart→Checkout→Payment→Tracking + Pre-order→Tracking + Empty-cart mascot — หลักฐาน `e2e/e2e-result.json` + 9 screenshots
 - ✅ **Live Supabase write ตรวจจริง:** `orders`=`BMB-20260917-526`, `pre_orders`=`PO-20260917-338`, `payment_intents`=completed — REST write ผ่าน (RLS ยัง permissive รอ owner rebuild 001→004)
@@ -45,7 +47,7 @@
 | ASYNC-01~07 | Pages async | DONE | await ทุก API call |
 | NOTIF-01~04 | Notification system + push | DONE | store + checkout/admin integration + browser push |
 | BUGFIX-01 | duplicate exports fix | DONE | bmbAdminApi_products consolidated |
-| BUILD-01 | TypeScript build errors | DONE | 90+ → 0 errors |
+| | BUILD-01 | TypeScript build errors | DONE | 90+ → 0 errors (TypeScript 5.9.3 — Cloudflare Pages CI compatible) |
 
 **Phase Progress:** 26/26 (100%)
 
@@ -74,14 +76,15 @@
 
 ---
 
-## DEPLOYMENT STATUS (2026-09-17 — Closure Final)
+## DEPLOYMENT STATUS (2026-09-17 — Build Fix v10.1)
 
-- **Build**: TypeScript 0 errors ✅ + Vite PASS 🏗️ — pages lazy-split; `bcryptjs` lazy chunk 20.18 kB; PWA precache 50 entries
+- **Build (v10.1)**: TypeScript **5.9.3** 0 errors ✅ + Vite PASS 🏗️ — pages lazy-split; `bcryptjs` lazy chunk 20.18 kB; PWA precache 52 entries
+  - ⚠️ **Note:** Downgrade จาก TypeScript 6.0.2 → 5.9.3 เพราะ Cloudflare Pages ใช้ Node.js 20 (TypeScript 6.0.2 ต้องการ Node.js 22+)
 - **Tests**: Vitest **26/26 PASS (100%)** — offline in-memory Supabase mock + delivery sandbox + pre-order API
-- **PWA**: Service Worker + Manifest generated ✅ (precache 50 entries)
+- **PWA**: Service Worker + Manifest generated ✅ (precache 52 entries)
 - **Lighthouse**: **Performance 81** / Accessibility 85 / BP 100 / SEO 100 (`lighthouse/final_2026-09-17.json` + `final_summary.txt`)
 - **E2E**: Playwright 7/7 PASS, 0 console errors (`e2e/`) — สร้าง real rows: `orders` BMB-20260917-526, `pre_orders` PO-20260917-338, `payment_intents` completed
-- **Production Deploy**: Cloudflare Pages ✅ (ดู `docs/BiteMeBaby_DEPLOYMENT.md`) — smoke test หลัง deploy
+- **Production Deploy**: Cloudflare Pages ⏳ **รอ deploy ใหม่** — บิลด์ล้ม 2 ครั้ง (`1dbf988`, `9f58150`) → แก้แล้ว commit `3723d17` — ดู `docs/BiteMeBaby_DEPLOYMENT.md`
 - **DB Migration**: 001→002→003→004 ready — live reset/rebuild 🔴 BLOCKED (owner) — RLS ยัง permissive
 - **Git**: commit ตาม convention `type(scope): subject` — ดู `git log`
 
@@ -110,4 +113,4 @@
 
 ---
 
-## END OF STATUS TRACKER (v10.0 — Closure Final — 2026-09-17)
+## END OF STATUS TRACKER (v10.1 — Build Fix — 2026-09-17)
