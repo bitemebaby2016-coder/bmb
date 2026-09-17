@@ -573,7 +573,9 @@ export type MascotPose =
   | 'pointing'  // ชี้ไปที่ปุ่ม — Call-to-Action Buttons
   | 'peeking'   // โผล่มาจากมุมการ์ด — Glassmorphism Overlay Cards
   | 'thinking'  // ถือลูกเต๋า 3D ครุ่นคิด — Random Menu Feature
-  | 'empty';    // หน้าหงอย / จานว่าง — Empty Cart / Sold Out State
+  | 'empty'     // หน้าหงอย / จานว่าง — Empty Cart / Sold Out State
+  | 'bye';      // โบกมือลา / ขอบคุณ — Delivery Complete / Payment Success
+                // (asset: /assets/mascot/bite_good bye.webp — ตัดสินใจ 2026-09-17)
 
 export type MascotSize = 'sm' | 'md' | 'lg' | 'fluid'
 

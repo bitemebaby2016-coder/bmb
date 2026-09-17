@@ -34,6 +34,10 @@ const POSE_ASSETS: Record<MascotPose, PoseAsset> = {
   peeking:  { src: '/assets/mascot/bite_peeking.webp', fallback: '/mascot_Bite_Main.webp' },
   thinking: { src: '/assets/mascot/bite_thinking.webp', fallback: '/mascot_Bite_Thinking.webp' },
   empty:    { src: '/assets/mascot/bite_empty_sad.webp', fallback: '/mascot_Bite_Good bye.webp' },
+  // 🗳️ Pose Decision 2026-09-17: `bite_good bye.webp` (แล้วแต่ชื่อ) → pose `bye`
+  // "โบกมือลา/ขอบคุณ" ใช้ที่ Delivery Complete (OrderTrackPage delivered) + Payment Success
+  // (PaymentConfirmationPage paid) ตาม docs/COMPONENT_SPEC_UI.md §18.2
+  bye:      { src: '/assets/mascot/bite_good bye.webp', fallback: '/mascot_Bite_Good bye.webp' },
 }
 
 const POSE_LABELS: Record<MascotPose, string> = {
@@ -45,6 +49,7 @@ const POSE_LABELS: Record<MascotPose, string> = {
   peeking: 'โผล่มุมการ์ด',
   thinking: 'ครุ่นคิด',
   empty: 'หงอย ๆ',
+  bye: 'โบกมือลา ขอบคุณ',
 }
 
 export function MascotBadge({ pose, size = 'sm', alt, className = '', loading = 'lazy' }: MascotBadgeProps) {

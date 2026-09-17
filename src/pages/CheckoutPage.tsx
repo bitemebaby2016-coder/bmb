@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from 'react'
+﻿import { useState, useEffect, useRef } from 'react'
 import { useNavigate, Link, useSearchParams } from 'react-router-dom'
 import { useCartStore } from '@/store/cartStore'
 import { useAuthStore } from '@/store/authStore'
@@ -6,6 +6,7 @@ import { useNotificationStore } from '@/store/notificationStore'
 import { storeConversationMessage, getMemorySummary, updateCustomerMemory } from '@/lib/aiMemory'
 import { showToast } from '@/components/ui/ToastContainer'
 import { createOrder, type OrderForm } from '@/lib/bmbAdminApi_orders'
+import { createPaymentIntent } from '@/lib/paymentGateway'
 import { writeAuditLog } from '@/lib/auditLog'
 import { getBestProvider, calculateProviderCost, type DeliveryProvider } from '@/lib/externalProviders'
 
@@ -25,6 +26,10 @@ export function CheckoutPage() {
   const [selectedProvider, setSelectedProvider] = useState<DeliveryProvider | null>(null)
   const [providerCost, setProviderCost] = useState(0)
   const [isProcessing, setIsProcessing] = useState(false)
+  // ✅ E2E fix (2026-09-17): mark that the user just placed an order so the
+  // empty-cart render guard below does not bounce them back to /cart before the
+  // router navigates to /payment/:orderNumber (react-router nav is async).
+  const justPlaced = useRef(false)
 
   // GAP CLOSURE: Calculate best provider based on delivery address
   useEffect(() => {
@@ -43,7 +48,7 @@ export function CheckoutPage() {
         setProviderCost(0)
       }
     }
-  }, [deliveryAddress.latitude, deliveryAddress.longitude, items.length])
+  }, [deliveryAddress.latitude, deliveryAddress.longitude, deliveryAddress.detail, items.length])
 
   // Recalculate total when provider changes
   useEffect(() => {
@@ -79,7 +84,7 @@ export function CheckoutPage() {
       customer_id: customer?.id || 'guest',
       customer_name: customer?.name || 'Guest',
       customer_phone: customer?.phone || '',
-      delivery_round_id: selectedRound,
+      delivery_round_id: ({ morning: 'round-1', midday: 'round-2', evening: 'round-3' } as Record<string, string>)[selectedRound] || selectedRound,
       status: 'pending',
       total_amount: total,
       delivery_fee: providerCost,
@@ -103,6 +108,18 @@ export function CheckoutPage() {
       return
     }
 
+// Payment Intent — created at checkout so the Payment step can confirm it
+    // (PromptPay TXN / COD). Stored in payment_intents (Supabase + localStorage).
+    try {
+      await createPaymentIntent(
+        order.order_number,
+        total,
+        paymentMethod,
+        { providerId: selectedProvider.id, providerName: selectedProvider.name }
+      )
+    } catch (e) {
+      console.warn('[Checkout] Payment intent creation failed (non-critical):', e)
+    }
     // GAP CLOSURE: Request provider delivery for non-self-delivery
     if (selectedProvider.type !== 'self_delivery') {
       try {
@@ -151,13 +168,16 @@ export function CheckoutPage() {
       deliveryProvider: selectedProvider.name,
     })
     
+    navigate(`/payment/${order.order_number}`)
+    justPlaced.current = true
     clearCart()
-    navigate(`/track/${order.order_number}`)
     setIsProcessing(false)
   }
 
   if (items.length === 0) {
-    navigate('/cart')
+    if (!justPlaced.current) {
+      navigate('/cart')
+    }
     return null
   }
 
@@ -181,6 +201,7 @@ export function CheckoutPage() {
         <h3 className="font-bold text-brand-accent mb-4">📍 ที่อย่จัดส่ง</h3>
         <input
           type="text"
+          data-testid="checkout-address"
           placeholder="ใส่ที่อย่จัดส่ง (ถนน, เลขที่บ้าน, หม่ที่)"
           value={deliveryAddress.detail}
           onChange={(e) => setDeliveryAddress({ ...deliveryAddress, detail: e.target.value })}
@@ -197,7 +218,7 @@ export function CheckoutPage() {
         {deliveryAddress.detail.length > 5 ? (
           selectedProvider ? (
             <div className="space-y-2">
-              <label className={`flex items-center gap-3 p-3 rounded-lg border-2 cursor-pointer transition-colors ${'border-brand-primary bg-brand-bg'}`}>
+              <label data-testid="provider-option" className={`flex items-center gap-3 p-3 rounded-lg border-2 cursor-pointer transition-colors ${'border-brand-primary bg-brand-bg'}`}>
                 <div className="w-5 h-5 rounded-full border-2 border-brand-primary flex items-center justify-center">
                   <div className="w-3 h-3 rounded-full bg-brand-primary" />
                 </div>
@@ -267,7 +288,7 @@ export function CheckoutPage() {
         </div>
       </div>
 
-      <button onClick={handlePlaceOrder} disabled={isProcessing || !selectedProvider} className="btn btn-primary w-full text-lg py-4 disabled:opacity-50 disabled:cursor-not-allowed">
+      <button onClick={handlePlaceOrder} data-testid="place-order" disabled={isProcessing || !selectedProvider} className="btn btn-primary w-full text-lg py-4 disabled:opacity-50 disabled:cursor-not-allowed">
         {isProcessing ? '⏳ กำลังยืนยัน...' : !selectedProvider ? '⚠️ เลือกผ้ให้บริการจัดส่งก่อน' : '✅ ยืนยันสั่งื้อ'}
       </button>
     </div>

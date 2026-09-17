@@ -148,6 +148,11 @@ export async function createPreOrder(data: Omit<PreOrder, 'id' | 'order_number' 
   }
 
   // Store in Supabase
+  // E2E fix (2026-09-17): pre_orders.customer_id FK->customers; a guest
+  // (anonymous) customer row must exist first.
+  if (data.customer_id === 'guest') {
+    await ensureGuestCustomer()
+  }
   try {
     const { data: order, error } = await supabase.from('pre_orders').insert(preOrder).select().single()
     if (error) throw error
@@ -159,6 +164,19 @@ export async function createPreOrder(data: Omit<PreOrder, 'id' | 'order_number' 
     orders.push(preOrder)
     storageSet('bmb_pre_orders', orders)
     return preOrder
+  }
+}
+
+/** Ensure an anonymous `guest` customer row exists (FK target for pre_orders). */
+async function ensureGuestCustomer(): Promise<void> {
+  try {
+    const { error } = await supabase.from('customers').upsert(
+      { id: 'guest', full_name: 'Guest', phone: '', email: '', address: '', loyalty_points: 0 },
+      { onConflict: 'id', ignoreDuplicates: true }
+    )
+    if (error) console.warn('[PreOrder] ensureGuestCustomer:', error)
+  } catch (e) {
+    console.warn('[PreOrder] ensureGuestCustomer failed:', e)
   }
 }
 

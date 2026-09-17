@@ -4,12 +4,20 @@
 // ============================================
 
 import { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import type { Product, ProductCategory, SameDayOrderPayload, PreOrderPayload, AvailabilityState, OrderMode, DeliveryRound } from '@/types'
 import { getProducts, getCategories, getDeliveryRounds } from '@/lib/bmbAdminApi_products'
 import { useCartStore } from '@/store/cartStore'
+import { useAuthStore } from '@/store/authStore'
 import { showToast } from '@/components/ui/ToastContainer'
 import { FoodMenuCard } from '@/components/FoodMenuCard'
+import { MascotBadge } from '@/components/MascotBadge'
+import { createPreOrder } from '@/lib/preOrderService'
+/** Default pre-order schedule = today + 3 days (YYYY-MM-DD). */
+function defaultPreorderDate(): string {
+  const d = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000)
+  return d.toISOString().slice(0, 10)
+}
 
 const CATEGORY_ICONS = { all: '\uD83D\uDF3D', dish: '\uD83C\uDF5C', rice: '\uD83C\uDF5A', curry: '\uD83C\uDF5B', drink: '\uD83E\uDD64', dessert: '\uD83C\uDF70' }
 
@@ -55,11 +63,46 @@ export function MenuPage() {
     showToast('สั่งเลยวันนี้ — เพิ่มลงตะกร้าแล้ว!', 'success')
   }
 
-  const handlePreOrder = (payload: PreOrderPayload) => {
+  const navigate = useNavigate()
+  const customer = useAuthStore((s) => s.customer)
+
+  // ✅ Closure 2026-09-17: Pre-order creates a REAL order (pre_orders table via
+  // createPreOrder — Supabase + localStorage fallback), NOT just a toast.
+  const handlePreOrder = async (payload: PreOrderPayload) => {
     console.log('[Log#pre-order]', payload)
     const product = products.find(p => p.id === payload.productId)
+    if (!product) {
+      showToast('ไม่พบเมนูนี้', 'error')
+      return
+    }
     const round = deliveryRounds.find(r => r.id === payload.deliveryRoundId)
-    showToast(`จองสำเร็จ! จะส่งวันที่ ${payload.scheduledDate || '—'} (${round?.display_name || ''})`, 'success')
+    const scheduleTarget = payload.scheduledDate || product.scheduled_date || defaultPreorderDate()
+
+    const preOrder = await createPreOrder({
+      customer_id: customer?.id || 'guest',
+      customer_name: customer?.name || 'Guest',
+      customer_phone: customer?.phone || '',
+      product_id: product.id,
+      product_name: product.name,
+      quantity: payload.quantity,
+      unit_price: Number(product.price) || 0,
+      total_amount: (Number(product.price) || 0) * payload.quantity,
+      delivery_round_id: payload.deliveryRoundId || product.delivery_round_id || 'round-1',
+      scheduled_date: scheduleTarget,
+      delivery_latitude: 10.7016,
+      delivery_longitude: 102.1429,
+      delivery_address: '',
+      status: 'pending',
+      special_instructions: '',
+    })
+
+    if (!preOrder) {
+      showToast('สร้าง pre-order ล้มเหลว กรุาลองใหม่', 'error')
+      return
+    }
+
+    showToast(`จองสำเร็จ! เลขที่ ${preOrder.order_number} — จะส่งวันที่ ${scheduleTarget} (${round?.display_name || ''})`, 'success')
+    navigate(`/track/${preOrder.order_number}`)
   }
 
   const availableCats = categories.filter((c) => c.is_active)
@@ -75,12 +118,14 @@ export function MenuPage() {
         <div className="flex gap-2 mb-4 bg-white p-1 rounded-xl">
           <button
             onClick={() => setMenuTab('same-day')}
+            data-testid="same-day-tab"
             className={`flex-1 py-2.5 px-4 rounded-lg font-semibold transition-all ${menuTab === 'same-day' ? 'bg-brand-primary text-white shadow-md' : 'text-brand-accent hover:bg-orange-50'}`}
           >
             🍽️ วันนี้ ({sameDayCount})
           </button>
           <button
             onClick={() => setMenuTab('pre-order')}
+            data-testid="pre-order-tab"
             className={`flex-1 py-2.5 px-4 rounded-lg font-semibold transition-all ${menuTab === 'pre-order' ? 'bg-brand-primary text-white shadow-md' : 'text-brand-accent hover:bg-orange-50'}`}
           >
             📅 จองล่วงหน้า ({preOrderCount})

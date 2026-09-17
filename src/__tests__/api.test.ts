@@ -268,3 +268,114 @@ describe('AI Model A Configuration', () => {
     }
   })
 })
+describe('External Delivery Providers — offline sandbox logic', () => {
+  // Grab / LINE MAN / Foodpanda / Bite Drive sandbox test: pure logic (no live
+  // API credentials available yet — BLOCKED for real provider sandbox).
+  it('calculates provider cost from base + distance + item fee', async () => {
+    const { calculateProviderCost, DEFAULT_PROVIDERS } = await import('@/lib/externalProviders')
+    const grab = DEFAULT_PROVIDERS.find((p) => p.id === 'grab')!
+    const cost = calculateProviderCost(grab, 5, 3)
+    expect(cost).toBeGreaterThan(0)
+    expect(cost).toBe(40 + 5 * 8 + 3 * 2)
+  })
+
+  it('returns -1 when distance is outside provider range', async () => {
+    const { calculateProviderCost, DEFAULT_PROVIDERS } = await import('@/lib/externalProviders')
+    const grab = DEFAULT_PROVIDERS.find((p) => p.id === 'grab')!
+    expect(calculateProviderCost(grab, 0.1, 1)).toBe(-1) // below min_distance_km
+    expect(calculateProviderCost(grab, 99, 1)).toBe(-1)  // above max_distance_km
+  })
+
+  it('selects the cheapest provider within coverage', async () => {
+    const { getBestProvider, DEFAULT_PROVIDERS } = await import('@/lib/externalProviders')
+    const best = getBestProvider({
+      dropoff_latitude: 10.7016,
+      dropoff_longitude: 102.1429,
+      items_count: 2,
+      estimated_weight: 2,
+    }, 10.7016, 102.1429, DEFAULT_PROVIDERS)
+    expect(best).not.toBeNull()
+    // Distance 0 → only 'self' (Bite Drive) has min_distance_km = 0
+    expect(best!.provider.id).toBe('self')
+  })
+
+  it('returns null when no provider covers the dropoff', async () => {
+    const { getBestProvider, DEFAULT_PROVIDERS } = await import('@/lib/externalProviders')
+    const best = getBestProvider({
+      dropoff_latitude: 12.0, // far outside coverage radius
+      dropoff_longitude: 102.0,
+      items_count: 1,
+      estimated_weight: 1,
+    }, 10.7016, 102.1429, DEFAULT_PROVIDERS)
+    expect(best).toBeNull()
+  })
+
+  it('creates an accepted provider order (sandbox persist)', async () => {
+    const { requestProviderDelivery } = await import('@/lib/externalProviders')
+    const order = await requestProviderDelivery('grab', {
+      provider_id: 'grab',
+      order_number: 'PO-SANDBOX-1',
+      pickup_latitude: 10.7016,
+      pickup_longitude: 102.1429,
+      dropoff_latitude: 10.7016,
+      dropoff_longitude: 102.1429,
+      dropoff_detail: 'Sandbox test',
+      items_count: 1,
+      total_weight: 0.5,
+      status: 'requested',
+      estimated_delivery_time: 30,
+      actual_delivery_time: null,
+    })
+    expect(order).not.toBeNull()
+    expect(order.status).toBe('accepted')
+  })
+})
+
+describe('Pre-order API — real order creation (not just toast)', () => {
+  it('creates a pre-order with a PO- order number', async () => {
+    storageClear()
+    const { createPreOrder } = await import('@/lib/preOrderService')
+    const preOrder = await createPreOrder({
+      customer_id: 'cust-1',
+      customer_name: 'Somchai Rakdee',
+      customer_phone: '0812345678',
+      product_id: 'prod-5',
+      product_name: 'Tomyum Gung Fresh',
+      quantity: 1,
+      unit_price: 85,
+      total_amount: 85,
+      delivery_round_id: 'round-2',
+      scheduled_date: '2030-01-01',
+      delivery_latitude: 10.7016,
+      delivery_longitude: 102.1429,
+      delivery_address: 'Test address',
+      status: 'pending',
+      special_instructions: '',
+    })
+    expect(preOrder).not.toBeNull()
+    expect(preOrder!.order_number).toMatch(/^PO-\d{8}-\d{3}$/)
+  })
+
+  it('getPreOrders returns the created pre-order', async () => {
+    const { createPreOrder, getPreOrders } = await import('@/lib/preOrderService')
+    const created = await createPreOrder({
+      customer_id: 'cust-1',
+      customer_name: 'Somchai Rakdee',
+      customer_phone: '0812345678',
+      product_id: 'prod-6',
+      product_name: 'New Menu',
+      quantity: 2,
+      unit_price: 95,
+      total_amount: 190,
+      delivery_round_id: 'round-3',
+      scheduled_date: '2030-01-05',
+      delivery_latitude: 10.7016,
+      delivery_longitude: 102.1429,
+      delivery_address: '',
+      status: 'pending',
+      special_instructions: '',
+    })
+    const orders = await getPreOrders({ status: 'pending' })
+    expect(orders.some((o) => o.order_number === created!.order_number)).toBe(true)
+  })
+})

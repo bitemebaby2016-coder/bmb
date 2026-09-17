@@ -8,17 +8,24 @@
 
 import { Link, useNavigate } from 'react-router-dom'
 import { useCartStore } from '@/store/cartStore'
+import { useAuthStore } from '@/store/authStore'
 import { useInventoryStore } from '@/store/inventoryStore'
 import { useEffect, useState } from 'react'
-import { getProducts, getCategories } from '@/lib/bmbAdminApi_products'
 import { FoodMenuCard } from '@/components/FoodMenuCard'
 import { CustomerReviewCard } from '@/components/CustomerReviewCard'
 import { MascotBadge } from '@/components/MascotBadge'
 import { LazyVideo } from '@/components/LazyVideo'
 import { getSocialProofReviews, MENU_HIGHLIGHT_CLIPS } from '@/lib/socialProofReviews'
 import { showToast } from '@/components/ui/ToastContainer'
+import { createPreOrder } from '@/lib/preOrderService'
 import type { Product, ProductCategory, SameDayOrderPayload, PreOrderPayload, AvailabilityState, OrderMode, SocialProofReview } from '@/types'
 
+/** Default pre-order schedule = today + 3 days (YYYY-MM-DD), used when the
+ *  product has no `scheduled_date` and the UI did not pick a date yet. */
+function defaultPreorderDate(): string {
+  const d = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000)
+  return d.toISOString().slice(0, 10)
+}
 export function HomePage() {
   const addItem = useCartStore((s) => s.addItem)
   const cartCount = useCartStore((s) => s.getCartCount())
@@ -34,6 +41,9 @@ export function HomePage() {
   useEffect(() => {
     async function loadData() {
       try {
+        // ⚡ PERF (2026-09-17): dynamic import — supabase chunk loads only after
+        // the landing page renders its first paint (kept off critical path).
+        const { getProducts, getCategories } = await import('@/lib/bmbAdminApi_products')
         const [products, cats] = await Promise.all([getProducts(), getCategories()])
         // ✅ v3.1: Separate same-day and pre-order featured products
         const sameDayFeatured = products.filter((p: Product) => p.is_featured && !p.is_preorder && p.is_available).slice(0, 4)
@@ -64,11 +74,45 @@ export function HomePage() {
     }
   }
 
-  const handlePreOrder = (payload: PreOrderPayload) => {
+  const customer = useAuthStore((s) => s.customer)
+
+  // ✅ Closure 2026-09-17: Pre-order creates a REAL order (pre_orders table via
+  // createPreOrder — Supabase + localStorage fallback), NOT just a toast.
+  // Products still use mockup placeholders while real food photos are produced.
+  const handlePreOrder = async (payload: PreOrderPayload) => {
     console.log('[Log#pre-order]', payload)
-    // ✅ v3.1: Find product and show scheduled date
     const product = products.find(p => p.id === payload.productId)
-    showToast(`จองสำเร็จ! ${product?.name || ''} จะส่งวันที่ ${payload.scheduledDate || '—'}`, 'success')
+    if (!product) {
+      showToast('ไม่พบเมนูนี้', 'error')
+      return
+    }
+
+    const scheduleTarget = payload.scheduledDate || product.scheduled_date || defaultPreorderDate()
+    const preOrder = await createPreOrder({
+      customer_id: customer?.id || 'guest',
+      customer_name: customer?.name || 'Guest',
+      customer_phone: customer?.phone || '',
+      product_id: product.id,
+      product_name: product.name,
+      quantity: payload.quantity,
+      unit_price: Number(product.price) || 0,
+      total_amount: (Number(product.price) || 0) * payload.quantity,
+      delivery_round_id: payload.deliveryRoundId || product.delivery_round_id || 'round-1',
+      scheduled_date: scheduleTarget,
+      delivery_latitude: 10.7016,
+      delivery_longitude: 102.1429,
+      delivery_address: '',
+      status: 'pending',
+      special_instructions: '',
+    })
+
+    if (!preOrder) {
+      showToast('สร้าง pre-order ล้มเหลว กรุาลองใหม่', 'error')
+      return
+    }
+
+    showToast(`จองสำเร็จ! เลขที่ ${preOrder.order_number} — ${product.name} จะส่งวันที่ ${scheduleTarget}`, 'success')
+    navigate(`/track/${preOrder.order_number}`)
   }
 
   // ✅ v4.0: Social Proof CTA — Deep Link ตรงเข้า Cart/Checkout ตาม Mode (same-day / pre-order)
@@ -93,8 +137,16 @@ export function HomePage() {
             </h1>
             <p className="text-lg mb-2 text-brand-accent font-medium">สั่งอาหารจัดส่ง</p>
             <p className="text-sm text-brand-muted mb-4">เมืองจันทบุรี • รัศมี 5 กม.</p>
-            <div className="flex flex-wrap justify-center md:justify-start gap-3">
-              <Link to="/menu" className="btn btn-primary">
+            <div className="flex flex-wrap justify-center md:justify-start gap-3 relative">
+{/* Mascot pose=`pointing` — points at the primary CTA (Mascot Pose Map §18) */}
+              <MascotBadge
+                pose="pointing"
+                size="sm"
+                alt="Bite the mascot pointing at the order menu button"
+                className="mascot-point-cta"
+                loading="eager"
+              />
+              <Link to="/menu" data-testid="home-menu-cta" className="btn btn-primary">
                 <span className="text-xl">🍽️</span> ดูเมนู
               </Link>
               <Link to="/random-menu" className="btn btn-outline">

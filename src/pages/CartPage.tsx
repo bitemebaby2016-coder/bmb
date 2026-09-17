@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { useCartStore } from '@/store/cartStore'
 import { showToast } from '@/components/ui/ToastContainer'
+import { MascotBadge } from '@/components/MascotBadge'
 
 export function CartPage() {
   const { items, subtotal, discount, deliveryFee, total, updateQuantity, removeItem, clearCart } = useCartStore()
@@ -8,7 +9,14 @@ export function CartPage() {
   if (items.length === 0) {
     return (
       <div className="max-w-7xl mx-auto px-4 py-12 text-center">
-        <div className="text-6xl mb-4">🛒</div>
+        {/* Mascot pose=`empty` — empty cart state (Mascot Pose Map §18) */}
+        <MascotBadge
+          pose="empty"
+          size="lg"
+          alt="Bite the mascot looks sad - your cart is empty"
+          className="mx-auto mb-2"
+          loading="eager"
+        />
         <h2 className="text-2xl font-bold text-brand-accent mb-2">ตะกร้าว่าง</h2>
         <p className="text-brand-muted mb-6">ยังไม่มีสินค้าในตะกร้า</p>
         <Link to="/menu" className="btn btn-primary">
@@ -101,7 +109,7 @@ export function CartPage() {
           </div>
         </div>
         
-        <Link to="/checkout" className="btn btn-primary w-full text-lg">
+        <Link to="/checkout" data-testid="go-checkout" className="btn btn-primary w-full text-lg">
           ยืนยันสั่งซื้อ →
         </Link>
       </div>

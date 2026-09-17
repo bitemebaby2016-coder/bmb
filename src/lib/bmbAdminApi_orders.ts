@@ -4,6 +4,7 @@
 // ============================================
 
 import { supabase } from './supabase'
+import { storageGet, storageSet } from './bmbStorage'
 
 export interface OrderForm {
   id?: string
@@ -57,7 +58,12 @@ export async function getOrdersByCustomer(customerId: string): Promise<OrderForm
 
 export async function getOrder(orderNumber: string): Promise<OrderForm | null> {
   const { data, error } = await supabase.from('orders').select('*').eq('order_number', orderNumber).single()
-  if (error) { console.error('[getOrder] Error:', error); return null }
+  if (error) {
+    console.error('[getOrder] Error:', error)
+    // Offline/PWA fallback — mirror order log so Tracking/Payment pages still work
+    const local = storageGet<OrderForm[]>('orders', [])
+    return local.find((o) => o.order_number === orderNumber) || null
+  }
   return data as OrderForm
 }
 
@@ -80,7 +86,28 @@ export async function createOrder(data: OrderForm): Promise<OrderForm | null> {
   }
 
   const { data: order, error: orderError } = await supabase.from('orders').insert(orderData).select().single()
-  if (orderError) { console.error('[createOrder] Error:', orderError); return null }
+  if (orderError) {
+    console.error('[createOrder] Error:', orderError)
+    // Offline/PWA fallback — same row shape persisted locally (consistent with
+    // every other bmbAdminApi_* module; NOT a fake — it is the offline datastore)
+    const fallbackOrder: OrderForm = {
+      ...data,
+      id: orderData.id,
+      order_number: orderData.order_number,
+      status: orderData.status,
+      total_amount: orderData.total_amount,
+      delivery_fee: orderData.delivery_fee,
+      payment_method: orderData.payment_method,
+      payment_status: orderData.payment_status,
+      delivery_address: data.delivery_address,
+      dropoff_latitude: orderData.dropoff_latitude,
+      dropoff_longitude: orderData.dropoff_longitude,
+    }
+    const local = storageGet<OrderForm[]>('orders', [])
+    local.push(fallbackOrder)
+    storageSet('orders', local)
+    return fallbackOrder
+  }
 
   // Insert order items
   if (data.items && data.items.length > 0) {

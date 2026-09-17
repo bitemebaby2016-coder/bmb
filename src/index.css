@@ -614,6 +614,38 @@ p { color: var(--color-brand-text-secondary); }
 .mascot-badge--md { width: 72px; height: 72px; }
 .mascot-badge--lg { width: 104px; height: 104px; }
 
+/* --- Mascot pose: `peeking` — โผล่จากมุมบนของ Glass Overlay Card (CustomerReviewCard) --- */
+.mascot-peek {
+  position: absolute;
+  top: -10px;
+  right: -6px;
+  width: 58px;
+  height: 58px;
+  object-fit: contain;
+  z-index: 4;
+  filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.24));
+  pointer-events: none;
+}
+
+/* --- Mascot pose: `pointing` — ชี้ Near CTA Button (Hero CTA) --- */
+.mascot-point-cta {
+  position: absolute;
+  top: -12px;
+  left: -6px;
+  width: 44px;
+  height: 44px;
+  object-fit: contain;
+  z-index: 4;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.22));
+  pointer-events: none;
+  animation: mascotNudge 2.4s ease-in-out infinite;
+}
+
+@keyframes mascotNudge {
+  0%, 100% { transform: translate(0, 0) rotate(6deg); }
+  50%      { transform: translate(3px, -4px) rotate(-4deg); }
+}
+
 /* --- LazyVideo (Menu Highlight ≤ 2 คลิป) --- */
 .lazy-video {
   width: 100%;

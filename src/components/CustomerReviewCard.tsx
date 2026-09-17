@@ -125,6 +125,14 @@ export function CustomerReviewCard({ review, product, mode, deepLinkTo, ctaLabel
         </Link>
       </div>
 
+      {/* Mascot pose=`peeking` — โผล่จากมุมขวาบน Glass Overlay (Mascot Pose Map §18) */}
+      <MascotBadge
+        pose="peeking"
+        size="sm"
+        alt="น้อง Bite โผล่มุมการ์ดรีวิว"
+        className="mascot-peek"
+      />
+
       {/* 3D Mascot "น้อง Bite" จิ๋ว มุมล่างการ์ด (MascotBadge pose=heart — Mini Heart) */}
       <MascotBadge
         pose="heart"

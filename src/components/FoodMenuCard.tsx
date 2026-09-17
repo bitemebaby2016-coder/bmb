@@ -6,6 +6,7 @@
 // ============================================
 
 import type { Product, ProductCategory, SameDayOrderPayload, PreOrderPayload, AvailabilityState, OrderMode } from '@/types'
+import { MascotBadge } from '@/components/MascotBadge'
 
 interface FoodMenuCardProps {
   product: Product
@@ -60,9 +61,10 @@ export function FoodMenuCard({ product, category, mode, availability, onSameDayO
           </div>
         )}
 
-        {/* Status Pill (Inline, not absolute) */}
+        {/* Status Pill (Inline, not absolute) */ }
         {!isAvail && (
-          <div className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-red-100 text-red-700 mb-3">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium bg-red-100 text-red-700 mb-3">
+            <MascotBadge pose="empty" size="sm" alt="Bite the mascot - sold out" loading="eager" />
             {AVAIL[avail]}
           </div>
         )}
@@ -122,7 +124,7 @@ export function FoodMenuCard({ product, category, mode, availability, onSameDayO
         {/* Same-day Order Button */}
         {mode === 'same-day' && isAvail && (
           <button 
-            onClick={handleSameDay} 
+            onClick={handleSameDay} data-testid="same-day-order" 
             disabled={!isAvail}
             className="w-full rounded-xl py-3 font-semibold text-sm bg-brand-primary hover:bg-brand-primary-dark active:bg-brand-primary-dark text-white disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-md"
           >
@@ -132,7 +134,7 @@ export function FoodMenuCard({ product, category, mode, availability, onSameDayO
 
         {/* Pre-order Button */}
         <button 
-          onClick={handlePreOrder} 
+          onClick={handlePreOrder} data-testid="pre-order-btn" 
           className="w-full border-2 border-brand-primary/40 text-brand-primary rounded-xl py-3 font-semibold text-sm hover:bg-brand-primary/10 active:bg-brand-primary/20 transition-all duration-200"
         >
           📅 จองล่วงหน้า

@@ -5,6 +5,7 @@ import { getOrder } from '@/lib/bmbAdminApi_orders'
 import { confirmPromptPay, confirmCOD, getPaymentIntents } from '@/lib/paymentGateway'
 import { writeAuditLog } from '@/lib/auditLog'
 import { showToast } from '@/components/ui/ToastContainer'
+import { MascotBadge } from '@/components/MascotBadge'
 
 export function PaymentConfirmationPage() {
   const { orderNumber } = useParams()
@@ -90,9 +91,9 @@ export function PaymentConfirmationPage() {
           <h3 className="font-bold text-brand-accent mb-4">PromptPay Confirmation</h3>
           <div className="mb-4">
             <label className="block text-sm font-medium text-brand-accent mb-2">Transaction ID</label>
-            <input type="text" placeholder="Enter Transaction ID" value={transactionId} onChange={(e) => setTransactionId(e.target.value)} className="input mb-3" />
+            <input data-testid="txn-input" type="text" placeholder="Enter Transaction ID" value={transactionId} onChange={(e) => setTransactionId(e.target.value)} className="input mb-3" />
           </div>
-          <button onClick={handlePromptPayConfirm} disabled={isConfirming || !transactionId} className="btn btn-success w-full text-lg py-3 disabled:opacity-50">
+          <button data-testid="confirm-payment" onClick={handlePromptPayConfirm} disabled={isConfirming || !transactionId} className="btn btn-success w-full text-lg py-3 disabled:opacity-50">
             {isConfirming ? 'Confirming...' : 'Confirm Payment'}
           </button>
         </div>
@@ -108,7 +109,8 @@ export function PaymentConfirmationPage() {
       )}
       {isPaid && (
         <div className="card mb-6 bg-gradient-to-br from-green-50 to-emerald-50 border-2 border-green-200 text-center py-6">
-          <div className="text-5xl mb-3">✅</div>
+          {/* Mascot pose=`bye` — payment success / thank-you (Pose Map §18.2) */}
+          <MascotBadge pose="bye" size="lg" alt="Bite the mascot waving goodbye - payment successful" className="mx-auto mb-3" loading="eager" />
           <h3 className="text-xl font-bold text-green-700 mb-2">Payment Successful</h3>
           <p className="text-brand-muted">This order has been paid. Processing...</p>
           <Link to={'/track/' + orderNumber} className="btn btn-primary mt-4">Track Order</Link>

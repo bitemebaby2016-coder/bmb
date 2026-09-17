@@ -1,6 +1,7 @@
 import { useParams, Link } from 'react-router-dom'
 import { useState, useEffect } from 'react'
 import { showToast } from '@/components/ui/ToastContainer'
+import { MascotBadge } from '@/components/MascotBadge'
 
 const statusSteps = [
   { key: 'pending', label: 'รอการยืนยัน', icon: '⏳' },
@@ -40,7 +41,7 @@ export function OrderTrackPage() {
       <div className="card mb-6">
         <div className="flex items-center justify-between mb-4">
           <h1 className="text-2xl font-bold text-brand-accent">📍 ติดตามออเดอร์</h1>
-          <span className="badge badge-primary">#{orderNumber}</span>
+          <span data-testid="track-order-number" className="badge badge-primary">#{orderNumber}</span>
         </div>
 
         {/* Progress Steps */}
@@ -126,7 +127,8 @@ export function OrderTrackPage() {
       {orderStatus === 'delivered' && (
         <div className="card mt-6 bg-gradient-to-r from-yellow-50 to-orange-50">
           <div className="text-center">
-            <div className="text-4xl mb-2">⭐</div>
+            {/* Mascot pose=`bye` — delivery complete / thank-you (Pose Map §18.2) */}
+            <MascotBadge pose="bye" size="lg" alt="Bite the mascot waving goodbye - thank you" className="mx-auto mb-2" loading="eager" />
             <h3 className="font-bold text-brand-accent mb-2">รีวิวประสบการณ์ของคุณ</h3>
             <p className="text-sm text-brand-muted mb-4">ช่วยเราพัฒนาบริการให้ดียิ่งขึ้น</p>
             <div className="flex justify-center gap-2 mb-4">
