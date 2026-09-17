@@ -3,10 +3,12 @@
    ============================================ */
 
 import type { Message, Product } from '@/types'
+import { MODEL_A_FALLBACK, resolveModelA } from './aiModels'
 
 const OPENROUTER_API_KEY = import.meta.env.VITE_OPENROUTER_API_KEY
 const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions'
-const OPENROUTER_MODEL = import.meta.env.VITE_OPENROUTER_MODEL || 'qwen/qwen3.7-flash'
+// Model A — primary chat model (owner directive): GLM 5.2 (free), fallback Qwen 3.7 Flash.
+const OPENROUTER_MODEL = resolveModelA(import.meta.env.VITE_OPENROUTER_MODEL)
 
 if (!OPENROUTER_API_KEY) {
   console.error(
@@ -50,40 +52,60 @@ let conversationHistory: ChatMessage[] = [
   { role: 'system', content: SYSTEM_PROMPT.trim() },
 ]
 
-export async function chatWithAI(userMessage: string): Promise<string> {
-  try {
-    const messages = [...conversationHistory, { role: 'user' as const, content: userMessage }];
-    
-    const response = await fetch(OPENROUTER_API_URL, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
-        'Content-Type': 'application/json',
-        'HTTP-Referer': window.location.href,
-        'X-Title': 'Bite Me Baby App'
-      },
-      body: JSON.stringify({
-        model: OPENROUTER_MODEL,
-        messages: messages.slice(-11), // Keep last 10 messages + system
-        max_tokens: 500,
-        temperature: 0.7,
-      })
-    });
+/**
+ * Perform a single OpenRouter chat completion request with the given model.
+ * Throws on any non-OK HTTP status or when the response has no usable content,
+ * so the caller can decide whether to fall back to another model.
+ */
+async function requestCompletion(messages: ChatMessage[], model: string): Promise<string> {
+  const response = await fetch(OPENROUTER_API_URL, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
+      'Content-Type': 'application/json',
+      'HTTP-Referer': typeof window !== 'undefined' ? window.location.href : 'https://bitemebaby.com',
+      'X-Title': 'Bite Me Baby App'
+    },
+    body: JSON.stringify({
+      model,
+      messages: messages.slice(-11), // Keep last 10 messages + system
+      max_tokens: 500,
+      temperature: 0.7,
+    })
+  })
 
-    if (!response.ok) {
-      throw new Error(`API error: ${response.status}`);
+  if (!response.ok) {
+    throw new Error(`API error: ${response.status}`)
+  }
+
+  const data = await response.json()
+  const content = data.choices?.[0]?.message?.content
+  if (!content) {
+    throw new Error('Empty AI response content')
+  }
+  return content
+}
+
+export async function chatWithAI(userMessage: string): Promise<string> {
+  const messages = [...conversationHistory, { role: 'user' as const, content: userMessage }]
+
+  try {
+    let aiResponse: string
+    try {
+      aiResponse = await requestCompletion(messages, OPENROUTER_MODEL)
+    } catch (primaryError) {
+      // Model A (GLM 5.2 free) failed → retry once with Qwen 3.7 Flash.
+      console.error(`[Bite Me Baby] Model A (${OPENROUTER_MODEL}) failed, falling back to ${MODEL_A_FALLBACK}:`, primaryError)
+      aiResponse = await requestCompletion(messages, MODEL_A_FALLBACK)
     }
 
-    const data = await response.json();
-    const aiResponse = data.choices?.[0]?.message?.content || 'ขอโทษค่ะ ฉันไม่ได้รับข้อความที่ถูกต้อง กรุณาลองอีกครั้งนะ 😊';
-    
-    conversationHistory.push({ role: 'user' as const, content: userMessage });
-    conversationHistory.push({ role: 'assistant' as const, content: aiResponse });
-    
-    return aiResponse;
+    conversationHistory.push({ role: 'user' as const, content: userMessage })
+    conversationHistory.push({ role: 'assistant' as const, content: aiResponse })
+
+    return aiResponse
   } catch (error) {
-    console.error('OpenRouter API Error:', error);
-    return 'ขอโทษค่ะ เกิดข้อผิดพลาดในการเชื่อมต่อ กรุณาลองใหม่อีกครั้งนะ 🙏';
+    console.error('OpenRouter API Error:', error)
+    return 'ขอโทษค่ะ เกิดข้อผิดพลาดในการเชื่อมต่อ กรุณาลองใหม่อีกครั้งนะ 🙏'
   }
 }
 

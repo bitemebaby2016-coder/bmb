@@ -25,6 +25,7 @@ import { getProducts, getProduct, createProduct, updateProduct, deleteProduct } 
 import { getOrders, createOrder, updateOrderStatus } from '@/lib/bmbAdminApi_orders'
 import { getCategories } from '@/lib/bmbAdminApi_products'
 import { storageGet, storageSet, storageClear } from '@/lib/bmbStorage'
+import { MODEL_A_PRIMARY, MODEL_A_FALLBACK } from '@/lib/aiModels'
 
 describe('Products API', () => {
   it('should get products', async () => {
@@ -223,5 +224,47 @@ describe('Rewards Store', () => {
     expect(result).toBe(true)
     // Points should decrease
     expect(store.loyaltyPoints).toBeLessThanOrEqual(pointsBefore)
+  })
+})
+
+describe('AI Model A Configuration', () => {
+  it('should use GLM 5.2 (free) as Model A primary with Qwen 3.7 Flash fallback', () => {
+    expect(MODEL_A_PRIMARY).toBe('z-ai/glm-5.2:free')
+    expect(MODEL_A_FALLBACK).toBe('qwen/qwen3.7-flash')
+  })
+
+  it('chatWithAI should fall back to Qwen 3.7 Flash when GLM 5.2 (free) fails', async () => {
+    const { chatWithAI, resetConversation } = await import('@/lib/aiService')
+    resetConversation()
+
+    const fetchMock = vi.fn()
+      // Attempt 1: Model A (GLM 5.2 free) → HTTP 429 rate-limited
+      .mockResolvedValueOnce({ ok: false, status: 429, json: async () => ({}) })
+      // Attempt 2: Qwen 3.7 Flash → success
+      .mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: async () => ({
+          choices: [{ message: { content: 'สวัสดีค่ะ ยินดีต้อนรับสู่ Bite Me Baby ค่ะ 😊' } }]
+        })
+      })
+
+    vi.stubGlobal('fetch', fetchMock)
+
+    try {
+      const result = await chatWithAI('สวัสดี')
+      expect(result).toContain('สวัสดี')
+      expect(fetchMock).toHaveBeenCalledTimes(2)
+
+      // First request must target Model A (GLM 5.2 free)
+      const firstBody = JSON.parse(fetchMock.mock.calls[0][1].body)
+      expect(firstBody.model).toBe(MODEL_A_PRIMARY)
+
+      // Fallback request must target Qwen 3.7 Flash
+      const secondBody = JSON.parse(fetchMock.mock.calls[1][1].body)
+      expect(secondBody.model).toBe(MODEL_A_FALLBACK)
+    } finally {
+      vi.unstubAllGlobals()
+    }
   })
 })

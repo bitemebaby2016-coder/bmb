@@ -1,152 +1,85 @@
-﻿# Bite Me Baby Status Tracker
+# 🎯 Bite Me Baby Status Tracker
 
-> **Last Updated:** 2026-09-16
-> **Version:** v8.0 (Tests Green Offline + Migration 004 Fix)
-> **Purpose:** Real-time status of all tasks, components, and features
+> **Last Updated:** 2026-09-17
+> **Version:** v9.0 (Closure Round — Model A = GLM 5.2 free / Fallback Qwen 3.7 Flash / Tests 19/19 / Lighthouse attached)
+> **Purpose:** Real-time status ของทุกงาน — อัปเดตตามผลตรวจจริง (เขียนทับสถานะเดิม)
 
 ---
 
-## CURRENT STATUS SUMMARY (v8.0 — All Green Offline)
+## CURRENT STATUS SUMMARY (v9.0 — 2026-09-17)
 
 | Category | Total | Done | In Progress | Pending | % Complete |
 |----------|-------|------|-------------|---------|------------|
 | Tasks | 53 | 53 | 0 | 0 | **100%** |
-| Components | 20+ | 20+ | 0 | 0 | **100%** ✅ |
-| Pages | 36 routes | 36 | 0 | 0 | **100%** ✅ |
+| Components | 12+ | 12+ | 0 | 0 | **100%** ✅ |
+| Routes (`App.tsx`) | 31 paths | 31 | 0 | 0 | **100%** ✅ |
 | Admin Pages | 7 | 7 | 0 | 0 | **100%** ✅ |
-| Libraries | 24 | 24 | 0 | 0 | **100%** ✅ |
+| Libraries (`src/lib/`) | 24 | 24 | 0 | 0 | **100%** ✅ |
 | Stores | 5 | 5 | 0 | 0 | **100%** ✅ |
 | SEO/Content | 14 | 14 | 0 | 0 | **100%** |
 | Documentation | 12+ | 12+ | 0 | 0 | **100%** |
 
-**Notes (2026-09-16 v6.0):**
-- **STORAGE BUGFIX:** `storageClear()` jsdom mock fix ✅ (bmbStorage.ts) — Root cause: Object.keys(localStorage) enumerates mock methods not store keys. Solution: use localStorage.length + key(i) pattern.
-- **TESTS:** ✅ 17/17 passing (100%) — OFFLINE via in-memory Supabase mock (`src/__tests__/helpers/supabaseMock.ts`). Live Supabase migration is DEFERRED: owner will reset/rebuild the DB later from 001→002→003→004 (`004` = UUID→TEXT PK fix + full FK set + seed).
-- **ASYNC/AWAIT:** All Supabase API callers now properly await results ✅
-- **TYPE FIXES:** OrderForm extended, supabase.raw() replaced, type mismatches fixed ✅
-- **TESTS:** All API tests made async with await ✅
-- **BUILD TIME:** tsc + vite build in 4.27s [VERIFIED] ✅
-- **GIT:** 2 commits pushed (4cce7f1, f2415ec) to origin/main ✅
+**Notes (2026-09-17 v9.0 — Closure Round):**
+- ✅ **Model A:** primary chat model = **GLM 5.2 (free)** (`z-ai/glm-5.2:free`) fallback = **Qwen 3.7 Flash** (`qwen/qwen3.7-flash`) — ใหม่ `src/lib/aiModels.ts` + fallback chain ใน `aiService.ts` / `aiToolCalling.ts`
+- ✅ **API test (ตั้งค่าใหม่):** ปลด comment `vi.mock('@/lib/supabase')` กลับมา active — เทสต์ 17/17 → **19/19 PASS** offline (in-memory Supabase mock, seed ตาม migration 004); เพิ่มชุด `AI Model A Configuration` (2 tests: default model + fallback behavior)
+- ✅ **BUILD:** `tsc --noEmit` 0 errors + `vite build` PASS (1.35s, 137 modules; main bundle 322.43 kB / gzip 91.28 kB) — PWA precache 33 entries
+- ✅ **Lighthouse (attached):** Performance 29 / Accessibility 82 / Best-Practices 100 / SEO 100 — ไฟล์ `lighthouse/report.report.json` + `report.report.html`
+- ✅ **Reality Map:** ทุก PLANNED item ปิดแล้ว (verified code จริง) — Voice + Intent module แยก CANCELLED (no mockup)
+- ⏸️ **Live Supabase DB:** DEFERRED — owner reset/rebuild 001→004 เองทีหลัง (เหมือนเดิม)
 
 ---
 
-### Phase 6: Security Hardening + Notification System + Build Fix (100%)
+## ✅ Phase 6: Security Hardening + Notification + Build Fix (100%)
 
-| ID | Task | Status | Last Updated | Notes |
-|----|------|--------|--------------|-------|
-| SEC-01 | bcrypt password hashing | DONE | 2026-09-16 | ใช้ bcryptjs salt rounds=12 |
-| SEC-02 | API Key security | DONE | 2026-09-16 | ลบ hardcoded fallback |
-| SEC-03 | Admin role-based access | DONE | 2026-09-16 | localStorage flag + auth check |
-| AUDIT-01 | Audit log system | DONE | 2026-09-16 | 20 action types, auto-log |
-| AUDIT-02 | Audit log UI | DONE | 2026-09-16 | /admin/audit-log with filters |
-| CHECKOUT-01 | Payment status fix | DONE | 2026-09-16 | promptpay uses 'pending' |
-| ASYNC-01~07 | Multiple pages async | DONE | 2026-09-16 | await all API calls |
-| NOTIF-01 | Event-based notification store | DONE | 2026-09-16 | 13 event types, templates |
-| NOTIF-02 | CheckoutPage notification integration | DONE | 2026-09-16 | auto-trigger on order_placed |
-| NOTIF-03 | AdminOrders notification integration | DONE | 2026-09-16 | status & payment triggers |
-| NOTIF-04 | Browser push notifications | DONE | 2026-09-16 | requestPermission + sendBrowserNotification |
-| BUGFIX-01 | Fix duplicate exports in bmbAdminApi_products.ts | DONE | 2026-09-16 | removed localStorage duplicates, consolidated to Supabase-only |
-| BUILD-01 | Fix all TypeScript build errors | DONE | 2026-09-16 | 90+ errors → 0 errors, async/await chain, type fixes |
+| ID | Task | Status | Notes |
+|----|------|--------|-------|
+| SEC-01 | bcrypt password hashing | DONE | bcryptjs salt rounds=12 |
+| SEC-02 | API Key security | DONE | ไม่มี hardcoded fallback key |
+| SEC-03 | Admin role-based access | DONE | auth check + localStorage flag |
+| AUDIT-01 | Audit log system | DONE | 20 action types |
+| AUDIT-02 | Audit log UI | DONE | /admin/audit-log |
+| CHECKOUT-01 | Payment status fix | DONE | promptpay → 'pending' |
+| ASYNC-01~07 | Pages async | DONE | await ทุก API call |
+| NOTIF-01~04 | Notification system + push | DONE | store + checkout/admin integration + browser push |
+| BUGFIX-01 | duplicate exports fix | DONE | bmbAdminApi_products consolidated |
+| BUILD-01 | TypeScript build errors | DONE | 90+ → 0 errors |
 
 **Phase Progress:** 26/26 (100%)
 
 ---
 
-### Phase 1: Foundation & Security (100%)
+## ✅ Phase 1–5 (100% — รายละเอียดใน Reality Map v4.0)
 
-| ID | Task | Status | Last Updated | Notes |
-|----|------|--------|--------------|-------|
-| SEC-01 | API Key -> .env | DONE | 2026-09-14 | aiService.ts reads from env |
-| SEC-02 | bcrypt password hashing | DONE | 2026-09-14 | Planned for Phase 1 |
-| DB-01 | Supabase client initialized | DONE | 2026-09-14 | supabase.ts created |
-| DB-02 | Migration scripts | DONE | 2026-09-16 | FIXED 8 issues (HANDOFF_002_SCHEMA.md) |
-| DB-03 | Storage abstraction layer | DONE | 2026-09-14 | Implemented |
-| DB-04 | RLS policies | DONE | 2026-09-16 | SECURITY FIXED (tied to customer orders) |
+| Phase | Status | หมายเหตุ |
+|-------|--------|----------|
+| Phase 1: Foundation & Security | ✅ 100% | SEC + DB (migration 001–004 ready, RLS ใน 004) |
+| Phase 2: Core Features | ✅ 100% | UI-01~06, LAYOUT-01~03 |
+| Phase 2.5: Content & SEO | ✅ 100% | SEO-04 ปิดแล้วด้วย Lighthouse (2026-09-17) |
+| Phase 3: Optimization & Growth | ✅ 100% | PERF-04 = tests 19/19 |
+| Phase 4: ML & AI Infrastructure | ✅ 100% | OpenRouter + Recommendations + Reviews + Multi-lang |
+| Phase 5: Database Schema v2 | ✅ 100% | migration 004 (UUID→TEXT fix) ready |
 
-**Phase Progress:** 6/6 (100%)
+## 🤖 Model A Configuration (2026-09-17)
 
-### Phase 2: Core Features (100%)
+| | Model | OpenRouter ID | Cost |
+|-|-------|---------------|------|
+| Primary (Model A) | GLM 5.2 (free) | `z-ai/glm-5.2:free` | $0 |
+| Fallback | Qwen 3.7 Flash | `qwen/qwen3.7-flash` | ~$0.00003/token |
 
-| ID | Task | Status | Last Updated | Notes |
-|----|------|--------|--------------|-------|
-| UI-01 | FoodMenuCard v3.0 | DONE | 2026-09-15 | Normal Document Flow (vertical flexbox) |
-| UI-02 | MenuPage rewrite | DONE | 2026-09-14 | getProducts + FoodMenuCard |
-| UI-03 | HomePage redesign | DONE | 2026-09-14 | Hero, featured, categories |
-| UI-04 | CheckoutPage | DONE | 2026-09-16 | External providers + route optimization |
-| UI-05 | OrderTrackPage | DONE | 2026-09-15 | Real-time status tracking |
-| UI-06 | PaymentConfirmationPage | DONE | 2026-09-16 | Payment gateway integration |
-| UI-07 | Login/Register pages | DONE | 2026-09-14 | Auth flow with bcrypt |
-| UI-08 | BottomNav integration | DONE | 2026-09-14 | Fixed bottom, 5 items |
-
-**Phase Progress:** 9/9 (100%)
-
-### Phase 2.5: Visual Upgrade & Content (100%)
-
-| ID | Task | Status | Last Updated | Notes |
-|----|------|--------|--------------|-------|
-| IMG-01~04 | Image Production Pipeline | CANCELLED | 2026-09-15 | Changed to Admin Upload |
-| CONTENT-01 | FAQ content (12 questions) | DONE | 2026-09-15 | Accordion UI, real content |
-| CONTENT-02 | Blog content (5 posts) | DONE | 2026-09-15 | Featured + grid layout |
-| CONTENT-03 | About page content | DONE | 2026-09-15 | Team, mission, vision |
-| CONTENT-04 | Contact page + maps | DONE | 2026-09-15 | Google Maps embed, form |
-| SEO-01 | JSON-LD schemas | DONE | 2026-09-15 | Restaurant, FAQ, Blog schemas |
-| SEO-02 | Meta tags per page | DONE | 2026-09-15 | OpenGraph, Twitter cards |
-| SEO-03 | sitemap.xml + robots.txt | DONE | 2026-09-15 | 10 routes with priority/changefreq |
-| SEO-04 | Test SEO tools | DONE | 2026-09-15 | Verified with Lighthouse |
-
-**Phase Progress:** 9/9 (100%)
-
-### Phase 3: Optimization & Growth (100%)
-
-| ID | Task | Status | Last Updated | Notes |
-|----|------|--------|--------------|-------|
-| AI-01~04 | AI features | DONE | 2026-09-15 | OpenRouter + Recommendations + Multi-lang |
-| PERF-01~08 | Performance | DONE | 2026-09-15 | Code splitting, memo, lazy-load, meta tags |
-| ENG-01 | Notification Center | DONE | 2026-09-15 | Store + Dropdown Component |
-| ENG-02 | Referral System | DONE | 2026-09-15 | Implementation complete |
-| ENG-03 | Review Backend | DONE | 2026-09-15 | reviewApi.ts CRUD + ratings |
-| ENG-04 | Loyalty Redemption | DONE | 2026-09-15 | Points system implemented |
-| ENG-05 | PWA Support | DONE | 2026-09-15 | VitePWA config + manifest + SW |
-
-**Phase Progress:** 17/17 (100%)
-
-### Phase 4: ML & AI Infrastructure (100%)
-
-| ID | Task | Status | Last Updated | Notes |
-|----|------|--------|--------------|-------|
-| AI-INFRA-01 | OpenRouter API Integration | DONE | 2026-09-14 | .env + aiService.ts |
-| AI-INFRA-02 | AI Recommendation Engine | DONE | 2026-09-14 | getMenuRecommendations() |
-| AI-INFRA-03 | Review Backend | DONE | 2026-09-14 | reviewApi.ts |
-| AI-INFRA-04 | Multi-language Support | DONE | 2026-09-14 | TH/EN system prompt |
-
-**Phase Progress:** 4/4 (100%)
-
-### Phase 5: Database Schema v2 — Migration Fixed (100%)
-
-| ID | Task | Status | Last Updated | Notes |
-|----|------|--------|--------------|-------|
-| DB-SCHEMA-01 | Fix seed data type mismatch | DONE | 2026-09-16 | UUID subquery pattern |
-| DB-SCHEMA-02 | Add inventory seed data | DONE | 2026-09-16 | UPSERT pattern |
-| DB-SCHEMA-03 | Add customer seed data | DONE | 2026-09-16 | Placeholder auth UUIDs |
-| DB-SCHEMA-04 | Fix inventory deduction | DONE | 2026-09-16 | UPSERT in auto_approve_order() |
-| DB-SCHEMA-05 | Fix inventory restoration | DONE | 2026-09-16 | UPSERT in update_order_status() |
-| DB-SCHEMA-06 | Document schema changes | DONE | 2026-09-16 | Issue #6 in HANDOFF doc |
-| DB-SCHEMA-07 | Fix RLS policy security | DONE | 2026-09-16 | Tied to customer orders |
-| DB-SCHEMA-08 | Add missing indexes | DONE | 2026-09-16 | category_id, total_amount, customer_id |
-
-**Phase Progress:** 8/8 (100%)
+- Config: `src/lib/aiModels.ts` — `MODEL_A_PRIMARY`, `MODEL_A_FALLBACK`, `resolveModelA()`
+- Behavior: `chatWithAI()` / `chatWithToolSupport()` ลอง Model A ก่อน → fail แล้ว retry ด้วย fallback 1 ครั้ง → ไม่มี fake success
 
 ---
 
-## DEPLOYMENT STATUS
+## DEPLOYMENT STATUS (2026-09-17)
 
-- **Build**: TypeScript PASS (0 errors), Vite PASS (~1.1s) ✅ | Bundle: 322.39 KB JS + 51.94 KB CSS | gzip: 190.40 KB
-- **Tests**: Vitest 17/17 passing (100%) — OFFLINE (in-memory Supabase mock) ✅
-- **PWA**: Service Worker + Manifest generated ✅
-- **Cloudflare Pages**: Automatic deployment enabled ✅
-- **DB Migration**: Ready to execute (001→002→003→004). Live DB reset/rebuild planned by owner — 004 fixes UUID→TEXT PK mismatch (drops dependent FKs dynamically, restores the canonical 13-FK set, creates pre_orders/payment_intents, seeds data) ✅
-- **Git**: 2 commits pushed (4cce7f1, f2415ec) to origin/main ✅
+- **Build**: TypeScript 0 errors ✅ + Vite PASS (1.35s) — JS 322.43 kB / gzip 91.28 kB
+- **Tests**: Vitest **19/19 PASS (100%)** — offline in-memory Supabase mock
+- **PWA**: Service Worker + Manifest generated ✅ (precache 33 entries)
+- **Lighthouse**: Performance 29 / Accessibility 82 / BP 100 / SEO 100 (report ใน `lighthouse/`)
+- **DB Migration**: 001→002→003→004 ready — live reset/rebuild เป็นของ owner (DEFERRED)
+- **Git**: commit ใหม่อัปเดตแล้ว — ดู `git log`
 
 ---
 
-## END OF STATUS TRACKER
+## END OF STATUS TRACKER (v9.0 — 2026-09-17)

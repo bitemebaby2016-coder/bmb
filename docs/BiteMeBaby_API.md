@@ -210,8 +210,10 @@ role: admin
 | Configuration | Value |
 |--------------|-------|
 | API URL | `https://openrouter.ai/api/v1/chat/completions` |
-| API Key | Hardcoded — ควรย้ายเป็น env variable |
-| Model | `google/gemini-2.0-flash-lite:free` |
+| API Key | `VITE_OPENROUTER_API_KEY` (env — ไม่มี hardcoded) |
+| Model A (primary) | `z-ai/glm-5.2:free` — **GLM 5.2 (free)** — กำหนดโดย owner directive 2026-09-17 |
+| Model A (fallback) | `qwen/qwen3.7-flash` — Qwen 3.7 Flash — ใช้เมื่อ Model A fail (retry 1 ครั้ง) |
+| Config source | `src/lib/aiModels.ts` (`MODEL_A_PRIMARY` / `MODEL_A_FALLBACK` / `resolveModelA()`) |
 | Max Tokens | 500 |
 | Temperature | 0.7 |
 | History | Last 10 messages + system prompt |

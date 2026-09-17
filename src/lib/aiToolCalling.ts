@@ -9,6 +9,7 @@ import { getProducts, getProduct } from './bmbAdminApi_products'
 import { getOrders, getOrder } from './bmbAdminApi_orders'
 import { getReviews, getAverageRating } from './reviewApi'
 import { getCategories } from './bmbAdminApi_products'
+import { MODEL_A_FALLBACK, resolveModelA } from './aiModels'
 
 export interface ToolCall {
   id: string
@@ -154,8 +155,11 @@ Tools available:
 Customer preferences: ${customerPreferences ? JSON.stringify(customerPreferences) : 'none'}
 `
 
-  // Send to OpenRouter with tool calling support
-  try {
+  // Send to OpenRouter with tool calling support.
+  // Model A = GLM 5.2 (free); on failure retry once with Qwen 3.7 Flash.
+  const modelA = resolveModelA(import.meta.env.VITE_OPENROUTER_MODEL)
+
+  const sendRequest = async (model: string) => {
     const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -163,7 +167,7 @@ Customer preferences: ${customerPreferences ? JSON.stringify(customerPreferences
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: import.meta.env.VITE_OPENROUTER_MODEL || 'qwen/qwen3.7-flash',
+        model,
         messages: [
           { role: 'system', content: systemPrompt },
           ...conversationHistory,
@@ -185,6 +189,17 @@ Customer preferences: ${customerPreferences ? JSON.stringify(customerPreferences
 
     if (!response.ok) {
       throw new Error(`API error: ${response.status}`)
+    }
+    return response
+  }
+
+  try {
+    let response: Response
+    try {
+      response = await sendRequest(modelA)
+    } catch (primaryError) {
+      console.error(`[Bite Me Baby] Model A (${modelA}) failed, falling back to ${MODEL_A_FALLBACK}:`, primaryError)
+      response = await sendRequest(MODEL_A_FALLBACK)
     }
 
     const data = await response.json()

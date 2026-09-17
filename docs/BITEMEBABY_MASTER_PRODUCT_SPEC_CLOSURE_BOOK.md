@@ -76,7 +76,7 @@ Mobile-first PWA
 | SEO-01 | JSON-LD schemas | ✅ DONE | `seo.ts` | 18 meta functions |
 | SEO-02 | Meta tags per page | ✅ DONE | `SeoHelmet.tsx` | react-helmet-async |
 | SEO-03 | sitemap.xml + robots.txt | ✅ DONE | `/public/` | Sitemap + robots rules |
-| SEO-04 | Test SEO tools | ⏸️ PLANNED | — | Use Lighthouse/GTM later |
+| SEO-04 | Test SEO tools | ✅ DONE (2026-09-17) | Lighthouse run จริง | Perf 29 / A11y 82 / BP 100 / SEO 100 -> `lighthouse/` |
 
 **Progress:** 11/13 (85%)
 ---
@@ -92,7 +92,7 @@ Mobile-first PWA
 | PERF-01 | Code splitting (lazy-load) | ✅ DONE | Vite | Auto-bundles |
 | PERF-02 | React.memo optimization | ✅ DONE | `FoodMenuCard.tsx` | Memoized |
 | PERF-03 | Image optimization + lazy-load | ✅ DONE | `FoodMenuCard.tsx` | loading="lazy" |
-| PERF-04 | Testing suite (Vitest) | ✅ DONE | `__tests__/api.test.ts` | 9/17 tests passing — 8 fail due to DB schema mismatch, NOT code bugs |
+| PERF-04 | Testing suite (Vitest) | ✅ DONE | `__tests__/api.test.ts` | **19/19 PASS** (offline in-memory Supabase mock, incl. AI Model A Configuration) |
 | PERF-05 | TypeScript strict mode | ✅ DONE | `tsconfig.json` | strict: true |
 | PERF-06 | JSON-LD schema improvement | ✅ DONE | `seo.ts` | Restaurant, FAQ, Blog |
 | PERF-07 | Dynamic sitemaps | ✅ DONE | `sitemap.xml` | 10 routes |
@@ -111,18 +111,18 @@ Mobile-first PWA
 
 | ID | Task | Status | Implementation | Notes |
 |----|------|--------|----------------|-------|
-| AI-01 | OpenRouter API integration | ✅ DONE | `.env` + `aiService.ts` | qwen/qwen3.7-flash |
+| AI-01 | OpenRouter API integration | ✅ DONE | `.env` + `aiService.ts` | Model A = z-ai/glm-5.2:free (+ fallback qwen/qwen3.7-flash) |
 | AI-02 | AI Chat with Bime | ✅ DONE | `chatWithAI()` | Conversation history |
 | AI-03 | AI Recommendation Engine | ✅ DONE | `getMenuRecommendations()` | ML-powered |
 | AI-04 | Multi-language support | ✅ DONE | System prompt | TH + EN |
-| AI-05 | AI Memory | ⏸️ PLANNED | — | Customer memory, order context |
-| AI-06 | Voice future | ⏸️ PLANNED | — | Section 2833 |
-| AI-07 | Tool calling | ⏸️ PLANNED | — | Section 2834 |
-| AI-08 | Customer Intelligence | ⏸️ PLANNED | — | Section 66 |
-| AI-09 | Content automation | ⏸️ PLANNED | — | AI-generated content |
+| AI-05 | AI Memory | ✅ DONE | `aiMemory.ts` | CLOSED — implement จริง |
+| AI-06 | Voice future | ❌ CANCELLED | — | ไม่มีโค้ดใน repo (no mockup) |
+| AI-07 | Tool calling | ✅ DONE | `aiToolCalling.ts` | CLOSED — implement จริง (5 tools) |
+| AI-08 | Customer Intelligence | ✅ DONE | `customerIntelligence.ts` | CLOSED — implement จริง |
+| AI-09 | Content automation | ✅ DONE | `contentAutomation.ts` | CLOSED — implement จริง |
 | AI-10 | Advanced chat | ✅ DONE | `chatWithAI()` | Context-aware |
 
-**Progress:** 6/10 (60%)
+**Progress:** 9/10 — AI-06 Voice CANCELLED (no mockup)
 
 ---
 
@@ -303,16 +303,16 @@ Bite Me Baby/
 
 | Priority | Feature | Status | Notes |
 |----------|---------|--------|-------|
-| P1 | AI Memory | ⏸️ PLANNED | Customer memory, order context |
-| P1 | Voice Future | ⏸️ PLANNED | Voice assistant (Section 2833) |
-| P1 | Tool Calling | ⏸️ PLANNED | AI tool integration (Section 2834) |
-| P1 | Customer Intelligence | ⏸️ PLANNED | Section 66 — Combined customer data |
-| P1 | Content Automation | ⏸️ PLANNED | AI-generated content |
-| P2 | Advanced Route Optimization | ⏸️ PLANNED | Multi-driver, multi-vehicle |
-| P2 | Advanced External Providers | ⏸️ PLANNED | More delivery partners |
-| P3 | Demand Forecasting | ⏸️ PLANNED | Predictive analytics |
-| P3 | AI Promotion Intelligence | ⏸️ PLANNED | Automated promotions |
-| P3 | Advanced Inventory Prediction | ⏸️ PLANNED | Stock forecasting |
+| P1 | AI Memory | ✅ DONE | aiMemory.ts |
+| P1 | Voice Future | ❌ CANCELLED | ไม่มีโค้ด (no mockup) |
+| P1 | Tool Calling | ✅ DONE | aiToolCalling.ts |
+| P1 | Customer Intelligence | ✅ DONE | customerIntelligence.ts |
+| P1 | Content Automation | ✅ DONE | contentAutomation.ts |
+| P2 | Advanced Route Optimization | ✅ DONE | routeOptimization.ts |
+| P2 | Advanced External Providers | ✅ DONE | externalProviders.ts |
+| P3 | Demand Forecasting | ✅ DONE | demandForecasting.ts |
+| P3 | AI Promotion Intelligence | ✅ DONE | promotionIntelligence.ts |
+| P3 | Advanced Inventory Prediction | ✅ DONE | inventoryPrediction.ts |
 
 ---
 
@@ -323,9 +323,9 @@ Bite Me Baby/
 | Metric | Current | Target | Status |
 |--------|---------|--------|--------|
 | TypeScript Strict Mode | ON | ON | ✅ PASS |
-| Test Coverage | PASS 17/17 (offline) | 80%+ | PASS |
-| Bundle Size | 705.68KB | <500KB | ✅ PASS |
-| Lighthouse Score | N/A | 90+ | ⏸️ PLANNED |
+| Test Coverage | PASS 19/19 (offline, incl. AI Model A) | 80%+ | PASS |
+| Bundle Size | 322.43KB (gzip 91.28KB) | <500KB | ✅ PASS |
+| Lighthouse Score | 29 Perf / 82 A11y / 100 BP / 100 SEO (2026-09-17) | 90+ | ⚠️ OPEN — attached `lighthouse/` |
 
 ### Documentation Quality
 
@@ -338,6 +338,17 @@ Bite Me Baby/
 ---
 
 ## 📝 Change Log
+
+### 2026-09-17 (v3.2 - Closure Round: Model A GLM 5.2 free + Fallback / API test 19/19 / Lighthouse attached)
+
+**Completed:**
+- Model A = GLM 5.2 (free) z-ai/glm-5.2:free + fallback Qwen 3.7 Flash qwen/qwen3.7-flash — NEW src/lib/aiModels.ts, fallback chain ใน aiService.ts / aiToolCalling.ts
+- API test ตั้งค่าใหม่: vi.mock('@/lib/supabase') กลับมา active → **19/19 PASS** offline (+2 tests AI Model A Configuration)
+- Lighthouse run จริง (local preview, Chrome headless): Perf 29 / A11y 82 / BP 100 / SEO 100 → lighthouse/report.report.json + .html — ปิด SEO-04
+- Reality Map items ทั้งหมด CLOSED (verified code จริง) — Voice + Intent module CANCELLED (no mockup)
+- Build: tsc 0 errors + vite 1.35s (322.43 KB JS / gzip 91.28 KB); Live DB rebuild ยัง DEFERRED (owner)
+
+---
 
 ### 2026-09-16 (v3.1 - Tests Green Offline + Migration 004 UUID-to-TEXT Fix)
 
@@ -377,18 +388,18 @@ Bite Me Baby/
 
 | ID | Task | Status | Implementation | Notes |
 |----|------|--------|----------------|-------|
-| AI-01 | OpenRouter API integration | ✅ DONE | `.env` + `aiService.ts` | qwen/qwen3.7-flash |
+| AI-01 | OpenRouter API integration | ✅ DONE | `.env` + `aiService.ts` | Model A = z-ai/glm-5.2:free (+ fallback qwen/qwen3.7-flash) |
 | AI-02 | AI Chat with **Bite** (ไบท์) | ✅ DONE | `chatWithAI()` | **Chef (บริกร)** of Bite Me Baby |
 | AI-03 | AI Recommendation Engine | ✅ DONE | `getMenuRecommendations()` | ML-powered |
 | AI-04 | Multi-language support | ✅ DONE | System prompt | TH + EN |
-| AI-05 | AI Memory | ⏸️ PLANNED | — | Customer memory, order context |
-| AI-06 | Voice future | ⏸️ PLANNED | — | Section 2833 |
-| AI-07 | Tool calling | ⏸️ PLANNED | — | Section 2834 |
-| AI-08 | Customer Intelligence | ⏸️ PLANNED | — | Section 66 |
-| AI-09 | Content automation | ⏸️ PLANNED | — | AI-generated content |
+| AI-05 | AI Memory | ✅ DONE | `aiMemory.ts` | CLOSED — implement จริง |
+| AI-06 | Voice future | ❌ CANCELLED | — | ไม่มีโค้ดใน repo (no mockup) |
+| AI-07 | Tool calling | ✅ DONE | `aiToolCalling.ts` | CLOSED — implement จริง (5 tools) |
+| AI-08 | Customer Intelligence | ✅ DONE | `customerIntelligence.ts` | CLOSED — implement จริง |
+| AI-09 | Content automation | ✅ DONE | `contentAutomation.ts` | CLOSED — implement จริง |
 | AI-10 | Advanced chat | ✅ DONE | `chatWithAI()` | Context-aware |
 
-**Progress:** 6/10 (60%)
+**Progress:** 9/10 — AI-06 Voice CANCELLED (no mockup)
 
 ---
 
@@ -414,7 +425,7 @@ Bite Me Baby/
 - Share cooking expertise when appropriate
 
 ### 🛠️ Technical Implementation
-- **API:** OpenRouter (qwen/qwen3.7-flash)
+- **API:** OpenRouter — Model A **z-ai/glm-5.2:free** (GLM 5.2 free), fallback **qwen/qwen3.7-flash**
 - **System Prompt:** Chef persona with Bite Me Baby context
 - **Conversation History:** Last 10 messages maintained
 - **Recommendation Engine:** ML-powered menu suggestions
@@ -580,16 +591,16 @@ Bite Me Baby/
 
 | Priority | Feature | Status | Notes |
 |----------|---------|--------|-------|
-| P1 | AI Memory | ⏸️ PLANNED | Customer memory, order context |
-| P1 | Voice Future | ⏸️ PLANNED | Voice assistant (Section 2833) |
-| P1 | Tool Calling | ⏸️ PLANNED | AI tool integration (Section 2834) |
-| P1 | Customer Intelligence | ⏸️ PLANNED | Section 66 — Combined customer data |
-| P1 | Content Automation | ⏸️ PLANNED | AI-generated content |
-| P2 | Advanced Route Optimization | ⏸️ PLANNED | Multi-driver, multi-vehicle |
-| P2 | Advanced External Providers | ⏸️ PLANNED | More delivery partners |
-| P3 | Demand Forecasting | ⏸️ PLANNED | Predictive analytics |
-| P3 | AI Promotion Intelligence | ⏸️ PLANNED | Automated promotions |
-| P3 | Advanced Inventory Prediction | ⏸️ PLANNED | Stock forecasting |
+| P1 | AI Memory | ✅ DONE | aiMemory.ts |
+| P1 | Voice Future | ❌ CANCELLED | ไม่มีโค้ด (no mockup) |
+| P1 | Tool Calling | ✅ DONE | aiToolCalling.ts |
+| P1 | Customer Intelligence | ✅ DONE | customerIntelligence.ts |
+| P1 | Content Automation | ✅ DONE | contentAutomation.ts |
+| P2 | Advanced Route Optimization | ✅ DONE | routeOptimization.ts |
+| P2 | Advanced External Providers | ✅ DONE | externalProviders.ts |
+| P3 | Demand Forecasting | ✅ DONE | demandForecasting.ts |
+| P3 | AI Promotion Intelligence | ✅ DONE | promotionIntelligence.ts |
+| P3 | Advanced Inventory Prediction | ✅ DONE | inventoryPrediction.ts |
 
 ---
 
@@ -600,9 +611,9 @@ Bite Me Baby/
 | Metric | Current | Target | Status |
 |--------|---------|--------|--------|
 | TypeScript Strict Mode | ON | ON | ✅ PASS |
-| Test Coverage | PASS 17/17 (offline) | 80%+ | PASS |
-| Bundle Size | 705.68KB | <500KB | ✅ PASS |
-| Lighthouse Score | N/A | 90+ | ⏸️ PLANNED |
+| Test Coverage | PASS 19/19 (offline, incl. AI Model A) | 80%+ | PASS |
+| Bundle Size | 322.43KB (gzip 91.28KB) | <500KB | ✅ PASS |
+| Lighthouse Score | 29 Perf / 82 A11y / 100 BP / 100 SEO (2026-09-17) | 90+ | ⚠️ OPEN — attached `lighthouse/` |
 
 ### Documentation Quality
 
@@ -615,6 +626,17 @@ Bite Me Baby/
 ---
 
 ## 📝 Change Log
+
+### 2026-09-17 (v3.2 - Closure Round: Model A GLM 5.2 free + Fallback / API test 19/19 / Lighthouse attached)
+
+**Completed:**
+- Model A = GLM 5.2 (free) z-ai/glm-5.2:free + fallback Qwen 3.7 Flash qwen/qwen3.7-flash — NEW src/lib/aiModels.ts, fallback chain ใน aiService.ts / aiToolCalling.ts
+- API test ตั้งค่าใหม่: vi.mock('@/lib/supabase') กลับมา active → **19/19 PASS** offline (+2 tests AI Model A Configuration)
+- Lighthouse run จริง (local preview, Chrome headless): Perf 29 / A11y 82 / BP 100 / SEO 100 → lighthouse/report.report.json + .html — ปิด SEO-04
+- Reality Map items ทั้งหมด CLOSED (verified code จริง) — Voice + Intent module CANCELLED (no mockup)
+- Build: tsc 0 errors + vite 1.35s (322.43 KB JS / gzip 91.28 KB); Live DB rebuild ยัง DEFERRED (owner)
+
+---
 
 ### 2026-09-16 (v3.1 - Tests Green Offline + Migration 004 UUID-to-TEXT Fix)
 
@@ -656,18 +678,18 @@ Bite Me Baby/
 
 | ID | Task | Status | Implementation | Notes |
 |----|------|--------|----------------|-------|
-| AI-01 | OpenRouter API integration | ✅ DONE | `.env` + `aiService.ts` | qwen/qwen3.7-flash |
+| AI-01 | OpenRouter API integration | ✅ DONE | `.env` + `aiService.ts` | Model A = z-ai/glm-5.2:free (+ fallback qwen/qwen3.7-flash) |
 | AI-02 | AI Chat with **Bite** (ไบท) | ✅ DONE | `chatWithAI()` | **Waiter (บริกร/พนักงานเสิรฟ)** |
 | AI-03 | AI Recommendation Engine | ✅ DONE | `getMenuRecommendations()` | ML-powered |
 | AI-04 | Multi-language support | ✅ DONE | System prompt | TH + EN |
-| AI-05 | AI Memory | ⏸️ PLANNED | — | Customer memory, order context |
-| AI-06 | Voice future | ⏸️ PLANNED | — | Section 2833 |
-| AI-07 | Tool calling | ⏸️ PLANNED | — | Section 2834 |
-| AI-08 | Customer Intelligence | ⏸️ PLANNED | — | Section 66 |
-| AI-09 | Content automation | ⏸️ PLANNED | — | AI-generated content |
+| AI-05 | AI Memory | ✅ DONE | `aiMemory.ts` | CLOSED — implement จริง |
+| AI-06 | Voice future | ❌ CANCELLED | — | ไม่มีโค้ดใน repo (no mockup) |
+| AI-07 | Tool calling | ✅ DONE | `aiToolCalling.ts` | CLOSED — implement จริง (5 tools) |
+| AI-08 | Customer Intelligence | ✅ DONE | `customerIntelligence.ts` | CLOSED — implement จริง |
+| AI-09 | Content automation | ✅ DONE | `contentAutomation.ts` | CLOSED — implement จริง |
 | AI-10 | Advanced chat | ✅ DONE | `chatWithAI()` | Context-aware |
 
-**Progress:** 6/10 (60%)
+**Progress:** 9/10 — AI-06 Voice CANCELLED (no mockup)
 
 ---
 
@@ -869,16 +891,16 @@ Bite Me Baby/
 
 | Priority | Feature | Status | Notes |
 |----------|---------|--------|-------|
-| P1 | AI Memory | ⏸️ PLANNED | Customer memory, order context |
-| P1 | Voice Future | ⏸️ PLANNED | Voice assistant (Section 2833) |
-| P1 | Tool Calling | ⏸️ PLANNED | AI tool integration (Section 2834) |
-| P1 | Customer Intelligence | ⏸️ PLANNED | Section 66 — Combined customer data |
-| P1 | Content Automation | ⏸️ PLANNED | AI-generated content |
+| P1 | AI Memory | ✅ DONE | aiMemory.ts |
+| P1 | Voice Future | ❌ CANCELLED | ไม่มีโค้ด (no mockup) |
+| P1 | Tool Calling | ✅ DONE | aiToolCalling.ts |
+| P1 | Customer Intelligence | ✅ DONE | customerIntelligence.ts |
+| P1 | Content Automation | ✅ DONE | contentAutomation.ts |
 | P2 | Advanced Route Optimization | ⏸️ PLANNED | Multi-driver, multi-vehicle (Bite Drive) |
-| P2 | Advanced External Providers | ⏸️ PLANNED | More delivery partners |
-| P3 | Demand Forecasting | ⏸️ PLANNED | Predictive analytics |
-| P3 | AI Promotion Intelligence | ⏸️ PLANNED | Automated promotions |
-| P3 | Advanced Inventory Prediction | ⏸️ PLANNED | Stock forecasting |
+| P2 | Advanced External Providers | ✅ DONE | externalProviders.ts |
+| P3 | Demand Forecasting | ✅ DONE | demandForecasting.ts |
+| P3 | AI Promotion Intelligence | ✅ DONE | promotionIntelligence.ts |
+| P3 | Advanced Inventory Prediction | ✅ DONE | inventoryPrediction.ts |
 
 ---
 
@@ -889,9 +911,9 @@ Bite Me Baby/
 | Metric | Current | Target | Status |
 |--------|---------|--------|--------|
 | TypeScript Strict Mode | ON | ON | ✅ PASS |
-| Test Coverage | PASS 17/17 (offline) | 80%+ | PASS |
-| Bundle Size | 705.68KB | <500KB | ✅ PASS |
-| Lighthouse Score | N/A | 90+ | ⏸️ PLANNED |
+| Test Coverage | PASS 19/19 (offline, incl. AI Model A) | 80%+ | PASS |
+| Bundle Size | 322.43KB (gzip 91.28KB) | <500KB | ✅ PASS |
+| Lighthouse Score | 29 Perf / 82 A11y / 100 BP / 100 SEO (2026-09-17) | 90+ | ⚠️ OPEN — attached `lighthouse/` |
 
 ### Documentation Quality
 
@@ -904,6 +926,17 @@ Bite Me Baby/
 ---
 
 ## 📝 Change Log
+
+### 2026-09-17 (v3.2 - Closure Round: Model A GLM 5.2 free + Fallback / API test 19/19 / Lighthouse attached)
+
+**Completed:**
+- Model A = GLM 5.2 (free) z-ai/glm-5.2:free + fallback Qwen 3.7 Flash qwen/qwen3.7-flash — NEW src/lib/aiModels.ts, fallback chain ใน aiService.ts / aiToolCalling.ts
+- API test ตั้งค่าใหม่: vi.mock('@/lib/supabase') กลับมา active → **19/19 PASS** offline (+2 tests AI Model A Configuration)
+- Lighthouse run จริง (local preview, Chrome headless): Perf 29 / A11y 82 / BP 100 / SEO 100 → lighthouse/report.report.json + .html — ปิด SEO-04
+- Reality Map items ทั้งหมด CLOSED (verified code จริง) — Voice + Intent module CANCELLED (no mockup)
+- Build: tsc 0 errors + vite 1.35s (322.43 KB JS / gzip 91.28 KB); Live DB rebuild ยัง DEFERRED (owner)
+
+---
 
 ### 2026-09-16 (v3.1 - Tests Green Offline + Migration 004 UUID-to-TEXT Fix)
 

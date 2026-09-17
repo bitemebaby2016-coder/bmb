@@ -39,23 +39,36 @@
 
 ## 📋 สถานะจริงของโปรเจค (2026-09-16)
 
-### Build Status (ยืนยันจากการรันคำสั่งจริง)
+### Build Status (ยืนยันจากการรันคำสั่งจริง 2026-09-17)
 
 | รายการ | ผลลัพธ์จริง | สถานะ |
 |--------|------------|-------|
 | TypeScript (tsc --noEmit) | ✅ PASS (0 errors) | ผ่าน |
-| Vite Build | ✅ PASS (822ms) | ผ่าน |
-| Bundle Size | 705.68 KB JS + 51.94 KB CSS | ⚠️ เตือน (>500KB) |
-| Service Worker | ✅ Generated | ผ่าน |
+| Vite Build | ✅ PASS (1.35s, v8.2.2) | ผ่าน |
+| Bundle Size | 322.43 KB JS (gzip 91.28 KB) + 52.00 KB CSS | ✅ ผ่าน (<500KB) |
+| Service Worker | ✅ Generated (precache 33 entries) | ผ่าน |
 | PWA Manifest | ✅ Generated | ผ่าน |
 
-### Test Status (ยืนยันจากการรัน `npm test` จริง)
+### Test Status (ยืนยันจากการรัน `npm test` จริง 2026-09-17)
 
 | รายการ | จำนวน | ผลลัพธ์จริง |
 |--------|-------|------------|
 | Test Files | 1 | 1 ไฟล์ |
-| Tests ทั้งหมด | 17 | 17 ผ่าน, 0 ไม่ผ่าน |
-| Pass Rate | - | **100% (17/17)** — offline ใน-memory Supabase mock (`src/__tests__/helpers/supabaseMock.ts`) |
+| Tests ทั้งหมด | 19 | 19 ผ่าน, 0 ไม่ผ่าน |
+| Pass Rate | - | **100% (19/19)** — offline ใน-memory Supabase mock (`src/__tests__/helpers/supabaseMock.ts`); รวมชุดใหม่ `AI Model A Configuration` (Model A = GLM 5.2 free + fallback) |
+
+### Model A Configuration (owner directive 2026-09-17)
+
+| | Model | OpenRouter ID |
+|-|-------|---------------|
+| Primary (Model A) | GLM 5.2 (free) | `z-ai/glm-5.2:free` |
+| Fallback | Qwen 3.7 Flash | `qwen/qwen3.7-flash` |
+
+Config แหล่งเดียว: `src/lib/aiModels.ts` — `chatWithAI()` / `chatWithToolSupport()` ลอง Model A ก่อน แล้ว fallback 1 ครั้งเมื่อ fail (มี test ยืนยัน path นี้)
+
+### Lighthouse (2026-09-17 — ผลจริง attached ใน `lighthouse/`)
+
+Performance **29** / Accessibility **82** / Best-Practices **100** / SEO **100** — ใช้ปิด SEO-04; Performance ยังต่ำเป้า 90+ → บันทึก backlog จริง (ไม่ fake)
 
 
 ---
@@ -130,8 +143,12 @@ authStore.ts, cartStore.ts, inventoryStore.ts, notificationStore.ts, rewardsStor
 
 ---
 
-## ⚠️ สิ่งที่ยัง "ไม่ผ่าน" (Not Verified / Failing)
+## ⚠️ สิ่งที่ยัง "ไม่ผ่าน" / เปิดอยู่ (2026-09-17 — เขียนตามจริง)
 
+- **Lighthouse Performance = 29** (เป้า 90+) — OPEN backlog: ลดน้ำหนัก main bundle (supabase-js), CLS, contrast → ห้ามนับว่าเสร็จ
+- **Live Supabase DB** — DEFERRED: owner จะ reset/rebuild จาก 001→004 เอง (test ใช้ in-memory mock)
+- **`externalProviders.ts` dynamic import ไม่มีประสิทธิภาพ** — จาก build warning จริง
+- **AI-06 Voice** — CANCELLED (ไม่มีโค้ดใน repo)
 
 ---
 
@@ -159,6 +176,7 @@ FILES CHANGED: <รายชื่อไฟล์ที่แก้>
 
 | Date | Version | Changes |
 |------|---------|---------|
+| 2026-09-17 | 1.2 | Model A = GLM 5.2 free + fallback Qwen 3.7 Flash; API test 19/19 PASS; Lighthouse attached (Perf 29/A11y 82/BP 100/SEO 100); Reality Map items ปิดครบ (no mockup) |
 | 2026-09-16 | 1.1 | Tests 17/17 PASS offline (in-memory Supabase mock); migration 004 UUID-to-TEXT fix ready; live DB rebuild deferred |
 | 2026-09-16 | 1.0 | เอกสารฉบับแรก — สรุปสถานะจริงตามการตรวจโค้ดและทดสอบ |
 
@@ -169,21 +187,19 @@ FILES CHANGED: <รายชื่อไฟล์ที่แก้>
 > "DO NOT MAKE THE PROJECT LOOK COMPLETE.  
 > MAKE THE PROJECT ACTUALLY COMPLETE — OR CLEARLY REPORT WHY IT IS NOT."
 
-### ✅ Test Coverage — 17/17 PASS (100% pass rate)
+### ✅ Test Coverage — 19/19 PASS (100% pass rate)
 
-**สถานะ:** PASS — ทุก test ผ่านแบบ offline ผ่าน in-memory Supabase mock (`src/__tests__/helpers/supabaseMock.ts`) ซึ่ง seed ข้อมูลตาม migration 004 ทุก API test รันบน mock นี้โดยไม่ต้องใช้ DB จริง และรัน `npm test` จริงแล้ว 17/17 ✅ (ดูผลการรันใน Summary ด้านล่าง)
+**สถานะ:** PASS — ทุก test ผ่านแบบ offline ผ่าน in-memory Supabase mock (`src/__tests__/helpers/supabaseMock.ts`) ซึ่ง seed ข้อมูลตาม migration 004 ทุก API test รันบน mock นี้โดยไม่ต้องใช้ DB จริง และรัน `npm test` จริงแล้ว 19/19 ✅ (รวมชุดใหม่ `AI Model A Configuration` — GLM 5.2 free + fallback; ดูผลการรันใน Summary ด้านล่าง)
 
 **Live Supabase DB — Deferred:** owner จะ reset/delete แล้ว rebuild DB ใหม่จาก 001→002→003→004 ภายหลัง เพื่อให้ schema ตรงกับ canonical (TEXT PK) ครบถ้วนก่อนเปิดใช้งานจริง
 
-### ⚠️ Bundle Size Warning
-- JS bundle: 705.68 KB (gzip 190.40 KB)
-- Warning: มากกว่า 500KB threshold
-- **คำแนะนำ:** ใช้ lazy loading สำหรับ admin routes และ info pages
+### ✅ Bundle Size (2026-09-17 — ปรับปรุงแล้ว)
+- JS bundle: **322.43 KB** (gzip 91.28 KB) + CSS 52.00 KB — ผ่าน <500KB threshold
+- Code splitting ใช้งานจริง: lazy-load admin routes + info pages (ดู `App.tsx` — `lazy()` + `Suspense`)
 
-### ⚠️ Ineffective Dynamic Imports
-- `bmbAdminApi_products.ts` ถูก import ทั้งแบบ static และ dynamic
-- `auditLog.ts` และ `externalProviders.ts` มีปัญหาคล้ายกัน
-- **ผลกระทบ:** Code splitting ไม่ทำงานเต็มประสิทธิภาพ
+### ⚠️ Ineffective Dynamic Import (จาก build log 2026-09-17)
+- `externalProviders.ts` ถูก import ทั้งแบบ static และ dynamic ที่ `CheckoutPage.tsx` / `DeliveryManagement.tsx` → dynamic import ไม่ได้ย้าย module ออกจาก chunk เดิม
+- **ผลกระทบ:** code splitting ของไฟล์นี้ไม่เต็มประสิทธิภาพ — backlog ยังเปิดอยู่ (จริง / ไม่ปิดบัง)
 #### Test Fail Detail (HISTORICAL - RESOLVED)
 
 The table below is the old record from before the offline mock existed. Current state: `npm test` runs 17/17 PASS fully offline.

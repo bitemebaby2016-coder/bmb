@@ -1450,6 +1450,15 @@ OpenRouter Adapter
 Model
 ```
 
+Model A Policy (owner directive 2026-09-17 — config แหล่งเดียว `src/lib/aiModels.ts`):
+
+```text
+Model A (primary)  → z-ai/glm-5.2:free   (GLM 5.2 free — $0)
+Model A (fallback) → qwen/qwen3.7-flash  (Qwen 3.7 Flash — ใช้เมื่อ primary fail)
+```
+
+Fallback ทำงานใน `chatWithAI()` / `chatWithToolSupport()` — fail แล้ว retry 1 ครั้งด้วย fallback; มี test ยืนยัน
+
 Future:
 
 ```text
@@ -1476,7 +1485,7 @@ API Keys ต้องอยู่ใน Server / Secure Environment
 ```text
 AI Failure
 ↓
-Retry
+Retry (1 ครั้ง ด้วย Model A fallback = qwen/qwen3.7-flash)
 ↓
 Fallback Model / Provider
 ↓

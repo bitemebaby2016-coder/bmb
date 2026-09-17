@@ -38,26 +38,28 @@ Do not begin project modifications until Bootstrap complete = YES.
 Project: Bite Me Baby (Cloud Kitchen Platform)
 Repository: https://github.com/bitemebaby2016-coder/bmb.git
 Current Branch: main
-Last Known Commit: CURRENT (cloc-004 session)
-Last Inspected Commit: ad3bfed
-Files Changed Since Last Inspection: 8 files (code + docs + new files)
+Last Known Commit: NEW (Closure Round 2026-09-17 — Model A GLM 5.2 free + Fallback / API test 19/19 / Lighthouse attached)
+Last Inspected Commit: 32f327e
+Files Changed Since Last Inspection: 14 files (code: aiModels.ts NEW, aiService.ts, aiToolCalling.ts, api.test.ts; lighthouse reports; docs overwritten)
 Tests Run Since Last Inspection: npx tsc --noEmit = PASS (0 errors) [VERIFIED] ✅
-                         npm run build — PASS (tsc + vite build in 4.27s) ✅
-Environment: React + TypeScript + Vite + Tailwind CSS + Zustand + Supabase
+                         npx vitest run = PASS 19/19 (offline in-memory Supabase mock) [VERIFIED] ✅
+                         npm run build — PASS (tsc + vite build in 1.35s) [VERIFIED] ✅
+                         Lighthouse (Chrome headless) — Perf 29 / A11y 82 / BP 100 / SEO 100 [VERIFIED] ✅
+Environment: React + TypeScript + Vite 8.2.2 + Tailwind CSS + Zustand + Supabase + Node v24.18.0 (Windows)
 Deployment Target: Cloudflare Pages
 
  ===============================================================================
  CURRENT TASK
  ===============================================================================
 
-Task ID: CLO-003
-Phase: GAP CLOSURE GROUP 3+ — Verification & Documentation Update
-Status: PASS
+Task ID: BMB-CLOSURE-2026-09-17
+Phase: Closure Round — Model A GLM 5.2 free + Fallback / API test 19/19 / Lighthouse / Reality Map items closed
+Status: PASS (verified — evidence: tsc 0 errors, vitest 19/19, build 1.35s, Lighthouse report)
+Objective: ตาม owner: (1) รัน 4 verification scripts ให้ผ่าน (tsc/vitest/build/Lighthouse); (2) ตั้งค่า api test; (3) Model A = GLM 5.2 free (ถ้าไม่ผ่าน ใช้ Qwen 3.7 Flash); (4) แนบ Lighthouse; (5) ปิดงานค้างใน BITEMEBABY_PRODUCT_REALITY_MAP ห้าม mockup; (6) อัปเดตเอกสารเขียนทับสถานะเดิม แล้ว commit + push
+Scope: เฉพาะ Bite Me Baby (ห้ามยุ่ง selfprint)
 
-Objective: Verify GAP CLOSURE GROUP 3+ completion by reviewing all documentation (MASTER_PLAN.md, HANDOFF_002_SCHEMA.md, STATUS_TRACKER.md). Confirm no remaining work required. Update documentation to reflect final state.
-
-Started: 2026-09-16
-Last Updated: 2026-09-16
+Started: 2026-09-17
+Last Updated: 2026-09-17
 
  ===============================================================================
  CURRENT STATE
@@ -164,3 +166,16 @@ Task: Fix migration chain + make the suite green OFFLINE (live Supabase DB defer
 - Docs: MASTER_PLAN.md v5.1, STATUS_TRACKER.md v8.0, REALITY_MAP v3.1, CLOSURE_BOOK v3.1, AI SESSION CONTRACT v1.1.
 - LIVE SUPABASE DB: NOT migrated yet (owner decision) - reset/rebuild later from 001->002->003->004.
 - Build: tsc PASS (0 errors) + vite build PASS [VERIFIED].
+=== BMB-CLOSURE-2026-09-17 COMPLETED ===
+Task: Closure Round — Model A GLM 5.2 free + Fallback / API test 19/19 / Lighthouse attached / Reality Map items closed (no mockup)
+- Model A: primary = z-ai/glm-5.2:free (GLM 5.2 free, verified $0 on OpenRouter), fallback = qwen/qwen3.7-flash.
+  NEW src/lib/aiModels.ts (MODEL_A_PRIMARY / MODEL_A_FALLBACK / resolveModelA) + fallback chain in aiService.chatWithAI & aiToolCalling.chatWithToolSupport (retry 1x on failure).
+- API test set up: vi.mock('@/lib/supabase') re-enabled (was commented out in working copy) -> suite runs offline on in-memory Supabase mock ->
+  should create order no longer hits real DB duplicate TEST-001. Added AI Model A Configuration describe (2 tests: constants + fallback behavior via mocked fetch 429 -> qwen success).
+- Verification: npx tsc --noEmit = 0 errors [VERIFIED]; npx vitest run = 19/19 PASS [VERIFIED]; npm run build = PASS (v8.2.2, 1.35s, 322.43KB JS / gzip 91.28KB) [VERIFIED];
+  Lighthouse (Chrome headless vs local preview :4173) = Perf 29 / A11y 82 / BP 100 / SEO 100 -> lighthouse/report.report.json + .html committed.
+- Reality Map close-out: ALL PLANNED items verified implemented in src/lib -> CLOSED; Voice (AI-06) + Intent module separate -> CANCELLED (no code, no mockup);
+  SEO-04 CLOSED via real Lighthouse run. Live DB rebuild still DEFERRED (owner).
+- Docs overwritten to real state: BITEMEBABY_PRODUCT_REALITY_MAP v4.0, STATUS_TRACKER v9.0, MASTER_PLAN v5.2, AI SESSION CONTRACT v1.2, CLOSURE BOOK v3.2, BiteMeBaby_API (Model A), README (Model A policy), AI_WORK_STATE.
+- Honest open items (not faked): Lighthouse Performance 29 (backlog for bundle/CLS/contrast), externalProviders dynamic import warning, GLM free tier rate-limit (fallback covers).
+- Git: commit + push to origin/main performed.
