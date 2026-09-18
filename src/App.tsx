@@ -1,7 +1,7 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { HelmetProvider } from 'react-helmet-async'
-import { lazy, Suspense } from 'react'
-import { useAuthStore } from './store/authStore'
+import { lazy, Suspense, useEffect, useState } from 'react'
+import { useAuthStore, fetchProfileRole } from './store/authStore'
 import { Layout } from './components/layout/Layout'
 import { ErrorBoundary } from './components/ErrorBoundary'
 import { FloatingAiButton } from './components/ai/FloatingAiButton'
@@ -64,18 +64,28 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   return <>{children}</>
 }
 
+
+// P0-3 FIX: AdminRoute ตรวจ role จาก DB (profiles) ผ่าน RLS
 function AdminRoute({ children }: { children: React.ReactNode }) {
-  const customer = useAuthStore((s) => s.customer)
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
-  
-  if (!isAuthenticated || !customer) return <Navigate to="/login" replace />
-  
-  // Check if user has admin role from stored data (from profiles table or users API)
-  const isAdminUser = localStorage.getItem('bmb_admin_role') === 'true' 
-    || customer.email === 'admin@bmb.co.th' // fallback for local mode
-  
-  if (!isAdminUser) return <Navigate to="/" replace />
-  
+  const [role, setRole] = useState<string | null>(null)
+  const [checking, setChecking] = useState(true)
+
+  useEffect(() => {
+    let cancelled = false
+    if (!isAuthenticated) { setChecking(false); return }
+    fetchProfileRole().then((r) => {
+      if (cancelled) return
+      setRole(r)
+      setChecking(false)
+    })
+    return () => { cancelled = true }
+  }, [isAuthenticated])
+
+  if (!isAuthenticated) return <Navigate to="/login" replace />
+  if (checking) return <LoadingSpinner />
+  if (role !== 'admin') return <Navigate to="/" replace />
+
   return <>{children}</>
 }
 

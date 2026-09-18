@@ -1,15 +1,12 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { authenticateUser } from '@/lib/bmbAdminApi_users'
-import { useAuthStore } from '@/store/authStore'
+import { useAuthStore, fetchProfileRole } from '@/store/authStore'
 import { showToast } from '@/components/ui/ToastContainer'
 import { writeAuditLog } from '@/lib/auditLog'
 
 export function LoginPage() {
   const navigate = useNavigate()
-  const setCustomer = useAuthStore((s) => s.setCustomer)
-  const setIsAuthenticated = useAuthStore((s) => s.setIsAuthenticated)
-  
+  const login = useAuthStore((s) => s.login)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [isLoading, setIsLoading] = useState(false)
@@ -19,53 +16,30 @@ export function LoginPage() {
     e.preventDefault()
     setIsLoading(true)
     setError('')
-    
+
     try {
-      const user = await authenticateUser(email, password)
-      if (!user) {
+      // P0-2: login ผ่าน Supabase Auth (ไม่ใช่ localStorage users)
+      const ok = await login(email, password)
+      if (!ok) {
         setError('อีเมลหรือรหัสผ่านไม่ถูกต้อง')
         setIsLoading(false)
         return
       }
-      
-      if (!user.is_active) {
-        setError('บัญชีนี้ถูกปิดใช้งาน')
-        setIsLoading(false)
-        return
-      }
-      
-      // Set auth state & admin role flag for routing
-      localStorage.setItem('bmb_admin_role', user.role === 'admin' ? 'true' : 'false')
-      
-      // Audit log: successful login
+
+      // Admin role อ่านจาก DB (profiles) ไม่ใช่ localStorage flag
+      const role = await fetchProfileRole()
+
       writeAuditLog({
         action: 'user_login',
         entity_type: 'user',
-        entity_id: user.id,
-        description: `${user.name} (${user.email}) เข้าสู่ระบบสำเร็จ`
+        entity_id: email,
+        description: `${email} เข้าสู่ระบบสำเร็จ`
       })
-      
-      setCustomer({
-        id: user.id,
-        email: user.email,
-        phone: user.phone,
-        name: user.name,
-        line_id: '',
-        default_latitude: 0,
-        default_longitude: 0,
-        default_address_detail: '',
-        loyalty_points: 0,
-        total_orders: 0,
-        total_spent: 0,
-        created_at: user.created_at,
-        updated_at: user.created_at
-      })
-      setIsAuthenticated(true)
-      
+
       showToast('เข้าสู่ระบบสำเร็จ!', 'success')
-      
-      // Redirect based on role
-      if (user.role === 'admin') {
+
+      // Redirect based on DB role
+      if (role === 'admin') {
         navigate('/admin')
       } else {
         navigate('/')
@@ -139,12 +113,6 @@ export function LoginPage() {
                 สมัครสมาชิก
               </Link>
             </p>
-          </div>
-          
-          <div className="mt-4 p-4 bg-brand-bg rounded-lg">
-            <p className="text-sm text-brand-accent font-medium mb-2">🔑 Demo Admin:</p>
-            <p className="text-sm text-brand-muted">อีเมล: admin@bmb.co.th</p>
-            <p className="text-sm text-brand-muted">รหัสผ่าน: admin123</p>
           </div>
         </div>
         

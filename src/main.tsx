@@ -19,13 +19,11 @@ function afterFirstPaint(cb: () => void): void {
 }
 
 afterFirstPaint(() => {
-  // ⚡ PERF (2026-09-17): dynamic import keeps the supabase chunk OFF the initial
-  // landing critical path (admin seeding no longer needs it at boot).
-  Promise.all([
-    import('./lib/bmbAdminApi_users').then(({ initializeAdmin }) => initializeAdmin()),
-    Promise.resolve().then(() => useAuthStore.getState().checkAuth()),
-  ]).then(() => {
-    console.log('[BMB] App initialized — bcrypt password hashing active, admin ready')
+  // P0-2 FIX (2026-09-18): ไม่มี admin seeding/localStorage user อีกต่อไป
+  // Authentication อยู่ที่ Supabase Auth; profile/role ถูกสร้างโดย trigger
+  // `on_auth_user_created` (migration 006) — client แค่ตรวจ session
+  useAuthStore.getState().checkAuth().then(() => {
+    console.log('[BMB] App initialized — Supabase Auth session checked')
   }).catch(err => {
     console.error('[BMB] Init error:', err)
   })

@@ -1,6 +1,14 @@
 import { create } from "zustand"
 import type { Customer } from "@/types"
-import { authenticateUser, authenticateUserByPhone } from '@/lib/bmbAdminApi_users'
+import { supabase } from "@/lib/supabase"
+
+// P0-2 FIX (2026-09-18): Authentication ถูกย้ายไป Supabase Auth แล้ว
+// ---------------------------------------------------------------
+// ก่อนหน้า: อ่าน/เขียน localStorage bmb_users/bmb_auth + bcrypt ใน browser
+//   → user DB อยู่ใน client → ปลอม/ถูกขโมยได้
+// หลังจาก: Supabase Auth เป็นเจ้าของ identity (JWT session, backend
+//          hashing, refresh, logout) — client มีแค่ anon key + session
+// ---------------------------------------------------------------
 
 interface AuthStore {
   customer: Customer | null
@@ -15,11 +23,50 @@ interface AuthStore {
   setReferralCode: (code: string) => void
   addPoints: (points: number) => void
   redeemPoints: (points: number) => boolean
-  
+
   login: (email: string, password: string) => Promise<boolean>
   loginByPhone: (phone: string, password: string) => Promise<boolean>
-  logout: () => void
-  checkAuth: () => void
+  logout: () => Promise<void>
+  checkAuth: () => Promise<void>
+}
+
+// Map Supabase Auth user → Customer (สำหรับ UI state; identity อยู่ที่
+// `supabase.auth` ไม่ใช่ localStorage)
+function mapUserToCustomer(user: {
+  id: string
+  email?: string | null
+  user_metadata?: Record<string, any>
+  phone?: string | null
+  created_at?: string
+}): Customer {
+  return {
+    id: user.id,
+    email: user.email || '',
+    phone: user.phone || user.user_metadata?.phone || '',
+    name: user.user_metadata?.full_name || user.user_metadata?.name || user.email || '',
+    line_id: '',
+    default_latitude: 0,
+    default_longitude: 0,
+    default_address_detail: '',
+    loyalty_points: 0,
+    total_orders: 0,
+    total_spent: 0,
+    created_at: user.created_at || new Date().toISOString(),
+    updated_at: user.created_at || new Date().toISOString()
+  }
+}
+
+// Get current profile role (RLS จะคัดเฉพาะของตัวเอง/ที่อนุญาต)
+export async function fetchProfileRole(): Promise<string | null> {
+  const { data: { session } } = await supabase.auth.getSession()
+  const uid = session?.user?.id
+  if (!uid) return null
+  const { data } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', uid)
+    .maybeSingle()
+  return (data?.role as string | null) ?? null
 }
 
 export const useAuthStore = create<AuthStore>((set, get) => ({
@@ -34,7 +81,7 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
   setLoyaltyPoints: (points) => set({ loyaltyPoints: points }),
   setReferralCode: (code) => set({ referralCode: code }),
   addPoints: (points) => set((state) => ({ loyaltyPoints: state.loyaltyPoints + points })),
-  
+
   redeemPoints: (points) => {
     const state = get()
     if (state.loyaltyPoints < points) return false
@@ -43,80 +90,77 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
   },
 
   login: async (email: string, password: string) => {
-    const user = await authenticateUser(email, password)
+    const { error } = await supabase.auth.signInWithPassword({ email, password })
+    if (error) return false
+    const { data: { user } } = await supabase.auth.getUser()
     if (!user) return false
-    
-    const customer: Customer = {
-      id: user.id,
-      email: user.email,
-      phone: user.phone,
-      name: user.name,
-      line_id: '',
-      default_latitude: 0,
-      default_longitude: 0,
-      default_address_detail: '',
-      loyalty_points: 0,
-      total_orders: 0,
-      total_spent: 0,
-      created_at: user.created_at,
-      updated_at: user.created_at
-    }
-    
-    set({ customer, isAuthenticated: true, isLoading: false })
+    set({
+      customer: mapUserToCustomer(user),
+      isAuthenticated: true,
+      isLoading: false
+    })
     return true
   },
 
   loginByPhone: async (phone: string, password: string) => {
-    const user = await authenticateUserByPhone(phone, password)
+    // Supabase Auth ใช้ email/OTP ตาม default — สำหรับตอนนี้ phone login
+    // ใช้ email field ถ้า email == phone pattern ให้ผ่าน (Enterprise config ภายหลัง)
+    const { error } = await supabase.auth.signInWithPassword({
+      email: phone.includes('@') ? phone : `${phone}@phone.bmb.local`,
+      password
+    })
+    if (error) return false
+    const { data: { user } } = await supabase.auth.getUser()
     if (!user) return false
-    
-    const customer: Customer = {
-      id: user.id,
-      email: user.email,
-      phone: user.phone,
-      name: user.name,
-      line_id: '',
-      default_latitude: 0,
-      default_longitude: 0,
-      default_address_detail: '',
-      loyalty_points: 0,
-      total_orders: 0,
-      total_spent: 0,
-      created_at: user.created_at,
-      updated_at: user.created_at
-    }
-    
-    set({ customer, isAuthenticated: true, isLoading: false })
+    set({
+      customer: mapUserToCustomer(user),
+      isAuthenticated: true,
+      isLoading: false
+    })
     return true
   },
 
-  logout: () => {
+  logout: async () => {
+    await supabase.auth.signOut()
     set({ customer: null, isAuthenticated: false, loyaltyPoints: 0, referralCode: '' })
   },
 
-  checkAuth: () => {
-    const stored = localStorage.getItem('bmb_auth')
-    if (stored) {
-      try {
-        const data = JSON.parse(stored)
-        set({ customer: data.customer, isAuthenticated: data.isAuthenticated, isLoading: false })
-      } catch {
-        set({ isLoading: false })
+  checkAuth: async () => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (session?.user) {
+        set({
+          customer: mapUserToCustomer(session.user),
+          isAuthenticated: true,
+          isLoading: false
+        })
+      } else {
+        set({ customer: null, isAuthenticated: false, isLoading: false })
       }
-    } else {
-      set({ isLoading: false })
+    } catch {
+      set({ customer: null, isAuthenticated: false, isLoading: false })
     }
   }
 }))
 
-// Save auth state to localStorage
-useAuthStore.subscribe((state) => {
-  if (state.isAuthenticated && state.customer) {
-    localStorage.setItem('bmb_auth', JSON.stringify({
-      customer: state.customer,
-      isAuthenticated: state.isAuthenticated
-    }))
-  } else {
-    localStorage.removeItem('bmb_auth')
-  }
-})
+// สมัครสมาชิกผ่าน Supabase Auth (แทน createUser ที่เขียน localStorage)
+export async function signUpWithEmail(data: {
+  name: string
+  email: string
+  phone: string
+  password: string
+}): Promise<{ ok: boolean; error?: string }> {
+  // Email domain การันตี uniqueness; signUp ต้องการ email เดียวกัน
+  const { error } = await supabase.auth.signUp({
+    email: data.email,
+    password: data.password,
+    options: {
+      data: {
+        full_name: data.name,
+        phone: data.phone
+      }
+    }
+  })
+  if (error) return { ok: false, error: error.message }
+  return { ok: true }
+}

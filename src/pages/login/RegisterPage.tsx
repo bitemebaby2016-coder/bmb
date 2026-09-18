@@ -1,15 +1,12 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { createUser } from '@/lib/bmbAdminApi_users'
-import { useAuthStore } from '@/store/authStore'
+import { signUpWithEmail } from '@/store/authStore'
 import { showToast } from '@/components/ui/ToastContainer'
 import { writeAuditLog } from '@/lib/auditLog'
 
 export function RegisterPage() {
   const navigate = useNavigate()
-  const setCustomer = useAuthStore((s) => s.setCustomer)
-  const setIsAuthenticated = useAuthStore((s) => s.setIsAuthenticated)
-  
+
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -24,61 +21,46 @@ export function RegisterPage() {
     e.preventDefault()
     setIsLoading(true)
     setError('')
-    
+
     if (formData.password !== formData.confirmPassword) {
       setError('รหัสผ่านไม่ตรงกัน')
       setIsLoading(false)
       return
     }
-    
+
     if (formData.password.length < 6) {
       setError('รหัสผ่านต้อง至少有 6 ตัวอักษร')
       setIsLoading(false)
       return
     }
-    
+
     try {
-      const user = await createUser({
+      // P0-2: สมัครผ่าน Supabase Auth (trigger on_auth_user_created จะ
+      // สร้าง profile ด้วย role=customer ให้อัตโนมัติ) — ไม่มี localStorage users
+      const result = await signUpWithEmail({
+        name: formData.name,
         email: formData.email,
         phone: formData.phone,
-        name: formData.name,
         password: formData.password
       })
-      
-      if (!user) {
-        setError('อีเมลหรือเบอร์โทรนี้ถูกใช้แล้ว')
+
+      if (!result.ok) {
+        setError(result.error || 'อีเมลนี้ถูกใช้แล้ว')
         setIsLoading(false)
         return
       }
-      
-      setCustomer({
-        id: user.id,
-        email: user.email,
-        phone: user.phone,
-        name: user.name,
-        line_id: '',
-        default_latitude: 0,
-        default_longitude: 0,
-        default_address_detail: '',
-        loyalty_points: 0,
-        total_orders: 0,
-        total_spent: 0,
-        created_at: user.created_at,
-        updated_at: user.created_at
-      })
-      setIsAuthenticated(true)
-      
-      showToast('สมัครสมาชิกสำเร็จ! ยินดีต้อนรับ', 'success')
-      
+
+      showToast('สมัครสมาชิกสำเร็จ! กรุณายืนยันอีเมล (ถ้าจำเป็น)', 'success')
+
       // Audit log: user registered
       writeAuditLog({
         action: 'user_register',
         entity_type: 'user',
-        entity_id: user.id,
+        entity_id: formData.email,
         description: `ผู้ใช้ใหม่ ${formData.name} (${formData.email}) ลงทะเบียนสำเร็จ`
       })
-      
-      navigate('/')
+
+      navigate('/login')
     } catch (err) {
       console.error('Register error:', err)
       setError('เกิดข้อผิดพลาด กรุณาลองใหม่')
