@@ -3,7 +3,6 @@
 // ============================================
 
 import { supabase } from './supabase'
-import { storageGet } from './bmbStorage'
 
 // P0-4 SPLIT (2026-09-18):
 //   OrderInput  — client payload (INPUT ONLY, no financial authority)
@@ -103,9 +102,7 @@ export async function getOrder(orderNumber: string): Promise<OrderForm | null> {
   const { data, error } = await supabase.from('orders').select('*').eq('order_number', orderNumber).single()
   if (error) {
     console.error('[getOrder] Error:', error)
-    // Offline/PWA fallback — mirror order log so Tracking/Payment pages still work
-    const local = storageGet<OrderForm[]>('orders', [])
-    return local.find((o) => o.order_number === orderNumber) || null
+    return null
   }
   return data as OrderForm
 }
@@ -135,17 +132,25 @@ export async function createOrder(input: OrderInput): Promise<OrderResult | null
   if (error) { console.error('[createOrder] RPC error:', error); return null }
   return data as OrderResult
 }
-
+// P0-6 (2026-09-18): order status changes go through the state machine RPC
+// `transition_order_status` (allow-list validated server-side + trigger guard).
+// Direct `orders.update({status})` from the client is no longer possible:
+// RLS denies non-admin updates and the guard trigger rejects illegal jumps.
 export async function updateOrderStatus(orderNumber: string, status: string): Promise<OrderForm | null> {
   const oldOrder = await getOrder(orderNumber)
-  
-  const { data, error } = await supabase.from('orders').update({ 
-    status,
-    updated_at: new Date().toISOString()
-  }).eq('order_number', orderNumber).select().single()
-  
-  if (error) { console.error('[updateOrderStatus] Error:', error); return null }
-  
+
+  const { data, error } = await supabase.rpc('transition_order_status', {
+    p_order_number: orderNumber,
+    p_new_status: status,
+  })
+
+  if (error) {
+    console.error('[updateOrderStatus] transition error:', error)
+    return null
+  }
+
+  void data
+
   // Audit log for order status change
   if (oldOrder && status !== oldOrder.status) {
     const { writeAuditLog } = await import('@/lib/auditLog')
@@ -153,18 +158,33 @@ export async function updateOrderStatus(orderNumber: string, status: string): Pr
       action: 'order_status_change' as any,
       entity_type: 'order',
       entity_id: orderNumber,
-      description: `สถานะออเดอร์ #${orderNumber} เปลี่ยนจาก "${oldOrder.status}" → "${status}"`,
+      description: `[BMB] order #${orderNumber} status changed "${oldOrder.status}" -> "${status}"`,
       metadata: { fromStatus: oldOrder.status, toStatus: status }
     })
   }
-  
-  return data as OrderForm
+
+  return await getOrder(orderNumber)
 }
 
-export async function updateOrderPayment(orderNumber: string, paymentStatus: string): Promise<OrderForm | null> {
-  const { data, error } = await supabase.from('orders').update({ payment_status: paymentStatus }).eq('order_number', orderNumber).select().single()
-  if (error) { console.error('[updateOrderPayment] Error:', error); return null }
-  return data as OrderForm
+// P0-5 (2026-09-18): payment confirmations are server-authoritative.
+// `confirmOfflinePayment` marks an order paid ONLY when the business rules are
+// met (COD -> order delivered; PromptPay -> TXN submitted). No direct write.
+export async function confirmOfflinePayment(orderNumber: string): Promise<{ success: boolean; error?: string }> {
+  const r = await supabase.rpc('confirm_offline_payment', { p_order_number: orderNumber })
+  if (r.error) {
+    console.error('[confirmOfflinePayment] RPC error:', r.error)
+    return { success: false, error: r.error.message }
+  }
+  return { success: true }
+}
+
+export async function markPaymentFailed(orderNumber: string, reason: string = ''): Promise<{ success: boolean; error?: string }> {
+  const r = await supabase.rpc('mark_payment_failed', { p_order_number: orderNumber, p_reason: reason })
+  if (r.error) {
+    console.error('[markPaymentFailed] RPC error:', r.error)
+    return { success: false, error: r.error.message }
+  }
+  return { success: true }
 }
 
 export async function getDashboardStats(): Promise<{

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { Link } from 'react-router-dom'
 import { getOrder } from '@/lib/bmbAdminApi_orders'
-import { confirmPromptPay, confirmCOD, getPaymentIntents } from '@/lib/paymentGateway'
+import { submitOfflinePaymentReference, getPaymentIntents } from '@/lib/paymentGateway'
 import { writeAuditLog } from '@/lib/auditLog'
 import { showToast } from '@/components/ui/ToastContainer'
 import { MascotBadge } from '@/components/MascotBadge'
@@ -27,25 +27,15 @@ export function PaymentConfirmationPage() {
     load()
   }, [orderNumber])
 
-  async function handlePromptPayConfirm() {
+  async function handlePromptPaySubmit() {
     if (!orderNumber) return
     setIsConfirming(true)
-    const result = await confirmPromptPay(orderNumber, transactionId)
+    // P0-5: customer only SUBMITS the TXN reference (pending -> processing).
+    // The kitchen verifies and confirms the payment — the client cannot mark paid.
+    const result = await submitOfflinePaymentReference(orderNumber, transactionId)
     if (result.success) {
-      writeAuditLog({ action: 'payment_processed', entity_type: 'order', entity_id: orderNumber, description: 'PromptPay confirmed #' + orderNumber, metadata: { transactionId } })
-      showToast('Payment confirmed!', 'success')
-      setTimeout(() => navigate('/track/' + orderNumber), 1500)
-    } else { showToast(result.error || 'Failed', 'error') }
-    setIsConfirming(false)
-  }
-
-  async function handleCODConfirm() {
-    if (!orderNumber) return
-    setIsConfirming(true)
-    const result = await confirmCOD(orderNumber, 'admin')
-    if (result.success) {
-      writeAuditLog({ action: 'payment_processed', entity_type: 'order', entity_id: orderNumber, description: 'COD confirmed #' + orderNumber })
-      showToast('COD confirmed!', 'success')
+      writeAuditLog({ action: 'payment_processed', entity_type: 'order', entity_id: orderNumber, description: 'PromptPay TXN submitted #' + orderNumber, metadata: { transactionId } })
+      showToast('ข้อมูลการชำระเงินถูกส่ง — รоยืนยานจาก kitchen', 'success')
       setTimeout(() => navigate('/track/' + orderNumber), 1500)
     } else { showToast(result.error || 'Failed', 'error') }
     setIsConfirming(false)
@@ -93,18 +83,16 @@ export function PaymentConfirmationPage() {
             <label className="block text-sm font-medium text-brand-accent mb-2">Transaction ID</label>
             <input data-testid="txn-input" type="text" placeholder="Enter Transaction ID" value={transactionId} onChange={(e) => setTransactionId(e.target.value)} className="input mb-3" />
           </div>
-          <button data-testid="confirm-payment" onClick={handlePromptPayConfirm} disabled={isConfirming || !transactionId} className="btn btn-success w-full text-lg py-3 disabled:opacity-50">
-            {isConfirming ? 'Confirming...' : 'Confirm Payment'}
+          <button data-testid="confirm-payment" onClick={handlePromptPaySubmit} disabled={isConfirming || !transactionId} className="btn btn-success w-full text-lg py-3 disabled:opacity-50">
+            {isConfirming ? 'กำลังส่ง...' : 'ส่งข้อมูลการชำระเงิน'}
           </button>
         </div>
       )}
       {isPending && order.payment_method === 'cash_on_delivery' && (
         <div className="card mb-6 bg-gradient-to-br from-blue-50 to-indigo-50 border-2 border-blue-200">
-          <h3 className="font-bold text-brand-accent mb-4">COD Confirmation</h3>
-          <p className="text-brand-muted mb-4">Confirm customer received item and paid</p>
-          <button onClick={handleCODConfirm} disabled={isConfirming} className="btn btn-primary w-full text-lg py-3 disabled:opacity-50">
-            {isConfirming ? 'Confirming...' : 'Confirm COD'}
-          </button>
+          <h3 className="font-bold text-brand-accent mb-4">เงินสดตอนรับของ</h3>
+          <p className="text-brand-muted mb-4">เงินจะถูกเก็บตอนส่งของ — ไม่ต้องชำระตอนนี้</p>
+          <span className="badge badge-info">⏳ รอเก็บเงินตอนรับของ (delivered)</span>
         </div>
       )}
       {isPaid && (

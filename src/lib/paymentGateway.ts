@@ -1,14 +1,24 @@
-﻿// ============================================
-// Bite Me Baby — Payment Gateway Service
-// GAP CLOSURE GROUP 2: Payment Confirmation Flow
-// Uses Stripe for real payment processing
+// ============================================
+// Bite Me Baby — Payment Gateway Service (P0-5)
+// ============================================
+// REAL integration contract (2026-09-18) — NO simulation, NO fake success:
+//
+//   credit_card  → Edge Function `create-checkout` creates a Stripe
+//                  PaymentIntent SERVER-SIDE (amount re-derived from the DB).
+//                  Confirmation happens in Stripe (client_secret + Stripe.js),
+//                  and the stripe-webhook EF records the result idempotently.
+//   promptpay_qr → create_payment_intent_record RPC (authoritative amount) →
+//                  customer submits TXN id (submit_offline_payment_reference,
+//                  intent pending→processing) → admin confirms
+//                  (confirm_offline_payment, intent → completed, order → paid).
+//   cash_on_delivery → create_payment_intent_record RPC → admin collects at the
+//                  door; confirm_offline_payment requires order = delivered.
+//
+// Failure paths return explicit errors. If the Edge Function is not deployed,
+// the client reports ERR_STRIPE_NOT_CONFIGURED — never a fabricated success.
 // ============================================
 
 import { supabase } from './supabase'
-
-// ============================================
-// Payment Types
-// ============================================
 
 export type PaymentProvider = 'stripe' | 'promptpay' | 'cod'
 export type PaymentStatus = 'pending' | 'processing' | 'completed' | 'failed' | 'refunded' | 'expired'
@@ -39,320 +49,209 @@ export interface PaymentConfirmResult {
   receiptUrl?: string
 }
 
-// ============================================
-// Stripe Payment Integration
-// ============================================
+export interface CardCheckoutResult {
+  ok: boolean
+  client_secret?: string
+  payment_intent_id?: string
+  amount?: number
+  order_number?: string
+  error?: string
+}
 
-// Stripe Publishable Key (placeholder - replace with real key from .env)
-const STRIPE_PUBLISHABLE_KEY = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || 'pk_test_placeholder'
+// ============================================
+// REAL Stripe checkout — via Edge Function (no Stripe secret on the client)
+// ============================================
+export async function createCheckout(orderNumber: string): Promise<CardCheckoutResult> {
+  try {
+    const { data, error } = await supabase.functions.invoke('create-checkout', {
+      body: { order_number: orderNumber },
+    })
+
+    if (error) {
+      console.error('[paymentGateway] create-checkout invoke error:', error)
+      return { ok: false, error: error.message }
+    }
+
+    const result = data as { ok?: boolean; client_secret?: string; payment_intent_id?: string; amount?: number; order_number?: string; error?: string }
+    if (!result?.ok) {
+      return { ok: false, error: result?.error || 'ERR_CHECKOUT_FAILED' }
+    }
+    return {
+      ok: true,
+      client_secret: result.client_secret,
+      payment_intent_id: result.payment_intent_id,
+      amount: result.amount,
+      order_number: result.order_number,
+    }
+  } catch (e: any) {
+    return { ok: false, error: e?.message || 'ERR_CHECKOUT_NETWORK' }
+  }
+}
 
 /**
- * Create a Payment Intent via Supabase (simulates Stripe backend call)
- * In production, this would call Stripe API directly or via a Cloud Function
+ * Create a Payment Intent for an order.
+ * - credit_card : delegated to the create-checkout Edge Function.
+ * - non-card    : recorded via create_payment_intent_record RPC — the server
+ *                 re-validates p_amount against orders.total_amount.
  */
 export async function createPaymentIntent(
   orderNumber: string,
   amount: number,
   method: PaymentMethod,
-  metadata: Record<string, any> = {}
-): Promise<PaymentIntent> {
-  const paymentIntentId = `pi_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`
-  
-  const paymentIntent: PaymentIntent = {
-    id: paymentIntentId,
+  metadata: Record<string, any> = {},
+): Promise<PaymentConfirmResult> {
+  const intentBase = {
     order_number: orderNumber,
     amount,
     currency: 'thb',
-    status: 'pending',
     method,
-    provider: method === 'credit_card' ? 'stripe' : 'promptpay',
-    client_secret: `pi_${paymentIntentId}_secret_${Math.random().toString(36).slice(2, 9)}`,
-    metadata: {
-      ...metadata,
-      created_by: 'checkout_page',
-    },
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
+  } as PaymentIntent
+
+  if (method === 'credit_card') {
+    const checkout = await createCheckout(orderNumber)
+    if (!checkout.ok) {
+      return { success: false, error: checkout.error || 'ERR_CHECKOUT_FAILED' }
+    }
+    return {
+      success: true,
+      payment_intent: {
+        ...intentBase,
+        id: `pi-${checkout.payment_intent_id}`,
+        status: 'pending' as PaymentStatus,
+        provider: 'stripe',
+        client_secret: checkout.client_secret,
+        payment_intent_id: checkout.payment_intent_id,
+        metadata: { ...metadata, provider: 'stripe', source: 'create-checkout' },
+      },
+    }
   }
 
-  // Store payment intent in Supabase
-  try {
-    await supabase.from('payment_intents').insert(paymentIntent)
-  } catch (e) {
-    console.warn('[PaymentGateway] Could not store payment intent in DB (localStorage fallback):', e)
-    // Fallback to localStorage
-    storePaymentIntent(paymentIntent)
+  // Non-card methods: authoritative record on the server (amount re-checked).
+  const provider: PaymentProvider = method === 'cash_on_delivery' ? 'cod' : 'promptpay'
+  const { data, error } = await supabase.rpc('create_payment_intent_record', {
+    p_order_number: orderNumber,
+    p_amount: amount,
+    p_method: method,
+    p_provider: provider,
+    p_metadata: metadata ?? {},
+  })
+
+  if (error) {
+    console.error('[paymentGateway] create_payment_intent_record error:', error)
+    return { success: false, error: error.message }
   }
 
-  return paymentIntent
+  const row = data as { id?: string; amount?: number; status?: string }
+  return {
+    success: true,
+    payment_intent: {
+      ...intentBase,
+      id: row.id || intentBase.id,
+      status: (row.status as PaymentStatus) || 'pending',
+      provider,
+      metadata,
+    },
+  }
 }
-
 /**
- * Confirm payment (simulate Stripe confirmation)
- * In production, this would call Stripe confirmPaymentIntent API
+ * Card confirmation is handled end-to-end by Stripe (client_secret → Stripe.js →
+ * webhook → record_payment_result). This function only reports the current
+ * intent state; it NEVER marks an order paid from the browser.
  */
 export async function confirmPayment(
   paymentIntentId: string,
-  paymentMethodId: string
+  _paymentMethodId: string,
 ): Promise<PaymentConfirmResult> {
-  // Simulate API delay
-  await new Promise(resolve => setTimeout(resolve, 1500))
-
-  // Get stored payment intent
-  const paymentIntent = getPaymentIntent(paymentIntentId)
-  if (!paymentIntent) {
-    return { success: false, error: 'Payment intent not found' }
-  }
-
-  // Update payment status
-  const updatedIntent = {
-    ...paymentIntent,
-    status: 'completed' as PaymentStatus,
-    payment_intent_id: paymentIntentId,
-    receipt_url: `https://pay.stripe.com/receipts/${paymentIntentId}`,
-    completed_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  }
-
-  // Update in Supabase
-  try {
-    await supabase.from('payment_intents').update(updatedIntent).eq('id', paymentIntentId)
-  } catch (e) {
-    console.warn('[PaymentGateway] Could not update payment intent:', e)
-    storePaymentIntent(updatedIntent)
-  }
-
-  // Update order payment status
-  try {
-    const { error } = await supabase
-      .from('orders')
-      .update({ payment_status: 'paid' })
-      .eq('order_number', paymentIntent.order_number)
-    if (error) console.warn('[PaymentGateway] Order payment update error:', error)
-  } catch (e) {
-    console.warn('[PaymentGateway] Order payment update error:', e)
-  }
-
-  return {
-    success: true,
-    payment_intent: updatedIntent,
-    receiptUrl: updatedIntent.receipt_url,
-  }
-}
-
-/**
- * Handle PromptPay QR payment confirmation
- * In production, this would verify with PromptPay API
- */
-export async function confirmPromptPay(
-  orderNumber: string,
-  transactionId: string
-): Promise<PaymentConfirmResult> {
-  await new Promise(resolve => setTimeout(resolve, 1000))
-
-  const paymentIntent = await getPaymentIntentByOrder(orderNumber)
-  if (!paymentIntent) {
-    return { success: false, error: 'No pending payment found for this order' }
-  }
-
-  const updatedIntent = {
-    ...paymentIntent,
-    status: 'completed' as PaymentStatus,
-    completed_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-    metadata: {
-      ...paymentIntent.metadata,
-      transaction_id: transactionId,
-      verified_by: 'promptpay_api',
-    },
-  }
-
-  try {
-    await supabase.from('payment_intents').update(updatedIntent).eq('id', paymentIntent.id)
-  } catch (e) {
-    storePaymentIntent(updatedIntent)
-  }
-
-  // Update order
-  try {
-    await supabase.from('orders').update({ payment_status: 'paid' }).eq('order_number', orderNumber)
-  } catch (e) {
-    console.warn('[PaymentGateway] Order update error:', e)
-  }
-
-  return {
-    success: true,
-    payment_intent: updatedIntent,
-    receiptUrl: `https://promptpay.go.th/receipt/${transactionId}`,
-  }
-}
-
-/**
- * Handle COD (Cash on Delivery) confirmation
- */
-export async function confirmCOD(orderNumber: string, confirmedBy: string): Promise<PaymentConfirmResult> {
-  const paymentIntent = await getPaymentIntentByOrder(orderNumber)
-  if (!paymentIntent) {
-    return { success: false, error: 'No pending payment found' }
-  }
-
-  const updatedIntent = {
-    ...paymentIntent,
-    status: 'completed' as PaymentStatus,
-    completed_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-    metadata: {
-      ...paymentIntent.metadata,
-      confirmed_by: confirmedBy,
-      confirmed_at: new Date().toISOString(),
-    },
-  }
-
-  try {
-    await supabase.from('payment_intents').update(updatedIntent).eq('id', paymentIntent.id)
-  } catch (e) {
-    storePaymentIntent(updatedIntent)
-  }
-
-  try {
-    await supabase.from('orders').update({ payment_status: 'paid' }).eq('order_number', orderNumber)
-  } catch (e) {
-    console.warn('[PaymentGateway] Order update error:', e)
-  }
-
-  return { success: true, payment_intent: updatedIntent }
-}
-
-/**
- * Refund a payment
- */
-export async function refundPayment(paymentIntentId: string, reason: string = ''): Promise<PaymentConfirmResult> {
-  const paymentIntent = getPaymentIntent(paymentIntentId)
-  if (!paymentIntent) {
-    return { success: false, error: 'Payment intent not found' }
-  }
-
-  if (paymentIntent.status !== 'completed') {
-    return { success: false, error: 'Only completed payments can be refunded' }
-  }
-
-  const updatedIntent = {
-    ...paymentIntent,
-    status: 'refunded' as PaymentStatus,
-    updated_at: new Date().toISOString(),
-    metadata: {
-      ...paymentIntent.metadata,
-      refund_reason: reason,
-      refunded_at: new Date().toISOString(),
-    },
-  }
-
-  try {
-    await supabase.from('payment_intents').update(updatedIntent).eq('id', paymentIntentId)
-  } catch (e) {
-    storePaymentIntent(updatedIntent)
-  }
-
-  // Update order
-  try {
-    await supabase.from('orders').update({ payment_status: 'refund' }).eq('order_number', paymentIntent.order_number)
-  } catch (e) {
-    console.warn('[PaymentGateway] Order refund update error:', e)
-  }
-
-  return { success: true, payment_intent: updatedIntent }
-}
-
-// ============================================
-// Helper Functions
-// ============================================
-
-function storePaymentIntent(intent: PaymentIntent): void {
-  try {
-    const intents = JSON.parse(localStorage.getItem('bmb_payment_intents') || '[]')
-    const index = intents.findIndex((i: PaymentIntent) => i.id === intent.id)
-    if (index >= 0) {
-      intents[index] = intent
-    } else {
-      intents.push(intent)
-    }
-    localStorage.setItem('bmb_payment_intents', JSON.stringify(intents))
-  } catch (e) {
-    console.error('[PaymentGateway] Storage error:', e)
-  }
-}
-
-function getPaymentIntent(id: string): PaymentIntent | null {
-  try {
-    const intents = JSON.parse(localStorage.getItem('bmb_payment_intents') || '[]')
-    return intents.find((i: PaymentIntent) => i.id === id) || null
-  } catch {
-    return null
-  }
-}
-
-async function getPaymentIntentByOrder(orderNumber: string): Promise<PaymentIntent | null> {
-  // Try Supabase first
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from('payment_intents')
     .select('*')
-    .eq('order_number', orderNumber)
-    .order('created_at', { ascending: false })
-    .limit(1)
-    .single()
-  
-  if (data) return data as PaymentIntent
-  
-  // Fallback to localStorage
-  try {
-    const intents = JSON.parse(localStorage.getItem('bmb_payment_intents') || '[]')
-    return intents.find((i: PaymentIntent) => i.order_number === orderNumber && i.status === 'pending') || null
-  } catch {
-    return null
+    .eq('id', paymentIntentId)
+    .maybeSingle()
+
+  if (error || !data) {
+    return { success: false, error: 'Payment intent not found' }
+  }
+  const intent = data as PaymentIntent
+  if (!intent.client_secret) {
+    return {
+      success: false,
+      error: 'NO_CLIENT_SECRET — card payment must be confirmed in Stripe (Payment Element)',
+    }
+  }
+  return {
+    success: true,
+    payment_intent: intent,
+    receiptUrl: intent.receipt_url,
   }
 }
 
+/** Customer submits a PromptPay transaction id (pending → processing). */
+export async function submitOfflinePaymentReference(orderNumber: string, reference: string): Promise<PaymentConfirmResult> {
+  const { data, error } = await supabase.rpc('submit_offline_payment_reference', {
+    p_order_number: orderNumber,
+    p_reference: reference,
+  })
+  if (error) {
+    return { success: false, error: error.message }
+  }
+  return { success: true }
+}
+
+/** ADMIN confirms an offline payment (PromptPay after TXN, COD after delivery). */
+export async function confirmOfflinePayment(orderNumber: string): Promise<PaymentConfirmResult> {
+  const { data, error } = await supabase.rpc('confirm_offline_payment', {
+    p_order_number: orderNumber,
+  })
+  if (error) {
+    return { success: false, error: error.message }
+  }
+  return { success: true }
+}
+
+/** ADMIN marks a pending/processing payment failed. */
+export async function markPaymentFailed(orderNumber: string, reason: string = ''): Promise<PaymentConfirmResult> {
+  const { data, error } = await supabase.rpc('mark_payment_failed', {
+    p_order_number: orderNumber,
+    p_reason: reason,
+  })
+  if (error) {
+    return { success: false, error: error.message }
+  }
+  return { success: true }
+}
+
 /**
- * Get all payment intents (for admin)
+ * Refunds are server-side only (requires service-role + Stripe API).
+ * Admin flow lives in the `stripe-refund` Edge Function once deployed; the
+ * browser NEVER touches money-out operations.
  */
+export async function refundPayment(_paymentIntentId: string, _reason: string = ''): Promise<PaymentConfirmResult> {
+  return { success: false, error: 'REFUND_SERVER_SIDE_ONLY — use the stripe-refund Edge Function (admin)' }
+}
+
+// ============================================
+// Query helpers (read-only; DB driven)
+// ============================================
+
 export async function getPaymentIntents(filters?: {
   orderNumber?: string
   status?: PaymentStatus
   startDate?: string
   endDate?: string
 }): Promise<PaymentIntent[]> {
-  let intents: PaymentIntent[] = []
-  
-  // Try Supabase
   let query = supabase.from('payment_intents').select('*').order('created_at', { ascending: false })
-  
+
   if (filters?.orderNumber) query = query.eq('order_number', filters.orderNumber)
   if (filters?.status) query = query.eq('status', filters.status)
   if (filters?.startDate) query = query.gte('created_at', filters.startDate)
   if (filters?.endDate) query = query.lte('created_at', filters.endDate)
-  
-  const { data: dbData } = await query
-  if (dbData && dbData.length > 0) {
-    intents = dbData as PaymentIntent[]
-  }
-  
-  // Merge with localStorage
-  try {
-    const localIntents = JSON.parse(localStorage.getItem('bmb_payment_intents') || '[]')
-    const existingIds = new Set(intents.map((i: PaymentIntent) => i.id))
-    localIntents.forEach((i: PaymentIntent) => {
-      if (!existingIds.has(i.id)) intents.push(i)
-    })
-  } catch {
-    // ignore
-  }
-  
-  return intents
+
+  const { data } = await query
+  return (data || []) as PaymentIntent[]
 }
 
-/**
- * Payment summary statistics
- */
 export async function getPaymentSummary(): Promise<{
   totalRevenue: number
   totalTransactions: number
@@ -363,15 +262,15 @@ export async function getPaymentSummary(): Promise<{
 }> {
   const intents = await getPaymentIntents()
   const today = new Date().toISOString().split('T')[0]
-  
+
   const completed = intents.filter((i: PaymentIntent) => i.status === 'completed')
   const todayCompleted = completed.filter((i: PaymentIntent) => i.completed_at?.startsWith(today))
-  
+
   const byMethod: Record<string, number> = {}
   completed.forEach((i: PaymentIntent) => {
     byMethod[i.method] = (byMethod[i.method] || 0) + i.amount
   })
-  
+
   return {
     totalRevenue: completed.reduce((sum: number, i: PaymentIntent) => sum + i.amount, 0),
     totalTransactions: completed.length,
