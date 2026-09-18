@@ -6,7 +6,15 @@
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://ivkdfognyiwjcmrhcnwz.supabase.co'
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || ''
-const supabaseServiceRoleKey = import.meta.env.VITE_SUPABASE_SERVICE_ROLE_KEY || ''
+
+// P0-1 FIX (2026-09-18): service-role key ถูกถอดออกจาก client bundle เรียบร้อย
+// ---------------------------------------------------------------
+// ก่อนหน้า: supabaseAdmin = createClient(url, VITE_SUPABASE_SERVICE_ROLE_KEY)
+//   → Vite อ่าน VITE_* env ลง inline ใน bundle → key รั่วสู่ทุก user
+// หลังจาก: client มีแค่ anon key; ทุก privileged operation ต้องย้ายไป
+//          Edge Function / RPC (server-side, service_role เก็บ server เท่านั้น)
+//          ดู SECURITY_REMEDIATION_PLAN.md P0-1
+// ---------------------------------------------------------------
 
 // Validate configuration
 if (!supabaseUrl || supabaseUrl === 'https://your-project.supabase.co') {
@@ -29,16 +37,6 @@ export const supabase: SupabaseClient = createClient(supabaseUrl, supabaseAnonKe
     },
   },
 })
-
-// Admin client (server-side only — bypasses RLS)
-export const supabaseAdmin: SupabaseClient | null = supabaseServiceRoleKey
-  ? createClient(supabaseUrl, supabaseServiceRoleKey, {
-      auth: {
-        autoRefreshToken: false,
-        persistSession: false,
-      },
-    })
-  : null
 
 export default supabase
 
