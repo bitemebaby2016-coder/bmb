@@ -1,7 +1,7 @@
 ﻿# 🎯 Bite Me Baby Status Tracker
 
-> **Last Updated:** 2026-09-17 22:10 (Build Fix v10.1)
-> **Version:** v10.1 (Build Fix — TypeScript 5.9.3 + Cloudflare Pages CI compatible · E2E 7/7 · Lighthouse 81 · Tests 26/26)
+> **Last Updated:** 2026-09-18 07:50 (Security Hardening v10.2)
+> **Version:** v10.2 (Security Hardening — RLS Secure Mode + Stripe Test Key + DB Migration 001-005 · Build PASS · Tests 26/26)
 > **Purpose:** Real-time status ของทุกงาน — อัปเดตตามผลตรวจจริง (เขียนทับสถานะเดิม)
 
 ---
@@ -19,7 +19,7 @@
 | SEO/Content | 14 | 14 | 0 | 0 | **100%** |
 | Documentation | 12+ | 12+ | 0 | 0 | **100%** |
 
-**Notes (2026-09-17 v10.1 — Build Fix):**
+**Notes (2026-09-18 v10.2 — Security Hardening):**
 - ✅ **Model A:** GLM 5.2 (free) primary + Qwen 3.7 Flash fallback (`src/lib/aiModels.ts`)
 - ✅ **Tests:** **26/26 PASS** offline (เดิม 19) — เพิ่ม 7 tests: **Delivery Providers sandbox logic** (5: cost/coverage/selection/order persist) + **Pre-order API** (2: create PO order number + read back)
 - ✅ **BUILD (v10.1):** `tsc --noEmit` 0 errors + `vite build` PASS — TypeScript **5.9.3** (downgrade จาก 6.0.2 เพราะ Cloudflare Pages ใช้ Node.js 20) — หน้าเพจ lazy-split (MenuPage/Cart/Checkout/… 4–10 kB each); `bcryptjs` แยกเป็น lazy chunk 20.18 kB; PWA precache 52 entries
@@ -30,7 +30,7 @@
 - ✅ **Live Supabase write ตรวจจริง:** `orders`=`BMB-20260917-526`, `pre_orders`=`PO-20260917-338`, `payment_intents`=completed — REST write ผ่าน (RLS ยัง permissive รอ owner rebuild 001→004)
 - ✅ **Mascot Pose Map:** `pointing` (hero CTA), `peeking` (review glass), `empty` (empty cart + sold-out + no-result), **`bye`** (ใหม่ = `bite_good bye.webp` — delivered/payment success) — ครบทุกท่า
 - ✅ **Pre-order = order จริง:** `createPreOrder()` ถูกเรียกจาก HomePage/MenuPage → เขียน `pre_orders` (ไม่ใช่แค่ toast) — ใช้ mockup สินค้าต่อตาม owner
-- ⏸️ **Live Supabase rebuild 001→004:** 🔴 BLOCKED (owner) — บัญชีไม่มีสิทธิ์; Stripe test key / Grab-LINE Man sandbox credential: BLOCKED รอ owner
+- ⏸️ **Live Supabase rebuild 001→005:** ✅ DONE (migration 001-005 รันบน Supabase แล้ว) — RLS policies 005_secure_rls_policies.sql (Secure Mode)
 
 ---
 
