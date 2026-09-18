@@ -210,3 +210,27 @@ Completed:
 Verified: tsc 0 errors [VERIFIED]; vitest 50/50 [VERIFIED] (14 new P0-5/P0-6 tests); npm run build PASS [VERIFIED].
 Blocked (owner): apply migration 008 to live DB; re-run 007 grants; supabase link+secrets+deploy EFs; rotate leaked service-role key; live Stripe webhook test; auth e2e live (email rate-limit today).
 Files changed: see git status (migrations/008, 2×supabase/functions, src/lib{paymentGateway,bmbAdminApi_orders,bmbAdminApi_{promotions,rounds,customers,settings}}, pages{PaymentConfirmation,admin/AdminOrders,admin/AdminDashboard,App.tsx}, 4 new admin pages, tests{paymentStateMachine, mockRef, supabaseMock}, docs).
+=== BMB-STRIPE-LIVE-VERIFY SESSION (2026-09-19) ===
+Task ID: BMB-STRIPE-GATE-2026-09-19 (continue BMB-SEC-2026-09-18)
+Status: LIVE VERIFY DONE / STRIPE GATE NOT PASSED (owner DB + Stripe blocked) — honest, not faked
+Objective: 1,2,3 done → get signed webhook smoke to 200 → verify DB → STRIPE GATE → 9 EF forensic → Phase C final audit. DON'T deploy empty shells.
+
+Live evidence (all real probes, project ivkdfognyiwjcmrhcnwz, 2026-09-19):
+- create-checkout DEPLOYED: GET → 401 UNAUTHORIZED_NO_AUTH_HEADER (verify_jwt active). ✅
+- stripe-webhook DEPLOYED: GET → 200 {ok:true}. ✅  Unsigned POST → 400 ERR_INVALID_SIGNATURE (whsec IS set). ✅
+- 007 anon EXECUTE now REVOKED (anon → PGRST202; 09-18 was P0001). ✅ R1/C3/C4 closed.
+- 007 RUNTIME BROKEN: authenticated call → 42883 extract_epoch(timestamp with time zone) does not exist. ❌ → FIX written: migrations/009_fix_007_extract_epoch.sql (verified: body identical to 007 except that one expression).
+- 008 NOT APPLIED: service_role probes of record_payment_result / transition_order_status / create_payment_intent_record / submit_offline_payment_reference / confirm_offline_payment / mark_payment_failed / order_transition_allowed / guard_order_status_transition → ALL PGRST202. (business_settings table exists → Phase-D DDL applied earlier, payment RPC section did NOT.) → root cause of "cannot get 200".
+- Stripe key in .env EXPIRED (Stripe API 401 api_key_expired). ❌ owner rotates.
+- Signed 200 impossible today (008 missing → EF returns 500 on valid events). Invalid-signature path PASS live (twice, via new e2e/webhook-smoke.cjs).
+
+Changed:
+- .env/.env.local → strict KEY=VALUE (no comments, no secrets; removed VITE_SUPABASE_SERVICE_ROLE_KEY/VITE_STRIPE_SECRET_KEY/stale anon key). Fixes parser error pattern "failed to parse environment file ... in variable name near '#'". Working anon key (sb_publishable_...) kept; also in .env.local.
+- migrations/009_fix_007_extract_epoch.sql NEW (above).
+- e2e/webhook-smoke.cjs NEW: T1 unsigned 400, T2 invalid sig 400, T3 signed 200, T4 duplicate 200, T5 no-order 202, T6 DB verify (service key). Negative path green live this session.
+- .gitignore + supabase/secrets.local.env.
+- STRIPE_WEBHOOK_PRELIVE_AUDIT.md rewritten → "STRIPE GATE - LIVE VERIFY REPORT". PHASE_C updated (C1 re-verified 0-file shells + owner NO-DEPLOY directive; C3 closed; C4 new; handoff statuses).
+
+Verified: npm run build PASS (with new .env) [VERIFIED]; smoke tool exit 0 (negative path) [VERIFIED].
+Blocked (owner, in order): 1) SQL Editor: run 009 then 008; 2) Stripe Dashboard webhook endpoint + keep whsec_... local only; 3) rotate STRIPE_SECRET_KEY + set on Supabase; 4) rotate service-role key; 5) re-run node e2e/webhook-smoke.cjs with --secret/--service-key (T3/T4/T6 close the gate).
+9 EF forensic: all 9 shells = 0 files each, NOT deployed (owner directive honored: do not deploy empties to fake completeness).

@@ -27,6 +27,9 @@
 
 **FINDING C1 — All 9 pre-existing EF directories are EMPTY** (0 files, created 2026-09-09):
 planned shells, never implemented, never deployed. No code references them.
+**RE-VERIFIED 2026-09-19** (0 files in each directory). **Owner directive: DO NOT
+DEPLOY these empty shells** to make the dashboard look feature-complete — they stay
+honest "planned" placeholders until actually implemented.
 
 ---
 
@@ -66,12 +69,18 @@ Dashboard — the 401s we observed show keys were already rotated once (the old
 | `order_transition_allowed` | service_role only | called from definer functions (superuser), safe |
 | `guard_order_status_transition` | service_role only | trigger, runs as definer |
 
-**FINDING C3 (live probe 2026-09-18):** anon call to `create_order_with_items`
-returns `P0001 ERR_NOT_AUTHENTICATED` — the function IS live. If 007's
-`REVOKE EXECUTE … FROM PUBLIC` had fully taken effect, PostgREST would return
-`PGRST202` instead. **Owner action:** re-run 007's REVOKE/GRANT section
-(idempotent) and re-probe. Blast radius is low — the function self-rejects
-non-authenticated callers regardless.
+**FINDING C3 (RE-PROBED 2026-09-19):** anon call to `create_order_with_items` now
+returns `PGRST202` — the 007 `REVOKE EXECUTE … FROM PUBLIC` IS now effective live
+(owner re-ran the grants after the 09-18 probe which had shown `P0001`).
+The one remaining 007 problem is **runtime**, not grants (see FINDING C4).
+
+**FINDING C4 (NEW 2026-09-19, live):** `create_order_with_items` exists and is
+authenticated-only, but EVERY call fails at runtime:
+`42883 function extract_epoch(timestamp with time zone) does not exist`.
+Migration 007 used the non-portable `extract_epoch(clock_timestamp())`.
+**Fix written:** `supabase/migrations/009_fix_007_extract_epoch.sql`
+(`CREATE OR REPLACE` with portable `extract(epoch from ...)`; body verified
+identical to 007 except that one expression). **Not applied yet** (owner DB).
 ---
 
 ## 4. Payment data flows (post this session)
@@ -103,13 +112,14 @@ from `products.price` / `delivery_rounds` / `promotions` inside
 
 ## 5. Honest open items (Phase C → D handoff)
 
-| # | Item | Blocker / owner action |
+| # | Item | Status (2026-09-19) / Blocker |
 |---|------|------------------------|
-| C-1 | `supabase link` + deploy `create-checkout`, `stripe-webhook` | needs `SUPABASE_ACCESS_TOKEN` (Dashboard → Account → Access Tokens) |
-| C-2 | `supabase secrets set STRIPE_SECRET_KEY=sk_test_… STRIPE_WEBHOOK_SECRET=whsec_…` | after link |
-| C-3 | Apply migration 008 to the live DB (SQL Editor) | makes payment/state RPCs live |
-| C-4 | Re-run 007 REVOKE/GRANT (idempotent) so anon EXECUTE is dropped (FINDING C3) | SQL Editor |
-| C-5 | Rotate service-role key (earlier bundle leak) | Dashboard → Settings → API |
+| C-1 | deploy `create-checkout` + `stripe-webhook` | ✅ **DONE live** (both deployed + probed; re-deployed this session) |
+| C-2 | `supabase secrets set STRIPE_SECRET_KEY / STRIPE_WEBHOOK_SECRET` | 🟡 **PARTIAL** — webhook secret verified set (unsigned → 400); `STRIPE_SECRET_KEY` from `.env` is **EXPIRED** (Stripe API `api_key_expired`) → rotate |
+| C-3 | Apply migration 008 to the live DB (SQL Editor) | ❌ **STILL BLOCKED (owner)** — payment/state RPCs `PGRST202` (verify: `record_payment_result` etc.) |
+| C-4 | 007 REVOKE/GRANT | ✅ **EFFECTIVE** (anon → `PGRST202` re-probed 2026-09-19) — closed |
+| C-4b | 007 runtime bug `extract_epoch` (FINDING C4) | ❌ **NEW** — fix written in `migrations/009_fix_007_extract_epoch.sql`; apply with C-3 |
+| C-5 | Rotate service-role key (earlier bundle leak) | ❌ **PENDING (owner)** — key was present again in working `.env`; purged 2026-09-19 |
 | C-6 | `stripe-refund` EF — write before admin refunds go live | backlog (admin-only, server-side) |
 | C-7 | Storage bucket `bmb-images` + `media_assets` wiring (media library) | deploy-time |
 

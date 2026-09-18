@@ -1,92 +1,114 @@
-# STRIPE_WEBHOOK_PRELIVE_AUDIT — Bite Me Baby
+# STRIPE GATE - LIVE VERIFY REPORT (Bite Me Baby)
 
-> Date: 2026-09-18 | Scope: `supabase/functions/stripe-webhook` pre-production
-> verification against the 12-point checklist + Supabase `verify_jwt` config.
-> Evidence = live probes on the production project (`ivkdfognyiwjcmrhcnwz`).
+> Date: 2026-09-19 (local session)
+> Project: Supabase `ivkdfognyiwjcmrhcnwz` (production) | Stripe: test mode
+> Supersedes: `STRIPE_WEBHOOK_PRELIVE_AUDIT` v1 (2026-09-18, pre-deploy review)
+> Method: LIVE probes only. Evidence > claims. No fake success.
 
 ---
 
-## VERDICT
+## VERDICT (STRIPE GATE)
 
 | Gate | Result |
 |------|--------|
-| Source correctness (12-point checklist) | ✅ **READY TO DEPLOY** (after fixes R2–R4 applied in this session) |
-| Deploy from this machine | ⛔ **BLOCKED** — no `supabase` CLI login (no access token in `~\.supabase`); only the owner can run the deploy |
-| Runtime secret | ⛔ **BLOCKED** — `STRIPE_WEBHOOK_SECRET` (whsec_...) is a *separate* secret the owner sets themselves after creating the endpoint in the Stripe Dashboard. **I do NOT create/fake it and do NOT ask for it in chat.** |
-| Pre-existing gap (outside webhook) | ⚠️ **REQUIRED FIX R1** — migration 007 EXECUTE-revoke still NOT effective live |
+| Edge Functions deployed (`create-checkout`, `stripe-webhook`) | PASS - live (probes below) |
+| Webhook rejects unsigned / invalid signature (HTTP 400) | PASS - live (**twice**, probes below) |
+| `STRIPE_WEBHOOK_SECRET` configured on the EF | PASS - live (unsigned -> 400, NOT 500) |
+| `verify_jwt` on `create-checkout` (platform 401, missing auth) | PASS - live |
+| Migration 007 anon EXECUTE revoke | PASS - live (anon -> PGRST202; was P0001 on 09-18) |
+| Order RPC `create_order_with_items` runtime | FAIL - live: `42883 function extract_epoch(timestamp with time zone) does not exist` -> **migration 009 fixes it (written, not applied)** |
+| Migration 008 (payment/order-state RPCs) | FAIL - NOT applied live (service_role probes -> PGRST202) -> **signed-webhook 200 is impossible until applied** |
+| Stripe secret key (`.env` copy) | FAIL - **EXPIRED** (`api_key_expired`) -> owner rotates key |
+| **STRIPE GATE (signed 200 smoke + payment DB verify)** | **NOT PASSED** - blocked on owner actions (Section 6) |
+| 9 pre-existing EF directories | confirmed **0 files** each (empty shells). **Per owner: DO NOT DEPLOY.** |
 
 ---
 
-## 1. Source-verification checklist (live evidence)
+## 1. Pipeline status (owner workflow)
 
-| # | Requirement | Status | Where / evidence |
-|---|-------------|--------|------------------|
-| 1 | Reads `STRIPE_WEBHOOK_SECRET` | ✅ | `index.ts:85` `Deno.env.get('STRIPE_WEBHOOK_SECRET')` |
-| 2 | Does NOT use `VITE_STRIPE_WEBHOOK_SECRET` | ✅ | grep `VITE_STRIPE_WEBHOOK` over `supabase/functions` = 0 hits |
-| 3 | No hardcoded `whsec_...` | ✅ | grep `whsec_[alnum]` = 0 hits (only a code comment mentions the prefix) |
-| 4 | Raw request body BEFORE signature verification | ✅ | `index.ts:83` `await req.text()` → verification at `:90` |
-| 5 | Reads `Stripe-Signature` header | ✅ | `index.ts:84` `req.headers.get('stripe-signature')` |
-| 6 | Real Stripe signature verification | ✅ | HMAC-SHA256 over `${t}.${payload}` with `crypto.subtle.sign` + **timing-safe compare** (R4) + 5-min timestamp window |
-| 7 | Invalid signature ⇒ **HTTP 400** | ✅ | `index.ts:90-93` returns 400 (**fixed — was 401**, R2) |
-| 8 | Valid signature ⇒ process event | ✅ | switch `payment_intent.succeeded` / `payment_intent.payment_failed` |
-| 9 | Duplicate event idempotent | ✅ | RPC `record_payment_result` checks existing `payment_intent_id` → `idempotent:true`; plus unique partial index `uq_payment_intents_provider_id` (migration 008) |
-| 10 | Amount / order mismatch rejected | ✅ | RPC raises `ERR_AMOUNT_MISMATCH` / `ERR_ORDER_NOT_FOUND`; EF maps to **HTTP 400** (R3) so Stripe does not retry a permanent mismatch |
-| 11 | Payment update via trusted backend authority | ✅ | EF uses **service-role client** (`SUPABASE_SERVICE_ROLE_KEY`) → RPC `record_payment_result`; live probe: anon → `42501 permission denied for function` = EXECUTE is service_role-only |
-| 12 | Client cannot set payment status | ✅ | no client path updates `payment_status`; no client code can execute `record_payment_result`; admin path uses `confirm_offline_payment` (is_admin-gated) |
+| # | Step | Status (2026-09-19) |
+|---|------|--------------------|
+| 1 | AI DEV LIVE VERIFY | DONE - this report (all probes real) |
+| 2 | deploy `create-checkout` | DONE - live (re-deployed this session, `supabase functions deploy`) |
+| 3 | deploy `stripe-webhook` | DONE - live |
+| 4 | signed webhook smoke test | BLOCKED - see root-cause (Section 4); tool `e2e/webhook-smoke.cjs` ready |
+| 5 | duplicate webhook test | BLOCKED - follows 4 |
+| 6 | invalid signature test | PASS - live (HTTP 400 `ERR_INVALID_SIGNATURE`) |
+| 7 | payment DB verification | BLOCKED - follows 4; tool T6 ready |
 
-## 2. SUPABASE CONFIG — `verify_jwt`
+## 2. Live probes recorded this session
 
-- **`supabase/config.toml` did not exist** → created this session.
-- `[functions.stripe-webhook] verify_jwt = false` ✅ — REQUIRED because Stripe
-  sends **no Supabase JWT**; with `verify_jwt = true` the platform would reject
-  every Stripe request before the handler runs. The handler itself performs the
-  Stripe signature verification (checklist #6).
-- `[functions.create-checkout] verify_jwt = true` — clients invoke with their
-  own JWT; platform-level rejection of anonymous callers = defense-in-depth.
-## 3. REQUIRED FIXES
+| Probe | Endpoint | Result (live) |
+|-------|----------|----------------|
+| GET webhook (no auth needed) | /functions/v1/stripe-webhook | 200 `{"ok":true,"service":"stripe-webhook"}` |
+| GET create-checkout (no JWT) | /functions/v1/create-checkout | 401 `UNAUTHORIZED_NO_AUTH_HEADER` (verify_jwt active) |
+| POST webhook empty/unsigned body | /functions/v1/stripe-webhook | 400 `{"error":"ERR_INVALID_SIGNATURE"}` |
+| POST webhook invalid signature (HMAC with wrong key) | same | 400 `{"error":"ERR_INVALID_SIGNATURE"}` |
+| anon RPC `create_order_with_items` | /rest/v1/rpc/... | 404 PGRST202 (EXECUTE revoked: anon can no longer see/run it) |
+| authenticated RPC `create_order_with_items` (real user, valid payload) | same | SQL **42883** `extract_epoch(...) does not exist` (function exists but body is broken) |
+| service_role RPC probes (`record_payment_result`, `transition_order_status`, `create_payment_intent_record`, `submit_offline_payment_reference`, `confirm_offline_payment`, `mark_payment_failed`, `order_transition_allowed`, `guard_order_status_transition`) | /rest/v1/rpc/... | ALL 404 PGRST202 = **migration 008 NOT applied** |
+| Stripe API `GET /v1/webhook_endpoints` | api.stripe.com | 401 `api_key_expired` (sk_test_...51UGp...EnMIKo is expired) |
+| Orders table (service_role) | /rest/v1/orders | rows: `BMB-20260917-526` (promptpay_qr) and `TEST-001` - **no credit_card order exists** |
+| Business settings (008 table) | /rest/v1/business_settings | EXISTS + `kitchen_location` row -> 008 Phase-D tables were applied earlier, but the payment RPC section is NOT |
 
-| ID | Item | Status |
-|----|------|--------|
-| R1 | **Migration 007 `REVOKE EXECUTE … FROM PUBLIC` still not effective live.** Live probe: anon `create_order_with_items` → `P0001 ERR_NOT_AUTHENTICATED` (function executed) — expected `42501` if revoked. Low blast radius (the function self-rejects anon), but the REVOKE/GRANT section of 007 must be re-run so execution is actually restricted to `authenticated`. | ⚠️ owner SQL Editor |
-| R2 | invalid signature `401` → `400` | ✅ fixed + committed |
-| R3 | permanent business rejections mapped to `400` (no infinite Stripe retry) | ✅ fixed + committed |
-| R4 | timing-safe hex compare for signature verification | ✅ fixed + committed |
+## 3. Webhook 12-point checklist (delta since v1)
 
-## 4. DEPLOY BLOCKERS (environment, not code)
+All 12 points of the v1 checklist remain satisfied in source (unchanged code), and are now
+additionally covered by live behavior: points 7 (invalid -> 400), 8 (process event),
+9 (idempotent), 10 (amount mismatch -> 400) are code-wise as v1; the live 200-path
+(point 8 end-to-end) is blocked only by missing migration 008 (below).
 
-| # | Block | Unblock |
-|---|-------|---------|
-| B1 | `supabase` CLI is not logged in on this machine (`~\.supabase` has no access token) | owner: `supabase login` (with a **read/write access token** from Dashboard → Account → Access Tokens) |
-| B2 | `STRIPE_WEBHOOK_SECRET` is not set anywhere — it only exists after a webhook endpoint is created in the Stripe Dashboard | owner (never pasted in chat): create endpoint → copy signing secret → `supabase secrets set STRIPE_WEBHOOK_SECRET=whsec_...` |
-| B3 | Stripe Dashboard endpoint not configured to target this project | owner: endpoint URL `https://ivkdfognyiwjcmrhcnwz.supabase.co/functions/v1/stripe-webhook`, events `payment_intent.succeeded` + `payment_intent.payment_failed` |
+## 4. ROOT CAUSE - why "signed webhook smoke cannot return 200"
 
-## 5. Deploy sequence (owner)
+Chain that must all be TRUE for HTTP 200 `{"received":true,"result":"paid"}`:
 
-```bash
-# 1. (already done by owner) STRIPE_SECRET_KEY set on Supabase
-supabase secrets set STRIPE_SECRET_KEY=sk_test_...
+1. A real `credit_card` order must exist -> `create_order_with_items` is now **broken at
+   runtime** (missing `extract_epoch`) -> new migration **009** fixes the body (written).
+2. The EF must be able to call `record_payment_result` -> the RPC does not exist live
+   (migration **008** not applied) -> a correctly signed event currently returns **HTTP 500**
+   with a "could not find function" error, not 200.
+3. The webhook secret (`whsec_...`) must be known to the smoke runner -> it is set on the EF
+   (proved by the 400s) but is intentionally never stored in the repo/chat; the owner flow
+   below keeps it local.
 
-# 2. after creating the Stripe webhook endpoint in the Stripe Dashboard:
-supabase secrets set STRIPE_WEBHOOK_SECRET=whsec_...      # value NEVER shared in chat
+Additionally the Stripe test key in `.env` is **expired**, so even the `create-checkout`
+Stripe API call cannot be exercised end-to-end until the owner rotates it.
 
-# 3. login + link + deploy ONLY the two real functions (the other 9 dirs are empty shells):
-supabase login
-supabase link --project-ref ivkdfognyiwjcmrhcnwz
-supabase functions deploy create-checkout stripe-webhook
+## 5. What this session CHANGED (repo)
 
-# 4. live webhook smoke (Stripe Dashboard → "Send test webhook"):
-#    - payment_intent.succeeded for a test PaymentIntent with
-#      metadata.order_number of a REAL order → expect HTTP 200 {"received":true,"result":"paid"}
-#    - duplicated delivery → second one still 200, no double-payment row
-#    - tampered body / bad signature → expect HTTP 400 ERR_INVALID_SIGNATURE
-```
+| File | Change |
+|------|--------|
+| `.env` / `.env.local` | rewritten as strict `KEY=VALUE` (no comment lines, no secrets). Fixes the CLI parse error pattern `failed to parse environment file ... in variable name near '#'`; removed `VITE_SUPABASE_SERVICE_ROLE_KEY`, `VITE_STRIPE_SECRET_KEY`, stale anon key. Working anon key from `.env.local` kept. |
+| `supabase/migrations/009_fix_007_extract_epoch.sql` | NEW - `CREATE OR REPLACE` of `create_order_with_items` with portable `extract(epoch from ...)`. Body verified byte-equal to 007 except that one line. |
+| `e2e/webhook-smoke.cjs` | NEW - live smoke tool for steps 4-7 (T1 unsigned, T2 invalid sig, T3 signed 200, T4 duplicate, T5 no-order 202, T6 DB verify). Negative path (T1/T2) ran green against the live EF this session. |
+| `.gitignore` | + `supabase/secrets.local.env` (local-only server secrets pattern) |
 
-## 6. Final note
+## 6. OWNER UNBLOCK (exact order)
 
-No secret was created or assumed. No `whsec_...` value appears in this repo or
-this session. Deployment is deliberately not performed until R1 is addressed
-(or explicitly accepted by the owner) and B1–B3 are cleared by the owner.
+1. **Supabase Dashboard -> SQL Editor**: run `supabase/migrations/009_fix_007_extract_epoch.sql`,
+   then `supabase/migrations/008_payment_state_machine_and_phase_d.sql` (008 is idempotent;
+   business_settings already exists -> `IF NOT EXISTS` handles it). Alternative with DB
+   password: `supabase db push` from the project dir.
+2. **Stripe Dashboard -> Developers -> Webhooks**: create endpoint
+   `https://ivkdfognyiwjcmrhcnwz.supabase.co/functions/v1/stripe-webhook` for
+   `payment_intent.succeeded` + `payment_intent.payment_failed` -> copy `whsec_...`.
+3. Set + keep the secrets out of the repo:
+   - `supabase secrets set STRIPE_SECRET_KEY=sk_test_...` (new, non-expired key)
+   - `supabase secrets set STRIPE_WEBHOOK_SECRET=whsec_...`
+   (`STRIPE_WEBHOOK_SECRET` is already set on the EF; re-set only if changed.)
+4. Rotate the service-role key (it existed in the working `.env`; purged this session).
+5. Re-run the gate:
+   `node e2e/webhook-smoke.cjs --order BMB-... --amount 172 --secret whsec_... --service-key sb_secret_...`
+   (or put the two secrets in `supabase/secrets.local.env`, gitignored, and pass `--secret file:` / `--service-key file:`).
+
+## 7. 9 EF forensic (owner directive honored)
+
+`ai-daily-report`, `calculate-promotion`, `check-inventory`, `daily-report`,
+`generate-rewards`, `inventory-reorder`, `random-menu-draw`, `track-share`, `vote-menu`
+= **0 files each, never deployed, nothing references them**. Per owner: **DO NOT deploy
+these empty shells** just to make the dashboard look complete - they stay as honest
+"planned" placeholders until actually implemented (Phase C / later).
 
 ---
 
-**END OF STRIPE_WEBHOOK_PRELIVE_AUDIT**
+**END OF STRIPE GATE - LIVE VERIFY REPORT (2026-09-19)**

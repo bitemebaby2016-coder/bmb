@@ -8,15 +8,21 @@
 
 ## ✅ Security Program (2026-09-18) — P0-4 → P0-6 + Phase C Forensic + Phase D Complete Admin
 
+> **2026-09-19 STRIPE GATE update (live evidence):** both EFs are DEPLOYED; webhook rejects unsigned/invalid
+> signatures (400, verified live); 007 anon EXECUTE once again effective (PGRST202); **007 has a NEW runtime bug**
+> (`extract_epoch` missing — fix in `migrations/009`), **migration 008 still NOT applied** (RPCs PGRST202), and the
+> Stripe secret key in `.env` is **expired**. Gate NOT passed — see `STRIPE_WEBHOOK_PRELIVE_AUDIT.md` (rewritten as
+> `STRIPE GATE - LIVE VERIFY REPORT`).
+
 | ID | Item | Status | Evidence |
 |----|------|--------|----------|
-| 007 | `create_order_with_items` server-authoritative order RPC | ✅ **LIVE VERIFIED** | live probe: anon → `P0001 ERR_NOT_AUTHENTICATED` (function runs, auth-guard works) |
-| P0-4 | Order creation/pricing server-side (no client totals) | ✅ DONE | migration 007 + `bmbAdminApi_orders.createOrder` (input-only) |
-| P0-5 | Payment real integration (Stripe EF + webhook + offline RPCs) | ✅ CODE DONE / ⛔ DEPLOY BLOCKED | `create-checkout` + `stripe-webhook` EF; migration 008 RPCs; `paymentGateway.ts` (no fake success) |
-| P0-6 | Order state machine (allow-list + trigger + RPC) | ✅ CODE DONE / ⛔ LIVE DB BLOCKED | migration 008 `order_transition_allowed` / `guard_order_status_transition` / `transition_order_status` |
-| Phase C | Forensic — trusted backend boundary + secrets + EF inventory | ✅ DONE | `PHASE_C_TRUSTED_BACKEND_FORENSIC.md` (9 empty EF shells found; deploy owner-blocked) |
+| 007 | `create_order_with_items` server-authoritative order RPC | ✅ EXECUTE-REVOKE LIVE / ❌ **runtime broken (extract_epoch)** | live probe 2026-09-19: anon → `PGRST202`; authenticated → `42883 extract_epoch does not exist` → fix = migration 009 |
+| P0-4 | Order creation/pricing server-side (no client totals) | ✅ CODE DONE / ⛔ **007 runtime bug blocks live orders** | migration 007 + `bmbAdminApi_orders.createOrder` (input-only); fix written |
+| P0-5 | Payment real integration (Stripe EF + webhook + offline RPCs) | ✅ CODE + EF DEPLOYED / ⛔ **008 RPCs not live** | `create-checkout` + `stripe-webhook` deployed (probed 401/200/400); valid-event 200 blocked by missing `record_payment_result` |
+| P0-6 | Order state machine (allow-list + trigger + RPC) | ✅ CODE DONE / ⛔ LIVE DB BLOCKED | migration 008 `transition_order_status` etc. → `PGRST202` on live |
+| Phase C | Forensic — trusted backend boundary + secrets + EF inventory | ✅ DONE / **2026-09-19 re-verified** | 9 EF shells = 0 files each; NOT deployed (owner directive); C3 closed, C4 new (extract_epoch) |
 | Phase D | Complete Admin (promotions/rounds/customers/settings) | ✅ DONE (UI+API) / ⛔ needs migration 008 applied live | 4 new pages + 4 lib APIs + routes + dashboard links |
-| .env | Client-facing secrets purged (service-role, Stripe keys) | ✅ DONE | `.env`/`.env.local` now contain NO secret material |
+| .env | Client-facing secrets purged (service-role, Stripe keys) | ✅ DONE (again) — 2026-09-19 | `.env`/`.env.local` rewritten strict `KEY=VALUE`, secrets removed; parse-error pattern fixed |
 
 **Tests:** Vitest **50/50 PASS** (26 baseline + **14 new** P0-5/P0-6 contract tests) ·
 `tsc --noEmit` 0 errors · `npm run build` PASS ·

@@ -1,0 +1,26 @@
+{
+  "timestamp": "2026-09-18T18:07:38.099Z",
+  "order": "BMB-NOSUCH",
+  "amount": 172,
+  "pi_id": "pi_test_smoke_1789754857",
+  "url": "https://ivkdfognyiwjcmrhcnwz.supabase.co/functions/v1/stripe-webhook",
+  "results": [
+    {
+      "name": "T1 unsigned -> 400",
+      "ok": true,
+      "extra": {
+        "status": 400,
+        "body": "{\"error\":\"ERR_INVALID_SIGNATURE\"}"
+      }
+    },
+    {
+      "name": "T2 invalid signature -> 400",
+      "ok": true,
+      "extra": {
+        "status": 400,
+        "body": "{\"error\":\"ERR_INVALID_SIGNATURE\"}"
+      }
+    }
+  ],
+  "pass": true
+}
