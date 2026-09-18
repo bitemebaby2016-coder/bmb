@@ -1,7 +1,7 @@
 ﻿# 🎯 Bite Me Baby Status Tracker
 
-> **Last Updated:** 2026-09-18 07:50 (Security Hardening v10.2)
-> **Version:** v10.2 (Security Hardening — RLS Secure Mode + Stripe Test Key + DB Migration 001-005 · Build PASS · Tests 26/26)
+> **Last Updated:** 2026-09-18 07:55 (Migration Fix v10.2.1)
+> **Version:** v10.2.1 (Migration Fix — RLS 005 use is_admin() function · Build PASS · Tests 26/26)
 > **Purpose:** Real-time status ของทุกงาน — อัปเดตตามผลตรวจจริง (เขียนทับสถานะเดิม)
 
 ---
