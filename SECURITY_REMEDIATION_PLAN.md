@@ -96,3 +96,18 @@
 - Auth ทั้งหมดผ่าน Supabase; AdminRoute ตรวจ DB
 - ราคา/state/payment ถูก enforce server-side
 - localStorage business keys ปลอดจาก authoritative role
+## Status Update (2026-09-18 — applied via commits `4f8c5c9` + this session)
+
+| Priority | Status | Where |
+|----------|--------|-------|
+| P0-1 (bundle service-role) | ✅ client purge done; **rotate key = owner** | supabase.ts, .env/.env.local |
+| P0-2 (Supabase Auth) | ✅ DONE | authStore.ts, Login/Register, AdminRoute |
+| P0-3 (admin privilege) | ✅ DONE | profiles guard trigger + is_admin() |
+| P0-4 (price authority) | ✅ DONE (migration 007 live) | `create_order_with_items` |
+| P0-5 (payment real) | ✅ code done in this session / ⛔ deploy blocked (owner) | migration 008 + `create-checkout`/`stripe-webhook` EF + paymentGateway.ts |
+| P0-6 (order state machine) | ✅ code done in this session / ⛔ apply migration 008 to live DB (owner) | migration 008 (`order_transition_allowed`, trigger, `transition_order_status`) |
+| P0-7 (RLS hardening) | ✅ DONE (migration 006 live) | 006 |
+
+**Tests Required (Phase B DoD) update:** `grep dist/` no service-role ✅; auth e2e ⛔ (live email rate-limit today, retry later); price tamper ✅ (mock contract test `ERR_AMOUNT_MISMATCH`); order state ✅ (14 offline contract tests); payment webhook idempotency ✅ (mock test); **live webhook test ⛔** (needs EF deployed + Stripe webhook endpoint configured in Stripe Dashboard).
+
+→ Full audit trail: `PHASE_C_TRUSTED_BACKEND_FORENSIC.md`

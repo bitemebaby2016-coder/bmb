@@ -193,3 +193,20 @@ Task: Closure Round — Model A GLM 5.2 free + Fallback / API test 19/19 / Light
 - Docs overwritten to real state: BITEMEBABY_PRODUCT_REALITY_MAP v4.0, STATUS_TRACKER v9.0, MASTER_PLAN v5.2, AI SESSION CONTRACT v1.2, CLOSURE BOOK v3.2, BiteMeBaby_API (Model A), README (Model A policy), AI_WORK_STATE.
 - Honest open items (not faked): Lighthouse Performance 29 (backlog for bundle/CLS/contrast), externalProviders dynamic import warning, GLM free tier rate-limit (fallback covers).
 - Git: commit + push to origin/main performed.
+=== BMB-P0-PHASE-CD SESSION (2026-09-18) ===
+Task ID: BMB-SEC-2026-09-18
+Status: CODE + TESTS DONE / LIVE DEPLOY BLOCKED (owner)
+Objective: Live-verify 007 → P0-5 (real payment) → P0-6 (order state machine) → Phase C Forensic → Phase D (approved) Complete Admin → final audit → commit+push (test-gated).
+
+Completed:
+- 007 LIVE VERIFIED: RPC exists; anon call → P0001 ERR_NOT_AUTHENTICATED. Note: anon still had EXECUTE (PGRST202 expected if REVOKE applied) → owner re-run 007 grants.
+- P0-5: supabase/functions/create-checkout + stripe-webhook (Deno, raw Stripe API + HMAC verify; zero fake success);
+  migration 008 (record_payment_result[service_role only], create_payment_intent_record, submit_offline_payment_reference, confirm_offline_payment, mark_payment_failed);
+  paymentGateway.ts rewritten (no simulation/localStorage); PaymentConfirmationPage: customer submits TXN → processing (never self-marks paid); AdminOrders: server-authoritative confirm.
+- P0-6: migration 008 state machine (order_transition_allowed + BEFORE UPDATE trigger + transition_order_status RPC); bmbAdminApi_orders.updateOrderStatus → RPC; direct status UPDATE blocked (RLS + trigger).
+- Phase C Forensic: PHASE_C_TRUSTED_BACKEND_FORENSIC.md (9 empty EF shells; secret purge; grant audit; C1-C7 open items).
+- Phase D Complete Admin: AdminPromotions, AdminRounds, AdminCustomers, AdminSettings + 4 lib APIs + routes + dashboard links.
+- .env/.env.local purged of VITE_SUPABASE_SERVICE_ROLE_KEY / VITE_STRIPE_SECRET_KEY / VITE_STRIPE_WEBHOOK_SECRET.
+Verified: tsc 0 errors [VERIFIED]; vitest 50/50 [VERIFIED] (14 new P0-5/P0-6 tests); npm run build PASS [VERIFIED].
+Blocked (owner): apply migration 008 to live DB; re-run 007 grants; supabase link+secrets+deploy EFs; rotate leaked service-role key; live Stripe webhook test; auth e2e live (email rate-limit today).
+Files changed: see git status (migrations/008, 2×supabase/functions, src/lib{paymentGateway,bmbAdminApi_orders,bmbAdminApi_{promotions,rounds,customers,settings}}, pages{PaymentConfirmation,admin/AdminOrders,admin/AdminDashboard,App.tsx}, 4 new admin pages, tests{paymentStateMachine, mockRef, supabaseMock}, docs).

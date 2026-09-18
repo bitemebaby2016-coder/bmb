@@ -6,6 +6,29 @@
 
 ---
 
+## ✅ Security Program (2026-09-18) — P0-4 → P0-6 + Phase C Forensic + Phase D Complete Admin
+
+| ID | Item | Status | Evidence |
+|----|------|--------|----------|
+| 007 | `create_order_with_items` server-authoritative order RPC | ✅ **LIVE VERIFIED** | live probe: anon → `P0001 ERR_NOT_AUTHENTICATED` (function runs, auth-guard works) |
+| P0-4 | Order creation/pricing server-side (no client totals) | ✅ DONE | migration 007 + `bmbAdminApi_orders.createOrder` (input-only) |
+| P0-5 | Payment real integration (Stripe EF + webhook + offline RPCs) | ✅ CODE DONE / ⛔ DEPLOY BLOCKED | `create-checkout` + `stripe-webhook` EF; migration 008 RPCs; `paymentGateway.ts` (no fake success) |
+| P0-6 | Order state machine (allow-list + trigger + RPC) | ✅ CODE DONE / ⛔ LIVE DB BLOCKED | migration 008 `order_transition_allowed` / `guard_order_status_transition` / `transition_order_status` |
+| Phase C | Forensic — trusted backend boundary + secrets + EF inventory | ✅ DONE | `PHASE_C_TRUSTED_BACKEND_FORENSIC.md` (9 empty EF shells found; deploy owner-blocked) |
+| Phase D | Complete Admin (promotions/rounds/customers/settings) | ✅ DONE (UI+API) / ⛔ needs migration 008 applied live | 4 new pages + 4 lib APIs + routes + dashboard links |
+| .env | Client-facing secrets purged (service-role, Stripe keys) | ✅ DONE | `.env`/`.env.local` now contain NO secret material |
+
+**Tests:** Vitest **50/50 PASS** (26 baseline + **14 new** P0-5/P0-6 contract tests) ·
+`tsc --noEmit` 0 errors · `npm run build` PASS ·
+**Live-verify 007:** function live, anon denied (see PHASE_C §Finding C3 for the EXECUTE-grant nuance the owner must re-run).
+
+**Owner follow-up (must do before claiming live) — see PHASE_C_TRUSTED_BACKEND_FORENSIC.md §5:**
+1. Apply migration 008 in the Supabase SQL Editor.
+2. Re-run 007 grants (idempotent) so anon EXECUTE is revoked properly.
+3. `supabase link` + `secrets set STRIPE_SECRET_KEY/STRIPE_WEBHOOK_SECRET` + deploy `create-checkout`/`stripe-webhook`.
+4. Rotate the original leaked service-role key.
+
+---
 ## CURRENT STATUS SUMMARY (v10.0 — 2026-09-17 Closure Final)
 
 | Category | Total | Done | In Progress | Pending | % Complete |
