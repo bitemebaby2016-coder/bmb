@@ -8,11 +8,13 @@
 -- 0. Helper Function: is_admin()
 -- ============================================
 CREATE OR REPLACE FUNCTION is_admin()
-RETURNS BOOLEAN AS 50
+RETURNS BOOLEAN
+LANGUAGE plpgsql SECURITY DEFINER
+AS $$
 BEGIN
   RETURN EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin');
 END;
-50 LANGUAGE plpgsql SECURITY DEFINER;
+$$;
 
 -- ============================================
 -- 1. orders — Secure Mode
