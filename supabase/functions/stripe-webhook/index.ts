@@ -22,6 +22,14 @@ function json(body: unknown, status = 200): Response {
   })
 }
 
+/** Constant-time hex comparison (avoids timing side-channels on the signature). */
+function timingSafeEqualHex(a: string, b: string): boolean {
+  if (a.length !== b.length) return false
+  let diff = 0
+  for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i)
+  return diff === 0
+}
+
 /** Verify a Stripe webhook signature (t=timestamp, v1=scheme) with HMAC-SHA256. */
 async function verifyStripeSignature(
   payload: string,
@@ -46,9 +54,7 @@ async function verifyStripeSignature(
     const data = new TextEncoder().encode(`${timestamp}.${payload}`)
     const sig = await crypto.subtle.sign('HMAC', { name: 'HMAC', hash: 'SHA-256' }, key, data)
     const hex = Array.from(new Uint8Array(sig)).map((b) => b.toString(16).padStart(2, '0')).join('')
-    // constant-time compare via crypto.subtle's equality is not exposed; the
-    // HMAC itself is the secret — a length-safe string compare is sufficient.
-    return hex.length === signature.length && hex === signature
+    return timingSafeEqualHex(hex, signature)
   } catch {
     return false
   }
@@ -56,6 +62,14 @@ async function verifyStripeSignature(
 
 function intMinorToMajor(amountMinor: number): number {
   return Number(amountMinor) / 100
+}
+
+// Permanent business rejections → HTTP 400 (Stripe must NOT retry these).
+// Anything else → 500 (transient, Stripe retries with backoff).
+const PERMANENT_ERRORS = ['ERR_ORDER_NOT_FOUND', 'ERR_AMOUNT_MISMATCH', 'ERR_MISSING_ORDER', 'ERR_MISSING_PAYMENT_INTENT_ID']
+
+function rpcErrorStatus(message: string): number {
+  return PERMANENT_ERRORS.some((e) => message.includes(e)) ? 400 : 500
 }
 
 Deno.serve(async (req: Request): Promise<Response> => {
@@ -74,7 +88,9 @@ Deno.serve(async (req: Request): Promise<Response> => {
     return json({ error: 'ERR_WEBHOOK_NOT_CONFIGURED' }, 500)
   }
   if (!(await verifyStripeSignature(payload, signature, secret))) {
-    return json({ error: 'ERR_INVALID_SIGNATURE' }, 401)
+    // 400 (not 401): Stripe treats 4xx as permanent — a bad signature will
+    // never become valid, so it must NOT be retried.
+    return json({ error: 'ERR_INVALID_SIGNATURE' }, 400)
   }
 
   let event: any
@@ -106,7 +122,9 @@ Deno.serve(async (req: Request): Promise<Response> => {
       })
       if (error) {
         console.error('[stripe-webhook] record_payment_result error:', error)
-        return json({ received: false, error: error.message }, 500)
+        // Permanent rule violations (missing/amount mismatch) → 400 (no retry);
+        // anything else → 500 (Stripe retries with backoff).
+        return json({ received: false, error: error.message }, rpcErrorStatus(String(error.message)))
       }
       return json({ received: true, result: 'paid' })
     }
@@ -121,7 +139,8 @@ Deno.serve(async (req: Request): Promise<Response> => {
       })
       if (error) {
         console.error('[stripe-webhook] record_payment_result error:', error)
-        return json({ received: false, error: error.message }, 500)
+        // Permanent rule violations → 400 (no retry); transient → 500.
+        return json({ received: false, error: error.message }, rpcErrorStatus(String(error.message)))
       }
       return json({ received: true, result: 'failed' })
     }

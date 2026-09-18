@@ -373,7 +373,9 @@ BEGIN
     v_is_admin := public.is_admin();
     v_is_owner := (OLD.customer_ref IS NOT NULL AND OLD.customer_ref = auth.uid());
     IF NOT public.order_transition_allowed(OLD.status::text, NEW.status::text, v_is_admin, v_is_owner) THEN
-      RAISE EXCEPTION 'FORBIDDEN: invalid order status transition ' || OLD.status::text || ' -> ' || NEW.status::text;
+      RAISE EXCEPTION 'FORBIDDEN: invalid order status transition % -> %',
+  OLD.status::text,
+  NEW.status::text;
     END IF;
   END IF;
   RETURN NEW;
@@ -417,7 +419,7 @@ BEGIN
   v_is_owner := (v_customer_ref IS NOT NULL AND v_customer_ref = v_uid);
 
   IF NOT public.order_transition_allowed(v_old::text, p_new_status::text, v_is_admin, v_is_owner) THEN
-    RAISE EXCEPTION 'ERR_INVALID_TRANSITION: ' || v_old::text || ' -> ' || p_new_status::text;
+    RAISE EXCEPTION 'ERR_INVALID_TRANSITION: % -> %', v_old::text, p_new_status::text;
   END IF;
 
   UPDATE public.orders SET status = p_new_status, updated_at = NOW()

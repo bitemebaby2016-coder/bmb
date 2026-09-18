@@ -1,0 +1,24 @@
+# ============================================
+# Bite Me Baby — Supabase configuration
+# project_ref = Supabase dashboard subdomain id (derived from project URL)
+# ============================================
+project_id = "ivkdfognyiwjcmrhcnwz"
+
+# Edge Functions settings are read by `supabase functions deploy`.
+# None of these functions are deployed until the owner runs the deploy
+# command (see STRIPE_WEBHOOK_PRELIVE_AUDIT.md §Deploy).
+
+# create-checkout: called by logged-in clients with their own JWT.
+#   verify_jwt = true  → platform rejects anonymous callers (defense-in-depth).
+#   The handler additionally re-verifies the user via /auth/v1/user.
+[functions.create-checkout]
+enabled = true
+verify_jwt = true
+
+# stripe-webhook: called by STRIPE, which does NOT send a Supabase JWT.
+#   verify_jwt = false is REQUIRED — Stripe requests would otherwise be
+#   rejected by the platform before reaching the handler.
+#   The handler itself verifies the Stripe signature (Stripe-Signature header).
+[functions.stripe-webhook]
+enabled = true
+verify_jwt = false
