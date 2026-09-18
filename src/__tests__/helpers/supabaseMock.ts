@@ -61,6 +61,7 @@ export function createSupabaseMock() {
     let orderSpec: { col: string; ascending: boolean } | null = null
     let action: { type: 'insert'; rows: MockRow[] } | { type: 'update'; patch: MockRow } | { type: 'delete' } | null = null
     let singleMode = false
+    let maybeMode = false
 
     const matches = (row: MockRow) => filters.every(f => row[f.col] === f.val)
 
@@ -98,6 +99,7 @@ export function createSupabaseMock() {
       }
       if (singleMode) {
         if (rows.length === 1) return { data: rows[0], error: null }
+        if (maybeMode) return { data: null, error: null }
         return { data: null, error: NOT_FOUND }
       }
       return { data: rows, error: null }
@@ -111,6 +113,7 @@ export function createSupabaseMock() {
       update(patch: MockRow) { action = { type: 'update', patch }; return builder },
       delete() { action = { type: 'delete' }; return builder },
       single() { singleMode = true; return builder },
+      maybeSingle() { singleMode = true; maybeMode = true; return builder },
       then(resolve: any, reject: any) { run().then(resolve, reject) },
     }
     return builder
@@ -244,8 +247,172 @@ export function createSupabaseMock() {
         error: null,
       }
     }
+    // ============ P0-5 / P0-6 RPC handlers (migration 008 contract) ============
+    if (name === 'create_payment_intent_record') {
+      const p = params ?? {}
+      const order = (tables['orders'] || []).find((o: any) => o.order_number === p.p_order_number)
+      if (!order) return { data: null, error: { code: 'ERR_ORDER_NOT_FOUND', message: 'ERR_ORDER_NOT_FOUND' } }
+      if (Number(p.p_amount) !== Number(order.total_amount)) {
+        return { data: null, error: { code: 'ERR_AMOUNT_MISMATCH', message: 'ERR_AMOUNT_MISMATCH' } }
+      }
+      const piId = `pi-mock-${Date.now()}-${Math.floor(Math.random() * 1000)}`
+      const row = {
+        id: piId,
+        order_number: p.p_order_number,
+        amount: Number(p.p_amount),
+        currency: 'thb',
+        status: 'pending',
+        method: p.p_method || 'promptpay_qr',
+        provider: p.p_provider || 'promptpay',
+        metadata: p.p_metadata || {},
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      }
+      ;(tables['payment_intents'] ||= []).push(row)
+      return {
+        data: { id: piId, order_number: p.p_order_number, amount: Number(p.p_amount), status: 'pending', method: p.p_method || 'promptpay_qr' },
+        error: null,
+      }
+    }
+
+    if (name === 'submit_offline_payment_reference') {
+      const p = params ?? {}
+      const intents = tables['payment_intents'] || []
+      const pi = intents.find((x: any) => x.order_number === p.p_order_number && x.method === 'promptpay_qr' && x.status === 'pending')
+      if (!pi) return { data: null, error: { code: 'ERR_NO_PENDING_PROMPTPAY', message: 'ERR_NO_PENDING_PROMPTPAY' } }
+      pi.status = 'processing'
+      pi.metadata = { ...(pi.metadata || {}), reference: String(p.p_reference) }
+      pi.updated_at = new Date().toISOString()
+      return { data: { ok: true, order_number: p.p_order_number, intent_status: 'processing' }, error: null }
+    }
+
+    if (name === 'confirm_offline_payment') {
+      const p = params ?? {}
+      const order = (tables['orders'] || []).find((o: any) => o.order_number === p.p_order_number)
+      if (!order) return { data: null, error: { code: 'ERR_ORDER_NOT_FOUND', message: 'ERR_ORDER_NOT_FOUND' } }
+      if (order.payment_status === 'paid') {
+        return { data: { ok: true, idempotent: true, order_number: p.p_order_number }, error: null }
+      }
+      if (order.payment_method === 'cash_on_delivery') {
+        if (order.status !== 'delivered') {
+          return { data: null, error: { code: 'ERR_COD_NOT_DELIVERED', message: 'ERR_COD_NOT_DELIVERED' } }
+        }
+      } else {
+        const intents = tables['payment_intents'] || []
+        const cands = intents
+          .filter((x: any) => x.order_number === p.p_order_number && x.method === order.payment_method)
+          .sort((a: any, b: any) => (a.created_at > b.created_at ? -1 : 1))
+        const pi = cands[0]
+        if (!pi) return { data: null, error: { code: 'ERR_NO_PAYMENT_INTENT', message: 'ERR_NO_PAYMENT_INTENT' } }
+        if (pi.status !== 'processing') {
+          return { data: null, error: { code: 'ERR_INTENT_NOT_PROCESSING', message: 'ERR_INTENT_NOT_PROCESSING' } }
+        }
+        pi.status = 'completed'
+        pi.completed_at = new Date().toISOString()
+      }
+      order.payment_status = 'paid'
+      order.updated_at = new Date().toISOString()
+      return { data: { ok: true, idempotent: false, order_number: p.p_order_number, payment_status: 'paid' }, error: null }
+    }
+
+    if (name === 'mark_payment_failed') {
+      const p = params ?? {}
+      const intents = tables['payment_intents'] || []
+      intents
+        .filter((x: any) => x.order_number === p.p_order_number && (x.status === 'pending' || x.status === 'processing'))
+        .forEach((x: any) => {
+          x.status = 'failed'
+          x.failure_reason = p.p_reason || 'admin'
+          x.updated_at = new Date().toISOString()
+        })
+      return { data: { ok: true, order_number: p.p_order_number }, error: null }
+    }
+
+    if (name === 'record_payment_result') {
+      const p = params ?? {}
+      const order = (tables['orders'] || []).find((o: any) => o.order_number === p.p_order_number)
+      if (!order) return { data: null, error: { code: 'ERR_ORDER_NOT_FOUND', message: 'ERR_ORDER_NOT_FOUND' } }
+      const intents = tables['payment_intents'] || []
+      const existing = intents.find((x: any) => x.payment_intent_id === p.p_payment_intent_id)
+      if (existing) {
+        return { data: { ok: true, idempotent: true, order_number: p.p_order_number, intent_status: existing.status }, error: null }
+      }
+      if (Number(p.p_amount) !== Number(order.total_amount)) {
+        return { data: null, error: { code: 'ERR_AMOUNT_MISMATCH', message: 'ERR_AMOUNT_MISMATCH' } }
+      }
+      intents
+        .filter((x: any) => x.order_number === p.p_order_number)
+        .forEach((x: any) => {
+          x.status = p.p_status || 'completed'
+          x.payment_intent_id = p.p_payment_intent_id
+          x.amount = Number(p.p_amount)
+          if ((p.p_status || 'completed') === 'completed') x.completed_at = new Date().toISOString()
+          if (p.p_failure_reason) x.failure_reason = p.p_failure_reason
+          x.updated_at = new Date().toISOString()
+        })
+      order.payment_status = (p.p_status || 'completed') === 'completed' ? 'paid' : 'pending'
+      order.updated_at = new Date().toISOString()
+      return { data: { ok: true, idempotent: false, order_number: p.p_order_number, payment_status: order.payment_status }, error: null }
+    }
+
+    if (name === 'transition_order_status') {
+      const p = params ?? {}
+      const order = (tables['orders'] || []).find((o: any) => o.order_number === p.p_order_number)
+      if (!order) return { data: null, error: { code: 'ERR_ORDER_NOT_FOUND', message: 'ERR_ORDER_NOT_FOUND' } }
+      const from = String(order.status)
+      const to = String(p.p_new_status)
+      if (from === to) return { data: { ok: true, order_number: p.p_order_number, from, to }, error: null }
+      const chain: Array<[string, string]> = [
+        ['pending', 'confirmed'],
+        ['confirmed', 'preparing'],
+        ['preparing', 'ready_for_dispatch'],
+        ['ready_for_dispatch', 'dispatched'],
+        ['dispatched', 'in_transit'],
+        ['in_transit', 'arrived'],
+        ['arrived', 'delivered'],
+      ]
+      const cancelFrom = ['pending', 'confirmed', 'preparing', 'ready_for_dispatch', 'dispatched', 'in_transit', 'arrived']
+      const adminOk =
+        chain.some(([a, b]) => a === from && b === to) ||
+        (cancelFrom.includes(from) && (to === 'cancelled' || to === 'failed'))
+      if (!adminOk) {
+        return { data: null, error: { code: 'ERR_INVALID_TRANSITION', message: `ERR_INVALID_TRANSITION: ${from} -> ${to}` } }
+      }
+      order.status = to
+      order.updated_at = new Date().toISOString()
+      return { data: { ok: true, order_number: p.p_order_number, from, to }, error: null }
+    }
+
     return { data: null, error: { code: 'PGRST202', message: 'rpc not mocked' } }
   }
 
-  return { from, rpc }
+  // ============ Edge Function mock (supabase.functions.invoke) ============
+  const invokeHandlers: Record<string, (body: any) => Promise<{ data: any; error: any }>> = {}
+
+  function setInvokeHandler(name: string, handler: (body: any) => Promise<{ data: any; error: any }>) {
+    invokeHandlers[name] = handler
+  }
+
+  const functions = {
+    async invoke(fnName: string, options: { body?: any } = {}): Promise<{ data: any; error: any }> {
+      const handler = invokeHandlers[fnName]
+      if (!handler) return { data: null, error: { message: `Function '${fnName}' not mocked` } }
+      return handler(options?.body ?? {})
+    },
+  }
+
+  return {
+    from,
+    rpc,
+    functions,
+    __setInvokeHandler: setInvokeHandler,
+    __tables: tables,
+    __reset() {
+      const fresh = clone(seed) as Record<string, MockRow[]>
+      for (const k of Object.keys(fresh)) tables[k] = fresh[k]
+      for (const k of Object.keys(tables)) {
+        if (!(k in fresh)) delete tables[k]
+      }
+    },
+  }
 }
