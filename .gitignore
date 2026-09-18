@@ -33,3 +33,7 @@ dist-ssr
 # OpenRouter API Key (DO NOT COMMIT)
 OPENROUTER_API_KEY=
 sk-or-v1-*
+
+# Supabase CLI local scratch
+supabase/.temp/
+supabase/.branches/

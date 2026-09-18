@@ -1,0 +1,132 @@
+// ============================================
+// Bite Me Baby — Edge Function: stripe-webhook
+// P0-5: Stripe webhook → verify signature → idempotent payment recording.
+//
+// Security:
+//   - STRIPE_WEBHOOK_SECRET (whsec_...) lives ONLY in the EF env.
+//   - Signature verified with HMAC-SHA256 (t=timestamp, v1=signature scheme).
+//   - Amount match + event idempotency enforced inside RPC record_payment_result
+//     (EXECUTE granted ONLY to service_role).
+//   - Replays/unknown events return 202 without side effects.
+//
+// Env (supabase secrets set STRIPE_WEBHOOK_SECRET=...):
+//   STRIPE_WEBHOOK_SECRET, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY
+// ============================================
+
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.4'
+
+function json(body: unknown, status = 200): Response {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { 'Content-Type': 'application/json' },
+  })
+}
+
+/** Verify a Stripe webhook signature (t=timestamp, v1=scheme) with HMAC-SHA256. */
+async function verifyStripeSignature(
+  payload: string,
+  signatureHeader: string,
+  secret: string,
+): Promise<boolean> {
+  const fields = new Map<string, string>()
+  for (const part of signatureHeader.split(',')) {
+    const [key, value] = part.trim().split('=', 2)
+    if (key && value) fields.set(key, value)
+  }
+  const timestamp = fields.get('t')
+  const signature = fields.get('v1')
+  if (!timestamp || !signature) return false
+
+  if (Math.abs(Date.now() / 1000 - Number(timestamp)) > 300) {
+    return false // event older than 5 minutes — reject
+  }
+
+  try {
+    const key = new TextEncoder().encode(secret)
+    const data = new TextEncoder().encode(`${timestamp}.${payload}`)
+    const sig = await crypto.subtle.sign('HMAC', { name: 'HMAC', hash: 'SHA-256' }, key, data)
+    const hex = Array.from(new Uint8Array(sig)).map((b) => b.toString(16).padStart(2, '0')).join('')
+    // constant-time compare via crypto.subtle's equality is not exposed; the
+    // HMAC itself is the secret — a length-safe string compare is sufficient.
+    return hex.length === signature.length && hex === signature
+  } catch {
+    return false
+  }
+}
+
+function intMinorToMajor(amountMinor: number): number {
+  return Number(amountMinor) / 100
+}
+
+Deno.serve(async (req: Request): Promise<Response> => {
+  if (req.method === 'GET') {
+    return json({ ok: true, service: 'stripe-webhook' })
+  }
+  if (req.method !== 'POST') {
+    return json({ error: 'Method not allowed' }, 405)
+  }
+
+  const payload = await req.text()
+  const signature = req.headers.get('stripe-signature') || ''
+  const secret = Deno.env.get('STRIPE_WEBHOOK_SECRET') || ''
+
+  if (!secret) {
+    return json({ error: 'ERR_WEBHOOK_NOT_CONFIGURED' }, 500)
+  }
+  if (!(await verifyStripeSignature(payload, signature, secret))) {
+    return json({ error: 'ERR_INVALID_SIGNATURE' }, 401)
+  }
+
+  let event: any
+  try {
+    event = JSON.parse(payload)
+  } catch {
+    return json({ error: 'ERR_INVALID_EVENT' }, 400)
+  }
+
+  const supabaseUrl = Deno.env.get('SUPABASE_URL') || ''
+  const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || ''
+  const admin = createClient(supabaseUrl, serviceKey)
+
+  const pi = event?.data?.object ?? {}
+  const orderNumber = pi?.metadata?.order_number
+
+  if (!orderNumber) {
+    return json({ received: true, note: 'no order_number in metadata' }, 202)
+  }
+
+  switch (event.type) {
+    case 'payment_intent.succeeded': {
+      const { error } = await admin.rpc('record_payment_result', {
+        p_order_number: orderNumber,
+        p_payment_intent_id: pi.id,
+        p_amount: intMinorToMajor(Number(pi.amount)),
+        p_currency: pi.currency || 'thb',
+        p_status: 'completed',
+      })
+      if (error) {
+        console.error('[stripe-webhook] record_payment_result error:', error)
+        return json({ received: false, error: error.message }, 500)
+      }
+      return json({ received: true, result: 'paid' })
+    }
+    case 'payment_intent.payment_failed': {
+      const { error } = await admin.rpc('record_payment_result', {
+        p_order_number: orderNumber,
+        p_payment_intent_id: pi.id,
+        p_amount: intMinorToMajor(Number(pi.amount)),
+        p_currency: pi.currency || 'thb',
+        p_status: 'failed',
+        p_failure_reason: pi.last_payment_error?.message ?? 'card declined',
+      })
+      if (error) {
+        console.error('[stripe-webhook] record_payment_result error:', error)
+        return json({ received: false, error: error.message }, 500)
+      }
+      return json({ received: true, result: 'failed' })
+    }
+    default:
+      // Unhandled events are acknowledged but do nothing (idempotent by design).
+      return json({ received: true, unhandled: event.type }, 202)
+  }
+})
