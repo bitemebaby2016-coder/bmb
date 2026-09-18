@@ -1,7 +1,7 @@
 ﻿# 🎯 Bite Me Baby Status Tracker
 
-> **Last Updated:** 2026-09-18 07:55 (Migration Fix v10.2.1)
-> **Version:** v10.2.1 (Migration Fix — RLS 005 use is_admin() function · Build PASS · Tests 26/26)
+> **Last Updated:** 2026-09-18 08:20 (Migration Fix v10.2.2 — Live Supabase RLS Secure Mode Active)
+> **Version:** v10.2.2 (Migration 005 LIVE on Supabase · is_admin() function working · RLS Secure Mode enforced)
 > **Purpose:** Real-time status ของทุกงาน — อัปเดตตามผลตรวจจริง (เขียนทับสถานะเดิม)
 
 ---
@@ -30,7 +30,7 @@
 - ✅ **Live Supabase write ตรวจจริง:** `orders`=`BMB-20260917-526`, `pre_orders`=`PO-20260917-338`, `payment_intents`=completed — REST write ผ่าน (RLS ยัง permissive รอ owner rebuild 001→004)
 - ✅ **Mascot Pose Map:** `pointing` (hero CTA), `peeking` (review glass), `empty` (empty cart + sold-out + no-result), **`bye`** (ใหม่ = `bite_good bye.webp` — delivered/payment success) — ครบทุกท่า
 - ✅ **Pre-order = order จริง:** `createPreOrder()` ถูกเรียกจาก HomePage/MenuPage → เขียน `pre_orders` (ไม่ใช่แค่ toast) — ใช้ mockup สินค้าต่อตาม owner
-- ⏸️ **Live Supabase rebuild 001→005:** ✅ DONE (migration 001-005 รันบน Supabase แล้ว) — RLS policies 005_secure_rls_policies.sql (Secure Mode)
+- ✅ **Live Supabase rebuild 001→005:** ✅ DONE (migration 001-005 รันบน Supabase แล้ว) — RLS policies 005_secure_rls_policies.sql (Secure Mode) — **is_admin() function working** — **RLS enforcing correctly** (Admin sees all, Users see own data)
 
 ---
 
@@ -85,7 +85,7 @@
 - **Lighthouse**: **Performance 81** / Accessibility 85 / BP 100 / SEO 100 (`lighthouse/final_2026-09-17.json` + `final_summary.txt`)
 - **E2E**: Playwright 7/7 PASS, 0 console errors (`e2e/`) — สร้าง real rows: `orders` BMB-20260917-526, `pre_orders` PO-20260917-338, `payment_intents` completed
 - **Production Deploy**: Cloudflare Pages ⏳ **รอ deploy ใหม่** — บิลด์ล้ม 2 ครั้ง (`1dbf988`, `9f58150`) → แก้แล้ว commit `3723d17` — ดู `docs/BiteMeBaby_DEPLOYMENT.md`
-- **DB Migration**: 001→002→003→004 ready — live reset/rebuild 🔴 BLOCKED (owner) — RLS ยัง permissive
+- **DB Migration**: 001→002→003→004→005 **LIVE on Supabase** ✅ — RLS **Secure Mode enforced** (is_admin() function working) — Admin/User access control active
 - **Git**: commit ตาม convention `type(scope): subject` — ดู `git log`
 
 ---
@@ -113,4 +113,4 @@
 
 ---
 
-## END OF STATUS TRACKER (v10.1 — Build Fix — 2026-09-17)
+## END OF STATUS TRACKER (v10.2.2 — Migration 005 LIVE on Supabase — 2026-09-18)
