@@ -88,7 +88,7 @@ export function AdminDashboard() {
           <div className="font-bold text-brand-accent text-lg">สต็อกวัตถุดิบ</div>
           <div className="text-sm text-brand-muted mt-1">จัดการวัตถุดิบและสต็อก</div>
         </Link>
-        <Link to="/promotions" className="card text-center hover:scale-105 transition-all hover:shadow-xl bg-gradient-to-br from-pink-50 to-rose-50 border-2 border-pink-200">
+        <Link to="/admin/promotions" className="card text-center hover:scale-105 transition-all hover:shadow-xl bg-gradient-to-br from-pink-50 to-rose-50 border-2 border-pink-200">
           <div className="text-4xl mb-3">🎟️</div>
           <div className="font-bold text-brand-accent text-lg">โปรโมชั่น</div>
           <div className="text-sm text-brand-muted mt-1">สร้างและจัดการโปรโมชั่น</div>
@@ -99,6 +99,22 @@ export function AdminDashboard() {
           <div className="text-sm text-brand-muted mt-1">Route optimization + ผู้ให้บริการ</div>
         </Link>
       </div>
+
+      <Link to="/admin/rounds" className="card text-center hover:scale-105 transition-all hover:shadow-xl bg-gradient-to-br from-indigo-50 to-violet-50 border-2 border-indigo-200">
+          <div className="text-4xl mb-3">🕐</div>
+          <div className="font-bold text-brand-accent text-lg">Rounds</div>
+          <div className="text-sm text-brand-muted mt-1">Time + capacity</div>
+        </Link>
+        <Link to="/admin/customers" className="card text-center hover:scale-105 transition-all hover:shadow-xl bg-gradient-to-br from-emerald-50 to-green-50 border-2 border-emerald-200">
+          <div className="text-4xl mb-3">👥</div>
+          <div className="font-bold text-brand-accent text-lg">Customers</div>
+          <div className="text-sm text-brand-muted mt-1">Profile + spend</div>
+        </Link>
+        <Link to="/admin/settings" className="card text-center hover:scale-105 transition-all hover:shadow-xl bg-gradient-to-br from-slate-50 to-gray-50 border-2 border-slate-200">
+          <div className="text-4xl mb-3">⚙️</div>
+          <div className="font-bold text-brand-accent text-lg">Settings</div>
+          <div className="text-sm text-brand-muted mt-1">Business settings</div>
+        </Link>
 
       {/* Overview Summary - Premium Style */}
       <div className="card bg-gradient-to-br from-brand-bg-warm to-brand-bg">
