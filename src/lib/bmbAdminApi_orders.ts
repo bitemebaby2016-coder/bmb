@@ -1,10 +1,53 @@
 // ============================================
 // Bite Me Baby Admin API - Orders
-// ✅ v3.1: Using Supabase (replaces localStorage)
 // ============================================
 
 import { supabase } from './supabase'
-import { storageGet, storageSet } from './bmbStorage'
+import { storageGet } from './bmbStorage'
+
+// P0-4 SPLIT (2026-09-18):
+//   OrderInput  — client payload (INPUT ONLY, no financial authority)
+//   OrderResult — server-authoritative result from RPC `create_order_with_items`
+//   OrderForm   — hydrated admin/read model (DB row + items)
+// Client MUST NOT send price/subtotal/discount/delivery_fee/total_amount.
+export interface OrderItemInput {
+  product_id: string
+  quantity: number
+  options?: Record<string, string | string[]>
+  special_request?: string
+}
+
+export interface OrderInput {
+  items: OrderItemInput[]
+  delivery_round_id: string
+  delivery_method?: string
+  delivery_address?: string
+  dropoff_latitude?: number
+  dropoff_longitude?: number
+  customer_name: string
+  customer_phone?: string
+  payment_method?: string
+  special_instructions?: string
+  promotion_code?: string
+  distance_km?: number
+  // intentionally NO price/subtotal/discount/delivery_fee/total_amount
+}
+
+export interface OrderResult {
+  id: string
+  order_number: string
+  status: string
+  subtotal: number
+  discount_amount: number
+  delivery_fee: number
+  service_fee: number
+  tax_amount: number
+  total_amount: number
+  payment_status: string
+  payment_method: string
+  delivery_round_id: string
+  customer_ref: string
+}
 
 export interface OrderForm {
   id?: string
@@ -67,64 +110,30 @@ export async function getOrder(orderNumber: string): Promise<OrderForm | null> {
   return data as OrderForm
 }
 
-export async function createOrder(data: OrderForm): Promise<OrderForm | null> {
-  const orderData = {
-    id: data.id || `ord-${Date.now()}`,
-    order_number: data.order_number || `BMB-${new Date().toISOString().slice(0, 10).replace(/-/g, '')}-${String(Math.floor(Math.random() * 1000)).padStart(3, '0')}`,
-    customer_id: data.customer_id,
-    customer_name: data.customer_name,
-    customer_phone: data.customer_phone,
-    delivery_round_id: data.delivery_round_id,
-    status: data.status || 'pending',
-    total_amount: data.total_amount,
-    delivery_fee: data.delivery_fee,
-    payment_method: data.payment_method as any,
-    payment_status: data.payment_status || 'pending',
-    dropoff_detail: data.delivery_address,
-    dropoff_latitude: data.dropoff_latitude,
-    dropoff_longitude: data.dropoff_longitude,
+// P0-4: createOrder per RPC (server-authoritative). Client sends ONLY input.
+export async function createOrder(input: OrderInput): Promise<OrderResult | null> {
+  const payload = {
+    items: input.items.map((it) => ({
+      product_id: it.product_id,
+      quantity: it.quantity,
+      options: it.options ?? {},
+      special_request: it.special_request ?? '',
+    })),
+    delivery_round_id: input.delivery_round_id,
+    delivery_method: input.delivery_method ?? 'self_delivery',
+    delivery_address: input.delivery_address ?? '',
+    dropoff_latitude: input.dropoff_latitude,
+    dropoff_longitude: input.dropoff_longitude,
+    customer_name: input.customer_name,
+    customer_phone: input.customer_phone ?? '',
+    payment_method: input.payment_method ?? 'promptpay_qr',
+    special_instructions: input.special_instructions ?? '',
+    promotion_code: input.promotion_code ?? undefined,
+    distance_km: input.distance_km ?? undefined,
   }
-
-  const { data: order, error: orderError } = await supabase.from('orders').insert(orderData).select().single()
-  if (orderError) {
-    console.error('[createOrder] Error:', orderError)
-    // Offline/PWA fallback — same row shape persisted locally (consistent with
-    // every other bmbAdminApi_* module; NOT a fake — it is the offline datastore)
-    const fallbackOrder: OrderForm = {
-      ...data,
-      id: orderData.id,
-      order_number: orderData.order_number,
-      status: orderData.status,
-      total_amount: orderData.total_amount,
-      delivery_fee: orderData.delivery_fee,
-      payment_method: orderData.payment_method,
-      payment_status: orderData.payment_status,
-      delivery_address: data.delivery_address,
-      dropoff_latitude: orderData.dropoff_latitude,
-      dropoff_longitude: orderData.dropoff_longitude,
-    }
-    const local = storageGet<OrderForm[]>('orders', [])
-    local.push(fallbackOrder)
-    storageSet('orders', local)
-    return fallbackOrder
-  }
-
-  // Insert order items
-  if (data.items && data.items.length > 0) {
-    const itemsData = data.items.map((item, idx) => ({
-      id: `oi-${order!.id}-${idx}`,
-      order_id: order!.id,
-      product_id: item.product_id,
-      product_name: item.product_name,
-      quantity: item.quantity,
-      unit_price: item.unit_price,
-    }))
-
-    const { error: itemsError } = await supabase.from('order_items').insert(itemsData)
-    if (itemsError) { console.error('[createOrder] Items Error:', itemsError) }
-  }
-
-  return order as OrderForm
+  const { data, error } = await supabase.rpc('create_order_with_items', payload)
+  if (error) { console.error('[createOrder] RPC error:', error); return null }
+  return data as OrderResult
 }
 
 export async function updateOrderStatus(orderNumber: string, status: string): Promise<OrderForm | null> {

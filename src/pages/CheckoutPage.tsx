@@ -1,11 +1,11 @@
-﻿import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate, Link, useSearchParams } from 'react-router-dom'
 import { useCartStore } from '@/store/cartStore'
 import { useAuthStore } from '@/store/authStore'
 import { useNotificationStore } from '@/store/notificationStore'
 import { storeConversationMessage, getMemorySummary, updateCustomerMemory } from '@/lib/aiMemory'
 import { showToast } from '@/components/ui/ToastContainer'
-import { createOrder, type OrderForm } from '@/lib/bmbAdminApi_orders'
+import { createOrder, type OrderForm, type OrderInput } from '@/lib/bmbAdminApi_orders'
 import { createPaymentIntent } from '@/lib/paymentGateway'
 import { writeAuditLog } from '@/lib/auditLog'
 import { getBestProvider, calculateProviderCost, type DeliveryProvider } from '@/lib/externalProviders'
@@ -70,38 +70,28 @@ export function CheckoutPage() {
 
     setIsProcessing(true)
 
-    const orderItems = items.map(item => ({
-      product_id: item.product.id,
-      product_name: item.product.name,
-      quantity: item.quantity,
-      unit_price: item.product.price,
-    }))
 
-    const today = new Date()
-    const orderData: OrderForm = {
-      id: `ord-${Date.now()}`,
-      order_number: `BMB-${today.toISOString().slice(0, 10).replace(/-/g, '')}-${String(Math.floor(Math.random() * 999) + 1).padStart(3, '0')}`,
-      customer_id: customer?.id || 'guest',
-      customer_name: customer?.name || 'Guest',
-      customer_phone: customer?.phone || '',
+    // P0-4: client sends INPUT ONLY (product_id/quantity/options).
+    // NO price / unit_price / subtotal / discount / delivery_fee / total_amount.
+    const orderInput: OrderInput = {
+      items: items.map((item) => ({
+        product_id: item.product.id,
+        quantity: item.quantity,
+        options: item.customizations,
+      })),
       delivery_round_id: ({ morning: 'round-1', midday: 'round-2', evening: 'round-3' } as Record<string, string>)[selectedRound] || selectedRound,
-      status: 'pending',
-      total_amount: total,
-      delivery_fee: providerCost,
-      payment_method: paymentMethod,
-      payment_status: paymentMethod === 'promptpay_qr' ? 'pending' : 'pending',
+      delivery_method: selectedProvider.type as any,
       delivery_address: deliveryAddress.detail,
       dropoff_latitude: deliveryAddress.latitude,
       dropoff_longitude: deliveryAddress.longitude,
-      delivery_method: selectedProvider.type as any,
-      provider_id: selectedProvider.id,
-      provider_name: selectedProvider.name,
-      items: orderItems,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
+      customer_name: customer?.name || 'Guest',
+      customer_phone: customer?.phone || '',
+      payment_method: paymentMethod,
+      distance_km: 0,
     }
 
-    const order = await createOrder(orderData)
+    // Server-authoritative: RPC computes prices/discount/delivery/total from DB.
+    const order = await createOrder(orderInput)
     if (!order) {
       showToast('สร้างออเดอรล้มเหลว กรุาลองใหม่', 'error')
       setIsProcessing(false)
@@ -113,7 +103,7 @@ export function CheckoutPage() {
     try {
       await createPaymentIntent(
         order.order_number,
-        total,
+        order.total_amount,
         paymentMethod,
         { providerId: selectedProvider.id, providerName: selectedProvider.name }
       )
@@ -147,10 +137,10 @@ export function CheckoutPage() {
       action: 'order_create',
       entity_type: 'order',
       entity_id: order.order_number,
-      description: `ออเดอรใหม่ #${order.order_number} ดย ${customer?.name || customer?.email || 'Guest'} รวม ${total.toFixed(2)} บาท (ผ้ให้บริการ: ${selectedProvider.name})`,
+      description: `ออเดอรใหม่ #${order.order_number} ดย ${customer?.name || customer?.email || 'Guest'} รวม ${order.total_amount.toFixed(2)} บาท (ผ้ให้บริการ: ${selectedProvider.name})`,
       metadata: { 
         itemCount: items.length, 
-        totalAmount: total, 
+        totalAmount: order.total_amount, 
         paymentMethod: paymentMethod,
         deliveryProvider: selectedProvider.id,
         deliveryProviderName: selectedProvider.name,
@@ -163,7 +153,7 @@ export function CheckoutPage() {
     useNotificationStore.getState().triggerEvent('order_placed', {
       orderNumber: order.order_number,
       userId: customer?.id || '',
-      totalAmount: total,
+      totalAmount: order.total_amount,
       itemCount: items.length,
       deliveryProvider: selectedProvider.name,
     })

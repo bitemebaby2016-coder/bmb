@@ -116,5 +116,136 @@ export function createSupabaseMock() {
     return builder
   }
 
-  return { from }
+  // RPC mock — mirrors migration 007 `create_order_with_items` server-authoritative
+  // contract (for client-contract tests: client payload must NOT carry financial
+  // fields; server always computes from products.price / delivery rules).
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  async function rpc(name: string, params: any): Promise<{ data: any; error: any }> {
+    if (name === 'create_order_with_items') {
+      const p = params ?? {}
+      const items: any[] = Array.isArray(p.items) ? p.items : []
+      if (items.length === 0) {
+        return { data: null, error: { code: 'ERR_EMPTY_ORDER', message: 'ERR_EMPTY_ORDER' } }
+      }
+      if (!p.delivery_round_id) {
+        return { data: null, error: { code: 'ERR_MISSING_ROUND', message: 'ERR_MISSING_ROUND' } }
+      }
+      const round = (tables['delivery_rounds'] || []).find((r: any) => r.id === p.delivery_round_id)
+      if (!round) return { data: null, error: { code: 'ERR_ROUND_NOT_FOUND', message: 'ERR_ROUND_NOT_FOUND' } }
+      if (round.status !== 'active') {
+        return { data: null, error: { code: 'ERR_ROUND_CLOSED', message: 'ERR_ROUND_CLOSED' } }
+      }
+      if (Number(round.current_count) >= Number(round.max_capacity)) {
+        return { data: null, error: { code: 'ERR_CAPACITY_FULL', message: 'ERR_CAPACITY_FULL' } }
+      }
+      if (!p.customer_name || String(p.customer_name).trim() === '') {
+        return { data: null, error: { code: 'ERR_MISSING_CUSTOMER_NAME', message: 'ERR_MISSING_CUSTOMER_NAME' } }
+      }
+      // authoritative price lookup from seeded products (ignores any client price)
+      const products = tables['products'] || []
+      let subtotal = 0
+      let totalQty = 0
+      for (const it of items) {
+        const prod = products.find((x: any) => x.id === it.product_id)
+        if (!prod) return { data: null, error: { code: 'ERR_PRODUCT_NOT_FOUND', message: 'ERR_PRODUCT_NOT_FOUND' } }
+        if (!prod.is_available) return { data: null, error: { code: 'ERR_PRODUCT_UNAVAILABLE', message: 'ERR_PRODUCT_UNAVAILABLE' } }
+        const q = Number(it.quantity ?? 0)
+        if (q <= 0 || q > 1000) return { data: null, error: { code: 'ERR_INVALID_QUANTITY', message: 'ERR_INVALID_QUANTITY' } }
+        subtotal += q * Number(prod.price)
+        totalQty += q
+      }
+      // delivery fee mirrors server rules (self_delivery = 30 + km*4 + items*2)
+      const method = p.delivery_method || 'self_delivery'
+      const dist = Number(p.distance_km ?? 0)
+      const feeBase: Record<string, number> = {
+        self_delivery: 30,
+        grab_rider: 40,
+        linemen_rider: 35,
+        foodpanda_rider: 38,
+      }
+      const feePerKm: Record<string, number> = { self_delivery: 4, grab_rider: 8, linemen_rider: 7, foodpanda_rider: 7.5 }
+      const delivery_fee = Math.min((feeBase[method] ?? 30) + dist * (feePerKm[method] ?? 4) + totalQty * 2, 9999)
+      // authoritative promotion discount (mirrors migration 007 promotions table)
+      let discount = 0
+      if (p.promotion_code) {
+        const promo = (tables['promotions'] || []).find((pr: any) =>
+          String(pr.code || '').toUpperCase() === String(p.promotion_code).toUpperCase() && pr.is_active === true)
+        if (promo) {
+          if (subtotal >= Number(promo.min_order_amount || 0)) {
+            if (promo.discount_type === 'percentage') {
+              discount = Math.min(subtotal * Number(promo.discount_value || 0) / 100, subtotal)
+            } else if (promo.discount_type === 'fixed_amount') {
+              discount = Math.min(Number(promo.discount_value || 0), subtotal)
+            }
+          }
+        }
+      }
+      const total = Math.max(0, subtotal - discount + delivery_fee)
+      const orderId = `ord-test-${Date.now()}-${Math.floor(Math.random() * 1000)}`
+      const orderNumber = `BMB-TEST-${String(Math.floor(Math.random() * 900) + 100)}`
+      // atomic persist mirrors server: order + order_items + capacity increment
+      const orderRow = {
+        id: orderId,
+        order_number: orderNumber,
+        customer_id: 'auth-test-user',
+        customer_name: String(p.customer_name ?? ''),
+        customer_phone: String(p.customer_phone ?? ''),
+        delivery_round_id: p.delivery_round_id,
+        status: 'pending',
+        delivery_method: method,
+        dropoff_detail: String(p.delivery_address ?? ''),
+        dropoff_latitude: p.dropoff_latitude,
+        dropoff_longitude: p.dropoff_longitude,
+        subtotal,
+        delivery_fee,
+        service_fee: 0,
+        discount_amount: discount,
+        tax_amount: 0,
+        total_amount: total,
+        payment_status: 'pending',
+        payment_method: p.payment_method || 'promptpay_qr',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      }
+      ;(tables['orders'] ||= []).push(clone(orderRow))
+      const oi = tables['order_items'] || (tables['order_items'] = [])
+      items.forEach((it: any, idx: number) => {
+        const prod = products.find((x: any) => x.id === it.product_id)!
+        oi.push(clone({
+          id: `oi-test-${orderId}-${idx + 1}`,
+          order_id: orderId,
+          product_id: it.product_id,
+          product_name: prod.name ?? '',
+          quantity: Number(it.quantity),
+          unit_price: Number(prod.price),
+          customizations: it.options ?? {},
+          special_request: it.special_request ?? '',
+          item_total: Number(it.quantity) * Number(prod.price),
+          created_at: new Date().toISOString(),
+        }))
+      })
+      round.current_count = Number(round.current_count) + 1
+      return {
+        data: {
+          id: orderId,
+          order_number: orderNumber,
+          status: 'pending',
+          subtotal,
+          discount_amount: discount,
+          delivery_fee,
+          service_fee: 0,
+          tax_amount: 0,
+          total_amount: total,
+          payment_status: 'pending',
+          payment_method: p.payment_method || 'promptpay_qr',
+          delivery_round_id: p.delivery_round_id,
+          customer_ref: 'auth-test-user',
+        },
+        error: null,
+      }
+    }
+    return { data: null, error: { code: 'PGRST202', message: 'rpc not mocked' } }
+  }
+
+  return { from, rpc }
 }
