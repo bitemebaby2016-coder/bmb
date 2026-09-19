@@ -199,4 +199,27 @@ Real Stripe delivery chain also verified end-to-end:
   `WEBHOOK_SMOKE pass=true` (evidence: `e2e/webhook-smoke-result.json`).
 - **Committed**: `032ca7e` (pushed to `origin/main`).
 
+### 8f. 🔴 REAL Stripe delivery closure (2026-09-19) — `LIVE_DELIVERY_RESULT=PASS`
+
+- **Why the self-signed smoke alone could not close this**: `webhook-smoke.cjs` signs locally with
+  whatever value is configured on the EF. It proves the EF behaves correctly with that secret,
+  but it CANNOT prove the ACTIVE Stripe endpoint uses the same secret.
+- **Live probe (first, FAIL)**: full real flow (test user → order → `create-checkout` →
+  real PaymentIntent `pi_3UHIoa3yHrQLTgfK0olyI5h6` → Stripe confirm `pm_card_visa` → succeeded)
+  left the order `pending`: the ACTIVE endpoint `we_1UHI8x3yHrQLTgfKDZhTTuMq` was enabled + correct
+  URL + test mode + right events, but its signing secret did not match the EF's
+  `STRIPE_WEBHOOK_SECRET` → deliveries 400 / no DB write.
+- **Fix (endpoint alignment, owner key)**: created a fresh endpoint
+  `we_1UHIrN3yHrQLTgfKkNZ4A0t5` (same URL/events) and captured its secret at creation
+  (`whsec_Dt6CDya0...`); set it as `STRIPE_WEBHOOK_SECRET` on Supabase (digest `a28759fc...`
+  confirmed); disabled the old endpoint `we_1UHI8x3yHrQLTgfKDZhTTuMq`.
+- **Re-verification (live)**: order `BMB-LIVE-20260919074017` (172 THB) →
+  `create-checkout` → PI `pi_3UHIsi3yHrQLTgfK02jmchbX` → confirm succeeded →
+  **real Stripe webhook arrived in <2 s** → `orders.payment_status=paid` +
+  `payment_intents.status=completed` → `LIVE_DELIVERY_RESULT=PASS`. Test user deleted.
+- **Lesson**: the EF side was correct after 032ca7e; the incident had a second, endpoint-side
+  misalignment. Owner rule going forward: `STRIPE_WEBHOOK_SECRET` on Supabase must always equal
+  the secret of the ACTIVE Stripe Dashboard endpoint.
+
+---
 ---

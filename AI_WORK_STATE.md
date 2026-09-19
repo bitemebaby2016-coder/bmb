@@ -316,3 +316,31 @@ VERIFICATION (live, e2e/webhook-smoke.cjs, order BMB-WHVER-20260919105254 amount
 COMMIT: 032ca7e (pushed origin/main).
 REMAINING (owner): apply migration 010 at next DB window; deactivate old C-5 service key;
   legacy SUPABASE_SERVICE_ROLE_KEY fallback still present (safe).
+=== LIVE STRIPE DELIVERY CLOSURE (2026-09-19, REAL webhook path verified) ===
+Status: ✅ LIVE_DELIVERY_RESULT = PASS (real Stripe webhook -> EF -> DB paid/completed)
+Objective: prove the REAL Stripe delivery path (not self-signed smoke) after the incident fix.
+
+FINDING (real-flow evidence, first attempt FAIL):
+- Full flow user->order->create-checkout->real PI->Stripe confirm(succeeded) worked, but
+  order/intent stayed pending => Stripe DID not complete delivery into the DB.
+- Root cause: the ACTIVE Stripe test webhook endpoint `we_1UHI8x3yHrQLTgfKDZhTTuMq`'s signing
+  secret did NOT match STRIPE_WEBHOOK_SECRET on Supabase (mismatch between whsec candidates
+  `whsec_Vy7d2Y55MFgQgGOTIWBvjX8B8rpzssTZ` vs reported `...vjx8...` vs `whsec_eOf3...`).
+  The self-signed smoke always passed because it signs with whatever value sits on the EF.
+
+ACTION:
+- Created NEW endpoint `we_1UHIrN3yHrQLTgfKkNZ4A0t5` (test mode, url
+  https://ivkdfognyiwjcmrhcnwz.supabase.co/functions/v1/stripe-webhook, events
+  payment_intent.succeeded + .payment_failed) and captured its secret (whsec_Dt6CDya0...).
+- supabase secrets set STRIPE_WEBHOOK_SECRET=<that endpoint secret> (digest a28759fc... confirmed).
+- Disabled OLD endpoint `we_1UHI8x3yHrQLTgfKDZhTTuMq` (unknown/stale secret -> would 400).
+- webhook smoke re-run with the new secret: WEBHOOK_SMOKE pass=true still (EF<->secret aligned).
+
+VERIFICATION (live, 2026-09-19, order BMB-LIVE-20260919074017, 172 THB):
+- create-checkout -> real PI pi_3UHIsi3yHrQLTgfK02jmchbX -> confirm pm_card_visa (succeeded)
+- REAL Stripe webhook: probe 1 (< 2s) -> orders.payment_status=paid, payment_intents.status=completed
+- LIVE_DELIVERY_RESULT=PASS. Test user deleted after run.
+- Also confirmed the earlier real-flow FAIL candidate endpoint is now disabled.
+
+REMAINING (owner): optional - retire/disable any other stale Stripe endpoints; keep the
+  endpoint secret on Supabase in sync with the ACTIVE endpoint (dashboard shows it).
