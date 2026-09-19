@@ -38,7 +38,7 @@ Do not begin project modifications until Bootstrap complete = YES.
 Project: Bite Me Baby (Cloud Kitchen Platform)
 Repository: https://github.com/bitemebaby2016-coder/bmb.git
 Current Branch: main
-Last Known Commit: NEW (Closure Round 2026-09-17 — Model A GLM 5.2 free + Fallback / API test 19/19 / Lighthouse attached)
+Last Known Commit: cf6384e (2026-09-19 — STRIPE GATE closed + webhook incident + REAL live delivery verified; migration 010 applied; C-5 service-role key revoked)
 Last Inspected Commit: 32f327e
 Files Changed Since Last Inspection: 14 files (code: aiModels.ts NEW, aiService.ts, aiToolCalling.ts, api.test.ts; lighthouse reports; docs overwritten)
 Tests Run Since Last Inspection: npx tsc --noEmit = PASS (0 errors) [VERIFIED] ✅
@@ -195,7 +195,7 @@ Task: Closure Round — Model A GLM 5.2 free + Fallback / API test 19/19 / Light
 - Git: commit + push to origin/main performed.
 === BMB-P0-PHASE-CD SESSION (2026-09-18) ===
 Task ID: BMB-SEC-2026-09-18
-Status: CODE + TESTS DONE / LIVE DEPLOY BLOCKED (owner)
+Status: CODE + TESTS DONE (session) — all LIVE blockers since CLOSED 2026-09-19 (deploys, migrations 008/009/010, secrets, webhook endpoint alignment, service-role rotation, REAL delivery PASS)
 Objective: Live-verify 007 → P0-5 (real payment) → P0-6 (order state machine) → Phase C Forensic → Phase D (approved) Complete Admin → final audit → commit+push (test-gated).
 
 Completed:
@@ -220,7 +220,7 @@ Live evidence (all real probes, project ivkdfognyiwjcmrhcnwz, 2026-09-19):
 - stripe-webhook DEPLOYED: GET → 200 {ok:true}. ✅  Unsigned POST → 400 ERR_INVALID_SIGNATURE (whsec IS set). ✅
 - 007 anon EXECUTE now REVOKED (anon → PGRST202; 09-18 was P0001). ✅ R1/C3/C4 closed.
 - 007 RUNTIME BROKEN: authenticated call → 42883 extract_epoch(timestamp with time zone) does not exist. ❌ → FIX written: migrations/009_fix_007_extract_epoch.sql (verified: body identical to 007 except that one expression).
-- 008 NOT APPLIED: service_role probes of record_payment_result / transition_order_status / create_payment_intent_record / submit_offline_payment_reference / confirm_offline_payment / mark_payment_failed / order_transition_allowed / guard_order_status_transition → ALL PGRST202. (business_settings table exists → Phase-D DDL applied earlier, payment RPC section did NOT.) → root cause of "cannot get 200".
+- 008 NOT APPLIED: service_role probes of record_payment_result / transition_order_status / create_payment_intent_record / submit_offline_payment_reference / confirm_offline_payment / mark_payment_failed / order_transition_allowed / guard_order_status_transition → ALL PGRST202. (business_settings table exists → Phase-D DDL applied earlier, payment RPC section did NOT.) → root cause of "cannot get 200". (→ SUPERSEDED: 008 confirmed LIVE, 009 + 010 applied later on 2026-09-19.)
 - Stripe key in .env EXPIRED (Stripe API 401 api_key_expired). ❌ owner rotates.
 - Signed 200 impossible today (008 missing → EF returns 500 on valid events). Invalid-signature path PASS live (twice, via new e2e/webhook-smoke.cjs).
 
@@ -255,14 +255,17 @@ Two production code bugs found + fixed this session (the actual blockers):
  400 -> orders never paid. Fix: importKey('raw',...). Deployed.
 - F9: create-checkout pre-set payment_intent_id (NULL now) so the first real webhook
   delivery looked like a replay and never updated the order. Deployed.
-Also: webhook endpoint re-aligned (new endpoint we_1UHCw8... + EF secret updated;
-old endpoint we_1UH30... left for owner cleanup); migration 010 (RPC idempotency
-backstop) written, NOT applied (new orders fine without it; order 616 = residual example).
+Also: the edge-function secret-dispatch regression from the key-rotation commit was fixed and the
+Stripe endpoint lineage finally aligned — ACTIVE endpoint is now `we_1UHIrN3yHrQLTgfKkNZ4A0t5`
+(secret = `whsec_Dt6CDya0...`, `STRIPE_WEBHOOK_SECRET` on Supabase = same, REAL live delivery PASS).
+Migration 010 (RPC idempotency backstop) is now **APPLIED by owner**; legacy pre-set-PI-id orders
+(e.g. `BMB-20260919-616`) are repaired by the 010 semantics.
 
 Verification status: vitest 56/56 [VERIFIED] (added 010-regression + 5 WebCrypto
 regression tests); smoke tool full pass live [VERIFIED]; EF deploys ok.
-Residual: rotate service-role key (C-5, still open); apply migration 010 when desired;
-old Stripe endpoint cleanup; test orders 249/489/830 left as durable evidence, users deleted.
+Residual (RESOLVED 2026-09-19): service-role key rotated + old leaked key REVOKED by owner
+(C-5 closed); migration 010 applied; old Stripe endpoints disabled; test orders 249/489/830
+left as durable evidence, users deleted.
 === BMB-KEY-ROTATION SESSION (2026-09-19, FINAL) ===
 Task ID: BMB-OWNER-KEY-ROTATE-2026-09-19
 Status: ✅ ROTATION VERIFIED LIVE (new service key in use; old key NOT yet retired - owner step)
@@ -281,9 +284,10 @@ pi_3UHEzo3yHrQLTgfK1x3wAOgF -> pm_card_visa confirm -> webhook -> record_payment
 -> orders.payment_status=paid + payment_intents.status=completed (all wrote via the new env key).
 tsc 0 errors. Test user deleted.
 
-REMAINS (owner): after this commit, deactivate old C-5 key (sb_secret_fpqHk...) + legacy
-vite_supabase_service_role_key + stale JWT in Dashboard; optional `supabase secrets unset
-SUPABASE_SERVICE_ROLE_KEY` (fallback) once the new name is the only one needed.
+REMAINS (owner, RESOLVED 2026-09-19): old C-5 key (sb_secret_fpqHk...) REVOKED in Dashboard.
+Legacy `SUPABASE_SERVICE_ROLE_KEY` env secret still present, but it holds the SAME value as the
+new name (digest 5a0f7199... verified) = safe fallback; owner may later `supabase secrets unset
+SUPABASE_SERVICE_ROLE_KEY` once the new name is the only one needed (optional).
 === INCIDENT-FIX SESSION (2026-09-19, STRIPE WEBHOOK SECRET-DISPATCH REGRESSION) ===
 Task ID: BMB-OWNER-WEBHOOK-INCIDENT-FIX-2026-09-19
 Status: ✅ FIXED + VERIFIED LIVE (webhook smoke T1-T6 pass=true)
@@ -314,8 +318,8 @@ VERIFICATION (live, e2e/webhook-smoke.cjs, order BMB-WHVER-20260919105254 amount
   -> WEBHOOK_SMOKE pass=true (evidence: e2e/webhook-smoke-result.json).
 
 COMMIT: 032ca7e (pushed origin/main).
-REMAINING (owner): apply migration 010 at next DB window; deactivate old C-5 service key;
-  legacy SUPABASE_SERVICE_ROLE_KEY fallback still present (safe).
+RESOLVED (owner, 2026-09-19): migration 010 APPLIED; old C-5 service key REVOKED in Dashboard
+  (legacy SUPABASE_SERVICE_ROLE_KEY env name still present, holds same value digest 5a0f7199... = safe).
 === LIVE STRIPE DELIVERY CLOSURE (2026-09-19, REAL webhook path verified) ===
 Status: ✅ LIVE_DELIVERY_RESULT = PASS (real Stripe webhook -> EF -> DB paid/completed)
 Objective: prove the REAL Stripe delivery path (not self-signed smoke) after the incident fix.

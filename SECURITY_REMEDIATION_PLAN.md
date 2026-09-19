@@ -11,7 +11,8 @@
 1. ลบ `supabaseAdmin` ออกจาก client (`src/lib/supabase.ts:34-41`) — client ต้องไม่มี service-role
 2. ลบ `VITE_SUPABASE_SERVICE_ROLE_KEY` ออกจาก `.env` / `.env.local`
 3. ย้าย privileged ops ไป **Edge Function** (server-side) ที่เรียกด้วย service_role
-4. **Rotate service-role key** บน Supabase Dashboard (เพราะ bundle ที่ leak แล้ว) — เป็น manual step ของ owner
+4. **Rotate service-role key** บน Supabase Dashboard — ✅ **DONE (2026-09-19)**: ใช้ key ใหม่
+   `bmb_backend_production_supabase_service_role_key` แล้ว (digest 5a0f7199...) และคีย์เก่าที่ leak ถูก **REVOKE โดย owner**
 5. ตรวจ bundle ใหม่: `grep -r 'sb_secret_' dist/` → ต้องไม่มี
 
 ## P0-2 Authentication → Supabase Auth (เลิก localStorage) 🔴
@@ -91,7 +92,7 @@
 ---
 
 ## DoD อย่างย่อ
-- bundle ไม่มี service-role + rotate เสร็จ (owner)
+- bundle ไม่มี service-role ✅ + rotate เสร็จ (owner) ✅ (2026-09-19: old leaked key revoked)
 - RLS matrix test ผ่านทุก cell
 - Auth ทั้งหมดผ่าน Supabase; AdminRoute ตรวจ DB
 - ราคา/state/payment ถูก enforce server-side
@@ -100,12 +101,12 @@
 
 | Priority | Status | Where |
 |----------|--------|-------|
-| P0-1 (bundle service-role) | ✅ client purge done; **rotate key = owner** | supabase.ts, .env/.env.local |
+| P0-1 (bundle service-role) | ✅ client purge done + **key rotated/revoked (2026-09-19)** | supabase.ts, .env/.env.local |
 | P0-2 (Supabase Auth) | ✅ DONE | authStore.ts, Login/Register, AdminRoute |
 | P0-3 (admin privilege) | ✅ DONE | profiles guard trigger + is_admin() |
 | P0-4 (price authority) | ✅ DONE (migration 007 live) | `create_order_with_items` |
-| P0-5 (payment real) | ✅ code done in this session / ⛔ deploy blocked (owner) | migration 008 + `create-checkout`/`stripe-webhook` EF + paymentGateway.ts |
-| P0-6 (order state machine) | ✅ code done in this session / ⛔ apply migration 008 to live DB (owner) | migration 008 (`order_transition_allowed`, trigger, `transition_order_status`) |
+| P0-5 (payment real) | ✅ **DONE + LIVE (STRIPE GATE passed 2026-09-19)** | migration 008/009/010 + `create-checkout`/`stripe-webhook` EF + paymentGateway.ts |
+| P0-6 (order state machine) | ✅ **DONE + LIVE (008 applied by owner)** | migration 008 (`order_transition_allowed`, trigger, `transition_order_status`) |
 | P0-7 (RLS hardening) | ✅ DONE (migration 006 live) | 006 |
 
 **Tests Required (Phase B DoD) update:** `grep dist/` no service-role ✅; auth e2e ⛔ (live email rate-limit today, retry later); price tamper ✅ (mock contract test `ERR_AMOUNT_MISMATCH`); order state ✅ (14 offline contract tests); payment webhook idempotency ✅ (mock test); **live webhook test ⛔** (needs EF deployed + Stripe webhook endpoint configured in Stripe Dashboard).

@@ -131,14 +131,16 @@ from `products.price` / `delivery_rounds` / `promotions` inside
 | C-4 | 007 REVOKE/GRANT | ✅ **EFFECTIVE** (anon → `PGRST202`) |
 | C-4b | 007 runtime bug `extract_epoch` | ✅ **APPLIED by owner** (migration 009) — real orders create fine (FINDING C4) |
 | C-4c | `stripe-webhook` WebCrypto key misuse (F8) + `create-checkout` payment_intent_id (F9) | ✅ **FIXED + DEPLOYED** (STRIPE GATE findings; regression tests 56/56) |
-| C-5 | Rotate service-role key (earlier bundle leak) | ❌ **PENDING (owner)** — the `sb_secret_...` used for verification still works live |
+| C-5 | Rotate service-role key (earlier bundle leak) | ✅ **DONE (2026-09-19)** — new key `bmb_backend_production_supabase_service_role_key` live (digest 5a0f7199...); old leaked key **REVOKED by owner** |
 | C-6 | `stripe-refund` EF — write before admin refunds go live | backlog (admin-only, server-side) |
 | C-7 | Storage bucket `bmb-images` + `media_assets` wiring (media library) | deploy-time |
 
 **Phase C verdict:** payment + order-state authority has moved server-side with
-verifiable contracts (offline suite simulates every RPC/EF path). The TRUSTED
-BACKEND is *code-complete for P0-5/P0-6*; **deployment is owner/CLI-blocked**
-(items C-1..C-5) and must NOT be mistaken for done.
+verifiable contracts (offline suite simulates every RPC/EF path). Deployment gate
+C-1..C-5 are **ALL DONE/CLOSED (2026-09-19)**: EFs deployed, secrets aligned,
+migrations 008/009/010 live, service-role key rotated + old key revoked, and a REAL
+Stripe delivery verified PASS. Remaining C-6 (`stripe-refund` EF) is backlog and
+C-7 (storage bucket `bmb-images` + `media_assets`) is deploy-time.
 
 ---
 

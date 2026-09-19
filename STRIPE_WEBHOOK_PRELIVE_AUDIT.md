@@ -47,7 +47,7 @@
 | POST webhook invalid signature (HMAC with wrong key) | same | 400 `{"error":"ERR_INVALID_SIGNATURE"}` |
 | anon RPC `create_order_with_items` | /rest/v1/rpc/... | 404 PGRST202 (EXECUTE revoked: anon can no longer see/run it) |
 | authenticated RPC `create_order_with_items` (real user, valid payload) | same | SQL **42883** `extract_epoch(...) does not exist` (function exists but body is broken) |
-| service_role RPC probes (`record_payment_result`, `transition_order_status`, `create_payment_intent_record`, `submit_offline_payment_reference`, `confirm_offline_payment`, `mark_payment_failed`, `order_transition_allowed`, `guard_order_status_transition`) | /rest/v1/rpc/... | ALL 404 PGRST202 = **migration 008 NOT applied** |
+| service_role RPC probes (`record_payment_result`, `transition_order_status`, `create_payment_intent_record`, `submit_offline_payment_reference`, `confirm_offline_payment`, `mark_payment_failed`, `order_transition_allowed`, `guard_order_status_transition`) | /rest/v1/rpc/... | ALL 404 PGRST202 = **migration 008 NOT applied** (probe moment — superseded: 008 confirmed LIVE same session, see verdict/§8) |
 | Stripe API `GET /v1/webhook_endpoints` | api.stripe.com | 401 `api_key_expired` (sk_test_...51UGp...EnMIKo is expired) |
 | Orders table (service_role) | /rest/v1/orders | rows: `BMB-20260917-526` (promptpay_qr) and `TEST-001` - **no credit_card order exists** |
 | Business settings (008 table) | /rest/v1/business_settings | EXISTS + `kitchen_location` row -> 008 Phase-D tables were applied earlier, but the payment RPC section is NOT |
@@ -65,15 +65,22 @@ Chain that must all be TRUE for HTTP 200 `{"received":true,"result":"paid"}`:
 
 1. A real `credit_card` order must exist -> `create_order_with_items` is now **broken at
    runtime** (missing `extract_epoch`) -> new migration **009** fixes the body (written).
-2. The EF must be able to call `record_payment_result` -> the RPC does not exist live
-   (migration **008** not applied) -> a correctly signed event currently returns **HTTP 500**
-   with a "could not find function" error, not 200.
+2. The EF must be able to call `record_payment_result` -> the RPC did not exist live
+   (migration **008** not applied **at that probe moment**) -> a correctly signed event then
+   returned **HTTP 500** with a "could not find function" error, not 200.
 3. The webhook secret (`whsec_...`) must be known to the smoke runner -> it is set on the EF
    (proved by the 400s) but is intentionally never stored in the repo/chat; the owner flow
    below keeps it local.
 
 Additionally the Stripe test key in `.env` is **expired**, so even the `create-checkout`
 Stripe API call cannot be exercised end-to-end until the owner rotates it.
+
+**Resolution (2026-09-19, end of incident):** all blockers above cleared — migration 009 applied
+by owner; migration 008 confirmed LIVE (the probes above were a moment-in-time snapshot);
+migration 010 applied; Stripe test key rotated (`rk_test_...`, live PI created + confirmed);
+webhook endpoint lineage finalized to ACTIVE `we_1UHIrN3yHrQLTgfKkNZ4A0t5` with
+`STRIPE_WEBHOOK_SECRET` matching (digest `a28759fc...`); **REAL Stripe delivery verified PASS**
+(order `BMB-LIVE-20260919074017` → `paid`/`completed` in <2 s).
 
 ## 5. What this session CHANGED (repo)
 
@@ -150,28 +157,29 @@ Real Stripe delivery chain also verified end-to-end:
   let the webhook set it. Regression: mock + `paymentStateMachine.test.ts`
   "010 regression: checkout-created pending intent ...".
 
-### 8c. Configuration realigned
+### 8c. Configuration realigned (FINAL 2026-09-19)
 
-- New Stripe test webhook endpoint `we_1UHCw83yHrQLTgfKtQwJJI8O` (url =
+- ACTIVE Stripe test webhook endpoint: `we_1UHIrN3yHrQLTgfKkNZ4A0t5` (url =
   `.../functions/v1/stripe-webhook`, events `payment_intent.succeeded` + `.payment_failed`).
-- EF secret updated: `supabase secrets set STRIPE_WEBHOOK_SECRET=<whsec of the new endpoint>`.
-- The pre-existing endpoint `we_1UH30B3yHrQLTgfKjqCCv2SK` is left enabled but its secret no
-  longer matches the EF (its deliveries now 400). Owner may delete it in the Stripe Dashboard
-  to avoid noise.
+- `STRIPE_WEBHOOK_SECRET` on Supabase = the ACTIVE endpoint's secret (`whsec_Dt6CDya0...`,
+  digest `a28759fc...` verified via `supabase secrets set`).
+- Old endpoints from the re-creation chain (`we_1UH30B3...`, `we_1UHCw8...`,
+  `we_1UHI8x3yHrQLTgfKDZhTTuMq`) are superseded; the last one (`we_1UHI8x3...`) was **disabled**
+  on 2026-09-19 because its secret was unknown and produced 400 deliveries.
 
-### 8d. Residual notes (honesty)
+### 8d. Residual notes — RESOLVED (2026-09-19)
 
 - **Migration 010 (backstop)** `supabase/migrations/010_fix_record_payment_result_idempotency.sql`
-  is written but NOT applied: it makes `record_payment_result` treat only terminal
-  (`completed`/`failed`) rows as replays. With fix F9 deployed, new orders complete correctly
-  without it; order `BMB-20260919-616` (created under the OLD EF behavior, pre-set PI id) is a
-  live example of the residual case - its event is validated by the EF (200) but the RPC
-  short-circuits, so that test order stays `pending`. Apply 010 at the next DB window to repair
-  that semantic. (Offline suite already enforces the 010 behavior.)
-- Service-role key `sb_secret_...` used for this session still works live (owner's rotation
-  item C-5 remains open).
+  is **APPLIED by owner (2026-09-19)** — `record_payment_result` now treats only terminal
+  (`completed`/`failed`) rows as replays; legacy pre-set-PI-id orders (e.g. `BMB-20260919-616`)
+  are repaired by that semantic. (Offline suite enforces the same behavior.)
+- Service-role key rotation: new key `bmb_backend_production_supabase_service_role_key`
+  (`sb_secret_RVEtLvVSfj8...`) is live; the old leaked C-5 key was **REVOKED by owner
+  (2026-09-19)**. Legacy `SUPABASE_SERVICE_ROLE_KEY` env secret still present and holds the same
+  value (digest `5a0f7199...`) = safe fallback.
 - Test data created & cleaned: smoke users deleted; test orders `BMB-20260919-249` (manually
-  paid for RPC probing) and `BMB-20260919-489`/`-830` (paid via webhook) remain in the DB as durable evidence.
+  paid for RPC probing), `BMB-20260919-489`/`-830` and `BMB-LIVE-20260919074017` (paid via real
+  webhook delivery) remain in the DB as durable evidence.
 - Tools: `e2e/webhook-smoke.cjs` now also resolves `--secret <NAME>` / `--service-key <NAME>`
   from environment variables (so `--secret STRIPE_WEBHOOK_SECRET` works when that var is set).
 

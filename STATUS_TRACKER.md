@@ -1,7 +1,7 @@
 # 🎯 Bite Me Baby Status Tracker
 
-> **Last Updated:** 2026-09-18 09:05 (Phase A Codebase Audit v10.3.0)
-> **Version:** v10.3.0 (Phase A — REAL_CODEBASE_AUDIT + ADMIN_GAP_MAP · Evidence > Claims)
+> **Last Updated:** 2026-09-19 15:00 (STRIPE GATE + webhook incident + REAL live delivery verified)
+> **Version:** v11.0 (STRIPE GATE passed · migration 010 applied · C-5 service-role key revoked · Evidence > Claims)
 > **Purpose:** Real-time status ของทุกงาน — อัปเดตตามผลตรวจจริง (เขียนทับสถานะเดิม)
 
 ---
@@ -16,7 +16,11 @@
 > `importKey('raw', ...)` and deployed; (F9) `create-checkout` pre-set `payment_intent_id`,
 > making the first webhook delivery look like a replay — now `NULL` until the webhook sets it.
 > 007 anon EXECUTE revoke effective; 008 confirmed live; `extract_epoch` fix (009) applied by
-> owner. See `STRIPE_WEBHOOK_PRELIVE_AUDIT.md` §8.
+> owner. **Final closure (same day):** migration **010 applied** (record_payment_result
+> idempotency); old leaked **C-5 service-role key revoked** in Dashboard; `STRIPE_WEBHOOK_SECRET`
+> = the ACTIVE endpoint `we_1UHIrN3yHrQLTgfKkNZ4A0t5` (whsec_Dt6CDya0..., digest a28759fc...);
+> old endpoint `we_1UHI8x3...` **disabled**; **REAL Stripe delivery verified PASS** (order
+> `BMB-LIVE-20260919074017` → paid/completed in <2 s). See `STRIPE_WEBHOOK_PRELIVE_AUDIT.md` §8.
 
 | ID | Item | Status | Evidence |
 |----|------|--------|----------|
@@ -32,11 +36,15 @@
 `tsc --noEmit` 0 errors · `npm run build` PASS ·
 **Live-verify 007:** function live, anon denied (see PHASE_C §Finding C3 for the EXECUTE-grant nuance the owner must re-run).
 
-**Owner follow-up (must do before claiming live) — see PHASE_C_TRUSTED_BACKEND_FORENSIC.md §5:**
-1. Apply migration 008 in the Supabase SQL Editor.
-2. Re-run 007 grants (idempotent) so anon EXECUTE is revoked properly.
-3. `supabase link` + `secrets set STRIPE_SECRET_KEY/STRIPE_WEBHOOK_SECRET` + deploy `create-checkout`/`stripe-webhook`.
-4. Rotate the original leaked service-role key.
+**Owner follow-up — ALL DONE (verified 2026-09-19) — see PHASE_C_TRUSTED_BACKEND_FORENSIC.md §5:**
+1. Migration 008 applied in the Supabase SQL Editor. ✅
+2. 007 grants re-run (idempotent) — anon EXECUTE revoked (anon → PGRST202). ✅
+3. `supabase link` + `secrets set STRIPE_SECRET_KEY/STRIPE_WEBHOOK_SECRET` + deploy `create-checkout`/`stripe-webhook`. ✅
+4. Original leaked service-role key rotated + **revoked by owner** (C-5 closed). ✅
+5. Migration 009 (`extract_epoch`) applied by owner. ✅
+6. Migration 010 (`record_payment_result` idempotency) **applied by owner**. ✅
+7. Stripe endpoint alignment final: ACTIVE `we_1UHIrN3yHrQLTgfKkNZ4A0t5` (secret matches
+   `STRIPE_WEBHOOK_SECRET`); old `we_1UHI8x3yHrQLTgfKDZhTTuMq` disabled; **REAL live delivery PASS**.
 
 ---
 ## CURRENT STATUS SUMMARY (v10.0 — 2026-09-17 Closure Final)
