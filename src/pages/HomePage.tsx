@@ -3,7 +3,8 @@
 // Information Architecture (shorter + scan-able):
 //   [1 Bite Conversational Hero] -> [2 Store/Delivery Status]
 //   -> [3 Same-day Carousel] -> [4 Pre-order Carousel]
-//   -> [5 Social Proof Review Carousel] -> [6 Promotions / Social]
+//   -> [5 Drinks Carousel (mockup)] -> [6 Social Proof Review Carousel]
+//   -> [7 Promotions / Social]
 // + FloatingCart. No low-stock dashboard, no long vertical grids.
 // Business flows preserved: add-to-cart (cartStore), pre-order (createPreOrder),
 // review deep-link (cart/checkout by mode).
@@ -29,6 +30,7 @@ import { HorizontalCarousel } from '@/components/home/HorizontalCarousel'
 import { HomeProductCard } from '@/components/home/HomeProductCard'
 import { ReviewCarouselSection } from '@/components/home/ReviewCarouselSection'
 import { PromotionStrip } from '@/components/home/PromotionStrip'
+import { DrinksSection } from '@/components/home/DrinksSection'
 import { FloatingCart } from '@/components/home/FloatingCart'
 import type {
   Product,
@@ -192,10 +194,13 @@ export function HomePage() {
         </section>
       )}
 
-      {/* 5. Social Proof Review Carousel */}
+      {/* 5. Drinks Menu — mockup carousel (owner edits src/lib/drinksMenu.ts) */}
+      <DrinksSection />
+
+      {/* 6. Social Proof Review Carousel */}
       <ReviewCarouselSection reviews={reviews} products={products} onReviewCta={handleReviewCta} />
 
-      {/* 6. Promotions + Shared social action */}
+      {/* 7. Promotions + Shared social action */}
       <PromotionStrip promotions={promotions} />
       <Link
         to="/share"

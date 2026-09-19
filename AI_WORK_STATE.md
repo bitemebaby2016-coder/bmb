@@ -431,3 +431,39 @@ runs AUTHENTICATED and PASSES 7/7 (0 console errors). Two REAL production bugs f
 attempt: (1) createOrder sent unprefixed keys → RPC PGRST202 (checkout broken) — fixed to p_* keys;
 (2) submit_offline_payment_reference ::jsonb cast fails for alphanumeric refs (22P02) — fixed via
 migration 013 (to_jsonb, owner applies). Checkout now requires sign-in (007) → guests redirected to login.
+
+=== HOME UI v6 + OWNER ADMIN BOOTSTRAP — SESSION (2026-09-19) ===
+Task ID: BMB-OWNER-HOME-UI-v6-ADMIN-2026-09-19
+Status: ✅ ALL DONE — verified before commit (tsc 0 · vitest 61/61 · build PASS · runtime QA PASS)
+
+ADDED:
+- DrinksSection (src/components/home/DrinksSection.tsx) — mockup carousel of เครื่องดื่ม,
+  POSITION: below pre-order menu, above review section. Data lives in src/lib/drinksMenu.ts
+  (owner edits name/price/description/tag/image THERE — no component/CSS changes needed).
+  Mockup images public/images/drinks/*.svg (5 placeholders; owner swaps with real photos).
+- Migration 014_owner_admin_full_access.sql — OWNER ADMIN BOOTSTRAP:
+  adds profiles.is_owner, softens guard_profile_mutation() for server-side contexts ONLY
+  (auth.uid() IS NULL), adds promote_to_full_admin(p_email) SECURITY DEFINER postgres-only RPC.
+  NO owner email/password committed to git (owner runs `select promote_to_full_admin('<email>');`
+  in Supabase SQL Editor after applying). role='admin' → full RLS admin access instantly.
+- Frameless floating carousel arrows: .hc-nav now transparent/no-border absolute overlay
+  (z-index above cards) — applies to ALL sections (same-day / pre-order / drinks / review / promo).
+- Auto-slide: review (already auto) + promotion carousels now auto-slide every 5s (pause on hover/touch).
+- Review section: blinking golden-star effect (starBlink keyframes — visible opacity/glow/scale
+  twinkle, staggered per star) + floating brand logo (Logo_Sticker_Circle.webp) beside heading.
+- Reduced-motion: new animations disabled under prefers-reduced-motion (starBlink/floatLogo/drink cards).
+
+VERIFICATION:
+- npx tsc --noEmit = PASS (exit 0)
+- npx vitest run = PASS 61/61 (4 files)
+- npm run build = PASS (tsc + vite build 2.06s; drink SVGs copied to dist)
+- Runtime QA (Playwright mobile 390x844, vite preview): drinks heading+5 cards·arrows frameless
+  (bg transparent, border 0, position absolute, overlay in section)·review floating logo·star
+  animation "starPop, starBlink"·carousels=5·auto-slide advanced review+promo tracks·0 console errors
+  → ALL PASS (screenshot e2e/screenshots/home-v6-qa.png)
+
+REMAINING / BLOCKED:
+- Owner to apply migrations 012, 013, 014 in Supabase SQL Editor (dev has no DB password),
+  then run: select public.promote_to_full_admin('<owner-email>');
+- TODO after migrations 011/012: remove MOCK_STOCK/MOCK_BADGE/MOCK_RATING overlays in homeProviders.ts.
+- Backlog unchanged: content mgmt (D7), kitchen/production (D10), reviews mgmt (D14).

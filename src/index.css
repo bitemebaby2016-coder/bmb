@@ -462,18 +462,17 @@ p { color: var(--color-brand-text-secondary); }
   color: var(--color-brand-accent);
 }
 
-/* Star.webp — 3D Star Rating (image-based) */
+/* Star.webp — 3D Star Rating (image-based) — blinking glow star effect */
 .star-3d-img {
   width: 20px;
   height: 20px;
   object-fit: contain;
   margin-right: 0.05rem;
-  filter: drop-shadow(0 2px 3px rgba(146, 64, 14, 0.4));
   background: transparent;
   animation:
     starPop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both,
-    starPulse 2.4s ease-in-out infinite;
-  animation-delay: calc(var(--star-i, 0) * 90ms);
+    starBlink 1.8s ease-in-out infinite;
+  animation-delay: calc(var(--star-i, 0) * 120ms);
 }
 
 .star-3d-img.is-empty {
@@ -486,9 +485,28 @@ p { color: var(--color-brand-text-secondary); }
   to   { transform: scale(1) rotate(0deg); opacity: 1; }
 }
 
-@keyframes starPulse {
-  0%, 100% { filter: drop-shadow(0 0 3px rgba(250, 204, 21, 0.5));  transform: scale(1); }
-  50%      { filter: drop-shadow(0 0 9px rgba(250, 204, 21, 0.95)); transform: scale(1.12); }
+/* Blinking golden star — clear "twinkle" so the effect is visible on the card */
+@keyframes starBlink {
+  0%, 100% {
+    opacity: 1;
+    transform: translateY(0) scale(1) rotate(0deg);
+    filter: drop-shadow(0 0 4px rgba(250, 204, 21, 0.65));
+  }
+  32% {
+    opacity: 0.55;
+    transform: translateY(-1px) scale(0.92) rotate(-8deg);
+    filter: drop-shadow(0 0 2px rgba(250, 204, 21, 0.35));
+  }
+  50% {
+    opacity: 1;
+    transform: translateY(-2px) scale(1.18) rotate(6deg);
+    filter: drop-shadow(0 0 14px rgba(250, 204, 21, 1));
+  }
+  72% {
+    opacity: 0.88;
+    transform: translateY(-1px) scale(1.02) rotate(2deg);
+    filter: drop-shadow(0 0 6px rgba(250, 204, 21, 0.8));
+  }
 }
 
 /* --- Review body --- */
@@ -664,7 +682,11 @@ p { color: var(--color-brand-text-secondary); }
 
 @media (prefers-reduced-motion: reduce) {
   .star-3d,
-  .mascot-mini {
+  .star-3d-img,
+  .mascot-mini,
+  .review-float-logo,
+  .drink-card,
+  .drink-card-media img {
     animation: none;
   }
 }
@@ -745,8 +767,8 @@ p { color: var(--color-brand-text-secondary); }
 }
 .store-strip.is-closed .store-strip-dot { background: #EF4444; box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.18); }
 
-/* Horizontal Carousel */
-.hc { display: flex; align-items: stretch; }
+/* Horizontal Carousel — frameless floating arrows overlay the whole section + images */
+.hc { position: relative; }
 .hc-track {
   display: flex;
   gap: 16px;
@@ -759,25 +781,36 @@ p { color: var(--color-brand-text-secondary); }
 .hc-track::-webkit-scrollbar { display: none; }
 .hc-track:focus-visible { outline: 3px solid rgba(249, 115, 22, 0.4); outline-offset: 2px; border-radius: 12px; }
 .hc-slide { scroll-snap-align: start; flex-shrink: 0; width: min(78vw, 250px); }
+/* Frameless arrows: no border / no background / no frame — float over cards & images. */
 .hc-nav {
-  align-self: center;
-  min-width: 40px;
-  min-height: 40px;
-  width: 40px; height: 40px;
-  border-radius: 50%;
-  border: 1px solid rgba(249, 115, 22, 0.3);
-  background: rgba(255, 255, 255, 0.92);
-  color: var(--color-brand-primary, #F97316);
-  font-size: 20px; line-height: 1;
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px; height: 42px;
+  min-width: 42px; min-height: 42px;
+  border: none;
+  background: transparent;
+  color: #ffffff;
+  font-size: 36px;
+  line-height: 1;
   cursor: pointer;
-  flex-shrink: 0;
-  box-shadow: 0 2px 6px rgba(146, 64, 14, 0.12);
-  transition: transform 0.15s ease, background 0.15s ease;
+  border-radius: 50%;
+  text-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.6),
+    0 0 14px rgba(0, 0, 0, 0.4);
+  opacity: 0.95;
+  transition: transform 0.18s ease, opacity 0.18s ease, text-shadow 0.18s ease;
+  -webkit-tap-highlight-color: transparent;
 }
-.hc-nav:hover { transform: scale(1.08); background: #fff; }
-.hc-nav:focus-visible { outline: 3px solid rgba(249, 115, 22, 0.45); }
-.hc-nav--prev { margin-right: 6px; }
-.hc-nav--next { margin-left: 6px; }
+.hc-nav--prev { left: 0; }
+.hc-nav--next { right: 0; }
+.hc-nav:hover { transform: translateY(-50%) scale(1.15); opacity: 1; text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8), 0 0 20px rgba(0, 0, 0, 0.55); }
+.hc-nav:active { transform: translateY(-50%) scale(0.95); }
+.hc-nav:focus-visible { outline: 3px solid rgba(249, 115, 22, 0.6); outline-offset: 2px; border-radius: 50%; }
 
 /* Home Product Card — 2.5D layered depth */
 .home-card {
@@ -870,6 +903,104 @@ p { color: var(--color-brand-text-secondary); }
   transition: background 0.18s ease, transform 0.18s ease;
 }
 .share-card:hover { background: #fff; transform: translateY(-2px); }
+
+/* Review section — floating brand logo (โลโก้ลอย) */
+.review-float-logo {
+  width: 42px;
+  height: 42px;
+  object-fit: contain;
+  border-radius: 50%;
+  filter: drop-shadow(0 6px 12px rgba(146, 64, 14, 0.3));
+  animation: floatLogo 4.5s ease-in-out infinite;
+  pointer-events: none;
+  flex-shrink: 0;
+}
+
+@keyframes floatLogo {
+  0%, 100% { transform: translateY(0) rotate(-5deg); }
+  50%      { transform: translateY(-7px) rotate(6deg) scale(1.05); }
+}
+
+/* Drinks section — mockup drink cards (owner can edit data in src/lib/drinksMenu.ts) */
+.drink-card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: #fff;
+  border: 1px solid rgba(14, 165, 233, 0.18);
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 10px 24px rgba(146, 64, 14, 0.12);
+  transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
+}
+.drink-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 18px 36px rgba(146, 64, 14, 0.18);
+  border-color: rgba(14, 165, 233, 0.4);
+}
+.drink-card-media {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  background: linear-gradient(to bottom, rgba(224, 242, 254, 0.85), #fff);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+.drink-card-media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+.drink-card:hover .drink-card-media img { transform: scale(1.06); }
+.drink-card-badge {
+  position: absolute;
+  top: 8px; left: 8px;
+  background: linear-gradient(135deg, #0EA5E9, #22D3EE);
+  color: #fff;
+  font-size: 11px; font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 999px;
+  box-shadow: 0 4px 10px rgba(14, 165, 233, 0.35);
+}
+.drink-card-body {
+  padding: 10px 12px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.drink-card-name {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+.drink-card-price {
+  font-weight: 800;
+  color: var(--color-brand-primary, #F97316);
+  white-space: nowrap;
+}
+.drink-card-desc {
+  font-size: 0.8rem;
+  color: var(--color-brand-muted);
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.drink-card-coming {
+  margin-top: 6px;
+  align-self: flex-start;
+  font-size: 11px;
+  font-weight: 700;
+  color: #0C4A6E;
+  background: rgba(224, 242, 254, 0.9);
+  border: 1px dashed rgba(14, 165, 233, 0.45);
+  padding: 3px 10px;
+  border-radius: 999px;
+}
 
 /* Floating Cart */
 .floating-cart {

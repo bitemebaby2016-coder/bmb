@@ -49,7 +49,15 @@ export function ReviewCarouselSection({ reviews, products, onReviewCta }: Review
     <section className="mb-10 scroll-mt-20" aria-labelledby="home-reviews-heading">
       <div className="flex items-center justify-between mb-2">
         <h2 id="home-reviews-heading" className="text-xl font-display font-bold text-brand-accent flex items-center gap-2">
-          ⭐ รีวิวจากลูกค้าจริง
+          <img
+            src="/Logo_Sticker_Circle.webp"
+            alt=""
+            loading="lazy"
+            decoding="async"
+            className="review-float-logo"
+            aria-hidden="true"
+          />
+          <span>⭐ รีวิวจากลูกค้าจริง</span>
         </h2>
         <Link to="/reviews" className="text-sm text-brand-primary font-medium hover:underline">รีวิวทั้งหมด →</Link>
       </div>
