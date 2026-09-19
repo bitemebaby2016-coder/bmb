@@ -284,3 +284,35 @@ tsc 0 errors. Test user deleted.
 REMAINS (owner): after this commit, deactivate old C-5 key (sb_secret_fpqHk...) + legacy
 vite_supabase_service_role_key + stale JWT in Dashboard; optional `supabase secrets unset
 SUPABASE_SERVICE_ROLE_KEY` (fallback) once the new name is the only one needed.
+=== INCIDENT-FIX SESSION (2026-09-19, STRIPE WEBHOOK SECRET-DISPATCH REGRESSION) ===
+Task ID: BMB-OWNER-WEBHOOK-INCIDENT-FIX-2026-09-19
+Status: ✅ FIXED + VERIFIED LIVE (webhook smoke T1-T6 pass=true)
+Objective: End re-issued webhook endpoints showing ERR_INVALID_SIGNATURE (400) on LIVE
+signed deliveries.
+
+FINDING:
+- Regression from commit ac7d262 (service-key rotation): the env read for the Stripe
+  signature secret in stripe-webhook/index.ts was switched to
+  bmb_backend_production_supabase_service_role_key instead of STRIPE_WEBHOOK_SECRET.
+  -> every correctly-signed delivery failed HMAC and returned ERR_INVALID_SIGNATURE.
+- Same class of bug in create-checkout/index.ts: the Stripe API Bearer token was read from
+  the Supabase service-role key instead of STRIPE_SECRET_KEY.
+- Also: the value stored on Supabase for STRIPE_WEBHOOK_SECRET did NOT equal the reported
+  whsec_Vy7d2Y55MFgQgGOTIWBvjx8B8rpzssTZ (digest 1c00d76c... vs expected c9027c36...).
+  Re-set to whsec_Vy7d2Y55MFgQgGOTIWBvjx8B8rpzssTZ and re-verified digest.
+
+ACTION:
+- stripe-webhook: signature secret = STRIPE_WEBHOOK_SECRET (service-role key used ONLY for the
+  Supabase admin client).
+- create-checkout: Stripe API Bearer = STRIPE_SECRET_KEY (service-role key used ONLY for DB writes).
+- supabase secrets set STRIPE_WEBHOOK_SECRET=whsec_Vy7d2Y55MFgQgGOTIWBvjx8B8rpzssTZ; deploy
+  stripe-webhook + create-checkout.
+
+VERIFICATION (live, e2e/webhook-smoke.cjs, order BMB-WHVER-20260919105254 amount 123 THB):
+  T1 400 / T2 400 / T5 202 / T3 200 {received:true,result:"paid"} / T4 200 (idempotent)
+  T6 payment_intents.status=completed + orders.payment_status=paid
+  -> WEBHOOK_SMOKE pass=true (evidence: e2e/webhook-smoke-result.json).
+
+COMMIT: 032ca7e (pushed origin/main).
+REMAINING (owner): apply migration 010 at next DB window; deactivate old C-5 service key;
+  legacy SUPABASE_SERVICE_ROLE_KEY fallback still present (safe).

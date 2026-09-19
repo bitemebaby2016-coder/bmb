@@ -176,3 +176,27 @@ Real Stripe delivery chain also verified end-to-end:
   from environment variables (so `--secret STRIPE_WEBHOOK_SECRET` works when that var is set).
 
 ---
+### 8e. ⚠️ Incident 2026-09-19 — secret-dispatch regression (FIXED + re-verified)
+
+- **Symptom**: after the webhook endpoint was re-issued via Stripe CLI several times,
+  `e2e/webhook-smoke.cjs` returned `ERR_INVALID_SIGNATURE (400)` for every live signed delivery.
+- **Root cause (incident)**: commit `ac7d262` (service-key rotation) accidentally rewrote the
+  env read for the Stripe **signature** secret in `stripe-webhook/index.ts` from
+  `STRIPE_WEBHOOK_SECRET` to the Supabase service-role key name — so the deployed EF verified
+  HMAC against the service-role key instead of the `whsec_...`, rejecting all genuine traffic.
+  The same over-reach hit `create-checkout/index.ts` (Stripe Bearer read the service-role key
+  instead of `STRIPE_SECRET_KEY`).
+- **Second root cause**: the value configured on Supabase for `STRIPE_WEBHOOK_SECRET` was NOT
+  `whsec_Vy7d2Y55MFgQgGOTIWBvjx8B8rpzssTZ` (digest on Supabase `1c00d76c...`, expected
+  `c9027c36...`). It was re-set via `supabase secrets set STRIPE_WEBHOOK_SECRET=...` and the
+  digest re-checked (`c9027c36...` confirmed).
+- **Fix**: restored `STRIPE_WEBHOOK_SECRET` (signature) and `STRIPE_SECRET_KEY` (Stripe API
+  Bearer); the Supabase service-role key stays in use only for the privileged Supabase client.
+  Redeployed `stripe-webhook` + `create-checkout`.
+- **Re-verification (live)**: `node e2e/webhook-smoke.cjs --order BMB-WHVER-20260919105254
+  --amount 123 --secret whsec_Vy7d2Y55MFgQgGOTIWBvjx8B8rpzssTZ --service-key ...` →
+  T1 400 / T2 400 / T5 202 / T3 200 / T4 200 / T6 `paid`+`completed` →
+  `WEBHOOK_SMOKE pass=true` (evidence: `e2e/webhook-smoke-result.json`).
+- **Committed**: `032ca7e` (pushed to `origin/main`).
+
+---
