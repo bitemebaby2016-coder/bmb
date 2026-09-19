@@ -88,6 +88,9 @@ Deno.serve(async (req: Request): Promise<Response> => {
 
   const payload = await req.text()
   const signature = req.headers.get('stripe-signature') || ''
+  // NOTE (2026-09-19): THIS must be the Stripe webhook signing secret (whsec_...),
+  // NOT the Supabase service-role key. The service-role key is used only for
+  // opening the privileged Supabase client below.
   const secret = Deno.env.get('STRIPE_WEBHOOK_SECRET') || ''
 
   if (!secret) {

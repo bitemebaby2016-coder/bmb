@@ -35,6 +35,8 @@ function json(body: unknown, status = 200): Response {
 }
 
 async function stripeFetch(path: string, form: URLSearchParams): Promise<{ ok: boolean; status: number; data: any }> {
+  // NOTE (2026-09-19): this is the Stripe API key for the Stripe API Bearer auth,
+  // NOT the Supabase service-role key (that would never authenticate to Stripe).
   const sk = Deno.env.get('STRIPE_SECRET_KEY') || ''
   const res = await fetch(`${STRIPE_API}${path}`, {
     method: 'POST',

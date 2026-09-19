@@ -1,8 +1,8 @@
 {
-  "timestamp": "2026-09-19T01:24:30.839Z",
-  "order": "BMB-20260919-489",
-  "amount": 111,
-  "pi_id": "pi_test_smoke_1789781065",
+  "timestamp": "2026-09-19T07:32:42.904Z",
+  "order": "BMB-WHVER-20260919105254",
+  "amount": 123,
+  "pi_id": "pi_test_smoke_1789803160",
   "url": "https://ivkdfognyiwjcmrhcnwz.supabase.co/functions/v1/stripe-webhook",
   "results": [
     {
@@ -51,19 +51,19 @@
       "extra": {
         "payment_intents": [
           {
-            "id": "pi-pi_3UHCxF3yHrQLTgfK1I12wZk5",
-            "order_number": "BMB-20260919-489",
-            "amount": 111,
+            "id": "pi-smoke-prep-1789803149698",
+            "order_number": "BMB-WHVER-20260919105254",
+            "amount": 123,
             "status": "completed",
             "method": "credit_card",
             "provider": "stripe",
-            "payment_intent_id": "pi_test_smoke_1789781065"
+            "payment_intent_id": "pi_test_smoke_1789803160"
           }
         ],
         "orders": [
           {
-            "order_number": "BMB-20260919-489",
-            "total_amount": 111,
+            "order_number": "BMB-WHVER-20260919105254",
+            "total_amount": 123,
             "payment_status": "paid"
           }
         ]
