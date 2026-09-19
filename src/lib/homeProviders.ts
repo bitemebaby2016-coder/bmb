@@ -151,7 +151,67 @@ export function getStoreStatus(now: Date = new Date()): StoreStatus {
   return { isOpen: false, state: 'closed', message: 'ร้านปิด — กลับมาใหม่รุ่งเช้าจ้า 🌙' }
 }
 
-/** Bite conversational message factory (context-aware, data-driven). */
+/** Derive StoreStatus from real delivery_rounds rows when available; fallback = mock. */
+export function getStoreStatusFromRounds(rounds: Array<{
+  status?: string
+  display_name?: string
+  cutoff_time?: string
+  delivery_start?: string
+  delivery_end?: string
+  max_capacity?: number
+  current_count?: number
+}>, now: Date = new Date()): StoreStatus {
+  const open = (rounds || []).filter((r) => r.status === 'open')
+  if (open.length === 0) return getStoreStatus(now)
+  const hour = now.getHours()
+  const current = open.find((r) => {
+    const end = Number((r.delivery_end || '00').split(':')[0])
+    const start = Number((r.delivery_start || '00').split(':')[0])
+    return hour >= start && hour < end
+  }) || open[0]
+  return {
+    isOpen: true,
+    state: 'open',
+    currentRoundLabel: current.display_name || 'ปัจจุบัน',
+    cutoff: current.cutoff_time,
+    deliveryWindowLabel: `ส่ง ${current.delivery_start}–${current.delivery_end}`,
+    capacityPct: Number(current.max_capacity) > 0
+      ? Math.min(100, Math.round((Number(current.current_count || 0) / Number(current.max_capacity)) * 100))
+      : undefined,
+    message: `เปิดรับออเดอร์${current.display_name ? ' ' + current.display_name : ''}`,
+  }
+}
+
+/** Map real promotions rows → HomePromotion; fallback = mock list when empty/no active. */
+export function getHomePromotionsFromRows(rows: Array<{
+  id?: string
+  name?: string
+  description?: string
+  code?: string
+  is_active?: boolean
+}>): HomePromotion[] {
+  const active = (rows || []).filter((r) => r.is_active !== false).slice(0, 6)
+  if (active.length > 0) {
+    return active.map((r) => ({
+      id: r.id || `promo-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+      title: r.name || 'โปรโมชั่น',
+      description: r.description || '',
+      coupon: r.code || undefined,
+      cta: 'ใช้เลย',
+    }))
+  }
+  return getHomePromotions()
+}
+
+/** Bite pose per store state (spec §4/5 — expression mapping; assets reuse). */
+export function getBitePose(state: StoreStatus['state']): 'greeting' | 'thinking' | 'pointing' | 'empty' {
+  switch (state) {
+    case 'closed': return 'empty'
+    case 'same_day_closed': return 'thinking'
+    case 'preorder_only': return 'pointing'
+    default: return 'greeting'
+  }
+}
 export function getBiteMessage(ctx: BiteContext): BiteMessage {
   const { storeStatus, sameDayCount, preOrderCount } = ctx
   const statusLine = storeStatus.isOpen
@@ -167,7 +227,7 @@ export function getBiteMessage(ctx: BiteContext): BiteMessage {
       { id: 'home-menu', label: '🍱 เมนูวันนี้', icon: '🍱', to: '/menu', mascotPose: 'pointing' },
       { id: 'home-preorder', label: '📅 สั่งล่วงหน้า', icon: '📅', to: '/menu' },
       { id: 'home-bite', label: '🤖 ให้ Bite แนะนำ', icon: '🤖', to: '/ai-chat' },
-      { id: 'home-orders', label: '📦 ดูออเดอร์', icon: '📦', to: '/profile' },
+      { id: 'home-orders', label: '📦 ดูออเดอร์', icon: '📦', to: '/orders' },
     ],
   }
 }

@@ -8,13 +8,13 @@ import { Link } from 'react-router-dom'
 import type { BiteMessage } from '@/types'
 import { MascotBadge } from '@/components/MascotBadge'
 
-export function BiteHero({ message }: { message: BiteMessage }) {
+export function BiteHero({ message, pose = 'greeting' }: { message: BiteMessage; pose?: 'greeting' | 'thinking' | 'pointing' | 'empty' }) {
   return (
     <section className="bite-hero card relative overflow-hidden" aria-label="Bite ผู้ช่วยแนะนำเมนู">
       <div className="bite-hero-glow" aria-hidden="true" />
       <div className="flex items-center gap-4 relative z-10">
         <MascotBadge
-          pose="greeting"
+          pose={pose}
           size="lg"
           alt="น้อง Bite กวักมือทักทาย"
           className="animate-float bite-hero-mascot"

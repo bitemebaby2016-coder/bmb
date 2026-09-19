@@ -18,9 +18,10 @@ import { createPreOrder } from '@/lib/preOrderService'
 import {
   getHomeProducts,
   getHomeReviews,
-  getHomePromotions,
-  getStoreStatus,
   getBiteMessage,
+  getStoreStatusFromRounds,
+  getHomePromotionsFromRows,
+  getBitePose,
 } from '@/lib/homeProviders'
 import { BiteHero } from '@/components/home/BiteHero'
 import { StoreStatusStrip } from '@/components/home/StoreStatusStrip'
@@ -50,16 +51,27 @@ export function HomePage() {
 
   const [products, setProducts] = useState<Product[]>([])
   const [categories, setCategories] = useState<ProductCategory[]>([])
+  const [rounds, setRounds] = useState<any[]>([])
+  const [promoRows, setPromoRows] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     async function loadData() {
       try {
-        // PERF: supabase chunk loads only after first paint (kept off critical path).
+        // PERF: supabase chunks load only after first paint (kept off critical path).
         const { getProducts, getCategories } = await import('@/lib/bmbAdminApi_products')
-        const [rows, cats] = await Promise.all([getProducts(), getCategories()])
+        const { getDeliveryRoundsAdmin } = await import('@/lib/bmbAdminApi_rounds')
+        const { getPromotionsAdmin } = await import('@/lib/bmbAdminApi_promotions')
+        const [rows, cats, rounds, promos] = await Promise.all([
+          getProducts(),
+          getCategories(),
+          getDeliveryRoundsAdmin(),
+          getPromotionsAdmin(),
+        ])
         setProducts(rows)
         setCategories(cats)
+        setRounds(rounds)
+        setPromoRows(promos)
       } catch (err) {
         console.error('[HomePage] Load error:', err)
       } finally {
@@ -71,8 +83,8 @@ export function HomePage() {
 
   const { sameDay, preOrder } = getHomeProducts(products, categories)
   const reviews = getHomeReviews(products)
-  const promotions = getHomePromotions()
-  const storeStatus = getStoreStatus()
+  const promotions = getHomePromotionsFromRows(promoRows)
+  const storeStatus = getStoreStatusFromRounds(rounds)
   const biteMessage = getBiteMessage({
     storeStatus,
     sameDayCount: sameDay.length,
@@ -151,7 +163,7 @@ export function HomePage() {
   return (
     <div className="max-w-7xl mx-auto px-4 py-6 pb-28 bg-organic min-h-screen">
 {/* 1. Bite Conversational Hero */}
-      <BiteHero message={biteMessage} />
+      <BiteHero message={biteMessage} pose={getBitePose(storeStatus.state)} />
 
       {/* 2. Store / Delivery Status — compact strip (replaces the 3-round grid) */}
       <StoreStatusStrip status={storeStatus} />

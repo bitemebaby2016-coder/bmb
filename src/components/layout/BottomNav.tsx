@@ -3,9 +3,9 @@ import { Link, useLocation } from 'react-router-dom'
 const navItems = [
   { path: '/', label: 'หน้าแรก', icon: '🏠' },
   { path: '/menu', label: 'เมนู', icon: '🍽️' },
-  { path: '/cart', label: 'ตะกร้า', icon: '🛒' },
   { path: '/ai-chat', label: 'ไบต์', icon: '/icon_chat.webp' },
-  { path: '/profile', label: 'โปรไฟล์', icon: '👤' },
+  { path: '/orders', label: 'ออเดอร์', icon: '📦' },
+  { path: '/profile', label: 'บัญชี', icon: '👤' },
 ]
 
 export function BottomNav() {
@@ -15,9 +15,9 @@ export function BottomNav() {
     <nav className="fixed bottom-0 left-0 right-0 bg-brand-surface border-t border-brand-border z-50 no-print">
       <div className="max-w-7xl mx-auto px-4 py-2 flex justify-around">
         {navItems.map((item) => {
-          const isActive = location.pathname === item.path || 
-            (item.path === '/cart' && location.pathname.startsWith('/cart')) ||
-            (item.path === '/ai-chat' && location.pathname.startsWith('/ai-chat'))
+          const isActive = location.pathname === item.path ||
+            (item.path === '/ai-chat' && location.pathname.startsWith('/ai-chat')) ||
+            (item.path === '/orders' && location.pathname.startsWith('/orders'))
           return (
             <Link
               key={item.path}

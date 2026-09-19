@@ -17,6 +17,7 @@ const MenuPage = lazy(() => import('./pages/MenuPage').then(m => ({ default: m.M
 const CartPage = lazy(() => import('./pages/CartPage').then(m => ({ default: m.CartPage })))
 const CheckoutPage = lazy(() => import('./pages/CheckoutPage').then(m => ({ default: m.CheckoutPage })))
 const OrderTrackPage = lazy(() => import('./pages/OrderTrackPage').then(m => ({ default: m.OrderTrackPage })))
+const OrdersPage = lazy(() => import('./pages/OrdersPage').then(m => ({ default: m.OrdersPage })))
 const PromotionsPage = lazy(() => import('./pages/PromotionsPage').then(m => ({ default: m.PromotionsPage })))
 const ReviewPage = lazy(() => import('./pages/ReviewPage').then(m => ({ default: m.ReviewPage })))
 const VotePage = lazy(() => import('./pages/VotePage').then(m => ({ default: m.VotePage })))
@@ -133,6 +134,7 @@ export default function App() {
         <Route path="/cart" element={<Suspense fallback={<LoadingSpinner />}><Layout><CartPage /></Layout></Suspense>} />
         <Route path="/checkout" element={<Suspense fallback={<LoadingSpinner />}><Layout><CheckoutPage /></Layout></Suspense>} />
         <Route path="/track/:orderNumber" element={<Suspense fallback={<LoadingSpinner />}><Layout><OrderTrackPage /></Layout></Suspense>} />
+        <Route path="/orders" element={<Suspense fallback={<LoadingSpinner />}><Layout><OrdersPage /></Layout></Suspense>} />
         <Route path="/payment/:orderNumber" element={<Suspense fallback={<LoadingSpinner />}><Layout><PaymentConfirmationPage /></Layout></Suspense>} />
         <Route path="/promotions" element={<Suspense fallback={<LoadingSpinner />}><Layout><PromotionsPage /></Layout></Suspense>} />
         <Route path="/reviews/:productId" element={<Suspense fallback={<LoadingSpinner />}><Layout><ReviewPage /></Layout></Suspense>} />
