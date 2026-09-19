@@ -4,7 +4,7 @@ import { lazy, Suspense, useEffect, useState } from 'react'
 import { useAuthStore, fetchProfileRole } from './store/authStore'
 import { Layout } from './components/layout/Layout'
 import { ErrorBoundary } from './components/ErrorBoundary'
-import { FloatingAiButton } from './components/ai/FloatingAiButton'
+// Bite / AI accessibility lives in BottomNav ('ไบต์' → /ai-chat) + BiteHero quick actions (UI v5)
 import { SeoHelmet } from './components/SeoHelmet'
 import { getHomeMeta, getMenuMeta, getCartMeta, getCheckoutMeta, getOrderTrackMeta, getAboutMeta, getFaqMeta, getBlogMeta, getContactMeta, getPrivacyMeta, getTermsMeta, getPromotionsMeta, getRewardsMeta, getVoteMeta, getRandomMenuMeta, getShareMeta, getViralMeta, getProfileMeta, getAdminMeta, getLoginMeta } from './lib/seo'
 
@@ -174,8 +174,7 @@ export default function App() {
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
       
-      {/* Floating AI Button */}
-      <FloatingAiButton />
+      {/* Bite / AI entry moved to BottomNav ('ไบต์') + BiteHero quick actions (UI v5) */}
     </ErrorBoundary>
     </HelmetProvider>
   )

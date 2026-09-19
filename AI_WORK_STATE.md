@@ -373,3 +373,31 @@ Phase D admin docs synced (overwrite): ADMIN_GAP_MAP (promotions/rounds/customer
 now VERIFIED; refund item; remaining backlog D7 content/D10 kitchen/D14 reviews/inventory-sync/
 delivery-zones UI), STATUS_TRACKER (P0-5 refund live, Phase D media), PHASE_C (C-6 done, C-7 ready).
 Build: npm run build PASS (tsc 0 errors).
+=== HOME UI/UX v5 SESSION (2026-09-19) — Customer Home Experience upgrade ===
+Task ID: BMB-OWNER-HOME-UI-v5-2026-09-19
+Status: ✅ DONE (runtime verified PASS) — UI only, no business logic changed
+
+NEW INFORMATION ARCHITECTURE (shorter homepage):
+  [1 Bite Conversational Hero] → [2 Store Status strip] → [3 Same-day carousel]
+  → [4 Pre-order carousel] → [5 Review carousel] → [6 Promotions + share]
+  + FloatingCart. Low-stock dashboard + 3-round grid + hard-coded promos REMOVED from home.
+
+LAYERS (mock → real without UI change):
+  - Contracts: HomeProduct/HomeReview/HomePromotion/StoreStatus/BiteMessage/QuickAction/BiteContext (types/index.ts)
+  - Provider: src/lib/homeProviders.ts (maps real products/reviews; mock ONLY for stock/badge/
+    rating/promotions/store status — swap later by editing this file)
+  - Components: components/home/ (BiteHero, StoreStatusStrip, HorizontalCarousel, HomeProductCard,
+    ReviewCarouselSection, PromotionStrip, FloatingCart) — reuse FoodMenuCard hooks (cart/pre-order) & CustomerReviewCard
+  - Removed FloatingAiButton (redundant — BottomNav 'ไบต์' + BiteHero quick actions)
+  - Fixed typo "รอบเยน" → data-driven (no hard-coded rounds)
+
+BUSINESS FLOWS PRESERVED (verified): add-to-cart (cartStore), pre-order (createPreOrder → real row),
+review CTA deep-link (cart/checkout by mode), [data-testid=home-menu-cta] kept for E2E.
+
+VALIDATION: tsc 0 errors · vitest 61/61 · npm run build PASS · Runtime QA (Playwright headless):
+  mobile 390x844: HERO_GREETING=true, 4 carousels, store strip, 4 quick actions, 0 console errors → PASS
+  desktop 1440: 4 carousels, hero 1280px, scrollH shorter, 0 errors → PASS
+  (screenshot: e2e/screenshots/home-v5-qa.png)
+
+REMAINING (honest): real store-status from delivery_rounds, real promotions from admin,
+real stock/rating from products — all wired via providers (single-file swap later).

@@ -646,3 +646,84 @@ export const UI_CONFIG: UIConfig = {
   borderRadius: '16px',
   shadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1)'
 }
+// ============================================
+// HOME UI/UX v5 — Data Contracts (View Model)
+// Mock providers feed these → real provider (Supabase/Admin) later WITHOUT UI change.
+// ============================================
+
+export type HomeMode = 'same-day' | 'pre-order'
+
+export interface HomeProduct {
+  id: string
+  name: string
+  image: string
+  price: number
+  description: string
+  category_id: string
+  categoryName?: string
+  categoryIcon?: string
+  mode: HomeMode
+  availability: AvailabilityState
+  stock?: number
+  badge?: string
+  rating?: number
+  reviewCount?: number
+  cta: string
+  scheduledDate?: string // pre-order only
+}
+
+export interface HomeReview {
+  id: string
+  displayName: string
+  rating: number
+  text: string
+  source: 'grabfood' | 'facebook' | 'website'
+  sourceLabel: string
+  dateLabel: string
+  image?: string
+  relatedProduct?: Product
+  relatedProductName?: string
+  visible: boolean
+}
+
+export interface HomePromotion {
+  id: string
+  title: string
+  description: string
+  image?: string
+  coupon?: string
+  expiry?: string
+  eligibility?: string
+  cta: string
+}
+
+export interface StoreStatus {
+  isOpen: boolean
+  state: 'open' | 'same_day_closed' | 'preorder_only' | 'closed'
+  currentRoundLabel?: string
+  cutoff?: string
+  deliveryWindowLabel?: string
+  capacityPct?: number
+  message: string
+}
+
+export interface QuickAction {
+  id: string
+  label: string
+  icon: string
+  to: string
+  mascotPose?: MascotPose
+}
+
+export interface BiteMessage {
+  greeting: string
+  statusLine: string
+  recommendLabel: string
+  quickActions: QuickAction[]
+}
+
+export interface BiteContext {
+  storeStatus: StoreStatus
+  sameDayCount: number
+  preOrderCount: number
+}
