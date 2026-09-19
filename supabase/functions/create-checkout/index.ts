@@ -9,8 +9,10 @@
 //   - Order must belong to the caller and be paid with credit_card.
 //   - STRIPE_SECRET_KEY lives ONLY in the Edge Function env (server-side).
 //
-// Env (supabase secrets set STRIPE_SECRET_KEY=...):
-//   STRIPE_SECRET_KEY, SUPABASE_URL, SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY
+// Env (supabase secrets set ...):
+//   STRIPE_SECRET_KEY, SUPABASE_URL, SUPABASE_ANON_KEY,
+//   bmb_backend_production_supabase_service_role_key (2026-09-19 rotation; legacy
+//   SUPABASE_SERVICE_ROLE_KEY kept as fallback until retired)
 //
 // Called from src/lib/paymentGateway.ts via supabase.functions.invoke('create-checkout')
 // ============================================
@@ -69,7 +71,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
 
   const supabaseUrl = Deno.env.get('SUPABASE_URL') || ''
   const anonKey = Deno.env.get('SUPABASE_ANON_KEY') || ''
-  const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || ''
+  const serviceKey = Deno.env.get('bmb_backend_production_supabase_service_role_key') || Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || ''
 
   // ---- 1. Verify the caller (Supabase Auth JWT) ----
   const userRes = await fetch(`${supabaseUrl}/auth/v1/user`, {

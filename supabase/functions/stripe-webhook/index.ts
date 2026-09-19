@@ -9,8 +9,10 @@
 //     (EXECUTE granted ONLY to service_role).
 //   - Replays/unknown events return 202 without side effects.
 //
-// Env (supabase secrets set STRIPE_WEBHOOK_SECRET=...):
-//   STRIPE_WEBHOOK_SECRET, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY
+// Env (supabase secrets set ...):
+//   STRIPE_WEBHOOK_SECRET, SUPABASE_URL,
+//   bmb_backend_production_supabase_service_role_key (2026-09-19 rotation; legacy
+//   SUPABASE_SERVICE_ROLE_KEY kept as fallback until retired)
 // ============================================
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.4'
@@ -104,7 +106,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
   }
 
   const supabaseUrl = Deno.env.get('SUPABASE_URL') || ''
-  const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || ''
+  const serviceKey = Deno.env.get('bmb_backend_production_supabase_service_role_key') || Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || ''
   const admin = createClient(supabaseUrl, serviceKey)
 
   const pi = event?.data?.object ?? {}

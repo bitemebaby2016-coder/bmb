@@ -263,3 +263,24 @@ Verification status: vitest 56/56 [VERIFIED] (added 010-regression + 5 WebCrypto
 regression tests); smoke tool full pass live [VERIFIED]; EF deploys ok.
 Residual: rotate service-role key (C-5, still open); apply migration 010 when desired;
 old Stripe endpoint cleanup; test orders 249/489/830 left as durable evidence, users deleted.
+=== BMB-KEY-ROTATION SESSION (2026-09-19, FINAL) ===
+Task ID: BMB-OWNER-KEY-ROTATE-2026-09-19
+Status: ✅ ROTATION VERIFIED LIVE (new service key in use; old key NOT yet retired - owner step)
+Objective: rotate to bmb_backend_production_supabase_service_role_key (sb_secret_RVEtLvVSfj8t..., value kept local only).
+
+Forensic: vite_supabase_service_role_key = UNUSED legacy (no repo/live reference).
+Service-key consumers = create-checkout + stripe-webhook only (env name read), 2 files changed this
+session to read new env name first with legacy fallback:
+  - supabase/functions/create-checkout/index.ts (Deno.env.get bmb_... first)
+  - supabase/functions/stripe-webhook/index.ts  (same)
+Both EFs redeployed. Owner set secret under the NEW name (digest 5a0f71...); legacy
+SUPABASE_SERVICE_ROLE_KEY secret (digest 82a11c...) still present = safe fallback.
+
+LIVE VERIFY (fresh user/order BMB-20260919-213, 178 THB): create-checkout -> real PI
+pi_3UHEzo3yHrQLTgfK1x3wAOgF -> pm_card_visa confirm -> webhook -> record_payment_result
+-> orders.payment_status=paid + payment_intents.status=completed (all wrote via the new env key).
+tsc 0 errors. Test user deleted.
+
+REMAINS (owner): after this commit, deactivate old C-5 key (sb_secret_fpqHk...) + legacy
+vite_supabase_service_role_key + stale JWT in Dashboard; optional `supabase secrets unset
+SUPABASE_SERVICE_ROLE_KEY` (fallback) once the new name is the only one needed.
