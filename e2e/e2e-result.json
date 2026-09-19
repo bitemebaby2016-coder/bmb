@@ -1,12 +1,12 @@
 {
-  "timestamp": "2026-09-17T12:58:50.573Z",
+  "timestamp": "2026-09-19T10:02:57.327Z",
   "base": "http://localhost:4173",
   "steps": [
     {
       "name": "landing renders + mascots (greeting/pointing)",
       "ok": true,
       "extra": {
-        "mascotImgs": 19
+        "mascotImgs": 13
       }
     },
     {
@@ -21,7 +21,7 @@
       "name": "order created → payment step",
       "ok": true,
       "extra": {
-        "url": "http://localhost:4173/payment/BMB-20260917-526",
+        "url": "http://localhost:4173/payment/BMB-20260919-442",
         "txnVisible": 1,
         "hasNotFound": false
       }
@@ -30,14 +30,14 @@
       "name": "payment confirmed → tracking",
       "ok": true,
       "extra": {
-        "badge": "#BMB-20260917-526"
+        "badge": "#BMB-20260919-442"
       }
     },
     {
       "name": "pre-order real order → tracking",
       "ok": true,
       "extra": {
-        "badge": "#PO-20260917-338"
+        "badge": "#PO-20260919-430"
       }
     },
     {

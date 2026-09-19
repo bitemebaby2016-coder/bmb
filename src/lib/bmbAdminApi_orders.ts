@@ -108,25 +108,27 @@ export async function getOrder(orderNumber: string): Promise<OrderForm | null> {
 }
 
 // P0-4: createOrder per RPC (server-authoritative). Client sends ONLY input.
+// NOTE (2026-09-19): payload keys MUST match the RPC parameter names exactly
+// (p_* prefix) — PostgREST returns PGRST202 "no matches found" otherwise.
 export async function createOrder(input: OrderInput): Promise<OrderResult | null> {
   const payload = {
-    items: input.items.map((it) => ({
+    p_items: input.items.map((it) => ({
       product_id: it.product_id,
       quantity: it.quantity,
       options: it.options ?? {},
       special_request: it.special_request ?? '',
     })),
-    delivery_round_id: input.delivery_round_id,
-    delivery_method: input.delivery_method ?? 'self_delivery',
-    delivery_address: input.delivery_address ?? '',
-    dropoff_latitude: input.dropoff_latitude,
-    dropoff_longitude: input.dropoff_longitude,
-    customer_name: input.customer_name,
-    customer_phone: input.customer_phone ?? '',
-    payment_method: input.payment_method ?? 'promptpay_qr',
-    special_instructions: input.special_instructions ?? '',
-    promotion_code: input.promotion_code ?? undefined,
-    distance_km: input.distance_km ?? undefined,
+    p_delivery_round_id: input.delivery_round_id,
+    p_delivery_method: input.delivery_method ?? 'self_delivery',
+    p_delivery_address: input.delivery_address ?? '',
+    p_dropoff_latitude: input.dropoff_latitude,
+    p_dropoff_longitude: input.dropoff_longitude,
+    p_customer_name: input.customer_name,
+    p_customer_phone: input.customer_phone ?? '',
+    p_payment_method: input.payment_method ?? 'promptpay_qr',
+    p_special_instructions: input.special_instructions ?? '',
+    p_promotion_code: input.promotion_code ?? undefined,
+    p_distance_km: input.distance_km ?? undefined,
   }
   const { data, error } = await supabase.rpc('create_order_with_items', payload)
   if (error) { console.error('[createOrder] RPC error:', error); return null }

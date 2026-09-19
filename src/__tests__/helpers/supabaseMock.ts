@@ -125,7 +125,14 @@ export function createSupabaseMock() {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async function rpc(name: string, params: any): Promise<{ data: any; error: any }> {
     if (name === 'create_order_with_items') {
-      const p = params ?? {}
+      const p: any = { ...(params ?? {}) }
+      // Client sends p_* prefixed keys matching the real RPC signature (2026-09-19 fix).
+      // Normalize so the rest of the mock (written against the old args) keeps working.
+      if (params && !('items' in params) && typeof params === 'object') {
+        for (const key of Object.keys(params)) {
+          if (key.startsWith('p_')) p[key.slice(2)] = params[key]
+        }
+      }
       const items: any[] = Array.isArray(p.items) ? p.items : []
       if (items.length === 0) {
         return { data: null, error: { code: 'ERR_EMPTY_ORDER', message: 'ERR_EMPTY_ORDER' } }

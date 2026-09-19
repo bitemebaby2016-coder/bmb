@@ -104,7 +104,7 @@
 | P0-1 (bundle service-role) | ✅ client purge done + **key rotated/revoked (2026-09-19)** | supabase.ts, .env/.env.local |
 | P0-2 (Supabase Auth) | ✅ DONE | authStore.ts, Login/Register, AdminRoute |
 | P0-3 (admin privilege) | ✅ DONE | profiles guard trigger + is_admin() |
-| P0-4 (price authority) | ✅ DONE (migration 007 live) | `create_order_with_items` |
+| P0-4 (price authority) | ✅ DONE (migration 007 live + client `p_*` RPC keys fixed 2026-09-19) | `create_order_with_items` |
 | P0-5 (payment real) | ✅ **DONE + LIVE (STRIPE GATE passed 2026-09-19)** | migration 008/009/010 + `create-checkout`/`stripe-webhook` EF + paymentGateway.ts |
 | P0-6 (order state machine) | ✅ **DONE + LIVE (008 applied by owner)** | migration 008 (`order_transition_allowed`, trigger, `transition_order_status`) |
 | P0-7 (RLS hardening) | ✅ DONE (migration 006 live) | 006 |

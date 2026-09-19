@@ -53,7 +53,10 @@ function availabilityOf(p: Product): AvailabilityState {
 
 function toHomeProduct(p: Product, cat?: ProductCategory, mode: 'same-day' | 'pre-order' = 'same-day'): HomeProduct {
   const overlay = MOCK_RATING[p.id] || { rating: 5, reviewCount: 0 }
-  const stock = MOCK_STOCK[p.id]
+  // migration 012 real columns win; MOCK_* overlay is the pre-migration fallback.
+  const stock = typeof p.stock === 'number' ? p.stock : MOCK_STOCK[p.id]
+  const rating = typeof p.rating === 'number' ? Number(p.rating) : overlay.rating
+  const reviewCount = typeof p.review_count === 'number' ? Number(p.review_count) : overlay.reviewCount
   return {
     id: p.id,
     name: p.name,
@@ -67,8 +70,8 @@ function toHomeProduct(p: Product, cat?: ProductCategory, mode: 'same-day' | 'pr
     availability: availabilityOf(p),
     stock,
     badge: MOCK_BADGE[p.id],
-    rating: overlay.rating,
-    reviewCount: overlay.reviewCount,
+    rating,
+    reviewCount,
     cta: mode === 'pre-order' ? '📅 จองล่วงหน้า' : '🛒 เพิ่มลงตะกร้า',
     scheduledDate: p.scheduled_date,
   }

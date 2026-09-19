@@ -59,6 +59,13 @@ export function CheckoutPage() {
   }, [selectedProvider, providerCost])
 
   async function handlePlaceOrder() {
+    // 007: create_order_with_items is authenticated-only → a guest cannot place an
+    // order server-side. Redirect to login instead of failing silently at the RPC.
+    if (!customer) {
+      showToast('กรุณาเข้าสู่ระบบก่อนสั่งอาหาร', 'warning')
+      navigate('/login', { state: { from: '/checkout' } })
+      return
+    }
     if (!deliveryAddress.detail) {
       showToast('กรุาใส่ที่อย่จัดส่ง', 'warning')
       return

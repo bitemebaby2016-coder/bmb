@@ -28,6 +28,46 @@ async function waitPort(port, ms) {
   return false
 }
 
+// ============================================
+// E2E runs as a REAL signed-in customer (007 RPC = authenticated-only since migration 007).
+// Test user is created via the Supabase Admin API (service key from env, NOT committed),
+// its session injected into the browser contexts, then the user deleted in `finally`.
+// ============================================
+const E2E_PROJECT = 'ivkdfognyiwjcmrhcnwz'
+const AUTH_BASE = 'https://' + E2E_PROJECT + '.supabase.co'
+const SVC = process.env.BMB_E2E_SVC_KEY || ''
+let testUserId = null
+
+async function createTestUser() {
+  if (!SVC) { console.log('WARN no BMB_E2E_SVC_KEY - guest fallback (order create may fail post-007)'); return null }
+  const email = 'e2e' + Date.now() + '@bmb.test'
+  const password = 'E2e!' + Date.now() + 'Aa'
+  const r = await fetch(AUTH_BASE + '/auth/v1/admin/users', {
+    method: 'POST',
+    headers: { apikey: SVC, Authorization: 'Bearer ' + SVC, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, password, email_confirm: true }),
+  })
+  const u = await r.json()
+  if (!u.id) { console.log('E2E create user failed', r.status, JSON.stringify(u).slice(0, 200)); return null }
+  testUserId = u.id
+  return { id: u.id, email, password }
+}
+
+// Real login via the app's own /login page (no localStorage hacks).
+async function loginUser(page, email, password) {
+  await page.goto(BASE + '/login', { waitUntil: 'commit', timeout: 45000 })
+  await page.waitForSelector('input[type="email"]', { timeout: 15000 })
+  await page.fill('input[type="email"]', email)
+  await page.fill('input[type="password"]', password)
+  await page.click('button[type="submit"]')
+  await page.waitForURL((u) => !u.pathname.includes('/login'), { timeout: 30000 }).catch(() => {})
+}
+
+async function deleteTestUser() {
+  if (testUserId && SVC) {
+    try { await fetch(AUTH_BASE + '/auth/v1/admin/users/' + testUserId, { method: 'DELETE', headers: { apikey: SVC, Authorization: 'Bearer ' + SVC } }) } catch {}
+  }
+}
 const steps = []
 const errors = []
 
@@ -47,10 +87,14 @@ let child = null
 
     browser = await chromium.launch({ channel: 'chrome', headless: true })
 
+    const testUser = await createTestUser()
+    if (testUser) console.log('E2E signed in as test user ' + testUserId)
+
     // ---------- FLOW A: same-day order → checkout → payment → tracking ----------
     {
       const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 1, isMobile: true })
       const page = await ctx.newPage()
+      if (testUser) await loginUser(page, testUser.email, testUser.password)
       page.on('console', (msg) => { if (msg.type === 'error') errors.push('A:' + msg.text.slice(0, 200)) })
       page.on('pageerror', (e) => errors.push('A-pageerror:' + String(e).slice(0, 200)))
 
@@ -88,7 +132,7 @@ await page.waitForSelector('[data-testid="checkout-address"]', { timeout: 15000 
       await page.screenshot({ path: path.join(SHOTS, '05-payment.png'), fullPage: false })
       const txnVisible = await page.locator('[data-testid="txn-input"]').count()
       record('order created → payment step', txnVisible > 0 || !String(bodyText).includes('Not Found'), { url: page.url(), txnVisible, hasNotFound: String(bodyText).includes('Not Found') })
-const txn = 'TXN-E2E-' + Date.now()
+const txn = '15160001' + String(Date.now()).slice(-8) // real-looking numeric PromptPay ref (numeric = valid JSON pre-013)
       await page.fill('[data-testid="txn-input"]', txn)
       await page.click('[data-testid="confirm-payment"]')
       await page.waitForURL(/\/track\//, { timeout: 30000 })
@@ -102,6 +146,7 @@ const txn = 'TXN-E2E-' + Date.now()
     {
       const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true })
       const page = await ctx.newPage()
+      if (testUser) await loginUser(page, testUser.email, testUser.password)
       page.on('console', (msg) => { if (msg.type === 'error') errors.push('B:' + msg.text.slice(0, 200)) })
       page.on('pageerror', (e) => errors.push('B-pageerror:' + String(e).slice(0, 200)))
 
@@ -147,6 +192,7 @@ const txn = 'TXN-E2E-' + Date.now()
     fs.writeFileSync(path.join(PROJ, 'e2e', 'e2e-result.json'), JSON.stringify({ timestamp: new Date().toISOString(), steps, consoleErrors: errors, pass: false, fatal: String(e).slice(0, 500) }, null, 2), 'utf8')
     process.exit(1)
   } finally {
+    await deleteTestUser()
     try { if (browser) await browser.close() } catch {}
     if (child) { try { execSync('taskkill /pid ' + child.pid + ' /t /f', { stdio: 'ignore' }) } catch {} }
   }

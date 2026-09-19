@@ -30,6 +30,9 @@ export interface Product {
   sort_order: number;
   delivery_round_id?: string;     // ✅ v3.1: Delivery round ID (สำหรับ pre-order)
   scheduled_date?: string;        // ✅ v3.1: Scheduled delivery date (สำหรับ pre-order)
+  stock?: number;                 // migration 012 — display stock (not authoritative capacity)
+  rating?: number;                // migration 012 — display rating (1–5)
+  review_count?: number;          // migration 012 — display review count
   created_at: string;
 }
 

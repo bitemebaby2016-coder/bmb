@@ -25,11 +25,11 @@
 | ID | Item | Status | Evidence |
 |----|------|--------|----------|
 | 007 | `create_order_with_items` server-authoritative order RPC | ✅ **LIVE** (revoke effective + `extract_epoch` fixed via migration 009) | live probe 2026-09-19: anon → PGRST202; real credit_card orders created OK |
-| P0-4 | Order creation/pricing server-side (no client totals) | ✅ **LIVE** | migration 007 (+009 fix) + `bmbAdminApi_orders.createOrder` (input-only) |
+| P0-4 | Order creation/pricing server-side (no client totals) | ✅ **LIVE + E2E GREEN** | migration 007 (+009 fix) + `bmbAdminApi_orders.createOrder` (input-only, p_* RPC keys fixed 2026-09-19) |
 | P0-5 | Payment real integration (Stripe EF + webhook + offline RPCs + **refunds**) | ✅ **LIVE + GATE PASSED** | create-checkout/stripe-webhook/**stripe-refund** deployed; smoke T1–T6 green; real Stripe PI → webhook → order paid; real Stripe **refund** → order refund (C-6) |
 | P0-6 | Order state machine (allow-list + trigger + RPC) | ✅ **LIVE (008 RPCs confirmed)** | OpenAPI shows 008 functions; `transition_order_status` etc. callable |
 | Phase C | Forensic — trusted backend boundary + secrets + EF inventory | ✅ **DONE / GATE PASSED** | 9 EF shells = 0 files, NOT deployed (owner). C5 new (008 live), C6 new (F8/F9 fixed); C-6 refund EF live-verified |
-| Phase D | Complete Admin (promotions/rounds/customers/settings/**media**) | ✅ **DONE (UI+API) / 008+011 now live** | 5 new pages (promotions/rounds/customers/settings + **`/admin/media`**) + 5 lib APIs + routes + dashboard links |
+| Phase D | Complete Admin (promotions/rounds/customers/settings/**media** + Customer Home v5) | ✅ **DONE (UI+API) / 008+011 live** | 5 admin pages (promotions/rounds/customers/settings + `/admin/media`) + OrdersPage + Home v5 carousels/BiteHero/BottomNav (Home/Menu/Bite/Orders/Account); E2E authenticated 7/7 PASS |
 | .env | Client-facing secrets purged (service-role, Stripe keys) | ✅ DONE (again) — Strict KEY=VALUE format, gate verified | `.env`/`.env.local` rewritten in this session; no secrets remain; parse-error pattern fixed |
 
 **Tests:** Vitest **50/50 PASS** (26 baseline + **14 new** P0-5/P0-6 contract tests) ·
@@ -45,6 +45,8 @@
 6. Migration 010 (`record_payment_result` idempotency) **applied by owner**. ✅
 7. Stripe endpoint alignment final: ACTIVE `we_1UHIrN3yHrQLTgfKkNZ4A0t5` (secret matches
    `STRIPE_WEBHOOK_SECRET`); old `we_1UHI8x3yHrQLTgfKDZhTTuMq` disabled; **REAL live delivery PASS**.
+8. Migration **012** (products stock/rating/review_count) + **013** (PromptPay reference `::jsonb`→`to_jsonb` fix) — ⏳ **owner apply** (SQL Editor).
+9. E2E now runs authenticated (007) — **7/7 PASS, 0 console errors** (landing→menu→cart→checkout→payment→tracking + pre-order + empty cart).
 
 ---
 ## CURRENT STATUS SUMMARY (v10.0 — 2026-09-17 Closure Final)

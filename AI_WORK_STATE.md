@@ -38,7 +38,7 @@ Do not begin project modifications until Bootstrap complete = YES.
 Project: Bite Me Baby (Cloud Kitchen Platform)
 Repository: https://github.com/bitemebaby2016-coder/bmb.git
 Current Branch: main
-Last Known Commit: cf6384e (2026-09-19 — STRIPE GATE closed + webhook incident + REAL live delivery verified; migration 010 applied; C-5 service-role key revoked)
+Last Known Commit: HEAD 2026-09-19 — Home UI v5 complete; checkout RPC param bug fixed; E2E authenticated 7/7 green; migrations 010/011 applied, 012/013 written (owner apply)
 Last Inspected Commit: 32f327e
 Files Changed Since Last Inspection: 14 files (code: aiModels.ts NEW, aiService.ts, aiToolCalling.ts, api.test.ts; lighthouse reports; docs overwritten)
 Tests Run Since Last Inspection: npx tsc --noEmit = PASS (0 errors) [VERIFIED] ✅
@@ -399,8 +399,9 @@ VALIDATION: tsc 0 errors · vitest 61/61 · npm run build PASS · Runtime QA (Pl
   desktop 1440: 4 carousels, hero 1280px, scrollH shorter, 0 errors → PASS
   (screenshot: e2e/screenshots/home-v5-qa.png)
 
-REMAINING (honest): real store-status from delivery_rounds, real promotions from admin,
-real stock/rating from products — all wired via providers (single-file swap later).
+RESOLVED (same day): store-status wired to real delivery_rounds (public-read RLS already exists for
+anon/authenticated), promotions wired to admin promotions, stock/rating wired to real products
+columns via migration 012 (owner applies; mock overlay stays as pre-migration fallback).
 === HOME UI v5 — COMPLETION SESSION (2026-09-19) — all remaining items closed ===
 Task ID: BMB-OWNER-HOME-UI-v5-FINAL-2026-09-19
 Status: ✅ ALL DONE — every test passed before commit (tsc 0 · vitest 61/61 · build PASS · runtime QA PASS)
@@ -424,6 +425,9 @@ VALIDATION (final): tsc --noEmit 0 · vitest 61/61 · npm run build PASS ·
   /orders guest prompt ✓ · 0 console errors → FINAL_ALL=PASS
   (screenshot e2e/screenshots/home-v5-qa.png)
 
-REMAINING (honest, product-side): real stock/rating need product columns (mock overlay stays in
-homeProviders); real store status needs delivery_rounds RLS read for anon (currently admin-scoped →
-graceful fallback to mock time-based); full runE2E (writes live orders — owner-gated).
+RESOLVED (2026-09-19): stock/rating via products columns (migration 012 written, owner applies);
+store status uses real delivery_rounds (public-read RLS exists) with mock fallback; full runE2E now
+runs AUTHENTICATED and PASSES 7/7 (0 console errors). Two REAL production bugs found+fixed in the
+attempt: (1) createOrder sent unprefixed keys → RPC PGRST202 (checkout broken) — fixed to p_* keys;
+(2) submit_offline_payment_reference ::jsonb cast fails for alphanumeric refs (22P02) — fixed via
+migration 013 (to_jsonb, owner applies). Checkout now requires sign-in (007) → guests redirected to login.

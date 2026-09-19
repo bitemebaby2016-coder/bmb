@@ -139,8 +139,11 @@ from `products.price` / `delivery_rounds` / `promotions` inside
 verifiable contracts (offline suite simulates every RPC/EF path). Deployment gate
 C-1..C-5 are **ALL DONE/CLOSED (2026-09-19)**: EFs deployed, secrets aligned,
 migrations 008/009/010/011 live, service-role key rotated + old key revoked, a REAL Stripe
-delivery verified PASS, and a REAL Stripe REFUND verified PASS (C-6). Remaining C-7 storage
-policies = owner applies migration 011 (bucket itself already exists).
+delivery verified PASS, and a REAL Stripe REFUND verified PASS (C-6). C-7 (storage/media)
+code-complete — bucket exists, migration 011 applied by owner.
+Auth-order flow VERIFIED live via authenticated E2E: createOrder `p_*` RPC-key bug fixed
+(2026-09-19), checkout/Payment/Tracking render confirmed in E2E; migrations 012 (products
+stock/rating) & 013 (PromptPay ref cast) are written — owner applies in the SQL Editor.
 
 ---
 
