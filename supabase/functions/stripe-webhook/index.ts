@@ -50,9 +50,13 @@ async function verifyStripeSignature(
   }
 
   try {
-    const key = new TextEncoder().encode(secret)
+    // WebCrypto requires an imported CryptoKey — raw bytes are NOT accepted
+    // by crypto.subtle.sign. Without importKey the call throws, every
+    // signature check fails, and all real Stripe deliveries get 400.
+    const keyBytes = new TextEncoder().encode(secret)
     const data = new TextEncoder().encode(`${timestamp}.${payload}`)
-    const sig = await crypto.subtle.sign('HMAC', { name: 'HMAC', hash: 'SHA-256' }, key, data)
+    const cryptoKey = await crypto.subtle.importKey('raw', keyBytes, { name: 'HMAC', hash: 'SHA-256' }, false, ['sign'])
+    const sig = await crypto.subtle.sign('HMAC', cryptoKey, data)
     const hex = Array.from(new Uint8Array(sig)).map((b) => b.toString(16).padStart(2, '0')).join('')
     return timingSafeEqualHex(hex, signature)
   } catch {
@@ -88,8 +92,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
     return json({ error: 'ERR_WEBHOOK_NOT_CONFIGURED' }, 500)
   }
   if (!(await verifyStripeSignature(payload, signature, secret))) {
-    // 400 (not 401): Stripe treats 4xx as permanent — a bad signature will
-    // never become valid, so it must NOT be retried.
+    // 400 (not 401): Stripe: a bad signature is permanent, never retried
     return json({ error: 'ERR_INVALID_SIGNATURE' }, 400)
   }
 

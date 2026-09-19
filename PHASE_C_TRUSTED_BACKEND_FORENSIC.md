@@ -74,13 +74,24 @@ returns `PGRST202` — the 007 `REVOKE EXECUTE … FROM PUBLIC` IS now effective
 (owner re-ran the grants after the 09-18 probe which had shown `P0001`).
 The one remaining 007 problem is **runtime**, not grants (see FINDING C4).
 
-**FINDING C4 (NEW 2026-09-19, live):** `create_order_with_items` exists and is
-authenticated-only, but EVERY call fails at runtime:
-`42883 function extract_epoch(timestamp with time zone) does not exist`.
-Migration 007 used the non-portable `extract_epoch(clock_timestamp())`.
-**Fix written:** `supabase/migrations/009_fix_007_extract_epoch.sql`
-(`CREATE OR REPLACE` with portable `extract(epoch from ...)`; body verified
-identical to 007 except that one expression). **Not applied yet** (owner DB).
+**FINDING C4 (RESOLVED 2026-09-19):** `create_order_with_items` previously failed with
+`42883 extract_epoch(timestamp with time zone) does not exist` (migration 007 used
+non-portable `extract_epoch`). Owner applied **migration 009**
+(`supabase/migrations/009_fix_007_extract_epoch.sql`, portable `extract(epoch from ...)`):
+re-verified live — real `credit_card` orders now create successfully.
+
+**FINDING C5 (NEW 2026-09-19):** migration 008's RPCs are **CONFIRMED LIVE**.
+(NB: earlier probes calling `record_payment_result` with an empty body returned PGRST202,
+which is ALSO what PostgREST returns when a function needs required args — inconclusive.
+The OpenAPI spec at `/rest/v1/` proves all 008 functions exist.)
+
+**FINDING C6 (NEW 2026-09-19, STRIPE GATE):** `stripe-webhook` signature verification was
+silently BROKEN in production: `crypto.subtle.sign` was called with RAW BYTES instead of an
+imported `CryptoKey` → every check threw in the `catch` → **every real Stripe delivery got
+HTTP 400** (permanent) → orders never became paid even though the EF "ran". Fix deployed:
+`crypto.subtle.importKey('raw', ...)` (see `STRIPE_WEBHOOK_PRELIVE_AUDIT.md` §8b F8).
+Companion fix F9: `create-checkout` now inserts `payment_intent_id = NULL` so the webhook's
+first delivery applies the result. Regression tests added; offline suite 56/56.
 ---
 
 ## 4. Payment data flows (post this session)
@@ -114,12 +125,13 @@ from `products.price` / `delivery_rounds` / `promotions` inside
 
 | # | Item | Status (2026-09-19) / Blocker |
 |---|------|------------------------|
-| C-1 | deploy `create-checkout` + `stripe-webhook` | ✅ **DONE live** (both deployed + probed; re-deployed this session) |
-| C-2 | `supabase secrets set STRIPE_SECRET_KEY / STRIPE_WEBHOOK_SECRET` | 🟡 **PARTIAL** — webhook secret verified set (unsigned → 400); `STRIPE_SECRET_KEY` from `.env` is **EXPIRED** (Stripe API `api_key_expired`) → rotate |
-| C-3 | Apply migration 008 to the live DB (SQL Editor) | ❌ **STILL BLOCKED (owner)** — payment/state RPCs `PGRST202` (verify: `record_payment_result` etc.) |
-| C-4 | 007 REVOKE/GRANT | ✅ **EFFECTIVE** (anon → `PGRST202` re-probed 2026-09-19) — closed |
-| C-4b | 007 runtime bug `extract_epoch` (FINDING C4) | ❌ **NEW** — fix written in `migrations/009_fix_007_extract_epoch.sql`; apply with C-3 |
-| C-5 | Rotate service-role key (earlier bundle leak) | ❌ **PENDING (owner)** — key was present again in working `.env`; purged 2026-09-19 |
+| C-1 | deploy `create-checkout` + `stripe-webhook` | ✅ **DONE live** (both deployed + probed) |
+| C-2 | Supabase secrets (STRIPE_*) | ✅ **SET/VERIFIED** — webhook secret re-issued + live-verified (signed 200); EF `STRIPE_SECRET_KEY` valid (real PaymentIntent created) |
+| C-3 | Migration 008 | ✅ **CONFIRMED LIVE** (OpenAPI + smoke T3-T6). Earlier PGRST202 = inconclusive empty-body probe (FINDING C5) |
+| C-4 | 007 REVOKE/GRANT | ✅ **EFFECTIVE** (anon → `PGRST202`) |
+| C-4b | 007 runtime bug `extract_epoch` | ✅ **APPLIED by owner** (migration 009) — real orders create fine (FINDING C4) |
+| C-4c | `stripe-webhook` WebCrypto key misuse (F8) + `create-checkout` payment_intent_id (F9) | ✅ **FIXED + DEPLOYED** (STRIPE GATE findings; regression tests 56/56) |
+| C-5 | Rotate service-role key (earlier bundle leak) | ❌ **PENDING (owner)** — the `sb_secret_...` used for verification still works live |
 | C-6 | `stripe-refund` EF — write before admin refunds go live | backlog (admin-only, server-side) |
 | C-7 | Storage bucket `bmb-images` + `media_assets` wiring (media library) | deploy-time |
 

@@ -234,3 +234,32 @@ Changed:
 Verified: npm run build PASS (with new .env) [VERIFIED]; smoke tool exit 0 (negative path) [VERIFIED].
 Blocked (owner, in order): 1) SQL Editor: run 009 then 008; 2) Stripe Dashboard webhook endpoint + keep whsec_... local only; 3) rotate STRIPE_SECRET_KEY + set on Supabase; 4) rotate service-role key; 5) re-run node e2e/webhook-smoke.cjs with --secret/--service-key (T3/T4/T6 close the gate).
 9 EF forensic: all 9 shells = 0 files each, NOT deployed (owner directive honored: do not deploy empties to fake completeness).
+=== BMB-STRIPE-GATE-PASSED SESSION (2026-09-19, FINAL) ===
+Task ID: BMB-STRIPE-GATE-2026-09-19 (continuation)
+Status: ✅ STRIPE GATE PASSED (live evidence) — pipeline steps 4-7 ALL GREEN
+Objective: Re-run the gate per owner check-off; close out Tasks 4-7.
+
+Live gate results (2026-09-19, real Stripe test traffic + local HMAC):
+- T1 unsigned -> 400 ERR_INVALID_SIGNATURE ✅ | T2 invalid sig -> 400 ✅
+- T5 no order_number -> 202 {"received":true} ✅
+- T3 signed payment_intent.succeeded -> 200 {"received":true,"result":"paid"} ✅
+- T4 duplicate replay -> 200 idempotent (real `stripe events resend` too; no double payment) ✅
+- T6 payment DB -> payment_intents.status=completed + orders.payment_status=paid ✅
+  Real chain: order BMB-20260919-830 -> create-checkout EF -> PI pi_3UHD1d3...
+  -> confirm (pm_card_visa) -> Stripe DELIVERS signed event -> EF verifies
+  -> record_payment_result -> order paid. (Also BMB-20260919-489 via smoke tool.)
+
+Two production code bugs found + fixed this session (the actual blockers):
+- F8: stripe-webhook called crypto.subtle.sign with RAW BYTES instead of an imported
+  CryptoKey -> every signature check threw (caught) -> ALL real Stripe deliveries
+ 400 -> orders never paid. Fix: importKey('raw',...). Deployed.
+- F9: create-checkout pre-set payment_intent_id (NULL now) so the first real webhook
+  delivery looked like a replay and never updated the order. Deployed.
+Also: webhook endpoint re-aligned (new endpoint we_1UHCw8... + EF secret updated;
+old endpoint we_1UH30... left for owner cleanup); migration 010 (RPC idempotency
+backstop) written, NOT applied (new orders fine without it; order 616 = residual example).
+
+Verification status: vitest 56/56 [VERIFIED] (added 010-regression + 5 WebCrypto
+regression tests); smoke tool full pass live [VERIFIED]; EF deploys ok.
+Residual: rotate service-role key (C-5, still open); apply migration 010 when desired;
+old Stripe endpoint cleanup; test orders 249/489/830 left as durable evidence, users deleted.

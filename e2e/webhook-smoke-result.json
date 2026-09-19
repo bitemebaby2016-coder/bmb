@@ -1,8 +1,8 @@
 {
-  "timestamp": "2026-09-18T18:07:38.099Z",
-  "order": "BMB-NOSUCH",
-  "amount": 172,
-  "pi_id": "pi_test_smoke_1789754857",
+  "timestamp": "2026-09-19T01:24:30.839Z",
+  "order": "BMB-20260919-489",
+  "amount": 111,
+  "pi_id": "pi_test_smoke_1789781065",
   "url": "https://ivkdfognyiwjcmrhcnwz.supabase.co/functions/v1/stripe-webhook",
   "results": [
     {
@@ -19,6 +19,54 @@
       "extra": {
         "status": 400,
         "body": "{\"error\":\"ERR_INVALID_SIGNATURE\"}"
+      }
+    },
+    {
+      "name": "T5 no order_number -> 202",
+      "ok": true,
+      "extra": {
+        "status": 202,
+        "body": "{\"received\":true,\"note\":\"no order_number in metadata\"}"
+      }
+    },
+    {
+      "name": "T3 signed success -> 200",
+      "ok": true,
+      "extra": {
+        "status": 200,
+        "body": "{\"received\":true,\"result\":\"paid\"}"
+      }
+    },
+    {
+      "name": "T4 duplicate replay -> 200 idempotent",
+      "ok": true,
+      "extra": {
+        "status": 200,
+        "body": "{\"received\":true,\"result\":\"paid\"}"
+      }
+    },
+    {
+      "name": "T6 payment DB verified (order paid + intent completed)",
+      "ok": true,
+      "extra": {
+        "payment_intents": [
+          {
+            "id": "pi-pi_3UHCxF3yHrQLTgfK1I12wZk5",
+            "order_number": "BMB-20260919-489",
+            "amount": 111,
+            "status": "completed",
+            "method": "credit_card",
+            "provider": "stripe",
+            "payment_intent_id": "pi_test_smoke_1789781065"
+          }
+        ],
+        "orders": [
+          {
+            "order_number": "BMB-20260919-489",
+            "total_amount": 111,
+            "payment_status": "paid"
+          }
+        ]
       }
     }
   ],

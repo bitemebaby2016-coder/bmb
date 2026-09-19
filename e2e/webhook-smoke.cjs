@@ -29,6 +29,9 @@ function arg(name) {
 function readSecretValue(v, envName) {
   if (v == null) v = process.env[envName] || ''
   if (String(v).startsWith('file:')) v = fs.readFileSync(String(v).slice(5), 'utf8').trim()
+  // If the argument is the NAME of an env var that actually holds the value,
+  // resolve it (so `--secret STRIPE_WEBHOOK_SECRET` works when that variable is set).
+  if (String(v).length > 0 && process.env[v] && process.env[v].length > 0) v = process.env[v]
   return String(v)
 }
 

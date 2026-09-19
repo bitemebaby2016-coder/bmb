@@ -149,7 +149,11 @@ Deno.serve(async (req: Request): Promise<Response> => {
       method: 'credit_card',
       provider: 'stripe',
       client_secret: intent.client_secret,
-      payment_intent_id: intent.id,
+      // payment_intent_id ถูกเก็บเป็น NULL ที่ checkout — ค่าจริงจะถูกเขียนโดย
+      // stripe-webhook (record_payment_result) เมื่อแรกที่รับ event จริง
+      // ถ้าเขียนไว้ตั้งแต่ต้น RPC จะเข้าใจผิดว่าเป็นการ replay (idempotent)
+      // แล้วข้ามการอัปเดต → order ค้าง pending ตลอด (STRIPE GATE finding, 2026-09-19)
+      payment_intent_id: null, // set by stripe-webhook → record_payment_result
       metadata: { provider: 'stripe', source: 'create-checkout' },
     }),
   })

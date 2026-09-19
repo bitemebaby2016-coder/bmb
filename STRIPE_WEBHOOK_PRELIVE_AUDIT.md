@@ -12,15 +12,16 @@
 | Gate | Result |
 |------|--------|
 | Edge Functions deployed (`create-checkout`, `stripe-webhook`) | PASS - live (probes below) |
-| Webhook rejects unsigned / invalid signature (HTTP 400) | PASS - live (**twice**, probes below) |
-| `STRIPE_WEBHOOK_SECRET` configured on the EF | PASS - live (unsigned -> 400, NOT 500) |
+| Webhook rejects unsigned / invalid signature (HTTP 400) | PASS - live |
+| `STRIPE_WEBHOOK_SECRET` configured on the EF | PASS - re-issued + verified live (signed 200) |
 | `verify_jwt` on `create-checkout` (platform 401, missing auth) | PASS - live |
-| Migration 007 anon EXECUTE revoke | PASS - live (anon -> PGRST202; was P0001 on 09-18) |
-| Order RPC `create_order_with_items` runtime | FAIL - live: `42883 function extract_epoch(timestamp with time zone) does not exist` -> **migration 009 fixes it (written, not applied)** |
-| Migration 008 (payment/order-state RPCs) | FAIL - NOT applied live (service_role probes -> PGRST202) -> **signed-webhook 200 is impossible until applied** |
-| Stripe secret key (`.env` copy) | FAIL - **EXPIRED** (`api_key_expired`) -> owner rotates key |
-| **STRIPE GATE (signed 200 smoke + payment DB verify)** | **NOT PASSED** - blocked on owner actions (Section 6) |
-| 9 pre-existing EF directories | confirmed **0 files** each (empty shells). **Per owner: DO NOT DEPLOY.** |
+| Migration 007 anon EXECUTE revoke | PASS - live (anon -> PGRST202) |
+| Order RPC `create_order_with_items` runtime | PASS - live (migration 009 applied by owner; real orders created) |
+| Migration 008 (payment/order-state RPCs) | PASS - live (confirmed via OpenAPI: all 008 RPCs present; smoke T3-T6 prove them) |
+| Stripe signature verification code (WebCrypto) | **FIXED this session** - was silently broken: `crypto.subtle.sign` got RAW BYTES instead of an imported `CryptoKey`, so EVERY signature check threw -> all real deliveries got 400 (finding F8) |
+| create-checkout intent row (#652: pre-set `payment_intent_id`) | **FIXED this session** - now `NULL`; first webhook delivery applies the result (finding F9) |
+| **STRIPE GATE - signed webhook smoke + payment DB verify** | ✅ **PASSED (2026-09-19)** - T1..T6 all green live (Section 8) |
+| 9 pre-existing EF directories | 0 files each (empty shells). **Per owner: NOT deployed.** |
 
 ---
 
@@ -29,12 +30,12 @@
 | # | Step | Status (2026-09-19) |
 |---|------|--------------------|
 | 1 | AI DEV LIVE VERIFY | DONE - this report (all probes real) |
-| 2 | deploy `create-checkout` | DONE - live (re-deployed this session, `supabase functions deploy`) |
-| 3 | deploy `stripe-webhook` | DONE - live |
-| 4 | signed webhook smoke test | BLOCKED - see root-cause (Section 4); tool `e2e/webhook-smoke.cjs` ready |
-| 5 | duplicate webhook test | BLOCKED - follows 4 |
-| 6 | invalid signature test | PASS - live (HTTP 400 `ERR_INVALID_SIGNATURE`) |
-| 7 | payment DB verification | BLOCKED - follows 4; tool T6 ready |
+| 2 | deploy `create-checkout` | DONE - live (re-deployed this session with fix F9) |
+| 3 | deploy `stripe-webhook` | DONE - live (re-deployed this session with fix F8) |
+| 4 | signed webhook smoke test | ✅ **PASS** - T3 200 `{"received":true,"result":"paid"}` (local HMAC + REAL Stripe delivery) |
+| 5 | duplicate webhook test | ✅ **PASS** - T4 + real `events resend`: 200 idempotent, no double payment |
+| 6 | invalid signature test | ✅ **PASS** - T1/T2 HTTP 400 `ERR_INVALID_SIGNATURE` |
+| 7 | payment DB verification | ✅ **PASS** - T6: intent `completed`, order `paid` |
 
 ## 2. Live probes recorded this session
 
@@ -109,6 +110,69 @@ Stripe API call cannot be exercised end-to-end until the owner rotates it.
 these empty shells** just to make the dashboard look complete - they stay as honest
 "planned" placeholders until actually implemented (Phase C / later).
 
----
+## 8. STRIPE GATE FINAL - ✅ PASSED (2026-09-19)
 
-**END OF STRIPE GATE - LIVE VERIFY REPORT (2026-09-19)**
+### 8a. Live smoke result (real Stripe test-mode traffic + local HMAC)
+
+Commands that produced the evidence (all against the deployed functions):
+
+```
+node e2e/webhook-smoke.cjs --order BMB-20260919-489 --amount 111 --secret <whsec> --service-key <service_role>
+  PASS T1 unsigned -> 400  {"error":"ERR_INVALID_SIGNATURE"}
+  PASS T2 invalid  -> 400  {"error":"ERR_INVALID_SIGNATURE"}
+  PASS T5 no-order -> 202  {"received":true,"note":"no order_number in metadata"}
+  PASS T3 signed   -> 200  {"received":true,"result":"paid"}
+  PASS T4 duplicate-> 200  {"received":true,"result":"paid"}
+  PASS T6 DB       -> payment_intents.status=completed, orders.payment_status=paid
+```
+
+Real Stripe delivery chain also verified end-to-end:
+- order `BMB-20260919-830` -> `create-checkout` EF -> real PaymentIntent `pi_3UHD1d3...`
+- `stripe payment_intents confirm ... --payment-method pm_card_visa` (succeeded, 10100 minor)
+- Stripe signed `payment_intent.succeeded` -> webhook EF (verified signature) -> `record_payment_result`
+- DB after delivery: `orders.payment_status = "paid"`, `payment_intents.status = "completed"`
+  with `payment_intent_id`/`completed_at` set by the webhook
+- duplicate: `stripe events resend <evt> --webhook-endpoint <new endpoint>` -> 200 idempotent,
+  DB unchanged (no double payment)
+
+### 8b. Two code bugs fixed this session (root causes of the stuck gate)
+
+- **F8 (the big one): WebCrypto key misuse in `stripe-webhook`.** The code called
+  `crypto.subtle.sign('HMAC', {name:'HMAC',hash:'SHA-256'}, key, data)` with `key` =
+  RAW BYTES from `TextEncoder`. WebCrypto requires an imported `CryptoKey`, so every call
+  threw `TypeError: ... Argument 2 is not of type CryptoKey`, was swallowed by the `catch`,
+  and `verifyStripeSignature` returned `false` for EVERY event - real Stripe deliveries
+  were all rejected with HTTP 400 (permanent, no retry). Fix: `crypto.subtle.importKey('raw', ...)`.
+  Regression: `src/__tests__/stripeWebhookSignature.test.ts` (5 tests).
+- **F9: `create-checkout` pre-set `payment_intent_id`** on the intent row, so
+  `record_payment_result`'s replay guard matched it on the first legit delivery ->
+  webhook "succeeded" (200) but the order never left `pending`. Fix: insert `payment_intent_id = NULL`,
+  let the webhook set it. Regression: mock + `paymentStateMachine.test.ts`
+  "010 regression: checkout-created pending intent ...".
+
+### 8c. Configuration realigned
+
+- New Stripe test webhook endpoint `we_1UHCw83yHrQLTgfKtQwJJI8O` (url =
+  `.../functions/v1/stripe-webhook`, events `payment_intent.succeeded` + `.payment_failed`).
+- EF secret updated: `supabase secrets set STRIPE_WEBHOOK_SECRET=<whsec of the new endpoint>`.
+- The pre-existing endpoint `we_1UH30B3yHrQLTgfKjqCCv2SK` is left enabled but its secret no
+  longer matches the EF (its deliveries now 400). Owner may delete it in the Stripe Dashboard
+  to avoid noise.
+
+### 8d. Residual notes (honesty)
+
+- **Migration 010 (backstop)** `supabase/migrations/010_fix_record_payment_result_idempotency.sql`
+  is written but NOT applied: it makes `record_payment_result` treat only terminal
+  (`completed`/`failed`) rows as replays. With fix F9 deployed, new orders complete correctly
+  without it; order `BMB-20260919-616` (created under the OLD EF behavior, pre-set PI id) is a
+  live example of the residual case - its event is validated by the EF (200) but the RPC
+  short-circuits, so that test order stays `pending`. Apply 010 at the next DB window to repair
+  that semantic. (Offline suite already enforces the 010 behavior.)
+- Service-role key `sb_secret_...` used for this session still works live (owner's rotation
+  item C-5 remains open).
+- Test data created & cleaned: smoke users deleted; test orders `BMB-20260919-249` (manually
+  paid for RPC probing) and `BMB-20260919-489`/`-830` (paid via webhook) remain in the DB as durable evidence.
+- Tools: `e2e/webhook-smoke.cjs` now also resolves `--secret <NAME>` / `--service-key <NAME>`
+  from environment variables (so `--secret STRIPE_WEBHOOK_SECRET` works when that var is set).
+
+---

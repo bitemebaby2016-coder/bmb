@@ -333,7 +333,10 @@ export function createSupabaseMock() {
       const order = (tables['orders'] || []).find((o: any) => o.order_number === p.p_order_number)
       if (!order) return { data: null, error: { code: 'ERR_ORDER_NOT_FOUND', message: 'ERR_ORDER_NOT_FOUND' } }
       const intents = tables['payment_intents'] || []
-      const existing = intents.find((x: any) => x.payment_intent_id === p.p_payment_intent_id)
+      // 010: only a TERMINAL recorded result short-circuits (idempotent replay).
+      // A row still pending (created by create-checkout without payment_intent_id,
+      // or with one) must fall through so the first real webhook delivery applies.
+      const existing = intents.find((x: any) => x.payment_intent_id === p.p_payment_intent_id && (x.status === 'completed' || x.status === 'failed'))
       if (existing) {
         return { data: { ok: true, idempotent: true, order_number: p.p_order_number, intent_status: existing.status }, error: null }
       }

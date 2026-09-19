@@ -170,6 +170,50 @@ it('PromptPay: cannot confirm without a submitted TXN (intent still pending)', a
     expect(bad.error).not.toBeNull()
     expect(String(bad.error.message)).toContain('ERR_AMOUNT_MISMATCH')
   })
+
+  it('010 regression: checkout-created pending intent is NOT treated as an idempotent replay', async () => {
+    // Simulates the bug found at the STRIPE GATE (2026-09-19): create-checkout
+    // pre-inserted the intent row WITH payment_intent_id set and status pending.
+    // record_payment_result must NOT short-circuit on that row — the first real
+    // webhook delivery has to apply the result (completed/paid).
+    const order = await makeOrder('credit_card')
+    const piTable = mockRef.current.__tables
+    if (!piTable['payment_intents']) piTable['payment_intents'] = []
+    piTable['payment_intents'].push({
+      id: 'pi-pi_3checkout',
+      order_number: order!.order_number,
+      amount: order!.total_amount,
+      currency: 'thb',
+      status: 'pending',
+      method: 'credit_card',
+      provider: 'stripe',
+      client_secret: 'pi_3checkout_secret_abc',
+      payment_intent_id: 'pi_3checkout',
+      metadata: {},
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    })
+    const r = mockRef.current.rpc
+    const res1 = await r('record_payment_result', {
+      p_order_number: order!.order_number,
+      p_payment_intent_id: 'pi_3checkout',
+      p_amount: order!.total_amount,
+      p_status: 'completed',
+    })
+    expect(res1.error).toBeNull()
+    expect(res1.data.idempotent).toBe(false) // first real delivery applies the result
+    expect(res1.data.payment_status).toBe('paid')
+    const row = mockRef.current.__tables['payment_intents'].find((x: any) => x.order_number === order!.order_number)
+    expect(row.status).toBe('completed')
+    // duplicate delivery → idempotent
+    const res2 = await r('record_payment_result', {
+      p_order_number: order!.order_number,
+      p_payment_intent_id: 'pi_3checkout',
+      p_amount: order!.total_amount,
+      p_status: 'completed',
+    })
+    expect(res2.data.idempotent).toBe(true)
+  })
 })
 
 describe('P0-6 Order state machine — allow-list enforcement', () => {
