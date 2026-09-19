@@ -115,6 +115,11 @@ export function AdminDashboard() {
           <div className="font-bold text-brand-accent text-lg">Settings</div>
           <div className="text-sm text-brand-muted mt-1">Business settings</div>
         </Link>
+        <Link to="/admin/media" className="card text-center hover:scale-105 transition-all hover:shadow-xl bg-gradient-to-br from-amber-50 to-orange-50 border-2 border-amber-200">
+          <div className="text-4xl mb-3">🖼️</div>
+          <div className="font-bold text-brand-accent text-lg">Media Library</div>
+          <div className="text-sm text-brand-muted mt-1">รูปภาพ/วิดีโอ (bmb-images)</div>
+        </Link>
 
       {/* Overview Summary - Premium Style */}
       <div className="card bg-gradient-to-br from-brand-bg-warm to-brand-bg">

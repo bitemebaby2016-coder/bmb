@@ -210,3 +210,24 @@ export async function getDashboardStats(): Promise<{
     totalRevenue: allOrders.reduce((sum, o) => sum + o.total_amount, 0),
   }
 }
+// ============================================
+// C-6 (2026-09-19): server-side Stripe refund via Edge Function (admin-only).
+// The EF verifies the caller is an admin, validates the order/intent, calls the
+// Stripe Refund API with an Idempotency-Key, then persists the result.
+// ============================================
+export async function stripeRefundOrder(
+  orderNumber: string,
+  reason?: string,
+): Promise<{ success: boolean; data?: any; error?: string }> {
+  try {
+    const { data, error } = await supabase.functions.invoke('stripe-refund', {
+      body: { order_number: orderNumber, reason },
+    })
+    if (error || (data && data.error)) {
+      return { success: false, error: (data && data.error) || error?.message || 'refund failed' }
+    }
+    return { success: true, data }
+  } catch (e) {
+    return { success: false, error: String(e).slice(0, 200) }
+  }
+}

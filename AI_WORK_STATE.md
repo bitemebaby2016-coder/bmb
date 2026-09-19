@@ -348,3 +348,28 @@ VERIFICATION (live, 2026-09-19, order BMB-LIVE-20260919074017, 172 THB):
 
 REMAINING (owner): optional - retire/disable any other stale Stripe endpoints; keep the
   endpoint secret on Supabase in sync with the ACTIVE endpoint (dashboard shows it).
+=== PHASE C-D REMAINING WORK SESSION (2026-09-19) — C-6 REFUND + C-7 MEDIA + PHASE D ===
+Task ID: BMB-OWNER-PHASE-CD-REMAINING-2026-09-19
+Status: ✅ C-6 DONE (LIVE VERIFIED) · C-7 code-complete (owner applies migration 011) · Phase D admin updated
+
+C-6 stripe-refund EF (supabase/functions/stripe-refund/index.ts, config.toml verify_jwt=true):
+- Admin-only (JWT + profiles.role='admin' server-side); Stripe Refund API with
+  Idempotency-Key bmb-refund-<order>-<amountMinor>; ledger in payment_intents.metadata
+  (refund_ids/refunded_total_minor/last_refund_at).
+- Offline tests: src/__tests__/stripeRefundLogic.test.ts (5 tests). Full vitest 61/61.
+- Deployed live. Probes: no-auth 401 / non-admin 403 / bad order 404 PASS;
+  REAL refund on test order BMB-LIVE-20260919074017 → 200, re_3UHIsi3yHrQLTgfK0PH3NdRk
+  (succeeded, 172 THB), orders.payment_status=refund + payment_intents.status=refunded.
+- Admin UI: stripeRefundOrder in bmbAdminApi_orders.ts + "คืนเงิน (Stripe)" button in AdminOrders.
+- NOTE: profiles role escalation is blocked by guard_profile_mutation (BEFORE UPDATE) even for
+  service role; promotion requires an existing admin or owner SQL.
+
+C-7 media (bucket bmb-images VERIFIED existing/public) + migration 011 (storage.objects policies
+for bmb-images; media_assets RLS re-assert) + bmbAdminApi_media.ts + AdminMedia.tsx (/admin/media)
++ dashboard card. OWNER: apply supabase/migrations/011_storage_bmb_images_policies.sql for storage
+uploads to work.
+
+Phase D admin docs synced (overwrite): ADMIN_GAP_MAP (promotions/rounds/customers/settings/media
+now VERIFIED; refund item; remaining backlog D7 content/D10 kitchen/D14 reviews/inventory-sync/
+delivery-zones UI), STATUS_TRACKER (P0-5 refund live, Phase D media), PHASE_C (C-6 done, C-7 ready).
+Build: npm run build PASS (tsc 0 errors).

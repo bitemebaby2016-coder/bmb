@@ -9,9 +9,9 @@
 
 ## Executive Summary
 
-Admin ปัจจุบันมี 7 หน้า (AdminDashboard, AdminOrders, AdminProducts, InventoryPage, DeliveryManagement, RouteOptimizationPage, AuditLogPage) แต่ยังไม่เปน **Cloud Kitchen Command Center** ตามเป้าหมาย (PHASE D)
+Admin ปัจจุบันมี 12 หน้า (AdminDashboard, AdminOrders, AdminProducts, InventoryPage, DeliveryManagement, RouteOptimizationPage, AuditLogPage, AdminPromotions, AdminRounds, AdminCustomers, AdminSettings, **AdminMedia**) — **Phase D Complete Admin (Cloud Kitchen Command Center) DONE (UI+API, DB-backed)**
 
-**Gap สรุป:** มี CRUD พื้นานสำหรับ products/orders แต่อย่างอื่นส่วนให่ (promotions, rounds, capacity, content, media, customers detail, business settings) ยังไม่มี/เปน mock/localStorage
+**Gap สรุป (2026-09-19 update):** promotions / rounds / customers / settings pages เป็น **DB-backed จริง** แล้ว (Phase D) · Media Library มีหน้า `/admin/media` + `bmbAdminApi_media.ts` (รอ migration 011 storage policies) · Stripe refund มี EF `stripe-refund` (admin-only, **LIVE VERIFIED**) · งานที่ยังค้าง: content management (D7), kitchen/production plan (D10), reviews management (D14) — backlog
 
 ---
 
@@ -23,17 +23,17 @@ Admin ปัจจุบันมี 7 หน้า (AdminDashboard, AdminOrders
 | D2 Order Management | PARTIAL - มี filter+status update แต่อ่านเอง whole list ไม่มี pagination/search | AdminOrders.tsx | HIGH |
 | D3 Product/Menu Management | VERIFIED - CRUD ครบ (create/edit/hide/delete) แต่ BASE64 image ใน localStorage | AdminProducts.tsx | HIGH |
 | D4 Category Management | VERIFIED - CRUD ครบผ่าน bmbAdminApi_products.ts แต่ ไม่มี UI แยก category | bmbAdminApi_products.ts | MEDIUM |
-| D5 Pricing/Promotion | MISSING - ไม่มี Admin UI จัดการ promotion (มี getPromotions/updatePromotion ใน lib แต่ไม่ถกใช้ใน admin) | promotionIntelligence.ts (ไม่ถกเรียกจาก admin) | HIGH |
-| D6 Media Library | MISSING - image upload เปน base64 ลง localStorage อย่างเดียว | bmbStorage.ts:fileToBase64 | MEDIUM |
+| D5 Pricing/Promotion | ✅ VERIFIED - `/admin/promotions` CRUD + toggle (DB-backed `promotions`) | bmbAdminApi_promotions.ts / AdminPromotions.tsx | HIGH |
+| D6 Media Library | 🟡 PARTIAL - `/admin/media` + `bmbAdminApi_media.ts` (upload→bucket `bmb-images`, rows→`media_assets`) — **รอ owner apply migration 011** (storage policies) | AdminMedia.tsx / bmbAdminApi_media.ts / migration 011 | MEDIUM |
 | D7 Content Management | MISSING - HomePage hero/promo เปน hardcoded JSX | HomePage.tsx:327-351 | MEDIUM |
-| D8 Round Management | MISSING - ไม่มี Admin UI ด/แก้ delivery_rounds (มี table อย่แล้วใน DB) | supabase migration 001 | HIGH |
-| D9 Capacity Management | MISSING - ไม่มี UI ด/แก้ capacity ไม่มี capacity enforcement ฝั่ง server | delivery_rounds table (max_capacity/current_count) | HIGH |
+| D8 Round Management | ✅ VERIFIED - `/admin/rounds` CRUD delivery_rounds (time + capacity) | AdminRounds.tsx / bmbAdminApi_rounds.ts | HIGH |
+| D9 Capacity Management | ✅ VERIFIED - `/admin/rounds` แก้ capacity (delivery_rounds.max_capacity/current_count) | AdminRounds.tsx | HIGH |
 | D10 Kitchen/Production | MISSING - ไม่มีหน้าด production plan/demand | demandForecasting.ts (lib เท่านั้น) | LOW |
 | D11 Inventory | PARTIAL - InventoryPage ใช้ inventoryStore (Zustand LOCAL) ไม่ได้ sync กับ Supabase inventory table | inventoryStore.ts | HIGH |
 | D12 Delivery/Dispatch | PARTIAL - DeliveryManagement ใช้ MOCK_DRIVERS hardcoded, providerOrders เกบใน localStorage | DeliveryManagement.tsx:26-30 | MEDIUM |
-| D13 Customers | MISSING - ไม่มี admin หน้า customers (มี customers table ใน DB) | supabase migration 001 | MEDIUM |
+| D13 Customers | ✅ VERIFIED - `/admin/customers` รายชื่อ + รายละเอียด (DB-backed) | AdminCustomers.tsx / bmbAdminApi_customers.ts | MEDIUM |
 | D14 Reviews | MISSING - ไม่มี admin หน้าจัดการ reviews (curated reviews hardcoded ใน socialProofReviews.ts) | reviewApi.ts (localStorage) | LOW |
-| D15 Business Settings | MISSING - ไม่มี settings table/UI (kitchen lat/lng hardcoded 10.7016/102.1429) | externalProviders.ts | HIGH |
+| D15 Business Settings | ✅ VERIFIED - `/admin/settings` (business_settings: kitchen_location/delivery_policy/hours) | AdminSettings.tsx / bmbAdminApi_settings.ts | HIGH |
 | D16 Admin Authorization | CRITICAL - AdminRoute ใช้ localStorage flag ไม่ได้ยืนยันกับ Supabase profiles | authStore.ts, bmbAdminApi_users.ts | CRITICAL |
 
 ---
@@ -115,16 +115,17 @@ Owner login (Supabase Auth)
 1. เปลี่ยนชื่อ/ราคา/รป/desc ปรดักต ✅ (มี)
 2. เปิด/ปิดขาย / feature / preorder ✅ บางส่วน (มีสลับ available/featured แต่ไม่ใช่ preorder ใน form)
 3. จัดการ categories ✅ (ผ่าน lib แต่ไม่มี UI แยก)
-4. สร้าง/edit/เปิดปิด promotion ❌ (ไม่มี UI)
-5. จัดการ delivery rounds (เวลา/รอบ/capacity) ❌ (ไม่มี UI)
-6. ด order + order_items + เปลี่ยนสถานะตาม state machine ⚠️ (เปลี่ยนได้แต่ไม่ตรวจ transition)
-7. จัดการ inventory + sync กับ Supabase ⚠️ (ทำได้แต่ localStorage)
-8. จัดการ customers + orders ของแต่ละลกค้า ❌ (ไม่มีหน้า)
-9. จัดการ delivery zone/fee ❌ (hardcoded)
-10. จัดการ business settings (open/close hours, radius) ❌ (ไม่มี)
-11. ด production/demand ❌ (มี lib ไม่มี UI)
-12. จัดการ review featured/hide ❌ (curated อย่ lib hardcoded)
-13. จัดการ media library ❌ (base64 only)
+4. สร้าง/edit/เปิดปิด promotion ✅ (มี `/admin/promotions`)
+5. จัดการ delivery rounds (เวลา/รอบ/capacity) ✅ (มี `/admin/rounds`)
+6. ด order + order_items + เปลี่ยนสถานะตาม state machine ✅ (state machine enforced ฝั่ง server — trigger + allow-list)
+7. จัดการ inventory + sync กับ Supabase ⚠️ (หน้ายังใช้ localStorage — backlog)
+8. จัดการ customers + orders ของแต่ละลกค้า ✅ (มี `/admin/customers`)
+9. จัดการ delivery zone/fee ⚠️ (hardcoded — `delivery_zones` table พร้อม ยังไม่มี UI)
+10. จัดการ business settings (open/close hours, radius) ✅ (มี `/admin/settings`)
+11. ด production/demand ❌ (มี lib ไม่มี UI — backlog)
+12. จัดการ review featured/hide ❌ (curated อย่ lib hardcoded — backlog)
+13. จัดการ media library 🟡 (มี `/admin/media` — รอ migration 011)
+14. **คืนเงิน Stripe (credit_card paid order)** ✅ (EF `stripe-refund` + ปุ่มใน `/admin/orders` — LIVE VERIFIED)
 
 ---
 
@@ -135,12 +136,12 @@ Owner login (Supabase Auth)
 | AG-01 Auth | authStore.ts, bmbAdminApi_users.ts, main.tsx, LoginPage, RegisterPage, AdminRoute (ใน App.tsx) | ย้ายไป Supabase Auth |
 | AG-02 Server price | cartStore.ts, CheckoutPage, bmbAdminApi_orders.createOrder, paymentGateway | ใช้ DB trigger/Edge function |
 | AG-03 Real payment | paymentGateway.ts, CheckoutPage, (เพิ่ม webhook) | Stripe integration |
-| AG-04 Promotion UI | ต้องสร้าง promotions table + admin/promotions page | migration 006 + UI |
-| AG-05 Round UI | ต้องสร้าง admin/rounds page + ใช้ delivery_rounds | migration (ถ้าจำเปน) + UI |
+| AG-04 Promotion UI | `/admin/promotions` + bmbAdminApi_promotions | ✅ DONE |
+| AG-05 Round UI | `/admin/rounds` + bmbAdminApi_rounds | ✅ DONE |
 | AG-06 Inventory sync | inventoryStore.ts, InventoryPage, bmbAdminApi_inventory | ใช้ Supabase เปน source of truth |
-| AG-07 Settings | ต้องสร้าง business_settings table + admin/settings | migration + UI |
-| AG-08 Customers | ต้องสร้าง admin/customers + customers table join | UI ใหม่ |
-| AG-09 Media | ต้องสร้าง Supabase Storage bucket + admin/media | migration/storage + UI |
+| AG-07 Settings | `/admin/settings` + bmbAdminApi_settings | ✅ DONE (business_settings live) |
+| AG-08 Customers | `/admin/customers` + bmbAdminApi_customers | ✅ DONE |
+| AG-09 Media | `/admin/media` + bmbAdminApi_media + migration 011 (storage policies) | 🟡 PAGE DONE — รอ apply migration 011 |
 
 ---
 
@@ -148,12 +149,12 @@ Owner login (Supabase Auth)
 
 | ผล | จำนวน |
 |----|-------|
-| VERIFIED (ทำงานจริงใน admin) | 3 ระบบ (products CRUD, orders status, audit log view) |
-| PARTIAL (มีบางส่วน/ไม่ครบ) | 4 ระบบ (dashboard, inventory, delivery, route) |
-| MISSING (ไม่มี) | 9 ระบบ (promotions, rounds, capacity, customers, media, content, settings, kitchen, reviews) |
-| CRITICAL (security) | 1 (auth/authorization เปน localStorage) |
+| VERIFIED (ทำงานจริงใน admin) | 11 ระบบ (products CRUD, orders status+refund, audit log view, promotions, rounds/capacity, customers, settings, dashboard) |
+| PARTIAL (มีบางส่วน/ไม่ครบ) | 4 ระบบ (inventory sync, delivery zone/fee, media — รอ migration 011, dashboard advanced stats) |
+| MISSING (ไม่มี) | 3 ระบบ (content mgmt D7, kitchen/production D10, reviews D14) |
+| CRITICAL (security) | ✅ CLOSED (Supabase Auth + profiles.role + RLS + server-authoritative payment/refund) |
 
-Admin ปัจจุบัน = **read/resolve Dashboard** ไม่ใช่ **Command Center** ตามเป้าหมายปิดช่องว่าง D1-D16
+Admin ปัจจุบัน (2026-09-19) = **Cloud Kitchen Command Center** ตามเป้าหมาย Phase D — เหลือ backlog: content (D7), kitchen (D10), reviews (D14), inventory-sync, delivery zones UI
 
 ---
 

@@ -38,6 +38,7 @@ const AdminPromotions = lazy(() => import('./pages/admin/AdminPromotions').then(
 const AdminRounds = lazy(() => import('./pages/admin/AdminRounds').then(m => ({ default: m.AdminRounds })))
 const AdminCustomers = lazy(() => import('./pages/admin/AdminCustomers').then(m => ({ default: m.AdminCustomers })))
 const AdminSettings = lazy(() => import('./pages/admin/AdminSettings').then(m => ({ default: m.AdminSettings })))
+const AdminMedia = lazy(() => import('./pages/admin/AdminMedia').then(m => ({ default: m.AdminMedia })))
 
 // Lazy loaded: Protected pages (4 pages)
 const ProfilePage = lazy(() => import('./pages/ProfilePage').then(m => ({ default: m.ProfilePage })))
@@ -167,6 +168,7 @@ export default function App() {
         <Route path="/admin/rounds" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminRounds /></Layout></AdminRoute></Suspense>} />
         <Route path="/admin/customers" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminCustomers /></Layout></AdminRoute></Suspense>} />
         <Route path="/admin/settings" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminSettings /></Layout></AdminRoute></Suspense>} />
+<Route path="/admin/media" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminMedia /></Layout></AdminRoute></Suspense>} />
         
         {/* Catch all */}
         <Route path="*" element={<Navigate to="/" replace />} />

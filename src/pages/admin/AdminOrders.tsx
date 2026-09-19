@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { useNotificationStore } from '@/store/notificationStore'
 import { showToast } from '@/components/ui/ToastContainer'
-import { getOrders, updateOrderStatus, confirmOfflinePayment, markPaymentFailed } from '@/lib/bmbAdminApi_orders'
+import { getOrders, updateOrderStatus, confirmOfflinePayment, markPaymentFailed, stripeRefundOrder } from '@/lib/bmbAdminApi_orders'
 import type { OrderForm } from '@/lib/bmbAdminApi_orders'
 
 export function AdminOrders() {
@@ -60,6 +60,16 @@ export function AdminOrders() {
     await markPaymentFailed(orderNumber, 'admin')
     loadOrders()
     showToast('การচำระเงินถูกทำล้ม', 'success')
+  }
+async function handleStripeRefund(orderNumber: string) {
+    // C-6: server-side Stripe refund (admin-only EF). Full refund by default.
+    const r = await stripeRefundOrder(orderNumber)
+    loadOrders()
+    if (r.success) {
+      showToast(`คืนเงินสำเร็จ (${r.data?.payment_status || 'refund'})`, 'success')
+    } else {
+      showToast(r.error || 'คืนเงินไม่สำเร็จ', 'error')
+    }
   }
 
   const filteredOrders = filterStatus === 'all' ? orders : orders.filter(o => o.status === filterStatus)
@@ -147,6 +157,9 @@ export function AdminOrders() {
               {order.payment_status === 'pending' && (
                 <button onClick={() => handleMarkFailed(order.order_number)} className="btn btn-outline text-sm">🚫 ব্যর্থ</button>
               )}
+{order.payment_method === 'credit_card' && (order.payment_status === 'paid' || order.payment_status === 'partially_refunded') && (
+                    <button onClick={() => handleStripeRefund(order.order_number)} className="btn btn-outline text-sm">💸 คืนเงิน (Stripe)</button>
+                  )}
 
               <button className="btn btn-outline text-sm ml-auto">📞 কল</button>
             </div>

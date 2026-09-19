@@ -22,3 +22,10 @@ verify_jwt = true
 [functions.stripe-webhook]
 enabled = true
 verify_jwt = false
+
+# stripe-refund: called by authenticated ADMIN users from the Admin UI.
+#   verify_jwt = true → platform rejects anonymous callers; the handler additionally
+#   verifies profiles.role='admin' (Phase C-D item C-6, server-side Stripe refund).
+[functions.stripe-refund]
+enabled = true
+verify_jwt = true

@@ -26,10 +26,10 @@
 |----|------|--------|----------|
 | 007 | `create_order_with_items` server-authoritative order RPC | ✅ **LIVE** (revoke effective + `extract_epoch` fixed via migration 009) | live probe 2026-09-19: anon → PGRST202; real credit_card orders created OK |
 | P0-4 | Order creation/pricing server-side (no client totals) | ✅ **LIVE** | migration 007 (+009 fix) + `bmbAdminApi_orders.createOrder` (input-only) |
-| P0-5 | Payment real integration (Stripe EF + webhook + offline RPCs) | ✅ **LIVE + GATE PASSED** | create-checkout/stripe-webhook deployed; smoke T1–T6 green; real Stripe PI → webhook → order paid |
+| P0-5 | Payment real integration (Stripe EF + webhook + offline RPCs + **refunds**) | ✅ **LIVE + GATE PASSED** | create-checkout/stripe-webhook/**stripe-refund** deployed; smoke T1–T6 green; real Stripe PI → webhook → order paid; real Stripe **refund** → order refund (C-6) |
 | P0-6 | Order state machine (allow-list + trigger + RPC) | ✅ **LIVE (008 RPCs confirmed)** | OpenAPI shows 008 functions; `transition_order_status` etc. callable |
-| Phase C | Forensic — trusted backend boundary + secrets + EF inventory | ✅ **DONE / GATE PASSED** | 9 EF shells = 0 files, NOT deployed (owner). C5 new (008 live), C6 new (F8/F9 fixed) |
-| Phase D | Complete Admin (promotions/rounds/customers/settings) | ✅ DONE (UI+API) / 008 now live | 4 new pages + 4 lib APIs + routes + dashboard links |
+| Phase C | Forensic — trusted backend boundary + secrets + EF inventory | ✅ **DONE / GATE PASSED** | 9 EF shells = 0 files, NOT deployed (owner). C5 new (008 live), C6 new (F8/F9 fixed); C-6 refund EF live-verified |
+| Phase D | Complete Admin (promotions/rounds/customers/settings/**media**) | ✅ **DONE (UI+API) / 008+011 now live** | 5 new pages (promotions/rounds/customers/settings + **`/admin/media`**) + 5 lib APIs + routes + dashboard links |
 | .env | Client-facing secrets purged (service-role, Stripe keys) | ✅ DONE (again) — Strict KEY=VALUE format, gate verified | `.env`/`.env.local` rewritten in this session; no secrets remain; parse-error pattern fixed |
 
 **Tests:** Vitest **50/50 PASS** (26 baseline + **14 new** P0-5/P0-6 contract tests) ·
