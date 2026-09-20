@@ -1,6 +1,7 @@
 import { create } from "zustand"
 import type { Customer } from "@/types"
 import { supabase } from "@/lib/supabase"
+import { quickLoginByPhone, type QuickLoginInput } from "@/lib/locationLogin"
 
 // P0-2 FIX (2026-09-18): Authentication ถูกย้ายไป Supabase Auth แล้ว
 // ---------------------------------------------------------------
@@ -26,6 +27,8 @@ interface AuthStore {
 
   login: (email: string, password: string) => Promise<boolean>
   loginByPhone: (phone: string, password: string) => Promise<boolean>
+  /** New quick login — name + phone + location (Edge Function phone-auto-login). */
+  loginByLocation: (input: QuickLoginInput) => Promise<{ ok: boolean; error?: string }>
   logout: () => Promise<void>
   checkAuth: () => Promise<void>
 }
@@ -118,6 +121,26 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
       isLoading: false
     })
     return true
+  },
+
+  loginByLocation: async (input: QuickLoginInput) => {
+    const res = await quickLoginByPhone(input)
+    if (!res.ok || !res.session) {
+      return { ok: false, error: res.error || 'ERR_QUICK_LOGIN' }
+    }
+    const { data, error } = await supabase.auth.setSession({
+      access_token: res.session.access_token,
+      refresh_token: res.session.refresh_token,
+    })
+    if (error || !data.user) {
+      return { ok: false, error: error?.message || 'ERR_SESSION_SET' }
+    }
+    set({
+      customer: mapUserToCustomer(data.user),
+      isAuthenticated: true,
+      isLoading: false,
+    })
+    return { ok: true }
   },
 
   logout: async () => {

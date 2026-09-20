@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" role="img" aria-label="Bite Me Baby - food placeholder">
+  <defs>
+    <linearGradient id="fm1" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#FFF7ED"/>
+      <stop offset="0.55" stop-color="#FED7AA"/>
+      <stop offset="1" stop-color="#FDBA74"/>
+    </linearGradient>
+  </defs>
+  <rect width="400" height="300" fill="url(#fm1)"/>
+  <circle cx="200" cy="135" r="92" fill="#FFFFFF" opacity="0.95"/>
+  <circle cx="200" cy="135" r="92" fill="none" stroke="#F97316" stroke-width="3" opacity="0.7"/>
+  <text x="200" y="172" font-size="96" text-anchor="middle">🍱</text>
+  <text x="200" y="248" font-size="26" font-weight="bold" text-anchor="middle" fill="#92400E" font-family="'Nunito',sans-serif">Bite Me Baby</text>
+  <text x="200" y="276" font-size="16" text-anchor="middle" fill="#B45309" font-family="'Nunito',sans-serif">ภาพตัวอย่าง — แัวемурimg продукта скоро</text>
+</svg>

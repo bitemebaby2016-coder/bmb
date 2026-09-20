@@ -921,8 +921,23 @@ p { color: var(--color-brand-text-secondary); }
   50%      { transform: translateY(-7px) rotate(6deg) scale(1.05); }
 }
 
-/* Drinks section — mockup drink cards (owner can edit data in src/lib/drinksMenu.ts) */
-.drink-card {
+/* Floating mascot accent on section headings (drinks / snacks / etc.) */
+.section-float-mascot {
+  width: 34px;
+  height: 34px;
+  object-fit: contain;
+  border-radius: 50%;
+  filter: drop-shadow(0 5px 9px rgba(146, 64, 14, 0.28));
+  animation: floatLogo 4.5s ease-in-out infinite;
+  pointer-events: none;
+  flex-shrink: 0;
+}
+
+/* Mock menu cards — Drinks section (.drink-card) + Snacks section (.snack-card)
+   Shared card styles; data lives in src/lib/drinksMenu.ts / src/lib/snacksMenu.ts
+   (owner edits name/price/description/tag/image THERE — no component/CSS changes needed). */
+.drink-card,
+.snack-card {
   display: flex;
   flex-direction: column;
   height: 100%;
@@ -933,12 +948,14 @@ p { color: var(--color-brand-text-secondary); }
   box-shadow: 0 10px 24px rgba(146, 64, 14, 0.12);
   transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
 }
-.drink-card:hover {
+.drink-card:hover,
+.snack-card:hover {
   transform: translateY(-4px);
   box-shadow: 0 18px 36px rgba(146, 64, 14, 0.18);
   border-color: rgba(14, 165, 233, 0.4);
 }
-.drink-card-media {
+.drink-card-media,
+.snack-card-media {
   position: relative;
   aspect-ratio: 4 / 3;
   background: linear-gradient(to bottom, rgba(224, 242, 254, 0.85), #fff);
@@ -947,14 +964,17 @@ p { color: var(--color-brand-text-secondary); }
   justify-content: center;
   overflow: hidden;
 }
-.drink-card-media img {
+.drink-card-media img,
+.snack-card-media img {
   width: 100%;
   height: 100%;
   object-fit: cover;
   transition: transform 0.3s ease;
 }
-.drink-card:hover .drink-card-media img { transform: scale(1.06); }
-.drink-card-badge {
+.drink-card:hover .drink-card-media img,
+.snack-card:hover .snack-card-media img { transform: scale(1.06); }
+.drink-card-badge,
+.snack-card-badge {
   position: absolute;
   top: 8px; left: 8px;
   background: linear-gradient(135deg, #0EA5E9, #22D3EE);
@@ -964,24 +984,28 @@ p { color: var(--color-brand-text-secondary); }
   border-radius: 999px;
   box-shadow: 0 4px 10px rgba(14, 165, 233, 0.35);
 }
-.drink-card-body {
+.drink-card-body,
+.snack-card-body {
   padding: 10px 12px 12px;
   display: flex;
   flex-direction: column;
   gap: 4px;
 }
-.drink-card-name {
+.drink-card-name,
+.snack-card-name {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
   gap: 8px;
 }
-.drink-card-price {
+.drink-card-price,
+.snack-card-price {
   font-weight: 800;
   color: var(--color-brand-primary, #F97316);
   white-space: nowrap;
 }
-.drink-card-desc {
+.drink-card-desc,
+.snack-card-desc {
   font-size: 0.8rem;
   color: var(--color-brand-muted);
   line-height: 1.4;
@@ -990,7 +1014,8 @@ p { color: var(--color-brand-text-secondary); }
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
-.drink-card-coming {
+.drink-card-coming,
+.snack-card-coming {
   margin-top: 6px;
   align-self: flex-start;
   font-size: 11px;

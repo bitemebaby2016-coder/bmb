@@ -15,7 +15,7 @@ import {
   type DeliveryOrder,
   type Route,
 } from '@/lib/routeOptimization'
-import { updateProviderOrderStatus, getProviderOrders, type ProviderOrder } from '@/lib/externalProviders'
+import { updateProviderOrderStatus, getProviderOrders, type ProviderOrder, DEFAULT_PROVIDERS, getProviderApiStatus } from '@/lib/externalProviders'
 import { writeAuditLog } from '@/lib/auditLog'
 import { showToast } from '@/components/ui/ToastContainer'
 
@@ -188,6 +188,35 @@ export function DeliveryManagement() {
         </div>
       </div>
 
+{/* Delivery Channels — Bite Drive (own fleet) vs external providers (mockup/sandbox) */}
+      <div className="card mb-6">
+        <h3 className="font-bold text-brand-accent mb-4">🚚 ช่องจัดส่ง (Bite Drive vs ภายนอก)</h3>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          {DEFAULT_PROVIDERS.map((p) => {
+            const info = getProviderApiStatus(p.id)
+            const badgeColor =
+              info?.status === 'live' ? 'badge-success' :
+              info?.status === 'sandbox' ? 'badge-info' : 'badge-warning'
+            const badgeLabel =
+              info?.status === 'live' ? '✅ REAL' :
+              info?.status === 'sandbox' ? '🧪 Sandbox' : '🔶 MOCKUP pending'
+            return (
+              <div key={p.id} className="p-4 rounded-lg border-2 border-brand-border">
+                <div className="flex items-center justify-between mb-1">
+                  <div className="font-bold">{p.name}</div>
+                  <span className={`badge ${badgeColor}`}>{badgeLabel}</span>
+                </div>
+                <div className="text-sm text-brand-muted">
+                  {info?.note || '—'}<br />
+                  base ฿{p.base_fee} • per-km ฿{p.per_km_fee} • max {p.max_distance_km} km
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      </div>
+
+      {/* Provider Orders */}
       {/* Optimized Routes */}
       {routes.length > 0 && (
         <div className="card mb-6">

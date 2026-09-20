@@ -79,9 +79,12 @@ export function FoodMenuCard({ product, category, mode, availability, onSameDayO
               loading="lazy"
             />
           ) : (
-            <div className="w-full h-full rounded-full bg-gradient-to-br from-orange-100 to-amber-100 flex items-center justify-center text-6xl shadow-lg">
-              🍽️
-            </div>
+            <img
+              src="/images/mock/food-mock.svg"
+              alt={`ภาพอาหาร ${name}`}
+              className="w-full h-full object-contain rounded-full shadow-lg"
+              loading="lazy"
+            />
           )}
         </div>
       </div>

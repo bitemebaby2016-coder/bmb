@@ -467,3 +467,39 @@ REMAINING / BLOCKED:
   then run: select public.promote_to_full_admin('<owner-email>');
 - TODO after migrations 011/012: remove MOCK_STOCK/MOCK_BADGE/MOCK_RATING overlays in homeProviders.ts.
 - Backlog unchanged: content mgmt (D7), kitchen/production (D10), reviews mgmt (D14).
+
+=== SESSION 2026-09-20: DB applied (012-015) + OWNER admin LIVE + snacks + quick login + delivery channels ===
+Task ID: BMB-SESSION-2026-09-20
+Status: ✅ ALL DONE — applied on LIVE Supabase, verified step-by-step
+
+VERIFIED ON LIVE (supabase db push + service-role REST):
+- Migrations 012/013 already applied (products stock/rating/review_count → HTTP 200; owner ran them).
+- Migration 014 applied via db push; profiles.is_owner exists; guard_profile_mutation softened for
+  server-side contexts ONLY (auth.uid() IS NULL); promote_to_full_admin(p_email) created (postgres-only).
+- OWNER account (jinpao3024@outlook.com) = role admin + is_owner true on live DB (owner original account
+  was accidentally deleted by a bad test-cleanup and RESTORED with the original uuid + a brand-new password,
+  then re-promoted; the new password is given to the owner directly, NOT committed to git).
+- Migration 015 applied (customers default_latitude/default_longitude/default_address_detail + indexes).
+- Edge Function `phone-auto-login` DEPLOYED (config verify_jwt=false, secrets set, incl. bmb_* service key)
+  and E2E-verified: created account (phone-keyed email), minted REAL session tokens, persisted customers row
+  with location columns; test user cleaned up after.
+
+ADDED (frontend):
+- SnacksSection (src/components/home/SnacksSection.tsx + src/lib/snacksMenu.ts + public/images/snacks/*.svg
+  ×5) — positions below drinks, above review.
+- Quick login (login by name + phone + location): src/store/locationStore.ts, src/lib/locationLogin.ts
+  (GPS → IP-geo → saved → kitchen fallback), authStore.loginByLocation, LoginPage quick tab, CheckoutPage
+  address prefill + "Use my location (GPS)" button.
+- Delivery channels overview (Bite Drive own fleet vs Grab/LINE MAN/FoodPanda with sandbox/mockup badges)
+  in admin DeliveryManagement + PROVIDER_API_STATUS in externalProviders + checkout provider note.
+- Image/mascot sync: branded fallback SVG /images/mock/food-mock.svg for HomeProductCard & FoodMenuCard
+  (products without image), floating peeking mascots on Drinks/Snacks section headings.
+
+VERIFICATION: tsc --noEmit 0 · vitest 61/61 · npm run build PASS · runtime QA (Playwright mobile 390):
+  drinks+snacks headings · snack cards 5 · carousels 6 · review mascot/logo · login quick tab (phone+GPS)
+  · checkout guest flow no crash · 0 console errors → PASS.
+
+REMAINING / NEXT:
+- Owner policy: phone quick login is single-factor (phone) — production hardening = phone OTP (SMS).
+- Grab/LINE MAN live API keys from call center (currently sandbox/mockup pricing).
+- Remove MOCK_STOCK/MOCK_BADGE/MOCK_RATING overlays once 012 data verified live in UI.

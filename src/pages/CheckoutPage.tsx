@@ -9,6 +9,8 @@ import { createOrder, type OrderForm, type OrderInput } from '@/lib/bmbAdminApi_
 import { createPaymentIntent } from '@/lib/paymentGateway'
 import { writeAuditLog } from '@/lib/auditLog'
 import { getBestProvider, calculateProviderCost, type DeliveryProvider } from '@/lib/externalProviders'
+import { useLocationStore } from '@/store/locationStore'
+import { getGpsLocation } from '@/lib/locationLogin'
 
 export function CheckoutPage() {
   const navigate = useNavigate()
@@ -17,11 +19,15 @@ export function CheckoutPage() {
   const customer = useAuthStore((s) => s.customer)
   const [selectedRound, setSelectedRound] = useState(searchParams.get('round') || 'morning')
   const deepLinkMode: 'same-day' | 'pre-order' = searchParams.get('mode') === 'pre-order' ? 'pre-order' : 'same-day'
-  const [deliveryAddress, setDeliveryAddress] = useState({
-    latitude: 10.7016,
-    longitude: 102.1429,
-    detail: ''
+  const [deliveryAddress, setDeliveryAddress] = useState(() => {
+    const saved = useLocationStore.getState().location
+    return {
+      latitude: saved?.latitude ?? 10.7016,
+      longitude: saved?.longitude ?? 102.1429,
+      detail: saved?.addressDetail ?? '',
+    }
   })
+  const [locating, setLocating] = useState(false)
   const [paymentMethod, setPaymentMethod] = useState<'promptpay_qr' | 'cash_on_delivery'>('promptpay_qr')
   const [selectedProvider, setSelectedProvider] = useState<DeliveryProvider | null>(null)
   const [providerCost, setProviderCost] = useState(0)
@@ -204,6 +210,36 @@ export function CheckoutPage() {
           onChange={(e) => setDeliveryAddress({ ...deliveryAddress, detail: e.target.value })}
           className="input mb-3"
         />
+<div className="flex items-center gap-2 flex-wrap mb-2">
+          <button
+            type="button"
+            disabled={locating}
+            onClick={async () => {
+              setLocating(true)
+              try {
+                const loc = await getGpsLocation()
+                useLocationStore.getState().setLocation({
+                  latitude: loc.latitude,
+                  longitude: loc.longitude,
+                  addressDetail: deliveryAddress.detail,
+                  source: loc.source,
+                })
+                setDeliveryAddress({ ...deliveryAddress, latitude: loc.latitude, longitude: loc.longitude })
+                showToast('Location set via GPS', 'success')
+              } catch {
+                showToast('GPS not available — please type your address', 'error')
+              } finally {
+                setLocating(false)
+              }
+            }}
+            className="btn btn-outline text-sm"
+          >
+            {locating ? 'Locating...' : '📍 Use my location (GPS)'}
+          </button>
+          <span className="text-xs text-brand-muted">
+            current point: ({deliveryAddress.latitude.toFixed(4)}, {deliveryAddress.longitude.toFixed(4)})
+          </span>
+        </div>
         <div className="text-sm text-brand-muted">
           📐 รัศมีจัดส่ง: 5 กม. จากตัวเมืองจันทบุรี
         </div>
@@ -243,6 +279,10 @@ export function CheckoutPage() {
             ⚠️ กรุาใส่ที่อย่จัดส่งเพื่อเลือกผ้ให้บริการ
           </div>
         )}
+        <div className="rounded-lg bg-brand-bg border border-brand-border p-3 mt-2 text-xs text-brand-muted">
+          🛵 Bite Drive = the store&apos;s own fleet (self-delivery). Grab / LINE MAN / FoodPanda
+          = external partners — sandbox/mock pricing until the store gets their live API keys.
+        </div>
       </div>
 
       {/* Payment Method */}

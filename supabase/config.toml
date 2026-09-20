@@ -29,3 +29,10 @@ verify_jwt = false
 [functions.stripe-refund]
 enabled = true
 verify_jwt = true
+
+# phone-auto-login: called by the /login page WITHOUT a session (name+phone+location
+# quick login). verify_jwt = false is REQUIRED; the handler uses the service role
+# server-side only to create/refresh the account and mint the session tokens.
+[functions.phone-auto-login]
+enabled = true
+verify_jwt = false

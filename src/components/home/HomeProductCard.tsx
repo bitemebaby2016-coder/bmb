@@ -41,7 +41,13 @@ export function HomeProductCard({ item, onSameDay, onPreOrder }: HomeProductCard
         {item.image ? (
           <img src={item.image} alt={item.name} loading="lazy" decoding="async" />
         ) : (
-          <div className="home-card-fallback" role="img" aria-label={`รูป ${item.name}`}>🍜</div>
+          <img
+            src="/images/mock/food-mock.svg"
+            alt={item.name}
+            loading="lazy"
+            decoding="async"
+            className="home-card-fallback-img"
+          />
         )}
         {item.badge && <span className="home-card-badge">{item.badge}</span>}
         {lowStock && <span className="home-card-stock">🔥 เหลือ {item.stock} กล่อง</span>}

@@ -4,6 +4,43 @@
 
 export type ProviderType = 'grab_rider' | 'linemen_rider' | 'foodpanda_rider' | 'self_delivery' | 'custom'
 
+/**
+ * Live-API status of each delivery channel (Task: check Bite Drive own fleet vs
+ * external Grab/LINE MAN/FoodPanda).
+ *   live          — real API wired end-to-end
+ *   sandbox       — sandbox credentials exist (env) but no live contract yet
+ *   mockup_pending— UI/pricing mock only; awaiting API keys from the call center
+ */
+export const PROVIDER_API_STATUS: Record<
+  string,
+  { status: 'live' | 'sandbox' | 'mockup_pending'; label: string; note: string }
+> = {
+  grab: {
+    status: 'sandbox',
+    label: 'Grab Sandbox',
+    note: 'Sandbox client id/secret exist in .env — live API still pending (awaiting keys from the call center)',
+  },
+  lineman: {
+    status: 'sandbox',
+    label: 'LINE MAN Sandbox',
+    note: 'Sandbox API key exists — live API still pending (awaiting keys from the call center)',
+  },
+  foodpanda: {
+    status: 'mockup_pending',
+    label: 'FoodPanda (mockup)',
+    note: 'Mock pricing only — no credentials yet',
+  },
+  self: {
+    status: 'live',
+    label: 'Bite Drive (own fleet)',
+    note: 'The store own drivers — real routes via routeOptimization (temporary MOCK drivers)',
+  },
+}
+
+export function getProviderApiStatus(providerId: string): { status: string; label: string; note: string } | null {
+  return PROVIDER_API_STATUS[providerId] ?? null
+}
+
 export interface DeliveryProvider {
   id: string
   name: string
