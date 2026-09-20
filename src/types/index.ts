@@ -33,6 +33,7 @@ export interface Product {
   stock?: number;                 // migration 012 — display stock (not authoritative capacity)
   rating?: number;                // migration 012 — display rating (1–5)
   review_count?: number;          // migration 012 — display review count
+  addons?: ProductAddon[];        // migration 016 — add-ons / toppings (server-priced)
   created_at: string;
 }
 

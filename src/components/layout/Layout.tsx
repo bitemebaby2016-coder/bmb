@@ -3,6 +3,7 @@ import { Header } from './Header'
 import { BottomNav } from './BottomNav'
 import { Footer } from './Footer'
 import { ToastContainer } from '../ui/ToastContainer'
+import { OrderBuilderModal } from '../order/OrderBuilderModal'
 
 interface LayoutProps {
   children?: ReactNode
@@ -57,6 +58,7 @@ export function Layout({ children, hideBottomNav = false }: LayoutProps) {
       
       {!hideBottomNav && <BottomNav />}
       <ToastContainer />
+      <OrderBuilderModal />
     </div>
   )
 }

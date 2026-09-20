@@ -12,7 +12,7 @@ interface CartStore {
   isCheckoutOpen: boolean
 
   // Actions
-  addItem: (product: Product, quantity?: number, customizations?: Record<string, string | string[]>) => void
+  addItem: (product: Product, quantity?: number, customizations?: Record<string, any>) => void
   removeItem: (productId: string) => void
   updateQuantity: (productId: string, quantity: number) => void
   clearCart: () => void

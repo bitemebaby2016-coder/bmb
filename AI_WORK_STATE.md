@@ -503,3 +503,31 @@ REMAINING / NEXT:
 - Owner policy: phone quick login is single-factor (phone) — production hardening = phone OTP (SMS).
 - Grab/LINE MAN live API keys from call center (currently sandbox/mockup pricing).
 - Remove MOCK_STOCK/MOCK_BADGE/MOCK_RATING overlays once 012 data verified live in UI.
+
+=== SESSION 2026-09-20 (B): Upsell/add-on/topping sheet + dismissible home banner ===
+Task ID: BMB-SESSION-2026-09-20B
+Status: ✅ ALL DONE — migration 016 applied LIVE, verified (tsc 0 · vitest 61/61 · build · QA3 PASS)
+
+VERIFIED ON LIVE:
+- Migration 016 applied → products.addons JSONB seeded for prod-1..4 (toppings w/ prices) ·
+  promotions.is_banner/banner_image added · seeded promo-welcome-banner (is_banner=true) ·
+  compute_addons_price() + create_order_with_items re-created so add-on surcharges are
+  re-derived SERVER-SIDE (client sends ids+choices only; base+prices stay authoritative).
+
+ADDED:
+- OrderBuilderModal (Grab/7-Eleven style): bottom-sheet on add → toppings (checkbox/radio/text),
+  quantity, rule-based upsell recommendations (pickRecommendations), live total + "Add to cart".
+  Wired into HomePage + MenuPage same-day handlers; modal rendered globally in Layout.
+- HomeBanner: first is_banner&&is_active promotion shows on home as dismissible ad (localStorage
+  per-promo); promo title/desc/coupon/image + "See deal" link; admin toggles it in /admin/promotions
+  ("🏠 Show as Home banner" + banner image URL). e2e/runE2E updated for the new confirm-sheet flow.
+
+VERIFICATION: tsc --noEmit 0 · vitest 61/61 · npm run build PASS · Runtime QA (mobile 390):
+  home banner visible ✅ · banner dismissible ✅ · modal opens ✅ · add-ons shown (3) ✅ ·
+  recommendations shown ✅ · topping raises total (65→80) ✅ · confirm adds to cart (badge 1) ✅ ·
+  modal closes ✅ · 0 console errors → QA3 PASS.
+
+REMAINING / NEXT:
+- Admin product editor does not yet expose the add-ons JSON field (owners edit via DB/API for now;
+  planned: JSON textarea in AdminProducts).
+- Pre-order items skip the upsell sheet (booking flow keeps direct confirm).

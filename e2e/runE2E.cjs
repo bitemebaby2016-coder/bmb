@@ -110,7 +110,15 @@ await page.waitForSelector('[data-testid="same-day-tab"]', { timeout: 15000 })
       await page.screenshot({ path: path.join(SHOTS, '02-menu.png'), fullPage: false })
 
       await page.click('[data-testid="same-day-order"] >> nth=0')
-      await sleep(900)
+      // new upsell sheet (Grab/7-Eleven style): confirm the item then go to cart
+      try { await page.waitForSelector('[data-testid="ob-confirm"]', { timeout: 8000 }) } catch {}
+      const obConfirm = await page.locator('[data-testid="ob-confirm"]').count()
+      if (obConfirm > 0) {
+        await page.locator('[data-testid="ob-confirm"]').click()
+        await sleep(500)
+      } else {
+        await sleep(900)
+      }
 
       // client-side nav to /cart (keeps the in-memory cart store alive)
       await page.click('a[href="/cart"]')

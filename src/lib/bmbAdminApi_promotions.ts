@@ -16,6 +16,8 @@ export interface PromotionRow {
   start_date?: string
   end_date?: string
   is_active: boolean
+  is_banner?: boolean
+  banner_image?: string
   created_at?: string
   updated_at?: string
 }

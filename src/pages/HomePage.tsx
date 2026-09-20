@@ -1,5 +1,5 @@
-// ============================================
-// Bite Me Baby — Home Page (UI v5)
+﻿// ============================================
+// Bite Me Baby â€” Home Page (UI v5)
 // Information Architecture (shorter + scan-able):
 //   [1 Bite Conversational Hero] -> [2 Store/Delivery Status]
 //   -> [3 Same-day Carousel] -> [4 Pre-order Carousel]
@@ -27,6 +27,7 @@ import {
 } from '@/lib/homeProviders'
 import { BiteHero } from '@/components/home/BiteHero'
 import { StoreStatusStrip } from '@/components/home/StoreStatusStrip'
+import { HomeBanner, type HomeBannerPromo } from '@/components/home/HomeBanner'
 import { HorizontalCarousel } from '@/components/home/HorizontalCarousel'
 import { HomeProductCard } from '@/components/home/HomeProductCard'
 import { ReviewCarouselSection } from '@/components/home/ReviewCarouselSection'
@@ -34,6 +35,7 @@ import { PromotionStrip } from '@/components/home/PromotionStrip'
 import { DrinksSection } from '@/components/home/DrinksSection'
 import { SnacksSection } from '@/components/home/SnacksSection'
 import { FloatingCart } from '@/components/home/FloatingCart'
+import { useOrderBuilderStore } from '@/store/orderBuilderStore'
 import type {
   Product,
   ProductCategory,
@@ -88,6 +90,16 @@ export function HomePage() {
   const { sameDay, preOrder } = getHomeProducts(products, categories)
   const reviews = getHomeReviews(products)
   const promotions = getHomePromotionsFromRows(promoRows)
+  const bannerRow = (promoRows || []).find((r) => r.is_banner && r.is_active !== false)
+  const bannerPromo: HomeBannerPromo | null = bannerRow
+    ? {
+        id: String(bannerRow.id),
+        title: String(bannerRow.name || 'Promotion'),
+        description: String(bannerRow.description || ''),
+        coupon: bannerRow.code,
+        image: bannerRow.banner_image,
+      }
+    : null
   const storeStatus = getStoreStatusFromRounds(rounds)
   const biteMessage = getBiteMessage({
     storeStatus,
@@ -97,16 +109,28 @@ export function HomePage() {
 
   const handleSameDay = (payload: SameDayOrderPayload) => {
     const product = products.find((p) => p.id === payload.productId)
-    if (product) {
-      addItem(product, payload.quantity)
-      showToast('เพิ่มลงตะกร้าแล้ว!', 'success')
+    if (!product) {
+      showToast('Item not found', 'error')
+      return
     }
+    // Grab / 7-Eleven style upsell: toppings + recommended companions.
+    useOrderBuilderStore.getState().openBuilder(product, products, (result) => {
+      const customizations: Record<string, any> = {}
+      if (result.addOns.length > 0) {
+        customizations['addOns'] = result.addOns.map((a) => ({ addonId: a.addonId, selections: a.selections, note: a.note ?? '' }))
+      }
+      addItem(result.product, result.quantity, customizations)
+      for (const rec of result.recommended) {
+        addItem(rec, 1)
+      }
+      showToast('Added: ' + result.product.name + (result.addOns.length > 0 ? ' (+toppings)' : '') + (result.recommended.length > 0 ? ' +' + result.recommended.length + ' recommended' : ''), 'success')
+    })
   }
 
   const handlePreOrder = async (payload: PreOrderPayload) => {
     const product = products.find((p) => p.id === payload.productId)
     if (!product) {
-      showToast('ไม่พบเมนูนี้', 'error')
+      showToast('Item not found', 'error')
       return
     }
     const scheduleTarget = payload.scheduledDate || product.scheduled_date || defaultPreorderDate()
@@ -129,10 +153,10 @@ export function HomePage() {
     })
 
     if (!preOrderRow) {
-      showToast('สร้าง pre-order ล้มเหลว กรุณาลองใหม่', 'error')
+      showToast('à¸ªà¸£à¹‰à¸²à¸‡ pre-order à¸¥à¹‰à¸¡à¹€à¸«à¸¥à¸§ à¸à¸£à¸¸à¸“à¸²à¸¥à¸­à¸‡à¹ƒà¸«à¸¡à¹ˆ', 'error')
       return
     }
-    showToast(`จองสำเร็จ! เลขที่ ${preOrderRow.order_number} — ${product.name} จะส่งวันที่ ${scheduleTarget}`, 'success')
+    showToast(`à¸ˆà¸­à¸‡à¸ªà¸³à¹€à¸£à¹‡à¸ˆ! à¹€à¸¥à¸‚à¸—à¸µà¹ˆ ${preOrderRow.order_number} â€” ${product.name} à¸ˆà¸°à¸ªà¹ˆà¸‡à¸§à¸±à¸™à¸—à¸µà¹ˆ ${scheduleTarget}`, 'success')
     navigate(`/track/${preOrderRow.order_number}`)
   }
 
@@ -141,7 +165,7 @@ export function HomePage() {
     const mode = product?.is_preorder ? 'pre-order' : 'same-day'
     if (product) {
       addItem(product, 1)
-      showToast('เพิ่มลงตะกร้าแล้ว!', 'success')
+      showToast('à¹€à¸žà¸´à¹ˆà¸¡à¸¥à¸‡à¸•à¸°à¸à¸£à¹‰à¸²à¹à¸¥à¹‰à¸§!', 'success')
     }
     navigate(mode === 'pre-order' ? '/checkout?mode=pre-order' : '/cart?mode=same-day')
   }
@@ -157,8 +181,8 @@ export function HomePage() {
     return (
       <div className="max-w-7xl mx-auto px-4 py-10 min-h-screen flex items-center justify-center">
         <div className="text-center text-brand-muted">
-          <div className="text-4xl mb-3 animate-float" role="img" aria-hidden="true">🐻</div>
-          <p>กำลังเตรียมเมนูให้จ้า…</p>
+          <div className="text-4xl mb-3 animate-float" role="img" aria-hidden="true">ðŸ»</div>
+          <p>à¸à¸³à¸¥à¸±à¸‡à¹€à¸•à¸£à¸µà¸¢à¸¡à¹€à¸¡à¸™à¸¹à¹ƒà¸«à¹‰à¸ˆà¹‰à¸²â€¦</p>
         </div>
       </div>
     )
@@ -169,37 +193,39 @@ export function HomePage() {
 {/* 1. Bite Conversational Hero */}
       <BiteHero message={biteMessage} pose={getBitePose(storeStatus.state)} />
 
-      {/* 2. Store / Delivery Status — compact strip (replaces the 3-round grid) */}
+      {/* 2. Store / Delivery Status â€” compact strip (replaces the 3-round grid) */}
       <StoreStatusStrip status={storeStatus} />
 
-      {/* 3. Same-day Menu — horizontal carousel */}
+{/* 2b. Promotional banner — admin flags a promotion; customer can dismiss */}
+      <HomeBanner promo={bannerPromo} />
+      {/* 3. Same-day Menu â€” horizontal carousel */}
       <section className="mb-10 scroll-mt-20" aria-labelledby="home-sameday-heading">
         <div className="flex items-center justify-between mb-2">
           <h2 id="home-sameday-heading" className="text-xl font-display font-bold text-brand-accent">
-            🔥 เมนูวันนี้
+            ðŸ”¥ à¹€à¸¡à¸™à¸¹à¸§à¸±à¸™à¸™à¸µà¹‰
           </h2>
-          <Link to="/menu" className="text-sm text-brand-primary font-medium hover:underline">ดูทั้งหมด →</Link>
+          <Link to="/menu" className="text-sm text-brand-primary font-medium hover:underline">à¸”à¸¹à¸—à¸±à¹‰à¸‡à¸«à¸¡à¸” â†’</Link>
         </div>
-        <HorizontalCarousel items={sameDayItems} aria-label="เมนูวันนี้ เลื่อนได้" />
+        <HorizontalCarousel items={sameDayItems} aria-label="à¹€à¸¡à¸™à¸¹à¸§à¸±à¸™à¸™à¸µà¹‰ à¹€à¸¥à¸·à¹ˆà¸­à¸™à¹„à¸”à¹‰" />
       </section>
 
-      {/* 4. Pre-order Menu — horizontal carousel */}
+      {/* 4. Pre-order Menu â€” horizontal carousel */}
       {preOrder.length > 0 && (
         <section className="mb-10 scroll-mt-20" aria-labelledby="home-preorder-heading">
           <div className="flex items-center justify-between mb-2">
             <h2 id="home-preorder-heading" className="text-xl font-display font-bold text-brand-accent">
-              📅 จองล่วงหน้า
+              ðŸ“… à¸ˆà¸­à¸‡à¸¥à¹ˆà¸§à¸‡à¸«à¸™à¹‰à¸²
             </h2>
-            <Link to="/menu" className="text-sm text-brand-primary font-medium hover:underline">ดูทั้งหมด →</Link>
+            <Link to="/menu" className="text-sm text-brand-primary font-medium hover:underline">à¸”à¸¹à¸—à¸±à¹‰à¸‡à¸«à¸¡à¸” â†’</Link>
           </div>
-          <HorizontalCarousel items={preOrderItems} aria-label="เมนูจองล่วงหน้า เลื่อนได้" />
+          <HorizontalCarousel items={preOrderItems} aria-label="à¹€à¸¡à¸™à¸¹à¸ˆà¸­à¸‡à¸¥à¹ˆà¸§à¸‡à¸«à¸™à¹‰à¸² à¹€à¸¥à¸·à¹ˆà¸­à¸™à¹„à¸”à¹‰" />
         </section>
       )}
 
-      {/* 5. Drinks Menu — mockup carousel (owner edits src/lib/drinksMenu.ts) */}
+      {/* 5. Drinks Menu â€” mockup carousel (owner edits src/lib/drinksMenu.ts) */}
       <DrinksSection />
 
-      {/* 5b. Snacks — mockup carousel (owner edits src/lib/snacksMenu.ts) */}
+      {/* 5b. Snacks â€” mockup carousel (owner edits src/lib/snacksMenu.ts) */}
       <SnacksSection />
 
       {/* 6. Social Proof Review Carousel */}
@@ -210,16 +236,16 @@ export function HomePage() {
       <Link
         to="/share"
         className="share-card card flex items-center justify-between gap-3 px-4 py-3"
-        aria-label="ชวนเพื่อนรับคูปอง"
+        aria-label="à¸Šà¸§à¸™à¹€à¸žà¸·à¹ˆà¸­à¸™à¸£à¸±à¸šà¸„à¸¹à¸›à¸­à¸‡"
       >
         <div className="flex items-center gap-3 min-w-0">
-          <span className="text-2xl" aria-hidden="true">👥</span>
+          <span className="text-2xl" aria-hidden="true">ðŸ‘¥</span>
           <div className="min-w-0">
-            <p className="font-bold text-brand-accent">ชวนเพื่อน รับคูปองคนละ ฿30</p>
-            <p className="text-sm text-brand-muted truncate">แชร์ให้เพื่อนสั่ง — เพื่อนและคุณได้คูปอง</p>
+            <p className="font-bold text-brand-accent">à¸Šà¸§à¸™à¹€à¸žà¸·à¹ˆà¸­à¸™ à¸£à¸±à¸šà¸„à¸¹à¸›à¸­à¸‡à¸„à¸™à¸¥à¸° à¸¿30</p>
+            <p className="text-sm text-brand-muted truncate">à¹à¸Šà¸£à¹Œà¹ƒà¸«à¹‰à¹€à¸žà¸·à¹ˆà¸­à¸™à¸ªà¸±à¹ˆà¸‡ â€” à¹€à¸žà¸·à¹ˆà¸­à¸™à¹à¸¥à¸°à¸„à¸¸à¸“à¹„à¸”à¹‰à¸„à¸¹à¸›à¸­à¸‡</p>
           </div>
         </div>
-        <span className="text-brand-primary font-medium whitespace-nowrap">ไปที่หน้าแชร์ →</span>
+        <span className="text-brand-primary font-medium whitespace-nowrap">à¹„à¸›à¸—à¸µà¹ˆà¸«à¸™à¹‰à¸²à¹à¸Šà¸£à¹Œ â†’</span>
       </Link>
 
       <FloatingCart />

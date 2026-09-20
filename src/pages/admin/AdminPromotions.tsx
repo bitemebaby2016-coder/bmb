@@ -17,6 +17,8 @@ const EMPTY_FORM = {
   start_date: '',
   end_date: '',
   is_active: true,
+  is_banner: false,
+  banner_image: '',
 }
 
 export function AdminPromotions() {
@@ -49,6 +51,8 @@ export function AdminPromotions() {
       start_date: (promo.start_date || '').slice(0, 10),
       end_date: (promo.end_date || '').slice(0, 10),
       is_active: promo.is_active,
+      is_banner: promo.is_banner || false,
+      banner_image: promo.banner_image || '',
     })
     setShowAddForm(true)
   }
@@ -121,6 +125,16 @@ export function AdminPromotions() {
               <input type="checkbox" checked={form.is_active} onChange={(e) => setForm({ ...form, is_active: e.target.checked })} />
               Active
             </label>
+            <label className="flex items-center gap-2">
+              <input type="checkbox" checked={form.is_banner} onChange={(e) => setForm({ ...form, is_banner: e.target.checked })} />
+              🏠 Show as Home banner (dismissible by customers)
+            </label>
+            <input
+              className="input"
+              placeholder="Banner image URL (optional)"
+              value={form.banner_image}
+              onChange={(e) => setForm({ ...form, banner_image: e.target.value })}
+            />
           </div>
           <div className="flex gap-3 mt-4">
             <button onClick={handleSave} className="btn btn-success">💾 Save</button>

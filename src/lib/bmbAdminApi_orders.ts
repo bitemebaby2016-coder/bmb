@@ -12,7 +12,7 @@ import { supabase } from './supabase'
 export interface OrderItemInput {
   product_id: string
   quantity: number
-  options?: Record<string, string | string[]>
+  options?: Record<string, any>
   special_request?: string
 }
 
