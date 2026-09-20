@@ -25,6 +25,7 @@
 - 🆕 `src/components/dashboard/{CustomerTimeline,RiderPWA,AdminControl}.tsx` (Geolocation+POD gating Delivered)
 - 🆕 `src/components/ai/{BiteMascot,BiteAIChat}.tsx` (4-Stage; AI emit ได้แค่ `EXECUTE_ADD_TO_CART`)
 - 🆕 เทสใหม่ 6 ไฟล์ → **38 tests** เพิ่มขึ้น (รวมเป็น 106)
+- 🆕 ต่อเนื่อง (update เดียวกัน): **Asset Set ใหม่ 12 ท่า** (`MascotPose` + `MascotBadge` mapping — แก้ path `bite_badge_thumbsup_approval.webp` ที่ไฟล์เก่าถูกแทน) · **Login error transparency** (`authStore.lastLoginError` + `describeLoginError` — หน้า login บอกเหตุผลจริงเป็นไทย เช่น "Email not confirmed" ที่เดิมถูกดันเป็น "Invalid email or password" ทำให้แอดมินเข้าไม่ได้หาสาเหตุไม่เจอ) · **คู่มือแอดมินไทย** `docs/BiteMeBaby_ADMIN_GUIDE_TH.md` (สาเหตุ login ล้ม + วิธีสร้าง/ยกระดับแอดมิน 3 วิธี + คู่มือใช้งานทุกหน้า + deploy + troubleshooting)
 
 **ผสาน (wired):** `Layout` โหลด `<BiteMascot/>`+`<CartIsolationModal/>` · route ใหม่ `/rider` และ `/admin/control` · `CheckoutPage` ฝัง `<DistanceChecker/>` additive
 

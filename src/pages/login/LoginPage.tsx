@@ -1,6 +1,6 @@
 ﻿import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { useAuthStore, fetchProfileRole } from '@/store/authStore'
+import { useAuthStore, fetchProfileRole, describeLoginError } from '@/store/authStore'
 import { useLocationStore, KITCHEN_LAT, KITCHEN_LNG } from '@/store/locationStore'
 import { getGpsLocation } from '@/lib/locationLogin'
 import { showToast } from '@/components/ui/ToastContainer'
@@ -43,7 +43,9 @@ export function LoginPage() {
       // P0-2: login through Supabase Auth (not localStorage users)
       const ok = await login(email, password)
       if (!ok) {
-        setError('Invalid email or password')
+        // Show the REAL reason (email not confirmed / wrong password / rate limit)
+        // instead of a blanket "Invalid email or password".
+        setError(describeLoginError(useAuthStore.getState().lastLoginError))
         setIsLoading(false)
         return
       }

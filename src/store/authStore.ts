@@ -17,6 +17,8 @@ interface AuthStore {
   isLoading: boolean
   loyaltyPoints: number
   referralCode: string
+  /** Raw Supabase error from the last failed login (surfaced as Thai guidance on /login). */
+  lastLoginError: string | null
 
   setCustomer: (customer: Customer | null) => void
   setIsAuthenticated: (auth: boolean) => void
@@ -72,12 +74,40 @@ export async function fetchProfileRole(): Promise<string | null> {
   return (data?.role as string | null) ?? null
 }
 
+/**
+ * Map the raw Supabase Auth error to actionable Thai guidance.
+ * สาเหตุที่พบบ่อยบน production:
+ *  - "Email not confirmed"      → สมัครแล้วแต่ยังไม่กดลิงก์ยืนยัน (Supabase default เปิด Confirm email)
+ *  - "Invalid login credentials" → อีเมล/รหัสผ่านไม่ถูก
+ *  - "Email rate limit exceeded" → Supabase built-in SMTP จำกัดอีเมล/ชั่วโมง
+ */
+export function describeLoginError(raw: string | null): string {
+  const msg = (raw ?? '').toLowerCase()
+  if (msg.includes('email not confirmed')) {
+    return 'อีเมลนี้ยังไม่ได้ยืนยัน (Email not confirmed) — เปิดลิงก์ยืนยันที่ได้รับทางอีเมล หรือให้เจ้าของร้านไปกด Confirm ที่ Supabase Dashboard → Authentication → Users แล้วลองใหม่'
+  }
+  if (msg.includes('invalid login credentials')) {
+    return 'อีเมลหรือรหัสผ่านไม่ถูกต้อง — ถ้าลืมรหัสผ่าน ให้เจ้าของร้านกด "Send password recovery" ที่ Supabase Dashboard → Authentication → Users'
+  }
+  if (msg.includes('rate limit')) {
+    return 'พยายามหลายครั้งเกินไป (rate limit) — รอสักครู่แล้วลองใหม่อีกครั้ง'
+  }
+  if (msg.includes('fetch') || msg.includes('network')) {
+    return 'เชื่อมต่อเซิร์ฟเวอร์ไม่สำเร็จ — ตรวจอินเทอร์เน็ต/ตั้งค่า VITE_SUPABASE_URL แล้วลองใหม่'
+  }
+  if (raw) {
+    return `เข้าสู่ระบบไม่สำเร็จ: ${raw}`
+  }
+  return 'อีเมลหรือรหัสผ่านไม่ถูกต้อง'
+}
+
 export const useAuthStore = create<AuthStore>((set, get) => ({
   customer: null,
   isAuthenticated: false,
   isLoading: true,
   loyaltyPoints: 0,
   referralCode: '',
+  lastLoginError: null,
 
   setCustomer: (customer) => set({ customer, isAuthenticated: !!customer }),
   setIsAuthenticated: (auth) => set({ isAuthenticated: auth }),
@@ -94,13 +124,22 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
 
   login: async (email: string, password: string) => {
     const { error } = await supabase.auth.signInWithPassword({ email, password })
-    if (error) return false
+    if (error) {
+      // Keep the REAL reason (email_not_confirmed / invalid credentials / rate limit…)
+      // so /login can guide the user instead of a blanket "Invalid email or password".
+      set({ lastLoginError: error.message })
+      return false
+    }
     const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return false
+    if (!user) {
+      set({ lastLoginError: 'NO_SESSION_USER' })
+      return false
+    }
     set({
       customer: mapUserToCustomer(user),
       isAuthenticated: true,
-      isLoading: false
+      isLoading: false,
+      lastLoginError: null,
     })
     return true
   },

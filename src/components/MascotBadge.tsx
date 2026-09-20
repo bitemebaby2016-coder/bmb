@@ -28,7 +28,8 @@ interface PoseAsset {
 const POSE_ASSETS: Record<MascotPose, PoseAsset> = {
   greeting: { src: '/assets/mascot/bite_hero_greeting.webp', fallback: '/mascot_Bite_Welcome.webp' },
   heart:    { src: '/assets/mascot/bite_badge_mini_heart.webp', fallback: '/mascot_Bite_Main.webp' },
-  thumbsup: { src: '/assets/mascot/bite_badge_thumbsup.webp', fallback: '/mascot_Bite_Main.webp' },
+  // 🆕 Asset Set 2026-09-20: thumbsup ถูกแทนด้วยไฟล์ใหม่ (bite_badge_thumbsup_approval.webp)
+  thumbsup: { src: '/assets/mascot/bite_badge_thumbsup_approval.webp', fallback: '/mascot_Bite_Main.webp' },
   running:  { src: '/assets/mascot/bite_delivery_run.webp', fallback: '/mascot_Bite_Good bye.webp' },
   pointing: { src: '/assets/mascot/bite_pointing.webp', fallback: '/mascot_Bite_Main.webp' },
   peeking:  { src: '/assets/mascot/bite_peeking.webp', fallback: '/mascot_Bite_Main.webp' },
@@ -38,6 +39,21 @@ const POSE_ASSETS: Record<MascotPose, PoseAsset> = {
   // "โบกมือลา/ขอบคุณ" ใช้ที่ Delivery Complete (OrderTrackPage delivered) + Payment Success
   // (PaymentConfirmationPage paid) ตาม docs/COMPONENT_SPEC_UI.md §18.2
   bye:      { src: '/assets/mascot/bite_good bye.webp', fallback: '/mascot_Bite_Good bye.webp' },
+  // 🆕 Asset Set 2026-09-20 — ท่าใหม่จากไฟล์ 3D ชุดล่าสุด
+  award:     { src: '/assets/mascot/bite_award.webp', fallback: '/mascot_Bite_Main.webp' },
+  cooking:   { src: '/assets/mascot/bite_cooking.webp', fallback: '/mascot_Bite_Main.webp' },
+  eating:    { src: '/assets/mascot/bite_eating.webp', fallback: '/mascot_Bite_Main.webp' },
+  feedback:  { src: '/assets/mascot/bite_feedback.webp', fallback: '/mascot_Bite_Main.webp' },
+  menu:      { src: '/assets/mascot/bite_menu.webp', fallback: '/mascot_Bite_Main.webp' },
+  ready:     { src: '/assets/mascot/bite_ready.webp', fallback: '/mascot_Bite_Main.webp' },
+  recommend: { src: '/assets/mascot/bite_recommend.webp', fallback: '/mascot_Bite_Main.webp' },
+  reviewing: { src: '/assets/mascot/bite_reviewing.webp', fallback: '/mascot_Bite_Main.webp' },
+  shopping:  { src: '/assets/mascot/bite_shopping.webp', fallback: '/mascot_Bite_Main.webp' },
+  success:   { src: '/assets/mascot/bite_success (1).webp', fallback: '/mascot_Bite_Main.webp' },
+  vote:      { src: '/assets/mascot/bite_vote.webp', fallback: '/mascot_Bite_Main.webp' },
+  waiting:   { src: '/assets/mascot/bite_waiting.webp', fallback: '/mascot_Bite_Main.webp' },
+  sad:       { src: '/assets/mascot/bite_sad.webp', fallback: '/mascot_Bite_Good bye.webp' },
+  closed:    { src: '/assets/mascot/bite_closed.webp', fallback: '/mascot_Bite_Main.webp' },
 }
 
 const POSE_LABELS: Record<MascotPose, string> = {
@@ -50,6 +66,21 @@ const POSE_LABELS: Record<MascotPose, string> = {
   thinking: 'ครุ่นคิด',
   empty: 'หงอย ๆ',
   bye: 'โบกมือลา ขอบคุณ',
+  // 🆕 Asset Set 2026-09-20
+  award: 'รับรางวัล',
+  cooking: 'กำลังปรุง',
+  eating: 'ชิมอาหาร',
+  feedback: 'รับฟีดแบ็ก',
+  menu: 'ถือเมนู',
+  ready: 'พร้อมเสิร์ฟ',
+  recommend: 'แนะนำเมนู',
+  reviewing: 'อ่านรีวิว',
+  shopping: 'ถือตะกร้า',
+  success: 'สำเร็จ',
+  vote: 'กำลังโหวต',
+  waiting: 'รอคิว',
+  sad: 'เสียใจด้วยนะ',
+  closed: 'ร้านปิดแล้ว',
 }
 
 export function MascotBadge({ pose, size = 'sm', alt, className = '', loading = 'lazy' }: MascotBadgeProps) {

@@ -574,13 +574,28 @@ export interface MenuHighlightClip {
 export type MascotPose =
   | 'greeting'  // ถือถาดอาหาร / กวักมือทักทาย — Hero Banner Header / Splash
   | 'heart'     // Mini Heart — Customer Review Cards (มุมการ์ดรีวิว)
-  | 'thumbsup'  // การันตีความอร่อย — Featured Menu Badges
+  | 'thumbsup'  // การันตีความอร่อย — Featured Menu Badges (asset: bite_badge_thumbsup_approval)
   | 'running'   // ถือกล่องอาหาร / วิ่งส่งของ — Delivery Round Cards / Tracking
   | 'pointing'  // ชี้ไปที่ปุ่ม — Call-to-Action Buttons
   | 'peeking'   // โผล่มาจากมุมการ์ด — Glassmorphism Overlay Cards
   | 'thinking'  // ถือลูกเต๋า 3D ครุ่นคิด — Random Menu Feature
   | 'empty'     // หน้าหงอย / จานว่าง — Empty Cart / Sold Out State
-  | 'bye';      // โบกมือลา / ขอบคุณ — Delivery Complete / Payment Success
+  | 'bye'       // โบกมือลา / ขอบคุณ — Delivery Complete / Payment Success
+  // 🆕 Asset Set 2026-09-20 (เจ้าของร้านอัปโหลด 3D ชุดใหม่)
+  | 'award'     // ถ้วยรางวัล — Rewards / Loyalty
+  | 'cooking'   // ทำอาหาร — Kitchen / Batch Production
+  | 'eating'    // กินอาหาร — Review / Social Proof
+  | 'feedback'  // ฟีดแบ็ก — Review Forms
+  | 'menu'      // ถือเมนู — Menu Page
+  | 'ready'     // พร้อมเสิร์ฟ — Ready for Pickup
+  | 'recommend' // แนะนำเมนู — AI Recommendation / Bite Hero
+  | 'reviewing' // อ่านรีวิว — Review Carousel
+  | 'shopping'  // ถือตะกร้า — Cart / Add-ons
+  | 'success'   // ชนะ/สำเร็จ — Payment Success / Vote Success
+  | 'vote'      // โหวต — Pre-order Voting
+  | 'waiting'  // รอคิว — Order Tracking (waiting states)
+  | 'sad'      // เศร้า — Order failed / payment failed
+  | 'closed';  // ปิดร้าน — Store closed banner
                 // (asset: /assets/mascot/bite_good bye.webp — ตัดสินใจ 2026-09-17)
 
 export type MascotSize = 'sm' | 'md' | 'lg' | 'fluid'
