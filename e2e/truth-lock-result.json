@@ -1,0 +1,254 @@
+{
+  "project": "bitemebaby production",
+  "supabaseUrl": "https://ivkdfognyiwjcmrhcnwz.supabase.co",
+  "timestamp": "2026-09-20T17:38:34.641Z",
+  "total": 48,
+  "passed": 48,
+  "failed": 0,
+  "notes": [
+    "read-only by design; RPC probes abort before persisting",
+    "pg_policies SQL dump requires human SQL editor -> e2e/truth-lock.sql (SEC-01 SQL-level pending owner run)"
+  ],
+  "checks": [
+    {
+      "name": "S-3 anon cannot read orders (RLS blocks)",
+      "ok": true,
+      "detail": "anon rows=0 svcRows=2"
+    },
+    {
+      "name": "anon blocked on customers",
+      "ok": true,
+      "detail": "anonRows=- svcRows=2"
+    },
+    {
+      "name": "anon blocked on payment_intents",
+      "ok": true,
+      "detail": "anonRows=- svcRows=2"
+    },
+    {
+      "name": "anon blocked on ai_conversations",
+      "ok": true,
+      "detail": "anonRows=- svcRows=0"
+    },
+    {
+      "name": "anon blocked on ai_recommendations",
+      "ok": true,
+      "detail": "anonRows=- svcRows=0"
+    },
+    {
+      "name": "anon blocked on profiles",
+      "ok": true,
+      "detail": "anonRows=- svcRows=2"
+    },
+    {
+      "name": "anon blocked on inventory",
+      "ok": true,
+      "detail": "anonRows=- svcRows=2"
+    },
+    {
+      "name": "anon can read products",
+      "ok": true,
+      "detail": "status=200 rows=2"
+    },
+    {
+      "name": "anon can read product_categories",
+      "ok": true,
+      "detail": "status=200 rows=2"
+    },
+    {
+      "name": "anon can read delivery_rounds",
+      "ok": true,
+      "detail": "status=200 rows=2"
+    },
+    {
+      "name": "anon can read reviews",
+      "ok": true,
+      "detail": "status=200 rows=0"
+    },
+    {
+      "name": "anon can read promotions",
+      "ok": true,
+      "detail": "status=200 rows=1"
+    },
+    {
+      "name": "anon can read delivery_zones",
+      "ok": true,
+      "detail": "status=200 rows=0"
+    },
+    {
+      "name": "anon can read preorder_votes",
+      "ok": true,
+      "detail": "status=200 rows=0"
+    },
+    {
+      "name": "RPC create_order_with_items exists + guards (negative)",
+      "ok": true,
+      "detail": "status=400 {\"code\":\"P0001\",\"details\":null,\"hint\":null,\"message\":\"ERR_NOT_AUTHENTICATED\"}"
+    },
+    {
+      "name": "RPC transition_order_status exists + guards (negative)",
+      "ok": true,
+      "detail": "status=400 {\"code\":\"P0001\",\"details\":null,\"hint\":null,\"message\":\"ERR_NOT_AUTHENTICATED\"}"
+    },
+    {
+      "name": "RPC create_payment_intent_record exists + guards (negative)",
+      "ok": true,
+      "detail": "status=400 {\"code\":\"P0001\",\"details\":null,\"hint\":null,\"message\":\"ERR_NOT_AUTHENTICATED\"}"
+    },
+    {
+      "name": "RPC confirm_offline_payment exists + guards (negative)",
+      "ok": true,
+      "detail": "status=400 {\"code\":\"P0001\",\"details\":null,\"hint\":null,\"message\":\"ERR_FORBIDDEN\"}"
+    },
+    {
+      "name": "RPC submit_offline_payment_reference exists + guards (negative)",
+      "ok": true,
+      "detail": "status=400 {\"code\":\"P0001\",\"details\":null,\"hint\":null,\"message\":\"ERR_NOT_AUTHENTICATED\"}"
+    },
+    {
+      "name": "RPC mark_payment_failed exists + guards (negative)",
+      "ok": true,
+      "detail": "status=400 {\"code\":\"P0001\",\"details\":null,\"hint\":null,\"message\":\"ERR_FORBIDDEN\"}"
+    },
+    {
+      "name": "RPC record_payment_result exists + guards (negative)",
+      "ok": true,
+      "detail": "status=400 {\"code\":\"P0001\",\"details\":null,\"hint\":null,\"message\":\"ERR_MISSING_ORDER\"}"
+    },
+    {
+      "name": "RPC compute_addons_price exists (016)",
+      "ok": true,
+      "detail": "status=200 0"
+    },
+    {
+      "name": "table pre_orders present (001/002 pre-order tables)",
+      "ok": true,
+      "detail": "status=200 [{\"id\":\"po-1789812174917\",\"order_number\":\"PO-20260919-430\",\"customer_i"
+    },
+    {
+      "name": "table orders present (001 orders spine)",
+      "ok": true,
+      "detail": "status=200 [{\"id\":\"ord-1789607384945\",\"order_number\":\"TEST-001\",\"customer_id\":\"te"
+    },
+    {
+      "name": "table order_items present (001 order lines)",
+      "ok": true,
+      "detail": "status=200 [{\"id\":\"oi-ord-1789607384945-0\",\"order_id\":\"ord-1789607384945\",\"produc"
+    },
+    {
+      "name": "table payment_intents present (008)",
+      "ok": true,
+      "detail": "status=200 [{\"id\":\"pi-pi_3UHCiQ3yHrQLTgfK1TJn9whO\",\"order_number\":\"BMB-20260919-6"
+    },
+    {
+      "name": "table delivery_rounds present (001/006 capacity)",
+      "ok": true,
+      "detail": "status=200 [{\"id\":\"round-3\",\"round_key\":\"evening\",\"display_name\":\"เย็น (17:00-20:"
+    },
+    {
+      "name": "table delivery_zones present (008 D.3)",
+      "ok": true,
+      "detail": "status=200 []"
+    },
+    {
+      "name": "table provider_orders present (008 D.4)",
+      "ok": true,
+      "detail": "status=200 []"
+    },
+    {
+      "name": "table business_settings present (008 D.1)",
+      "ok": true,
+      "detail": "status=200 [{\"key\":\"kitchen_location\",\"value\":{\"address\": \"Bite Me Baby Kitchen\","
+    },
+    {
+      "name": "table media_assets present (008 D.2)",
+      "ok": true,
+      "detail": "status=200 []"
+    },
+    {
+      "name": "table inventory present (001/006)",
+      "ok": true,
+      "detail": "status=200 [{\"id\":\"ing-1\",\"name\":\"ข้าว\",\"category\":\"carb\",\"unit\":\"kg\",\"current_st"
+    },
+    {
+      "name": "table inventory_transactions present (001/006)",
+      "ok": true,
+      "detail": "status=200 []"
+    },
+    {
+      "name": "table customers present (001 + 015)",
+      "ok": true,
+      "detail": "status=200 [{\"id\":\"cust-1\",\"user_id\":null,\"full_name\":\"สมชาย รักดี\",\"phone\":\"0812"
+    },
+    {
+      "name": "table ai_conversations present (AI chat)",
+      "ok": true,
+      "detail": "status=200 []"
+    },
+    {
+      "name": "table ai_recommendations present (AI chat)",
+      "ok": true,
+      "detail": "status=200 []"
+    },
+    {
+      "name": "table products present (001 + 012/016)",
+      "ok": true,
+      "detail": "status=200 [{\"id\":\"prod-1789607383214-t8rm95\",\"name\":\"Updated Name\",\"description\""
+    },
+    {
+      "name": "table product_categories present (001)",
+      "ok": true,
+      "detail": "status=200 [{\"id\":\"cat-1\",\"name\":\"จานเดียว\",\"slug\":\"dish\",\"icon\":\"🍜\",\"sort_order"
+    },
+    {
+      "name": "table reviews present (001/002)",
+      "ok": true,
+      "detail": "status=200 []"
+    },
+    {
+      "name": "table promotions present (001 + 016 is_banner)",
+      "ok": true,
+      "detail": "status=200 [{\"id\":\"promo-welcome-banner\",\"name\":\"Welcome special - 10% off\",\"desc"
+    },
+    {
+      "name": "table preorder_votes present (001/002)",
+      "ok": true,
+      "detail": "status=200 []"
+    },
+    {
+      "name": "columns orders (007 fields)",
+      "ok": true,
+      "detail": "status=200 [{\"order_number\":\"TEST-001\",\"total_amount\":200.00,\"payment_status\":\"paid\",\"customer_ref\":null,\"status\":\"confir"
+    },
+    {
+      "name": "columns products (016 addons / 012 stock)",
+      "ok": true,
+      "detail": "status=200 [{\"addons\":[],\"is_preorder\":false,\"is_available\":true,\"stock\":null,\"price\":150.00,\"created_at\":\"2026-09-17T01:"
+    },
+    {
+      "name": "columns customers (015 location)",
+      "ok": true,
+      "detail": "status=200 [{\"default_latitude\":null,\"default_longitude\":null,\"default_address_detail\":null,\"phone\":\"0812345678\",\"created"
+    },
+    {
+      "name": "columns promotions (016 banner)",
+      "ok": true,
+      "detail": "status=200 [{\"is_banner\":true,\"banner_image\":null,\"discount_type\":\"percentage\",\"is_active\":true,\"created_at\":\"2026-09-20T"
+    },
+    {
+      "name": "columns payment_intents (008 flow)",
+      "ok": true,
+      "detail": "status=200 [{\"payment_intent_id\":\"pi_3UHCiQ3yHrQLTgfK1TJn9whO\",\"status\":\"pending\",\"method\":\"credit_card\",\"amount\":172.00,"
+    },
+    {
+      "name": "storage bucket bmb-images present (011)",
+      "ok": true,
+      "detail": "status=200 id=bmb-images"
+    },
+    {
+      "name": "anon INSERT into products rejected",
+      "ok": true,
+      "detail": "status=401 {\"code\":\"42501\",\"details\":null,\"hint\":\"Grant the required privileges to the current role with: GRANT"
+    }
+  ]
+}

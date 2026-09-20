@@ -1,3 +1,6 @@
+> ⚠️ **HISTORICAL — design record (2026-09-20):** แนวคิดในเอกสารนี้ (pure functions, two-tier routing, truth-table) ถูกนำไปใช้ใน code แล้ว ใช้เป็นหลักฐานการออกแบบเท่านั้น สถานะปัจจุบัน → `docs/BMB_CURRENT_STATE_2026-09-20.md`
+
+
 # Bite Me Baby — MASTER UNIVERSAL BLUEPRINT REFACTOR (2026-09-20)
 
 > สถานะจริง ณ วันที่โพสต์เอกสารนี้: **DONE & VERIFIED** — โค้ดคอมไพล์ผ่าน + เทสผ่าน

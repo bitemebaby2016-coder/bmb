@@ -1,3 +1,6 @@
+> ⚠️ **HISTORICAL — บันทึกงาน session ก่อนหน้า (2026-09-20):** งานที่อธิบายในเอกสารนี้ทำเสร็จแล้ว (commit `887944f`) ใช้เป็นหลักฐานเท่านั้น สถานะปัจจุบัน → `docs/BMB_CURRENT_STATE_2026-09-20.md`
+
+
 # 📘 สรุปงานรอบ 2026-09-20 — Add-ons Editor + Floating Ad Banners + ระบบภาษา TH/EN + SEO/GEO/AEO
 
 > Git HEAD: `69747da` · origin/main: `69747da` (Push เรียบร้อย / working tree สะอาด)

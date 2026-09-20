@@ -1,3 +1,6 @@
+> ⚠️ **HISTORICAL — อ่านอย่างเดียว (2026-09-20):** เอกสารนี้เป็นหลักฐานย้อนประวัติเท่านั้น สถานะปัจจุบัน → `docs/BMB_CURRENT_STATE_2026-09-20.md` · target → `docs/BMB_MASTER_PRODUCT_SPEC.md` · งานค้าง → `docs/BMB_100_PERCENT_CLOSURE_BOOK.md`
+
+
 # 🔴 GAP Analysis & Implementation Status — Updated 2026-09-16
 
 ## ✅ P0-CRITICAL FIXED (2026-09-16)

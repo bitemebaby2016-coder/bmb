@@ -1,3 +1,6 @@
+> ⚠️ **HISTORICAL — อ่านอย่างเดียว (2026-09-20):** เอกสารนี้เป็นหลักฐานย้อนประวัติเท่านั้น สถานะปัจจุบัน → `docs/BMB_CURRENT_STATE_2026-09-20.md` · target → `docs/BMB_MASTER_PRODUCT_SPEC.md` · งานค้าง → `docs/BMB_100_PERCENT_CLOSURE_BOOK.md`
+
+
 # 🗂️ Bite Me Baby — เอกสารแผนงานปิดงาน (Closure Work Plan)
 
 > **Version:** 2.0 · **สถานะ:** 10 รายการปิดแล้วส่วนใหญ่ (BLOCKED 2 รายการ — ระบุชัด) · **จัดทำ/อัปเดต:** 2026-09-17
