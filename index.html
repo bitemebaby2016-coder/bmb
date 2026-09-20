@@ -1,60 +1,105 @@
-﻿<!doctype html>
-<html lang="th">
+<!doctype html>
+<html lang="th" xml:lang="th">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <meta name="theme-color" content="#F97316" />
-    <meta name="description" content="Bite Me Baby - สั่งอาหารจัดส่งเมืองจันทบุรี รัศมี 5 กม. จัดส่งด้วยรถไฟฟ้า รอบเช้า กลางวัน เย็น" />
-    <meta name="keywords" content="สั่งอาหารจันทบุรี, อาหารจัดส่ง, ร้านอาหารเมืองจันทร์, Bite Me Baby" />
-    
+    <meta name="robots" content="index, follow" />
+
+    <!-- Primary SEO -->
+    <title>Bite Me Baby - สั่งอาหารจัดส่งเมืองจันทบุรี รัศมี 5 กม.</title>
+    <meta name="description" content="Bite Me Baby - ร้านอาหารไทยจัดส่งถึงบ้านในรัศมี 5 กม. จากตัวเมืองจันทบุรี จัดส่งเช้า กลางวัน เย็น สั่งออนไลน์ได้พร้อม AI Assistant 24/7" />
+    <meta name="keywords" content="สั่งอาหารจันทบุรี, อาหารจัดส่ง, ร้านอาหารเมืองจันทบุรี, Bite Me Baby, ส่งอาหารจันทบุรี, cloud kitchen จันทบุรี" />
+
+    <!-- Canonical + hreflang (TH/EN) -->
+    <link rel="canonical" href="https://bitemebaby.com/" />
+    <link rel="alternate" hreflang="th" href="https://bitemebaby.com/" />
+    <link rel="alternate" hreflang="en" href="https://bitemebaby.com/?lang=en" />
+    <link rel="alternate" hreflang="x-default" href="https://bitemebaby.com/" />
+
     <!-- Open Graph -->
     <meta property="og:title" content="Bite Me Baby - สั่งอาหารจัดส่งเมืองจันทบุรี" />
-    <meta property="og:description" content="ร้านอาหารไทยจัดส่งถึงบ้าน รัศมี 5 กม. จากตัวเมืองจันทบุรี" />
+    <meta property="og:description" content="ร้านอาหารไทยจัดส่งถึงบ้าน รัศมี 5 กม. จากตัวเมืองจันทบุรี สั่งออนไลน์ได้เลย" />
     <meta property="og:type" content="website" />
     <meta property="og:image" content="/og-image.png" />
-    
+    <meta property="og:url" content="https://bitemebaby.com/" />
+    <meta property="og:site_name" content="Bite Me Baby" />
+    <meta property="og:locale" content="th_TH" />
+    <meta property="og:locale:alternate" content="en_US" />
+
     <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="Bite Me Baby" />
-    <meta name="twitter:description" content="สั่งอาหารจัดส่งเมืองจันทบุรี" />
-    
-    <!-- SEO Schema -->
+    <meta name="twitter:description" content="สั่งอาหารจัดส่งเมืองจันทบุรี รัศมี 5 กม." />
+
+    <!-- GEO (Local SEO) -->
+    <meta name="geo.region" content="TH-22" />
+    <meta name="geo.placename" content="Chanthaburi" />
+    <meta name="geo.position" content="10.7016;102.1429" />
+    <meta name="ICBM" content="10.7016, 102.1429" />
+
+    <!-- SEO Schema / AEO: Restaurant + LocalBusiness + WebSite (JSON-LD) -->
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
-      "@type": "Restaurant",
-      "name": "Bite Me Baby",
-      "servesCuisine": "Thai",
-      "priceRange": "$$",
-      "address": {
-        "@type": "PostalAddress",
-        "addressLocality": "Chanthaburi",
-        "addressRegion": "Chanthaburi",
-        "addressCountry": "TH"
-      },
-      "areaServed": {
-        "@type": "AdministrativeArea",
-        "name": "Chanthaburi"
-      },
-      "openingHours": "Mo-Su 06:00-20:00",
-      "hasMenu": {
-        "@type": "Menu",
-        "name": "Bite Me Baby Menu"
-      }
+      "@graph": [
+        {
+          "@type": "Restaurant",
+          "@id": "https://bitemebaby.com/#restaurant",
+          "name": "Bite Me Baby",
+          "url": "https://bitemebaby.com/",
+          "image": "https://bitemebaby.com/og-image.png",
+          "servesCuisine": ["Thai", "Asian"],
+          "priceRange": "$$",
+          "currenciesAccepted": "THB",
+          "paymentAccepted": "QR PromptPay, Cash",
+          "address": {
+            "@type": "PostalAddress",
+            "streetAddress": "ในตัวเมืองจันทบุรี",
+            "addressLocality": "Chanthaburi",
+            "addressRegion": "Chanthaburi",
+            "postalCode": "22000",
+            "addressCountry": "TH"
+          },
+          "geo": { "@type": "GeoCoordinates", "latitude": 10.7016, "longitude": 102.1429 },
+          "telephone": "+66-8X-XXX-XXXX",
+          "openingHoursSpecification": [{
+            "@type": "OpeningHoursSpecification",
+            "dayOfWeek": ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"],
+            "opens": "06:00",
+            "closes": "20:00"
+          }],
+          "areaServed": { "@type": "AdministrativeArea", "name": "Chanthaburi" },
+          "hasMenu": { "@type": "Menu", "name": "Bite Me Baby Menu", "url": "https://bitemebaby.com/menu" },
+          "sameAs": [
+            "https://facebook.com/bitemebaby",
+            "https://instagram.com/bitemebaby",
+            "https://line.me/R/ti/p/@bitemebaby"
+          ]
+        },
+        {
+          "@type": "WebSite",
+          "@id": "https://bitemebaby.com/#website",
+          "url": "https://bitemebaby.com/",
+          "name": "Bite Me Baby",
+          "description": "สั่งอาหารจัดส่งเมืองจันทบุรี รัศมี 5 กม.",
+          "inLanguage": ["th", "en"],
+          "publisher": { "@id": "https://bitemebaby.com/#restaurant" }
+        }
+      ]
     }
     </script>
-    
-    <!-- Google Fonts (non-blocking: media=print/onload replaces swap pattern) -->
+<!-- Google Fonts (non-blocking, preconnect) -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=Quicksand:wght@400;600;700&display=swap"
+      rel="stylesheet"
+    />
 
-    <!-- ⚡ PERF: Hero mascot (LCP candidate) preload + high fetch priority -->
-    <link rel="preload" as="image" href="/assets/mascot/bite_hero_greeting.webp" fetchpriority="high" />
-
-    <link rel="manifest" href="/manifest.json" />
-    <title>Bite Me Baby - สั่งอาหารจัดส่งเมืองจันทบุรี</title>
+    <!-- PWA facade -->
+    <!-- name="description" already set above for the landing page -->
   </head>
   <body>
     <div id="root"></div>

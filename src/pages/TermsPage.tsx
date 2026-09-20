@@ -59,7 +59,7 @@ export function TermsPage() {
             Bite Me Baby จะไม่รับผิดชอบต่อความเสียหายใดๆ arising from การใช้บริการนี้ รวมถึงแต่ไม่จำกัดเพียง:
           </p>
           <ul className="list-disc list-inside space-y-2 text-brand-text-secondary mt-2">
-            <li>อาการแพ้จากอาหาร (ลูกค้าควรแจ้ง过敏ก่อน)</li>
+            <li>Food allergy matters — please inform us of any allergy before ordering</li>
             <li>การล่าช้าจากการขนส่งที่ไม่ใช่ความผิดของเรา</li>
             <li>ปัญหาทางเทคนิคภายนอก (server down, internet outage)</li>
           </ul>

@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { showToast } from '@/components/ui/ToastContainer'
 import { getProducts, createProduct, updateProduct, deleteProduct, getCategories } from '@/lib/bmbAdminApi_products'
 import { fileToBase64 } from '@/lib/bmbStorage'
+import { AddonsEditor, toAddonDrafts, addonDraftsToJson, type AddonDraft } from '@/components/admin/AddonsEditor'
 import type { Product, ProductCategory } from '@/types'
 
 export function AdminProducts() {
@@ -20,6 +21,7 @@ export function AdminProducts() {
     is_featured: false,
     prep_minutes: 10
   })
+  const [addons, setAddons] = useState<AddonDraft[]>([])
 
   useEffect(() => { loadAll() }, [])
 
@@ -46,7 +48,8 @@ export function AdminProducts() {
       return
     }
     
-    await createProduct(formData)
+    // Sanitize add-on draft rows into the products.addons JSON shape.
+    await createProduct({ ...formData, addons: addonDraftsToJson(addons) })
     loadAll()
     resetForm()
     setShowAddForm(false)
@@ -65,13 +68,14 @@ export function AdminProducts() {
       is_featured: product.is_featured,
       prep_minutes: product.prep_minutes
     })
+    setAddons(toAddonDrafts(product.addons))
     setShowAddForm(true)
   }
 
   async function handleUpdateProduct() {
     if (!editingProduct) return
     
-    await updateProduct(editingProduct.id, formData)
+    await updateProduct(editingProduct.id, { ...formData, addons: addonDraftsToJson(addons) })
     loadAll()
     resetForm()
     setShowAddForm(false)
@@ -98,6 +102,7 @@ export function AdminProducts() {
       prep_minutes: 10
     })
     setEditingProduct(null)
+    setAddons([])
   }
 
   return (
@@ -151,6 +156,10 @@ export function AdminProducts() {
                 <img src={formData.image_url} alt="Preview" className="mt-2 w-32 h-32 object-cover rounded-lg" />
               )}
             </div>
+{/* ── Add-ons / Toppings editor (products.addons) ── */}
+            <div className="md:col-span-2">
+              <AddonsEditor value={addons} onChange={setAddons} />
+            </div>
             
             <div className="flex items-center gap-4">
               <label className="flex items-center gap-2">
@@ -191,6 +200,9 @@ export function AdminProducts() {
               </span>
             </div>
             <div className="text-brand-primary font-bold text-xl mb-2">฿{product.price}</div>
+            {Array.isArray(product.addons) && product.addons.length > 0 && (
+              <span className="badge badge-info text-xs mb-1 inline-block">🧁 +{product.addons.length} toppings</span>
+            )}
             <div className="text-sm text-brand-muted mb-3">
               {categories.find(c => c.id === product.category_id)?.name} • ⏱️ {product.prep_minutes} นาที
             </div>

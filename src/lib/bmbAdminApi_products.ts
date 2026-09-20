@@ -4,7 +4,10 @@
 // ============================================
 
 import { supabase } from './supabase'
-import type { Product, ProductCategory, RoundPeriod, DeliveryRound } from '@/types'
+import type { Product, ProductCategory, ProductAddon, RoundPeriod, DeliveryRound } from '@/types'
+
+/** JSON shape stored in products.addons (no product_id inside the JSON array). */
+export type AddonJson = Omit<ProductAddon, 'product_id'>
 
 export interface ProductForm {
   id?: string
@@ -20,6 +23,7 @@ export interface ProductForm {
   sort_order?: number
   delivery_round_id?: string
   scheduled_date?: string
+  addons?: AddonJson[]
 }
 
 // ============================================
@@ -73,6 +77,7 @@ export async function createProduct(data: ProductForm): Promise<Product | null> 
     is_preorder: data.is_preorder ?? false, prep_minutes: data.prep_minutes,
     sort_order: data.sort_order || 0, delivery_round_id: data.delivery_round_id,
     scheduled_date: data.scheduled_date,
+    addons: Array.isArray(data.addons) ? data.addons : [],
   }
   const { data: result, error } = await supabase.from('products').insert(productData).select().single()
   if (error) { console.error('[createProduct] Error:', error); return null }

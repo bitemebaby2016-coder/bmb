@@ -97,11 +97,11 @@ export function DeliveryManagement() {
       action: 'delivery_assigned',
       entity_type: 'delivery_route',
       entity_id: `route-${Date.now()}`,
-      description: `优化${summary.totalOrders} ออเดอรเปน ${summary.totalRoutes}路线 (ระยะทาง ${summary.totalDistance.toFixed(1)} กม.)`,
+      description: `Optimize${summary.totalOrders} ออเดอรเปน ${summary.totalRoutes}route (ระยะทาง ${summary.totalDistance.toFixed(1)} กม.)`,
       metadata: summary
     })
 
-    showToast(`优化สำเรจ! ${summary.totalRoutes}路线, ${summary.totalOrders}ออเดอร`, 'success')
+    showToast(`Optimizeสำเรจ! ${summary.totalRoutes}route, ${summary.totalOrders}ออเดอร`, 'success')
     setIsOptimizing(false)
   }
 
@@ -134,16 +134,16 @@ export function DeliveryManagement() {
       {/* Route Optimization Summary */}
       <div className="card mb-6 bg-gradient-to-br from-blue-50 to-indigo-50 border-2 border-blue-200">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="font-bold text-brand-accent text-xl">📍 สถานะ路线 optimization</h3>
+          <h3 className="font-bold text-brand-accent text-xl">📍 สถานะroute optimization</h3>
           <button onClick={handleOptimizeRoutes} disabled={isOptimizing} className="btn btn-primary disabled:opacity-50">
-            {isOptimizing ? ' กำลัง优化...' : '🚀 optimize路线'}
+            {isOptimizing ? ' กำลังOptimize...' : '🚀 optimizeroute'}
           </button>
         </div>
         
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           <div className="text-center p-4 bg-white rounded-lg">
             <div className="text-2xl font-bold text-blue-600">{summary.totalRoutes}</div>
-            <div className="text-sm text-brand-muted">路线ทั้งหมด</div>
+            <div className="text-sm text-brand-muted">routeทั้งหมด</div>
           </div>
           <div className="text-center p-4 bg-white rounded-lg">
             <div className="text-2xl font-bold text-green-600">{summary.totalOrders}</div>
@@ -220,7 +220,7 @@ export function DeliveryManagement() {
       {/* Optimized Routes */}
       {routes.length > 0 && (
         <div className="card mb-6">
-          <h3 className="font-bold text-brand-accent mb-4">🗺️路线ที่ optimize แล้ว</h3>
+          <h3 className="font-bold text-brand-accent mb-4">🗺️routeที่ optimize แล้ว</h3>
           <div className="space-y-4">
             {routes.map((route) => {
               const driver = drivers.find(d => d.id === route.driver_id)

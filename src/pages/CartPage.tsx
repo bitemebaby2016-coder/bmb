@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom'
 import { useCartStore } from '@/store/cartStore'
 import { showToast } from '@/components/ui/ToastContainer'
 import { MascotBadge } from '@/components/MascotBadge'
+import { resolveAddOnLines, addOnTotalFor } from '@/lib/addonDisplay'
 
 export function CartPage() {
   const { items, subtotal, discount, deliveryFee, total, updateQuantity, removeItem, clearCart } = useCartStore()
@@ -46,8 +47,22 @@ export function CartPage() {
             <img src={item.product.image_url || '/placeholder.png'} alt={item.product.name} className="w-24 h-24 rounded-xl object-cover" />
             <div className="flex-1">
               <h3 className="font-bold text-brand-accent">{item.product.name}</h3>
-              <p className="text-brand-primary font-bold">{item.product.price} x {item.quantity} = {item.subtotal} บาท</p>
-              
+              <p className="text-brand-primary font-bold">฿{Number(item.product.price)} x {item.quantity} = ฿{item.subtotal.toFixed(2)}</p>
+
+              {/* Toppings / Add-ons the customer picked — clear & easy to read for kitchen staff */}
+              {resolveAddOnLines(item.product, item.customizations).length > 0 && (
+                <ul className="mt-1 space-y-0.5 text-sm text-brand-muted" data-testid="cart-addons">
+                  {resolveAddOnLines(item.product, item.customizations).map((line) => (
+                    <li key={line.groupName}>
+                      ➕ <span className="font-medium text-brand-accent">{line.groupName}</span>
+                      {line.selections.length > 0 && <span>: {line.selections.join(', ')}</span>}
+                      {line.note && <span> · "{line.note.trim()}"</span>}
+                      {line.linePrice > 0 && <span className="text-brand-primary">  +฿{line.linePrice}</span>}
+                    </li>
+                  ))}
+                </ul>
+              )}
+
               <div className="flex items-center gap-3 mt-2">
                 <button
                   onClick={() => updateQuantity(item.product.id, item.quantity - 1)}

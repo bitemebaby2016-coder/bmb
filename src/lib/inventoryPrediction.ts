@@ -57,7 +57,7 @@ export const DEFAULT_INVENTORY: InventoryItem[] = [
     min_stock: 20,
     max_stock: 100,
     unit_price: 45,
-    supplier_name: '农场 supplier',
+    supplier_name: 'Farm supplier',
     supplier_phone: '081-234-5678',
     reorder_point: 25,
     lead_time_days: 2,

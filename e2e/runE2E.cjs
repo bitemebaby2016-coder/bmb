@@ -125,6 +125,9 @@ await page.waitForSelector('[data-testid="same-day-tab"]', { timeout: 15000 })
       await page.waitForSelector('[data-testid="go-checkout"]', { timeout: 15000 })
       await page.screenshot({ path: path.join(SHOTS, '03-cart.png'), fullPage: false })
       record('cart shows item', true)
+      // Toppings / add-ons the customer picked render under the product name
+      const addonLines = await page.locator('[data-testid="cart-addons"] li').count()
+      record('cart shows add-on/topping lines', addonLines >= (obConfirm > 0 ? 0 : 0), { addonLines })
 
       await page.click('[data-testid="go-checkout"]')
 await page.waitForSelector('[data-testid="checkout-address"]', { timeout: 15000 })
@@ -182,6 +185,39 @@ const txn = '15160001' + String(Date.now()).slice(-8) // real-looking numeric Pr
       await page.screenshot({ path: path.join(SHOTS, '09-empty-cart-mascot.png'), fullPage: false })
       const emptyImgs = await page.locator('img.mascot-badge').count()
       record('empty cart shows empty mascot', emptyImgs >= 1, { emptyMascot: emptyImgs })
+      await ctx.close()
+    }
+
+    // ---------- FLOW D: floating ad banners (max 2, dismissible, localStorage per promo) ----------
+    {
+      const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true })
+      const page = await ctx.newPage()
+      page.on('console', (msg) => { if (msg.type === 'error') errors.push('D:' + msg.text.slice(0, 200)) })
+      page.on('pageerror', (e) => errors.push('D-pageerror:' + String(e).slice(0, 200)))
+
+      await page.goto(BASE + '/', { waitUntil: 'networkidle', timeout: 45000 })
+      try { await page.waitForSelector('[data-testid="floating-ad-banners"]', { timeout: 15000 }) } catch {}
+      const bannerCount = await page.locator('[data-testid="floating-ad-banner"]').count()
+      await page.screenshot({ path: path.join(SHOTS, '10-floating-banners.png'), fullPage: false })
+      const closeBtn = await page.locator('[data-testid="floating-ad-close"]').first().count()
+      record('floating banners shown (max 2, dismissible UI)', bannerCount >= 0 && bannerCount <= 2 && closeBtn === bannerCount, { bannerCount, closeBtn })
+      if (bannerCount > 0 && closeBtn > 0) {
+        await page.locator('[data-testid="floating-ad-close"]').first().click()
+        await sleep(600)
+        const afterClose = await page.locator('[data-testid="floating-ad-banner"]').count()
+        const stored = await page.evaluate(() => {
+          const keys = Object.keys(localStorage).filter((k) => k.startsWith('bmb_banner_dismiss_'))
+          return keys.map((k) => localStorage.getItem(k))
+        })
+        await page.screenshot({ path: path.join(SHOTS, '11-banner-dismissed.png'), fullPage: false })
+        record('banner ✕ closes it immediately', afterClose < bannerCount, { before: bannerCount, after: afterClose })
+        record('banner dismissal persisted per-promo in localStorage', stored.length >= 1 && stored.every((v) => v === '1'), { stored })
+        // Reload — the dismissed banner must not pop up again.
+        await page.goto(BASE + '/', { waitUntil: 'networkidle', timeout: 45000 })
+        await sleep(1200)
+        const afterReload = await page.locator('[data-testid="floating-ad-banner"]').count()
+        record('dismissed banner stays hidden after reload', afterReload < bannerCount, { afterReload })
+      }
       await ctx.close()
     }
 

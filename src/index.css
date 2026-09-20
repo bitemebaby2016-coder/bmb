@@ -933,47 +933,88 @@ p { color: var(--color-brand-text-secondary); }
   flex-shrink: 0;
 }
 
-/* Home banner — store promo ad (admin flags a promotion; customers can dismiss) */
-.home-banner {
-  position: relative;
-  border-radius: 18px;
-  overflow: hidden;
-  margin-bottom: 12px;
-  padding: 12px 14px;
-  background: linear-gradient(120deg, rgba(249, 115, 22, 0.18), rgba(255, 251, 235, 0.95) 55%, rgba(251, 191, 36, 0.2));
-  border: 1px solid rgba(249, 115, 22, 0.3);
-  color: #1C1917;
-}
-.home-banner-shade {
-  position: absolute;
-  inset: 0;
-  background: rgba(28, 25, 23, 0.45);
-  z-index: 0;
-}
-.home-banner-content {
-  position: relative;
-  z-index: 1;
+/* Floating Ad Banners — overlay stack (replaces the old inline home strip).
+   Promos flagged is_banner float in above the bottom nav; max 2 at once.
+   Customers dismiss each with ✕ (per-promo localStorage). */
+.flad-stack {
+  position: fixed;
+  left: 12px;
+  right: 12px;
+  bottom: 78px;
+  z-index: 70;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
+  max-width: 420px;
+  margin-inline: auto;
+  pointer-events: none;
 }
-.home-banner-title {
+.flad-stack > .flad-card { pointer-events: auto; }
+.flad-card {
+  position: relative;
+  border-radius: 16px;
+  overflow: hidden;
+  background: #fff;
+  border: 1px solid rgba(249, 115, 22, 0.4);
+  box-shadow: 0 14px 28px rgba(249, 115, 22, 0.25);
+  animation: fladIn 0.35s ease-out;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px 10px 10px;
+}
+.flad-media {
+  width: 118px;
+  height: 74px;
+  border-radius: 10px;
+  overflow: hidden;
+  flex-shrink: 0;
+  background: linear-gradient(135deg, #F97316, #FBBF24);
+}
+.flad-media img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.flad-body { flex: 1; min-width: 0; }
+.flad-title {
   font-weight: 800;
-  color: #7C2D12;
+  font-size: 13px;
+  color: var(--color-brand-accent, #92400E);
+  line-height: 1.2;
+  padding-right: 22px;
 }
-.home-banner-close {
+.flad-desc { font-size: 11px; color: var(--color-brand-muted, #78716C); margin-top: 2px; }
+.flad-actions { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-top: 4px; }
+.flad-coupon {
+  font-family: monospace;
+  font-size: 10px;
+  background: rgba(28, 25, 23, 0.08);
+  border-radius: 999px;
+  padding: 2px 8px;
+  white-space: nowrap;
+}
+.flad-cta { font-size: 12px; font-weight: 700; color: var(--color-brand-primary, #F97316); }
+.flad-close {
   position: absolute;
-  top: 8px;
-  right: 8px;
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
+  top: 4px;
+  right: 4px;
+  width: 26px;
+  height: 26px;
   border: none;
-  background: rgba(255, 255, 255, 0.9);
-  color: #7C2D12;
+  border-radius: 50%;
+  background: rgba(28, 25, 23, 0.10);
+  color: #1C1917;
   font-size: 13px;
   cursor: pointer;
   z-index: 2;
+}
+.flad-close:hover { background: rgba(239, 68, 68, 0.85); color: #fff; }
+@keyframes fladIn {
+  from { opacity: 0; transform: translateY(18px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@media (max-width: 480px) {
+  .flad-media { width: 104px; height: 66px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .flad-card { animation: none; }
 }
 
 /* Mock menu cards — Drinks section (.drink-card) + Snacks section (.snack-card)
@@ -1230,7 +1271,7 @@ p { color: var(--color-brand-text-secondary); }
   position: fixed;
   right: 16px;
   bottom: 84px;
-  z-index: 45;
+  z-index: 71; /* above bottom nav (50) AND floating ad banners (70) so it stays tappable */
   display: flex;
   align-items: center;
   justify-content: center;

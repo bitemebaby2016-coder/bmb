@@ -30,7 +30,7 @@ export function LoginPage() {
       entity_id: userLabel,
       description: userLabel + ' - login success',
     })
-    showToast('লগইন সফল!', 'success')
+    showToast('Login successful!', 'success')
     navigate(role === 'admin' ? '/admin' : '/')
   }
 
@@ -43,14 +43,14 @@ export function LoginPage() {
       // P0-2: login through Supabase Auth (not localStorage users)
       const ok = await login(email, password)
       if (!ok) {
-        setError('ইমেইল অথবা পাসওয়ার্ড ভুল')
+        setError('Invalid email or password')
         setIsLoading(false)
         return
       }
       await finishLogin(email)
     } catch (err) {
       console.error('Login error:', err)
-      setError('একটি ত্রুটি হয়েছে, আবার চেষ্টা করুন')
+      setError('Something went wrong, please try again')
     } finally {
       setIsLoading(false)
     }
@@ -76,14 +76,14 @@ export function LoginPage() {
         addressDetail: qAddress,
       })
       if (!res.ok) {
-        setError(res.error || 'দ্রুত লগইন ব্যর্থ হয়েছে')
+        setError(res.error || 'Quick login failed')
         setIsLoading(false)
         return
       }
       await finishLogin('quick:' + qPhone)
     } catch (err) {
       console.error('Quick login error:', err)
-      setError('একটি ত্রুটি হয়েছে, আবার চেষ্টা করুন')
+      setError('Something went wrong, please try again')
     } finally {
       setIsLoading(false)
     }
@@ -92,7 +92,7 @@ export function LoginPage() {
   // Fetch GPS and remember it for the quick login
   async function handleLocate() {
     setIsLocating(true)
-    setLocationBadge('অবস্থান খোঁজা হচ্ছে...')
+    setLocationBadge('Locating your position...')
     try {
       const loc = await getGpsLocation()
       useLocationStore.getState().setLocation({
@@ -104,12 +104,12 @@ export function LoginPage() {
         source: loc.source,
       })
       const label =
-        loc.source === 'gps' ? 'GPS অবস্থান' :
-        loc.source === 'ip' ? 'IP অনুযায়ী (আনুমানিক)' :
-        loc.source === 'saved' ? 'আগের সংরক্ষিত অবস্থান' : 'রান্নাঘরের অবস্থান (ডিফল্ট)'
-      setLocationBadge('আমার অবস্থান: ' + label + ' · ' + loc.latitude.toFixed(4) + ', ' + loc.longitude.toFixed(4))
+        loc.source === 'gps' ? 'GPS location' :
+        loc.source === 'ip' ? 'IP-based (approximate)' :
+        loc.source === 'saved' ? 'Previously saved location' : 'Kitchen location (default)'
+      setLocationBadge('My location: ' + label + ' · ' + loc.latitude.toFixed(4) + ', ' + loc.longitude.toFixed(4))
     } catch {
-      setLocationBadge('অবস্থান পাওয়া যায়নি — ডিফল্ট ব্যবহার হবে: ' + KITCHEN_LAT + ', ' + KITCHEN_LNG)
+      setLocationBadge('Location not found — using default: ' + KITCHEN_LAT + ', ' + KITCHEN_LNG)
     } finally {
       setIsLocating(false)
     }
@@ -121,7 +121,7 @@ return (
         <div className="text-center mb-8">
           <div className="text-6xl mb-4">🧡</div>
           <h1 className="text-4xl font-bold text-brand-accent font-display">Bite Me Baby</h1>
-          <p className="text-brand-muted mt-2">α╕íα╕▓α╕üα╕üα╕ºα╣êα╕▓α╕äα╕│α╕ºα╣êα╕▓α╕¡α╕úα╣êα╕¡α╕ó</p>
+          <p className="text-brand-muted mt-2">More than just delicious food</p>
         </div>
 
         {/* Mode switch: email login OR quick login (name + phone + location) */}
@@ -132,14 +132,14 @@ return (
               onClick={() => { setMode('email'); setError('') }}
               className={`flex-1 py-2 text-sm font-semibold rounded-lg ${mode === 'email' ? 'bg-brand-primary text-white' : 'bg-white/60 text-brand-accent'}`}
             >
-              📧 ইমেইল / পাসওয়ার্ড
+              📧 Email / Password
             </button>
             <button
               type="button"
               onClick={() => { setMode('quick'); setError('') }}
               className={`flex-1 py-2 text-sm font-semibold rounded-lg ${mode === 'quick' ? 'bg-brand-primary text-white' : 'bg-white/60 text-brand-accent'}`}
             >
-              ⚡ নাম + ফোন + অবস্থান
+              ⚡ Name + Phone + Location
             </button>
           </div>
 
@@ -152,7 +152,7 @@ return (
           {mode === 'email' ? (
             <form onSubmit={handleLogin} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-brand-accent mb-2">ইমেইল</label>
+                <label className="block text-sm font-medium text-brand-accent mb-2">Email</label>
                 <input
                   type="email"
                   value={email}
@@ -164,7 +164,7 @@ return (
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-brand-accent mb-2">পাসওয়ার্ড</label>
+                <label className="block text-sm font-medium text-brand-accent mb-2">Password</label>
                 <input
                   type="password"
                   value={password}
@@ -180,47 +180,47 @@ return (
                 disabled={isLoading}
                 className={`btn btn-primary w-full ${isLoading ? 'btn-disabled' : ''}`}
               >
-                {isLoading ? 'লগইন হচ্ছে...' : 'লগইন'}
+                {isLoading ? 'Logging in...' : 'Login'}
               </button>
             </form>
           ) : (
             <form onSubmit={handleQuickLogin} className="space-y-4">
               <div className="rounded-lg bg-brand-bg border border-brand-border p-3 text-xs text-brand-muted">
-                দ্রুত লগইন: শুধু নাম + ফোন নম্বর + অবস্থান (GPS) — সিস্টেম আপনার
-                আসল অবস্থান দিয়ে দূরত্ব / রুট / ডেলিভারি চার্জ হিসাব করে।
+                Quick login: just name + phone number + location (GPS) — the system
+                uses your real location to calculate distance / route / delivery charge.
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-brand-accent mb-2">নাম</label>
+                <label className="block text-sm font-medium text-brand-accent mb-2">Name</label>
                 <input
                   value={qName}
                   onChange={(e) => setQName(e.target.value)}
                   className="input"
-                  placeholder="আপনার নাম"
+                  placeholder="Your name"
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-brand-accent mb-2">ফোন নম্বর</label>
+                <label className="block text-sm font-medium text-brand-accent mb-2">Phone number</label>
                 <input
                   type="tel"
                   value={qPhone}
                   onChange={(e) => setQPhone(e.target.value)}
                   className="input"
-                  placeholder="যেমন 0812345678"
+                  placeholder="e.g. 0812345678"
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-brand-accent mb-2">ডেলিভারি ঠিকানা (ঐচ্ছিক)</label>
+                <label className="block text-sm font-medium text-brand-accent mb-2">Delivery address (optional)</label>
                 <textarea
                   value={qAddress}
                   onChange={(e) => setQAddress(e.target.value)}
                   className="input"
                   rows={2}
-                  placeholder="বাসা/দোকান নম্বর ইত্যাদি"
+                  placeholder="House/shop number etc."
                 />
               </div>
 
@@ -231,7 +231,7 @@ return (
                   disabled={isLocating}
                   className="btn btn-outline text-sm"
                 >
-                  {isLocating ? 'খোঁজা হচ্ছে...' : 'আমার অবস্থান (GPS)'}
+                  {isLocating ? 'Locating...' : '📍 My location (GPS)'}
                 </button>
                 {locationBadge && <span className="text-xs text-brand-muted">{locationBadge}</span>}
               </div>
@@ -241,16 +241,16 @@ return (
                 disabled={isLoading}
                 className={`btn btn-primary w-full ${isLoading ? 'btn-disabled' : ''}`}
               >
-                {isLoading ? 'লগইন হচ্ছে...' : 'দ্রুত লগইন'}
+                {isLoading ? 'Logging in...' : 'Quick login'}
               </button>
             </form>
           )}
 
           <div className="mt-6 text-center">
             <p className="text-brand-muted text-sm">
-              এখনও অ্যাকাউন্ট নেই?{' '}
+              Don't have an account?{' '}
               <Link to="/register" className="text-brand-primary font-medium hover:underline">
-                নিবন্ধন করুন
+                Register
               </Link>
             </p>
           </div>
@@ -258,7 +258,7 @@ return (
 
         <div className="text-center mt-6">
           <Link to="/" className="text-brand-primary hover:underline">
-            ← হোম পেজে ফিরুন
+            ← Back to home
           </Link>
         </div>
       </div>

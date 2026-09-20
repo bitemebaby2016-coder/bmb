@@ -511,6 +511,8 @@ export interface SEOMeta {
   description: string;
   keywords: string[];
   ogImage: string;
+  url?: string;                 // canonical path (e.g. '/menu') for hreflang/canonical
+  ogLocale?: string;
   schema: Record<string, any>;
 }
 

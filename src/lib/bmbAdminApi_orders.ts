@@ -71,9 +71,47 @@ export interface OrderForm {
     product_name: string
     quantity: number
     unit_price: number
+    item_total?: number
+    special_request?: string
+    customizations?: Record<string, any>
   }>
   created_at: string
   updated_at: string
+}
+
+/**
+ * Hydrate OrderForm rows with their order_items children (including the
+ * add-on/topping snapshot stored in order_items.customizations by migration 016).
+ * Keeps the existing OrderForm.items contract used across Admin/Orders pages.
+ */
+export async function hydrateOrderItems(orders: OrderForm[]): Promise<OrderForm[]> {
+  const withId = (orders || []).filter((o) => !!o.id)
+  if (withId.length === 0) return orders || []
+  const ids = Array.from(new Set(withId.map((o) => o.id as string)))
+  let data: any[] | null = null
+  try {
+    const r = await supabase.from('order_items').select('*').in('order_id', ids)
+    if (r.error) { console.error('[hydrateOrderItems] Error:', r.error); return orders || [] }
+    data = r.data
+  } catch (e) {
+    // Degrade gracefully (e.g. test mocks without .in()) — items stay as requested.
+    console.warn('[hydrateOrderItems] unavailable, skipping hydration:', String(e).slice(0, 120))
+    return orders || []
+  }
+  if (!data) return orders || []
+  for (const o of withId) {
+    const children = data.filter((oi) => oi.order_id === o.id)
+    o.items = children.map((oi) => ({
+      product_id: oi.product_id,
+      product_name: oi.product_name,
+      quantity: oi.quantity,
+      unit_price: Number(oi.unit_price || 0),
+      item_total: Number(oi.item_total || 0),
+      special_request: oi.special_request || '',
+      customizations: oi.customizations || {},
+    }))
+  }
+  return orders || []
 }
 
 // ============================================
@@ -83,19 +121,19 @@ export interface OrderForm {
 export async function getOrders(): Promise<OrderForm[]> {
   const { data, error } = await supabase.from('orders').select('*').order('created_at', { ascending: false })
   if (error) { console.error('[getOrders] Error:', error); return [] }
-  return (data || []) as OrderForm[]
+  return await hydrateOrderItems((data || []) as OrderForm[])
 }
 
 export async function getOrdersAdmin(): Promise<OrderForm[]> {
   const { data, error } = await supabase.from('orders').select('*').order('created_at', { ascending: false })
   if (error) { console.error('[getOrdersAdmin] Error:', error); return [] }
-  return (data || []) as OrderForm[]
+  return await hydrateOrderItems((data || []) as OrderForm[])
 }
 
 export async function getOrdersByCustomer(customerId: string): Promise<OrderForm[]> {
   const { data, error } = await supabase.from('orders').select('*').eq('customer_id', customerId).order('created_at', { ascending: false })
   if (error) { console.error('[getOrdersByCustomer] Error:', error); return [] }
-  return (data || []) as OrderForm[]
+  return await hydrateOrderItems((data || []) as OrderForm[])
 }
 
 export async function getOrder(orderNumber: string): Promise<OrderForm | null> {
@@ -104,7 +142,8 @@ export async function getOrder(orderNumber: string): Promise<OrderForm | null> {
     console.error('[getOrder] Error:', error)
     return null
   }
-  return data as OrderForm
+  const hydrated = await hydrateOrderItems([data as OrderForm])
+  return hydrated[0]
 }
 
 // P0-4: createOrder per RPC (server-authoritative). Client sends ONLY input.

@@ -170,7 +170,7 @@ export async function generateCustomerInsights(customerId: string): Promise<stri
   }
   
   if (intelligence.review_count > 0) {
-    insights.push(`ให้รีวิว ${intelligence.review_count} ครั้ง平均 ${intelligence.average_rating_given.toFixed(1)} ดาว`)
+    insights.push(`ให้รีวิว ${intelligence.review_count} ครั้ง (avg ${intelligence.average_rating_given.toFixed(1)} ดาว)`)
   }
   
   if (intelligence.segments.length > 0) {

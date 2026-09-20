@@ -8,7 +8,7 @@ export function ReviewPage() {
   const [comment, setComment] = useState('')
   const [reviews, setReviews] = useState<any[]>([
     { id: '1', user: 'สมชาย', rating: 5, comment: 'อร่อยมาก! ส่งไว', date: '2026-09-08' },
-    { id: '2', user: 'สมหิง', rating: 4, comment: 'ดีแต่รอ稍', date: '2026-09-07' },
+    { id: '2', user: 'Somhai', rating: 4, comment: 'Good but could be better', date: '2026-09-07' },
   ])
 
   function handleSubmit() {

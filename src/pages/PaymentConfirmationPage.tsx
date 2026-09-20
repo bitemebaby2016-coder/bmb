@@ -35,7 +35,7 @@ export function PaymentConfirmationPage() {
     const result = await submitOfflinePaymentReference(orderNumber, transactionId)
     if (result.success) {
       writeAuditLog({ action: 'payment_processed', entity_type: 'order', entity_id: orderNumber, description: 'PromptPay TXN submitted #' + orderNumber, metadata: { transactionId } })
-      showToast('ข้อมูลการชำระเงินถูกส่ง — รоยืนยานจาก kitchen', 'success')
+      showToast('Payment info submitted — awaiting kitchen confirmation', 'success')
       setTimeout(() => navigate('/track/' + orderNumber), 1500)
     } else { showToast(result.error || 'Failed', 'error') }
     setIsConfirming(false)

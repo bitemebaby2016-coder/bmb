@@ -11,6 +11,7 @@ import { writeAuditLog } from '@/lib/auditLog'
 import { getBestProvider, calculateProviderCost, type DeliveryProvider } from '@/lib/externalProviders'
 import { useLocationStore } from '@/store/locationStore'
 import { getGpsLocation } from '@/lib/locationLogin'
+import { resolveAddOnLines } from '@/lib/addonDisplay'
 
 export function CheckoutPage() {
   const navigate = useNavigate()
@@ -312,8 +313,23 @@ export function CheckoutPage() {
         <div className="space-y-2 mb-4">
           {items.map((item) => (
             <div key={item.product.id} className="flex justify-between text-sm">
-              <span>{item.product.name} x{item.quantity}</span>
-              <span>{item.subtotal.toFixed(2)} บาท</span>
+              <div className="min-w-0 flex-1">
+                <span>{item.product.name} × {item.quantity}</span>
+                {/* Toppings/Add-ons visible under the item — kitchen-readable */}
+                {resolveAddOnLines(item.product, item.customizations).length > 0 && (
+                  <ul className="mt-0.5 text-xs text-brand-muted" data-testid="co-addons">
+                    {resolveAddOnLines(item.product, item.customizations).map((line) => (
+                      <li key={line.groupName}>
+                        ➕ {line.groupName}
+                        {line.selections.length > 0 && <span>: {line.selections.join(', ')}</span>}
+                        {line.note && <span> · "{line.note.trim()}"</span>}
+                        {line.linePrice > 0 && <span className="text-brand-primary">  +฿{line.linePrice}</span>}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+              <span>{item.subtotal.toFixed(2)} ฿</span>
             </div>
           ))}
         </div>

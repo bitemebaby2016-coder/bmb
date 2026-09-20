@@ -3,17 +3,25 @@ import { Link } from 'react-router-dom'
 import { useNotificationStore } from '@/store/notificationStore'
 import { showToast } from '@/components/ui/ToastContainer'
 import { getOrders, updateOrderStatus, confirmOfflinePayment, markPaymentFailed, stripeRefundOrder } from '@/lib/bmbAdminApi_orders'
+import { getProductsAdmin } from '@/lib/bmbAdminApi_products'
+import { addOnLinesFromChoices } from '@/lib/addonDisplay'
 import type { OrderForm } from '@/lib/bmbAdminApi_orders'
+import type { Product } from '@/types'
 
 export function AdminOrders() {
   const [orders, setOrders] = useState<OrderForm[]>([])
   const [filterStatus, setFilterStatus] = useState('all')
+  const [productById, setProductById] = useState<Record<string, Product>>({})
 
   useEffect(() => { loadOrders() }, [])
 
   async function loadOrders() {
     const orders = await getOrders()
     setOrders(orders)
+    const products = await getProductsAdmin()
+    const map: Record<string, Product> = {}
+    for (const p of products || []) map[p.id] = p
+    setProductById(map)
   }
 
   const statusEventMap: Record<string, 'order_confirmed' | 'order_preparing' | 'order_ready_for_dispatch' | 'order_dispatched' | 'order_delivered'> = {
@@ -31,7 +39,7 @@ export function AdminOrders() {
     loadOrders()
 
     if (!updated) {
-      showToast(`ไม่สามารถเปลี่ยนสถานะ -> ${newStatus} (กฎ state machine)`, 'error')
+      showToast(`Cannot change status -> ${newStatus} (state machine rule)`, 'error')
       return
     }
 
@@ -40,7 +48,7 @@ export function AdminOrders() {
       useNotificationStore.getState().triggerEvent(eventType, { orderNumber })
     }
 
-    showToast(`อัপডেটสถานা ${newStatus} สำเร็จ`, 'success')
+    showToast(`Status updated to ${newStatus}`, 'success')
   }
 
   async function handleConfirmPayment(orderNumber: string) {
@@ -50,25 +58,25 @@ export function AdminOrders() {
 
     if (r.success) {
       useNotificationStore.getState().triggerEvent('payment_confirmed', { orderNumber })
-      showToast('ยকনয়ানการচำระเงินสำเร็จ', 'success')
+      showToast('Payment confirmed', 'success')
     } else {
-      showToast(r.error || 'ไม่สามารถยকনয়ান (กฎ: delivered/TXN)', 'error')
+      showToast(r.error || 'Cannot confirm (rule: delivered/TXN)', 'error')
     }
   }
 
   async function handleMarkFailed(orderNumber: string) {
     await markPaymentFailed(orderNumber, 'admin')
     loadOrders()
-    showToast('การচำระเงินถูกทำล้ม', 'success')
+    showToast('Payment marked as failed', 'success')
   }
 async function handleStripeRefund(orderNumber: string) {
     // C-6: server-side Stripe refund (admin-only EF). Full refund by default.
     const r = await stripeRefundOrder(orderNumber)
     loadOrders()
     if (r.success) {
-      showToast(`คืนเงินสำเร็จ (${r.data?.payment_status || 'refund'})`, 'success')
+      showToast(`Refund successful (${r.data?.payment_status || 'refund'})`, 'success')
     } else {
-      showToast(r.error || 'คืนเงินไม่สำเร็จ', 'error')
+      showToast(r.error || 'Refund failed', 'error')
     }
   }
 
@@ -77,19 +85,19 @@ async function handleStripeRefund(orderNumber: string) {
   return (
     <div className="max-w-7xl mx-auto px-4 py-6">
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-3xl font-bold text-brand-accent">📋 จัดকার অর্ডার</h1>
-        <Link to="/admin" className="btn btn-outline">← গ্লব দ্যাশবোর্ড</Link>
+        <h1 className="text-3xl font-bold text-brand-accent">📋 Manage Orders</h1>
+        <Link to="/admin" className="btn btn-outline">← Dashboard</Link>
       </div>
 
       <div className="flex gap-2 mb-6 overflow-x-auto">
         {[
-          { key: 'all', label: 'সব' },
-          { key: 'pending', label: 'অপেক্ষা' },
-          { key: 'confirmed', label: 'নিশ্চিত' },
-          { key: 'preparing', label: 'প্রস্তুতি' },
-          { key: 'ready_for_dispatch', label: 'পাঠানোর জন্য প্রস্তুত' },
-          { key: 'delivered', label: 'পাঠানো হয়েছে' },
-          { key: 'cancelled', label: 'বাতিল' }
+          { key: 'all', label: 'All' },
+          { key: 'pending', label: 'Pending' },
+          { key: 'confirmed', label: 'Confirmed' },
+          { key: 'preparing', label: 'Preparing' },
+          { key: 'ready_for_dispatch', label: 'Ready to dispatch' },
+          { key: 'delivered', label: 'Delivered' },
+          { key: 'cancelled', label: 'Cancelled' }
         ].map((status) => (
           <button
             key={status.key}
@@ -113,7 +121,7 @@ async function handleStripeRefund(orderNumber: string) {
                 <div>
                   <div className="font-bold text-brand-accent">{order.order_number}</div>
                   <div className="text-sm text-brand-muted">
-                    {order.customer_name} • {order.customer_phone} • রাউন্ড {order.delivery_round_id || 'সকাল'} • {new Date(order.created_at).toLocaleTimeString('en', { hour: '2-digit', minute: '2-digit' })}
+                    {order.customer_name} • {order.customer_phone} • Round {order.delivery_round_id || 'Morning'} • {new Date(order.created_at).toLocaleTimeString('en', { hour: '2-digit', minute: '2-digit' })}
                   </div>
                 </div>
               </div>
@@ -130,38 +138,63 @@ async function handleStripeRefund(orderNumber: string) {
             </div>
 
             <div className="text-sm text-brand-muted mb-3">
-              <strong>আইটেম:</strong> {order.items.map(i => `${i.product_name} x${i.quantity}`).join(', ')}
+              <strong>Items:</strong>
+              <ul className="mt-1 space-y-1" data-testid="admin-order-items">
+                {order.items.map((i) => {
+                  const addonLines = addOnLinesFromChoices(productById[i.product_id]?.addons, i.customizations?.addOns)
+                  return (
+                    <li key={i.product_id} className="flex items-baseline justify-between gap-2">
+                      <div className="min-w-0 flex-1">
+                        <span className="font-medium text-brand-accent">{i.product_name}</span>
+                        <span className="text-brand-muted"> × {i.quantity}</span>
+                        {addonLines.length > 0 && (
+                          <ul className="pl-3 text-xs text-brand-muted list-disc list-inside">
+                            {addonLines.map((line) => (
+                              <li key={line.groupName}>
+                                {line.groupName}{line.selections.length > 0 ? `: ${line.selections.join(', ')}` : ''}{line.note ? ` · "${line.note.trim()}"` : ''}
+                                {line.linePrice > 0 ? `  +฿${line.linePrice}` : ''}
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+                        {i.special_request && <div className="text-xs text-brand-muted italic">“{i.special_request}”</div>}
+                      </div>
+                      <span className="whitespace-nowrap">฿{Number(i.unit_price || 0).toFixed(2)}</span>
+                    </li>
+                  )
+                })}
+              </ul>
             </div>
 
             <div className="flex flex-wrap gap-2">
               {order.status === 'pending' && (
-                <button onClick={() => handleStatusUpdate(order.order_number, 'confirmed')} className="btn btn-primary text-sm">✅ নিশ্চিত করুন</button>
+                <button onClick={() => handleStatusUpdate(order.order_number, 'confirmed')} className="btn btn-primary text-sm">✅ Confirm</button>
               )}
               {order.status === 'confirmed' && (
-                <button onClick={() => handleStatusUpdate(order.order_number, 'preparing')} className="btn btn-info text-sm">🍳 রান্না শুরু</button>
+                <button onClick={() => handleStatusUpdate(order.order_number, 'preparing')} className="btn btn-info text-sm">🍳 Start cooking</button>
               )}
               {order.status === 'preparing' && (
-                <button onClick={() => handleStatusUpdate(order.order_number, 'ready_for_dispatch')} className="btn btn-success text-sm">📦 পাঠানোর প্রস্তুতি</button>
+                <button onClick={() => handleStatusUpdate(order.order_number, 'ready_for_dispatch')} className="btn btn-success text-sm">📦 Ready to dispatch</button>
               )}
               {order.status === 'ready_for_dispatch' && (
-                <button onClick={() => handleStatusUpdate(order.order_number, 'delivered')} className="btn btn-info text-sm">🛵 ডেলিভারি</button>
+                <button onClick={() => handleStatusUpdate(order.order_number, 'delivered')} className="btn btn-info text-sm">🛵 Delivered</button>
               )}
 
               {(order.status === 'pending' || order.status === 'preparing') && (
-                <button onClick={() => handleStatusUpdate(order.order_number, 'cancelled')} className="btn btn-danger text-sm">✖ বাতিল</button>
+                <button onClick={() => handleStatusUpdate(order.order_number, 'cancelled')} className="btn btn-danger text-sm">✖ Cancel</button>
               )}
 
               {order.payment_status === 'pending' && (
-                <button onClick={() => handleConfirmPayment(order.order_number)} className="btn btn-success text-sm">💰 পেমেন্ট নিশ্চিত</button>
+                <button onClick={() => handleConfirmPayment(order.order_number)} className="btn btn-success text-sm">💰 Confirm payment</button>
               )}
               {order.payment_status === 'pending' && (
-                <button onClick={() => handleMarkFailed(order.order_number)} className="btn btn-outline text-sm">🚫 ব্যর্থ</button>
+                <button onClick={() => handleMarkFailed(order.order_number)} className="btn btn-outline text-sm">🚫 Mark failed</button>
               )}
 {order.payment_method === 'credit_card' && (order.payment_status === 'paid' || order.payment_status === 'partially_refunded') && (
-                    <button onClick={() => handleStripeRefund(order.order_number)} className="btn btn-outline text-sm">💸 คืนเงิน (Stripe)</button>
+                    <button onClick={() => handleStripeRefund(order.order_number)} className="btn btn-outline text-sm">💸 Refund (Stripe)</button>
                   )}
 
-              <button className="btn btn-outline text-sm ml-auto">📞 কল</button>
+              <button className="btn btn-outline text-sm ml-auto">📞 Call</button>
             </div>
           </div>
         ))}
@@ -170,7 +203,7 @@ async function handleStripeRefund(orderNumber: string) {
       {filteredOrders.length === 0 && (
         <div className="text-center py-12">
           <div className="text-6xl mb-4">📋</div>
-          <h3 className="text-xl font-bold text-brand-accent">অর্ডার পাওয়া যায়নি</h3>
+          <h3 className="text-xl font-bold text-brand-accent">No orders found</h3>
         </div>
       )}
     </div>

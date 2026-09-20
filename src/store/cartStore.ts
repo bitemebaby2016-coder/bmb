@@ -1,5 +1,6 @@
 import { create } from "zustand"
 import type { CartItem, Promotion, Product } from "@/types"
+import { addOnTotalFor } from "@/lib/addonDisplay"
 
 interface CartStore {
   items: CartItem[]
@@ -48,11 +49,14 @@ export const useCartStore = create<CartStore>((set, get) => ({
             : item
         )
       } else {
+        // Client-side add-on estimate only — the server re-derives the price
+        // (migration 016 compute_addons_price) at order creation.
+        const unit = Number(product.price) + addOnTotalFor({ product, customizations })
         newItems = [...state.items, {
           product,
           quantity,
           customizations,
-          subtotal: product.price * quantity
+          subtotal: unit * quantity
         }]
       }
       
@@ -77,7 +81,7 @@ export const useCartStore = create<CartStore>((set, get) => ({
     set((state) => ({
       items: state.items.map(item =>
         item.product.id === productId
-          ? { ...item, quantity, subtotal: item.product.price * quantity }
+          ? { ...item, quantity, subtotal: (Number(item.product.price) + addOnTotalFor(item)) * quantity }
           : item
       )
     }))

@@ -193,7 +193,7 @@ export async function getPromotionInsights(): Promise<PromotionInsight[]> {
     // Generate recommendations
     const recommendations: string[] = []
     if (performance === 'poor') {
-      recommendations.push('📉转化率ต่ำ - ลองเพิ่มส่วนลดหรือลดขั้นต่ำ')
+      recommendations.push('📉 อัตราแปลงต่ำ — ลองเพิ่มส่วนลดหรือลดขั้นต่ำ')
     }
     if (usageCount > promo.max_uses * 0.8) {
       recommendations.push('⚠️ ใกล้หมดควตา - เพิ่ม max_uses หรือต่ออายุ')

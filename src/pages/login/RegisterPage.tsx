@@ -29,7 +29,7 @@ export function RegisterPage() {
     }
 
     if (formData.password.length < 6) {
-      setError('รหัสผ่านต้อง至少有 6 ตัวอักษร')
+      setError('รหัสผ่านต้องat least  6 ตัวอักษร')
       setIsLoading(false)
       return
     }
@@ -109,7 +109,7 @@ export function RegisterPage() {
             
             <div>
               <label className="block text-sm font-medium text-brand-accent mb-2">รหัสผ่าน</label>
-              <input type="password" name="password" value={formData.password} onChange={handleChange} className="input" placeholder="至少有 6 ตัวอักษร" required minLength={6} />
+              <input type="password" name="password" value={formData.password} onChange={handleChange} className="input" placeholder="at least  6 ตัวอักษร" required minLength={6} />
             </div>
             
             <div>
