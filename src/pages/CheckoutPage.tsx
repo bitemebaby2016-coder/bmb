@@ -12,6 +12,7 @@ import { getBestProvider, calculateProviderCost, type DeliveryProvider } from '@
 import { useLocationStore } from '@/store/locationStore'
 import { getGpsLocation } from '@/lib/locationLogin'
 import { resolveAddOnLines } from '@/lib/addonDisplay'
+import { DistanceChecker } from '@/components/delivery/DistanceChecker'
 
 export function CheckoutPage() {
   const navigate = useNavigate()
@@ -244,6 +245,13 @@ export function CheckoutPage() {
         <div className="text-sm text-brand-muted">
           📐 รัศมีจัดส่ง: 5 กม. จากตัวเมืองจันทบุรี
         </div>
+      </div>
+
+      {/* Two-Tier routing estimation (debounced) — additive informational panel */}
+      <div className="mb-6">
+        <DistanceChecker
+          destination={{ latitude: deliveryAddress.latitude, longitude: deliveryAddress.longitude }}
+        />
       </div>
 
       {/* GAP CLOSURE: Delivery Provider Selection */}

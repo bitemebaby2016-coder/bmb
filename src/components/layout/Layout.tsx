@@ -4,13 +4,17 @@ import { BottomNav } from './BottomNav'
 import { Footer } from './Footer'
 import { ToastContainer } from '../ui/ToastContainer'
 import { OrderBuilderModal } from '../order/OrderBuilderModal'
+import { BiteMascot } from '../ai/BiteMascot'
+import { CartIsolationModal } from '../cart/CartIsolationModal'
 
 interface LayoutProps {
   children?: ReactNode
   hideBottomNav?: boolean
+  /** Set to 'pre-order' on pre-order-heavy views to arm the Stage 3 micro-hook. */
+  activeSection?: string
 }
 
-export function Layout({ children, hideBottomNav = false }: LayoutProps) {
+export function Layout({ children, hideBottomNav = false, activeSection = 'home' }: LayoutProps) {
   const [headerHidden, setHeaderHidden] = useState(false)
   const [lastScrollY, setLastScrollY] = useState(0)
 
@@ -59,6 +63,10 @@ export function Layout({ children, hideBottomNav = false }: LayoutProps) {
       {!hideBottomNav && <BottomNav />}
       <ToastContainer />
       <OrderBuilderModal />
+      {/* Decorative + floating AI mascot (pointer-events guarded) */}
+      <BiteMascot activeSection={activeSection} />
+      {/* Global cart-isolation confirmation modal */}
+      <CartIsolationModal />
     </div>
   )
 }

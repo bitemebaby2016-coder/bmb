@@ -6,7 +6,31 @@
 
 **Mobile-first PWA + Order Hub + Kitchen Operations + Bite Drive + External Delivery + AI Service Staff + Content Automation + Customer Intelligence**
 
-## 📋 Documentation Status Update (2026-09-13)
+## 📋 Documentation Status Update (2026-09-20) — Master Universal Blueprint Refactor
+
+> สถานะจริง (verify ได้) : `npm test` **106/106 PASS** · `npm run build` **tsc 0 errors + vite ✓**
+> เอกสาร: `docs/BITEBABY_BLUEPRINT_REFACTOR_2026-09-20.md`
+
+**เป้าหมาย:** ติดตั้งสถาปัตยกรรมใหม่ตาม **MASTER UNIVERSAL BLUEPRINT REFACTOR** — White-Label Config Engine, 4 Stores (Cart Isolation / Order State Machine / Delivery Router / Bite AI 4-Stage), 2.5D/3D Glassmorphism + dashboards + Two-Tier Delivery
+
+**เพิ่มเติมใหม่ (โค้ด):**
+- 🆕 `src/config/platformConfig.ts` — Multi-Tenant Global Config (no hard-coding; distance/quota/cutoff/theme)
+- 🆕 `src/stores/useCartStore.ts` — Cart Isolation Engine (`order_mode`, ยืนยันเคลียร์ตะกร้าก่อนสลับโหมด)
+- 🆕 `src/stores/useOrderStateMachine.ts` — State Machine reactive (Same-Day & Pre-Order chains)
+- 🆕 `src/stores/useDeliveryRouter.ts` — Hybrid Dispatch Hub (Tier1 BiteDrive / Tier2 3rd-party + markup)
+- 🆕 `src/stores/useBiteAIStore.ts` — 4-Stage Bite Mascot stage manager (Ambient→Upsell→MicroHook→FullChat)
+- 🆕 `src/lib/availabilityEngine.ts` / `orderStateMachine.ts` / `deliveryRouter.ts` — pure engines (deterministic)
+- 🆕 `src/components/ui/GlassCard.tsx`, `ui/MascotWrapper.tsx`, `cart/CartIsolationModal.tsx`
+- 🆕 `src/components/delivery/DistanceChecker.tsx` (debounce 500ms, Two-Tier)
+- 🆕 `src/components/dashboard/{CustomerTimeline,RiderPWA,AdminControl}.tsx` (Geolocation+POD gating Delivered)
+- 🆕 `src/components/ai/{BiteMascot,BiteAIChat}.tsx` (4-Stage; AI emit ได้แค่ `EXECUTE_ADD_TO_CART`)
+- 🆕 เทสใหม่ 6 ไฟล์ → **38 tests** เพิ่มขึ้น (รวมเป็น 106)
+
+**ผสาน (wired):** `Layout` โหลด `<BiteMascot/>`+`<CartIsolationModal/>` · route ใหม่ `/rider` และ `/admin/control` · `CheckoutPage` ฝัง `<DistanceChecker/>` additive
+
+**สถานะจริง:** ✅ เสร็จ + เทสผ่านครบ — **106/106 PASS**, `tsc --noEmit` 0 errors, `vite build` ✓ — legacy flow เดิม (cartStore/checkout/payment) **ไม่ถูกแก้** เพิ่ม layer ใหม่แบบ additive ได้จริงตามข้อกำหนด (ดู docs ข้างต้น + §4 Honest Notes)
+
+
 
 ### 🆕 Phase 4: Social Proof Review Feed + 2.5D/3D Hybrid Glassmorphism (2026-09-17)
 
