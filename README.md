@@ -10,7 +10,7 @@ PWA สั่งอาหารจริงของร้าน Bite Me Baby (�
 ## Current Production Status (สรุป — รายละเอียด + evidence ใน CURRENT_STATE)
 
 - **ใช้งานจริงแล้ว:** PWA storefront ครบ flow · ออเดอร์ server-authoritative · PromptPay TXN + COD · Stripe webhook (production-verified 6/6 ปี 2026-09-19) · Admin core · PWA install
-- **ยังไม่ปิด (Domain A):** pre-order server-side pricing (P0) · บิลบัตรจริงครบวงจร + refund จริง · inventory auto-deduct · ไดรเวอร์จริง (ยัง MOCK) · AI server proxy (key ยังอยู่ใน client) · CI/lint · Lighthouse Perf 29→90
+- **ยังไม่ปิด (Domain A — ตาม CLOSURE_BOOK):** บิลบัตรจริง 1 รายการ (PAY-02) · refund จริง (PAY-03) · Bite Drive real rider flow (RPCs deployed — รอ REAL-WORLD PILOT) · SEC-02 AI key ออกจาก client · Lighthouse Perf ≥ 90 (PWA-01)
 - **สถานะเอกสาร:** ตาม Domain A closure table — "ปิดครบ" ของ Domain A = **BMB Production 100% เท่านั้น ไม่ใช่ SaaS พร้อมขาย**
 
 ## Current Phase
@@ -29,9 +29,8 @@ banner promotions auto-submit to approval, publish gate opens only after `approv
 
 **Tests:** 154 PASS · build PASS (tsc strict + vite + PWA sw.js) · lint 0 errors.
 
-**Owner asked next:** `supabase db push` (migration **020 Bite Drive** — ขั้นตอนที่เหลือก่อน GATE)
-→ `node e2e/sqlContracts.cjs --include-new` (expect 29/29) → owner SQL suites (`e2e/contracts_020_bite_drive.sql`)
-→ PWA-100-GATE evidence pack: `docs/BMB_PWA_100_GATE_EVIDENCE_2026-09-21.md` → REAL-WORLD PILOT → **M1 = BMB PRODUCTION 100%**.
+**Owner status 2026-09-21:** `supabase db push` สำเร็จ — 020/021/022 APPLIED · `sqlContracts --include-new` = **29/29 PASSED** (evidence: `e2e/sql-contract-result.json`)
+→ NEXT: SQL Editor owner suite (`e2e/contracts_020_bite_drive.sql` → PASS) → Lighthouse production → PWA-100-GATE pack (`docs/BMB_PWA_100_GATE_EVIDENCE_2026-09-21.md`) → REAL-WORLD PILOT → **M1 = BMB PRODUCTION 100%**.
 
 ## Future SaaS Direction (ไม่ได้ implement — DEFERRED ทั้งหมด)
 

@@ -27,7 +27,7 @@
 | ORD-01 | Server-side state machine + audit (017/018) | VERIFIED | transitions + append_audit_log |
 | INV-01/02 | Inventory auto-deduct/restore (019) | VERIFIED | RPC deployed live |
 | KIT-01/02 | Production batches/recipes/BOM (019) | VERIFIED | deployed; UI queue -- PARTIAL (admin) |
-| DEL-01..04 | Bite Drive (020) | **PENDING owner db push** | File full in HEAD; live DB needs `supabase db push` |
+| DEL-01..04 | Bite Drive (020) | VERIFIED | DB APPLIED 2026-09-21 (db push) + REST probes 4/4 ERR-control; real rider flow --> REAL-WORLD PILOT |
 | SEC-02 | AI key off client (ai-proxy EF) | PARTIAL | EF deployed; .env.local legacy key remains |
 | AI-01..03 | AI guardrails/memory (021/022) | VERIFIED | server memory merge + injection suite |
 | NOT-01 | Notification center (021) | VERIFIED | 4 channels + prefs + page |
@@ -46,8 +46,8 @@
 
 ## Migrations (verified 2026-09-21)
 
-- 001-019, 021, 022 -- APPLIED on live DB
-- **020 -- PENDING**: `supabase db push` -> `node e2e/sqlContracts.cjs --include-new` (expected 29/29 after push)
+- 001-022 -- APPLIED on live DB (020/021/022 recorded 2026-09-21 via `supabase db push`)
+- `node e2e/sqlContracts.cjs --include-new` = **29/29 PASSED** (2026-09-21)
 - Owner SQL suites: `e2e/contracts_017_018.sql`, `_019_kitchen.sql`, `_020_bite_drive.sql`, `_021_phase4.sql`, `_022_phases_5_7.sql`
 
 ---
@@ -56,7 +56,7 @@
 
 | # | Criterion | Status |
 |---|----------|--------|
-| 1 | All main flows work on production PWA | PARTIAL (Bite Drive 020 awaits push) |
+| 1 | All main flows work on production PWA | PARTIAL (Bite Drive RPCs deployed -- real rider flow รอ pilot) |
 | 2 | Prices/payment server-authoritative | VERIFIED |
 | 3 | auth/RLS/audit no sk in frontend | VERIFIED (service-role not exported) |
 | 4 | AI: key in proxy, guardrails, memory | PARTIAL (see SEC-02) |
@@ -71,9 +71,9 @@
 ## Exact Next Task (owner)
 
 ```
-1) supabase db push  (migration 020)
-2) node e2e/sqlContracts.cjs --include-new   -> 29/29
-3) SQL Editor: contracts_020_bite_drive.sql  -> PASS
+1) supabase db push                          -> DONE 2026-09-21 (020/021/022)
+2) node e2e/sqlContracts.cjs --include-new   -> DONE (29/29 PASSED)
+3) SQL Editor: contracts_020_bite_drive.sql  -> NEXT (owner)
 4) Lighthouse production -> record in evidence pack
 5) REAL-WORLD PILOT start
 ```

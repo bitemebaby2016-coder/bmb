@@ -32,6 +32,9 @@ jobs:
 
       - name: Unit tests
         run: npm test
+        env:
+          VITE_SUPABASE_URL: https://ci-placeholder.supabase.co
+          VITE_SUPABASE_ANON_KEY: ci-dummy-key-not-a-secret
 
       - name: Typecheck + Build (PWA)
         run: npm run build

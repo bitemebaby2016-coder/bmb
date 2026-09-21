@@ -15,7 +15,7 @@ PWA live บน https://bitemebaby-5f7.pages.dev, Supabase project `ivkdfognyiwj
 
 **PHASE 6 UI/Admin closure** และ **PHASE 7 Content Approval UI** เสร็จสมบูรณ์แล้ว (2026-09-21)
 
-**Migration 020 (Bite Drive):** ไฟล์ migration มีอยู่ใน HEAD แต่ **ยังไม่ push ขึ้น production DB** --> RPCs ยังไม่ทำงานบน live DB
+**Migration 020 (Bite Drive):** APPLIED บน production DB แล้ว (2026-09-21, `supabase db push` — 020/021/022 recorded) --> Bite Drive RPCs LIVE (REST contracts 29/29)
 
 ### ระดับความคืบหน้าภาพรวม
 
@@ -26,7 +26,7 @@ PWA live บน https://bitemebaby-5f7.pages.dev, Supabase project `ivkdfognyiwj
 | Payment (PromptPay + COD + Card/Stripe) | **VERIFIED** | Webhook verified 6/6 (2026-09-19) |
 | Refund | **PARTIAL** | EF พร้อม แต่ยังไม่พิสูจน์ real refund |
 | Kitchen & Inventory (019) | **VERIFIED** | Live DB deployed + RPCs |
-| Bite Drive / Delivery (020) | **PENDING OWNER DB PUSH** | Code ready, DB not applied |
+| Bite Drive / Delivery (020) | **APPLIED + LIVE** (db push 2026-09-21) | DB applied + REST probes 29/29 PASSED |
 | AI (proxy + guardrails + memory) | **VERIFIED** | Code deployed, server-side |
 | Notifications (021) | **VERIFIED** | Live DB deployed |
 | Customer Intelligence (022) | **VERIFIED** | Live DB deployed |
@@ -78,11 +78,11 @@ PWA live บน https://bitemebaby-5f7.pages.dev, Supabase project `ivkdfognyiwj
 | 017 (pre-order) | YES | YES | YES | YES | **APPLIED** | pre-order RPCs + RLS revoke |
 | 018 (audit log) | YES | YES | YES | YES | **APPLIED** | `append_audit_log` |
 | 019 (kitchen/core) | YES | YES | YES | YES | **APPLIED** | deduct/restore/batches/recipes/kitchen_queue |
-| 020 (bite drive) | YES | YES | NO | NO | **PENDING OWNER DB PUSH** | PGRST202 -- compute_delivery_fee_rpc ไม่พบ |
+| 020 (bite drive) | YES | YES | YES | YES | **APPLIED + LIVE** | db push 2026-09-21 -- REST probes ERR control PASS 4/4 |
 | 021 (notifications/AI) | YES | YES | YES | YES | **APPLIED** | notif/errors/memory/mascot |
 | 022 (phases 5-7) | YES | YES | YES | YES | **APPLIED** | customer_intelligence, content_approvals |
 
-> **Action ที่จำเป็น:** owner ต้องรัน `supabase db push` (migration 020) แล้วซ้ำ `node e2e/sqlContracts.cjs --include-new`
+> **UPDATE 2026-09-21:** `supabase db push` สำเร็จ (020 + 021 + 022 recorded) -- `node e2e/sqlContracts.cjs --include-new` = **29/29 PASSED**
 
 ---
 
@@ -93,7 +93,7 @@ PWA live บน https://bitemebaby-5f7.pages.dev, Supabase project `ivkdfognyiwj
 | `npm test` | **154 PASS** (19/21 test files) | บอก 163/163 | 2 files ล้มเพราะไม่มี VITE_SUPABASE_ANON_KEY (ไม่ใช่ logic error) |
 | `npm run build` | **PASS** -- tsc strict + vite + PWA sw.js (80 entries) | บอกผ่าน | Precache 80 entries |
 | `npm run lint` | **0 errors** | บอก 0 | QA-02 baseline |
-| `node e2e/sqlContracts.cjs --include-new` | **28/29 passed** | บอก 25/29 | เดิมมี 020 pending อยู่แล้ว แต่ตัวเลขทดสอบเปลี่ยนไป |
+| `node e2e/sqlContracts.cjs --include-new` | **29/29 PASSED** (หลัง push 020) | เดิมบอก 25/29 | bite-drive 4/4 deployed -- evidence ใน sql-contract-result.json |
 
 ### Test Files Detail
 
@@ -147,10 +147,10 @@ PWA live บน https://bitemebaby-5f7.pages.dev, Supabase project `ivkdfognyiwj
 ## 9. PWA-100-GATE Status
 
 - **Test/build/lint**: ผ่าน (ดู Section 6)
-- **SQL contracts**: 28/29 (รอ 020 push)
+- **SQL contracts**: 29/29 PASSED (2026-09-21)
 - **Production PWA**: LIVE
 - **Residual blockers**:
-  - Migration 020 รอ owner `db push`
+  - Owner SQL suite (`e2e/contracts_020_bite_drive.sql` ใน SQL Editor) ยังไม่รัน
   - Lighthouse Perf >= 90 --> รอ owner รัน production
   - AI key VITE_OPENROUTER_API_KEY ยังอยู่ใน .env.local (SEC-02 กำลังดำเนินการ)
   - Card loop: ต้องการ bill จริงรายการเดียวสำหรับ PAY-02 ครบ
@@ -161,8 +161,8 @@ PWA live บน https://bitemebaby-5f7.pages.dev, Supabase project `ivkdfognyiwj
 
 | # | Issue | Domain | Status | Owner Action |
 |---|-------|--------|--------|--------------|
-| 1 | Migration 020 (Bite Drive) ไม่อยู่บน live DB | DEL-01..04 | PENDING | `supabase db push` |
-| 2 | SQL contracts: 28/29 (compute_delivery_fee_rpc) | DEL-01 | PENDING | หลัง push 020 --> 29/29 |
+| 1 | ~~Migration 020 ไม่อยู่บน live DB~~ RESOLVED: db push สำเร็จ 2026-09-21 | DEL-01..04 | **VERIFIED** | -- |
+| 2 | ~~SQL contracts 28/29~~ RESOLVED: 29/29 PASSED (compute_delivery_fee_rpc deployed) | DEL-01 | **VERIFIED** | -- |
 | 3 | Lighthouse Perf >= 90 ยังไม่มี evidence | PWA-01 | DEFERRED | owner วัดบน prod |
 | 4 | SEC-02: AI key ใน .env.local | PARTIAL | CONTINUES | ย้ายเข้า ai-proxy EF |
 | 5 | REFUND: EF พร้อมแต่ไม่มี evidence การคืนเงินจริง | PARTIAL | PENDING | ต้องการ refund จริง 1 รายการ |
@@ -172,7 +172,7 @@ PWA live บน https://bitemebaby-5f7.pages.dev, Supabase project `ivkdfognyiwj
 
 ## 11. Next Required Actions
 
-1. **Owner:** `supabase db push` --> ยืนยัน 020 --> `node e2e/sqlContracts.cjs --include-new` (คาดหวัง 29/29)
+1. ~~db push + contracts~~ **DONE 2026-09-21** (29/29 PASSED)
 2. **Owner:** Supabase SQL Editor -- รัน `e2e/contracts_020_bite_drive.sql` (owner suite)
 3. **Owner:** Lighthouse บน production --> ลงหลักฐานใน evidence pack
 4. **REAL-WORLD PILOT** (2-4 สัปดาห์) --> PATCH/HARDENING LOOP --> **M1 = BMB PRODUCTION 100%**
@@ -207,7 +207,7 @@ CODE / LIVE DB / TEST/EVIDENCE --> override --> DOCUMENT
 | Tests 154/154 | `npm test` (2026-09-21) |
 | Build + PWA | `npm run build` --> dist/sw.js (80 entries) |
 | Lint 0 errors | `npm run lint` |
-| SQL contracts REST | `e2e/sql-contract-result.json` (28/29) |
+| SQL contracts REST | `e2e/sql-contract-result.json` (**29/29** -- 2026-09-21T11:55Z) |
 | Owner SQL suites | `e2e/contracts_*.sql` |
 | Prod smoke / webhook | `e2e/prod-smoke.json`, `e2e/webhook-smoke-result.json` |
 | PHASE 6/7 tests | `src/__tests__/adminUi.test.ts` (11 tests) |

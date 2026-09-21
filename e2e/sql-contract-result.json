@@ -1,8 +1,8 @@
 {
   "project": "bitemebaby production",
-  "timestamp": "2026-09-21T04:11:48.293Z",
+  "timestamp": "2026-09-21T11:55:43.589Z",
   "total": 29,
-  "passed": 25,
+  "passed": 29,
   "pendingDeploy": 0,
   "note": "migrations 017-022 contract probes — full Domain A SQL set (Bite Drive 020 must be pushed by owner first)",
   "checks": [
@@ -64,7 +64,7 @@
     {
       "name": "QA-03 audit RPC append_audit_log is deployed",
       "ok": true,
-      "detail": "status=200 {\"id\": \"alog- ###########-71af6b\", \"ok\": true, \"user_id\": null}"
+      "detail": "status=200 {\"id\": \"alog- ###########-d3be67\", \"ok\": true, \"user_id\": null}"
     },
     {
       "name": "QA-03 kitchen RPC deduct_inventory_for_order is deployed",
@@ -93,23 +93,23 @@
     },
     {
       "name": "QA-03 bite-drive RPC compute_delivery_fee_rpc is deployed",
-      "ok": false,
-      "detail": "status=404 {\"code\":\"PGRST202\",\"details\":\"Searched for the function public.compute_delivery_fee_rpc without parameters or "
+      "ok": true,
+      "detail": "status=400 {\"code\":\"P0001\",\"details\":null,\"hint\":null,\"message\":\"ERR_NOT_AUTHENTICATED\"}"
     },
     {
       "name": "QA-03 bite-drive RPC driver_login is deployed",
-      "ok": false,
-      "detail": "status=404 {\"code\":\"PGRST202\",\"details\":\"Searched for the function public.driver_login with parameter p_phone or with a s"
+      "ok": true,
+      "detail": "status=400 {\"code\":\"P0001\",\"details\":null,\"hint\":null,\"message\":\"ERR_NOT_AUTHENTICATED\"}"
     },
     {
       "name": "QA-03 bite-drive RPC assign_driver is deployed",
-      "ok": false,
-      "detail": "status=404 {\"code\":\"PGRST202\",\"details\":\"Searched for the function public.assign_driver with parameters p_driver_id, p_or"
+      "ok": true,
+      "detail": "status=400 {\"code\":\"P0001\",\"details\":null,\"hint\":null,\"message\":\"ERR_NOT_AUTHENTICATED\"}"
     },
     {
       "name": "QA-03 bite-drive RPC my_deliveries is deployed",
-      "ok": false,
-      "detail": "status=404 {\"code\":\"PGRST202\",\"details\":\"Searched for the function public.my_deliveries with parameter p_driver_phone or "
+      "ok": true,
+      "detail": "status=400 {\"code\":\"P0001\",\"details\":null,\"hint\":null,\"message\":\"ERR_NOT_AUTHENTICATED\"}"
     },
     {
       "name": "QA-03 phase4 RPC create_notification deployed",
