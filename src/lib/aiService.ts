@@ -3,20 +3,12 @@
    ============================================ */
 
 import type { Message, Product } from '@/types'
+import { supabase } from './supabase'
 import { MODEL_A_FALLBACK, resolveModelA } from './aiModels'
 
-const OPENROUTER_API_KEY = import.meta.env.VITE_OPENROUTER_API_KEY
-const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions'
-// Model A — primary chat model (owner directive): GLM 5.2 (free), fallback Qwen 3.7 Flash.
+// SEC-02 (Phase 4): the OpenRouter key is SERVER-SIDE in the ai-proxy Edge Function.
+// The client only stores the model id (public) for display/fallback purposes.
 const OPENROUTER_MODEL = resolveModelA(import.meta.env.VITE_OPENROUTER_MODEL)
-
-if (!OPENROUTER_API_KEY) {
-  console.error(
-    '[Bite Me Baby] ⛔ VITE_OPENROUTER_API_KEY is REQUIRED but NOT SET.\n' +
-      'Copy .env.example → .env.local and fill in your OpenRouter API key.\n' +
-      'The app cannot run without a valid API key — no fallback keys allowed for security.'
-  )
-}
 
 const SYSTEM_PROMPT = `
 You are "Bite" (ไบท์), the friendly waiter (บริกร/พนักงานเสิร์ฟ) at Bite Me Baby restaurant in Chanthaburi!
@@ -58,28 +50,13 @@ let conversationHistory: ChatMessage[] = [
  * so the caller can decide whether to fall back to another model.
  */
 async function requestCompletion(messages: ChatMessage[], model: string): Promise<string> {
-  const response = await fetch(OPENROUTER_API_URL, {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
-      'Content-Type': 'application/json',
-      'HTTP-Referer': typeof window !== 'undefined' ? window.location.href : 'https://bitemebaby.com',
-      'X-Title': 'Bite Me Baby App'
-    },
-    body: JSON.stringify({
-      model,
-      messages: messages.slice(-11), // Keep last 10 messages + system
-      max_tokens: 500,
-      temperature: 0.7,
-    })
+  const { data: proxy, error } = await supabase.functions.invoke('ai-proxy', {
+    body: { messages: messages.slice(-11), model, maxTokens: 500 },
   })
-
-  if (!response.ok) {
-    throw new Error(`API error: ${response.status}`)
-  }
-
-  const data = await response.json()
-  const content = data.choices?.[0]?.message?.content
+  if (error) throw new Error(`proxy error: ${error.message || 'upstream'}`)
+  if (!proxy || proxy.error) throw new Error(proxy?.error || 'Empty proxy response')
+  // proxy.data carries the OpenRouter completion payload (choices[0].message.content).
+  const content = proxy.data?.choices?.[0]?.message?.content
   if (!content) {
     throw new Error('Empty AI response content')
   }
@@ -140,27 +117,19 @@ export async function getMenuRecommendations(
       ...
     ]`
 
-    const response = await fetch(OPENROUTER_API_URL, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: OPENROUTER_MODEL,
+    // SEC-02 (Phase 4): recommendations route through the ai-proxy too (no client key).
+    const { data: proxy, error } = await supabase.functions.invoke('ai-proxy', {
+      body: {
         messages: [
           { role: 'system', content: 'คุณคือ AI Recommendation Engine ที่แนะนำเมนูอาหาร' },
           { role: 'user', content: prompt }
         ],
-        max_tokens: 300,
-        temperature: 0.8,
-      })
+        model: OPENROUTER_MODEL,
+        maxTokens: 300,
+      },
     })
-
-    if (!response.ok) return products.slice(0, 3)
-
-    const data = await response.json()
-    const content = data.choices?.[0]?.message?.content || '[]'
+    if (error || !proxy || proxy.error) return products.slice(0, 3)
+    const content = proxy.data?.choices?.[0]?.message?.content || '[]'
     
     // Parse JSON response
     const jsonMatch = content.match(/\[[\s\S]*\]/)

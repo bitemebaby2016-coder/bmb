@@ -613,6 +613,44 @@ if (name === 'deduct_inventory_for_order') {
       tables['inventory_transactions'] = (tables['inventory_transactions'] || []).filter((t: any) => !(t.reference_type === 'order' && t.reference_id === p.p_order_number))
       return { data: { ok: true, idempotent: false, order_number: p.p_order_number, restored_amount: tx.length }, error: null }
     }
+// ============ PHASE 4 RPC handlers (migration 021 contract) ============
+    if (name === 'get_ai_memory') {
+      const mem = (tables['ai_customer_memory'] || []).find((m: any) => m.user_id === 'auth-test-user')
+      return { data: { ok: true, memory: mem ? mem.memory : {} }, error: null }
+    }
+
+    if (name === 'save_ai_memory') {
+      const p = params ?? {}
+      const i = (tables['ai_customer_memory'] || []).findIndex((m: any) => m.user_id === 'auth-test-user')
+      if (i >= 0) (tables['ai_customer_memory'] as any[])[i].memory = p.p_memory || {}
+      else (tables['ai_customer_memory'] ||= []).push({ user_id: 'auth-test-user', memory: p.p_memory || {}, updated_at: new Date().toISOString() })
+      return { data: { ok: true, user_id: 'auth-test-user' }, error: null }
+    }
+
+    if (name === 'record_system_error') {
+      const p = params ?? {}
+      ;(tables['system_errors'] ||= []).push({
+        id: `err-mock-${Date.now()}`, source: p.p_source || 'client', level: p.p_level || 'error',
+        message: p.p_message || '', details: p.p_details || {}, user_id: 'auth-test-user',
+        created_at: new Date().toISOString(),
+      })
+      return { data: { ok: true, id: `err-mock-${Date.now()}` }, error: null }
+    }
+
+    if (name === 'create_notification') {
+      const p = params ?? {}
+      ;(tables['notifications'] ||= []).push({
+        id: `notif-mock-${Date.now()}`, customer_id: p.p_customer_id || 'auth-test-user',
+        user_id: 'auth-test-user', title: p.p_title || '', message: p.p_message || '',
+        is_read: false, notification_type: p.p_category || 'Transactional',
+        category: p.p_category || 'Transactional', created_at: new Date().toISOString(),
+      })
+      return { data: { ok: true, id: `notif-mock-${Date.now()}`, suppressed: false, category: p.p_category || 'Transactional' }, error: null }
+    }
+
+    if (name === 'set_notification_pref') {
+      return { data: { ok: true, channels: { [params?.p_channel || 'Marketing']: params?.p_enabled ?? true } }, error: null }
+    }
     return { data: null, error: { code: 'PGRST202', message: 'rpc not mocked' } }
   }
 

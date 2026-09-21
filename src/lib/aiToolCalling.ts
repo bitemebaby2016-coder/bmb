@@ -89,7 +89,7 @@ export async function executeToolCall(toolName: string, args: Record<string, any
     }
 
     case 'get_order': {
-      const order = getOrder(args.order_number)
+      const order = await getOrder(args.order_number)
       if (!order) {
         return { success: false, error: 'Order not found' }
       }
@@ -97,7 +97,7 @@ export async function executeToolCall(toolName: string, args: Record<string, any
     }
 
     case 'get_product': {
-      const product = getProduct(args.product_id)
+      const product = await getProduct(args.product_id)
       if (!product) {
         return { success: false, error: 'Product not found' }
       }

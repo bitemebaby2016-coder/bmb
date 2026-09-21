@@ -47,6 +47,9 @@ const RewardsPage = lazy(() => import('./pages/RewardsPage').then(m => ({ defaul
 const ViralPage = lazy(() => import('./pages/ViralPage').then(m => ({ default: m.ViralPage })))
 const AiChatPage = lazy(() => import('./pages/ai/AiChatPage').then(m => ({ default: m.AiChatPage })))
 const RiderPwaPage = lazy(() => import('./pages/RiderPwaPage').then(m => ({ default: m.RiderPwaPage })))
+const NotificationCenterPage = lazy(() => import('./pages/NotificationCenterPage').then(m => ({ default: m.NotificationCenterPage })))
+const AdminErrorsPage = lazy(() => import('./pages/admin/AdminErrorsPage').then(m => ({ default: m.AdminErrorsPage })))
+const MascotSettingsPage = lazy(() => import('./pages/admin/MascotSettingsPage').then(m => ({ default: m.MascotSettingsPage })))
 const AdminControlPage = lazy(() => import('./pages/AdminControlPage').then(m => ({ default: m.AdminControlPage })))
 
 // Lazy loaded: Info pages (6 pages)
@@ -154,6 +157,7 @@ export default function App() {
         
         {/* Protected Routes — Lazy Loaded */}
         <Route path="/profile" element={<Suspense fallback={<LoadingSpinner />}><ProtectedRoute><Layout><ProfilePage /></Layout></ProtectedRoute></Suspense>} />
+        <Route path="/notifications" element={<Suspense fallback={<LoadingSpinner />}><ProtectedRoute><Layout><NotificationCenterPage /></Layout></ProtectedRoute></Suspense>} />
         <Route path="/rewards" element={<Suspense fallback={<LoadingSpinner />}><ProtectedRoute><Layout><RewardsPage /></Layout></ProtectedRoute></Suspense>} />
         <Route path="/viral" element={<Suspense fallback={<LoadingSpinner />}><ProtectedRoute><Layout><ViralPage /></Layout></ProtectedRoute></Suspense>} />
         
@@ -177,6 +181,8 @@ export default function App() {
         <Route path="/admin/customers" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminCustomers /></Layout></AdminRoute></Suspense>} />
         <Route path="/admin/settings" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminSettings /></Layout></AdminRoute></Suspense>} />
 <Route path="/admin/media" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminMedia /></Layout></AdminRoute></Suspense>} />
+        <Route path="/admin/errors" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminErrorsPage /></Layout></AdminRoute></Suspense>} />
+        <Route path="/admin/mascot" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><MascotSettingsPage /></Layout></AdminRoute></Suspense>} />
         
         {/* Catch all */}
         <Route path="*" element={<Navigate to="/" replace />} />

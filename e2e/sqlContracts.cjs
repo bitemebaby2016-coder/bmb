@@ -86,8 +86,22 @@ const isMissingFn = (b) => /PGRST202/.test(b)
     }
   }
 
+  // ============ PHASE 4 (migration 021 — after deploy) ============
+  if (INCLUDE_NEW) {
+    const phase4 = [
+      ['phase4 RPC create_notification deployed', 'create_notification', { p_title: 't', p_message: 'm', p_category: 'Transactional' }, (b) => /ok|ERR_/.test(b)],
+      ['phase4 RPC record_system_error deployed', 'record_system_error', { p_message: 'probe' }, (b) => /ok|ERR_/.test(b)],
+      ['phase4 RPC get_ai_memory deployed', 'get_ai_memory', {}, (b) => b.includes('memory') || b.includes('ERR_')],
+      ['phase4 RPC upsert_mascot_override deployed', 'upsert_mascot_override', { p_role_name: 'x', p_media_url: 'y' }, (b) => /ok|ERR_FORBIDDEN/.test(b)],
+    ]
+    for (const [label, fn, args, okFn] of phase4) {
+      const r = await rpc(fn, args)
+      record(`QA-03 ${label}`, !isMissingFn(r.body) && okFn(r.body), `status=${r.status} ${r.body.slice(0, 110)}`)
+    }
+  }
+
   const passed = results.filter((r) => r.ok).length
-  const pending = INCLUDE_NEW ? 0 : 9 // 017/018 (4) + 019 kitchen (5) probes not run before deploy
+  const pending = INCLUDE_NEW ? 0 : 13 // 017/018 (4) + 019 kitchen (5) + 021 phase4 (4) probes
   fs.writeFileSync(
     path.join(PROJ, 'e2e', 'sql-contract-result.json'),
     JSON.stringify({

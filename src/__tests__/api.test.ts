@@ -433,41 +433,32 @@ describe('AI Model A Configuration', () => {
     expect(MODEL_A_FALLBACK).toBe('qwen/qwen3.7-flash')
   })
 
-  it('chatWithAI should fall back to Qwen 3.7 Flash when GLM 5.2 (free) fails', async () => {
+  it('chatWithAI should fall back to Qwen 3.7 Flash when GLM 5.2 (free) fails (via ai-proxy EF)', async () => {
     const { chatWithAI, resetConversation } = await import('@/lib/aiService')
+    const { supabase } = await import('@/lib/supabase')
     resetConversation()
 
-    const fetchMock = vi.fn()
-      // Attempt 1: Model A (GLM 5.2 free) → HTTP 429 rate-limited
-      .mockResolvedValueOnce({ ok: false, status: 429, json: async () => ({}) })
-      // Attempt 2: Qwen 3.7 Flash → success
-      .mockResolvedValueOnce({
-        ok: true,
-        status: 200,
-        json: async () => ({
-          choices: [{ message: { content: 'สวัสดีค่ะ ยินดีต้อนรับสู่ Bite Me Baby ค่ะ 😊' } }]
-        })
-      })
+    // SEC-02 (Phase 4): the client now routes through the ai-proxy Edge Function;
+    // the proxy simulates Model A (GLM 5.2 free) failing with an upstream 429 so
+    // the client falls back to Qwen 3.7 Flash — same contract as before.
+    const modelCalls: string[] = []
+    ;(supabase as any).__setInvokeHandler('ai-proxy', async (body: any) => {
+      modelCalls.push(body.model)
+      if (body.model === MODEL_A_PRIMARY) {
+        return { data: null, error: { message: 'upstream 429' } }
+      }
+      return {
+        data: { data: { choices: [{ message: { content: 'สวัสดีค่ะ ยินดีต้อนรับสู่ Bite Me Baby ค่ะ 😊' } }] } },
+        error: null,
+      }
+    })
 
-    vi.stubGlobal('fetch', fetchMock)
-
-    try {
-      const result = await chatWithAI('สวัสดี')
-      expect(result).toContain('สวัสดี')
-      expect(fetchMock).toHaveBeenCalledTimes(2)
-
-      // First request must target Model A (GLM 5.2 free)
-      const firstBody = JSON.parse(fetchMock.mock.calls[0][1].body)
-      expect(firstBody.model).toBe(MODEL_A_PRIMARY)
-
-      // Fallback request must target Qwen 3.7 Flash
-      const secondBody = JSON.parse(fetchMock.mock.calls[1][1].body)
-      expect(secondBody.model).toBe(MODEL_A_FALLBACK)
-    } finally {
-      vi.unstubAllGlobals()
-    }
+    const result = await chatWithAI('สวัสดี')
+    expect(result).toContain('สวัสดี')
+    expect(modelCalls).toEqual([MODEL_A_PRIMARY, MODEL_A_FALLBACK])
   })
 })
+
 describe('External Delivery Providers — offline sandbox logic', () => {
   // Grab / LINE MAN / Foodpanda / Bite Drive sandbox test: pure logic (no live
   // API credentials available yet — BLOCKED for real provider sandbox).

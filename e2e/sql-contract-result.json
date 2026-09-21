@@ -1,9 +1,9 @@
 {
   "project": "bitemebaby production",
-  "timestamp": "2026-09-21T00:28:47.824Z",
+  "timestamp": "2026-09-21T02:11:12.933Z",
   "total": 8,
   "passed": 8,
-  "pendingDeploy": 9,
+  "pendingDeploy": 13,
   "note": "pre-017 contract set — run again with --include-new after supabase db push (017+018+019)",
   "checks": [
     {

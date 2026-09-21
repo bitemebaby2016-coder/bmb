@@ -177,6 +177,7 @@ Admin guard: `AdminRoute` (App.tsx) + role จาก `profiles.role` (`is_admin(
 | **PHASE 1 MONEY+ORDER (code):** tests 111/111, lint 0 errors, build ✓, SQL contracts 8/8 — pre-order RPC/audit migration ready (017/018), CI workflow + ESLint ติดตั้ง, orderVocabulary canonical, EF secret-key fallback ลบแล้ว, playwright โลคัล | **2026-09-21** | `npm test` 111/111 · `npm run lint` 0 err · `npm run build` ✓ (sw.js) · `e2e/sql-contract-result.json` 8/8 · migrations `017`/`018` (await `supabase db push`) |
 | **PHASE 2 KITCHEN (code):** tests 115/115, build ✓, lint ✓ — migration 019 (recipes/BOM, production batches, auto deduct/restore + sold-out, hook in transition), client `kitchenService.ts` (+4 tests) | **2026-09-21** | `npm test` 115/115 · migrations `019` (await `supabase db push`) · `e2e/contracts_019_kitchen.sql` (owner) · `e2e/sql-contract-result.json` 8/8 |
 | **PHASE 3 BITE DRIVE (code):** tests 132/132, build ✓, lint ✓ — migration 020 (zone fee authoritative + server distance, drivers & delivery_assignments + RPC dispatch/self-service, seed zones), client `drivers/deliveryFee/providers` services, Rider PWA ใหม่, provider adapters plug-in ready, ETA calibration | **2026-09-21** | `npm test` 132/132 · migrations `020` (await `supabase db push`) · `e2e/contracts_020_bite_drive.sql` (owner) |
+| **PHASE 4 PWA+ADMIN+AI (code):** tests 147/147, build ✓, lint ✓ — migration 021 (notifications/category+prefs, system_errors, mascot_overrides, ai_customer_memory + RPCs), SEC-02 ai-proxy EF (key ฝั่ง server) + aiService route, AI-01 await fix, AI-02 guardrails suite, AI-03 server memory bridge, NOT-01 center page, ADM-01 feed + reporter + page, ADM-07 mascot settings page, PWA-02 retry/offline, PWA-01 index 348.6→114.6 kB | **2026-09-21** | `npm test` 147/147 · migrations `021` (await push) · `e2e/contracts_021_phase4.sql` (owner) · chunks: index 114.56 kB (gzip 31.56) · EF `ai-proxy` (await deploy) |
 | **ยังไม่มีหลักฐาน:** transaction บัตรจริงครบวงจร, refund จริง, Grab/LINEMAN live call, notification จริง, SQL dump `pg_policies` (owner ต้องรัน `e2e/truth-lock.sql` ใน SQL Editor) | — | — |
 
 ## 18. LIVE
@@ -255,9 +256,10 @@ Voice/Intent module (cancelled ตาม Reality Map เดิม) · White-labe
 1. **PHASE 0 — TRUTH LOCK: เสร็จ 2026-09-21** (48/48) · **Owner:** `e2e/truth-lock.sql`
 2. **PHASE 1 — MONEY + ORDER: CODE เสร็จ** (111/111) · **Owner:** push 017+018 → `sqlContracts --include-new` → deploy EF → **บิลบัตรจริง 1 ใบ (PAY-02) + refund จริง 1 รายการ (PAY-03)**
 3. **PHASE 2 — KITCHEN: CODE เสร็จ** (115/115, migration 019) · **Owner:** push 019 → `contracts_019_kitchen.sql` · **ค้าง:** admin UI kitchen queue panel
-4. **PHASE 3 — BITE DRIVE: CODE เสร็จ 2026-09-21** (132/132, migration 020) — DEL-01 zone fee authoritative, DEL-02 driver real + Rider PWA, DEL-03 provider adapters plug-in ready (รอ live keys), DEL-04 ETA calibration · **Owner:** push 020 → `e2e/contracts_020_bite_drive.sql` + `sqlContracts --include-new` → **เทสทริปส่งจริง 1 ทริปผ่าน Rider PWA** → นำ live keys มาใส่ env (DEL-03)
-5. **Phase 4 (PWA + ADMIN + AI GATE):** PWA-01 perf ≥90, PWA-02 offline/error, NOT-01 notification center, ADM-01 errors feed, ADM-07 mascot self-service, SEC-02 AI proxy, AI-01 fix, AI-02 base, AI-03 server memory
-6. รายละเอียดทั้งหมด → `BMB_100_PERCENT_CLOSURE_BOOK.md`
+4. **PHASE 3 — BITE DRIVE: CODE เสร็จ** (132/132, migration 020) · **Owner:** push 020 → `contracts_020_bite_drive.sql` → เทสทริปจริง 1 ทริป → live keys (DEL-03)
+5. **PHASE 4 — PWA+ADMIN+AI: CODE เสร็จ 2026-09-21** (147/147, migration 021) — SEC-02 ai-proxy EF + aiService route, AI-01 fix, AI-02 base, AI-03 server memory, NOT-01 center, ADM-01 errors feed, ADM-07 mascot, PWA-01 (index 348→114 kB), PWA-02 · **Owner:** push 021 → `contracts_021_phase4.sql` + `sqlContracts --include-new` → `supabase functions deploy ai-proxy` + secrets (OPENROUTER_API_KEY ฝั่ง server) → Lighthouse re-run (PWA-01)
+6. **Phase 5–7 (หลัง M1 per closure book — แต่ user อนุมัติทำจนจบ):** 5 AI Hardening (advanced suite) → 6 Intelligence CI-01 → 7 Growth CNT-01
+7. รายละเอียดทั้งหมด → `BMB_100_PERCENT_CLOSURE_BOOK.md`
 
 ---
 

@@ -36,3 +36,10 @@ verify_jwt = true
 [functions.phone-auto-login]
 enabled = true
 verify_jwt = false
+
+# ai-proxy: called by authenticated clients with their own user JWT.
+#   verify_jwt = true → anonymous callers are rejected by the platform before
+#   reaching the handler. OPENROUTER_API_KEY stays server-side (SEC-02).
+[functions.ai-proxy]
+enabled = true
+verify_jwt = true

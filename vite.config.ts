@@ -57,4 +57,20 @@ export default defineConfig({
     port: 3000,
     open: true,
   },
+  build: {
+    target: 'es2019',
+    // PWA-01: vendor splitting — keep the heavy supabase client + React out of the
+    // index chunk so static caching is stable and the first paint stays small.
+    rollupOptions: {
+      output: {
+        manualChunks(id: string) {
+          if (id.includes('node_modules/@supabase')) return 'supabase-vendor'
+          if (id.includes('node_modules/react')) return 'react-vendor'
+          if (id.includes('node_modules/zustand')) return 'state-vendor'
+          if (id.includes('node_modules/axios')) return 'http-vendor'
+          return undefined
+        },
+      },
+    },
+  },
 })

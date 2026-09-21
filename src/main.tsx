@@ -5,6 +5,7 @@ import { HelmetProvider } from 'react-helmet-async'
 import App from './App'
 import './index.css'
 import { useAuthStore } from './store/authStore'
+import { installGlobalErrorReporter } from './lib/errorReporter'
 
 // ⚡ PERF (2026-09-17): admin seeding hashes a bcrypt password at boot, which is
 // heavy on the main thread. Defer it until after first paint / idle so LCP and
@@ -22,6 +23,8 @@ afterFirstPaint(() => {
   // P0-2 FIX (2026-09-18): ไม่มี admin seeding/localStorage user อีกต่อไป
   // Authentication อยู่ที่ Supabase Auth; profile/role ถูกสร้างโดย trigger
   // `on_auth_user_created` (migration 006) — client แค่ตรวจ session
+  // ADM-01: report uncaught errors to the server-side feed.
+  if (typeof window !== 'undefined') installGlobalErrorReporter()
   useAuthStore.getState().checkAuth().then(() => {
     console.log('[BMB] App initialized — Supabase Auth session checked')
   }).catch(err => {

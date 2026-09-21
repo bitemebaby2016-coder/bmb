@@ -5,6 +5,7 @@ import { AiAvatar } from '@/components/ai/AiAvatar'
 import { showToast } from '@/components/ui/ToastContainer'
 import { chatWithAI, resetConversation as resetAiConversation } from '@/lib/aiService'
 import { storeConversationMessage, getConversationHistory, getMemorySummary, updateCustomerMemory } from '@/lib/aiMemory'
+import { hydrateMemoryFromServer, pushLocalMemoryToServer } from '@/lib/aiServerMemory'
 interface ChatMsg { id: string; role: 'user'|'assistant'; content: string; timestamp: string }
 const WELCOME_MSG = 'Welcome! Bite here What can I help you with today?'
 function getUserClass(role: 'user'|'assistant') {
@@ -20,9 +21,14 @@ export function AiChatPage() {
   const messagesEndRef = useRef<HTMLDivElement>(null)
   useEffect(() => {
     if (customer?.id) {
-      const history = getConversationHistory(customer.id)
-      if (history.length > 0) { setMessages(history.map(e => ({ id:e.id, role:e.value.role as 'user'|'assistant', content:e.value.content as string, timestamp:e.created_at }))) }
-      else { setMessages([{ id:'1', role:'assistant', content:WELCOME_MSG, timestamp:new Date().toISOString() }]) }
+      // AI-03: bridge server memory -> local on open (cross-device context continuity).
+      void (async () => {
+        await hydrateMemoryFromServer(customer.id)
+        void pushLocalMemoryToServer(customer.id).catch(() => {})
+        const history = getConversationHistory(customer.id)
+        if (history.length > 0) { setMessages(history.map(e => ({ id:e.id, role:e.value.role as 'user'|'assistant', content:e.value.content as string, timestamp:e.created_at }))) }
+        else { setMessages([{ id:'1', role:'assistant', content:WELCOME_MSG, timestamp:new Date().toISOString() }]) }
+      })()
     } else { setMessages([{ id:'1', role:'assistant', content:WELCOME_MSG, timestamp:new Date().toISOString() }]) }
   }, [customer?.id])
   useEffect(() => { messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }) }, [messages])

@@ -1,4 +1,5 @@
 import { Component, ErrorInfo, ReactNode } from 'react'
+import { reportError } from '@/lib/errorReporter'
 
 interface Props {
   children: ReactNode
@@ -22,6 +23,13 @@ export class ErrorBoundary extends Component<Props, State> {
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     console.error('ErrorBoundary caught an error:', error, errorInfo)
+    // ADM-01: surfacing render errors to the admin errors feed.
+    reportError(error?.message || String(error), { componentStack: String(errorInfo?.componentStack || '').slice(0, 400) })
+  }
+
+  public retry = () => {
+    this.setState({ hasError: false, error: null })
+    if (typeof window !== 'undefined') window.location.reload()
   }
 
   public render() {
@@ -66,6 +74,23 @@ export class ErrorBoundary extends Component<Props, State> {
               <p style={{ color: '#78716C', marginBottom: '1rem' }}>
                 เกิดปัญหาในการโหลดหน้าเว็บ กรุณาลองรีเฟรชหน้าใหม่
               </p>
+              <button
+                type='button'
+                onClick={this.retry}
+                style={{
+                  display: 'block',
+                  margin: '0 auto 1rem',
+                  padding: '0.6rem 1.25rem',
+                  borderRadius: '9999px',
+                  background: '#F97316',
+                  color: '#fff',
+                  fontWeight: 600,
+                  border: 'none',
+                  cursor: 'pointer',
+                }}
+              >
+                🔄 ลองใหม่อีกครั้ง
+              </button>
               <details
                 style={{
                   textAlign: 'left',
