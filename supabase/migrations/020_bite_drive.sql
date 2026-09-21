@@ -1,6 +1,6 @@
 -- ============================================
 -- Bite Me Baby — Migration 020: Bite Drive (DEL-01, DEL-02)
--- Date: 2026-09-21
+-- Date: 2026-09-21 (clean reconstruction — fixes corrupted interleaved version)
 -- Phase: PHASE 3 (BITE DRIVE)
 --
 -- DEL-01  delivery fee AUTHORITATIVE from `delivery_zones`:
@@ -13,14 +13,35 @@
 -- DEL-02  real drivers + assignments (replaces MOCK drivers):
 --           - drivers          (rider identity + availability + location)
 --           - delivery_assignments (order <-> driver lifecycle, transactional)
---           - RPCs: assign_driver, driver_login, my_deliveries,
---                   driver_accept, driver_update_delivery_status
+--           - RPCs: upsert_driver, assign_driver, driver_login,
+--                   driver_accept_assignment, driver_update_delivery_status,
+--                   my_deliveries
 -- Security: SECURITY DEFINER + SET search_path = public;
 --           management RPCs admin-guarded; driver self-service matched by phone.
--- Idempotent: safe to re-run.
+--           Server-side contexts (SQL Editor / db push — no request JWT) pass
+--           the HTTP-only guards so the owner SQL contract suite can run them.
+-- Idempotent: safe to re-run (tolerates partial objects from earlier attempts).
 -- ============================================
 
 BEGIN;
+
+-- ============================================
+-- 0. Defensive cleanup — remove any partial/legacy overloads left by
+--    previous manual attempts, so the canonical signatures below are the
+--    ONLY overloads PostgREST can resolve (prevents PGRST203 ambiguity).
+-- ============================================
+DROP FUNCTION IF EXISTS public.haversine_km(numeric, numeric, numeric, numeric);
+DROP FUNCTION IF EXISTS public.kitchen_location();
+DROP FUNCTION IF EXISTS public.compute_delivery_fee(numeric, numeric, text, integer, numeric);
+DROP FUNCTION IF EXISTS public.compute_delivery_fee_rpc(numeric, numeric, text, integer, numeric);
+DROP FUNCTION IF EXISTS public.upsert_driver(text, text, text);
+DROP FUNCTION IF EXISTS public.assign_driver(text, text);
+DROP FUNCTION IF EXISTS public.driver_login(text);
+DROP FUNCTION IF EXISTS public.driver_login(text, text);
+DROP FUNCTION IF EXISTS public.driver_accept_assignment(text, text);
+DROP FUNCTION IF EXISTS public.driver_update_delivery_status(text, text, text);
+DROP FUNCTION IF EXISTS public.driver_update_delivery_status(text, text, text, numeric, numeric);
+DROP FUNCTION IF EXISTS public.my_deliveries(text);
 
 -- ============================================
 -- 1. DEL-01: server-side distance + authoritative zone fee
@@ -35,8 +56,8 @@ AS $$
 DECLARE
   v_dlat numeric;
   v_dlon numeric;
-  v_a numeric;
-  v_r numeric := 6371;
+  v_a    numeric;
+  v_r    numeric := 6371;
 BEGIN
   IF p_lat1 IS NULL OR p_lon1 IS NULL OR p_lat2 IS NULL OR p_lon2 IS NULL THEN
     RETURN 0;
@@ -66,7 +87,6 @@ BEGIN
   RETURN v_loc::jsonb;
 END;
 $$;
-
 -- Authoritative delivery fee (THB):
 --   distance is computed server-side from the drop-off coords when present;
 --   matches an active delivery_zone by min/max distance; fee = zone.fee.
@@ -84,8 +104,8 @@ SECURITY DEFINER
 SET search_path = public
 AS $$
 DECLARE
-  v_dist numeric;
-  v_fee  numeric;
+  v_dist    numeric;
+  v_fee     numeric;
   v_kitchen jsonb;
 BEGIN
   IF p_distance_km IS NOT NULL AND p_distance_km > 0 THEN
@@ -105,9 +125,56 @@ BEGIN
    WHERE is_active = true
      AND v_dist >= min_distance_km
      AND v_dist <= max_distance_km
+   ORDER BY max_distance_km ASC
+   LIMIT 1;
+
+  IF v_fee IS NOT NULL THEN
+    RETURN v_fee;
+  END IF;
+
+  -- Fallback: legacy per-method formula (kept until all zones are seeded).
+  IF COALESCE(p_delivery_method, 'self_delivery') = 'grab_rider' THEN
+    RETURN LEAST(40 + v_dist * 8 + COALESCE(p_items_count, 1) * 2, 9999);
+  ELSIF COALESCE(p_delivery_method, 'self_delivery') = 'linemen_rider' THEN
+    RETURN LEAST(35 + v_dist * 7 + COALESCE(p_items_count, 1) * 2, 9999);
+  ELSIF COALESCE(p_delivery_method, 'self_delivery') = 'foodpanda_rider' THEN
+    RETURN LEAST(38 + v_dist * 7.5 + COALESCE(p_items_count, 1) * 2, 9999);
+  END IF;
+  RETURN LEAST(30 + v_dist * 4 + COALESCE(p_items_count, 1) * 2, 9999);
+END;
+$$;
+
+-- Client-visible quote: authenticated (admin-guard NOT needed — customer sees the fee).
+-- ALL parameters defaulted so the no-argument contract probe (POST body {})
+-- resolves this exact overload; identity stays (numeric,numeric,text,integer,numeric).
+CREATE OR REPLACE FUNCTION public.compute_delivery_fee_rpc(
+  p_dropoff_latitude numeric DEFAULT NULL,
+  p_dropoff_longitude numeric DEFAULT NULL,
+  p_delivery_method text DEFAULT 'self_delivery',
+  p_items_count integer DEFAULT 1,
+  p_distance_km numeric DEFAULT NULL
+)
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  v_uid uuid;
+BEGIN
+  v_uid := auth.uid();
+  IF v_uid IS NULL THEN RAISE EXCEPTION 'ERR_NOT_AUTHENTICATED'; END IF;
+  RETURN jsonb_build_object(
+    'delivery_fee', public.compute_delivery_fee(p_dropoff_latitude, p_dropoff_longitude, p_delivery_method, p_items_count, p_distance_km),
+    'method', COALESCE(p_delivery_method, 'self_delivery')
+  );
+END;
+$$;
 -- ============================================
 -- 2. DEL-01: create_order_with_items — delivery_fee จาก delivery_zones (server)
 --    (client p_distance_km ยังรับได้เป็น fallback เท่านั้น — เงินจริง derive จาก lat/lon)
+--    NOTE: round capacity is incremented by trigger
+--    increment_delivery_round_count (migration 001) — do NOT increment here.
 -- ============================================
 CREATE OR REPLACE FUNCTION public.create_order_with_items(
   p_items jsonb,
@@ -129,28 +196,28 @@ SECURITY DEFINER
 SET search_path = public
 AS $$
 DECLARE
-  v_uid            uuid;
-  v_order_id       text;
-  v_order_number   text;
-  v_item_row       record;
-  v_pid            text;
-  v_qty            integer;
-  v_unit_price     numeric;
-  v_item_sub       numeric;
-  v_addon_price    numeric;
-  v_subtotal       numeric := 0;
-  v_discount       numeric := 0;
-  v_delivery_fee   numeric := 0;
-  v_service_fee    numeric := 0;
-  v_tax            numeric := 0;
-  v_total          numeric := 0;
-  v_round_status   text;
-  v_max_cap        integer;
-  v_cur_count      integer;
-  v_prod_is_avail  boolean;
-  v_prod_name      text;
-  v_order_exists   boolean;
-  v_attempt        integer := 0;
+  v_uid             uuid;
+  v_order_id        text;
+  v_order_number    text;
+  v_item_row        record;
+  v_pid             text;
+  v_qty             integer;
+  v_unit_price      numeric;
+  v_item_sub        numeric;
+  v_addon_price     numeric;
+  v_subtotal        numeric := 0;
+  v_discount        numeric := 0;
+  v_delivery_fee    numeric := 0;
+  v_service_fee     numeric := 0;
+  v_tax             numeric := 0;
+  v_total           numeric := 0;
+  v_round_status    text;
+  v_max_cap         integer;
+  v_cur_count       integer;
+  v_prod_is_avail   boolean;
+  v_prod_name       text;
+  v_order_exists    boolean;
+  v_attempt         integer := 0;
   v_delivery_method text;
   v_distance        numeric;
   v_items_total_qty integer := 0;
@@ -208,7 +275,34 @@ BEGIN
     v_qty := COALESCE(v_item_row.quantity, 0);
 
     IF v_pid IS NULL OR trim(v_pid) = '' THEN
--- ===== 5. PROMOTION (authoritative — from promotions table) =====
+      RAISE EXCEPTION 'ERR_MISSING_PRODUCT_ID';
+    END IF;
+    IF v_qty <= 0 OR v_qty > 1000 THEN
+      RAISE EXCEPTION 'ERR_INVALID_QUANTITY';
+    END IF;
+
+    SELECT price, is_available, name
+      INTO v_unit_price, v_prod_is_avail, v_prod_name
+      FROM public.products
+     WHERE id = v_pid
+     FOR UPDATE;
+
+    IF v_unit_price IS NULL THEN
+      RAISE EXCEPTION 'ERR_PRODUCT_NOT_FOUND';
+    END IF;
+    IF NOT COALESCE(v_prod_is_avail, false) THEN
+      RAISE EXCEPTION 'ERR_PRODUCT_UNAVAILABLE';
+    END IF;
+
+    -- add-on surcharge re-derived from products.addons (client sends no prices)
+    v_addon_price := public.compute_addons_price(v_pid, v_item_row.options);
+
+    v_item_sub := v_qty * (v_unit_price + COALESCE(v_addon_price, 0));
+    v_subtotal := v_subtotal + v_item_sub;
+    v_items_total_qty := v_items_total_qty + v_qty;
+  END LOOP;
+
+  -- ===== 5. PROMOTION (authoritative — from promotions table) =====
   IF p_promotion_code IS NOT NULL AND trim(p_promotion_code) <> '' THEN
     SELECT * INTO v_promo
       FROM public.promotions
@@ -241,7 +335,9 @@ BEGIN
   v_total := GREATEST(0, v_subtotal - v_discount + v_delivery_fee + v_service_fee + v_tax);
 
   -- ===== 7. INSERT order (authoritative amounts) =====
-  v_order_id := 'ord-' || to_char(extract_epoch(clock_timestamp()) * 1000, '99999999999')
+  -- FIX (portable epoch — see migration 009): extract_epoch(timestamptz) does
+  -- not exist on the live project; the portable form is extract(epoch from ...).
+  v_order_id := 'ord-' || to_char(extract(epoch from clock_timestamp()) * 1000, '99999999999')
                     || '-' || substr(md5(random()::text), 1, 6);
   v_order_number := 'BMB-' || to_char(CURRENT_DATE, 'YYYYMMDD') || '-'
                     || lpad((floor(random() * 900) + 100)::text, 3, '0');
@@ -274,27 +370,28 @@ BEGIN
 
   -- ===== 8. INSERT order_items (unit_price = base; add-on snapshot in customizations) =====
   DECLARE
-    v_item_qty integer;
-    v_item_pid text;
+    v_item_qty     integer;
+    v_item_pid     text;
     v_item_options jsonb;
     v_item_special text;
-    v_i integer := 0;
+    v_i            integer := 0;
   BEGIN
     FOR v_item_row IN SELECT * FROM jsonb_to_recordset(p_items)
         AS x(product_id text, quantity integer, options jsonb, special_request text)
     LOOP
       v_i := v_i + 1;
       v_item_qty     := COALESCE(v_item_row.quantity, 1);
+      v_item_pid     := v_item_row.product_id;
       v_item_options := COALESCE(v_item_row.options, '{}');
       v_item_special := COALESCE(v_item_row.special_request, '');
 
       SELECT price, name INTO v_unit_price, v_prod_name
-        FROM public.products WHERE id = v_item_row.product_id FOR UPDATE;
+        FROM public.products WHERE id = v_item_pid FOR UPDATE;
 
       v_item_options := jsonb_set(
         v_item_options,
         '{addOnTotal}',
-        to_jsonb(public.compute_addons_price(v_item_row.product_id, v_item_options))
+        to_jsonb(public.compute_addons_price(v_item_pid, v_item_options))
       );
 
       INSERT INTO public.order_items (
@@ -303,7 +400,7 @@ BEGIN
       ) VALUES (
         'oi-' || v_order_id || '-' || v_i,
         v_order_id,
-        v_item_row.product_id,
+        v_item_pid,
         v_prod_name,
         v_item_qty,
         v_unit_price,
@@ -334,44 +431,7 @@ $$;
 
 REVOKE EXECUTE ON FUNCTION public.create_order_with_items FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION public.create_order_with_items TO authenticated;
-      RAISE EXCEPTION 'ERR_MISSING_PRODUCT_ID';
-    END IF;
-    IF v_qty <= 0 OR v_qty > 1000 THEN
-      RAISE EXCEPTION 'ERR_INVALID_QUANTITY';
-    END IF;
 
-    SELECT price, is_available, name
-      INTO v_unit_price, v_prod_is_avail, v_prod_name
-      FROM public.products
-     WHERE id = v_pid
-     FOR UPDATE;
-
-    IF v_unit_price IS NULL THEN
-      RAISE EXCEPTION 'ERR_PRODUCT_NOT_FOUND';
-    END IF;
-    IF NOT COALESCE(v_prod_is_avail, false) THEN
-      RAISE EXCEPTION 'ERR_PRODUCT_UNAVAILABLE';
-    END IF;
-
-    -- add-on surcharge re-derived from products.addons (client sends no prices)
-    v_addon_price := public.compute_addons_price(v_pid, v_item_row.options);
-
-    v_item_sub := v_qty * (v_unit_price + COALESCE(v_addon_price, 0));
-    v_subtotal := v_subtotal + v_item_sub;
-    v_items_total_qty := v_items_total_qty + v_qty;
-  END LOOP;
-   ORDER BY max_distance_km ASC
-   LIMIT 1;
-
-  IF v_fee IS NOT NULL THEN
-    RETURN v_fee;
-  END IF;
-
-  -- Fallback: legacy per-method formula (kept until all zones are seeded).
-  IF COALESCE(p_delivery_method, 'self_delivery') = 'grab_rider' THEN
-    RETURN LEAST(40 + v_dist * 8 + COALESCE(p_items_count, 1) * 2, 9999);
-  ELSIF COALESCE(p_delivery_method, 'self_delivery') = 'linemen_rider' THEN
-    RETURN LEAST(35 + v_dist * 7 + COALESCE(p_items_count, 1) * 2, 9999);
 -- ============================================
 -- 3. DEL-02: drivers + delivery_assignments (replaces MOCK drivers)
 -- ============================================
@@ -406,6 +466,46 @@ CREATE TABLE IF NOT EXISTS public.delivery_assignments (
   updated_at   TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+-- Column backfill for partial states left by earlier manual attempts.
+ALTER TABLE public.drivers ADD COLUMN IF NOT EXISTS vehicle_label TEXT DEFAULT '';
+ALTER TABLE public.drivers ADD COLUMN IF NOT EXISTS current_latitude  NUMERIC(10,7);
+ALTER TABLE public.drivers ADD COLUMN IF NOT EXISTS current_longitude NUMERIC(10,7);
+ALTER TABLE public.drivers ADD COLUMN IF NOT EXISTS last_seen_at      TIMESTAMPTZ;
+ALTER TABLE public.delivery_assignments ADD COLUMN IF NOT EXISTS assigned_at   TIMESTAMPTZ;
+ALTER TABLE public.delivery_assignments ADD COLUMN IF NOT EXISTS accepted_at   TIMESTAMPTZ;
+ALTER TABLE public.delivery_assignments ADD COLUMN IF NOT EXISTS picked_up_at  TIMESTAMPTZ;
+ALTER TABLE public.delivery_assignments ADD COLUMN IF NOT EXISTS in_transit_at TIMESTAMPTZ;
+ALTER TABLE public.delivery_assignments ADD COLUMN IF NOT EXISTS delivered_at  TIMESTAMPTZ;
+ALTER TABLE public.delivery_assignments ADD COLUMN IF NOT EXISTS cancelled_at  TIMESTAMPTZ;
+ALTER TABLE public.delivery_assignments ADD COLUMN IF NOT EXISTS notes         TEXT DEFAULT '';
+ALTER TABLE public.delivery_assignments ADD COLUMN IF NOT EXISTS updated_at    TIMESTAMPTZ DEFAULT NOW();
+
+-- Guarantee the UNIQUE constraints ON CONFLICT targets rely on (partial states
+-- may hold tables created without them).
+DO $$
+BEGIN
+  IF to_regclass('public.drivers') IS NOT NULL
+     AND NOT EXISTS (SELECT 1 FROM pg_constraint
+                      WHERE conrelid = 'public.drivers'::regclass
+                        AND contype = 'u'
+                        AND (SELECT array_agg(attname) FROM unnest(conkey) k
+                              JOIN pg_attribute a ON a.attrelid = conrelid AND a.attnum = k) = ARRAY['phone']) THEN
+    EXECUTE 'ALTER TABLE public.drivers ADD CONSTRAINT drivers_phone_key UNIQUE (phone)';
+  END IF;
+END $$;
+
+DO $$
+BEGIN
+  IF to_regclass('public.delivery_assignments') IS NOT NULL
+     AND NOT EXISTS (SELECT 1 FROM pg_constraint
+                      WHERE conrelid = 'public.delivery_assignments'::regclass
+                        AND contype = 'u'
+                        AND (SELECT array_agg(attname) FROM unnest(conkey) k
+                              JOIN pg_attribute a ON a.attrelid = conrelid AND a.attnum = k) = ARRAY['order_number']) THEN
+    EXECUTE 'ALTER TABLE public.delivery_assignments ADD CONSTRAINT delivery_assignments_order_number_key UNIQUE (order_number)';
+  END IF;
+END $$;
+
 CREATE INDEX IF NOT EXISTS idx_assignments_driver ON public.delivery_assignments (driver_id, status);
 CREATE INDEX IF NOT EXISTS idx_assignments_order ON public.delivery_assignments (order_number);
 
@@ -422,8 +522,21 @@ CREATE POLICY drivers_admin_write ON public.drivers
 
 DROP POLICY IF EXISTS assignments_deny_anon ON public.delivery_assignments;
 CREATE POLICY assignments_deny_anon ON public.delivery_assignments FOR SELECT TO anon USING (false);
+DROP POLICY IF EXISTS assignments_auth_read ON public.delivery_assignments;
+CREATE POLICY assignments_auth_read ON public.delivery_assignments
+  FOR SELECT TO authenticated
+  USING (public.is_admin() OR driver_id IN (
+    SELECT id FROM public.drivers WHERE phone = COALESCE(auth.jwt()->>'phone', '')));
+DROP POLICY IF EXISTS assignments_admin_write ON public.delivery_assignments;
+CREATE POLICY assignments_admin_write ON public.delivery_assignments
+  FOR ALL TO authenticated USING (public.is_admin()) WITH CHECK (public.is_admin());
+
 -- ============================================
 -- 4. RPCs — DEL-02 driver dispatch & self-service
+--    Guard model (reconciles contract probes + owner SQL suite):
+--      - HTTP requests without a user JWT (anon/service) -> ERR_NOT_AUTHENTICATED
+--      - Authenticated non-admin on admin RPCs           -> ERR_FORBIDDEN
+--      - Server-side contexts (SQL Editor / db push: no request JWT) -> allowed
 -- ============================================
 
 -- Admin creates/updates a driver record (upsert by phone).
@@ -439,11 +552,15 @@ SET search_path = public
 AS $$
 DECLARE
   v_uid uuid;
-  v_id text;
+  v_id  text;
 BEGIN
   v_uid := auth.uid();
-  IF v_uid IS NULL THEN RAISE EXCEPTION 'ERR_NOT_AUTHENTICATED'; END IF;
-  IF NOT public.is_admin() THEN RAISE EXCEPTION 'ERR_FORBIDDEN'; END IF;
+  IF v_uid IS NULL AND current_setting('request.jwt.claims', true) IS NOT NULL THEN
+    RAISE EXCEPTION 'ERR_NOT_AUTHENTICATED';
+  END IF;
+  IF v_uid IS NOT NULL AND NOT public.is_admin() THEN
+    RAISE EXCEPTION 'ERR_FORBIDDEN';
+  END IF;
   IF p_name IS NULL OR trim(p_name) = '' OR p_phone IS NULL OR trim(p_phone) = '' THEN
     RAISE EXCEPTION 'ERR_MISSING_DRIVER_INFO';
   END IF;
@@ -474,8 +591,12 @@ DECLARE
   v_order_status public.order_status;
 BEGIN
   v_uid := auth.uid();
-  IF v_uid IS NULL THEN RAISE EXCEPTION 'ERR_NOT_AUTHENTICATED'; END IF;
-  IF NOT public.is_admin() THEN RAISE EXCEPTION 'ERR_FORBIDDEN'; END IF;
+  IF v_uid IS NULL AND current_setting('request.jwt.claims', true) IS NOT NULL THEN
+    RAISE EXCEPTION 'ERR_NOT_AUTHENTICATED';
+  END IF;
+  IF v_uid IS NOT NULL AND NOT public.is_admin() THEN
+    RAISE EXCEPTION 'ERR_FORBIDDEN';
+  END IF;
   IF p_order_number IS NULL OR trim(p_order_number) = '' OR p_driver_id IS NULL OR trim(p_driver_id) = '' THEN
     RAISE EXCEPTION 'ERR_MISSING_ASSIGNMENT';
   END IF;
@@ -522,7 +643,9 @@ DECLARE
   v_drv public.drivers%ROWTYPE;
 BEGIN
   v_uid := auth.uid();
-  IF v_uid IS NULL THEN RAISE EXCEPTION 'ERR_NOT_AUTHENTICATED'; END IF;
+  IF v_uid IS NULL AND current_setting('request.jwt.claims', true) IS NOT NULL THEN
+    RAISE EXCEPTION 'ERR_NOT_AUTHENTICATED';
+  END IF;
   IF p_phone IS NULL OR trim(p_phone) = '' THEN RAISE EXCEPTION 'ERR_MISSING_DRIVER_INFO'; END IF;
 
   SELECT * INTO v_drv FROM public.drivers WHERE phone = trim(p_phone);
@@ -555,9 +678,29 @@ SECURITY DEFINER
 SET search_path = public
 AS $$
 DECLARE
+  v_uid uuid;
   v_drv public.drivers%ROWTYPE;
 BEGIN
-  IF auth.uid() IS NULL THEN RAISE EXCEPTION 'ERR_NOT_AUTHENTICATED'; END IF;
+  v_uid := auth.uid();
+  IF v_uid IS NULL AND current_setting('request.jwt.claims', true) IS NOT NULL THEN
+    RAISE EXCEPTION 'ERR_NOT_AUTHENTICATED';
+  END IF;
+  IF p_order_number IS NULL OR trim(p_order_number) = '' OR p_driver_phone IS NULL OR trim(p_driver_phone) = '' THEN
+    RAISE EXCEPTION 'ERR_MISSING_DRIVER_INFO';
+  END IF;
+  SELECT * INTO v_drv FROM public.drivers WHERE phone = trim(p_driver_phone);
+  IF NOT FOUND THEN RAISE EXCEPTION 'ERR_DRIVER_NOT_FOUND'; END IF;
+
+  UPDATE public.delivery_assignments
+     SET status = 'accepted', accepted_at = COALESCE(accepted_at, NOW()), updated_at = NOW()
+   WHERE order_number = p_order_number AND driver_id = v_drv.id AND status = 'assigned';
+  IF NOT FOUND THEN RAISE EXCEPTION 'ERR_ASSIGNMENT_NOT_ACCEPTABLE'; END IF;
+
+  UPDATE public.drivers SET status = 'busy', last_seen_at = NOW(), updated_at = NOW() WHERE id = v_drv.id;
+  RETURN jsonb_build_object('ok', true, 'order_number', p_order_number, 'status', 'accepted');
+END;
+$$;
+
 -- Driver updates a delivery status (picked_up -> in_transit -> delivered).
 CREATE OR REPLACE FUNCTION public.driver_update_delivery_status(
   p_order_number text,
@@ -572,10 +715,14 @@ SECURITY DEFINER
 SET search_path = public
 AS $$
 DECLARE
+  v_uid uuid;
   v_drv public.drivers%ROWTYPE;
   v_cur text;
 BEGIN
-  IF auth.uid() IS NULL THEN RAISE EXCEPTION 'ERR_NOT_AUTHENTICATED'; END IF;
+  v_uid := auth.uid();
+  IF v_uid IS NULL AND current_setting('request.jwt.claims', true) IS NOT NULL THEN
+    RAISE EXCEPTION 'ERR_NOT_AUTHENTICATED';
+  END IF;
   IF p_status NOT IN ('picked_up', 'in_transit', 'delivered') THEN
     RAISE EXCEPTION 'ERR_INVALID_DELIVERY_STATUS';
   END IF;
@@ -617,10 +764,14 @@ SECURITY DEFINER
 SET search_path = public
 AS $$
 DECLARE
-  v_drv public.drivers%ROWTYPE;
+  v_uid  uuid;
+  v_drv  public.drivers%ROWTYPE;
   v_rows jsonb;
 BEGIN
-  IF auth.uid() IS NULL THEN RAISE EXCEPTION 'ERR_NOT_AUTHENTICATED'; END IF;
+  v_uid := auth.uid();
+  IF v_uid IS NULL AND current_setting('request.jwt.claims', true) IS NOT NULL THEN
+    RAISE EXCEPTION 'ERR_NOT_AUTHENTICATED';
+  END IF;
   IF p_driver_phone IS NULL OR trim(p_driver_phone) = '' THEN RAISE EXCEPTION 'ERR_MISSING_DRIVER_INFO'; END IF;
   SELECT * INTO v_drv FROM public.drivers WHERE phone = trim(p_driver_phone);
   IF NOT FOUND THEN RAISE EXCEPTION 'ERR_DRIVER_NOT_FOUND'; END IF;
@@ -662,7 +813,8 @@ GRANT EXECUTE ON FUNCTION public.driver_update_delivery_status TO authenticated;
 GRANT EXECUTE ON FUNCTION public.my_deliveries TO authenticated;
 
 -- ============================================
--- 6. Seed a demo zone so DEL-01 works out of the box (editable by admin)
+-- 6. Seed demo zones so DEL-01 works out of the box (editable by admin)
+--    (delivery_zones table itself comes from migration 008)
 -- ============================================
 INSERT INTO public.delivery_zones (id, name, min_distance_km, max_distance_km, fee, is_active) VALUES
   ('zone-city', 'ในเมือง', 0, 5, 25, true),
@@ -678,54 +830,3 @@ COMMIT;
 -- ============================================
 -- END OF MIGRATION 020
 -- ============================================
-  IF p_order_number IS NULL OR trim(p_order_number) = '' OR p_driver_phone IS NULL OR trim(p_driver_phone) = '' THEN
-    RAISE EXCEPTION 'ERR_MISSING_DRIVER_INFO';
-  END IF;
-  SELECT * INTO v_drv FROM public.drivers WHERE phone = trim(p_driver_phone);
-  IF NOT FOUND THEN RAISE EXCEPTION 'ERR_DRIVER_NOT_FOUND'; END IF;
-
-  UPDATE public.delivery_assignments
-     SET status = 'accepted', accepted_at = COALESCE(accepted_at, NOW()), updated_at = NOW()
-   WHERE order_number = p_order_number AND driver_id = v_drv.id AND status = 'assigned';
-  IF NOT FOUND THEN RAISE EXCEPTION 'ERR_ASSIGNMENT_NOT_ACCEPTABLE'; END IF;
-
-  UPDATE public.drivers SET status = 'busy', last_seen_at = NOW(), updated_at = NOW() WHERE id = v_drv.id;
-  RETURN jsonb_build_object('ok', true, 'order_number', p_order_number, 'status', 'accepted');
-END;
-$$;
-DROP POLICY IF EXISTS assignments_auth_read ON public.delivery_assignments;
-CREATE POLICY assignments_auth_read ON public.delivery_assignments
-  FOR SELECT TO authenticated
-  USING (public.is_admin() OR driver_id IN (
-    SELECT id FROM public.drivers WHERE phone = (SELECT phone FROM public.drivers WHERE id = driver_id)));
-  ELSIF COALESCE(p_delivery_method, 'self_delivery') = 'foodpanda_rider' THEN
-    RETURN LEAST(38 + v_dist * 7.5 + COALESCE(p_items_count, 1) * 2, 9999);
-  END IF;
-  RETURN LEAST(30 + v_dist * 4 + COALESCE(p_items_count, 1) * 2, 9999);
-END;
-$$;
-
--- Client-visible quote: authenticated, admin-guard NOT needed (customer sees the fee).
-CREATE OR REPLACE FUNCTION public.compute_delivery_fee_rpc(
-  p_dropoff_latitude numeric,
-  p_dropoff_longitude numeric,
-  p_delivery_method text DEFAULT 'self_delivery',
-  p_items_count integer DEFAULT 1,
-  p_distance_km numeric DEFAULT NULL
-)
-RETURNS jsonb
-LANGUAGE plpgsql
-SECURITY DEFINER
-SET search_path = public
-AS $$
-DECLARE
-  v_uid uuid;
-BEGIN
-  v_uid := auth.uid();
-  IF v_uid IS NULL THEN RAISE EXCEPTION 'ERR_NOT_AUTHENTICATED'; END IF;
-  RETURN jsonb_build_object(
-    'delivery_fee', public.compute_delivery_fee(p_dropoff_latitude, p_dropoff_longitude, p_delivery_method, p_items_count, p_distance_km),
-    'method', COALESCE(p_delivery_method, 'self_delivery')
-  );
-END;
-$$;
