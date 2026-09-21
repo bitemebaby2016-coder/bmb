@@ -1,7 +1,7 @@
 # Bite Me Baby — Restaurant Commerce & Operations Platform (PWA)
 
 > **สถานะตรวจสอบล่าสุด:** 2026-09-21 · **Commit:** см. `git log --oneline -1` (`feat(phase6-7)`) · **Production:** https://bitemebaby-5f7.pages.dev + Supabase `ivkdfognyiwjcmrhcnwz`
-> **Tests:** 163/163 ผ่าน (วัดจริง 2026-09-21) · **Build:** ผ่าน (tsc strict + vite, PWA sw.js) · **Lint/CI:** Lint 0 errors baseline + CI workflow (2026-09-21)
+> **Tests:** 154 PASSED (วัดจริง 2026-09-21) · 2 files ล้มเพราะไม่มี VITE_SUPABASE_ANON_KEY (ไม่ใช่ logic error) · **Build:** ผ่าน (tsc strict + vite, PWA sw.js) · **Lint/CI:** Lint 0 errors baseline + CI workflow (2026-09-21)
 
 ## Current Product
 
@@ -27,9 +27,9 @@ admin and user manuals rewritten (essentials, overwrite).
 **PHASE 7 UI completion (2026-09-21):** `/admin/content-approvals` (submit + approve/reject + note),
 banner promotions auto-submit to approval, publish gate opens only after `approved` (CNT-01).
 
-**Tests:** 163/163 PASS · build PASS (tsc strict + vite + PWA sw.js) · lint 0 errors.
+**Tests:** 154 PASS · build PASS (tsc strict + vite + PWA sw.js) · lint 0 errors.
 
-**Owner asked next:** `supabase db push` (migration **020 Bite Drive** — единственный оставшийся шаг перед GATE)
+**Owner asked next:** `supabase db push` (migration **020 Bite Drive** — ขั้นตอนที่เหลือก่อน GATE)
 → `node e2e/sqlContracts.cjs --include-new` (expect 29/29) → owner SQL suites (`e2e/contracts_020_bite_drive.sql`)
 → PWA-100-GATE evidence pack: `docs/BMB_PWA_100_GATE_EVIDENCE_2026-09-21.md` → REAL-WORLD PILOT → **M1 = BMB PRODUCTION 100%**.
 
@@ -53,7 +53,7 @@ banner promotions auto-submit to approval, publish gate opens only after `approv
 ```bash
 npm install
 npm run dev        # http://localhost:3000
-npm test           # vitest — 106 tests (offline in-memory Supabase mock)
+npm test           # vitest — 154 tests (offline in-memory Supabase mock)
 npm run build      # tsc + vite build (สร้าง dist/ + sw.js)
 ```
 

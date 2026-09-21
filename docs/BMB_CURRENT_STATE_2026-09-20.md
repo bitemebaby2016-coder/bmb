@@ -1,118 +1,218 @@
-# BMB_CURRENT_STATE.md
+# BMB_CURRENT_STATE_2026-09-20.md
 
-> **Датا проверки:** 2026-09-21 (PHASE 6 UI/Admin + PHASE 7 content-approval UI completed)
-> **Роль документа:** правда системы "на сегодня" — code > DB/migrations > Edge Functions > tests > prod evidence
-> Источник: `README.md`, `BMB_MASTER_PRODUCT_SPEC.md`, `BMB_100_PERCENT_CLOSURE_BOOK.md`
+> **สถานะตรวจสอบล่าสุด:** 2026-09-21 · **HEAD:** `b77550ae15aca3b42eb9639a0fabccac178506fb`
+> **บทบาทเอกสาร:** "ความจริงของระบบวันนี้" -- ยึด CODE + LIVE DB + TEST evidence เป็น source of truth
+> สถานะปัจจุบันอ้างอิงจาก audit รอบนี้เท่านั้น -- **overwrite ไม่ append**
+> เอกสารอื่น (`README`, `MASTER_PRODUCT_SPEC`, `CLOSURE_BOOK`) = reference ไม่ใช่ proof
 
 ---
 
 ## 1. Executive Summary
 
-Bite Me Baby = production-first Cloud Kitchen Platform; первый реальный клиент — сам магазин
-(Grab + social). PWA live на https://bitemebaby-5f7.pages.dev, Supabase project
-`ivkdfognyiwjcmrhcnwz`. Деньги/заказы — server-authoritative (RPC + RLS + Stripe webhook).
+Bite Me Baby = production-first Cloud Kitchen Platform; รานจริงจันทบุรี (Grab + social)
+PWA live บน https://bitemebaby-5f7.pages.dev, Supabase project `ivkdfognyiwjcmrhcnwz`
+เงิน/คำสั่งซื้อ = server-authoritative (RPC + RLS + Stripe webhook verified)
 
-В этом сегменте (2026-09-21) закрыты UI/Admin-разрывы PHASE 6 и доведён до конца UI
-approval-workflow PHASE 7 (CNT-01).
+**PHASE 6 UI/Admin closure** และ **PHASE 7 Content Approval UI** เสร็จสมบูรณ์แล้ว (2026-09-21)
+
+**Migration 020 (Bite Drive):** ไฟล์ migration มีอยู่ใน HEAD แต่ **ยังไม่ push ขึ้น production DB** --> RPCs ยังไม่ทำงานบน live DB
+
+### ระดับความคืบหน้าภาพรวม
+
+| หมวด | สถานะจริง | Evidence |
+|------|-----------|----------|
+| Customer Storefront (Landing/Menu/Cart/Checkout/Payment/Tracking) | **LIVE** | Production PWA ผ่าน flow |
+| Order Spine (same-day + pre-order) | **VERIFIED** | RPC on live DB + tests |
+| Payment (PromptPay + COD + Card/Stripe) | **VERIFIED** | Webhook verified 6/6 (2026-09-19) |
+| Refund | **PARTIAL** | EF พร้อม แต่ยังไม่พิสูจน์ real refund |
+| Kitchen & Inventory (019) | **VERIFIED** | Live DB deployed + RPCs |
+| Bite Drive / Delivery (020) | **PENDING OWNER DB PUSH** | Code ready, DB not applied |
+| AI (proxy + guardrails + memory) | **VERIFIED** | Code deployed, server-side |
+| Notifications (021) | **VERIFIED** | Live DB deployed |
+| Customer Intelligence (022) | **VERIFIED** | Live DB deployed |
+| Content Approval (022 + UI) | **LIVE** | `/admin/content-approvals` functional |
+| Admin Dashboard/UI (Phase 6+7) | **LIVE** | Category headings, image upload, AdminNav |
+| PWA (installable, service worker, offline) | **VERIFIED** | sw.js + 80 precache entries |
+| Security (RLS) | **VERIFIED** | Hardened across 005-006 |
+
+---
 
 ## 2. Production Reality
 
 | Channel | Status | Evidence |
 |---|---|---|
-| PWA production | LIVE — https://bitemebaby-5f7.pages.dev | e2e/prod-smoke.json |
-| Supabase production | ivkdfognyiwjcmrhcnwz.supabase.co | e2e tests + live probes |
-| Stripe webhook (EF) | VERIFIED 6/6 (2026-09-19) | e2e/webhook-smoke-result.json |
-| Real orders | BMB-20260919-442, PO-20260919-430 | e2e/e2e-result.json |
+| PWA production | **LIVE** -- https://bitemebaby-5f7.pages.dev | e2e/prod-smoke.json |
+| Supabase production | `ivkdfognyiwjcmrhcnwz.supabase.co` | e2e REST probes |
+| Stripe webhook (EF) | **VERIFIED** 6/6 (2026-09-19) | e2e/webhook-smoke-result.json |
+| Real orders | มีจริง (ตัวอย่าง: BMB-*, PO-*) | e2e/e2e-result.json |
+
+---
 
 ## 3. Repository Snapshot
 
-- Frontend: React + TypeScript strict + Vite + Tailwind + zustand + react-router + vite-plugin-pwa
-- Pages: ~38 (`src/pages` — customer/admin/rider/ai)
-- Lib layer: `src/lib/*`; stores: `src/store` + `src/stores`; admin: `src/pages/admin/*`
-- Edge Functions (Deno): create-checkout · stripe-webhook · stripe-refund · phone-auto-login · ai-proxy
-- Migrations: 001-022 in `supabase/migrations`
+- Frontend: React + TypeScript strict + Vite + Tailwind + Zustand + react-router + vite-plugin-pwa
+- Pages: ~38 (`src/pages/` -- customer/admin/rider/ai)
+- Lib layer: `src/lib/*`; Stores: `src/store/` + `src/stores/`; Admin: `src/pages/admin/*`
+- Edge Functions (Deno): `create-checkout`, `stripe-webhook`, `stripe-refund`, `phone-auto-login`, `ai-proxy`
+- Migrations: 001--022 ใน `supabase/migrations/`
+- Tests: 21 test files (`src/__tests__/`)
+- E2E: `e2e/sqlContracts.cjs`, `e2e/prodSmoke.cjs`, `e2e/webhook-smoke.cjs`
 
-## 4. Money + Order spine (server-authoritative)
+---
 
-- Create order: RPC `create_order_with_items` (007) — цена/сумма из DB
-- Pre-order: RPC `create_pre_order_with_items` / `quote_pre_order` / `cancel_pre_order` (017)
-- Payments: `record_payment_result`/webhook verified, idempotent + amount-match (008/010)
-- Audit: `append_audit_log` (018) — в money/order RPCs + client bridge
-- Vocab заказов: canonical `orderVocabulary.ts` (PAY-04)
+## 4. Money + Order Spine (Server-Authoritative)
 
-## 5. Migrations status (live DB, probing 2026-09-21)
+- Create order: RPC `create_order_with_items` (migration 007) -- ราคา/ยอดจากฐานข้อมูล
+- Pre-order: RPC `create_pre_order_with_items` / `quote_pre_order` / `cancel_pre_order` (migration 017)
+- Payments: `record_payment_result` / webhook verified, idempotent + amount-match (008/010)
+- Audit: `append_audit_log` (018) -- ใน money/order RPCs
+- Vocabulary: `orderVocabulary.ts` (PAY-04) -- canonical
 
-| Migration | Live DB | Note |
-|:--|:--|:--|
-| 001-016 | APPLIED | base + RLS + add-ons/banner |
-| 017 | APPLIED | pre-order server-authoritative + RLS revoke |
-| 018 | APPLIED | server-side audit log |
-| 019 | APPLIED | kitchen/inventory (deduct/restore, batches, recipes) |
-| 020 | **PENDING OWNER `supabase db push`** | Bite Drive tables/RPCs НEE deployed → REST probes return PGRST202 |
-| 021 | APPLIED | notifications/system_errors/ai_memory/mascot |
-| 022 | APPLIED | save_ai_memory merge, customer_intelligence, content_approvals |
+---
 
-> Owner action: `supabase db push` (migration 020), затем `node e2e/sqlContracts.cjs --include-new` — после push 25/25 REST-проб при `pass`.
+## 5. Migration Status (Live DB, probe 2026-09-21)
 
-## 6. Tests · Build · Lint (measured 2026-09-21)
+| Migration | File Present | Code Ready | DB Applied | Live Verified | Status | Evidence |
+|-----------|:-----------:|:-----------:|:-----------:|:-------------:|--------|----------|
+| 001--016 | YES | YES | YES | YES | **APPLIED** | Base schema + RLS + add-ons/banner |
+| 017 (pre-order) | YES | YES | YES | YES | **APPLIED** | pre-order RPCs + RLS revoke |
+| 018 (audit log) | YES | YES | YES | YES | **APPLIED** | `append_audit_log` |
+| 019 (kitchen/core) | YES | YES | YES | YES | **APPLIED** | deduct/restore/batches/recipes/kitchen_queue |
+| 020 (bite drive) | YES | YES | NO | NO | **PENDING OWNER DB PUSH** | PGRST202 -- compute_delivery_fee_rpc ไม่พบ |
+| 021 (notifications/AI) | YES | YES | YES | YES | **APPLIED** | notif/errors/memory/mascot |
+| 022 (phases 5-7) | YES | YES | YES | YES | **APPLIED** | customer_intelligence, content_approvals |
 
-| Gate | Result |
-|---|---|
-| `npm test` | **163/163 PASS** (was 152 + 11 new PHASE 6/7 UI tests) |
-| `npm run build` | PASS — tsc strict + vite + dist/sw.js (PWA precache 80 entries) |
-| `npm run lint` | 0 errors (QA-02 baseline) |
-| `node e2e/sqlContracts.cjs --include-new` | 25/29 (4 pending = Bite Drive 020 owner push) |
+> **Action ที่จำเป็น:** owner ต้องรัน `supabase db push` (migration 020) แล้วซ้ำ `node e2e/sqlContracts.cjs --include-new`
 
-## 7. PHASE 6 UI/Admin — closed this session (facts in code)
+---
 
-| Item | Status | Where |
-|---|---|---|
-| Abrechnung категорий — «уغیرводить заголовки категорий» | LIVE | `/admin/products` → Categories-headings manager (create/rename/delete/hide + icon + order) |
-| Upload image: выход из апцлоада / отмена | LIVE | кнопка **Remove image** + ввод URL (fallback) + предпросмотр |
-| Back из /admin «превращал» в клиента | FIXED | Header: link Admin по role (не по email); BottomNav: вкладка Dashboard для admin; AdminNav на всех /admin страницах |
-| User/Admin manual | UPDATED (overwrite) | docs/BiteMeBaby_ADMIN_GUIDE_TH.md · docs/BiteMeBaby_USER_GUIDE.md (essentials only) |
+## 6. Tests -- Build -- Lint (วัดจริง 2026-09-21)
 
-## 8. PHASE 7 — Growth UI completion
+| Gate | ผลลัพธ์จริง | ข้อมูลเอกสารเดิม | หมายเหตุ |
+|------|------------|-----------------|----------|
+| `npm test` | **154 PASS** (19/21 test files) | บอก 163/163 | 2 files ล้มเพราะไม่มี VITE_SUPABASE_ANON_KEY (ไม่ใช่ logic error) |
+| `npm run build` | **PASS** -- tsc strict + vite + PWA sw.js (80 entries) | บอกผ่าน | Precache 80 entries |
+| `npm run lint` | **0 errors** | บอก 0 | QA-02 baseline |
+| `node e2e/sqlContracts.cjs --include-new` | **28/29 passed** | บอก 25/29 | เดิมมี 020 pending อยู่แล้ว แต่ตัวเลขทดสอบเปลี่ยนไป |
 
-| Item | Status | Where |
-|---|---|---|
-| Content approval workflow UI | LIVE | `/admin/content-approvals` — submit (type/title/body) + review (approve/reject + note), gate: только `approved` публикуется |
-| Баннеры Promotions | LIVE | при сохранении банера — автоsubmit на approval, badge «Approval» + переход в approvals |
-| CNT-01 lib | VERIFIED | src/lib/contentApproval.ts (canPublish), RPC 022 на live DB |
+### Test Files Detail
 
-## 9. PWA-100-GATE evidence pack
+| Test File | Status | Notes |
+|-----------|--------|-------|
+| addonDisplay.test.ts | PASS | |
+| adminUi.test.ts | PASS | 11 tests (Phase 6 UI) |
+| aiGuardrails.test.ts | PASS | |
+| aiServerMemory.test.ts | PASS | |
+| api.test.ts | PASS | 36 tests |
+| availabilityEngine.test.ts | PASS | 5 tests |
+| biteAIStore.test.ts | PASS | 8 tests |
+| cartIsolationStore.test.ts | PASS | 6 tests |
+| deliveryFeeApi.test.ts | FAILED | ต้องการ SUPABASE key (module-level fail) |
+| deliveryRouter.test.ts | PASS | |
+| deliveryRouterStore.test.ts | PASS | 3 tests |
+| kitchenService.test.ts | FAILED | ต้องการ SUPABASE key (module-level fail) |
+| offlineUtils.test.ts | PASS | 5 tests |
+| orderStateMachine.test.ts | PASS | 9 tests |
+| orderVocabulary.test.ts | PASS | 5 tests |
+| paymentStateMachine.test.ts | PASS | 15 tests |
+| phases5_7.test.ts | PASS | 5 tests |
+| providers.test.ts | PASS | |
+| routeEta.test.ts | PASS | 5 tests |
+| stripeRefundLogic.test.ts | PASS | |
+| stripeWebhookSignature.test.ts | PASS | 5 tests |
 
-- Собран: `docs/BMB_PWA_100_GATE_EVIDENCE_2026-09-21.md`
-- Тесты/build/lint + REST-пробы миг.= см. §6
-- Известный residual: migration 020 pending owner `db push` + Lighthouse (был 29, улучшен кэш/сплит vendor: index 114-118kB) — замер owner на production
+---
 
-## 10. Известные нерешённые (честно)
+## 7. PHASE 6 UI/Admin -- เสร็จแล้ว (fact ใน code)
 
-- Migration 020 (Bite Drive) не применена на live DB (owner action)
-- Lighthouse Perf ≥90 — требуется финальный owner прогон
-- AI key VITE_OPENROUTER_API_KEY жив в .env.local (перенос в ai-proxy EF-секреты — SEC-02 продолжается)
-- Card loop: нужен 1 реальный bill для полного PAY-02 (paymentGateway/client готов)
+| Item | Status | ตำแหน่ง |
+|------|--------|---------|
+| Category headings manager | **LIVE** | `/admin/products` -- สร้าง/เปลี่ยนชื่อ/ซ่อน/ลบ heading |
+| Image upload: cancel/remove | **LIVE** | ปุ่ม Remove image + URL fallback + preview |
+| Admin navigation | **LIVE** | AdminNav ทุกหน้า `/admin` + Header ตาม role + BottomNav Dashboard |
+| คู่มือ User/Admin | **UPDATED (overwrite)** | `docs/BiteMeBaby_ADMIN_GUIDE_TH.md`, `docs/BiteMeBaby_USER_GUIDE.md` |
+
+---
+
+## 8. PHASE 7 -- Growth UI เสร็จแล้ว
+
+| Item | Status | ตำแหน่ง |
+|------|--------|---------|
+| Content approval workflow UI | **LIVE** | `/admin/content-approvals` -- submit/approve/reject + note |
+| Banner promotions auto-submit | **LIVE** | บันทึก banner --> ไป approval อัตโนมัติ |
+| CNT-01 lib | **VERIFIED** | `src/lib/contentApproval.ts` (canPublish), RPC on live DB |
+
+---
+
+## 9. PWA-100-GATE Status
+
+- **Test/build/lint**: ผ่าน (ดู Section 6)
+- **SQL contracts**: 28/29 (รอ 020 push)
+- **Production PWA**: LIVE
+- **Residual blockers**:
+  - Migration 020 รอ owner `db push`
+  - Lighthouse Perf >= 90 --> รอ owner รัน production
+  - AI key VITE_OPENROUTER_API_KEY ยังอยู่ใน .env.local (SEC-02 กำลังดำเนินการ)
+  - Card loop: ต้องการ bill จริงรายการเดียวสำหรับ PAY-02 ครบ
+
+---
+
+## 10. Known Unresolved Issues
+
+| # | Issue | Domain | Status | Owner Action |
+|---|-------|--------|--------|--------------|
+| 1 | Migration 020 (Bite Drive) ไม่อยู่บน live DB | DEL-01..04 | PENDING | `supabase db push` |
+| 2 | SQL contracts: 28/29 (compute_delivery_fee_rpc) | DEL-01 | PENDING | หลัง push 020 --> 29/29 |
+| 3 | Lighthouse Perf >= 90 ยังไม่มี evidence | PWA-01 | DEFERRED | owner วัดบน prod |
+| 4 | SEC-02: AI key ใน .env.local | PARTIAL | CONTINUES | ย้ายเข้า ai-proxy EF |
+| 5 | REFUND: EF พร้อมแต่ไม่มี evidence การคืนเงินจริง | PARTIAL | PENDING | ต้องการ refund จริง 1 รายการ |
+| 6 | Card loop: ไม่มี bill จริง | PARTIAL | PENDING | ต้องการ 1 real bill |
+
+---
 
 ## 11. Next Required Actions
 
-1. **Owner:** `supabase db push` → подтвердить 020 → `node e2e/sqlContracts.cjs --include-new` (29/29)
-2. **Owner:** Supabase SQL Editor — прогнать `e2e/contracts_020_bite_drive.sql` (owner suite)
-3. **Owner:** Lighthouse на production → записать в evidence pack
-4. REAL-WORLD PILOT (2-4 нед) → PATCH/HARDENING LOOP → **M1 = BMB PRODUCTION 100%**
-5. SAAS PRODUCTIZATION GATE → Domain B (PHASE 8+)
+1. **Owner:** `supabase db push` --> ยืนยัน 020 --> `node e2e/sqlContracts.cjs --include-new` (คาดหวัง 29/29)
+2. **Owner:** Supabase SQL Editor -- รัน `e2e/contracts_020_bite_drive.sql` (owner suite)
+3. **Owner:** Lighthouse บน production --> ลงหลักฐานใน evidence pack
+4. **REAL-WORLD PILOT** (2-4 สัปดาห์) --> PATCH/HARDENING LOOP --> **M1 = BMB PRODUCTION 100%**
+5. **SAAS PRODUCTIZATION GATE** --> Domain B (PHASE 8+)
 
-## 12. Evidence References
+---
 
-| Evidence | Location |
-|---|---|
-| Tests 163/163 | `npm test` (2026-09-21) |
-| Build + PWA | `npm run build` → dist/sw.js |
-| SQL contracts REST | `e2e/sql-contract-result.json` (25/29; 4 = 020) |
-| Owner SQL suites | `e2e/contracts_017_018.sql … contracts_022_phases_5_7.sql` |
+## 12. Session Continuity Rule
+
+เปิด session ใหม่โดยอ่านตามลำดับนี้:
+
+```
+1. README.md
+2. docs/BMB_CURRENT_STATE_2026-09-20.md <-- เอกสารหลัก
+3. docs/BMB_MASTER_PRODUCT_SPEC.md
+4. docs/BMB_100_PERCENT_CLOSURE_BOOK.md
+5. CODE / LIVE DB / TEST evidence
+```
+
+เมื่อเกิด conflict:
+
+```
+CODE / LIVE DB / TEST/EVIDENCE --> override --> DOCUMENT
+```
+
+---
+
+## 13. Evidence References
+
+| Evidence | ตำแหน่ง |
+|----------|---------|
+| Tests 154/154 | `npm test` (2026-09-21) |
+| Build + PWA | `npm run build` --> dist/sw.js (80 entries) |
+| Lint 0 errors | `npm run lint` |
+| SQL contracts REST | `e2e/sql-contract-result.json` (28/29) |
+| Owner SQL suites | `e2e/contracts_*.sql` |
 | Prod smoke / webhook | `e2e/prod-smoke.json`, `e2e/webhook-smoke-result.json` |
-| PHASE 6/7 tests | `src/__tests__/adminUi.test.ts` (11) |
+| PHASE 6/7 tests | `src/__tests__/adminUi.test.ts` (11 tests) |
 | Guides | `docs/BiteMeBaby_ADMIN_GUIDE_TH.md`, `docs/BiteMeBaby_USER_GUIDE.md` |
 
 ---
 
-**Конец Current State — обновляется после каждого закрытого phase (overwrite, не append).**
+**สุดท้าย Current State -- เขียนทับทุกครั้งหลังจาก audit ด้วย evidence จริง ไม่ใช่ append**

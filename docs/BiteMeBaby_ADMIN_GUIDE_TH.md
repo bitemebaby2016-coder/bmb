@@ -1,69 +1,81 @@
-# Bite Me Baby — คู่มือผู้ดูแลระบบ (Admin · Thai)
+# Bite Me Baby -- คู่มือผู้ดูแลระบบ (Admin Guide)
 
-> ปปรับ 2026-09-21 — เขιхทΎមเขียนทбตามจริงของระบบ (overwrite, не append)
+> ปรับปรุง: 2026-09-21 -- เขียนตามความเป็นจริงของระบบ (overwrite ไม่ append)
 
 ---
 
-## 1) เข้าสู่ระบบ (Login)
+## เข้าสู่ระบบ (Login)
 
-- เปิด веб 그리고กд **เข้าสู่ระบบ** (email + password)
-- ผู้ดูแลระบบ = profile ที่มี role = `admin` (системаตรวจด้วย server/RLS)
-- После входа —กд **Admin** сверX справа либо откройте `/admin`
-- Если role ещё не admin, بنетво owner проmote:
+- เปิดเว็บแล้วกด **เข้าสู่ระบบ** (email + password)
+- ผู้ดูแลระบบ = profile ที่มี role = `admin` (ระบบตรวจด้วย server/RLS)
+- หลังเข้าระบบ --> กด **Admin** ด้านขวาหรือเปิด `/admin`
+- หาก role ยังไม่ใช่ admin, owner ต้อง promote ก่อน:
   `select public.promote_to_full_admin('you@example.com');`
 
-## 2) Дашборд (Dashboard) и навигация
+---
 
-- `/admin` — обзор бизнес: 오더рวันนี้ · раийдวันนี้ · pending · delivered · low stock · ลূকКА
-- **AdminNav** (панель сверX на каждой admin-странице): переключение раздеов в один клик
-- На мобильном — кнопка **Dashboard**: вернуться в панель можно всегда
-- Разделы: Dashboard · Orders · Menu · Approvals · Rounds · Promos · Customers · Inventory · Media · Settings · Delivery · Route · Audit · Errors · Mascot · Control
+## Dashboard และการนำทาง
 
-## 3) Меню и Categories
+- `/admin` --> ภาพรวมธุรกิจ: ออเดอร์วันนี้, ไดรเวอร์, pending, delivered, stock ต่ำ
+- **AdminNav** (แถบด้านซ้ายทุกหน้า admin): สลับหมวดหมู่ได้ในคลิกเดียว
+- บนมือถือ --> ปุ่ม **Dashboard**: กลับไปแผงควบคุมได้ทุกเวลา
+- หมวดหมู่: Dashboard, Orders, Menu, Approvals, Rounds, Promos, Customers, Inventory, Media, Settings, Delivery, Route, Audit, Errors, Mascot, Control
 
-- `+ เพдбမူ` — имя · цена · category · prep time · описание · изображение
-- **Image**: загрузить файл (preview) **или** вставить URL; **Remove image** — удалить выбор
-- Вч belt вида: продаётся / скрыто · Add-ons (цены считает server)
-- **Category headings** (блок ниже списка меню):
-  * `+ New heading` — новый заголえвок категории (name + icon + order + active)
-  * Edit — переименовать/икоنка/порядок/скрыть · Delete — только когда пусто
-  * Сохранённая категория сразу видна покупателям
+---
 
-## 4) Контент-проверка (Content Approvals · PHASE 7)
+## เมนูและหมวดหมู่
 
-- Страница `/admin/content-approvals` — submit (тип + title + body)
-- Публикация **только** после `approved` — авто-публикации нет
-- Админ: **Approve** / **Reject** + comment
-- Банеры из Promotions автоматически идут на approval
+- **+ เพิ่มเมนู** -- ชื่อ, ราคา, หมวดหมู่, prep time, คำอธิบาย, รูปภาพ
+- **รูปภาพ**: อัพโหลดไฟล์ (preview) หรือใส่ URL; **Remove image** -- ลบรูปภาพที่เลือก
+- แสดงผลแบบสลับ: ขายอยู่ / ซ่อนไว้, Add-ons (ราคาคำนวณฝั่ง server)
+- **Category headings** (ส่วนล่างรายการเมนู):
+  * **+ New heading** -- สร้าง heading ใหม่ (name + icon + order + active)
+  * Edit -- เปลี่ยนชื่อ/ไอคอน/ลำดับ/ซ่อน, Delete -- ลบได้เฉพาะเมื่อ empty
+  * หมวดหมู่ที่ยบันทึกจะแสดงแก่ลูกค้าทันที
 
-## 5) Таблица страниц
+---
 
-| URL | Назначение |
-|-----|-------------|
-| `/admin` | Дашборд |
-| `/admin/orders` | Заказы, статусы |
-| `/admin/products` | Меню + категории |
-| `/admin/rounds` | Раунды, лимиты |
-| `/admin/promotions` | Промо/купноны/banner |
+## การอนุมัติเนื้อหา (Content Approvals)
+
+- หน้า `/admin/content-approvals` -- ส่งขอ approves (type + title + body)
+- การเผยแพร่ทำได้ **เฉพาะเมื่อ approved** เท่านั้น
+- Admin: **Approve** / **Reject** + หมายเหตุ
+- Banner จาก Promotions จะถูกส่งห approval โดยอัตโนมัติ
+
+---
+
+## ตาราง URLs
+
+| URL | ความรับผิดชอบ |
+|-----|---------------|
+| `/admin` | Dashboard |
+| `/admin/orders` | ออเดอร์, สถานะ |
+| `/admin/products` | เมนู + หมวดหมู่ |
+| `/admin/rounds` | รอบส่ง, จำกัด |
+| `/admin/promotions` | Promo/coupon/banner |
 | `/admin/content-approvals` | Approval |
-| `/admin/customers` | Клиенты |
-| `/admin/inventory` | Ингредиенты/склад |
-| `/admin/media` | Медиа (bmb-images) |
-| `/admin/settings` | Настройки |
-| `/admin/delivery` | Bite Drive + external |
-| `/admin/route-optimization` | Маршруты |
-| `/admin/audit-log` | Лог действий |
-| `/admin/errors` | Ошибки |
-| `/admin/mascot` | Маскот |
-| `/admin/control` | Квота/Rider |
+| `/admin/customers` | ลูกค้า |
+| `/admin/inventory` | วัตถุดิบ/สต็อก |
+| `/admin/media` | สื่อ (bmb-images) |
+| `/admin/settings` | ตั้งค่า |
+| `/admin/delivery` | Bite Drive + External |
+| `/admin/route-optimization` | วิดีดเส้นทาง |
+| `/admin/audit-log` | บันทึกการกระทำ |
+| `/admin/errors` | ข้อผิดพลาด |
+| `/admin/mascot` | มาสคอต |
+| `/admin/control` | Quota/Rider |
 | `/rider` | Rider PWA |
 
-## 6) Deploy
+---
 
-- Cloudflare Pages: `git push origin main` → авто-deploy
+## Deploy
+
+- Cloudflare Pages: `git push origin main` --> deploy อัตโนมัติ
 - Env: `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`, `VITE_OPENROUTER_API_KEY`
-- ⛔ Никогда не кладitите `service_role` key в frontend
-- Миграции 001→022 применяет владелец (`supabase db push` / SQL Editor)
-- Перед push: `npm test` + `npm run build` + `npm run lint`
+- ห้ามใส่ `service_role` key ใน frontend เด็ดขาด
+- Migrations 001-022: owner นำไปใช้ (`supabase db push` / SQL Editor)
+- ก่อน push: `npm test` + `npm run build` + `npm run lint`
 
-— конец —
+---
+
+**สิ้นสุดคู่มือผู้ดูแลระบบ**
