@@ -17,9 +17,11 @@ export interface RiderPWAProps {
   dropOff: { latitude: number; longitude: number }
   /** Allowed margin (meters) around the drop-off to confirm delivery. */
   radiusMeters?: number
+  /** Called AFTER the client state machine reaches Delivered (server sync hook). */
+  onDelivered?: () => void
 }
 
-export function RiderPWA({ dropOff, radiusMeters = 300 }: RiderPWAProps) {
+export function RiderPWA({ dropOff, radiusMeters = 300, onDelivered }: RiderPWAProps) {
   const { status, transition } = useOrderStateMachine()
   const [coords, setCoords] = useState<{ latitude: number; longitude: number } | null>(null)
   const [geoError, setGeoError] = useState<string | null>(null)
@@ -57,6 +59,7 @@ export function RiderPWA({ dropOff, radiusMeters = 300 }: RiderPWAProps) {
     if (!geoOk) return
     if (!podUrl) return
     transition('Delivered')
+    onDelivered?.()
   }
 
   return (

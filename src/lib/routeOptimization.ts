@@ -144,6 +144,54 @@ export function assignOrdersToDrivers(
 
   return routes
 }
+/**
+ * DEL-04 — ETA calibration: a delivery report is accurate if the model error
+ * is within the closure tolerance (< 15 minutes per stop).
+ */
+export const ETA_ACCURACY_TOLERANCE_MIN = 15
+
+export function etaAccuracyMinutes(estimatedMinutes: number, actualMinutes: number): number {
+  return Math.abs(estimatedMinutes - actualMinutes)
+}
+
+export interface EtaReport {
+  estimated: number
+  actual: number
+}
+
+export function etaAccuracySummary(reports: EtaReport[]): {
+  withinTolerance: boolean
+  maxErrorMinutes: number
+  meanErrorMinutes: number
+  totalReports: number
+} {
+  if (reports.length === 0) return { withinTolerance: true, maxErrorMinutes: 0, meanErrorMinutes: 0, totalReports: 0 }
+  const errors = reports.map((r) => etaAccuracyMinutes(r.estimated, r.actual))
+  const max = Math.max(...errors)
+  const mean = errors.reduce((s, e) => s + e, 0) / errors.length
+  return {
+    withinTolerance: max <= ETA_ACCURACY_TOLERANCE_MIN,
+    maxErrorMinutes: max,
+    meanErrorMinutes: Math.round(mean * 10) / 10,
+    totalReports: reports.length,
+  }
+}
+
+/**
+ * DEL-04 — calibrated ETA: uses the observed historical minutes-per-km when
+ * samples exist (falls back to the stock 2 min/km heuristic).
+ */
+export function calibratedEtaMinutes(
+  distanceKm: number,
+  ordersCount: number,
+  minutesPerKmHistory?: number[],
+): number {
+  if (minutesPerKmHistory && minutesPerKmHistory.length > 0) {
+    const base = minutesPerKmHistory.reduce((s, m) => s + m, 0) / minutesPerKmHistory.length
+    return Math.round(distanceKm * base + ordersCount * 5)
+  }
+  return estimateDeliveryTime(distanceKm, ordersCount)
+}
 
 // Get route summary
 export function getRouteSummary(routes: Route[]): {

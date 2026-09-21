@@ -92,8 +92,9 @@ Landing (BiteHero + mascots) → Menu (FoodMenuCard, same-day/pre-order split, a
 ## 10. Delivery / Bite Drive
 
 - **Router (pricing logic) LIVE:** two-tier — Tier 1 Bite Drive ≤ maxKm ค่าส่งคงที่ / Tier 2 external quote + markup (`deliveryRouter.ts`, haversine; pure + unit-tested)
-- **Bite Drive (ไรเดอร์ร้านเอง): LIVE** แต่ **driver assignment = MOCK** (code ระบุเอง "temporary MOCK drivers")
-- **External providers: ไม่ LIVE** — Grab = sandbox (env มี key รอ live contract), LINEMAN = sandbox, Foodpanda = mockup_pending (`externalProviders.ts` ระบุสถานะไว้ใน code เอง)
+- **DEL-01 (บรรจุ code 2026-09-21):** ค่าส่ง authoritative จาก `delivery_zones` ฝั่ง server (`compute_delivery_fee` + server-distance) — migration 020 รอ deploy; client `deliveryFeeApi.ts`
+- **Bite Drive (ไรเดอร์ร้านเอง): CODE ครบ (await deploy 020)** — `drivers`/`delivery_assignments` + RPC dispatch/self-service + Rider PWA ใหม่ (login→รับงาน→สถานะ→geo+POD) — driver assignment ยังเป็น MOCK จนกว่า migration 020 จะ deploy
+- **External providers: ADAPTER-READY** — `src/lib/providers/*` (interface + adapters + registry): Grab = sandbox, LINE MAN = sandbox, FoodPanda = mockup_pending; live keys ยังไม่มา (call-center) — ใส่ env เมื่อได้ แล้ว adapter เรียก live endpoint ได้ทันที
 - **มีจริง:** `delivery_zones` (public read active, admin write), พิกัดลูกค้า (015), `provider_orders` + สถานะ requested→…→delivered, `RouteOptimizationPage`
 - **MISSING:** live API integration กับ Grab/LINEMAN, ETA จริง, dispatch อัตโนมัติ
 
@@ -175,6 +176,7 @@ Admin guard: `AdminRoute` (App.tsx) + role จาก `profiles.role` (`is_admin(
 | **PHASE 0 TRUTH LOCK (read-only live verify) 48/48** — RLS anon posture (S-3 ปิดจริง), protected tables anon-blocked, public tables anon-readable, RPC 007/008/016 ทั้งหมดมี + guard ทำงาน, tables/columns/columns migration markers ครบ, storage bucket `bmb-images` มี, anon INSERT ถูกปฏิเสธ | **2026-09-21** | `e2e/truthLock.cjs` + `e2e/truth-lock-result.json` (48/48) |
 | **PHASE 1 MONEY+ORDER (code):** tests 111/111, lint 0 errors, build ✓, SQL contracts 8/8 — pre-order RPC/audit migration ready (017/018), CI workflow + ESLint ติดตั้ง, orderVocabulary canonical, EF secret-key fallback ลบแล้ว, playwright โลคัล | **2026-09-21** | `npm test` 111/111 · `npm run lint` 0 err · `npm run build` ✓ (sw.js) · `e2e/sql-contract-result.json` 8/8 · migrations `017`/`018` (await `supabase db push`) |
 | **PHASE 2 KITCHEN (code):** tests 115/115, build ✓, lint ✓ — migration 019 (recipes/BOM, production batches, auto deduct/restore + sold-out, hook in transition), client `kitchenService.ts` (+4 tests) | **2026-09-21** | `npm test` 115/115 · migrations `019` (await `supabase db push`) · `e2e/contracts_019_kitchen.sql` (owner) · `e2e/sql-contract-result.json` 8/8 |
+| **PHASE 3 BITE DRIVE (code):** tests 132/132, build ✓, lint ✓ — migration 020 (zone fee authoritative + server distance, drivers & delivery_assignments + RPC dispatch/self-service, seed zones), client `drivers/deliveryFee/providers` services, Rider PWA ใหม่, provider adapters plug-in ready, ETA calibration | **2026-09-21** | `npm test` 132/132 · migrations `020` (await `supabase db push`) · `e2e/contracts_020_bite_drive.sql` (owner) |
 | **ยังไม่มีหลักฐาน:** transaction บัตรจริงครบวงจร, refund จริง, Grab/LINEMAN live call, notification จริง, SQL dump `pg_policies` (owner ต้องรัน `e2e/truth-lock.sql` ใน SQL Editor) | — | — |
 
 ## 18. LIVE
@@ -250,11 +252,12 @@ Voice/Intent module (cancelled ตาม Reality Map เดิม) · White-labe
 
 > **Roadmap v2 (2026-09-20 — scope revision):** phase plan ถูกแทนด้วยโครงสร้าง v2 — **Domain A** (PHASE 0–4) → **PWA-100-GATE** → REAL-WORLD PILOT → PATCH/HARDENING LOOP → **Milestone 1 = BMB PRODUCTION 100%** → PHASE 5–7 → SAAS PRODUCTIZATION GATE → **Domain B** (PHASE 8–15) → **Milestone 2 = BMB SAAS READY** · Future SaaS requirements (COM/RES/THEME/SITE/QR/DINE/CRM/MKT/REV/CAT/LOC/IAM/INV-PRO/ANA/AI-BIZ/AI-FC/WL/SAAS = 215 items) อยู่ Domain B = **DEFERRED ทั้งหมด และห้ามบล็อก PWA 100%** · รายละเอียด gate ทั้งหมด → `BMB_100_PERCENT_CLOSURE_BOOK.md` §A/A2/B+
 
-1. **PHASE 0 — TRUTH LOCK: เสร็จ 2026-09-21** (REST-level 48/48 — `e2e/truth-lock-result.json`; S-3 ปิดจริงที่ REST) · **Owner action:** รัน `e2e/truth-lock.sql` ใน SQL Editor เพื่อปิด SEC-01 ชั้น SQL
-2. **PHASE 1 — MONEY + ORDER: CODE เสร็จ 2026-09-21** — PAY-01/S-2 (migration 017), PRE-01, PAY-04 (orderVocabulary), SEC-03 (migration 018), SEC-04, QA-01/02/03/04 · **Tests 111/111 + build + lint ผ่าน** · **Owner actions:** `supabase db push` (017+018) → `sqlContracts --include-new` → deploy EF → **บิลบัตรจริง 1 ใบ (PAY-02) + refund จริง 1 รายการ (PAY-03)**
-3. **PHASE 2 — KITCHEN: CODE เสร็จ 2026-09-21** — INV-01/02 (migration 019 auto-deduct/restore + auto sold-out, hook ใน transition confirm/cancel), KIT-01 (production_batches + create_production_batch/kitchen_queue + client kitchenService), KIT-02 (recipes/BOM + get_inventory_requirements + bomFeasibility) · **Tests 115/115 + build + lint ผ่าน** · **Owner action:** `supabase db push` (019) → รัน `e2e/contracts_019_kitchen.sql` + `sqlContracts --include-new` · **UI panel kitchen queue ใน admin = งานค้างถัดไปในเฟส 2**
-4. **Phase 3 (BITE DRIVE):** driver จริงผ่าน Rider PWA + zone fee authoritative + external provider adapter (DEL-01/02/03)
-5. รายละเอียดทั้งหมด → `BMB_100_PERCENT_CLOSURE_BOOK.md`
+1. **PHASE 0 — TRUTH LOCK: เสร็จ 2026-09-21** (48/48) · **Owner:** `e2e/truth-lock.sql`
+2. **PHASE 1 — MONEY + ORDER: CODE เสร็จ** (111/111) · **Owner:** push 017+018 → `sqlContracts --include-new` → deploy EF → **บิลบัตรจริง 1 ใบ (PAY-02) + refund จริง 1 รายการ (PAY-03)**
+3. **PHASE 2 — KITCHEN: CODE เสร็จ** (115/115, migration 019) · **Owner:** push 019 → `contracts_019_kitchen.sql` · **ค้าง:** admin UI kitchen queue panel
+4. **PHASE 3 — BITE DRIVE: CODE เสร็จ 2026-09-21** (132/132, migration 020) — DEL-01 zone fee authoritative, DEL-02 driver real + Rider PWA, DEL-03 provider adapters plug-in ready (รอ live keys), DEL-04 ETA calibration · **Owner:** push 020 → `e2e/contracts_020_bite_drive.sql` + `sqlContracts --include-new` → **เทสทริปส่งจริง 1 ทริปผ่าน Rider PWA** → นำ live keys มาใส่ env (DEL-03)
+5. **Phase 4 (PWA + ADMIN + AI GATE):** PWA-01 perf ≥90, PWA-02 offline/error, NOT-01 notification center, ADM-01 errors feed, ADM-07 mascot self-service, SEC-02 AI proxy, AI-01 fix, AI-02 base, AI-03 server memory
+6. รายละเอียดทั้งหมด → `BMB_100_PERCENT_CLOSURE_BOOK.md`
 
 ---
 
