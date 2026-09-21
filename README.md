@@ -1,7 +1,7 @@
 # Bite Me Baby — Restaurant Commerce & Operations Platform (PWA)
 
-> **สถานะตรวจสอบล่าสุด:** 2026-09-20 · **Commit:** `887944f` · **Production:** https://bitemebaby-5f7.pages.dev + Supabase `ivkdfognyiwjcmrhcnwz`
-> **Tests:** 106/106 ผ่าน (วัดจริง 2026-09-20) · **Build:** ผ่าน (tsc strict + vite, PWA sw.js) · **Lint/CI:** ยังไม่มี
+> **สถานะตรวจสอบล่าสุด:** 2026-09-20 · **Commit:** `6be8e30` · **Production:** https://bitemebaby-5f7.pages.dev + Supabase `ivkdfognyiwjcmrhcnwz`
+> **Tests:** 111/111 ผ่าน (วัดจริง 2026-09-20) · **Build:** ผ่าน (tsc strict + vite, PWA sw.js) · **Lint/CI:** Lint 0 errors baseline + CI workflow (2026-09-21)
 
 ## Current Product
 

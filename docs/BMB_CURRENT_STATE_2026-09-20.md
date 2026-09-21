@@ -1,6 +1,6 @@
 # BMB_CURRENT_STATE_2026-09-20.md
 
-> **วันที่ตรวจ:** 2026-09-20 · **Commit:** `887944f1c45bc28ee3d84b13d1642e45ab414791` (2026-09-20 21:26 +0700, working tree clean)
+> **วันที่ตรวจ:** 2026-09-21 · **Commit:** `6be8e306335bcf4c1da7a5835630102545eaf9a5` (2026-09-21, PHASE 1 MONEY+ORDER code complete)
 > **บทบาทเอกสารนี้:** ความจริงของระบบ ณ วันที่ล่าสุด (truth lock) — ตอบคำถามเดียว: "วันนี้ระบบมีอะไรจริง?"
 > **ห้ามใช้** README หรือเอกสารเก่าเป็น source of truth — ลำดับความจริง: Actual Code > DB/Migrations > Edge Functions > Tests > Production Evidence > Docs > README
 
@@ -157,7 +157,7 @@ Admin guard: `AdminRoute` (App.tsx) + role จาก `profiles.role` (`is_admin(
 
 ## 16. Tests
 
-- **Unit/Integration:** 106/106 ผ่าน (11 files, vitest, in-memory Supabase mock) — วัดจริง 2026-09-20
+- **Unit/Integration:** 111/111 ผ่าน (12 files, vitest, in-memory Supabase mock) — วัดจริง 2026-09-21
 - **ครอบคลุม:** order state machine (allow-list, skip/backward), payment contracts (amount tamper→ERR_AMOUNT_MISMATCH, COD เฉพาะ delivered, PromptPay pending→processing→paid), webhook signature/refund logic, availability engine, delivery router, cart isolation, AI model fallback, API layer
 - **ไม่ครอบคลุม:** SQL functions จริงใน Postgres (mock จำลอง RPC — เสี่ยง drift กับ SQL จริง), admin UI flows, notification, offline recovery
 - **E2E (ผ่านจริง 2026-09-19):** Playwright + system Chrome ต่อ production DB สร้าง user จริง→สั่งจริง→ชำระ→track; webhook smoke T1–T6; prod smoke (2026-09-17)
@@ -224,11 +224,11 @@ Voice/Intent module (cancelled ตาม Reality Map เดิม) · White-labe
 
 ## 27. Current Commit
 
-`887944f1c45bc28ee3d84b13d1642e45ab414791` — "feat(admin+assets): login error transparency (Thai guidance for Email-not-confirmed/invalid-credentials), wire new 3D mascot asset set (14 poses incl. thumbsup-approval path fix), Thai admin guide (login fix, 3 ways to promote admin)" (2026-09-20 21:26 +0700) — working tree clean
+`6be8e306335bcf4c1da7a5835630102545eaf9a5` — "feat(phase1): MONEY+ORDER closure code (pre-order server-authoritative pricing 017, server audit 018, canonical vocab PAY-04, CI+lint 0 errors, SQL contracts 8/8)" (2026-09-21)
 
 ## 28. Last Verified Date
 
-**2026-09-20** — tests + build รันใหม่ใน session นี้; e2e/webhook evidence ล่าสุด 2026-09-19; prod smoke 2026-09-17
+**2026-09-21** — tests 111/111 + build + lint 0 errors + SQL contracts 8/8 รันใหม่ใน session นี้; e2e/webhook evidence ล่าสุด 2026-09-19; prod smoke 2026-09-17
 
 ## 29. Evidence References
 

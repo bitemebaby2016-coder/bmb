@@ -1,6 +1,6 @@
 # BMB_100_PERCENT_CLOSURE_BOOK.md
 
-> **Version:** 2.0 (Scope Revision 2026-09-20 — Two Milestones + Two Closure Domains + PWA-100-GATE) · **Commit base:** `887944f`
+> **Version:** 2.0 (Scope Revision 2026-09-20 — Two Milestones + Two Closure Domains + PWA-100-GATE) · **Commit base:** `6be8e30`
 > **บทบาท:** master checklist "อะไรที่ยังต้องทำเพื่อไปถึง target" — derive จาก code จริง + Master Product Spec (ไม่ใช่ generic checklist)
 > กฎ: ทุก item ต้องมี Evidence + Verification Method + Acceptance Criteria · ห้ามปิด item ด้วยเอกสาร — ปิดด้วย evidence เท่านั้น
 > สถานะใช้คำเดียวกับ CURRENT_STATE: LIVE / PARTIAL / SKELETON / MISSING / BROKEN / VERIFIED / DEFERRED

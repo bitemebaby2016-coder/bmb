@@ -1,6 +1,6 @@
 # BMB_MASTER_PRODUCT_SPEC.md
 
-> **Version:** 2.0 (Scope Revision: Restaurant Commerce & Operations Platform — 2026-09-20) · **Commit base:** `887944f`
+> **Version:** 2.0 (Scope Revision: Restaurant Commerce & Operations Platform — 2026-09-20) · **Commit base:** `6be8e30`
 > **บทบาทเอกสารนี้:** "ระบบ BMB ต้องเป็นอะไรเมื่อ product target สำเร็จ" — ไม่ใช่สถานะปัจจุบัน
 > สถานะปัจจุบันอยู่ที่ `BMB_CURRENT_STATE_2026-09-20.md` · สิ่งที่ยังต้องทำอยู่ที่ `BMB_100_PERCENT_CLOSURE_BOOK.md`
 > ห้ามเขียน target ให้ดูเหมือนมี implementation แล้ว ทุก requirement ระบุคลาส: **REQUIRED / OPTIONAL / DEFERRED**
