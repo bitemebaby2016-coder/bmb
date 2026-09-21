@@ -485,11 +485,12 @@ ALTER TABLE public.delivery_assignments ADD COLUMN IF NOT EXISTS updated_at    T
 DO $$
 BEGIN
   IF to_regclass('public.drivers') IS NOT NULL
-     AND NOT EXISTS (SELECT 1 FROM pg_constraint
-                      WHERE conrelid = 'public.drivers'::regclass
-                        AND contype = 'u'
-                        AND (SELECT array_agg(attname) FROM unnest(conkey) k
-                              JOIN pg_attribute a ON a.attrelid = conrelid AND a.attnum = k) = ARRAY['phone']) THEN
+     AND NOT EXISTS (
+       SELECT 1 FROM pg_constraint
+        WHERE conrelid = 'public.drivers'::regclass
+          AND contype = 'u'
+          AND conname = 'drivers_phone_key'
+     ) THEN
     EXECUTE 'ALTER TABLE public.drivers ADD CONSTRAINT drivers_phone_key UNIQUE (phone)';
   END IF;
 END $$;
@@ -497,11 +498,12 @@ END $$;
 DO $$
 BEGIN
   IF to_regclass('public.delivery_assignments') IS NOT NULL
-     AND NOT EXISTS (SELECT 1 FROM pg_constraint
-                      WHERE conrelid = 'public.delivery_assignments'::regclass
-                        AND contype = 'u'
-                        AND (SELECT array_agg(attname) FROM unnest(conkey) k
-                              JOIN pg_attribute a ON a.attrelid = conrelid AND a.attnum = k) = ARRAY['order_number']) THEN
+     AND NOT EXISTS (
+       SELECT 1 FROM pg_constraint
+        WHERE conrelid = 'public.delivery_assignments'::regclass
+          AND contype = 'u'
+          AND conname = 'delivery_assignments_order_number_key'
+     ) THEN
     EXECUTE 'ALTER TABLE public.delivery_assignments ADD CONSTRAINT delivery_assignments_order_number_key UNIQUE (order_number)';
   END IF;
 END $$;
