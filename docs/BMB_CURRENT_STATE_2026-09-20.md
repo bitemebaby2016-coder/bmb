@@ -90,7 +90,7 @@ PWA live บน https://bitemebaby-5f7.pages.dev, Supabase project `ivkdfognyiwj
 
 | Gate | ผลลัพธ์จริง | ข้อมูลเอกสารเดิม | หมายเหตุ |
 |------|------------|-----------------|----------|
-| `npm test` | **154 PASS** (19/21 test files) | บอก 163/163 | 2 files ล้มเพราะไม่มี VITE_SUPABASE_ANON_KEY (ไม่ใช่ logic error) |
+| `npm test` | **154 PASS** (19/21 files เมื่อไม่มี key) | บอก 163/163 | 2 files ต้องการ VITE_SUPABASE_ANON_KEY — บนเครื่องที่มี .env ครบ = **163/163** (ต่างกันตาม environment ไม่ใช่ contradiction) |
 | `npm run build` | **PASS** -- tsc strict + vite + PWA sw.js (80 entries) | บอกผ่าน | Precache 80 entries |
 | `npm run lint` | **0 errors** | บอก 0 | QA-02 baseline |
 | `node e2e/sqlContracts.cjs --include-new` | **29/29 PASSED** (หลัง push 020) | เดิมบอก 25/29 | bite-drive 4/4 deployed -- evidence ใน sql-contract-result.json |
