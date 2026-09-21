@@ -88,20 +88,15 @@ export function MenuPage() {
     const scheduleTarget = payload.scheduledDate || product.scheduled_date || defaultPreorderDate()
 
     const preOrder = await createPreOrder({
-      customer_id: customer?.id || 'guest',
+      product_id: product.id,
+      quantity: payload.quantity,
+      delivery_round_id: payload.deliveryRoundId || product.delivery_round_id || undefined,
+      scheduled_date: scheduleTarget,
       customer_name: customer?.name || 'Guest',
       customer_phone: customer?.phone || '',
-      product_id: product.id,
-      product_name: product.name,
-      quantity: payload.quantity,
-      unit_price: Number(product.price) || 0,
-      total_amount: (Number(product.price) || 0) * payload.quantity,
-      delivery_round_id: payload.deliveryRoundId || product.delivery_round_id || 'round-1',
-      scheduled_date: scheduleTarget,
       delivery_latitude: 10.7016,
       delivery_longitude: 102.1429,
       delivery_address: '',
-      status: 'pending',
       special_instructions: '',
     })
 

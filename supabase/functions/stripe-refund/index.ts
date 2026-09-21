@@ -83,7 +83,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
   const supabaseUrl = Deno.env.get('SUPABASE_URL') || ''
   const anonKey = Deno.env.get('SUPABASE_ANON_KEY') || ''
   const sk = Deno.env.get('STRIPE_SECRET_KEY') || ''
-  const serviceKey = Deno.env.get('bmb_backend_production_supabase_service_role_key') || Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || ''
+  const serviceKey = Deno.env.get('bmb_backend_production_supabase_service_role_key') || ''
 
   if (!sk || !serviceKey || !supabaseUrl) {
     return json({ error: 'ERR_NOT_CONFIGURED' }, 500)

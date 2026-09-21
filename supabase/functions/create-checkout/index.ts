@@ -12,7 +12,7 @@
 // Env (supabase secrets set ...):
 //   STRIPE_SECRET_KEY, SUPABASE_URL, SUPABASE_ANON_KEY,
 //   bmb_backend_production_supabase_service_role_key (2026-09-19 rotation; legacy
-//   SUPABASE_SERVICE_ROLE_KEY kept as fallback until retired)
+//   SUPABASE_SERVICE_ROLE_KEY fallback REMOVED (2026-09-21 SEC-04))
 //
 // Called from src/lib/paymentGateway.ts via supabase.functions.invoke('create-checkout')
 // ============================================
@@ -73,7 +73,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
 
   const supabaseUrl = Deno.env.get('SUPABASE_URL') || ''
   const anonKey = Deno.env.get('SUPABASE_ANON_KEY') || ''
-  const serviceKey = Deno.env.get('bmb_backend_production_supabase_service_role_key') || Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || ''
+  const serviceKey = Deno.env.get('bmb_backend_production_supabase_service_role_key') || ''
 
   // ---- 1. Verify the caller (Supabase Auth JWT) ----
   const userRes = await fetch(`${supabaseUrl}/auth/v1/user`, {

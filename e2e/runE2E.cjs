@@ -1,7 +1,7 @@
 // ============================================
-// Bite Me Baby — E2E Smoke Runner (Playwright + system Chrome)
-// Flow: Landing → Menu (same-day) → Cart → Checkout → Payment → Tracking
-//       + Pre-order → real order → Tracking
+// Bite Me Baby â€” E2E Smoke Runner (Playwright + system Chrome)
+// Flow: Landing â†’ Menu (same-day) â†’ Cart â†’ Checkout â†’ Payment â†’ Tracking
+//       + Pre-order â†’ real order â†’ Tracking
 //       + Empty cart mascot state
 // Usage: node e2e/runE2E.cjs
 // Evidence: e2e/screenshots/*.png + e2e/e2e-result.json
@@ -9,7 +9,7 @@
 const { spawn, execSync } = require('node:child_process')
 const fs = require('fs')
 const path = require('path')
-const { chromium } = require('D:/selfprint-v3-react/node_modules/playwright')
+const { chromium } = require('playwright')
 
 const PROJ = 'D:/A PROJECT/Bite Me Baby'
 const PORT = 4173
@@ -90,7 +90,7 @@ let child = null
     const testUser = await createTestUser()
     if (testUser) console.log('E2E signed in as test user ' + testUserId)
 
-    // ---------- FLOW A: same-day order → checkout → payment → tracking ----------
+    // ---------- FLOW A: same-day order â†’ checkout â†’ payment â†’ tracking ----------
     {
       const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 1, isMobile: true })
       const page = await ctx.newPage()
@@ -142,7 +142,7 @@ await page.waitForSelector('[data-testid="checkout-address"]', { timeout: 15000 
       const bodyText = await page.locator('body').textContent()
       await page.screenshot({ path: path.join(SHOTS, '05-payment.png'), fullPage: false })
       const txnVisible = await page.locator('[data-testid="txn-input"]').count()
-      record('order created → payment step', txnVisible > 0 || !String(bodyText).includes('Not Found'), { url: page.url(), txnVisible, hasNotFound: String(bodyText).includes('Not Found') })
+      record('order created â†’ payment step', txnVisible > 0 || !String(bodyText).includes('Not Found'), { url: page.url(), txnVisible, hasNotFound: String(bodyText).includes('Not Found') })
 const txn = '15160001' + String(Date.now()).slice(-8) // real-looking numeric PromptPay ref (numeric = valid JSON pre-013)
       await page.fill('[data-testid="txn-input"]', txn)
       await page.click('[data-testid="confirm-payment"]')
@@ -150,10 +150,10 @@ const txn = '15160001' + String(Date.now()).slice(-8) // real-looking numeric Pr
       await page.waitForSelector('[data-testid="track-order-number"]', { timeout: 15000 })
       const badge = await page.locator('[data-testid="track-order-number"]').textContent()
       await page.screenshot({ path: path.join(SHOTS, '06-tracking.png'), fullPage: false })
-      record('payment confirmed → tracking', true, { badge })
+      record('payment confirmed â†’ tracking', true, { badge })
       await ctx.close()
     }
-// ---------- FLOW B: pre-order → real order (pre_orders) → tracking ----------
+// ---------- FLOW B: pre-order â†’ real order (pre_orders) â†’ tracking ----------
     {
       const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true })
       const page = await ctx.newPage()
@@ -172,7 +172,7 @@ const txn = '15160001' + String(Date.now()).slice(-8) // real-looking numeric Pr
       await page.waitForSelector('[data-testid="track-order-number"]', { timeout: 15000 })
       const preBadge = await page.locator('[data-testid="track-order-number"]').textContent()
       await page.screenshot({ path: path.join(SHOTS, '08-preorder-tracking.png'), fullPage: false })
-      record('pre-order real order → tracking', preBadge !== null && String(preBadge).includes('PO-'), { badge: preBadge })
+      record('pre-order real order â†’ tracking', preBadge !== null && String(preBadge).includes('PO-'), { badge: preBadge })
       await ctx.close()
     }
 
@@ -210,9 +210,9 @@ const txn = '15160001' + String(Date.now()).slice(-8) // real-looking numeric Pr
           return keys.map((k) => localStorage.getItem(k))
         })
         await page.screenshot({ path: path.join(SHOTS, '11-banner-dismissed.png'), fullPage: false })
-        record('banner ✕ closes it immediately', afterClose < bannerCount, { before: bannerCount, after: afterClose })
+        record('banner âœ• closes it immediately', afterClose < bannerCount, { before: bannerCount, after: afterClose })
         record('banner dismissal persisted per-promo in localStorage', stored.length >= 1 && stored.every((v) => v === '1'), { stored })
-        // Reload — the dismissed banner must not pop up again.
+        // Reload â€” the dismissed banner must not pop up again.
         await page.goto(BASE + '/', { waitUntil: 'networkidle', timeout: 45000 })
         await sleep(1200)
         const afterReload = await page.locator('[data-testid="floating-ad-banner"]').count()

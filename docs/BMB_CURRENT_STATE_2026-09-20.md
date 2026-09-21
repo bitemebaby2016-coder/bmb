@@ -173,6 +173,7 @@ Admin guard: `AdminRoute` (App.tsx) + role จาก `profiles.role` (`is_admin(
 | Migrations 005–013 + 011/014 ถูก apply แล้ว (e2e/webhook ใช้ feature ที่ต้องมี migration เหล่านั้น) | 2026-09-19 | e2e evidence + owner confirmation |
 | Tests 106/106 + build ผ่าน (tsc+vite, sw.js) | 2026-09-20 | รันใน session audit นี้ |
 | **PHASE 0 TRUTH LOCK (read-only live verify) 48/48** — RLS anon posture (S-3 ปิดจริง), protected tables anon-blocked, public tables anon-readable, RPC 007/008/016 ทั้งหมดมี + guard ทำงาน, tables/columns/columns migration markers ครบ, storage bucket `bmb-images` มี, anon INSERT ถูกปฏิเสธ | **2026-09-21** | `e2e/truthLock.cjs` + `e2e/truth-lock-result.json` (48/48) |
+| **PHASE 1 MONEY+ORDER (code):** tests 111/111, lint 0 errors, build ✓, SQL contracts 8/8 — pre-order RPC/audit migration ready (017/018), CI workflow + ESLint ติดตั้ง, orderVocabulary canonical, EF secret-key fallback ลบแล้ว, playwright โลคัล | **2026-09-21** | `npm test` 111/111 · `npm run lint` 0 err · `npm run build` ✓ (sw.js) · `e2e/sql-contract-result.json` 8/8 · migrations `017`/`018` (await `supabase db push`) |
 | **ยังไม่มีหลักฐาน:** transaction บัตรจริงครบวงจร, refund จริง, Grab/LINEMAN live call, notification จริง, SQL dump `pg_policies` (owner ต้องรัน `e2e/truth-lock.sql` ใน SQL Editor) | — | — |
 
 ## 18. LIVE
@@ -248,9 +249,9 @@ Voice/Intent module (cancelled ตาม Reality Map เดิม) · White-labe
 
 > **Roadmap v2 (2026-09-20 — scope revision):** phase plan ถูกแทนด้วยโครงสร้าง v2 — **Domain A** (PHASE 0–4) → **PWA-100-GATE** → REAL-WORLD PILOT → PATCH/HARDENING LOOP → **Milestone 1 = BMB PRODUCTION 100%** → PHASE 5–7 → SAAS PRODUCTIZATION GATE → **Domain B** (PHASE 8–15) → **Milestone 2 = BMB SAAS READY** · Future SaaS requirements (COM/RES/THEME/SITE/QR/DINE/CRM/MKT/REV/CAT/LOC/IAM/INV-PRO/ANA/AI-BIZ/AI-FC/WL/SAAS = 215 items) อยู่ Domain B = **DEFERRED ทั้งหมด และห้ามบล็อก PWA 100%** · รายละเอียด gate ทั้งหมด → `BMB_100_PERCENT_CLOSURE_BOOK.md` §A/A2/B+
 
-1. **PHASE 0 — TRUTH LOCK: ดำเนินการแล้ว 2026-09-21** (REST-level 48/48 ผ่าน — `e2e/truth-lock-result.json`) ผล: S-3 ปิดจริงที่ระดับ REST, RPC/trigger/tables ทั้งหมดครบ, storage `bmb-images` พร้อม · **Owner action ค้าง:** รัน `e2e/truth-lock.sql` ใน Supabase SQL Editor เพื่อ dump `pg_policies` + migration markers (ปิด SEC-01 ชั้น SQL ให้สมบูรณ์)
-2. Phase 1 (MONEY+ORDER): S-2 pre-order price authority, 1 บิลบัตรจริงครบวงจร (owner: จ่ายบัตรจริง 1 บิล), refund จริง 1 รายการ (owner), mapping สถานะเป็น vocabulary เดียว, SEC-03 server audit, QA-01 CI, QA-02 lint, QA-03 SQL contract tests, QA-04 e2e reproducible
-3. Phase 2 (KITCHEN): inventory auto-deduct + recipe/BOM
+1. **PHASE 0 — TRUTH LOCK: เสร็จ 2026-09-21** (REST-level 48/48 — `e2e/truth-lock-result.json`; S-3 ปิดจริงที่ REST) · **Owner action:** รัน `e2e/truth-lock.sql` ใน SQL Editor เพื่อปิด SEC-01 ชั้น SQL
+2. **PHASE 1 — MONEY + ORDER: CODE เสร็จ 2026-09-21** — PAY-01/S-2 (migration 017 RPC server-authoritative pre-order + client RPC-based: `create_pre_order_with_items`/`quote_pre_order`/`cancel_pre_order`, revoke client write), PRE-01 (rounds จาก DB), PAY-04 (orderVocabulary + OrdersPage), SEC-03 (migration 018 audit_logs + RPC + audit ใน RPC เงิน/ออเดอร์), SEC-04 (ลบ legacy key env EF 4 ตัว), QA-01 (CI workflow), QA-02 (lint 0 errors), QA-03 (`e2e/sqlContracts.cjs` 8/8 + SQL suite), QA-04 (playwright โลคัล) · **Tests 111/111 + build + lint ผ่าน** · **Owner actions:** (ก) `supabase db push` (017+018) → รัน `node e2e/sqlContracts.cjs --include-new` + `e2e/contracts_017_018.sql` · (ข) deploy EF → smoke · (ค) **REAL-WORLD PROOF: บิลบัตรจริง 1 ใบ (PAY-02) + refund จริง 1 รายการ (PAY-03)**
+3. **Phase 2 (KITCHEN):** inventory auto-deduct + recipe/BOM (INV-01/02, KIT-01/02)
 4. รายละเอียดทั้งหมด → `BMB_100_PERCENT_CLOSURE_BOOK.md`
 
 ---

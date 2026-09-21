@@ -15,7 +15,7 @@ PWA สั่งอาหารจริงของร้าน Bite Me Baby (�
 
 ## Current Phase
 
-**PHASE 0 — TRUTH LOCK: ดำเนินการแล้ว (2026-09-21 — REST-level 48/48 ผ่าน, `e2e/truth-lock-result.json`)** · เหลือ owner รัน `e2e/truth-lock.sql` ใน SQL Editor เพื่อปิด SEC-01 ระดับ SQL (dump `pg_policies` + migration markers) · กำลังทำ **PHASE 1 — MONEY + ORDER** · Roadmap v2: PHASE 0–4 → PWA-100-GATE → REAL-WORLD PILOT → PATCH LOOP → **M1: BMB Production 100%** → PHASE 5–7 → SAAS GATE → PHASE 8–15 → **M2: BMB SaaS Ready**
+**PHASE 1 — MONEY + ORDER: CODE เสร็จ 2026-09-21** (tests 111/111 · lint 0 errors · build ✓ · SQL contracts 8/8) — PAY-01/S-2 pre-order server-side pricing (migration 017), PRE-01 rounds จาก DB, PAY-04 orderVocabulary เดียว, SEC-03 server audit (migration 018), SEC-04 ลบ legacy key env, QA-01 CI, QA-02 lint, QA-03 SQL contract tests, QA-04 playwright โลคัล · **รอ owner:** `supabase db push` (017+018) → `node e2e/sqlContracts.cjs --include-new` → deploy EF → **บิลบัตรจริง 1 ใบ (PAY-02) + refund จริง 1 รายการ (PAY-03)** · ต่อไป PHASE 0–4 → PWA-100-GATE → PILOT → **M1** → PHASE 5–7 → SAAS GATE → **M2**
 
 ## Future SaaS Direction (ไม่ได้ implement — DEFERRED ทั้งหมด)
 

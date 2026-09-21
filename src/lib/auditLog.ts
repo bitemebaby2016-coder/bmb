@@ -4,6 +4,7 @@
 // ============================================
 
 import { storageGet, storageSet } from './bmbStorage'
+import { supabase } from './supabase'
 
 export type AuditAction = 
   | 'user_login'
@@ -84,6 +85,60 @@ export function writeAuditLog(params: {
     }
   } catch (error) {
     console.error('[BMB] Failed to write audit log:', error)
+  }
+
+  // SEC-03 (Phase 1): also persist server-side via RPC append_audit_log (fire-and-forget).
+  void pushAuditLogServer({
+    action: params.action,
+    entity_type: params.entity_type,
+    entity_id: params.entity_id || null,
+    description: params.description,
+    metadata: params.metadata || {},
+    user_email: readStoredUserEmail(),
+  }).catch(() => {})
+}
+
+/**
+ * SEC-03: persist an audit entry in the DB (audit_logs table, migration 018).
+ * user_id is set server-side from the session (never trusted from the client).
+ */
+export async function pushAuditLogServer(params: {
+  action: AuditAction
+  entity_type: string
+  entity_id?: string | null
+  description: string
+  metadata?: Record<string, any> | null
+  user_email?: string | null
+}): Promise<{ ok: boolean } | null> {
+  try {
+    const { data, error } = await supabase.rpc('append_audit_log', {
+      p_action: params.action,
+      p_entity_type: params.entity_type,
+      p_entity_id: params.entity_id || null,
+      p_description: params.description,
+      p_metadata: params.metadata || {},
+      p_user_email: params.user_email || null,
+    })
+    if (error) {
+      console.warn('[BMB] Server audit push failed (offline/guest):', error.message)
+      return null
+    }
+    return data as unknown as { ok: boolean }
+  } catch (e) {
+    console.warn('[BMB] Server audit push exception:', String(e).slice(0, 120))
+    return null
+  }
+}
+
+function readStoredUserEmail(): string | null {
+  try {
+    const raw = localStorage.getItem('bmb_auth')
+    if (!raw) return null
+    const parsed = JSON.parse(raw)
+    const email = parsed?.customer?.email || parsed?.email || null
+    return typeof email === "string" && email.length > 0 ? email : null
+  } catch {
+    return null
   }
 }
 

@@ -8,19 +8,9 @@ import { Link } from 'react-router-dom'
 import { useAuthStore } from '@/store/authStore'
 import { getOrders, type OrderForm } from '@/lib/bmbAdminApi_orders'
 import { getPreOrders, type PreOrder } from '@/lib/preOrderService'
+import { getServerStatusLabel } from '@/lib/orderVocabulary'
 
-const ORDER_STATUS_LABEL: Record<string, string> = {
-  pending: '⏳ รอดำเนินการ',
-  confirmed: '✅ ยืนยันแล้ว',
-  preparing: '🍳 กำลังปรุง',
-  ready_for_dispatch: '📦 เตรียมจัดส่ง',
-  dispatched: '🛵 กำลังจัดส่ง',
-  in_transit: '🛵 ระหว่างทาง',
-  arrived: '📍 ถึงจุดส่ง',
-  delivered: '🏠 ส่งแล้ว',
-  cancelled: '✖️ ยกเลิก',
-  failed: '⚠️ ล้มเหลว',
-}
+
 
 const PAYMENT_LABEL: Record<string, string> = {
   pending: 'รอชำระ',
@@ -103,7 +93,7 @@ export function OrdersPage() {
               <li key={o.order_number} className="card p-4 flex items-center justify-between gap-3">
                 <div className="min-w-0">
                   <p className="font-bold text-brand-accent">#{o.order_number}</p>
-                  <p className="text-sm text-brand-muted">{ORDER_STATUS_LABEL[o.status] || o.status}
+                  <p className="text-sm text-brand-muted">{getServerStatusLabel(o.status)}
                     {' · '}{PAYMENT_LABEL[o.payment_status] || o.payment_status}</p>
                 </div>
                 <Link to={`/track/${o.order_number}`} className="btn btn-outline btn-sm whitespace-nowrap">ติดตาม</Link>

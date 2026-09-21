@@ -1,7 +1,7 @@
-// Bite Me Baby — Production smoke test (Playwright)
+// Bite Me Baby â€” Production smoke test (Playwright)
 const fs = require('fs')
 const path = require('path')
-const { chromium } = require('D:/selfprint-v3-react/node_modules/playwright')
+const { chromium } = require('playwright')
 const PROJ = 'D:/A PROJECT/Bite Me Baby'
 const URL = 'https://bitemebaby-5f7.pages.dev'
 ;(async () => {

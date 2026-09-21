@@ -1,0 +1,50 @@
+{
+  "project": "bitemebaby production",
+  "timestamp": "2026-09-21T00:03:09.166Z",
+  "total": 8,
+  "passed": 8,
+  "pendingDeploy": 4,
+  "note": "pre-017 contract set — run again with --include-new after supabase db push (017+018)",
+  "checks": [
+    {
+      "name": "QA-03 create_order_with_items must reject empty order (ERR)",
+      "ok": true,
+      "detail": "status=400 {\"code\":\"P0001\",\"details\":null,\"hint\":null,\"message\":\"ERR_NOT_AUTHENTICATED\"}"
+    },
+    {
+      "name": "QA-03 create_order_with_items must reject missing round",
+      "ok": true,
+      "detail": "status=400 {\"code\":\"P0001\",\"details\":null,\"hint\":null,\"message\":\"ERR_NOT_AUTHENTICATED\"}"
+    },
+    {
+      "name": "QA-03 transition_order_status must fail on unknown order",
+      "ok": true,
+      "detail": "status=400 {\"code\":\"P0001\",\"details\":null,\"hint\":null,\"message\":\"ERR_NOT_AUTHENTICATED\"}"
+    },
+    {
+      "name": "QA-03 create_payment_intent_record must guard missing order",
+      "ok": true,
+      "detail": "status=400 {\"code\":\"P0001\",\"details\":null,\"hint\":null,\"message\":\"ERR_NOT_AUTHENTICATED\"}"
+    },
+    {
+      "name": "QA-03 confirm_offline_payment must guard non-admin",
+      "ok": true,
+      "detail": "status=400 {\"code\":\"P0001\",\"details\":null,\"hint\":null,\"message\":\"ERR_FORBIDDEN\"}"
+    },
+    {
+      "name": "QA-03 mark_payment_failed must guard non-admin",
+      "ok": true,
+      "detail": "status=400 {\"code\":\"P0001\",\"details\":null,\"hint\":null,\"message\":\"ERR_FORBIDDEN\"}"
+    },
+    {
+      "name": "QA-03 record_payment_result must guard empty order",
+      "ok": true,
+      "detail": "status=400 {\"code\":\"P0001\",\"details\":null,\"hint\":null,\"message\":\"ERR_MISSING_ORDER\"}"
+    },
+    {
+      "name": "QA-03 compute_addons_price exists (016) and returns 0",
+      "ok": true,
+      "detail": "status=200 0"
+    }
+  ]
+}

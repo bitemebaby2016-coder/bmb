@@ -536,20 +536,15 @@ describe('Pre-order API — real order creation (not just toast)', () => {
     storageClear()
     const { createPreOrder } = await import('@/lib/preOrderService')
     const preOrder = await createPreOrder({
-      customer_id: 'cust-1',
-      customer_name: 'Somchai Rakdee',
-      customer_phone: '0812345678',
       product_id: 'prod-5',
-      product_name: 'Tomyum Gung Fresh',
       quantity: 1,
-      unit_price: 85,
-      total_amount: 85,
       delivery_round_id: 'round-2',
       scheduled_date: '2030-01-01',
+      customer_name: 'Somchai Rakdee',
+      customer_phone: '0812345678',
       delivery_latitude: 10.7016,
       delivery_longitude: 102.1429,
       delivery_address: 'Test address',
-      status: 'pending',
       special_instructions: '',
     })
     expect(preOrder).not.toBeNull()
@@ -559,20 +554,15 @@ describe('Pre-order API — real order creation (not just toast)', () => {
   it('getPreOrders returns the created pre-order', async () => {
     const { createPreOrder, getPreOrders } = await import('@/lib/preOrderService')
     const created = await createPreOrder({
-      customer_id: 'cust-1',
-      customer_name: 'Somchai Rakdee',
-      customer_phone: '0812345678',
       product_id: 'prod-6',
-      product_name: 'New Menu',
       quantity: 2,
-      unit_price: 95,
-      total_amount: 190,
       delivery_round_id: 'round-3',
       scheduled_date: '2030-01-05',
+      customer_name: 'Somchai Rakdee',
+      customer_phone: '0812345678',
       delivery_latitude: 10.7016,
       delivery_longitude: 102.1429,
       delivery_address: '',
-      status: 'pending',
       special_instructions: '',
     })
     const orders = await getPreOrders({ status: 'pending' })

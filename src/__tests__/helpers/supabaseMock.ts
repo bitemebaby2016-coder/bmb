@@ -1,5 +1,5 @@
 // ============================================
-// Bite Me Baby — In-memory Supabase client mock
+// Bite Me Baby â€” In-memory Supabase client mock
 // ============================================
 // Offline replacement for the real Supabase REST client, used by api.test.ts.
 // Implements the postgrest-js fluent surface the app's API layer actually
@@ -7,44 +7,44 @@
 //
 // The seed data mirrors supabase/migrations/004_fix_uuid_to_text.sql, so the
 // API tests exercise the real code paths deterministically without a DB.
-// The user is planning a full Supabase reset + rebuild later (001→004); until
+// The user is planning a full Supabase reset + rebuild later (001â†’004); until
 // then the whole suite must be green offline.
 
 export interface MockRow {
   [key: string]: any
 }
 
-// Canonical seed (TEXT ids — same rows as migration 004 Section 10)
+// Canonical seed (TEXT ids â€” same rows as migration 004 Section 10)
 export const seed: Record<string, MockRow[]> = {
   product_categories: [
-    { id: 'cat-1', name: 'จานเดียว', slug: 'dish', icon: '🍜', sort_order: 1, is_active: true, created_at: new Date().toISOString() },
-    { id: 'cat-2', name: 'ข้าว', slug: 'rice', icon: '🍚', sort_order: 2, is_active: true, created_at: new Date().toISOString() },
-    { id: 'cat-3', name: 'แกง', slug: 'curry', icon: '', sort_order: 3, is_active: true, created_at: new Date().toISOString() },
-    { id: 'cat-4', name: 'เครื่องดื่ม', slug: 'drink', icon: '🥤', sort_order: 4, is_active: true, created_at: new Date().toISOString() },
-    { id: 'cat-5', name: 'ของหวาน', slug: 'dessert', icon: '🍰', sort_order: 5, is_active: true, created_at: new Date().toISOString() },
+    { id: 'cat-1', name: 'à¸ˆà¸²à¸™à¹€à¸”à¸µà¸¢à¸§', slug: 'dish', icon: 'ðŸœ', sort_order: 1, is_active: true, created_at: new Date().toISOString() },
+    { id: 'cat-2', name: 'à¸‚à¹‰à¸²à¸§', slug: 'rice', icon: 'ðŸš', sort_order: 2, is_active: true, created_at: new Date().toISOString() },
+    { id: 'cat-3', name: 'à¹à¸à¸‡', slug: 'curry', icon: '', sort_order: 3, is_active: true, created_at: new Date().toISOString() },
+    { id: 'cat-4', name: 'à¹€à¸„à¸£à¸·à¹ˆà¸­à¸‡à¸”à¸·à¹ˆà¸¡', slug: 'drink', icon: 'ðŸ¥¤', sort_order: 4, is_active: true, created_at: new Date().toISOString() },
+    { id: 'cat-5', name: 'à¸‚à¸­à¸‡à¸«à¸§à¸²à¸™', slug: 'dessert', icon: 'ðŸ°', sort_order: 5, is_active: true, created_at: new Date().toISOString() },
   ],
   delivery_rounds: [
-    { id: 'round-1', round_key: 'morning', display_name: 'เช้า (07:00-10:00)', cutoff_time: '06:00', delivery_start: '07:00', delivery_end: '10:00', max_capacity: 60, current_count: 0, date: new Date().toISOString().slice(0, 10), scheduled_date: new Date().toISOString().slice(0, 10), name: 'morning', status: 'active' },
-    { id: 'round-2', round_key: 'midday', display_name: 'เที่ยง (11:00-14:00)', cutoff_time: '10:00', delivery_start: '11:00', delivery_end: '14:00', max_capacity: 80, current_count: 0, date: new Date().toISOString().slice(0, 10), scheduled_date: new Date().toISOString().slice(0, 10), name: 'midday', status: 'active' },
-    { id: 'round-3', round_key: 'evening', display_name: 'เย็น (17:00-20:00)', cutoff_time: '16:00', delivery_start: '17:00', delivery_end: '20:00', max_capacity: 100, current_count: 0, date: new Date().toISOString().slice(0, 10), scheduled_date: new Date().toISOString().slice(0, 10), name: 'evening', status: 'active' },
+    { id: 'round-1', round_key: 'morning', display_name: 'à¹€à¸Šà¹‰à¸² (07:00-10:00)', cutoff_time: '06:00', delivery_start: '07:00', delivery_end: '10:00', max_capacity: 60, current_count: 0, date: new Date().toISOString().slice(0, 10), scheduled_date: new Date().toISOString().slice(0, 10), name: 'morning', status: 'active' },
+    { id: 'round-2', round_key: 'midday', display_name: 'à¹€à¸—à¸µà¹ˆà¸¢à¸‡ (11:00-14:00)', cutoff_time: '10:00', delivery_start: '11:00', delivery_end: '14:00', max_capacity: 80, current_count: 0, date: new Date().toISOString().slice(0, 10), scheduled_date: new Date().toISOString().slice(0, 10), name: 'midday', status: 'active' },
+    { id: 'round-3', round_key: 'evening', display_name: 'à¹€à¸¢à¹‡à¸™ (17:00-20:00)', cutoff_time: '16:00', delivery_start: '17:00', delivery_end: '20:00', max_capacity: 100, current_count: 0, date: new Date().toISOString().slice(0, 10), scheduled_date: new Date().toISOString().slice(0, 10), name: 'evening', status: 'active' },
   ],
   products: [
-    { id: 'prod-1', name: 'ผัดไทยกุ้งสด', description: 'ผัดไทยกุ้งสดสดใหม่', price: 65.00, category_id: 'cat-1', image_url: '', is_available: true, is_featured: true, is_preorder: false, prep_minutes: 15, sort_order: 1, delivery_round_id: null, scheduled_date: null },
-    { id: 'prod-2', name: 'ข้าวหมูทอดกระเทียม', description: 'ข้าวหมูทอดกระเทียมหอมๆ', price: 70.00, category_id: 'cat-2', image_url: '', is_available: true, is_featured: false, is_preorder: false, prep_minutes: 10, sort_order: 2, delivery_round_id: null, scheduled_date: null },
-    { id: 'prod-3', name: 'แกงเขียวหวานไก่', description: 'แกงเขียวหวานไก่ creamy', price: 75.00, category_id: 'cat-3', image_url: '', is_available: true, is_featured: true, is_preorder: false, prep_minutes: 20, sort_order: 3, delivery_round_id: null, scheduled_date: null },
-    { id: 'prod-4', name: 'กาแฟเย็น', description: 'กาแฟเย็นหอมๆ', price: 35.00, category_id: 'cat-4', image_url: '', is_available: true, is_featured: false, is_preorder: false, prep_minutes: 5, sort_order: 4, delivery_round_id: null, scheduled_date: null },
-    { id: 'prod-5', name: 'เมนูโหวต: ต้มยำกุ้งสด', description: 'โหวตเมนูนี้เพื่อจองล่วงหน้า — ส่งรอบหน้า', price: 85.00, category_id: 'cat-1', image_url: '', is_available: true, is_featured: true, is_preorder: true, prep_minutes: 25, sort_order: 5, delivery_round_id: 'round-2', scheduled_date: null },
-    { id: 'prod-6', name: 'เมนูใหม่: ผัดไทยทะเล', description: 'โหวตเมนูนี้เพื่อจองล่วงหน้า — ส่งรอบหน้า', price: 95.00, category_id: 'cat-1', image_url: '', is_available: true, is_featured: true, is_preorder: true, prep_minutes: 20, sort_order: 6, delivery_round_id: 'round-3', scheduled_date: null },
+    { id: 'prod-1', name: 'à¸œà¸±à¸”à¹„à¸—à¸¢à¸à¸¸à¹‰à¸‡à¸ªà¸”', description: 'à¸œà¸±à¸”à¹„à¸—à¸¢à¸à¸¸à¹‰à¸‡à¸ªà¸”à¸ªà¸”à¹ƒà¸«à¸¡à¹ˆ', price: 65.00, category_id: 'cat-1', image_url: '', is_available: true, is_featured: true, is_preorder: false, prep_minutes: 15, sort_order: 1, delivery_round_id: null, scheduled_date: null },
+    { id: 'prod-2', name: 'à¸‚à¹‰à¸²à¸§à¸«à¸¡à¸¹à¸—à¸­à¸”à¸à¸£à¸°à¹€à¸—à¸µà¸¢à¸¡', description: 'à¸‚à¹‰à¸²à¸§à¸«à¸¡à¸¹à¸—à¸­à¸”à¸à¸£à¸°à¹€à¸—à¸µà¸¢à¸¡à¸«à¸­à¸¡à¹†', price: 70.00, category_id: 'cat-2', image_url: '', is_available: true, is_featured: false, is_preorder: false, prep_minutes: 10, sort_order: 2, delivery_round_id: null, scheduled_date: null },
+    { id: 'prod-3', name: 'à¹à¸à¸‡à¹€à¸‚à¸µà¸¢à¸§à¸«à¸§à¸²à¸™à¹„à¸à¹ˆ', description: 'à¹à¸à¸‡à¹€à¸‚à¸µà¸¢à¸§à¸«à¸§à¸²à¸™à¹„à¸à¹ˆ creamy', price: 75.00, category_id: 'cat-3', image_url: '', is_available: true, is_featured: true, is_preorder: false, prep_minutes: 20, sort_order: 3, delivery_round_id: null, scheduled_date: null },
+    { id: 'prod-4', name: 'à¸à¸²à¹à¸Ÿà¹€à¸¢à¹‡à¸™', description: 'à¸à¸²à¹à¸Ÿà¹€à¸¢à¹‡à¸™à¸«à¸­à¸¡à¹†', price: 35.00, category_id: 'cat-4', image_url: '', is_available: true, is_featured: false, is_preorder: false, prep_minutes: 5, sort_order: 4, delivery_round_id: null, scheduled_date: null },
+    { id: 'prod-5', name: 'à¹€à¸¡à¸™à¸¹à¹‚à¸«à¸§à¸•: à¸•à¹‰à¸¡à¸¢à¸³à¸à¸¸à¹‰à¸‡à¸ªà¸”', description: 'à¹‚à¸«à¸§à¸•à¹€à¸¡à¸™à¸¹à¸™à¸µà¹‰à¹€à¸žà¸·à¹ˆà¸­à¸ˆà¸­à¸‡à¸¥à¹ˆà¸§à¸‡à¸«à¸™à¹‰à¸² â€” à¸ªà¹ˆà¸‡à¸£à¸­à¸šà¸«à¸™à¹‰à¸²', price: 85.00, category_id: 'cat-1', image_url: '', is_available: true, is_featured: true, is_preorder: true, prep_minutes: 25, sort_order: 5, delivery_round_id: 'round-2', scheduled_date: null },
+    { id: 'prod-6', name: 'à¹€à¸¡à¸™à¸¹à¹ƒà¸«à¸¡à¹ˆ: à¸œà¸±à¸”à¹„à¸—à¸¢à¸—à¸°à¹€à¸¥', description: 'à¹‚à¸«à¸§à¸•à¹€à¸¡à¸™à¸¹à¸™à¸µà¹‰à¹€à¸žà¸·à¹ˆà¸­à¸ˆà¸­à¸‡à¸¥à¹ˆà¸§à¸‡à¸«à¸™à¹‰à¸² â€” à¸ªà¹ˆà¸‡à¸£à¸­à¸šà¸«à¸™à¹‰à¸²', price: 95.00, category_id: 'cat-1', image_url: '', is_available: true, is_featured: true, is_preorder: true, prep_minutes: 20, sort_order: 6, delivery_round_id: 'round-3', scheduled_date: null },
   ],
   inventory: [
-    { id: 'ing-1', name: 'ข้าว', category: 'carb', unit: 'kg', current_stock: 10, min_stock: 5, max_stock: 20, unit_price: 45.00, supplier_name: 'ร้านข้าวจันทบุรี', supplier_phone: '0812345678' },
-    { id: 'ing-2', name: 'ไก่', category: 'protein', unit: 'kg', current_stock: 5, min_stock: 3, max_stock: 15, unit_price: 85.00, supplier_name: 'ฟาร์มไก่จันทบุรี', supplier_phone: '0812345679' },
-    { id: 'ing-3', name: 'ไข่ไก่', category: 'protein', unit: 'piece', current_stock: 2, min_stock: 10, max_stock: 50, unit_price: 3.00, supplier_name: 'ฟาร์มไข่จันทบุรี', supplier_phone: '0812345680' },
-    { id: 'ing-4', name: 'น้ำมัน', category: 'sauce', unit: 'liter', current_stock: 3, min_stock: 2, max_stock: 10, unit_price: 40.00, supplier_name: 'ร้านน้ำมันจันทบุรี', supplier_phone: '0812345681' },
+    { id: 'ing-1', name: 'à¸‚à¹‰à¸²à¸§', category: 'carb', unit: 'kg', current_stock: 10, min_stock: 5, max_stock: 20, unit_price: 45.00, supplier_name: 'à¸£à¹‰à¸²à¸™à¸‚à¹‰à¸²à¸§à¸ˆà¸±à¸™à¸—à¸šà¸¸à¸£à¸µ', supplier_phone: '0812345678' },
+    { id: 'ing-2', name: 'à¹„à¸à¹ˆ', category: 'protein', unit: 'kg', current_stock: 5, min_stock: 3, max_stock: 15, unit_price: 85.00, supplier_name: 'à¸Ÿà¸²à¸£à¹Œà¸¡à¹„à¸à¹ˆà¸ˆà¸±à¸™à¸—à¸šà¸¸à¸£à¸µ', supplier_phone: '0812345679' },
+    { id: 'ing-3', name: 'à¹„à¸‚à¹ˆà¹„à¸à¹ˆ', category: 'protein', unit: 'piece', current_stock: 2, min_stock: 10, max_stock: 50, unit_price: 3.00, supplier_name: 'à¸Ÿà¸²à¸£à¹Œà¸¡à¹„à¸‚à¹ˆà¸ˆà¸±à¸™à¸—à¸šà¸¸à¸£à¸µ', supplier_phone: '0812345680' },
+    { id: 'ing-4', name: 'à¸™à¹‰à¸³à¸¡à¸±à¸™', category: 'sauce', unit: 'liter', current_stock: 3, min_stock: 2, max_stock: 10, unit_price: 40.00, supplier_name: 'à¸£à¹‰à¸²à¸™à¸™à¹‰à¸³à¸¡à¸±à¸™à¸ˆà¸±à¸™à¸—à¸šà¸¸à¸£à¸µ', supplier_phone: '0812345681' },
   ],
   customers: [
-    { id: 'cust-1', full_name: 'สมชาย รักดี', phone: '0812345678', email: 'somchai@example.com', address: '123 สุขสันต์ ซอย 1 กรุงเทพฯ 10100', loyalty_points: 50 },
-    { id: 'cust-2', full_name: 'สมหญิง ดีใจ', phone: '0898765432', email: 'somying@example.com', address: '456 ใหม่ ถนนเพชรบุรี กรุงเทพฯ 10400', loyalty_points: 120 },
+    { id: 'cust-1', full_name: 'à¸ªà¸¡à¸Šà¸²à¸¢ à¸£à¸±à¸à¸”à¸µ', phone: '0812345678', email: 'somchai@example.com', address: '123 à¸ªà¸¸à¸‚à¸ªà¸±à¸™à¸•à¹Œ à¸‹à¸­à¸¢ 1 à¸à¸£à¸¸à¸‡à¹€à¸—à¸žà¸¯ 10100', loyalty_points: 50 },
+    { id: 'cust-2', full_name: 'à¸ªà¸¡à¸«à¸à¸´à¸‡ à¸”à¸µà¹ƒà¸ˆ', phone: '0898765432', email: 'somying@example.com', address: '456 à¹ƒà¸«à¸¡à¹ˆ à¸–à¸™à¸™à¹€à¸žà¸Šà¸£à¸šà¸¸à¸£à¸µ à¸à¸£à¸¸à¸‡à¹€à¸—à¸žà¸¯ 10400', loyalty_points: 120 },
   ],
   orders: [],
   order_items: [],
@@ -119,10 +119,9 @@ export function createSupabaseMock() {
     return builder
   }
 
-  // RPC mock — mirrors migration 007 `create_order_with_items` server-authoritative
+  // RPC mock â€” mirrors migration 007 `create_order_with_items` server-authoritative
   // contract (for client-contract tests: client payload must NOT carry financial
   // fields; server always computes from products.price / delivery rules).
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async function rpc(name: string, params: any): Promise<{ data: any; error: any }> {
     if (name === 'create_order_with_items') {
       const p: any = { ...(params ?? {}) }
@@ -393,6 +392,114 @@ export function createSupabaseMock() {
       return { data: { ok: true, order_number: p.p_order_number, from, to }, error: null }
     }
 
+// ============ PHASE 1 RPC handlers (migration 017 pre-order + 018 audit) ============
+    if (name === 'create_pre_order_with_items') {
+      const p = params ?? {}
+      const products = tables['products'] || []
+      const prod = products.find((x: any) => x.id === p.p_product_id)
+      if (!prod) return { data: null, error: { code: 'ERR_PRODUCT_NOT_FOUND', message: 'ERR_PRODUCT_NOT_FOUND' } }
+      if (!prod.is_preorder) return { data: null, error: { code: 'ERR_NOT_PREORDER_PRODUCT', message: 'ERR_NOT_PREORDER_PRODUCT' } }
+      if (!prod.is_available) return { data: null, error: { code: 'ERR_PRODUCT_UNAVAILABLE', message: 'ERR_PRODUCT_UNAVAILABLE' } }
+      const qty = Number(p.p_quantity || 0)
+      if (qty < 1) return { data: null, error: { code: 'ERR_QUANTITY_INVALID', message: 'ERR_QUANTITY_INVALID' } }
+      const rounds = tables['delivery_rounds'] || []
+      const round = rounds.find((r: any) => r.id === p.p_delivery_round_id)
+      if (!round) return { data: null, error: { code: 'ERR_ROUND_NOT_FOUND', message: 'ERR_ROUND_NOT_FOUND' } }
+      if (!['active', 'open', 'scheduled'].includes(String(round.status))) {
+        return { data: null, error: { code: 'ERR_ROUND_CLOSED', message: 'ERR_ROUND_CLOSED' } }
+      }
+      if (Number(round.current_count) >= Number(round.max_capacity)) {
+        return { data: null, error: { code: 'ERR_ROUND_FULL', message: 'ERR_ROUND_FULL' } }
+      }
+      // authoritative price from seeded products â€” client price (if any) is ignored
+      const unit = Number(prod.price)
+      const total = Math.round(unit * qty * 100) / 100
+      const orderNumber = `PO-${String(p.p_scheduled_date || '').replace(/-/g, '')}-${String(Math.floor(Math.random() * 900) + 100)}`
+      const row: any = {
+        id: `po-test-${Date.now()}`,
+        order_number: orderNumber,
+        customer_id: 'auth-test-user',
+        customer_ref: 'auth-test-user',
+        customer_name: String(p.p_customer_name || 'Guest'),
+        customer_phone: String(p.p_customer_phone || ''),
+        product_id: prod.id,
+        product_name: prod.name,
+        quantity: qty,
+        unit_price: unit,
+        total_amount: total,
+        delivery_round_id: String(p.p_delivery_round_id),
+        scheduled_date: String(p.p_scheduled_date || round.scheduled_date || ''),
+        delivery_latitude: p.p_delivery_latitude,
+        delivery_longitude: p.p_delivery_longitude,
+        delivery_address: String(p.p_delivery_address || ''),
+        status: 'pending',
+        special_instructions: String(p.p_special_instructions || ''),
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      }
+      ;(tables['pre_orders'] ||= []).push(clone(row))
+      round.current_count = Number(round.current_count) + 1
+      return {
+        data: {
+          id: row.id,
+          order_number: orderNumber,
+          product_id: prod.id,
+          product_name: prod.name,
+          quantity: qty,
+          unit_price: unit,
+          total_amount: total,
+          delivery_round_id: String(p.p_delivery_round_id),
+          round_display_name: round.display_name,
+          scheduled_date: String(row.scheduled_date),
+          status: 'pending',
+          customer_ref: 'auth-test-user',
+        },
+        error: null,
+      }
+    }
+
+    if (name === 'quote_pre_order') {
+      const p = params ?? {}
+      const prod = (tables['products'] || []).find((x: any) => x.id === p.p_product_id)
+      if (!prod) return { data: null, error: { code: 'ERR_PRODUCT_NOT_FOUND', message: 'ERR_PRODUCT_NOT_FOUND' } }
+      const q = Math.max(Number(p.p_quantity || 1), 1)
+      const unit = Number(prod.price)
+      return { data: { product_id: prod.id, unit_price: unit, quantity: q, total_amount: Math.round(unit * q * 100) / 100 }, error: null }
+    }
+
+    if (name === 'cancel_pre_order') {
+      const p = params ?? {}
+      const orders = tables['pre_orders'] || []
+      const po = orders.find((o: any) => o.order_number === p.p_order_number)
+      if (!po) return { data: null, error: { code: 'ERR_ORDER_NOT_FOUND', message: 'ERR_ORDER_NOT_FOUND' } }
+      if (['cancelled', 'expired', 'delivered', 'picked_up'].includes(String(po.status))) {
+        return { data: null, error: { code: 'ERR_ORDER_TERMINAL', message: 'ERR_ORDER_TERMINAL' } }
+      }
+      po.status = 'cancelled'
+      po.cancelled_at = new Date().toISOString()
+      po.updated_at = new Date().toISOString()
+      if (po.delivery_round_id) {
+        const round = (tables['delivery_rounds'] || []).find((r: any) => r.id === po.delivery_round_id)
+        if (round) round.current_count = Math.max(Number(round.current_count) - 1, 0)
+      }
+      return { data: { ok: true, order_number: p.p_order_number, status: 'cancelled' }, error: null }
+    }
+
+    if (name === 'append_audit_log') {
+      const p = params ?? {}
+      ;(tables['audit_logs'] ||= []).push(clone({
+        id: `alog-test-${Date.now()}`,
+        user_id: 'auth-test-user',
+        user_email: p.p_user_email || null,
+        action: p.p_action,
+        entity_type: p.p_entity_type || '',
+        entity_id: p.p_entity_id || null,
+        description: p.p_description || '',
+        metadata: p.p_metadata || {},
+        created_at: new Date().toISOString(),
+      }))
+      return { data: { ok: true, id: `alog-test-${Date.now()}`, user_id: 'auth-test-user' }, error: null }
+    }
     return { data: null, error: { code: 'PGRST202', message: 'rpc not mocked' } }
   }
 
