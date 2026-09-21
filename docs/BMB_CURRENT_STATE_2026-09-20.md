@@ -153,7 +153,7 @@ PWA live บน https://bitemebaby-5f7.pages.dev, Supabase project `ivkdfognyiwj
 - **Residual blockers**:
   - ~~Owner SQL suite (`e2e/contracts_020_bite_drive.sql` ใน SQL Editor)~~ **RESOLVED 2026-09-21** — owner รันผ่าน (Success, transaction rolled back — หลังแก้ haversine_km 42883)
   - Lighthouse Perf >= 90 --> รอ owner รัน production
-  - AI key VITE_OPENROUTER_API_KEY ยังอยู่ใน .env.local (SEC-02 กำลังดำเนินการ)
+  - ~~AI key VITE_OPENROUTER_API_KEY ยังอยู่ใน .env.local~~ **RESOLVED 2026-09-21** — production bundle scan = **0 key hits**; chat ใช้ `ai-proxy` EF (key server-side) — legacy key ใน .env.local เครื่อง owner ไม่ถูก bundle และไม่ถูก client code อ่าน (aiToolCalling.ts เป็น dead path)
   - Card loop: ต้องการ bill จริงรายการเดียวสำหรับ PAY-02 ครบ
 
 ---
@@ -165,7 +165,7 @@ PWA live บน https://bitemebaby-5f7.pages.dev, Supabase project `ivkdfognyiwj
 | 1 | ~~Migration 020 ไม่อยู่บน live DB~~ RESOLVED: db push สำเร็จ 2026-09-21 | DEL-01..04 | **VERIFIED** | -- |
 | 2 | ~~SQL contracts 28/29~~ RESOLVED: 29/29 PASSED (compute_delivery_fee_rpc deployed) | DEL-01 | **VERIFIED** | -- |
 | 3 | Lighthouse รอบวัดแรก (2026-09-21, owner, **PREVIEW deploy** c04ffb8b): Perf **41** / A11y 85 / BP 100 / SEO 61, LCP 29.3s, TBT 910ms, SI 18.1s, CLS 0 | PWA-01 | PARTIAL | วัดซ้ำบน production domain (bitemebaby-5f7.pages.dev) + แก้ LCP |
-| 4 | SEC-02: AI key ใน .env.local | PARTIAL | CONTINUES | ย้ายเข้า ai-proxy EF |
+| 4 | ~~SEC-02: AI key ใน .env.local~~ RESOLVED: production bundle scan 0 key hits (2026-09-21), chat ผ่าน ai-proxy EF | SEC-02 | **VERIFIED** | -- |
 | 5 | REFUND: EF พร้อมแต่ไม่มี evidence การคืนเงินจริง | PARTIAL | PENDING | ต้องการ refund จริง 1 รายการ |
 | 6 | Card loop: ไม่มี bill จริง | PARTIAL | PENDING | ต้องการ 1 real bill |
 | 7 | External courier APIs (Grab / LINEMAN / Foodpanda) — **ทุกเจ้ายังรอ API keys** (sandbox/mock) | DEL-EXT | DEFERRED/SANDBOX | รอ keys จาก call-center |
@@ -206,11 +206,12 @@ CODE / LIVE DB / TEST/EVIDENCE --> override --> DOCUMENT
 
 | Evidence | ตำแหน่ง |
 |----------|---------|
-| Tests 163/163 | `npm test` (2026-09-21 — env ครบ; ไม่มี env = 154) |
-| CI | GitHub Actions run #15 **PASS** (Node 24 — test+lint+build, head `0e85c37`) |
+| Tests 163/163 | `npm test` (2026-09-21 21:26 น. — env ครบ; ไม่มี env = 154) |
+| CI | GitHub Actions runs #15/#16 **PASS** (Node 24 — test+lint+build, heads `0e85c37`/`f03a0f7`) |
 | Build + PWA | `npm run build` --> dist/sw.js (80 entries) |
 | Lint 0 errors | `npm run lint` |
-| SQL contracts REST | `e2e/sql-contract-result.json` (**29/29** -- 2026-09-21T11:55Z) |
+| SQL contracts REST | `e2e/sql-contract-result.json` (**29/29** -- 2026-09-21T14:27Z re-run) |
+| SEC-02 bundle scan | production JS scan 2026-09-21 = **0 key hits** (index.html + 9 bundles) — `ai-proxy` EF only |
 | Owner SQL suites | `e2e/contracts_*.sql` |
 | Prod smoke / webhook | `e2e/prod-smoke.json`, `e2e/webhook-smoke-result.json` |
 | PHASE 6/7 tests | `src/__tests__/adminUi.test.ts` (11 tests) |

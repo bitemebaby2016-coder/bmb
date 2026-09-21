@@ -56,7 +56,7 @@ npm test           # vitest — 163 tests (offline in-memory Supabase mock; ต�
 npm run build      # tsc + vite build (สร้าง dist/ + sw.js)
 ```
 
-Env: Supabase URL + anon key, `VITE_OPENROUTER_API_KEY` (⚠️ จะถูกย้ายเข้า server proxy ใน Phase 4 — SEC-02), Stripe keys อยู่ฝั่ง Edge Function env เท่านั้น · E2E/smoke scripts ใน `e2e/` (ดู CURRENT_STATE S-7)
+Env: Supabase URL + anon key · AI key อยู่ฝั่ง **server เท่านั้น** (`ai-proxy` Edge Function — SEC-02 verified 2026-09-21: production bundle scan = 0 key hits, client ไม่อ่าน key) · Stripe keys อยู่ฝั่ง Edge Function env เท่านั้น · E2E/smoke scripts ใน `e2e/` (ดู CURRENT_STATE S-7)
 
 ## Document Update Rule
 

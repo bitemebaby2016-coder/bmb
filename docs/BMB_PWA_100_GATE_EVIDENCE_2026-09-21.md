@@ -23,7 +23,7 @@ node e2e/sqlContracts.cjs --include-new   # live DB REST probes -- 29/29 PASSED 
 | Unit tests | **163 PASS** (21 files) | `npm test` (incl. `adminUi.test.ts` 11 new) |
 | Build (tsc strict + vite) | PASS | `dist/index.html`, `dist/sw.js`, precache 80 entries |
 | Lint | 0 errors | `npm run lint` |
-| SQL contracts REST | **29/29 PASSED** | `e2e/sql-contract-result.json` (2026-09-21T11:55Z) |
+| SQL contracts REST | **29/29 PASSED** | `e2e/sql-contract-result.json` (2026-09-21T14:27Z re-run) |
 | CI workflow | **PASS** | GitHub Actions run #15 head `0e85c37` — Node 24, test+lint+build (runs #3-#14 were red on Node 20: jsdom 30 engines) |
 
 ---
@@ -59,7 +59,7 @@ node e2e/sqlContracts.cjs --include-new   # live DB REST probes -- 29/29 PASSED 
 ## 5. Owner Tasks to Close GATE
 
 1. ~~`supabase db push` + `--include-new`~~ DONE 2026-09-21 (29/29)
-2. Supabase SQL Editor: `e2e/contracts_020_bite_drive.sql` -> PASS (transaction rollback)
+2. ~~Supabase SQL Editor: `e2e/contracts_020_bite_drive.sql`~~ DONE 2026-09-21 (owner ran -> PASS, transaction rolled back)
 3. Lighthouse (production mobile) -> record score in this file (§6)
 4. REAL-WORLD PILOT plan (2-4 weeks) -> evidence in this pack
 
@@ -73,6 +73,10 @@ node e2e/sqlContracts.cjs --include-new   # live DB REST probes -- 29/29 PASSED 
 - **CAVEAT:** วัดบน **PREVIEW deployment** (ไม่ใช่ production domain `bitemebaby-5f7.pages.dev`)
   + หน้าแรกติดสถานะ loading (mascot thinking) — LCP 29.3s น่าจะโดน data-load stall
 - **NEXT:** วัดซ้ำบน production domain + สืบสาเหตุ LCP (data fetch / hero image) → Target Performance >= 90
+- **2026-09-21 (assistant verification round — attempted 3 paths, all failed, ตามจริง):**
+  - `lighthouse` CLI local → **EPERM** จาก chrome-launcher temp cleanup (AV lock บนเครื่องนี้, 3 ครั้งรวม profile/no-space/system-temp)
+  - PageSpeed Insights API (Lighthouse บน Google infra) → **429 Too Many Requests** (rate limit ต่อ IP, 2 ครั้ง)
+  - → **ยังไม่มี production Lighthouse measurement ใหม่** — gate เปิดอยู่ รอ owner วัด (Chrome DevTools หรือ PSI ตอน rate limit คลาย)
 
 ---
 

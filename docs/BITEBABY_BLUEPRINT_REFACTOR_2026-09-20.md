@@ -45,7 +45,7 @@ $ npm run build     -> tsc (0 errors) + vite build  built (PWA generateSW ok)
 - **tsc 0 errors** (npm run build)
 
 > ⚠️ **ตัวเลขเหล่านี้เป็นของ session เดิม และอาจไม่ตรงกับปัจจุบัน**
-> Current reality (HEAD b77550ae, 2026-09-21): **154 PASS**, Build PASS, Lint 0 errors
+> Current reality ต้องอ่านจาก `docs/BMB_CURRENT_STATE_2026-09-20.md` เท่านั้น (ล่าสุด ตรวจ 2026-09-21: **163/163 PASS** @ HEAD `f03a0f7`, Build PASS, Lint 0 errors)
 
 ---
 

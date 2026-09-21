@@ -77,7 +77,7 @@ REAL BUSINESS > REAL ORDERS > REAL KITCHEN > REAL DELIVERY > REAL DATA > AI > AU
 
 ## 10. BITE AI (SERVICE STAFF)
 
-- **CURRENT:** PARTIAL — chat จริง (GLM-5.2 free + fallback Qwen), tools read-only, key ฝั่ง client (S-1), get_order bug (missing await)
+- **CURRENT:** VERIFIED ส่วน chat — chat จริงผ่าน **ai-proxy EF** (key server-side, production bundle ไม่มี key — ตรวจ 2026-09-21) + fallback Qwen; tools = **SKELETON** (`aiToolCalling.ts` มี definitions แต่ไม่มี component เรียกใช้ — ไม่ถูก bundle); get_order await แก้แล้ว (ตรวจ 2026-09-21)
 - **TARGET (REQUIRED):** AI ผ่าน **server proxy** (ไม่มี key ใน bundle), guardrails ทดสอบได้ (ห้ามค้างราคา/สั่งเกิน stock — AI แนะนำได้ แต่การกระทำต้องผ่าน RPC ที่ enforce กฎ), memory ฝั่ง server ต่อ customer, fallback chain คงเดิม
 - **OPTIONAL:** voice, pro-active nudges, AI ช่วยจัด promotion
 

@@ -28,7 +28,7 @@
 | INV-01/02 | Inventory auto-deduct/restore (019) | VERIFIED | RPC deployed live |
 | KIT-01/02 | Production batches/recipes/BOM (019) | VERIFIED | deployed; UI queue -- PARTIAL (admin) |
 | DEL-01..04 | Bite Drive (020) | VERIFIED | DB APPLIED 2026-09-21 (db push) + REST probes 4/4 ERR-control; real rider flow --> REAL-WORLD PILOT |
-| SEC-02 | AI key off client (ai-proxy EF) | PARTIAL | EF deployed; .env.local legacy key remains |
+| SEC-02 | AI key off client (ai-proxy EF) | VERIFIED | EF deployed; production bundle scan 2026-09-21 = **0 key hits** (9 JS files); client chat ผ่าน ai-proxy — `aiToolCalling.ts` เป็น dead path (ไม่ถูก wire/bundle) |
 | AI-01..03 | AI guardrails/memory (021/022) | VERIFIED | server memory merge + injection suite |
 | NOT-01 | Notification center (021) | VERIFIED | 4 channels + prefs + page |
 | CI-01 | Customer intelligence (022) | VERIFIED | view + RPC + client service |
@@ -59,7 +59,7 @@
 | 1 | All main flows work on production PWA | PARTIAL (Bite Drive RPCs deployed -- real rider flow รอ pilot) |
 | 2 | Prices/payment server-authoritative | VERIFIED |
 | 3 | auth/RLS/audit no sk in frontend | VERIFIED (service-role not exported) |
-| 4 | AI: key in proxy, guardrails, memory | PARTIAL (see SEC-02) |
+| 4 | AI: key in proxy, guardrails, memory | VERIFIED (SEC-02: bundle scan 0 key hits 2026-09-21) |
 | 5 | Offline/retry + ErrorBoundary | VERIFIED |
 | 6 | Perf: vendor split, build | PARTIAL (Lighthouse measurement by owner) |
 | 7 | Evidence-pack: tests/build/lint/contracts | Ready: `docs/BMB_PWA_100_GATE_EVIDENCE_2026-09-21.md` |
