@@ -40,7 +40,7 @@
 | ADM-UI-03 | Admin navigation (PHASE 6) | LIVE | AdminNav on all /admin + Header by role + BottomNav Dashboard |
 | PWA-01 | Vendor split/perf | PARTIAL | index ~114-118kB; final Lighthouse -- owner |
 | PWA-02 | Retry/offline + ErrorBoundary | VERIFIED | offlineUtils + retry |
-| QA-01..04 | CI/lint/tests/SQL contracts | VERIFIED | CI workflow; lint 0; 154 tests; sqlContracts runner |
+| QA-01..04 | CI/lint/tests/SQL contracts | VERIFIED | CI **PASS** run #15 (Node 24); lint 0; 163 tests; sqlContracts 29/29 |
 
 ---
 

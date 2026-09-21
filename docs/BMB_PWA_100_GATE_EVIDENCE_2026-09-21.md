@@ -8,7 +8,7 @@
 ## 1. Recovery Commands (re-run)
 
 ```bash
-npm test                          # unit 154/154
+npm test                          # unit 163/163 (needs VITE_SUPABASE_URL/ANON_KEY in env)
 npm run build                     # tsc strict + vite + PWA (dist/sw.js)
 npm run lint                      # eslint — 0 errors
 node e2e/sqlContracts.cjs --include-new   # live DB REST probes -- 29/29 PASSED (2026-09-21)
@@ -20,11 +20,11 @@ node e2e/sqlContracts.cjs --include-new   # live DB REST probes -- 29/29 PASSED 
 
 | Check | Result | Evidence file |
 |-------|--------|---------------|
-| Unit tests | **154 PASS** | `npm test` (incl. `adminUi.test.ts` 11 new) |
+| Unit tests | **163 PASS** (21 files) | `npm test` (incl. `adminUi.test.ts` 11 new) |
 | Build (tsc strict + vite) | PASS | `dist/index.html`, `dist/sw.js`, precache 80 entries |
 | Lint | 0 errors | `npm run lint` |
 | SQL contracts REST | **29/29 PASSED** | `e2e/sql-contract-result.json` (2026-09-21T11:55Z) |
-| CI workflow | present | `.github/workflows/ci.yml` (push/PR -> test+lint+build) |
+| CI workflow | **PASS** | GitHub Actions run #15 head `0e85c37` — Node 24, test+lint+build (runs #3-#14 were red on Node 20: jsdom 30 engines) |
 
 ---
 

@@ -1,7 +1,7 @@
 # Bite Me Baby — Restaurant Commerce & Operations Platform (PWA)
 
-> **สถานะตรวจสอบล่าสุด:** 2026-09-21 · **Commit:** см. `git log --oneline -1` (`feat(phase6-7)`) · **Production:** https://bitemebaby-5f7.pages.dev + Supabase `ivkdfognyiwjcmrhcnwz`
-> **Tests:** 154 PASSED (วัดจริง 2026-09-21) · 2 files ล้มเพราะไม่มี VITE_SUPABASE_ANON_KEY (ไม่ใช่ logic error) · **Build:** ผ่าน (tsc strict + vite, PWA sw.js) · **Lint/CI:** Lint 0 errors baseline + CI workflow (2026-09-21)
+> **สถานะตรวจสอบล่าสุด:** 2026-09-21 · **Commit:** `0e85c37` (ดู `git log --oneline -1`) · **Production:** https://bitemebaby-5f7.pages.dev + Supabase `ivkdfognyiwjcmrhcnwz`
+> **Tests:** 163/163 PASSED (21 files, วัดจริง 2026-09-21 — ต้องมี VITE_SUPABASE_URL/ANON_KEY ใน env; ไม่มี env = 154, ไม่ใช่ logic error) · **Build:** ผ่าน (tsc strict + vite, PWA sw.js) · **Lint:** 0 errors · **CI: PASS** (GitHub Actions run #15 — Node 24, test+lint+build)
 
 ## Current Product
 
@@ -27,10 +27,10 @@ admin and user manuals rewritten (essentials, overwrite).
 **PHASE 7 UI completion (2026-09-21):** `/admin/content-approvals` (submit + approve/reject + note),
 banner promotions auto-submit to approval, publish gate opens only after `approved` (CNT-01).
 
-**Tests:** 154 PASS · build PASS (tsc strict + vite + PWA sw.js) · lint 0 errors.
+**Tests:** 163/163 PASS (21 files) · build PASS (tsc strict + vite + PWA sw.js) · lint 0 errors · **CI PASS** (GitHub Actions run #15 — Node 24).
 
-**Owner status 2026-09-21:** `supabase db push` สำเร็จ — 020/021/022 APPLIED · `sqlContracts --include-new` = **29/29 PASSED** (evidence: `e2e/sql-contract-result.json`)
-→ NEXT: SQL Editor owner suite (`e2e/contracts_020_bite_drive.sql` → PASS) → Lighthouse production → PWA-100-GATE pack (`docs/BMB_PWA_100_GATE_EVIDENCE_2026-09-21.md`) → REAL-WORLD PILOT → **M1 = BMB PRODUCTION 100%**.
+**Owner status 2026-09-21:** `supabase db push` สำเร็จ — 020/021/022 APPLIED · `sqlContracts --include-new` = **29/29 PASSED** (evidence: `e2e/sql-contract-result.json`) · SQL Editor owner suite (`e2e/contracts_020_bite_drive.sql`) **PASS แล้ว** (transaction rolled back)
+→ NEXT: Lighthouse production → PWA-100-GATE pack (`docs/BMB_PWA_100_GATE_EVIDENCE_2026-09-21.md`) → REAL-WORLD PILOT → **M1 = BMB PRODUCTION 100%**.
 
 ## Future SaaS Direction (ไม่ได้ implement — DEFERRED ทั้งหมด)
 
@@ -52,7 +52,7 @@ banner promotions auto-submit to approval, publish gate opens only after `approv
 ```bash
 npm install
 npm run dev        # http://localhost:3000
-npm test           # vitest — 154 tests (offline in-memory Supabase mock)
+npm test           # vitest — 163 tests (offline in-memory Supabase mock; ต้องมี VITE_SUPABASE_URL/ANON_KEY ใน env)
 npm run build      # tsc + vite build (สร้าง dist/ + sw.js)
 ```
 

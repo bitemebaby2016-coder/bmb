@@ -1,6 +1,6 @@
 # BMB_CURRENT_STATE_2026-09-20.md
 
-> **สถานะตรวจสอบล่าสุด:** 2026-09-21 · **HEAD:** `b77550ae15aca3b42eb9639a0fabccac178506fb`
+> **สถานะตรวจสอบล่าสุด:** 2026-09-21 · **HEAD:** `0e85c370306fab97c842eccf5be2a1ff0522f7bd`
 > **บทบาทเอกสาร:** "ความจริงของระบบวันนี้" -- ยึด CODE + LIVE DB + TEST evidence เป็น source of truth
 > สถานะปัจจุบันอ้างอิงจาก audit รอบนี้เท่านั้น -- **overwrite ไม่ append**
 > เอกสารอื่น (`README`, `MASTER_PRODUCT_SPEC`, `CLOSURE_BOOK`) = reference ไม่ใช่ proof
@@ -90,9 +90,10 @@ PWA live บน https://bitemebaby-5f7.pages.dev, Supabase project `ivkdfognyiwj
 
 | Gate | ผลลัพธ์จริง | ข้อมูลเอกสารเดิม | หมายเหตุ |
 |------|------------|-----------------|----------|
-| `npm test` | **154 PASS** (19/21 files เมื่อไม่มี key) | บอก 163/163 | 2 files ต้องการ VITE_SUPABASE_ANON_KEY — บนเครื่องที่มี .env ครบ = **163/163** (ต่างกันตาม environment ไม่ใช่ contradiction) |
+| `npm test` | **163/163 PASS** (21/21 files — มี VITE_SUPABASE_URL/ANON_KEY ใน env; ยืนยันซ้ำ 2026-09-21) | บอก 163/163 | ไม่มี env = 154 (2 files module-level fail — environment difference ไม่ใช่ logic error) |
 | `npm run build` | **PASS** -- tsc strict + vite + PWA sw.js (80 entries) | บอกผ่าน | Precache 80 entries |
 | `npm run lint` | **0 errors** | บอก 0 | QA-02 baseline |
+| **CI (GitHub Actions)** | **PASS** — run #15 head `0e85c37` (test + lint + build) | แดงตั้งแต่ run #3-#14 | root cause: Node 20 ไม่ตรง jsdom 30 engines (^24.15) — แก้เป็น Node 24 แล้ว |
 | `node e2e/sqlContracts.cjs --include-new` | **29/29 PASSED** (หลัง push 020) | เดิมบอก 25/29 | bite-drive 4/4 deployed -- evidence ใน sql-contract-result.json |
 
 ### Test Files Detail
@@ -107,12 +108,12 @@ PWA live บน https://bitemebaby-5f7.pages.dev, Supabase project `ivkdfognyiwj
 | availabilityEngine.test.ts | PASS | 5 tests |
 | biteAIStore.test.ts | PASS | 8 tests |
 | cartIsolationStore.test.ts | PASS | 6 tests |
-| deliveryFeeApi.test.ts | FAILED | ต้องการ SUPABASE key (module-level fail) |
+| deliveryFeeApi.test.ts | PASS | 5 tests (ต้องมี VITE_SUPABASE_URL/ANON_KEY ใน env) |
 | deliveryRouter.test.ts | PASS | |
 | deliveryRouterStore.test.ts | PASS | 3 tests |
-| kitchenService.test.ts | FAILED | ต้องการ SUPABASE key (module-level fail) |
+| kitchenService.test.ts | PASS | 4 tests (ต้องมี VITE_SUPABASE_URL/ANON_KEY ใน env) |
 | offlineUtils.test.ts | PASS | 5 tests |
-| orderStateMachine.test.ts | PASS | 9 tests |
+| orderStateMachine.test.ts | PASS | 10 tests |
 | orderVocabulary.test.ts | PASS | 5 tests |
 | paymentStateMachine.test.ts | PASS | 15 tests |
 | phases5_7.test.ts | PASS | 5 tests |
@@ -150,7 +151,7 @@ PWA live บน https://bitemebaby-5f7.pages.dev, Supabase project `ivkdfognyiwj
 - **SQL contracts**: 29/29 PASSED (2026-09-21)
 - **Production PWA**: LIVE
 - **Residual blockers**:
-  - Owner SQL suite (`e2e/contracts_020_bite_drive.sql` ใน SQL Editor) ยังไม่รัน
+  - ~~Owner SQL suite (`e2e/contracts_020_bite_drive.sql` ใน SQL Editor)~~ **RESOLVED 2026-09-21** — owner รันผ่าน (Success, transaction rolled back — หลังแก้ haversine_km 42883)
   - Lighthouse Perf >= 90 --> รอ owner รัน production
   - AI key VITE_OPENROUTER_API_KEY ยังอยู่ใน .env.local (SEC-02 กำลังดำเนินการ)
   - Card loop: ต้องการ bill จริงรายการเดียวสำหรับ PAY-02 ครบ
@@ -174,7 +175,7 @@ PWA live บน https://bitemebaby-5f7.pages.dev, Supabase project `ivkdfognyiwj
 ## 11. Next Required Actions
 
 1. ~~db push + contracts~~ **DONE 2026-09-21** (29/29 PASSED)
-2. **Owner:** Supabase SQL Editor -- รัน `e2e/contracts_020_bite_drive.sql` (owner suite)
+2. ~~Owner: Supabase SQL Editor -- รัน `e2e/contracts_020_bite_drive.sql` (owner suite)~~ **DONE 2026-09-21** (PASS — transaction rolled back)
 3. **Owner:** Lighthouse บน production --> ลงหลักฐานใน evidence pack
 4. **REAL-WORLD PILOT** (2-4 สัปดาห์) --> PATCH/HARDENING LOOP --> **M1 = BMB PRODUCTION 100%**
 5. **SAAS PRODUCTIZATION GATE** --> Domain B (PHASE 8+)
@@ -205,7 +206,8 @@ CODE / LIVE DB / TEST/EVIDENCE --> override --> DOCUMENT
 
 | Evidence | ตำแหน่ง |
 |----------|---------|
-| Tests 154/154 | `npm test` (2026-09-21) |
+| Tests 163/163 | `npm test` (2026-09-21 — env ครบ; ไม่มี env = 154) |
+| CI | GitHub Actions run #15 **PASS** (Node 24 — test+lint+build, head `0e85c37`) |
 | Build + PWA | `npm run build` --> dist/sw.js (80 entries) |
 | Lint 0 errors | `npm run lint` |
 | SQL contracts REST | `e2e/sql-contract-result.json` (**29/29** -- 2026-09-21T11:55Z) |
