@@ -74,13 +74,14 @@ DROP POLICY IF EXISTS recipes_admin ON public.recipes;
 CREATE POLICY recipes_admin ON public.recipes
   FOR ALL TO authenticated USING (public.is_admin()) WITH CHECK (public.is_admin());
 
--- Batches: admin read/write, staff auth read via is_admin() (roles ยัง 2 ระดับใน Domain A).
+-- Batches: admin read/write
 DROP POLICY IF EXISTS batches_admin ON public.production_batches;
 CREATE POLICY batches_admin ON public.production_batches
   FOR ALL TO authenticated USING (public.is_admin()) WITH CHECK (public.is_admin());
 DROP POLICY IF EXISTS batch_items_admin ON public.production_batch_items;
 CREATE POLICY batch_items_admin ON public.production_batch_items
   FOR ALL TO authenticated USING (public.is_admin()) WITH CHECK (public.is_admin());
+
 -- ============================================
 -- 3. RPC: deduct_inventory_for_order — INV-01 (auto-deduct at confirm)
 -- ============================================
@@ -129,6 +130,7 @@ BEGIN
            SET current_stock = GREATEST(current_stock - v_item.quantity * v_ingr.quantity_per_unit, 0),
                updated_at = NOW()
          WHERE id = v_ingr.ingredient_id;
+
         INSERT INTO public.inventory_transactions (
           id, inventory_id, type, quantity, reference_type, reference_id, notes, created_by, created_at
         ) VALUES (
@@ -136,11 +138,13 @@ BEGIN
           v_ingr.ingredient_id, 'out', v_item.quantity * v_ingr.quantity_per_unit,
           'order', p_order_number, 'auto-deduct', v_uid::text, NOW()
         );
+
         -- INV-02: below min_stock -> auto sold-out products using this ingredient.
         IF (SELECT current_stock < min_stock FROM public.inventory WHERE id = v_ingr.ingredient_id) THEN
           UPDATE public.products p
              SET is_available = false, updated_at = NOW()
            WHERE p.id IN (SELECT product_id FROM public.recipes WHERE ingredient_id = v_ingr.ingredient_id);
+
           INSERT INTO public.inventory_transactions (
             id, inventory_id, type, quantity, reference_type, reference_id, notes, created_by, created_at
           ) VALUES (
@@ -149,6 +153,7 @@ BEGIN
             'sold_out_auto', v_ingr.ingredient_id, 'auto sold-out (below min_stock)', v_uid::text, NOW()
           );
         END IF;
+
         v_done_ids := array_append(v_done_ids, v_ingr.ingredient_id);
       END IF;
     END LOOP;
@@ -157,6 +162,7 @@ BEGIN
   RETURN jsonb_build_object('ok', true, 'idempotent', false, 'order_number', p_order_number);
 END;
 $$;
+
 -- ============================================
 -- 4. RPC: restore_inventory_for_order — INV-01 (cancel/fail refund)
 -- ============================================
@@ -184,6 +190,7 @@ BEGIN
      WHERE reference_type = 'order' AND reference_id = p_order_number
        AND notes LIKE 'auto-deduct%'
   ) INTO v_had_deduct;
+
   IF NOT v_had_deduct THEN
     RETURN jsonb_build_object('ok', true, 'idempotent', true, 'order_number', p_order_number, 'restored_amount', 0);
   END IF;
@@ -209,6 +216,25 @@ BEGIN
       JOIN (SELECT DISTINCT inventory_id FROM public.inventory_transactions
              WHERE reference_type = 'sold_out_auto') m ON m.inventory_id = i.id
      WHERE i.current_stock >= i.min_stock
+  LOOP
+    UPDATE public.products p
+       SET is_available = true, updated_at = NOW()
+     WHERE p.id IN (SELECT product_id FROM public.recipes WHERE ingredient_id = v_ingr.id)
+       AND p.id IN (
+         SELECT r2.product_id FROM public.recipes r2
+          JOIN public.inventory i2 ON i2.id = r2.ingredient_id
+         GROUP BY r2.product_id
+         HAVING bool_and(i2.current_stock >= i2.min_stock)
+       );
+
+    DELETE FROM public.inventory_transactions
+     WHERE reference_type = 'sold_out_auto' AND inventory_id = v_ingr.id;
+  END LOOP;
+
+  RETURN jsonb_build_object('ok', true, 'idempotent', false, 'order_number', p_order_number, 'restored_amount', 1);
+END;
+$$;
+
 -- ============================================
 -- 5. RPC: create_production_batch — KIT-01 (group confirmed/preparing orders per round)
 -- ============================================
@@ -239,6 +265,7 @@ BEGIN
 
   v_batch_id := 'batch-' || to_char(EXTRACT(EPOCH FROM clock_timestamp()) * 1000, '99999999999')
                 || '-' || substr(md5(random()::text), 1, 6);
+
   INSERT INTO public.production_batches (id, delivery_round_id, scheduled_date, status, created_by, created_at, updated_at)
   VALUES (v_batch_id, p_delivery_round_id, p_scheduled_date, 'open', v_uid, NOW(), NOW());
 
@@ -295,7 +322,14 @@ BEGIN
       LEFT JOIN public.production_batch_items pbi ON pbi.batch_id = pb.id
      WHERE pb.scheduled_date = COALESCE(p_scheduled_date, CURRENT_DATE)
        AND (p_delivery_round_id IS NULL OR pb.delivery_round_id = p_delivery_round_id)
-     GROUP BY pb.id, pb.delivery_round_id, pb.scheduled_date, pb.status
+     GROUP BY pb.id, pb.delivery_round_id, pb.scheduled_date, pb.status, pb.created_at
+     ORDER BY pb.created_at ASC
+  ) b;
+
+  RETURN jsonb_build_object('ok', true, 'batches', COALESCE(v_result, '[]'::jsonb));
+END;
+$$;
+
 -- ============================================
 -- 7. RPC: get_inventory_requirements — KIT-02 (recipe => requirement for a product)
 -- ============================================
@@ -348,6 +382,7 @@ REVOKE EXECUTE ON FUNCTION public.restore_inventory_for_order FROM PUBLIC;
 REVOKE EXECUTE ON FUNCTION public.create_production_batch FROM PUBLIC;
 REVOKE EXECUTE ON FUNCTION public.kitchen_queue FROM PUBLIC;
 REVOKE EXECUTE ON FUNCTION public.get_inventory_requirements FROM PUBLIC;
+
 GRANT EXECUTE ON FUNCTION public.deduct_inventory_for_order TO authenticated;
 GRANT EXECUTE ON FUNCTION public.restore_inventory_for_order TO authenticated;
 GRANT EXECUTE ON FUNCTION public.create_production_batch TO authenticated;
@@ -366,7 +401,6 @@ INSERT INTO public.recipes (id, product_id, ingredient_id, quantity_per_unit) VA
   ('rcp-6', 'prod-4', 'ing-4', 0.05)
 ON CONFLICT (product_id, ingredient_id) DO NOTHING;
 
--- ============================================
 -- ============================================
 -- 9b. Hook INV-01 into transition_order_status: deduct at CONFIRM, restore at CANCEL/FAIL
 -- ============================================
@@ -434,14 +468,8 @@ $$;
 
 REVOKE EXECUTE ON FUNCTION public.transition_order_status FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION public.transition_order_status TO authenticated;
-       );
-    DELETE FROM public.inventory_transactions
-     WHERE reference_type = 'sold_out_auto' AND inventory_id = v_ingr.id;
-  END LOOP;
 
-  RETURN jsonb_build_object('ok', true, 'idempotent', false, 'order_number', p_order_number, 'restored_amount', 1);
-END;
-$$;
+-- ============================================
 -- DONE
 -- ============================================
 COMMIT;
@@ -449,18 +477,3 @@ COMMIT;
 -- ============================================
 -- END OF MIGRATION 019
 -- ============================================
-     ORDER BY pb.created_at ASC
-  ) b;
-
-  RETURN jsonb_build_object('ok', true, 'batches', COALESCE(v_result, '[]'::jsonb));
-END;
-$$;
-  LOOP
-    UPDATE public.products p
-       SET is_available = true, updated_at = NOW()
-     WHERE p.id IN (SELECT product_id FROM public.recipes WHERE ingredient_id = v_ingr.id)
-       AND p.id IN (
-         SELECT r2.product_id FROM public.recipes r2
-          JOIN public.inventory i2 ON i2.id = r2.ingredient_id
-         GROUP BY r2.product_id
-         HAVING bool_and(i2.current_stock >= i2.min_stock)

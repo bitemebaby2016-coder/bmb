@@ -73,14 +73,28 @@ const isMissingFn = (b) => /PGRST202/.test(b)
     }
 
       // ============ PHASE 2 KITCHEN (migration 019 — after deploy) ============
+    // NOTE: RPCs are SECURITY DEFINER — without a JWT they answer ERR_NOT_AUTHENTICATED,
+    // which still PROVES deployment (missing functions would return PGRST202).
     const kitchen = [
-      ['kitchen RPC deduct_inventory_for_order is deployed', 'deduct_inventory_for_order', { p_order_number: 'NULL-0' }, (b) => /ERR_ORDER_NOT_FOUND|ERR_FORBIDDEN/.test(b)],
-      ['kitchen RPC restore_inventory_for_order is deployed', 'restore_inventory_for_order', { p_order_number: 'NULL-0' }, (b) => /ERR_ORDER_NOT_FOUND|ERR_FORBIDDEN/.test(b)],
-      ['kitchen RPC create_production_batch is deployed', 'create_production_batch', { p_delivery_round_id: 'round-x', p_scheduled_date: '2026-01-01' }, (b) => /ERR_ROUND_NOT_FOUND|ERR_FORBIDDEN/.test(b)],
-      ['kitchen RPC kitchen_queue is deployed', 'kitchen_queue', { p_delivery_round_id: null, p_scheduled_date: null }, (b) => b.includes('batches') || b.includes('ERR_FORBIDDEN')],
+      ['kitchen RPC deduct_inventory_for_order is deployed', 'deduct_inventory_for_order', { p_order_number: 'NULL-0' }, (b) => /ERR_ORDER_NOT_FOUND|ERR_FORBIDDEN|ERR_NOT_AUTHENTICATED/.test(b)],
+      ['kitchen RPC restore_inventory_for_order is deployed', 'restore_inventory_for_order', { p_order_number: 'NULL-0' }, (b) => /ERR_ORDER_NOT_FOUND|ERR_FORBIDDEN|ERR_NOT_AUTHENTICATED/.test(b)],
+      ['kitchen RPC create_production_batch is deployed', 'create_production_batch', { p_delivery_round_id: 'round-x', p_scheduled_date: '2026-01-01' }, (b) => /ERR_ROUND_NOT_FOUND|ERR_FORBIDDEN|ERR_NOT_AUTHENTICATED/.test(b)],
+      ['kitchen RPC kitchen_queue is deployed', 'kitchen_queue', { p_delivery_round_id: null, p_scheduled_date: null }, (b) => b.includes('batches') || b.includes('ERR_')],
       ['kitchen RPC get_inventory_requirements is deployed', 'get_inventory_requirements', { p_product_id: null, p_quantity: 1 }, isControlled],
     ]
     for (const [label, fn, args, okFn] of kitchen) {
+      const r = await rpc(fn, args)
+      record(`QA-03 ${label}`, !isMissingFn(r.body) && okFn(r.body), `status=${r.status} ${r.body.slice(0, 110)}`)
+    }
+
+    // ============ PHASE 3 BITE DRIVE (migration 020 — after deploy) ============
+    const biteDrive = [
+      ['bite-drive RPC compute_delivery_fee_rpc is deployed', 'compute_delivery_fee_rpc', {}, (b) => /ok|ERR_/.test(b)],
+      ['bite-drive RPC driver_login is deployed', 'driver_login', { p_phone: '' }, (b) => /ok|ERR_/.test(b)],
+      ['bite-drive RPC assign_driver is deployed', 'assign_driver', { p_order_number: 'X', p_driver_id: 'Y' }, (b) => /ok|ERR_/.test(b)],
+      ['bite-drive RPC my_deliveries is deployed', 'my_deliveries', { p_driver_phone: '0800000000' }, (b) => b.includes('assignments') || b.includes('ERR_')],
+    ]
+    for (const [label, fn, args, okFn] of biteDrive) {
       const r = await rpc(fn, args)
       record(`QA-03 ${label}`, !isMissingFn(r.body) && okFn(r.body), `status=${r.status} ${r.body.slice(0, 110)}`)
     }
@@ -92,24 +106,36 @@ const isMissingFn = (b) => /PGRST202/.test(b)
       ['phase4 RPC create_notification deployed', 'create_notification', { p_title: 't', p_message: 'm', p_category: 'Transactional' }, (b) => /ok|ERR_/.test(b)],
       ['phase4 RPC record_system_error deployed', 'record_system_error', { p_message: 'probe' }, (b) => /ok|ERR_/.test(b)],
       ['phase4 RPC get_ai_memory deployed', 'get_ai_memory', {}, (b) => b.includes('memory') || b.includes('ERR_')],
-      ['phase4 RPC upsert_mascot_override deployed', 'upsert_mascot_override', { p_role_name: 'x', p_media_url: 'y' }, (b) => /ok|ERR_FORBIDDEN/.test(b)],
+      ['phase4 RPC upsert_mascot_override deployed', 'upsert_mascot_override', { p_role_name: 'x', p_media_url: 'y' }, (b) => /ok|ERR_FORBIDDEN|ERR_NOT_AUTHENTICATED/.test(b)],
     ]
     for (const [label, fn, args, okFn] of phase4) {
+      const r = await rpc(fn, args)
+      record(`QA-03 ${label}`, !isMissingFn(r.body) && okFn(r.body), `status=${r.status} ${r.body.slice(0, 110)}`)
+    }
+
+    // ============ PHASE 5-7 (migration 022 — after deploy) ============
+    const phases57 = [
+      ['phase5-7 RPC customer_intelligence is deployed', 'customer_intelligence', {}, (b) => b.includes('customers') || b.includes('ERR_')],
+      ['phase5-7 RPC submit_content_for_approval is deployed', 'submit_content_for_approval', { p_content_type: 'probe', p_title: 'p', p_body: '' }, (b) => /ok|ERR_/.test(b)],
+      ['phase5-7 RPC review_content is deployed', 'review_content', { p_approval_id: 'x', p_decision: 'approved', p_note: '' }, (b) => /ok|ERR_/.test(b)],
+      ['phase5-7 RPC is_content_approved is deployed', 'is_content_approved', { p_approval_id: 'x' }, (b) => /true|false/.test(b)],
+    ]
+    for (const [label, fn, args, okFn] of phases57) {
       const r = await rpc(fn, args)
       record(`QA-03 ${label}`, !isMissingFn(r.body) && okFn(r.body), `status=${r.status} ${r.body.slice(0, 110)}`)
     }
   }
 
   const passed = results.filter((r) => r.ok).length
-  const pending = INCLUDE_NEW ? 0 : 13 // 017/018 (4) + 019 kitchen (5) + 021 phase4 (4) probes
+  const pending = INCLUDE_NEW ? 0 : 21 // 017/018 (4) + 019 (5) + 020 (4) + 021 (4) + 022 (4)
   fs.writeFileSync(
     path.join(PROJ, 'e2e', 'sql-contract-result.json'),
     JSON.stringify({
       project: 'bitemebaby production', timestamp: new Date().toISOString(),
       total: results.length, passed, pendingDeploy: pending,
       note: INCLUDE_NEW
-        ? 'migrations 017/018/019 applied — full Phase 1+2 contract set'
-        : 'pre-017 contract set — run again with --include-new after supabase db push (017+018+019)',
+        ? 'migrations 017-022 contract probes — full Domain A SQL set (Bite Drive 020 must be pushed by owner first)'
+        : 'pre-017 contract set — run again with --include-new after supabase db push (017-022)',
       checks: results,
     }, null, 2),
     'utf8',

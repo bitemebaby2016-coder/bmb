@@ -1,11 +1,13 @@
 import { Link } from 'react-router-dom'
 import { useCartStore } from '@/store/cartStore'
 import { useAuthStore } from '@/store/authStore'
+import { shouldShowAdminLink } from '@/lib/adminUi'
 import { NotificationDropdown } from '@/components/notification/NotificationDropdown'
 
 export function Header() {
   const cartCount = useCartStore((s) => s.getCartCount())
   const customer = useAuthStore((s) => s.customer)
+  const role = useAuthStore((s) => s.role)
   const logout = useAuthStore((s) => s.logout)
 
   function handleLogout() {
@@ -32,7 +34,7 @@ export function Header() {
           {customer ? (
             <div className="flex items-center gap-3">
               <NotificationDropdown />
-              {customer.email === 'admin@bmb.co.th' && (
+              {shouldShowAdminLink(role, customer.email) && (
                 <Link to="/admin" className="text-brand-primary font-medium hover:underline">Admin</Link>
               )}
               <div className="w-9 h-9 bg-brand-secondary rounded-full flex items-center justify-center text-brand-accent font-bold">

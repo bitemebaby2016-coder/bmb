@@ -1,7 +1,7 @@
 # Bite Me Baby — Restaurant Commerce & Operations Platform (PWA)
 
-> **สถานะตรวจสอบล่าสุด:** 2026-09-20 · **Commit:** `6be8e30` · **Production:** https://bitemebaby-5f7.pages.dev + Supabase `ivkdfognyiwjcmrhcnwz`
-> **Tests:** 111/111 ผ่าน (วัดจริง 2026-09-20) · **Build:** ผ่าน (tsc strict + vite, PWA sw.js) · **Lint/CI:** Lint 0 errors baseline + CI workflow (2026-09-21)
+> **สถานะตรวจสอบล่าสุด:** 2026-09-21 · **Commit:** см. `git log --oneline -1` (`feat(phase6-7)`) · **Production:** https://bitemebaby-5f7.pages.dev + Supabase `ivkdfognyiwjcmrhcnwz`
+> **Tests:** 163/163 ผ่าน (วัดจริง 2026-09-21) · **Build:** ผ่าน (tsc strict + vite, PWA sw.js) · **Lint/CI:** Lint 0 errors baseline + CI workflow (2026-09-21)
 
 ## Current Product
 
@@ -15,7 +15,23 @@ PWA สั่งอาหารจริงของร้าน Bite Me Baby (�
 
 ## Current Phase
 
-**PHASE 5–7 (AI Hardening · Intelligence · Growth): CODE เสร็จ 2026-09-21** (tests 152/152 · build ✓ · lint ✓) — 5) AI-02 advanced guardrails suite + AI-03 memory merge (migration 022) · 6) CI-01 server-side customer intelligence (view + RPC) · 7) CNT-01 content approval workflow (publish-block จนกว่า approve) · **รอ owner:** `supabase db push` (022) → `e2e/contracts_022_phases_5_7.sql` → ต่อ **PWA-100-GATE** (evidence pack) → REAL-WORLD PILOT → **M1: BMB Production 100%**
+**PHASE 5-7 (AI Hardening / Intelligence / Growth):** CODE done 2026-09-21 (migration 022):
+AI-02 advanced guardrails + AI-03 memory merge, CI-01 customer intelligence (view+RPC),
+CNT-01 content approval workflow (publish-block until approved).
+
+**PHASE 6 UI/Admin closure (2026-09-21):** category headings manager (menu categories add/edit/
+rename/hide), image upload: Remove-image button + URL fallback + preview, AdminNav bar on every
+`/admin` page, role-based Header + BottomNav Dashboard entry (no more "back becomes customer"),
+admin and user manuals rewritten (essentials, overwrite).
+
+**PHASE 7 UI completion (2026-09-21):** `/admin/content-approvals` (submit + approve/reject + note),
+banner promotions auto-submit to approval, publish gate opens only after `approved` (CNT-01).
+
+**Tests:** 163/163 PASS · build PASS (tsc strict + vite + PWA sw.js) · lint 0 errors.
+
+**Owner asked next:** `supabase db push` (migration **020 Bite Drive** — единственный оставшийся шаг перед GATE)
+→ `node e2e/sqlContracts.cjs --include-new` (expect 29/29) → owner SQL suites (`e2e/contracts_020_bite_drive.sql`)
+→ PWA-100-GATE evidence pack: `docs/BMB_PWA_100_GATE_EVIDENCE_2026-09-21.md` → REAL-WORLD PILOT → **M1 = BMB PRODUCTION 100%**.
 
 ## Future SaaS Direction (ไม่ได้ implement — DEFERRED ทั้งหมด)
 

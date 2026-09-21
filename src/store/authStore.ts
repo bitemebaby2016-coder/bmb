@@ -19,6 +19,8 @@ interface AuthStore {
   referralCode: string
   /** Raw Supabase error from the last failed login (surfaced as Thai guidance on /login). */
   lastLoginError: string | null
+  /** Current user role from `profiles.role` (RLS-guarded) — drives admin UI visibility. */
+  role: string | null
 
   setCustomer: (customer: Customer | null) => void
   setIsAuthenticated: (auth: boolean) => void
@@ -26,6 +28,8 @@ interface AuthStore {
   setReferralCode: (code: string) => void
   addPoints: (points: number) => void
   redeemPoints: (points: number) => boolean
+  setRole: (role: string | null) => void
+  refreshRole: () => Promise<string | null>
 
   login: (email: string, password: string) => Promise<boolean>
   loginByPhone: (phone: string, password: string) => Promise<boolean>
@@ -108,11 +112,18 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
   loyaltyPoints: 0,
   referralCode: '',
   lastLoginError: null,
+  role: null,
 
   setCustomer: (customer) => set({ customer, isAuthenticated: !!customer }),
   setIsAuthenticated: (auth) => set({ isAuthenticated: auth }),
   setLoyaltyPoints: (points) => set({ loyaltyPoints: points }),
   setReferralCode: (code) => set({ referralCode: code }),
+  setRole: (role) => set({ role }),
+  refreshRole: async () => {
+    const role = await fetchProfileRole()
+    set({ role })
+    return role
+  },
   addPoints: (points) => set((state) => ({ loyaltyPoints: state.loyaltyPoints + points })),
 
   redeemPoints: (points) => {
@@ -141,6 +152,7 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
       isLoading: false,
       lastLoginError: null,
     })
+    void get().refreshRole?.()
     return true
   },
 
@@ -159,6 +171,7 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
       isAuthenticated: true,
       isLoading: false
     })
+    void get().refreshRole?.()
     return true
   },
 
@@ -179,12 +192,13 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
       isAuthenticated: true,
       isLoading: false,
     })
+    void get().refreshRole?.()
     return { ok: true }
   },
 
   logout: async () => {
     await supabase.auth.signOut()
-    set({ customer: null, isAuthenticated: false, loyaltyPoints: 0, referralCode: '' })
+    set({ customer: null, isAuthenticated: false, loyaltyPoints: 0, referralCode: '', role: null })
   },
 
   checkAuth: async () => {
@@ -196,11 +210,12 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
           isAuthenticated: true,
           isLoading: false
         })
+        void get().refreshRole?.()
       } else {
-        set({ customer: null, isAuthenticated: false, isLoading: false })
+        set({ customer: null, isAuthenticated: false, isLoading: false, role: null })
       }
     } catch {
-      set({ customer: null, isAuthenticated: false, isLoading: false })
+      set({ customer: null, isAuthenticated: false, isLoading: false, role: null })
     }
   }
 }))

@@ -61,12 +61,15 @@ CREATE TABLE IF NOT EXISTS public.ai_customer_memory (
   memory      JSONB NOT NULL DEFAULT '{}',
   updated_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+-- RLS Enablement
 ALTER TABLE public.system_errors ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.mascot_overrides ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.ai_customer_memory ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.notification_prefs ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.notifications ENABLE ROW LEVEL SECURITY;
 
+-- RLS Policies
 DROP POLICY IF EXISTS system_errors_deny_anon ON public.system_errors;
 CREATE POLICY system_errors_deny_anon ON public.system_errors FOR ALL TO anon USING (false);
 DROP POLICY IF EXISTS system_errors_admin_read ON public.system_errors;
@@ -94,6 +97,19 @@ DROP POLICY IF EXISTS notif_prefs_own ON public.notification_prefs;
 CREATE POLICY notif_prefs_own ON public.notification_prefs
   FOR ALL TO authenticated USING (customer_id = auth.uid()::text) WITH CHECK (customer_id = auth.uid()::text);
 DROP POLICY IF EXISTS notif_prefs_admin ON public.notification_prefs;
+CREATE POLICY notif_prefs_admin ON public.notification_prefs
+  FOR SELECT TO authenticated USING (public.is_admin());
+
+DROP POLICY IF EXISTS notifications_deny_anon ON public.notifications;
+CREATE POLICY notifications_deny_anon ON public.notifications FOR ALL TO anon USING (false);
+DROP POLICY IF EXISTS notifications_own_read ON public.notifications;
+CREATE POLICY notifications_own_read ON public.notifications
+  FOR SELECT TO authenticated
+  USING (user_id = auth.uid() OR customer_id IN (SELECT id FROM public.customers WHERE user_id = auth.uid()) OR public.is_admin());
+DROP POLICY IF EXISTS notifications_admin ON public.notifications;
+CREATE POLICY notifications_admin ON public.notifications
+  FOR ALL TO authenticated USING (public.is_admin()) WITH CHECK (public.is_admin());
+
 -- ============================================
 -- 5. RPCs
 -- ============================================
@@ -167,6 +183,17 @@ BEGIN
   IF v_channels IS NULL THEN
     v_channels := '{"Transactional":true,"Marketing":true,"Bite":true,"Operational":true}'::jsonb;
   END IF;
+
+  v_channels := jsonb_set(v_channels, ARRAY[p_channel], to_jsonb(COALESCE(p_enabled, true)));
+
+  INSERT INTO public.notification_prefs (customer_id, channels, updated_at)
+  VALUES (v_uid::text, v_channels, NOW())
+  ON CONFLICT (customer_id) DO UPDATE SET channels = EXCLUDED.channels, updated_at = NOW();
+
+  RETURN jsonb_build_object('ok', true, 'channels', v_channels);
+END;
+$$;
+
 -- ADM-01: record a system error (authenticated; used by client reporter/EFs).
 CREATE OR REPLACE FUNCTION public.record_system_error(
   p_message text,
@@ -235,6 +262,29 @@ BEGIN
   INSERT INTO public.ai_customer_memory (user_id, memory, updated_at)
   VALUES (v_uid, COALESCE(p_memory, '{}'), NOW())
   ON CONFLICT (user_id) DO UPDATE SET memory = COALESCE(p_memory, '{}'), updated_at = NOW();
+
+  RETURN jsonb_build_object('ok', true, 'user_id', v_uid::text);
+END;
+$$;
+
+-- AI-03: load server memory for the current user.
+CREATE OR REPLACE FUNCTION public.get_ai_memory()
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  v_uid uuid;
+  v_memory jsonb;
+BEGIN
+  v_uid := auth.uid();
+  IF v_uid IS NULL THEN RAISE EXCEPTION 'ERR_NOT_AUTHENTICATED'; END IF;
+  SELECT memory INTO v_memory FROM public.ai_customer_memory WHERE user_id = v_uid;
+  RETURN jsonb_build_object('ok', true, 'memory', COALESCE(v_memory, '{}'::jsonb));
+END;
+$$;
+
 -- ADM-07: upsert a mascot override.
 CREATE OR REPLACE FUNCTION public.upsert_mascot_override(
   p_role_name text,
@@ -269,6 +319,7 @@ REVOKE EXECUTE ON FUNCTION public.list_system_errors FROM PUBLIC;
 REVOKE EXECUTE ON FUNCTION public.save_ai_memory FROM PUBLIC;
 REVOKE EXECUTE ON FUNCTION public.get_ai_memory FROM PUBLIC;
 REVOKE EXECUTE ON FUNCTION public.upsert_mascot_override FROM PUBLIC;
+
 GRANT EXECUTE ON FUNCTION public.create_notification TO authenticated;
 GRANT EXECUTE ON FUNCTION public.set_notification_pref TO authenticated;
 GRANT EXECUTE ON FUNCTION public.record_system_error TO authenticated;
@@ -285,45 +336,3 @@ COMMIT;
 -- ============================================
 -- END OF MIGRATION 021
 -- ============================================
-  RETURN jsonb_build_object('ok', true, 'user_id', v_uid::text);
-END;
-$$;
-
--- AI-03: load server memory for the current user.
-CREATE OR REPLACE FUNCTION public.get_ai_memory()
-RETURNS jsonb
-LANGUAGE plpgsql
-SECURITY DEFINER
-SET search_path = public
-AS $$
-DECLARE
-  v_uid uuid;
-  v_memory jsonb;
-BEGIN
-  v_uid := auth.uid();
-  IF v_uid IS NULL THEN RAISE EXCEPTION 'ERR_NOT_AUTHENTICATED'; END IF;
-  SELECT memory INTO v_memory FROM public.ai_customer_memory WHERE user_id = v_uid;
-  RETURN jsonb_build_object('ok', true, 'memory', COALESCE(v_memory, '{}'::jsonb));
-END;
-$$;
-  v_channels := jsonb_set(v_channels, ARRAY[p_channel], to_jsonb(COALESCE(p_enabled, true)));
-
-  INSERT INTO public.notification_prefs (customer_id, channels, updated_at)
-  VALUES (v_uid::text, v_channels, NOW())
-  ON CONFLICT (customer_id) DO UPDATE SET channels = EXCLUDED.channels, updated_at = NOW();
-
-  RETURN jsonb_build_object('ok', true, 'channels', v_channels);
-END;
-$$;
-CREATE POLICY notif_prefs_admin ON public.notification_prefs
-  FOR SELECT TO authenticated USING (public.is_admin());
-
-DROP POLICY IF EXISTS notifications_deny_anon ON public.notifications;
-CREATE POLICY notifications_deny_anon ON public.notifications FOR ALL TO anon USING (false);
-DROP POLICY IF EXISTS notifications_own_read ON public.notifications;
-CREATE POLICY notifications_own_read ON public.notifications
-  FOR SELECT TO authenticated
-  USING (user_id = auth.uid() OR customer_id IN (SELECT id FROM public.customers WHERE user_id = auth.uid()) OR public.is_admin());
-DROP POLICY IF EXISTS notifications_admin ON public.notifications;
-CREATE POLICY notifications_admin ON public.notifications
-  FOR ALL TO authenticated USING (public.is_admin()) WITH CHECK (public.is_admin());

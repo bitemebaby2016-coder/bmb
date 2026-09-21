@@ -1,10 +1,10 @@
 {
   "project": "bitemebaby production",
-  "timestamp": "2026-09-21T02:11:12.933Z",
-  "total": 8,
-  "passed": 8,
-  "pendingDeploy": 13,
-  "note": "pre-017 contract set — run again with --include-new after supabase db push (017+018+019)",
+  "timestamp": "2026-09-21T04:11:48.293Z",
+  "total": 29,
+  "passed": 25,
+  "pendingDeploy": 0,
+  "note": "migrations 017-022 contract probes — full Domain A SQL set (Bite Drive 020 must be pushed by owner first)",
   "checks": [
     {
       "name": "QA-03 create_order_with_items must reject empty order (ERR)",
@@ -45,6 +45,111 @@
       "name": "QA-03 compute_addons_price exists (016) and returns 0",
       "ok": true,
       "detail": "status=200 0"
+    },
+    {
+      "name": "QA-03 pre-order RPC create_pre_order_with_items is deployed",
+      "ok": true,
+      "detail": "status=400 {\"code\":\"P0001\",\"details\":null,\"hint\":null,\"message\":\"ERR_NOT_AUTHENTICATED\"}"
+    },
+    {
+      "name": "QA-03 pre-order RPC quote_pre_order is deployed",
+      "ok": true,
+      "detail": "status=400 {\"code\":\"P0001\",\"details\":null,\"hint\":null,\"message\":\"ERR_PRODUCT_NOT_FOUND\"}"
+    },
+    {
+      "name": "QA-03 pre-order RPC cancel_pre_order is deployed",
+      "ok": true,
+      "detail": "status=400 {\"code\":\"P0001\",\"details\":null,\"hint\":null,\"message\":\"ERR_NOT_AUTHENTICATED\"}"
+    },
+    {
+      "name": "QA-03 audit RPC append_audit_log is deployed",
+      "ok": true,
+      "detail": "status=200 {\"id\": \"alog- ###########-71af6b\", \"ok\": true, \"user_id\": null}"
+    },
+    {
+      "name": "QA-03 kitchen RPC deduct_inventory_for_order is deployed",
+      "ok": true,
+      "detail": "status=400 {\"code\":\"P0001\",\"details\":null,\"hint\":null,\"message\":\"ERR_NOT_AUTHENTICATED\"}"
+    },
+    {
+      "name": "QA-03 kitchen RPC restore_inventory_for_order is deployed",
+      "ok": true,
+      "detail": "status=400 {\"code\":\"P0001\",\"details\":null,\"hint\":null,\"message\":\"ERR_NOT_AUTHENTICATED\"}"
+    },
+    {
+      "name": "QA-03 kitchen RPC create_production_batch is deployed",
+      "ok": true,
+      "detail": "status=400 {\"code\":\"P0001\",\"details\":null,\"hint\":null,\"message\":\"ERR_NOT_AUTHENTICATED\"}"
+    },
+    {
+      "name": "QA-03 kitchen RPC kitchen_queue is deployed",
+      "ok": true,
+      "detail": "status=400 {\"code\":\"P0001\",\"details\":null,\"hint\":null,\"message\":\"ERR_NOT_AUTHENTICATED\"}"
+    },
+    {
+      "name": "QA-03 kitchen RPC get_inventory_requirements is deployed",
+      "ok": true,
+      "detail": "status=400 {\"code\":\"P0001\",\"details\":null,\"hint\":null,\"message\":\"ERR_NOT_AUTHENTICATED\"}"
+    },
+    {
+      "name": "QA-03 bite-drive RPC compute_delivery_fee_rpc is deployed",
+      "ok": false,
+      "detail": "status=404 {\"code\":\"PGRST202\",\"details\":\"Searched for the function public.compute_delivery_fee_rpc without parameters or "
+    },
+    {
+      "name": "QA-03 bite-drive RPC driver_login is deployed",
+      "ok": false,
+      "detail": "status=404 {\"code\":\"PGRST202\",\"details\":\"Searched for the function public.driver_login with parameter p_phone or with a s"
+    },
+    {
+      "name": "QA-03 bite-drive RPC assign_driver is deployed",
+      "ok": false,
+      "detail": "status=404 {\"code\":\"PGRST202\",\"details\":\"Searched for the function public.assign_driver with parameters p_driver_id, p_or"
+    },
+    {
+      "name": "QA-03 bite-drive RPC my_deliveries is deployed",
+      "ok": false,
+      "detail": "status=404 {\"code\":\"PGRST202\",\"details\":\"Searched for the function public.my_deliveries with parameter p_driver_phone or "
+    },
+    {
+      "name": "QA-03 phase4 RPC create_notification deployed",
+      "ok": true,
+      "detail": "status=400 {\"code\":\"P0001\",\"details\":null,\"hint\":null,\"message\":\"ERR_NOT_AUTHENTICATED\"}"
+    },
+    {
+      "name": "QA-03 phase4 RPC record_system_error deployed",
+      "ok": true,
+      "detail": "status=400 {\"code\":\"P0001\",\"details\":null,\"hint\":null,\"message\":\"ERR_NOT_AUTHENTICATED\"}"
+    },
+    {
+      "name": "QA-03 phase4 RPC get_ai_memory deployed",
+      "ok": true,
+      "detail": "status=400 {\"code\":\"P0001\",\"details\":null,\"hint\":null,\"message\":\"ERR_NOT_AUTHENTICATED\"}"
+    },
+    {
+      "name": "QA-03 phase4 RPC upsert_mascot_override deployed",
+      "ok": true,
+      "detail": "status=400 {\"code\":\"P0001\",\"details\":null,\"hint\":null,\"message\":\"ERR_NOT_AUTHENTICATED\"}"
+    },
+    {
+      "name": "QA-03 phase5-7 RPC customer_intelligence is deployed",
+      "ok": true,
+      "detail": "status=400 {\"code\":\"P0001\",\"details\":null,\"hint\":null,\"message\":\"ERR_NOT_AUTHENTICATED\"}"
+    },
+    {
+      "name": "QA-03 phase5-7 RPC submit_content_for_approval is deployed",
+      "ok": true,
+      "detail": "status=400 {\"code\":\"P0001\",\"details\":null,\"hint\":null,\"message\":\"ERR_NOT_AUTHENTICATED\"}"
+    },
+    {
+      "name": "QA-03 phase5-7 RPC review_content is deployed",
+      "ok": true,
+      "detail": "status=400 {\"code\":\"P0001\",\"details\":null,\"hint\":null,\"message\":\"ERR_NOT_AUTHENTICATED\"}"
+    },
+    {
+      "name": "QA-03 phase5-7 RPC is_content_approved is deployed",
+      "ok": true,
+      "detail": "status=200 false"
     }
   ]
 }

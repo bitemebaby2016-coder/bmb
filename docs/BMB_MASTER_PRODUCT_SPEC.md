@@ -36,7 +36,7 @@ REAL BUSINESS > REAL ORDERS > REAL KITCHEN > REAL DELIVERY > REAL DATA > AI > AU
 
 ## 3. MENU / CATALOG / AVAILABILITY
 
-- **CURRENT:** LIVE — products/categories/add-ons (016) + availability engine (quota+cutoff) + admin CRUD
+- **CURRENT:** LIVE — products/categories/add-ons (016) + availability engine (quota+cutoff) + admin CRUD; **category headings (ชื่อหมبق الغذاء) managed from `/admin/products` (PHASE 6, 2026-09-21)**
 - **TARGET (REQUIRED):** availability จาก **recipe/BOM + inventory จริง** ไม่ใช่ manual toggle เท่านั้น; ราคา add-on re-derive ฝั่ง server
 - **OPTIONAL:** รูปอาหาร AI-generated (มี media library รองรับ), multi-language
 

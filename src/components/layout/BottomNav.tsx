@@ -1,4 +1,6 @@
 import { Link, useLocation } from 'react-router-dom'
+import { useAuthStore } from '@/store/authStore'
+import { shouldShowAdminLink } from '@/lib/adminUi'
 
 const navItems = [
   { path: '/', label: 'หน้าแรก', icon: '🏠' },
@@ -10,14 +12,23 @@ const navItems = [
 
 export function BottomNav() {
   const location = useLocation()
+const role = useAuthStore((s) => s.role)
+  const customer = useAuthStore((s) => s.customer)
+
+  // PHASE 6 UI/admin: admins get a Dashboard entry instead of the customer
+  // account tab, so they can always jump back to /admin without browser Back.
+  const items = shouldShowAdminLink(role, customer?.email)
+    ? navItems.map((item) => item.path === '/profile' ? { path: '/admin', label: 'Dashboard', icon: '🛠️' } : item)
+    : navItems
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 bg-brand-surface border-t border-brand-border z-50 no-print">
       <div className="max-w-7xl mx-auto px-4 py-2 flex justify-around">
-        {navItems.map((item) => {
+        {items.map((item) => {
           const isActive = location.pathname === item.path ||
             (item.path === '/ai-chat' && location.pathname.startsWith('/ai-chat')) ||
-            (item.path === '/orders' && location.pathname.startsWith('/orders'))
+            (item.path === '/orders' && location.pathname.startsWith('/orders')) ||
+            (item.path === '/admin' && location.pathname.startsWith('/admin'))
           return (
             <Link
               key={item.path}

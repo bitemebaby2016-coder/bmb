@@ -11,8 +11,8 @@
 --
 -- Implements:
 --   1. create_pre_order_with_items(...)     — server-authoritative insert
---   2. cancel_pre_order(p_order_number)      — owner/admin cancel + capacity refund
---   3. quote_pre_order(p_product_id, p_quantity) — authoritative price quote for display
+--   2. quote_pre_order(p_product_id, p_quantity) — authoritative price quote for display
+--   3. cancel_pre_order(p_order_number)      — owner/admin cancel + capacity refund
 --   4. pre_orders RLS: authenticated direct INSERT/UPDATE/DELETE revoked
 --      (writes via RPC only); SELECT own kept; admin ALL kept.
 --
@@ -113,7 +113,8 @@ BEGIN
     SET user_id = EXCLUDED.user_id,
         full_name = COALESCE(NULLIF(trim(p_customer_name), ''), customers.full_name),
         updated_at = NOW();
--- ===== 6. AUTHORITATIVE TOTALS =====
+
+  -- ===== 6. AUTHORITATIVE TOTALS =====
   v_unit_price := v_prod.price;
   v_total      := round(v_prod.price * p_quantity, 2);
 
@@ -191,6 +192,17 @@ BEGIN
   END IF;
   SELECT * INTO v_prod FROM public.products WHERE id = p_product_id;
   IF NOT FOUND THEN RAISE EXCEPTION 'ERR_PRODUCT_NOT_FOUND'; END IF;
+  IF NOT COALESCE(v_prod.is_preorder, false) THEN RAISE EXCEPTION 'ERR_NOT_PREORDER_PRODUCT'; END IF;
+  
+  RETURN jsonb_build_object(
+    'product_id', v_prod.id,
+    'unit_price', v_prod.price,
+    'quantity', GREATEST(COALESCE(p_quantity, 1), 1),
+    'total_amount', round(v_prod.price * GREATEST(COALESCE(p_quantity, 1), 1), 2)
+  );
+END;
+$$;
+
 -- ============================================
 -- 3. RPC: cancel_pre_order — owner/admin cancel + capacity refund
 -- ============================================
@@ -271,12 +283,3 @@ COMMIT;
 -- ============================================
 -- END OF MIGRATION 017
 -- ============================================
-  IF NOT COALESCE(v_prod.is_preorder, false) THEN RAISE EXCEPTION 'ERR_NOT_PREORDER_PRODUCT'; END IF;
-  RETURN jsonb_build_object(
-    'product_id', v_prod.id,
-    'unit_price', v_prod.price,
-    'quantity', GREATEST(COALESCE(p_quantity, 1), 1),
-    'total_amount', round(v_prod.price * GREATEST(COALESCE(p_quantity, 1), 1), 2)
-  );
-END;
-$$;

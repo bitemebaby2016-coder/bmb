@@ -6,6 +6,7 @@ import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { showToast } from '@/components/ui/ToastContainer'
 import { getPromotionsAdmin, upsertPromotion, deletePromotion, togglePromotion, type PromotionRow } from '@/lib/bmbAdminApi_promotions'
+import { submitContentForApproval } from '@/lib/contentApproval'
 
 const EMPTY_FORM = {
   name: '',
@@ -72,6 +73,16 @@ export function AdminPromotions() {
     if (!saved) {
       showToast('Failed to save promotion', 'error')
       return
+    }
+    // CNT-01 (PHASE 7): banners must pass the content approval gate before
+    // they are customer-visible. Saving auto-submits for human review.
+    if (row.is_banner) {
+      const approvalId = await submitContentForApproval('banner', row.name, row.description || '')
+      if (approvalId) {
+        showToast('Banner submitted for approval — gate opens after approval', 'success')
+      } else {
+        showToast('Promotion saved, but approval submit failed', 'error')
+      }
     }
     showToast('Promotion saved!', 'success')
     setShowAddForm(false)
@@ -157,6 +168,9 @@ export function AdminPromotions() {
               </div>
               <div className="text-right">
                 <span className={`badge ${p.is_active ? 'badge-success' : 'badge-warning'}`}>{p.is_active ? 'Active' : 'Paused'}</span>
+                {p.is_banner && (
+                  <Link to="/admin/content-approvals" className="badge badge-info text-xs" title="Banners require content approval (CNT-01)">🛡️ Approval</Link>
+                )}
                 <div className="flex gap-2 mt-1">
                   <button onClick={() => openEdit(p)} className="btn btn-outline text-sm">✏️ Edit</button>
                   <button onClick={() => handleToggle(p)} className="btn btn-outline text-sm">{p.is_active ? '⏸ Pause' : '▶ Activate'}</button>
