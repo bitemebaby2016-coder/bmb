@@ -65,12 +65,14 @@ node e2e/sqlContracts.cjs --include-new   # live DB REST probes -- 29/29 PASSED 
 
 ---
 
-## 6. Lighthouse (placeholder for owner)
+## 6. Lighthouse (owner measurement log)
 
-```
-TBD — owner: run lighthouse on https://bitemebaby-5f7.pages.dev
-Target: Performance >= 90 (current cache/vendor-split, index ~114-118kB)
-```
+- **2026-09-21 (owner, Chrome DevTools mobile — PREVIEW deploy `c04ffb8b.bitemebaby.pages.dev`, 400px viewport):**
+  Performance **41** · Accessibility 85 · Best Practices 100 · SEO 61
+  Metrics: FCP 2.5s · **LCP 29.3s** · TBT 910ms · SI 18.1s · CLS 0
+- **CAVEAT:** วัดบน **PREVIEW deployment** (ไม่ใช่ production domain `bitemebaby-5f7.pages.dev`)
+  + หน้าแรกติดสถานะ loading (mascot thinking) — LCP 29.3s น่าจะโดน data-load stall
+- **NEXT:** วัดซ้ำบน production domain + สืบสาเหตุ LCP (data fetch / hero image) → Target Performance >= 90
 
 ---
 

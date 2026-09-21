@@ -163,10 +163,11 @@ PWA live บน https://bitemebaby-5f7.pages.dev, Supabase project `ivkdfognyiwj
 |---|-------|--------|--------|--------------|
 | 1 | ~~Migration 020 ไม่อยู่บน live DB~~ RESOLVED: db push สำเร็จ 2026-09-21 | DEL-01..04 | **VERIFIED** | -- |
 | 2 | ~~SQL contracts 28/29~~ RESOLVED: 29/29 PASSED (compute_delivery_fee_rpc deployed) | DEL-01 | **VERIFIED** | -- |
-| 3 | Lighthouse Perf >= 90 ยังไม่มี evidence | PWA-01 | DEFERRED | owner วัดบน prod |
+| 3 | Lighthouse รอบวัดแรก (2026-09-21, owner, **PREVIEW deploy** c04ffb8b): Perf **41** / A11y 85 / BP 100 / SEO 61, LCP 29.3s, TBT 910ms, SI 18.1s, CLS 0 | PWA-01 | PARTIAL | วัดซ้ำบน production domain (bitemebaby-5f7.pages.dev) + แก้ LCP |
 | 4 | SEC-02: AI key ใน .env.local | PARTIAL | CONTINUES | ย้ายเข้า ai-proxy EF |
 | 5 | REFUND: EF พร้อมแต่ไม่มี evidence การคืนเงินจริง | PARTIAL | PENDING | ต้องการ refund จริง 1 รายการ |
 | 6 | Card loop: ไม่มี bill จริง | PARTIAL | PENDING | ต้องการ 1 real bill |
+| 7 | External courier APIs (Grab / LINEMAN / Foodpanda) — **ทุกเจ้ายังรอ API keys** (sandbox/mock) | DEL-EXT | DEFERRED/SANDBOX | รอ keys จาก call-center |
 
 ---
 

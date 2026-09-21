@@ -67,7 +67,9 @@ BEGIN
   v_a := sin(v_dlat / 2) * sin(v_dlat / 2) +
          cos(radians(p_lat1)) * cos(radians(p_lat2)) *
          sin(v_dlon / 2) * sin(v_dlon / 2);
-  RETURN round(v_r * 2 * atan2(sqrt(v_a), sqrt(1 - v_a)), 2);
+  -- FIX (42883): atan2() returns double precision and PostgreSQL has no
+  -- round(double precision, integer) — cast to numeric before round(numeric, int).
+  RETURN round((v_r * 2 * atan2(sqrt(v_a), sqrt(1 - v_a)))::numeric, 2);
 END;
 $$;
 
