@@ -15,7 +15,7 @@ PWA สั่งอาหารจริงของร้าน Bite Me Baby (�
 
 ## Current Phase
 
-**PHASE 4 — PWA + ADMIN + AI GATE: CODE เสร็จ 2026-09-21** (tests 147/147 · build ✓ · lint ✓) — SEC-02 **ai-proxy EF** (เอา key ออกจาก client), AI-01 fix, AI-02 base guardrails suite, AI-03 server memory, NOT-01 Notification Center (4 ช่อง), ADM-01 errors feed, ADM-07 mascot self-service, PWA-01 index 348→114 kB, PWA-02 retry/offline · **รอ owner:** `supabase db push` (021) → `contracts_021_phase4.sql` → `supabase functions deploy ai-proxy` (+ secrets) → Lighthouse re-run · ต่อ PHASE 5 (AI Hardening) → 6 (Intelligence) → 7 (Growth) → PWA-100-GATE → PILOT → **M1**
+**PHASE 5–7 (AI Hardening · Intelligence · Growth): CODE เสร็จ 2026-09-21** (tests 152/152 · build ✓ · lint ✓) — 5) AI-02 advanced guardrails suite + AI-03 memory merge (migration 022) · 6) CI-01 server-side customer intelligence (view + RPC) · 7) CNT-01 content approval workflow (publish-block จนกว่า approve) · **รอ owner:** `supabase db push` (022) → `e2e/contracts_022_phases_5_7.sql` → ต่อ **PWA-100-GATE** (evidence pack) → REAL-WORLD PILOT → **M1: BMB Production 100%**
 
 ## Future SaaS Direction (ไม่ได้ implement — DEFERRED ทั้งหมด)
 

@@ -108,6 +108,7 @@ export function createSupabaseMock() {
     const builder: any = {
       eq(col: string, val: any) { filters.push({ col, val }); return builder },
       order(col: string, opts?: { ascending?: boolean }) { orderSpec = { col, ascending: opts?.ascending ?? true }; return builder },
+      limit(_n: number) { return builder },
       select() { return builder },
       insert(rows: MockRow | MockRow[]) { action = { type: 'insert', rows: Array.isArray(rows) ? rows : [rows] }; return builder },
       update(patch: MockRow) { action = { type: 'update', patch }; return builder },
@@ -622,8 +623,8 @@ if (name === 'deduct_inventory_for_order') {
     if (name === 'save_ai_memory') {
       const p = params ?? {}
       const i = (tables['ai_customer_memory'] || []).findIndex((m: any) => m.user_id === 'auth-test-user')
-      if (i >= 0) (tables['ai_customer_memory'] as any[])[i].memory = p.p_memory || {}
-      else (tables['ai_customer_memory'] ||= []).push({ user_id: 'auth-test-user', memory: p.p_memory || {}, updated_at: new Date().toISOString() })
+      if (i >= 0) (tables['ai_customer_memory'] as any[])[i].memory = { ...((tables['ai_customer_memory'] as any[])[i].memory || {}), ...(p.p_memory || {}) }
+      else (tables['ai_customer_memory'] ||= []).push({ user_id: 'auth-test-user', memory: { ...(p.p_memory || {}) }, updated_at: new Date().toISOString() })
       return { data: { ok: true, user_id: 'auth-test-user' }, error: null }
     }
 
@@ -650,6 +651,38 @@ if (name === 'deduct_inventory_for_order') {
 
     if (name === 'set_notification_pref') {
       return { data: { ok: true, channels: { [params?.p_channel || 'Marketing']: params?.p_enabled ?? true } }, error: null }
+    }
+if (name === 'customer_intelligence') {
+      const p = params ?? {}
+      const orders = tables['orders'] || []
+      const mine = orders.filter((o: any) => o.customer_ref === 'auth-test-user' && o.payment_status === 'paid')
+      const row = {
+        user_id: 'auth-test-user', total_orders: mine.length, total_revenue: mine.reduce((s: number, o: any) => s + Number(o.total_amount || 0), 0),
+        average_order_value: mine.length ? Math.round((mine.reduce((s: number, o: any) => s + Number(o.total_amount || 0), 0) / mine.length) * 100) / 100 : 0,
+        days_since_last_order: mine.length ? 1 : null, last_order_at: mine.length ? mine[0].created_at : null,
+        segment: mine.length >= 2 ? 'regular' : 'new',
+      }
+      if (p.p_user_id) return { data: { ok: true, customer: row }, error: null }
+      return { data: { ok: true, customers: [row] }, error: null }
+    }
+
+    if (name === 'submit_content_for_approval') {
+      const p = params ?? {}
+      const id = `cap-mock-${Date.now()}`
+      ;(tables['content_approvals'] ||= []).push({
+        id, content_type: p.p_content_type || 'promotion', title: p.p_title || '', body: p.p_body || '',
+        status: 'pending', created_by: 'auth-test-user', created_at: new Date().toISOString(),
+      })
+      return { data: { ok: true, id, status: 'pending' }, error: null }
+    }
+
+    if (name === 'review_content') {
+      const p = params ?? {}
+      const row = (tables['content_approvals'] || []).find((x: any) => x.id === p.p_approval_id)
+      if (!row || row.status !== 'pending') return { data: null, error: { code: 'ERR_APPROVAL_NOT_PENDING', message: 'ERR_APPROVAL_NOT_PENDING' } }
+      row.status = p.p_decision
+      row.reviewed_at = new Date().toISOString()
+      return { data: { ok: true, id: p.p_approval_id, status: p.p_decision }, error: null }
     }
     return { data: null, error: { code: 'PGRST202', message: 'rpc not mocked' } }
   }
