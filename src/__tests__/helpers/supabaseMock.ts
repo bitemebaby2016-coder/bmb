@@ -500,6 +500,119 @@ export function createSupabaseMock() {
       }))
       return { data: { ok: true, id: `alog-test-${Date.now()}`, user_id: 'auth-test-user' }, error: null }
     }
+// ============ PHASE 2 KITCHEN RPC handlers (migration 019 contract) ============
+    if (name === 'get_inventory_requirements') {
+      const p = params ?? {}
+      const prod = (tables['products'] || []).find((x: any) => x.id === p.p_product_id)
+      if (!prod) return { data: null, error: { code: 'ERR_PRODUCT_NOT_FOUND', message: 'ERR_PRODUCT_NOT_FOUND' } }
+      const qty = Math.max(Number(p.p_quantity || 1), 1)
+      // DEMO recipe map (mirrors migration 019 seed) — prod-1 requires ing-1 0.25 + ing-3 1
+      const reqs: Array<[string, number]> = prod.id === 'prod-1' ? [['ing-1', 0.25], ['ing-3', 1]] : []
+      const requirements = reqs.map(([ing, per]) => {
+        const inv = (tables['inventory'] || []).find((i: any) => i.id === ing)
+        return {
+          ingredient_id: ing,
+          ingredient_name: inv ? inv.name : ing,
+          unit: inv ? inv.unit : 'unit',
+          quantity_per_unit: per,
+          required: per * qty,
+          current_stock: inv ? Number(inv.current_stock) : 0,
+          min_stock: inv ? Number(inv.min_stock) : 0,
+          feasible: inv ? Number(inv.current_stock) >= per * qty : false,
+        }
+      })
+      return {
+        data: {
+          ok: true, product_id: prod.id, quantity: qty,
+          feasible: requirements.every((r: any) => r.feasible),
+          requirements,
+        },
+        error: null,
+      }
+    }
+
+    if (name === 'kitchen_queue') {
+      const p = params ?? {}
+      const batches = (tables['production_batches'] || []).filter((b: any) =>
+        (p.p_delivery_round_id == null || b.delivery_round_id === p.p_delivery_round_id))
+      const items = tables['production_batch_items'] || []
+      return {
+        data: {
+          ok: true,
+          batches: batches.map((b: any) => ({
+            batch_id: b.id,
+            delivery_round_id: b.delivery_round_id,
+            scheduled_date: b.scheduled_date,
+            status: b.status,
+            items: items.filter((i: any) => i.batch_id === b.id).map((i: any) => ({
+              item_id: i.id, order_number: i.order_number, product_name: i.product_name,
+              quantity: i.quantity, status: i.status,
+            })),
+          })),
+        },
+        error: null,
+      }
+    }
+
+    if (name === 'create_production_batch') {
+      const p = params ?? {}
+      const round = (tables['delivery_rounds'] || []).find((r: any) => r.id === p.p_delivery_round_id)
+      if (!round) return { data: null, error: { code: 'ERR_ROUND_NOT_FOUND', message: 'ERR_ROUND_NOT_FOUND' } }
+      const batchId = `batch-mock-${Date.now()}`
+      const orders = (tables['orders'] || []).filter((o: any) => o.delivery_round_id === p.p_delivery_round_id && (o.status === 'confirmed' || o.status === 'preparing'))
+      let n = 0
+      for (const o of orders) {
+        for (const oi of (tables['order_items'] || []).filter((x: any) => x.order_id === o.id)) {
+          ;(tables['production_batch_items'] ||= []).push({
+            id: `pbi-${batchId}-${n}`, batch_id: batchId, order_id: o.id,
+            order_number: o.order_number, product_id: oi.product_id,
+            product_name: oi.product_name, quantity: oi.quantity, status: 'queued',
+            created_at: new Date().toISOString(),
+          })
+          n++
+        }
+      }
+      ;(tables['production_batches'] ||= []).push({
+        id: batchId, delivery_round_id: p.p_delivery_round_id,
+        scheduled_date: p.p_scheduled_date || new Date().toISOString().slice(0, 10),
+        status: 'open', created_by: 'auth-test-user', created_at: new Date().toISOString(), updated_at: new Date().toISOString(),
+      })
+      return { data: { ok: true, batch_id: batchId, delivery_round_id: p.p_delivery_round_id, items_count: n }, error: null }
+    }
+if (name === 'deduct_inventory_for_order') {
+      const p = params ?? {}
+      const order = (tables['orders'] || []).find((o: any) => o.order_number === p.p_order_number)
+      if (!order) return { data: null, error: { code: 'ERR_ORDER_NOT_FOUND', message: 'ERR_ORDER_NOT_FOUND' } }
+      const already = (tables['inventory_transactions'] || []).some((t: any) => t.reference_type === 'order' && t.reference_id === p.p_order_number)
+      if (already) return { data: { ok: true, idempotent: true, order_number: p.p_order_number }, error: null }
+      for (const oi of (tables['order_items'] || []).filter((x: any) => x.order_id === order.id)) {
+        if (oi.product_id === 'prod-1') {
+          const ing = (tables['inventory'] || []).find((i: any) => i.id === 'ing-1')
+          if (ing) {
+            ing.current_stock = Number(ing.current_stock) - Number(oi.quantity) * 0.25
+            ;(tables['inventory_transactions'] ||= []).push({
+              id: `itx-${Date.now()}`, inventory_id: 'ing-1', type: 'out',
+              quantity: Number(oi.quantity) * 0.25, reference_type: 'order',
+              reference_id: p.p_order_number, notes: 'auto-deduct', created_by: 'auth-test-user',
+              created_at: new Date().toISOString(),
+            })
+          }
+        }
+      }
+      return { data: { ok: true, idempotent: false, order_number: p.p_order_number }, error: null }
+    }
+
+    if (name === 'restore_inventory_for_order') {
+      const p = params ?? {}
+      const tx = (tables['inventory_transactions'] || []).filter((t: any) => t.reference_type === 'order' && t.reference_id === p.p_order_number)
+      if (tx.length === 0) return { data: { ok: true, idempotent: true, order_number: p.p_order_number, restored_amount: 0 }, error: null }
+      for (const t of tx) {
+        const ing = (tables['inventory'] || []).find((i: any) => i.id === t.inventory_id)
+        if (ing) ing.current_stock = Number(ing.current_stock) + Number(t.quantity)
+      }
+      tables['inventory_transactions'] = (tables['inventory_transactions'] || []).filter((t: any) => !(t.reference_type === 'order' && t.reference_id === p.p_order_number))
+      return { data: { ok: true, idempotent: false, order_number: p.p_order_number, restored_amount: tx.length }, error: null }
+    }
     return { data: null, error: { code: 'PGRST202', message: 'rpc not mocked' } }
   }
 

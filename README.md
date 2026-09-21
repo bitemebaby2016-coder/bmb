@@ -15,7 +15,7 @@ PWA สั่งอาหารจริงของร้าน Bite Me Baby (�
 
 ## Current Phase
 
-**PHASE 1 — MONEY + ORDER: CODE เสร็จ 2026-09-21** (tests 111/111 · lint 0 errors · build ✓ · SQL contracts 8/8) — PAY-01/S-2 pre-order server-side pricing (migration 017), PRE-01 rounds จาก DB, PAY-04 orderVocabulary เดียว, SEC-03 server audit (migration 018), SEC-04 ลบ legacy key env, QA-01 CI, QA-02 lint, QA-03 SQL contract tests, QA-04 playwright โลคัล · **รอ owner:** `supabase db push` (017+018) → `node e2e/sqlContracts.cjs --include-new` → deploy EF → **บิลบัตรจริง 1 ใบ (PAY-02) + refund จริง 1 รายการ (PAY-03)** · ต่อไป PHASE 0–4 → PWA-100-GATE → PILOT → **M1** → PHASE 5–7 → SAAS GATE → **M2**
+**PHASE 2 — KITCHEN: CODE เสร็จ 2026-09-21** (tests 115/115 · build ✓ · lint ✓) — INV-01/02 auto-deduct/restore + auto sold-out (migration 019 + hook), KIT-01 production batches/queue, KIT-02 recipes/BOM + `bomFeasibility` · **รอ owner:** `supabase db push` (019) → `e2e/contracts_019_kitchen.sql` + `sqlContracts --include-new` · **ค้างในเฟส:** admin UI panel kitchen queue · ต่อ PHASE 0–1 owner actions (push 017/018, บิลบัตรจริง 1 ใบ, refund จริง) → PHASE 3 BITE DRIVE → … → PWA-100-GATE → PILOT → **M1** → PHASE 5–7 → SAAS GATE → **M2**
 
 ## Future SaaS Direction (ไม่ได้ implement — DEFERRED ทั้งหมด)
 

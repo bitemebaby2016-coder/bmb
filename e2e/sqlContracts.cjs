@@ -71,18 +71,31 @@ const isMissingFn = (b) => /PGRST202/.test(b)
       const r = await rpc(fn, args)
       record(`QA-03 ${label}`, !isMissingFn(r.body) && okFn(r.body), `status=${r.status} ${r.body.slice(0, 110)}`)
     }
+
+      // ============ PHASE 2 KITCHEN (migration 019 — after deploy) ============
+    const kitchen = [
+      ['kitchen RPC deduct_inventory_for_order is deployed', 'deduct_inventory_for_order', { p_order_number: 'NULL-0' }, (b) => /ERR_ORDER_NOT_FOUND|ERR_FORBIDDEN/.test(b)],
+      ['kitchen RPC restore_inventory_for_order is deployed', 'restore_inventory_for_order', { p_order_number: 'NULL-0' }, (b) => /ERR_ORDER_NOT_FOUND|ERR_FORBIDDEN/.test(b)],
+      ['kitchen RPC create_production_batch is deployed', 'create_production_batch', { p_delivery_round_id: 'round-x', p_scheduled_date: '2026-01-01' }, (b) => /ERR_ROUND_NOT_FOUND|ERR_FORBIDDEN/.test(b)],
+      ['kitchen RPC kitchen_queue is deployed', 'kitchen_queue', { p_delivery_round_id: null, p_scheduled_date: null }, (b) => b.includes('batches') || b.includes('ERR_FORBIDDEN')],
+      ['kitchen RPC get_inventory_requirements is deployed', 'get_inventory_requirements', { p_product_id: null, p_quantity: 1 }, isControlled],
+    ]
+    for (const [label, fn, args, okFn] of kitchen) {
+      const r = await rpc(fn, args)
+      record(`QA-03 ${label}`, !isMissingFn(r.body) && okFn(r.body), `status=${r.status} ${r.body.slice(0, 110)}`)
+    }
   }
 
   const passed = results.filter((r) => r.ok).length
-  const pending = INCLUDE_NEW ? 0 : 4 // 017/018 probes not yet runnable pre-deploy
+  const pending = INCLUDE_NEW ? 0 : 9 // 017/018 (4) + 019 kitchen (5) probes not run before deploy
   fs.writeFileSync(
     path.join(PROJ, 'e2e', 'sql-contract-result.json'),
     JSON.stringify({
       project: 'bitemebaby production', timestamp: new Date().toISOString(),
       total: results.length, passed, pendingDeploy: pending,
       note: INCLUDE_NEW
-        ? 'migrations 017/018 applied — full Phase 1 contract set'
-        : 'pre-017 contract set — run again with --include-new after supabase db push (017+018)',
+        ? 'migrations 017/018/019 applied — full Phase 1+2 contract set'
+        : 'pre-017 contract set — run again with --include-new after supabase db push (017+018+019)',
       checks: results,
     }, null, 2),
     'utf8',
