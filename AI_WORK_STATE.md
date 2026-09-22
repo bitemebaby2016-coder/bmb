@@ -577,3 +577,45 @@ REMAINING / NEXT (owner queue):
 - Optionally: rerun older contract suites (017–022) on production for completeness; stale remote
   history rows 031/032/20260812000002 no longer exist (resolved during this wave).
 production → §13 post-apply checklist.
+---
+
+Status: ✅ PHASE 3B · WAVE 3 DONE (2026-09-22) — migration 033 table-ACL alignment applied + verified locally
+
+Full evidence: `RLS_MATRIX.md` v2.0 · `e2e/prodCheckGrants.cjs` · `e2e/contracts_033_table_acl.sql` ·
+`e2e/prod-check-grants-result.json`.
+
+SHIPPED THIS WAVE (LOCAL STACK — production push pending owner token):
+- Migration `033_table_acl_alignment.sql` (F-3 closure) — GRANT/REVOKE only, no schema/policy change:
+  residue REVOKE (REFERENCES/TRIGGER/TRUNCATE anon+auth on every public rel) · service_role full
+  restore + default privileges · authenticated grants: business_settings S / content_approvals S /
+  media_assets S,I,U,D / mascot_overrides S,I,U,D · anon mascot_overrides S · `public_profiles`
+  view-write REVOKED (SECURITY: view runs as owner → view-write = profiles-RLS bypass = cross-user
+  write) · `pre_orders` auth I/U/D REVOKED (024 archive is RPC-write-only).
+- Applied locally via psql + registered `033|table_acl_alignment` in schema_migrations.
+- Local verification ALL GREEN:
+  · `e2e/prodCheckGrants.cjs` grant probe 7/7 PASS (uses has_table_privilege(role, c.oid, priv) —
+    string form 'public.'||relname can reorder under the planner and hit the vault schema,
+    e.g. vault.decrypted_secrets → spurious "relation public.decrypted_secrets does not exist";
+    OID overload is evaluation-order safe).
+  · Contract suites 023/028/029/030/033 run via psql → 5/5 exit=0.
+  · REST probe (local PostgREST :54331, minted auth JWT): anon products 200 · anon
+    mascot_overrides 200 (NEW) · auth business_settings 200 (NEW — checkout 403 fixed) ·
+    auth POST public_profiles → 403 · anon POST public_profiles → 401 (vuln closed) ·
+    anon business_settings → 401 (stays locked).
+- `RLS_MATRIX.md` rewritten v2.0 (live policy+grant truth; old Phase-B baseline preserved as
+  `RLS_MATRIX_v1_phaseB_baseline.md`); F-5 dormant wide policies documented (payment_intents_policy,
+  inventory_public_read, profiles_public_read, recipes_anon_read, media_assets_public_read) —
+  keep them UN-granted.
+
+RESOLVED the WAVE-2 "KNOWN MACHINE/GRANTS NOTES" items (locally): `service_role` full grants restored;
+`authenticated` SELECT on `business_settings` now granted. The other note (two local stacks, BMB API on
+:54331, `supabase status` misleadingly reports 54321 owned by selfprint-v3-react) — still TRUE and
+documented; the REST probe hits :54331 deliberately.
+
+REMAINING / NEXT (owner queue — BLOCKED on secret):
+- **Production apply**: `supabase db push` (or Management API) for 033. Requires owner
+  `SUPABASE_ACCESS_TOKEN` or CLI login — NOT present in this environment (no supabase.temp/at.local,
+  ~/.supabase has no access-token; .env.local holds only VITE_* keys). After push: rerun
+  `e2e/prodCheckGrants.cjs --remote` + contract suites on production (§13 checklist), then commit
+  the production-verification evidence.
+- Optional: rerun older contract suites (017–022) on production for completeness.

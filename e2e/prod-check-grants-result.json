@@ -1,0 +1,15 @@
+{
+  "timestamp": "2026-09-22T10:31:33.977Z",
+  "ref": "ivkdfognyiwjcmrhcnwz",
+  "local": {
+    "anon_write_residue": "0",
+    "anon_extra_select": "0",
+    "anon_mascot_read": "granted",
+    "auth_public_profiles_write": "0",
+    "auth_preorders_write": "0",
+    "auth_new_grants": "10",
+    "service_role_missing": "0"
+  },
+  "remote": null,
+  "local_pass": true
+}
