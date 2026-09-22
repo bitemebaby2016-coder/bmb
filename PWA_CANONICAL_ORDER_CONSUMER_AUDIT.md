@@ -313,3 +313,88 @@ error surface is ugly. Proposed owner-approved follow-up: tiny migration adding
 `supabase/config.toml` (54321-54324 defaults restored); all `_*.txt`/`_*.sql` probe temp
 files deleted; `supabase/020_corrupted_backup.txt` deleted (020 was restored from HEAD
 earlier in the session).
+
+## 13. WAVE 2 EXECUTION LOG (2026-09-22) — F-1 fix (migration 030) + real-browser cancel
+## click-through + production migration state
+# (post-fa93f9d wave: closes the §22 scope-honesty note and the "ยังไม่เคยรัน" migration question)
+
+**F-1 FIXED (owner-approved in chat: "อนุมัติ ต่อเลย")**
+
+- `supabase/migrations/030_order_transition_allowed_else.sql` — CREATE OR REPLACE of the LIVE
+  4-arg `order_transition_allowed(p_from, p_to, p_is_admin, p_is_owner)` adding exactly ONE
+  functional line `ELSE RETURN false;` to the admin CASE. Body otherwise identical to the live
+  definition at fa93f9d (proven via `pg_get_functiondef`); signature / SECURITY DEFINER /
+  search_path / allow-list / owner branch / EXECUTE grants (service_role only) all unchanged.
+- **Proof of the bug (pre-fix):** `e2e/contracts_030_transition_else.sql` run BEFORE applying 030
+  died exactly at G2 with `ERROR: case not found` + `HINT: CASE statement is missing ELSE part`
+  (G1 allow-list regression still passed) — root cause reproduced live, not inferred.
+- **After 030 applied** (local `supabase migration up` is blocked by the CLI's remote-drift
+  check against stale remote history rows — see §13 production state — so it was applied via
+  psql from the same file + registered in local history): the same suite PASSES 4/4 + ROLLBACK:
+  G1 allow-list regression intact (admin chain / identity / owner cancel) · G2 off-allow-list
+  pairs return false WITHOUT case_not_found · G3 end-to-end admin `transition_order_status` on a
+  forced-delivered PRE_ORDER order rejected with the CONTRACTED `ERR_INVALID_TRANSITION`
+  (delivered→cancelled and delivered→failed; order untouched) · G4 owner `cancel_order`
+  end-to-end (pending + window + future PRE_ORDER date) with capacity released 2→1.
+- **No regression:** `e2e/live_verify_022.sql` re-run AFTER 030 → 13/13 PASS (§22 gates intact).
+- **Full gates:** vitest 179/179 (22 files) · eslint clean · `npm run build` PASS.
+
+**Real-browser cancel click-through — the §22 scope-honesty gap, now CLOSED**
+
+`e2e/cancelClickThrough.cjs` (Playwright + system Chrome, headless, LOCAL stack ONLY) — **11/11
+steps PASS** (`e2e/cancel-clickthrough-result.json`, screenshots `e2e/screenshots/ct-01..06`):
+
+1. real login through `/login` (customer created via local auth admin API, deleted in `finally`);
+2. real SAME_DAY order created through the FULL UI (menu → add → upsell sheet → cart →
+   checkout → round picker → place-order → PromptPay txn submit → `/track/BMB-*`);
+3. CANCEL **clicked on the tracking page** (`data-testid="track-cancel"`) → success toast
+   "ยกเลิกออเดอร์สำเร็จ" + cancelled state text + cancel button hidden after refetch;
+4. server truth under the customer's own RLS: `orders.status='cancelled'` + round capacity
+   released 1→0 (`cancel_order` → capacity trigger);
+5. second real order → CANCEL **clicked on `/orders`** (`data-testid="cancel-<order_number>"`)
+   → same toast + row label "ยกเลิก" + button gone;
+6. server truth again: `cancelled` + capacity 1→0.
+
+Gate runbook: the script auto-resolves the REAL local API port (see F-2 below), waits for the
+async round picker, and picks a round whose cutoff is genuinely still open — widening TODAY's
+cutoffs via local psql ONLY when the gate runs after every cutoff (local test data; NOT a code
+path). Console noise during the run: only `getBusinessSettings` 403 (F-3 below) — display-only,
+graceful.
+
+**Findings from the click-through environment (informational, NOT changed in this wave)**
+
+- **F-2 (machine-level):** TWO local supabase stacks run concurrently on this machine
+  (Bite Me Baby + selfprint-v3-react). BMB's actual API gateway is `127.0.0.1:54331`, while
+  `supabase status -o env` reports the default `54321` — owned by the OTHER project's stack
+  (its schema is a digital-twin app: `twin_*` tables). The gate scripts therefore probe
+  candidate ports and pin the one that serves THIS project's schema (`products` resolves).
+- **F-3 (grants gap):** `service_role` holds NO table privileges on `delivery_rounds`
+  (42501 hint: "GRANT SELECT ON public.delivery_rounds TO service_role"), and `authenticated`
+  lacks SELECT on `business_settings` (checkout logs 403 from `getBusinessSettings`, degrades
+  gracefully). The RLS-hardening lineage never re-issued table grants for later-created tables.
+  Flagged for a future owner-approved grants pass; no behavior hole (RLS stays authoritative).
+
+**Production migration state — answering "มิเกรชั่นของวันนี้ทั้งหมดยังไม่เคยรันเลย ให้รันยังไง"**
+(all READ-ONLY evidence; NO production write happened in this wave)
+
+- Local stack: 001→030 applied AND recorded in `supabase_migrations.schema_migrations`
+  (030 applied + registered this session; contracts_030 + live_verify_022 green).
+- Production `ivkdfognyiwjcmrhcnwz`: `supabase migration list` (CLI connects read-only without
+  an access token) shows **001→027 applied + RECORDED; 028, 029 (+ new 030) are NOT on
+  production** — "ยังไม่เคยรัน" is therefore true exactly for 028/029(+030); 023–027 already
+  shipped earlier. Fingerprint probes with the publishable key (read-only) confirm the
+  023/024-era objects exist on production: `delivery_rounds` table + `orders.order_mode`
+  column return 200 on production REST.
+- `supabase db push --dry-run` prints EXACTLY the pending set:
+  `028_phase3a_operational_guarantees · 029_ensure_rounds_grant · 030_order_transition_allowed_else`
+  → **one `supabase db push`** applies them in order and RECORDS history. Do NOT re-run
+  023–027 manually. Production history carries 3 stale rows (031, 032, 20260812000002) from an
+  old refactor whose files no longer exist — they do NOT block `db push`; optional later
+  cleanup: `supabase migration repair --status reverted 031 032 20260812000002`.
+- New tooling (committed with this wave): `e2e/prodCheckMigrations.cjs` (read-only
+  local-vs-remote sentinel diff: migration history, functions, tables, F-1 ELSE presence, 029
+  grant; `--remote` mode token-gated via `SUPABASE_ACCESS_TOKEN`) and `e2e/prodApplyMigrations.cjs`
+  (Management API apply, ONE file per query, BOM/CRLF/NUL sanitized, transaction-wrapped when
+  not self-wrapped, stops at first failure, explicit `--files 028,029,030` only).
+- Post-apply verification (unchanged from §23): rerun `contracts_023` / `contracts_028` /
+  `contracts_029` / `contracts_030` against production + re-check the rounds/capacity audit.

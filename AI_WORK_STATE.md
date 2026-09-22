@@ -531,3 +531,32 @@ REMAINING / NEXT:
 - Admin product editor does not yet expose the add-ons JSON field (owners edit via DB/API for now;
   planned: JSON textarea in AdminProducts).
 - Pre-order items skip the upsell sheet (booking flow keeps direct confirm).
+
+---
+Status: ✅ PHASE 3B · WAVE 2 DONE (2026-09-22) — F-1 fixed + REAL-BROWSER cancel click-through + production migration runbook
+Full evidence: `PWA_CANONICAL_ORDER_CONSUMER_AUDIT.md` §13 (this file's earlier blocks are from
+older phases and kept as history).
+
+SHIPPED THIS WAVE (all committed to main):
+- Migration 030 `030_order_transition_allowed_else.sql` — approved F-1 fix: ONE line
+  `ELSE RETURN false;` added to the admin CASE of `order_transition_allowed`. Pre-fix suite run
+  reproduced `case not found` live; post-fix suite 4/4 PASS (`e2e/contracts_030_transition_else.sql`)
+  with `ERR_INVALID_TRANSITION` surfacing end-to-end; `live_verify_022.sql` still 13/13 PASS.
+- Gates: vitest 179/179 · eslint clean · build PASS.
+- `e2e/cancelClickThrough.cjs` — REAL browser click-through (Playwright, local stack): 11/11 PASS —
+  login → full-UI SAME_DAY order → cancel clicked on Track page → toast/status/capacity 1→0 →
+  second order → cancel clicked on Orders page → toast/row/capacity 1→0. Evidence:
+  `e2e/cancel-clickthrough-result.json` + screenshots `e2e/screenshots/ct-01..06`.
+- `e2e/prodCheckMigrations.cjs` + `e2e/prodApplyMigrations.cjs` — production migration state
+  checker (read-only) + Management API applier (one file per query, explicit --files only).
+- Production truth: 001–027 applied+recorded on production; **028, 029, 030 pending** — one
+  `supabase db push` applies exactly those three and records history (dry-run verified).
+
+KNOWN MACHINE/GRANTS NOTES (flagged, not changed):
+- Two local supabase stacks share this machine; BMB's real API is 127.0.0.1:54331 while
+  `supabase status` reports 54321 (owned by selfprint-v3-react). Gate scripts auto-probe ports.
+- `service_role` lacks table grants on `delivery_rounds`; `authenticated` lacks SELECT on
+  `business_settings` (403 in checkout, display-only) — future owner-approved grants pass.
+
+NEXT: owner confirms → `supabase db push` (028+029+030) → rerun contracts_023/028/029/030 on
+production → §13 post-apply checklist.

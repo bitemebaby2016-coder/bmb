@@ -1,0 +1,94 @@
+{
+  "timestamp": "2026-09-22T07:14:25.436Z",
+  "base": "http://localhost:4175",
+  "supabase": "http://127.0.0.1:54331",
+  "orders": [
+    "BMB-20260922-362",
+    "BMB-20260922-468"
+  ],
+  "steps": [
+    {
+      "name": "real login via /login",
+      "ok": true,
+      "extra": {
+        "userId": "9a91dc04-a69b-4b68-b056-7476e4c16166"
+      }
+    },
+    {
+      "name": "UI order #1 created through the real checkout (SAME_DAY, pending)",
+      "ok": true,
+      "extra": {
+        "n1": "BMB-20260922-362",
+        "mode": "SAME_DAY"
+      }
+    },
+    {
+      "name": "TRACK cancel click → success toast",
+      "ok": true,
+      "extra": {
+        "toast1": "✅ยกเลิกออเดอร์สำเร็จ"
+      }
+    },
+    {
+      "name": "TRACK page renders cancelled state text",
+      "ok": true,
+      "extra": null
+    },
+    {
+      "name": "DB status=cancelled + round capacity released (track surface)",
+      "ok": true,
+      "extra": {
+        "status": "cancelled",
+        "capacity": "1→0"
+      }
+    },
+    {
+      "name": "TRACK cancel button hidden after cancel",
+      "ok": true,
+      "extra": null
+    },
+    {
+      "name": "UI order #2 created through the real checkout (SAME_DAY, pending)",
+      "ok": true,
+      "extra": {
+        "n2": "BMB-20260922-468"
+      }
+    },
+    {
+      "name": "ORDERS cancel click → success toast",
+      "ok": true,
+      "extra": {
+        "toast2": "✅ยกเลิกออเดอร์สำเร็จ"
+      }
+    },
+    {
+      "name": "DB status=cancelled + round capacity released (orders surface)",
+      "ok": true,
+      "extra": {
+        "status": "cancelled",
+        "capacity": "1→0"
+      }
+    },
+    {
+      "name": "ORDERS cancel button gone after cancel",
+      "ok": true,
+      "extra": null
+    },
+    {
+      "name": "ORDERS row shows ยกเลิก status label",
+      "ok": true,
+      "extra": null
+    }
+  ],
+  "consoleErrors": [
+    "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+    "[getBusinessSettings] Error: {code: 42501, details: null, hint: Grant the required privileges to the current role …ECT ON public.business_settings TO authentica",
+    "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+    "[getBusinessSettings] Error: {code: 42501, details: null, hint: Grant the required privileges to the current role …ECT ON public.business_settings TO authentica",
+    "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+    "Failed to load resource: the server responded with a status of 403 (Forbidden)",
+    "[getBusinessSettings] Error: {code: 42501, details: null, hint: Grant the required privileges to the current role …ECT ON public.business_settings TO authentica",
+    "[getBusinessSettings] Error: {code: 42501, details: null, hint: Grant the required privileges to the current role …ECT ON public.business_settings TO authentica"
+  ],
+  "pass": true
+}
