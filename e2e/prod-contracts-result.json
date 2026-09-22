@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-09-22T14:16:48.561Z",
+  "timestamp": "2026-09-22T15:02:40.993Z",
   "ref": "ivkdfognyiwjcmrhcnwz",
   "checks": [
     {
@@ -28,10 +28,10 @@
     },
     {
       "file": "e2e/contracts_033_table_acl.sql",
-      "ok": false,
-      "status": 400,
-      "detail": "{\"message\":\"Failed to run sql query: ERROR:  P0001: FAIL G1b anon ACL drift (write-residue=16, unexpected-SELECT=15)\\nCONTEXT:  PL/pgSQL function inline_code_block line 27 at RAISE\\n\"}"
+      "ok": true,
+      "status": 201,
+      "detail": null
     }
   ],
-  "pass": false
+  "pass": true
 }

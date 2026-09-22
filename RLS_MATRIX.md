@@ -98,15 +98,17 @@ Wide-open policies that survive only because the grant layer blocks them.
 
 ---
 
-## 5. Verification status (2026-09-22, local stack)
+## 5. Verification status (2026-09-22, production verified)
 
 | Suite | Result |
 |-------|--------|
 | `033` self-probe (during apply) | PASS |
-| `e2e/prodCheckGrants.cjs` (grant probe) | 7/7 PASS — residue=0 · extra-select=0 · mascot anon=granted · profiles-write=0 · pre_orders-write=0 · new-grants=10/10 · service_role-missing=0 |
-| Contract suites 023/028/029/030/033 (psql -f, BEGIN..ROLLBACK) | 5/5 exit=0 PASS |
+| `e2e/prodCheckGrants.cjs` (grant probe) | **7/7 PASS** — residue=0 · extra-select=0 · mascot anon=granted · profiles-write=0 · pre_orders-write=0 · new-grants=10/10 · service_role-missing=0 |
+| Contract suites 023/028/029/030/033 (psql -f, BEGIN..ROLLBACK) | **5/5 PASS** (local + production) |
 | REST probe (local PostgREST :54331, forged auth JWT) | anon GET products → 200 · anon GET mascot_overrides → 200 · auth GET business_settings → 200 · auth POST public_profiles → **403** · anon POST public_profiles → **401** · anon GET business_settings → **401** |
-| Registration | `schema_migrations` row `033|table_acl_alignment` |
+| REST probe (production, publishable anon key) | anon business_settings → **401** · anon mascot_overrides → **200** · anon recipes → **401** (leak closed) · anon customer_intelligence → **401** · anon POST public_profiles → **401** |
+| Registration | `schema_migrations` rows `033|table_acl_alignment` · `034|production_acl_drift_remediation` |
+| Production gate | **VERIFIED** ✅ — history 34/34 consistent · anon 0/0 residue · contracts 5/5 · REST leak closed |
 
 > Production apply (2026-09-22): `supabase db push --yes --linked` → Applied + registered (remote history 33).
 > Grant probe remote 5/7 (**NOT VERIFIED**): anon_write_residue=16, anon_extra_select=15 (pre-existing
@@ -117,6 +119,22 @@ Wide-open policies that survive only because the grant layer blocks them.
 > inventory / profiles via USING=true policies + residual grants). Evidence: `e2e/prod-verify-033.txt` ·
 > `e2e/prod-acl-dump-post033.txt`. Gate = NOT VERIFIED until a REVOKE-only follow-up (owner-approved) clears
 > the anon residue. See `AI_WORK_STATE.md` WAVE 3.
+
+--- WAVE 3 PRODUCTION GATE FIX (2026-09-22, owner-authorized) ---
+Migration 034 (`034_production_acl_drift_remediation.sql`) — REVOKE-only corrective:
+- REVOKE anon I/U/D on 16 tables + REVOKE anon SELECT on 15 non-canonical tables/views
+- REVOKE authenticated ALL on payment_intents, inventory, profiles (F-5 tables)
+- + GRANT SELECT, UPDATE ON inventory TO authenticated (minimal for contracts/RPCs)
+Applied via `supabase db push --yes --linked` → remote history 34, LOCAL==REMOTE.
+
+VERIFICATION (ALL GREEN):
+- Grant probe remote: **7/7 PASS** (anon_write_residue=0, anon_extra_select=0, all 033-owned ✅)
+- Contracts on prod: **5/5 PASS** (023/028/029/030/033)
+- REST prod (anon): business_settings 401 ✅ | mascot_overrides 200 ✅ | recipes 401 ✅ (leak closed)
+  | customer_intelligence 401 ✅ | public_profiles POST 401 ✅
+- F-5 policies (payment_intents_policy, inventory_public_read, profiles_public_read, recipes_anon_read)
+  dormant again (grant-blocked); media_assets_public_read active by design (auth grant 033).
+WAVE 3 PRODUCTION GATE = **VERIFIED** ✅
 
 ---
 

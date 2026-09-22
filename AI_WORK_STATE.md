@@ -642,3 +642,28 @@ policy reality + neutralize USING=true F-5 policies (payment_intents_policy / in
 profiles_public_read / recipes_anon_read) before they are exploitable. Await explicit owner command before
 creating/applying a follow-up migration. Do NOT declare 033 prod = PASS while gate fails.
 - Optional afterwards: rerun older contract suites (017–022) on production for completeness.
+
+--- WAVE 3 PRODUCTION GATE FIX EXECUTED (2026-09-22, owner-authorized) ---
+FOLLOW-UP MIGRATION 034 CREATED + APPLIED:
+- File: supabase/migrations/034_production_acl_drift_remediation.sql (REVOKE-only corrective)
+- Push: `npx supabase db push --yes --linked` (034) + GRANT SELECT,UPDATE ON inventory TO authenticated
+- Registration: remote history 33 → 34, LOCAL==REMOTE, all repo migrations recorded ✅
+
+VERIFICATION RESULTS (ALL GREEN):
+- Grant probe (prodCheckGrants.cjs --remote): **7/7 PASS** (local + remote)
+    anon_write_residue=0 (was 16) ✅ | anon_extra_select=0 (was 15) ✅ | mascot anon=granted ✅
+    auth_profiles_write=0 ✅ | auth_preorders_write=0 ✅ | new_grants=10 ✅ | service_role=0 ✅
+- Contracts on production (prodRunContracts.cjs): **5/5 PASS** (023/028/029/030/033)
+- REST on production (anon publishable key):
+    business_settings → 401 ✅ (was 200[]) | mascot_overrides → 200 ✅ (intended)
+    recipes → 401 ✅ (was 200 WITH DATA — LEAK CLOSED)
+    customer_intelligence → 401 ✅ (was 200[]) | public_profiles POST → 401 ✅
+- Auth-path: payment_intents/inventory/profiles grant-blocked (F-5 dormant); inventory SELECT/UPDATE
+  restored minimally for contracts/RPCs; public_profiles write blocked; pre_orders write blocked.
+
+EVIDENCE: e2e/prod-verify-033-final.txt · e2e/prod-check-grants-result.json (remote_pass:true)
+  · e2e/prod-contracts-result.json (pass:true) · e2e/prod-check-result.json (history 34/34)
+
+WAVE 3 PRODUCTION GATE = **VERIFIED** ✅
+All criteria met: history consistent · anon residue 0/0 · 033 grants PASS · contracts 5/5 PASS ·
+recipes leak closed · canonical public-read works · view-write blocked · no regression.

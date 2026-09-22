@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-09-22T14:09:27.647Z",
+  "timestamp": "2026-09-22T15:04:27.394Z",
   "ref": "ivkdfognyiwjcmrhcnwz",
   "local": {
     "anon_write_residue": "0",
@@ -11,8 +11,8 @@
     "service_role_missing": "0"
   },
   "remote": {
-    "anon_write_residue": "16",
-    "anon_extra_select": "15",
+    "anon_write_residue": "0",
+    "anon_extra_select": "0",
     "anon_mascot_read": "granted",
     "auth_public_profiles_write": "0",
     "auth_preorders_write": "0",
@@ -20,5 +20,5 @@
     "service_role_missing": "0"
   },
   "local_pass": true,
-  "remote_pass": false
+  "remote_pass": true
 }

@@ -1,0 +1,82 @@
+WAVE 3 / MIGRATION 033 + 034 — PRODUCTION VERIFICATION RECORD (FINAL)
+===================================================================
+Date: 2026-09-22 · Link repro: ivkdfognyiwjcmrhcnwz
+Migrations:
+  - 033: supabase/migrations/033_table_acl_alignment.sql (table-ACL alignment, F-3)
+  - 034: supabase/migrations/034_production_acl_drift_remediation.sql (REVOKE-only remediation)
+Method: Supabase CLI 2.117.0 `db push --yes --linked` (dry-run verified each)
+Status: **GATE VERIFIED — WAVE 3 PRODUCTION = PASS**
+
+1) PUSH HISTORY
+   033: Applying migration 033_table_acl_alignment.sql ... Finished (PUSH-EXIT=0)
+   034: Applying migration 034_production_acl_drift_remediation.sql ... Finished (PUSH-EXIT=0)
+   + GRANT SELECT, UPDATE ON public.inventory TO authenticated (required for contracts 023/028)
+   Registration verified: remote history 32 → 33 → 34, LOCAL==REMOTE,
+   "every repo migration recorded on production" PASS (`e2e/prodCheckMigrations.cjs --remote`)
+
+2) GRANT PROBE (e2e/prodCheckGrants.cjs --remote) → e2e/prod-check-grants-result.json
+   LOCAL  : 7/7 PASS
+   REMOTE : 7/7 PASS  ✅
+   - anon_write_residue = 0 (was 16) ✅
+   - anon_extra_select = 0 (was 15) ✅
+   - anon_mascot_read = granted ✅
+   - auth_public_profiles_write = 0 ✅
+   - auth_preorders_write = 0 ✅
+   - auth_new_grants = 10 ✅
+   - service_role_missing = 0 ✅
+
+3) CONTRACTS ON PRODUCTION (e2e/prodRunContracts.cjs) → e2e/prod-contracts-result.json
+   contracts_023_order_spine.sql                    PASS (201)
+   contracts_028_payment_confirmation_kitchen.sql   PASS (201)
+   contracts_029_round_grant.sql                    PASS (201)
+   contracts_030_transition_else.sql                PASS (201)
+   contracts_033_table_acl.sql                      PASS (201)
+   → **5/5 PASS** — no functional regression in order/payment/round/kitchen paths
+
+4) REST / PostgREST ON PRODUCTION (anon via publishable key)
+   anon GET  business_settings    → 401 ✅ (was 200[]; grant residue removed)
+   anon GET  mascot_overrides     → 200 ✅ (intended public-read)
+   anon GET  recipes              → 401 ✅ (was 200 WITH DATA; live leak CLOSED)
+   anon GET  customer_intelligence→ 401 ✅ (was 200[]; no-RLS view now grant-blocked)
+   anon POST public_profiles      → 401 ✅ (vuln closed)
+   signup for auth session        → 429 (platform rate limit; auth live probes not run)
+   Auth-path analysis (grant+policy):
+     - auth business_settings     → allowed by construction (grant SELECT + policy)
+     - auth public_profiles write → rejected by construction (033 revoked I/U/D)
+     - auth payment_intents       → grant-blocked (034 revoked ALL; policy dormant)
+     - auth inventory             → SELECT/UPDATE granted (minimal for contracts/RPCs)
+     - auth profiles              → grant-blocked (034 revoked ALL; reads via public_profiles)
+
+5) SECURITY ANALYSIS — ROOT CAUSE RESOLVED
+   Production retained 004-era wide grants (`GRANT ALL ... TO anon, authenticated`).
+   033 step-1 only revoked REFERENCES/TRIGGER/TRUNCATE (premise from local was FALSE on prod).
+   034 (this fix) REVOKEs:
+     - anon INSERT/UPDATE/DELETE on 16 tables
+     - anon SELECT on 15 non-canonical tables/views
+     - authenticated ALL on payment_intents, inventory, profiles (F-5 tables)
+   + Restored minimal authenticated SELECT,UPDATE on inventory (required by contracts/RPCs).
+   Result: anon grants = canonical 8-table SELECT set only; authenticated grants = 033-owned 10 grants
+   + inventory SELECT/UPDATE; F-5 policies dormant again (defense-in-depth preserved).
+   No schema/policy changes — pure ACL alignment.
+
+6) EVIDENCE FILES
+   - e2e/prod-verify-033.txt (initial verification, pre-fix)
+   - e2e/prod-acl-dump-post033.txt (205 ACL rows, pre-fix baseline)
+   - e2e/prod-check-grants-result.json (remote_pass: true, 7/7)
+   - e2e/prod-contracts-result.json (pass: true, 5/5)
+   - e2e/prod-check-result.json (history 34/34)
+   - supabase/migrations/034_production_acl_drift_remediation.sql (the fix)
+
+7) DECISION
+   WAVE 3 PRODUCTION GATE = **VERIFIED** ✅
+   All criteria met:
+   ✓ migration history 34 consistent
+   ✓ anon_write_residue = 0
+   ✓ anon_extra_select = 0
+   ✓ 033 grants all PASS
+   ✓ contracts 023/028/029/030 = PASS
+   ✓ contracts_033 = PASS
+   ✓ recipes anon data leak = CLOSED (401)
+   ✓ canonical public-read endpoints work (mascot_overrides 200)
+   ✓ public_profiles/pre_orders write = blocked (401)
+   ✓ no regression in order/payment/round/kitchen paths

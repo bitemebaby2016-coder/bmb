@@ -244,13 +244,13 @@ SECTION 9: MODEL SELECTION & COST-OPTIMIZED ESCALATION
     and small file tasks before escalating to paid/large-context models.
 
     - TIER 0 (FREE MODELS - Default First Preference):
-      * Primary Router: `openrouter/free` (Automatically routes to best free model)
-      * Secondary (Coding/Logic): `qwen/qwen3.8-27b:free` or `deepseek/deepseek-r1:free` / `google/gemma-4-31b-it:free` / `nvidia/Nemotron 3 Ultra (free)`
+      * Primary Router: `openrouter/auto` (Automatically routes to best free model)
+      * Secondary (Coding/Logic): `nvidia/nemotron-3-ultra-550b-a55b:free` or `poolside/laguna-s-2.1:free` / `google/gemma-4-31b-it:free` / `qwen/qwen3.8-27b:free` /  `deepseek/deepseek-r1:free`
       * Use for: Initial investigation, single-file edits, quick bug fixes, and small tests.
 
     - TIER 1 (PAID / FAST & HIGH EFFICIENCY - First Fallback):
-      * Primary: `deepseek/DeepSeek V4 Flash 0731`
-      * Secondary: `qwen/qwen3.7-flash` or `thudm/glm-flash`
+      * Primary: `qwen/qwen3.7-flash`
+      * Secondary: `z-ai/glm-flash-latest` or `deepseek/DeepSeek V4 Flash 0731`
       * Use for: Complex code generation, multi-file refactoring when TIER 0 hits rate limits or fails.
 
     - TIER 2 (LARGE CONTEXT / ARCHITECTURE - 2M Window):
