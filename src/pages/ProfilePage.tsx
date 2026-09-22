@@ -42,7 +42,7 @@ export function ProfilePage() {
       </div>
 
       <div className="space-y-3">
-        <Link to="/profile/orders" className="card block hover:scale-[1.02] transition-transform">
+        <Link to="/orders" className="card block hover:scale-[1.02] transition-transform">
           <div className="flex items-center gap-3">
             <span className="text-2xl">📋</span>
             <div>

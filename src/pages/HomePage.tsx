@@ -16,7 +16,6 @@ import { useCartStore } from '@/store/cartStore'
 import { useAuthStore } from '@/store/authStore'
 import { useEffect, useState } from 'react'
 import { showToast } from '@/components/ui/ToastContainer'
-import { createPreOrder } from '@/lib/preOrderService'
 import {
   getHomeProducts,
   getHomeReviews,
@@ -44,11 +43,8 @@ import type {
   HomeReview,
 } from '@/types'
 
-/** Default pre-order schedule = today + 3 days (YYYY-MM-DD) when no date chosen yet. */
-function defaultPreorderDate(): string {
-  const d = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000)
-  return d.toISOString().slice(0, 10)
-}
+/** PRE_ORDER lead/date policy is DB-driven (order_policy) — no client hardcode.
+ * The date is chosen in /checkout?mode=pre-order (server validates lead time). */
 
 export function HomePage() {
   const addItem = useCartStore((s) => s.addItem)
@@ -127,42 +123,36 @@ export function HomePage() {
     })
   }
 
-  const handlePreOrder = async (payload: PreOrderPayload) => {
+  const handlePreOrder = (payload: PreOrderPayload) => {
     const product = products.find((p) => p.id === payload.productId)
     if (!product) {
       showToast('Item not found', 'error')
       return
     }
-    const scheduleTarget = payload.scheduledDate || product.scheduled_date || defaultPreorderDate()
-    const preOrderRow = await createPreOrder({
-      product_id: product.id,
-      quantity: payload.quantity,
-      delivery_round_id: payload.deliveryRoundId || product.delivery_round_id || undefined,
-      scheduled_date: scheduleTarget,
-      customer_name: customer?.name || 'Guest',
-      customer_phone: customer?.phone || '',
-      delivery_latitude: 10.7016,
-      delivery_longitude: 102.1429,
-      delivery_address: '',
-      special_instructions: '',
+    // ✅ Phase 3B: PRE_ORDER flows through the canonical cart → /checkout?mode=pre-order.
+    // Date + round + address + payment are chosen there; the SERVER (RPC
+    // create_order_with_items, migration 025) is the only creation authority.
+    useOrderBuilderStore.getState().openBuilder(product, products, (result) => {
+      const customizations: Record<string, any> = {}
+      if (result.addOns.length > 0) {
+        customizations['addOns'] = result.addOns.map((a) => ({ addonId: a.addonId, selections: a.selections, note: a.note ?? '' }))
+      }
+      addItem(result.product, result.quantity, customizations, 'PRE_ORDER')
+      for (const rec of result.recommended) addItem(rec, 1, {}, 'PRE_ORDER')
+      showToast('เลือกวันที่/รอบ/ที่อยู่ แล้วชำระเงินเพื่อยืนยันการจอง', 'info')
+      navigate('/checkout?mode=pre-order')
     })
-
-    if (!preOrderRow) {
-      showToast('สร้าง pre-order ล้มเหลว กรุณาลองใหม่', 'error')
-      return
-    }
-    showToast(`จองสำเร็จ! เลขที่ ${preOrderRow.order_number} — ${product.name} จะส่งวันที่ ${scheduleTarget}`, 'success')
-    navigate(`/track/${preOrderRow.order_number}`)
   }
 
   const handleReviewCta = (review: HomeReview) => {
     const product = products.find((p) => p.id === (review.relatedProduct?.id ?? review.relatedProductName ?? ''))
-    const mode = product?.is_preorder ? 'pre-order' : 'same-day'
+    // ✅ Phase 3B: canonical mode columns drive the deep link (alias fallback).
+    const isPre = !!(product && (product.available_preorder ?? product.is_preorder))
     if (product) {
-      addItem(product, 1)
+      addItem(product, 1, {}, isPre ? 'PRE_ORDER' : 'SAME_DAY')
       showToast('เพิ่มลงตะกร้าแล้ว!', 'success')
     }
-    navigate(mode === 'pre-order' ? '/checkout?mode=pre-order' : '/cart?mode=same-day')
+    navigate(isPre ? '/checkout?mode=pre-order' : '/cart')
   }
 
   const sameDayItems = sameDay.map((item) => (

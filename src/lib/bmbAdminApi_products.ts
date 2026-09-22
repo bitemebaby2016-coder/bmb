@@ -19,6 +19,8 @@ export interface ProductForm {
   is_available: boolean
   is_featured: boolean
   is_preorder?: boolean
+  available_same_day?: boolean
+  available_preorder?: boolean
   prep_minutes: number
   sort_order?: number
   delivery_round_id?: string
@@ -49,15 +51,18 @@ export async function getProduct(id: string): Promise<Product | null> {
 }
 
 export async function getSameDayProducts(): Promise<Product[]> {
-  const { data, error } = await supabase.from('products').select('*').eq('is_available', true).eq('is_preorder', false).order('sort_order', { ascending: true })
+  // Canonical mode column (migration 023). Fallback keeps legacy rows working:
+  // a product without the column defaults to same-day-orderable (DB default true).
+  const { data, error } = await supabase.from('products').select('*').eq('is_available', true).order('sort_order', { ascending: true })
   if (error) { console.error('[getSameDayProducts] Error:', error); return [] }
-  return (data || []) as Product[]
+  return ((data || []) as Product[]).filter((p) => p.available_same_day ?? !p.is_preorder)
 }
 
 export async function getPreorderProducts(): Promise<Product[]> {
-  const { data, error } = await supabase.from('products').select('*').eq('is_available', true).eq('is_preorder', true).order('sort_order', { ascending: true })
+  // Canonical mode column (migration 023). Fallback = deprecated alias mirror.
+  const { data, error } = await supabase.from('products').select('*').eq('is_available', true).order('sort_order', { ascending: true })
   if (error) { console.error('[getPreorderProducts] Error:', error); return [] }
-  return (data || []) as Product[]
+  return ((data || []) as Product[]).filter((p) => p.available_preorder ?? p.is_preorder)
 }
 
 export async function getFeaturedProducts(): Promise<Product[]> {
@@ -74,7 +79,10 @@ export async function createProduct(data: ProductForm): Promise<Product | null> 
     name: data.name, description: data.description, price: data.price,
     category_id: data.category_id, image_url: data.image_url,
     is_available: data.is_available, is_featured: data.is_featured,
-    is_preorder: data.is_preorder ?? false, prep_minutes: data.prep_minutes,
+    is_preorder: data.is_preorder ?? false,
+    available_same_day: data.available_same_day ?? true,
+    available_preorder: data.available_preorder ?? data.is_preorder ?? false,
+    prep_minutes: data.prep_minutes,
     sort_order: data.sort_order || 0, delivery_round_id: data.delivery_round_id,
     scheduled_date: data.scheduled_date,
     addons: Array.isArray(data.addons) ? data.addons : [],

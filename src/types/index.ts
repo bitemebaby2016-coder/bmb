@@ -25,7 +25,9 @@ export interface Product {
   image_url: string;
   is_available: boolean;
   is_featured: boolean;
-  is_preorder: boolean;           // ✅ v3.1: Pre-order menu (โหวต/จองล่วงหน้า)
+  is_preorder: boolean;           // DEPRECATED alias (migration 023): one-way mirror of available_preorder
+  available_same_day?: boolean;   // ✅ migration 023 — canonical mode column (server gate authority)
+  available_preorder?: boolean;   // ✅ migration 023 — canonical mode column (server gate authority)
   prep_minutes: number;
   sort_order: number;
   delivery_round_id?: string;     // ✅ v3.1: Delivery round ID (สำหรับ pre-order)

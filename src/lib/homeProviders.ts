@@ -87,7 +87,7 @@ export function getHomeProducts(
   const preOrder: HomeProduct[] = []
   for (const p of products || []) {
     const cat = catMap.get(p.category_id)
-    if (p.is_preorder) {
+    if (p.available_preorder ?? p.is_preorder) {
       if (p.is_featured || preOrder.length < 6) preOrder.push(toHomeProduct(p, cat, 'pre-order'))
     } else if (p.is_available) {
       if (p.is_featured || sameDay.length < 6) sameDay.push(toHomeProduct(p, cat, 'same-day'))

@@ -60,3 +60,45 @@ export async function resetRoundCapacity(id: string): Promise<boolean> {
   if (error) { console.error('[resetRoundCapacity] Error:', error); return false }
   return true
 }
+
+// ============================================
+// ✅ Phase 3B (migration 024/025/029): canonical round reading for the customer
+// checkout — deterministic ids `round-YYYYMMDD-<key>`, template-validated,
+// instantiated server-side by ensure_rounds_for_date (EXECUTE granted to
+// authenticated by migration 029). The SERVER remains the round authority;
+// these helpers only display what the server will accept.
+// ============================================
+
+/** Instantiate (idempotently) the canonical rounds of a date. Graceful when the
+ * RPC is unavailable: falls back to listing whatever active rounds already exist. */
+export async function ensureRoundsForDate(date: string): Promise<boolean> {
+  try {
+    const { error } = await supabase.rpc('ensure_rounds_for_date', { p_date: date })
+    if (error) {
+      console.warn('[ensureRoundsForDate] RPC unavailable/failed (continuing with existing rounds):', error.message)
+      return false
+    }
+    return true
+  } catch (e) {
+    console.warn('[ensureRoundsForDate] unexpected error:', String(e).slice(0, 120))
+    return false
+  }
+}
+
+/** Active (bookable) rounds for a date — only `status='active'` rows can be used
+ * by the canonical create RPC (025: anything else → ERR_ROUND_CLOSED). */
+export async function getActiveRoundsForDate(date: string): Promise<DeliveryRoundRow[]> {
+  const { data, error } = await supabase
+    .from('delivery_rounds')
+    .select('*')
+    .eq('scheduled_date', date)
+    .order('delivery_start', { ascending: true })
+  if (error) { console.error('[getActiveRoundsForDate] Error:', error); return [] }
+  return ((data || []) as DeliveryRoundRow[]).filter((r) => r.status === 'active')
+}
+
+/** Convenience: instantiate then list (SAME_DAY today + PRE_ORDER date picker). */
+export async function listRoundsForDate(date: string): Promise<DeliveryRoundRow[]> {
+  await ensureRoundsForDate(date)
+  return getActiveRoundsForDate(date)
+}

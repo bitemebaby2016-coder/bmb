@@ -29,12 +29,12 @@ export const seed: Record<string, MockRow[]> = {
     { id: 'round-3', round_key: 'evening', display_name: 'à¹€à¸¢à¹‡à¸™ (17:00-20:00)', cutoff_time: '16:00', delivery_start: '17:00', delivery_end: '20:00', max_capacity: 100, current_count: 0, date: new Date().toISOString().slice(0, 10), scheduled_date: new Date().toISOString().slice(0, 10), name: 'evening', status: 'active' },
   ],
   products: [
-    { id: 'prod-1', name: 'à¸œà¸±à¸”à¹„à¸—à¸¢à¸à¸¸à¹‰à¸‡à¸ªà¸”', description: 'à¸œà¸±à¸”à¹„à¸—à¸¢à¸à¸¸à¹‰à¸‡à¸ªà¸”à¸ªà¸”à¹ƒà¸«à¸¡à¹ˆ', price: 65.00, category_id: 'cat-1', image_url: '', is_available: true, is_featured: true, is_preorder: false, prep_minutes: 15, sort_order: 1, delivery_round_id: null, scheduled_date: null },
-    { id: 'prod-2', name: 'à¸‚à¹‰à¸²à¸§à¸«à¸¡à¸¹à¸—à¸­à¸”à¸à¸£à¸°à¹€à¸—à¸µà¸¢à¸¡', description: 'à¸‚à¹‰à¸²à¸§à¸«à¸¡à¸¹à¸—à¸­à¸”à¸à¸£à¸°à¹€à¸—à¸µà¸¢à¸¡à¸«à¸­à¸¡à¹†', price: 70.00, category_id: 'cat-2', image_url: '', is_available: true, is_featured: false, is_preorder: false, prep_minutes: 10, sort_order: 2, delivery_round_id: null, scheduled_date: null },
-    { id: 'prod-3', name: 'à¹à¸à¸‡à¹€à¸‚à¸µà¸¢à¸§à¸«à¸§à¸²à¸™à¹„à¸à¹ˆ', description: 'à¹à¸à¸‡à¹€à¸‚à¸µà¸¢à¸§à¸«à¸§à¸²à¸™à¹„à¸à¹ˆ creamy', price: 75.00, category_id: 'cat-3', image_url: '', is_available: true, is_featured: true, is_preorder: false, prep_minutes: 20, sort_order: 3, delivery_round_id: null, scheduled_date: null },
-    { id: 'prod-4', name: 'à¸à¸²à¹à¸Ÿà¹€à¸¢à¹‡à¸™', description: 'à¸à¸²à¹à¸Ÿà¹€à¸¢à¹‡à¸™à¸«à¸­à¸¡à¹†', price: 35.00, category_id: 'cat-4', image_url: '', is_available: true, is_featured: false, is_preorder: false, prep_minutes: 5, sort_order: 4, delivery_round_id: null, scheduled_date: null },
-    { id: 'prod-5', name: 'à¹€à¸¡à¸™à¸¹à¹‚à¸«à¸§à¸•: à¸•à¹‰à¸¡à¸¢à¸³à¸à¸¸à¹‰à¸‡à¸ªà¸”', description: 'à¹‚à¸«à¸§à¸•à¹€à¸¡à¸™à¸¹à¸™à¸µà¹‰à¹€à¸žà¸·à¹ˆà¸­à¸ˆà¸­à¸‡à¸¥à¹ˆà¸§à¸‡à¸«à¸™à¹‰à¸² â€” à¸ªà¹ˆà¸‡à¸£à¸­à¸šà¸«à¸™à¹‰à¸²', price: 85.00, category_id: 'cat-1', image_url: '', is_available: true, is_featured: true, is_preorder: true, prep_minutes: 25, sort_order: 5, delivery_round_id: 'round-2', scheduled_date: null },
-    { id: 'prod-6', name: 'à¹€à¸¡à¸™à¸¹à¹ƒà¸«à¸¡à¹ˆ: à¸œà¸±à¸”à¹„à¸—à¸¢à¸—à¸°à¹€à¸¥', description: 'à¹‚à¸«à¸§à¸•à¹€à¸¡à¸™à¸¹à¸™à¸µà¹‰à¹€à¸žà¸·à¹ˆà¸­à¸ˆà¸­à¸‡à¸¥à¹ˆà¸§à¸‡à¸«à¸™à¹‰à¸² â€” à¸ªà¹ˆà¸‡à¸£à¸­à¸šà¸«à¸™à¹‰à¸²', price: 95.00, category_id: 'cat-1', image_url: '', is_available: true, is_featured: true, is_preorder: true, prep_minutes: 20, sort_order: 6, delivery_round_id: 'round-3', scheduled_date: null },
+    { id: 'prod-1', name: 'à¸œà¸±à¸”à¹„à¸—à¸¢à¸à¸¸à¹‰à¸‡à¸ªà¸”', description: 'à¸œà¸±à¸”à¹„à¸—à¸¢à¸à¸¸à¹‰à¸‡à¸ªà¸”à¸ªà¸”à¹ƒà¸«à¸¡à¹ˆ', price: 65.00, category_id: 'cat-1', image_url: '', is_available: true, is_featured: true, is_preorder: true, available_same_day: true, available_preorder: true, prep_minutes: 15, sort_order: 1, delivery_round_id: null, scheduled_date: null },
+    { id: 'prod-2', name: 'à¸‚à¹‰à¸²à¸§à¸«à¸¡à¸¹à¸—à¸­à¸”à¸à¸£à¸°à¹€à¸—à¸µà¸¢à¸¡', description: 'à¸‚à¹‰à¸²à¸§à¸«à¸¡à¸¹à¸—à¸­à¸”à¸à¸£à¸°à¹€à¸—à¸µà¸¢à¸¡à¸«à¸­à¸¡à¹†', price: 70.00, category_id: 'cat-2', image_url: '', is_available: true, is_featured: false, is_preorder: false, available_same_day: true, available_preorder: false, prep_minutes: 10, sort_order: 2, delivery_round_id: null, scheduled_date: null },
+    { id: 'prod-3', name: 'à¹à¸à¸‡à¹€à¸‚à¸µà¸¢à¸§à¸«à¸§à¸²à¸™à¹„à¸à¹ˆ', description: 'à¹à¸à¸‡à¹€à¸‚à¸µà¸¢à¸§à¸«à¸§à¸²à¸™à¹„à¸à¹ˆ creamy', price: 75.00, category_id: 'cat-3', image_url: '', is_available: true, is_featured: true, is_preorder: false, available_same_day: true, available_preorder: false, prep_minutes: 20, sort_order: 3, delivery_round_id: null, scheduled_date: null },
+    { id: 'prod-4', name: 'à¸à¸²à¹à¸Ÿà¹€à¸¢à¹‡à¸™', description: 'à¸à¸²à¹à¸Ÿà¹€à¸¢à¹‡à¸™à¸«à¸­à¸¡à¹†', price: 35.00, category_id: 'cat-4', image_url: '', is_available: true, is_featured: false, is_preorder: false, available_same_day: true, available_preorder: false, prep_minutes: 5, sort_order: 4, delivery_round_id: null, scheduled_date: null },
+    { id: 'prod-5', name: 'à¹€à¸¡à¸™à¸¹à¹‚à¸«à¸§à¸•: à¸•à¹‰à¸¡à¸¢à¸³à¸à¸¸à¹‰à¸‡à¸ªà¸”', description: 'à¹‚à¸«à¸§à¸•à¹€à¸¡à¸™à¸¹à¸™à¸µà¹‰à¹€à¸žà¸·à¹ˆà¸­à¸ˆà¸­à¸‡à¸¥à¹ˆà¸§à¸‡à¸«à¸™à¹‰à¸² â€” à¸ªà¹ˆà¸‡à¸£à¸­à¸šà¸«à¸™à¹‰à¸²', price: 85.00, category_id: 'cat-1', image_url: '', is_available: true, is_featured: true, is_preorder: true, available_same_day: false, available_preorder: true, prep_minutes: 25, sort_order: 5, delivery_round_id: 'round-2', scheduled_date: null },
+    { id: 'prod-6', name: 'à¹€à¸¡à¸™à¸¹à¹ƒà¸«à¸¡à¹ˆ: à¸œà¸±à¸”à¹„à¸—à¸¢à¸—à¸°à¹€à¸¥', description: 'à¹‚à¸«à¸§à¸•à¹€à¸¡à¸™à¸¹à¸™à¸µà¹‰à¹€à¸žà¸·à¹ˆà¸­à¸ˆà¸­à¸‡à¸¥à¹ˆà¸§à¸‡à¸«à¸™à¹‰à¸² â€” à¸ªà¹ˆà¸‡à¸£à¸­à¸šà¸«à¸™à¹‰à¸²', price: 95.00, category_id: 'cat-1', image_url: '', is_available: true, is_featured: true, is_preorder: true, available_same_day: false, available_preorder: true, prep_minutes: 20, sort_order: 6, delivery_round_id: 'round-3', scheduled_date: null },
   ],
   inventory: [
     { id: 'ing-1', name: 'à¸‚à¹‰à¸²à¸§', category: 'carb', unit: 'kg', current_stock: 10, min_stock: 5, max_stock: 20, unit_price: 45.00, supplier_name: 'à¸£à¹‰à¸²à¸™à¸‚à¹‰à¸²à¸§à¸ˆà¸±à¸™à¸—à¸šà¸¸à¸£à¸µ', supplier_phone: '0812345678' },
@@ -123,6 +123,9 @@ export function createSupabaseMock() {
   // RPC mock â€” mirrors migration 007 `create_order_with_items` server-authoritative
   // contract (for client-contract tests: client payload must NOT carry financial
   // fields; server always computes from products.price / delivery rules).
+  // RPC mock — mirrors migrations 007/020/025 `create_order_with_items` (canonical v3):
+  // client payload must NOT carry financial fields; server computes everything,
+  // validates the order-mode gate / scheduled-date invariant / capacity.
   async function rpc(name: string, params: any): Promise<{ data: any; error: any }> {
     if (name === 'create_order_with_items') {
       const p: any = { ...(params ?? {}) }
@@ -133,6 +136,12 @@ export function createSupabaseMock() {
           if (key.startsWith('p_')) p[key.slice(2)] = params[key]
         }
       }
+      // === 025: canonical order mode (computed AFTER p_* normalization) ===
+      const mode = String(p.order_mode || 'SAME_DAY').toUpperCase()
+      if (mode !== 'SAME_DAY' && mode !== 'PRE_ORDER') {
+        return { data: null, error: { code: 'ERR_INVALID_ORDER_MODE', message: 'ERR_INVALID_ORDER_MODE' } }
+      }
+      const today = new Date().toISOString().slice(0, 10)
       const items: any[] = Array.isArray(p.items) ? p.items : []
       if (items.length === 0) {
         return { data: null, error: { code: 'ERR_EMPTY_ORDER', message: 'ERR_EMPTY_ORDER' } }
@@ -148,6 +157,26 @@ export function createSupabaseMock() {
       if (Number(round.current_count) >= Number(round.max_capacity)) {
         return { data: null, error: { code: 'ERR_CAPACITY_FULL', message: 'ERR_CAPACITY_FULL' } }
       }
+      // === 025 §4: mode-specific round / cutoff / scheduled-date rules ===
+      if (mode === 'SAME_DAY') {
+        if (String(round.scheduled_date) !== today) {
+          return { data: null, error: { code: 'ERR_ROUND_DATE', message: 'ERR_ROUND_DATE' } }
+        }
+      } else {
+        if (!p.scheduled_date) {
+          return { data: null, error: { code: 'ERR_MISSING_SCHEDULED_DATE', message: 'ERR_MISSING_SCHEDULED_DATE' } }
+        }
+        if (String(p.scheduled_date) <= today) {
+          return { data: null, error: { code: 'ERR_SCHEDULED_DATE_INVALID', message: 'ERR_SCHEDULED_DATE_INVALID' } }
+        }
+        if (String(p.scheduled_date) !== String(round.scheduled_date)) {
+          return { data: null, error: { code: 'ERR_ROUND_DATE_MISMATCH', message: 'ERR_ROUND_DATE_MISMATCH' } }
+        }
+        const leadDays = (new Date(String(p.scheduled_date)).getTime() - new Date(today).getTime()) / 86400000
+        if (leadDays < 1) {
+          return { data: null, error: { code: 'ERR_LEAD_TIME', message: 'ERR_LEAD_TIME' } }
+        }
+      }
       if (!p.customer_name || String(p.customer_name).trim() === '') {
         return { data: null, error: { code: 'ERR_MISSING_CUSTOMER_NAME', message: 'ERR_MISSING_CUSTOMER_NAME' } }
       }
@@ -159,6 +188,12 @@ export function createSupabaseMock() {
         const prod = products.find((x: any) => x.id === it.product_id)
         if (!prod) return { data: null, error: { code: 'ERR_PRODUCT_NOT_FOUND', message: 'ERR_PRODUCT_NOT_FOUND' } }
         if (!prod.is_available) return { data: null, error: { code: 'ERR_PRODUCT_UNAVAILABLE', message: 'ERR_PRODUCT_UNAVAILABLE' } }
+        // === 025 §5 INVARIANT 1: server-authoritative mode gate (both directions) ===
+        // missing canonical columns fall back to the 023 DB defaults (same_day true / alias)
+        const sameDayOk = prod.available_same_day ?? true
+        const preOrderOk = prod.available_preorder ?? prod.is_preorder ?? false
+        if (mode === 'SAME_DAY' && !sameDayOk) return { data: null, error: { code: 'ERR_PRODUCT_MODE_NOT_ALLOWED', message: 'ERR_PRODUCT_MODE_NOT_ALLOWED' } }
+        if (mode === 'PRE_ORDER' && !preOrderOk) return { data: null, error: { code: 'ERR_PRODUCT_MODE_NOT_ALLOWED', message: 'ERR_PRODUCT_MODE_NOT_ALLOWED' } }
         const q = Number(it.quantity ?? 0)
         if (q <= 0 || q > 1000) return { data: null, error: { code: 'ERR_INVALID_QUANTITY', message: 'ERR_INVALID_QUANTITY' } }
         subtotal += q * Number(prod.price)
@@ -192,7 +227,10 @@ export function createSupabaseMock() {
       }
       const total = Math.max(0, subtotal - discount + delivery_fee)
       const orderId = `ord-test-${Date.now()}-${Math.floor(Math.random() * 1000)}`
-      const orderNumber = `BMB-TEST-${String(Math.floor(Math.random() * 900) + 100)}`
+      const schedDate = mode === 'PRE_ORDER' ? String(p.scheduled_date) : String(round.scheduled_date)
+      const orderNumber = mode === 'PRE_ORDER'
+        ? `PO-${schedDate.replace(/-/g, '')}-${String(Math.floor(Math.random() * 900) + 100)}`
+        : `BMB-TEST-${String(Math.floor(Math.random() * 900) + 100)}`
       // atomic persist mirrors server: order + order_items + capacity increment
       const orderRow = {
         id: orderId,
@@ -214,6 +252,8 @@ export function createSupabaseMock() {
         total_amount: total,
         payment_status: 'pending',
         payment_method: p.payment_method || 'promptpay_qr',
+        order_mode: mode,
+        scheduled_date: schedDate,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       }
@@ -248,6 +288,8 @@ export function createSupabaseMock() {
           total_amount: total,
           payment_status: 'pending',
           payment_method: p.payment_method || 'promptpay_qr',
+          order_mode: mode,
+          scheduled_date: schedDate,
           delivery_round_id: p.delivery_round_id,
           customer_ref: 'auth-test-user',
         },
@@ -391,6 +433,80 @@ export function createSupabaseMock() {
       order.status = to
       order.updated_at = new Date().toISOString()
       return { data: { ok: true, order_number: p.p_order_number, from, to }, error: null }
+    }
+
+    // ============ PHASE 3B handlers (migration 025 cancel_order + 024 ensure_rounds_for_date) ============
+    if (name === 'cancel_order') {
+      const p = params ?? {}
+      const order = (tables['orders'] || []).find((o: any) => o.order_number === p.p_order_number)
+      if (!order) return { data: null, error: { code: 'ERR_ORDER_NOT_FOUND', message: 'ERR_ORDER_NOT_FOUND' } }
+      // mock context: authenticated user = 'auth-test-user' (owner semantics, admin unsupported here)
+      if (order.customer_ref && order.customer_ref !== 'auth-test-user') {
+        return { data: null, error: { code: 'ERR_FORBIDDEN', message: 'ERR_FORBIDDEN' } }
+      }
+      if (order.status === 'cancelled') {
+        return { data: { ok: true, order_number: p.p_order_number, status: 'cancelled', idempotent: true }, error: null }
+      }
+      if (order.status !== 'pending') {
+        return { data: null, error: { code: 'ERR_CANCEL_WINDOW_PASSED', message: 'ERR_CANCEL_WINDOW_PASSED' } }
+      }
+      // D-5 cancel window (order_policy cancel_window_minutes, default 5)
+      const ageMin = (Date.now() - new Date(order.created_at).getTime()) / 60000
+      if (ageMin > 5) {
+        return { data: null, error: { code: 'ERR_CANCEL_WINDOW_PASSED', message: 'ERR_CANCEL_WINDOW_PASSED' } }
+      }
+      const previousStatus = String(order.status)
+      order.status = 'cancelled'
+      order.updated_at = new Date().toISOString()
+      // capacity release (025 trigger semantics; mock has no corruption invariant)
+      if (order.delivery_round_id) {
+        const round = (tables['delivery_rounds'] || []).find((r: any) => r.id === order.delivery_round_id)
+        if (round && Number(round.current_count) > 0) round.current_count = Number(round.current_count) - 1
+      }
+      return {
+        data: {
+          ok: true,
+          order_number: p.p_order_number,
+          status: 'cancelled',
+          order_mode: order.order_mode || 'SAME_DAY',
+          previous_status: previousStatus,
+          capacity_released: !!order.delivery_round_id,
+          inventory_restored: previousStatus === 'confirmed' || previousStatus === 'preparing',
+          note: order.payment_status === 'paid'
+            ? 'order was paid — refund via stripe-refund EF is an admin follow-up'
+            : 'no payment captured',
+        },
+        error: null,
+      }
+    }
+
+    if (name === 'ensure_rounds_for_date') {
+      const p = params ?? {}
+      const date = String(p.p_date || p.date || '')
+      if (!date) return { data: null, error: { code: 'ERR_MISSING_DATE', message: 'ERR_MISSING_DATE' } }
+      const today = new Date().toISOString().slice(0, 10)
+      if (date < today) return { data: null, error: { code: 'ERR_DATE_IN_PAST', message: 'ERR_DATE_IN_PAST' } }
+      const keys = ['morning', 'midday', 'evening'] as const
+      const created: string[] = []
+      for (const key of keys) {
+        const id = `round-${date.replace(/-/g, '')}-${key}`
+        if ((tables['delivery_rounds'] || []).some((r: any) => r.id === id)) continue
+        // template = latest existing row for that round_key (deterministic instantiation)
+        const tpl = (tables['delivery_rounds'] || [])
+          .filter((r: any) => (r.round_key || r.name) === key)
+          .sort((a: any, b: any) => String(b.scheduled_date).localeCompare(String(a.scheduled_date)))[0]
+        if (!tpl) return { data: null, error: { code: 'ERR_ROUND_TEMPLATE_MISSING', message: 'ERR_ROUND_TEMPLATE_MISSING: ' + key } }
+        ;(tables['delivery_rounds'] ||= []).push({
+          ...clone(tpl),
+          id,
+          scheduled_date: date,
+          date,
+          current_count: 0,
+          status: 'active',
+        })
+        created.push(id)
+      }
+      return { data: { ok: true, created: created.length, rounds: created }, error: null }
     }
 
 // ============ PHASE 1 RPC handlers (migration 017 pre-order + 018 audit) ============

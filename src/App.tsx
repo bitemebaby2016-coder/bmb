@@ -142,6 +142,8 @@ export default function App() {
         <Route path="/checkout" element={<Suspense fallback={<LoadingSpinner />}><Layout><CheckoutPage /></Layout></Suspense>} />
         <Route path="/track/:orderNumber" element={<Suspense fallback={<LoadingSpinner />}><Layout><OrderTrackPage /></Layout></Suspense>} />
         <Route path="/orders" element={<Suspense fallback={<LoadingSpinner />}><Layout><OrdersPage /></Layout></Suspense>} />
+        {/* Phase 3B: legacy /profile/orders link — canonical history lives at /orders */}
+        <Route path="/profile/orders" element={<Navigate to="/orders" replace />} />
         <Route path="/payment/:orderNumber" element={<Suspense fallback={<LoadingSpinner />}><Layout><PaymentConfirmationPage /></Layout></Suspense>} />
         <Route path="/promotions" element={<Suspense fallback={<LoadingSpinner />}><Layout><PromotionsPage /></Layout></Suspense>} />
         <Route path="/reviews/:productId" element={<Suspense fallback={<LoadingSpinner />}><Layout><ReviewPage /></Layout></Suspense>} />

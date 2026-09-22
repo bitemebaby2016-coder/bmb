@@ -522,41 +522,56 @@ describe('External Delivery Providers — offline sandbox logic', () => {
   })
 })
 
-describe('Pre-order API — real order creation (not just toast)', () => {
-  it('creates a pre-order with a PO- order number', async () => {
+describe('Pre-order API — canonical creation through create_order_with_items (Phase 3B)', () => {
+  async function ensureFutureRound(date: string): Promise<string> {
+    const { supabase } = await import('@/lib/supabase')
+    await supabase.rpc('ensure_rounds_for_date', { p_date: date })
+    const res = await supabase.from('delivery_rounds').select('*')
+    const rounds = ((res.data || []) as any[]).filter((r) => String(r.scheduled_date) === date && r.status === 'active')
+    if (rounds.length === 0) throw new Error('mock: no active round for ' + date)
+    return rounds[0].id as string
+  }
+
+  it('creates a PRE_ORDER canonical order with a PO- order number', async () => {
     storageClear()
-    const { createPreOrder } = await import('@/lib/preOrderService')
-    const preOrder = await createPreOrder({
-      product_id: 'prod-5',
-      quantity: 1,
-      delivery_round_id: 'round-2',
-      scheduled_date: '2030-01-01',
+    const { createOrder } = await import('@/lib/bmbAdminApi_orders')
+    const roundId = await ensureFutureRound('2030-01-01')
+    const order = await createOrder({
+      items: [{ product_id: 'prod-5', quantity: 1 }],
+      delivery_round_id: roundId,
       customer_name: 'Somchai Rakdee',
       customer_phone: '0812345678',
-      delivery_latitude: 10.7016,
-      delivery_longitude: 102.1429,
+      dropoff_latitude: 10.7016,
+      dropoff_longitude: 102.1429,
       delivery_address: 'Test address',
-      special_instructions: '',
+      order_mode: 'PRE_ORDER',
+      scheduled_date: '2030-01-01',
     })
-    expect(preOrder).not.toBeNull()
-    expect(preOrder!.order_number).toMatch(/^PO-\d{8}-\d{3}$/)
+    expect(order).not.toBeNull()
+    expect(order!.order_number).toMatch(/^PO-\d{8}-\d{3}$/)
+    expect(order!.status).toBe('pending')
+    expect((order as any).order_mode).toBe('PRE_ORDER')
+    expect((order as any).scheduled_date).toBe('2030-01-01')
   })
 
-  it('getPreOrders returns the created pre-order', async () => {
-    const { createPreOrder, getPreOrders } = await import('@/lib/preOrderService')
-    const created = await createPreOrder({
-      product_id: 'prod-6',
-      quantity: 2,
-      delivery_round_id: 'round-3',
-      scheduled_date: '2030-01-05',
+  it('the created PRE_ORDER row lives in canonical orders (mode + scheduled_date)', async () => {
+    const { createOrder, getOrders } = await import('@/lib/bmbAdminApi_orders')
+    const roundId = await ensureFutureRound('2030-01-05')
+    const created = await createOrder({
+      items: [{ product_id: 'prod-6', quantity: 2 }],
+      delivery_round_id: roundId,
       customer_name: 'Somchai Rakdee',
       customer_phone: '0812345678',
-      delivery_latitude: 10.7016,
-      delivery_longitude: 102.1429,
+      dropoff_latitude: 10.7016,
+      dropoff_longitude: 102.1429,
       delivery_address: '',
-      special_instructions: '',
+      order_mode: 'PRE_ORDER',
+      scheduled_date: '2030-01-05',
     })
-    const orders = await getPreOrders({ status: 'pending' })
-    expect(orders.some((o) => o.order_number === created!.order_number)).toBe(true)
+    const orders = await getOrders()
+    const row = orders.find((o) => o.order_number === created!.order_number)
+    expect(row).toBeTruthy()
+    expect((row as any).order_mode).toBe('PRE_ORDER')
+    expect((row as any).scheduled_date).toBe('2030-01-05')
   })
 })

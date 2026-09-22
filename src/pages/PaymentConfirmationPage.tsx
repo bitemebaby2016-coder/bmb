@@ -1,8 +1,8 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { Link } from 'react-router-dom'
 import { getOrder } from '@/lib/bmbAdminApi_orders'
-import { submitOfflinePaymentReference, getPaymentIntents } from '@/lib/paymentGateway'
+import { submitOfflinePaymentReference, getPaymentIntents, createPaymentIntent } from '@/lib/paymentGateway'
 import { writeAuditLog } from '@/lib/auditLog'
 import { showToast } from '@/components/ui/ToastContainer'
 import { MascotBadge } from '@/components/MascotBadge'
@@ -14,18 +14,36 @@ export function PaymentConfirmationPage() {
   const [paymentIntent, setPaymentIntent] = useState<any>(null)
   const [transactionId, setTransactionId] = useState('')
   const [isConfirming, setIsConfirming] = useState(false)
+  const [retrying, setRetrying] = useState(false)
+
+  // ✅ Phase 3B §10: server state is polled; intent selection prefers the
+  // ACTIVE attempt (pending/processing) — never blindly intents[0] — and a
+  // failed attempt is surfaced with a Retry that re-uses the SAME order.
+  const load = useCallback(async () => {
+    if (!orderNumber) return
+    const o = await getOrder(orderNumber)
+    if (o) setOrder(o)
+    const intents = await getPaymentIntents({ orderNumber })
+    const active = intents.find((i) => i.status === 'pending' || i.status === 'processing')
+    setPaymentIntent(active ?? intents[0] ?? null)
+  }, [orderNumber])
 
   useEffect(() => {
-    async function load() {
-      if (orderNumber) {
-        const o = await getOrder(orderNumber)
-        if (o) setOrder(o)
-        const intents = await getPaymentIntents({ orderNumber })
-        if (intents.length > 0) setPaymentIntent(intents[0])
-      }
-    }
-    load()
-  }, [orderNumber])
+    void load()
+    const t = setInterval(() => void load(), 15000) // READ-ONLY polling
+    return () => clearInterval(t)
+  }, [load])
+
+  async function handleRetryPayment() {
+    if (!orderNumber || retrying) return
+    setRetrying(true)
+    // Same order, new attempt — NO second order, NO cart mutation.
+    const res = await createPaymentIntent(orderNumber, order?.total_amount ?? 0, order?.payment_method ?? 'promptpay_qr')
+    if (res.success) showToast('สร้างรายการชำระใหม่สำเร็จ — ลองชำระอีกครั้งได้เลย', 'success')
+    else showToast(res.error || 'สร้างรายการชำระใหม่ไม่สำเร็จ', 'error')
+    await load()
+    setRetrying(false)
+  }
 
   async function handlePromptPaySubmit() {
     if (!orderNumber) return
@@ -72,7 +90,7 @@ export function PaymentConfirmationPage() {
         <div className="border-t border-brand-border pt-4 space-y-2">
           <div className="flex justify-between"><span>Customer</span><span>{order.customer_name}</span></div>
           <div className="flex justify-between"><span>Phone</span><span>{order.customer_phone}</span></div>
-          <div className="flex justify-between"><span>Payment</span><span>{order.payment_method === 'promptpay_qr' ? 'PromptPay QR' : 'COD'}</span></div>
+          <div className="flex justify-between"><span>Payment</span><span>{order.payment_method === 'promptpay_qr' ? 'PromptPay QR' : order.payment_method === 'credit_card' ? 'บัตรเครดิต/เดบิต (Stripe)' : 'เงินสดตอนรับของ'}</span></div>
           <div className="flex justify-between text-xl font-bold pt-2 border-t border-brand-border"><span>Total</span><span className="text-brand-primary">฿{order.total_amount.toFixed(2)}</span></div>
         </div>
       </div>
@@ -93,6 +111,16 @@ export function PaymentConfirmationPage() {
           <h3 className="font-bold text-brand-accent mb-4">เงินสดตอนรับของ</h3>
           <p className="text-brand-muted mb-4">เงินจะถูกเก็บตอนส่งของ — ไม่ต้องชำระตอนนี้</p>
           <span className="badge badge-info">⏳ รอเก็บเงินตอนรับของ (delivered)</span>
+        </div>
+      )}
+      {/* ✅ Phase 3B §10: failed payment → retry on the SAME order */}
+      {order.payment_status === 'failed' && (
+        <div className="card mb-6 bg-gradient-to-br from-red-50 to-rose-50 border-2 border-red-200 text-center py-6">
+          <h3 className="text-xl font-bold text-red-700 mb-2">การชำระเงินไม่สำเร็จ</h3>
+          <p className="text-brand-muted mb-4">ลองชำระใหม่อีกครั้ง — ออเดอร์เดิมของคุณยังอยู่ (ไม่มีการสร้างออเดอร์ใหม่)</p>
+          <button onClick={handleRetryPayment} disabled={retrying} data-testid="retry-payment" className="btn btn-primary disabled:opacity-50">
+            {retrying ? 'กำลังสร้างรายการใหม่…' : 'ลองชำระเงินอีกครั้ง'}
+          </button>
         </div>
       )}
       {isPaid && (

@@ -18,6 +18,17 @@ describe('zoneFeeForDistance (DEL-01 — fee จาก delivery_zones)', () => {
     expect(zoneFeeForDistance(-1)).toBeNull()
   })
 
+  it('§18 tier grid: <1 / 1 / 4.99 / 5 / >5 km (server-zone mirror)', () => {
+    expect(zoneFeeForDistance(0.99)).toBe(25) // <1 km → city
+    expect(zoneFeeForDistance(1)).toBe(25) // 1 km → city
+    expect(zoneFeeForDistance(4.99)).toBe(25) // just under the city boundary
+    expect(zoneFeeForDistance(5)).toBe(25) // 5 km inclusive → city (first band by max_distance)
+    expect(zoneFeeForDistance(5.01)).toBe(45) // >5 km → suburb
+    expect(zoneFeeForDistance(9.99)).toBe(45)
+    expect(zoneFeeForDistance(10.01)).toBe(80) // >10 km → far
+    expect(zoneFeeForDistance(19.99)).toBe(80)
+  })
+
   it('honours is_active=false zones (admin disables a zone → fallthrough to next)', () => {
     const zones = SEEDED_DELIVERY_ZONES.map((z) => (z.id === 'zone-city' ? { ...z, is_active: false } : z))
     // city (0-5) disabled → a 6 km drop falls into suburb (5-10)

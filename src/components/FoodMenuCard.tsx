@@ -124,8 +124,8 @@ export function FoodMenuCard({ product, category, mode, availability, onSameDayO
       {/* ============================================ */}
       <div className="w-full px-5 pb-5 flex flex-col gap-2">
         
-        {/* Same-day Order Button */}
-        {mode === 'same-day' && isAvail && (
+        {/* Same-day Order Button — canonical availability (migration 023) */}
+        {(product.available_same_day ?? !product.is_preorder) && isAvail && (
           <button 
             onClick={handleSameDay} data-testid="same-day-order" 
             disabled={!isAvail}
@@ -135,13 +135,15 @@ export function FoodMenuCard({ product, category, mode, availability, onSameDayO
           </button>
         )}
 
-        {/* Pre-order Button */}
-        <button 
-          onClick={handlePreOrder} data-testid="pre-order-btn" 
-          className="w-full border-2 border-brand-primary/40 text-brand-primary rounded-xl py-3 font-semibold text-sm hover:bg-brand-primary/10 active:bg-brand-primary/20 transition-all duration-200"
-        >
-          📅 จองล่วงหน้า
-        </button>
+        {/* Pre-order Button — only when the product is actually preorder-orderable */}
+        {(product.available_preorder ?? product.is_preorder) && (
+          <button 
+            onClick={handlePreOrder} data-testid="pre-order-btn" 
+            className="w-full border-2 border-brand-primary/40 text-brand-primary rounded-xl py-3 font-semibold text-sm hover:bg-brand-primary/10 active:bg-brand-primary/20 transition-all duration-200"
+          >
+            📅 จองล่วงหน้า
+          </button>
+        )}
       </div>
     </div>
   )

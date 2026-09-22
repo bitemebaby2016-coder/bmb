@@ -1,60 +1,69 @@
 // ============================================
-// Bite Me Baby — OrdersPage (UI v5, BottomNav 'Orders')
-// Lists the signed-in customer's orders + pre-orders (RLS own) with tracking links.
+// Bite Me Baby — OrdersPage (Phase 3B · ONE canonical order history)
+// ============================================
+// Reads ONLY `orders` (+ order_items hydration) — SAME_DAY and PRE_ORDER are
+// rows of the same canonical table (orders.order_mode, migration 023/024).
+// The pre_orders archive is NOT rendered here (read-only archive; migrated
+// rows would duplicate the canonical ones). Customer cancellation goes
+// through `cancel_order` (owner: pending-only inside the D-5 window).
 // ============================================
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuthStore } from '@/store/authStore'
-import { getOrders, type OrderForm } from '@/lib/bmbAdminApi_orders'
-import { getPreOrders, type PreOrder } from '@/lib/preOrderService'
+import { getOrders, hydrateOrderItems, cancelOrder, type OrderForm } from '@/lib/bmbAdminApi_orders'
 import { getServerStatusLabel } from '@/lib/orderVocabulary'
-
-
+import { showToast } from '@/components/ui/ToastContainer'
 
 const PAYMENT_LABEL: Record<string, string> = {
   pending: 'รอชำระ',
+  processing: 'รอตรวจสอบ',
   paid: 'ชำระแล้ว',
+  failed: 'ชำระไม่สำเร็จ',
   refund: 'คืนเงินแล้ว',
   partially_refunded: 'คืนเงินบางส่วน',
-}
-
-const PRE_ORDER_STATUS_LABEL: Record<string, string> = {
-  pending: '⏳ รอการยืนยัน',
-  confirmed: '✅ ยืนยันแล้ว',
-  paid: '💳 ชำระแล้ว',
-  cancelled: '✖️ ยกเลิก',
-  completed: '✅ สำเร็จ',
-  failed: '⚠️ ล้มเหลว',
 }
 
 export function OrdersPage() {
   const customer = useAuthStore((s) => s.customer)
   const [orders, setOrders] = useState<OrderForm[]>([])
-  const [preOrders, setPreOrders] = useState<PreOrder[]>([])
   const [loading, setLoading] = useState(true)
+  const [cancelling, setCancelling] = useState<string | null>(null)
+
+  const load = useCallback(async () => {
+    try {
+      const list = await getOrders()
+      setOrders(await hydrateOrderItems(list || []))
+    } catch (e) {
+      console.error('[OrdersPage] load error:', e)
+    } finally {
+      setLoading(false)
+    }
+  }, [])
 
   useEffect(() => {
     let active = true
-    async function load() {
-      if (!customer?.id) {
-        setLoading(false)
-        return
-      }
-      try {
-        const [o, p] = await Promise.all([getOrders(), getPreOrders({ customerId: customer.id })])
-        if (!active) return
-        setOrders(o || [])
-        setPreOrders(p || [])
-      } catch (e) {
-        console.error('[OrdersPage] load error:', e)
-      } finally {
-        if (active) setLoading(false)
-      }
+    async function run() {
+      if (!customer?.id) { setLoading(false); return }
+      await load()
+      if (!active) return
     }
-    load()
+    run()
     return () => { active = false }
-  }, [customer?.id])
+  }, [customer?.id, load])
+
+  async function handleCancel(orderNumber: string) {
+    if (cancelling) return
+    setCancelling(orderNumber)
+    const res = await cancelOrder(orderNumber, 'customer cancel (order history)')
+    if (res.success) {
+      showToast(res.idempotent ? 'ออเดอร์ถูกยกเลิกอยู่แล้ว' : 'ยกเลิกออเดอร์สำเร็จ', 'success')
+      await load()
+    } else {
+      showToast(res.error || 'ยกเลิกไม่สำเร็จ (อาจพ้นเงื่อนไขการยกเลิก)', 'error')
+    }
+    setCancelling(null)
+  }
 
   if (!customer) {
     return (
@@ -69,57 +78,57 @@ export function OrdersPage() {
 
   if (loading) {
     return (
-      <div className="max-w-3xl mx-auto px-4 py-16 text-center text-brand-muted">
-        กำลังโหลดออเดอร์…
-      </div>
+      <div className="max-w-3xl mx-auto px-4 py-16 text-center text-brand-muted">กำลังโหลดออเดอร์…</div>
     )
   }
-
-  const hasAny = orders.length > 0 || preOrders.length > 0
 
   return (
     <div className="max-w-3xl mx-auto px-4 py-6 min-h-screen">
       <h1 className="text-2xl font-display font-bold text-brand-accent mb-5">📦 ออเดอร์ของฉัน</h1>
 
-      {!hasAny && (
+      {orders.length === 0 && (
         <p className="text-brand-muted text-center py-10">ยังไม่มีออเดอร์ — ไปสั่งเมนูได้เลยจ้า</p>
       )}
 
-      {orders.length > 0 && (
-        <section className="mb-8" aria-labelledby="orders-heading">
-          <h2 id="orders-heading" className="text-xl font-bold text-brand-accent mb-3">คำสั่งซื้อ (Same-day)</h2>
-          <ul className="space-y-3">
-            {orders.map((o) => (
-              <li key={o.order_number} className="card p-4 flex items-center justify-between gap-3">
+      {/* ONE canonical list — both modes, newest first (RLS: own only) */}
+      <ul className="space-y-3" data-testid="orders-list">
+        {orders.map((o) => {
+          const mode = ((o as any).order_mode ?? 'SAME_DAY') as 'SAME_DAY' | 'PRE_ORDER'
+          const cancellable = o.status === 'pending'
+          return (
+            <li key={o.order_number} className="card p-4">
+              <div className="flex items-center justify-between gap-3">
                 <div className="min-w-0">
                   <p className="font-bold text-brand-accent">#{o.order_number}</p>
-                  <p className="text-sm text-brand-muted">{getServerStatusLabel(o.status)}
-                    {' · '}{PAYMENT_LABEL[o.payment_status] || o.payment_status}</p>
+                  <p className="text-sm text-brand-muted">
+                    <span className="badge badge-info mr-1">{mode === 'PRE_ORDER' ? '📅 จองล่วงหน้า' : '🔥 วันนี้'}</span>
+                    {getServerStatusLabel(String(o.status), mode)}
+                    {' · '}{PAYMENT_LABEL[o.payment_status] || o.payment_status}
+                    {mode === 'PRE_ORDER' && o.scheduled_date ? ` · รับวันที่ ${o.scheduled_date}` : ''}
+                    {' · '}{Number(o.total_amount).toFixed(2)} ฿
+                  </p>
+                  {String(o.status) === 'cancelled' && o.payment_status === 'paid' && (
+                    <p className="text-xs text-yellow-700 mt-1">ชำระแล้ว + ยกเลิก — รอดำเนินการคืนเงิน (ยังไม่ได้คืนเงิน)</p>
+                  )}
                 </div>
-                <Link to={`/track/${o.order_number}`} className="btn btn-outline btn-sm whitespace-nowrap">ติดตาม</Link>
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
-
-      {preOrders.length > 0 && (
-        <section className="mb-8" aria-labelledby="preorders-heading">
-          <h2 id="preorders-heading" className="text-xl font-bold text-brand-accent mb-3">📅 การจองล่วงหน้า</h2>
-          <ul className="space-y-3">
-            {preOrders.map((p) => (
-              <li key={p.order_number} className="card p-4 flex items-center justify-between gap-3">
-                <div className="min-w-0">
-                  <p className="font-bold text-brand-accent">#{p.order_number} · {p.product_name}</p>
-                  <p className="text-sm text-brand-muted">{PRE_ORDER_STATUS_LABEL[p.status] || p.status}
-                    {p.scheduled_date ? ` · รอบ ${p.scheduled_date}` : ''}</p>
+                <div className="flex flex-col gap-2 items-end">
+                  <Link to={`/track/${o.order_number}`} className="btn btn-outline btn-sm whitespace-nowrap">ติดตาม</Link>
+                  {cancellable && (
+                    <button
+                      onClick={() => handleCancel(o.order_number)}
+                      disabled={cancelling === o.order_number}
+                      data-testid={'cancel-' + o.order_number}
+                      className="btn btn-outline btn-sm text-red-600 whitespace-nowrap disabled:opacity-50"
+                    >
+                      {cancelling === o.order_number ? 'กำลังยกเลิก…' : 'ยกเลิก'}
+                    </button>
+                  )}
                 </div>
-                <Link to={`/track/${p.order_number}`} className="btn btn-outline btn-sm whitespace-nowrap">ติดตาม</Link>
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
+              </div>
+            </li>
+          )
+        })}
+      </ul>
     </div>
   )
 }

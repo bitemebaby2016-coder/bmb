@@ -29,6 +29,9 @@ export interface OrderInput {
   special_instructions?: string
   promotion_code?: string
   distance_km?: number
+  // ✅ Phase 3B (migration 025 v3): canonical order mode + scheduled date
+  order_mode?: 'SAME_DAY' | 'PRE_ORDER'
+  scheduled_date?: string
   // intentionally NO price/subtotal/discount/delivery_fee/total_amount
 }
 
@@ -75,6 +78,9 @@ export interface OrderForm {
     special_request?: string
     customizations?: Record<string, any>
   }>
+  // ✅ Phase 3B (migration 025): canonical order mode + scheduled delivery date
+  order_mode?: 'SAME_DAY' | 'PRE_ORDER'
+  scheduled_date?: string
   created_at: string
   updated_at: string
 }
@@ -168,6 +174,10 @@ export async function createOrder(input: OrderInput): Promise<OrderResult | null
     p_special_instructions: input.special_instructions ?? '',
     p_promotion_code: input.promotion_code ?? undefined,
     p_distance_km: input.distance_km ?? undefined,
+    // ✅ Phase 3B (migration 025 v3): canonical mode + scheduled date — the server
+    // remains the authority (mode gate / cutoff / lead time / round-date invariant).
+    p_order_mode: input.order_mode ?? 'SAME_DAY',
+    p_scheduled_date: input.scheduled_date ?? undefined,
   }
   const { data, error } = await supabase.rpc('create_order_with_items', payload)
   if (error) { console.error('[createOrder] RPC error:', error); return null }
@@ -226,6 +236,46 @@ export async function markPaymentFailed(orderNumber: string, reason: string = ''
     return { success: false, error: r.error.message }
   }
   return { success: true }
+}
+
+// ============================================
+// ✅ Phase 3B (migration 025 §3): canonical atomic cancellation.
+// Authz (owner pending-only inside the D-5 window; admin any non-delivered),
+// capacity release + inventory restore + delivery-assignment cancel + audit all
+// happen server-side in ONE transaction. Cancel ≠ refund — payment_status is
+// untouched; a paid cancelled order is refunded later via the admin stripe-refund EF.
+// ============================================
+export interface CancelOrderResult {
+  success: boolean
+  idempotent?: boolean
+  order_number?: string
+  status?: string
+  order_mode?: string
+  previous_status?: string
+  capacity_released?: boolean
+  inventory_restored?: boolean
+  note?: string
+  error?: string
+}
+
+export async function cancelOrder(orderNumber: string, reason: string = ''): Promise<CancelOrderResult> {
+  const r = await supabase.rpc('cancel_order', { p_order_number: orderNumber, p_reason: reason })
+  if (r.error) {
+    console.error('[cancelOrder] RPC error:', r.error)
+    return { success: false, error: r.error.message }
+  }
+  const data = (r.data ?? {}) as Record<string, any>
+  return {
+    success: data.ok !== false,
+    idempotent: data.idempotent === true,
+    order_number: data.order_number ?? orderNumber,
+    status: data.status ?? 'cancelled',
+    order_mode: data.order_mode,
+    previous_status: data.previous_status,
+    capacity_released: data.capacity_released === true,
+    inventory_restored: data.inventory_restored === true,
+    note: data.note,
+  }
 }
 
 export async function getDashboardStats(): Promise<{

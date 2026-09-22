@@ -8,17 +8,10 @@ import { Link, useNavigate } from 'react-router-dom'
 import type { Product, ProductCategory, SameDayOrderPayload, PreOrderPayload, AvailabilityState, OrderMode, DeliveryRound } from '@/types'
 import { getProducts, getCategories, getDeliveryRounds } from '@/lib/bmbAdminApi_products'
 import { useCartStore } from '@/store/cartStore'
-import { useAuthStore } from '@/store/authStore'
 import { showToast } from '@/components/ui/ToastContainer'
 import { FoodMenuCard } from '@/components/FoodMenuCard'
 import { MascotBadge } from '@/components/MascotBadge'
-import { createPreOrder } from '@/lib/preOrderService'
 import { useOrderBuilderStore } from '@/store/orderBuilderStore'
-/** Default pre-order schedule = today + 3 days (YYYY-MM-DD). */
-function defaultPreorderDate(): string {
-  const d = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000)
-  return d.toISOString().slice(0, 10)
-}
 
 const CATEGORY_ICONS = { all: '\uD83D\uDF3D', dish: '\uD83C\uDF5C', rice: '\uD83C\uDF5A', curry: '\uD83C\uDF5B', drink: '\uD83E\uDD64', dessert: '\uD83C\uDF70' }
 
@@ -45,10 +38,12 @@ export function MenuPage() {
     loadData()
   }, [])
 
-  // ✓ v3.1: Filter by tab (same-day vs pre-order)
+  // ✓ v3.1: Filter by tab — canonical mode columns (migration 023), alias fallback
   const filtered = products.filter((p) => {
-    if (menuTab === 'same-day' && p.is_preorder) return false
-    if (menuTab === 'pre-order' && !p.is_preorder) return false
+    const isPre = p.available_preorder ?? p.is_preorder
+    const isSame = p.available_same_day ?? !p.is_preorder
+    if (menuTab === 'same-day' && !isSame) return false
+    if (menuTab === 'pre-order' && !isPre) return false
     const matchCat = selectedCategory === 'all' || String(p.category_id).includes(selectedCategory.slice(0, 3))
     return matchCat && p.name.toLowerCase().includes(searchQuery.toLowerCase())
   })
@@ -73,45 +68,36 @@ export function MenuPage() {
   }
 
   const navigate = useNavigate()
-  const customer = useAuthStore((s) => s.customer)
 
   // ✓ Closure 2026-09-17: Pre-order creates a REAL order (pre_orders table via
   // createPreOrder — Supabase + localStorage fallback), NOT just a toast.
-  const handlePreOrder = async (payload: PreOrderPayload) => {
+  const handlePreOrder = (payload: PreOrderPayload) => {
     console.log('[Log#pre-order]', payload)
     const product = products.find(p => p.id === payload.productId)
     if (!product) {
       showToast('ไม่พบเมนูนี้', 'error')
       return
     }
-    const round = deliveryRounds.find(r => r.id === payload.deliveryRoundId)
-    const scheduleTarget = payload.scheduledDate || product.scheduled_date || defaultPreorderDate()
-
-    const preOrder = await createPreOrder({
-      product_id: product.id,
-      quantity: payload.quantity,
-      delivery_round_id: payload.deliveryRoundId || product.delivery_round_id || undefined,
-      scheduled_date: scheduleTarget,
-      customer_name: customer?.name || 'Guest',
-      customer_phone: customer?.phone || '',
-      delivery_latitude: 10.7016,
-      delivery_longitude: 102.1429,
-      delivery_address: '',
-      special_instructions: '',
+    // ✅ Phase 3B: PRE_ORDER no longer creates rows directly from product cards.
+    // It flows through the canonical cart → /checkout?mode=pre-order, where the
+    // customer picks date + round + address + payment and the SERVER (RPC
+    // create_order_with_items, migration 025) remains the only authority.
+    useOrderBuilderStore.getState().openBuilder(product, products, (result) => {
+      const customizations: Record<string, any> = {}
+      if (result.addOns.length > 0) {
+        customizations['addOns'] = result.addOns.map((a) => ({ addonId: a.addonId, selections: a.selections, note: a.note ?? '' }))
+      }
+      addItem(result.product, result.quantity, customizations, 'PRE_ORDER')
+      for (const rec of result.recommended) addItem(rec, 1, {}, 'PRE_ORDER')
+      showToast('เลือกวันที่/รอบ/ที่อยู่ แล้วชำระเงินเพื่อยืนยันการจอง', 'info')
+      navigate('/checkout?mode=pre-order')
     })
-
-    if (!preOrder) {
-      showToast('สร้าง pre-order ล้มเหลว กรุาลองใหม่', 'error')
-      return
-    }
-
-    showToast(`จองสำเร็จ! เลขที่ ${preOrder.order_number} — จะส่งวันที่ ${scheduleTarget} (${round?.display_name || ''})`, 'success')
-    navigate(`/track/${preOrder.order_number}`)
   }
 
   const availableCats = categories.filter((c) => c.is_active)
-  const sameDayCount = products.filter(p => !p.is_preorder && p.is_available).length
-  const preOrderCount = products.filter(p => p.is_preorder).length
+  // ✅ Phase 3B: canonical mode columns (migration 023) — alias fallback kept.
+  const sameDayCount = products.filter(p => (p.available_same_day ?? !p.is_preorder) && p.is_available).length
+  const preOrderCount = products.filter(p => (p.available_preorder ?? p.is_preorder)).length
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-6 bg-brand-bg min-h-screen">

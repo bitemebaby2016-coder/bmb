@@ -1,15 +1,18 @@
 // ============================================
-// Bite Me Baby — Cart Isolation Engine
+// Bite Me Baby — Cart Isolation Engine (Phase 3B: delegating shim)
 // ============================================
-// Global operational state `order_mode: 'SAME_DAY' | 'PRE_ORDER' | null`.
-// On `addToCart` we intercept the item's mode against the active mode:
-//   - matching        -> append, order stays consistent.
-//   - mismatched      -> set `pendingMode` and return 'needs_confirmation'
-//                        (the global CartIsolationModal surfaces the approval
-//                        prompt; user confirms ⇒ clear previous cart then switch).
-// Decoupled from any UI — components only read state / call actions.
+// The SINGLE cart implementation now lives in `src/store/cartStore.ts` (which
+// owns the SAME_DAY / PRE_ORDER isolation semantics + the live order path).
+// This module keeps the historical isolation-store API for its existing
+// consumers/tests (CartIsolationModal surface, `cartIsolationStore.test.ts`)
+// by mirroring the canonical store — ONE effective order path, no duplicated
+// state machine.
+// ============================================
 
 import { create } from 'zustand'
+import { useCartStore as useBaseCartStore } from '@/store/cartStore'
+import type { CartItem } from '@/types'
+import type { Product } from '@/types'
 import type { OrderMode } from '@/config/platformConfig'
 
 export interface IsolationCartItem {
@@ -38,49 +41,60 @@ interface CartIsolationStore {
   clearCart: () => void
 }
 
-export const useCartStore = create<CartIsolationStore>((set, get) => ({
-  items: [],
-  order_mode: null,
-  pendingMode: null,
-  cartTotal: 0,
+function toIsolationItems(items: CartItem[]): IsolationCartItem[] {
+  return items.map((i) => ({
+    id: i.product.id,
+    name: i.product.name,
+    price: Number(i.product.price) || 0,
+    quantity: i.quantity,
+  }))
+}
 
-  addToCart: (item, mode) => {
-    const { order_mode, pendingMode, items } = get()
+function baseItemToIso(id: string, name: string, price: number, quantity: number): Product {
+  return {
+    id,
+    name,
+    price,
+    description: '',
+    category_id: '',
+    image_url: '',
+    is_available: true,
+    is_featured: false,
+    is_preorder: false,
+    prep_minutes: 0,
+    sort_order: 0,
+    created_at: '',
+  } as Product
+}
 
-    // A switch is already awaiting confirmation — keep waiting.
-    if (pendingMode) return 'needs_confirmation'
-
-    // Isolation rule: a non-empty cart is locked to one order mode.
-    if (order_mode !== null && order_mode !== mode && items.length > 0) {
-      set({ pendingMode: mode })
-      return 'needs_confirmation'
-    }
-
-    const existing = items.find((i) => i.id === item.id)
-    const nextItems = existing
-      ? items.map((i) => (i.id === item.id ? { ...i, quantity: i.quantity + item.quantity } : i))
-      : [...items, { ...item, mode }]
-
+export const useCartStore = create<CartIsolationStore>((set) => {
+  // Mirror the canonical store state (single source of truth).
+  const base = useBaseCartStore.getState()
+  useBaseCartStore.subscribe((s) => {
     set({
-      items: nextItems,
-      order_mode: order_mode ?? mode,
-      cartTotal: nextItems.reduce((sum, i) => sum + i.price * i.quantity, 0),
-      pendingMode: null,
+      items: toIsolationItems(s.items),
+      order_mode: s.order_mode,
+      pendingMode: s.pendingMode,
+      cartTotal: s.cartTotal,
     })
-    return 'added'
-  },
+  })
 
-  confirmModeSwitch: () => {
-    const { pendingMode } = get()
-    if (!pendingMode) return
-    // Clear the previous cart before switching operational modes.
-    set({ items: [], cartTotal: 0, order_mode: pendingMode, pendingMode: null })
-  },
+  return {
+    items: toIsolationItems(base.items),
+    order_mode: base.order_mode,
+    pendingMode: base.pendingMode,
+    cartTotal: base.cartTotal,
 
-  cancelModeSwitch: () => {
-    if (!get().pendingMode) return
-    set({ pendingMode: null })
-  },
+    addToCart: (item, mode) =>
+      useBaseCartStore.getState().addItem(
+        baseItemToIso(item.id, item.name, item.price, item.quantity),
+        item.quantity,
+        {},
+        mode,
+      ),
 
-  clearCart: () => set({ items: [], cartTotal: 0, order_mode: null, pendingMode: null }),
-}))
+    confirmModeSwitch: () => useBaseCartStore.getState().confirmModeSwitch(),
+    cancelModeSwitch: () => useBaseCartStore.getState().cancelModeSwitch(),
+    clearCart: () => useBaseCartStore.getState().clearCart(),
+  }
+})

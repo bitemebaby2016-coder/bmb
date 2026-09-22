@@ -20,7 +20,7 @@ export function ReviewCarouselSection({ reviews, products, onReviewCta }: Review
   const productMap = new Map((products || []).map((p) => [p.id, p]))
   const items = reviews.map((r) => {
     const product = productMap.get(r.relatedProduct?.id ?? '') ?? r.relatedProduct
-    const mode: OrderMode = product?.is_preorder ? 'pre-order' : 'same-day'
+    const mode: OrderMode = (product?.available_preorder ?? product?.is_preorder) ? 'pre-order' : 'same-day'
     return (
       <CustomerReviewCard
         key={r.id}
