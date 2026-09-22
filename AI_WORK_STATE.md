@@ -619,3 +619,9 @@ REMAINING / NEXT (owner queue — BLOCKED on secret):
   `e2e/prodCheckGrants.cjs --remote` + contract suites on production (§13 checklist), then commit
   the production-verification evidence.
 - Optional: rerun older contract suites (017–022) on production for completeness.
+
+PRODUCTION ANON BASELINE (2026-09-22, PRE-033-push, probe via publishable key + REST):
+  products 200 · **mascot_overrides 200 (anon SELECT already live on prod — 033 closes the same
+  drift locally; post-push verify keeps it 200) · **business_settings 200 [] (RLS filters rows;
+  grant wide-open on prod → 033 MUST revoke; post-push expect 401)** — matches the audit's
+  "policy-vs-grant mismatches" (prod still carries 004-era wide grants).
