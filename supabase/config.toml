@@ -4,22 +4,6 @@
 # ============================================
 project_id = "ivkdfognyiwjcmrhcnwz"
 
-# TEMP (PHASE 2 local validation): avoid port conflicts with the OTHER local
-# supabase stack on this machine (selfprint). Revert after Phase 2 verification.
-[studio]
-port = 55323
-[api]
-port = 55321
-[db]
-port = 55432
-[inbucket]
-port = 55324
-[analytics]
-enabled = true
-port = 55327
-vector_port = 55328
-
-
 # Edge Functions settings are read by `supabase functions deploy`.
 # None of these functions are deployed until the owner runs the deploy
 # command (see STRIPE_WEBHOOK_PRELIVE_AUDIT.md §Deploy).
