@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-09-22T15:06:27.715Z",
+  "timestamp": "2026-09-22T16:00:35.760Z",
   "ref": "ivkdfognyiwjcmrhcnwz",
   "local": {
     "migration_history": "001|initial_schema\n002|complete_schema\n003|add_missing_columns\n004|fix_uuid_to_text\n005|secure_rls_policies\n006|rls_hardening_auth\n007|server_authoritative_order\n008|payment_state_machine_and_phase_d\n009|fix_007_extract_epoch\n010|fix_record_payment_result_idempotency\n011|storage_bmb_images_policies\n012|products_stock_rating_review_count\n013|fix_submit_offline_payment_reference\n014|owner_admin_full_access\n015|customer_location_columns\n016|addons_and_banner\n017|pre_order_server_authoritative\n018|server_side_audit_log\n019|kitchen_core\n020|bite_drive\n021|phase4_admin_ai\n022|phases_5_7\n023|canonical_order_domain\n024|round_lifecycle_and_preorder_migration\n025|canonical_order_rpc\n026|inventory_aggregate_fix\n027|kitchen_canonical_batch\n028|phase3a_operational_guarantees\n029|ensure_rounds_grant\n030|order_transition_allowed_else\n031|production_acl_drift_repair\n032|public_execute_drift_repair\n033|table_acl_alignment\n034|production_acl_drift_remediation",

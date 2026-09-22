@@ -1,37 +1,37 @@
 {
-  "timestamp": "2026-09-22T15:02:40.993Z",
+  "timestamp": "2026-09-22T15:49:41.862Z",
   "ref": "ivkdfognyiwjcmrhcnwz",
   "checks": [
     {
-      "file": "e2e/contracts_023_order_spine.sql",
+      "file": "e2e/contracts_017_018.sql",
+      "ok": false,
+      "status": 400,
+      "detail": "{\"message\":\"Failed to run sql query: ERROR:  42704: variable \\\"fn\\\" does not exist\\nCONTEXT:  compilation of PL/pgSQL function \\\"inline_code_block\\\" near line 6\\n\"}"
+    },
+    {
+      "file": "e2e/contracts_019_kitchen.sql",
+      "ok": false,
+      "status": 400,
+      "detail": "{\"message\":\"Failed to run sql query: ERROR:  P0001: FAIL kitchen RPCs missing\\nCONTEXT:  PL/pgSQL function inline_code_block line 16 at RAISE\\n\"}"
+    },
+    {
+      "file": "e2e/contracts_020_bite_drive.sql",
       "ok": true,
       "status": 201,
       "detail": null
     },
     {
-      "file": "e2e/contracts_028_payment_confirmation_kitchen.sql",
-      "ok": true,
-      "status": 201,
-      "detail": null
+      "file": "e2e/contracts_021_phase4.sql",
+      "ok": false,
+      "status": 400,
+      "detail": "{\"message\":\"Failed to run sql query: ERROR:  P0001: ERR_NOT_AUTHENTICATED\\nCONTEXT:  PL/pgSQL function save_ai_memory(jsonb) line 6 at RAISE\\nSQL statement \\\"SELECT public.save_ai_memory('{\\\"name\\\":\\\"QA\\\"}'::jsonb)\\\"\\nPL/pgSQL function inline_code_block line 28 at PERFORM\\n\"}"
     },
     {
-      "file": "e2e/contracts_029_round_grant.sql",
-      "ok": true,
-      "status": 201,
-      "detail": null
-    },
-    {
-      "file": "e2e/contracts_030_transition_else.sql",
-      "ok": true,
-      "status": 201,
-      "detail": null
-    },
-    {
-      "file": "e2e/contracts_033_table_acl.sql",
-      "ok": true,
-      "status": 201,
-      "detail": null
+      "file": "e2e/contracts_022_phases_5_7.sql",
+      "ok": false,
+      "status": 400,
+      "detail": "{\"message\":\"Failed to run sql query: ERROR:  P0001: ERR_NOT_AUTHENTICATED\\nCONTEXT:  PL/pgSQL function submit_content_for_approval(text,text,text) line 7 at RAISE\\nPL/pgSQL function inline_code_block line 20 at assignment\\n\"}"
     }
   ],
-  "pass": true
+  "pass": false
 }

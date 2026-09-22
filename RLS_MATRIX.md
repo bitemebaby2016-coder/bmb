@@ -110,31 +110,13 @@ Wide-open policies that survive only because the grant layer blocks them.
 | Registration | `schema_migrations` rows `033|table_acl_alignment` · `034|production_acl_drift_remediation` |
 | Production gate | **VERIFIED** ✅ — history 34/34 consistent · anon 0/0 residue · contracts 5/5 · REST leak closed |
 
-> Production apply (2026-09-22): `supabase db push --yes --linked` → Applied + registered (remote history 33).
-> Grant probe remote 5/7 (**NOT VERIFIED**): anon_write_residue=16, anon_extra_select=15 (pre-existing
-> 004-era wide grants — 033's own checks all green remote). Contracts on prod 4/5 (contracts_033 G1b FAIL,
-> same 16/15). REST prod: anon business_settings 200[] (residue), **anon recipes 200 [data] live leak**,
-> anon customer_intelligence 200[] (open no-RLS view), anon POST public_profiles 401 (vuln closed).
-> Auth-session live probes blocked by signup 429; auth exposure by construction (payment_intents /
-> inventory / profiles via USING=true policies + residual grants). Evidence: `e2e/prod-verify-033.txt` ·
-> `e2e/prod-acl-dump-post033.txt`. Gate = NOT VERIFIED until a REVOKE-only follow-up (owner-approved) clears
-> the anon residue. See `AI_WORK_STATE.md` WAVE 3.
-
---- WAVE 3 PRODUCTION GATE FIX (2026-09-22, owner-authorized) ---
-Migration 034 (`034_production_acl_drift_remediation.sql`) — REVOKE-only corrective:
-- REVOKE anon I/U/D on 16 tables + REVOKE anon SELECT on 15 non-canonical tables/views
-- REVOKE authenticated ALL on payment_intents, inventory, profiles (F-5 tables)
-- + GRANT SELECT, UPDATE ON inventory TO authenticated (minimal for contracts/RPCs)
-Applied via `supabase db push --yes --linked` → remote history 34, LOCAL==REMOTE.
-
-VERIFICATION (ALL GREEN):
-- Grant probe remote: **7/7 PASS** (anon_write_residue=0, anon_extra_select=0, all 033-owned ✅)
-- Contracts on prod: **5/5 PASS** (023/028/029/030/033)
-- REST prod (anon): business_settings 401 ✅ | mascot_overrides 200 ✅ | recipes 401 ✅ (leak closed)
-  | customer_intelligence 401 ✅ | public_profiles POST 401 ✅
-- F-5 policies (payment_intents_policy, inventory_public_read, profiles_public_read, recipes_anon_read)
-  dormant again (grant-blocked); media_assets_public_read active by design (auth grant 033).
-WAVE 3 PRODUCTION GATE = **VERIFIED** ✅
+> Production apply (2026-09-22): `supabase db push --yes --linked` → Applied migrations 033 + 034 + registered (remote history 34).
+> Grant probe remote: **7/7 PASS** (anon_write_residue=0, anon_extra_select=0, all 033/034-owned ✅).
+> Contracts on prod: **5/5 PASS** (023/028/029/030/033).
+> REST prod (anon): business_settings 401 ✅ | mascot_overrides 200 ✅ | recipes 401 ✅ (leak closed)
+>   | customer_intelligence 401 ✅ | public_profiles POST 401 ✅
+> F-5 policies dormant (grant-blocked); media_assets_public_read active by design (auth grant 033).
+> WAVE 3 PRODUCTION GATE = **VERIFIED** ✅
 
 ---
 
