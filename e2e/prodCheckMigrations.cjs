@@ -26,7 +26,7 @@ const TOKEN = process.env.SUPABASE_ACCESS_TOKEN || ''
 
 // ONE probe query, run identically on local (docker psql) and remote (Management API)
 const PROBE_SQL = `
-select coalesce(json_agg(t), '[]'::json) from (
+select coalesce(json_agg(t), '[]'::json) as probe from (
   select 'migration_history' as kind,
          coalesce((select string_agg(version || '|' || coalesce(name,''), E'\\n' order by version)
                    from supabase_migrations.schema_migrations), '') as items
@@ -42,16 +42,15 @@ select coalesce(json_agg(t), '[]'::json) from (
            where n.nspname = 'public' and c.relkind in ('r','p')) as items
   union all
   select 'f1_else' as kind,
-         coalesce((select case when position('ELSE RETURN false' in pg_get_functiondef(oid)) > 0
+         coalesce((select case when position('ELSE RETURN false' in pg_get_functiondef(p.oid)) > 0
                                then 'present' else 'absent' end
                      from pg_proc p join pg_namespace n on n.oid = p.pronamespace
                     where n.nspname = 'public' and p.proname = 'order_transition_allowed'),
                   'missing') as items
   union all
   select 'grant_029' as kind,
-         coalesce((select 'granted' from information_schema.role_function_grants
-                    where grantee = 'authenticated' and routine_name = 'ensure_rounds_for_date'
-                    limit 1), 'not-granted') as items
+         case when has_function_privilege('authenticated', 'public.ensure_rounds_for_date(date)', 'EXECUTE')
+              then 'granted' else 'not-granted' end as items
 ) t;
 `
 
@@ -91,7 +90,9 @@ async function run() {
       if (!r.ok) {
         console.log('XMARK remote probe failed: ' + JSON.stringify(body).slice(0, 300))
       } else {
-        const rows = Array.isArray(body) ? body : []
+        const first = Array.isArray(body) ? body[0] : null
+        const raw = first && (first.probe ?? first.coalesce)
+        const rows = typeof raw === 'string' ? JSON.parse(raw) : (Array.isArray(raw) ? raw : [])
         evidence.remote = Object.fromEntries(rows.map((r2) => [r2.kind, r2.items]))
         console.log('check remote probe ok: history=' + splitItems(evidence.remote.migration_history).length +
           ' migrations, functions=' + splitItems(evidence.remote.functions).length +

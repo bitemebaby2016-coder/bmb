@@ -398,3 +398,38 @@ graceful.
   not self-wrapped, stops at first failure, explicit `--files 028,029,030` only).
 - Post-apply verification (unchanged from §23): rerun `contracts_023` / `contracts_028` /
   `contracts_029` / `contracts_030` against production + re-check the rounds/capacity audit.
+
+**Production apply executed (owner-approved: "รันตอนนี้เลย") — 2026-09-22:**
+
+- `supabase db push --yes` (CLI connects to the linked project's DB itself — no access token
+  needed) applied IN ORDER and RECORDED: `028 · 029 · 030` on production.
+- Contract suites ON PRODUCTION via Management API (ONE query per suite; each suite is a single
+  BEGIN…ROLLBACK — new tooling `e2e/prodRunContracts.cjs`, evidence
+  `e2e/prod-contracts-result.json`): contracts_023 PASS · contracts_028 PASS · contracts_030
+  PASS (F-1 verified end-to-end on production) · contracts_029 FAIL at G2 — which uncovered:
+
+- **SECURITY FINDING F-4 (production-only, REAL, now CLOSED):** the manual-apply era left
+  `ALTER DEFAULT PRIVILEGES IN SCHEMA public` that auto-granted EXECUTE on FUNCTIONS to anon,
+  plus stray PUBLIC grants. On production anon could call 82 functions vs local 49, and the
+  PostgREST probe PROVED anon could EXECUTE `ensure_rounds_for_date` (400 `ERR_DATE_IN_PAST` =
+  the function ran; with a future date it would have WRITTEN delivery rounds anonymously).
+  028's `REVOKE … FROM PUBLIC` could not remove per-role anon ACL entries, and PUBLIC entries
+  survived separately.
+- **FIX (owner-approved):** `031_production_acl_drift_repair.sql` — remove the drifted anon
+  DEFAULT PRIVILEGES for role postgres in public (FUNCTIONS/TABLES/SEQUENCES) + REVOKE anon
+  EXECUTE on the 33 drifted functions (DO-block tolerant: REVOKE has no IF EXISTS and some
+  functions exist only on production) — and `032_public_execute_drift_repair.sql` — REVOKE
+  PUBLIC EXECUTE on the 5 residual functions (`auto_approve_order`,
+  `calculate_loyalty_points`, `check_product_availability`, `update_order_status`,
+  `validate_order_before_submit`). Both applied to LOCAL and PRODUCTION.
+- **Post-fix verification (all green):**
+  - REST anon probe on production → **401 permission denied** (was 400 executed);
+  - anon-callable function diff → **LOCAL 49 == PROD 49, PROD-ONLY = 0** (was 82);
+  - migration history **32/32 recorded on BOTH** sides; `prodCheck --remote`:
+    F1_else=present, grant_029=granted on both;
+  - full contract suite re-run on production → **4/4 PASS (023, 028, 029, 030)**.
+- NOTE (harness honesty): contracts_029's SQL-level G2 probe is sensitive to the caller's role
+  context (the Management API executor cannot always be downgraded to anon) — the AUTHORITATIVE
+  anon check is the PostgREST REST probe, which now returns 401 on production.
+- Supabase-side note: `information_schema.role_function_grants` does not exist on this PG17 —
+  use `has_function_privilege()` for grant probes (the check tooling does).

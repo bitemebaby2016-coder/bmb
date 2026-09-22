@@ -87,16 +87,17 @@ async function run() {
   // post-apply verification probes (same single-query style)
   const verify = {}
   try {
-    const rows = await apiQuery(
-      "select coalesce(json_agg(t),'[]'::json) from ("
-      + " select 'f1_else' k, coalesce((select case when position('ELSE RETURN false' in pg_get_functiondef(oid))>0 then 'present' else 'absent' end"
+    const rowsRaw = await apiQuery(
+      "select coalesce(json_agg(t),'[]'::json) as probe from ("
+      + " select 'f1_else' k, coalesce((select case when position('ELSE RETURN false' in pg_get_functiondef(p.oid))>0 then 'present' else 'absent' end"
       + "   from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname='public' and p.proname='order_transition_allowed'),'missing') v"
-      + " union all select 'grant_029' k, coalesce((select 'granted' from information_schema.role_function_grants"
-      + "   where grantee='authenticated' and routine_name='ensure_rounds_for_date' limit 1),'not-granted') v"
+      + " union all select 'grant_029' k, case when has_function_privilege('authenticated','public.ensure_rounds_for_date(date)','EXECUTE') then 'granted' else 'not-granted' end v"
       + " union all select 'history_tail' k, (select coalesce(string_agg(version,',' order by version),'') from supabase_migrations.schema_migrations) v"
       + ') t',
     )
-    for (const row of rows) verify[row.k] = row.v
+    const first = Array.isArray(rowsRaw) ? rowsRaw[0] : null
+    const parsed = first && typeof first.probe === 'string' ? JSON.parse(first.probe) : []
+    for (const row of parsed) verify[row.k] = row.v
   } catch (e) { verify.error = String(e).slice(0, 200) }
 
   const okCount = applied.filter((a) => a.ok).length

@@ -559,4 +559,21 @@ KNOWN MACHINE/GRANTS NOTES (flagged, not changed):
   `business_settings` (403 in checkout, display-only) — future owner-approved grants pass.
 
 NEXT: owner confirms → `supabase db push` (028+029+030) → rerun contracts_023/028/029/030 on
+
+---
+Status: ✅ PHASE 3B · WAVE 2 FULLY CLOSED (2026-09-22 evening) — production migrated + verified + security hole closed
+Production apply EXECUTED (owner-approved): `supabase db push` applied 028+029+030 (recorded), then
+contract suites on production revealed a REAL anon-execute hole (F-4: default-privileges drift from
+the manual-apply era → anon could execute 82 functions incl. writing delivery_rounds). Fixed by
+migrations 031 (default-privileges + 33 function REVOKEs) and 032 (5 PUBLIC EXECUTE revokes), both
+applied to local AND production. Final state: migration history 32/32 both sides · anon-callable
+functions LOCAL 49 == PROD 49 · REST anon probe on production → 401 · full contract suites on
+production 4/4 PASS (023/028/029/030) · evidence: `e2e/prod-contracts-result.json`,
+`e2e/prod-check-result.json`, audit doc §13.
+
+REMAINING / NEXT (owner queue):
+- F-3 follow-up: full table-ACL hardening pass (anon table grants from the same drift era — RLS
+  currently governs, but grants should be aligned like the functions were).
+- Optionally: rerun older contract suites (017–022) on production for completeness; stale remote
+  history rows 031/032/20260812000002 no longer exist (resolved during this wave).
 production → §13 post-apply checklist.
