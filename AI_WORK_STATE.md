@@ -612,16 +612,33 @@ RESOLVED the WAVE-2 "KNOWN MACHINE/GRANTS NOTES" items (locally): `service_role`
 :54331, `supabase status` misleadingly reports 54321 owned by selfprint-v3-react) — still TRUE and
 documented; the REST probe hits :54331 deliberately.
 
-REMAINING / NEXT (owner queue — BLOCKED on secret):
-- **Production apply**: `supabase db push` (or Management API) for 033. Requires owner
-  `SUPABASE_ACCESS_TOKEN` or CLI login — NOT present in this environment (no supabase.temp/at.local,
-  ~/.supabase has no access-token; .env.local holds only VITE_* keys). After push: rerun
-  `e2e/prodCheckGrants.cjs --remote` + contract suites on production (§13 checklist), then commit
-  the production-verification evidence.
-- Optional: rerun older contract suites (017–022) on production for completeness.
+PRODUCTION APPLY EXECUTED (owner token + CLI, 2026-09-22 evening):
+- `npx supabase db push --yes --linked` (CLI 2.117.0, dry-run verified 033 only) → Applying migration
+  033 ... Finished (PUSH-EXIT=0). Registration verified: remote history 32 → 33, LOCAL==REMOTE,
+  "every repo migration recorded on production" PASS (`e2e/prodCheckMigrations.cjs --remote`).
+- `e2e/prodCheckGrants.cjs --remote` → **REMOTE 5/7 — NOT VERIFIED**: anon_write_residue=16 (want 0),
+  anon_extra_select=15 (want 0). All 033-owned checks PASS remote (mascot anon granted ·
+  public_profiles write=0 · pre_orders write=0 · new-grants=10 · service_role missing=0).
+- Contracts on production (`e2e/prodRunContracts.cjs`): **4/5** — 023/028/029/030 PASS (no functional
+  regression), contracts_033 FAIL (P0001 FAIL G1b anon ACL drift 16/15) — same numbers as probe.
+- REST on production (publishable anon key; signup for auth session → 429 rate-limit): anon business_settings
+  → 200 [] (grant residue; should be 401) · anon mascot_overrides → 200 (intended) · **anon recipes → 200
+  WITH DATA (live leak: recipes_anon_read USING=true + grant)** · anon customer_intelligence → 200 []
+  (no-RLS view open to anon; empty only because no rows) · anon POST public_profiles → 401 (vuln closed ✔).
+  Auth live probes blocked by platform signup rate limit; auth-path exposure established by construction
+  (grant+policy): payment_intents (payment_intents_policy ALL USING=true), inventory (inventory_public_read),
+  profiles (profiles_public_read) readable by any authenticated session on prod.
+- ROOT CAUSE: production retained 004-era wide grants (`GRANT ALL ... TO anon/authenticated`); local had
+  already shed them, so 033 step-1 residue cleanup (REFERENCES/TRIGGER/TRUNCATE only) did not cover the
+  surviving anon INSERT/UPDATE/DELETE (16 rels) and extra anon SELECT (15) on prod. 033 did NOT create or
+  worsen any of it; its own deliverables are all green on prod.
+- EVIDENCE: `e2e/prod-verify-033.txt` · `e2e/prod-acl-dump-post033.txt` (205 ACL rows) ·
+  `e2e/prod-check-grants-result.json` · `e2e/prod-contracts-result.json` · `e2e/prod-check-result.json`.
 
-PRODUCTION ANON BASELINE (2026-09-22, PRE-033-push, probe via publishable key + REST):
-  products 200 · **mascot_overrides 200 (anon SELECT already live on prod — 033 closes the same
-  drift locally; post-push verify keeps it 200) · **business_settings 200 [] (RLS filters rows;
-  grant wide-open on prod → 033 MUST revoke; post-push expect 401)** — matches the audit's
-  "policy-vs-grant mismatches" (prod still carries 004-era wide grants).
+REMAINING / NEXT (owner queue — DECISION REQUIRED): WAVE 3 PRODUCTION GATE = **NOT VERIFIED** (GT 2/2 FAIL).
+Draft fix ready (REVOKE-only, additive, same F-3 family — NOT created as a migration, NOT applied):
+revoke anon non-canonical grants (restore canonical 8-table SELECT set) + scope authenticated grants to
+policy reality + neutralize USING=true F-5 policies (payment_intents_policy / inventory_public_read /
+profiles_public_read / recipes_anon_read) before they are exploitable. Await explicit owner command before
+creating/applying a follow-up migration. Do NOT declare 033 prod = PASS while gate fails.
+- Optional afterwards: rerun older contract suites (017–022) on production for completeness.

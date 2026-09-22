@@ -1,0 +1,71 @@
+WAVE 3 / MIGRATION 033 — PRODUCTION VERIFICATION RECORD
+=============================================================
+Date: 2026-09-22 · Link repro  ivkdfognyiwjcmrhcnwz · Migration: supabase/migrations/033_table_acl_alignment.sql
+Method: Supabase CLI 2.117.0 `db push --yes --linked` (dry-run verified first)
+Status: MIGRATION APPLIED + REGISTERED ✓ · GATE RESULT: NOT VERIFIED (ACL drift GT gates 2/2 FAIL) — see below
+
+1) PUSH
+   npx supabase db push --yes --linked
+   → Applying migration 033_table_acl_alignment.sql ... Finished supabase db push. (PUSH-EXIT=0)
+   (dry-run beforehand: "Would push these migrations: 033_table_acl_alignment.sql" — only 033 pending)
+
+2) REGISTRATION (e2e/prodCheckMigrations.cjs --remote)
+   remote history = 33 migrations (was 32) · "check every repo migration is recorded on production" PASS
+   local = 33 · remote = 33  → local==remote history ✔
+
+3) GRANT PROBE (e2e/prodCheckGrants.cjs --remote)  → e2e/prod-check-grants-result.json
+   LOCAL : 7/7 PASS  (anon_write_residue=0 · anon_extra_select=0 · mascot anon=granted ·
+           auth_public_profiles_write=0 · auth_preorders_write=0 · auth_new_grants=10 · service_role_missing=0)
+   REMOTE: 5/7 PASS — FAILURES:
+           anon_write_residue=16 (want 0)
+           anon_extra_select=15 (want 0)
+           033-owned checks ALL PASS remote: anon_mascot_read=granted ·
+           auth_public_profiles_write=0 · auth_preorders_write=0 · auth_new_grants=10 ·
+           service_role_missing=0
+
+4) CONTRACTS ON PRODUCTION (e2e/prodRunContracts.cjs, Management API) → e2e/prod-contracts-result.json
+   contracts_023_order_spine.sql                    PASS (http 201)
+   contracts_028_payment_confirmation_kitchen.sql   PASS (http 201)
+   contracts_029_round_grant.sql                    PASS (http 201)
+   contracts_030_transition_else.sql                PASS (http 201)
+   contracts_033_table_acl.sql                      FAIL (http 400): FAIL G1b anon ACL drift
+                                                    (write-residue=16, unexpected-SELECT=15)
+   → No functional regression in order/payment/round/kitchen paths (023/028/029/030 green).
+
+5) REST / PostgREST ON PRODUCTION (anon via publishable key; auth via throwaway signup)
+   anon GET  business_settings    → 200 []      (GRANT residue: should be 401 — RLS filters rows, grant still present)
+   anon GET  mascot_overrides     → 200 []      (intended public-read ✔)
+   anon GET  recipes              → 200 [data]  (LEAK: rcp-1.. full recipe/costing rows, anon readable)
+   anon GET  customer_intelligence→ 200 []      (LEAK-path: no-RLS view open to anon; empty only because no rows today)
+   anon POST public_profiles      → 401 42501 permission denied ✓ (vuln closed on prod)
+   signup for auth session        → 429 (platform rate limit) — authenticated live probes NOT possible this run
+   auth-path analysis (grant+policy conclusive, no live call):
+     auth GET business_settings   → allowed by construction (grant SELECT + policy business_settings_auth_read=true)
+     auth POST public_profiles    → rejected by construction (033 revoked auth INSERT/UPDATE/DELETE; SELECT-only)
+     auth GET payment_intents     → LEAK by construction (grant S/I/U/D + policy payment_intents_policy ALL USING=true)
+     auth GET inventory           → LEAK by construction (grant SELECT + inventory_public_read USING=true)
+     auth GET profiles            → LEAK by construction (grant SELECT + profiles_public_read USING=true)
+
+6) SECURITY ANALYSIS OF FOUND STATE
+   Root cause: production retained 004-era wide grants (GRANT ALL ON ALL TABLES TO anon/authenticated).
+   033 step 1 revoked REFERENCES/TRIGGER/TRUNCATE residue ONLY — its premise (from local truth, where
+   INSERT/UPDATE/DELETE residue was already absent) was FALSE on production, so anon INSERT/UPDATE/DELETE
+   on 16 rels and extra anon SELECT on 15 rels survived. 033 did NOT introduce these (pre-existing 004-era),
+   and did NOT weaken anything (all 033-owned checks pass remote).
+   Live exposure confirmed: anon read recipes (recipes_anon_read USING=true) and customer_intelligence
+   (no-RLS view, anon SELECT grant — same class as public_profiles). Auth exposure by construction on
+   payment_intents/inventory/profiles via USING=true policies + residual grants.
+   anon WRITE attempts remain RLS-blocked on tables with false/deny anon policies (audit_logs,
+   content_approvals, drivers, provider_orders, system_errors, ai_* ...) — no write leak DEMONSTRATED,
+   but ACL≠policy (the exact drift 033 targets).
+   Full ACL snapshot: e2e/prod-acl-dump-post033.txt (205 role/table/priv rows, anon+authenticated).
+
+7) DECISION NEEDED FROM OWNER (NOT performed — constraints: no auto Wave 4 / no F-4/F-5 / no 033 rewrite)
+   Minimal REVOKE-only follow-up (draft, same F-3 family, additive — NOT applied):
+   - REVOKE all privileges (or S/I/U/D) on public rels from anon where policies deny or app does not use,
+     restoring the canonical anon set: SELECT ON products, product_categories, delivery_rounds, reviews,
+     promotions, preorder_votes, orders, mascot_overrides
+   - REVOKE authenticated writes on admin-only tables / order/payment/inventory wide grants to policy-scope,
+     and neutralize USING=true F-5 policies payment_intents_policy / inventory_public_read / profiles_public_read
+     by dropping-policy or revoking grants before they become exploitable.
+   Await explicit owner command before creating/applying such a migration.

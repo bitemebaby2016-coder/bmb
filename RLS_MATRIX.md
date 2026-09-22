@@ -108,8 +108,15 @@ Wide-open policies that survive only because the grant layer blocks them.
 | REST probe (local PostgREST :54331, forged auth JWT) | anon GET products → 200 · anon GET mascot_overrides → 200 · auth GET business_settings → 200 · auth POST public_profiles → **403** · anon POST public_profiles → **401** · anon GET business_settings → **401** |
 | Registration | `schema_migrations` row `033|table_acl_alignment` |
 
-> Production apply + verification: **PENDING** — requires owner `SUPABASE_ACCESS_TOKEN`
-> (Management API) or a CLI login; see `AI_WORK_STATE.md` WAVE 3.
+> Production apply (2026-09-22): `supabase db push --yes --linked` → Applied + registered (remote history 33).
+> Grant probe remote 5/7 (**NOT VERIFIED**): anon_write_residue=16, anon_extra_select=15 (pre-existing
+> 004-era wide grants — 033's own checks all green remote). Contracts on prod 4/5 (contracts_033 G1b FAIL,
+> same 16/15). REST prod: anon business_settings 200[] (residue), **anon recipes 200 [data] live leak**,
+> anon customer_intelligence 200[] (open no-RLS view), anon POST public_profiles 401 (vuln closed).
+> Auth-session live probes blocked by signup 429; auth exposure by construction (payment_intents /
+> inventory / profiles via USING=true policies + residual grants). Evidence: `e2e/prod-verify-033.txt` ·
+> `e2e/prod-acl-dump-post033.txt`. Gate = NOT VERIFIED until a REVOKE-only follow-up (owner-approved) clears
+> the anon residue. See `AI_WORK_STATE.md` WAVE 3.
 
 ---
 
