@@ -112,3 +112,44 @@
 **Tests Required (Phase B DoD) update:** `grep dist/` no service-role ✅; auth e2e ⛔ (live email rate-limit today, retry later); price tamper ✅ (mock contract test `ERR_AMOUNT_MISMATCH`); order state ✅ (14 offline contract tests); payment webhook idempotency ✅ (mock test); **live webhook test ⛔** (needs EF deployed + Stripe webhook endpoint configured in Stripe Dashboard).
 
 → Full audit trail: `PHASE_C_TRUSTED_BACKEND_FORENSIC.md`
+
+---
+
+## CROSS-CHECK POST-WAVE 3 EVIDENCE (ed1ac58 · 2026-09-22)
+
+> **Rule:** Do not mark P0/P1/P2 as COMPLETE merely because a related ACL gate passed. If 033/034 closes only the grant-layer portion, record `GRANT LAYER VERIFIED — APPLICATION/RLS/ARCHITECTURE REMEDIATION MAY REMAIN`.
+
+### P0 Items
+
+| Item | Claim (before Wave 3) | Current Evidence | Verdict |
+|------|-----------------------|------------------|---------|
+| P0-1 Service-role exposure | ✅ DONE | Bundle scan 0 key hits (2026-09-21); old key revoked (2026-09-19) | ✅ **VERIFIED — NO REMAINING WORK** |
+| P0-2 Authentication → Supabase Auth | ✅ DONE (claim) | `authStore.ts` still uses `bmb_auth` localStorage; `LoginPage` still calls `authenticateUser()` from `bmbAdminApi_users` (localStorage lookup, bcrypt in browser) | ⚠️ **CLAIM FALSE** — Still using localStorage authentication. Application-layer migration required (not addressed by DB grants) |
+| P0-3 Admin privilege escalation | ✅ DONE (claim) | Trigger guard exists on `profiles.role`; BUT `App.tsx:74` still checks `localStorage.bmb_admin_role === 'true'` for AdminRoute bypass | ⚠️ **PARTIAL** — DB layer guarded; frontend AdminRoute bypass still possible via DevTools. GRANT LAYER VERIFIED — Frontend remediation remains |
+| P0-4 Price authority server-side | ✅ DONE (migration 007) | `create_order_with_items` v3 derives prices from DB tables; client `total_amount` sent by cart is ignored by RPC | ✅ **VERIFIED** — Server enforces authoritative pricing |
+| P0-5 Payment real integration | ✅ DONE + LIVE | Stripe EF deployed; webhook F8+F9 fixed; real delivery verified (T1–T6 green); refund EF created | ✅ **VERIFIED** — Webhook + signature verification operational |
+| P0-6 Order state machine | ✅ DONE + LIVE | Migration 008 + 030 applied; allow-list enforced via BEFORE UPDATE trigger + `order_transition_allowed` | ✅ **VERIFIED** — State transitions validated server-side |
+| P0-7 RLS hardening | ✅ DONE (migration 006) | Grants realigned via 033; anon residue REVOLED + SELECT scoped via 034; grant probe 7/7 PASS | ✅ **GRANT LAYER VERIFIED** — Policies enforce correctly; no residual grants exploitable |
+
+### P1 Items
+
+| Item | Claim (before Wave 3) | Current Evidence | Verdict |
+|------|-----------------------|------------------|---------|
+| P1-1 Capacity race → row lock + max check | ⏳ TODO | Trigger `increment_delivery_round_count` runs but no pre-check on `max_capacity`; cancel path doesn't decrement | ⏳ **REMAINING** — Gap documented as G-02 in deep audit |
+| P1-2 Inventory reservation/consumption | ⏳ TODO | Deduction works but clamp at 0 has bug `v_done_ids`; no concurrency guard | ⏳ **REMAINING** — Bug G-03 in deep audit |
+| P1-3 Migrate localStorage → Supabase business data | ⏳ TODO | Promotions, reviews, customer_intelligence still dual-store (localStorage + DB) | ⏳ **REMAINING** — Some tables exist; UI not fully migrated |
+| P1-4 Audit logs → DB write | ✅ TABLE EXISTS | `audit_logs` table created via migration 018; RPC-based writing working | ✅ **TABLE VERIFIED** — Frontend partially migrated; legacy localStorage writes may remain |
+| P1-5 PromotionsPage/ReviewPage use DB | ⏳ TODO | DB tables exist (migrations 001+); frontend logic may still reference localStorage fallbacks | ⏳ **PARTIALLY MIGRATED** — Check individual pages |
+| P1-6 Payment reconciliation | ✅ PARTIALLY DO | Stripe EF idempotent + amount-match implemented | ✅ **VERIFIED** — Idempotency enforced at DB level |
+
+### Additional Findings from Deep Audit (BMB_DEEP_PRODUCT_LOGIC_AUDIT_2026-09-22)
+
+| Finding | Severity | Status | Notes |
+|---------|----------|--------|-------|
+| G-01 Cutoff enforcement (all modes) | 🔴 P0 | ⏳ **MISSING** | No SQL implements cutoff validation |
+| G-02 Capacity leak on cancel | 🔴 P0 | ⏳ **MISSING** | Trigger increments but no decrement on cancel |
+| G-03 Inventory deduct bug | 🔴 P0 | ⏳ **BUG IN CODE** | `v_done_ids` bug causes silent stock discrepancy |
+| G-04 Pre-order payment | 🔴 P0 | ⏳ **MISSING** | pre_orders have no payment flow |
+| G-05 Pre-order address/fee | 🔴 P0 | ⏳ **MISSING** | pre_orders store address as text blob; no zone-based fee derive |
+| G-06 Pre-order → kitchen batch | 🟡 P1 | ⏳ **ISLAND TABLE** | `pre_orders` not consumed by production_batches |
+| G-14 Delivery fee client distance | 🟡 P1 | ⏳ **VULNERABILITY** | RPC accepts `p_distance` from client; must derive from coordinates + zone lookup |

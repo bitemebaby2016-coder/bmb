@@ -246,3 +246,39 @@ confirmPayment():
 ---
 
 *Continue → `RLS_MATRIX.md`, `AUTHORIZATION_AUDIT.md`, `DATA_AUTHORITY_MAP.md`, `SECURITY_REMEDIATION_PLAN.md`*
+
+---
+
+## POST-WAVE 3 VERIFICATION MATRIX (2026-09-22, baseline `ed1ac58`)
+
+> **Purpose:** Cross-reference every original finding against current production state after migrations 033+034. Historical evidence sections (1–10) remain unchanged — this is a current-status overlay only.
+
+| Finding | Original Status | Current Status | Evidence | Remaining Work |
+|---------|----------------|----------------|----------|----------------|
+| **§1 P0 — Service-role key exposure** | 🔴 EXPOSED | ✅ REMEDIATED (old leaked key revoked 2026-09-19; client purge done) | Bundle scan = 0 key hits (2026-09-21 production verified) | None — rotation + revocation complete |
+| **§2 Authentication (localStorage)** | 🔴 BROKEN | ⚠️ UNCHANGED (application-layer; not addressed by DB migrations) | Code evidence persists in `authStore.ts`, `LoginPage.tsx` | Migrate Login/Register to Supabase Auth signIn |
+| **§3 RLS forensic** | 🔴 9 tables permissive | ✅ FIXED (migration 006 → secure policies; migration 033/034 grants aligned) | Grant probe 7/7 PASS; anon residue 0/0 | None — RLS policies enforced |
+| **§4 Price authority** | 🔴 Client calc | ⚠️ PARTIAL FIX (007 server-authoritative RPC for order creation; client cart may still send prices but RPC ignores them) | `create_order_with_items` v3 derives price from DB | Frontend should not trust cart totals for payment; verify `paymentGateway.ts` uses server-derived total |
+| **§5 Payment forensic** | 🔴 Fake simulation | ✅ FIXED (Stripe EF deployed 2026-09-19; webhook signature F8+F9 fixed; real delivery verified) | Smoke T1–T6 green; real Stripe PI → webhook → order paid/completed | Card payment loop still needs bll verification; refund EF created but no real refund bill yet |
+| **§6 Capacity (oversell risk)** | 🟡 PARTIAL | ⚠️ SAME (trigger exists but no pre-check on max_capacity) | Trigger `increment_delivery_round_count` runs; capacity leak documented in deep audit G-02 | Pre-check `current_count < max_capacity`; cancel trigger to decrement |
+| **§7 Inventory (dual-store)** | 🟡 PARTIAL | ⚠️ SAME (admin UI still uses localStorage store for display; DB `inventory` table exists & accessible) | `bmbAdminApi_inventory.ts` queries DB; `InventoryPage.tsx` uses Zustand `inventoryStore` | Migrate admin UI to read/write DB directly |
+| **§8 Audit log (localStorage)** | 🔴 No DB table | ✅ FIXED (`audit_logs` table created via migration 018; RPC-based audit writing working) | Production migration history includes 018 `server_side_audit_log` | Frontend audit logging partially migrated; some legacy localStorage writes may remain |
+| **§9 Secrets scan (client bundle)** | 🔴 service-role in dist | ✅ FIXED (service-role key removed from client build; git-tracked secret hit = 0) | Production bundle scan = 0 key hits (2026-09-21 verified) | Ensure future builds don't reintroduce VITE_SUPABASE_SERVICE_ROLE_KEY |
+| **§10 DB schema gap** | ❌ Missing tables | ✅ MOSTLY FILLED (migrations 001–034 create all core tables; Phase D tables added over time) | 34/34 migrations applied; 33 tables in production | SaaS domain B tables (multi-tenant, themes, etc.) are DEFERRED |
+
+### Summary: Post-Wave 3 State
+
+| Category | Status | Details |
+|----------|--------|---------|
+| **ACL/Grant layer (033/034)** | ✅ VERIFIED | Production gate PASS; grant probe 7/7; anon residue 0/0; REST leak closed |
+| **Authentication architecture** | ⚠️ NOT MIGRATED | Browser still uses localStorage auth; AdminRoute bypass still possible via DevTools |
+| **Price authority** | ⚠️ PARTIALLY SECURED | Server-side order creation enforces DB prices; client cart calculation remains unenforced for other flows |
+| **Payment spine** | ✅ VERIFIED | Stripe EF + webhook operational; real delivery tested; ID/F8/F9 fixes deployed |
+| **Capacity/Inventory** | ⚠️ NEEDS ENFORCEMENT | Triggers exist but lack guards (max_capacity check, cancel decrement); dual-store for admin UI |
+| **Audit trail** | ✅ TABLE EXISTS | `audit_logs` table created; some frontend writes still localStorage-only |
+| **Secrets management** | ✅ SECURE | No secrets in git; service-role key purged from client bundles |
+
+---
+
+**End of DATABASE_SECURITY_AUDIT**
+*Baseline e6b3e65 | Audit date 2026-09-18 | Post-wave 3 update 2026-09-22 ed1ac58 | Principles: Evidence > Claims, Historical forensic preserved*

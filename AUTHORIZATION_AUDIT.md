@@ -76,3 +76,50 @@ CREATE POLICY profiles_own_write ON profiles
 
 ## 5. Remediation References
 → `SECURITY_REMEDIATION_PLAN.md` (P0-2, P0-3, P0-4, P0-7)
+
+---
+
+## 6. CURRENT STATE — POST-WAVE 3 VERIFIED (2026-09-22)
+
+> **Baseline:** `ed1ac58` | **Verified:** local + production via `e2e/prodCheckGrants.cjs`, `prodRunContracts.cjs`, `prodCheckMigrations.cjs`
+
+### 6.1 DB/ACL Remediation Status (COMPLETED & VERIFIED)
+
+| Finding | Original Severity | Current Status | Evidence |
+|---------|-------------------|----------------|----------|
+| F2 — Frontend uses anon for admin operations | 🔴 CRITICAL | ✅ **Mitigated by grant layer** (RLS policies block access; grants aligned per 033) | Grant probe 7/7 PASS (local + remote), contracts 023/028/029/030/033 5/5 PASS production |
+| F3 — profiles role escalation (RLS) | 🔴 CRITICAL | ✅ **Remediated** (migration 006 + 033 guard, migration 034 REVOKE authenticated ALL on profiles) | anon_profiles_write=0 ✅, auth_profiles_write=0 ✅ |
+| F4 — Phone vs Email identity mismatch | 🟠 HIGH | ⚠️ **Still present in RLS policy logic** (not fixed by 033/034) | Policy `customer_phone = auth.email()` still exists; no application fix |
+| F5 — Audit log client-side only | 🟠 HIGH | ⚠️ **Application-level finding** (DB audit_logs table created via 018 but frontend not fully migrated) | `audit_logs` table exists (production); frontend still dual-store |
+| F1 — AdminRoute bypass (UI only) | 🔴 CRITICAL | ⚠️ **NOT SOLVED by DB fixes** (localStorage-based auth persists in frontend code) | Code evidence: `App.tsx:74` still reads `bmb_admin_role` from localStorage |
+
+### 6.2 What Was Fixed (DB Layer Only)
+
+- **Migration 033** (table-ACL alignment): Restored service_role grants, aligned authenticated/anon table privileges, revoked public_profiles view-write, revoked pre_orders auth writes
+- **Migration 034** (prod ACL drift remediation): REVOKE anon non-canonical I/U/D + SELECT; REVOKE authenticated ALL on F-5 tables (payment_intents, inventory, profiles); minimal GRANT for contracts
+- **Result**: Production ACL gate = PASS, anon residue 0/0, REST leak closed, canonical reads intact
+
+### 6.3 What Remains (Application/Auth Architecture Work)
+
+| Domain | Current State | Required Migration | Notes |
+|--------|---------------|--------------------|-------|
+| Browser → Supabase Auth signIn | localStorage-only (`bmb_auth`) | Migrate Login/Register to `supabase.auth.signInWithPassword` | **NOT done by 033/034**; application-layer change |
+| AdminRoute authorization | UI check via `localStorage.bmb_admin_role` | Check `profile.role` via RLS/isAdmin() | **NOT done by 033/034**; DB grant now correct, but frontend bypass remains |
+| Price authority | Client cart calculation (`cartStore.ts`) | Server-side recalc via RPC/EF | **NOT done by 033/034**; 033/034 are grant-only, no schema change |
+| Payment spine | Stripe EF deployed (2026-09-19) ✅ | Already partially done | Webhook verified; client simulation in `paymentGateway.ts` may still exist |
+| Order state machine | Server-enforced (migration 008/030) ✅ | Already done | Allow-list + trigger working |
+| Capacity/Inventory | Server-trigger (migration 007+) ✅ | Already done | Gaps documented in deep audit (G-02, G-03) |
+
+### 6.4 Distinction: DB ACL Remediation ≠ Full Application Authentication
+
+> **Important:** Migration 033/034 resolved the **grant/ACL layer** (what PostgREST enforces). This does NOT mean:
+> - The browser is using Supabase Auth (it still uses localStorage)
+> - AdminRoute checks database roles (it checks localStorage flag)
+> - Price/payment flows are server-authoritative (many still rely on client calculations)
+>
+> These are **application-level architectural changes** that require separate implementation phases. The DB is now properly secured, but the application frontend has not yet been fully migrated to use Supabase Auth or enforce authority server-side.
+
+---
+
+**End of AUTHORIZATION_AUDIT**
+*Baseline e6b3e65 | Current state ed1ac58 (WAVE 3 Verified) | Principles: Evidence > Claims, Historical forensic preserved*

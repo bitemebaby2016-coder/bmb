@@ -1,5 +1,8 @@
 # Bite Me Baby Reality Map
 
+> **Current Production Baseline:** 34/34 migrations LIVE (001–034) · ACL gate PASS (Wave 3 verified 2026-09-22 ed1ac58)
+> All tables referenced below are present in production. RLS policies enforce correct access; grant layer aligned by migrations 033+034.
+
 ## ภาพรวมของระบบ
 Bite Me Baby เป็น **Cloud Kitchen Operating Platform** ที่รวมระบบ Order Management, Inventory Control, Customer Relationship Management และ AI-Powered Customer Service เข้าด้วยกันในระบบเดียว
 

@@ -419,6 +419,19 @@ vi.mock('@/lib/supabase', async () => {
 | Vitest | 3.1.1 | Latest stable |
 | bcryptjs | 3.0.3 | Dynamic imported |
 
+### 11.1 Migration Status Update (2026-09-22)
+
+Original audit baseline listed migrations 001→004 as the "migration needed" section. **Production has progressed to 34/34 migrations applied (001–034):**
+
+- Migrations 005–006: RLS hardening (Wave 1)
+- Migrations 007–010: Order RPC, payment state machine, webhook infrastructure (Phase C/D)
+- Migrations 011–022: Kitchen core, Bite Drive, Phase 4–7 admin + AI (Phase 5–7 shipped)
+- Migrations 023–028: Canonical order domain, round lifecycle, operational guarantees (Wave 2)
+- Migrations 029–032: Grant repair, EXECUTE drift fixes (Wave 2.5)
+- Migrations 033–034: Table-ACL alignment + production ACL drift remediation (**Wave 3 VERIFIED**)
+
+All tables documented in sections 9.1 are now present and managed via Supabase CLI migrations. See `AI_WORK_STATE.md` §Migrations for registry.
+
 ---
 
 ## 12. Environment Variables

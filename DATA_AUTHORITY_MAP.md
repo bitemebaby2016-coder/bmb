@@ -1,6 +1,7 @@
 # DATA_AUTHORITY_MAP — Bite Me Baby
 
 > Baseline: `e6b3e65` | Date: 2026-09-18 | Phase B
+> **⚠️ CURRENT STATUS OVERLAY (2026-09-22):** Migrations 033/034 resolved the **grant/ACL layer** (verified: grant probe 7/7 PASS, anon residue 0/0). This means RLS policies are enforced correctly at the PostgREST level. However, **localStorage-based client authority remains unchanged** (browser still sends anonymous requests to Supabase; admin checks via localStorage flag in App.tsx). The DB blocks unauthorized writes via RLS, but the frontend auth model has not yet been migrated to Supabase Auth.
 
 ---
 

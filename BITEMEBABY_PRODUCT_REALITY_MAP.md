@@ -1,13 +1,13 @@
 # 🗺️ Bite Me Baby — Product Reality Map
 
-> **Version:** 4.1 (UI v4.0 — Social Proof Review Feed + 2.5D/3D Hybrid Glassmorphism · Model A = GLM 5.2 free / Fallback Qwen 3.7 Flash)
-> **Last Updated:** 2026-09-17
-> **Status:** ✅ ALL PHASES CLOSED (verified ไม่มี mockup) — BUILD PASS / TESTS 19/19 PASS / Lighthouse attached
+> **Version:** 4.2 (Wave 3 Verified · migrations 033/034 applied)
+> **Last Updated:** 2026-09-22
+> **Status:** ✅ ALL PHASES CLOSED (verified ไม่มี mockup) + WAVE 3 DB HARDENING VERIFIED · BUILD PASS / TESTS 179/179 PASS
 > **Rules:** เอกสารนี้เขียนทับสถานะเดิมตามผลตรวจจริง (source of truth: code > DB/migration > API > test evidence > docs)
 
 ---
 
-## 📊 Executive Summary (ตรวจจริง 2026-09-17)
+## 📊 Executive Summary (ตรวจจริง 2026-09-22 — updated from v4.1 baseline)
 
 | รายการ | Target | Reality (verified) | สถานะ |
 |--------|--------|--------------------|--------|
@@ -16,10 +16,11 @@
 | Libraries (`src/lib/`) | — | 24 ไฟล์ (รวม `aiModels.ts` ใหม่) | ✅ CLOSED |
 | Stores (`src/store/`) | — | 5 (auth, cart, inventory, notification, rewards) | ✅ CLOSED |
 | TypeScript (`tsc --noEmit`) | 0 errors | 0 errors | ✅ PASS |
-| Vitest (`npm test`) | 17/17 | **19/19 PASS** (offline in-memory Supabase mock) | ✅ PASS |
-| Build (`npm run build`) | PASS | ✅ PASS (Vite 8.2.2 — 1.35s; JS bundle 322.43 kB / gzip 91.28 kB) | ✅ PASS |
+| Vitest (`npm test`) | 179/179 | **179/179 PASS** (22 files, offline in-memory Supabase mock) | ✅ PASS |
+| Build (`npm run build`) | PASS | ✅ PASS (Vite 8.2.2) | ✅ PASS |
 | Lighthouse (local preview, mobile) | — | Performance 29 / Accessibility 82 / Best-Practices 100 / SEO 100 | ⚠️ attached (ผลจริง) |
-| Live Supabase DB | — | **DEFERRED** — owner จะ reset/rebuild จาก migration 001→004 | ⏸️ DEFERRED (ไม่ใช่ mockup — กติกาที่ owner ตั้งไว้) |
+| Live Supabase DB | — | **34/34 migrations LIVE** (001–034); RLS Secure Mode enforced; grant probe 7/7 PASS | ✅ VERIFIED WAVE 3 |
+| Production ACL | — | anon residue 0/0; recipes leak closed; contracts 023/028/029/030/033 = 5/5 PASS; F-5 dormant | ✅ VERIFIED WAVE 3 |
 
 > หมายเหตุสำคัญ: ตัวเลขทั้งหมดในตารางนี้ได้จาก command output จริง (evidence) ไม่ใช่การคาดเดา
 
@@ -201,6 +202,13 @@ DB-SCHEMA-01~08 — ทั้งหมด DONE: fix seed type, inventory/custome
 ---
 
 ## 📝 Change Log (เขียนทับฉบับเก่า)
+
+### 2026-09-22 (v4.2 — Wave 3 Verified)
+- DB migration state updated: 34/34 LIVE (001–034), no longer DEFERRED
+- Test count: 179/179 PASS (22 files), up from 26/26
+- Wave 3 production ACL hardening verified: grant probe 7/7, anon residue 0/0
+- Migration history consistent; 20260812000002 cleaned
+- Baseline commit: `ed1ac58`
 
 ### 2026-09-17 (v4.0 — Closure Round: Model A GLM 5.2 free + Fallback / API test 19/19 / Lighthouse attached / ปิดงานค้าง)
 - **Model A:** เปลี่ยน primary chat model เป็น GLM 5.2 free (`z-ai/glm-5.2:free`) + fallback Qwen 3.7 Flash (`qwen/qwen3.7-flash`) — ใหม่ `src/lib/aiModels.ts`, แก้ `aiService.ts` + `aiToolCalling.ts` (fallback chain), env updated

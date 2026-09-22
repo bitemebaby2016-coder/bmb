@@ -1,44 +1,83 @@
 # 🎯 Bite Me Baby Status Tracker
 
-> **Last Updated:** 2026-09-19 15:00 (STRIPE GATE + webhook incident + REAL live delivery verified)
-> **Version:** v11.0 (STRIPE GATE passed · migration 010 applied · C-5 service-role key revoked · Evidence > Claims)
+> **Last Updated:** 2026-09-22 · **Version:** v12.0 (WAVE 3 VERIFIED · migration 033/034 · ACL gate PASS · contracts 017–022 limitation documented)
 > **Purpose:** Real-time status ของทุกงาน — อัปเดตตามผลตรวจจริง (เขียนทับสถานะเดิม)
 
 ---
 
-## ✅ Security Program (2026-09-18) — P0-4 → P0-6 + Phase C Forensic + Phase D Complete Admin
+## ✅ Security Program — POST-WAVE 3 VERIFIED (2026-09-22)
 
-> **2026-09-19 STRIPE GATE update (live evidence):** ✅ **GATE PASSED** — T1..T6 all green live
-> (signed 200 + duplicate 200 idempotent + payment DB verified with a real Stripe test
-> PaymentIntent). Two production bugs were found and fixed this session: (F8) `stripe-webhook`
-> fed RAW BYTES to `crypto.subtle.sign` instead of an imported `CryptoKey`, so every signature
-> check threw and **all real Stripe deliveries were 400'd forever** — fixed with
-> `importKey('raw', ...)` and deployed; (F9) `create-checkout` pre-set `payment_intent_id`,
-> making the first webhook delivery look like a replay — now `NULL` until the webhook sets it.
-> 007 anon EXECUTE revoke effective; 008 confirmed live; `extract_epoch` fix (009) applied by
-> owner. **Final closure (same day):** migration **010 applied** (record_payment_result
-> idempotency); old leaked **C-5 service-role key revoked** in Dashboard; `STRIPE_WEBHOOK_SECRET`
-> = the ACTIVE endpoint `we_1UHIrN3yHrQLTgfKkNZ4A0t5` (whsec_Dt6CDya0..., digest a28759fc...);
-> old endpoint `we_1UHI8x3...` **disabled**; **REAL Stripe delivery verified PASS** (order
-> `BMB-LIVE-20260919074017` → paid/completed in <2 s). See `STRIPE_WEBHOOK_PRELIVE_AUDIT.md` §8.
+> **2026-09-22 WAVE 3 update (production verified):**
+> - Migration **033** (table-ACL alignment, F-3) + **034** (production ACL drift remediation, REVOKE-only) **VERIFIED on production**
+> - Grant probe: **7/7 PASS** (local + remote) — anon_write_residue=0, anon_extra_select=0
+> - Contracts on production: **023/028/029/030/033 = 5/5 PASS**
+> - REST ACL: anon recipes leak **CLOSED (401)**, canonical reads intact, view-write blocked
+> - F-5 policies: dormant / grant-blocked
+> - Migration history: **34/34 consistent** (001–034), `20260812000002` cleaned (no file)
+> - Local == Remote: **YES** (baseline `ed1ac58`)
+> - Working tree: CLEAN
 
 | ID | Item | Status | Evidence |
 |----|------|--------|----------|
-| 007 | `create_order_with_items` server-authoritative order RPC | ✅ **LIVE** (revoke effective + `extract_epoch` fixed via migration 009) | live probe 2026-09-19: anon → PGRST202; real credit_card orders created OK |
-| P0-4 | Order creation/pricing server-side (no client totals) | ✅ **LIVE + E2E GREEN** | migration 007 (+009 fix) + `bmbAdminApi_orders.createOrder` (input-only, p_* RPC keys fixed 2026-09-19) |
-| P0-5 | Payment real integration (Stripe EF + webhook + offline RPCs + **refunds**) | ✅ **LIVE + GATE PASSED** | create-checkout/stripe-webhook/**stripe-refund** deployed; smoke T1–T6 green; real Stripe PI → webhook → order paid; real Stripe **refund** → order refund (C-6) |
-| P0-6 | Order state machine (allow-list + trigger + RPC) | ✅ **LIVE (008 RPCs confirmed)** | OpenAPI shows 008 functions; `transition_order_status` etc. callable |
+| 033 | Migration 033 table-ACL alignment (F-3) | ✅ **VERIFIED PROD** | Grant probe 7/7 PASS, contracts 5/5 PASS, REST leak closed |
+| 034 | Migration 034 production ACL drift remediation | ✅ **VERIFIED PROD** | REVOKE-only corrective; anon residue 0/0 |
+| 031 | Migration 031 production_acl_drift_repair | ✅ **RETAINED** | Valid migration file, audit trail |
+| 032 | Migration 032 public_execute_drift_repair | ✅ **RETAINED** | Valid migration file, audit trail |
+| 20260812000002 | Unknown history row | ✅ **CLEANED** | No migration file, unknown origin |
+| P0-4 | Order creation/pricing server-side | ✅ **LIVE + E2E GREEN** | migration 007 (+009 fix) + `create_order_with_items` |
+| P0-5 | Payment real integration (Stripe EF + webhook) | ✅ **LIVE + GATE PASSED** | create-checkout/stripe-webhook/stripe-refund deployed; smoke T1–T6 green; real Stripe PI → webhook → order paid; real Stripe refund → order refund |
+| P0-6 | Order state machine (allow-list + trigger + RPC) | ✅ **LIVE** | migration 008 RPCs confirmed live; `transition_order_status` callable |
 | Phase C | Forensic — trusted backend boundary + secrets + EF inventory | ✅ **DONE / GATE PASSED** | 9 EF shells = 0 files, NOT deployed (owner). C5 new (008 live), C6 new (F8/F9 fixed); C-6 refund EF live-verified |
-| Phase D | Complete Admin (promotions/rounds/customers/settings/**media** + Customer Home v5) | ✅ **DONE (UI+API) / 008+011 live** | 5 admin pages (promotions/rounds/customers/settings + `/admin/media`) + OrdersPage + Home v5 carousels/BiteHero/BottomNav (Home/Menu/Bite/Orders/Account); E2E authenticated 7/7 PASS |
-| .env | Client-facing secrets purged (service-role, Stripe keys) | ✅ DONE (again) — Strict KEY=VALUE format, gate verified | `.env`/`.env.local` rewritten in this session; no secrets remain; parse-error pattern fixed |
+| Phase D | Complete Admin (promotions/rounds/customers/settings/**media** + Customer Home v5) | ✅ **DONE (UI+API)** | 5 admin pages + OrdersPage + Home v5; E2E authenticated 7/7 PASS |
+| .env | Client-facing secrets purged | ✅ DONE | Strict KEY=VALUE format, gate verified |
 
-**Tests:** Vitest **50/50 PASS** (26 baseline + **14 new** P0-5/P0-6 contract tests) ·
-`tsc --noEmit` 0 errors · `npm run build` PASS ·
-**Live-verify 007:** function live, anon denied (see PHASE_C §Finding C3 for the EXECUTE-grant nuance the owner must re-run).
+**Tests:** Vitest **179/179 PASS** (22 files) · `tsc --noEmit` 0 errors · `npm run build` PASS ·
+**Live-verify:** 033/034 grants PASS production · contracts 023/028/029/030/033 PASS production · REST anon recipes 401 ✅
 
-**Owner follow-up — ALL DONE (verified 2026-09-19) — see PHASE_C_TRUSTED_BACKEND_FORENSIC.md §5:**
-1. Migration 008 applied in the Supabase SQL Editor. ✅
-2. 007 grants re-run (idempotent) — anon EXECUTE revoked (anon → PGRST202). ✅
+**Owner follow-up — WAVE 3 COMPLETE (verified 2026-09-22):**
+1. Migration 033 applied + registered ✅
+2. Migration 034 applied + registered ✅
+3. Grant probe remote 7/7 PASS ✅
+4. Contracts on production 5/5 PASS ✅
+5. REST production: business_settings 401, mascot_overrides 200, recipes 401 (leak closed), customer_intelligence 401, public_profiles POST 401 ✅
+6. F-5 policies dormant (grant-blocked) ✅
+
+---
+
+## ⚠️ Contracts 017–022 — Known Limitation (NOT Production Regression)
+
+| Suite | HTTP | Result | Classification |
+|-------|------|--------|----------------|
+| 017_018 (pre-order + audit) | 400 | ❌ FAIL | Contract syntax bug (`fn%TYPE` invalid) — test artifact |
+| 019 (kitchen core) | 400 | ❌ FAIL | Mgmt API executor lacks `auth.uid()` context — test-env limitation |
+| 020 (Bite Drive) | 201 | ✅ PASS | Phone-based driver auth (no `auth.uid()`) |
+| 021 (Phase 4) | 400 | ❌ FAIL | Mgmt API executor lacks `auth.uid()` — test-env limitation |
+| 022 (Phases 5-7) | 400 | ❌ FAIL | Mgmt API executor lacks `auth.uid()` — test-env limitation |
+
+**Summary:** 1/5 PASS. 4 failures attributable to **test-environment limitation** (Management API runs as `postgres` user, no `auth.uid()`/`is_admin()` context). **NOT classified as production regression.** Production functional paths covered by contracts 023/028/029/030/033 = 5/5 PASS.
+
+---
+
+## 🤖 Model A Configuration (2026-09-17)
+
+| | Model | OpenRouter ID | Cost |
+|-|-------|---------------|------|
+| Primary (Model A) | GLM 5.2 (free) | `z-ai/glm-5.2:free` | $0 |
+| Fallback | Qwen 3.7 Flash | `qwen/qwen3.7-flash` | ~$0.00003/token |
+
+- Config: `src/lib/aiModels.ts` — `MODEL_A_PRIMARY`, `MODEL_A_FALLBACK`, `resolveModelA()`
+- Behavior: `chatWithAI()` / `chatWithToolSupport()` ลอง Model A ก่อน → fail แล้ว retry ด้วย fallback 1 ครั้ง → ไม่มี fake success
+
+---
+
+## DEPLOYMENT STATUS (2026-09-22 — WAVE 3 Verified)
+
+- **Build**: TypeScript **5.9.3** 0 errors ✅ + Vite PASS 🏗️ — pages lazy-split
+- **Tests**: Vitest **179/179 PASS (100%)** — offline in-memory Supabase mock + delivery sandbox + pre-order API + Phase 4/5/6/7 contracts
+- **PWA**: Service Worker + Manifest generated ✅
+- **Production Deploy**: Cloudflare Pages (current baseline `ed1ac58`)
+- **DB Migration**: **34/34 LIVE on Supabase** ✅ — migrations 001–034 applied and verified; RLS Secure Mode enforced
+- **Git**: commit ตาม convention `type(scope): subject`. 007 grants re-run (idempotent) — anon EXECUTE revoked (anon → PGRST202). ✅
 3. `supabase link` + `secrets set STRIPE_SECRET_KEY/STRIPE_WEBHOOK_SECRET` + deploy `create-checkout`/`stripe-webhook`. ✅
 4. Original leaked service-role key rotated + **revoked by owner** (C-5 closed). ✅
 5. Migration 009 (`extract_epoch`) applied by owner. ✅

@@ -1,7 +1,8 @@
 # Bite Me Baby — Restaurant Commerce & Operations Platform (PWA)
 
-> **สถานะตรวจสอบล่าสุด:** 2026-09-21 · **Commit:** `0e85c37` (ดู `git log --oneline -1`) · **Production:** https://bitemebaby-5f7.pages.dev + Supabase `ivkdfognyiwjcmrhcnwz`
-> **Tests:** 163/163 PASSED (21 files, วัดจริง 2026-09-21 — ต้องมี VITE_SUPABASE_URL/ANON_KEY ใน env; ไม่มี env = 154, ไม่ใช่ logic error) · **Build:** ผ่าน (tsc strict + vite, PWA sw.js) · **Lint:** 0 errors · **CI: PASS** (GitHub Actions run #15 — Node 24, test+lint+build)
+> **สถานะตรวจสอบล่าสุด:** 2026-09-22 · **Commit:** `ed1ac58` (ดู `git log --oneline -1`) · **Production:** https://bitemebaby-5f7.pages.dev + Supabase `ivkdfognyiwjcmrhcnwz`
+> **Tests:** 179/179 PASSED (22 files) · **Build:** ผ่าน (tsc strict + vite, PWA sw.js) · **Lint:** 0 errors · **CI: PASS** (GitHub Actions run #15 — Node 24, test+lint+build)
+> **DB Migration:** 34/34 LIVE (001–034); **ACL Gate:** PASS (grant probe 7/7, anon residue 0/0)
 
 ## Current Product
 
@@ -10,27 +11,18 @@ PWA สั่งอาหารจริงของร้าน Bite Me Baby (�
 ## Current Production Status (สรุป — รายละเอียด + evidence ใน CURRENT_STATE)
 
 - **ใช้งานจริงแล้ว:** PWA storefront ครบ flow · ออเดอร์ server-authoritative · PromptPay TXN + COD · Stripe webhook (production-verified 6/6 ปี 2026-09-19) · Admin core · PWA install
+- **Wave 3 Verified (2026-09-22):** Migration 033/034 applied; ACL gate PASS (grant probe 7/7); contracts 023/028/029/030/033 = 5/5 production; REST leak closed; F-5 policies dormant
 - **ยังไม่ปิด (Domain A — ตาม CLOSURE_BOOK):** บิลบัตรจริง 1 รายการ (PAY-02) · refund จริง (PAY-03) · Bite Drive real rider flow (RPCs deployed — รอ REAL-WORLD PILOT) · SEC-02 AI key ออกจาก client · Lighthouse Perf ≥ 90 (PWA-01)
 - **สถานะเอกสาร:** ตาม Domain A closure table — "ปิดครบ" ของ Domain A = **BMB Production 100% เท่านั้น ไม่ใช่ SaaS พร้อมขาย**
 
 ## Current Phase
 
-**PHASE 5-7 (AI Hardening / Intelligence / Growth):** CODE done 2026-09-21 (migration 022):
-AI-02 advanced guardrails + AI-03 memory merge, CI-01 customer intelligence (view+RPC),
-CNT-01 content approval workflow (publish-block until approved).
-
-**PHASE 6 UI/Admin closure (2026-09-21):** category headings manager (menu categories add/edit/
-rename/hide), image upload: Remove-image button + URL fallback + preview, AdminNav bar on every
-`/admin` page, role-based Header + BottomNav Dashboard entry (no more "back becomes customer"),
-admin and user manuals rewritten (essentials, overwrite).
-
-**PHASE 7 UI completion (2026-09-21):** `/admin/content-approvals` (submit + approve/reject + note),
-banner promotions auto-submit to approval, publish gate opens only after `approved` (CNT-01).
+**PHASE 5-7 + WAVE 1–3 DB Hardening COMPLETE (baseline `ed1ac58`):**
+Phase 6/7 UI closure (content-approvals, category headings, image upload, AdminNav, role-based Header) · Phase 4/5 RPCs (AI memory, customer intelligence, content approval workflow) · Wave 1 RLS hardening (005/006) · Wave 2 ACL repair (031/032) · Wave 3 table-ACL alignment (033) + production drift remediation (034) — all verified on production.
 
 **Tests:** 163/163 PASS (21 files) · build PASS (tsc strict + vite + PWA sw.js) · lint 0 errors · **CI PASS** (GitHub Actions run #15 — Node 24).
 
-**Owner status 2026-09-21:** `supabase db push` สำเร็จ — 020/021/022 APPLIED · `sqlContracts --include-new` = **29/29 PASSED** (evidence: `e2e/sql-contract-result.json`) · SQL Editor owner suite (`e2e/contracts_020_bite_drive.sql`) **PASS แล้ว** (transaction rolled back)
-→ NEXT: Lighthouse production → PWA-100-GATE pack (`docs/BMB_PWA_100_GATE_EVIDENCE_2026-09-21.md`) → REAL-WORLD PILOT → **M1 = BMB PRODUCTION 100%**.
+**Owner status 2026-09-22:** Migration 033+034 applied via `supabase db push` — **34/34 verified production**; Grant probe 7/7 PASS; contracts 023/028/029/030/033 = 5/5 PASS production; REST anon leak CLOSED → NEXT: Await owner instruction for Wave 4 / next phase.
 
 ## Future SaaS Direction (ไม่ได้ implement — DEFERRED ทั้งหมด)
 

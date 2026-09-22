@@ -1,10 +1,16 @@
 # 🚀 Bite Me Baby — Supabase Integration Guide (v3.1)
 
+> **⚠️ NOTE — CURRENT STATUS OVERLAY (2026-09-22, baseline `ed1ac58`):**
+> This guide describes the original manual setup workflow. **Production is now fully managed via Supabase CLI migrations** (34/34 applied, history consistent 001–034). Do NOT re-run manual SQL steps on production — use `supabase db push` or `supabase migration up/down`.
+> See `AI_WORK_STATE.md` §Migrations for current migration registry.
+
 ## ✅ สิ่งที่ทำแล้ว
 
 ### 1. SQL Migration (`supabase-migration.sql`)
 - ✅ Tables: `products`, `product_categories`, `delivery_rounds`, `orders`, `order_items`, `inventory`, `preorder_votes`, `profiles`
 - ✅ RLS policies, triggers, functions, seed data
+
+**HISTORICAL ONLY** — These tables have been superseded by migrations 001–034. Production database schema is managed exclusively via `supabase/migrations/*.sql` files. Manual run of this legacy script on production is NOT recommended.
 
 ### 2. Environment Variables
 - ✅ `.env` — Supabase URL: `https://ivkdfognyiwjcmrhcnwz.supabase.co`
