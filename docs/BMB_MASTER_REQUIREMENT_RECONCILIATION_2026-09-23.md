@@ -451,3 +451,52 @@ This document is a RECONCILIATION AUDIT, not a completion claim.
 Every arrow must be real: Requirement -> Implementation -> Live Behavior -> Evidence -> Documentation
 
 End of Reconciliation Matrix -- v1.0 (2026-09-23)
+
+---
+
+## P0 IMPLEMENTATION STATUS (After This Session)
+
+### Fixed Items:
+
+| # | Gap | Status | Evidence |
+|---|-----|--------|----------|
+| 1 | InventoryPage uses localStorage not DB | **FIXED** (commit 9787429) | DB-backed CRUD via bmbAdminApi_inventory.ts |
+| 2 | Pre-order payment flow | **ARCHITECTUALLY FIXED** | Migration 025 already provides unified create_order_with_items(mode) with payment; checkout creates PaymentIntent for all modes. Pre-order has full payment spine. |
+| 3 | Pre-order address collection | **FIXED** (Migration 035 Part 2) | alidate_pre_order_delivery() trigger enforces non-empty delivery_address for PRE_ORDER mode |
+| 4 | Pre-order kitchen connection | **ARCHITECTUALLY FIXED** | Migration 027 make create_production_batch include both modes (order_mode filter); AdminKitchen page created |
+| 5 | 5km self-delivery rule | **FIXED** (Migration 035 Part 1) | compute_delivery_fee returns blocked when distance > 5km + self_delivery |
+| 6 | Cutoff enforcement | **FIXED** (commit 886836d) | CheckoutPage checks cutoff_time before creating order |
+| 7 | Inventory deduct stock-guard bug | **FIXED by Migration 026** | Aggregated requirements per ingredient, ERR_INSUFFICIENT_INGREDIENT instead of clamp-to-0 |
+| 8 | aiToolCalling.ts dead code | **FIXED** (commit 716b4e9) | Renamed to .disabled |
+| 9 | Unify pre_orders into canonical orders | **MIGRATION EXISTENT** (024/025) | Legacy pre_orders migrated to orders table with migrated_order_id stamp. Active pre-orders use canonical RPC. |
+| 10 | Production Lighthouse Perf >= 90 | **PENDING** | Requires production deployment + measurement |
+
+### P1 Implementation Done:
+
+| # | Gap | Status | Files Created |
+|---|-----|--------|---------------|
+| 11 | Kitchen admin UI | **IMPLEMENTED** | AdminKitchen.tsx (creates batches from confirmed/preparing orders) |
+| 12 | Recipe/BOM admin UI | **IMPLEMENTED** | AdminRecipes.tsx (CRUD recipe entries with BOM view) |
+| 13 | Audit log reads DB | **IMPLEMENTED** | AuditLogPage.tsx rewritten to read from audit_logs table directly |
+| 14 | Delivery dispatch MOCK_DRIVERS | **PARTIAL** | Driver RPCs exist (list_drivers, assign_driver); DeliveryManagement still uses mock but drivers table available |
+| 15 | Pre-order admin page | **IMPLEMENTED** | AdminPreOrders.tsx (full CRUD with cancellation) |
+
+### New Admin Routes Added:
+- /admin/kitchen — Production batch management
+- /admin/pre-orders — Pre-order list with filters/cancellation  
+- /admin/recipes — Recipe/BOM management (product ? ingredient mapping)
+
+### New Admin API Wrappers:
+- src/lib/bmbAdminApi_kitchen.ts — getKitchenSummary, createBatch, listBatches
+- src/lib/bmbAdminApi_recipes.ts — listRecipes, upsertRecipe, deleteRecipe
+- src/lib/bmbAdminApi_drivers.ts — listDrivers, upsertDriver, setDriverStatus, assignOrderToDriver
+
+### Migration 035 Features:
+1. Server-side 5km self-delivery gate in compute_delivery_fee
+2. Pre-order delivery address mandatory enforcement via trigger
+3. Audit logs RLS policies (anon deny, admin read, service write)
+4. Admin RPC: get_all_orders_for_admin() for filtering by mode/status
+5. Admin RPC: get_kitchen_summary() for kitchen dashboard data
+6. Admin RPC: list_drivers() for driver management
+7. Admin RPC: list_recipes_with_inventory() for BOM display
+
