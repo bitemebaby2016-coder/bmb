@@ -18,32 +18,46 @@ import {
 import { updateProviderOrderStatus, getProviderOrders, type ProviderOrder, DEFAULT_PROVIDERS, getProviderApiStatus } from '@/lib/externalProviders'
 import { writeAuditLog } from '@/lib/auditLog'
 import { showToast } from '@/components/ui/ToastContainer'
+import { listDrivers } from '@/lib/bmbAdminApi_drivers'
 
-// ============================================
-// Mock Drivers (in production, fetch from DB)
-// ============================================
-
-const MOCK_DRIVERS: DeliveryDriver[] = [
-  { id: 'driver-1', name: 'สมชาย ใจดี', current_latitude: 10.7016, current_longitude: 102.1429, current_orders: [], max_capacity: 5, current_load: 0, status: 'available' },
-  { id: 'driver-2', name: 'สมหิง รักงาน', current_latitude: 10.71, current_longitude: 102.15, current_orders: [], max_capacity: 4, current_load: 0, status: 'available' },
-  { id: 'driver-3', name: 'วิชัย มั่นคง', current_latitude: 10.69, current_longitude: 102.13, current_orders: [], max_capacity: 6, current_load: 0, status: 'available' },
-]
+// Map DB DriverRow to route optimization DeliveryDriver interface
+function mapDriver(row: any): DeliveryDriver {
+  return {
+    id: row.id,
+    name: row.driver_name,
+    current_latitude: row.current_latitude ?? 10.7016,
+    current_longitude: row.current_longitude ?? 102.1429,
+    current_orders: [],
+    max_capacity: row.max_capacity || 5,
+    current_load: row.active_assignments || 0,
+    status: row.status === 'on_delivery' ? 'busy' : row.status === 'available' ? 'available' : 'offline',
+  }
+}
 
 export function DeliveryManagement() {
   const [orders, setOrders] = useState<OrderForm[]>([])
-  const [drivers, setDrivers] = useState<DeliveryDriver[]>(MOCK_DRIVERS)
+  const [drivers, setDrivers] = useState<DeliveryDriver[]>([])
   const [routes, setRoutes] = useState<Route[]>([])
   const [providerOrders, setProviderOrders] = useState<ProviderOrder[]>([])
   const [filterStatus, setFilterStatus] = useState('pending')
   const [isOptimizing, setIsOptimizing] = useState(false)
 
-  useEffect(() => { loadOrders() }, [])
+  useEffect(() => { void (async () => { await loadOrders(); await loadDrivers() })() }, [])
 
   async function loadOrders() {
     const allOrders = await getOrders()
     setOrders(allOrders)
     const provOrders = getProviderOrders()
     setProviderOrders(provOrders)
+  }
+
+  async function loadDrivers() {
+    const res = await listDrivers()
+    if (res.ok && res.drivers && res.drivers.length > 0) {
+      setDrivers(res.drivers.map(mapDriver))
+    } else {
+      setDrivers([])
+    }
   }
 
   // GAP CLOSURE: Optimize delivery routes
