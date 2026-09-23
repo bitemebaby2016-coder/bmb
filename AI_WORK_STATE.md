@@ -38,28 +38,29 @@ Do not begin project modifications until Bootstrap complete = YES.
 Project: Bite Me Baby (Cloud Kitchen Platform)
 Repository: https://github.com/bitemebaby2016-coder/bmb.git
 Current Branch: main
-Last Known Commit: HEAD 2026-09-19 — Home UI v5 complete; checkout RPC param bug fixed; E2E authenticated 7/7 green; migrations 010/011 applied, 012/013 written (owner apply)
-Last Inspected Commit: 32f327e
-Files Changed Since Last Inspection: 14 files (code: aiModels.ts NEW, aiService.ts, aiToolCalling.ts, api.test.ts; lighthouse reports; docs overwritten)
+Last Known Commit: HEAD 2026-09-22 — WAVE 3 VERIFIED: migration 033/034 applied, ACL gate PASS, contracts 5/5 PASS production
+Last Inspected Commit: ed1ac58
+Files Changed Since Last Inspection: Documentation sync pass (13 files: STATUS_TRACKER, MASTER_PLAN, README, AUTHORIZATION_AUDIT, DATABASE_SECURITY_AUDIT, SECURITY_REMEDIATION_PLAN, DATA_AUTHORITY_MAP, REAL_CODEBASE_AUDIT, BITEMEBABY_PRODUCT_REALITY_MAP, BiteMeBaby_REALITY_MAP, SUPABASE_SETUP, plus e2e evidence JSONs)
 Tests Run Since Last Inspection: npx tsc --noEmit = PASS (0 errors) [VERIFIED] ✅
-                         npx vitest run = PASS 19/19 (offline in-memory Supabase mock) [VERIFIED] ✅
-                         npm run build — PASS (tsc + vite build in 1.35s) [VERIFIED] ✅
-                         Lighthouse (Chrome headless) — Perf 29 / A11y 82 / BP 100 / SEO 100 [VERIFIED] ✅
+                         npx vitest run = PASS 179/179 (22 files, offline in-memory Supabase mock) [VERIFIED] ✅
+                         npm run build — PASS (tsc + vite build ~2s) [VERIFIED] ✅
+                         Lighthouse (local preview, mobile) — Perf 29 / A11y 82 / BP 100 / SEO 100 [VERIFIED] ✅
 Environment: React + TypeScript + Vite 8.2.2 + Tailwind CSS + Zustand + Supabase + Node v24.18.0 (Windows)
-Deployment Target: Cloudflare Pages
+Deployment Target: Cloudflare Pages (bitemebaby-5f7.pages.dev)
+Production DB: Supabase `ivkdfognyiwjcmrhcnwz` — 34/34 migrations LIVE (001–034), RLS Secure Mode enforced
 
  ===============================================================================
  CURRENT TASK
  ===============================================================================
 
-Task ID: BMB-CLOSURE-2026-09-17
-Phase: Closure Round — Model A GLM 5.2 free + Fallback / API test 19/19 / Lighthouse / Reality Map items closed
-Status: PASS (verified — evidence: tsc 0 errors, vitest 19/19, build 1.35s, Lighthouse report)
-Objective: ตาม owner: (1) รัน 4 verification scripts ให้ผ่าน (tsc/vitest/build/Lighthouse); (2) ตั้งค่า api test; (3) Model A = GLM 5.2 free (ถ้าไม่ผ่าน ใช้ Qwen 3.7 Flash); (4) แนบ Lighthouse; (5) ปิดงานค้างใน BITEMEBABY_PRODUCT_REALITY_MAP ห้าม mockup; (6) อัปเดตเอกสารเขียนทับสถานะเดิม แล้ว commit + push
-Scope: เฉพาะ Bite Me Baby (ห้ามยุ่ง selfprint)
+Task ID: BMB-DOCS-SYNC-2026-09-22
+Phase: Documentation Synchronization Pass — align all docs to ed1ac58 baseline
+Status: IN PROGRESS — systematic sync of all repository docs to Wave 3 verified state
+Objective: ทำให้เอกสารทั้ง repository สอดคล้องกับ Code + Supabase Production + Migration History + Runtime Evidence + Current Project State ณ baseline ed1ac58
+Scope: เฉพาะ documentation — ห้ามสร้าง migration / แก้ code / deploy / เริ่ม Wave 4
 
-Started: 2026-09-17
-Last Updated: 2026-09-17
+Started: 2026-09-22
+Last Updated: 2026-09-22
 
  ===============================================================================
  CURRENT STATE
@@ -549,8 +550,9 @@ SHIPPED THIS WAVE (all committed to main):
   `e2e/cancel-clickthrough-result.json` + screenshots `e2e/screenshots/ct-01..06`.
 - `e2e/prodCheckMigrations.cjs` + `e2e/prodApplyMigrations.cjs` — production migration state
   checker (read-only) + Management API applier (one file per query, explicit --files only).
-- Production truth: 001–027 applied+recorded on production; **028, 029, 030 pending** — one
+- Production truth (at time of WAVE 2, 2026-09-22 before WAVE 3): 001–027 applied+recorded on production; **028, 029, 030 pending** — one
   `supabase db push` applies exactly those three and records history (dry-run verified).
+  > **NOTE (2026-09-22 post-WAVE 3):** This "Production truth" was accurate for WAVE 2 checkpoint. WAVE 3 subsequently applied migrations 033+034, bringing production to **34/34 migrations LIVE (001–034)**. See CURRENT STATUS section below for verified state.
 
 KNOWN MACHINE/GRANTS NOTES (flagged, not changed):
 - Two local supabase stacks share this machine; BMB's real API is 127.0.0.1:54331 while
@@ -558,7 +560,7 @@ KNOWN MACHINE/GRANTS NOTES (flagged, not changed):
 - `service_role` lacks table grants on `delivery_rounds`; `authenticated` lacks SELECT on
   `business_settings` (403 in checkout, display-only) — future owner-approved grants pass.
 
-NEXT: owner confirms → `supabase db push` (028+029+030) → rerun contracts_023/028/029/030 on
+> **HISTORICAL (WAVE 2):** NEXT: owner confirms → `supabase db push` (028+029+030) → rerun contracts_023/028/029/030 on
 
 ---
 Status: ✅ PHASE 3B · WAVE 2 FULLY CLOSED (2026-09-22 evening) — production migrated + verified + security hole closed
@@ -633,7 +635,7 @@ CURRENT STATUS:
 POST-WAVE 3 VERIFIED ✅
 
 LAST VERIFIED PRODUCTION BASELINE:
-`d4fa4a9` (this checkpoint)
+`ed1ac58` (docs sync checkpoint — 34/34 migrations, ACL gate PASS, contracts 5/5 PASS)
 
 Migrations:
 033 = VERIFIED (table-ACL alignment, F-3)

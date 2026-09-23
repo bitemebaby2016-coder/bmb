@@ -1,3 +1,6 @@
+> **⚠️ CURRENT STATUS OVERLAY (2026-09-22):** This document describes the legacy architecture. **Production now uses Supabase RPC/RLS as the authoritative backend** (migrations 001–034 LIVE). The localStorage layer remains for UI convenience only. The Data Access Layer is now: Supabase client (anon) for public reads + RPC/Edge Functions for all mutations. See `DATA_AUTHORITY_MAP.md` for current client/server boundary.
+
+# System Architecture
 # System Architecture
 
 ## Overview

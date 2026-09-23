@@ -1,3 +1,12 @@
+> **⚠️ CURRENT STATUS OVERLAY (2026-09-22):** This document describes the legacy localStorage-based architecture. **Production now uses Supabase RPC/RLS as the authoritative backend** (migrations 001–034 LIVE). The localStorage layer remains for UI convenience only (theme, cart draft, last search) — NOT for transaction/authority/sensitive data. See `DATA_AUTHORITY_MAP.md` for current client/server boundary.
+
+# API & Internal Module Reference — เอกสารอ้างอิง API และโมดูลภายใน
+
+## ภาพรวม (Historical — Legacy Architecture)
+
+Bite Me Baby ใช้ **localStorage-based storage layer** เป็นหลัก (ในระยะพัฒนา) แทน Supabase ซึ่งเป็นแผน future-state
+
+> **หมายเหตุจาก Code จริง:** ไฟล์ `supabase.ts` มีอยู่แต่ใช้งานจริงใน `bmbAdminApi_*.ts` และ `storage.ts` ใช้ localStorage แทน
 # API & Internal Module Reference — เอกสารอ้างอิง API และโมดูลภายใน
 
 ## ภาพรวม

@@ -1,8 +1,8 @@
 ﻿# ADMIN_GAP_MAP - Bite Me Baby
 
-> **Target Commit:** e007d08
+> **Target Commit:** ed1ac58
 > **Phase:** A (Real Codebase Audit)
-> **Date:** 2026-09-18
+> **Date:** 2026-09-22 (Updated with WAVE 3 verification)
 > **Principle:** Evidence > Claims
 
 ---
@@ -11,7 +11,7 @@
 
 Admin ปัจจุบันมี 12 หน้า (AdminDashboard, AdminOrders, AdminProducts, InventoryPage, DeliveryManagement, RouteOptimizationPage, AuditLogPage, AdminPromotions, AdminRounds, AdminCustomers, AdminSettings, **AdminMedia**) — **Phase D Complete Admin (Cloud Kitchen Command Center) DONE (UI+API, DB-backed)**
 
-**Gap สรุป (2026-09-19 update):** promotions / rounds / customers / settings pages เป็น **DB-backed จริง** แล้ว (Phase D) · Media Library มีหน้า `/admin/media` + `bmbAdminApi_media.ts` (รอ migration 011 storage policies) · Stripe refund มี EF `stripe-refund` (admin-only, **LIVE VERIFIED**) · งานที่ยังค้าง: content management (D7), kitchen/production plan (D10), reviews management (D14) — backlog
+**Gap สรุป (2026-09-22 update — WAVE 3 VERIFIED):** promotions / rounds / customers / settings pages เป็น **DB-backed จริง** แล้ว (Phase D) · Media Library มีหน้า `/admin/media` + `bmbAdminApi_media.ts` (migration 011 storage policies applied) · Stripe refund มี EF `stripe-refund` (admin-only, **LIVE VERIFIED 2026-09-19**) · **WAVE 3: Production ACL verified (grant probe 7/7, anon residue 0/0, REST leak closed, contracts 5/5 PASS)** · งานที่ยังค้าง: content management (D7), kitchen/production plan (D10), reviews management (D14), inventory-sync, delivery zones UI — backlog
 
 ---
 
@@ -24,7 +24,7 @@ Admin ปัจจุบันมี 12 หน้า (AdminDashboard, AdminOrder
 | D3 Product/Menu Management | VERIFIED - CRUD ครบ (create/edit/hide/delete) แต่ BASE64 image ใน localStorage | AdminProducts.tsx | HIGH |
 | D4 Category Management | VERIFIED - CRUD ครบผ่าน bmbAdminApi_products.ts แต่ ไม่มี UI แยก category | bmbAdminApi_products.ts | MEDIUM |
 | D5 Pricing/Promotion | ✅ VERIFIED - `/admin/promotions` CRUD + toggle (DB-backed `promotions`) | bmbAdminApi_promotions.ts / AdminPromotions.tsx | HIGH |
-| D6 Media Library | 🟡 PARTIAL - `/admin/media` + `bmbAdminApi_media.ts` (upload→bucket `bmb-images`, rows→`media_assets`) — **รอ owner apply migration 011** (storage policies) | AdminMedia.tsx / bmbAdminApi_media.ts / migration 011 | MEDIUM |
+| D6 Media Library | ✅ VERIFIED - `/admin/media` + `bmbAdminApi_media.ts` (upload→bucket `bmb-images`, rows→`media_assets`) — **migration 011 applied** | AdminMedia.tsx / bmbAdminApi_media.ts / migration 011 | MEDIUM |
 | D7 Content Management | MISSING - HomePage hero/promo เปน hardcoded JSX | HomePage.tsx:327-351 | MEDIUM |
 | D8 Round Management | ✅ VERIFIED - `/admin/rounds` CRUD delivery_rounds (time + capacity) | AdminRounds.tsx / bmbAdminApi_rounds.ts | HIGH |
 | D9 Capacity Management | ✅ VERIFIED - `/admin/rounds` แก้ capacity (delivery_rounds.max_capacity/current_count) | AdminRounds.tsx | HIGH |
@@ -35,6 +35,7 @@ Admin ปัจจุบันมี 12 หน้า (AdminDashboard, AdminOrder
 | D14 Reviews | MISSING - ไม่มี admin หน้าจัดการ reviews (curated reviews hardcoded ใน socialProofReviews.ts) | reviewApi.ts (localStorage) | LOW |
 | D15 Business Settings | ✅ VERIFIED - `/admin/settings` (business_settings: kitchen_location/delivery_policy/hours) | AdminSettings.tsx / bmbAdminApi_settings.ts | HIGH |
 | D16 Admin Authorization | CRITICAL - AdminRoute ใช้ localStorage flag ไม่ได้ยืนยันกับ Supabase profiles | authStore.ts, bmbAdminApi_users.ts | CRITICAL |
+| **WAVE 3: Production ACL** | ✅ **VERIFIED** - grant probe 7/7, anon residue 0/0, REST leak closed | `e2e/prodCheckGrants.cjs` | **CRITICAL** |
 
 ---
 

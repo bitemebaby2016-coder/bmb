@@ -1,18 +1,18 @@
-# Deployment Guide — คู่มือการติดตั้งและเผยแพร่ระบบ Bite Me Baby
+﻿# Deployment Guide — คู่มือการติดตั้งและเผยแพร่ระบบ Bite Me Baby
 
 ## ภาพรวม
 Bite Me Baby เป็น Vite/PWA frontend application ที่สามารถ deploy บน static hosting platform ใดๆ ได้ Schema ฐานข้อมูลและ migration ถูกกำหนดไว้สำหรับการบูรณาการกับ Supabase
 
 ---
 
-## 🚀 Production Status (2026-09-17 — Closure Final)
+## 🚀 Production Status (2026-09-22 — WAVE 3 VERIFIED)
 
 | รายการ | ผล |
 |--------|-----|
 | **Platform** | Cloudflare Pages (`bitemebaby-5f7.pages.dev`) |
 | **Production URL** | https://bitemebaby-5f7.pages.dev |
 | **Branch** | `production` (production branch ของ project) — deploy ด้วย `wrangler pages deploy dist --project-name bitemebaby --branch production` |
-| **Latest Deployment** | ✅ 2026-09-17 — 79 files uploaded |
+| **Latest Deployment** | ✅ 2026-09-17 — 79 files uploaded (awaiting new deploy post-WAVE 3) |
 | **Smoke Test** | ✅ PASS — title `Bite Me Baby - สั่งอาหารจัดส่งเมืองจันทบุรี`, hero mascots 19, menu cards 6, console errors 0 (`e2e/prod-smoke.json`) |
 | **E2E (pre-deploy, local)** | ✅ 7/7 PASS (`e2e/e2e-result.json` + `e2e/screenshots/`) |
 
@@ -21,6 +21,7 @@ Bite Me Baby เป็น Vite/PWA frontend application ที่สามาร
 npm run build
 npx wrangler pages deploy dist --project-name bitemebaby --branch production --commit-dirty=true
 # smoke: node e2e/prodSmoke.cjs   (targets https://bitemebaby-5f7.pages.dev)
+# WAVE 3 verify: node e2e/prodCheckMigrations.cjs --remote `&` node e2e/prodCheckGrants.cjs --remote `&` node e2e/prodRunContracts.cjs
 ```
 
 **หมาย имеет:** Git commit/push ต้องทำก่อนอีก (ดู `git log`); deploy ต่อไปใช้คำสั่ง выше แล้วรัน `node e2e/prodSmoke.cjs` đểยืนยัน
@@ -30,7 +31,7 @@ npx wrangler pages deploy dist --project-name bitemebaby --branch production --c
 ## ข้อกำหนดเบื้องต้น (Pre-requisites)
 1. **Node.js** >= 20.x
 2. **npm** (มาพร้อมกับ Node)
-3. **Supabase account** (future state — สำหรับ database และ auth)
+3. **Supabase account** — **PRODUCTION DB LIVE** (`ivkdfognyiwjcmrhcnwz`) — 34/34 migrations applied
 
 ## การพัฒนาในเครื่อง (Local Development)
 
@@ -175,3 +176,5 @@ GitHub Push
 - [ ] Admin panel สามารถเข้าถึงได้
 - [ ] Error handling อยู่แล้ว
 - [ ] HTTPS เปิดใช้งานแล้ว
+
+

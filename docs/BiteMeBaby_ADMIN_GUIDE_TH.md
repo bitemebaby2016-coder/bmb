@@ -73,8 +73,9 @@
 - Cloudflare Pages: `git push origin main` --> deploy อัตโนมัติ
 - Env: `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`, `VITE_OPENROUTER_API_KEY`
 - ห้ามใส่ `service_role` key ใน frontend เด็ดขาด
-- Migrations 001-022: owner นำไปใช้ (`supabase db push` / SQL Editor)
+- **Migrations 001-034: ผ่าน `supabase db push` แล้ว (34/34 LIVE, history consistent)**
 - ก่อน push: `npm test` + `npm run build` + `npm run lint`
+- **WAVE 3 verification: `node e2e/prodCheckMigrations.cjs --remote` + `node e2e/prodCheckGrants.cjs --remote` + `node e2e/prodRunContracts.cjs`**
 
 ---
 

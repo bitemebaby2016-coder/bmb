@@ -1,6 +1,7 @@
 # Bite Me Baby -- คู่มือผู้ใช้ (User Manual)
 
-> อัปเดต: 2026-09-21 -- เขียนตามความเป็นจริงของระบบ (overwrite ไม่ append)
+> อัปเดต: 2026-09-22 -- เขียนตามความเป็นจริงของระบบ (overwrite ไม่ append)
+> **Refund: รองรับแล้ว (Stripe refund verified 2026-09-19)**
 
 ---
 

@@ -24,30 +24,30 @@ REAL BUSINESS > REAL ORDERS > REAL KITCHEN > REAL DELIVERY > REAL DATA > AI > AU
 
 ## 1. CUSTOMER STOREFRONT (PWA)
 
-- **CURRENT:** LIVE — Landing/Menu/Product/Cart/Checkout/Payment/Tracking/Orders/Profile ใช้งานจริง + e2e ผ่าน
+- **CURRENT (2026-09-22):** LIVE — Landing/Menu/Product/Cart/Checkout/Payment/Tracking/Orders/Profile ใช้งานจริง + e2e 7/7 ผ่าน; **WAVE 3 ACL VERIFIED (grant probe 7/7, anon residue 0/0, REST leak closed)**
 - **TARGET (REQUIRED):** เส้นทางเดียวที่ลูกค้าทุก channel (social/Grab/walk-in) สั่งซื้อ-ติดตามได้จริงบนมือถือ; offline-tolerant UX; error/retry states ครบ; Lighthouse Perf ≥ 90 (ปัจจุบัน 29)
 - **OPTIONAL:** Random menu, Viral/Share, vote system
 
 ## 2. AUTHENTICATION & ACCOUNTS
 
-- **CURRENT:** LIVE — Supabase Auth (email+password, phone-pattern, quick-login ผ่าน EF `phone-auto-login`), auto-profile role='customer', admin role จาก `profiles`
+- **CURRENT (2026-09-22):** LIVE — Supabase Auth (email+password, phone-pattern, quick-login ผ่าน EF `phone-auto-login`), auto-profile role=`customer`; **Frontend auth still localStorage-based (not yet migrated) — see AUTHORIZATION_AUDIT.md §6**
 - **TARGET (REQUIRED):** identity ทุก channel เชื่อม `customers` record เดียว (phone unique), ไม่มี pattern hack (`@phone.bmb.local`), recovery flow ครบ
 - **OPTIONAL:** OTP/SMS provider จริง, LINE OA login
 
 ## 3. MENU / CATALOG / AVAILABILITY
 
-- **CURRENT:** LIVE — products/categories/add-ons (016) + availability engine (quota+cutoff) + admin CRUD; **category headings (ชื่อหมبق الغذاء) managed from `/admin/products` (PHASE 6, 2026-09-21)**
+- **CURRENT (2026-09-22):** LIVE — products/categories/add-ons (016) + availability engine (quota+cutoff) + admin CRUD; **category headings (ชื่อหมู่อาหาร) managed from `/admin/products` (PHASE 6, 2026-09-21)**; **34/34 migrations LIVE, ACL gate PASS**
 - **TARGET (REQUIRED):** availability จาก **recipe/BOM + inventory จริง** ไม่ใช่ manual toggle เท่านั้น; ราคา add-on re-derive ฝั่ง server
 - **OPTIONAL:** รูปอาหาร AI-generated (มี media library รองรับ), multi-language
 
 ## 4. CART & CHECKOUT
 
-- **CURRENT:** LIVE — versioned cart (v1/v2) + isolation modal + order builder + server-authoritative order creation (007)
+- **CURRENT:** LIVE — versioned cart (v1/v2) + isolation modal + order builder + server-authoritative order creation (007); **WAVE 3: ACL gate PASS, anon residue 0/0**
 - **TARGET (REQUIRED):** flow เดียวสำหรับ same-day + pre-order โดย **ทั้งสองโหมดผ่าน server-side pricing** (pre-order ยังไม่ผ่าน — S-2); promotion code ตรวจฝั่ง server; delivery fee จาก `delivery_zones` ฝั่ง server
 
 ## 5. PAYMENT
 
-- **CURRENT:** webhook Stripe VERIFIED · PromptPay offline-reference LIVE · COD LIVE · Refund EF พร้อม-ยังไม่พิสูจน์ · card loop ขาดหลักฐานบิลจริง
+- **CURRENT:** webhook Stripe VERIFIED · PromptPay offline-reference LIVE · COD LIVE · Refund EF พร้อม + **real Stripe refund 172 THB verified 2026-09-19** · card loop ขาดหลักฐานบิลจริง
 - **TARGET (REQUIRED):** บัตรครบวงจร 1 บิลจริง (create-checkout → Stripe.js confirm → webhook → paid) + refund จริง 1 รายการ · PromptPay TXN + admin confirm ตามปัจจุบัน (**bank auto-verification = OPTIONAL ไม่ block closure**) · ทุก method idempotent + amount-match + ตรวจย้อนหลังได้
 - **DEFERRED:** TrueMoney/wallet อื่น
 
