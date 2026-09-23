@@ -1,37 +1,134 @@
-import { useState, useEffect } from 'react'
-import { useInventoryStore } from '@/store/inventoryStore'
+import { useState, useEffect, useCallback } from 'react'
+import { getInventory, createInventory, updateInventoryStock, deleteInventory, getLowStockAlerts, type InventoryForm } from '@/lib/bmbAdminApi_inventory'
 import { showToast } from '@/components/ui/ToastContainer'
-import type { IngredientUnit } from '@/types'
+import type { Ingredient, IngredientUnit, ReorderAlert } from '@/types'
 
 export function InventoryPage() {
-  const { ingredients, alerts, checkLowStock, bulkUpdateStock, addIngredient, deleteIngredient } = useInventoryStore()
+  const [ingredients, setIngredients] = useState<Ingredient[]>([])
+  const [alerts, setAlerts] = useState<ReorderAlert[]>([])
+  const [isLoading, setIsLoading] = useState(true)
   const [showAddForm, setShowAddForm] = useState(false)
-  const [newIngredient, setNewIngredient] = useState({ name: '', category: 'protein', unit: 'kg' as IngredientUnit, current_stock: 0, min_stock: 1, max_stock: 10, unit_price: 0, supplier_name: '', supplier_phone: '' })
+  const [newIngredient, setNewIngredient] = useState<Partial<InventoryForm>>({ name: '', category: 'protein', unit: 'kg' as IngredientUnit, current_stock: 0, min_stock: 1, max_stock: 10, unit_price: 0, supplier_name: '', supplier_phone: '' })
 
-  useEffect(() => { checkLowStock() }, [ingredients])
+  // Load ingredients from DB on mount
+  const loadInventory = useCallback(async () => {
+    setIsLoading(true)
+    try {
+      const data = await getInventory()
+      setIngredients(data || [])
+    } catch (e) {
+      console.error('[InventoryPage] Failed to load inventory:', e)
+    } finally {
+      setIsLoading(false)
+    }
+  }, [])
 
-  function handleAddIngredient() {
+  useEffect(() => { void loadInventory() }, [loadInventory])
+
+  // Compute low-stock alerts from DB data
+  useEffect(() => {
+    const computedAlerts: ReorderAlert[] = []
+    ingredients.forEach(ing => {
+      if (ing.current_stock <= ing.min_stock) {
+        const urgency = ing.current_stock <= ing.min_stock * 0.5
+          ? 'critical' as const
+          : ing.current_stock <= ing.min_stock * 0.75
+            ? 'high' as const
+            : 'medium' as const
+        computedAlerts.push({
+          id: `alert-${ing.id}`,
+          ingredient_id: ing.id,
+          ingredient_name: ing.name,
+          current_stock: ing.current_stock,
+          min_stock: ing.min_stock,
+          recommended_quantity: Math.max(ing.max_stock - ing.current_stock, ing.min_stock),
+          estimated_cost: (ing.max_stock - ing.current_stock) * ing.unit_price,
+          urgency,
+          generated_at: new Date().toISOString(),
+          is_resolved: false
+        })
+      }
+    })
+    setAlerts(computedAlerts)
+  }, [ingredients])
+
+
+  async function handleAddIngredient() {
     if (!newIngredient.name) { showToast('กรุณาใส่ชื่อวัตถุดิบ', 'warning'); return }
-    const ingredient = { id: `ing-${Date.now()}`, ...newIngredient, status: newIngredient.current_stock <= 0 ? 'out_of_stock' as const : newIngredient.current_stock <= newIngredient.min_stock ? 'low_stock' as const : 'in_stock' as const, last_restocked_at: new Date().toISOString(), created_at: new Date().toISOString(), updated_at: new Date().toISOString() }
-    addIngredient(ingredient)
-    setNewIngredient({ name: '', category: 'protein', unit: 'kg', current_stock: 0, min_stock: 1, max_stock: 10, unit_price: 0, supplier_name: '', supplier_phone: '' })
-    setShowAddForm(false)
-    showToast('เพิ่มวัตถุดิบสำเร็จ!', 'success')
+    try {
+      const created = await createInventory({
+        name: newIngredient.name || '',
+        category: newIngredient.category || 'protein',
+        unit: newIngredient.unit || 'kg',
+        current_stock: newIngredient.current_stock || 0,
+        min_stock: newIngredient.min_stock || 1,
+        max_stock: newIngredient.max_stock || 10,
+        unit_price: newIngredient.unit_price || 0,
+        supplier_name: newIngredient.supplier_name || '',
+        supplier_phone: newIngredient.supplier_phone || '',
+      })
+      if (created) {
+        setIngredients(prev => [...prev, created])
+        setNewIngredient({ name: '', category: 'protein', unit: 'kg' as IngredientUnit, current_stock: 0, min_stock: 1, max_stock: 10, unit_price: 0, supplier_name: '', supplier_phone: '' })
+        setShowAddForm(false)
+        showToast('เพิ่มวัตถุดิบสำเร็จ!', 'success')
+        void loadInventory() // refresh to get server-generated timestamps
+      } else {
+        showToast('เกิดข้อผิดพลาดในการเพิ่มวัตถุดิบ', 'error')
+      }
+    } catch (e) {
+      console.error('[InventoryPage] Add ingredient failed:', e)
+      showToast('เกิดข้อผิดพลาด', 'error')
+    }
   }
 
-  function handleStockUpdate(id: string, quantity: number, reason: string) {
-    bulkUpdateStock([{ id, quantity, reason }])
-    showToast('อัปเดตสต็อกสำเร็จ!', 'success')
+  async function handleStockUpdate(id: string, quantity: number, reason: string) {
+    try {
+      const updated = await updateInventoryStock(id, quantity, reason)
+      if (updated) {
+        setIngredients(prev => prev.map(ing => ing.id === id ? { ...ing, ...updated, updated_at: new Date().toISOString() } : ing))
+        showToast('อัปเดตสต็อกสำเร็จ!', 'success')
+      } else {
+        showToast('ไม่สามารถอัปเดตสต็อกได้', 'error')
+      }
+    } catch (e) {
+      console.error('[InventoryPage] Stock update failed:', e)
+      showToast('เกิดข้อผิดพลาด', 'error')
+    }
+  }
+  async function handleDelete(id: string) {
+    if (!confirm('ต้องการลบวัตถุดิบนี้?')) return
+    try {
+      const ok = await deleteInventory(id)
+      if (ok) {
+        setIngredients(prev => prev.filter(ing => ing.id !== id))
+        showToast('ลบวัตถุดิบสำเร็จ!', 'success')
+      } else {
+        showToast('ไม่สามารถลบวัตถุดิบได้', 'error')
+      }
+    } catch (e) {
+      console.error('[InventoryPage] Delete failed:', e)
+      showToast('เกิดข้อผิดพลาด', 'error')
+    }
   }
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-6">
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-3xl font-bold text-brand-accent">📦 จัดการวัตถุดิบ</h1>
-        <button onClick={() => setShowAddForm(!showAddForm)} className="btn btn-primary">+ เพิ่มวัตถุดิบ</button>
+        <div className="flex gap-2">
+          <button onClick={() => { void loadInventory() }} className="btn btn-outline text-sm" disabled={isLoading}>รีเฟรช</button>
+          <button onClick={() => setShowAddForm(!showAddForm)} className="btn btn-primary">+ เพิ่มวัตถุดิบ</button>
+        </div>
       </div>
 
-      {alerts.length > 0 && (
+      {isLoading && (
+        <div className="card text-center py-8">
+          <p className="text-brand-muted">กำลังโหลดข้อมูล...</p>
+        </div>
+      )}
+
+      {!isLoading && alerts.length > 0 && (
         <div className="card mb-6 bg-yellow-50 border-2 border-yellow-400">
           <h3 className="font-bold text-yellow-800 mb-4">⚠️ แจ้งเตือนสต็อกต่ำ ({alerts.length} รายการ)</h3>
           <div className="space-y-3">
@@ -121,7 +218,7 @@ export function InventoryPage() {
                 <td className="p-3">
                   <div className="flex gap-2">
                     <button onClick={() => handleStockUpdate(ing.id, ing.max_stock - ing.current_stock, 'restock')} className="btn btn-outline text-xs">เติม</button>
-                    <button onClick={() => deleteIngredient(ing.id)} className="btn btn-outline text-xs text-red-500">ลบ</button>
+                    <button onClick={() => handleDelete(ing.id)} className="btn btn-outline text-xs text-red-500">ลบ</button>
                   </div>
                 </td>
               </tr>
