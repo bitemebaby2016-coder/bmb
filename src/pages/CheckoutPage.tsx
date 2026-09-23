@@ -154,6 +154,35 @@ export function CheckoutPage() {
       showToast('กรุณาเลือกรอบการจัดส่ง', 'error')
       return
     }
+
+    // ✅ SERVER-AUTHORITATIVE AVAILABILITY CHECK (P0 #6: cutoff enforcement)
+    // Client-side gate — the RPC enforces the same rules again server-side.
+    const selectedRound = rounds.find(r => r.id === selectedRoundId)
+    if (selectedRound && orderMode === 'SAME_DAY') {
+      // Parse round cutoff_time (HH:mm) and compare with current ICT time
+      const now = new Date()
+      const ictOffset = 7 * 60 // ICT is UTC+7; assume local is also ICT or close
+      const ictNow = new Date(now.getTime() + (ictOffset - now.getTimezoneOffset()) * 60000)
+      const [cutoffH, cutoffM] = String(selectedRound.cutoff_time || '08:00').split(':').map(Number)
+      const cutoffMs = ictNow.getFullYear() + '-' + 
+        String(ictNow.getMonth()+1).padStart(2,'0') + '-' + 
+        String(ictNow.getDate()).padStart(2,'0') + 'T' + 
+        String(cutoffH).padStart(2,'0') + ':' + 
+        String(cutoffM).padStart(2,'0') + ':00'
+      const cutoffTime = new Date(cutoffMs).getTime()
+      if (ictNow.getTime() > cutoffTime) {
+        showToast(`รอบจัดส่งนี้ปิดรับออเดอร์แล้ว (cutoff เวลา ${selectedRound.cutoff_time} น.)`, 'error')
+        setIsProcessing(false)
+        return
+      }
+      // Quota check — prevent ordering when round is full
+      if (selectedRound.current_count >= selectedRound.max_capacity) {
+        showToast('รอบจัดส่งนี้เต็มแล้ว กรุณาเลือกroundอื่น', 'error')
+        setIsProcessing(false)
+        return
+      }
+    }
+
     if (orderMode === 'PRE_ORDER' && scheduledDate < addDays(today, leadDays)) {
       showToast(`จองล่วงหน้าต้องเลือกวันที่อย่างน้อย ${leadDays} วันข้างหน้า`, 'error')
       return
