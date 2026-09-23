@@ -51,8 +51,8 @@ export function slugifyCategory(name: string): string {
 /** True when the image source is a data-URL or http(s). */
 export function isImageSourceValid(source: string | null | undefined): boolean {
   if (!source) return false
-  var pattern = /^(data:image\/(png|jpe?g|webp|gif);base64,)/i
-  var httpPattern = /^https?:\/\/[^\s]+$/i
+  const pattern = /^(data:image\/(png|jpe?g|webp|gif);base64,)/i
+  const httpPattern = /^https?:\/\/[^\s]+$/i
   return pattern.test(source) || httpPattern.test(source)
 }
 
@@ -60,3 +60,4 @@ export function isImageSourceValid(source: string | null | undefined): boolean {
 export function blankCategoryForm() {
   return { name: '', icon: '\uD83C\uDF7D\uFE0F', sort_order: 0, is_active: true }
 }
+

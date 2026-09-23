@@ -19,12 +19,12 @@ export function AdminRecipes() {
   const [selectedIngredient, setSelectedIngredient] = useState('')
   const [qty, setQty] = useState(0)
 
-  var load = useCallback(async () => {
+  const load = useCallback(async () => {
     setLoading(true)
     try {
-      var data = await listRecipes()
+      const data = await listRecipes()
       setRecipes(data || [])
-      var productsData = await getProducts()
+      const productsData = await getProducts()
       setProducts(productsData || [])
     } catch (e) {
       console.error('[AdminRecipes] Load failed:', e)
@@ -41,7 +41,7 @@ export function AdminRecipes() {
       return
     }
     try {
-      var ok = await upsertRecipe(selectedProduct, selectedIngredient, qty)
+      const ok = await upsertRecipe(selectedProduct, selectedIngredient, qty)
       if (ok) {
         showToast('เพิ่ม Recipe สำเรจ!', 'success')
         writeAuditLog({ action: 'product_update', entity_type: 'recipe', description: 'Added recipe: product=' + selectedProduct + ', ingredient=' + selectedIngredient + ', qty=' + qty })
@@ -61,7 +61,7 @@ export function AdminRecipes() {
   async function handleDelete(product_id: string, ingredient_id: string) {
     if (!confirm('ต้องการลบ Recipe นี้?')) return
     try {
-      var ok = await deleteRecipe(product_id, ingredient_id)
+      const ok = await deleteRecipe(product_id, ingredient_id)
       if (ok) {
         showToast('ลบ Recipe สำเรจ!', 'success')
         writeAuditLog({ action: 'product_delete', entity_type: 'recipe', description: 'Deleted recipe for product ' + product_id })
@@ -76,15 +76,15 @@ export function AdminRecipes() {
   }
 
   // Get unique ingredients
-  var ingMap = new Map()
+  const ingMap = new Map()
   recipes.forEach(function(r) {
     if (r.ingredient_name && !ingMap.has(r.ingredient_id)) {
       ingMap.set(r.ingredient_id, { id: r.ingredient_id, name: r.ingredient_name, status: r.inventory_status })
     }
   })
-  var allIngredients = Array.from(ingMap.values())
+  const allIngredients = Array.from(ingMap.values())
 
-  var filtered = searchProduct
+  const filtered = searchProduct
     ? recipes.filter(function(r) { return (r.product_name || '').toLowerCase().includes(searchProduct.toLowerCase()) })
     : recipes
 
@@ -155,3 +155,4 @@ export function AdminRecipes() {
     </div>
   )
 }
+

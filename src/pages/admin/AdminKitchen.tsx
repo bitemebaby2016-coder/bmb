@@ -20,15 +20,15 @@ export function AdminKitchen() {
   const [creating, setCreating] = useState(false)
   const [date, setDate] = useState(new Date().toISOString().split('T')[0])
 
-  var load = useCallback(async () => {
+  const load = useCallback(async () => {
     setLoading(true)
     try {
-      var res: any = await getKitchenSummary(date)
+      const res: any = await getKitchenSummary(date)
       if (res?.ok) {
         setBatches(res.batches || [])
         setSummary(res.summary ?? { pending_orders: 0, ready_orders: 0 })
       }
-      var activeRounds = await listRoundsForDate(date)
+      const activeRounds = await listRoundsForDate(date)
       setRounds(activeRounds)
     } catch (e) {
       console.error('[AdminKitchen] Load failed:', e)
@@ -46,7 +46,7 @@ export function AdminKitchen() {
     }
     setCreating(true)
     try {
-      var result: any = await createBatch(selectedRoundId, date, undefined)
+      const result: any = await createBatch(selectedRoundId, date, undefined)
       if (result && result.batch_id) {
         showToast('สร้าง Batch สำเรจ (#' + result.batch_id.slice(5, 12) + ')', 'success')
         writeAuditLog({ action: 'order_create', entity_type: 'production_batch', description: 'Created batch ' + result.batch_id + ' for round ' + selectedRoundId })
@@ -146,3 +146,4 @@ export function AdminKitchen() {
     </div>
   )
 }
+

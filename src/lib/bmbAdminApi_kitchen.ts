@@ -1,5 +1,5 @@
 // ============================================
-// Bite Me Baby Admin API — Kitchen & Production
+// Bite Me Baby Admin API ? Kitchen & Production
 // ============================================
 
 import { supabase } from './supabase'
@@ -22,7 +22,7 @@ export interface KitchenQueueResponse {
   summary: { pending_orders: number; ready_orders: number }
 }
 
-/** Get today's kitchen production summary */
+/** Get today''s kitchen production summary */
 export async function getKitchenSummary(date?: string): Promise<KitchenQueueResponse | null> {
   const { data, error } = await supabase.rpc('get_kitchen_summary', { p_date: date || new Date().toISOString().split('T')[0] })
   if (error) { console.error('[Kitchen] getKitchenSummary failed:', error); return null }
@@ -49,4 +49,3 @@ export async function createBatch(roundId: string, scheduledDate?: string, order
   if (error) { console.error('[Kitchen] createBatch failed:', error); return null }
   return data as unknown as { batch_id: string; items_count: number }
 }
-

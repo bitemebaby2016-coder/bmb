@@ -12,16 +12,16 @@ export function AuditLogPage() {
   const [filterAction, setFilterAction] = useState('all')
   const [searchTerm, setSearchTerm] = useState('')
   const [page, setPage] = useState(0)
-  var PAGE_SIZE = 50
+  const PAGE_SIZE = 50
 
-  var load = useCallback(async () => {
+  const load = useCallback(async () => {
     setLoading(true)
     try {
-      var query = supabase.from('audit_logs').select('*').order('created_at', { ascending: false }).limit(PAGE_SIZE).range(page * PAGE_SIZE, page * PAGE_SIZE + PAGE_SIZE - 1)
+      let query = supabase.from('audit_logs').select('*').order('created_at', { ascending: false }).limit(PAGE_SIZE).range(page * PAGE_SIZE, page * PAGE_SIZE + PAGE_SIZE - 1)
       if (filterAction !== 'all') {
         query = query.eq('action', filterAction)
       }
-      var { data, error } = await query
+      const { data, error } = await query
       if (error) { console.error('[AuditLog] Load failed:', error); return }
       setEntries(data || [])
     } catch (e) {
@@ -33,14 +33,14 @@ export function AuditLogPage() {
 
   useEffect(() => { void load() }, [load])
 
-  var filtered = searchTerm
+  const filtered = searchTerm
     ? entries.filter(function(e) {
         return (e.description || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
                (e.entity_id || '').toLowerCase().includes(searchTerm.toLowerCase())
       })
     : entries
 
-  var actionLabels: Record<string, string> = {
+  const actionLabels: Record<string, string> = {
     user_login: 'Login',
     user_register: 'Register',
     order_create: 'สร้างออเดอร',
@@ -110,3 +110,5 @@ export function AuditLogPage() {
     </div>
   )
 }
+
+

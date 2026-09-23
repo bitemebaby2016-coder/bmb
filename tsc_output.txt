@@ -1,0 +1,16 @@
+﻿timeout : ERROR: Invalid syntax. Default 
+option is not allowed more than '1' 
+time(s).
+At line:1 char:33
++ ... "D:\A PROJECT\Bite Me Baby"; 
+timeout 60 npx tsc --noEmit 2>&1 | Out-F 
+...
++                                  
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecifie 
+   d: (ERROR: Invalid ...an '1' time(s).  
+  :String) [], RemoteException
+    + FullyQualifiedErrorId : NativeComma 
+   ndError
+ 
+Type "TIMEOUT /?" for usage.

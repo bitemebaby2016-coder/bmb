@@ -1,8 +1,4 @@
-# ============================================
-# Bite Me Baby — CI (QA-01) — runs on every push / PR
-# test + lint + build must pass for Domain A closure.
-# ============================================
-name: CI
+﻿name: CI
 
 on:
   push:
@@ -14,6 +10,9 @@ jobs:
     name: Test + Lint + Build
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    env:
+      VITE_SUPABASE_URL: https://ci-placeholder.supabase.co
+      VITE_SUPABASE_ANON_KEY: ci-dummy-key-not-a-secret
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -21,8 +20,6 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          # jsdom 30 engines: ^22.22.2 || ^24.15.0 || >=26.0.0 — Node 20 breaks
-          # the vitest jsdom environment (CI runs #3-#14 all red for this reason)
           node-version: 24
           cache: npm
 
@@ -34,9 +31,6 @@ jobs:
 
       - name: Unit tests
         run: npm test
-        env:
-          VITE_SUPABASE_URL: https://ci-placeholder.supabase.co
-          VITE_SUPABASE_ANON_KEY: ci-dummy-key-not-a-secret
 
       - name: Typecheck + Build (PWA)
         run: npm run build

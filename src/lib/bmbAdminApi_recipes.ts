@@ -21,7 +21,7 @@ export async function listRecipes(): Promise<RecipeRow[]> {
 
 /** Create or update a recipe entry in the BOM */
 export async function upsertRecipe(product_id: string, ingredient_id: string, quantity_per_unit: number): Promise<boolean> {
-  var idVal = 'rcp-' + product_id + '-' + ingredient_id
+  const idVal = 'rcp-' + product_id + '-' + ingredient_id
   // Check if exists first, then insert or update
   const { data: existing } = await supabase.from('recipes').select('id').match({ product_id, ingredient_id }).single()
   if (existing) {
@@ -39,3 +39,4 @@ export async function deleteRecipe(product_id: string, ingredient_id: string): P
   if (error) { console.error('[Recipes] delete failed:', error); return false }
   return true
 }
+

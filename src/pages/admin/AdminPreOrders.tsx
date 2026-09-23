@@ -21,7 +21,7 @@ export function AdminPreOrders() {
   const load = useCallback(async () => {
     setLoading(true)
     try {
-      var { data, error } = await supabase
+      const { data, error } = await supabase
         .from('orders')
         .select('*')
         .eq('order_mode', 'PRE_ORDER')
@@ -29,9 +29,9 @@ export function AdminPreOrders() {
         .limit(100)
       if (error) { console.error('[AdminPreOrders] Load failed:', error); return }
       // Hydrate items count for each order
-      var enriched: any[] = []
-      for (var o of (data || []) as any[]) {
-        var { data: items, error: itemError } = await supabase
+      const enriched: any[] = []
+      for (const o of (data || []) as any[]) {
+        const { data: items, error: itemError } = await supabase
           .from('order_items').select('id').eq('order_id', o.id).limit(100)
         enriched.push({ ...o, items_count: itemError ? 0 : (items?.length ?? 0) })
       }
@@ -49,7 +49,7 @@ export function AdminPreOrders() {
     if (!confirm('ต้องการยกเลิกออเดอร ' + orderNumber + '?')) return
     setCancelling(orderNumber)
     try {
-      var res = await cancelOrder(orderNumber, 'admin pre-order cancel')
+      const res = await cancelOrder(orderNumber, 'admin pre-order cancel')
       if (res.success) {
         showToast('ยกเลิก ' + orderNumber + ' สำเรจ', 'success')
         writeAuditLog({ action: 'order_status_change', entity_type: 'order', entity_id: orderNumber, description: 'Pre-order cancelled by admin: ' + orderNumber })
@@ -65,9 +65,9 @@ export function AdminPreOrders() {
     }
   }
 
-  var filtered = filterStatus === 'all' ? orders : orders.filter(function(o) { return o.status === filterStatus })
+  let filtered = filterStatus === 'all' ? orders : orders.filter(function(o) { return o.status === filterStatus })
   if (searchTerm) {
-    var lower = searchTerm.toLowerCase()
+    const lower = searchTerm.toLowerCase()
     filtered = filtered.filter(function(o) {
       return (o.order_number || '').toLowerCase().includes(lower) ||
              (o.customer_name || '').toLowerCase().includes(lower)
@@ -127,7 +127,7 @@ export function AdminPreOrders() {
             </thead>
             <tbody>
               {filtered.map(function(order) {
-                var isDone = order.status === 'cancelled' || order.status === 'delivered'
+                const isDone = order.status === 'cancelled' || order.status === 'delivered'
                 return (
                   <tr key={order.id} className="border-b border-brand-border hover:bg-brand-bg">
                     <td className="p-3 font-mono text-sm">{order.order_number}</td>
@@ -155,3 +155,6 @@ export function AdminPreOrders() {
     </div>
   )
 }
+
+
+
