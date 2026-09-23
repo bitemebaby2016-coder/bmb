@@ -53,14 +53,20 @@ Production DB: Supabase `ivkdfognyiwjcmrhcnwz` — 34/34 migrations LIVE (001–
  CURRENT TASK
  ===============================================================================
 
-Task ID: BMB-DOCS-SYNC-2026-09-22
-Phase: Documentation Synchronization Pass — align all docs to ed1ac58 baseline
-Status: IN PROGRESS — systematic sync of all repository docs to Wave 3 verified state
-Objective: ทำให้เอกสารทั้ง repository สอดคล้องกับ Code + Supabase Production + Migration History + Runtime Evidence + Current Project State ณ baseline ed1ac58
-Scope: เฉพาะ documentation — ห้ามสร้าง migration / แก้ code / deploy / เริ่ม Wave 4
+Task ID: BMB-M1-CLOSURE-2026-09-23
+Phase: M1 Full Closure Execution — close all gaps, make experiment-ready
+Status: IN PROGRESS — Phase 1 security/auth fixes done, continuing business logic hardening
+Objective: ปิด M1 ทั้งหมด (real customer ordering + real payment + kitchen/delivery ops + recovery paths) → READY FOR OWNER EXPERIMENT
 
-Started: 2026-09-22
-Last Updated: 2026-09-22
+Started: 2026-09-23
+Last Updated: 2026-09-23T15:05Z
+Completed this session:
+- auditLog.ts: Removed localStorage user identity reading (now server-authoritative via RPC)
+- bmbStorage.ts: Removed dead hashPassword/verifyPassword (Supabase Auth since P0-2)
+- RiderPwaPage.tsx: Documented intentional localStorage session design
+- Created EXPERIMENT_CHECKLIST.md for owner pilot testing
+- Tests: 358/358 PASS (44 files) ✅
+- Build: tsc + vite build PASS ✅
 
  ===============================================================================
  CURRENT STATE
