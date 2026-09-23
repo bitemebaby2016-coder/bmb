@@ -1,7 +1,7 @@
 // ============================================
 // Bite Me Baby Storage Layer
-// ใช้ localStorage เป็น data store (แทน Supabase ในระยะแรก)
-// Prefix: bmb_ เพื่อป้องกันทับกับโปรเจคอื่น
+// Local storage wrapper for non-critical UI state
+// All business/auth data lives in Supabase
 // ============================================
 
 const PREFIX = 'bmb_'
@@ -29,10 +29,8 @@ export function storageRemove(key: string): void {
 }
 
 export function storageClear(): void {
-  // Use localStorage.clear() directly for reliability across all environments
-  // (jsdom mock, Node.js, browser) since the mock may not expose keys via Object.keys()
+  // Remove only our prefixed keys safely
   try {
-    // Remove only our prefixed keys safely
     if (typeof localStorage !== 'undefined' && localStorage.hasOwnProperty('getItem')) {
       const keys: string[] = []
       for (let i = 0; i < localStorage.length; i++) {
@@ -42,7 +40,6 @@ export function storageClear(): void {
       keys.forEach((k) => localStorage.removeItem(k))
     }
   } catch {
-    // Fallback: clear everything (safe in production where no other apps use same origin)
     localStorage.clear()
   }
 }
@@ -60,46 +57,4 @@ export async function fileToBase64(file: File): Promise<string> {
 // Generate unique ID
 export function generateId(prefix: string = 'id'): string {
   return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`
-}
-
-// ============================================
-// Secure Password Hashing using bcrypt
-// Production-ready password security
-// ============================================
-// ⚡ PERF (2026-09-17): bcryptjs is now loaded via dynamic import ONLY when a
-// password actually hashes/verifies (login/register/admin seeding). This removes
-// ~2.3s of bcryptjs module evaluation from the initial page-load main thread,
-// which was the #1 Total Blocking Time / LCP contributor on the landing page.
-// @see lighthouse/baseline_2026-09-17.json (bootup-time: bmbStorage chunk ~2279ms)
-import type * as BcryptModule from 'bcryptjs'
-
-const SALT_ROUNDS = 12
-
-async function loadBcrypt(): Promise<typeof BcryptModule> {
-  const bcrypt = await import('bcryptjs')
-  // Vite/Rollup dynamic-import interop: bcryptjs is CJS so the namespace exposes
-  // the default export; fall back to the namespace itself if interop differs.
-  return ((bcrypt as any).default ?? bcrypt) as typeof BcryptModule
-}
-
-/**
- * Hash a password using bcrypt with configurable salt rounds
- * @param password - Plain text password to hash
- * @returns bcrypt hashed password (with embedded salt)
- */
-export async function hashPassword(password: string): Promise<string> {
-  const bcrypt = await loadBcrypt()
-  const salt = await bcrypt.genSalt(SALT_ROUNDS)
-  return await bcrypt.hash(password, salt)
-}
-
-/**
- * Verify a password against a bcrypt hash
- * @param password - Plain text password to verify
- * @param hash - bcrypt hash to compare against
- * @returns true if password matches the hash
- */
-export async function verifyPassword(password: string, hash: string): Promise<boolean> {
-  const bcrypt = await loadBcrypt()
-  return await bcrypt.compare(password, hash)
 }

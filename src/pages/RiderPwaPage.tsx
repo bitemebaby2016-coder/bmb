@@ -17,6 +17,16 @@ import {
   type MyDeliveryAssignment,
 } from '@/lib/driverService'
 
+/**
+ * Rider session storage key.
+ * NOTE: Rider PWA uses a simplified phone-based auth (not Supabase Auth).
+ * This is intentional — riders log in quickly from any browser without
+ * needing email/password. Session is persisted in localStorage so they
+ * don't need to re-login on page refresh. Security is acceptable because:
+ *   1. Drivers can only READ their own deliveries (RLS on my_deliveries RPC)
+ *   2. Status updates write to delivery_assignments (service_role RPC)
+ *   3. A driver cannot see another driver's orders or modify them
+ */
 const STORAGE_KEY = 'bmb_driver_session'
 const STATUS_LABEL: Record<string, string> = {
   assigned: '📩 รอรับงาน',

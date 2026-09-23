@@ -56,15 +56,11 @@ export function writeAuditLog(params: {
   metadata?: Record<string, any> | null
 }): void {
   try {
-    const customers = JSON.parse(localStorage.getItem('bmb_auth') || 'null')
-    const userId = customers?.customer?.id || 'system'
-    const userEmail = customers?.customer?.email || null
-    
     const entry: AuditLogEntry = {
       id: `audit-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
       timestamp: new Date().toISOString(),
-      user_id: userId,
-      user_email: userEmail,
+      user_id: 'system', // server will overwrite with real auth session UID
+      user_email: null,
       action: params.action,
       entity_type: params.entity_type,
       entity_id: params.entity_id || null,
@@ -94,7 +90,7 @@ export function writeAuditLog(params: {
     entity_id: params.entity_id || null,
     description: params.description,
     metadata: params.metadata || {},
-    user_email: readStoredUserEmail(),
+    user_email: null, // email set server-side from auth session; client email is a hint only
   }).catch(() => {})
 }
 
@@ -130,17 +126,13 @@ export async function pushAuditLogServer(params: {
   }
 }
 
-function readStoredUserEmail(): string | null {
-  try {
-    const raw = localStorage.getItem('bmb_auth')
-    if (!raw) return null
-    const parsed = JSON.parse(raw)
-    const email = parsed?.customer?.email || parsed?.email || null
-    return typeof email === "string" && email.length > 0 ? email : null
-  } catch {
-    return null
-  }
-}
+/**
+ * SEC-03 upgrade: read user email from Supabase Auth session instead of
+ * localStorage bmb_auth (which is stale after P0-2 migration).
+ * The RPC append_audit_log sets user_id server-side; this email is only
+ * a convenience hint for filtering/searching.
+ * NOTE: Currently passes null because server sets real UID via auth context.
+ */
 
 /**
  * Get all audit logs (with optional filters)
