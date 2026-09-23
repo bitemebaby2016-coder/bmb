@@ -1,4 +1,4 @@
-# BMB � MASTER REQUIREMENT RECONCILIATION MATRIX
+# BMB — MASTER REQUIREMENT RECONCILIATION MATRIX
 
 > **DATE:** 2026-09-23  
 > **BASELINE SHA:** cf29b39  
@@ -59,6 +59,7 @@ If conflicts exist between two documents, they are recorded below. No requiremen
 | P3 | Performance / optimization |
 | P4 | SaaS / multi-tenant / DEFERRED features |
 
+
 ---
 
 ## DOMAIN A: CUSTOMER STOREFRONT
@@ -78,6 +79,7 @@ If conflicts exist between two documents, they are recorded below. No requiremen
 | A-CUS-009 | SEO metadata per page | REQUIRED | seo.ts + meta tags | Basic meta per page | N/A (frontend) | seo.ts tests | Local only; production SEO depends on framework | PARTIAL | SEO needs production verification; no SSR strategy documented | Build pipeline | P3 | Lighthouse SEO score >= 90 |
 | A-CUS-010 | Offline Support | REQUIRED | offlineUtils.ts + sw.js (52 precache entries) | Service worker present; offline cache strategy basic | N/A | offlineUtils tests | Local only; offline behavior not tested in production | PARTIAL | Offline behavior needs production testing | PWA configuration | P3 | Offline behavior test |
 | A-CUS-011 | Push Notification | REQUIRED (original spec section 1.4) | notificationService.ts + NotificationCenterPage | UI exists; notification preferences stored in DB (migration 021) | notifications table + notification_preferences | Server push not tested | VAPID key/service worker push not verified on production | PARTIAL | Actual push delivery not verified on production device | VAPID setup | M1 | Live push test on production |
+
 
 ---
 
@@ -122,6 +124,7 @@ If conflicts exist between two documents, they are recorded below. No requiremen
 | A-ADMIN-019 | Refund management | REQUIRED | stripe-refund EF + stripeRefundOrder in bmbAdminApi_orders + AdminOrders refund button | Real refund tested (172 THB) | payment_intents tracks refunds | stripeRefundLogic tests | Real Stripe refund verified | VERIFIED | None | None | M1 | Refund execution test |
 | A-ADMIN-020 | Reviews management | REQUIRED | Review API exists; reviewApi.ts for reading reviews | Read-only; management (block/spam/remove) missing | reviews table exists | getReviews/getAverageRating tests | Production review reading works | PARTIAL - Read-only; management missing | Add review moderation UI | M2 | Review moderation test |
 
+
 ---
 
 ## DOMAIN D: SAME-DAY ORDERING
@@ -141,6 +144,7 @@ If conflicts exist between two documents, they are recorded below. No requiremen
 | A-SD-009 | Same-day tracking | REQUIRED | OrderTrackPage reads from DB via getOrder(); polls every 20s | REAL data displayed (timeline, status from DB, items, total, payment) | orders table + hydration RPC | orderVocabulary tests map status | Production LIVE | VERIFIED - Previously MOCK in Deep Audit; now FIXED (reads real DB) | None | M1 | Tracking page production test |
 | A-SD-010 | Same-day cancellation | REQUIRED | cancel_order RPC with ability-reservation + audit | Cancel button on OrderTrackPage | cancel_order RPC | E2E cancel clickthrough (cancelClickThrough.cjs) | E2E shows cancel -> DB updated + capacity restored | VERIFIED | None | M1 | E2E cancel test |
 
+
 ---
 
 ## DOMAIN E: PRE-ORDER
@@ -159,6 +163,7 @@ If conflicts exist between two documents, they are recorded below. No requiremen
 | A-PO-008 | Pre-order cutoff/lead time | REQUIRED | ValidatePreOrder function exists; leadDays state in CheckoutPage | Display-only lead days; server enforces via RPC validation | validatePreOrder exists but server policy not fully defined | No lead-time enforcement test | Server-side lead time validation unclear | PARTIAL - Display exists; enforcement needs verification | Confirm server validates min lead time before accepting pre-order | Settings | P0 | Lead time enforcement test |
 | A-PO-009 | Pre-order payment status tracking | REQUIRED | pre_orders table has payment-related columns? | Schema structure unclear; no clear payment_status enum equivalent | pre_orders lacks payment_status like orders has | No pre-order payment status tests | Cannot track whether pre-order is paid/unpaid | MISSING - Need payment_status on pre_orders or unified spine | Add payment_status to pre_orders or migrate to canonical spine | G-04 | P0 | Pre-order paid/unpaid tracking test |
 | A-PO-010 | Pre-order to canonical spine migration | REQUIRED (root-cause fix) | Migration 025 adds p_order_mode/p_scheduled_date to orders; pre_orders archived (024) | Dual system: pre_orders ISLAND TABLE + orders.mode=presell exists | Active pre_orders not migrated | No migration script to merge pre_orders into orders | Two tables = two systems sharing only products/rounds | ARCHITECTURE GAP - Requires migration to unify | Execute migration: merge active pre_orders into orders table with mode=PRESERVE, connect payment/batch/delivery | UNIFY_SPINE | P0 | Post-migration unified order test |
+
 
 ---
 
@@ -198,6 +203,7 @@ If conflicts exist between two documents, they are recorded below. No requiremen
 | A-H-003 | Audit trail on all transitions | VERIFIED | Fire-and-forget server write may lose entries | P1 | Audit persistence test |
 | A-H-004 | Order status vocabulary consistency | PARTIAL - 3-4 different status label sets in codebase | Consolidate to single orderVocabulary mapping | P1 | Label consistency test |
 | A-H-005 | Cancel preserves deducted invariant | VERIFIED (migration 028: confirmed=>deducted guard + cancel restoration) | None | M1 | Cancel restore test |
+
 
 ---
 
@@ -239,6 +245,7 @@ If conflicts exist between two documents, they are recorded below. No requiremen
 | A-K-008 | Customer tracking (real-time) | VERIFIED - Fixed from MOCK in Deep Audit; reads real DB | None | M1 | Tracking production test |
 | A-K-009 | Delivery completion | VERIFIED - Rating CTA shows when delivered | None | M1 | Delivery completion test |
 | A-K-010 | Delivery failure/cancellation | VERIFIED - Cancel/restores work | None | M1 | Delivery fail test |
+
 
 ---
 
@@ -297,6 +304,7 @@ If conflicts exist between two documents, they are recorded below. No requiremen
 | A-P-001 | Stripe refund execution | VERIFIED - Real 172 THB refund executed | None | M1 | Refund execution test |
 | A-P-002 | Refund to other methods (PromptPay/COD) | DEFERRED per spec | Deferred | M2 | N/A |
 
+
 ---
 
 ## CROSS-DOMAIN: SAME-DAY vs PRE-ORDER SEPARATION MATRIX
@@ -314,6 +322,7 @@ If conflicts exist between two documents, they are recorded below. No requiremen
 | Kitchen batch | Included in batch (confirmed/preparing) | NOT included | Batch groups by round | Pre-order absent from batch query | Batch SQL only selects orders table | No pre-order indicator in kitchen | Kitchen doesnt plan for pre-orders | CRITICAL GAP G-06 |
 | Delivery assignment | Assigned to delivery_round | No delivery assignment | Round_id links to delivery | Pre-order delivery not assigned | No pre-order delivery flow | No delivery schedule for pre-order | Pre-orders not dispatched | CRITICAL GAP |
 | Cancellation | Full lifecycle cancellation | Cancel with capacity refund | cancel_order RPC restores capacity | Pre-order cancel simpler (no delivery reversal) | Both restore capacity | Cancel button available (needs verification for PO) | Cancel visible in admin | PARTIAL pre-order cancel UI |
+
 
 ---
 
@@ -400,6 +409,7 @@ These are FULLY VERIFIED with code + DB + evidence:
 | AI_WORK_STATE.md | Yes | Task state needs update after reconciliation |
 | AI_ENTRYPOINT.md | No (foundational) | Bootstrap instructions unchanged |
 
+
 ---
 
 ## M1 FINAL GATE CHECKLIST (Per Directive Section 19)
@@ -452,51 +462,51 @@ Every arrow must be real: Requirement -> Implementation -> Live Behavior -> Evid
 
 End of Reconciliation Matrix -- v1.0 (2026-09-23)
 
+
 ---
 
-## P0 IMPLEMENTATION STATUS (After This Session)
+## สถานะการปิด P0 (หลัง Session นี้)
 
-### Fixed Items:
+### รายการที่แก้เสร็จแล้ว:
 
-| # | Gap | Status | Evidence |
-|---|-----|--------|----------|
-| 1 | InventoryPage uses localStorage not DB | **FIXED** (commit 9787429) | DB-backed CRUD via bmbAdminApi_inventory.ts |
-| 2 | Pre-order payment flow | **ARCHITECTUALLY FIXED** | Migration 025 already provides unified create_order_with_items(mode) with payment; checkout creates PaymentIntent for all modes. Pre-order has full payment spine. |
-| 3 | Pre-order address collection | **FIXED** (Migration 035 Part 2) | alidate_pre_order_delivery() trigger enforces non-empty delivery_address for PRE_ORDER mode |
-| 4 | Pre-order kitchen connection | **ARCHITECTUALLY FIXED** | Migration 027 make create_production_batch include both modes (order_mode filter); AdminKitchen page created |
-| 5 | 5km self-delivery rule | **FIXED** (Migration 035 Part 1) | compute_delivery_fee returns blocked when distance > 5km + self_delivery |
-| 6 | Cutoff enforcement | **FIXED** (commit 886836d) | CheckoutPage checks cutoff_time before creating order |
-| 7 | Inventory deduct stock-guard bug | **FIXED by Migration 026** | Aggregated requirements per ingredient, ERR_INSUFFICIENT_INGREDIENT instead of clamp-to-0 |
-| 8 | aiToolCalling.ts dead code | **FIXED** (commit 716b4e9) | Renamed to .disabled |
-| 9 | Unify pre_orders into canonical orders | **MIGRATION EXISTENT** (024/025) | Legacy pre_orders migrated to orders table with migrated_order_id stamp. Active pre-orders use canonical RPC. |
-| 10 | Production Lighthouse Perf >= 90 | **PENDING** | Requires production deployment + measurement |
+| # | ช่องว่าง (Gap) | สถานะ | หลักฐาน (Evidence) |
+|---|----------------|--------|---------------------|
+| 1 | InventoryPage ใช้ localStorage ไม่ใช่ DB | **แก้เสร็จแล้ว** (commit 9787429) | CRUD แบบ DB-backed ผ่าน bmbAdminApi_inventory.ts |
+| 2 | Payment flow สำหรับ Pre-order | **แก้ที่ Architecture แล้ว** | Migration 025 มี canonical RPC create_order_with_items(mode) รองรับ payment ทั้ง 2 โหมด; Checkout สร้าง PaymentIntent ให้ทุกโหมด; Pre-order มี payment spine ครบ |
+| 3 | การเก็บที่อยู่จัดส่ง Pre-order | **แก้เสร็จแล้ว** (Migration 035 Part 2) | Trigger alidate_pre_order_delivery() บังคับ delivery_address ไม่ว่างสำหรับโหมด PRE_ORDER |
+| 4 | เชื่อม Pre-order เข้า Kitchen batching | **แก้ที่ Architecture แล้ว** | Migration 027 ทำให้ create_production_batch รวมทั้ง 2 โหมด (filter ด้วย order_mode); สร้างหน้า AdminKitchen |
+| 5 | กฎ Self-delivery ≤ 5km ฝั่ง Server | **แก้เสร็จแล้ว** (Migration 035 Part 1) | compute_delivery_fee คืน blocked เมื่อ distance > 5km + self_delivery |
+| 6 | การบังคับ Cutoff time | **แก้เสร็จแล้ว** (commit 886836d) | CheckoutPage ตรวจ cutoff_time ก่อนสร้าง order |
+| 7 | Bug Inventory deduct / stock-guard (G-03) | **แก้โดย Migration 026** | รวม requirement ต่อ ingredient, โยน ERR_INSUFFICIENT_INGREDIENT แทน clamp-to-0 |
+| 8 | aiToolCalling.ts dead code | **แก้เสร็จแล้ว** (commit 716b4e9) | Rename เป็น .disabled |
+| 9 | รวม pre_orders เข้า canonical orders | **มี Migration แล้ว** (024/025) | Legacy pre_orders migrate เข้า orders table พร้อม migrated_order_id; pre-order ใช้งานอยู่ใช้ canonical RPC |
+| 10 | Production Lighthouse Perf ≥ 90 | **PENDING** | ต้อง deploy production จริงก่อนจึงวัดได้ |
 
-### P1 Implementation Done:
+### P1 ที่ทำเสร็จแล้ว:
 
-| # | Gap | Status | Files Created |
-|---|-----|--------|---------------|
-| 11 | Kitchen admin UI | **IMPLEMENTED** | AdminKitchen.tsx (creates batches from confirmed/preparing orders) |
-| 12 | Recipe/BOM admin UI | **IMPLEMENTED** | AdminRecipes.tsx (CRUD recipe entries with BOM view) |
-| 13 | Audit log reads DB | **IMPLEMENTED** | AuditLogPage.tsx rewritten to read from audit_logs table directly |
-| 14 | Delivery dispatch MOCK_DRIVERS | **PARTIAL** | Driver RPCs exist (list_drivers, assign_driver); DeliveryManagement still uses mock but drivers table available |
-| 15 | Pre-order admin page | **IMPLEMENTED** | AdminPreOrders.tsx (full CRUD with cancellation) |
+| # | ช่องว่าง (Gap) | สถานะ | ไฟล์ที่สร้าง |
+|---|----------------|--------|--------------|
+| 11 | Kitchen admin UI | **IMPLEMENTED** | AdminKitchen.tsx (สร้าง batch จาก order confirmed/preparing) |
+| 12 | Recipe/BOM admin UI | **IMPLEMENTED** | AdminRecipes.tsx (CRUD recipe entries พร้อม BOM view) |
+| 13 | Audit log อ่านจาก DB | **IMPLEMENTED** | AuditLogPage.tsx เขียนใหม่อ่านจาก audit_logs table โดยตรง |
+| 14 | Delivery dispatch ใช้ MOCK_DRIVERS | **แก้เสร็จแล้ว** | แทน MOCK_DRIVERS ด้วย listDrivers() RPC จริง (commit 04d19c7) |
+| 15 | Pre-order admin page | **IMPLEMENTED** | AdminPreOrders.tsx (CRUD เต็มรูปแบบพร้อม cancellation) |
 
-### New Admin Routes Added:
-- /admin/kitchen � Production batch management
-- /admin/pre-orders � Pre-order list with filters/cancellation  
-- /admin/recipes � Recipe/BOM management (product ? ingredient mapping)
+### Admin Routes ใหม่ที่เพิ่ม:
+- /admin/kitchen — จัดการ Production batch
+- /admin/pre-orders — รายการ Pre-order พร้อม filter/cancellation
+- /admin/recipes — จัดการ Recipe/BOM (product → ingredient mapping)
 
-### New Admin API Wrappers:
-- src/lib/bmbAdminApi_kitchen.ts � getKitchenSummary, createBatch, listBatches
-- src/lib/bmbAdminApi_recipes.ts � listRecipes, upsertRecipe, deleteRecipe
-- src/lib/bmbAdminApi_drivers.ts � listDrivers, upsertDriver, setDriverStatus, assignOrderToDriver
+### Admin API Wrappers ใหม่:
+- src/lib/bmbAdminApi_kitchen.ts — getKitchenSummary, createBatch, listBatches
+- src/lib/bmbAdminApi_recipes.ts — listRecipes, upsertRecipe, deleteRecipe
+- src/lib/bmbAdminApi_drivers.ts — listDrivers, upsertDriver, setDriverStatus, assignOrderToDriver
 
-### Migration 035 Features:
-1. Server-side 5km self-delivery gate in compute_delivery_fee
-2. Pre-order delivery address mandatory enforcement via trigger
-3. Audit logs RLS policies (anon deny, admin read, service write)
-4. Admin RPC: get_all_orders_for_admin() for filtering by mode/status
-5. Admin RPC: get_kitchen_summary() for kitchen dashboard data
-6. Admin RPC: list_drivers() for driver management
-7. Admin RPC: list_recipes_with_inventory() for BOM display
-
+### ฟีเจอร์ Migration 035:
+1. Server-side 5km self-delivery gate ใน compute_delivery_fee
+2. บังคับที่อยู่จัดส่ง Pre-order ผ่าน trigger
+3. RLS policies สำหรับ audit_logs (anon deny, admin read, service write)
+4. Admin RPC: get_all_orders_for_admin() filter ตาม mode/status
+5. Admin RPC: get_kitchen_summary() สำหรับ kitchen dashboard
+6. Admin RPC: list_drivers() สำหรับจัดการ driver
+7. Admin RPC: list_recipes_with_inventory() สำหรับแสดง BOM
