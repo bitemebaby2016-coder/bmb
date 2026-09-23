@@ -1,157 +1,379 @@
-﻿# AI WORK STATE
-# Version: 2.0
-# Purpose: Compact operational state ledger for AI coding agents.
 
-# RULE:
-# This file records CURRENT PROJECT STATE.
-# It is NOT a replacement for project specifications or documentation.
-# Keep it factual, compact, and updated after meaningful work.
+# AI WORK STATE
+# Version: 3.0
+# Purpose: Universal operational state + evidence ledger for AI coding agents.
+# Canonical rule source: .clinerules / UNIVERSAL_MASTER_AI_RULES.md
+# This file MUST remain behaviorally aligned with those rules.
 
-# IMPORTANT:
-# - Do not use this file to turn FAIL into PASS.
-# - Do not remove unresolved failures merely to make the project look clean.
-# - This file is an evidence/state ledger, not a completion mechanism.
+> IMPORTANT
+> This file is both:
+> 1. the current project-state ledger, and
+> 2. the operational checklist that every AI agent must obey.
+>
+> The permanent rulebook remains `.clinerules` / `UNIVERSAL_MASTER_AI_RULES.md`.
+> If this file and the rulebook ever disagree, the permanent rulebook wins and
+> the discrepancy MUST be reported as DOC DRIFT.
+>
+> Never edit this file to manufacture PASS, COMPLETE, 100%, or PRODUCTION READY.
+> Evidence outranks claims.
 
- ===============================================================================
- MANDATORY AI BOOTSTRAP
- ===============================================================================
+===============================================================================
+SECTION 0: NON-NEGOTIABLE RULES
+===============================================================================
 
-Every AI session MUST load, in this order, before substantial work:
+0.1 NO EVIDENCE = NOT DONE
+    - Completion claims require appropriate evidence.
+    - If verification has not been performed, status = UNVERIFIED.
+    - Never convert assumptions into PASS.
 
-1. AI_ENTRYPOINT.md (if present)
-2. UNIVERSAL_MASTER_AI_RULES.md
-3. AI_WORK_STATE.md
+0.2 DOCUMENTATION CANNOT MAKE IMPLEMENTATION PASS
+    - Documentation describes reality; it cannot create implementation evidence.
+    - If code and documentation disagree, report DOC DRIFT and follow the
+      Source of Truth hierarchy.
 
-BOOTSTRAP STATUS:
-- AI_ENTRYPOINT loaded: YES
-- UNIVERSAL_MASTER_AI_RULES loaded: YES
-- AI_WORK_STATE loaded: YES
-- Bootstrap complete: YES
+0.3 SKIPPED ≠ PASSED
+    - SKIPPED, NOT RUN, BLOCKED, MOCKED, or UNVERIFIED are never PASS.
+    - Unit tests do not automatically prove E2E/runtime/production behavior.
+    - Local verification does not automatically prove production verification.
 
-RULE:
-Do not begin project modifications until Bootstrap complete = YES.
+0.4 NEVER REDUCE SCOPE TO CLAIM COMPLETION
+    - Do not remove, rename, reinterpret, split, defer, downgrade, or redefine
+      requirements merely because they are difficult.
+    - If an item cannot safely be completed, mark it BLOCKED and record the
+      concrete blocker.
 
- ===============================================================================
- PROJECT IDENTITY
- ===============================================================================
+0.5 NEVER MODIFY REQUIREMENTS TO MATCH IMPLEMENTATION
+    - Requirements change only through an explicit owner/product decision.
 
-Project: Bite Me Baby (Cloud Kitchen Platform)
-Repository: https://github.com/bitemebaby2016-coder/bmb.git
-Current Branch: main
-Last Known Commit: HEAD 2026-09-22 — WAVE 3 VERIFIED: migration 033/034 applied, ACL gate PASS, contracts 5/5 PASS production
-Last Inspected Commit: ed1ac58
-Files Changed Since Last Inspection: Documentation sync pass (13 files: STATUS_TRACKER, MASTER_PLAN, README, AUTHORIZATION_AUDIT, DATABASE_SECURITY_AUDIT, SECURITY_REMEDIATION_PLAN, DATA_AUTHORITY_MAP, REAL_CODEBASE_AUDIT, BITEMEBABY_PRODUCT_REALITY_MAP, BiteMeBaby_REALITY_MAP, SUPABASE_SETUP, plus e2e evidence JSONs)
-Tests Run Since Last Inspection: npx tsc --noEmit = PASS (0 errors) [VERIFIED] ✅
-                         npx vitest run = PASS 179/179 (22 files, offline in-memory Supabase mock) [VERIFIED] ✅
-                         npm run build — PASS (tsc + vite build ~2s) [VERIFIED] ✅
-                         Lighthouse (local preview, mobile) — Perf 29 / A11y 82 / BP 100 / SEO 100 [VERIFIED] ✅
-Environment: React + TypeScript + Vite 8.2.2 + Tailwind CSS + Zustand + Supabase + Node v24.18.0 (Windows)
-Deployment Target: Cloudflare Pages (bitemebaby-5f7.pages.dev)
-Production DB: Supabase `ivkdfognyiwjcmrhcnwz` — 34/34 migrations LIVE (001–034), RLS Secure Mode enforced
+0.6 NEVER HIDE A FAILURE
+    - Do not suppress errors, weaken tests, delete failing tests, increase
+      tolerances, disable validation, or bypass security checks to obtain PASS.
+    - Temporary diagnostic changes must be identified and reverted unless
+      intentionally approved.
 
- ===============================================================================
- CURRENT TASK
- ===============================================================================
+0.7 EVERY FIX MUST BE VERIFIED
+    - Code inspection alone is insufficient when execution/testing is available.
+    - Verify affected behavior and relevant regressions.
 
-Task ID: BMB-M1-CLOSURE-2026-09-23
-Phase: M1 Full Closure Execution — close all gaps, make experiment-ready
-Status: IN PROGRESS — Phase 1 security/auth fixes done, continuing business logic hardening
-Objective: ปิด M1 ทั้งหมด (real customer ordering + real payment + kitchen/delivery ops + recovery paths) → READY FOR OWNER EXPERIMENT
+0.8 ATTEMPT COUNT IS GLOBAL
+    - Changing model/provider does not reset the debugging attempt counter.
 
-Started: 2026-09-23
-Last Updated: 2026-09-23T15:05Z
-Completed this session:
-- auditLog.ts: Removed localStorage user identity reading (now server-authoritative via RPC)
-- bmbStorage.ts: Removed dead hashPassword/verifyPassword (Supabase Auth since P0-2)
-- RiderPwaPage.tsx: Documented intentional localStorage session design
-- Created EXPERIMENT_CHECKLIST.md for owner pilot testing
-- Tests: 358/358 PASS (44 files) ✅
-- Build: tsc + vite build PASS ✅
+0.9 AFTER TWO FAILED ATTEMPTS, STOP
+    - No third trial-and-error attempt.
+    - Produce the Mandatory Halt Report and request new context/guidance.
 
- ===============================================================================
- CURRENT STATE
- ===============================================================================
-
-What is known to be working:
-- Build passes: tsc --noEmit = 0 errors ✅
-- vite build = PASS in 1.17s ✅
-- All async Supabase API callers now properly await results ✅
-- OrderForm interface extended with delivery_method, provider_id, provider_name ✅
-- supabase.raw() replaced with JS-based stock calculation ✅
-- All notificationStore bodyFn parameters typed as Record<string, any> ✅
-- DeliveryManagement id/status type mismatches fixed ✅
-- api.test.ts all tests made async with await ✅
-- Git commit + push to origin/main successful (ad3bfed) ✅
-- All phases 100% complete per MASTER_PLAN.md ✅
-- All 8 DB schema issues fixed per HANDOFF_002_SCHEMA.md ✅
-
-Files Changed (GAP CLOSURE GROUP 3+ — Documentation Update):
-- AI_WORK_STATE.md (updated to v1.2, marked GAP CLOSURE GROUP 3+ COMPLETE)
-- STATUS_TRACKER.md (updated to v6.0, added BUILD-01 task)
-
-Tests / Commands Run:
-- npx tsc --noEmit — PASS (0 errors) ✅
-- npm run build (tsc && vite build) — PASS in 1.17s ✅
-- git add -A → git commit — SUCCESS (ad3bfed)
-- git push origin main — SUCCESS (4cce7f1..ad3bfed)
-
-Known Risks:
-- None for current work
-- Runtime notifications unverified in production (not a blocker, just unverified)
-
-Next Exact Action:
-- GAP CLOSURE GROUP 3+ COMPLETE ✅ (all documentation reviewed, no remaining work)
-- Project is BUILD PASSING and READY for production deployment
-
-User Decision Required:
-- NONE
-
- ===============================================================================
- PRODUCTION READINESS SNAPSHOT
- ===============================================================================
-
-[x] Requirements closed — All GAP CLOSURE GROUPs complete (1-3+)
-[x] Build — PASS: tsc 0 errors + vite build 1.17s ✅
-[x] Typecheck — All TypeScript errors resolved ✅
-[x] Lint — No lint changes this session
-[x] Security/auth/RLS/user isolation — Completed (Phase 1)
-[x] Database Schema — All 8 issues fixed (Phase 5)
-[x] Documentation synchronized — AI_WORK_STATE.md v1.2, STATUS_TRACKER.md v6.0, MASTER_PLAN.md v3.1 ✅
-[x] Git commit + push — ad3bfed pushed to origin/main ✅
-[ ] Critical UI/mobile flows — Runtime notifications unverified in production (not a blocker)
-[ ] No critical blockers — None. Project is READY for production deployment.
-
-Overall:
-BUILD PASSING — ALL GAP CLOSURE GROUPS COMPLETE. Project is READY for production deployment.
-
-IMPORTANT:
-`PRODUCTION READY` is permitted only when the applicable gates have actual
-supporting evidence. Do not tick boxes to make the status look complete.
-
-The remaining item (Runtime notifications unverified) is NOT a blocker —
-it is an unverified item that can be tested later in production environment.
-
- ===============================================================================
- COMPACT SESSION END CHECKLIST
- ===============================================================================
-
-[x] Record what changed (3 files, documentation updates)
-[x] Record actual verification (tsc 0 errors, vite build 1.17s, all docs reviewed)
-[x] Record failures/blockers (none)
-[x] Record attempt number (1)
-[x] Record next exact action (GAP CLOSURE GROUP 3+ COMPLETE, project READY)
-[x] Update documentation (AI_WORK_STATE.md v1.2, STATUS_TRACKER.md v6.0)
-[x] Leave no misleading PASS/COMPLETE claim
-
- ===============================================================================
- FINAL RULE
- ===============================================================================
-
-DO NOT MAKE THE PROJECT LOOK COMPLETE.
-MAKE THE PROJECT ACTUALLY COMPLETE — OR CLEARLY REPORT WHY IT IS NOT.
+0.10 PRODUCTION READY IS A VERIFIED STATE
+    - `100%`, `COMPLETE`, `DONE`, and `PRODUCTION READY` require applicable
+      evidence. Never use these labels merely because documentation says so.
 
 
- === GAP CLOSURE GROUP 4 COMPLETED (2026-09-16) ===
+===============================================================================
+SECTION 0A: MANDATORY AI BOOTSTRAP
+===============================================================================
+
+Every AI session MUST load these before substantial work or project changes:
+
+    1. AI_ENTRYPOINT.md (if present)
+    2. UNIVERSAL_MASTER_AI_RULES.md
+    3. AI_WORK_STATE.md
+
+Then:
+
+    4. Project-specific specification / Codex
+    5. Relevant source files
+    6. Implementation
+    7. Verification
+    8. AI_WORK_STATE.md update
+
+NO WORK BEFORE BOOTSTRAP
+    - Do not edit, delete, rename, install, migrate, restructure, or "quick fix"
+      project files before bootstrap is complete.
+    - Identify the current Task ID, status, blockers, last inspected commit,
+      and relevant changes before continuing work.
+    - Do not duplicate work already completed.
+
+MISSING / INVALID BOOTSTRAP FILE
+    - Do not silently invent replacement rules.
+    - Report the condition.
+    - Repair only when no unresolved product decision is required.
+    - If safe execution is affected, mark BLOCKED.
+
+DO NOT REREAD UNCHANGED CONTEXT
+    - If the required files are already loaded and unchanged, reuse them.
+
+
+===============================================================================
+SECTION 0B: MULTI-PROJECT TREE ISOLATION
+===============================================================================
+
+0B.1 CWD VERIFICATION
+    - Verify the Current Working Directory before read/write/command execution.
+    - Never edit/create files outside the explicit project boundary.
+    - This is mandatory on machines containing multiple repositories/stacks.
+
+
+===============================================================================
+SECTION 1: CORE BEHAVIOR & LOOP PREVENTION
+===============================================================================
+
+1.1 MAXIMUM 2-TRY RULE
+
+    ATTEMPT 1
+      - Reproduce/inspect the failure.
+      - Identify the most likely root cause.
+      - State a concise hypothesis.
+      - Apply a targeted fix.
+      - Verify.
+
+    ATTEMPT 2
+      - Only if Attempt 1 failed.
+      - Re-evaluate assumptions and evidence.
+      - Use a materially different approach where appropriate.
+      - Verify.
+
+    IF ATTEMPT 2 FAILS
+      - STOP.
+      - Do not trial-and-error.
+      - Do not silently widen scope.
+      - Do not keep editing related files hoping for PASS.
+      - Request new context, explicit guidance, or a different strategy.
+
+1.2 MANDATORY HALT REPORT
+    After two failed attempts, report:
+      - Attempt 1 Overview
+      - Attempt 2 Overview
+      - Current Diagnosis
+      - Known Constraints
+      - Next Action Request
+
+1.3 NO LOOPING
+    - Do not repeat the same command/edit/hypothesis/workaround without new
+      evidence.
+    - Repeated same result => reassess cause.
+
+1.4 PLAN BEFORE COMPLEX EDITS
+    1. Inspect relevant source.
+    2. Establish current state.
+    3. Form hypothesis.
+    4. Define smallest complete fix.
+    5. Edit.
+    6. Verify.
+
+
+===============================================================================
+SECTION 2: SOURCE OF TRUTH & INTEGRITY
+===============================================================================
+
+2.1 SOURCE OF TRUTH HIERARCHY
+      1. Actual Code
+      2. Database / Migration
+      3. API / Edge / Runtime implementation
+      4. Tests / Runtime evidence
+      5. Documentation
+
+2.2 DOCUMENTATION INTEGRITY LOCK
+    - AI_WORK_STATE is an evidence ledger, not a completion mechanism.
+    - Update it AFTER implementation/state is verified.
+    - Never erase unresolved failures to make the project look clean.
+
+
+===============================================================================
+SECTION 5: CONTEXT & TOKEN ECONOMY
+===============================================================================
+
+5.1 READ ONLY WHAT IS NEEDED
+    - Do not scan node_modules, dist, build, .next, logs, generated artifacts,
+      caches, or other large directories unless explicitly required.
+    - Respect .gitignore, .clineignore, .kiloignore and equivalents.
+    - Prefer targeted search and relevant files.
+
+5.2 DO NOT REREAD VERIFIED CONTEXT
+    - Reuse unchanged verified context.
+
+
+===============================================================================
+SECTION 9: MODEL SELECTION & COST-OPTIMIZED ESCALATION
+===============================================================================
+
+9.1 FREE-FIRST ROUTING STRATEGY
+    Always prioritize verified FREE models for initial research, simple edits,
+    and small tasks.
+
+    TIER 0 (FREE — DEFAULT)
+      - Primary Router: openrouter/auto
+      - Secondary: nvidia/nemotron-3-ultra-550b-a55b:free
+        or poolside/laguna-s-2.1:free
+        or google/gemma-4-31b-it:free
+        or qwen/qwen3.8-27b:free
+        or deepseek/deepseek-r1:free
+      - Use for investigation, single-file edits, quick fixes, small tests.
+
+    TIER 1 (PAID / FAST)
+      - Primary: qwen/qwen3.7-flash
+      - Secondary: z-ai/glm-flash-latest
+        or deepseek/DeepSeek V4 Flash 0731
+      - Use for complex code generation and multi-file refactoring when Tier 0
+        is insufficient.
+
+    TIER 2 (LARGE CONTEXT / ARCHITECTURE)
+      - Primary: google/gemini-2.5-pro (or latest Gemini 2.x Pro series)
+      - Secondary: google/gemini-2.5-flash
+      - Use for very large repositories/schema/architecture analysis.
+
+9.2 ESCALATION PROTOCOL
+    Start with TIER 0.
+    Escalate only when:
+      1. TIER 0 hits API rate limit/quota/context overflow;
+      2. the task exceeds TIER 0 context limits (>200K tokens); or
+      3. Attempt 1 failed due to model capability constraints.
+    Notify the user when escalating.
+
+9.3 MODEL DEPRECATION
+    - If a model is unavailable/deprecated, use the closest equivalent tier
+      without breaking execution rules.
+
+
+===============================================================================
+SECTION 10: COMPLETION & PRODUCTION GATES
+===============================================================================
+
+10.1 UNIVERSAL DEFINITION OF DONE
+    A task may be CLOSED only when applicable:
+      [ ] Requirement understood
+      [ ] Relevant source inspected
+      [ ] Root cause identified
+      [ ] Implementation changed where required
+      [ ] Relevant verification executed
+      [ ] Regression checked
+      [ ] Work state updated
+
+10.2 STATUS VOCABULARY
+      PASS        = verified evidence exists
+      FAIL        = verification failed
+      BLOCKED     = cannot proceed because of a concrete external constraint
+      UNVERIFIED  = not yet verified
+      SKIPPED     = intentionally not run; never PASS
+      CANCELLED   = explicitly cancelled by owner/product decision
+      DOC DRIFT   = documentation disagrees with higher-level evidence
+
+10.3 PRODUCTION GATE
+    - A production gate is CLOSED only from actual applicable evidence.
+    - Do not infer production readiness from build/typecheck/unit tests alone.
+
+
+===============================================================================
+SECTION 15: ENVIRONMENT & GIT SYNC WORKFLOW
+===============================================================================
+
+15.1 AT HOME / LOCAL-FIRST
+    - Work and test locally first when that is the declared workflow.
+    - After local verification, commit and push according to project workflow.
+
+15.2 AWAY / REMOTE-FIRST
+    - When working directly against the remote environment, keep remote/local
+      state synchronized when returning to the main workstation.
+
+15.3 POST-VERIFICATION DOCUMENTATION + PUSH
+    After E2E/Test verification passes completely:
+      1. Update summary documentation in Thai when the project requires it.
+      2. Stage modified/new files.
+      3. Commit and push according to repository workflow.
+
+15.4 NEVER CLAIM PUSH WITHOUT EVIDENCE
+    - Record actual commit/push result only after the command succeeds.
+
+
+===============================================================================
+SECTION 16: SESSION END CONTRACT
+===============================================================================
+
+Before ending a meaningful coding session, update this file with:
+
+    [ ] What changed
+    [ ] Exact verification performed
+    [ ] Exact failures/blockers
+    [ ] Attempt number where relevant
+    [ ] Next exact action
+    [ ] Documentation status / DOC DRIFT if any
+    [ ] No misleading PASS/COMPLETE claims
+
+If work is unfinished, leave the exact next action and blocker.
+Do not write "nothing remains" unless evidence proves it.
+
+
+===============================================================================
+SECTION 17: CURRENT PROJECT STATE — BITE ME BABY
+===============================================================================
+
+PROJECT
+    Name: Bite Me Baby (Cloud Kitchen Platform)
+    Repository: https://github.com/bitemebaby2016-coder/bmb.git
+    Branch: main
+    Last verified production/documentation checkpoint: ed1ac58
+    Latest known production migration state: 34/34 (001–034)
+    Deployment target: Cloudflare Pages (bitemebaby-5f7.pages.dev)
+    Stack: React + TypeScript + Vite 8.2.2 + Tailwind CSS + Zustand + Supabase
+           + Node v24.18.0 (Windows)
+
+CURRENT VERIFIED STATE
+    - Production migration history: 34/34.
+    - Production ACL gate: PASS.
+    - Grant probe: 7/7 PASS.
+    - anon_write_residue: 0.
+    - anon_extra_select: 0.
+    - Production contracts 023/028/029/030/033: 5/5 PASS.
+    - Production REST probes verified:
+        business_settings anon -> 401
+        mascot_overrides anon -> 200 (intended public-read)
+        recipes anon -> 401
+        customer_intelligence anon -> 401
+        public_profiles POST anon -> 401
+        business_settings authenticated -> 200
+    - F-5 policies are dormant/grant-blocked.
+    - Working tree: CLEAN.
+    - Local == Remote migration state: YES (34/34).
+
+IMPORTANT TEST LIMITATION
+    - Contracts 017–022 currently report 1/5 PASS and 4 failures are attributed
+      to the test-environment limitation where the Management API executor lacks
+      auth.uid() context. This is NOT to be relabeled PASS and is NOT to be
+      silently deleted.
+
+LATEST VERIFIED WAVE
+    WAVE 3 — completed 2026-09-22.
+    - Migration 033: table-ACL alignment.
+    - Migration 034: production ACL drift remediation.
+    - Both applied and registered.
+    - Production verification green for the applicable WAVE 3 gates.
+
+CURRENT OWNER INSTRUCTION
+    - Do NOT start Wave 4 automatically.
+    - Await explicit owner instruction.
+
+KNOWN ENVIRONMENT NOTE
+    - Two local Supabase stacks share this machine.
+    - BMB API is 127.0.0.1:54331.
+    - `supabase status` may report 54321 because that stack belongs to
+      selfprint-v3-react.
+    - Gate scripts deliberately probe the BMB stack.
+
+CURRENT NEXT ACTION
+    WAIT FOR OWNER INSTRUCTION.
+    Do not invent a new Wave 4 task.
+    If the owner supplies a new task, bootstrap again and update the Task ID
+    before implementation.
+
+
+===============================================================================
+SECTION 18: HISTORICAL EVIDENCE
+===============================================================================
+
+The historical session/evidence ledger below is retained from the previous
+AI_WORK_STATE. Historical claims are historical and MUST NOT override the
+CURRENT PROJECT STATE above.
+
+
+=== GAP CLOSURE GROUP 4 COMPLETED (2026-09-16) ===
 P0-1: Notification Store trigger verified (already existed in CheckoutPage + AdminOrders)
 P0-2: AI Memory wired to AiChatPage (storeConversationMessage, getMemorySummary, updateCustomerMemory)
 P1-1: Review API Supabase migration created (bmbAdminApi_reviews.ts)
@@ -682,3 +904,10 @@ Working tree: CLEAN
 Local == Remote: YES (34/34 migrations)
 
 **Do not start Wave 4 automatically. Await owner instruction.**
+
+===============================================================================
+FINAL PRINCIPLE
+===============================================================================
+
+BUILD THE PRODUCT — DO NOT BUILD THE APPEARANCE OF COMPLETION.
+Evidence outranks claims.
