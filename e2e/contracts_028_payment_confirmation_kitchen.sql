@@ -1,9 +1,9 @@
--- ============================================
--- Bite Me Baby â€” PHASE 3A SQL Contract Suite: Payment â†’ Confirm â†’ Inventory â†’ Kitchen (028)
--- Baseline: 36a3a3c Â· Run as OWNER in Supabase SQL Editor (or local psql).
--- Entire suite runs in ONE transaction and ROLLBACKs â€” zero persisted test data.
+﻿-- ============================================
+-- Bite Me Baby Ã¢â‚¬â€ PHASE 3A SQL Contract Suite: Payment Ã¢â€ â€™ Confirm Ã¢â€ â€™ Inventory Ã¢â€ â€™ Kitchen (028)
+-- Baseline: 36a3a3c Ã‚Â· Run as OWNER in Supabase SQL Editor (or local psql).
+-- Entire suite runs in ONE transaction and ROLLBACKs Ã¢â‚¬â€ zero persisted test data.
 --
--- Scenarios (brief Â§15):
+-- Scenarios (brief Ã‚Â§15):
 --   T1 SAME_DAY COD            T2 PRE_ORDER COD           T3 SAME_DAY PromptPay
 --   T4 PRE_ORDER PromptPay     T5 payment amount mismatch T6 duplicate payment event
 --   T7 payment failure         T8 retry payment           T9 confirmation
@@ -19,7 +19,7 @@ BEGIN;
 RESET ROLE;
 
 -- ============================================
--- 0. FIXTURES + BEFORE-STATE EVIDENCE (brief Â§16: database state before)
+-- 0. FIXTURES + BEFORE-STATE EVIDENCE (brief Ã‚Â§16: database state before)
 -- ============================================
 INSERT INTO auth.users (id, email, encrypted_password, email_confirmed_at, created_at, updated_at, raw_app_meta_data, raw_user_meta_data, aud, role)
 VALUES
@@ -64,7 +64,7 @@ SELECT set_config('role', 'authenticated', false);
 SELECT set_config('request.jwt.claims', '{"sub":"11111111-1111-1111-1111-111111111111","role":"authenticated"}', false);
 
 -- ============================================
--- T1 SAME_DAY COD â€” confirm â†’ deduct (Case A: single product X=2) â†’ batch
+-- T1 SAME_DAY COD Ã¢â‚¬â€ confirm Ã¢â€ â€™ deduct (Case A: single product X=2) Ã¢â€ â€™ batch
 -- ============================================
 DO $$ DECLARE r jsonb; n text; s1 numeric; s2 numeric; c1 int; BEGIN
   UPDATE public.delivery_rounds SET current_count = 0 WHERE id = 'round-' || to_char(CURRENT_DATE,'YYYYMMDD') || '-morning';
@@ -97,11 +97,11 @@ DO $$ DECLARE r jsonb; n text; s1 numeric; s2 numeric; c1 int; BEGIN
   r := public.create_production_batch(p_delivery_round_id => 'round-' || to_char(CURRENT_DATE,'YYYYMMDD') || '-morning',
                                       p_scheduled_date => CURRENT_DATE);
   IF (r->>'items_count')::int <> 1 THEN RAISE EXCEPTION 'FAIL T1 batch %', r->>'items_count'; END IF;
-  RAISE NOTICE 'PASS T1 SAME_DAY COD: confirmed â†’ inventory -1 (Case A single-product exact deduct), batch queued, payment stays pending (% â†’ %)', s1, s2;
+  RAISE NOTICE 'PASS T1 SAME_DAY COD: confirmed Ã¢â€ â€™ inventory -1 (Case A single-product exact deduct), batch queued, payment stays pending (% Ã¢â€ â€™ %)', s1, s2;
 END $$;
 
 -- ============================================
--- T2 PRE_ORDER COD â€” confirm â†’ batch (+2); payment stays pending
+-- T2 PRE_ORDER COD Ã¢â‚¬â€ confirm Ã¢â€ â€™ batch (+2); payment stays pending
 -- ============================================
 DO $$ DECLARE r jsonb; n text; BEGIN
   RESET ROLE;
@@ -113,7 +113,8 @@ DO $$ DECLARE r jsonb; n text; BEGIN
     p_delivery_method => 'self_delivery',
     p_dropoff_latitude => 10.7016, p_dropoff_longitude => 102.1429,
     p_payment_method => 'cash_on_delivery',
-    p_order_mode => 'PRE_ORDER', p_scheduled_date => CURRENT_DATE + 2);
+    p_order_mode => 'PRE_ORDER', p_scheduled_date => CURRENT_DATE + 2,
+    p_delivery_address => 'm028-pre-addr');
   n := r->>'order_number';
   IF n NOT LIKE 'PO-%' THEN RAISE EXCEPTION 'FAIL T2 prefix'; END IF;
   RESET ROLE;
@@ -125,11 +126,11 @@ DO $$ DECLARE r jsonb; n text; BEGIN
   IF (r->>'items_count')::int <> 1 THEN RAISE EXCEPTION 'FAIL T2 batch %', r->>'items_count'; END IF;
   IF (SELECT payment_status FROM public.orders WHERE order_number = n) <> 'pending' THEN
     RAISE EXCEPTION 'FAIL T2 COD payment mutated'; END IF;
-  RAISE NOTICE 'PASS T2 PRE_ORDER COD: confirmed â†’ batch (PRE_ORDER) without pre_orders; payment stays pending';
+  RAISE NOTICE 'PASS T2 PRE_ORDER COD: confirmed Ã¢â€ â€™ batch (PRE_ORDER) without pre_orders; payment stays pending';
 END $$;
 
 -- ============================================
--- T3 SAME_DAY PromptPay â€” intent â†’ paid â†’ confirm â†’ deduct
+-- T3 SAME_DAY PromptPay Ã¢â‚¬â€ intent Ã¢â€ â€™ paid Ã¢â€ â€™ confirm Ã¢â€ â€™ deduct
 -- (this order is reused by T6 duplicate, T13 restore, T18 paid cancellation)
 -- ============================================
 DO $$ DECLARE r jsonb; n text; t numeric; i1 numeric; i2 numeric; s1 numeric; s2 numeric; s3 numeric; BEGIN
@@ -159,11 +160,11 @@ DO $$ DECLARE r jsonb; n text; t numeric; i1 numeric; i2 numeric; s1 numeric; s2
   IF s3 <> 4.85 THEN RAISE EXCEPTION 'FAIL T3 deduct ing-2 %', s3; END IF;
   IF (SELECT status FROM public.orders WHERE order_number = n) <> 'confirmed' THEN
     RAISE EXCEPTION 'FAIL T3 status'; END IF;
-  RAISE NOTICE 'PASS T3/T9/T10 SAME_DAY PromptPay: paid â†’ confirmed â†’ deducted (ing-1 % â†’ %, ing-2 â†’ %)', s1, s2, s3;
+  RAISE NOTICE 'PASS T3/T9/T10 SAME_DAY PromptPay: paid Ã¢â€ â€™ confirmed Ã¢â€ â€™ deducted (ing-1 % Ã¢â€ â€™ %, ing-2 Ã¢â€ â€™ %)', s1, s2, s3;
 END $$;
 
 -- ============================================
--- T4 PRE_ORDER PromptPay â€” intent â†’ paid â†’ confirmed â†’ batch (+2 evening)
+-- T4 PRE_ORDER PromptPay Ã¢â‚¬â€ intent Ã¢â€ â€™ paid Ã¢â€ â€™ confirmed Ã¢â€ â€™ batch (+2 evening)
 -- ============================================
 DO $$ DECLARE r jsonb; n text; t numeric; BEGIN
   RESET ROLE;
@@ -175,7 +176,8 @@ DO $$ DECLARE r jsonb; n text; t numeric; BEGIN
     p_delivery_method => 'self_delivery',
     p_dropoff_latitude => 10.7016, p_dropoff_longitude => 102.1429,
     p_payment_method => 'promptpay_qr',
-    p_order_mode => 'PRE_ORDER', p_scheduled_date => CURRENT_DATE + 2);
+    p_order_mode => 'PRE_ORDER', p_scheduled_date => CURRENT_DATE + 2,
+    p_delivery_address => 'm028-pre-addr');
   n := r->>'order_number'; t := (r->>'total_amount')::numeric;
   PERFORM public.create_payment_intent_record(p_order_number => n, p_amount => t);
   RESET ROLE;
@@ -187,11 +189,11 @@ DO $$ DECLARE r jsonb; n text; t numeric; BEGIN
   r := public.create_production_batch(p_delivery_round_id => 'round-' || to_char(CURRENT_DATE + 2,'YYYYMMDD') || '-evening',
                                       p_scheduled_date => CURRENT_DATE + 2);
   IF (r->>'items_count')::int <> 1 THEN RAISE EXCEPTION 'FAIL T4 batch %', r->>'items_count'; END IF;
-  RAISE NOTICE 'PASS T4 PRE_ORDER PromptPay: paid â†’ confirmed â†’ batch (+2 evening)';
+  RAISE NOTICE 'PASS T4 PRE_ORDER PromptPay: paid Ã¢â€ â€™ confirmed Ã¢â€ â€™ batch (+2 evening)';
 END $$;
 
 -- ============================================
--- T5 payment amount mismatch â€” authoritative total enforced
+-- T5 payment amount mismatch Ã¢â‚¬â€ authoritative total enforced
 -- ============================================
 DO $$ DECLARE r jsonb; n text; t numeric; BEGIN
   RESET ROLE;
@@ -215,7 +217,7 @@ DO $$ DECLARE r jsonb; n text; t numeric; BEGIN
 END $$;
 
 -- ============================================
--- T6 duplicate payment event â€” replay changes nothing (order T3)
+-- T6 duplicate payment event Ã¢â‚¬â€ replay changes nothing (order T3)
 -- ============================================
 DO $$ DECLARE r jsonb; n text; t numeric; c1 int; c2 int; BEGIN
   RESET ROLE;
@@ -235,7 +237,7 @@ DO $$ DECLARE r jsonb; n text; t numeric; c1 int; c2 int; BEGIN
 END $$;
 
 -- ============================================
--- T7 payment failure â€” order stays non-confirmed; slot retained; inventory untouched
+-- T7 payment failure Ã¢â‚¬â€ order stays non-confirmed; slot retained; inventory untouched
 -- ============================================
 DO $$ DECLARE r jsonb; n text; t numeric; c1 int; c2 int; s1 numeric; s2 numeric; BEGIN
   RESET ROLE;
@@ -268,7 +270,7 @@ DO $$ DECLARE r jsonb; n text; t numeric; c1 int; c2 int; s1 numeric; s2 numeric
   RESET ROLE; -- production_batch_items has no authenticated grant; assert as postgres
   IF (SELECT count(*) FROM public.production_batch_items WHERE order_number = n) <> 0 THEN
     RAISE EXCEPTION 'FAIL T7 kitchen received a pending order'; END IF;
-  -- T8 retry payment â†’ success (new attempt row, no duplicate order/intents mess)
+  -- T8 retry payment Ã¢â€ â€™ success (new attempt row, no duplicate order/intents mess)
   PERFORM set_config('role', 'authenticated', false);
   PERFORM set_config('request.jwt.claims', '{"sub":"11111111-1111-1111-1111-111111111111","role":"authenticated"}', false);
   PERFORM public.create_payment_intent_record(p_order_number => n, p_amount => t);
@@ -283,8 +285,8 @@ DO $$ DECLARE r jsonb; n text; t numeric; c1 int; c2 int; s1 numeric; s2 numeric
 END $$;
 
 -- ============================================
--- T11 shared ingredient aggregation (Case B) â€” A=2 + B=3 â†’ X -5 (not -2, not -3)
--- prod-1 x8 â†’ ing-1 x2.0 (+ ing-3 x8) Â· prod-2 x15 â†’ ing-1 x3.0 (+ ing-2 x2.25)
+-- T11 shared ingredient aggregation (Case B) Ã¢â‚¬â€ A=2 + B=3 Ã¢â€ â€™ X -5 (not -2, not -3)
+-- prod-1 x8 Ã¢â€ â€™ ing-1 x2.0 (+ ing-3 x8) Ã‚Â· prod-2 x15 Ã¢â€ â€™ ing-1 x3.0 (+ ing-2 x2.25)
 -- ============================================
 DO $$ DECLARE r jsonb; n text; b1 numeric; a1 numeric; BEGIN
   RESET ROLE;
@@ -310,11 +312,11 @@ DO $$ DECLARE r jsonb; n text; b1 numeric; a1 numeric; BEGIN
     RAISE EXCEPTION 'FAIL T11 ing-2 %', (SELECT current_stock FROM public.inventory WHERE id='ing-2'); END IF;
   IF (SELECT current_stock FROM public.inventory WHERE id='ing-3') <> 12 THEN
     RAISE EXCEPTION 'FAIL T11 ing-3 %', (SELECT current_stock FROM public.inventory WHERE id='ing-3'); END IF;
-  RAISE NOTICE 'PASS T11 Case B shared aggregation: ing-1 % â†’ % (deducted 4.0 = 2.0 + 2.0, no v_done_ids skip)', a1, b1;
+  RAISE NOTICE 'PASS T11 Case B shared aggregation: ing-1 % Ã¢â€ â€™ % (deducted 4.0 = 2.0 + 2.0, no v_done_ids skip)', a1, b1;
 END $$;
 
 -- ============================================
--- T12 insufficient inventory (Case C) â€” confirmation blocked atomically
+-- T12 insufficient inventory (Case C) Ã¢â‚¬â€ confirmation blocked atomically
 -- T12b the SAME via DIRECT table UPDATE (new 028 trigger guarantee)
 -- ============================================
 DO $$ DECLARE r jsonb; n text; st text; s1 numeric; s2 numeric; BEGIN
@@ -361,7 +363,7 @@ DO $$ DECLARE r jsonb; n text; st text; s1 numeric; s2 numeric; BEGIN
 END $$;
 
 -- ============================================
--- T16 duplicate batch behavior â€” 2nd call same round+date must NOT re-queue orders;
+-- T16 duplicate batch behavior Ã¢â‚¬â€ 2nd call same round+date must NOT re-queue orders;
 --                                  a NEWLY confirmed order is picked up alone
 -- ============================================
 DO $$ DECLARE r jsonb; c1 int; c2 int; c3 int; dup int; n_new text; BEGIN
@@ -402,7 +404,7 @@ DO $$ DECLARE r jsonb; c1 int; c2 int; c3 int; dup int; n_new text; BEGIN
       AND pb.scheduled_date = CURRENT_DATE
     GROUP BY pbi.order_id HAVING count(DISTINCT pb.id) > 1);
   IF dup > 0 THEN RAISE EXCEPTION 'FAIL T16 % orders duplicated in kitchen', dup; END IF;
-  -- confirm the retried paid order (still pending) â†’ it becomes the NEW kitchen work
+  -- confirm the retried paid order (still pending) Ã¢â€ â€™ it becomes the NEW kitchen work
   PERFORM set_config('role', 'authenticated', false);
   PERFORM set_config('request.jwt.claims', '{"sub":"22222222-2222-2222-2222-222222222222","role":"authenticated"}', false);
   n_new := (SELECT order_number FROM p3a_orders WHERE tag = 'T7F');
@@ -424,11 +426,11 @@ DO $$ DECLARE r jsonb; c1 int; c2 int; c3 int; dup int; n_new text; BEGIN
       AND pb.scheduled_date = CURRENT_DATE
     GROUP BY pbi.order_id HAVING count(DISTINCT pb.id) > 1);
   IF dup > 0 THEN RAISE EXCEPTION 'FAIL T16 duplicates after re-batch'; END IF;
-  RAISE NOTICE 'PASS T16 duplicate batch protection: % â†’ % (no dup on re-run) â†’ % after new confirm (picked up only the new order)', c1, c2, c3;
+  RAISE NOTICE 'PASS T16 duplicate batch protection: % Ã¢â€ â€™ % (no dup on re-run) Ã¢â€ â€™ % after new confirm (picked up only the new order)', c1, c2, c3;
 END $$;
 
 -- ============================================
--- T17 cancellation of a pending order â€” capacity released, inventory untouched
+-- T17 cancellation of a pending order Ã¢â‚¬â€ capacity released, inventory untouched
 -- ============================================
 DO $$ DECLARE r jsonb; n text; c1 int; c2 int; BEGIN
   RESET ROLE;
@@ -448,60 +450,65 @@ DO $$ DECLARE r jsonb; n text; c1 int; c2 int; BEGIN
   IF c2 <> c1 - 1 THEN RAISE EXCEPTION 'FAIL T17 capacity % -> %', c1, c2; END IF;
   IF (SELECT count(*) FROM public.inventory_transactions WHERE reference_id = n) <> 0 THEN
     RAISE EXCEPTION 'FAIL T17 inventory rows for pending cancel'; END IF;
-  RAISE NOTICE 'PASS T17 pending cancel: capacity % â†’ %, inventory untouched', c1, c2;
+  RAISE NOTICE 'PASS T17 pending cancel: capacity % Ã¢â€ â€™ %, inventory untouched', c1, c2;
 END $$;
 
 -- ============================================
--- T19/T20 delivery fee authority â€” server distance wins; 5.00 inclusive boundary
+-- T19/T20 delivery fee authority Ã¢â‚¬â€ server distance wins; 5.00 inclusive boundary
 -- ============================================
 DO $$ DECLARE d1 numeric := 4.99 / 111.195; d5 numeric := 5.00 / 111.195; d6 numeric := 6.00 / 111.195; BEGIN
   RESET ROLE;
   PERFORM set_config('role', 'authenticated', false);
   PERFORM set_config('request.jwt.claims', '{"sub":"11111111-1111-1111-1111-111111111111","role":"authenticated"}', false);
-  -- 0.00 km â†’ self OK
+  -- 0.00 km Ã¢â€ â€™ self OK
   PERFORM public.create_order_with_items(
     p_items => '[{"product_id":"prod-5","quantity":1}]'::jsonb,
     p_delivery_round_id => 'round-' || to_char(CURRENT_DATE + 2,'YYYYMMDD') || '-morning',
     p_delivery_method => 'self_delivery',
     p_dropoff_latitude => 10.7016, p_dropoff_longitude => 102.1429,
-    p_order_mode => 'PRE_ORDER', p_scheduled_date => CURRENT_DATE + 2);
-  -- 1.00 km â†’ self OK
+    p_order_mode => 'PRE_ORDER', p_scheduled_date => CURRENT_DATE + 2,
+    p_delivery_address => 'm028-pre-addr');
+  -- 1.00 km Ã¢â€ â€™ self OK
   PERFORM public.create_order_with_items(
     p_items => '[{"product_id":"prod-5","quantity":1}]'::jsonb,
     p_delivery_round_id => 'round-' || to_char(CURRENT_DATE + 2,'YYYYMMDD') || '-morning',
     p_delivery_method => 'self_delivery',
     p_dropoff_latitude => 10.7016 + (1.00 / 111.195), p_dropoff_longitude => 102.1429,
-    p_order_mode => 'PRE_ORDER', p_scheduled_date => CURRENT_DATE + 2);
-  -- 4.99 km â†’ self OK
+    p_order_mode => 'PRE_ORDER', p_scheduled_date => CURRENT_DATE + 2,
+    p_delivery_address => 'm028-pre-addr');
+  -- 4.99 km Ã¢â€ â€™ self OK
   PERFORM public.create_order_with_items(
     p_items => '[{"product_id":"prod-5","quantity":1}]'::jsonb,
     p_delivery_round_id => 'round-' || to_char(CURRENT_DATE + 2,'YYYYMMDD') || '-morning',
     p_delivery_method => 'self_delivery',
     p_dropoff_latitude => 10.7016 + d1, p_dropoff_longitude => 102.1429,
-    p_order_mode => 'PRE_ORDER', p_scheduled_date => CURRENT_DATE + 2);
+    p_order_mode => 'PRE_ORDER', p_scheduled_date => CURRENT_DATE + 2,
+    p_delivery_address => 'm028-pre-addr');
   RAISE NOTICE 'PASS T19a 0.00 / 1.00 / 4.99 km self_delivery accepted (server distance)';
-  -- 5.00 km â†’ self OK (boundary inclusive)
+  -- 5.00 km Ã¢â€ â€™ self OK (boundary inclusive)
   PERFORM public.create_order_with_items(
     p_items => '[{"product_id":"prod-5","quantity":1}]'::jsonb,
     p_delivery_round_id => 'round-' || to_char(CURRENT_DATE + 2,'YYYYMMDD') || '-morning',
     p_delivery_method => 'self_delivery',
     p_dropoff_latitude => 10.7016 + d5, p_dropoff_longitude => 102.1429,
-    p_order_mode => 'PRE_ORDER', p_scheduled_date => CURRENT_DATE + 2);
+    p_order_mode => 'PRE_ORDER', p_scheduled_date => CURRENT_DATE + 2,
+    p_delivery_address => 'm028-pre-addr');
   RAISE NOTICE 'PASS T20a 5.00 km self accepted (boundary inclusive)';
-  -- 5.01 km â†’ self REJECTED
+  -- 5.01 km Ã¢â€ â€™ self REJECTED
   BEGIN
     PERFORM public.create_order_with_items(
       p_items => '[{"product_id":"prod-5","quantity":1}]'::jsonb,
       p_delivery_round_id => 'round-' || to_char(CURRENT_DATE + 2,'YYYYMMDD') || '-morning',
       p_delivery_method => 'self_delivery',
       p_dropoff_latitude => 10.7016 + (5.01 / 111.195), p_dropoff_longitude => 102.1429,
-      p_order_mode => 'PRE_ORDER', p_scheduled_date => CURRENT_DATE + 2);
+      p_order_mode => 'PRE_ORDER', p_scheduled_date => CURRENT_DATE + 2,
+    p_delivery_address => 'm028-pre-addr');
     RAISE EXCEPTION 'FAIL T20b 5.01km self accepted';
   EXCEPTION WHEN OTHERS THEN
-    IF SQLERRM LIKE '%ERR_DELIVERY_METHOD_ZONE%' THEN RAISE NOTICE 'PASS T20b 5.01 km self rejected';
+    IF SQLERRM LIKE '%SELF_DELIVERY_EXCEEDS_5KM_LIMIT%' OR SQLERRM LIKE '%ERR_DELIVERY_METHOD_ZONE%' THEN RAISE NOTICE 'PASS T20b 5.01 km self rejected (5km gate)';
     ELSE RAISE EXCEPTION 'FAIL T20b unexpected: %', SQLERRM; END IF;
   END;
-  -- forged: client says 1 km, server measures 6 km â†’ server rule wins (self rejected)
+  -- forged: client says 1 km, server measures 6 km Ã¢â€ â€™ server rule wins (self rejected)
   BEGIN
     PERFORM public.create_order_with_items(
       p_items => '[{"product_id":"prod-5","quantity":1}]'::jsonb,
@@ -509,25 +516,27 @@ DO $$ DECLARE d1 numeric := 4.99 / 111.195; d5 numeric := 5.00 / 111.195; d6 num
       p_delivery_method => 'self_delivery',
       p_dropoff_latitude => 10.7016 + d6, p_dropoff_longitude => 102.1429,
       p_distance_km => 1,
-      p_order_mode => 'PRE_ORDER', p_scheduled_date => CURRENT_DATE + 2);
+      p_order_mode => 'PRE_ORDER', p_scheduled_date => CURRENT_DATE + 2,
+    p_delivery_address => 'm028-pre-addr');
     RAISE EXCEPTION 'FAIL T19b forged distance accepted';
   EXCEPTION WHEN OTHERS THEN
-    IF SQLERRM LIKE '%ERR_DELIVERY_METHOD_ZONE%' THEN RAISE NOTICE 'PASS T19b forged distance (client 1 km, server 6 km) â†’ server wins';
+    IF SQLERRM LIKE '%ERR_DELIVERY_METHOD_ZONE%' OR SQLERRM LIKE '%SELF_DELIVERY_EXCEEDS_5KM_LIMIT%' THEN RAISE NOTICE 'PASS T19b forged distance rejected, server rule wins';
     ELSE RAISE EXCEPTION 'FAIL T19b unexpected: %', SQLERRM; END IF;
   END;
-  -- 6 km + external rider â†’ accepted (fee from server zone, not the forged client value)
+  -- 6 km + external rider Ã¢â€ â€™ accepted (fee from server zone, not the forged client value)
   PERFORM public.create_order_with_items(
     p_items => '[{"product_id":"prod-5","quantity":1}]'::jsonb,
     p_delivery_round_id => 'round-' || to_char(CURRENT_DATE + 2,'YYYYMMDD') || '-morning',
     p_delivery_method => 'grab_rider',
     p_dropoff_latitude => 10.7016 + d6, p_dropoff_longitude => 102.1429,
     p_distance_km => 1,
-    p_order_mode => 'PRE_ORDER', p_scheduled_date => CURRENT_DATE + 2);
+    p_order_mode => 'PRE_ORDER', p_scheduled_date => CURRENT_DATE + 2,
+    p_delivery_address => 'm028-pre-addr');
   RAISE NOTICE 'PASS T19c 6 km external accepted with server-derived fee';
 END $$;
 
 -- ============================================
--- AFTER-STATE EVIDENCE (brief Â§16)
+-- AFTER-STATE EVIDENCE (brief Ã‚Â§16)
 -- ============================================
 RESET ROLE;
 DO $$ BEGIN
@@ -551,7 +560,7 @@ DO $$ BEGIN
 END $$;
 
 -- ============================================
--- T14/T15 kitchen E2E â€” queue exposes both modes; PRE_ORDER never touches pre_orders
+-- T14/T15 kitchen E2E Ã¢â‚¬â€ queue exposes both modes; PRE_ORDER never touches pre_orders
 -- ============================================
 DO $$ DECLARE r jsonb; c int; BEGIN
   RESET ROLE;
@@ -586,7 +595,7 @@ DO $$ DECLARE r jsonb; c int; BEGIN
 END $$;
 
 -- ============================================
--- T13/T18 PAID cancellation â€” exact restore, no double restore, financial truth intact
+-- T13/T18 PAID cancellation Ã¢â‚¬â€ exact restore, no double restore, financial truth intact
 -- ============================================
 DO $$ DECLARE n text; r jsonb; i1 numeric; i2 numeric; p1 numeric; p2 numeric; paid text; st text; ip int; BEGIN
   RESET ROLE;
@@ -614,7 +623,7 @@ DO $$ DECLARE n text; r jsonb; i1 numeric; i2 numeric; p1 numeric; p2 numeric; p
   RESET ROLE;
   IF (SELECT current_stock FROM public.inventory WHERE id = 'ing-1') <> p1 THEN
     RAISE EXCEPTION 'FAIL T13 double restore'; END IF;
-  -- T18: financial truth intact â€” refund is a SEPARATE financial operation
+  -- T18: financial truth intact Ã¢â‚¬â€ refund is a SEPARATE financial operation
   SELECT payment_status, status INTO paid, st FROM public.orders WHERE order_number = n;
   IF paid <> 'paid' THEN RAISE EXCEPTION 'FAIL T18 payment_status must stay paid (no fake refund)'; END IF;
   IF st <> 'cancelled' THEN RAISE EXCEPTION 'FAIL T18 status'; END IF;
@@ -622,10 +631,10 @@ DO $$ DECLARE n text; r jsonb; i1 numeric; i2 numeric; p1 numeric; p2 numeric; p
     RAISE EXCEPTION 'FAIL T18 completed intent rows'; END IF;
   IF (SELECT count(*) FROM public.payment_intents WHERE order_number = n) <> ip THEN
     RAISE EXCEPTION 'FAIL T18 intent rows changed'; END IF;
-  RAISE NOTICE 'PASS T13/T18 paid cancel: restore exact (ing-1 % â†’ %, ing-2 â†’ %), duplicate cancel idempotent, payment records untouched (REFUND = separate financial operation)', i1, p1, p2;
+  RAISE NOTICE 'PASS T13/T18 paid cancel: restore exact (ing-1 % Ã¢â€ â€™ %, ing-2 Ã¢â€ â€™ %), duplicate cancel idempotent, payment records untouched (REFUND = separate financial operation)', i1, p1, p2;
 END $$;
 
 -- ============================================
--- DONE â€” discard every test-created row
+-- DONE Ã¢â‚¬â€ discard every test-created row
 -- ============================================
 ROLLBACK;

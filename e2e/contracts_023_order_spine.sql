@@ -1,18 +1,18 @@
--- ============================================
--- Bite Me Baby — PHASE 2 SQL Contract Suite: Canonical Order Spine (023-027)
+﻿-- ============================================
+-- Bite Me Baby â€” PHASE 2 SQL Contract Suite: Canonical Order Spine (023-027)
 -- Run as OWNER in Supabase SQL Editor (or local psql). Read-only impact:
 -- entire suite runs in ONE transaction and ROLLBACKs at the end.
 --
--- Covers (implementation command §19/§20):
---   Mode gate (both directions) · cutoff (before/exactly/after) · capacity
---   (create/full/cancel/idempotent-cancel/corruption/payment-failure) ·
---   inventory (shared-ingredient aggregation, insufficient, exact restore) ·
---   payment (amount-match, idempotent, COD-on-PRE_ORDER) · kitchen
---   (both modes, date/round separation) · delivery (coords, 5km tier,
---   forged client distance) · pre-order migration checks.
+-- Covers (implementation command Â§19/Â§20):
+--   Mode gate (both directions) Â· cutoff (before/exactly/after) Â· capacity
+--   (create/full/cancel/idempotent-cancel/corruption/payment-failure) Â·
+--   inventory (shared-ingredient aggregation, insufficient, exact restore) Â·
+--   payment (amount-match, idempotent, COD-on-PRE_ORDER) Â· kitchen
+--   (both modes, date/round separation) Â· delivery (coords, 5km tier,
+--   forged client distance) Â· pre-order migration checks.
 --
 -- NOTE: positive tests simulate real JWTs via set_config('request.jwt.claims')
---       — RPCs run with the same guards as production HTTP requests.
+--       â€” RPCs run with the same guards as production HTTP requests.
 -- ============================================
 
 BEGIN;
@@ -32,7 +32,7 @@ INSERT INTO public.profiles (id, email, role)
 VALUES ('22222222-2222-2222-2222-222222222222', 'spine-admin@bmb.test', 'admin')
 ON CONFLICT (id) DO NOTHING;
 
--- the auth.users INSERT trigger auto-creates profiles with role='customer' —
+-- the auth.users INSERT trigger auto-creates profiles with role='customer' â€”
 -- force the admin role AFTER the trigger has run (idempotent)
 UPDATE public.profiles SET role = 'admin' WHERE id = '22222222-2222-2222-2222-222222222222';
 
@@ -46,7 +46,7 @@ SELECT set_config('role', 'authenticated', false);
 SELECT set_config('request.jwt.claims', '{"sub":"11111111-1111-1111-1111-111111111111","role":"authenticated"}', false);
 
 -- ============================================
--- T1 MODE — SAME_DAY product allowed (canonical creation, PO-/BMB- prefix)
+-- T1 MODE â€” SAME_DAY product allowed (canonical creation, PO-/BMB- prefix)
 -- ============================================
 DO $$ DECLARE r jsonb; BEGIN
   r := public.create_order_with_items(
@@ -66,14 +66,15 @@ DO $$ DECLARE r jsonb; BEGIN
 END $$;
 
 -- ============================================
--- T2 MODE — PRE_ORDER product allowed via compat shim → canonical row
+-- T2 MODE â€” PRE_ORDER product allowed via compat shim â†’ canonical row
 -- ============================================
 DO $$ DECLARE r jsonb; n text; BEGIN
   r := public.create_pre_order_with_items(
     p_product_id => 'prod-5', p_quantity => 2,
     p_scheduled_date => CURRENT_DATE + 2,
     p_customer_name => 'Spine Cust', p_customer_phone => '0800000001',
-    p_delivery_latitude => 10.7016, p_delivery_longitude => 102.1429
+    p_delivery_latitude => 10.7016, p_delivery_longitude => 102.1429,
+    p_delivery_address => 'm023-pre-addr'
   );
   n := r->>'order_number';
   IF n NOT LIKE 'PO-%' THEN RAISE EXCEPTION 'FAIL T2 prefix'; END IF;
@@ -89,18 +90,18 @@ DO $$ DECLARE r jsonb; n text; BEGIN
   IF EXISTS (SELECT 1 FROM public.pre_orders WHERE order_number = n) THEN
     RAISE EXCEPTION 'FAIL T2 shim must NOT write legacy pre_orders (canonical only)';
   END IF;
-  RAISE NOTICE 'PASS T2 pre-order via shim → canonical %', n;
+  RAISE NOTICE 'PASS T2 pre-order via shim â†’ canonical %', n;
 END $$;
 
 -- ============================================
--- T3 MODE — SAME_DAY request for available_same_day=false → rejected
+-- T3 MODE â€” SAME_DAY request for available_same_day=false â†’ rejected
 -- ============================================
 RESET ROLE;
 UPDATE public.products SET available_same_day = false WHERE id = 'prod-5';
 SELECT set_config('role', 'authenticated', false);
 
 -- ============================================
--- T6 CUTOFF — before cutoff accepted
+-- T6 CUTOFF â€” before cutoff accepted
 -- ============================================
 DO $$ DECLARE r jsonb; BEGIN
   r := public.create_order_with_items(
@@ -114,7 +115,7 @@ DO $$ DECLARE r jsonb; BEGIN
 END $$;
 
 -- ============================================
--- T7 CUTOFF — after cutoff rejected (00:00 cutoff = always passed)
+-- T7 CUTOFF â€” after cutoff rejected (00:00 cutoff = always passed)
 -- ============================================
 RESET ROLE;
 UPDATE public.delivery_rounds SET cutoff_time = '00:00'
@@ -134,7 +135,7 @@ EXCEPTION WHEN OTHERS THEN
 END $$;
 
 -- ============================================
--- T8 CAPACITY — full round rejected atomically
+-- T8 CAPACITY â€” full round rejected atomically
 -- ============================================
 RESET ROLE;
 UPDATE public.delivery_rounds SET max_capacity = 1, current_count = 0
@@ -166,7 +167,7 @@ DO $$ DECLARE n text; c int; BEGIN
 END $$;
 
 -- ============================================
--- T9 CAPACITY — total item quantity cap (D-1 = 20)
+-- T9 CAPACITY â€” total item quantity cap (D-1 = 20)
 -- ============================================
 DO $$ BEGIN
   PERFORM public.create_order_with_items(
@@ -182,7 +183,7 @@ EXCEPTION WHEN OTHERS THEN
 END $$;
 
 -- ============================================
--- T10 PAYMENT — PRE_ORDER + COD allowed (D-3) + canonical payment intent (amount-match)
+-- T10 PAYMENT â€” PRE_ORDER + COD allowed (D-3) + canonical payment intent (amount-match)
 -- ============================================
 DO $$ DECLARE r jsonb; n text; BEGIN
   r := public.create_order_with_items(
@@ -191,7 +192,8 @@ DO $$ DECLARE r jsonb; n text; BEGIN
     p_delivery_method => 'self_delivery',
     p_dropoff_latitude => 10.7016, p_dropoff_longitude => 102.1429,
     p_payment_method => 'cash_on_delivery',
-    p_order_mode => 'PRE_ORDER', p_scheduled_date => CURRENT_DATE + 2);
+    p_order_mode => 'PRE_ORDER', p_scheduled_date => CURRENT_DATE + 2,
+    p_delivery_address => 'm023-pre-addr');
   n := r->>'order_number';
   IF (r->>'payment_method') <> 'cash_on_delivery' THEN RAISE EXCEPTION 'FAIL T10 method'; END IF;
   IF (SELECT payment_status FROM public.orders WHERE order_number = n) <> 'pending' THEN
@@ -202,7 +204,7 @@ DO $$ DECLARE r jsonb; n text; BEGIN
 END $$;
 
 -- ============================================
--- T11 PAYMENT — amount mismatch rejected (authoritative total)
+-- T11 PAYMENT â€” amount mismatch rejected (authoritative total)
 -- ============================================
 DO $$ DECLARE r jsonb; n text; t numeric; BEGIN
   r := public.create_order_with_items(
@@ -221,7 +223,7 @@ DO $$ DECLARE r jsonb; n text; t numeric; BEGIN
   PERFORM public.create_payment_intent_record(p_order_number => n, p_amount => t);
   RAISE NOTICE 'PASS T11 amount-mismatch rejected, exact-amount intent created';
 
-  -- T11b WEBHOOK — duplicate payment result is idempotent (008/010 contract, canonical orders)
+  -- T11b WEBHOOK â€” duplicate payment result is idempotent (008/010 contract, canonical orders)
   RESET ROLE; -- record_payment_result is service_role/postgres-only by design
   r := public.record_payment_result(p_order_number => n, p_payment_intent_id => 'pi_test_spine_1', p_amount => t, p_status => 'completed');
   IF (r->>'payment_status') <> 'paid' THEN RAISE EXCEPTION 'FAIL T11b first webhook'; END IF;
@@ -234,7 +236,7 @@ DO $$ DECLARE r jsonb; n text; t numeric; BEGIN
 END $$;
 
 -- ============================================
--- T12 CANCELLATION — owner cancel releases capacity; duplicate cancel idempotent;
+-- T12 CANCELLATION â€” owner cancel releases capacity; duplicate cancel idempotent;
 --                    corruption detected (no silent zero-clamp)
 -- ============================================
 DO $$ DECLARE n text; c1 int; c2 int; c3 int; BEGIN
@@ -255,7 +257,7 @@ DO $$ DECLARE n text; c1 int; c2 int; c3 int; BEGIN
 END $$;
 
 -- ============================================
--- T13 CAPACITY CORRUPTION — releasing with count=0 fails loudly (no GREATEST)
+-- T13 CAPACITY CORRUPTION â€” releasing with count=0 fails loudly (no GREATEST)
 -- ============================================
 DO $$ DECLARE n text; BEGIN
   n := (public.create_order_with_items(
@@ -283,7 +285,7 @@ UPDATE public.delivery_rounds SET current_count = 5 WHERE id = 'round-' || to_ch
 SELECT set_config('role', 'authenticated', false);
 
 -- ============================================
--- T14 PAYMENT FAILURE — slot retained (no automatic release)
+-- T14 PAYMENT FAILURE â€” slot retained (no automatic release)
 -- ============================================
 DO $$ DECLARE n text; c1 int; c2 int; BEGIN
   n := (public.create_order_with_items(
@@ -306,9 +308,9 @@ DO $$ DECLARE n text; c1 int; c2 int; BEGIN
 END $$;
 
 -- ============================================
--- T15 INVENTORY — shared-ingredient AGGREGATION + insufficient rejected (G-03)
--- prod-1: ing-1 x0.25 + ing-3 x1 · prod-2: ing-2 x0.15 + ing-1 x0.2
--- items prod-1 + prod-2 → ing-1 needs 0.45 (NOT 0.25 like the old v_done_ids bug)
+-- T15 INVENTORY â€” shared-ingredient AGGREGATION + insufficient rejected (G-03)
+-- prod-1: ing-1 x0.25 + ing-3 x1 Â· prod-2: ing-2 x0.15 + ing-1 x0.2
+-- items prod-1 + prod-2 â†’ ing-1 needs 0.45 (NOT 0.25 like the old v_done_ids bug)
 -- ============================================
 DO $$ DECLARE n text; BEGIN
   RESET ROLE;
@@ -326,7 +328,7 @@ DO $$ DECLARE n text; BEGIN
     p_delivery_round_id => 'round-' || to_char(CURRENT_DATE + 2,'YYYYMMDD') || '-morning',
     p_delivery_method => 'self_delivery',
     p_dropoff_latitude => 10.7016, p_dropoff_longitude => 102.1429,
-    p_order_mode => 'PRE_ORDER', p_scheduled_date => CURRENT_DATE + 2))->>'order_number';
+    p_order_mode => 'PRE_ORDER', p_scheduled_date => CURRENT_DATE + 2, p_delivery_address => 'm023-pre-addr'))->>'order_number';
   BEGIN
     PERFORM public.transition_order_status(p_order_number => n, p_new_status => 'confirmed');
     RAISE EXCEPTION 'FAIL T15 aggregation not enforced (would have under-deducted)';
@@ -341,7 +343,7 @@ DO $$ DECLARE n text; BEGIN
 END $$;
 
 -- ============================================
--- T16 INVENTORY — sufficient stock deducts AGGREGATED; cancel restores exactly
+-- T16 INVENTORY â€” sufficient stock deducts AGGREGATED; cancel restores exactly
 -- ============================================
 DO $$ DECLARE n text; s1 numeric; s2 numeric; s3 numeric; BEGIN
   RESET ROLE;
@@ -369,7 +371,7 @@ DO $$ DECLARE n text; s1 numeric; s2 numeric; s3 numeric; BEGIN
 END $$;
 
 -- ============================================
--- T17 KITCHEN — canonical batch covers both modes; date separation
+-- T17 KITCHEN â€” canonical batch covers both modes; date separation
 -- ============================================
 DO $$ DECLARE r jsonb; n_pre text; BEGIN
   RESET ROLE;
@@ -380,7 +382,7 @@ DO $$ DECLARE r jsonb; n_pre text; BEGIN
     p_delivery_round_id => 'round-' || to_char(CURRENT_DATE + 2,'YYYYMMDD') || '-midday',
     p_delivery_method => 'self_delivery',
     p_dropoff_latitude => 10.7016, p_dropoff_longitude => 102.1429,
-    p_order_mode => 'PRE_ORDER', p_scheduled_date => CURRENT_DATE + 2))->>'order_number';
+    p_order_mode => 'PRE_ORDER', p_scheduled_date => CURRENT_DATE + 2, p_delivery_address => 'm023-pre-addr'))->>'order_number';
   PERFORM public.transition_order_status(p_order_number => n_pre, p_new_status => 'confirmed');
   r := public.create_production_batch(p_delivery_round_id => 'round-' || to_char(CURRENT_DATE + 2,'YYYYMMDD') || '-midday',
                                       p_scheduled_date => CURRENT_DATE + 2);
@@ -396,11 +398,11 @@ DO $$ DECLARE r jsonb; n_pre text; BEGIN
 END $$;
 
 -- ============================================
--- T18 DELIVERY — coords required; 5km tier server-enforced; forged client distance ignored
+-- T18 DELIVERY â€” coords required; 5km tier server-enforced; forged client distance ignored
 -- ============================================
 DO $$ DECLARE d1 numeric := 4.90 / 111.195; d2 numeric := 5.50 / 111.195; BEGIN
   RESET ROLE;
-  -- T15/T16 legitimately sold prod-1 out via INV-02 (eggs below min) — restore for delivery tests
+  -- T15/T16 legitimately sold prod-1 out via INV-02 (eggs below min) â€” restore for delivery tests
   UPDATE public.products SET is_available = true WHERE id = 'prod-1';
   PERFORM set_config('role', 'authenticated', false);
   BEGIN
@@ -437,7 +439,7 @@ DO $$ DECLARE d1 numeric := 4.90 / 111.195; d2 numeric := 5.50 / 111.195; BEGIN
       p_order_mode => 'SAME_DAY');
     RAISE EXCEPTION 'FAIL T18c self beyond 5km accepted';
   EXCEPTION WHEN OTHERS THEN
-    IF SQLERRM LIKE '%ERR_DELIVERY_METHOD_ZONE%' THEN RAISE NOTICE 'PASS T18c 5.50km self rejected, forged distance ignored';
+    IF SQLERRM LIKE '%ERR_DELIVERY_METHOD_ZONE%' OR SQLERRM LIKE '%SELF_DELIVERY_EXCEEDS_5KM_LIMIT%' THEN RAISE NOTICE 'PASS T18c 5.50km self rejected, forged distance ignored';
     ELSE RAISE EXCEPTION 'FAIL T18c unexpected: %', SQLERRM; END IF;
   END;
   PERFORM public.create_order_with_items(
@@ -450,7 +452,7 @@ DO $$ DECLARE d1 numeric := 4.90 / 111.195; d2 numeric := 5.50 / 111.195; BEGIN
 END $$;
 
 -- ============================================
--- T19 PRE-ORDER MIGRATION consistency (archive ↔ canonical)
+-- T19 PRE-ORDER MIGRATION consistency (archive â†” canonical)
 -- ============================================
 DO $$ DECLARE bad int; total int; BEGIN
   RESET ROLE;
@@ -467,7 +469,7 @@ DO $$ DECLARE bad int; total int; BEGIN
 END $$;
 
 -- ============================================
--- T4 MODE — PRE_ORDER request for available_preorder=false → rejected
+-- T4 MODE â€” PRE_ORDER request for available_preorder=false â†’ rejected
 -- ============================================
 RESET ROLE;
 UPDATE public.products SET available_preorder = false WHERE id = 'prod-1';
@@ -479,7 +481,8 @@ DO $$ BEGIN
     p_delivery_round_id => 'round-' || to_char(CURRENT_DATE + 2,'YYYYMMDD') || '-morning',
     p_delivery_method => 'self_delivery',
     p_dropoff_latitude => 10.7016, p_dropoff_longitude => 102.1429,
-    p_order_mode => 'PRE_ORDER', p_scheduled_date => CURRENT_DATE + 2
+    p_order_mode => 'PRE_ORDER', p_scheduled_date => CURRENT_DATE + 2,
+    p_delivery_address => 'm023-pre-addr'
   );
   RAISE EXCEPTION 'FAIL T4 not rejected';
 EXCEPTION WHEN OTHERS THEN
@@ -488,7 +491,7 @@ EXCEPTION WHEN OTHERS THEN
 END $$;
 
 -- ============================================
--- T5 MODE — both-mode product allowed in BOTH directions
+-- T5 MODE â€” both-mode product allowed in BOTH directions
 -- ============================================
 RESET ROLE;
 UPDATE public.products SET available_same_day = true, available_preorder = true WHERE id = 'prod-1';
@@ -506,11 +509,11 @@ DO $$ DECLARE a text; b text; BEGIN
     p_delivery_round_id => 'round-' || to_char(CURRENT_DATE + 2,'YYYYMMDD') || '-morning',
     p_delivery_method => 'self_delivery',
     p_dropoff_latitude => 10.7016, p_dropoff_longitude => 102.1429,
-    p_order_mode => 'PRE_ORDER', p_scheduled_date => CURRENT_DATE + 2))->>'order_number';
+    p_order_mode => 'PRE_ORDER', p_scheduled_date => CURRENT_DATE + 2, p_delivery_address => 'm023-pre-addr'))->>'order_number';
   IF a IS NOT NULL AND b IS NOT NULL THEN RAISE NOTICE 'PASS T5 both-mode allowed both ways'; ELSE RAISE EXCEPTION 'FAIL T5'; END IF;
 END $$;
 
 -- ============================================
--- DONE — discard every test-created row
+-- DONE â€” discard every test-created row
 -- ============================================
 ROLLBACK;
