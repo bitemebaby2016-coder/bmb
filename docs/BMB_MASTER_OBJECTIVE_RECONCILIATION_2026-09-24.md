@@ -1,555 +1,714 @@
-﻿﻿# BMB - à¹€à¸­à¸à¸ªà¸²à¸£à¸ªà¸£à¸¸à¸›à¸à¸²à¸£à¸•à¸£à¸§à¸ˆà¸ªà¸­à¸šà¸„à¸§à¸²à¸¡à¸ªà¸­à¸”à¸„à¸¥à¹‰à¸­à¸‡à¸à¸±à¸šà¸§à¸±à¸•à¸–à¸¸à¸›à¸£à¸°à¸ªà¸‡à¸„à¹Œà¸«à¸¥à¸±à¸à¸‚à¸­à¸‡à¹‚à¸„à¸£à¸‡à¸à¸²à¸£ (Master Objective Reconciliation)
+# BMB — MASTER OBJECTIVE RECONCILIATION
 
-> **à¸«à¸±à¸§à¹€à¸£à¸·à¹ˆà¸­à¸‡à¸ªà¸³à¸„à¸±à¸:** M1 Closure Full Product Completion (à¸à¸²à¸£à¸›à¸´à¸” Milestone 1 à¹„à¸¡à¹ˆà¹€à¸—à¹ˆà¸²à¸à¸±à¸šà¸—à¸µà¹ˆà¹‚à¸›à¸£à¹€à¸ˆà¸à¸•à¹Œà¹€à¸ªà¸£à¹‡à¸ˆà¸ªà¸¡à¸šà¸¹à¸£à¸“à¹Œà¸„à¸£à¸šà¸–à¹‰à¸§à¸™)
-> **à¸§à¸±à¸™à¸—à¸µà¹ˆà¸ˆà¸±à¸”à¸—à¸³:** 2026-09-24
+## M1 CLOSURE ≠ FULL PRODUCT COMPLETION
+
+> **⚠️ ข้อความสำคัญก่อนอ่านต่อ:** M1 Closure ≠ Full Product Completion (การปิด Milestone 1 ไม่ใช่การจบสินค้า/โปรเจกต์ทั้งหมด)
+
+> **วันที่:** 2026-09-24
 > **Repository:** `bitemebaby2016-coder/bmb`
-> **à¸ªà¸–à¸²à¸™à¸° HEAD à¸›à¸±à¸ˆà¸ˆà¸¸à¸šà¸±à¸™:** `454b212` (main branch = origin/main, à¸‹à¸´à¸‡à¹€à¸£à¸µà¸¢à¸šà¸£à¹‰à¸­à¸¢à¹à¸¥à¹‰à¸§)
-> **à¸œà¸¹à¹‰à¸ˆà¸±à¸”à¸—à¸³à¹‚à¸”à¸¢:** AI Engineering Agent (à¹ƒà¸Šà¹‰à¸«à¸¥à¸±à¸à¸à¸²à¸£ Code / Database / Evidence à¹€à¸›à¹‡à¸™à¸‚à¹‰à¸­à¸¡à¸¹à¸¥à¸­à¹‰à¸²à¸‡à¸­à¸´à¸‡)
-> **à¸«à¸¡à¸²à¸¢à¹€à¸«à¸•à¸¸à¸ à¸²à¸©à¸²:** à¹€à¸­à¸à¸ªà¸²à¸£à¸™à¸µà¹‰à¸—à¸³à¹€à¸›à¹‡à¸™à¸ à¸²à¸©à¸²à¹„à¸—à¸¢à¸—à¸±à¹‰à¸‡à¸«à¸¡à¸”à¸•à¸²à¸¡à¸„à¸³à¸‚à¸­ à¹à¸•à¹ˆà¸¢à¸±à¸‡à¸„à¸‡à¸¨à¸±à¸žà¸—à¹Œà¸—à¸²à¸‡à¹€à¸—à¸„à¸™à¸´à¸„à¸¡à¸²à¸•à¸£à¸à¸²à¸™à¹ƒà¸™à¸ à¸²à¸©à¸²à¸­à¸±à¸‡à¸à¸¤à¸© à¹€à¸Šà¹ˆà¸™ VERIFIED, PARTIAL, MISSING, BLOCKED, OWNER-ONLY, DEFERRED, RPC, API, DB, à¹à¸¥à¸° M1/P2/P3 à¸•à¸²à¸¡à¹à¸™à¸§à¸›à¸à¸´à¸šà¸±à¸•à¸´à¸‚à¸­à¸‡ repository à¸™à¸µà¹‰
+> **HEAD ณ เวลาตรวจสอบ:** `1df7498` (branch `main` = `origin/main`)
+> **ผู้ตรวจสอบ:** AI Engineering Agent (ตรวจจาก Code / Database Migration / Evidence จริงเท่านั้น — ห้ามใช้ Fake Evidence, ห้าม Mock ข้อมูล, ห้ามใช้ Documentation อย่างเดียวในการสรุป)
+> **ขอบเขต:** ไฟล์นี้ไม่มีการแก้ implementation code ใดๆ ทั้งสิ้น (ตามกฎ AUDIT / RECONCILE / CLASSIFY / EVIDENCE เท่านั้น)
 
 ---
 
-## 0. à¸ˆà¸¸à¸”à¸›à¸£à¸°à¸ªà¸‡à¸„à¹Œà¸«à¸¥à¸±à¸ (PURPOSE)
+## 0. PURPOSE
 
-à¹€à¸­à¸à¸ªà¸²à¸£à¸™à¸µà¹‰à¸—à¸³à¸«à¸™à¹‰à¸²à¸—à¸µà¹ˆ:
+ก่อนแก้ code เพิ่ม ห้ามสรุปว่า BMB เหลือเพียง 3 owner actions และห้ามถือว่า M1 closure evidence = full product completion
 
-1. à¸•à¸£à¸§à¸ˆà¸ªà¸­à¸šà¸§à¹ˆà¸²à¸ªà¸´à¹ˆà¸‡à¸—à¸µà¹ˆ Owner (à¹€à¸ˆà¹‰à¸²à¸‚à¸­à¸‡à¹‚à¸›à¸£à¹€à¸ˆà¸à¸•à¹Œ) à¸à¸³à¸«à¸™à¸”à¹ƒà¸«à¹‰à¹€à¸›à¹‡à¸™à¹€à¸›à¹‰à¸²à¸«à¸¡à¸²à¸¢à¸‚à¸­à¸‡ BMB à¹„à¸§à¹‰à¸•à¸±à¹‰à¸‡à¹à¸•à¹ˆà¸•à¹‰à¸™ à¸–à¸¹à¸à¸ªà¸£à¹‰à¸²à¸‡à¸„à¸£à¸šà¸–à¹‰à¸§à¸™à¹à¸„à¹ˆà¹„à¸«à¸™
-2. à¹€à¸›à¸£à¸µà¸¢à¸šà¹€à¸—à¸µà¸¢à¸šà¹€à¸›à¹‰à¸²à¸«à¸¡à¸²à¸¢à¹€à¸”à¸´à¸¡à¸à¸±à¸šà¸ªà¸´à¹ˆà¸‡à¸—à¸µà¹ˆà¹€à¸›à¹‡à¸™à¸ˆà¸£à¸´à¸‡à¹ƒà¸™à¸›à¸±à¸ˆà¸ˆà¸¸à¸šà¸±à¸™ (à¸ˆà¸²à¸à¸à¸²à¸£à¸”à¸¹à¹‚à¸„à¹‰à¸”à¸ˆà¸£à¸´à¸‡à¹à¸¥à¸°à¸à¸²à¸™à¸‚à¹‰à¸­à¸¡à¸¹à¸¥à¸ˆà¸£à¸´à¸‡)
-3. à¹à¸¢à¸ "à¸„à¸³à¸–à¸²à¸¡" à¸­à¸­à¸à¹€à¸›à¹‡à¸™à¸ªà¸­à¸‡à¸‚à¹‰à¸­à¸—à¸µà¹ˆà¹à¸•à¸à¸•à¹ˆà¸²à¸‡à¸à¸±à¸™à¸­à¸¢à¹ˆà¸²à¸‡à¸Šà¸±à¸”à¹€à¸ˆà¸™ à¸‹à¸¶à¹ˆà¸‡à¸«à¹‰à¸²à¸¡à¸œà¸ªà¸¡à¸à¸±à¸™à¹€à¸”à¹‡à¸”à¸‚à¸²à¸”:
+เอกสารนี้เป็น **Master Objective Reconciliation** เพื่อพิสูจน์ว่า:
 
-### à¸‚à¹‰à¸­ A: à¸à¸²à¸£à¸›à¸´à¸” Milestone 1 (M1 CLOSURE)
-> à¹€à¸à¸“à¸‘à¹Œà¸”à¹‰à¸²à¸™à¹€à¸—à¸„à¸™à¸´à¸„à¹à¸¥à¸°à¸à¸²à¸£à¸”à¸³à¹€à¸™à¸´à¸™à¸‡à¸²à¸™à¸—à¸µà¹ˆà¸à¸³à¸«à¸™à¸”à¹„à¸§à¹‰à¹ƒà¸™ M1 à¸›à¸´à¸”à¸„à¸£à¸šà¹à¸¥à¹‰à¸§à¸«à¸£à¸·à¸­à¸¢à¸±à¸‡?
+> สิ่งที่เจ้าของกำหนดให้ BMB เป็น Cloud Kitchen Operating Platform ตั้งแต่ต้น
+> ถูก implement จริงครบแค่ไหน, เชื่อมต่อกันจริงแค่ไหน, production runtime ผ่านแค่ไหน และอะไรถูก defer อย่างมีเหตุผล
 
-### à¸‚à¹‰à¸­ B: à¸§à¸±à¸•à¸–à¸¸à¸›à¸£à¸°à¸ªà¸‡à¸„à¹Œà¹€à¸•à¹‡à¸¡à¸£à¸¹à¸›à¹à¸šà¸šà¸‚à¸­à¸‡à¸œà¸¥à¸´à¸•à¸ à¸±à¸“à¸‘à¹Œ BMB (FULL BMB PRODUCT OBJECTIVE)
-> à¸šà¸£à¸—à¸±à¸” Cloud Kitchen Platform à¸—à¸±à¹‰à¸‡à¸«à¸¡à¸”à¸•à¸²à¸¡à¸§à¸±à¸•à¸–à¸¸à¸›à¸£à¸°à¸ªà¸‡à¸„à¹Œà¸”à¸±à¹‰à¸‡à¹€à¸”à¸´à¸¡ à¸ªà¸£à¹‰à¸²à¸‡à¸„à¸£à¸šà¹à¸¥à¸°à¸žà¸£à¹‰à¸­à¸¡à¹ƒà¸Šà¹‰à¸‡à¸²à¸™à¸ˆà¸£à¸´à¸‡à¸«à¸£à¸·à¸­à¸¢à¸±à¸‡?
+ต้องแยกให้ชัด 2 คำถามที่ห้ามปนกัน:
 
-**à¸à¸Žà¸—à¸µà¹ˆà¹„à¸¡à¹ˆà¸ªà¸²à¸¡à¸²à¸£à¸–à¸¥à¸°à¹€à¸¡à¸´à¸”à¹„à¸”à¹‰:** à¸«à¹‰à¸²à¸¡à¹ƒà¸Šà¹‰à¸„à¸³à¸•à¸­à¸šà¸‚à¸­à¸‡à¸‚à¹‰à¸­ A à¹à¸—à¸™à¸„à¸³à¸•à¸­à¸šà¸‚à¸­à¸‡à¸‚à¹‰à¸­ B à¸ à¸²à¸¢à¹ƒà¸•à¹‰à¸ªà¸–à¸²à¸™à¸à¸²à¸£à¸“à¹Œà¹ƒà¸”à¹†
-à¸à¸²à¸£à¸—à¸µà¹ˆ M1 à¸›à¸´à¸”à¹„à¸”à¹‰ à¹„à¸¡à¹ˆà¹„à¸”à¹‰à¸«à¸¡à¸²à¸¢à¸„à¸§à¸²à¸¡à¸§à¹ˆà¸² à¹‚à¸›à¸£à¹€à¸ˆà¸à¸•à¹Œ BMB à¸—à¸±à¹‰à¸‡à¸«à¸¡à¸”à¹€à¸ªà¸£à¹‡à¸ˆà¸ªà¸¡à¸šà¸¹à¸£à¸“à¹Œà¹à¸¥à¹‰à¸§
+### A. M1 CLOSURE
+
+> M1 technical/operational acceptance criteria ปิดครบหรือยัง?
+
+### B. FULL BMB PRODUCT OBJECTIVE
+
+> BMB Cloud Kitchen Platform ตาม objective ที่กำหนดไว้ทั้งหมด สร้างครบและพร้อมใช้งานจริงหรือยัง?
+
+**ห้ามใช้ A แทน B** — สองสิ่งนี้เป็นคนละเรื่องกันโดยสิ้นเชิง
 
 ---
 
-## 1. à¸à¸Žà¸žà¸·à¹‰à¸™à¸à¸²à¸™à¸‚à¸­à¸‡à¸à¸²à¸£à¸•à¸£à¸§à¸ˆà¸ªà¸­à¸š (NON-NEGOTIABLE AUDIT RULES)
+## 1. NON-NEGOTIABLE AUDIT RULES
 
-à¸¥à¸³à¸”à¸±à¸šà¸„à¸§à¸²à¸¡à¸ªà¸³à¸„à¸±à¸à¸‚à¸­à¸‡à¸«à¸¥à¸±à¸à¸à¸²à¸™à¸—à¸µà¹ˆà¹€à¸Šà¸·à¹ˆà¸­à¸–à¸·à¸­à¹„à¸”à¹‰ (à¹€à¸£à¸µà¸¢à¸‡à¸ˆà¸²à¸ à¸¡à¸²à¸à¸—à¸µà¹ˆà¸ªà¸¸à¸”à¹„à¸›à¸™à¹‰à¸­à¸¢à¸—à¸µà¹ˆà¸ªà¸¸à¸”):
+ลำดับชั้นของหลักฐาน (evidence hierarchy) ที่ใช้ในเอกสารนี้:
+
 ```text
-à¸¥à¸³à¸”à¸±à¸š 1: à¸žà¸¤à¸•à¸´à¸à¸£à¸£à¸¡à¸à¸²à¸£à¸—à¸³à¸‡à¸²à¸™à¸ˆà¸£à¸´à¸‡à¸šà¸™ Production Server
-à¸¥à¸³à¸”à¸±à¸š 2: à¹‚à¸„à¸£à¸‡à¸ªà¸£à¹‰à¸²à¸‡à¸à¸²à¸™à¸‚à¹‰à¸­à¸¡à¸¹à¸¥ Supabase à¸ˆà¸£à¸´à¸‡ / RPC / RLS / à¸‚à¹‰à¸­à¸¡à¸¹à¸¥à¸ˆà¸£à¸´à¸‡
-à¸¥à¸³à¸”à¸±à¸š 3: à¹‚à¸„à¹‰à¸” Runtime à¸‚à¸­à¸‡ Application
-à¸¥à¸³à¸”à¸±à¸š 4: à¸à¸²à¸£à¸•à¸±à¹‰à¸‡à¸„à¹ˆà¸² Integration / Edge Functions / Make.com
-à¸¥à¸³à¸”à¸±à¸š 5: Automated Tests
-à¸¥à¸³à¸”à¸±à¸š 6: Migration Scripts
-à¸¥à¸³à¸”à¸±à¸š 7: à¹€à¸­à¸à¸ªà¸²à¸£à¸•à¹ˆà¸²à¸‡à¹† (Documentation)
-à¸¥à¸³à¸”à¸±à¸š 8: à¸„à¸§à¸²à¸¡à¸„à¸²à¸”à¸„à¸°à¹€à¸™à¸‚à¸­à¸‡ AI
+1. Running production behavior
+2. Live Supabase schema / RPC / RLS / data
+3. Application runtime code
+4. Integration configuration / Edge Functions / Make.com
+5. Automated tests
+6. Migrations
+7. Documentation
+8. AI assumptions
 ```
 
-à¸à¸Žà¸›à¹‰à¸­à¸‡à¸à¸±à¸™à¸à¸²à¸£à¹ƒà¸Šà¹‰à¸«à¸¥à¸±à¸à¸à¸²à¸™à¸›à¸¥à¸­à¸¡:
+กฎที่ห้ามฝ่าฝืนเด็ดขาด:
+
 ```text
-à¹‚à¸„à¹‰à¸”à¹à¸‚à¹‡à¸‡à¸•à¸±à¸§ (HARDCODED) != à¸œà¹ˆà¸²à¸™à¸à¸²à¸£à¸¢à¸·à¸™à¸¢à¸±à¸™ (VERIFIED)
-à¸¡à¸µà¹„à¸Ÿà¸¥à¹Œà¸­à¸¢à¸¹à¹ˆ (EXISTS FILE) != à¸Ÿà¸µà¹€à¸ˆà¸­à¸£à¹Œà¸ªà¸¡à¸šà¸¹à¸£à¸“à¹Œ (FEATURE COMPLETE)
-à¸¡à¸µà¹€à¸—à¸ªà¸­à¸¢à¸¹à¹ˆ (TEST EXISTS) != à¸—à¸³à¸‡à¸²à¸™à¸ªà¸³à¹€à¸£à¹‡à¸ˆà¸šà¸™ Production (PRODUCTION VERIFIED)
-à¸¡à¸µ RPC (RPC EXISTS) != à¸¥à¸¹à¹ˆà¸§à¸´à¸™à¸œà¸¹à¹‰à¹ƒà¸Šà¹‰à¹€à¸Šà¸·à¹ˆà¸­à¸¡à¸•à¹ˆà¸­à¸ˆà¸£à¸´à¸‡ (CUSTOMER FLOW CONNECTED)
-à¸¡à¸µà¸«à¸™à¹‰à¸² Admin (ADMIN PAGE EXISTS) != à¸£à¸°à¸šà¸š Admin à¸ªà¸¡à¸šà¸¹à¸£à¸“à¹Œ (ADMIN SYSTEM COMPLETE)
-à¸¡à¸µà¸Ÿà¸±à¸‡à¸à¹Œà¸Šà¸±à¸™ AI (AI FUNCTION EXISTS) != à¸£à¸°à¸šà¸š AI à¹€à¸Šà¸·à¹ˆà¸­à¸¡à¸•à¹ˆà¸­à¸ªà¸¡à¸šà¸¹à¸£à¸“à¹Œ (AI SYSTEM INTEGRATED)
-à¸¥à¸š Mock à¸­à¸­à¸ (MOCK REMOVED) != à¸¢à¸·à¸™à¸¢à¸±à¸™à¸¥à¸¹à¹ˆà¸§à¸´à¸™à¹‚à¸¥à¸à¸ˆà¸£à¸´à¸‡à¸œà¹ˆà¸²à¸™à¹à¸¥à¹‰à¸§ (REAL WORLD FLOW VERIFIED)
-à¸‚à¹‰à¸­à¸„à¸§à¸²à¸¡à¹ƒà¸™à¹€à¸­à¸à¸ªà¸²à¸£ (DOCUMENTATION CLAIM) != à¸«à¸¥à¸±à¸à¸à¸²à¸™à¸à¸²à¸£ Implement à¸ˆà¸£à¸´à¸‡ (IMPLEMENTATION EVIDENCE)
+HARDCODED != VERIFIED
+EXISTS FILE != FEATURE COMPLETE
+TEST EXISTS != PRODUCTION VERIFIED
+RPC EXISTS != CUSTOMER FLOW CONNECTED
+ADMIN PAGE EXISTS != ADMIN SYSTEM COMPLETE
+AI FUNCTION EXISTS != AI SYSTEM INTEGRATED
+MOCK REMOVED != REAL WORLD FLOW VERIFIED
+DOCUMENTATION CLAIM != IMPLEMENTATION EVIDENCE
 ```
 
-à¸ªà¸–à¸²à¸™à¸°à¸—à¸µà¹ˆà¹ƒà¸Šà¹‰à¹„à¸”à¹‰à¹€à¸‰à¸žà¸²à¸° 6 à¸ªà¸–à¸²à¸™à¸°à¸™à¸µà¹‰à¹€à¸—à¹ˆà¸²à¸™à¸±à¹‰à¸™:
-```
-VERIFIED       | PARTIAL       | MISSING
-BLOCKED        | OWNER-ONLY    | DEFERRED
-```
-à¸«à¹‰à¸²à¸¡à¹ƒà¸Šà¹‰à¸„à¸³à¸§à¹ˆà¸² `COMPLETE` à¹€à¸§à¹‰à¸™à¹à¸•à¹ˆà¸¡à¸µà¸«à¸¥à¸±à¸à¸à¸²à¸™à¸„à¸£à¸šà¸—à¸¸à¸à¸Šà¸±à¹‰à¸™à¸•à¸²à¸¡à¸¥à¸³à¸”à¸±à¸šà¸‚à¹‰à¸²à¸‡à¸•à¹‰à¸™
+ห้ามสร้าง fake evidence, mock evidence หรือ claim จาก documentation อย่างเดียว
 
 ---
 
-## 2. à¸à¸²à¸£à¸•à¸£à¸§à¸ˆà¸ªà¸­à¸š Baseline (FIRST: BASELINE RECONCILIATION)
+## 2. BASELINE RECONCILIATION (ตรวจก่อนเริ่มงาน)
 
-| à¸£à¸²à¸¢à¸à¸²à¸£ | à¸„à¹ˆà¸²à¸›à¸±à¸ˆà¸ˆà¸¸à¸šà¸±à¸™ | à¸„à¸³à¸­à¸˜à¸´à¸šà¸²à¸¢ |
-|--------|-------------|----------|
-| Working Tree | CLEAN | à¹„à¸¡à¹ˆà¸¡à¸µà¹„à¸Ÿà¸¥à¹Œà¸—à¸µà¹ˆà¹à¸à¹‰à¹„à¸‚à¹„à¸§à¹‰à¹à¸•à¹ˆà¸¢à¸±à¸‡à¹„à¸¡à¹ˆà¹„à¸”à¹‰ Commit |
-| Branch | main | -- |
-| HEAD | `454b212` | docs(M1): create Master Objective Reconciliation |
-| Origin/MAIN | `454b212` | à¸‹à¸´à¸‡à¸„à¹Œà¹€à¸£à¸µà¸¢à¸šà¸£à¹‰à¸­à¸¢à¹à¸¥à¹‰à¸§ |
-| Git merge-base à¸£à¸°à¸«à¸§à¹ˆà¸²à¸‡ `04d19c7` à¸à¸±à¸š HEAD | à¸œà¹ˆà¸²à¸™ (exit code 0) | à¸à¸²à¸£à¹à¸à¹‰à¹„à¸‚ MOCK_DRIVERS -> DB drivers à¸–à¸¹à¸ Merge à¹€à¸‚à¹‰à¸²à¸à¸²à¸™à¹à¸¥à¹‰à¸§ |
+ผลการตรวจจริง ณ 2026-09-24:
 
-**à¸šà¸—à¸ªà¸£à¸¸à¸›à¹€à¸šà¸·à¹‰à¸­à¸‡à¸•à¹‰à¸™:** Baseline à¹‚à¸›à¸£à¹€à¸ˆà¸à¸­à¸¢à¸¹à¹ˆà¹ƒà¸™à¸ªà¸ à¸²à¸žà¸ªà¸¡à¸šà¸¹à¸£à¸“à¹Œ à¸à¸²à¸£à¹à¸à¹‰à¹„à¸‚ MOCK_DRIVERS à¸–à¸¹à¸ Merge à¹€à¸‚à¹‰à¸²à¸¡à¸²à¸–à¸¹à¸à¸•à¹‰à¸­à¸‡ à¹„à¸¡à¹ˆà¸•à¹‰à¸­à¸‡à¸—à¸³à¸‹à¹‰à¸³à¸­à¸µà¸
-à¹€à¸­à¸à¸ªà¸²à¸£ BMB_M1_CLOSURE_EVIDENCE_2026-09-24.md à¸ªà¸­à¸”à¸„à¸¥à¹‰à¸­à¸‡à¸à¸±à¸šà¸ªà¸–à¸²à¸™à¸°à¸›à¸±à¸ˆà¸ˆà¸¸à¸šà¸±à¸™ à¹ƒà¸Šà¹‰à¹€à¸›à¹‡à¸™ Reference à¹„à¸”à¹‰
+| รายการ | ค่า | หลักฐาน |
+|--------|-----|---------|
+| Branch | `main` | `git branch --show-current` |
+| HEAD | `1df7498` | `git rev-parse HEAD` |
+| Origin/main | `1df7498` | `git rev-parse origin/main` |
+| Working Tree | มี staged deletion ของไฟล์นี้เอง (งานนี้สร้างขึ้นใหม่แทน) | `git status --short` |
+| `04d19c7` เป็น ancestor ของ HEAD | **PASS** (exit code 0) | `git merge-base --is-ancestor 04d19c7 HEAD` |
+
+### สรุป baseline
+
+1. **`04d19c7` (fix: replace MOCK_DRIVERS with real DB drivers) ถูก merge แล้ว** — ยืนยันจาก ancestor check + โค้ดปัจจุบัน `src/pages/admin/DeliveryManagement.tsx` import `listDrivers()` จาก `src/lib/bmbAdminApi_drivers.ts` ซึ่งเรียก RPC `list_drivers` จริง — **ห้าม reimplement 04d19c7**
+2. เอกสาร `docs/BMB_M1_CLOSURE_EVIDENCE_2026-09-24.md` สอดคล้องกับ actual repository state — commit หลังจากนั้นทั้งหมดเป็น docs-only ไม่มีการเปลี่ยนสถานะ code
+
+### คำจำกัดความสถานะ (MATRIX LEGEND)
+
+| สถานะ | ความหมาย |
+|-------|----------|
+| **VERIFIED** | Implement ครบทั้ง Code, DB, RPC และมีหลักฐานการทำงานจริงบน Production |
+| **PARTIAL** | มี Code, DB, RPC แล้วแต่ยังขาดหลักฐานสำคัญอย่างน้อยหนึ่งชั้น (ส่วนใหญ่คือ production runtime evidence) |
+| **MISSING** | ยังไม่มีการ Implement เลย — ไม่พบ Code / DB / RPC / Flow ที่เกี่ยวข้อง |
+| **BLOCKED** | ระบบพร้อมแต่ถูก block จาก dependency ภายนอก (API key, credentials, owner decision) |
+| **OWNER-ONLY** | ต้องทำโดยตรงจาก Owner เท่านั้น (production secrets, API keys, order จริง, bill จริง) |
+| **DEFERRED** | เลื่อนออกไป phase หลังหรือ post-M1 อย่างชัดเจน |
+
+**ห้ามใช้คำว่า `COMPLETE` เว้นแต่มีหลักฐานครบทุกชั้นตามลำดับชั้นด้านบน**
 
 ---
 
-## 3. à¸­à¸˜à¸´à¸šà¸²à¸¢à¸„à¸³à¸ˆà¸³à¸à¸±à¸”à¸„à¸§à¸²à¸¡à¸ªà¸–à¸²à¸™à¸° (MASTER OBJECTIVE MATRIX LEGEND)
+## 3. MASTER OBJECTIVE MATRIX (โครงสร้างมาตรฐาน)
 
-à¸•à¸²à¸£à¸²à¸‡à¹ƒà¸™à¹€à¸­à¸à¸ªà¸²à¸£à¸–à¸±à¸”à¹„à¸›à¸ˆà¸°à¹ƒà¸Šà¹‰à¹‚à¸„à¸£à¸‡à¸ªà¸£à¹‰à¸²à¸‡à¹à¸–à¸§à¹à¸šà¸šà¹€à¸”à¸µà¸¢à¸§à¸à¸±à¸šà¸™à¸µà¹‰:
+ทุกตารางในเอกสารนี้ใช้โครงสร้างแถวมาตรฐานเดียวกัน:
 
 ```text
 | Domain | Original Objective | Required Capability | Implementation Evidence | DB/RPC Evidence | Runtime Evidence | Production Evidence | Status | M1/P2/Deferred | Exact Gap |
 ```
 
-| à¸ªà¸–à¸²à¸™à¸° | à¸„à¸³à¹à¸›à¸¥à¹à¸¥à¸°à¸„à¸§à¸²à¸¡à¸«à¸¡à¸²à¸¢ |
-|-------|------------------|
-| **VERIFIED** | à¸¡à¸µà¸à¸²à¸£ Implement à¸„à¸£à¸šà¸—à¸±à¹‰à¸‡ Code, DB, RPC, Tests à¹à¸¥à¸°à¸œà¹ˆà¸²à¸™à¸à¸²à¸£à¸¢à¸·à¸™à¸¢à¸±à¸™à¸§à¹ˆà¸²à¸¡à¸µà¸žà¸¤à¸•à¸´à¸à¸£à¸£à¸¡à¸—à¸³à¸‡à¸²à¸™à¸ˆà¸£à¸´à¸‡à¸šà¸™ Production Server |
-| **PARTIAL** | à¸¡à¸µ Code, DB, à¹à¸¥à¸° RPC à¹à¸¥à¹‰à¸§ à¹à¸•à¹ˆà¸¢à¸±à¸‡à¸‚à¸²à¸”à¸«à¸¥à¸±à¸à¸à¸²à¸™à¸ªà¸³à¸„à¸±à¸à¸­à¸¢à¹ˆà¸²à¸‡à¸™à¹‰à¸­à¸¢à¸«à¸™à¸¶à¹ˆà¸‡à¸‚à¹‰à¸­ (à¹‚à¸”à¸¢à¹€à¸‰à¸žà¸²à¸°à¸à¸²à¸£à¸—à¸”à¸ªà¸­à¸šà¸à¸²à¸£à¸—à¸³à¸‡à¸²à¸™à¸ˆà¸£à¸´à¸‡) |
-| **MISSING** | à¸¢à¸±à¸‡à¹„à¸¡à¹ˆà¸¡à¸µà¸à¸²à¸£ Implement à¹€à¸¥à¸¢, à¹„à¸¡à¹ˆà¸žà¸š Code / DB / RPC à¸«à¸£à¸·à¸­ Flow à¸—à¸µà¹ˆà¹€à¸à¸µà¹ˆà¸¢à¸§à¸‚à¹‰à¸­à¸‡ |
-| **BLOCKED** | à¸•à¸±à¸§à¸£à¸°à¸šà¸šà¸žà¸£à¹‰à¸­à¸¡à¹à¸¥à¹‰à¸§ à¹à¸•à¹ˆà¸–à¸¹à¸ Block à¸ˆà¸²à¸ Dependency à¸ à¸²à¸¢à¸™à¸­à¸ (à¹€à¸Šà¹ˆà¸™ à¸•à¹‰à¸­à¸‡à¸£à¸­ API Key, à¸œà¸¹à¹‰à¹ƒà¸«à¹‰à¸šà¸£à¸´à¸à¸²à¸£, à¸«à¸£à¸·à¸­à¸ªà¸´à¸—à¸˜à¸´à¹Œ) |
-| **OWNER-ONLY** | à¸•à¹‰à¸­à¸‡à¸à¸²à¸£à¸à¸²à¸£à¸”à¸³à¹€à¸™à¸´à¸™à¸à¸²à¸£à¹‚à¸”à¸¢à¸•à¸£à¸‡à¸ˆà¸²à¸ Owner à¹€à¸—à¹ˆà¸²à¸™à¸±à¹‰à¸™ (à¹€à¸Šà¹ˆà¸™ à¹ƒà¸ªà¹ˆ Production Secrets, API Keys, à¸§à¸²à¸‡ Order à¸ˆà¸£à¸´à¸‡, à¹ƒà¸«à¹‰ Bill) |
-| **DEFERRED** | à¸•à¸±à¸”à¸ªà¸´à¸™à¹ƒà¸ˆà¹€à¸¥à¸·à¹ˆà¸­à¸™à¸­à¸­à¸à¹„à¸›à¸ªà¸¹à¹ˆ Phase à¹ƒà¸«à¸¡à¹ˆ à¸«à¸£à¸·à¸­ Domain B à¸«à¸£à¸·à¸­ Post-M1 à¹‚à¸”à¸¢à¸Šà¸±à¸”à¹€à¸ˆà¸™ |
+Status ใช้เพียง: `VERIFIED / PARTIAL / MISSING / BLOCKED / OWNER-ONLY / DEFERRED`
 
 ---
 
-## 4. à¹à¸¢à¸à¸•à¸£à¸§à¸ˆà¸ªà¸­à¸šà¹à¸žà¸¥à¸•à¸Ÿà¸­à¸£à¹Œà¸¡à¸à¸²à¸£à¸ªà¸±à¹ˆà¸‡à¸‹à¸·à¹‰à¸­à¸¥à¸¹à¸à¸„à¹‰à¸² (CUSTOMER ORDERING PLATFORM â€” RECONCILE)
+## 4. RECONCILE: CUSTOMER ORDERING PLATFORM
 
-| à¸«à¸±à¸§à¸‚à¹‰à¸­ | à¸§à¸±à¸•à¸–à¸¸à¸›à¸£à¸°à¸ªà¸‡à¸„à¹Œà¹€à¸”à¸´à¸¡ | à¸„à¸§à¸²à¸¡à¸ªà¸²à¸¡à¸²à¸£à¸–à¹ƒà¸™à¸à¸²à¸£à¸•à¹‰à¸­à¸‡à¸¡à¸µ | à¸«à¸¥à¸±à¸à¸à¸²à¸™à¸ˆà¸²à¸à¹‚à¸„à¹‰à¸”à¸ˆà¸£à¸´à¸‡ | à¸ªà¸–à¸²à¸™à¸° | à¸«à¸¡à¸§à¸”à¸«à¸¡à¸¹à¹ˆ | à¸Šà¹ˆà¸­à¸‡à¸§à¹ˆà¸²à¸‡à¸—à¸µà¹ˆà¸¢à¸±à¸‡à¹€à¸«à¸¥à¸·à¸­ |
-|--------|------------------|---------------------|--------------------|-------|----------|----------------------|
-| PWA à¸‚à¸­à¸‡à¸¥à¸¹à¸à¸„à¹‰à¸² | à¹à¸­à¸›à¸ªà¸±à¹ˆà¸‡à¸­à¸²à¸«à¸²à¸£à¸¡à¸·à¸­à¸–à¸·à¸­ à¸•à¸´à¸”à¸•à¸±à¹‰à¸‡à¹„à¸”à¹‰ | PWA (sw.js, manifest, Offline) | vite-plugin-pwa à¹„à¸Ÿà¸¥à¹Œà¸„à¸£à¸š | VERIFIED | M1 | à¹„à¸¡à¹ˆà¸¡à¸µ |
-| Mobile-first | à¸­à¸­à¸à¹à¸šà¸šà¸ªà¸³à¸«à¸£à¸±à¸šà¸¡à¸·à¸­à¸–à¸·à¸­à¸à¹ˆà¸­à¸™à¹€à¸ªà¸¡à¸­ | Responsive Tailwind 390x844 px | à¸—à¸”à¸ªà¸­à¸šà¸«à¸™à¹‰à¸²à¹à¸£à¸à¸ªà¸³à¹€à¸£à¹‡à¸ˆ | VERIFIED | M1 | à¹„à¸¡à¹ˆà¸¡à¸µ |
-| à¹€à¸¡à¸™à¸¹à¸­à¸²à¸«à¸²à¸£ | à¸«à¸¡à¸§à¸”à¸«à¸¡à¸¹à¹ˆ / à¸ªà¸´à¸™à¸„à¹‰à¸² / à¹€à¸žà¸´à¹ˆà¸¡à¹€à¸•à¸´à¸¡ | à¸•à¸²à¸£à¸²à¸‡ products, categories, add-ons | Migr 016 + Admin CRUD à¸„à¸£à¸š | VERIFIED | M1 | à¹„à¸¡à¹ˆà¸¡à¸µ |
-| à¸ªà¸´à¸™à¸„à¹‰à¸²à¸¡à¸µ stock à¸«à¸£à¸·à¸­à¹„à¸¡à¹ˆ | Stock à¸ˆà¸£à¸´à¸‡à¸ˆà¸²à¸à¸ªà¸¹à¸•à¸£à¹à¸¥à¸°à¸§à¸±à¸•à¸–à¸¸à¸”à¸´à¸š | availability engine (quota + cutoff) | Migr 016/019; à¸¢à¸±à¸‡à¹„à¸¡à¹ˆà¹„à¸”à¹‰à¸—à¸”à¸ªà¸­à¸šà¸à¸±à¸š BOM stock à¸ˆà¸£à¸´à¸‡ | PARTIAL | M1/P1 | à¸•à¹‰à¸­à¸‡à¸”à¸¶à¸‡à¸ˆà¸²à¸à¸ªà¸¹à¸•à¸£à¸­à¸²à¸«à¸²à¸£ + Inventory à¸ˆà¸£à¸´à¸‡ |
-| à¸ªà¸±à¹ˆà¸‡à¸§à¸±à¸™à¸™à¸µà¹‰ (Same-Day) | à¸ªà¸±à¹ˆà¸‡à¸£à¸±à¸šà¹ƒà¸™à¸§à¸±à¸™à¹€à¸”à¸µà¸¢à¸§à¸à¸±à¸™ | à¸¥à¸¹à¹ˆà¸§à¸´à¸™ SAME_DAY à¹à¸šà¸š Canonical | Migr 025 canonical RPC | PARTIAL | M1 | à¸•à¹‰à¸­à¸‡à¸à¸²à¸£ Order à¸ˆà¸£à¸´à¸‡ 1 à¹ƒà¸š |
-| à¸ªà¸±à¹ˆà¸‡à¸¥à¹ˆà¸§à¸‡à¸«à¸™à¹‰à¸² (Pre-Order) | à¸ªà¸±à¹ˆà¸‡à¸ˆà¸­à¸‡à¹„à¸§à¹‰à¸¥à¹ˆà¸§à¸‡à¸«à¸™à¹‰à¸²à¸«à¸¥à¸²à¸¢à¸§à¸±à¸™ | à¸¥à¸¹à¹ˆà¸§à¸´à¸™ PRE_ORDER à¸„à¸£à¸šà¸—à¸¸à¸à¸‚à¸±à¹‰à¸™à¸•à¸­à¸™ | Migr 025/027/035 trigger à¸¡à¸µà¸„à¸£à¸š | **PARTIAL / BLOCKER** | M1 | à¸•à¹‰à¸­à¸‡à¸¡à¸µ Pre-Order à¸ˆà¸£à¸´à¸‡à¸«à¸™à¸¶à¹ˆà¸‡à¹ƒà¸šà¸ˆà¸šå…¨æµç¨‹ |
-| à¹€à¸¥à¸·à¸­à¸à¸§à¸±à¸™à¸—à¸µà¹ˆà¸ˆà¸±à¸”à¸ªà¹ˆà¸‡ | à¹€à¸¥à¸·à¸­à¸à¸§à¸±à¸™à¹ƒà¸™à¸­à¸™à¸²à¸„à¸• | minDate=today+1 + Server à¸•à¸£à¸§à¸ˆà¸ªà¸­à¸šà¸‹à¹‰à¸³ | CheckoutPage à¸šà¸£à¸£à¸—à¸±à¸” 51/53/186-189 | PARTIAL | M1 | à¸•à¹‰à¸­à¸‡à¸à¸²à¸£à¸—à¸”à¸ªà¸­à¸šà¹€à¸¥à¸·à¸­à¸à¸§à¸±à¸™à¸—à¸µà¹ˆà¸šà¸™ Production |
-| à¹€à¸¥à¸·à¸­à¸ Delivery Round | à¹€à¸¥à¸·à¸­à¸à¸£à¸­à¸šà¸ˆà¸±à¸”à¸ªà¹ˆà¸‡à¸—à¸µà¹ˆà¸à¸³à¸«à¸™à¸” | à¸•à¸²à¸£à¸²à¸‡ delivery_rounds + API à¸”à¸¶à¸‡à¸¥à¸´à¸ªà¸•à¹Œà¸£à¸­à¸š | Migr 015/025 | PARTIAL | M1 | à¹€à¸Šà¸·à¹ˆà¸­à¸¡ Round à¸à¸±à¸š Pre-Order à¹ƒà¸«à¹‰à¸„à¸£à¸š |
-| à¸—à¸µà¹ˆà¸­à¸¢à¸¹à¹ˆà¸ˆà¸±à¸”à¸ªà¹ˆà¸‡ | Address à¸ªà¸³à¸«à¸£à¸±à¸šà¸ªà¹ˆà¸‡à¸‚à¸­à¸‡ | delivery_address + Trigger à¸šà¸±à¸‡à¸„à¸±à¸šà¸ˆà¸²à¸ Migr 035 | Migr 035 Trigger à¸•à¸£à¸§à¸ˆà¸ªà¸­à¸š | PARTIAL | M1 | à¸•à¹‰à¸­à¸‡à¸à¸²à¸£à¸—à¸”à¸ªà¸­à¸šà¸šà¸±à¸‡à¸„à¸±à¸šà¹ƒà¸ªà¹ˆà¸—à¸µà¹ˆà¸­à¸¢à¸¹à¹ˆ |
-| à¸„à¹ˆà¸²à¸ˆà¸±à¸”à¸ªà¹ˆà¸‡ |à¸„à¸³à¸™à¸§à¸“à¹‚à¸”à¸¢ Server à¹„à¸¡à¹ˆà¹ƒà¸«à¹‰à¹à¸à¹‰à¹„à¸‚à¸‡à¹ˆà¸²à¸¢ | compute_delivery_fee RPC + Gate 5km | Migr 035; contracts 29/29 à¸œà¹ˆà¸²à¸™ | VERIFIED | M1 | à¹„à¸¡à¹ˆà¸¡à¸µ |
-| Cutoff à¹€à¸§à¸¥à¸²à¸•à¸±à¸”à¸£à¸±à¸šà¸­à¸­à¹€à¸”à¸­à¸£à¹Œ | à¸•à¸±à¸”à¸ªà¸´à¸—à¸˜à¸´à¹Œà¸à¹ˆà¸­à¸™à¸–à¸¶à¸‡à¹€à¸§à¸¥à¸²à¸›à¸´à¸” | à¸•à¸£à¸§à¸ˆà¸—à¸±à¹‰à¸‡à¸à¸±à¹ˆà¸‡ Client à¹à¸¥à¸° Server RPC | CheckoutPage à¸šà¸£à¸£à¸—à¸±à¸” 161-184 | VERIFIED | M1 | à¹„à¸¡à¹ˆà¸¡à¸µ |
-| Capacity à¹€à¸•à¹‡à¸¡à¹à¸„à¹ˆà¹„à¸«à¸™ | à¸›à¹‰à¸­à¸‡à¸à¸±à¸™à¸à¸²à¸£ Overbooking | FOR UPDATE Lock à¸•à¸­à¸™à¸ªà¸£à¹‰à¸²à¸‡ Order | Migr 025; à¸¡à¸µà¹€à¸—à¸ªà¸•à¹Œ Capacity | PARTIAL | M1 | à¸•à¹‰à¸­à¸‡à¸à¸²à¸£à¸—à¸”à¸ªà¸­à¸šà¸„à¸·à¸™ Capacity à¸«à¸¥à¸±à¸‡ Cancel |
-| à¸à¸²à¸£à¸Šà¸³à¸£à¸°à¹€à¸‡à¸´à¸™ | à¸£à¸­à¸‡à¸£à¸±à¸šà¸«à¸¥à¸²à¸¢à¸§à¸´à¸˜à¸µ | Stripe / PromptPay / COD | EF create-checkout, Webhook 6/6 à¸œà¹ˆà¸²à¸™; à¸‚à¸²à¸” Bill à¸à¸²à¸£à¹Œà¸”à¸ˆà¸£à¸´à¸‡ | PARTIAL | M1 | à¸•à¹‰à¸­à¸‡à¸à¸²à¸£ Card Charge Receipt |
-| à¸¢à¸·à¸™à¸¢à¸±à¸™à¸­à¸­à¹€à¸”à¸­à¸£à¹Œ | Confirm à¸«à¸¥à¸±à¸‡ Payment | payment/webhook confirm RPC | stripe-webhook EF; Webhook 6/6 à¸œà¹ˆà¸²à¸™à¸«à¸¡à¸” | VERIFIED | M1 | à¹„à¸¡à¹ˆà¸¡à¸µ |
-| à¸¢à¸à¹€à¸¥à¸´à¸à¸­à¸­à¹€à¸”à¸­à¸£à¹Œ | Customer Cancel | cancel_order RPC + à¸„à¸·à¸™ Capacity | Migr 025 + OrdersPage à¸šà¸£à¸£à¸—à¸±à¸” 116-125 | PARTIAL | M1 | à¸•à¹‰à¸­à¸‡à¸—à¸”à¸ªà¸­à¸š Cancel + Restore on Prod |
-| à¸„à¸·à¸™à¹€à¸‡à¸´à¸™ (Refund) | à¸à¸£à¸°à¸šà¸§à¸™à¸à¸²à¸£ Refund | stripe-refund EF + à¸„à¸·à¸™à¸ˆà¸£à¸´à¸‡ 172 THB | à¸„à¸·à¸™à¹€à¸‡à¸´à¸™à¸ˆà¸£à¸´à¸‡ 172 THB à¸ªà¸³à¹€à¸£à¹‡à¸ˆ | VERIFIED | M1 | à¹„à¸¡à¹ˆà¸¡à¸µ |
-| à¸•à¸´à¸”à¸•à¸²à¸¡à¸ªà¸–à¸²à¸™à¸°à¸ªà¸´à¸™à¸„à¹‰à¸² | à¸”à¸¹ Progress + ETA | State Machine à¸­à¸­à¹€à¸”à¸­à¸£à¹Œ + Trigger | Migr 025; UI à¹à¸ªà¸”à¸‡à¸œà¸¥à¸•à¸²à¸¡ Real-time | PARTIAL | M1/P1 | à¸•à¹‰à¸­à¸‡à¸—à¸”à¸ªà¸­à¸š Route ETA à¸ˆà¸£à¸´à¸‡ |
-| à¸›à¸£à¸°à¸§à¸±à¸•à¸´à¸­à¸­à¹€à¸”à¸­à¸£à¹Œà¸¥à¸¹à¸à¸„à¹‰à¸² | à¸¥à¸¹à¸à¸„à¹‰à¸²à¸”à¸¹à¸£à¸²à¸¢à¸à¸²à¸£à¸—à¸µà¹ˆà¹€à¸„à¸¢à¸ªà¸±à¹ˆà¸‡ | OrdersPage + orders table | OrdersPage.tsx à¸—à¸³à¸‡à¸²à¸™; UI à¹à¸ªà¸”à¸‡à¸œà¸¥ | VERIFIED | M1 | à¹„à¸¡à¹ˆà¸¡à¸µ |
-
----
-
-## 5. à¹€à¸›à¸£à¸µà¸¢à¸šà¹€à¸—à¸µà¸¢à¸š Same-Day vs Pre-Order (SAME-DAY vs PRE-ORDER MATRIX)
-
-| à¸„à¸§à¸²à¸¡à¸ªà¸²à¸¡à¸²à¸£à¸– | SAME_DAY | PRE_ORDER | à¸«à¸¥à¸±à¸à¸à¸²à¸™ Same-Day | à¸«à¸¥à¸±à¸à¸à¸²à¸™ Pre-Order |
-|------------|----------|-----------|-------------------|--------------------|
-| à¸ªà¸£à¹‰à¸²à¸‡à¸­à¸­à¹€à¸”à¸­à¸£à¹Œ | OK | OK | Canonical RPC (Migr 025) | create_pre_order_with_items (Migr 025) |
-| à¸—à¸µà¹ˆà¸­à¸¢à¸¹à¹ˆà¸ˆà¸±à¸”à¸ªà¹ˆà¸‡ | à¹„à¸¡à¹ˆà¸šà¸±à¸‡à¸„à¸±à¸š | à¸šà¸±à¸‡à¸„à¸±à¸š (Trigger) | Migr 035 Trigger | Migr 035 validate_trigger RAISE |
-| à¸à¸²à¸£à¸Šà¸³à¸£à¸° | OK | OK (Skeleton) | Stripe Webhook à¸¢à¸·à¸™à¸¢à¸±à¸™à¹à¸¥à¹‰à¸§ | createPaymentIntent à¸—à¸±à¹‰à¸‡à¹‚à¸«à¸¡à¸” |
-| à¸«à¸±à¸à¸ªà¸•à¹‡à¸­à¸ Inventory | OK | OK | Migr 026 Aggregated | à¸—à¸²à¸‡à¹€à¸”à¸µà¸¢à¸§à¸à¸±à¸™ |
-| Capacity | OK | OK | FOR UPDATE Lock | à¸¢à¸±à¸‡à¹„à¸¡à¹ˆà¹„à¸”à¹‰à¸—à¸”à¸ªà¸­à¸š Restore |
-| à¸«à¹‰à¸­à¸‡à¸„à¸£à¸±à¸§ Batch | OK | OK | Migr 027 à¸£à¸­à¸‡à¸£à¸±à¸šà¸—à¸±à¹‰à¸‡à¸ªà¸­à¸‡ Mode | create_production_batch(NULL=Both) |
-| Delivery Round | OK | warnings | Round Assignment | à¸¢à¸±à¸‡à¹„à¸¡à¹ˆà¸¡à¸µ Trace à¸ªà¸”à¸‚à¸­à¸‡ Pre-Order Round |
-| à¸¢à¸à¹€à¸¥à¸´à¸ | OK | OK | cancel_order RPC | cancel_order RPC |
-| à¸„à¸·à¸™à¹€à¸‡à¸´à¸™ | OK | OK | à¸„à¸·à¸™à¹€à¸‡à¸´à¸™à¸ˆà¸£à¸´à¸‡ 172 THB | Path Refund à¸¡à¸µà¸­à¸¢à¸¹à¹ˆ |
-| Notification | OK/warnings | warnings | Event Emitter à¹€à¸—à¹ˆà¸²à¸™à¸±à¹‰à¸™ | à¹„à¸¡à¹ˆà¸¡à¸µ Push/Email/LINE à¹€à¸¥à¸¢ |
-
-**à¸‚à¹‰à¸­à¸„à¹‰à¸™à¸žà¸šà¸ªà¸³à¸„à¸±à¸:** à¸—à¸±à¹‰à¸‡à¸ªà¸­à¸‡à¹‚à¸«à¸¡à¸”à¹ƒà¸Šà¹‰à¹‚à¸„à¸£à¸‡à¸ªà¸£à¹‰à¸²à¸‡à¸­à¸­à¸£à¹Œà¹€à¸”à¸­à¸£à¹Œà¸«à¸¥à¸±à¸ (Canonical Order Spine) à¹€à¸”à¸µà¸¢à¸§à¸à¸±à¸™ à¸¥à¸¹à¹ˆà¸§à¸´à¸™ Pre-Order à¸¢à¸±à¸‡à¸‚à¸²à¸”à¸«à¸¥à¸±à¸à¸à¸²à¸™à¸à¸²à¸£à¸—à¸³à¸‡à¸²à¸™à¸ˆà¸£à¸´à¸‡à¸šà¸™ Production à¹ƒà¸™à¸—à¸¸à¸à¸£à¸°à¸”à¸±à¸š -- à¸™à¸µà¹ˆà¸„à¸·à¸­ Blocker à¸‚à¸­à¸‡ M1
+| หัวข้อ | หลักฐานจากโค้ดจริง | สถานะ | ช่องว่างที่เหลือ |
+|--------|--------------------|-------|------------------|
+| Customer PWA | `index.html` + PWA manifest + `HomePage/MenuPage/CartPage/CheckoutPage` | VERIFIED | — |
+| Mobile-first ordering | Responsive + lazy page chunks + WebP assets | PARTIAL | ต้องวัดผลบน production จริง |
+| Menu | `MenuPage.tsx` + `products` table + `bmbAdminApi_products.ts` | VERIFIED | — |
+| Product availability | `src/lib/availabilityEngine.ts` (quota + cutoff + sold-out) | PARTIAL | engine มีจริง แต่ไม่มี production trace |
+| Same-day ordering | RPC `create_order_with_items` (Migr 007→016→020) server-authoritative | VERIFIED (code+DB) | ต้อง capture 1 real order บน production |
+| Pre-order | Migr 024/025 รวม pre_orders เข้า canonical orders + Migr 035 บังคับ address | PARTIAL | ต้อง place 1 real pre-order ผ่าน full lifecycle |
+| Scheduled date | `scheduled_date` ใน canonical order spine (Migr 023) | VERIFIED (schema) | — |
+| Delivery round | `delivery_rounds` + `orders.delivery_round_id` + capacity ต่อรอบ | VERIFIED (schema) | — |
+| Address | Migr 015 (customer_location) + Migr 035 trigger `validate_pre_order_delivery()` บังคับ address สำหรับ PRE_ORDER | PARTIAL | ไม่มี production evidence |
+| Delivery fee | `compute_delivery_fee` zone-based (Migr 020) + `deliveryFeeApi.ts` | PARTIAL | ไม่มี real flow trace |
+| Cutoff | CheckoutPage ตรวจ `cutoff_time` ก่อนสร้าง order (commit `886836d`) | VERIFIED (code) | ต้องมี production trace |
+| Capacity | Trigger `orders_increment_round` + `FOR UPDATE` lock + `ERR_CAPACITY_FULL` | VERIFIED (DB logic) | ไม่มี stress test จริง |
+| Payment | `record_payment_result` (service_role, idempotent, amount-match) + Stripe webhook verified 6/6 (2026-09-19) + PromptPay TXN reference | PARTIAL | ไม่มี real card charge bill |
+| Confirmation | Order state machine ฝั่ง server (allow-list + BEFORE UPDATE trigger + audit log) | VERIFIED | — |
+| Cancellation | RPC cancel + restore inventory (Migr 018/019) + คืน capacity (Migr 017 pre-order) | PARTIAL | ไม่มี real cancel trace บน prod |
+| Refund | Edge Function พร้อม, payment state machine รองรับ | PARTIAL | ไม่มีบิล refund จริง |
+| Order tracking / status | `OrderTrackPage.tsx` + `OrdersPage.tsx` อ่าน DB จริง | PARTIAL | ต้อง verify กับ order จริงบน prod |
+| Order history | `OrdersPage.tsx` | VERIFIED (code) | — |
 
 ---
 
-## 6. à¹‚à¸„à¸£à¸‡à¸ªà¸£à¹‰à¸²à¸‡à¸­à¸­à¸£à¹Œà¹€à¸”à¸­à¸£à¹Œà¸«à¸¥à¸±à¸ (ORDER SPINE)
+## 5. SAME-DAY vs PRE-ORDER MATRIX
+
+ตรวจ chain ครบ: customer → backend → DB → admin → delivery
+
+| Capability | SAME_DAY | PRE_ORDER |
+| ---------- | -------- | --------- |
+| Create order | VERIFIED — `create_order_with_items` server-authoritative | VERIFIED — canonical RPC (Migr 025) |
+| Address | VERIFIED — เก็บจาก checkout | PARTIAL — Migr 035 trigger บังคับแล้ว แต่ไม่มี production evidence |
+| Payment | PARTIAL — spine verified, ไม่มี bill จริง | PARTIAL — payment intent สร้างได้ แต่ไม่มี real charge |
+| Confirm | VERIFIED — state machine + inventory hook | VERIFIED — state machine เดียวกัน |
+| Inventory deduct | PARTIAL — RPC ครบ (Migr 019/026) ไม่มี prod test | PARTIAL — เดียวกัน |
+| Capacity | VERIFIED — lock ตอน INSERT | VERIFIED — lock รอบวันอนาคต |
+| Kitchen batch | VERIFIED — Migr 027 canonical batch | VERIFIED — `p_order_mode` รองรับทั้งสองโหมด |
+| Delivery round | VERIFIED — round mapping | VERIFIED — scheduled_date → round |
+| Driver assignment | PARTIAL — RPC มี (Migr 020/035) ไม่มี prod trace | PARTIAL |
+| Dispatch | PARTIAL — ไม่มี production dispatch trace | PARTIAL |
+| Delivered | PARTIAL — rider status sync ต้องยืนยันบน prod | PARTIAL |
+| Cancel | PARTIAL — RPC ครบ, ไม่มี real trace | VERIFIED (schema) — `cancel_pre_order` คืน capacity |
+| Refund | PARTIAL | PARTIAL |
+| Notifications | PARTIAL — in-app event เท่านั้น | PARTIAL |
+
+**ข้อห้าม:** ห้ามถือว่า feature มีเพียงเพราะ canonical schema รองรับ — ทุกแถว PARTIAL ข้างต้นต้องพิสูจน์ด้วย order จริงบน production
+
+---
+
+## 6. ORDER SPINE
+
+| องค์ประกอบ | หลักฐาน | สถานะ |
+|------------|---------|--------|
+| `orders` | Migr 001/023 — canonical order domain | VERIFIED |
+| `order_mode` | Migr 023 — `SAME_DAY` / `PRE_ORDER` ในตารางเดียว | VERIFIED |
+| `scheduled_date` | Migr 023 | VERIFIED |
+| `delivery_round_id` | Migr 023 + FK | VERIFIED |
+| `order_status` | enum + allow-list + BEFORE UPDATE trigger (Migr 008/030) | VERIFIED |
+| `payment_status` | payment state machine idempotent (Migr 008/010) | VERIFIED |
+| `delivery_status` | `delivery_assignments` (Migr 020) | PARTIAL — ไม่ sync orders.status ทุก path |
+| `order_items` | Migr 001/007 — atomic INSERT | VERIFIED |
+| `inventory` | Migr 019/026 — deduct/restore + transactions | PARTIAL (prod test) |
+| `capacity` | trigger per-round + row lock | VERIFIED (DB logic) |
+
+**สรุป spine:** SAME_DAY และ PRE_ORDER ใช้ canonical order spine เดียวกันจริง (Migr 023/025/027) — ไม่ใช่สองระบบแยก
+
+**Legacy `pre_orders` ตรวจแล้ว:** Migr 024/025 ย้ายข้อมูลเก่าเข้า `orders` พร้อม `migrated_order_id`; ตาราง `pre_orders` freeze เป็น archive (anon DENY, auth write REVOKED, RPC-write-only) — **ไม่มี hidden legacy flow ที่ยังทำงานแยกเป็น second source of truth** ตาม `PWA_CANONICAL_ORDER_CONSUMER_AUDIT.md`
+
+---
+
+## 7. INVENTORY
+
+| รายการ | หลักฐาน | สถานะ |
+|--------|---------|--------|
+| Recipe / BOM | `recipes` table + AdminRecipes + `list_recipes_with_inventory()` RPC (Migr 035) | VERIFIED (code) |
+| Ingredient | `ingredients` + `inventory` tables | VERIFIED |
+| Order confirmation → deduction | `deduct_inventory_for_order` hook + Migr 026 aggregate fix | PARTIAL — ไม่มี production runtime test |
+| Cancel → restore | `restore_inventory_for_order` (Migr 019) | PARTIAL — ต้องทดสอบ cancel จริง แล้วตรวจ `inventory_transactions` |
+| Insufficient stock → reject | `ERR_INSUFFICIENT_INGREDIENT` (Migr 026 แทน clamp-to-0) | VERIFIED (code) |
+| Concurrency | aggregate per-ingredient + transaction guard | PARTIAL — ไม่มี stress test |
+
+**กฎตามข้อกำหนด:** ต้องพิสูจน์ `confirm → deduct`, `cancel → restore`, `insufficient → reject atomically` ให้ครบ — ยังไม่มี production runtime evidence ครบวงจร สถานะรวมของ Inventory lifecycle จึงเป็น **PARTIAL** ไม่ใช่ VERIFIED
+
+---
+
+## 8. CAPACITY
+
+| รายการ | หลักฐาน | สถานะ |
+|--------|---------|--------|
+| Date / round | `delivery_rounds` + `scheduled_date` | VERIFIED |
+| Capacity limit | คอลัมน์ max capacity ต่อรอบ | VERIFIED |
+| Reserved quantity | Trigger `orders_increment_round` นับตอน INSERT | VERIFIED |
+| Confirm | ผูกกับ order lifecycle | VERIFIED (schema) |
+| Cancel → restore capacity | PRE_ORDER: `cancel_pre_order` คืน capacity (Migr 017); SAME_DAY: ผ่าน transition path (Migr 030) | PARTIAL — ต้อง prod test |
+| Full capacity → reject | `ERR_CAPACITY_FULL` | VERIFIED (code) |
+| Concurrency | `FOR UPDATE` row lock ต่อรอบ | PARTIAL — design ถูกต้อง ไม่มี stress test จริง |
+
+**PRE_ORDER + scheduled_date + delivery_round:** กลไกกัน oversell อยู่ฝั่ง server ทั้งหมด (server-authoritative) — ตามโครงสร้างไม่สามารถ oversell ได้ แต่ยังขาด production evidence จึงระบุ **PARTIAL**
+
+---
+
+## 9. KITCHEN COMMAND CENTER
+
+| รายการ | หลักฐาน | สถานะ |
+|--------|---------|--------|
+| AdminKitchen page | `src/pages/admin/AdminKitchen.tsx` (commit `ff54783`) | VERIFIED (code) |
+| Production batches | `production_batches` + `production_batch_items` (Migr 019/027) | VERIFIED |
+| Batch status | status column + progression | PARTIAL — ต้อง trace จาก UI บน prod |
+| scheduled_date + delivery_round | batch ผูกทั้งสองค่า | VERIFIED |
+| Order aggregation | `create_production_batch` รวมจาก `orders` (confirmed/preparing) | VERIFIED |
+| SAME_DAY + PRE_ORDER | Migr 027: canonical source = orders + order_items เท่านั้น (NEVER pre_orders), `p_order_mode` NULL = both, legacy 2-arg overload DROP แล้ว | VERIFIED |
+| Recipe/BOM admin | `bmbAdminApi_recipes.ts` + `list_recipes_with_inventory()` (Migr 035) | VERIFIED (code) |
+
+**คำถามตามข้อกำหนด:** Kitchen สามารถ operationally ทำงานจาก confirmed orders ได้จริงหรือไม่?
+
+> **ตอบ: PARTIAL** — AdminKitchen ไม่ใช่แค่ React page: มี DB RPC จริง (`create_production_batch`, `kitchen_queue`, `get_inventory_requirements`) รองรับทั้งสองโหมด แต่ยัง**ไม่มี production evidence** ว่า batch จริงถูกสร้างและเดิน production cycle จนจบ
+
+---
+
+## 10. DELIVERY / BITE DRIVE
+
+| รายการ | หลักฐาน | สถานะ |
+|--------|---------|--------|
+| Drivers | `drivers` table (driver_name, phone_number, status, active_assignments) | VERIFIED |
+| Driver status | `setDriverStatus()` + RPC | PARTIAL — status update flow ต้องทดสอบจริง |
+| Assignment | `delivery_assignments` (Migr 020) + `assignOrderToDriver()` | PARTIAL — RPC มี ต้องมี prod trace |
+| Order dispatch | `assign_driver` RPC (Migr 020/035) | PARTIAL |
+| Delivery status | `driver_update_delivery_status` (Migr 020) | PARTIAL — อัปเดต assignment; orders.status sync ต้องยืนยัน |
+| Self delivery ≤ 5 km | Migr 035 — กฎ 5 กม. ฝั่ง server | VERIFIED (code) |
+| External rider > 5 km | provider system (Grab/LineMan/Foodpanda) sandbox logic 5/5 tests | **BLOCKED** — ไม่มี API keys จริง (OWNER-ONLY) |
+| Delivery fee | `compute_delivery_fee` zone-based | PARTIAL |
+| Distance | Migr 015 customer location columns | VERIFIED (schema) |
+| Round | Rider PWA `RiderPwaPage.tsx` / `my_deliveries` | VERIFIED (code) |
+| Tracking / ETA | `OrderTrackPage.tsx` + `routeOptimization.ts` | PARTIAL — ต้อง verify บน prod |
+
+**ตรวจ `04d19c7` ถูกใช้งานจริง:** **YES** — `DeliveryManagement.tsx` import และเรียก `listDrivers()` → RPC `list_drivers` จริง ไม่ใช่แค่มี function อยู่เฉยๆ
+
+---
+
+## 11. CUSTOMER → ORDER INTAKE CHANNELS
+
+Canonical rule ที่ทุก channel ต้องเดินตาม:
 
 ```text
-orders               OK à¸¡à¸µ order_mode(SAME_DAY/PRE_ORDER), scheduled_date, delivery_round_id, order_status, payment_status, delivery_status
-order_items          OK à¸¡à¸µ product_id, quantity, unit_price, customizations
-inventory            OK à¸¡à¸µ current_stock, min_stock, status, category
-capacity             OK à¸¡à¸µ delivery_rounds.max_capacity / current_count
+all channels
+    ↓
+canonical order_id
+    ↓
+Supabase Order Hub (orders table)
 ```
 
-à¸à¸²à¸£à¸•à¸£à¸§à¸ˆà¸ªà¸­à¸š:
-- SAME_DAY à¹à¸¥à¸° PRE_ORDER à¹ƒà¸Šà¹‰à¸•à¸²à¸£à¸²à¸‡ `orders` à¹€à¸”à¸µà¸¢à¸§à¸à¸±à¸™ -- à¹ƒà¸Šà¹ˆ (Migr 023 à¸£à¸§à¸¡à¹‚à¸”à¹€à¸¡à¸™; Migr 025 à¹ƒà¸«à¹‰ Canonical RPC)
-- à¹„à¸¡à¹ˆà¸¡à¸µ Legacy `pre_orders` à¹€à¸›à¹‡à¸™à¸—à¸µà¹ˆà¹€à¸à¹‡à¸šà¸‚à¹‰à¸­à¸¡à¸¹à¸¥à¸—à¸µà¹ˆà¸ªà¸­à¸‡ -- à¸¢à¸·à¸™à¸¢à¸±à¸™à¹à¸¥à¹‰à¸§ (`pre_orders` à¹€à¸›à¹‡à¸™ Archive Table à¹€à¸—à¹ˆà¸²à¸™à¸±à¹‰à¸™)
+| Channel | การแยกสถานะ | หลักฐาน |
+|---------|-------------|---------|
+| PWA (Direct web) | **IMPLEMENTED** | `create_order_with_items` → canonical `orders` — ยืนยันโดย `PWA_CANONICAL_ORDER_CONSUMER_AUDIT.md` |
+| Manual (admin สร้างแทน) | **IMPLEMENTED** (basic) | AdminOrders จัดการ order ใน canonical table |
+| Facebook | **PLANNED — ห้ามนับเป็น implemented** | ไม่มี code เชื่อม Facebook เข้า Order Hub |
+| Messenger | **PLANNED — ห้ามนับเป็น implemented** | เดียวกัน |
+| LINE | **PLANNED — ห้ามนับเป็น implemented** | เดียวกัน |
+| Future channels | **DEFERRED** | Phase หลัง (P2+) |
 
-à¸ªà¸£à¸¸à¸›: ORDER SPINE = VERIFIED (à¸”à¹‰à¸²à¸™ Schema + Code) / PARTIAL (à¸•à¹‰à¸­à¸‡à¸à¸²à¸£à¸«à¸¥à¸±à¸à¸à¸²à¸™ Runtime à¸‚à¸­à¸‡ Pre-Order)
-
----
-
-## 7. à¸£à¸°à¸šà¸šà¸ˆà¸±à¸”à¸à¸²à¸£à¸„à¸¥à¸±à¸‡à¸§à¸±à¸•à¸–à¸¸à¸”à¸´à¸š (INVENTORY)
-
-| à¸ªà¸´à¹ˆà¸‡à¸—à¸µà¹ˆà¸•à¹‰à¸­à¸‡à¸žà¸´à¸ªà¸¹à¸ˆà¸™à¹Œ | à¸ªà¸–à¸²à¸™à¸°à¸›à¸±à¸ˆà¸ˆà¸¸à¸šà¸±à¸™ | à¸«à¸¥à¸±à¸à¸à¸²à¸™à¸—à¸µà¹ˆà¸žà¸š | à¹€à¸«à¸•à¸¸à¸œà¸¥à¸—à¸µà¹ˆà¸¢à¸±à¸‡à¹€à¸›à¹‡à¸™ PARTIAL |
-|------------------|--------------|---------------|--------------------------|
-| Recipe -> Ingredient -> Inventory | OK à¹‚à¸„à¸£à¸‡à¸ªà¸£à¹‰à¸²à¸‡ BOM à¸–à¸¹à¸à¸•à¹‰à¸­à¸‡ | Migr 019 | -- |
-| à¸¢à¸·à¸™à¸¢à¸±à¸™à¸­à¸­à¹€à¸”à¸­à¸£à¹Œà¹à¸¥à¹‰à¸§à¸«à¸±à¸à¸ªà¸•à¹‡à¸­à¸ | OK Aggregated Deduct | Migr 026 deduct_inventory_for_order() | à¸¢à¸±à¸‡à¸•à¹‰à¸­à¸‡à¸à¸²à¸£à¸—à¸”à¸ªà¸­à¸šà¸šà¸™ Production |
-| à¸¢à¸à¹€à¸¥à¸´à¸à¸­à¸­à¹€à¸”à¸­à¸£à¹Œà¹à¸¥à¹‰à¸§à¸„à¸·à¸™à¸ªà¸•à¹‡à¸­à¸ | OK Restore à¸•à¸²à¸¡ Logic | Migr 025 cancel_order restore | à¸¢à¸±à¸‡à¸•à¹‰à¸­à¸‡à¸à¸²à¸£à¸—à¸”à¸ªà¸­à¸šà¸šà¸™ Production |
-| Stock à¹„à¸¡à¹ˆà¸žà¸­ Reject à¸­à¸¢à¹ˆà¸²à¸‡ Atomic | OK à¹ƒà¸Šà¹‰ ERR_INSUFFICIENT_INGREDIENT | Migr 026 RAISE à¹à¸—à¸™à¸à¸²à¸£ Clamp à¹€à¸›à¹‡à¸™à¸¨à¸¹à¸™à¸¢à¹Œ | à¸¢à¸±à¸‡à¸•à¹‰à¸­à¸‡à¸à¸²à¸£à¸—à¸”à¸ªà¸­à¸šà¸šà¸™ Production |
-| à¸›à¹‰à¸­à¸‡à¸à¸±à¸™ Concurrent Race Condition | OK FOR UPDATE Lock | Migr 026 | -- |
-| à¸šà¸±à¸™à¸—à¸¶à¸ Audit Trail | OK .inventory_transactions | Migr 026 | -- |
-
-**à¸ªà¸£à¸¸à¸›: INVENTORY = PARTIAL** â€” Code/DB/RPC à¸ªà¸¡à¸šà¸¹à¸£à¸“à¹Œà¸–à¸¹à¸à¸•à¹‰à¸­à¸‡ à¹à¸•à¹ˆà¹„à¸¡à¹ˆà¸¡à¸µà¸«à¸¥à¸±à¸à¸à¸²à¸™à¸à¸²à¸£à¸—à¸³à¸‡à¸²à¸™à¸ˆà¸£à¸´à¸‡à¸‚à¸­à¸‡ Deduct/Restore/Insufficient cycle à¸£à¸°à¸«à¸§à¹ˆà¸²à¸‡ session à¸™à¸µà¹‰ à¸ˆà¸¶à¸‡à¸¢à¸±à¸‡à¸™à¸±à¸šà¸§à¹ˆà¸²à¹€à¸›à¹‡à¸™ VERIFIED à¹„à¸¡à¹ˆà¹„à¸”à¹‰
+**สรุป:** Canonical rule ถูก enforce จริงเฉพาะ PWA + Manual — planned integration ไม่ถูกนับเป็น implemented ตามกฎของเอกสารนี้
 
 ---
 
-## 8. à¸£à¸°à¸šà¸šà¸ˆà¸±à¸”à¸à¸²à¸£à¸à¸³à¸¥à¸±à¸‡à¸à¸²à¸£à¸œà¸¥à¸´à¸• (CAPACITY)
+## 12. MAKE.COM AUTOMATION
 
-| à¸ªà¸´à¹ˆà¸‡à¸—à¸µà¹ˆà¸•à¹‰à¸­à¸‡à¸žà¸´à¸ªà¸¹à¸ˆà¸™à¹Œ | à¸ªà¸–à¸²à¸™à¸°à¸›à¸±à¸ˆà¸ˆà¸¸à¸šà¸±à¸™ | à¸«à¸¥à¸±à¸à¸à¸²à¸™à¸—à¸µà¹ˆà¸žà¸š | à¹€à¸«à¸•à¸¸à¸œà¸¥à¸—à¸µà¹ˆà¸¢à¸±à¸‡à¹€à¸›à¹‡à¸™ PARTIAL |
-|------------------|--------------|---------------|--------------------------|
-| Date + Round + à¸‚à¸µà¸”à¸ˆà¸³à¸à¸±à¸” Capacity | OK | delivery_rounds (max/current/cutoff/scheduled_date) | -- |
-| à¸ˆà¸­à¸‡ Capacity à¸•à¸­à¸™à¸ªà¸£à¹‰à¸²à¸‡à¸­à¸­à¹€à¸”à¸­à¸£à¹Œ | OK | create: FOR UPDATE + à¹€à¸žà¸´à¹ˆà¸¡ current_count | -- |
-| à¸¢à¸·à¸™à¸¢à¸±à¸™ | OK | Flow à¸à¸²à¸£à¸¢à¸·à¸™à¸¢à¸±à¸™à¸­à¸­à¹€à¸”à¸­à¸£à¹Œ | -- |
-| à¸¢à¸à¹€à¸¥à¸´à¸à¸­à¸­à¹€à¸”à¸­à¸£à¹Œà¹à¸¥à¹‰à¸§à¸„à¸·à¸™ Capacity | OK | Migr 025 trigger release_round_capacity_on_terminal + resetRoundCapacity RPC | à¸¢à¸±à¸‡à¸•à¹‰à¸­à¸‡à¸à¸²à¸£à¸—à¸”à¸ªà¸­à¸šà¸šà¸™ Production |
-| Full Capacity à¸›à¹‰à¸­à¸‡à¸à¸±à¸™ Overbooking | OK | FOR Update Block overbooking | -- |
-| à¸›à¹‰à¸­à¸‡à¸à¸±à¸™ Concurrent Access | OK | Row-Level Lock | -- |
-| Pre-Order + scheduled_date + delivery_round | warnings | Canonical Path à¹€à¸›à¸´à¸”à¹ƒà¸Šà¹‰à¸‡à¸²à¸™; à¸¢à¸±à¸‡à¹„à¸¡à¹ˆà¸¡à¸µ Future-Date Round à¸ªà¸” | à¸•à¹‰à¸­à¸‡à¸—à¸”à¸ªà¸­à¸š Pre-Order Round à¸šà¸™ Production |
+คำถามหลัก: **Make.com เป็น worker จริงหรือยัง หรือเป็นเพียง architecture decision?**
 
-**à¸ªà¸£à¸¸à¸›: CAPACITY = PARTIAL** (Atomic Locking + Schema à¸¢à¸·à¸™à¸¢à¸±à¸™à¹à¸¥à¹‰à¸§; Cancel Restoration + à¸à¸²à¸£à¸•à¹ˆà¸­à¹€à¸Šà¸·à¹ˆà¸­à¸¡ Pre-Order Round à¸¢à¸±à¸‡à¸•à¹‰à¸­à¸‡à¸à¸²à¸£à¸—à¸”à¸ªà¸­à¸šà¸šà¸™ Production)
+| รายการ | สถานะ |
+|--------|-------|
+| Live scenario บน Make.com | ไม่พบ live scenario evidence (ไม่มี webhook log / scenario ID / Supabase→Make wiring) |
+| Back-office automation | **DEFERRED / OWNER-ONLY** |
+| Facebook/Messenger intake ผ่าน Make | **PLANNED** — architecture decision ใน blueprint เท่านั้น |
+| Notifications ผ่าน Make | **PLANNED** |
+| Operational workflows / external integrations | **PLANNED** |
 
----
-
-## 9. à¸¨à¸¹à¸™à¸¢à¹Œà¸„à¸§à¸šà¸„à¸¸à¸¡à¸«à¹‰à¸­à¸‡à¸„à¸£à¸±à¸§ (KITCHEN COMMAND CENTER)
-
-| à¸ªà¸´à¹ˆà¸‡à¸—à¸µà¹ˆà¸•à¹‰à¸­à¸‡à¸•à¸£à¸§à¸ˆ | à¸ªà¸–à¸²à¸™à¸°à¸›à¸±à¸ˆà¸ˆà¸¸à¸šà¸±à¸™ | à¸«à¸¥à¸±à¸à¸à¸²à¸™à¸—à¸µà¹ˆà¸žà¸š | à¹€à¸«à¸•à¸¸à¸œà¸¥à¸—à¸µà¹ˆà¸¢à¸±à¸‡à¹€à¸›à¹‡à¸™ PARTIAL |
-|-----------------|--------------|---------------|--------------------------|
-| à¸«à¸™à¹‰à¸² AdminKitchen | OK à¸—à¸³à¸‡à¸²à¸™à¹„à¸”à¹‰à¸ªà¸¡à¸šà¸¹à¸£à¸“à¹Œ | src/pages/admin/AdminKitchen.tsx | -- |
-| Production Batches | OK | à¸•à¸²à¸£à¸²à¸‡ production_batches (Migr 019/027) | -- |
-| Batch status | OK | à¸¡à¸µ status column | -- |
-| scheduled_date + delivery_round | OK | à¸¡à¸µà¸„à¸­à¸¥à¸±à¸¡à¸™à¹Œà¸£à¸­à¸‡à¸£à¸±à¸š | -- |
-| à¸£à¸§à¸¡ Order à¸—à¸±à¹‰à¸‡à¹‚à¸«à¸¡à¸” (Same-Day+Pre-Order) | OK | Migr 027 + create_production_batch_items | à¸•à¹‰à¸­à¸‡à¸à¸²à¸£ Trace Batch à¸ªà¸”à¸šà¸™ Production |
-| à¸£à¸²à¸¢à¸à¸²à¸£ Recipe/BOM | OK | list_recipes_with_inventory() RPC (Migr 035) | -- |
-
-**à¸„à¸³à¸–à¸²à¸¡à¸ªà¸³à¸„à¸±à¸:** Kitchen à¸ªà¸²à¸¡à¸²à¸£à¸–à¸—à¸³à¸‡à¸²à¸™ Operationally à¸ˆà¸²à¸ Confirmed Orders à¹„à¸”à¹‰à¸ˆà¸£à¸´à¸‡à¸«à¸£à¸·à¸­à¹„à¸¡à¹ˆ?
-**à¸„à¸³à¸•à¸­à¸šà¸•à¸²à¸¡ Evidence:** AdminKitchen à¸¡à¸µà¸«à¸™à¹‰à¸² UI à¸—à¸µà¹ˆà¹ƒà¸Šà¹‰à¸‡à¸²à¸™à¹„à¸”à¹‰ à¹à¸¥à¸° Batch RPC à¸£à¸­à¸‡à¸£à¸±à¸šà¸—à¸±à¹‰à¸‡à¸ªà¸­à¸‡ Mode à¹à¸•à¹ˆà¸¢à¸±à¸‡à¸‚à¸²à¸”à¸à¸²à¸£à¸žà¸´à¸ªà¸¹à¸ˆà¸™à¹Œà¸šà¸™ Production à¸§à¹ˆà¸² Batch à¹€à¸à¸´à¸”à¸ˆà¸²à¸ Order à¸—à¸µà¹ˆ Confirm+Paid à¸ˆà¸£à¸´à¸‡à¹† à¸”à¸±à¸‡à¸™à¸±à¹‰à¸™à¸ˆà¸¶à¸‡à¹€à¸›à¹‡à¸™ **PARTIAL**
+**ตอบ:** ณ วันนี้ Make.com **ยังไม่ใช่ worker จริง** — ตามลำดับชั้นหลักฐานจึงสรุปเป็น **PARTIAL / OWNER-ONLY / DEFERRED** (ต้องการ owner decision + credentials)
 
 ---
 
-## 10. à¸£à¸°à¸šà¸šà¸ˆà¸±à¸”à¸ªà¹ˆà¸‡ / Bite Drive (DELIVERY / BITE DRIVE)
+## 13. AI SYSTEM
 
-| à¸ªà¸´à¹ˆà¸‡à¸—à¸µà¹ˆà¸•à¹‰à¸­à¸‡à¸•à¸£à¸§à¸ˆ | à¸ªà¸–à¸²à¸™à¸°à¸›à¸±à¸ˆà¸ˆà¸¸à¸šà¸±à¸™ | à¸«à¸¥à¸±à¸à¸à¸²à¸™à¸—à¸µà¹ˆà¸žà¸š | à¸Šà¹ˆà¸­à¸‡à¸§à¹ˆà¸²à¸‡ |
-|-----------------|--------------|---------------|----------|
-| à¸•à¸²à¸£à¸²à¸‡ Drivers | OK | drivers (driver_name, phone_number, status, active_assignments) | -- |
-| à¸ˆà¸±à¸”à¸à¸²à¸£à¸ªà¸–à¸²à¸™à¸° Driver | warnings | à¸¡à¸µ status column; UI à¸¢à¸±à¸‡à¹„à¸¡à¹ˆà¸ªà¸¡à¸šà¸¹à¸£à¸“à¹Œ | Status update UI/Flow à¸•à¹‰à¸­à¸‡à¸à¸²à¸£ Test à¸ªà¸” |
-| Assign Order | OK | assign_driver RPC (Migr 020) SEC DEFINER | à¸•à¹‰à¸­à¸‡à¸—à¸”à¸ªà¸­à¸š Assignment à¸šà¸™ Production |
-| Dispatch Order | OK | à¸¥à¸¹à¹ˆà¸§à¸´à¸™ Dispatch (DB Drivers à¸ˆà¸²à¸ commit 04d19c7) | à¸•à¹‰à¸­à¸‡à¸—à¸”à¸ªà¸­à¸š Dispatch à¸ªà¸” |
-| à¸ªà¸–à¸²à¸™à¸°à¸ˆà¸±à¸”à¸ªà¹ˆà¸‡ | OK | Status transitions à¸‚à¸­à¸‡ delivery_status | -- |
-| à¸ªà¹ˆà¸‡à¹€à¸­à¸‡à¹„à¸¡à¹ˆà¹€à¸à¸´à¸™ 5 à¸à¸¡. | OK | compute_delivery_fee Gate 5km (Migr 035) | à¸•à¹‰à¸­à¸‡à¸—à¸”à¸ªà¸­à¸š Production |
-| Rider External à¹€à¸à¸´à¸™ 5 à¸à¸¡. | BLOCKED | Adapter Grab/LINEMAN/Foodpanda à¸¡à¸µà¸­à¸¢à¸¹à¹ˆ; à¹„à¸¡à¹ˆà¸¡à¸µ API Keys | OWNER-ONLY â€” à¸•à¹‰à¸­à¸‡à¸‚à¸­ Key à¸ˆà¸²à¸ Call-Center |
-| à¸„à¹ˆà¸²à¸ˆà¸±à¸”à¸ªà¹ˆà¸‡à¸•à¸²à¸¡à¸£à¸°à¸¢à¸°à¸—à¸²à¸‡ | OK | compute_delivery_fee RPC à¸£à¸°à¸¢à¸°à¸—à¸²à¸‡ | REST Probe |
-| Round + ETA | warnings | Round assignment + Algorithmic Route ETA | à¸•à¹‰à¸­à¸‡à¸—à¸”à¸ªà¸­à¸š ETA à¸ˆà¸£à¸´à¸‡ |
+สถาปัตยกรรมที่ตกลงไว้: **AI = Intelligence / Extraction / Assistance** — AI ห้ามมี authority เหนือ price, payment, stock, capacity, cancel, refund, delivery fee, order state
 
-**à¸ªà¸£à¸¸à¸›:**
-- Delivery Management (à¸ªà¹ˆà¸‡à¹€à¸­à¸‡à¸ à¸²à¸¢à¹ƒà¸™à¸£à¸°à¸¢à¸° <=5km) = **VERIFIED** (DB-Backed, à¹„à¸¡à¹ˆà¸¡à¸µ MOCK_DRIVERS, commit 04d19c7 à¸¢à¸·à¸™à¸¢à¸±à¸™à¹à¸¥à¹‰à¸§)
-- External Rider Integration = **OWNER-ONLY / BLOCKED** (à¸¡à¸µ Adapter Code à¹à¸•à¹ˆà¹„à¸¡à¹ˆà¸¡à¸µ API Keys â†’ à¸¢à¸±à¸‡à¹„à¸¡à¹ˆà¹ƒà¸Šà¹ˆà¸£à¸°à¸šà¸šà¸—à¸³à¸‡à¸²à¸™à¸ˆà¸£à¸´à¸‡)
+### A. AI architecture (enforce จริงหรือไม่)
 
----
+| ข้อ | สถานะ |
+|-----|-------|
+| AI ไม่มีสิทธิ์แตะ order state / เงิน / stock / cancel / refund | **VERIFIED** — ไม่มี mutation tools ที่ลงทะเบียน; AI order access ผูก RLS อ่านได้เฉพาะแถวของตัวเอง (`PWA_CANONICAL_ORDER_CONSUMER_AUDIT.md`) |
+| Permission boundary / Guardrails | `aiGuardrails.ts` + `aiGuardrailsAdv.ts` — VERIFIED (code) |
 
-## 11. à¸Šà¹ˆà¸­à¸‡à¸—à¸²à¸‡à¸à¸²à¸£à¸£à¸±à¸šà¸­à¸­à¹€à¸”à¸­à¸£à¹Œà¸ˆà¸²à¸à¸¥à¸¹à¸à¸„à¹‰à¸² (CUSTOMER -> ORDER INTAKE CHANNELS)
+### B. AI implementation
 
-à¸à¸Žà¸«à¸¥à¸±à¸: all channels | canonical order_id | Supabase Order Hub
+| รายการ | หลักฐาน | สถานะ |
+|--------|---------|--------|
+| AI content generation | `contentAutomation.ts` | VERIFIED (code) |
+| Content assistance | `contentApproval.ts`, `mascotService.ts` | VERIFIED (code) |
+| Extraction | `customerIntelligence.ts` | VERIFIED (code) |
+| Customer assistance chat | `aiService.ts` (Model A: GLM 5.2 free + fallback Qwen 3.7 Flash) | VERIFIED (code + test 19/19) |
+| Order parsing | ภายใต้ guardrails | PARTIAL — ไม่มี prod trace |
+| Proactive intelligence | `demandForecasting.ts` / `promotionIntelligence.ts` / `inventoryPrediction.ts` | PARTIAL — lib เท่านั้น ไม่มี production loop |
+| Tool calling | `aiToolCalling.ts.disabled` (commit `716b4e9`) | **DEAD CODE ปิดอย่างถูกต้อง** — เดิมไม่ถูก import + เสี่ยง expose OpenRouter API key ฝั่ง client; ไม่ได้ wire เข้า chat จริง |
+| Disabled/dead code | ไม่ตกค้างใน bundle — scan = 0 key hits | VERIFIED |
+| Provider integration | OpenRouter ผ่าน proxy | PARTIAL — ต้องใช้ key จริงของ owner |
 
-| à¸Šà¹ˆà¸­à¸‡à¸—à¸²à¸‡ | à¸ªà¸–à¸²à¸™à¸°à¸›à¸±à¸ˆà¸ˆà¸¸à¸šà¸±à¸™ | à¸«à¸¥à¸±à¸à¸à¸²à¸™à¸—à¸µà¹ˆà¸žà¸š | M1/P2/Deferred |
-|---------|--------------|---------------|----------------|
-| PWA (à¹€à¸§à¹‡à¸šà¹€à¸šà¸£à¸²à¸§à¹Œà¹€à¸‹à¸­à¸£à¹Œ) | OK IMPLEMENTED à¹à¸¥à¹‰à¸§ | Canonical order RPC -> à¸•à¸²à¸£à¸²à¸‡ orders | M1 |
-| Direct (Walk-in / à¸ªà¸±à¹ˆà¸‡à¸«à¸™à¹‰à¸²à¸£à¹‰à¸²à¸™) | warnings PARTIAL | à¸•à¹‰à¸­à¸‡à¸à¸²à¸£à¸«à¸¥à¸±à¸à¸à¸²à¸™ Admin à¸ªà¸£à¹‰à¸²à¸‡ Order à¹„à¸”à¹‰ | M1/P1 |
-| Facebook | MISSING PLANNED / OWNER-ONLY | à¸¢à¸±à¸‡à¹„à¸¡à¹ˆà¸¡à¸µà¸£à¸°à¸šà¸šà¹€à¸Šà¸·à¹ˆà¸­à¸¡à¸•à¹ˆà¸­ | P2/DEFERRED |
-| Messenger | MISSING PLANNED / OWNER-ONLY | à¸¢à¸±à¸‡à¹„à¸¡à¹ˆà¸¡à¸µà¸£à¸°à¸šà¸šà¹€à¸Šà¸·à¹ˆà¸­à¸¡à¸•à¹ˆà¸­ | P2/DEFERRED |
-| LINE | MISSING OWNER-ONLY | à¸¢à¸±à¸‡à¹„à¸¡à¹ˆà¸¡à¸µ LINE Integration | P2/DEFERRED |
-| Grab / Marketplace à¸­à¸·à¹ˆà¸™à¹† | MISSING OWNER-ONLY | External; à¹„à¸¡à¹ˆà¸­à¸¢à¸¹à¹ˆà¹ƒà¸™à¸‚à¸­à¸šà¹€à¸‚à¸• PWA Hub | P2/DEFERRED |
-
-à¸ªà¸³à¸„à¸±à¸: IMPLEMENTED (à¸¡à¸µà¹€à¸‰à¸žà¸²à¸° PWA), PLANNED (à¸­à¸­à¸à¹à¸šà¸šà¹„à¸§à¹‰à¹à¸•à¹ˆà¸¢à¸±à¸‡à¹„à¸¡à¹ˆà¹„à¸”à¹‰à¹€à¸‚à¸µà¸¢à¸™à¹‚à¸„à¹‰à¸”), DEFERRED (à¸•à¸±à¹‰à¸‡à¹ƒà¸ˆà¹€à¸¥à¸·à¹ˆà¸­à¸™à¸­à¸­à¸à¹„à¸›)
-à¸«à¹‰à¸²à¸¡à¹„à¸¡à¹ˆà¸™à¸±à¸š Planned Channel à¸§à¹ˆà¸²à¹€à¸›à¹‡à¸™ Implemented. à¸›à¸±à¸ˆà¸ˆà¸¸à¸šà¸±à¸™ PWA à¹€à¸›à¹‡à¸™à¸Šà¹ˆà¸­à¸‡à¸—à¸²à¸‡à¹€à¸”à¸µà¸¢à¸§à¸—à¸µà¹ˆà¸—à¸³à¸‡à¸²à¸™à¹„à¸”à¹‰à¸ˆà¸£à¸´à¸‡
-
----
-
-## 12. Make.com Automation
-
-| à¸„à¸³à¸–à¸²à¸¡ | à¸„à¸³à¸•à¸­à¸šà¸•à¸²à¸¡ Evidence à¸ˆà¸£à¸´à¸‡ |
-|-------|------------------------|
-| Make.com à¹€à¸›à¹‡à¸™ Worker à¸—à¸³à¸‡à¸²à¸™à¸ˆà¸£à¸´à¸‡à¸«à¸£à¸·à¸­à¸¢à¸±à¸‡? | **à¹„à¸¡à¹ˆà¸žà¸šà¸«à¸¥à¸±à¸à¸à¸²à¸™ Live Make.com Integration à¹€à¸¥à¸¢** â€” à¹€à¸›à¹‡à¸™à¹€à¸žà¸µà¸¢à¸‡ Architecture Decision à¹‚à¸”à¸¢à¹„à¸¡à¹ˆà¸¡à¸µ Runtime Proof |
-| Facebook / Messenger Intake? | à¹„à¸¡à¹ˆà¸¡à¸µ |
-| Notifications? | à¹„à¸¡à¹ˆà¸¡à¸µ Evidence à¸‚à¸­à¸‡ Make.com-based Notification |
-
-**à¸ªà¸£à¸¸à¸›:** Make.com = PARTIAL / OWNER-ONLY/BLOCKED (FB Intake à¸•à¹‰à¸­à¸‡à¹ƒà¸Šà¹‰ Config à¸ à¸²à¸¢à¸™à¸­à¸) / DEFERRED à¸«à¹‰à¸²à¸¡à¸™à¸±à¸šà¸§à¹ˆà¸²à¹€à¸›à¹‡à¸™ Worker à¸—à¸µà¹ˆà¸—à¸³à¸‡à¸²à¸™à¸ˆà¸£à¸´à¸‡ à¹€à¸žà¸µà¸¢à¸‡à¹€à¸žà¸£à¸²à¸°à¸¡à¸µ Architecture Decision à¹„à¸§à¹‰
-
----
-
-## 13. à¸£à¸°à¸šà¸š AI (AI SYSTEM)
-
-| à¸ªà¸´à¹ˆà¸‡à¸—à¸µà¹ˆà¸•à¹‰à¸­à¸‡à¸•à¸£à¸§à¸ˆà¸ªà¸­à¸š | à¸ªà¸–à¸²à¸™à¸°à¸›à¸±à¸ˆà¸ˆà¸¸à¸šà¸±à¸™ | à¸«à¸¥à¸±à¸à¸à¸²à¸™à¸—à¸µà¹ˆà¸žà¸š |
-|--------------------|--------------|---------------|
-| AI = Intelligence/Extraction/Assistance | OK | ai-proxy EF + Guardrails + Memory |
-| AI à¹„à¸¡à¹ˆà¸¡à¸µà¸­à¸³à¸™à¸²à¸ˆà¹€à¸›à¸¥à¸µà¹ˆà¸¢à¸™à¸£à¸²à¸„à¸² | OK | AI à¸­à¹ˆà¸²à¸™à¸­à¸¢à¹ˆà¸²à¸‡à¹€à¸”à¸µà¸¢à¸§; à¹„à¸¡à¹ˆà¹à¸à¹‰à¹„à¸‚à¸£à¸²à¸„à¸² |
-| AI à¹„à¸¡à¹ˆà¸¡à¸µà¸­à¸³à¸™à¸²à¸ˆà¸ˆà¸±à¸”à¸à¸²à¸£ Payment/Stock/Capacity | OK | AI à¹„à¸¡à¹ˆà¹à¸•à¸°à¸•à¹‰à¸­à¸‡à¸£à¸°à¸šà¸šà¹€à¸«à¸¥à¹ˆà¸²à¸™à¸µà¹‰ |
-| AI à¹„à¸¡à¹ˆà¸¡à¸µà¸­à¸³à¸™à¸²à¸ˆ Cancel/Refund/Delivery fee/Order state | OK | Tool à¸–à¸¹à¸ Disable (commit 716b4e9) |
-| Content Generation / Assistance | warnings | à¸¡à¸µ Hub à¹à¸•à¹ˆ Generation à¸¢à¸±à¸‡à¹„à¸¡à¹ˆà¸ªà¸¡à¸šà¸¹à¸£à¸“à¹Œ |
-| Extraction / Order Parsing | warnings | aiToolCalling dead code |
-| Proactive Intelligence | MISSING | AI-BIZ/Forecast Deferred Phase 12 |
-| Tool Calling / Permission Boundary | OK | aiToolCalling à¸–à¸¹à¸ Disable (commit 716b4e9) |
-| Provider Integration | OK | ai-proxy EF (OpenRouter) |
+### C. แยก 3 ชั้นตามข้อกำหนด
 
 ```text
-AI ARCHITECTURE               = VERIFIED (Guardrail + Proxy + Boundary à¸­à¸­à¸à¹à¸šà¸šà¹„à¸§à¹‰à¸–à¸¹à¸à¸•à¹‰à¸­à¸‡)
-AI IMPLEMENTATION             = PARTIAL (Chat à¸¡à¸µà¸­à¸¢à¸¹à¹ˆ; Extraction/Content à¸¢à¸±à¸‡à¹„à¸¡à¹ˆà¸ªà¸¡à¸šà¸¹à¸£à¸“à¹Œ)
-AI PRODUCTION INTEGRATION     = PARTIAL (à¹„à¸¡à¹ˆà¸¡à¸µ Production AI Conversation Evidence)
+AI architecture           = VERIFIED (permission boundary + guardrails + RLS)
+AI implementation         = VERIFIED (code-level พร้อมใช้)
+AI production integration = PARTIAL (ต้องมี prod conversation trace + owner key)
 ```
 
-**à¸ªà¸£à¸¸à¸›: AI = PARTIAL** â€” à¸—à¸³à¸«à¸™à¹‰à¸²à¸—à¸µà¹ˆà¸–à¸¹à¸à¸•à¹‰à¸­à¸‡à¸„à¸·à¸­à¹€à¸›à¹‡à¸™à¸œà¸¹à¹‰à¸Šà¹ˆà¸§à¸¢à¸—à¸µà¹ˆà¹„à¸¡à¹ˆà¸¡à¸µà¸­à¸³à¸™à¸²à¸ˆà¹€à¸«à¸™à¸·à¸­ P0 Money/Order Items à¸ªà¹ˆà¸§à¸™ Proactive Intelligence / Business Copilot / Forecasting = DEFERRED à¹„à¸› Phase 12
+---
+
+## 14. CONTENT ENGINE
+
+Original objective ของ BMB ไม่ได้จบที่ order: `Content → Customer acquisition → Order`
+
+| รายการ | สถานะ | หลักฐาน |
+|--------|-------|---------|
+| Facebook content posting | PARTIAL / OWNER-ONLY | ต้องใช้ FB token ของ owner; ไม่มี live posting trace |
+| Content generation | VERIFIED (code) | `contentAutomation.ts` (social post / email / blog / promo) |
+| Content management | PARTIAL | `contentApproval.ts` มี แต่ไม่มี production workflow trace |
+| Reusable content | PARTIAL | content templates ใน lib |
+| AI-assisted content | VERIFIED (code) | `aiService.ts` + contentAutomation |
+| Content → order loop | **MISSING** | ไม่มีการวัด content → traffic → order จริง |
+
+**เหตุผลการ defer เป็น P2 (ต้องระบุชัด):** ต้องเชื่อม Meta/FB API ของ owner + เป็น growth layer ที่ไม่ block การ operational ของ M1 (ครัวแรกต้องทำงานก่อน) Requirement ที่ defer ต้องกลับมาทำ: content management UI เต็มรูปแบบ + content → order attribution/loop
 
 ---
 
-## 14. à¸£à¸°à¸šà¸š Content Engine
+## 15. NOTIFICATION SYSTEM
 
-à¸¥à¸¹à¹ˆà¸§à¸´à¸™à¹€à¸”à¸´à¸¡: Content -> Customer Acquisition -> Order
+| Event | In-memory event | Database event | Actual push/email/LINE/Messenger |
+|-------|-----------------|----------------|----------------------------------|
+| Order confirmation | ✅ | ✅ (order row + audit log) | ❌ MISSING |
+| Payment confirmation | ✅ | ✅ (payment_intents) | ❌ MISSING |
+| Kitchen status | ✅ | ✅ (batch status) | ❌ MISSING |
+| Dispatch | ✅ | ✅ (assignments) | ❌ MISSING |
+| Delivery | ✅ | ✅ | ❌ MISSING |
+| Cancellation | ✅ | ✅ | ❌ MISSING |
+| Refund | ✅ | ✅ | ❌ MISSING |
 
-| à¸„à¸§à¸²à¸¡à¸ªà¸²à¸¡à¸²à¸£à¸– | à¸ªà¸–à¸²à¸™à¸°à¸›à¸±à¸ˆà¸ˆà¸¸à¸šà¸±à¸™ | à¸«à¸¥à¸±à¸à¸à¸²à¸™à¸—à¸µà¹ˆà¸žà¸š | M1/P2/Deferred |
-|-----------|--------------|---------------|----------------|
-| Facebook Content | MISSING | à¹„à¸¡à¹ˆà¸¡à¸µà¸£à¸°à¸šà¸šà¸ˆà¸±à¸”à¸à¸²à¸£ FB Content | P2/DEFERRED |
-| Content Generation | warnings | Skeleton à¸ªà¸³à¸«à¸£à¸±à¸š AI Content Assistance | P2/DEFERRED |
-| Content Management | warnings | Content Approval UI (Migr 022) | P1 |
-| Reusable Content | warnings | Media Library à¸£à¸­à¸‡à¸£à¸±à¸š AI Images | P2 |
-| Content -> Order Loop | MISSING | à¹„à¸¡à¹ˆà¸¡à¸µà¸£à¸°à¸šà¸šà¸§à¸±à¸”à¸œà¸¥ Closed-Loop | P2/DEFERRED |
-
-**à¸ªà¸£à¸¸à¸›: CONTENT ENGINE = DEFERRED** (à¹„à¸¡à¹ˆà¹ƒà¸Šà¹ˆ Core M1 Blocker) â€” à¸¡à¸µ Content Approval UI à¹à¸•à¹ˆà¹„à¸¡à¹ˆà¸¡à¸µ Closed-Loop à¸—à¸µà¹ˆà¸§à¸±à¸”à¸œà¸¥ Content -> Acquisition -> Order à¸­à¸¢à¹ˆà¸²à¸‡à¹à¸—à¹‰à¸ˆà¸£à¸´à¸‡
-
----
-
-## 15. à¸£à¸°à¸šà¸šà¹à¸ˆà¹‰à¸‡à¹€à¸•à¸·à¸­à¸™ (NOTIFICATION SYSTEM)
-
-| à¸ªà¸´à¹ˆà¸‡à¸—à¸µà¹ˆà¸•à¹‰à¸­à¸‡à¸•à¸£à¸§à¸ˆà¸ªà¸­à¸š | à¸ªà¸–à¸²à¸™à¸°à¸›à¸±à¸ˆà¸ˆà¸¸à¸šà¸±à¸™ | à¸«à¸¥à¸±à¸à¸à¸²à¸™à¸—à¸µà¹ˆà¸žà¸š |
-|--------------------|--------------|---------------|
-| à¹à¸ˆà¹‰à¸‡à¹€à¸•à¸·à¸­à¸™ Order/Payment/Delivery/Cancel/Refund | warnings Event Emitter à¹€à¸—à¹ˆà¸²à¸™à¸±à¹‰à¸™; à¹„à¸¡à¹ˆà¸¡à¸µ Push/Email/LINE/Messenger à¸ˆà¸£à¸´à¸‡ |
-
-à¸à¸²à¸£à¸ˆà¸±à¸”à¸›à¸£à¸°à¹€à¸ à¸—: In-Memory Event (warnings), Database Event (warnings), Actual Push (MISSING), Email (MISSING), LINE/Messenger (MISSING)
-
-**à¸ªà¸£à¸¸à¸›: NOTIFICATION = DEFERRED** â€” à¸¥à¸¹à¸à¸„à¹‰à¸²à¸¢à¸±à¸‡**à¹„à¸¡à¹ˆà¹„à¸”à¹‰à¸£à¸±à¸š** Notification à¸ˆà¸£à¸´à¸‡à¸œà¹ˆà¸²à¸™à¸Šà¹ˆà¸­à¸‡à¸—à¸²à¸‡à¸—à¸µà¹ˆà¸•à¸±à¹‰à¸‡à¹ƒà¸ˆ à¸«à¹‰à¸²à¸¡à¹€à¸£à¸µà¸¢à¸ Event Emitter à¸§à¹ˆà¸² "Notification System"
+**สรุปตามกฎข้อกำหนด:** ปัจจุบันเป็น in-app event bus + database event เท่านั้น (`notificationService.ts`, `NotificationCenterPage.tsx`) — **ลูกค้ายังไม่ได้รับ push/email/LINE จริง** จึง**ห้ามเรียก event emitter ว่า notification system เต็มรูปแบบ** สถานะ = **PARTIAL** (P2 ตาม M1 closure evidence)
 
 ---
 
-## 16. à¸§à¸‡à¸ˆà¸£ Review / Feedback Loop
+## 16. REVIEW / FEEDBACK LOOP
 
-à¸§à¸±à¸•à¸–à¸¸à¸›à¸£à¸°à¸ªà¸‡à¸„à¹Œ Closed-Loop à¹€à¸”à¸´à¸¡: Content -> Customer -> Order -> Kitchen -> Delivery -> Review -> Data -> AI -> Better Content
+Original closed-loop objective:
 
-| Node à¹ƒà¸™à¸§à¸‡à¸ˆà¸£ | à¸ªà¸–à¸²à¸™à¸°à¸›à¸±à¸ˆà¸ˆà¸¸à¸šà¸±à¸™ | à¸«à¸¥à¸±à¸à¸à¸²à¸™à¸—à¸µà¹ˆà¸žà¸š |
-|-------------|--------------|---------------|
-| Content | warnings | Content mgmt à¸¢à¸±à¸‡à¹„à¸¡à¹ˆà¸ªà¸¡à¸šà¸¹à¸£à¸“à¹Œ / FB Missing |
-| Customer | OK | Storefront + Auth |
-| Order | OK | Canonical Order Spine |
-| Kitchen | warnings | Batch à¸—à¸³à¸‡à¸²à¸™à¹„à¸”à¹‰; à¸•à¹‰à¸­à¸‡à¸à¸²à¸£ Trace à¸ªà¸” |
-| Delivery | warnings | Self-delivery à¸—à¸³à¸‡à¸²à¸™à¹„à¸”à¹‰; External Rider Blocked |
-| Review | warnings | Section à¹à¸ªà¸”à¸‡ Review + à¸”à¸²à¸§; Data Collection à¸¢à¸±à¸‡à¹„à¸¡à¹ˆà¸ªà¸¡à¸šà¸¹à¸£à¸“à¹Œ |
-| Data -> AI Feedback | MISSING | à¹„à¸¡à¹ˆà¸¡à¸µ Analytics Loop Feed à¸à¸¥à¸±à¸šà¹„à¸›à¸›à¸£à¸±à¸š AI Content |
-| Better Content | MISSING | Closed-Loop à¸¢à¸±à¸‡à¹„à¸¡à¹ˆà¹„à¸”à¹‰ Implement |
+```text
+Content → Customer → Order → Kitchen → Delivery → Review → Data → AI → Better Content
+```
 
-**à¸ªà¸£à¸¸à¸›:** Half Front (Content -> Delivery) à¸¡à¸µà¹ƒà¸™à¸£à¸°à¸”à¸±à¸š Single-Order à¸ªà¹ˆà¸§à¸™ **Review -> Data -> AI -> Better Content** Closed-Loop = **MISSING/DEFERRED** â€” à¸™à¸µà¹ˆà¸„à¸·à¸­à¸Šà¹ˆà¸­à¸‡à¸§à¹ˆà¸²à¸‡à¸—à¸µà¹ˆà¹à¸—à¹‰à¸ˆà¸£à¸´à¸‡à¸‚à¸­à¸‡ BMB Product Objective à¹„à¸¡à¹ˆà¹ƒà¸Šà¹ˆ Facade à¸‚à¸­à¸‡ Closed Loop
+| Node | สถานะ | หลักฐาน |
+|------|-------|---------|
+| Content | PARTIAL | สร้างได้ (code) แต่ไม่มี live posting |
+| Customer | VERIFIED | PWA + customers table |
+| Order | PARTIAL | canonical spine พร้อม ขาด prod E2E trace |
+| Kitchen | PARTIAL | batch RPC พร้อม ไม่มี prod batch cycle |
+| Delivery | PARTIAL | dispatch UI + rider PWA พร้อม ไม่มี prod ครบวงจร |
+| Review | PARTIAL | `ReviewPage.tsx` + `reviews` table + `bmbAdminApi_reviews.ts` |
+| Data | PARTIAL | `customerIntelligenceServer.ts` aggregate จาก DB ได้ |
+| AI | PARTIAL | AI อ่าน intelligence ได้ แต่ไม่มี closed-loop automation |
+| Better Content | **MISSING** | ไม่มีกลไกเอา Review/Data กลับไปปรับ content อัตโนมัติ |
 
----
-
-## 17. à¸¨à¸¹à¸™à¸¢à¹Œà¸ªà¸±à¹ˆà¸‡à¸à¸²à¸£ Admin (ADMIN COMMAND CENTER)
-
-à¸•à¸£à¸§à¸ˆà¸ªà¸­à¸šà¸—à¸¸à¸ Module: VIEW / CREATE / EDIT / DELETE / STATE TRANSITION / DB PERSISTENCE / RLS
-
-| Module | Page | View | C/E/D | State Trans | DB Persist | RLS | à¸ªà¸£à¸¸à¸›à¸ªà¸–à¸²à¸™à¸° |
-|--------|------|------|-------|-------------|------------|-----|----------|
-| Dashboard | OK | warnings KPI à¸¢à¸±à¸‡à¸•à¸·à¹‰à¸™ | warnings | warnings | OK | OK | PARTIAL |
-| Orders | OK AdminOrders | OK | OK | OK | OK | OK | VERIFIED |
-| Pre-orders | OK AdminPreOrders | OK | OK | OK | OK | OK | PARTIAL |
-| Kitchen | OK AdminKitchen | OK | OK | OK | OK | OK | PARTIAL |
-| Inventory | OK InventoryPage | OK | OK | OK | warnings | OK | VERIFIED |
-| Recipes | OK AdminRecipes | OK | OK | warnings | OK | OK | VERIFIED |
-| Drivers | OK | OK | OK | OK | OK | OK | VERIFIED |
-| Delivery | OK Delivery/AdminDelivery | OK | OK | OK | OK | OK | VERIFIED |
-| Customers | warnings | warnings | warnings | warnings | warnings | OK | PARTIAL |
-| Audit Logs | OK AuditLogPage | OK | -- | -- | OK | OK | VERIFIED |
-| Settings | OK AdminSettings | OK | OK | OK | warnings | OK | VERIFIED |
-| Content Approvals | OK | OK | OK | warnings | OK | OK | PARTIAL |
-| AI | warnings | warnings | warnings | warnings | warnings | OK | PARTIAL |
-
-**à¸ªà¸£à¸¸à¸›: ADMIN = Operational Command Center à¹€à¸›à¹‡à¸™ PARTIAL-STRONG** â€” Core Modules (Orders/Inventory/Recipes/Drivers/Delivery/Audit/Settings) = **VERIFIED** à¹à¸•à¹ˆ Customers Management + Content + AI Console = **PARTIAL/MISSING**
+**Review/Data/AI feedback loop ยังไม่มีครบ — เป็น GAP ที่ต้องแสดงชัดเจน (Section 23D GAP-7)**
 
 ---
 
-## 18. à¸£à¸°à¸šà¸šà¸£à¸±à¸à¸©à¸²à¸„à¸§à¸²à¸¡à¸›à¸¥à¸­à¸”à¸ à¸±à¸¢ (SECURITY)
+## 17. ADMIN COMMAND CENTER
 
-| à¸ªà¸´à¹ˆà¸‡à¸—à¸µà¹ˆà¸•à¹‰à¸­à¸‡à¸•à¸£à¸§à¸ˆà¸ªà¸­à¸š | à¸ªà¸–à¸²à¸™à¸°à¸›à¸±à¸ˆà¸ˆà¸¸à¸šà¸±à¸™ | à¸«à¸¥à¸±à¸à¸à¸²à¸™à¸—à¸µà¹ˆà¸žà¸š |
-|--------------------|--------------|---------------|
-| RLS | OK | WAVE 3: Grant Probe 7/7 PASS, Anon Residue 0/0 |
-| Anon Access | OK | REST Anon Leak à¸›à¸´à¸”à¹à¸¥à¹‰à¸§ |
-| Authenticated / Service Role | OK | Role -> Profiles; SEC DEFINER RPCs |
-| Edge Functions | OK | Verify_jwt Config; Key Server-Side Only; Bundle Scan 0 Hits |
-| à¸à¸²à¸£à¹€à¸›à¸´à¸”à¹€à¸œà¸¢à¸‚à¹‰à¸­à¸¡à¸¹à¸¥à¸ªà¸³à¸„à¸±à¸ | OK | à¹„à¸¡à¹ˆà¸¡à¸µ Key à¸­à¸¢à¸¹à¹ˆà¹ƒà¸™ Client Bundle |
-| Admin Authorization | OK | is_admin() Enforced à¹ƒà¸™ AdminRoute + DB Role Check |
-| AI Tool Authorization | OK | aiToolCalling à¸–à¸¹à¸ Disable (commit 716b4e9) |
+Audit ทั้งระบบ ไม่ใช่เฉพาะ page existence — ตรวจ VIEW / CREATE / EDIT / DELETE / STATE TRANSITION / DB PERSISTENCE / RLS / ERROR HANDLING
 
-à¸­à¹‰à¸²à¸‡à¸­à¸´à¸‡: Migr 033/034/035 + Live DB Verification (2026-09-22)
-**à¸ªà¸£à¸¸à¸›: SECURITY = VERIFIED** (Production ACL Hardening à¸ªà¸³à¹€à¸£à¹‡à¸ˆà¹à¸¥à¸°à¸¢à¸·à¸™à¸¢à¸±à¸™à¹à¸¥à¹‰à¸§)
+| Module | Page | CRUD | State transition | DB persistence | สถานะ |
+|--------|------|------|------------------|----------------|-------|
+| Dashboard | `AdminControlPage` + dashboard components | VIEW | — | ✅ | VERIFIED |
+| Orders | `AdminOrders.tsx` + `bmbAdminApi_orders.ts` | VIEW/EDIT | ✅ ผ่าน `transition_order_status` + allow-list | ✅ | VERIFIED |
+| Pre-orders | `AdminPreOrders.tsx` (commit `ff54783`) | CRUD เต็ม + cancellation | ✅ | ✅ | VERIFIED (code) |
+| Kitchen | `AdminKitchen.tsx` + `bmbAdminApi_kitchen.ts` | CREATE batch / VIEW queue | PARTIAL | ✅ | PARTIAL (prod trace) |
+| Inventory | `InventoryPage.tsx` — DB-backed (commit `9787429` แทน localStorage) | CRUD | — | ✅ | VERIFIED (code) |
+| Recipes | `AdminRecipes.tsx` + `bmbAdminApi_recipes.ts` + RPC (Migr 035) | CRUD + BOM view | — | ✅ | VERIFIED (code) |
+| Drivers | `DeliveryManagement.tsx` + `bmbAdminApi_drivers.ts` (list/upsert/status/assign — 04d19c7) | CRUD | PARTIAL | ✅ | PARTIAL (prod trace) |
+| Delivery | `DeliveryManagement.tsx` + provider sandbox | VIEW/dispatch | PARTIAL | ✅ | PARTIAL |
+| Customers | `AdminCustomers.tsx` + `bmbAdminApi_customers.ts` | VIEW + detail | — | ✅ | VERIFIED |
+| Audit Logs | `AuditLogPage.tsx` อ่านจาก `audit_logs` table โดยตรง | VIEW | — | ✅ | VERIFIED |
+| Settings | `bmbAdminApi_settings.ts` | CRUD | — | ✅ | VERIFIED (code) |
+| Content | `bmbAdminApi_media.ts` / contentApproval | PARTIAL | — | ✅ | PARTIAL |
+| AI | guardrails / intelligence admin | PARTIAL | — | ✅ | PARTIAL |
 
----
+**คำถามตามข้อกำหนด:** Admin เป็น operational command center จริงหรือไม่?
 
-## 19. à¸£à¸°à¸šà¸šà¹€à¸ªà¸µà¸¢à¸‡à¸žà¸¹à¸” (VOICE)
-
-à¸‚à¹‰à¸­à¸à¸³à¸«à¸™à¸”à¹€à¸”à¸´à¸¡ (à¸–à¹‰à¸²à¸­à¸¢à¸¹à¹ˆà¹ƒà¸™ M1): Voice Input / Voice Output / Customer Interaction / AI Interaction / Browser+Mobile Support
-
-| à¸ªà¸´à¹ˆà¸‡à¸—à¸µà¹ˆà¸•à¹‰à¸­à¸‡à¸•à¸£à¸§à¸ˆà¸ªà¸­à¸š | à¸ªà¸–à¸²à¸™à¸°à¸›à¸±à¸ˆà¸ˆà¸¸à¸šà¸±à¸™ |
-|--------------------|--------------|
-| Search src/ à¸ªà¸³à¸«à¸£à¸±à¸š SpeechRecognition | **à¹€à¸ˆà¸­ 0 à¸£à¸²à¸¢à¸à¸²à¸£** |
-| Search src/ à¸ªà¸³à¸«à¸£à¸±à¸š SpeechSynthesis | **à¹€à¸ˆà¸­ 0 à¸£à¸²à¸¢à¸à¸²à¸£** |
-| STT/TTS API | **à¹„à¸¡à¹ˆà¸žà¸šà¹€à¸¥à¸¢** |
-
-à¹€à¸«à¸•à¸¸à¸œà¸¥à¹ƒà¸™à¸à¸²à¸£ Deferral: Original Spec Section 3 à¸£à¸°à¸šà¸¸ Voice à¹€à¸›à¹‡à¸™à¸Ÿà¸µà¹€à¸ˆà¸­à¸£à¹Œà¸«à¸¥à¸±à¸ à¹à¸•à¹ˆ MASTER_PRODUCT_SPEC Section 3.4 à¸£à¸°à¸šà¸¸à¸§à¹ˆà¸² Voice à¹€à¸›à¹‡à¸™ **OPTIONAL/Enhancement** (à¹„à¸¡à¹ˆà¹ƒà¸Šà¹ˆ P0)
-AI Assistant à¸›à¸±à¸ˆà¸ˆà¸¸à¸šà¸±à¸™à¹€à¸›à¹‡à¸™ Text-First Chat à¸—à¸µà¹ˆà¹„à¸¡à¹ˆà¸¡à¸µ STT/TTS Integration
-
-**à¸ªà¸£à¸¸à¸›: VOICE = DEFERRED (P2 à¹€à¸§à¹‰à¸™à¹à¸•à¹ˆ Owner à¸¢à¸à¸£à¸°à¸”à¸±à¸šà¹€à¸›à¹‡à¸™ P0)** â€” à¹„à¸¡à¹ˆà¹ƒà¸Šà¹ˆ Blocker à¸‚à¸­à¸‡ M1
+> **ตอบ: PARTIAL (ใกล้ VERIFIED)** — ทุก module หลักมี CRUD + DB persistence + RLS + audit log รองรับ จุดที่ยัง PARTIAL คือ (1) state transition ของ kitchen/delivery ต้องมี production trace (2) error handling ต้องยืนยันด้วย order จริงบน prod
 
 ---
 
-## 20. à¸›à¸£à¸°à¸ªà¸´à¸—à¸˜à¸´à¸ à¸²à¸žà¸šà¸™ Production (PERFORMANCE / PRODUCTION)
+## 18. SECURITY
 
-| à¸ªà¸´à¹ˆà¸‡à¸—à¸µà¹ˆà¸•à¹‰à¸­à¸‡à¸•à¸£à¸§à¸ˆà¸ªà¸­à¸š | à¸ªà¸–à¸²à¸™à¸°à¸›à¸±à¸ˆà¸ˆà¸¸à¸šà¸±à¸™ | à¸«à¸¥à¸±à¸à¸à¸²à¸™à¸—à¸µà¹ˆà¸žà¸š |
-|--------------------|--------------|---------------|
-| Production URL | OK | https://bitemebaby-5f7.pages.dev |
-| Lighthouse à¸œà¸¥ Production | PENDING | à¸•à¹‰à¸­à¸‡à¸‚à¸­ Owner à¸§à¸±à¸”à¸œà¸¥à¸ˆà¸£à¸´à¸‡ |
+| รายการ | หลักฐาน | สถานะ |
+|--------|---------|--------|
+| RLS ทุกตาราง | Migr 005/006 (hardening) + 033 (table-ACL alignment) + 034 (prod ACL drift remediation) | VERIFIED |
+| anon | SELECT เฉพาะ canonical tables; I/U/D REVOKED 16 ตาราง; `pre_orders` auth write REVOKED (024 archive RPC-write-only) | VERIFIED (Migr 033/034) |
+| authenticated | Minimal grants; REVOKE ALL บน payment_intents / inventory / profiles (Migr 034) | VERIFIED |
+| service_role | เฉพาะ `record_payment_result` + Stripe webhook | VERIFIED |
+| RPC execute | REVOKE PUBLIC + `is_admin()` gate สำหรับ kitchen/driver/admin RPCs (Migr 019/027/028/031) | VERIFIED |
+| Edge Functions | `create-checkout` re-derive ยอดจาก DB; stripe-webhook service_role + signature verify 6/6 (2026-09-19) | VERIFIED |
+| Sensitive data exposure | `aiToolCalling.ts.disabled` — ปิดความเสี่ยง client-side key; bundle scan = 0 key hits | VERIFIED |
+| Admin authorization | `is_admin()` + Migr 014 owner-admin full access + Migr 006 guard | VERIFIED |
+| AI tool authorization | AI อ่านเฉพาะของตัวเองผ่าน RLS; ไม่มี mutation tools | VERIFIED |
+
+**อ้างอิง:** Migration 033/034/035 + `DATABASE_SECURITY_AUDIT.md` + `AUTHORIZATION_AUDIT.md` (Production ACL gate = PASS, anon residue 0/0, REST leak closed)
+
+**หมายเหตุ (OWNER-ONLY):** การยืนยันข้างต้นอ้างอิง migration files + audit docs — ควรทำ live database review ผ่าน Supabase Dashboard เป็นขั้นสุดท้ายโดย owner
 
 ---
 
-## 21. à¸•à¸£à¸§à¸ˆà¸ªà¸­à¸šà¸„à¸§à¸²à¸¡à¸ªà¸­à¸”à¸„à¸¥à¹‰à¸­à¸‡à¸‚à¸­à¸‡à¹€à¸­à¸à¸ªà¸²à¸£ (DOCUMENTATION RECONCILIATION)
+## 19. VOICE
 
-| à¹€à¸­à¸à¸ªà¸²à¸£ | à¸ªà¸–à¸²à¸™à¸°à¸›à¸±à¸ˆà¸ˆà¸¸à¸šà¸±à¸™ | à¸„à¸§à¸²à¸¡à¸‚à¸±à¸”à¹à¸¢à¹‰à¸‡à¸—à¸µà¹ˆà¸žà¸š |
-|--------|--------------|------------------|
-| README.md | CONFLICT (à¸Šà¸µà¹‰à¹„à¸›à¸—à¸µà¹ˆ ed1ac58 à¸‹à¸¶à¹ˆà¸‡à¸¥à¹‰à¸²à¸ªà¸¡à¸±à¸¢) | à¸Šà¸µà¹‰à¹„à¸› HEAD à¸—à¸µà¹ˆà¹„à¸¡à¹ˆà¹ƒà¸Šà¹ˆà¹€à¸§à¸­à¸£à¹Œà¸Šà¸±à¸™à¸›à¸±à¸ˆà¸ˆà¸¸à¸šà¸±à¸™ |
-| CURRENT_STATE (2026-09-20) | CONFLICT (à¸¥à¹‰à¸²à¸ªà¸¡à¸±à¸¢à¹€à¸—à¸µà¸¢à¸šà¸à¸±à¸š HEAD à¸›à¸±à¸ˆà¸ˆà¸¸à¸šà¸±à¸™) | Head/Migration count à¹à¸•à¸à¸•à¹ˆà¸²à¸‡à¸à¸±à¸™à¸¡à¸²à¸ |
-| M1_CLOSURE_EVIDENCE (2026-09-24) | OK UPDATED (Thai Version) | à¸ªà¸­à¸”à¸„à¸¥à¹‰à¸­à¸‡à¸à¸±à¸š HEAD 1d3d6e7 |
-| RECONCILIATION_MATRIX (2026-09-23) | OK UPDATED | HEAD 4fa8c03 à¸‹à¸´à¸‡à¸„à¹Œà¹à¸¥à¹‰à¸§ |
-| CLOSURE_BOOK v5.0 | CONFLICT | à¸­à¹‰à¸²à¸‡à¸§à¹ˆà¸² "No Technical Blocking" à¹à¸•à¹ˆà¸¡à¸µ Gap à¸”à¹‰à¸²à¸™ Runtime Evidence à¸ˆà¸£à¸´à¸‡ -> à¸•à¹‰à¸­à¸‡ Downgrade Partial Items |
-| MASTER_PRODUCT_SPEC v2.0 | OK Reference Document | à¹„à¸¡à¹ˆà¹ƒà¸Šà¹ˆ Current-State Doc |
-| AI_WORK_STATE | warnings | Session Log à¸•à¹‰à¸­à¸‡à¸à¸²à¸£à¸­à¸±à¸›à¹€à¸”à¸• |
+ตรวจตาม original requirement:
 
-à¸„à¸§à¸²à¸¡à¸‚à¸±à¸”à¹à¸¢à¹‰à¸‡ -> à¸„à¸§à¸²à¸¡à¸ˆà¸£à¸´à¸‡à¸›à¸±à¸ˆà¸ˆà¸¸à¸šà¸±à¸™ vs à¸à¸²à¸£à¸„à¹‰à¸™à¸žà¸šà¹ƒà¸™à¸­à¸”à¸µà¸•:
-| à¸«à¸±à¸§à¸‚à¹‰à¸­ | à¸„à¸§à¸²à¸¡à¸ˆà¸£à¸´à¸‡à¸›à¸±à¸ˆà¸ˆà¸¸à¸šà¸±à¸™ (Evidence) | à¸à¸²à¸£à¸„à¹‰à¸™à¸žà¸šà¹ƒà¸™à¸­à¸”à¸µà¸• (Doc Claim) |
-|--------|-----------------------------|----------------------------|
-| Pre-order Payment | PARTIAL (à¹„à¸¡à¹ˆà¸¡à¸µ Production Pre-Order Payment Runtime Evidence) | CLOSURE_BOOK PAY-05 à¸­à¹‰à¸²à¸‡à¸§à¹ˆà¸²à¹€à¸›à¹‡à¸™ VERIFIED |
-| Pre-order Inventory | PARTIAL (à¸•à¹‰à¸­à¸‡à¸à¸²à¸£à¸—à¸”à¸ªà¸­à¸š Production) | CLOSURE_BOOK INV à¸­à¹‰à¸²à¸‡à¸§à¹ˆà¸²à¹€à¸›à¹‡à¸™ VERIFIED |
-| Card Bill | PARTIAL (PAY-02 à¸‚à¸²à¸”à¸«à¸²à¸¢à¹„à¸›) | -- |
-| Lighthouse | PARTIAL (à¸‚à¸²à¸” Measurement à¸šà¸™ Production) | CLOSURE_BOOK LHR PENDING |
+| รายการ | หลักฐาน | สถานะ |
+|--------|---------|--------|
+| Voice input | grep `voice|speech|synthesis` ใน production code = 0 hits | **MISSING** |
+| Voice output | เดียวกัน | **MISSING** |
+| Customer/AI interaction ทางเสียง | ไม่มี | **MISSING** |
+| Browser/mobile support | ไม่มี | **MISSING** |
+
+**การตัดสินใจของ Owner (มีหลักฐานชัดเจน — ห้ามปล่อยเป็น "unclear"):** `BITEMEBABY_PRODUCT_REALITY_MAP.md` ระบุ AI-06 **CANCELLED**:
+
+> "Voice future — grep voice/speech/synthesis ใน repo = 0 hits → ไม่มีของจริง → ไม่เขียนว่าเสร็จ (no mockup)"
+
+**สถานะสุทธิ: DEFERRED โดย owner decision** — เหตุผล: voice ไม่ใช่ M1 acceptance criteria; ระบบ operational ครัว/ส่งถึงบ้านต้องพิสูจน์ก่อน
+
+---
+
+## 20. PERFORMANCE / PRODUCTION
+
+| รายการ | หลักฐาน | สถานะ |
+|--------|---------|--------|
+| Production URL | `bitemebaby-5f7.pages.dev` (Cloudflare Pages — deployed) | VERIFIED |
+| Lighthouse Performance | Local measurement: 43 → 81 (best run; variance 56–81 จาก external font/CPU noise ตาม AI_WORK_STATE) | **PARTIAL** — target ≥ 90 บน production ยังไม่ทำได้ |
+| Mobile | Responsive + lazy chunks + WebP บีบอัด 60–90% + preload LCP | PARTIAL — ต้องวัดบน prod |
+| Accessibility / Best practices / SEO | `SeoHelmet.tsx` + meta/OG + sitemap | PARTIAL — ต้องวัดบน prod |
+
+**กฎตามข้อกำหนด: ห้ามใช้ localhost score แทน production score** — ทุกตัวเลขที่มีอยู่เป็น local measurement เท่านั้น จำเป็นต้องรัน Lighthouse บน production URL จริง (OWNER-ONLY run + ENGINEERING fix ถ้าต่ำกว่าเกณฑ์)
+
+---
+
+## 21. DOCUMENTATION RECONCILIATION
+
+แยก **CURRENT TRUTH** (ข้อเท็จจริงปัจจุบัน) กับ **HISTORICAL FINDING** (สิ่งที่เคยเป็นจริงแต่แก้แล้ว):
+
+| เอกสาร | ข้อกล่าวอ้าง | การจัดหมวด |
+|--------|-------------|-------------|
+| `docs/BMB_M1_CLOSURE_EVIDENCE_2026-09-24.md` | M1 gate = BLOCKED เหลือ 3 owner actions | **CURRENT TRUTH** ✅ ตรงกับ repo state |
+| `docs/BMB_MASTER_REQUIREMENT_RECONCILIATION_2026-09-23.md` + `docs/_temp_recon.md` | P0 10 items แก้ 8-10 / MOCK_DRIVERS fixed / aiToolCalling disabled / Migr 035 | **CURRENT TRUTH** (ตรวจซ้ำกับโค้ดจริงแล้ว) |
+| `BMB_DEEP_PRODUCT_LOGIC_AUDIT_2026-09-22.md` | "MOCK_DRIVERS / ไม่มี AdminKitchen+PreOrders+Recipes / cutoff ไม่ enforce / OrderTrackPage mock" | **HISTORICAL FINDING** — ถูกแก้แล้วด้วย 04d19c7 / ff54783 / 886836d |
+| `ADMIN_GAP_MAP.md` | "DeliveryManagement ใช้ MOCK_DRIVERS; Inventory ใช้ localStorage" | **HISTORICAL FINDING** — แก้แล้วทั้งสองจุด |
+| `BMB_MASTER_PRODUCT_SPEC.md` §7/§8/§9 | เดิมขัดแย้งกับ CURRENT_STATE + Migr 019/020 | **HISTORICAL CONTRADICTION** — ยุบแล้วด้วย Migr 023/024/025 (canonical spine) |
+| `BMB_100_PERCENT_CLOSURE_BOOK.md` / เอกสาร "100%" ต่างๆ | อ้าง closure ระดับต่างๆ | **HISTORICAL** — ห้ามใช้เป็น evidence ของ full product completion |
+| เอกสารนี้ | Single source of truth ปัจจุบัน | **CURRENT TRUTH** |
+
+**ผลการตรวจ contradiction:** ไม่พบเอกสารปัจจุบันที่ขัดแย้งกัน — เอกสารที่เคยบอก "PRE_ORDER missing" ถูกจัดเป็น HISTORICAL เพราะ Migr 023/024/025/027 ยุบปัญหานั้นแล้ว
 
 ---
 
 ## 22. IMPORTANT: DO NOT FIX YET
 
-à¸£à¸­à¸šà¸™à¸µà¹‰à¸„à¸·à¸­ **AUDIT / RECONCILE / CLASSIFY / EVIDENCE** à¹€à¸—à¹ˆà¸²à¸™à¸±à¹‰à¸™ â€” à¸«à¹‰à¸²à¸¡à¹à¸à¹‰à¹„à¸‚ implementation à¸à¹ˆà¸­à¸™
-
----
-
-## 23. REQUIRED FINAL OUTPUT â€” A. EXECUTIVE STATUS
+รอบนี้ทำเพียง:
 
 ```text
-M1 STATUS:       NOT CLOSED (BLOCKED)
+AUDIT / RECONCILE / CLASSIFY / EVIDENCE
+```
+
+**ห้ามแก้ implementation** (ยกเว้น bug ที่ทำให้ audit เดินต่อไม่ได้ — ต้องรายงานและขอ owner decision ก่อน)
+
+ห้ามทำ:
+
+- architecture redesign
+- scope expansion
+- P2 / P3 implementation
+- fake integration
+- fake production evidence
+- mock replacement เพียงเพื่อให้ report ผ่าน
 
 ---
 
-## 23B. M1 CLOSURE MATRIX (à¹€à¸‰à¸žà¸²à¸° M1 requirements)
+## 23. REQUIRED FINAL OUTPUT
 
-| M1 Requirement | Status | Evidence status |
-|----------------|--------|-----------------|
-| Same-day canonical ordering spine | VERIFIED | schema/RPC prod verify |
-| Pre-order complete lifecycle | PARTIAL/BLOCKER | no production pre-order evidence |
-| Payment (multi-method) | PARTIAL | card bill missing (PAY-02) |
-| Real refund | VERIFIED | 172 THB real |
-| Customer cancel + restore | PARTIAL | production restore test missing |
-| Capacity atomic + no oversell | PARTIAL | production restore test missing |
-| Inventory deduct/restore atomic | PARTIAL | production cycle test missing |
-| Kitchen batch (both modes) | PARTIAL | production batch trace missing |
-| Delivery self <= 5 km | VERIFIED | REST probe + 5km gate |
-| External rider > 5 km | OWNER-ONLY/BLOCKED | no API keys |
-| Order state machine + audit | VERIFIED | trigger + audit prod |
-| RLS / Security hardening | VERIFIED | WAVE 3 prod |
-| Lighthouse Perf >= 90 | PARTIAL | production measurement missing |
-| PWA installable | VERIFIED | sw.js + manifest |
-| AI (assistant, non-authority) | PARTIAL | chat exists; no prod conversation evidence |
-| Notifications | DEFERRED | no push/email/LINE |
-| Voice | DEFERRED | not implemented (optional) |
+## A. EXECUTIVE STATUS
 
----
+```text
+M1 STATUS:            BLOCKED  — เหลือ 3 owner actions (production runtime evidence) ก่อนปิด M1
+FULL PRODUCT STATUS:  PARTIAL  — M1 spine เกือบครบ; ยังมีงาน P2/P3 + OWNER-ONLY + DEFERRED จำนวนมาก
+```
 
-## 23C. FULL BMB OBJECTIVE MATRIX (à¸—à¸¸à¸ capability à¸—à¸µà¹ˆ owner à¹€à¸„à¸¢à¸à¸³à¸«à¸™à¸”)
+(ห้ามใช้คำว่า "almost complete" โดยไม่มี definition — definition ที่ใช้คือจำนวนแถว VERIFIED/PARTIAL ใน Matrix C เทียบ objective ทั้งหมด)
 
-| Capability | Status | Milestone |
-|------------|--------|-----------|
-| Customer PWA ordering | VERIFIED | M1 |
-| Same-day ordering | VERIFIED/partial (prod trace) | M1 |
-| Pre-order lifecycle | PARTIAL | M1 (blocker) |
-| Payment multi-method | PARTIAL | M1 |
-| Refund | VERIFIED | M1 |
-| Admin Command Center (core modules) | VERIFIED | M1 |
-| Admin content/customers/analytics | PARTIAL | P1-P2 |
-| Kitchen Command | PARTIAL (prod) | M1 |
-| Delivery management | VERIFIED | M1 |
-| External rider | OWNER-ONLY/BLOCKED | M1/P2 |
-| Multi-channel intake (FB/Messenger/LINE/Grab) | PLANNED/DEFERRED | P2 |
-| Make.com automation | PARTIAL/DEFERRED | P2 |
+## B. M1 CLOSURE MATRIX (เฉพาะ M1 requirements)
 
----
+| # | M1 Requirement | สถานะ | สิ่งที่ขาดเพื่อปิด |
+|---|----------------|-------|--------------------|
+| 1 | Same-day ordering server-authoritative | VERIFIED | — |
+| 2 | Payment spine (Stripe/PromptPay/COD state machine) | VERIFIED | bill จริง |
+| 3 | Order state machine ฝั่ง server | VERIFIED | — |
+| 4 | Canonical order spine (SAME_DAY + PRE_ORDER เดียว) | VERIFIED | — |
+| 5 | Legacy pre_orders migration + freeze | VERIFIED | — |
+| 6 | Cutoff enforcement | VERIFIED (code) | prod trace |
+| 7 | Inventory deduct/restore/insufficient reject | PARTIAL | prod cycle test |
+| 8 | Capacity lock + กัน oversell | PARTIAL | stress test + prod trace |
+| 9 | Kitchen command center operational | PARTIAL | prod batch cycle |
+| 10 | Delivery dispatch + MOCK_DRIVERS removed | VERIFIED (04d19c7) | prod dispatch trace |
+| 11 | 5km gate + pre-order address (Migr 035) | VERIFIED (code) | prod trace |
+| 12 | Admin core CRUD + AuditLog DB-backed | VERIFIED (code) | — |
+| 13 | Security RLS/ACL hardening | VERIFIED | owner live-DB review |
+| 14 | Pre-order E2E production trace | **P0 ค้าง** | place 1 real pre-order full lifecycle |
+| 15 | Real card charge + bill (PAY-02) | **P0 ค้าง** | owner ทำธุรกรรมจริง |
+| 16 | Production Lighthouse Perf ≥ 90 | **P0 ค้าง** | วัดบน prod URL |
 
-## 23D. CRITICAL GAPS (à¹€à¸£à¸µà¸¢à¸‡à¸•à¸²à¸¡ dependency à¹„à¸¡à¹ˆà¹ƒà¸Šà¹ˆà¸•à¸²à¸¡à¸„à¸§à¸²à¸¡à¸‡à¹ˆà¸²à¸¢)
+```text
+# M1 NOT CLOSED (BLOCKED)
+เหตุผล: ยังไม่มี production runtime evidence สำหรับ 3 owner actions:
+  1. Real pre-order E2E trace บน production
+  2. Real card charge bill จริง
+  3. Production Lighthouse performance ≥ 90
+```
 
-| Gap | WHY | EVIDENCE | IMPACT | REQUIRED ACTION | Owner/Eng | Milestone |
-|-----|-----|----------|--------|-----------------|-----------|-----------|
-| GAP-1: Production Runtime Evidence à¸‚à¸­à¸‡ Order Loop | à¸•à¹‰à¸­à¸‡à¸à¸²à¸£à¸žà¸´à¸ªà¸¹à¸ˆà¸™à¹Œà¸§à¹ˆà¸²à¸£à¸°à¸šà¸šà¸—à¸³à¸‡à¸²à¸™à¸ˆà¸£à¸´à¸‡à¸šà¸™ Production | à¹„à¸¡à¹ˆà¸¡à¸µ live pre-order / inventory cycle / capacity restore / card bill à¹ƒà¸™ production | à¹„à¸¡à¹ˆà¸ªà¸²à¸¡à¸²à¸£à¸–à¸›à¸£à¸°à¸à¸§à¹ˆà¸² pre-order/inventory/capacity/payment à¹€à¸›à¹‡à¸™ VERIFIED | Owner place 1 real pre-order full lifecycle; Engineering re-verify | Owner / Eng | M1 (blocker) |
-| GAP-2: Card Charge Bill (PAY-02) | à¸•à¹‰à¸­à¸‡à¸¡à¸µ bill à¸ˆà¸ˆà¸£à¸´à¸‡ 1 à¸£à¸²à¸¢à¸—à¸µà¹ˆà¸œà¹ˆà¸²à¸™ card | à¸¡à¸µ refund 172 THB + webhook 6/6 à¹à¸•à¹ˆà¹„à¸¡à¹ˆà¸¡à¸µ charge receipt | Payment à¹„à¸¡à¹ˆà¸ªà¸²à¸¡à¸²à¸£à¸– claim full closure | Owner à¹ƒà¸«à¹‰ real card charge receipt à¸ˆà¸²à¸ Stripe | Owner | M1 (blocker) |
-| GAP-3: Production Lighthouse Perf >= 90 | Requirement à¸§à¸±à¸”à¸šà¸™ production URL | URL bitemebaby-5f7.pages.dev; measurement missing | PWA-100-GATE criterion 6 fails | Owner run Lighthouse à¸šà¸™ production URL | Owner | M1 (blocker) |
-| GAP-4: External Rider API Keys | >5km delivery loop à¹„à¸¡à¹ˆà¹€à¸Šà¸·à¹ˆà¸­à¸¡à¸ˆà¸ˆà¸£à¸´à¸‡ | Adapters à¸¡à¸µà¸­à¸¢à¸¹à¹ˆ à¹à¸•à¹ˆà¸¢à¸±à¸‡à¹„à¸¡à¹ˆà¸¡à¸µ keys | external delivery à¹€à¸›à¹‡à¸™ plan à¹€à¸—à¹ˆà¸²à¸™à¸±à¹‰à¸™ | Request keys (Grab/LINEMAN/Foodpanda) à¸«à¸£à¸·à¸­ defer | Owner | OWNER-ONLY / P2 |
-| GAP-5: Multi-channel intake | original objective = multi-channel; à¸›à¸±à¸ˆà¸ˆà¸¸à¸šà¸±à¸™à¸¡à¸µà¹à¸„à¹ˆ PWA | No intake integration | online channels à¸ˆà¸³à¸à¸±à¸”à¸­à¸¢à¸¹à¹ˆà¹à¸„à¹ˆ PWA | Owner à¸•à¸±à¸”à¸§à¹ˆà¸²à¸ˆà¸° defer à¹€à¸›à¹‡à¸™ P2; Engineering scope | Owner / Eng | P2 / DEFERRED |
-| GAP-6: Notification delivery | à¸¥à¸¹à¸à¸„à¹‰à¸²à¸•à¹‰à¸­à¸‡à¹„à¸”à¹‰à¸£à¸±à¸š confirm/status/deliver notification à¸ˆà¸£à¸´à¸‡ | event emitter à¹€à¸—à¹ˆà¸²à¸™à¸±à¹‰à¸™, à¹„à¸¡à¹ˆà¸¡à¸µ push/email/LINE | customer UX + ops stream | Implement push/email/LINE à¸«à¸£à¸·à¸­ defer à¹€à¸›à¹‡à¸™à¸—à¸²à¸‡à¸à¸²à¸£ | Engineering | P2 / P0 if owner wants |
-| GAP-7: Review->Data->AI closed loop | Full product objective = closed loop; à¸¢à¸±à¸‡à¹„à¸¡à¹ˆà¸¡à¸µ | à¹„à¸¡à¹ˆà¸¡à¸µ Data/AI feedback iteration | content/recommendation à¹„à¸¡à¹ˆà¸›à¸£à¸±à¸šà¸›à¸£à¸¸à¸‡à¸ˆà¸²à¸à¸‚à¹‰à¸­à¸¡à¸¹à¸¥ | Defer à¹€à¸›à¹‡à¸™à¸—à¸²à¸‡à¸à¸²à¸£; Scope à¸ªà¸³à¸«à¸£à¸±à¸š Phase 10/12 | Engineering | DEFERRED Ph10/12 |
-| GAP-8: Documentation sync | README/CURRENT_STATE/CLOSURE_BOOK à¸Šà¸µà¹‰à¹„à¸› old HEAD | README ed1ac58; CLOSURE_BOOK claims VERIFIED à¹€à¸«à¸™à¸·à¸­ PARTIAL | Operators/Contributors à¹„à¸”à¹‰à¸£à¸±à¸šà¸‚à¹‰à¸­à¸¡à¸¹à¸¥à¸œà¸´à¸” | Sync à¸—à¸¸à¸ doc à¹ƒà¸«à¹‰à¸•à¸£à¸‡ HEAD à¸›à¸±à¸ˆà¸ˆà¸¸à¸šà¸±à¸™ | Engineering | M1 (final cleanup) |
+## C. FULL BMB OBJECTIVE MATRIX
 
----
+| Domain | Original Objective | Required Capability | Implementation Evidence | DB/RPC Evidence | Runtime Evidence | Production Evidence | Status | M1/P2/Deferred | Exact Gap |
+| ------ | ------------------ | ------------------- | ----------------------- | --------------- | ---------------- | ------------------- | ------ | -------------- | --------- |
+| Customer Ordering | PWA สั่งอาหาร mobile-first | menu/availability/order/fee/cutoff | pages/* + RPC create_order_with_items | ✅ (Migr 007-023) | ✅ code | ⚠️ trace | PARTIAL | M1 | real order capture |
+| Same-Day | สั่งวันนี้ส่งวันนี้ | cutoff/capacity | RPC + trigger + CheckoutPage | ✅ | ✅ code | ⚠️ 1 real order | PARTIAL | M1 | real order capture |
+| Pre-Order | จองล่วงหน้า + scheduled date | date/round/address | Migr 023/024/025/035 + AdminPreOrders | ✅ | ✅ code | ❌ | PARTIAL | M1 | real pre-order E2E |
+| Payment | Stripe/PromptPay/COD | idempotent + amount-match | record_payment_result + webhook 6/6 | ✅ | ✅ | ⚠️ ไม่มี bill จริง | PARTIAL | M1 | card bill |
+| Inventory | recipe→ingredient→deduct/restore | atomic | Migr 019/026 + InventoryPage DB | ✅ | ✅ code | ❌ prod test | PARTIAL | M1 | prod cycle test |
+| Capacity | กัน oversell ต่อรอบ | FOR UPDATE lock | trigger + ERR_CAPACITY_FULL | ✅ | ✅ code | ⚠️ | PARTIAL | M1 | stress + prod trace |
+| Kitchen | ผลิตจาก confirmed orders | batch aggregation | AdminKitchen + Migr 027 (both modes) | ✅ | ✅ code | ❌ prod batch | PARTIAL | M1 | prod batch cycle |
+| Delivery/Bite Drive | drivers/assignment/dispatch | list_drivers + 5km gate | 04d19c7 + Migr 035 + RiderPwa | ✅ | ✅ code | ⚠️ | PARTIAL | M1 | dispatch trace |
+| External Riders >5km | Grab/LineMan/Foodpanda | provider dispatch | sandbox logic 5/5 (logic เท่านั้น) | ✅ schema | ❌ | ❌ | BLOCKED | post-M1 | API keys (OWNER) |
+| Channels | PWA/FB/Messenger/LINE | canonical order_id hub | PWA ✅ เท่านั้น | ✅ | ✅ | ✅ (PWA) | PWA=VERIFIED, อื่น=PLANNED | P2 | FB/LINE/Messenger integration |
+| Make.com | back-office automation worker | FB intake/notify/workflows | ไม่มี live scenario | ❌ | ❌ | ❌ | DEFERRED / OWNER-ONLY | P2 | credentials + scenarios |
+| AI System | Intelligence/Extraction/Assistance | no authority over money/stock/state | guardrails + RLS-bound tools | ✅ | ✅ code | ⚠️ | PARTIAL (prod integration) | M1 arch / P2 integration | prod conversation trace |
+| Content Engine | content→acquisition→order | generation/management/loop | contentAutomation.ts | partial | ⚠️ | ❌ | PARTIAL / MISSING (loop) | P2 | FB token + attribution loop |
+| Notifications | แจ้งเตือนครบ lifecycle | real push/email/LINE | in-app event bus เท่านั้น | ✅ events | ❌ real channel | ❌ | PARTIAL | P2 | provider + real send |
+| Review Loop | review→data→AI→better content | closed loop | reviews + intelligenceServer | ✅ schema | ⚠️ | ❌ | PARTIAL / MISSING (ปลายทาง) | P2/P3 | automation loop |
+| Admin | operational command center | 13 modules CRUD+transition | 13 modules DB-backed | ✅ | ✅ code | ⚠️ | PARTIAL (ใกล้ VERIFIED) | M1 | prod state transitions |
+| Security | RLS/ACL/0 anon residue | hardened | Migr 033/034/035 | ✅ | ✅ code | ⚠️ owner review | VERIFIED (code) | M1 | live DB review |
+| Voice | voice input/output | STT/TTS | 0 hits — CANCELLED | ❌ | ❌ | ❌ | DEFERRED | DEFERRED (owner) | — |
+| Performance | Lighthouse ≥ 90 prod | mobile/perf/SEO | local best 81 | — | ⚠️ local เท่านั้น | ❌ | PARTIAL | M1 gate (owner) | prod measurement |
+| Analytics PRO (14) | forecasting/reporting | — | — | ❌ | ❌ | ❌ | DEFERRED | P3 | — |
+| AI-BIZ / AI-FC (14) | copilot/forecast | — | — | ❌ | ❌ | ❌ | DEFERRED | P3 | — |
+| Inventory PRO (10) | advanced stock ops | — | — | ❌ | ❌ | ❌ | DEFERRED | P3 | — |
+| SaaS (26) / White-label (8) | multi-tenant/white-label | — | — | ❌ | ❌ | ❌ | DEFERRED | Phase 8-15 | — |
 
-## 23E. FALSE-CLOSURE CHECK
+## D. CRITICAL GAPS (เรียงตาม dependency — ไม่ใช่ตามความง่าย)
 
-à¸—à¸³à¹„à¸¡ M1 closure evidence à¸ˆà¸¶à¸‡à¹„à¸¡à¹ˆà¸„à¸§à¸£à¸–à¸¹à¸à¸•à¸µà¸„à¸§à¸²à¸¡à¸§à¹ˆà¸² BMB full product completion?
+```text
+GAP-1  Production runtime evidence ครบวงจร (pre-order E2E + same-day trace + kitchen batch + dispatch)
+WHY:        ทุกสถานะ PARTIAL ถูก block ที่ชั้นนี้ — ไม่มี order จริงบน prod จึงพิสูจน์อะไรไม่ได้เลย
+EVIDENCE:   Matrix B แถว 6-11, 14
+IMPACT:     M1 ปิดไม่ได้
+REQUIRED:   ทำ 1 real order ต่อโหมด ผ่าน full lifecycle บน bitemebaby-5f7.pages.dev
+OWNER/ENG:  OWNER + ENGINEERING
+MILESTONE:  M1
 
-1. M1 à¹€à¸›à¹‡à¸™ technical/operational gateway à¸ªà¸³à¸«à¸£à¸±à¸šì²« real kitchen â€” à¹„à¸¡à¹ˆà¹€à¸—à¹ˆà¸²à¸à¸±à¸š "all BMB objectives"
-2. Full product à¸£à¸§à¸¡à¸–à¸¶à¸‡ **P2-P3 + DOMAIN B** (SaaS / white-label / analytics / AI copilot / forecast / inventory-pro) à¸—à¸µà¹ˆ owner à¸à¸³à¸«à¸™à¸”à¹„à¸§à¹‰ à¹ƒà¸™ spec à¸‹à¸¶à¹ˆà¸‡à¸¢à¸±à¸‡ **unimplemented à¹à¸¥à¸° DEFERRED** â€” à¸™à¸­à¸à¸‚à¸­à¸šà¹€à¸‚à¸• M1
-3. **Multi-channel ordering** (FB/Messenger/LINE/Grab) à¹€à¸›à¹‡à¸™ original objective à¹à¸•à¹ˆà¸•à¸­à¸™à¸™à¸µà¹‰à¸¡à¸µà¹à¸„à¹ˆ PWA à¹€à¸—à¹ˆà¸²à¸™à¸±à¹‰à¸™à¸—à¸µà¹ˆà¸—à¸³à¸‡à¸²à¸™à¹„à¸”à¹‰ â€” planned/deferred
-4. **Content -> Customer -> Order -> Review -> Data -> AI -> Better Content** closed loop à¹„à¸¡à¹ˆà¹„à¸”à¹‰ implement â€” à¸¡à¸µà¹à¸„à¹ˆ front single-order chain
-5. **Real push notifications** (email/LINE/push) à¸¢à¸±à¸‡à¹„à¸¡à¹ˆà¹„à¸”à¹‰ implement â€” à¸¡à¸µà¹à¸„à¹ˆ event emitter
-6. **Make.com automation** à¹€à¸›à¹‡à¸™ plan à¹„à¸¡à¹ˆà¹ƒà¸Šà¹ˆ worker à¸—à¸µà¹ˆà¸—à¸³à¸‡à¸²à¸™à¸ˆà¸£à¸´à¸‡
-7. **Voice** à¹€à¸›à¹‡à¸™ optional/deferred à¹„à¸¡à¹ˆà¹ƒà¸Šà¹ˆ real STT/TTS
-8. **External rider > 5 km** à¸–à¸¹à¸ block à¸šà¸™ API keys à¸¢à¸±à¸‡à¹„à¸¡à¹ˆ active
-9. **Analytics (14 items), AI-BIZ (8 items), AI-FC (6 items), Inventory PRO (10 items), SaaS (26 items), White-label (8 items)** â€” à¸—à¸±à¹‰à¸‡à¸«à¸¡à¸” DEFERRED (Phase 8-15)
+GAP-2  Real card charge + bill (PAY-02)
+WHY:        Payment spine verified แต่ไม่มีธุรกรรมจริง
+EVIDENCE:   record_payment_result + webhook 6/6 verified; ไม่มี receipt
+IMPACT:     ไม่ยอมรับเงินจริงได้อย่างมั่นใจ
+REQUIRED:   Owner ทำธุรกรรมจริง 1 รายการ
+OWNER/ENG:  OWNER
+MILESTONE:  M1
 
---> M1 closure evidence à¸„à¸£à¸­à¸šà¸„à¸¥à¸¸à¸¡à¹à¸„à¹ˆ FIRST OPERATING KITCHEN SPINE à¹€à¸—à¹ˆà¸²à¸™à¸±à¹‰à¸™. Full product à¹ƒà¸«à¸à¹ˆà¸à¸§à¹ˆà¸²à¸¡à¸²à¸
+GAP-3  Production Lighthouse
+WHY:        มีแต่ local score
+EVIDENCE:   local best 81 < 90
+IMPACT:     M1 gate ไม่ผ่าน
+REQUIRED:   Owner รันบน bitemebaby-5f7.pages.dev; engineering fix ถ้าต่ำกว่าเกณฑ์
+OWNER/ENG:  OWNER + ENGINEERING
+MILESTONE:  M1
 
----
+GAP-4  Notification delivery จริง (push/email/LINE)
+WHY:        in-app event bus ≠ ลูกค้าได้รับแจ้งจริง
+EVIDENCE:   notificationService.ts in-memory เท่านั้น
+IMPACT:     ลูกค้า/ครัว/ไรเดอร์ไม่รู้สถานะแบบ real-time
+OWNER/ENG:  ENGINEERING
+MILESTONE:  P2
 
-## 23F. MILESTONE BOUNDARY
+GAP-5  Multi-channel intake (FB/Messenger/LINE → canonical order hub)
+WHY:        original objective ต้องการ; ปัจจุบันมีเฉพาะ PWA
+IMPACT:     ช่องทางขายสูญเปล่า
+OWNER/ENG:  OWNER (decision + tokens) + ENGINEERING
+MILESTONE:  P2
 
-| Milestone | Scope | Status |
+GAP-6  Make.com จาก architecture decision → real worker
+EVIDENCE:   ไม่มี live scenario / webhook log
+OWNER/ENG:  OWNER
+MILESTONE:  P2
+
+GAP-7  Content → Order loop และ Review → Data → AI → Better Content loop
+WHY:        closed-loop objective ปลายทางยังไม่มี
+OWNER/ENG:  ENGINEERING
+MILESTONE:  P2/P3
+
+GAP-8  External riders > 5 km
+WHY:        BLOCKED บน API keys
+OWNER/ENG:  OWNER
+MILESTONE:  หลัง M1
+
+GAP-9  Kitchen/delivery state transition บน production (batch → dispatch → delivered)
+OWNER/ENG:  ENGINEERING + OWNER
+MILESTONE:  M1 closure evidence
+```
+
+## E. FALSE-CLOSURE CHECK
+
+**คำถาม: "เหตุใด M1 closure evidence จึงไม่ควรถูกตีความว่า BMB full product completion?"**
+
+**ตอบตรง:** เพราะ M1 closure evidence ครอบคลุมเฉพาะ **First Operating Kitchen Spine** (PWA ordering ทั้งสองโหมด + payment + kitchen + self-delivery ≤ 5 km + admin + security) เท่านั้น ขณะที่ Full BMB Product Objective ตามที่ owner กำหนดตั้งแต่ต้นคือ **Cloud Kitchen Operating Platform** — ซึ่งมี domain ที่ยังไม่ได้ implement หรือยังไม่ได้ production verify จำนวนมาก
+
+**รายการที่ยังไม่อยู่ใน 3 owner actions ของ M1 (13 หมวด):**
+
+1. Multi-channel intake (Facebook / Messenger / LINE / future channels) — PLANNED เท่านั้น
+2. Make.com back-office automation — architecture decision เท่านั้น (ไม่มี live scenario)
+3. External rider > 5 km — BLOCKED บน API keys
+4. Notification delivery จริง (push/email/LINE/Messenger) — มีแต่ in-app event
+5. Content Engine เต็มรูปแบบ + content → order loop — MISSING ปลายทาง
+6. Review → Data → AI → Better Content closed loop — MISSING
+7. AI proactive intelligence / copilot / forecasting — DEFERRED P3
+8. Analytics PRO (14 items) — DEFERRED P3
+9. Inventory PRO (10 items) — DEFERRED P3
+10. SaaS-ready / multi-tenant (26 items) — DEFERRED (Phase 8-15)
+11. White-label (8 items) — DEFERRED
+12. Voice input/output — CANCELLED/DEFERRED โดย owner decision (มีหลักฐาน AI-06)
+13. AI production integration (conversation trace จริงบน prod) — PARTIAL
+
+## F. MILESTONE BOUNDARY
+
+| Milestone | Scope | เหตุผล |
 |-----------|-------|--------|
-| **M1** | First real kitchen operational (PWA ordering + kitchen + self-delivery <= 5 km + payment + admin) | **BLOCKED** (3 P0 runtime evidence) |
-| **P2** (Phase 8+) | SaaS-ready: multi-tenant, notifications, extra channels, Make.com, content | DEFERRED |
-| **P3** (Phase 10+) | Inventory PRO / analytics / AI copilot / forecasting | DEFERRED |
-| **OWNER-ONLY** | Prod secrets, API keys (external riders), Lighthouse run, real order placement, card bill | PENDING owner |
-| **DEFERRED** | Voice, White-label, full analytics, SaaS billing | By owner decision |
+| **M1** | First real kitchen operational: PWA ordering (ทั้งสองโหมด) + payment + kitchen + self-delivery ≤ 5 km + admin + security | ต้องปิดก่อนเปิดให้ลูกค้าใช้จริง — ค้าง 3 owner actions |
+| **P2** | Notifications จริง, extra channels (FB/LINE/Messenger), Make.com worker, content engine, external riders | จำเป็นสำหรับ platform เต็มรูปแบบ แต่ไม่ block ครัวแรก |
+| **P3** | Inventory PRO, analytics, AI copilot/forecast, SaaS, white-label | Growth — ทำหลังพิสูจน์ P2 |
+| **OWNER-ONLY** | Production secrets, API keys (external riders), Lighthouse run, real order placement, card bill, live DB review | ต้องใช้บัญชี/บัตร/token ของ owner เท่านั้น |
+| **DEFERRED** | Voice, white-label, full analytics, SaaS billing | มี owner decision บันทึกแล้ว |
 
----
+## G. FINAL RECOMMENDATION
 
-## 23G. FINAL RECOMMENDATION
-
-(à¹„à¸¡à¹ˆà¸¡à¸µ ratings/rankings/best-worst â€” à¹€à¸‰à¸žà¸²à¸°à¸•à¸²à¸¡ evidence)
+(ไม่มีคะแนน / ไม่มี ranking / ไม่มี best-worst — สรุปเฉพาะตาม evidence)
 
 ```text
-M1 CLOSURE:      BLOCKED  (3 P0: pre-order E2E, card bill, Lighthouse prod)
-FULL PRODUCT:    PARTIAL  (M1 spine nearly done; large P2-P3 + DEFERRED + OWNER-ONLY + BLOCKED remain)
+M1 CLOSURE:        BLOCKED   (3 owner actions ยังไม่มี production evidence)
+FULL PRODUCT:      PARTIAL   (M1 spine เกือบครบ; เหลือ P2/P3/OWNER-ONLY/DEFERRED จำนวนมาก)
+PAYMENT:           PARTIAL   (spine verified; bill จริงค้าง)
+KITCHEN:           PARTIAL   (RPC ครบ; prod batch cycle ค้าง)
+DELIVERY:          PARTIAL   (MOCK_DRIVERS แก้แล้ว; prod dispatch trace ค้าง)
+INVENTORY:         PARTIAL   (logic verified; prod cycle ค้าง)
+NOTIFICATIONS:     PARTIAL   (event เท่านั้น — ไม่ใช่ real delivery)
+CONTENT LOOP:      PARTIAL / MISSING (ปลายทางของ loop)
+AI:                PARTIAL   (arch + code verified; prod integration ค้าง)
+SECURITY:          VERIFIED  (code/ACL) — owner live-DB review ค้าง
+VOICE:             DEFERRED  (owner decision บันทึกแล้ว)
+MAKE.COM:          DEFERRED  (architecture decision เท่านั้น)
+EXTERNAL RIDERS:   BLOCKED   (API keys)
+SAAS/WHITE-LABEL:  DEFERRED
 ```
 
 ---
 
 ## 24. SUCCESS CONDITION
 
-Owner à¸ªà¸²à¸¡à¸²à¸£à¸–à¹€à¸›à¸´à¸”à¹„à¸Ÿà¸¥à¹Œà¹€à¸”à¸µà¸¢à¸§à¸™à¸µà¹‰à¹à¸¥à¹‰à¸§à¸•à¸­à¸šà¸„à¸³à¸–à¸²à¸¡à¸—à¸±à¹‰à¸‡ 10 à¸‚à¹‰à¸­à¸•à¹ˆà¸­à¹„à¸›à¸™à¸µà¹‰à¹„à¸”à¹‰à¸—à¸±à¸™à¸—à¸µ:
+Owner เปิดไฟล์เดียวนี้แล้วตอบได้ทันที:
 
-1. Full BMB objective à¸¡à¸µà¸­à¸°à¹„à¸£à¸šà¹‰à¸²à¸‡ -> Section 3 + Section 23C
-2. à¸­à¸°à¹„à¸£à¸ªà¸£à¹‰à¸²à¸‡à¹à¸¥à¹‰à¸§ -> Section 23C (VERIFIED column)
-3. à¸­à¸°à¹„à¸£à¹€à¸Šà¸·à¹ˆà¸­à¸¡à¹à¸¥à¹‰à¸§ -> Section 5/6 (canonical spine + two-mode matrix)
-4. à¸­à¸°à¹„à¸£ production verified à¹à¸¥à¹‰à¸§ -> Section 23B/23C VERIFIED rows
-5. à¸¢à¸±à¸‡à¹€à¸«à¸¥à¸·à¸­à¸­à¸°à¹„à¸£à¹€à¸›à¹‡à¸™ PARTIAL -> Section 23B PARTIAL rows (pre-order, inventory, capacity, card bill, lighthouse, kitchen prod, AI conv)
-6. à¸­à¸°à¹„à¸£ MISSING -> AI proactive, Review->Data->AI loop, multi-channel intake, real notifications, content loop
-7. à¸­à¸°à¹„à¸£ OWNER-ONLY -> external rider keys, prod secrets, Lighthouse run, real order, card bill
-8. à¸­à¸°à¹„à¸£ DEFERRED -> Voice, SaaS, analytics, AI copilot, forecast, inventory-pro, white-label, make.com, FB content
-9. à¸­à¸°à¹„à¸£à¸„à¸·à¸­ M1 blocker à¸ˆà¸£à¸´à¸‡ -> GAP-1 (pre-order E2E prod) + GAP-2 (card bill) + GAP-3 (Lighthouse)
-10. à¸«à¸¥à¸±à¸‡ M1 à¸›à¸´à¸”à¹à¸¥à¹‰à¸§ à¹€à¸«à¸¥à¸·à¸­ product work à¸­à¸°à¹„à¸£à¸­à¸µà¸ -> multi-channel intake, notifications, external riders, content loop, analytics, AI copilot/forecast, inventory-pro, SaaS/white-label
+1. **BMB objective ทั้งหมดมีอะไรบ้าง** → Section 4-20 + Matrix C
+2. **อะไรสร้างแล้ว** → Matrix C (Implementation Evidence)
+3. **อะไรเชื่อมแล้ว** → Section 5/6 (canonical spine + two-mode matrix)
+4. **อะไร production verified แล้ว** → Matrix B/C แถว VERIFIED
+5. **อะไรยัง PARTIAL** → Section 7/8/9/10/15/17 + Matrix B แถว PARTIAL
+6. **อะไร MISSING** → Notification จริง, multi-channel intake, review→AI→content loop, voice
+7. **อะไร OWNER-ONLY** → prod secrets, external rider keys, Lighthouse run, real order, card bill
+8. **อะไร DEFERRED** → Voice, SaaS, analytics, AI copilot/forecast, inventory-pro, white-label, Make.com, FB content
+9. **อะไรคือ M1 blocker จริง** → GAP-1 (pre-order E2E prod) + GAP-2 (card bill) + GAP-3 (Lighthouse prod)
+10. **หลัง M1 ปิด เหลือ product work อะไร** → GAP-4 ถึง GAP-8 + P3 ทั้งหมด (Section F)
 
-**à¸«à¹‰à¸²à¸¡à¸•à¸­à¸šà¹€à¸žà¸µà¸¢à¸‡à¸§à¹ˆà¸² "à¹€à¸«à¸¥à¸·à¸­ 3 actions" à¹ƒà¸«à¹‰à¹à¸¢à¸à¸­à¸­à¸à¹€à¸›à¹‡à¸™à¸ªà¸­à¸‡à¸ªà¹ˆà¸§à¸™:**
+**ห้ามตอบเพียงว่า "เหลือ 3 actions"** — ต้องตอบแยกสองส่วน:
 
-> "à¹€à¸«à¸¥à¸·à¸­ 3 actions à¸ªà¸³à¸«à¸£à¸±à¸š **M1 closure**"
-> à¹à¸¥à¸°
-> "à¸¢à¸±à¸‡à¸¡à¸µà¸‡à¸²à¸™ product à¸­à¸µà¸à¸¡à¸²à¸à¸¡à¸²à¸¢à¸ªà¸³à¸«à¸£à¸±à¸š **full BMB product objective**"
+> **"เหลือ 3 actions สำหรับ M1 closure"** (pre-order E2E trace, card bill, production Lighthouse)
 
-à¸—à¸±à¹‰à¸‡à¸ªà¸­à¸‡à¸ªà¸´à¹ˆà¸‡à¸™à¸µà¹‰à¹„à¸¡à¹ˆà¸„à¸§à¸£à¸–à¸¹à¸à¸›à¸™à¸à¸±à¸™ â€” à¸•à¸­à¸™à¸™à¸µà¹‰à¸–à¸¹à¸à¹à¸¢à¸à¸šà¸±à¸™à¸—à¸¶à¸à¹„à¸§à¹‰à¹ƒà¸™à¹€à¸­à¸à¸ªà¸²à¸£à¸™à¸µà¹‰à¸­à¸¢à¹ˆà¸²à¸‡à¸Šà¸±à¸”à¹€à¸ˆà¸™à¹à¸¥à¹‰à¸§
+และ
+
+> **"ยังเหลือ product work อีก 13 หมวดสำหรับ BMB product objective ทั้งหมด"** (Section E)
+
+สองสิ่งนี้ห้ามปนกัน — ถูกแยกไว้ชัดเจนทั่วทั้งเอกสารนี้
 
 ---
 
-**End of Master Objective Reconciliation â€” 2026-09-24 HEAD `454b212` (Thai version)**
+**End of Master Objective Reconciliation — 2026-09-24 · HEAD `1df7498` (Thai version)**
