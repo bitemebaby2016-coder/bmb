@@ -65,7 +65,7 @@ WHERE dr.id IN (
   WHERE o.order_number = :order_number);
 
 -- 8. AUDIT TRAIL (ทุก event ของ order นี้)
-SELECT 'AUDIT' AS check, al.action, al.entity_id, al.details, al.created_at
+SELECT 'AUDIT' AS check, al.action, al.entity_id, al.description, al.metadata, al.created_at
 FROM public.audit_logs al
 WHERE al.entity_id = :order_number OR al.entity_id IN (
   SELECT o.id FROM public.orders o WHERE o.order_number = :order_number)
