@@ -9,6 +9,7 @@
 > **HEAD ณ เวลาตรวจสอบ:** `1df7498` (branch `main` = `origin/main`)
 > **ผู้ตรวจสอบ:** AI Engineering Agent (ตรวจจาก Code / Database Migration / Evidence จริงเท่านั้น — ห้ามใช้ Fake Evidence, ห้าม Mock ข้อมูล, ห้ามใช้ Documentation อย่างเดียวในการสรุป)
 > **ขอบเขต:** ไฟล์นี้ไม่มีการแก้ implementation code ใดๆ ทั้งสิ้น (ตามกฎ AUDIT / RECONCILE / CLASSIFY / EVIDENCE เท่านั้น)
+> **Revision 2 (แก้ตาม owner feedback):** ตีความ SAME_DAY / PRE_ORDER ใหม่เป็น **operating model คนละ lifecycle** (Section 5), แยก Capacity mechanism vs business capability (Section 8), Kitchen/Delivery แยก current-day vs scheduled (Section 9/10), และแก้ M1 Acceptance Model เป็น **2 Operational E2E แยกโหมด** (Section 23) — ห้ามแก้โค้ด
 
 ---
 
@@ -119,8 +120,10 @@ Status ใช้เพียง: `VERIFIED / PARTIAL / MISSING / BLOCKED / OWNER
 | Mobile-first ordering | Responsive + lazy page chunks + WebP assets | PARTIAL | ต้องวัดผลบน production จริง |
 | Menu | `MenuPage.tsx` + `products` table + `bmbAdminApi_products.ts` | VERIFIED | — |
 | Product availability | `src/lib/availabilityEngine.ts` (quota + cutoff + sold-out) | PARTIAL | engine มีจริง แต่ไม่มี production trace |
-| Same-day ordering | RPC `create_order_with_items` (Migr 007→016→020) server-authoritative | VERIFIED (code+DB) | ต้อง capture 1 real order บน production |
-| Pre-order | Migr 024/025 รวม pre_orders เข้า canonical orders + Migr 035 บังคับ address | PARTIAL | ต้อง place 1 real pre-order ผ่าน full lifecycle |
+| Same-day ordering — ORDER CREATION | RPC `create_order_with_items` (Migr 007→016→020) server-authoritative | VERIFIED (creation เท่านั้น) | — |
+| Same-day ordering — FULL OPERATION (current-day path: availability→cutoff→capacity→fee→payment→confirm→inventory→kitchen→current round→dispatch→delivered) | RPC + trigger + CheckoutPage + AdminKitchen + DeliveryManagement | **PARTIAL** | ต้องพิสูจน์ current-day operational path ครบ chain (ดู Section 5 MODE A) |
+| Pre-order — ORDER CREATION | Migr 024/025 canonical RPC + Migr 035 address trigger | VERIFIED (creation เท่านั้น) | — |
+| Pre-order — FULL SCHEDULED LIFECYCLE (scheduled production + scheduled delivery, ดู MODE B) | Migr 024/025/027/035 + AdminPreOrders | **PARTIAL** | ยังไม่พิสูจน์ lifecycle ครบ 20 ขั้น (ordered→…→delivered/cancel→restore/refund) |
 | Scheduled date | `scheduled_date` ใน canonical order spine (Migr 023) | VERIFIED (schema) | — |
 | Delivery round | `delivery_rounds` + `orders.delivery_round_id` + capacity ต่อรอบ | VERIFIED (schema) | — |
 | Address | Migr 015 (customer_location) + Migr 035 trigger `validate_pre_order_delivery()` บังคับ address สำหรับ PRE_ORDER | PARTIAL | ไม่มี production evidence |
@@ -136,28 +139,187 @@ Status ใช้เพียง: `VERIFIED / PARTIAL / MISSING / BLOCKED / OWNER
 
 ---
 
-## 5. SAME-DAY vs PRE-ORDER MATRIX
+## 5. SAME-DAY vs PRE-ORDER — BUSINESS MODEL RECONCILIATION (แทน feature checklist เดิม)
 
-ตรวจ chain ครบ: customer → backend → DB → admin → delivery
+### 5.0 หลักการสำคัญที่สุดของ audit รอบนี้
 
-| Capability | SAME_DAY | PRE_ORDER |
-| ---------- | -------- | --------- |
-| Create order | VERIFIED — `create_order_with_items` server-authoritative | VERIFIED — canonical RPC (Migr 025) |
-| Address | VERIFIED — เก็บจาก checkout | PARTIAL — Migr 035 trigger บังคับแล้ว แต่ไม่มี production evidence |
-| Payment | PARTIAL — spine verified, ไม่มี bill จริง | PARTIAL — payment intent สร้างได้ แต่ไม่มี real charge |
-| Confirm | VERIFIED — state machine + inventory hook | VERIFIED — state machine เดียวกัน |
-| Inventory deduct | PARTIAL — RPC ครบ (Migr 019/026) ไม่มี prod test | PARTIAL — เดียวกัน |
-| Capacity | VERIFIED — lock ตอน INSERT | VERIFIED — lock รอบวันอนาคต |
-| Kitchen batch | VERIFIED — Migr 027 canonical batch | VERIFIED — `p_order_mode` รองรับทั้งสองโหมด |
-| Delivery round | VERIFIED — round mapping | VERIFIED — scheduled_date → round |
-| Driver assignment | PARTIAL — RPC มี (Migr 020/035) ไม่มี prod trace | PARTIAL |
-| Dispatch | PARTIAL — ไม่มี production dispatch trace | PARTIAL |
-| Delivered | PARTIAL — rider status sync ต้องยืนยันบน prod | PARTIAL |
-| Cancel | PARTIAL — RPC ครบ, ไม่มี real trace | VERIFIED (schema) — `cancel_pre_order` คืน capacity |
-| Refund | PARTIAL | PARTIAL |
-| Notifications | PARTIAL — in-app event เท่านั้น | PARTIAL |
+> **Shared backend ≠ shared business lifecycle**
 
-**ข้อห้าม:** ห้ามถือว่า feature มีเพียงเพราะ canonical schema รองรับ — ทุกแถว PARTIAL ข้างต้นต้องพิสูจน์ด้วย order จริงบน production
+SAME_DAY และ PRE_ORDER ใช้ canonical order spine เดียวกัน (`orders` + `order_mode`) — แต่เป็น **operating model คนละแบบ**:
+
+```text
+                 CANONICAL ORDER SPINE
+                         │
+             ┌───────────┴───────────┐
+             │                       │
+         SAME_DAY                PRE_ORDER
+       "ส่งวันนี้"              "จองล่วงหน้า"
+             │                       │
+      CURRENT OPERATING         SCHEDULED OPERATING
+             │                       │
+      วันนี้ / cutoff           future date
+      current capacity          date capacity
+      current round             selected round
+      current dispatch          scheduled batch
+             │                       │
+             └──────────┬────────────┘
+                        │
+                 Kitchen / Delivery
+```
+
+**ข้อห้ามในการตีความ:**
+
+1. **ห้าม**ตีความว่า `SAME_DAY = PRE_ORDER แต่ scheduled_date = วันนี้` — ทำให้ business rules ของ same-day (current cutoff, current capability, current dispatch window) หายไป
+2. **ห้าม**ใช้ PRE_ORDER E2E เป็นตัวแทนของ SAME_DAY (หรือกลับกัน) — แต่ละ mode ต้องมี M1 Operational E2E ของตัวเอง
+3. **ห้าม**ถือว่า DB mechanism (lock/trigger/RPC) = business capability ที่ VERIFIED
+
+### 5.1 MODE A — SAME_DAY: CURRENT-DAY OPERATIONAL PATH
+
+Objective เดิม: ลูกค้า "สั่งตอนนี้ → รับ/ส่งวันนี้" พร้อมเงื่อนไข operational ของตัวเอง
+
+```text
+Customer
+ ↓
+เลือกเมนู
+ ↓
+SAME_DAY
+ ↓
+ตรวจ availability            ← availabilityEngine
+ ↓
+ตรวจ cutoff (วันนี้)          ← CheckoutPage (886836d)
+ ↓
+ตรวจ capacity (current date + current round)
+ ↓
+คำนวณ delivery               ← compute_delivery_fee
+ ↓
+ชำระเงิน / payment state     ← record_payment_result
+ ↓
+confirm                      ← state machine + inventory hook
+ ↓
+inventory deduct             ← deduct_inventory_for_order
+ ↓
+เข้า kitchen queue           ← create_production_batch (SAME_DAY)
+ ↓
+จัดรอบส่งปัจจุบัน (TODAY round / dispatch window)
+ ↓
+Bite Drive / external rider
+ ↓
+dispatch
+ ↓
+delivered
+```
+
+**การแยกสถานะที่ถูกต้อง (แทนการตอบ "มี order วันนี้"):**
+
+| ขั้นของ SAME_DAY chain | สถานะ |
+|------------------------|-------|
+| Order creation (server-authoritative) | VERIFIED |
+| Availability check | PARTIAL |
+| Current-day cutoff enforcement | VERIFIED (code) / ไม่มี prod trace |
+| Current capacity (today + current round) reserve → full → reject | PARTIAL |
+| Delivery fee ปัจจุบัน | PARTIAL |
+| Payment / payment state | PARTIAL (ไม่มี bill จริง) |
+| Confirm + inventory deduct | PARTIAL (ไม่มี prod trace) |
+| เข้า kitchen queue (SAME_DAY batch) | PARTIAL |
+| จัดรอบส่งปัจจุบัน / current dispatch window | PARTIAL |
+| Dispatch → delivered วันเดียวกัน | PARTIAL |
+
+> **SAME_DAY ORDER CREATION = VERIFIED / SAME_DAY FULL OPERATION = PARTIAL** — จนกว่าจะพิสูจน์: order → payment → confirm → inventory → kitchen → current delivery round → dispatch → delivered ครบ
+
+### 5.2 MODE B — PRE_ORDER: SCHEDULED OPERATING MODEL
+
+PRE_ORDER ของ BMB **ไม่ใช่ SAME_DAY ที่เปลี่ยนวันที่** — เป็น **scheduled production + scheduled delivery model**
+
+```text
+วันนี้
+  ↓
+ลูกค้าจอง
+  ↓
+เลือก scheduled_date          (เช่น 2026-09-25)
+  ↓
+เลือกรอบ                       (เช่น Morning 06:00–09:00)
+  ↓
+capacity ของวันนั้น/รอบนั้น    (date + round เป็นหัวใจของการวางแผน)
+  ↓
+payment
+  ↓
+confirmed
+  ↓
+รอ production date
+  ↓
+Kitchen batch                 (ตาม scheduled_date + round)
+  ↓
+เตรียมตาม scheduled_date + round
+  ↓
+Dispatch ตามรอบ
+  ↓
+Delivered
+```
+
+**PRE_ORDER lifecycle เฉพาะของมัน (ไม่ใช่ state machine เดียวกับ same-day เฉยๆ):**
+
+```text
+ORDERED
+   ↓
+PAID / CONFIRMED
+   ↓
+SCHEDULED
+   ↓
+QUEUED_FOR_PRODUCTION
+   ↓
+BATCHED
+   ↓
+PREPARING
+   ↓
+READY
+   ↓
+DISPATCHED
+   ↓
+DELIVERED
+```
+
+**PRE_ORDER capability = ทั้ง chain 20 ขั้นนี้ — ไม่ใช่เพียง Migration 024/025/035 ผ่าน:**
+
+| # | ขั้น | สถานะ |
+|---|------|-------|
+| 1 | เลือกวันที่ (min today+1, ห้ามวันนี้/อดีต) | VERIFIED (code) |
+| 2 | เลือกรอบ | VERIFIED (code) |
+| 3 | ตรวจว่ารับ pre-order ได้ (pre-order window) | PARTIAL |
+| 4 | ตรวจ cutoff ของ pre-order (แยกจาก same-day cutoff) | PARTIAL |
+| 5 | ตรวจ capacity ของ date+round (อนาคต) | PARTIAL |
+| 6 | ตรวจ address (Migr 035 trigger) | VERIFIED (code) / ไม่มี prod trace |
+| 7 | คำนวณ delivery fee | PARTIAL |
+| 8 | payment | PARTIAL |
+| 9 | confirm | VERIFIED (code) |
+| 10 | reserve capacity (date+round) | PARTIAL |
+| 11 | deduct inventory ตาม lifecycle ที่ออกแบบ | PARTIAL |
+| 12 | เข้า production batch (Migr 027 PRE_ORDER) | VERIFIED (code) / ไม่มี prod batch |
+| 13 | ถึงวันผลิต (scheduled_date) | PARTIAL — ไม่มี prod trace |
+| 14 | kitchen prepare ตาม schedule | PARTIAL |
+| 15 | ready | PARTIAL |
+| 16 | assign driver | PARTIAL |
+| 17 | dispatch ตามรอบ (scheduled_date + delivery_round + capacity + production batch + delivery assignment) | PARTIAL |
+| 18 | delivered | PARTIAL |
+| 19 | cancel ก่อน cutoff → restore capacity + inventory | PARTIAL |
+| 20 | refund ตาม payment state | PARTIAL |
+
+**ข้อสรุป PRE_ORDER (แก้ถ้อยคำเดิม):** ถ้อยคำเดิมที่ให้ความรู้สึกว่า "architecture ของ PRE_ORDER เกือบปิดแล้ว เหลือเพียง production trace" ถูกแก้ไขแล้ว — สิ่งที่ถูกคือ architecture + creation สร้างเสร็จ แต่ **PRE_ORDER operational scheduling capability ยัง PARTIAL เพราะไม่เคยพิสูจน์ chain date+round → production batch → delivery round แบบ end-to-end**
+
+### 5.3 Matrix เทียบ operational semantics (แทน feature checklist เดิม)
+
+| ประเด็น | SAME_DAY (current operating) | PRE_ORDER (scheduled operating) |
+| -------- | ---------------------------- | -------------------------------- |
+| ความหมายทางธุรกิจ | ส่งวันนี้ — current-day fulfillment | จองล่วงหน้า — scheduled production + delivery |
+| วันที่ | วันนี้ (current date) | future scheduled_date |
+| รอบ | current round / dispatch window ของวันนี้ | selected round ของวันอนาคต |
+| Capacity | current capacity (today + current round) | date capacity (future date + selected round) |
+| Cutoff | current cutoff ของวันนี้ | pre-order cutoff แยกของตัวเอง |
+| Kitchen | เข้า queue ปัจจุบัน | queued_for_production → batch ตามวันผลิต |
+| Delivery | current dispatch window | dispatch ตามรอบที่จองไว้ |
+| การยกเลิก | ตามนโยบาย cancel ปัจจุบัน | cancel ก่อน cutoff → restore |
+| Shared | canonical spine + payment + kitchen + delivery **infrastructure** เดียวกัน | เดียวกัน |
+
+**คอลัมน์ข้างบนคือ lifecycle คนละชุดที่แชร์ infrastructure เดียวกัน — ห้ามอ่านเป็น feature checklist เดียวกันอีกต่อไป**
 
 ---
 
@@ -176,7 +338,7 @@ Status ใช้เพียง: `VERIFIED / PARTIAL / MISSING / BLOCKED / OWNER
 | `inventory` | Migr 019/026 — deduct/restore + transactions | PARTIAL (prod test) |
 | `capacity` | trigger per-round + row lock | VERIFIED (DB logic) |
 
-**สรุป spine:** SAME_DAY และ PRE_ORDER ใช้ canonical order spine เดียวกันจริง (Migr 023/025/027) — ไม่ใช่สองระบบแยก
+**สรุป spine:** SAME_DAY และ PRE_ORDER ใช้ canonical order spine เดียวกันจริง (Migr 023/025/027) — **แชร์ infrastructure เดียวกัน แต่เป็น business lifecycle คนละชุด** (ดู Section 5: current operating vs scheduled operating — ห้ามตีความว่า SAME_DAY = PRE_ORDER ที่ scheduled_date = วันนี้)
 
 **Legacy `pre_orders` ตรวจแล้ว:** Migr 024/025 ย้ายข้อมูลเก่าเข้า `orders` พร้อม `migrated_order_id`; ตาราง `pre_orders` freeze เป็น archive (anon DENY, auth write REVOKED, RPC-write-only) — **ไม่มี hidden legacy flow ที่ยังทำงานแยกเป็น second source of truth** ตาม `PWA_CANONICAL_ORDER_CONSUMER_AUDIT.md`
 
@@ -197,19 +359,37 @@ Status ใช้เพียง: `VERIFIED / PARTIAL / MISSING / BLOCKED / OWNER
 
 ---
 
-## 8. CAPACITY
+## 8. CAPACITY — MECHANISM ≠ BUSINESS CAPABILITY
+
+> **กฎของ Section นี้:** DB mechanism VERIFIED **ไม่เท่ากับ** business capability VERIFIED
 
 | รายการ | หลักฐาน | สถานะ |
 |--------|---------|--------|
-| Date / round | `delivery_rounds` + `scheduled_date` | VERIFIED |
-| Capacity limit | คอลัมน์ max capacity ต่อรอบ | VERIFIED |
-| Reserved quantity | Trigger `orders_increment_round` นับตอน INSERT | VERIFIED |
-| Confirm | ผูกกับ order lifecycle | VERIFIED (schema) |
-| Cancel → restore capacity | PRE_ORDER: `cancel_pre_order` คืน capacity (Migr 017); SAME_DAY: ผ่าน transition path (Migr 030) | PARTIAL — ต้อง prod test |
-| Full capacity → reject | `ERR_CAPACITY_FULL` | VERIFIED (code) |
-| Concurrency | `FOR UPDATE` row lock ต่อรอบ | PARTIAL — design ถูกต้อง ไม่มี stress test จริง |
+| Date / round | `delivery_rounds` + `scheduled_date` | VERIFIED (schema) |
+| **Capacity enforcement mechanism** | Trigger `orders_increment_round` + `FOR UPDATE` row lock + `ERR_CAPACITY_FULL` | **VERIFIED (mechanism เท่านั้น)** |
+| Confirm ผูกกับ lifecycle | ผูกกับ order lifecycle | VERIFIED (schema) |
+| Cancel → restore capacity | PRE_ORDER: `cancel_pre_order` (Migr 017); SAME_DAY: transition path (Migr 030) | VERIFIED (mechanism) |
+| Full capacity → reject | `ERR_CAPACITY_FULL` | VERIFIED (mechanism) |
+| Concurrency mechanism | `FOR UPDATE` lock ต่อรอบ | VERIFIED (mechanism) — design ถูกต้อง |
 
-**PRE_ORDER + scheduled_date + delivery_round:** กลไกกัน oversell อยู่ฝั่ง server ทั้งหมด (server-authoritative) — ตามโครงสร้างไม่สามารถ oversell ได้ แต่ยังขาด production evidence จึงระบุ **PARTIAL**
+### 8.1 แยก Mechanism ออกจาก Operational Behavior
+
+**ห้ามสรุป "SAME_DAY Capacity = VERIFIED / PRE_ORDER Capacity = VERIFIED" จากการที่ DB มี lock/trigger** — ต้องแยกดังนี้:
+
+| ชั้น | รายการ | สถานะ |
+|------|--------|-------|
+| Mechanism | Capacity enforcement (lock + trigger + reject error) | **VERIFIED** |
+| Operational | **SAME_DAY capacity behavior** — today + current round: reserve → full → reject → cancel → release | **PARTIAL** (ไม่มี production runtime evidence) |
+| Operational | **PRE_ORDER capacity behavior** — future date + selected round: reserve → full → reject → cancel → release | **PARTIAL** (ไม่มี production runtime evidence) |
+
+**สิ่งที่ยังต้องพิสูจน์ runtime ให้ครบ ทั้งสองโหมด:**
+
+```text
+SAME_DAY   current date + current round → reserve → full → reject → cancel → release
+PRE_ORDER  future date + selected round → reserve → full → reject → cancel → release
+```
+
+**PRE_ORDER + scheduled_date + delivery_round — ต้องพิสูจน์ว่า oversell ไม่ได้จริง ณ runtime:** กลไกอยู่ฝั่ง server (server-authoritative) ตาม design แต่ไม่เคยพิสูจน์ด้วย production evidence หรือ stress test — สถานะรวมของ **business capability = PARTIAL** แม้ **mechanism = VERIFIED**
 
 ---
 
@@ -220,14 +400,16 @@ Status ใช้เพียง: `VERIFIED / PARTIAL / MISSING / BLOCKED / OWNER
 | AdminKitchen page | `src/pages/admin/AdminKitchen.tsx` (commit `ff54783`) | VERIFIED (code) |
 | Production batches | `production_batches` + `production_batch_items` (Migr 019/027) | VERIFIED |
 | Batch status | status column + progression | PARTIAL — ต้อง trace จาก UI บน prod |
-| scheduled_date + delivery_round | batch ผูกทั้งสองค่า | VERIFIED |
+| scheduled_date + delivery_round | batch ผูกทั้งสองค่า | VERIFIED (schema) |
 | Order aggregation | `create_production_batch` รวมจาก `orders` (confirmed/preparing) | VERIFIED |
-| SAME_DAY + PRE_ORDER | Migr 027: canonical source = orders + order_items เท่านั้น (NEVER pre_orders), `p_order_mode` NULL = both, legacy 2-arg overload DROP แล้ว | VERIFIED |
+| Batch mechanism ทั้งสองโหมด | Migr 027: canonical source = orders + order_items เท่านั้น (NEVER pre_orders), `p_order_mode` NULL = both, legacy 2-arg overload DROP แล้ว | VERIFIED (mechanism เท่านั้น — batch mechanism รองรับทั้งสอง mode ไม่เท่ากับ production lifecycle ผ่าน) |
+| SAME_DAY current-day queue behavior | batch จาก confirmed/preparing วันนี้ → เตรียม → dispatch window ปัจจุบัน | PARTIAL — ไม่มี prod trace |
+| PRE_ORDER scheduled batch lifecycle | queued_for_production → batch ตาม scheduled_date + round → prepare ตามรอบ | PARTIAL — ไม่เคยพิสูจน์ chain date+round → batch → delivery round จริง |
 | Recipe/BOM admin | `bmbAdminApi_recipes.ts` + `list_recipes_with_inventory()` (Migr 035) | VERIFIED (code) |
 
 **คำถามตามข้อกำหนด:** Kitchen สามารถ operationally ทำงานจาก confirmed orders ได้จริงหรือไม่?
 
-> **ตอบ: PARTIAL** — AdminKitchen ไม่ใช่แค่ React page: มี DB RPC จริง (`create_production_batch`, `kitchen_queue`, `get_inventory_requirements`) รองรับทั้งสองโหมด แต่ยัง**ไม่มี production evidence** ว่า batch จริงถูกสร้างและเดิน production cycle จนจบ
+> **ตอบ: PARTIAL (แยกตามโหมด)** — มี DB RPC จริง (`create_production_batch`, `kitchen_queue`, `get_inventory_requirements`) รองรับทั้งสอง mode — นั่นคือ **batch mechanism = VERIFIED** แต่ (1) SAME_DAY current-day queue behavior และ (2) PRE_ORDER scheduled batch lifecycle ยังไม่มี production evidence — Kitchen จึงยังไม่ได้พิสูจน์ว่า operationally ทำงานจาก confirmed orders ได้จริงครบ lifecycle ของแต่ละโหมด
 
 ---
 
@@ -240,11 +422,12 @@ Status ใช้เพียง: `VERIFIED / PARTIAL / MISSING / BLOCKED / OWNER
 | Assignment | `delivery_assignments` (Migr 020) + `assignOrderToDriver()` | PARTIAL — RPC มี ต้องมี prod trace |
 | Order dispatch | `assign_driver` RPC (Migr 020/035) | PARTIAL |
 | Delivery status | `driver_update_delivery_status` (Migr 020) | PARTIAL — อัปเดต assignment; orders.status sync ต้องยืนยัน |
-| Self delivery ≤ 5 km | Migr 035 — กฎ 5 กม. ฝั่ง server | VERIFIED (code) |
+| Self delivery ≤ 5 km | Migr 035 — กฎ 5 กม. ฝั่ง server | VERIFIED (mechanism) |
 | External rider > 5 km | provider system (Grab/LineMan/Foodpanda) sandbox logic 5/5 tests | **BLOCKED** — ไม่มี API keys จริง (OWNER-ONLY) |
 | Delivery fee | `compute_delivery_fee` zone-based | PARTIAL |
 | Distance | Migr 015 customer location columns | VERIFIED (schema) |
-| Round | Rider PWA `RiderPwaPage.tsx` / `my_deliveries` | VERIFIED (code) |
+| Round — SAME_DAY (current-day fulfillment) | current round / dispatch window ของวันนี้: available_now → current cutoff → current capability → current round/dispatch window | PARTIAL — logic มีใน availabilityEngine + round mapping แต่ไม่มี prod trace ของ current-day dispatch window |
+| Round — PRE_ORDER (scheduled fulfillment) | รอบเป็นหัวใจของการวางแผน: scheduled_date + delivery_round + capacity + production batch + delivery assignment (เช่น 2026-09-25 Morning 06:00–09:00 ใช้ตั้งแต่ order → kitchen → delivery) | PARTIAL — schema รองรับทั้งหมด แต่ไม่เคยพิสูจน์ end-to-end ว่า date+round chain ถูกใช้จริงตลอด order → kitchen → delivery |
 | Tracking / ETA | `OrderTrackPage.tsx` + `routeOptimization.ts` | PARTIAL — ต้อง verify บน prod |
 
 **ตรวจ `04d19c7` ถูกใช้งานจริง:** **YES** — `DeliveryManagement.tsx` import และเรียก `listDrivers()` → RPC `list_drivers` จริง ไม่ใช่แค่มี function อยู่เฉยๆ
@@ -506,39 +689,80 @@ AUDIT / RECONCILE / CLASSIFY / EVIDENCE
 ## A. EXECUTIVE STATUS
 
 ```text
-M1 STATUS:            BLOCKED  — เหลือ 3 owner actions (production runtime evidence) ก่อนปิด M1
+M1 STATUS:            BLOCKED  — M1 Operational E2E ทั้ง 2 โหมด + card bill + production Lighthouse ยังไม่มี evidence
 FULL PRODUCT STATUS:  PARTIAL  — M1 spine เกือบครบ; ยังมีงาน P2/P3 + OWNER-ONLY + DEFERRED จำนวนมาก
 ```
 
-(ห้ามใช้คำว่า "almost complete" โดยไม่มี definition — definition ที่ใช้คือจำนวนแถว VERIFIED/PARTIAL ใน Matrix C เทียบ objective ทั้งหมด)
+### M1 ACCEPTANCE MODEL — ต้องพิสูจน์ 2 OPERATING MODES แยกกัน
+
+> **"ทั้งสองโหมด" ใน M1 ต้องหมายถึง ทั้งสองโหมดทำงานได้จริงใน business semantics ของตัวเอง — ไม่ใช่ canonical orders รองรับทั้งสองค่า** นี่คือ distinction สำคัญที่สุดของ audit รอบนี้
+
+**MODE A — SAME_DAY (current-day operational fulfillment):**
+
+```text
+Customer → SAME_DAY selection → availability → cutoff (วันนี้) → capacity (today+current round)
+→ address → fee → payment → confirm → inventory → kitchen (current queue)
+→ current fulfillment → driver/provider → dispatch → delivered
+```
+
+**MODE B — PRE_ORDER (scheduled production + scheduled delivery):**
+
+```text
+Customer → PRE_ORDER → scheduled_date → delivery_round → cutoff (pre-order)
+→ capacity (date+round) → address → fee → payment → confirm
+→ inventory/capacity reservation → production batch → scheduled kitchen preparation
+→ driver assignment → dispatch ตามรอบ → delivered
+```
+
+**Shared lifecycle (infrastructure เดียวกัน, lifecycle คนละชุด):**
+
+```text
+                ┌── SAME_DAY ────────┐
+                │                    │
+CUSTOMER → ORDER SPINE               ├→ KITCHEN → DELIVERY
+                │                    │
+                └── PRE_ORDER ───────┘
+```
+
+**ข้อห้าม:** ห้ามใช้ PRE_ORDER เป็นตัวแทน SAME_DAY และห้ามใช้ happy path (order→pay→deliver) แทนการพิสูจน์ business rules ครบทั้งของแต่ละโหมด
 
 ## B. M1 CLOSURE MATRIX (เฉพาะ M1 requirements)
 
 | # | M1 Requirement | สถานะ | สิ่งที่ขาดเพื่อปิด |
 |---|----------------|-------|--------------------|
-| 1 | Same-day ordering server-authoritative | VERIFIED | — |
+| 1 | Same-day ordering — ORDER CREATION (server-authoritative) | VERIFIED | — |
+| 1a | **M1 Operational E2E #1 — SAME_DAY REAL ORDER** (current-day path: availability→cutoff→capacity→fee→payment→confirm→inventory→kitchen→current round→dispatch→delivered) | **P0 ค้าง** | ต้องพิสูจน์ทั้ง chain — ห้ามนับแค่ creation |
 | 2 | Payment spine (Stripe/PromptPay/COD state machine) | VERIFIED | bill จริง |
 | 3 | Order state machine ฝั่ง server | VERIFIED | — |
 | 4 | Canonical order spine (SAME_DAY + PRE_ORDER เดียว) | VERIFIED | — |
 | 5 | Legacy pre_orders migration + freeze | VERIFIED | — |
 | 6 | Cutoff enforcement | VERIFIED (code) | prod trace |
 | 7 | Inventory deduct/restore/insufficient reject | PARTIAL | prod cycle test |
-| 8 | Capacity lock + กัน oversell | PARTIAL | stress test + prod trace |
+| 8 | Capacity — mechanism VERIFIED (lock/trigger/reject) / **business behavior PARTIAL** (SAME_DAY today+round และ PRE_ORDER date+round: reserve→full→reject→cancel→release ยังไม่มี prod evidence) | PARTIAL | runtime proof ทั้งสองโหมด |
 | 9 | Kitchen command center operational | PARTIAL | prod batch cycle |
 | 10 | Delivery dispatch + MOCK_DRIVERS removed | VERIFIED (04d19c7) | prod dispatch trace |
 | 11 | 5km gate + pre-order address (Migr 035) | VERIFIED (code) | prod trace |
 | 12 | Admin core CRUD + AuditLog DB-backed | VERIFIED (code) | — |
 | 13 | Security RLS/ACL hardening | VERIFIED | owner live-DB review |
-| 14 | Pre-order E2E production trace | **P0 ค้าง** | place 1 real pre-order full lifecycle |
+| 14 | **M1 Operational E2E #2 — PRE_ORDER REAL ORDER** (scheduled lifecycle: date selection→round selection→pre-order window→pre-order cutoff→capacity date+round→address→fee→payment→confirm→reserve→inventory→batch→วันผลิต→prepare→ready→driver→dispatch ตามรอบ→delivered→cancel→restore→refund) | **P0 ค้าง** | ต้องกำหนด business rules coverage — ห้ามนับ happy path (order→pay→deliver) เพียงอย่างเดียว; ต้องพิสูจน์ date+round → production batch → delivery round chain จริง |
 | 15 | Real card charge + bill (PAY-02) | **P0 ค้าง** | owner ทำธุรกรรมจริง |
 | 16 | Production Lighthouse Perf ≥ 90 | **P0 ค้าง** | วัดบน prod URL |
 
 ```text
 # M1 NOT CLOSED (BLOCKED)
-เหตุผล: ยังไม่มี production runtime evidence สำหรับ 3 owner actions:
-  1. Real pre-order E2E trace บน production
+M1 gate = 3 owner actions — แต่ action #1 ประกอบด้วย 2 Operational E2E แยกโหมด ห้ามใช้โหมดหนึ่งแทนอีกโหมดหนึ่ง:
+  1. M1 Operational E2E (ทั้งสองโหมดแยกกัน, ไม่ใช่ happy path):
+     #1 SAME_DAY REAL ORDER  — current-day operational path ครบ chain
+     #2 PRE_ORDER REAL ORDER — scheduled lifecycle ครบ (date+round → batch → delivery round)
+     แต่ละ scenario ต้องกำหนดว่าครอบคลุม business rules อะไรบ้าง:
+     date/round selection · address requirement · cutoff · capacity · payment
+     · inventory · kitchen batching · delivery · cancellation · refund
   2. Real card charge bill จริง
   3. Production Lighthouse performance ≥ 90
+
+# Logical gap ที่แก้แล้ว (เดิม): GAP-1 บอกว่า SAME_DAY + PRE_ORDER ต้องมี runtime evidence
+# แต่ M1 closure เดิมระบุเพียง "Real pre-order E2E" — เกิด logical gap เพราะใช้ PRE_ORDER
+# เป็นตัวแทน SAME_DAY — แก้แล้วโดยระบุ M1 Operational E2E #1 (SAME_DAY) และ #2 (PRE_ORDER) แยกกัน
 ```
 
 ## C. FULL BMB OBJECTIVE MATRIX
@@ -546,13 +770,13 @@ FULL PRODUCT STATUS:  PARTIAL  — M1 spine เกือบครบ; ยัง�
 | Domain | Original Objective | Required Capability | Implementation Evidence | DB/RPC Evidence | Runtime Evidence | Production Evidence | Status | M1/P2/Deferred | Exact Gap |
 | ------ | ------------------ | ------------------- | ----------------------- | --------------- | ---------------- | ------------------- | ------ | -------------- | --------- |
 | Customer Ordering | PWA สั่งอาหาร mobile-first | menu/availability/order/fee/cutoff | pages/* + RPC create_order_with_items | ✅ (Migr 007-023) | ✅ code | ⚠️ trace | PARTIAL | M1 | real order capture |
-| Same-Day | สั่งวันนี้ส่งวันนี้ | cutoff/capacity | RPC + trigger + CheckoutPage | ✅ | ✅ code | ⚠️ 1 real order | PARTIAL | M1 | real order capture |
-| Pre-Order | จองล่วงหน้า + scheduled date | date/round/address | Migr 023/024/025/035 + AdminPreOrders | ✅ | ✅ code | ❌ | PARTIAL | M1 | real pre-order E2E |
+| Same-Day | สั่งตอนนี้ส่งวันนี้ — **current-day operational fulfillment** | current-day path: availability/cutoff/capacity(today+round)/fee/payment/inventory/kitchen/current dispatch window | RPC + trigger + CheckoutPage + availabilityEngine | ✅ | ✅ code (creation) | ❌ (full path ไม่มี trace) | ORDER CREATION=VERIFIED / FULL OPERATION=PARTIAL | M1 (E2E #1) | current-day operational path ครบ chain |
+| Pre-Order | จองล่วงหน้า — **scheduled production + scheduled delivery** | 20 ขั้น lifecycle: date→round→window→cutoff→capacity(date+round)→address→fee→payment→confirm→reserve→inventory→batch→วันผลิต→prepare→ready→driver→dispatch ตามรอบ→delivered→cancel→restore→refund | Migr 023/024/025/027/035 + AdminPreOrders | ✅ | ✅ code (creation) | ❌ (lifecycle ไม่มี trace) | ORDER CREATION=VERIFIED / SCHEDULED LIFECYCLE=PARTIAL | M1 (E2E #2) | date+round → production batch → delivery round chain end-to-end |
 | Payment | Stripe/PromptPay/COD | idempotent + amount-match | record_payment_result + webhook 6/6 | ✅ | ✅ | ⚠️ ไม่มี bill จริง | PARTIAL | M1 | card bill |
 | Inventory | recipe→ingredient→deduct/restore | atomic | Migr 019/026 + InventoryPage DB | ✅ | ✅ code | ❌ prod test | PARTIAL | M1 | prod cycle test |
-| Capacity | กัน oversell ต่อรอบ | FOR UPDATE lock | trigger + ERR_CAPACITY_FULL | ✅ | ✅ code | ⚠️ | PARTIAL | M1 | stress + prod trace |
-| Kitchen | ผลิตจาก confirmed orders | batch aggregation | AdminKitchen + Migr 027 (both modes) | ✅ | ✅ code | ❌ prod batch | PARTIAL | M1 | prod batch cycle |
-| Delivery/Bite Drive | drivers/assignment/dispatch | list_drivers + 5km gate | 04d19c7 + Migr 035 + RiderPwa | ✅ | ✅ code | ⚠️ | PARTIAL | M1 | dispatch trace |
+| Capacity | กัน oversell — **mechanism ≠ business capability** | enforcement: lock/trigger/reject (mechanism) + behavior: reserve→full→reject→cancel→release (operational) | trigger + ERR_CAPACITY_FULL + FOR UPDATE | ✅ (mechanism) | ✅ code | ❌ (behavior ทั้งสองโหมด) | MECHANISM=VERIFIED / BUSINESS CAPABILITY=PARTIAL | M1 | SAME_DAY today+round และ PRE_ORDER date+round runtime proof |
+| Kitchen | ผลิตจาก confirmed orders — **แยก current-day queue vs scheduled batch** | SAME_DAY queue behavior + PRE_ORDER scheduled batch lifecycle | AdminKitchen + Migr 027 (both modes) | ✅ | ✅ code | ❌ (ทั้งสอง lifecycle) | MECHANISM=VERIFIED / LIFECYCLE=PARTIAL | M1 | current-day queue + date+round→batch→round chain |
+| Delivery/Bite Drive | drivers/assignment/dispatch — **current-day + scheduled-round dispatch แยกกัน** | dispatch ใน current window (SAME_DAY) และ dispatch ตามรอบที่จอง (PRE_ORDER) | 04d19c7 + Migr 035 + RiderPwa | ✅ | ✅ code | ⚠️ | PARTIAL | M1 | dispatch trace ทั้งสองโหมด |
 | External Riders >5km | Grab/LineMan/Foodpanda | provider dispatch | sandbox logic 5/5 (logic เท่านั้น) | ✅ schema | ❌ | ❌ | BLOCKED | post-M1 | API keys (OWNER) |
 | Channels | PWA/FB/Messenger/LINE | canonical order_id hub | PWA ✅ เท่านั้น | ✅ | ✅ | ✅ (PWA) | PWA=VERIFIED, อื่น=PLANNED | P2 | FB/LINE/Messenger integration |
 | Make.com | back-office automation worker | FB intake/notify/workflows | ไม่มี live scenario | ❌ | ❌ | ❌ | DEFERRED / OWNER-ONLY | P2 | credentials + scenarios |
@@ -572,11 +796,20 @@ FULL PRODUCT STATUS:  PARTIAL  — M1 spine เกือบครบ; ยัง�
 ## D. CRITICAL GAPS (เรียงตาม dependency — ไม่ใช่ตามความง่าย)
 
 ```text
-GAP-1  Production runtime evidence ครบวงจร (pre-order E2E + same-day trace + kitchen batch + dispatch)
-WHY:        ทุกสถานะ PARTIAL ถูก block ที่ชั้นนี้ — ไม่มี order จริงบน prod จึงพิสูจน์อะไรไม่ได้เลย
-EVIDENCE:   Matrix B แถว 6-11, 14
+GAP-1  Production runtime evidence — **M1 Operational E2E ทั้งสองโหมดแยกกัน**
+           #1 SAME_DAY REAL ORDER  — current-day path: availability→cutoff→capacity(today+round)
+              →fee→payment→confirm→inventory→kitchen→current round→dispatch→delivered
+           #2 PRE_ORDER REAL ORDER — scheduled lifecycle: date→round→window→cutoff→capacity(date+round)
+              →address→fee→payment→confirm→reserve→inventory→batch→วันผลิต→prepare→ready
+              →driver→dispatch ตามรอบ→delivered→cancel→restore→refund
+WHY:        ทุกสถานะ PARTIAL ถูก block ที่ชั้นนี้ — ห้ามใช้ PRE_ORDER เป็นตัวแทน SAME_DAY และ
+            ห้ามใช้ happy path (order→pay→deliver) แทน business rules ครบ
+EVIDENCE:   Matrix B แถว 1a, 6-11, 14
 IMPACT:     M1 ปิดไม่ได้
-REQUIRED:   ทำ 1 real order ต่อโหมด ผ่าน full lifecycle บน bitemebaby-5f7.pages.dev
+REQUIRED:   ทำ real order ต่อโหมด ผ่าน full lifecycle บน bitemebaby-5f7.pages.dev
+            พร้อมกำหนด business-rules coverage ของแต่ละ scenario:
+            date/round selection · address requirement · cutoff · capacity · payment
+            · inventory · kitchen batching · delivery · cancellation · refund
 OWNER/ENG:  OWNER + ENGINEERING
 MILESTONE:  M1
 
@@ -655,7 +888,7 @@ MILESTONE:  M1 closure evidence
 
 | Milestone | Scope | เหตุผล |
 |-----------|-------|--------|
-| **M1** | First real kitchen operational: PWA ordering (ทั้งสองโหมด) + payment + kitchen + self-delivery ≤ 5 km + admin + security | ต้องปิดก่อนเปิดให้ลูกค้าใช้จริง — ค้าง 3 owner actions |
+| **M1** | First real kitchen operational: **ทั้งสองโหมดทำงานได้จริงใน business semantics ของตัวเอง** (SAME_DAY current-day fulfillment + PRE_ORDER scheduled fulfillment) + payment + kitchen + self-delivery ≤ 5 km + admin + security | ต้องปิดก่อนเปิดให้ลูกค้าใช้จริง — ค้าง 3 owner actions โดย action #1 = 2 Operational E2E แยกโหมด |
 | **P2** | Notifications จริง, extra channels (FB/LINE/Messenger), Make.com worker, content engine, external riders | จำเป็นสำหรับ platform เต็มรูปแบบ แต่ไม่ block ครัวแรก |
 | **P3** | Inventory PRO, analytics, AI copilot/forecast, SaaS, white-label | Growth — ทำหลังพิสูจน์ P2 |
 | **OWNER-ONLY** | Production secrets, API keys (external riders), Lighthouse run, real order placement, card bill, live DB review | ต้องใช้บัญชี/บัตร/token ของ owner เท่านั้น |
@@ -696,18 +929,40 @@ Owner เปิดไฟล์เดียวนี้แล้วตอบไ�
 6. **อะไร MISSING** → Notification จริง, multi-channel intake, review→AI→content loop, voice
 7. **อะไร OWNER-ONLY** → prod secrets, external rider keys, Lighthouse run, real order, card bill
 8. **อะไร DEFERRED** → Voice, SaaS, analytics, AI copilot/forecast, inventory-pro, white-label, Make.com, FB content
-9. **อะไรคือ M1 blocker จริง** → GAP-1 (pre-order E2E prod) + GAP-2 (card bill) + GAP-3 (Lighthouse prod)
+9. **อะไรคือ M1 blocker จริง** → GAP-1 = **M1 Operational E2E ทั้งสองโหมดแยกกัน** (#1 SAME_DAY REAL ORDER + #2 PRE_ORDER REAL ORDER พร้อม business-rules coverage ไม่ใช่ happy path) + GAP-2 (card bill) + GAP-3 (Lighthouse prod)
 10. **หลัง M1 ปิด เหลือ product work อะไร** → GAP-4 ถึง GAP-8 + P3 ทั้งหมด (Section F)
 
 **ห้ามตอบเพียงว่า "เหลือ 3 actions"** — ต้องตอบแยกสองส่วน:
 
-> **"เหลือ 3 actions สำหรับ M1 closure"** (pre-order E2E trace, card bill, production Lighthouse)
+> **"เหลือ 3 actions สำหรับ M1 closure"** — โดย action #1 คือ **M1 Operational E2E ทั้งสองโหมดแยกกัน**:
+> - **E2E #1 — SAME_DAY REAL ORDER** (current-day operational path ครบ chain)
+> - **E2E #2 — PRE_ORDER REAL ORDER** (scheduled lifecycle ครบ: date+round → production batch → delivery round)
+> - ห้ามใช้โหมดหนึ่งเป็นตัวแทนอีกโหมดหนึ่ง และห้ามใช้ happy path แทน business rules ครบ
+> - พร้อม card bill จริง และ production Lighthouse ≥ 90
 
 และ
 
 > **"ยังเหลือ product work อีก 13 หมวดสำหรับ BMB product objective ทั้งหมด"** (Section E)
 
 สองสิ่งนี้ห้ามปนกัน — ถูกแยกไว้ชัดเจนทั่วทั้งเอกสารนี้
+
+**สรุป distinction ที่สำคัญที่สุดของ audit รอบนี้ (แก้ตาม owner feedback):**
+
+```text
+ถูกแล้ว:   canonical order spine เดียว · order_mode แยก SAME_DAY/PRE_ORDER
+           scheduled_date · delivery_round · capacity · kitchen batch ทั้งสองโหมด
+           legacy pre_orders ไม่ใช่ second source of truth
+แก้แล้วในเวอร์ชันนี้:
+  1. ห้ามเทียบ SAME_DAY/PRE_ORDER เป็น feature checklist เดียวกัน → เป็น lifecycle คนละชุด (Section 5)
+  2. ห้ามถือ DB mechanism = business capability — แยก Mechanism vs Operational Behavior (Section 8)
+  3. ห้ามใช้ PRE_ORDER E2E เป็นตัวแทนทั้งสองโหมด — M1 ต้องมี Operational E2E #1 และ #2 แยกกัน (Section 23)
+  4. SAME_DAY production E2E ถูกยกขึ้นเป็น explicit M1 acceptance (Matrix B แถว 1a)
+  5. แยก current-day fulfillment กับ scheduled fulfillment ชัดเจน (Section 5.3, 10)
+  6. พิสูจน์ date+round → production batch → delivery round chain ของ PRE_ORDER แบบ end-to-end
+     เป็น acceptance เฉพาะของ PRE_ORDER — ไม่ใช่เพียง Migration 024/025/035 ผ่าน
+  7. cancellation/restore/payment/refund ถูกจัดเป็นขั้นของ business lifecycle
+     ไม่ใช่ technical capability กระจัดกระจาย (Section 5.2 chain 20 ขั้น)
+```
 
 ---
 
