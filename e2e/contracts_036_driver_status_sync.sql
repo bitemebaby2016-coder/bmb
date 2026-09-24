@@ -1,4 +1,4 @@
-﻿-- ============================================
+-- ============================================
 -- Bite Me Baby â€” PHASE 3B SQL Contract Suite: M1-09 driver â†’ orders.status sync (036)
 -- Baseline: e118c47 Â· Scope: owner-approved M1-09 defect fix ONLY
 -- Run as OWNER in Supabase SQL Editor (or via prodRunContracts.cjs).
@@ -32,9 +32,9 @@ VALUES
 ON CONFLICT (id) DO NOTHING;
 UPDATE public.profiles SET role = 'admin' WHERE id = '66666666-6666-6666-6666-666666666666';
 
-SELECT public.ensure_rounds_for_date(CURRENT_DATE);
+SELECT public.ensure_rounds_for_date((now() AT TIME ZONE 'Asia/Bangkok')::date);
 UPDATE public.delivery_rounds SET cutoff_time = '23:59', max_capacity = 50, current_count = 0
- WHERE scheduled_date >= CURRENT_DATE;
+ WHERE scheduled_date >= (now() AT TIME ZONE 'Asia/Bangkok')::date;
 UPDATE public.inventory SET current_stock = 999999;
 DELETE FROM public.inventory_transactions;
 
@@ -83,12 +83,12 @@ BEGIN
   PERFORM set_config('request.jwt.claims', '{"sub":"77777777-7777-7777-7777-777777777777","role":"authenticated"}', false);
   v_on := (public.create_order_with_items(
     p_items => '[{"product_id":"prod-4","quantity":1}]'::jsonb,
-    p_delivery_round_id => 'round-' || to_char(CURRENT_DATE,'YYYYMMDD') || '-morning',
+    p_delivery_round_id => 'round-' || to_char((now() AT TIME ZONE 'Asia/Bangkok')::date,'YYYYMMDD') || '-morning',
     p_delivery_method => 'self_delivery',
     p_delivery_address => 'm109-g1',
     p_dropoff_latitude => 10.7016, p_dropoff_longitude => 102.1429,
     p_customer_name => 'M109 G1', p_payment_method => 'cash_on_delivery',
-    p_order_mode => 'SAME_DAY', p_scheduled_date => CURRENT_DATE
+    p_order_mode => 'SAME_DAY', p_scheduled_date => (now() AT TIME ZONE 'Asia/Bangkok')::date
   ))->>'order_number';
   IF v_on IS NULL THEN RAISE EXCEPTION 'FAIL G1 order create'; END IF;
 
@@ -137,22 +137,22 @@ BEGIN
   PERFORM set_config('request.jwt.claims', '{"sub":"77777777-7777-7777-7777-777777777777","role":"authenticated"}', false);
   v_on := (public.create_order_with_items(
     p_items => '[{"product_id":"prod-4","quantity":1}]'::jsonb,
-    p_delivery_round_id => 'round-' || to_char(CURRENT_DATE,'YYYYMMDD') || '-morning',
+    p_delivery_round_id => 'round-' || to_char((now() AT TIME ZONE 'Asia/Bangkok')::date,'YYYYMMDD') || '-morning',
     p_delivery_method => 'self_delivery', p_delivery_address => 'm109-g2',
     p_dropoff_latitude => 10.7016, p_dropoff_longitude => 102.1429,
     p_customer_name => 'M109 G2', p_payment_method => 'cash_on_delivery',
-    p_order_mode => 'SAME_DAY', p_scheduled_date => CURRENT_DATE
+    p_order_mode => 'SAME_DAY', p_scheduled_date => (now() AT TIME ZONE 'Asia/Bangkok')::date
   ))->>'order_number';
   IF v_on IS NULL THEN RAISE EXCEPTION 'FAIL G2 order create'; END IF;
 
   -- unrelated control order, stays pending forever
   v_ctrl := (public.create_order_with_items(
     p_items => '[{"product_id":"prod-4","quantity":1}]'::jsonb,
-    p_delivery_round_id => 'round-' || to_char(CURRENT_DATE,'YYYYMMDD') || '-morning',
+    p_delivery_round_id => 'round-' || to_char((now() AT TIME ZONE 'Asia/Bangkok')::date,'YYYYMMDD') || '-morning',
     p_delivery_method => 'self_delivery', p_delivery_address => 'm109-g2-ctrl',
     p_dropoff_latitude => 10.7016, p_dropoff_longitude => 102.1429,
     p_customer_name => 'M109 G2 CTRL', p_payment_method => 'cash_on_delivery',
-    p_order_mode => 'SAME_DAY', p_scheduled_date => CURRENT_DATE
+    p_order_mode => 'SAME_DAY', p_scheduled_date => (now() AT TIME ZONE 'Asia/Bangkok')::date
   ))->>'order_number';
 
   PERFORM set_config('role', 'authenticated', false);
@@ -195,11 +195,11 @@ BEGIN
   PERFORM set_config('request.jwt.claims', '{"sub":"77777777-7777-7777-7777-777777777777","role":"authenticated"}', false);
   v_blk := (public.create_order_with_items(
     p_items => '[{"product_id":"prod-4","quantity":1}]'::jsonb,
-    p_delivery_round_id => 'round-' || to_char(CURRENT_DATE,'YYYYMMDD') || '-morning',
+    p_delivery_round_id => 'round-' || to_char((now() AT TIME ZONE 'Asia/Bangkok')::date,'YYYYMMDD') || '-morning',
     p_delivery_method => 'self_delivery', p_delivery_address => 'm109-g4',
     p_dropoff_latitude => 10.7016, p_dropoff_longitude => 102.1429,
     p_customer_name => 'M109 G4', p_payment_method => 'cash_on_delivery',
-    p_order_mode => 'SAME_DAY', p_scheduled_date => CURRENT_DATE
+    p_order_mode => 'SAME_DAY', p_scheduled_date => (now() AT TIME ZONE 'Asia/Bangkok')::date
   ))->>'order_number';
   RESET ROLE;
   PERFORM set_config('role', 'authenticated', false);

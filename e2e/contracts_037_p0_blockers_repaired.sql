@@ -25,10 +25,10 @@ VALUES
 ON CONFLICT (id) DO NOTHING;
 UPDATE public.profiles SET role = 'admin' WHERE id = 'aaaa1111-1111-1111-1111-111111111111';
 
-SELECT public.ensure_rounds_for_date(CURRENT_DATE);
-SELECT public.ensure_rounds_for_date(CURRENT_DATE + 2);
+SELECT public.ensure_rounds_for_date((now() AT TIME ZONE 'Asia/Bangkok')::date);
+SELECT public.ensure_rounds_for_date((now() AT TIME ZONE 'Asia/Bangkok')::date + 2);
 UPDATE public.delivery_rounds SET cutoff_time = '23:59', max_capacity = 50, current_count = 0
- WHERE scheduled_date >= CURRENT_DATE;
+ WHERE scheduled_date >= (now() AT TIME ZONE 'Asia/Bangkok')::date;
 UPDATE public.inventory SET current_stock = 999999;
 
 -- ============================================
@@ -50,11 +50,11 @@ BEGIN
   BEGIN
     v_on := (public.create_order_with_items(
       p_items => '[{"product_id":"prod-4","quantity":1}]'::jsonb,
-      p_delivery_round_id => 'round-' || to_char(CURRENT_DATE,'YYYYMMDD') || '-morning',
+      p_delivery_round_id => 'round-' || to_char((now() AT TIME ZONE 'Asia/Bangkok')::date,'YYYYMMDD') || '-morning',
       p_delivery_method => 'self_delivery', p_delivery_address => 'm037-far',
       p_dropoff_latitude => 10.85, p_dropoff_longitude => 102.20,
       p_customer_name => 'M037 FAR', p_payment_method => 'cash_on_delivery',
-      p_order_mode => 'SAME_DAY', p_scheduled_date => CURRENT_DATE
+      p_order_mode => 'SAME_DAY', p_scheduled_date => (now() AT TIME ZONE 'Asia/Bangkok')::date
     ))->>'order_number';
     RAISE EXCEPTION 'FAIL G1 order accepted >5km (got %)', v_on;
   EXCEPTION WHEN OTHERS THEN
@@ -89,8 +89,8 @@ BEGIN
       p_delivery_method => 'self_delivery', p_delivery_address => '',
       p_dropoff_latitude => 10.7050, p_dropoff_longitude => 102.1450,
       p_customer_name => 'M037 NOADDR', p_payment_method => 'cash_on_delivery',
-      p_order_mode => 'PRE_ORDER', p_scheduled_date => CURRENT_DATE + 2,
-      p_delivery_round_id => 'round-' || to_char(CURRENT_DATE + 2,'YYYYMMDD') || '-morning'
+      p_order_mode => 'PRE_ORDER', p_scheduled_date => (now() AT TIME ZONE 'Asia/Bangkok')::date + 2,
+      p_delivery_round_id => 'round-' || to_char((now() AT TIME ZONE 'Asia/Bangkok')::date + 2,'YYYYMMDD') || '-morning'
     ))->>'order_number';
     RAISE EXCEPTION 'FAIL G4 PRE_ORDER without address ACCEPTED';
   EXCEPTION WHEN OTHERS THEN
@@ -101,11 +101,11 @@ BEGIN
 
   v_on := (public.create_order_with_items(
     p_items => '[{"product_id":"prod-6","quantity":1}]'::jsonb,
-    p_delivery_round_id => 'round-' || to_char(CURRENT_DATE + 2,'YYYYMMDD') || '-morning',
+    p_delivery_round_id => 'round-' || to_char((now() AT TIME ZONE 'Asia/Bangkok')::date + 2,'YYYYMMDD') || '-morning',
     p_delivery_method => 'self_delivery', p_delivery_address => 'm037-pre',
     p_dropoff_latitude => 10.7050, p_dropoff_longitude => 102.1450,
     p_customer_name => 'M037 PRE', p_payment_method => 'cash_on_delivery',
-    p_order_mode => 'PRE_ORDER', p_scheduled_date => CURRENT_DATE + 2
+    p_order_mode => 'PRE_ORDER', p_scheduled_date => (now() AT TIME ZONE 'Asia/Bangkok')::date + 2
   ))->>'order_number';
   IF v_on IS NULL THEN RAISE EXCEPTION 'FAIL G5 PRE_ORDER create'; END IF;
 
@@ -141,7 +141,7 @@ BEGIN
     RAISE EXCEPTION 'FAIL G6 list_drivers aliases missing'; END IF;
   RAISE NOTICE 'PASS G6 list_drivers DriverRow shape ok (count=%)', r->>'count';
 
-  r := public.get_kitchen_summary(CURRENT_DATE);
+  r := public.get_kitchen_summary((now() AT TIME ZONE 'Asia/Bangkok')::date);
   IF (r->>'ok') <> 'true' OR (r->'summary'->>'pending_orders') IS NULL THEN RAISE EXCEPTION 'FAIL G7 kitchen summary'; END IF;
   RAISE NOTICE 'PASS G7 get_kitchen_summary shape ok (batches=%)', r->>'total_batches';
 

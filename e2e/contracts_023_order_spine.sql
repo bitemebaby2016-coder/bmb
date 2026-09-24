@@ -1,4 +1,4 @@
-﻿-- ============================================
+-- ============================================
 -- Bite Me Baby â€” PHASE 2 SQL Contract Suite: Canonical Order Spine (023-027)
 -- Run as OWNER in Supabase SQL Editor (or local psql). Read-only impact:
 -- entire suite runs in ONE transaction and ROLLBACKs at the end.
@@ -37,9 +37,9 @@ ON CONFLICT (id) DO NOTHING;
 UPDATE public.profiles SET role = 'admin' WHERE id = '22222222-2222-2222-2222-222222222222';
 
 -- test knobs: guarantee same-day acceptance windows inside the suite
-SELECT public.ensure_rounds_for_date(CURRENT_DATE);
+SELECT public.ensure_rounds_for_date((now() AT TIME ZONE 'Asia/Bangkok')::date);
 UPDATE public.delivery_rounds SET cutoff_time = '23:59', max_capacity = 50, current_count = 0
- WHERE scheduled_date = CURRENT_DATE;
+ WHERE scheduled_date = (now() AT TIME ZONE 'Asia/Bangkok')::date;
 
 -- customer context
 SELECT set_config('role', 'authenticated', false);
@@ -51,7 +51,7 @@ SELECT set_config('request.jwt.claims', '{"sub":"11111111-1111-1111-1111-1111111
 DO $$ DECLARE r jsonb; BEGIN
   r := public.create_order_with_items(
     p_items => '[{"product_id":"prod-1","quantity":1}]'::jsonb,
-    p_delivery_round_id => 'round-' || to_char(CURRENT_DATE,'YYYYMMDD') || '-morning',
+    p_delivery_round_id => 'round-' || to_char((now() AT TIME ZONE 'Asia/Bangkok')::date,'YYYYMMDD') || '-morning',
     p_delivery_method => 'self_delivery',
     p_delivery_address => 'test',
     p_dropoff_latitude => 10.7016, p_dropoff_longitude => 102.1429,
@@ -71,7 +71,7 @@ END $$;
 DO $$ DECLARE r jsonb; n text; BEGIN
   r := public.create_pre_order_with_items(
     p_product_id => 'prod-5', p_quantity => 2,
-    p_scheduled_date => CURRENT_DATE + 2,
+    p_scheduled_date => (now() AT TIME ZONE 'Asia/Bangkok')::date + 2,
     p_customer_name => 'Spine Cust', p_customer_phone => '0800000001',
     p_delivery_latitude => 10.7016, p_delivery_longitude => 102.1429,
     p_delivery_address => 'm023-pre-addr'
@@ -79,7 +79,7 @@ DO $$ DECLARE r jsonb; n text; BEGIN
   n := r->>'order_number';
   IF n NOT LIKE 'PO-%' THEN RAISE EXCEPTION 'FAIL T2 prefix'; END IF;
   IF NOT EXISTS (SELECT 1 FROM public.orders WHERE order_number = n
-                  AND order_mode = 'PRE_ORDER' AND scheduled_date = CURRENT_DATE + 2) THEN
+                  AND order_mode = 'PRE_ORDER' AND scheduled_date = (now() AT TIME ZONE 'Asia/Bangkok')::date + 2) THEN
     RAISE EXCEPTION 'FAIL T2 canonical row missing';
   END IF;
   IF NOT EXISTS (SELECT 1 FROM public.order_items oi JOIN public.orders o ON o.id = oi.order_id
@@ -106,7 +106,7 @@ SELECT set_config('role', 'authenticated', false);
 DO $$ DECLARE r jsonb; BEGIN
   r := public.create_order_with_items(
     p_items => '[{"product_id":"prod-1","quantity":1}]'::jsonb,
-    p_delivery_round_id => 'round-' || to_char(CURRENT_DATE,'YYYYMMDD') || '-midday',
+    p_delivery_round_id => 'round-' || to_char((now() AT TIME ZONE 'Asia/Bangkok')::date,'YYYYMMDD') || '-midday',
     p_delivery_method => 'self_delivery',
     p_dropoff_latitude => 10.7016, p_dropoff_longitude => 102.1429,
     p_order_mode => 'SAME_DAY');
@@ -119,12 +119,12 @@ END $$;
 -- ============================================
 RESET ROLE;
 UPDATE public.delivery_rounds SET cutoff_time = '00:00'
- WHERE id = 'round-' || to_char(CURRENT_DATE,'YYYYMMDD') || '-evening';
+ WHERE id = 'round-' || to_char((now() AT TIME ZONE 'Asia/Bangkok')::date,'YYYYMMDD') || '-evening';
 SELECT set_config('role', 'authenticated', false);
 DO $$ BEGIN
   PERFORM public.create_order_with_items(
     p_items => '[{"product_id":"prod-1","quantity":1}]'::jsonb,
-    p_delivery_round_id => 'round-' || to_char(CURRENT_DATE,'YYYYMMDD') || '-evening',
+    p_delivery_round_id => 'round-' || to_char((now() AT TIME ZONE 'Asia/Bangkok')::date,'YYYYMMDD') || '-evening',
     p_delivery_method => 'self_delivery',
     p_dropoff_latitude => 10.7016, p_dropoff_longitude => 102.1429,
     p_order_mode => 'SAME_DAY');
@@ -139,12 +139,12 @@ END $$;
 -- ============================================
 RESET ROLE;
 UPDATE public.delivery_rounds SET max_capacity = 1, current_count = 0
- WHERE id = 'round-' || to_char(CURRENT_DATE,'YYYYMMDD') || '-midday';
+ WHERE id = 'round-' || to_char((now() AT TIME ZONE 'Asia/Bangkok')::date,'YYYYMMDD') || '-midday';
 SELECT set_config('role', 'authenticated', false);
 DO $$ DECLARE n text; c int; BEGIN
   n := (public.create_order_with_items(
     p_items => '[{"product_id":"prod-1","quantity":1}]'::jsonb,
-    p_delivery_round_id => 'round-' || to_char(CURRENT_DATE,'YYYYMMDD') || '-midday',
+    p_delivery_round_id => 'round-' || to_char((now() AT TIME ZONE 'Asia/Bangkok')::date,'YYYYMMDD') || '-midday',
     p_delivery_method => 'self_delivery',
     p_dropoff_latitude => 10.7016, p_dropoff_longitude => 102.1429,
     p_order_mode => 'SAME_DAY'))->>'order_number';
@@ -152,7 +152,7 @@ DO $$ DECLARE n text; c int; BEGIN
   BEGIN
     PERFORM public.create_order_with_items(
       p_items => '[{"product_id":"prod-1","quantity":1}]'::jsonb,
-      p_delivery_round_id => 'round-' || to_char(CURRENT_DATE,'YYYYMMDD') || '-midday',
+      p_delivery_round_id => 'round-' || to_char((now() AT TIME ZONE 'Asia/Bangkok')::date,'YYYYMMDD') || '-midday',
       p_delivery_method => 'self_delivery',
       p_dropoff_latitude => 10.7016, p_dropoff_longitude => 102.1429,
       p_order_mode => 'SAME_DAY');
@@ -161,7 +161,7 @@ DO $$ DECLARE n text; c int; BEGIN
     IF SQLERRM NOT LIKE '%ERR_CAPACITY_FULL%' THEN RAISE EXCEPTION 'FAIL T8 unexpected: %', SQLERRM; END IF;
   END;
   SELECT current_count INTO c FROM public.delivery_rounds
-   WHERE id = 'round-' || to_char(CURRENT_DATE,'YYYYMMDD') || '-midday';
+   WHERE id = 'round-' || to_char((now() AT TIME ZONE 'Asia/Bangkok')::date,'YYYYMMDD') || '-midday';
   IF c <> 1 THEN RAISE EXCEPTION 'FAIL T8 count drift %', c; END IF;
   RAISE NOTICE 'PASS T8 capacity full rejected, count stays 1';
 END $$;
@@ -172,7 +172,7 @@ END $$;
 DO $$ BEGIN
   PERFORM public.create_order_with_items(
     p_items => '[{"product_id":"prod-1","quantity":25}]'::jsonb,
-    p_delivery_round_id => 'round-' || to_char(CURRENT_DATE,'YYYYMMDD') || '-morning',
+    p_delivery_round_id => 'round-' || to_char((now() AT TIME ZONE 'Asia/Bangkok')::date,'YYYYMMDD') || '-morning',
     p_delivery_method => 'self_delivery',
     p_dropoff_latitude => 10.7016, p_dropoff_longitude => 102.1429,
     p_order_mode => 'SAME_DAY');
@@ -188,11 +188,11 @@ END $$;
 DO $$ DECLARE r jsonb; n text; BEGIN
   r := public.create_order_with_items(
     p_items => '[{"product_id":"prod-5","quantity":1}]'::jsonb,
-    p_delivery_round_id => 'round-' || to_char(CURRENT_DATE + 2,'YYYYMMDD') || '-midday',
+    p_delivery_round_id => 'round-' || to_char((now() AT TIME ZONE 'Asia/Bangkok')::date + 2,'YYYYMMDD') || '-midday',
     p_delivery_method => 'self_delivery',
     p_dropoff_latitude => 10.7016, p_dropoff_longitude => 102.1429,
     p_payment_method => 'cash_on_delivery',
-    p_order_mode => 'PRE_ORDER', p_scheduled_date => CURRENT_DATE + 2,
+    p_order_mode => 'PRE_ORDER', p_scheduled_date => (now() AT TIME ZONE 'Asia/Bangkok')::date + 2,
     p_delivery_address => 'm023-pre-addr');
   n := r->>'order_number';
   IF (r->>'payment_method') <> 'cash_on_delivery' THEN RAISE EXCEPTION 'FAIL T10 method'; END IF;
@@ -209,7 +209,7 @@ END $$;
 DO $$ DECLARE r jsonb; n text; t numeric; BEGIN
   r := public.create_order_with_items(
     p_items => '[{"product_id":"prod-1","quantity":1}]'::jsonb,
-    p_delivery_round_id => 'round-' || to_char(CURRENT_DATE,'YYYYMMDD') || '-morning',
+    p_delivery_round_id => 'round-' || to_char((now() AT TIME ZONE 'Asia/Bangkok')::date,'YYYYMMDD') || '-morning',
     p_delivery_method => 'self_delivery',
     p_dropoff_latitude => 10.7016, p_dropoff_longitude => 102.1429,
     p_order_mode => 'SAME_DAY');
@@ -242,16 +242,16 @@ END $$;
 DO $$ DECLARE n text; c1 int; c2 int; c3 int; BEGIN
   n := (public.create_order_with_items(
     p_items => '[{"product_id":"prod-1","quantity":1}]'::jsonb,
-    p_delivery_round_id => 'round-' || to_char(CURRENT_DATE,'YYYYMMDD') || '-morning',
+    p_delivery_round_id => 'round-' || to_char((now() AT TIME ZONE 'Asia/Bangkok')::date,'YYYYMMDD') || '-morning',
     p_delivery_method => 'self_delivery',
     p_dropoff_latitude => 10.7016, p_dropoff_longitude => 102.1429,
     p_order_mode => 'SAME_DAY'))->>'order_number';
-  SELECT current_count INTO c1 FROM public.delivery_rounds WHERE id = 'round-' || to_char(CURRENT_DATE,'YYYYMMDD') || '-morning';
+  SELECT current_count INTO c1 FROM public.delivery_rounds WHERE id = 'round-' || to_char((now() AT TIME ZONE 'Asia/Bangkok')::date,'YYYYMMDD') || '-morning';
   PERFORM public.cancel_order(p_order_number => n, p_reason => 'test');
-  SELECT current_count INTO c2 FROM public.delivery_rounds WHERE id = 'round-' || to_char(CURRENT_DATE,'YYYYMMDD') || '-morning';
+  SELECT current_count INTO c2 FROM public.delivery_rounds WHERE id = 'round-' || to_char((now() AT TIME ZONE 'Asia/Bangkok')::date,'YYYYMMDD') || '-morning';
   IF c2 <> c1 - 1 THEN RAISE EXCEPTION 'FAIL T12 release % -> %', c1, c2; END IF;
   PERFORM public.cancel_order(p_order_number => n, p_reason => 'duplicate');
-  SELECT current_count INTO c3 FROM public.delivery_rounds WHERE id = 'round-' || to_char(CURRENT_DATE,'YYYYMMDD') || '-morning';
+  SELECT current_count INTO c3 FROM public.delivery_rounds WHERE id = 'round-' || to_char((now() AT TIME ZONE 'Asia/Bangkok')::date,'YYYYMMDD') || '-morning';
   IF c3 <> c2 THEN RAISE EXCEPTION 'FAIL T12 double release % -> %', c2, c3; END IF;
   RAISE NOTICE 'PASS T12 cancel release + idempotent duplicate (% -> % -> %)', c1, c2, c3;
 END $$;
@@ -262,12 +262,12 @@ END $$;
 DO $$ DECLARE n text; BEGIN
   n := (public.create_order_with_items(
     p_items => '[{"product_id":"prod-1","quantity":1}]'::jsonb,
-    p_delivery_round_id => 'round-' || to_char(CURRENT_DATE,'YYYYMMDD') || '-morning',
+    p_delivery_round_id => 'round-' || to_char((now() AT TIME ZONE 'Asia/Bangkok')::date,'YYYYMMDD') || '-morning',
     p_delivery_method => 'self_delivery',
     p_dropoff_latitude => 10.7016, p_dropoff_longitude => 102.1429,
     p_order_mode => 'SAME_DAY'))->>'order_number';
   RESET ROLE;
-  UPDATE public.delivery_rounds SET current_count = 0 WHERE id = 'round-' || to_char(CURRENT_DATE,'YYYYMMDD') || '-morning';
+  UPDATE public.delivery_rounds SET current_count = 0 WHERE id = 'round-' || to_char((now() AT TIME ZONE 'Asia/Bangkok')::date,'YYYYMMDD') || '-morning';
   PERFORM set_config('role', 'authenticated', false);
   PERFORM set_config('request.jwt.claims', '{"sub":"22222222-2222-2222-2222-222222222222","role":"authenticated"}', false);
   BEGIN
@@ -281,7 +281,7 @@ END $$;
 
 -- restore sane morning-round state after the corruption probe
 RESET ROLE;
-UPDATE public.delivery_rounds SET current_count = 5 WHERE id = 'round-' || to_char(CURRENT_DATE,'YYYYMMDD') || '-morning';
+UPDATE public.delivery_rounds SET current_count = 5 WHERE id = 'round-' || to_char((now() AT TIME ZONE 'Asia/Bangkok')::date,'YYYYMMDD') || '-morning';
 SELECT set_config('role', 'authenticated', false);
 
 -- ============================================
@@ -290,16 +290,16 @@ SELECT set_config('role', 'authenticated', false);
 DO $$ DECLARE n text; c1 int; c2 int; BEGIN
   n := (public.create_order_with_items(
     p_items => '[{"product_id":"prod-1","quantity":1}]'::jsonb,
-    p_delivery_round_id => 'round-' || to_char(CURRENT_DATE,'YYYYMMDD') || '-morning',
+    p_delivery_round_id => 'round-' || to_char((now() AT TIME ZONE 'Asia/Bangkok')::date,'YYYYMMDD') || '-morning',
     p_delivery_method => 'self_delivery',
     p_dropoff_latitude => 10.7016, p_dropoff_longitude => 102.1429,
     p_order_mode => 'SAME_DAY'))->>'order_number';
-  SELECT current_count INTO c1 FROM public.delivery_rounds WHERE id = 'round-' || to_char(CURRENT_DATE,'YYYYMMDD') || '-morning';
+  SELECT current_count INTO c1 FROM public.delivery_rounds WHERE id = 'round-' || to_char((now() AT TIME ZONE 'Asia/Bangkok')::date,'YYYYMMDD') || '-morning';
   RESET ROLE;
   PERFORM set_config('role', 'authenticated', false);
   PERFORM set_config('request.jwt.claims', '{"sub":"22222222-2222-2222-2222-222222222222","role":"authenticated"}', false);
   PERFORM public.mark_payment_failed(p_order_number => n, p_reason => 'test');
-  SELECT current_count INTO c2 FROM public.delivery_rounds WHERE id = 'round-' || to_char(CURRENT_DATE,'YYYYMMDD') || '-morning';
+  SELECT current_count INTO c2 FROM public.delivery_rounds WHERE id = 'round-' || to_char((now() AT TIME ZONE 'Asia/Bangkok')::date,'YYYYMMDD') || '-morning';
   IF c1 <> c2 THEN RAISE EXCEPTION 'FAIL T14 slot released on payment failure % -> %', c1, c2; END IF;
   IF (SELECT status FROM public.orders WHERE order_number = n) <> 'pending' THEN
     RAISE EXCEPTION 'FAIL T14 order status changed by payment failure';
@@ -325,10 +325,10 @@ DO $$ DECLARE n text; BEGIN
   PERFORM set_config('request.jwt.claims', '{"sub":"22222222-2222-2222-2222-222222222222","role":"authenticated"}', false);
   n := (public.create_order_with_items(
     p_items => '[{"product_id":"prod-1","quantity":1},{"product_id":"prod-2","quantity":1}]'::jsonb,
-    p_delivery_round_id => 'round-' || to_char(CURRENT_DATE + 2,'YYYYMMDD') || '-morning',
+    p_delivery_round_id => 'round-' || to_char((now() AT TIME ZONE 'Asia/Bangkok')::date + 2,'YYYYMMDD') || '-morning',
     p_delivery_method => 'self_delivery',
     p_dropoff_latitude => 10.7016, p_dropoff_longitude => 102.1429,
-    p_order_mode => 'PRE_ORDER', p_scheduled_date => CURRENT_DATE + 2, p_delivery_address => 'm023-pre-addr'))->>'order_number';
+    p_order_mode => 'PRE_ORDER', p_scheduled_date => (now() AT TIME ZONE 'Asia/Bangkok')::date + 2, p_delivery_address => 'm023-pre-addr'))->>'order_number';
   BEGIN
     PERFORM public.transition_order_status(p_order_number => n, p_new_status => 'confirmed');
     RAISE EXCEPTION 'FAIL T15 aggregation not enforced (would have under-deducted)';
@@ -354,7 +354,7 @@ DO $$ DECLARE n text; s1 numeric; s2 numeric; s3 numeric; BEGIN
   s1 := (SELECT current_stock FROM public.inventory WHERE id = 'ing-1');
   n := (public.create_order_with_items(
     p_items => '[{"product_id":"prod-1","quantity":2},{"product_id":"prod-2","quantity":1}]'::jsonb,
-    p_delivery_round_id => 'round-' || to_char(CURRENT_DATE,'YYYYMMDD') || '-morning',
+    p_delivery_round_id => 'round-' || to_char((now() AT TIME ZONE 'Asia/Bangkok')::date,'YYYYMMDD') || '-morning',
     p_delivery_method => 'self_delivery',
     p_dropoff_latitude => 10.7016, p_dropoff_longitude => 102.1429,
     p_order_mode => 'SAME_DAY'))->>'order_number';
@@ -379,20 +379,20 @@ DO $$ DECLARE r jsonb; n_pre text; BEGIN
   PERFORM set_config('request.jwt.claims', '{"sub":"22222222-2222-2222-2222-222222222222","role":"authenticated"}', false);
   n_pre := (public.create_order_with_items(
     p_items => '[{"product_id":"prod-5","quantity":1}]'::jsonb,
-    p_delivery_round_id => 'round-' || to_char(CURRENT_DATE + 2,'YYYYMMDD') || '-midday',
+    p_delivery_round_id => 'round-' || to_char((now() AT TIME ZONE 'Asia/Bangkok')::date + 2,'YYYYMMDD') || '-midday',
     p_delivery_method => 'self_delivery',
     p_dropoff_latitude => 10.7016, p_dropoff_longitude => 102.1429,
-    p_order_mode => 'PRE_ORDER', p_scheduled_date => CURRENT_DATE + 2, p_delivery_address => 'm023-pre-addr'))->>'order_number';
+    p_order_mode => 'PRE_ORDER', p_scheduled_date => (now() AT TIME ZONE 'Asia/Bangkok')::date + 2, p_delivery_address => 'm023-pre-addr'))->>'order_number';
   PERFORM public.transition_order_status(p_order_number => n_pre, p_new_status => 'confirmed');
-  r := public.create_production_batch(p_delivery_round_id => 'round-' || to_char(CURRENT_DATE + 2,'YYYYMMDD') || '-midday',
-                                      p_scheduled_date => CURRENT_DATE + 2);
+  r := public.create_production_batch(p_delivery_round_id => 'round-' || to_char((now() AT TIME ZONE 'Asia/Bangkok')::date + 2,'YYYYMMDD') || '-midday',
+                                      p_scheduled_date => (now() AT TIME ZONE 'Asia/Bangkok')::date + 2);
   IF (r->>'items_count')::int < 1 THEN RAISE EXCEPTION 'FAIL T17 pre-order not in batch'; END IF;
   RESET ROLE; -- production_batch_items has no table grant for authenticated (created after 006); assert as postgres
   IF NOT EXISTS (SELECT 1 FROM public.production_batch_items WHERE batch_id = r->>'batch_id' AND order_mode = 'PRE_ORDER') THEN
     RAISE EXCEPTION 'FAIL T17 batch item order_mode';
   END IF;
-  r := public.create_production_batch(p_delivery_round_id => 'round-' || to_char(CURRENT_DATE + 2,'YYYYMMDD') || '-midday',
-                                      p_scheduled_date => CURRENT_DATE);
+  r := public.create_production_batch(p_delivery_round_id => 'round-' || to_char((now() AT TIME ZONE 'Asia/Bangkok')::date + 2,'YYYYMMDD') || '-midday',
+                                      p_scheduled_date => (now() AT TIME ZONE 'Asia/Bangkok')::date);
   IF (r->>'items_count')::int <> 0 THEN RAISE EXCEPTION 'FAIL T17 date separation'; END IF;
   RAISE NOTICE 'PASS T17 canonical batch both modes + date separation';
 END $$;
@@ -408,7 +408,7 @@ DO $$ DECLARE d1 numeric := 4.90 / 111.195; d2 numeric := 5.50 / 111.195; BEGIN
   BEGIN
     PERFORM public.create_order_with_items(
       p_items => '[{"product_id":"prod-1","quantity":1}]'::jsonb,
-      p_delivery_round_id => 'round-' || to_char(CURRENT_DATE,'YYYYMMDD') || '-morning',
+      p_delivery_round_id => 'round-' || to_char((now() AT TIME ZONE 'Asia/Bangkok')::date,'YYYYMMDD') || '-morning',
       p_delivery_method => 'self_delivery',
       p_order_mode => 'SAME_DAY');
     RAISE EXCEPTION 'FAIL T18a missing coords accepted';
@@ -419,7 +419,7 @@ DO $$ DECLARE d1 numeric := 4.90 / 111.195; d2 numeric := 5.50 / 111.195; BEGIN
   BEGIN
     PERFORM public.create_order_with_items(
       p_items => '[{"product_id":"prod-1","quantity":1}]'::jsonb,
-      p_delivery_round_id => 'round-' || to_char(CURRENT_DATE,'YYYYMMDD') || '-morning',
+      p_delivery_round_id => 'round-' || to_char((now() AT TIME ZONE 'Asia/Bangkok')::date,'YYYYMMDD') || '-morning',
       p_delivery_method => 'grab_rider',
       p_dropoff_latitude => 10.7016 + d1, p_dropoff_longitude => 102.1429,
       p_distance_km => 999,
@@ -432,7 +432,7 @@ DO $$ DECLARE d1 numeric := 4.90 / 111.195; d2 numeric := 5.50 / 111.195; BEGIN
   BEGIN
     PERFORM public.create_order_with_items(
       p_items => '[{"product_id":"prod-1","quantity":1}]'::jsonb,
-      p_delivery_round_id => 'round-' || to_char(CURRENT_DATE,'YYYYMMDD') || '-morning',
+      p_delivery_round_id => 'round-' || to_char((now() AT TIME ZONE 'Asia/Bangkok')::date,'YYYYMMDD') || '-morning',
       p_delivery_method => 'self_delivery',
       p_dropoff_latitude => 10.7016 + d2, p_dropoff_longitude => 102.1429,
       p_distance_km => 0.1,
@@ -444,7 +444,7 @@ DO $$ DECLARE d1 numeric := 4.90 / 111.195; d2 numeric := 5.50 / 111.195; BEGIN
   END;
   PERFORM public.create_order_with_items(
     p_items => '[{"product_id":"prod-1","quantity":1}]'::jsonb,
-    p_delivery_round_id => 'round-' || to_char(CURRENT_DATE,'YYYYMMDD') || '-morning',
+    p_delivery_round_id => 'round-' || to_char((now() AT TIME ZONE 'Asia/Bangkok')::date,'YYYYMMDD') || '-morning',
     p_delivery_method => 'self_delivery',
     p_dropoff_latitude => 10.7016 + (4.95 / 111.195), p_dropoff_longitude => 102.1429,
     p_order_mode => 'SAME_DAY');
@@ -478,10 +478,10 @@ SELECT set_config('request.jwt.claims', '{"sub":"11111111-1111-1111-1111-1111111
 DO $$ BEGIN
   PERFORM public.create_order_with_items(
     p_items => '[{"product_id":"prod-1","quantity":1}]'::jsonb,
-    p_delivery_round_id => 'round-' || to_char(CURRENT_DATE + 2,'YYYYMMDD') || '-morning',
+    p_delivery_round_id => 'round-' || to_char((now() AT TIME ZONE 'Asia/Bangkok')::date + 2,'YYYYMMDD') || '-morning',
     p_delivery_method => 'self_delivery',
     p_dropoff_latitude => 10.7016, p_dropoff_longitude => 102.1429,
-    p_order_mode => 'PRE_ORDER', p_scheduled_date => CURRENT_DATE + 2,
+    p_order_mode => 'PRE_ORDER', p_scheduled_date => (now() AT TIME ZONE 'Asia/Bangkok')::date + 2,
     p_delivery_address => 'm023-pre-addr'
   );
   RAISE EXCEPTION 'FAIL T4 not rejected';
@@ -500,16 +500,16 @@ SELECT set_config('request.jwt.claims', '{"sub":"11111111-1111-1111-1111-1111111
 DO $$ DECLARE a text; b text; BEGIN
   a := (public.create_order_with_items(
     p_items => '[{"product_id":"prod-1","quantity":1}]'::jsonb,
-    p_delivery_round_id => 'round-' || to_char(CURRENT_DATE,'YYYYMMDD') || '-morning',
+    p_delivery_round_id => 'round-' || to_char((now() AT TIME ZONE 'Asia/Bangkok')::date,'YYYYMMDD') || '-morning',
     p_delivery_method => 'self_delivery',
     p_dropoff_latitude => 10.7016, p_dropoff_longitude => 102.1429,
     p_order_mode => 'SAME_DAY'))->>'order_number';
   b := (public.create_order_with_items(
     p_items => '[{"product_id":"prod-1","quantity":1}]'::jsonb,
-    p_delivery_round_id => 'round-' || to_char(CURRENT_DATE + 2,'YYYYMMDD') || '-morning',
+    p_delivery_round_id => 'round-' || to_char((now() AT TIME ZONE 'Asia/Bangkok')::date + 2,'YYYYMMDD') || '-morning',
     p_delivery_method => 'self_delivery',
     p_dropoff_latitude => 10.7016, p_dropoff_longitude => 102.1429,
-    p_order_mode => 'PRE_ORDER', p_scheduled_date => CURRENT_DATE + 2, p_delivery_address => 'm023-pre-addr'))->>'order_number';
+    p_order_mode => 'PRE_ORDER', p_scheduled_date => (now() AT TIME ZONE 'Asia/Bangkok')::date + 2, p_delivery_address => 'm023-pre-addr'))->>'order_number';
   IF a IS NOT NULL AND b IS NOT NULL THEN RAISE NOTICE 'PASS T5 both-mode allowed both ways'; ELSE RAISE EXCEPTION 'FAIL T5'; END IF;
 END $$;
 
