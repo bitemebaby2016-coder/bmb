@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-09-24T13:46:47.277Z",
+  "timestamp": "2026-09-24T22:10:16.686Z",
   "ref": "ivkdfognyiwjcmrhcnwz",
   "checks": [
     {
@@ -10,18 +10,6 @@
     },
     {
       "file": "e2e/contracts_028_payment_confirmation_kitchen.sql",
-      "ok": true,
-      "status": 201,
-      "detail": null
-    },
-    {
-      "file": "e2e/contracts_029_round_grant.sql",
-      "ok": true,
-      "status": 201,
-      "detail": null
-    },
-    {
-      "file": "e2e/contracts_030_transition_else.sql",
       "ok": true,
       "status": 201,
       "detail": null
