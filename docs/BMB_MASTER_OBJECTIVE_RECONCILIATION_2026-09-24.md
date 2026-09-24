@@ -1,503 +1,434 @@
-# BMB — MASTER OBJECTIVE RECONCILIATION
+﻿# BMB - à¹€à¸­à¸à¸ªà¸²à¸£à¸ªà¸£à¸¸à¸›à¸à¸²à¸£à¸•à¸£à¸§à¸ˆà¸ªà¸­à¸šà¸„à¸§à¸²à¸¡à¸ªà¸­à¸”à¸„à¸¥à¹‰à¸­à¸‡à¸à¸±à¸šà¸§à¸±à¸•à¸–à¸¸à¸›à¸£à¸°à¸ªà¸‡à¸„à¹Œà¸«à¸¥à¸±à¸à¸‚à¸­à¸‡à¹‚à¸„à¸£à¸‡à¸à¸²à¸£ (Master Objective Reconciliation)
 
-> **Topic:** M1 Closure ≠ Full Product Completion
-> **Date:** 2026-09-24
+> **à¸«à¸±à¸§à¹€à¸£à¸·à¹ˆà¸­à¸‡à¸ªà¸³à¸„à¸±à¸:** M1 Closure Full Product Completion (à¸à¸²à¸£à¸›à¸´à¸” Milestone 1 à¹„à¸¡à¹ˆà¹€à¸—à¹ˆà¸²à¸à¸±à¸šà¸—à¸µà¹ˆà¹‚à¸›à¸£à¹€à¸ˆà¸à¸•à¹Œà¹€à¸ªà¸£à¹‡à¸ˆà¸ªà¸¡à¸šà¸¹à¸£à¸“à¹Œà¸„à¸£à¸šà¸–à¹‰à¸§à¸™)
+> **à¸§à¸±à¸™à¸—à¸µà¹ˆà¸ˆà¸±à¸”à¸—à¸³:** 2026-09-24
 > **Repository:** `bitemebaby2016-coder/bmb`
-> **Baseline CHECK:** HEAD `1d3d6e7` (main = origin/main, synchronized)
-> **Author:** AI Engineering Agent (Code / DB / Evidence based)
-> **Language note:** Primary = English (repo technical standard, zero-ambiguity). Thai framing kept where safe.
+> **à¸ªà¸–à¸²à¸™à¸° HEAD à¸›à¸±à¸ˆà¸ˆà¸¸à¸šà¸±à¸™:** `454b212` (main branch = origin/main, à¸‹à¸´à¸‡à¹€à¸£à¸µà¸¢à¸šà¸£à¹‰à¸­à¸¢à¹à¸¥à¹‰à¸§)
+> **à¸œà¸¹à¹‰à¸ˆà¸±à¸”à¸—à¸³à¹‚à¸”à¸¢:** AI Engineering Agent (à¹ƒà¸Šà¹‰à¸«à¸¥à¸±à¸à¸à¸²à¸£ Code / Database / Evidence à¹€à¸›à¹‡à¸™à¸‚à¹‰à¸­à¸¡à¸¹à¸¥à¸­à¹‰à¸²à¸‡à¸­à¸´à¸‡)
+> **à¸«à¸¡à¸²à¸¢à¹€à¸«à¸•à¸¸à¸ à¸²à¸©à¸²:** à¹€à¸­à¸à¸ªà¸²à¸£à¸™à¸µà¹‰à¸—à¸³à¹€à¸›à¹‡à¸™à¸ à¸²à¸©à¸²à¹„à¸—à¸¢à¸—à¸±à¹‰à¸‡à¸«à¸¡à¸”à¸•à¸²à¸¡à¸„à¸³à¸‚à¸­ à¹à¸•à¹ˆà¸¢à¸±à¸‡à¸„à¸‡à¸¨à¸±à¸žà¸—à¹Œà¸—à¸²à¸‡à¹€à¸—à¸„à¸™à¸´à¸„à¸¡à¸²à¸•à¸£à¸à¸²à¸™à¹ƒà¸™à¸ à¸²à¸©à¸²à¸­à¸±à¸‡à¸à¸¤à¸© à¹€à¸Šà¹ˆà¸™ VERIFIED, PARTIAL, MISSING, BLOCKED, OWNER-ONLY, DEFERRED, RPC, API, DB, à¹à¸¥à¸° M1/P2/P3 à¸•à¸²à¸¡à¹à¸™à¸§à¸›à¸à¸´à¸šà¸±à¸•à¸´à¸‚à¸­à¸‡ repository à¸™à¸µà¹‰
 
 ---
 
-## 0. PURPOSE
+## 0. à¸ˆà¸¸à¸”à¸›à¸£à¸°à¸ªà¸‡à¸„à¹Œà¸«à¸¥à¸±à¸ (PURPOSE)
 
-This document reconciles the FULL BMB product objective (as originally defined by the owner)
-against the actual implementation, and SEPARATES two different questions that must never be conflated:
+à¹€à¸­à¸à¸ªà¸²à¸£à¸™à¸µà¹‰à¸—à¸³à¸«à¸™à¹‰à¸²à¸—à¸µà¹ˆ:
 
-### A. M1 CLOSURE
-> Are the M1 technical/operational acceptance criteria actually closed?
+1. à¸•à¸£à¸§à¸ˆà¸ªà¸­à¸šà¸§à¹ˆà¸²à¸ªà¸´à¹ˆà¸‡à¸—à¸µà¹ˆ Owner (à¹€à¸ˆà¹‰à¸²à¸‚à¸­à¸‡à¹‚à¸›à¸£à¹€à¸ˆà¸à¸•à¹Œ) à¸à¸³à¸«à¸™à¸”à¹ƒà¸«à¹‰à¹€à¸›à¹‡à¸™à¹€à¸›à¹‰à¸²à¸«à¸¡à¸²à¸¢à¸‚à¸­à¸‡ BMB à¹„à¸§à¹‰à¸•à¸±à¹‰à¸‡à¹à¸•à¹ˆà¸•à¹‰à¸™ à¸–à¸¹à¸à¸ªà¸£à¹‰à¸²à¸‡à¸„à¸£à¸šà¸–à¹‰à¸§à¸™à¹à¸„à¹ˆà¹„à¸«à¸™
+2. à¹€à¸›à¸£à¸µà¸¢à¸šà¹€à¸—à¸µà¸¢à¸šà¹€à¸›à¹‰à¸²à¸«à¸¡à¸²à¸¢à¹€à¸”à¸´à¸¡à¸à¸±à¸šà¸ªà¸´à¹ˆà¸‡à¸—à¸µà¹ˆà¹€à¸›à¹‡à¸™à¸ˆà¸£à¸´à¸‡à¹ƒà¸™à¸›à¸±à¸ˆà¸ˆà¸¸à¸šà¸±à¸™ (à¸ˆà¸²à¸à¸à¸²à¸£à¸”à¸¹à¹‚à¸„à¹‰à¸”à¸ˆà¸£à¸´à¸‡à¹à¸¥à¸°à¸à¸²à¸™à¸‚à¹‰à¸­à¸¡à¸¹à¸¥à¸ˆà¸£à¸´à¸‡)
+3. à¹à¸¢à¸ "à¸„à¸³à¸–à¸²à¸¡" à¸­à¸­à¸à¹€à¸›à¹‡à¸™à¸ªà¸­à¸‡à¸‚à¹‰à¸­à¸—à¸µà¹ˆà¹à¸•à¸à¸•à¹ˆà¸²à¸‡à¸à¸±à¸™à¸­à¸¢à¹ˆà¸²à¸‡à¸Šà¸±à¸”à¹€à¸ˆà¸™ à¸‹à¸¶à¹ˆà¸‡à¸«à¹‰à¸²à¸¡à¸œà¸ªà¸¡à¸à¸±à¸™à¹€à¸”à¹‡à¸”à¸‚à¸²à¸”:
 
-### B. FULL BMB PRODUCT OBJECTIVE
-> Is the BMB Cloud Kitchen Platform, per the full original objective, built and production-ready?
+### à¸‚à¹‰à¸­ A: à¸à¸²à¸£à¸›à¸´à¸” Milestone 1 (M1 CLOSURE)
+> à¹€à¸à¸“à¸‘à¹Œà¸”à¹‰à¸²à¸™à¹€à¸—à¸„à¸™à¸´à¸„à¹à¸¥à¸°à¸à¸²à¸£à¸”à¸³à¹€à¸™à¸´à¸™à¸‡à¸²à¸™à¸—à¸µà¹ˆà¸à¸³à¸«à¸™à¸”à¹„à¸§à¹‰à¹ƒà¸™ M1 à¸›à¸´à¸”à¸„à¸£à¸šà¹à¸¥à¹‰à¸§à¸«à¸£à¸·à¸­à¸¢à¸±à¸‡?
 
-**Rule: NEVER use A as a substitute for B.**
-Closing M1 does NOT equal product completion.
+### à¸‚à¹‰à¸­ B: à¸§à¸±à¸•à¸–à¸¸à¸›à¸£à¸°à¸ªà¸‡à¸„à¹Œà¹€à¸•à¹‡à¸¡à¸£à¸¹à¸›à¹à¸šà¸šà¸‚à¸­à¸‡à¸œà¸¥à¸´à¸•à¸ à¸±à¸“à¸‘à¹Œ BMB (FULL BMB PRODUCT OBJECTIVE)
+> à¸šà¸£à¸—à¸±à¸” Cloud Kitchen Platform à¸—à¸±à¹‰à¸‡à¸«à¸¡à¸”à¸•à¸²à¸¡à¸§à¸±à¸•à¸–à¸¸à¸›à¸£à¸°à¸ªà¸‡à¸„à¹Œà¸”à¸±à¹‰à¸‡à¹€à¸”à¸´à¸¡ à¸ªà¸£à¹‰à¸²à¸‡à¸„à¸£à¸šà¹à¸¥à¸°à¸žà¸£à¹‰à¸­à¸¡à¹ƒà¸Šà¹‰à¸‡à¸²à¸™à¸ˆà¸£à¸´à¸‡à¸«à¸£à¸·à¸­à¸¢à¸±à¸‡?
+
+**à¸à¸Žà¸—à¸µà¹ˆà¹„à¸¡à¹ˆà¸ªà¸²à¸¡à¸²à¸£à¸–à¸¥à¸°à¹€à¸¡à¸´à¸”à¹„à¸”à¹‰:** à¸«à¹‰à¸²à¸¡à¹ƒà¸Šà¹‰à¸„à¸³à¸•à¸­à¸šà¸‚à¸­à¸‡à¸‚à¹‰à¸­ A à¹à¸—à¸™à¸„à¸³à¸•à¸­à¸šà¸‚à¸­à¸‡à¸‚à¹‰à¸­ B à¸ à¸²à¸¢à¹ƒà¸•à¹‰à¸ªà¸–à¸²à¸™à¸à¸²à¸£à¸“à¹Œà¹ƒà¸”à¹†
+à¸à¸²à¸£à¸—à¸µà¹ˆ M1 à¸›à¸´à¸”à¹„à¸”à¹‰ à¹„à¸¡à¹ˆà¹„à¸”à¹‰à¸«à¸¡à¸²à¸¢à¸„à¸§à¸²à¸¡à¸§à¹ˆà¸² à¹‚à¸›à¸£à¹€à¸ˆà¸à¸•à¹Œ BMB à¸—à¸±à¹‰à¸‡à¸«à¸¡à¸”à¹€à¸ªà¸£à¹‡à¸ˆà¸ªà¸¡à¸šà¸¹à¸£à¸“à¹Œà¹à¸¥à¹‰à¸§
 
 ---
 
-## 1. NON-NEGOTIABLE AUDIT RULES
+## 1. à¸à¸Žà¸žà¸·à¹‰à¸™à¸à¸²à¸™à¸‚à¸­à¸‡à¸à¸²à¸£à¸•à¸£à¸§à¸ˆà¸ªà¸­à¸š (NON-NEGOTIABLE AUDIT RULES)
 
-Evidence hierarchy (highest = strongest):
+à¸¥à¸³à¸”à¸±à¸šà¸„à¸§à¸²à¸¡à¸ªà¸³à¸„à¸±à¸à¸‚à¸­à¸‡à¸«à¸¥à¸±à¸à¸à¸²à¸™à¸—à¸µà¹ˆà¹€à¸Šà¸·à¹ˆà¸­à¸–à¸·à¸­à¹„à¸”à¹‰ (à¹€à¸£à¸µà¸¢à¸‡à¸ˆà¸²à¸ à¸¡à¸²à¸à¸—à¸µà¹ˆà¸ªà¸¸à¸”à¹„à¸›à¸™à¹‰à¸­à¸¢à¸—à¸µà¹ˆà¸ªà¸¸à¸”):
 ```text
-1. Running production behavior
-2. Live Supabase schema / RPC / RLS / data
-3. Application runtime code
-4. Integration configuration / Edge Functions / Make.com
-5. Automated tests
-6. Migrations
-7. Documentation
-8. AI assumptions
+à¸¥à¸³à¸”à¸±à¸š 1: à¸žà¸¤à¸•à¸´à¸à¸£à¸£à¸¡à¸à¸²à¸£à¸—à¸³à¸‡à¸²à¸™à¸ˆà¸£à¸´à¸‡à¸šà¸™ Production Server
+à¸¥à¸³à¸”à¸±à¸š 2: à¹‚à¸„à¸£à¸‡à¸ªà¸£à¹‰à¸²à¸‡à¸à¸²à¸™à¸‚à¹‰à¸­à¸¡à¸¹à¸¥ Supabase à¸ˆà¸£à¸´à¸‡ / RPC / RLS / à¸‚à¹‰à¸­à¸¡à¸¹à¸¥à¸ˆà¸£à¸´à¸‡
+à¸¥à¸³à¸”à¸±à¸š 3: à¹‚à¸„à¹‰à¸” Runtime à¸‚à¸­à¸‡ Application
+à¸¥à¸³à¸”à¸±à¸š 4: à¸à¸²à¸£à¸•à¸±à¹‰à¸‡à¸„à¹ˆà¸² Integration / Edge Functions / Make.com
+à¸¥à¸³à¸”à¸±à¸š 5: Automated Tests
+à¸¥à¸³à¸”à¸±à¸š 6: Migration Scripts
+à¸¥à¸³à¸”à¸±à¸š 7: à¹€à¸­à¸à¸ªà¸²à¸£à¸•à¹ˆà¸²à¸‡à¹† (Documentation)
+à¸¥à¸³à¸”à¸±à¸š 8: à¸„à¸§à¸²à¸¡à¸„à¸²à¸”à¸„à¸°à¹€à¸™à¸‚à¸­à¸‡ AI
 ```
 
-Guard rules:
+à¸à¸Žà¸›à¹‰à¸­à¸‡à¸à¸±à¸™à¸à¸²à¸£à¹ƒà¸Šà¹‰à¸«à¸¥à¸±à¸à¸à¸²à¸™à¸›à¸¥à¸­à¸¡:
 ```text
-HARDCODED != VERIFIED
-EXISTS FILE != FEATURE COMPLETE
-TEST EXISTS != PRODUCTION VERIFIED
-RPC EXISTS != CUSTOMER FLOW CONNECTED
-ADMIN PAGE EXISTS != ADMIN SYSTEM COMPLETE
-AI FUNCTION EXISTS != AI SYSTEM INTEGRATED
-MOCK REMOVED != REAL WORLD FLOW VERIFIED
-DOCUMENTATION CLAIM != IMPLEMENTATION EVIDENCE
+à¹‚à¸„à¹‰à¸”à¹à¸‚à¹‡à¸‡à¸•à¸±à¸§ (HARDCODED) != à¸œà¹ˆà¸²à¸™à¸à¸²à¸£à¸¢à¸·à¸™à¸¢à¸±à¸™ (VERIFIED)
+à¸¡à¸µà¹„à¸Ÿà¸¥à¹Œà¸­à¸¢à¸¹à¹ˆ (EXISTS FILE) != à¸Ÿà¸µà¹€à¸ˆà¸­à¸£à¹Œà¸ªà¸¡à¸šà¸¹à¸£à¸“à¹Œ (FEATURE COMPLETE)
+à¸¡à¸µà¹€à¸—à¸ªà¸­à¸¢à¸¹à¹ˆ (TEST EXISTS) != à¸—à¸³à¸‡à¸²à¸™à¸ªà¸³à¹€à¸£à¹‡à¸ˆà¸šà¸™ Production (PRODUCTION VERIFIED)
+à¸¡à¸µ RPC (RPC EXISTS) != à¸¥à¸¹à¹ˆà¸§à¸´à¸™à¸œà¸¹à¹‰à¹ƒà¸Šà¹‰à¹€à¸Šà¸·à¹ˆà¸­à¸¡à¸•à¹ˆà¸­à¸ˆà¸£à¸´à¸‡ (CUSTOMER FLOW CONNECTED)
+à¸¡à¸µà¸«à¸™à¹‰à¸² Admin (ADMIN PAGE EXISTS) != à¸£à¸°à¸šà¸š Admin à¸ªà¸¡à¸šà¸¹à¸£à¸“à¹Œ (ADMIN SYSTEM COMPLETE)
+à¸¡à¸µà¸Ÿà¸±à¸‡à¸à¹Œà¸Šà¸±à¸™ AI (AI FUNCTION EXISTS) != à¸£à¸°à¸šà¸š AI à¹€à¸Šà¸·à¹ˆà¸­à¸¡à¸•à¹ˆà¸­à¸ªà¸¡à¸šà¸¹à¸£à¸“à¹Œ (AI SYSTEM INTEGRATED)
+à¸¥à¸š Mock à¸­à¸­à¸ (MOCK REMOVED) != à¸¢à¸·à¸™à¸¢à¸±à¸™à¸¥à¸¹à¹ˆà¸§à¸´à¸™à¹‚à¸¥à¸à¸ˆà¸£à¸´à¸‡à¸œà¹ˆà¸²à¸™à¹à¸¥à¹‰à¸§ (REAL WORLD FLOW VERIFIED)
+à¸‚à¹‰à¸­à¸„à¸§à¸²à¸¡à¹ƒà¸™à¹€à¸­à¸à¸ªà¸²à¸£ (DOCUMENTATION CLAIM) != à¸«à¸¥à¸±à¸à¸à¸²à¸™à¸à¸²à¸£ Implement à¸ˆà¸£à¸´à¸‡ (IMPLEMENTATION EVIDENCE)
 ```
 
-Allowed statuses (only these):
+à¸ªà¸–à¸²à¸™à¸°à¸—à¸µà¹ˆà¹ƒà¸Šà¹‰à¹„à¸”à¹‰à¹€à¸‰à¸žà¸²à¸° 6 à¸ªà¸–à¸²à¸™à¸°à¸™à¸µà¹‰à¹€à¸—à¹ˆà¸²à¸™à¸±à¹‰à¸™:
 ```
-VERIFIED / PARTIAL / MISSING / BLOCKED / OWNER-ONLY / DEFERRED
+VERIFIED       | PARTIAL       | MISSING
+BLOCKED        | OWNER-ONLY    | DEFERRED
 ```
-`COMPLETE` is NOT allowed without evidence meeting the criteria.
+à¸«à¹‰à¸²à¸¡à¹ƒà¸Šà¹‰à¸„à¸³à¸§à¹ˆà¸² `COMPLETE` à¹€à¸§à¹‰à¸™à¹à¸•à¹ˆà¸¡à¸µà¸«à¸¥à¸±à¸à¸à¸²à¸™à¸„à¸£à¸šà¸—à¸¸à¸à¸Šà¸±à¹‰à¸™à¸•à¸²à¸¡à¸¥à¸³à¸”à¸±à¸šà¸‚à¹‰à¸²à¸‡à¸•à¹‰à¸™
 
 ---
 
-## 2. BASELINE RECONCILIATION
+## 2. à¸à¸²à¸£à¸•à¸£à¸§à¸ˆà¸ªà¸­à¸š Baseline (FIRST: BASELINE RECONCILIATION)
 
-| Item | Value | Notes |
-|------|-------|-------|
-| WORKING TREE | CLEAN | no uncommitted changes |
-| BRANCH | main | -- |
-| HEAD | `1d3d6e7` | docs(M1): translate M1 closure evidence pack to Thai version |
-| ORIGIN/MAIN | `1d3d6e7` | synchronized |
-| `04d19c7` ancestor of HEAD | YES (merge-base --is-ancestor exit 0) | MOCK_DRIVERS -> DB drivers fix is merged into baseline |
+| à¸£à¸²à¸¢à¸à¸²à¸£ | à¸„à¹ˆà¸²à¸›à¸±à¸ˆà¸ˆà¸¸à¸šà¸±à¸™ | à¸„à¸³à¸­à¸˜à¸´à¸šà¸²à¸¢ |
+|--------|-------------|----------|
+| Working Tree | CLEAN | à¹„à¸¡à¹ˆà¸¡à¸µà¹„à¸Ÿà¸¥à¹Œà¸—à¸µà¹ˆà¹à¸à¹‰à¹„à¸‚à¹„à¸§à¹‰à¹à¸•à¹ˆà¸¢à¸±à¸‡à¹„à¸¡à¹ˆà¹„à¸”à¹‰ Commit |
+| Branch | main | -- |
+| HEAD | `454b212` | docs(M1): create Master Objective Reconciliation |
+| Origin/MAIN | `454b212` | à¸‹à¸´à¸‡à¸„à¹Œà¹€à¸£à¸µà¸¢à¸šà¸£à¹‰à¸­à¸¢à¹à¸¥à¹‰à¸§ |
+| Git merge-base à¸£à¸°à¸«à¸§à¹ˆà¸²à¸‡ `04d19c7` à¸à¸±à¸š HEAD | à¸œà¹ˆà¸²à¸™ (exit code 0) | à¸à¸²à¸£à¹à¸à¹‰à¹„à¸‚ MOCK_DRIVERS -> DB drivers à¸–à¸¹à¸ Merge à¹€à¸‚à¹‰à¸²à¸à¸²à¸™à¹à¸¥à¹‰à¸§ |
 
-**Conclusion:** Baseline is intact. Do NOT reimplement `04d19c7`.
-`docs/BMB_M1_CLOSURE_EVIDENCE_2026-09-24.md` matches current HEAD state (Thai version, commit 1d3d6e7). Reference only; M1 closure evidence is NOT full-product evidence.
+**à¸šà¸—à¸ªà¸£à¸¸à¸›à¹€à¸šà¸·à¹‰à¸­à¸‡à¸•à¹‰à¸™:** Baseline à¹‚à¸›à¸£à¹€à¸ˆà¸à¸­à¸¢à¸¹à¹ˆà¹ƒà¸™à¸ªà¸ à¸²à¸žà¸ªà¸¡à¸šà¸¹à¸£à¸“à¹Œ à¸à¸²à¸£à¹à¸à¹‰à¹„à¸‚ MOCK_DRIVERS à¸–à¸¹à¸ Merge à¹€à¸‚à¹‰à¸²à¸¡à¸²à¸–à¸¹à¸à¸•à¹‰à¸­à¸‡ à¹„à¸¡à¹ˆà¸•à¹‰à¸­à¸‡à¸—à¸³à¸‹à¹‰à¸³à¸­à¸µà¸
+à¹€à¸­à¸à¸ªà¸²à¸£ BMB_M1_CLOSURE_EVIDENCE_2026-09-24.md à¸ªà¸­à¸”à¸„à¸¥à¹‰à¸­à¸‡à¸à¸±à¸šà¸ªà¸–à¸²à¸™à¸°à¸›à¸±à¸ˆà¸ˆà¸¸à¸šà¸±à¸™ à¹ƒà¸Šà¹‰à¹€à¸›à¹‡à¸™ Reference à¹„à¸”à¹‰
 
 ---
-## 3. MASTER OBJECTIVE MATRIX — LEGEND
 
-Every domain row uses this shape:
+## 3. à¸­à¸˜à¸´à¸šà¸²à¸¢à¸„à¸³à¸ˆà¸³à¸à¸±à¸”à¸„à¸§à¸²à¸¡à¸ªà¸–à¸²à¸™à¸° (MASTER OBJECTIVE MATRIX LEGEND)
+
+à¸•à¸²à¸£à¸²à¸‡à¹ƒà¸™à¹€à¸­à¸à¸ªà¸²à¸£à¸–à¸±à¸”à¹„à¸›à¸ˆà¸°à¹ƒà¸Šà¹‰à¹‚à¸„à¸£à¸‡à¸ªà¸£à¹‰à¸²à¸‡à¹à¸–à¸§à¹à¸šà¸šà¹€à¸”à¸µà¸¢à¸§à¸à¸±à¸šà¸™à¸µà¹‰:
 
 ```text
 | Domain | Original Objective | Required Capability | Implementation Evidence | DB/RPC Evidence | Runtime Evidence | Production Evidence | Status | M1/P2/Deferred | Exact Gap |
 ```
 
-| Status | Meaning |
-|--------|---------|
-| **VERIFIED** | Implementation + code + DB/RPC + tests + PRODUCTION runtime evidence all present |
-| **PARTIAL** | Code/DB/RPC exist but at least one important evidence (esp. production runtime) is missing |
-| **MISSING** | No implementation found (no code / DB / RPC / flow) |
-| **BLOCKED** | Implementation exists but blocked by an external dependency (API key, provider, permission) |
-| **OWNER-ONLY** | Requires owner action (prod secrets, API keys, config, real order, bill) |
-| **DEFERRED** | Moved to another phase / Domain B / post-M1 per an explicit requirement |
+| à¸ªà¸–à¸²à¸™à¸° | à¸„à¸³à¹à¸›à¸¥à¹à¸¥à¸°à¸„à¸§à¸²à¸¡à¸«à¸¡à¸²à¸¢ |
+|-------|------------------|
+| **VERIFIED** | à¸¡à¸µà¸à¸²à¸£ Implement à¸„à¸£à¸šà¸—à¸±à¹‰à¸‡ Code, DB, RPC, Tests à¹à¸¥à¸°à¸œà¹ˆà¸²à¸™à¸à¸²à¸£à¸¢à¸·à¸™à¸¢à¸±à¸™à¸§à¹ˆà¸²à¸¡à¸µà¸žà¸¤à¸•à¸´à¸à¸£à¸£à¸¡à¸—à¸³à¸‡à¸²à¸™à¸ˆà¸£à¸´à¸‡à¸šà¸™ Production Server |
+| **PARTIAL** | à¸¡à¸µ Code, DB, à¹à¸¥à¸° RPC à¹à¸¥à¹‰à¸§ à¹à¸•à¹ˆà¸¢à¸±à¸‡à¸‚à¸²à¸”à¸«à¸¥à¸±à¸à¸à¸²à¸™à¸ªà¸³à¸„à¸±à¸à¸­à¸¢à¹ˆà¸²à¸‡à¸™à¹‰à¸­à¸¢à¸«à¸™à¸¶à¹ˆà¸‡à¸‚à¹‰à¸­ (à¹‚à¸”à¸¢à¹€à¸‰à¸žà¸²à¸°à¸à¸²à¸£à¸—à¸”à¸ªà¸­à¸šà¸à¸²à¸£à¸—à¸³à¸‡à¸²à¸™à¸ˆà¸£à¸´à¸‡) |
+| **MISSING** | à¸¢à¸±à¸‡à¹„à¸¡à¹ˆà¸¡à¸µà¸à¸²à¸£ Implement à¹€à¸¥à¸¢, à¹„à¸¡à¹ˆà¸žà¸š Code / DB / RPC à¸«à¸£à¸·à¸­ Flow à¸—à¸µà¹ˆà¹€à¸à¸µà¹ˆà¸¢à¸§à¸‚à¹‰à¸­à¸‡ |
+| **BLOCKED** | à¸•à¸±à¸§à¸£à¸°à¸šà¸šà¸žà¸£à¹‰à¸­à¸¡à¹à¸¥à¹‰à¸§ à¹à¸•à¹ˆà¸–à¸¹à¸ Block à¸ˆà¸²à¸ Dependency à¸ à¸²à¸¢à¸™à¸­à¸ (à¹€à¸Šà¹ˆà¸™ à¸•à¹‰à¸­à¸‡à¸£à¸­ API Key, à¸œà¸¹à¹‰à¹ƒà¸«à¹‰à¸šà¸£à¸´à¸à¸²à¸£, à¸«à¸£à¸·à¸­à¸ªà¸´à¸—à¸˜à¸´à¹Œ) |
+| **OWNER-ONLY** | à¸•à¹‰à¸­à¸‡à¸à¸²à¸£à¸à¸²à¸£à¸”à¸³à¹€à¸™à¸´à¸™à¸à¸²à¸£à¹‚à¸”à¸¢à¸•à¸£à¸‡à¸ˆà¸²à¸ Owner à¹€à¸—à¹ˆà¸²à¸™à¸±à¹‰à¸™ (à¹€à¸Šà¹ˆà¸™ à¹ƒà¸ªà¹ˆ Production Secrets, API Keys, à¸§à¸²à¸‡ Order à¸ˆà¸£à¸´à¸‡, à¹ƒà¸«à¹‰ Bill) |
+| **DEFERRED** | à¸•à¸±à¸”à¸ªà¸´à¸™à¹ƒà¸ˆà¹€à¸¥à¸·à¹ˆà¸­à¸™à¸­à¸­à¸à¹„à¸›à¸ªà¸¹à¹ˆ Phase à¹ƒà¸«à¸¡à¹ˆ à¸«à¸£à¸·à¸­ Domain B à¸«à¸£à¸·à¸­ Post-M1 à¹‚à¸”à¸¢à¸Šà¸±à¸”à¹€à¸ˆà¸™ |
 
 ---
 
-## 4. CUSTOMER ORDERING PLATFORM — RECONCILE
+## 4. à¹à¸¢à¸à¸•à¸£à¸§à¸ˆà¸ªà¸­à¸šà¹à¸žà¸¥à¸•à¸Ÿà¸­à¸£à¹Œà¸¡à¸à¸²à¸£à¸ªà¸±à¹ˆà¸‡à¸‹à¸·à¹‰à¸­à¸¥à¸¹à¸à¸„à¹‰à¸² (CUSTOMER ORDERING PLATFORM â€” RECONCILE)
 
-| Domain | Original Objective | Required Capability | Implementation Evidence | DB/RPC Evidence | Runtime Evidence | Production Evidence | Status | M1/P2/Deferred | Exact Gap |
-|--------|--------------------|---------------------|--------------------------|-----------------|------------------|---------------------|--------|----------------|-----------|
-| Customer PWA | Mobile-first installable ordering app | PWA (sw.js, manifest, offline) | `vite-plugin-pwa`, `src/pages/*` | sw.js + manifest in build | 52 precache entries | Deployed bitemebaby-5f7.pages.dev | **VERIFIED** | M1 | -- |
-| Mobile-first | Mobile-first UI | Responsive Tailwind (390/844 px) | home QA | QA screenshot | Live on mobile prod | **VERIFIED** | M1 | -- |
-| Menu | Categories / products / add-ons | products, categories, add_ons tables | Migr 016 + admin CRUD | e2e menu flow | Live menu | **VERIFIED** | M1 | -- |
-| Product availability | Availability from real stock, not manual toggle | availability engine (quota + cutoff) | Migr 016/019 | availabilityEngine.test.ts | not tested against real BOM stock | **PARTIAL** | M1/P1 | derive from real recipe/BOM + inventory |
-| Same-day ordering | Order for today | SAME_DAY canonical path | Migr 025 canonical RPC | availabilityEngine.test.ts | no prod order trace this session | **PARTIAL** | M1 | 1 same-day live order trace |
-| Pre-order | Order in advance | PRE_ORDER full lifecycle | Migr 025/027/035 trigger | orderVocabulary.test.ts (5) | no pre-order production evidence at all | **PARTIAL** | M1/**BLOCKER** | 1 real pre-order full lifecycle |
-| Scheduled date | Pick a future date | minDate=today+1 + server re-validate | CheckoutPage 51/53/186-189 | date validation test | no prod pre-order date flow | **PARTIAL** | M1 | prod pre-order date selection |
-| Delivery round | Round selection | delivery_rounds table + round API | Migr 015/025 | availabilityEngine.test.ts | schema live | **PARTIAL** (pre-order round) | M1 | connect round to pre-order in prod |
-| Address | Delivery address | delivery_address + Migr 035 trigger | Migr 035 validate trigger | trigger test | no prod pre-order address | **PARTIAL** | M1 | prod mandatory address test |
-| Delivery fee | Server-authoritative fee | compute_delivery_fee RPC + 5km gate | Migr 035 | contracts 29/29 | REST probe PASS | **VERIFIED** | M1 | -- |
-| Cutoff | Cutoff enforcement | client + RPC double gate | CheckoutPage 161-184, 886836d | cutoff test | REST probe | **VERIFIED** | M1 | -- |
-| Capacity | Prevent oversell | FOR UPDATE lock on create | Migr 025 | capacity test | no prod restore context | **PARTIAL** | M1 | capacity restore prod test |
-| Payment | Multi-method | Stripe / PromptPay / COD | EF create-checkout; webhook 6/6 | record_payment_result idempotent | card bill missing | **PARTIAL** | M1 | card charge bill (PAY-02) |
-| Confirmation | Order confirm | payment / webhook confirm RPC | stripe-webhook EF | webhook 6/6 PASS | live webhook | **VERIFIED** | M1 | -- |
-| Cancellation | Customer cancel | cancel_order RPC + restore | Migr 025 + OrdersPage 116-125 | cancel test | no prod cancel trace | **PARTIAL** | M1 | cancel restore prod test |
-| Refund | Refund mechanism | stripe-refund EF + real 172 THB | EF source | real refund verified 2026-09-19 | real refund done | **VERIFIED** | M1 | -- |
-| Order tracking/status | 6 status + map + ETA | order state machine + trigger | Migr 025 | orderVocabulary.test.ts | live tracking UI | **PARTIAL** (ETA prod) | M1/P1 | Route ETA live verification |
-| Order history/status | Customer order history | OrdersPage + orders table | OrdersPage.tsx | orderVocabulary.test.ts | live UI | **VERIFIED** | M1 | -- |
+| à¸«à¸±à¸§à¸‚à¹‰à¸­ | à¸§à¸±à¸•à¸–à¸¸à¸›à¸£à¸°à¸ªà¸‡à¸„à¹Œà¹€à¸”à¸´à¸¡ | à¸„à¸§à¸²à¸¡à¸ªà¸²à¸¡à¸²à¸£à¸–à¹ƒà¸™à¸à¸²à¸£à¸•à¹‰à¸­à¸‡à¸¡à¸µ | à¸«à¸¥à¸±à¸à¸à¸²à¸™à¸ˆà¸²à¸à¹‚à¸„à¹‰à¸”à¸ˆà¸£à¸´à¸‡ | à¸ªà¸–à¸²à¸™à¸° | à¸«à¸¡à¸§à¸”à¸«à¸¡à¸¹à¹ˆ | à¸Šà¹ˆà¸­à¸‡à¸§à¹ˆà¸²à¸‡à¸—à¸µà¹ˆà¸¢à¸±à¸‡à¹€à¸«à¸¥à¸·à¸­ |
+|--------|------------------|---------------------|--------------------|-------|----------|----------------------|
+| PWA à¸‚à¸­à¸‡à¸¥à¸¹à¸à¸„à¹‰à¸² | à¹à¸­à¸›à¸ªà¸±à¹ˆà¸‡à¸­à¸²à¸«à¸²à¸£à¸¡à¸·à¸­à¸–à¸·à¸­ à¸•à¸´à¸”à¸•à¸±à¹‰à¸‡à¹„à¸”à¹‰ | PWA (sw.js, manifest, Offline) | vite-plugin-pwa à¹„à¸Ÿà¸¥à¹Œà¸„à¸£à¸š | VERIFIED | M1 | à¹„à¸¡à¹ˆà¸¡à¸µ |
+| Mobile-first | à¸­à¸­à¸à¹à¸šà¸šà¸ªà¸³à¸«à¸£à¸±à¸šà¸¡à¸·à¸­à¸–à¸·à¸­à¸à¹ˆà¸­à¸™à¹€à¸ªà¸¡à¸­ | Responsive Tailwind 390x844 px | à¸—à¸”à¸ªà¸­à¸šà¸«à¸™à¹‰à¸²à¹à¸£à¸à¸ªà¸³à¹€à¸£à¹‡à¸ˆ | VERIFIED | M1 | à¹„à¸¡à¹ˆà¸¡à¸µ |
+| à¹€à¸¡à¸™à¸¹à¸­à¸²à¸«à¸²à¸£ | à¸«à¸¡à¸§à¸”à¸«à¸¡à¸¹à¹ˆ / à¸ªà¸´à¸™à¸„à¹‰à¸² / à¹€à¸žà¸´à¹ˆà¸¡à¹€à¸•à¸´à¸¡ | à¸•à¸²à¸£à¸²à¸‡ products, categories, add-ons | Migr 016 + Admin CRUD à¸„à¸£à¸š | VERIFIED | M1 | à¹„à¸¡à¹ˆà¸¡à¸µ |
+| à¸ªà¸´à¸™à¸„à¹‰à¸²à¸¡à¸µ stock à¸«à¸£à¸·à¸­à¹„à¸¡à¹ˆ | Stock à¸ˆà¸£à¸´à¸‡à¸ˆà¸²à¸à¸ªà¸¹à¸•à¸£à¹à¸¥à¸°à¸§à¸±à¸•à¸–à¸¸à¸”à¸´à¸š | availability engine (quota + cutoff) | Migr 016/019; à¸¢à¸±à¸‡à¹„à¸¡à¹ˆà¹„à¸”à¹‰à¸—à¸”à¸ªà¸­à¸šà¸à¸±à¸š BOM stock à¸ˆà¸£à¸´à¸‡ | PARTIAL | M1/P1 | à¸•à¹‰à¸­à¸‡à¸”à¸¶à¸‡à¸ˆà¸²à¸à¸ªà¸¹à¸•à¸£à¸­à¸²à¸«à¸²à¸£ + Inventory à¸ˆà¸£à¸´à¸‡ |
+| à¸ªà¸±à¹ˆà¸‡à¸§à¸±à¸™à¸™à¸µà¹‰ (Same-Day) | à¸ªà¸±à¹ˆà¸‡à¸£à¸±à¸šà¹ƒà¸™à¸§à¸±à¸™à¹€à¸”à¸µà¸¢à¸§à¸à¸±à¸™ | à¸¥à¸¹à¹ˆà¸§à¸´à¸™ SAME_DAY à¹à¸šà¸š Canonical | Migr 025 canonical RPC | PARTIAL | M1 | à¸•à¹‰à¸­à¸‡à¸à¸²à¸£ Order à¸ˆà¸£à¸´à¸‡ 1 à¹ƒà¸š |
+| à¸ªà¸±à¹ˆà¸‡à¸¥à¹ˆà¸§à¸‡à¸«à¸™à¹‰à¸² (Pre-Order) | à¸ªà¸±à¹ˆà¸‡à¸ˆà¸­à¸‡à¹„à¸§à¹‰à¸¥à¹ˆà¸§à¸‡à¸«à¸™à¹‰à¸²à¸«à¸¥à¸²à¸¢à¸§à¸±à¸™ | à¸¥à¸¹à¹ˆà¸§à¸´à¸™ PRE_ORDER à¸„à¸£à¸šà¸—à¸¸à¸à¸‚à¸±à¹‰à¸™à¸•à¸­à¸™ | Migr 025/027/035 trigger à¸¡à¸µà¸„à¸£à¸š | **PARTIAL / BLOCKER** | M1 | à¸•à¹‰à¸­à¸‡à¸¡à¸µ Pre-Order à¸ˆà¸£à¸´à¸‡à¸«à¸™à¸¶à¹ˆà¸‡à¹ƒà¸šà¸ˆà¸šå…¨æµç¨‹ |
+| à¹€à¸¥à¸·à¸­à¸à¸§à¸±à¸™à¸—à¸µà¹ˆà¸ˆà¸±à¸”à¸ªà¹ˆà¸‡ | à¹€à¸¥à¸·à¸­à¸à¸§à¸±à¸™à¹ƒà¸™à¸­à¸™à¸²à¸„à¸• | minDate=today+1 + Server à¸•à¸£à¸§à¸ˆà¸ªà¸­à¸šà¸‹à¹‰à¸³ | CheckoutPage à¸šà¸£à¸£à¸—à¸±à¸” 51/53/186-189 | PARTIAL | M1 | à¸•à¹‰à¸­à¸‡à¸à¸²à¸£à¸—à¸”à¸ªà¸­à¸šà¹€à¸¥à¸·à¸­à¸à¸§à¸±à¸™à¸—à¸µà¹ˆà¸šà¸™ Production |
+| à¹€à¸¥à¸·à¸­à¸ Delivery Round | à¹€à¸¥à¸·à¸­à¸à¸£à¸­à¸šà¸ˆà¸±à¸”à¸ªà¹ˆà¸‡à¸—à¸µà¹ˆà¸à¸³à¸«à¸™à¸” | à¸•à¸²à¸£à¸²à¸‡ delivery_rounds + API à¸”à¸¶à¸‡à¸¥à¸´à¸ªà¸•à¹Œà¸£à¸­à¸š | Migr 015/025 | PARTIAL | M1 | à¹€à¸Šà¸·à¹ˆà¸­à¸¡ Round à¸à¸±à¸š Pre-Order à¹ƒà¸«à¹‰à¸„à¸£à¸š |
+| à¸—à¸µà¹ˆà¸­à¸¢à¸¹à¹ˆà¸ˆà¸±à¸”à¸ªà¹ˆà¸‡ | Address à¸ªà¸³à¸«à¸£à¸±à¸šà¸ªà¹ˆà¸‡à¸‚à¸­à¸‡ | delivery_address + Trigger à¸šà¸±à¸‡à¸„à¸±à¸šà¸ˆà¸²à¸ Migr 035 | Migr 035 Trigger à¸•à¸£à¸§à¸ˆà¸ªà¸­à¸š | PARTIAL | M1 | à¸•à¹‰à¸­à¸‡à¸à¸²à¸£à¸—à¸”à¸ªà¸­à¸šà¸šà¸±à¸‡à¸„à¸±à¸šà¹ƒà¸ªà¹ˆà¸—à¸µà¹ˆà¸­à¸¢à¸¹à¹ˆ |
+| à¸„à¹ˆà¸²à¸ˆà¸±à¸”à¸ªà¹ˆà¸‡ |à¸„à¸³à¸™à¸§à¸“à¹‚à¸”à¸¢ Server à¹„à¸¡à¹ˆà¹ƒà¸«à¹‰à¹à¸à¹‰à¹„à¸‚à¸‡à¹ˆà¸²à¸¢ | compute_delivery_fee RPC + Gate 5km | Migr 035; contracts 29/29 à¸œà¹ˆà¸²à¸™ | VERIFIED | M1 | à¹„à¸¡à¹ˆà¸¡à¸µ |
+| Cutoff à¹€à¸§à¸¥à¸²à¸•à¸±à¸”à¸£à¸±à¸šà¸­à¸­à¹€à¸”à¸­à¸£à¹Œ | à¸•à¸±à¸”à¸ªà¸´à¸—à¸˜à¸´à¹Œà¸à¹ˆà¸­à¸™à¸–à¸¶à¸‡à¹€à¸§à¸¥à¸²à¸›à¸´à¸” | à¸•à¸£à¸§à¸ˆà¸—à¸±à¹‰à¸‡à¸à¸±à¹ˆà¸‡ Client à¹à¸¥à¸° Server RPC | CheckoutPage à¸šà¸£à¸£à¸—à¸±à¸” 161-184 | VERIFIED | M1 | à¹„à¸¡à¹ˆà¸¡à¸µ |
+| Capacity à¹€à¸•à¹‡à¸¡à¹à¸„à¹ˆà¹„à¸«à¸™ | à¸›à¹‰à¸­à¸‡à¸à¸±à¸™à¸à¸²à¸£ Overbooking | FOR UPDATE Lock à¸•à¸­à¸™à¸ªà¸£à¹‰à¸²à¸‡ Order | Migr 025; à¸¡à¸µà¹€à¸—à¸ªà¸•à¹Œ Capacity | PARTIAL | M1 | à¸•à¹‰à¸­à¸‡à¸à¸²à¸£à¸—à¸”à¸ªà¸­à¸šà¸„à¸·à¸™ Capacity à¸«à¸¥à¸±à¸‡ Cancel |
+| à¸à¸²à¸£à¸Šà¸³à¸£à¸°à¹€à¸‡à¸´à¸™ | à¸£à¸­à¸‡à¸£à¸±à¸šà¸«à¸¥à¸²à¸¢à¸§à¸´à¸˜à¸µ | Stripe / PromptPay / COD | EF create-checkout, Webhook 6/6 à¸œà¹ˆà¸²à¸™; à¸‚à¸²à¸” Bill à¸à¸²à¸£à¹Œà¸”à¸ˆà¸£à¸´à¸‡ | PARTIAL | M1 | à¸•à¹‰à¸­à¸‡à¸à¸²à¸£ Card Charge Receipt |
+| à¸¢à¸·à¸™à¸¢à¸±à¸™à¸­à¸­à¹€à¸”à¸­à¸£à¹Œ | Confirm à¸«à¸¥à¸±à¸‡ Payment | payment/webhook confirm RPC | stripe-webhook EF; Webhook 6/6 à¸œà¹ˆà¸²à¸™à¸«à¸¡à¸” | VERIFIED | M1 | à¹„à¸¡à¹ˆà¸¡à¸µ |
+| à¸¢à¸à¹€à¸¥à¸´à¸à¸­à¸­à¹€à¸”à¸­à¸£à¹Œ | Customer Cancel | cancel_order RPC + à¸„à¸·à¸™ Capacity | Migr 025 + OrdersPage à¸šà¸£à¸£à¸—à¸±à¸” 116-125 | PARTIAL | M1 | à¸•à¹‰à¸­à¸‡à¸—à¸”à¸ªà¸­à¸š Cancel + Restore on Prod |
+| à¸„à¸·à¸™à¹€à¸‡à¸´à¸™ (Refund) | à¸à¸£à¸°à¸šà¸§à¸™à¸à¸²à¸£ Refund | stripe-refund EF + à¸„à¸·à¸™à¸ˆà¸£à¸´à¸‡ 172 THB | à¸„à¸·à¸™à¹€à¸‡à¸´à¸™à¸ˆà¸£à¸´à¸‡ 172 THB à¸ªà¸³à¹€à¸£à¹‡à¸ˆ | VERIFIED | M1 | à¹„à¸¡à¹ˆà¸¡à¸µ |
+| à¸•à¸´à¸”à¸•à¸²à¸¡à¸ªà¸–à¸²à¸™à¸°à¸ªà¸´à¸™à¸„à¹‰à¸² | à¸”à¸¹ Progress + ETA | State Machine à¸­à¸­à¹€à¸”à¸­à¸£à¹Œ + Trigger | Migr 025; UI à¹à¸ªà¸”à¸‡à¸œà¸¥à¸•à¸²à¸¡ Real-time | PARTIAL | M1/P1 | à¸•à¹‰à¸­à¸‡à¸—à¸”à¸ªà¸­à¸š Route ETA à¸ˆà¸£à¸´à¸‡ |
+| à¸›à¸£à¸°à¸§à¸±à¸•à¸´à¸­à¸­à¹€à¸”à¸­à¸£à¹Œà¸¥à¸¹à¸à¸„à¹‰à¸² | à¸¥à¸¹à¸à¸„à¹‰à¸²à¸”à¸¹à¸£à¸²à¸¢à¸à¸²à¸£à¸—à¸µà¹ˆà¹€à¸„à¸¢à¸ªà¸±à¹ˆà¸‡ | OrdersPage + orders table | OrdersPage.tsx à¸—à¸³à¸‡à¸²à¸™; UI à¹à¸ªà¸”à¸‡à¸œà¸¥ | VERIFIED | M1 | à¹„à¸¡à¹ˆà¸¡à¸µ |
 
-## 5. SAME-DAY vs PRE-ORDER MATRIX
+---
 
-| Capability | SAME_DAY | PRE_ORDER | SAME_DAY evidence | PRE_ORDER evidence |
+## 5. à¹€à¸›à¸£à¸µà¸¢à¸šà¹€à¸—à¸µà¸¢à¸š Same-Day vs Pre-Order (SAME-DAY vs PRE-ORDER MATRIX)
+
+| à¸„à¸§à¸²à¸¡à¸ªà¸²à¸¡à¸²à¸£à¸– | SAME_DAY | PRE_ORDER | à¸«à¸¥à¸±à¸à¸à¸²à¸™ Same-Day | à¸«à¸¥à¸±à¸à¸à¸²à¸™ Pre-Order |
 |------------|----------|-----------|-------------------|--------------------|
-| Create order | OK | OK | Canonical RPC (Migr 025) | create_pre_order_with_items (Migr 025) |
-| Address | optional | mandatory (trigger) | Migr 035 trigger | Migr 035 validate trigger RAISE |
-| Payment | OK | OK (skeleton) | Stripe webhook verified | createPaymentIntent both modes (no prod pre-order) |
-| Confirm | OK | OK | webhook/admin confirm | webhook exists (no prod pre-order confirm) |
-| Inventory deduct | OK | OK | Migr 026 aggregated | same path (no prod pre-order test) |
-| Capacity | OK | OK | FOR UPDATE lock | reservation (no prod restore) |
-| Kitchen batch | OK | OK | Migr 027 both modes | create_production_batch(NULL=both) |
-| Delivery round | OK | WARN | round assignment | no prod pre-order round trace |
-| Driver assignment | OK | OK | assign_driver RPC | assign_driver RPC (no prod pre-order) |
-| Dispatch | OK | WARN | dispatch flow (DB drivers) | no prod pre-order dispatch |
-| Delivered | OK | WARN | delivered transition | no prod pre-order delivered |
-| Cancel | OK | OK | cancel_order RPC | cancel_order RPC (no prod pre-order) |
-| Refund | OK | OK | real 172 THB refund | refund path (no prod pre-order refund) |
-| Notifications | OK/WARN | WARN | event emitter only | no push/email/SMS system |
+| à¸ªà¸£à¹‰à¸²à¸‡à¸­à¸­à¹€à¸”à¸­à¸£à¹Œ | OK | OK | Canonical RPC (Migr 025) | create_pre_order_with_items (Migr 025) |
+| à¸—à¸µà¹ˆà¸­à¸¢à¸¹à¹ˆà¸ˆà¸±à¸”à¸ªà¹ˆà¸‡ | à¹„à¸¡à¹ˆà¸šà¸±à¸‡à¸„à¸±à¸š | à¸šà¸±à¸‡à¸„à¸±à¸š (Trigger) | Migr 035 Trigger | Migr 035 validate_trigger RAISE |
+| à¸à¸²à¸£à¸Šà¸³à¸£à¸° | OK | OK (Skeleton) | Stripe Webhook à¸¢à¸·à¸™à¸¢à¸±à¸™à¹à¸¥à¹‰à¸§ | createPaymentIntent à¸—à¸±à¹‰à¸‡à¹‚à¸«à¸¡à¸” |
+| à¸«à¸±à¸à¸ªà¸•à¹‡à¸­à¸ Inventory | OK | OK | Migr 026 Aggregated | à¸—à¸²à¸‡à¹€à¸”à¸µà¸¢à¸§à¸à¸±à¸™ |
+| Capacity | OK | OK | FOR UPDATE Lock | à¸¢à¸±à¸‡à¹„à¸¡à¹ˆà¹„à¸”à¹‰à¸—à¸”à¸ªà¸­à¸š Restore |
+| à¸«à¹‰à¸­à¸‡à¸„à¸£à¸±à¸§ Batch | OK | OK | Migr 027 à¸£à¸­à¸‡à¸£à¸±à¸šà¸—à¸±à¹‰à¸‡à¸ªà¸­à¸‡ Mode | create_production_batch(NULL=Both) |
+| Delivery Round | OK | warnings | Round Assignment | à¸¢à¸±à¸‡à¹„à¸¡à¹ˆà¸¡à¸µ Trace à¸ªà¸”à¸‚à¸­à¸‡ Pre-Order Round |
+| à¸¢à¸à¹€à¸¥à¸´à¸ | OK | OK | cancel_order RPC | cancel_order RPC |
+| à¸„à¸·à¸™à¹€à¸‡à¸´à¸™ | OK | OK | à¸„à¸·à¸™à¹€à¸‡à¸´à¸™à¸ˆà¸£à¸´à¸‡ 172 THB | Path Refund à¸¡à¸µà¸­à¸¢à¸¹à¹ˆ |
+| Notification | OK/warnings | warnings | Event Emitter à¹€à¸—à¹ˆà¸²à¸™à¸±à¹‰à¸™ | à¹„à¸¡à¹ˆà¸¡à¸µ Push/Email/LINE à¹€à¸¥à¸¢ |
 
-**Finding:** Both modes SHARE the same canonical order spine. There is NO hidden legacy `pre_orders`
-second source of truth (legacy rows migrated via Migr 024/025). However, the PRE_ORDER full pipeline
-still lacks production runtime evidence at every step — that is the M1 blocker.
+**à¸‚à¹‰à¸­à¸„à¹‰à¸™à¸žà¸šà¸ªà¸³à¸„à¸±à¸:** à¸—à¸±à¹‰à¸‡à¸ªà¸­à¸‡à¹‚à¸«à¸¡à¸”à¹ƒà¸Šà¹‰à¹‚à¸„à¸£à¸‡à¸ªà¸£à¹‰à¸²à¸‡à¸­à¸­à¸£à¹Œà¹€à¸”à¸­à¸£à¹Œà¸«à¸¥à¸±à¸ (Canonical Order Spine) à¹€à¸”à¸µà¸¢à¸§à¸à¸±à¸™ à¸¥à¸¹à¹ˆà¸§à¸´à¸™ Pre-Order à¸¢à¸±à¸‡à¸‚à¸²à¸”à¸«à¸¥à¸±à¸à¸à¸²à¸™à¸à¸²à¸£à¸—à¸³à¸‡à¸²à¸™à¸ˆà¸£à¸´à¸‡à¸šà¸™ Production à¹ƒà¸™à¸—à¸¸à¸à¸£à¸°à¸”à¸±à¸š -- à¸™à¸µà¹ˆà¸„à¸·à¸­ Blocker à¸‚à¸­à¸‡ M1
 
 ---
 
-## 6. ORDER SPINE
+## 6. à¹‚à¸„à¸£à¸‡à¸ªà¸£à¹‰à¸²à¸‡à¸­à¸­à¸£à¹Œà¹€à¸”à¸­à¸£à¹Œà¸«à¸¥à¸±à¸ (ORDER SPINE)
 
 ```text
-orders          OK  order_mode(SAME_DAY/PRE_ORDER), scheduled_date, delivery_round_id, order_status, payment_status, delivery_status
-order_items      OK  product_id, quantity, unit_price, customizations
-inventory        OK  current_stock, min_stock, status, category
-capacity         OK  delivery_rounds.max_capacity / current_count
+orders               OK à¸¡à¸µ order_mode(SAME_DAY/PRE_ORDER), scheduled_date, delivery_round_id, order_status, payment_status, delivery_status
+order_items          OK à¸¡à¸µ product_id, quantity, unit_price, customizations
+inventory            OK à¸¡à¸µ current_stock, min_stock, status, category
+capacity             OK à¸¡à¸µ delivery_rounds.max_capacity / current_count
 ```
 
-Checks:
-- SAME_DAY and PRE_ORDER share the SAME canonical `orders` table — **YES** (Migr 023 unified domain; Migr 025 canonical RPC).
-- No hidden legacy `pre_orders` second source — **CONFIRMED** (`pre_orders` is archive-only, rows have `migrated_order_id` -> `orders`; new orders go through canonical RPC).
+à¸à¸²à¸£à¸•à¸£à¸§à¸ˆà¸ªà¸­à¸š:
+- SAME_DAY à¹à¸¥à¸° PRE_ORDER à¹ƒà¸Šà¹‰à¸•à¸²à¸£à¸²à¸‡ `orders` à¹€à¸”à¸µà¸¢à¸§à¸à¸±à¸™ -- à¹ƒà¸Šà¹ˆ (Migr 023 à¸£à¸§à¸¡à¹‚à¸”à¹€à¸¡à¸™; Migr 025 à¹ƒà¸«à¹‰ Canonical RPC)
+- à¹„à¸¡à¹ˆà¸¡à¸µ Legacy `pre_orders` à¹€à¸›à¹‡à¸™à¸—à¸µà¹ˆà¹€à¸à¹‡à¸šà¸‚à¹‰à¸­à¸¡à¸¹à¸¥à¸—à¸µà¹ˆà¸ªà¸­à¸‡ -- à¸¢à¸·à¸™à¸¢à¸±à¸™à¹à¸¥à¹‰à¸§ (`pre_orders` à¹€à¸›à¹‡à¸™ Archive Table à¹€à¸—à¹ˆà¸²à¸™à¸±à¹‰à¸™)
 
-Verdict: **ORDER SPINE = VERIFIED (schema + code) / PARTIAL (runtime pre-order proof)**.
----
-
-## 7. INVENTORY
-
-| Required proof | State | Evidence | Why PARTIAL |
-|----------------|-------|----------|-------------|
-| Recipe -> Ingredient -> Inventory | OK BOM structure | Migr 019 (recipes, inventory) | -- |
-| Order confirm -> deduct | OK aggregated | Migr 026 deduct_inventory_for_order() | needs prod test |
-| Cancel -> restore | OK | Migr 025 cancel_order restore | needs prod test |
-| Insufficient stock -> reject atomically | OK ERR_INSUFFICIENT_INGREDIENT | Migr 026 RAISE (not clamp) | needs prod test |
-| Concurrency | OK FOR UPDATE lock | Migr 026 | -- |
-| Audit trail | OK inventory_transactions | Migr 026 | -- |
-
-**Verdict: INVENTORY = PARTIAL.** Code/DB/RPC are complete and correct (aggregated dedup + ERR guard +
-FOR UPDATE + audit), but there is NO production runtime evidence of the deduct/restore/insufficient cycle
-this session -> NOT VERIFIED.
+à¸ªà¸£à¸¸à¸›: ORDER SPINE = VERIFIED (à¸”à¹‰à¸²à¸™ Schema + Code) / PARTIAL (à¸•à¹‰à¸­à¸‡à¸à¸²à¸£à¸«à¸¥à¸±à¸à¸à¸²à¸™ Runtime à¸‚à¸­à¸‡ Pre-Order)
 
 ---
 
-## 8. CAPACITY
+## 7. à¸£à¸°à¸šà¸šà¸ˆà¸±à¸”à¸à¸²à¸£à¸„à¸¥à¸±à¸‡à¸§à¸±à¸•à¸–à¸¸à¸”à¸´à¸š (INVENTORY)
 
-| Required proof | State | Evidence | Why PARTIAL |
-|----------------|-------|----------|-------------|
-| Date + round + capacity limit | OK | delivery_rounds (max/current/cutoff/scheduled_date) | -- |
-| Reserve at order | OK | create: FOR UPDATE + increment current_count | -- |
-| Confirm | OK | order confirmed flow | -- |
-| Cancel -> restore | OK | Migr 025 trigger release_round_capacity_on_terminal + resetRoundCapacity RPC | needs prod test |
-| Full capacity cannot oversell | OK | FOR UPDATE block overbooking | -- |
-| Concurrency | OK | row-level lock | -- |
-| PRE_ORDER + scheduled_date + round | WARN | canonical enables; no prod future-date round | needs prod pre-order round test |
+| à¸ªà¸´à¹ˆà¸‡à¸—à¸µà¹ˆà¸•à¹‰à¸­à¸‡à¸žà¸´à¸ªà¸¹à¸ˆà¸™à¹Œ | à¸ªà¸–à¸²à¸™à¸°à¸›à¸±à¸ˆà¸ˆà¸¸à¸šà¸±à¸™ | à¸«à¸¥à¸±à¸à¸à¸²à¸™à¸—à¸µà¹ˆà¸žà¸š | à¹€à¸«à¸•à¸¸à¸œà¸¥à¸—à¸µà¹ˆà¸¢à¸±à¸‡à¹€à¸›à¹‡à¸™ PARTIAL |
+|------------------|--------------|---------------|--------------------------|
+| Recipe -> Ingredient -> Inventory | OK à¹‚à¸„à¸£à¸‡à¸ªà¸£à¹‰à¸²à¸‡ BOM à¸–à¸¹à¸à¸•à¹‰à¸­à¸‡ | Migr 019 | -- |
+| à¸¢à¸·à¸™à¸¢à¸±à¸™à¸­à¸­à¹€à¸”à¸­à¸£à¹Œà¹à¸¥à¹‰à¸§à¸«à¸±à¸à¸ªà¸•à¹‡à¸­à¸ | OK Aggregated Deduct | Migr 026 deduct_inventory_for_order() | à¸¢à¸±à¸‡à¸•à¹‰à¸­à¸‡à¸à¸²à¸£à¸—à¸”à¸ªà¸­à¸šà¸šà¸™ Production |
+| à¸¢à¸à¹€à¸¥à¸´à¸à¸­à¸­à¹€à¸”à¸­à¸£à¹Œà¹à¸¥à¹‰à¸§à¸„à¸·à¸™à¸ªà¸•à¹‡à¸­à¸ | OK Restore à¸•à¸²à¸¡ Logic | Migr 025 cancel_order restore | à¸¢à¸±à¸‡à¸•à¹‰à¸­à¸‡à¸à¸²à¸£à¸—à¸”à¸ªà¸­à¸šà¸šà¸™ Production |
+| Stock à¹„à¸¡à¹ˆà¸žà¸­ Reject à¸­à¸¢à¹ˆà¸²à¸‡ Atomic | OK à¹ƒà¸Šà¹‰ ERR_INSUFFICIENT_INGREDIENT | Migr 026 RAISE à¹à¸—à¸™à¸à¸²à¸£ Clamp à¹€à¸›à¹‡à¸™à¸¨à¸¹à¸™à¸¢à¹Œ | à¸¢à¸±à¸‡à¸•à¹‰à¸­à¸‡à¸à¸²à¸£à¸—à¸”à¸ªà¸­à¸šà¸šà¸™ Production |
+| à¸›à¹‰à¸­à¸‡à¸à¸±à¸™ Concurrent Race Condition | OK FOR UPDATE Lock | Migr 026 | -- |
+| à¸šà¸±à¸™à¸—à¸¶à¸ Audit Trail | OK .inventory_transactions | Migr 026 | -- |
 
-**Verdict: CAPACITY = PARTIAL** (atomic locking + schema verified; cancel restoration + pre-order round connection need prod test).
-
----
-
-## 9. KITCHEN COMMAND CENTER
-
-| Check | State | Evidence | Why PARTIAL |
-|--------|-------|----------|-------------|
-| AdminKitchen page | OK functional | src/pages/admin/AdminKitchen.tsx | -- |
-| Production batches | OK | production_batches table (Migr 019/027) | -- |
-| Batch status | OK | status column | -- |
-| scheduled_date + delivery_round | OK | columns exist | -- |
-| Order aggregation (both modes) | OK | Migr 027 + create_production_batch_items | needs prod batch trace |
-| Recipe/BOM list | OK | list_recipes_with_inventory() RPC (Migr 035) | -- |
-
-**Question:** Can Kitchen actually operate FROM confirmed orders?
-**Evidence-based answer:** AdminKitchen is functional and the batch RPC supports both modes, BUT there is no
-production proof that a kitchen batch is keyed off confirmed+paid orders in real time. -> **PARTIAL**
-(Prove: confirmed order -> batch created -> batch status moves -> kitchen fulfills, with 1 real order.)
+**à¸ªà¸£à¸¸à¸›: INVENTORY = PARTIAL** â€” Code/DB/RPC à¸ªà¸¡à¸šà¸¹à¸£à¸“à¹Œà¸–à¸¹à¸à¸•à¹‰à¸­à¸‡ à¹à¸•à¹ˆà¹„à¸¡à¹ˆà¸¡à¸µà¸«à¸¥à¸±à¸à¸à¸²à¸™à¸à¸²à¸£à¸—à¸³à¸‡à¸²à¸™à¸ˆà¸£à¸´à¸‡à¸‚à¸­à¸‡ Deduct/Restore/Insufficient cycle à¸£à¸°à¸«à¸§à¹ˆà¸²à¸‡ session à¸™à¸µà¹‰ à¸ˆà¸¶à¸‡à¸¢à¸±à¸‡à¸™à¸±à¸šà¸§à¹ˆà¸²à¹€à¸›à¹‡à¸™ VERIFIED à¹„à¸¡à¹ˆà¹„à¸”à¹‰
 
 ---
 
-## 10. DELIVERY / BITE DRIVE
+## 8. à¸£à¸°à¸šà¸šà¸ˆà¸±à¸”à¸à¸²à¸£à¸à¸³à¸¥à¸±à¸‡à¸à¸²à¸£à¸œà¸¥à¸´à¸• (CAPACITY)
 
-| Check | State | Evidence | Gap |
-|--------|-------|----------|-----|
-| drivers table | OK | drivers (driver_name, phone, status, active_assignments) | -- |
-| Driver status mgmt | WARN | status column; UI partial | status update UI/flow prod |
-| Assignment | OK | assign_driver RPC (Migr 020) SEC DEFINER | prod assignment test |
-| Order dispatch | OK | dispatch flow with DB drivers (04d19c7) | prod dispatch |
-| Delivery status | OK | delivery_status transitions | -- |
-| Self delivery <= 5 km | OK | compute_delivery_fee 5km gate (Migr 035) | prod test |
-| External rider > 5 km | BLOCKED | Grab/LINEMAN/Foodpanda adapters exist; NO API keys | **OWNER-ONLY** — keys from call-center |
-| Delivery fee + distance | OK | compute_delivery_fee RPC distance-based | REST probe |
-| Round + ETA | WARN | round assignment + algorithmic route ETA | prod ETA verification |
+| à¸ªà¸´à¹ˆà¸‡à¸—à¸µà¹ˆà¸•à¹‰à¸­à¸‡à¸žà¸´à¸ªà¸¹à¸ˆà¸™à¹Œ | à¸ªà¸–à¸²à¸™à¸°à¸›à¸±à¸ˆà¸ˆà¸¸à¸šà¸±à¸™ | à¸«à¸¥à¸±à¸à¸à¸²à¸™à¸—à¸µà¹ˆà¸žà¸š | à¹€à¸«à¸•à¸¸à¸œà¸¥à¸—à¸µà¹ˆà¸¢à¸±à¸‡à¹€à¸›à¹‡à¸™ PARTIAL |
+|------------------|--------------|---------------|--------------------------|
+| Date + Round + à¸‚à¸µà¸”à¸ˆà¸³à¸à¸±à¸” Capacity | OK | delivery_rounds (max/current/cutoff/scheduled_date) | -- |
+| à¸ˆà¸­à¸‡ Capacity à¸•à¸­à¸™à¸ªà¸£à¹‰à¸²à¸‡à¸­à¸­à¹€à¸”à¸­à¸£à¹Œ | OK | create: FOR UPDATE + à¹€à¸žà¸´à¹ˆà¸¡ current_count | -- |
+| à¸¢à¸·à¸™à¸¢à¸±à¸™ | OK | Flow à¸à¸²à¸£à¸¢à¸·à¸™à¸¢à¸±à¸™à¸­à¸­à¹€à¸”à¸­à¸£à¹Œ | -- |
+| à¸¢à¸à¹€à¸¥à¸´à¸à¸­à¸­à¹€à¸”à¸­à¸£à¹Œà¹à¸¥à¹‰à¸§à¸„à¸·à¸™ Capacity | OK | Migr 025 trigger release_round_capacity_on_terminal + resetRoundCapacity RPC | à¸¢à¸±à¸‡à¸•à¹‰à¸­à¸‡à¸à¸²à¸£à¸—à¸”à¸ªà¸­à¸šà¸šà¸™ Production |
+| Full Capacity à¸›à¹‰à¸­à¸‡à¸à¸±à¸™ Overbooking | OK | FOR Update Block overbooking | -- |
+| à¸›à¹‰à¸­à¸‡à¸à¸±à¸™ Concurrent Access | OK | Row-Level Lock | -- |
+| Pre-Order + scheduled_date + delivery_round | warnings | Canonical Path à¹€à¸›à¸´à¸”à¹ƒà¸Šà¹‰à¸‡à¸²à¸™; à¸¢à¸±à¸‡à¹„à¸¡à¹ˆà¸¡à¸µ Future-Date Round à¸ªà¸” | à¸•à¹‰à¸­à¸‡à¸—à¸”à¸ªà¸­à¸š Pre-Order Round à¸šà¸™ Production |
 
-**Verdict:**
-- Delivery Management (in-house self-delivery) = **VERIFIED** (DB-backed, no MOCK_DRIVERS, 04d19c7 confirmed).
-- External rider integration = **OWNER-ONLY / BLOCKED** (adapters exist but no API keys; not a working real-world flow).
+**à¸ªà¸£à¸¸à¸›: CAPACITY = PARTIAL** (Atomic Locking + Schema à¸¢à¸·à¸™à¸¢à¸±à¸™à¹à¸¥à¹‰à¸§; Cancel Restoration + à¸à¸²à¸£à¸•à¹ˆà¸­à¹€à¸Šà¸·à¹ˆà¸­à¸¡ Pre-Order Round à¸¢à¸±à¸‡à¸•à¹‰à¸­à¸‡à¸à¸²à¸£à¸—à¸”à¸ªà¸­à¸šà¸šà¸™ Production)
+
 ---
 
-## 11. CUSTOMER -> ORDER INTAKE CHANNELS
+## 9. à¸¨à¸¹à¸™à¸¢à¹Œà¸„à¸§à¸šà¸„à¸¸à¸¡à¸«à¹‰à¸­à¸‡à¸„à¸£à¸±à¸§ (KITCHEN COMMAND CENTER)
 
-Canonical rule (original objective):
+| à¸ªà¸´à¹ˆà¸‡à¸—à¸µà¹ˆà¸•à¹‰à¸­à¸‡à¸•à¸£à¸§à¸ˆ | à¸ªà¸–à¸²à¸™à¸°à¸›à¸±à¸ˆà¸ˆà¸¸à¸šà¸±à¸™ | à¸«à¸¥à¸±à¸à¸à¸²à¸™à¸—à¸µà¹ˆà¸žà¸š | à¹€à¸«à¸•à¸¸à¸œà¸¥à¸—à¸µà¹ˆà¸¢à¸±à¸‡à¹€à¸›à¹‡à¸™ PARTIAL |
+|-----------------|--------------|---------------|--------------------------|
+| à¸«à¸™à¹‰à¸² AdminKitchen | OK à¸—à¸³à¸‡à¸²à¸™à¹„à¸”à¹‰à¸ªà¸¡à¸šà¸¹à¸£à¸“à¹Œ | src/pages/admin/AdminKitchen.tsx | -- |
+| Production Batches | OK | à¸•à¸²à¸£à¸²à¸‡ production_batches (Migr 019/027) | -- |
+| Batch status | OK | à¸¡à¸µ status column | -- |
+| scheduled_date + delivery_round | OK | à¸¡à¸µà¸„à¸­à¸¥à¸±à¸¡à¸™à¹Œà¸£à¸­à¸‡à¸£à¸±à¸š | -- |
+| à¸£à¸§à¸¡ Order à¸—à¸±à¹‰à¸‡à¹‚à¸«à¸¡à¸” (Same-Day+Pre-Order) | OK | Migr 027 + create_production_batch_items | à¸•à¹‰à¸­à¸‡à¸à¸²à¸£ Trace Batch à¸ªà¸”à¸šà¸™ Production |
+| à¸£à¸²à¸¢à¸à¸²à¸£ Recipe/BOM | OK | list_recipes_with_inventory() RPC (Migr 035) | -- |
+
+**à¸„à¸³à¸–à¸²à¸¡à¸ªà¸³à¸„à¸±à¸:** Kitchen à¸ªà¸²à¸¡à¸²à¸£à¸–à¸—à¸³à¸‡à¸²à¸™ Operationally à¸ˆà¸²à¸ Confirmed Orders à¹„à¸”à¹‰à¸ˆà¸£à¸´à¸‡à¸«à¸£à¸·à¸­à¹„à¸¡à¹ˆ?
+**à¸„à¸³à¸•à¸­à¸šà¸•à¸²à¸¡ Evidence:** AdminKitchen à¸¡à¸µà¸«à¸™à¹‰à¸² UI à¸—à¸µà¹ˆà¹ƒà¸Šà¹‰à¸‡à¸²à¸™à¹„à¸”à¹‰ à¹à¸¥à¸° Batch RPC à¸£à¸­à¸‡à¸£à¸±à¸šà¸—à¸±à¹‰à¸‡à¸ªà¸­à¸‡ Mode à¹à¸•à¹ˆà¸¢à¸±à¸‡à¸‚à¸²à¸”à¸à¸²à¸£à¸žà¸´à¸ªà¸¹à¸ˆà¸™à¹Œà¸šà¸™ Production à¸§à¹ˆà¸² Batch à¹€à¸à¸´à¸”à¸ˆà¸²à¸ Order à¸—à¸µà¹ˆ Confirm+Paid à¸ˆà¸£à¸´à¸‡à¹† à¸”à¸±à¸‡à¸™à¸±à¹‰à¸™à¸ˆà¸¶à¸‡à¹€à¸›à¹‡à¸™ **PARTIAL**
+
+---
+
+## 10. à¸£à¸°à¸šà¸šà¸ˆà¸±à¸”à¸ªà¹ˆà¸‡ / Bite Drive (DELIVERY / BITE DRIVE)
+
+| à¸ªà¸´à¹ˆà¸‡à¸—à¸µà¹ˆà¸•à¹‰à¸­à¸‡à¸•à¸£à¸§à¸ˆ | à¸ªà¸–à¸²à¸™à¸°à¸›à¸±à¸ˆà¸ˆà¸¸à¸šà¸±à¸™ | à¸«à¸¥à¸±à¸à¸à¸²à¸™à¸—à¸µà¹ˆà¸žà¸š | à¸Šà¹ˆà¸­à¸‡à¸§à¹ˆà¸²à¸‡ |
+|-----------------|--------------|---------------|----------|
+| à¸•à¸²à¸£à¸²à¸‡ Drivers | OK | drivers (driver_name, phone_number, status, active_assignments) | -- |
+| à¸ˆà¸±à¸”à¸à¸²à¸£à¸ªà¸–à¸²à¸™à¸° Driver | warnings | à¸¡à¸µ status column; UI à¸¢à¸±à¸‡à¹„à¸¡à¹ˆà¸ªà¸¡à¸šà¸¹à¸£à¸“à¹Œ | Status update UI/Flow à¸•à¹‰à¸­à¸‡à¸à¸²à¸£ Test à¸ªà¸” |
+| Assign Order | OK | assign_driver RPC (Migr 020) SEC DEFINER | à¸•à¹‰à¸­à¸‡à¸—à¸”à¸ªà¸­à¸š Assignment à¸šà¸™ Production |
+| Dispatch Order | OK | à¸¥à¸¹à¹ˆà¸§à¸´à¸™ Dispatch (DB Drivers à¸ˆà¸²à¸ commit 04d19c7) | à¸•à¹‰à¸­à¸‡à¸—à¸”à¸ªà¸­à¸š Dispatch à¸ªà¸” |
+| à¸ªà¸–à¸²à¸™à¸°à¸ˆà¸±à¸”à¸ªà¹ˆà¸‡ | OK | Status transitions à¸‚à¸­à¸‡ delivery_status | -- |
+| à¸ªà¹ˆà¸‡à¹€à¸­à¸‡à¹„à¸¡à¹ˆà¹€à¸à¸´à¸™ 5 à¸à¸¡. | OK | compute_delivery_fee Gate 5km (Migr 035) | à¸•à¹‰à¸­à¸‡à¸—à¸”à¸ªà¸­à¸š Production |
+| Rider External à¹€à¸à¸´à¸™ 5 à¸à¸¡. | BLOCKED | Adapter Grab/LINEMAN/Foodpanda à¸¡à¸µà¸­à¸¢à¸¹à¹ˆ; à¹„à¸¡à¹ˆà¸¡à¸µ API Keys | OWNER-ONLY â€” à¸•à¹‰à¸­à¸‡à¸‚à¸­ Key à¸ˆà¸²à¸ Call-Center |
+| à¸„à¹ˆà¸²à¸ˆà¸±à¸”à¸ªà¹ˆà¸‡à¸•à¸²à¸¡à¸£à¸°à¸¢à¸°à¸—à¸²à¸‡ | OK | compute_delivery_fee RPC à¸£à¸°à¸¢à¸°à¸—à¸²à¸‡ | REST Probe |
+| Round + ETA | warnings | Round assignment + Algorithmic Route ETA | à¸•à¹‰à¸­à¸‡à¸—à¸”à¸ªà¸­à¸š ETA à¸ˆà¸£à¸´à¸‡ |
+
+**à¸ªà¸£à¸¸à¸›:**
+- Delivery Management (à¸ªà¹ˆà¸‡à¹€à¸­à¸‡à¸ à¸²à¸¢à¹ƒà¸™à¸£à¸°à¸¢à¸° <=5km) = **VERIFIED** (DB-Backed, à¹„à¸¡à¹ˆà¸¡à¸µ MOCK_DRIVERS, commit 04d19c7 à¸¢à¸·à¸™à¸¢à¸±à¸™à¹à¸¥à¹‰à¸§)
+- External Rider Integration = **OWNER-ONLY / BLOCKED** (à¸¡à¸µ Adapter Code à¹à¸•à¹ˆà¹„à¸¡à¹ˆà¸¡à¸µ API Keys â†’ à¸¢à¸±à¸‡à¹„à¸¡à¹ˆà¹ƒà¸Šà¹ˆà¸£à¸°à¸šà¸šà¸—à¸³à¸‡à¸²à¸™à¸ˆà¸£à¸´à¸‡)
+
+---
+
+## 11. à¸Šà¹ˆà¸­à¸‡à¸—à¸²à¸‡à¸à¸²à¸£à¸£à¸±à¸šà¸­à¸­à¹€à¸”à¸­à¸£à¹Œà¸ˆà¸²à¸à¸¥à¸¹à¸à¸„à¹‰à¸² (CUSTOMER -> ORDER INTAKE CHANNELS)
+
+à¸à¸Žà¸«à¸¥à¸±à¸: all channels | canonical order_id | Supabase Order Hub
+
+| à¸Šà¹ˆà¸­à¸‡à¸—à¸²à¸‡ | à¸ªà¸–à¸²à¸™à¸°à¸›à¸±à¸ˆà¸ˆà¸¸à¸šà¸±à¸™ | à¸«à¸¥à¸±à¸à¸à¸²à¸™à¸—à¸µà¹ˆà¸žà¸š | M1/P2/Deferred |
+|---------|--------------|---------------|----------------|
+| PWA (à¹€à¸§à¹‡à¸šà¹€à¸šà¸£à¸²à¸§à¹Œà¹€à¸‹à¸­à¸£à¹Œ) | OK IMPLEMENTED à¹à¸¥à¹‰à¸§ | Canonical order RPC -> à¸•à¸²à¸£à¸²à¸‡ orders | M1 |
+| Direct (Walk-in / à¸ªà¸±à¹ˆà¸‡à¸«à¸™à¹‰à¸²à¸£à¹‰à¸²à¸™) | warnings PARTIAL | à¸•à¹‰à¸­à¸‡à¸à¸²à¸£à¸«à¸¥à¸±à¸à¸à¸²à¸™ Admin à¸ªà¸£à¹‰à¸²à¸‡ Order à¹„à¸”à¹‰ | M1/P1 |
+| Facebook | MISSING PLANNED / OWNER-ONLY | à¸¢à¸±à¸‡à¹„à¸¡à¹ˆà¸¡à¸µà¸£à¸°à¸šà¸šà¹€à¸Šà¸·à¹ˆà¸­à¸¡à¸•à¹ˆà¸­ | P2/DEFERRED |
+| Messenger | MISSING PLANNED / OWNER-ONLY | à¸¢à¸±à¸‡à¹„à¸¡à¹ˆà¸¡à¸µà¸£à¸°à¸šà¸šà¹€à¸Šà¸·à¹ˆà¸­à¸¡à¸•à¹ˆà¸­ | P2/DEFERRED |
+| LINE | MISSING OWNER-ONLY | à¸¢à¸±à¸‡à¹„à¸¡à¹ˆà¸¡à¸µ LINE Integration | P2/DEFERRED |
+| Grab / Marketplace à¸­à¸·à¹ˆà¸™à¹† | MISSING OWNER-ONLY | External; à¹„à¸¡à¹ˆà¸­à¸¢à¸¹à¹ˆà¹ƒà¸™à¸‚à¸­à¸šà¹€à¸‚à¸• PWA Hub | P2/DEFERRED |
+
+à¸ªà¸³à¸„à¸±à¸: IMPLEMENTED (à¸¡à¸µà¹€à¸‰à¸žà¸²à¸° PWA), PLANNED (à¸­à¸­à¸à¹à¸šà¸šà¹„à¸§à¹‰à¹à¸•à¹ˆà¸¢à¸±à¸‡à¹„à¸¡à¹ˆà¹„à¸”à¹‰à¹€à¸‚à¸µà¸¢à¸™à¹‚à¸„à¹‰à¸”), DEFERRED (à¸•à¸±à¹‰à¸‡à¹ƒà¸ˆà¹€à¸¥à¸·à¹ˆà¸­à¸™à¸­à¸­à¸à¹„à¸›)
+à¸«à¹‰à¸²à¸¡à¹„à¸¡à¹ˆà¸™à¸±à¸š Planned Channel à¸§à¹ˆà¸²à¹€à¸›à¹‡à¸™ Implemented. à¸›à¸±à¸ˆà¸ˆà¸¸à¸šà¸±à¸™ PWA à¹€à¸›à¹‡à¸™à¸Šà¹ˆà¸­à¸‡à¸—à¸²à¸‡à¹€à¸”à¸µà¸¢à¸§à¸—à¸µà¹ˆà¸—à¸³à¸‡à¸²à¸™à¹„à¸”à¹‰à¸ˆà¸£à¸´à¸‡
+
+---
+
+## 12. Make.com Automation
+
+| à¸„à¸³à¸–à¸²à¸¡ | à¸„à¸³à¸•à¸­à¸šà¸•à¸²à¸¡ Evidence à¸ˆà¸£à¸´à¸‡ |
+|-------|------------------------|
+| Make.com à¹€à¸›à¹‡à¸™ Worker à¸—à¸³à¸‡à¸²à¸™à¸ˆà¸£à¸´à¸‡à¸«à¸£à¸·à¸­à¸¢à¸±à¸‡? | **à¹„à¸¡à¹ˆà¸žà¸šà¸«à¸¥à¸±à¸à¸à¸²à¸™ Live Make.com Integration à¹€à¸¥à¸¢** â€” à¹€à¸›à¹‡à¸™à¹€à¸žà¸µà¸¢à¸‡ Architecture Decision à¹‚à¸”à¸¢à¹„à¸¡à¹ˆà¸¡à¸µ Runtime Proof |
+| Facebook / Messenger Intake? | à¹„à¸¡à¹ˆà¸¡à¸µ |
+| Notifications? | à¹„à¸¡à¹ˆà¸¡à¸µ Evidence à¸‚à¸­à¸‡ Make.com-based Notification |
+
+**à¸ªà¸£à¸¸à¸›:** Make.com = PARTIAL / OWNER-ONLY/BLOCKED (FB Intake à¸•à¹‰à¸­à¸‡à¹ƒà¸Šà¹‰ Config à¸ à¸²à¸¢à¸™à¸­à¸) / DEFERRED à¸«à¹‰à¸²à¸¡à¸™à¸±à¸šà¸§à¹ˆà¸²à¹€à¸›à¹‡à¸™ Worker à¸—à¸µà¹ˆà¸—à¸³à¸‡à¸²à¸™à¸ˆà¸£à¸´à¸‡ à¹€à¸žà¸µà¸¢à¸‡à¹€à¸žà¸£à¸²à¸°à¸¡à¸µ Architecture Decision à¹„à¸§à¹‰
+
+---
+
+## 13. à¸£à¸°à¸šà¸š AI (AI SYSTEM)
+
+| à¸ªà¸´à¹ˆà¸‡à¸—à¸µà¹ˆà¸•à¹‰à¸­à¸‡à¸•à¸£à¸§à¸ˆà¸ªà¸­à¸š | à¸ªà¸–à¸²à¸™à¸°à¸›à¸±à¸ˆà¸ˆà¸¸à¸šà¸±à¸™ | à¸«à¸¥à¸±à¸à¸à¸²à¸™à¸—à¸µà¹ˆà¸žà¸š |
+|--------------------|--------------|---------------|
+| AI = Intelligence/Extraction/Assistance | OK | ai-proxy EF + Guardrails + Memory |
+| AI à¹„à¸¡à¹ˆà¸¡à¸µà¸­à¸³à¸™à¸²à¸ˆà¹€à¸›à¸¥à¸µà¹ˆà¸¢à¸™à¸£à¸²à¸„à¸² | OK | AI à¸­à¹ˆà¸²à¸™à¸­à¸¢à¹ˆà¸²à¸‡à¹€à¸”à¸µà¸¢à¸§; à¹„à¸¡à¹ˆà¹à¸à¹‰à¹„à¸‚à¸£à¸²à¸„à¸² |
+| AI à¹„à¸¡à¹ˆà¸¡à¸µà¸­à¸³à¸™à¸²à¸ˆà¸ˆà¸±à¸”à¸à¸²à¸£ Payment/Stock/Capacity | OK | AI à¹„à¸¡à¹ˆà¹à¸•à¸°à¸•à¹‰à¸­à¸‡à¸£à¸°à¸šà¸šà¹€à¸«à¸¥à¹ˆà¸²à¸™à¸µà¹‰ |
+| AI à¹„à¸¡à¹ˆà¸¡à¸µà¸­à¸³à¸™à¸²à¸ˆ Cancel/Refund/Delivery fee/Order state | OK | Tool à¸–à¸¹à¸ Disable (commit 716b4e9) |
+| Content Generation / Assistance | warnings | à¸¡à¸µ Hub à¹à¸•à¹ˆ Generation à¸¢à¸±à¸‡à¹„à¸¡à¹ˆà¸ªà¸¡à¸šà¸¹à¸£à¸“à¹Œ |
+| Extraction / Order Parsing | warnings | aiToolCalling dead code |
+| Proactive Intelligence | MISSING | AI-BIZ/Forecast Deferred Phase 12 |
+| Tool Calling / Permission Boundary | OK | aiToolCalling à¸–à¸¹à¸ Disable (commit 716b4e9) |
+| Provider Integration | OK | ai-proxy EF (OpenRouter) |
+
 ```text
-all channels
-    |
-    v
-canonical order_id
-    |
-    v
-Supabase Order Hub
+AI ARCHITECTURE               = VERIFIED (Guardrail + Proxy + Boundary à¸­à¸­à¸à¹à¸šà¸šà¹„à¸§à¹‰à¸–à¸¹à¸à¸•à¹‰à¸­à¸‡)
+AI IMPLEMENTATION             = PARTIAL (Chat à¸¡à¸µà¸­à¸¢à¸¹à¹ˆ; Extraction/Content à¸¢à¸±à¸‡à¹„à¸¡à¹ˆà¸ªà¸¡à¸šà¸¹à¸£à¸“à¹Œ)
+AI PRODUCTION INTEGRATION     = PARTIAL (à¹„à¸¡à¹ˆà¸¡à¸µ Production AI Conversation Evidence)
 ```
 
-| Channel | State | Evidence | M1/P2/Deferred |
-|---------|-------|----------|----------------|
-| PWA (web) | **IMPLEMENTED** | canonical order RPC -> orders table | M1 |
-| Direct (in-person / manual) | WARN PARTIAL | admin order-creation evidence needed | M1/P1 |
-| Facebook | PLANNED/OWNER-ONLY | no intake integration | P2/DEFERRED |
-| Messenger | PLANNED/OWNER-ONLY | no intake integration | P2/DEFERRED |
-| LINE | OWNER-ONLY | no LINE integration (LINE OA login = OPTIONAL) | P2/DEFERRED |
-| Grab / marketplace | OWNER-ONLY | external; outside owned PWA order hub | P2/DEFERRED |
-
-Critical differentiation:
-```text
-IMPLEMENTED (PWA only)
-PLANNED     (structured in arch, not built)
-DEFERRED    (cut per owner/product decision)
-```
-**Never count a planned channel as implemented.** PWA is the ONLY working intake channel today.
+**à¸ªà¸£à¸¸à¸›: AI = PARTIAL** â€” à¸—à¸³à¸«à¸™à¹‰à¸²à¸—à¸µà¹ˆà¸–à¸¹à¸à¸•à¹‰à¸­à¸‡à¸„à¸·à¸­à¹€à¸›à¹‡à¸™à¸œà¸¹à¹‰à¸Šà¹ˆà¸§à¸¢à¸—à¸µà¹ˆà¹„à¸¡à¹ˆà¸¡à¸µà¸­à¸³à¸™à¸²à¸ˆà¹€à¸«à¸™à¸·à¸­ P0 Money/Order Items à¸ªà¹ˆà¸§à¸™ Proactive Intelligence / Business Copilot / Forecasting = DEFERRED à¹„à¸› Phase 12
 
 ---
 
-## 12. MAKE.COM AUTOMATION
+## 14. à¸£à¸°à¸šà¸š Content Engine
 
-| Question | Evidence-based answer |
-|----------|----------------------|
-| Is Make.com a real worker? | No live Make.com integration evidence found — it is an architecture decision (back-office automation scope) with NO runtime proof |
-| Facebook / Messenger intake? | Not present |
-| Notifications? | No Make.com-based notification evidence |
-| Operational workflows / external | No live evidence |
+à¸¥à¸¹à¹ˆà¸§à¸´à¸™à¹€à¸”à¸´à¸¡: Content -> Customer Acquisition -> Order
 
-**Verdict:** **PARTIAL** (architecture set in spec) / **OWNER-ONLY / BLOCKED** (FB intake needs external config) /
-**DEFERRED** (if owner defers as post-M1/P2). Do NOT treat Make.com as a working worker simply because the architecture was decided.
+| à¸„à¸§à¸²à¸¡à¸ªà¸²à¸¡à¸²à¸£à¸– | à¸ªà¸–à¸²à¸™à¸°à¸›à¸±à¸ˆà¸ˆà¸¸à¸šà¸±à¸™ | à¸«à¸¥à¸±à¸à¸à¸²à¸™à¸—à¸µà¹ˆà¸žà¸š | M1/P2/Deferred |
+|-----------|--------------|---------------|----------------|
+| Facebook Content | MISSING | à¹„à¸¡à¹ˆà¸¡à¸µà¸£à¸°à¸šà¸šà¸ˆà¸±à¸”à¸à¸²à¸£ FB Content | P2/DEFERRED |
+| Content Generation | warnings | Skeleton à¸ªà¸³à¸«à¸£à¸±à¸š AI Content Assistance | P2/DEFERRED |
+| Content Management | warnings | Content Approval UI (Migr 022) | P1 |
+| Reusable Content | warnings | Media Library à¸£à¸­à¸‡à¸£à¸±à¸š AI Images | P2 |
+| Content -> Order Loop | MISSING | à¹„à¸¡à¹ˆà¸¡à¸µà¸£à¸°à¸šà¸šà¸§à¸±à¸”à¸œà¸¥ Closed-Loop | P2/DEFERRED |
 
----
-
-## 13. AI SYSTEM
-
-| Check | State | Evidence |
-|-------|-------|----------|
-| AI = Intelligence/Extraction/Assistance | OK | ai-proxy EF + guardrails + memory |
-| AI no authority over price | OK | AI read-only canonical; no price modify |
-| AI no authority over payment | OK | AI does not touch payment |
-| AI no authority over stock | OK | AI does not modify stock |
-| AI no authority over capacity | OK | AI does not modify capacity |
-| AI no authority over cancel/refund | OK | tool disabled (716b4e9) |
-| AI no authority over delivery fee | OK | AI cannot modify delivery fee |
-| AI no authority over order state | OK | AI cannot change order state |
-| Content generation / assistance | WARN | hub exists; generation partial |
-| Extraction / order parsing | WARN | aiToolCalling dead; extraction not built |
-| Customer assistance | WARN | chat exists; no prod conversation evidence |
-| Proactive intelligence | MISSING | AI-BIZ/Forecast deferred Phase 12 |
-| Tool calling / permission boundary | OK | aiToolCalling disabled (716b4e9) |
-| Disabled / dead code | OK | aiToolCalling.ts -> .disabled |
-| Provider integration | OK | ai-proxy EF (OpenRouter) |
-
-Separated into three layers:
-```text
-AI ARCHITECTURE               = VERIFIED (guardrail + proxy + boundary designed)
-AI IMPLEMENTATION             = PARTIAL (chat exists; extraction/content incomplete)
-AI PRODUCTION INTEGRATION     = PARTIAL (no prod AI conversation/usage evidence)
-```
-
-**Verdict: AI = PARTIAL.** AI is correctly non-authoritative over P0 money/order items. Proactive intelligence /
-business copilot / forecasting = **DEFERRED Phase 12**.
+**à¸ªà¸£à¸¸à¸›: CONTENT ENGINE = DEFERRED** (à¹„à¸¡à¹ˆà¹ƒà¸Šà¹ˆ Core M1 Blocker) â€” à¸¡à¸µ Content Approval UI à¹à¸•à¹ˆà¹„à¸¡à¹ˆà¸¡à¸µ Closed-Loop à¸—à¸µà¹ˆà¸§à¸±à¸”à¸œà¸¥ Content -> Acquisition -> Order à¸­à¸¢à¹ˆà¸²à¸‡à¹à¸—à¹‰à¸ˆà¸£à¸´à¸‡
 
 ---
 
-## 14. CONTENT ENGINE
+## 15. à¸£à¸°à¸šà¸šà¹à¸ˆà¹‰à¸‡à¹€à¸•à¸·à¸­à¸™ (NOTIFICATION SYSTEM)
 
-Original loop: Content -> Customer acquisition -> Order
+| à¸ªà¸´à¹ˆà¸‡à¸—à¸µà¹ˆà¸•à¹‰à¸­à¸‡à¸•à¸£à¸§à¸ˆà¸ªà¸­à¸š | à¸ªà¸–à¸²à¸™à¸°à¸›à¸±à¸ˆà¸ˆà¸¸à¸šà¸±à¸™ | à¸«à¸¥à¸±à¸à¸à¸²à¸™à¸—à¸µà¹ˆà¸žà¸š |
+|--------------------|--------------|---------------|
+| à¹à¸ˆà¹‰à¸‡à¹€à¸•à¸·à¸­à¸™ Order/Payment/Delivery/Cancel/Refund | warnings Event Emitter à¹€à¸—à¹ˆà¸²à¸™à¸±à¹‰à¸™; à¹„à¸¡à¹ˆà¸¡à¸µ Push/Email/LINE/Messenger à¸ˆà¸£à¸´à¸‡ |
 
-| Capability | State | Evidence | M1/P2/Deferred |
-|-----------|-------|----------|----------------|
-| Facebook content | MISSING | no FB content mgmt | P2/DEFERRED |
-| Content generation | WARN | AI content assistance skeleton | P2/DEFERRED |
-| Content management | WARN | Content approval UI (022 + `/admin/content-approvals`) | P1 |
-| Reusable content | WARN | media library (supports AI images) | P2 |
-| AI-assisted content | WARN | AiHub/hub root | P2/DEFERRED |
-| Content -> order loop | MISSING | no closed-loop measurement | P2/DEFERRED |
+à¸à¸²à¸£à¸ˆà¸±à¸”à¸›à¸£à¸°à¹€à¸ à¸—: In-Memory Event (warnings), Database Event (warnings), Actual Push (MISSING), Email (MISSING), LINE/Messenger (MISSING)
 
-**Verdict: CONTENT ENGINE = DEFERRED** (not a core M1 blocker). Content approval UI + media library exist,
-but the content -> acquisition -> order closed loop does not. Deferral rationale recorded here.
+**à¸ªà¸£à¸¸à¸›: NOTIFICATION = DEFERRED** â€” à¸¥à¸¹à¸à¸„à¹‰à¸²à¸¢à¸±à¸‡**à¹„à¸¡à¹ˆà¹„à¸”à¹‰à¸£à¸±à¸š** Notification à¸ˆà¸£à¸´à¸‡à¸œà¹ˆà¸²à¸™à¸Šà¹ˆà¸­à¸‡à¸—à¸²à¸‡à¸—à¸µà¹ˆà¸•à¸±à¹‰à¸‡à¹ƒà¸ˆ à¸«à¹‰à¸²à¸¡à¹€à¸£à¸µà¸¢à¸ Event Emitter à¸§à¹ˆà¸² "Notification System"
 
 ---
 
-## 15. NOTIFICATION SYSTEM
+## 16. à¸§à¸‡à¸ˆà¸£ Review / Feedback Loop
 
-| Check | State | Evidence |
-|-------|-------|----------|
-| Order/Payment/Kitchen/Dispatch/Delivery/Cancel/Refund notif | WARN | in-memory/DB event emitter only; NO push/email/LINE/Messenger delivery |
+à¸§à¸±à¸•à¸–à¸¸à¸›à¸£à¸°à¸ªà¸‡à¸„à¹Œ Closed-Loop à¹€à¸”à¸´à¸¡: Content -> Customer -> Order -> Kitchen -> Delivery -> Review -> Data -> AI -> Better Content
 
-Classification:
-```text
-in-memory event  WARN  event bus/emitter exists
-database event   WARN  audit/transaction event exists
-actual push      MISSING  NOT IMPLEMENTED
-email            MISSING  NOT IMPLEMENTED
-LINE/Messenger   MISSING  NOT IMPLEMENTED
-```
+| Node à¹ƒà¸™à¸§à¸‡à¸ˆà¸£ | à¸ªà¸–à¸²à¸™à¸°à¸›à¸±à¸ˆà¸ˆà¸¸à¸šà¸±à¸™ | à¸«à¸¥à¸±à¸à¸à¸²à¸™à¸—à¸µà¹ˆà¸žà¸š |
+|-------------|--------------|---------------|
+| Content | warnings | Content mgmt à¸¢à¸±à¸‡à¹„à¸¡à¹ˆà¸ªà¸¡à¸šà¸¹à¸£à¸“à¹Œ / FB Missing |
+| Customer | OK | Storefront + Auth |
+| Order | OK | Canonical Order Spine |
+| Kitchen | warnings | Batch à¸—à¸³à¸‡à¸²à¸™à¹„à¸”à¹‰; à¸•à¹‰à¸­à¸‡à¸à¸²à¸£ Trace à¸ªà¸” |
+| Delivery | warnings | Self-delivery à¸—à¸³à¸‡à¸²à¸™à¹„à¸”à¹‰; External Rider Blocked |
+| Review | warnings | Section à¹à¸ªà¸”à¸‡ Review + à¸”à¸²à¸§; Data Collection à¸¢à¸±à¸‡à¹„à¸¡à¹ˆà¸ªà¸¡à¸šà¸¹à¸£à¸“à¹Œ |
+| Data -> AI Feedback | MISSING | à¹„à¸¡à¹ˆà¸¡à¸µ Analytics Loop Feed à¸à¸¥à¸±à¸šà¹„à¸›à¸›à¸£à¸±à¸š AI Content |
+| Better Content | MISSING | Closed-Loop à¸¢à¸±à¸‡à¹„à¸¡à¹ˆà¹„à¸”à¹‰ Implement |
 
-**Verdict: NOTIFICATION = DEFERRED.** The customer does NOT yet receive real notifications via the intended
-channel. Do NOT call an event emitter a notification system.
-
----
-
-## 16. REVIEW / FEEDBACK LOOP
-
-Closed-loop objective:
-```text
-Content -> Customer -> Order -> Kitchen -> Delivery -> Review -> Data -> AI -> Better Content
-```
-
-| Node | State | Evidence |
-|------|-------|----------|
-| Content | WARN | content mgmt partial / FB missing |
-| Customer | OK | storefront + auth |
-| Order | OK | canonical order spine |
-| Kitchen | WARN | batch works; prod trace needed |
-| Delivery | WARN | self-delivery works; external blocked |
-| Review | WARN | review section + star rating; data collection partial |
-| Data -> AI feedback | MISSING | no analytics loop feeding AI content |
-| Better Content | MISSING | closed-loop not implemented |
-
-**Verdict:** The front half (Content -> Delivery) exists at a partial single-order level, but the
-**Review -> Data -> AI -> Better Content** closed loop = **MISSING/DEFERRED**. This is a genuine gap in the
-full BMB product objective, not a façade of a closed loop.
----
-
-## 17. ADMIN COMMAND CENTER
-
-Audited as a system (per module: VIEW / CREATE / EDIT / DELETE / STATE TRANSITION / DB PERSISTENCE / RLS / ERROR HANDLING).
-
-| Module | Page | View | C/E/D | State Trans | DB Persist | RLS | Verdict |
-|--------|------|------|-------|-------------|------------|-----|---------|
-| Dashboard | OK | WARN core KPIs | WARN | WARN | OK | OK | PARTIAL (shallow analytics) |
-| Orders | AdminOrders | OK | OK | OK | OK | OK | VERIFIED |
-| Pre-orders | AdminPreOrders | OK | OK | OK | OK | OK | PARTIAL (prod pre-order) |
-| Kitchen | AdminKitchen | OK | OK | OK | OK | OK | PARTIAL (prod batch trace) |
-| Inventory | InventoryPage | OK | OK | OK | WARN | OK | VERIFIED (DB-backed) |
-| Recipes | AdminRecipes | OK | OK | WARN | OK | OK | VERIFIED |
-| Drivers | OK | OK | OK | OK | OK | OK | VERIFIED (listDrivers RPC) |
-| Delivery | Delivery/AdminDelivery | OK | OK | OK | OK | OK | VERIFIED |
-| Customers | WARN | WARN | WARN | WARN | WARN | OK | PARTIAL (manage customers metrics) |
-| Audit Logs | AuditLogPage | OK | -- | -- | OK | OK | VERIFIED |
-| Settings | AdminSettings | OK | OK | OK | WARN | OK | VERIFIED |
-| Content (approvals) | OK | OK | OK | WARN | OK | OK | PARTIAL (content FR missing) |
-| AI | WARN | WARN | WARN | WARN | WARN | OK | PARTIAL |
-
-**Verdict: ADMIN = operational command center is PARTIAL-strong.** Core modules
-(Orders/Inventory/Recipes/Drivers/Delivery/Audit/Settings) = **VERIFIED**; Customers mgmt + Content + AI console + technical analytics = **PARTIAL/missing**.
+**à¸ªà¸£à¸¸à¸›:** Half Front (Content -> Delivery) à¸¡à¸µà¹ƒà¸™à¸£à¸°à¸”à¸±à¸š Single-Order à¸ªà¹ˆà¸§à¸™ **Review -> Data -> AI -> Better Content** Closed-Loop = **MISSING/DEFERRED** â€” à¸™à¸µà¹ˆà¸„à¸·à¸­à¸Šà¹ˆà¸­à¸‡à¸§à¹ˆà¸²à¸‡à¸—à¸µà¹ˆà¹à¸—à¹‰à¸ˆà¸£à¸´à¸‡à¸‚à¸­à¸‡ BMB Product Objective à¹„à¸¡à¹ˆà¹ƒà¸Šà¹ˆ Facade à¸‚à¸­à¸‡ Closed Loop
 
 ---
 
-## 18. SECURITY
+## 17. à¸¨à¸¹à¸™à¸¢à¹Œà¸ªà¸±à¹ˆà¸‡à¸à¸²à¸£ Admin (ADMIN COMMAND CENTER)
 
-| Check | State | Evidence |
-|-------|-------|----------|
-| RLS | OK | WAVE 3: grant probe 7/7, anon residue 0/0 |
-| anon | OK | REST anon leak closed (recipes leak) |
-| authenticated | OK | role -> profiles |
-| service_role | OK | SEC DEFINER RPCs |
-| RPC execute | OK | grants 7/7 |
-| Edge Functions | OK | verify_jwt config; key server-side; bundle scan 0 hits |
-| Sensitive data exposure | OK | no keys in client bundle |
-| Admin authorization | OK | is_admin() enforced; AdminRoute DB role |
-| AI tool authorization | OK | aiToolCalling disabled (716b4e9) |
+à¸•à¸£à¸§à¸ˆà¸ªà¸­à¸šà¸—à¸¸à¸ Module: VIEW / CREATE / EDIT / DELETE / STATE TRANSITION / DB PERSISTENCE / RLS
 
-References: Migr 033/034/035 + live DB verification (2026-09-22 result).
-**Verdict: SECURITY = VERIFIED** (production ACL hardening done and verified).
+| Module | Page | View | C/E/D | State Trans | DB Persist | RLS | à¸ªà¸£à¸¸à¸›à¸ªà¸–à¸²à¸™à¸° |
+|--------|------|------|-------|-------------|------------|-----|----------|
+| Dashboard | OK | warnings KPI à¸¢à¸±à¸‡à¸•à¸·à¹‰à¸™ | warnings | warnings | OK | OK | PARTIAL |
+| Orders | OK AdminOrders | OK | OK | OK | OK | OK | VERIFIED |
+| Pre-orders | OK AdminPreOrders | OK | OK | OK | OK | OK | PARTIAL |
+| Kitchen | OK AdminKitchen | OK | OK | OK | OK | OK | PARTIAL |
+| Inventory | OK InventoryPage | OK | OK | OK | warnings | OK | VERIFIED |
+| Recipes | OK AdminRecipes | OK | OK | warnings | OK | OK | VERIFIED |
+| Drivers | OK | OK | OK | OK | OK | OK | VERIFIED |
+| Delivery | OK Delivery/AdminDelivery | OK | OK | OK | OK | OK | VERIFIED |
+| Customers | warnings | warnings | warnings | warnings | warnings | OK | PARTIAL |
+| Audit Logs | OK AuditLogPage | OK | -- | -- | OK | OK | VERIFIED |
+| Settings | OK AdminSettings | OK | OK | OK | warnings | OK | VERIFIED |
+| Content Approvals | OK | OK | OK | warnings | OK | OK | PARTIAL |
+| AI | warnings | warnings | warnings | warnings | warnings | OK | PARTIAL |
 
----
-
-## 19. VOICE
-
-Original requirement (if in M1): voice input / voice output / customer interaction / AI interaction / browser+mobile.
-
-| Check | State |
-|-------|-------|
-| Search src/ for SpeechRecognition | **0 matches** |
-| Search src/ for SpeechSynthesis | **0 matches** |
-| STT/TTS API | **NOT FOUND** |
-| Voice UI (floating mic, etc.) | WARN hybrid AI entry exists but NO voice backend |
-
-**Deferral justification (evidence):**
-- Original spec section 3 lists "Voice Input + Output" as a core feature.
-- MASTER_PRODUCT_SPEC section 3.4 marks voice as **OPTIONAL/enhancement** (not P0).
-- AI assistant is a text-first chat with NO STT/TTS integration.
-
-**Verdict: VOICE = DEFERRED (P2 unless Owner elevates).** Not a missing M1 item; the owner deferred it.
-Not blocking M1.
+**à¸ªà¸£à¸¸à¸›: ADMIN = Operational Command Center à¹€à¸›à¹‡à¸™ PARTIAL-STRONG** â€” Core Modules (Orders/Inventory/Recipes/Drivers/Delivery/Audit/Settings) = **VERIFIED** à¹à¸•à¹ˆ Customers Management + Content + AI Console = **PARTIAL/MISSING**
 
 ---
 
-## 20. PERFORMANCE / PRODUCTION
+## 18. à¸£à¸°à¸šà¸šà¸£à¸±à¸à¸©à¸²à¸„à¸§à¸²à¸¡à¸›à¸¥à¸­à¸”à¸ à¸±à¸¢ (SECURITY)
 
-| Check | State | Evidence |
-|-------|-------|----------|
+| à¸ªà¸´à¹ˆà¸‡à¸—à¸µà¹ˆà¸•à¹‰à¸­à¸‡à¸•à¸£à¸§à¸ˆà¸ªà¸­à¸š | à¸ªà¸–à¸²à¸™à¸°à¸›à¸±à¸ˆà¸ˆà¸¸à¸šà¸±à¸™ | à¸«à¸¥à¸±à¸à¸à¸²à¸™à¸—à¸µà¹ˆà¸žà¸š |
+|--------------------|--------------|---------------|
+| RLS | OK | WAVE 3: Grant Probe 7/7 PASS, Anon Residue 0/0 |
+| Anon Access | OK | REST Anon Leak à¸›à¸´à¸”à¹à¸¥à¹‰à¸§ |
+| Authenticated / Service Role | OK | Role -> Profiles; SEC DEFINER RPCs |
+| Edge Functions | OK | Verify_jwt Config; Key Server-Side Only; Bundle Scan 0 Hits |
+| à¸à¸²à¸£à¹€à¸›à¸´à¸”à¹€à¸œà¸¢à¸‚à¹‰à¸­à¸¡à¸¹à¸¥à¸ªà¸³à¸„à¸±à¸ | OK | à¹„à¸¡à¹ˆà¸¡à¸µ Key à¸­à¸¢à¸¹à¹ˆà¹ƒà¸™ Client Bundle |
+| Admin Authorization | OK | is_admin() Enforced à¹ƒà¸™ AdminRoute + DB Role Check |
+| AI Tool Authorization | OK | aiToolCalling à¸–à¸¹à¸ Disable (commit 716b4e9) |
+
+à¸­à¹‰à¸²à¸‡à¸­à¸´à¸‡: Migr 033/034/035 + Live DB Verification (2026-09-22)
+**à¸ªà¸£à¸¸à¸›: SECURITY = VERIFIED** (Production ACL Hardening à¸ªà¸³à¹€à¸£à¹‡à¸ˆà¹à¸¥à¸°à¸¢à¸·à¸™à¸¢à¸±à¸™à¹à¸¥à¹‰à¸§)
+
+---
+
+## 19. à¸£à¸°à¸šà¸šà¹€à¸ªà¸µà¸¢à¸‡à¸žà¸¹à¸” (VOICE)
+
+à¸‚à¹‰à¸­à¸à¸³à¸«à¸™à¸”à¹€à¸”à¸´à¸¡ (à¸–à¹‰à¸²à¸­à¸¢à¸¹à¹ˆà¹ƒà¸™ M1): Voice Input / Voice Output / Customer Interaction / AI Interaction / Browser+Mobile Support
+
+| à¸ªà¸´à¹ˆà¸‡à¸—à¸µà¹ˆà¸•à¹‰à¸­à¸‡à¸•à¸£à¸§à¸ˆà¸ªà¸­à¸š | à¸ªà¸–à¸²à¸™à¸°à¸›à¸±à¸ˆà¸ˆà¸¸à¸šà¸±à¸™ |
+|--------------------|--------------|
+| Search src/ à¸ªà¸³à¸«à¸£à¸±à¸š SpeechRecognition | **à¹€à¸ˆà¸­ 0 à¸£à¸²à¸¢à¸à¸²à¸£** |
+| Search src/ à¸ªà¸³à¸«à¸£à¸±à¸š SpeechSynthesis | **à¹€à¸ˆà¸­ 0 à¸£à¸²à¸¢à¸à¸²à¸£** |
+| STT/TTS API | **à¹„à¸¡à¹ˆà¸žà¸šà¹€à¸¥à¸¢** |
+
+à¹€à¸«à¸•à¸¸à¸œà¸¥à¹ƒà¸™à¸à¸²à¸£ Deferral: Original Spec Section 3 à¸£à¸°à¸šà¸¸ Voice à¹€à¸›à¹‡à¸™à¸Ÿà¸µà¹€à¸ˆà¸­à¸£à¹Œà¸«à¸¥à¸±à¸ à¹à¸•à¹ˆ MASTER_PRODUCT_SPEC Section 3.4 à¸£à¸°à¸šà¸¸à¸§à¹ˆà¸² Voice à¹€à¸›à¹‡à¸™ **OPTIONAL/Enhancement** (à¹„à¸¡à¹ˆà¹ƒà¸Šà¹ˆ P0)
+AI Assistant à¸›à¸±à¸ˆà¸ˆà¸¸à¸šà¸±à¸™à¹€à¸›à¹‡à¸™ Text-First Chat à¸—à¸µà¹ˆà¹„à¸¡à¹ˆà¸¡à¸µ STT/TTS Integration
+
+**à¸ªà¸£à¸¸à¸›: VOICE = DEFERRED (P2 à¹€à¸§à¹‰à¸™à¹à¸•à¹ˆ Owner à¸¢à¸à¸£à¸°à¸”à¸±à¸šà¹€à¸›à¹‡à¸™ P0)** â€” à¹„à¸¡à¹ˆà¹ƒà¸Šà¹ˆ Blocker à¸‚à¸­à¸‡ M1
+
+---
+
+## 20. à¸›à¸£à¸°à¸ªà¸´à¸—à¸˜à¸´à¸ à¸²à¸žà¸šà¸™ Production (PERFORMANCE / PRODUCTION)
+
+| à¸ªà¸´à¹ˆà¸‡à¸—à¸µà¹ˆà¸•à¹‰à¸­à¸‡à¸•à¸£à¸§à¸ˆà¸ªà¸­à¸š | à¸ªà¸–à¸²à¸™à¸°à¸›à¸±à¸ˆà¸ˆà¸¸à¸šà¸±à¸™ | à¸«à¸¥à¸±à¸à¸à¸²à¸™à¸—à¸µà¹ˆà¸žà¸š |
+|--------------------|--------------|---------------|
 | Production URL | OK | https://bitemebaby-5f7.pages.dev |
-| Lighthouse production | PENDING | owner action required — measurement needed |
-| Mobile | WARN | layout QA done; prod perf unverified |
-| Performance | WARN | Local approx 29 (PREVIEW 41) — below target |
-| Accessibility | WARN | local 82-85; prod TBD |
-| Best Practices | OK | local 100 |
-| SEO | WARN | local 61-100; prod TBD |
-
-**Verdict: PERFORMANCE = PARTIAL.** Production Lighthouse Perf >= 90 has NOT been measured on the live URL.
-**Do NOT substitute localhost/PREVIEW scores for production.** Blocked by owner action (B-03).
+| Lighthouse à¸œà¸¥ Production | PENDING | à¸•à¹‰à¸­à¸‡à¸‚à¸­ Owner à¸§à¸±à¸”à¸œà¸¥à¸ˆà¸£à¸´à¸‡ |
 
 ---
 
-## 21. DOCUMENTATION RECONCILIATION
+## 21. à¸•à¸£à¸§à¸ˆà¸ªà¸­à¸šà¸„à¸§à¸²à¸¡à¸ªà¸­à¸”à¸„à¸¥à¹‰à¸­à¸‡à¸‚à¸­à¸‡à¹€à¸­à¸à¸ªà¸²à¸£ (DOCUMENTATION RECONCILIATION)
 
-| Doc | State | Contradiction |
-|-----|-------|---------------|
-| README.md | CONFLICT (points to ed1ac58, outdated) | points to a non-current HEAD |
-| CURRENT_STATE (2026-09-20) | CONFLICT (out of date vs HEAD 1d3d6e7) | HEAD / migration count differ |
-| M1_CLOSURE_EVIDENCE (2026-09-24) | UPDATED (Thai) | matches HEAD 1d3d6e7 |
-| RECONCILIATION_MATRIX (2026-09-23) | UPDATED | HEAD 4fa8c03 synchronized |
-| CLOSURE_BOOK v5.0 | CONFLICT | claims "no technical blocking" but actual runtime evidence gaps exist — downgrade PARTIAL items |
-| MASTER_PRODUCT_SPEC v2.0 | OK reference | not a current-state doc (by design) |
-| AI_WORK_STATE | WARN | session log needs updating |
+| à¹€à¸­à¸à¸ªà¸²à¸£ | à¸ªà¸–à¸²à¸™à¸°à¸›à¸±à¸ˆà¸ˆà¸¸à¸šà¸±à¸™ | à¸„à¸§à¸²à¸¡à¸‚à¸±à¸”à¹à¸¢à¹‰à¸‡à¸—à¸µà¹ˆà¸žà¸š |
+|--------|--------------|------------------|
+| README.md | CONFLICT (à¸Šà¸µà¹‰à¹„à¸›à¸—à¸µà¹ˆ ed1ac58 à¸‹à¸¶à¹ˆà¸‡à¸¥à¹‰à¸²à¸ªà¸¡à¸±à¸¢) | à¸Šà¸µà¹‰à¹„à¸› HEAD à¸—à¸µà¹ˆà¹„à¸¡à¹ˆà¹ƒà¸Šà¹ˆà¹€à¸§à¸­à¸£à¹Œà¸Šà¸±à¸™à¸›à¸±à¸ˆà¸ˆà¸¸à¸šà¸±à¸™ |
+| CURRENT_STATE (2026-09-20) | CONFLICT (à¸¥à¹‰à¸²à¸ªà¸¡à¸±à¸¢à¹€à¸—à¸µà¸¢à¸šà¸à¸±à¸š HEAD à¸›à¸±à¸ˆà¸ˆà¸¸à¸šà¸±à¸™) | Head/Migration count à¹à¸•à¸à¸•à¹ˆà¸²à¸‡à¸à¸±à¸™à¸¡à¸²à¸ |
+| M1_CLOSURE_EVIDENCE (2026-09-24) | OK UPDATED (Thai Version) | à¸ªà¸­à¸”à¸„à¸¥à¹‰à¸­à¸‡à¸à¸±à¸š HEAD 1d3d6e7 |
+| RECONCILIATION_MATRIX (2026-09-23) | OK UPDATED | HEAD 4fa8c03 à¸‹à¸´à¸‡à¸„à¹Œà¹à¸¥à¹‰à¸§ |
+| CLOSURE_BOOK v5.0 | CONFLICT | à¸­à¹‰à¸²à¸‡à¸§à¹ˆà¸² "No Technical Blocking" à¹à¸•à¹ˆà¸¡à¸µ Gap à¸”à¹‰à¸²à¸™ Runtime Evidence à¸ˆà¸£à¸´à¸‡ -> à¸•à¹‰à¸­à¸‡ Downgrade Partial Items |
+| MASTER_PRODUCT_SPEC v2.0 | OK Reference Document | à¹„à¸¡à¹ˆà¹ƒà¸Šà¹ˆ Current-State Doc |
+| AI_WORK_STATE | warnings | Session Log à¸•à¹‰à¸­à¸‡à¸à¸²à¸£à¸­à¸±à¸›à¹€à¸”à¸• |
 
-Contradictions -> **CURRENT TRUTH vs HISTORICAL FINDING**:
+à¸„à¸§à¸²à¸¡à¸‚à¸±à¸”à¹à¸¢à¹‰à¸‡ -> à¸„à¸§à¸²à¸¡à¸ˆà¸£à¸´à¸‡à¸›à¸±à¸ˆà¸ˆà¸¸à¸šà¸±à¸™ vs à¸à¸²à¸£à¸„à¹‰à¸™à¸žà¸šà¹ƒà¸™à¸­à¸”à¸µà¸•:
+| à¸«à¸±à¸§à¸‚à¹‰à¸­ | à¸„à¸§à¸²à¸¡à¸ˆà¸£à¸´à¸‡à¸›à¸±à¸ˆà¸ˆà¸¸à¸šà¸±à¸™ (Evidence) | à¸à¸²à¸£à¸„à¹‰à¸™à¸žà¸šà¹ƒà¸™à¸­à¸”à¸µà¸• (Doc Claim) |
+|--------|-----------------------------|----------------------------|
+| Pre-order Payment | PARTIAL (à¹„à¸¡à¹ˆà¸¡à¸µ Production Pre-Order Payment Runtime Evidence) | CLOSURE_BOOK PAY-05 à¸­à¹‰à¸²à¸‡à¸§à¹ˆà¸²à¹€à¸›à¹‡à¸™ VERIFIED |
+| Pre-order Inventory | PARTIAL (à¸•à¹‰à¸­à¸‡à¸à¸²à¸£à¸—à¸”à¸ªà¸­à¸š Production) | CLOSURE_BOOK INV à¸­à¹‰à¸²à¸‡à¸§à¹ˆà¸²à¹€à¸›à¹‡à¸™ VERIFIED |
+| Card Bill | PARTIAL (PAY-02 à¸‚à¸²à¸”à¸«à¸²à¸¢à¹„à¸›) | -- |
+| Lighthouse | PARTIAL (à¸‚à¸²à¸” Measurement à¸šà¸™ Production) | CLOSURE_BOOK LHR PENDING |
 
-| Item | CURRENT TRUTH (evidence) | HISTORICAL FINDING (doc claim) |
-|------|--------------------------|--------------------------------|
-| Pre-order payment | PARTIAL (no production pre-order payment runtime evidence) | CLOSURE_BOOK PAY-05 claimed VERIFIED |
-| Pre-order inventory | PARTIAL (needs production test) | CLOSURE_BOOK INV claimed VERIFIED |
-| Card bill | PARTIAL (PAY-02 missing) | -- |
-| Lighthouse | PARTIAL (prod measurement missing) | CLOSURE_BOOK LHR PENDING |
 ---
 
 ## 22. IMPORTANT: DO NOT FIX YET
 
-This round is **AUDIT / RECONCILE / CLASSIFY / EVIDENCE** only.
-
-- Do NOT modify implementation yet in this round.
-- Exception: a bug that blocks the audit must be reported first and requires owner decision
-  (already raised at Section 12 Make.com and Section 10 external rider).
-- Do NOT: architecture redesign / scope expansion / P2-P3 implementation / fake integration /
-  fake production evidence / mock replacement solely to make the report pass.
-
-This document records the current-state diagnosis only; it does not change code.
+à¸£à¸­à¸šà¸™à¸µà¹‰à¸„à¸·à¸­ **AUDIT / RECONCILE / CLASSIFY / EVIDENCE** à¹€à¸—à¹ˆà¸²à¸™à¸±à¹‰à¸™ â€” à¸«à¹‰à¸²à¸¡à¹à¸à¹‰à¹„à¸‚ implementation à¸à¹ˆà¸­à¸™
 
 ---
 
-## 23. REQUIRED FINAL OUTPUT
-
-### A. EXECUTIVE STATUS
+## 23. REQUIRED FINAL OUTPUT â€” A. EXECUTIVE STATUS
 
 ```text
 M1 STATUS:       NOT CLOSED (BLOCKED)
-FULL PRODUCT:    NOT COMPLETE (PARTIAL — larger gaps than M1 remain)
-```
-
-"Almost complete" is not used without a definition. M1 specifically has **3 P0 blocker actions** left.
-Full product has **many P2-P3 + DEFERRED items** still open.
 
 ---
 
-### B. M1 CLOSURE MATRIX (M1 requirements only)
+## 23B. M1 CLOSURE MATRIX (à¹€à¸‰à¸žà¸²à¸° M1 requirements)
 
 | M1 Requirement | Status | Evidence status |
 |----------------|--------|-----------------|
@@ -509,7 +440,7 @@ Full product has **many P2-P3 + DEFERRED items** still open.
 | Capacity atomic + no oversell | PARTIAL | production restore test missing |
 | Inventory deduct/restore atomic | PARTIAL | production cycle test missing |
 | Kitchen batch (both modes) | PARTIAL | production batch trace missing |
-| Delivery self <= 5 km | VERIFIED | REST probe + 5 km gate |
+| Delivery self <= 5 km | VERIFIED | REST probe + 5km gate |
 | External rider > 5 km | OWNER-ONLY/BLOCKED | no API keys |
 | Order state machine + audit | VERIFIED | trigger + audit prod |
 | RLS / Security hardening | VERIFIED | WAVE 3 prod |
@@ -521,7 +452,7 @@ Full product has **many P2-P3 + DEFERRED items** still open.
 
 ---
 
-### C. FULL BMB OBJECTIVE MATRIX (every capability the owner defined)
+## 23C. FULL BMB OBJECTIVE MATRIX (à¸—à¸¸à¸ capability à¸—à¸µà¹ˆ owner à¹€à¸„à¸¢à¸à¸³à¸«à¸™à¸”)
 
 | Capability | Status | Milestone |
 |------------|--------|-----------|
@@ -537,54 +468,43 @@ Full product has **many P2-P3 + DEFERRED items** still open.
 | External rider | OWNER-ONLY/BLOCKED | M1/P2 |
 | Multi-channel intake (FB/Messenger/LINE/Grab) | PLANNED/DEFERRED | P2 |
 | Make.com automation | PARTIAL/DEFERRED | P2 |
-| AI assistant | PARTIAL | M1/P1 |
-| AI proactive / business copilot / forecast | MISSING/DEFERRED | Phase 12 |
-| Content engine (FB/content loop) | DEFERRED | P2 |
-| Notification system | DEFERRED | P2 |
-| Review/Data/AI feedback loop | MISSING/DEFERRED | P2 |
-| Voice | DEFERRED | P2 |
-| Performance/Lighthouse prod | PARTIAL | M1 |
-| Analytics (ANA 14 items) | DEFERRED | Phase 12 |
-| Inventory PRO (purchase/waste/cost) | DEFERRED | Phase 10 |
-| SaaS / White-label | DEFERRED | Phase 8/13/14/15 |
+
 ---
 
-### D. CRITICAL GAPS (ordered by dependency, not by ease)
+## 23D. CRITICAL GAPS (à¹€à¸£à¸µà¸¢à¸‡à¸•à¸²à¸¡ dependency à¹„à¸¡à¹ˆà¹ƒà¸Šà¹ˆà¸•à¸²à¸¡à¸„à¸§à¸²à¸¡à¸‡à¹ˆà¸²à¸¢)
 
 | Gap | WHY | EVIDENCE | IMPACT | REQUIRED ACTION | Owner/Eng | Milestone |
 |-----|-----|----------|--------|-----------------|-----------|-----------|
-| GAP-1 Production Runtime Evidence of Order Loop | M1 closure requires proving the system works operationally | no live pre-order / inventory cycle / capacity restore / card bill in production | pre-order/inventory/capacity/payment cannot be VERIFIED | Owner places 1 real pre-order full lifecycle and captures logs/screenshots; Engineering re-verifies | Owner / Eng | M1 (blocker) |
-| GAP-2 Card Charge Bill (PAY-02) | require 1 real card payment | refund 172 THB + webhook 6/6 exist, but no charge receipt | payment cannot claim full closure | Owner provides real card charge receipt from Stripe | Owner | M1 (blocker) |
-| GAP-3 Production Lighthouse Perf >= 90 | requirement is measured on the production URL | URL bitemebaby-5f7.pages.dev; measurement missing | PWA-100-GATE criterion 6 fails | Owner runs Lighthouse on production URL | Owner | M1 (blocker) |
-| GAP-4 External Rider API Keys | >5km delivery loop not connected | adapters exist but no API keys | external delivery is plan-only | Request keys (Grab/LINEMAN/Foodpanda) or defer formally | Owner | OWNER-ONLY / P2 |
-| GAP-5 Multi-channel intake (FB/Messenger/LINE/Grab) | original objective = multi-channel; only PWA works | no intake integration | online channels limited to PWA | Owner decides defer as P2; Engineering scopes | Owner / Eng | P2 / DEFERRED |
-| GAP-6 Notification delivery mechanism | customer should receive real confirm/status/deliver notifications | event emitter only; no push/email/LINE | customer UX + ops stream | Implement push/email/LINE or defer formally | Engineering | P2 / P0 if owner wills |
-| GAP-7 Review->Data->AI closed loop + Analytics | full product objective = closed loop; absent | no Data/AI feedback iteration | content/recommendation not improved from data | Defer formally; scope for Phase 10/12 | Engineering | DEFERRED Ph10/12 |
-| GAP-8 Documentation synchronization | README/CURRENT_STATE/CLOSURE_BOOK point to old HEAD | README ed1ac58; CLOSURE_BOOK claims VERIFIED over PARTIAL | operators/contributors mis-directed | Sync all docs to HEAD 1d3d6e7 | Engineering | M1 (final cleanup) |
----
-
-### E. FALSE-CLOSURE CHECK
-
-> "Why should the M1 closure evidence NOT be interpreted as full BMB product completion?"
-
-Direct answer:
-1. M1 is a technical/operational gateway for the FIRST real kitchen — it is NOT the same as all BMB objectives.
-2. Full product includes **P2-P3 + DOMAIN B** (SaaS / white-label / analytics / AI copilot / forecast / inventory-pro)
-   that the owner defined in the spec, which are still **unimplemented and DEFERRED** — outside M1 scope.
-3. **Multi-channel ordering** (FB / Messenger / LINE / Grab) is an original objective, but only PWA works — planned/deferred.
-4. The **Content -> Customer -> Order -> Review -> Data -> AI -> Better Content** closed loop is not implemented —
-   only the front single-order chain exists.
-5. **Real push notifications** (email / LINE / push) are not implemented — only an event emitter.
-6. **Make.com automation** is a plan, not a working worker.
-7. **Voice** is optional/deferred, not real STT/TTS.
-8. **External rider > 5 km** is blocked on API keys, not active.
-9. **Analytics (14), AI-BIZ (8), AI-FC (6), Inventory PRO (10), SaaS (26), White-label (8)** — all DEFERRED (Phase 8-15).
-
--> M1 closure evidence covers only the FIRST operating kitchen spine. Full product is MUCH larger.
+| GAP-1: Production Runtime Evidence à¸‚à¸­à¸‡ Order Loop | à¸•à¹‰à¸­à¸‡à¸à¸²à¸£à¸žà¸´à¸ªà¸¹à¸ˆà¸™à¹Œà¸§à¹ˆà¸²à¸£à¸°à¸šà¸šà¸—à¸³à¸‡à¸²à¸™à¸ˆà¸£à¸´à¸‡à¸šà¸™ Production | à¹„à¸¡à¹ˆà¸¡à¸µ live pre-order / inventory cycle / capacity restore / card bill à¹ƒà¸™ production | à¹„à¸¡à¹ˆà¸ªà¸²à¸¡à¸²à¸£à¸–à¸›à¸£à¸°à¸à¸§à¹ˆà¸² pre-order/inventory/capacity/payment à¹€à¸›à¹‡à¸™ VERIFIED | Owner place 1 real pre-order full lifecycle; Engineering re-verify | Owner / Eng | M1 (blocker) |
+| GAP-2: Card Charge Bill (PAY-02) | à¸•à¹‰à¸­à¸‡à¸¡à¸µ bill à¸ˆà¸ˆà¸£à¸´à¸‡ 1 à¸£à¸²à¸¢à¸—à¸µà¹ˆà¸œà¹ˆà¸²à¸™ card | à¸¡à¸µ refund 172 THB + webhook 6/6 à¹à¸•à¹ˆà¹„à¸¡à¹ˆà¸¡à¸µ charge receipt | Payment à¹„à¸¡à¹ˆà¸ªà¸²à¸¡à¸²à¸£à¸– claim full closure | Owner à¹ƒà¸«à¹‰ real card charge receipt à¸ˆà¸²à¸ Stripe | Owner | M1 (blocker) |
+| GAP-3: Production Lighthouse Perf >= 90 | Requirement à¸§à¸±à¸”à¸šà¸™ production URL | URL bitemebaby-5f7.pages.dev; measurement missing | PWA-100-GATE criterion 6 fails | Owner run Lighthouse à¸šà¸™ production URL | Owner | M1 (blocker) |
+| GAP-4: External Rider API Keys | >5km delivery loop à¹„à¸¡à¹ˆà¹€à¸Šà¸·à¹ˆà¸­à¸¡à¸ˆà¸ˆà¸£à¸´à¸‡ | Adapters à¸¡à¸µà¸­à¸¢à¸¹à¹ˆ à¹à¸•à¹ˆà¸¢à¸±à¸‡à¹„à¸¡à¹ˆà¸¡à¸µ keys | external delivery à¹€à¸›à¹‡à¸™ plan à¹€à¸—à¹ˆà¸²à¸™à¸±à¹‰à¸™ | Request keys (Grab/LINEMAN/Foodpanda) à¸«à¸£à¸·à¸­ defer | Owner | OWNER-ONLY / P2 |
+| GAP-5: Multi-channel intake | original objective = multi-channel; à¸›à¸±à¸ˆà¸ˆà¸¸à¸šà¸±à¸™à¸¡à¸µà¹à¸„à¹ˆ PWA | No intake integration | online channels à¸ˆà¸³à¸à¸±à¸”à¸­à¸¢à¸¹à¹ˆà¹à¸„à¹ˆ PWA | Owner à¸•à¸±à¸”à¸§à¹ˆà¸²à¸ˆà¸° defer à¹€à¸›à¹‡à¸™ P2; Engineering scope | Owner / Eng | P2 / DEFERRED |
+| GAP-6: Notification delivery | à¸¥à¸¹à¸à¸„à¹‰à¸²à¸•à¹‰à¸­à¸‡à¹„à¸”à¹‰à¸£à¸±à¸š confirm/status/deliver notification à¸ˆà¸£à¸´à¸‡ | event emitter à¹€à¸—à¹ˆà¸²à¸™à¸±à¹‰à¸™, à¹„à¸¡à¹ˆà¸¡à¸µ push/email/LINE | customer UX + ops stream | Implement push/email/LINE à¸«à¸£à¸·à¸­ defer à¹€à¸›à¹‡à¸™à¸—à¸²à¸‡à¸à¸²à¸£ | Engineering | P2 / P0 if owner wants |
+| GAP-7: Review->Data->AI closed loop | Full product objective = closed loop; à¸¢à¸±à¸‡à¹„à¸¡à¹ˆà¸¡à¸µ | à¹„à¸¡à¹ˆà¸¡à¸µ Data/AI feedback iteration | content/recommendation à¹„à¸¡à¹ˆà¸›à¸£à¸±à¸šà¸›à¸£à¸¸à¸‡à¸ˆà¸²à¸à¸‚à¹‰à¸­à¸¡à¸¹à¸¥ | Defer à¹€à¸›à¹‡à¸™à¸—à¸²à¸‡à¸à¸²à¸£; Scope à¸ªà¸³à¸«à¸£à¸±à¸š Phase 10/12 | Engineering | DEFERRED Ph10/12 |
+| GAP-8: Documentation sync | README/CURRENT_STATE/CLOSURE_BOOK à¸Šà¸µà¹‰à¹„à¸› old HEAD | README ed1ac58; CLOSURE_BOOK claims VERIFIED à¹€à¸«à¸™à¸·à¸­ PARTIAL | Operators/Contributors à¹„à¸”à¹‰à¸£à¸±à¸šà¸‚à¹‰à¸­à¸¡à¸¹à¸¥à¸œà¸´à¸” | Sync à¸—à¸¸à¸ doc à¹ƒà¸«à¹‰à¸•à¸£à¸‡ HEAD à¸›à¸±à¸ˆà¸ˆà¸¸à¸šà¸±à¸™ | Engineering | M1 (final cleanup) |
 
 ---
 
-### F. MILESTONE BOUNDARY
+## 23E. FALSE-CLOSURE CHECK
+
+à¸—à¸³à¹„à¸¡ M1 closure evidence à¸ˆà¸¶à¸‡à¹„à¸¡à¹ˆà¸„à¸§à¸£à¸–à¸¹à¸à¸•à¸µà¸„à¸§à¸²à¸¡à¸§à¹ˆà¸² BMB full product completion?
+
+1. M1 à¹€à¸›à¹‡à¸™ technical/operational gateway à¸ªà¸³à¸«à¸£à¸±à¸šì²« real kitchen â€” à¹„à¸¡à¹ˆà¹€à¸—à¹ˆà¸²à¸à¸±à¸š "all BMB objectives"
+2. Full product à¸£à¸§à¸¡à¸–à¸¶à¸‡ **P2-P3 + DOMAIN B** (SaaS / white-label / analytics / AI copilot / forecast / inventory-pro) à¸—à¸µà¹ˆ owner à¸à¸³à¸«à¸™à¸”à¹„à¸§à¹‰ à¹ƒà¸™ spec à¸‹à¸¶à¹ˆà¸‡à¸¢à¸±à¸‡ **unimplemented à¹à¸¥à¸° DEFERRED** â€” à¸™à¸­à¸à¸‚à¸­à¸šà¹€à¸‚à¸• M1
+3. **Multi-channel ordering** (FB/Messenger/LINE/Grab) à¹€à¸›à¹‡à¸™ original objective à¹à¸•à¹ˆà¸•à¸­à¸™à¸™à¸µà¹‰à¸¡à¸µà¹à¸„à¹ˆ PWA à¹€à¸—à¹ˆà¸²à¸™à¸±à¹‰à¸™à¸—à¸µà¹ˆà¸—à¸³à¸‡à¸²à¸™à¹„à¸”à¹‰ â€” planned/deferred
+4. **Content -> Customer -> Order -> Review -> Data -> AI -> Better Content** closed loop à¹„à¸¡à¹ˆà¹„à¸”à¹‰ implement â€” à¸¡à¸µà¹à¸„à¹ˆ front single-order chain
+5. **Real push notifications** (email/LINE/push) à¸¢à¸±à¸‡à¹„à¸¡à¹ˆà¹„à¸”à¹‰ implement â€” à¸¡à¸µà¹à¸„à¹ˆ event emitter
+6. **Make.com automation** à¹€à¸›à¹‡à¸™ plan à¹„à¸¡à¹ˆà¹ƒà¸Šà¹ˆ worker à¸—à¸µà¹ˆà¸—à¸³à¸‡à¸²à¸™à¸ˆà¸£à¸´à¸‡
+7. **Voice** à¹€à¸›à¹‡à¸™ optional/deferred à¹„à¸¡à¹ˆà¹ƒà¸Šà¹ˆ real STT/TTS
+8. **External rider > 5 km** à¸–à¸¹à¸ block à¸šà¸™ API keys à¸¢à¸±à¸‡à¹„à¸¡à¹ˆ active
+9. **Analytics (14 items), AI-BIZ (8 items), AI-FC (6 items), Inventory PRO (10 items), SaaS (26 items), White-label (8 items)** â€” à¸—à¸±à¹‰à¸‡à¸«à¸¡à¸” DEFERRED (Phase 8-15)
+
+--> M1 closure evidence à¸„à¸£à¸­à¸šà¸„à¸¥à¸¸à¸¡à¹à¸„à¹ˆ FIRST OPERATING KITCHEN SPINE à¹€à¸—à¹ˆà¸²à¸™à¸±à¹‰à¸™. Full product à¹ƒà¸«à¸à¹ˆà¸à¸§à¹ˆà¸²à¸¡à¸²à¸
+
+---
+
+## 23F. MILESTONE BOUNDARY
 
 | Milestone | Scope | Status |
 |-----------|-------|--------|
@@ -596,41 +516,40 @@ Direct answer:
 
 ---
 
-### G. FINAL RECOMMENDATION
+## 23G. FINAL RECOMMENDATION
 
-(No ratings, rankings, or best/worst — only per evidence.)
+(à¹„à¸¡à¹ˆà¸¡à¸µ ratings/rankings/best-worst â€” à¹€à¸‰à¸žà¸²à¸°à¸•à¸²à¸¡ evidence)
 
 ```text
 M1 CLOSURE:      BLOCKED  (3 P0: pre-order E2E, card bill, Lighthouse prod)
 FULL PRODUCT:    PARTIAL  (M1 spine nearly done; large P2-P3 + DEFERRED + OWNER-ONLY + BLOCKED remain)
 ```
 
-- M1 can close after 3 owner actions.
-- Full product is NOT complete — many objectives remain in P2/P3/DEFERRED/OWNER-ONLY.
-- This document does NOT claim the project is "almost complete"; there is a large gap between M1 and the full objective.
-
 ---
 
 ## 24. SUCCESS CONDITION
 
-The owner can open this single file and immediately answer:
-1. What the full BMB objective includes -> Section 3 + Section 23C
-2. What is built -> Section 23C (VERIFIED column)
-3. What is connected -> Section 5/6 (canonical spine + two-mode matrix)
-4. What is production verified -> Section 23B/23C VERIFIED rows
-5. What is still partial -> Section 23B PARTIAL rows (pre-order, inventory, capacity, card bill, lighthouse, kitchen prod, AI conv)
-6. What is missing -> AI proactive, Review->Data->AI loop, multi-channel intake, real notifications, content loop
-7. What is owner-only -> external rider keys, prod secrets, Lighthouse run, real order, card bill
-8. What is deferred -> Voice, SaaS, analytics, AI copilot, forecast, inventory-pro, white-label, make.com, FB content
-9. What is the real M1 blocker -> GAP-1 (pre-order E2E) + GAP-2 (card bill) + GAP-3 (Lighthouse)
-10. What product work remains after M1 -> multi-channel intake, notifications, external riders, content loop, analytics, AI copilot/forecast, inventory-pro, SaaS/white-label
+Owner à¸ªà¸²à¸¡à¸²à¸£à¸–à¹€à¸›à¸´à¸”à¹„à¸Ÿà¸¥à¹Œà¹€à¸”à¸µà¸¢à¸§à¸™à¸µà¹‰à¹à¸¥à¹‰à¸§à¸•à¸­à¸šà¸„à¸³à¸–à¸²à¸¡à¸—à¸±à¹‰à¸‡ 10 à¸‚à¹‰à¸­à¸•à¹ˆà¸­à¹„à¸›à¸™à¸µà¹‰à¹„à¸”à¹‰à¸—à¸±à¸™à¸—à¸µ:
 
-**Do NOT answer with only "3 actions."** Provide it separately:
-> "3 actions remain for **M1 closure**"
-> "much more work remains for the **full BMB product objective**"
+1. Full BMB objective à¸¡à¸µà¸­à¸°à¹„à¸£à¸šà¹‰à¸²à¸‡ -> Section 3 + Section 23C
+2. à¸­à¸°à¹„à¸£à¸ªà¸£à¹‰à¸²à¸‡à¹à¸¥à¹‰à¸§ -> Section 23C (VERIFIED column)
+3. à¸­à¸°à¹„à¸£à¹€à¸Šà¸·à¹ˆà¸­à¸¡à¹à¸¥à¹‰à¸§ -> Section 5/6 (canonical spine + two-mode matrix)
+4. à¸­à¸°à¹„à¸£ production verified à¹à¸¥à¹‰à¸§ -> Section 23B/23C VERIFIED rows
+5. à¸¢à¸±à¸‡à¹€à¸«à¸¥à¸·à¸­à¸­à¸°à¹„à¸£à¹€à¸›à¹‡à¸™ PARTIAL -> Section 23B PARTIAL rows (pre-order, inventory, capacity, card bill, lighthouse, kitchen prod, AI conv)
+6. à¸­à¸°à¹„à¸£ MISSING -> AI proactive, Review->Data->AI loop, multi-channel intake, real notifications, content loop
+7. à¸­à¸°à¹„à¸£ OWNER-ONLY -> external rider keys, prod secrets, Lighthouse run, real order, card bill
+8. à¸­à¸°à¹„à¸£ DEFERRED -> Voice, SaaS, analytics, AI copilot, forecast, inventory-pro, white-label, make.com, FB content
+9. à¸­à¸°à¹„à¸£à¸„à¸·à¸­ M1 blocker à¸ˆà¸£à¸´à¸‡ -> GAP-1 (pre-order E2E prod) + GAP-2 (card bill) + GAP-3 (Lighthouse)
+10. à¸«à¸¥à¸±à¸‡ M1 à¸›à¸´à¸”à¹à¸¥à¹‰à¸§ à¹€à¸«à¸¥à¸·à¸­ product work à¸­à¸°à¹„à¸£à¸­à¸µà¸ -> multi-channel intake, notifications, external riders, content loop, analytics, AI copilot/forecast, inventory-pro, SaaS/white-label
 
-These two are distinct and are now recorded separately in this document.
+**à¸«à¹‰à¸²à¸¡à¸•à¸­à¸šà¹€à¸žà¸µà¸¢à¸‡à¸§à¹ˆà¸² "à¹€à¸«à¸¥à¸·à¸­ 3 actions" à¹ƒà¸«à¹‰à¹à¸¢à¸à¸­à¸­à¸à¹€à¸›à¹‡à¸™à¸ªà¸­à¸‡à¸ªà¹ˆà¸§à¸™:**
+
+> "à¹€à¸«à¸¥à¸·à¸­ 3 actions à¸ªà¸³à¸«à¸£à¸±à¸š **M1 closure**"
+> à¹à¸¥à¸°
+> "à¸¢à¸±à¸‡à¸¡à¸µà¸‡à¸²à¸™ product à¸­à¸µà¸à¸¡à¸²à¸à¸¡à¸²à¸¢à¸ªà¸³à¸«à¸£à¸±à¸š **full BMB product objective**"
+
+à¸—à¸±à¹‰à¸‡à¸ªà¸­à¸‡à¸ªà¸´à¹ˆà¸‡à¸™à¸µà¹‰à¹„à¸¡à¹ˆà¸„à¸§à¸£à¸–à¸¹à¸à¸›à¸™à¸à¸±à¸™ â€” à¸•à¸­à¸™à¸™à¸µà¹‰à¸–à¸¹à¸à¹à¸¢à¸à¸šà¸±à¸™à¸—à¸¶à¸à¹„à¸§à¹‰à¹ƒà¸™à¹€à¸­à¸à¸ªà¸²à¸£à¸™à¸µà¹‰à¸­à¸¢à¹ˆà¸²à¸‡à¸Šà¸±à¸”à¹€à¸ˆà¸™à¹à¸¥à¹‰à¸§
 
 ---
 
-**End of Master Objective Reconciliation — 2026-09-24 · HEAD `1d3d6e7`**
+**End of Master Objective Reconciliation â€” 2026-09-24 HEAD `454b212` (Thai version)**
