@@ -35,7 +35,7 @@ export interface VoiceResponse {
 }
 
 const DEFAULT_CONFIG: VoiceConfig = {
-  model: 'nvidia/nemotron-3-ultra-550b-a55b:free',
+  model: import.meta.env.VITE_OPENROUTER_MODEL || 'nvidia/nemotron-3-ultra-550b-a55b:free',
   fallbackModel: 'qwen/qwen3.7-flash',
   apiKey: import.meta.env.VITE_OPENROUTER_API_KEY || '',
   baseUrl: 'https://openrouter.ai/api/v1',

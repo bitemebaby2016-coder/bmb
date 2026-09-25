@@ -1,4 +1,4 @@
-﻿# BMB — MASTER EXECUTION PLAN
+# BMB — MASTER EXECUTION PLAN
 
 ## AI DEV HANDOFF — 2026-09-24
 
@@ -90,7 +90,7 @@ Platform ต้องบริหาร: การรับ order จากล�
 | 22 | AI-BIZ / AI-FC | MISSING | P3 |
 | 23 | SaaS / multi-tenant | MISSING | P3 |
 | 24 | White-label | MISSING | P3 |
-| 25 | Voice | **CANCELLED/DEFERRED (owner decision AI-06)** — ห้าม resurrect โดยไม่มี owner decision ใหม่ | DEFERRED |
+| 25 | AI Voice | **IMPLEMENTING (P1)** — OpenRouter: `nvidia/nemotron-3-ultra-550b-a55b:free` (fallback `qwen/qwen3.7-flash`) + Web Speech API (STT/TTS) | IMPLEMENTING |
 
 ---
 
@@ -271,7 +271,7 @@ STATUS: BLOCKED · เงื่อนไขปิด: E2E #1 + #2 (ครบ bus
 ### P3 (SCALE / INTELLIGENCE)
 
 **P3-01 Inventory PRO · P3-02 Analytics PRO · P3-03 AI-BIZ · P3-04 AI-FC · P3-05 forecasting/copilot · P3-06 SaaS/multi-tenant · P3-07 White-label** — ทั้งหมด MISSING, ปัจจุบันไม่มี implementation evidence ใดๆ — เริ่มได้เมื่อ P2 พิสูจน์แล้วตาม dependency
-**DEFERRED: Voice — owner decision AI-06 CANCELLED — ห้าม resurrect โดยไม่มี owner decision ใหม่**
+**AI Voice — IMPLEMENTING (P1): OpenRouter `nvidia/nemotron-3-ultra-550b-a55b:free` (fallback `qwen/qwen3.7-flash`) + Web Speech API (STT/TTS) — Architecture: Voice→STT→AI→Authorized tools→TTS — ห้าม resurrect โดยไม่มี owner decision ใหม่**
 
 ---
 
@@ -420,7 +420,7 @@ PHASE 10 P3 Scale                           — หลัง P2 พิสูจ�
 3. **Security controls ที่ VERIFIED แล้ว** — Migr 033/034/035 ACL, `is_admin()` gates, webhook service_role
 4. **`aiToolCalling.ts.disabled`** — ปิดอย่างถูกต้องแล้ว (716b4e9) — ห้าม un-disable โดยไม่มี owner decision + security review
 5. **Legacy `pre_orders` archive/freeze** — ห้ามทำ write path ใหม่; `migrated_order_id` ต้องอยู่
-6. **Owner decisions** — Voice CANCELLED (AI-06); ห้าม resurrect โดยไม่มี decision ใหม่
+6. **Owner decisions — Voice = IMPLEMENTING (P1); OpenRouter model + keys required; AI Voice keys separate from backend keys); ห้าม resurrect โดยไม่มี decision ใหม่
 7. ห้ามสร้าง mock/fake evidence เพื่อให้ report ผ่าน
 
 ---
@@ -466,7 +466,7 @@ CODE · DB · RPC · RLS · UI · RUNTIME · PRODUCTION · TEST · DOCUMENTATION
 2. Pre-order inventory deduct timing
 3. External rider provider ที่จะใช้ (Grab/LineMan/Foodpanda) + keys
 4. Notification provider (email/push/LINE) ที่จะใช้ (P2)
-5. Make.com: จะใช้เป็น worker จริงหรือยกเลิก
+5. Automation Worker (Make.com/n8n/custom): deterministic workflow engine separate from AI Voice จริงหรือยกเลิก
 6. Channels: FB/Messenger/LINE priority + tokens
 
 **PLAN STATUS: READY FOR OWNER REVIEW — ห้ามเริ่ม implementation จนกว่า Owner จะ approve**

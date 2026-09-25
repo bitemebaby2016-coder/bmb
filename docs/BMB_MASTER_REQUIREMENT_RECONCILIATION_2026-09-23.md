@@ -648,9 +648,9 @@ Historical evidence preserved above. Do not delete. Append updates with date/cha
 | A-L-003 | Conversation memory | PARTIAL — aiMemory.ts localStorage only | Server persistence pending | P1 | Memory persistence test |
 | A-L-004 | AI Guardrails | VERIFIED (aiGuardrails.ts / aiGuardrailsAdv.ts) | None | M1 | Guardrail verification |
 | A-L-005 | Tool Calling | DEAD CODE (aiToolCalling.ts.disabled) | Re-enable with production keys | P1 | Wire or remove |
-| A-L-006 | Voice Interface | MISSING — no STT/TTS/Voice code in repo | Architecture: Voice→STT→AI→Authorized tools→TTS | P2 | Voice E2E test |
-| A-L-006 | AI Voice Input | PARTIAL | STT verification needed | M1 | Voice input test |
-| A-L-007 | AI Voice Output | PARTIAL | Quality unknown | M2 | Voice output test |
+| A-L-006 | AI Voice | IMPLEMENTING — OpenRouter: `nvidia/nemotron-3-ultra-550b-a55b:free` (fallback `qwen/qwen3.7-flash`) + Web Speech API (STT/TTS) | Architecture: Voice→STT→AI→Authorized tools→TTS | P1 | Voice E2E test |
+| A-L-007 | Automation Worker | SEPARATE FROM AI VOICE — Make.com / n8n / custom worker for workflows | Not AI; deterministic workflow engine | P2 | Workflow execution test |
+|  |
 | A-L-008 | AI Recommendation | PARTIAL | Not surfaced to customers | P2 | Recommendation display test |
 | A-L-009 | AI Context-aware | VERIFIED | None | M1 | Context test |
 | A-L-010 | AI pro-active nudges | MISSING | Implement nudge system | M2 | Nudge engagement test |

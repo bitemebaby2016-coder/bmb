@@ -99,7 +99,7 @@ BMB คือ **Cloud Kitchen Operating Platform** (ไม่ใช่ POS ร�
 | ID | งาน | สถานะ |
 |----|-----|-------|
 | E1 | Voice (input/output) | CANCELLED โดย Owner (AI-06) — ห้าม resurrect โดยไม่มี decision ใหม่ |
-| E2 | Analytics/Inventory PRO/AI copilot/SaaS/white-label | DEFERRED (P3) |
+| E2 | **Automation Worker** | **SEPARATE FROM AI VOICE** — Make.com / n8n / custom worker for workflows | Not AI; deterministic workflow engine | P2 | Workflow execution test |
 
 ---
 
