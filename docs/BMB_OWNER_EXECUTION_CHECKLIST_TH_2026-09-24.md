@@ -1,6 +1,6 @@
-# BMB — OWNER EXECUTION CHECKLIST (ภาษาไทย)
+﻿# BMB — OWNER EXECUTION CHECKLIST (ภาษาไทย)
 
-> **วันที่:** 2026-09-25 · **HEAD:** `81c513b` (main) · **อ้างอิง:** `docs/BMB_MASTER_OBJECTIVE_RECONCILIATION_2026-09-24.md` (Rev.2) + `docs/BMB_MASTER_EXECUTION_PLAN_2026-09-24.md`
+> **วันที่:** 2026-09-25 · **HEAD:** `5666ab4` (main) · **อ้างอิง:** `docs/BMB_MASTER_OBJECTIVE_RECONCILIATION_2026-09-24.md` (Rev.2) + `docs/BMB_MASTER_EXECUTION_PLAN_2026-09-24.md`
 > **สถานะ:** EXECUTION STARTED — Migration 038/039 implemented, contracts 8/8 PASS, vitest 358/358
 
 ---

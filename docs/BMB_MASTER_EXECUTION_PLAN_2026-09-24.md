@@ -1,8 +1,8 @@
-# BMB — MASTER EXECUTION PLAN
+﻿# BMB — MASTER EXECUTION PLAN
 
 ## AI DEV HANDOFF — 2026-09-24
 
-> **Repository:** `bitemebaby2016-coder/bmb` · **HEAD baseline:** `3ace98a` (main = origin/main)
+> **Repository:** `bitemebaby2016-coder/bmb` · **HEAD baseline:** `5666ab4` (main = origin/main)
 > **เอกสารอ้างอิงหลัก:** `docs/BMB_MASTER_OBJECTIVE_RECONCILIATION_2026-09-24.md` (Revision 2)
 > **ผู้จัดทำ:** Principal Engineer + Product Architect + Audit Reconciliation Agent
 > **สถานะรอบนี้:** AUDIT → RECONCILE → PLAN → DEPENDENCY MAP → ACCEPTANCE CRITERIA → OWNER CHECKLIST เท่านั้น — **ห้ามแก้ implementation code จนกว่า Owner จะ approve plan นี้**
@@ -45,11 +45,11 @@ Platform ต้องบริหาร: การรับ order จากล�
 
 ---
 
-## Section 2 — CURRENT BASELINE (ณ HEAD `3ace98a`)
+## Section 2 — CURRENT BASELINE (ณ HEAD `5666ab4`)
 
 | รายการ | สถานะ | หมายเหตุ |
 |--------|-------|----------|
-| Branch / HEAD | `main` / `3ace98a` (= origin/main) | reconciliation revision 2 แล้ว |
+| Branch / HEAD | `main` / `5666ab4` (= origin/main) | reconciliation revision 2 แล้ว |
 | 04d19c7 (MOCK_DRIVERS → DB drivers) | **แก้แล้ว — ห้าม reimplement** | `DeliveryManagement.tsx` → `listDrivers()` → RPC `list_drivers` |
 | 886836d (cutoff enforcement ใน CheckoutPage) | แก้แล้ว | code-level |
 | 716b4e9 (`aiToolCalling.ts.disabled`) | แก้แล้ว | dead code ปิดอย่างถูกต้อง |

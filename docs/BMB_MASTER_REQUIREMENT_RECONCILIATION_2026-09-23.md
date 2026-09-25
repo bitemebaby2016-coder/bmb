@@ -1,4 +1,4 @@
-# BMB — ตารางตรวจสอบความต้องการหลัก (Master Requirement Reconciliation Matrix)
+﻿# BMB — ตารางตรวจสอบความต้องการหลัก (Master Requirement Reconciliation Matrix)
 
 > **วันที่:** 2026-09-25  
 > **BASELINE SHA:** 81c513b  

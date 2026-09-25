@@ -1,4 +1,4 @@
-# BMB — MASTER OBJECTIVE RECONCILIATION
+﻿# BMB — MASTER OBJECTIVE RECONCILIATION
 
 ## M1 CLOSURE ≠ FULL PRODUCT COMPLETION
 
@@ -6,7 +6,7 @@
 
 > **วันที่:** 2026-09-25
 > **Repository:** `bitemebaby2016-coder/bmb`
-> **HEAD ณ เวลาตรวจสอบ:** `81c513b` (branch `main` = `origin/main`)
+> **HEAD ณ เวลาตรวจสอบ:** `5666ab4` (branch `main` = `origin/main`)
 > **ผู้ตรวจสอบ:** AI Engineering Agent (ตรวจจาก Code / Database Migration / Evidence จริงเท่านั้น — ห้ามใช้ Fake Evidence, ห้าม Mock ข้อมูล, ห้ามใช้ Documentation อย่างเดียวในการสรุป)
 > **ขอบเขต:** ไฟล์นี้ไม่มีการแก้ implementation code ใดๆ ทั้งสิ้น (ตามกฎ AUDIT / RECONCILE / CLASSIFY / EVIDENCE เท่านั้น)
 > **Revision 2 (แก้ตาม owner feedback):** ตีความ SAME_DAY / PRE_ORDER ใหม่เป็น **operating model คนละ lifecycle** (Section 5), แยก Capacity mechanism vs business capability (Section 8), Kitchen/Delivery แยก current-day vs scheduled (Section 9/10), และแก้ M1 Acceptance Model เป็น **2 Operational E2E แยกโหมด** (Section 23) — ห้ามแก้โค้ด
@@ -75,8 +75,8 @@ DOCUMENTATION CLAIM != IMPLEMENTATION EVIDENCE
 | รายการ | ค่า | หลักฐาน |
 |--------|-----|---------|
 | Branch | `main` | `git branch --show-current` |
-| HEAD | `1df7498` | `git rev-parse HEAD` |
-| Origin/main | `1df7498` | `git rev-parse origin/main` |
+| HEAD | `5666ab4` | `git rev-parse HEAD` |
+| Origin/main | `5666ab4` | `git rev-parse origin/main` |
 | Working Tree | มี staged deletion ของไฟล์นี้เอง (งานนี้สร้างขึ้นใหม่แทน) | `git status --short` |
 | `04d19c7` เป็น ancestor ของ HEAD | **PASS** (exit code 0) | `git merge-base --is-ancestor 04d19c7 HEAD` |
 
@@ -84,7 +84,7 @@ DOCUMENTATION CLAIM != IMPLEMENTATION EVIDENCE
 
 1. **`04d19c7` (fix: replace MOCK_DRIVERS with real DB drivers) ถูก merge แล้ว** — ยืนยันจาก ancestor check + โค้ดปัจจุบัน `src/pages/admin/DeliveryManagement.tsx` import `listDrivers()` จาก `src/lib/bmbAdminApi_drivers.ts` ซึ่งเรียก RPC `list_drivers` จริง — **ห้าม reimplement 04d19c7**
 2. เอกสาร `docs/BMB_M1_CLOSURE_EVIDENCE_2026-09-24.md` สอดคล้องกับ actual repository state — commit หลังจากนั้นทั้งหมดเป็น docs-only ไม่มีการเปลี่ยนสถานะ code
-3. **HEAD ปัจจุบัน:** `81c513b` (feat(PRE-05): weekly PRE_ORDER menu + mode/round controls (Migr 039)) — Migrations 001–039 live, contracts 8/8 PASS, vitest 358/358
+3. **HEAD ปัจจุบัน:** `5666ab4` (feat(PRE-05): weekly PRE_ORDER menu + mode/round controls (Migr 039)) — Migrations 001–039 live, contracts 8/8 PASS, vitest 358/358
 
 ### คำจำกัดความสถานะ (MATRIX LEGEND)
 
@@ -969,4 +969,4 @@ Owner เปิดไฟล์เดียวนี้แล้วตอบไ�
 
 ---
 
-**End of Master Objective Reconciliation — 2026-09-24 · HEAD `1df7498` (Thai version)**
+**End of Master Objective Reconciliation — 2026-09-24 · HEAD `5666ab4` (Thai version)**

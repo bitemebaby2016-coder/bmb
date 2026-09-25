@@ -1,8 +1,8 @@
-# BMB M1 CLOSURE EVIDENCE PACK (ฉบับภาษาไทย)
+﻿# BMB M1 CLOSURE EVIDENCE PACK (ฉบับภาษาไทย)
 
 > **วันที่:** 2026-09-25  
-> **HEAD:** 81c513b (feat(PRE-05): weekly PRE_ORDER menu + mode/round controls (Migr 039))  
-> **Origin/main:** 81c513b  
+> **HEAD:** 5666ab4 (feat(PRE-05): weekly PRE_ORDER menu + mode/round controls (Migr 039))  
+> **Origin/main:** 5666ab4  
 > **ผู้ผลิต:** AI Engineering Agent (ตรวจสอบจาก Code/DB/Evidence จริง)  
 
 ---
@@ -10,8 +10,8 @@
 ## A. สถานะ Git
 
 ```text
-HEAD          : 81c513b (feat(PRE-05): weekly PRE_ORDER menu + mode/round controls (Migr 039))
-ORIGIN/MAIN   : 81c513b (ซิงค์แล้ว ✅)
+HEAD          : 5666ab4 (feat(PRE-05): weekly PRE_ORDER menu + mode/round controls (Migr 039))
+ORIGIN/MAIN   : 5666ab4 (ซิงค์แล้ว ✅)
 BRANCH        : main
 WORKING TREE  : CLEAN (หลัง commit แล้ว)
 04d19c7       : IS ancestor ของ HEAD ✅ (การแก้ MOCK_DRIVERS ถูก merge เข้า baseline แล้ว)
@@ -19,7 +19,7 @@ WORKING TREE  : CLEAN (หลัง commit แล้ว)
 
 **Commit ที่เกี่ยวข้อง (15 ตัวล่าสุด):**
 ```
-81c513b chore(e2e): record Migr 039 production evidence — 8/8 contract suites PASS
+5666ab4 chore(e2e): record Migr 039 production evidence — 8/8 contract suites PASS
 8dcd525 feat(PRE-05): weekly PRE_ORDER menu system + mode/round open-close server enforcement (Migr 039)
 2865036 chore(e2e): record owner PRE-01 answers + Migr 038 production evidence
 1fd9efc fix(037): migrate 035 P0 blockers repaired (5km gate + PRE_ORDER address trigger + admin RPCs)
@@ -28,7 +28,7 @@ ed5f955 fix(m1-09): sync driver delivery status -> canonical orders.status (Migr
 dbabc7a chore(e2e): record M1-09 production evidence
 e118c47 test(e2e): add read-only order trace tooling + SAME_DAY/PRE_ORDER acceptance scripts
 c370b4c docs(plan): create Master Execution Plan + Thai Owner Execution Checklist
-3ace98a docs(M1): reconcile SAME_DAY vs PRE_ORDER business model (revision 2)
+5666ab4 docs(M1): reconcile SAME_DAY vs PRE_ORDER business model (revision 2)
 6595600 docs(M1): recreate Master Objective Reconciliation in Thai
 1df7498 docs(M1): fix encoding to UTF-8 with single BOM
 bcc048f docs(M1): rewrite Master Objective Reconciliation in full Thai
@@ -254,7 +254,7 @@ Not implemented anywhere. Verdict: PARTIAL — deferred unless Owner elevates to
 | เอกสาร | สถานะ | การกระทำ |
 |--------|--------|-----------|
 | README.md | CONFLICT (ชี้ไปที่ ed1ac58) | อัปเดตเป็น HEAD ปัจจุบัน |
-| CURRENT_STATE | CONFLICT (ล้าสมัย vs HEAD 4fa8c03) | Reconcile vs HEAD 5887fab |
+| CURRENT_STATE | CONFLICT (ล้าสมัย vs HEAD 4fa8c03) | Reconcile vs HEAD 5666ab4 |
 | CLOSURE_BOOK | CONFLICT (PARTIAL มียกเป็น VERIFIED) | แก้สถานะให้ถูกต้อง |
 | RECONCILIATION_MATRIX v2.0 | UPDATED ✅ | ผลลัพธ์ของ session นี้ |
 
