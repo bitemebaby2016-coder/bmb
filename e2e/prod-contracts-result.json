@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-09-24T22:10:16.686Z",
+  "timestamp": "2026-09-25T02:45:31.799Z",
   "ref": "ivkdfognyiwjcmrhcnwz",
   "checks": [
     {
@@ -15,6 +15,18 @@
       "detail": null
     },
     {
+      "file": "e2e/contracts_029_round_grant.sql",
+      "ok": true,
+      "status": 201,
+      "detail": null
+    },
+    {
+      "file": "e2e/contracts_030_transition_else.sql",
+      "ok": true,
+      "status": 201,
+      "detail": null
+    },
+    {
       "file": "e2e/contracts_036_driver_status_sync.sql",
       "ok": true,
       "status": 201,
@@ -22,6 +34,18 @@
     },
     {
       "file": "e2e/contracts_037_p0_blockers_repaired.sql",
+      "ok": true,
+      "status": 201,
+      "detail": null
+    },
+    {
+      "file": "e2e/contracts_038_pre_order_policy.sql",
+      "ok": true,
+      "status": 201,
+      "detail": null
+    },
+    {
+      "file": "e2e/contracts_039_menu_schedule.sql",
       "ok": true,
       "status": 201,
       "detail": null

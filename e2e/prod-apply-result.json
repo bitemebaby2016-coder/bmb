@@ -1,9 +1,9 @@
 {
-  "timestamp": "2026-09-24T21:55:59.646Z",
+  "timestamp": "2026-09-25T00:51:43.926Z",
   "ref": "ivkdfognyiwjcmrhcnwz",
   "applied": [
     {
-      "file": "038_pre_order_policy_enforcement.sql",
+      "file": "039_weekly_menu_and_mode_controls.sql",
       "ok": true
     }
   ],
