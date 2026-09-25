@@ -9,7 +9,7 @@
 // pointer-events-auto so order CTAs are never blocked.
 // ============================================
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, useCallback } from 'react'
 import { MascotWrapper } from '@/components/ui/MascotWrapper'
 import { GlassCard } from '@/components/ui/GlassCard'
 import { BiteAIChat } from '@/components/ai/BiteAIChat'
@@ -20,6 +20,40 @@ import { usePlatformConfig } from '@/config/platformConfig'
 export interface BiteMascotProps {
   userName?: string
   activeSection?: string
+}
+
+// All 24 mascot poses from public/assets/mascot/
+const MASCOT_POSES = [
+  'bite_award',
+  'bite_badge_mini_heart',
+  'bite_badge_thumbsup_approval',
+  'bite_closed',
+  'bite_cooking',
+  'bite_delivery_run',
+  'bite_eating',
+  'bite_empty_sad',
+  'bite_feedback',
+  'bite_goodbye',
+  'bite_hero_greeting',
+  'bite_menu',
+  'bite_peeking',
+  'bite_pointing',
+  'bite_ready',
+  'bite_recommend',
+  'bite_reviewing',
+  'bite_sad',
+  'bite_shopping',
+  'bite_success',
+  'bite_thinking',
+  'bite_vote',
+  'bite_vote_mini_heart',
+  'bite_waiting',
+] as const
+
+type MascotPose = (typeof MASCOT_POSES)[number]
+
+function getMascotUrl(pose: MascotPose): string {
+  return `/assets/mascot/${pose}.webp`
 }
 
 function playGreetingSound() {
@@ -57,6 +91,12 @@ export function BiteMascot({ userName, activeSection = 'home' }: BiteMascotProps
 
   const stallTimer = useRef<ReturnType<typeof setInterval> | null>(null)
   const [chatVisible, setChatVisible] = useState(false)
+  const [currentPoseIndex, setCurrentPoseIndex] = useState(0)
+
+  // Cycle to next pose on each tap/interaction
+  const cyclePose = useCallback(() => {
+    setCurrentPoseIndex((prev) => (prev + 1) % MASCOT_POSES.length)
+  }, [])
 
   // Stage 1 — greet via Web Audio on the user's first click anywhere (once).
   useEffect(() => {
@@ -97,9 +137,13 @@ export function BiteMascot({ userName, activeSection = 'home' }: BiteMascotProps
     const context = `ลูกค้าชื่อ ${name} มีของในตะกร้า ${cartTotal} บาท กำลังดูเซกชั่น ${activeSection}`
     openChat(context)
     setChatVisible(true)
+    cyclePose() // Cycle to next pose on tap
   }
 
   useEffect(() => setChatVisible(chatOpen), [chatOpen])
+
+  const currentPose = MASCOT_POSES[currentPoseIndex]
+  const mascotUrl = getMascotUrl(currentPose)
 
   return (
     <>
@@ -117,10 +161,15 @@ export function BiteMascot({ userName, activeSection = 'home' }: BiteMascotProps
             type="button"
             onClick={handleTap}
             aria-label="เปิดแชทกับน้อง Bite"
-            className="pointer-events-auto flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-brand-primary to-brand-secondary text-3xl shadow-lg animate-float hover:scale-105 active:scale-95 transition-transform"
+            className="pointer-events-auto flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-brand-primary to-brand-secondary shadow-lg animate-float hover:scale-105 active:scale-95 transition-transform overflow-hidden"
             data-testid="bite-mascot"
           >
-            🐻
+            <img
+              src={mascotUrl}
+              alt={`Bite mascot - ${currentPose}`}
+              className="h-full w-full object-cover"
+              loading="lazy"
+            />
           </button>
         </div>
       </MascotWrapper>
