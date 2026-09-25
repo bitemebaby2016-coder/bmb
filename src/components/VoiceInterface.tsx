@@ -112,12 +112,14 @@ export const VoiceInterface: React.FC = () => {
               type="text"
               value={textInput}
               onChange={(e) => setTextInput(e.target.value)}
-              onKeyDown={handleKeyDown}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault();
+                  handleSendText();
+                }
+              }}
               placeholder={isListening ? 'กำลังฟัง... พูดเลย' : 'พิมพ์ข้อความหรือกดไมค์เพื่อพูด...'}
               disabled={isListening}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') handleSendText();
-              }}
             />
             <button
               className={`voice-mic-btn ${isListening ? 'active' : ''}`}
