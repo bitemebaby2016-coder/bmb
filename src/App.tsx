@@ -50,6 +50,7 @@ const ProfilePage = lazy(() => import('./pages/ProfilePage').then(m => ({ defaul
 const RewardsPage = lazy(() => import('./pages/RewardsPage').then(m => ({ default: m.RewardsPage })))
 const ViralPage = lazy(() => import('./pages/ViralPage').then(m => ({ default: m.ViralPage })))
 const AiChatPage = lazy(() => import('./pages/ai/AiChatPage').then(m => ({ default: m.AiChatPage })))
+const VoiceDemoPage = lazy(() => import('./pages/VoiceDemoPage').then(m => ({ default: m.VoiceDemoPage })))
 const RiderPwaPage = lazy(() => import('./pages/RiderPwaPage').then(m => ({ default: m.RiderPwaPage })))
 const NotificationCenterPage = lazy(() => import('./pages/NotificationCenterPage').then(m => ({ default: m.NotificationCenterPage })))
 const AdminErrorsPage = lazy(() => import('./pages/admin/AdminErrorsPage').then(m => ({ default: m.AdminErrorsPage })))
@@ -170,6 +171,7 @@ export default function App() {
         
         {/* AI Routes — Lazy Loaded */}
         <Route path="/ai-chat" element={<Suspense fallback={<LoadingSpinner />}><ProtectedRoute><Layout><AiChatPage /></Layout></ProtectedRoute></Suspense>} />
+        <Route path="/voice-demo" element={<Suspense fallback={<LoadingSpinner />}><ProtectedRoute><Layout><VoiceDemoPage /></Layout></ProtectedRoute></Suspense>} />
         
         {/* Ops Routes — Rider PWA (public demo) + Admin Control (admin-only) */}
         <Route path="/rider" element={<Suspense fallback={<LoadingSpinner />}><Layout hideBottomNav><RiderPwaPage /></Layout></Suspense>} />
