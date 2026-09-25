@@ -1,8 +1,8 @@
 # BMB M1 CLOSURE EVIDENCE PACK (ฉบับภาษาไทย)
 
-> **วันที่:** 2026-09-24  
-> **HEAD:** 5887fab (docs(M1): สร้างเอกสารหลักฐานปิด M1 v2.0 จาก HEAD 4fa8c03)  
-> **Origin/main:** 5887fab  
+> **วันที่:** 2026-09-25  
+> **HEAD:** 81c513b (feat(PRE-05): weekly PRE_ORDER menu + mode/round controls (Migr 039))  
+> **Origin/main:** 81c513b  
 > **ผู้ผลิต:** AI Engineering Agent (ตรวจสอบจาก Code/DB/Evidence จริง)  
 
 ---
@@ -10,8 +10,8 @@
 ## A. สถานะ Git
 
 ```text
-HEAD          : 5887fab (docs(M1): สร้างเอกสารหลักฐานปิด M1 v2.0 จาก HEAD 4fa8c03)
-ORIGIN/MAIN   : 5887fab (ซิงค์แล้ว ✅)
+HEAD          : 81c513b (feat(PRE-05): weekly PRE_ORDER menu + mode/round controls (Migr 039))
+ORIGIN/MAIN   : 81c513b (ซิงค์แล้ว ✅)
 BRANCH        : main
 WORKING TREE  : CLEAN (หลัง commit แล้ว)
 04d19c7       : IS ancestor ของ HEAD ✅ (การแก้ MOCK_DRIVERS ถูก merge เข้า baseline แล้ว)
@@ -19,21 +19,20 @@ WORKING TREE  : CLEAN (หลัง commit แล้ว)
 
 **Commit ที่เกี่ยวข้อง (15 ตัวล่าสุด):**
 ```
-5887fab docs(M1): สร้างเอกสารหลักฐานปิด M1 v2.0 จาก HEAD 4fa8c03
-4fa8c03 docs(M1): rebuild reconciliation matrix v2.0 + fix lint .kilo ignore
-2ad74c2 docs(M1): แปลไทยเต็มรูปของ reconciliation matrix
-b72b53a docs(M1): แปลไทยเต็มรูป
-096d665 docs(M1): อัปเดต reconciliation — สถานะ P0/P1, แก้ MOCK_DRIVERS
-04d19c7 fix(M1): แทน MOCK_DRIVERS ด้วย DB drivers จริง
-28b0a40 fix(M1): แก้ CI lint failures ทั้งหมด (var->const/let)
-665a3e1 docs(M1): สรุปสถานะการทำงาน — 8/10 P0 แก้แล้ว, Admin UI P1 ครบ
-ff54783 feat(M1): ปิด P0/P1 blockers — Migration 035, AdminKitchen/PreOrders/Recipes, AuditLog, enforcement cutoff
-7a44893 feat(db): Migration 035 — 5km gate, ที่อยู่ pre-order, audit RLS, admin RPCs
-886836d fix(P0-6): บังคับ cutoff ใน CheckoutPage handlePlaceOrder
-716b4e9 fix(P0-8): ปิด aiToolCalling.ts → เปลี่ยนชื่อเป็น .disabled
-9787429 fix(P0-1): เขียนใหม่ InventoryPage ใช้ API DB-backed (เลิกใช้ localStorage)
-95b0518 state(M1): อัปเดต AI_WORK_STATE Phase 2 checkpoint
-c6a4c69 docs(M1): สร้าง master requirement reconciliation matrix v1.0
+81c513b chore(e2e): record Migr 039 production evidence — 8/8 contract suites PASS
+8dcd525 feat(PRE-05): weekly PRE_ORDER menu system + mode/round open-close server enforcement (Migr 039)
+2865036 chore(e2e): record owner PRE-01 answers + Migr 038 production evidence
+1fd9efc fix(037): migrate 035 P0 blockers repaired (5km gate + PRE_ORDER address trigger + admin RPCs)
+fcaac5b fix(037): migrate 035 P0 blockers repaired (5km gate + PRE_ORDER address trigger + admin RPCs)
+ed5f955 fix(m1-09): sync driver delivery status -> canonical orders.status (Migr 036)
+dbabc7a chore(e2e): record M1-09 production evidence
+e118c47 test(e2e): add read-only order trace tooling + SAME_DAY/PRE_ORDER acceptance scripts
+c370b4c docs(plan): create Master Execution Plan + Thai Owner Execution Checklist
+3ace98a docs(M1): reconcile SAME_DAY vs PRE_ORDER business model (revision 2)
+6595600 docs(M1): recreate Master Objective Reconciliation in Thai
+1df7498 docs(M1): fix encoding to UTF-8 with single BOM
+bcc048f docs(M1): rewrite Master Objective Reconciliation in full Thai
+454b212 docs(M1): create Master Objective Reconciliation from HEAD 1d3d6e7
 ```
 
 ---
@@ -47,10 +46,11 @@ c6a4c69 docs(M1): สร้าง master requirement reconciliation matrix v1.0
 | BUILD | PASS | Vite + PWA sw.js เกิดขึ้น (52 precache entries) |
 | TESTS | 358/358 PASSED | 44 test files, vitest run |
 | CI | PASS | GitHub Actions มีประวัติ passing runs |
+| PRODUCTION CONTRACTS | 8/8 PASS | 023/028/029/030/036/037/038/039 verified on production |
 
 ---
 
-## C. Database Schema & Migrations (001–035)
+## C. Database Schema & Migrations (001–039)
 
 ### Migration ที่สำคัญที่ Trace ได้:
 
@@ -62,6 +62,10 @@ c6a4c69 docs(M1): สร้าง master requirement reconciliation matrix v1.0
 | 026 | แก้ไข inventory deduction แบบ aggregated (แก้ bug dedup + guard `ERR_INSUFFICIENT_INGREDIENT`) | Code review ยืนยัน SUM aggregated ต่อ ingredient |
 | 027 | Kitchen canonical batch (รองรับทั้งสองโหมดผ่าน `p_order_mode NULL`) | AdminKitchen creates_batch() เรียก create_production_batch(roundId,date,NULL) |
 | 035 | M1 closure P0: 5km gate, ที่อยู่ pre-order บังคับ (`validate_pre_order_delivery()` trigger), audit RLS, admin RPCs | Trace โค้ด: compute_delivery_fee, trigger, list_drivers RPC |
+| 036 | M1-09 driver delivery status → canonical orders.status sync (driver→order sync via allow-list) | driver_update_delivery_status, guard_order_status_transition |
+| 037 | M1 closure P0 blockers repaired: 5km self-delivery gate, PRE_ORDER address trigger, admin RPCs | compute_delivery_fee, trg_pre_order_address_check, list_drivers, get_kitchen_summary, list_recipes_with_inventory |
+| 038 | PRE_ORDER policy enforcement: window max 40d, 2h pre-delivery cutoff, cancel-after-cutoff rejection | trg_pre_order_window, trg_pre_order_cancel_window, enforce_pre_order_window/cancel_window |
+| 039 | Weekly PRE_ORDER menu system + mode/round open-close controls | menu_schedule table, set_menu_schedule/publish_menu_schedule/get_menu_for_date, trg_menu_gate, trg_operating_hours |
 
 ### ตารางที่ยืนยันจากโค้ด/Migration:
 
@@ -79,8 +83,9 @@ delivery_assignments ✅ order_number, driver_phone, status
 payment_intents     ✅ order_number, amount, currency, status, method, provider, metadata(refund_ledger)
 audit_logs          ✅ action, entity_type, entity_id, description, metadata
 profiles            ✅ role, is_owner
-business_settings   ✅ key/value store
+business_settings   ✅ key/value store (order_policy, operating_hours)
 pre_orders          ✅ Archive เท่านั้น; rows ที่ migrate แล้วมี migrated_order_id → ไป orders
+menu_schedule       ✅ scheduled_date, product_id, delivery_round_key, is_published
 ```
 
 ### Security:
@@ -116,7 +121,7 @@ Supabase Secrets  ✅ Keys อยู่ใน Edge Function env เท่าน�
 Tests: ✔ availabilityEngine.test.ts, ✔ orderVocabulary(5), ✔ kitchenService(4)
 Prod: ✅ Deployed บน Cloudflare Pages
 
-Verdict: SAME-DAY E2E = PARTIAL — ต้องการ live production order trace
+Verdict: SAME-DAY E2E = PARTIAL — ต้องการ live production order trace (tooling พร้อม: trace_order_evidence.sql, acceptance_same_day_m1.sql)
 ```
 
 ---
@@ -131,6 +136,12 @@ Verdict: SAME-DAY E2E = PARTIAL — ต้องการ live production order 
 | ที่อยู่ pre-order บังคับ | ใช่ | Migr 035 Part 2: trigger validate_pre_order_delivery() RAISE ถ้าว่าง | Implementation VERIFIED / Prod proof PARTIAL |
 | Kitchen batching Pre-order | ใช่ | Migr 027: create_production_batch รับ p_order_mode=NULL (รองรับ both โหมด) | Implementation VERIFIED |
 | Legacy pre_orders → canonical | ใช่ | Migr 024/025: legacy migrate แล้ว; ใหม่ใช้ canonical RPC | Implementation VERIFIED |
+| PRE_ORDER window (max 40d) | ใช่ | Migr 038: trg_pre_order_window + business_settings order_policy | Implementation VERIFIED |
+| PRE_ORDER cutoff (2h before delivery) | ใช่ | Migr 038: trg_pre_order_window (delivery_start - 2h) | Implementation VERIFIED |
+| Cancel-after-cutoff policy | ใช่ | Migr 038: trg_pre_order_cancel_window (ERR_CANCEL_AFTER_CUTOFF) | Implementation VERIFIED |
+| Inventory deduct timing (at confirm) | ใช่ | Migr 019/026/028: deduct at confirm via transition_order_status | Implementation VERIFIED |
+| PRE_ORDER menu weekly | ใช่ | Migr 039: menu_schedule + trg_menu_gate + get_menu_for_date | Implementation VERIFIED |
+| Mode/round open-close controls | ใช่ | Migr 039: trg_operating_hours + operating_hours settings | Implementation VERIFIED |
 
 ### ลำดับการทำงาน Pre-Order (Trace จากโค้ด):
 
@@ -152,8 +163,9 @@ Verdict: SAME-DAY E2E = PARTIAL — ต้องการ live production order 
 - สินค้าคงคลังไม่พอ: throw ERR_INSUFFICIENT_INGREDIENT, txn rollback ✓
 - Webhook ซ้ำ: record_payment_result แบบ idempotent ✓
 
-Verdict: PRE-ORDER E2E = PARTIAL
-Architecture + implementation สมบูรณ์และถูกต้อง ข้อควรระวังหลัก: ไม่มี production pre-order runtime evidence เลย.
+Verdict: PRE-ORDER E2E = PARTIAL (Implementation VERIFIED — Architecture, RPC, triggers, policies all implemented; Production runtime evidence pending)
+Architecture + implementation สมบูรณ์และถูกต้อง (Migr 038/038/039 policies implemented, contracts 8/8 PASS, vitest 358/358 PASS)
+ข้อควรระวังหลัก: ไม่มี production pre-order runtime evidence เลย (ต้องการ Owner place real pre-order)
 ไม่สามารถประกาศ VERIFIED ได้จนกว่าจะมี pre-order อย่างน้อยหนึ่งรายการที่จบครบวงจรใน production.
 ```
 
@@ -319,9 +331,9 @@ P0 items จำนวน 3 รายการยังขาด production runti
 2. **Real card charge bill สำหรับ PAY-02**: Payment infrastructure ทำงานสมบูรณ์ (webhook 6/6 verified, refund 172 THB สำเร็จ) — เพียงแต่เจ้าของยังไม่ได้ให้ charge receipt
 3. **Production Lighthouse Perf ≥ 90**: Production URL มีอยู่แล้วที่ https://bitemebaby-5f7.pages.dev — ต้องทำการวัดผล
 
-### สิ่งที่ DECLARED VERIFIED ได้ตอนนี้แล้ว (20 รายการ):
+### สิ่งที่ DECLARED VERIFIED ได้ตอนนี้แล้ว (24 รายการ):
 
-Same-Day ordering spine, Payment spine, Real Stripe refund, Order state machine, RLS hardening, Inventory CRUD DB-backed, AI key security, aiToolCalling disabled, Admin panels ทั้ง 17 หน้า, Delivery Management (ไม่มี mocks), Migrations 001–035, CI/Build/Lint/Tests ผ่านทั้งหมด, PWA installable, Customer cancel button, 5km gate, Same-day cutoff enforcement, Pre-order canonical RPC, Pre-order address mandatory, Pre-order kitchen batching, Legacy pre_orders migration
+Same-Day ordering spine, Payment spine, Real Stripe refund, Order state machine, RLS hardening, Inventory CRUD DB-backed, AI key security, aiToolCalling disabled, Admin panels ทั้ง 17 หน้า, Delivery Management (ไม่มี mocks), Migrations 001–039, CI/Build/Lint/Tests ผ่านทั้งหมด, PWA installable, Customer cancel button, 5km gate, Same-day cutoff enforcement, Pre-order canonical RPC, Pre-order address mandatory, Pre-order kitchen batching, Legacy pre_orders migration, PRE_ORDER window/cutoff/cancel policies (Migr 038), Weekly PRE_ORDER menu + mode/round controls (Migr 039), Driver→Order status sync (Migr 036)
 
 ### เส้นทางสู่การ CLOSE:
 

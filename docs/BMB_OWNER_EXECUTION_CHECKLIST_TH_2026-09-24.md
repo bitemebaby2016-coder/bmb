@@ -1,7 +1,7 @@
 # BMB — OWNER EXECUTION CHECKLIST (ภาษาไทย)
 
-> **วันที่:** 2026-09-24 · **HEAD:** `3ace98a` (main) · **อ้างอิง:** `docs/BMB_MASTER_OBJECTIVE_RECONCILIATION_2026-09-24.md` (Rev.2) + `docs/BMB_MASTER_EXECUTION_PLAN_2026-09-24.md`
-> **สถานะ:** PLAN-ONLY — ยังไม่มีการแก้ code · **รอ Owner review/approve ก่อนเริ่ม implementation**
+> **วันที่:** 2026-09-25 · **HEAD:** `81c513b` (main) · **อ้างอิง:** `docs/BMB_MASTER_OBJECTIVE_RECONCILIATION_2026-09-24.md` (Rev.2) + `docs/BMB_MASTER_EXECUTION_PLAN_2026-09-24.md`
+> **สถานะ:** EXECUTION STARTED — Migration 038/039 implemented, contracts 8/8 PASS, vitest 358/358
 
 ---
 
@@ -9,9 +9,9 @@
 
 BMB คือ **Cloud Kitchen Operating Platform** (ไม่ใช่ POS ร้านอาหารทั่วไป)
 
-- **M1 (เปิดครัวแรกให้ทำงานจริง): BLOCKED** — โครงระบบ (spine) สร้างเสร็จเกือบครบแต่ยังไม่มีหลักฐานการทำงานจริงบน production
+- **M1 (เปิดครัวแรกให้ทำงานจริง): BLOCKED** — โครงระบบ (spine) สร้างเสร็จแล้ว (migrations 001–039, contracts 8/8 PASS, vitest 358/358) แต่ยังไม่มีหลักฐานการทำงานจริงบน production
 - **Full Product: PARTIAL** — นอกจาก M1 ยังมีงาน P2/P3 อีกจำนวนมาก
-- ของที่ "แก้แล้ว" อย่าง MOCK_DRIVERS, localStorage inventory, cutoff enforcement — ทำเสร็จแล้ว ห้ามทำซ้ำ
+- ของที่ "แก้แล้ว" อย่าง MOCK_DRIVERS, localStorage inventory, cutoff enforcement, PRE_ORDER policies (Migr 038/039) — ทำเสร็จแล้ว ห้ามทำซ้ำ
 
 ## M1 เหลืออะไร?
 

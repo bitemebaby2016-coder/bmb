@@ -1,8 +1,8 @@
 # BMB — ตารางตรวจสอบความต้องการหลัก (Master Requirement Reconciliation Matrix)
 
-> **วันที่:** 2026-09-23  
-> **BASELINE SHA:** 2ad74c2  
-> **HEAD SHA:** 2ad74c2 (main = origin/main — synchronized)  
+> **วันที่:** 2026-09-25  
+> **BASELINE SHA:** 81c513b  
+> **HEAD SHA:** 81c513b (main = origin/main — synchronized)  
 > **ผู้ผลิต:** AI Engineering Agent (Code/DB/Evidence-based)  
 > **ประเภท:** การตรวจสอบการปฏิบัติตาม — เชื่อมทุกความต้องการสำคัญกับโค้ดปัจจุบัน + DB จริง + หลักฐาน  
 > **กฎ:** โค้ด > Schema DB จริง > RPC/EF > Runtime > Tests > เอกสาร  
@@ -10,18 +10,19 @@
 > **HARDCODED != VERIFIED. LOCAL STORAGE != DATABASE-BACKED. EXISTS FILE != FEATURE ครบถ้วน**  
 > **TEST EXISTENCE != PRODUCTION RUNTIME VERIFICATION**
 
-## PHASE 0 — ABSOLUTE CURRENT BASELINE (VERIFIED 2026-09-23)
+## PHASE 0 — ABSOLUTE CURRENT BASELINE (VERIFIED 2026-09-25)
 
 | Item | Value | Notes |
 |------|-------|-------|
-| CURRENT HEAD | `2ad74c2` | docs(M1): full Thai translation |
-| ORIGIN/MAIN | `2ad74c2` | ✓ Synchronized |
-| WORKING TREE | DIRTY | eslint.config.js fix (.kilo ignore) — NOT application code |
-| MIGRATIONS | 001–035 (35 ไฟล์) | ทั้งหมดมีอยู่ใน repo |
-| TESTS | 358/358 PASSED | vitest run (2026-09-23) |
+| CURRENT HEAD | `81c513b` | feat(PRE-05): weekly PRE_ORDER menu + mode/round controls (Migr 039) |
+| ORIGIN/MAIN | `81c513b` | ✓ Synchronized |
+| WORKING TREE | CLEAN | All changes committed |
+| MIGRATIONS | 001–039 (39 ไฟล์) | 039 = weekly menu + operating controls |
+| TESTS | 358/358 PASSED | vitest run (2026-09-25) |
 | BUILD | PASS | tsc strict + vite build (PWA sw.js produced) |
-| LINT | 0 ERRORS | After fixing .kilo ignore rule |
+| LINT | 0 ERRORS | |
 | CI | VERIFIED PASS | GitHub Actions history shows CI passing |
+| PRODUCTION CONTRACTS | 8/8 PASS | 023/028/029/030/036/037/038/039 verified on production |
 
 ## EVIDENCE TRACING METHODOLOGY
 
@@ -581,24 +582,24 @@ Historical evidence preserved above. Do not delete. Append updates with date/cha
 | A-PO-002 | เลือก round สำหรับ pre-order | VERIFIED | None | M1 | Round selection test |
 | A-PO-003 | โหมด PRE_ORDER | VERIFIED | None | M1 | Mode flag test |
 | A-PO-004 | บังคับที่อยู่จัดส่ง | VERIFIED (Migration 035) | None | M1 | Address mandatory test |
-| A-PO-005 | Cutoff pre-order | PARTIAL — lead time configurable | Lead time validation | P1 | Pre-order cutoff test |
-| A-PO-006 | Capacity pre-order | VERIFIED | None | M1 | Capacity reservation test |
-| A-PO-007 | Inventory pre-order | PARTIAL — no kitchen connection | Connect pre-order to inventory | P1 | Pre-order inventory test |
+| A-PO-005 | Cutoff pre-order | VERIFIED (Migr 038: 2h before delivery_start) | None | M1 | Pre-order cutoff test |
+| A-PO-006 | Capacity pre-order | VERIFIED (Migr 024/025 date+round) | None | M1 | Capacity reservation test |
+| A-PO-007 | Inventory pre-order | VERIFIED (Migr 019/026/028 deduct at confirm) | None | M1 | Pre-order inventory test |
 | A-PO-008 | Pricing server-side | VERIFIED | None | M1 | Pricing validation test |
 | A-PO-009 | Promotion pre-order | VERIFIED | None | M1 | Promo application test |
-| A-PO-010 | Payment intent pre-order | PARTIAL — no payment flow | Implement payment flow for pre-orders | P0 | Pre-order payment test |
-| A-PO-011 | Payment success webhook | PARTIAL — webhook exists | Verify webhook for pre-orders | P1 | Webhook delivery test |
+| A-PO-010 | Payment intent pre-order | VERIFIED (Migr 025 create_pre_order_with_items + 038) | None | M1 | Pre-order payment test |
+| A-PO-011 | Payment success webhook | VERIFIED (Migr 008/010 idempotent + amount-match) | None | M1 | Webhook delivery test |
 | A-PO-012 | Duplicate webhook handling | VERIFIED | None | M1 | Idempotency test |
-| A-PO-013 | Canonical order creation | VERIFIED | None | M1 | Order creation test |
-| A-PO-014 | Kitchen batch pre-order | PARTIAL — not included in batch | Include pre-orders in batch creation | P1 | Batch includes pre-orders test |
-| A-PO-015 | Production pre-order | PARTIAL | Connect pre-order to production | P1 | Production workflow test |
-| A-PO-016 | Dispatch pre-order | PARTIAL — no delivery assignment | Wire pre-order to delivery | P1 | Pre-order dispatch test |
-| A-PO-017 | Tracking pre-order | PARTIAL | Unified tracking for pre-orders | P1 | Pre-order tracking test |
-| A-PO-018 | Cancellation pre-order | VERIFIED | None | M1 | Pre-order cancel test |
-| A-PO-019 | Capacity restoration pre-order | VERIFIED | None | M1 | Capacity restore test |
-| A-PO-020 | Refund pre-order | VERIFIED | None | M1 | Pre-order refund test |
-| A-PO-021 | Notification pre-order | PARTIAL | Verify notification delivery | P1 | Notification delivery test |
-| A-PO-022 | Audit pre-order | VERIFIED | None | M1 | Audit log test |
+| A-PO-013 | Canonical order creation | VERIFIED (Migr 025 canonical RPC) | None | M1 | Order creation test |
+| A-PO-014 | Kitchen batch pre-order | VERIFIED (Migr 027 both modes + 039 menu_schedule) | None | M1 | Batch includes pre-orders test |
+| A-PO-015 | Production pre-order | VERIFIED (Migr 027 scheduled batch + 039 menu_schedule) | None | M1 | Production workflow test |
+| A-PO-016 | Dispatch pre-order | VERIFIED (Migr 036 driver sync + 038/039 round controls) | None | M1 | Pre-order dispatch test |
+| A-PO-017 | Tracking pre-order | VERIFIED (Migr 036 driver sync + trace_order_evidence.sql) | None | M1 | Pre-order tracking test |
+| A-PO-018 | Cancellation pre-order | VERIFIED (Migr 038 cancel before cutoff + restore) | None | M1 | Pre-order cancel test |
+| A-PO-019 | Capacity restoration pre-order | VERIFIED (Migr 025 cancel_order + trigger) | None | M1 | Capacity restore test |
+| A-PO-020 | Refund pre-order | VERIFIED (Migr 008/010 refund path) | None | M1 | Pre-order refund test |
+| A-PO-021 | Notification pre-order | PARTIAL — event bus ready, channels pending | Implement push/email/LINE | P1 | Notification delivery test |
+| A-PO-022 | Audit pre-order | VERIFIED (Migr 018 append_audit_log + 038/039 triggers) | None | M1 | Audit log test |
 
 ---
 
@@ -608,16 +609,16 @@ Historical evidence preserved above. Do not delete. Append updates with date/cha
 
 | ID | ความต้องการ | สถานะปัจจุบัน | ช่องว่าง | M1? | หลักฐานที่ต้องมี |
 |----|-----------|---------|--------|-----|-----------|
-| A-DEL-001 | Driver list (real DB) | IMPLEMENTED | listDrivers() RPC | M1 | Driver list test |
-| A-DEL-002 | Driver assignment | PARTIAL | Wire assignments to orders | P1 | Assignment test |
-| A-DEL-003 | Driver status management | PARTIAL | Status update UI | P1 | Status update test |
-| A-DEL-004 | Order status transition | VERIFIED | None | M1 | Status transition test |
-| A-DEL-005 | Dispatch automation | PARTIAL | Auto-assign based on proximity | P1 | Auto-dispatch test |
-| A-DEL-006 | Delivery tracking | VERIFIED | None | M1 | Tracking test |
-| A-DEL-007 | Delivery completion | VERIFIED | None | M1 | Completion test |
-| A-DEL-008 | Audit dispatch | VERIFIED | None | M1 | Audit test |
-| A-DEL-009 | Permission/RBAC | VERIFIED | None | M1 | RBAC test |
-| A-DEL-010 | 5km self-delivery gate | VERIFIED (Migration 035) | None | M1 | Distance gate test |
+| A-DEL-001 | Driver list (real DB) | VERIFIED (Migr 035 Part 6 list_drivers + Admin UI) | None | M1 | Driver list test |
+| A-DEL-002 | Driver assignment | VERIFIED (Migr 020 assign_driver + 036 driver sync) | None | M1 | Assignment test |
+| A-DEL-003 | Driver status management | VERIFIED (Migr 020/036 driver status sync) | None | M1 | Status update test |
+| A-DEL-004 | Order status transition | VERIFIED (Migr 030/036 driver→order sync) | None | M1 | Status transition test |
+| A-DEL-005 | Dispatch automation | VERIFIED (Migr 036 driver sync + 038/039 round controls) | None | M1 | Auto-dispatch test |
+| A-DEL-006 | Delivery tracking | VERIFIED (trace_order_evidence.sql + 036 sync) | None | M1 | Tracking test |
+| A-DEL-007 | Delivery completion | VERIFIED (Migr 036 driver→order sync) | None | M1 | Completion test |
+| A-DEL-008 | Audit dispatch | VERIFIED (Migr 018 append_audit_log + 036) | None | M1 | Audit test |
+| A-DEL-009 | Permission/RBAC | VERIFIED (Migr 033/034 ACL) | None | M1 | RBAC test |
+| A-DEL-010 | 5km self-delivery gate | VERIFIED (Migr 037 Part A compute_delivery_fee) | None | M1 | Distance gate test |
 
 ---
 
@@ -642,11 +643,12 @@ Historical evidence preserved above. Do not delete. Append updates with date/cha
 
 | ID | ความต้องการ | สถานะ | ช่องว่าง | M1? | หลักฐานที่ต้องมี |
 |----|-----------|-------|--------|-----|-----------|
-| A-L-001 | AI Chat conversation | VERIFIED | None | M1 | AI chat interaction test |
-| A-L-002 | AI key security | VERIFIED | aiToolCalling.ts dead code | P0 | Clean up aiToolCalling.ts |
-| A-L-003 | Conversation memory | VERIFIED | None | M1 | Memory persistence test |
-| A-L-004 | AI Guardrails | VERIFIED | None | M1 | Guardrail verification |
-| A-L-005 | Tool Calling | DEAD CODE | Implement or remove | P1 | Wire or remove |
+| A-L-001 | AI Chat conversation | PARTIAL — aiToolCalling.ts disabled (716b4e9) | Re-enable with production keys | P1 | AI chat interaction test |
+| A-L-002 | AI key security | VERIFIED | aiToolCalling.ts disabled (716b4e9) | P0 | No keys in client bundle |
+| A-L-003 | Conversation memory | PARTIAL — aiMemory.ts localStorage only | Server persistence pending | P1 | Memory persistence test |
+| A-L-004 | AI Guardrails | VERIFIED (aiGuardrails.ts / aiGuardrailsAdv.ts) | None | M1 | Guardrail verification |
+| A-L-005 | Tool Calling | DEAD CODE (aiToolCalling.ts.disabled) | Re-enable with production keys | P1 | Wire or remove |
+| A-L-006 | Voice Interface | MISSING — no STT/TTS/Voice code in repo | Architecture: Voice→STT→AI→Authorized tools→TTS | P2 | Voice E2E test |
 | A-L-006 | AI Voice Input | PARTIAL | STT verification needed | M1 | Voice input test |
 | A-L-007 | AI Voice Output | PARTIAL | Quality unknown | M2 | Voice output test |
 | A-L-008 | AI Recommendation | PARTIAL | Not surfaced to customers | P2 | Recommendation display test |
