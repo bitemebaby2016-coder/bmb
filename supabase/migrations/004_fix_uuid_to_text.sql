@@ -559,8 +559,8 @@ INSERT INTO product_categories (id, name, slug, icon, sort_order, is_active) VAL
 ON CONFLICT (id) DO NOTHING;
 
 INSERT INTO delivery_rounds (id, round_key, display_name, cutoff_time, delivery_start, delivery_end, max_capacity, current_count, date, scheduled_date, name, status) VALUES
-  ('round-1', 'morning', 'เช้า (07:00-10:00)', '06:00', '07:00', '10:00', 60, 0, CURRENT_DATE, CURRENT_DATE, 'morning', 'active'),
-  ('round-2', 'midday', 'เที่ยง (11:00-14:00)', '10:00', '11:00', '14:00', 80, 0, CURRENT_DATE, CURRENT_DATE, 'midday', 'active'),
+  ('round-1', 'morning', 'เช้า (06:00-09:00)', '08:00', '06:00', '09:00', 60, 0, CURRENT_DATE, CURRENT_DATE, 'morning', 'active'),
+  ('round-2', 'midday', 'เที่ยง (11:00-14:00)', '10:30', '11:00', '14:00', 80, 0, CURRENT_DATE, CURRENT_DATE, 'midday', 'active'),
   ('round-3', 'evening', 'เย็น (17:00-20:00)', '16:00', '17:00', '20:00', 100, 0, CURRENT_DATE, CURRENT_DATE, 'evening', 'active')
 ON CONFLICT (id) DO NOTHING;
 

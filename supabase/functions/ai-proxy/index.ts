@@ -68,7 +68,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
   const systemMessage: ChatMessage = { role: 'system', content: GUARDRAIL_SEGMENT }
   const safeMessages = [systemMessage, ...messages.slice(-10)]
 
-  const model = payload.model || 'z-ai/glm-5.2:free'
+  const model = payload.model || 'nvidia/nemotron-3-ultra-550b-a55b:free'
 
   const res = await fetch(OPENROUTER_URL, {
     method: 'POST',

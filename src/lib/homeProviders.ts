@@ -111,19 +111,20 @@ export function getHomePromotions(): HomePromotion[] {
 /** Store / delivery status — MOCK deterministic (hour-based). Real = delivery_rounds later. */
 export function getStoreStatus(now: Date = new Date()): StoreStatus {
   const hour = now.getHours()
-  if (hour >= 6 && hour < 10) {
-    return { isOpen: true, state: 'open', currentRoundLabel: 'รอบเช้า', cutoff: '08:00', deliveryWindowLabel: 'ส่ง 6:00–9:00', capacityPct: 60, message: 'เปิดรับออเดอร์รอบเช้า' }
+  // Spec canonical: Morning 06-09 (cutoff 08:00), Midday 11-14 (cutoff 10:30), Evening 17-20 (cutoff 16:00)
+  if (hour >= 6 && hour < 9) {
+    return { isOpen: true, state: 'open', currentRoundLabel: 'รอบเช้า', cutoff: '08:00', deliveryWindowLabel: 'ส่ง 06:00–09:00', capacityPct: 60, message: 'เปิดรับออเดอร์รอบเช้า' }
   }
-  if (hour >= 10 && hour < 11) {
-    return { isOpen: true, state: 'same_day_closed', currentRoundLabel: 'รอบกลางวัน', cutoff: '10:30', deliveryWindowLabel: 'ส่ง 11:00–14:00', capacityPct: 40, message: 'รอบกลางวัน เปิดรับออเดอร์ 10:30' }
+  if (hour >= 9 && hour < 11) {
+    return { isOpen: true, state: 'same_day_closed', currentRoundLabel: 'รอบเช้า', cutoff: '08:00', deliveryWindowLabel: 'ส่ง 06:00–09:00', capacityPct: 40, message: 'รอบเช้าปิดรับออเดอร์แล้ว' }
   }
-  if (hour >= 11 && hour < 15) {
+  if (hour >= 11 && hour < 14) {
     return { isOpen: true, state: 'open', currentRoundLabel: 'รอบกลางวัน', cutoff: '10:30', deliveryWindowLabel: 'ส่ง 11:00–14:00', capacityPct: 70, message: 'เปิดรับออเดอร์รอบกลางวัน' }
   }
-  if (hour >= 16 && hour < 17) {
-    return { isOpen: true, state: 'same_day_closed', currentRoundLabel: 'รอบเย็น', cutoff: '16:00', deliveryWindowLabel: 'ส่ง 17:00–20:00', capacityPct: 50, message: 'รอบเย็น เปิดรับออเดอร์ 16:00' }
+  if (hour >= 14 && hour < 17) {
+    return { isOpen: true, state: 'same_day_closed', currentRoundLabel: 'รอบกลางวัน', cutoff: '10:30', deliveryWindowLabel: 'ส่ง 11:00–14:00', capacityPct: 50, message: 'รอบกลางวันปิดรับออเดอร์แล้ว' }
   }
-  if (hour >= 17 && hour < 21) {
+  if (hour >= 17 && hour < 20) {
     return { isOpen: true, state: 'open', currentRoundLabel: 'รอบเย็น', cutoff: '16:00', deliveryWindowLabel: 'ส่ง 17:00–20:00', capacityPct: 80, message: 'เปิดรับออเดอร์รอบเย็น' }
   }
   return { isOpen: false, state: 'closed', message: 'ร้านปิด — กลับมาใหม่รุ่งเช้าจ้า 🌙' }

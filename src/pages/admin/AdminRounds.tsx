@@ -13,8 +13,8 @@ export function AdminRounds() {
   const [form, setForm] = useState({
     display_name: '',
     cutoff_time: '08:00',
-    delivery_start: '09:00',
-    delivery_end: '12:00',
+    delivery_start: '06:00',
+    delivery_end: '09:00',
     max_capacity: 100,
     status: 'active',
   })

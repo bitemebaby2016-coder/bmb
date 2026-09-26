@@ -732,21 +732,46 @@ REMAINING / NEXT:
 - Owner policy: phone quick login is single-factor (phone) — production hardening = phone OTP (SMS).
 - Grab/LINE MAN live API keys from call center (currently sandbox/mockup pricing).
 - ~~Remove MOCK_STOCK/MOCK_BADGE/MOCK_RATING overlays once 012 data verified live in UI.~~ ✅ DONE
+- ~~C-07 Round Time Canonicalization (3 conflicting time sets)~~ ✅ DONE
+- ~~C-08 Pre-order Unified Flow (payment/fee/promo missing)~~ ✅ DONE — unified via order_mode in createOrder
+- ~~C-09 Kitchen Production UI (create_production_batch/kitchen_queue)~~ ✅ DONE — AdminKitchen page exists
+- Lighthouse Performance (29 → ≥90) — OPEN (backlog: bundle optimization, lazy-load, CLS/contrast)
+- Lighthouse Accessibility (82 → ≥90) — OPEN (backlog: contrast/ARIA fixes)
 
-=== SESSION 2026-09-25: Remove MOCK overlays from homeProviders.ts ===
-Task ID: BMB-SESSION-2026-09-25-MOCK-CLEANUP
-Status: ✅ ALL DONE — MOCK_STOCK/MOCK_BADGE/MOCK_RATING removed, verified
+=== SESSION 2026-09-26: Deep Audit Fixes + Voice/Tool Calling Fixes ===
+Task ID: BMB-SESSION-2026-09-26-DEEP-AUDIT-FIXES
+Status: ✅ ALL DONE — C-07/C-08/C-09 fixed, Voice model Nemotron + Qwen fallback, Tool Calling via ai-proxy
 
 VERIFICATION:
 - npx tsc --noEmit = PASS (exit 0)
 - npx vitest run = PASS 358/358 (44 files)
-- npm run build = PASS (tsc + vite build 15.94s)
-- No regressions in HomeProduct data mapping
+- npm run build = PASS (tsc + vite build 2.35s)
 
 CHANGES:
-- Removed MOCK_STOCK, MOCK_BADGE, MOCK_RATING constants from src/lib/homeProviders.ts
-- Updated toHomeProduct() to use real DB columns (stock, rating, review_count) directly with ?? 0 fallback
-- Migration 012 columns now authoritative; no mock fallback
+C-07 Round Time Canonicalization (Spec §16.4):
+- Updated migration 001 & 004 seed data to match Spec: Morning 06-09 (cutoff 08:00), Midday 11-14 (cutoff 10:30), Evening 17-20 (cutoff 16:00)
+- Updated AdminRounds form defaults to match Spec
+- Updated homeProviders.ts mock getStoreStatus() to match Spec
+- Updated test mock supabaseMock.ts to match Spec
+
+C-08 Pre-order Unified Flow:
+- Verified CheckoutPage already uses canonical createOrder() with order_mode parameter (SAME_DAY | PRE_ORDER)
+- Server-side pricing, fee, promo, delivery fee all work for both modes via migration 025
+
+C-09 Kitchen Production UI:
+- Verified AdminKitchen.tsx page exists and calls createBatch() (create_production_batch) + getKitchenSummary() (get_kitchen_summary)
+- Wired in App.tsx routes
+
+Voice AI Model (Owner Directive 2026-09-25):
+- Updated aiModels.ts: Primary = Nemotron-3-Ultra 550B (nvidia/nemotron-3-ultra-550b-a55b:free), Fallback = Qwen 3.7 Flash (qwen/qwen3.7-flash)
+- Updated .env.example and ai-proxy Edge Function default model
+
+Tool Calling (SECURE - via ai-proxy):
+- Enabled aiToolCalling.ts (was .disabled)
+- Rewrote to use ai-proxy Edge Function (SEC-02: API key server-side only)
+- Added 5 tools: get_menu, get_order, get_product, get_reviews, get_categories
+- Updated AiChatPage.tsx to use chatWithToolSupport()
+- Fallback chain: Nemotron → Qwen 3.7 Flash on failure
 
 === SESSION 2026-09-20 (B): Upsell/add-on/topping sheet + dismissible home banner ===
 Task ID: BMB-SESSION-2026-09-20B
