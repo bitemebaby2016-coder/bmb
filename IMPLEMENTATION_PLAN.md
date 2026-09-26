@@ -1,5 +1,5 @@
 # BITE ME BABY - Implementation Plan
-Version: 1.0 | Date: 2026-09-26 | Status: ACTIVE
+Version: 1.1 | Date: 2026-09-26 | Status: ACTIVE
 
 ## Current State
 
@@ -15,15 +15,15 @@ Version: 1.0 | Date: 2026-09-26 | Status: ACTIVE
 - CustomerTimeline (3D Glass UI, animated progress for SAME_DAY/PRE_ORDER) ✅
 - RiderPod (Mandatory Photo + GPS capture on delivery) ✅
 - DistanceChecker (500ms debounce) ✅
+- Payment Gateway P0-5 (Stripe + PromptPay + COD — server-authoritative) ✅
+- Order State Machine P0-6 (allow-list transitions) ✅
 - Build + 358/358 tests PASS ✅
 
 ### IN PROGRESS
-- None — all planned Tasks 3+4 complete
+- None
 
 ### BLOCKED (OWNER ACTION REQUIRED)
-- External Delivery Provider Keys (Grab/LINE MAN/Foodpanda sandbox)
-- Stripe Test Keys (for live payment testing)
-- Real Bite Drive Pilot (physical riders)
+- External Delivery Provider Keys (Grab/LINE MAN/Foodpanda sandbox credentials provided but no live API yet)
 
 ## TASK 1: Glassmorphism Design System (P0, Week 1-2)
 ### Completed
@@ -73,14 +73,30 @@ Version: 1.0 | Date: 2026-09-26 | Status: ACTIVE
 - Stage 2: Add personalized recommendation based on browsing history
 - Stage 3: Expand quota warning triggers (not just scroll-stall)
 - Stage 4: Add voice output option (TTS integration with aiVoice.ts)
-- New: `useBiteAIStore` persistence across page refreshes (localStorage)
 
-## Blockers (OWNER ACTION REQUIRED)
-1. External delivery provider keys (Grab/LINE MAN/Foodpanda sandbox)
-2. Stripe test keys (live payment flow testing)
-3. Supabase Service Role Key (admin API)
+## PAYMENT INTEGRATION (P0-5) — VERIFIED WITH REAL KEYS ✅
+### Live Configuration in .env
+- **Supabase URL**: `https://ivkdfognyiwjcmrhcnwz.supabase.co` ✅
+- **Supabase Service Role Key**: `sb_secret_RVEtLvVSfj8twoNkxTE-...` ✅
+- **Stripe Publishable Key**: `pk_test_51UGpVA3yHrQLTgfK...` ✅
+- **Stripe Secret Key**: `sk_test_51UGpVA3yHrQLTgfKmV8...` ✅
+- **Stripe Webhook Secret**: `whsec_Dt6CDya0kdAuZmf7EW6fG49cBlrcmwpP` ✅
 
-## Next Actions
-1. **TASK 1 remaining**: Food image negative-margin + drop-shadow polish
-2. **TASK 5 remaining**: TTS voice output for Bite AI chat
-3. Owner: Provide external delivery & Stripe keys to enable live integrations
+### Server-Authoritative Flow
+1. **credit_card** → Edge Function `create-checkout` creates Stripe PaymentIntent
+   - Reads `STRIPE_SECRET_KEY` from env → Stripe API (Bearer auth)
+   - Creates PI with authoritative amount (from `orders.total_amount`, never client-supplied)
+   - Returns `client_secret` for Stripe.js confirmation
+   - Records intent row with service-role key (`bmb_backend_production_supabase_service_role_key`)
+2. **Stripe Webhook** → `stripe-webhook/index.ts`
+   - Verifies HMAC-SHA256 with `STRIPE_WEBHOOK_SECRET` (constant-time comparison)
+   - Calls `record_payment_result()` RPC (service_role only, idempotent by `payment_intent_id`)
+   - Updates `orders.payment_status='paid'` + `payment_intents.status='completed'`
+3. **promptpay_qr** → `create_payment_intent_record()` RPC → customer submits TXN reference → admin confirms
+4. **cash_on_delivery** → `create_payment_intent_record()` RPC → admin collects at door → `confirm_offline_payment()` after delivered
+
+### Security Guarantees
+- Service-role key NEVER exposed in client bundle (confirmed in `src/lib/supabase.ts` — P0-1 FIX)
+- Client can never fabricate success (no simulation/localStorage)
+- Amount tamper-proof: edge function re-derives from DB
+- Refunds server-side only via `stripe-refund` EF
