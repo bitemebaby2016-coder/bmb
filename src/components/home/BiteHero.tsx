@@ -8,6 +8,13 @@ import { Link } from 'react-router-dom'
 import type { BiteMessage } from '@/types'
 import { MascotBadge } from '@/components/MascotBadge'
 
+// USP Bar items (static trust signals)
+const USP_ITEMS = [
+  { icon: '🚚', text: 'ส่งฟรีครบ ฿200' },
+  { icon: '🤖', text: 'AI แนะนำ 24/7' },
+  { icon: '📍', text: 'จันทบุรี 5 กม.' },
+] as const
+
 export function BiteHero({ message, pose = 'greeting' }: { message: BiteMessage; pose?: 'greeting' | 'thinking' | 'pointing' | 'empty' }) {
   return (
     <section className="bite-hero card relative overflow-hidden" aria-label="Bite ผู้ช่วยแนะนำเมนู">
@@ -35,6 +42,29 @@ export function BiteHero({ message, pose = 'greeting' }: { message: BiteMessage;
               {message.recommendLabel}
             </Link>
           )}
+          
+          {/* USP Bar — Trust Signals */}
+          <div className="usp-bar flex flex-wrap items-center justify-center sm:justify-start gap-3 mt-3" role="list" aria-label="จุดเด่นของบริการ">
+            {USP_ITEMS.map((item, i) => (
+              <span key={i} className="usp-item inline-flex items-center gap-1 text-xs sm:text-sm text-brand-muted font-medium" role="listitem">
+                <span aria-hidden="true">{item.icon}</span>
+                {item.text}
+              </span>
+            ))}
+          </div>
+
+          {/* Trust Badges — Social Proof Summary */}
+          <div className="trust-badges flex flex-wrap items-center justify-center sm:justify-start gap-2 mt-3" role="list" aria-label="ความน่าเชื่อถือ">
+            <span className="trust-badge inline-flex items-center gap-1 text-xs sm:text-sm text-brand-muted font-medium" role="listitem">
+              <span aria-hidden="true">⭐</span> 4.8/5.0
+            </span>
+            <span className="trust-badge inline-flex items-center gap-1 text-xs sm:text-sm text-brand-muted font-medium" role="listitem">
+              <span aria-hidden="true">📦</span> 10,000+ ออเดอร์
+            </span>
+            <span className="trust-badge inline-flex items-center gap-1 text-xs sm:text-sm text-brand-muted font-medium" role="listitem">
+              <span aria-hidden="true">🔒</span> จ่ายปลอดภัย PromptPay
+            </span>
+          </div>
         </div>
       </div>
 

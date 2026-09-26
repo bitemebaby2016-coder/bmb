@@ -39,7 +39,8 @@ export function PromotionStrip({ promotions }: { promotions: HomePromotion[] }) 
         ))}
         aria-label="โปรโมชั่น เลื่อนได้"
         auto
-        intervalMs={5000}
+        intervalMs={8000}
+        showIndicators={false}
       />
     </section>
   )

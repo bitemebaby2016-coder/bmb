@@ -33,7 +33,7 @@ import { ReviewCarouselSection } from '@/components/home/ReviewCarouselSection'
 import { PromotionStrip } from '@/components/home/PromotionStrip'
 import { DrinksSection } from '@/components/home/DrinksSection'
 import { SnacksSection } from '@/components/home/SnacksSection'
-import { FloatingCart } from '@/components/home/FloatingCart'
+import { FloatingCart, StickyCartBar } from '@/components/home/FloatingCart'
 import { useOrderBuilderStore } from '@/store/orderBuilderStore'
 import type {
   Product,
@@ -56,6 +56,8 @@ export function HomePage() {
   const [rounds, setRounds] = useState<any[]>([])
   const [promoRows, setPromoRows] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [activeCategory, setActiveCategory] = useState<string | null>(null)
 
   useEffect(() => {
     async function loadData() {
@@ -86,6 +88,18 @@ export function HomePage() {
   const { sameDay, preOrder } = getHomeProducts(products, categories)
   const reviews = getHomeReviews(products)
   const promotions = getHomePromotionsFromRows(promoRows)
+
+  // Filter products by search query and category
+  const filteredSameDay = sameDay.filter((item) => {
+    const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase())
+    const matchesCategory = !activeCategory || item.category_id === activeCategory
+    return matchesSearch && matchesCategory
+  })
+  const filteredPreOrder = preOrder.filter((item) => {
+    const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase())
+    const matchesCategory = !activeCategory || item.category_id === activeCategory
+    return matchesSearch && matchesCategory
+  })
   const bannerPromos: FloatingBannerPromo[] = (promoRows || [])
     .filter((r) => r.is_banner === true && r.is_active !== false)
     .sort((a, b) => String(a.created_at || '').localeCompare(String(b.created_at || '')))
@@ -155,10 +169,10 @@ export function HomePage() {
     navigate(isPre ? '/checkout?mode=pre-order' : '/cart')
   }
 
-  const sameDayItems = sameDay.map((item) => (
+  const sameDayItems = filteredSameDay.map((item) => (
     <HomeProductCard key={item.id} item={item} onSameDay={handleSameDay} onPreOrder={handlePreOrder} />
   ))
-  const preOrderItems = preOrder.map((item) => (
+  const preOrderItems = filteredPreOrder.map((item) => (
     <HomeProductCard key={item.id} item={item} onSameDay={handleSameDay} onPreOrder={handlePreOrder} />
   ))
 
@@ -175,19 +189,68 @@ export function HomePage() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-6 pb-28 bg-organic min-h-screen">
-{/* 1. Bite Conversational Hero */}
+      {/* SEO: Visually hidden H1 with primary keywords */}
+      <h1 className="sr-only">Bite Me Baby — สั่งอาหารจัดส่งเมืองจันทบุรี รัศมี 5 กม. AI แนะนำเมนู 24/7</h1>
+      
+      {/* 1. Bite Conversational Hero */}
       <BiteHero message={biteMessage} pose={getBitePose(storeStatus.state)} />
 
       {/* 2. Store / Delivery Status — compact strip (replaces the 3-round grid) */}
       <StoreStatusStrip status={storeStatus} />
 
-{/* 2b. Floating ad banners — max 2 overlay cards, dismissible per promo (localStorage) */}
+      {/* 2b. Search & Category Filter Bar */}
+      <section className="mb-6" aria-labelledby="home-search-heading">
+        <div className="flex flex-col sm:flex-row gap-3">
+          <label htmlFor="home-search" className="sr-only">ค้นหาเมนู</label>
+          <div className="relative flex-1">
+            <svg className="absolute left-3 top-1/2 -translate-y-1/2 text-brand-muted" width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+            <input
+              id="home-search"
+              type="search"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="ค้นหาเมนู... (เช่น ไข่เจียว, ผัดไทย)"
+              className="search-input w-full pl-10 pr-4 py-3 rounded-xl border border-brand-border bg-white text-brand-accent placeholder-brand-muted"
+              aria-label="ค้นหาเมนู"
+            />
+          </div>
+        </div>
+        {categories.length > 0 && (
+          <div className="category-chips flex gap-2 overflow-x-auto pb-2 mt-3" role="group" aria-label="กรองตามหมวดหมู่">
+            <button
+              type="button"
+              onClick={() => setActiveCategory(null)}
+              className={`category-chip whitespace-nowrap px-4 py-2 rounded-full text-sm font-medium transition-colors ${!activeCategory ? 'bg-brand-primary text-white' : 'bg-white text-brand-accent border border-brand-border'}`}
+              aria-pressed={!activeCategory}
+            >
+              ทั้งหมด
+            </button>
+            {categories
+              .filter((c) => c.is_active)
+              .map((cat) => (
+                <button
+                  key={cat.id}
+                  type="button"
+                  onClick={() => setActiveCategory(activeCategory === cat.id ? null : cat.id)}
+                  className={`category-chip whitespace-nowrap px-4 py-2 rounded-full text-sm font-medium transition-colors ${activeCategory === cat.id ? 'bg-brand-primary text-white' : 'bg-white text-brand-accent border border-brand-border'}`}
+                  aria-pressed={activeCategory === cat.id}
+                >
+                  {cat.icon} {cat.name}
+                </button>
+              ))}
+          </div>
+        )}
+      </section>
+
+      {/* 2c. Floating ad banners — max 2 overlay cards, dismissible per promo (localStorage) */}
       <FloatingAdBanners promos={bannerPromos} />
       {/* 3. Same-day Menu — horizontal carousel */}
       <section className="mb-10 scroll-mt-20" aria-labelledby="home-sameday-heading">
         <div className="flex items-center justify-between mb-2">
           <h2 id="home-sameday-heading" className="text-xl font-display font-bold text-brand-accent">
-            🔥 เมนูวันนี้
+            🔥 เมนูวันนี้ — สั่งอาหารจัดส่งจันทบุรี ได้เลย
           </h2>
           <Link to="/menu" className="text-sm text-brand-primary font-medium hover:underline">ดูทั้งหมด →</Link>
         </div>
@@ -199,7 +262,7 @@ export function HomePage() {
         <section className="mb-10 scroll-mt-20" aria-labelledby="home-preorder-heading">
           <div className="flex items-center justify-between mb-2">
             <h2 id="home-preorder-heading" className="text-xl font-display font-bold text-brand-accent">
-              📅 จองล่วงหน้า
+              📅 จองล่วงหน้า — สั่งอาหารจันทบุรี เตรียมพร้อมส่ง
             </h2>
             <Link to="/menu" className="text-sm text-brand-primary font-medium hover:underline">ดูทั้งหมด →</Link>
           </div>
@@ -234,6 +297,7 @@ export function HomePage() {
       </Link>
 
       <FloatingCart />
+      <StickyCartBar />
     </div>
   )
 }

@@ -51,6 +51,11 @@ export function HomeProductCard({ item, onSameDay, onPreOrder }: HomeProductCard
         )}
         {item.badge && <span className="home-card-badge">{item.badge}</span>}
         {lowStock && <span className="home-card-stock">🔥 เหลือ {item.stock} กล่อง</span>}
+        {item.mode === 'pre-order' && item.scheduledDate && (
+          <span className="home-card-scheduled">
+            📅 พร้อมส่ง {formatThaiDate(item.scheduledDate)}
+          </span>
+        )}
       </div>
 
       <div className="home-card-body">
@@ -78,4 +83,9 @@ export function HomeProductCard({ item, onSameDay, onPreOrder }: HomeProductCard
       </div>
     </article>
   )
+}
+
+function formatThaiDate(dateStr: string): string {
+  const date = new Date(dateStr + 'T00:00:00')
+  return date.toLocaleDateString('th-TH', { day: 'numeric', month: 'short' })
 }

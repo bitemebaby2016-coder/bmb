@@ -65,7 +65,7 @@ export function ReviewCarouselSection({ reviews, products, onReviewCta }: Review
         items={items}
         aria-label="รีวิวจากลูกค้า เลื่อนได้"
         auto
-        intervalMs={5000}
+        intervalMs={8000}
       />
     </section>
   )

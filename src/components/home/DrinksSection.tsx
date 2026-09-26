@@ -10,8 +10,13 @@ import { HorizontalCarousel } from './HorizontalCarousel'
 import { DRINKS_MENU, type HomeDrink } from '@/lib/drinksMenu'
 
 function DrinkCard({ drink }: { drink: HomeDrink }) {
+  const isComingSoon = !!drink.comingSoon
   return (
-    <article className="drink-card" aria-label={drink.name}>
+    <article
+      className="drink-card"
+      aria-label={drink.name}
+      data-coming-soon={isComingSoon ? "true" : "false"}
+    >
       <div className="drink-card-media">
         <img
           src={drink.image}
@@ -20,6 +25,11 @@ function DrinkCard({ drink }: { drink: HomeDrink }) {
           decoding="async"
         />
         <span className="drink-card-badge">{drink.tag}</span>
+        {isComingSoon && (
+          <div className="drink-card-coming-soon-overlay" aria-hidden="true">
+            <span>🪄 เร็ว ๆ นี้ — ยังไม่สามารถสั่งได้</span>
+          </div>
+        )}
       </div>
       <div className="drink-card-body">
         <div className="drink-card-name">
@@ -27,7 +37,7 @@ function DrinkCard({ drink }: { drink: HomeDrink }) {
           <span className="drink-card-price">฿{drink.price}</span>
         </div>
         <p className="drink-card-desc">{drink.description}</p>
-        {drink.comingSoon && <span className="drink-card-coming">🪄 เร็ว ๆ นี้</span>}
+        {isComingSoon && <span className="drink-card-coming">🪄 เร็ว ๆ นี้</span>}
       </div>
     </article>
   )
