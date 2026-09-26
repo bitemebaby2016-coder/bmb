@@ -9,13 +9,16 @@
 // pointer-events-auto so order CTAs are never blocked.
 // ============================================
 
-import { useEffect, useRef, useState, useCallback } from 'react'
+import { useEffect, useRef, useState, useCallback, lazy, Suspense } from 'react'
 import { MascotWrapper } from '@/components/ui/MascotWrapper'
 import { GlassCard } from '@/components/ui/GlassCard'
-import { BiteAIChat } from '@/components/ai/BiteAIChat'
 import { useBiteAIStore } from '@/stores/useBiteAIStore'
 import { useCartStore } from '@/stores/useCartStore'
 import { usePlatformConfig } from '@/config/platformConfig'
+
+// ⚡ PERF: the full AI chat UI + aiService/OpenRouter chain is only needed when
+// the user taps the mascot — load it on demand instead of at boot (TBT).
+const BiteAIChat = lazy(() => import('@/components/ai/BiteAIChat').then(m => ({ default: m.BiteAIChat })))
 
 export interface BiteMascotProps {
   userName?: string
@@ -174,7 +177,11 @@ export function BiteMascot({ userName, activeSection = 'home' }: BiteMascotProps
         </div>
       </MascotWrapper>
 
-      {chatVisible && <BiteAIChat />}
+      {chatVisible && (
+        <Suspense fallback={null}>
+          <BiteAIChat />
+        </Suspense>
+      )}
     </>
   )
 }

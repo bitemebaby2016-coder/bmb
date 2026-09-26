@@ -1075,6 +1075,41 @@ NEXT EXACT ACTION:
    re-run LH on https://bitemebaby.com.
 
 
+=== SESSION 2026-09-26 (4): Bundle/TBT — dead deps + lazy AI chat + content-visibility ===
+Task ID: BMB-SESSION-2026-09-26-4
+Status: COMPLETE (all gates pass)
+
+ANALYSIS (evidence lighthouse/local-tbt.json + local-tbt2.json):
+- Dead deps confirmed NOT imported anywhere in src: stripe (edge functions use
+  Deno), bcryptjs, axios, react-markdown -> removed from package.json (+lock).
+- Long tasks: 705/463ms document (React initial render+layout), react-vendor
+  eval 280/209ms; biggest main-thread bucket = Style & Layout 2867ms.
+- Lazy candidates found: BiteAIChat (imported eagerly via BiteMascot->Layout on
+  EVERY page) pulled the AI chat UI + aiService/OpenRouter chain into the
+  critical index chunk.
+
+CHANGES:
+- BiteMascot.tsx: BiteAIChat -> React.lazy + Suspense (loads only on mascot tap)
+- package.json: removed axios/bcryptjs/@types/bcryptjs/react-markdown/stripe
+- index.css: `main section.mb-10 { content-visibility: auto; contain-intrinsic-size: auto 420px }`
+  (below-the-fold sections skip Style&Layout until scrolled near)
+- OrderTrackPage: progress bar width% -> transform: scaleX (GPU) [session 3]
+
+VERIFIED RESULTS (local preview, mobile throttling):
+- Main-thread work: 6.7s (user prod baseline) / 5.3s -> ~3.4s
+  (Style&Layout 2867->1841ms, Script Eval 841->593ms)
+- TBT: 500ms -> 290ms (matches owner's prod 290ms on a hot machine; re-measure
+  on prod post-deploy)
+- index chunk: 131 -> 125KB (BiteAIChat+aiService split to lazy chunk)
+- non-composited-animations: PASS (score 1) [session 3]
+- tsc 0 errors; vitest 0 failed / 358 PASS (isolated JSON-reporter run; one
+  earlier run showed 1 flaky failure while Lighthouse ran concurrently —
+  not reproducible in isolation)
+- Note: react-vendor 242KB + supabase-vendor 217KB are framework floors; the
+  "unused JS 79KiB" residual lives mostly in supabase auth/realtime internals —
+  not safely tree-shakeable at this stage.
+
+==============================================================================
 === SESSION 2026-09-26 (3): Non-composited animations fixed + production robots gate ===
 Task ID: BMB-SESSION-2026-09-26-3
 Status: COMPLETE (all gates pass)

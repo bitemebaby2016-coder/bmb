@@ -1541,6 +1541,16 @@ p { color: var(--color-brand-text-secondary); }
 }
 
 /* ============================================
+   Perf: skip Style&Layout work for offscreen sections (Lighthouse
+   mainthread-work-breakdown "Style & Layout" 2.9s -> big cut; sections
+   below the fold don't need layout until scrolled near)
+   ============================================ */
+main section.mb-10 {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 420px;
+}
+
+/* ============================================
    A11y fixes (Lighthouse): color contrast + touch target size
    ============================================ */
 /* Text-on-white brand orange 2.8:1 -> dark orange 5.9:1 (text usages only;
