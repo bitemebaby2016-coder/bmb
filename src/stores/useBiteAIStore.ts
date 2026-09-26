@@ -31,7 +31,7 @@ interface BiteAIStore {
 
   /** Fire on the user's first click/interaction (enables Web Audio greeting). */
   firstInteraction: () => void
-  /** Stage 2 — compute an upsell prompt when cartTotal < freeShippingThreshold. */
+  /** Stage 2 — compute an upsell prompt when cartTotal > 0 AND cartTotal < freeShippingThreshold. */
   evaluateUpsell: (cartTotal: number, freeShippingThreshold: number) => void
   /** Stage 3 — micro-hook fired when the user stalls on the pre-order grid. */
   triggerMicroHook: (quotaLabel: string) => void
@@ -55,21 +55,32 @@ export const useBiteAIStore = create<BiteAIStore>((set) => ({
     set((state) => (state.greetingPlayed ? state : { greetingPlayed: true })),
 
   evaluateUpsell: (cartTotal, freeShippingThreshold) => {
-    const remaining = freeShippingThreshold - cartTotal
-    if (remaining > 0) {
-      set({
-        stage: 'personalization',
-        upsell: {
-          remaining,
-          message: `รับขนมหวานเพิ่มอีก ${remaining} บาท เพื่อรับสิทธิ์ส่งฟรีทันทีไหมคะ? 🍊`,
-        },
-        bubble: `รับขนมหวานเพิ่มอีก ${remaining} บาท เพื่อรับสิทธิ์ส่งฟรีทันทีไหมคะ? 🍊`,
-      })
+    // Only show upsell when customer has items in cart
+    if (cartTotal > 0) {
+      if (cartTotal < freeShippingThreshold) {
+        const remaining = freeShippingThreshold - cartTotal
+        set({
+          stage: 'personalization',
+          upsell: {
+            remaining,
+            message: `รับขนมหวานเพิ่มอีก ${remaining} บาท เพื่อรับสิทธิ์ส่งฟรีทันทีไหมคะ? 🍊`,
+          },
+          bubble: `รับขนมหวานเพิ่มอีก ${remaining} บาท เพื่อรับสิทธิ์ส่งฟรีทันทีไหมคะ? 🍊`,
+        })
+      } else {
+        // Cart meets or exceeds free shipping threshold
+        set({
+          stage: 'personalization',
+          upsell: { remaining: 0, message: 'ได้สิทธิ์ส่งฟรีแล้วค่ะ! 🎉' },
+          bubble: 'ได้สิทธิ์ส่งฟรีแล้วค่ะ! 🎉',
+        })
+      }
     } else {
+      // Cart is empty - no upsell
       set({
         stage: 'personalization',
-        upsell: { remaining: 0, message: 'ได้สิทธิ์ส่งฟรีแล้วค่ะ! 🎉' },
-        bubble: 'ได้สิทธิ์ส่งฟรีแล้วค่ะ! 🎉',
+        upsell: null,
+        bubble: null,
       })
     }
   },

@@ -5,7 +5,7 @@
 // Stage 2 Upsell     : cart vs free-shipping config → sweetener prompt.
 // Stage 3 Micro-Hook : scroll-stall monitor (>5s) on the pre-order grid.
 // Stage 4 Full-Chat  : mascot tap → full-screen contextual BiteAIChat.
-// Guard: wrapper is absolute pointer-events-none; only the tap target has
+// Guard: wrapper is fixed pointer-events-none; only the tap target has
 // pointer-events-auto so order CTAs are never blocked.
 // ============================================
 
@@ -161,7 +161,7 @@ export function BiteMascot({ userName, activeSection = 'home' }: BiteMascotProps
             type="button"
             onClick={handleTap}
             aria-label="เปิดแชทกับน้อง Bite"
-            className="pointer-events-auto flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-brand-primary to-brand-secondary shadow-lg animate-float hover:scale-105 active:scale-95 transition-transform overflow-hidden"
+            className="pointer-events-auto flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-brand-primary to-brand-secondary shadow-lg animate-float hover:scale-105 active:scale-95 transition-transform overflow-hidden cursor-grab active:cursor-grabbing"
             data-testid="bite-mascot"
           >
             <img
