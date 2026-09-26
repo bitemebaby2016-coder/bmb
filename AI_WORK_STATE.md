@@ -1075,6 +1075,41 @@ NEXT EXACT ACTION:
    re-run LH on https://bitemebaby.com.
 
 
+=== SESSION 2026-09-26 (3): Non-composited animations fixed + production robots gate ===
+Task ID: BMB-SESSION-2026-09-26-3
+Status: COMPLETE (all gates pass)
+
+OWNER DIRECTIVES HANDLED:
+- Domain: ON HOLD (owner decides + binds DNS; production is
+  https://bitemebaby-5f7.pages.dev — bitemebaby.com has NO DNS record yet).
+- Old deployed build: local dist cleared + rebuilt; stale CF deployment itself
+  can only be purged by owner (no CLOUDFLARE_API_TOKEN in env) — new push
+  supersedes it on next build.
+
+NON-COMPOSITED ANIMATIONS (Lighthouse: 28 elements) — ROOT CAUSE + FIX:
+- img.star-3d-img had TWO concurrent animations (starPop `both` fill +
+  starBlink infinite) -> Lighthouse "incompatible animations" =
+  non-composited. 6 cards x 5 stars = the 28 flagged nodes.
+- starBlink keyframes also animated `filter: drop-shadow()` (non-GPU).
+- FIXES (src/index.css):
+  * starBlink -> opacity + transform only (filter lines removed)
+  * .star-3d-img -> SINGLE animation (starBlink) — starPop dropped
+  * .star-3d -> removed reference to non-existent starPulse keyframes
+  * 10 transition lines converted to transform-only (box-shadow/background/
+    border-color no longer animated — hover changes are instant)
+  * HorizontalCarousel dots: no width transition (w-2<->w-6 instant)
+  * OrderTrackPage progress bar: width% -> transform: scaleX + origin-left
+- RESCAN: 0 non-GPU transitions/keyframes remain in src/index.css.
+- VERIFIED: Lighthouse local — non-composited-animations score 1 (PASS);
+  tsc 0 errors; vitest 358/358; build PASS; dist/_headers present.
+
+REMAINING:
+- Owner: decide domain + DNS; purge old CF deployment if desired;
+  after next deploy re-run
+  `node scripts/checkProductionHeaders.cjs https://bitemebaby-5f7.pages.dev`
+  (expect ALL PASS — canonical fixed in the new build).
+
+==============================================================================
 ===============================================================================
 FINAL PRINCIPLE
 ===============================================================================

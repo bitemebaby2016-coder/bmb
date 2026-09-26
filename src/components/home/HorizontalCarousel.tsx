@@ -110,7 +110,7 @@ export function HorizontalCarousel({ items, 'aria-label': ariaLabel, auto = fals
               className={`hc-dot w-6 h-6 flex items-center justify-center p-0 bg-transparent border-0 cursor-pointer`}
             >
               <span
-                className={`block rounded-full transition-all ${
+                className={`block rounded-full ${
                   i === currentIndex ? 'bg-brand-primary w-6 h-2' : 'bg-brand-muted/50 hover:bg-brand-muted w-2 h-2'
                 }`}
                 aria-hidden="true"

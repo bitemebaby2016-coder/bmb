@@ -337,7 +337,7 @@ p { color: var(--color-brand-text-secondary); }
   overflow: hidden;
   box-shadow: var(--shadow-lg);
   transform-style: preserve-3d;
-  transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.35s ease;
+  transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
   border: 1px solid rgba(255, 255, 255, 0.6);
   background: var(--color-brand-bg-warm);
   will-change: transform;
@@ -443,9 +443,7 @@ p { color: var(--color-brand-text-secondary); }
   text-shadow:
     0 2px 0 rgba(146, 64, 14, 0.35),
     0 0 6px rgba(250, 204, 21, 0.45);
-  animation:
-    starPop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both,
-    starPulse 2.4s ease-in-out infinite;
+  animation: starPop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
   animation-delay: calc(var(--star-i, 0) * 90ms);
 }
 
@@ -469,9 +467,9 @@ p { color: var(--color-brand-text-secondary); }
   object-fit: contain;
   margin-right: 0.05rem;
   background: transparent;
-  animation:
-    starPop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both,
-    starBlink 1.8s ease-in-out infinite;
+  /* SINGLE animation only — Lighthouse flags concurrent animations
+     (starPop + starBlink) as "incompatible" = non-composited */
+  animation: starBlink 1.8s ease-in-out infinite;
   animation-delay: calc(var(--star-i, 0) * 120ms);
 }
 
@@ -487,25 +485,23 @@ p { color: var(--color-brand-text-secondary); }
 
 /* Blinking golden star — clear "twinkle" so the effect is visible on the card */
 @keyframes starBlink {
+  /* GPU-only: opacity + transform (filter/drop-shadow removed — was the
+     source of Lighthouse "28 non-composited animations") */
   0%, 100% {
     opacity: 1;
     transform: translateY(0) scale(1) rotate(0deg);
-    filter: drop-shadow(0 0 4px rgba(250, 204, 21, 0.65));
   }
   32% {
     opacity: 0.55;
     transform: translateY(-1px) scale(0.92) rotate(-8deg);
-    filter: drop-shadow(0 0 2px rgba(250, 204, 21, 0.35));
   }
   50% {
     opacity: 1;
     transform: translateY(-2px) scale(1.18) rotate(6deg);
-    filter: drop-shadow(0 0 14px rgba(250, 204, 21, 1));
   }
   72% {
     opacity: 0.88;
     transform: translateY(-1px) scale(1.02) rotate(2deg);
-    filter: drop-shadow(0 0 6px rgba(250, 204, 21, 0.8));
   }
 }
 
@@ -582,7 +578,7 @@ p { color: var(--color-brand-text-secondary); }
   font-size: 0.9rem;
   text-decoration: none;
   box-shadow: 0 4px 10px rgba(249, 115, 22, 0.35);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition: transform 0.2s ease;
 }
 
 .review-cta:hover {
@@ -755,7 +751,7 @@ p { color: var(--color-brand-text-secondary); }
   background: var(--color-brand-surface);
   color: var(--color-brand-accent);
   font-size: 14px;
-  transition: border-color 0.18s ease, box-shadow 0.18s ease;
+  transition: transform 0.18s ease;
 }
 .search-input::placeholder { color: var(--color-brand-muted); }
 .search-input:focus {
@@ -793,7 +789,7 @@ p { color: var(--color-brand-text-secondary); }
   border-radius: 16px;
   color: var(--color-brand-accent, #92400E);
   box-shadow: 0 2px 6px rgba(146, 64, 14, 0.08);
-  transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+  transition: transform 0.18s ease;
   text-align: center;
 }
 .quick-action:hover { transform: translateY(-2px); box-shadow: 0 8px 18px rgba(249, 115, 22, 0.18); background: #fff; }
@@ -880,7 +876,7 @@ p { color: var(--color-brand-text-secondary); }
   overflow: hidden;
   box-shadow: 0 10px 24px rgba(146, 64, 14, 0.12);
   transform: perspective(900px) rotateY(0deg);
-  transition: transform 0.22s ease, box-shadow 0.22s ease;
+  transition: transform 0.22s ease;
 }
 .home-card:hover {
   transform: perspective(900px) translateY(-4px) rotateY(-1.5deg);
@@ -958,7 +954,7 @@ p { color: var(--color-brand-text-secondary); }
   display: flex;
   flex-direction: column;
   gap: 10px;
-  transition: transform 0.18s ease, box-shadow 0.18s ease;
+  transition: transform 0.18s ease;
 }
 .promo-card:hover { transform: translateY(-3px); box-shadow: 0 12px 24px rgba(146, 64, 14, 0.16); }
 .promo-card-cta { color: var(--color-brand-primary, #F97316); font-weight: 700; font-size: 14px; }
@@ -967,7 +963,7 @@ p { color: var(--color-brand-text-secondary); }
   border: 1px dashed rgba(249, 115, 22, 0.3);
   background: rgba(255, 251, 235, 0.8);
   border-radius: 16px;
-  transition: background 0.18s ease, transform 0.18s ease;
+  transition: transform 0.18s ease;
 }
 .share-card:hover { background: #fff; transform: translateY(-2px); }
 
@@ -1096,7 +1092,7 @@ p { color: var(--color-brand-text-secondary); }
   border-radius: 20px;
   overflow: hidden;
   box-shadow: 0 10px 24px rgba(146, 64, 14, 0.12);
-  transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
+  transition: transform 0.22s ease;
 }
 .drink-card:hover,
 .snack-card:hover {
@@ -1328,7 +1324,7 @@ p { color: var(--color-brand-text-secondary); }
   padding: 5px 12px;
   font-size: 12px;
   cursor: pointer;
-  transition: background 0.15s ease, border-color 0.15s ease;
+  transition: transform 0.15s ease;
 }
 .ob-chip--on {
   background: linear-gradient(135deg, #F97316, #FBBF24);
@@ -1465,7 +1461,7 @@ p { color: var(--color-brand-text-secondary); }
   padding: 14px;
   border-radius: 12px;
   box-shadow: 0 4px 14px rgba(249, 115, 22, 0.35);
-  transition: transform 0.18s ease, box-shadow 0.18s ease;
+  transition: transform 0.18s ease;
 }
 .sticky-cart-cta:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(249, 115, 22, 0.45); }
 .sticky-cart-cta:active { transform: scale(0.98); }

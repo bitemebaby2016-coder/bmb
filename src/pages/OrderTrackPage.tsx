@@ -118,8 +118,8 @@ export function OrderTrackPage() {
             <div className="flex items-center justify-between relative">
               <div className="absolute top-6 left-0 right-0 h-1 bg-brand-border z-0"></div>
               <div
-                className="absolute top-6 left-0 h-1 bg-brand-primary z-0 transition-all duration-500"
-                style={{ width: `${Math.min(100, (activeIdx / (TIMELINE.length - 1)) * 100)}%` }}
+                className="absolute top-6 left-0 h-1 w-full bg-brand-primary z-0 origin-left transition-transform duration-500"
+                style={{ transform: `scaleX(${Math.min(100, (activeIdx / (TIMELINE.length - 1)) * 100) / 100})` }}
               ></div>
               {TIMELINE.map((step, index) => (
                 <div key={step.key} className="relative z-10 flex flex-col items-center">
