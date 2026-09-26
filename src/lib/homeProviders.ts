@@ -23,40 +23,16 @@ import type {
 } from '@/types'
 import { SOCIAL_PROOF_REVIEWS } from './socialProofReviews'
 
-// ============================================
-// TEMPORARY MOCK OVERLAYS (until real data flows from Admin/DB)
-// keyed by product id — remove when stock/rating/review_count live in products.
-// ============================================
-const MOCK_STOCK: Record<string, number> = {
-  'prod-1': 8,
-  'prod-2': 12,
-  'prod-3': 3,
-  'prod-4': 20,
-}
-const MOCK_BADGE: Record<string, string> = {
-  'prod-1': '🔥 ขายดี',
-  'prod-3': '฿ ลดพิเศษ',
-}
-const MOCK_RATING: Record<string, { rating: number; reviewCount: number }> = {
-  'prod-1': { rating: 5, reviewCount: 42 },
-  'prod-2': { rating: 4.8, reviewCount: 31 },
-  'prod-3': { rating: 4.6, reviewCount: 18 },
-  'prod-4': { rating: 4.9, reviewCount: 57 },
-  'prod-5': { rating: 5, reviewCount: 12 },
-  'prod-6': { rating: 5, reviewCount: 9 },
-}
-
 function availabilityOf(p: Product): AvailabilityState {
   if (!p.is_available) return 'sold_out'
   return 'available'
 }
 
 function toHomeProduct(p: Product, cat?: ProductCategory, mode: 'same-day' | 'pre-order' = 'same-day'): HomeProduct {
-  const overlay = MOCK_RATING[p.id] || { rating: 5, reviewCount: 0 }
-  // migration 012 real columns win; MOCK_* overlay is the pre-migration fallback.
-  const stock = typeof p.stock === 'number' ? p.stock : MOCK_STOCK[p.id]
-  const rating = typeof p.rating === 'number' ? Number(p.rating) : overlay.rating
-  const reviewCount = typeof p.review_count === 'number' ? Number(p.review_count) : overlay.reviewCount
+  // migration 012 real columns win; MOCK_* overlays removed.
+  const stock = p.stock ?? 0
+  const rating = Number(p.rating) ?? 0
+  const reviewCount = Number(p.review_count) ?? 0
   return {
     id: p.id,
     name: p.name,
@@ -69,7 +45,6 @@ function toHomeProduct(p: Product, cat?: ProductCategory, mode: 'same-day' | 'pr
     mode,
     availability: availabilityOf(p),
     stock,
-    badge: MOCK_BADGE[p.id],
     rating,
     reviewCount,
     cta: mode === 'pre-order' ? '📅 จองล่วงหน้า' : '🛒 เพิ่มลงตะกร้า',

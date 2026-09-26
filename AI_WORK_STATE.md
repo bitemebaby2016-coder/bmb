@@ -731,7 +731,22 @@ VERIFICATION: tsc --noEmit 0 · vitest 61/61 · npm run build PASS · runtime QA
 REMAINING / NEXT:
 - Owner policy: phone quick login is single-factor (phone) — production hardening = phone OTP (SMS).
 - Grab/LINE MAN live API keys from call center (currently sandbox/mockup pricing).
-- Remove MOCK_STOCK/MOCK_BADGE/MOCK_RATING overlays once 012 data verified live in UI.
+- ~~Remove MOCK_STOCK/MOCK_BADGE/MOCK_RATING overlays once 012 data verified live in UI.~~ ✅ DONE
+
+=== SESSION 2026-09-25: Remove MOCK overlays from homeProviders.ts ===
+Task ID: BMB-SESSION-2026-09-25-MOCK-CLEANUP
+Status: ✅ ALL DONE — MOCK_STOCK/MOCK_BADGE/MOCK_RATING removed, verified
+
+VERIFICATION:
+- npx tsc --noEmit = PASS (exit 0)
+- npx vitest run = PASS 358/358 (44 files)
+- npm run build = PASS (tsc + vite build 15.94s)
+- No regressions in HomeProduct data mapping
+
+CHANGES:
+- Removed MOCK_STOCK, MOCK_BADGE, MOCK_RATING constants from src/lib/homeProviders.ts
+- Updated toHomeProduct() to use real DB columns (stock, rating, review_count) directly with ?? 0 fallback
+- Migration 012 columns now authoritative; no mock fallback
 
 === SESSION 2026-09-20 (B): Upsell/add-on/topping sheet + dismissible home banner ===
 Task ID: BMB-SESSION-2026-09-20B
