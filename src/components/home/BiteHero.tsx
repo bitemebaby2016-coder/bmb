@@ -4,7 +4,8 @@
 // Data comes ONLY from the message contract (BiteMessage) — no hard-coded business text.
 // ============================================
 
-import { Link, useState } from 'react'
+import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import type { BiteMessage } from '@/types'
 import { MascotBadge } from '@/components/MascotBadge'
 import { BiteAIChat } from '@/components/ai/BiteAIChat'
