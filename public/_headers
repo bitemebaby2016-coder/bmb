@@ -1,0 +1,13 @@
+# Cloudflare Pages headers — served from dist/ (public/ is copied verbatim)
+# Defensive: never allow a stray noindex on production (pages.dev previews
+# send "X-Robots-Tag: noindex" automatically; this pins production to indexable).
+/*
+  X-Robots-Tag: index, follow
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/fonts/*
+  Cache-Control: public, max-age=31536000, immutable
