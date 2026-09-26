@@ -19,6 +19,7 @@ export function PromotionStrip({ promotions }: { promotions: HomePromotion[] }) 
         </h2>
         <Link to="/promotions" className="text-sm text-brand-primary font-medium hover:underline">ดูทั้งหมด →</Link>
       </div>
+      <h3 className="sr-only">โปรโมชั่น — ลดราคาสั่งอาหาร</h3>
       <HorizontalCarousel
         items={promotions.map((promo) => (
           <div key={promo.id} className="promo-card card">

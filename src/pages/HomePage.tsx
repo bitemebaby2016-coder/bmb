@@ -201,6 +201,7 @@ export function HomePage() {
 
       {/* 2b. Search & Category Filter Bar */}
       <section className="mb-6" aria-labelledby="home-search-heading">
+        <h2 id="home-search-heading" className="sr-only">ค้นหาและกรองเมนู</h2>
         <div className="flex flex-col sm:flex-row gap-3">
           <label htmlFor="home-search" className="sr-only">ค้นหาเมนู</label>
           <div className="relative flex-1">
@@ -255,6 +256,7 @@ export function HomePage() {
           </h2>
           <Link to="/menu" className="text-sm text-brand-primary font-medium hover:underline">ดูทั้งหมด →</Link>
         </div>
+        <h3 className="sr-only">เมนูวันนี้</h3>
         <HorizontalCarousel items={sameDayItems} aria-label="เมนูวันนี้ เลื่อนได้" />
       </section>
 
@@ -267,6 +269,7 @@ export function HomePage() {
             </h2>
             <Link to="/menu" className="text-sm text-brand-primary font-medium hover:underline">ดูทั้งหมด →</Link>
           </div>
+          <h3 className="sr-only">เมนูล่วงหน้า</h3>
           <HorizontalCarousel items={preOrderItems} aria-label="เมนูจองล่วงหน้า เลื่อนได้" />
         </section>
       )}

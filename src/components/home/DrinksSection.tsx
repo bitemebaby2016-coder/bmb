@@ -60,6 +60,7 @@ export function DrinksSection() {
         </h2>
         <Link to="/menu" className="text-sm text-brand-primary font-medium hover:underline">ดูทั้งหมด →</Link>
       </div>
+      <h3 className="sr-only">เครื่องดื่ม — รีวิวอาหารจานๆ</h3>
       <HorizontalCarousel
         items={DRINKS_MENU.map((drink) => <DrinkCard key={drink.id} drink={drink} />)}
         aria-label="เครื่องดื่ม เลื่อนได้"

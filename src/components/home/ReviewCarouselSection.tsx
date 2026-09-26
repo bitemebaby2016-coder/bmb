@@ -61,6 +61,7 @@ export function ReviewCarouselSection({ reviews, products, onReviewCta }: Review
         </h2>
         <Link to="/reviews" className="text-sm text-brand-primary font-medium hover:underline">รีวิวทั้งหมด →</Link>
       </div>
+      <h3 className="sr-only">รีวิวจากลูกค้าจริง</h3>
       <HorizontalCarousel
         items={items}
         aria-label="รีวิวจากลูกค้า เลื่อนได้"
