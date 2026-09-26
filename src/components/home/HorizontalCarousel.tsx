@@ -107,10 +107,15 @@ export function HorizontalCarousel({ items, 'aria-label': ariaLabel, auto = fals
               aria-selected={i === currentIndex}
               aria-label={`ไปสไลด์ ${i + 1}`}
               onClick={() => trackRef.current?.scrollTo({ left: i * (trackRef.current?.querySelector('[data-slide]')?.clientWidth ?? 260) + 16 * i, behavior: 'smooth' })}
-              className={`hc-dot w-2 h-2 rounded-full transition-all ${
-                i === currentIndex ? 'bg-brand-primary w-6' : 'bg-brand-muted/50 hover:bg-brand-muted'
-              }`}
-            />
+              className={`hc-dot w-6 h-6 flex items-center justify-center p-0 bg-transparent border-0 cursor-pointer`}
+            >
+              <span
+                className={`block rounded-full transition-all ${
+                  i === currentIndex ? 'bg-brand-primary w-6 h-2' : 'bg-brand-muted/50 hover:bg-brand-muted w-2 h-2'
+                }`}
+                aria-hidden="true"
+              />
+            </button>
           ))}
         </div>
       )}

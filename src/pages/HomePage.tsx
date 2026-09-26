@@ -30,6 +30,7 @@ import { FloatingAdBanners, type FloatingBannerPromo } from '@/components/home/F
 import { HorizontalCarousel } from '@/components/home/HorizontalCarousel'
 import { HomeProductCard } from '@/components/home/HomeProductCard'
 import { ReviewCarouselSection } from '@/components/home/ReviewCarouselSection'
+import { ReviewGallerySection } from '@/components/home/ReviewGallerySection'
 import { PromotionStrip } from '@/components/home/PromotionStrip'
 import { DrinksSection } from '@/components/home/DrinksSection'
 import { SnacksSection } from '@/components/home/SnacksSection'
@@ -279,12 +280,14 @@ export function HomePage() {
       {/* 6. Social Proof Review Carousel */}
       <ReviewCarouselSection reviews={reviews} products={products} onReviewCta={handleReviewCta} />
 
+      {/* 6b. Real customer review photo gallery (lazy) */}
+      <ReviewGallerySection />
+
       {/* 7. Promotions + Shared social action */}
       <PromotionStrip promotions={promotions} />
       <Link
         to="/share"
         className="share-card card flex items-center justify-between gap-3 px-4 py-3"
-        aria-label="ชวนเพื่อนรับคูปอง"
       >
         <div className="flex items-center gap-3 min-w-0">
           <span className="text-2xl" aria-hidden="true">👥</span>

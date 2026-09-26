@@ -13,6 +13,10 @@ const SITE_URL = 'https://bitemebaby.com'
 
 function canonicalUrl(url?: string): string {
   if (!url || url === '/') return SITE_URL + '/'
+  // Already absolute (e.g. seo.ts returns SITE_CONFIG.url + path) — normalize home only.
+  if (/^https?:\/\//i.test(url)) {
+    return url.replace(/\/+$/, '') === SITE_URL ? SITE_URL + '/' : url
+  }
   return SITE_URL + (url.startsWith('/') ? url : '/' + url)
 }
 

@@ -996,6 +996,85 @@ Local == Remote: YES (34/34 migrations)
 
 **Do not start Wave 4 automatically. Await owner instruction.**
 
+=== SESSION 2026-09-26: DB apply + Owner admin + Real reviews + Lighthouse remediation ===
+Task ID: BMB-SESSION-2026-09-26-2
+Status: PARTIAL-COMPLETE (gates pass; final LH + prod deploy pending)
+
+OBJECTIVE:
+Owner directives: (1) apply pending migrations to Supabase, (2) promote
+bitemebaby2016@gmail.com to full admin, (3) MOCK cleanup + use real review
+photos from public/assets/reviews (resized), (4) fix Lighthouse issues.
+
+COMPLETED (VERIFIED):
+1. MIGRATIONS: migration list showed ONLY 035 missing on remote (012-014 were
+   already applied earlier — prior claim in this file that 012/013/014 needed
+   manual apply was STALE/WRONG).
+   - 035 file was CORRUPTED ($$ dollar-quotes replaced by a filesystem path,
+     then "Length" from a bad PS interpolation). Repaired via scripts/fix035.cjs.
+   - db push of 035 FAILED: return-type conflict (prod has 037's
+     compute_delivery_fee RETURNS numeric) AND 037_m1_p0_blockers_repaired.sql
+     (applied) explicitly documents 035 as corrupted+superseded (all required
+     parts repaired in 037; parts 2/3 superseded by 025/018; part 4 no caller).
+   - RESOLUTION: `supabase migration repair --status applied 035 --linked`
+     (history 001-039, local == remote). 035 NOT executed (would regress prod).
+2. OWNER ADMIN: select public.promote_to_full_admin('bitemebaby2016@gmail.com')
+   via Management API (scripts/promoteAdmin.cjs) -> HTTP 201
+   {ok:true, role:'admin', is_owner:true}; verified in profiles:
+   id=dddf4b57-405f-4852-a985-76d8d52b1b72, role=admin, is_owner=true.
+3. MOCK cleanup: MOCK_STOCK/MOCK_BADGE/MOCK_RATING were ALREADY removed in
+   commit 89133e3 (prior session's "TODO remove MOCK_*" claim was stale).
+4. REAL REVIEW PHOTOS: 37 screenshots in public/assets/reviews/ (~16MB)
+   compressed to public/assets/reviews/small/review-01..37.jpg (640px q58,
+   2.68MB total) via scripts/compressReviews.ps1. New:
+   src/lib/realReviews.ts + src/components/home/ReviewGallerySection.tsx
+   (lazy grid + lightbox, wired into HomePage after ReviewCarouselSection).
+5. OG IMAGE: /og-image.png did not exist — generated 1200x630 via script.
+6. LIGHTHOUSE FIXES:
+   - viewport: removed maximum-scale=1.0 + user-scalable=no
+   - SeoHelmet.canonicalUrl absolute-URL bug (produced
+     https://bitemebaby.com/https://bitemebaby.com/ on home) -> fixed
+   - self-hosted Nunito+Quicksand (public/fonts + fonts.css, scripts/
+     fetchFonts.cjs); Google Fonts third-party links removed; 3 preloads
+   - a11y: MascotWrapper aria-hidden over focusable chat button -> false;
+     Header cart aria-label; removed mismatched aria-labels (BiteHero/
+     promo-card-cta/share-card); contrast -> #c2410c text, chip #9a3412,
+     active chip bg #c2410c, amber #b45309, flad-cta #c2410c, review
+     SOURCE_COLOR AA (#1D4ED8/#047857/#C2410C); hc-dot -> 24x24 button with
+     inner dot; bottom-nav 44x44 + gap; MascotWrapper bottom-4 -> bottom-24.
+
+VERIFICATION:
+- npx tsc --noEmit = 0 errors; npm test = 358/358 PASS; npm run build = PASS
+- Lighthouse local preview :4173 (lighthouse/local-2026-09-26.json):
+  Perf 57->81, A11y 87->96, BP 100, SEO 100; aria-hidden-focus / color-contrast /
+  label-content-name-mismatch / link-name all -> 1.0 after fixes. Final rerun
+  after hc-dot + source-color fixes pending at commit time.
+- Supabase: migration list 001-039 local==remote; promote HTTP 201 + profile row verified.
+
+FILES CHANGED:
+- supabase/migrations/035_m1_closure_p0_blockers.sql (repaired corruption)
+- scripts/fix035.cjs, promoteAdmin.cjs, fetchFonts.cjs, compressReviews.ps1 (new)
+- index.html; src/components/SeoHelmet.tsx; Header.tsx; BiteMascot.tsx;
+  MascotWrapper.tsx; BiteHero.tsx; PromotionStrip.tsx; HorizontalCarousel.tsx;
+  CustomerReviewCard.tsx; HomePage.tsx; src/index.css
+- NEW: src/lib/realReviews.ts; src/components/home/ReviewGallerySection.tsx;
+  public/fonts/* (29 woff2 + fonts.css); public/og-image.png;
+  public/assets/reviews/small/* (37 jpg)
+
+REMAINING / KNOWN RISKS:
+- 035 stays UNEXECUTED by design (superseded by 037) — never --include-all it.
+- Prod perf must be re-measured post-deploy (TBT 290ms, main-thread 6.7s,
+  28 non-composited animations need a separate perf pass).
+- "blocked from indexing" not reproducible in repo (robots.txt allows, meta
+  index,follow) — likely Cloudflare preview header; verify on real domain.
+- Final LH rerun after last 2 fixes pending; previous post-fix run already
+  A11y 96 / SEO 100 / BP 100.
+
+NEXT EXACT ACTION:
+1. Read final lighthouse/local-2026-09-26.json (target-size + color-contrast
+   = 1.0?). 2. Commit + push (owner directive). 3. Deploy Cloudflare Pages,
+   re-run LH on https://bitemebaby.com.
+
+
 ===============================================================================
 FINAL PRINCIPLE
 ===============================================================================

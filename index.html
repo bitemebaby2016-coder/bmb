@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#F97316" />
     <meta name="robots" content="index, follow" />
 
@@ -22,7 +22,7 @@
     <meta property="og:title" content="Bite Me Baby - สั่งอาหารจัดส่งเมืองจันทบุรี" />
     <meta property="og:description" content="ร้านอาหารไทยจัดส่งถึงบ้าน รัศมี 5 กม. จากตัวเมืองจันทบุรี สั่งออนไลน์ได้เลย" />
     <meta property="og:type" content="website" />
-    <meta property="og:image" content="/og-image.png" />
+    <meta property="og:image" content="https://bitemebaby.com/og-image.png" />
     <meta property="og:url" content="https://bitemebaby.com/" />
     <meta property="og:site_name" content="Bite Me Baby" />
     <meta property="og:locale" content="th_TH" />
@@ -90,13 +90,11 @@
       ]
     }
     </script>
-<!-- Google Fonts (non-blocking, preconnect) -->
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=Quicksand:wght@400;600;700&display=swap"
-      rel="stylesheet"
-    />
+<!-- Self-hosted fonts (Nunito + Quicksand) — no render-blocking third-party request -->
+    <link rel="preload" href="/fonts/nunito-400-normal-latin.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="/fonts/nunito-700-normal-latin.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="/fonts/quicksand-700-normal-latin.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="stylesheet" href="/fonts/fonts.css" />
 
     <!-- PWA facade -->
     <!-- name="description" already set above for the landing page -->

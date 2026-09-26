@@ -147,7 +147,7 @@ export function BiteMascot({ userName, activeSection = 'home' }: BiteMascotProps
 
   return (
     <>
-      <MascotWrapper position="bottom-left" className="z-[95]">
+      <MascotWrapper position="bottom-left" className="z-[95]" ariaHidden={false}>
         <div className="relative flex flex-col items-end">
           {bubble && stage !== 'fullchat' && (
             <GlassCard className="px-3 py-1.5 text-xs animate-bounce mb-1 mr-4 max-w-[220px]">

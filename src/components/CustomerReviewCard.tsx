@@ -32,9 +32,10 @@ const SOURCE_LOGO: Partial<Record<SocialProofReview['source'], string>> = {
 }
 
 const SOURCE_COLOR: Record<SocialProofReview['source'], string> = {
-  facebook: '#1877F2',
-  grabfood: '#00B14F',
-  website: '#EA580C',
+  // WCAG AA (>= 4.5:1 on white) darkened brand shades
+  facebook: '#1D4ED8',
+  grabfood: '#047857',
+  website: '#C2410C',
 }
 
 const FALLBACK_EMOJI = '🍜'

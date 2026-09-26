@@ -32,7 +32,7 @@ export function PromotionStrip({ promotions }: { promotions: HomePromotion[] }) 
                 )}
               </div>
             </div>
-            <Link to="/promotions" className="promo-card-cta" aria-label={`${promo.title} — ดูโปรโมชั่น`}>
+            <Link to="/promotions" className="promo-card-cta">
               {promo.cta} →
             </Link>
           </div>

@@ -1476,3 +1476,88 @@ p { color: var(--color-brand-text-secondary); }
   .home-card, .promo-card, .quick-action, .hc-nav, .floating-cart { transition: none; }
   .home-card:hover, .home-card:hover .home-card-media img { transform: none; }
 }
+
+/* ============================================
+   Review gallery — รีวิวจริงจากลูกค้า (lazy grid + lightbox)
+   ============================================ */
+.review-gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+  gap: 8px;
+}
+.review-gallery-item {
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: zoom-in;
+  border-radius: 12px;
+  overflow: hidden;
+  aspect-ratio: 4 / 5;
+  display: block;
+}
+.review-gallery-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  background: var(--brand-surface, #fff7ed);
+  transition: transform 0.2s ease;
+}
+.review-gallery-item:hover .review-gallery-img { transform: scale(1.04); }
+.review-gallery-item:focus-visible { outline: 3px solid rgba(249, 115, 22, 0.5); outline-offset: 2px; }
+
+.review-gallery-lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: rgba(0, 0, 0, 0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  cursor: zoom-out;
+}
+.review-gallery-full {
+  max-width: min(92vw, 560px);
+  max-height: 88vh;
+  border-radius: 14px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+}
+.review-gallery-close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 0;
+  font-size: 18px;
+  background: rgba(255, 255, 255, 0.9);
+  color: #3c322d;
+  cursor: pointer;
+}
+@media (min-width: 768px) {
+  .review-gallery { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .review-gallery-img { transition: none; }
+  .review-gallery-item:hover .review-gallery-img { transform: none; }
+}
+
+/* ============================================
+   A11y fixes (Lighthouse): color contrast + touch target size
+   ============================================ */
+/* Text-on-white brand orange 2.8:1 -> dark orange 5.9:1 (text usages only;
+   solid .btn-primary/.bg-brand-primary buttons keep white text). */
+a.text-brand-primary, span.text-brand-primary, p.text-brand-primary, div.text-brand-primary { color: #c2410c; }
+.category-chip:not(.text-white) { color: #9a3412; }
+/* Active chip: white text on brand orange = 2.8:1 -> darker orange bg (4.6:1) */
+.category-chip.text-white { background-color: #c2410c; border-color: #c2410c; }
+.flad-cta { color: #c2410c; }
+.text-amber-500 { color: #b45309; }
+/* Carousel indicator dots are now 24x24 buttons with an inner visual dot */
+/* Bottom nav links: enforce >= 44x44 touch targets + spacing */
+nav.no-print > div > a { min-width: 44px; min-height: 44px; justify-content: center; }
+nav.no-print > div { gap: 12px; }
+
+

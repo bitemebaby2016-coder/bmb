@@ -1,5 +1,5 @@
 -- ============================================
--- Bite Me Baby — Migration 035: TRUE M1 Closure P0 Blockers
+-- Bite Me Baby ï¿½ Migration 035: TRUE M1 Closure P0 Blockers
 -- Date: 2026-09-23
 -- Fixes:
 --   1) DELIVERY RULE SERVER ENFORCEMENT: Add 5km self-delivery gate
@@ -30,7 +30,7 @@ CREATE OR REPLACE FUNCTION public.compute_delivery_fee(
 RETURNS jsonb
 LANGUAGE plpgsql
 SET search_path = public
-AS d:\A PROJECT\Bite Me Baby\src
+AS $$
 DECLARE
   v_kitchen jsonb;
   v_lat1 numeric;
@@ -103,7 +103,7 @@ BEGIN
     'delivery_method_note', CASE WHEN v_method = 'self_delivery' THEN 'Bite Me Baby (??????? =5 ??.)' ELSE 'External provider' END
   );
 END;
-d:\A PROJECT\Bite Me Baby\src;
+$$;
 
 REVOKE EXECUTE ON FUNCTION public.compute_delivery_fee(numeric, numeric, text, integer, numeric) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION public.compute_delivery_fee(numeric, numeric, text, integer, numeric) TO authenticated, service_role;
@@ -117,7 +117,7 @@ COMMIT;
 BEGIN;
 
 -- Check if payment_status column exists on orders (should exist from 025)
--- If not, add it (defensive — idempotent via DO block)
+-- If not, add it (defensive ï¿½ idempotent via DO block)
 DO } BEGIN
   IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='orders' AND column_name='payment_status') THEN
     ALTER TABLE public.orders ADD COLUMN payment_status TEXT DEFAULT 'pending'::text CHECK (payment_status IN ('pending', 'paid', 'refund'));
@@ -214,7 +214,7 @@ RETURNS jsonb
 LANGUAGE plpgsql
 SECURITY DEFINER
 SET search_path = public
-AS d:\A PROJECT\Bite Me Baby\src
+AS $$
 DECLARE
   v_uid uuid;
   v_result jsonb;
@@ -246,7 +246,7 @@ BEGIN
 
   RETURN jsonb_build_object('ok', true, 'orders', v_result, 'count', jsonb_array_length(v_result));
 END;
-d:\A PROJECT\Bite Me Baby\src;
+$$;
 
 REVOKE EXECUTE ON FUNCTION public.get_all_orders_for_admin(text, text, integer, integer) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION public.get_all_orders_for_admin(text, text, integer, integer) TO authenticated;
@@ -273,7 +273,7 @@ RETURNS jsonb
 LANGUAGE plpgsql
 SECURITY DEFINER
 SET search_path = public
-AS d:\A PROJECT\Bite Me Baby\src
+AS $$
 DECLARE
   v_uid uuid;
   v_batches jsonb;
@@ -314,7 +314,7 @@ BEGIN
     'summary', jsonb_build_object('pending_orders', v_total_orders, 'ready_orders', v_ready_count)
   );
 END;
-d:\A PROJECT\Bite Me Baby\src;
+$$;
 
 REVOKE EXECUTE ON FUNCTION public.get_kitchen_summary(date) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION public.get_kitchen_summary(date) TO authenticated;
@@ -333,7 +333,7 @@ RETURNS jsonb
 LANGUAGE plpgsql
 SECURITY DEFINER
 SET search_path = public
-AS d:\A PROJECT\Bite Me Baby\src
+AS $$
 DECLARE
   v_uid uuid;
   v_result jsonb;
@@ -356,7 +356,7 @@ BEGIN
   
   RETURN jsonb_build_object('ok', true, 'drivers', v_result, 'count', jsonb_array_length(v_result));
 END;
-d:\A PROJECT\Bite Me Baby\src;
+$$;
 
 REVOKE EXECUTE ON FUNCTION public.list_drivers() FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION public.list_drivers() TO authenticated;
@@ -369,7 +369,7 @@ RETURNS jsonb
 LANGUAGE plpgsql
 SECURITY DEFINER
 SET search_path = public
-AS d:\A PROJECT\Bite Me Baby\src
+AS $$
 DECLARE
   v_uid uuid;
   v_result jsonb;
@@ -392,7 +392,7 @@ BEGIN
   
   RETURN jsonb_build_object('ok', true, 'recipes', v_result, 'count', jsonb_array_length(v_result));
 END;
-d:\A PROJECT\Bite Me Baby\src;
+$$;
 
 REVOKE EXECUTE ON FUNCTION public.list_recipes_with_inventory(text) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION public.list_recipes_with_inventory(text) TO authenticated;

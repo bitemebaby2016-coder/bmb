@@ -1,6 +1,6 @@
 # 🎯 Bite Me Baby Status Tracker
 
-> **Last Updated:** 2026-09-22 · **Version:** v12.0 (WAVE 3 VERIFIED · migration 033/034 · ACL gate PASS · contracts 017–022 limitation documented)
+> **Last Updated:** 2026-09-26 · **Version:** v13.0 (owner admin promoted · migration history 001-039 aligned · 035 superseded-by-037 repair recorded · real review gallery · Lighthouse a11y/SEO/best-practices remediated on local: Perf 81 · A11y 96 · BP 100 · SEO 100)
 > **Purpose:** Real-time status ของทุกงาน — อัปเดตตามผลตรวจจริง (เขียนทับสถานะเดิม)
 
 ---

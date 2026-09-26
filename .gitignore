@@ -41,3 +41,7 @@ GOOGLE_MAPS_API_KEY=AIzaSy...*
 # Supabase CLI local scratch
 supabase/.temp/
 supabase/.branches/
+
+# Real review ORIGINALS (large ~16MB) — only the compressed small/ set is
+# committed/deployed; regenerate via scripts/compressReviews.ps1
+public/assets/reviews/*.jpg

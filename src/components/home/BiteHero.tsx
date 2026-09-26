@@ -36,7 +36,6 @@ export function BiteHero({ message, pose = 'greeting' }: { message: BiteMessage;
             <Link
               to="/ai-chat"
               className="inline-flex items-center gap-1 mt-2 text-brand-primary font-medium hover:underline"
-              aria-label="ให้ Bite แนะนำเมนู"
             >
               <span role="img" aria-hidden="true">🤖</span>
               {message.recommendLabel}
