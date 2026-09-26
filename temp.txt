@@ -8,11 +8,16 @@
 //                                  + dynamic platform markup.
 // Pure functions (no imports) so the routing decision is deterministic and
 // unit-testable; the reactive store feeds it from reactivity-safe inputs.
-
 import type { DeliveryConfig } from '@/config/platformConfig'
-
+import { haversineDistanceSimple } from '@/lib/googleMaps'
+// Module augmentation for RoutingQuote (add optional duration field)
+declare module '@/config/platformConfig' {
+  export interface RoutingQuote {
+    /** Estimated delivery time in seconds (from Google Routes or heuristic). */
+    estimatedDurationSec?: number
+  }
+}
 export type DeliveryTier = 'bite_drive' | 'third_party'
-
 export interface RoutingQuote {
   tier: DeliveryTier
   /** Payable shipping fee shown to the customer (THB). */
@@ -26,22 +31,11 @@ export interface RoutingQuote {
   distanceKm: number
   /** Short description of the chosen service tier. */
   rationale: string
-  /** Estimated delivery time in seconds (from Google Routes or heuristic). */
-  estimatedDurationSec?: number
 }
-
-/** Haversine great-circle distance between two lat/lon points (km). */
+/** Haversine great-circle distance between two lat/lon points (km). Alias for compatibility. */
 export function haversineDistanceKm(lat1: number, lon1: number, lat2: number, lon2: number): number {
-  const R = 6371
-  const toRad = (d: number) => (d * Math.PI) / 180
-  const dLat = toRad(lat2 - lat1)
-  const dLon = toRad(lon2 - lon1)
-  const a =
-    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) * Math.sin(dLon / 2)
-  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+  return haversineDistanceSimple(lat1, lon1, lat2, lon2)
 }
-
 export interface RouteInput {
   distanceKm?: number
   from?: { latitude: number; longitude: number }
@@ -50,7 +44,6 @@ export interface RouteInput {
   /** Real-time external quote (THB) supplied by the 3rd-party API. Defaults to a flat estimate. */
   externalQuote?: number
 }
-
 /**
  * Route an order through the two-tier hub.
  * Tier 1 route (≤ max distance) uses the flat Bite Drive fee.
@@ -63,9 +56,7 @@ export function routeOrder(input: RouteInput): RoutingQuote {
     (input.from
       ? haversineDistanceKm(input.from.latitude, input.from.longitude, input.to.latitude, input.to.longitude)
       : 0)
-
   const { biteDriveMaxDistanceKm, biteDriveFlatFee, tier2MarkupPct } = input.delivery
-
   if (distanceKm <= biteDriveMaxDistanceKm) {
     return {
       tier: 'bite_drive',
@@ -77,7 +68,6 @@ export function routeOrder(input: RouteInput): RoutingQuote {
       rationale: `Tier 1: ระยะทาง ${distanceKm.toFixed(1)} กม. ≤ ${biteDriveMaxDistanceKm} กม. — ส่งเรือธงของร้านเอง ค่าธรรมเนียมคงที่ คุณภาพ 100%`,
     }
   }
-
   const executorFee = input.externalQuote ?? estimateExternalQuote(distanceKm)
   const markup = executorFee * (tier2MarkupPct / 100)
   return {
@@ -90,18 +80,15 @@ export function routeOrder(input: RouteInput): RoutingQuote {
     rationale: `Tier 2: ระยะทาง ${distanceKm.toFixed(1)} กม. > ${biteDriveMaxDistanceKm} กม. — เรียกค่าบริการ real-time จากผู้ให้บริการภายนอก + markup แพลตฟอร์ม ${tier2MarkupPct}%`,
   }
 }
-
 /** Fallback external quote estimator used when a live API call is unavailable. */
 export function estimateExternalQuote(distanceKm: number, base = 45, perKm = 8): number {
   return Math.max(base, Math.round(base + distanceKm * perKm))
 }
-
 // ---------------------------------------------------------------------------
-// Google Routes integration — real driving distance (not straight-line)
+// Google Routes integration — override routing with real driving distance
 // ---------------------------------------------------------------------------
 import { computeGoogleRoute } from '@/lib/googleMaps'
-
-/** Same as routeOrder but uses Google Routes API for actual driving distance/duration. */
+/** Same as routeOrder but uses Google Routes API for actual driving distance (not straight-line). */
 export async function routeOrderWithGoogle(
   input: RouteInput & { from: { latitude: number; longitude: number } },
 ): Promise<RoutingQuote | null> {
@@ -111,16 +98,14 @@ export async function routeOrderWithGoogle(
     languageCode: 'th',
     regionCode: 'TH',
   })
-
   if (!googleRoute) {
     console.warn('[DeliveryRouter] Google Routes unavailable, falling back to haversine')
+    // Fall back to synchronous Haversine-based routing
     return routeOrder(input)
   }
-
   const distanceKm = googleRoute.distanceKm
   const durationSec = googleRoute.durationSec
   const { biteDriveMaxDistanceKm, biteDriveFlatFee, tier2MarkupPct } = input.delivery
-
   if (distanceKm <= biteDriveMaxDistanceKm) {
     return {
       tier: 'bite_drive',
@@ -129,11 +114,10 @@ export async function routeOrderWithGoogle(
       markup: 0,
       providerLabel: 'Bite Drive (ไรเดอร์ร้านเอง)',
       distanceKm,
-      rationale: `Tier 1: ${distanceKm.toFixed(1)} กม. (real driving via Google Routes ≤ ${biteDriveMaxDistanceKm} กม.)`,
+      rationale: `Tier 1: ระยะทาง ${distanceKm.toFixed(1)} กม. (real driving via Google Routes ≤ ${biteDriveMaxDistanceKm} กม.)`,
       estimatedDurationSec: durationSec,
     }
   }
-
   const externalQuote = input.externalQuote ?? estimateExternalQuote(distanceKm)
   const markup = externalQuote * (tier2MarkupPct / 100)
   return {
@@ -143,7 +127,13 @@ export async function routeOrderWithGoogle(
     markup,
     providerLabel: 'พันธมิตรขนส่งภายนอก (GrabExpress/Lalamove/Deliveree)',
     distanceKm,
-    rationale: `Tier 2: ${distanceKm.toFixed(1)} กม. (real driving > ${biteDriveMaxDistanceKm} กม.)`,
+    rationale: `Tier 2: ระยะทาง ${distanceKm.toFixed(1)} กม. (real driving > ${biteDriveMaxDistanceKm} กม.)`,
     estimatedDurationSec: durationSec,
+  }
+}
+declare module '@/config/platformConfig' {
+  export interface RoutingQuote {
+    /** Estimated delivery time in seconds (from Google Routes or heuristic). */
+    estimatedDurationSec?: number
   }
 }

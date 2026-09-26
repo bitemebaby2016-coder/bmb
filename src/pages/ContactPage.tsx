@@ -1,21 +1,43 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { showToast } from '@/components/ui/ToastContainer'
+import { loadGoogleMapsJS, isGoogleMapsConfigured } from '@/lib/googleMaps'
 
 export function ContactPage() {
   const [formData, setFormData] = useState({ name: '', email: '', message: '' })
   const [sending, setSending] = useState(false)
+  const [mapReady, setMapReady] = useState(false)
+  const mapRef = useRef<HTMLDivElement>(null)
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setSending(true)
     // Simulate sending
     setTimeout(() => {
-      showToast('ส่งข้อความสำเรจ! เราจะตอบกลับดยเรว', 'success')
+      showToast('ส่งข้อความสำเร็จ! เราจะตอบกลับโดยเร็ว', 'success')
       setFormData({ name: '', email: '', message: '' })
       setSending(false)
     }, 1000)
   }
+
+  // Load Google Maps & render interactive map
+  useEffect(() => {
+    if (!isGoogleMapsConfigured()) return
+    loadGoogleMapsJS().then(() => {
+      if (mapRef.current && !mapReady && (window as any).google?.maps) {
+        const kitchenLat = parseFloat(import.meta.env.VITE_DELIVERY_KITCHEN_LAT ?? '10.7016')
+        const kitchenLng = parseFloat(import.meta.env.VITE_DELIVERY_KITCHEN_LNG ?? '102.1429')
+        try {
+          new ((window as any).google.maps.Map)(mapRef.current, {
+            center: { lat: kitchenLat, lng: kitchenLng },
+            zoom: 15,
+            disableDefaultUI: false,
+          })
+          setMapReady(true)
+        } catch { /* map failed */ }
+      }
+    })
+  }, [])
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">
@@ -59,15 +81,18 @@ export function ContactPage() {
             </div>
           </div>
 
-          {/* Map Placeholder */}
+          {/* Interactive Google Map */}
           <div className="card overflow-hidden">
             <h3 className="font-bold text-brand-accent mb-3">🗺️ ตำแหน่งของเรา</h3>
-            <div className="bg-blue-50 rounded-lg aspect-video flex items-center justify-center">
-              <div className="text-center text-brand-muted">
-                <p className="text-4xl mb-2">🗺️</p>
-                <p className="text-sm">Google Maps — เมืองจันทบุรี</p>
-                <p className="text-xs mt-1">ฝังแผนที่จาก Google Maps API</p>
-              </div>
+            <div className="bg-blue-50 rounded-lg aspect-video flex items-center justify-center overflow-hidden">
+              {isGoogleMapsConfigured() ? (
+                <div ref={mapRef} className="w-full h-full" style={{ minHeight: '200px' }} />
+              ) : (
+                <div className="text-center text-brand-muted p-4">
+                  <p className="text-4xl mb-2">🗺️</p>
+                  <p className="text-sm">กำลังโหลดแผนที่...</p>
+                </div>
+              )}
             </div>
           </div>
 
