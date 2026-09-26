@@ -1075,6 +1075,44 @@ NEXT EXACT ACTION:
    re-run LH on https://bitemebaby.com.
 
 
+=== SESSION 2026-09-26 (5): unused JS + Style&Layout — realtime stripped ===
+Task ID: BMB-SESSION-2026-09-26-5
+Status: COMPLETE (all gates pass)
+
+EVIDENCE-DRIVEN TARGETS (from lighthouse/local-tbt2.json):
+- unused-javascript: supabase-vendor 45KB wasted (of 57KB gzip!) + react-vendor 34KB.
+- Root cause found: app NEVER uses realtime — subscribeToTable() in lib/supabase.ts
+  is dead code (only tests mock it), yet @supabase/realtime-js + @supabase/phoenix
+  (~100KB raw) shipped in every page load.
+
+CHANGES:
+- src/lib/stubs/realtimeStub.ts (NEW): no-op RealtimeClient implementing the
+  exact surface SupabaseClient uses (setAuth/channel/getChannels/removeChannel/
+  removeAllChannels); channel() throws REALTIME_DISABLED if ever called.
+- vite.config.ts: resolve.alias '@supabase/realtime-js' -> stub (remove alias if
+  realtime is ever needed for real).
+- ReviewGallerySection: renders 12 thumbs initially + "แสดงรีวิวทั้งหมด" button
+  (DOM cut ~25 buttons deep); all 37 still reachable.
+- index.css: `contain: content` on .hc-slide/.home-card/.drink-card/.snack-card/
+  .promo-card/.review-card-3d (style/layout recalc scoped per card).
+
+VERIFIED:
+- supabase-vendor: 217KB -> 160KB raw (-57KB); phoenix/realtime signatures GONE
+  from bundle (verified: phoenix/WebSocketHeartbeat/longpoll/RealtimeChannel = false).
+- unused JS at load: supabase 45KB -> 31KB (remaining 31KB = auth/storage/functions
+  code paths used later in session; react 34KB = framework floor, not actionable).
+- tsc 0 errors; vitest 358/358 PASS (isolated JSON run); build PASS.
+- LH local (high machine variance, structure-level wins confirmed): TBT 290-630ms
+  band, Style&Layout 1.8-3.2s band — re-measure on production post-deploy.
+
+KNOWN LIMits:
+- Remaining "unused" is auth/storage/functions client code executed later in the
+  session + React internals — deferring supabase fully would need a lazy-client
+  refactor across all stores (separate task, regression budget).
+- LCP 8.8s on prod is IMAGE delivery (Supabase storage images unoptimized) —
+  the next big perf lever, separate task.
+
+==============================================================================
 === SESSION 2026-09-26 (4): Bundle/TBT — dead deps + lazy AI chat + content-visibility ===
 Task ID: BMB-SESSION-2026-09-26-4
 Status: COMPLETE (all gates pass)

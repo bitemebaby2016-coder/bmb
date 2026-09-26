@@ -1549,6 +1549,10 @@ main section.mb-10 {
   content-visibility: auto;
   contain-intrinsic-size: auto 420px;
 }
+/* Scope style/layout recalculation per card — hover changes stay local */
+.hc-slide, .home-card, .drink-card, .snack-card, .promo-card, .review-card-3d {
+  contain: content;
+}
 
 /* ============================================
    A11y fixes (Lighthouse): color contrast + touch target size

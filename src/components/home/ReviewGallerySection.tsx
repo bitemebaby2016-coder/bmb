@@ -7,9 +7,16 @@
 import { useState } from 'react'
 import { REAL_REVIEW_PHOTOS } from '@/lib/realReviews'
 
+// PERF: render 12 thumbs in the DOM first — the rest are one click away.
+// Cuts ~25 nodes x nested elements from initial Style&Layout work.
+const INITIAL_COUNT = 12
+
 export function ReviewGallerySection() {
   const [open, setOpen] = useState<string | null>(null)
+  const [showAll, setShowAll] = useState(false)
   if (REAL_REVIEW_PHOTOS.length === 0) return null
+
+  const visible = showAll ? REAL_REVIEW_PHOTOS : REAL_REVIEW_PHOTOS.slice(0, INITIAL_COUNT)
 
   return (
     <section className="mb-10 scroll-mt-20" aria-labelledby="home-review-gallery-heading">
@@ -20,7 +27,7 @@ export function ReviewGallerySection() {
         <span className="text-sm text-brand-muted">{REAL_REVIEW_PHOTOS.length} รีวิว</span>
       </div>
       <div className="review-gallery" role="list">
-        {REAL_REVIEW_PHOTOS.map((p) => (
+        {visible.map((p) => (
           <button
             key={p.src}
             type="button"
@@ -41,6 +48,15 @@ export function ReviewGallerySection() {
           </button>
         ))}
       </div>
+      {!showAll && REAL_REVIEW_PHOTOS.length > INITIAL_COUNT && (
+        <button
+          type="button"
+          className="btn btn-outline btn-sm mt-3"
+          onClick={() => setShowAll(true)}
+        >
+          แสดงรีวิวทั้งหมด {REAL_REVIEW_PHOTOS.length} รูป ↓
+        </button>
+      )}
       {open && (
         <div
           className="review-gallery-lightbox"

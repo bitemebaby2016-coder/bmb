@@ -51,6 +51,9 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': join(__dirname, 'src'),
+      // Bundle-size: realtime-js is dead code here (no .channel subscribers) —
+      // point the package at a no-op stub instead of shipping ~100KB of Phoenix.
+      '@supabase/realtime-js': join(__dirname, 'src/lib/stubs/realtimeStub.ts'),
     },
   },
   server: {
