@@ -35,6 +35,9 @@ supabase/secrets.local.env
 OPENROUTER_API_KEY=
 sk-or-v1-*
 
+#NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=AIzaSy...*
+GOOGLE_MAPS_API_KEY=AIzaSy...*
+
 # Supabase CLI local scratch
 supabase/.temp/
 supabase/.branches/
