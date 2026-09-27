@@ -1,0 +1,103 @@
+{
+  "date": "2026-09-27T11:36:08.996Z",
+  "tests": [
+    {
+      "name": "logins",
+      "pass": true,
+      "detail": "cust=200 admin=200 driver=200"
+    },
+    {
+      "name": "customer-self-link-denied",
+      "pass": true,
+      "detail": "status=400 body={\"code\":\"P0001\",\"details\":null,\"hint\":null,\"message\":\"ERR_ONLY_ADMIN\"}"
+    },
+    {
+      "name": "driver-link-denied",
+      "pass": true,
+      "detail": "status=400"
+    },
+    {
+      "name": "admin-link-created",
+      "pass": true,
+      "detail": "status=200 id=5a906474-32cf-48b8-8eec-47929c4df1b5"
+    },
+    {
+      "name": "duplicate-link-same-identity",
+      "pass": true,
+      "detail": "id=5a906474-32cf-48b8-8eec-47929c4df1b5"
+    },
+    {
+      "name": "cross-channel-separate-identity",
+      "pass": true,
+      "detail": "msg_id=b8fedd84-ef82-43ae-a9cd-d6ca3a6cd1a0"
+    },
+    {
+      "name": "different-extid-separate",
+      "pass": true,
+      "detail": "id=3d253eac-4fb5-4856-99ef-03d3bbf563b0"
+    },
+    {
+      "name": "identity-collision-rejected",
+      "pass": true,
+      "detail": "collision=true owner=5c609eb9-0943-4e40-b1ee-c450dca9c594"
+    },
+    {
+      "name": "admin-can-read",
+      "pass": true,
+      "detail": "rows=5"
+    },
+    {
+      "name": "customer-cannot-read",
+      "pass": true,
+      "detail": "status=200 rows=0"
+    },
+    {
+      "name": "driver-cannot-read",
+      "pass": true,
+      "detail": "status=200 rows=0"
+    },
+    {
+      "name": "anon-cannot-read",
+      "pass": true,
+      "detail": "status=401 rows=undefined"
+    },
+    {
+      "name": "direct-table-insert-denied",
+      "pass": true,
+      "detail": "status=403"
+    },
+    {
+      "name": "resolve-via-service-role",
+      "pass": true,
+      "detail": "status=200 body={\"linked\":true,\"channel\":\"FACEBOOK\",\"customer_ref\":\"5c609eb9-0943-4e40-b1ee-c450dca9c594\",\"display_name\":\"F14 Test FB Us"
+    },
+    {
+      "name": "resolve-anon-denied",
+      "pass": true,
+      "detail": "status=401"
+    },
+    {
+      "name": "unlink-removes-identity",
+      "pass": true,
+      "detail": "unlinked=true rows=0"
+    },
+    {
+      "name": "relink-after-unlink",
+      "pass": true,
+      "detail": "new_id=3fff7899-a86d-483a-ab20-a3edfa283600"
+    },
+    {
+      "name": "concurrent-identity-one-row",
+      "pass": true,
+      "detail": "rows=1 c1_collision=false c2_collision=true"
+    },
+    {
+      "name": "audit-trail-recorded",
+      "pass": true,
+      "detail": "actions=identity_linked,identity_link_duplicate,identity_link_rejected,identity_unlinked"
+    }
+  ],
+  "pass": true,
+  "pass_count": 19,
+  "total": 19
+}

@@ -1,5 +1,5 @@
 {
-  "date": "2026-09-27T09:19:28.674Z",
+  "date": "2026-09-27T11:36:23.600Z",
   "tests": [
     {
       "name": "logins",
@@ -14,47 +14,47 @@
     {
       "name": "legacy-pwa-intake",
       "pass": true,
-      "detail": "status=200 order=BMB-20260927-446"
+      "detail": "status=200 order=BMB-20260927-571"
     },
     {
       "name": "legacy-manual-intake",
       "pass": true,
-      "detail": "status=200 order=BMB-20260927-241"
+      "detail": "status=200 order=BMB-20260927-174"
     },
     {
       "name": "legacy-stamped-pwa",
       "pass": true,
-      "detail": "{\"order_number\":\"BMB-20260927-446\",\"source_channel\":\"PWA\",\"external_ref_id\":null}"
+      "detail": "{\"order_number\":\"BMB-20260927-571\",\"source_channel\":\"PWA\",\"external_ref_id\":null}"
     },
     {
       "name": "legacy-stamped-manual",
       "pass": true,
-      "detail": "{\"order_number\":\"BMB-20260927-241\",\"source_channel\":\"MANUAL\",\"external_ref_id\":null}"
+      "detail": "{\"order_number\":\"BMB-20260927-174\",\"source_channel\":\"MANUAL\",\"external_ref_id\":null}"
     },
     {
       "name": "facebook-intake",
       "pass": true,
-      "detail": "status=200 order=BMB-20260927-507 sc=FACEBOOK"
+      "detail": "status=200 order=BMB-20260927-612 sc=FACEBOOK"
     },
     {
       "name": "fbgroup-messenger-intake",
       "pass": true,
-      "detail": "fbg=BMB-20260927-131 msg=BMB-20260927-137"
+      "detail": "fbg=BMB-20260927-981 msg=BMB-20260927-783"
     },
     {
       "name": "duplicate-retry-same-order",
       "pass": true,
-      "detail": "retry_order=BMB-20260927-507 rows=1"
+      "detail": "retry_order=BMB-20260927-612 rows=1"
     },
     {
       "name": "cross-channel-no-collision",
       "pass": true,
-      "detail": "BMB-20260927-175 vs BMB-20260927-729"
+      "detail": "BMB-20260927-412 vs BMB-20260927-657"
     },
     {
       "name": "null-ref-no-guard",
       "pass": true,
-      "detail": "order=BMB-20260927-206"
+      "detail": "order=BMB-20260927-804"
     },
     {
       "name": "invalid-channel-rejected",
@@ -74,7 +74,7 @@
     {
       "name": "concurrent-duplicate-one-order",
       "pass": true,
-      "detail": "p1=BMB-20260927-511 dup1=true p2=BMB-20260927-511 dup2=false rows=1"
+      "detail": "p1=BMB-20260927-996 dup1=false p2=BMB-20260927-996 dup2=true rows=1"
     },
     {
       "name": "order-history-regression",

@@ -36,7 +36,7 @@
   BACKFILL/DELETION/COLLISION/TEST PLAN) ใน BMB_F14_OMNICHANNEL_SCHEMA_EVIDENCE.md §14 ·
   **ห้ามสร้างจนกว่า Owner จะอนุมัติ migration**
 
-## GAP
+## GAP (อัปเดต 2026-09-27: Identity Foundation = PASS — migrations 046/047 + E2E 19/19 · ด BMB_CHANNEL_IDENTITY_FOUNDATION_EVIDENCE.md)
 - identity table (ข้างบน) · external channel production integration (FB/Messenger/LINE) —
   ห้ามทำจน identity + webhook verification ผ่าน Gate · pre-order RPC channel params (ต่อยอดภายหลัง)
 
