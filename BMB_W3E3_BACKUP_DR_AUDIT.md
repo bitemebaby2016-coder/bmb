@@ -1,6 +1,16 @@
 # BMB_W3E3_BACKUP_DR_AUDIT.md
 **W3-E-3 — Backup / DR Verification (CLOSURE) · วันที่: 2026-09-27 · READ-ONLY · หลักฐานจาก Supabase Management API จริง (ยืนยันซ้ำ 2 ครั้ง ผลตรงกัน) · Scheduler = CLOSED/PASS (ไม่แตะตามคำสั่ง)**
 
+**W3-E-3 — Backup / DR Verification (CLOSURE) · วันที่: 2026-09-27 · READ-ONLY · หลักฐานจาก Supabase Management API จริง (ยืนยันซ้ำ 2 ครั้ง ผลตรงกัน) · Scheduler = CLOSED/PASS (ไม่แตะตามคำสั่ง)**
+
+> **UPDATE (DR CLOSURE ROUND — Owner authorization):** ตรวจ capability จริงแล้วว่า
+> - **Management API ไม่มี endpoint เปิด backup/PITR** (POST /database/backups → 404; GET /database/pitr → 404)
+> - **COST GATE — STOP BEFORE PURCHASE**: Free plan = ไม่มี database backups; Daily backups (7-day retention) ต้อง **Pro plan (จาก $25/mo)**; **PITR = paid add-on** บน Pro (ราคาจริงแสดงใน Supabase Dashboard/pricing) — ทั้งสองต้อง **Owner ดำเนินการเองใน Dashboard** (AI DEV ห้ามใช้เงิน/เปลี่ยน plan)
+> - **RPO ≤ 1h (Owner target)**: Daily backups เพียงอย่างเดียว **ไม่รับรอง** RPO ≤ 1h (worst-case data loss สูงสุด ~24h) → ต้องใช้ **PITR add-on** เท่านั้นที่ capability รองรับ (granularity ระดับนาที) — TARGET ≠ CAPABILITY ≠ VERIFIED
+> - **RTO ≤ 4h (Owner target)**: ยังไม่มี restore test → ไม่มี measured value; DB ขนาดปัจจุบันเล็ก (MB-scale) คาด restore เร็ว แต่**ห้ามอ้างเป็น RTO จนกว่าจะทดสอบจริง**
+> - **BEFORE**: 0 backups / PITR off — **AFTER**: ยังคงเดิม (รอ Owner dashboard action — COST GATE)
+> - `BMB_DR_RUNBOOK.md` สร้างแล้ว (Draft v1 — ยังไม่ TESTED end-to-end)
+
 ## ⚠️ CRITICAL FINDING (VERIFIED — หักล้าง assumption รอบแรกของเอกสารฉบับก่อน)
 
 ```text
@@ -18,6 +28,12 @@ Supabase Management API (PAT ของ CLI — read-only GET) ยืนยัน
 → หากข้อมูลสูญหายวันนี้ (มนุษย์/bug/ransom/instance ล่ม) business data ไม่มีทางกู้คืน
 (กู้คืนได้เฉพาะ code/schema จาก repo) — ความเสี่ยงระดับ CRITICAL · Owner action ด่วน**
 
+**DR CLOSURE UPDATE**: การเปิด backup/PITR **ทำได้เฉพาะผ่าน Supabase Dashboard โดย Owner**
+(Management API ไม่มี endpoint — ยืนยันแล้ว) และต้องผ่าน COST GATE:
+- Pro plan (จาก $25/mo) = Daily backups 7-day retention
+- PITR = paid add-on บน Pro (ราคาจริงแสดงใน Dashboard)
+- คงสถานะ **STOP BEFORE PURCHASE** ตามคำสั่ง Owner — จึงยังไม่เปิดได้โดย AI DEV
+
 หมายเหตุ: รอบแรกของ audit สรุป "Backup = ASSUMED / OWNER VERIFY" — **ผิด**;
 ตอนนี้ตรวจได้จริงด้วย Management API (รอบแรก 404 เพราะ scope ไม่ถึง) —
 เอกสารฉบับนี้แทนที่ข้อสรุปเดิมทั้งหมด
@@ -34,8 +50,9 @@ RPO                      = NOT DEFINED
 RTO                      = NOT DEFINED
 ```
 
-## RPO / RTO
-ไม่มี documented/verified value จาก BMB หรือ provider → **RPO = NOT DEFINED / OWNER DECISION · RTO = NOT DEFINED / OWNER DECISION** (ห้ามเรียก backup frequency ว่า RPO อัตโนมัติ / ห้ามเรียก restore availability ว่า RTO)
+## RPO / RTO (Owner targets: RPO ≤ 1h · RTO ≤ 4h — กำหนดโดย Owner)
+- **RPO ≤ 1h**: TARGET กำหนดแล้ว · **PROVIDER CAPABILITY**: Daily backups เพียงอย่างเดียวไม่รับรอง (ช่องว่างสูงสุด ~24h) → ต้อง PITR add-on · **RUNTIME VERIFIED**: ยังไม่มี (PITR ยังไม่เปิด) → **GAP: CAPABILITY ยังไม่ถูกซื้อ/เปิด — COST GATE**
+- **RTO ≤ 4h**: TARGET กำหนดแล้ว · **PROVIDER CAPABILITY**: ไม่มี provider SLA สำหรับ restore duration · **RUNTIME VERIFIED**: ไม่มี (ยังไม่ได้ restore test) → **GAP: UNMEASURED — ต้องผ่าน restore test**
 
 ## Restore verification — test plan (ห้าม restore production)
 Path ปลอดภัย: สร้าง **Supabase project แยก (test)** → restore backup ลงนั้น → verify:

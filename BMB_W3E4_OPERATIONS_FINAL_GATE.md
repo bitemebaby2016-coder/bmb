@@ -83,3 +83,9 @@ HARD STOP
 ```
 
 เงื่อนไข PASS WITH OWNER GAPS ครบทุกข้อ: application foundation ✓ · security ✓ · automation ✓ · scheduler ✓ · notification core ✓ · admin visibility ✓ · ไม่มี regression ✓ · gaps ที่เหลือเป็น Owner Decision จริง ✓
+## W3-E-4 RE-CLOSURE UPDATE (Owner authorization — วันที่เดียวกัน)
+
+- Backup/PITR enablement: **COST GATE — STOP BEFORE PURCHASE** (ต้อง Pro plan + PITR add-on; Dashboard-only; Management API ไม่มี endpoint) — ด `BMB_W3E3_BACKUP_DR_AUDIT.md` UPDATE block
+- **BEFORE**: 0 backups / PITR off — **AFTER**: ยังคงเดิม (รอ Owner dashboard action) · RPO/RTO targets กำหนดแล้ว (≤1h / ≤4h) แต่ capability ยังไม่ถกื้อ/เปิด → ยังไม่ VERIFIED
+- `BMB_DR_RUNBOOK.md` สร้างแล้ว (Draft v1, ยังไม่ TESTED)
+- ผล re-closure: **W3-E-3 = PASS WITH OWNER GAPS (คงเดิม)** · **W3-E-4 = PASS WITH OWNER GAPS (คงเดิม)** — ห้ามประกาศ DR PASS จนกว่า: backup เปิด + PITR เปิด + restore test ผ่าน + verification checklist ครบ
