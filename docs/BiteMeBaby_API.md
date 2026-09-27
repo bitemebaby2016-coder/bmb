@@ -185,13 +185,11 @@ export interface User {
 
 ### Auto-Initialize Admin
 
-```
-email: admin@bmb.co.th
-phone: 0812345678
-password: admin123
-id: admin-001
-role: admin
-```
+> ⚠️ **REMOVED (F-01 / Owner Decision 12, 2026-09-27):** Public demo credential
+> (`admin@bmb.co.th` + default password) ถูก **REVOKE** ออกจาก Production แล้ว
+> ห้ามเขียน credential ใด ๆ ลงในเอกสารนี้อีก — Admin/Rider accounts ใหม่ให้สร้างผ่าน
+> Supabase Dashboard (Admin provisioning) โดยเก็บรหัสผ่านไว้ใน secret channel
+> ของผู้ดูแลระบบเท่านั้น (เช่น password manager / `supabase/secrets.local.env` ซึ่งไม่ถูก commit)
 
 ---
 

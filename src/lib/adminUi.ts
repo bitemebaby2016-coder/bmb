@@ -1,4 +1,4 @@
-﻿// ============================================
+// ============================================
 // Bite Me Baby — Admin UI helpers (PHASE 6+ M1 CLOSURE)
 // ============================================
 
@@ -33,9 +33,11 @@ export const ADMIN_NAV_ITEMS: AdminNavItem[] = [
 
 /** Whether the header / bottom nav should show the Admin link. */
 export function shouldShowAdminLink(role: string | null | undefined, email?: string | null): boolean {
-  if (role === 'admin') return true
-  const legacy = (email ?? '').trim().toLowerCase()
-  return legacy === 'admin@bmb.co.th' || legacy === 'owner@bmb.co.th'
+  // F-01 FIX (Wave 1): legacy email fallback (admin@bmb.co.th / owner@bmb.co.th)
+  // ถูกถอดออกตาม Owner Decision 12 (ROTATE & REVOKE public credential) —
+  // สิทธิ์ admin ต้องอิง profiles.role จาก DB ผ่าน RLS เท่านั้น ห้ามอิง email ฝั่ง client
+  void email
+  return role === 'admin'
 }
 
 /** Normalize a category heading name into a URL-safe slug. */

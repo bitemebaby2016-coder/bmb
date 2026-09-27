@@ -15,11 +15,11 @@ describe('adminUi — role-based admin link', () => {
     expect(shouldShowAdminLink('admin', 'some.owner@example.com')).toBe(true)
     expect(shouldShowAdminLink('admin', null)).toBe(true)
   })
-  it('keeps the legacy seeded admin emails as a fallback', async () => {
+  it('no longer trusts legacy public admin emails (F-01 — revoked credential)', async () => {
     const { shouldShowAdminLink } = await import('@/lib/adminUi')
-    expect(shouldShowAdminLink(null, 'admin@bmb.co.th')).toBe(true)
-    expect(shouldShowAdminLink(null, 'owner@bmb.co.th')).toBe(true)
-    expect(shouldShowAdminLink('customer', 'admin@bmb.co.th')).toBe(true)
+    expect(shouldShowAdminLink(null, 'admin@bmb.co.th')).toBe(false)
+    expect(shouldShowAdminLink(null, 'owner@bmb.co.th')).toBe(false)
+    expect(shouldShowAdminLink('customer', 'admin@bmb.co.th')).toBe(false)
   })
   it('stays closed for ordinary customers', async () => {
     const { shouldShowAdminLink } = await import('@/lib/adminUi')

@@ -45,8 +45,13 @@ VITE_SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...  # Servic
 ```
 
 ### Step 4: สร้าง Admin User (optional)
-- Authentication > Users > Add user: `admin@bmb.co.th` / `admin123`
-- หรือ SQL: `INSERT INTO profiles (...) VALUES ((SELECT id FROM auth.users WHERE email = 'admin@bmb.co.th'), ...)`
+- ⚠️ **F-01 / Owner Decision 12 (2026-09-27):** ห้ามใช้ credential สาธารณะอีกต่อไป
+  (`admin@bmb.co.th` ถูก revoke จาก Production แล้ว)
+- สร้างบัญชี Admin ใหม่ผ่าน Supabase Dashboard → Authentication → Users → Add user
+  (ตั้งรหัสผ่านเอง, email confirm เสร็จ) แล้ว set `profiles.role='admin'`
+- รหัสผ่านของ Admin/Test account เก็บใน secret channel ฝั่งผู้ดูแลเท่านั้น
+  (password manager หรือไฟล์ local ที่ถูก .gitignore เช่น `supabase/secrets.local.env`)
+  ห้ามใส่ password ลงในเอกสาร/README/test script/สกรีนช็อต
 
 ### Step 5: ทดสอบ Connection
 ```bash
