@@ -40,6 +40,6 @@
 - identity table (ข้างบน) · external channel production integration (FB/Messenger/LINE) —
   ห้ามทำจน identity + webhook verification ผ่าน Gate · pre-order RPC channel params (ต่อยอดภายหลัง)
 
-## Next Step
+## Next Step (อัปเดต 2026-09-27: W3-C-EXTERNAL = IMPLEMENTED + DEPLOYED + RUNTIME VERIFIED (foundation) · CONNECTED BLOCKED รอ Owner Meta config · ด BMB_W3C_EXTERNAL_EVIDENCE.md)
 **HARD STOP — รอคำสั่ง Owner** · เมื่อ Owner อนุมัติ identity migration → กลับมาปิด W3-C
 external-channel dependency → จากนั้น W3-D Notifications (ตาม execution order)

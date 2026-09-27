@@ -1,5 +1,5 @@
 {
-  "date": "2026-09-27T11:36:28.495Z",
+  "date": "2026-09-27T12:37:05.435Z",
   "tests": [
     {
       "name": "customer-login",
@@ -19,12 +19,12 @@
     {
       "name": "pwa-canonical-intake",
       "pass": true,
-      "detail": "status=200 order=BMB-20260927-273"
+      "detail": "status=200 order=BMB-20260927-632"
     },
     {
       "name": "manual-canonical-intake",
       "pass": true,
-      "detail": "status=200 order=BMB-20260927-617"
+      "detail": "status=200 order=BMB-20260927-879"
     },
     {
       "name": "direct-db-insert-denied",
@@ -39,12 +39,12 @@
     {
       "name": "preorder-canonical-intake",
       "pass": true,
-      "detail": "product_status=204 pre_status=200 body={\"id\":\"ord- ###########-f67621\",\"status\":\"pending\",\"quantity\":1,\"canonical\":true,\"created_at\":\"2026-09-27T11:36:31.019Z\""
+      "detail": "product_status=204 pre_status=200 body={\"id\":\"ord- ###########-2bdb62\",\"status\":\"pending\",\"quantity\":1,\"canonical\":true,\"created_at\":\"2026-09-27T12:37:09.205Z\""
     },
     {
       "name": "duplicate-transition-idempotent",
       "pass": true,
-      "detail": "tr1={\"ok\":true,\"to\":\"cancelled\",\"from\":\"pending\",\"inventory\":null,\"order_number\":\"BMB-20260927-273\"} tr2={\"ok\":true,\"to\":\"cancelled\",\"from\":\"cancelled\",\"inventory\":null,\"order_number\":\"BMB-20260927-273\"}"
+      "detail": "tr1={\"ok\":true,\"to\":\"cancelled\",\"from\":\"pending\",\"inventory\":null,\"order_number\":\"BMB-20260927-632\"} tr2={\"ok\":true,\"to\":\"cancelled\",\"from\":\"cancelled\",\"inventory\":null,\"order_number\":\"BMB-20260927-632\"}"
     },
     {
       "name": "invalid-payload-rejected",
@@ -54,12 +54,12 @@
     {
       "name": "duplicate-create-behavior-documented",
       "pass": true,
-      "detail": "second_order=BMB-20260927-388 (CURRENT: no cross-channel idempotency key — F-14 BLOCKED, see evidence §10/11)"
+      "detail": "second_order=BMB-20260927-999 (CURRENT: no cross-channel idempotency key — F-14 BLOCKED, see evidence §10/11)"
     },
     {
       "name": "automation-handoff-once",
       "pass": true,
-      "detail": "run1={\"found\":21,\"notified\":[\"BMB-20260927-173\",\"PO-20260928-577\",\"BMB-20260927-388\"],\"already_notified\":[\"BMB-20260927-451\", run2_duplicate=true"
+      "detail": "run1={\"found\":23,\"notified\":[\"BMB-20260927-999\"],\"already_notified\":[\"BMB-20260927-451\",\"BMB-20260927-821\",\"BMB-20260927-627\" run2_duplicate=true"
     }
   ],
   "pass": true,

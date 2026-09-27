@@ -33,7 +33,10 @@ capacity / payment / refund / delivery fee / order state / financial settlement.
   server-side audit log (018), payment idempotency (008/010)
 - External webhook handler: `stripe-webhook` (signature verify + payment idempotency)
 
-## Scheduling (GAP — รอ Owner decision)
+## Channel Integration (W3-C-EXTERNAL, 2026-09-27)
+- channel-webhook EF = Meta webhook receiver (verify + HMAC signature + channel derivation + identity + canonical intake) — IMPLEMENTED + DEPLOYED + RUNTIME VERIFIED (foundation path) · production CONNECTED = BLOCKED (รอ Owner Meta config)
+
+## Scheduling (GAP — รอ Owner)
 Worker ยังไม่มี scheduler ผูกใน production. ตัวเลือก: pg_cron extension เรียก EF ทุกชั่วโมง,
 หรือ external trigger (owner cron). การ enable pg_cron = DB change → ต้องผ่าน Owner.
 

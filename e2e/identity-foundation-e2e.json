@@ -1,5 +1,5 @@
 {
-  "date": "2026-09-27T11:36:08.996Z",
+  "date": "2026-09-27T12:37:00.620Z",
   "tests": [
     {
       "name": "logins",
@@ -19,22 +19,22 @@
     {
       "name": "admin-link-created",
       "pass": true,
-      "detail": "status=200 id=5a906474-32cf-48b8-8eec-47929c4df1b5"
+      "detail": "status=200 id=c8346013-7465-4f85-b408-7005da596f37"
     },
     {
       "name": "duplicate-link-same-identity",
       "pass": true,
-      "detail": "id=5a906474-32cf-48b8-8eec-47929c4df1b5"
+      "detail": "id=c8346013-7465-4f85-b408-7005da596f37"
     },
     {
       "name": "cross-channel-separate-identity",
       "pass": true,
-      "detail": "msg_id=b8fedd84-ef82-43ae-a9cd-d6ca3a6cd1a0"
+      "detail": "msg_id=bcdc5adc-dfda-470e-bc57-3fafab48e105"
     },
     {
       "name": "different-extid-separate",
       "pass": true,
-      "detail": "id=3d253eac-4fb5-4856-99ef-03d3bbf563b0"
+      "detail": "id=dade224c-6c27-493b-a8f8-037bd86abbe5"
     },
     {
       "name": "identity-collision-rejected",
@@ -84,12 +84,12 @@
     {
       "name": "relink-after-unlink",
       "pass": true,
-      "detail": "new_id=3fff7899-a86d-483a-ab20-a3edfa283600"
+      "detail": "new_id=9e7273d8-8198-49d9-bcad-54cdba9d8a9a"
     },
     {
       "name": "concurrent-identity-one-row",
       "pass": true,
-      "detail": "rows=1 c1_collision=false c2_collision=true"
+      "detail": "rows=1 c1_collision=true c2_collision=false"
     },
     {
       "name": "audit-trail-recorded",

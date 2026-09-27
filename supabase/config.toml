@@ -46,3 +46,7 @@ verify_jwt = true
 # automation-worker: native back-office worker (W3-B) — called by pg_cron/owner with shared token.
 [functions.automation-worker]
 verify_jwt = true
+
+# channel-webhook: FB/Messenger inbound adapter (W3-C-EXTERNAL) — Meta verify + HMAC signature.
+[functions.channel-webhook]
+verify_jwt = false

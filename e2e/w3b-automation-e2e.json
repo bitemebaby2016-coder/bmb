@@ -1,5 +1,5 @@
 {
-  "date": "2026-09-27T11:37:34.741Z",
+  "date": "2026-09-27T12:37:16.331Z",
   "target": "https://ivkdfognyiwjcmrhcnwz.supabase.co/functions/v1/automation-worker",
   "tests": [
     {
@@ -15,7 +15,7 @@
     {
       "name": "test-order-create",
       "pass": true,
-      "detail": "status=200 order=BMB-20260927-927"
+      "detail": "status=200 order=BMB-20260927-177"
     },
     {
       "name": "unauthenticated-rejected",
@@ -25,7 +25,7 @@
     {
       "name": "stale-pending-first-run",
       "pass": true,
-      "detail": "status=200 result={\"found\":7,\"notified\":[\"BMB-20260927-927\"],\"already_notified\":[\"BMB-20260927-452\",\"BMB-20260927-238\",\"BMB-20260927-560\",\"BMB-20260927-278\",\"BMB-20260927-540\",\"B"
+      "detail": "status=200 result={\"found\":8,\"notified\":[\"BMB-20260927-177\"],\"already_notified\":[\"BMB-20260927-452\",\"BMB-20260927-238\",\"BMB-20260927-560\",\"BMB-20260927-278\",\"BMB-20260927-540\",\"B"
     },
     {
       "name": "notification-recorded",

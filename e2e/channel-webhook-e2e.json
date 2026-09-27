@@ -1,0 +1,84 @@
+{
+  "date": "2026-09-27T12:37:53.653Z",
+  "target": "https://ivkdfognyiwjcmrhcnwz.supabase.co/functions/v1/channel-webhook",
+  "tests": [
+    {
+      "name": "verification-handshake",
+      "pass": true,
+      "detail": "status=200 body=CHALLENGE_123"
+    },
+    {
+      "name": "verification-wrong-token-rejected",
+      "pass": true,
+      "detail": "status=403"
+    },
+    {
+      "name": "unsigned-rejected",
+      "pass": true,
+      "detail": "status=401"
+    },
+    {
+      "name": "bad-signature-rejected",
+      "pass": true,
+      "detail": "status=401"
+    },
+    {
+      "name": "malformed-json-400",
+      "pass": true,
+      "detail": "status=400"
+    },
+    {
+      "name": "unsupported-object-400",
+      "pass": true,
+      "detail": "status=400"
+    },
+    {
+      "name": "unknown-origin-rejected",
+      "pass": true,
+      "detail": "channel= errors=[\"cannot determine channel origin (missing group_id/item metadata)\"]"
+    },
+    {
+      "name": "setup-round-product",
+      "pass": true,
+      "detail": "round=round-w3b-test product=prod-1789607383214-t8rm95"
+    },
+    {
+      "name": "messenger-order-intake",
+      "pass": true,
+      "detail": "status=200 channel=MESSENGER order=BMB-20260927-642 body={\"status\":200,\"body\":{\"order_number\":\"BMB-20260927-642\",\"duplicate\":false}}"
+    },
+    {
+      "name": "messenger-order-row-tagged",
+      "pass": true,
+      "detail": "rows=1 ref=msg-f14-mid-1790512673653"
+    },
+    {
+      "name": "duplicate-event-idempotent",
+      "pass": true,
+      "detail": "dup_event=undefined order_dup=true rows=1"
+    },
+    {
+      "name": "facebook-change-event",
+      "pass": true,
+      "detail": "channel=FACEBOOK"
+    },
+    {
+      "name": "facebook-group-channel",
+      "pass": true,
+      "detail": "channel=FACEBOOK_GROUP"
+    },
+    {
+      "name": "concurrent-one-order",
+      "pass": true,
+      "detail": "rows=1"
+    },
+    {
+      "name": "no-secret-leak",
+      "pass": true,
+      "detail": "responses=13 leaks=0"
+    }
+  ],
+  "pass": true,
+  "pass_count": 15,
+  "total": 15
+}

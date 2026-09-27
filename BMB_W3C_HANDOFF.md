@@ -32,7 +32,7 @@
 ## GAP / READY / BLOCKED
 - READY: PWA channel · MANUAL channel · canonical intake + Order Hub + mode gate ·
   automation handoff · F-14 channel intake schema · identity foundation
-- BLOCKED: production webhook integration ทุกช่องทาง (รอ Owner เปิด)
+- production webhook: channel-webhook EF = IMPLEMENTED + DEPLOYED + RUNTIME VERIFIED (foundation) · CONNECTED = BLOCKED (รอ Owner Meta config — BMB_W3C_EXTERNAL_EVIDENCE.md §10)
 - NOT IMPLEMENTED: LINE/TikTok/Google/QR/Direct (ไม่มี Owner requirement)
 
 ## Final Gate (แยก verdict)
