@@ -1,0 +1,75 @@
+{
+  "date": "2026-09-27T13:48:54.390Z",
+  "checks": [
+    {
+      "name": "audit-coverage-core-actions",
+      "pass": true,
+      "detail": "actions_seen=15 core_present=order_status_change,automation.execution"
+    },
+    {
+      "name": "failed-executions-visible",
+      "pass": true,
+      "detail": "non_succeeded_rows=9 (bounded-retry trace preserved)"
+    },
+    {
+      "name": "system-errors-feed-readable",
+      "pass": true,
+      "detail": "rows=0"
+    },
+    {
+      "name": "retention-proxy-readable",
+      "pass": true,
+      "detail": "oldest=2026-09-27T08:24:35.838774+00:00"
+    },
+    {
+      "name": "deterministic-id-scheme-in-use",
+      "pass": true,
+      "detail": "deterministic_rows_in_last200=65"
+    },
+    {
+      "name": "security-boundaries",
+      "pass": true,
+      "detail": "RLS matrix F-18 15/15 + secret scans CLEAN (see W3-D evidence §8)"
+    }
+  ],
+  "audit_actions": {
+    "test": 6,
+    "preorder_migrated": 1,
+    "user_login": 29,
+    "user_register": 1,
+    "order_created": 243,
+    "order_status_change": 101,
+    "capacity_released": 23,
+    "delivery_assigned": 9,
+    "automation.execution": 66,
+    "identity_linked": 35,
+    "identity_link_duplicate": 7,
+    "identity_link_rejected": 13,
+    "identity_unlinked": 7,
+    "channel_event_rejected": 7,
+    "channel_event": 35
+  },
+  "non_succeeded_examples": [
+    {
+      "id": "auto-exec-w3d-empty-1790515661836",
+      "status": "partial",
+      "errors": 10
+    },
+    {
+      "id": "auto-exec-w3d-third-1790515656950",
+      "status": "partial",
+      "errors": 10
+    },
+    {
+      "id": "auto-exec-w3d-second-rerun-1790515653308",
+      "status": "partial",
+      "errors": 7
+    }
+  ],
+  "notification_age": {
+    "oldest": "2026-09-27T08:24:35.838774+00:00",
+    "newest": "2026-09-27T13:33:40.389753+00:00"
+  },
+  "passed": 6,
+  "total": 6
+}
