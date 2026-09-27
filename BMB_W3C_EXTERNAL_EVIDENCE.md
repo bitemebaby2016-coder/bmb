@@ -160,3 +160,15 @@ Quality Gate         = PASS
 ```
 → **W3-C-EXTERNAL: IMPLEMENTED + DEPLOYED + RUNTIME VERIFIED (foundation) · CONNECTED = BLOCKED
 (รอ Owner Meta configuration ตาม checklist §10)** · ห้ามสรุปเป็น "W3-C-EXTERNAL = PASS" รวม ๆ
+
+
+## PRE-FLIGHT RE-CHECK — 2026-09-27 (W3-C-EXTERNAL Connectivity Command)
+- `supabase secrets list`: `CHANNEL_WEBHOOK_APP_SECRET`, `CHANNEL_WEBHOOK_VERIFY_TOKEN` **PRESENT**
+  (names only — values not printed; per handoff these are still **test values**, not real Meta values)
+- Live GET `/functions/v1/channel-webhook`:
+  - no token → **403** ✓ · wrong verify token → **403** ✓ · missing hub params → **403** ✓
+  - "valid verify token → 200 + challenge" **NOT PROVEN** against real Meta values
+    (verify token lives only in the production secret store — not readable by AI DEV, by design)
+- Facebook App / Page Access Token / Meta webhook subscription: still **MISSING** (Owner action)
+- Status unchanged: Facebook/Messenger = IMPLEMENTED + DEPLOYED + runtime-verified foundation ·
+  **CONNECTED = BLOCKED (Owner Meta configuration)** · W3-D NOT STARTED (per HARD STOP)
