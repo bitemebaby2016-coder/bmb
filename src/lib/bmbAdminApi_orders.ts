@@ -124,6 +124,21 @@ export async function hydrateOrderItems(orders: OrderForm[]): Promise<OrderForm[
 // Orders API — Supabase-backed
 // ============================================
 
+// W4-A: paged order fetch for Admin (server-side filter + range) — canonical data untouched.
+// `getOrders()` is preserved unchanged for existing callers.
+export async function getOrdersPaged(opts: { page: number; pageSize?: number; status?: string }): Promise<{ orders: OrderForm[]; total: number }> {
+  const pageSize = Math.max(1, Math.min(100, opts.pageSize ?? 25))
+  const page = Math.max(0, opts.page)
+  const from = page * pageSize
+  const to = from + pageSize - 1
+  let q = supabase.from('orders').select('*', { count: 'exact' }).order('created_at', { ascending: false }).range(from, to)
+  if (opts.status) q = q.eq('status', opts.status)
+  const { data, error, count } = await q
+  if (error) { console.error('[getOrdersPaged] Error:', error); return { orders: [], total: 0 } }
+  const orders = await hydrateOrderItems((data || []) as OrderForm[])
+  return { orders, total: count ?? orders.length }
+}
+
 export async function getOrders(): Promise<OrderForm[]> {
   const { data, error } = await supabase.from('orders').select('*').order('created_at', { ascending: false })
   if (error) { console.error('[getOrders] Error:', error); return [] }

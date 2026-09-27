@@ -1,28 +1,45 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 import { useNotificationStore } from '@/store/notificationStore'
 import { showToast } from '@/components/ui/ToastContainer'
-import { getOrders, updateOrderStatus, confirmOfflinePayment, markPaymentFailed, stripeRefundOrder } from '@/lib/bmbAdminApi_orders'
+import { getOrdersPaged, updateOrderStatus, confirmOfflinePayment, markPaymentFailed, stripeRefundOrder } from '@/lib/bmbAdminApi_orders'
 import { getProductsAdmin } from '@/lib/bmbAdminApi_products'
 import { addOnLinesFromChoices } from '@/lib/addonDisplay'
 import type { OrderForm } from '@/lib/bmbAdminApi_orders'
 import type { Product } from '@/types'
 
+const PAGE_SIZE = 25
+
 export function AdminOrders() {
   const [orders, setOrders] = useState<OrderForm[]>([])
   const [filterStatus, setFilterStatus] = useState('all')
   const [productById, setProductById] = useState<Record<string, Product>>({})
+  // W4-A: server-side pagination — avoids loading the full orders table on every visit.
+  const [page, setPage] = useState(0)
+  const [total, setTotal] = useState(0)
+  const [loadError, setLoadError] = useState('')
 
-  useEffect(() => { loadOrders() }, [])
-
-  async function loadOrders() {
-    const orders = await getOrders()
-    setOrders(orders)
+  const loadOrders = useCallback(async (p: number = page, status: string = filterStatus) => {
+    setLoadError('')
+    const res = await getOrdersPaged({ page: p, pageSize: PAGE_SIZE, status: status === 'all' ? undefined : status })
+    setOrders(res.orders)
+    setTotal(res.total)
     const products = await getProductsAdmin()
     const map: Record<string, Product> = {}
     for (const p of products || []) map[p.id] = p
     setProductById(map)
+  }, [page, filterStatus])
+
+  useEffect(() => { loadOrders() }, [loadOrders])
+
+  function changeFilter(status: string) {
+    setFilterStatus(status)
+    setPage(0)
   }
+  function changePage(p: number) {
+    setPage(p)
+  }
+
 
   const statusEventMap: Record<string, 'order_confirmed' | 'order_preparing' | 'order_ready_for_dispatch' | 'order_dispatched' | 'order_delivered'> = {
     confirmed: 'order_confirmed',
@@ -80,7 +97,8 @@ async function handleStripeRefund(orderNumber: string) {
     }
   }
 
-  const filteredOrders = filterStatus === 'all' ? orders : orders.filter(o => o.status === filterStatus)
+  // W4-A: server already filtered the current page — no client re-filter.
+  const filteredOrders = orders
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-6">
@@ -101,7 +119,7 @@ async function handleStripeRefund(orderNumber: string) {
         ].map((status) => (
           <button
             key={status.key}
-            onClick={() => setFilterStatus(status.key)}
+            onClick={() => changeFilter(status.key)}
             className={`px-4 py-2 rounded-full font-medium whitespace-nowrap transition-all ${
               filterStatus === status.key ? 'bg-brand-primary text-white' : 'bg-brand-surface text-brand-accent hover:bg-brand-bg'
             }`}
@@ -206,6 +224,23 @@ async function handleStripeRefund(orderNumber: string) {
           <h3 className="text-xl font-bold text-brand-accent">No orders found</h3>
         </div>
       )}
+
+      {/* W4-A pagination */}
+      <div className="flex items-center justify-between mt-4 text-sm">
+        <button
+          disabled={page === 0}
+          onClick={() => changePage(Math.max(0, page - 1))}
+          className="px-3 py-1 rounded-lg border disabled:opacity-40"
+        >← ก่อนหน้า</button>
+        <span className="text-xs text-brand-muted">
+          หน้า {page + 1} · ทั้งหมด {total} ออเดอร์
+        </span>
+        <button
+          disabled={(page + 1) * PAGE_SIZE >= total}
+          onClick={() => changePage(page + 1)}
+          className="px-3 py-1 rounded-lg border disabled:opacity-40"
+        >ถัดไป →</button>
+      </div>
     </div>
   )
 }
