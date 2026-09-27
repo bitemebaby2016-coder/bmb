@@ -1,3 +1,5 @@
+**W4-B — Placeholder Edge Function Audit / Cleanup · วันที่: 2026-09-27 · AUDIT-FIRST → CLEANUP EXECUTED (OWNER-APPROVED) · Authority: Production runtime > Code > Deployment state > Docs**
+
 # BMB_W4B_PLACEHOLDER_EF_AUDIT.md
 **W4-B — Placeholder Edge Function Audit / Cleanup · วันที่: 2026-09-27 · AUDIT-FIRST (ไม่มี destructive action) · Authority: Production runtime > Code > Deployment state > Docs**
 
@@ -65,6 +67,48 @@ D / F / G: 0
 - Orders/payments/stripe/refund/identity/driver/delivery/notifications: functions ที่เกี่ยวข้องล้วน ACTIVE → ไม่ถูกแตะ ✓
 - AI boundary คงเดิม: ai-proxy = Intelligence/Extraction/Assistance เท่านั้น (grep: 0 write patterns) ✓
 
+## 9 placeholders (รายชื่อข้างบน) | PLACEHOLDER (verified) | **REMOVE — OWNER REVIEW** → **APPROVED & EXECUTED (OWNER 2026-09-27)**
+
+---
+
+## W4-B CLEANUP GATE — CLOSED (OWNER-APPROVED EXECUTION)
+
+**Owner approval**: ลบ 9 placeholder folders (2026-09-27)
+**Pre-delete re-verification**: git grep ทั้ง repo — refs ทั้ง 9 ชื่อล้วนเป็นเอกสาร
+(BMB_*.md / docs/ / W4-B audit / 2 historical Phase-6 artifacts) — **0 code/config/deployment references**
+
+**Executed**: ลบ 9 folders ออกจาก working tree (git ไม่ track empty dirs — จึงไม่มี code diff)
+**ห้ามแตะ 7 ACTIVE**: create-checkout · stripe-webhook · stripe-refund · phone-auto-login ·
+ai-proxy · automation-worker · channel-webhook — channel-webhook = KEEP, Meta = DEFERRED BY OWNER
+
+**Quality Gate หลังลบ**:
+- tsc --noEmit: 0
+- vitest: 22 files / **179 passed** (previous 179 → current 179 — unchanged; ไม่มี test เปลี่ยน เพราะไม่มี code change; unique files 22, unique tests 179)
+- eslint --quiet: 0
+- build: ✓ built in 5.08s
+- secret scan (supabase/functions): 0 hits
+- secret scan (dist): 0 hits
+- Deployment state re-check: **7/7 ACTIVE** (ยังเดิมทั้งหมด — ไม่มี undeploy/ไม่มี deploy)
+
+**Final status**:
+
+```text
+TOTAL FUNCTIONS = 7
+ACTIVE    = 7
+PLACEHOLDER = 0
+SAFE CLEANUP = COMPLETE (9 folders removed from working tree; runtime/deployment untouched)
+UNKNOWN   = 0
+LEGACY    = 0
+FROZEN    = 0
+```
+
+(ห้ามตีความเป็น "ALL EDGE FUNCTIONS = RUNTIME VERIFIED" —
+runtime verification ครอบคลุมเฉพาะ W3 evidence ของ 7 ACTIVE functions
+และไม่เกี่ยวกับ placeholder ที่ถูกลบ)
+
+---
+
+## STEP 4 — CRITICAL BOUNDARIES
 ## STEP 5 — DESTRUCTIVE ACTION RULE
 - ไม่มีการ DROP/delete/rename/เปลี่ยน contract/auth ใด ๆ ในรอบนี้ (AUDIT-FIRST)
 - ลบ 9 folders ว่าง = folder deletion → **OWNER REVIEW** ก่อน
