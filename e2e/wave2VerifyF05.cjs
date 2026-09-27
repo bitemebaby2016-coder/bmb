@@ -59,6 +59,7 @@ async function main() {
   const dup = await rpc(admin.jwt, 'transition_order_status', { p_order_number: onum, p_new_status: 'ready_for_dispatch' })
   const afterDup = await history(admin.jwt, onum)
   push('F05.duplicate_no_history', dup.status === 200 && afterDup.rows.length === afterIllegal.rows.length,
+    'dup=' + dup.status + ' rows=' + afterDup.rows.length)
 
   // customer cancel path (owner): pending → cancelled (second test order)
   const ordersQ2 = await api(ANON, 'GET', '/rest/v1/orders?customer_ref=eq.' + cust.uid + '&select=order_number,status&order=created_at.desc&limit=5', undefined, admin.jwt)

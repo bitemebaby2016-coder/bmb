@@ -3,7 +3,6 @@
 const path = require('path')
 const fs = require('fs')
 const { api, SERVICE, ensureAuthUser, S, rpc, login } = require('./wave2Lib.cjs')
-const fs = require('fs')
 
 async function main() {
   const out = { timestamp: new Date().toISOString(), env: 'PRODUCTION-DB (test data only)', steps: [] }
