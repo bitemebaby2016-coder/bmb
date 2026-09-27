@@ -23,7 +23,7 @@
   RLS/ACL à¹„à¸¡à¹ˆà¸–à¸¹à¸à¹à¸•à¸° (no unrelated regression)
 
 ## F-14 Status
-- **F-14 = RESOLVED (CORE) â†’ RESOLVED (CORE) 2026-09-27** â€” Owner à¸­à¸™à¸¸à¸¡à¸±à¸•à¸´ F-14 â†’ migrations 043/044/045
+- **F-14 = RESOLVED (CORE) — 2026-09-27 2026-09-27** â€” Owner à¸­à¸™à¸¸à¸¡à¸±à¸•à¸´ F-14 â†’ migrations 043/044/045
   applied + E2E 16/16 (`e2e/f14-channel-intake-e2e.json`) Â· à¸”à¸¹ `BMB_F14_HANDOFF.md` à¹à¸¥à¸°
   `BMB_F14_OMNICHANNEL_SCHEMA_EVIDENCE.md`
 - à¸„à¸‡ BLOCKED: identity table `customer_channel_identities` (à¸£à¸­ Owner) + production webhook
