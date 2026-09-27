@@ -49,6 +49,7 @@ jobs:
           EV="gh-dispatch-$(date -u +%Y%m%dT%H%M)"
           RESP=$(curl -sS -f -X POST "$WORKER_URL" \
             -H "Content-Type: application/json" \
+            -H "apikey: sb_publishable_Q7AHrjSYOrysDjxS9_ZB-g_NMmytLOH" \
             -H "x-automation-token: $TOKEN" \
             -d "{\"job\":\"notification_dispatch\",\"eventId\":\"$EV\",\"lookbackMinutes\":360,\"limit\":200}") || {
             echo "::error::notification_dispatch HTTP call failed"; exit 1; }
@@ -70,6 +71,7 @@ jobs:
           EV="gh-stale-$(date -u +%Y%m%dT%H%M)"
           RESP=$(curl -sS -f -X POST "$WORKER_URL" \
             -H "Content-Type: application/json" \
+            -H "apikey: sb_publishable_Q7AHrjSYOrysDjxS9_ZB-g_NMmytLOH" \
             -H "x-automation-token: $TOKEN" \
             -d "{\"job\":\"orders_stale_pending\",\"eventId\":\"$EV\",\"maxAgeMinutes\":120}") || {
             echo "::error::orders_stale_pending HTTP call failed"; exit 1; }
@@ -97,6 +99,7 @@ jobs:
           EV="gh-stock-$(date -u +%Y%m%dT%H)"
           RESP=$(curl -sS -f -X POST "$WORKER_URL" \
             -H "Content-Type: application/json" \
+            -H "apikey: sb_publishable_Q7AHrjSYOrysDjxS9_ZB-g_NMmytLOH" \
             -H "x-automation-token: $TOKEN" \
             -d "{\"job\":\"inventory_low_stock\",\"eventId\":\"$EV\",\"stockThreshold\":3}") || {
             echo "::error::inventory_low_stock HTTP call failed"; exit 1; }
