@@ -60,7 +60,7 @@ export const VoiceDemoPage: React.FC = () => {
                 <p>รองรับภาษาไทย เร็ว ฟรี</p>
               </div>
             </div>
-            <p className="note">⚠️ ต้องตั้งค่า <code>VITE_OPENROUTER_API_KEY</code> ใน .env.local</p>
+            <p className="note">🔒 คำขอทั้งหมดส่งผ่าน <code>ai-proxy</code> (Supabase Edge Function) — OpenRouter key เก็บฝั่ง server เท่านั้น</p>
           </section>
 
           <section className="demo-section">

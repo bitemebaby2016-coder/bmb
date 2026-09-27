@@ -1,9 +1,14 @@
 // ============================================
-// Bite Me Baby — AI Voice (OpenRouter + Web Speech API)
+// Bite Me Baby — AI Voice (Web Speech API + ai-proxy)
 // Primary: nvidia/nemotron-3-ultra-550b-a55b:free
 // Fallback: qwen/qwen3.7-flash
-// Architecture: Voice Input → STT → AI → Authorized Tools → TTS → Voice Output
+// Architecture: Voice Input → STT → ai-proxy (server-side key) → TTS → Voice Output
+// F-17 FIX (Wave 1): NO OpenRouter API key on the client. The key lives ONLY in
+// the ai-proxy Edge Function env — voice requests ride the same JWT-authenticated
+// proxy as chat (Client → Supabase Auth JWT → ai-proxy → OpenRouter).
 // ============================================
+
+import { supabase } from './supabase'
 
 // Web Speech API types (not in standard lib.dom.d.ts)
 interface SpeechRecognition extends EventTarget {
@@ -57,8 +62,6 @@ declare global {
 export interface VoiceConfig {
   model: string;
   fallbackModel: string;
-  apiKey: string;
-  baseUrl: string;
   voice: SpeechSynthesisVoice | null;
   language: string;
   rate: number;
@@ -92,8 +95,6 @@ export interface AIVoiceCallbacks {
 const DEFAULT_CONFIG: VoiceConfig = {
   model: import.meta.env.VITE_OPENROUTER_MODEL || 'nvidia/nemotron-3-ultra-550b-a55b:free',
   fallbackModel: 'qwen/qwen3.7-flash',
-  apiKey: import.meta.env.VITE_OPENROUTER_API_KEY || '',
-  baseUrl: 'https://openrouter.ai/api/v1',
   voice: null,
   language: 'th-TH',
   rate: 1.0,
@@ -199,13 +200,8 @@ export class AIVoiceService {
   }
 
   async sendTextMessage(text: string): Promise<VoiceResponse> {
-    if (!this.config.apiKey) {
-      return {
-        content: '',
-        error: 'OpenRouter API key not configured. Please set VITE_OPENROUTER_API_KEY in .env.local',
-      };
-    }
-
+    // F-17: no client-side key anymore — the request goes through ai-proxy,
+    // which authenticates the user's Supabase JWT server-side.
     this.abortController = new AbortController();
     const messages = [
       {
@@ -251,30 +247,20 @@ export class AIVoiceService {
       if (controller?.signal.aborted) break;
 
       try {
-        const response = await fetch(this.config.baseUrl + '/chat/completions', {
-          method: 'POST',
-          headers: {
-            'Authorization': 'Bearer ' + this.config.apiKey,
-            'Content-Type': 'application/json',
-            'HTTP-Referer': window.location.origin,
-            'X-Title': 'Bite Me Baby AI Voice',
-          },
-          body: JSON.stringify({
-            model,
-            messages,
-            temperature: 0.7,
-            max_tokens: 500,
-          }),
-          signal: controller?.signal,
+        // F-17 FIX (Wave 1): server-side proxy call — the OpenRouter key never
+        // leaves the Edge Function. JWT session is attached automatically.
+        const { data: proxy, error } = await supabase.functions.invoke('ai-proxy', {
+          body: { messages, model, maxTokens: 500 },
         });
 
-        if (!response.ok) {
-          const errorData = await response.json().catch(() => ({}));
-          throw new Error('OpenRouter error (' + response.status + '): ' + (errorData.error?.message || response.statusText));
+        if (error) {
+          throw new Error('AI proxy error: ' + (error.message || 'upstream unavailable'));
+        }
+        if (!proxy || proxy.error) {
+          throw new Error('AI proxy error: ' + (proxy?.error || 'empty proxy response'));
         }
 
-        const data = await response.json();
-        const content = data.choices?.[0]?.message?.content || '';
+        const content = proxy.data?.choices?.[0]?.message?.content || '';
         return { content: content.trim() };
       } catch (error) {
         if (error instanceof Error && error.name === 'AbortError') break;
