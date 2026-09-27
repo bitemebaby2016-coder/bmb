@@ -6,6 +6,7 @@
 // ============================================
 
 import { useEffect, useState } from 'react'
+import { supabase } from '@/lib/supabase'
 import { GlassCard } from '@/components/ui/GlassCard'
 import { RiderPWA } from '@/components/dashboard/RiderPWA'
 import {
@@ -27,7 +28,6 @@ import {
  *   2. Status updates write to delivery_assignments (service_role RPC)
  *   3. A driver cannot see another driver's orders or modify them
  */
-const STORAGE_KEY = 'bmb_driver_session'
 const STATUS_LABEL: Record<string, string> = {
   assigned: '📩 รอรับงาน',
   accepted: '✅ รับงานแล้ว',
@@ -37,69 +37,83 @@ const STATUS_LABEL: Record<string, string> = {
 }
 
 export function RiderPwaPage() {
-  const [phone, setPhone] = useState('')
-  const [name, setName] = useState('')
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
   const [driver, setDriver] = useState<DriverRecord | null>(null)
   const [assignments, setAssignments] = useState<MyDeliveryAssignment[]>([])
   const [loading, setLoading] = useState(false)
   const [busyOn, setBusyOn] = useState<string | null>(null)
   const [activeOrder, setActiveOrder] = useState<MyDeliveryAssignment | null>(null)
 
-  async function refresh(phoneToLoad: string) {
+  async function refresh() {
     setLoading(true)
     try {
-      setAssignments(await myDeliveries(phoneToLoad))
+      setAssignments(await myDeliveries())
     } finally {
       setLoading(false)
     }
   }
 
-  async function doLogin(p = phone, n = name) {
-    if (!p.trim()) return
-    const d = await driverLogin(p.trim(), n.trim())
-    if (!d) {
-      alert('เข้าสู่ระบบไรเดอร์ไม่สำเร็จ — ต้อง login ด้วยบัญชีลูกค้าก่อน (Rider PWA ใช้ session ของแอป)')
-      return
+  /**
+   * F-06 (Wave 2-B): rider identity = Supabase Auth JWT.
+   * Phone/name self-registration removed — the account must be provisioned
+   * (linked to a drivers row) by an Admin (Owner Decision 06).
+   */
+  async function doLogin(em = email, pw = password) {
+    if (!em.trim() || !pw) return
+    setLoading(true)
+    try {
+      const { error } = await supabase.auth.signInWithPassword({ email: em.trim(), password: pw })
+      if (error) {
+        alert('เข้าสู่ระบบไม่สำเร็จ: ' + error.message)
+        return
+      }
+      const d = await driverLogin()
+      if (!d) {
+        alert('บัญชีนี้ยังไม่ถูกผูกกับโปรไฟล์ไรเดอร์ — ต้องให้ Admin provision (F-06: เบอร์โทรอย่างเดียวใช้ระบุตัวตนไม่ได้)')
+        return
+      }
+      setDriver(d)
+      void refresh()
+    } finally {
+      setLoading(false)
     }
-    setDriver(d)
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({ phone: p.trim(), name: n.trim() }))
-    void refresh(p.trim())
   }
 
-  function logout() {
+  async function logout() {
+    await supabase.auth.signOut()
     setDriver(null)
     setAssignments([])
     setActiveOrder(null)
-    localStorage.removeItem(STORAGE_KEY)
   }
 
   async function accept(orderNumber: string) {
     if (!driver) return
     setBusyOn(orderNumber)
-    const ok = await driverAcceptAssignment(orderNumber, driver.phone)
+    const ok = await driverAcceptAssignment(orderNumber)
     setBusyOn(null)
-    if (ok) void refresh(driver.phone)
+    if (ok) void refresh()
   }
 
   async function advance(orderNumber: string, status: 'picked_up' | 'in_transit') {
     if (!driver) return
     setBusyOn(orderNumber)
-    const ok = await driverUpdateDeliveryStatus(orderNumber, driver.phone, status)
+    const ok = await driverUpdateDeliveryStatus(orderNumber, status)
     setBusyOn(null)
-    if (ok) void refresh(driver.phone)
+    if (ok) void refresh()
   }
-// Restore session on mount (rider PWA persists identity across reloads).
+
+  // Restore session on mount (Supabase Auth persists the rider session).
   useEffect(() => {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY)
-      if (!raw) return
-      const saved = JSON.parse(raw) as { phone: string; name: string }
-      setPhone(saved.phone)
-      setName(saved.name)
-      void doLogin(saved.phone, saved.name)
-    } catch {
-      // ignore corrupt session
-    }
+    void (async () => {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) return
+      const d = await driverLogin()
+      if (d) {
+        setDriver(d)
+        void refresh()
+      }
+    })()
   }, [])
 
   return (
@@ -108,26 +122,29 @@ export function RiderPwaPage() {
 
       {!driver ? (
         <GlassCard className="p-5">
-          <h3 className="font-bold text-slate-800 mb-3">เข้าสู่ระบบไรเดอร์</h3>
+          <h3 className="font-bold text-slate-800 mb-3">เข้าสู่ระบบไรเดอร์ (Supabase Auth)</h3>
           <input
             className="input mb-2"
-            placeholder="ชื่อไรเดอร์"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            data-testid="rider-name"
+            placeholder="อีเมลไรเดอร์ (บัญชีที่ Admin provision แล้ว)"
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            data-testid="rider-email"
           />
           <input
             className="input mb-3"
-            placeholder="เบอร์โทร (ใช้จริงของไรเดอร์)"
-            value={phone}
-            onChange={(e) => setPhone(e.target.value)}
-            data-testid="rider-phone"
+            placeholder="รหัสผ่าน"
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            data-testid="rider-password"
           />
           <button className="btn btn-primary w-full" onClick={() => void doLogin()} data-testid="rider-login">
-            เข้าสู่ระบบ / สร้างโปรไฟล์ไรเดอร์
+            เข้าสู่ระบบ
           </button>
           <p className="text-xs text-slate-500 mt-2">
-            ระบบแมตช์โดยเบอร์โทรกับตาราง drivers (migration 020) — แอดมิน assign งานผ่าน Delivery Management
+            F-06: ตัวตนไรเดอร์ยืนยันด้วย Supabase Auth JWT — เบอร์โทร/ชื่อจาก client ใช้ระบุตัวตนไม่ได้อีกต่อไป
+            (บัญชีต้องถูก Admin link กับ drivers.user_id ก่อน)
           </p>
         </GlassCard>
       ) : (
@@ -145,7 +162,7 @@ export function RiderPwaPage() {
             </div>
           </GlassCard>
 
-          <button className="btn btn-outline w-full" onClick={() => void refresh(driver.phone)} disabled={loading}>
+          <button className="btn btn-outline w-full" onClick={() => void refresh()} disabled={loading}>
             {loading ? 'โหลด…' : '🔄 รีเฟรชงานของฉัน'}
           </button>
 
@@ -168,7 +185,7 @@ export function RiderPwaPage() {
                 <RiderPWA
                   dropOff={{ latitude: Number(activeOrder.dropoff_latitude), longitude: Number(activeOrder.dropoff_longitude) }}
                   onDelivered={() => {
-                    if (driver) void driverUpdateDeliveryStatus(activeOrder.order_number, driver.phone, 'delivered')
+                    void driverUpdateDeliveryStatus(activeOrder.order_number, 'delivered')
                   }}
                 />
               ) : (
