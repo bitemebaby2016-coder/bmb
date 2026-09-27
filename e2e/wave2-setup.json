@@ -1,0 +1,51 @@
+{
+  "timestamp": "2026-09-27T07:33:55.437Z",
+  "env": "PRODUCTION-DB (test data only)",
+  "steps": [
+    {
+      "step": "admin_login",
+      "status": 200,
+      "pass": true
+    },
+    {
+      "step": "customer_account",
+      "uid": "5c609eb9-0943-4e40-b1ee-c450dca9c594",
+      "pass": true
+    },
+    {
+      "step": "driver_account",
+      "uid": "dc7eece0-70ed-4024-a0f8-79b2be07db20",
+      "pass": true
+    },
+    {
+      "step": "driver_b_account",
+      "uid": "258025bf-9cb1-449e-88b7-bfa66b799b6d",
+      "pass": true
+    },
+    {
+      "step": "driver_row_link",
+      "id": "drv-qa-w2-01",
+      "status": 204,
+      "pass": true
+    },
+    {
+      "step": "driver_row_link",
+      "id": "drv-qa-w2-02",
+      "status": 204,
+      "pass": true
+    },
+    {
+      "step": "jwt_driver_login_probe",
+      "status": 200,
+      "body": "{\"ok\":true,\"driver\":{\"id\":\"drv-qa-w2-01\",\"name\":\"QA Rider A (W2)\",\"phone\":\"0900000001\",\"status\":\"available\",\"user_id\":\"d",
+      "note": "200 expected only after migr 041"
+    },
+    {
+      "step": "test_order_create",
+      "status": 200,
+      "order": "BMB-20260927-382",
+      "error": null,
+      "pass": true
+    }
+  ]
+}

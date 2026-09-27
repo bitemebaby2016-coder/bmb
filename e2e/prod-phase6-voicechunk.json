@@ -1,0 +1,55 @@
+{
+  "timestamp": "2026-09-27T03:09:12.966Z",
+  "chunks": [
+    {
+      "url": "/assets/rolldown-runtime-hePW80VL.js",
+      "size": 716,
+      "found": {}
+    },
+    {
+      "url": "/assets/preload-helper-Czpn1I53.js",
+      "size": 1196,
+      "found": {}
+    },
+    {
+      "url": "/assets/react-CwJFpaho.js",
+      "size": 7532,
+      "found": {}
+    },
+    {
+      "url": "/assets/bmbStorage-C7v7KUGh.js",
+      "size": 950,
+      "found": {}
+    },
+    {
+      "url": "/assets/jsx-runtime-NZYk81nU.js",
+      "size": 435,
+      "found": {}
+    },
+    {
+      "url": "/assets/bmbAdminApi_orders-DI4WMPoo.js",
+      "size": 2874,
+      "found": {}
+    },
+    {
+      "url": "/assets/index-CF9u42pe.js",
+      "size": 304391,
+      "found": {}
+    },
+    {
+      "url": "/assets/supabase-DaLDiMEI.js",
+      "size": 214869,
+      "found": {
+        "sb_secret": 1
+      }
+    },
+    {
+      "url": "/assets/bmbAdminApi_products-CrUKEDdg.js",
+      "size": 4553,
+      "found": {}
+    }
+  ],
+  "hits": {
+    "sb_secret": 1
+  }
+}

@@ -1,0 +1,301 @@
+{
+  "timestamp": "2026-09-27T02:54:07.286Z",
+  "data": {
+    "fn_order_transition_allowed": [
+      {
+        "def": "CREATE OR REPLACE FUNCTION public.order_transition_allowed(p_from text, p_to text, p_is_admin boolean, p_is_owner boolean)\n RETURNS boolean\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\r\nBEGIN\r\n  IF p_from = p_to THEN RETURN true; END IF;\r\n\r\n  IF p_is_admin THEN\r\n    CASE\r\n      WHEN (p_from = 'pending'            AND p_to = 'confirmed') THEN RETURN true;\r\n      WHEN (p_from = 'confirmed'          AND p_to = 'preparing') THEN RETURN true;\r\n      WHEN (p_from = 'preparing'          AND p_to = 'ready_for_dispatch') THEN RETURN true;\r\n      WHEN (p_from = 'ready_for_dispatch' AND p_to = 'dispatched') THEN RETURN true;\r\n      WHEN (p_from = 'dispatched'         AND p_to = 'in_transit') THEN RETURN true;\r\n      WHEN (p_from = 'in_transit'         AND p_to = 'arrived') THEN RETURN true;\r\n      WHEN (p_from = 'arrived'            AND p_to = 'delivered') THEN RETURN true;\r\n      WHEN (p_from IN ('pending','confirmed','preparing','ready_for_dispatch','dispatched','in_transit','arrived') AND p_to = 'cancelled') THEN RETURN true;\r\n      WHEN (p_from IN ('pending','confirmed','preparing','ready_for_dispatch','dispatched','in_transit','arrived') AND p_to = 'failed') THEN RETURN true;\r\n      ELSE RETURN false; -- F-1: off-allow-list admin transitions return false (were: case not found)\r\n    END CASE;\r\n    RETURN false;\r\n  END IF;\r\n\r\n  -- Customer (owner): can only cancel their own order from pending\r\n  IF p_is_owner THEN\r\n    IF p_from = 'pending' AND p_to = 'cancelled' THEN RETURN true; END IF;\r\n    RETURN false;\r\n  END IF;\r\n\r\n  RETURN false;\r\nEND;\r\n$function$\n"
+      }
+    ],
+    "fn_enforce_operating_hours": [
+      {
+        "def": "CREATE OR REPLACE FUNCTION public.enforce_operating_hours()\n RETURNS trigger\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\r\nDECLARE\r\n  v_open      jsonb;\r\n  v_mode_open boolean;\r\n  v_round_key text;\r\nBEGIN\r\n  SELECT COALESCE(value, '{}'::jsonb) INTO v_open\r\n    FROM public.business_settings WHERE key = 'operating_hours';\r\n\r\n  IF v_open ? 'same_day_open' OR v_open ? 'pre_order_open' THEN\r\n    v_mode_open := CASE WHEN NEW.order_mode::text = 'PRE_ORDER'\r\n                        THEN COALESCE((v_open->>'pre_order_open')::boolean, true)\r\n                        ELSE COALESCE((v_open->>'same_day_open')::boolean, true) END;\r\n    IF NOT v_mode_open THEN\r\n      RAISE EXCEPTION 'ERR_ORDER_MODE_CLOSED: % is currently closed', NEW.order_mode::text;\r\n    END IF;\r\n  END IF;\r\n\r\n  SELECT COALESCE(round_key, name) INTO v_round_key\r\n    FROM public.delivery_rounds WHERE id = NEW.delivery_round_id;\r\n  IF v_round_key IS NOT NULL AND v_open ? (v_round_key || '_open') THEN\r\n    IF COALESCE((v_open->>((v_round_key) || '_open'))::boolean, true) = false THEN\r\n      RAISE EXCEPTION 'ERR_ROUND_CLOSED: % round is currently closed', v_round_key;\r\n    END IF;\r\n  END IF;\r\n\r\n  RETURN NEW;\r\nEND;\r\n$function$\n"
+      }
+    ],
+    "fn_enforce_pre_order_window": [
+      {
+        "def": "CREATE OR REPLACE FUNCTION public.enforce_pre_order_window()\n RETURNS trigger\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\r\nDECLARE\r\n  v_today     date;\r\n  v_now_ts    timestamp;\r\n  v_max_days  integer;\r\n  v_start     time;\r\n  v_cutoff_ts timestamp;\r\nBEGIN\r\n  IF NEW.order_mode::text <> 'PRE_ORDER' THEN\r\n    RETURN NEW;\r\n  END IF;\r\n\r\n  v_today  := (now() AT TIME ZONE 'Asia/Bangkok')::date;\r\n  v_now_ts := (now() AT TIME ZONE 'Asia/Bangkok')::timestamp;\r\n\r\n  -- scheduled_date must be strictly future (today/past pre-orders rejected)\r\n  IF NEW.scheduled_date IS NULL OR NEW.scheduled_date <= v_today THEN\r\n    RAISE EXCEPTION 'ERR_PRE_ORDER_DATE_INVALID';\r\n  END IF;\r\n\r\n  -- owner decision Q1: max window (business_settings, default 40)\r\n  v_max_days := COALESCE(public.order_setting('preorder_max_days', 40), 40);\r\n  IF (NEW.scheduled_date - v_today) > v_max_days THEN\r\n    RAISE EXCEPTION 'ERR_PRE_ORDER_DATE_TOO_FAR: max % days ahead', v_max_days;\r\n  END IF;\r\n\r\n  -- owner decision Q1 cutoff: closes 2h before the round's delivery_start\r\n  SELECT COALESCE(delivery_start, cutoff_time) INTO v_start\r\n    FROM public.delivery_rounds\r\n   WHERE id = NEW.delivery_round_id;\r\n  IF NOT FOUND THEN RAISE EXCEPTION 'ERR_ROUND_NOT_FOUND'; END IF;\r\n  IF v_start IS NULL THEN\r\n    RAISE EXCEPTION 'ERR_PRE_ORDER_CUTOFF_UNKNOWN';\r\n  END IF;\r\n\r\n  v_cutoff_ts := NEW.scheduled_date::timestamp + (v_start - interval '2 hours');\r\n  IF v_now_ts > v_cutoff_ts THEN\r\n    RAISE EXCEPTION 'ERR_PRE_ORDER_CUTOFF_PASSED: closes %', v_cutoff_ts;\r\n  END IF;\r\n\r\n  RETURN NEW;\r\nEND;\r\n$function$\n"
+      }
+    ],
+    "fn_driver_login": [
+      {
+        "def": "CREATE OR REPLACE FUNCTION public.driver_login(p_phone text, p_name text DEFAULT ''::text)\n RETURNS jsonb\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\nDECLARE\n  v_uid uuid;\n  v_drv public.drivers%ROWTYPE;\nBEGIN\n  v_uid := auth.uid();\n  IF v_uid IS NULL AND current_setting('request.jwt.claims', true) IS NOT NULL THEN\n    RAISE EXCEPTION 'ERR_NOT_AUTHENTICATED';\n  END IF;\n  IF p_phone IS NULL OR trim(p_phone) = '' THEN RAISE EXCEPTION 'ERR_MISSING_DRIVER_INFO'; END IF;\n\n  SELECT * INTO v_drv FROM public.drivers WHERE phone = trim(p_phone);\n  IF NOT FOUND THEN\n    INSERT INTO public.drivers (id, name, phone, status, last_seen_at, created_at, updated_at)\n    VALUES (\n      'drv-' || to_char(EXTRACT(EPOCH FROM clock_timestamp()) * 1000, '99999999999') || '-' || substr(md5(random()::text), 1, 4),\n      COALESCE(NULLIF(trim(p_name), ''), 'Rider'), trim(p_phone), 'available', NOW(), NOW(), NOW()\n    )\n    RETURNING * INTO v_drv;\n  ELSE\n    UPDATE public.drivers\n       SET status = CASE WHEN v_drv.status = 'busy' THEN 'busy' ELSE 'available' END,\n           last_seen_at = NOW(), updated_at = NOW()\n     WHERE id = v_drv.id;\n  END IF;\n\n  RETURN jsonb_build_object('ok', true, 'driver', to_jsonb(v_drv));\nEND;\n$function$\n"
+      }
+    ],
+    "fn_driver_accept": [
+      {
+        "def": "CREATE OR REPLACE FUNCTION public.driver_accept_assignment(p_order_number text, p_driver_phone text)\n RETURNS jsonb\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\nDECLARE\n  v_uid uuid;\n  v_drv public.drivers%ROWTYPE;\nBEGIN\n  v_uid := auth.uid();\n  IF v_uid IS NULL AND current_setting('request.jwt.claims', true) IS NOT NULL THEN\n    RAISE EXCEPTION 'ERR_NOT_AUTHENTICATED';\n  END IF;\n  IF p_order_number IS NULL OR trim(p_order_number) = '' OR p_driver_phone IS NULL OR trim(p_driver_phone) = '' THEN\n    RAISE EXCEPTION 'ERR_MISSING_DRIVER_INFO';\n  END IF;\n  SELECT * INTO v_drv FROM public.drivers WHERE phone = trim(p_driver_phone);\n  IF NOT FOUND THEN RAISE EXCEPTION 'ERR_DRIVER_NOT_FOUND'; END IF;\n\n  UPDATE public.delivery_assignments\n     SET status = 'accepted', accepted_at = COALESCE(accepted_at, NOW()), updated_at = NOW()\n   WHERE order_number = p_order_number AND driver_id = v_drv.id AND status = 'assigned';\n  IF NOT FOUND THEN RAISE EXCEPTION 'ERR_ASSIGNMENT_NOT_ACCEPTABLE'; END IF;\n\n  UPDATE public.drivers SET status = 'busy', last_seen_at = NOW(), updated_at = NOW() WHERE id = v_drv.id;\n  RETURN jsonb_build_object('ok', true, 'order_number', p_order_number, 'status', 'accepted');\nEND;\n$function$\n"
+      }
+    ],
+    "fn_confirm_offline": [
+      {
+        "def": "CREATE OR REPLACE FUNCTION public.confirm_offline_payment(p_order_number text)\n RETURNS jsonb\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\r\nDECLARE\r\n  v_payment_method  text;\r\n  v_order_status    public.order_status;\r\n  v_intent_status   text;\r\n  v_intent_id       text;\r\n  v_paid_status     public.payment_status;\r\nBEGIN\r\n  IF NOT public.is_admin() THEN RAISE EXCEPTION 'ERR_FORBIDDEN'; END IF;\r\n  IF p_order_number IS NULL OR trim(p_order_number) = '' THEN\r\n    RAISE EXCEPTION 'ERR_MISSING_ORDER';\r\n  END IF;\r\n\r\n  SELECT payment_status INTO v_paid_status\r\n    FROM public.orders WHERE order_number = p_order_number;\r\n  IF NOT FOUND THEN RAISE EXCEPTION 'ERR_ORDER_NOT_FOUND'; END IF;\r\n  IF v_paid_status = 'paid' THEN\r\n    RETURN jsonb_build_object('ok', true, 'idempotent', true, 'order_number', p_order_number);\r\n  END IF;\r\n\r\n  SELECT payment_method, status INTO v_payment_method, v_order_status\r\n    FROM public.orders WHERE order_number = p_order_number;\r\n\r\n  IF v_payment_method = 'cash_on_delivery' THEN\r\n    IF v_order_status <> 'delivered' THEN\r\n      RAISE EXCEPTION 'ERR_COD_NOT_DELIVERED';\r\n    END IF;\r\n    UPDATE public.payment_intents\r\n       SET status = 'completed', completed_at = NOW(), updated_at = NOW()\r\n     WHERE order_number = p_order_number AND method = 'cash_on_delivery';\r\n  ELSE\r\n    SELECT status, id INTO v_intent_status, v_intent_id\r\n      FROM public.payment_intents\r\n     WHERE order_number = p_order_number AND method = v_payment_method\r\n     ORDER BY created_at DESC LIMIT 1;\r\n    IF NOT FOUND THEN RAISE EXCEPTION 'ERR_NO_PAYMENT_INTENT'; END IF;\r\n    IF v_intent_status <> 'processing' THEN\r\n      RAISE EXCEPTION 'ERR_INTENT_NOT_PROCESSING';\r\n    END IF;\r\n    UPDATE public.payment_intents\r\n       SET status = 'completed', completed_at = NOW(), updated_at = NOW()\r\n     WHERE id = v_intent_id;\r\n  END IF;\r\n\r\n  UPDATE public.orders\r\n     SET payment_status = 'paid', updated_at = NOW()\r\n   WHERE order_number = p_order_number;\r\n\r\n  PERFORM public.append_audit_log(\r\n    p_action := 'payment_processed',\r\n    p_entity_type := 'order',\r\n    p_entity_id := p_order_number,\r\n    p_description := 'payment confirmed (' || v_payment_method || ')',\r\n    p_metadata := jsonb_build_object('payment_method', v_payment_method, 'payment_status', 'paid')\r\n  );\r\n\r\n  RETURN jsonb_build_object('ok', true, 'idempotent', false, 'order_number', p_order_number, 'payment_status', 'paid');\r\nEND;\r\n$function$\n"
+      }
+    ],
+    "fn_record_payment": [
+      {
+        "def": "CREATE OR REPLACE FUNCTION public.record_payment_result(p_order_number text, p_payment_intent_id text, p_amount numeric, p_currency text DEFAULT 'thb'::text, p_status text DEFAULT 'completed'::text, p_failure_reason text DEFAULT NULL::text)\n RETURNS jsonb\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\r\nDECLARE\r\n  v_order_total numeric;\r\n  v_existing text;\r\n  v_new_payment_status text;\r\n  v_target_id text;\r\nBEGIN\r\n  IF p_order_number IS NULL OR trim(p_order_number) = '' THEN\r\n    RAISE EXCEPTION 'ERR_MISSING_ORDER';\r\n  END IF;\r\n  IF p_payment_intent_id IS NULL OR trim(p_payment_intent_id) = '' THEN\r\n    RAISE EXCEPTION 'ERR_MISSING_PAYMENT_INTENT_ID';\r\n  END IF;\r\n\r\n  -- Idempotency (010): only a terminal result recorded for this PaymentIntent\r\n  -- short-circuits. A still-pending row (created by create-checkout) must NOT\r\n  -- look like a replay, otherwise the first real webhook delivery never applies.\r\n  SELECT status INTO v_existing\r\n    FROM public.payment_intents\r\n   WHERE payment_intent_id = p_payment_intent_id\r\n     AND status IN ('completed', 'failed');\r\n  IF FOUND THEN\r\n    RETURN jsonb_build_object(\r\n      'ok', true,\r\n      'idempotent', true,\r\n      'order_number', p_order_number,\r\n      'payment_status', (SELECT payment_status FROM public.orders WHERE order_number = p_order_number),\r\n      'intent_status', v_existing\r\n    );\r\n  END IF;\r\n\r\n  -- Authoritative amount check.\r\n  SELECT total_amount INTO v_order_total\r\n    FROM public.orders\r\n   WHERE order_number = p_order_number;\r\n  IF NOT FOUND THEN\r\n    RAISE EXCEPTION 'ERR_ORDER_NOT_FOUND';\r\n  END IF;\r\n  IF COALESCE(p_amount, -1) <> v_order_total THEN\r\n    RAISE EXCEPTION 'ERR_AMOUNT_MISMATCH';\r\n  END IF;\r\n\r\n  v_new_payment_status := CASE\r\n    WHEN p_status = 'completed' THEN 'paid'\r\n    WHEN p_status = 'failed'    THEN 'pending'\r\n    ELSE 'pending'\r\n  END;\r\n\r\n  -- PHASE 3A: target EXACTLY ONE attempt row (never blanket-update the order's rows,\r\n  -- never violate uq_payment_intents_provider_id on retried payments).\r\n  SELECT id INTO v_target_id\r\n    FROM public.payment_intents\r\n   WHERE order_number = p_order_number\r\n     AND (payment_intent_id = p_payment_intent_id OR payment_intent_id IS NULL)\r\n   ORDER BY (payment_intent_id = p_payment_intent_id) DESC, created_at ASC\r\n   LIMIT 1;\r\n  IF v_target_id IS NULL THEN\r\n    RAISE EXCEPTION 'ERR_NO_PAYMENT_INTENT';\r\n  END IF;\r\n\r\n  UPDATE public.payment_intents\r\n     SET status            = p_status,\r\n         payment_intent_id = COALESCE(payment_intent_id, p_payment_intent_id),\r\n         amount            = p_amount,\r\n         currency          = p_currency,\r\n         failure_reason    = COALESCE(p_failure_reason, failure_reason),\r\n         completed_at      = CASE WHEN p_status = 'completed' THEN NOW() ELSE completed_at END,\r\n         updated_at        = NOW()\r\n   WHERE id = v_target_id;\r\n\r\n  UPDATE public.orders\r\n     SET payment_status = v_new_payment_status::payment_status,\r\n         updated_at     = NOW()\r\n   WHERE order_number = p_order_number;\r\n\r\n  RETURN jsonb_build_object(\r\n    'ok', true,\r\n    'idempotent', false,\r\n    'order_number', p_order_number,\r\n    'payment_status', v_new_payment_status\r\n  );\r\nEND;\r\n$function$\n"
+      }
+    ],
+    "fn_create_order_head": [
+      {
+        "def": "CREATE OR REPLACE FUNCTION public.create_order_with_items(p_items jsonb, p_delivery_round_id text, p_delivery_method text DEFAULT 'self_delivery'::text, p_delivery_address text DEFAULT ''::text, p_dropoff_latitude numeric DEFAULT NULL::numeric, p_dropoff_longitude numeric DEFAULT NULL::numeric, p_customer_name text DEFAULT ''::text, p_customer_phone text DEFAULT ''::text, p_payment_method text DEFAULT 'promptpay_qr'::text, p_special_instructions text DEFAULT ''::text, p_promotion_code text DEFAULT NULL::text, p_distance_km numeric DEFAULT 0, p_order_mode text DEFAULT 'SAME_DAY'::text, p_scheduled_date date DEFAULT NULL::date)\n RETURNS jsonb\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\r\nDECLARE\r\n  v_uid            uuid;\r\n  v_order_id       text;\r\n  v_order_number   text;\r\n  v_order_exists   boolean;\r\n  v_attempt        integer := 0;\r\n  v_mode           text;\r\n  v_item_row       record;\r\n  v_pid            text;\r\n  v_qty            integer;\r\n  v_unit_price     numeric;\r\n  v_addon_price    numeric;\r\n  v_item_sub       numeric;\r\n  v_subtotal       numeric := 0;\r\n  v_discount       numeric := 0;\r\n  v_delivery_fee   numeric := 0;\r\n  v_service_fee    numeric := 0;\r\n  v_tax            numeric := 0;\r\n  v_total          numeric := 0;\r\n  v_items_total_qty integer := 0;\r\n  v_round_status   text;\r\n  v_max_cap        integer;\r\n  v_cur_count      integer;\r\n  v_round_date     date;\r\n  v_round_cutoff   time;\r\n  v_prod_is_avail  boolean;\r\n  v_prod_same_day  boolean;\r\n  v_prod_preorder  boolean;\r\n  v_prod_name      text;\r\n  v_delivery_method text;\r\n  v_distance       numeric;\r\n  v_promo          public.promotions%ROWTYPE;\r\n  v_ing_name       text;\r\n  v_today          date := (now() AT TIME ZONE 'Asia/Bangkok')::date;\r\n  v_now            time := (now() AT TIME ZONE 'Asia/Bangkok')::time;\r\nBEGIN\r\n  -- ===== 1. AUTHENTICATION =====\r\n  v_uid := auth.uid();\r\n  IF v_uid IS NULL THEN\r\n    RAISE EXCEPTION 'ERR_NOT_AUTHENTICATED';\r\n  END IF;\r\n\r\n  -- ===== 2. ORDER MODE + INPUT =====\r\n  v_mode := COALESCE(p_order_mode, 'SAME_DAY');\r\n  IF v_mode NOT IN ('SAME_DAY', 'PRE_ORDER') THEN\r\n    RAISE EXCEPTION 'ERR_INVALID_ORDER_MODE';\r\n  END IF;\r\n  IF p_items IS NULL OR jsonb_array_length(p_items) = 0 THEN\r\n    RAISE EXCEPTION 'ERR_EMPTY_ORDER';\r\n  END IF;\r\n  IF p_delivery_round_id IS NULL OR trim(p_delivery_round_id) = '' THEN\r\n    RAISE EXCEPTION 'ERR_MISSING_ROUND';\r\n  END IF;\r\n  IF p_payment_method NOT IN ('promptpay_qr', 'cash_on_delivery', 'credit_card') THEN\r\n    RAISE EXCEPTION 'ERR_INVALID_PAYMENT_METHOD';\r\n  END IF;\r\n  IF p_delivery_method NOT IN ('self_delivery', 'grab_rider', 'linemen_rider', 'foodpanda_rider') THEN\r\n    RAISE EXCEPTION 'ERR_INVALID_DELIVERY_METHOD';\r\n  END IF;\r\n\r\n  -- ===== 3. DELIVERY ROUND — atomic capacity lock =====\r\n  SELECT status, max_capacity, current_count, scheduled_date, cutoff_time\r\n    INTO v_round_status, v_max_cap, v_cur_count, v_round_date, v_round_cutoff\r\n    FROM public.delivery_rounds\r\n   WHERE id = p_delivery_round_id\r\n   FOR UPDATE;\r\n\r\n  IF v_round_status IS NULL THEN\r\n    RAISE EXCEPTION 'ERR_ROUND_NOT_FOUND';\r\n  END IF;\r\n  IF v_round_status <> 'active' THEN\r\n    RAISE EXCEPTION 'ERR_ROUND_CLOSED';\r\n  END IF;\r\n\r\n  -- ===== 4. MODE-SPECIFIC ROUND / CUTOFF / DATE RULES (server authority, Bangkok time) =====\r\n  IF v_mode = 'SAME_DAY' THEN\r\n    IF v_round_date IS NULL OR v_round_date <> v_today THEN\r\n      RAISE EXCEPTION 'ERR_ROUND_DATE';\r\n    END IF;\r\n    IF v_now > v_round_cutoff THEN\r\n      RAISE EXCEPTION 'ERR_CUTOFF_PASSED';\r\n    END IF;\r\n    IF p_scheduled_date IS NOT NULL AND p_scheduled_date <> v_round_date THEN\r\n      RAISE EXCEPTION 'ERR_ROUND_DATE';\r\n    END IF;\r\n  ELSE\r\n    IF p_scheduled_date IS NULL THEN\r\n      RAISE EXCEPTION 'ERR_MISSING_SCHEDULED_DATE';\r\n    END IF;\r\n    IF p_scheduled_date <= v_today THEN\r\n      RAISE EXCEPTION 'ERR_SCHEDULED_DATE_INVALID';\r\n    END IF;\r\n    IF p_scheduled_date <> v_round_date THEN\r\n      RAISE EXCEPTION 'ERR_ROUND_DATE_MISMATCH';\r\n    END IF;\r\n    IF (p_scheduled_date - v_today) < public.order_setting('pre_order_lead_days', 1) THEN\r\n      RAISE EXCEPTION 'ERR_LEAD_TIME';\r\n    END IF;\r\n  END IF;\r\n\r\n  -- capacity check (1 order = 1 slot; +1 handled by trigger orders_increment_round)\r\n  IF (COALESCE(v_cur_count, 0) + 1) > v_max_cap THEN\r\n    RAISE EXCEPTION 'ERR_CAPACITY_FULL';\r\n  END IF;\r\n\r\n  -- ===== 5. PRODUCTS — authoritative prices + MODE GATE (both directions) =====\r\n  FOR v_item_row IN SELECT * FROM jsonb_to_recordset(p_items)\r\n      AS x(product_id text, quantity integer, options jsonb, special_request text)\r\n  LOOP\r\n    v_pid := v_item_row.product_id;\r\n    v_qty := COALESCE(v_item_row.quantity, 0);\r\n\r\n    IF v_pid IS NULL OR trim(v_pid) = '' THEN\r\n      RAISE EXCEPTION 'ERR_MISSING_PRODUCT_ID';\r\n    END IF;\r\n    IF v_qty <= 0 OR v_qty > 1000 THEN\r\n      RAISE EXCEPTION 'ERR_INVALID_QUANTITY';\r\n    END IF;\r\n\r\n    SELECT price, is_available, available_same_day, available_preorder, name\r\n      INTO v_unit_price, v_prod_is_avail, v_prod_same_day, v_prod_preorder, v_prod_name\r\n      FROM public.products\r\n     WHERE id = v_pid\r\n     FOR UPDATE;\r\n\r\n    IF v_unit_price IS NULL THEN\r\n      RAISE EXCEPTION 'ERR_PRODUCT_NOT_FOUND';\r\n    END IF;\r\n    IF NOT COALESCE(v_prod_is_avail, false) THEN\r\n      RAISE EXCEPTION 'ERR_PRODUCT_UNAVAILABLE';\r\n    END IF;\r\n\r\n    -- INVARIANT 1: mode gate, server-authoritative (client UI is NOT authority)\r\n    IF v_mode = 'SAME_DAY' AND NOT COALESCE(v_prod_same_day, false) THEN\r\n      RAISE EXCEPTION 'ERR_PRODUCT_MODE_NOT_ALLOWED';\r\n    END IF;\r\n    IF v_mode = 'PRE_ORDER' AND NOT COALESCE(v_prod_preorder, false) THEN\r\n      RAISE EXCEPTION 'ERR_PRODUCT_MODE_NOT_ALLOWED';\r\n    END IF;\r\n\r\n    -- add-on surcharge re-derived from products.addons (client sends no prices)\r\n    v_addon_price := public.compute_addons_price(v_pid, v_item_row.options);\r\n\r\n    v_item_sub := v_qty * (v_unit_price + COALESCE(v_addon_price, 0));\r\n    v_subtotal := v_subtotal + v_item_sub;\r\n "
+      }
+    ],
+    "consistency_states": [
+      {
+        "st": "pending",
+        "pst": "pending",
+        "count": 9
+      },
+      {
+        "st": "pending",
+        "pst": "paid",
+        "count": 6
+      },
+      {
+        "st": "pending",
+        "pst": "refund",
+        "count": 1
+      },
+      {
+        "st": "confirmed",
+        "pst": "paid",
+        "count": 1
+      }
+    ],
+    "delivered_no_paid": [
+      {
+        "delivered_not_paid": 0
+      }
+    ],
+    "cancelled_paid": [
+      {
+        "cancelled_paid": 0
+      }
+    ],
+    "payment_no_order": [
+      {
+        "pi_no_order": 0
+      }
+    ],
+    "duplicate_pi": [
+      {
+        "dup_pi": 0
+      }
+    ],
+    "audit_by_action": [
+      {
+        "action": "user_login",
+        "count": 23
+      },
+      {
+        "action": "test",
+        "count": 6
+      },
+      {
+        "action": "user_register",
+        "count": 1
+      },
+      {
+        "action": "preorder_migrated",
+        "count": 1
+      }
+    ],
+    "audit_order_events": [],
+    "history_tables": [],
+    "assignment_models": [
+      {
+        "column_name": "id",
+        "data_type": "text"
+      },
+      {
+        "column_name": "order_number",
+        "data_type": "text"
+      },
+      {
+        "column_name": "driver_id",
+        "data_type": "text"
+      },
+      {
+        "column_name": "status",
+        "data_type": "text"
+      },
+      {
+        "column_name": "assigned_at",
+        "data_type": "timestamp with time zone"
+      },
+      {
+        "column_name": "accepted_at",
+        "data_type": "timestamp with time zone"
+      },
+      {
+        "column_name": "picked_up_at",
+        "data_type": "timestamp with time zone"
+      },
+      {
+        "column_name": "in_transit_at",
+        "data_type": "timestamp with time zone"
+      },
+      {
+        "column_name": "delivered_at",
+        "data_type": "timestamp with time zone"
+      },
+      {
+        "column_name": "cancelled_at",
+        "data_type": "timestamp with time zone"
+      },
+      {
+        "column_name": "notes",
+        "data_type": "text"
+      },
+      {
+        "column_name": "created_at",
+        "data_type": "timestamp with time zone"
+      },
+      {
+        "column_name": "updated_at",
+        "data_type": "timestamp with time zone"
+      }
+    ],
+    "provider_orders_state": [
+      {
+        "provider_orders_rows": 0
+      }
+    ],
+    "production_batches_state": [
+      {
+        "batches": 0,
+        "items": 0
+      }
+    ],
+    "trigger_list": [
+      {
+        "tbl": "auth.users",
+        "tgname": "on_auth_user_created"
+      },
+      {
+        "tbl": "storage.buckets",
+        "tgname": "enforce_bucket_name_length_trigger"
+      },
+      {
+        "tbl": "storage.buckets",
+        "tgname": "protect_bucket_control_insert"
+      },
+      {
+        "tbl": "storage.buckets",
+        "tgname": "protect_bucket_control_update"
+      },
+      {
+        "tbl": "storage.buckets",
+        "tgname": "protect_bucket_control_update_role"
+      },
+      {
+        "tbl": "storage.buckets",
+        "tgname": "protect_buckets_delete"
+      },
+      {
+        "tbl": "storage.objects",
+        "tgname": "protect_objects_delete"
+      },
+      {
+        "tbl": "storage.objects",
+        "tgname": "update_objects_updated_at"
+      },
+      {
+        "tbl": "realtime.subscription",
+        "tgname": "tr_check_filters"
+      },
+      {
+        "tbl": "delivery_rounds",
+        "tgname": "delivery_round_sync_aliases"
+      },
+      {
+        "tbl": "delivery_rounds",
+        "tgname": "delivery_rounds_updated_at"
+      },
+      {
+        "tbl": "products",
+        "tgname": "products_sync_mode_alias"
+      },
+      {
+        "tbl": "products",
+        "tgname": "products_updated_at"
+      },
+      {
+        "tbl": "orders",
+        "tgname": "orders_ensure_deduct_on_confirm"
+      },
+      {
+        "tbl": "orders",
+        "tgname": "orders_guard_status_transition"
+      },
+      {
+        "tbl": "orders",
+        "tgname": "orders_increment_round"
+      },
+      {
+        "tbl": "orders",
+        "tgname": "orders_release_round_capacity"
+      },
+      {
+        "tbl": "orders",
+        "tgname": "orders_updated_at"
+      },
+      {
+        "tbl": "orders",
+        "tgname": "trg_operating_hours"
+      },
+      {
+        "tbl": "orders",
+        "tgname": "trg_pre_order_address_check"
+      },
+      {
+        "tbl": "orders",
+        "tgname": "trg_pre_order_cancel_window"
+      },
+      {
+        "tbl": "orders",
+        "tgname": "trg_pre_order_window"
+      },
+      {
+        "tbl": "order_items",
+        "tgname": "order_items_calculate_total"
+      },
+      {
+        "tbl": "order_items",
+        "tgname": "trg_menu_gate"
+      },
+      {
+        "tbl": "inventory",
+        "tgname": "inventory_calculate_status"
+      },
+      {
+        "tbl": "inventory",
+        "tgname": "inventory_updated_at"
+      },
+      {
+        "tbl": "profiles",
+        "tgname": "profiles_guard_mutation"
+      },
+      {
+        "tbl": "profiles",
+        "tgname": "profiles_updated_at"
+      }
+    ],
+    "fn_transition_status_rpc": [
+      {
+        "args": "p_order_number text, p_new_status order_status"
+      }
+    ],
+    "fn_capacity_check_in_create": [
+      {
+        "cap_pos": 2817,
+        "cutoff_pos": 2862,
+        "cnt_pos": 2831,
+        "lock_pos": 3025,
+        "rounds_pos": 2970
+      }
+    ]
+  },
+  "errors": {}
+}

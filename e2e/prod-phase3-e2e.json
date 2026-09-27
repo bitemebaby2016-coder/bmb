@@ -1,0 +1,103 @@
+{
+  "timestamp": "2026-09-27T02:17:32.336Z",
+  "base": "https://bitemebaby-5f7.pages.dev",
+  "runs": [
+    {
+      "name": "home-mobile",
+      "viewport": "390x844",
+      "steps": [],
+      "title": "Bite Me Baby - สั่งอาหารจัดส่งเมืองจันทบุรี รัศมี 5 กม.",
+      "h1h2": [
+        "🍽️ Bite Me Baby",
+        "⭐ รีวิวจากลูกค้าจริง",
+        "🔥 เมนูวันนี้ (Same-day)",
+        "📅 เมนูจองล่วงหน้า (Pre-order)",
+        "🎟️ โปรโมชั่นวันนี้",
+        "📢 แชรเพื่อน รับแต้ม!"
+      ],
+      "navLinks": [
+        "/",
+        "/menu",
+        "/promotions",
+        "/vote",
+        "/random-menu",
+        "/login",
+        "/cart",
+        "/reviews",
+        "/cart?mode=same-day",
+        "/checkout?mode=pre-order",
+        "/share",
+        "/menu?category=dish",
+        "/menu?category=rice",
+        "/menu?category=curry",
+        "/menu?category=drink",
+        "/menu?category=dessert",
+        "/about",
+        "/faq",
+        "/blog",
+        "/privacy",
+        "/terms",
+        "/track",
+        "/rewards",
+        "/viral",
+        "/contact",
+        "https://facebook.com/bitemebaby",
+        "https://instagram.com/bitemebaby",
+        "https://twitter.com/bitemebaby",
+        "https://line.me/R/ti/p/@bitemebaby",
+        "/ai-chat",
+        "/profile"
+      ],
+      "drinksSection": true,
+      "snacksSection": false
+    },
+    {
+      "name": "menu-mobile",
+      "viewport": "390x844",
+      "steps": [],
+      "items": [
+        "ลุยสวนหมูสับเห็ดหอม",
+        "ผัดไทยกุ้งสด",
+        "เมี่ยงแซลม่อน",
+        "ปลาต้มผักกาดดอง (ซวนช่ายหยุย)",
+        "เมี่ยงหมู+กุ้ง ",
+        "สปาเกตตี้ผัดพริกแห้งกุ้ง",
+        "ข้าวลาบอกไก่+ไข่ต้ม"
+      ],
+      "preorderButtons": 10,
+      "sameDayButtons": 8
+    },
+    {
+      "name": "cart-flow-mobile",
+      "viewport": "390x844",
+      "steps": [],
+      "sameDayTestid": 7,
+      "preorderTestid": 7,
+      "afterClickUrl": "https://bitemebaby-5f7.pages.dev/menu",
+      "cartBody": "\n    Bite Me Babyเมนูโปรโมชั่นโหวตเมนูสุ่มเมนูเข้าสู่ระบบตะกร้าว่างยังไม่มีสินค้าในตะกร้า🍽️ ดูเมนู🍽️ Bite Me Baby — Cloud Kitchen Operating Platform เมืองจันทบุรีบริการสั่งอาหารจัดส่งเมืองจันทบุรี รัศมี 5 กม. ส่งฟรีเมื่อครบ ฿200 • เมนูจานเดียว ข้าว แกง เครื่องดื่ม ของหวาน • ส่งเช้า กลางวัน เย็น • รองรับ Same-day Order และ Pre-order • AI Assistant \"ไบต์\" ตอบคำถาม 24/7เมนูอาหารจานเดียวข้าวแกงเครื่องดื่มของหวานเกี่ยวกับเราเกี่ยวกับ Bite Me BabyFAQบทความ & ข่าวสารนโยบายความเป็นส่วนตัวเงื่อนไขการใช้งานบริการสั่งอาหารติดตามออเดอร์โปรโมชั่นโปรแกรมความภักดีแชร์เพื่อน รับแต้มติดต่อเรา📍 เมืองจันทบุรี",
+      "cartBodyAfterReload": "\n    Bite Me Babyเมนูโปรโมชั่นโหวตเมนูสุ่มเมนูเข้าสู่ระบบตะกร้าว่างยังไม่มีสินค้าในตะกร้า🍽️ ดูเมนู🍽️ Bite Me Baby — Cloud Kitchen Operating Platform เมืองจันทบุรีบริการสั่งอาหารจัดส่งเมืองจันทบุรี รัศมี 5 กม. ส่งฟรีเมื่อครบ ฿200 • เมนูจานเดียว ข้าว แกง เครื่องดื่ม ของหวาน • ส่งเช้า กลางวัน เย็น • รองรับ Same-day Order และ Pre-order • AI Assistant \"ไบต์\" ตอบคำถาม 24/7เมนูอาหารจานเดียวข้าวแกงเครื่",
+      "lsKeys": [
+        "bmb_bmb_users"
+      ],
+      "checkoutUrl": "https://bitemebaby-5f7.pages.dev/checkout"
+    },
+    {
+      "name": "track-unauth-mobile",
+      "viewport": "390x844",
+      "steps": [],
+      "trackUrl": "https://bitemebaby-5f7.pages.dev/track/TEST-001",
+      "trackBody": "\n    {\"@context\":\"https://schema.org\",\"@type\":\"Order\",\"orderNumber\":\":orderNumber\"}Bite Me Babyเมนูโปรโมชั่นโหวตเมนูสุ่มเมนูเข้าสู่ระบบ← กลับหน้าแรก📍 ติดตามออเดอร์#TEST-001⏳รอการยืนยัน✅ยืนยันแล้ว👨‍🍳กำลังงทำพร้อมส่ง🛵กำลังงส่งส่งสำเรจ👨‍🍳กำลังงทำกำลังจัดเตรียมอาหารของคุณ⏱️ คาดว่าจะถึง15 นาที📞 ติดต่อเรา รายละเอียดออเดอร์วันที่สั่งซื้อ27/9/2569รอบจัดส่งรอบเช้ารายการผัดไทย x2, ข้าวแกง x1รวม230 บา",
+      "aiChatBody": "\n    Bite Me Babyเมนูโปรโมชั่นโหวตเมนูสุ่มเมนูเข้าสู่ระบบ🧡Bite Me Babyมากกว่าคำว่าอร่อยเข้าสู่ระบบอีเมลรหัสผ่านเข้าสู่ระบบยังไม่มีบัญชี? สมัครสมาชิก🔑 Demo Admin:อีเมล: admin@bmb.co.thรหัสผ่าน: admin123← กลับหน้าแรก🍽️ Bite Me Baby — Cloud Kitchen Operating Platform เมืองจันทบุรีบริการสั่งอาหารจัดส"
+    },
+    {
+      "name": "home-desktop",
+      "viewport": "1280x800",
+      "steps": [],
+      "horizontalScroll": false,
+      "installPrompt": true,
+      "manifestHref": "https://bitemebaby-5f7.pages.dev/manifest.json",
+      "swRegistered": true
+    }
+  ],
+  "consoleErrors": []
+}

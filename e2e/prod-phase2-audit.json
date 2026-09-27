@@ -1,0 +1,6157 @@
+{
+  "timestamp": "2026-09-27T01:56:06.574Z",
+  "ref": "ivkdfognyiwjcmrhcnwz",
+  "data": {
+    "edge_functions": [
+      {
+        "id": "3262231f-2900-47ab-a221-6bc2002d8000",
+        "slug": "create-checkout",
+        "name": "create-checkout",
+        "status": "ACTIVE",
+        "version": 33,
+        "created_at": 1789742916480,
+        "updated_at": 1789802125100,
+        "verify_jwt": true,
+        "import_map": false,
+        "entrypoint_path": "file:///tmp/user_fn_ivkdfognyiwjcmrhcnwz_3262231f-2900-47ab-a221-6bc2002d8000_30/source/supabase/functions/create-checkout/index.ts",
+        "ezbr_sha256": "a34581e301da3966a9869b92a2a099ae130b7073ef4035902d80dc6f26dd88cb"
+      },
+      {
+        "id": "b90a350d-77b8-4421-8d3e-76cf67e906af",
+        "slug": "stripe-webhook",
+        "name": "stripe-webhook",
+        "status": "ACTIVE",
+        "version": 41,
+        "created_at": 1789742916480,
+        "updated_at": 1789802113198,
+        "verify_jwt": false,
+        "import_map": false,
+        "entrypoint_path": "file:///tmp/user_fn_ivkdfognyiwjcmrhcnwz_b90a350d-77b8-4421-8d3e-76cf67e906af_38/source/supabase/functions/stripe-webhook/index.ts",
+        "ezbr_sha256": "0a798b77d4cc1458c11245e060a7ca8932a838fd4e9b77997e1dca6d4e1c3ff4"
+      },
+      {
+        "id": "06296fa2-ea15-4fe8-af36-ac120c01134c",
+        "slug": "stripe-refund",
+        "name": "stripe-refund",
+        "status": "ACTIVE",
+        "version": 3,
+        "created_at": 1789805857606,
+        "updated_at": 1789806051079,
+        "verify_jwt": true,
+        "import_map": false,
+        "entrypoint_path": "file:///tmp/user_fn_ivkdfognyiwjcmrhcnwz_06296fa2-ea15-4fe8-af36-ac120c01134c_2/source/supabase/functions/stripe-refund/index.ts",
+        "ezbr_sha256": "882025fc12adae0b2e6ca7a022e9b918459118092a02e56364cbc103d749970e"
+      },
+      {
+        "id": "1f53d37b-1226-4893-8840-96eead56355d",
+        "slug": "phone-auto-login",
+        "name": "phone-auto-login",
+        "status": "ACTIVE",
+        "version": 1,
+        "created_at": 1789874928599,
+        "updated_at": 1789874928599,
+        "verify_jwt": false,
+        "import_map": false,
+        "entrypoint_path": "file:///tmp/user_fn_ivkdfognyiwjcmrhcnwz_1f53d37b-1226-4893-8840-96eead56355d_1/source/supabase/functions/phone-auto-login/index.ts",
+        "ezbr_sha256": "d19116ac92af07f34495b72cf55cd2b4f4fbe49f6a019d6c037de6de14eba619"
+      }
+    ],
+    "migration_history": [
+      {
+        "version": "001",
+        "name": "initial_schema"
+      },
+      {
+        "version": "002",
+        "name": "complete_schema"
+      },
+      {
+        "version": "003",
+        "name": "add_missing_columns"
+      },
+      {
+        "version": "004",
+        "name": "fix_uuid_to_text"
+      },
+      {
+        "version": "005",
+        "name": "secure_rls_policies"
+      },
+      {
+        "version": "006",
+        "name": "rls_hardening_auth"
+      },
+      {
+        "version": "007",
+        "name": "server_authoritative_order"
+      },
+      {
+        "version": "008",
+        "name": "payment_state_machine_and_phase_d"
+      },
+      {
+        "version": "009",
+        "name": "fix_007_extract_epoch"
+      },
+      {
+        "version": "010",
+        "name": "fix_record_payment_result_idempotency"
+      },
+      {
+        "version": "011",
+        "name": "storage_bmb_images_policies"
+      },
+      {
+        "version": "012",
+        "name": "products_stock_rating_review_count"
+      },
+      {
+        "version": "013",
+        "name": "fix_submit_offline_payment_reference"
+      },
+      {
+        "version": "014",
+        "name": "owner_admin_full_access"
+      },
+      {
+        "version": "015",
+        "name": "customer_location_columns"
+      },
+      {
+        "version": "016",
+        "name": "addons_and_banner"
+      },
+      {
+        "version": "017",
+        "name": "pre_order_server_authoritative"
+      },
+      {
+        "version": "018",
+        "name": "server_side_audit_log"
+      },
+      {
+        "version": "019",
+        "name": "kitchen_core"
+      },
+      {
+        "version": "020",
+        "name": "bite_drive"
+      },
+      {
+        "version": "021",
+        "name": "phase4_admin_ai"
+      },
+      {
+        "version": "022",
+        "name": "phases_5_7"
+      },
+      {
+        "version": "023",
+        "name": "canonical_order_domain"
+      },
+      {
+        "version": "024",
+        "name": "round_lifecycle_and_preorder_migration"
+      },
+      {
+        "version": "025",
+        "name": "canonical_order_rpc"
+      },
+      {
+        "version": "026",
+        "name": "inventory_aggregate_fix"
+      },
+      {
+        "version": "027",
+        "name": "kitchen_canonical_batch"
+      },
+      {
+        "version": "028",
+        "name": "phase3a_operational_guarantees"
+      },
+      {
+        "version": "029",
+        "name": "ensure_rounds_grant"
+      },
+      {
+        "version": "030",
+        "name": "order_transition_allowed_else"
+      },
+      {
+        "version": "031",
+        "name": "production_acl_drift_repair"
+      },
+      {
+        "version": "032",
+        "name": "public_execute_drift_repair"
+      },
+      {
+        "version": "033",
+        "name": "table_acl_alignment"
+      },
+      {
+        "version": "034",
+        "name": "production_acl_drift_remediation"
+      },
+      {
+        "version": "035",
+        "name": "m1_closure_p0_blockers"
+      },
+      {
+        "version": "036",
+        "name": "m1_09_driver_order_status_sync"
+      },
+      {
+        "version": "037",
+        "name": "m1_p0_blockers_repaired"
+      },
+      {
+        "version": "038",
+        "name": "pre_order_policy_enforcement"
+      },
+      {
+        "version": "039",
+        "name": "weekly_menu_and_mode_controls"
+      }
+    ],
+    "tables": [
+      {
+        "name": "ai_conversations",
+        "kind": "r"
+      },
+      {
+        "name": "ai_customer_memory",
+        "kind": "r"
+      },
+      {
+        "name": "ai_recommendations",
+        "kind": "r"
+      },
+      {
+        "name": "audit_logs",
+        "kind": "r"
+      },
+      {
+        "name": "business_settings",
+        "kind": "r"
+      },
+      {
+        "name": "content_approvals",
+        "kind": "r"
+      },
+      {
+        "name": "customer_intelligence",
+        "kind": "v"
+      },
+      {
+        "name": "customers",
+        "kind": "r"
+      },
+      {
+        "name": "delivery_assignments",
+        "kind": "r"
+      },
+      {
+        "name": "delivery_rounds",
+        "kind": "r"
+      },
+      {
+        "name": "delivery_zones",
+        "kind": "r"
+      },
+      {
+        "name": "drivers",
+        "kind": "r"
+      },
+      {
+        "name": "inventory",
+        "kind": "r"
+      },
+      {
+        "name": "inventory_transactions",
+        "kind": "r"
+      },
+      {
+        "name": "loyalty_points",
+        "kind": "r"
+      },
+      {
+        "name": "mascot_overrides",
+        "kind": "r"
+      },
+      {
+        "name": "media_assets",
+        "kind": "r"
+      },
+      {
+        "name": "menu_schedule",
+        "kind": "r"
+      },
+      {
+        "name": "notification_prefs",
+        "kind": "r"
+      },
+      {
+        "name": "notifications",
+        "kind": "r"
+      },
+      {
+        "name": "order_items",
+        "kind": "r"
+      },
+      {
+        "name": "orders",
+        "kind": "r"
+      },
+      {
+        "name": "payment_intents",
+        "kind": "r"
+      },
+      {
+        "name": "pre_orders",
+        "kind": "r"
+      },
+      {
+        "name": "preorder_votes",
+        "kind": "r"
+      },
+      {
+        "name": "product_categories",
+        "kind": "r"
+      },
+      {
+        "name": "production_batch_items",
+        "kind": "r"
+      },
+      {
+        "name": "production_batches",
+        "kind": "r"
+      },
+      {
+        "name": "products",
+        "kind": "r"
+      },
+      {
+        "name": "profiles",
+        "kind": "r"
+      },
+      {
+        "name": "promotions",
+        "kind": "r"
+      },
+      {
+        "name": "provider_orders",
+        "kind": "r"
+      },
+      {
+        "name": "public_profiles",
+        "kind": "v"
+      },
+      {
+        "name": "recipes",
+        "kind": "r"
+      },
+      {
+        "name": "reviews",
+        "kind": "r"
+      },
+      {
+        "name": "system_errors",
+        "kind": "r"
+      }
+    ],
+    "columns_orders": [
+      {
+        "table_name": "order_items",
+        "column_name": "id",
+        "data_type": "text",
+        "is_nullable": "NO",
+        "column_default": null
+      },
+      {
+        "table_name": "order_items",
+        "column_name": "order_id",
+        "data_type": "text",
+        "is_nullable": "NO",
+        "column_default": null
+      },
+      {
+        "table_name": "order_items",
+        "column_name": "product_id",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "table_name": "order_items",
+        "column_name": "product_name",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "table_name": "order_items",
+        "column_name": "quantity",
+        "data_type": "integer",
+        "is_nullable": "NO",
+        "column_default": "1"
+      },
+      {
+        "table_name": "order_items",
+        "column_name": "unit_price",
+        "data_type": "numeric",
+        "is_nullable": "NO",
+        "column_default": null
+      },
+      {
+        "table_name": "order_items",
+        "column_name": "customizations",
+        "data_type": "jsonb",
+        "is_nullable": "YES",
+        "column_default": "'{}'::jsonb"
+      },
+      {
+        "table_name": "order_items",
+        "column_name": "special_request",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": "''::text"
+      },
+      {
+        "table_name": "order_items",
+        "column_name": "item_total",
+        "data_type": "numeric",
+        "is_nullable": "NO",
+        "column_default": "0"
+      },
+      {
+        "table_name": "order_items",
+        "column_name": "created_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "NO",
+        "column_default": "now()"
+      },
+      {
+        "table_name": "orders",
+        "column_name": "id",
+        "data_type": "text",
+        "is_nullable": "NO",
+        "column_default": null
+      },
+      {
+        "table_name": "orders",
+        "column_name": "order_number",
+        "data_type": "text",
+        "is_nullable": "NO",
+        "column_default": null
+      },
+      {
+        "table_name": "orders",
+        "column_name": "customer_id",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "table_name": "orders",
+        "column_name": "customer_name",
+        "data_type": "text",
+        "is_nullable": "NO",
+        "column_default": null
+      },
+      {
+        "table_name": "orders",
+        "column_name": "customer_phone",
+        "data_type": "text",
+        "is_nullable": "NO",
+        "column_default": null
+      },
+      {
+        "table_name": "orders",
+        "column_name": "delivery_round_id",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "table_name": "orders",
+        "column_name": "customer_ref",
+        "data_type": "uuid",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "table_name": "orders",
+        "column_name": "status",
+        "data_type": "USER-DEFINED",
+        "is_nullable": "NO",
+        "column_default": "'pending'::order_status"
+      },
+      {
+        "table_name": "orders",
+        "column_name": "delivery_method",
+        "data_type": "USER-DEFINED",
+        "is_nullable": "NO",
+        "column_default": "'self_delivery'::delivery_method"
+      },
+      {
+        "table_name": "orders",
+        "column_name": "pickup_latitude",
+        "data_type": "numeric",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "table_name": "orders",
+        "column_name": "pickup_longitude",
+        "data_type": "numeric",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "table_name": "orders",
+        "column_name": "dropoff_latitude",
+        "data_type": "numeric",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "table_name": "orders",
+        "column_name": "dropoff_longitude",
+        "data_type": "numeric",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "table_name": "orders",
+        "column_name": "dropoff_detail",
+        "data_type": "text",
+        "is_nullable": "NO",
+        "column_default": "''::text"
+      },
+      {
+        "table_name": "orders",
+        "column_name": "is_outside_self_zone",
+        "data_type": "boolean",
+        "is_nullable": "NO",
+        "column_default": "false"
+      },
+      {
+        "table_name": "orders",
+        "column_name": "subtotal",
+        "data_type": "numeric",
+        "is_nullable": "NO",
+        "column_default": "0"
+      },
+      {
+        "table_name": "orders",
+        "column_name": "delivery_fee",
+        "data_type": "numeric",
+        "is_nullable": "NO",
+        "column_default": "0"
+      },
+      {
+        "table_name": "orders",
+        "column_name": "service_fee",
+        "data_type": "numeric",
+        "is_nullable": "NO",
+        "column_default": "0"
+      },
+      {
+        "table_name": "orders",
+        "column_name": "discount_amount",
+        "data_type": "numeric",
+        "is_nullable": "NO",
+        "column_default": "0"
+      },
+      {
+        "table_name": "orders",
+        "column_name": "tax_amount",
+        "data_type": "numeric",
+        "is_nullable": "NO",
+        "column_default": "0"
+      },
+      {
+        "table_name": "orders",
+        "column_name": "total_amount",
+        "data_type": "numeric",
+        "is_nullable": "NO",
+        "column_default": null
+      },
+      {
+        "table_name": "orders",
+        "column_name": "payment_status",
+        "data_type": "USER-DEFINED",
+        "is_nullable": "NO",
+        "column_default": "'pending'::payment_status"
+      },
+      {
+        "table_name": "orders",
+        "column_name": "payment_method",
+        "data_type": "USER-DEFINED",
+        "is_nullable": "NO",
+        "column_default": "'promptpay_qr'::payment_method"
+      },
+      {
+        "table_name": "orders",
+        "column_name": "special_instructions",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": "''::text"
+      },
+      {
+        "table_name": "orders",
+        "column_name": "created_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "NO",
+        "column_default": "now()"
+      },
+      {
+        "table_name": "orders",
+        "column_name": "updated_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "NO",
+        "column_default": "now()"
+      },
+      {
+        "table_name": "orders",
+        "column_name": "order_mode",
+        "data_type": "USER-DEFINED",
+        "is_nullable": "NO",
+        "column_default": "'SAME_DAY'::order_mode"
+      },
+      {
+        "table_name": "orders",
+        "column_name": "scheduled_date",
+        "data_type": "date",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "table_name": "payment_intents",
+        "column_name": "id",
+        "data_type": "text",
+        "is_nullable": "NO",
+        "column_default": null
+      },
+      {
+        "table_name": "payment_intents",
+        "column_name": "order_number",
+        "data_type": "text",
+        "is_nullable": "NO",
+        "column_default": null
+      },
+      {
+        "table_name": "payment_intents",
+        "column_name": "amount",
+        "data_type": "numeric",
+        "is_nullable": "NO",
+        "column_default": null
+      },
+      {
+        "table_name": "payment_intents",
+        "column_name": "currency",
+        "data_type": "text",
+        "is_nullable": "NO",
+        "column_default": "'thb'::text"
+      },
+      {
+        "table_name": "payment_intents",
+        "column_name": "status",
+        "data_type": "text",
+        "is_nullable": "NO",
+        "column_default": "'pending'::text"
+      },
+      {
+        "table_name": "payment_intents",
+        "column_name": "method",
+        "data_type": "text",
+        "is_nullable": "NO",
+        "column_default": "'promptpay_qr'::text"
+      },
+      {
+        "table_name": "payment_intents",
+        "column_name": "provider",
+        "data_type": "text",
+        "is_nullable": "NO",
+        "column_default": "'promptpay'::text"
+      },
+      {
+        "table_name": "payment_intents",
+        "column_name": "client_secret",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "table_name": "payment_intents",
+        "column_name": "payment_intent_id",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "table_name": "payment_intents",
+        "column_name": "receipt_url",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "table_name": "payment_intents",
+        "column_name": "metadata",
+        "data_type": "jsonb",
+        "is_nullable": "YES",
+        "column_default": "'{}'::jsonb"
+      },
+      {
+        "table_name": "payment_intents",
+        "column_name": "created_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "NO",
+        "column_default": "now()"
+      },
+      {
+        "table_name": "payment_intents",
+        "column_name": "updated_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "NO",
+        "column_default": "now()"
+      },
+      {
+        "table_name": "payment_intents",
+        "column_name": "completed_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "table_name": "payment_intents",
+        "column_name": "failure_reason",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      }
+    ],
+    "columns_products_rounds": [
+      {
+        "table_name": "business_settings",
+        "column_name": "key",
+        "data_type": "text",
+        "column_default": null
+      },
+      {
+        "table_name": "business_settings",
+        "column_name": "value",
+        "data_type": "jsonb",
+        "column_default": "'{}'::jsonb"
+      },
+      {
+        "table_name": "business_settings",
+        "column_name": "created_at",
+        "data_type": "timestamp with time zone",
+        "column_default": "now()"
+      },
+      {
+        "table_name": "business_settings",
+        "column_name": "updated_at",
+        "data_type": "timestamp with time zone",
+        "column_default": "now()"
+      },
+      {
+        "table_name": "delivery_rounds",
+        "column_name": "id",
+        "data_type": "text",
+        "column_default": null
+      },
+      {
+        "table_name": "delivery_rounds",
+        "column_name": "round_key",
+        "data_type": "text",
+        "column_default": "'morning'::text"
+      },
+      {
+        "table_name": "delivery_rounds",
+        "column_name": "display_name",
+        "data_type": "text",
+        "column_default": null
+      },
+      {
+        "table_name": "delivery_rounds",
+        "column_name": "cutoff_time",
+        "data_type": "time without time zone",
+        "column_default": null
+      },
+      {
+        "table_name": "delivery_rounds",
+        "column_name": "delivery_start",
+        "data_type": "time without time zone",
+        "column_default": null
+      },
+      {
+        "table_name": "delivery_rounds",
+        "column_name": "delivery_end",
+        "data_type": "time without time zone",
+        "column_default": null
+      },
+      {
+        "table_name": "delivery_rounds",
+        "column_name": "max_capacity",
+        "data_type": "integer",
+        "column_default": "100"
+      },
+      {
+        "table_name": "delivery_rounds",
+        "column_name": "current_count",
+        "data_type": "integer",
+        "column_default": "0"
+      },
+      {
+        "table_name": "delivery_rounds",
+        "column_name": "date",
+        "data_type": "date",
+        "column_default": null
+      },
+      {
+        "table_name": "delivery_rounds",
+        "column_name": "scheduled_date",
+        "data_type": "date",
+        "column_default": "CURRENT_DATE"
+      },
+      {
+        "table_name": "delivery_rounds",
+        "column_name": "name",
+        "data_type": "text",
+        "column_default": null
+      },
+      {
+        "table_name": "delivery_rounds",
+        "column_name": "status",
+        "data_type": "text",
+        "column_default": "'active'::text"
+      },
+      {
+        "table_name": "delivery_rounds",
+        "column_name": "created_at",
+        "data_type": "timestamp with time zone",
+        "column_default": "now()"
+      },
+      {
+        "table_name": "delivery_rounds",
+        "column_name": "updated_at",
+        "data_type": "timestamp with time zone",
+        "column_default": "now()"
+      },
+      {
+        "table_name": "products",
+        "column_name": "id",
+        "data_type": "text",
+        "column_default": null
+      },
+      {
+        "table_name": "products",
+        "column_name": "name",
+        "data_type": "text",
+        "column_default": null
+      },
+      {
+        "table_name": "products",
+        "column_name": "description",
+        "data_type": "text",
+        "column_default": "''::text"
+      },
+      {
+        "table_name": "products",
+        "column_name": "price",
+        "data_type": "numeric",
+        "column_default": null
+      },
+      {
+        "table_name": "products",
+        "column_name": "category_id",
+        "data_type": "text",
+        "column_default": null
+      },
+      {
+        "table_name": "products",
+        "column_name": "image_url",
+        "data_type": "text",
+        "column_default": "''::text"
+      },
+      {
+        "table_name": "products",
+        "column_name": "is_available",
+        "data_type": "boolean",
+        "column_default": "true"
+      },
+      {
+        "table_name": "products",
+        "column_name": "is_featured",
+        "data_type": "boolean",
+        "column_default": "false"
+      },
+      {
+        "table_name": "products",
+        "column_name": "is_preorder",
+        "data_type": "boolean",
+        "column_default": "false"
+      },
+      {
+        "table_name": "products",
+        "column_name": "prep_minutes",
+        "data_type": "integer",
+        "column_default": "0"
+      },
+      {
+        "table_name": "products",
+        "column_name": "sort_order",
+        "data_type": "integer",
+        "column_default": "0"
+      },
+      {
+        "table_name": "products",
+        "column_name": "delivery_round_id",
+        "data_type": "text",
+        "column_default": null
+      },
+      {
+        "table_name": "products",
+        "column_name": "scheduled_date",
+        "data_type": "date",
+        "column_default": null
+      },
+      {
+        "table_name": "products",
+        "column_name": "created_at",
+        "data_type": "timestamp with time zone",
+        "column_default": "now()"
+      },
+      {
+        "table_name": "products",
+        "column_name": "updated_at",
+        "data_type": "timestamp with time zone",
+        "column_default": "now()"
+      },
+      {
+        "table_name": "products",
+        "column_name": "stock",
+        "data_type": "integer",
+        "column_default": null
+      },
+      {
+        "table_name": "products",
+        "column_name": "rating",
+        "data_type": "numeric",
+        "column_default": null
+      },
+      {
+        "table_name": "products",
+        "column_name": "review_count",
+        "data_type": "integer",
+        "column_default": "0"
+      },
+      {
+        "table_name": "products",
+        "column_name": "addons",
+        "data_type": "jsonb",
+        "column_default": "'[]'::jsonb"
+      },
+      {
+        "table_name": "products",
+        "column_name": "available_same_day",
+        "data_type": "boolean",
+        "column_default": "true"
+      },
+      {
+        "table_name": "products",
+        "column_name": "available_preorder",
+        "data_type": "boolean",
+        "column_default": "false"
+      },
+      {
+        "table_name": "promotions",
+        "column_name": "id",
+        "data_type": "text",
+        "column_default": null
+      },
+      {
+        "table_name": "promotions",
+        "column_name": "name",
+        "data_type": "text",
+        "column_default": null
+      },
+      {
+        "table_name": "promotions",
+        "column_name": "description",
+        "data_type": "text",
+        "column_default": null
+      },
+      {
+        "table_name": "promotions",
+        "column_name": "code",
+        "data_type": "text",
+        "column_default": null
+      },
+      {
+        "table_name": "promotions",
+        "column_name": "discount_type",
+        "data_type": "text",
+        "column_default": null
+      },
+      {
+        "table_name": "promotions",
+        "column_name": "discount_value",
+        "data_type": "numeric",
+        "column_default": "0"
+      },
+      {
+        "table_name": "promotions",
+        "column_name": "min_order_amount",
+        "data_type": "numeric",
+        "column_default": "0"
+      },
+      {
+        "table_name": "promotions",
+        "column_name": "start_date",
+        "data_type": "date",
+        "column_default": null
+      },
+      {
+        "table_name": "promotions",
+        "column_name": "end_date",
+        "data_type": "date",
+        "column_default": null
+      },
+      {
+        "table_name": "promotions",
+        "column_name": "is_active",
+        "data_type": "boolean",
+        "column_default": "true"
+      },
+      {
+        "table_name": "promotions",
+        "column_name": "created_at",
+        "data_type": "timestamp with time zone",
+        "column_default": "now()"
+      },
+      {
+        "table_name": "promotions",
+        "column_name": "updated_at",
+        "data_type": "timestamp with time zone",
+        "column_default": "now()"
+      },
+      {
+        "table_name": "promotions",
+        "column_name": "is_banner",
+        "data_type": "boolean",
+        "column_default": "false"
+      },
+      {
+        "table_name": "promotions",
+        "column_name": "banner_image",
+        "data_type": "text",
+        "column_default": null
+      }
+    ],
+    "all_tables_cols": [
+      {
+        "table_name": "ai_conversations",
+        "cols": "id:text, customer_id:text, message:text, response:text, created_at:timestamp with time zone"
+      },
+      {
+        "table_name": "ai_customer_memory",
+        "cols": "user_id:uuid, memory:jsonb, updated_at:timestamp with time zone"
+      },
+      {
+        "table_name": "ai_recommendations",
+        "cols": "id:text, customer_id:text, product_id:text, reason:text, confidence_score:numeric, created_at:timestamp with time zone"
+      },
+      {
+        "table_name": "audit_logs",
+        "cols": "id:text, user_id:uuid, user_email:text, action:text, entity_type:text, entity_id:text, description:text, metadata:jsonb, ip_address:text, user_agent:text, created_at:timestamp with time zone"
+      },
+      {
+        "table_name": "business_settings",
+        "cols": "key:text, value:jsonb, created_at:timestamp with time zone, updated_at:timestamp with time zone"
+      },
+      {
+        "table_name": "content_approvals",
+        "cols": "id:text, content_type:text, title:text, body:text, status:text, created_by:uuid, reviewed_by:uuid, review_note:text, created_at:timestamp with time zone, reviewed_at:timestamp with time zone"
+      },
+      {
+        "table_name": "customer_intelligence",
+        "cols": "user_id:uuid, total_orders:integer, total_revenue:numeric, average_order_value:numeric, days_since_last_order:integer, last_order_at:timestamp with time zone, segment:text"
+      },
+      {
+        "table_name": "customers",
+        "cols": "id:text, user_id:uuid, full_name:text, phone:text, email:text, address:text, loyalty_points:integer, created_at:timestamp with time zone, updated_at:timestamp with time zone, default_latitude:numeric, default_longitude:numeric, default_address_detail:text"
+      },
+      {
+        "table_name": "delivery_assignments",
+        "cols": "id:text, order_number:text, driver_id:text, status:text, assigned_at:timestamp with time zone, accepted_at:timestamp with time zone, picked_up_at:timestamp with time zone, in_transit_at:timestamp with time zone, delivered_at:timestamp with time zone, cancelled_at:timestamp with time zone, notes:text, created_at:timestamp with time zone, updated_at:timestamp with time zone"
+      },
+      {
+        "table_name": "delivery_rounds",
+        "cols": "id:text, round_key:text, display_name:text, cutoff_time:time without time zone, delivery_start:time without time zone, delivery_end:time without time zone, max_capacity:integer, current_count:integer, date:date, scheduled_date:date, name:text, status:text, created_at:timestamp with time zone, updated_at:timestamp with time zone"
+      },
+      {
+        "table_name": "delivery_zones",
+        "cols": "id:text, name:text, min_distance_km:numeric, max_distance_km:numeric, fee:numeric, is_active:boolean, created_at:timestamp with time zone, updated_at:timestamp with time zone"
+      },
+      {
+        "table_name": "drivers",
+        "cols": "id:text, name:text, phone:text, vehicle_label:text, status:text, current_latitude:numeric, current_longitude:numeric, last_seen_at:timestamp with time zone, created_at:timestamp with time zone, updated_at:timestamp with time zone"
+      },
+      {
+        "table_name": "inventory",
+        "cols": "id:text, name:text, category:text, unit:text, current_stock:numeric, min_stock:numeric, max_stock:numeric, unit_price:numeric, supplier_name:text, supplier_phone:text, status:text, last_restocked_at:timestamp with time zone, created_at:timestamp with time zone, updated_at:timestamp with time zone"
+      },
+      {
+        "table_name": "inventory_transactions",
+        "cols": "id:text, inventory_id:text, type:text, quantity:numeric, reference_type:text, reference_id:text, notes:text, created_by:text, created_at:timestamp with time zone"
+      },
+      {
+        "table_name": "loyalty_points",
+        "cols": "id:text, customer_id:text, points:integer, status:text, description:text, expires_at:timestamp with time zone, created_at:timestamp with time zone"
+      },
+      {
+        "table_name": "mascot_overrides",
+        "cols": "role_name:text, media_url:text, alt:text, updated_by:uuid, updated_at:timestamp with time zone"
+      },
+      {
+        "table_name": "media_assets",
+        "cols": "id:text, url:text, alt:text, kind:text, created_by:uuid, created_at:timestamp with time zone"
+      },
+      {
+        "table_name": "menu_schedule",
+        "cols": "id:text, scheduled_date:date, product_id:text, delivery_round_key:text, is_published:boolean, note:text, created_by:uuid, created_at:timestamp with time zone, updated_at:timestamp with time zone"
+      },
+      {
+        "table_name": "notification_prefs",
+        "cols": "customer_id:text, channels:jsonb, updated_at:timestamp with time zone"
+      },
+      {
+        "table_name": "notifications",
+        "cols": "id:text, customer_id:text, title:text, message:text, is_read:boolean, notification_type:text, created_at:timestamp with time zone, category:text, user_id:uuid"
+      },
+      {
+        "table_name": "order_items",
+        "cols": "id:text, order_id:text, product_id:text, product_name:text, quantity:integer, unit_price:numeric, customizations:jsonb, special_request:text, item_total:numeric, created_at:timestamp with time zone"
+      },
+      {
+        "table_name": "orders",
+        "cols": "id:text, order_number:text, customer_id:text, customer_name:text, customer_phone:text, delivery_round_id:text, customer_ref:uuid, status:USER-DEFINED, delivery_method:USER-DEFINED, pickup_latitude:numeric, pickup_longitude:numeric, dropoff_latitude:numeric, dropoff_longitude:numeric, dropoff_detail:text, is_outside_self_zone:boolean, subtotal:numeric, delivery_fee:numeric, service_fee:numeric, discount_amount:numeric, tax_amount:numeric, total_amount:numeric, payment_status:USER-DEFINED, payment_method:USER-DEFINED, special_instructions:text, created_at:timestamp with time zone, updated_at:timestamp with time zone, order_mode:USER-DEFINED, scheduled_date:date"
+      },
+      {
+        "table_name": "payment_intents",
+        "cols": "id:text, order_number:text, amount:numeric, currency:text, status:text, method:text, provider:text, client_secret:text, payment_intent_id:text, receipt_url:text, metadata:jsonb, created_at:timestamp with time zone, updated_at:timestamp with time zone, completed_at:timestamp with time zone, failure_reason:text"
+      },
+      {
+        "table_name": "pre_orders",
+        "cols": "id:text, order_number:text, customer_id:text, customer_name:text, customer_phone:text, product_id:text, product_name:text, quantity:integer, unit_price:numeric, total_amount:numeric, delivery_round_id:text, scheduled_date:date, delivery_latitude:numeric, delivery_longitude:numeric, delivery_address:text, status:text, special_instructions:text, confirmed_at:timestamp with time zone, cancelled_at:timestamp with time zone, created_at:timestamp with time zone, updated_at:timestamp with time zone, customer_ref:uuid, migrated_order_id:text"
+      },
+      {
+        "table_name": "preorder_votes",
+        "cols": "id:text, product_id:text, customer_id:text, vote_count:integer, created_at:timestamp with time zone"
+      },
+      {
+        "table_name": "product_categories",
+        "cols": "id:text, name:text, slug:text, icon:text, sort_order:integer, is_active:boolean, created_at:timestamp with time zone"
+      },
+      {
+        "table_name": "production_batch_items",
+        "cols": "id:text, batch_id:text, order_id:text, order_number:text, product_id:text, product_name:text, quantity:integer, status:text, created_at:timestamp with time zone, order_mode:USER-DEFINED"
+      },
+      {
+        "table_name": "production_batches",
+        "cols": "id:text, delivery_round_id:text, scheduled_date:date, status:text, created_by:uuid, created_at:timestamp with time zone, updated_at:timestamp with time zone"
+      },
+      {
+        "table_name": "products",
+        "cols": "id:text, name:text, description:text, price:numeric, category_id:text, image_url:text, is_available:boolean, is_featured:boolean, is_preorder:boolean, prep_minutes:integer, sort_order:integer, delivery_round_id:text, scheduled_date:date, created_at:timestamp with time zone, updated_at:timestamp with time zone, stock:integer, rating:numeric, review_count:integer, addons:jsonb, available_same_day:boolean, available_preorder:boolean"
+      },
+      {
+        "table_name": "profiles",
+        "cols": "id:uuid, email:text, phone:text, name:text, role:text, is_active:boolean, avatar_url:text, created_at:timestamp with time zone, updated_at:timestamp with time zone, is_owner:boolean"
+      },
+      {
+        "table_name": "promotions",
+        "cols": "id:text, name:text, description:text, code:text, discount_type:text, discount_value:numeric, min_order_amount:numeric, start_date:date, end_date:date, is_active:boolean, created_at:timestamp with time zone, updated_at:timestamp with time zone, is_banner:boolean, banner_image:text"
+      },
+      {
+        "table_name": "provider_orders",
+        "cols": "id:text, order_number:text, provider_id:text, provider_name:text, status:text, pickup_latitude:numeric, pickup_longitude:numeric, dropoff_latitude:numeric, dropoff_longitude:numeric, dropoff_detail:text, items_count:integer, total_weight:numeric, estimated_delivery_time:integer, actual_delivery_time:integer, created_at:timestamp with time zone, updated_at:timestamp with time zone"
+      },
+      {
+        "table_name": "public_profiles",
+        "cols": "id:uuid, name:text, avatar_url:text, created_at:timestamp with time zone"
+      },
+      {
+        "table_name": "recipes",
+        "cols": "id:text, product_id:text, ingredient_id:text, quantity_per_unit:numeric, created_at:timestamp with time zone"
+      },
+      {
+        "table_name": "reviews",
+        "cols": "id:text, product_id:text, customer_id:text, customer_name:text, rating:integer, comment:text, is_verified:boolean, created_at:timestamp with time zone"
+      },
+      {
+        "table_name": "system_errors",
+        "cols": "id:text, source:text, level:text, message:text, details:jsonb, user_id:uuid, created_at:timestamp with time zone"
+      }
+    ],
+    "functions": [
+      {
+        "name": "append_audit_log",
+        "args": "p_action text, p_entity_type text, p_entity_id text, p_description text, p_metadata jsonb, p_user_email text",
+        "security_definer": true,
+        "owner": "postgres"
+      },
+      {
+        "name": "assign_driver",
+        "args": "p_order_number text, p_driver_id text",
+        "security_definer": true,
+        "owner": "postgres"
+      },
+      {
+        "name": "auto_approve_order",
+        "args": "",
+        "security_definer": true,
+        "owner": "postgres"
+      },
+      {
+        "name": "calculate_item_total",
+        "args": "",
+        "security_definer": false,
+        "owner": "postgres"
+      },
+      {
+        "name": "calculate_loyalty_points",
+        "args": "p_order_total numeric",
+        "security_definer": true,
+        "owner": "postgres"
+      },
+      {
+        "name": "cancel_order",
+        "args": "p_order_number text, p_reason text",
+        "security_definer": true,
+        "owner": "postgres"
+      },
+      {
+        "name": "cancel_pre_order",
+        "args": "p_order_number text",
+        "security_definer": true,
+        "owner": "postgres"
+      },
+      {
+        "name": "check_product_availability",
+        "args": "p_product_id uuid",
+        "security_definer": true,
+        "owner": "postgres"
+      },
+      {
+        "name": "compute_addons_price",
+        "args": "p_product_id text, p_options jsonb",
+        "security_definer": true,
+        "owner": "postgres"
+      },
+      {
+        "name": "compute_delivery_fee",
+        "args": "p_dropoff_latitude numeric, p_dropoff_longitude numeric, p_delivery_method text, p_items_count integer, p_distance_km numeric",
+        "security_definer": true,
+        "owner": "postgres"
+      },
+      {
+        "name": "compute_delivery_fee_rpc",
+        "args": "p_dropoff_latitude numeric, p_dropoff_longitude numeric, p_delivery_method text, p_items_count integer, p_distance_km numeric",
+        "security_definer": true,
+        "owner": "postgres"
+      },
+      {
+        "name": "confirm_offline_payment",
+        "args": "p_order_number text",
+        "security_definer": true,
+        "owner": "postgres"
+      },
+      {
+        "name": "create_notification",
+        "args": "p_title text, p_message text, p_category text, p_customer_id text",
+        "security_definer": true,
+        "owner": "postgres"
+      },
+      {
+        "name": "create_order_with_items",
+        "args": "p_items jsonb, p_delivery_round_id text, p_delivery_method text, p_delivery_address text, p_dropoff_latitude numeric, p_dropoff_longitude numeric, p_customer_name text, p_customer_phone text, p_payment_method text, p_special_instructions text, p_promotion_code text, p_distance_km numeric, p_order_mode text, p_scheduled_date date",
+        "security_definer": true,
+        "owner": "postgres"
+      },
+      {
+        "name": "create_payment_intent_record",
+        "args": "p_order_number text, p_amount numeric, p_method payment_method, p_provider text, p_metadata jsonb",
+        "security_definer": true,
+        "owner": "postgres"
+      },
+      {
+        "name": "create_pre_order_with_items",
+        "args": "p_product_id text, p_quantity integer, p_delivery_round_id text, p_scheduled_date date, p_customer_name text, p_customer_phone text, p_delivery_latitude numeric, p_delivery_longitude numeric, p_delivery_address text, p_special_instructions text",
+        "security_definer": true,
+        "owner": "postgres"
+      },
+      {
+        "name": "create_production_batch",
+        "args": "p_delivery_round_id text, p_scheduled_date date, p_order_mode text",
+        "security_definer": true,
+        "owner": "postgres"
+      },
+      {
+        "name": "customer_intelligence",
+        "args": "p_user_id uuid",
+        "security_definer": true,
+        "owner": "postgres"
+      },
+      {
+        "name": "decrement_delivery_round_count",
+        "args": "",
+        "security_definer": true,
+        "owner": "postgres"
+      },
+      {
+        "name": "deduct_inventory_for_order",
+        "args": "p_order_number text",
+        "security_definer": true,
+        "owner": "postgres"
+      },
+      {
+        "name": "driver_accept_assignment",
+        "args": "p_order_number text, p_driver_phone text",
+        "security_definer": true,
+        "owner": "postgres"
+      },
+      {
+        "name": "driver_login",
+        "args": "p_phone text, p_name text",
+        "security_definer": true,
+        "owner": "postgres"
+      },
+      {
+        "name": "driver_update_delivery_status",
+        "args": "p_order_number text, p_driver_phone text, p_status text, p_latitude numeric, p_longitude numeric",
+        "security_definer": true,
+        "owner": "postgres"
+      },
+      {
+        "name": "enforce_menu_gate",
+        "args": "",
+        "security_definer": true,
+        "owner": "postgres"
+      },
+      {
+        "name": "enforce_operating_hours",
+        "args": "",
+        "security_definer": true,
+        "owner": "postgres"
+      },
+      {
+        "name": "enforce_pre_order_cancel_window",
+        "args": "",
+        "security_definer": true,
+        "owner": "postgres"
+      },
+      {
+        "name": "enforce_pre_order_window",
+        "args": "",
+        "security_definer": true,
+        "owner": "postgres"
+      },
+      {
+        "name": "ensure_inventory_deducted_on_confirm",
+        "args": "",
+        "security_definer": true,
+        "owner": "postgres"
+      },
+      {
+        "name": "ensure_rounds_for_date",
+        "args": "p_date date",
+        "security_definer": true,
+        "owner": "postgres"
+      },
+      {
+        "name": "get_ai_memory",
+        "args": "",
+        "security_definer": true,
+        "owner": "postgres"
+      },
+      {
+        "name": "get_inventory_requirements",
+        "args": "p_product_id text, p_quantity integer",
+        "security_definer": true,
+        "owner": "postgres"
+      },
+      {
+        "name": "get_kitchen_summary",
+        "args": "p_date date",
+        "security_definer": true,
+        "owner": "postgres"
+      },
+      {
+        "name": "get_menu_for_date",
+        "args": "p_scheduled_date date",
+        "security_definer": true,
+        "owner": "postgres"
+      },
+      {
+        "name": "gin_extract_query_trgm",
+        "args": "text, internal, smallint, internal, internal, internal, internal",
+        "security_definer": false,
+        "owner": "supabase_admin"
+      },
+      {
+        "name": "gin_extract_value_trgm",
+        "args": "text, internal",
+        "security_definer": false,
+        "owner": "supabase_admin"
+      },
+      {
+        "name": "gin_trgm_consistent",
+        "args": "internal, smallint, text, integer, internal, internal, internal, internal",
+        "security_definer": false,
+        "owner": "supabase_admin"
+      },
+      {
+        "name": "gin_trgm_triconsistent",
+        "args": "internal, smallint, text, integer, internal, internal, internal",
+        "security_definer": false,
+        "owner": "supabase_admin"
+      },
+      {
+        "name": "gtrgm_compress",
+        "args": "internal",
+        "security_definer": false,
+        "owner": "supabase_admin"
+      },
+      {
+        "name": "gtrgm_consistent",
+        "args": "internal, text, smallint, oid, internal",
+        "security_definer": false,
+        "owner": "supabase_admin"
+      },
+      {
+        "name": "gtrgm_decompress",
+        "args": "internal",
+        "security_definer": false,
+        "owner": "supabase_admin"
+      },
+      {
+        "name": "gtrgm_distance",
+        "args": "internal, text, smallint, oid, internal",
+        "security_definer": false,
+        "owner": "supabase_admin"
+      },
+      {
+        "name": "gtrgm_in",
+        "args": "cstring",
+        "security_definer": false,
+        "owner": "supabase_admin"
+      },
+      {
+        "name": "gtrgm_options",
+        "args": "internal",
+        "security_definer": false,
+        "owner": "supabase_admin"
+      },
+      {
+        "name": "gtrgm_out",
+        "args": "gtrgm",
+        "security_definer": false,
+        "owner": "supabase_admin"
+      },
+      {
+        "name": "gtrgm_penalty",
+        "args": "internal, internal, internal",
+        "security_definer": false,
+        "owner": "supabase_admin"
+      },
+      {
+        "name": "gtrgm_picksplit",
+        "args": "internal, internal",
+        "security_definer": false,
+        "owner": "supabase_admin"
+      },
+      {
+        "name": "gtrgm_same",
+        "args": "gtrgm, gtrgm, internal",
+        "security_definer": false,
+        "owner": "supabase_admin"
+      },
+      {
+        "name": "gtrgm_union",
+        "args": "internal, internal",
+        "security_definer": false,
+        "owner": "supabase_admin"
+      },
+      {
+        "name": "guard_order_status_transition",
+        "args": "",
+        "security_definer": true,
+        "owner": "postgres"
+      },
+      {
+        "name": "guard_profile_mutation",
+        "args": "",
+        "security_definer": true,
+        "owner": "postgres"
+      },
+      {
+        "name": "handle_new_user",
+        "args": "",
+        "security_definer": true,
+        "owner": "postgres"
+      },
+      {
+        "name": "haversine_km",
+        "args": "p_lat1 numeric, p_lon1 numeric, p_lat2 numeric, p_lon2 numeric",
+        "security_definer": false,
+        "owner": "postgres"
+      },
+      {
+        "name": "increment_delivery_round_count",
+        "args": "",
+        "security_definer": false,
+        "owner": "postgres"
+      },
+      {
+        "name": "is_admin",
+        "args": "",
+        "security_definer": true,
+        "owner": "postgres"
+      },
+      {
+        "name": "is_content_approved",
+        "args": "p_approval_id text",
+        "security_definer": false,
+        "owner": "postgres"
+      },
+      {
+        "name": "kitchen_location",
+        "args": "",
+        "security_definer": false,
+        "owner": "postgres"
+      },
+      {
+        "name": "kitchen_queue",
+        "args": "p_delivery_round_id text, p_scheduled_date date",
+        "security_definer": true,
+        "owner": "postgres"
+      },
+      {
+        "name": "list_drivers",
+        "args": "",
+        "security_definer": true,
+        "owner": "postgres"
+      },
+      {
+        "name": "list_recipes_with_inventory",
+        "args": "p_product_id text",
+        "security_definer": true,
+        "owner": "postgres"
+      },
+      {
+        "name": "list_system_errors",
+        "args": "p_limit integer",
+        "security_definer": true,
+        "owner": "postgres"
+      },
+      {
+        "name": "mark_payment_failed",
+        "args": "p_order_number text, p_reason text",
+        "security_definer": true,
+        "owner": "postgres"
+      },
+      {
+        "name": "my_deliveries",
+        "args": "p_driver_phone text",
+        "security_definer": true,
+        "owner": "postgres"
+      },
+      {
+        "name": "order_setting",
+        "args": "p_field text, p_default numeric",
+        "security_definer": false,
+        "owner": "postgres"
+      },
+      {
+        "name": "order_transition_allowed",
+        "args": "p_from text, p_to text, p_is_admin boolean, p_is_owner boolean",
+        "security_definer": true,
+        "owner": "postgres"
+      },
+      {
+        "name": "promote_to_full_admin",
+        "args": "p_email text",
+        "security_definer": true,
+        "owner": "postgres"
+      },
+      {
+        "name": "publish_menu_schedule",
+        "args": "p_scheduled_date date, p_publish boolean",
+        "security_definer": true,
+        "owner": "postgres"
+      },
+      {
+        "name": "quote_pre_order",
+        "args": "p_product_id text, p_quantity integer",
+        "security_definer": true,
+        "owner": "postgres"
+      },
+      {
+        "name": "record_payment_result",
+        "args": "p_order_number text, p_payment_intent_id text, p_amount numeric, p_currency text, p_status text, p_failure_reason text",
+        "security_definer": true,
+        "owner": "postgres"
+      },
+      {
+        "name": "record_system_error",
+        "args": "p_message text, p_source text, p_level text, p_details jsonb",
+        "security_definer": true,
+        "owner": "postgres"
+      },
+      {
+        "name": "release_round_capacity_on_terminal",
+        "args": "",
+        "security_definer": true,
+        "owner": "postgres"
+      },
+      {
+        "name": "restore_inventory_for_order",
+        "args": "p_order_number text",
+        "security_definer": true,
+        "owner": "postgres"
+      },
+      {
+        "name": "review_content",
+        "args": "p_approval_id text, p_decision text, p_note text",
+        "security_definer": true,
+        "owner": "postgres"
+      },
+      {
+        "name": "save_ai_memory",
+        "args": "p_memory jsonb",
+        "security_definer": true,
+        "owner": "postgres"
+      },
+      {
+        "name": "set_limit",
+        "args": "real",
+        "security_definer": false,
+        "owner": "supabase_admin"
+      },
+      {
+        "name": "set_menu_schedule",
+        "args": "p_scheduled_date date, p_items jsonb",
+        "security_definer": true,
+        "owner": "postgres"
+      },
+      {
+        "name": "set_notification_pref",
+        "args": "p_channel text, p_enabled boolean",
+        "security_definer": true,
+        "owner": "postgres"
+      },
+      {
+        "name": "show_limit",
+        "args": "",
+        "security_definer": false,
+        "owner": "supabase_admin"
+      },
+      {
+        "name": "show_trgm",
+        "args": "text",
+        "security_definer": false,
+        "owner": "supabase_admin"
+      },
+      {
+        "name": "similarity",
+        "args": "text, text",
+        "security_definer": false,
+        "owner": "supabase_admin"
+      },
+      {
+        "name": "similarity_dist",
+        "args": "text, text",
+        "security_definer": false,
+        "owner": "supabase_admin"
+      },
+      {
+        "name": "similarity_op",
+        "args": "text, text",
+        "security_definer": false,
+        "owner": "supabase_admin"
+      },
+      {
+        "name": "strict_word_similarity",
+        "args": "text, text",
+        "security_definer": false,
+        "owner": "supabase_admin"
+      },
+      {
+        "name": "strict_word_similarity_commutator_op",
+        "args": "text, text",
+        "security_definer": false,
+        "owner": "supabase_admin"
+      },
+      {
+        "name": "strict_word_similarity_dist_commutator_op",
+        "args": "text, text",
+        "security_definer": false,
+        "owner": "supabase_admin"
+      },
+      {
+        "name": "strict_word_similarity_dist_op",
+        "args": "text, text",
+        "security_definer": false,
+        "owner": "supabase_admin"
+      },
+      {
+        "name": "strict_word_similarity_op",
+        "args": "text, text",
+        "security_definer": false,
+        "owner": "supabase_admin"
+      },
+      {
+        "name": "submit_content_for_approval",
+        "args": "p_content_type text, p_title text, p_body text",
+        "security_definer": true,
+        "owner": "postgres"
+      },
+      {
+        "name": "submit_offline_payment_reference",
+        "args": "p_order_number text, p_reference text",
+        "security_definer": true,
+        "owner": "postgres"
+      },
+      {
+        "name": "sync_delivery_round_aliases",
+        "args": "",
+        "security_definer": false,
+        "owner": "postgres"
+      },
+      {
+        "name": "sync_product_mode_alias",
+        "args": "",
+        "security_definer": false,
+        "owner": "postgres"
+      },
+      {
+        "name": "transition_order_status",
+        "args": "p_order_number text, p_new_status order_status",
+        "security_definer": true,
+        "owner": "postgres"
+      },
+      {
+        "name": "update_inventory_status",
+        "args": "",
+        "security_definer": false,
+        "owner": "postgres"
+      },
+      {
+        "name": "update_order_status",
+        "args": "",
+        "security_definer": true,
+        "owner": "postgres"
+      },
+      {
+        "name": "update_updated_at_column",
+        "args": "",
+        "security_definer": false,
+        "owner": "postgres"
+      },
+      {
+        "name": "upsert_driver",
+        "args": "p_name text, p_phone text, p_vehicle_label text",
+        "security_definer": true,
+        "owner": "postgres"
+      },
+      {
+        "name": "upsert_mascot_override",
+        "args": "p_role_name text, p_media_url text, p_alt text",
+        "security_definer": true,
+        "owner": "postgres"
+      },
+      {
+        "name": "validate_order_before_submit",
+        "args": "",
+        "security_definer": true,
+        "owner": "postgres"
+      },
+      {
+        "name": "validate_pre_order_delivery",
+        "args": "",
+        "security_definer": true,
+        "owner": "postgres"
+      },
+      {
+        "name": "word_similarity",
+        "args": "text, text",
+        "security_definer": false,
+        "owner": "supabase_admin"
+      },
+      {
+        "name": "word_similarity_commutator_op",
+        "args": "text, text",
+        "security_definer": false,
+        "owner": "supabase_admin"
+      },
+      {
+        "name": "word_similarity_dist_commutator_op",
+        "args": "text, text",
+        "security_definer": false,
+        "owner": "supabase_admin"
+      },
+      {
+        "name": "word_similarity_dist_op",
+        "args": "text, text",
+        "security_definer": false,
+        "owner": "supabase_admin"
+      },
+      {
+        "name": "word_similarity_op",
+        "args": "text, text",
+        "security_definer": false,
+        "owner": "supabase_admin"
+      }
+    ],
+    "rpc_grants": [
+      {
+        "proname": "append_audit_log",
+        "exec_to": [
+          "16388",
+          "16485",
+          "16486"
+        ]
+      },
+      {
+        "proname": "assign_driver",
+        "exec_to": [
+          "16388",
+          "16485",
+          "16486"
+        ]
+      },
+      {
+        "proname": "auto_approve_order",
+        "exec_to": [
+          "16388",
+          "16485",
+          "16486"
+        ]
+      },
+      {
+        "proname": "calculate_item_total",
+        "exec_to": [
+          "0",
+          "16388",
+          "16484",
+          "16485",
+          "16486"
+        ]
+      },
+      {
+        "proname": "calculate_loyalty_points",
+        "exec_to": [
+          "16388",
+          "16485",
+          "16486"
+        ]
+      },
+      {
+        "proname": "cancel_order",
+        "exec_to": [
+          "16388",
+          "16485",
+          "16486"
+        ]
+      },
+      {
+        "proname": "cancel_pre_order",
+        "exec_to": [
+          "16388",
+          "16485",
+          "16486"
+        ]
+      },
+      {
+        "proname": "check_product_availability",
+        "exec_to": [
+          "16388",
+          "16485",
+          "16486"
+        ]
+      },
+      {
+        "proname": "compute_addons_price",
+        "exec_to": [
+          "0",
+          "16388",
+          "16484",
+          "16485",
+          "16486"
+        ]
+      },
+      {
+        "proname": "compute_delivery_fee",
+        "exec_to": [
+          "0",
+          "16388",
+          "16484",
+          "16485",
+          "16486"
+        ]
+      },
+      {
+        "proname": "compute_delivery_fee_rpc",
+        "exec_to": [
+          "16388",
+          "16485",
+          "16486"
+        ]
+      },
+      {
+        "proname": "confirm_offline_payment",
+        "exec_to": [
+          "16388",
+          "16485",
+          "16486"
+        ]
+      },
+      {
+        "proname": "create_notification",
+        "exec_to": [
+          "16388",
+          "16485",
+          "16486"
+        ]
+      },
+      {
+        "proname": "create_order_with_items",
+        "exec_to": [
+          "16388",
+          "16485",
+          "16486"
+        ]
+      },
+      {
+        "proname": "create_payment_intent_record",
+        "exec_to": [
+          "16388",
+          "16485",
+          "16486"
+        ]
+      },
+      {
+        "proname": "create_pre_order_with_items",
+        "exec_to": [
+          "16388",
+          "16485",
+          "16486"
+        ]
+      },
+      {
+        "proname": "create_production_batch",
+        "exec_to": [
+          "16388",
+          "16485",
+          "16486"
+        ]
+      },
+      {
+        "proname": "customer_intelligence",
+        "exec_to": [
+          "0",
+          "16388",
+          "16484",
+          "16485",
+          "16486"
+        ]
+      },
+      {
+        "proname": "decrement_delivery_round_count",
+        "exec_to": [
+          "0",
+          "16388",
+          "16484",
+          "16485",
+          "16486"
+        ]
+      },
+      {
+        "proname": "deduct_inventory_for_order",
+        "exec_to": [
+          "16388",
+          "16485",
+          "16486"
+        ]
+      },
+      {
+        "proname": "driver_accept_assignment",
+        "exec_to": [
+          "16388",
+          "16485",
+          "16486"
+        ]
+      },
+      {
+        "proname": "driver_login",
+        "exec_to": [
+          "16388",
+          "16485",
+          "16486"
+        ]
+      },
+      {
+        "proname": "driver_update_delivery_status",
+        "exec_to": [
+          "16388",
+          "16485",
+          "16486"
+        ]
+      },
+      {
+        "proname": "enforce_menu_gate",
+        "exec_to": [
+          "16388",
+          "16486"
+        ]
+      },
+      {
+        "proname": "enforce_operating_hours",
+        "exec_to": [
+          "16388",
+          "16486"
+        ]
+      },
+      {
+        "proname": "enforce_pre_order_cancel_window",
+        "exec_to": [
+          "16388",
+          "16486"
+        ]
+      },
+      {
+        "proname": "enforce_pre_order_window",
+        "exec_to": [
+          "16388",
+          "16486"
+        ]
+      },
+      {
+        "proname": "ensure_inventory_deducted_on_confirm",
+        "exec_to": [
+          "0",
+          "16388",
+          "16484",
+          "16485",
+          "16486"
+        ]
+      },
+      {
+        "proname": "ensure_rounds_for_date",
+        "exec_to": [
+          "16388",
+          "16485",
+          "16486"
+        ]
+      },
+      {
+        "proname": "get_ai_memory",
+        "exec_to": [
+          "16388",
+          "16485",
+          "16486"
+        ]
+      },
+      {
+        "proname": "get_inventory_requirements",
+        "exec_to": [
+          "16388",
+          "16485",
+          "16486"
+        ]
+      },
+      {
+        "proname": "get_kitchen_summary",
+        "exec_to": [
+          "16388",
+          "16485",
+          "16486"
+        ]
+      },
+      {
+        "proname": "get_menu_for_date",
+        "exec_to": [
+          "16388",
+          "16485",
+          "16486"
+        ]
+      },
+      {
+        "proname": "gin_extract_query_trgm",
+        "exec_to": [
+          "0",
+          "10",
+          "16388",
+          "16484",
+          "16485",
+          "16486"
+        ]
+      },
+      {
+        "proname": "gin_extract_value_trgm",
+        "exec_to": [
+          "0",
+          "10",
+          "16388",
+          "16484",
+          "16485",
+          "16486"
+        ]
+      },
+      {
+        "proname": "gin_trgm_consistent",
+        "exec_to": [
+          "0",
+          "10",
+          "16388",
+          "16484",
+          "16485",
+          "16486"
+        ]
+      },
+      {
+        "proname": "gin_trgm_triconsistent",
+        "exec_to": [
+          "0",
+          "10",
+          "16388",
+          "16484",
+          "16485",
+          "16486"
+        ]
+      },
+      {
+        "proname": "gtrgm_compress",
+        "exec_to": [
+          "0",
+          "10",
+          "16388",
+          "16484",
+          "16485",
+          "16486"
+        ]
+      },
+      {
+        "proname": "gtrgm_consistent",
+        "exec_to": [
+          "0",
+          "10",
+          "16388",
+          "16484",
+          "16485",
+          "16486"
+        ]
+      },
+      {
+        "proname": "gtrgm_decompress",
+        "exec_to": [
+          "0",
+          "10",
+          "16388",
+          "16484",
+          "16485",
+          "16486"
+        ]
+      },
+      {
+        "proname": "gtrgm_distance",
+        "exec_to": [
+          "0",
+          "10",
+          "16388",
+          "16484",
+          "16485",
+          "16486"
+        ]
+      },
+      {
+        "proname": "gtrgm_in",
+        "exec_to": [
+          "0",
+          "10",
+          "16388",
+          "16484",
+          "16485",
+          "16486"
+        ]
+      },
+      {
+        "proname": "gtrgm_options",
+        "exec_to": [
+          "0",
+          "10",
+          "16388",
+          "16484",
+          "16485",
+          "16486"
+        ]
+      },
+      {
+        "proname": "gtrgm_out",
+        "exec_to": [
+          "0",
+          "10",
+          "16388",
+          "16484",
+          "16485",
+          "16486"
+        ]
+      },
+      {
+        "proname": "gtrgm_penalty",
+        "exec_to": [
+          "0",
+          "10",
+          "16388",
+          "16484",
+          "16485",
+          "16486"
+        ]
+      },
+      {
+        "proname": "gtrgm_picksplit",
+        "exec_to": [
+          "0",
+          "10",
+          "16388",
+          "16484",
+          "16485",
+          "16486"
+        ]
+      },
+      {
+        "proname": "gtrgm_same",
+        "exec_to": [
+          "0",
+          "10",
+          "16388",
+          "16484",
+          "16485",
+          "16486"
+        ]
+      },
+      {
+        "proname": "gtrgm_union",
+        "exec_to": [
+          "0",
+          "10",
+          "16388",
+          "16484",
+          "16485",
+          "16486"
+        ]
+      },
+      {
+        "proname": "guard_order_status_transition",
+        "exec_to": [
+          "16388",
+          "16486"
+        ]
+      },
+      {
+        "proname": "guard_profile_mutation",
+        "exec_to": [
+          "0",
+          "16388",
+          "16484",
+          "16485",
+          "16486"
+        ]
+      },
+      {
+        "proname": "handle_new_user",
+        "exec_to": [
+          "0",
+          "16388",
+          "16484",
+          "16485",
+          "16486"
+        ]
+      },
+      {
+        "proname": "haversine_km",
+        "exec_to": [
+          "0",
+          "16388",
+          "16484",
+          "16485",
+          "16486"
+        ]
+      },
+      {
+        "proname": "increment_delivery_round_count",
+        "exec_to": [
+          "0",
+          "16388",
+          "16484",
+          "16485",
+          "16486"
+        ]
+      },
+      {
+        "proname": "is_admin",
+        "exec_to": [
+          "0",
+          "16388",
+          "16484",
+          "16485",
+          "16486"
+        ]
+      },
+      {
+        "proname": "is_content_approved",
+        "exec_to": [
+          "0",
+          "16388",
+          "16484",
+          "16485",
+          "16486"
+        ]
+      },
+      {
+        "proname": "kitchen_location",
+        "exec_to": [
+          "0",
+          "16388",
+          "16484",
+          "16485",
+          "16486"
+        ]
+      },
+      {
+        "proname": "kitchen_queue",
+        "exec_to": [
+          "16388",
+          "16485",
+          "16486"
+        ]
+      },
+      {
+        "proname": "list_drivers",
+        "exec_to": [
+          "16388",
+          "16485",
+          "16486"
+        ]
+      },
+      {
+        "proname": "list_recipes_with_inventory",
+        "exec_to": [
+          "16388",
+          "16485",
+          "16486"
+        ]
+      },
+      {
+        "proname": "list_system_errors",
+        "exec_to": [
+          "16388",
+          "16485",
+          "16486"
+        ]
+      },
+      {
+        "proname": "mark_payment_failed",
+        "exec_to": [
+          "16388",
+          "16485",
+          "16486"
+        ]
+      },
+      {
+        "proname": "my_deliveries",
+        "exec_to": [
+          "16388",
+          "16485",
+          "16486"
+        ]
+      },
+      {
+        "proname": "order_setting",
+        "exec_to": [
+          "16388",
+          "16485",
+          "16486"
+        ]
+      },
+      {
+        "proname": "order_transition_allowed",
+        "exec_to": [
+          "16388",
+          "16486"
+        ]
+      },
+      {
+        "proname": "promote_to_full_admin",
+        "exec_to": [
+          "16388",
+          "16486"
+        ]
+      },
+      {
+        "proname": "publish_menu_schedule",
+        "exec_to": [
+          "16388",
+          "16485",
+          "16486"
+        ]
+      },
+      {
+        "proname": "quote_pre_order",
+        "exec_to": [
+          "16388",
+          "16485",
+          "16486"
+        ]
+      },
+      {
+        "proname": "record_payment_result",
+        "exec_to": [
+          "16388",
+          "16486"
+        ]
+      },
+      {
+        "proname": "record_system_error",
+        "exec_to": [
+          "16388",
+          "16485",
+          "16486"
+        ]
+      },
+      {
+        "proname": "release_round_capacity_on_terminal",
+        "exec_to": [
+          "0",
+          "16388",
+          "16484",
+          "16485",
+          "16486"
+        ]
+      },
+      {
+        "proname": "restore_inventory_for_order",
+        "exec_to": [
+          "16388",
+          "16485",
+          "16486"
+        ]
+      },
+      {
+        "proname": "review_content",
+        "exec_to": [
+          "16388",
+          "16485",
+          "16486"
+        ]
+      },
+      {
+        "proname": "save_ai_memory",
+        "exec_to": [
+          "16388",
+          "16485",
+          "16486"
+        ]
+      },
+      {
+        "proname": "set_limit",
+        "exec_to": [
+          "0",
+          "10",
+          "16388",
+          "16484",
+          "16485",
+          "16486"
+        ]
+      },
+      {
+        "proname": "set_menu_schedule",
+        "exec_to": [
+          "16388",
+          "16485",
+          "16486"
+        ]
+      },
+      {
+        "proname": "set_notification_pref",
+        "exec_to": [
+          "16388",
+          "16485",
+          "16486"
+        ]
+      },
+      {
+        "proname": "show_limit",
+        "exec_to": [
+          "0",
+          "10",
+          "16388",
+          "16484",
+          "16485",
+          "16486"
+        ]
+      },
+      {
+        "proname": "show_trgm",
+        "exec_to": [
+          "0",
+          "10",
+          "16388",
+          "16484",
+          "16485",
+          "16486"
+        ]
+      },
+      {
+        "proname": "similarity",
+        "exec_to": [
+          "0",
+          "10",
+          "16388",
+          "16484",
+          "16485",
+          "16486"
+        ]
+      },
+      {
+        "proname": "similarity_dist",
+        "exec_to": [
+          "0",
+          "10",
+          "16388",
+          "16484",
+          "16485",
+          "16486"
+        ]
+      },
+      {
+        "proname": "similarity_op",
+        "exec_to": [
+          "0",
+          "10",
+          "16388",
+          "16484",
+          "16485",
+          "16486"
+        ]
+      },
+      {
+        "proname": "strict_word_similarity",
+        "exec_to": [
+          "0",
+          "10",
+          "16388",
+          "16484",
+          "16485",
+          "16486"
+        ]
+      },
+      {
+        "proname": "strict_word_similarity_commutator_op",
+        "exec_to": [
+          "0",
+          "10",
+          "16388",
+          "16484",
+          "16485",
+          "16486"
+        ]
+      },
+      {
+        "proname": "strict_word_similarity_dist_commutator_op",
+        "exec_to": [
+          "0",
+          "10",
+          "16388",
+          "16484",
+          "16485",
+          "16486"
+        ]
+      },
+      {
+        "proname": "strict_word_similarity_dist_op",
+        "exec_to": [
+          "0",
+          "10",
+          "16388",
+          "16484",
+          "16485",
+          "16486"
+        ]
+      },
+      {
+        "proname": "strict_word_similarity_op",
+        "exec_to": [
+          "0",
+          "10",
+          "16388",
+          "16484",
+          "16485",
+          "16486"
+        ]
+      },
+      {
+        "proname": "submit_content_for_approval",
+        "exec_to": [
+          "16388",
+          "16485",
+          "16486"
+        ]
+      },
+      {
+        "proname": "submit_offline_payment_reference",
+        "exec_to": [
+          "16388",
+          "16485",
+          "16486"
+        ]
+      },
+      {
+        "proname": "sync_delivery_round_aliases",
+        "exec_to": [
+          "0",
+          "16388",
+          "16484",
+          "16485",
+          "16486"
+        ]
+      },
+      {
+        "proname": "sync_product_mode_alias",
+        "exec_to": [
+          "0",
+          "16388",
+          "16484",
+          "16485",
+          "16486"
+        ]
+      },
+      {
+        "proname": "transition_order_status",
+        "exec_to": [
+          "16388",
+          "16485",
+          "16486"
+        ]
+      },
+      {
+        "proname": "update_inventory_status",
+        "exec_to": [
+          "0",
+          "16388",
+          "16484",
+          "16485",
+          "16486"
+        ]
+      },
+      {
+        "proname": "update_order_status",
+        "exec_to": [
+          "16388",
+          "16485",
+          "16486"
+        ]
+      },
+      {
+        "proname": "update_updated_at_column",
+        "exec_to": [
+          "0",
+          "16388",
+          "16484",
+          "16485",
+          "16486"
+        ]
+      },
+      {
+        "proname": "upsert_driver",
+        "exec_to": [
+          "16388",
+          "16485",
+          "16486"
+        ]
+      },
+      {
+        "proname": "upsert_mascot_override",
+        "exec_to": [
+          "16388",
+          "16485",
+          "16486"
+        ]
+      },
+      {
+        "proname": "validate_order_before_submit",
+        "exec_to": [
+          "16388",
+          "16485",
+          "16486"
+        ]
+      },
+      {
+        "proname": "validate_pre_order_delivery",
+        "exec_to": [
+          "0",
+          "16388",
+          "16485",
+          "16486"
+        ]
+      },
+      {
+        "proname": "word_similarity",
+        "exec_to": [
+          "0",
+          "10",
+          "16388",
+          "16484",
+          "16485",
+          "16486"
+        ]
+      },
+      {
+        "proname": "word_similarity_commutator_op",
+        "exec_to": [
+          "0",
+          "10",
+          "16388",
+          "16484",
+          "16485",
+          "16486"
+        ]
+      },
+      {
+        "proname": "word_similarity_dist_commutator_op",
+        "exec_to": [
+          "0",
+          "10",
+          "16388",
+          "16484",
+          "16485",
+          "16486"
+        ]
+      },
+      {
+        "proname": "word_similarity_dist_op",
+        "exec_to": [
+          "0",
+          "10",
+          "16388",
+          "16484",
+          "16485",
+          "16486"
+        ]
+      },
+      {
+        "proname": "word_similarity_op",
+        "exec_to": [
+          "0",
+          "10",
+          "16388",
+          "16484",
+          "16485",
+          "16486"
+        ]
+      }
+    ],
+    "orders_cols": [
+      {
+        "column_name": "id",
+        "data_type": "text",
+        "is_nullable": "NO",
+        "column_default": null
+      },
+      {
+        "column_name": "order_number",
+        "data_type": "text",
+        "is_nullable": "NO",
+        "column_default": null
+      },
+      {
+        "column_name": "customer_id",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "customer_name",
+        "data_type": "text",
+        "is_nullable": "NO",
+        "column_default": null
+      },
+      {
+        "column_name": "customer_phone",
+        "data_type": "text",
+        "is_nullable": "NO",
+        "column_default": null
+      },
+      {
+        "column_name": "delivery_round_id",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "customer_ref",
+        "data_type": "uuid",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "status",
+        "data_type": "USER-DEFINED",
+        "is_nullable": "NO",
+        "column_default": "'pending'::order_status"
+      },
+      {
+        "column_name": "delivery_method",
+        "data_type": "USER-DEFINED",
+        "is_nullable": "NO",
+        "column_default": "'self_delivery'::delivery_method"
+      },
+      {
+        "column_name": "pickup_latitude",
+        "data_type": "numeric",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "pickup_longitude",
+        "data_type": "numeric",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "dropoff_latitude",
+        "data_type": "numeric",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "dropoff_longitude",
+        "data_type": "numeric",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "column_name": "dropoff_detail",
+        "data_type": "text",
+        "is_nullable": "NO",
+        "column_default": "''::text"
+      },
+      {
+        "column_name": "is_outside_self_zone",
+        "data_type": "boolean",
+        "is_nullable": "NO",
+        "column_default": "false"
+      },
+      {
+        "column_name": "subtotal",
+        "data_type": "numeric",
+        "is_nullable": "NO",
+        "column_default": "0"
+      },
+      {
+        "column_name": "delivery_fee",
+        "data_type": "numeric",
+        "is_nullable": "NO",
+        "column_default": "0"
+      },
+      {
+        "column_name": "service_fee",
+        "data_type": "numeric",
+        "is_nullable": "NO",
+        "column_default": "0"
+      },
+      {
+        "column_name": "discount_amount",
+        "data_type": "numeric",
+        "is_nullable": "NO",
+        "column_default": "0"
+      },
+      {
+        "column_name": "tax_amount",
+        "data_type": "numeric",
+        "is_nullable": "NO",
+        "column_default": "0"
+      },
+      {
+        "column_name": "total_amount",
+        "data_type": "numeric",
+        "is_nullable": "NO",
+        "column_default": null
+      },
+      {
+        "column_name": "payment_status",
+        "data_type": "USER-DEFINED",
+        "is_nullable": "NO",
+        "column_default": "'pending'::payment_status"
+      },
+      {
+        "column_name": "payment_method",
+        "data_type": "USER-DEFINED",
+        "is_nullable": "NO",
+        "column_default": "'promptpay_qr'::payment_method"
+      },
+      {
+        "column_name": "special_instructions",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": "''::text"
+      },
+      {
+        "column_name": "created_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "NO",
+        "column_default": "now()"
+      },
+      {
+        "column_name": "updated_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "NO",
+        "column_default": "now()"
+      },
+      {
+        "column_name": "order_mode",
+        "data_type": "USER-DEFINED",
+        "is_nullable": "NO",
+        "column_default": "'SAME_DAY'::order_mode"
+      },
+      {
+        "column_name": "scheduled_date",
+        "data_type": "date",
+        "is_nullable": "YES",
+        "column_default": null
+      }
+    ],
+    "order_items_cols": [
+      {
+        "column_name": "id",
+        "data_type": "text"
+      },
+      {
+        "column_name": "order_id",
+        "data_type": "text"
+      },
+      {
+        "column_name": "product_id",
+        "data_type": "text"
+      },
+      {
+        "column_name": "product_name",
+        "data_type": "text"
+      },
+      {
+        "column_name": "quantity",
+        "data_type": "integer"
+      },
+      {
+        "column_name": "unit_price",
+        "data_type": "numeric"
+      },
+      {
+        "column_name": "customizations",
+        "data_type": "jsonb"
+      },
+      {
+        "column_name": "special_request",
+        "data_type": "text"
+      },
+      {
+        "column_name": "item_total",
+        "data_type": "numeric"
+      },
+      {
+        "column_name": "created_at",
+        "data_type": "timestamp with time zone"
+      }
+    ],
+    "triggers": [
+      {
+        "tbl": "auth.users",
+        "tgname": "on_auth_user_created",
+        "tgenabled": "O"
+      },
+      {
+        "tbl": "storage.buckets",
+        "tgname": "enforce_bucket_name_length_trigger",
+        "tgenabled": "O"
+      },
+      {
+        "tbl": "storage.buckets",
+        "tgname": "protect_bucket_control_insert",
+        "tgenabled": "O"
+      },
+      {
+        "tbl": "storage.buckets",
+        "tgname": "protect_bucket_control_update",
+        "tgenabled": "O"
+      },
+      {
+        "tbl": "storage.buckets",
+        "tgname": "protect_bucket_control_update_role",
+        "tgenabled": "O"
+      },
+      {
+        "tbl": "storage.buckets",
+        "tgname": "protect_buckets_delete",
+        "tgenabled": "O"
+      },
+      {
+        "tbl": "storage.objects",
+        "tgname": "protect_objects_delete",
+        "tgenabled": "O"
+      },
+      {
+        "tbl": "storage.objects",
+        "tgname": "update_objects_updated_at",
+        "tgenabled": "O"
+      },
+      {
+        "tbl": "realtime.subscription",
+        "tgname": "tr_check_filters",
+        "tgenabled": "O"
+      },
+      {
+        "tbl": "delivery_rounds",
+        "tgname": "delivery_round_sync_aliases",
+        "tgenabled": "O"
+      },
+      {
+        "tbl": "delivery_rounds",
+        "tgname": "delivery_rounds_updated_at",
+        "tgenabled": "O"
+      },
+      {
+        "tbl": "products",
+        "tgname": "products_sync_mode_alias",
+        "tgenabled": "O"
+      },
+      {
+        "tbl": "products",
+        "tgname": "products_updated_at",
+        "tgenabled": "O"
+      },
+      {
+        "tbl": "orders",
+        "tgname": "orders_ensure_deduct_on_confirm",
+        "tgenabled": "O"
+      },
+      {
+        "tbl": "orders",
+        "tgname": "orders_guard_status_transition",
+        "tgenabled": "O"
+      },
+      {
+        "tbl": "orders",
+        "tgname": "orders_increment_round",
+        "tgenabled": "O"
+      },
+      {
+        "tbl": "orders",
+        "tgname": "orders_release_round_capacity",
+        "tgenabled": "O"
+      },
+      {
+        "tbl": "orders",
+        "tgname": "orders_updated_at",
+        "tgenabled": "O"
+      },
+      {
+        "tbl": "orders",
+        "tgname": "trg_operating_hours",
+        "tgenabled": "O"
+      },
+      {
+        "tbl": "orders",
+        "tgname": "trg_pre_order_address_check",
+        "tgenabled": "O"
+      },
+      {
+        "tbl": "orders",
+        "tgname": "trg_pre_order_cancel_window",
+        "tgenabled": "O"
+      },
+      {
+        "tbl": "orders",
+        "tgname": "trg_pre_order_window",
+        "tgenabled": "O"
+      },
+      {
+        "tbl": "order_items",
+        "tgname": "order_items_calculate_total",
+        "tgenabled": "O"
+      },
+      {
+        "tbl": "order_items",
+        "tgname": "trg_menu_gate",
+        "tgenabled": "O"
+      },
+      {
+        "tbl": "inventory",
+        "tgname": "inventory_calculate_status",
+        "tgenabled": "O"
+      },
+      {
+        "tbl": "inventory",
+        "tgname": "inventory_updated_at",
+        "tgenabled": "O"
+      },
+      {
+        "tbl": "profiles",
+        "tgname": "profiles_guard_mutation",
+        "tgenabled": "O"
+      },
+      {
+        "tbl": "profiles",
+        "tgname": "profiles_updated_at",
+        "tgenabled": "O"
+      }
+    ],
+    "constraints": [
+      {
+        "tbl": "product_categories",
+        "conname": "product_categories_slug_key",
+        "contype": "u"
+      },
+      {
+        "tbl": "product_categories",
+        "conname": "product_categories_pkey",
+        "contype": "p"
+      },
+      {
+        "tbl": "delivery_rounds",
+        "conname": "delivery_rounds_pkey",
+        "contype": "p"
+      },
+      {
+        "tbl": "delivery_rounds",
+        "conname": "delivery_rounds_status_check",
+        "contype": "c"
+      },
+      {
+        "tbl": "products",
+        "conname": "products_price_check",
+        "contype": "c"
+      },
+      {
+        "tbl": "products",
+        "conname": "products_delivery_round_id_fkey",
+        "contype": "f"
+      },
+      {
+        "tbl": "products",
+        "conname": "products_sort_order_check",
+        "contype": "c"
+      },
+      {
+        "tbl": "products",
+        "conname": "products_pkey",
+        "contype": "p"
+      },
+      {
+        "tbl": "products",
+        "conname": "products_category_id_fkey",
+        "contype": "f"
+      },
+      {
+        "tbl": "customers",
+        "conname": "customers_pkey",
+        "contype": "p"
+      },
+      {
+        "tbl": "customers",
+        "conname": "customers_user_id_fkey",
+        "contype": "f"
+      },
+      {
+        "tbl": "orders",
+        "conname": "orders_total_nonneg",
+        "contype": "c"
+      },
+      {
+        "tbl": "orders",
+        "conname": "orders_pkey",
+        "contype": "p"
+      },
+      {
+        "tbl": "orders",
+        "conname": "orders_delivery_round_id_fkey",
+        "contype": "f"
+      },
+      {
+        "tbl": "orders",
+        "conname": "orders_order_number_key",
+        "contype": "u"
+      },
+      {
+        "tbl": "orders",
+        "conname": "orders_customer_ref_fkey",
+        "contype": "f"
+      },
+      {
+        "tbl": "order_items",
+        "conname": "order_items_order_id_fkey",
+        "contype": "f"
+      },
+      {
+        "tbl": "order_items",
+        "conname": "order_items_product_id_fkey",
+        "contype": "f"
+      },
+      {
+        "tbl": "order_items",
+        "conname": "order_items_pkey",
+        "contype": "p"
+      },
+      {
+        "tbl": "order_items",
+        "conname": "order_items_quantity_check",
+        "contype": "c"
+      },
+      {
+        "tbl": "inventory",
+        "conname": "inventory_pkey",
+        "contype": "p"
+      },
+      {
+        "tbl": "inventory_transactions",
+        "conname": "inventory_transactions_inventory_id_fkey",
+        "contype": "f"
+      },
+      {
+        "tbl": "inventory_transactions",
+        "conname": "inventory_transactions_type_check",
+        "contype": "c"
+      },
+      {
+        "tbl": "inventory_transactions",
+        "conname": "inventory_transactions_pkey",
+        "contype": "p"
+      },
+      {
+        "tbl": "preorder_votes",
+        "conname": "preorder_votes_product_id_fkey",
+        "contype": "f"
+      },
+      {
+        "tbl": "preorder_votes",
+        "conname": "preorder_votes_pkey",
+        "contype": "p"
+      },
+      {
+        "tbl": "reviews",
+        "conname": "reviews_product_id_fkey",
+        "contype": "f"
+      },
+      {
+        "tbl": "reviews",
+        "conname": "reviews_pkey",
+        "contype": "p"
+      },
+      {
+        "tbl": "reviews",
+        "conname": "reviews_rating_check",
+        "contype": "c"
+      },
+      {
+        "tbl": "loyalty_points",
+        "conname": "loyalty_points_customer_id_fkey",
+        "contype": "f"
+      },
+      {
+        "tbl": "loyalty_points",
+        "conname": "loyalty_points_pkey",
+        "contype": "p"
+      },
+      {
+        "tbl": "promotions",
+        "conname": "promotions_discount_type_check",
+        "contype": "c"
+      },
+      {
+        "tbl": "promotions",
+        "conname": "promotions_pkey",
+        "contype": "p"
+      },
+      {
+        "tbl": "notifications",
+        "conname": "notifications_category_check",
+        "contype": "c"
+      },
+      {
+        "tbl": "notifications",
+        "conname": "notifications_customer_id_fkey",
+        "contype": "f"
+      },
+      {
+        "tbl": "notifications",
+        "conname": "notifications_pkey",
+        "contype": "p"
+      },
+      {
+        "tbl": "notifications",
+        "conname": "notifications_user_id_fkey",
+        "contype": "f"
+      },
+      {
+        "tbl": "ai_conversations",
+        "conname": "ai_conversations_pkey",
+        "contype": "p"
+      },
+      {
+        "tbl": "ai_conversations",
+        "conname": "ai_conversations_customer_id_fkey",
+        "contype": "f"
+      },
+      {
+        "tbl": "ai_recommendations",
+        "conname": "ai_recommendations_customer_id_fkey",
+        "contype": "f"
+      },
+      {
+        "tbl": "ai_recommendations",
+        "conname": "ai_recommendations_pkey",
+        "contype": "p"
+      },
+      {
+        "tbl": "ai_recommendations",
+        "conname": "ai_recommendations_product_id_fkey",
+        "contype": "f"
+      },
+      {
+        "tbl": "profiles",
+        "conname": "profiles_pkey",
+        "contype": "p"
+      },
+      {
+        "tbl": "profiles",
+        "conname": "profiles_id_fkey",
+        "contype": "f"
+      },
+      {
+        "tbl": "profiles",
+        "conname": "profiles_role_check",
+        "contype": "c"
+      },
+      {
+        "tbl": "pre_orders",
+        "conname": "pre_orders_order_number_key",
+        "contype": "u"
+      },
+      {
+        "tbl": "pre_orders",
+        "conname": "pre_orders_delivery_round_id_fkey",
+        "contype": "f"
+      },
+      {
+        "tbl": "pre_orders",
+        "conname": "pre_orders_product_id_fkey",
+        "contype": "f"
+      },
+      {
+        "tbl": "pre_orders",
+        "conname": "pre_orders_customer_id_fkey",
+        "contype": "f"
+      },
+      {
+        "tbl": "pre_orders",
+        "conname": "pre_orders_customer_ref_fkey",
+        "contype": "f"
+      },
+      {
+        "tbl": "pre_orders",
+        "conname": "pre_orders_pkey",
+        "contype": "p"
+      },
+      {
+        "tbl": "pre_orders",
+        "conname": "pre_orders_quantity_check",
+        "contype": "c"
+      },
+      {
+        "tbl": "payment_intents",
+        "conname": "payment_intents_pkey",
+        "contype": "p"
+      },
+      {
+        "tbl": "business_settings",
+        "conname": "business_settings_pkey",
+        "contype": "p"
+      },
+      {
+        "tbl": "media_assets",
+        "conname": "media_assets_kind_check",
+        "contype": "c"
+      },
+      {
+        "tbl": "media_assets",
+        "conname": "media_assets_pkey",
+        "contype": "p"
+      },
+      {
+        "tbl": "media_assets",
+        "conname": "media_assets_created_by_fkey",
+        "contype": "f"
+      },
+      {
+        "tbl": "delivery_zones",
+        "conname": "delivery_zones_pkey",
+        "contype": "p"
+      },
+      {
+        "tbl": "provider_orders",
+        "conname": "provider_orders_pkey",
+        "contype": "p"
+      },
+      {
+        "tbl": "provider_orders",
+        "conname": "provider_orders_order_number_fkey",
+        "contype": "f"
+      },
+      {
+        "tbl": "audit_logs",
+        "conname": "audit_logs_pkey",
+        "contype": "p"
+      },
+      {
+        "tbl": "audit_logs",
+        "conname": "audit_logs_user_id_fkey",
+        "contype": "f"
+      },
+      {
+        "tbl": "recipes",
+        "conname": "recipes_pkey",
+        "contype": "p"
+      },
+      {
+        "tbl": "recipes",
+        "conname": "recipes_quantity_per_unit_check",
+        "contype": "c"
+      },
+      {
+        "tbl": "recipes",
+        "conname": "recipes_ingredient_id_fkey",
+        "contype": "f"
+      },
+      {
+        "tbl": "recipes",
+        "conname": "recipes_product_id_fkey",
+        "contype": "f"
+      },
+      {
+        "tbl": "recipes",
+        "conname": "recipes_product_id_ingredient_id_key",
+        "contype": "u"
+      },
+      {
+        "tbl": "production_batches",
+        "conname": "production_batches_pkey",
+        "contype": "p"
+      },
+      {
+        "tbl": "production_batches",
+        "conname": "production_batches_status_check",
+        "contype": "c"
+      },
+      {
+        "tbl": "production_batches",
+        "conname": "production_batches_created_by_fkey",
+        "contype": "f"
+      },
+      {
+        "tbl": "production_batches",
+        "conname": "production_batches_delivery_round_id_fkey",
+        "contype": "f"
+      },
+      {
+        "tbl": "production_batch_items",
+        "conname": "production_batch_items_batch_id_fkey",
+        "contype": "f"
+      },
+      {
+        "tbl": "production_batch_items",
+        "conname": "production_batch_items_pkey",
+        "contype": "p"
+      },
+      {
+        "tbl": "production_batch_items",
+        "conname": "production_batch_items_status_check",
+        "contype": "c"
+      },
+      {
+        "tbl": "production_batch_items",
+        "conname": "production_batch_items_quantity_check",
+        "contype": "c"
+      },
+      {
+        "tbl": "production_batch_items",
+        "conname": "production_batch_items_product_id_fkey",
+        "contype": "f"
+      },
+      {
+        "tbl": "notification_prefs",
+        "conname": "notification_prefs_pkey",
+        "contype": "p"
+      },
+      {
+        "tbl": "notification_prefs",
+        "conname": "notification_prefs_customer_id_fkey",
+        "contype": "f"
+      },
+      {
+        "tbl": "system_errors",
+        "conname": "system_errors_pkey",
+        "contype": "p"
+      },
+      {
+        "tbl": "system_errors",
+        "conname": "system_errors_level_check",
+        "contype": "c"
+      },
+      {
+        "tbl": "system_errors",
+        "conname": "system_errors_user_id_fkey",
+        "contype": "f"
+      },
+      {
+        "tbl": "mascot_overrides",
+        "conname": "mascot_overrides_pkey",
+        "contype": "p"
+      },
+      {
+        "tbl": "mascot_overrides",
+        "conname": "mascot_overrides_updated_by_fkey",
+        "contype": "f"
+      },
+      {
+        "tbl": "ai_customer_memory",
+        "conname": "ai_customer_memory_pkey",
+        "contype": "p"
+      },
+      {
+        "tbl": "ai_customer_memory",
+        "conname": "ai_customer_memory_user_id_fkey",
+        "contype": "f"
+      },
+      {
+        "tbl": "content_approvals",
+        "conname": "content_approvals_content_type_check",
+        "contype": "c"
+      },
+      {
+        "tbl": "content_approvals",
+        "conname": "content_approvals_reviewed_by_fkey",
+        "contype": "f"
+      },
+      {
+        "tbl": "content_approvals",
+        "conname": "content_approvals_pkey",
+        "contype": "p"
+      },
+      {
+        "tbl": "content_approvals",
+        "conname": "content_approvals_status_check",
+        "contype": "c"
+      },
+      {
+        "tbl": "content_approvals",
+        "conname": "content_approvals_created_by_fkey",
+        "contype": "f"
+      },
+      {
+        "tbl": "drivers",
+        "conname": "drivers_pkey",
+        "contype": "p"
+      },
+      {
+        "tbl": "drivers",
+        "conname": "drivers_phone_key",
+        "contype": "u"
+      },
+      {
+        "tbl": "drivers",
+        "conname": "drivers_status_check",
+        "contype": "c"
+      },
+      {
+        "tbl": "delivery_assignments",
+        "conname": "delivery_assignments_driver_id_fkey",
+        "contype": "f"
+      },
+      {
+        "tbl": "delivery_assignments",
+        "conname": "delivery_assignments_pkey",
+        "contype": "p"
+      },
+      {
+        "tbl": "delivery_assignments",
+        "conname": "delivery_assignments_order_number_key",
+        "contype": "u"
+      },
+      {
+        "tbl": "delivery_assignments",
+        "conname": "delivery_assignments_order_number_fkey",
+        "contype": "f"
+      },
+      {
+        "tbl": "delivery_assignments",
+        "conname": "delivery_assignments_status_check",
+        "contype": "c"
+      },
+      {
+        "tbl": "menu_schedule",
+        "conname": "menu_schedule_scheduled_date_product_id_key",
+        "contype": "u"
+      },
+      {
+        "tbl": "menu_schedule",
+        "conname": "menu_schedule_product_id_fkey",
+        "contype": "f"
+      },
+      {
+        "tbl": "menu_schedule",
+        "conname": "menu_schedule_pkey",
+        "contype": "p"
+      }
+    ],
+    "rls": [
+      {
+        "tbl": "ai_conversations",
+        "rls_on": true,
+        "force_rls": false
+      },
+      {
+        "tbl": "ai_customer_memory",
+        "rls_on": true,
+        "force_rls": false
+      },
+      {
+        "tbl": "ai_recommendations",
+        "rls_on": true,
+        "force_rls": false
+      },
+      {
+        "tbl": "audit_logs",
+        "rls_on": true,
+        "force_rls": false
+      },
+      {
+        "tbl": "business_settings",
+        "rls_on": true,
+        "force_rls": false
+      },
+      {
+        "tbl": "content_approvals",
+        "rls_on": true,
+        "force_rls": false
+      },
+      {
+        "tbl": "customers",
+        "rls_on": true,
+        "force_rls": false
+      },
+      {
+        "tbl": "delivery_assignments",
+        "rls_on": true,
+        "force_rls": false
+      },
+      {
+        "tbl": "delivery_rounds",
+        "rls_on": true,
+        "force_rls": false
+      },
+      {
+        "tbl": "delivery_zones",
+        "rls_on": true,
+        "force_rls": false
+      },
+      {
+        "tbl": "drivers",
+        "rls_on": true,
+        "force_rls": false
+      },
+      {
+        "tbl": "inventory",
+        "rls_on": true,
+        "force_rls": false
+      },
+      {
+        "tbl": "inventory_transactions",
+        "rls_on": true,
+        "force_rls": false
+      },
+      {
+        "tbl": "loyalty_points",
+        "rls_on": true,
+        "force_rls": false
+      },
+      {
+        "tbl": "mascot_overrides",
+        "rls_on": true,
+        "force_rls": false
+      },
+      {
+        "tbl": "media_assets",
+        "rls_on": true,
+        "force_rls": false
+      },
+      {
+        "tbl": "menu_schedule",
+        "rls_on": true,
+        "force_rls": false
+      },
+      {
+        "tbl": "notification_prefs",
+        "rls_on": true,
+        "force_rls": false
+      },
+      {
+        "tbl": "notifications",
+        "rls_on": true,
+        "force_rls": false
+      },
+      {
+        "tbl": "order_items",
+        "rls_on": true,
+        "force_rls": false
+      },
+      {
+        "tbl": "orders",
+        "rls_on": true,
+        "force_rls": false
+      },
+      {
+        "tbl": "payment_intents",
+        "rls_on": true,
+        "force_rls": false
+      },
+      {
+        "tbl": "pre_orders",
+        "rls_on": true,
+        "force_rls": false
+      },
+      {
+        "tbl": "preorder_votes",
+        "rls_on": true,
+        "force_rls": false
+      },
+      {
+        "tbl": "product_categories",
+        "rls_on": true,
+        "force_rls": false
+      },
+      {
+        "tbl": "production_batch_items",
+        "rls_on": true,
+        "force_rls": false
+      },
+      {
+        "tbl": "production_batches",
+        "rls_on": true,
+        "force_rls": false
+      },
+      {
+        "tbl": "products",
+        "rls_on": true,
+        "force_rls": false
+      },
+      {
+        "tbl": "profiles",
+        "rls_on": true,
+        "force_rls": false
+      },
+      {
+        "tbl": "promotions",
+        "rls_on": true,
+        "force_rls": false
+      },
+      {
+        "tbl": "provider_orders",
+        "rls_on": true,
+        "force_rls": false
+      },
+      {
+        "tbl": "recipes",
+        "rls_on": true,
+        "force_rls": false
+      },
+      {
+        "tbl": "reviews",
+        "rls_on": true,
+        "force_rls": false
+      },
+      {
+        "tbl": "system_errors",
+        "rls_on": true,
+        "force_rls": false
+      }
+    ],
+    "policies": [
+      {
+        "schemaname": "public",
+        "tablename": "ai_conversations",
+        "policyname": "ai_conversations_admin",
+        "roles": "{authenticated}",
+        "cmd": "ALL"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "ai_conversations",
+        "policyname": "ai_conversations_anon",
+        "roles": "{anon}",
+        "cmd": "ALL"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "ai_conversations",
+        "policyname": "ai_conversations_own",
+        "roles": "{authenticated}",
+        "cmd": "ALL"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "ai_customer_memory",
+        "policyname": "ai_memory_admin_read",
+        "roles": "{authenticated}",
+        "cmd": "SELECT"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "ai_customer_memory",
+        "policyname": "ai_memory_deny_anon",
+        "roles": "{anon}",
+        "cmd": "SELECT"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "ai_customer_memory",
+        "policyname": "ai_memory_own_read",
+        "roles": "{authenticated}",
+        "cmd": "SELECT"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "ai_recommendations",
+        "policyname": "ai_recommendations_admin",
+        "roles": "{authenticated}",
+        "cmd": "ALL"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "ai_recommendations",
+        "policyname": "ai_recommendations_anon",
+        "roles": "{anon}",
+        "cmd": "ALL"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "ai_recommendations",
+        "policyname": "ai_recommendations_own",
+        "roles": "{authenticated}",
+        "cmd": "ALL"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "audit_logs",
+        "policyname": "audit_logs_admin_read",
+        "roles": "{authenticated}",
+        "cmd": "SELECT"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "audit_logs",
+        "policyname": "audit_logs_anon",
+        "roles": "{anon}",
+        "cmd": "SELECT"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "audit_logs",
+        "policyname": "audit_logs_own_read",
+        "roles": "{authenticated}",
+        "cmd": "SELECT"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "business_settings",
+        "policyname": "business_settings_admin",
+        "roles": "{authenticated}",
+        "cmd": "ALL"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "business_settings",
+        "policyname": "business_settings_anon",
+        "roles": "{anon}",
+        "cmd": "ALL"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "business_settings",
+        "policyname": "business_settings_auth_read",
+        "roles": "{authenticated}",
+        "cmd": "SELECT"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "content_approvals",
+        "policyname": "content_approvals_admin",
+        "roles": "{authenticated}",
+        "cmd": "ALL"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "content_approvals",
+        "policyname": "content_approvals_anon",
+        "roles": "{anon}",
+        "cmd": "ALL"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "content_approvals",
+        "policyname": "content_approvals_auth_read",
+        "roles": "{authenticated}",
+        "cmd": "SELECT"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "customers",
+        "policyname": "customers_admin_manage",
+        "roles": "{authenticated}",
+        "cmd": "ALL"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "customers",
+        "policyname": "customers_anon",
+        "roles": "{anon}",
+        "cmd": "ALL"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "customers",
+        "policyname": "customers_own_read",
+        "roles": "{authenticated}",
+        "cmd": "SELECT"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "delivery_assignments",
+        "policyname": "assignments_admin_write",
+        "roles": "{authenticated}",
+        "cmd": "ALL"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "delivery_assignments",
+        "policyname": "assignments_auth_read",
+        "roles": "{authenticated}",
+        "cmd": "SELECT"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "delivery_assignments",
+        "policyname": "assignments_deny_anon",
+        "roles": "{anon}",
+        "cmd": "SELECT"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "delivery_rounds",
+        "policyname": "delivery_rounds_admin_manage",
+        "roles": "{authenticated}",
+        "cmd": "ALL"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "delivery_rounds",
+        "policyname": "delivery_rounds_public_read",
+        "roles": "{anon,authenticated}",
+        "cmd": "SELECT"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "delivery_zones",
+        "policyname": "delivery_zones_admin",
+        "roles": "{authenticated}",
+        "cmd": "ALL"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "delivery_zones",
+        "policyname": "delivery_zones_public_read",
+        "roles": "{anon,authenticated}",
+        "cmd": "SELECT"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "drivers",
+        "policyname": "drivers_admin_write",
+        "roles": "{authenticated}",
+        "cmd": "ALL"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "drivers",
+        "policyname": "drivers_auth_read",
+        "roles": "{authenticated}",
+        "cmd": "SELECT"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "drivers",
+        "policyname": "drivers_deny_anon",
+        "roles": "{anon}",
+        "cmd": "SELECT"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "inventory",
+        "policyname": "inventory_admin_manage",
+        "roles": "{authenticated}",
+        "cmd": "ALL"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "inventory",
+        "policyname": "inventory_anon_read",
+        "roles": "{anon}",
+        "cmd": "SELECT"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "inventory",
+        "policyname": "inventory_public_read",
+        "roles": "{anon,authenticated}",
+        "cmd": "SELECT"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "inventory_transactions",
+        "policyname": "inventory_transactions_admin",
+        "roles": "{authenticated}",
+        "cmd": "ALL"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "inventory_transactions",
+        "policyname": "inventory_transactions_anon",
+        "roles": "{anon}",
+        "cmd": "ALL"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "loyalty_points",
+        "policyname": "loyalty_points_admin",
+        "roles": "{authenticated}",
+        "cmd": "ALL"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "loyalty_points",
+        "policyname": "loyalty_points_anon",
+        "roles": "{anon}",
+        "cmd": "ALL"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "loyalty_points",
+        "policyname": "loyalty_points_own_read",
+        "roles": "{authenticated}",
+        "cmd": "SELECT"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "mascot_overrides",
+        "policyname": "mascot_overrides_admin",
+        "roles": "{authenticated}",
+        "cmd": "ALL"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "mascot_overrides",
+        "policyname": "mascot_overrides_anon_read",
+        "roles": "{anon}",
+        "cmd": "SELECT"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "media_assets",
+        "policyname": "media_assets_admin",
+        "roles": "{authenticated}",
+        "cmd": "ALL"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "media_assets",
+        "policyname": "media_assets_public_read",
+        "roles": "{anon,authenticated}",
+        "cmd": "SELECT"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "menu_schedule",
+        "policyname": "menu_schedule_admin",
+        "roles": "{authenticated}",
+        "cmd": "ALL"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "menu_schedule",
+        "policyname": "menu_schedule_read",
+        "roles": "{authenticated}",
+        "cmd": "SELECT"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "notification_prefs",
+        "policyname": "notif_prefs_admin",
+        "roles": "{authenticated}",
+        "cmd": "SELECT"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "notification_prefs",
+        "policyname": "notif_prefs_deny_anon",
+        "roles": "{anon}",
+        "cmd": "ALL"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "notification_prefs",
+        "policyname": "notif_prefs_own",
+        "roles": "{authenticated}",
+        "cmd": "ALL"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "notifications",
+        "policyname": "notifications_admin",
+        "roles": "{authenticated}",
+        "cmd": "ALL"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "notifications",
+        "policyname": "notifications_anon",
+        "roles": "{anon}",
+        "cmd": "ALL"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "notifications",
+        "policyname": "notifications_deny_anon",
+        "roles": "{anon}",
+        "cmd": "ALL"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "notifications",
+        "policyname": "notifications_own_read",
+        "roles": "{authenticated}",
+        "cmd": "SELECT"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "notifications",
+        "policyname": "notifications_own_update",
+        "roles": "{authenticated}",
+        "cmd": "UPDATE"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "order_items",
+        "policyname": "order_items_admin",
+        "roles": "{authenticated}",
+        "cmd": "ALL"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "order_items",
+        "policyname": "order_items_anon",
+        "roles": "{anon}",
+        "cmd": "ALL"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "order_items",
+        "policyname": "order_items_own",
+        "roles": "{authenticated}",
+        "cmd": "ALL"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "orders",
+        "policyname": "orders_admin_manage",
+        "roles": "{authenticated}",
+        "cmd": "ALL"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "orders",
+        "policyname": "orders_anon_read",
+        "roles": "{anon}",
+        "cmd": "SELECT"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "orders",
+        "policyname": "orders_own_create",
+        "roles": "{authenticated}",
+        "cmd": "INSERT"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "orders",
+        "policyname": "orders_own_read",
+        "roles": "{authenticated}",
+        "cmd": "SELECT"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "orders",
+        "policyname": "orders_own_update",
+        "roles": "{authenticated}",
+        "cmd": "UPDATE"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "payment_intents",
+        "policyname": "payment_intents_admin",
+        "roles": "{authenticated}",
+        "cmd": "ALL"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "payment_intents",
+        "policyname": "payment_intents_anon",
+        "roles": "{anon}",
+        "cmd": "ALL"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "payment_intents",
+        "policyname": "payment_intents_own",
+        "roles": "{authenticated}",
+        "cmd": "SELECT"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "payment_intents",
+        "policyname": "payment_intents_own_create",
+        "roles": "{authenticated}",
+        "cmd": "INSERT"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "payment_intents",
+        "policyname": "payment_intents_policy",
+        "roles": "{anon,authenticated}",
+        "cmd": "ALL"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "pre_orders",
+        "policyname": "pre_orders_archive_admin",
+        "roles": "{authenticated}",
+        "cmd": "SELECT"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "pre_orders",
+        "policyname": "pre_orders_archive_anon",
+        "roles": "{anon}",
+        "cmd": "SELECT"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "pre_orders",
+        "policyname": "pre_orders_archive_own",
+        "roles": "{authenticated}",
+        "cmd": "SELECT"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "preorder_votes",
+        "policyname": "preorder_votes_admin",
+        "roles": "{authenticated}",
+        "cmd": "ALL"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "preorder_votes",
+        "policyname": "preorder_votes_anon",
+        "roles": "{anon,authenticated}",
+        "cmd": "INSERT"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "preorder_votes",
+        "policyname": "preorder_votes_public_read",
+        "roles": "{anon,authenticated}",
+        "cmd": "SELECT"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "product_categories",
+        "policyname": "product_categories_admin_manage",
+        "roles": "{authenticated}",
+        "cmd": "ALL"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "product_categories",
+        "policyname": "product_categories_public_read",
+        "roles": "{anon,authenticated}",
+        "cmd": "SELECT"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "production_batch_items",
+        "policyname": "batch_items_admin",
+        "roles": "{authenticated}",
+        "cmd": "ALL"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "production_batches",
+        "policyname": "batches_admin",
+        "roles": "{authenticated}",
+        "cmd": "ALL"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "products",
+        "policyname": "products_admin_manage",
+        "roles": "{authenticated}",
+        "cmd": "ALL"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "products",
+        "policyname": "products_public_read",
+        "roles": "{anon,authenticated}",
+        "cmd": "SELECT"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "profiles",
+        "policyname": "Users can view own profile",
+        "roles": "{public}",
+        "cmd": "SELECT"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "profiles",
+        "policyname": "profiles_admin_manage",
+        "roles": "{authenticated}",
+        "cmd": "ALL"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "profiles",
+        "policyname": "profiles_own_read_limited",
+        "roles": "{authenticated}",
+        "cmd": "SELECT"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "profiles",
+        "policyname": "profiles_own_write",
+        "roles": "{authenticated}",
+        "cmd": "UPDATE"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "profiles",
+        "policyname": "profiles_public_read",
+        "roles": "{anon,authenticated}",
+        "cmd": "SELECT"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "promotions",
+        "policyname": "promotions_admin_manage",
+        "roles": "{authenticated}",
+        "cmd": "ALL"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "promotions",
+        "policyname": "promotions_public_read",
+        "roles": "{anon,authenticated}",
+        "cmd": "SELECT"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "provider_orders",
+        "policyname": "provider_orders_admin",
+        "roles": "{authenticated}",
+        "cmd": "ALL"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "provider_orders",
+        "policyname": "provider_orders_anon",
+        "roles": "{anon}",
+        "cmd": "ALL"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "provider_orders",
+        "policyname": "provider_orders_own",
+        "roles": "{authenticated}",
+        "cmd": "SELECT"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "recipes",
+        "policyname": "recipes_admin",
+        "roles": "{authenticated}",
+        "cmd": "ALL"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "recipes",
+        "policyname": "recipes_anon_read",
+        "roles": "{anon}",
+        "cmd": "SELECT"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "reviews",
+        "policyname": "reviews_admin_manage",
+        "roles": "{authenticated}",
+        "cmd": "ALL"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "reviews",
+        "policyname": "reviews_own_insert",
+        "roles": "{authenticated}",
+        "cmd": "INSERT"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "reviews",
+        "policyname": "reviews_own_update",
+        "roles": "{authenticated}",
+        "cmd": "UPDATE"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "reviews",
+        "policyname": "reviews_public_read",
+        "roles": "{anon,authenticated}",
+        "cmd": "SELECT"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "system_errors",
+        "policyname": "system_errors_admin_read",
+        "roles": "{authenticated}",
+        "cmd": "SELECT"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "system_errors",
+        "policyname": "system_errors_deny_anon",
+        "roles": "{anon}",
+        "cmd": "ALL"
+      }
+    ],
+    "table_grants": [
+      {
+        "table_name": "ai_conversations",
+        "grants": "authenticated:INSERT, authenticated:SELECT, authenticated:UPDATE, authenticated:DELETE, service_role:DELETE, service_role:TRUNCATE, service_role:REFERENCES, service_role:TRIGGER, service_role:INSERT, service_role:SELECT, service_role:UPDATE"
+      },
+      {
+        "table_name": "ai_customer_memory",
+        "grants": "authenticated:INSERT, authenticated:SELECT, authenticated:UPDATE, authenticated:DELETE, service_role:DELETE, service_role:REFERENCES, service_role:TRUNCATE, service_role:TRIGGER, service_role:INSERT, service_role:SELECT, service_role:UPDATE"
+      },
+      {
+        "table_name": "ai_recommendations",
+        "grants": "authenticated:SELECT, authenticated:DELETE, authenticated:UPDATE, authenticated:INSERT, service_role:UPDATE, service_role:TRUNCATE, service_role:REFERENCES, service_role:TRIGGER, service_role:INSERT, service_role:SELECT, service_role:DELETE"
+      },
+      {
+        "table_name": "audit_logs",
+        "grants": "authenticated:INSERT, authenticated:UPDATE, authenticated:DELETE, authenticated:SELECT, service_role:REFERENCES, service_role:TRIGGER, service_role:TRUNCATE, service_role:DELETE, service_role:UPDATE, service_role:SELECT, service_role:INSERT"
+      },
+      {
+        "table_name": "business_settings",
+        "grants": "authenticated:DELETE, authenticated:INSERT, authenticated:SELECT, authenticated:UPDATE, service_role:INSERT, service_role:SELECT, service_role:DELETE, service_role:UPDATE, service_role:TRIGGER, service_role:REFERENCES, service_role:TRUNCATE"
+      },
+      {
+        "table_name": "content_approvals",
+        "grants": "authenticated:SELECT, authenticated:DELETE, authenticated:UPDATE, authenticated:INSERT, service_role:TRUNCATE, service_role:SELECT, service_role:INSERT, service_role:TRIGGER, service_role:REFERENCES, service_role:DELETE, service_role:UPDATE"
+      },
+      {
+        "table_name": "customer_intelligence",
+        "grants": "authenticated:INSERT, authenticated:SELECT, authenticated:UPDATE, authenticated:DELETE, service_role:REFERENCES, service_role:TRIGGER, service_role:TRUNCATE, service_role:DELETE, service_role:UPDATE, service_role:SELECT, service_role:INSERT"
+      },
+      {
+        "table_name": "customers",
+        "grants": "authenticated:DELETE, authenticated:UPDATE, authenticated:SELECT, authenticated:INSERT, service_role:UPDATE, service_role:SELECT, service_role:INSERT, service_role:TRIGGER, service_role:REFERENCES, service_role:TRUNCATE, service_role:DELETE"
+      },
+      {
+        "table_name": "delivery_assignments",
+        "grants": "authenticated:SELECT, authenticated:DELETE, authenticated:UPDATE, authenticated:INSERT, service_role:TRUNCATE, service_role:INSERT, service_role:DELETE, service_role:SELECT, service_role:UPDATE, service_role:TRIGGER, service_role:REFERENCES"
+      },
+      {
+        "table_name": "delivery_rounds",
+        "grants": "anon:SELECT, authenticated:DELETE, authenticated:INSERT, authenticated:SELECT, authenticated:UPDATE, service_role:TRIGGER, service_role:INSERT, service_role:SELECT, service_role:UPDATE, service_role:DELETE, service_role:TRUNCATE, service_role:REFERENCES"
+      },
+      {
+        "table_name": "delivery_zones",
+        "grants": "authenticated:DELETE, authenticated:INSERT, authenticated:SELECT, authenticated:UPDATE, service_role:INSERT, service_role:SELECT, service_role:UPDATE, service_role:DELETE, service_role:TRUNCATE, service_role:REFERENCES, service_role:TRIGGER"
+      },
+      {
+        "table_name": "drivers",
+        "grants": "authenticated:INSERT, authenticated:DELETE, authenticated:UPDATE, authenticated:SELECT, service_role:REFERENCES, service_role:DELETE, service_role:UPDATE, service_role:SELECT, service_role:INSERT, service_role:TRIGGER, service_role:TRUNCATE"
+      },
+      {
+        "table_name": "inventory",
+        "grants": "authenticated:UPDATE, authenticated:SELECT, service_role:TRIGGER, service_role:INSERT, service_role:DELETE, service_role:TRUNCATE, service_role:REFERENCES, service_role:UPDATE, service_role:SELECT"
+      },
+      {
+        "table_name": "inventory_transactions",
+        "grants": "authenticated:UPDATE, authenticated:SELECT, authenticated:INSERT, authenticated:DELETE, service_role:TRUNCATE, service_role:INSERT, service_role:SELECT, service_role:UPDATE, service_role:DELETE, service_role:REFERENCES, service_role:TRIGGER"
+      },
+      {
+        "table_name": "loyalty_points",
+        "grants": "authenticated:INSERT, authenticated:DELETE, authenticated:SELECT, authenticated:UPDATE, service_role:REFERENCES, service_role:TRIGGER, service_role:SELECT, service_role:UPDATE, service_role:DELETE, service_role:TRUNCATE, service_role:INSERT"
+      },
+      {
+        "table_name": "mascot_overrides",
+        "grants": "anon:SELECT, authenticated:INSERT, authenticated:UPDATE, authenticated:DELETE, authenticated:SELECT, service_role:SELECT, service_role:UPDATE, service_role:DELETE, service_role:TRUNCATE, service_role:REFERENCES, service_role:TRIGGER, service_role:INSERT"
+      },
+      {
+        "table_name": "media_assets",
+        "grants": "authenticated:DELETE, authenticated:UPDATE, authenticated:INSERT, authenticated:SELECT, service_role:TRIGGER, service_role:INSERT, service_role:SELECT, service_role:UPDATE, service_role:DELETE, service_role:TRUNCATE, service_role:REFERENCES"
+      },
+      {
+        "table_name": "menu_schedule",
+        "grants": "authenticated:REFERENCES, authenticated:TRUNCATE, authenticated:DELETE, authenticated:UPDATE, authenticated:INSERT, authenticated:SELECT, authenticated:TRIGGER, service_role:TRIGGER, service_role:TRUNCATE, service_role:DELETE, service_role:UPDATE, service_role:SELECT, service_role:INSERT, service_role:REFERENCES"
+      },
+      {
+        "table_name": "notification_prefs",
+        "grants": "authenticated:SELECT, authenticated:DELETE, authenticated:UPDATE, authenticated:INSERT, service_role:REFERENCES, service_role:INSERT, service_role:SELECT, service_role:UPDATE, service_role:DELETE, service_role:TRUNCATE, service_role:TRIGGER"
+      },
+      {
+        "table_name": "notifications",
+        "grants": "authenticated:UPDATE, authenticated:INSERT, authenticated:DELETE, authenticated:SELECT, service_role:TRIGGER, service_role:REFERENCES, service_role:TRUNCATE, service_role:DELETE, service_role:UPDATE, service_role:SELECT, service_role:INSERT"
+      },
+      {
+        "table_name": "order_items",
+        "grants": "authenticated:UPDATE, authenticated:DELETE, authenticated:INSERT, authenticated:SELECT, service_role:TRUNCATE, service_role:TRIGGER, service_role:INSERT, service_role:REFERENCES, service_role:SELECT, service_role:UPDATE, service_role:DELETE"
+      },
+      {
+        "table_name": "orders",
+        "grants": "anon:SELECT, authenticated:UPDATE, authenticated:INSERT, authenticated:SELECT, authenticated:DELETE, service_role:REFERENCES, service_role:DELETE, service_role:UPDATE, service_role:SELECT, service_role:INSERT, service_role:TRIGGER, service_role:TRUNCATE"
+      },
+      {
+        "table_name": "payment_intents",
+        "grants": "service_role:INSERT, service_role:SELECT, service_role:UPDATE, service_role:DELETE, service_role:TRUNCATE, service_role:REFERENCES, service_role:TRIGGER"
+      },
+      {
+        "table_name": "pre_orders",
+        "grants": "authenticated:SELECT, service_role:TRIGGER, service_role:REFERENCES, service_role:TRUNCATE, service_role:DELETE, service_role:UPDATE, service_role:INSERT, service_role:SELECT"
+      },
+      {
+        "table_name": "preorder_votes",
+        "grants": "anon:SELECT, authenticated:INSERT, authenticated:SELECT, authenticated:UPDATE, authenticated:DELETE, service_role:SELECT, service_role:INSERT, service_role:DELETE, service_role:TRUNCATE, service_role:REFERENCES, service_role:UPDATE, service_role:TRIGGER"
+      },
+      {
+        "table_name": "product_categories",
+        "grants": "anon:SELECT, authenticated:SELECT, authenticated:INSERT, authenticated:DELETE, authenticated:UPDATE, service_role:REFERENCES, service_role:INSERT, service_role:SELECT, service_role:UPDATE, service_role:DELETE, service_role:TRUNCATE, service_role:TRIGGER"
+      },
+      {
+        "table_name": "production_batch_items",
+        "grants": "authenticated:UPDATE, authenticated:DELETE, authenticated:INSERT, authenticated:SELECT, service_role:REFERENCES, service_role:INSERT, service_role:UPDATE, service_role:SELECT, service_role:TRIGGER, service_role:DELETE, service_role:TRUNCATE"
+      },
+      {
+        "table_name": "production_batches",
+        "grants": "authenticated:DELETE, authenticated:INSERT, authenticated:SELECT, authenticated:UPDATE, service_role:TRIGGER, service_role:DELETE, service_role:TRUNCATE, service_role:UPDATE, service_role:SELECT, service_role:INSERT, service_role:REFERENCES"
+      },
+      {
+        "table_name": "products",
+        "grants": "anon:SELECT, authenticated:UPDATE, authenticated:SELECT, authenticated:DELETE, authenticated:INSERT, service_role:UPDATE, service_role:DELETE, service_role:TRUNCATE, service_role:REFERENCES, service_role:TRIGGER, service_role:INSERT, service_role:SELECT"
+      },
+      {
+        "table_name": "profiles",
+        "grants": "service_role:DELETE, service_role:TRIGGER, service_role:REFERENCES, service_role:TRUNCATE, service_role:UPDATE, service_role:SELECT, service_role:INSERT"
+      },
+      {
+        "table_name": "promotions",
+        "grants": "anon:SELECT, authenticated:INSERT, authenticated:UPDATE, authenticated:SELECT, authenticated:DELETE, service_role:UPDATE, service_role:SELECT, service_role:TRUNCATE, service_role:INSERT, service_role:TRIGGER, service_role:REFERENCES, service_role:DELETE"
+      },
+      {
+        "table_name": "provider_orders",
+        "grants": "authenticated:DELETE, authenticated:UPDATE, authenticated:SELECT, authenticated:INSERT, service_role:DELETE, service_role:INSERT, service_role:SELECT, service_role:UPDATE, service_role:TRUNCATE, service_role:REFERENCES, service_role:TRIGGER"
+      },
+      {
+        "table_name": "public_profiles",
+        "grants": "authenticated:SELECT, service_role:DELETE, service_role:UPDATE, service_role:INSERT, service_role:TRIGGER, service_role:REFERENCES, service_role:TRUNCATE, service_role:SELECT"
+      },
+      {
+        "table_name": "recipes",
+        "grants": "authenticated:INSERT, authenticated:DELETE, authenticated:UPDATE, authenticated:SELECT, service_role:SELECT, service_role:INSERT, service_role:UPDATE, service_role:DELETE, service_role:TRUNCATE, service_role:REFERENCES, service_role:TRIGGER"
+      },
+      {
+        "table_name": "reviews",
+        "grants": "anon:SELECT, authenticated:DELETE, authenticated:UPDATE, authenticated:INSERT, authenticated:SELECT, service_role:DELETE, service_role:TRUNCATE, service_role:REFERENCES, service_role:INSERT, service_role:TRIGGER, service_role:SELECT, service_role:UPDATE"
+      },
+      {
+        "table_name": "system_errors",
+        "grants": "authenticated:DELETE, authenticated:UPDATE, authenticated:SELECT, authenticated:INSERT, service_role:UPDATE, service_role:DELETE, service_role:REFERENCES, service_role:TRUNCATE, service_role:TRIGGER, service_role:INSERT, service_role:SELECT"
+      }
+    ],
+    "data_sanity_orders": [
+      {
+        "payment_status": "pending",
+        "status": "pending",
+        "order_mode": "SAME_DAY",
+        "cnt": 8
+      },
+      {
+        "payment_status": "paid",
+        "status": "pending",
+        "order_mode": "SAME_DAY",
+        "cnt": 6
+      },
+      {
+        "payment_status": "refund",
+        "status": "pending",
+        "order_mode": "SAME_DAY",
+        "cnt": 1
+      },
+      {
+        "payment_status": "pending",
+        "status": "pending",
+        "order_mode": "PRE_ORDER",
+        "cnt": 1
+      },
+      {
+        "payment_status": "paid",
+        "status": "confirmed",
+        "order_mode": "SAME_DAY",
+        "cnt": 1
+      }
+    ],
+    "order_counts": [
+      {
+        "orders": 17,
+        "order_items": 14,
+        "products": 9,
+        "delivery_rounds": 15,
+        "payment_intents": 13,
+        "profiles": 5
+      }
+    ],
+    "orphan_items": [
+      {
+        "orphan_items": 0
+      }
+    ],
+    "paid_no_pi": [
+      {
+        "paid_orders_no_completed_pi": 2
+      }
+    ],
+    "invalid_mode": [
+      {
+        "om": "SAME_DAY",
+        "count": 16
+      },
+      {
+        "om": "PRE_ORDER",
+        "count": 1
+      }
+    ],
+    "rounds_sample": [
+      {
+        "id": "round-20260925-morning",
+        "round_key": "morning",
+        "display_name": "เช้า (07:00-09:00)",
+        "status": "active",
+        "cutoff_time": "05:00:00",
+        "delivery_start": "07:00:00",
+        "delivery_end": "09:00:00",
+        "max_capacity": 60,
+        "current_count": 0,
+        "date": "2026-09-25",
+        "scheduled_date": "2026-09-25"
+      },
+      {
+        "id": "round-20260925-midday",
+        "round_key": "midday",
+        "display_name": "เที่ยง (11:00-13:00)",
+        "status": "active",
+        "cutoff_time": "09:00:00",
+        "delivery_start": "11:00:00",
+        "delivery_end": "13:00:00",
+        "max_capacity": 80,
+        "current_count": 0,
+        "date": "2026-09-25",
+        "scheduled_date": "2026-09-25"
+      },
+      {
+        "id": "round-20260925-evening",
+        "round_key": "evening",
+        "display_name": "เย็น (18:00-20:00)",
+        "status": "active",
+        "cutoff_time": "16:00:00",
+        "delivery_start": "18:00:00",
+        "delivery_end": "20:00:00",
+        "max_capacity": 100,
+        "current_count": 0,
+        "date": "2026-09-25",
+        "scheduled_date": "2026-09-25"
+      },
+      {
+        "id": "round-20260924-morning",
+        "round_key": "morning",
+        "display_name": "เช้า (07:00-10:00)",
+        "status": "active",
+        "cutoff_time": "08:00:00",
+        "delivery_start": "07:00:00",
+        "delivery_end": "10:00:00",
+        "max_capacity": 60,
+        "current_count": 0,
+        "date": "2026-09-24",
+        "scheduled_date": "2026-09-24"
+      },
+      {
+        "id": "round-20260924-midday",
+        "round_key": "midday",
+        "display_name": "เที่ยง (11:00-14:00)",
+        "status": "active",
+        "cutoff_time": "10:30:00",
+        "delivery_start": "11:00:00",
+        "delivery_end": "14:00:00",
+        "max_capacity": 80,
+        "current_count": 1,
+        "date": "2026-09-24",
+        "scheduled_date": "2026-09-24"
+      },
+      {
+        "id": "round-20260924-evening",
+        "round_key": "evening",
+        "display_name": "เย็น (17:00-20:00)",
+        "status": "active",
+        "cutoff_time": "16:00:00",
+        "delivery_start": "17:00:00",
+        "delivery_end": "20:00:00",
+        "max_capacity": 100,
+        "current_count": 0,
+        "date": "2026-09-24",
+        "scheduled_date": "2026-09-24"
+      },
+      {
+        "id": "round-20260923-evening",
+        "round_key": "evening",
+        "display_name": "เย็น (17:00-20:00)",
+        "status": "active",
+        "cutoff_time": "16:00:00",
+        "delivery_start": "17:00:00",
+        "delivery_end": "20:00:00",
+        "max_capacity": 100,
+        "current_count": 0,
+        "date": "2026-09-23",
+        "scheduled_date": "2026-09-23"
+      },
+      {
+        "id": "round-20260923-morning",
+        "round_key": "morning",
+        "display_name": "เช้า (07:00-10:00)",
+        "status": "active",
+        "cutoff_time": "08:00:00",
+        "delivery_start": "07:00:00",
+        "delivery_end": "10:00:00",
+        "max_capacity": 60,
+        "current_count": 0,
+        "date": "2026-09-23",
+        "scheduled_date": "2026-09-23"
+      },
+      {
+        "id": "round-20260923-midday",
+        "round_key": "midday",
+        "display_name": "เที่ยง (11:00-14:00)",
+        "status": "active",
+        "cutoff_time": "10:30:00",
+        "delivery_start": "11:00:00",
+        "delivery_end": "14:00:00",
+        "max_capacity": 80,
+        "current_count": 0,
+        "date": "2026-09-23",
+        "scheduled_date": "2026-09-23"
+      },
+      {
+        "id": "round-20260922-evening",
+        "round_key": "evening",
+        "display_name": "เย็น (17:00-20:00)",
+        "status": "active",
+        "cutoff_time": "16:00:00",
+        "delivery_start": "17:00:00",
+        "delivery_end": "20:00:00",
+        "max_capacity": 100,
+        "current_count": 0,
+        "date": "2026-09-22",
+        "scheduled_date": "2026-09-22"
+      },
+      {
+        "id": "round-20260922-morning",
+        "round_key": "morning",
+        "display_name": "เช้า (07:00-10:00)",
+        "status": "active",
+        "cutoff_time": "08:00:00",
+        "delivery_start": "07:00:00",
+        "delivery_end": "10:00:00",
+        "max_capacity": 60,
+        "current_count": 0,
+        "date": "2026-09-22",
+        "scheduled_date": "2026-09-22"
+      },
+      {
+        "id": "round-20260922-midday",
+        "round_key": "midday",
+        "display_name": "เที่ยง (11:00-14:00)",
+        "status": "active",
+        "cutoff_time": "10:30:00",
+        "delivery_start": "11:00:00",
+        "delivery_end": "14:00:00",
+        "max_capacity": 80,
+        "current_count": 0,
+        "date": "2026-09-22",
+        "scheduled_date": "2026-09-22"
+      },
+      {
+        "id": "round-3",
+        "round_key": "evening",
+        "display_name": "เย็น (17:00-20:00)",
+        "status": "active",
+        "cutoff_time": "16:00:00",
+        "delivery_start": "17:00:00",
+        "delivery_end": "20:00:00",
+        "max_capacity": 100,
+        "current_count": 2,
+        "date": "2026-09-17",
+        "scheduled_date": "2026-09-17"
+      },
+      {
+        "id": "round-2",
+        "round_key": "midday",
+        "display_name": "เที่ยง (11:00-14:00)",
+        "status": "active",
+        "cutoff_time": "10:30:00",
+        "delivery_start": "11:00:00",
+        "delivery_end": "14:00:00",
+        "max_capacity": 80,
+        "current_count": 5,
+        "date": "2026-09-17",
+        "scheduled_date": "2026-09-17"
+      },
+      {
+        "id": "round-1",
+        "round_key": "morning",
+        "display_name": "เช้า (07:00-10:00)",
+        "status": "active",
+        "cutoff_time": "08:00:00",
+        "delivery_start": "07:00:00",
+        "delivery_end": "10:00:00",
+        "max_capacity": 60,
+        "current_count": 6,
+        "date": "2026-09-17",
+        "scheduled_date": "2026-09-17"
+      }
+    ],
+    "business_settings": [
+      {
+        "key": "delivery_policy",
+        "value": {
+          "currency": "THB",
+          "min_order": 0,
+          "radius_km": 10
+        }
+      },
+      {
+        "key": "hours",
+        "value": {
+          "open": "10:00",
+          "close": "22:00"
+        }
+      },
+      {
+        "key": "kitchen_location",
+        "value": {
+          "address": "Bite Me Baby Kitchen",
+          "latitude": 10.7016,
+          "longitude": 102.1429
+        }
+      },
+      {
+        "key": "operating_hours",
+        "value": {
+          "midday_open": true,
+          "evening_open": true,
+          "morning_open": true,
+          "same_day_open": true,
+          "pre_order_open": true
+        }
+      },
+      {
+        "key": "order_policy",
+        "value": {
+          "preorder_max_days": 40,
+          "max_items_per_order": 20,
+          "pre_order_lead_days": 1,
+          "cancel_window_minutes": 5
+        }
+      }
+    ],
+    "products_sample": [
+      {
+        "id": "prod-1789610117076-2p5e8u",
+        "name": "ข้าวลาบอกไก่+ไข่ต้ม",
+        "price": "69.00",
+        "is_available": true,
+        "stock": null,
+        "is_featured": false,
+        "is_preorder": false,
+        "available_same_day": true,
+        "available_preorder": false,
+        "delivery_round_id": null,
+        "scheduled_date": null
+      },
+      {
+        "id": "prod-3",
+        "name": "ปลาต้มผักกาดดอง (ซวนช่ายหยุย)",
+        "price": "99.00",
+        "is_available": true,
+        "stock": 3,
+        "is_featured": true,
+        "is_preorder": false,
+        "available_same_day": true,
+        "available_preorder": false,
+        "delivery_round_id": null,
+        "scheduled_date": null
+      },
+      {
+        "id": "prod-1",
+        "name": "ผัดไทยกุ้งสด",
+        "price": "69.00",
+        "is_available": true,
+        "stock": 8,
+        "is_featured": true,
+        "is_preorder": false,
+        "available_same_day": true,
+        "available_preorder": false,
+        "delivery_round_id": null,
+        "scheduled_date": null
+      },
+      {
+        "id": "prod-6",
+        "name": "เมนูใหม่: ข้าวกุ้งกระเทียม",
+        "price": "95.00",
+        "is_available": true,
+        "stock": null,
+        "is_featured": true,
+        "is_preorder": true,
+        "available_same_day": true,
+        "available_preorder": true,
+        "delivery_round_id": "round-3",
+        "scheduled_date": "2026-10-01"
+      },
+      {
+        "id": "prod-2",
+        "name": "เมี่ยงแซลม่อน",
+        "price": "79.00",
+        "is_available": true,
+        "stock": 12,
+        "is_featured": false,
+        "is_preorder": false,
+        "available_same_day": true,
+        "available_preorder": false,
+        "delivery_round_id": null,
+        "scheduled_date": null
+      },
+      {
+        "id": "prod-4",
+        "name": "เมี่ยงหมู+กุ้ง ",
+        "price": "99.00",
+        "is_available": true,
+        "stock": 20,
+        "is_featured": false,
+        "is_preorder": false,
+        "available_same_day": true,
+        "available_preorder": false,
+        "delivery_round_id": null,
+        "scheduled_date": null
+      },
+      {
+        "id": "prod-5",
+        "name": "ลุยสวนหมู+กุ้ง",
+        "price": "85.00",
+        "is_available": true,
+        "stock": null,
+        "is_featured": true,
+        "is_preorder": true,
+        "available_same_day": true,
+        "available_preorder": true,
+        "delivery_round_id": "round-2",
+        "scheduled_date": "2026-09-24"
+      },
+      {
+        "id": "prod-1789952342087-ian4a1",
+        "name": "ลุยสวนหมูสับเห็ดหอม",
+        "price": "69.00",
+        "is_available": true,
+        "stock": null,
+        "is_featured": false,
+        "is_preorder": false,
+        "available_same_day": true,
+        "available_preorder": false,
+        "delivery_round_id": null,
+        "scheduled_date": null
+      },
+      {
+        "id": "prod-1789607383214-t8rm95",
+        "name": "สปาเกตตี้ผัดพริกแห้งกุ้ง",
+        "price": "99.00",
+        "is_available": true,
+        "stock": null,
+        "is_featured": false,
+        "is_preorder": false,
+        "available_same_day": true,
+        "available_preorder": false,
+        "delivery_round_id": null,
+        "scheduled_date": null
+      }
+    ],
+    "payment_intents_sample": [
+      {
+        "status": "refunded",
+        "method": "credit_card",
+        "count": 1
+      },
+      {
+        "status": "pending",
+        "method": "credit_card",
+        "count": 2
+      },
+      {
+        "status": "processing",
+        "method": "promptpay_qr",
+        "count": 1
+      },
+      {
+        "status": "completed",
+        "method": "credit_card",
+        "count": 5
+      },
+      {
+        "status": "pending",
+        "method": "promptpay_qr",
+        "count": 4
+      }
+    ],
+    "extensions": [
+      {
+        "extname": "pg_stat_statements"
+      },
+      {
+        "extname": "pg_trgm"
+      },
+      {
+        "extname": "pgcrypto"
+      },
+      {
+        "extname": "plpgsql"
+      },
+      {
+        "extname": "supabase_vault"
+      },
+      {
+        "extname": "uuid-ossp"
+      }
+    ],
+    "views_defs": [
+      {
+        "table_name": "customer_intelligence"
+      },
+      {
+        "table_name": "public_profiles"
+      }
+    ],
+    "pre_orders_count": [
+      {
+        "pre_orders": 1,
+        "coalesce": "2026-09-24",
+        "any_status": "pending"
+      }
+    ],
+    "misc_counts": [
+      {
+        "reviews": 0,
+        "promotions": 1,
+        "inventory": 4,
+        "audit_logs": 31,
+        "delivery_assignments": 0,
+        "drivers": 0,
+        "recipes": 6,
+        "content_approvals": 0,
+        "system_errors": 0
+      }
+    ],
+    "orders_round_join": [
+      {
+        "orders_with_round": 14
+      }
+    ],
+    "drivers_assignments": [],
+    "enum_values": [
+      {
+        "typname": "aal_level",
+        "values": "aal1,aal2,aal3"
+      },
+      {
+        "typname": "action",
+        "values": "INSERT,UPDATE,DELETE,TRUNCATE,ERROR"
+      },
+      {
+        "typname": "buckettype",
+        "values": "STANDARD,ANALYTICS,VECTOR"
+      },
+      {
+        "typname": "code_challenge_method",
+        "values": "s256,plain"
+      },
+      {
+        "typname": "delivery_method",
+        "values": "self_delivery,grab_rider,linemen_rider,foodpanda_rider"
+      },
+      {
+        "typname": "equality_op",
+        "values": "eq,neq,lt,lte,gt,gte,in,like,ilike,is,match,imatch,isdistinct"
+      },
+      {
+        "typname": "factor_status",
+        "values": "unverified,verified"
+      },
+      {
+        "typname": "factor_type",
+        "values": "totp,webauthn,phone,recovery_code"
+      },
+      {
+        "typname": "ingredient_status",
+        "values": "in_stock,low_stock,out_of_stock"
+      },
+      {
+        "typname": "oauth_authorization_status",
+        "values": "pending,approved,denied,expired"
+      },
+      {
+        "typname": "oauth_client_type",
+        "values": "public,confidential"
+      },
+      {
+        "typname": "oauth_registration_type",
+        "values": "dynamic,manual"
+      },
+      {
+        "typname": "oauth_response_type",
+        "values": "code"
+      },
+      {
+        "typname": "one_time_token_type",
+        "values": "confirmation_token,reauthentication_token,recovery_token,email_change_token_new,email_change_token_current,phone_change_token"
+      },
+      {
+        "typname": "order_mode",
+        "values": "SAME_DAY,PRE_ORDER"
+      },
+      {
+        "typname": "order_status",
+        "values": "pending,confirmed,preparing,ready_for_dispatch,dispatched,in_transit,arrived,delivered,cancelled,failed"
+      },
+      {
+        "typname": "payment_method",
+        "values": "promptpay_qr,credit_card,cash_on_delivery"
+      },
+      {
+        "typname": "payment_status",
+        "values": "pending,paid,refund,partially_refunded"
+      },
+      {
+        "typname": "round_period",
+        "values": "morning,midday,evening"
+      }
+    ],
+    "indexes": [
+      {
+        "tablename": "ai_conversations",
+        "indexname": "ai_conversations_pkey",
+        "indexdef": "CREATE UNIQUE INDEX ai_conversations_pkey ON public.ai_conversations USING btree (id)"
+      },
+      {
+        "tablename": "ai_customer_memory",
+        "indexname": "ai_customer_memory_pkey",
+        "indexdef": "CREATE UNIQUE INDEX ai_customer_memory_pkey ON public.ai_customer_memory USING btree (user_id)"
+      },
+      {
+        "tablename": "ai_recommendations",
+        "indexname": "ai_recommendations_pkey",
+        "indexdef": "CREATE UNIQUE INDEX ai_recommendations_pkey ON public.ai_recommendations USING btree (id)"
+      },
+      {
+        "tablename": "audit_logs",
+        "indexname": "idx_audit_logs_entity",
+        "indexdef": "CREATE INDEX idx_audit_logs_entity ON public.audit_logs USING btree (entity_type, entity_id)"
+      },
+      {
+        "tablename": "audit_logs",
+        "indexname": "idx_audit_logs_user",
+        "indexdef": "CREATE INDEX idx_audit_logs_user ON public.audit_logs USING btree (user_id)"
+      },
+      {
+        "tablename": "audit_logs",
+        "indexname": "audit_logs_pkey",
+        "indexdef": "CREATE UNIQUE INDEX audit_logs_pkey ON public.audit_logs USING btree (id)"
+      },
+      {
+        "tablename": "audit_logs",
+        "indexname": "idx_audit_logs_created",
+        "indexdef": "CREATE INDEX idx_audit_logs_created ON public.audit_logs USING btree (created_at DESC)"
+      },
+      {
+        "tablename": "business_settings",
+        "indexname": "business_settings_pkey",
+        "indexdef": "CREATE UNIQUE INDEX business_settings_pkey ON public.business_settings USING btree (key)"
+      },
+      {
+        "tablename": "content_approvals",
+        "indexname": "content_approvals_pkey",
+        "indexdef": "CREATE UNIQUE INDEX content_approvals_pkey ON public.content_approvals USING btree (id)"
+      },
+      {
+        "tablename": "content_approvals",
+        "indexname": "idx_content_approvals_status",
+        "indexdef": "CREATE INDEX idx_content_approvals_status ON public.content_approvals USING btree (status, created_at DESC)"
+      },
+      {
+        "tablename": "customers",
+        "indexname": "idx_customers_phone",
+        "indexdef": "CREATE INDEX idx_customers_phone ON public.customers USING btree (phone)"
+      },
+      {
+        "tablename": "customers",
+        "indexname": "customers_pkey",
+        "indexdef": "CREATE UNIQUE INDEX customers_pkey ON public.customers USING btree (id)"
+      },
+      {
+        "tablename": "customers",
+        "indexname": "idx_customers_user_id",
+        "indexdef": "CREATE INDEX idx_customers_user_id ON public.customers USING btree (user_id)"
+      },
+      {
+        "tablename": "delivery_assignments",
+        "indexname": "idx_assignments_order",
+        "indexdef": "CREATE INDEX idx_assignments_order ON public.delivery_assignments USING btree (order_number)"
+      },
+      {
+        "tablename": "delivery_assignments",
+        "indexname": "delivery_assignments_pkey",
+        "indexdef": "CREATE UNIQUE INDEX delivery_assignments_pkey ON public.delivery_assignments USING btree (id)"
+      },
+      {
+        "tablename": "delivery_assignments",
+        "indexname": "delivery_assignments_order_number_key",
+        "indexdef": "CREATE UNIQUE INDEX delivery_assignments_order_number_key ON public.delivery_assignments USING btree (order_number)"
+      },
+      {
+        "tablename": "delivery_assignments",
+        "indexname": "idx_assignments_driver",
+        "indexdef": "CREATE INDEX idx_assignments_driver ON public.delivery_assignments USING btree (driver_id, status)"
+      },
+      {
+        "tablename": "delivery_rounds",
+        "indexname": "idx_delivery_rounds_name",
+        "indexdef": "CREATE INDEX idx_delivery_rounds_name ON public.delivery_rounds USING btree (name)"
+      },
+      {
+        "tablename": "delivery_rounds",
+        "indexname": "delivery_rounds_pkey",
+        "indexdef": "CREATE UNIQUE INDEX delivery_rounds_pkey ON public.delivery_rounds USING btree (id)"
+      },
+      {
+        "tablename": "delivery_rounds",
+        "indexname": "idx_delivery_rounds_status",
+        "indexdef": "CREATE INDEX idx_delivery_rounds_status ON public.delivery_rounds USING btree (status)"
+      },
+      {
+        "tablename": "delivery_rounds",
+        "indexname": "idx_delivery_rounds_date",
+        "indexdef": "CREATE INDEX idx_delivery_rounds_date ON public.delivery_rounds USING btree (date)"
+      },
+      {
+        "tablename": "delivery_rounds",
+        "indexname": "idx_delivery_rounds_scheduled_date",
+        "indexdef": "CREATE INDEX idx_delivery_rounds_scheduled_date ON public.delivery_rounds USING btree (scheduled_date)"
+      },
+      {
+        "tablename": "delivery_rounds",
+        "indexname": "idx_delivery_rounds_round_key",
+        "indexdef": "CREATE INDEX idx_delivery_rounds_round_key ON public.delivery_rounds USING btree (round_key)"
+      },
+      {
+        "tablename": "delivery_zones",
+        "indexname": "delivery_zones_pkey",
+        "indexdef": "CREATE UNIQUE INDEX delivery_zones_pkey ON public.delivery_zones USING btree (id)"
+      },
+      {
+        "tablename": "drivers",
+        "indexname": "drivers_pkey",
+        "indexdef": "CREATE UNIQUE INDEX drivers_pkey ON public.drivers USING btree (id)"
+      },
+      {
+        "tablename": "drivers",
+        "indexname": "drivers_phone_key",
+        "indexdef": "CREATE UNIQUE INDEX drivers_phone_key ON public.drivers USING btree (phone)"
+      },
+      {
+        "tablename": "inventory",
+        "indexname": "idx_inventory_category",
+        "indexdef": "CREATE INDEX idx_inventory_category ON public.inventory USING btree (category)"
+      },
+      {
+        "tablename": "inventory",
+        "indexname": "idx_inventory_status",
+        "indexdef": "CREATE INDEX idx_inventory_status ON public.inventory USING btree (status)"
+      },
+      {
+        "tablename": "inventory",
+        "indexname": "inventory_pkey",
+        "indexdef": "CREATE UNIQUE INDEX inventory_pkey ON public.inventory USING btree (id)"
+      },
+      {
+        "tablename": "inventory_transactions",
+        "indexname": "inventory_transactions_pkey",
+        "indexdef": "CREATE UNIQUE INDEX inventory_transactions_pkey ON public.inventory_transactions USING btree (id)"
+      },
+      {
+        "tablename": "loyalty_points",
+        "indexname": "loyalty_points_pkey",
+        "indexdef": "CREATE UNIQUE INDEX loyalty_points_pkey ON public.loyalty_points USING btree (id)"
+      },
+      {
+        "tablename": "mascot_overrides",
+        "indexname": "mascot_overrides_pkey",
+        "indexdef": "CREATE UNIQUE INDEX mascot_overrides_pkey ON public.mascot_overrides USING btree (role_name)"
+      },
+      {
+        "tablename": "media_assets",
+        "indexname": "media_assets_pkey",
+        "indexdef": "CREATE UNIQUE INDEX media_assets_pkey ON public.media_assets USING btree (id)"
+      },
+      {
+        "tablename": "menu_schedule",
+        "indexname": "menu_schedule_pkey",
+        "indexdef": "CREATE UNIQUE INDEX menu_schedule_pkey ON public.menu_schedule USING btree (id)"
+      },
+      {
+        "tablename": "menu_schedule",
+        "indexname": "menu_schedule_scheduled_date_product_id_key",
+        "indexdef": "CREATE UNIQUE INDEX menu_schedule_scheduled_date_product_id_key ON public.menu_schedule USING btree (scheduled_date, product_id)"
+      },
+      {
+        "tablename": "menu_schedule",
+        "indexname": "idx_menu_schedule_date",
+        "indexdef": "CREATE INDEX idx_menu_schedule_date ON public.menu_schedule USING btree (scheduled_date)"
+      },
+      {
+        "tablename": "notification_prefs",
+        "indexname": "notification_prefs_pkey",
+        "indexdef": "CREATE UNIQUE INDEX notification_prefs_pkey ON public.notification_prefs USING btree (customer_id)"
+      },
+      {
+        "tablename": "notifications",
+        "indexname": "idx_notifications_customer",
+        "indexdef": "CREATE INDEX idx_notifications_customer ON public.notifications USING btree (customer_id)"
+      },
+      {
+        "tablename": "notifications",
+        "indexname": "notifications_pkey",
+        "indexdef": "CREATE UNIQUE INDEX notifications_pkey ON public.notifications USING btree (id)"
+      },
+      {
+        "tablename": "order_items",
+        "indexname": "idx_order_items_product",
+        "indexdef": "CREATE INDEX idx_order_items_product ON public.order_items USING btree (product_id)"
+      },
+      {
+        "tablename": "order_items",
+        "indexname": "idx_order_items_order",
+        "indexdef": "CREATE INDEX idx_order_items_order ON public.order_items USING btree (order_id)"
+      },
+      {
+        "tablename": "order_items",
+        "indexname": "order_items_pkey",
+        "indexdef": "CREATE UNIQUE INDEX order_items_pkey ON public.order_items USING btree (id)"
+      },
+      {
+        "tablename": "orders",
+        "indexname": "idx_orders_status",
+        "indexdef": "CREATE INDEX idx_orders_status ON public.orders USING btree (status)"
+      },
+      {
+        "tablename": "orders",
+        "indexname": "idx_orders_number",
+        "indexdef": "CREATE INDEX idx_orders_number ON public.orders USING btree (order_number)"
+      },
+      {
+        "tablename": "orders",
+        "indexname": "orders_order_number_key",
+        "indexdef": "CREATE UNIQUE INDEX orders_order_number_key ON public.orders USING btree (order_number)"
+      },
+      {
+        "tablename": "orders",
+        "indexname": "idx_orders_customer",
+        "indexdef": "CREATE INDEX idx_orders_customer ON public.orders USING btree (customer_id)"
+      },
+      {
+        "tablename": "orders",
+        "indexname": "idx_orders_mode_date",
+        "indexdef": "CREATE INDEX idx_orders_mode_date ON public.orders USING btree (order_mode, scheduled_date)"
+      },
+      {
+        "tablename": "orders",
+        "indexname": "orders_pkey",
+        "indexdef": "CREATE UNIQUE INDEX orders_pkey ON public.orders USING btree (id)"
+      },
+      {
+        "tablename": "orders",
+        "indexname": "idx_orders_created",
+        "indexdef": "CREATE INDEX idx_orders_created ON public.orders USING btree (created_at)"
+      },
+      {
+        "tablename": "orders",
+        "indexname": "idx_orders_round",
+        "indexdef": "CREATE INDEX idx_orders_round ON public.orders USING btree (delivery_round_id)"
+      },
+      {
+        "tablename": "orders",
+        "indexname": "idx_orders_scheduled_date",
+        "indexdef": "CREATE INDEX idx_orders_scheduled_date ON public.orders USING btree (scheduled_date)"
+      },
+      {
+        "tablename": "payment_intents",
+        "indexname": "uq_payment_intents_provider_id",
+        "indexdef": "CREATE UNIQUE INDEX uq_payment_intents_provider_id ON public.payment_intents USING btree (payment_intent_id) WHERE (payment_intent_id IS NOT NULL)"
+      },
+      {
+        "tablename": "payment_intents",
+        "indexname": "idx_payment_intents_order",
+        "indexdef": "CREATE INDEX idx_payment_intents_order ON public.payment_intents USING btree (order_number)"
+      },
+      {
+        "tablename": "payment_intents",
+        "indexname": "payment_intents_pkey",
+        "indexdef": "CREATE UNIQUE INDEX payment_intents_pkey ON public.payment_intents USING btree (id)"
+      },
+      {
+        "tablename": "pre_orders",
+        "indexname": "pre_orders_pkey",
+        "indexdef": "CREATE UNIQUE INDEX pre_orders_pkey ON public.pre_orders USING btree (id)"
+      },
+      {
+        "tablename": "pre_orders",
+        "indexname": "idx_pre_orders_status",
+        "indexdef": "CREATE INDEX idx_pre_orders_status ON public.pre_orders USING btree (status)"
+      },
+      {
+        "tablename": "pre_orders",
+        "indexname": "idx_pre_orders_customer",
+        "indexdef": "CREATE INDEX idx_pre_orders_customer ON public.pre_orders USING btree (customer_id)"
+      },
+      {
+        "tablename": "pre_orders",
+        "indexname": "pre_orders_order_number_key",
+        "indexdef": "CREATE UNIQUE INDEX pre_orders_order_number_key ON public.pre_orders USING btree (order_number)"
+      },
+      {
+        "tablename": "preorder_votes",
+        "indexname": "preorder_votes_pkey",
+        "indexdef": "CREATE UNIQUE INDEX preorder_votes_pkey ON public.preorder_votes USING btree (id)"
+      },
+      {
+        "tablename": "product_categories",
+        "indexname": "product_categories_slug_key",
+        "indexdef": "CREATE UNIQUE INDEX product_categories_slug_key ON public.product_categories USING btree (slug)"
+      },
+      {
+        "tablename": "product_categories",
+        "indexname": "product_categories_pkey",
+        "indexdef": "CREATE UNIQUE INDEX product_categories_pkey ON public.product_categories USING btree (id)"
+      },
+      {
+        "tablename": "production_batch_items",
+        "indexname": "idx_pbi_batch",
+        "indexdef": "CREATE INDEX idx_pbi_batch ON public.production_batch_items USING btree (batch_id)"
+      },
+      {
+        "tablename": "production_batch_items",
+        "indexname": "production_batch_items_pkey",
+        "indexdef": "CREATE UNIQUE INDEX production_batch_items_pkey ON public.production_batch_items USING btree (id)"
+      },
+      {
+        "tablename": "production_batches",
+        "indexname": "production_batches_pkey",
+        "indexdef": "CREATE UNIQUE INDEX production_batches_pkey ON public.production_batches USING btree (id)"
+      },
+      {
+        "tablename": "production_batches",
+        "indexname": "idx_pbi_round",
+        "indexdef": "CREATE INDEX idx_pbi_round ON public.production_batches USING btree (delivery_round_id, scheduled_date)"
+      },
+      {
+        "tablename": "products",
+        "indexname": "idx_products_scheduled",
+        "indexdef": "CREATE INDEX idx_products_scheduled ON public.products USING btree (scheduled_date)"
+      },
+      {
+        "tablename": "products",
+        "indexname": "idx_products_preorder_mode",
+        "indexdef": "CREATE INDEX idx_products_preorder_mode ON public.products USING btree (available_preorder) WHERE (available_preorder = true)"
+      },
+      {
+        "tablename": "products",
+        "indexname": "idx_products_sameday_off",
+        "indexdef": "CREATE INDEX idx_products_sameday_off ON public.products USING btree (available_same_day) WHERE (available_same_day = false)"
+      },
+      {
+        "tablename": "products",
+        "indexname": "idx_products_category",
+        "indexdef": "CREATE INDEX idx_products_category ON public.products USING btree (category_id)"
+      },
+      {
+        "tablename": "products",
+        "indexname": "idx_products_preorder",
+        "indexdef": "CREATE INDEX idx_products_preorder ON public.products USING btree (is_preorder) WHERE (is_preorder = true)"
+      },
+      {
+        "tablename": "products",
+        "indexname": "idx_products_featured",
+        "indexdef": "CREATE INDEX idx_products_featured ON public.products USING btree (is_featured) WHERE (is_featured = true)"
+      },
+      {
+        "tablename": "products",
+        "indexname": "idx_products_available",
+        "indexdef": "CREATE INDEX idx_products_available ON public.products USING btree (is_available) WHERE (is_available = true)"
+      },
+      {
+        "tablename": "products",
+        "indexname": "idx_products_sort_order",
+        "indexdef": "CREATE INDEX idx_products_sort_order ON public.products USING btree (sort_order)"
+      },
+      {
+        "tablename": "products",
+        "indexname": "idx_products_name_trgm",
+        "indexdef": "CREATE INDEX idx_products_name_trgm ON public.products USING gin (name gin_trgm_ops)"
+      },
+      {
+        "tablename": "products",
+        "indexname": "products_pkey",
+        "indexdef": "CREATE UNIQUE INDEX products_pkey ON public.products USING btree (id)"
+      },
+      {
+        "tablename": "profiles",
+        "indexname": "idx_profiles_role",
+        "indexdef": "CREATE INDEX idx_profiles_role ON public.profiles USING btree (role)"
+      },
+      {
+        "tablename": "profiles",
+        "indexname": "profiles_pkey",
+        "indexdef": "CREATE UNIQUE INDEX profiles_pkey ON public.profiles USING btree (id)"
+      },
+      {
+        "tablename": "promotions",
+        "indexname": "promotions_pkey",
+        "indexdef": "CREATE UNIQUE INDEX promotions_pkey ON public.promotions USING btree (id)"
+      },
+      {
+        "tablename": "provider_orders",
+        "indexname": "provider_orders_pkey",
+        "indexdef": "CREATE UNIQUE INDEX provider_orders_pkey ON public.provider_orders USING btree (id)"
+      },
+      {
+        "tablename": "recipes",
+        "indexname": "recipes_pkey",
+        "indexdef": "CREATE UNIQUE INDEX recipes_pkey ON public.recipes USING btree (id)"
+      },
+      {
+        "tablename": "recipes",
+        "indexname": "recipes_product_id_ingredient_id_key",
+        "indexdef": "CREATE UNIQUE INDEX recipes_product_id_ingredient_id_key ON public.recipes USING btree (product_id, ingredient_id)"
+      },
+      {
+        "tablename": "reviews",
+        "indexname": "reviews_pkey",
+        "indexdef": "CREATE UNIQUE INDEX reviews_pkey ON public.reviews USING btree (id)"
+      },
+      {
+        "tablename": "reviews",
+        "indexname": "idx_reviews_product",
+        "indexdef": "CREATE INDEX idx_reviews_product ON public.reviews USING btree (product_id)"
+      },
+      {
+        "tablename": "system_errors",
+        "indexname": "system_errors_pkey",
+        "indexdef": "CREATE UNIQUE INDEX system_errors_pkey ON public.system_errors USING btree (id)"
+      },
+      {
+        "tablename": "system_errors",
+        "indexname": "idx_system_errors_created",
+        "indexdef": "CREATE INDEX idx_system_errors_created ON public.system_errors USING btree (created_at DESC)"
+      }
+    ],
+    "policy_exprs": [
+      {
+        "tablename": "business_settings",
+        "policyname": "business_settings_admin",
+        "cmd": "*",
+        "using_expr": "is_admin()",
+        "with_check": "is_admin()"
+      },
+      {
+        "tablename": "business_settings",
+        "policyname": "business_settings_anon",
+        "cmd": "*",
+        "using_expr": "false",
+        "with_check": "<none>"
+      },
+      {
+        "tablename": "business_settings",
+        "policyname": "business_settings_auth_read",
+        "cmd": "r",
+        "using_expr": "true",
+        "with_check": "<none>"
+      },
+      {
+        "tablename": "customers",
+        "policyname": "customers_admin_manage",
+        "cmd": "*",
+        "using_expr": "is_admin()",
+        "with_check": "is_admin()"
+      },
+      {
+        "tablename": "customers",
+        "policyname": "customers_anon",
+        "cmd": "*",
+        "using_expr": "false",
+        "with_check": "<none>"
+      },
+      {
+        "tablename": "customers",
+        "policyname": "customers_own_read",
+        "cmd": "r",
+        "using_expr": "((user_id = auth.uid()) OR is_admin())",
+        "with_check": "<none>"
+      },
+      {
+        "tablename": "delivery_rounds",
+        "policyname": "delivery_rounds_admin_manage",
+        "cmd": "*",
+        "using_expr": "is_admin()",
+        "with_check": "is_admin()"
+      },
+      {
+        "tablename": "delivery_rounds",
+        "policyname": "delivery_rounds_public_read",
+        "cmd": "r",
+        "using_expr": "(status = 'active'::text)",
+        "with_check": "<none>"
+      },
+      {
+        "tablename": "drivers",
+        "policyname": "drivers_admin_write",
+        "cmd": "*",
+        "using_expr": "is_admin()",
+        "with_check": "is_admin()"
+      },
+      {
+        "tablename": "drivers",
+        "policyname": "drivers_auth_read",
+        "cmd": "r",
+        "using_expr": "true",
+        "with_check": "<none>"
+      },
+      {
+        "tablename": "drivers",
+        "policyname": "drivers_deny_anon",
+        "cmd": "r",
+        "using_expr": "false",
+        "with_check": "<none>"
+      },
+      {
+        "tablename": "orders",
+        "policyname": "orders_admin_manage",
+        "cmd": "*",
+        "using_expr": "is_admin()",
+        "with_check": "is_admin()"
+      },
+      {
+        "tablename": "orders",
+        "policyname": "orders_anon_read",
+        "cmd": "r",
+        "using_expr": "(status = ANY (ARRAY['delivered'::order_status, 'cancelled'::order_status]))",
+        "with_check": "<none>"
+      },
+      {
+        "tablename": "orders",
+        "policyname": "orders_own_create",
+        "cmd": "a",
+        "using_expr": "<none>",
+        "with_check": "(customer_ref = auth.uid())"
+      },
+      {
+        "tablename": "orders",
+        "policyname": "orders_own_read",
+        "cmd": "r",
+        "using_expr": "((customer_ref = auth.uid()) OR is_admin())",
+        "with_check": "<none>"
+      },
+      {
+        "tablename": "orders",
+        "policyname": "orders_own_update",
+        "cmd": "w",
+        "using_expr": "false",
+        "with_check": "<none>"
+      },
+      {
+        "tablename": "payment_intents",
+        "policyname": "payment_intents_admin",
+        "cmd": "*",
+        "using_expr": "is_admin()",
+        "with_check": "is_admin()"
+      },
+      {
+        "tablename": "payment_intents",
+        "policyname": "payment_intents_anon",
+        "cmd": "*",
+        "using_expr": "false",
+        "with_check": "<none>"
+      },
+      {
+        "tablename": "payment_intents",
+        "policyname": "payment_intents_own",
+        "cmd": "r",
+        "using_expr": "(order_number IN ( SELECT orders.order_number\n   FROM orders\n  WHERE (orders.customer_ref = auth.uid())))",
+        "with_check": "<none>"
+      },
+      {
+        "tablename": "payment_intents",
+        "policyname": "payment_intents_own_create",
+        "cmd": "a",
+        "using_expr": "<none>",
+        "with_check": "(order_number IN ( SELECT orders.order_number\n   FROM orders\n  WHERE (orders.customer_ref = auth.uid())))"
+      },
+      {
+        "tablename": "payment_intents",
+        "policyname": "payment_intents_policy",
+        "cmd": "*",
+        "using_expr": "true",
+        "with_check": "true"
+      },
+      {
+        "tablename": "products",
+        "policyname": "products_admin_manage",
+        "cmd": "*",
+        "using_expr": "is_admin()",
+        "with_check": "is_admin()"
+      },
+      {
+        "tablename": "products",
+        "policyname": "products_public_read",
+        "cmd": "r",
+        "using_expr": "(is_available = true)",
+        "with_check": "<none>"
+      },
+      {
+        "tablename": "recipes",
+        "policyname": "recipes_admin",
+        "cmd": "*",
+        "using_expr": "is_admin()",
+        "with_check": "is_admin()"
+      },
+      {
+        "tablename": "recipes",
+        "policyname": "recipes_anon_read",
+        "cmd": "r",
+        "using_expr": "true",
+        "with_check": "<none>"
+      }
+    ],
+    "anon_orders_read": [
+      {
+        "anon_visible_orders_estimate": 17
+      }
+    ],
+    "recent_orders_nonpii": [
+      {
+        "order_number": "PO-20260919-430",
+        "status": "pending",
+        "payment_status": "pending",
+        "order_mode": "PRE_ORDER",
+        "scheduled_date": "2026-09-24",
+        "delivery_round_id": "round-20260924-midday",
+        "delivery_fee": "0.00",
+        "total_amount": "85.00",
+        "created_at": "2026-09-19"
+      },
+      {
+        "order_number": "BMB-WHVER-20260919105254",
+        "status": "pending",
+        "payment_status": "paid",
+        "order_mode": "SAME_DAY",
+        "scheduled_date": null,
+        "delivery_round_id": null,
+        "delivery_fee": "0.00",
+        "total_amount": "123.00",
+        "created_at": "2026-09-19"
+      },
+      {
+        "order_number": "BMB-LIVE-20260919074017",
+        "status": "pending",
+        "payment_status": "refund",
+        "order_mode": "SAME_DAY",
+        "scheduled_date": null,
+        "delivery_round_id": null,
+        "delivery_fee": "0.00",
+        "total_amount": "172.00",
+        "created_at": "2026-09-19"
+      },
+      {
+        "order_number": "BMB-20260919-249",
+        "status": "pending",
+        "payment_status": "paid",
+        "order_mode": "SAME_DAY",
+        "scheduled_date": "2026-09-17",
+        "delivery_round_id": "round-3",
+        "delivery_fee": "36.00",
+        "total_amount": "106.00",
+        "created_at": "2026-09-19"
+      },
+      {
+        "order_number": "BMB-20260919-123",
+        "status": "pending",
+        "payment_status": "pending",
+        "order_mode": "SAME_DAY",
+        "scheduled_date": "2026-09-17",
+        "delivery_round_id": "round-3",
+        "delivery_fee": "36.00",
+        "total_amount": "101.00",
+        "created_at": "2026-09-19"
+      },
+      {
+        "order_number": "BMB-20260919-616",
+        "status": "pending",
+        "payment_status": "pending",
+        "order_mode": "SAME_DAY",
+        "scheduled_date": "2026-09-17",
+        "delivery_round_id": "round-2",
+        "delivery_fee": "42.00",
+        "total_amount": "172.00",
+        "created_at": "2026-09-19"
+      },
+      {
+        "order_number": "BMB-20260919-489",
+        "status": "pending",
+        "payment_status": "paid",
+        "order_mode": "SAME_DAY",
+        "scheduled_date": "2026-09-17",
+        "delivery_round_id": "round-2",
+        "delivery_fee": "36.00",
+        "total_amount": "111.00",
+        "created_at": "2026-09-19"
+      },
+      {
+        "order_number": "BMB-20260919-830",
+        "status": "pending",
+        "payment_status": "paid",
+        "order_mode": "SAME_DAY",
+        "scheduled_date": "2026-09-17",
+        "delivery_round_id": "round-2",
+        "delivery_fee": "36.00",
+        "total_amount": "101.00",
+        "created_at": "2026-09-19"
+      },
+      {
+        "order_number": "BMB-20260919-213",
+        "status": "pending",
+        "payment_status": "paid",
+        "order_mode": "SAME_DAY",
+        "scheduled_date": "2026-09-17",
+        "delivery_round_id": "round-2",
+        "delivery_fee": "38.00",
+        "total_amount": "178.00",
+        "created_at": "2026-09-19"
+      },
+      {
+        "order_number": "BMB-20260919-104",
+        "status": "pending",
+        "payment_status": "pending",
+        "order_mode": "SAME_DAY",
+        "scheduled_date": "2026-09-17",
+        "delivery_round_id": "round-2",
+        "delivery_fee": "32.00",
+        "total_amount": "97.00",
+        "created_at": "2026-09-19"
+      },
+      {
+        "order_number": "BMB-20260919-442",
+        "status": "pending",
+        "payment_status": "pending",
+        "order_mode": "SAME_DAY",
+        "scheduled_date": "2026-09-17",
+        "delivery_round_id": "round-1",
+        "delivery_fee": "32.00",
+        "total_amount": "97.00",
+        "created_at": "2026-09-19"
+      },
+      {
+        "order_number": "BMB-LIVE-20260919073600",
+        "status": "pending",
+        "payment_status": "pending",
+        "order_mode": "SAME_DAY",
+        "scheduled_date": null,
+        "delivery_round_id": null,
+        "delivery_fee": "0.00",
+        "total_amount": "172.00",
+        "created_at": "2026-09-19"
+      },
+      {
+        "order_number": "BMB-20260919-108",
+        "status": "pending",
+        "payment_status": "pending",
+        "order_mode": "SAME_DAY",
+        "scheduled_date": "2026-09-17",
+        "delivery_round_id": "round-1",
+        "delivery_fee": "32.00",
+        "total_amount": "97.00",
+        "created_at": "2026-09-19"
+      },
+      {
+        "order_number": "BMB-20260919-658",
+        "status": "pending",
+        "payment_status": "pending",
+        "order_mode": "SAME_DAY",
+        "scheduled_date": "2026-09-17",
+        "delivery_round_id": "round-1",
+        "delivery_fee": "32.00",
+        "total_amount": "97.00",
+        "created_at": "2026-09-19"
+      },
+      {
+        "order_number": "BMB-20260919-918",
+        "status": "pending",
+        "payment_status": "pending",
+        "order_mode": "SAME_DAY",
+        "scheduled_date": "2026-09-17",
+        "delivery_round_id": "round-1",
+        "delivery_fee": "32.00",
+        "total_amount": "97.00",
+        "created_at": "2026-09-19"
+      },
+      {
+        "order_number": "TEST-001",
+        "status": "confirmed",
+        "payment_status": "paid",
+        "order_mode": "SAME_DAY",
+        "scheduled_date": "2026-09-17",
+        "delivery_round_id": "round-1",
+        "delivery_fee": "30.00",
+        "total_amount": "200.00",
+        "created_at": "2026-09-17"
+      },
+      {
+        "order_number": "BMB-20260917-526",
+        "status": "pending",
+        "payment_status": "paid",
+        "order_mode": "SAME_DAY",
+        "scheduled_date": "2026-09-17",
+        "delivery_round_id": "round-1",
+        "delivery_fee": "32.00",
+        "total_amount": "182.00",
+        "created_at": "2026-09-17"
+      }
+    ],
+    "functions_preorder": [
+      {
+        "proname": "cancel_pre_order",
+        "args": "p_order_number text"
+      },
+      {
+        "proname": "create_pre_order_with_items",
+        "args": "p_product_id text, p_quantity integer, p_delivery_round_id text, p_scheduled_date date, p_customer_name text, p_customer_phone text, p_delivery_latitude numeric, p_delivery_longitude numeric, p_delivery_address text, p_special_instructions text"
+      },
+      {
+        "proname": "decrement_delivery_round_count",
+        "args": ""
+      },
+      {
+        "proname": "enforce_menu_gate",
+        "args": ""
+      },
+      {
+        "proname": "enforce_pre_order_cancel_window",
+        "args": ""
+      },
+      {
+        "proname": "enforce_pre_order_window",
+        "args": ""
+      },
+      {
+        "proname": "ensure_rounds_for_date",
+        "args": "p_date date"
+      },
+      {
+        "proname": "get_menu_for_date",
+        "args": "p_scheduled_date date"
+      },
+      {
+        "proname": "gtrgm_compress",
+        "args": "internal"
+      },
+      {
+        "proname": "gtrgm_decompress",
+        "args": "internal"
+      },
+      {
+        "proname": "increment_delivery_round_count",
+        "args": ""
+      },
+      {
+        "proname": "publish_menu_schedule",
+        "args": "p_scheduled_date date, p_publish boolean"
+      },
+      {
+        "proname": "quote_pre_order",
+        "args": "p_product_id text, p_quantity integer"
+      },
+      {
+        "proname": "release_round_capacity_on_terminal",
+        "args": ""
+      },
+      {
+        "proname": "set_menu_schedule",
+        "args": "p_scheduled_date date, p_items jsonb"
+      },
+      {
+        "proname": "set_notification_pref",
+        "args": "p_channel text, p_enabled boolean"
+      },
+      {
+        "proname": "sync_delivery_round_aliases",
+        "args": ""
+      },
+      {
+        "proname": "validate_pre_order_delivery",
+        "args": ""
+      }
+    ],
+    "function_sources_key": [
+      {
+        "proname": "assign_driver",
+        "def_len": 2121,
+        "refs_create": false,
+        "refs_cutoff": false,
+        "refs_capacity": false
+      },
+      {
+        "proname": "confirm_offline_payment",
+        "def_len": 2464,
+        "refs_create": false,
+        "refs_cutoff": false,
+        "refs_capacity": false
+      },
+      {
+        "proname": "create_order_with_items",
+        "def_len": 13523,
+        "refs_create": true,
+        "refs_cutoff": true,
+        "refs_capacity": true
+      },
+      {
+        "proname": "driver_accept_assignment",
+        "def_len": 1253,
+        "refs_create": false,
+        "refs_cutoff": false,
+        "refs_capacity": false
+      },
+      {
+        "proname": "driver_login",
+        "def_len": 1261,
+        "refs_create": false,
+        "refs_cutoff": false,
+        "refs_capacity": false
+      },
+      {
+        "proname": "enforce_menu_gate",
+        "def_len": 1181,
+        "refs_create": false,
+        "refs_cutoff": false,
+        "refs_capacity": false
+      },
+      {
+        "proname": "enforce_operating_hours",
+        "def_len": 1227,
+        "refs_create": false,
+        "refs_cutoff": false,
+        "refs_capacity": false
+      },
+      {
+        "proname": "enforce_pre_order_window",
+        "def_len": 1605,
+        "refs_create": false,
+        "refs_cutoff": true,
+        "refs_capacity": false
+      },
+      {
+        "proname": "ensure_rounds_for_date",
+        "def_len": 2624,
+        "refs_create": false,
+        "refs_cutoff": true,
+        "refs_capacity": true
+      },
+      {
+        "proname": "record_payment_result",
+        "def_len": 3221,
+        "refs_create": false,
+        "refs_cutoff": false,
+        "refs_capacity": false
+      },
+      {
+        "proname": "transition_order_status",
+        "def_len": 2030,
+        "refs_create": false,
+        "refs_cutoff": false,
+        "refs_capacity": false
+      }
+    ]
+  },
+  "errors": {}
+}

@@ -1,0 +1,98 @@
+{
+  "timestamp": "2026-09-27T02:33:07.890Z",
+  "base": "https://bitemebaby-5f7.pages.dev",
+  "login": {
+    "url": "https://bitemebaby-5f7.pages.dev/admin",
+    "body": "\n    Bite Me Babyเมนูโปรโมชั่นโหวตเมนูสุ่มเมนู🔔1AdminAออก📊 แดชบอร์ดจัดการร้านภาพรวมธุรกิจ Bite Me Baby📦วันนี้0ออเดอร์วันนี้💰วันนี้฿0รายได้วันนี้⏳รอดำเนินการ0รอดำเนินการ⚠️ต้องระวัง0วัตถุดิบใกล้หมด📋จัดการออเดอร์ดูและจัดการทุกออเดอร์🍽️จัดการเมนูเพิ่ม/แก้ไขเมนูอาหาร📦สต็อกวัตถุดิบจัดการวัตถุดิบและ"
+  },
+  "pages": {
+    "/admin": {
+      "url": "https://bitemebaby-5f7.pages.dev/login",
+      "redirected": true,
+      "body": "\n    Bite Me Babyเมนูโปรโมชั่นโหวตเมนูสุ่มเมนู🔔1AdminAออก🧡Bite Me Babyมากกว่าคำว่าอร่อยเข้าสู่ระบบอีเมลรหัสผ่านเข้าสู่ระบบยังไม่มีบัญชี? สมัครสมาชิก🔑 Demo Admin:อีเมล: admin@bmb.co.thรหัสผ่าน: admin123← กลับหน้าแรก🍽️ Bite Me Baby — Cloud Kitchen Operating Platform เมืองจันทบุรีบริการสั่งอาหารจัดส่งเมืองจันทบุรี รัศมี 5 กม. ส่งฟรีเมื่อครบ ฿200 • เมนูจานเดียว ข้าว แกง เครื่องดื่ม ของหวาน • ส่งเช้า กลางวัน เย็น • รองรับ Same-day Order และ Pre-order • AI Assistant \"ไบต์\" ตอบคำถาม 24/7เมนูอาหารจา"
+    },
+    "/admin/orders": {
+      "url": "https://bitemebaby-5f7.pages.dev/login",
+      "redirected": true,
+      "body": "\n    Bite Me Babyเมนูโปรโมชั่นโหวตเมนูสุ่มเมนู🔔1AdminAออก🧡Bite Me Babyมากกว่าคำว่าอร่อยเข้าสู่ระบบอีเมลรหัสผ่านเข้าสู่ระบบยังไม่มีบัญชี? สมัครสมาชิก🔑 Demo Admin:อีเมล: admin@bmb.co.thรหัสผ่าน: admin123← กลับหน้าแรก🍽️ Bite Me Baby — Cloud Kitchen Operating Platform เมืองจันทบุรีบริการสั่งอาหารจัดส่งเมืองจันทบุรี รัศมี 5 กม. ส่งฟรีเมื่อครบ ฿200 • เมนูจานเดียว ข้าว แกง เครื่องดื่ม ของหวาน • ส่งเช้า กลางวัน เย็น • รองรับ Same-day Order และ Pre-order • AI Assistant \"ไบต์\" ตอบคำถาม 24/7เมนูอาหารจา"
+    },
+    "/admin/products": {
+      "url": "https://bitemebaby-5f7.pages.dev/login",
+      "redirected": true,
+      "body": "\n    Bite Me Babyเมนูโปรโมชั่นโหวตเมนูสุ่มเมนู🔔1AdminAออก🧡Bite Me Babyมากกว่าคำว่าอร่อยเข้าสู่ระบบอีเมลรหัสผ่านเข้าสู่ระบบยังไม่มีบัญชี? สมัครสมาชิก🔑 Demo Admin:อีเมล: admin@bmb.co.thรหัสผ่าน: admin123← กลับหน้าแรก🍽️ Bite Me Baby — Cloud Kitchen Operating Platform เมืองจันทบุรีบริการสั่งอาหารจัดส่งเมืองจันทบุรี รัศมี 5 กม. ส่งฟรีเมื่อครบ ฿200 • เมนูจานเดียว ข้าว แกง เครื่องดื่ม ของหวาน • ส่งเช้า กลางวัน เย็น • รองรับ Same-day Order และ Pre-order • AI Assistant \"ไบต์\" ตอบคำถาม 24/7เมนูอาหารจา"
+    },
+    "/admin/rounds": {
+      "url": "https://bitemebaby-5f7.pages.dev/",
+      "redirected": true,
+      "body": "\n    {\"@context\":\"https://schema.org\",\"@type\":\"Restaurant\",\"name\":\"Bite Me Baby\",\"servesCuisine\":[\"Thai\",\"Asian\"],\"priceRange\":\"$$\",\"address\":{\"@type\":\"PostalAddress\",\"streetAddress\":\"ในตัวเมืองจันทบุรี\",\"addressLocality\":\"Chanthaburi\",\"addressRegion\":\"Chanthaburi\",\"postalCode\":\"22000\",\"addressCountry\":\"TH\"},\"geo\":{\"@type\":\"GeoCoordinates\",\"latitude\":10.7016,\"longitude\":102.1429},\"openingHoursSpecification\":[{\"@type\":\"OpeningHoursSpecification\",\"dayOfWeek\":[\"Monday\",\"Tuesday\",\"Wednesday\",\"Thursd"
+    },
+    "/admin/customers": {
+      "url": "https://bitemebaby-5f7.pages.dev/",
+      "redirected": true,
+      "body": "\n    {\"@context\":\"https://schema.org\",\"@type\":\"Restaurant\",\"name\":\"Bite Me Baby\",\"servesCuisine\":[\"Thai\",\"Asian\"],\"priceRange\":\"$$\",\"address\":{\"@type\":\"PostalAddress\",\"streetAddress\":\"ในตัวเมืองจันทบุรี\",\"addressLocality\":\"Chanthaburi\",\"addressRegion\":\"Chanthaburi\",\"postalCode\":\"22000\",\"addressCountry\":\"TH\"},\"geo\":{\"@type\":\"GeoCoordinates\",\"latitude\":10.7016,\"longitude\":102.1429},\"openingHoursSpecification\":[{\"@type\":\"OpeningHoursSpecification\",\"dayOfWeek\":[\"Monday\",\"Tuesday\",\"Wednesday\",\"Thursd"
+    },
+    "/admin/settings": {
+      "url": "https://bitemebaby-5f7.pages.dev/",
+      "redirected": true,
+      "body": "\n    {\"@context\":\"https://schema.org\",\"@type\":\"Restaurant\",\"name\":\"Bite Me Baby\",\"servesCuisine\":[\"Thai\",\"Asian\"],\"priceRange\":\"$$\",\"address\":{\"@type\":\"PostalAddress\",\"streetAddress\":\"ในตัวเมืองจันทบุรี\",\"addressLocality\":\"Chanthaburi\",\"addressRegion\":\"Chanthaburi\",\"postalCode\":\"22000\",\"addressCountry\":\"TH\"},\"geo\":{\"@type\":\"GeoCoordinates\",\"latitude\":10.7016,\"longitude\":102.1429},\"openingHoursSpecification\":[{\"@type\":\"OpeningHoursSpecification\",\"dayOfWeek\":[\"Monday\",\"Tuesday\",\"Wednesday\",\"Thursd"
+    },
+    "/admin/delivery": {
+      "url": "https://bitemebaby-5f7.pages.dev/login",
+      "redirected": true,
+      "body": "\n    Bite Me Babyเมนูโปรโมชั่นโหวตเมนูสุ่มเมนู🔔1AdminAออก🧡Bite Me Babyมากกว่าคำว่าอร่อยเข้าสู่ระบบอีเมลรหัสผ่านเข้าสู่ระบบยังไม่มีบัญชี? สมัครสมาชิก🔑 Demo Admin:อีเมล: admin@bmb.co.thรหัสผ่าน: admin123← กลับหน้าแรก🍽️ Bite Me Baby — Cloud Kitchen Operating Platform เมืองจันทบุรีบริการสั่งอาหารจัดส่งเมืองจันทบุรี รัศมี 5 กม. ส่งฟรีเมื่อครบ ฿200 • เมนูจานเดียว ข้าว แกง เครื่องดื่ม ของหวาน • ส่งเช้า กลางวัน เย็น • รองรับ Same-day Order และ Pre-order • AI Assistant \"ไบต์\" ตอบคำถาม 24/7เมนูอาหารจา"
+    },
+    "/admin/inventory": {
+      "url": "https://bitemebaby-5f7.pages.dev/login",
+      "redirected": true,
+      "body": "\n    Bite Me Babyเมนูโปรโมชั่นโหวตเมนูสุ่มเมนู🔔1AdminAออก🧡Bite Me Babyมากกว่าคำว่าอร่อยเข้าสู่ระบบอีเมลรหัสผ่านเข้าสู่ระบบยังไม่มีบัญชี? สมัครสมาชิก🔑 Demo Admin:อีเมล: admin@bmb.co.thรหัสผ่าน: admin123← กลับหน้าแรก🍽️ Bite Me Baby — Cloud Kitchen Operating Platform เมืองจันทบุรีบริการสั่งอาหารจัดส่งเมืองจันทบุรี รัศมี 5 กม. ส่งฟรีเมื่อครบ ฿200 • เมนูจานเดียว ข้าว แกง เครื่องดื่ม ของหวาน • ส่งเช้า กลางวัน เย็น • รองรับ Same-day Order และ Pre-order • AI Assistant \"ไบต์\" ตอบคำถาม 24/7เมนูอาหารจา"
+    },
+    "/admin/promotions": {
+      "url": "https://bitemebaby-5f7.pages.dev/",
+      "redirected": true,
+      "body": "\n    {\"@context\":\"https://schema.org\",\"@type\":\"Restaurant\",\"name\":\"Bite Me Baby\",\"servesCuisine\":[\"Thai\",\"Asian\"],\"priceRange\":\"$$\",\"address\":{\"@type\":\"PostalAddress\",\"streetAddress\":\"ในตัวเมืองจันทบุรี\",\"addressLocality\":\"Chanthaburi\",\"addressRegion\":\"Chanthaburi\",\"postalCode\":\"22000\",\"addressCountry\":\"TH\"},\"geo\":{\"@type\":\"GeoCoordinates\",\"latitude\":10.7016,\"longitude\":102.1429},\"openingHoursSpecification\":[{\"@type\":\"OpeningHoursSpecification\",\"dayOfWeek\":[\"Monday\",\"Tuesday\",\"Wednesday\",\"Thursd"
+    },
+    "/admin/media": {
+      "url": "https://bitemebaby-5f7.pages.dev/",
+      "redirected": true,
+      "body": "\n    {\"@context\":\"https://schema.org\",\"@type\":\"Restaurant\",\"name\":\"Bite Me Baby\",\"servesCuisine\":[\"Thai\",\"Asian\"],\"priceRange\":\"$$\",\"address\":{\"@type\":\"PostalAddress\",\"streetAddress\":\"ในตัวเมืองจันทบุรี\",\"addressLocality\":\"Chanthaburi\",\"addressRegion\":\"Chanthaburi\",\"postalCode\":\"22000\",\"addressCountry\":\"TH\"},\"geo\":{\"@type\":\"GeoCoordinates\",\"latitude\":10.7016,\"longitude\":102.1429},\"openingHoursSpecification\":[{\"@type\":\"OpeningHoursSpecification\",\"dayOfWeek\":[\"Monday\",\"Tuesday\",\"Wednesday\",\"Thursd"
+    },
+    "/admin/audit-log": {
+      "url": "https://bitemebaby-5f7.pages.dev/login",
+      "redirected": true,
+      "body": "\n    Bite Me Babyเมนูโปรโมชั่นโหวตเมนูสุ่มเมนู🔔1AdminAออก🧡Bite Me Babyมากกว่าคำว่าอร่อยเข้าสู่ระบบอีเมลรหัสผ่านเข้าสู่ระบบยังไม่มีบัญชี? สมัครสมาชิก🔑 Demo Admin:อีเมล: admin@bmb.co.thรหัสผ่าน: admin123← กลับหน้าแรก🍽️ Bite Me Baby — Cloud Kitchen Operating Platform เมืองจันทบุรีบริการสั่งอาหารจัดส่งเมืองจันทบุรี รัศมี 5 กม. ส่งฟรีเมื่อครบ ฿200 • เมนูจานเดียว ข้าว แกง เครื่องดื่ม ของหวาน • ส่งเช้า กลางวัน เย็น • รองรับ Same-day Order และ Pre-order • AI Assistant \"ไบต์\" ตอบคำถาม 24/7เมนูอาหารจา"
+    },
+    "/admin/control": {
+      "url": "https://bitemebaby-5f7.pages.dev/",
+      "redirected": true,
+      "body": "\n    {\"@context\":\"https://schema.org\",\"@type\":\"Restaurant\",\"name\":\"Bite Me Baby\",\"servesCuisine\":[\"Thai\",\"Asian\"],\"priceRange\":\"$$\",\"address\":{\"@type\":\"PostalAddress\",\"streetAddress\":\"ในตัวเมืองจันทบุรี\",\"addressLocality\":\"Chanthaburi\",\"addressRegion\":\"Chanthaburi\",\"postalCode\":\"22000\",\"addressCountry\":\"TH\"},\"geo\":{\"@type\":\"GeoCoordinates\",\"latitude\":10.7016,\"longitude\":102.1429},\"openingHoursSpecification\":[{\"@type\":\"OpeningHoursSpecification\",\"dayOfWeek\":[\"Monday\",\"Tuesday\",\"Wednesday\",\"Thursd"
+    },
+    "/admin/route-optimization": {
+      "url": "https://bitemebaby-5f7.pages.dev/login",
+      "redirected": true,
+      "body": "\n    Bite Me Babyเมนูโปรโมชั่นโหวตเมนูสุ่มเมนู🔔1AdminAออก🧡Bite Me Babyมากกว่าคำว่าอร่อยเข้าสู่ระบบอีเมลรหัสผ่านเข้าสู่ระบบยังไม่มีบัญชี? สมัครสมาชิก🔑 Demo Admin:อีเมล: admin@bmb.co.thรหัสผ่าน: admin123← กลับหน้าแรก🍽️ Bite Me Baby — Cloud Kitchen Operating Platform เมืองจันทบุรีบริการสั่งอาหารจัดส่งเมืองจันทบุรี รัศมี 5 กม. ส่งฟรีเมื่อครบ ฿200 • เมนูจานเดียว ข้าว แกง เครื่องดื่ม ของหวาน • ส่งเช้า กลางวัน เย็น • รองรับ Same-day Order และ Pre-order • AI Assistant \"ไบต์\" ตอบคำถาม 24/7เมนูอาหารจา"
+    },
+    "/admin/content-approvals": {
+      "url": "https://bitemebaby-5f7.pages.dev/",
+      "redirected": true,
+      "body": "\n    {\"@context\":\"https://schema.org\",\"@type\":\"Restaurant\",\"name\":\"Bite Me Baby\",\"servesCuisine\":[\"Thai\",\"Asian\"],\"priceRange\":\"$$\",\"address\":{\"@type\":\"PostalAddress\",\"streetAddress\":\"ในตัวเมืองจันทบุรี\",\"addressLocality\":\"Chanthaburi\",\"addressRegion\":\"Chanthaburi\",\"postalCode\":\"22000\",\"addressCountry\":\"TH\"},\"geo\":{\"@type\":\"GeoCoordinates\",\"latitude\":10.7016,\"longitude\":102.1429},\"openingHoursSpecification\":[{\"@type\":\"OpeningHoursSpecification\",\"dayOfWeek\":[\"Monday\",\"Tuesday\",\"Wednesday\",\"Thursd"
+    },
+    "/admin/mascot": {
+      "url": "https://bitemebaby-5f7.pages.dev/",
+      "redirected": true,
+      "body": "\n    {\"@context\":\"https://schema.org\",\"@type\":\"Restaurant\",\"name\":\"Bite Me Baby\",\"servesCuisine\":[\"Thai\",\"Asian\"],\"priceRange\":\"$$\",\"address\":{\"@type\":\"PostalAddress\",\"streetAddress\":\"ในตัวเมืองจันทบุรี\",\"addressLocality\":\"Chanthaburi\",\"addressRegion\":\"Chanthaburi\",\"postalCode\":\"22000\",\"addressCountry\":\"TH\"},\"geo\":{\"@type\":\"GeoCoordinates\",\"latitude\":10.7016,\"longitude\":102.1429},\"openingHoursSpecification\":[{\"@type\":\"OpeningHoursSpecification\",\"dayOfWeek\":[\"Monday\",\"Tuesday\",\"Wednesday\",\"Thursd"
+    },
+    "/admin/errors": {
+      "url": "https://bitemebaby-5f7.pages.dev/",
+      "redirected": true,
+      "body": "\n    {\"@context\":\"https://schema.org\",\"@type\":\"Restaurant\",\"name\":\"Bite Me Baby\",\"servesCuisine\":[\"Thai\",\"Asian\"],\"priceRange\":\"$$\",\"address\":{\"@type\":\"PostalAddress\",\"streetAddress\":\"ในตัวเมืองจันทบุรี\",\"addressLocality\":\"Chanthaburi\",\"addressRegion\":\"Chanthaburi\",\"postalCode\":\"22000\",\"addressCountry\":\"TH\"},\"geo\":{\"@type\":\"GeoCoordinates\",\"latitude\":10.7016,\"longitude\":102.1429},\"openingHoursSpecification\":[{\"@type\":\"OpeningHoursSpecification\",\"dayOfWeek\":[\"Monday\",\"Tuesday\",\"Wednesday\",\"Thursd"
+    }
+  },
+  "consoleErrors": [
+    "Failed to load resource: the server responded with a status of 401 ()",
+    "[getInventory] Error: {code: 42501, details: null, hint: Grant the required privileges to the current role with: GRANT SELECT ON public.inventory TO anon;, message: permission denied for table inventory}"
+  ],
+  "unauthAdmin": {
+    "url": "https://bitemebaby-5f7.pages.dev/login",
+    "hasPassword": true
+  }
+}

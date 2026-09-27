@@ -19,7 +19,9 @@ async function main() {
 
   async function sel(jwt, table) {
     const r = await api(ANON, 'GET', '/rest/v1/' + table + '?select=id&limit=50', undefined, jwt)
-    return { status: r.status, count: Array.isArray(r.j) ? r.j.length : null, body: r.j }
+    // non-200 (401/403) = denied at API level; RLS-filtered empty array = denied at policy level
+    const denied = r.status !== 200
+    return { status: r.status, count: Array.isArray(r.j) ? r.j.length : (denied ? 0 : -1), body: r.j, denied }
   }
   async function ins(jwt, table, body) {
     const r = await api(ANON, 'POST', '/rest/v1/' + table, body, jwt)
@@ -55,9 +57,9 @@ async function main() {
   check('drivers', 'driver', 'UPDATE own user_id', 'denied (WITH CHECK pin)', String(a.status), a.status !== 200 && a.status !== 204)
 
   // ================= recipes =================
-  // anon: DENY (0 rows) — Owner intent: no intended public policy
+  // anon: DENY (401/deny or RLS-empty) — Owner intent: no intended public policy
   a = await sel(null, 'recipes')
-  check('recipes', 'anon', 'SELECT', '0 rows (deny)', a.status + '/' + a.count, a.count === 0)
+  check('recipes', 'anon', 'SELECT', 'deny (401/empty)', a.status + '/' + a.count, a.count === 0)
   // customer/driver/admin: READ allowed (authenticated read)
   for (const [name, p] of [['customer', cust], ['driver', drv], ['admin', admin]]) {
     a = await sel(p.jwt, 'recipes')
@@ -68,12 +70,20 @@ async function main() {
     a = await ins(p.jwt, 'recipes', { id: 'rcp-fake-w2', product_id: 'p-fake', ingredient_id: 'i-fake', quantity_per_unit: 1 })
     check('recipes', name, 'INSERT', 'denied', String(a.status), a.status !== 200 && a.status !== 201)
   }
-  // admin WRITE: allowed (INSERT temp row + DELETE = test data cleanup)
-  a = await ins(admin.jwt, 'recipes', { id: 'rcp-w2-temp-probe', product_id: 'p-w2-temp', ingredient_id: 'i-w2-temp', quantity_per_unit: 1 })
-  const insOk = a.status === 200 || a.status === 201
-  let del = null
-  if (insOk) del = await api(ANON, 'DELETE', '/rest/v1/recipes?id=eq.rcp-w2-temp-probe', undefined, admin.jwt)
-  check('recipes', 'admin', 'INSERT+DELETE (temp probe row)', 'allowed + cleaned', String(a.status) + '/' + (del ? del.status : 'n/a'), insOk && (!del || del.status === 200 || del.status === 204))
+  // admin WRITE: allowed (INSERT temp probe row with REAL FK refs + DELETE cleanup)
+  const prodList = await api(ANON, 'GET', '/rest/v1/products?select=id&limit=1', undefined, admin.jwt)
+  const invList = await api(ANON, 'GET', '/rest/v1/inventory?select=id&limit=1', undefined, admin.jwt)
+  const pid = (prodList.j?.[0]?.id) || null
+  const iid = (invList.j?.[0]?.id) || null
+  if (!pid || !iid) {
+    check('recipes', 'admin', 'INSERT+DELETE (temp probe row)', 'allowed + cleaned', 'skipped: no product/inventory ref', false, 'setup data missing')
+  } else {
+    a = await ins(admin.jwt, 'recipes', { id: 'rcp-w2-temp-probe', product_id: pid, ingredient_id: iid, quantity_per_unit: 1 })
+    const insOk = a.status === 200 || a.status === 201
+    let del = null
+    if (insOk) del = await api(ANON, 'DELETE', '/rest/v1/recipes?id=eq.rcp-w2-temp-probe', undefined, admin.jwt)
+    check('recipes', 'admin', 'INSERT+DELETE (temp probe row)', 'allowed + cleaned', String(a.status) + '/' + (del ? del.status : 'n/a'), insOk && (!del || del.status === 200 || del.status === 204))
+  }
 
   const result = {
     kind: 'BMB_WAVE2_F18_RLS_MATRIX',

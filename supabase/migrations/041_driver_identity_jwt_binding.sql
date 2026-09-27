@@ -53,6 +53,17 @@ CREATE POLICY assignments_scoped_read ON public.delivery_assignments
   USING (public.is_admin() OR driver_id IN (
     SELECT id FROM public.drivers WHERE user_id = auth.uid()));
 
+-- Driver may update ONLY their own row (permitted profile fields: name, phone,
+-- vehicle_label, status, location, last_seen). WITH CHECK pins user_id → a
+-- driver cannot re-link their row to another auth user (user_id hijack blocked
+-- by the row-level WITH CHECK). Admin retains full write via drivers_admin_write.
+DROP POLICY IF EXISTS drivers_self_update ON public.drivers;
+CREATE POLICY drivers_self_update ON public.drivers
+  FOR UPDATE TO authenticated
+  USING (user_id = auth.uid())
+  WITH CHECK (user_id = auth.uid());
+
+
 -- ============================================
 -- 3. driver_login — JWT-bound only (self-upsert by phone REMOVED)
 --    Old signature driver_login(text, text) is dropped.

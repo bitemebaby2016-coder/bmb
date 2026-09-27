@@ -1,0 +1,80 @@
+{
+  "kind": "BMB_WAVE2_F06_DRIVER_SECURITY",
+  "timestamp": "2026-09-27T07:34:58.229Z",
+  "env": "PRODUCTION-DB (test data only)",
+  "commit": "wave2",
+  "checks": [
+    {
+      "name": "F06.A_no_jwt_rejected",
+      "pass": true,
+      "detail": "driver_login(anon)=401"
+    },
+    {
+      "name": "F06.B_customer_not_driver",
+      "pass": true,
+      "detail": "customer driver_login=400 {\"code\":\"P0001\",\"details\":null,\"hint\":null,\"message\":\"ERR_NOT_A_DRIVER: no driver record is linked to this account (admi"
+    },
+    {
+      "name": "F06.B2_phone_self_register_removed",
+      "pass": true,
+      "detail": "driver_login(p_phone)=404 (dropped signature → 404 PGRST202 expected)"
+    },
+    {
+      "name": "F06.C_driver_own_row_only",
+      "pass": true,
+      "detail": "driver A sees rows=[\"drv-qa-w2-01\"]"
+    },
+    {
+      "name": "F06.C_customer_zero_rows",
+      "pass": true,
+      "detail": "customer sees=[]"
+    },
+    {
+      "name": "F06.C_anon_zero_rows",
+      "pass": true,
+      "detail": "anon status=401 count=0"
+    },
+    {
+      "name": "F06.D_setup_assign_to_B",
+      "pass": true,
+      "detail": "assign=200"
+    },
+    {
+      "name": "F06.D_cross_driver_mutation",
+      "pass": true,
+      "detail": "A accepts B-order=400 {\"code\":\"P0001\",\"details\":null,\"hint\":null,\"message\":\"ERR_ASSIGNMENT_NOT_ACCEPTABLE\"}"
+    },
+    {
+      "name": "F06.own_assignment_works",
+      "pass": true,
+      "detail": "B accepts own=200"
+    },
+    {
+      "name": "F06.E_jwt_wins_not_phone",
+      "pass": true,
+      "detail": "A with B-phone=400 {\"code\":\"P0001\",\"details\":null,\"hint\":null,\"message\":\"ERR_ASSIGNMENT_NOT_ACCEPTABLE\"}"
+    },
+    {
+      "name": "F06.self_update_own",
+      "pass": true,
+      "detail": "PATCH own=204"
+    },
+    {
+      "name": "F06.self_update_other_blocked",
+      "pass": true,
+      "detail": "PATCH other → label=[]"
+    },
+    {
+      "name": "F06.relink_hijack_blocked",
+      "pass": true,
+      "detail": "PATCH user_id=403"
+    },
+    {
+      "name": "F06.admin_full_access",
+      "pass": true,
+      "detail": "admin sees=2"
+    }
+  ],
+  "passCount": 14,
+  "total": 14
+}

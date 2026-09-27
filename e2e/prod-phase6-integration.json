@@ -1,0 +1,41 @@
+{
+  "timestamp": "2026-09-27T03:04:49.030Z",
+  "endpoints": {
+    "ai-proxy": {
+      "status": 404,
+      "body": "{\"code\":\"NOT_FOUND\",\"message\":\"Requested function was not found\"}"
+    },
+    "stripe-webhook": {
+      "status": 200,
+      "body": "{\"ok\":true,\"service\":\"stripe-webhook\"}"
+    },
+    "create-checkout": {
+      "status": 401,
+      "body": "{\"code\":\"UNAUTHORIZED_NO_AUTH_HEADER\",\"message\":\"Missing authorization header\"}"
+    },
+    "stripe-refund": {
+      "status": 401,
+      "body": "{\"code\":\"UNAUTHORIZED_NO_AUTH_HEADER\",\"message\":\"Missing authorization header\"}"
+    },
+    "phone-auto-login": {
+      "status": 405,
+      "body": "{\"error\":\"Method not allowed\"}"
+    },
+    "daily-report": {
+      "status": 404,
+      "body": "{\"code\":\"NOT_FOUND\",\"message\":\"Requested function was not found\"}"
+    },
+    "vote-menu": {
+      "status": 404,
+      "body": "{\"code\":\"NOT_FOUND\",\"message\":\"Requested function was not found\"}"
+    },
+    "generate-rewards": {
+      "status": 404,
+      "body": "{\"code\":\"NOT_FOUND\",\"message\":\"Requested function was not found\"}"
+    }
+  },
+  "aiChat": {
+    "status": 404,
+    "body": "{\"code\":\"NOT_FOUND\",\"message\":\"Requested function was not found\"}"
+  }
+}

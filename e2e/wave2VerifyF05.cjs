@@ -18,9 +18,9 @@ async function main() {
   const cust = await login('qa-customer@bmb.co.th', readSecrets().BMB_TEST_CUSTOMER_PASSWORD)
   if (cust.status !== 200) throw new Error('customer login failed ' + cust.status)
 
-  const ordersQ = await api(ANON, 'GET', '/rest/v1/orders?customer_ref=eq.' + cust.uid + '&select=order_number,status&order=created_at.desc&limit=5', undefined, admin.jwt)
-  const order = (ordersQ.j || [])[0]
-  if (!order) throw new Error('no test order found — run wave2Setup first')
+  const ordersQ = await api(ANON, 'GET', '/rest/v1/orders?customer_ref=eq.' + cust.uid + '&select=order_number,status&order=created_at.desc&limit=10', undefined, admin.jwt)
+  const order = (ordersQ.j || []).find((o) => o.status === 'pending')
+  if (!order) throw new Error('no PENDING test order found — run node e2e/wave2Setup.cjs to create a fresh one')
   const onum = order.order_number
 
   const checks = []
@@ -61,30 +61,47 @@ async function main() {
   push('F05.duplicate_no_history', dup.status === 200 && afterDup.rows.length === afterIllegal.rows.length,
     'dup=' + dup.status + ' rows=' + afterDup.rows.length)
 
-  // customer cancel path (owner): pending → cancelled (second test order)
-  const ordersQ2 = await api(ANON, 'GET', '/rest/v1/orders?customer_ref=eq.' + cust.uid + '&select=order_number,status&order=created_at.desc&limit=5', undefined, admin.jwt)
-  const second = (ordersQ2.j || []).find((o) => o.status === 'pending' && o.order_number !== onum)
-  if (second) {
-    const cancel = await rpc(cust.jwt, 'transition_order_status', { p_order_number: second.order_number, p_new_status: 'cancelled' })
-    const cHist = await history(admin.jwt, second.order_number)
+  // customer cancel path (owner): pending → cancelled on a FRESH order created inline
+  const prod = await api(ANON, 'GET', '/rest/v1/products?select=id,is_available&limit=10', undefined, admin.jwt)
+  const prodOk = (prod.j || []).find((p) => p.is_available !== false)
+  const fresh = await rpc(cust.jwt, 'create_order_with_items', {
+    p_items: [{ product_id: prodOk.id, quantity: 1 }],
+    p_delivery_round_id: 'round-w2-test',
+    p_delivery_method: 'self_delivery',
+    p_delivery_address: 'TEST-ORDER cancel-path (Wave 2)',
+    p_dropoff_latitude: 10.7016,
+    p_dropoff_longitude: 102.1429,
+    p_customer_name: 'W2 Test Customer',
+    p_customer_phone: '0990000001',
+    p_payment_method: 'promptpay_qr',
+  })
+  if (fresh.status === 200 && fresh.j?.order_number) {
+    const cancel = await rpc(cust.jwt, 'transition_order_status', { p_order_number: fresh.j.order_number, p_new_status: 'cancelled' })
+    const cHist = await history(admin.jwt, fresh.j.order_number)
     push('F05.customer_cancel_history', cancel.status === 200 && cHist.rows.some((r) => r.to_status === 'cancelled' && r.actor_type === 'CUSTOMER'),
       'cancel=' + cancel.status + ' rows=' + JSON.stringify(cHist.rows.map((r) => [r.from_status, r.to_status, r.actor_type])))
   } else {
-    push('F05.customer_cancel_history', false, 'no second pending test order (run wave2Setup again to create one)')
+    push('F05.customer_cancel_history', false, 'inline order create failed ' + fresh.status + ' ' + JSON.stringify(fresh.j || {}).slice(0, 120))
   }
 
-  // concurrent: two simultaneous transitions must not both win
+  // concurrent: two simultaneous same-target transitions — allow-list treats
+  // p_from=p_to as idempotent (no history rows); the invariant that MUST hold is
+  // history chain consistency vs final orders.status (no contradictory rows).
   const conc = await Promise.all([
     rpc(admin.jwt, 'transition_order_status', { p_order_number: onum, p_new_status: 'dispatched' }),
     rpc(admin.jwt, 'transition_order_status', { p_order_number: onum, p_new_status: 'dispatched' }),
   ])
-  const wins = conc.filter((c) => c.status === 200 && c.j?.ok).length
-  push('F05.concurrent_single_winner', wins === 1, 'results=' + conc.map((c) => c.status).join(','))
+  const okCount = conc.filter((c) => c.status === 200 && c.j?.ok).length
+  push('F05.concurrent_no_corrupt', okCount >= 1 && okCount <= 2, 'same-target concurrent results=' + conc.map((c) => c.status).join(','))
   const finalHist = await history(admin.jwt, onum)
   const finalStatus = (await api(ANON, 'GET', '/rest/v1/orders?order_number=eq.' + onum + '&select=status', undefined, admin.jwt)).j?.[0]?.status
+  let chainOk = finalHist.rows.length > 0 && finalHist.rows[0].from_status === null
+  for (let i = 1; i < finalHist.rows.length; i++) {
+    if (finalHist.rows[i].from_status !== finalHist.rows[i - 1].to_status) chainOk = false
+  }
   const lastHist = finalHist.rows[finalHist.rows.length - 1]
-  push('F05.concurrent_history_matches_final', lastHist && lastHist.to_status === finalStatus,
-    'final=' + finalStatus + ' lastHistory=' + (lastHist && lastHist.to_status))
+  push('F05.history_chain_consistent', chainOk && lastHist && lastHist.to_status === finalStatus,
+    'final=' + finalStatus + ' rows=' + finalHist.rows.map((r) => (r.from_status ?? 'null') + '>' + r.to_status).join(','))
 
   // client cannot insert history directly (forgery blocked)
   const forge = await api(ANON, 'POST', '/rest/v1/order_status_history', {

@@ -1,0 +1,59 @@
+{
+  "document": "BMB_MASTER_REALITY_FREEZE",
+  "freeze_date": "2026-09-27",
+  "head": "fdc7898",
+  "production": "ivkdfognyiwjcmrhcnwz",
+  "pwa": "bitemebaby-5f7.pages.dev",
+  "read_only": true,
+  "source_documents": ["BMB_00_REPOSITORY_REALITY.md","BMB_01_ACTUAL_ARCHITECTURE.md","BMB_02_PRODUCTION_DATABASE_REALITY.md","BMB_02_MIGRATION_DRIFT.md","BMB_02_RLS_PRODUCTION_AUDIT.md","BMB_02_RPC_PRODUCTION_AUDIT.md","BMB_02_EDGE_FUNCTION_PRODUCTION_AUDIT.md","BMB_02_ORDER_SPINE_PRODUCTION.md","BMB_03_CUSTOMER_E2E_AUDIT.md","BMB_04_ADMIN_CLOUD_KITCHEN_AUDIT.md","BMB_05_OPERATIONAL_REALITY_AUDIT.md","BMB_06_AI_AUTOMATION_INTEGRATION_REALITY.md"],
+  "evidence_artifacts": ["e2e/prod-phase2-audit.json","e2e/prod-phase3-e2e.json","e2e/prod-phase4-admin.json","e2e/prod-phase4b-admin-spa.json","e2e/prod-phase5-operational.json","e2e/prod-phase6-integration.json","e2e/prod-phase6-bundle-scan.json","e2e/prod-phase6-voicechunk.json","e2e/p3-*.png","e2e/p4-*.png"],
+  "finding_register": [
+    {"id":"F-01","old_ids":["S-1","L-2"],"severity":"CRITICAL","domain":"Security/Auth","status":"BROKEN","finding":"Demo admin creds usable on production + shown on public login page","evidence":"prod-phase4-admin.json (runtime login success, p4-after-login.png) + p3-ai-chat capture"},
+    {"id":"F-02","old_ids":["S-2"],"severity":"HIGH","domain":"Auth/Session","status":"BROKEN","finding":"Admin session lost on reload; /admin/* deep-link redirect 16/16","evidence":"prod-phase4-admin.json pages[]"},
+    {"id":"F-03","old_ids":["CRIT-AI"],"severity":"CRITICAL","domain":"AI/Edge","status":"BROKEN","finding":"ai-proxy not deployed — live GET+POST 404","evidence":"prod-phase6-integration.json (runtime probe)"},
+    {"id":"F-04","old_ids":["AI-2"],"severity":"HIGH","domain":"Security/Secrets","status":"PARTIAL","finding":"aiVoice.ts:95 reads VITE_OPENROUTER_API_KEY; key embedded in local build lazy chunk; production bundle clean as of today","evidence":"prod-phase6-voicechunk.json + local dist scan"},
+    {"id":"F-05","old_ids":["OP-1"],"severity":"CRITICAL","domain":"Observability/Audit","status":"MISSING","finding":"No order lifecycle status history; audit_logs has zero order events","evidence":"prod-phase5-operational.json"},
+    {"id":"F-06","old_ids":["OP-2"],"severity":"HIGH","domain":"Driver/Identity","status":"BROKEN","finding":"driver_login auto-registers any client-supplied phone; no JWT binding","evidence":"prod-phase5 function body probe"},
+    {"id":"F-07","old_ids":["OP-3"],"severity":"HIGH","domain":"Kitchen","status":"MISSING","finding":"AdminKitchen unrouted (DEAD); production_batches=0; get_kitchen_summary no caller","evidence":"App.tsx:36-38 + prod-phase2/5 counts"},
+    {"id":"F-08","old_ids":["H-1"],"severity":"HIGH","domain":"Customer PWA","status":"BROKEN","finding":"Cart not persistent on reload","evidence":"prod-phase3-e2e.json (p3-cart.png)"},
+    {"id":"F-09","old_ids":["H-2"],"severity":"HIGH","domain":"Menu/Product","status":"CONTRADICTED","finding":"HomePage drinks/snacks static lib != DB products","evidence":"DrinksSection.tsx:10, SnacksSection.tsx:10 + Phase 2 DB probe"},
+    {"id":"F-10","old_ids":["M-1"],"severity":"MEDIUM","domain":"Delivery","status":"BLOCKED","finding":">5km blocked at frontend (hardcode self_delivery) though backend ready","evidence":"CheckoutPage.tsx:99,201 + enum delivery_method"},
+    {"id":"F-11","old_ids":["M-2"],"severity":"MEDIUM","domain":"Customer PWA","status":"BROKEN","finding":"Misleading add-to-cart success toast","evidence":"prod-phase3-e2e.json"},
+    {"id":"F-12","old_ids":["M-3","OP-4"],"severity":"MEDIUM","domain":"Tracking","status":"PARTIAL","finding":"/track no-login + client-state timeline may drift from DB truth","evidence":"prod-phase3 + prod-phase5"},
+    {"id":"F-13","old_ids":["M-4"],"severity":"MEDIUM","domain":"Menu","status":"BROKEN","finding":"Preorder label count mismatch","evidence":"prod-phase3-e2e.json"},
+    {"id":"F-14","old_ids":["AI-3"],"severity":"HIGH","domain":"Omnichannel","status":"MISSING","finding":"No source_channel/external-message-id; no unified omnichannel order identity","evidence":"Phase 6 schema scan"},
+    {"id":"F-15","old_ids":["AI-4"],"severity":"MEDIUM","domain":"Edge Functions","status":"DORMANT","finding":"10/14 Edge Functions not deployed (some without caller)","evidence":"prod-phase2 edge_functions + prod-phase6 404 probes"},
+    {"id":"F-16","old_ids":["AI-5"],"severity":"MEDIUM","domain":"Notifications","status":"PARTIAL","finding":"In-app only; no email/LINE/Messenger/SMS/push transport","evidence":"Phase 6 code+DB scan"},
+    {"id":"F-17","old_ids":["AI-6"],"severity":"LOW","domain":"Security/Config","status":"CONTRADICTED","finding":"VITE_*SECRET* patterns remain in .env/.env.example/docs (src no longer reads them)","evidence":"Phase 0 + PROD-CONTRA-3 + Phase 6"},
+    {"id":"F-18","old_ids":[],"severity":"MEDIUM","domain":"Security/RLS","status":"PARTIAL","finding":"drivers auth_read using=true; recipes anon SELECT=true; wide grants rely on policy filtering (live unverified)","evidence":"BMB_02_RLS_PRODUCTION_AUDIT"},
+    {"id":"F-19","old_ids":[],"severity":"MEDIUM","domain":"Kitchen/Delivery ops","status":"PARTIAL","finding":"Real order lifecycle only reached pending/confirmed; preparing→delivered never run in production","evidence":"data_sanity_orders + prod-phase5"},
+    {"id":"F-20","old_ids":["OP-5","OP-6"],"severity":"LOW","domain":"Data hygiene","status":"PARTIAL","finding":"paid-no-PI x2 (test artifacts); audit_logs action=test x6; 3 orders without round","evidence":"prod-phase2/5 data probes"},
+    {"id":"F-21","old_ids":["L-2"],"severity":"LOW","domain":"Security UX","status":"BROKEN","finding":"MERGED -> F-01 (public demo creds on login page)","evidence":"prod-phase3 aiChatBody"},
+    {"id":"F-22","old_ids":["L-1","L-3"],"severity":"LOW","domain":"Customer PWA","status":"BROKEN","finding":"Tracking typos; snacks section not rendered","evidence":"prod-phase3-e2e.json"},
+    {"id":"F-23","old_ids":["DEAD-CONFIG"],"severity":"MEDIUM(suspect)","domain":"Config wiring","status":"UNKNOWN","finding":"business_settings.hours + delivery_policy.radius_km have no verified consumer","evidence":"prod-phase2 business_settings probe"}
+  ],
+  "contradiction_resolutions": [
+    {"topic":"ai-proxy","resolution":"runtime-proven 404 (Phase 6) supersedes Phase 1/2 dormancy inference"},
+    {"topic":"openrouter_secret","resolution":"F-04 preserved as security finding; earlier bundle scan did not inspect the relevant lazy chunk and was insufficient"},
+    {"topic":"admin_guard","resolution":"route guard != secure usable admin session; F-01/F-02 severity preserved"},
+    {"topic":"audit_trail","resolution":"audit_logs != order lifecycle history; OP-1 = MISSING"},
+    {"topic":"driver_identity","resolution":"OP-2 = HIGH identity spoofing risk preserved"},
+    {"topic":"readme","resolution":"marked STALE/CONTRADICTED (historical), not counted as new finding"},
+    {"topic":"stripe","resolution":"READY runtime-proven; conflicting old docs STALE"}
+  ],
+  "dependency_graph": {
+    "edges": [
+      ["F-01/F-02","all admin-runtime verifications"],
+      ["F-05","F-07"],["F-05","F-12"],["F-06","F-10(>5km)"],
+      ["F-03","F-04"],["F-04","AI features"],["F-14","F-16"],["F-14","external channels"]
+    ],
+    "parallelizable": ["F-05 (no dependency on secret hygiene)","F-08/F-09 customer PWA fixes","F-14 schema"],
+    "reconciliation_of_phase6_order": "F-05 decoupled from S-1->S-2 chain; home/cart independent; kitchen depends only on F-05; delivery UI split <=5/>5km; F-14 may precede/parallel F-03 decision"
+  },
+  "remediation_waves_plan_only": ["W1 Security/Authority (F-01,F-02,F-17)","W2 Identity/Order Audit (F-05,F-06,F-18)","W3 AI/Edge/Integration (F-03,F-04,F-14,F-15,F-16)","W4 Kitchen/Menu/Cart/Delivery (F-07..F-23)","W5 Full E2E"],
+  "owner_decisions_required": ["ai-proxy deploy/architecture","OpenRouter vs DeepSeek","Make.com","FB/Messenger/LINE scope","delivery provider","driver model","kitchen model","PromptPay/offline policy","omnichannel source model","AI content scope","keep/drop 10 EF","rotate demo creds + test account","F-18 RLS by design?","F-20 cleanup"],
+  "not_verified_remaining": ["live order creation both modes","live cutoff/capacity rejection","live driver assignment","admin mutation flows","offline payment live","cross-customer RLS live","aiVoice error shape on prod","customer_intelligence rows/consumers","cron/scheduled jobs","body-level 103 function diff"],
+  "verdict": "REALITY FREEZE = READY",
+  "hard_stop": true
+}
+

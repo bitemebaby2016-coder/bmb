@@ -140,3 +140,26 @@ Impact:   Wave 2 (F-05/F-06/F-18) ยัง NOT VERIFIED จนกว่า migr
 - **WAVE 2 GATE = NOT PASSED** → ห้ามเริ่ม Wave 3 จนกว่า verification จริงจะผ่าน
 
 **HARD STOP — WAIT FOR OWNER (รัน supabase db push แล้วแจ้งกลับเพื่อรัน verification)**
+
+---
+
+## §17-B UPDATE (POST-APPLY) — 2026-09-27 หลัง Owner อนุาต Production Apply
+- `npx supabase db push` = **Finished** — 040/041/042 applied to production
+  (PROPOSED files ถก CLI skip อัตนมัติ — ตรงตามคำสั่ง ห้ามเพิ่ม migration history)
+- Post-apply probes: order_status_history 200 · drivers.user_id present ·
+  driver JWT login 200 · recipes anon 401
+- ผล Verification จริง: F-05 12/12 PASS · F-06 14/14 PASS · F-18 15/15 PASS
+- Backfill: คง BLOCKED รอ Owner decision (ยังไม่มีการ backfill)
+- SMS OTP: คง BLOCKED รอ Owner เลือก provider
+- recipes visibility: คงรอ Owner decision (ไม่มี column ถกเพิ่ม)
+
+## §18-B WAVE 2 GATE RESULT
+- F-05 = PASS (12/12 production) · F-06 = PASS (14/14 production) · F-18 = PASS (15/15 production)
+- tsc PASS / vitest 44 files PASS / build PASS / secret scan 0 hits / evidence complete /
+  documentation updated / commits pushed
+- **WAVE 2 GATE = PASS** · Owner Decisions 3 ข้อคงค้าง (ไม่บลอก Gate)
+
+## §19 UPDATE — HANDOFF และ HARD STOP
+- BMB_WAVE_2_HANDOFF.md สร้างแล้ว (สรุปงานเสรจ/evidence/commits/GAP/Owner decisions/
+  next scope = Wave 3)
+- **HARD STOP — ห้ามเริ่ม Wave 3 จนกว่า Owner จะออกคำสั่งใหม่**

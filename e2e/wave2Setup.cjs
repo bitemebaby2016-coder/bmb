@@ -45,8 +45,9 @@ async function main() {
   }
 
   // 4) test order (customer creates via canonical RPC; needs an active round + product)
-  const rounds = await api(SERVICE, 'GET', '/rest/v1/delivery_rounds?select=id,status&limit=20')
-  const active = (rounds.j || []).find((r) => r.status === 'active')
+  const rounds = await api(SERVICE, 'GET', '/rest/v1/delivery_rounds?select=id,status&limit=30')
+  const active = (rounds.j || []).find((r) => r.status === 'active' && r.id === 'round-w2-test')
+    || (rounds.j || []).find((r) => r.status === 'active')
   const products = await api(SERVICE, 'GET', '/rest/v1/products?select=id,is_available&limit=50')
   const product = (products.j || []).find((p) => p.is_available !== false)
   if (!active || !product) {
@@ -59,11 +60,13 @@ async function main() {
       p_delivery_round_id: active.id,
       p_delivery_method: 'self_delivery',
       p_delivery_address: 'TEST-ORDER address (Wave 2)',
+      p_dropoff_latitude: 10.7016,
+      p_dropoff_longitude: 102.1429,
       p_customer_name: 'W2 Test Customer',
       p_customer_phone: '0990000001',
       p_payment_method: 'promptpay_qr',
     })
-    out.steps.push({ step: 'test_order_create', status: created.status, order: created.j?.order_number ?? null, pass: created.status === 200 })
+    out.steps.push({ step: 'test_order_create', status: created.status, order: created.j?.order_number ?? null, error: created.j?.message || created.j?.details || created.j?.hint || null, pass: created.status === 200 })
     if (created.j?.order_number) fs.writeFileSync(path.join(__dirname, 'wave2-test-order.txt'), created.j.order_number)
   }
 

@@ -1,0 +1,71 @@
+{
+  "kind": "BMB_WAVE2_F05_ORDER_HISTORY",
+  "timestamp": "2026-09-27T07:29:35.343Z",
+  "env": "PRODUCTION-DB (test data only)",
+  "commit": "wave2",
+  "test_order": "BMB-20260927-817",
+  "checks": [
+    {
+      "name": "F05.initial_event_exists",
+      "pass": true,
+      "detail": "rows=1 first={\"id\":\"osh-  1790494170685-15d5cdd2\",\"order_number\":\"BMB-20260927-817\",\"from_status\":null,\"to_status\":\"pending\",\"changed_at\":\"2026-09-27T07:29:30.647373+00:00\",\"actor_type\":\"CUSTOM"
+    },
+    {
+      "name": "F05.initial_event_shape",
+      "pass": true,
+      "detail": "{\"id\":\"osh-  1790494170685-15d5cdd2\",\"order_number\":\"BMB-20260927-817\",\"from_status\":null,\"to_status\":\"pending\",\"changed_at\":\"2026-09-27T07:29:30.647373+00:00\",\"actor_type\":\"CUSTOM"
+    },
+    {
+      "name": "F05.legal_chain",
+      "pass": true,
+      "detail": "pending→confirmed→preparing→ready_for_dispatch"
+    },
+    {
+      "name": "F05.legal_chain_history",
+      "pass": true,
+      "detail": "to_statuses=pending,confirmed,preparing,ready_for_dispatch"
+    },
+    {
+      "name": "F05.actor_admin",
+      "pass": true,
+      "detail": "admin rows=3"
+    },
+    {
+      "name": "F05.illegal_rejected",
+      "pass": true,
+      "detail": "400 {\"code\":\"P0001\",\"details\":null,\"hint\":null,\"message\":\"ERR_INVALID_TRANSITION: ready_for_dispatch -> delivered\"}"
+    },
+    {
+      "name": "F05.illegal_no_history",
+      "pass": true,
+      "detail": "rows before=4 after=4"
+    },
+    {
+      "name": "F05.duplicate_no_history",
+      "pass": true,
+      "detail": "dup=200 rows=4"
+    },
+    {
+      "name": "F05.customer_cancel_history",
+      "pass": true,
+      "detail": "cancel=200 rows=[[null,\"pending\",\"CUSTOMER\"],[\"pending\",\"cancelled\",\"CUSTOMER\"]]"
+    },
+    {
+      "name": "F05.concurrent_no_corrupt",
+      "pass": true,
+      "detail": "same-target concurrent results=200,200"
+    },
+    {
+      "name": "F05.history_chain_consistent",
+      "pass": true,
+      "detail": "final=dispatched rows=null>pending,pending>confirmed,confirmed>preparing,preparing>ready_for_dispatch,ready_for_dispatch>dispatched"
+    },
+    {
+      "name": "F05.client_forgery_blocked",
+      "pass": true,
+      "detail": "insert attempt=403"
+    }
+  ],
+  "passCount": 12,
+  "total": 12
+}

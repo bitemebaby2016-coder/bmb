@@ -43,9 +43,10 @@ async function main() {
   const custRows = await api(ANON, 'GET', '/rest/v1/drivers?select=id', undefined, cust.jwt)
   push('F06.C_customer_zero_rows', (custRows.j || []).length === 0, 'customer sees=' + JSON.stringify(custRows.j || []).slice(0, 120))
 
-  // anon sees ZERO
+  // anon sees ZERO (401/error response also counts as denied)
   const anonRows = await api(ANON, 'GET', '/rest/v1/drivers?select=id')
-  push('F06.C_anon_zero_rows', (anonRows.j || []).length === 0, 'anon sees=' + (anonRows.j || []).length)
+  const anonCount = Array.isArray(anonRows.j) ? anonRows.j.length : (anonRows.status !== 200 ? 0 : -1)
+  push('F06.C_anon_zero_rows', anonCount === 0, 'anon status=' + anonRows.status + ' count=' + anonCount)
 
   // Case D — Driver A cannot mutate Driver B's assignment
   const ordersQ = await api(ANON, 'GET', '/rest/v1/orders?select=order_number,status&order=created_at.desc&limit=10', undefined, admin.jwt)
@@ -59,6 +60,7 @@ async function main() {
     push('F06.D_cross_driver_mutation', cross.status !== 200, 'A accepts B-order=' + cross.status + ' ' + JSON.stringify(cross.j || {}).slice(0, 120))
     const own = await rpc(drvB.jwt, 'driver_accept_assignment', { p_order_number: pendingOrder.order_number, p_driver_phone: '0900000002' })
     push('F06.own_assignment_works', own.status === 200 && own.j?.ok === true, 'B accepts own=' + own.status)
+  }
 
   // Case E — phone param of Driver B + JWT of Driver A → JWT WINS
   const spoof = await rpc(drvA.jwt, 'driver_accept_assignment', { p_order_number: 'TEST-NONE-E', p_driver_phone: '0900000002' })
@@ -85,6 +87,4 @@ async function main() {
 }
 
 main().catch((e) => { console.error('FATAL', e.message); process.exit(1) })
-
-  }
 

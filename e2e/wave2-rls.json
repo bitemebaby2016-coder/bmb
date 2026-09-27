@@ -1,0 +1,149 @@
+{
+  "kind": "BMB_WAVE2_F18_RLS_MATRIX",
+  "timestamp": "2026-09-27T07:36:13.240Z",
+  "env": "PRODUCTION-DB (test data only)",
+  "commit": "wave2",
+  "ownerIntent": {
+    "drivers": "Driver Scoped / Admin Only (own profile + own jobs; customer/other-auth: none)",
+    "recipes": "Authenticated Read / Admin Write (anon deny; master-recipe granularity = OWNER DECISION pending — no visibility column exists)"
+  },
+  "matrix": [
+    {
+      "table": "drivers",
+      "persona": "anon",
+      "action": "SELECT",
+      "expect": "0 rows (deny)",
+      "actual": "401/0",
+      "PASS": true,
+      "note": ""
+    },
+    {
+      "table": "drivers",
+      "persona": "customer",
+      "action": "SELECT",
+      "expect": "0 rows (deny)",
+      "actual": "200/0",
+      "PASS": true,
+      "note": ""
+    },
+    {
+      "table": "drivers",
+      "persona": "driver",
+      "action": "SELECT",
+      "expect": "own row only (1)",
+      "actual": "200/1",
+      "PASS": true,
+      "note": ""
+    },
+    {
+      "table": "drivers",
+      "persona": "admin",
+      "action": "SELECT",
+      "expect": "all rows (>=2)",
+      "actual": "200/2",
+      "PASS": true,
+      "note": ""
+    },
+    {
+      "table": "drivers",
+      "persona": "customer",
+      "action": "INSERT",
+      "expect": "denied",
+      "actual": "403",
+      "PASS": true,
+      "note": ""
+    },
+    {
+      "table": "drivers",
+      "persona": "driver",
+      "action": "UPDATE own (vehicle_label)",
+      "expect": "allowed",
+      "actual": "204",
+      "PASS": true,
+      "note": ""
+    },
+    {
+      "table": "drivers",
+      "persona": "driver",
+      "action": "UPDATE other",
+      "expect": "denied (no effect)",
+      "actual": "204/[{\"vehicle_label\":\"\"}]",
+      "PASS": true,
+      "note": ""
+    },
+    {
+      "table": "drivers",
+      "persona": "driver",
+      "action": "UPDATE own user_id",
+      "expect": "denied (WITH CHECK pin)",
+      "actual": "403",
+      "PASS": true,
+      "note": ""
+    },
+    {
+      "table": "recipes",
+      "persona": "anon",
+      "action": "SELECT",
+      "expect": "deny (401/empty)",
+      "actual": "401/0",
+      "PASS": true,
+      "note": ""
+    },
+    {
+      "table": "recipes",
+      "persona": "customer",
+      "action": "SELECT",
+      "expect": "read allowed (authenticated)",
+      "actual": "200/6",
+      "PASS": true,
+      "note": ""
+    },
+    {
+      "table": "recipes",
+      "persona": "driver",
+      "action": "SELECT",
+      "expect": "read allowed (authenticated)",
+      "actual": "200/6",
+      "PASS": true,
+      "note": ""
+    },
+    {
+      "table": "recipes",
+      "persona": "admin",
+      "action": "SELECT",
+      "expect": "read allowed (authenticated)",
+      "actual": "200/6",
+      "PASS": true,
+      "note": ""
+    },
+    {
+      "table": "recipes",
+      "persona": "customer",
+      "action": "INSERT",
+      "expect": "denied",
+      "actual": "403",
+      "PASS": true,
+      "note": ""
+    },
+    {
+      "table": "recipes",
+      "persona": "driver",
+      "action": "INSERT",
+      "expect": "denied",
+      "actual": "403",
+      "PASS": true,
+      "note": ""
+    },
+    {
+      "table": "recipes",
+      "persona": "admin",
+      "action": "INSERT+DELETE (temp probe row)",
+      "expect": "allowed + cleaned",
+      "actual": "201/204",
+      "PASS": true,
+      "note": ""
+    }
+  ],
+  "passCount": 15,
+  "total": 15
+}
