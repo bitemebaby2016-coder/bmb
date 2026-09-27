@@ -1,0 +1,27 @@
+{
+  "date": "2026-09-27",
+  "workflow": "automation-scheduler",
+  "repo": "bitemebaby2016-coder/bmb (public)",
+  "secret_configured_by": "OWNER (GitHub repository secret AUTOMATION_TOKEN — value never exposed)",
+  "commits": {
+    "workflow_created": "f639762",
+    "secret_owner_action": "3172c87 (state at owner action)",
+    "apikey_fix": "be476ac"
+  },
+  "scheduled_runs": [
+    { "id": 36324134901, "at": "2026-09-27T13:56:29Z", "trigger": "schedule", "conclusion": "failure", "cause": "run before owner secret + missing apikey header (platform JWT gate 401)" },
+    { "id": 36324739044, "at": "2026-09-27T14:06:47Z", "trigger": "schedule", "conclusion": "failure", "cause": "secret present but apikey header missing (root-caused locally: WITH apikey=200, WITHOUT=401)" },
+    { "id": 36325296383, "at": "2026-09-27T14:16:08Z", "trigger": "schedule (*/5 cron, ran 14:16 vs 14:15 nominal — GitHub best-effort delay)", "conclusion": "success", "jobs": { "hourly-low-stock": "success (inventory_low_stock worker trace auto-exec-gh-stock-20260927T14 = succeeded, found=0)", "every-5-minutes": "skipped (hourly-only schedule event)" } },
+    { "id": 36325544565, "at": "2026-09-27T14:20:16Z", "trigger": "schedule (*/5)", "conclusion": "success", "jobs": { "every-5-minutes": "success (notification_dispatch + orders_stale_pending both success)", "hourly-low-stock": "skipped (*/5-only event)" } }
+  ],
+  "worker_traces": [
+    { "id": "auto-exec-gh-stock-20260927T14", "at": "2026-09-27T14:16:14Z", "status": "succeeded", "result": "inventory_low_stock found=0 threshold=3" },
+    { "id": "auto-exec-gh-dispatch-20260927T1420", "at": "2026-09-27T14:20:50Z", "status": "succeeded", "result": "notification_dispatch order_events=191 created=0 duplicate=165 skipped=33 suppressed=0 (all already-notified events → idempotent re-run, ZERO new rows)" },
+    { "id": "auto-exec-gh-stale-20260927T1420", "at": "2026-09-27T14:21:12Z", "status": "succeeded" }
+  ],
+  "observed_interval_minutes": { "nominal": 5, "observed_gaps": ["13:56→14:06 ≈ 10", "14:06→14:16 ≈ 10", "14:16→14:20 ≈ 4"], "conclusion": "BEST-EFFORT — gaps 4–10 min under load; NOT an exact 5-min SLA (as documented)" },
+  "idempotency_under_schedule": "same events re-scanned each run → duplicates only, no duplicate side effects (deterministic ids verified in traces)",
+  "concurrency": "workflow-level queue (bmb-automation, cancel-in-progress=false); DB deterministic id = authority; race (executed=3/duplicate=0, E-1) remains documented — OPTIMIZATION DEFERRED per owner",
+  "ci_note": "CI failure on be476ac (Unit tests step) = pre-existing GitHub-runner flakiness (10 of ~16 CI runs failed 2026-09-21..26 before any W3-D/E work; identical test set passed locally 179/179 twice and CI passed on d9c6e9b which contains ALL src changes). be476ac diff = 3 YAML lines only.",
+  "security": "token only via GitHub secret → x-automation-token header; never in YAML/logs/git; publishable apikey (public by design) added as platform header"
+}
