@@ -15,6 +15,7 @@ export interface NotificationRow {
   category: NotificationChannel
   is_read: boolean
   created_at: string
+  notification_type?: string | null
 }
 
 export interface NotificationPrefs {
@@ -59,9 +60,18 @@ export async function setNotificationPref(channel: NotificationChannel, enabled:
 export async function getMyNotifications(): Promise<NotificationRow[]> {
   const { data, error } = await supabase
     .from('notifications')
-    .select('id,title,message,category,is_read,created_at')
+    .select('id,title,message,category,is_read,created_at,notification_type')
     .order('created_at', { ascending: false })
     .limit(200)
   if (error) return []
   return (data ?? []) as NotificationRow[]
+}
+
+/**
+ * Mark one own notification as read — server-authoritative persistence
+ * (RLS own update via customers.user_id; local store is a cache only).
+ */
+export async function markNotificationRead(id: string): Promise<boolean> {
+  const { error } = await supabase.from('notifications').update({ is_read: true }).eq('id', id)
+  return !error
 }

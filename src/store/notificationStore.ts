@@ -26,6 +26,8 @@ const NOTIFICATION_TEMPLATES = {
 interface NotificationStore {
   notifications: Notification[]
   unreadCount: number
+  hydrateServerNotifications: (rows: Array<{ id: string; title: string; message: string; is_read: boolean; created_at: string; notification_type?: string | null }>) => void
+  markServerAsRead: (id: string) => Promise<void>
   addNotification: (notification: SimpleNotification) => void
   markAsRead: (id: string) => void
   markAllAsRead: () => void
@@ -40,6 +42,41 @@ interface NotificationStore {
 export const useNotificationStore = create<NotificationStore>((set, get) => ({
   notifications: [],
   unreadCount: 0,
+  /**
+   * W3-D — hydrate server-side (durable) notifications into the local cache.
+   * Server rows are canonical; deterministic server ids (`evt-*`/`auto-*`)
+   * keep the merge idempotent — re-hydration never duplicates entries.
+   */
+  hydrateServerNotifications: (rows) => {
+    if (!rows || rows.length === 0) return
+    set((state) => {
+      const existing = new Set(state.notifications.map((n) => n.id))
+      const mapped = rows
+        .filter((r) => !existing.has(r.id))
+        .map((r) => ({
+          id: r.id,
+          user_id: '',
+          title: r.title,
+          body: r.message,
+          type: (r.notification_type || 'order_update') as unknown as Notification['type'],
+          data: {},
+          channel: 'in_app' as const,
+          is_read: r.is_read,
+          sent_at: r.created_at,
+          created_at: r.created_at,
+          read_at: r.is_read ? r.created_at : undefined,
+        })) as unknown as Notification[]
+      const merged = [...mapped, ...state.notifications].slice(0, 50)
+      const unread = merged.filter((n) => !n.is_read).length
+      return { notifications: merged, unreadCount: unread }
+    })
+  },
+  /** Persist "read" server-side first; local cache follows the server result. */
+  markServerAsRead: async (id) => {
+    const { markNotificationRead } = await import('@/lib/notificationService')
+    const ok = await markNotificationRead(id)
+    if (ok) get().markAsRead(id)
+  },
   addNotification: (notification) => {
     const now = new Date().toISOString()
     const newNotification: Notification = {

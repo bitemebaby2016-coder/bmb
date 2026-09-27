@@ -26,11 +26,15 @@
 
 ## Status ตามคำสั่ง (แยก IMPLEMENTED→CONNECTED→DEPLOYED→RUNTIME VERIFIED)
 ```
-Facebook  = IMPLEMENTED + DEPLOYED + RUNTIME VERIFIED (foundation) · CONNECTED = BLOCKED (Meta config)
-Messenger = IMPLEMENTED + DEPLOYED + RUNTIME VERIFIED (foundation) · CONNECTED = BLOCKED (Meta config)
-Facebook Group = foundation PASS · real integration NOT STARTED
-W3-D      = NOT STARTED
+Facebook  = IMPLEMENTED + DEPLOYED + RUNTIME VERIFIED (foundation) · CONNECTED = DEFERRED BY OWNER
+Messenger = IMPLEMENTED + DEPLOYED + RUNTIME VERIFIED (foundation) · CONNECTED = DEFERRED BY OWNER
+Facebook Group = foundation PASS · real integration DEFERRED BY OWNER
+W3-D      = CORE PASS (2026-09-27 — ดู BMB_W3D_HANDOFF.md)
 ```
+
+> **UPDATE 2026-09-27**: Owner ตัดสินใจ DEFER Meta real connectivity — สถานะเปลี่ยนจาก
+> "BLOCKED (รอ Owner Meta config)" เป็น **"DEFERRED BY OWNER"** (ไม่ใช่ defect · ไม่ rollback ·
+> ไม่ mark PASS) — งานเดินต่อที่ W3-D/W3-E ที่ไม่ขึ้นกับ Meta ตาม execution order
 
 ## Owner Action Required (production connectivity — ห้าม paste secrets ใน chat)
 ตาม checklist §10 ของ BMB_W3C_EXTERNAL_EVIDENCE.md: Facebook App + Page + Meta APP_SECRET

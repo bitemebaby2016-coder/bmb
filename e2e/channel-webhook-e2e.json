@@ -1,5 +1,5 @@
 {
-  "date": "2026-09-27T12:37:53.653Z",
+  "date": "2026-09-27T13:33:23.550Z",
   "target": "https://ivkdfognyiwjcmrhcnwz.supabase.co/functions/v1/channel-webhook",
   "tests": [
     {
@@ -45,12 +45,12 @@
     {
       "name": "messenger-order-intake",
       "pass": true,
-      "detail": "status=200 channel=MESSENGER order=BMB-20260927-642 body={\"status\":200,\"body\":{\"order_number\":\"BMB-20260927-642\",\"duplicate\":false}}"
+      "detail": "status=200 channel=MESSENGER order=BMB-20260927-181 body={\"status\":200,\"body\":{\"order_number\":\"BMB-20260927-181\",\"duplicate\":false}}"
     },
     {
       "name": "messenger-order-row-tagged",
       "pass": true,
-      "detail": "rows=1 ref=msg-f14-mid-1790512673653"
+      "detail": "rows=1 ref=msg-f14-mid-1790516003549"
     },
     {
       "name": "duplicate-event-idempotent",

@@ -1,7 +1,8 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNotificationStore } from '@/store/notificationStore'
-import { useEffect } from 'react'
 import { Link } from 'react-router-dom'
+import { useAuthStore } from '@/store/authStore'
+import { getMyNotifications } from '@/lib/notificationService'
 
 const icons: Record<string, string> = {
   order_update: '📦',
@@ -15,20 +16,22 @@ export function NotificationDropdown() {
   const notifications = useNotificationStore((s) => s.notifications)
   const unreadCount = useNotificationStore((s) => s.unreadCount)
   const markAllAsRead = useNotificationStore((s) => s.markAllAsRead)
+  const hydrateServerNotifications = useNotificationStore((s) => s.hydrateServerNotifications)
+  const markServerAsRead = useNotificationStore((s) => s.markServerAsRead)
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
   const [open, setOpen] = useState(false)
+  const [hydrated, setHydrated] = useState(false)
 
   useEffect(() => {
     // ✅ GAP CLOSURE: Request browser notification permission on mount
     useNotificationStore.getState().requestBrowserPermission()
 
-    if (notifications.length === 0) {
-      useNotificationStore.getState().addNotification({
-        type: 'system' as any,
-        title: 'ยินดีต้อนรับ! 🎉',
-        body: 'ขอบคุณที่ใช้งาน Bite Me Baby มีคำถามถาม AI Assistant ของเราได้เลย',
-      })
+    // W3-D: hydrate durable server notifications once (RLS own rows only).
+    if (isAuthenticated && !hydrated) {
+      setHydrated(true)
+      getMyNotifications().then((rows) => hydrateServerNotifications(rows))
     }
-  }, [notifications.length])
+  }, [isAuthenticated, hydrated, hydrateServerNotifications])
 
   if (unreadCount === 0 && !open) return null
 
@@ -65,7 +68,12 @@ export function NotificationDropdown() {
               {notifications.slice(0, 10).map((n) => (
                 <button
                   key={n.id}
-                  onClick={() => !n.is_read && useNotificationStore.getState().markAsRead(n.id)}
+                  onClick={() => {
+                    if (n.is_read) return
+                    // Server-durable rows (evt-*/auto-*) persist "read" via RLS; local-only rows stay local.
+                    if (n.id.startsWith('evt-') || n.id.startsWith('auto-')) markServerAsRead(n.id)
+                    else useNotificationStore.getState().markAsRead(n.id)
+                  }}
                   className={`w-full text-left p-3 transition-colors ${
                     n.is_read ? 'bg-white hover:bg-gray-50' : 'bg-orange-50 hover:bg-orange-100'
                   }`}

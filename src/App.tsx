@@ -37,6 +37,7 @@ const AdminPreOrders = lazy(() => import('./pages/admin/AdminPreOrders').then(m 
 const AdminKitchen = lazy(() => import('./pages/admin/AdminKitchen').then(m => ({ default: m.AdminKitchen })))
 const AdminRecipes = lazy(() => import('./pages/admin/AdminRecipes').then(m => ({ default: m.AdminRecipes })))
 const AuditLogPage = lazy(() => import('./pages/admin/AuditLogPage').then(m => ({ default: m.AuditLogPage })))
+const AdminNotificationsPage = lazy(() => import('./pages/admin/AdminNotifications').then(m => ({ default: m.AdminNotificationsPage })))
 const DeliveryManagement = lazy(() => import('./pages/admin/DeliveryManagement').then(m => ({ default: m.DeliveryManagement })))
 const RouteOptimizationPage = lazy(() => import('./pages/admin/RouteOptimizationPage').then(m => ({ default: m.RouteOptimizationPage })))
 const AdminPromotions = lazy(() => import('./pages/admin/AdminPromotions').then(m => ({ default: m.AdminPromotions })))
@@ -193,6 +194,7 @@ export default function App() {
         <Route path="/admin/products" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminNav><AdminProducts /></AdminNav></Layout></AdminRoute></Suspense>} />
         <Route path="/admin/content-approvals" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminNav><AdminContentApprovals /></AdminNav></Layout></AdminRoute></Suspense>} />
         <Route path="/admin/audit-log" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminNav><AuditLogPage /></AdminNav></Layout></AdminRoute></Suspense>} />
+            <Route path="/admin/notifications" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminNav><AdminNotificationsPage /></AdminNav></Layout></AdminRoute></Suspense>} />
         <Route path="/admin/delivery" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminNav><DeliveryManagement /></AdminNav></Layout></AdminRoute></Suspense>} />
         <Route path="/admin/route-optimization" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminNav><RouteOptimizationPage /></AdminNav></Layout></AdminRoute></Suspense>} />
         <Route path="/admin/promotions" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminNav><AdminPromotions /></AdminNav></Layout></AdminRoute></Suspense>} />

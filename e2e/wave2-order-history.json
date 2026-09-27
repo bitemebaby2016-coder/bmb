@@ -1,19 +1,19 @@
 {
   "kind": "BMB_WAVE2_F05_ORDER_HISTORY",
-  "timestamp": "2026-09-27T12:38:06.501Z",
+  "timestamp": "2026-09-27T13:31:52.248Z",
   "env": "PRODUCTION-DB (test data only)",
   "commit": "wave2",
-  "test_order": "PO-20260928-222",
+  "test_order": "BMB-20260927-618",
   "checks": [
     {
       "name": "F05.initial_event_exists",
       "pass": true,
-      "detail": "rows=1 first={\"id\":\"osh-  1790512629214-d7a7702b\",\"order_number\":\"PO-20260928-222\",\"from_status\":null,\"to_status\":\"pending\",\"changed_at\":\"2026-09-27T12:37:09.205703+00:00\",\"actor_type\":\"CUSTOME"
+      "detail": "rows=1 first={\"id\":\"osh-  1790512601650-4c64f6b3\",\"order_number\":\"BMB-20260927-618\",\"from_status\":null,\"to_status\":\"pending\",\"changed_at\":\"2026-09-27T12:36:41.646421+00:00\",\"actor_type\":\"CUSTOM"
     },
     {
       "name": "F05.initial_event_shape",
       "pass": true,
-      "detail": "{\"id\":\"osh-  1790512629214-d7a7702b\",\"order_number\":\"PO-20260928-222\",\"from_status\":null,\"to_status\":\"pending\",\"changed_at\":\"2026-09-27T12:37:09.205703+00:00\",\"actor_type\":\"CUSTOME"
+      "detail": "{\"id\":\"osh-  1790512601650-4c64f6b3\",\"order_number\":\"BMB-20260927-618\",\"from_status\":null,\"to_status\":\"pending\",\"changed_at\":\"2026-09-27T12:36:41.646421+00:00\",\"actor_type\":\"CUSTOM"
     },
     {
       "name": "F05.legal_chain",

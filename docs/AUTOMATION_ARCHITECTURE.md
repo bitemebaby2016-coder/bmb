@@ -21,7 +21,7 @@ capacity / payment / refund / delivery fee / order state / financial settlement.
 
 ## Implementation ปัจจุบัน (native, ไม่มี schema ใหม่)
 - `supabase/functions/automation-worker` — native back-office worker
-  - Jobs: `orders_stale_pending`, `inventory_low_stock`
+  - Jobs: `orders_stale_pending`, `inventory_low_stock`, `notification_dispatch` (W3-D — canonical event → durable in_app notification; deterministic id `evt-ord-*`/`evt-drv-*`; recipient = customers.id resolved จาก customers.user_id; เคารพ notification_prefs; evidence: BMB_W3D_NOTIFICATIONS_EVIDENCE.md)
   - Auth: verify_jwt + shared `x-automation-token` (Supabase secret)
   - Durable idempotency: `event_id` → `audit_logs` (`action=automation.execution`,
     `id=auto-exec-<event_id>`) — ONE logical event → ONE logical side effect

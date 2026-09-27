@@ -1,6 +1,9 @@
 # BMB_W3C_HANDOFF.md
 **Wave 3-C — Omnichannel · วันที่: 2026-09-27 · CORE = PASS / F-14 = RESOLVED (CORE) · HARD STOP**
 
+> **UPDATE 2026-09-27**: Facebook/Messenger real connectivity = **DEFERRED BY OWNER** (เดิม: BLOCKED รอ Owner Meta config) — รายละเอียดใน `BMB_W3C_EXTERNAL_HANDOFF.md` · W3-D Notifications = CORE PASS (ดู `BMB_W3D_HANDOFF.md`)
+
+
 ## Production State
 - Supabase: canonical intake RPCs (`create_order_with_items`, `create_pre_order_with_items`)
   + RLS deny-by-default สำหรับ direct DB insert (runtime: 403/401) + automation-worker (W3-B)
