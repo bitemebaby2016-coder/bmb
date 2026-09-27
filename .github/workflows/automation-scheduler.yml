@@ -1,0 +1,112 @@
+﻿# ============================================
+# BMB â€” automation-scheduler (W3-E-1)
+#
+# External HTTP scheduler for the native BMB automation-worker.
+# Architecture (unchanged, per Owner approval):
+#   Supabase = Source of Truth Â· automation-worker = the ONLY worker Â·
+#   HTTP + x-automation-token = invocation Â· DB deterministic-id = idempotency authority
+#
+# NOTE: GitHub Actions schedule is BEST-EFFORT â€” runs may be delayed under
+# load. Do NOT treat 5 minutes as an exact SLA.
+#
+# Concurrency: queued (never cancels an in-flight execution).
+# Failure behavior: job FAILS if any worker call is non-succeeded or
+# non-HTTP-200 â€” visible in Actions run history. The token is never echoed.
+# ============================================
+
+name: automation-scheduler
+
+on:
+  schedule:
+    # every 5 minutes â€” canonical-event notifications + stale orders
+    - cron: '*/5 * * * *'
+    # hourly (offset from top-of-hour to reduce GitHub top-of-hour congestion)
+    - cron: '7 * * * *'
+  workflow_dispatch:
+    inputs:
+      job:
+        description: 'Which worker call to run (all | dispatch | stale | stock)'
+        required: false
+        default: 'all'
+
+concurrency:
+  group: bmb-automation
+  cancel-in-progress: false
+
+permissions: {}
+
+jobs:
+  every-5-minutes:
+    if: github.event_name == 'schedule' && github.event.schedule == '*/5 * * * *' || github.event_name == 'workflow_dispatch' && (github.event.inputs.job == 'all' || github.event.inputs.job == 'dispatch' || github.event.inputs.job == 'stale')
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: notification_dispatch
+        env:
+          WORKER_URL: https://ivkdfognyiwjcmrhcnwz.supabase.co/functions/v1/automation-worker
+          TOKEN: ${{ secrets.AUTOMATION_TOKEN }}
+        run: |
+          EV="gh-dispatch-$(date -u +%Y%m%dT%H%M)"
+          RESP=$(curl -sS -f -X POST "$WORKER_URL" \
+            -H "Content-Type: application/json" \
+            -H "x-automation-token: $TOKEN" \
+            -d "{\"job\":\"notification_dispatch\",\"eventId\":\"$EV\",\"lookbackMinutes\":360,\"limit\":200}") || {
+            echo "::error::notification_dispatch HTTP call failed"; exit 1; }
+          echo "$RESP" | node -e '
+            let s=""; process.stdin.on("data",d=>s+=d).on("end",()=>{
+              try { const j=JSON.parse(s);
+                if (!(j.duplicate === true) && j.status !== "succeeded" && j.status !== "partial") {
+                  console.error("::error::notification_dispatch worker status=" + j.status + " errors=" + JSON.stringify(j.errors||[]));
+                  process.exit(1);
+                }
+                console.log("notification_dispatch " + j.status + " created=" + ((j.results.notification_dispatch||{}).created||[]).length + " duplicate=" + ((j.results.notification_dispatch||{}).duplicate||[]).length);
+              } catch(e) { console.error("::error::invalid worker response"); process.exit(1); }
+            })'
+      - name: orders_stale_pending
+        env:
+          WORKER_URL: https://ivkdfognyiwjcmrhcnwz.supabase.co/functions/v1/automation-worker
+          TOKEN: ${{ secrets.AUTOMATION_TOKEN }}
+        run: |
+          EV="gh-stale-$(date -u +%Y%m%dT%H%M)"
+          RESP=$(curl -sS -f -X POST "$WORKER_URL" \
+            -H "Content-Type: application/json" \
+            -H "x-automation-token: $TOKEN" \
+            -d "{\"job\":\"orders_stale_pending\",\"eventId\":\"$EV\",\"maxAgeMinutes\":120}") || {
+            echo "::error::orders_stale_pending HTTP call failed"; exit 1; }
+          echo "$RESP" | node -e '
+            let s=""; process.stdin.on("data",d=>s+=d).on("end",()=>{
+              try { const j=JSON.parse(s);
+                if (!(j.duplicate === true) && j.status !== "succeeded" && j.status !== "partial") {
+                  console.error("::error::orders_stale_pending worker status=" + j.status + " errors=" + JSON.stringify(j.errors||[]));
+                  process.exit(1);
+                }
+                console.log("orders_stale_pending " + j.status);
+              } catch(e) { console.error("::error::invalid worker response"); process.exit(1); }
+            })'
+
+  hourly-low-stock:
+    if: github.event_name == 'schedule' && github.event.schedule == '7 * * * *' || github.event_name == 'workflow_dispatch' && github.event.inputs.job == 'stock'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: inventory_low_stock
+        env:
+          WORKER_URL: https://ivkdfognyiwjcmrhcnwz.supabase.co/functions/v1/automation-worker
+          TOKEN: ${{ secrets.AUTOMATION_TOKEN }}
+        run: |
+          EV="gh-stock-$(date -u +%Y%m%dT%H)"
+          RESP=$(curl -sS -f -X POST "$WORKER_URL" \
+            -H "Content-Type: application/json" \
+            -H "x-automation-token: $TOKEN" \
+            -d "{\"job\":\"inventory_low_stock\",\"eventId\":\"$EV\",\"stockThreshold\":3}") || {
+            echo "::error::inventory_low_stock HTTP call failed"; exit 1; }
+          echo "$RESP" | node -e '
+            let s=""; process.stdin.on("data",d=>s+=d).on("end",()=>{
+              try { const j=JSON.parse(s);
+                if (!(j.duplicate === true) && j.status !== "succeeded" && j.status !== "partial") {
+                  console.error("::error::inventory_low_stock worker status=" + j.status + " errors=" + JSON.stringify(j.errors||[]));
+                  process.exit(1);
+                }
+                console.log("inventory_low_stock " + j.status);
+              } catch(e) { console.error("::error::invalid worker response"); process.exit(1); }
+            })'
