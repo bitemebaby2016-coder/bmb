@@ -1,0 +1,147 @@
+{
+  "timestamp": "2026-09-27T05:53:57.612Z",
+  "checks": [
+    {
+      "name": "A.login",
+      "pass": true,
+      "detail": "signed in with dedicated test admin (Supabase Auth)"
+    },
+    {
+      "name": "B.goto_admin_after_login",
+      "pass": true,
+      "detail": "http://localhost:4212/admin"
+    },
+    {
+      "name": "B.reload_admin_stays",
+      "pass": true,
+      "detail": "http://localhost:4212/admin"
+    },
+    {
+      "name": "C.deep_link /admin",
+      "pass": true,
+      "detail": "http://localhost:4212/admin"
+    },
+    {
+      "name": "C.deep_link /admin/orders",
+      "pass": true,
+      "detail": "http://localhost:4212/admin/orders"
+    },
+    {
+      "name": "C.deep_link /admin/products",
+      "pass": true,
+      "detail": "http://localhost:4212/admin/products"
+    },
+    {
+      "name": "C.deep_link /admin/pre-orders",
+      "pass": false,
+      "detail": "http://localhost:4212/"
+    },
+    {
+      "name": "C.deep_link /admin/kitchen",
+      "pass": false,
+      "detail": "http://localhost:4212/"
+    },
+    {
+      "name": "C.deep_link /admin/recipes",
+      "pass": false,
+      "detail": "http://localhost:4212/"
+    },
+    {
+      "name": "C.deep_link /admin/content-approvals",
+      "pass": true,
+      "detail": "http://localhost:4212/admin/content-approvals"
+    },
+    {
+      "name": "C.deep_link /admin/rounds",
+      "pass": true,
+      "detail": "http://localhost:4212/admin/rounds"
+    },
+    {
+      "name": "C.deep_link /admin/promotions",
+      "pass": true,
+      "detail": "http://localhost:4212/admin/promotions"
+    },
+    {
+      "name": "C.deep_link /admin/customers",
+      "pass": true,
+      "detail": "http://localhost:4212/admin/customers"
+    },
+    {
+      "name": "C.deep_link /admin/inventory",
+      "pass": true,
+      "detail": "http://localhost:4212/admin/inventory"
+    },
+    {
+      "name": "C.deep_link /admin/delivery",
+      "pass": true,
+      "detail": "http://localhost:4212/admin/delivery"
+    },
+    {
+      "name": "C.deep_link /admin/audit-log",
+      "pass": true,
+      "detail": "http://localhost:4212/admin/audit-log"
+    },
+    {
+      "name": "C.deep_link /admin/route-optimization",
+      "pass": true,
+      "detail": "http://localhost:4212/admin/route-optimization"
+    },
+    {
+      "name": "C.deep_link /admin/errors",
+      "pass": true,
+      "detail": "http://localhost:4212/admin/errors"
+    },
+    {
+      "name": "C.deep_link /admin/media",
+      "pass": true,
+      "detail": "http://localhost:4212/admin/media"
+    },
+    {
+      "name": "C.deep_link /admin/settings",
+      "pass": true,
+      "detail": "http://localhost:4212/admin/settings"
+    },
+    {
+      "name": "C.deep_link /admin/mascot",
+      "pass": true,
+      "detail": "http://localhost:4212/admin/mascot"
+    },
+    {
+      "name": "C.deep_link /admin/control",
+      "pass": true,
+      "detail": "http://localhost:4212/admin/control"
+    },
+    {
+      "name": "E.persist_orders_reload",
+      "pass": true,
+      "detail": "http://localhost:4212/admin/orders"
+    },
+    {
+      "name": "E.persist_settings_reload",
+      "pass": true,
+      "detail": "http://localhost:4212/admin/settings"
+    },
+    {
+      "name": "F.logout_blocks_admin",
+      "pass": true,
+      "detail": "http://localhost:4212/login"
+    },
+    {
+      "name": "F.logout_survives_reload",
+      "pass": true,
+      "detail": "http://localhost:4212/login"
+    },
+    {
+      "name": "D.unauthorized_redirect_login",
+      "pass": true,
+      "detail": "http://localhost:4212/login"
+    },
+    {
+      "name": "D.unauthorized_deep_link",
+      "pass": true,
+      "detail": "http://localhost:4212/login"
+    }
+  ],
+  "passCount": 25,
+  "total": 28
+}

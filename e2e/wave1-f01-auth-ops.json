@@ -1,0 +1,33 @@
+{
+  "timestamp": "2026-09-27T05:43:41.453Z",
+  "steps": [
+    {
+      "step": "find_public_user",
+      "found": false,
+      "id": null
+    },
+    {
+      "step": "generate_test_admin_password",
+      "storedIn": "supabase/secrets.local.env (gitignored)"
+    },
+    {
+      "step": "create_test_admin",
+      "status": 200,
+      "id": "29eea405-ec06-4b63-b773-1facdb09ed4a"
+    },
+    {
+      "step": "set_profile_role_admin",
+      "status": 204
+    },
+    {
+      "step": "verify_public_login_revoked",
+      "status": 400,
+      "error": "Invalid login credentials"
+    },
+    {
+      "step": "verify_test_admin_login",
+      "status": 200,
+      "ok": true
+    }
+  ]
+}

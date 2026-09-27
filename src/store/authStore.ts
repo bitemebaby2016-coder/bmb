@@ -73,16 +73,27 @@ function mapUserToCustomer(user: {
 }
 
 // Get current profile role (RLS จะคัดเฉพาะของตัวเอง/ที่อนุญาต)
+// F-02 FIX (Wave 1): production บางตารางไม่มี table-level GRANT SELECT ให้
+// authenticated (เช่น profiles) → direct select ตอบ 42501 แม้จะมี RLS policy
+// fallback ที่ 1: RPC `is_admin()` (SECURITY DEFINER อ่าน profiles.role —
+// ใช้งานได้จริงบน production, DB ยังเป็น authority) แล้ว map true → 'admin'
 export async function fetchProfileRole(): Promise<string | null> {
   const { data: { session } } = await supabase.auth.getSession()
   const uid = session?.user?.id
   if (!uid) return null
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from('profiles')
     .select('role')
     .eq('id', uid)
     .maybeSingle()
-  return (data?.role as string | null) ?? null
+  if (!error) return (data?.role as string | null) ?? null
+  try {
+    const { data: isAdmin, error: rpcError } = await supabase.rpc('is_admin')
+    if (!rpcError && isAdmin === true) return 'admin'
+  } catch {
+    /* fallthrough */
+  }
+  return null
 }
 
 /**
