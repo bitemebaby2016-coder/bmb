@@ -66,25 +66,10 @@ export async function isAdmin(): Promise<boolean> {
 }
 
 // ============================================
-// Helper: Realtime subscription helper
+// Realtime: intentionally absent from the app.
+// The bundle stubs @supabase/realtime-js (see vite.config.ts +
+// src/lib/stubs/realtimeStub.ts). Freshness is provided by
+// READ-ONLY polling (OrderTrack / PaymentConfirmation / AdminErrors).
+// The former subscribeToTable/unsubscribeFromChannel helpers were
+// removed in W4-C (0 production callers — dead code).
 // ============================================
-export function subscribeToTable(
-  tableName: string,
-  callback: (payload: any) => void,
-  event: '*'|'INSERT'|'UPDATE'|'DELETE' = '*'
-) {
-  const channel = supabase
-    .channel(`table-${tableName}`)
-    .on(
-      'postgres_changes',
-      { event, schema: 'public', table: tableName },
-      callback
-    )
-    .subscribe()
-
-  return channel
-}
-
-export function unsubscribeFromChannel(channel: any) {
-  supabase.removeChannel(channel)
-}

@@ -18,8 +18,6 @@ vi.mock('@/lib/supabase', async () => {
     supabaseAdmin: null,
     getCurrentUser: async () => null,
     isAdmin: async () => false,
-    subscribeToTable: () => ({ unsubscribe: vi.fn() }),
-    unsubscribeFromChannel: () => {},
     default: null,
   }
 })

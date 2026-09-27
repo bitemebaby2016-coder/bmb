@@ -1,5 +1,5 @@
 # BMB_W4C_REALTIME_AUDIT.md
-**W4-C — Realtime Stub Audit · วันที่: 2026-09-27 · AUDIT ONLY (ไม่มี implement) · Authority: Production runtime > Code > Deployment state > Docs**
+**W4-C — Realtime Stub Audit + Dead-Code Cleanup · วันที่: 2026-09-27 · AUDIT COMPLETE → CLEANUP EXECUTED (OWNER-APPROVED) · Authority: Production runtime > Code > Deployment state > Docs**
 
 ## คำตอบข้อถามหลัก
 
@@ -66,3 +66,27 @@ OWNER DECISION   = 1
 - การเปิด realtime จริงในอนาคตต้อง: add table เข้า publication (= DB change → ต้องอนุมัติแยก) + ลบ alias + RLS-aware policies → เกิน scope W4
 
 **HARD STOP — รอ Owner decision ก่อน W4-D**
+
+## W4-C CLEANUP GATE — CLOSED (OWNER-APPROVED EXECUTION)
+
+```text
+Realtime Stub = KEEP (ห้ามลบ — bundle protection ~100KB)
+Dead-code helpers = REMOVED (subscribeToTable + unsubscribeFromChannel จาก
+  src/lib/supabase.ts · แก้ 3 test mocks: api/canonicalOrderFlow/paymentStateMachine)
+Subscriptions = 0
+Polling = PRIMARY (PWA + Admin — ไม่ถูกเปลี่ยน)
+No realtime business requirement = VERIFIED
+```
+
+**Pre-delete re-verification**: git grep ทั้ง repo — refs มีเพียง definition + 3 mocks +
+stub comment + docs = **0 production callers** ✓
+
+**Quality Gate**:
+- tsc --noEmit: 0 · vitest: 22 files / **179 passed** (previous 179 → current 179 —
+  unchanged; mock 2 บรรทัดถูกลบแต่ไม่มี test ที่เรียกใช้จริง · unique files 22, unique tests 179)
+- eslint --quiet: 0 · build ✓ 3.36s
+- secret scan: repo-tracked files CLEAN (129 hits ทั้งหมดอยู่ใน `src/.kilo/worktrees/`
+  = local tool worktree **gitignored, 0 tracked files** — ไม่ได้ commit; dist: 0)
+- Regression: PWA/Admin polling, scheduler, notifications, automation-worker — ไม่มี code change ใน paths เหล่านั้น ✓
+
+---
