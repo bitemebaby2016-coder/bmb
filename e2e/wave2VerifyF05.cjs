@@ -100,5 +100,3 @@ async function main() {
 
 main().catch((e) => { console.error('FATAL', e.message); process.exit(1) })
 
-    'dup=' + dup.status + ' rows=' + afterDup.rows.length)
-
