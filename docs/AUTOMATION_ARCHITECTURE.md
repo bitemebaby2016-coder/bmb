@@ -37,6 +37,10 @@ capacity / payment / refund / delivery fee / order state / financial settlement.
 Worker ยังไม่มี scheduler ผูกใน production. ตัวเลือก: pg_cron extension เรียก EF ทุกชั่วโมง,
 หรือ external trigger (owner cron). การ enable pg_cron = DB change → ต้องผ่าน Owner.
 
-## F-14 dependency (BLOCKED)
-Channel ingestion (source_channel / external_ref_id / idempotency) = F-14 Owner-controlled
-schema scope — ยังไม่ implement จนกว่า Owner sign-off migration.
+## F-14 dependency (BLOCKED → **RESOLVED (CORE) 2026-09-27**)
+- F-14 schema implemented: `orders.source_channel` / `orders.external_ref_id` (nullable) +
+  UNIQUE `(source_channel, external_ref_id)` WHERE external_ref_id IS NOT NULL + single-signature
+  `create_order_with_items` (16-param, additive) + stamp trigger — runtime-verified 16/16
+  (`e2e/f14-channel-intake-e2e.json`) · ดู `BMB_F14_OMNICHANNEL_SCHEMA_EVIDENCE.md`
+- คงเหลือ BLOCKED: **identity table** `customer_channel_identities` (design ครบใน F-14 evidence
+  §14 — รอ Owner authorization) · external channel production integration (webhook verify ต้องมาก่อน)

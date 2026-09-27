@@ -65,7 +65,13 @@
   migration impact: additive table; security impact: ต้อง design ควบคู่ webhook verification ·
   **ไม่สร้าง identity model ใหม่เอง** — รอ Owner
 
-## 10. F-14 Dependency (W3-C-2) — **F-14 = BLOCKED (ไม่ implement)**
+## 10. F-14 Dependency (W3-C-2) — **RESOLVED (CORE) — 2026-09-27** (เดิม = BLOCKED)
+- Owner อนุมัติ F-14 implementation แล้ว → schema live บน production (migrations 043/044/045) —
+  ดู `BMB_F14_OMNICHANNEL_SCHEMA_EVIDENCE.md` (E2E 16/16) และ `BMB_F14_HANDOFF.md`
+- FACEBOOK / FACEBOOK_GROUP / MESSENGER schema intake simulation = PASS ผ่าน canonical contract
+  (source_channel + external_ref_id + duplicate guard runtime-verified)
+- คง BLOCKED: identity table `customer_channel_identities` (รอ Owner) + production webhook
+  integration (ต้องมี identity + webhook signature verification ก่อน)
 Requirement จาก production schema จริง (ตอบ 10 ข้อ):
 1. **ขาด**: `orders.source_channel` (text, default), `orders.external_ref_id` (text nullable)
 2. **Contract**: `create_order_with_items` ต้องเพิ่ม optional `p_source_channel`/`p_external_ref_id`
@@ -81,7 +87,9 @@ Requirement จาก production schema จริง (ตอบ 10 ข้อ):
 9. **Security impact**: unique index = durable duplicate guard; adapter ต้องมี webhook signature
    verification ก่อนเรียก RPC
 10. **Test impact**: เพิ่ม duplicate-event/same-ref tests ได้ (ต่อยอด w3c probe)
-→ **STOP เฉพาะ F-14 implementation** (รอ Owner Gate) · ส่วน W3-C อื่นทำต่อเสร็จแล้ว
+→ (อัปเดต 2026-09-27) Owner อนุมัติแล้ว → implemented: migrations 043/044/045 —
+  duplicate guard + channel intake runtime-verified 16/16 (`e2e/f14-channel-intake-e2e.json`)
+  · รายละเอียดปัจจุบัน: `BMB_F14_OMNICHANNEL_SCHEMA_EVIDENCE.md`
 
 ## 11. Idempotency (W3-C-4)
 - พิสูจน์ runtime ที่มีอยู่: transition ซ้ำ (same-state) → idempotent, ไม่เกิด side effect ใหม่
@@ -166,17 +174,18 @@ Requirement จาก production schema จริง (ตอบ 10 ข้อ):
 ## 22. Final Verdict (แยกตามคำสั่ง)
 ```
 W3-C CORE            = PASS   (canonical intake + Order Hub + automation handoff runtime-verified)
-F-14                 = BLOCKED (schema requirement รอ Owner Gate — ไม่ได้ implement)
+F-14                 = RESOLVED (CORE) — 2026-09-27: migrations 043/044/045 + E2E 16/16
+                       (เดิม = BLOCKED; คงเหลือ identity table = BLOCKED รอ Owner)
 Channel PWA          = PASS
 Channel MANUAL       = PASS
-Channel FACEBOOK     = NOT IMPLEMENTED (F-14 BLOCKED)
-Channel FACEBOOK_GROUP = NOT IMPLEMENTED (F-14 BLOCKED)
-Channel MESSENGER    = NOT IMPLEMENTED (F-14 BLOCKED)
+Channel FACEBOOK     = SCHEMA INTAKE PASS (canonical contract) — production webhook integration ยังไม่เปิด
+Channel FACEBOOK_GROUP = SCHEMA INTAKE PASS (canonical contract) — production webhook integration ยังไม่เปิด
+Channel MESSENGER    = SCHEMA INTAKE PASS (canonical contract) — production webhook integration ยังไม่เปิด
 Channel LINE/TikTok/Google/QR/Direct = NOT IMPLEMENTED (ไม่มี Owner requirement)
 Security             = PASS (RLS enforce intake; ไม่มี secret exposure)
-E2E                  = PASS (12/12, TEST DATA ONLY)
+E2E                  = PASS (12/12 + F-14 16/16, TEST DATA ONLY)
 Quality Gate         = PASS
 ```
-**ห้ามสรุปเป็น "W3-C = PASS" เพราะ F-14 และ external channels ยัง BLOCKED**
+**ห้ามสรุปเป็น "W3-C = PASS" เพราะ identity table + production webhook integration ยัง BLOCKED**
 
 

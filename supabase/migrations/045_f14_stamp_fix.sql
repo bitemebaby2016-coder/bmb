@@ -1,0 +1,148 @@
+-- ============================================
+-- Bite Me Baby — Migration 045: F-14 wrapper stamp fix
+-- Bug: wrapper's UPDATE overwrote the trigger-stamped source_channel with NULL
+-- on legacy (no-channel) calls. Fix: only tag when channel/ref provided —
+-- leave trigger stamp (PWA/MANUAL) intact otherwise.
+-- ============================================
+
+BEGIN;
+
+CREATE OR REPLACE FUNCTION public.create_order_with_items(
+  p_items jsonb,
+  p_delivery_round_id text,
+  p_delivery_method text DEFAULT 'self_delivery',
+  p_delivery_address text DEFAULT '',
+  p_dropoff_latitude numeric DEFAULT NULL,
+  p_dropoff_longitude numeric DEFAULT NULL,
+  p_customer_name text DEFAULT '',
+  p_customer_phone text DEFAULT '',
+  p_payment_method text DEFAULT 'promptpay_qr',
+  p_special_instructions text DEFAULT '',
+  p_promotion_code text DEFAULT NULL,
+  p_distance_km numeric DEFAULT 0,
+  p_order_mode text DEFAULT 'SAME_DAY',
+  p_scheduled_date date DEFAULT NULL,
+  p_source_channel text DEFAULT NULL,
+  p_external_ref_id text DEFAULT NULL
+)
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $function$
+DECLARE
+  v_result        jsonb;
+  v_order_number  text;
+  v_order_id      text;
+  v_channel       text;
+  v_ext_ref       text;
+  v_existing      record;
+BEGIN
+  IF auth.uid() IS NULL THEN
+    RAISE EXCEPTION 'ERR_NOT_AUTHENTICATED';
+  END IF;
+
+  v_channel := NULLIF(trim(COALESCE(p_source_channel, '')), '');
+  IF v_channel IS NOT NULL THEN
+    v_channel := upper(v_channel);
+    IF v_channel !~ '^[A-Z][A-Z0-9_]{2,31}$' THEN
+      RAISE EXCEPTION 'ERR_INVALID_SOURCE_CHANNEL';
+    END IF;
+  END IF;
+  v_ext_ref := NULLIF(trim(COALESCE(p_external_ref_id, '')), '');
+  IF v_ext_ref IS NOT NULL AND length(v_ext_ref) > 128 THEN
+    RAISE EXCEPTION 'ERR_INVALID_EXTERNAL_REF';
+  END IF;
+
+  IF v_ext_ref IS NOT NULL THEN
+    SELECT order_number, id INTO v_existing
+      FROM public.orders
+     WHERE source_channel = v_channel
+       AND external_ref_id = v_ext_ref
+     LIMIT 1;
+    IF v_existing IS NOT NULL THEN
+      RETURN jsonb_build_object(
+        'id', v_existing.id,
+        'order_number', v_existing.order_number,
+        'duplicate', true,
+        'source_channel', v_channel,
+        'external_ref_id', v_ext_ref
+      );
+    END IF;
+  END IF;
+
+  v_result := public.create_order_with_items_core(
+    p_items := p_items,
+    p_delivery_round_id := p_delivery_round_id,
+    p_delivery_method := p_delivery_method,
+    p_delivery_address := p_delivery_address,
+    p_dropoff_latitude := p_dropoff_latitude,
+    p_dropoff_longitude := p_dropoff_longitude,
+    p_customer_name := p_customer_name,
+    p_customer_phone := p_customer_phone,
+    p_payment_method := p_payment_method,
+    p_special_instructions := p_special_instructions,
+    p_promotion_code := p_promotion_code,
+    p_distance_km := p_distance_km,
+    p_order_mode := p_order_mode,
+    p_scheduled_date := p_scheduled_date
+  );
+
+  v_order_number := v_result->>'order_number';
+  v_order_id     := v_result->>'id';
+
+  -- FIX (045): only tag when channel/ref provided — never overwrite the
+  -- trigger-stamped PWA/MANUAL value with NULL on legacy calls.
+  IF v_channel IS NOT NULL OR v_ext_ref IS NOT NULL THEN
+    BEGIN
+      UPDATE public.orders
+         SET source_channel = v_channel,
+             external_ref_id = v_ext_ref
+       WHERE order_number = v_order_number;
+    EXCEPTION
+      WHEN unique_violation THEN
+        SELECT order_number, id INTO v_existing
+          FROM public.orders
+         WHERE source_channel = v_channel
+           AND external_ref_id = v_ext_ref
+         LIMIT 1;
+        DELETE FROM public.orders
+         WHERE order_number = v_order_number
+           AND customer_ref = auth.uid()
+           AND (v_ext_ref IS NULL OR external_ref_id = v_ext_ref);
+        RETURN jsonb_build_object(
+          'id', v_existing.id,
+          'order_number', v_existing.order_number,
+          'duplicate', true,
+          'source_channel', v_channel,
+          'external_ref_id', v_ext_ref
+        );
+    END;
+  END IF;
+
+  PERFORM public.append_audit_log(
+    p_action := 'order_created',
+    p_entity_type := 'order',
+    p_entity_id := v_order_number,
+    p_description := 'canonical order created (channel-tagged)',
+    p_metadata := jsonb_build_object(
+      'source_channel', v_channel,
+      'external_ref_id', v_ext_ref,
+      'order_mode', v_result->>'order_mode',
+      'total', v_result->>'total_amount'
+    )
+  );
+
+  RETURN v_result || jsonb_build_object(
+    'source_channel', v_channel,
+    'external_ref_id', v_ext_ref,
+    'duplicate', false
+  );
+END;
+$function$;
+
+GRANT EXECUTE ON FUNCTION public.create_order_with_items(
+  jsonb, text, text, text, numeric, numeric, text, text, text, text, text, numeric, text, date, text, text
+) TO authenticated;
+
+COMMIT;
