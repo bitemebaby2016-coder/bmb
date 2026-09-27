@@ -14,9 +14,14 @@
 ## Production evidence
 - `e2e/wave2-order-history.json` · `e2e/wave2-driver-security.json` · `e2e/wave2-rls.json`
 - `e2e/wave2-setup.json` (provisioning) · `BMB_WAVE_2_PRODUCTION_APPLY_EVIDENCE.md`
-- Cloudflare deployment ปัจจุบัน = `c6a4014` (ยังไม่รวม Wave 2 client — dist ใหม่ถูก
-  build แล้วแต่ **ยังไม่ได้ deploy**; deploy จะทำเมื่อ Owner สั่ง หรือในขั้นตอนถัดไปของ
-  งาน deploy ครั้งถัดไป เพราะ F-06 RiderPWA จะมีผลกับ UI ทันทีเมื่อ deploy)
+- Cloudflare production deployment ยืนยันจาก runtime (2026-09-27, W3-0 Reality
+  Reconciliation): production คือ build จาก `84fbd75` — asset fingerprint match 6/6
+  (index-DphkYgGq.js / rolldown-runtime-hePW80VL.js / react-vendor-DK_VtTwx.js /
+  state-vendor-Brj8_dxs.js / supabase-vendor-OACgMRo1.js / index-vxWXmwip.css) และ
+  SHA256 ตรง local build จาก 84fbd75 ทุกไฟล์ที่สุ่มตรวจ · ข้อความเดิมที่ระบุ
+  `c6a4014` = เก่าแล้ว (ข้อมูลจาก Wave 1 deployment `42809703` — ถูก overwrite ด้วย
+  deployment ใหม่ก่อน Wave 2 gate) · **Wave 2 client (RiderPWA) deploy แล้ว — ไม่มี
+  DEPLOYMENT GAP**
 
 ## Commits (Wave 2)
 2530eba (F-05) · d289706 + c0f2f09 (F-06 migration) · 68f1419 (F-06 client) ·

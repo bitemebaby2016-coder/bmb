@@ -16,6 +16,9 @@
 
 const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions'
 
+/** Well-known non-JWT bearer values that must never pass as auth. */
+const ANON_KEY_FALLBACKS = ['anon', 'service_role']
+
 function corsHeaders(): Record<string, string> {
   return {
     'Access-Control-Allow-Origin': '*',
@@ -50,6 +53,21 @@ interface ChatMessage {
 Deno.serve(async (req: Request): Promise<Response> => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders() })
   if (req.method !== 'POST') return json({ error: 'method not allowed' }, 405)
+
+  // W3-A hardening (defense-in-depth): verify the caller's JWT server-side.
+  // The platform-level verify_jwt was not enforced at deploy time (runtime probe
+  // evidence: anon caller got HTTP 200), so the function must reject anonymous
+  // callers itself — otherwise it would be an unrestricted AI relay on the
+  // server-side OpenRouter key.
+  const token = (req.headers.get('Authorization') || '').replace(/^Bearer\s+/, '')
+  if (!token || token === ANON_KEY_FALLBACKS[0] || token.startsWith('sb_publishable_')) {
+    return json({ error: 'unauthorized' }, 401)
+  }
+  const authCheck = await fetch(`${Deno.env.get('SUPABASE_URL') || ''}/auth/v1/user`, {
+    headers: { Authorization: `Bearer ${token}`, apikey: Deno.env.get('SUPABASE_ANON_KEY') || '' },
+  }).catch(() => null)
+  if (!authCheck || !authCheck.ok) return json({ error: 'unauthorized' }, 401)
+
 
   const apiKey = Deno.env.get('OPENROUTER_API_KEY') || ''
   if (!apiKey) return json({ error: 'AI proxy not configured (OPENROUTER_API_KEY missing)' }, 500)

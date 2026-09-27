@@ -1,0 +1,64 @@
+{
+  "date": "2026-09-27T08:07:44.362Z",
+  "target": "https://ivkdfognyiwjcmrhcnwz.supabase.co/functions/v1/ai-proxy",
+  "tests": [
+    {
+      "name": "login-test-admin",
+      "pass": true,
+      "detail": "JWT obtained (value not recorded)"
+    },
+    {
+      "name": "unauthenticated-rejected",
+      "pass": true,
+      "detail": "status=401"
+    },
+    {
+      "name": "anon-key-not-enough",
+      "pass": true,
+      "detail": "status=401"
+    },
+    {
+      "name": "cors-preflight",
+      "pass": true,
+      "detail": "status=200 aca=*"
+    },
+    {
+      "name": "malformed-json-400",
+      "pass": true,
+      "detail": "status=400 body={\"error\":\"invalid json\"}"
+    },
+    {
+      "name": "empty-messages-400",
+      "pass": true,
+      "detail": "status=400 body={\"error\":\"no messages\"}"
+    },
+    {
+      "name": "get-method-405",
+      "pass": true,
+      "detail": "status=405"
+    },
+    {
+      "name": "valid-request-ai-response",
+      "pass": true,
+      "detail": "status=200 contract=id,object,created,model,provider,system_fingerprint,service_tier,choices,usage"
+    },
+    {
+      "name": "guardrail-server-side-no-secret-echo",
+      "pass": true,
+      "detail": "status=200"
+    },
+    {
+      "name": "provider-error-handled-no-key-leak",
+      "pass": true,
+      "detail": "status=502 upstream=400"
+    },
+    {
+      "name": "no-secret-leak-all-responses",
+      "pass": true,
+      "detail": "responses-scan=9 leaks=0"
+    }
+  ],
+  "pass": true,
+  "pass_count": 11,
+  "total": 11
+}
