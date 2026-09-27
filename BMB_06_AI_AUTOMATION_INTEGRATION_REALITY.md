@@ -1,4 +1,11 @@
 # BMB_06_AI_AUTOMATION_INTEGRATION_REALITY.md
+
+> ⚠️ **OWNER CORRECTION (2026-09-27, W3-B):** ข้อความใด ๆ ในเอกสารนี้ที่อ่านแล้วเข้าใจว่า
+> "Make.com เป็น automation engine / dependency ของ BMB" = **INVALID ASSUMPTION**
+> (ตาม Owner Decision ในคำสั่ง W3-B Native Automation) · ตารางด้านล่างที่ระบุ
+> "Make.com = MISSING" ยังเป็นความจริงทาง code แต่ **MISSING ไม่ใช่ GAP ที่ต้องแก้ด้วย
+> Make.com** — Automation ของ BMB = Native (Supabase Edge Functions + DB) เท่านั้น
+> ดู `BMB_W3B_NATIVE_AUTOMATION_EVIDENCE.md` และ `docs/AUTOMATION_ARCHITECTURE.md`
 **Phase 6 — Automation / AI / Omnichannel / External Integration / Failure Reality Audit (FINAL AUDIT PHASE)**
 **Audit date:** 2026-09-27 · HEAD `fdc7898` · Production `ivkdfognyiwjcmrhcnwz`
 **Method:** READ-ONLY — live EF endpoint probes + production bundle secret scan + code scans · ไม่ deploy/configure/trigger ใด ๆ

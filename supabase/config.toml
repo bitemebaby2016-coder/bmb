@@ -43,3 +43,6 @@ verify_jwt = false
 [functions.ai-proxy]
 enabled = true
 verify_jwt = true
+# automation-worker: native back-office worker (W3-B) — called by pg_cron/owner with shared token.
+[functions.automation-worker]
+verify_jwt = true
