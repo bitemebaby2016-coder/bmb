@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-09-27T05:53:57.612Z",
+  "timestamp": "2026-09-27T06:22:33.010Z",
   "checks": [
     {
       "name": "A.login",
@@ -9,139 +9,124 @@
     {
       "name": "B.goto_admin_after_login",
       "pass": true,
-      "detail": "http://localhost:4212/admin"
+      "detail": "https://bitemebaby-5f7.pages.dev/admin"
     },
     {
       "name": "B.reload_admin_stays",
       "pass": true,
-      "detail": "http://localhost:4212/admin"
+      "detail": "https://bitemebaby-5f7.pages.dev/admin"
     },
     {
       "name": "C.deep_link /admin",
       "pass": true,
-      "detail": "http://localhost:4212/admin"
+      "detail": "https://bitemebaby-5f7.pages.dev/admin"
     },
     {
       "name": "C.deep_link /admin/orders",
       "pass": true,
-      "detail": "http://localhost:4212/admin/orders"
+      "detail": "https://bitemebaby-5f7.pages.dev/admin/orders"
     },
     {
       "name": "C.deep_link /admin/products",
       "pass": true,
-      "detail": "http://localhost:4212/admin/products"
-    },
-    {
-      "name": "C.deep_link /admin/pre-orders",
-      "pass": false,
-      "detail": "http://localhost:4212/"
-    },
-    {
-      "name": "C.deep_link /admin/kitchen",
-      "pass": false,
-      "detail": "http://localhost:4212/"
-    },
-    {
-      "name": "C.deep_link /admin/recipes",
-      "pass": false,
-      "detail": "http://localhost:4212/"
+      "detail": "https://bitemebaby-5f7.pages.dev/admin/products"
     },
     {
       "name": "C.deep_link /admin/content-approvals",
       "pass": true,
-      "detail": "http://localhost:4212/admin/content-approvals"
+      "detail": "https://bitemebaby-5f7.pages.dev/admin/content-approvals"
     },
     {
       "name": "C.deep_link /admin/rounds",
       "pass": true,
-      "detail": "http://localhost:4212/admin/rounds"
+      "detail": "https://bitemebaby-5f7.pages.dev/admin/rounds"
     },
     {
       "name": "C.deep_link /admin/promotions",
       "pass": true,
-      "detail": "http://localhost:4212/admin/promotions"
+      "detail": "https://bitemebaby-5f7.pages.dev/admin/promotions"
     },
     {
       "name": "C.deep_link /admin/customers",
       "pass": true,
-      "detail": "http://localhost:4212/admin/customers"
+      "detail": "https://bitemebaby-5f7.pages.dev/admin/customers"
     },
     {
       "name": "C.deep_link /admin/inventory",
       "pass": true,
-      "detail": "http://localhost:4212/admin/inventory"
+      "detail": "https://bitemebaby-5f7.pages.dev/admin/inventory"
     },
     {
       "name": "C.deep_link /admin/delivery",
       "pass": true,
-      "detail": "http://localhost:4212/admin/delivery"
+      "detail": "https://bitemebaby-5f7.pages.dev/admin/delivery"
     },
     {
       "name": "C.deep_link /admin/audit-log",
       "pass": true,
-      "detail": "http://localhost:4212/admin/audit-log"
+      "detail": "https://bitemebaby-5f7.pages.dev/admin/audit-log"
     },
     {
       "name": "C.deep_link /admin/route-optimization",
       "pass": true,
-      "detail": "http://localhost:4212/admin/route-optimization"
+      "detail": "https://bitemebaby-5f7.pages.dev/admin/route-optimization"
     },
     {
       "name": "C.deep_link /admin/errors",
       "pass": true,
-      "detail": "http://localhost:4212/admin/errors"
+      "detail": "https://bitemebaby-5f7.pages.dev/admin/errors"
     },
     {
       "name": "C.deep_link /admin/media",
       "pass": true,
-      "detail": "http://localhost:4212/admin/media"
+      "detail": "https://bitemebaby-5f7.pages.dev/admin/media"
     },
     {
       "name": "C.deep_link /admin/settings",
       "pass": true,
-      "detail": "http://localhost:4212/admin/settings"
+      "detail": "https://bitemebaby-5f7.pages.dev/admin/settings"
     },
     {
       "name": "C.deep_link /admin/mascot",
       "pass": true,
-      "detail": "http://localhost:4212/admin/mascot"
+      "detail": "https://bitemebaby-5f7.pages.dev/admin/mascot"
     },
     {
       "name": "C.deep_link /admin/control",
       "pass": true,
-      "detail": "http://localhost:4212/admin/control"
+      "detail": "https://bitemebaby-5f7.pages.dev/admin/control"
     },
     {
       "name": "E.persist_orders_reload",
       "pass": true,
-      "detail": "http://localhost:4212/admin/orders"
+      "detail": "https://bitemebaby-5f7.pages.dev/admin/orders"
     },
     {
       "name": "E.persist_settings_reload",
       "pass": true,
-      "detail": "http://localhost:4212/admin/settings"
+      "detail": "https://bitemebaby-5f7.pages.dev/admin/settings"
     },
     {
       "name": "F.logout_blocks_admin",
       "pass": true,
-      "detail": "http://localhost:4212/login"
+      "detail": "https://bitemebaby-5f7.pages.dev/login"
     },
     {
       "name": "F.logout_survives_reload",
       "pass": true,
-      "detail": "http://localhost:4212/login"
+      "detail": "https://bitemebaby-5f7.pages.dev/login"
     },
     {
       "name": "D.unauthorized_redirect_login",
       "pass": true,
-      "detail": "http://localhost:4212/login"
+      "detail": "https://bitemebaby-5f7.pages.dev/login"
     },
     {
       "name": "D.unauthorized_deep_link",
       "pass": true,
-      "detail": "http://localhost:4212/login"
+      "detail": "https://bitemebaby-5f7.pages.dev/login"
     }
   ],
   "passCount": 25,
-  "total": 28
+  "total": 25
 }

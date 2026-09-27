@@ -6,7 +6,7 @@ const { spawn } = require('child_process')
 const fs = require('fs')
 const path = require('path')
 
-const BASE = () => 'http://localhost:' + PORT
+const BASE = process.env.BASE_URL ? () => process.env.BASE_URL : () => 'http://localhost:' + PORT
 const PORT = 4180 + Math.floor(Math.random() * 40) + 1
 const ROUTES = [
   // NOTE: dead nav routes (/admin/pre-orders, /admin/kitchen, /admin/recipes)
@@ -39,7 +39,8 @@ async function waitFor(url, ms) {
 }
 
 async function main() {
-  const preview = spawn('npx', ['vite', 'preview', '--port', String(PORT), '--strictPort'], {
+  const usingProd = !!process.env.BASE_URL
+  const preview = usingProd ? null : spawn('npx', ['vite', 'preview', '--port', String(PORT), '--strictPort'], {
     cwd: process.cwd(), shell: true, stdio: 'ignore',
   })
   try {
@@ -121,7 +122,7 @@ async function main() {
     console.log('PASS ' + passCount + '/' + results.checks.length)
     for (const c of results.checks) if (!c.pass) console.log('FAIL', c.name, c.detail)
   } finally {
-    preview.kill()
+    if (preview) preview.kill()
   }
 }
 

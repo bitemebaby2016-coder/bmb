@@ -111,7 +111,8 @@ Verification:
 - Findings อื่น (F-04..F-23) คงสถานะเดิมตาม GAP MAP
 
 ## §12 Commit / HEAD
-- HEAD หลัง Wave 1: **a75b28d** (main, ยังไม่ push origin — รอการอนุมัติ deploy)
+- Wave 1 HEAD: `c6a4014` (main) — 5 commits หลัง baseline `fdc7898`
+- **PUSHED**: origin/main = `c6a4014` (local == remote == deployed commit)
 
 ## §13 Rollback Notes
 - git revert <sha> ราย commit ได้ปลอดภัย (ไม่มี executed schema change)
@@ -142,3 +143,58 @@ Next recommended Wave = WAVE 2 (Order History + Driver Identity)
 ```
 
 **HARD STOP — WAIT FOR OWNER**
+## §14 Production Deployment
+- Push: `fdc7898..c6a4014  main -> main` (origin/main = `c6a4014`) — ไม่มี amend/force/squash
+- Pre-push safety: worktree CLEAN (untracked = เอกสาร/evidence ของ freeze เดิมเท่านั้น),
+  ไม่มี secrets.local.env/.env.local ใน status, ไม่มี credential hardcode
+- Pre-push verification: tsc=0 · vitest 44/44 files · build exit 0 · dist scan 238 files = 0 hits
+- Cloudflare Pages project `bitemebaby` (bitemebaby-5f7.pages.dev) **ไม่มี Git Provider**
+  → push ไม่ trigger deploy อัตโนมัติ; deploy ตาม workflow เดิมด้วย wrangler:
+  `wrangler pages deploy dist --project-name=bitemebaby --branch=production`
+  (production branch ของ project คือ `production` — build ที่ deploy คือ dist จาก `c6a4014`)
+- Deployment ID `42809703` / Environment=**Production** / Source commit=**c6a4014**
+  (ยืนยันผ่าน `wrangler pages deployment list`)
+
+## §15 Production Verification
+- **F-01 Production = PASS**
+  - A: `admin@bmb.co.th/admin123` → HTTP 400 "Invalid login credentials" (INVALID LOGIN)
+  - B: `qa-admin@bmb.co.th` (password จาก secure local secret) → HTTP 200 LOGIN PASS
+  - C: deployed bundle scan → demo email/password/secret = 0 hits บน public UI
+- **F-02 Production = PASS (25/25)**
+  - Login PASS · Reload `/admin` PASS · Admin root PASS
+  - Deep-link 16/16 เฉพาะ routes ที่มีจริง (dead routes ยกเว้นตามคำสั่ง)
+  - Persistence: login→admin→refresh→navigate→refresh→deep-link→refresh = authenticated ตลอด
+  - Unauthorized (context ใหม่, หลัง logout) → `/login` PASS · Logout + refresh → block PASS
+- **F-17 Production = PASS**
+  - สแกน build artifact ที่ deploy จริง: 73 ไฟล์ text (js/css/html ทุก chunk รวม lazy)
+    → **0 actual secret hits** (แยก FALSE POSITIVE แล้ว — ไม่มี value pattern ใด match)
+  - AI architecture ยืนยัน: ไม่มี Client→OpenRouter path; key = server-side (ai-proxy)
+- Local Verification = PASS · Production Deployment = PASS · Production Verification = PASS
+
+## §16 Production Evidence
+- `e2e/wave1-production-verification.json` — สรุปรวม (timestamp, URL, deployment id/commit,
+  account types, HTTP status ที่เกี่ยวข้อง; ไม่มี password/secret ในไฟล์)
+- `e2e/wave1-prod-auth-secret.json` — auth + deployed-asset scan สด
+- `e2e/wave1-admin-e2e.json` — production E2E 25/25 (run 06:22Z, base=prod URL)
+- `e2e/wave1-build-secret-scan.json` — local dist scan (238 files, 0 hits)
+- Cloudflare deployment record: id `42809703-ec62-4e15-9164-e0aafae375fe`, Source `c6a4014`
+
+## §17 Final Wave 1 Gate
+
+```text
+F-01 Production = PASS
+F-02 Production = PASS
+F-17 Production = PASS
+origin/main = deployed commit = c6a4014
+Production build = verified (asset hash match 6/6 + deployment list Source=c6a4014)
+Secret scan = 0 actual secret hits (local 238 files + deployed 73 files)
+```
+
+WAVE 1 PRODUCTION GATE = **PASS** → HARD STOP (ห้ามเริ่ม Wave 2 / F-05 / F-06 /
+RLS / ai-proxy / Kitchen / Omnichannel / Automation)
+
+Residual (ไม่บล็อก Gate, รอ Owner):
+- OpenRouter key rotation — Owner จัดการเองภายหลัง (ตามคำสั่ง: ห้าม rotate ตอนนี้)
+- PROPOSED migration — คงสถานะ PROPOSED (ห้ามรัน)
+- Dead nav routes (pre-orders/kitchen/recipes) — โดเมน Wave 2/4
+

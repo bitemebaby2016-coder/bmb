@@ -1,0 +1,41 @@
+{
+  "kind": "BMB_WAVE_1_PRODUCTION_VERIFICATION",
+  "timestamp": "2026-09-27T06:29:00.000Z",
+  "production_url": "https://bitemebaby-5f7.pages.dev",
+  "deployment_alias": "https://42809703.bitemebaby-5f7.pages.dev",
+  "deployed_commit": "c6a4014",
+  "origin_main": "c6a4014228e07feab03a67b10ed7f8c87a452cf1",
+  "deployment_method": "wrangler pages deploy dist --project-name=bitemebaby --branch=production (project production branch = 'production'; no Git provider configured)",
+  "tested_accounts": [
+    { "type": "public-demo", "email": "admin@bmb.co.th", "expected": "INVALID LOGIN", "result": "HTTP 400 Invalid login credentials", "pass": true },
+    { "type": "dedicated-test-admin", "email": "qa-admin@bmb.co.th", "expected": "LOGIN PASS", "result": "HTTP 200 (password read from supabase/secrets.local.env, never printed)", "pass": true }
+  ],
+  "f01": {
+    "public_demo_login": "PASS (HTTP 400)",
+    "test_admin_login": "PASS (HTTP 200)",
+    "public_ui_bundle_demo_credentials": "PASS (scan of 73 deployed text assets: admin123 / admin@bmb.co.th = 0 hits)"
+  },
+  "f02": {
+    "source": "e2e/wave1-admin-e2e.json (run 2026-09-27T06:22:33Z, base=https://bitemebaby-5f7.pages.dev)",
+    "login": "PASS",
+    "reload_admin": "PASS",
+    "admin_root": "PASS",
+    "deep_links": "PASS (16/16 existing routes; dead routes /admin/pre-orders|kitchen|recipes excluded per instruction — no route in App.tsx)",
+    "persistence_login_refresh_navigate_refresh_deeplink_refresh": "PASS",
+    "unauthorized_redirect_login": "PASS (fresh context, /admin and deep-link -> /login)",
+    "logout_block_reload": "PASS",
+    "score": "25/25 PASS"
+  },
+  "f17": {
+    "deployed_asset_scan": "PASS",
+    "files_scanned": 73,
+    "patterns": ["OPENROUTER_API_KEY", "VITE_OPENROUTER_API_KEY", "SUPABASE_SERVICE_ROLE_KEY", "VITE_SUPABASE_SERVICE_ROLE_KEY", "STRIPE_SECRET_KEY", "VITE_STRIPE_SECRET_KEY", "STRIPE_WEBHOOK_SECRET", "VITE_STRIPE_WEBHOOK_SECRET", "sk-or-*", "sk_test/live_*", "whsec_*", "sb_secret_*", "\"role\":\"service_role\"", "admin123"],
+    "secret_hits": 0,
+    "false_positive_note": "package/library names containing the word 'secret' were not counted; only actual value/var patterns matched",
+    "ai_architecture": "Client -> Supabase Auth JWT -> ai-proxy -> OpenRouter (no client -> OpenRouter path; verified in src/lib/aiVoice.ts + deployed bundle scan)"
+  },
+  "remaining_blockers": [
+    "PROPOSED migration supabase/migrations/PROPOSED_wave1_profiles_grant.sql remains PROPOSED (owner decision: do not run)",
+    "OpenRouter key rotation deferred by owner (key kept as server-side secret only)"
+  ]
+}
