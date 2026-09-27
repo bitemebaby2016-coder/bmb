@@ -1,0 +1,34 @@
+-- ============================================
+-- BMB — PROPOSED migration (Wave 2 / F-05) — NOT EXECUTED
+-- สถานะ: PROPOSED — รอ OWNER อนุมัติกลยุทธ์ backfill ก่อน (Wave 2 rule §8)
+--
+-- ปัญหา: existing orders บน production ไม่มี lifecycle history (ตารางสร้างใหม่)
+-- กลยุทธ์ที่เสนอ (HISTORICAL_BASELINE):
+--   สร้าง 1 แถว baseline ต่อออเดอร์ที่มีอยู่:
+--     from_status = NULL, to_status = orders.status (สถานะปัจจุบัน),
+--     actor_type = 'SYSTEM', reason = 'HISTORICAL_BASELINE (pre-W2 order, no recorded lifecycle)',
+--     metadata = { 'backfill': true, 'strategy': 'HISTORICAL_BASELINE' }
+--   ข้อจำกัดที่รับได้: ประวัติย้อนหลังแบบ step-by-step หาไม่ได้ (audit_logs ไม่ครบทุกออเดอร์
+--   และไม่ authoritative) — baseline นี้ทำให้ "ทุกออเดอร์มีอย่างน้อย 1 event" โดยไม่เดา
+--   สถานะย้อนหลัง
+-- ทางเลือกอื่น (BACKFILL_UNKNOWN): ไม่ backfill เลย — ออเดอร์เก่าไม่มี history
+--   (queries ต้อง tolerate missing history)
+-- ห้ามรันจนกว่า Owner จะเลือกกลยุทธ์
+-- ============================================
+
+-- BEGIN;  -- uncomment only after OWNER approval
+-- INSERT INTO public.order_status_history (id, order_number, from_status, to_status, changed_at, actor_type, reason, metadata)
+-- SELECT
+--   'osh-baseline-' || o.order_number,
+--   o.order_number,
+--   NULL,
+--   o.status,
+--   o.updated_at,
+--   'SYSTEM',
+--   'HISTORICAL_BASELINE (pre-W2 order, no recorded lifecycle)',
+--   jsonb_build_object('backfill', true, 'strategy', 'HISTORICAL_BASELINE')
+-- FROM public.orders o
+-- WHERE NOT EXISTS (
+--   SELECT 1 FROM public.order_status_history h WHERE h.order_number = o.order_number
+-- );
+-- COMMIT;
