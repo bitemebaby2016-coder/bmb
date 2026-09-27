@@ -9,7 +9,7 @@ import { installGlobalErrorReporter } from './lib/errorReporter'
 
 // ⚡ PERF (2026-09-17): admin seeding hashes a bcrypt password at boot, which is
 // heavy on the main thread. Defer it until after first paint / idle so LCP and
-// TBT for the landing page are not blocked. Auth check is also non-blocking now.
+// TBT for the landing page are not blocked.
 function afterFirstPaint(cb: () => void): void {
   const run = () => setTimeout(cb, 1500)
   if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
@@ -20,17 +20,16 @@ function afterFirstPaint(cb: () => void): void {
 }
 
 afterFirstPaint(() => {
-  // P0-2 FIX (2026-09-18): ไม่มี admin seeding/localStorage user อีกต่อไป
-  // Authentication อยู่ที่ Supabase Auth; profile/role ถูกสร้างโดย trigger
-  // `on_auth_user_created` (migration 006) — client แค่ตรวจ session
   // ADM-01: report uncaught errors to the server-side feed.
   if (typeof window !== 'undefined') installGlobalErrorReporter()
-  useAuthStore.getState().checkAuth().then(() => {
-    console.log('[BMB] App initialized — Supabase Auth session checked')
-  }).catch(err => {
-    console.error('[BMB] Init error:', err)
-  })
 })
+
+// F-02 FIX (Wave 1): restore the Supabase Auth session BEFORE first render.
+// ก่อนหน้า: checkAuth ถูก defer 1.5s → บน reload ของ /admin/* ทุก route guard
+// เห็น isAuthenticated=false ช่วงแรกแล้ว redirect ไป /login ทันที (16/16 routes)
+// ตอนนี้: checkAuth เริ่มตรงนี้ (sync ตอน module load) และ guards รอผ่าน
+// authStore.isInitializing จนกว่า session restore เสร็จจริง
+void useAuthStore.getState().checkAuth()
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>

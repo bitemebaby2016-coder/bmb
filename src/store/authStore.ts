@@ -21,6 +21,13 @@ interface AuthStore {
   lastLoginError: string | null
   /** Current user role from `profiles.role` (RLS-guarded) — drives admin UI visibility. */
   role: string | null
+  /**
+   * F-02 FIX (Wave 1): true ตั้งแต่ boot จนกว่า checkAuth() จะ restore session
+   * จาก Supabase Auth เสร็จครั้งแรก — route guards ต้อง "รอ" ช่วงนี้ (โชว์ spinner)
+   * แทนที่จะตัดสินด้วย isAuthenticated=false แล้ว redirect ไป /login ทันที
+   * (สาเหตุเดิมของ "session หายเมื่อ reload / deep-link /admin/* 16/16 → /login")
+   */
+  isInitializing: boolean
 
   setCustomer: (customer: Customer | null) => void
   setIsAuthenticated: (auth: boolean) => void
@@ -113,6 +120,7 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
   referralCode: '',
   lastLoginError: null,
   role: null,
+  isInitializing: true,
 
   setCustomer: (customer) => set({ customer, isAuthenticated: !!customer }),
   setIsAuthenticated: (auth) => set({ isAuthenticated: auth }),
@@ -208,14 +216,15 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
         set({
           customer: mapUserToCustomer(session.user),
           isAuthenticated: true,
-          isLoading: false
+          isLoading: false,
+          isInitializing: false
         })
         void get().refreshRole?.()
       } else {
-        set({ customer: null, isAuthenticated: false, isLoading: false, role: null })
+        set({ customer: null, isAuthenticated: false, isLoading: false, role: null, isInitializing: false })
       }
     } catch {
-      set({ customer: null, isAuthenticated: false, isLoading: false, role: null })
+      set({ customer: null, isAuthenticated: false, isLoading: false, role: null, isInitializing: false })
     }
   }
 }))

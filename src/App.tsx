@@ -75,21 +75,29 @@ function LoadingSpinner() {
   )
 }
 
+// F-02 FIX (Wave 1): ProtectedRoute รอ session restore (isInitializing) ก่อนตัดสิน
+// — reload ต้องไม่พาผู้ใช้ไป /login ขณะ Supabase กำลัง restore session
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
+  const isInitializing = useAuthStore((s) => s.isInitializing)
+  if (isInitializing) return <LoadingSpinner />
   if (!isAuthenticated) return <Navigate to="/login" replace />
   return <>{children}</>
 }
 
 
 // P0-3 FIX: AdminRoute ตรวจ role จาก DB (profiles) ผ่าน RLS
+// F-02 FIX (Wave 1): รอ isInitializing ก่อน — reload/deep-link /admin/* ต้องคง
+// session จาก Supabase Auth (persistSession) ไม่ redirect ไป /login ระหว่าง restore
 function AdminRoute({ children }: { children: React.ReactNode }) {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
+  const isInitializing = useAuthStore((s) => s.isInitializing)
   const [role, setRole] = useState<string | null>(null)
   const [checking, setChecking] = useState(true)
 
   useEffect(() => {
     let cancelled = false
+    if (isInitializing) return
     if (!isAuthenticated) { setChecking(false); return }
     fetchProfileRole().then((r) => {
       if (cancelled) return
@@ -97,8 +105,9 @@ function AdminRoute({ children }: { children: React.ReactNode }) {
       setChecking(false)
     })
     return () => { cancelled = true }
-  }, [isAuthenticated])
+  }, [isAuthenticated, isInitializing])
 
+  if (isInitializing) return <LoadingSpinner />
   if (!isAuthenticated) return <Navigate to="/login" replace />
   if (checking) return <LoadingSpinner />
   if (role !== 'admin') return <Navigate to="/" replace />
