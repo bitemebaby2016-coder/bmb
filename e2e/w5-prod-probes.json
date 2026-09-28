@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-09-28T03:39:53.726Z",
+  "timestamp": "2026-09-28T08:32:37.862Z",
   "supa": "https://ivkdfognyiwjcmrhcnwz.supabase.co",
   "probes": [
     {
@@ -45,12 +45,12 @@
     {
       "name": "rest:delivery_rounds",
       "status": 200,
-      "body": "[{\"id\":\"round-20260928-evening\",\"round_key\":\"evening\",\"cutoff_time\":\"16:00:00\",\"max_capacity\":100,\"current_count\":0,\"status\":\"active\",\"date\":\"2026-09-28\"}, \n {\"id\":\"round-20260928-midday\",\"round_key\":\"midday\",\"cutoff_time\":\"09:00:00\",\"max_capacity\":80,\"current_count\":0,\"status\":\"active\",\"date\":\"2026-09-28\"}, \n {\"id\":\"round-20260928-morning\",\"round_key\":\"morning\",\"cutoff_time\":\"23:59:59\",\"max_capac"
+      "body": "[{\"id\":\"round-20260929-evening\",\"round_key\":\"evening\",\"cutoff_time\":\"16:00:00\",\"max_capacity\":100,\"current_count\":0,\"status\":\"active\",\"date\":\"2026-09-29\"}, \n {\"id\":\"round-20260929-midday\",\"round_key\":\"midday\",\"cutoff_time\":\"09:00:00\",\"max_capacity\":80,\"current_count\":0,\"status\":\"active\",\"date\":\"2026-09-29\"}, \n {\"id\":\"round-20260929-morning\",\"round_key\":\"morning\",\"cutoff_time\":\"23:59:59\",\"max_capac"
     },
     {
       "name": "rest:orders",
-      "status": 200,
-      "body": "[{\"id\":\"ord- ###########-432e72\",\"status\":\"cancelled\"}, \n {\"id\":\"ord- ###########-48a0b0\",\"status\":\"cancelled\"}, \n {\"id\":\"ord- ###########-eb2d13\",\"status\":\"cancelled\"}]"
+      "status": 401,
+      "body": "{\"code\":\"42501\",\"details\":null,\"hint\":\"Grant the required privileges to the current role with: GRANT SELECT ON public.orders TO anon;\",\"message\":\"permission denied for table orders\"}"
     },
     {
       "name": "rest:pre_orders",
