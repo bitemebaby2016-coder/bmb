@@ -80,5 +80,6 @@ DEFERRED         = ไม่มี (D2 ยังอยู่ future phase ตา
 
 
 
+
 คงเหลือ: D2 (MEDIUM, future phase) — ไม่มี CRITICAL/HIGH
 Wave 4 = COMPLETE · พร้อมรับคำสั่ง Wave 5 จาก Owner
