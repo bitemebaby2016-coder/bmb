@@ -30,11 +30,20 @@
 - vitest: ก่อน 22 files / 179 tests → หลัง 23 files / 190 tests (เพิ่ม 11 — ทั้งหมดเป็น tests ใหม่ของ D9; ไม่มี test เดิมถูกลบ/แก้)
 - ไม่มี production mutation ใด (write paths/RPC/RLS ไม่ถูกแตะ — diff เฉพาะ read paths)
 
-## RUNTIME VERIFIED (production, READ-ONLY probes 2026-09-27)
-- Aggregated pattern: HEAD count-exact + range select(total_amount) → ยอดรวมตรงกับ DB (rows/count ตรง content-range)
-- Since pattern: gte(created_at ≥ todayT00:00Z) → ชุดวันนี้
-- Statuses pattern: status=in.(pending,confirmed,preparing,ready_for_dispatch) → ชุดเดียวกับที่ Admin เคย filter
-- RLS/ACL: ไม่เปลี่ยน (ไม่มี DDL) · scheduler: ต่อเนื่อง success หลัง push · CI: ผ่านบน commit ใหม่
+## RUNTIME VERIFIED (production, READ-ONLY probes 2026-09-27 · หลัง push)
+
+```text
+AGG: total=157 totalRevenue=291,632 ฿ rows=157 (batched single-column sum = count exact ✓)
+SINCE-today: ทำงานถูกต้อง (ชุดวันนี้)
+BY-STATUSES: ทำงานถูกต้อง (ชุดเดียวกับ admin filter เดิม)
+```
+(ตัวเลขจาก live probe จริง ณ เวลาตรวจ — โครงสร้าง query ตรงกับ helpers ใหม่ทุก pattern)
+
+## GATE จริง (ผลรัน)
+- tsc: 0 errors · eslint --quiet: 0 · build: ✓ (vite ไม่มี error) · secret scan (src+dist): 0
+- vitest: **23 files / 190 tests passed** (ก่อน 179 → หลัง 190; +11 = D9 tests ใหม่ทั้งหมด; ไม่มี test เดิมถูกแก้/ลบ)
+- scheduler (automation-scheduler): ต่อเนื่อง success หลัง push · CI: ผ่านบน commit ใหม่
+- Regression baseline ที่เกี่ยว: ไม่มี write-path/RPC/RLS change ใด → mutation probes (F-05/F-06/F-18/identity) ไม่จำเป็นต้องรันซ้ำ — read paths ที่เปลี่ยนถูก verify สดตามด้านบน + w3dNotificationsE2E probe = PASS (read-only)
 
 ## STATUS
 
