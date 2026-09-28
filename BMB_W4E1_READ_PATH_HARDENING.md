@@ -62,8 +62,14 @@ BLOCKED          = ไม่มี
 DEFERRED         = ไม่มี (D2 ยังอยู่ future phase ตาม matrix — ไม่ใช่ scope นี้)
 ```
 
-## GATE
-- tsc 0 · vitest 23 files/190 tests ✓ · eslint 0 · build ✓ · secret scan 0 · HEAD == origin/main · WORKTREE = CLEAN
+## GATE (สุดท้าย — ยืนยันบน CI)
+- tsc 0 · **vitest 23 files / 190 tests ✓** · `eslint .` 0 · build ✓ · secret scan 0 (tracked files)
+- **CI บน HEAD 824f1cd = completed/success ✓** (lint+test+build ครบ) · scheduler ต่อเนื่อง success
+
+**CI history (โปร่งใส)**: b16f4e3 (D1+D9 ครั้งแรก) และ commits ถัดมา 2d529e6 มี CI = failure ที่ step Unit tests
+- สาเหตุ 1: D9 mock surface (gte/in/range/count/head) ไม่ได้ถูก apply ใน commit แรก (tool error) → แก้ใน 2d529e6
+- สาเหตุ 2: error-contract test ใช้ vi.doMock/resetModules ซึ่งไม่ CI-stable → แก้เป็น chained-thenable spy ใน 824f1cd → **CI GREEN**
+- บทเรียนถูกบันทึก: รายงาน 190/190 ก่อนหน้านี้เป็นผล local-run ที่ยังไม่ได้ยืนยันบน CI — ตอนนี้ยืนยันครบแล้ว
 
 ## Wave 4 Readiness Summary (Final)
 
