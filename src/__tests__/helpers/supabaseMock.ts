@@ -830,14 +830,19 @@ if (name === 'customer_intelligence') {
     // ============ W5-1 / migration 050 — secure guest tracking RPC ============
     if (name === 'track_order') {
       const p = params ?? {}
-      const digits = String(p.p_phone || '').replace(/[^0-9]/g, '')
+      // migration 051 parity: canonicalize Thai local 0XXXXXXXXX → 66XXXXXXXXX
+      const norm = (raw: any) => {
+        const dig = String(raw || '').replace(/[^0-9]/g, '')
+        return dig.length === 10 && dig.startsWith('0') ? '66' + dig.slice(1) : dig
+      }
+      const digits = norm(p.p_phone)
       if (!String(p.p_order_number || '').trim() || !digits) {
         return { data: { found: false }, error: null }
       }
       const order = (tables['orders'] || []).find(
         (o: any) =>
           String(o.order_number) === String(p.p_order_number).trim() &&
-          String(o.customer_phone || '').replace(/[^0-9]/g, '') === digits,
+          norm(o.customer_phone) === digits,
       )
       if (!order) return { data: { found: false }, error: null }
       // tracking-scope fields ONLY — mirrors migration 050 contract

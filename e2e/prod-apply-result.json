@@ -1,9 +1,9 @@
 {
-  "timestamp": "2026-09-28T04:12:02.161Z",
+  "timestamp": "2026-09-28T04:34:07.852Z",
   "ref": "ivkdfognyiwjcmrhcnwz",
   "applied": [
     {
-      "file": "050_w5_h1_close_anon_orders.sql",
+      "file": "051_w52_track_phone_normalize.sql",
       "ok": true
     }
   ],

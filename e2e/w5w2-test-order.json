@@ -1,0 +1,219 @@
+{
+  "timestamp": "2026-09-28T04:51:12.174Z",
+  "environment": "production",
+  "ref": "ivkdfognyiwjcmrhcnwz",
+  "HEAD": "37dbf0c",
+  "test_data": {
+    "name": "QA W52",
+    "phone": "+66990000003",
+    "email_key": "66990000003@phone.bmb.local",
+    "latitude": 10.7031,
+    "longitude": 102.14439999999999,
+    "address_detail": "REDACTED (test address, not real)",
+    "local_phone": "0990000003",
+    "scheduled_date": "2026-09-29",
+    "round_id": "round-20260929-morning",
+    "product_id": "prod-5",
+    "price": 85,
+    "quantity": 1,
+    "order_mode": "PRE_ORDER",
+    "payment_method": "credit_card",
+    "stripe_mode": "pk_test",
+    "customer_id": "32d8d700-43bb-4765-a1c5-bc72d0f07f26",
+    "test_order_number": "PO-20260929-131"
+  },
+  "stages": {
+    "qa_identity": {
+      "status": 200,
+      "reused": false,
+      "has_session": true,
+      "user_id": "32d8d700-43bb-4765-a1c5-bc72d0f07f26",
+      "phone": "+66990000003"
+    },
+    "order_creation": {
+      "resumed": true,
+      "order_number": "PO-20260929-131"
+    },
+    "stripe_checkout": {
+      "status": 200,
+      "ok": "pi_3UKWX13yHrQLTgfK1romz9hW_secret_Dcga7Ms9OC3QO1Dlw5dtJ0yzZ",
+      "payment_intent_id": "pi_3UKWX13yHrQLTgfK1romz9hW",
+      "client_secret": "(present, redacted)",
+      "amount": 110,
+      "error": null
+    },
+    "stripe_confirm": {
+      "ok": true,
+      "error": null,
+      "status": "succeeded",
+      "id": "pi_3UKWX13yHrQLTgfK1romz9hW",
+      "test_card": "tok_visa (Stripe TEST mode)"
+    },
+    "payment_verify": {
+      "PASS": true,
+      "order": {
+        "order_number": "PO-20260929-131",
+        "status": "pending",
+        "payment_status": "paid",
+        "order_mode": "PRE_ORDER",
+        "scheduled_date": "2026-09-29",
+        "delivery_round_id": "round-20260929-morning",
+        "delivery_method": "self_delivery",
+        "total_amount": "110.00",
+        "source_channel": "PWA",
+        "customer_id": "32d8d700-43bb-4765-a1c5-bc72d0f07f26",
+        "created_at": "2026-09-28 04:38:41.657584+00"
+      },
+      "payment_intents": [
+        {
+          "status": "pending",
+          "method": "credit_card",
+          "provider": "stripe",
+          "amount": "110.00",
+          "has_pi_id": false,
+          "completed": false
+        },
+        {
+          "status": "pending",
+          "method": "credit_card",
+          "provider": "stripe",
+          "amount": "110.00",
+          "has_pi_id": false,
+          "completed": false
+        },
+        {
+          "status": "completed",
+          "method": "credit_card",
+          "provider": "stripe",
+          "amount": "110.00",
+          "has_pi_id": true,
+          "completed": true
+        }
+      ],
+      "order_status_history": [
+        {
+          "from_status": null,
+          "to_status": "pending",
+          "changed_at": "2026-09-28 04:38:41.657584+00",
+          "actor_type": "CUSTOMER",
+          "actor_id": "32d8d700-43bb-4765-a1c5-bc72d0f07f26"
+        }
+      ],
+      "webhook": "Stripe → EF stripe-webhook → record_payment_result (canonical)"
+    },
+    "tracking": {
+      "PASS": true,
+      "rpc_found": true,
+      "negative_rejected": true,
+      "ui": {
+        "found": true,
+        "no_pii": true,
+        "status_text": "รอการยืนยันกำลังรอยืนยันคำสั่งซื้อจากร้าน",
+        "wrong_phone_rejected": true
+      },
+      "response_fields": [
+        "status",
+        "created_at",
+        "order_mode",
+        "receipt_url",
+        "order_number",
+        "total_amount",
+        "payment_status",
+        "scheduled_date",
+        "delivery_method",
+        "delivery_round_id"
+      ],
+      "pii_leak": []
+    },
+    "order_history": {
+      "PASS": true,
+      "own_order": [
+        {
+          "order_number": "PO-20260929-131",
+          "status": "pending",
+          "payment_status": "paid",
+          "total_amount": 110,
+          "scheduled_date": "2026-09-29"
+        }
+      ],
+      "other_customers_visible": 0,
+      "rls_isolation": true
+    },
+    "notifications_audit": {
+      "notifications": [
+        {
+          "row_to_json": {
+            "id": "evt-ord-PO-20260929-131-pending",
+            "customer_id": "cust-66990000003",
+            "title": "รับออเดอร์แล้ว",
+            "message": "ออเดอร์ PO-20260929-131 ของคุณได้รับเรียบร้อยแล้ว",
+            "is_read": false,
+            "notification_type": "ORDER_CREATED",
+            "created_at": "2026-09-28T04:49:33.945932+00:00",
+            "category": "Transactional",
+            "user_id": null
+          }
+        }
+      ],
+      "audit_logs": [
+        {
+          "row_to_json": {
+            "id": "alog- ###########-cf97fa",
+            "user_id": "32d8d700-43bb-4765-a1c5-bc72d0f07f26",
+            "user_email": null,
+            "action": "order_created",
+            "entity_type": "order",
+            "entity_id": "PO-20260929-131",
+            "description": "canonical order created (PRE_ORDER)",
+            "metadata": {
+              "total": 110,
+              "order_mode": "PRE_ORDER",
+              "scheduled_date": "2026-09-29"
+            },
+            "ip_address": null,
+            "user_agent": null,
+            "created_at": "2026-09-28T04:38:41.657584+00:00"
+          }
+        },
+        {
+          "row_to_json": {
+            "id": "alog- ###########-0aa6bd",
+            "user_id": "32d8d700-43bb-4765-a1c5-bc72d0f07f26",
+            "user_email": null,
+            "action": "order_created",
+            "entity_type": "order",
+            "entity_id": "PO-20260929-131",
+            "description": "canonical order created (channel-tagged)",
+            "metadata": {
+              "total": "110.00",
+              "order_mode": "PRE_ORDER",
+              "source_channel": null,
+              "external_ref_id": null
+            },
+            "ip_address": null,
+            "user_agent": null,
+            "created_at": "2026-09-28T04:38:41.657584+00:00"
+          }
+        }
+      ],
+      "delivery_assignments": []
+    },
+    "kitchen_transition_attempt": {
+      "status": 400,
+      "response": "{\"code\":\"P0001\",\"details\":null,\"hint\":null,\"message\":\"ERR_INVALID_TRANSITION: pending -> confirmed\"}",
+      "blocked_as_customer": true
+    }
+  },
+  "timeline": {
+    "identity": "2026-09-28T04:51:14.825Z",
+    "created": "2026-09-28T04:51:14.825Z",
+    "paid": "2026-09-28T04:51:26.328Z",
+    "tracking": "2026-09-28T04:51:36.050Z"
+  },
+  "notes": [],
+  "final": {
+    "customer_side_chain": "RUNTIME VERIFIED (identity → order → stripe test payment → webhook → paid → tracking → history)",
+    "kitchen_delivery_delivered": "BLOCKED — no QA admin identity available; transition_order_status correctly refuses non-admin (canonical admin guard working)",
+    "physical_delivery": "DEFERRED — operational pilot needs approved test driver/destination (separate gate)"
+  }
+}

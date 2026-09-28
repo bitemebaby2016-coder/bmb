@@ -62,10 +62,11 @@ Deno.serve(async (req: Request): Promise<Response> => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders() })
   if (req.method !== 'POST') return json({ error: 'Method not allowed' }, 405)
 
-  const supabaseUrl = Deno.env.get('SUPABASE_URL') || ''
+  const supabaseUrl = Deno.env.get('SUPABASE_URL') || ('https://' + new URL(req.url).host)
   const anonKey = Deno.env.get('SUPABASE_ANON_KEY') || ''
-  const serviceKey = Deno.env.get('bmb_backend_production_supabase_service_role_key') || ''
-  if (!supabaseUrl || !serviceKey) return json({ error: 'ERR_NOT_CONFIGURED' }, 500)
+  const serviceKey = Deno.env.get('bmb_backend_production_supabase_service_role_key')
+    || Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || ''
+  if (!supabaseUrl || !serviceKey) return json({ error: 'ERR_NOT_CONFIGURED', detail: { has_url: !!supabaseUrl, has_svc: !!serviceKey } }, 500)
 
   let body: any
   try { body = await req.json() } catch { return json({ error: 'ERR_INVALID_BODY' }, 400) }
@@ -124,8 +125,40 @@ Deno.serve(async (req: Request): Promise<Response> => {
         },
       }),
     })
-    if (!created.ok) return json({ error: 'ERR_ACCOUNT_CREATE_FAILED', detail: created.data?.msg ?? 'create failed' }, 502)
-    uid = String(created.data?.id ?? '')
+    if (!created.ok) {
+      // W5-2 FIX (2026-09-28): the admin users endpoint does NOT support ?email=
+      // filtering, so the `found` check above always misses → "already registered"
+      // for any existing account. Fallback: page the list and match locally.
+      const em = email.toLowerCase()
+      let foundUser: any = null
+      for (let page = 1; page <= 20 && !foundUser; page++) {
+        const list = await ghFetch(supabaseUrl, serviceKey, `/auth/v1/admin/users?page=${page}&per_page=200`)
+        const users = (list.data && (Array.isArray(list.data.users) ? list.data.users : (Array.isArray(list.data) ? list.data : []))) || []
+        for (const u of users) {
+          if (String(u.email ?? '').toLowerCase() === em) { foundUser = u; break }
+        }
+        if (users.length < 200) break
+      }
+      if (!foundUser) {
+        return json({ error: 'ERR_ACCOUNT_CREATE_FAILED', detail: created.data?.msg ?? 'create failed' }, 502)
+      }
+      uid = String(foundUser.id)
+      const upd = await ghFetch(supabaseUrl, serviceKey, `/auth/v1/admin/users/${uid}`, {
+        method: 'PUT',
+        body: JSON.stringify({
+          password,
+          user_metadata: {
+            full_name: name,
+            phone,
+            login_method: 'location',
+          },
+        }),
+      })
+      if (!upd.ok && upd.status !== 404) {
+        return json({ error: 'ERR_ACCOUNT_UPDATE_FAILED', detail: upd.data?.msg ?? 'update failed' }, 502)
+      }
+    }
+    uid = String(created.data?.id ?? uid)
   }
   if (!uid) return json({ error: 'ERR_NO_USER_ID' }, 500)
 // ---- 2. mint a real session (password grant with the password we just set) ----

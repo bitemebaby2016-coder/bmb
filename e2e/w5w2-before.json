@@ -1,0 +1,88 @@
+{
+  "timestamp": "2026-09-28T04:28:24.965Z",
+  "environment": "production",
+  "ref": "ivkdfognyiwjcmrhcnwz",
+  "HEAD": "37dbf0c",
+  "qa_identity": {
+    "test_phone": "0990000001",
+    "test_email_key": "0990000001@phone.bmb.local",
+    "existing_customers": []
+  },
+  "test_products": [
+    {
+      "id": "prod-5",
+      "name": "ลุยสวนหมู+กุ้ง",
+      "price": "85.00",
+      "is_available": true,
+      "is_preorder": true,
+      "available_preorder": true,
+      "prep_minutes": 25
+    },
+    {
+      "id": "prod-6",
+      "name": "เมนูใหม่: ข้าวกุ้งกระเทียม",
+      "price": "95.00",
+      "is_available": true,
+      "is_preorder": true,
+      "available_preorder": true,
+      "prep_minutes": 20
+    },
+    {
+      "id": "prod-w3c-test-pre",
+      "name": "W3C Test Preorder Product",
+      "price": "50.00",
+      "is_available": true,
+      "is_preorder": true,
+      "available_preorder": true,
+      "prep_minutes": 10
+    }
+  ],
+  "rounds": [],
+  "business_settings": [
+    {
+      "key": "kitchen_location",
+      "value": {
+        "address": "Bite Me Baby Kitchen",
+        "latitude": 10.7016,
+        "longitude": 102.1429
+      }
+    },
+    {
+      "key": "delivery_policy",
+      "value": {
+        "currency": "THB",
+        "min_order": 0,
+        "radius_km": 10
+      }
+    },
+    {
+      "key": "order_policy",
+      "value": {
+        "preorder_max_days": 50,
+        "max_items_per_order": 50,
+        "pre_order_lead_days": 1,
+        "cancel_window_minutes": 5
+      }
+    }
+  ],
+  "orders_baseline": {
+    "total": 157,
+    "cancelled": 23
+  },
+  "payment_config": {
+    "stripe_publishable_mode": "pk_test",
+    "ef_create_checkout": {
+      "status": 405,
+      "body": "{\"error\":\"Method not allowed\"}"
+    },
+    "ef_stripe_webhook": {
+      "status": 200,
+      "body": "{\"ok\":true,\"service\":\"stripe-webhook\"}"
+    },
+    "ef_phone_auto_login": {
+      "status": 400,
+      "body": "{\"error\":\"ERR_MISSING_NAME_OR_PHONE\"}"
+    }
+  },
+  "existing_test_artifacts": []
+}
