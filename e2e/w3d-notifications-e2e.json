@@ -1,5 +1,5 @@
 {
-  "date": "2026-09-27T13:31:14.047Z",
+  "date": "2026-09-28T01:25:18.147Z",
   "target": "https://ivkdfognyiwjcmrhcnwz.supabase.co/functions/v1/automation-worker",
   "tests": [
     {
@@ -34,97 +34,11 @@
     },
     {
       "name": "test-order-create",
-      "pass": true,
-      "detail": "status=200 order=BMB-20260927-778"
-    },
-    {
-      "name": "admin-login",
-      "pass": true,
-      "detail": "status=200"
-    },
-    {
-      "name": "dispatch-run-1-created",
-      "pass": true,
-      "detail": "status=200 created=[\"evt-ord-BMB-20260927-778-pending\"] errors=[]"
-    },
-    {
-      "name": "notification-recorded-with-recipient",
-      "pass": true,
-      "detail": "rows=1 customer_id_match=true"
-    },
-    {
-      "name": "transition-to-confirmed",
-      "pass": true,
-      "detail": "status=200 body={\"ok\":true,\"to\":\"confirmed\",\"from\":\"pending\",\"inventory\":{\"ok\":true,\"idempotent\":false,\"order_number\":\"BMB-20260927-778\""
-    },
-    {
-      "name": "dispatch-run-2-order-confirmed",
-      "pass": true,
-      "detail": "created=[\"evt-ord-BMB-20260927-778-confirmed\"]"
-    },
-    {
-      "name": "re-run-idempotent-no-duplicate-side-effect",
-      "pass": true,
-      "detail": "duplicate=[\"evt-ord-BMB-20260927-778-confirmed\",\"evt-ord-BMB-20260927-778-pending\",\"evt-ord-BMB-20260927-949-ready_for_dispatch\",\"evt-ord-BMB-20260927-949-preparing\",\"evt-ord-BMB-20260927-949-confirmed\",\"evt-ord-BMB-20260927-949-p rows=2"
-    },
-    {
-      "name": "driver-assigned-canonical",
-      "pass": true,
-      "detail": "tr2=200 tr3=200 asg=200 {\"ok\":true,\"status\":\"assigned\",\"driver_id\":\"drv-qa-w2-01\",\"order_number\":\"BMB-20260927-778\"}"
-    },
-    {
-      "name": "driver-assigned-notification",
-      "pass": true,
-      "detail": "created=[\"evt-ord-BMB-20260927-778-ready_for_dispatch\",\"evt-ord-BMB-20260927-778-preparing\",\"evt-drv-BMB-20260927-778-assigned\"] duplicate=[\"evt-ord-BMB-20260927-778-confirmed\",\"evt-ord-BMB-20260927-778-pending\",\"evt-ord-BMB-20260927-949-ready_for_dispatch\",\"evt-ord-BMB-20260927-949-preparing\",\"evt-ord-BMB-20260927-949-confirmed\",\"evt-or"
-    },
-    {
-      "name": "execution-trace-recorded",
-      "pass": true,
-      "detail": "meta_keys=job,errors,status,results,event_id,finished_at,execution_id"
-    },
-    {
-      "name": "empty-window-observable",
-      "pass": true,
-      "detail": "created=0"
-    },
-    {
-      "name": "customer-reads-own-notification",
-      "pass": true,
-      "detail": "status=200 rows=1"
-    },
-    {
-      "name": "customer-cannot-read-foreign-row",
-      "pass": true,
-      "detail": "status=200 rows=0"
-    },
-    {
-      "name": "customer-cannot-mutate-foreign-row",
-      "pass": true,
-      "detail": "status=204 still_unread=true"
-    },
-    {
-      "name": "customer-marks-own-read-persisted",
-      "pass": true,
-      "detail": "status=204 now_read=true"
-    },
-    {
-      "name": "admin-reads-notification",
-      "pass": true,
-      "detail": "rows=1"
-    },
-    {
-      "name": "anonymous-blocked-by-rls",
-      "pass": true,
-      "detail": "status=401 rows=n/a"
-    },
-    {
-      "name": "no-secret-leak",
-      "pass": true,
-      "detail": "leaks=[]"
+      "pass": false,
+      "detail": "status=400 order="
     }
   ],
-  "order_number": "BMB-20260927-778",
-  "passed": 24,
-  "total": 24,
-  "all_pass": true
+  "passed": 6,
+  "total": 7,
+  "all_pass": false
 }

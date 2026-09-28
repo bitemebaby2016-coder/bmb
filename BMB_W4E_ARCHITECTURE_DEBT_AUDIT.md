@@ -1,4 +1,7 @@
 # BMB_W4E_ARCHITECTURE_DEBT_AUDIT.md
+
+> หมายเหตุ execution: ช่วงต้นรอบนี้เกิด editor tool error ทำให้เอกสารบางส่วน commit ไม่ครบ (67e4652) และมีการเติมให้ครบใน commit ถัดไป (f26fec6/62841ca) — เนื้อหาปัจจุบันคือสถานะสุดท้ายที่ใช้ตัดสินได้ และไม่มีผลต่อ production runtime (เอกสารเท่านั้น)
+
 **W4-E-0 — Architecture / Technical Debt Reality Audit · วันที่: 2026-09-27 · AUDIT ONLY (ไม่มี implementation) · Authority: Production runtime > Code > Deployment state > Docs**
 
 ## STEP 1 — SYSTEM HEALTH (re-verified จาก production จริง 2026-09-27)
