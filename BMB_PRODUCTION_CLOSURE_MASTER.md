@@ -1,115 +1,177 @@
-# BMB_PRODUCTION_CLOSURE_MASTER — แผนปิดระบบสู่การเปิดร้านจริง
+# BMB_PRODUCTION_CLOSURE_MASTER — OWNER EXECUTION CONTRACT
 
-**วันที่สร้าง:** 2026-09-28 · HEAD `bca0853` (== origin/main, WORKTREE CLEAN)
-**ที่มาของเอกสารนี้:** ตรวจจาก **โค้ดจริงปัจจุบัน** (7 Edge Functions, 54 migrations, `src/pages`, `src/lib`) + ผลการรันจริงล่าสุด — **ไม่ใช้เอกสารเก่าเป็นหลักฐานว่า feature ใด complete**
+**สถานะเอกสาร:** OWNER EXECUTION CONTRACT — ผูกการทำงานทั้งหมดต่อจากนี้ · แก้ไขตามคำสั่ง Owner (2026-09-28)
+**ขั้นปัจจุบัน:** STEP 1 = **NOT STARTED** — ทุก STEP ต้องรอ OWNER REVIEW / OWNER APPROVAL ก่อนเริ่ม
 
-## สถานะปัจจุบัน (ล็อกตามคำสั่ง Owner)
+---
+
+## 1. เอกสารนี้คืออะไร — และ "ไม่ใช่" อะไร (หลักการที่ 1)
+
+**Master นี้ไม่ใช่ Audit Report** — ห้ามใช้เอกสารนี้ (หรือเอกสารใด) อ้างว่า feature ใด READY / COMPLETE โดยไม่มี evidence สดที่ตรวจจริงใน STEP นั้น
+
+บทบาทแยกเป็น 3 ชั้น:
+
+| ชั้น | หน้าที่ | ห้าม |
+|---|---|---|
+| **Master** (ไฟล์นี้) | เป้าหมาย · Gate · Definition of Done · Owner authority · ลำดับงาน | ห้ามใช้เป็นหลักฐานว่า feature complete |
+| **Audit** (รายงานที่เกิดใหม่ในแต่ละ STEP) | หลักฐานจาก code / DB / runtime (สดเสมอ) | ห้าม copy claim เก่ามาเป็น PASS |
+| **Implementation** (งานหลัง Owner เปิด Gate) | แก้ code/config ตาม scope ที่ Gate อนุญาต | ห้ามทำนอก scope / ล่วงหน้า |
+
+- ห้าม copy claim จากเอกสารเก่า (W1–W5 และอื่น ๆ) มาเป็น PASS โดยไม่มี evidence สดใหม่
+- สิ่งที่เคย "ผ่าน" มาก่อน = ประวัติ — ต้องพิสูจน์ใหม่ใน STEP ที่เกี่ยวข้องเสมอ
+
+## 2. เป้าหมาย (ล็อกตามคำสั่ง Owner)
+
+> เปิด BMB ให้รับ Order จริง + ชำระเงินจริง + ครัวใช้งานจริง + ส่งอาหารจริง + ลูกค้าติดตามได้ + รองรับ failure จริงอย่างควบคุมได้
+
+## 3. Definition of Done (เกณฑ์นำเสนอ Owner — ไม่ใช่การประกาศผ่าน)
+
+ทุกข้อต้องมี evidence สดจาก STEP ที่เกี่ยวข้อง:
+
+1. ลูกค้าจริงสั่ง → จ่าย (เงินจริง) → ครัวเตรียม → ส่งถึงมือ → ติดตามสถานะ ครบวงจร
+2. ชำระเงิน LIVE แบบ Owner-controlled (§8) + refund จริงพิสูจน์แล้ว
+3. ครัว/admin ใช้งานจริงด้วยบัญชีจริง (§10)
+4. ส่งจริงโดยคนขับจริง พร้อมหลักฐานการส่ง
+5. ลูกค้าติดตามสถานะจริงโดยไม่รั่ว PII
+6. failure ทุกประเภทถูก verify ตามระดับที่เหมาะสม (§9)
+7. ผ่าน STEP 7 — และ **Owner เป็นผู้ประกาศ OPEN SHOP เท่านั้น**
+
+## 4. ลำดับงานหลัก (ล็อก — ห้ามสลับ / ห้ามข้าม)
 
 ```text
-SOFTWARE FOUNDATION        = VERIFIED
-SOFTWARE E2E               = PASS
-PHYSICAL DELIVERY          = NOT VERIFIED
-FULLY OPERATIONAL          = NOT DECLARED
+STEP 1 — REAL CODE CLOSURE AUDIT
+        ↓
+OWNER REVIEW
+        ↓
+STEP 2 — COMMERCE INTEGRITY
+        ↓
+OWNER GATE
+        ↓
+STEP 3 — ADMIN COMMAND CENTER
+        ↓
+OWNER GATE
+        ↓
+STEP 4 — PHYSICAL DELIVERY PILOT PREPARATION
+        ↓
+OWNER GATE
+        ↓
+STEP 5 — PHYSICAL DELIVERY PILOT
+        ↓
+STEP 6 — REAL OPERATIONAL / FAILURE VERIFICATION
+        ↓
+STEP 7 — PRODUCTION OPERATIONAL GATE
+        ↓
+OWNER DECISION: OPEN SHOP
+        ↓
+กลับมาเปิด FROZEN ทีละเรื่อง
 ```
 
-**เป้าหมายเดียวของงานต่อจากนี้:** ทำให้ Bite Me Baby เปิดร้านได้จริง — รับ Order จริง · ชำระเงินจริง · จัดการ Order จริง · เตรียมอาหารจริง · ส่งอาหารจริง · ติดตามสถานะจริง · รับมือ failure ได้อย่างควบคุม
+## 5. Gate Model (ล็อกทุก STEP)
 
-**ห้ามเริ่ม Wave ใหม่** — งานต่อจากนี้เดินตาม Gate ในเอกสารนี้เท่านั้น
+```text
+AUDIT → OWNER REVIEW → OWNER APPROVAL → IMPLEMENT / EXECUTE
+     → TEST → RUNTIME VERIFY → EVIDENCE → GATE CLOSE
+```
 
----
-
-## 1. ความหมายของ "เปิดร้านจริงได้" (เกณฑ์ปิดระบบ)
-
-ระบบถือว่าปิดสู่ production จริง เมื่อครบทั้ง 6 เงื่อนไขนี้ (พิสูจน์สด ไม่ใช่แค่โค้ดมีอยู่):
-
-1. **ลูกค้าจริง 1 คน สั่งจริง จ่ายจริง ได้ของจริง** ครบวงจร โดยไม่มี QA/test identity แทรก
-2. **การชำระเงิน LIVE** (Stripe live key / PromptPay จริง) และ **refund จริงทดสอบผ่าน 1 ครั้ง**
-3. **ครัวจริง** ใช้ admin จริง เห็น order จริง เปลี่ยนสถานะจริง
-4. **ส่งของจริง** โดยคนขับจริง ไปถึงปลายทางจริง มีหลักฐานการส่ง
-5. **ลูกค้าติดตามสถานะจริง** ผ่าน /track ได้ โดยไม่มี PII รั่ว
-6. **failure ที่คาดได้ รับมือได้จริง:** ชำระไม่สำเร็จ / ยกเลิก / คนขับยกเลิก / ส่งไม่ถึง / refund คืนเงิน — แต่ละกรณีทดสอบจริงแล้วอย่างน้อย 1 ครั้ง
-
-## 2. สิ่งที่โค้ดมีจริงและพิสูจน์แล้ว (ฐานที่ยืนอยู่)
-
-| ส่วน | หลักฐานจากโค้ด/การรันจริง | สถานะ |
-|---|---|---|
-| Edge Functions ครบชุดหลัก | 7 ตัว: `create-checkout`, `stripe-webhook`, `stripe-refund`, `phone-auto-login`, `automation-worker`, `ai-proxy`, `channel-webhook` | DEPLOYED + runtime ตรวจแล้ว (401/400 guard ถูกต้อง) |
-| ฐานข้อมูล | 54 migrations · RLS ปิด anon ทุกตาราง PII · `track_order` ปลอดภัย (order_number+phone, rate-limited) | VERIFIED (probes 5/5) |
-| State machine order | `pending→confirmed→preparing→ready_for_dispatch→dispatched→in_transit→arrived→delivered` + `cancelled` — transition ผิดถูก block ด้วย RPC เดียว (`transition_order_status`) | RUNTIME VERIFIED (W5-2 สด) |
-| ชำระเงิน TEST | Stripe `pk_test` + tok_visa → webhook จริง → `paid`; กันโดนเก็บซ้ำ (single-open-PI + 409 already-paid) | RUNTIME VERIFIED (TEST เท่านั้น) |
-| ช่องทางชำระที่โค้ดรองรับ | `credit_card` (Stripe) · `promptpay` (+ offline reference: ส่งสลิป→admin ยืนยัน) | โค้ดมีจริง — PromptPay/offline ยังไม่ได้พิสูจน์กับเงินจริง |
-| หน้าคนขับ | `src/pages/RiderPwaPage.tsx` (242 บรรทัด): คนขับล็อกอินด้วยเบอร์ → เห็น assignment จริง → accept → เดินสถานะ picked_up/in_transit/arrived/delivered | โค้ดมีจริง + รันผ่าน RPC แล้ว (W5-2, ยังเป็น QA driver) |
-| หน้าติดตามลูกค้า | `/track` guest phone gate — เบอร์ถูกเห็นสถานะ, เบอร์ผิดปฏิเสธ, 0 PII | RUNTIME VERIFIED |
-| Admin | RLS admin ดี่ order/driver/assignment ครบ · ประวัติสถานะ + audit_logs ครบทุกขั้น | RUNTIME VERIFIED |
-| ความปลอดภัย | ไม่มี secret ใน client (scan 239 ไฟล์ 0 hit) · anon เข้าถึง order ไม่ได้ · anti-enumeration | VERIFIED |
-
-**สรุป:** โครงซอฟต์แวร์ครบและแข็งแรง — ที่เหลือคือ **ของจริง** (เงินจริง คนจริง ครัวจริง การส่งจริง) และ **การรับมือ failure กับเงินจริง**
-
-## 3. สิ่งที่ยังขาด (Gap) — สิ่งที่ต้องทำให้ครบก่อนประกาศ FULLY OPERATIONAL
-
-### Gap 1 — การชำระเงินจริง (ยังเป็น TEST 100%)
-- Stripe ยังใช้ `pk_test`/`sk_test` — ยังไม่มี live key ถูกตั้งและทดสอบ
-- `stripe-refund` มีโค้ดแต่ **ไม่เคยรีฟันด์จริง**
-- ต้องทำ: ตั้ง live key (Owner ตั้งเอง) → smoke 1 order จริงยอดเล็ก → refund จริง 1 ครั้ง → ปิด gate
-- ความเสี่ยงถ้าไม่ทำ: เปิดร้านแล้วลูกค้าจ่ายเงินจริงเข้า TEST หรือคืนเงินไม่ได้
-
-### Gap 2 — การส่งอาหารจริง (NOT VERIFIED)
-- ทุกอย่างที่ผ่านมาคือ **สถานะซอฟต์แวร์** ไม่ใช่ของถึงมือลูกค้า
-- ข้อจำกัดปัจจุบัน: self-delivery ≤5 km (คนขับร้าน) · >5 km = ต้อง rider ภายนอก (Grab) ซึ่ง **ยังห้ามเปิด** (frozen)
-- ต้องทำ: Physical Delivery Pilot ตาม `BMB_W5_3_PHYSICAL_DELIVERY_PILOT_SPEC.md` (ห้ามลูกค้าจริง/เงินจริง) → แล้วขยายเป็นลูกค้าจริง 1 รายแบบคุมด้วย Owner
-
-### Gap 3 — ลูกค้าจริง + ข้อมูลจริง (ยังไม่มี)
-- ระบบเคยเห็นแต่ข้อมูลทดสอบ — ต้องทำ **Real-First-Order Pilot**: ลูกค้าจริง 1 คน (Owner คุม) สั่ง-จ่าย-ได้ของ ครบวงจร แล้วตรวจ: PII ถูกเก็บถูกตำแหน่ง, /track ไม่รั่ว, admin เห็นถูกต้อง
-- ต้องเคลียร์ขยะทดสอบก่อน (ตาม `BMB_W5_TEST_ARTIFACT_CLEANUP_AUDIT.md` — รอ Owner อนุมัติ)
-
-### Gap 4 — รับมือ failure กับเงินจริง (ยังไม่เคยเกิดจริง)
-โค้ดรองรับอยู่แล้ว แต่ต้อง **ซ้อมจริง** แต่ละกรณี:
-| กรณี | กลไกที่มีอยู่ | ต้องพิสูจน์ |
-|---|---|---|
-| ชำระไม่สำเร็จ | `mark_payment_failed` + order ค้าง pending | เกิดจริง 1 ครั้ง → order ถูกจัดการถูก |
-| ลูกค้ายกเลิก | cancel window 5 นาที + `cancelled` | ยกเลิกหลังจ่ายแล้ว → คืนเงินได้จริง |
-| คนขับยกเลิก/ส่งไม่ถึง | reassign + `cancelled` | ส่งไม่ถึง 1 ครั้ง → ลูกค้าได้เงินคืน + ข้อมูลครบ |
-| ชำระแล้ว webhook ไม่มา | ตรวจ intent ค้าง manual (admin) | มีวิธีเช็ค/แก้ด้วยมือที่เขียนไว้แล้วใช้ได้จริง |
-| โดนเก็บเงินซ้ำ | single-open-PI guard (409) | มี live แล้วยังกันได้ |
+- **ห้าม AI เปิด Gate เอง** — ทุก Gate เปิดด้วยคำสั่ง Owner เท่านั้น
+- **ห้าม AI ประกาศ `FULLY OPERATIONAL`** — Owner เป็นผู้ประกาศเท่านั้น
+- หากงานใดคิดว่าจำเป็นต้องข้าม/แก้ลำดับ → STOP + รายงาน Owner ก่อนทำอย่างอื่น
 
 ---
+## 6. ขอบเขตแต่ละ STEP (สิ่งที่ต้องตรวจ/ทำ — ไม่ใช่ผลการตรวจ)
 
-## 4. แผนปิดระบบ (Closure Gates) — เดินทีละ Gate ห้ามข้าม
+**หลักการที่ 5 — ห้ามสรุปว่าโค้ดรองรับครบก่อน STEP 1:** ข้อความประเภท `reassign มีแล้ว` / `refund มีแล้ว` / `mark_payment_failed มีแล้ว` / `failure รองรับครบ` ให้ถือเป็น **สิ่งที่ต้องตรวจใน STEP 1** จนกว่าจะมี source-code + contract + runtime evidence รองรับทั้งสามด้าน
 
-| Gate | ชื่อ | สิ่งที่ทำ | เกณฑ์ผ่าน | ห้าม/หยุด |
-|---|---|---|---|---|
-| **G1** | เคลียร์ขยะทดสอบ | Owner อนุมัติ cleanup ตาม audit (ลบ order ทดสอบ/PI orphan/บัญชี orphan) | DB เหลือแต่ของจำเป็น · evidence `PO-…-131` เก็บไว้ | ห้ามลบ evidence, ห้ามแตะ order ลูกค้าจริง (ยังไม่มี) |
-| **G2** | เงินจริง LIVE | Owner ตั้ง Stripe live key → smoke order จริงยอดเล็ก → refund จริง 1 ครั้ง | จ่ายจริงเข้าบัญชีร้าน · คืนเงินจริงสำเร็จ · webhook live ทำงาน | ถ้า webhook live fail → STOP อย่าเปิดรับจ่าย |
-| **G3** | Physical Pilot (ไม่มีลูกค้าจริง) | ตาม W5-3 spec: คนขับทดสอบ → ปลายทางทดสอบ ≤5 km | ครบ 9 ขั้น + หลักฐานทุกขั้น | ห้าม Grab/รีดเดอร์ภายนอก · เกิน 5 km หยุด |
-| **G4** | Real-First-Order | ลูกค้าจริง 1 ราย (Owner คุม) สั่ง→จ่าย(live)→ครัวเตรียม→ส่งจริง→ลูกค้าติดตาม | ครบวงจร · PII ถูกต้อง · /track ปลอดภัย | มีอะไรผิดปกติ → หยุด+เก็บหลักฐาน |
-| **G5** | ซ้อม failure จริง | ซ้อม 5 กรณีใน Gap 4 ด้วยเงินจริงยอดเล็ก | ทุกกรณีจบสถานะถูกต้อง + เงินถูกต้อง | เงินไม่ตรง → STOP ทันที |
-| **G6** | Runbook + เปิดร้าน | เขียนคู่มือ 1 หน้า · ทดลองเดินร้านจริง 1 วัน · ประกาศ FULLY OPERATIONAL | วันทดลองไม่มีเหตุขัดขวาง | — |
+### STEP 1 — REAL CODE CLOSURE AUDIT (read-only)
+- ตรวจสดจาก source code + DB schema/RLS + runtime probes: payment paths (create-checkout / webhook / refund) · duplicate & open-PI behaviour · customer cancellation · driver flow (available/unavailable) · delivery failure · reassignment · admin visibility · tracking/PII · notifications/audit trail — **ทีละรายการ ระบุไฟล์/บรรทัด + ผลรันจริง**
+- ผลลัพธ์: รายงาน audit ใหม่ (ชื่อใหม่) แบ่งชัด `verified / not-verified / blocked` + รายการสิ่งที่ต้องแก้
+- ขอบเขต: **ห้ามแก้อะไรทั้งสิ้น** (code/DB/config/user/artifact)
 
-**ผลลัพธ์ที่คาดหวังต่อ Gate:** จบ G1–G5 ครบ → ยื่น G6 → ประกาศ FULLY OPERATIONAL ได้
+### STEP 2 — COMMERCE INTEGRITY (หลัง OWNER REVIEW)
+- จัดการช่องว่าง/ช่องโหว่ด้านเงินที่ STEP 1 พบ (payment state, PI lifecycle, refund path, webhook) — แก้เฉพาะรายการที่ Owner อนุมัติ
+- ผ่าน = TEST + RUNTIME VERIFY สด + EVIDENCE ครบ → OWNER GATE CLOSE
 
-## 5. กติกาที่ยังผูกอยู่ (ไม่เปลี่ยน)
-- ห้ามแตะ FROZEN: OTP/SMS · Web Push · Email/LINE · Meta · pg_cron · Supabase Pro/PITR · race optimization · rider ภายนอก (Grab)
-- ห้ามใช้เอกสารเก่าอ้างว่า feature complete — ทุก gate ต้องพิสูจน์สดแล้วบันทึกหลักฐานใหม่
-- ห้าม SQL force / mutation นอก canonical RPC · ห้าม schema เปลี่ยนโดยไม่จำเป็น
-- ทุกครั้งที่แตะ production: HEAD == origin/main, WORKTREE CLEAN, secret scan, บันทึก evidence
+### STEP 3 — ADMIN COMMAND CENTER (หลัง OWNER GATE)
+- ความพร้อมฝั่งครัว/admin ตามรายการที่ Owner อนุมัติ: บัญชีจริง · สิทธิ์ · หน้าจอครัว/assignment · การมองเห็น order ทั้งวัน
 
-## 6. ตารางสรุปสถานะเทียบเป้าหมาย
+### STEP 4 — PHYSICAL DELIVERY PILOT PREPARATION (หลัง OWNER GATE)
+- เตรียม test driver / test destination / run sheet — **ยังไม่มีการส่งจริง**
 
-| ความสามารถ (ตามเป้าหมาย Owner) | สถานะ | เหลืออะไร |
-|---|---|---|
-| รับ Order จริง | ซอฟต์แวร์พร้อม (RUNTIME VERIFIED) | ลูกค้าจริง + เคลียร์ข้อมูลทดสอบ (G1, G4) |
-| ชำระเงินจริง | ซอฟต์แวร์พร้อม (TEST) | live key + smoke + refund จริง (G2) |
-| จัดการ Order จริง | ซอฟต์แวร์พร้อม + admin มีจริง | บัญชี admin จริงของร้าน (G6) |
-| เตรียมอาหารจริง | state machine พร้อม | ครัวใช้จริง 1 วัน (G4/G6) |
-| ส่งอาหารจริง | โค้ด+RPC พร้อม · คนขับ UI มีจริง | Physical Pilot + คนขับจริง (G3, G4) |
-| ติดตามสถานะจริง | VERIFIED (0 PII) | ใช้กับลูกค้าจริง (G4) |
-| รับมือ failure ได้ | กลไกครบในโค้ด | ซ้อมจริง 5 กรณี (G5) |
+### STEP 5 — PHYSICAL DELIVERY PILOT
+- ส่งจริง 1 เที่ยวแบบทดสอบควบคุม (ไม่มีลูกค้าจริง / ไม่มีเงินจริง) ตามแผนที่ Owner อนุมัติ + evidence ทุกขั้น
+
+### STEP 6 — REAL OPERATIONAL / FAILURE VERIFICATION
+- ทดสอบ failure ทั้งหมดตามระดับใน §9 — เลือกวิธีที่ปลอดภัยที่สุดที่เพียงพอ
+
+### STEP 7 — PRODUCTION OPERATIONAL GATE
+- รวบรวม evidence จากทุก STEP → ยื่น Owner → **OWNER DECISION: OPEN SHOP** → เปิด FROZEN ทีละเรื่องด้วยคำสั่ง Owner เท่านั้น
+
+## 7. TEST ARTIFACT CLEANUP REVIEW (เดิมชื่อ G1 — หลักการที่ 2)
+
+**นี่คือ REVIEW ไม่ใช่ "ต้องลบทุกอย่างก่อนจึงไปต่อ":**
+- inventory test artifacts ให้ครบ (order / PaymentIntent / auth user / driver / Stripe charge)
+- classify ทุกชิ้น: `SAFE DELETE` / `SAFE REFUND` / `KEEP FOR EVIDENCE` / `OWNER ACTION` / `DEPENDENCY-RISK`
+- ระบุ evidence ที่จำเป็นต้องเก็บ — รายการนี้**ห้ามลบ**
+- **ห้าม DELETE / REFUND / MUTATE ใด ๆ โดยไม่มี Owner approval**
+- หลัง Owner approval → cleanup เฉพาะรายการที่อนุมัติ + บันทึกหลักฐานการลบทุกชิ้น
+
+## 8. REAL PAYMENT / LIVE (หลักการที่ 3 — Owner-controlled เท่านั้น)
+
+- **Live Stripe activation = Owner-controlled action** — AI ห้ามเปิดเองเด็ดขาด
+- AI **ห้าม** นำ live secret มา echo / commit / expose (รวมถึงใน log/evidence ใด ๆ)
+- AI **ห้าม** switch production payment mode เอง โดยไม่มี Owner authorization
+- ก่อน live ต้อง audit code / config / webhook / refund path ครบก่อน (STEP 1 → STEP 2)
+- live smoke + refund จริง = ทำ**เฉพาะเมื่อ Owner เปิด Gate** เท่านั้น
+- หาก live webhook / payment / refund มี anomaly แม้แต่อย่างเดียว → **HARD STOP** + รายงาน Owner ทันที
 
 ---
-**หมายเหตุ:** เอกสารนี้คือเป้าหมายและแผนเดียวที่ใช้ต่อจากนี้ ทุกงานถัดไปต้องอ้าง Gate ในเอกสารนี้ และต้องมีหลักฐานสดใหม่ทุกครั้ง
-### Gap 5 — การเดินร้านประจำวัน (Operations Runbook)
-- ยังไม่มีคู่มือสั้น ๆ สำหรับคนครัว/คนขับ/เจ้าของ: เปิดรอบ, รับ order, เปลี่ยนสถานะ, เรียกคนขับ, แก้ปัญหาเฉพาะหน้า, ดูยอดประจำวัน (automation-worker มี daily-report ในโค้ด — ยังไม่ deploy)
-- ต้องทำ: เขียน runbook 1 หน้า + ทดลองใช้จริง 1 วัน
+## 9. การทดสอบ Failure — 3 ระดับ (หลักการที่ 4)
 
-### Gap 6 — สิทธิ์คนจริง
-- ตอนนี้ไม่มี admin จริง (admin ทดสอบถูก revoke แล้ว) — ต้องสร้างบัญชี admin จริงของร้าน (Owner อนุมัติ) + บัญชีคนขับจริง
+**แต่ละ failure เลือกวิธีทดสอบที่ปลอดภัยและเหมาะสม — ห้ามสร้างความเสียหายจริงเพียงเพื่อให้ได้ PASS** (ไม่ล็อกว่าต้องใช้เงินจริงทุกกรณี)
+
+| ระดับ | ความหมาย | วิธีการโดยทั่วไป |
+|---|---|---|
+| `CODE/CONTRACT VERIFIED` | โค้ด + สัญญา (RPC/EF/state machine) รองรับ | code review + contract/unit test |
+| `CONTROLLED TEST VERIFIED` | ซ้อมในสภาพควบคุม | TEST mode / QA identity / ยอดเล็ก (Owner อนุมัติ) |
+| `REAL-WORLD VERIFIED` | เกิดจริงกับเงินจริง/การส่งจริง | เฉพาะกรณีจำเป็น + Owner อนุมัติเป็นรายกรณี |
+
+รายการ failure ที่ STEP 1 ต้องระบุระดับที่เหมาะสมของแต่ละข้อ:
+`payment failure` · `duplicate/open PI` · `customer cancellation` · `driver unavailable` · `delivery failure` · `reassignment` · `refund`
+
+## 10. Operational Readiness Items (หลักการที่ 6)
+
+รายการต่อไปนี้ถือเป็น **operational readiness items** — จัดการใน STEP 3 / STEP 7 เท่านั้น:
+- Real Owner/Admin account
+- Real Driver account
+- Kitchen operating flow
+- Delivery operating flow
+- Daily Runbook
+
+**ห้ามสร้างบัญชีจริง / ห้าม mutate production ในขั้นการทำ Master** — รวมถึงห้ามสร้าง admin/driver จริงล่วงหน้า
+
+## 11. Frozen Scope (หลักการที่ 8 — คงเดิมทั้งหมด + กฎ blocker)
+
+```text
+OTP / SMS
+P1-1 race
+Meta real E2E
+Facebook Group
+Payment Events
+Web Push / VAPID
+Email
+LINE
+pg_cron
+Supabase Pro / PITR
+new providers
+```
+
+**กฎเพิ่มเติม:** ถ้าพบว่า Frozen item เป็น blocker ต่อ production closure → **STOP และรายงาน Owner** แทนการแก้เอง
+
+## 12. สถานะปัจจุบัน + ข้อห้ามที่ยังผูกอยู่
+
+- Master document = UPDATED (commit นี้) · STEP 1 = **NOT STARTED** · Production mutation = **NONE**
+- ข้อห้ามจนกว่า Owner จะเปิด Gate ที่เกี่ยวข้อง: ห้ามแก้ source code · ห้ามแก้ DB · ห้ามสร้าง/ลบ user · ห้ามแตะ production configuration · ห้าม cleanup test artifacts · ห้าม refund · ห้ามเปิด LIVE payment
+- ทุก STEP รายงานกลับแบบ `STATUS / OBJECTIVE / FINDING / ACTION / VERIFICATION` พร้อม evidence สด และจบด้วยการรอ OWNER REVIEW
+
+---
+**สิ้นสุด OWNER EXECUTION CONTRACT — รอคำสั่ง Owner**
