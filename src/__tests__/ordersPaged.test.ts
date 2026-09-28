@@ -120,27 +120,23 @@ describe('getOrdersPaged contract (W4-E-1 D9)', () => {
   })
 
   it('errors degrade gracefully to empty result (contract)', async () => {
-    vi.resetModules()
-    vi.doMock('@/lib/supabase', async () => {
-      const { createSupabaseMock } = await import('./helpers/supabaseMock')
-      return {
-        supabase: createSupabaseMock({ failReadTable: 'orders' }),
-        supabaseAdmin: null,
-        getCurrentUser: async () => null,
-        isAdmin: async () => false,
-        default: null,
-      }
-    })
-    try {
-      const mod = await import('@/lib/bmbAdminApi_orders')
-      const res = await mod.getOrdersPaged({ page: 0 })
-      expect(res).toEqual({ orders: [], total: 0 })
-      const agg = await mod.getOrdersAggregated()
-      expect(agg).toEqual({ total: 0, totalRevenue: 0 })
-    } finally {
-      vi.doUnmock('@/lib/supabase')
-      vi.resetModules()
+    // simulate a PostgREST error response through the full builder chain —
+    // the API layer must degrade to the documented empty-result contract
+    const errBuilder: any = {
+      select() { return errBuilder },
+      eq() { return errBuilder },
+      order() { return errBuilder },
+      range() { return errBuilder },
+      then(res: (v: any) => void) { res({ data: null, error: { code: 'PGRST', message: 'forced' }, count: null }) },
     }
+    const spy = vi.spyOn(supabase, 'from') as any
+    spy.mockImplementationOnce(() => errBuilder)
+    const res = await getOrdersPaged({ page: 0 })
+    expect(res).toEqual({ orders: [], total: 0 })
+    spy.mockImplementationOnce(() => errBuilder)
+    const agg = await getOrdersAggregated()
+    expect(agg).toEqual({ total: 0, totalRevenue: 0 })
+    spy.mockRestore()
   })
 })
 
