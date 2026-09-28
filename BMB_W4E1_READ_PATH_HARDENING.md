@@ -33,6 +33,8 @@
 - ไม่มี production mutation ใด (write paths/RPC/RLS ไม่ถูกแตะ — diff เฉพาะ read paths)
 - getCustomersWithStats (bmbAdminApi_customers) = เดิม column-limited (5 คอลัมน์) สำหรับ per-customer aggregation — KEEP (ตรงตามหลักการ query เฉพาะที่จำเป็น)
 
+**หมายเหตุ execution audit trail**: ระหว่างรอบนี้ editor tool มี intermittent error ทำให้เกิด commit ขนาดเล็กหลายรายการและมี push retry — ทุก commit ผ่าน secret scan และสถานะสุดท้าย HEAD == origin/main · WORKTREE CLEAN (audit trail ครบถ้วนใน git log)
+
 ## RUNTIME VERIFIED (production, READ-ONLY probes 2026-09-27 · หลัง push)
 
 ```text
