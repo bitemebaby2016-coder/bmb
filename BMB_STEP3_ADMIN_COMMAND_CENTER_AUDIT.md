@@ -135,3 +135,19 @@ Date: 2026-09-28 · Project: `ivkdfognyiwjcmrhcnwz` · Mode: **AUDIT ONLY — no
 - **Impact analysis (source-verified):** only caller is `kitchenService.getInventoryRequirements` (Admin/Kitchen); **no page / customer-PWA / Edge Function / order path** uses it; no alternative public-safe RPC exists; no order/payment/pre-order dependency.
 - **Local (pre-deploy):** migration-contract check `e2e/ct-gsec01b-contract.cjs` → **8/8 PASS**; Admin inventory path `inventoryAdmin.test.ts` PASS; `vitest` **199/199**; `tsc` 0; `lint` 0; `build` PASS.
 - Post-deploy verification → `e2e/ct-gsec01b-probe.cjs` (anon/non-admin denied, admin PASS; table anon/non-admin denied, admin PASS).
+
+### STEP 3A.1 / G-SEC-01b — production deployment + runtime verification (PASS)
+- Migration `053_g_sec01b_inventory_requirements_guard.sql` **applied** (mgmt query → HTTP 201).
+- Post-deploy read-only probe (`e2e/ct-gsec01b-probe.cjs`):
+  - **A** `get_inventory_requirements` anon → **DENIED** (401/`42501`)
+  - **B** non-admin customer JWT → **DENIED** (`ERR_FORBIDDEN`)
+  - **C** admin JWT → **PASS** (`ok:true`, `feasible`, requirements)
+  - **D** direct `inventory` anon → **DENIED** (401)
+  - **E** direct `inventory` non-admin → **DENIED** (0 rows)
+  - **F** direct `inventory` admin → **PASS** (4 rows)
+- Regression: `vitest` 199/199 · `tsc` 0 · `lint` 0 · `build` PASS.
+
+## RESULT
+- **G-SEC-01** (direct inventory table public read) = **CLOSED** (RUNTIME VERIFIED).
+- **G-SEC-01b** (get_inventory_requirements unauthorized authenticated access) = **CLOSED** (RUNTIME VERIFIED).
+- Throwaway probe profiles created for verification (`[STEP3A]`, `[STEP3A1]` ADMIN/CUST) — left for Owner cleanup per STEP 2 precedent (not removed; removal is a write).
