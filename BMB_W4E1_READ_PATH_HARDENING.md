@@ -74,7 +74,7 @@ DEFERRED         = ไม่มี (D2 ยังอยู่ future phase ตา
 | W4-C realtime audit + dead-code cleanup | 45ade88 · aab0619 | DONE / CLEANUP COMPLETE |
 | W4-D TODO/marker audit | d06761c | DONE (OTP FROZEN · P1-1 FROZEN · P1-2/3/5 DEFERRED) |
 | W4-E-0 debt reality audit | 67e4652/f26fec6/62841ca | DONE (D1/D2/D9) |
-| W4-E-1 read-path hardening + D9 | ดู git log | DONE — D1 CLOSED · D9 CLOSED |
+| W4-E-1 read-path hardening + D9 | git log | DONE — D1 CLOSED · D9 CLOSED |
 
 คงเหลือ: D2 (MEDIUM, future phase) — ไม่มี CRITICAL/HIGH
 Wave 4 = COMPLETE · พร้อมรับคำสั่ง Wave 5 จาก Owner
