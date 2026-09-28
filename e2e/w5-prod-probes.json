@@ -1,0 +1,91 @@
+{
+  "timestamp": "2026-09-28T03:39:53.726Z",
+  "supa": "https://ivkdfognyiwjcmrhcnwz.supabase.co",
+  "probes": [
+    {
+      "name": "fn:ai-proxy",
+      "status": 401,
+      "body": "{\"error\":\"unauthorized\"}"
+    },
+    {
+      "name": "fn:stripe-webhook",
+      "status": 400,
+      "body": "{\"error\":\"ERR_INVALID_SIGNATURE\"}"
+    },
+    {
+      "name": "fn:create-checkout",
+      "status": 401,
+      "body": "{\"error\":\"ERR_NOT_AUTHENTICATED\"}"
+    },
+    {
+      "name": "fn:stripe-refund",
+      "status": 401,
+      "body": "{\"error\":\"ERR_NOT_AUTHENTICATED\"}"
+    },
+    {
+      "name": "fn:automation-worker",
+      "status": 401,
+      "body": "{\"error\":\"unauthorized\"}"
+    },
+    {
+      "name": "fn:phone-auto-login",
+      "status": 400,
+      "body": "{\"error\":\"ERR_MISSING_NAME_OR_PHONE\"}"
+    },
+    {
+      "name": "fn:daily-report",
+      "status": 404,
+      "body": "{\"code\":\"NOT_FOUND\",\"message\":\"Requested function was not found\"}"
+    },
+    {
+      "name": "rest:products",
+      "status": 200,
+      "body": "[{\"id\":\"prod-1789607383214-t8rm95\"}, \n {\"id\":\"prod-1789610117076-2p5e8u\"}, \n {\"id\":\"prod-1789952342087-ian4a1\"}, \n {\"id\":\"prod-6\"}, \n {\"id\":\"prod-1\"}]"
+    },
+    {
+      "name": "rest:delivery_rounds",
+      "status": 200,
+      "body": "[{\"id\":\"round-20260928-evening\",\"round_key\":\"evening\",\"cutoff_time\":\"16:00:00\",\"max_capacity\":100,\"current_count\":0,\"status\":\"active\",\"date\":\"2026-09-28\"}, \n {\"id\":\"round-20260928-midday\",\"round_key\":\"midday\",\"cutoff_time\":\"09:00:00\",\"max_capacity\":80,\"current_count\":0,\"status\":\"active\",\"date\":\"2026-09-28\"}, \n {\"id\":\"round-20260928-morning\",\"round_key\":\"morning\",\"cutoff_time\":\"23:59:59\",\"max_capac"
+    },
+    {
+      "name": "rest:orders",
+      "status": 200,
+      "body": "[{\"id\":\"ord- ###########-432e72\",\"status\":\"cancelled\"}, \n {\"id\":\"ord- ###########-48a0b0\",\"status\":\"cancelled\"}, \n {\"id\":\"ord- ###########-eb2d13\",\"status\":\"cancelled\"}]"
+    },
+    {
+      "name": "rest:pre_orders",
+      "status": 401,
+      "body": "{\"code\":\"42501\",\"details\":null,\"hint\":\"Grant the required privileges to the current role with: GRANT SELECT ON public.pre_orders TO anon;\",\"message\":\"permission denied for table pre_orders\"}"
+    },
+    {
+      "name": "rest:business_settings",
+      "status": 401,
+      "body": "{\"code\":\"42501\",\"details\":null,\"hint\":\"Grant the required privileges to the current role with: GRANT SELECT ON public.business_settings TO anon;\",\"message\":\"permission denied for table business_settings\"}"
+    },
+    {
+      "name": "rest:promotions",
+      "status": 200,
+      "body": "[{\"id\":\"promo-welcome-banner\",\"name\":\"Welcome special - 10% off\",\"is_active\":true}]"
+    },
+    {
+      "name": "rest:order_status_history",
+      "status": 401,
+      "body": "{\"code\":\"42501\",\"details\":null,\"hint\":\"Grant the required privileges to the current role with: GRANT SELECT ON public.order_status_history TO anon;\",\"message\":\"permission denied for table order_status_history\"}"
+    },
+    {
+      "name": "rest:drivers",
+      "status": 401,
+      "body": "{\"code\":\"42501\",\"details\":null,\"hint\":\"Grant the required privileges to the current role with: GRANT SELECT ON public.drivers TO anon;\",\"message\":\"permission denied for table drivers\"}"
+    },
+    {
+      "name": "auth:s1-demo-cred",
+      "status": 400,
+      "body": "{\"code\":400,\"error_code\":\"invalid_credentials\",\"msg\":\"Invalid login credentials\"}"
+    },
+    {
+      "name": "prod:home",
+      "status": 200,
+      "len": 5566
+    }
+  ]
+}
