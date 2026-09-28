@@ -59,7 +59,7 @@ INFO:     ที่เหลือทั้งหมด (docs/generated/test fix
 
 SAFE CLEANUP: 0 จำเป็น (MOCK_* TODOs = OBSOLETE docs — historical records,
   ไม่แตะ; ไม่มี dead code/typo ที่กระทบ)
-OWNER DECISION: 2
+OWNER DECISION: 2 — **RESOLVED (Owner 2026-09-27): (1) OTP = ACCEPT MVP RISK/FROZEN (2) P1-2/3/5 = DEFERRED (Future Security Phase)**
   (1) TODO OTP — phone login ไม่มี SMS verification: รับความเสี่ยงต่อ / อนุมัติ
       implement OTP (แตะ FROZEN: SMS + identity → ต้องอนุมัติแยก)
   (2) P1-2/P1-3/P1-5 (inventory clamp, localStorage→DB) — จัดคิว remediation
@@ -85,8 +85,17 @@ DEFERRED         = P1-1 (FROZEN) · P1-2/3/5 (OWNER)
 OWNER DECISION   = 2 (รายการข้างบน)
 ```
 
+## OWNER DECISIONS — LOCKED (2026-09-27)
+
+```text
+OTP (phone-auto-login TODO) = ACCEPT MVP RISK → FROZEN
+P1-1 race optimization      = FROZEN
+P1-2 / P1-3 / P1-5          = DEFERRED (Known Tech Debt / Future Security Phase)
+```
+
 ## ห้ามตีความ
-- ห้ามรายงาน TODO OTP เป็น PASS หรือ RESOLVED — ยังเป็น **KNOWN GAP ที่รอ Owner decision**
+
+- ห้ามรายงาน TODO OTP เป็น PASS หรือ RESOLVED — สถานะจบที่ **FROZEN: ACCEPT MVP RISK (Owner 2026-09-27)**
 - ห้ามสรุป raw marker counts เป็น debt — ส่วนใหญ่เป็น doc words/UI attributes/SQL syntax
 
 ## FROZEN SCOPE — INTACT

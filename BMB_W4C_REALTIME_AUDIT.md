@@ -44,10 +44,8 @@ Runtime verification: publication ว่าง ยืนยันผ่าน re
 TRUE STUBS: 1 (realtimeStub.ts — เจตนาที่ถูกต้อง: ประหยัด ~100KB)
 MISSING CAPABILITIES: ไม่มี business requirement ที่ต้องใช้ realtime จริง
   (freshness ที่มีอยู่ = polling; notifications = Web Push FROZEN/DEFERRED)
-SAFE CLEANUP: 1 รายการเสนอได้ (subscribeToTable/unsubscribeFromChannel dead code
-  + 3 test mocks — non-destructive, แต่ต้องแก้ tests ร่วม → OWNER REVIEW)
-OWNER DECISION REQUIRED: 1 (อนุมัติ/ไม่อนุมัติ ลบ dead-code helpers ใน W4-D
-  หรือคงไว้เป็น API surface สำหรับอนาคต)
+SAFE CLEANUP — OWNER REVIEW → APPROVED & EXECUTED (ลบ subscribeToTable/unsubscribeFromChannel + แก้ 3 mocks — ดู W4-C CLEANUP GATE ด้านล่าง)
+OWNER DECISION REQUIRED: CLOSED (stub = KEEP by owner)
 
 IMPLEMENTED      = 0 (audit-only)
 CONNECTED        = 0
@@ -65,7 +63,7 @@ OWNER DECISION   = 1
 - ห้ามลบ stub (bundle protection ตั้งใจ · ถ้าลบ = bundle regression ~100KB)
 - การเปิด realtime จริงในอนาคตต้อง: add table เข้า publication (= DB change → ต้องอนุมัติแยก) + ลบ alias + RLS-aware policies → เกิน scope W4
 
-**HARD STOP — รอ Owner decision ก่อน W4-D**
+**HARD STOP — รอ Owner decision ก่อน W4-D — CLOSED: Owner อนุมัติ cleanup และ KEEP stub (ด้านล่าง)**
 
 ## W4-C CLEANUP GATE — CLOSED (OWNER-APPROVED EXECUTION)
 

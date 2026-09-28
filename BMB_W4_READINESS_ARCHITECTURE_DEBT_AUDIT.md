@@ -39,7 +39,7 @@
 | CRITICAL | — | ไม่พบ (operational correctness ไม่มีช่องโหว่ใหม่จาก audit นี้) |
 | HIGH | Backup/DR configuration ยังไม่เปิด (อยู่ใน W3-E-3 owner gate — ไม่ใช่ code debt) | W3-E-3 evidence |
 | MEDIUM | (1) realtime-js ถูก stub ออก (bundle) — ถ้าอนาคตต้องใช้ realtime ต้องกลับมาตัดสินใจ (vite alias) (2) 9 placeholder EF folders (3) ไม่มี pagination ใน admin dashboard stats | grep/vite.config/adminUi |
-| LOW | (1) TODO ×2 · LEGACY/DEPRECATED/TEMP markers ×5 ใน src (2) bmbAdminApi_users/getOrdersByCustomer อ่าน orders แบบ select=* (query surface กว้างแต่ RLS ปิดอยู่) | grep จริง |
+| LOW | TODO ×2 + markers ×5 (จำแนกครบแล้วใน W4-D) · getOrdersByCustomer อ่านเต็มตาราง (RLS ปิดอยู่ — ดู D1/D9 ใน W4-E-0) | grep จริง |
 
 ## 7. FROZEN INTEGRATION READINESS (ตรวจเท่านั้น — ไม่เปิด)
 
@@ -56,7 +56,10 @@
 READY:                    Customer PWA core · Admin command center · Backend contract · Automation · AI boundary
 BLOCKED:                  Backup/DR enablement (COST GATE — Supabase Pro + PITR add-on; Dashboard-only)
 OWNER DECISION:           backup tier/PITR · test project · payment events design · push/email/sms/line providers · placeholder EF cleanup
-TECHNICAL DEBT:           9 placeholder EFs (MEDIUM) · realtime stub (MEDIUM) · admin pagination (MEDIUM) · TODO/markers ×7 (LOW)
+TECHNICAL DEBT (สถานะ 2026-09-27 หลัง W4-A/B/C/D/E-0): 9 placeholder EFs = REMOVED (W4-B) ·
+realtime stub = INTENTIONAL KEEP + dead-code helpers removed (W4-C) · admin pagination = DONE (W4-A) ·
+TODO/markers จำแนกครบ + OTP = FROZEN ACCEPT RISK + P1-1 FROZEN + P1-2/3/5 DEFERRED (W4-D) ·
+remaining: D1 full-table AI/analytics reads (MEDIUM, safe-cleanup candidate) · D2 admin client-write path (MEDIUM, future) · D9 paged-path unit tests (LOW) — ดู BMB_W4E_ARCHITECTURE_DEBT_AUDIT.md
 EVIDENCE:                 grep results + W3 gates ทั้งหมด + Management API + runtime probes (doc นี้และ W3 docs)
 NEXT IMPLEMENTATION CANDIDATES (ไม่จัดอันดับ — รอ Owner เลือก):
   1. Enable backups/PITR (Owner, Dashboard) — เหตุผลด่วนสุดตาม W3-E-3
