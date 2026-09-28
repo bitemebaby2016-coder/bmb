@@ -63,4 +63,16 @@ DEFERRED         = ไม่มี (D2 ยังอยู่ future phase ตา
 ## GATE
 - tsc 0 · vitest 23 files/190 tests ✓ · eslint 0 · build ✓ · secret scan 0 · HEAD == origin/main · WORKTREE = CLEAN
 
-**W4-E-1 GATE — D1 = CLOSED · D9 = CLOSED · Wave 4 Readiness Summary อยู่ท้ายเอกสาร**
+## Wave 4 Readiness Summary (Final)
+
+| Phase | Commit | Status |
+|---|---|---|
+| W4-A admin pagination | 1f6d140 | DONE |
+| W4-B placeholder EF audit + cleanup | 4c05cf7 · 1873047 | DONE / CLEANUP COMPLETE |
+| W4-C realtime audit + dead-code cleanup | 45ade88 · aab0619 | DONE / CLEANUP COMPLETE |
+| W4-D TODO/marker audit | d06761c | DONE (OTP FROZEN · P1-1 FROZEN · P1-2/3/5 DEFERRED) |
+| W4-E-0 debt reality audit | 67e4652/f26fec6/62841ca | DONE (D1/D2/D9) |
+| W4-E-1 read-path hardening + D9 | (รอบนี้) | DONE — D1 CLOSED · D9 CLOSED |
+
+คงเหลือ: D2 (MEDIUM, future phase) — ไม่มี CRITICAL/HIGH
+Wave 4 = COMPLETE · พร้อมรับคำสั่ง Wave 5 จาก Owner
