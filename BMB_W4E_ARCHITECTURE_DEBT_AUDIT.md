@@ -70,4 +70,16 @@ OWNER DECISIONS REQUIRED: 0 (ปิด W4 ได้ — ดู Final Wave 4 Summ
 - git status/diff: เอกสาร audit เท่านั้น · secret scan CLEAN (0)
 - Commit/Push แล้ว · HEAD == origin/main · WORKTREE = CLEAN
 
-**HARD STOP — ห้ามเริ่ม W4-E-1 เอง รอ Owner เลือกจาก Debt Matrix**
+## สรุป W4 (Final)
+
+```text
+W4-A admin pagination      = DONE (1f6d140)
+W4-B placeholder EF audit  = DONE (4c05cf7) · cleanup COMPLETE (1873047)
+W4-C realtime audit        = DONE (45ade88) · dead-code cleanup COMPLETE (aab0619)
+W4-D TODO/marker audit     = DONE (d06761c) — OTP FROZEN/ACCEPT RISK · P1-1 FROZEN · P1-2/3/5 DEFERRED
+W4-E-0 debt reality audit  = DONE (67e4652/f26fec6/62841ca) — D1/D2/D9 classified
+W4-E-1 read-path hardening = DONE (D1 CLOSED) · D9 CLOSED (11 tests, 179→190)
+D2 (admin client-write path) = MEDIUM · future phase (ต้อง design RPC ชุดใหม่) — ไม่เร่ง
+```
+
+WAVE 4 = COMPLETE (รอ Owner สั่งเริ่ม Wave 5)
