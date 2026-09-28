@@ -6,7 +6,7 @@
 // ============================================
 
 import { supabase } from './supabase'
-import { getOrders } from './bmbAdminApi_orders'
+import { getOrdersAggregated, getOrdersSince } from './bmbAdminApi_orders'
 import { getInventory } from './bmbAdminApi_inventory'
 import type { Ingredient } from '@/types'
 
@@ -65,12 +65,19 @@ export interface DashboardStats {
 }
 
 export async function getDashboardStats(): Promise<DashboardStats> {
-  const [orders, inventory] = await Promise.all([getOrders(), getInventory()])
+  // W4-E-1 (D1): aggregated reads replace the full-table getOrders() fetch —
+  // totals via count-exact + column-limited batched sum; today's slice is a
+  // small gte(created_at) query. Aggregation math is unchanged.
+  const today = new Date().toISOString().slice(0, 10)
+  const [agg, todays, inventory] = await Promise.all([
+    getOrdersAggregated(),
+    getOrdersSince({ sinceISO: `${today}T00:00:00.000Z`, columns: ['created_at', 'status', 'total_amount'] }),
+    getInventory(),
+  ])
   const users = await getUsers()
 
-  const today = new Date().toISOString().slice(0, 10)
-  const todayOrders = orders.filter((o: any) => o.created_at.startsWith(today))
-  const todayRevenue = todayOrders.reduce((sum: number, o: any) => sum + o.total_amount, 0)
+  const todayOrders = (todays as any[]).filter((o: any) => String(o.created_at).startsWith(today))
+  const todayRevenue = todayOrders.reduce((sum: number, o: any) => sum + Number(o.total_amount || 0), 0)
   const pendingOrders = todayOrders.filter((o: any) => o.status === 'pending' || o.status === 'confirmed').length
   const deliveredOrders = todayOrders.filter((o: any) => o.status === 'delivered').length
   const completionRate = todayOrders.length > 0 ? Math.round((deliveredOrders / todayOrders.length) * 100) : 0
@@ -82,8 +89,8 @@ export async function getDashboardStats(): Promise<DashboardStats> {
     pendingOrders,
     completionRate,
     lowStockItems,
-    totalOrders: orders.length,
-    totalRevenue: orders.reduce((sum: number, o: any) => sum + o.total_amount, 0),
+    totalOrders: agg.total,
+    totalRevenue: agg.totalRevenue,
     totalCustomers: users.filter((u: User) => (u.role ?? 'customer') === 'customer').length
   }
 }

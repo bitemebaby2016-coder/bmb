@@ -7,7 +7,7 @@
 import { supabase } from './supabase'
 import type { Product } from '@/types'
 import { getProducts, getProduct } from './bmbAdminApi_products'
-import { getOrders, getOrder } from './bmbAdminApi_orders'
+import { getOrder } from './bmbAdminApi_orders'
 import { getReviews, getAverageRating } from './reviewApi'
 import { getCategories } from './bmbAdminApi_products'
 import { MODEL_A_FALLBACK, resolveModelA } from './aiModels'

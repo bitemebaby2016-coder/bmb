@@ -145,11 +145,56 @@ export async function getOrders(): Promise<OrderForm[]> {
   return await hydrateOrderItems((data || []) as OrderForm[])
 }
 
-export async function getOrdersAdmin(): Promise<OrderForm[]> {
-  const { data, error } = await supabase.from('orders').select('*').order('created_at', { ascending: false })
-  if (error) { console.error('[getOrdersAdmin] Error:', error); return [] }
+// W4-E-1 (D1): aggregated/filtered read helpers — replace full-table getOrders()
+// fetches in analytics/admin paths. READ-ONLY; no business logic change.
+export async function getOrdersAggregated(): Promise<{ total: number; totalRevenue: number }> {
+  try {
+    const { count, error } = await supabase
+      .from('orders')
+      .select('total_amount', { count: 'exact', head: true })
+    if (error) { console.error('[getOrdersAggregated] count error:', error); return { total: 0, totalRevenue: 0 } }
+    const total = count ?? 0
+    let totalRevenue = 0
+    const PAGE = 1000
+    for (let from = 0; from < total; from += PAGE) {
+      const { data, error: sumErr } = await supabase
+        .from('orders')
+        .select('total_amount')
+        .range(from, from + PAGE - 1)
+      if (sumErr) { console.error('[getOrdersAggregated] sum error:', sumErr); break }
+      for (const r of (data || []) as any[]) totalRevenue += Number(r.total_amount || 0)
+      if (!data || data.length < PAGE) break
+    }
+    return { total, totalRevenue }
+  } catch (e) {
+    console.error('[getOrdersAggregated] Error:', e)
+    return { total: 0, totalRevenue: 0 }
+  }
+}
+
+export async function getOrdersByStatuses(statuses: string[]): Promise<OrderForm[]> {
+  if (!statuses || statuses.length === 0) return []
+  const { data, error } = await supabase
+    .from('orders')
+    .select('*')
+    .in('status', statuses)
+    .order('created_at', { ascending: false })
+  if (error) { console.error('[getOrdersByStatuses] Error:', error); return [] }
   return await hydrateOrderItems((data || []) as OrderForm[])
 }
+
+export async function getOrdersSince(opts: { sinceISO: string; columns?: string[] }): Promise<any[]> {
+  const cols = opts.columns && opts.columns.length > 0 ? opts.columns.join(',') : '*'
+  const { data, error } = await supabase
+    .from('orders')
+    .select(cols)
+    .gte('created_at', opts.sinceISO)
+    .order('created_at', { ascending: false })
+  if (error) { console.error('[getOrdersSince] Error:', error); return [] }
+  return (data || []) as any[]
+}
+
+// W4-E-1: getOrdersAdmin() removed — dead duplicate of getOrders() (0 callers, verified W4-E-1 audit).
 
 export async function getOrdersByCustomer(customerId: string): Promise<OrderForm[]> {
   const { data, error } = await supabase.from('orders').select('*').eq('customer_id', customerId).order('created_at', { ascending: false })
@@ -293,29 +338,10 @@ export async function cancelOrder(orderNumber: string, reason: string = ''): Pro
   }
 }
 
-export async function getDashboardStats(): Promise<{
-  todayOrders: number
-  todayRevenue: number
-  pendingOrders: number
-  totalOrders: number
-  totalRevenue: number
-}> {
-  const today = new Date().toISOString().split('T')[0]
+// W4-E-1 (D1): the orders-table getDashboardStats() duplicate was removed —
+// it was a dead full-table read (0 callers; the canonical stats live in
+// bmbAdminApi_users.getDashboardStats, now hardened with aggregated reads).
 
-  const { data: orders, error } = await supabase.from('orders').select('*').order('created_at', { ascending: false })
-  if (error) { console.error('[getDashboardStats] Error:', error); return { todayOrders: 0, todayRevenue: 0, pendingOrders: 0, totalOrders: 0, totalRevenue: 0 } }
-
-  const allOrders = orders as OrderForm[]
-  const todayOrders = allOrders.filter(o => o.created_at.startsWith(today))
-
-  return {
-    todayOrders: todayOrders.length,
-    todayRevenue: todayOrders.reduce((sum, o) => sum + o.total_amount, 0),
-    pendingOrders: todayOrders.filter(o => o.status === 'pending' || o.status === 'confirmed').length,
-    totalOrders: allOrders.length,
-    totalRevenue: allOrders.reduce((sum, o) => sum + o.total_amount, 0),
-  }
-}
 // ============================================
 // C-6 (2026-09-19): server-side Stripe refund via Edge Function (admin-only).
 // The EF verifies the caller is an admin, validates the order/intent, calls the

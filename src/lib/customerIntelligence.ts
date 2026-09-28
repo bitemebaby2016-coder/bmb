@@ -4,7 +4,7 @@
 // ============================================
 
 import { storageGet, storageSet } from './bmbStorage'
-import { getOrders } from './bmbAdminApi_orders'
+import { getOrdersByCustomer } from './bmbAdminApi_orders'
 import { getReviews } from './reviewApi'
 import { getCustomerMemory } from './aiMemory'
 import type { Review } from './reviewApi'
@@ -49,7 +49,7 @@ const INTELLIGENCE_PREFIX = 'bmb_customer_intelligence_'
 
 // Calculate customer intelligence from raw data
 export async function calculateCustomerIntelligence(customerId: string): Promise<CustomerIntelligence> {
-  const orders = (await getOrders()).filter((o: any) => o.customer_id === customerId)
+  const orders = await getOrdersByCustomer(customerId)
   const allReviews = storageGet<Review[]>('bmb_reviews', [])
   const reviews = allReviews.filter((r: Review) => r.customer_id === customerId)
   const memory = null as CustomerMemory | null

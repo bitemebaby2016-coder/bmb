@@ -3,7 +3,6 @@
 // ============================================
 
 import { storageGet, storageSet } from './bmbStorage'
-import { getOrders } from './bmbAdminApi_orders'
 import { getProducts } from './bmbAdminApi_products'
 import { calculateDemandForecast, getProductionRecommendations } from './demandForecasting'
 

@@ -3,7 +3,7 @@
 // Predicts order volume for production planning
 // ============================================
 
-import { getOrders } from './bmbAdminApi_orders'
+import { getOrdersSince } from './bmbAdminApi_orders'
 
 export interface DemandForecast {
   date: string
@@ -26,7 +26,12 @@ export interface HistoricalData {
 
 // Get historical order data
 export async function getHistoricalData(days: number = 30): Promise<HistoricalData[]> {
-  const orders = await getOrders()
+  // W4-E-1 (D1): column-limited + time-bounded read (server-side gte) instead of
+  // a full-table fetch. The daysDiff<=days check below keeps semantics identical.
+  const orders = await getOrdersSince({
+    sinceISO: new Date(Date.now() - days * 86400000).toISOString(),
+    columns: ['created_at', 'delivery_round', 'total_amount'],
+  })
   const historical: HistoricalData[] = []
   const today = new Date()
 

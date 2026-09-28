@@ -19,7 +19,7 @@
 
 | ID | Component | Finding | Evidence | Severity | Type | Status | Recommended Action |
 |---|---|---|---|---|---|---|---|
-| D1 | AI intelligence modules | 5 modules (inventoryPrediction/demandForecasting/customerIntelligence/promotionIntelligence ×2) + AdminOrders/DeliveryManagement ยังเรียก `getOrders()` full-table | git grep getOrders callers · getOrdersPaged มีแล้ว (W4-A) | **MEDIUM** | SCALABILITY/PERFORMANCE | OPEN | SAFE CLEANUP CANDIDATE (W4-E-1): migrate callers ไป paged/aggregated reads — non-destructive |
+| D1 | AI intelligence modules | **CLOSED (W4-E-1)** — callers migrated to paged/aggregated reads: users.getDashboardStats → getOrdersAggregated + getOrdersSince · customerIntelligence → getOrdersByCustomer · demandForecasting → getOrdersSince (column-limited + gte) · promotionIntelligence (×2) → getOrdersAggregated · OrdersPage → getOrdersByCustomer · DeliveryManagement → getOrdersByStatuses · dead imports/functions removed (getOrdersAdmin, orders.getDashboardStats) — getOrders() kept (tests + rule 11) | source + tests + runtime probes | RESOLVED | verified by W4-E-1 gate |
 | D2 | Admin write path | Admin CRUD บางเส้น write ผ่าน client + RLS (แทน RPC) | git grep .insert/.update/.delete ใน bmbAdminApi_* | MEDIUM | ARCHITECTURE (consistency) | OPEN | KEEP มาตรฐานปัจจุบัน — ย้ายไป RPC = future phase (schema/logic change) |
 | D3 | phone-auto-login | OTP ไม่มี (identity gap) | TODO OTP ×2 (W4-D) | — | SECURITY | FROZEN BY OWNER (ACCEPT MVP RISK) | NO ACTION |
 | D4 | capacity race (P1-1) | SECURITY_REMEDIATION_PLAN P1-1 | W4-D | — | RELIABILITY | FROZEN BY OWNER | NO ACTION |
@@ -27,7 +27,7 @@
 | D6 | DR / backup | off-site/automated/PITR ไม่มี · manual dump มี | สถานะจริง + W3-E gates | — | RELIABILITY | OWNER ACCEPTED RISK | รักษา manual dump เป็นระยะ (ห้ามเปิด Pro ใน W4) |
 | D7 | docs | raw marker counts (doc words/HTML attrs/fixtures) | W4-D | INFO | DOCUMENTATION | CLOSED | NO ACTION |
 | D8 | tooling local | src/.kilo/worktrees (gitignored, 0 tracked) | git ls-files | INFO | MAINTAINABILITY | CLOSED | NO ACTION |
-| D9 | test coverage | ไม่มี unit test ของ getOrdersPaged (ยืนยันด้วย runtime probe แทน) | W4-A checkpoint | LOW | MAINTAINABILITY | OPEN | optional follow-up |
+| D9 | test coverage | **CLOSED (W4-E-1)** — เพิ่ม src/__tests__/ordersPaged.test.ts: 11 tests (default/explicit page+pageSize, status filter, exact count, range math, empty page, error propagation, stable ordering, aggregated sum, byStatuses, byCustomer, since) | ordersPaged.test.ts + vitest run | RESOLVED | unit + live probes |
 
 ## Required Output
 
@@ -42,8 +42,8 @@ SYSTEM HEALTH: HEALTHY — 7/7 EF ACTIVE · scheduler ต่อเนื่อ�
 
 CRITICAL: 0
 HIGH:     0
-MEDIUM:   2 (D1 full-table AI/analytics queries · D2 admin client-write path)
-LOW:      1 (D9 unit-test gap ของ paged path)
+MEDIUM:   1 (D2 admin client-write path — future phase, ไม่เร่ง)
+LOW:      0 (D9 CLOSED ใน W4-E-1)
 INFO:     D7 D8
 
 OWNER ACCEPTED RISKS: DR off-site/automated/PITR (D6) · OTP MVP risk (D3)
@@ -52,10 +52,9 @@ FROZEN: OTP/SMS (D3) · P1-1 (D4) · Meta real E2E · Facebook Group ·
   Supabase Pro/PITR · new external providers
 DEFERRED: P1-2 · P1-3 · P1-5 (Future Security Phase)
 
-SAFE CLEANUP: 1 (D1 — migrate AI/analysis callers จาก getOrders() ไป
-  paged/aggregated path — non-destructive, ไม่แตะ business rules/schema)
-IMPLEMENTATION CANDIDATES: 1 (D1 → W4-E-1) · optional (D9)
-OWNER DECISIONS REQUIRED: 1 (เลือก D1 ใน W4-E-1 หรือปิด W4 ที่นี่)
+SAFE CLEANUP: 0 คงเหลือ (D1 executed ใน W4-E-1 · D9 executed)
+IMPLEMENTATION CANDIDATES: 0 (D1+D9 CLOSED)
+OWNER DECISIONS REQUIRED: 0 (ปิด W4 ได้ — ดู Final Wave 4 Summary)
 ========================================
 ```
 

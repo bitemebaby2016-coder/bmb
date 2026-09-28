@@ -5,7 +5,7 @@
 
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { getOrders } from '@/lib/bmbAdminApi_orders'
+import { getOrdersByStatuses } from '@/lib/bmbAdminApi_orders'
 import type { OrderForm } from '@/lib/bmbAdminApi_orders'
 import {
   assignOrdersToDrivers,
@@ -45,7 +45,9 @@ export function DeliveryManagement() {
   useEffect(() => { void (async () => { await loadOrders(); await loadDrivers() })() }, [])
 
   async function loadOrders() {
-    const allOrders = await getOrders()
+    // W4-E-1 (D1): server-side status filter — the UI tabs and route optimization
+    // only use these statuses, so behavior is unchanged while the query is bounded.
+    const allOrders = await getOrdersByStatuses(['pending', 'confirmed', 'preparing', 'ready_for_dispatch'])
     setOrders(allOrders)
     const provOrders = getProviderOrders()
     setProviderOrders(provOrders)

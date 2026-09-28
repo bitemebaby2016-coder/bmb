@@ -11,7 +11,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuthStore } from '@/store/authStore'
-import { getOrders, hydrateOrderItems, cancelOrder, type OrderForm } from '@/lib/bmbAdminApi_orders'
+import { getOrdersByCustomer, hydrateOrderItems, cancelOrder, type OrderForm } from '@/lib/bmbAdminApi_orders'
 import { getServerStatusLabel } from '@/lib/orderVocabulary'
 import { showToast } from '@/components/ui/ToastContainer'
 
@@ -31,15 +31,18 @@ export function OrdersPage() {
   const [cancelling, setCancelling] = useState<string | null>(null)
 
   const load = useCallback(async () => {
+    if (!customer?.id) { setOrders([]); setLoading(false); return }
     try {
-      const list = await getOrders()
+      // W4-E-1 (D1): server-side own-orders filter — same RLS-own semantics as
+      // the previous unfiltered read, but bounded at the query level.
+      const list = await getOrdersByCustomer(customer.id)
       setOrders(await hydrateOrderItems(list || []))
     } catch (e) {
       console.error('[OrdersPage] load error:', e)
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [customer?.id])
 
   useEffect(() => {
     let active = true

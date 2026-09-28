@@ -4,7 +4,7 @@
 // ============================================
 
 import { storageGet, storageSet } from './bmbStorage'
-import { getOrders } from './bmbAdminApi_orders'
+import { getOrdersAggregated } from './bmbAdminApi_orders'
 import { getProducts } from './bmbAdminApi_products'
 import type { Product } from '@/types'
 
@@ -170,19 +170,21 @@ export function applyPromotion(
 // Get promotion insights
 export async function getPromotionInsights(): Promise<PromotionInsight[]> {
   const promotions = getPromotions()
-  const orders = await getOrders()
+  // W4-E-1 (D1): aggregated totals replace the full-table fetch — same math.
+  const { total: ordersTotal, totalRevenue } = await getOrdersAggregated()
+  const avgOrderValue = ordersTotal > 0 ? totalRevenue / ordersTotal : 0
   const insights: PromotionInsight[] = []
 
   promotions.forEach((promo: Promotion) => {
     // Count orders using this promotion (simplified)
     const usageCount = promo.usage_count
-    const conversionRate = usageCount > 0 ? (usageCount / orders.length) * 100 : 0
+    const conversionRate = usageCount > 0 ? (usageCount / ordersTotal) * 100 : 0
     
     // Calculate revenue impact (simplified)
     const avgDiscount = promo.type === 'percentage_discount' 
       ? promo.discount_value / 100 
       : promo.discount_value / 1000
-    const revenueImpact = usageCount * (orders.reduce((sum: number, o: any) => sum + o.total_amount, 0) / orders.length || 0) * avgDiscount
+    const revenueImpact = usageCount * avgOrderValue * avgDiscount
 
     // Determine performance
     let performance: 'excellent' | 'good' | 'average' | 'poor' = 'average'
@@ -222,7 +224,7 @@ export async function recommendPromotions(): Promise<Array<{
   expectedConversion: number
   expectedRevenue: number
 }> > {
-  const orders = await getOrders()
+  const { total: ordersTotal, totalRevenue } = await getOrdersAggregated()
   const products = await getProducts()
   const insights = getPromotionInsights()
 
@@ -233,10 +235,8 @@ export async function recommendPromotions(): Promise<Array<{
     expectedRevenue: number
   }> = []
 
-  // Analyze order patterns
-  const avgOrderValue = orders.length > 0 
-    ? orders.reduce((sum: number, o: any) => sum + o.total_amount, 0) / orders.length 
-    : 200
+  // Analyze order patterns (W4-E-1: aggregated totals, same math)
+  const avgOrderValue = ordersTotal > 0 ? totalRevenue / ordersTotal : 200
 
   // Recommendation 1: Spend threshold for free shipping
   if (avgOrderValue < 250) {
