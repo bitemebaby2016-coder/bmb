@@ -1,9 +1,9 @@
 {
-  "timestamp": "2026-09-25T00:51:43.926Z",
+  "timestamp": "2026-09-28T04:12:02.161Z",
   "ref": "ivkdfognyiwjcmrhcnwz",
   "applied": [
     {
-      "file": "039_weekly_menu_and_mode_controls.sql",
+      "file": "050_w5_h1_close_anon_orders.sql",
       "ok": true
     }
   ],

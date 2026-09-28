@@ -1,0 +1,33 @@
+{
+  "timestamp": "2026-09-28T04:12:46.384Z",
+  "supa": "https://ivkdfognyiwjcmrhcnwz.supabase.co",
+  "probes": [
+    {
+      "name": "anon:direct-select-orders",
+      "ok": true,
+      "detail": "status=401 body={\"code\":\"42501\",\"details\":null,\"hint\":\"Grant the required privileges to the current role with: GRANT SELECT ON public.or"
+    },
+    {
+      "name": "anon:select-star-no-pii",
+      "ok": true,
+      "detail": "status=401 body={\"code\":\"42501\",\"details\":null,\"hint\":\"Grant the required privileges to the current role with: GRANT SELECT ON public.or"
+    },
+    {
+      "name": "rpc:track_order-deployed",
+      "ok": true,
+      "detail": "status=200 body={\"found\": false}"
+    },
+    {
+      "name": "rpc:anti-enumeration-identical-shape",
+      "ok": true,
+      "detail": "a={\"found\": false} b={\"found\": false} c={\"found\": false}"
+    },
+    {
+      "name": "anon:track_order_attempts-denied",
+      "ok": true,
+      "detail": "status=401 body={\"code\":\"42501\",\"details\":null,\"hint\":\"Grant the required privileges to the current role with: GRANT"
+    }
+  ],
+  "pass": 5,
+  "fail": 0
+}

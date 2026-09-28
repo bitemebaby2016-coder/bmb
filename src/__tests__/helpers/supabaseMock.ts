@@ -827,6 +827,51 @@ if (name === 'customer_intelligence') {
       row.reviewed_at = new Date().toISOString()
       return { data: { ok: true, id: p.p_approval_id, status: p.p_decision }, error: null }
     }
+    // ============ W5-1 / migration 050 — secure guest tracking RPC ============
+    if (name === 'track_order') {
+      const p = params ?? {}
+      const digits = String(p.p_phone || '').replace(/[^0-9]/g, '')
+      if (!String(p.p_order_number || '').trim() || !digits) {
+        return { data: { found: false }, error: null }
+      }
+      const order = (tables['orders'] || []).find(
+        (o: any) =>
+          String(o.order_number) === String(p.p_order_number).trim() &&
+          String(o.customer_phone || '').replace(/[^0-9]/g, '') === digits,
+      )
+      if (!order) return { data: { found: false }, error: null }
+      // tracking-scope fields ONLY — mirrors migration 050 contract
+      const items = (tables['order_items'] || [])
+        .filter((i: any) => i.order_id === order.id)
+        .map((i: any) => ({
+          product_id: i.product_id,
+          product_name: i.product_name,
+          quantity: i.quantity,
+          unit_price: i.unit_price,
+        }))
+      const intent = (tables['payment_intents'] || [])
+        .filter((x: any) => x.order_number === order.order_number)
+        .sort((a: any, b: any) => String(b.created_at).localeCompare(String(a.created_at)))[0]
+      return {
+        data: {
+          found: true,
+          order: {
+            order_number: order.order_number,
+            status: order.status,
+            order_mode: order.order_mode ?? 'SAME_DAY',
+            payment_status: order.payment_status,
+            delivery_method: order.delivery_method,
+            delivery_round_id: order.delivery_round_id,
+            scheduled_date: order.scheduled_date,
+            total_amount: order.total_amount,
+            created_at: order.created_at,
+            receipt_url: intent?.receipt_url ?? null,
+          },
+          items,
+        },
+        error: null,
+      }
+    }
     return { data: null, error: { code: 'PGRST202', message: 'rpc not mocked' } }
   }
 

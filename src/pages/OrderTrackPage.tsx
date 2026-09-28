@@ -12,6 +12,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { getOrder, hydrateOrderItems, cancelOrder, type OrderForm } from '@/lib/bmbAdminApi_orders'
 import { getServerStatusLabel } from '@/lib/orderVocabulary'
 import { getPaymentIntents } from '@/lib/paymentGateway'
+import { trackOrderByPhone, getSavedTrackPhone } from '@/lib/trackingApi'
 import { showToast } from '@/components/ui/ToastContainer'
 import { MascotBadge } from '@/components/MascotBadge'
 
@@ -36,21 +37,43 @@ export function OrderTrackPage() {
   const [missing, setMissing] = useState(false)
   const [loaded, setLoaded] = useState(false)
   const [cancelling, setCancelling] = useState(false)
+  // W5-H1: anon direct reads on `orders` are closed (migration 050).
+  // Guests must verify with order_number + phone via the secure RPC.
+  const [phoneGate, setPhoneGate] = useState(false)
+  const [phoneInput, setPhoneInput] = useState('')
+  const [viaRpc, setViaRpc] = useState(false)
 
   // GET/READ → server state → render. Polling refetches; it never writes.
   const load = useCallback(async () => {
     if (!orderNumber) return
     try {
-      const o = await getOrder(orderNumber)
-      if (!o) { setMissing(true); return }
-      const hydrated = await hydrateOrderItems([o])
-      setOrder(hydrated[0] ?? o)
-      setIntents((await getPaymentIntents({ orderNumber })) as Array<Record<string, any>>)
+      // 1) owner path — RLS `orders_own_read` (customer_ref = auth.uid())
+      let o = await getOrder(orderNumber)
+      if (o) {
+        o = (await hydrateOrderItems([o]))[0] ?? o
+        setViaRpc(false)
+      } else {
+        // 2) guest path — secure RPC (order_number + phone), tracking fields only
+        const saved = getSavedTrackPhone()
+        if (saved) o = await trackOrderByPhone(orderNumber, saved)
+        setViaRpc(!!o)
+      }
+      if (!o) {
+        // not the owner + no verified phone yet → ask for phone (do NOT reveal
+        // whether the order exists until the pair matches)
+        setPhoneGate(true)
+        setMissing(false)
+        return
+      }
+      setPhoneGate(false)
+      setOrder(o)
+      // RPC path already carries receipt_url; payment_intents stay anon-denied
+      if (!viaRpc) setIntents((await getPaymentIntents({ orderNumber })) as Array<Record<string, any>>)
       setMissing(false)
     } finally {
       setLoaded(true)
     }
-  }, [orderNumber])
+  }, [orderNumber, viaRpc])
 
   useEffect(() => {
     void load()
@@ -69,6 +92,57 @@ export function OrderTrackPage() {
       showToast(res.error || 'ยกเลิกไม่สำเร็จ', 'error')
     }
     setCancelling(false)
+  }
+
+  // W5-H1 guest gate: verify order_number + phone via secure RPC (migration 050)
+  async function handlePhoneSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    if (!orderNumber || !phoneInput.trim()) return
+    setLoaded(false)
+    try {
+      const o = await trackOrderByPhone(orderNumber, phoneInput.trim())
+      if (!o) {
+        showToast('ไม่พบออเดอร์ที่ตรงกับเลขที่และเบอร์โทรนี้', 'error')
+        setLoaded(true)
+        return
+      }
+      setPhoneGate(false)
+      setViaRpc(true)
+      setOrder(o)
+      setMissing(false)
+    } finally {
+      setLoaded(true)
+    }
+  }
+
+  if (phoneGate && !order) {
+    return (
+      <div className="max-w-2xl mx-auto px-4 py-12">
+        <div className="card max-w-md mx-auto">
+          <div className="text-5xl mb-3 text-center">🔐</div>
+          <h1 className="text-xl font-bold text-brand-accent mb-2 text-center">ยืนยันตัวตนเพื่อติดตามออเดอร์</h1>
+          <p className="text-sm text-brand-muted mb-4 text-center">
+            กรุณากรอกเบอร์โทรที่ใช้สั่งออเดอร์ <b>#{orderNumber}</b> เพื่อดูสถานะ
+            (หรือ <Link to="/orders" className="text-brand-primary hover:underline">เข้าสู่ระบบ</Link> เพื่อดูออเดอร์ของคุณ)
+          </p>
+          <form onSubmit={handlePhoneSubmit} className="space-y-3">
+            <input
+              data-testid="track-phone-input"
+              type="tel"
+              inputMode="tel"
+              className="input w-full"
+              placeholder="เบอร์โทรที่ใช้สั่ง เช่น 0812345678"
+              value={phoneInput}
+              onChange={(e) => setPhoneInput(e.target.value)}
+              autoFocus
+            />
+            <button data-testid="track-phone-submit" type="submit" className="btn btn-primary w-full" disabled={!phoneInput.trim()}>
+              ติดตามออเดอร์
+            </button>
+          </form>
+        </div>
+      </div>
+    )
   }
 
   if (missing) {
@@ -194,9 +268,9 @@ export function OrderTrackPage() {
             <span>รวม (จากระบบ)</span>
             <span className="text-brand-primary">{Number(order.total_amount).toFixed(2)} บาท</span>
           </div>
-          {intent?.receipt_url ? (
+          {intent?.receipt_url || (order as any).receipt_url ? (
             <div className="text-center pt-2">
-              <a href={String(intent.receipt_url)} target="_blank" rel="noopener" className="text-brand-primary hover:underline">ดูใบเสร็จ</a>
+              <a href={String(intent?.receipt_url || (order as any).receipt_url)} target="_blank" rel="noopener" className="text-brand-primary hover:underline">ดูใบเสร็จ</a>
             </div>
           ) : null}
         </div>
