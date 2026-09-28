@@ -115,3 +115,23 @@ Date: 2026-09-28 · Project: `ivkdfognyiwjcmrhcnwz` · Mode: **AUDIT ONLY — no
 
 ### Closure status
 - **CODE** (migration ready) · **LOCAL TEST** (admin read+mutation path — new `inventoryAdmin.test.ts`) · **PRODUCTION/DEPLOY = GATED — awaiting Owner approval** · **RUNTIME VERIFIED = post-deploy read-only probe prepared** (`e2e/ct-gsec01-verify.cjs`) · **REGRESSION = pending local suite** · **COMMIT = local-only (Commit A/B)** · Phase E deployment report → see STEP 3A status in the owner-facing report.
+
+### STEP 3A closure-live verification (Owner-approved deploy, 2026-09-28)
+- Migration `052_g_sec01_inventory_public_read.sql` **applied** (mgmt query → HTTP 201).
+- Production policy state confirmed: `inventory_public_read` **ABSENT**; `inventory_admin_manage` (ALL, `is_admin()`) + `inventory_anon_read` (deny) **PRESENT**.
+- Anonymous `SELECT inventory` → **DENIED** (REST status 401, PostgREST `42501`).
+- Admin `inventory` read (throwaway admin via `is_admin()` harness) → **WORKS** (REST 200, 4 rows).
+- Non-admin (authenticated customer) `inventory` read → **DENIED** (REST 200, 0 rows).
+
+### ⚠ NEW BOUNDARY FOUND — HARD STOP (per Owner FAILURE RULE) — G-SEC-01 closure pending Owner decision
+`get_inventory_requirements(p_product_id, qty)` (migration 019, SECURITY DEFINER, `GRANT ... TO authenticated`):
+- Header comment states "**admin-guarded inside**", but the body only checks `auth.uid() IS NOT NULL` — **no `is_admin()` guard**.
+- Live probe (non-admin/customer JWT) returned **200 `{"ok":true,... current_stock, min_stock ...}`** → **any authenticated user can read per-ingredient `current_stock` / `min_stock`** via this RPC.
+- **Pre-existing** (NOT caused by migration 052) and **outside the authorized `052` scope** (Owner forbade RPC changes). Directly conflicts with G-SEC-01's "do not expose internal stock data" objective.
+- Action per rule: **STOP, do NOT push**, report for Owner. Not rolled back; not modified.
+
+### STEP 3A.1 / G-SEC-01b — Owner authorized; fix prepared + committed for deploy
+- Migration `053_g_sec01b_inventory_requirements_guard.sql`: adds `IF NOT public.is_admin() THEN RAISE EXCEPTION 'ERR_FORBIDDEN';` **inside** `get_inventory_requirements` (canonical boundary, same as all admin RPCs/RLS). Calculation, return structure, pricing, stock mutation, order state, kitchen logic, and `GRANT ... TO authenticated` all **unchanged**.
+- **Impact analysis (source-verified):** only caller is `kitchenService.getInventoryRequirements` (Admin/Kitchen); **no page / customer-PWA / Edge Function / order path** uses it; no alternative public-safe RPC exists; no order/payment/pre-order dependency.
+- **Local (pre-deploy):** migration-contract check `e2e/ct-gsec01b-contract.cjs` → **8/8 PASS**; Admin inventory path `inventoryAdmin.test.ts` PASS; `vitest` **199/199**; `tsc` 0; `lint` 0; `build` PASS.
+- Post-deploy verification → `e2e/ct-gsec01b-probe.cjs` (anon/non-admin denied, admin PASS; table anon/non-admin denied, admin PASS).
