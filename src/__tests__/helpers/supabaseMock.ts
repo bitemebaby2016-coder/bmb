@@ -53,19 +53,31 @@ export const seed: Record<string, MockRow[]> = {
 const clone = <T>(v: T): T => JSON.parse(JSON.stringify(v))
 const NOT_FOUND = { code: 'PGRST116', message: 'JSON object requested, multiple (or no) rows returned' }
 
-export function createSupabaseMock() {
+export function createSupabaseMock(opts?: { failReadTable?: string }) {
   const tables: Record<string, MockRow[]> = clone(seed)
 
   function from(table: string) {
     let filters: Array<{ col: string; val: any }> = []
+    let gteFilters: Array<{ col: string; val: any }> = []
+    let inFilters: Array<{ col: string; vals: any[] }> = []
     let orderSpec: { col: string; ascending: boolean } | null = null
+    let rangeSpec: { from: number; to: number } | null = null
+    let countExact = false
+    let headMode = false
     let action: { type: 'insert'; rows: MockRow[] } | { type: 'update'; patch: MockRow } | { type: 'delete' } | null = null
     let singleMode = false
     let maybeMode = false
 
-    const matches = (row: MockRow) => filters.every(f => row[f.col] === f.val)
+    const matches = (row: MockRow) =>
+      filters.every(f => row[f.col] === f.val) &&
+      gteFilters.every(f => {
+        const a = row[f.col]
+        const b = f.val
+        return (typeof a === 'number' || typeof b === 'number') ? Number(a) >= Number(b) : String(a) >= String(b)
+      }) &&
+      inFilters.every(f => f.vals.includes(row[f.col]))
 
-    async function run(): Promise<{ data: any; error: any }> {
+    async function run(): Promise<{ data: any; error: any; count?: number | null }> {
       if (action?.type === 'insert') {
         const arr = tables[table] || (tables[table] = [])
         arr.push(...clone(action.rows))
@@ -86,6 +98,9 @@ export function createSupabaseMock() {
         return { data: clone(rows), error: null }
       }
       // read path
+      if (opts?.failReadTable && table === opts.failReadTable) {
+        return { data: null, error: { code: 'FORCED_READ_FAILURE', message: 'forced read failure' } }
+      }
       let rows = clone(tables[table] || [])
       rows = rows.filter(matches)
       if (orderSpec) {
@@ -97,19 +112,31 @@ export function createSupabaseMock() {
           return ascending ? cmp : -cmp
         })
       }
+      const matchedTotal = rows.length
+      if (rangeSpec) rows = rows.slice(rangeSpec.from, rangeSpec.to + 1)
       if (singleMode) {
         if (rows.length === 1) return { data: rows[0], error: null }
         if (maybeMode) return { data: null, error: null }
         return { data: null, error: NOT_FOUND }
       }
-      return { data: rows, error: null }
+      if (headMode) return { data: null, error: null, count: countExact ? matchedTotal : null }
+      const result: { data: any; error: any; count?: number } = { data: rows, error: null }
+      if (countExact) result.count = matchedTotal
+      return result
     }
 
     const builder: any = {
       eq(col: string, val: any) { filters.push({ col, val }); return builder },
+      gte(col: string, val: any) { gteFilters.push({ col, val }); return builder },
+      in(col: string, vals: any[]) { inFilters.push({ col, vals }); return builder },
       order(col: string, opts?: { ascending?: boolean }) { orderSpec = { col, ascending: opts?.ascending ?? true }; return builder },
       limit(_n: number) { return builder },
-      select() { return builder },
+      range(from: number, to: number) { rangeSpec = { from, to }; return builder },
+      select(_columns?: any, queryOpts?: { count?: 'exact'; head?: boolean }) {
+        if (queryOpts?.count === 'exact') countExact = true
+        if (queryOpts?.head) headMode = true
+        return builder
+      },
       insert(rows: MockRow | MockRow[]) { action = { type: 'insert', rows: Array.isArray(rows) ? rows : [rows] }; return builder },
       update(patch: MockRow) { action = { type: 'update', patch }; return builder },
       delete() { action = { type: 'delete' }; return builder },

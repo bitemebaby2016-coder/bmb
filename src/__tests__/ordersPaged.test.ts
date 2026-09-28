@@ -82,7 +82,8 @@ describe('getOrdersPaged contract (W4-E-1 D9)', () => {
     const res = await getOrdersPaged({ page: 1, pageSize: 3 })
     expect(res.orders.length).toBe(3)
     expect(res.total).toBe(8)
-    expect(res.orders.map(o => o.order_number)).toEqual(['BMB-T-5', 'BMB-T-4', 'BMB-T-3'])
+    // desc order: 7,6,5,4,3,2,1,OTHER → page1(size3) = rows 4..6
+    expect(res.orders.map(o => o.order_number)).toEqual(['BMB-T-4', 'BMB-T-3', 'BMB-T-2'])
   })
 
   it('status filter narrows both rows and count', async () => {
@@ -119,6 +120,7 @@ describe('getOrdersPaged contract (W4-E-1 D9)', () => {
   })
 
   it('errors degrade gracefully to empty result (contract)', async () => {
+    vi.resetModules()
     vi.doMock('@/lib/supabase', async () => {
       const { createSupabaseMock } = await import('./helpers/supabaseMock')
       return {
@@ -133,8 +135,11 @@ describe('getOrdersPaged contract (W4-E-1 D9)', () => {
       const mod = await import('@/lib/bmbAdminApi_orders')
       const res = await mod.getOrdersPaged({ page: 0 })
       expect(res).toEqual({ orders: [], total: 0 })
+      const agg = await mod.getOrdersAggregated()
+      expect(agg).toEqual({ total: 0, totalRevenue: 0 })
     } finally {
       vi.doUnmock('@/lib/supabase')
+      vi.resetModules()
     }
   })
 })
