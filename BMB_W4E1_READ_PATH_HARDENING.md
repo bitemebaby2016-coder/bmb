@@ -63,4 +63,4 @@ DEFERRED         = ไม่มี (D2 ยังอยู่ future phase ตา
 ## GATE
 - tsc 0 · vitest 23 files/190 tests ✓ · eslint 0 · build ✓ · secret scan 0 · HEAD == origin/main · WORKTREE = CLEAN
 
-**D1 = CLOSED · D9 = CLOSED**
+**W4-E-1 GATE — D1 = CLOSED · D9 = CLOSED · Wave 4 Readiness Summary อยู่ท้ายเอกสาร**
