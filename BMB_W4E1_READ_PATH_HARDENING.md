@@ -31,6 +31,7 @@
 ## ผลก่อน/หลัง
 - vitest: ก่อน 22 files / 179 tests → หลัง 23 files / 190 tests (เพิ่ม 11 — ทั้งหมดเป็น tests ใหม่ของ D9; ไม่มี test เดิมถูกลบ/แก้)
 - ไม่มี production mutation ใด (write paths/RPC/RLS ไม่ถูกแตะ — diff เฉพาะ read paths)
+- getCustomersWithStats (bmbAdminApi_customers) = เดิม column-limited (5 คอลัมน์) สำหรับ per-customer aggregation — KEEP (ตรงตามหลักการ query เฉพาะที่จำเป็น)
 
 ## RUNTIME VERIFIED (production, READ-ONLY probes 2026-09-27 · หลัง push)
 
