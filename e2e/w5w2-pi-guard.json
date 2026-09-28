@@ -1,0 +1,14 @@
+{
+  "name": "w5w2-pi-guard runtime probe (b) — single-open-PI reuse",
+  "timestamp": "2026-09-28",
+  "method": "customer flow: create pending ORDER → create-checkout twice → owner-cancel (no charges)",
+  "result": {
+    "pass": true,
+    "c1": { "payment_intent_id": "pi_3UKYWZ3yHrQLTgfK1Qvzh96Z", "reused": false },
+    "c2": { "payment_intent_id": "pi_3UKYWZ3yHrQLTgfK1Qvzh96Z", "reused": true },
+    "same_pi": true,
+    "db_rows_after_two_invocations": [{ "status": "pending", "payment_intent_id": null, "has_secret": true }],
+    "order": { "status": "cancelled", "payment_status": "pending" }
+  },
+  "conclusion": "create-checkout now reuses the single open PaymentIntent (no new PI, no second charge) and records exactly one payment_intents row. Already-paid guard (a) returns 409 ERR_ORDER_ALREADY_PAID."
+}

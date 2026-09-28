@@ -1,219 +1,622 @@
 {
-  "timestamp": "2026-09-28T04:51:12.174Z",
+  "phase": "B",
+  "timestamp": "2026-09-28T06:38:12.973Z",
   "environment": "production",
   "ref": "ivkdfognyiwjcmrhcnwz",
-  "HEAD": "37dbf0c",
+  "HEAD": "6f3276c",
   "test_data": {
-    "name": "QA W52",
+    "order": "PO-20260929-131",
     "phone": "+66990000003",
-    "email_key": "66990000003@phone.bmb.local",
-    "latitude": 10.7031,
-    "longitude": 102.14439999999999,
-    "address_detail": "REDACTED (test address, not real)",
-    "local_phone": "0990000003",
-    "scheduled_date": "2026-09-29",
-    "round_id": "round-20260929-morning",
-    "product_id": "prod-5",
-    "price": 85,
-    "quantity": 1,
-    "order_mode": "PRE_ORDER",
-    "payment_method": "credit_card",
-    "stripe_mode": "pk_test",
-    "customer_id": "32d8d700-43bb-4765-a1c5-bc72d0f07f26",
-    "test_order_number": "PO-20260929-131"
+    "driver_phone": "+66990000100"
   },
-  "stages": {
-    "qa_identity": {
+  "lifecycle": {
+    "admin_visibility_pre": {
       "status": 200,
-      "reused": false,
-      "has_session": true,
-      "user_id": "32d8d700-43bb-4765-a1c5-bc72d0f07f26",
-      "phone": "+66990000003"
+      "rows": [
+        {
+          "order_number": "PO-20260929-131",
+          "status": "ready_for_dispatch",
+          "payment_status": "paid",
+          "customer_name": "QA W52"
+        }
+      ]
     },
-    "order_creation": {
-      "resumed": true,
-      "order_number": "PO-20260929-131"
-    },
-    "stripe_checkout": {
+    "driver_upsert": {
       "status": 200,
-      "ok": "pi_3UKWX13yHrQLTgfK1romz9hW_secret_Dcga7Ms9OC3QO1Dlw5dtJ0yzZ",
-      "payment_intent_id": "pi_3UKWX13yHrQLTgfK1romz9hW",
-      "client_secret": "(present, redacted)",
-      "amount": 110,
-      "error": null
+      "body": "{\"ok\": true, \"phone\": \"+66990000100\", \"driver_id\": \"drv- ###########-c10a\"}"
     },
-    "stripe_confirm": {
-      "ok": true,
-      "error": null,
-      "status": "succeeded",
-      "id": "pi_3UKWX13yHrQLTgfK1romz9hW",
-      "test_card": "tok_visa (Stripe TEST mode)"
+    "assignment": {
+      "status": 200,
+      "body": "{\"ok\": true, \"status\": \"assigned\", \"driver_id\": \"drv- ###########-c10a\", \"order_number\": \"PO-20260929-131\"}",
+      "driver_id": "drv- ###########-c10a"
     },
-    "payment_verify": {
+    "assignment_rows": {
+      "delivery_assignments": [
+        {
+          "id": "das- ###########-29f1",
+          "order_number": "PO-20260929-131",
+          "driver_id": "drv- ###########-c10a",
+          "status": "assigned",
+          "assigned_at": "2026-09-28 06:38:54.701426+00"
+        }
+      ],
+      "driver": [
+        {
+          "id": "drv- ###########-c10a",
+          "phone": "+66990000100",
+          "status": "busy"
+        }
+      ]
+    },
+    "raw_log": {
+      "confirmed": {
+        "resp": "400 {\"code\":\"P0001\",\"details\":null,\"hint\":null,\"message\":\"ERR_INVALID_TRANSITION: ready_for_dispatch -> confirmed\"}",
+        "order_status": "ready_for_dispatch",
+        "history_len": 4
+      },
+      "preparing": {
+        "resp": "400 {\"code\":\"P0001\",\"details\":null,\"hint\":null,\"message\":\"ERR_INVALID_TRANSITION: ready_for_dispatch -> preparing\"}",
+        "order_status": "ready_for_dispatch",
+        "history_len": 4
+      },
+      "ready_for_dispatch": {
+        "resp": "200 {\"ok\": true, \"to\": \"ready_for_dispatch\", \"from\": \"ready_for_dispatch\", \"inventory\": null, \"order_number\": \"PO-20260929-131\"}",
+        "order_status": "ready_for_dispatch",
+        "history_len": 4
+      },
+      "ofd(dispatched)": {
+        "resp": "200 {\"ok\": true, \"to\": \"dispatched\", \"from\": \"ready_for_dispatch\", \"inventory\": null, \"order_number\": \"PO-20260929-131\"}",
+        "order_status": "dispatched"
+      },
+      "driver_accept": {
+        "status": 400,
+        "body": "{\"code\":\"P0001\",\"details\":null,\"hint\":null,\"message\":\"ERR_NOT_A_DRIVER\"}"
+      },
+      "driver_picked_up": {
+        "status": 400,
+        "body": "{\"code\":\"P0001\",\"details\":null,\"hint\":null,\"message\":\"ERR_NOT_A_DRIVER\"}"
+      },
+      "order_in_transit": {
+        "resp": "200 {\"ok\": true, \"to\": \"in_transit\", \"from\": \"dispatched\", \"inventory\": null, \"order_number\": \"PO-20260929-131\"}"
+      },
+      "driver_in_transit": {
+        "status": 400,
+        "body": "{\"code\":\"P0001\",\"details\":null,\"hint\":null,\"message\":\"ERR_NOT_A_DRIVER\"}"
+      },
+      "order_arrived": {
+        "resp": "200 {\"ok\": true, \"to\": \"arrived\", \"from\": \"in_transit\", \"inventory\": null, \"order_number\": \"PO-20260929-131\"}"
+      },
+      "order_delivered": {
+        "resp": "200 {\"ok\": true, \"to\": \"delivered\", \"from\": \"arrived\", \"inventory\": null, \"order_number\": \"PO-20260929-131\"}"
+      },
+      "driver_delivered": {
+        "status": 400,
+        "body": "{\"code\":\"P0001\",\"details\":null,\"hint\":null,\"message\":\"ERR_NOT_A_DRIVER\"}"
+      }
+    },
+    "post_delivered": {
       "PASS": true,
       "order": {
-        "order_number": "PO-20260929-131",
-        "status": "pending",
+        "status": "delivered",
         "payment_status": "paid",
         "order_mode": "PRE_ORDER",
         "scheduled_date": "2026-09-29",
         "delivery_round_id": "round-20260929-morning",
-        "delivery_method": "self_delivery",
-        "total_amount": "110.00",
-        "source_channel": "PWA",
-        "customer_id": "32d8d700-43bb-4765-a1c5-bc72d0f07f26",
-        "created_at": "2026-09-28 04:38:41.657584+00"
+        "total_amount": "110.00"
       },
-      "payment_intents": [
-        {
-          "status": "pending",
-          "method": "credit_card",
-          "provider": "stripe",
-          "amount": "110.00",
-          "has_pi_id": false,
-          "completed": false
-        },
-        {
-          "status": "pending",
-          "method": "credit_card",
-          "provider": "stripe",
-          "amount": "110.00",
-          "has_pi_id": false,
-          "completed": false
-        },
-        {
-          "status": "completed",
-          "method": "credit_card",
-          "provider": "stripe",
-          "amount": "110.00",
-          "has_pi_id": true,
-          "completed": true
-        }
-      ],
-      "order_status_history": [
+      "history": [
         {
           "from_status": null,
           "to_status": "pending",
-          "changed_at": "2026-09-28 04:38:41.657584+00",
           "actor_type": "CUSTOMER",
+          "actor_id": "32d8d700-43bb-4765-a1c5-bc72d0f07f26"
+        },
+        {
+          "from_status": "pending",
+          "to_status": "confirmed",
+          "actor_type": "ADMIN",
+          "actor_id": "32d8d700-43bb-4765-a1c5-bc72d0f07f26"
+        },
+        {
+          "from_status": "confirmed",
+          "to_status": "preparing",
+          "actor_type": "ADMIN",
+          "actor_id": "32d8d700-43bb-4765-a1c5-bc72d0f07f26"
+        },
+        {
+          "from_status": "preparing",
+          "to_status": "ready_for_dispatch",
+          "actor_type": "ADMIN",
+          "actor_id": "32d8d700-43bb-4765-a1c5-bc72d0f07f26"
+        },
+        {
+          "from_status": "ready_for_dispatch",
+          "to_status": "dispatched",
+          "actor_type": "ADMIN",
+          "actor_id": "32d8d700-43bb-4765-a1c5-bc72d0f07f26"
+        },
+        {
+          "from_status": "dispatched",
+          "to_status": "in_transit",
+          "actor_type": "ADMIN",
+          "actor_id": "32d8d700-43bb-4765-a1c5-bc72d0f07f26"
+        },
+        {
+          "from_status": "in_transit",
+          "to_status": "arrived",
+          "actor_type": "ADMIN",
+          "actor_id": "32d8d700-43bb-4765-a1c5-bc72d0f07f26"
+        },
+        {
+          "from_status": "arrived",
+          "to_status": "delivered",
+          "actor_type": "ADMIN",
           "actor_id": "32d8d700-43bb-4765-a1c5-bc72d0f07f26"
         }
       ],
-      "webhook": "Stripe → EF stripe-webhook → record_payment_result (canonical)"
-    },
-    "tracking": {
-      "PASS": true,
-      "rpc_found": true,
-      "negative_rejected": true,
-      "ui": {
-        "found": true,
-        "no_pii": true,
-        "status_text": "รอการยืนยันกำลังรอยืนยันคำสั่งซื้อจากร้าน",
-        "wrong_phone_rejected": true
-      },
-      "response_fields": [
-        "status",
-        "created_at",
-        "order_mode",
-        "receipt_url",
-        "order_number",
-        "total_amount",
-        "payment_status",
-        "scheduled_date",
-        "delivery_method",
-        "delivery_round_id"
-      ],
-      "pii_leak": []
-    },
-    "order_history": {
-      "PASS": true,
-      "own_order": [
+      "audit": [
         {
-          "order_number": "PO-20260929-131",
-          "status": "pending",
-          "payment_status": "paid",
-          "total_amount": 110,
-          "scheduled_date": "2026-09-29"
-        }
-      ],
-      "other_customers_visible": 0,
-      "rls_isolation": true
-    },
-    "notifications_audit": {
-      "notifications": [
-        {
-          "row_to_json": {
-            "id": "evt-ord-PO-20260929-131-pending",
-            "customer_id": "cust-66990000003",
-            "title": "รับออเดอร์แล้ว",
-            "message": "ออเดอร์ PO-20260929-131 ของคุณได้รับเรียบร้อยแล้ว",
-            "is_read": false,
-            "notification_type": "ORDER_CREATED",
-            "created_at": "2026-09-28T04:49:33.945932+00:00",
-            "category": "Transactional",
-            "user_id": null
-          }
-        }
-      ],
-      "audit_logs": [
-        {
-          "row_to_json": {
-            "id": "alog- ###########-cf97fa",
-            "user_id": "32d8d700-43bb-4765-a1c5-bc72d0f07f26",
-            "user_email": null,
-            "action": "order_created",
-            "entity_type": "order",
-            "entity_id": "PO-20260929-131",
-            "description": "canonical order created (PRE_ORDER)",
-            "metadata": {
-              "total": 110,
-              "order_mode": "PRE_ORDER",
-              "scheduled_date": "2026-09-29"
-            },
-            "ip_address": null,
-            "user_agent": null,
-            "created_at": "2026-09-28T04:38:41.657584+00:00"
-          }
+          "action": "order_created",
+          "entity_type": "order",
+          "entity_id": "PO-20260929-131",
+          "metadata": {
+            "total": "110.00",
+            "order_mode": "PRE_ORDER",
+            "source_channel": null,
+            "external_ref_id": null
+          },
+          "created_at": "2026-09-28 04:38:41.657584+00"
         },
         {
-          "row_to_json": {
-            "id": "alog- ###########-0aa6bd",
-            "user_id": "32d8d700-43bb-4765-a1c5-bc72d0f07f26",
-            "user_email": null,
-            "action": "order_created",
-            "entity_type": "order",
-            "entity_id": "PO-20260929-131",
-            "description": "canonical order created (channel-tagged)",
-            "metadata": {
-              "total": "110.00",
-              "order_mode": "PRE_ORDER",
-              "source_channel": null,
-              "external_ref_id": null
+          "action": "order_created",
+          "entity_type": "order",
+          "entity_id": "PO-20260929-131",
+          "metadata": {
+            "total": 110,
+            "order_mode": "PRE_ORDER",
+            "scheduled_date": "2026-09-29"
+          },
+          "created_at": "2026-09-28 04:38:41.657584+00"
+        },
+        {
+          "action": "automation.execution",
+          "entity_type": "automation",
+          "entity_id": "notification_dispatch",
+          "metadata": {
+            "job": "notification_dispatch",
+            "errors": [],
+            "status": "succeeded",
+            "results": {
+              "notification_dispatch": {
+                "created": [
+                  "evt-ord-PO-20260929-131-pending"
+                ],
+                "skipped": 0,
+                "duplicate": [],
+                "suppressed": 0,
+                "order_events": 1,
+                "driver_events": 0,
+                "window_minutes": 360
+              }
             },
-            "ip_address": null,
-            "user_agent": null,
-            "created_at": "2026-09-28T04:38:41.657584+00:00"
+            "event_id": "gh-dispatch-20260928T0449",
+            "finished_at": "2026-09-28T04:49:34.035Z",
+            "execution_id": "19061a18-6ffa-48bf-9481-95969bf31374"
+          },
+          "created_at": "2026-09-28 04:49:34.104163+00"
+        },
+        {
+          "action": "automation.execution",
+          "entity_type": "automation",
+          "entity_id": "notification_dispatch",
+          "metadata": {
+            "job": "notification_dispatch",
+            "errors": [],
+            "status": "succeeded",
+            "results": {
+              "notification_dispatch": {
+                "created": [],
+                "skipped": 0,
+                "duplicate": [
+                  "evt-ord-PO-20260929-131-pending"
+                ],
+                "suppressed": 0,
+                "order_events": 1,
+                "driver_events": 0,
+                "window_minutes": 360
+              }
+            },
+            "event_id": "gh-dispatch-20260928T0459",
+            "finished_at": "2026-09-28T04:59:40.407Z",
+            "execution_id": "1f01fce1-e8a8-4b78-959a-b688b865ac5a"
+          },
+          "created_at": "2026-09-28 04:59:40.498926+00"
+        },
+        {
+          "action": "automation.execution",
+          "entity_type": "automation",
+          "entity_id": "notification_dispatch",
+          "metadata": {
+            "job": "notification_dispatch",
+            "errors": [],
+            "status": "succeeded",
+            "results": {
+              "notification_dispatch": {
+                "created": [],
+                "skipped": 0,
+                "duplicate": [
+                  "evt-ord-PO-20260929-131-pending"
+                ],
+                "suppressed": 0,
+                "order_events": 1,
+                "driver_events": 0,
+                "window_minutes": 360
+              }
+            },
+            "event_id": "gh-dispatch-20260928T0514",
+            "finished_at": "2026-09-28T05:14:15.388Z",
+            "execution_id": "57c6937a-7715-4bbe-9c58-f69d421e7af2"
+          },
+          "created_at": "2026-09-28 05:14:15.468267+00"
+        },
+        {
+          "action": "automation.execution",
+          "entity_type": "automation",
+          "entity_id": "notification_dispatch",
+          "metadata": {
+            "job": "notification_dispatch",
+            "errors": [],
+            "status": "succeeded",
+            "results": {
+              "notification_dispatch": {
+                "created": [],
+                "skipped": 0,
+                "duplicate": [
+                  "evt-ord-PO-20260929-131-pending"
+                ],
+                "suppressed": 0,
+                "order_events": 1,
+                "driver_events": 0,
+                "window_minutes": 360
+              }
+            },
+            "event_id": "gh-dispatch-20260928T0529",
+            "finished_at": "2026-09-28T05:29:23.797Z",
+            "execution_id": "7e9f5db1-51b4-401d-8e3c-775cb3402920"
+          },
+          "created_at": "2026-09-28 05:29:23.919234+00"
+        },
+        {
+          "action": "automation.execution",
+          "entity_type": "automation",
+          "entity_id": "notification_dispatch",
+          "metadata": {
+            "job": "notification_dispatch",
+            "errors": [],
+            "status": "succeeded",
+            "results": {
+              "notification_dispatch": {
+                "created": [],
+                "skipped": 0,
+                "duplicate": [
+                  "evt-ord-PO-20260929-131-pending"
+                ],
+                "suppressed": 0,
+                "order_events": 1,
+                "driver_events": 0,
+                "window_minutes": 360
+              }
+            },
+            "event_id": "gh-dispatch-20260928T0543",
+            "finished_at": "2026-09-28T05:43:28.646Z",
+            "execution_id": "148f3d0b-076c-4bd2-8f5f-9092b24b4435"
+          },
+          "created_at": "2026-09-28 05:43:29.182946+00"
+        },
+        {
+          "action": "automation.execution",
+          "entity_type": "automation",
+          "entity_id": "notification_dispatch",
+          "metadata": {
+            "job": "notification_dispatch",
+            "errors": [],
+            "status": "succeeded",
+            "results": {
+              "notification_dispatch": {
+                "created": [],
+                "skipped": 0,
+                "duplicate": [
+                  "evt-ord-PO-20260929-131-pending"
+                ],
+                "suppressed": 0,
+                "order_events": 1,
+                "driver_events": 0,
+                "window_minutes": 360
+              }
+            },
+            "event_id": "gh-dispatch-20260928T0554",
+            "finished_at": "2026-09-28T05:54:09.890Z",
+            "execution_id": "acbb1fac-adb5-4780-ab40-d96c0315c616"
+          },
+          "created_at": "2026-09-28 05:54:10.440181+00"
+        },
+        {
+          "action": "automation.execution",
+          "entity_type": "automation",
+          "entity_id": "notification_dispatch",
+          "metadata": {
+            "job": "notification_dispatch",
+            "errors": [],
+            "status": "succeeded",
+            "results": {
+              "notification_dispatch": {
+                "created": [],
+                "skipped": 0,
+                "duplicate": [
+                  "evt-ord-PO-20260929-131-pending"
+                ],
+                "suppressed": 0,
+                "order_events": 1,
+                "driver_events": 0,
+                "window_minutes": 360
+              }
+            },
+            "event_id": "gh-dispatch-20260928T0603",
+            "finished_at": "2026-09-28T06:03:11.839Z",
+            "execution_id": "5fe61045-8ac1-49aa-9d17-2833f9eddfad"
+          },
+          "created_at": "2026-09-28 06:03:11.91324+00"
+        },
+        {
+          "action": "automation.execution",
+          "entity_type": "automation",
+          "entity_id": "notification_dispatch",
+          "metadata": {
+            "job": "notification_dispatch",
+            "errors": [],
+            "status": "succeeded",
+            "results": {
+              "notification_dispatch": {
+                "created": [],
+                "skipped": 0,
+                "duplicate": [
+                  "evt-ord-PO-20260929-131-pending"
+                ],
+                "suppressed": 0,
+                "order_events": 1,
+                "driver_events": 0,
+                "window_minutes": 360
+              }
+            },
+            "event_id": "gh-dispatch-20260928T0627",
+            "finished_at": "2026-09-28T06:27:32.001Z",
+            "execution_id": "830c5007-96a8-4ad3-b47f-f39c5f9fb416"
+          },
+          "created_at": "2026-09-28 06:27:32.53244+00"
+        },
+        {
+          "action": "order_status_change",
+          "entity_type": "order",
+          "entity_id": "PO-20260929-131",
+          "metadata": {
+            "to": "confirmed",
+            "from": "pending"
+          },
+          "created_at": "2026-09-28 06:33:33.471204+00"
+        },
+        {
+          "action": "order_status_change",
+          "entity_type": "order",
+          "entity_id": "PO-20260929-131",
+          "metadata": {
+            "to": "preparing",
+            "from": "confirmed"
+          },
+          "created_at": "2026-09-28 06:33:37.483581+00"
+        },
+        {
+          "action": "order_status_change",
+          "entity_type": "order",
+          "entity_id": "PO-20260929-131",
+          "metadata": {
+            "to": "ready_for_dispatch",
+            "from": "preparing"
+          },
+          "created_at": "2026-09-28 06:33:39.59548+00"
+        },
+        {
+          "action": "delivery_assigned",
+          "entity_type": "delivery",
+          "entity_id": "PO-20260929-131",
+          "metadata": {
+            "driver_id": "drv- ###########-c10a"
+          },
+          "created_at": "2026-09-28 06:33:56.757607+00"
+        },
+        {
+          "action": "order_status_change",
+          "entity_type": "order",
+          "entity_id": "PO-20260929-131",
+          "metadata": {
+            "to": "ready_for_dispatch",
+            "from": "ready_for_dispatch"
+          },
+          "created_at": "2026-09-28 06:38:52.258523+00"
+        },
+        {
+          "action": "delivery_assigned",
+          "entity_type": "delivery",
+          "entity_id": "PO-20260929-131",
+          "metadata": {
+            "driver_id": "drv- ###########-c10a"
+          },
+          "created_at": "2026-09-28 06:38:54.701426+00"
+        },
+        {
+          "action": "order_status_change",
+          "entity_type": "order",
+          "entity_id": "PO-20260929-131",
+          "metadata": {
+            "to": "dispatched",
+            "from": "ready_for_dispatch"
+          },
+          "created_at": "2026-09-28 06:38:57.670919+00"
+        },
+        {
+          "action": "order_status_change",
+          "entity_type": "order",
+          "entity_id": "PO-20260929-131",
+          "metadata": {
+            "to": "in_transit",
+            "from": "dispatched"
+          },
+          "created_at": "2026-09-28 06:39:01.276619+00"
+        },
+        {
+          "action": "order_status_change",
+          "entity_type": "order",
+          "entity_id": "PO-20260929-131",
+          "metadata": {
+            "to": "arrived",
+            "from": "in_transit"
+          },
+          "created_at": "2026-09-28 06:39:02.773818+00"
+        },
+        {
+          "action": "order_status_change",
+          "entity_type": "order",
+          "entity_id": "PO-20260929-131",
+          "metadata": {
+            "to": "delivered",
+            "from": "arrived"
+          },
+          "created_at": "2026-09-28 06:39:02.987726+00"
+        }
+      ],
+      "notifications": [
+        {
+          "notification_type": "ORDER_CREATED",
+          "n": 1
+        }
+      ],
+      "delivery_assignment": [
+        {
+          "row_to_json": {
+            "id": "das- ###########-29f1",
+            "order_number": "PO-20260929-131",
+            "driver_id": "drv- ###########-c10a",
+            "status": "assigned",
+            "assigned_at": "2026-09-28T06:38:54.701426+00:00",
+            "accepted_at": null,
+            "picked_up_at": null,
+            "in_transit_at": null,
+            "delivered_at": null,
+            "cancelled_at": null,
+            "notes": "assigned by admin",
+            "created_at": "2026-09-28T06:33:56.757607+00:00",
+            "updated_at": "2026-09-28T06:38:54.701426+00:00"
           }
         }
       ],
-      "delivery_assignments": []
-    },
-    "kitchen_transition_attempt": {
-      "status": 400,
-      "response": "{\"code\":\"P0001\",\"details\":null,\"hint\":null,\"message\":\"ERR_INVALID_TRANSITION: pending -> confirmed\"}",
-      "blocked_as_customer": true
+      "driver": [
+        {
+          "id": "drv- ###########-c10a",
+          "status": "busy"
+        }
+      ],
+      "admin_visibility": [
+        {
+          "order_number": "PO-20260929-131",
+          "status": "delivered",
+          "payment_status": "paid"
+        }
+      ]
     }
   },
-  "timeline": {
-    "identity": "2026-09-28T04:51:14.825Z",
-    "created": "2026-09-28T04:51:14.825Z",
-    "paid": "2026-09-28T04:51:26.328Z",
-    "tracking": "2026-09-28T04:51:36.050Z"
+  "admin_promotion": {
+    "promote": {
+      "prior_role": "customer",
+      "now_role": "admin",
+      "promoted": true,
+      "ms": 2253
+    },
+    "revoke": {
+      "prior_role": "customer",
+      "now": {
+        "id": "32d8d700-43bb-4765-a1c5-bc72d0f07f26",
+        "role": "customer"
+      },
+      "ms": 3038
+    },
+    "post_revoke_boundary": {
+      "assign_driver": {
+        "status": 400,
+        "body": "{\"code\":\"P0001\",\"details\":null,\"hint\":null,\"message\":\"ERR_FORBIDDEN\"}"
+      }
+    }
   },
-  "notes": [],
-  "final": {
-    "customer_side_chain": "RUNTIME VERIFIED (identity → order → stripe test payment → webhook → paid → tracking → history)",
-    "kitchen_delivery_delivered": "BLOCKED — no QA admin identity available; transition_order_status correctly refuses non-admin (canonical admin guard working)",
-    "physical_delivery": "DEFERRED — operational pilot needs approved test driver/destination (separate gate)"
+  "payment_guard": {
+    "a_already_paid": {
+      "status": 409,
+      "body": {
+        "error": "ERR_ORDER_ALREADY_PAID",
+        "detail": "order PO-20260929-131 already has payment_status=paid"
+      }
+    },
+    "b_reuse_same_pi": {
+      "first_pi": "pi_3UKYDg3yHrQLTgfK0SmDZC2W",
+      "second_pi": "pi_3UKYDi3yHrQLTgfK1pbkvHZR",
+      "same": false,
+      "first_reused": false,
+      "second_reused": false
+    },
+    "fresh_order": "BMB-20260928-900",
+    "close_fresh_order": {
+      "order": "BMB-20260928-900",
+      "cancel_resp": "200 {\"ok\": true, \"to\": \"cancelled\", \"from\": \"pending\", \"inventory\": null, \"order_number\": \"BMB-20260928-900\"}"
+    }
+  },
+  "cleanup": {},
+  "qa_uid": "32d8d700-43bb-4765-a1c5-bc72d0f07f26",
+  "idempotency": {
+    "same_state_delivered": {
+      "resp": "200 {\"ok\": true, \"to\": \"delivered\", \"from\": \"delivered\", \"inventory\": null, \"order_number\": \"PO-20260929-131\"}",
+      "history_unchanged": true
+    },
+    "invalid_delivered_to_confirmed": {
+      "resp": "400 {\"code\":\"P0001\",\"details\":null,\"hint\":null,\"message\":\"ERR_INVALID_TRANSITION: delivered -> confirmed\"}",
+      "history_unchanged": true
+    },
+    "reassign_still_single_row": {
+      "resp": "400 {\"code\":\"P0001\",\"details\":null,\"hint\":null,\"message\":\"ERR_ORDER_NOT_DISPATCHABLE\"}",
+      "assignment_count": 1
+    },
+    "duplicate_deliver_rider": {
+      "resp": "400 {\"code\":\"P0001\",\"details\":null,\"hint\":null,\"message\":\"ERR_NOT_A_DRIVER\"}"
+    }
+  },
+  "tracking_delivered": {
+    "PASS": true,
+    "rpc": {
+      "status": "delivered",
+      "payment_status": "paid"
+    },
+    "response_fields": [
+      "status",
+      "created_at",
+      "order_mode",
+      "receipt_url",
+      "order_number",
+      "total_amount",
+      "payment_status",
+      "scheduled_date",
+      "delivery_method",
+      "delivery_round_id"
+    ],
+    "ui": {
+      "found": true,
+      "delivered_ui": true,
+      "no_pii": true
+    }
   }
 }

@@ -73,7 +73,8 @@ Deno.serve(async (req: Request): Promise<Response> => {
 
   const supabaseUrl = Deno.env.get('SUPABASE_URL') || ''
   const anonKey = Deno.env.get('SUPABASE_ANON_KEY') || ''
-  const serviceKey = Deno.env.get('bmb_backend_production_supabase_service_role_key') || ''
+  const serviceKey = Deno.env.get('bmb_backend_production_supabase_service_role_key')
+    || Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || ''
 
   // ---- 1. Verify the caller (Supabase Auth JWT) ----
   const userRes = await fetch(`${supabaseUrl}/auth/v1/user`, {
@@ -98,7 +99,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
 
   // ---- 3. Load the order through the USER's token (RLS guarantees ownership) ----
   const orderRes = await fetch(
-    `${supabaseUrl}/rest/v1/orders?select=order_number,total_amount,payment_method,status,customer_ref&order_number=eq.${encodeURIComponent(orderNumber)}`,
+    `${supabaseUrl}/rest/v1/orders?select=order_number,total_amount,payment_method,status,payment_status,customer_ref&order_number=eq.${encodeURIComponent(orderNumber)}`,
     { headers: { apikey: anonKey, Authorization: authHeader } },
   )
   if (!orderRes.ok) {
@@ -119,6 +120,44 @@ Deno.serve(async (req: Request): Promise<Response> => {
   const amount = Number(order.total_amount)
   if (!(amount > 0)) {
     return json({ error: 'ERR_INVALID_AMOUNT' }, 400)
+  }
+
+  // ---- 3.5 W5-2 single-open-PI guard (IDEMPOTENT CHECKOUT) ----
+  // prevents duplicate CHARGES (W5-2 finding: resume/retry created multiple
+  // PaymentIntents, each confirm produced a separate real charge).
+  //  a) already-terminal payment → refuse (no new PI / charge possible)
+  //  b) else REUSE the latest still-open PaymentIntent for this order instead of
+  //     creating a new one (resume/retry returns the SAME PI + client_secret)
+  if (['paid', 'completed', 'refunded', 'partially_refunded'].includes(String(order.payment_status))) {
+    return json({ error: 'ERR_ORDER_ALREADY_PAID', detail: `order ${orderNumber} already has payment_status=${order.payment_status}` }, 409)
+  }
+  const openRes = await fetch(
+    `${supabaseUrl}/rest/v1/payment_intents?select=id,status&order_number=eq.${encodeURIComponent(orderNumber)}&status=in.(pending,processing)&order=created_at.desc&limit=1`,
+    { headers: { apikey: serviceKey, Authorization: `Bearer ${serviceKey}` } },
+  )
+  let openRows: any[] = []
+  try { if (openRes.ok) openRows = await openRes.json() } catch { /* ignore */ }
+  const openRow = openRows?.[0]
+  if (openRow && typeof openRow.id === 'string' && openRow.id.startsWith('pi-')) {
+    const stripeId = openRow.id.slice(3)
+    const existRes = await fetch(`${STRIPE_API}/v1/payment_intents/${stripeId}`, {
+      headers: { Authorization: `Bearer ${sk}` },
+    })
+    try {
+      const existData = await existRes.json()
+      if (existRes.ok && existData?.client_secret && ['requires_payment_method', 'requires_confirmation', 'requires_action', 'processing'].includes(String(existData.status))) {
+        return json({
+          ok: true,
+          order_number: orderNumber,
+          payment_intent_id: stripeId,
+          client_secret: existData.client_secret,
+          amount,
+          currency: 'thb',
+          status: 'pending',
+          reused: true,
+        })
+      }
+    } catch { /* fall through to create a new PI */ }
   }
 
   // ---- 4. Create Stripe PaymentIntent with the AUTHORITATIVE amount ----
