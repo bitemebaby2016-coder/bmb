@@ -77,5 +77,6 @@ DEFERRED         = ไม่มี (D2 ยังอยู่ future phase ตา
 | W4-E-1 read-path hardening + D9 | — | DONE — D1 CLOSED · D9 CLOSED |
 
 **จบ Wave 4 — พร้อมรับคำสั่ง Wave 5 จาก Owner**
+
 คงเหลือ: D2 (MEDIUM, future phase) — ไม่มี CRITICAL/HIGH
 Wave 4 = COMPLETE · พร้อมรับคำสั่ง Wave 5 จาก Owner
