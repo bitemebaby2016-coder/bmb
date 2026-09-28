@@ -78,6 +78,9 @@ DEFERRED         = ไม่มี (D2 ยังอยู่ future phase ตา
 
 คงเหลือ: D2 (MEDIUM, future phase) — ไม่มี CRITICAL/HIGH
 Wave 4 = COMPLETE · พร้อมรับคำสั่ง Wave 5 จาก Owner
+Regression evidence: W3-D notifications probe (read-only, หลัง push ล่าสุด) = 6/7 pass —
+  1 failure = test-order-create (fixture/round setup, ไม่เกี่ยวกับ read paths ที่เปลี่ยน;
+  automation-worker contract tests ผ่านครบ 3/3)
 
 **จบ Wave 4 — พร้อมรับคำสั่ง Wave 5 จาก Owner**
 
