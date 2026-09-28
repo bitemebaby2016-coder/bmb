@@ -1,6 +1,8 @@
 # BMB_W4E1_READ_PATH_HARDENING.md
 **W4-E-1 — Admin / AI Analytics Read Path Hardening (D1) + Test Coverage (D9) · วันที่: 2026-09-27 · OWNER-APPROVED · ไม่มี migration/RLS/business-logic change**
 
+**สถานะ: D1 = CLOSED · D9 = CLOSED (ผ่าน gate ครบ — รายละเอียดด้านล่าง)**
+
 ## D1 — ก่อน → หลัง (ทุก caller ของ getOrders())
 
 | Caller | ก่อน (full-table) | หลัง (bounded read) | Semantics |
