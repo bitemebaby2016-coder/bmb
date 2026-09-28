@@ -1,0 +1,532 @@
+{
+  "step": "CT PREFLIGHT",
+  "timestamp": "2026-09-28T11:18:55.319Z",
+  "env": "production-db/tests-only",
+  "ref": "ivkdfognyiwjcmrhcnwz",
+  "probes": {
+    "GET /functions/v1/stripe-webhook": {
+      "error": "TypeError: fetch failed"
+    },
+    "GET /functions/v1/stripe-refund": {
+      "status": 200,
+      "body": "{\"ok\":true,\"service\":\"stripe-refund\"}"
+    },
+    "GET /functions/v1/create-checkout": {
+      "status": 405,
+      "body": "{\"error\":\"Method not allowed\"}"
+    },
+    "GET /functions/v1/ai-proxy": {
+      "status": 405,
+      "body": "{\"error\":\"method not allowed\"}"
+    },
+    "GET /functions/v1/phone-auto-login": {
+      "status": 405,
+      "body": "{\"error\":\"Method not allowed\"}"
+    },
+    "GET /functions/v1/automation-worker": {
+      "status": 405,
+      "body": "{\"error\":\"method not allowed\"}"
+    },
+    "GET /functions/v1/daily-report": {
+      "status": 404,
+      "body": "{\"code\":\"NOT_FOUND\",\"message\":\"Requested function was not found\"}"
+    }
+  },
+  "inventory": {
+    "qa_orders": [
+      {
+        "order_number": "BMB-20260928-322",
+        "status": "cancelled",
+        "payment_status": "pending",
+        "payment_method": "credit_card",
+        "created_at": "2026-09-28 06:58:53.064659+00"
+      },
+      {
+        "order_number": "BMB-20260928-900",
+        "status": "cancelled",
+        "payment_status": "pending",
+        "payment_method": "credit_card",
+        "created_at": "2026-09-28 06:39:22.860792+00"
+      },
+      {
+        "order_number": "PO-20260929-131",
+        "status": "delivered",
+        "payment_status": "paid",
+        "payment_method": "credit_card",
+        "created_at": "2026-09-28 04:38:41.657584+00"
+      },
+      {
+        "order_number": "BMB-20260927-431",
+        "status": "pending",
+        "payment_status": "pending",
+        "payment_method": "promptpay_qr",
+        "created_at": "2026-09-27 13:33:44.784029+00"
+      },
+      {
+        "order_number": "BMB-20260927-654",
+        "status": "pending",
+        "payment_status": "pending",
+        "payment_method": "promptpay_qr",
+        "created_at": "2026-09-27 13:33:44.117074+00"
+      },
+      {
+        "order_number": "BMB-20260927-754",
+        "status": "pending",
+        "payment_status": "pending",
+        "payment_method": "promptpay_qr",
+        "created_at": "2026-09-27 13:33:43.944007+00"
+      },
+      {
+        "order_number": "BMB-20260927-947",
+        "status": "pending",
+        "payment_status": "pending",
+        "payment_method": "promptpay_qr",
+        "created_at": "2026-09-27 13:33:43.76073+00"
+      },
+      {
+        "order_number": "BMB-20260927-801",
+        "status": "pending",
+        "payment_status": "pending",
+        "payment_method": "promptpay_qr",
+        "created_at": "2026-09-27 13:33:43.156963+00"
+      },
+      {
+        "order_number": "BMB-20260927-666",
+        "status": "pending",
+        "payment_status": "pending",
+        "payment_method": "promptpay_qr",
+        "created_at": "2026-09-27 13:33:42.975455+00"
+      },
+      {
+        "order_number": "BMB-20260927-420",
+        "status": "pending",
+        "payment_status": "pending",
+        "payment_method": "promptpay_qr",
+        "created_at": "2026-09-27 13:33:42.792175+00"
+      },
+      {
+        "order_number": "BMB-20260927-894",
+        "status": "pending",
+        "payment_status": "pending",
+        "payment_method": "promptpay_qr",
+        "created_at": "2026-09-27 13:33:42.479509+00"
+      },
+      {
+        "order_number": "BMB-20260927-738",
+        "status": "cancelled",
+        "payment_status": "pending",
+        "payment_method": "promptpay_qr",
+        "created_at": "2026-09-27 13:33:42.295182+00"
+      },
+      {
+        "order_number": "PO-20260928-627",
+        "status": "pending",
+        "payment_status": "pending",
+        "payment_method": "promptpay_qr",
+        "created_at": "2026-09-27 13:33:35.327845+00"
+      },
+      {
+        "order_number": "BMB-20260927-449",
+        "status": "pending",
+        "payment_status": "pending",
+        "payment_method": "promptpay_qr",
+        "created_at": "2026-09-27 13:33:34.427021+00"
+      },
+      {
+        "order_number": "BMB-20260927-579",
+        "status": "cancelled",
+        "payment_status": "pending",
+        "payment_method": "promptpay_qr",
+        "created_at": "2026-09-27 13:33:34.21883+00"
+      },
+      {
+        "order_number": "BMB-20260927-117",
+        "status": "pending",
+        "payment_status": "pending",
+        "payment_method": "promptpay_qr",
+        "created_at": "2026-09-27 13:33:31.143099+00"
+      },
+      {
+        "order_number": "BMB-20260927-181",
+        "status": "pending",
+        "payment_status": "pending",
+        "payment_method": "promptpay_qr",
+        "created_at": "2026-09-27 13:33:26.57312+00"
+      },
+      {
+        "order_number": "BMB-20260927-377",
+        "status": "cancelled",
+        "payment_status": "pending",
+        "payment_method": "promptpay_qr",
+        "created_at": "2026-09-27 13:31:50.940142+00"
+      },
+      {
+        "order_number": "BMB-20260927-778",
+        "status": "ready_for_dispatch",
+        "payment_status": "pending",
+        "payment_method": "promptpay_qr",
+        "created_at": "2026-09-27 13:31:16.458302+00"
+      },
+      {
+        "order_number": "BMB-20260927-949",
+        "status": "ready_for_dispatch",
+        "payment_status": "pending",
+        "payment_method": "promptpay_qr",
+        "created_at": "2026-09-27 13:30:37.811417+00"
+      },
+      {
+        "order_number": "BMB-20260927-136",
+        "status": "ready_for_dispatch",
+        "payment_status": "pending",
+        "payment_method": "promptpay_qr",
+        "created_at": "2026-09-27 13:29:18.920643+00"
+      },
+      {
+        "order_number": "BMB-20260927-971",
+        "status": "ready_for_dispatch",
+        "payment_status": "pending",
+        "payment_method": "promptpay_qr",
+        "created_at": "2026-09-27 13:27:25.171685+00"
+      },
+      {
+        "order_number": "BMB-20260927-245",
+        "status": "ready_for_dispatch",
+        "payment_status": "pending",
+        "payment_method": "promptpay_qr",
+        "created_at": "2026-09-27 13:23:49.656172+00"
+      },
+      {
+        "order_number": "BMB-20260927-937",
+        "status": "pending",
+        "payment_status": "pending",
+        "payment_method": "promptpay_qr",
+        "created_at": "2026-09-27 13:03:36.057+00"
+      },
+      {
+        "order_number": "BMB-20260927-198",
+        "status": "pending",
+        "payment_status": "pending",
+        "payment_method": "promptpay_qr",
+        "created_at": "2026-09-27 13:03:18.13+00"
+      },
+      {
+        "order_number": "BMB-20260927-110",
+        "status": "pending",
+        "payment_status": "pending",
+        "payment_method": "promptpay_qr",
+        "created_at": "2026-09-27 13:03:11.829+00"
+      },
+      {
+        "order_number": "BMB-20260927-178",
+        "status": "pending",
+        "payment_status": "pending",
+        "payment_method": "promptpay_qr",
+        "created_at": "2026-09-27 13:02:25.868+00"
+      },
+      {
+        "order_number": "BMB-20260927-556",
+        "status": "ready_for_dispatch",
+        "payment_status": "pending",
+        "payment_method": "promptpay_qr",
+        "created_at": "2026-09-27 12:40:30.327583+00"
+      },
+      {
+        "order_number": "BMB-20260927-179",
+        "status": "cancelled",
+        "payment_status": "pending",
+        "payment_method": "promptpay_qr",
+        "created_at": "2026-09-27 12:38:05.486395+00"
+      },
+      {
+        "order_number": "BMB-20260927-386",
+        "status": "pending",
+        "payment_status": "pending",
+        "payment_method": "promptpay_qr",
+        "created_at": "2026-09-27 12:38:00.971351+00"
+      }
+    ],
+    "qa_payment_intents": [
+      {
+        "id": "pi-pi_3UKYWZ3yHrQLTgfK1Qvzh96Z",
+        "order_number": "BMB-20260928-322",
+        "status": "pending",
+        "amount": "110.00",
+        "currency": "thb",
+        "method": "credit_card",
+        "provider": "stripe",
+        "created_at": "2026-09-28 06:58:56.472924+00"
+      },
+      {
+        "id": "pi-pi_3UKWX13yHrQLTgfK1romz9hW",
+        "order_number": "PO-20260929-131",
+        "status": "pending",
+        "amount": "110.00",
+        "currency": "thb",
+        "method": "credit_card",
+        "provider": "stripe",
+        "created_at": "2026-09-28 04:51:15.73929+00"
+      },
+      {
+        "id": "pi-pi_3UKWWA3yHrQLTgfK0Ok5wRhG",
+        "order_number": "PO-20260929-131",
+        "status": "pending",
+        "amount": "110.00",
+        "currency": "thb",
+        "method": "credit_card",
+        "provider": "stripe",
+        "created_at": "2026-09-28 04:50:22.615411+00"
+      },
+      {
+        "id": "pi-pi_3UKWV33yHrQLTgfK0SfhE0oW",
+        "order_number": "PO-20260929-131",
+        "status": "completed",
+        "amount": "110.00",
+        "currency": "thb",
+        "method": "credit_card",
+        "provider": "stripe",
+        "created_at": "2026-09-28 04:49:13.870068+00"
+      },
+      {
+        "id": "pi-pi_3UKWSP3yHrQLTgfK0dqbwFu5",
+        "order_number": "PO-20260929-131",
+        "status": "completed",
+        "amount": "110.00",
+        "currency": "thb",
+        "method": "credit_card",
+        "provider": "stripe",
+        "created_at": "2026-09-28 04:46:29.338816+00"
+      },
+      {
+        "id": "pi-pi_3UKWKs3yHrQLTgfK0WXmGX5W",
+        "order_number": "PO-20260929-131",
+        "status": "completed",
+        "amount": "110.00",
+        "currency": "thb",
+        "method": "credit_card",
+        "provider": "stripe",
+        "created_at": "2026-09-28 04:38:42.699525+00"
+      },
+      {
+        "id": "pi- ###########-502cb0",
+        "order_number": "BMB-20260919-442",
+        "status": "processing",
+        "amount": "97.00",
+        "currency": "thb",
+        "method": "promptpay_qr",
+        "provider": "promptpay",
+        "created_at": "2026-09-19 10:02:46.307804+00"
+      },
+      {
+        "id": "pi- ###########-968e84",
+        "order_number": "BMB-20260919-104",
+        "status": "pending",
+        "amount": "97.00",
+        "currency": "thb",
+        "method": "promptpay_qr",
+        "provider": "promptpay",
+        "created_at": "2026-09-19 10:01:49.651714+00"
+      },
+      {
+        "id": "pi- ###########-5f75b6",
+        "order_number": "BMB-20260919-918",
+        "status": "pending",
+        "amount": "97.00",
+        "currency": "thb",
+        "method": "promptpay_qr",
+        "provider": "promptpay",
+        "created_at": "2026-09-19 10:00:19.203116+00"
+      },
+      {
+        "id": "pi- ###########-02ad4c",
+        "order_number": "BMB-20260919-658",
+        "status": "pending",
+        "amount": "97.00",
+        "currency": "thb",
+        "method": "promptpay_qr",
+        "provider": "promptpay",
+        "created_at": "2026-09-19 09:57:16.876452+00"
+      },
+      {
+        "id": "pi- ###########-e37df8",
+        "order_number": "BMB-20260919-108",
+        "status": "pending",
+        "amount": "97.00",
+        "currency": "thb",
+        "method": "promptpay_qr",
+        "provider": "promptpay",
+        "created_at": "2026-09-19 09:56:48.041678+00"
+      },
+      {
+        "id": "pi-pi_3UHIsi3yHrQLTgfK02jmchbX",
+        "order_number": "BMB-LIVE-20260919074017",
+        "status": "refunded",
+        "amount": "172.00",
+        "currency": "thb",
+        "method": "credit_card",
+        "provider": "stripe",
+        "created_at": "2026-09-19 07:40:20.881128+00"
+      },
+      {
+        "id": "pi-pi_3UHIoa3yHrQLTgfK0olyI5h6",
+        "order_number": "BMB-LIVE-20260919073600",
+        "status": "pending",
+        "amount": "172.00",
+        "currency": "thb",
+        "method": "credit_card",
+        "provider": "stripe",
+        "created_at": "2026-09-19 07:36:04.98256+00"
+      },
+      {
+        "id": "pi-smoke-prep-1789803149698",
+        "order_number": "BMB-WHVER-20260919105254",
+        "status": "completed",
+        "amount": "123.00",
+        "currency": "thb",
+        "method": "credit_card",
+        "provider": "stripe",
+        "created_at": "2026-09-19 07:32:29.903098+00"
+      },
+      {
+        "id": "pi-pi_3UHEzo3yHrQLTgfK1x3wAOgF",
+        "order_number": "BMB-20260919-213",
+        "status": "completed",
+        "amount": "178.00",
+        "currency": "thb",
+        "method": "credit_card",
+        "provider": "stripe",
+        "created_at": "2026-09-19 03:31:24.765228+00"
+      },
+      {
+        "id": "pi-pi_3UHD1d3yHrQLTgfK1ibh4pwc",
+        "order_number": "BMB-20260919-830",
+        "status": "completed",
+        "amount": "101.00",
+        "currency": "thb",
+        "method": "credit_card",
+        "provider": "stripe",
+        "created_at": "2026-09-19 01:25:09.937785+00"
+      },
+      {
+        "id": "pi-pi_3UHCxF3yHrQLTgfK1I12wZk5",
+        "order_number": "BMB-20260919-489",
+        "status": "completed",
+        "amount": "111.00",
+        "currency": "thb",
+        "method": "credit_card",
+        "provider": "stripe",
+        "created_at": "2026-09-19 01:20:37.652192+00"
+      },
+      {
+        "id": "pi-pi_3UHCsv3yHrQLTgfK0Xhkw9AL",
+        "order_number": "BMB-20260919-249",
+        "status": "completed",
+        "amount": "106.00",
+        "currency": "thb",
+        "method": "credit_card",
+        "provider": "stripe",
+        "created_at": "2026-09-19 01:16:09.439862+00"
+      },
+      {
+        "id": "pi-pi_3UHCiQ3yHrQLTgfK1TJn9whO",
+        "order_number": "BMB-20260919-616",
+        "status": "pending",
+        "amount": "172.00",
+        "currency": "thb",
+        "method": "credit_card",
+        "provider": "stripe",
+        "created_at": "2026-09-19 01:05:18.588045+00"
+      }
+    ],
+    "qa_drivers": [
+      {
+        "id": "drv- ###########-c10a",
+        "name": "QA W52 Driver",
+        "phone": "+66990000100",
+        "status": "busy",
+        "user_id": null
+      },
+      {
+        "id": "drv-qa-w2-02",
+        "name": "QA Rider B (W2)",
+        "phone": "0900000002",
+        "status": "busy",
+        "user_id": "258025bf-9cb1-449e-88b7-bfa66b799b6d"
+      },
+      {
+        "id": "drv-qa-w2-01",
+        "name": "QA Rider A (W2)",
+        "phone": "0900000001",
+        "status": "busy",
+        "user_id": "dc7eece0-70ed-4024-a0f8-79b2be07db20"
+      }
+    ],
+    "qa_delivery_assignments": [
+      {
+        "id": "das- ###########-29f1",
+        "order_number": "PO-20260929-131",
+        "driver_id": "drv- ###########-c10a",
+        "status": "assigned",
+        "assigned_at": "2026-09-28 06:38:54.701426+00"
+      },
+      {
+        "id": "das- ###########-99fa",
+        "order_number": "BMB-20260927-778",
+        "driver_id": "drv-qa-w2-02",
+        "status": "accepted",
+        "assigned_at": "2026-09-27 13:31:55.173415+00"
+      },
+      {
+        "id": "das- ###########-3d3d",
+        "order_number": "BMB-20260927-949",
+        "driver_id": "drv-qa-w2-01",
+        "status": "assigned",
+        "assigned_at": "2026-09-27 13:30:54.318232+00"
+      },
+      {
+        "id": "das- ###########-95db",
+        "order_number": "BMB-20260927-136",
+        "driver_id": "drv-qa-w2-01",
+        "status": "assigned",
+        "assigned_at": "2026-09-27 13:29:24.482171+00"
+      },
+      {
+        "id": "das- ###########-500a",
+        "order_number": "BMB-20260927-971",
+        "driver_id": "drv-qa-w2-01",
+        "status": "assigned",
+        "assigned_at": "2026-09-27 13:27:36.926395+00"
+      },
+      {
+        "id": "das- ###########-9b8d",
+        "order_number": "BMB-20260927-245",
+        "driver_id": "drv-qa-w2-01",
+        "status": "assigned",
+        "assigned_at": "2026-09-27 13:23:58.770759+00"
+      },
+      {
+        "id": "das- ###########-b256",
+        "order_number": "BMB-20260927-556",
+        "driver_id": "drv-qa-w2-02",
+        "status": "accepted",
+        "assigned_at": "2026-09-27 12:40:35.087516+00"
+      },
+      {
+        "id": "das- ###########-1586",
+        "order_number": "BMB-20260927-815",
+        "driver_id": "drv-qa-w2-02",
+        "status": "accepted",
+        "assigned_at": "2026-09-27 11:39:32.690351+00"
+      },
+      {
+        "id": "das- ###########-7e9d",
+        "order_number": "BMB-20260927-382",
+        "driver_id": "drv-qa-w2-02",
+        "status": "accepted",
+        "assigned_at": "2026-09-27 07:34:55.853702+00"
+      }
+    ],
+    "qa_rounds": {
+      "error": "Error: MGMT 400 {\"message\":\"Failed to run sql query: ERROR:  42703: column \\\"date_id\\\" does not exist\\nLINE 1: select id,status,date_id from public.delivery_rou"
+    }
+  }
+}

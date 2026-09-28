@@ -1,0 +1,62 @@
+{
+  "ct": 1,
+  "name": "Single-open PaymentIntent",
+  "ts": "2026-09-28T13:40:19.169Z",
+  "env": "production-db/tests-only",
+  "order_ids": {
+    "reuse_order": "BMB-20260928-885",
+    "already_paid_order": "BMB-20260928-658"
+  },
+  "pi_ids": {
+    "piA": "pi_3UKen73yHrQLTgfK1es1ddvH",
+    "piB": "pi_3UKenB3yHrQLTgfK0n2tvsT6"
+  },
+  "before": {
+    "admin_promote": {
+      "uid": "90d8a027-f823-458f-a0bb-eaaa718558c3",
+      "ok": true
+    }
+  },
+  "action": {
+    "first_checkout": {
+      "status": 200,
+      "pi": "pi_3UKen73yHrQLTgfK1es1ddvH"
+    },
+    "second_checkout": {
+      "status": 200,
+      "pi": "pi_3UKen73yHrQLTgfK1es1ddvH",
+      "reused": true
+    },
+    "already_paid_checkout": {
+      "status": 409,
+      "body": "{\"error\":\"ERR_ORDER_ALREADY_PAID\",\"detail\":\"order BMB-20260928-658 already has payment_status=paid\"}"
+    }
+  },
+  "after": {
+    "reuse_pi_count": 1
+  },
+  "db": {
+    "open_rows_after_two_checkouts": [
+      {
+        "status": "pending",
+        "payment_intent_id": null
+      }
+    ],
+    "record_payment_result_resp": {
+      "status": 200,
+      "body": "{\"ok\": true, \"idempotent\": false, \"order_number\": \"BMB-20260928-658\", \"payment_status\": \"paid\"}"
+    },
+    "already_paid_order_status": {
+      "payment_status": "paid"
+    }
+  },
+  "result": {
+    "same_pi_reused": true,
+    "duplicate_open_pi": 1,
+    "no_dup_open_pi": true,
+    "already_paid_blocked": true,
+    "f1": "SOURCE+DEPLOY VERIFIED (deployed v40 fails closed on non-OK insert; report note below)"
+  },
+  "pass": true,
+  "status": "PASS"
+}

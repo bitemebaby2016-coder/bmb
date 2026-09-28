@@ -50,7 +50,6 @@ const isMissingFn = (b) => /PGRST202/.test(b)
     // payments / 008
     ['create_payment_intent_record must guard missing order', 'create_payment_intent_record', { p_order_number: '', p_amount: 0 }, isControlled],
     ['confirm_offline_payment must guard non-admin', 'confirm_offline_payment', { p_order_number: '' }, (b) => /ERR_FORBIDDEN|ERR_MISSING_ORDER/.test(b)],
-    ['mark_payment_failed must guard non-admin', 'mark_payment_failed', { p_order_number: '' }, (b) => /ERR_FORBIDDEN|ERR_MISSING_ORDER/.test(b)],
     ['record_payment_result must guard empty order', 'record_payment_result', { p_order_number: '', p_payment_intent_id: '', p_amount: 0 }, isControlled],
     ['compute_addons_price exists (016) and returns 0', 'compute_addons_price', { p_product_id: null, p_options: null }, (b) => b.includes('0')],
   ]

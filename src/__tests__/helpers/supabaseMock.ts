@@ -391,19 +391,6 @@ export function createSupabaseMock(opts?: { failReadTable?: string }) {
       return { data: { ok: true, idempotent: false, order_number: p.p_order_number, payment_status: 'paid' }, error: null }
     }
 
-    if (name === 'mark_payment_failed') {
-      const p = params ?? {}
-      const intents = tables['payment_intents'] || []
-      intents
-        .filter((x: any) => x.order_number === p.p_order_number && (x.status === 'pending' || x.status === 'processing'))
-        .forEach((x: any) => {
-          x.status = 'failed'
-          x.failure_reason = p.p_reason || 'admin'
-          x.updated_at = new Date().toISOString()
-        })
-      return { data: { ok: true, order_number: p.p_order_number }, error: null }
-    }
-
     if (name === 'record_payment_result') {
       const p = params ?? {}
       const order = (tables['orders'] || []).find((o: any) => o.order_number === p.p_order_number)

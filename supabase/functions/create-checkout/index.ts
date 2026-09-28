@@ -201,7 +201,13 @@ Deno.serve(async (req: Request): Promise<Response> => {
     }),
   })
   if (!recRes.ok) {
-    console.warn('[create-checkout] payment_intents insert failed (may be duplicate):', recRes.status)
+    // F1 FIX (2026-09-28): Throw error instead of silent warn.
+    // If insert fails, we MUST NOT return success — otherwise the next
+    // create-checkout call won't find an open row and will create a NEW PI,
+    // bypassing the single-open-PI guard and risking duplicate charges.
+    const errText = await recRes.text().catch(() => '')
+    console.error('[create-checkout] payment_intents insert FAILED:', recRes.status, errText)
+    return json({ error: 'ERR_PI_INSERT_FAILED', detail: `payment_intents insert failed: ${recRes.status}` }, 500)
   }
 
   return json({

@@ -11,7 +11,6 @@
 --        - submit_offline_payment_reference() — customer records PromptPay TXN id (pending → processing)
 --        - confirm_offline_payment()          — admin-only; marks intent completed + orders.payment_status='paid'
 --          (COD requires order.status='delivered'; PromptPay requires intent='processing')
---        - mark_payment_failed()              — admin-only failure path
 --        - unique partial index on payment_intents(payment_intent_id) for webhook idempotency
 --   C. P0-6          : order state machine
 --        - order_transition_allowed()         — pure allow-list validator
@@ -287,32 +286,6 @@ END;
 $$;
 
 -- ============================================
--- B.6 mark_payment_failed — ADMIN ONLY (idempotent)
--- ============================================
-CREATE OR REPLACE FUNCTION public.mark_payment_failed(
-  p_order_number text,
-  p_reason text DEFAULT ''
-)
-RETURNS jsonb
-LANGUAGE plpgsql
-SECURITY DEFINER
-SET search_path = public
-AS $$
-BEGIN
-  IF NOT public.is_admin() THEN RAISE EXCEPTION 'ERR_FORBIDDEN'; END IF;
-
-  UPDATE public.payment_intents
-     SET status = 'failed', failure_reason = COALESCE(NULLIF(p_reason, ''), 'admin'), updated_at = NOW()
-   WHERE order_number = p_order_number AND status IN ('pending', 'processing');
-
-  UPDATE public.orders
-     SET updated_at = NOW()
-   WHERE order_number = p_order_number;
-
-  RETURN jsonb_build_object('ok', true, 'order_number', p_order_number, 'payment_status', 'pending');
-END;
-$$;
--- ============================================
 -- C. ORDER STATE MACHINE (P0-6)
 --    order_transition_allowed = single source of truth used by BOTH the
 --    BEFORE UPDATE trigger AND the transition_order_status RPC.
@@ -554,9 +527,6 @@ GRANT EXECUTE ON FUNCTION public.submit_offline_payment_reference TO authenticat
 
 REVOKE EXECUTE ON FUNCTION public.confirm_offline_payment FROM PUBLIC, anon;
 GRANT EXECUTE ON FUNCTION public.confirm_offline_payment TO authenticated;
-
-REVOKE EXECUTE ON FUNCTION public.mark_payment_failed FROM PUBLIC, anon;
-GRANT EXECUTE ON FUNCTION public.mark_payment_failed TO authenticated;
 
 REVOKE EXECUTE ON FUNCTION public.transition_order_status FROM PUBLIC, anon;
 GRANT EXECUTE ON FUNCTION public.transition_order_status TO authenticated;

@@ -1,0 +1,103 @@
+{
+  "ct": 4,
+  "name": "Refund (FULL + PARTIAL; F2 webhook sync; F3 status)",
+  "ts": "2026-09-28T14:40:00.694Z",
+  "env": "production-db/tests-only",
+  "order_ids": {
+    "partial_order": "BMB-20260928-714",
+    "full_order": "BMB-20260928-247",
+    "over_order": "BMB-20260928-180",
+    "webhook_order": "BMB-20260928-420"
+  },
+  "pi_ids": {
+    "partial_pi": "pi_3UKfiv3yHrQLTgfK1CEdjpJb",
+    "full_pi": "pi_3UKfj63yHrQLTgfK0fPG68BU",
+    "webhook_pi": "pi_3UKfjR3yHrQLTgfK1wkVqNH7"
+  },
+  "refund_ids": {
+    "webhook_stripe_refund": "re_3UKfjR3yHrQLTgfK1jYOoq6x"
+  },
+  "before": {
+    "customer_session": {
+      "uid": "ea092ec5-b602-4b58-9594-1d66333a7a50"
+    }
+  },
+  "action": {
+    "partial_refund": {
+      "status": 200,
+      "body": "{\"ok\":true,\"order_number\":\"BMB-20260928-714\",\"payment_status\":\"partially_refunded\",\"refund\":{\"id\":\"re_3UKfiv3yHrQLTgfK1fquCSKB\",\"status\":\"succeeded\",\"amount\":44,\"currency\":\"thb\",\"idempotency_key\":\"bmb-refund-BMB-20260928-714-4400\"}}"
+    },
+    "full_refund": {
+      "status": 200,
+      "body": "{\"ok\":true,\"order_number\":\"BMB-20260928-247\",\"payment_status\":\"refund\",\"refund\":{\"id\":\"re_3UKfj63yHrQLTgfK0bff2qmK\",\"status\":\"succeeded\",\"amount\":110,\"currency\":\"thb\",\"idempotency_key\":\"bmb-refund-BMB-20260928-247-11000\"}}"
+    },
+    "over_refund": {
+      "status": 400,
+      "body": "{\"error\":\"ERR_REFUND_AMOUNT_EXCEEDS\"}"
+    },
+    "idempotent_refund": {
+      "status": 400,
+      "body": "{\"error\":\"ERR_REFUND_ALREADY_EXISTS\"}"
+    },
+    "stripe_api_refund": {
+      "ok": true,
+      "status": 200,
+      "refund_id": "re_3UKfjR3yHrQLTgfK1jYOoq6x",
+      "charge": "ch_3UKfjR3yHrQLTgfK1bm2jJfE"
+    },
+    "charge_refunded_webhook": {
+      "status": 200,
+      "body": "{\"received\":true,\"result\":\"refund_synced\",\"order_number\":\"BMB-20260928-420\",\"full_refund\":true}"
+    }
+  },
+  "db": {
+    "after_partial": {
+      "order": {
+        "order_number": "BMB-20260928-714",
+        "payment_status": "partially_refunded",
+        "total_amount": "110.00"
+      },
+      "pi": {
+        "status": "partially_refunded",
+        "refunded_total_minor": 4400,
+        "refund_ids": [
+          "re_3UKfiv3yHrQLTgfK1fquCSKB"
+        ]
+      }
+    },
+    "after_full": {
+      "order": {
+        "order_number": "BMB-20260928-247",
+        "payment_status": "refund",
+        "total_amount": "110.00"
+      },
+      "pi": {
+        "status": "refunded",
+        "refunded_total_minor": 11000
+      }
+    },
+    "after_webhook": {
+      "order": {
+        "order_number": "BMB-20260928-420",
+        "payment_status": "refund",
+        "total_amount": "110.00"
+      },
+      "pi": {
+        "status": "refunded",
+        "refunded_total_minor": 11000,
+        "refund_ids": [
+          "ch_3UKfjR3yHrQLTgfK1bm2jJfE"
+        ]
+      }
+    }
+  },
+  "result": {
+    "partial_f3": true,
+    "full_f3": true,
+    "over_refund_blocked": true,
+    "idempotency": true,
+    "webhook_f2_sync": true
+  },
+  "pass": true,
+  "status": "PASS"
+}

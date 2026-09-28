@@ -1,0 +1,97 @@
+{
+  "ct": 3,
+  "name": "Driver Reassignment",
+  "ts": "2026-09-28T13:50:32.100Z",
+  "env": "production-db/tests-only",
+  "order_ids": {
+    "reassigned_order": "BMB-20260928-231"
+  },
+  "driver_ids": {
+    "riderA": "drv- ###########-dd5e",
+    "riderB": "drv- ###########-ffd1"
+  },
+  "assignment_ids": {
+    "afterA": [
+      {
+        "id": "das- ###########-fe10",
+        "driver_id": "drv- ###########-dd5e",
+        "status": "assigned"
+      }
+    ]
+  },
+  "before": {
+    "customer_session": {
+      "uid": "1b393647-bd82-47df-b7f8-b7b32d1ab3b5"
+    }
+  },
+  "action": {
+    "to_confirmed": {
+      "status": 200,
+      "body": "{\"ok\": true, \"to\": \"confirmed\", \"from\": \"pending\", \"inventory\": {\"ok\": true, \"idempotent\": false, \"order_number\": \"BMB-20260928-231\"}, \"order_number\": \"BMB-20260928-231\"}"
+    },
+    "to_preparing": {
+      "status": 200,
+      "body": "{\"ok\": true, \"to\": \"preparing\", \"from\": \"confirmed\", \"inventory\": null, \"order_number\": \"BMB-20260928-231\"}"
+    },
+    "to_ready_for_dispatch": {
+      "status": 200,
+      "body": "{\"ok\": true, \"to\": \"ready_for_dispatch\", \"from\": \"preparing\", \"inventory\": null, \"order_number\": \"BMB-20260928-231\"}"
+    },
+    "assign_A": {
+      "status": 200,
+      "body": "{\"ok\": true, \"status\": \"assigned\", \"driver_id\": \"drv- ###########-dd5e\", \"order_number\": \"BMB-20260928-231\"}"
+    },
+    "reassign_B": {
+      "status": 200,
+      "body": "{\"ok\": true, \"status\": \"assigned\", \"driver_id\": \"drv- ###########-ffd1\", \"order_number\": \"BMB-20260928-231\"}"
+    }
+  },
+  "db": {
+    "after_reassign": {
+      "assignment_rows": [
+        {
+          "id": "das- ###########-fe10",
+          "driver_id": "drv- ###########-ffd1",
+          "status": "assigned"
+        }
+      ],
+      "assignment_count": 1,
+      "drivers": [
+        {
+          "id": "drv- ###########-dd5e",
+          "status": "busy"
+        },
+        {
+          "id": "drv- ###########-ffd1",
+          "status": "busy"
+        }
+      ],
+      "audit_events": [
+        {
+          "action": "delivery_assigned",
+          "metadata": {
+            "driver_id": "drv- ###########-dd5e"
+          }
+        },
+        {
+          "action": "delivery_assigned",
+          "metadata": {
+            "driver_id": "drv- ###########-ffd1"
+          }
+        }
+      ],
+      "order_state": {
+        "status": "ready_for_dispatch",
+        "payment_status": "pending"
+      }
+    }
+  },
+  "result": {
+    "reassigned_to_B": true,
+    "no_duplicate_assignment": true,
+    "order_state_ok": true,
+    "audited": true
+  },
+  "pass": true,
+  "status": "PASS"
+}

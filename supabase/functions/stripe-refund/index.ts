@@ -83,7 +83,10 @@ Deno.serve(async (req: Request): Promise<Response> => {
   const supabaseUrl = Deno.env.get('SUPABASE_URL') || ''
   const anonKey = Deno.env.get('SUPABASE_ANON_KEY') || ''
   const sk = Deno.env.get('STRIPE_SECRET_KEY') || ''
-  const serviceKey = Deno.env.get('bmb_backend_production_supabase_service_role_key') || ''
+  // Canonical service-role binding (matches create-checkout): prefer the rotated
+  // custom name, fall back to the platform-injected SUPABASE_SERVICE_ROLE_KEY.
+  const serviceKey = Deno.env.get('bmb_backend_production_supabase_service_role_key')
+    || Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || ''
 
   if (!sk || !serviceKey || !supabaseUrl) {
     return json({ error: 'ERR_NOT_CONFIGURED' }, 500)
@@ -102,16 +105,22 @@ Deno.serve(async (req: Request): Promise<Response> => {
     return json({ error: 'ERR_NOT_AUTHENTICATED' }, 401)
   }
 
-  // ---- 2. Verify the caller is an ADMIN (profiles.role, read with the user's own token) ----
-  const profileRes = await fetch(
-    `${supabaseUrl}/rest/v1/profiles?select=role,is_active&id=eq.${encodeURIComponent(uid)}`,
-    { headers: { apikey: anonKey, Authorization: authHeader } },
-  )
-  if (!profileRes.ok) {
+  // ---- 2. Verify the caller is an ADMIN (canonical is_admin(); profiles is
+  //     RLS-locked so a raw user-token SELECT on it is 42501 — see RLS_MATRIX) ----
+  const adminRes = await fetch(`${supabaseUrl}/rest/v1/rpc/is_admin`, {
+    method: 'POST',
+    headers: { apikey: anonKey, Authorization: authHeader, 'content-type': 'application/json' },
+    body: '{}',
+  })
+  if (!adminRes.ok) {
     return json({ error: 'ERR_FORBIDDEN' }, 403)
   }
-  const profiles: any[] = await profileRes.json()
-  const isAdmin = Array.isArray(profiles) && profiles.some((p) => p?.role === 'admin' && p?.is_active !== false)
+  let isAdmin = false
+  try {
+    isAdmin = (await adminRes.json()) === true
+  } catch {
+    /* treat an unreadable result as not-admin */
+  }
   if (!isAdmin) {
     return json({ error: 'ERR_FORBIDDEN' }, 403)
   }
@@ -223,7 +232,7 @@ if (order.payment_method !== 'credit_card') return json({ error: 'ERR_NOT_CARD_P
   const piPatch = await fetch(`${supabaseUrl}/rest/v1/payment_intents?id=eq.${encodeURIComponent(pi.id)}`, {
     method: 'PATCH',
     headers: { ...hSvc, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ status: 'refunded', metadata: nextMetadata, updated_at: now }),
+    body: JSON.stringify({ status: newPaymentStatus === 'refund' ? 'refunded' : 'partially_refunded', metadata: nextMetadata, updated_at: now }),
   })
   const orderPatch = await fetch(
     `${supabaseUrl}/rest/v1/orders?order_number=eq.${encodeURIComponent(orderNumber)}`,

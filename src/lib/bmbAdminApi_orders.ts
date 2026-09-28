@@ -289,14 +289,7 @@ export async function confirmOfflinePayment(orderNumber: string): Promise<{ succ
   return { success: true }
 }
 
-export async function markPaymentFailed(orderNumber: string, reason: string = ''): Promise<{ success: boolean; error?: string }> {
-  const r = await supabase.rpc('mark_payment_failed', { p_order_number: orderNumber, p_reason: reason })
-  if (r.error) {
-    console.error('[markPaymentFailed] RPC error:', r.error)
-    return { success: false, error: r.error.message }
-  }
-  return { success: true }
-}
+// REMOVED: markPaymentFailed (dead code - canonical failed path is webhook -> record_payment_result)
 
 // ============================================
 // ✅ Phase 3B (migration 025 §3): canonical atomic cancellation.

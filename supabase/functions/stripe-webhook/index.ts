@@ -11,8 +11,9 @@
 //
 // Env (supabase secrets set ...):
 //   STRIPE_WEBHOOK_SECRET, SUPABASE_URL,
-//   bmb_backend_production_supabase_service_role_key (2026-09-19 rotation; legacy
-//   SUPABASE_SERVICE_ROLE_KEY fallback REMOVED (2026-09-21 SEC-04))
+//   bmb_backend_production_supabase_service_role_key (custom rotated name; if the
+//   platform runtime cannot resolve it, fall back to the canonical auto-injected
+//   SUPABASE_SERVICE_ROLE_KEY — same binding as create-checkout).
 // ============================================
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.4'
@@ -109,7 +110,10 @@ Deno.serve(async (req: Request): Promise<Response> => {
   }
 
   const supabaseUrl = Deno.env.get('SUPABASE_URL') || ''
-  const serviceKey = Deno.env.get('bmb_backend_production_supabase_service_role_key') || ''
+  // Canonical service-role binding (matches create-checkout): prefer the rotated
+  // custom name, fall back to the platform-injected SUPABASE_SERVICE_ROLE_KEY.
+  const serviceKey = Deno.env.get('bmb_backend_production_supabase_service_role_key')
+    || Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || ''
   const admin = createClient(supabaseUrl, serviceKey)
 
   const pi = event?.data?.object ?? {}
@@ -151,6 +155,78 @@ Deno.serve(async (req: Request): Promise<Response> => {
         return json({ received: false, error: error.message }, rpcErrorStatus(String(error.message)))
       }
       return json({ received: true, result: 'failed' })
+    }
+    case 'charge.refunded': {
+      // F2 FIX (2026-09-28): Handle refunds created via Stripe Dashboard.
+      // charge.refunded event has the charge object with payment_intent reference.
+      const charge = pi
+      const paymentIntentId = charge.payment_intent
+      if (!paymentIntentId) {
+        console.warn('[stripe-webhook] charge.refunded: no payment_intent on charge')
+        return json({ received: true, note: 'charge.refunded no payment_intent' }, 202)
+      }
+
+      // Look up order_number from payment_intents table using payment_intent_id
+      const { data: piRow, error: piErr } = await admin
+        .from('payment_intents')
+        .select('order_number, metadata')
+        .eq('payment_intent_id', paymentIntentId)
+        .maybeSingle()
+
+      if (piErr || !piRow?.order_number) {
+        console.warn('[stripe-webhook] charge.refunded: payment_intent not found', { paymentIntentId, error: piErr })
+        return json({ received: true, note: 'payment_intent not found' }, 202)
+      }
+
+      const refundOrderNumber = piRow.order_number
+      const originalAmountMinor = Number(charge.amount || 0)
+
+      // Fetch current metadata and update refund_ids ledger (idempotent)
+      const currentMetadata = piRow.metadata ?? {}
+      const refundIds = Array.isArray(currentMetadata.refund_ids) ? [...currentMetadata.refund_ids] : []
+      if (!refundIds.includes(charge.id)) {
+        refundIds.push(charge.id)
+      }
+      const refundedTotalMinor = Number(currentMetadata.refunded_total_minor || 0) + Number(charge.amount_refunded || 0)
+
+      // Determine if full or partial refund
+      const isFullRefund = refundedTotalMinor >= originalAmountMinor
+      const nextPiStatus = isFullRefund ? 'refunded' : 'partially_refunded'
+      const nextOrderPaymentStatus = isFullRefund ? 'refund' : 'partially_refunded'
+
+      const nextMetadata = {
+        ...currentMetadata,
+        refund_ids: refundIds,
+        refunded_total_minor: refundedTotalMinor,
+        last_refund_at: new Date().toISOString(),
+      }
+      const { error: refundErr } = await admin
+        .from('payment_intents')
+        .update({
+          metadata: nextMetadata, 
+          status: nextPiStatus,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('payment_intent_id', paymentIntentId)
+
+      if (refundErr) {
+        console.error('[stripe-webhook] charge.refunded DB update error:', refundErr)
+        return json({ received: false, error: refundErr.message }, 500)
+      }
+
+      // Also update orders.payment_status
+      const { error: orderErr } = await admin
+        .from('orders')
+        .update({ payment_status: nextOrderPaymentStatus, updated_at: new Date().toISOString() })
+        .eq('order_number', refundOrderNumber)
+
+      if (orderErr) {
+        console.error('[stripe-webhook] charge.refunded order update error:', orderErr)
+        return json({ received: false, error: orderErr.message }, 500)
+      }
+
+      console.log('[stripe-webhook] charge.refunded synced:', { order_number: refundOrderNumber, refund_id: charge.id })
+      return json({ received: true, result: 'refund_synced', order_number: refundOrderNumber, full_refund: isFullRefund })
     }
     default:
       // Unhandled events are acknowledged but do nothing (idempotent by design).

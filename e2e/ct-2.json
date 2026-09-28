@@ -1,0 +1,89 @@
+{
+  "ct": 2,
+  "name": "Customer Cancellation",
+  "ts": "2026-09-28T13:44:54.656Z",
+  "env": "production-db/tests-only",
+  "order_ids": {
+    "customer_cancel_order": "BMB-20260928-250",
+    "paid_cancel_block_order": "BMB-20260928-515"
+  },
+  "before": {
+    "customer_session": {
+      "uid": "021b9009-dd7e-43ae-b9ac-87027cf67ad0"
+    }
+  },
+  "action": {
+    "customer_cancel": {
+      "status": 200,
+      "body": "{\"ok\": true, \"to\": \"cancelled\", \"from\": \"pending\", \"inventory\": null, \"order_number\": \"BMB-20260928-250\"}"
+    },
+    "paid_cancel_attempt": {
+      "status": 200,
+      "body": "{\"ok\": true, \"to\": \"cancelled\", \"from\": \"pending\", \"inventory\": null, \"order_number\": \"BMB-20260928-515\"}"
+    }
+  },
+  "db": {
+    "cancelled_order": {
+      "row": {
+        "status": "cancelled",
+        "payment_status": "pending"
+      },
+      "history": [
+        {
+          "from_status": null,
+          "to_status": "pending",
+          "actor_type": "CUSTOMER"
+        },
+        {
+          "from_status": "pending",
+          "to_status": "cancelled",
+          "actor_type": "CUSTOMER"
+        }
+      ],
+      "audit": [
+        {
+          "action": "order_created",
+          "entity_id": "BMB-20260928-250"
+        },
+        {
+          "action": "order_created",
+          "entity_id": "BMB-20260928-250"
+        },
+        {
+          "action": "capacity_released",
+          "entity_id": "BMB-20260928-250"
+        },
+        {
+          "action": "order_status_change",
+          "entity_id": "BMB-20260928-250"
+        }
+      ]
+    },
+    "paid_cancel": {
+      "before": {
+        "payment_status": "paid",
+        "payment_method": "credit_card"
+      },
+      "pi": [
+        {
+          "status": "completed",
+          "payment_intent_id": "pi_3UKerZ3yHrQLTgfK0MdBj0qK"
+        }
+      ],
+      "after": {
+        "status": "cancelled",
+        "payment_status": "paid",
+        "payment_method": "credit_card"
+      }
+    }
+  },
+  "result": {
+    "customer_cancel_pending": true,
+    "history_has_cancel": true,
+    "audit_trail": true,
+    "paid_cancel_preserves_payment": true,
+    "refund_eligible_for_CT04": true
+  },
+  "pass": true,
+  "status": "PASS"
+}

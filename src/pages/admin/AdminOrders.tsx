@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 import { useNotificationStore } from '@/store/notificationStore'
 import { showToast } from '@/components/ui/ToastContainer'
-import { getOrdersPaged, updateOrderStatus, confirmOfflinePayment, markPaymentFailed, stripeRefundOrder } from '@/lib/bmbAdminApi_orders'
+import { getOrdersPaged, updateOrderStatus, confirmOfflinePayment, stripeRefundOrder } from '@/lib/bmbAdminApi_orders'
 import { getProductsAdmin } from '@/lib/bmbAdminApi_products'
 import { addOnLinesFromChoices } from '@/lib/addonDisplay'
 import type { OrderForm } from '@/lib/bmbAdminApi_orders'
@@ -81,11 +81,6 @@ export function AdminOrders() {
     }
   }
 
-  async function handleMarkFailed(orderNumber: string) {
-    await markPaymentFailed(orderNumber, 'admin')
-    loadOrders()
-    showToast('Payment marked as failed', 'success')
-  }
 async function handleStripeRefund(orderNumber: string) {
     // C-6: server-side Stripe refund (admin-only EF). Full refund by default.
     const r = await stripeRefundOrder(orderNumber)
@@ -204,9 +199,6 @@ async function handleStripeRefund(orderNumber: string) {
 
               {order.payment_status === 'pending' && (
                 <button onClick={() => handleConfirmPayment(order.order_number)} className="btn btn-success text-sm">💰 Confirm payment</button>
-              )}
-              {order.payment_status === 'pending' && (
-                <button onClick={() => handleMarkFailed(order.order_number)} className="btn btn-outline text-sm">🚫 Mark failed</button>
               )}
 {order.payment_method === 'credit_card' && (order.payment_status === 'paid' || order.payment_status === 'partially_refunded') && (
                     <button onClick={() => handleStripeRefund(order.order_number)} className="btn btn-outline text-sm">💸 Refund (Stripe)</button>

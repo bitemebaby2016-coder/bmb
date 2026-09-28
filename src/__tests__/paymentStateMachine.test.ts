@@ -30,7 +30,6 @@ import {
   submitOfflinePaymentReference,
   confirmOfflinePayment,
   getPaymentIntents,
-  markPaymentFailed,
 } from '@/lib/paymentGateway'
 
 async function makeOrder(paymentMethod = 'promptpay_qr') {
@@ -260,13 +259,5 @@ describe('P0-6 Order state machine — allow-list enforcement', () => {
     const failed = await updateOrderStatus(order!.order_number, 'failed')
     expect(failed).not.toBeNull()
     expect(failed!.status).toBe('failed')
-  })
-
-  it('mark_payment_failed flips pending/processing intents to failed', async () => {
-    const order = await makeOrder('promptpay_qr')
-    await createPaymentIntent(order!.order_number, order!.total_amount, 'promptpay_qr')
-    const r = await markPaymentFailed(order!.order_number)
-    expect(r.success).toBe(true)
-    expect(txnId(order!.order_number).status).toBe('failed')
   })
 })

@@ -210,18 +210,6 @@ export async function confirmOfflinePayment(orderNumber: string): Promise<Paymen
   return { success: true }
 }
 
-/** ADMIN marks a pending/processing payment failed. */
-export async function markPaymentFailed(orderNumber: string, reason: string = ''): Promise<PaymentConfirmResult> {
-  const { data, error } = await supabase.rpc('mark_payment_failed', {
-    p_order_number: orderNumber,
-    p_reason: reason,
-  })
-  if (error) {
-    return { success: false, error: error.message }
-  }
-  return { success: true }
-}
-
 /**
  * Refunds are server-side only (requires service-role + Stripe API).
  * Admin flow lives in the `stripe-refund` Edge Function once deployed; the

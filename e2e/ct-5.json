@@ -1,0 +1,177 @@
+{
+  "ct": 5,
+  "name": "Offline Payment (promptpay_qr + cash_on_delivery)",
+  "ts": "2026-09-28T14:53:41.590Z",
+  "env": "production-db/tests-only",
+  "methods_audited": [
+    "promptpay_qr",
+    "cash_on_delivery"
+  ],
+  "order_ids": {
+    "submit_order": "BMB-20260928-883",
+    "cod_order": "BMB-20260928-415",
+    "unauth_order": "BMB-20260928-293"
+  },
+  "action": {
+    "sessions": {
+      "custA": "e2aa57bf-42d3-4966-b965-92ab529e18f4",
+      "custB": "514b979a-f2b4-42c9-b836-b07794c9b811",
+      "admin": "308d97f3-3574-42b4-b3d0-341fe01e7230"
+    },
+    "create_intent_A": {
+      "status": 200,
+      "existing": false,
+      "body": "{\"id\": \"pi- ###########-60d554\", \"amount\": 110, \"method\": \"promptpay_qr\", \"status\": \"pending\", \"order_number\": \"BMB-20260928-883\"}"
+    }
+  },
+  "db": {
+    "testA": {
+      "before": {
+        "order": {
+          "order_number": "BMB-20260928-883",
+          "status": "pending",
+          "payment_status": "pending",
+          "payment_method": "promptpay_qr"
+        },
+        "intent": {
+          "status": "pending",
+          "metadata": {}
+        }
+      },
+      "submit": {
+        "status": 200,
+        "body": "{\"ok\": true, \"order_number\": \"BMB-20260928-883\", \"intent_status\": \"processing\"}"
+      },
+      "after": {
+        "order": {
+          "order_number": "BMB-20260928-883",
+          "status": "pending",
+          "payment_status": "pending",
+          "payment_method": "promptpay_qr"
+        },
+        "intent": {
+          "status": "processing",
+          "metadata": {
+            "reference": "TXN-CT05-1790607235383"
+          }
+        }
+      }
+    },
+    "testB": {
+      "confirm": {
+        "status": 200,
+        "body": "{\"ok\": true, \"idempotent\": false, \"order_number\": \"BMB-20260928-883\", \"payment_status\": \"paid\"}"
+      },
+      "after": {
+        "order": {
+          "order_number": "BMB-20260928-883",
+          "status": "pending",
+          "payment_status": "paid",
+          "payment_method": "promptpay_qr"
+        },
+        "intent": {
+          "status": "completed",
+          "metadata": {
+            "reference": "TXN-CT05-1790607235383"
+          }
+        },
+        "audit": 1
+      }
+    },
+    "testC": {
+      "before": {
+        "order_number": "BMB-20260928-415",
+        "status": "pending",
+        "payment_status": "pending",
+        "payment_method": "cash_on_delivery"
+      },
+      "confirm": {
+        "status": 400,
+        "body": "{\"code\":\"P0001\",\"details\":null,\"hint\":null,\"message\":\"ERR_COD_NOT_DELIVERED\"}"
+      },
+      "after": {
+        "order": {
+          "order_number": "BMB-20260928-415",
+          "status": "pending",
+          "payment_status": "pending",
+          "payment_method": "cash_on_delivery"
+        },
+        "audit": 0
+      }
+    },
+    "testD": {
+      "before": {
+        "order": {
+          "order_number": "BMB-20260928-293",
+          "status": "pending",
+          "payment_status": "pending",
+          "payment_method": "promptpay_qr"
+        },
+        "intent": {
+          "status": "processing",
+          "metadata": {
+            "reference": "TXN-1790607252927"
+          }
+        }
+      },
+      "confirm": {
+        "status": 400,
+        "body": "{\"code\":\"P0001\",\"details\":null,\"hint\":null,\"message\":\"ERR_FORBIDDEN\"}"
+      },
+      "after": {
+        "order": {
+          "order_number": "BMB-20260928-293",
+          "status": "pending",
+          "payment_status": "pending",
+          "payment_method": "promptpay_qr"
+        },
+        "intent": {
+          "status": "processing",
+          "metadata": {
+            "reference": "TXN-1790607252927"
+          }
+        },
+        "audit": 0
+      }
+    },
+    "testE": {
+      "before": {
+        "order": {
+          "order_number": "BMB-20260928-883",
+          "status": "pending",
+          "payment_status": "paid",
+          "payment_method": "promptpay_qr"
+        },
+        "audit": 1
+      },
+      "confirm": {
+        "status": 200,
+        "body": "{\"ok\": true, \"idempotent\": true, \"order_number\": \"BMB-20260928-883\"}"
+      },
+      "after": {
+        "order": {
+          "order_number": "BMB-20260928-883",
+          "status": "pending",
+          "payment_status": "paid",
+          "payment_method": "promptpay_qr"
+        },
+        "intent": {
+          "status": "completed",
+          "metadata": {
+            "reference": "TXN-CT05-1790607235383"
+          }
+        },
+        "audit": 1
+      }
+    }
+  },
+  "result": {
+    "testA_customer_submit": true,
+    "testB_admin_confirm_valid": true,
+    "testC_invalid_admin_confirm_rejected": true,
+    "testD_unauthorized_confirm_rejected": true,
+    "testE_repeat_confirm_idempotent": true
+  },
+  "pass": true,
+  "status": "PASS"
+}
