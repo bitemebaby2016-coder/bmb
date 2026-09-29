@@ -23,7 +23,7 @@ export interface IsolationCartItem {
   mode?: OrderMode
 }
 
-export type AddToCartResult = 'added' | 'needs_confirmation'
+export type AddToCartResult = 'added' | 'needs_confirmation' | 'context_blocked'
 
 interface CartIsolationStore {
   items: IsolationCartItem[]

@@ -8,6 +8,7 @@ import { AdminNav } from './components/admin/AdminNav'
 // Bite / AI accessibility lives in BottomNav ('ไบต์' → /ai-chat) + BiteHero quick actions (UI v5)
 import { SeoHelmet } from './components/SeoHelmet'
 import { getHomeMeta, getMenuMeta, getCartMeta, getCheckoutMeta, getOrderTrackMeta, getAboutMeta, getFaqMeta, getBlogMeta, getContactMeta, getPrivacyMeta, getTermsMeta, getPromotionsMeta, getRewardsMeta, getVoteMeta, getRandomMenuMeta, getShareMeta, getViralMeta, getProfileMeta, getAdminMeta, getLoginMeta } from './lib/seo'
+import { BrandProvider } from './components/BrandProvider'
 
 // Core page (must load immediately — it is the LCP page)
 import { HomePage } from './pages/HomePage'
@@ -42,6 +43,7 @@ const AdminNotificationsPage = lazy(() => import('./pages/admin/AdminNotificatio
 const DeliveryManagement = lazy(() => import('./pages/admin/DeliveryManagement').then(m => ({ default: m.DeliveryManagement })))
 const RouteOptimizationPage = lazy(() => import('./pages/admin/RouteOptimizationPage').then(m => ({ default: m.RouteOptimizationPage })))
 const AdminPromotions = lazy(() => import('./pages/admin/AdminPromotions').then(m => ({ default: m.AdminPromotions })))
+const AdminBrands = lazy(() => import('./pages/admin/AdminBrands').then(m => ({ default: m.AdminBrands })))
 const AdminRounds = lazy(() => import('./pages/admin/AdminRounds').then(m => ({ default: m.AdminRounds })))
 const AdminCustomers = lazy(() => import('./pages/admin/AdminCustomers').then(m => ({ default: m.AdminCustomers })))
 const AdminSettings = lazy(() => import('./pages/admin/AdminSettings').then(m => ({ default: m.AdminSettings })))
@@ -120,10 +122,11 @@ function AdminRoute({ children }: { children: React.ReactNode }) {
 
 export default function App() {
   return (
+    <BrandProvider>
     <HelmetProvider>
-    <ErrorBoundary>
-      {/* SEO Helmet — per-page meta tags */}
-      <Routes>
+      <ErrorBoundary>
+        {/* SEO Helmet — per-page meta tags */}
+        <Routes>
         <Route path="/" element={<SeoHelmet seo={getHomeMeta()} />} />
         <Route path="/menu" element={<SeoHelmet seo={getMenuMeta()} />} />
         <Route path="/cart" element={<SeoHelmet seo={getCartMeta()} />} />
@@ -211,6 +214,9 @@ export default function App() {
         <Route path="/admin/errors" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminNav><AdminErrorsPage /></AdminNav></Layout></AdminRoute></Suspense>} />
         <Route path="/admin/mascot" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminNav><MascotSettingsPage /></AdminNav></Layout></AdminRoute></Suspense>} />
         
+        {/* TEN-05: Brand Management */}
+        <Route path="/admin/brands" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminNav><AdminBrands /></AdminNav></Layout></AdminRoute></Suspense>} />
+        
         {/* Catch all */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
@@ -218,5 +224,6 @@ export default function App() {
       {/* Bite / AI entry moved to BottomNav ('ไบต์') + BiteHero quick actions (UI v5) */}
     </ErrorBoundary>
     </HelmetProvider>
+    </BrandProvider>
   )
 }

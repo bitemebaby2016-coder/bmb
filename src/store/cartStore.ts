@@ -1,5 +1,5 @@
 // ============================================
-// Bite Me Baby — Cart Store (Phase 3B: ONE mode-locked order path)
+// Bite Me Baby — Cart Store (Phase 3B + TEN-05 Context Isolation)
 // ============================================
 // Single canonical cart used by Menu/Home/Cart/Checkout. Owns the
 // SAME_DAY / PRE_ORDER isolation semantics previously duplicated in
@@ -10,17 +10,24 @@
 //     confirms ⇒ clear the previous cart then switch).
 // Prices here are DISPLAY ONLY — the server re-derives subtotal/discount/
 // delivery fee/total at order creation (migrations 016/025).
+// 
+// TEN-05 ADDITION (RD-03: Strict Context Isolation):
+//   - Each cart item tracks `__context_tenant_id` at time of addition.
+//   - Context change detection: compare stored context against new resolved
+//     context before allowing add-to-cart. If tenants differ → MUST clear.
+//     If brands within same tenant differ → STRICT ISOLATION: also clear.
+//   - No silent merge across context boundaries.
 // ============================================
 
 import { create } from "zustand"
-import type { CartItem, Promotion, Product } from "@/types"
+import type { CartItem as CartItemType, Promotion, Product } from "@/types"
 import type { OrderMode } from "@/config/platformConfig"
 import { addOnTotalFor } from "@/lib/addonDisplay"
 
-export type AddToCartResult = 'added' | 'needs_confirmation'
+export type AddToCartResult = 'added' | 'needs_confirmation' | 'context_blocked'
 
 interface CartStore {
-  items: CartItem[]
+  items: Array<CartItemType & { __context_tenant_id?: string }>
   couponCode: string
   appliedPromotion: Promotion | null
   subtotal: number
@@ -28,14 +35,13 @@ interface CartStore {
   deliveryFee: number
   total: number
   isCheckoutOpen: boolean
-  // ✅ Phase 3B: mode isolation (canonical orders.order_mode vocabulary)
   order_mode: OrderMode | null
-  /** Set when a mode-mismatch awaits the user's approval to clear the cart. */
   pendingMode: OrderMode | null
-  /** Running display subtotal (Bite AI upsell / free-shipping logic). */
   cartTotal: number
+  // ✅ TEN-05: Current active context (set/replaced by BrandProvider)
+  active_context_tenant_id: string | null
+  active_context_brand_id: string | null
 
-  // Actions
   addItem: (product: Product, quantity?: number, customizations?: Record<string, any>, mode?: OrderMode) => AddToCartResult
   removeItem: (productId: string) => void
   updateQuantity: (productId: string, quantity: number) => void
@@ -44,12 +50,13 @@ interface CartStore {
   setAppliedPromotion: (promo: Promotion | null) => void
   setDeliveryFee: (fee: number) => void
   setCheckoutOpen: (open: boolean) => void
-  /** Called by the isolation modal on "ยืนยัน": clear the old cart, then apply the new mode. */
   confirmModeSwitch: () => void
-  /** Called by the isolation modal on "ยกเลิก": keep the current cart untouched. */
   cancelModeSwitch: () => void
+  /** TEN-05: Resolve whether cart survives context change */
+  resolveContextChange: (newTenantId: string, newBrandId: string) => 'cleared' | 'kept' | 'error'
+  /** TEN-05: Set active context AND clear incompatible cart atomically */
+  setContextAndClearIfIncompatible: (tenantId: string, brandId: string) => void
 
-  // Calculations
   recalculate: () => void
   getCartCount: () => number
 }
@@ -66,12 +73,24 @@ export const useCartStore = create<CartStore>((set, get) => ({
   order_mode: null,
   pendingMode: null,
   cartTotal: 0,
+  active_context_tenant_id: null,
+  active_context_brand_id: null,
 
   addItem: (product, quantity = 1, customizations = {}, mode = 'SAME_DAY') => {
-    const { order_mode, pendingMode, items } = get()
+    const { order_mode, pendingMode, items, active_context_tenant_id, active_context_brand_id } = get()
 
     // A switch is already awaiting confirmation — keep waiting.
     if (pendingMode) return 'needs_confirmation'
+
+    // Check context compatibility before adding
+    if (items.length > 0) {
+      const firstItem = items[0]
+      const itemTenant = firstItem.__context_tenant_id
+      if (itemTenant && itemTenant !== active_context_tenant_id) {
+        console.warn('[CartStore] Context mismatch: cannot add item from different tenant.')
+        return 'context_blocked'
+      }
+    }
 
     // ✅ Isolation rule: a non-empty cart is locked to one order mode.
     if (order_mode !== null && order_mode !== mode && items.length > 0) {
@@ -81,7 +100,7 @@ export const useCartStore = create<CartStore>((set, get) => ({
 
     set((state) => {
       const existingItem = state.items.find(item => item.product.id === product.id)
-      let newItems: CartItem[]
+      let newItems: Array<CartItemType & { __context_tenant_id?: string }>
       
       if (existingItem) {
         newItems = state.items.map(item =>
@@ -90,14 +109,13 @@ export const useCartStore = create<CartStore>((set, get) => ({
             : item
         )
       } else {
-        // Client-side add-on estimate only — the server re-derives the price
-        // (migration 016 compute_addons_price) at order creation.
         const unit = Number(product.price) + addOnTotalFor({ product, customizations })
         newItems = [...state.items, {
           product,
           quantity,
           customizations,
-          subtotal: unit * quantity
+          subtotal: unit * quantity,
+          __context_tenant_id: active_context_tenant_id!
         }]
       }
       
@@ -132,6 +150,35 @@ export const useCartStore = create<CartStore>((set, get) => ({
 
   clearCart: () => set({ items: [], couponCode: '', appliedPromotion: null, subtotal: 0, discount: 0, deliveryFee: 0, total: 0, order_mode: null, pendingMode: null, cartTotal: 0 }),
 
+  // TEN-05: Resolve whether cart survives context change
+  resolveContextChange: (newTenantId: string, newBrandId: string) => {
+    const { items } = get()
+    if (items.length === 0) return 'kept'
+    
+    // Check if ANY item belongs to a DIFFERENT tenant
+    const hasCrossTenant = items.some(item => 
+      item.__context_tenant_id && item.__context_tenant_id !== newTenantId
+    )
+    
+    if (hasCrossTenant) return 'cleared' // Security boundary crossed
+    // Same tenant but different brand → STRICT ISOLATION (RD-03): clear
+    return 'cleared'
+  },
+
+  // TEN-05: Atomic context set + incompatible cart clear
+  setContextAndClearIfIncompatible: (tenantId: string, brandId: string) => {
+    const decision = get().resolveContextChange(tenantId, brandId)
+    
+    if (decision === 'cleared') {
+      const count = get().getCartCount()
+      if (count > 0) {
+        console.warn(`[CartStore] Context changed (t=${tenantId}, b=${brandId}) — clearing ${count} incompatible items.`)
+        get().clearCart()
+      }
+    }
+    set({ active_context_tenant_id: tenantId, active_context_brand_id: brandId })
+  },
+
   setCouponCode: (code: string) => set({ couponCode: code }),
 
   setAppliedPromotion: (promo) => set({ appliedPromotion: promo }),
@@ -146,7 +193,6 @@ export const useCartStore = create<CartStore>((set, get) => ({
   confirmModeSwitch: () => {
     const { pendingMode } = get()
     if (!pendingMode) return
-    // Clear the previous cart before switching operational modes.
     set({ items: [], subtotal: 0, discount: 0, total: 0, cartTotal: 0, order_mode: pendingMode, pendingMode: null })
   },
 

@@ -1,10 +1,12 @@
 // ============================================
 // Bite Me Baby Admin API - Products & Categories
 // ✅ v3.1: Using Supabase (replaces localStorage)
+// TEN-05: Catalog queries are tenant-scoped via brandContextStore
 // ============================================
 
 import { supabase } from './supabase'
 import type { Product, ProductCategory, ProductAddon, RoundPeriod, DeliveryRound, MenuSection } from '@/types'
+import { useBrandContextStore } from '@/store/resolvedBrandStore'
 
 
 /** JSON shape stored in products.addons (no product_id inside the JSON array). */
@@ -30,16 +32,31 @@ export interface ProductForm {
 }
 
 // ============================================
-// Products API — Supabase-backed
+// Products API — Supabase-backed + TEN-05 tenant-scoped
 // ============================================
 
-export async function getProducts(): Promise<Product[]> {
-  const { data, error } = await supabase.from('products').select('*').order('sort_order', { ascending: true })
+/** Get products with optional tenant filter (TEN-05: auto-scope from resolved brand context) */
+export async function getProducts(tenantHint?: string): Promise<Product[]> {
+  let query = supabase.from('products').select('*').order('sort_order', { ascending: true })
+  
+  // TEN-05: Auto-scope catalog to resolved brand's tenant if no hint provided
+  if (!tenantHint) {
+    const currentTenant = useBrandContextStore.getState().resolved?.tenant_id
+    if (currentTenant && currentTenant !== 'tenant-bmb-001') {
+      query = query.eq('tenant_id', currentTenant)
+    }
+  } else if (tenantHint !== 'all') {
+    // Explicit admin/admin-side query with tenant scope
+    query = query.eq('tenant_id', tenantHint)
+  }
+  
+  const { data, error } = await query
   if (error) { console.error('[getProducts] Error:', error); return [] }
   return (data || []) as Product[]
 }
 
 export async function getProductsAdmin(): Promise<Product[]> {
+  // Admin sees ALL products (admin operates globally within their tenant scope)
   const { data, error } = await supabase.from('products').select('*').order('sort_order', { ascending: true })
   if (error) { console.error('[getProductsAdmin] Error:', error); return [] }
   return (data || []) as Product[]
@@ -163,7 +180,13 @@ export interface CategoryForm {
 }
 
 export async function getCategories(): Promise<ProductCategory[]> {
-  const { data, error } = await supabase.from('product_categories').select('*').eq('is_active', true).order('sort_order', { ascending: true })
+  // TEN-05: Tenant-scope via resolved brand context
+  const currentTenant = useBrandContextStore.getState().resolved?.tenant_id
+  let query = supabase.from('product_categories').select('*').eq('is_active', true).order('sort_order', { ascending: true })
+  if (currentTenant && currentTenant !== 'tenant-bmb-001') {
+    query = query.eq('tenant_id', currentTenant)
+  }
+  const { data, error } = await query
   if (error) { console.error('[getCategories] Error:', error); return [] }
   return (data || []) as ProductCategory[]
 }
@@ -207,7 +230,13 @@ export interface SectionForm {
 }
 
 export async function getSections(): Promise<MenuSection[]> {
-  const { data, error } = await supabase.from('menu_sections').select('*').eq('is_active', true).order('sort_order', { ascending: true })
+  // TEN-05: Tenant-scope via resolved brand context
+  const currentTenant = useBrandContextStore.getState().resolved?.tenant_id
+  let query = supabase.from('menu_sections').select('*').eq('is_active', true).order('sort_order', { ascending: true })
+  if (currentTenant && currentTenant !== 'tenant-bmb-001') {
+    query = query.eq('tenant_id', currentTenant)
+  }
+  const { data, error } = await query
   if (error) { console.error('[getSections] Error:', error); return [] }
   return (data || []) as MenuSection[]
 }
