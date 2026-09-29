@@ -274,11 +274,11 @@ export function HomePage() {
         </section>
       )}
 
-      {/* 5. Drinks Menu — mockup carousel (owner edits src/lib/drinksMenu.ts) */}
-      <DrinksSection />
+      {/* 5. Drinks — canonical carousel (category slug 'drinks') */}
+      <DrinksSection products={products} categories={categories} />
 
-      {/* 5b. Snacks — mockup carousel (owner edits src/lib/snacksMenu.ts) */}
-      <SnacksSection />
+      {/* 5b. Snacks — canonical carousel (category slug 'snacks') */}
+      <SnacksSection products={products} categories={categories} />
 
       {/* 6. Social Proof Review Carousel */}
       <ReviewCarouselSection reviews={reviews} products={products} onReviewCta={handleReviewCta} />

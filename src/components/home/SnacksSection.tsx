@@ -1,50 +1,44 @@
 // ============================================
-// Bite Me Baby — SnacksSection (Home)
-// Mockup snacks carousel — data lives in src/lib/snacksMenu.ts (owner edits there).
+// Bite Me Baby — SnacksSection (Home) — CAT-WL-00 canonical carousel
+// Data: canonical products/category slug='snacks' — ไม่มี mockup source
 // Position: below the drinks section, above the review section.
 // ============================================
 
 import { Link } from 'react-router-dom'
 import { MascotBadge } from '@/components/MascotBadge'
 import { HorizontalCarousel } from './HorizontalCarousel'
-import { SNACKS_MENU, type HomeSnack } from '@/lib/snacksMenu'
+import { selectHomeShowcase, type HomeShowcaseItem } from '@/lib/homeShowcase'
+import type { Product, ProductCategory } from '@/types'
 
-function SnackCard({ snack }: { snack: HomeSnack }) {
-  const isComingSoon = !!snack.comingSoon
+function SnackCard({ item }: { item: HomeShowcaseItem }) {
   return (
     <article
       className="snack-card"
-      aria-label={snack.name}
-      data-coming-soon={isComingSoon ? "true" : "false"}
+      aria-label={item.name}
+      data-coming-soon="false"
     >
       <div className="snack-card-media">
         <img
-          src={snack.image}
-          alt={snack.name}
+          src={item.image}
+          alt={item.name}
           loading="lazy"
           decoding="async"
         />
-        <span className="snack-card-badge">{snack.tag}</span>
-        {isComingSoon && (
-          <div className="snack-card-coming-soon-overlay" aria-hidden="true">
-            <span>🪄 เร็ว ๆ นี้ — ยังไม่สามารถสั่งได้</span>
-          </div>
-        )}
       </div>
       <div className="snack-card-body">
         <div className="snack-card-name">
-          <h3 className="font-bold text-brand-accent truncate">{snack.name}</h3>
-          <span className="snack-card-price">฿{snack.price}</span>
+          <h3 className="font-bold text-brand-accent truncate">{item.name}</h3>
+          <span className="snack-card-price">฿{item.price}</span>
         </div>
-        <p className="snack-card-desc">{snack.description}</p>
-        {isComingSoon && <span className="snack-card-coming">🪄 เร็ว ๆ นี้</span>}
+        <p className="snack-card-desc">{item.description}</p>
       </div>
     </article>
   )
 }
 
-export function SnacksSection() {
-  if (SNACKS_MENU.length === 0) return null
+export function SnacksSection({ products, categories }: { products: Product[]; categories: ProductCategory[] }) {
+  const items = selectHomeShowcase(products, categories, 'snacks')
+  if (items.length === 0) return null
 
   return (
     <section className="mb-10 scroll-mt-20" aria-labelledby="home-snacks-heading">
@@ -60,9 +54,9 @@ export function SnacksSection() {
         </h2>
         <Link to="/menu" className="text-sm text-brand-primary font-medium hover:underline">ดูทั้งหมด →</Link>
       </div>
-      <h3 className="sr-only">ของกินเล่น — ของว่าง/ขนม</h3>
+      <h3 className="sr-only">ของกินเล่น — เมนูจริงของร้าน</h3>
       <HorizontalCarousel
-        items={SNACKS_MENU.map((snack) => <SnackCard key={snack.id} snack={snack} />)}
+        items={items.map((item) => <SnackCard key={item.id} item={item} />)}
         aria-label="ของกินเล่น เลื่อนได้"
       />
     </section>
