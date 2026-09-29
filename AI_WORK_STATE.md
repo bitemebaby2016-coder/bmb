@@ -4,6 +4,24 @@
 # Purpose: Universal operational state + evidence ledger for AI coding agents.
 # Canonical rule source: .clinerules / UNIVERSAL_MASTER_AI_RULES.md
 # This file MUST remain behaviorally aligned with those rules.
+#
+# ===============================================================================
+# SESSION HANDOFF (2026-09-29 — TEN-01 AUDIT + STORAGE PLATFORM BLOCKER)
+# ===============================================================================
+# Gate: TEN-01 AUDIT ONLY + Storage 403 investigation (docs-only commit)
+# HEAD ตอนจบ gate: ดู git log — docs-only commit บน main (baseline ebea3266)
+# Reports: BMB_TEN01_AUDIT.md · BMB_STORAGE_PLATFORM_BLOCKER.md (อ่านก่อนทำอะไรต่อ)
+# Prod facts (read-only probes e2e/ct-ten01-*.cjs):
+#   - ไม่มี tenants/brands/tenant_id ใน prod จริง (38 tables, all global, is_admin() = profiles.role='admin')
+#   - order_number = BMB-YYYYMMDD-NNN global (202 rows) · drivers=5 (user_id ไม่มี FK) · business_settings 5 keys (all TENANT_OPERATIONAL)
+#   - Dependency พบใหม่: products.delivery_round_id FK → ต้องทำ TEN-04-lite ก่อน TEN-03 (ดู staged plan ใน TEN-01 report)
+# Storage 403 ROOT CAUSE (evidence): user JWT = ES256/kid (new JWT signing keys) แต่ storage-api ไม่ verify ES256
+#   (PostgREST ผ่านปกติ, service key HS256 ผ่าน) → Admin UI upload ยัง 403 จนกว่า Owner จะแก้
+#   platform config (Dashboard → Auth → JWT Keys) หรือ open support ticket (ดูรายงาน §Owner action)
+# Workaround active: svc-key storage upload server-side only (CAT-03 §4) — Admin UI upload ยัง NOT runtime verified
+# Awaiting Owner: TEN-01 ownership matrix + staged migration plan + RLS contract approval · Storage platform action
+# ห้ามเริ่ม: TEN-02..09 · CAT-04 · CAT-03B (ก่อน >= 2026-10-13) · Catalog Runtime Verify · Open-Shop
+
 
 > IMPORTANT
 > This file is both:
