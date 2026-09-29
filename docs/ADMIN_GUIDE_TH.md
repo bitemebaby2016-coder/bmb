@@ -18,9 +18,12 @@ Admin แบ่งเป็นพื้นที่ควบคุม: **Orders*
 - ระบบเลือกภาพ: อ่าน override จาก DB ตาม role → ถ้าไม่มีใช้ภาพ default ใน app
 - ข้อจำกัดปัจจุบัน: ยังใส่ URL เอง (ยังไม่ผูก upload), ไม่มีชื่อ/คำอธิบาย mascot — รอ WL-04
 
-## 4. การจัดการ Media — ⚠️ ยังไม่เปิดใช้จริง (DEPLOYED/NOT CONNECTED)
+## 4. การจัดการ Media — ✅ CANONICAL (migration 057, CAT-D03=B)
 
-- หน้า Media มีอยู่แต่ยังไม่ต่อ upload จริง — อย่าใช้จนกว่าจะประกาศ (รอ CAT-D03)
+- **หน้า Media (/admin/media)**: อัปโหลด/ลบ asset จริง → Storage bucket `bmb-images` + metadata ที่ `media_assets` (kinds: image/video/logo/hero/mascot)
+- **รูปสินค้า**: อัปโหลดผ่านหน้า Menu จะถูก validate (JPEG/PNG/WebP/GIF · ≤5MB) → เก็บใน `bmb-images` → attach ที่ `products.image_url` (แสดงบน PWA ทันที) — **ไม่ใช้ Base64 สำหรับรูปใหม่อีกต่อไป**
+- **ความปลอดภัย**: public อ่านได้อย่างเดียว · อัปโหลดต้องล็อกอิน · แก้ไข/ลบ = admin เท่านั้น (migration 057, live)
+- รูปเก่าที่เป็น Base64 (9 รายการ) ยังแสดงได้ตามปกติ — การย้ายไป Storage เป็นแยก gate (CAT-03A) รอ Owner อนุมัติ
 
 ## 5. การจัดการ Menu
 

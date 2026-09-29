@@ -74,3 +74,47 @@ function extractPath(publicUrl: string): string | null {
   const i = publicUrl.indexOf(marker)
   return i >= 0 ? decodeURIComponent(publicUrl.slice(i + marker.length)) : null
 }
+
+// ============================================
+// CAT-03: canonical product image flow (contract §6)
+// Storage bmb-images → media_assets metadata → products.image_url = public URL.
+// No Base64 for NEW/REPLACED images. Client validates; server policies gate writes.
+// ============================================
+
+export const IMAGE_MIME_WHITELIST = ['image/jpeg', 'image/png', 'image/webp', 'image/gif']
+export const MAX_IMAGE_BYTES = 5 * 1024 * 1024 // 5 MB
+
+export interface ImageValidation {
+  ok: boolean
+  error?: string
+}
+
+export function validateImageFile(file: File): ImageValidation {
+  if (!IMAGE_MIME_WHITELIST.includes(file.type)) {
+    return { ok: false, error: `ERR_INVALID_MIME (${file.type || 'unknown'} — รองรับ JPEG/PNG/WebP/GIF)` }
+  }
+  if (file.size <= 0 || file.size > MAX_IMAGE_BYTES) {
+    return { ok: false, error: `ERR_INVALID_SIZE (${(file.size / 1024 / 1024).toFixed(2)} MB — สูงสุด 5 MB)` }
+  }
+  return { ok: true }
+}
+
+export interface ProductImageResult {
+  ok: boolean
+  url?: string
+  assetId?: string
+  error?: string
+}
+
+/**
+ * Upload a product image: validate → Storage → media_assets row → return
+ * public URL for products.image_url. Attachment (updateProduct image_url) is
+ * done by the caller so a failed product update leaves the asset reusable.
+ */
+export async function uploadProductImage(file: File, alt = ''): Promise<ProductImageResult> {
+  const v = validateImageFile(file)
+  if (!v.ok) return { ok: false, error: v.error }
+  const row = await uploadMediaAsset(file, 'image', alt || file.name)
+  if (!row) return { ok: false, error: 'ERR_UPLOAD_FAILED (ตรวจ storage policy / การล็อกอิน admin)' }
+  return { ok: true, url: row.url, assetId: row.id }
+}

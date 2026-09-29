@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { showToast } from '@/components/ui/ToastContainer'
 import { getProducts, createProduct, updateProduct, archiveProduct, restoreProduct, getCategories, getCategoriesAdmin, createCategory, updateCategory, archiveCategory, restoreCategory, getSectionsAdmin, createSection, updateSection, archiveSection, restoreSection } from '@/lib/bmbAdminApi_products'
-import { fileToBase64 } from '@/lib/bmbStorage'
+import { uploadProductImage, validateImageFile } from '@/lib/bmbAdminApi_media'
 import { slugifyCategory, blankCategoryForm } from '@/lib/adminUi'
 import { AddonsEditor, toAddonDrafts, addonDraftsToJson, type AddonDraft } from '@/components/admin/AddonsEditor'
 import type { Product, ProductCategory, MenuSection } from '@/types'
@@ -52,11 +52,24 @@ export function AdminProducts() {
   }
 
 
+  // ✅ CAT-03: canonical image flow — Storage bmb-images → media_assets →
+  // products.image_url = public URL. No new Base64 (migration contract §6/§7).
   async function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     if (!file) return
-    const base64 = await fileToBase64(file)
-    setFormData({ ...formData, image_url: base64 })
+    const v = validateImageFile(file)
+    if (!v.ok) {
+      showToast('รูปไม่ผ่านเงื่อนไข: ' + v.error, 'error')
+      e.target.value = ''
+      return
+    }
+    const res = await uploadProductImage(file)
+    if (!res.ok || !res.url) {
+      showToast('อัปโหลดไม่สำเร็จ: ' + (res.error || ''), 'error')
+      e.target.value = ''
+      return
+    }
+    setFormData({ ...formData, image_url: res.url })
     e.target.value = ''
   }
 

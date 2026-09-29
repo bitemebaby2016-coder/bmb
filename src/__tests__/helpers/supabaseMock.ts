@@ -1152,14 +1152,48 @@ if (name === 'customer_intelligence') {
     },
   }
 
+  // ============ CAT-03: Storage mock (bmb-images) ============
+  const storageObjects: { bucket: string; path: string; data: any }[] = []
+
+  const storage = {
+    from(bucket: string) {
+      return {
+        async upload(path: string, file: any, _opts?: any) {
+          // mirrors migration 011/057 policy: INSERT requires an authenticated caller
+          if (mockNoAdmin) return { data: null, error: { message: 'ERR_FORBIDDEN (storage: anon write denied)' } }
+          const blob = file instanceof Blob ? file : new Blob([String(file ?? '')])
+          storageObjects.push({ bucket, path, data: blob })
+          return { data: { path, id: path, fullPath: `${bucket}/${path}` }, error: null }
+        },
+        getPublicUrl(path: string) {
+          return { data: { publicUrl: `https://storage.mock.local/object/public/${bucket}/${path}` } }
+        },
+        async remove(paths: string[]) {
+          if (mockNoAdmin) return { data: null, error: { message: 'ERR_FORBIDDEN (storage: anon delete denied)' } }
+          let removed = 0
+          for (const p of paths) {
+            const i = storageObjects.findIndex((o) => o.bucket === bucket && o.path === p)
+            if (i >= 0) { storageObjects.splice(i, 1); removed++ }
+          }
+          return { data: removed > 0 ? [{ name: paths[0] }] : [], error: null }
+        },
+        async list(path = '') {
+          return { data: storageObjects.filter((o) => o.bucket === bucket && o.path.startsWith(path)).map((o) => ({ name: o.path })), error: null }
+        },
+      }
+    },
+  }
+
   return {
     from,
     rpc,
+    storage,
     functions,
     // Minimal auth surface — the mock session user is always MOCK_USER (041
     // driver identity tests rely on this).
     auth: {
       getSession: async () => ({ data: { session: { user: { id: MOCK_USER } } }, error: null }),
+      getUser: async () => ({ data: { user: { id: MOCK_USER } }, error: null }),
     },
     __setInvokeHandler: setInvokeHandler,
     __setNoAdmin: setNoAdmin,
