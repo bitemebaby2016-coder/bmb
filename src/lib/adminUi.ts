@@ -23,6 +23,7 @@ export const ADMIN_NAV_ITEMS: AdminNavItem[] = [
   { to: '/admin/inventory', label: 'Inventory', icon: '\uD83E\uDD55' },
   { to: '/admin/delivery', label: 'Delivery', icon: '\uD83D\uDED5' },
   { to: '/admin/audit-log', label: 'Audit Log', icon: '\uD83D\uDCCB' },
+{ to: '/admin/payment-exceptions', label: 'Payments', icon: '\uD83D\uDCB3' },
   { to: '/admin/notifications', label: 'Notifications', icon: '\uD83D\uDD14' },
   { to: '/admin/route-optimization', label: 'Route', icon: '\uD83D\uDDFA\uFE0F' },
   { to: '/admin/errors', label: 'Errors', icon: '\uD83E\uDE79' },

@@ -58,6 +58,7 @@ const AdminErrorsPage = lazy(() => import('./pages/admin/AdminErrorsPage').then(
 const MascotSettingsPage = lazy(() => import('./pages/admin/MascotSettingsPage').then(m => ({ default: m.MascotSettingsPage })))
 const AdminControlPage = lazy(() => import('./pages/AdminControlPage').then(m => ({ default: m.AdminControlPage })))
 const AdminContentApprovals = lazy(() => import('./pages/admin/AdminContentApprovals').then(m => ({ default: m.AdminContentApprovals })))
+const AdminPaymentExceptions = lazy(() => import('./pages/admin/AdminPaymentExceptions').then(m => ({ default: m.AdminPaymentExceptions })))
 
 // Lazy loaded: Info pages (6 pages)
 const AboutPage = lazy(() => import('./pages/AboutPage').then(m => ({ default: m.AboutPage })))
@@ -194,6 +195,7 @@ export default function App() {
         <Route path="/admin/products" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminNav><AdminProducts /></AdminNav></Layout></AdminRoute></Suspense>} />
         <Route path="/admin/content-approvals" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminNav><AdminContentApprovals /></AdminNav></Layout></AdminRoute></Suspense>} />
         <Route path="/admin/audit-log" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminNav><AuditLogPage /></AdminNav></Layout></AdminRoute></Suspense>} />
+<Route path="/admin/payment-exceptions" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminNav><AdminPaymentExceptions /></AdminNav></Layout></AdminRoute></Suspense>} />
             <Route path="/admin/notifications" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminNav><AdminNotificationsPage /></AdminNav></Layout></AdminRoute></Suspense>} />
         <Route path="/admin/delivery" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminNav><DeliveryManagement /></AdminNav></Layout></AdminRoute></Suspense>} />
         <Route path="/admin/route-optimization" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminNav><RouteOptimizationPage /></AdminNav></Layout></AdminRoute></Suspense>} />
