@@ -27,7 +27,9 @@ Admin แบ่งเป็นพื้นที่ควบคุม: **Orders*
 - **Section (migration 055)**: สร้าง/แก้/ลำดับ/ซ่อน-แสดง/จัดเก็บ — Section ปิด = ลูกค้าไม่เห็นและ **server ปฏิเสธออเดอร์สินค้าใน Section นั้นจริง** (ERR_SECTION_CLOSED)
 - **Category (หมวด)**: เพิ่ม/แก้/ลำดับ/ซ่อน + เลือก Section ที่สังกัด + จัดเก็บ (archive) — หมวดใน Section ปิดจะซ่อนทั้งหมวด
 - **Product** อยู่ใต้ Category · โครงสร้างเต็ม: Section → Category → Product (TEN-D01=A: catalog เป็นของ Tenant, Brand เป็น presentation layer ภายหลัง)
-- **Menu Schedule รายสัปดาห์**: ระบบหลังบ้านพร้อมแต่ยังไม่มีหน้า Admin (รอ CAT-02)
+- **Menu Schedule รายสัปดาห์ (migration 039/056 — CAT-D02=A)**: หน้า **/admin/menu-schedule** — เลือกวันที่ (≤ preorder_max_days จาก order_policy จริง), ติ๊กสินค้าที่ขายได้ + กำหนด round key (ว่าง = ทุกรอบ), Save (replace-all) → **Publish** เพื่อบังคับใช้จริง · Effective state แสดงจาก DB ตรง
+- **Server บังคับใช้จริง**: PRE_ORDER วันที่มี published menu สินค้านอกเมนูถูก RPC ปฏิเสธ (`ERR_PRODUCT_NOT_ON_MENU`) · วันที่ไม่มี menu = ใช้เงื่อนไข pre-order ปกติ (`available_preorder`) · mode/round เปิด-ปิด ผ่าน Settings (operating_hours) → `ERR_ORDER_MODE_CLOSED` / `ERR_ROUND_CLOSED`
+- Customer Checkout (pre-order) อ่าน schedule published เดียวกัน + แจ้งเตือนก่อน submit — server ยังเป็นผู้ตัดสินสุดท้าย
 
 ## 6. การจัดการ Product
 

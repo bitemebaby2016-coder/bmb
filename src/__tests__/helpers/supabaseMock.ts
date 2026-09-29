@@ -246,6 +246,26 @@ export function createSupabaseMock(opts?: { failReadTable?: string; noAdmin?: bo
         }
         if (!prod) return { data: null, error: { code: 'ERR_PRODUCT_NOT_FOUND', message: 'ERR_PRODUCT_NOT_FOUND' } }
         if (!prod.is_available) return { data: null, error: { code: 'ERR_PRODUCT_UNAVAILABLE', message: 'ERR_PRODUCT_UNAVAILABLE' } }
+        // === 039 trg_menu_gate mirror: PRE_ORDER on a day WITH a published menu →
+        // every product must be on that day's menu (round key NULL = all rounds).
+        if (mode === 'PRE_ORDER' && p.scheduled_date) {
+          const sched = (tables['menu_schedule'] || []).filter((s: any) => s.scheduled_date === p.scheduled_date && s.is_published)
+          if (sched.length > 0) {
+            const roundKey = round?.round_key ?? round?.name ?? null
+            const onMenu = sched.some((s: any) =>
+              s.product_id === it.product_id &&
+              (!s.delivery_round_key || s.delivery_round_key === roundKey))
+            if (!onMenu) {
+              return { data: null, error: { code: 'ERR_PRODUCT_NOT_ON_MENU', message: 'ERR_PRODUCT_NOT_ON_MENU' } }
+            }
+          }
+        }
+        // === 039 trg_operating_hours mirror: mode/round open-close (business_settings) ===
+        const oh = ((tables['business_settings'] || []).find((s: any) => s.key === 'operating_hours') || {}).value || {}
+        if (mode === 'PRE_ORDER' && oh.pre_order_open === false) return { data: null, error: { code: 'ERR_ORDER_MODE_CLOSED', message: 'ERR_ORDER_MODE_CLOSED' } }
+        if (mode === 'SAME_DAY' && oh.same_day_open === false) return { data: null, error: { code: 'ERR_ORDER_MODE_CLOSED', message: 'ERR_ORDER_MODE_CLOSED' } }
+        const roundKeyForOh = round?.round_key ?? round?.name
+        if (roundKeyForOh && oh[String(roundKeyForOh) + '_open'] === false) return { data: null, error: { code: 'ERR_ROUND_CLOSED', message: 'ERR_ROUND_CLOSED' } }
         // === 025 §5 INVARIANT 1: server-authoritative mode gate (both directions) ===
         // missing canonical columns fall back to the 023 DB defaults (same_day true / alias)
         const sameDayOk = prod.available_same_day ?? true
@@ -1070,6 +1090,45 @@ if (name === 'customer_intelligence') {
         error: null,
       }
     }
+    // ============ CAT-02 / migration 039 — menu schedule RPCs ============
+    if (name === 'set_menu_schedule') {
+      const p = params ?? {}
+      if (mockNoAdmin) return { data: null, error: { code: 'ERR_FORBIDDEN', message: 'ERR_FORBIDDEN' } }
+      const pDate = String(p.p_scheduled_date || '')
+      const today2 = new Date().toISOString().slice(0, 10)
+      if (!pDate || pDate < today2) return { data: null, error: { code: 'ERR_INVALID_MENU_DATE', message: 'ERR_INVALID_MENU_DATE' } }
+      if (!Array.isArray(p.p_items)) return { data: null, error: { code: 'ERR_INVALID_MENU_ITEMS', message: 'ERR_INVALID_MENU_ITEMS' } }
+      const prods = tables['products'] || []
+      for (const it of p.p_items) {
+        if (!it.product_id || !prods.some((x: any) => x.id === it.product_id)) {
+          return { data: null, error: { code: 'ERR_PRODUCT_NOT_FOUND', message: 'ERR_PRODUCT_NOT_FOUND' } }
+        }
+      }
+      tables['menu_schedule'] = (tables['menu_schedule'] || []).filter((s: any) => s.scheduled_date !== pDate)
+      for (const it of p.p_items) {
+        ;(tables['menu_schedule'] ||= []).push({
+          id: `ms-${pDate}-${it.product_id}`,
+          scheduled_date: pDate,
+          product_id: it.product_id,
+          delivery_round_key: it.delivery_round_key || null,
+          is_published: false,
+          note: it.note || '',
+          created_by: 'auth-test-user',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        })
+      }
+      return { data: { ok: true, date: pDate, items: p.p_items.length, published: false }, error: null }
+    }
+
+    if (name === 'publish_menu_schedule') {
+      const p = params ?? {}
+      if (mockNoAdmin) return { data: null, error: { code: 'ERR_FORBIDDEN', message: 'ERR_FORBIDDEN' } }
+      const rows = (tables['menu_schedule'] || []).filter((s: any) => s.scheduled_date === String(p.p_scheduled_date || ''))
+      for (const r of rows) r.is_published = p.p_publish !== false
+      return { data: { ok: true, date: String(p.p_scheduled_date || ''), rows: rows.length }, error: null }
+    }
+
     return { data: null, error: { code: 'PGRST202', message: 'rpc not mocked' } }
   }
 

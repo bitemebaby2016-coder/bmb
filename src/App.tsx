@@ -33,6 +33,7 @@ const InventoryPage = lazy(() => import('./pages/admin/InventoryPage').then(m =>
 const AdminDashboard = lazy(() => import('./pages/admin/AdminDashboard').then(m => ({ default: m.AdminDashboard })))
 const AdminOrders = lazy(() => import('./pages/admin/AdminOrders').then(m => ({ default: m.AdminOrders })))
 const AdminProducts = lazy(() => import('./pages/admin/AdminProducts').then(m => ({ default: m.AdminProducts })))
+const AdminMenuSchedule = lazy(() => import('./pages/admin/AdminMenuSchedule').then(m => ({ default: m.AdminMenuSchedule })))
 const AdminPreOrders = lazy(() => import('./pages/admin/AdminPreOrders').then(m => ({ default: m.AdminPreOrders })))
 const AdminKitchen = lazy(() => import('./pages/admin/AdminKitchen').then(m => ({ default: m.AdminKitchen })))
 const AdminRecipes = lazy(() => import('./pages/admin/AdminRecipes').then(m => ({ default: m.AdminRecipes })))
@@ -193,6 +194,8 @@ export default function App() {
         <Route path="/admin/inventory" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminNav><InventoryPage /></AdminNav></Layout></AdminRoute></Suspense>} />
         <Route path="/admin/orders" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminNav><AdminOrders /></AdminNav></Layout></AdminRoute></Suspense>} />
         <Route path="/admin/products" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminNav><AdminProducts /></AdminNav></Layout></AdminRoute></Suspense>} />
+        <Route path="/admin/menu-schedule" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminNav><AdminMenuSchedule /></AdminNav></Layout></AdminRoute></Suspense>} />
+
         <Route path="/admin/content-approvals" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminNav><AdminContentApprovals /></AdminNav></Layout></AdminRoute></Suspense>} />
         <Route path="/admin/audit-log" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminNav><AuditLogPage /></AdminNav></Layout></AdminRoute></Suspense>} />
 <Route path="/admin/payment-exceptions" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminNav><AdminPaymentExceptions /></AdminNav></Layout></AdminRoute></Suspense>} />

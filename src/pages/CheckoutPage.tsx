@@ -23,6 +23,7 @@ import { getGpsLocation } from '@/lib/locationLogin'
 import { resolveAddOnLines } from '@/lib/addonDisplay'
 import { DistanceChecker } from '@/components/delivery/DistanceChecker'
 import { listRoundsForDate, type DeliveryRoundRow } from '@/lib/bmbAdminApi_rounds'
+import { getPublishedScheduleForDate, mirrorPreOrderScheduleGate, type MenuScheduleRow } from '@/lib/bmbMenuSchedule'
 import { fetchServerDeliveryFee } from '@/lib/deliveryFeeApi'
 import { getBusinessSettings } from '@/lib/bmbAdminApi_settings'
 import type { OrderMode } from '@/config/platformConfig'
@@ -68,6 +69,7 @@ export function CheckoutPage() {
   })
   const [locating, setLocating] = useState(false)
   const [isProcessing, setIsProcessing] = useState(false)
+  const [daySchedule, setDaySchedule] = useState<MenuScheduleRow[]>([]) // CAT-02: published schedule mirror for the selected date
 
   // 007/025: order creation is authenticated-only → guests are redirected.
   useEffect(() => {
@@ -88,6 +90,19 @@ export function CheckoutPage() {
     })()
     return () => { active = false }
   }, [scheduledDate])
+
+  // ✅ CAT-02: canonical published menu schedule for the selected PRE_ORDER date.
+  // DISPLAY MIRROR ONLY — server (trg_menu_gate, migration 039) re-decides at order time.
+  useEffect(() => {
+    if (orderMode !== 'PRE_ORDER') { setDaySchedule([]); return }
+    let active = true
+    void (async () => {
+      const rows = await getPublishedScheduleForDate(scheduledDate)
+      if (!active) return
+      setDaySchedule(rows)
+    })()
+    return () => { active = false }
+  }, [orderMode, scheduledDate])
 
   // ✅ Server-authoritative delivery fee display (DEL-01 / migration 020 RPC).
   useEffect(() => {
@@ -186,6 +201,24 @@ export function CheckoutPage() {
     if (orderMode === 'PRE_ORDER' && scheduledDate < addDays(today, leadDays)) {
       showToast(`จองล่วงหน้าต้องเลือกวันที่อย่างน้อย ${leadDays} วันข้างหน้า`, 'error')
       return
+    }
+
+    // ✅ CAT-02: canonical menu schedule mirror (migration 039 trg_menu_gate).
+    // Blocks submit BEFORE the RPC so the customer never hits a schedule reject;
+    // the server re-validates and remains the only authority.
+    if (orderMode === 'PRE_ORDER') {
+      const selectedRound = rounds.find((r) => r.id === selectedRoundId)
+      const gate = mirrorPreOrderScheduleGate(
+        items.map((i) => ({ product_id: i.product.id, quantity: i.quantity })),
+        scheduledDate, daySchedule,
+        selectedRound?.round_key ?? null, selectedRound?.display_name ?? null,
+      )
+      if (!gate.allowed) {
+        const off = (gate.rejected || []).map((r) => items.find((i) => i.product.id === r.product_id)?.product.name || r.product_id).join(', ')
+        showToast(`เมนูวันที่ ${scheduledDate} ไม่รับสินค้านี้: ${off} — เลือกวันอื่นที่เปิดเมนู`, 'error')
+        setIsProcessing(false)
+        return
+      }
     }
 
     setIsProcessing(true)
@@ -296,6 +329,15 @@ export function CheckoutPage() {
             className="input mb-2"
           />
           <p className="text-xs text-brand-muted">จองล่วงหน้าได้ตั้งแต่ {minDate} เป็นต้นไป (lead time {leadDays} วัน)</p>
+          {daySchedule.length > 0 ? (
+            <div data-testid="schedule-banner" className="mt-2 p-2 rounded-lg bg-blue-50 border border-blue-200 text-xs text-blue-700">
+              📅 วันที่เลือกเปิดเมนูจำกัด ({daySchedule.length} รายการ) — สินค้าที่ไม่อยู่ในเมนูวันนี้ server จะปฏิเสธ (ERR_PRODUCT_NOT_ON_MENU)
+            </div>
+          ) : (
+            <div data-testid="schedule-banner" className="mt-2 p-2 rounded-lg bg-gray-50 border border-gray-200 text-xs text-brand-muted">
+              ไม่มีเมนูจำกัดพิเศษสำหรับวันนี้ — ใช้เงื่อนไข pre-order ปกติ
+            </div>
+          )}
         </div>
       )}
 

@@ -14,6 +14,7 @@ export const ADMIN_NAV_ITEMS: AdminNavItem[] = [
   { to: '/admin/orders', label: 'Orders', icon: '\uD83D\uDCE6' },
   { to: '/admin/pre-orders', label: 'Pre-Orders', icon: '\uD83D\uDCC5' },
   { to: '/admin/products', label: 'Menu', icon: '\uD83C\uDF7D\uFE0F' },
+  { to: '/admin/menu-schedule', label: 'Menu Schedule', icon: '\uD83D\uDDD3\uFE0F' },
   { to: '/admin/kitchen', label: 'Kitchen/Production', icon: '\uD83C\uDF73' },
   { to: '/admin/recipes', label: 'Recipes/BOM', icon: '\uD83E\uDDEA' },
   { to: '/admin/content-approvals', label: 'Approve', icon: '\uD83D\uDED6\uFE0F' },
