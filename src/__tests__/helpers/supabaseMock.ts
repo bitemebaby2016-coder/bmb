@@ -216,10 +216,34 @@ export function createSupabaseMock(opts?: { failReadTable?: string; noAdmin?: bo
       }
       // authoritative price lookup from seeded products (ignores any client price)
       const products = tables['products'] || []
+      // migration 055 (CAT-01): catalog visibility gate — archived product/category
+      // or inactive governing section must be rejected server-side (CAT-D01=B).
+      const cats = tables['product_categories'] || []
+      const secs = tables['menu_sections'] || []
       let subtotal = 0
       let totalQty = 0
       for (const it of items) {
         const prod = products.find((x: any) => x.id === it.product_id)
+        if (prod) {
+          if (prod.archived) {
+            return { data: null, error: { code: 'ERR_PRODUCT_ARCHIVED', message: 'ERR_PRODUCT_ARCHIVED' } }
+          }
+          const cat = cats.find((c: any) => c.id === prod.category_id)
+          if (cat) {
+            if (cat.archived) {
+              return { data: null, error: { code: 'ERR_CATEGORY_ARCHIVED', message: 'ERR_CATEGORY_ARCHIVED' } }
+            }
+            if (cat.is_active === false) {
+              return { data: null, error: { code: 'ERR_CATEGORY_CLOSED', message: 'ERR_CATEGORY_CLOSED' } }
+            }
+            if (cat.menu_section_id) {
+              const sec = secs.find((s: any) => s.id === cat.menu_section_id)
+              if (sec && sec.is_active === false) {
+                return { data: null, error: { code: 'ERR_SECTION_CLOSED', message: 'ERR_SECTION_CLOSED' } }
+              }
+            }
+          }
+        }
         if (!prod) return { data: null, error: { code: 'ERR_PRODUCT_NOT_FOUND', message: 'ERR_PRODUCT_NOT_FOUND' } }
         if (!prod.is_available) return { data: null, error: { code: 'ERR_PRODUCT_UNAVAILABLE', message: 'ERR_PRODUCT_UNAVAILABLE' } }
         // === 025 §5 INVARIANT 1: server-authoritative mode gate (both directions) ===

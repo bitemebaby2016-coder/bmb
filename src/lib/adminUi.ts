@@ -62,6 +62,6 @@ export function isImageSourceValid(source: string | null | undefined): boolean {
 
 /** Blank category form defaults. */
 export function blankCategoryForm() {
-  return { name: '', icon: '\uD83C\uDF7D\uFE0F', sort_order: 0, is_active: true }
+  return { name: '', icon: '\uD83C\uDF7D\uFE0F', sort_order: 0, is_active: true, menu_section_id: '' }
 }
 

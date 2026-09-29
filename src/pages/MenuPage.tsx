@@ -5,8 +5,9 @@
 
 import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import type { Product, ProductCategory, SameDayOrderPayload, PreOrderPayload, AvailabilityState, OrderMode, DeliveryRound } from '@/types'
-import { getProducts, getCategories, getDeliveryRounds } from '@/lib/bmbAdminApi_products'
+import type { Product, ProductCategory, SameDayOrderPayload, PreOrderPayload, AvailabilityState, OrderMode, DeliveryRound, MenuSection } from '@/types'
+import { getProducts, getCategories, getDeliveryRounds, getSections } from '@/lib/bmbAdminApi_products'
+import { buildCatalogGroups } from '@/lib/catalogStructure'
 import { useCartStore } from '@/store/cartStore'
 import { showToast } from '@/components/ui/ToastContainer'
 import { FoodMenuCard } from '@/components/FoodMenuCard'
@@ -22,15 +23,17 @@ export function MenuPage() {
   const [products, setProducts] = useState<Product[]>([])
   const [categories, setCategories] = useState<ProductCategory[]>([])
   const [deliveryRounds, setDeliveryRounds] = useState<DeliveryRound[]>([]) // ✓ v3.1: Delivery rounds
+  const [sections, setSections] = useState<MenuSection[]>([]) // ✓ CAT-01: Menu → Section → Category
   const addItem = useCartStore((s) => s.addItem)
 
   useEffect(() => {
     async function loadData() {
       try {
-        const [products, cats, rounds] = await Promise.all([getProducts(), getCategories(), getDeliveryRounds()])
+        const [products, cats, rounds, secs] = await Promise.all([getProducts(), getCategories(), getDeliveryRounds(), getSections()])
         setProducts(products)
         setCategories(cats)
         setDeliveryRounds(rounds)
+        setSections(secs)
       } catch (err) {
         console.error('[MenuPage] Load error:', err)
       }
@@ -45,7 +48,7 @@ export function MenuPage() {
     if (menuTab === 'same-day' && !isSame) return false
     if (menuTab === 'pre-order' && !isPre) return false
     const matchCat = selectedCategory === 'all' || String(p.category_id).includes(selectedCategory.slice(0, 3))
-    return matchCat && p.name.toLowerCase().includes(searchQuery.toLowerCase())
+    return matchCat && !p.archived && p.name.toLowerCase().includes(searchQuery.toLowerCase())
   })
 
   const handleSameDay = (payload: SameDayOrderPayload) => {
@@ -154,24 +157,32 @@ export function MenuPage() {
         </div>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-        {filtered.map((product) => {
-          const cat = categories.find((c) => c.id === product.category_id)
-          // ✓ v3.1: Use correct mode based on product.is_preorder
-          const mode: OrderMode = product.is_preorder ? 'pre-order' : 'same-day'
-          return (
-            <FoodMenuCard
-              key={product.id}
-              product={product}
-              category={cat}
-              mode={mode}
-              availability={product.is_available ? 'available' : 'sold_out'}
-              onSameDayOrder={handleSameDay}
-              onPreOrder={handlePreOrder}
-            />
-          )
-        })}
-      </div>
+      {buildCatalogGroups(filtered, categories, sections).map((group, gi) => (
+        <section key={group.section?.id ?? `loose-${gi}`} className="mb-8" aria-labelledby={`catsec-${gi}`}>
+          {group.section && (
+            <h2 id={`catsec-${gi}`} className="text-lg font-display font-bold text-brand-accent mb-3">{group.section.name}</h2>
+          )}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {group.categories.flatMap(({ category, products: catProducts }) =>
+              catProducts.map((product) => {
+                // ✓ v3.1: Use correct mode based on product.is_preorder
+                const mode: OrderMode = product.is_preorder ? 'pre-order' : 'same-day'
+                return (
+                  <FoodMenuCard
+                    key={product.id}
+                    product={product}
+                    category={category}
+                    mode={mode}
+                    availability={product.is_available ? 'available' : 'sold_out'}
+                    onSameDayOrder={handleSameDay}
+                    onPreOrder={handlePreOrder}
+                  />
+                )
+              }),
+            )}
+          </div>
+        </section>
+      ))}
       {filtered.length === 0 && (
         <div className="text-center py-16">
           <div className="text-6xl mb-4">🔍</div>

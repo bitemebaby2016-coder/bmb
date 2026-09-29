@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { showToast } from '@/components/ui/ToastContainer'
-import { getProducts, createProduct, updateProduct, deleteProduct, getCategories, getCategoriesAdmin, createCategory, updateCategory, deleteCategory } from '@/lib/bmbAdminApi_products'
+import { getProducts, createProduct, updateProduct, archiveProduct, restoreProduct, getCategories, getCategoriesAdmin, createCategory, updateCategory, archiveCategory, restoreCategory, getSectionsAdmin, createSection, updateSection, archiveSection, restoreSection } from '@/lib/bmbAdminApi_products'
 import { fileToBase64 } from '@/lib/bmbStorage'
 import { slugifyCategory, blankCategoryForm } from '@/lib/adminUi'
 import { AddonsEditor, toAddonDrafts, addonDraftsToJson, type AddonDraft } from '@/components/admin/AddonsEditor'
-import type { Product, ProductCategory } from '@/types'
+import type { Product, ProductCategory, MenuSection } from '@/types'
+
 
 export function AdminProducts() {
   const [products, setProducts] = useState<Product[]>([])
@@ -30,18 +31,26 @@ export function AdminProducts() {
   const [showCatForm, setShowCatForm] = useState(false)
   const [editingCat, setEditingCat] = useState<ProductCategory | null>(null)
 
+  // ── Sections (CAT-01, migration 055): Menu → Section → Category → Product ──
+  const [sections, setSections] = useState<MenuSection[]>([])
+  const [sectionForm, setSectionForm] = useState({ name: '', sort_order: 0 })
+  const [editingSection, setEditingSection] = useState<MenuSection | null>(null)
+  const [showSectionForm, setShowSectionForm] = useState(false)
+
   useEffect(() => { loadAll() }, [])
 
   async function loadAll() {
     try {
-      const [products, cats, allCats] = await Promise.all([getProducts(), getCategories(), getCategoriesAdmin()])
+      const [products, cats, allCats, secs] = await Promise.all([getProducts(), getCategories(), getCategoriesAdmin(), getSectionsAdmin()])
       setProducts(products)
       setCategories(cats)
       setAdminCats(allCats)
+      setSections(secs)
     } catch (err) {
       console.error('[AdminProducts] Load error:', err)
     }
   }
+
 
   async function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
@@ -91,19 +100,26 @@ export function AdminProducts() {
     showToast('อัปเดตเมนูสำเร็จ!', 'success')
   }
 
-  function handleDeleteProduct(id: string) {
-    if (confirm('ต้องการลบเมนูนี้ใช่หรือไม่?')) {
-      deleteProduct(id)
+  // ── Archive / Restore (CAT-01, migration 055 — CAT-D04=B: hard delete is NOT the normal mechanism) ──
+  async function handleArchiveProduct(id: string) {
+    if (confirm('จัดเก็บเมนูนี้ (ซ่อนจากลูกค้า + หยุดรับออเดอร์ — กู้คืนได้) ?')) {
+      const ok = await archiveProduct(id)
+      showToast(ok ? 'จัดเก็บเมนูแล้ว (กู้คืนได้)' : 'จัดเก็บไม่สำเร็จ', ok ? 'success' : 'error')
       loadAll()
-      showToast('ลบเมนูสำเร็จ!', 'success')
     }
+  }
+
+  async function handleRestoreProduct(id: string) {
+    const ok = await restoreProduct(id)
+    showToast(ok ? 'กู้คืนเมนูแล้ว — เปิดขายได้จากปุ่มเปิด/ปิดขาย' : 'กู้คืนไม่สำเร็จ', ok ? 'success' : 'error')
+    loadAll()
   }
 
   // ── Category manager actions (PHASE 6 UI/admin) ──
   function openCategoryForm(cat?: ProductCategory) {
     if (cat) {
       setEditingCat(cat)
-      setCatForm({ name: cat.name, icon: cat.icon, sort_order: cat.sort_order, is_active: cat.is_active })
+      setCatForm({ name: cat.name, icon: cat.icon, sort_order: cat.sort_order, is_active: cat.is_active, menu_section_id: cat.menu_section_id ?? '' })
     } else {
       setEditingCat(null)
       setCatForm(blankCategoryForm())
@@ -117,11 +133,11 @@ export function AdminProducts() {
     const maxSort = adminCats.reduce((m, c) => Math.max(m, c.sort_order || 0), 0)
     const sortOrder = editingCat ? (catForm.sort_order || maxSort) : (catForm.sort_order > 0 ? catForm.sort_order : maxSort + 1)
     if (editingCat) {
-      const ok = await updateCategory(editingCat.id, { name, icon: catForm.icon, sort_order: sortOrder, is_active: catForm.is_active })
+      const ok = await updateCategory(editingCat.id, { name, icon: catForm.icon, sort_order: sortOrder, is_active: catForm.is_active, menu_section_id: (catForm.menu_section_id || null) as string | null })
       if (!ok) { showToast('ไม่สามารถอ্যাপডেটประเภท', 'error'); return }
       showToast('หัวข้อหมডอ্যাপডেটแล้ว!', 'success')
     } else {
-      const ok = await createCategory({ name, slug: slugifyCategory(name), icon: catForm.icon, sort_order: sortOrder, is_active: catForm.is_active })
+      const ok = await createCategory({ name, slug: slugifyCategory(name), icon: catForm.icon, sort_order: sortOrder, is_active: catForm.is_active, menu_section_id: (catForm.menu_section_id || null) as string | null })
       if (!ok) { showToast('ไม่สามารถเพิ่มประเภท', 'error'); return }
       showToast('เพิ่มหัวข้อหมডสำเร็จ!', 'success')
     }
@@ -131,17 +147,53 @@ export function AdminProducts() {
     loadAll()
   }
 
-  async function handleDeleteCategory(cat: ProductCategory) {
-    const used = products.some((p) => p.category_id === cat.id)
+  async function handleArchiveCategory(cat: ProductCategory) {
+    const used = false // CAT-D04=B: archive allowed regardless of order references
     if (used) {
       showToast('ไม่สามารถลб: มีเมনুในหมวดนี้', 'error')
       return
     }
     if (confirm(`ต้องการลبหมวด "${cat.name}" ใช่หรือไม่?`)) {
-      const ok = await deleteCategory(cat.id)
+      const ok = await archiveCategory(cat.id)
       showToast(ok ? 'لبหมڈสำเร็จ' : 'ลбไม่สำเร็จ', ok ? 'success' : 'error')
       loadAll()
     }
+  }
+
+  async function handleRestoreCategory(cat: ProductCategory) {
+    const ok = await restoreCategory(cat.id)
+    showToast(ok ? 'กู้คืนหมวดแล้ว' : 'กู้คืนไม่สำเร็จ', ok ? 'success' : 'error')
+    loadAll()
+  }
+
+  // ── Sections (CAT-01, migration 055) ──
+  async function handleSaveSection() {
+    const name = sectionForm.name.trim()
+    if (!name) { showToast('กรุณาใส่ชื่อ Section', 'warning'); return }
+    if (editingSection) {
+      const ok = await updateSection(editingSection.id, { name, sort_order: sectionForm.sort_order })
+      showToast(ok ? 'อัปเดต Section แล้ว!' : 'บันทึกไม่สำเร็จ', ok ? 'success' : 'error')
+    } else {
+      const ok = await createSection({ name, slug: slugifyCategory(name), sort_order: sectionForm.sort_order, is_active: true })
+      showToast(ok ? 'เพิ่ม Section แล้ว!' : 'บันทึกไม่สำเร็จ', ok ? 'success' : 'error')
+    }
+    setShowSectionForm(false)
+    setEditingSection(null)
+    loadAll()
+  }
+
+  async function handleArchiveSection(id: string) {
+    if (confirm('ซ่อน Section นี้ (ลูกค้าไม่เห็น + server จะไม่รับสินค้าใน Section นี้ — กู้คืนได้)?')) {
+      const ok = await archiveSection(id)
+      showToast(ok ? 'จัดเก็บ Section แล้ว (กู้คืนได้)' : 'ไม่สำเร็จ', ok ? 'success' : 'error')
+      loadAll()
+    }
+  }
+
+  async function handleRestoreSection(id: string) {
+    const ok = await restoreSection(id)
+    showToast(ok ? 'กู้คืน Section แล้ว' : 'ไม่สำเร็จ', ok ? 'success' : 'error')
+    loadAll()
   }
 
   function resetForm() {
@@ -277,10 +329,53 @@ export function AdminProducts() {
             </div>
             <div className="flex gap-2 mt-3">
               <button onClick={handleSaveCategory} className="btn btn-success text-sm">💾 Save</button>
-              <button onClick={() => { setShowCatForm(false); setEditingCat(null); setCatForm(blankCategoryForm()) }} className="btn btn-outline text-sm">Cancel</button>
+              <div>
+              <label className="block text-sm font-medium text-brand-accent mb-2">Section</label>
+              <select value={(catForm.menu_section_id as string) || ''} onChange={(e) => setCatForm({ ...catForm, menu_section_id: e.target.value })} className="input">
+                <option value="">— ไม่มี Section —</option>
+                {sections.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
+              </select>
+            </div>
+            <button onClick={() => { setShowCatForm(false); setEditingCat(null); setCatForm(blankCategoryForm()) }} className="btn btn-outline text-sm">Cancel</button>
             </div>
           </div>
         )}
+
+      {/* Sections manager (CAT-01, migration 055): Menu → Section → Category → Product */}
+      <div className="card mb-6">
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="font-bold text-brand-accent">📚 Sections (หัวข้อเมนู)</h2>
+          <button onClick={() => { setEditingSection(null); setSectionForm({ name: '', sort_order: sections.reduce((m, s) => Math.max(m, s.sort_order || 0), 0) + 1 }); setShowSectionForm(true) }} className="btn btn-outline text-xs">+ Section</button>
+        </div>
+        {showSectionForm && (
+          <div className="flex flex-wrap gap-2 items-center mb-3">
+            <input className="input max-w-xs" placeholder="ชื่อ Section" value={sectionForm.name} onChange={(e) => setSectionForm({ ...sectionForm, name: e.target.value })} />
+            <input type="number" className="input max-w-24" aria-label="ลำดับ" value={sectionForm.sort_order} onChange={(e) => setSectionForm({ ...sectionForm, sort_order: parseInt(e.target.value || '0', 10) })} />
+            <button onClick={handleSaveSection} className="btn btn-primary text-xs">Save</button>
+            <button onClick={() => { setShowSectionForm(false); setEditingSection(null) }} className="btn btn-outline text-sm">Cancel</button>
+          </div>
+        )}
+        <div className="space-y-1">
+          {sections.map((s) => (
+            <div key={s.id} className="flex items-center justify-between gap-2 px-3 py-2 rounded-lg bg-white">
+              <div className="flex items-center gap-2">
+                <span className="font-medium text-brand-accent">{s.name}</span>
+                <span className="text-xs text-brand-muted">(#{s.sort_order})</span>
+                {!s.is_active && <span className="badge badge-warning text-xs">Hidden</span>}
+              </div>
+              <div className="flex gap-2">
+                <button onClick={() => { setEditingSection(s); setSectionForm({ name: s.name, sort_order: s.sort_order }); setShowSectionForm(true) }} className="btn btn-outline text-xs">✏️ Edit</button>
+                {s.is_active ? (
+                  <button onClick={() => handleArchiveSection(s.id)} className="btn btn-outline text-xs text-red-500">📦 Archive</button>
+                ) : (
+                  <button onClick={() => handleRestoreSection(s.id)} className="btn btn-outline text-xs">↩ Restore</button>
+                )}
+              </div>
+            </div>
+          ))}
+          {sections.length === 0 && <p className="text-brand-muted text-sm">ยังไม่มี Section — หมวดทั้งหมดแสดงแบบเดิมจนกว่าจะสร้าง Section</p>}
+        </div>
+      </div>
 
         <div className="space-y-2">
           {adminCats.map((cat) => {
@@ -292,10 +387,11 @@ export function AdminProducts() {
                   <span className="font-medium text-brand-accent">{cat.name}</span>
                   <span className="text-xs text-brand-muted">({count} dishes)</span>
                   {!cat.is_active && <span className="badge badge-warning text-xs">Hidden</span>}
+                  {cat.archived && <span className="badge badge-danger text-xs">Archived</span>}
                 </div>
                 <div className="flex gap-2">
                   <button onClick={() => openCategoryForm(cat)} className="btn btn-outline text-xs">✏️ Edit</button>
-                  <button onClick={() => handleDeleteCategory(cat)} className="btn btn-outline text-xs text-red-500">🗑️ Delete</button>
+                  <button onClick={() => (cat.archived ? handleRestoreCategory(cat) : handleArchiveCategory(cat))} className="btn btn-outline text-xs text-red-500">📦 Archive</button>
                 </div>
               </div>
             )
@@ -318,6 +414,7 @@ export function AdminProducts() {
             </div>
             <div className="flex items-center justify-between mb-2">
               <h3 className="font-bold text-brand-accent">{product.name}</h3>
+              {product.archived && <span className="badge badge-danger text-xs">📦 Archived</span>}
               <span className={`badge ${product.is_available ? 'badge-success' : 'badge-danger'}`}>
                 {product.is_available ? '✅ เปิดขาย' : '❌ ปิดขาย'}
               </span>
@@ -331,7 +428,7 @@ export function AdminProducts() {
             </div>
             <div className="flex gap-2">
               <button onClick={() => handleEditProduct(product)} className="btn btn-outline text-sm flex-1">✏️ แก้ไข</button>
-              <button onClick={() => handleDeleteProduct(product.id)} className="btn btn-outline text-sm text-red-500 flex-1">🗑️ ลบ</button>
+              <button onClick={() => (product.archived ? handleRestoreProduct(product.id) : handleArchiveProduct(product.id))} className="btn btn-outline text-sm text-red-500 flex-1">{product.archived ? '↩ กู้คืน' : '📦 จัดเก็บ'}</button>
             </div>
           </div>
         ))}

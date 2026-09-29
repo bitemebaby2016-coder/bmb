@@ -4,7 +4,8 @@
 // ============================================
 
 import { supabase } from './supabase'
-import type { Product, ProductCategory, ProductAddon, RoundPeriod, DeliveryRound } from '@/types'
+import type { Product, ProductCategory, ProductAddon, RoundPeriod, DeliveryRound, MenuSection } from '@/types'
+
 
 /** JSON shape stored in products.addons (no product_id inside the JSON array). */
 export type AddonJson = Omit<ProductAddon, 'product_id'>
@@ -173,13 +174,13 @@ export async function getCategoriesAdmin(): Promise<ProductCategory[]> {
   return (data || []) as ProductCategory[]
 }
 
-export async function createCategory(data: { id?: string; name: string; slug: string; icon: string; sort_order: number; is_active: boolean }): Promise<ProductCategory | null> {
-  const { data: result, error } = await supabase.from('product_categories').insert({ id: data.id || `cat-${Date.now()}`, name: data.name, slug: data.slug, icon: data.icon, sort_order: data.sort_order, is_active: data.is_active }).select().single()
+export async function createCategory(data: { id?: string; name: string; slug: string; icon: string; sort_order: number; is_active: boolean; menu_section_id?: string | null }): Promise<ProductCategory | null> {
+  const { data: result, error } = await supabase.from('product_categories').insert({ id: data.id || `cat-${Date.now()}`, name: data.name, slug: data.slug, icon: data.icon, sort_order: data.sort_order, is_active: data.is_active, menu_section_id: data.menu_section_id ?? null }).select().single()
   if (error) { console.error('[createCategory] Error:', error); return null }
   return result as ProductCategory
 }
 
-export async function updateCategory(id: string, data: Partial<{ name: string; icon: string; sort_order: number; is_active: boolean }>): Promise<ProductCategory | null> {
+export async function updateCategory(id: string, data: Partial<{ name: string; icon: string; sort_order: number; is_active: boolean; menu_section_id: string | null }>): Promise<ProductCategory | null> {
   const { data: result, error } = await supabase.from('product_categories').update(data).eq('id', id).select().single()
   if (error) { console.error('[updateCategory] Error:', error); return null }
   return result as ProductCategory
@@ -189,4 +190,86 @@ export async function deleteCategory(id: string): Promise<boolean> {
   const { error } = await supabase.from('product_categories').delete().eq('id', id)
   if (error) { console.error('[deleteCategory] Error:', error); return false }
   return true
+}
+
+// ============================================
+// Sections (migration 055 — CAT-01: Menu → Section → Category → Product)
+// Tenant-owned catalog (TEN-D01=A) — section is a real catalog entity.
+// ============================================
+
+export interface SectionForm {
+  id?: string
+  name: string
+  slug: string
+  description?: string
+  sort_order: number
+  is_active: boolean
+}
+
+export async function getSections(): Promise<MenuSection[]> {
+  const { data, error } = await supabase.from('menu_sections').select('*').eq('is_active', true).order('sort_order', { ascending: true })
+  if (error) { console.error('[getSections] Error:', error); return [] }
+  return (data || []) as MenuSection[]
+}
+
+export async function getSectionsAdmin(): Promise<MenuSection[]> {
+  const { data, error } = await supabase.from('menu_sections').select('*').order('sort_order', { ascending: true })
+  if (error) { console.error('[getSectionsAdmin] Error:', error); return [] }
+  return (data || []) as MenuSection[]
+}
+
+export async function createSection(data: SectionForm): Promise<MenuSection | null> {
+  const { data: result, error } = await supabase.from('menu_sections').insert({
+    id: data.id || `sec-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+    name: data.name, slug: data.slug, description: data.description ?? '',
+    sort_order: data.sort_order, is_active: data.is_active,
+  }).select().single()
+  if (error) { console.error('[createSection] Error:', error); return null }
+  return result as MenuSection
+}
+
+export async function updateSection(id: string, data: Partial<SectionForm>): Promise<MenuSection | null> {
+  const { data: result, error } = await supabase.from('menu_sections').update(data).eq('id', id).select().single()
+  if (error) { console.error('[updateSection] Error:', error); return null }
+  return result as MenuSection
+}
+
+// Archive (CAT-D04=B): deactivate — NOT a hard delete.
+export async function archiveSection(id: string): Promise<MenuSection | null> {
+  return updateSection(id, { is_active: false })
+}
+
+export async function restoreSection(id: string): Promise<MenuSection | null> {
+  return updateSection(id, { is_active: true })
+}
+
+// ============================================
+// Soft archive (migration 055 — CAT-D04=B)
+// archive = archived:true + is_available:false → RLS hides from customers,
+// server gate (trg_catalog_visibility_gate) rejects new orders.
+// restore = archived:false (availability stays OFF; admin re-enables explicitly).
+// ============================================
+
+export async function archiveProduct(id: string): Promise<Product | null> {
+  const { data, error } = await supabase.from('products').update({ archived: true, is_available: false }).eq('id', id).select().single()
+  if (error) { console.error('[archiveProduct] Error:', error); return null }
+  return data as Product
+}
+
+export async function restoreProduct(id: string): Promise<Product | null> {
+  const { data, error } = await supabase.from('products').update({ archived: false }).eq('id', id).select().single()
+  if (error) { console.error('[restoreProduct] Error:', error); return null }
+  return data as Product
+}
+
+export async function archiveCategory(id: string): Promise<ProductCategory | null> {
+  const { data, error } = await supabase.from('product_categories').update({ archived: true, is_active: false }).eq('id', id).select().single()
+  if (error) { console.error('[archiveCategory] Error:', error); return null }
+  return data as ProductCategory
+}
+
+export async function restoreCategory(id: string): Promise<ProductCategory | null> {
+  const { data, error } = await supabase.from('product_categories').update({ archived: false }).eq('id', id).select().single()
+  if (error) { console.error('[restoreCategory] Error:', error); return null }
+  return data as ProductCategory
 }

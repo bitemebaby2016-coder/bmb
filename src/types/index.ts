@@ -36,6 +36,7 @@ export interface Product {
   rating?: number;                // migration 012 — display rating (1–5)
   review_count?: number;          // migration 012 — display review count
   addons?: ProductAddon[];        // migration 016 — add-ons / toppings (server-priced)
+  archived?: boolean;             // migration 055 — soft archive (CAT-D04=B); archived → server rejects orders
   created_at: string;
 }
 
@@ -46,6 +47,20 @@ export interface ProductCategory {
   icon: string;
   sort_order: number;
   is_active: boolean;
+  menu_section_id?: string | null; // migration 055 — section this category belongs to (Menu → Section → Category)
+  archived?: boolean;              // migration 055 — soft archive
+}
+
+// migration 055 (CAT-01) — Menu → Section level (tenant-owned catalog, TEN-D01=A)
+export interface MenuSection {
+  id: string;
+  name: string;
+  slug: string;
+  description: string;
+  sort_order: number;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface ProductAddon {
