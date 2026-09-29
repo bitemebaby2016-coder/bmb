@@ -1,337 +1,202 @@
-﻿// ============================================
-// Bite Me Baby — Delivery Management Page
-// GAP CLOSURE GROUP 2: Route Optimization integration
 // ============================================
+// Bite Me Baby — Admin Delivery / Dispatch board (STEP 3B-2D)
+// ============================================
+// CANONICAL ONLY. The backend/database is the sole authority:
+//   - driver list        → RPC list_drivers (037, is_admin)
+//   - order assignment   → RPC assign_driver (020; admin-only, deterministic
+//     ON CONFLICT reassignment, server-side audit) — NO client-side optimizer,
+//     NO direct UPDATE of orders/drivers/delivery_assignments/tracking.
+//   - assignments/orders → table reads scoped by RLS (041)
+//   - dispatch hop       → transition_order_status (008/019/030) via
+//     updateOrderStatus — never a direct status write.
+// The old client-side "route optimizer assignment" + external-provider mock UI
+// were removed (they manufactured dispatch state without backend authority).
+// External rider providers (Grab/Lineman/Foodpanda) remain FROZEN — not shown,
+// not implemented.
+// NO cost/supplier/inventory fields are displayed here.
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Link } from 'react-router-dom'
-import { getOrdersByStatuses } from '@/lib/bmbAdminApi_orders'
-import type { OrderForm } from '@/lib/bmbAdminApi_orders'
-import {
-  assignOrdersToDrivers,
-  calculateRouteDistance,
-  getRouteSummary,
-  type DeliveryDriver,
-  type DeliveryOrder,
-  type Route,
-} from '@/lib/routeOptimization'
-import { updateProviderOrderStatus, getProviderOrders, type ProviderOrder, DEFAULT_PROVIDERS, getProviderApiStatus } from '@/lib/externalProviders'
-import { writeAuditLog } from '@/lib/auditLog'
+import { getOrdersByStatuses, getDeliveryAssignmentsFor, updateOrderStatus } from '@/lib/bmbAdminApi_orders'
+import type { OrderForm, DeliveryAssignmentLiteRow } from '@/lib/bmbAdminApi_orders'
+import { adminListDrivers, assignDriver, type AdminDriverRow } from '@/lib/driverService'
 import { showToast } from '@/components/ui/ToastContainer'
-import { listDrivers } from '@/lib/bmbAdminApi_drivers'
 
-// Map DB DriverRow to route optimization DeliveryDriver interface
-function mapDriver(row: any): DeliveryDriver {
-  return {
-    id: row.id,
-    name: row.driver_name,
-    current_latitude: row.current_latitude ?? 10.7016,
-    current_longitude: row.current_longitude ?? 102.1429,
-    current_orders: [],
-    max_capacity: row.max_capacity || 5,
-    current_load: row.active_assignments || 0,
-    status: row.status === 'on_delivery' ? 'busy' : row.status === 'available' ? 'available' : 'offline',
-  }
+const ASSIGN_LABEL: Record<string, { label: string; cls: string }> = {
+  assigned: { label: '📌 มอบหมายแล้ว', cls: 'badge-warning' },
+  accepted: { label: '🙋 ไรเดอร์รับแล้ว', cls: 'badge-info' },
+  picked_up: { label: '📦 รับของแล้ว', cls: 'badge-info' },
+  in_transit: { label: '🛵 กำลังส่ง', cls: 'badge-info' },
+  delivered: { label: '🏁 ส่งถึงแล้ว', cls: 'badge-success' },
+  cancelled: { label: '⚠ ยกเลิก (exception)', cls: 'badge-danger' },
+}
+
+function assignmentBadge(status?: string | null): { label: string; cls: string } {
+  if (!status) return { label: '📭 ยังไม่มอบหมาย', cls: 'badge-primary' }
+  return ASSIGN_LABEL[status] ?? { label: status, cls: 'badge-primary' }
 }
 
 export function DeliveryManagement() {
   const [orders, setOrders] = useState<OrderForm[]>([])
-  const [drivers, setDrivers] = useState<DeliveryDriver[]>([])
-  const [routes, setRoutes] = useState<Route[]>([])
-  const [providerOrders, setProviderOrders] = useState<ProviderOrder[]>([])
-  const [filterStatus, setFilterStatus] = useState('pending')
-  const [isOptimizing, setIsOptimizing] = useState(false)
+  const [drivers, setDrivers] = useState<AdminDriverRow[]>([])
+  const [assignments, setAssignments] = useState<DeliveryAssignmentLiteRow[]>([])
+  const [loading, setLoading] = useState(true)
+  const [acting, setActing] = useState<string | null>(null)
+  const [pending, setPending] = useState<Record<string, string>>({}) // order_number -> driver_id
 
-  useEffect(() => { void (async () => { await loadOrders(); await loadDrivers() })() }, [])
-
-  async function loadOrders() {
-    // W4-E-1 (D1): server-side status filter — the UI tabs and route optimization
-    // only use these statuses, so behavior is unchanged while the query is bounded.
-    const allOrders = await getOrdersByStatuses(['pending', 'confirmed', 'preparing', 'ready_for_dispatch'])
-    setOrders(allOrders)
-    const provOrders = getProviderOrders()
-    setProviderOrders(provOrders)
-  }
-
-  async function loadDrivers() {
-    const res = await listDrivers()
-    if (res.ok && res.drivers && res.drivers.length > 0) {
-      setDrivers(res.drivers.map(mapDriver))
-    } else {
-      setDrivers([])
+  const load = useCallback(async () => {
+    setLoading(true)
+    try {
+      const [dispatchOrders, drv] = await Promise.all([
+        getOrdersByStatuses(['ready_for_dispatch', 'dispatched', 'in_transit', 'arrived', 'delivered']),
+        adminListDrivers(),
+      ])
+      setOrders(dispatchOrders)
+      setDrivers(drv.drivers)
+      // assignments are read AFTER we know the order numbers (scoped read, 041 RLS)
+      setAssignments(await getDeliveryAssignmentsFor(dispatchOrders.map((o) => o.order_number)))
+    } catch (e) {
+      console.error('[DeliveryManagement] load failed:', e)
+    } finally {
+      setLoading(false)
     }
+  }, [])
+
+  useEffect(() => { void load() }, [load])
+
+  // Canonical assignment: UI → assign_driver RPC → backend validation → DB → audit
+  async function handleAssign(orderNumber: string) {
+    const driverId = pending[orderNumber]
+    if (!driverId) { showToast('เลือกไรเดอร์ก่อน', 'error'); return }
+    setActing(orderNumber)
+    try {
+      const ok = await assignDriver(orderNumber, driverId)
+      if (ok) {
+        showToast('✅ มอบหมายสำเร็จ: ' + orderNumber, 'success')
+        setPending((p) => { const n = { ...p }; delete n[orderNumber]; return n })
+        await load()
+      } else showToast('มอบหมายไม่สำเร็จ (server ปฏิเสธ)', 'error')
+    } finally { setActing(null) }
   }
 
-  // GAP CLOSURE: Optimize delivery routes
-  async function handleOptimizeRoutes() {
-    setIsOptimizing(true)
-    
-    // Get pending orders that need delivery
-    const pendingOrders = orders.filter(o => 
-      ['confirmed', 'preparing', 'ready_for_dispatch'].includes(o.status) && 
-      o.delivery_method !== 'self_delivery'
-    )
-
-    // Convert to DeliveryOrder format
-    const deliveryOrders: DeliveryOrder[] = pendingOrders.map(order => ({
-      id: order.id || '',
-      order_number: order.order_number,
-      dropoff_latitude: order.dropoff_latitude || 10.7016,
-      dropoff_longitude: order.dropoff_longitude || 102.1429,
-      dropoff_detail: order.delivery_address || '',
-      items_count: order.items?.length || 1,
-      estimated_weight: (order.items?.length || 1) * 0.5,
-      priority: order.total_amount > 500 ? 'vip' : 'normal',
-    }))
-
-    if (deliveryOrders.length === 0) {
-      showToast('ไม่มีออเดอรที่ต้องจัดส่ง', 'info')
-      setIsOptimizing(false)
-      return
-    }
-
-    // Assign orders to drivers and optimize routes
-    const optimizedRoutes = assignOrdersToDrivers(
-      deliveryOrders,
-      drivers,
-      10.7016, // kitchen latitude
-      102.1429 // kitchen longitude
-    )
-
-    setRoutes(optimizedRoutes)
-    
-    // Update driver status
-    const updatedDrivers = drivers.map(driver => ({
-      ...driver,
-      status: (optimizedRoutes.some(r => r.driver_id === driver.id) ? 'busy' : 'available') as DeliveryDriver['status'],
-    }))
-    setDrivers(updatedDrivers)
-
-    // Audit log
-    const summary = getRouteSummary(optimizedRoutes)
-    writeAuditLog({
-      action: 'delivery_assigned',
-      entity_type: 'delivery_route',
-      entity_id: `route-${Date.now()}`,
-      description: `Optimize${summary.totalOrders} ออเดอรเปน ${summary.totalRoutes}route (ระยะทาง ${summary.totalDistance.toFixed(1)} กม.)`,
-      metadata: summary
-    })
-
-    showToast(`Optimizeสำเรจ! ${summary.totalRoutes}route, ${summary.totalOrders}ออเดอร`, 'success')
-    setIsOptimizing(false)
+  // Canonical admin hop: ready_for_dispatch → dispatched via transition RPC
+  async function handleDispatch(orderNumber: string) {
+    setActing(orderNumber)
+    try {
+      const res: any = await updateOrderStatus(orderNumber, 'dispatched')
+      if (res && res.status === 'dispatched') { showToast('🚚 Dispatch สำเร็จ: ' + orderNumber, 'success'); await load() }
+      else showToast('Dispatch ไม่สำเร็จ (server ปฏิเสธ)', 'error')
+    } catch (e: any) {
+      showToast('ผิดพลาด: ' + String(e?.message || e).slice(0, 80), 'error')
+    } finally { setActing(null) }
   }
 
-  // Update provider order status
-  function handleProviderStatusUpdate(orderId: string, status: ProviderOrder['status']) {
-    updateProviderOrderStatus(orderId, status)
-    setProviderOrders(getProviderOrders())
-    
-    writeAuditLog({
-      action: 'delivery_status_change',
-      entity_type: 'provider_order',
-      entity_id: orderId,
-      description: `สถานะผ้จัดส่งเปลี่ยนเปน ${status} (${orderId})`,
-      metadata: { status }
-    })
-    
-    showToast(`อัปเดตสถานะสำเรจ: ${status}`, 'success')
-  }
-
-  const filteredOrders = filterStatus === 'all' ? orders : orders.filter(o => o.status === filterStatus)
-  const summary = getRouteSummary(routes)
+  const driverName = (id?: string | null) => drivers.find((d) => d.id === id)?.driver_name || (id ? String(id).slice(0, 14) : null)
+  const readyQ = orders.filter((o) => o.status === 'ready_for_dispatch')
+  const enroute = orders.filter((o) => ['dispatched', 'in_transit', 'arrived', 'delivered'].includes(o.status))
+  const asgFor = (n: string) => assignments.find((a) => a.order_number === n)
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-6">
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-3xl font-bold text-brand-accent">🛵 จัดการจัดส่ง</h1>
-        <Link to="/admin" className="btn btn-outline">← กลับแดชบอรด</Link>
-      </div>
-
-      {/* Route Optimization Summary */}
-      <div className="card mb-6 bg-gradient-to-br from-blue-50 to-indigo-50 border-2 border-blue-200">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="font-bold text-brand-accent text-xl">📍 สถานะroute optimization</h3>
-          <button onClick={handleOptimizeRoutes} disabled={isOptimizing} className="btn btn-primary disabled:opacity-50">
-            {isOptimizing ? ' กำลังOptimize...' : '🚀 optimizeroute'}
-          </button>
-        </div>
-        
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="text-center p-4 bg-white rounded-lg">
-            <div className="text-2xl font-bold text-blue-600">{summary.totalRoutes}</div>
-            <div className="text-sm text-brand-muted">routeทั้งหมด</div>
-          </div>
-          <div className="text-center p-4 bg-white rounded-lg">
-            <div className="text-2xl font-bold text-green-600">{summary.totalOrders}</div>
-            <div className="text-sm text-brand-muted">ออเดอรที่ต้องส่ง</div>
-          </div>
-          <div className="text-center p-4 bg-white rounded-lg">
-            <div className="text-2xl font-bold text-purple-600">{summary.totalDistance.toFixed(1)} กม.</div>
-            <div className="text-sm text-brand-muted">ระยะทางรวม</div>
-          </div>
-          <div className="text-center p-4 bg-white rounded-lg">
-            <div className="text-2xl font-bold text-orange-600">{summary.estimatedTotalTime} นาที</div>
-            <div className="text-sm text-brand-muted">เวลาประมา</div>
-          </div>
+      <div className="flex items-center justify-between mb-6 flex-wrap gap-2">
+        <h1 className="text-3xl font-bold text-brand-accent">🛵 Dispatch / ไรเดอร์ (Bite Drive)</h1>
+        <div className="flex gap-2">
+          <button onClick={() => { void load() }} className="btn btn-outline text-sm" disabled={loading}>รีเฟรช</button>
+          <Link to="/admin" className="btn btn-outline">← กลับแดชบอร์ด</Link>
         </div>
       </div>
 
-      {/* Drivers Status */}
+      {/* Summary */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+        <div className="card bg-orange-50 border-2 border-orange-200"><h3 className="font-bold text-brand-accent">📦 รอมอบหมาย</h3><p className="text-3xl font-bold mt-2">{readyQ.filter((o) => !asgFor(o.order_number)).length}</p></div>
+        <div className="card bg-blue-50 border-2 border-blue-200"><h3 className="font-bold text-brand-accent">✅ พร้อมส่งทั้งหมด</h3><p className="text-3xl font-bold mt-2">{readyQ.length}</p></div>
+        <div className="card bg-green-50 border-2 border-green-200"><h3 className="font-bold text-brand-accent">🛵 บนถนน</h3><p className="text-3xl font-bold mt-2">{enroute.filter((o) => o.status !== 'delivered').length}</p></div>
+        <div className="card bg-purple-50 border-2 border-purple-200"><h3 className="font-bold text-brand-accent">👨‍✈️ ไรเดอร์พร้อม</h3><p className="text-3xl font-bold mt-2">{drivers.filter((d) => d.status === 'available').length}</p></div>
+      </div>
+
+      {/* Drivers status — display only (availability is backend authority) */}
       <div className="card mb-6">
-        <h3 className="font-bold text-brand-accent mb-4">👨‍✈️ สถานะคนขับรถ</h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {drivers.map((driver) => (
-            <div key={driver.id} className={`p-4 rounded-lg border-2 ${
-              driver.status === 'available' ? 'border-green-300 bg-green-50' :
-              driver.status === 'busy' ? 'border-blue-300 bg-blue-50' :
-              'border-gray-300 bg-gray-50'
-            }`}>
-              <div className="flex items-center justify-between mb-2">
-                <div className="font-bold">{driver.name}</div>
-                <span className={`badge ${
-                  driver.status === 'available' ? 'badge-success' :
-                  driver.status === 'busy' ? 'badge-primary' : 'badge-muted'
-                }`}>
-                  {driver.status === 'available' ? 'พร้อมรับ' : driver.status === 'busy' ? ' sedang ส่ง' : ' offline'}
-                </span>
-              </div>
-              <div className="text-sm text-brand-muted">
-                📦 หลด: {driver.current_load}/{driver.max_capacity}<br />
-                🚚 ออเดอร: {driver.current_orders.length}
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-{/* Delivery Channels — Bite Drive (own fleet) vs external providers (mockup/sandbox) */}
-      <div className="card mb-6">
-        <h3 className="font-bold text-brand-accent mb-4">🚚 ช่องจัดส่ง (Bite Drive vs ภายนอก)</h3>
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          {DEFAULT_PROVIDERS.map((p) => {
-            const info = getProviderApiStatus(p.id)
-            const badgeColor =
-              info?.status === 'live' ? 'badge-success' :
-              info?.status === 'sandbox' ? 'badge-info' : 'badge-warning'
-            const badgeLabel =
-              info?.status === 'live' ? '✅ REAL' :
-              info?.status === 'sandbox' ? '🧪 Sandbox' : '🔶 MOCKUP pending'
-            return (
-              <div key={p.id} className="p-4 rounded-lg border-2 border-brand-border">
+        <h3 className="font-bold text-brand-accent mb-4">👨‍✈️ สถานะไรเดอร์ (list_drivers)</h3>
+        {drivers.length === 0 ? <p className="text-brand-muted text-sm">ไม่มีไรเดอร์ในระบบ</p> : (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            {drivers.map((d) => (
+              <div key={d.id} className={'p-3 rounded-lg border-2 ' + (d.status === 'available' ? 'border-green-300 bg-green-50' : d.status === 'busy' ? 'border-blue-300 bg-blue-50' : 'border-gray-300 bg-gray-50')}>
                 <div className="flex items-center justify-between mb-1">
-                  <div className="font-bold">{p.name}</div>
-                  <span className={`badge ${badgeColor}`}>{badgeLabel}</span>
+                  <div className="font-bold">{d.driver_name}</div>
+                  <span className={'badge ' + (d.status === 'available' ? 'badge-success' : d.status === 'busy' ? 'badge-primary' : 'badge-muted')}>{d.status}</span>
                 </div>
-                <div className="text-sm text-brand-muted">
-                  {info?.note || '—'}<br />
-                  base ฿{p.base_fee} • per-km ฿{p.per_km_fee} • max {p.max_distance_km} km
-                </div>
+                <div className="text-xs text-brand-muted">งานค้าง: {d.active_assignments} · ล่าสุด: {d.last_active ? new Date(d.last_active).toLocaleString('th-TH') : '—'}</div>
               </div>
-            )
-          })}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
 
-      {/* Provider Orders */}
-      {/* Optimized Routes */}
-      {routes.length > 0 && (
-        <div className="card mb-6">
-          <h3 className="font-bold text-brand-accent mb-4">🗺️routeที่ optimize แล้ว</h3>
-          <div className="space-y-4">
-            {routes.map((route) => {
-              const driver = drivers.find(d => d.id === route.driver_id)
+      {/* Dispatch queue */}
+      <div className="card mb-6">
+        <h3 className="font-bold text-brand-accent mb-4">📦 คิว Dispatch — พร้อมส่ง ({readyQ.length})</h3>
+        {loading ? <p className="text-brand-muted text-sm">กำลังโหลด…</p> : readyQ.length === 0 ? <p className="text-brand-muted text-sm py-4 text-center">ไม่มีออเดอร์รอ dispatch</p> : (
+          <div className="space-y-3">
+            {readyQ.map((o) => {
+              const a = asgFor(o.order_number)
+              const ab = assignmentBadge(a?.status)
               return (
-                <div key={route.id} className="p-4 bg-brand-bg rounded-lg border-2 border-brand-border">
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="font-bold text-brand-accent">
-                      🚚 {driver?.name || 'Unknown Driver'}
+                <div key={o.order_number} className="border border-brand-border rounded-lg p-3 bg-brand-bg/50">
+                  <div className="flex items-center justify-between gap-2 flex-wrap">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="font-mono text-sm font-bold">{o.order_number}</span>
+                      <span className={'badge ' + ab.cls}>{ab.label}</span>
+                      {a?.driver_id ? <span className="badge badge-info">👤 {driverName(a.driver_id)}</span> : null}
+                      {o.order_mode ? <span className="badge badge-primary">{o.order_mode}</span> : null}
+                      {o.payment_status ? <span className={'badge ' + (o.payment_status === 'paid' ? 'badge-success' : 'badge-warning')}>{o.payment_status}</span> : null}
                     </div>
-                    <div className="text-sm text-brand-muted">
-                      {route.total_distance.toFixed(1)} กม. • {route.estimated_time} นาที
-                    </div>
+                    <span className="text-xs text-brand-muted">📍 {o.delivery_address || '—'}</span>
                   </div>
-                  <div className="space-y-2">
-                    {route.orders.map((order, index) => (
-                      <div key={order.id} className="flex items-center gap-2 text-sm">
-                        <span className="w-6 h-6 bg-brand-primary text-white rounded-full flex items-center justify-center text-xs font-bold">{index + 1}</span>
-                        <span className="font-medium">{order.order_number}</span>
-                        <span className="text-brand-muted">→ {order.dropoff_detail}</span>
-                      </div>
-                    ))}
+                  {/* exception visibility: order not dispatchable but assignment active */}
+                  {!['ready_for_dispatch', 'dispatched'].includes(o.status) ? <p className="text-xs text-red-500 mt-2">⚠ สถานะออเดอร์ = {o.status} (ไม่อยู่ในช่วง dispatch)</p> : null}
+                  <div className="mt-3 flex gap-2 flex-wrap items-center">
+                    <select value={pending[o.order_number] || ''} onChange={(e) => setPending((p) => ({ ...p, [o.order_number]: e.target.value }))} className="input text-sm w-auto">
+                      <option value="">— เลือกไรเดอร์ —</option>
+                      {drivers.map((d) => <option key={d.id} value={d.id}>{d.driver_name} ({d.status})</option>)}
+                    </select>
+                    <button onClick={() => { void handleAssign(o.order_number) }} disabled={acting === o.order_number || !pending[o.order_number]} className="btn btn-primary text-sm disabled:opacity-50">
+                      {acting === o.order_number ? '⏳…' : '📌 มอบหมาย (assign_driver)'}
+                    </button>
+                    <button onClick={() => { void handleDispatch(o.order_number) }} disabled={acting === o.order_number} className="btn btn-outline text-sm disabled:opacity-50">
+                      🚚 Dispatch (transition)
+                    </button>
                   </div>
                 </div>
               )
             })}
           </div>
-        </div>
-      )}
-
-      {/* Provider Orders */}
-      <div className="card mb-6">
-        <h3 className="font-bold text-brand-accent mb-4"> ออเดอรผ้ให้บริการ (${providerOrders.length})</h3>
-        <div className="space-y-3">
-          {providerOrders.length > 0 ? providerOrders.map((order) => (
-            <div key={order.id} className="p-3 bg-brand-bg rounded-lg border border-brand-border">
-              <div className="flex items-center justify-between mb-2">
-                <div>
-                  <div className="font-bold">#{order.order_number}</div>
-                  <div className="text-sm text-brand-muted">{order.dropoff_detail}</div>
-                </div>
-                <span className={`badge ${
-                  order.status === 'delivered' ? 'badge-success' :
-                  order.status === 'in_transit' ? 'badge-info' :
-                  order.status === 'accepted' ? 'badge-primary' : 'badge-warning'
-                }`}>
-                  {order.status}
-                </span>
-              </div>
-              <div className="flex gap-2">
-                {order.status === 'requested' && (
-                  <button onClick={() => handleProviderStatusUpdate(order.id, 'accepted')} className="btn btn-primary text-sm">✅ Accept</button>
-                )}
-                {order.status === 'accepted' && (
-                  <button onClick={() => handleProviderStatusUpdate(order.id, 'picked_up')} className="btn btn-info text-sm">Pick Up</button>
-                )}
-                {order.status === 'picked_up' && (
-                  <button onClick={() => handleProviderStatusUpdate(order.id, 'in_transit')} className="btn btn-info text-sm"> In Transit</button>
-                )}
-                {order.status === 'in_transit' && (
-                  <button onClick={() => handleProviderStatusUpdate(order.id, 'delivered')} className="btn btn-success text-sm"> Delivered</button>
-                )}
-              </div>
-            </div>
-          )) : (
-            <div className="text-center py-8 text-brand-muted">
-              ไม่มีออเดอรผ้ให้บริการ
-            </div>
-          )}
-        </div>
+        )}
       </div>
 
-      {/* Pending Orders Filter */}
+      {/* En-route */}
       <div className="card">
-        <h3 className="font-bold text-brand-accent mb-4"> ออเดอร ({filteredOrders.length})</h3>
-        <div className="flex gap-2 mb-4 overflow-x-auto">
-          {['all', 'pending', 'confirmed', 'preparing', 'ready_for_dispatch'].map((status) => (
-            <button key={status} onClick={() => setFilterStatus(status)}
-              className={`px-3 py-1 rounded-full text-sm font-medium whitespace-nowrap ${filterStatus === status ? 'bg-brand-primary text-white' : 'bg-brand-surface text-brand-accent'}`}>
-              {status === 'all' ? 'ทั้งหมด' : status}
-            </button>
-          ))}
-        </div>
-        <div className="space-y-2">
-          {filteredOrders.slice(0, 10).map((order) => (
-            <div key={order.id} className="p-3 bg-brand-bg rounded border border-brand-border flex items-center justify-between">
-              <div>
-                <div className="font-bold text-sm">{order.order_number}</div>
-                <div className="text-xs text-brand-muted">{order.customer_name} • ฿{order.total_amount}</div>
-              </div>
-              <span className={`badge text-xs ${
-                order.status === 'delivered' ? 'badge-success' : 'badge-primary'
-              }`}>{order.status}</span>
-            </div>
-          ))}
-        </div>
+        <h3 className="font-bold text-brand-accent mb-4">🛵 กำลังเดินทาง / ส่งแล้ว ({enroute.length})</h3>
+        {enroute.length === 0 ? <p className="text-brand-muted text-sm">ยังไม่มีออเดอร์บนถนน</p> : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-sm">
+              <thead className="bg-brand-bg"><tr><th className="p-2">ออเดอร์</th><th className="p-2">สถานะ</th><th className="p-2">ไรเดอร์</th><th className="p-2">assignment</th></tr></thead>
+              <tbody>
+                {enroute.map((o) => {
+                  const a = asgFor(o.order_number)
+                  const ab = assignmentBadge(a?.status)
+                  return (
+                    <tr key={o.order_number} className="border-b border-brand-border">
+                      <td className="p-2 font-mono">{o.order_number}</td>
+                      <td className="p-2">{o.status}</td>
+                      <td className="p-2">{a?.driver_id ? driverName(a.driver_id) : '—'}</td>
+                      <td className="p-2"><span className={'badge ' + ab.cls}>{ab.label}</span></td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
     </div>
   )

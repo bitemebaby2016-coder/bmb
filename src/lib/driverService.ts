@@ -73,8 +73,11 @@ export async function driverUpdateDeliveryStatus(
   status: 'picked_up' | 'in_transit' | 'delivered',
   coords?: { latitude: number; longitude: number },
 ): Promise<boolean> {
+  // p_driver_phone is REQUIRED by the 041 signature but IGNORED for identity
+  // (JWT WINS, F-06) — sent as empty string for wire compatibility only.
   const { error } = await supabase.rpc('driver_update_delivery_status', {
     p_order_number: orderNumber,
+    p_driver_phone: '',
     p_status: status,
     p_latitude: coords?.latitude ?? null,
     p_longitude: coords?.longitude ?? null,
@@ -103,4 +106,27 @@ export async function upsertDriver(name: string, phone: string, vehicleLabel = '
   const { data, error } = await supabase.rpc('upsert_driver', { p_name: name, p_phone: phone, p_vehicle_label: vehicleLabel })
   if (error) return null
   return (data as unknown as { driver_id?: string }).driver_id ?? null
+}
+
+// ============================================
+// STEP 3B-2D — Admin dispatch board (canonical reads only)
+// ============================================
+export interface AdminDriverRow {
+  id: string
+  driver_name: string
+  phone_number: string
+  status: string
+  max_capacity: number | null
+  current_latitude: number | null
+  current_longitude: number | null
+  active_assignments: number
+  last_active: string | null
+}
+
+/** Admin driver list via canonical RPC `list_drivers` (037; is_admin-guarded). */
+export async function adminListDrivers(): Promise<{ ok: boolean; drivers: AdminDriverRow[] }> {
+  const { data, error } = await supabase.rpc('list_drivers')
+  if (error) { console.error('[Driver] list_drivers failed:', error); return { ok: false, drivers: [] } }
+  const d = data as unknown as { ok?: boolean; drivers?: AdminDriverRow[] }
+  return { ok: !!d?.ok, drivers: d?.drivers ?? [] }
 }

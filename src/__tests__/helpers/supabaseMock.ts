@@ -48,10 +48,14 @@ export const seed: Record<string, MockRow[]> = {
   ],
   orders: [],
   order_items: [],
+  drivers: [],
+  delivery_assignments: [],
 }
 
 const clone = <T>(v: T): T => JSON.parse(JSON.stringify(v))
 const NOT_FOUND = { code: 'PGRST116', message: 'JSON object requested, multiple (or no) rows returned' }
+// Mock session user — used for JWT-bound driver identity in the 3B-2D RPCs (041).
+const MOCK_USER = 'auth-test-user'
 
 export function createSupabaseMock(opts?: { failReadTable?: string; noAdmin?: boolean }) {
   const tables: Record<string, MockRow[]> = clone(seed)
@@ -484,6 +488,147 @@ export function createSupabaseMock(opts?: { failReadTable?: string; noAdmin?: bo
         if (String(order.scheduled_date) < today) return { data: { ready: false, reason_code: 'SCHEDULE_PAST_DUE' }, error: null }
       }
       return { data: { ready: true, order_number: order.order_number, status: order.status, order_mode: order.order_mode, payment_status: order.payment_status, payment_method: order.payment_method, scheduled_date: order.scheduled_date ?? null }, error: null }
+    }
+
+    // ============ STEP 3B-2D — driver/dispatch RPCs (mirror 020/036/037/041) ============
+    // Driver RPCs are JWT-bound: identity = drivers.user_id === MOCK_USER (041).
+    if (name === 'driver_login') {
+      const drv = (tables['drivers'] || []).find((d: any) => d.user_id === MOCK_USER)
+      if (!drv) return { data: null, error: { code: 'ERR_NOT_A_DRIVER', message: 'ERR_NOT_A_DRIVER' } }
+      drv.last_seen_at = new Date().toISOString()
+      drv.updated_at = drv.last_seen_at
+      return { data: { ok: true, driver: drv }, error: null }
+    }
+    if (name === 'list_drivers') {
+      if (mockNoAdmin) return { data: null, error: { code: 'ERR_FORBIDDEN', message: 'ERR_FORBIDDEN' } }
+      const drs = tables['drivers'] || []
+      const asg = tables['delivery_assignments'] || []
+      const rows = drs.map((d: any) => ({
+        id: d.id, driver_name: d.name, phone_number: d.phone, status: d.status,
+        max_capacity: null, current_latitude: d.current_latitude ?? null, current_longitude: d.current_longitude ?? null,
+        active_assignments: asg.filter((a: any) => a.driver_id === d.id && ['assigned', 'accepted', 'in_transit'].includes(a.status)).length,
+        last_active: d.last_seen_at ?? null,
+      })).sort((a: any, b: any) => String(a.driver_name).localeCompare(String(b.driver_name)))
+      return { data: { ok: true, drivers: rows, count: rows.length }, error: null }
+    }
+
+    if (name === 'assign_driver') {
+      const p = params ?? {}
+      if (mockNoAdmin) return { data: null, error: { code: 'ERR_FORBIDDEN', message: 'ERR_FORBIDDEN' } }
+      const order = (tables['orders'] || []).find((o: any) => o.order_number === p.p_order_number)
+      if (!order) return { data: null, error: { code: 'ERR_ORDER_NOT_FOUND', message: 'ERR_ORDER_NOT_FOUND' } }
+      if (!['ready_for_dispatch', 'dispatched', 'confirmed', 'preparing'].includes(String(order.status))) {
+        return { data: null, error: { code: 'ERR_ORDER_NOT_DISPATCHABLE', message: 'ERR_ORDER_NOT_DISPATCHABLE' } }
+      }
+      const drv = (tables['drivers'] || []).find((d: any) => d.id === p.p_driver_id)
+      if (!drv) return { data: null, error: { code: 'ERR_DRIVER_NOT_FOUND', message: 'ERR_DRIVER_NOT_FOUND' } }
+      // deterministic ON CONFLICT (order_number) reassignment: reset to 'assigned'
+      const asg = (tables['delivery_assignments'] ||= [])
+      const existing = asg.find((a: any) => a.order_number === p.p_order_number)
+      const now = new Date().toISOString()
+      if (existing) {
+        existing.driver_id = drv.id
+        existing.status = 'assigned'
+        existing.accepted_at = null; existing.picked_up_at = null; existing.in_transit_at = null; existing.delivered_at = null
+        existing.updated_at = now
+      } else {
+        asg.push({ id: 'das-' + Math.random().toString(36).slice(2, 10), order_number: p.p_order_number, driver_id: drv.id, status: 'assigned', assigned_at: now, accepted_at: null, picked_up_at: null, in_transit_at: null, delivered_at: null, cancelled_at: null, notes: '', created_at: now, updated_at: now })
+      }
+      drv.status = 'busy'
+      return { data: { ok: true, order_number: p.p_order_number, driver_id: drv.id, status: 'assigned' }, error: null }
+    }
+
+    if (name === 'upsert_driver') {
+      const p = params ?? {}
+      if (mockNoAdmin) return { data: null, error: { code: 'ERR_FORBIDDEN', message: 'ERR_FORBIDDEN' } }
+      if (!p.p_name || !p.p_phone) return { data: null, error: { code: 'ERR_MISSING_DRIVER_INFO', message: 'ERR_MISSING_DRIVER_INFO' } }
+      const drs = (tables['drivers'] ||= [])
+      const existing = drs.find((d: any) => d.phone === String(p.p_phone))
+      const now = new Date().toISOString()
+      if (existing) {
+        existing.name = p.p_name
+        existing.vehicle_label = p.p_vehicle_label ?? existing.vehicle_label ?? ''
+        existing.updated_at = now
+      } else {
+        drs.push({ id: 'drv-' + Math.random().toString(36).slice(2, 10), name: String(p.p_name), phone: String(p.p_phone), vehicle_label: p.p_vehicle_label ?? '', status: 'available', current_latitude: null, current_longitude: null, last_seen_at: now, created_at: now, updated_at: now, user_id: null })
+      }
+      return { data: { ok: true, driver_id: existing?.id ?? drs[drs.length - 1].id }, error: null }
+    }
+
+    if (name === 'link_driver_user') {
+      const p = params ?? {}
+      if (mockNoAdmin) return { data: null, error: { code: 'ERR_FORBIDDEN', message: 'ERR_FORBIDDEN' } }
+      const drv = (tables['drivers'] || []).find((d: any) => d.id === p.p_driver_id)
+      if (!drv) return { data: null, error: { code: 'ERR_DRIVER_NOT_FOUND', message: 'ERR_DRIVER_NOT_FOUND' } }
+      const taken = (tables['drivers'] || []).some((d: any) => d.user_id === p.p_user_id && d.id !== p.p_driver_id)
+      if (taken) return { data: null, error: { code: 'ERR_USER_ALREADY_LINKED', message: 'ERR_USER_ALREADY_LINKED' } }
+      drv.user_id = p.p_user_id
+      drv.updated_at = new Date().toISOString()
+      return { data: { ok: true, driver_id: drv.id, user_id: p.p_user_id }, error: null }
+    }
+
+    if (name === 'driver_accept_assignment') {
+      const p = params ?? {}
+      const drv = (tables['drivers'] || []).find((d: any) => d.user_id === MOCK_USER)
+      if (!drv) return { data: null, error: { code: 'ERR_NOT_A_DRIVER', message: 'ERR_NOT_A_DRIVER' } }
+      const asg = (tables['delivery_assignments'] || []).find((a: any) => a.order_number === p.p_order_number && a.driver_id === drv.id && a.status === 'assigned')
+      if (!asg) return { data: null, error: { code: 'ERR_ASSIGNMENT_NOT_ACCEPTABLE', message: 'ERR_ASSIGNMENT_NOT_ACCEPTABLE' } }
+      asg.status = 'accepted'
+      asg.accepted_at = asg.accepted_at || new Date().toISOString()
+      asg.updated_at = new Date().toISOString()
+      drv.status = 'busy'
+      return { data: { ok: true, order_number: p.p_order_number, status: 'accepted' }, error: null }
+    }
+
+    if (name === 'driver_update_delivery_status') {
+      const p = params ?? {}
+      if (!['picked_up', 'in_transit', 'delivered'].includes(String(p.p_status))) {
+        return { data: null, error: { code: 'ERR_INVALID_DELIVERY_STATUS', message: 'ERR_INVALID_DELIVERY_STATUS' } }
+      }
+      const drv = (tables['drivers'] || []).find((d: any) => d.user_id === MOCK_USER)
+      if (!drv) return { data: null, error: { code: 'ERR_NOT_A_DRIVER', message: 'ERR_NOT_A_DRIVER' } }
+      const asg = (tables['delivery_assignments'] || []).find((a: any) => a.order_number === p.p_order_number && a.driver_id === drv.id)
+      if (!asg) return { data: null, error: { code: 'ERR_ASSIGNMENT_NOT_FOUND', message: 'ERR_ASSIGNMENT_NOT_FOUND' } }
+      if (asg.status === 'delivered') return { data: null, error: { code: 'ERR_ALREADY_DELIVERED', message: 'ERR_ALREADY_DELIVERED' } }
+      const order = (tables['orders'] || []).find((o: any) => o.order_number === p.p_order_number)
+      if (!order) return { data: null, error: { code: 'ERR_ORDER_NOT_FOUND', message: 'ERR_ORDER_NOT_FOUND' } }
+      // forward-only multi-hop sync validated against the canonical chain (041)
+      const target = String(p.p_status) === 'picked_up' ? 'dispatched' : String(p.p_status) === 'in_transit' ? 'in_transit' : 'delivered'
+      if (!['cancelled', 'failed', 'delivered'].includes(String(order.status))) {
+        let hop: string | null = String(order.status)
+        while (hop !== target) {
+          const next: Record<string, string> = { ready_for_dispatch: 'dispatched', dispatched: 'in_transit', in_transit: 'arrived', arrived: 'delivered' }
+          hop = next[hop as string] ?? null
+          if (!hop) return { data: null, error: { code: 'ERR_DELIVERY_SYNC_BLOCKED', message: 'ERR_DELIVERY_SYNC_BLOCKED' } }
+          order.status = hop
+        }
+        order.updated_at = new Date().toISOString()
+      }
+      asg.status = String(p.p_status)
+      if (p.p_status === 'picked_up') asg.picked_up_at = asg.picked_up_at || new Date().toISOString()
+      if (p.p_status === 'in_transit') asg.in_transit_at = asg.in_transit_at || new Date().toISOString()
+      if (p.p_status === 'delivered') asg.delivered_at = asg.delivered_at || new Date().toISOString()
+      asg.updated_at = new Date().toISOString()
+      drv.status = p.p_status === 'delivered' ? 'available' : 'busy'
+      return { data: { ok: true, order_number: p.p_order_number, status: p.p_status }, error: null }
+    }
+
+    if (name === 'my_deliveries') {
+      const drv = (tables['drivers'] || []).find((d: any) => d.user_id === MOCK_USER)
+      if (!drv) return { data: null, error: { code: 'ERR_NOT_A_DRIVER', message: 'ERR_NOT_A_DRIVER' } }
+      const rows = (tables['delivery_assignments'] || [])
+        .filter((a: any) => a.driver_id === drv.id && a.status !== 'cancelled')
+        .map((a: any) => {
+          const o = (tables['orders'] || []).find((x: any) => x.order_number === a.order_number)
+          return {
+            order_number: a.order_number, assignment_status: a.status, assigned_at: a.assigned_at, accepted_at: a.accepted_at,
+            dropoff_detail: o?.delivery_address ?? '', dropoff_latitude: o?.dropoff_latitude ?? null, dropoff_longitude: o?.dropoff_longitude ?? null,
+            order_status: o?.status ?? null, total_amount: o?.total_amount ?? null, payment_status: o?.payment_status ?? null, payment_method: o?.payment_method ?? null,
+            items: (tables['order_items'] || []).filter((i: any) => i.order_id === o?.id).map((i: any) => ({ product_name: i.product_name, quantity: i.quantity })),
+          }
+        })
+        .sort((a: any, b: any) => String(b.assigned_at).localeCompare(String(a.assigned_at)))
+      return { data: { ok: true, driver: drv, assignments: rows }, error: null }
     }
 
     // ============ PHASE 3B handlers (migration 025 cancel_order + 024 ensure_rounds_for_date) ============
@@ -928,6 +1073,11 @@ if (name === 'customer_intelligence') {
     from,
     rpc,
     functions,
+    // Minimal auth surface — the mock session user is always MOCK_USER (041
+    // driver identity tests rely on this).
+    auth: {
+      getSession: async () => ({ data: { session: { user: { id: MOCK_USER } } }, error: null }),
+    },
     __setInvokeHandler: setInvokeHandler,
     __setNoAdmin: setNoAdmin,
     __tables: tables,
