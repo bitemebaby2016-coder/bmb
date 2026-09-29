@@ -1,0 +1,18 @@
+-- Bite Me Baby Migration 069: TEN-03 Catalog Backfill
+-- UPDATE ALL catalog rows SET tenant_id = 'tenant-bmb-001'
+-- NOTE: addon_groups/addons/product_addon_groups created in migration-067 with NULL tenant_id
+BEGIN;
+DO $$ DECLARE v_count int; BEGIN SELECT count(*) INTO v_count FROM public.tenants WHERE id = 'tenant-bmb-001'; IF v_count <> 1 THEN RAISE EXCEPTION 'ERR_BACKFILL_TENANT: tenant-bmb-001 not found.'; END IF; END $$;
+
+-- Backfill ALL catalog tables including newly created ones
+UPDATE public.products SET tenant_id = 'tenant-bmb-001' WHERE tenant_id IS NULL;
+UPDATE public.product_categories SET tenant_id = 'tenant-bmb-001' WHERE tenant_id IS NULL;
+UPDATE public.menu_sections SET tenant_id = 'tenant-bmb-001' WHERE tenant_id IS NULL;
+UPDATE public.addon_groups SET tenant_id = 'tenant-bmb-001' WHERE tenant_id IS NULL;
+UPDATE public.addons SET tenant_id = 'tenant-bmb-001' WHERE tenant_id IS NULL;
+UPDATE public.product_addon_groups SET tenant_id = 'tenant-bmb-001' WHERE tenant_id IS NULL;
+UPDATE public.menu_schedule SET tenant_id = 'tenant-bmb-001' WHERE tenant_id IS NULL;
+
+-- Print counts for evidence capture
+DO $$ DECLARE v_p int; v_c int; v_s int; v_ag int; v_a int; v_pag int; v_ms int; BEGIN SELECT count(*) INTO v_p FROM public.products WHERE tenant_id = 'tenant-bmb-001'; SELECT count(*) INTO v_c FROM public.product_categories WHERE tenant_id = 'tenant-bmb-001'; SELECT count(*) INTO v_s FROM public.menu_sections WHERE tenant_id = 'tenant-bmb-001'; SELECT count(*) INTO v_ag FROM public.addon_groups WHERE tenant_id = 'tenant-bmb-001'; SELECT count(*) INTO v_a FROM public.addons WHERE tenant_id = 'tenant-bmb-001'; SELECT count(*) INTO v_pag FROM public.product_addon_groups WHERE tenant_id = 'tenant-bmb-001'; SELECT count(*) INTO v_ms FROM public.menu_schedule WHERE tenant_id = 'tenant-bmb-001'; RAISE NOTICE 'TEN-03 BACKFILL: products=% categories=% sections=% addon_groups=% addons=% product_addon_groups=% menu_schedule=%', v_p, v_c, v_s, v_ag, v_a, v_pag, v_ms; END $$;
+COMMIT;
