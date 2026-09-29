@@ -118,3 +118,34 @@ export async function uploadProductImage(file: File, alt = ''): Promise<ProductI
   if (!row) return { ok: false, error: 'ERR_UPLOAD_FAILED (ตรวจ storage policy / การล็อกอิน admin)' }
   return { ok: true, url: row.url, assetId: row.id }
 }
+
+// ============================================
+// CAT-03A helpers — Base64 data-URL parsing (migration contract §7)
+// ============================================
+
+export interface ParsedBase64Image {
+  mime: string
+  ext: string
+  bytes: Uint8Array
+}
+
+/** Parse a data:image/*;base64 URL — null if not an image data URL or malformed. */
+export function parseBase64Image(url: string): ParsedBase64Image | null {
+  const m = /^data:image\/([\w.+-]+);base64,(.+)$/.exec(url)
+  if (!m) return null
+  let bytes: Uint8Array
+  try {
+    bytes = Uint8Array.from(atob(m[2]), (c) => c.charCodeAt(0))
+  } catch {
+    return null
+  }
+  return { mime: `image/${m[1]}`, ext: m[1], bytes }
+}
+
+/** RIFF....WEBP magic check (CAT-03A: all legacy product images are WebP). */
+export function isValidWebp(bytes: Uint8Array): boolean {
+  if (bytes.length < 12) return false
+  const riff = String.fromCharCode(bytes[0], bytes[1], bytes[2], bytes[3])
+  const webp = String.fromCharCode(bytes[8], bytes[9], bytes[10], bytes[11])
+  return riff === 'RIFF' && webp === 'WEBP'
+}

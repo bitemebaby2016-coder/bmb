@@ -31,8 +31,10 @@ function availabilityOf(p: Product): AvailabilityState {
 function toHomeProduct(p: Product, cat?: ProductCategory, mode: 'same-day' | 'pre-order' = 'same-day'): HomeProduct {
   // migration 012 real columns win; MOCK_* overlays removed.
   const stock = p.stock ?? 0
-  const rating = Number(p.rating) ?? 0
-  const reviewCount = Number(p.review_count) ?? 0
+  // RE-D3: products.rating/review_count are LEGACY SEED VALUES (migration 012),
+  // NOT canonical customer-review aggregates (reviews table = 0 rows).
+  // Per RE-D3 they must not be shown as customer-review truth → omitted until
+  // a canonical aggregate derived from `reviews` exists (future gate).
   return {
     id: p.id,
     name: p.name,
@@ -45,8 +47,6 @@ function toHomeProduct(p: Product, cat?: ProductCategory, mode: 'same-day' | 'pr
     mode,
     availability: availabilityOf(p),
     stock,
-    rating,
-    reviewCount,
     cta: mode === 'pre-order' ? '📅 จองล่วงหน้า' : '🛒 เพิ่มลงตะกร้า',
     scheduledDate: p.scheduled_date,
   }

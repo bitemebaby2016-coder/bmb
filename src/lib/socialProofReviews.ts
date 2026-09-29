@@ -1,6 +1,13 @@
 // ============================================
 // Bite Me Baby — Social Proof Review Feed (curated)
-// "รีวิวจริงจาก Facebook / GrabFood" — แสดงผลบน HomePage
+//
+// ⚠️ CLASSIFICATION (RE-D2, Review Closure 2026-09-28):
+//    ข้อมูลชุดนี้คือ MARKETING TESTIMONIALS (curated จาก Facebook/GrabFood)
+//    ไม่ใช่ customer reviews จากฐานข้อมูล — ห้าม insert เข้า table `reviews`
+//    ห้ามใช้คำนวณ products.rating/review_count
+//    canonical customer reviews = table `reviews` (เปิดใช้ใน gate ภายหลัง)
+//
+// แสดงผลบน HomePage (ReviewCarouselSection — label ระบุชัดว่า testimonial)
 // @see docs/COMPONENT_SPEC_UI.md §12 CustomerReviewCard + Glassmorphism Spec
 // ============================================
 

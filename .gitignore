@@ -45,3 +45,6 @@ supabase/.branches/
 # Real review ORIGINALS (large ~16MB) — only the compressed small/ set is
 # committed/deployed; regenerate via scripts/compressReviews.ps1
 public/assets/reviews/*.jpg
+
+# CAT-03A migration artifacts (Base64 backups + manifest — local only, 14-day retention)
+e2e/artifacts/

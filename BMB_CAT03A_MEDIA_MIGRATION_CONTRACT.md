@@ -1,5 +1,7 @@
 # BMB — CAT-03A: Base64 Media Migration Contract (AUDIT ONLY — NOT IMPLEMENTED)
 
+> **STATUS UPDATE (2026-09-29):** Implementation EXECUTED ตาม contract นี้แล้ว — ดู `BMB_CAT03A_IMPLEMENT_REPORT.md` (9/9 migrated & verified, Base64 = 0, CAT-03B DEFERRED รอ Owner)
+
 **สถานะ:** AUDIT + CONTRACT ONLY · ไม่มี implementation · ไม่แตะ production data · commit เอกสารเท่านั้น
 **Baseline:** CAT-03 CLOSED (`c03c5e9f`) · bucket `bmb-images` + `media_assets` canonical พร้อมใช้ (057 live) · media_assets = 0 rows, bucket ว่าง
 

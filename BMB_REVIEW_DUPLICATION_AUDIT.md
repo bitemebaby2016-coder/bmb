@@ -1,5 +1,7 @@
 # BMB — REVIEW / SECTION DUPLICATION AUDIT (AUDIT ONLY — NOT IMPLEMENTED)
 
+> **STATUS UPDATE (2026-09-29):** Closure EXECUTED ตาม Owner decisions (RE-D1 ปิด anon INSERT = migration 058 · RE-D2 reviews=canonical + testimonial reword + ลบ fake write path · RE-D3 seed aggregates ซ่อน) — ดู `BMB_REVIEW_CLOSURE_REPORT.md` · RE-D4 DEFERRED
+
 **สถานะ:** discovery/contract work · ไม่แก้ schema · ไม่แก้ RLS · ไม่แกะ business rule · 2026-09-29
 
 ## B1. พบ "Section" กี่แบบ — แยก concept ชัด
