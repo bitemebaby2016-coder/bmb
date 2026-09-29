@@ -53,8 +53,11 @@ export const seed: Record<string, MockRow[]> = {
 const clone = <T>(v: T): T => JSON.parse(JSON.stringify(v))
 const NOT_FOUND = { code: 'PGRST116', message: 'JSON object requested, multiple (or no) rows returned' }
 
-export function createSupabaseMock(opts?: { failReadTable?: string }) {
+export function createSupabaseMock(opts?: { failReadTable?: string; noAdmin?: boolean }) {
   const tables: Record<string, MockRow[]> = clone(seed)
+  // STEP 3B-2C: when true, order_ready_to_make behaves as the server does for a
+  // NON-admin caller (ERR_FORBIDDEN) — mirrors is_admin() = false in migr 054.
+  let mockNoAdmin = !!opts?.noAdmin
 
   function from(table: string) {
     let filters: Array<{ col: string; val: any }> = []
@@ -447,6 +450,40 @@ export function createSupabaseMock(opts?: { failReadTable?: string }) {
       order.status = to
       order.updated_at = new Date().toISOString()
       return { data: { ok: true, order_number: p.p_order_number, from, to }, error: null }
+    }
+
+    // ============ STEP 3B-2C — order_ready_to_make (migration 054 mirror) ============
+    if (name === 'order_ready_to_make') {
+      const p = params ?? {}
+      if (mockNoAdmin) return { data: null, error: { code: 'ERR_FORBIDDEN', message: 'ERR_FORBIDDEN' } }
+      const order = (tables['orders'] || []).find((o: any) => o.order_number === p.p_order_number)
+      if (!order) return { data: { ready: false, reason_code: 'ORDER_NOT_FOUND' }, error: null }
+      if (['cancelled', 'failed', 'delivered'].includes(String(order.status))) {
+        return { data: { ready: false, reason_code: 'TERMINAL_STATE', status: order.status }, error: null }
+      }
+      if (!['confirmed', 'preparing'].includes(String(order.status))) {
+        return { data: { ready: false, reason_code: 'INVALID_ORDER_STATE', status: order.status }, error: null }
+      }
+      if (order.payment_status === 'refund') return { data: { ready: false, reason_code: 'PAYMENT_REFUNDED' }, error: null }
+      const method = String(order.payment_method || '').trim()
+      const ps = String(order.payment_status || '')
+      if (method === 'cash_on_delivery') {
+        if (!['pending', 'paid'].includes(ps)) return { data: { ready: false, reason_code: 'PAYMENT_NOT_READY', payment_status: ps }, error: null }
+      } else {
+        if (ps !== 'paid') {
+          return { data: { ready: false, reason_code: method ? 'PAYMENT_NOT_PAID' : 'PAYMENT_METHOD_UNKNOWN', payment_status: ps, payment_method: order.payment_method }, error: null }
+        }
+      }
+      const items = (tables['order_items'] || []).filter((i: any) => i.order_id === order.id)
+      if (items.length === 0) return { data: { ready: false, reason_code: 'EMPTY_ORDER' }, error: null }
+      if (order.order_mode === 'PRE_ORDER' && !order.scheduled_date) {
+        return { data: { ready: false, reason_code: 'MISSING_SCHEDULE' }, error: null }
+      }
+      if (order.order_mode === 'PRE_ORDER' && order.scheduled_date) {
+        const today = new Date().toISOString().split('T')[0]
+        if (String(order.scheduled_date) < today) return { data: { ready: false, reason_code: 'SCHEDULE_PAST_DUE' }, error: null }
+      }
+      return { data: { ready: true, order_number: order.order_number, status: order.status, order_mode: order.order_mode, payment_status: order.payment_status, payment_method: order.payment_method, scheduled_date: order.scheduled_date ?? null }, error: null }
     }
 
     // ============ PHASE 3B handlers (migration 025 cancel_order + 024 ensure_rounds_for_date) ============
@@ -867,6 +904,11 @@ if (name === 'customer_intelligence') {
     return { data: null, error: { code: 'PGRST202', message: 'rpc not mocked' } }
   }
 
+  // Test hook: simulate a non-admin authenticated caller for the 054 gate.
+  function setNoAdmin(v: boolean) {
+    mockNoAdmin = v
+  }
+
   // ============ Edge Function mock (supabase.functions.invoke) ============
   const invokeHandlers: Record<string, (body: any) => Promise<{ data: any; error: any }>> = {}
 
@@ -887,6 +929,7 @@ if (name === 'customer_intelligence') {
     rpc,
     functions,
     __setInvokeHandler: setInvokeHandler,
+    __setNoAdmin: setNoAdmin,
     __tables: tables,
     __reset() {
       const fresh = clone(seed) as Record<string, MockRow[]>
@@ -894,6 +937,7 @@ if (name === 'customer_intelligence') {
       for (const k of Object.keys(tables)) {
         if (!(k in fresh)) delete tables[k]
       }
+      mockNoAdmin = !!opts?.noAdmin
     },
   }
 }

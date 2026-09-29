@@ -49,3 +49,32 @@ export async function createBatch(roundId: string, scheduledDate?: string, order
   if (error) { console.error('[Kitchen] createBatch failed:', error); return null }
   return data as unknown as { batch_id: string; items_count: number }
 }
+
+// ============================================
+// STEP 3B-2C — canonical READY_TO_MAKE gate (migration 054)
+// ============================================
+// The SERVER RPC `order_ready_to_make` is the SOLE readiness authority
+// (Owner decision: Option A). This wrapper is a pure pass-through read.
+export interface ReadyToMakeResult {
+  ready: boolean
+  reason_code?: string
+  status?: string
+  order_mode?: string
+  payment_status?: string
+  payment_method?: string
+  scheduled_date?: string | null
+  delivery_round_id?: string | null
+}
+
+export async function getOrderReadyToMake(orderNumber: string): Promise<ReadyToMakeResult | null> {
+  const { data, error } = await supabase.rpc('order_ready_to_make', { p_order_number: orderNumber })
+  if (error) { console.error('[Kitchen] order_ready_to_make failed:', error); return null }
+  return data as unknown as ReadyToMakeResult
+}
+
+/** Kitchen pipeline orders: confirmed (queue) + preparing (cooking) + ready (dispatchable). */
+export async function getKitchenPipelineOrders(): Promise<import('./bmbAdminApi_orders').OrderForm[]> {
+  const { getOrdersByStatuses } = await import('./bmbAdminApi_orders')
+  return getOrdersByStatuses(['confirmed', 'preparing', 'ready_for_dispatch'])
+}
+

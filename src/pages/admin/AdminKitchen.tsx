@@ -5,11 +5,15 @@
 // ============================================
 
 import { useState, useEffect, useCallback } from 'react'
-import { getKitchenSummary, createBatch } from '@/lib/bmbAdminApi_kitchen'
+import { getKitchenSummary, createBatch, getKitchenPipelineOrders, getOrderReadyToMake } from '@/lib/bmbAdminApi_kitchen'
+import { updateOrderStatus } from '@/lib/bmbAdminApi_orders'
 import { listRoundsForDate } from '@/lib/bmbAdminApi_rounds'
+import { orderModeBadge, paymentStateBadge } from '@/lib/adminOrderDisplay'
+import { kitchenGatePreview, groupKitchenOrders, splitSameDayPreOrder, readyReasonLabel, kitchenItemLines } from '@/lib/kitchenQueueView'
 import { writeAuditLog } from '@/lib/auditLog'
 import { showToast } from '@/components/ui/ToastContainer'
 import type { DeliveryRoundRow } from '@/lib/bmbAdminApi_rounds'
+import type { OrderForm } from '@/lib/bmbAdminApi_orders'
 
 export function AdminKitchen() {
   const [batches, setBatches] = useState<any[]>([])
@@ -19,6 +23,8 @@ export function AdminKitchen() {
   const [loading, setLoading] = useState(true)
   const [creating, setCreating] = useState(false)
   const [date, setDate] = useState(new Date().toISOString().split('T')[0])
+  const [pipeline, setPipeline] = useState<OrderForm[]>([])
+  const [acting, setActing] = useState<string | null>(null)
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -30,6 +36,8 @@ export function AdminKitchen() {
       }
       const activeRounds = await listRoundsForDate(date)
       setRounds(activeRounds)
+      const pipe = await getKitchenPipelineOrders()
+      setPipeline(pipe.filter((o) => (o.scheduled_date || date) === date || o.order_mode !== 'PRE_ORDER'))
     } catch (e) {
       console.error('[AdminKitchen] Load failed:', e)
     } finally {
@@ -59,6 +67,34 @@ export function AdminKitchen() {
       showToast('เกิดข้อผิดพลาด', 'error')
     } finally {
       setCreating(false)
+    }
+  }
+
+  // STEP 3B-2C: kitchen actions — the SERVER gate (order_ready_to_make, migr 054)
+  // decides readiness; buttons render from the client mirror but ALWAYS re-check
+  // via the RPC before calling the canonical transition RPC. No direct UPDATE.
+  async function kitchenAct(o: OrderForm, to: 'preparing' | 'ready_for_dispatch') {
+    setActing(o.order_number)
+    try {
+      if (to === 'preparing') {
+        const gate = await getOrderReadyToMake(o.order_number)
+        if (!gate || !gate.ready) {
+          showToast('ครัวยังเริ่มทำไม่ได้: ' + readyReasonLabel(gate?.reason_code || 'SERVER_ERROR'), 'error')
+          return
+        }
+      }
+      const res: any = await updateOrderStatus(o.order_number, to)
+      if (res && res.status === to) {
+        showToast('✅ ' + o.order_number + ' → ' + to, 'success')
+        writeAuditLog({ action: 'order_status_change', entity_type: 'order', entity_id: o.order_number, description: 'kitchen: ' + o.order_number + ' → ' + to })
+        await load()
+      } else {
+        showToast('เปลี่ยนสถานะไม่สำเร็จ (server ปฏิเสธ)', 'error')
+      }
+    } catch (e: any) {
+      showToast('ผิดพลาด: ' + String(e?.message || e).slice(0, 80), 'error')
+    } finally {
+      setActing(null)
     }
   }
 
@@ -103,6 +139,77 @@ export function AdminKitchen() {
           </button>
         </div>
         <p className="text-xs text-brand-muted mt-2">Batch จะรวบรวมออเดอรที่ confirmed/preparing ของรอบนี้</p>
+      </div>
+
+      {/* Kitchen Order Queue (STEP 3B-2C) — server gate authority (migr 054) */}
+      <div className="card mb-6">
+        <h3 className="font-bold text-brand-accent mb-4">👨‍🍳 คิวครัว — Order ที่เข้าสายการผลิต</h3>
+        {(() => {
+          const todayISO = date
+          const { sameDay, preOrderToday, preOrderLater } = splitSameDayPreOrder(pipeline, todayISO)
+          const sections: Array<{ title: string; list: OrderForm[] }> = [
+            { title: '⚡ SAME_DAY', list: sameDay },
+            { title: '📅 PRE_ORDER (ถึงรอบแล้ว)', list: preOrderToday },
+            { title: '📅 PRE_ORDER (รอบหน้า — แสดงเพื่อวางแผน)', list: preOrderLater },
+          ]
+          const visible = sections.filter((s) => s.list.length > 0)
+          if (visible.length === 0) return <p className="text-brand-muted text-sm py-4 text-center">ไม่มีออเดอร์ในสายการผลิตสำหรับวันที่เลือก</p>
+          return (
+            <div className="space-y-4">
+              {visible.map((sec) => (
+                <div key={sec.title}>
+                  <p className="text-xs font-bold text-brand-muted mb-2">{sec.title} ({sec.list.length})</p>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    {sec.list.map((o) => {
+                      const gate = kitchenGatePreview(o)
+                      const pm = paymentStateBadge(o.payment_status)
+                      const mode = orderModeBadge(o.order_mode, o.scheduled_date)
+                      const roundName = rounds.find((r) => r.id === o.delivery_round_id)?.display_name || (o.delivery_round_id ? String(o.delivery_round_id).slice(0, 12) : '—')
+                      return (
+                        <div key={o.order_number} className="border border-brand-border rounded-lg p-3 bg-brand-bg/50">
+                          <div className="flex items-center justify-between gap-2 flex-wrap">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span className="font-mono text-sm font-bold">{o.order_number}</span>
+                              <span className={'badge ' + pm.cls}>{pm.label}</span>
+                              <span className="badge badge-primary">{mode.label}</span>
+                              <span className="badge badge-info">{o.status}</span>
+                            </div>
+                            <span className="text-xs text-brand-muted">🚌 {roundName}</span>
+                          </div>
+                          <ul className="mt-2 text-sm space-y-1">
+                            {kitchenItemLines(o).map((line, i) => (
+                              <li key={i}>
+                                <span className="font-bold">{line.quantity}×</span> {line.productName}
+                                {line.addonText ? <span className="text-brand-muted text-xs"> · {line.addonText}</span> : null}
+                                {line.specialRequest ? <span className="text-warning text-xs"> · 📝 {line.specialRequest}</span> : null}
+                              </li>
+                            ))}
+                          </ul>
+                          {gate.reasonCode ? (
+                            <p className="mt-2 text-xs text-red-500">⛔ {readyReasonLabel(gate.reasonCode)}</p>
+                          ) : null}
+                          <div className="mt-3 flex gap-2 flex-wrap">
+                            {o.status === 'confirmed' && gate.canStart ? (
+                              <button onClick={() => { void kitchenAct(o, 'preparing') }} disabled={acting === o.order_number} className="btn btn-primary text-sm disabled:opacity-50">
+                                {acting === o.order_number ? '⏳...' : '🔥 เริ่มทำ'}
+                              </button>
+                            ) : null}
+                            {o.status === 'preparing' && gate.canReady ? (
+                              <button onClick={() => { void kitchenAct(o, 'ready_for_dispatch') }} disabled={acting === o.order_number} className="btn btn-primary text-sm disabled:opacity-50">
+                                {acting === o.order_number ? '⏳...' : '✅ พร้อมส่ง'}
+                              </button>
+                            ) : null}
+                            {o.status === 'ready_for_dispatch' ? <span className="badge badge-success self-center">✅ พร้อมส่งแล้ว — รอ dispatch</span> : null}
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )
+        })()}
       </div>
 
       {/* Batches Table */}
