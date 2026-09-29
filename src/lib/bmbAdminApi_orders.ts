@@ -81,6 +81,9 @@ export interface OrderForm {
   // ✅ Phase 3B (migration 025): canonical order mode + scheduled delivery date
   order_mode?: 'SAME_DAY' | 'PRE_ORDER'
   scheduled_date?: string
+  // ✅ STEP 3B-2A: channel attribution + external reference (display only)
+  source_channel?: string
+  external_ref_id?: string
   created_at: string
   updated_at: string
 }
@@ -126,13 +129,15 @@ export async function hydrateOrderItems(orders: OrderForm[]): Promise<OrderForm[
 
 // W4-A: paged order fetch for Admin (server-side filter + range) — canonical data untouched.
 // `getOrders()` is preserved unchanged for existing callers.
-export async function getOrdersPaged(opts: { page: number; pageSize?: number; status?: string }): Promise<{ orders: OrderForm[]; total: number }> {
+// STEP 3B-2A: optional orderMode filter (SAME_DAY / PRE_ORDER) — server-side eq.
+export async function getOrdersPaged(opts: { page: number; pageSize?: number; status?: string; orderMode?: 'SAME_DAY' | 'PRE_ORDER' }): Promise<{ orders: OrderForm[]; total: number }> {
   const pageSize = Math.max(1, Math.min(100, opts.pageSize ?? 25))
   const page = Math.max(0, opts.page)
   const from = page * pageSize
   const to = from + pageSize - 1
   let q = supabase.from('orders').select('*', { count: 'exact' }).order('created_at', { ascending: false }).range(from, to)
   if (opts.status) q = q.eq('status', opts.status)
+  if (opts.orderMode) q = q.eq('order_mode', opts.orderMode)
   const { data, error, count } = await q
   if (error) { console.error('[getOrdersPaged] Error:', error); return { orders: [], total: 0 } }
   const orders = await hydrateOrderItems((data || []) as OrderForm[])
@@ -354,5 +359,90 @@ export async function stripeRefundOrder(
     return { success: true, data }
   } catch (e) {
     return { success: false, error: String(e).slice(0, 200) }
+  }
+}
+
+// ============================================
+// STEP 3B-2A — Operational visibility read helpers (Phase B/C)
+// ============================================
+// All three are READ-ONLY table reads protected by existing RLS:
+//   - order_status_history → migration 040 policy `osh_admin_read` (is_admin only)
+//   - delivery_assignments → migration 020 policy `assignments_auth_read`
+//     (is_admin OR own-driver scope) — Admin Orders is admin-scoped
+//   - audit_logs           → migration 018 admin read (AuditLogPage pattern)
+// No new authority, no new RPC, no client-side mutation anywhere.
+
+export interface OrderStatusHistoryRow {
+  id: string
+  order_number: string
+  from_status: string | null
+  to_status: string
+  changed_at: string
+  actor_type: string
+  actor_id: string | null
+  reason: string | null
+  metadata: Record<string, any>
+}
+
+/** Authoritative lifecycle trace for one order (oldest→newest). Admin-only per RLS. */
+export async function getOrderStatusHistory(orderNumber: string): Promise<OrderStatusHistoryRow[]> {
+  try {
+    const { data, error } = await supabase
+      .from('order_status_history')
+      .select('*')
+      .eq('order_number', orderNumber)
+      .order('changed_at', { ascending: true })
+    if (error) { console.error('[getOrderStatusHistory] Error:', error); return [] }
+    return (data || []) as OrderStatusHistoryRow[]
+  } catch (e) {
+    console.warn('[getOrderStatusHistory] unavailable:', String(e).slice(0, 120))
+    return []
+  }
+}
+
+export interface DeliveryAssignmentLiteRow {
+  id: string
+  order_number: string
+  driver_id: string
+  status: string
+  assigned_at: string | null
+  accepted_at: string | null
+  picked_up_at: string | null
+  in_transit_at: string | null
+  delivered_at: string | null
+  cancelled_at: string | null
+}
+
+/** Assignment rows for a page of orders (020 lifecycle) — admin/driver RLS scoped. */
+export async function getDeliveryAssignmentsFor(orderNumbers: string[]): Promise<DeliveryAssignmentLiteRow[]> {
+  if (!orderNumbers || orderNumbers.length === 0) return []
+  try {
+    const { data, error } = await supabase
+      .from('delivery_assignments')
+      .select('*')
+      .in('order_number', orderNumbers)
+    if (error) { console.error('[getDeliveryAssignmentsFor] Error:', error); return [] }
+    return (data || []) as DeliveryAssignmentLiteRow[]
+  } catch (e) {
+    console.warn('[getDeliveryAssignmentsFor] unavailable:', String(e).slice(0, 120))
+    return []
+  }
+}
+
+/** Generic audit-log read for one order (entity_type='order', entity_id=order_number). */
+export async function getOrderAuditTrail(orderNumber: string, limit = 25): Promise<Record<string, any>[]> {
+  try {
+    const { data, error } = await supabase
+      .from('audit_logs')
+      .select('*')
+      .eq('entity_type', 'order')
+      .eq('entity_id', orderNumber)
+      .order('created_at', { ascending: false })
+      .limit(limit)
+    if (error) { console.error('[getOrderAuditTrail] Error:', error); return [] }
+    return (data || []) as Record<string, any>[]
+  } catch (e) {
+    console.warn('[getOrderAuditTrail] unavailable:', String(e).slice(0, 120))
+    return []
   }
 }
