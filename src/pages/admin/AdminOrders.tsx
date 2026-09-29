@@ -4,7 +4,7 @@ import { useNotificationStore } from '@/store/notificationStore'
 import { showToast } from '@/components/ui/ToastContainer'
 import {
   getOrdersPaged, updateOrderStatus, confirmOfflinePayment, stripeRefundOrder, cancelOrder,
-  getDeliveryAssignmentsFor, getOrderStatusHistory, getOrderAuditTrail,
+  getDeliveryAssignmentsFor, getOrderStatusHistory, getOrderAuditTrail, getRoundsByIds,
 } from '@/lib/bmbAdminApi_orders'
 import type { DeliveryAssignmentLiteRow } from '@/lib/bmbAdminApi_orders'
 import { getProductsAdmin } from '@/lib/bmbAdminApi_products'
@@ -13,6 +13,10 @@ import {
   orderModeBadge, paymentStateBadge, deliveryStateBadge,
   nextForwardAction, isCancellable,
 } from '@/lib/adminOrderDisplay'
+import {
+  groupPreOrders, roundCapacityState, roundCutoffState, isPaymentException,
+} from '@/lib/preOrderQueue'
+import type { RoundLite } from '@/lib/preOrderQueue'
 import type { OrderForm } from '@/lib/bmbAdminApi_orders'
 import type { Product } from '@/types'
 
@@ -55,6 +59,9 @@ export function AdminOrders() {
   const [loadError, setLoadError] = useState('')
   // STEP 3B-2A Phase B: delivery-assignment state per order (migration 020 rows, RLS admin).
   const [assignmentByOrder, setAssignmentByOrder] = useState<Record<string, DeliveryAssignmentLiteRow>>({})
+  // STEP 3B-2B: delivery_rounds rows (canonical capacity/cutoff source of truth) for the
+  // PRE_ORDER queue header — DISPLAY ONLY; server RPCs (025/038) enforce the rules.
+  const [roundsById, setRoundsById] = useState<Record<string, RoundLite>>({})
   // Phase C inspection: lazily-loaded lifecycle trace + audit trail per expanded order.
   const [expandedOrder, setExpandedOrder] = useState<string | null>(null)
   const [inspect, setInspect] = useState<{ history: any[]; audit: any[]; loading: boolean }>({ history: [], audit: [], loading: false })
@@ -74,6 +81,12 @@ export function AdminOrders() {
     const amap: Record<string, DeliveryAssignmentLiteRow> = {}
     for (const a of assignments) amap[a.order_number] = a
     setAssignmentByOrder(amap)
+    // 3B-2B: rounds for the current page (queue headers read the DB source of truth)
+    const roundIds = Array.from(new Set(res.orders.map((o) => o.delivery_round_id).filter(Boolean))) as string[]
+    const rounds = await getRoundsByIds(roundIds)
+    const rmap: Record<string, RoundLite> = {}
+    for (const r of rounds) rmap[(r as any).id] = r as RoundLite
+    setRoundsById(rmap)
     const products = await getProductsAdmin()
     const map: Record<string, Product> = {}
     for (const p of products || []) map[p.id] = p
@@ -175,6 +188,12 @@ async function handleStripeRefund(orderNumber: string) {
   // W4-A: server already filtered the current page — no client re-filter.
   const filteredOrders = orders
 
+  // STEP 3B-2B: PRE_ORDER queue grouping (display only — canonical spine columns)
+  const preGroupsByKey: Record<string, ReturnType<typeof groupPreOrders>[number]> = {}
+  if (filterMode === 'PRE_ORDER') {
+    for (const g of groupPreOrders(filteredOrders)) preGroupsByKey[g.key] = g
+  }
+
   return (
     <div className="max-w-7xl mx-auto px-4 py-6">
       <div className="flex items-center justify-between mb-6">
@@ -220,8 +239,28 @@ async function handleStripeRefund(orderNumber: string) {
           const payBadge = paymentStateBadge(order.payment_status)
           const dlvBadge = deliveryStateBadge(assignmentByOrder[order.order_number])
           const forward = nextForwardAction(order.status)
+          // 3B-2B queue context: group header before the first order of each (date|round) group
+          const grp = filterMode === 'PRE_ORDER' ? preGroupsByKey[`${order.scheduled_date || '—'}|${order.delivery_round_id || '—'}`] : null
+          const cap = grp ? roundCapacityState(roundsById[grp.roundId] ?? null, grp.orders.length) : null
+          const cut = grp ? roundCutoffState(roundsById[grp.roundId] ?? null) : null
+          const payExcCount = grp ? grp.orders.filter((o) => isPaymentException(o.payment_status)).length : 0
           return (
-          <div key={order.id} className="card">
+          <div key={order.id}>
+          {grp && grp.orders[0].order_number === order.order_number && (
+            <div className="card mb-2" data-testid="preorder-queue-header">
+              <div className="flex flex-wrap items-center gap-2 text-sm">
+                <span className="font-bold text-brand-accent">📅 {grp.scheduledDate}</span>
+                <span className="badge badge-primary">{grp.roundId}</span>
+                {roundsById[grp.roundId]?.display_name && <span className="badge badge-primary">{roundsById[grp.roundId].display_name}</span>}
+                <span className={`badge ${cap!.cls}`}>{cap!.label}</span>
+                <span className="badge badge-info">{cut!.label}</span>
+                {roundsById[grp.roundId]?.status && <span className="badge badge-primary">round: {roundsById[grp.roundId].status}</span>}
+                {payExcCount > 0 && <span className="badge badge-warning">⚠ payment needs attention: {payExcCount}</span>}
+                <span className="text-brand-muted">({grp.orders.length} orders)</span>
+              </div>
+            </div>
+          )}
+          <div className="card">
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 bg-brand-primary rounded-full flex items-center justify-center text-white font-bold">
@@ -345,6 +384,7 @@ async function handleStripeRefund(orderNumber: string) {
                 )}
               </div>
             )}
+          </div>
           </div>
           )
         })}

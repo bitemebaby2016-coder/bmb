@@ -446,3 +446,26 @@ export async function getOrderAuditTrail(orderNumber: string, limit = 25): Promi
     return []
   }
 }
+
+// ============================================
+// STEP 3B-2B — Pre-order queue round reads (Phase B)
+// ============================================
+// READ-ONLY read of `delivery_rounds` — the canonical capacity/cutoff source of
+// truth (migration 017/024/025/038). RLS: `delivery_rounds_public_read`
+// (anon+authenticated SELECT). DISPLAY ONLY: the client never enforces
+// cutoff/capacity — the server RPCs (025/038) remain the authority.
+
+export async function getRoundsByIds(roundIds: string[]): Promise<Record<string, any>[]> {
+  if (!roundIds || roundIds.length === 0) return []
+  try {
+    const { data, error } = await supabase
+      .from('delivery_rounds')
+      .select('*')
+      .in('id', roundIds)
+    if (error) { console.error('[getRoundsByIds] Error:', error); return [] }
+    return (data || []) as Record<string, any>[]
+  } catch (e) {
+    console.warn('[getRoundsByIds] unavailable:', String(e).slice(0, 120))
+    return []
+  }
+}
