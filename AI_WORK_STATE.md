@@ -6,21 +6,22 @@
 # This file MUST remain behaviorally aligned with those rules.
 #
 # ===============================================================================
-# SESSION HANDOFF (2026-09-29 — TEN-01 AUDIT + STORAGE PLATFORM BLOCKER)
+# SESSION HANDOFF (2026-09-29 — TEN-02 DEPLOYED + TEN-01 CONSUMED)
 # ===============================================================================
-# Gate: TEN-01 AUDIT ONLY + Storage 403 investigation (docs-only commit)
-# HEAD ตอนจบ gate: ดู git log — docs-only commit บน main (baseline ebea3266)
-# Reports: BMB_TEN01_AUDIT.md · BMB_STORAGE_PLATFORM_BLOCKER.md (อ่านก่อนทำอะไรต่อ)
-# Prod facts (read-only probes e2e/ct-ten01-*.cjs):
-#   - ไม่มี tenants/brands/tenant_id ใน prod จริง (38 tables, all global, is_admin() = profiles.role='admin')
-#   - order_number = BMB-YYYYMMDD-NNN global (202 rows) · drivers=5 (user_id ไม่มี FK) · business_settings 5 keys (all TENANT_OPERATIONAL)
-#   - Dependency พบใหม่: products.delivery_round_id FK → ต้องทำ TEN-04-lite ก่อน TEN-03 (ดู staged plan ใน TEN-01 report)
-# Storage 403 ROOT CAUSE (evidence): user JWT = ES256/kid (new JWT signing keys) แต่ storage-api ไม่ verify ES256
-#   (PostgREST ผ่านปกติ, service key HS256 ผ่าน) → Admin UI upload ยัง 403 จนกว่า Owner จะแก้
-#   platform config (Dashboard → Auth → JWT Keys) หรือ open support ticket (ดูรายงาน §Owner action)
-# Workaround active: svc-key storage upload server-side only (CAT-03 §4) — Admin UI upload ยัง NOT runtime verified
-# Awaiting Owner: TEN-01 ownership matrix + staged migration plan + RLS contract approval · Storage platform action
-# ห้ามเริ่ม: TEN-02..09 · CAT-04 · CAT-03B (ก่อน >= 2026-10-13) · Catalog Runtime Verify · Open-Shop
+# Gate: TEN-02 IMPLEMENTATION — DEPLOYED TO PROD + VERIFIED
+# HEAD ตอนจบ gate: ดู git log — deployments on main (baseline 8169853b -> post-ten02)
+# Reports: BMB_TEN02_CLOSURE_REPORT.md · BMB_TEN02_IMPLEMENTATION_CONTRACT.md · BMB_TEN01_AUDIT.md · BMB_STORAGE_PLATFORM_BLOCKER.md
+# Prod facts post-TEN-02 (verified e2e/ten02-verify.cjs):
+#   - tenants table: tenant-bmb-001 active (single tenant)
+#   - brands: 0 rows
+#   - drivers/delivery_rounds/delivery_zones/delivery_assignments: all have tenant_id='tenant-bmb-001' (NOT NULL enforced)
+#   - profiles: all tenant_id='tenant-bmb-001', is_platform=true for 1 row (dddf4b57 = platform admin, verified by is_owner=true)
+#   - order_number = BMB-YYYYMMDD-NNN global unchanged (orders=202, order_items=199, payment_intents=56)
+#   - RLS rewritten: *_tenant_admin_manage policies for ops tables; F-06 JWT driver identity preserved
+# Storage 403 ROOT CAUSE: STILL UNRESOLVED (ES256/JWT key issue) — Admin UI upload NOT runtime verified
+#   Workaround active: svc-key storage upload server-side only (CAT-03 §4)
+# Awaiting Owner: TEN-03 catalog tenancy progression decision · Storage platform fix action
+# ห้ามเริ่ม: TEN-03..09 · CAT-04 · CAT-03B (ก่อน >= 2026-10-13) · Catalog Runtime Verify · Open-Shop
 
 
 > IMPORTANT
