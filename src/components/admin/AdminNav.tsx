@@ -7,6 +7,8 @@
 import { Link, useLocation } from 'react-router-dom'
 import type { ReactNode } from 'react'
 import { ADMIN_NAV_ITEMS } from '@/lib/adminUi'
+import { BranchSwitcher } from './BranchSwitcher'
+
 
 export function AdminNav({ children }: { children?: ReactNode }) {
   const location = useLocation()
@@ -18,6 +20,7 @@ export function AdminNav({ children }: { children?: ReactNode }) {
       className="sticky top-0 z-40 bg-brand-surface border-b border-brand-border shadow-sm no-print"
     >
       <div className="flex items-center gap-1 px-2 py-2 overflow-x-auto whitespace-nowrap">
+        <BranchSwitcher />
         <span className="text-sm font-bold text-brand-accent mr-1 hidden md:inline">🛠️</span>
         {ADMIN_NAV_ITEMS.map((item) => {
           const isActive =
