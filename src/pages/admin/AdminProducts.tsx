@@ -226,7 +226,9 @@ export function AdminProducts() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-6">
-<Link to="/admin" className="text-sm text-brand-muted hover:underline">← กลับแดшборд</Link>
+<div className="inline-block mb-3">
+        <Link to="/admin" className="text-sm text-brand-muted hover:underline">← กลับแดชบอร์ด</Link>
+      </div>
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-3xl font-bold text-brand-accent">🍽️ จัดการเมนู</h1>
         <button onClick={() => { resetForm(); setShowAddForm(true) }} className="btn btn-primary">+ เพิ่มเมนู</button>
@@ -331,10 +333,17 @@ export function AdminProducts() {
         {showCatForm && (
           <div className="card p-4 mb-3 bg-white">
             <h4 className="font-bold text-brand-accent mb-3">{editingCat ? 'Edit heading' : 'New category heading'}</h4>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
               <input type="text" className="input" placeholder="Heading (e.g. Burgers)" value={catForm.name} onChange={(e) => setCatForm({ ...catForm, name: e.target.value })} />
               <input type="text" className="input" placeholder="Icon (e.g. 🍔)" value={catForm.icon} onChange={(e) => setCatForm({ ...catForm, icon: e.target.value })} />
               <input type="number" className="input" placeholder="Order" value={catForm.sort_order || ''} onChange={(e) => setCatForm({ ...catForm, sort_order: parseInt(e.target.value || '0') })} />
+              <div>
+                <label className="block text-sm font-medium text-brand-accent mb-2">Section</label>
+                <select value={(catForm.menu_section_id as string) || ''} onChange={(e) => setCatForm({ ...catForm, menu_section_id: e.target.value })} className="input">
+                  <option value="">— ไม่มี Section —</option>
+                  {sections.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
+                </select>
+              </div>
               <label className="flex items-center gap-2 text-sm">
                 <input type="checkbox" checked={catForm.is_active} onChange={(e) => setCatForm({ ...catForm, is_active: e.target.checked })} />
                 Active
@@ -342,14 +351,7 @@ export function AdminProducts() {
             </div>
             <div className="flex gap-2 mt-3">
               <button onClick={handleSaveCategory} className="btn btn-success text-sm">💾 Save</button>
-              <div>
-              <label className="block text-sm font-medium text-brand-accent mb-2">Section</label>
-              <select value={(catForm.menu_section_id as string) || ''} onChange={(e) => setCatForm({ ...catForm, menu_section_id: e.target.value })} className="input">
-                <option value="">— ไม่มี Section —</option>
-                {sections.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
-              </select>
-            </div>
-            <button onClick={() => { setShowCatForm(false); setEditingCat(null); setCatForm(blankCategoryForm()) }} className="btn btn-outline text-sm">Cancel</button>
+              <button onClick={() => { setShowCatForm(false); setEditingCat(null); setCatForm(blankCategoryForm()) }} className="btn btn-outline text-sm">Cancel</button>
             </div>
           </div>
         )}

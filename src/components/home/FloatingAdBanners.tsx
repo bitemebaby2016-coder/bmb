@@ -55,7 +55,16 @@ export function FloatingAdBanners({ promos }: { promos: FloatingBannerPromo[] })
           <div key={promo.id} className="flad-card" data-testid="floating-ad-banner">
           <div className="flad-media">
             {promo.image ? (
-              <img src={promo.image} alt="" loading="lazy" />
+              <img
+                src={promo.image}
+                alt=""
+                loading="lazy"
+                onError={(e) => {
+                  // promo.image ชี้ไฟล์ที่ไม่มีแล้ว (เช่น mock banner เดิม) → แสดง branded fallback
+                  const el = e.currentTarget as HTMLImageElement
+                  if (!el.dataset.fbk) { el.dataset.fbk = '1'; el.style.display = 'none'; el.parentElement?.classList.add('flad-media-fallback') }
+                }}
+              />
             ) : (
               <div className="flad-media flad-media-fallback" aria-hidden="true" />
             )}

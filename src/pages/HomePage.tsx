@@ -33,8 +33,7 @@ import { PromotionStrip } from '@/components/home/PromotionStrip'
 import { BranchAwareProductCard } from '@/components/home/BranchAwareProductCard'
 import { VerifiedReviewsSection } from '@/components/home/VerifiedReviewsSection'
 import { ReviewCarouselSection } from '@/components/home/ReviewCarouselSection'
-import { DrinksSection } from '@/components/home/DrinksSection'
-import { SnacksSection } from '@/components/home/SnacksSection'
+import { CategorySections } from '@/components/home/CategorySections'
 import { FloatingCart, StickyCartBar } from '@/components/home/FloatingCart'
 import { useOrderBuilderStore } from '@/store/orderBuilderStore'
 import { useBrandContextStore } from '@/store/resolvedBrandStore'
@@ -282,11 +281,8 @@ export function HomePage() {
         </section>
       )}
 
-      {/* 5. Drinks — canonical carousel (category slug 'drinks') */}
-      <DrinksSection products={products} categories={categories} />
-
-      {/* 5b. Snacks — canonical carousel (category slug 'snacks') */}
-      <SnacksSection products={products} categories={categories} />
+      {/* 5. Category carousels — DB-driven: แสดงทุกหมวดที่แอดมินสร้าง (จานเดียว/เครื่องดื่ม/ของทานเล่น/ผลไม้/สินค้าสำเร็จรูป) ซิงก์จริง */}
+      <CategorySections products={products} categories={categories} />
 
       {/* 6. Social Proof Review Carousel */}
       <ReviewCarouselSection reviews={reviews} products={products} onReviewCta={handleReviewCta} />

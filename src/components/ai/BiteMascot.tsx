@@ -102,6 +102,14 @@ export function BiteMascot({ userName, activeSection = 'home' }: BiteMascotProps
   const [chatVisible, setChatVisible] = useState(false)
   const [currentPoseIndex, setCurrentPoseIndex] = useState(0)
 
+  // AI-UI: มาสคอตสลับหน้าที่ตามหน้าที่เปิด (ใช้ครบทุกตัวใน MASCOT_POSES) —
+  // หน้าซ้ำ/แท็บเดิมจะเลื่อนตัวถัดไป ไม่ซ้ำตัวเดิมติดกัน
+  useEffect(() => {
+    let hash = 0
+    for (const ch of activeSection) hash = (hash * 31 + ch.charCodeAt(0)) >>> 0
+    setCurrentPoseIndex(hash % MASCOT_POSES.length)
+  }, [activeSection])
+
   // Cycle to next pose on each tap/interaction
   const cyclePose = useCallback(() => {
     setCurrentPoseIndex((prev) => (prev + 1) % MASCOT_POSES.length)
@@ -178,7 +186,7 @@ export function BiteMascot({ userName, activeSection = 'home' }: BiteMascotProps
             type="button"
             onClick={handleTap}
             aria-label="เปิดแชทกับน้อง Bite"
-            className="pointer-events-auto flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-brand-primary to-brand-secondary shadow-lg animate-float hover:scale-105 active:scale-95 transition-transform overflow-hidden cursor-grab active:cursor-grabbing"
+            className="pointer-events-auto flex h-16 w-16 items-center justify-center rounded-full shadow-lg animate-float hover:scale-105 active:scale-95 transition-transform overflow-hidden cursor-grab active:cursor-grabbing bg-transparent"
             data-testid="bite-mascot"
           >
             <img

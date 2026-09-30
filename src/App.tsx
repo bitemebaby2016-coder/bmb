@@ -76,11 +76,20 @@ const ContactPage = lazy(() => import('./pages/ContactPage').then(m => ({ defaul
 const PrivacyPage = lazy(() => import('./pages/PrivacyPage').then(m => ({ default: m.PrivacyPage })))
 const TermsPage = lazy(() => import('./pages/TermsPage').then(m => ({ default: m.TermsPage })))
 
-// Loading component for Suspense
+// Loading component for Suspense — มาสคอตน้อง Bite รอโหลด (แทน spinner วงกลม)
 function LoadingSpinner() {
   return (
-    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '200px' }}>
-      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500"></div>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 8, justifyContent: 'center', alignItems: 'center', minHeight: '200px' }}>
+      <img
+        src="/mascot_Bite_Waiting.webp"
+        alt="น้อง Bite กำลังโหลด"
+        width={96}
+        height={96}
+        style={{ borderRadius: '50%', objectFit: 'cover' }}
+        className="animate-bounce"
+        onError={(e) => { (e.currentTarget as HTMLImageElement).src = '/bite-mascot.svg' }}
+      />
+      <span className="text-sm text-brand-muted">น้อง Bite กำลังจัดเตรียมของ…</span>
     </div>
   )
 }

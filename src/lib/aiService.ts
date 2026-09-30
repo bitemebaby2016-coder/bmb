@@ -46,10 +46,25 @@ let conversationHistory: ChatMessage[] = [
 
 /**
  * Perform a single OpenRouter chat completion request with the given model.
+ * Guest-safe: sends the user's JWT when logged in, otherwise the platform anon
+ * key (ai-proxy accepts the anon key as a valid guest JWT — read-only advice).
  * Throws on any non-OK HTTP status or when the response has no usable content,
  * so the caller can decide whether to fall back to another model.
  */
 async function requestCompletion(messages: ChatMessage[], model: string): Promise<string> {
+  // Guest-safe: functions.invoke sends the anon key as Bearer when there is no
+  // (valid) session — the deployed ai-proxy accepts that as a guest JWT. If a
+  // stale session lingers in storage with an already-expired access token, we
+  // deliberately drop it and fall back to the anon key (guest) so น้อง Bite
+  // never 401s on expired credentials.
+  const { data: sessionData } = await supabase.auth.getSession()
+  const s: any = (sessionData as any)?.data?.session
+  // session ที่ไม่มี expires_at (mock/legacy shape) ถือว่าใช้ได้ — มี expires_at ต้องยังไม่หมดอายุ
+  const sessionValid = !s ? false : (typeof s.expires_at !== 'number' || s.expires_at * 1000 > Date.now() + 30_000)
+  if (s && !sessionValid && typeof (supabase.auth as any).signOut === 'function') {
+    void supabase.auth.signOut({ scope: 'local' }).catch(() => {})
+  }
+
   const { data: proxy, error } = await supabase.functions.invoke('ai-proxy', {
     body: { messages: messages.slice(-11), model, maxTokens: 500 },
   })
@@ -79,7 +94,12 @@ async function streamCompletionOnce(
   // Guest-safe: use the user's JWT when logged in, otherwise the platform anon
   // key (ai-proxy accepts the anon key as a valid guest JWT — read-only advice).
   const { data: sessionData } = await supabase.auth.getSession()
-  const token = sessionData.session?.access_token || import.meta.env.VITE_SUPABASE_ANON_KEY || ''
+  const s: any = (sessionData as any)?.data?.session
+  const sessionValid = !s ? false : (typeof s.expires_at !== 'number' || s.expires_at * 1000 > Date.now() + 30_000)
+  if (s && !sessionValid && typeof (supabase.auth as any).signOut === 'function') {
+    void supabase.auth.signOut({ scope: 'local' }).catch(() => {})
+  }
+  const token = sessionValid ? s.access_token : import.meta.env.VITE_SUPABASE_ANON_KEY || ''
   if (!token) throw new Error('no auth token')
 
   const url = `${import.meta.env.VITE_SUPABASE_URL || 'https://ivkdfognyiwjcmrhcnwz.supabase.co'}/functions/v1/ai-proxy`
