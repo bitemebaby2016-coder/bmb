@@ -31,6 +31,9 @@ export const ADMIN_NAV_ITEMS: AdminNavItem[] = [
   { to: '/admin/media', label: 'Media', icon: '\uD83D\uDDBC\uFE0F' },
   { to: '/admin/settings', label: 'Settings', icon: '\u2699\uFE0F' },
   { to: '/admin/mascot', label: 'Mascot', icon: '\uD83E\uDD16' },
+  // TEN-06: White-label control plane entries
+  { to: '/admin/tenants', label: 'Tenants', icon: '\uD83C\uDFE2' },
+  { to: '/admin/brands', label: 'Brands', icon: '\uD83C\uDFF3\uFE0F' },
   { to: '/admin/control', label: 'Control', icon: '\uD83D\uDED4\uFE0F' },
 ]
 

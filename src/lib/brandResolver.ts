@@ -1,4 +1,4 @@
-
+﻿
 
 // ============================================
 // Bite Me Baby — Brand Resolver (TEN-05: Customer/Public Routing Foundation)
@@ -33,7 +33,7 @@ export type ResolvedBrandResult = {
     updated_at: string
   } | null
   /** Fallback path: how we arrived at this brand */
-  source: 'url-param' | 'tenant-default' | 'first-active' | 'fallback'
+  source: 'url-param' | 'tenant-default' | 'first-active' | 'global-fallback' | 'fallback'
 }
 
 /** Resolve brand by slug — returns only active+published brands */
@@ -77,25 +77,29 @@ export async function resolveDefaultBrand(tenantId: string): Promise<ResolvedBra
   }
 }
 
-/** Resolve fallback: first active published brand for a tenant */
-export async function resolveFirstActiveBrand(tenantId: string): Promise<ResolvedBrandResult | null> {
-  const { data, error } = await supabase
-    .from('brands')
-    .select('*')
-    .eq('tenant_id', tenantId)
+/** Resolve first active published brand (optionally scoped to tenant, or global if tenant is null) */
+export async function resolveFirstActiveBrand(tenantId: string | null): Promise<ResolvedBrandResult | null> {
+  let query = supabase.from('brands').select('*')
     .eq('is_published', true)
     .eq('status', 'active')
     .order('is_default', { ascending: false })
     .limit(1)
-    .maybeSingle()
-
+  
+  if (tenantId) {
+    query = query.eq('tenant_id', tenantId)
+  } else {
+    // Global fallback: first active published brand across ALL tenants
+    query = query.order('created_at', { ascending: true }).limit(1)
+  }
+  
+  const { data, error } = await query.maybeSingle()
   if (error || !data) return null
   return {
     slug: data.slug,
     brand_id: data.id,
     tenant_id: data.tenant_id!,
     brand: data as any,
-    source: 'first-active'
+    source: tenantId ? 'first-active' : 'global-fallback'
   }
 }
 
@@ -105,7 +109,7 @@ export async function resolveFirstActiveBrand(tenantId: string): Promise<Resolve
  * 1. ?brand=<slug> → direct lookup
  * 2. Default brand for resolved tenant → via tenants.default_brand_id
  * 3. First active brand for tenant → fallback
- * 4. Global fallback → first active brand across all tenants
+ * 4. Global fallback → first active brand across all tenants (TEN-06: uses resolvedBrandStore)
  */
 export interface UrlParamContext {
   brandSlug?: string
@@ -124,7 +128,6 @@ export async function resolveBrand(opts: ResolveOptions): Promise<ResolvedBrandR
   if (opts.urlParams?.brandSlug && opts.urlParams.brandSlug.trim()) {
     const result = await resolveBrandBySlug(opts.urlParams!.brandSlug)
     if (result) return result
-    // Invalid/inactive slug → fall through
     console.warn('[BrandResolver] Brand not found or not active:', opts.urlParams?.brandSlug)
   }
 
@@ -140,17 +143,16 @@ export async function resolveBrand(opts: ResolveOptions): Promise<ResolvedBrandR
     if (result) return result
   }
 
-  // 4. Global fallback — first active published brand (single-tenant BMB)
-  const globalFallback = await resolveFirstActiveBrand('tenant-bmb-001')
+  // 4. Global fallback — use TEN-06 adminTenantContext if available, otherwise first active published brand
+  const globalFallback = await resolveFirstActiveBrand(null)
   if (globalFallback) return globalFallback
 
-  // 5. Ultimate fallback — cannot happen in normal operation
-  // But if somehow no brands exist, return fallback marker
+  // 5. Ultimate fallback
   console.error('[BrandResolver] No active brands found! Returning fallback.')
   return {
     slug: 'unknown',
     brand_id: '',
-    tenant_id: 'tenant-bmb-001',
+    tenant_id: 'tenant-bmb-001', // Last resort — should never happen in normal operation
     brand: null,
     source: 'fallback'
   }

@@ -1,19 +1,21 @@
-import { Routes, Route, Navigate } from 'react-router-dom'
+﻿import { Routes, Route, Navigate } from 'react-router-dom'
 import { HelmetProvider } from 'react-helmet-async'
 import { lazy, Suspense, useEffect, useState } from 'react'
 import { useAuthStore, fetchProfileRole } from './store/authStore'
 import { Layout } from './components/layout/Layout'
 import { ErrorBoundary } from './components/ErrorBoundary'
 import { AdminNav } from './components/admin/AdminNav'
-// Bite / AI accessibility lives in BottomNav ('ไบต์' → /ai-chat) + BiteHero quick actions (UI v5)
+// Bite / AI accessibility lives in BottomNav ('à¹„à¸šà¸•à¹Œ' â†’ /ai-chat) + BiteHero quick actions (UI v5)
 import { SeoHelmet } from './components/SeoHelmet'
 import { getHomeMeta, getMenuMeta, getCartMeta, getCheckoutMeta, getOrderTrackMeta, getAboutMeta, getFaqMeta, getBlogMeta, getContactMeta, getPrivacyMeta, getTermsMeta, getPromotionsMeta, getRewardsMeta, getVoteMeta, getRandomMenuMeta, getShareMeta, getViralMeta, getProfileMeta, getAdminMeta, getLoginMeta } from './lib/seo'
 import { BrandProvider } from './components/BrandProvider'
+import { useAdminTenantContextStore } from './lib/adminTenantContext'
+import { listTenants } from './lib/adminTenantApi'
 
-// Core page (must load immediately — it is the LCP page)
+// Core page (must load immediately â€” it is the LCP page)
 import { HomePage } from './pages/HomePage'
 
-// ⚡ PERF (2026-09-17): all non-home pages are now code-split (React.lazy) to keep
+// âš¡ PERF (2026-09-17): all non-home pages are now code-split (React.lazy) to keep
 // the initial JS bundle small. bcryptjs is also a dynamic import now (see bmbStorage).
 const MenuPage = lazy(() => import('./pages/MenuPage').then(m => ({ default: m.MenuPage })))
 const CartPage = lazy(() => import('./pages/CartPage').then(m => ({ default: m.CartPage })))
@@ -44,6 +46,7 @@ const DeliveryManagement = lazy(() => import('./pages/admin/DeliveryManagement')
 const RouteOptimizationPage = lazy(() => import('./pages/admin/RouteOptimizationPage').then(m => ({ default: m.RouteOptimizationPage })))
 const AdminPromotions = lazy(() => import('./pages/admin/AdminPromotions').then(m => ({ default: m.AdminPromotions })))
 const AdminBrands = lazy(() => import('./pages/admin/AdminBrands').then(m => ({ default: m.AdminBrands })))
+const AdminTenants = lazy(() => import('./pages/admin/AdminTenants').then(m => ({ default: m.AdminTenants })))
 const AdminRounds = lazy(() => import('./pages/admin/AdminRounds').then(m => ({ default: m.AdminRounds })))
 const AdminCustomers = lazy(() => import('./pages/admin/AdminCustomers').then(m => ({ default: m.AdminCustomers })))
 const AdminSettings = lazy(() => import('./pages/admin/AdminSettings').then(m => ({ default: m.AdminSettings })))
@@ -80,8 +83,8 @@ function LoadingSpinner() {
   )
 }
 
-// F-02 FIX (Wave 1): ProtectedRoute รอ session restore (isInitializing) ก่อนตัดสิน
-// — reload ต้องไม่พาผู้ใช้ไป /login ขณะ Supabase กำลัง restore session
+// F-02 FIX (Wave 1): ProtectedRoute à¸£à¸­ session restore (isInitializing) à¸à¹ˆà¸­à¸™à¸•à¸±à¸”à¸ªà¸´à¸™
+// â€” reload à¸•à¹‰à¸­à¸‡à¹„à¸¡à¹ˆà¸žà¸²à¸œà¸¹à¹‰à¹ƒà¸Šà¹‰à¹„à¸› /login à¸‚à¸“à¸° Supabase à¸à¸³à¸¥à¸±à¸‡ restore session
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
   const isInitializing = useAuthStore((s) => s.isInitializing)
@@ -91,9 +94,9 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 }
 
 
-// P0-3 FIX: AdminRoute ตรวจ role จาก DB (profiles) ผ่าน RLS
-// F-02 FIX (Wave 1): รอ isInitializing ก่อน — reload/deep-link /admin/* ต้องคง
-// session จาก Supabase Auth (persistSession) ไม่ redirect ไป /login ระหว่าง restore
+// P0-3 FIX: AdminRoute à¸•à¸£à¸§à¸ˆ role à¸ˆà¸²à¸ DB (profiles) à¸œà¹ˆà¸²à¸™ RLS
+// F-02 FIX (Wave 1): à¸£à¸­ isInitializing à¸à¹ˆà¸­à¸™ â€” reload/deep-link /admin/* à¸•à¹‰à¸­à¸‡à¸„à¸‡
+// session à¸ˆà¸²à¸ Supabase Auth (persistSession) à¹„à¸¡à¹ˆ redirect à¹„à¸› /login à¸£à¸°à¸«à¸§à¹ˆà¸²à¸‡ restore
 function AdminRoute({ children }: { children: React.ReactNode }) {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
   const isInitializing = useAuthStore((s) => s.isInitializing)
@@ -125,7 +128,7 @@ export default function App() {
     <BrandProvider>
     <HelmetProvider>
       <ErrorBoundary>
-        {/* SEO Helmet — per-page meta tags */}
+        {/* SEO Helmet â€” per-page meta tags */}
         <Routes>
         <Route path="/" element={<SeoHelmet seo={getHomeMeta()} />} />
         <Route path="/menu" element={<SeoHelmet seo={getMenuMeta()} />} />
@@ -152,7 +155,7 @@ export default function App() {
       </Routes>
       
       <Routes>
-        {/* Public Routes — Home eager (LCP); the rest Suspense-wrapped lazy chunks */}
+        {/* Public Routes â€” Home eager (LCP); the rest Suspense-wrapped lazy chunks */}
         <Route path="/" element={<Layout><HomePage /></Layout>} />
         <Route path="/login" element={<Suspense fallback={<LoadingSpinner />}><Layout hideBottomNav={true}><LoginPage /></Layout></Suspense>} />
         <Route path="/register" element={<Suspense fallback={<LoadingSpinner />}><Layout hideBottomNav={true}><RegisterPage /></Layout></Suspense>} />
@@ -161,7 +164,7 @@ export default function App() {
         <Route path="/checkout" element={<Suspense fallback={<LoadingSpinner />}><Layout><CheckoutPage /></Layout></Suspense>} />
         <Route path="/track/:orderNumber" element={<Suspense fallback={<LoadingSpinner />}><Layout><OrderTrackPage /></Layout></Suspense>} />
         <Route path="/orders" element={<Suspense fallback={<LoadingSpinner />}><Layout><OrdersPage /></Layout></Suspense>} />
-        {/* Phase 3B: legacy /profile/orders link — canonical history lives at /orders */}
+        {/* Phase 3B: legacy /profile/orders link â€” canonical history lives at /orders */}
         <Route path="/profile/orders" element={<Navigate to="/orders" replace />} />
         <Route path="/payment/:orderNumber" element={<Suspense fallback={<LoadingSpinner />}><Layout><PaymentConfirmationPage /></Layout></Suspense>} />
         <Route path="/promotions" element={<Suspense fallback={<LoadingSpinner />}><Layout><PromotionsPage /></Layout></Suspense>} />
@@ -171,7 +174,7 @@ export default function App() {
         <Route path="/random-menu" element={<Suspense fallback={<LoadingSpinner />}><Layout><RandomMenuPage /></Layout></Suspense>} />
         <Route path="/share" element={<Suspense fallback={<LoadingSpinner />}><Layout><SharePage /></Layout></Suspense>} />
         
-        {/* Info Pages (SEO/GEO/AEO) — Lazy Loaded */}
+        {/* Info Pages (SEO/GEO/AEO) â€” Lazy Loaded */}
         <Route path="/about" element={<Suspense fallback={<LoadingSpinner />}><Layout><AboutPage /></Layout></Suspense>} />
         <Route path="/faq" element={<Suspense fallback={<LoadingSpinner />}><Layout><FaqPage /></Layout></Suspense>} />
         <Route path="/blog" element={<Suspense fallback={<LoadingSpinner />}><Layout><BlogPage /></Layout></Suspense>} />
@@ -179,21 +182,21 @@ export default function App() {
         <Route path="/privacy" element={<Suspense fallback={<LoadingSpinner />}><Layout><PrivacyPage /></Layout></Suspense>} />
         <Route path="/terms" element={<Suspense fallback={<LoadingSpinner />}><Layout><TermsPage /></Layout></Suspense>} />
         
-        {/* Protected Routes — Lazy Loaded */}
+        {/* Protected Routes â€” Lazy Loaded */}
         <Route path="/profile" element={<Suspense fallback={<LoadingSpinner />}><ProtectedRoute><Layout><ProfilePage /></Layout></ProtectedRoute></Suspense>} />
         <Route path="/notifications" element={<Suspense fallback={<LoadingSpinner />}><ProtectedRoute><Layout><NotificationCenterPage /></Layout></ProtectedRoute></Suspense>} />
         <Route path="/rewards" element={<Suspense fallback={<LoadingSpinner />}><ProtectedRoute><Layout><RewardsPage /></Layout></ProtectedRoute></Suspense>} />
         <Route path="/viral" element={<Suspense fallback={<LoadingSpinner />}><ProtectedRoute><Layout><ViralPage /></Layout></ProtectedRoute></Suspense>} />
         
-        {/* AI Routes — Lazy Loaded */}
+        {/* AI Routes â€” Lazy Loaded */}
         <Route path="/ai-chat" element={<Suspense fallback={<LoadingSpinner />}><ProtectedRoute><Layout><AiChatPage /></Layout></ProtectedRoute></Suspense>} />
         <Route path="/voice-demo" element={<Suspense fallback={<LoadingSpinner />}><ProtectedRoute><Layout><VoiceDemoPage /></Layout></ProtectedRoute></Suspense>} />
         
-        {/* Ops Routes — Rider PWA (public demo) + Admin Control (admin-only) */}
+        {/* Ops Routes â€” Rider PWA (public demo) + Admin Control (admin-only) */}
         <Route path="/rider" element={<Suspense fallback={<LoadingSpinner />}><Layout hideBottomNav><RiderPwaPage /></Layout></Suspense>} />
         <Route path="/admin/control" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminNav><AdminControlPage /></AdminNav></Layout></AdminRoute></Suspense>} />
         
-        {/* Admin Routes — Lazy Loaded (AdminNav = persistent admin sidebar across every /admin page) */}
+        {/* Admin Routes â€” Lazy Loaded (AdminNav = persistent admin sidebar across every /admin page) */}
         <Route path="/admin" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminNav><AdminDashboard /></AdminNav></Layout></AdminRoute></Suspense>} />
         <Route path="/admin/inventory" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminNav><InventoryPage /></AdminNav></Layout></AdminRoute></Suspense>} />
         <Route path="/admin/orders" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminNav><AdminOrders /></AdminNav></Layout></AdminRoute></Suspense>} />
@@ -217,13 +220,19 @@ export default function App() {
         {/* TEN-05: Brand Management */}
         <Route path="/admin/brands" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminNav><AdminBrands /></AdminNav></Layout></AdminRoute></Suspense>} />
         
+        {/* TEN-06: Tenant Management */}
+        <Route path="/admin/tenants" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminNav><AdminTenants /></AdminNav></Layout></AdminRoute></Suspense>} />
+        
         {/* Catch all */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
       
-      {/* Bite / AI entry moved to BottomNav ('ไบต์') + BiteHero quick actions (UI v5) */}
+      {/* Bite / AI entry moved to BottomNav ('à¹„à¸šà¸•à¹Œ') + BiteHero quick actions (UI v5) */}
     </ErrorBoundary>
     </HelmetProvider>
     </BrandProvider>
   )
 }
+
+
+

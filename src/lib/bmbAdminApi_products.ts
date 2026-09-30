@@ -1,12 +1,13 @@
-// ============================================
-// Bite Me Baby Admin API - Products & Categories
-// ✅ v3.1: Using Supabase (replaces localStorage)
+﻿// ============================================
+// Bite Me Baby Admin API - Products & Categories (TEN-06: Tenant-scoped via adminTenantContext)
 // TEN-05: Catalog queries are tenant-scoped via brandContextStore
+// TEN-06: Now uses adminTenantContext for active tenant boundary enforcement
 // ============================================
 
 import { supabase } from './supabase'
 import type { Product, ProductCategory, ProductAddon, RoundPeriod, DeliveryRound, MenuSection } from '@/types'
 import { useBrandContextStore } from '@/store/resolvedBrandStore'
+import { useAdminTenantContextStore } from '@/lib/adminTenantContext'
 
 
 /** JSON shape stored in products.addons (no product_id inside the JSON array). */
@@ -32,22 +33,24 @@ export interface ProductForm {
 }
 
 // ============================================
-// Products API — Supabase-backed + TEN-05 tenant-scoped
+// Products API â€” Supabase-backed + TEN-06 tenant-scoped
 // ============================================
 
-/** Get products with optional tenant filter (TEN-05: auto-scope from resolved brand context) */
+/** Get products with optional tenant filter (TEN-06: auto-scope from adminTenantContext or brand context) */
 export async function getProducts(tenantHint?: string): Promise<Product[]> {
+  // TEN-06: Prefer explicit adminTenantContext activeTenantId
+  let effectiveTenant = tenantHint || useAdminTenantContextStore.getState().activeTenantId
+  if (!effectiveTenant) {
+    effectiveTenant = (useBrandContextStore.getState().resolved?.tenant_id as string | null) || null
+  }
+  
   let query = supabase.from('products').select('*').order('sort_order', { ascending: true })
   
-  // TEN-05: Auto-scope catalog to resolved brand's tenant if no hint provided
-  if (!tenantHint) {
-    const currentTenant = useBrandContextStore.getState().resolved?.tenant_id
-    if (currentTenant && currentTenant !== 'tenant-bmb-001') {
-      query = query.eq('tenant_id', currentTenant)
-    }
-  } else if (tenantHint !== 'all') {
-    // Explicit admin/admin-side query with tenant scope
-    query = query.eq('tenant_id', tenantHint)
+  if (effectiveTenant) {
+    query = query.eq('tenant_id', effectiveTenant)
+  } else {
+    // No tenant resolved â†’ show all (fallback for unauthenticated / bootstrapping)
+    // Will be RLS-enforced by DB policies anyway
   }
   
   const { data, error } = await query
@@ -56,8 +59,18 @@ export async function getProducts(tenantHint?: string): Promise<Product[]> {
 }
 
 export async function getProductsAdmin(): Promise<Product[]> {
-  // Admin sees ALL products (admin operates globally within their tenant scope)
-  const { data, error } = await supabase.from('products').select('*').order('sort_order', { ascending: true })
+  // TEN-06: Platform admin sees ALL products; tenant admin only sees own tenant's
+  const ctx = useAdminTenantContextStore.getState()
+  const isPlatform = ctx.isAdminScopePlatform
+  
+  let query = supabase.from('products').select('*').order('sort_order', { ascending: true })
+  
+  if (!isPlatform && ctx.activeTenantId) {
+    query = query.eq('tenant_id', ctx.activeTenantId)
+  }
+  // If platform admin with no activeTenant selected â†’ show all (RLS will enforce)
+  
+  const { data, error } = await query
   if (error) { console.error('[getProductsAdmin] Error:', error); return [] }
   return (data || []) as Product[]
 }
@@ -92,7 +105,7 @@ export async function getFeaturedProducts(): Promise<Product[]> {
 export async function createProduct(data: ProductForm): Promise<Product | null> {
   const productData = {
     // Unique even for rapid consecutive creations (Date.now() alone can
-    // collide within the same millisecond → duplicate TEXT PK error).
+    // collide within the same millisecond â†’ duplicate TEXT PK error).
     id: data.id || `prod-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
     name: data.name, description: data.description, price: data.price,
     category_id: data.category_id, image_url: data.image_url,
@@ -124,7 +137,7 @@ export async function deleteProduct(id: string): Promise<boolean> {
 }
 
 // ============================================
-// Delivery Rounds API — Supabase-backed (v3.1+)
+// Delivery Rounds API â€” Supabase-backed (v3.1+)
 // ============================================
 
 export interface DeliveryRoundForm {
@@ -167,7 +180,7 @@ export async function closeDeliveryRound(id: string): Promise<DeliveryRound | nu
 }
 
 // ============================================
-// Categories API — Supabase-backed
+// Categories API â€” Supabase-backed
 // ============================================
 
 export interface CategoryForm {
@@ -183,7 +196,7 @@ export async function getCategories(): Promise<ProductCategory[]> {
   // TEN-05: Tenant-scope via resolved brand context
   const currentTenant = useBrandContextStore.getState().resolved?.tenant_id
   let query = supabase.from('product_categories').select('*').eq('is_active', true).order('sort_order', { ascending: true })
-  if (currentTenant && currentTenant !== 'tenant-bmb-001') {
+  if (currentTenant) {
     query = query.eq('tenant_id', currentTenant)
   }
   const { data, error } = await query
@@ -216,8 +229,8 @@ export async function deleteCategory(id: string): Promise<boolean> {
 }
 
 // ============================================
-// Sections (migration 055 — CAT-01: Menu → Section → Category → Product)
-// Tenant-owned catalog (TEN-D01=A) — section is a real catalog entity.
+// Sections (migration 055 â€” CAT-01: Menu â†’ Section â†’ Category â†’ Product)
+// Tenant-owned catalog (TEN-D01=A) â€” section is a real catalog entity.
 // ============================================
 
 export interface SectionForm {
@@ -233,7 +246,7 @@ export async function getSections(): Promise<MenuSection[]> {
   // TEN-05: Tenant-scope via resolved brand context
   const currentTenant = useBrandContextStore.getState().resolved?.tenant_id
   let query = supabase.from('menu_sections').select('*').eq('is_active', true).order('sort_order', { ascending: true })
-  if (currentTenant && currentTenant !== 'tenant-bmb-001') {
+  if (currentTenant) {
     query = query.eq('tenant_id', currentTenant)
   }
   const { data, error } = await query
@@ -263,7 +276,7 @@ export async function updateSection(id: string, data: Partial<SectionForm>): Pro
   return result as MenuSection
 }
 
-// Archive (CAT-D04=B): deactivate — NOT a hard delete.
+// Archive (CAT-D04=B): deactivate â€” NOT a hard delete.
 export async function archiveSection(id: string): Promise<MenuSection | null> {
   return updateSection(id, { is_active: false })
 }
@@ -273,8 +286,8 @@ export async function restoreSection(id: string): Promise<MenuSection | null> {
 }
 
 // ============================================
-// Soft archive (migration 055 — CAT-D04=B)
-// archive = archived:true + is_available:false → RLS hides from customers,
+// Soft archive (migration 055 â€” CAT-D04=B)
+// archive = archived:true + is_available:false â†’ RLS hides from customers,
 // server gate (trg_catalog_visibility_gate) rejects new orders.
 // restore = archived:false (availability stays OFF; admin re-enables explicitly).
 // ============================================
@@ -302,3 +315,4 @@ export async function restoreCategory(id: string): Promise<ProductCategory | nul
   if (error) { console.error('[restoreCategory] Error:', error); return null }
   return data as ProductCategory
 }
+
