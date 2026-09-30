@@ -1,4 +1,4 @@
--- ============================================
+﻿-- ============================================
 -- Bite Me Baby Migration 089: TEN-07 create_order_with_items p_branch_id Extension
 -- Date: 2026-09-30 · Baseline: m025 deployed (original function)
 -- Scope: Add optional p_branch_id parameter for branch-level order routing
@@ -9,6 +9,29 @@
 
 BEGIN;
 
+-- Defensive: drop ALL existing create_order_with_items signatures via DO block
+DO $$
+DECLARE
+  r RECORD;
+BEGIN
+  FOR r IN (SELECT proname, proargtypes FROM pg_proc WHERE proname = 'create_order_with_items' AND pronamespace = 'public'::regnamespace)
+  LOOP
+    IF r.proargtypes IS NOT NULL AND array_length(r.proargtypes, 1) > 0 THEN
+      EXECUTE format(
+        'DROP FUNCTION IF EXISTS public.%I(%s)',
+        r.proname,
+        (SELECT string_agg(oid::regtype::text, ', ') FROM unnest(r.proargtypes) AS t(oid))
+      );
+    ELSE
+      EXECUTE format('DROP FUNCTION IF EXISTS public.%I()', r.proname);
+    END IF;
+  END LOOP;
+END $$;
+
+-- Also drop named-arg overloads explicitly known to exist
+DROP FUNCTION IF EXISTS public.create_order_with_items(
+  jsonb, text, text, text, numeric, numeric, text, text, text, text, text, numeric
+);
 DROP FUNCTION IF EXISTS public.create_order_with_items(
   jsonb, text, text, text, numeric, numeric, text, text, text, text, text, numeric, text, date
 );

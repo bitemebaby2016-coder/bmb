@@ -69,7 +69,7 @@ CREATE POLICY drivers_branch_admin_manage ON public.drivers
 DROP POLICY IF EXISTS drivers_self_read ON public.drivers;
 CREATE POLICY drivers_self_read ON public.drivers
   FOR SELECT TO authenticated USING (
-    id = (SELECT driver_id FROM public.driver_profiles WHERE user_id = auth.uid() LIMIT 1)
+    user_id = auth.uid()
     OR public.is_branch_admin(home_branch_id)
   );
 
@@ -81,7 +81,7 @@ DROP POLICY IF EXISTS assignments_driver_read ON public.delivery_assignments;
 CREATE POLICY assignments_driver_read ON public.delivery_assignments
   FOR SELECT TO authenticated USING (
     public.is_branch_admin(branch_id)
-    OR driver_id = (SELECT driver_id FROM public.driver_profiles WHERE user_id = auth.uid() LIMIT 1)
+    OR driver_id IN (SELECT id FROM public.drivers WHERE user_id = auth.uid())
   );
 
 -- 7. business_settings RLS: branch override + tenant default
