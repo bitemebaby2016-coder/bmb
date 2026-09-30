@@ -81,13 +81,17 @@ function LoadingSpinner() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 8, justifyContent: 'center', alignItems: 'center', minHeight: '200px' }}>
       <img
-        src="/mascot_Bite_Waiting.webp"
+        src="/mascot_Bite_Main.webp"
         alt="น้อง Bite กำลังโหลด"
         width={96}
         height={96}
-        style={{ borderRadius: '50%', objectFit: 'cover' }}
+        style={{ borderRadius: '50%', objectFit: 'cover', background: '#FFF7ED' }}
         className="animate-bounce"
-        onError={(e) => { (e.currentTarget as HTMLImageElement).src = '/bite-mascot.svg' }}
+        onError={(e) => {
+          const el = e.currentTarget as HTMLImageElement
+          if (!el.dataset.fbk) { el.dataset.fbk = '1'; el.src = '/mascot_Bite_Welcome.webp' }
+          else if (el.dataset.fbk === '1') { el.dataset.fbk = '2'; el.src = '/bite-mascot.svg' }
+        }}
       />
       <span className="text-sm text-brand-muted">น้อง Bite กำลังจัดเตรียมของ…</span>
     </div>

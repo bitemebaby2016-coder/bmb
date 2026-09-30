@@ -87,7 +87,16 @@ export async function getVerifiedReviewsForProducts(productIds: string[], limit 
   const results: VerifiedCustomerReview[] = []
   for (const pid of productIds.slice(0, 20)) {
     const res = await supabase.from('reviews').select('*').eq('product_id', pid).order('rating', { ascending: false }).limit(10)
-    if (!res.error && res.data) results.push(...(res.data as VerifiedCustomerReview[]))
+    if (res.error) {
+      // AI-FIX: 401/403 = ยังไม่มีสิทธิ์อ่าน (grant/policy ยังไม่ apply) — หยุดทันที
+      // ไม่สแปมยิงทีละสินค้าจน Console เต็ม error
+      if (res.error.code === '401' || res.error.code === '403' || res.error.code === 'PGRST301' || res.error.code === '42501') {
+        console.warn('[getVerifiedReviewsForProducts] reviews read forbidden — skipping remaining lookups')
+        break
+      }
+      continue
+    }
+    if (res.data) results.push(...(res.data as VerifiedCustomerReview[]))
   }
   return results.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()).slice(0, limit)
 }

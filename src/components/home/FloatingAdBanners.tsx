@@ -70,8 +70,8 @@ export function FloatingAdBanners({ promos }: { promos: FloatingBannerPromo[] })
             )}
           </div>
           <div className="flad-body">
-            <div className="flad-title">{promo.title}</div>
-            {promo.description && <p className="flad-desc">{promo.description}</p>}
+            <div className="flad-title">{promo.title?.trim() || '🎉 โปรโมชั่นพิเศษจาก Bite Me Baby'}</div>
+            {promo.description?.trim() && <p className="flad-desc">{promo.description}</p>}
             <div className="flad-actions">
               {promo.coupon && (
                 <span className="flad-coupon" data-testid="floating-ad-coupon">Code: {promo.coupon}</span>
