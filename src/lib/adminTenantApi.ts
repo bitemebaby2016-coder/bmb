@@ -68,10 +68,28 @@ export async function updateTenant(
   }
 }
 
+/** Set default brand for tenant */
+export async function setDefaultBrand(tenantId: string, brandId: string): Promise<{ ok: boolean; error?: string }> {
+  try {
+    const { error } = await supabase.rpc('tenant_set_default_brand', {
+      p_tenant_id: tenantId,
+      p_brand_id: brandId,
+    })
+    if (error) throw error
+    return { ok: true }
+  } catch (err: any) {
+    const msg = err?.message || 'Failed to set default brand'
+    console.error('[setDefaultBrand] Error:', msg)
+    // Hide NOT_FOUND / CONFLICT from UI — treat as user cancelling
+    if (err?.message?.includes('NOT_FOUND') || err?.message?.includes('CONFLICT')) return { ok: false, error: 'Invalid brand or tenant' }
+    return { ok: false, error: msg }
+  }
+}
+
 /** Set tenant status (quick toggle: active/inactive/suspended) */
 export async function setTenantStatus(tenantId: string, status: 'active' | 'inactive' | 'suspended'): Promise<{ ok: boolean; error?: string }> {
   try {
-    const { data, error } = await supabase.rpc('tenant_set_status', {
+    const { error } = await supabase.rpc('tenant_set_status', {
       p_tenant_id: tenantId,
       p_status: status,
     })

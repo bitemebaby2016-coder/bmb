@@ -7,10 +7,18 @@ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
 DECLARE v_role TEXT; v_is_platform BOOLEAN; v_user_tenant TEXT; v_norm_slug TEXT; v_exists INT;
 BEGIN
   IF auth.uid() IS NULL THEN RAISE EXCEPTION 'UNAUTHENTICATED'; END IF;
-  SELECT p.role, COALESCE(p.tenant_id, 'tenant-bmb-001') INTO v_role, v_user_tenant FROM public.profiles p WHERE p.id = auth.uid();
+
+  -- Fetch role & tenant from profiles safely
+  SELECT role, COALESCE(tenant_id, 'tenant-bmb-001') INTO v_role, v_user_tenant
+    FROM public.profiles WHERE id = auth.uid() LIMIT 1;
   IF v_role IS NULL THEN RAISE EXCEPTION 'FORBIDDEN'; END IF;
-  SELECT COALESCE(is_platform, false) INTO v_is_platform FROM public.profiles WHERE id = auth.uid();
+
+  -- Check platform admin flag
+  SELECT COALESCE(is_platform, false) INTO v_is_platform
+    FROM public.profiles WHERE id = auth.uid() LIMIT 1;
+
   IF NOT v_is_platform AND v_user_tenant != p_tenant_id THEN RAISE EXCEPTION 'FORBIDDEN'; END IF;
+
   IF p_slug IS NOT NULL AND TRIM(p_slug) != '' THEN
     v_norm_slug := LOWER(TRIM(p_slug));
     v_norm_slug := REGEXP_REPLACE(v_norm_slug, '[^a-z0-9]+', '-', 'g');
@@ -19,12 +27,14 @@ BEGIN
     SELECT count(*) INTO v_exists FROM public.tenants WHERE slug = v_norm_slug AND id != p_tenant_id;
     IF v_exists > 0 THEN RAISE EXCEPTION 'CONFLICT: Slug already in use.'; END IF;
   END IF;
+
   UPDATE public.tenants SET
     name = COALESCE(NULLIF(p_name, ''), name),
     slug = COALESCE(v_norm_slug, slug),
     status = COALESCE(NULLIF(p_status, ''), status),
     updated_at = NOW()
   WHERE id = p_tenant_id;
+
   RETURN QUERY SELECT id, name, slug, status, updated_at FROM public.tenants WHERE id = p_tenant_id;
 END; $$;
 REVOKE EXECUTE ON FUNCTION public.tenant_update_admin(text,text,text,text) FROM PUBLIC, anon;
@@ -34,13 +44,21 @@ GRANT EXECUTE ON FUNCTION public.tenant_update_admin(text,text,text,text) TO aut
 CREATE OR REPLACE FUNCTION public.tenant_set_status(p_tenant_id TEXT, p_status TEXT)
 RETURNS TABLE (id TEXT, status TEXT, updated_at TIMESTAMPTZ)
 LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
-DECLARE v_is_platform BOOLEAN; v_user_tenant TEXT;
+DECLARE v_role TEXT; v_is_platform BOOLEAN; v_user_tenant TEXT;
 BEGIN
   IF auth.uid() IS NULL THEN RAISE EXCEPTION 'UNAUTHENTICATED'; END IF;
-  SELECT p.role, COALESCE(p.tenant_id, 'tenant-bmb-001') INTO v_role, v_user_tenant FROM public.profiles p WHERE p.id = auth.uid();
-  SELECT COALESCE(is_platform, false) INTO v_is_platform FROM public.profiles WHERE id = auth.uid();
+
+  -- Fetch role & tenant from profiles safely (no ambiguous aliases)
+  SELECT role, COALESCE(tenant_id, 'tenant-bmb-001') INTO v_role, v_user_tenant
+    FROM public.profiles WHERE id = auth.uid() LIMIT 1;
+
+  -- Check platform admin flag
+  SELECT COALESCE(is_platform, false) INTO v_is_platform
+    FROM public.profiles WHERE id = auth.uid() LIMIT 1;
+
   IF p_status NOT IN ('active','inactive','suspended') THEN RAISE EXCEPTION 'BAD_REQUEST: Invalid status.'; END IF;
   IF NOT v_is_platform AND v_user_tenant != p_tenant_id THEN RAISE EXCEPTION 'FORBIDDEN'; END IF;
+
   UPDATE public.tenants SET status = p_status, updated_at = NOW() WHERE id = p_tenant_id;
   RETURN QUERY SELECT id, status, updated_at FROM public.tenants WHERE id = p_tenant_id;
 END; $$;
@@ -61,11 +79,33 @@ BEGIN;
 -- -------------------------------------------------------
 -- 1. REWRITE TENANTS RLS POLICIES
 -- -------------------------------------------------------
+-- NOTE: tenants table has no "tenant_id" column — it IS the root entity (id = self).
+-- We use explicit per-role policies instead of relying on is_tenant_admin() which
+-- ignores the parameter (it always maps to user's own tenant_id).
+
+-- Platform admin: can manage ALL tenants
 DROP POLICY IF EXISTS tenants_admin_manage ON public.tenants;
 CREATE POLICY tenants_platform_admin_manage ON public.tenants
   FOR ALL TO authenticated
-  USING (public.is_tenant_admin(tenant_id))
-  WITH CHECK (public.is_tenant_admin(tenant_id));
+  USING (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND is_platform = true))
+  WITH CHECK (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND is_platform = true));
+
+-- Tenant admin: can manage own tenant only
+DROP POLICY IF EXISTS tenants_tenant_admin_manage ON public.tenants;
+CREATE POLICY tenants_tenant_admin_manage ON public.tenants
+  FOR ALL TO authenticated
+  USING (
+    EXISTS (SELECT 1 FROM public.profiles p
+            WHERE p.id = auth.uid()
+              AND p.role IN ('admin', 'tenant_admin')
+              AND COALESCE(p.tenant_id, 'tenant-bmb-001') = tenants.id)
+  )
+  WITH CHECK (
+    EXISTS (SELECT 1 FROM public.profiles p
+            WHERE p.id = auth.uid()
+              AND p.role IN ('admin', 'tenant_admin')
+              AND COALESCE(p.tenant_id, 'tenant-bmb-001') = tenants.id)
+  );
 
 DROP POLICY IF EXISTS tenants_public_read ON public.tenants;
 CREATE POLICY tenants_public_read ON public.tenants
@@ -91,7 +131,7 @@ RETURNS TABLE (
 DECLARE v_role TEXT;
 BEGIN
   IF auth.uid() IS NULL THEN RAISE EXCEPTION 'UNAUTHENTICATED'; END IF;
-  SELECT role INTO v_role FROM public.profiles WHERE id = auth.uid();
+  SELECT role INTO v_role FROM public.profiles WHERE id = auth.uid() LIMIT 1;
   IF v_role NOT IN ('admin', 'tenant_admin') THEN RAISE EXCEPTION 'FORBIDDEN'; END IF;
   RETURN QUERY SELECT t.id, t.name, t.slug, t.status, t.created_at, t.updated_at
     FROM public.tenants t ORDER BY t.name;
@@ -109,11 +149,18 @@ RETURNS TABLE (
 DECLARE v_role TEXT; v_is_platform BOOLEAN; v_user_tenant TEXT;
 BEGIN
   IF auth.uid() IS NULL THEN RAISE EXCEPTION 'UNAUTHENTICATED'; END IF;
-  SELECT p.role, COALESCE(p.tenant_id, 'tenant-bmb-001') INTO v_role, v_user_tenant
-    FROM public.profiles p WHERE p.id = auth.uid();
+
+  -- Fetch role & tenant from profiles safely (no ambiguous aliases)
+  SELECT role, COALESCE(tenant_id, 'tenant-bmb-001') INTO v_role, v_user_tenant
+    FROM public.profiles WHERE id = auth.uid() LIMIT 1;
   IF v_role IS NULL THEN RAISE EXCEPTION 'FORBIDDEN'; END IF;
-  SELECT COALESCE(is_platform, false) INTO v_is_platform FROM public.profiles WHERE id = auth.uid();
+
+  -- Check platform admin flag
+  SELECT COALESCE(is_platform, false) INTO v_is_platform
+    FROM public.profiles WHERE id = auth.uid() LIMIT 1;
+
   IF NOT v_is_platform AND v_user_tenant != p_tenant_id THEN RAISE EXCEPTION 'FORBIDDEN'; END IF;
+
   RETURN QUERY SELECT t.id, t.name, t.slug, t.status, t.created_at, t.updated_at
     FROM public.tenants t WHERE t.id = p_tenant_id ORDER BY t.name;
 END; $$;
@@ -127,7 +174,7 @@ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
 DECLARE v_is_platform BOOLEAN; v_norm_slug TEXT; v_count INT;
 BEGIN
   IF auth.uid() IS NULL THEN RAISE EXCEPTION 'UNAUTHENTICATED'; END IF;
-  SELECT COALESCE(is_platform, false) INTO v_is_platform FROM public.profiles WHERE id = auth.uid();
+  SELECT COALESCE(is_platform, false) INTO v_is_platform FROM public.profiles WHERE id = auth.uid() LIMIT 1;
   IF NOT v_is_platform THEN RAISE EXCEPTION 'FORBIDDEN: Only platform admins can create tenants.'; END IF;
   IF TRIM(p_name) = '' OR TRIM(p_slug) = '' THEN RAISE EXCEPTION 'BAD_REQUEST: name and slug required.'; END IF;
   v_norm_slug := LOWER(TRIM(p_slug));
