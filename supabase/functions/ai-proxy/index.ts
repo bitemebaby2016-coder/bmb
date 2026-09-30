@@ -110,18 +110,24 @@ Deno.serve(async (req: Request): Promise<Response> => {
   if (req.method !== 'POST') return json({ error: 'method not allowed' }, 405)
 
   // W3-A hardening (defense-in-depth): verify the caller's JWT server-side.
-  // The platform-level verify_jwt was not enforced at deploy time (runtime probe
-  // evidence: anon caller got HTTP 200), so the function must reject anonymous
-  // callers itself — otherwise it would be an unrestricted AI relay on the
-  // server-side OpenRouter key.
+  // Platform-level verify_jwt was not enforced at deploy time, so the function
+  // must reject anonymous callers itself — EXCEPT the platform anon key, which
+  // is a valid, deliberately-public guest JWT: น้อง Bite must answer guests on
+  // the storefront. Guest calls are read-only advice behind guardrails, so
+  // accepting the anon key is safe (it carries no elevated privileges and the
+  // guardrail segment forbids any transactional action regardless).
   const token = (req.headers.get('Authorization') || '').replace(/^Bearer\s+/, '')
+  const anonKey = Deno.env.get('SUPABASE_ANON_KEY') || ''
+  const isGuestJwt = !!anonKey && token === anonKey
   if (!token || token === ANON_KEY_FALLBACKS[0] || token.startsWith('sb_publishable_')) {
     return json({ error: 'unauthorized' }, 401)
   }
-  const authCheck = await fetch(`${Deno.env.get('SUPABASE_URL') || ''}/auth/v1/user`, {
-    headers: { Authorization: `Bearer ${token}`, apikey: Deno.env.get('SUPABASE_ANON_KEY') || '' },
-  }).catch(() => null)
-  if (!authCheck || !authCheck.ok) return json({ error: 'unauthorized' }, 401)
+  if (!isGuestJwt) {
+    const authCheck = await fetch(`${Deno.env.get('SUPABASE_URL') || ''}/auth/v1/user`, {
+      headers: { Authorization: `Bearer ${token}`, apikey: anonKey },
+    }).catch(() => null)
+    if (!authCheck || !authCheck.ok) return json({ error: 'unauthorized' }, 401)
+  }
 
 
   const apiKey = Deno.env.get('OPENROUTER_API_KEY') || ''

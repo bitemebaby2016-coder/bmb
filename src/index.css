@@ -996,25 +996,33 @@ p { color: var(--color-brand-text-secondary); }
   flex-shrink: 0;
 }
 
-/* Floating Ad Banners — overlay stack (replaces the old inline home strip).
-   Promos flagged is_banner float in above the bottom nav; max 2 at once.
-   Customers dismiss each with ✕ (per-promo localStorage).
-   Positioned at bottom-left to avoid conflict with FloatingCart (bottom-right). */
-.flad-stack {
+/* Floating Ad Banners — CENTER POPUP MODAL (UI refactor).
+   Promos flagged is_banner appear as a centered dialog over a dimmed backdrop;
+   max 2 cards at once. Customers dismiss each with ✕ (per-promo localStorage).
+   Center placement guarantees zero overlap with BottomNav / mascot / cart. */
+.flad-overlay {
   position: fixed;
-  left: 12px;
-  /* AI-CLEANUP: raised above the BiteMascot button (bottom-left, z-[95]) so the
-     banner stack never overlaps the mascot tap target / speech bubble. */
-  bottom: 190px;
-  z-index: 90;
+  inset: 0;
+  z-index: 80; /* above BottomNav(50)/cart(71), below mascot(95) */
   display: flex;
-  flex-direction: column;
-  gap: 8px;
-  max-width: 420px;
+  align-items: center;
+  justify-content: center;
   pointer-events: none;
 }
-@media (max-width: 640px) {
-  .flad-stack { bottom: 168px; max-width: calc(100vw - 24px); }
+.flad-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(28, 25, 23, 0.45);
+  backdrop-filter: blur(2px);
+  pointer-events: auto;
+}
+.flad-stack {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: min(420px, calc(100vw - 32px));
+  pointer-events: none;
 }
 .flad-stack > .flad-card { pointer-events: auto; }
 .flad-card {

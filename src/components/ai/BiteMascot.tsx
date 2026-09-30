@@ -82,6 +82,10 @@ function playGreetingSound() {
   }
 }
 
+// AI-UI: one-time reset of saved mascot drag positions - the anchor side changed from
+// bottom-LEFT to bottom-RIGHT; stale left-anchored offsets would misplace the mascot.
+try { localStorage.removeItem('bmb_mascot_position') } catch { /* ignore */ }
+
 export function BiteMascot({ userName, activeSection = 'home' }: BiteMascotProps) {
   const { bubble, upsell, stage, greetingPlayed, chatOpen } = useBiteAIStore()
   const firstInteraction = useBiteAIStore((s) => s.firstInteraction)
@@ -89,8 +93,10 @@ export function BiteMascot({ userName, activeSection = 'home' }: BiteMascotProps
   const triggerMicroHook = useBiteAIStore((s) => s.triggerMicroHook)
   const openChat = useBiteAIStore((s) => s.openChat)
 
+  const cartCount = useCartStore((s) => s.items.length)
   const cartTotal = useCartStore((s) => s.cartTotal)
   const { delivery } = usePlatformConfig()
+
 
   const stallTimer = useRef<ReturnType<typeof setInterval> | null>(null)
   const [chatVisible, setChatVisible] = useState(false)
@@ -150,7 +156,15 @@ export function BiteMascot({ userName, activeSection = 'home' }: BiteMascotProps
 
   return (
     <>
-      <MascotWrapper position="bottom-left" className="z-[95]" ariaHidden={false}>
+      <MascotWrapper
+        position="bottom-right"
+        className="z-[95]"
+        ariaHidden={false}
+        // Single AI entry point: right:16px, bottom:84px above BottomNav —
+        // lifts to bottom:152px while the FloatingCart button occupies the
+        // 84px slot (cart visible only when items > 0), so they never overlap.
+        style={{ bottom: cartCount > 0 ? 152 : 84 }}
+      >
         <div className="relative flex flex-col items-end">
           {bubble && stage !== 'fullchat' && (
             <GlassCard className="px-3 py-1.5 text-xs animate-bounce mb-1 mr-4 max-w-[220px]">

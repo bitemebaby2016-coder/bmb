@@ -24,6 +24,7 @@
 - Client: `src/lib/aiService.ts` — `chatWithAI()` (blocking) / `chatWithAIStream()` (SSE, fallback อัตโนมัติเป็น blocking)
 - Context: `src/lib/ai/aiContextBuilder.ts` — Active Branch + Catalog (M092) + Delivery Rounds, in-memory cache TTL 12 นาที (`invalidateAiContextCache()` สำหรับ force refresh)
 - Guardrails: ฝังใน `ai-proxy` server-side (ห้ามสัญญา/แก้ราคา/สถานะออเดอร์ — read-only advice)
+- Guest access: `ai-proxy` ยอมรับ **anon key JWT** เป็น guest call (read-only advice เท่านั้น) — ลูกค้าที่ยังไม่ login ใช้แชท/เสียงได้ปกติ ไม่เกิด 401; logged-in users ใช้ session JWT (verified ผ่าน `/auth/v1/user`)
 
 ## 4. External Delivery Providers (สถานะจริง)
 - Adapters: `src/lib/providers/` + `externalProviders.ts` — foundation พร้อมแต่ **ยังไม่ active**

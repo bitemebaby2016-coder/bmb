@@ -76,9 +76,11 @@ async function streamCompletionOnce(
   onDelta: (text: string) => void,
   signal?: AbortSignal,
 ): Promise<string> {
+  // Guest-safe: use the user's JWT when logged in, otherwise the platform anon
+  // key (ai-proxy accepts the anon key as a valid guest JWT — read-only advice).
   const { data: sessionData } = await supabase.auth.getSession()
-  const token = sessionData.session?.access_token
-  if (!token) throw new Error('no auth session')
+  const token = sessionData.session?.access_token || import.meta.env.VITE_SUPABASE_ANON_KEY || ''
+  if (!token) throw new Error('no auth token')
 
   const url = `${import.meta.env.VITE_SUPABASE_URL || 'https://ivkdfognyiwjcmrhcnwz.supabase.co'}/functions/v1/ai-proxy`
   const res = await fetch(url, {

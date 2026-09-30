@@ -47,9 +47,12 @@ export function FloatingAdBanners({ promos }: { promos: FloatingBannerPromo[] })
   }
 
   return (
-    <div className="flad-stack" data-testid="floating-ad-banners" aria-label="โปรโมชั่น">
-      {visible.map((promo) => (
-        <div key={promo.id} className="flad-card" data-testid="floating-ad-banner">
+    <div className="flad-overlay" role="dialog" aria-modal="true" aria-label="โปรโมชั่น" data-testid="floating-ad-banners">
+      {/* Backdrop: dims the page so the promo never hides menu items */}
+      <div className="flad-backdrop" onClick={() => visible.forEach((p) => dismiss(p.id))} />
+      <div className="flad-stack">
+        {visible.map((promo) => (
+          <div key={promo.id} className="flad-card" data-testid="floating-ad-banner">
           <div className="flad-media">
             {promo.image ? (
               <img src={promo.image} alt="" loading="lazy" />
@@ -78,6 +81,7 @@ export function FloatingAdBanners({ promos }: { promos: FloatingBannerPromo[] })
           </button>
         </div>
       ))}
+      </div>
     </div>
   )
 }

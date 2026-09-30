@@ -56,6 +56,7 @@ npm run build        # exit 0 + PWA generated
 |---|---|
 | Deploy functions 401 Unauthorized | access token หมดอายุ → `supabase login` ใหม่ หรือ generate Access Token ใหม่ |
 | AI ตอบไม่รู้จักเมนูใหม่ | context cache 12 นาที — รอรีเฟรช หรือเรียก `invalidateAiContextCache()` |
+| AI แชท 401 (guest) | deploy `ai-proxy` ใหม่ — เวอร์ชันปัจจุบันยอมรับ anon-key JWT ของ guest แล้ว |
 | แชทไม่ stream (ตอบทีเดียวจบ) | Edge Function เวอร์ชันเก่า → deploy `ai-proxy` ใหม่ (ระบบจะ fallback เป็น blocking เอง) |
 | Stripe webhook 400 | เช็ค `STRIPE_WEBHOOK_SECRET` ตรง endpoint ฝั่ง Dashboard |
 | anon อ่านตารางไม่ได้ | เช็ค RLS grant (public_read) ตาม M088 / migrations |
