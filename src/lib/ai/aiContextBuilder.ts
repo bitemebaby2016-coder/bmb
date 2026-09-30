@@ -29,7 +29,31 @@ const fmtProducts = (rows: any[]): string[] =>
     `- ${p.name} ฿${Number(p.price).toFixed(0)} [${p.available_same_day ? 'SAME_DAY' : ''}${p.available_preorder ? ' PRE_ORDER' : ''}]${p.description ? ' — ' + p.description : ''}`
   )
 
-export async function buildAiStoreContext(): Promise<AiStoreContext> {
+// AI-OPT: In-memory context cache (TTL 12 min) — avoids re-querying Supabase
+// (branches + products + delivery_rounds) on every new chat message. The store
+// data changes rarely (menu edits, round seeding), so a short-TTL cache is safe
+// and callers can force a refresh via invalidateAiContextCache().
+const CONTEXT_TTL_MS = 12 * 60 * 1000
+let ctxCache: { at: number; value: AiStoreContext } | null = null
+
+export function invalidateAiContextCache(): void {
+  ctxCache = null
+}
+
+export function getAiContextCacheAgeMs(): number | null {
+  return ctxCache ? Date.now() - ctxCache.at : null
+}
+
+export async function buildAiStoreContext(forceRefresh = false): Promise<AiStoreContext> {
+  if (!forceRefresh && ctxCache && Date.now() - ctxCache.at < CONTEXT_TTL_MS) {
+    return ctxCache.value
+  }
+  const built = await buildAiStoreContextFresh()
+  ctxCache = { at: Date.now(), value: built }
+  return built
+}
+
+async function buildAiStoreContextFresh(): Promise<AiStoreContext> {
   // 1) Resolve branch: URL ?branch=<slug> first, else tenant default
   let branchId: string | null = null
   let branchName = 'BMB Central (สาขาหลัก)'

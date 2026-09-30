@@ -63,6 +63,95 @@ async function requestCompletion(messages: ChatMessage[], model: string): Promis
   return content
 }
 
+/**
+ * AI-OPT: streaming chat — calls the ai-proxy Edge Function with { stream: true }
+ * and delivers incremental token deltas to `onDelta` (live typing effect in the
+ * widget). Uses a direct fetch (not functions.invoke) because invoke buffers the
+ * whole body. Falls back to the non-streaming chatWithAI when SSE is unavailable
+ * (e.g. older Edge runtime or network error before the first delta).
+ */
+async function streamCompletionOnce(
+  messages: ChatMessage[],
+  model: string,
+  onDelta: (text: string) => void,
+  signal?: AbortSignal,
+): Promise<string> {
+  const { data: sessionData } = await supabase.auth.getSession()
+  const token = sessionData.session?.access_token
+  if (!token) throw new Error('no auth session')
+
+  const url = `${import.meta.env.VITE_SUPABASE_URL || 'https://ivkdfognyiwjcmrhcnwz.supabase.co'}/functions/v1/ai-proxy`
+  const res = await fetch(url, {
+    method: 'POST',
+    signal,
+    headers: {
+      Authorization: `Bearer ${token}`,
+      apikey: import.meta.env.VITE_SUPABASE_ANON_KEY || '',
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ messages: messages.slice(-11), model, maxTokens: 500, stream: true }),
+  })
+  const ctype = res.headers.get('content-type') || ''
+  if (!res.ok || !res.body || !ctype.includes('text/event-stream')) {
+    throw new Error(`stream unavailable (status ${res.status}, type ${ctype})`)
+  }
+
+  const reader = res.body.getReader()
+  const decoder = new TextDecoder()
+  let buffer = ''
+  let full = ''
+  for (;;) {
+    const { done, value } = await reader.read()
+    if (done) break
+    buffer += decoder.decode(value, { stream: true })
+    const events = buffer.split('\n\n')
+    buffer = events.pop() ?? ''
+    for (const ev of events) {
+      const line = ev.split('\n').find((l) => l.startsWith('data:'))
+      if (!line) continue
+      const data = line.slice(5).trim()
+      if (data === '[DONE]') continue
+      try {
+        const parsed = JSON.parse(data) as { t?: string }
+        if (parsed.t) { full += parsed.t; onDelta(parsed.t) }
+      } catch { /* partial event — skip */ }
+    }
+  }
+  if (!full) throw new Error('stream produced no content')
+  return full
+}
+
+export async function chatWithAIStream(
+  userMessage: string,
+  runtimeContext: string | undefined,
+  onDelta: (text: string) => void,
+): Promise<string> {
+  const messages = [...conversationHistory, { role: 'user' as const, content: userMessage }]
+  if (runtimeContext) {
+    const base = conversationHistory[0]?.content ?? ''
+    messages[0] = { role: 'system' as const, content: `${base}\n\n--- LIVE STORE CONTEXT (authoritative, use this over any prior knowledge) ---\n${runtimeContext}` }
+  }
+
+  try {
+    let aiResponse: string
+    try {
+      aiResponse = await streamCompletionOnce(messages, OPENROUTER_MODEL, onDelta)
+    } catch (primaryError) {
+      // Model A failed to stream → retry once with the fallback model.
+      console.error(`[Bite Me Baby] Stream with ${OPENROUTER_MODEL} failed, falling back to ${MODEL_A_FALLBACK}:`, primaryError)
+      aiResponse = await streamCompletionOnce(messages, MODEL_A_FALLBACK, onDelta)
+    }
+
+    conversationHistory.push({ role: 'user' as const, content: userMessage })
+    conversationHistory.push({ role: 'assistant' as const, content: aiResponse })
+    return aiResponse
+  } catch (error) {
+    console.error('OpenRouter streaming failed — falling back to blocking call:', error)
+    // Graceful degradation: same conversation, non-streaming path.
+    return chatWithAI(userMessage, runtimeContext)
+  }
+}
+
 export async function chatWithAI(userMessage: string, runtimeContext?: string): Promise<string> {
   // AI-EXT: merge runtime context (branch/catalog/rounds) into the system message
   // so the model answers with live store data. Replaces the static system slot.

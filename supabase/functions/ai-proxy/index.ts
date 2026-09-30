@@ -50,6 +50,61 @@ interface ChatMessage {
   content: string
 }
 
+// AI-OPT: SSE streaming support. When payload.stream === true the upstream
+// OpenRouter call uses stream:true and the raw token deltas are piped back to
+// the client as Server-Sent Events, so น้อง Bite can render a live typing
+// effect instead of waiting for the full completion.
+function sseHeaders(): Record<string, string> {
+  return { ...corsHeaders(), 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache, no-transform', Connection: 'keep-alive' }
+}
+
+const DEFAULT_MODEL = 'nvidia/nemotron-3-ultra-550b-a55b:free'
+
+async function streamCompletion(req: Request, apiKey: string, model: string, safeMessages: ChatMessage[], maxTokens: number): Promise<Response> {
+  const upstream = await fetch(OPENROUTER_URL, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      'Content-Type': 'application/json',
+      'HTTP-Referer': req.headers.get('origin') || 'https://bitemebaby-5f7.pages.dev',
+      'X-Title': 'Bite Me Baby App',
+    },
+    body: JSON.stringify({ model, messages: safeMessages, max_tokens: maxTokens, temperature: 0.7, stream: true }),
+  })
+  if (!upstream.ok || !upstream.body) {
+    const detail = await upstream.json().catch(() => ({}))
+    return json({ error: 'upstream error', upstream_status: upstream.status, detail }, 502)
+  }
+  const decoder = new TextDecoder()
+  const encoder = new TextEncoder()
+  const body = new ReadableStream({
+    async start(controller) {
+      const reader = upstream.body!.getReader()
+      try {
+        for (;;) {
+          const { done, value } = await reader.read()
+          if (done) break
+          const text = decoder.decode(value, { stream: true })
+          for (const line of text.split('\n')) {
+            const trimmed = line.trim()
+            if (!trimmed.startsWith('data:')) continue
+            const data = trimmed.slice(5).trim()
+            if (data === '[DONE]') { controller.enqueue(encoder.encode('data: [DONE]\n\n')); continue }
+            try {
+              const chunk = JSON.parse(data)
+              const delta = chunk.choices?.[0]?.delta?.content
+              if (delta) controller.enqueue(encoder.encode(`data: ${JSON.stringify({ t: delta })}\n\n`))
+            } catch { /* partial json line — skip */ }
+          }
+        }
+      } finally {
+        controller.close()
+      }
+    },
+  })
+  return new Response(body, { headers: sseHeaders() })
+}
+
 Deno.serve(async (req: Request): Promise<Response> => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders() })
   if (req.method !== 'POST') return json({ error: 'method not allowed' }, 405)
@@ -72,7 +127,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
   const apiKey = Deno.env.get('OPENROUTER_API_KEY') || ''
   if (!apiKey) return json({ error: 'AI proxy not configured (OPENROUTER_API_KEY missing)' }, 500)
 
-  let payload: { messages?: ChatMessage[]; model?: string; maxTokens?: number }
+  let payload: { messages?: ChatMessage[]; model?: string; maxTokens?: number; stream?: boolean }
   try {
     payload = await req.json()
   } catch {
@@ -86,7 +141,11 @@ Deno.serve(async (req: Request): Promise<Response> => {
   const systemMessage: ChatMessage = { role: 'system', content: GUARDRAIL_SEGMENT }
   const safeMessages = [systemMessage, ...messages.slice(-10)]
 
-  const model = payload.model || 'nvidia/nemotron-3-ultra-550b-a55b:free'
+  const model = payload.model || DEFAULT_MODEL
+  const maxTokens = payload.maxTokens ?? 500
+
+  // AI-OPT: streaming path (SSE) — client opts in with { stream: true }.
+  if (payload.stream) return streamCompletion(req, apiKey, model, safeMessages, maxTokens)
 
   const res = await fetch(OPENROUTER_URL, {
     method: 'POST',

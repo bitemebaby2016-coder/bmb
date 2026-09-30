@@ -7,7 +7,7 @@
 // ============================================
 
 import { useState, useRef, useEffect, useCallback } from 'react'
-import { chatWithAI } from '@/lib/aiService'
+import { chatWithAI, chatWithAIStream } from '@/lib/aiService'
 import { buildAiStoreContext } from '@/lib/ai/aiContextBuilder'
 
 interface Msg { id: string; role: 'user' | 'assistant'; content: string }
@@ -69,10 +69,23 @@ export function BiteChatWidget() {
     setInput('')
     setMsgs((m) => [...m, { id: `${Date.now()}-u`, role: 'user', content: clean }])
     setBusy(true)
+    // AI-OPT: live typing effect — stream token deltas into a growing assistant
+    // bubble instead of waiting for the whole completion.
+    const replyId = `${Date.now()}-a`
+    let streamed = ''
     try {
-      const reply = await chatWithAI(clean, ctxRef.current || undefined)
-      setMsgs((m) => [...m, { id: `${Date.now()}-a`, role: 'assistant', content: reply }])
-      speakOut(reply)
+      const reply = await chatWithAIStream(clean, ctxRef.current || undefined, (delta) => {
+        streamed += delta
+        const snapshot = streamed
+        setMsgs((m) => {
+          const existing = m.find((x) => x.id === replyId)
+          if (existing) return m.map((x) => (x.id === replyId ? { ...x, content: snapshot } : x))
+          return [...m, { id: replyId, role: 'assistant', content: snapshot }]
+        })
+      })
+      const final = reply || streamed
+      setMsgs((m) => m.map((x) => (x.id === replyId ? { ...x, content: final } : x)))
+      speakOut(final)
     } catch {
       setMsgs((m) => [...m, { id: 'err', role: 'assistant', content: 'ขอทษค่ะ เชื่อมต่อไม่สำเรจ ลองใหม่อีกครั้งนะคะ 🙏' }])
     } finally { setBusy(false) }
