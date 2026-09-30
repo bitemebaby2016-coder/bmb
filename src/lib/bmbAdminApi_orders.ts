@@ -250,6 +250,7 @@ export async function createOrder(input: OrderInput): Promise<OrderResult | null
     p_order_mode: input.order_mode ?? 'SAME_DAY',
     
     // TEN-07: optional branch_id for multi-branch routing from public checkout or admin context
+    p_scheduled_date: input.scheduled_date ?? undefined,
     p_branch_id: input.branch_id ?? null,
   }
   const { data, error } = await supabase.rpc('create_order_with_items', payload)
