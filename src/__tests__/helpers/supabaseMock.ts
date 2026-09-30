@@ -24,9 +24,9 @@ export const seed: Record<string, MockRow[]> = {
     { id: 'cat-5', name: 'à¸‚à¸­à¸‡à¸«à¸§à¸²à¸™', slug: 'dessert', icon: 'ðŸ°', sort_order: 5, is_active: true, created_at: new Date().toISOString() },
   ],
   delivery_rounds: [
-    { id: 'round-1', round_key: 'morning', display_name: 'เช้า (06:00-09:00)', cutoff_time: '08:00', delivery_start: '06:00', delivery_end: '09:00', max_capacity: 60, current_count: 0, date: new Date().toISOString().slice(0, 10), scheduled_date: new Date().toISOString().slice(0, 10), name: 'morning', status: 'active' },
-    { id: 'round-2', round_key: 'midday', display_name: 'เที่ยง (11:00-14:00)', cutoff_time: '10:30', delivery_start: '11:00', delivery_end: '14:00', max_capacity: 80, current_count: 0, date: new Date().toISOString().slice(0, 10), scheduled_date: new Date().toISOString().slice(0, 10), name: 'midday', status: 'active' },
-    { id: 'round-3', round_key: 'evening', display_name: 'เย็น (17:00-20:00)', cutoff_time: '16:00', delivery_start: '17:00', delivery_end: '20:00', max_capacity: 100, current_count: 0, date: new Date().toISOString().slice(0, 10), scheduled_date: new Date().toISOString().slice(0, 10), name: 'evening', status: 'active' },
+    { id: 'round-1', round_key: 'morning', display_name: 'เช้า (06:00-09:00)', cutoff_time: '08:00', delivery_start: '06:00', delivery_end: '09:00', max_capacity: 60, current_count: 0, date: new Date().toISOString().slice(0, 10), scheduled_date: new Date().toISOString().slice(0, 10), name: 'morning', status: 'active', branch_id: 'branch-test-1' },
+    { id: 'round-2', round_key: 'midday', display_name: 'เที่ยง (11:00-14:00)', cutoff_time: '10:30', delivery_start: '11:00', delivery_end: '14:00', max_capacity: 80, current_count: 0, date: new Date().toISOString().slice(0, 10), scheduled_date: new Date().toISOString().slice(0, 10), name: 'midday', status: 'active', branch_id: 'branch-test-1' },
+    { id: 'round-3', round_key: 'evening', display_name: 'เย็น (17:00-20:00)', cutoff_time: '16:00', delivery_start: '17:00', delivery_end: '20:00', max_capacity: 100, current_count: 0, date: new Date().toISOString().slice(0, 10), scheduled_date: new Date().toISOString().slice(0, 10), name: 'evening', status: 'active', branch_id: 'branch-test-1' },
   ],
   products: [
     { id: 'prod-1', name: 'à¸œà¸±à¸”à¹„à¸—à¸¢à¸à¸¸à¹‰à¸‡à¸ªà¸”', description: 'à¸œà¸±à¸”à¹„à¸—à¸¢à¸à¸¸à¹‰à¸‡à¸ªà¸”à¸ªà¸”à¹ƒà¸«à¸¡à¹ˆ', price: 65.00, category_id: 'cat-1', image_url: '', is_available: true, is_featured: true, is_preorder: true, available_same_day: true, available_preorder: true, prep_minutes: 15, sort_order: 1, delivery_round_id: null, scheduled_date: null },
@@ -332,6 +332,7 @@ export function createSupabaseMock(opts?: { failReadTable?: string; noAdmin?: bo
         payment_method: p.payment_method || 'promptpay_qr',
         order_mode: mode,
         scheduled_date: schedDate,
+        branch_id: String(p.branch_id || 'branch-test-1'),
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       }
@@ -743,6 +744,7 @@ export function createSupabaseMock(opts?: { failReadTable?: string; noAdmin?: bo
           date,
           current_count: 0,
           status: 'active',
+          branch_id: tpl.branch_id || 'branch-test-1',
         })
         created.push(id)
       }
