@@ -29,20 +29,17 @@ import { StoreStatusStrip } from '@/components/home/StoreStatusStrip'
 import { FloatingAdBanners, type FloatingBannerPromo } from '@/components/home/FloatingAdBanners'
 import { HorizontalCarousel } from '@/components/home/HorizontalCarousel'
 import { HomeProductCard } from '@/components/home/HomeProductCard'
-import { ReviewCarouselSection } from '@/components/home/ReviewCarouselSection'
-import { ReviewGallerySection } from '@/components/home/ReviewGallerySection'
 import { PromotionStrip } from '@/components/home/PromotionStrip'
+import { BranchAwareProductCard } from '@/components/home/BranchAwareProductCard'
+import { VerifiedReviewsSection } from '@/components/home/VerifiedReviewsSection'
+import { ReviewCarouselSection } from '@/components/home/ReviewCarouselSection'
 import { DrinksSection } from '@/components/home/DrinksSection'
 import { SnacksSection } from '@/components/home/SnacksSection'
 import { FloatingCart, StickyCartBar } from '@/components/home/FloatingCart'
 import { useOrderBuilderStore } from '@/store/orderBuilderStore'
-import type {
-  Product,
-  ProductCategory,
-  SameDayOrderPayload,
-  PreOrderPayload,
-  HomeReview,
-} from '@/types'
+import { useBrandContextStore } from '@/store/resolvedBrandStore'
+import { filterProductsByBranch } from '@/lib/homeProviders'
+import type { VerifiedCustomerReview, Product, ProductCategory, SameDayOrderPayload, PreOrderPayload, HomeReview } from '@/types'
 
 /** PRE_ORDER lead/date policy is DB-driven (order_policy) — no client hardcode.
  * The date is chosen in /checkout?mode=pre-order (server validates lead time). */
@@ -59,6 +56,8 @@ export function HomePage() {
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
   const [activeCategory, setActiveCategory] = useState<string | null>(null)
+  // CAT-04: verified customer reviews on homepage
+  const [verifiedReviews, setVerifiedReviews] = useState<any[]>([])
 
   useEffect(() => {
     async function loadData() {
@@ -77,6 +76,15 @@ export function HomePage() {
         setCategories(cats)
         setRounds(rounds)
         setPromoRows(promos)
+        // CAT-04: Load verified reviews for all products
+        const { getVerifiedReviewsForProducts } = await import('@/lib/reviewApi')
+        const allProductIds = rows.map((r: any) => r.id)
+        if (allProductIds.length > 0) {
+          try {
+            const verified = await getVerifiedReviewsForProducts(allProductIds.slice(0, 50), 50)
+            setVerifiedReviews(verified)
+          } catch(e) { console.warn('[HomePage] Verified reviews load failed:', e) }
+        }
       } catch (err) {
         console.error('[HomePage] Load error:', err)
       } finally {
@@ -284,7 +292,8 @@ export function HomePage() {
       <ReviewCarouselSection reviews={reviews} products={products} onReviewCta={handleReviewCta} />
 
       {/* 6b. Real customer review photo gallery (lazy) */}
-      <ReviewGallerySection />
+      {/* CAT-04: Verified Customer Reviews Section */}
+        <VerifiedReviewsSection reviews={verifiedReviews} products={products} />
 
       {/* 7. Promotions + Shared social action */}
       <PromotionStrip promotions={promotions} />
@@ -307,3 +316,4 @@ export function HomePage() {
     </div>
   )
 }
+
