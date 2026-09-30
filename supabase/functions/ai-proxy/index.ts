@@ -118,11 +118,21 @@ Deno.serve(async (req: Request): Promise<Response> => {
   // guardrail segment forbids any transactional action regardless).
   const token = (req.headers.get('Authorization') || '').replace(/^Bearer\s+/, '')
   const anonKey = Deno.env.get('SUPABASE_ANON_KEY') || ''
-  const isGuestJwt = !!anonKey && token === anonKey
-  if (!token || token === ANON_KEY_FALLBACKS[0] || token.startsWith('sb_publishable_')) {
+  // New Supabase API keys (2025+): the client sends `sb_publishable_...`, which
+  // is NOT a JWT — platform verify_jwt must be OFF for this function (see
+  // config.toml). The publishable key is a deliberately-public identifier, so
+  // matching it exactly is a safe guest credential: guardrails below forbid
+  // any transactional action and the caller gains no elevated DB privileges.
+  const publishableKey =
+    Deno.env.get('SUPABASE_PUBLISHABLE_KEY') ||
+    Deno.env.get('SUPABASE_PUBLISHABLE_DEFAULT_KEY') ||
+    ''
+  const isGuestKey =
+    (!!anonKey && token === anonKey) || (!!publishableKey && token === publishableKey)
+  if (!token || token === ANON_KEY_FALLBACKS[0]) {
     return json({ error: 'unauthorized' }, 401)
   }
-  if (!isGuestJwt) {
+  if (!isGuestKey) {
     const authCheck = await fetch(`${Deno.env.get('SUPABASE_URL') || ''}/auth/v1/user`, {
       headers: { Authorization: `Bearer ${token}`, apikey: anonKey },
     }).catch(() => null)
