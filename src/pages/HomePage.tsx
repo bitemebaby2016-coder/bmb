@@ -290,7 +290,7 @@ export function HomePage() {
       )}
 
       {/* 5. Category carousels — DB-driven: แสดงทุกหมวดที่แอดมินสร้าง (จานเดียว/เครื่องดื่ม/ของทานเล่น/ผลไม้/สินค้าสำเร็จรูป) ซิงก์จริง */}
-      <CategorySections products={products} categories={categories} />
+      <CategorySections products={products} categories={categories} onSameDay={handleSameDay} onPreOrder={handlePreOrder} />
 
       {/* 6. Social Proof Review Carousel */}
       <ReviewCarouselSection reviews={reviews} products={products} onReviewCta={handleReviewCta} />

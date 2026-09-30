@@ -77,9 +77,14 @@ export function getHomeProducts(
   const preOrder: HomeProduct[] = []
   for (const p of products || []) {
     const cat = catMap.get(p.category_id)
+    // FIX (owner report 2026-10-01): the pre-order carousel leaked unavailable
+    // products (e.g. promo placeholders) into "จองล่วงหน้า — สั่งอาหารจันทบุรี"
+    // because availability was only checked on the same-day branch. Both modes
+    // now require is_available && !archived (mirror of the catalog gate).
+    const sellable = !!p.is_available && !p.archived
     if (p.available_preorder ?? p.is_preorder) {
-      if (p.is_featured || preOrder.length < 6) preOrder.push(toHomeProduct(p, cat, 'pre-order'))
-    } else if (p.is_available) {
+      if (sellable && (p.is_featured || preOrder.length < 6)) preOrder.push(toHomeProduct(p, cat, 'pre-order'))
+    } else if (sellable) {
       if (p.is_featured || sameDay.length < 6) sameDay.push(toHomeProduct(p, cat, 'same-day'))
     }
   }

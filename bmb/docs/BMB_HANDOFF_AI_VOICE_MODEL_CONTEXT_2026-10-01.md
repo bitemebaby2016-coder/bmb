@@ -142,6 +142,12 @@
 - [x] ai-proxy deploy แล้ว (owner, 2026-10-01); เอกสาร AI-06 เปลี่ยน CANCELLED → DONE พร้อมหลักฐาน
 
 ## 5. ความเสี่ยง / ข้อควรระวัง
+**Bugfix เพิ่มเติม (owner report 2026-10-01 — เซคชั่นแอดมินใหม่):**
+- อาการ: เซคชั่นใหม่ที่แอดมินเพิ่มไม่มีปุ่มเพิ่มลงตะกร้า + มีไอเทมหลุดเข้าเซคชั่น "จองล่วงหน้า — สั่งอาหารจันทบุรี"
+- สาเหตุ 1: การ์ด showcase บนหน้าแรก (`CategorySections.ShowcaseCard`) ไม่เคยมีปุ่มตะกร้ามาตั้งแต่ออกแบบ → แก้: เพิ่มปุ่ม 🛒 เพิ่มลงตะกร้า / 📅 จองล่วงหน้า ผูกกับ flow เดิม (ผ่าน `onSameDay`/`onPreOrder` ของ HomePage) + ธง `isAvailable/sameDay/preorder` จาก `homeShowcase.ts`
+- สาเหตุ 2: production probe ด้วย anon key พบ "permission denied for table menu_sections" (ACL drift — 097 ประกาศแต่ prod ไม่มี grant) → แก้ด้วย migration `101_menu_sections_anon_read.sql` (**ต้อง owner `supabase db push` ด้วย!**) ไม่งั้น guest เห็นเมนูไม่ครบตามเซคชั่นที่แอดมินสร้าง
+- สาเหตุ 3: `getHomeProducts` (homeProviders.ts) สาย pre-order ไม่กรอง `is_available/archived` → สินค้า/โปรโมชั่น placeholder ที่ปิดขายแต่ติดธง pre-order หลุดขึ้น carousel จองล่วงหน้า → แก้: ทั้ง 2 โหมดต้อง `is_available && !archived`
+- ทดสอบ: homeShowcase.test.ts เพิ่ม 2 case (ธง CTA + กัน leak) — รวม 38 ไฟล์ / 353 tests; tsc 0 errors; build exit 0
 - id โมเดล GLM บน OpenRouter ต้องยืนยันจริงก่อนใช้ (ชื่อในคำสั่ง owner อาจไม่ตรง id จริง)
 - Web Speech API รองรับเต็มบน Chrome/Edge — Firefox/iOS บางส่วนไม่รองรับ ต้องมี graceful fallback
 - ถ้า OpenRouter ไม่มีโมเดลเสียงตามต้อง ให้ยึดแผน B (browser-only) และบันทึก decision ไว้

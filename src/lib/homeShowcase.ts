@@ -13,6 +13,13 @@ export interface HomeShowcaseItem {
   description: string
   image: string
   categoryId: string
+  /** FIX (owner report 2026-10-01): cart CTA needs mode/availability flags —
+   * showcase cards used to render with no add-to-cart button at all. */
+  isAvailable: boolean
+  /** same-day orderable (canonical migration 023 + alias fallback) */
+  sameDay: boolean
+  /** pre-orderable (canonical migration 023 + alias fallback) */
+  preorder: boolean
 }
 
 /**
@@ -29,7 +36,7 @@ export function selectHomeShowcase(
   const cat = categories.find((c) => c.slug === slug && c.is_active)
   if (!cat) return []
   return products
-    .filter((p) => p.category_id === cat.id && p.is_available)
+    .filter((p) => p.category_id === cat.id && p.is_available && !p.archived)
     .sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0))
     .map((p) => ({
       id: p.id,
@@ -38,5 +45,8 @@ export function selectHomeShowcase(
       description: p.description ?? '',
       image: p.image_url ?? '',
       categoryId: p.category_id,
+      isAvailable: !!p.is_available && !p.archived,
+      sameDay: !!(p.available_same_day ?? !p.is_preorder),
+      preorder: !!(p.available_preorder ?? p.is_preorder),
     }))
 }

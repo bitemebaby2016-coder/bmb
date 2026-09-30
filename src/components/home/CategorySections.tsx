@@ -10,11 +10,42 @@ import { Link } from 'react-router-dom'
 import { MascotBadge } from '@/components/MascotBadge'
 import { HorizontalCarousel } from './HorizontalCarousel'
 import { selectHomeShowcase, type HomeShowcaseItem } from '@/lib/homeShowcase'
-import type { Product, ProductCategory } from '@/types'
+import type { Product, ProductCategory, SameDayOrderPayload, PreOrderPayload } from '@/types'
 
 const SECTION_POSES = ['peeking', 'thumbsup', 'running', 'pointing', 'cooking', 'menu', 'greeting', 'heart'] as const
 
-function ShowcaseCard({ item }: { item: HomeShowcaseItem }) {
+function ShowcaseCard({
+  item,
+  onSameDay,
+  onPreOrder,
+}: {
+  item: HomeShowcaseItem
+  onSameDay: (p: SameDayOrderPayload) => void
+  onPreOrder: (p: PreOrderPayload) => void
+}) {
+  // FIX (owner report 2026-10-01): showcase cards in admin-added sections had
+  // NO add-to-cart button at all — mirror HomeProductCard's CTA behavior here:
+  // sold-out → disabled label; same-day → add-to-cart; preorder-only → pre-order.
+  const handleSameDay = () => {
+    if (!item.isAvailable || !item.sameDay) return
+    onSameDay({
+      productId: item.id,
+      quantity: 1,
+      timestamp: new Date().toISOString(),
+      availabilitySnapshot: {
+        isAvailable: item.isAvailable,
+        engineState: item.isAvailable ? 'available' : 'sold_out',
+        source: 'home_showcase',
+        snapshotAt: new Date().toISOString(),
+      },
+    })
+  }
+  const handlePreOrder = () => {
+    if (!item.preorder) return
+    onPreOrder({ productId: item.id, quantity: 1, deliveryRoundId: '', scheduledDate: '' })
+  }
+  const soldOut = !item.isAvailable
+
   return (
     <article
       className="drink-card"
@@ -36,14 +67,51 @@ function ShowcaseCard({ item }: { item: HomeShowcaseItem }) {
           <span className="drink-card-price">฿{item.price}</span>
         </div>
         <p className="drink-card-desc">{item.description}</p>
+        <div className="flex flex-col gap-2 mt-2">
+          {item.sameDay && !soldOut && (
+            <button
+              type="button"
+              onClick={handleSameDay}
+              data-testid="home-showcase-add-to-cart"
+              className="btn btn-primary btn-sm w-full"
+              aria-label={`เพิ่ม ${item.name} ลงตะกร้า`}
+            >
+              🛒 เพิ่มลงตะกร้า
+            </button>
+          )}
+          {item.preorder && (
+            <button
+              type="button"
+              onClick={handlePreOrder}
+              data-testid="home-showcase-preorder"
+              className={`btn btn-sm w-full ${soldOut ? 'btn-outline' : 'btn-outline'}`}
+              aria-label={`จอง ${item.name} ล่วงหน้า`}
+            >
+              📅 จองล่วงหน้า
+            </button>
+          )}
+          {soldOut && (
+            <span className="text-xs text-red-600 text-center font-medium">หมดแล้ววันนี้</span>
+          )}
+        </div>
       </div>
     </article>
   )
 }
 
-export function CategorySections({ products, categories }: { products: Product[]; categories: ProductCategory[] }) {
+export function CategorySections({
+  products,
+  categories,
+  onSameDay,
+  onPreOrder,
+}: {
+  products: Product[]
+  categories: ProductCategory[]
+  onSameDay: (p: SameDayOrderPayload) => void
+  onPreOrder: (p: PreOrderPayload) => void
+}) {
   const active = [...categories]
-    .filter((c) => c.is_active)
+    .filter((c) => c.is_active && !c.archived)
     .sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0))
 
   return (
@@ -69,7 +137,9 @@ export function CategorySections({ products, categories }: { products: Product[]
             </div>
             <h3 className="sr-only">{cat.name}</h3>
             <HorizontalCarousel
-              items={items.map((item) => <ShowcaseCard key={item.id} item={item} />)}
+              items={items.map((item) => (
+                <ShowcaseCard key={item.id} item={item} onSameDay={onSameDay} onPreOrder={onPreOrder} />
+              ))}
               aria-label={`${cat.name} เลื่อนได้`}
             />
           </section>
