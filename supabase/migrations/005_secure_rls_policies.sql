@@ -1,4 +1,4 @@
-﻿-- ============================================
+-- ============================================
 -- Bite Me Baby — Migration 005: Secure RLS Policies
 -- Date: 2026-09-18
 -- Purpose: Convert RLS from Permissive → Secure/Strict Mode

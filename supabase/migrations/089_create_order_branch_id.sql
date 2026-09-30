@@ -1,4 +1,4 @@
-﻿-- ============================================
+-- ============================================
 -- Bite Me Baby Migration 089: TEN-07 create_order_with_items p_branch_id Extension
 -- Date: 2026-09-30 · Baseline: m025 deployed (original function)
 -- Scope: Add optional p_branch_id parameter for branch-level order routing
