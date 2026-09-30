@@ -16,6 +16,10 @@ export interface DriverRecord {
   current_latitude: number | null
   current_longitude: number | null
   last_seen_at: string | null
+  tenant_id: string              // TEN-02: FK to tenants(id)
+  home_branch_id: string         // TEN-07: FK to branches(id) — driver's home branch
+  can_float: boolean             // TEN-07: can be assigned to other branches in tenant
+  branch_id: string              // TEN-07: current branch context (alias for home_branch_id)
 }
 
 export interface MyDeliveryItem {

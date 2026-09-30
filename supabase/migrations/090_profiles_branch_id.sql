@@ -14,10 +14,15 @@ ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS branch_id TEXT;
 COMMENT ON COLUMN public.profiles.branch_id IS
   'BRANCH_STAFF: FK to branches(id). Set for branch_staff role to enable branch-level RLS. NULL for tenant/platform admins.';
 
--- 2. Add FK constraint (nullable)
-ALTER TABLE public.profiles
-  ADD CONSTRAINT profiles_branch_id_fkey
-  FOREIGN KEY (branch_id) REFERENCES public.branches(id);
+-- 2. Add FK constraint (nullable) — idempotent via DO block
+DO $$ BEGIN
+  -- Create constraint only if it does not exist
+  ALTER TABLE public.profiles
+    ADD CONSTRAINT profiles_branch_id_fkey
+    FOREIGN KEY (branch_id) REFERENCES public.branches(id);
+EXCEPTION
+  WHEN duplicate_object THEN null;
+END $$;
 
 -- 3. Index
 CREATE INDEX IF NOT EXISTS idx_profiles_branch ON public.profiles (branch_id);

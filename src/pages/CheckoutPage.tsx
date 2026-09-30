@@ -26,6 +26,7 @@ import { listRoundsForDate, type DeliveryRoundRow } from '@/lib/bmbAdminApi_roun
 import { getPublishedScheduleForDate, mirrorPreOrderScheduleGate, type MenuScheduleRow } from '@/lib/bmbMenuSchedule'
 import { fetchServerDeliveryFee } from '@/lib/deliveryFeeApi'
 import { getBusinessSettings } from '@/lib/bmbAdminApi_settings'
+import { resolvePublicBranch } from '@/lib/brandResolver'
 import type { OrderMode } from '@/config/platformConfig'
 
 function todayStr(): string {
@@ -54,6 +55,7 @@ export function CheckoutPage() {
   const [scheduledDate, setScheduledDate] = useState(orderMode === 'PRE_ORDER' ? addDays(today, 1) : today)
   const [rounds, setRounds] = useState<DeliveryRoundRow[]>([])
   const [selectedRoundId, setSelectedRoundId] = useState('')
+  const [resolvedBranchId, setResolvedBranchId] = useState<string | null>(null) // TEN-07: resolve from round
   const [serverFee, setServerFee] = useState<number | null>(null)
   const [feeSource, setFeeSource] = useState<'server' | 'local-mirror' | null>(null)
   const [leadDays, setLeadDays] = useState(1) // DISPLAY ONLY — server policy enforces the real lead
@@ -158,6 +160,16 @@ export function CheckoutPage() {
     }
   }
 
+  // TEN-07: Resolve branch_id from selected delivery_round for multi-branch routing
+  useEffect(() => {
+    if (!selectedRoundId) { setResolvedBranchId(null); return }
+    const resolve = async () => {
+      const branch = await resolvePublicBranch({ urlParams: { roundId: selectedRoundId } })
+      setResolvedBranchId(branch.branch_id || null)
+    }
+    resolve()
+  }, [selectedRoundId])
+
   async function handlePlaceOrder() {
     if (!customer) {
       showToast('กรุณาเข้าสู่ระบบก่อนสั่งซื้อ', 'info')
@@ -241,6 +253,8 @@ export function CheckoutPage() {
       promotion_code: couponCode.trim() || undefined,
       order_mode: orderMode,
       scheduled_date: orderMode === 'PRE_ORDER' ? scheduledDate : undefined,
+      // TEN-07: resolve branch from selected delivery_round (round has branch_id column)
+      branch_id: resolvedBranchId ?? undefined,
     }
 
     // Server-authoritative: mode gate / cutoff / capacity / pricing inside the RPC.

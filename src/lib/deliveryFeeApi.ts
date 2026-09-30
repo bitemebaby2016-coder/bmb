@@ -15,12 +15,14 @@ export interface DeliveryZonesRow {
   max_distance_km: number
   fee: number
   is_active: boolean
+  branch_id: string          // TEN-07: FK to branches(id) — zone belongs to a branch
+  tenant_id: string          // TEN-02: FK to tenants(id)
 }
 
 export const SEEDED_DELIVERY_ZONES: DeliveryZonesRow[] = [
-  { id: 'zone-city', name: 'ในเมือง', min_distance_km: 0, max_distance_km: 5, fee: 25, is_active: true },
-  { id: 'zone-suburb', name: 'ชานเมือง', min_distance_km: 5, max_distance_km: 10, fee: 45, is_active: true },
-  { id: 'zone-far', name: 'ไกล', min_distance_km: 10, max_distance_km: 20, fee: 80, is_active: true },
+  { id: 'zone-city', name: 'ในเมือง', min_distance_km: 0, max_distance_km: 5, fee: 25, is_active: true, branch_id: 'branch-bite-me-baby-main', tenant_id: 'tenant-bmb-001' },
+  { id: 'zone-suburb', name: 'ชานเมือง', min_distance_km: 5, max_distance_km: 10, fee: 45, is_active: true, branch_id: 'branch-bite-me-baby-main', tenant_id: 'tenant-bmb-001' },
+  { id: 'zone-far', name: 'ไกล', min_distance_km: 10, max_distance_km: 20, fee: 80, is_active: true, branch_id: 'branch-bite-me-baby-main', tenant_id: 'tenant-bmb-001' },
 ]
 
 /** Pure: pick the zone that contains `distanceKm` and return its flat fee. */

@@ -125,10 +125,66 @@ export interface DeliveryRound {
   current_count: number;
   date: string;                   // TypeScript property (DB column: 'scheduled_date')
   status: string;
+  branch_id: string;              // TEN-07: FK to branches(id) — round belongs to a branch
+  tenant_id: string;              // TEN-02: FK to tenants(id)
   // Note: Supabase returns DB column names as object keys:
   // - 'scheduled_date' (not 'date')
   // - 'name' (not 'round_key')
   // Access via: data.scheduled_date, data.name
+}
+
+// ============================================
+// TEN-07: Branch / Store / Location Types
+// ============================================
+
+export interface Branch {
+  id: string;                     // 'branch-{tenant_slug}-{code}'
+  tenant_id: string;              // FK to tenants(id)
+  code: string;                   // unique per tenant: 'main', 'sukhumvit', 'rangsit'
+  name: string;                   // 'Bite Me Baby Sukhumvit'
+  slug: string;                   // 'sukhumvit'
+  display_name: string | null;
+  address_line1: string;
+  address_line2: string | null;
+  city: string;
+  province: string;
+  postal_code: string | null;
+  country: string;
+  latitude: number;
+  longitude: number;
+  service_radius_km: number;
+  kitchen_latitude: number | null;
+  kitchen_longitude: number | null;
+  operating_hours: {
+    open: string;
+    close: string;
+    timezone?: string;
+    exceptions?: Array<{ date: string; open: string; close: string; closed: boolean }>;
+  };
+  status: 'active' | 'inactive' | 'maintenance';
+  is_default: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface BranchForm {
+  code: string;
+  name: string;
+  slug: string;
+  display_name?: string;
+  address_line1: string;
+  address_line2?: string;
+  city?: string;
+  province?: string;
+  postal_code?: string;
+  country?: string;
+  latitude: number;
+  longitude: number;
+  service_radius_km?: number;
+  kitchen_latitude?: number;
+  kitchen_longitude?: number;
+  operating_hours?: Branch['operating_hours'];
+  is_default?: boolean;
 }
 
 // ============================================
@@ -487,6 +543,88 @@ export interface ServiceZone {
   is_open: boolean;
   opening_time: string;
   closing_time: string;
+}
+
+export interface DeliveryZone {
+  id: string;
+  name: string;
+  min_distance_km: number;
+  max_distance_km: number;
+  fee: number;
+  is_active: boolean;
+  branch_id: string;              // TEN-07: FK to branches(id) — zone belongs to a branch
+  tenant_id: string;              // TEN-02: FK to tenants(id)
+  created_at: string;
+  updated_at: string;
+}
+
+// ============================================
+// Business Settings Types (TEN-04 + TEN-07)
+// ============================================
+
+export interface BusinessSettingsRow {
+  key: string;
+  value: Record<string, any>;
+  tenant_id: string;              // TEN-04: FK to tenants(id)
+  branch_id: string | null;       // TEN-07: FK to branches(id) — NULL = tenant default, non-NULL = branch override
+  created_at: string;
+  updated_at: string;
+}
+
+export type BusinessSettingsKey = 
+  | 'kitchen_location'
+  | 'delivery_policy'
+  | 'hours'
+  | 'operating_hours'
+  | 'order_policy';
+
+export interface KitchenLocation {
+  latitude: number;
+  longitude: number;
+  address: string;
+}
+
+export interface DeliveryPolicy {
+  radius_km: number;
+  currency: string;
+  min_order: number;
+}
+
+export interface HoursSettings {
+  open: string;
+  close: string;
+}
+
+export interface OperatingHours {
+  open: string;
+  close: string;
+  timezone: string;
+  exceptions?: Array<{ date: string; open: string; close: string; closed: boolean }>;
+}
+
+export interface OrderPolicy {
+  pre_order_lead_days: number;
+  max_pre_order_days: number;
+  same_day_cutoff_minutes: number;
+}
+
+// ============================================
+// Profile Types (TEN-02 + TEN-07)
+// ============================================
+
+export interface Profile {
+  id: string;                     // UUID from auth.users
+  email: string | null;
+  phone: string | null;
+  name: string | null;
+  role: 'customer' | 'admin' | 'tenant_admin' | 'branch_staff';
+  is_active: boolean;
+  avatar_url: string;
+  tenant_id: string | null;       // TEN-02: FK to tenants(id) — nullable for customers
+  branch_id: string | null;       // TEN-07: FK to branches(id) — set for branch_staff role
+  is_platform: boolean;           // TEN-02: platform admin flag (single user)
+  created_at: string;
+  updated_at: string;
 }
 
 // ============================================

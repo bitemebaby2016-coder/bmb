@@ -170,3 +170,122 @@ export async function validateBrandAccessible(slug: string): Promise<boolean> {
   if (error) return false
   return (count ?? 0) > 0
 }
+
+// ============================================
+// TEN-07: Branch Resolution (Public Checkout Integration)
+// Resolve active branch from URL param or first available round's branch
+// ============================================
+
+export type ResolvedBranchResult = {
+  /** Branch primary key */
+  branch_id: string
+  /** Full branch row from DB */
+  branch: {
+    id: string
+    name: string
+    slug: string
+    tenant_id: string
+    status: 'active' | 'inactive' | 'suspended'
+    kitchen_latitude?: number
+    kitchen_longitude?: number
+    created_at: string
+  } | null
+  /** How we arrived at this branch */
+  source: 'url-param' | 'round-based' | 'tenant-default' | 'fallback'
+}
+
+/** Resolve branch by explicit branch_slug URL param */
+export async function resolveBranchBySlug(slug: string): Promise<ResolvedBranchResult | null> {
+  const { data, error } = await supabase
+    .from('branches')
+    .select('*')
+    .eq('slug', slug.trim())
+    .eq('status', 'active')
+    .maybeSingle()
+
+  if (error || !data) return null
+  return {
+    branch_id: data.id,
+    branch: data as any,
+    source: 'url-param'
+  }
+}
+
+/** Resolve branch from an active delivery_round */
+export async function resolveBranchFromRound(roundId: string): Promise<ResolvedBranchResult | null> {
+  const { data, error } = await supabase
+    .from('delivery_rounds')
+    .select('branch_id')
+    .eq('id', roundId)
+    .eq('status', 'active')
+    .single()
+
+  if (error || !data?.branch_id) return null
+
+  // Fetch full branch details
+  const { data: branchData, error: branchError } = await supabase
+    .from('branches')
+    .select('*')
+    .eq('id', data.branch_id)
+    .eq('status', 'active')
+    .maybeSingle()
+
+  if (branchError || !branchData) return null
+
+  return {
+    branch_id: branchData.id,
+    branch: branchData as any,
+    source: 'round-based'
+  }
+}
+
+/** Universal public branch resolver — input varies, output always consistent. */
+export interface PublicBranchResolveOptions {
+  urlParams?: {
+    branchSlug?: string
+    roundId?: string
+  }
+}
+
+export async function resolvePublicBranch(opts: PublicBranchResolveOptions): Promise<ResolvedBranchResult> {
+  const urlParams = opts?.urlParams
+
+  // 1. Direct URL param lookup (?branch=<slug>)
+  if (urlParams?.branchSlug && urlParams.branchSlug.trim()) {
+    const result = await resolveBranchBySlug(urlParams.branchSlug)
+    if (result) return result
+    console.warn('[BranchResolver] Branch not found or inactive:', urlParams?.branchSlug)
+  }
+
+  // 2. Resolve from selected round ?roundId=<id>
+  if (urlParams?.roundId) {
+    const result = await resolveBranchFromRound(urlParams.roundId)
+    if (result) return result
+    console.warn('[BranchResolver] Active round not found:', urlParams?.roundId)
+  }
+
+  // 3. Fallback — first active branch
+  const fallback = await supabase
+    .from('branches')
+    .select('*')
+    .eq('status', 'active')
+    .order('created_at', { ascending: true })
+    .limit(1)
+    .maybeSingle()
+
+  if (!fallback.error && fallback.data) {
+    return {
+      branch_id: fallback.data.id,
+      branch: fallback.data as any,
+      source: 'fallback'
+    }
+  }
+
+  // 4. Ultimate fallback — should never happen in normal operation
+  console.error('[BranchResolver] No active branches found!')
+  return {
+    branch_id: '',
+    branch: null,
+    source: 'fallback'
+  }
+}
