@@ -67,6 +67,13 @@ async function requestCompletion(messages: ChatMessage[], model: string): Promis
 
   const { data: proxy, error } = await supabase.functions.invoke('ai-proxy', {
     body: { messages: messages.slice(-11), model, maxTokens: 500 },
+    // Explicit headers: never let a stale session token silently become the
+    // only credential — the apikey header always carries the public guest key
+    // so ai-proxy can degrade to the guest path if the JWT is rejected.
+    headers: {
+      Authorization: `Bearer ${sessionValid ? s.access_token : import.meta.env.VITE_SUPABASE_ANON_KEY || ''}`,
+      apikey: import.meta.env.VITE_SUPABASE_ANON_KEY || '',
+    },
   })
   if (error) throw new Error(`proxy error: ${error.message || 'upstream'}`)
   if (!proxy || proxy.error) throw new Error(proxy?.error || 'Empty proxy response')
@@ -235,6 +242,11 @@ export async function getMenuRecommendations(
     ]`
 
     // SEC-02 (Phase 4): recommendations route through the ai-proxy too (no client key).
+    // Explicit headers so a stale session JWT can never 401 the guest path.
+    const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || ''
+    const { data: sess } = await supabase.auth.getSession()
+    const sessAny: any = (sess as any)?.data?.session
+    const sessValid = !sessAny ? false : (typeof sessAny.expires_at !== 'number' || sessAny.expires_at * 1000 > Date.now() + 30_000)
     const { data: proxy, error } = await supabase.functions.invoke('ai-proxy', {
       body: {
         messages: [
@@ -243,6 +255,10 @@ export async function getMenuRecommendations(
         ],
         model: OPENROUTER_MODEL,
         maxTokens: 300,
+      },
+      headers: {
+        Authorization: `Bearer ${sessValid ? sessAny.access_token : anonKey}`,
+        apikey: anonKey,
       },
     })
     if (error || !proxy || proxy.error) return products.slice(0, 3)

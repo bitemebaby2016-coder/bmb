@@ -136,7 +136,19 @@ Deno.serve(async (req: Request): Promise<Response> => {
     const authCheck = await fetch(`${Deno.env.get('SUPABASE_URL') || ''}/auth/v1/user`, {
       headers: { Authorization: `Bearer ${token}`, apikey: anonKey },
     }).catch(() => null)
-    if (!authCheck || !authCheck.ok) return json({ error: 'unauthorized' }, 401)
+    if (!authCheck || !authCheck.ok) {
+      // Fallback: a logged-in browser can carry a session JWT the auth server
+      // no longer accepts (rotated JWT secret / stale session the client still
+      // believes is valid). If the request's `apikey` header matches a valid
+      // public guest key, degrade gracefully to the guest path instead of 401 —
+      // the guest credential is public by design and the guardrails below
+      // forbid any transactional action regardless of identity.
+      const apiKeyHeader = (req.headers.get('apikey') || '').trim()
+      const headerIsGuestKey =
+        (!!anonKey && apiKeyHeader === anonKey) ||
+        (!!publishableKey && apiKeyHeader === publishableKey)
+      if (!headerIsGuestKey) return json({ error: 'unauthorized' }, 401)
+    }
   }
 
 
