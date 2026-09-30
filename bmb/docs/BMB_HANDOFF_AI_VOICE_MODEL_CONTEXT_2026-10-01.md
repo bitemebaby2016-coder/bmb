@@ -152,6 +152,7 @@
 **Fix ตาม console log (2026-10-01): "Model A (qwen3.7-flash) failed — Empty AI response content"**
 - probe production จริง (anon/guest path) ยืนยัน: qwen3.7-flash = **hybrid reasoning model** — completion 576 tokens มี reasoning_tokens 522 ตัว กิน budget จน content ว่างเมื่อ context ยาว → ai-proxy จึงเพิ่ม `reasoning: { enabled: false }` ใน upstream call ทั้งสอง path (stream + non-stream) — แชทพนักงานเสิร์ฟไม่ต้องคิดลึก, เร็วขึ้น, ไม่ fallback โดยไม่จำเป็น
 - **ต้อง owner deploy อีกครั้ง:** `supabase functions deploy ai-proxy` (deploy ด้วย token ใน .env.local ติด 401 Unauthorized — token ไม่มีสิทธิ์ deploy) · หลัง deploy รีเฟรชหน้าแล้ว console ไม่ควรมี error นี้อีก (ตอบจะมาจาก qwen ตรง ๆ)
+- ✅ **ปิดจบแล้ว (2026-10-01):** deploy สำเร็จโดยใช้ `$env:SUPABASE_ACCESS_TOKEN` จาก .env.local + `--project-ref ivkdfognyiwjcmrhcnwz` (script 6.4 kB) — probe หลัง deploy: content ตอบไทย+ราคาถูกต้อง, reasoning_tokens **0** (เดิม 522), completion 61 tokens, finish=stop → "Empty AI response content" หมดไป, qwen ใช้เป็น primary จริง ไม่ fallback แล้ว
 - id โมเดล GLM บน OpenRouter ต้องยืนยันจริงก่อนใช้ (ชื่อในคำสั่ง owner อาจไม่ตรง id จริง)
 - Web Speech API รองรับเต็มบน Chrome/Edge — Firefox/iOS บางส่วนไม่รองรับ ต้องมี graceful fallback
 - ถ้า OpenRouter ไม่มีโมเดลเสียงตามต้อง ให้ยึดแผน B (browser-only) และบันทึก decision ไว้
