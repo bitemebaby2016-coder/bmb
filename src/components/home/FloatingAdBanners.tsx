@@ -1,4 +1,4 @@
-// ============================================
+﻿// ============================================
 // Bite Me Baby — Floating Ad Banners (overlay)
 // Replaces the old inline home strip: promos flagged `is_banner` float in as an
 // overlay card stack (max 2 at once, promo data pulled from the real DB rows
@@ -86,7 +86,7 @@ export function FloatingAdBanners({ promos }: { promos: FloatingBannerPromo[] })
             type="button"
             className="flad-close"
             data-testid="floating-ad-close"
-            aria-label={`ปิดปโปรโมশন ${promo.title}`}
+            aria-label={`ปิดโปรโมชั่น ${promo.title}`}
             onClick={() => dismiss(promo.id)}
           >
             ✕
