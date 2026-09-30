@@ -56,14 +56,14 @@
 3. [x] แก้ `supabase/functions/ai-proxy/index.ts` บรรทัด 61 `DEFAULT_MODEL` → `qwen/qwen3.7-flash`
 4. [x] แก้ `.env`, `.env.local`, `.env.example`: `VITE_OPENROUTER_MODEL=qwen/qwen3.7-flash` (ลบ `openrouter/free` ทิ้งแล้วทุกไฟล์)
 5. [x] grep `nemotron` ทั้ง repo (config ใช้จริง: src/, ai-proxy, .env*) = **0 hits**; แก้เพิ่มที่พบ: `aiVoice.ts` (default+fallback), `VoiceDemoPage.tsx` (UI copy), `api.test.ts:429-434` (assert โมเดลใหม่), `aiToolCalling.ts` (คอมเมนต์)
-6. [ ] **ค้าง — ต้อง owner รัน:** deploy ai-proxy (`supabase functions deploy ai-proxy`) — ยืนยัน secrets `OPENROUTER_API_KEY` ยังอยู่
-7. [ ] **ค้าง — ต้อง owner ทดสอบจริง:** แชทผ่าน BiteAIChat 1 รอบ → ตอบไทยผ่าน qwen; จำลอง primary fail → fallback ไป GLM
+6. [x] deploy ai-proxy — DONE (owner deploy จริง 2026-10-01: "Deployed Functions on project ivkdfognyiwjcmrhcnwz: ai-proxy", script 6.0 kB)
+7. [x] ทดสอบจริง — DONE (owner ยืนยันผลทดสอบ production 2026-10-01: "ok")
 8. [x] verification 2026-10-01: `npx tsc --noEmit` = 0 errors ✅ / `npx vitest run` = 36 files, 331 tests passed ✅ / `npm run build` = PASS ✅
 9. [x] อัปเดตเอกสาร: aiModels.ts header ✅, `.env.example` policy ✅, handoff นี้ ✅ — README ไม่มี mention โมเดลเก่า (grep = 0); AI_WORK_STATE/STATUS_TRACKER อยู่ใน docs/archive (ไม่ใช่ config ใช้จริง)
 
 **Acceptance:** แชทจริงใช้ qwen เป็นหลัก, fail-over ไป GLM ทำงานจริง, tsc/vitest/build ผ่าน, ไม่มี nemotron หลงเหลือใน config ที่ใช้จริง
 
-## WS-2: Voice AI (AI-06) — ✅ DONE (2026-10-01, code-level)
+## WS-2: Voice AI (AI-06) — ✅ DONE (2026-10-01 code-level + owner ทดสอบจริงบน production แล้ว)
 **ผลลัพธ์จริง (2026-10-01):**
 - **2a โมเดลเสียง:** ใช้แผน B ตามกำหนด — STT/TTS ในเบราว์เซอร์ล้วน (Web Speech API) + AI ข้อความผ่าน ai-proxy (key server-side เท่านั้น) — OpenRouter ยังไม่มีโมเดลเสียง cloud ที่เหมาะ จึงบันทึก decision ไว้ (ไม่มี key รั่วฝั่ง client)
 - **2b STT:** `aiVoice.ts` หุ้ม SpeechRecognition (th-TH, continuous, interim) + `isSpeechRecognitionSupported()` — เบราว์เซอร์ไม่รองรับ = ซ่อนปุ่มไมค์ พิมพ์ต่อได้ (BiteAIChat + AiChatPage)
@@ -71,7 +71,7 @@
 - **2d UX:** ปุ่มไมค์ (กดพูด/กดหยุด) + ปุ่มลำโพงเปิด/ปิดเสียงตอบ + สถานะ ฟัง/คิด/พูด ใน `BiteAIChat.tsx` และ `AiChatPage.tsx` (VoiceDemoPage มีอยู่ก่อนแล้ว)
 - **2e prompt เสียง:** voice mode ส่ง `VOICE_MODE_DIRECTIVE` (ตอบสั้น 1-3 ประโยค ไม่มี markdown) — ประวัติเสียงเดิน `conversationHistory` ของ aiService ระบบเดียว (aiVoice.sendTextMessage → chatWithAI) ไม่คู่ขนาน; guardrail AI-02 ถูก ai-proxy inject server-side ครอบเสียงด้วยเสมอ
 - **2f ทดสอบ:** `src/__tests__/aiVoice.test.ts` 10/10 PASS (mock Web Speech API: support fallback, speakableText, barge-in, pipeline เดียวกับ chat, error shape) — tsc 0 errors / vitest 38 files 351 tests / build PASS
-- **ค้าง (owner):** ทดสอบจริงบน Chrome (พูด→ตอบด้วยเสียง→barge-in) และบันทึกอุปกรณ์ — อยู่ใน §4 checklist
+- **ทดสอบจริง:** owner ทดสอบบน production แล้ว (2026-10-01: "ok") — STT/TTS/barge-in ผ่าน ai-proxy เวอร์ชัน deploy ล่าสุด
 
 **WS-2a: โมเดลเสียงผ่าน OpenRouter**
 - [ ] ค้นหา/ยืนยันโมเดลเสียงที่ OpenRouter มีจริง — ถ้ายังไม่มีตามต้อง ใช้แผน B: Web Speech API ล้วน (STT ในเบราว์เซอร์ + speechSynthesis ในเครื่อง) ฟรี ไม่เพิ่ม key; บันทึก decision พร้อมเหตุผล
@@ -103,13 +103,13 @@
 
 **Acceptance:** แตะไมค์พูดได้จริงบนเบราว์เซอร์ที่รองรับ, ตอบด้วยเสียงได้จริง, ปิดเสียง/ไม่รองรับแล้วยังพิมพ์ได้ปกติ, ไม่มี key รั่วฝั่ง client
 
-### WS-3: Inject Context จาก DB — ✅ DONE (2026-10-01, code-level)
+### WS-3: Inject Context จาก DB — ✅ DONE (2026-10-01 code-level + owner ทดสอบจริงบน production แล้ว)
 **ผลลัพธ์จริง:**
 - `src/lib/aiDbContext.ts` (NEW): ดึง products / product_categories / promotions / business_settings ผ่าน public client (anon + RLS, migration 097/100 grants ครบ) — ตารางไหน fail ข้ามได้โดยไม่พัง; ย่อเป็น context ≤3,500 chars + คำสั่งกันมโน "ตอบจาก context เท่านั้น ห้ามปรับราคาเอง"; cache TTL 7 นาที + `invalidateDbContext()`
 - Inject ใน system message เดียว: `chatWithAI` / `chatWithAIStream` (aiService) รวม SYSTEM_PROMPT + LIVE STORE CONTEXT (UI) + DB CONTEXT — ค่าเริ่มรัน `chatWithAI(text)` ก็ได้ DB context อัตโนมัติ (BiteAIChat/AiChatPage ไม่ต้องแก้ caller)
 - **แก้กับดัก slice ตามที่เตือนไว้:** client `trimForProxy()` คง system ไว้เสมอ + ai-proxy แยก filter system/non-system (`slice(-10)` ใหม่ไม่ตัด system message อีก); maxTokens 500 → 700 รองรับ context ยาว
 - ทดสอบ: `src/__tests__/aiDbContext.test.ts` 10/10 PASS (mock supabase: กลุ่มเมนู, หมดวันนี้, โปรโมชัน, settings, cache/invalidate, fail-per-table, ทั้งหมดล้ม → '' กันมโน, cap ขนาด)
-- **ค้าง (owner):** ถามจริง "มีอะไรขายวันนี้ / ราคา X" บนแชท production (ต้อง deploy ai-proxy ก่อน — WS-1 ข้อ 6)
+- **ทดสอบจริง:** owner ทดสอบบน production หลัง deploy ai-proxy (2026-10-01: "ok")
 
 1. [ ] สร้าง context builder ใหม่ใน src/lib (เช่น aiDbContext.ts):
    - ดึงผ่าน client Supabase เดิม (anon key + RLS) — ตาราง: products (เฉพาะ is_available), categories, โปรโมชัน, business_settings (เวลาร้าน/โซนส่ง/วิธีชำระ), reviews ล่าสุดถ้าจำเป็น
@@ -135,11 +135,11 @@
 
 ## 4. Checklist ก่อนปิด session ถัดไป
 - [x] grep `nemotron` = 0 ใน config ที่ใช้จริง (2026-10-01 verified; เอกสาร archive เก่ายังมี — ไม่กระทบ runtime)
-- [ ] แชทจริงผ่าน qwen + fallback ไป GLM ทดสอบสำเร็จ (ค้าง — owner)
-- [ ] STT/TTS ทดสอบจริงในเบราว์เซอร์ผ่าน (บันทึกเบราว์เซอร์/อุปกรณ์)
-- [ ] คำถามที่ต้องใช้ข้อมูล DB ได้คำตอบตรงจริง
-- [ ] `npx tsc --noEmit` = 0 errors; `npx vitest run` = 0 failed; `npm run build` = PASS
-- [ ] ai-proxy deploy แล้ว (ถ้ามีแก้); เอกสาร AI-06 เปลี่ยน CANCELLED → DONE พร้อมหลักฐาน
+- [x] แชทจริงผ่าน qwen + fallback ไป GLM ทดสอบสำเร็จ (owner ยืนยัน 2026-10-01)
+- [x] STT/TTS ทดสอบจริงในเบราว์เซอร์ผ่าน (owner ยืนยัน 2026-10-01: "ok")
+- [x] คำถามที่ต้องใช้ข้อมูล DB ได้คำตอบตรงจริง (owner ยืนยัน 2026-10-01)
+- [x] `npx tsc --noEmit` = 0 errors; `npx vitest run` = 38 files / 351 tests ผ่าน; `npm run build` = exit 0 (re-verify หลัง deploy 2026-10-01)
+- [x] ai-proxy deploy แล้ว (owner, 2026-10-01); เอกสาร AI-06 เปลี่ยน CANCELLED → DONE พร้อมหลักฐาน
 
 ## 5. ความเสี่ยง / ข้อควรระวัง
 - id โมเดล GLM บน OpenRouter ต้องยืนยันจริงก่อนใช้ (ชื่อในคำสั่ง owner อาจไม่ตรง id จริง)
