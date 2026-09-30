@@ -60,6 +60,14 @@ function sseHeaders(): Record<string, string> {
 
 const DEFAULT_MODEL = 'qwen/qwen3.7-flash' // sync: src/lib/aiModels.ts (fallback z-ai/glm-5.3-flash)
 
+// FIX (2026-10-01, owner console log): qwen3.7-flash is a HYBRID REASONING model —
+// a production probe showed 522/576 completion tokens burned on reasoning, so with
+// maxTokens 700 + a long DB context the answer `content` came back EMPTY
+// ("Empty AI response content" → forced fallback to GLM on every message).
+// Waiter chat doesn't need chain-of-thought → disable reasoning on hybrid models
+// via OpenRouter's `reasoning` parameter (ignored by non-reasoning models).
+const REASONING_OFF = { enabled: false }
+
 async function streamCompletion(req: Request, apiKey: string, model: string, safeMessages: ChatMessage[], maxTokens: number): Promise<Response> {
   const upstream = await fetch(OPENROUTER_URL, {
     method: 'POST',
@@ -69,7 +77,7 @@ async function streamCompletion(req: Request, apiKey: string, model: string, saf
       'HTTP-Referer': req.headers.get('origin') || 'https://bitemebaby-5f7.pages.dev',
       'X-Title': 'Bite Me Baby App',
     },
-    body: JSON.stringify({ model, messages: safeMessages, max_tokens: maxTokens, temperature: 0.7, stream: true }),
+    body: JSON.stringify({ model, messages: safeMessages, max_tokens: maxTokens, temperature: 0.7, reasoning: REASONING_OFF, stream: true }),
   })
   if (!upstream.ok || !upstream.body) {
     const detail = await upstream.json().catch(() => ({}))
@@ -195,6 +203,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
       messages: safeMessages,
       max_tokens: payload.maxTokens ?? 500,
       temperature: 0.7,
+      reasoning: REASONING_OFF,
     }),
   })
 
