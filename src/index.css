@@ -1041,6 +1041,8 @@ p { color: var(--color-brand-text-secondary); }
 .flad-media {
   width: 118px;
   height: 74px;
+  /* โชว์สติกเกอร์โลโก้แบรนด์แทนพื้นส้มเปล่า เมื่อ promo ไม่มีรูป (หรือรูปเสีย) */
+  background: url('/Logo_Sticker_Circle.webp') center / cover no-repeat, linear-gradient(135deg, #F97316, #FBBF24);
   border-radius: 10px;
   overflow: hidden;
   flex-shrink: 0;
