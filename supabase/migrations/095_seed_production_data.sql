@@ -12,7 +12,7 @@ INSERT INTO public.branches (id, tenant_id, code, name, slug, address_line1, cit
 VALUES ('branch-bkk-central', 'tenant-bmb-001', 'main', 'BMB Central (à¸ªà¸²à¸‚à¸²à¸«à¸¥à¸±à¸)', 'main', '123 Silom Road, Bang Rak', 'Bangkok', 'Bangkok', 'TH', 13.7273, 100.5340, 13.7273, 100.5340, 10.00, 'active', true) ON CONFLICT (id) DO NOTHING;
 
 -- SECTION 2: Delivery Rounds tomorrow schedule (M082+M025)
-DO 
+DO $$
 DECLARE
   v_date text := (CURRENT_DATE + INTERVAL '1 day')::text;
   v_bid text;
@@ -36,7 +36,7 @@ BEGIN
     ON CONFLICT (id) DO NOTHING;
 
   RAISE NOTICE 'Delivery rounds for % inserted/ignored, branch=%', v_date, v_bid;
-END ;
+END $$;
 
 -- SECTION 3: Delivery Zones (M008+M083 schema)
 INSERT INTO public.delivery_zones (id, name, min_distance_km, max_distance_km, fee, is_active, tenant_id, branch_id)
@@ -47,7 +47,7 @@ VALUES
 ON CONFLICT (id) DO NOTHING;
 
 -- SECTION 4: Verification
-DO  DECLARE
+DO $$ DECLARE
   v_bc int := 0; v_rc int := 0; v_zc int := 0; v_bid text;
 BEGIN
   SELECT id INTO v_bid FROM public.branches WHERE tenant_id='tenant-bmb-001' AND is_default=true LIMIT 1;
@@ -61,6 +61,6 @@ BEGIN
   SELECT count(*) INTO v_rc FROM public.delivery_rounds WHERE status='active';
   SELECT count(*) INTO v_zc FROM public.delivery_zones WHERE is_active=true;
   RAISE NOTICE 'Validation passed: branches=%, rounds=%, zones=% | main_branch=%', v_bc, v_rc, v_zc, v_bid;
-END ;
+END $$;
 
 COMMIT;
