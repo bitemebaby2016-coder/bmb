@@ -1,5 +1,5 @@
 ﻿// ============================================
-// Bite Me Baby â€” Admin Tenants Management (TEN-06)
+// Bite Me Baby — Admin Tenants Management (TEN-06)
 import { useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { listTenants, createTenant, updateTenant, setTenantStatus, setDefaultBrand } from '@/lib/adminTenantApi'

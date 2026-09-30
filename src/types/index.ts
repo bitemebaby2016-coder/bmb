@@ -26,17 +26,17 @@ export interface Product {
   is_available: boolean;
   is_featured: boolean;
   is_preorder: boolean;           // DEPRECATED alias (migration 023): one-way mirror of available_preorder
-  available_same_day?: boolean;   // âœ… migration 023 â€” canonical mode column (server gate authority)
-  available_preorder?: boolean;   // âœ… migration 023 â€” canonical mode column (server gate authority)
+  available_same_day?: boolean;   // ✅ migration 023 — canonical mode column (server gate authority)
+  available_preorder?: boolean;   // ✅ migration 023 — canonical mode column (server gate authority)
   prep_minutes: number;
   sort_order: number;
-  delivery_round_id?: string;     // âœ… v3.1: Delivery round ID (à¸ªà¸³à¸«à¸£à¸±à¸š pre-order)
-  scheduled_date?: string;        // âœ… v3.1: Scheduled delivery date (à¸ªà¸³à¸«à¸£à¸±à¸š pre-order)
-  stock?: number;                 // migration 012 â€” display stock (not authoritative capacity)
-  rating?: number;                // migration 012 â€” display rating (1â€“5)
-  review_count?: number;          // migration 012 â€” display review count
-  addons?: ProductAddon[];        // migration 016 â€” add-ons / toppings (server-priced)
-  archived?: boolean;             // migration 055 â€” soft archive (CAT-D04=B); archived â†’ server rejects orders
+  delivery_round_id?: string;     // ✅ v3.1: Delivery round ID (สำหรับ pre-order)
+  scheduled_date?: string;        // ✅ v3.1: Scheduled delivery date (สำหรับ pre-order)
+  stock?: number;                 // migration 012 — display stock (not authoritative capacity)
+  rating?: number;                // migration 012 — display rating (1–5)
+  review_count?: number;          // migration 012 — display review count
+  addons?: ProductAddon[];        // migration 016 — add-ons / toppings (server-priced)
+  archived?: boolean;             // migration 055 — soft archive (CAT-D04=B); archived → server rejects orders
   branch_id?: string;             // TEN-07: which branch this product belongs to (global = null)
   created_at: string;
 }
@@ -48,11 +48,11 @@ export interface ProductCategory {
   icon: string;
   sort_order: number;
   is_active: boolean;
-  menu_section_id?: string | null; // migration 055 â€” section this category belongs to (Menu â†’ Section â†’ Category)
-  archived?: boolean;              // migration 055 â€” soft archive
+  menu_section_id?: string | null; // migration 055 — section this category belongs to (Menu → Section → Category)
+  archived?: boolean;              // migration 055 — soft archive
 }
 
-// migration 055 (CAT-01) â€” Menu â†’ Section level (tenant-owned catalog, TEN-D01=A)
+// migration 055 (CAT-01) — Menu → Section level (tenant-owned catalog, TEN-D01=A)
 export interface MenuSection {
   id: string;
   name: string;
@@ -126,7 +126,7 @@ export interface DeliveryRound {
   current_count: number;
   date: string;                   // TypeScript property (DB column: 'scheduled_date')
   status: string;
-  branch_id: string;              // TEN-07: FK to branches(id) â€” round belongs to a branch
+  branch_id: string;              // TEN-07: FK to branches(id) — round belongs to a branch
   tenant_id: string;              // TEN-02: FK to tenants(id)
   // Note: Supabase returns DB column names as object keys:
   // - 'scheduled_date' (not 'date')
@@ -553,7 +553,7 @@ export interface DeliveryZone {
   max_distance_km: number;
   fee: number;
   is_active: boolean;
-  branch_id: string;              // TEN-07: FK to branches(id) â€” zone belongs to a branch
+  branch_id: string;              // TEN-07: FK to branches(id) — zone belongs to a branch
   tenant_id: string;              // TEN-02: FK to tenants(id)
   created_at: string;
   updated_at: string;
@@ -567,7 +567,7 @@ export interface BusinessSettingsRow {
   key: string;
   value: Record<string, any>;
   tenant_id: string;              // TEN-04: FK to tenants(id)
-  branch_id: string | null;       // TEN-07: FK to branches(id) â€” NULL = tenant default, non-NULL = branch override
+  branch_id: string | null;       // TEN-07: FK to branches(id) — NULL = tenant default, non-NULL = branch override
   created_at: string;
   updated_at: string;
 }
@@ -621,8 +621,8 @@ export interface Profile {
   role: 'customer' | 'admin' | 'tenant_admin' | 'branch_staff';
   is_active: boolean;
   avatar_url: string;
-  tenant_id: string | null;       // TEN-02: FK to tenants(id) â€” nullable for customers
-  branch_id: string | null;       // TEN-07: FK to branches(id) â€” set for branch_staff role
+  tenant_id: string | null;       // TEN-02: FK to tenants(id) — nullable for customers
+  branch_id: string | null;       // TEN-07: FK to branches(id) — set for branch_staff role
   is_platform: boolean;           // TEN-02: platform admin flag (single user)
   created_at: string;
   updated_at: string;
@@ -697,7 +697,7 @@ export type AvailabilityState =
 
 // ============================================
 // Social Proof Review Feed Types (UI v4.0)
-// @see docs/COMPONENT_SPEC_UI.md Â§12 CustomerReviewCard + Glassmorphism Spec
+// @see docs/COMPONENT_SPEC_UI.md §12 CustomerReviewCard + Glassmorphism Spec
 // ============================================
 
 export type SocialProofSource = 'facebook' | 'grabfood' | 'website';
@@ -705,54 +705,54 @@ export type SocialProofSource = 'facebook' | 'grabfood' | 'website';
 export interface SocialProofReview {
   id: string;
   customerName: string;
-  rating: number;              // 1-5 (curated integers â€” whole stars for 3D rating)
+  rating: number;              // 1-5 (curated integers — whole stars for 3D rating)
   comment: string;             // real review copy from Facebook / GrabFood
   source: SocialProofSource;
   sourceLabel: string;         // e.g. "Facebook", "GrabFood"
-  dateLabel: string;           // e.g. "2 à¸ªà¸±à¸›à¸”à¸²à¸«à¹Œà¸—à¸µà¹ˆà¹à¸¥à¹‰à¸§"
-  foodName: string;            // à¸­à¸°à¹„à¸£à¸‚à¸­à¸‡à¸£à¹‰à¸²à¸™à¸—à¸µà¹ˆà¸¥à¸¹à¸à¸„à¹‰à¸²à¸ªà¸±à¹ˆà¸‡
-  productId: string;           // deep link â†’ real product (products.id)
+  dateLabel: string;           // e.g. "2 สัปดาห์ที่แล้ว"
+  foodName: string;            // อะไรของร้านที่ลูกค้าสั่ง
+  productId: string;           // deep link → real product (products.id)
 }
 
 export interface MenuHighlightClip {
   id: string;
   title: string;
   subtitle?: string;
-  videoUrl: string;            // mp4/webm â€” short clip only (max 2 clips, see video policy)
+  videoUrl: string;            // mp4/webm — short clip only (max 2 clips, see video policy)
   posterUrl?: string;          // WebP poster (lazy)
 }
 
 // ============================================
-// Mascot "à¸™à¹‰à¸­à¸‡ Bite" â€” Pose System (Mascot Asset System v1.0)
-// @see docs/COMPONENT_SPEC_UI.md Â§18 Mascot Asset System (Scale & Placement Guide)
+// Mascot "น้อง Bite" — Pose System (Mascot Asset System v1.0)
+// @see docs/COMPONENT_SPEC_UI.md §18 Mascot Asset System (Scale & Placement Guide)
 // ============================================
 
 export type MascotPose =
-  | 'greeting'  // à¸–à¸·à¸­à¸–à¸²à¸”à¸­à¸²à¸«à¸²à¸£ / à¸à¸§à¸±à¸à¸¡à¸·à¸­à¸—à¸±à¸à¸—à¸²à¸¢ â€” Hero Banner Header / Splash
-  | 'heart'     // Mini Heart â€” Customer Review Cards (à¸¡à¸¸à¸¡à¸à¸²à¸£à¹Œà¸”à¸£à¸µà¸§à¸´à¸§)
-  | 'thumbsup'  // à¸à¸²à¸£à¸±à¸™à¸•à¸µà¸„à¸§à¸²à¸¡à¸­à¸£à¹ˆà¸­à¸¢ â€” Featured Menu Badges (asset: bite_badge_thumbsup_approval)
-  | 'running'   // à¸–à¸·à¸­à¸à¸¥à¹ˆà¸­à¸‡à¸­à¸²à¸«à¸²à¸£ / à¸§à¸´à¹ˆà¸‡à¸ªà¹ˆà¸‡à¸‚à¸­à¸‡ â€” Delivery Round Cards / Tracking
-  | 'pointing'  // à¸Šà¸µà¹‰à¹„à¸›à¸—à¸µà¹ˆà¸›à¸¸à¹ˆà¸¡ â€” Call-to-Action Buttons
-  | 'peeking'   // à¹‚à¸œà¸¥à¹ˆà¸¡à¸²à¸ˆà¸²à¸à¸¡à¸¸à¸¡à¸à¸²à¸£à¹Œà¸” â€” Glassmorphism Overlay Cards
-  | 'thinking'  // à¸–à¸·à¸­à¸¥à¸¹à¸à¹€à¸•à¹‹à¸² 3D à¸„à¸£à¸¸à¹ˆà¸™à¸„à¸´à¸” â€” Random Menu Feature
-  | 'empty'     // à¸«à¸™à¹‰à¸²à¸«à¸‡à¸­à¸¢ / à¸ˆà¸²à¸™à¸§à¹ˆà¸²à¸‡ â€” Empty Cart / Sold Out State
-  | 'bye'       // à¹‚à¸šà¸à¸¡à¸·à¸­à¸¥à¸² / à¸‚à¸­à¸šà¸„à¸¸à¸“ â€” Delivery Complete / Payment Success
-  // ðŸ†• Asset Set 2026-09-20 (à¹€à¸ˆà¹‰à¸²à¸‚à¸­à¸‡à¸£à¹‰à¸²à¸™à¸­à¸±à¸›à¹‚à¸«à¸¥à¸” 3D à¸Šà¸¸à¸”à¹ƒà¸«à¸¡à¹ˆ)
-  | 'award'     // à¸–à¹‰à¸§à¸¢à¸£à¸²à¸‡à¸§à¸±à¸¥ â€” Rewards / Loyalty
-  | 'cooking'   // à¸—à¸³à¸­à¸²à¸«à¸²à¸£ â€” Kitchen / Batch Production
-  | 'eating'    // à¸à¸´à¸™à¸­à¸²à¸«à¸²à¸£ â€” Review / Social Proof
-  | 'feedback'  // à¸Ÿà¸µà¸”à¹à¸šà¹‡à¸ â€” Review Forms
-  | 'menu'      // à¸–à¸·à¸­à¹€à¸¡à¸™à¸¹ â€” Menu Page
-  | 'ready'     // à¸žà¸£à¹‰à¸­à¸¡à¹€à¸ªà¸´à¸£à¹Œà¸Ÿ â€” Ready for Pickup
-  | 'recommend' // à¹à¸™à¸°à¸™à¸³à¹€à¸¡à¸™à¸¹ â€” AI Recommendation / Bite Hero
-  | 'reviewing' // à¸­à¹ˆà¸²à¸™à¸£à¸µà¸§à¸´à¸§ â€” Review Carousel
-  | 'shopping'  // à¸–à¸·à¸­à¸•à¸°à¸à¸£à¹‰à¸² â€” Cart / Add-ons
-  | 'success'   // à¸Šà¸™à¸°/à¸ªà¸³à¹€à¸£à¹‡à¸ˆ â€” Payment Success / Vote Success
-  | 'vote'      // à¹‚à¸«à¸§à¸• â€” Pre-order Voting
-  | 'waiting'  // à¸£à¸­à¸„à¸´à¸§ â€” Order Tracking (waiting states)
-  | 'sad'      // à¹€à¸¨à¸£à¹‰à¸² â€” Order failed / payment failed
-  | 'closed';  // à¸›à¸´à¸”à¸£à¹‰à¸²à¸™ â€” Store closed banner
-                // (asset: /assets/mascot/bite_good bye.webp â€” à¸•à¸±à¸”à¸ªà¸´à¸™à¹ƒà¸ˆ 2026-09-17)
+  | 'greeting'  // ถือถาดอาหาร / กวักมือทักทาย — Hero Banner Header / Splash
+  | 'heart'     // Mini Heart — Customer Review Cards (มุมการ์ดรีวิว)
+  | 'thumbsup'  // การันตีความอร่อย — Featured Menu Badges (asset: bite_badge_thumbsup_approval)
+  | 'running'   // ถือกล่องอาหาร / วิ่งส่งของ — Delivery Round Cards / Tracking
+  | 'pointing'  // ชี้ไปที่ปุ่ม — Call-to-Action Buttons
+  | 'peeking'   // โผล่มาจากมุมการ์ด — Glassmorphism Overlay Cards
+  | 'thinking'  // ถือลูกเต๋า 3D ครุ่นคิด — Random Menu Feature
+  | 'empty'     // หน้าหงอย / จานว่าง — Empty Cart / Sold Out State
+  | 'bye'       // โบกมือลา / ขอบคุณ — Delivery Complete / Payment Success
+  // 🆕 Asset Set 2026-09-20 (เจ้าของร้านอัปโหลด 3D ชุดใหม่)
+  | 'award'     // ถ้วยรางวัล — Rewards / Loyalty
+  | 'cooking'   // ทำอาหาร — Kitchen / Batch Production
+  | 'eating'    // กินอาหาร — Review / Social Proof
+  | 'feedback'  // ฟีดแบ็ก — Review Forms
+  | 'menu'      // ถือเมนู — Menu Page
+  | 'ready'     // พร้อมเสิร์ฟ — Ready for Pickup
+  | 'recommend' // แนะนำเมนู — AI Recommendation / Bite Hero
+  | 'reviewing' // อ่านรีวิว — Review Carousel
+  | 'shopping'  // ถือตะกร้า — Cart / Add-ons
+  | 'success'   // ชนะ/สำเร็จ — Payment Success / Vote Success
+  | 'vote'      // โหวต — Pre-order Voting
+  | 'waiting'  // รอคิว — Order Tracking (waiting states)
+  | 'sad'      // เศร้า — Order failed / payment failed
+  | 'closed';  // ปิดร้าน — Store closed banner
+                // (asset: /assets/mascot/bite_good bye.webp — ตัดสินใจ 2026-09-17)
 
 export type MascotSize = 'sm' | 'md' | 'lg' | 'fluid'
 
@@ -814,9 +814,9 @@ export interface UIConfig {
 }
 
 export const UI_CONFIG: UIConfig = {
-  primaryColor: '#F97316',    // à¸ªà¹‰à¸¡à¸«à¸¥à¸±à¸ (Bite Me Baby brand)
-  secondaryColor: '#FBBF24',  // à¹€à¸«à¸¥à¸·à¸­à¸‡ (secondary)
-  accentColor: '#92400E',     // à¸™à¹‰à¸³à¸•à¸²à¸¥à¹€à¸‚à¹‰à¸¡ (text/accents)
+  primaryColor: '#F97316',    // ส้มหลัก (Bite Me Baby brand)
+  secondaryColor: '#FBBF24',  // เหลือง (secondary)
+  accentColor: '#92400E',     // น้ำตาลเข้ม (text/accents)
   bgColor: '#FFF7ED',         // Cream/Beige background
   textColor: '#1C1917',       // Dark text
   fontFamily: "'Nunito', 'Quicksand', sans-serif",
@@ -824,8 +824,8 @@ export const UI_CONFIG: UIConfig = {
   shadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1)'
 }
 // ============================================
-// HOME UI/UX v5 â€” Data Contracts (View Model)
-// Mock providers feed these â†’ real provider (Supabase/Admin) later WITHOUT UI change.
+// HOME UI/UX v5 — Data Contracts (View Model)
+// Mock providers feed these → real provider (Supabase/Admin) later WITHOUT UI change.
 // ============================================
 
 export type HomeMode = 'same-day' | 'pre-order'

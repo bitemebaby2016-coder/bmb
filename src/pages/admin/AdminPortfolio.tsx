@@ -1,5 +1,5 @@
 ﻿// ============================================
-// Bite Me Baby â€” Admin Portfolio Management (CAT-04, migration 094)
+// Bite Me Baby — Admin Portfolio Management (CAT-04, migration 094)
 // CRUD management of admin-curated past works / promotional images
 // ============================================
 
@@ -80,7 +80,7 @@ export function AdminPortfolioPage() {
       </div>
 
       <div className="mt-6">
-        <Link to="/admin/dashboard" className="text-sm text-brand-primary hover:underline">â† Back to Admin Dashboard</Link>
+        <Link to="/admin/dashboard" className="text-sm text-brand-primary hover:underline">← Back to Admin Dashboard</Link>
       </div>
     </div>
   )

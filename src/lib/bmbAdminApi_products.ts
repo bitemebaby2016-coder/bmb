@@ -33,7 +33,7 @@ export interface ProductForm {
 }
 
 // ============================================
-// Products API â€” Supabase-backed + TEN-06 tenant-scoped
+// Products API — Supabase-backed + TEN-06 tenant-scoped
 // ============================================
 
 /** Get products with optional tenant filter (TEN-06: auto-scope from adminTenantContext or brand context) */
@@ -49,7 +49,7 @@ export async function getProducts(tenantHint?: string): Promise<Product[]> {
   if (effectiveTenant) {
     query = query.eq('tenant_id', effectiveTenant)
   } else {
-    // No tenant resolved â†’ show all (fallback for unauthenticated / bootstrapping)
+    // No tenant resolved → show all (fallback for unauthenticated / bootstrapping)
     // Will be RLS-enforced by DB policies anyway
   }
   
@@ -68,7 +68,7 @@ export async function getProductsAdmin(): Promise<Product[]> {
   if (!isPlatform && ctx.activeTenantId) {
     query = query.eq('tenant_id', ctx.activeTenantId)
   }
-  // If platform admin with no activeTenant selected â†’ show all (RLS will enforce)
+  // If platform admin with no activeTenant selected → show all (RLS will enforce)
   
   const { data, error } = await query
   if (error) { console.error('[getProductsAdmin] Error:', error); return [] }
@@ -105,7 +105,7 @@ export async function getFeaturedProducts(): Promise<Product[]> {
 export async function createProduct(data: ProductForm): Promise<Product | null> {
   const productData = {
     // Unique even for rapid consecutive creations (Date.now() alone can
-    // collide within the same millisecond â†’ duplicate TEXT PK error).
+    // collide within the same millisecond → duplicate TEXT PK error).
     id: data.id || `prod-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
     name: data.name, description: data.description, price: data.price,
     category_id: data.category_id, image_url: data.image_url,
@@ -137,7 +137,7 @@ export async function deleteProduct(id: string): Promise<boolean> {
 }
 
 // ============================================
-// Delivery Rounds API â€” Supabase-backed (v3.1+)
+// Delivery Rounds API — Supabase-backed (v3.1+)
 // ============================================
 
 export interface DeliveryRoundForm {
@@ -180,7 +180,7 @@ export async function closeDeliveryRound(id: string): Promise<DeliveryRound | nu
 }
 
 // ============================================
-// Categories API â€” Supabase-backed
+// Categories API — Supabase-backed
 // ============================================
 
 export interface CategoryForm {
@@ -229,8 +229,8 @@ export async function deleteCategory(id: string): Promise<boolean> {
 }
 
 // ============================================
-// Sections (migration 055 â€” CAT-01: Menu â†’ Section â†’ Category â†’ Product)
-// Tenant-owned catalog (TEN-D01=A) â€” section is a real catalog entity.
+// Sections (migration 055 — CAT-01: Menu → Section → Category → Product)
+// Tenant-owned catalog (TEN-D01=A) — section is a real catalog entity.
 // ============================================
 
 export interface SectionForm {
@@ -276,7 +276,7 @@ export async function updateSection(id: string, data: Partial<SectionForm>): Pro
   return result as MenuSection
 }
 
-// Archive (CAT-D04=B): deactivate â€” NOT a hard delete.
+// Archive (CAT-D04=B): deactivate — NOT a hard delete.
 export async function archiveSection(id: string): Promise<MenuSection | null> {
   return updateSection(id, { is_active: false })
 }
@@ -286,8 +286,8 @@ export async function restoreSection(id: string): Promise<MenuSection | null> {
 }
 
 // ============================================
-// Soft archive (migration 055 â€” CAT-D04=B)
-// archive = archived:true + is_available:false â†’ RLS hides from customers,
+// Soft archive (migration 055 — CAT-D04=B)
+// archive = archived:true + is_available:false → RLS hides from customers,
 // server gate (trg_catalog_visibility_gate) rejects new orders.
 // restore = archived:false (availability stays OFF; admin re-enables explicitly).
 // ============================================

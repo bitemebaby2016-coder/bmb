@@ -1,5 +1,5 @@
 // ============================================
-// Phase 3B Wave 1 â€” canonical customer order flow (mock-level contracts)
+// Phase 3B Wave 1 — canonical customer order flow (mock-level contracts)
 // Mirrors the server rules of migrations 024/025/029 at the client boundary:
 //   - ONE creation RPC (create_order_with_items v3, mode params, no client prices)
 //   - canonical cancellation (cancel_order: owner window rules, idempotent)
@@ -9,7 +9,7 @@
 
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
-// Offline DB mock â€” same wiring as api.test.ts (in-memory PostgREST fake seeded
+// Offline DB mock — same wiring as api.test.ts (in-memory PostgREST fake seeded
 // like migration 004). These tests must NEVER touch the real database.
 vi.mock('@/lib/supabase', async () => {
   const { createSupabaseMock } = await import('./helpers/supabaseMock')
@@ -30,7 +30,7 @@ const TOMORROW = () => {
   return d.toISOString().slice(0, 10)
 }
 
-describe('ensure_rounds_for_date â€” deterministic rounds for the PRE_ORDER date picker', () => {
+describe('ensure_rounds_for_date — deterministic rounds for the PRE_ORDER date picker', () => {
   it('creates deterministic active rounds and is idempotent', async () => {
     const date = TOMORROW()
     const r1 = await supabase.rpc('ensure_rounds_for_date', { p_date: date })
@@ -44,7 +44,7 @@ describe('ensure_rounds_for_date â€” deterministic rounds for the PRE_ORDER
       `round-${date.replace(/-/g, '')}-midday`,
       `round-${date.replace(/-/g, '')}-morning`,
     ])
-    // idempotent retry â€” no duplicates
+    // idempotent retry — no duplicates
     const r2 = await supabase.rpc('ensure_rounds_for_date', { p_date: date })
     expect(r2.error).toBeNull()
     const read2 = await supabase.from('delivery_rounds').select('*')
@@ -57,7 +57,7 @@ describe('ensure_rounds_for_date â€” deterministic rounds for the PRE_ORDER
   })
 })
 
-describe('cancel_order â€” canonical cancellation (owner rules)', () => {
+describe('cancel_order — canonical cancellation (owner rules)', () => {
   it('cancels a pending own order and releases round capacity', async () => {
     const order = await supabase.rpc('create_order_with_items', {
       p_items: [{ product_id: 'prod-1', quantity: 1 }],
@@ -103,7 +103,7 @@ describe('cancel_order â€” canonical cancellation (owner rules)', () => {
   })
 })
 
-describe('server mode gate â€” client cannot order a product in a forbidden mode', () => {
+describe('server mode gate — client cannot order a product in a forbidden mode', () => {
   it('rejects PRE_ORDER for a same-day-only product', async () => {
     const date = TOMORROW()
     await supabase.rpc('ensure_rounds_for_date', { p_date: date })
@@ -136,7 +136,7 @@ describe('canonical payload hygiene', () => {
       p_delivery_round_id: 'round-1',
       p_customer_name: 'Somchai Rakdee',
       p_order_mode: 'SAME_DAY',
-      // attempted client money injection â€” the server contract ignores it
+      // attempted client money injection — the server contract ignores it
       p_total_amount: 1,
       p_delivery_fee: 1,
     })
@@ -146,10 +146,10 @@ describe('canonical payload hygiene', () => {
 })
 
 // ============================================
-// Â§18 Wave 10 coverage (tracking / delivery / payment)
+// §18 Wave 10 coverage (tracking / delivery / payment)
 // ============================================
 
-describe('Â§18 tracking â€” no timer mutates status; refresh reflects server', () => {
+describe('§18 tracking — no timer mutates status; refresh reflects server', () => {
   it('time passing alone never advances order state; only a server transition + refetch does', async () => {
     vi.useFakeTimers()
     try {
@@ -169,7 +169,7 @@ describe('Â§18 tracking â€” no timer mutates status; refresh reflects ser
       expect((mid.data as any).status).toBe('pending') // elapsed time â‰  progression
       expect((mid.data as any).payment_status).toBe('pending')
 
-      // Server-side lifecycle change (admin path) â†’ visible ONLY through refetch.
+      // Server-side lifecycle change (admin path) → visible ONLY through refetch.
       await supabase.rpc('transition_order_status', { p_order_number: onum, p_new_status: 'confirmed' })
       const after = await supabase.from('orders').select('*').eq('order_number', onum).single()
       expect((after.data as any).status).toBe('confirmed')
@@ -209,8 +209,8 @@ describe('Â§18 tracking â€” no timer mutates status; refresh reflects ser
   })
 })
 
-describe('Â§18 delivery â€” forged client distance is input-only; no client money field', () => {
-  it('createOrder payload contains ONLY p_* inputs â€” no fee/total authority keys', async () => {
+describe('§18 delivery — forged client distance is input-only; no client money field', () => {
+  it('createOrder payload contains ONLY p_* inputs — no fee/total authority keys', async () => {
     const { createOrder } = await import('@/lib/bmbAdminApi_orders')
     const spy = vi.spyOn(supabase, 'rpc')
     try {
@@ -226,7 +226,7 @@ describe('Â§18 delivery â€” forged client distance is input-only; no clie
       expect(created).not.toBeNull()
       expect(spy.mock.calls[0][0]).toBe('create_order_with_items')
       const args = Object.keys(spy.mock.calls[0][1] as Record<string, any>)
-      // allow-list of inputs only â€” money authority never crosses the boundary
+      // allow-list of inputs only — money authority never crosses the boundary
       expect(args.every((k) => ['p_items', 'p_delivery_round_id', 'p_delivery_method', 'p_delivery_address', 'p_dropoff_latitude', 'p_dropoff_longitude', 'p_customer_name', 'p_customer_phone', 'p_payment_method', 'p_special_instructions', 'p_promotion_code', 'p_distance_km', 'p_order_mode', 'p_scheduled_date', 'p_branch_id'].includes(k))).toBe(true)
       expect(args).not.toContain('p_total_amount')
       expect(args).not.toContain('p_delivery_fee')
@@ -249,15 +249,15 @@ describe('Â§18 delivery â€” forged client distance is input-only; no clie
     })
     expect(res.error).toBeNull()
     const d = res.data as any
-    expect(Number(d.subtotal)).toBe(130) // 65 Ã— 2 â€” distance never touches price
+    expect(Number(d.subtotal)).toBe(130) // 65 × 2 — distance never touches price
     expect(Number(d.total_amount)).toBe(Number(d.subtotal) - Number(d.discount_amount) + Number(d.delivery_fee))
-    // fee follows the SERVER formula (30 + 4/km + 2/item, capped) â€” not an echoed client value
+    // fee follows the SERVER formula (30 + 4/km + 2/item, capped) — not an echoed client value
     expect(Number(d.delivery_fee)).toBe(Math.min(30 + 4 * 9999 + 2 * 2, 9999))
   })
 })
 
-describe('Â§18 payment â€” COD never paid before delivery; Stripe server-only; retry reuses the order', () => {
-  it('COD order cannot be paid before delivered â€” confirm is rejected, status stays pending', async () => {
+describe('§18 payment — COD never paid before delivery; Stripe server-only; retry reuses the order', () => {
+  it('COD order cannot be paid before delivered — confirm is rejected, status stays pending', async () => {
     const order = await supabase.rpc('create_order_with_items', {
       p_items: [{ product_id: 'prod-1', quantity: 1 }],
       p_delivery_round_id: 'round-1',
@@ -297,7 +297,7 @@ describe('Â§18 payment â€” COD never paid before delivery; Stripe server-
     expect(co.amount).toBe(9900)
   })
 
-  it('retry after failure creates a new intent for the SAME order â€” no second order, no cart mutation', async () => {
+  it('retry after failure creates a new intent for the SAME order — no second order, no cart mutation', async () => {
     const { createPaymentIntent, getPaymentIntents } = await import('@/lib/paymentGateway')
     const { useCartStore } = await import('@/store/cartStore')
     const cartBefore = useCartStore.getState().items.length

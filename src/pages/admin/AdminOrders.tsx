@@ -37,7 +37,7 @@ const STATUS_FILTERS = [
   { key: 'failed', label: 'Failed' },
 ] as const
 
-// STEP 3B-2A: operational status â†’ notification event (in-app surface only â€”
+// STEP 3B-2A: operational status → notification event (in-app surface only —
 // SMS/email/push/LINE/pg_cron remain FROZEN per Owner decision 3).
 const statusEventMap: Record<string, 'order_confirmed' | 'order_preparing' | 'order_ready_for_dispatch' | 'order_dispatched' | 'order_delivered'> = {
   confirmed: 'order_confirmed',
@@ -50,18 +50,18 @@ const statusEventMap: Record<string, 'order_confirmed' | 'order_preparing' | 'or
 export function AdminOrders() {
   const [orders, setOrders] = useState<OrderForm[]>([])
   const [filterStatus, setFilterStatus] = useState('all')
-  // STEP 3B-2A: SAME_DAY / PRE_ORDER is a server-side filter (Phase D display only â€”
+  // STEP 3B-2A: SAME_DAY / PRE_ORDER is a server-side filter (Phase D display only —
   // the pre-order queue/cutoff/capacity workflow itself belongs to 3B-2B).
   const [filterMode, setFilterMode] = useState<'all' | 'SAME_DAY' | 'PRE_ORDER'>('all')
   const [productById, setProductById] = useState<Record<string, Product>>({})
-  // W4-A: server-side pagination â€” avoids loading the full orders table on every visit.
+  // W4-A: server-side pagination — avoids loading the full orders table on every visit.
   const [page, setPage] = useState(0)
   const [total, setTotal] = useState(0)
   const [loadError, setLoadError] = useState('')
   // STEP 3B-2A Phase B: delivery-assignment state per order (migration 020 rows, RLS admin).
   const [assignmentByOrder, setAssignmentByOrder] = useState<Record<string, DeliveryAssignmentLiteRow>>({})
   // STEP 3B-2B: delivery_rounds rows (canonical capacity/cutoff source of truth) for the
-  // PRE_ORDER queue header â€” DISPLAY ONLY; server RPCs (025/038) enforce the rules.
+  // PRE_ORDER queue header — DISPLAY ONLY; server RPCs (025/038) enforce the rules.
   const [roundsById, setRoundsById] = useState<Record<string, RoundLite>>({})
   // Phase C inspection: lazily-loaded lifecycle trace + audit trail per expanded order.
   const [expandedOrder, setExpandedOrder] = useState<string | null>(null)
@@ -129,7 +129,7 @@ export function AdminOrders() {
   }
 
   async function handleConfirmPayment(orderNumber: string) {
-    // P0-5: server-authoritative â€” COD requires delivered, PromptPay requires TXN submitted.
+    // P0-5: server-authoritative — COD requires delivered, PromptPay requires TXN submitted.
     const r = await confirmOfflinePayment(orderNumber)
     loadOrders()
 
@@ -154,7 +154,7 @@ async function handleStripeRefund(orderNumber: string) {
 
   // STEP 3B-2A GAP-A2: admin cancellation goes through the canonical ATOMIC
   // `cancel_order` RPC (authz + capacity release + inventory restore + delivery-
-  // assignment cancel + audit in ONE transaction) â€” NOT transition_order_status.
+  // assignment cancel + audit in ONE transaction) — NOT transition_order_status.
   async function handleCancelOrder(orderNumber: string) {
     const reason = window.prompt(`Cancel reason for ${orderNumber} (optional)`)
     if (reason === null) return // operator aborted the prompt
@@ -162,7 +162,7 @@ async function handleStripeRefund(orderNumber: string) {
     await loadOrders()
     if (r.success) {
       showToast(
-        r.idempotent ? 'Already cancelled' : `Cancelled (${r.previous_status})${r.capacity_released ? ' Â· round capacity released' : ''}${r.inventory_restored ? ' Â· inventory restored' : ''}`,
+        r.idempotent ? 'Already cancelled' : `Cancelled (${r.previous_status})${r.capacity_released ? ' · round capacity released' : ''}${r.inventory_restored ? ' · inventory restored' : ''}`,
         'success',
       )
       if (r.note) showToast(r.note, 'info')
@@ -172,7 +172,7 @@ async function handleStripeRefund(orderNumber: string) {
   }
 
   // Phase C inspection: status history (order_status_history, migration 040) +
-  // audit trail (audit_logs, migration 018) â€” both admin-RLS read-only.
+  // audit trail (audit_logs, migration 018) — both admin-RLS read-only.
   async function toggleInspect(orderNumber: string) {
     if (expandedOrder === orderNumber) {
       setExpandedOrder(null)
@@ -187,10 +187,10 @@ async function handleStripeRefund(orderNumber: string) {
     setInspect({ history, audit, loading: false })
   }
 
-  // W4-A: server already filtered the current page â€” no client re-filter.
+  // W4-A: server already filtered the current page — no client re-filter.
   const filteredOrders = orders
 
-  // STEP 3B-2B: PRE_ORDER queue grouping (display only â€” canonical spine columns)
+  // STEP 3B-2B: PRE_ORDER queue grouping (display only — canonical spine columns)
   const preGroupsByKey: Record<string, ReturnType<typeof groupPreOrders>[number]> = {}
   if (filterMode === 'PRE_ORDER') {
     for (const g of groupPreOrders(filteredOrders)) preGroupsByKey[g.key] = g
@@ -199,8 +199,8 @@ async function handleStripeRefund(orderNumber: string) {
   return (
     <div className="max-w-7xl mx-auto px-4 py-6">
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-3xl font-bold text-brand-accent">ðŸ“‹ Manage Orders</h1>
-        <Link to="/admin" className="btn btn-outline">â† Dashboard</Link>
+        <h1 className="text-3xl font-bold text-brand-accent">📋 Manage Orders</h1>
+        <Link to="/admin" className="btn btn-outline">← Dashboard</Link>
       </div>
 
       <div className="flex gap-2 mb-2 overflow-x-auto">
@@ -221,8 +221,8 @@ async function handleStripeRefund(orderNumber: string) {
       <div className="flex gap-2 mb-6">
         {([
           { key: 'all', label: 'All modes' },
-          { key: 'SAME_DAY', label: 'âš¡ SAME_DAY' },
-          { key: 'PRE_ORDER', label: 'ðŸ“… PRE_ORDER' },
+          { key: 'SAME_DAY', label: '⚡ SAME_DAY' },
+          { key: 'PRE_ORDER', label: '📅 PRE_ORDER' },
         ] as const).map((mode) => (
           <button
             key={mode.key}
@@ -242,7 +242,7 @@ async function handleStripeRefund(orderNumber: string) {
           const dlvBadge = deliveryStateBadge(assignmentByOrder[order.order_number])
           const forward = nextForwardAction(order.status)
           // 3B-2B queue context: group header before the first order of each (date|round) group
-          const grp = filterMode === 'PRE_ORDER' ? preGroupsByKey[`${order.scheduled_date || 'â€”'}|${order.delivery_round_id || 'â€”'}`] : null
+          const grp = filterMode === 'PRE_ORDER' ? preGroupsByKey[`${order.scheduled_date || '—'}|${order.delivery_round_id || '—'}`] : null
           const cap = grp ? roundCapacityState(roundsById[grp.roundId] ?? null, grp.orders.length) : null
           const cut = grp ? roundCutoffState(roundsById[grp.roundId] ?? null) : null
           const payExcCount = grp ? grp.orders.filter((o) => isPaymentException(o.payment_status)).length : 0
@@ -251,7 +251,7 @@ async function handleStripeRefund(orderNumber: string) {
           {grp && grp.orders[0].order_number === order.order_number && (
             <div className="card mb-2" data-testid="preorder-queue-header">
               <div className="flex flex-wrap items-center gap-2 text-sm">
-                <span className="font-bold text-brand-accent">ðŸ“… {grp.scheduledDate}</span>
+                <span className="font-bold text-brand-accent">📅 {grp.scheduledDate}</span>
                 <span className="badge badge-primary">{grp.roundId}</span>
                 {roundsById[grp.roundId]?.display_name && <span className="badge badge-primary">{roundsById[grp.roundId].display_name}</span>}
                 <span className={`badge ${cap!.cls}`}>{cap!.label}</span>
@@ -271,22 +271,22 @@ async function handleStripeRefund(orderNumber: string) {
                 <div>
                   <div className="font-bold text-brand-accent">{order.order_number}</div>
                   <div className="text-sm text-brand-muted">
-                    {order.customer_name} â€¢ {order.customer_phone} â€¢ {new Date(order.created_at).toLocaleTimeString('en', { hour: '2-digit', minute: '2-digit' })}
+                    {order.customer_name} • {order.customer_phone} • {new Date(order.created_at).toLocaleTimeString('en', { hour: '2-digit', minute: '2-digit' })}
                   </div>
                   {/* STEP 3B-2A GAP-A3: mode / scheduled date / round / payment / delivery badges */}
                   <div className="flex flex-wrap gap-1 mt-1 text-xs" data-testid="admin-order-badges">
                     <span className={`badge ${modeBadge.mode === 'PRE_ORDER' ? 'badge-warning' : modeBadge.mode === 'SAME_DAY' ? 'badge-info' : 'badge-danger'}`}>
                       {modeBadge.label}
                     </span>
-                    <span className="badge badge-primary">Round {order.delivery_round_id || 'â€”'}</span>
+                    <span className="badge badge-primary">Round {order.delivery_round_id || '—'}</span>
                     <span className={`badge ${payBadge.cls}`}>{payBadge.label}</span>
-                    <span className="badge badge-primary">{order.payment_method || 'â€”'}</span>
+                    <span className="badge badge-primary">{order.payment_method || '—'}</span>
                     <span className={`badge ${dlvBadge.cls}`} data-testid="admin-order-delivery-state">{dlvBadge.label}</span>
                   </div>
                 </div>
               </div>
               <div className="text-right">
-                <div className="font-bold text-brand-primary">à¸¿{order.total_amount}</div>
+                <div className="font-bold text-brand-primary">฿{order.total_amount}</div>
                 <span className={`badge ${
                   order.status === 'delivered' ? 'badge-success' :
                   order.status === 'preparing' ? 'badge-info' :
@@ -306,20 +306,20 @@ async function handleStripeRefund(orderNumber: string) {
                     <li key={i.product_id} className="flex items-baseline justify-between gap-2">
                       <div className="min-w-0 flex-1">
                         <span className="font-medium text-brand-accent">{i.product_name}</span>
-                        <span className="text-brand-muted"> Ã— {i.quantity}</span>
+                        <span className="text-brand-muted"> × {i.quantity}</span>
                         {addonLines.length > 0 && (
                           <ul className="pl-3 text-xs text-brand-muted list-disc list-inside">
                             {addonLines.map((line) => (
                               <li key={line.groupName}>
-                                {line.groupName}{line.selections.length > 0 ? `: ${line.selections.join(', ')}` : ''}{line.note ? ` Â· "${line.note.trim()}"` : ''}
-                                {line.linePrice > 0 ? `  +à¸¿${line.linePrice}` : ''}
+                                {line.groupName}{line.selections.length > 0 ? `: ${line.selections.join(', ')}` : ''}{line.note ? ` · "${line.note.trim()}"` : ''}
+                                {line.linePrice > 0 ? `  +฿${line.linePrice}` : ''}
                               </li>
                             ))}
                           </ul>
                         )}
-                        {i.special_request && <div className="text-xs text-brand-muted italic">â€œ{i.special_request}â€</div>}
+                        {i.special_request && <div className="text-xs text-brand-muted italic">“{i.special_request}”</div>}
                       </div>
-                      <span className="whitespace-nowrap">à¸¿{Number(i.unit_price || 0).toFixed(2)}</span>
+                      <span className="whitespace-nowrap">฿{Number(i.unit_price || 0).toFixed(2)}</span>
                     </li>
                   )
                 })}
@@ -329,7 +329,7 @@ async function handleStripeRefund(orderNumber: string) {
             <div className="flex flex-wrap gap-2">
               {/* STEP 3B-2A GAP-A1: ONLY the canonical next hop (008 allow-list mirror).
                   The server (transition_order_status RPC + guard trigger) remains the
-                  authority â€” an off-list click is still rejected server-side. */}
+                  authority — an off-list click is still rejected server-side. */}
               {forward && (
                 <button onClick={() => handleStatusUpdate(order.order_number, forward.to)} className="btn btn-primary text-sm">
                   {forward.label}
@@ -338,27 +338,27 @@ async function handleStripeRefund(orderNumber: string) {
 
               {/* GAP-A2: canonical atomic cancel via cancel_order RPC (any non-terminal state) */}
               {isCancellable(order.status) && (
-                <button onClick={() => handleCancelOrder(order.order_number)} className="btn btn-danger text-sm">âœ– Cancel</button>
+                <button onClick={() => handleCancelOrder(order.order_number)} className="btn btn-danger text-sm">✖ Cancel</button>
               )}
 
               {/* Phase C inspection: lifecycle history + audit trail (read-only, admin RLS) */}
               <button onClick={() => toggleInspect(order.order_number)} className="btn btn-outline text-sm" data-testid={`admin-order-inspect-${order.order_number}`}>
-                ðŸ•˜ History / Audit
+                🕘 History / Audit
               </button>
 
               {order.payment_status === 'pending' && (
-                <button onClick={() => handleConfirmPayment(order.order_number)} className="btn btn-success text-sm">ðŸ’° Confirm payment</button>
+                <button onClick={() => handleConfirmPayment(order.order_number)} className="btn btn-success text-sm">💰 Confirm payment</button>
               )}
               {order.payment_method === 'credit_card' && (order.payment_status === 'paid' || order.payment_status === 'partially_refunded') && (
-                    <button onClick={() => handleStripeRefund(order.order_number)} className="btn btn-outline text-sm">ðŸ’¸ Refund (Stripe)</button>
+                    <button onClick={() => handleStripeRefund(order.order_number)} className="btn btn-outline text-sm">💸 Refund (Stripe)</button>
                   )}
 
-              <button className="btn btn-outline text-sm ml-auto">ðŸ“ž Call</button>
+              <button className="btn btn-outline text-sm ml-auto">📞 Call</button>
             </div>
 
             {expandedOrder === order.order_number && (
               <div className="mt-3 rounded-lg border border-brand-muted/30 p-3 text-xs" data-testid="admin-order-inspect-panel">
-                {inspect.loading && <div className="text-brand-muted">Loading lifecycleâ€¦</div>}
+                {inspect.loading && <div className="text-brand-muted">Loading lifecycle…</div>}
                 {!inspect.loading && (
                   <>
                     <div className="font-bold text-brand-accent mb-1">Status history (order_status_history)</div>
@@ -366,19 +366,19 @@ async function handleStripeRefund(orderNumber: string) {
                     <ul className="space-y-0.5 mb-3">
                       {inspect.history.map((h) => (
                         <li key={h.id}>
-                          {h.from_status ? `${h.from_status} â†’ ` : 'create â†’ '}{h.to_status}
-                          {' Â· '}{new Date(h.changed_at).toLocaleString()}
-                          {' Â· '}{h.actor_type}{h.reason ? ` Â· â€œ${h.reason}â€` : ''}
+                          {h.from_status ? `${h.from_status} → ` : 'create → '}{h.to_status}
+                          {' · '}{new Date(h.changed_at).toLocaleString()}
+                          {' · '}{h.actor_type}{h.reason ? ` · “${h.reason}”` : ''}
                         </li>
                       ))}
                     </ul>
-                    <div className="font-bold text-brand-accent mb-1">Audit trail (audit_logs Â· entity=order)</div>
+                    <div className="font-bold text-brand-accent mb-1">Audit trail (audit_logs · entity=order)</div>
                     {inspect.audit.length === 0 && <div className="text-brand-muted">No audit rows for this order.</div>}
                     <ul className="space-y-0.5">
                       {inspect.audit.map((a) => (
                         <li key={a.id}>
-                          {a.action}{' Â· '}{new Date(a.created_at || a.timestamp).toLocaleString()}
-                          {a.description ? ` Â· ${a.description}` : ''}
+                          {a.action}{' · '}{new Date(a.created_at || a.timestamp).toLocaleString()}
+                          {a.description ? ` · ${a.description}` : ''}
                         </li>
                       ))}
                     </ul>
@@ -394,7 +394,7 @@ async function handleStripeRefund(orderNumber: string) {
 
       {filteredOrders.length === 0 && (
         <div className="text-center py-12">
-          <div className="text-6xl mb-4">ðŸ“‹</div>
+          <div className="text-6xl mb-4">📋</div>
           <h3 className="text-xl font-bold text-brand-accent">No orders found</h3>
         </div>
       )}
@@ -405,15 +405,15 @@ async function handleStripeRefund(orderNumber: string) {
           disabled={page === 0}
           onClick={() => changePage(Math.max(0, page - 1))}
           className="px-3 py-1 rounded-lg border disabled:opacity-40"
-        >â† à¸à¹ˆà¸­à¸™à¸«à¸™à¹‰à¸²</button>
+        >← ก่อนหน้า</button>
         <span className="text-xs text-brand-muted">
-          à¸«à¸™à¹‰à¸² {page + 1} Â· à¸—à¸±à¹‰à¸‡à¸«à¸¡à¸” {total} à¸­à¸­à¹€à¸”à¸­à¸£à¹Œ
+          หน้า {page + 1} · ทั้งหมด {total} ออเดอร์
         </span>
         <button
           disabled={(page + 1) * PAGE_SIZE >= total}
           onClick={() => changePage(page + 1)}
           className="px-3 py-1 rounded-lg border disabled:opacity-40"
-        >à¸–à¸±à¸”à¹„à¸› â†’</button>
+        >ถัดไป →</button>
       </div>
     </div>
   )
