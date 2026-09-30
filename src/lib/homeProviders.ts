@@ -218,10 +218,10 @@ export function getBiteMessage(ctx: BiteContext): BiteMessage {
     statusLine,
     recommendLabel: `เดี๋ยว Bite แนะนำให้เอง${recos}${preOrderLine}🍽️`,
     quickActions: [
-      { id: 'home-menu', label: '🍱 เมนูวันนี้', icon: '🍱', to: '/menu', mascotPose: 'pointing' },
-      { id: 'home-preorder', label: '📅 สั่งล่วงหน้า', icon: '📅', to: '/menu' },
-      { id: 'home-bite', label: '🤖 ให้ Bite แนะนำ', icon: '🤖', to: '/ai-chat' },
-      { id: 'home-orders', label: '📦 ดูออเดอร์', icon: '📦', to: '/orders' },
+      { id: 'home-menu', label: 'เมนูวันนี้', icon: 'mascot:menu', to: '/menu', mascotPose: 'menu' },
+      { id: 'home-preorder', label: 'สั่งล่วงหน้า', icon: '📅', to: '/menu' },
+      { id: 'home-bite', label: 'ให้ Bite แนะนำ', icon: 'mascot:recommend', to: '/ai-chat' },
+      { id: 'home-orders', label: 'ดูออเดอร์', icon: '📦', to: '/orders' },
     ],
   }
 }

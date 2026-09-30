@@ -66,7 +66,10 @@ export function FloatingAdBanners({ promos }: { promos: FloatingBannerPromo[] })
                 }}
               />
             ) : (
-              <div className="flad-media flad-media-fallback" aria-hidden="true" />
+              <div className="flad-media flad-media-fallback" aria-hidden="true">
+                {/* ช่องสื่อว่าง → ใส่มาสคอตน้อง Bite ทับ gradient ส้ม ไม่ทิ้งบล็อกเปล่า */}
+                <img src="/assets/mascot/bite_ready.webp" alt="" loading="lazy" className="flad-fallback-mascot" />
+              </div>
             )}
           </div>
           <div className="flad-body">

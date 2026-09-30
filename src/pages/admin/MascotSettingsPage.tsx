@@ -5,7 +5,7 @@
 
 import { useEffect, useState } from 'react'
 import { GlassCard } from '@/components/ui/GlassCard'
-import { getMascotOverrides, upsertMascotOverride, MASCOT_ROLES, type MascotOverride } from '@/lib/mascotService'
+import { getMascotOverrides, upsertMascotOverride, invalidateMascotOverrides, MASCOT_ROLES, type MascotOverride } from '@/lib/mascotService'
 
 export function MascotSettingsPage() {
   const [overrides, setOverrides] = useState<MascotOverride[]>([])
@@ -31,6 +31,7 @@ export function MascotSettingsPage() {
     setSaving(role)
     const f = form[role]
     await upsertMascotOverride(role, f.url.trim(), f.alt.trim())
+    invalidateMascotOverrides() // storefront จะดึงรูปใหม่ทันทีใน mount ถัดไป
     setSaving(null)
     await refresh()
   }

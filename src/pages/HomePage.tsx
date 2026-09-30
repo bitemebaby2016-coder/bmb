@@ -189,7 +189,7 @@ export function HomePage() {
       <div className="max-w-7xl mx-auto px-4 py-10 min-h-screen flex items-center justify-center">
         <div className="text-center text-brand-muted">
           <img
-            src="/mascot_Bite_Thinking.webp"
+            src="/assets/mascot/bite_cooking.webp"
             alt="น้อง Bite กำลังเตรียมเมนู"
             width={72}
             height={72}

@@ -35,14 +35,57 @@ export async function upsertMascotOverride(roleName: string, mediaUrl: string, a
   return !error
 }
 
-/** Roles the mascot badge can render (23 poses + 14 3D set). */
+/** Roles the mascot badge can render — ครบทุก pose ใน /assets/mascot/
+ * (role_name ตรงกับ pose key ของ MascotBadge/BiteMascot พอดี → admin เปลี่ยนได้ทุกท่า) */
 export const MASCOT_ROLES = [
   'greeting',
-  'cooking',
-  'delivering',
-  'empty_cart',
-  'checkout',
-  'thanks',
-  'pointing',
+  'heart',
   'thumbsup',
+  'running',
+  'pointing',
+  'peeking',
+  'thinking',
+  'empty',
+  'bye',
+  'award',
+  'cooking',
+  'eating',
+  'feedback',
+  'menu',
+  'ready',
+  'recommend',
+  'reviewing',
+  'shopping',
+  'success',
+  'vote',
+  'waiting',
+  'sad',
+  'closed',
 ] as const
+
+// ---- Admin override cache (โหลดครั้งเดียวต่อ session, แชร์ทุก component) ----
+let overridesCache: MascotOverride[] | null = null
+let overridesPromise: Promise<MascotOverride[]> | null = null
+
+/** โหลด override ทั้งหมด (cache — เรียกซ้ำเมื่อ admin บันทึกด้วย force=true) */
+export async function loadMascotOverrides(force = false): Promise<MascotOverride[]> {
+  if (!force && overridesCache) return overridesCache
+  if (!force && overridesPromise) return overridesPromise
+  overridesPromise = getMascotOverrides().then((list) => {
+    overridesCache = list
+    return list
+  })
+  return overridesPromise
+}
+
+/** ล้าง cache (เรียกหลัง admin บันทึก override ใหม่) */
+export function invalidateMascotOverrides(): void {
+  overridesCache = null
+  overridesPromise = null
+}
+
+/** หา URL จาก override ของ pose (sync — ใช้กับ cache ที่โหลดแล้วเท่านั้น) */
+export function getOverrideUrl(pose: string): string | undefined {
+  const hit = resolveOverride(overridesCache ?? [], pose)
+  return hit?.media_url
+}

@@ -9,6 +9,7 @@
 
 import { useEffect, useState } from 'react'
 import type { MascotPose, MascotSize } from '@/types'
+import { loadMascotOverrides, getOverrideUrl } from '@/lib/mascotService'
 
 export interface MascotBadgeProps {
   pose: MascotPose
@@ -38,7 +39,7 @@ const POSE_ASSETS: Record<MascotPose, PoseAsset> = {
   // 🗳️ Pose Decision 2026-09-17: `bite_good bye.webp` (แล้วแต่ชื่อ) → pose `bye`
   // "โบกมือลา/ขอบคุณ" ใช้ที่ Delivery Complete (OrderTrackPage delivered) + Payment Success
   // (PaymentConfirmationPage paid) ตาม docs/COMPONENT_SPEC_UI.md §18.2
-  bye:      { src: '/assets/mascot/bite_good bye.webp', fallback: '/mascot_Bite_Good bye.webp' },
+  bye:      { src: '/assets/mascot/bite_goodbye.webp', fallback: '/mascot_Bite_Good bye.webp' },
   // 🆕 Asset Set 2026-09-20 — ท่าใหม่จากไฟล์ 3D ชุดล่าสุด
   award:     { src: '/assets/mascot/bite_award.webp', fallback: '/mascot_Bite_Main.webp' },
   cooking:   { src: '/assets/mascot/bite_cooking.webp', fallback: '/mascot_Bite_Main.webp' },
@@ -49,7 +50,7 @@ const POSE_ASSETS: Record<MascotPose, PoseAsset> = {
   recommend: { src: '/assets/mascot/bite_recommend.webp', fallback: '/mascot_Bite_Main.webp' },
   reviewing: { src: '/assets/mascot/bite_reviewing.webp', fallback: '/mascot_Bite_Main.webp' },
   shopping:  { src: '/assets/mascot/bite_shopping.webp', fallback: '/mascot_Bite_Main.webp' },
-  success:   { src: '/assets/mascot/bite_success (1).webp', fallback: '/mascot_Bite_Main.webp' },
+  success:   { src: '/assets/mascot/bite_success.webp', fallback: '/mascot_Bite_Main.webp' },
   vote:      { src: '/assets/mascot/bite_vote.webp', fallback: '/mascot_Bite_Main.webp' },
   waiting:   { src: '/assets/mascot/bite_waiting.webp', fallback: '/mascot_Bite_Main.webp' },
   sad:       { src: '/assets/mascot/bite_sad.webp', fallback: '/mascot_Bite_Good bye.webp' },
@@ -91,9 +92,25 @@ export function MascotBadge({ pose, size = 'sm', alt, className = '', loading = 
     setSrc(POSE_ASSETS[pose].src)
   }, [pose])
 
-  // ไฟล์ 3D บางท่ายังไม่ถูกอัปโหลด → fallback เวกเตอร์เดิม แค่ครั้งเดียว (กัน infinite loop)
+  // Admin override (mascot_overrides) — role_name = pose key, โหลดครั้งเดียวต่อ session
+  useEffect(() => {
+    let active = true
+    void loadMascotOverrides().then(() => {
+      if (!active) return
+      const o = getOverrideUrl(pose)
+      if (o) setSrc(o)
+    })
+    return () => { active = false }
+  }, [pose])
+
+  // ลำดับ fallback: admin override → 3D asset จริง → เวกเตอร์เดิม (กัน infinite loop)
   const handleError = () => {
-    setSrc((current) => (current === POSE_ASSETS[pose].fallback ? current : POSE_ASSETS[pose].fallback))
+    setSrc((current) => {
+      const { src: asset, fallback } = POSE_ASSETS[pose]
+      if (current === asset) return fallback
+      if (current === fallback) return current
+      return asset
+    })
   }
 
   const sizeClass = size === 'fluid' ? '' : `mascot-badge--${size}`

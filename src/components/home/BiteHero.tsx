@@ -10,10 +10,18 @@ import type { BiteMessage } from '@/types'
 import { MascotBadge } from '@/components/MascotBadge'
 import { BiteAIChat } from '@/components/ai/BiteAIChat'
 
-// USP Bar items (static trust signals)
+/** ไอคอนบรรทัด: 'mascot:<pose>' → มาสคอตน้อง Bite (แทนอีโมจิหุ่นยนต์), อื่น ๆ → อีโมจิปกติ */
+function InlineIcon({ icon, className = '' }: { icon: string; className?: string }) {
+  if (icon.startsWith('mascot:')) {
+    return <MascotBadge pose={icon.slice(7) as 'thinking'} size="sm" className={className} />
+  }
+  return <span aria-hidden="true" className={className}>{icon}</span>
+}
+
+// USP Bar items (static trust signals) — icon 'mascot:<pose>' = ใช้มาสคอตน้อง Bite แทนอีโมจิ
 const USP_ITEMS = [
   { icon: '🚚', text: 'ส่งฟรีครบ ฿200' },
-  { icon: '🤖', text: 'AI แนะนำ 24/7' },
+  { icon: 'mascot:thinking', text: 'AI แนะนำ 24/7' },
   { icon: '📍', text: 'จันทบุรี 5 กม.' },
 ] as const
 
@@ -43,7 +51,7 @@ export function BiteHero({ message, pose = 'greeting' }: { message: BiteMessage;
               className="inline-flex items-center gap-1 mt-2 text-brand-primary font-medium hover:underline"
               aria-label="เปิดแชทกับ AI ไบต์"
             >
-              <span role="img" aria-hidden="true">🤖</span>
+              <MascotBadge pose="recommend" size="sm" className="inline-block align-middle" />
               {message.recommendLabel}
             </button>
           )}
@@ -52,7 +60,7 @@ export function BiteHero({ message, pose = 'greeting' }: { message: BiteMessage;
           <div className="usp-bar flex flex-wrap items-center justify-center sm:justify-start gap-3 mt-3" role="list" aria-label="จุดเด่นของบริการ">
             {USP_ITEMS.map((item, i) => (
               <span key={i} className="usp-item inline-flex items-center gap-1 text-xs sm:text-sm text-brand-muted font-medium" role="listitem">
-                <span aria-hidden="true">{item.icon}</span>
+                <InlineIcon icon={item.icon} />
                 {item.text}
               </span>
             ))}
@@ -84,7 +92,7 @@ export function BiteHero({ message, pose = 'greeting' }: { message: BiteMessage;
                 className="quick-action"
                 aria-label={qa.label}
               >
-                <span className="text-xl leading-none" aria-hidden="true">{qa.icon}</span>
+                <InlineIcon icon={qa.icon} className="inline-block align-middle" />
                 <span className="text-xs sm:text-sm font-medium">{qa.label}</span>
               </button>
             )
@@ -97,7 +105,7 @@ export function BiteHero({ message, pose = 'greeting' }: { message: BiteMessage;
               aria-label={qa.label}
               {...(qa.id === 'home-menu' ? { 'data-testid': 'home-menu-cta' as string } : {})}
             >
-              <span className="text-xl leading-none" aria-hidden="true">{qa.icon}</span>
+              <InlineIcon icon={qa.icon} className="inline-block align-middle" />
               <span className="text-xs sm:text-sm font-medium">{qa.label}</span>
             </Link>
           )

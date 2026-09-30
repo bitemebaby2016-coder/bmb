@@ -15,6 +15,7 @@ import { GlassCard } from '@/components/ui/GlassCard'
 import { useBiteAIStore } from '@/stores/useBiteAIStore'
 import { useCartStore } from '@/stores/useCartStore'
 import { usePlatformConfig } from '@/config/platformConfig'
+import { loadMascotOverrides, getOverrideUrl } from '@/lib/mascotService'
 
 // ⚡ PERF: the full AI chat UI + aiService/OpenRouter chain is only needed when
 // the user taps the mascot — load it on demand instead of at boot (TBT).
@@ -25,38 +26,38 @@ export interface BiteMascotProps {
   activeSection?: string
 }
 
-// All 24 mascot poses from public/assets/mascot/
+// All 24 mascot poses from public/assets/mascot/ (ต้องตรงกับไฟล์จริงในโฟลเดอร์)
 const MASCOT_POSES = [
-  'bite_award',
-  'bite_badge_mini_heart',
-  'bite_badge_thumbsup_approval',
-  'bite_closed',
-  'bite_cooking',
-  'bite_delivery_run',
-  'bite_eating',
-  'bite_empty_sad',
-  'bite_feedback',
-  'bite_goodbye',
-  'bite_hero_greeting',
-  'bite_menu',
-  'bite_peeking',
-  'bite_pointing',
   'bite_ready',
+  'bite_menu',
+  'bite_cooking',
   'bite_recommend',
-  'bite_reviewing',
-  'bite_sad',
-  'bite_shopping',
-  'bite_success',
+  'bite_hero_greeting',
   'bite_thinking',
-  'bite_vote',
-  'bite_vote_mini_heart',
+  'bite_shopping',
+  'bite_pointing',
   'bite_waiting',
+  'bite_success',
+  'bite_eating',
+  'bite_delivery_run',
+  'bite_goodbye',
 ] as const
 
 type MascotPose = (typeof MASCOT_POSES)[number]
 
 function getMascotUrl(pose: MascotPose): string {
   return `/assets/mascot/${pose}.webp`
+}
+
+/** ท่าเริ่มต้นตามบริบทหน้าที่ลูกค้ากำลังดู (สลับมาสคอตให้เข้ากับสถานการณ์) */
+function contextPose(activeSection: string): MascotPose {
+  switch (activeSection) {
+    case 'menu': return 'bite_menu'
+    case 'pre-order': return 'bite_shopping'
+    case 'orders': return 'bite_delivery_run'
+    case 'ai-chat': return 'bite_recommend'
+    default: return 'bite_ready'
+  }
 }
 
 function playGreetingSound() {
@@ -100,15 +101,26 @@ export function BiteMascot({ userName, activeSection = 'home' }: BiteMascotProps
 
   const stallTimer = useRef<ReturnType<typeof setInterval> | null>(null)
   const [chatVisible, setChatVisible] = useState(false)
-  const [currentPoseIndex, setCurrentPoseIndex] = useState(0)
+  // ท่าเริ่มต้น = บริบทหน้าที่ลูกค้ากำลังดู (home→ready, menu→menu, pre-order→shopping …)
+  const [currentPoseIndex, setCurrentPoseIndex] = useState(() =>
+    Math.max(0, MASCOT_POSES.indexOf(contextPose(activeSection)))
+  )
+  // Admin override ต่อ pose (mascot_overrides — role_name = pose key ตัดคำว่า bite_)
+  const [overrideUrl, setOverrideUrl] = useState<string | undefined>(undefined)
 
-  // AI-UI: มาสคอตสลับหน้าที่ตามหน้าที่เปิด (ใช้ครบทุกตัวใน MASCOT_POSES) —
-  // หน้าซ้ำ/แท็บเดิมจะเลื่อนตัวถัดไป ไม่ซ้ำตัวเดิมติดกัน
+  // AI-UI: เมื่อ activeSection เปลี่ยน → สลับไปท่าตามบริบท + อ่าน override ล่าสุด
   useEffect(() => {
-    let hash = 0
-    for (const ch of activeSection) hash = (hash * 31 + ch.charCodeAt(0)) >>> 0
-    setCurrentPoseIndex(hash % MASCOT_POSES.length)
+    setCurrentPoseIndex(Math.max(0, MASCOT_POSES.indexOf(contextPose(activeSection))))
   }, [activeSection])
+
+  useEffect(() => {
+    let active = true
+    void loadMascotOverrides().then(() => {
+      if (!active) return
+      setOverrideUrl(getOverrideUrl(MASCOT_POSES[currentPoseIndex].replace('bite_', '')))
+    })
+    return () => { active = false }
+  }, [currentPoseIndex])
 
   // Cycle to next pose on each tap/interaction
   const cyclePose = useCallback(() => {
@@ -160,7 +172,7 @@ export function BiteMascot({ userName, activeSection = 'home' }: BiteMascotProps
   useEffect(() => setChatVisible(chatOpen), [chatOpen])
 
   const currentPose = MASCOT_POSES[currentPoseIndex]
-  const mascotUrl = getMascotUrl(currentPose)
+  const mascotUrl = overrideUrl || getMascotUrl(currentPose)
 
   return (
     <>
@@ -194,6 +206,11 @@ export function BiteMascot({ userName, activeSection = 'home' }: BiteMascotProps
               alt={`Bite mascot - ${currentPose}`}
               className="h-full w-full object-cover"
               loading="lazy"
+              onError={(e) => {
+                // override เสีย → กลับไปใช้ 3D asset ปกติของ pose
+                const el = e.currentTarget as HTMLImageElement
+                if (el.dataset.fbk !== '1') { el.dataset.fbk = '1'; el.src = getMascotUrl(currentPose) }
+              }}
             />
           </button>
         </div>

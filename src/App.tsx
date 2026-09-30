@@ -7,6 +7,7 @@ import { ErrorBoundary } from './components/ErrorBoundary'
 import { AdminNav } from './components/admin/AdminNav'
 // Bite / AI accessibility lives in BottomNav ('ไบต์' → /ai-chat) + BiteHero quick actions (UI v5)
 import { SeoHelmet } from './components/SeoHelmet'
+import { MascotBadge } from './components/MascotBadge'
 import { getHomeMeta, getMenuMeta, getCartMeta, getCheckoutMeta, getOrderTrackMeta, getAboutMeta, getFaqMeta, getBlogMeta, getContactMeta, getPrivacyMeta, getTermsMeta, getPromotionsMeta, getRewardsMeta, getVoteMeta, getRandomMenuMeta, getShareMeta, getViralMeta, getProfileMeta, getAdminMeta, getLoginMeta } from './lib/seo'
 import { BrandProvider } from './components/BrandProvider'
 import { useAdminTenantContextStore } from './lib/adminTenantContext'
@@ -80,19 +81,7 @@ const TermsPage = lazy(() => import('./pages/TermsPage').then(m => ({ default: m
 function LoadingSpinner() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 8, justifyContent: 'center', alignItems: 'center', minHeight: '200px' }}>
-      <img
-        src="/mascot_Bite_Main.webp"
-        alt="น้อง Bite กำลังโหลด"
-        width={96}
-        height={96}
-        style={{ borderRadius: '50%', objectFit: 'cover', background: '#FFF7ED' }}
-        className="animate-bounce"
-        onError={(e) => {
-          const el = e.currentTarget as HTMLImageElement
-          if (!el.dataset.fbk) { el.dataset.fbk = '1'; el.src = '/mascot_Bite_Welcome.webp' }
-          else if (el.dataset.fbk === '1') { el.dataset.fbk = '2'; el.src = '/bite-mascot.svg' }
-        }}
-      />
+      <MascotBadge pose="ready" size="md" alt="น้อง Bite กำลังโหลด" className="animate-bounce" loading="eager" />
       <span className="text-sm text-brand-muted">น้อง Bite กำลังจัดเตรียมของ…</span>
     </div>
   )

@@ -13,12 +13,21 @@ import {
   type NotificationRow,
   type NotificationChannel,
 } from '@/lib/notificationService'
+import { MascotBadge } from '@/components/MascotBadge'
 
 const CHANNEL_ICON: Record<NotificationChannel, string> = {
   Transactional: '🧾',
   Marketing: '📣',
   Bite: '🤖',
   Operational: '⚙️',
+}
+
+/** ช่อง Bite ใช้มาสคอตน้อง Bite แทนอีโมจิหุ่นยนต์ */
+function ChannelIcon({ channel }: { channel: NotificationChannel }) {
+  if (channel === 'Bite') {
+    return <MascotBadge pose="recommend" size="sm" alt="น้อง Bite" className="inline-block align-middle" />
+  }
+  return <span aria-hidden="true">{CHANNEL_ICON[channel]}</span>
 }
 
 export function NotificationCenterPage() {
@@ -59,7 +68,7 @@ export function NotificationCenterPage() {
       <div className="grid grid-cols-2 gap-3">
         {NOTIFICATION_CHANNELS.map((c) => (
           <label key={c} className="flex items-center justify-between bg-white rounded-xl p-3 shadow-sm border border-slate-100">
-            <span className="text-sm font-semibold text-slate-700">{CHANNEL_ICON[c]} {c}</span>
+            <span className="text-sm font-semibold text-slate-700"><ChannelIcon channel={c} /> {c}</span>
             <input
               type="checkbox"
               checked={prefs[c] ?? true}
@@ -74,7 +83,7 @@ export function NotificationCenterPage() {
 
       {NOTIFICATION_CHANNELS.map((c) => (
         <section key={c} data-testid={`notif-section-${c}`}>
-          <h2 className="font-bold text-slate-700 mb-2 mt-4">{CHANNEL_ICON[c]} {c}</h2>
+          <h2 className="font-bold text-slate-700 mb-2 mt-4"><ChannelIcon channel={c} /> {c}</h2>
           {grouped.get(c)!.length === 0 ? (
             <p className="text-xs text-slate-400 ml-1">ไม่มีข้อความในช่องนี้</p>
           ) : (

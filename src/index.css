@@ -1041,14 +1041,21 @@ p { color: var(--color-brand-text-secondary); }
 .flad-media {
   width: 118px;
   height: 74px;
-  /* โชว์สติกเกอร์โลโก้แบรนด์แทนพื้นส้มเปล่า เมื่อ promo ไม่มีรูป (หรือรูปเสีย) */
-  background: url('/Logo_Sticker_Circle.webp') center / cover no-repeat, linear-gradient(135deg, #F97316, #FBBF24);
   border-radius: 10px;
   overflow: hidden;
   flex-shrink: 0;
-  background: linear-gradient(135deg, #F97316, #FBBF24);
+  /* โชว์สติกเกอร์โลโก้แบรนด์ทับ gradient ส้ม เมื่อ promo ไม่มีรูป (หรือรูปเสีย) */
+  background: url('/Logo_Sticker_Circle.webp') center / cover no-repeat, linear-gradient(135deg, #F97316, #FBBF24);
 }
 .flad-media img { width: 100%; height: 100%; object-fit: cover; display: block; }
+/* มาสคอตน้อง Bite ในช่องสื่อ fallback — ไม่ทับโลโก้/gradient ทั้งช่อง */
+.flad-media .flad-fallback-mascot {
+  width: 78%;
+  height: 88%;
+  object-fit: contain;
+  margin: 4% auto 0;
+  display: block;
+}
 .flad-body { flex: 1; min-width: 0; }
 .flad-title {
   font-weight: 800;
