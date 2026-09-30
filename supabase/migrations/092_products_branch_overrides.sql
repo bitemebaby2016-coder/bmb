@@ -8,7 +8,7 @@
 BEGIN;
 
 CREATE TABLE IF NOT EXISTS public.products_branch_overrides (
-  id TEXT PRIMARY KEY DEFAULT gen_random_text_uuid(),
+  id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
   product_id TEXT NOT NULL REFERENCES public.products(id) ON DELETE CASCADE,
   branch_id TEXT NOT NULL REFERENCES public.branches(id) ON DELETE CASCADE,
   is_available_override BOOLEAN NOT NULL DEFAULT false,

@@ -8,7 +8,7 @@
 BEGIN;
 
 CREATE TABLE IF NOT EXISTS public.admin_portfolio_items (
-  id TEXT PRIMARY KEY DEFAULT gen_random_text_uuid(),
+  id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
   title TEXT NOT NULL,
   description TEXT,
   image_url TEXT NOT NULL, -- stored in bmb-images bucket
