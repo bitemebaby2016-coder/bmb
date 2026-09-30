@@ -1,4 +1,4 @@
-﻿// ============================================
+// ============================================
 // Bite Me Baby Admin API - Orders
 // ============================================
 
@@ -309,7 +309,7 @@ export async function confirmOfflinePayment(orderNumber: string): Promise<{ succ
 // âœ… Phase 3B (migration 025 Â§3): canonical atomic cancellation.
 // Authz (owner pending-only inside the D-5 window; admin any non-delivered),
 // capacity release + inventory restore + delivery-assignment cancel + audit all
-// happen server-side in ONE transaction. Cancel â‰  refund â€” payment_status is
+// happen server-side in ONE transaction. Cancel â‰  refund â€” payment_status is
 // untouched; a paid cancelled order is refunded later via the admin stripe-refund EF.
 // ============================================
 export interface CancelOrderResult {

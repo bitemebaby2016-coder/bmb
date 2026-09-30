@@ -63,8 +63,14 @@ async function requestCompletion(messages: ChatMessage[], model: string): Promis
   return content
 }
 
-export async function chatWithAI(userMessage: string): Promise<string> {
+export async function chatWithAI(userMessage: string, runtimeContext?: string): Promise<string> {
+  // AI-EXT: merge runtime context (branch/catalog/rounds) into the system message
+  // so the model answers with live store data. Replaces the static system slot.
   const messages = [...conversationHistory, { role: 'user' as const, content: userMessage }]
+  if (runtimeContext) {
+    const base = conversationHistory[0]?.content ?? ''
+    messages[0] = { role: 'system' as const, content: `${base}\n\n--- LIVE STORE CONTEXT (authoritative, use this over any prior knowledge) ---\n${runtimeContext}` }
+  }
 
   try {
     let aiResponse: string

@@ -1,4 +1,4 @@
-﻿import { Routes, Route, Navigate } from 'react-router-dom'
+import { Routes, Route, Navigate } from 'react-router-dom'
 import { HelmetProvider } from 'react-helmet-async'
 import { lazy, Suspense, useEffect, useState } from 'react'
 import { useAuthStore, fetchProfileRole } from './store/authStore'
@@ -66,6 +66,7 @@ const AdminControlPage = lazy(() => import('./pages/AdminControlPage').then(m =>
 const AdminContentApprovals = lazy(() => import('./pages/admin/AdminContentApprovals').then(m => ({ default: m.AdminContentApprovals })))
 const AdminPaymentExceptions = lazy(() => import('./pages/admin/AdminPaymentExceptions').then(m => ({ default: m.AdminPaymentExceptions })))
 const AdminPortfolioPage = lazy(() => import('./pages/admin/AdminPortfolio').then(m => ({ default: m.AdminPortfolioPage })))
+const AdminAiStudio = lazy(() => import('./pages/admin/AdminAiStudio').then(m => ({ default: m.AdminAiStudio })))
 
 // Lazy loaded: Info pages (6 pages)
 const AboutPage = lazy(() => import('./pages/AboutPage').then(m => ({ default: m.AboutPage })))
@@ -226,6 +227,8 @@ export default function App() {
         
         {/* CAT-04: Admin Portfolio / Past Works */}
         <Route path="/admin/portfolio" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminNav><AdminPortfolioPage /></AdminNav></Layout></AdminRoute></Suspense>} />
+        {/* AI-EXT: Admin AI Content Studio */}
+        <Route path="/admin/ai-studio" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminNav><AdminAiStudio /></AdminNav></Layout></AdminRoute></Suspense>} />
         {/* Catch all */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

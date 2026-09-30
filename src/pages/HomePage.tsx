@@ -1,4 +1,4 @@
-﻿// ============================================
+// ============================================
 // Bite Me Baby — Home Page (UI v5)
 // Information Architecture (shorter + scan-able):
 //   [1 Bite Conversational Hero] -> [2 Store/Delivery Status]
@@ -32,6 +32,7 @@ import { HomeProductCard } from '@/components/home/HomeProductCard'
 import { PromotionStrip } from '@/components/home/PromotionStrip'
 import { BranchAwareProductCard } from '@/components/home/BranchAwareProductCard'
 import { VerifiedReviewsSection } from '@/components/home/VerifiedReviewsSection'
+import { BiteChatWidget } from '@/components/ai/BiteChatWidget'
 import { ReviewCarouselSection } from '@/components/home/ReviewCarouselSection'
 import { DrinksSection } from '@/components/home/DrinksSection'
 import { SnacksSection } from '@/components/home/SnacksSection'
@@ -294,6 +295,7 @@ export function HomePage() {
       {/* 6b. Real customer review photo gallery (lazy) */}
       {/* CAT-04: Verified Customer Reviews Section */}
         <VerifiedReviewsSection reviews={verifiedReviews} products={products} />
+        <BiteChatWidget />
 
       {/* 7. Promotions + Shared social action */}
       <PromotionStrip promotions={promotions} />

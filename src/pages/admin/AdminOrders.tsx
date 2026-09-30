@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 import { useNotificationStore } from '@/store/notificationStore'
 import { showToast } from '@/components/ui/ToastContainer'
@@ -257,7 +257,7 @@ async function handleStripeRefund(orderNumber: string) {
                 <span className={`badge ${cap!.cls}`}>{cap!.label}</span>
                 <span className="badge badge-info">{cut!.label}</span>
                 {roundsById[grp.roundId]?.status && <span className="badge badge-primary">round: {roundsById[grp.roundId].status}</span>}
-                {payExcCount > 0 && <span className="badge badge-warning">âš  payment needs attention: {payExcCount}</span>}
+                {payExcCount > 0 && <span className="badge badge-warning">âš  payment needs attention: {payExcCount}</span>}
                 <span className="text-brand-muted">({grp.orders.length} orders)</span>
               </div>
             </div>

@@ -30,6 +30,7 @@ export const ADMIN_NAV_ITEMS: AdminNavItem[] = [
   { to: '/admin/errors', label: 'Errors', icon: '\uD83E\uDE79' },
   { to: '/admin/media', label: 'Media', icon: '\uD83D\uDDBC\uFE0F' },
   { to: '/admin/portfolio', label: 'Portfolio', icon: '\uD83D\uDDBC\uFE0F' },
+  { to: '/admin/ai-studio', label: 'AI Studio', icon: '\uD83E\uDD16' },
   { to: '/admin/settings', label: 'Settings', icon: '\u2699\uFE0F' },
   { to: '/admin/mascot', label: 'Mascot', icon: '\uD83E\uDD16' },
   // TEN-06: White-label control plane entries

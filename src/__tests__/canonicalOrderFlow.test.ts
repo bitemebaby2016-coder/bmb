@@ -1,4 +1,4 @@
-﻿// ============================================
+// ============================================
 // Phase 3B Wave 1 â€” canonical customer order flow (mock-level contracts)
 // Mirrors the server rules of migrations 024/025/029 at the client boundary:
 //   - ONE creation RPC (create_order_with_items v3, mode params, no client prices)
@@ -166,7 +166,7 @@ describe('Â§18 tracking â€” no timer mutates status; refresh reflects ser
       for (let i = 0; i < 4; i++) vi.advanceTimersByTime(20000)
 
       const mid = await supabase.from('orders').select('*').eq('order_number', onum).single()
-      expect((mid.data as any).status).toBe('pending') // elapsed time â‰  progression
+      expect((mid.data as any).status).toBe('pending') // elapsed time â‰  progression
       expect((mid.data as any).payment_status).toBe('pending')
 
       // Server-side lifecycle change (admin path) â†’ visible ONLY through refetch.
