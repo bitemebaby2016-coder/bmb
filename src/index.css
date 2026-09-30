@@ -1003,13 +1003,18 @@ p { color: var(--color-brand-text-secondary); }
 .flad-stack {
   position: fixed;
   left: 12px;
-  bottom: 78px;
-  z-index: 70;
+  /* AI-CLEANUP: raised above the BiteMascot button (bottom-left, z-[95]) so the
+     banner stack never overlaps the mascot tap target / speech bubble. */
+  bottom: 190px;
+  z-index: 90;
   display: flex;
   flex-direction: column;
   gap: 8px;
   max-width: 420px;
   pointer-events: none;
+}
+@media (max-width: 640px) {
+  .flad-stack { bottom: 168px; max-width: calc(100vw - 24px); }
 }
 .flad-stack > .flad-card { pointer-events: auto; }
 .flad-card {
@@ -1075,6 +1080,28 @@ p { color: var(--color-brand-text-secondary); }
 @media (max-width: 480px) {
   .flad-media { width: 104px; height: 66px; }
 }
+/* --- AI-CLEANUP: brand fallback visuals (replaces mock svg assets) --- */
+.img-fallback {
+  display: inline-block;
+  width: 100%;
+  height: 100%;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #ff9a56 0%, #fc6076 100%);
+  position: relative;
+}
+.img-fallback::after {
+  content: '🍽️';
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: clamp(1.5rem, 40%, 3rem);
+}
+.home-card-fallback-img.img-fallback { width: 100%; height: 100%; }
+.ob-thumb.img-fallback, .ob-rec-img.img-fallback { width: 44px; height: 44px; border-radius: 8px; flex-shrink: 0; }
+.flad-media-fallback { background: linear-gradient(135deg, #F97316 0%, #FC6076 100%); min-width: 64px; min-height: 64px; }
+
 @media (prefers-reduced-motion: reduce) {
   .flad-card { animation: none; }
 }

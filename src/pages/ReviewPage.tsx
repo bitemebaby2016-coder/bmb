@@ -1,12 +1,14 @@
 ﻿// Bite Me Baby -- Review Page (CAT-04 Enhanced)
 import { useParams, Link } from 'react-router-dom'
 import { useEffect, useState } from 'react'
+import { supabase } from '@/lib/supabase'
 import { getVerifiedReviewsByProduct } from '@/lib/reviewApi'
 import type { VerifiedCustomerReview } from '@/types'
 
 export function ReviewPage() {
   const { productId } = useParams()
   const [verifiedReviews, setVerifiedReviews] = useState<VerifiedCustomerReview[]>([])
+  const [portfolio, setPortfolio] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -18,6 +20,22 @@ export function ReviewPage() {
     }
     loadReviews()
   }, [productId])
+
+  // AI-CLEANUP: portfolio images come from the real Admin Portfolio (M094)
+  // admin_portfolio_items — the hardcoded mock [1,2,3] list was removed.
+  useEffect(() => {
+    void (async () => {
+      try {
+        const { data } = await supabase
+          .from('admin_portfolio_items')
+          .select('id,title,image_url')
+          .eq('is_active', true)
+          .order('display_order')
+          .limit(9)
+        if (data) setPortfolio(data as any[])
+      } catch { /* portfolio is best-effort */ }
+    })()
+  }, [])
 
   return (
     <div className='max-w-4xl mx-auto px-4 py-6'>
@@ -39,9 +57,17 @@ export function ReviewPage() {
       </section>
       <section className='mb-10'>
         <h2 className='text-xl font-display font-bold text-brand-accent mb-3'>Admin Portfolio</h2>
-        <div className='grid grid-cols-3 gap-3'>
-          {[1,2,3].map(i =><div key={i} className='aspect-square rounded-lg bg-gray-100 overflow-hidden'><img src={'/images/mock/portfolio-'+i+'.webp'} alt={'Portfolio '+i} loading='lazy' className='w-full h-full object-cover' /></div>)}
-        </div>
+        {portfolio.length > 0 ? (
+          <div className='grid grid-cols-3 gap-3'>
+            {portfolio.map((item: any) => (
+              <div key={item.id} className='aspect-square rounded-lg bg-gray-100 overflow-hidden'>
+                <img src={item.image_url} alt={item.title} loading='lazy' className='w-full h-full object-cover' />
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className='card bg-gray-50 text-center py-8'><p className='text-brand-muted'>ผลงานล่าสุดกำลังจะมาเร็ว ๆ นี้</p></div>
+        )}
       </section>
     </div>
   )

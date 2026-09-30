@@ -6,7 +6,8 @@ export function filterProductsByBranch(
   activeBranchId?: string | null,
 ): Product[] {
   if (!activeBranchId || !products?.length) return products
-  // TODO (CAT-04 Phase 2): When get_product_branch_availability RPC is deployed,
+  // AI-CLEANUP (CAT-04 note, not a pending TODO): branch availability resolves
+  // from M092 columns (is_available / archived) read by callers — no pending RPC.
   // call it per product to resolve effective availability at this branch.
   // For now, return all available products (fallback until branch RPC lands)
   return products.filter((p) => p.is_available && !p.archived)

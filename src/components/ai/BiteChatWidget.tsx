@@ -113,7 +113,7 @@ export function BiteChatWidget() {
         onClick={() => setOpen((o) => !o)}
         aria-label={open ? 'ปิดแชทน้อง Bite' : 'เปิดแชทน้อง Bite'}
         data-testid="bite-chat-launcher"
-        className="fixed bottom-20 right-4 z-50 w-14 h-14 rounded-full bg-brand-primary text-white shadow-lg flex items-center justify-center text-2xl hover:scale-105 transition-transform no-print md:bottom-6"
+        className="fixed bottom-[9.5rem] right-4 z-[72] w-14 h-14 rounded-full bg-brand-primary text-white shadow-lg flex items-center justify-center text-2xl hover:scale-105 transition-transform no-print"
       >
         {open ? '✕' : '🐶'}
       </button>
@@ -121,7 +121,7 @@ export function BiteChatWidget() {
       {open && (
         <div
           data-testid="bite-chat-panel"
-          className="fixed bottom-36 right-4 z-50 w-[min(360px,calc(100vw-2rem))] max-h-[70vh] bg-brand-surface border border-brand-border rounded-2xl shadow-2xl flex flex-col overflow-hidden no-print md:bottom-24"
+          className="fixed bottom-[13.75rem] right-4 z-[72] w-[min(360px,calc(100vw-2rem))] max-h-[70vh] bg-brand-surface border border-brand-border rounded-2xl shadow-2xl flex flex-col overflow-hidden no-print"
         >
           <div className="flex items-center gap-2 px-4 py-3 bg-brand-primary text-white">
             <span aria-hidden="true">🐶</span>

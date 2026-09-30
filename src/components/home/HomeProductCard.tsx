@@ -41,12 +41,10 @@ export function HomeProductCard({ item, onSameDay, onPreOrder }: HomeProductCard
         {item.image ? (
           <img src={item.image} alt={item.name} loading="lazy" decoding="async" />
         ) : (
-          <img
-            src="/images/mock/food-mock.svg"
-            alt={item.name}
-            loading="lazy"
-            decoding="async"
-            className="home-card-fallback-img"
+          <span
+            role="img"
+            aria-label={item.name}
+            className="home-card-fallback-img img-fallback"
           />
         )}
         {item.badge && <span className="home-card-badge">{item.badge}</span>}

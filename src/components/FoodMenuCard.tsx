@@ -79,12 +79,7 @@ export function FoodMenuCard({ product, category, mode, availability, onSameDayO
               loading="lazy"
             />
           ) : (
-            <img
-              src="/images/mock/food-mock.svg"
-              alt={`ภาพอาหาร ${name}`}
-              className="w-full h-full object-contain rounded-full shadow-lg"
-              loading="lazy"
-            />
+            <span className="img-fallback" role="img" aria-label={`ภาพอาหาร ${name}`} />
           )}
         </div>
       </div>

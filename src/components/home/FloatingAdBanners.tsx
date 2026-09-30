@@ -27,7 +27,8 @@ function isDismissed(id: string): boolean {
   } catch { return false }
 }
 
-const MOCK_BANNER_IMAGE = '/images/banners/banner-mock-1.svg'
+// AI-CLEANUP: mock banner asset removed — banners without a creative render a
+// branded CSS gradient placeholder instead (dynamic promo data from DB only).
 
 export function FloatingAdBanners({ promos }: { promos: FloatingBannerPromo[] }) {
   const [dismissedIds, setDismissedIds] = useState<Set<string>>(new Set())
@@ -53,7 +54,7 @@ export function FloatingAdBanners({ promos }: { promos: FloatingBannerPromo[] })
             {promo.image ? (
               <img src={promo.image} alt="" loading="lazy" />
             ) : (
-              <img src={MOCK_BANNER_IMAGE} alt="" loading="lazy" />
+              <div className="flad-media flad-media-fallback" aria-hidden="true" />
             )}
           </div>
           <div className="flad-body">

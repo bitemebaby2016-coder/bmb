@@ -120,7 +120,7 @@ return (
             {product.image_url ? (
               <img src={product.image_url} alt={product.name} className="ob-thumb" loading="lazy" />
             ) : (
-              <img src="/images/mock/food-mock.svg" alt={product.name} className="ob-thumb" loading="lazy" />
+              <span className="ob-thumb img-fallback" role="img" aria-label={product.name} />
             )}
             <div className="min-w-0">
               <h3 className="font-bold text-brand-accent truncate">{product.name}</h3>
@@ -206,7 +206,7 @@ return (
                         {rec.image_url ? (
                           <img src={rec.image_url} alt={rec.name} className="ob-rec-img" loading="lazy" />
                         ) : (
-                          <img src="/images/mock/food-mock.svg" alt={rec.name} className="ob-rec-img" loading="lazy" />
+                          <span className="ob-rec-img img-fallback" role="img" aria-label={rec.name} />
                         )}
                         <div className="min-w-0">
                           <div className="font-medium text-sm truncate">{rec.name}</div>
