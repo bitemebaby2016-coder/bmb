@@ -1,4 +1,4 @@
-﻿# 🤖 BITE ME BABY — AI Session Contract
+# 🤖 BITE ME BABY — AI Session Contract
 
 > **Version:** 1.0  
 > **Created:** 2026-09-16  
@@ -148,7 +148,7 @@ authStore.ts, cartStore.ts, inventoryStore.ts, notificationStore.ts, rewardsStor
 - **Lighthouse Performance = 29** (เป้า 90+) — OPEN backlog: ลดน้ำหนัก main bundle (supabase-js), CLS, contrast → ห้ามนับว่าเสร็จ
 - **Live Supabase DB** — DEFERRED: owner จะ reset/rebuild จาก 001→004 เอง (test ใช้ in-memory mock)
 - **`externalProviders.ts` dynamic import ไม่มีประสิทธิภาพ** — จาก build warning จริง
-- **AI-06 Voice** — CANCELLED (ไม่มีโค้ดใน repo)
+- **AI-06 Voice** - CANCELLED (no code) [UPDATE 2026-10-01 -> DONE: src/lib/aiVoice.ts + VoiceInterface + mic/TTS in BiteAIChat & AiChatPage + vitest aiVoice.test 10/10 PASS]
 
 ---
 

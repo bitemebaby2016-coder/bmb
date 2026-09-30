@@ -13,6 +13,15 @@ import { useEffect, useRef, useState } from 'react'
 import { useBiteAIStore } from '@/stores/useBiteAIStore'
 import { GlassCard } from '@/components/ui/GlassCard'
 import { chatWithAI } from '@/lib/aiService'
+import {
+  getAIVoiceService,
+  isSpeechRecognitionSupported,
+  isSpeechSynthesisSupported,
+  isVoiceReplyEnabled,
+  setVoiceReplyEnabled,
+  speakableText,
+  type AIVoiceService,
+} from '@/lib/aiVoice'
 
 interface ChatMsg {
   id: string
@@ -22,7 +31,7 @@ interface ChatMsg {
 
 export interface BiteAIChatProps {
   /** Injectable responder for deterministic tests / custom backends. */
-  sendMessage?: (text: string) => Promise<string>
+  sendMessage?: (text: string, voiceMode?: boolean) => Promise<string>
 }
 
 export function BiteAIChat({ sendMessage = defaultSend }: BiteAIChatProps) {
@@ -33,7 +42,37 @@ export function BiteAIChat({ sendMessage = defaultSend }: BiteAIChatProps) {
   const [messages, setMessages] = useState<ChatMsg[]>([])
   const [input, setInput] = useState('')
   const [typing, setTyping] = useState(false)
+  const [listening, setListening] = useState(false)
+  const [speaking, setSpeaking] = useState(false)
+  const [voiceReply, setVoiceReply] = useState(isVoiceReplyEnabled())
+  const micSupported = isSpeechRecognitionSupported()
+  const ttsSupported = isSpeechSynthesisSupported()
+  const voiceRef = useRef<AIVoiceService | null>(null)
+  const voiceInputRef = useRef(false)
   const endRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!chatOpen || !micSupported) return
+    const service = getAIVoiceService()
+    voiceRef.current = service
+    service.setCallbacks({
+      // WS-2d: transcript ไหลเข้าช่อง input เหมือนพิมพ์ → กดส่งเองหรือรอประโยคสุดท้าย
+      onTranscript: (text) => {
+        voiceInputRef.current = true
+        setInput(text)
+      },
+      onResponse: () => {},
+      onError: () => setListening(false),
+    })
+    // barge-in + สถานะพูด (poll เบา ๆ — synthesis API ไม่มี event แบบ reactive)
+    const interval = window.setInterval(() => setSpeaking(service.isSpeaking()), 150)
+    return () => {
+      window.clearInterval(interval)
+      service.stopListening()
+      service.stopSpeaking()
+      voiceRef.current = null
+    }
+  }, [chatOpen, micSupported])
 
   useEffect(() => {
     if (chatOpen) {
@@ -53,16 +92,45 @@ export function BiteAIChat({ sendMessage = defaultSend }: BiteAIChatProps) {
 
   if (!chatOpen) return null
 
+  function toggleMic() {
+    const service = voiceRef.current
+    if (!service) return
+    if (listening) {
+      service.stopListening()
+      setListening(false)
+    } else {
+      if (service.startListening()) setListening(true)
+    }
+  }
+
+  function toggleVoiceReply() {
+    const next = !voiceReply
+    setVoiceReply(next)
+    setVoiceReplyEnabled(next)
+    if (!next) voiceRef.current?.stopSpeaking()
+  }
+
   async function handleSend() {
     const text = input.trim()
     if (!text || typing) return
     const userMsg: ChatMsg = { id: `u-${Date.now()}`, role: 'user', content: text }
     setMessages((prev) => [...prev, userMsg])
     setInput('')
+    const fromVoice = voiceInputRef.current
+    voiceInputRef.current = false
+    if (listening) {
+      voiceRef.current?.stopListening()
+      setListening(false)
+    }
     setTyping(true)
     try {
-      const reply = await sendMessage(`${fullContext ? `[Context: ${fullContext}] ` : ''}${text}`)
+      // WS-2e: ข้อความที่มาจากไมค์ หรือเมื่อเปิดเสียงตอบ → ใช้ voice mode (ตอบสั้นแบบพูด)
+      const reply = await sendMessage(`${fullContext ? `[Context: ${fullContext}] ` : ''}${text}`, fromVoice || voiceReply)
       setMessages((prev) => [...prev, { id: `a-${Date.now()}`, role: 'assistant', content: reply }])
+      // WS-2c: อ่านคำตอบด้วยเสียงเมื่อผู้ใช้เปิดลำโพง (กรอง markdown/emoji ก่อนพูด)
+      if (voiceReply && ttsSupported) {
+        await voiceRef.current?.speak(speakableText(reply))
+      }
     } finally {
       setTyping(false)
     }
@@ -80,7 +148,9 @@ export function BiteAIChat({ sendMessage = defaultSend }: BiteAIChatProps) {
         <GlassCard className="!p-0 w-11 h-11 flex items-center justify-center text-2xl">🐻</GlassCard>
         <div className="flex-1">
           <h2 className="font-bold text-slate-800 leading-tight">Bite AI — 4-Stage Assistant</h2>
-          <p className="text-xs text-slate-500">โหมด Full-Screen Chat (Stage 4)</p>
+          <p className="text-xs text-slate-500" data-testid="bite-ai-status">
+            {listening ? '🎤 กำลังฟัง...' : typing ? 'กำลังคิด...' : speaking ? '🔊 กำลังพูด...' : 'โหมด Full-Screen Chat (Stage 4)'}
+          </p>
         </div>
         <button onClick={closeChat} className="btn btn-outline text-sm" data-testid="bite-ai-close">
           ปิด
@@ -111,11 +181,35 @@ export function BiteAIChat({ sendMessage = defaultSend }: BiteAIChatProps) {
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-          placeholder="พิมพ์ข้อความ..."
+          placeholder={listening ? 'กำลังฟัง... พูดเลยค่ะ' : 'พิมพ์ข้อความหรือกดไมค์เพื่อพูด...'}
           className="input flex-1"
           data-testid="bite-ai-input"
         />
-        <button onClick={handleSend} disabled={!input.trim() || typing} className="btn btn-primary" data-testid="bite-ai-send">
+        {/* WS-2b: ปุ่มไมค์ (กดพูด/กดหยุด) — ซ่อนเมื่อเบราว์เซอร์ไม่รองรับ STT (พิมพ์ต่อได้ปกติ) */}
+        {micSupported && (
+          <button
+            onClick={toggleMic}
+            className={listening ? 'btn btn-primary' : 'btn btn-outline'}
+            data-testid="bite-ai-mic"
+            aria-label={listening ? 'หยุดฟัง' : 'กดเพื่อพูด'}
+            title={listening ? 'หยุดฟัง' : 'พูดเลย'}
+          >
+            🎤
+          </button>
+        )}
+        {/* WS-2c: เปิด/ปิดเสียงตอบ (จำการตั้งค่าไว้ใน localStorage) — ซ่อนถ้าไม่มี TTS */}
+        {ttsSupported && (
+          <button
+            onClick={toggleVoiceReply}
+            className={voiceReply ? 'btn btn-primary' : 'btn btn-outline'}
+            data-testid="bite-ai-speaker"
+            aria-label={voiceReply ? 'ปิดเสียงตอบ' : 'เปิดเสียงตอบ'}
+            title={voiceReply ? 'ปิดเสียงตอบ' : 'เปิดเสียงตอบ'}
+          >
+            {voiceReply ? '🔊' : '🔇'}
+          </button>
+        )}
+        <button onClick={() => handleSend()} disabled={!input.trim() || typing} className="btn btn-primary" data-testid="bite-ai-send">
           ส่ง
         </button>
       </div>
@@ -123,9 +217,9 @@ export function BiteAIChat({ sendMessage = defaultSend }: BiteAIChatProps) {
   )
 }
 
-async function defaultSend(text: string): Promise<string> {
+async function defaultSend(text: string, voiceMode?: boolean): Promise<string> {
   try {
-    return await chatWithAI(text)
+    return await chatWithAI(text, undefined, { voiceMode })
   } catch (e) {
     return 'ขอโทษค่ะ เกิดข้อผิดพลาดในการเชื่อมต่อ กรุณาลองใหม่นะ 🙏'
   }

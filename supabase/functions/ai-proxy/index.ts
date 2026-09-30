@@ -58,7 +58,7 @@ function sseHeaders(): Record<string, string> {
   return { ...corsHeaders(), 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache, no-transform', Connection: 'keep-alive' }
 }
 
-const DEFAULT_MODEL = 'nvidia/nemotron-3-ultra-550b-a55b:free'
+const DEFAULT_MODEL = 'qwen/qwen3.7-flash' // sync: src/lib/aiModels.ts (fallback z-ai/glm-5.3-flash)
 
 async function streamCompletion(req: Request, apiKey: string, model: string, safeMessages: ChatMessage[], maxTokens: number): Promise<Response> {
   const upstream = await fetch(OPENROUTER_URL, {
@@ -166,8 +166,15 @@ Deno.serve(async (req: Request): Promise<Response> => {
   if (messages.length === 0) return json({ error: 'no messages' }, 400)
 
   // Inject the guardrail segment at the TOP of the system context (AI-02 base).
+  // WS-3 fix: keep ALL client system messages (DB context / voice directive live
+  // there) — the old slice(-10) silently dropped the second system message when
+  // the conversation grew past 10 turns.
   const systemMessage: ChatMessage = { role: 'system', content: GUARDRAIL_SEGMENT }
-  const safeMessages = [systemMessage, ...messages.slice(-10)]
+  const safeMessages = [
+    systemMessage,
+    ...messages.filter((m) => m.role === 'system'),
+    ...messages.filter((m) => m.role !== 'system').slice(-10),
+  ]
 
   const model = payload.model || DEFAULT_MODEL
   const maxTokens = payload.maxTokens ?? 500

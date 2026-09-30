@@ -426,12 +426,12 @@ describe('Rewards Store', () => {
 })
 
 describe('AI Model A Configuration', () => {
-  it('should use Nemotron-3-Ultra 550B (free) as Model A primary with Qwen 3.7 Flash fallback', () => {
-    expect(MODEL_A_PRIMARY).toBe('nvidia/nemotron-3-ultra-550b-a55b:free')
-    expect(MODEL_A_FALLBACK).toBe('qwen/qwen3.7-flash')
+  it('should use Qwen 3.7 Flash as Model A primary with Z-AI GLM 5.3 Flash fallback', () => {
+    expect(MODEL_A_PRIMARY).toBe('qwen/qwen3.7-flash')
+    expect(MODEL_A_FALLBACK).toBe('z-ai/glm-5.3-flash')
   })
 
-  it('chatWithAI should fall back to Qwen 3.7 Flash when Nemotron-3-Ultra 550B (free) fails (via ai-proxy EF)', async () => {
+  it('chatWithAI should fall back to Z-AI GLM 5.3 Flash when Qwen 3.7 Flash fails (via ai-proxy EF)', async () => {
     const { chatWithAI, resetConversation } = await import('@/lib/aiService')
     const { supabase } = await import('@/lib/supabase')
     resetConversation()

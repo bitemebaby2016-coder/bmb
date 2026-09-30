@@ -9,7 +9,7 @@ export const VoiceDemoPage: React.FC = () => {
         <header className="demo-header">
           <h1>🎙️ AI Voice Assistant Demo</h1>
           <p className="demo-subtitle">
-            พูดคุยกับ AI Voice ของ Bite Me Baby — ใช้ OpenRouter (Nemotron-3-Ultra / Qwen Fallback)
+            พูดคุยกับ AI Voice ของ Bite Me Baby — ใช้ OpenRouter (Qwen 3.7 Flash / GLM 5.3 Flash Fallback)
           </p>
         </header>
 
@@ -18,7 +18,7 @@ export const VoiceDemoPage: React.FC = () => {
             <h2>วิธีใช้งาน</h2>
             <ul className="instructions">
               <li><strong>กดไอคอนไมค์</strong> เพื่อเริ่มพูด (Web Speech API STT)</li>
-              <li><strong>พูดเป็นภาษาไทย</strong> — AI จะประมวลผลผ่าน OpenRouter (Nemotron-3-Ultra)</li>
+              <li><strong>พูดเป็นภาษาไทย</strong> — AI จะประมวลผลผ่าน OpenRouter (Qwen 3.7 Flash)</li>
               <li><strong>AI จะตอบกลับด้วยเสียง</strong> (Web Speech API TTS)</li>
               <li>หรือพิมพ์ข้อความในช่องด้านล่างได้เช่นกัน</li>
             </ul>
@@ -51,12 +51,12 @@ export const VoiceDemoPage: React.FC = () => {
             <div className="model-info">
               <div className="model-card primary">
                 <h4>🥇 Primary</h4>
-                <code>nvidia/nemotron-3-ultra-550b-a55b:free</code>
-                <p>High-quality reasoning, ตอบเป็นภาษาไทยได้ดี</p>
+                <code>qwen/qwen3.7-flash</code>
+                <p>ตอบเป็นภาษาไทยได้ดี เร็ว ~ฟรี</p>
               </div>
               <div className="model-card fallback">
                 <h4>🔄 Fallback</h4>
-                <code>qwen/qwen3.7-flash</code>
+                <code>z-ai/glm-5.3-flash</code>
                 <p>รองรับภาษาไทย เร็ว ฟรี</p>
               </div>
             </div>

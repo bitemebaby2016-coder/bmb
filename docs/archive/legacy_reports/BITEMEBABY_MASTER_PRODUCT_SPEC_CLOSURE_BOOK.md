@@ -119,13 +119,13 @@ Mobile-first PWA
 | AI-03 | AI Recommendation Engine | ✅ DONE | `getMenuRecommendations()` | ML-powered |
 | AI-04 | Multi-language support | ✅ DONE | System prompt | TH + EN |
 | AI-05 | AI Memory | ✅ DONE | `aiMemory.ts` | CLOSED — implement จริง |
-| AI-06 | Voice future | ❌ CANCELLED | — | ไม่มีโค้ดใน repo (no mockup) |
+| AI-06 | Voice | DONE (2026-10-01: src/lib/aiVoice.ts + VoiceInterface + mic/TTS in BiteAIChat & AiChatPage, vitest aiVoice.test 10/10 PASS) | - | was CANCELLED
 | AI-07 | Tool calling | ✅ DONE | `aiToolCalling.ts` | CLOSED — implement จริง (5 tools) |
 | AI-08 | Customer Intelligence | ✅ DONE | `customerIntelligence.ts` | CLOSED — implement จริง |
 | AI-09 | Content automation | ✅ DONE | `contentAutomation.ts` | CLOSED — implement จริง |
 | AI-10 | Advanced chat | ✅ DONE | `chatWithAI()` | Context-aware |
 
-**Progress:** 9/10 — AI-06 Voice CANCELLED (no mockup)
+**Progress:** 10/10 [UPDATE 2026-10-01: AI-06 Voice DONE]
 
 ---
 
@@ -396,13 +396,13 @@ Bite Me Baby/
 | AI-03 | AI Recommendation Engine | ✅ DONE | `getMenuRecommendations()` | ML-powered |
 | AI-04 | Multi-language support | ✅ DONE | System prompt | TH + EN |
 | AI-05 | AI Memory | ✅ DONE | `aiMemory.ts` | CLOSED — implement จริง |
-| AI-06 | Voice future | ❌ CANCELLED | — | ไม่มีโค้ดใน repo (no mockup) |
+| AI-06 | Voice | DONE (2026-10-01: src/lib/aiVoice.ts + VoiceInterface + mic/TTS in BiteAIChat & AiChatPage, vitest aiVoice.test 10/10 PASS) | - | was CANCELLED
 | AI-07 | Tool calling | ✅ DONE | `aiToolCalling.ts` | CLOSED — implement จริง (5 tools) |
 | AI-08 | Customer Intelligence | ✅ DONE | `customerIntelligence.ts` | CLOSED — implement จริง |
 | AI-09 | Content automation | ✅ DONE | `contentAutomation.ts` | CLOSED — implement จริง |
 | AI-10 | Advanced chat | ✅ DONE | `chatWithAI()` | Context-aware |
 
-**Progress:** 9/10 — AI-06 Voice CANCELLED (no mockup)
+**Progress:** 10/10 [UPDATE 2026-10-01: AI-06 Voice DONE]
 
 ---
 
@@ -686,13 +686,13 @@ Bite Me Baby/
 | AI-03 | AI Recommendation Engine | ✅ DONE | `getMenuRecommendations()` | ML-powered |
 | AI-04 | Multi-language support | ✅ DONE | System prompt | TH + EN |
 | AI-05 | AI Memory | ✅ DONE | `aiMemory.ts` | CLOSED — implement จริง |
-| AI-06 | Voice future | ❌ CANCELLED | — | ไม่มีโค้ดใน repo (no mockup) |
+| AI-06 | Voice | DONE (2026-10-01: src/lib/aiVoice.ts + VoiceInterface + mic/TTS in BiteAIChat & AiChatPage, vitest aiVoice.test 10/10 PASS) | - | was CANCELLED
 | AI-07 | Tool calling | ✅ DONE | `aiToolCalling.ts` | CLOSED — implement จริง (5 tools) |
 | AI-08 | Customer Intelligence | ✅ DONE | `customerIntelligence.ts` | CLOSED — implement จริง |
 | AI-09 | Content automation | ✅ DONE | `contentAutomation.ts` | CLOSED — implement จริง |
 | AI-10 | Advanced chat | ✅ DONE | `chatWithAI()` | Context-aware |
 
-**Progress:** 9/10 — AI-06 Voice CANCELLED (no mockup)
+**Progress:** 10/10 [UPDATE 2026-10-01: AI-06 Voice DONE]
 
 ---
 

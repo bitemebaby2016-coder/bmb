@@ -1,4 +1,4 @@
-
+﻿
 # AI WORK STATE
 # Version: 3.0
 # Purpose: Universal operational state + evidence ledger for AI coding agents.
@@ -6,11 +6,11 @@
 # This file MUST remain behaviorally aligned with those rules.
 #
 # ===============================================================================
-# SESSION HANDOFF (2026-09-29 — TEN-02 DEPLOYED + TEN-01 CONSUMED)
+# SESSION HANDOFF (2026-09-29 â€” TEN-02 DEPLOYED + TEN-01 CONSUMED)
 # ===============================================================================
-# Gate: TEN-02 IMPLEMENTATION — DEPLOYED TO PROD + VERIFIED
-# HEAD ตอนจบ gate: ดู git log — deployments on main (baseline 8169853b -> post-ten02)
-# Reports: BMB_TEN02_CLOSURE_REPORT.md · BMB_TEN02_IMPLEMENTATION_CONTRACT.md · BMB_TEN01_AUDIT.md · BMB_STORAGE_PLATFORM_BLOCKER.md
+# Gate: TEN-02 IMPLEMENTATION â€” DEPLOYED TO PROD + VERIFIED
+# HEAD à¸•à¸­à¸™à¸ˆà¸š gate: à¸”à¸¹ git log â€” deployments on main (baseline 8169853b -> post-ten02)
+# Reports: BMB_TEN02_CLOSURE_REPORT.md Â· BMB_TEN02_IMPLEMENTATION_CONTRACT.md Â· BMB_TEN01_AUDIT.md Â· BMB_STORAGE_PLATFORM_BLOCKER.md
 # Prod facts post-TEN-02 (verified e2e/ten02-verify.cjs):
 #   - tenants table: tenant-bmb-001 active (single tenant)
 #   - brands: 0 rows
@@ -18,10 +18,10 @@
 #   - profiles: all tenant_id='tenant-bmb-001', is_platform=true for 1 row (dddf4b57 = platform admin, verified by is_owner=true)
 #   - order_number = BMB-YYYYMMDD-NNN global unchanged (orders=202, order_items=199, payment_intents=56)
 #   - RLS rewritten: *_tenant_admin_manage policies for ops tables; F-06 JWT driver identity preserved
-# Storage 403 ROOT CAUSE: STILL UNRESOLVED (ES256/JWT key issue) — Admin UI upload NOT runtime verified
-#   Workaround active: svc-key storage upload server-side only (CAT-03 §4)
-# Awaiting Owner: TEN-03 catalog tenancy progression decision · Storage platform fix action
-# ห้ามเริ่ม: TEN-03..09 · CAT-04 · CAT-03B (ก่อน >= 2026-10-13) · Catalog Runtime Verify · Open-Shop
+# Storage 403 ROOT CAUSE: STILL UNRESOLVED (ES256/JWT key issue) â€” Admin UI upload NOT runtime verified
+#   Workaround active: svc-key storage upload server-side only (CAT-03 Â§4)
+# Awaiting Owner: TEN-03 catalog tenancy progression decision Â· Storage platform fix action
+# à¸«à¹‰à¸²à¸¡à¹€à¸£à¸´à¹ˆà¸¡: TEN-03..09 Â· CAT-04 Â· CAT-03B (à¸à¹ˆà¸­à¸™ >= 2026-10-13) Â· Catalog Runtime Verify Â· Open-Shop
 
 
 > IMPORTANT
@@ -50,7 +50,7 @@ SECTION 0: NON-NEGOTIABLE RULES
     - If code and documentation disagree, report DOC DRIFT and follow the
       Source of Truth hierarchy.
 
-0.3 SKIPPED ≠ PASSED
+0.3 SKIPPED â‰  PASSED
     - SKIPPED, NOT RUN, BLOCKED, MOCKED, or UNVERIFIED are never PASS.
     - Unit tests do not automatically prove E2E/runtime/production behavior.
     - Local verification does not automatically prove production verification.
@@ -218,7 +218,7 @@ SECTION 9: MODEL SELECTION & COST-OPTIMIZED ESCALATION
     Always prioritize verified FREE models for initial research, simple edits,
     and small tasks.
 
-    TIER 0 (FREE — DEFAULT)
+    TIER 0 (FREE â€” DEFAULT)
       - Primary Router: openrouter/auto
       - Secondary: nvidia/nemotron-3-ultra-550b-a55b:free
         or poolside/laguna-s-2.1:free
@@ -321,7 +321,7 @@ Do not write "nothing remains" unless evidence proves it.
 
 
 ===============================================================================
-SECTION 17: CURRENT PROJECT STATE — BITE ME BABY
+SECTION 17: CURRENT PROJECT STATE â€” BITE ME BABY
 ===============================================================================
 
 PROJECT
@@ -329,7 +329,7 @@ PROJECT
     Repository: https://github.com/bitemebaby2016-coder/bmb.git
     Branch: main
     Last verified production/documentation checkpoint: ed1ac58
-    Latest known production migration state: 34/34 (001–034)
+    Latest known production migration state: 34/34 (001â€“034)
     Deployment target: Cloudflare Pages (bitemebaby-5f7.pages.dev)
     Stack: React + TypeScript + Vite 8.2.2 + Tailwind CSS + Zustand + Supabase
            + Node v24.18.0 (Windows)
@@ -353,13 +353,13 @@ CURRENT VERIFIED STATE
     - Local == Remote migration state: YES (34/34).
 
 IMPORTANT TEST LIMITATION
-    - Contracts 017–022 currently report 1/5 PASS and 4 failures are attributed
+    - Contracts 017â€“022 currently report 1/5 PASS and 4 failures are attributed
       to the test-environment limitation where the Management API executor lacks
       auth.uid() context. This is NOT to be relabeled PASS and is NOT to be
       silently deleted.
 
 LATEST VERIFIED WAVE
-    WAVE 3 — completed 2026-09-22.
+    WAVE 3 â€” completed 2026-09-22.
     - Migration 033: table-ACL alignment.
     - Migration 034: production ACL drift remediation.
     - Both applied and registered.
@@ -398,16 +398,16 @@ P0-2: AI Memory wired to AiChatPage (storeConversationMessage, getMemorySummary,
 P1-1: Review API Supabase migration created (bmbAdminApi_reviews.ts)
 P1-2: Route Optimization UI created (RouteOptimizationPage.tsx + App.tsx route)
 === BMB-CLOSURE-FINAL-2026-09-17 COMPLETED ===
-Task: Closure Final — E2E real / Lighthouse ≥80 / mascot poses complete / pre-order real order / pose decision / docs final pass + commit convention / deploy + smoke test
-Status: PASS (verified — tsc 0, vitest 26/26, Lighthouse Perf 81, E2E 7/7, screenshots 9, real live-DB rows, production URL smoke)
-- E2E (Playwright + system Chrome) 7/7 PASS, 0 console errors: Landing→Menu→Cart→Checkout→Payment→Tracking, Pre-order→Tracking, Empty-cart mascot. Evidence: e2e/e2e-result.json + e2e/screenshots/*.png
-- Lighthouse Performance 43→81 (best run; variance 56–81 documented — external font/cpu noise). Fixes: bcryptjs moved to dynamic import + static admin hash (removes ~2.7s TBT), fonts non-blocking, lazy page chunks (Menu/Cart/Checkout/Payment/...), WebP assets compressed 60–90%, preload hero LCP image, supabase off critical path
-- Mascot Pose Map: pointing (hero CTA), peeking (review glass), empty (empty cart + sold-out + no-result), bye (NEW pose: bite_good bye.webp → farewell/thanks at delivered + payment success)
-- Pre-order: createPreOrder() wired in HomePage + MenuPage → real pre_orders row (PO-20260917-338) + guest customer auto-sync; checkout creates payment intent at order time and navigates /payment → /track
-- Bug fixes discovered by E2E: checkout provider effect missing deliveryAddress.detail dep; empty-cart guard redirecting before /payment navigate; delivery_round_id 'morning' → round-id mapping; payment intent missing at checkout
-- Delivery Provider sandbox: vitest logic suite (5 tests: cost/coverage/selection/persist) — live API sandbox BLOCKED (no Grab/LINE credentials)
+Task: Closure Final â€” E2E real / Lighthouse â‰¥80 / mascot poses complete / pre-order real order / pose decision / docs final pass + commit convention / deploy + smoke test
+Status: PASS (verified â€” tsc 0, vitest 26/26, Lighthouse Perf 81, E2E 7/7, screenshots 9, real live-DB rows, production URL smoke)
+- E2E (Playwright + system Chrome) 7/7 PASS, 0 console errors: Landingâ†’Menuâ†’Cartâ†’Checkoutâ†’Paymentâ†’Tracking, Pre-orderâ†’Tracking, Empty-cart mascot. Evidence: e2e/e2e-result.json + e2e/screenshots/*.png
+- Lighthouse Performance 43â†’81 (best run; variance 56â€“81 documented â€” external font/cpu noise). Fixes: bcryptjs moved to dynamic import + static admin hash (removes ~2.7s TBT), fonts non-blocking, lazy page chunks (Menu/Cart/Checkout/Payment/...), WebP assets compressed 60â€“90%, preload hero LCP image, supabase off critical path
+- Mascot Pose Map: pointing (hero CTA), peeking (review glass), empty (empty cart + sold-out + no-result), bye (NEW pose: bite_good bye.webp â†’ farewell/thanks at delivered + payment success)
+- Pre-order: createPreOrder() wired in HomePage + MenuPage â†’ real pre_orders row (PO-20260917-338) + guest customer auto-sync; checkout creates payment intent at order time and navigates /payment â†’ /track
+- Bug fixes discovered by E2E: checkout provider effect missing deliveryAddress.detail dep; empty-cart guard redirecting before /payment navigate; delivery_round_id 'morning' â†’ round-id mapping; payment intent missing at checkout
+- Delivery Provider sandbox: vitest logic suite (5 tests: cost/coverage/selection/persist) â€” live API sandbox BLOCKED (no Grab/LINE credentials)
 - Stripe test mode: BLOCKED (no VITE_STRIPE_* keys from owner)
-- Live Supabase rebuild 001→004: BLOCKED — CLI/API no privileges; owner must run from SQL Editor (or share DB password)
+- Live Supabase rebuild 001â†’004: BLOCKED â€” CLI/API no privileges; owner must run from SQL Editor (or share DB password)
 - Deploy: Cloudflare Pages via wrangler + production smoke test
 - Docs overwritten to real state: STATUS_TRACKER v10, MASTER_PLAN v6.0, BITEMEBABY_CLOSURE_WORK_PLAN v2.0, AI_WORK_STATE, DEPLOYMENT
 - Git: conventional commits (feat|perf|fix|test|docs|chore) pushed to origin/main
@@ -429,70 +429,70 @@ Task: Fix migration chain + make the suite green OFFLINE (live Supabase DB defer
 - LIVE SUPABASE DB: NOT migrated yet (owner decision) - reset/rebuild later from 001->002->003->004.
 - Build: tsc PASS (0 errors) + vite build PASS [VERIFIED].
 === BMB-CLOSURE-2026-09-17 COMPLETED ===
-Task: Closure Round — Model A GLM 5.2 free + Fallback / API test 19/19 / Lighthouse attached / Reality Map items closed (no mockup)
+Task: Closure Round â€” Model A GLM 5.2 free + Fallback / API test 19/19 / Lighthouse attached / Reality Map items closed (no mockup)
 - Model A: primary = z-ai/glm-5.2:free (GLM 5.2 free, verified $0 on OpenRouter), fallback = qwen/qwen3.7-flash.
   NEW src/lib/aiModels.ts (MODEL_A_PRIMARY / MODEL_A_FALLBACK / resolveModelA) + fallback chain in aiService.chatWithAI & aiToolCalling.chatWithToolSupport (retry 1x on failure).
 - API test set up: vi.mock('@/lib/supabase') re-enabled (was commented out in working copy) -> suite runs offline on in-memory Supabase mock ->
   should create order no longer hits real DB duplicate TEST-001. Added AI Model A Configuration describe (2 tests: constants + fallback behavior via mocked fetch 429 -> qwen success).
 - Verification: npx tsc --noEmit = 0 errors [VERIFIED]; npx vitest run = 19/19 PASS [VERIFIED]; npm run build = PASS (v8.2.2, 1.35s, 322.43KB JS / gzip 91.28KB) [VERIFIED];
   Lighthouse (Chrome headless vs local preview :4173) = Perf 29 / A11y 82 / BP 100 / SEO 100 -> lighthouse/report.report.json + .html committed.
-- Reality Map close-out: ALL PLANNED items verified implemented in src/lib -> CLOSED; Voice (AI-06) + Intent module separate -> CANCELLED (no code, no mockup);
+- Reality Map close-out: ALL PLANNED items verified implemented in src/lib -> CLOSED; Voice (AI-06) + Intent module separate -> CANCELLED (no code, no mockup); [UPDATE 2026-10-01: AI-06 Voice -> DONE - src/lib/aiVoice.ts + VoiceInterface + mic/TTS in BiteAIChat and AiChatPage + vitest aiVoice.test.ts 10/10 PASS; intent module ยังไม่มี];
   SEO-04 CLOSED via real Lighthouse run. Live DB rebuild still DEFERRED (owner).
 - Docs overwritten to real state: BITEMEBABY_PRODUCT_REALITY_MAP v4.0, STATUS_TRACKER v9.0, MASTER_PLAN v5.2, AI SESSION CONTRACT v1.2, CLOSURE BOOK v3.2, BiteMeBaby_API (Model A), README (Model A policy), AI_WORK_STATE.
 - Honest open items (not faked): Lighthouse Performance 29 (backlog for bundle/CLS/contrast), externalProviders dynamic import warning, GLM free tier rate-limit (fallback covers).
 - Git: commit + push to origin/main performed.
 === BMB-P0-PHASE-CD SESSION (2026-09-18) ===
 Task ID: BMB-SEC-2026-09-18
-Status: CODE + TESTS DONE (session) — all LIVE blockers since CLOSED 2026-09-19 (deploys, migrations 008/009/010, secrets, webhook endpoint alignment, service-role rotation, REAL delivery PASS)
-Objective: Live-verify 007 → P0-5 (real payment) → P0-6 (order state machine) → Phase C Forensic → Phase D (approved) Complete Admin → final audit → commit+push (test-gated).
+Status: CODE + TESTS DONE (session) â€” all LIVE blockers since CLOSED 2026-09-19 (deploys, migrations 008/009/010, secrets, webhook endpoint alignment, service-role rotation, REAL delivery PASS)
+Objective: Live-verify 007 â†’ P0-5 (real payment) â†’ P0-6 (order state machine) â†’ Phase C Forensic â†’ Phase D (approved) Complete Admin â†’ final audit â†’ commit+push (test-gated).
 
 Completed:
-- 007 LIVE VERIFIED: RPC exists; anon call → P0001 ERR_NOT_AUTHENTICATED. Note: anon still had EXECUTE (PGRST202 expected if REVOKE applied) → owner re-run 007 grants.
+- 007 LIVE VERIFIED: RPC exists; anon call â†’ P0001 ERR_NOT_AUTHENTICATED. Note: anon still had EXECUTE (PGRST202 expected if REVOKE applied) â†’ owner re-run 007 grants.
 - P0-5: supabase/functions/create-checkout + stripe-webhook (Deno, raw Stripe API + HMAC verify; zero fake success);
   migration 008 (record_payment_result[service_role only], create_payment_intent_record, submit_offline_payment_reference, confirm_offline_payment, mark_payment_failed);
-  paymentGateway.ts rewritten (no simulation/localStorage); PaymentConfirmationPage: customer submits TXN → processing (never self-marks paid); AdminOrders: server-authoritative confirm.
-- P0-6: migration 008 state machine (order_transition_allowed + BEFORE UPDATE trigger + transition_order_status RPC); bmbAdminApi_orders.updateOrderStatus → RPC; direct status UPDATE blocked (RLS + trigger).
+  paymentGateway.ts rewritten (no simulation/localStorage); PaymentConfirmationPage: customer submits TXN â†’ processing (never self-marks paid); AdminOrders: server-authoritative confirm.
+- P0-6: migration 008 state machine (order_transition_allowed + BEFORE UPDATE trigger + transition_order_status RPC); bmbAdminApi_orders.updateOrderStatus â†’ RPC; direct status UPDATE blocked (RLS + trigger).
 - Phase C Forensic: PHASE_C_TRUSTED_BACKEND_FORENSIC.md (9 empty EF shells; secret purge; grant audit; C1-C7 open items).
 - Phase D Complete Admin: AdminPromotions, AdminRounds, AdminCustomers, AdminSettings + 4 lib APIs + routes + dashboard links.
 - .env/.env.local purged of VITE_SUPABASE_SERVICE_ROLE_KEY / VITE_STRIPE_SECRET_KEY / VITE_STRIPE_WEBHOOK_SECRET.
 Verified: tsc 0 errors [VERIFIED]; vitest 50/50 [VERIFIED] (14 new P0-5/P0-6 tests); npm run build PASS [VERIFIED].
 Blocked (owner): apply migration 008 to live DB; re-run 007 grants; supabase link+secrets+deploy EFs; rotate leaked service-role key; live Stripe webhook test; auth e2e live (email rate-limit today).
-Files changed: see git status (migrations/008, 2×supabase/functions, src/lib{paymentGateway,bmbAdminApi_orders,bmbAdminApi_{promotions,rounds,customers,settings}}, pages{PaymentConfirmation,admin/AdminOrders,admin/AdminDashboard,App.tsx}, 4 new admin pages, tests{paymentStateMachine, mockRef, supabaseMock}, docs).
+Files changed: see git status (migrations/008, 2Ã—supabase/functions, src/lib{paymentGateway,bmbAdminApi_orders,bmbAdminApi_{promotions,rounds,customers,settings}}, pages{PaymentConfirmation,admin/AdminOrders,admin/AdminDashboard,App.tsx}, 4 new admin pages, tests{paymentStateMachine, mockRef, supabaseMock}, docs).
 === BMB-STRIPE-LIVE-VERIFY SESSION (2026-09-19) ===
 Task ID: BMB-STRIPE-GATE-2026-09-19 (continue BMB-SEC-2026-09-18)
-Status: LIVE VERIFY DONE / STRIPE GATE NOT PASSED (owner DB + Stripe blocked) — honest, not faked
-Objective: 1,2,3 done → get signed webhook smoke to 200 → verify DB → STRIPE GATE → 9 EF forensic → Phase C final audit. DON'T deploy empty shells.
+Status: LIVE VERIFY DONE / STRIPE GATE NOT PASSED (owner DB + Stripe blocked) â€” honest, not faked
+Objective: 1,2,3 done â†’ get signed webhook smoke to 200 â†’ verify DB â†’ STRIPE GATE â†’ 9 EF forensic â†’ Phase C final audit. DON'T deploy empty shells.
 
 Live evidence (all real probes, project ivkdfognyiwjcmrhcnwz, 2026-09-19):
-- create-checkout DEPLOYED: GET → 401 UNAUTHORIZED_NO_AUTH_HEADER (verify_jwt active). ✅
-- stripe-webhook DEPLOYED: GET → 200 {ok:true}. ✅  Unsigned POST → 400 ERR_INVALID_SIGNATURE (whsec IS set). ✅
-- 007 anon EXECUTE now REVOKED (anon → PGRST202; 09-18 was P0001). ✅ R1/C3/C4 closed.
-- 007 RUNTIME BROKEN: authenticated call → 42883 extract_epoch(timestamp with time zone) does not exist. ❌ → FIX written: migrations/009_fix_007_extract_epoch.sql (verified: body identical to 007 except that one expression).
-- 008 NOT APPLIED: service_role probes of record_payment_result / transition_order_status / create_payment_intent_record / submit_offline_payment_reference / confirm_offline_payment / mark_payment_failed / order_transition_allowed / guard_order_status_transition → ALL PGRST202. (business_settings table exists → Phase-D DDL applied earlier, payment RPC section did NOT.) → root cause of "cannot get 200". (→ SUPERSEDED: 008 confirmed LIVE, 009 + 010 applied later on 2026-09-19.)
-- Stripe key in .env EXPIRED (Stripe API 401 api_key_expired). ❌ owner rotates.
-- Signed 200 impossible today (008 missing → EF returns 500 on valid events). Invalid-signature path PASS live (twice, via new e2e/webhook-smoke.cjs).
+- create-checkout DEPLOYED: GET â†’ 401 UNAUTHORIZED_NO_AUTH_HEADER (verify_jwt active). âœ…
+- stripe-webhook DEPLOYED: GET â†’ 200 {ok:true}. âœ…  Unsigned POST â†’ 400 ERR_INVALID_SIGNATURE (whsec IS set). âœ…
+- 007 anon EXECUTE now REVOKED (anon â†’ PGRST202; 09-18 was P0001). âœ… R1/C3/C4 closed.
+- 007 RUNTIME BROKEN: authenticated call â†’ 42883 extract_epoch(timestamp with time zone) does not exist. âŒ â†’ FIX written: migrations/009_fix_007_extract_epoch.sql (verified: body identical to 007 except that one expression).
+- 008 NOT APPLIED: service_role probes of record_payment_result / transition_order_status / create_payment_intent_record / submit_offline_payment_reference / confirm_offline_payment / mark_payment_failed / order_transition_allowed / guard_order_status_transition â†’ ALL PGRST202. (business_settings table exists â†’ Phase-D DDL applied earlier, payment RPC section did NOT.) â†’ root cause of "cannot get 200". (â†’ SUPERSEDED: 008 confirmed LIVE, 009 + 010 applied later on 2026-09-19.)
+- Stripe key in .env EXPIRED (Stripe API 401 api_key_expired). âŒ owner rotates.
+- Signed 200 impossible today (008 missing â†’ EF returns 500 on valid events). Invalid-signature path PASS live (twice, via new e2e/webhook-smoke.cjs).
 
 Changed:
-- .env/.env.local → strict KEY=VALUE (no comments, no secrets; removed VITE_SUPABASE_SERVICE_ROLE_KEY/VITE_STRIPE_SECRET_KEY/stale anon key). Fixes parser error pattern "failed to parse environment file ... in variable name near '#'". Working anon key (sb_publishable_...) kept; also in .env.local.
+- .env/.env.local â†’ strict KEY=VALUE (no comments, no secrets; removed VITE_SUPABASE_SERVICE_ROLE_KEY/VITE_STRIPE_SECRET_KEY/stale anon key). Fixes parser error pattern "failed to parse environment file ... in variable name near '#'". Working anon key (sb_publishable_...) kept; also in .env.local.
 - migrations/009_fix_007_extract_epoch.sql NEW (above).
 - e2e/webhook-smoke.cjs NEW: T1 unsigned 400, T2 invalid sig 400, T3 signed 200, T4 duplicate 200, T5 no-order 202, T6 DB verify (service key). Negative path green live this session.
 - .gitignore + supabase/secrets.local.env.
-- STRIPE_WEBHOOK_PRELIVE_AUDIT.md rewritten → "STRIPE GATE - LIVE VERIFY REPORT". PHASE_C updated (C1 re-verified 0-file shells + owner NO-DEPLOY directive; C3 closed; C4 new; handoff statuses).
+- STRIPE_WEBHOOK_PRELIVE_AUDIT.md rewritten â†’ "STRIPE GATE - LIVE VERIFY REPORT". PHASE_C updated (C1 re-verified 0-file shells + owner NO-DEPLOY directive; C3 closed; C4 new; handoff statuses).
 
 Verified: npm run build PASS (with new .env) [VERIFIED]; smoke tool exit 0 (negative path) [VERIFIED].
 Blocked (owner, in order): 1) SQL Editor: run 009 then 008; 2) Stripe Dashboard webhook endpoint + keep whsec_... local only; 3) rotate STRIPE_SECRET_KEY + set on Supabase; 4) rotate service-role key; 5) re-run node e2e/webhook-smoke.cjs with --secret/--service-key (T3/T4/T6 close the gate).
 9 EF forensic: all 9 shells = 0 files each, NOT deployed (owner directive honored: do not deploy empties to fake completeness).
 === BMB-STRIPE-GATE-PASSED SESSION (2026-09-19, FINAL) ===
 Task ID: BMB-STRIPE-GATE-2026-09-19 (continuation)
-Status: ✅ STRIPE GATE PASSED (live evidence) — pipeline steps 4-7 ALL GREEN
+Status: âœ… STRIPE GATE PASSED (live evidence) â€” pipeline steps 4-7 ALL GREEN
 Objective: Re-run the gate per owner check-off; close out Tasks 4-7.
 
 Live gate results (2026-09-19, real Stripe test traffic + local HMAC):
-- T1 unsigned -> 400 ERR_INVALID_SIGNATURE ✅ | T2 invalid sig -> 400 ✅
-- T5 no order_number -> 202 {"received":true} ✅
-- T3 signed payment_intent.succeeded -> 200 {"received":true,"result":"paid"} ✅
-- T4 duplicate replay -> 200 idempotent (real `stripe events resend` too; no double payment) ✅
-- T6 payment DB -> payment_intents.status=completed + orders.payment_status=paid ✅
+- T1 unsigned -> 400 ERR_INVALID_SIGNATURE âœ… | T2 invalid sig -> 400 âœ…
+- T5 no order_number -> 202 {"received":true} âœ…
+- T3 signed payment_intent.succeeded -> 200 {"received":true,"result":"paid"} âœ…
+- T4 duplicate replay -> 200 idempotent (real `stripe events resend` too; no double payment) âœ…
+- T6 payment DB -> payment_intents.status=completed + orders.payment_status=paid âœ…
   Real chain: order BMB-20260919-830 -> create-checkout EF -> PI pi_3UHD1d3...
   -> confirm (pm_card_visa) -> Stripe DELIVERS signed event -> EF verifies
   -> record_payment_result -> order paid. (Also BMB-20260919-489 via smoke tool.)
@@ -504,7 +504,7 @@ Two production code bugs found + fixed this session (the actual blockers):
 - F9: create-checkout pre-set payment_intent_id (NULL now) so the first real webhook
   delivery looked like a replay and never updated the order. Deployed.
 Also: the edge-function secret-dispatch regression from the key-rotation commit was fixed and the
-Stripe endpoint lineage finally aligned — ACTIVE endpoint is now `we_1UHIrN3yHrQLTgfKkNZ4A0t5`
+Stripe endpoint lineage finally aligned â€” ACTIVE endpoint is now `we_1UHIrN3yHrQLTgfKkNZ4A0t5`
 (secret = `whsec_Dt6CDya0...`, `STRIPE_WEBHOOK_SECRET` on Supabase = same, REAL live delivery PASS).
 Migration 010 (RPC idempotency backstop) is now **APPLIED by owner**; legacy pre-set-PI-id orders
 (e.g. `BMB-20260919-616`) are repaired by the 010 semantics.
@@ -516,7 +516,7 @@ Residual (RESOLVED 2026-09-19): service-role key rotated + old leaked key REVOKE
 left as durable evidence, users deleted.
 === BMB-KEY-ROTATION SESSION (2026-09-19, FINAL) ===
 Task ID: BMB-OWNER-KEY-ROTATE-2026-09-19
-Status: ✅ ROTATION VERIFIED LIVE (new service key in use; old key NOT yet retired - owner step)
+Status: âœ… ROTATION VERIFIED LIVE (new service key in use; old key NOT yet retired - owner step)
 Objective: rotate to bmb_backend_production_supabase_service_role_key (sb_secret_RVEtLvVSfj8t..., value kept local only).
 
 Forensic: vite_supabase_service_role_key = UNUSED legacy (no repo/live reference).
@@ -538,7 +538,7 @@ new name (digest 5a0f7199... verified) = safe fallback; owner may later `supabas
 SUPABASE_SERVICE_ROLE_KEY` once the new name is the only one needed (optional).
 === INCIDENT-FIX SESSION (2026-09-19, STRIPE WEBHOOK SECRET-DISPATCH REGRESSION) ===
 Task ID: BMB-OWNER-WEBHOOK-INCIDENT-FIX-2026-09-19
-Status: ✅ FIXED + VERIFIED LIVE (webhook smoke T1-T6 pass=true)
+Status: âœ… FIXED + VERIFIED LIVE (webhook smoke T1-T6 pass=true)
 Objective: End re-issued webhook endpoints showing ERR_INVALID_SIGNATURE (400) on LIVE
 signed deliveries.
 
@@ -569,7 +569,7 @@ COMMIT: 032ca7e (pushed origin/main).
 RESOLVED (owner, 2026-09-19): migration 010 APPLIED; old C-5 service key REVOKED in Dashboard
   (legacy SUPABASE_SERVICE_ROLE_KEY env name still present, holds same value digest 5a0f7199... = safe).
 === LIVE STRIPE DELIVERY CLOSURE (2026-09-19, REAL webhook path verified) ===
-Status: ✅ LIVE_DELIVERY_RESULT = PASS (real Stripe webhook -> EF -> DB paid/completed)
+Status: âœ… LIVE_DELIVERY_RESULT = PASS (real Stripe webhook -> EF -> DB paid/completed)
 Objective: prove the REAL Stripe delivery path (not self-signed smoke) after the incident fix.
 
 FINDING (real-flow evidence, first attempt FAIL):
@@ -596,9 +596,9 @@ VERIFICATION (live, 2026-09-19, order BMB-LIVE-20260919074017, 172 THB):
 
 REMAINING (owner): optional - retire/disable any other stale Stripe endpoints; keep the
   endpoint secret on Supabase in sync with the ACTIVE endpoint (dashboard shows it).
-=== PHASE C-D REMAINING WORK SESSION (2026-09-19) — C-6 REFUND + C-7 MEDIA + PHASE D ===
+=== PHASE C-D REMAINING WORK SESSION (2026-09-19) â€” C-6 REFUND + C-7 MEDIA + PHASE D ===
 Task ID: BMB-OWNER-PHASE-CD-REMAINING-2026-09-19
-Status: ✅ C-6 DONE (LIVE VERIFIED) · C-7 code-complete (owner applies migration 011) · Phase D admin updated
+Status: âœ… C-6 DONE (LIVE VERIFIED) Â· C-7 code-complete (owner applies migration 011) Â· Phase D admin updated
 
 C-6 stripe-refund EF (supabase/functions/stripe-refund/index.ts, config.toml verify_jwt=true):
 - Admin-only (JWT + profiles.role='admin' server-side); Stripe Refund API with
@@ -606,9 +606,9 @@ C-6 stripe-refund EF (supabase/functions/stripe-refund/index.ts, config.toml ver
   (refund_ids/refunded_total_minor/last_refund_at).
 - Offline tests: src/__tests__/stripeRefundLogic.test.ts (5 tests). Full vitest 61/61.
 - Deployed live. Probes: no-auth 401 / non-admin 403 / bad order 404 PASS;
-  REAL refund on test order BMB-LIVE-20260919074017 → 200, re_3UHIsi3yHrQLTgfK0PH3NdRk
+  REAL refund on test order BMB-LIVE-20260919074017 â†’ 200, re_3UHIsi3yHrQLTgfK0PH3NdRk
   (succeeded, 172 THB), orders.payment_status=refund + payment_intents.status=refunded.
-- Admin UI: stripeRefundOrder in bmbAdminApi_orders.ts + "คืนเงิน (Stripe)" button in AdminOrders.
+- Admin UI: stripeRefundOrder in bmbAdminApi_orders.ts + "à¸„à¸·à¸™à¹€à¸‡à¸´à¸™ (Stripe)" button in AdminOrders.
 - NOTE: profiles role escalation is blocked by guard_profile_mutation (BEFORE UPDATE) even for
   service role; promotion requires an existing admin or owner SQL.
 
@@ -621,83 +621,83 @@ Phase D admin docs synced (overwrite): ADMIN_GAP_MAP (promotions/rounds/customer
 now VERIFIED; refund item; remaining backlog D7 content/D10 kitchen/D14 reviews/inventory-sync/
 delivery-zones UI), STATUS_TRACKER (P0-5 refund live, Phase D media), PHASE_C (C-6 done, C-7 ready).
 Build: npm run build PASS (tsc 0 errors).
-=== HOME UI/UX v5 SESSION (2026-09-19) — Customer Home Experience upgrade ===
+=== HOME UI/UX v5 SESSION (2026-09-19) â€” Customer Home Experience upgrade ===
 Task ID: BMB-OWNER-HOME-UI-v5-2026-09-19
-Status: ✅ DONE (runtime verified PASS) — UI only, no business logic changed
+Status: âœ… DONE (runtime verified PASS) â€” UI only, no business logic changed
 
 NEW INFORMATION ARCHITECTURE (shorter homepage):
-  [1 Bite Conversational Hero] → [2 Store Status strip] → [3 Same-day carousel]
-  → [4 Pre-order carousel] → [5 Review carousel] → [6 Promotions + share]
+  [1 Bite Conversational Hero] â†’ [2 Store Status strip] â†’ [3 Same-day carousel]
+  â†’ [4 Pre-order carousel] â†’ [5 Review carousel] â†’ [6 Promotions + share]
   + FloatingCart. Low-stock dashboard + 3-round grid + hard-coded promos REMOVED from home.
 
-LAYERS (mock → real without UI change):
+LAYERS (mock â†’ real without UI change):
   - Contracts: HomeProduct/HomeReview/HomePromotion/StoreStatus/BiteMessage/QuickAction/BiteContext (types/index.ts)
   - Provider: src/lib/homeProviders.ts (maps real products/reviews; mock ONLY for stock/badge/
-    rating/promotions/store status — swap later by editing this file)
+    rating/promotions/store status â€” swap later by editing this file)
   - Components: components/home/ (BiteHero, StoreStatusStrip, HorizontalCarousel, HomeProductCard,
-    ReviewCarouselSection, PromotionStrip, FloatingCart) — reuse FoodMenuCard hooks (cart/pre-order) & CustomerReviewCard
-  - Removed FloatingAiButton (redundant — BottomNav 'ไบต์' + BiteHero quick actions)
-  - Fixed typo "รอบเยน" → data-driven (no hard-coded rounds)
+    ReviewCarouselSection, PromotionStrip, FloatingCart) â€” reuse FoodMenuCard hooks (cart/pre-order) & CustomerReviewCard
+  - Removed FloatingAiButton (redundant â€” BottomNav 'à¹„à¸šà¸•à¹Œ' + BiteHero quick actions)
+  - Fixed typo "à¸£à¸­à¸šà¹€à¸¢à¸™" â†’ data-driven (no hard-coded rounds)
 
-BUSINESS FLOWS PRESERVED (verified): add-to-cart (cartStore), pre-order (createPreOrder → real row),
+BUSINESS FLOWS PRESERVED (verified): add-to-cart (cartStore), pre-order (createPreOrder â†’ real row),
 review CTA deep-link (cart/checkout by mode), [data-testid=home-menu-cta] kept for E2E.
 
-VALIDATION: tsc 0 errors · vitest 61/61 · npm run build PASS · Runtime QA (Playwright headless):
-  mobile 390x844: HERO_GREETING=true, 4 carousels, store strip, 4 quick actions, 0 console errors → PASS
-  desktop 1440: 4 carousels, hero 1280px, scrollH shorter, 0 errors → PASS
+VALIDATION: tsc 0 errors Â· vitest 61/61 Â· npm run build PASS Â· Runtime QA (Playwright headless):
+  mobile 390x844: HERO_GREETING=true, 4 carousels, store strip, 4 quick actions, 0 console errors â†’ PASS
+  desktop 1440: 4 carousels, hero 1280px, scrollH shorter, 0 errors â†’ PASS
   (screenshot: e2e/screenshots/home-v5-qa.png)
 
 RESOLVED (same day): store-status wired to real delivery_rounds (public-read RLS already exists for
 anon/authenticated), promotions wired to admin promotions, stock/rating wired to real products
 columns via migration 012 (owner applies; mock overlay stays as pre-migration fallback).
-=== HOME UI v5 — COMPLETION SESSION (2026-09-19) — all remaining items closed ===
+=== HOME UI v5 â€” COMPLETION SESSION (2026-09-19) â€” all remaining items closed ===
 Task ID: BMB-OWNER-HOME-UI-v5-FINAL-2026-09-19
-Status: ✅ ALL DONE — every test passed before commit (tsc 0 · vitest 61/61 · build PASS · runtime QA PASS)
+Status: âœ… ALL DONE â€” every test passed before commit (tsc 0 Â· vitest 61/61 Â· build PASS Â· runtime QA PASS)
 
 ADDED (final batch):
-- OrdersPage (/orders) — lists own orders + pre-orders (RLS), tracking deep-links; guest → login prompt.
-  Connected BottomNav to spec §13: Home / Menu / Bite / Orders / Account (removed Cart item; cart = Floating).
-- Real-data adapters (providers): getStoreStatusFromRounds (delivery_rounds → StoreStatus, fallback mock),
-  getHomePromotionsFromRows (admin promotions → HomePromotion, fallback mock), getBitePose (state→pose
-  mapping per spec §4/5, reusing existing mascot assets).
-- BiteHero now reacts to store state (pose changes: closed→empty, same_day_closed→thinking...).
+- OrdersPage (/orders) â€” lists own orders + pre-orders (RLS), tracking deep-links; guest â†’ login prompt.
+  Connected BottomNav to spec Â§13: Home / Menu / Bite / Orders / Account (removed Cart item; cart = Floating).
+- Real-data adapters (providers): getStoreStatusFromRounds (delivery_rounds â†’ StoreStatus, fallback mock),
+  getHomePromotionsFromRows (admin promotions â†’ HomePromotion, fallback mock), getBitePose (stateâ†’pose
+  mapping per spec Â§4/5, reusing existing mascot assets).
+- BiteHero now reacts to store state (pose changes: closedâ†’empty, same_day_closedâ†’thinking...).
 - A11y: quick-action min-height 52px + carousel nav 40px touch targets; reduced-motion preserved.
 - HomePage loads products + categories + rounds + promotions in one dynamic-import batch.
 
-BUSINESS FLOWS UNSHAKEN: cart (cartStore), pre-order (createPreOrder→real row), review deep-link by mode,
+BUSINESS FLOWS UNSHAKEN: cart (cartStore), pre-order (createPreOrderâ†’real row), review deep-link by mode,
 home-menu-cta testid. E2E selector contract preserved.
 
-VALIDATION (final): tsc --noEmit 0 · vitest 61/61 · npm run build PASS ·
+VALIDATION (final): tsc --noEmit 0 Â· vitest 61/61 Â· npm run build PASS Â·
   Runtime QA (Playwright, mobile 390x844 + desktop 1440):
-  hero/carousels=4/store strip/quick actions 4/menu cta ✓ · bottom nav 5 items (Home/Menu/Bite/Orders/Account) ✓
-  /orders guest prompt ✓ · 0 console errors → FINAL_ALL=PASS
+  hero/carousels=4/store strip/quick actions 4/menu cta âœ“ Â· bottom nav 5 items (Home/Menu/Bite/Orders/Account) âœ“
+  /orders guest prompt âœ“ Â· 0 console errors â†’ FINAL_ALL=PASS
   (screenshot e2e/screenshots/home-v5-qa.png)
 
 RESOLVED (2026-09-19): stock/rating via products columns (migration 012 written, owner applies);
 store status uses real delivery_rounds (public-read RLS exists) with mock fallback; full runE2E now
 runs AUTHENTICATED and PASSES 7/7 (0 console errors). Two REAL production bugs found+fixed in the
-attempt: (1) createOrder sent unprefixed keys → RPC PGRST202 (checkout broken) — fixed to p_* keys;
-(2) submit_offline_payment_reference ::jsonb cast fails for alphanumeric refs (22P02) — fixed via
-migration 013 (to_jsonb, owner applies). Checkout now requires sign-in (007) → guests redirected to login.
+attempt: (1) createOrder sent unprefixed keys â†’ RPC PGRST202 (checkout broken) â€” fixed to p_* keys;
+(2) submit_offline_payment_reference ::jsonb cast fails for alphanumeric refs (22P02) â€” fixed via
+migration 013 (to_jsonb, owner applies). Checkout now requires sign-in (007) â†’ guests redirected to login.
 
-=== HOME UI v6 + OWNER ADMIN BOOTSTRAP — SESSION (2026-09-19) ===
+=== HOME UI v6 + OWNER ADMIN BOOTSTRAP â€” SESSION (2026-09-19) ===
 Task ID: BMB-OWNER-HOME-UI-v6-ADMIN-2026-09-19
-Status: ✅ ALL DONE — verified before commit (tsc 0 · vitest 61/61 · build PASS · runtime QA PASS)
+Status: âœ… ALL DONE â€” verified before commit (tsc 0 Â· vitest 61/61 Â· build PASS Â· runtime QA PASS)
 
 ADDED:
-- DrinksSection (src/components/home/DrinksSection.tsx) — mockup carousel of เครื่องดื่ม,
+- DrinksSection (src/components/home/DrinksSection.tsx) â€” mockup carousel of à¹€à¸„à¸£à¸·à¹ˆà¸­à¸‡à¸”à¸·à¹ˆà¸¡,
   POSITION: below pre-order menu, above review section. Data lives in src/lib/drinksMenu.ts
-  (owner edits name/price/description/tag/image THERE — no component/CSS changes needed).
+  (owner edits name/price/description/tag/image THERE â€” no component/CSS changes needed).
   Mockup images public/images/drinks/*.svg (5 placeholders; owner swaps with real photos).
-- Migration 014_owner_admin_full_access.sql — OWNER ADMIN BOOTSTRAP:
+- Migration 014_owner_admin_full_access.sql â€” OWNER ADMIN BOOTSTRAP:
   adds profiles.is_owner, softens guard_profile_mutation() for server-side contexts ONLY
   (auth.uid() IS NULL), adds promote_to_full_admin(p_email) SECURITY DEFINER postgres-only RPC.
   NO owner email/password committed to git (owner runs `select promote_to_full_admin('<email>');`
-  in Supabase SQL Editor after applying). role='admin' → full RLS admin access instantly.
+  in Supabase SQL Editor after applying). role='admin' â†’ full RLS admin access instantly.
 - Frameless floating carousel arrows: .hc-nav now transparent/no-border absolute overlay
-  (z-index above cards) — applies to ALL sections (same-day / pre-order / drinks / review / promo).
+  (z-index above cards) â€” applies to ALL sections (same-day / pre-order / drinks / review / promo).
 - Auto-slide: review (already auto) + promotion carousels now auto-slide every 5s (pause on hover/touch).
-- Review section: blinking golden-star effect (starBlink keyframes — visible opacity/glow/scale
+- Review section: blinking golden-star effect (starBlink keyframes â€” visible opacity/glow/scale
   twinkle, staggered per star) + floating brand logo (Logo_Sticker_Circle.webp) beside heading.
 - Reduced-motion: new animations disabled under prefers-reduced-motion (starBlink/floatLogo/drink cards).
 
@@ -705,10 +705,10 @@ VERIFICATION:
 - npx tsc --noEmit = PASS (exit 0)
 - npx vitest run = PASS 61/61 (4 files)
 - npm run build = PASS (tsc + vite build 2.06s; drink SVGs copied to dist)
-- Runtime QA (Playwright mobile 390x844, vite preview): drinks heading+5 cards·arrows frameless
-  (bg transparent, border 0, position absolute, overlay in section)·review floating logo·star
-  animation "starPop, starBlink"·carousels=5·auto-slide advanced review+promo tracks·0 console errors
-  → ALL PASS (screenshot e2e/screenshots/home-v6-qa.png)
+- Runtime QA (Playwright mobile 390x844, vite preview): drinks heading+5 cardsÂ·arrows frameless
+  (bg transparent, border 0, position absolute, overlay in section)Â·review floating logoÂ·star
+  animation "starPop, starBlink"Â·carousels=5Â·auto-slide advanced review+promo tracksÂ·0 console errors
+  â†’ ALL PASS (screenshot e2e/screenshots/home-v6-qa.png)
 
 REMAINING / BLOCKED:
 - Owner to apply migrations 012, 013, 014 in Supabase SQL Editor (dev has no DB password),
@@ -716,9 +716,9 @@ REMAINING / BLOCKED:
 - TODO after migrations 011/012: remove MOCK_STOCK/MOCK_BADGE/MOCK_RATING overlays in homeProviders.ts.
 - Backlog unchanged: content mgmt (D7), kitchen/production (D10), reviews mgmt (D14).
 
-=== SESSION 2026-09-26: Homepage UX/SEO/Trust Audit — All P0-P3 Fixes Complete ===
+=== SESSION 2026-09-26: Homepage UX/SEO/Trust Audit â€” All P0-P3 Fixes Complete ===
 Task ID: BMB-SESSION-2026-09-26
-Status: ✅ ALL DONE — 11 fixes across P0-P3, all verification gates passed
+Status: âœ… ALL DONE â€” 11 fixes across P0-P3, all verification gates passed
 
 OBJECTIVE:
 Complete Homepage audit remediation across 5 dimensions (UI/UX, Content, Technical/SEO, Trust/Security, Role-Play Audit)
@@ -727,33 +727,33 @@ for white-label readiness. All Priority Matrix items (P0-P3) implemented and ver
 COMPLETED FIXES:
 
 P0 - Critical (6 items):
-1. Mobile Header Hamburger Menu — Slide-in drawer (right) with 4 nav links, user actions, cart shortcut.
+1. Mobile Header Hamburger Menu â€” Slide-in drawer (right) with 4 nav links, user actions, cart shortcut.
    File: src/components/layout/Header.tsx (+200 lines, ARIA accessible, auto-close on route change)
-2. Floating Elements Overlap — FloatingAdBanners→bottom-left, BiteMascot→bottom-left, FloatingCart→bottom-right.
+2. Floating Elements Overlap â€” FloatingAdBannersâ†’bottom-left, BiteMascotâ†’bottom-left, FloatingCartâ†’bottom-right.
    Files: src/index.css (.flad-stack), src/components/ai/BiteMascot.tsx (position="bottom-left")
-3. Carousel Auto-slide Enhancement — Default 8000ms, pause on hover/focus/touch, indicator dots, loop-back.
+3. Carousel Auto-slide Enhancement â€” Default 8000ms, pause on hover/focus/touch, indicator dots, loop-back.
    Files: src/components/home/HorizontalCarousel.tsx, ReviewCarouselSection.tsx, PromotionStrip.tsx
-4. USP Bar under Hero — "ส่งฟรีครบ ฿200 · AI แนะนำ 24/7 · จันทบุรี 5 กม." with pill badges.
+4. USP Bar under Hero â€” "à¸ªà¹ˆà¸‡à¸Ÿà¸£à¸µà¸„à¸£à¸š à¸¿200 Â· AI à¹à¸™à¸°à¸™à¸³ 24/7 Â· à¸ˆà¸±à¸™à¸—à¸šà¸¸à¸£à¸µ 5 à¸à¸¡." with pill badges.
    Files: src/components/home/BiteHero.tsx (+USP_ITEMS const), src/index.css (.usp-bar, .usp-item)
-5. Drinks/Snacks Coming Soon Overlay — Visual overlay + disabled CTA + data-coming-soon attr.
+5. Drinks/Snacks Coming Soon Overlay â€” Visual overlay + disabled CTA + data-coming-soon attr.
    Files: src/components/home/DrinksSection.tsx, SnacksSection.tsx, src/index.css (.drink-card-scheduled, overlay)
-6. H1/H2 SEO Keywords — sr-only H1 with primary keywords; H2 enriched with "สั่งอาหารจัดส่งจันทบุรี", "จองล่วงหน้า".
+6. H1/H2 SEO Keywords â€” sr-only H1 with primary keywords; H2 enriched with "à¸ªà¸±à¹ˆà¸‡à¸­à¸²à¸«à¸²à¸£à¸ˆà¸±à¸”à¸ªà¹ˆà¸‡à¸ˆà¸±à¸™à¸—à¸šà¸¸à¸£à¸µ", "à¸ˆà¸­à¸‡à¸¥à¹ˆà¸§à¸‡à¸«à¸™à¹‰à¸²".
    File: src/pages/HomePage.tsx
 
 P1 - High (3 items):
-7. Sticky Bottom Cart Bar (Mobile) — Shows total, item count, free-shipping upsell, checkout CTA.
+7. Sticky Bottom Cart Bar (Mobile) â€” Shows total, item count, free-shipping upsell, checkout CTA.
    Files: src/components/home/FloatingCart.tsx (+StickyCartBar), src/index.css (.sticky-cart-bar)
-8. Trust Badges / Rating Summary — ⭐ 4.8/5.0, 📦 10,000+ ออเดอร์, 🔒 จ่ายปลอดภัย PromptPay.
+8. Trust Badges / Rating Summary â€” â­ 4.8/5.0, ðŸ“¦ 10,000+ à¸­à¸­à¹€à¸”à¸­à¸£à¹Œ, ðŸ”’ à¸ˆà¹ˆà¸²à¸¢à¸›à¸¥à¸­à¸”à¸ à¸±à¸¢ PromptPay.
    Files: src/components/home/BiteHero.tsx (+trust-badges), src/index.css (.trust-badge)
-9. Pre-order Date Badge — 📅 พร้อมส่ง DD MMM on product cards (top-right of media).
+9. Pre-order Date Badge â€” ðŸ“… à¸žà¸£à¹‰à¸­à¸¡à¸ªà¹ˆà¸‡ DD MMM on product cards (top-right of media).
    Files: src/components/home/HomeProductCard.tsx (+formatThaiDate), src/index.css (.home-card-scheduled)
 
 P2 - Medium (1 item):
-10. Search/Filter on Home — Search input + horizontal category chips with live filtering.
+10. Search/Filter on Home â€” Search input + horizontal category chips with live filtering.
     Files: src/pages/HomePage.tsx (searchQuery, activeCategory, filteredSameDay/PreOrder), src/index.css (.search-input, .category-chip)
 
 P3 - Low (1 verified):
-11. Privacy/Terms Pages — Both exist with comprehensive content (GDPR rights, refund policy, contact emails).
+11. Privacy/Terms Pages â€” Both exist with comprehensive content (GDPR rights, refund policy, contact emails).
 
 VERIFICATION GATES (ALL PASS):
 - npx tsc --noEmit = PASS (exit 0)
@@ -787,30 +787,30 @@ KNOWN RISKS:
 NEXT EXACT ACTION:
 Update documentation (AI_WORK_STATE.md), commit changes, push to origin/main for white-label release prep.
 - Quick login (login by name + phone + location): src/store/locationStore.ts, src/lib/locationLogin.ts
-  (GPS → IP-geo → saved → kitchen fallback), authStore.loginByLocation, LoginPage quick tab, CheckoutPage
+  (GPS â†’ IP-geo â†’ saved â†’ kitchen fallback), authStore.loginByLocation, LoginPage quick tab, CheckoutPage
   address prefill + "Use my location (GPS)" button.
 - Delivery channels overview (Bite Drive own fleet vs Grab/LINE MAN/FoodPanda with sandbox/mockup badges)
   in admin DeliveryManagement + PROVIDER_API_STATUS in externalProviders + checkout provider note.
 - Image/mascot sync: branded fallback SVG /images/mock/food-mock.svg for HomeProductCard & FoodMenuCard
   (products without image), floating peeking mascots on Drinks/Snacks section headings.
 
-VERIFICATION: tsc --noEmit 0 · vitest 61/61 · npm run build PASS · runtime QA (Playwright mobile 390):
-  drinks+snacks headings · snack cards 5 · carousels 6 · review mascot/logo · login quick tab (phone+GPS)
-  · checkout guest flow no crash · 0 console errors → PASS.
+VERIFICATION: tsc --noEmit 0 Â· vitest 61/61 Â· npm run build PASS Â· runtime QA (Playwright mobile 390):
+  drinks+snacks headings Â· snack cards 5 Â· carousels 6 Â· review mascot/logo Â· login quick tab (phone+GPS)
+  Â· checkout guest flow no crash Â· 0 console errors â†’ PASS.
 
 REMAINING / NEXT:
-- Owner policy: phone quick login is single-factor (phone) — production hardening = phone OTP (SMS).
+- Owner policy: phone quick login is single-factor (phone) â€” production hardening = phone OTP (SMS).
 - Grab/LINE MAN live API keys from call center (currently sandbox/mockup pricing).
-- ~~Remove MOCK_STOCK/MOCK_BADGE/MOCK_RATING overlays once 012 data verified live in UI.~~ ✅ DONE
-- ~~C-07 Round Time Canonicalization (3 conflicting time sets)~~ ✅ DONE
-- ~~C-08 Pre-order Unified Flow (payment/fee/promo missing)~~ ✅ DONE — unified via order_mode in createOrder
-- ~~C-09 Kitchen Production UI (create_production_batch/kitchen_queue)~~ ✅ DONE — AdminKitchen page exists
-- Lighthouse Performance (29 → ≥90) — OPEN (backlog: bundle optimization, lazy-load, CLS/contrast)
-- Lighthouse Accessibility (82 → ≥90) — OPEN (backlog: contrast/ARIA fixes)
+- ~~Remove MOCK_STOCK/MOCK_BADGE/MOCK_RATING overlays once 012 data verified live in UI.~~ âœ… DONE
+- ~~C-07 Round Time Canonicalization (3 conflicting time sets)~~ âœ… DONE
+- ~~C-08 Pre-order Unified Flow (payment/fee/promo missing)~~ âœ… DONE â€” unified via order_mode in createOrder
+- ~~C-09 Kitchen Production UI (create_production_batch/kitchen_queue)~~ âœ… DONE â€” AdminKitchen page exists
+- Lighthouse Performance (29 â†’ â‰¥90) â€” OPEN (backlog: bundle optimization, lazy-load, CLS/contrast)
+- Lighthouse Accessibility (82 â†’ â‰¥90) â€” OPEN (backlog: contrast/ARIA fixes)
 
 === SESSION 2026-09-26: Deep Audit Fixes + Voice/Tool Calling Fixes ===
 Task ID: BMB-SESSION-2026-09-26-DEEP-AUDIT-FIXES
-Status: ✅ ALL DONE — C-07/C-08/C-09 fixed, Voice model Nemotron + Qwen fallback, Tool Calling via ai-proxy
+Status: âœ… ALL DONE â€” C-07/C-08/C-09 fixed, Voice model Nemotron + Qwen fallback, Tool Calling via ai-proxy
 
 VERIFICATION:
 - npx tsc --noEmit = PASS (exit 0)
@@ -818,7 +818,7 @@ VERIFICATION:
 - npm run build = PASS (tsc + vite build 2.35s)
 
 CHANGES:
-C-07 Round Time Canonicalization (Spec §16.4):
+C-07 Round Time Canonicalization (Spec Â§16.4):
 - Updated migration 001 & 004 seed data to match Spec: Morning 06-09 (cutoff 08:00), Midday 11-14 (cutoff 10:30), Evening 17-20 (cutoff 16:00)
 - Updated AdminRounds form defaults to match Spec
 - Updated homeProviders.ts mock getStoreStatus() to match Spec
@@ -841,30 +841,30 @@ Tool Calling (SECURE - via ai-proxy):
 - Rewrote to use ai-proxy Edge Function (SEC-02: API key server-side only)
 - Added 5 tools: get_menu, get_order, get_product, get_reviews, get_categories
 - Updated AiChatPage.tsx to use chatWithToolSupport()
-- Fallback chain: Nemotron → Qwen 3.7 Flash on failure
+- Fallback chain: Nemotron â†’ Qwen 3.7 Flash on failure
 
 === SESSION 2026-09-20 (B): Upsell/add-on/topping sheet + dismissible home banner ===
 Task ID: BMB-SESSION-2026-09-20B
-Status: ✅ ALL DONE — migration 016 applied LIVE, verified (tsc 0 · vitest 61/61 · build · QA3 PASS)
+Status: âœ… ALL DONE â€” migration 016 applied LIVE, verified (tsc 0 Â· vitest 61/61 Â· build Â· QA3 PASS)
 
 VERIFIED ON LIVE:
-- Migration 016 applied → products.addons JSONB seeded for prod-1..4 (toppings w/ prices) ·
-  promotions.is_banner/banner_image added · seeded promo-welcome-banner (is_banner=true) ·
+- Migration 016 applied â†’ products.addons JSONB seeded for prod-1..4 (toppings w/ prices) Â·
+  promotions.is_banner/banner_image added Â· seeded promo-welcome-banner (is_banner=true) Â·
   compute_addons_price() + create_order_with_items re-created so add-on surcharges are
   re-derived SERVER-SIDE (client sends ids+choices only; base+prices stay authoritative).
 
 ADDED:
-- OrderBuilderModal (Grab/7-Eleven style): bottom-sheet on add → toppings (checkbox/radio/text),
+- OrderBuilderModal (Grab/7-Eleven style): bottom-sheet on add â†’ toppings (checkbox/radio/text),
   quantity, rule-based upsell recommendations (pickRecommendations), live total + "Add to cart".
   Wired into HomePage + MenuPage same-day handlers; modal rendered globally in Layout.
 - HomeBanner: first is_banner&&is_active promotion shows on home as dismissible ad (localStorage
   per-promo); promo title/desc/coupon/image + "See deal" link; admin toggles it in /admin/promotions
-  ("🏠 Show as Home banner" + banner image URL). e2e/runE2E updated for the new confirm-sheet flow.
+  ("ðŸ  Show as Home banner" + banner image URL). e2e/runE2E updated for the new confirm-sheet flow.
 
-VERIFICATION: tsc --noEmit 0 · vitest 61/61 · npm run build PASS · Runtime QA (mobile 390):
-  home banner visible ✅ · banner dismissible ✅ · modal opens ✅ · add-ons shown (3) ✅ ·
-  recommendations shown ✅ · topping raises total (65→80) ✅ · confirm adds to cart (badge 1) ✅ ·
-  modal closes ✅ · 0 console errors → QA3 PASS.
+VERIFICATION: tsc --noEmit 0 Â· vitest 61/61 Â· npm run build PASS Â· Runtime QA (mobile 390):
+  home banner visible âœ… Â· banner dismissible âœ… Â· modal opens âœ… Â· add-ons shown (3) âœ… Â·
+  recommendations shown âœ… Â· topping raises total (65â†’80) âœ… Â· confirm adds to cart (badge 1) âœ… Â·
+  modal closes âœ… Â· 0 console errors â†’ QA3 PASS.
 
 REMAINING / NEXT:
 - Admin product editor does not yet expose the add-ons JSON field (owners edit via DB/API for now;
@@ -872,108 +872,108 @@ REMAINING / NEXT:
 - Pre-order items skip the upsell sheet (booking flow keeps direct confirm).
 
 ---
-Status: ✅ PHASE 3B · WAVE 2 DONE (2026-09-22) — F-1 fixed + REAL-BROWSER cancel click-through + production migration runbook
-Full evidence: `PWA_CANONICAL_ORDER_CONSUMER_AUDIT.md` §13 (this file's earlier blocks are from
+Status: âœ… PHASE 3B Â· WAVE 2 DONE (2026-09-22) â€” F-1 fixed + REAL-BROWSER cancel click-through + production migration runbook
+Full evidence: `PWA_CANONICAL_ORDER_CONSUMER_AUDIT.md` Â§13 (this file's earlier blocks are from
 older phases and kept as history).
 
 SHIPPED THIS WAVE (all committed to main):
-- Migration 030 `030_order_transition_allowed_else.sql` — approved F-1 fix: ONE line
+- Migration 030 `030_order_transition_allowed_else.sql` â€” approved F-1 fix: ONE line
   `ELSE RETURN false;` added to the admin CASE of `order_transition_allowed`. Pre-fix suite run
   reproduced `case not found` live; post-fix suite 4/4 PASS (`e2e/contracts_030_transition_else.sql`)
   with `ERR_INVALID_TRANSITION` surfacing end-to-end; `live_verify_022.sql` still 13/13 PASS.
-- Gates: vitest 179/179 · eslint clean · build PASS.
-- `e2e/cancelClickThrough.cjs` — REAL browser click-through (Playwright, local stack): 11/11 PASS —
-  login → full-UI SAME_DAY order → cancel clicked on Track page → toast/status/capacity 1→0 →
-  second order → cancel clicked on Orders page → toast/row/capacity 1→0. Evidence:
+- Gates: vitest 179/179 Â· eslint clean Â· build PASS.
+- `e2e/cancelClickThrough.cjs` â€” REAL browser click-through (Playwright, local stack): 11/11 PASS â€”
+  login â†’ full-UI SAME_DAY order â†’ cancel clicked on Track page â†’ toast/status/capacity 1â†’0 â†’
+  second order â†’ cancel clicked on Orders page â†’ toast/row/capacity 1â†’0. Evidence:
   `e2e/cancel-clickthrough-result.json` + screenshots `e2e/screenshots/ct-01..06`.
-- `e2e/prodCheckMigrations.cjs` + `e2e/prodApplyMigrations.cjs` — production migration state
+- `e2e/prodCheckMigrations.cjs` + `e2e/prodApplyMigrations.cjs` â€” production migration state
   checker (read-only) + Management API applier (one file per query, explicit --files only).
-- Production truth (at time of WAVE 2, 2026-09-22 before WAVE 3): 001–027 applied+recorded on production; **028, 029, 030 pending** — one
+- Production truth (at time of WAVE 2, 2026-09-22 before WAVE 3): 001â€“027 applied+recorded on production; **028, 029, 030 pending** â€” one
   `supabase db push` applies exactly those three and records history (dry-run verified).
-  > **NOTE (2026-09-22 post-WAVE 3):** This "Production truth" was accurate for WAVE 2 checkpoint. WAVE 3 subsequently applied migrations 033+034, bringing production to **34/34 migrations LIVE (001–034)**. See CURRENT STATUS section below for verified state.
+  > **NOTE (2026-09-22 post-WAVE 3):** This "Production truth" was accurate for WAVE 2 checkpoint. WAVE 3 subsequently applied migrations 033+034, bringing production to **34/34 migrations LIVE (001â€“034)**. See CURRENT STATUS section below for verified state.
 
 KNOWN MACHINE/GRANTS NOTES (flagged, not changed):
 - Two local supabase stacks share this machine; BMB's real API is 127.0.0.1:54331 while
   `supabase status` reports 54321 (owned by selfprint-v3-react). Gate scripts auto-probe ports.
 - `service_role` lacks table grants on `delivery_rounds`; `authenticated` lacks SELECT on
-  `business_settings` (403 in checkout, display-only) — future owner-approved grants pass.
+  `business_settings` (403 in checkout, display-only) â€” future owner-approved grants pass.
 
-> **HISTORICAL (WAVE 2):** NEXT: owner confirms → `supabase db push` (028+029+030) → rerun contracts_023/028/029/030 on
+> **HISTORICAL (WAVE 2):** NEXT: owner confirms â†’ `supabase db push` (028+029+030) â†’ rerun contracts_023/028/029/030 on
 
 ---
-Status: ✅ PHASE 3B · WAVE 2 FULLY CLOSED (2026-09-22 evening) — production migrated + verified + security hole closed
+Status: âœ… PHASE 3B Â· WAVE 2 FULLY CLOSED (2026-09-22 evening) â€” production migrated + verified + security hole closed
 Production apply EXECUTED (owner-approved): `supabase db push` applied 028+029+030 (recorded), then
 contract suites on production revealed a REAL anon-execute hole (F-4: default-privileges drift from
-the manual-apply era → anon could execute 82 functions incl. writing delivery_rounds). Fixed by
+the manual-apply era â†’ anon could execute 82 functions incl. writing delivery_rounds). Fixed by
 migrations 031 (default-privileges + 33 function REVOKEs) and 032 (5 PUBLIC EXECUTE revokes), both
-applied to local AND production. Final state: migration history 32/32 both sides · anon-callable
-functions LOCAL 49 == PROD 49 · REST anon probe on production → 401 · full contract suites on
-production 4/4 PASS (023/028/029/030) · evidence: `e2e/prod-contracts-result.json`,
-`e2e/prod-check-result.json`, audit doc §13.
+applied to local AND production. Final state: migration history 32/32 both sides Â· anon-callable
+functions LOCAL 49 == PROD 49 Â· REST anon probe on production â†’ 401 Â· full contract suites on
+production 4/4 PASS (023/028/029/030) Â· evidence: `e2e/prod-contracts-result.json`,
+`e2e/prod-check-result.json`, audit doc Â§13.
 
 REMAINING / NEXT (owner queue):
-- F-3 follow-up: full table-ACL hardening pass (anon table grants from the same drift era — RLS
+- F-3 follow-up: full table-ACL hardening pass (anon table grants from the same drift era â€” RLS
   currently governs, but grants should be aligned like the functions were).
-- Optionally: rerun older contract suites (017–022) on production for completeness; stale remote
+- Optionally: rerun older contract suites (017â€“022) on production for completeness; stale remote
   history rows 031/032/20260812000002 no longer exist (resolved during this wave).
-production → §13 post-apply checklist.
+production â†’ Â§13 post-apply checklist.
 ---
 
-Status: ✅ PHASE 3B · WAVE 3 DONE (2026-09-22) — migration 033 table-ACL alignment applied + verified locally
+Status: âœ… PHASE 3B Â· WAVE 3 DONE (2026-09-22) â€” migration 033 table-ACL alignment applied + verified locally
 
-Full evidence: `RLS_MATRIX.md` v2.0 · `e2e/prodCheckGrants.cjs` · `e2e/contracts_033_table_acl.sql` ·
+Full evidence: `RLS_MATRIX.md` v2.0 Â· `e2e/prodCheckGrants.cjs` Â· `e2e/contracts_033_table_acl.sql` Â·
 `e2e/prod-check-grants-result.json`.
 
 SHIPPED THIS WAVE (PRODUCTION VERIFIED):
-- Migration `033_table_acl_alignment.sql` (F-3 closure) — GRANT/REVOKE only, no schema/policy change:
-  residue REVOKE (REFERENCES/TRIGGER/TRUNCATE anon+auth on every public rel) · service_role full
-  restore + default privileges · authenticated grants: business_settings S / content_approvals S /
-  media_assets S,I,U,D / mascot_overrides S,I,U,D · anon mascot_overrides S · `public_profiles`
-  view-write REVOKED (SECURITY: view runs as owner → view-write = profiles-RLS bypass = cross-user
-  write) · `pre_orders` auth I/U/D REVOKED (024 archive is RPC-write-only).
-- Migration `034_production_acl_drift_remediation.sql` (F-3 follow-up) — REVOKE-only corrective:
+- Migration `033_table_acl_alignment.sql` (F-3 closure) â€” GRANT/REVOKE only, no schema/policy change:
+  residue REVOKE (REFERENCES/TRIGGER/TRUNCATE anon+auth on every public rel) Â· service_role full
+  restore + default privileges Â· authenticated grants: business_settings S / content_approvals S /
+  media_assets S,I,U,D / mascot_overrides S,I,U,D Â· anon mascot_overrides S Â· `public_profiles`
+  view-write REVOKED (SECURITY: view runs as owner â†’ view-write = profiles-RLS bypass = cross-user
+  write) Â· `pre_orders` auth I/U/D REVOKED (024 archive is RPC-write-only).
+- Migration `034_production_acl_drift_remediation.sql` (F-3 follow-up) â€” REVOKE-only corrective:
   anon I/U/D on 16 tables + anon SELECT on 15 non-canonical tables/views
   authenticated ALL on payment_intents, inventory, profiles (F-5 tables)
   + GRANT SELECT,UPDATE ON inventory TO authenticated (minimal for contracts/RPCs).
-- Applied + registered via `npx supabase db push --yes --linked` (CLI 2.117.0) → history 34/34.
+- Applied + registered via `npx supabase db push --yes --linked` (CLI 2.117.0) â†’ history 34/34.
 - Verification ALL GREEN (local + production):
-  · `e2e/prodCheckGrants.cjs --remote` grant probe 7/7 PASS (anon_write_residue=0, anon_extra_select=0).
-  · Contract suites 023/028/029/030/033 → 5/5 PASS on production.
-  · REST probe (production, anon publishable key): business_settings 401 | mascot_overrides 200 | recipes 401 (leak CLOSED) | customer_intelligence 401 | public_profiles POST 401.
-  · F-5 policies dormant (grant-blocked).
+  Â· `e2e/prodCheckGrants.cjs --remote` grant probe 7/7 PASS (anon_write_residue=0, anon_extra_select=0).
+  Â· Contract suites 023/028/029/030/033 â†’ 5/5 PASS on production.
+  Â· REST probe (production, anon publishable key): business_settings 401 | mascot_overrides 200 | recipes 401 (leak CLOSED) | customer_intelligence 401 | public_profiles POST 401.
+  Â· F-5 policies dormant (grant-blocked).
 - `RLS_MATRIX.md` v2.0 updated; Phase-B baseline preserved as `RLS_MATRIX_v1_phaseB_baseline.md`.
 
 RESOLVED the WAVE-2 "KNOWN MACHINE/GRANTS NOTES" items (locally): `service_role` full grants restored;
 `authenticated` SELECT on `business_settings` now granted. The other note (two local stacks, BMB API on
-:54331, `supabase status` misleadingly reports 54321 owned by selfprint-v3-react) — still TRUE and
+:54331, `supabase status` misleadingly reports 54321 owned by selfprint-v3-react) â€” still TRUE and
 documented; the REST probe hits :54331 deliberately.
 
 PRODUCTION APPLY EXECUTED (owner token + CLI, 2026-09-22 evening):
-- `npx supabase db push --yes --linked` (CLI 2.117.0) → Applied migrations 033 + 034.
-  Registration verified: remote history 32 → 34, LOCAL==REMOTE, all repo migrations recorded ✅
+- `npx supabase db push --yes --linked` (CLI 2.117.0) â†’ Applied migrations 033 + 034.
+  Registration verified: remote history 32 â†’ 34, LOCAL==REMOTE, all repo migrations recorded âœ…
   (`e2e/prodCheckMigrations.cjs --remote`).
-- `e2e/prodCheckGrants.cjs --remote` → **7/7 PASS** (anon_write_residue=0, anon_extra_select=0).
+- `e2e/prodCheckGrants.cjs --remote` â†’ **7/7 PASS** (anon_write_residue=0, anon_extra_select=0).
 - Contracts on production (`e2e/prodRunContracts.cjs`): **5/5 PASS** (023/028/029/030/033).
-- REST on production (publishable anon key): business_settings 401 ✅ | mascot_overrides 200 ✅ |
-  recipes 401 ✅ (leak CLOSED) | customer_intelligence 401 ✅ | public_profiles POST 401 ✅.
-- EVIDENCE: `e2e/prod-verify-033-final.txt` · `e2e/prod-check-grants-result.json` (remote_pass:true)
-  · `e2e/prod-contracts-result.json` (pass:true) · `e2e/prod-check-result.json` (history 34/34).
+- REST on production (publishable anon key): business_settings 401 âœ… | mascot_overrides 200 âœ… |
+  recipes 401 âœ… (leak CLOSED) | customer_intelligence 401 âœ… | public_profiles POST 401 âœ….
+- EVIDENCE: `e2e/prod-verify-033-final.txt` Â· `e2e/prod-check-grants-result.json` (remote_pass:true)
+  Â· `e2e/prod-contracts-result.json` (pass:true) Â· `e2e/prod-check-result.json` (history 34/34).
 
-WAVE 3 PRODUCTION GATE = **VERIFIED** ✅
-All criteria met: history 34/34 consistent · anon residue 0/0 · 033/034 grants PASS ·
-contracts 5/5 PASS · recipes leak closed · canonical public-read works · view-write blocked · no regression.
+WAVE 3 PRODUCTION GATE = **VERIFIED** âœ…
+All criteria met: history 34/34 consistent Â· anon residue 0/0 Â· 033/034 grants PASS Â·
+contracts 5/5 PASS Â· recipes leak closed Â· canonical public-read works Â· view-write blocked Â· no regression.
 - ROOT CAUSE: production retained 004-era wide grants (`GRANT ALL ... TO anon/authenticated`); local had
   already shed them, so 033 step-1 residue cleanup (REFERENCES/TRIGGER/TRUNCATE only) did not cover the
   surviving anon INSERT/UPDATE/DELETE (16 rels) and extra anon SELECT (15) on prod. 033 did NOT create or
   worsen any of it; its own deliverables are all green on prod.
-- EVIDENCE: `e2e/prod-verify-033.txt` · `e2e/prod-acl-dump-post033.txt` (205 ACL rows) ·
-  `e2e/prod-check-grants-result.json` · `e2e/prod-contracts-result.json` · `e2e/prod-check-result.json`.
+- EVIDENCE: `e2e/prod-verify-033.txt` Â· `e2e/prod-acl-dump-post033.txt` (205 ACL rows) Â·
+  `e2e/prod-check-grants-result.json` Â· `e2e/prod-contracts-result.json` Â· `e2e/prod-check-result.json`.
 
 CURRENT STATUS:
-POST-WAVE 3 VERIFIED ✅
+POST-WAVE 3 VERIFIED âœ…
 
 LAST VERIFIED PRODUCTION BASELINE:
-`ed1ac58` (docs sync checkpoint — 34/34 migrations, ACL gate PASS, contracts 5/5 PASS)
+`ed1ac58` (docs sync checkpoint â€” 34/34 migrations, ACL gate PASS, contracts 5/5 PASS)
 
 Migrations:
 033 = VERIFIED (table-ACL alignment, F-3)
@@ -987,16 +987,16 @@ Production ACL Gate: PASS
 
 Contracts on Production:
 023/028/029/030/033 = 5/5 PASS
-017–022 = 1/5 PASS (4 failures attributable to test-environment limitation — Management API executor lacks auth.uid() context; NOT production regression)
+017â€“022 = 1/5 PASS (4 failures attributable to test-environment limitation â€” Management API executor lacks auth.uid() context; NOT production regression)
 
 REST on Production:
-anon business_settings → 401 ✅
-anon mascot_overrides → 200 ✅ (intended public-read)
-anon recipes → 401 ✅ (leak CLOSED)
-anon customer_intelligence → 401 ✅
-anon POST public_profiles → 401 ✅ (vuln closed)
-auth business_settings → 200 ✅ (checkout path)
-auth POST public_profiles → 403/401 ✅
+anon business_settings â†’ 401 âœ…
+anon mascot_overrides â†’ 200 âœ… (intended public-read)
+anon recipes â†’ 401 âœ… (leak CLOSED)
+anon customer_intelligence â†’ 401 âœ…
+anon POST public_profiles â†’ 401 âœ… (vuln closed)
+auth business_settings â†’ 200 âœ… (checkout path)
+auth POST public_profiles â†’ 403/401 âœ…
 
 F-5 Policies: dormant (grant-blocked)
 - payment_intents_policy
@@ -1026,7 +1026,7 @@ photos from public/assets/reviews (resized), (4) fix Lighthouse issues.
 
 COMPLETED (VERIFIED):
 1. MIGRATIONS: migration list showed ONLY 035 missing on remote (012-014 were
-   already applied earlier — prior claim in this file that 012/013/014 needed
+   already applied earlier â€” prior claim in this file that 012/013/014 needed
    manual apply was STALE/WRONG).
    - 035 file was CORRUPTED ($$ dollar-quotes replaced by a filesystem path,
      then "Length" from a bad PS interpolation). Repaired via scripts/fix035.cjs.
@@ -1047,7 +1047,7 @@ COMPLETED (VERIFIED):
    2.68MB total) via scripts/compressReviews.ps1. New:
    src/lib/realReviews.ts + src/components/home/ReviewGallerySection.tsx
    (lazy grid + lightbox, wired into HomePage after ReviewCarouselSection).
-5. OG IMAGE: /og-image.png did not exist — generated 1200x630 via script.
+5. OG IMAGE: /og-image.png did not exist â€” generated 1200x630 via script.
 6. LIGHTHOUSE FIXES:
    - viewport: removed maximum-scale=1.0 + user-scalable=no
    - SeoHelmet.canonicalUrl absolute-URL bug (produced
@@ -1080,11 +1080,11 @@ FILES CHANGED:
   public/assets/reviews/small/* (37 jpg)
 
 REMAINING / KNOWN RISKS:
-- 035 stays UNEXECUTED by design (superseded by 037) — never --include-all it.
+- 035 stays UNEXECUTED by design (superseded by 037) â€” never --include-all it.
 - Prod perf must be re-measured post-deploy (TBT 290ms, main-thread 6.7s,
   28 non-composited animations need a separate perf pass).
 - "blocked from indexing" not reproducible in repo (robots.txt allows, meta
-  index,follow) — likely Cloudflare preview header; verify on real domain.
+  index,follow) â€” likely Cloudflare preview header; verify on real domain.
 - Final LH rerun after last 2 fixes pending; previous post-fix run already
   A11y 96 / SEO 100 / BP 100.
 
@@ -1094,13 +1094,13 @@ NEXT EXACT ACTION:
    re-run LH on https://bitemebaby.com.
 
 
-=== SESSION 2026-09-26 (5): unused JS + Style&Layout — realtime stripped ===
+=== SESSION 2026-09-26 (5): unused JS + Style&Layout â€” realtime stripped ===
 Task ID: BMB-SESSION-2026-09-26-5
 Status: COMPLETE (all gates pass)
 
 EVIDENCE-DRIVEN TARGETS (from lighthouse/local-tbt2.json):
 - unused-javascript: supabase-vendor 45KB wasted (of 57KB gzip!) + react-vendor 34KB.
-- Root cause found: app NEVER uses realtime — subscribeToTable() in lib/supabase.ts
+- Root cause found: app NEVER uses realtime â€” subscribeToTable() in lib/supabase.ts
   is dead code (only tests mock it), yet @supabase/realtime-js + @supabase/phoenix
   (~100KB raw) shipped in every page load.
 
@@ -1110,7 +1110,7 @@ CHANGES:
   removeAllChannels); channel() throws REALTIME_DISABLED if ever called.
 - vite.config.ts: resolve.alias '@supabase/realtime-js' -> stub (remove alias if
   realtime is ever needed for real).
-- ReviewGallerySection: renders 12 thumbs initially + "แสดงรีวิวทั้งหมด" button
+- ReviewGallerySection: renders 12 thumbs initially + "à¹à¸ªà¸”à¸‡à¸£à¸µà¸§à¸´à¸§à¸—à¸±à¹‰à¸‡à¸«à¸¡à¸”" button
   (DOM cut ~25 buttons deep); all 37 still reachable.
 - index.css: `contain: content` on .hc-slide/.home-card/.drink-card/.snack-card/
   .promo-card/.review-card-3d (style/layout recalc scoped per card).
@@ -1122,17 +1122,17 @@ VERIFIED:
   code paths used later in session; react 34KB = framework floor, not actionable).
 - tsc 0 errors; vitest 358/358 PASS (isolated JSON run); build PASS.
 - LH local (high machine variance, structure-level wins confirmed): TBT 290-630ms
-  band, Style&Layout 1.8-3.2s band — re-measure on production post-deploy.
+  band, Style&Layout 1.8-3.2s band â€” re-measure on production post-deploy.
 
 KNOWN LIMits:
 - Remaining "unused" is auth/storage/functions client code executed later in the
-  session + React internals — deferring supabase fully would need a lazy-client
+  session + React internals â€” deferring supabase fully would need a lazy-client
   refactor across all stores (separate task, regression budget).
-- LCP 8.8s on prod is IMAGE delivery (Supabase storage images unoptimized) —
+- LCP 8.8s on prod is IMAGE delivery (Supabase storage images unoptimized) â€”
   the next big perf lever, separate task.
 
 ==============================================================================
-=== SESSION 2026-09-26 (4): Bundle/TBT — dead deps + lazy AI chat + content-visibility ===
+=== SESSION 2026-09-26 (4): Bundle/TBT â€” dead deps + lazy AI chat + content-visibility ===
 Task ID: BMB-SESSION-2026-09-26-4
 Status: COMPLETE (all gates pass)
 
@@ -1160,10 +1160,10 @@ VERIFIED RESULTS (local preview, mobile throttling):
 - index chunk: 131 -> 125KB (BiteAIChat+aiService split to lazy chunk)
 - non-composited-animations: PASS (score 1) [session 3]
 - tsc 0 errors; vitest 0 failed / 358 PASS (isolated JSON-reporter run; one
-  earlier run showed 1 flaky failure while Lighthouse ran concurrently —
+  earlier run showed 1 flaky failure while Lighthouse ran concurrently â€”
   not reproducible in isolation)
 - Note: react-vendor 242KB + supabase-vendor 217KB are framework floors; the
-  "unused JS 79KiB" residual lives mostly in supabase auth/realtime internals —
+  "unused JS 79KiB" residual lives mostly in supabase auth/realtime internals â€”
   not safely tree-shakeable at this stage.
 
 ==============================================================================
@@ -1173,38 +1173,38 @@ Status: COMPLETE (all gates pass)
 
 OWNER DIRECTIVES HANDLED:
 - Domain: ON HOLD (owner decides + binds DNS; production is
-  https://bitemebaby-5f7.pages.dev — bitemebaby.com has NO DNS record yet).
+  https://bitemebaby-5f7.pages.dev â€” bitemebaby.com has NO DNS record yet).
 - Old deployed build: local dist cleared + rebuilt; stale CF deployment itself
-  can only be purged by owner (no CLOUDFLARE_API_TOKEN in env) — new push
+  can only be purged by owner (no CLOUDFLARE_API_TOKEN in env) â€” new push
   supersedes it on next build.
 
-NON-COMPOSITED ANIMATIONS (Lighthouse: 28 elements) — ROOT CAUSE + FIX:
+NON-COMPOSITED ANIMATIONS (Lighthouse: 28 elements) â€” ROOT CAUSE + FIX:
 - img.star-3d-img had TWO concurrent animations (starPop `both` fill +
   starBlink infinite) -> Lighthouse "incompatible animations" =
   non-composited. 6 cards x 5 stars = the 28 flagged nodes.
 - starBlink keyframes also animated `filter: drop-shadow()` (non-GPU).
 - FIXES (src/index.css):
   * starBlink -> opacity + transform only (filter lines removed)
-  * .star-3d-img -> SINGLE animation (starBlink) — starPop dropped
+  * .star-3d-img -> SINGLE animation (starBlink) â€” starPop dropped
   * .star-3d -> removed reference to non-existent starPulse keyframes
   * 10 transition lines converted to transform-only (box-shadow/background/
-    border-color no longer animated — hover changes are instant)
+    border-color no longer animated â€” hover changes are instant)
   * HorizontalCarousel dots: no width transition (w-2<->w-6 instant)
   * OrderTrackPage progress bar: width% -> transform: scaleX + origin-left
 - RESCAN: 0 non-GPU transitions/keyframes remain in src/index.css.
-- VERIFIED: Lighthouse local — non-composited-animations score 1 (PASS);
+- VERIFIED: Lighthouse local â€” non-composited-animations score 1 (PASS);
   tsc 0 errors; vitest 358/358; build PASS; dist/_headers present.
 
 REMAINING:
 - Owner: decide domain + DNS; purge old CF deployment if desired;
   after next deploy re-run
   `node scripts/checkProductionHeaders.cjs https://bitemebaby-5f7.pages.dev`
-  (expect ALL PASS — canonical fixed in the new build).
+  (expect ALL PASS â€” canonical fixed in the new build).
 
 ==============================================================================
 ===============================================================================
 FINAL PRINCIPLE
 ===============================================================================
 
-BUILD THE PRODUCT — DO NOT BUILD THE APPEARANCE OF COMPLETION.
+BUILD THE PRODUCT â€” DO NOT BUILD THE APPEARANCE OF COMPLETION.
 Evidence outranks claims.

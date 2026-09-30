@@ -6,6 +6,14 @@ import { showToast } from '@/components/ui/ToastContainer'
 import { chatWithAI, resetConversation as resetAiConversation } from '@/lib/aiService'
 import { storeConversationMessage, getConversationHistory, getMemorySummary, updateCustomerMemory } from '@/lib/aiMemory'
 import { hydrateMemoryFromServer, pushLocalMemoryToServer } from '@/lib/aiServerMemory'
+import {
+  getAIVoiceService,
+  isSpeechRecognitionSupported,
+  isSpeechSynthesisSupported,
+  isVoiceReplyEnabled,
+  setVoiceReplyEnabled,
+  speakableText,
+} from '@/lib/aiVoice'
 interface ChatMsg { id: string; role: 'user'|'assistant'; content: string; timestamp: string }
 const WELCOME_MSG = 'Welcome! Bite here What can I help you with today?'
 function getUserClass(role: 'user'|'assistant') {
@@ -18,7 +26,26 @@ export function AiChatPage() {
   const [input, setInput] = useState('')
   const [isTyping, setIsTyping] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
+  // WS-2d: voice states — mic (STT) + speaker (TTS reply) แบบเดียวกับ BiteAIChat
+  const [listening, setListening] = useState(false)
+  const [voiceReply, setVoiceReply] = useState(isVoiceReplyEnabled())
+  const micSupported = isSpeechRecognitionSupported()
+  const ttsSupported = isSpeechSynthesisSupported()
+  const voiceServiceRef = useRef<ReturnType<typeof getAIVoiceService> | null>(null)
+  const voiceInputRef = useRef(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    if (!micSupported) return
+    const service = getAIVoiceService()
+    voiceServiceRef.current = service
+    service.setCallbacks({
+      onTranscript: (text) => { voiceInputRef.current = true; setInput(text) },
+      onResponse: () => {},
+      onError: () => setListening(false),
+    })
+    const interval = window.setInterval(() => {}, 150)
+    return () => { window.clearInterval(interval); service.stopListening(); voiceServiceRef.current = null }
+  }, [micSupported])
   useEffect(() => {
     if (customer?.id) {
       // AI-03: bridge server memory -> local on open (cross-device context continuity).
@@ -41,11 +68,16 @@ export function AiChatPage() {
     try {
       let memoryContext = ''
       if (customer?.id) { const s = getMemorySummary(customer.id); if (s) memoryContext = '\n\nCustomer Context:\n' + s }
-      const aiResponse = await chatWithAI(userMsg.content + memoryContext)
+      // WS-2e: ข้อความจากไมค์ หรือเมื่อเปิดเสียงตอบ → voice mode (ตอบสั้นแบบประโยคพูด)
+      const fromVoice = voiceInputRef.current
+      voiceInputRef.current = false
+      const aiResponse = await chatWithAI(userMsg.content + memoryContext, undefined, { voiceMode: fromVoice || voiceReply })
       const assistantMsg: ChatMsg = { id:(Date.now()+1).toString(), role:'assistant', content:aiResponse, timestamp:new Date().toISOString() }
       storeConversationMessage(userId, 'assistant', aiResponse)
       updateCustomerMemory(userId, { last_order_date: new Date().toISOString() })
       setMessages(prev => [...prev, assistantMsg])
+      // WS-2c: อ่านคำตอบด้วยเสียงเมื่อเปิดลำโพง (กรอง markdown/emoji ก่อนพูด)
+      if (voiceReply && ttsSupported) { await voiceServiceRef.current?.speak(speakableText(aiResponse)) }
     } catch (error) { console.error('Chat error:', error); showToast('Error occurred', 'error') }
     finally { setIsTyping(false); setIsLoading(false) }
   }
@@ -78,7 +110,32 @@ export function AiChatPage() {
         {['Order food', 'Recommend menu', 'Check status', 'Ask Bite'].map((action) => (<button key={action} onClick={() => setInput(action)} className="px-4 py-2 bg-brand-bg text-brand-accent rounded-full text-sm whitespace-nowrap hover:bg-brand-secondary transition-colors">{action}</button>))}
       </div>
       <div className="flex gap-2">
-        <input type="text" value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleSend()} placeholder="Type a message..." className="input flex-1" />
+        <input type="text" value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleSend()} placeholder={listening ? 'กำลังฟัง... พูดเลยค่ะ' : 'Type a message...'} className="input flex-1" />
+        {/* WS-2b: ปุ่มไมค์ (กดพูด/กดหยุด) — ซ่อนเมื่อเบราว์เซอร์ไม่รองรับ STT */}
+        {micSupported && (
+          <button
+            onClick={() => {
+              const service = voiceServiceRef.current
+              if (!service) return
+              if (listening) { service.stopListening(); setListening(false) }
+              else if (service.startListening()) setListening(true)
+            }}
+            className={listening ? 'btn btn-primary' : 'btn btn-outline'}
+            aria-label={listening ? 'หยุดฟัง' : 'กดเพื่อพูด'}
+          >
+            {listening ? '⏹' : '🎤'}
+          </button>
+        )}
+        {/* WS-2c: เปิด/ปิดเสียงตอบ (จำการตั้งค่า) — ซ่อนถ้าไม่มี TTS */}
+        {ttsSupported && (
+          <button
+            onClick={() => { const next = !voiceReply; setVoiceReply(next); setVoiceReplyEnabled(next); if (!next) voiceServiceRef.current?.stopSpeaking() }}
+            className={voiceReply ? 'btn btn-primary' : 'btn btn-outline'}
+            aria-label={voiceReply ? 'ปิดเสียงตอบ' : 'เปิดเสียงตอบ'}
+          >
+            {voiceReply ? '🔊' : '🔇'}
+          </button>
+        )}
         <button onClick={handleSend} disabled={isInputEmpty} className={'btn btn-primary ' + (isInputEmpty ? 'btn-disabled' : '')}>Send</button>
       </div>
     </div>

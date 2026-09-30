@@ -5,6 +5,7 @@
 import type { Message, Product } from '@/types'
 import { supabase } from './supabase'
 import { MODEL_A_FALLBACK, resolveModelA } from './aiModels'
+import { getDbContextPrompt } from './aiDbContext'
 
 // SEC-02 (Phase 4): the OpenRouter key is SERVER-SIDE in the ai-proxy Edge Function.
 // The client only stores the model id (public) for display/fallback purposes.
@@ -40,9 +41,61 @@ interface ChatMessage {
   content: string
 }
 
+// AI-VOICE (WS-2e): directive layer for voice mode — short, spoken-style answers.
+// The base guardrail (AI-02) is still injected server-side by ai-proxy for every
+// request, so voice-mode answers keep the same money/stock/order boundaries.
+const VOICE_MODE_DIRECTIVE = `
+VOICE MODE (โหมดเสียง):
+- ตอบเป็นประโยคพูดสั้น กระชับ 1-3 ประโยค — เหมือนพนักงานเสิร์ฟพูดกับลูกค้าตรง ๆ
+- ห้ามใช้ markdown / bullet / ตาราง / ลิงก์ / emoji ที่อ่านไม่ออกเมื่ออ่านเป็นเสียง
+- ถ้าต้องระบุหลายเมนู พูดต่อกันเป็นประโยค เช่น "มีขนมครกกับข้าวเหนียวมะม่วงค่ะ"
+- ราคา/สต็อก/การชำระเงิน: ยังคงเป็น read-only ห้ามยืนยันหรือสัญญาแทนร้าน
+- ตอบจาก context จริงเท่านั้น ถ้าไม่มีข้อมูลให้บอกว่าจะถามทางร้านให้ค่ะ
+`
+
+export interface ChatOptions {
+  /** WS-2e: เปิดโหมดเสียง — system prompt บังคับตอบสั้นแบบประโยคพูด */
+  voiceMode?: boolean
+}
+
 let conversationHistory: ChatMessage[] = [
   { role: 'system', content: SYSTEM_PROMPT.trim() },
 ]
+
+/**
+ * WS-3: เตรียม messages ก่อนส่ง ai-proxy — คง system messages ไว้เสมอ
+ * (กับดักเดิม: slice(-10/-11) ตัด system message ทิ้งเมื่อประวัติยาว →
+ * DB context / voice directive หายไปเฉย ๆ) โดยตัดเฉพาะ non-system ท้าย ๆ
+ */
+function trimForProxy(messages: ChatMessage[], maxTurns = 10): ChatMessage[] {
+  const system = messages.filter((m) => m.role === 'system')
+  const rest = messages.filter((m) => m.role !== 'system')
+  return [...system, ...rest.slice(-maxTurns)]
+}
+
+/**
+ * WS-3: รวม system prompt + LIVE STORE CONTEXT (UI) + DB CONTEXT ไว้ใน
+ * system message เดียว เพื่อให้ ai-proxy (ที่ inject guardrail ท้าย) ได้
+ * ข้อมูลครบและไม่มีอะไรถูก slice ทิ้ง
+ */
+function buildSystemMessage(
+  base: string,
+  runtimeContext: string | undefined,
+  dbContext: string,
+  voiceMode: boolean
+): string {
+  let content = base
+  if (runtimeContext) {
+    content += `\n\n--- LIVE STORE CONTEXT (authoritative, use this over any prior knowledge) ---\n${runtimeContext}`
+  }
+  if (dbContext) {
+    content += `\n\n--- RESTAURANT DATA FROM DATABASE (authoritative, answer only from this) ---\n${dbContext}`
+  }
+  if (voiceMode) {
+    content += VOICE_MODE_DIRECTIVE
+  }
+  return content
+}
 
 /**
  * Perform a single OpenRouter chat completion request with the given model.
@@ -66,7 +119,7 @@ async function requestCompletion(messages: ChatMessage[], model: string): Promis
   }
 
   const { data: proxy, error } = await supabase.functions.invoke('ai-proxy', {
-    body: { messages: messages.slice(-11), model, maxTokens: 500 },
+    body: { messages: trimForProxy(messages), model, maxTokens: 700 },
     // Explicit headers: never let a stale session token silently become the
     // only credential — the apikey header always carries the public guest key
     // so ai-proxy can degrade to the guest path if the JWT is rejected.
@@ -118,7 +171,7 @@ async function streamCompletionOnce(
       apikey: import.meta.env.VITE_SUPABASE_ANON_KEY || '',
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({ messages: messages.slice(-11), model, maxTokens: 500, stream: true }),
+    body: JSON.stringify({ messages: trimForProxy(messages), model, maxTokens: 700, stream: true }),
   })
   const ctype = res.headers.get('content-type') || ''
   if (!res.ok || !res.body || !ctype.includes('text/event-stream')) {
@@ -154,11 +207,17 @@ export async function chatWithAIStream(
   userMessage: string,
   runtimeContext: string | undefined,
   onDelta: (text: string) => void,
+  options?: ChatOptions
 ): Promise<string> {
+  // WS-3: ดึง context จริงจาก DB (cache 7 นาที) — ผิดพลาด → '' แล้วใช้ base prompt
+  const dbContext = await getDbContextPrompt()
   const messages = [...conversationHistory, { role: 'user' as const, content: userMessage }]
-  if (runtimeContext) {
+  if (runtimeContext || dbContext || options?.voiceMode) {
     const base = conversationHistory[0]?.content ?? ''
-    messages[0] = { role: 'system' as const, content: `${base}\n\n--- LIVE STORE CONTEXT (authoritative, use this over any prior knowledge) ---\n${runtimeContext}` }
+    messages[0] = {
+      role: 'system' as const,
+      content: buildSystemMessage(base, runtimeContext, dbContext, options?.voiceMode ?? false),
+    }
   }
 
   try {
@@ -181,13 +240,23 @@ export async function chatWithAIStream(
   }
 }
 
-export async function chatWithAI(userMessage: string, runtimeContext?: string): Promise<string> {
+export async function chatWithAI(
+  userMessage: string,
+  runtimeContext?: string,
+  options?: ChatOptions
+): Promise<string> {
   // AI-EXT: merge runtime context (branch/catalog/rounds) into the system message
   // so the model answers with live store data. Replaces the static system slot.
+  // WS-3: + DB context (เมนู/ราคา/โปรโมชัน/ตั้งค่าร้าน จาก Supabase, cache 7 นาที)
+  // WS-2e: + voice directive เมื่อ options.voiceMode
+  const dbContext = await getDbContextPrompt()
   const messages = [...conversationHistory, { role: 'user' as const, content: userMessage }]
-  if (runtimeContext) {
+  if (runtimeContext || dbContext || options?.voiceMode) {
     const base = conversationHistory[0]?.content ?? ''
-    messages[0] = { role: 'system' as const, content: `${base}\n\n--- LIVE STORE CONTEXT (authoritative, use this over any prior knowledge) ---\n${runtimeContext}` }
+    messages[0] = {
+      role: 'system' as const,
+      content: buildSystemMessage(base, runtimeContext, dbContext, options?.voiceMode ?? false),
+    }
   }
 
   try {

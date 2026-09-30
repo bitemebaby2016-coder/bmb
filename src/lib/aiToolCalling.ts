@@ -129,7 +129,7 @@ export async function executeToolCall(toolName: string, args: Record<string, any
 
 /**
  * Chat with AI using tool calling via ai-proxy Edge Function (SECURE).
- * Falls back from Model A (Nemotron) to Qwen 3.7 Flash on failure.
+ * Falls back from Model A (Qwen 3.7 Flash) to Z-AI GLM 5.3 Flash on failure.
  */
 export async function chatWithToolSupport(
   userMessage: string,

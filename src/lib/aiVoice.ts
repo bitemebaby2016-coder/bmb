@@ -1,14 +1,19 @@
 // ============================================
 // Bite Me Baby — AI Voice (Web Speech API + ai-proxy)
-// Primary: nvidia/nemotron-3-ultra-550b-a55b:free
-// Fallback: qwen/qwen3.7-flash
-// Architecture: Voice Input → STT → ai-proxy (server-side key) → TTS → Voice Output
+// Primary: qwen/qwen3.7-flash
+// Fallback: z-ai/glm-5.3-flash
+// Architecture: Voice Input → STT → chatWithAI (ai-proxy, server-side key) → TTS
 // F-17 FIX (Wave 1): NO OpenRouter API key on the client. The key lives ONLY in
 // the ai-proxy Edge Function env — voice requests ride the same JWT-authenticated
 // proxy as chat (Client → Supabase Auth JWT → ai-proxy → OpenRouter).
+// WS-2 (2026-10-01): ประวัติเสียงเดินระบบเดียวกับ conversationHistory ของ
+// aiService (sendTextMessage ไปที่ chatWithAI({ voiceMode: true })) — ไม่แยก
+// ระบบคู่ขนาน; ตอบผ่าน voice-mode prompt สั้นกระชับ + guardrail เดิมครอบเสียง
 // ============================================
 
-import { supabase } from './supabase'
+// WS-2: supabase client ไม่ถูกใช้แล้วตรงนี้ — การเรียก AI ไปที่ chatWithAI
+// (aiService) ซึ่งจัดการ ai-proxy + JWT + fallback ให้เอง
+import { chatWithAI } from './aiService'
 
 // Web Speech API types (not in standard lib.dom.d.ts)
 interface SpeechRecognition extends EventTarget {
@@ -92,9 +97,79 @@ export interface AIVoiceCallbacks {
   onError: (error: Error) => void;
 }
 
+// ============================================
+// WS-2b/c: browser support helpers (graceful fallback)
+// Web Speech API เต็มรูปแบบใช้ได้บน Chrome/Edge; Firefox/iOS บางส่วนไม่รองรับ
+// → UI ต้องซ่อนปุ่มไมค์และพิมพ์ต่อได้ปกติ ห้ามพัง UX เดิม
+// ============================================
+export function isSpeechRecognitionSupported(): boolean {
+  return (
+    typeof window !== 'undefined' &&
+    ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)
+  )
+}
+
+export function isSpeechSynthesisSupported(): boolean {
+  return typeof window !== 'undefined' && 'speechSynthesis' in window
+}
+
+export function isVoiceSupported(): boolean {
+  return isSpeechRecognitionSupported() && isSpeechSynthesisSupported()
+}
+
+// ============================================
+// WS-2c: กรองข้อความก่อนพูด — ตัด markdown/emoji/สัญลักษณ์ที่อ่านไม่ได้
+// ============================================
+export function speakableText(text: string): string {
+  return (
+    text
+      // code blocks / inline code → เก็บเฉพาะข้อความใน code
+      .replace(/```[\s\S]*?```/g, (m) => m.replace(/```[a-z]*\n?/gi, '').replace(/```/g, ' '))
+      .replace(/`([^`]+)`/g, '$1')
+      // markdown: headers, bold/italic, links (เก็บ label), bullets, blockquote, tables
+      .replace(/^#{1,6}\s*/gm, '')
+      .replace(/\*\*([^*]+)\*\*/g, '$1')
+      .replace(/\*([^*]+)\*/g, '$1')
+      .replace(/__([^_]+)__/g, '$1')
+      .replace(/_([^_]+)_/g, '$1')
+      .replace(/\[([^\]]+)\]\([^)]*\)/g, '$1')
+      .replace(/^\s*[-*•]\s+/gm, '')
+      .replace(/^\s*\|.*\|\s*$/gm, (m) => m.replace(/\|/g, ' '))
+      .replace(/^>\s?/gm, '')
+      // emoji / pictographs / สัญลักษณ์ตกแต่ง (อ่าน TTS ได้แปลกหรือไม่อ่าน)
+      .replace(
+        /[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{FE00}-\u{FE0F}\u{2190}-\u{21FF}\u{2B00}-\u{2BFF}\u{2500}-\u{25FF}]/gu,
+        ''
+      )
+      // markdown residue
+      .replace(/[*_~`#>|]/g, '')
+      .replace(/\s+/g, ' ')
+      .trim()
+  )
+}
+
+// WS-2c: จำการตั้งค่าเปิด/ปิดเสียงตอบ (localStorage — aiMemory ไม่มี key นี้)
+const VOICE_REPLY_ENABLED_KEY = 'bmb_voice_reply_enabled'
+
+export function isVoiceReplyEnabled(): boolean {
+  try {
+    return localStorage.getItem(VOICE_REPLY_ENABLED_KEY) === '1'
+  } catch {
+    return false
+  }
+}
+
+export function setVoiceReplyEnabled(enabled: boolean): void {
+  try {
+    localStorage.setItem(VOICE_REPLY_ENABLED_KEY, enabled ? '1' : '0')
+  } catch {
+    /* storage unavailable — ปุ่มยังใช้ได้ใน session เดียว */
+  }
+}
+
 const DEFAULT_CONFIG: VoiceConfig = {
-  model: import.meta.env.VITE_OPENROUTER_MODEL || 'nvidia/nemotron-3-ultra-550b-a55b:free',
-  fallbackModel: 'qwen/qwen3.7-flash',
+  model: import.meta.env.VITE_OPENROUTER_MODEL || 'qwen/qwen3.7-flash',
+  fallbackModel: 'z-ai/glm-5.3-flash',
   voice: null,
   language: 'th-TH',
   rate: 1.0,
@@ -173,6 +248,9 @@ export class AIVoiceService {
     }
     if (this.isListeningFlag) return false;
 
+    // WS-2c barge-in: เริ่มพูดใหม่ = หยุดเสียง AI ทันที (ลูกค้าขัดจังหวะได้)
+    if (this.isSpeakingFlag) this.stopSpeaking();
+
     this.isListeningFlag = true;
     try {
       this.recognition.start();
@@ -200,75 +278,23 @@ export class AIVoiceService {
   }
 
   async sendTextMessage(text: string): Promise<VoiceResponse> {
-    // F-17: no client-side key anymore — the request goes through ai-proxy,
-    // which authenticates the user's Supabase JWT server-side.
+    // WS-2 (2026-10-01): ประวัติเสียงเดินระบบเดียวกับ chat — เรียก chatWithAI
+    // (voice mode) ที่รวม DB context + ใช้ ai-proxy + fallback chain เดิมแล้ว
+    // F-17: ไม่มี key ฝั่ง client ทั้งหมด (ai-proxy ออก key server-side)
     this.abortController = new AbortController();
-    const messages = [
-      {
-        role: 'system' as const,
-        content: this.buildSystemPrompt(),
-      },
-      ...this.conversation,
-      {
-        role: 'user' as const,
-        content: text,
-      },
-    ];
-
     try {
-      const response = await this.callOpenRouter(messages);
-      const assistantMessage: VoiceMessage = {
-        role: 'assistant',
-        content: response.content,
-        timestamp: Date.now(),
-      };
+      const content = await chatWithAI(text, undefined, { voiceMode: true });
       this.conversation.push(
         { role: 'user', content: text, timestamp: Date.now() },
-        assistantMessage
+        { role: 'assistant', content, timestamp: Date.now() }
       );
-      return response;
+      return { content };
     } catch (error) {
       return {
         content: '',
         error: error instanceof Error ? error.message : 'Unknown error occurred',
       };
     }
-  }
-
-  private buildSystemPrompt(): string {
-    return 'You are the AI Voice Assistant for "Bite Me Baby" — a food delivery service in Thailand.\nLanguage: Thai (th-TH) primary, English secondary.\nTone: Friendly, helpful, concise.\n\nCAPABILITIES (read-only tools you can call via function calling):\n- list_menu: Get current menu with prices, availability\n- get_product: Get details for a specific product\n- check_delivery: Check if address is within 5km delivery zone, get fee & ETA\n- get_order_status: Get status of an order by order_id\n- list_promotions: Get active promotions\n- get_kitchen_summary: Get kitchen workload summary (admin)\n- list_drivers: List available drivers (admin)\n- list_recipes: List recipes (admin)\n\nGUARDRAILS:\n- NEVER promise, modify, or confirm prices/stock/payment — these are server-authoritative.\n- NEVER create orders or process payments — user must use the app UI.\n- If user asks for write operations, politely decline and direct them to the app.\n- Keep responses short and conversational for voice.\n- Always respond in Thai unless user speaks English.';
-  }
-
-  private async callOpenRouter(messages: Array<{ role: string; content: string }>): Promise<VoiceResponse> {
-    const controller = this.abortController;
-    const modelsToTry = [this.config.model, this.config.fallbackModel].filter(Boolean);
-
-    for (const model of modelsToTry) {
-      if (controller?.signal.aborted) break;
-
-      try {
-        // F-17 FIX (Wave 1): server-side proxy call — the OpenRouter key never
-        // leaves the Edge Function. JWT session is attached automatically.
-        const { data: proxy, error } = await supabase.functions.invoke('ai-proxy', {
-          body: { messages, model, maxTokens: 500 },
-        });
-
-        if (error) {
-          throw new Error('AI proxy error: ' + (error.message || 'upstream unavailable'));
-        }
-        if (!proxy || proxy.error) {
-          throw new Error('AI proxy error: ' + (proxy?.error || 'empty proxy response'));
-        }
-
-        const content = proxy.data?.choices?.[0]?.message?.content || '';
-        return { content: content.trim() };
-      } catch (error) {
-        if (error instanceof Error && error.name === 'AbortError') break;
-        if (model === modelsToTry[modelsToTry.length - 1]) throw error;
-      }
-    }
-
-    throw new Error('All models failed');
   }
 
   async speak(text: string): Promise<void> {
