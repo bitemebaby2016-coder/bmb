@@ -9,6 +9,20 @@ import type { Product, ProductCategory, ProductAddon, RoundPeriod, DeliveryRound
 import { useBrandContextStore } from '@/store/resolvedBrandStore'
 import { useAdminTenantContextStore } from '@/lib/adminTenantContext'
 
+/**
+ * TEN-06/07: resolve the tenant for admin writes.
+ * Priority: adminTenantContext (TenantSelector) → brandContext (customer resolve) → seed default.
+ * Every INSERT into a tenant-scoped table MUST go through this (migration 103 adds the
+ * DB-side default as a safety net, but explicit is better than implicit).
+ */
+export function resolveAdminTenantId(): string {
+  const ctx = useAdminTenantContextStore.getState().activeTenantId
+  if (ctx) return ctx
+  const brand = useBrandContextStore.getState().resolved?.tenant_id
+  if (brand) return brand
+  return 'tenant-bmb-001'
+}
+
 
 /** JSON shape stored in products.addons (no product_id inside the JSON array). */
 export type AddonJson = Omit<ProductAddon, 'product_id'>
@@ -117,6 +131,7 @@ export async function createProduct(data: ProductForm): Promise<Product | null> 
     sort_order: data.sort_order || 0, delivery_round_id: data.delivery_round_id,
     scheduled_date: data.scheduled_date,
     addons: Array.isArray(data.addons) ? data.addons : [],
+    tenant_id: resolveAdminTenantId(),
   }
   const { data: result, error } = await supabase.from('products').insert(productData).select().single()
   if (error) { console.error('[createProduct] Error:', error); return null }
@@ -168,7 +183,7 @@ export async function getActiveDeliveryRounds(): Promise<DeliveryRound[]> {
 
 export async function createDeliveryRound(data: DeliveryRoundForm): Promise<DeliveryRound | null> {
   // DB columns: scheduled_date (not 'date'), name/round_key (not 'round_key')
-  const { data: result, error } = await supabase.from('delivery_rounds').insert({ id: data.id || `round-${Date.now()}`, name: data.round_key, round_key: data.round_key, display_name: data.display_name, cutoff_time: data.cutoff_time, delivery_start: data.delivery_start, delivery_end: data.delivery_end, max_capacity: data.max_capacity, scheduled_date: data.date, date: data.date, status: 'active', current_count: 0 }).select().single()
+  const { data: result, error } = await supabase.from('delivery_rounds').insert({ id: data.id || `round-${Date.now()}`, name: data.round_key, round_key: data.round_key, display_name: data.display_name, cutoff_time: data.cutoff_time, delivery_start: data.delivery_start, delivery_end: data.delivery_end, max_capacity: data.max_capacity, scheduled_date: data.date, date: data.date, status: 'active', current_count: 0, tenant_id: resolveAdminTenantId() }).select().single()
   if (error) { console.error('[createDeliveryRound] Error:', error); return null }
   return result as DeliveryRound
 }
@@ -211,7 +226,7 @@ export async function getCategoriesAdmin(): Promise<ProductCategory[]> {
 }
 
 export async function createCategory(data: { id?: string; name: string; slug: string; icon: string; sort_order: number; is_active: boolean; menu_section_id?: string | null }): Promise<ProductCategory | null> {
-  const { data: result, error } = await supabase.from('product_categories').insert({ id: data.id || `cat-${Date.now()}`, name: data.name, slug: data.slug, icon: data.icon, sort_order: data.sort_order, is_active: data.is_active, menu_section_id: data.menu_section_id ?? null }).select().single()
+  const { data: result, error } = await supabase.from('product_categories').insert({ id: data.id || `cat-${Date.now()}`, name: data.name, slug: data.slug, icon: data.icon, sort_order: data.sort_order, is_active: data.is_active, menu_section_id: data.menu_section_id ?? null, tenant_id: resolveAdminTenantId() }).select().single()
   if (error) { console.error('[createCategory] Error:', error); return null }
   return result as ProductCategory
 }
@@ -265,6 +280,7 @@ export async function createSection(data: SectionForm): Promise<MenuSection | nu
     id: data.id || `sec-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
     name: data.name, slug: data.slug, description: data.description ?? '',
     sort_order: data.sort_order, is_active: data.is_active,
+    tenant_id: resolveAdminTenantId(),
   }).select().single()
   if (error) { console.error('[createSection] Error:', error); return null }
   return result as MenuSection
