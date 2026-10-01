@@ -50,6 +50,86 @@ interface ChatMessage {
   content: string
 }
 
+// ============================================
+// AI-VOICE (WS-2f, 2026-10-01 owner spec): STT mode.
+// เบราว์เซอร์ที่ไม่รองรับ Web Speech API (Firefox/iOS บางส่วน) จะส่งไฟล์เสียง
+// (MediaRecorder blob → base64) มาที่ ai-proxy เหมือนเดิม — key ไม่หลุด client
+// Chain ตาม spec: หลัก google/gemini-2.5-flash (multimodal audio) →
+// รอง whisper-large-v3 via Groq (ถ้าตั้ง GROQ_API_KEY ใน secrets)
+// ============================================
+const STT_PRIMARY_MODEL = 'google/gemini-2.5-flash'
+const STT_PROMPT =
+  'ถอดเสียงพูดในไฟล์เสียงนี้เป็นข้อความภาษาไทยตามที่พูดจริง (ภาษาไทยเป็นหลัก ถ้าพูดอังกฤษให้ถอดอังกฤษ) ' +
+  'ตอบเฉพาะข้อความที่ถอดได้เท่านั้น ห้ามอธิบายเพิ่ม ถ้าเสียงไม่ชัดหรือไม่มีคำพูดให้ตอบ [ไม่ได้ยิน]'
+const GROQ_STT_URL = 'https://api.groq.com/openai/v1/audio/transcriptions'
+
+interface TranscribePayload {
+  mode: 'transcribe'
+  audioBase64?: string
+  mimeType?: string
+  model?: string
+}
+
+async function audioToTranscript(apiKey: string, p: TranscribePayload): Promise<Response> {
+  const b64 = (p.audioBase64 || '').replace(/^data:[^,]+,/, '').replace(/\s/g, '')
+  if (!b64 || b64.length < 256) return json({ error: 'audioBase64 required' }, 400)
+  const mime = (p.mimeType || 'audio/webm').toLowerCase()
+  const format = mime.includes('mp4') || mime.includes('aac') ? 'mp4' : mime.includes('mpeg') || mime.includes('mp3') ? 'mp3' : mime.includes('ogg') ? 'ogg' : mime.includes('wav') ? 'wav' : 'webm'
+
+  // 1) หลัก: gemini-2.5-flash multimodal (OpenRouter chat completions)
+  const primary = await fetch(OPENROUTER_URL, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      'Content-Type': 'application/json',
+      'HTTP-Referer': 'https://bitemebaby-5f7.pages.dev',
+      'X-Title': 'Bite Me Baby App',
+    },
+    body: JSON.stringify({
+      model: p.model || STT_PRIMARY_MODEL,
+      messages: [{
+        role: 'user',
+        content: [
+          { type: 'text', text: STT_PROMPT },
+          { type: 'input_audio', input_audio: { data: b64, format } },
+        ],
+      }],
+      max_tokens: 300,
+      temperature: 0,
+    }),
+  })
+  if (primary.ok) {
+    const data = await primary.json().catch(() => ({}))
+    const text: string | undefined = data?.choices?.[0]?.message?.content
+    if (text) return json({ text: text.trim() })
+  } else {
+    console.error('stt primary failed:', primary.status, JSON.stringify(await primary.text().catch(() => '')).slice(0, 200))
+  }
+
+  // 2) รอง: whisper-large-v3 ผ่าน Groq (owner ตั้ง GROQ_API_KEY)
+  const groqKey = Deno.env.get('GROQ_API_KEY') || ''
+  if (groqKey) {
+    try {
+      const bin = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0))
+      const form = new FormData()
+      form.append('file', new Blob([bin], { type: mime }), 'voice.' + format)
+      form.append('model', 'whisper-large-v3')
+      form.append('language', 'th')
+      const groq = await fetch(GROQ_STT_URL, { method: 'POST', headers: { Authorization: `Bearer ${groqKey}` }, body: form })
+      if (groq.ok) {
+        const g = await groq.json()
+        if (g?.text) return json({ text: String(g.text).trim() })
+      } else {
+        console.error('stt groq failed:', groq.status, (await groq.text()).slice(0, 200))
+      }
+    } catch (e) {
+      console.error('stt groq exception:', String(e).slice(0, 200))
+    }
+  }
+
+  return json({ error: 'stt_unavailable', hint: 'primary + fallback STT both failed; client falls back to Web Speech API' }, 503)
+}
+
 // AI-OPT: SSE streaming support. When payload.stream === true the upstream
 // OpenRouter call uses stream:true and the raw token deltas are piped back to
 // the client as Server-Sent Events, so น้อง Bite can render a live typing
@@ -163,12 +243,15 @@ Deno.serve(async (req: Request): Promise<Response> => {
   const apiKey = Deno.env.get('OPENROUTER_API_KEY') || ''
   if (!apiKey) return json({ error: 'AI proxy not configured (OPENROUTER_API_KEY missing)' }, 500)
 
-  let payload: { messages?: ChatMessage[]; model?: string; maxTokens?: number; stream?: boolean }
+  let payload: { messages?: ChatMessage[]; model?: string; maxTokens?: number; stream?: boolean; mode?: 'transcribe'; audioBase64?: string; mimeType?: string }
   try {
     payload = await req.json()
   } catch {
     return json({ error: 'invalid json' }, 400)
   }
+
+  // AI-VOICE (WS-2f): STT path — same JWT/guest-key auth as chat above
+  if (payload.mode === 'transcribe') return audioToTranscript(apiKey, payload as TranscribePayload)
 
   const messages: ChatMessage[] = Array.isArray(payload.messages) ? payload.messages : []
   if (messages.length === 0) return json({ error: 'no messages' }, 400)

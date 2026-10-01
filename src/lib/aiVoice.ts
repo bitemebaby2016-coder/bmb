@@ -14,6 +14,7 @@
 // WS-2: supabase client ไม่ถูกใช้แล้วตรงนี้ — การเรียก AI ไปที่ chatWithAI
 // (aiService) ซึ่งจัดการ ai-proxy + JWT + fallback ให้เอง
 import { chatWithAI } from './aiService'
+import { supabase } from './supabase'
 
 // Web Speech API types (not in standard lib.dom.d.ts)
 interface SpeechRecognition extends EventTarget {
@@ -178,6 +179,61 @@ const DEFAULT_CONFIG: VoiceConfig = {
 };
 
 // ============================================
+// WS-2f (2026-10-01 owner spec): server-side STT/TTS chains
+// STT: ai-proxy mode=transcribe (gemini-2.5-flash → whisper-large-v3/Groq)
+// TTS: voice-tts EF (Edge-TTS ฟรี → Botnoi) — key ทั้งหมด server-side
+// ทุก path ล้มเหลว → client fallback Web Speech API เดิม (ระบบไม่ตาย)
+// ============================================
+
+function blobToBase64(blob: Blob): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = () => resolve(String(reader.result).split(',')[1] || '')
+    reader.onerror = () => reject(new Error('read blob failed'))
+    reader.readAsDataURL(blob)
+  })
+}
+
+/** STT ผ่าน ai-proxy (server key) — ใช้เมื่อ Web Speech API ไม่รองรับ */
+export async function serverTranscribe(blob: Blob): Promise<string> {
+  const audioBase64 = await blobToBase64(blob)
+  const { data, error } = await supabase.functions.invoke('ai-proxy', {
+    body: { mode: 'transcribe', audioBase64, mimeType: blob.type || 'audio/webm' },
+  })
+  if (error) throw new Error(error.message || 'STT request failed')
+  const text = data?.text
+  if (!text || text === '[ไม่ได้ยิน]') throw new Error('stt_empty')
+  return String(text)
+}
+
+/** TTS ผ่าน voice-tts EF (Edge-TTS หลัก / Botnoi รอง) — คืน blob เสียง mp3 */
+export async function serverSpeak(text: string, voice?: string): Promise<Blob> {
+  const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/voice-tts`
+  const session = await supabase.auth.getSession()
+  const token = session.data.session?.access_token
+  const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || ''
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' }
+  if (token) {
+    headers.Authorization = `Bearer ${token}`
+    if (anonKey) headers.apikey = anonKey
+  } else if (anonKey) {
+    headers.Authorization = `Bearer ${anonKey}`
+    headers.apikey = anonKey
+  }
+  const r = await fetch(url, { method: 'POST', headers, body: JSON.stringify({ text: speakableText(text), voice }) })
+  if (!r.ok) throw new Error('voice-tts ' + r.status)
+  return r.blob()
+}
+
+export function isMediaRecorderSupported(): boolean {
+  return (
+    typeof navigator !== 'undefined' &&
+    typeof MediaRecorder !== 'undefined' &&
+    !!navigator.mediaDevices?.getUserMedia
+  )
+}
+
+// ============================================
 // AIVoiceService Class
 // ============================================
 export class AIVoiceService {
@@ -189,6 +245,9 @@ export class AIVoiceService {
   private isListeningFlag = false;
   private isSpeakingFlag = false;
   private currentUtterance: SpeechSynthesisUtterance | null = null;
+  private currentAudio: HTMLAudioElement | null = null;
+  private mediaRecorder: MediaRecorder | null = null;
+  private recordedChunks: Blob[] = [];
   private abortController: AbortController | null = null;
 
   constructor(config?: Partial<VoiceConfig>) {
@@ -298,6 +357,17 @@ export class AIVoiceService {
   }
 
   async speak(text: string): Promise<void> {
+    // WS-2f: server TTS (Edge-TTS หลัก / Botnoi รอง) เปิดผ่าน env VITE_VOICE_SERVER_TTS=1
+    // (admin ควบคุมที่ env ได้ ไม่ต้องแก้โค้ด; ปิด/EF ล้ม → fallback browser synthesis ทันที)
+    if (import.meta.env.VITE_VOICE_SERVER_TTS === '1' && import.meta.env.VITE_SUPABASE_URL) {
+      try {
+        const blob = await serverSpeak(text)
+        await this.playAudioBlob(blob)
+        return
+      } catch {
+        /* fall through to browser TTS */
+      }
+    }
     if (!this.synthesis) {
       throw new Error('Speech synthesis not supported in this browser');
     }
@@ -342,6 +412,75 @@ export class AIVoiceService {
       this.synthesis.cancel();
       this.isSpeakingFlag = false;
     }
+    if (this.currentAudio) {
+      this.currentAudio.pause();
+      this.currentAudio = null;
+      this.isSpeakingFlag = false;
+    }
+  }
+
+  /** WS-2f: เล่น mp3 จาก voice-tts EF (barge-in ได้ผ่าน stopSpeaking) */
+  private playAudioBlob(blob: Blob): Promise<void> {
+    return new Promise((resolve, reject) => {
+      const url = URL.createObjectURL(blob)
+      const audio = new Audio(url)
+      this.currentAudio = audio
+      this.isSpeakingFlag = true
+      const done = () => {
+        URL.revokeObjectURL(url)
+        this.currentAudio = null
+        this.isSpeakingFlag = false
+        resolve()
+      }
+      audio.onended = done
+      audio.onerror = () => { URL.revokeObjectURL(url); this.currentAudio = null; this.isSpeakingFlag = false; reject(new Error('audio playback failed')) }
+      audio.play().catch((e) => { URL.revokeObjectURL(url); this.currentAudio = null; this.isSpeakingFlag = false; reject(e as Error) })
+    })
+  }
+
+  /** WS-2f: STT fallback path — บันทึกเสียง (browser ที่ไม่มี Web Speech API) */
+  async startRecording(): Promise<boolean> {
+    if (!isMediaRecorderSupported()) {
+      this.callbacks?.onError(new Error('MediaRecorder not supported in this browser'))
+      return false
+    }
+    if (this.isListeningFlag) return false
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+      this.recordedChunks = []
+      this.mediaRecorder = new MediaRecorder(stream)
+      this.mediaRecorder.ondataavailable = (e) => {
+        if (e.data.size > 0) this.recordedChunks.push(e.data)
+      }
+      this.mediaRecorder.start()
+      this.isListeningFlag = true
+      return true
+    } catch (e) {
+      this.callbacks?.onError(e as Error)
+      return false
+    }
+  }
+
+  /** หยุดบันทึก → ถอดเสียงผ่าน ai-proxy (gemini → whisper) แล้วคืนข้อความ */
+  async stopRecordingAndTranscribe(): Promise<string | null> {
+    const rec = this.mediaRecorder
+    if (!rec) return null
+    return new Promise((resolve) => {
+      rec.onstop = async () => {
+        rec.stream.getTracks().forEach((t) => t.stop())
+        this.isListeningFlag = false
+        try {
+          const blob = new Blob(this.recordedChunks, { type: rec.mimeType || 'audio/webm' })
+          const text = await serverTranscribe(blob)
+          this.callbacks?.onTranscript(text)
+          resolve(text)
+        } catch (e) {
+          this.callbacks?.onError(e as Error)
+          resolve(null)
+        }
+      }
+      rec.stop()
+    })
   }
 
   clearConversation(): void {
