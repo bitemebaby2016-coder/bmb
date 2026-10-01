@@ -10,7 +10,7 @@ import { Link } from 'react-router-dom'
 import { MascotBadge } from '@/components/MascotBadge'
 import { HorizontalCarousel } from './HorizontalCarousel'
 import { selectHomeShowcase, type HomeShowcaseItem } from '@/lib/homeShowcase'
-import type { Product, ProductCategory, SameDayOrderPayload, PreOrderPayload } from '@/types'
+import type { Product, ProductCategory, MenuSection, SameDayOrderPayload, PreOrderPayload } from '@/types'
 
 const SECTION_POSES = ['peeking', 'thumbsup', 'running', 'pointing', 'cooking', 'menu', 'greeting', 'heart'] as const
 
@@ -102,11 +102,14 @@ function ShowcaseCard({
 export function CategorySections({
   products,
   categories,
+  sections = [],
   onSameDay,
   onPreOrder,
 }: {
   products: Product[]
   categories: ProductCategory[]
+  /** B-fix (owner 2026-10-01): กลุ่มใหญ่ menu_sections — ถ้ามี จะแสดงหัวข้อกลุ่มครอบ carousel หมวด (ให้ผลทุกหน้าเหมือน MenuPage) */
+  sections?: MenuSection[]
   onSameDay: (p: SameDayOrderPayload) => void
   onPreOrder: (p: PreOrderPayload) => void
 }) {
@@ -114,37 +117,70 @@ export function CategorySections({
     .filter((c) => c.is_active && !c.archived)
     .sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0))
 
+  const activeSections = [...sections]
+    .filter((s) => s.is_active)
+    .sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0))
+
+  // หมวดที่อยู่ใน Section ที่กำลังแสดงอยู่ (หมวดใน Section ที่ปิดจะถูกซ่อนตาม server gate CAT-D01=B)
+  const shownSectionCatIds = new Set(
+    activeSections.flatMap((s) => active.filter((c) => c.menu_section_id === s.id).map((c) => c.id)),
+  )
+  const loose = active.filter((c) => !shownSectionCatIds.has(c.id))
+
+  let carouselIdx = 0
+  const renderCategoryCarousel = (cat: ProductCategory, grouped: boolean) => {
+    const items = selectHomeShowcase(products, categories, cat.slug)
+    if (items.length === 0) return null
+    const idx = carouselIdx++
+    const headingId = `home-cat-${cat.slug}`
+    const pose = SECTION_POSES[idx % SECTION_POSES.length]
+    return (
+      <section key={cat.id} className={`${grouped ? 'mb-8' : 'mb-10'} scroll-mt-20`} aria-labelledby={headingId}>
+        <div className="flex items-center justify-between mb-2">
+          <h3
+            id={headingId}
+            className={`${grouped ? 'text-lg' : 'text-xl'} font-display font-bold text-brand-accent flex items-center gap-2`}
+          >
+            <MascotBadge
+              pose={pose}
+              size="sm"
+              alt={`น้อง Bite ประจำหมวด ${cat.name}`}
+              className="section-float-mascot"
+            />
+            <span>{cat.icon ? `${cat.icon} ` : ''}{cat.name}</span>
+          </h3>
+          <Link to="/menu" className="text-sm text-brand-primary font-medium hover:underline">ดูทั้งหมด →</Link>
+        </div>
+        <h4 className="sr-only">{cat.name}</h4>
+        <HorizontalCarousel
+          items={items.map((item) => (
+            <ShowcaseCard key={item.id} item={item} onSameDay={onSameDay} onPreOrder={onPreOrder} />
+          ))}
+          aria-label={`${cat.name} เลื่อนได้`}
+        />
+      </section>
+    )
+  }
+
+  // ไม่มี Section → แสดงแบบเดิม (1 carousel ต่อ 1 หมวด)
+  if (activeSections.length === 0) {
+    return <>{active.map((cat) => renderCategoryCarousel(cat, false))}</>
+  }
+
+  // มี Section → หัวข้อกลุ่มใหญ่ครอบหมวด (เดียวกับ MenuPage: Menu → Section → Category)
   return (
     <>
-      {active.map((cat, idx) => {
-        const items = selectHomeShowcase(products, categories, cat.slug)
-        if (items.length === 0) return null
-        const headingId = `home-cat-${cat.slug}`
-        const pose = SECTION_POSES[idx % SECTION_POSES.length]
-        return (
-          <section key={cat.id} className="mb-10 scroll-mt-20" aria-labelledby={headingId}>
-            <div className="flex items-center justify-between mb-2">
-              <h2 id={headingId} className="text-xl font-display font-bold text-brand-accent flex items-center gap-2">
-                <MascotBadge
-                  pose={pose}
-                  size="sm"
-                  alt={`น้อง Bite ประจำหมวด ${cat.name}`}
-                  className="section-float-mascot"
-                />
-                <span>{cat.icon ? `${cat.icon} ` : ''}{cat.name}</span>
-              </h2>
-              <Link to="/menu" className="text-sm text-brand-primary font-medium hover:underline">ดูทั้งหมด →</Link>
-            </div>
-            <h3 className="sr-only">{cat.name}</h3>
-            <HorizontalCarousel
-              items={items.map((item) => (
-                <ShowcaseCard key={item.id} item={item} onSameDay={onSameDay} onPreOrder={onPreOrder} />
-              ))}
-              aria-label={`${cat.name} เลื่อนได้`}
-            />
-          </section>
-        )
-      })}
+      {activeSections.map((s) => (
+        <div key={s.id} className="mb-12">
+          <h2 className="text-2xl font-display font-bold text-brand-primary border-b-2 border-brand-primary/20 pb-2 mb-5">
+            {s.name}
+          </h2>
+          {active
+            .filter((c) => c.menu_section_id === s.id)
+            .map((cat) => renderCategoryCarousel(cat, true))}
+        </div>
+      ))}
+      {loose.map((cat) => renderCategoryCarousel(cat, true))}
     </>
   )
 }

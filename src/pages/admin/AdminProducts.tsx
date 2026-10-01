@@ -142,17 +142,17 @@ export function AdminProducts() {
 
   async function handleSaveCategory() {
     const name = catForm.name.trim()
-    if (!name) { showToast('กรุกหัวข้อหมวดอาหาร', 'warning'); return }
+    if (!name) { showToast('กรุณาใส่ชื่อหมวดหมู่', 'warning'); return }
     const maxSort = adminCats.reduce((m, c) => Math.max(m, c.sort_order || 0), 0)
     const sortOrder = editingCat ? (catForm.sort_order || maxSort) : (catForm.sort_order > 0 ? catForm.sort_order : maxSort + 1)
     if (editingCat) {
       const ok = await updateCategory(editingCat.id, { name, icon: catForm.icon, sort_order: sortOrder, is_active: catForm.is_active, menu_section_id: (catForm.menu_section_id || null) as string | null })
       if (!ok) { showToast('ไม่สามารถอ্যাপডেটประเภท', 'error'); return }
-      showToast('หัวข้อหมডอ্যাপডেটแล้ว!', 'success')
+      showToast('หมวดหมู่อัปเดตแล้ว!', 'success')
     } else {
       const ok = await createCategory({ name, slug: slugifyCategory(name), icon: catForm.icon, sort_order: sortOrder, is_active: catForm.is_active, menu_section_id: (catForm.menu_section_id || null) as string | null })
       if (!ok) { showToast('ไม่สามารถเพิ่มประเภท', 'error'); return }
-      showToast('เพิ่มหัวข้อหมডสำเร็จ!', 'success')
+      showToast('เพิ่มหมวดหมู่สำเร็จ!', 'success')
     }
     setShowCatForm(false)
     setEditingCat(null)
@@ -326,21 +326,21 @@ export function AdminProducts() {
       {/* ── PHASE 6 UI/admin: Category headings manager (add / rename / reorder / hide) ── */}
       <div className="card mb-6 bg-brand-bg">
         <div className="flex items-center justify-between mb-3">
-          <h3 className="text-lg font-bold text-brand-accent">🏷️ Category headings</h3>
-          <button onClick={() => openCategoryForm()} className="btn btn-primary text-sm">+ New heading</button>
+          <h3 className="text-lg font-bold text-brand-accent">🏷️ หมวดหมู่ (Category — ปุ่มกรองในหน้าเมนู)</h3>
+          <button onClick={() => openCategoryForm()} className="btn btn-primary text-sm">+ เพิ่มหมวดหมู่</button>
         </div>
 
         {showCatForm && (
           <div className="card p-4 mb-3 bg-white">
-            <h4 className="font-bold text-brand-accent mb-3">{editingCat ? 'Edit heading' : 'New category heading'}</h4>
+            <h4 className="font-bold text-brand-accent mb-3">{editingCat ? 'แก้ไขหมวดหมู่' : 'เพิ่มหมวดหมู่ใหม่'}</h4>
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              <input type="text" className="input" placeholder="Heading (e.g. Burgers)" value={catForm.name} onChange={(e) => setCatForm({ ...catForm, name: e.target.value })} />
+              <input type="text" className="input" placeholder="ชื่อหมวดหมู่ (เช่น ขนมครก)" value={catForm.name} onChange={(e) => setCatForm({ ...catForm, name: e.target.value })} />
               <input type="text" className="input" placeholder="Icon (e.g. 🍔)" value={catForm.icon} onChange={(e) => setCatForm({ ...catForm, icon: e.target.value })} />
               <input type="number" className="input" placeholder="Order" value={catForm.sort_order || ''} onChange={(e) => setCatForm({ ...catForm, sort_order: parseInt(e.target.value || '0') })} />
               <div>
-                <label className="block text-sm font-medium text-brand-accent mb-2">Section</label>
+                <label className="block text-sm font-medium text-brand-accent mb-2">กลุ่มเมนู (Section)</label>
                 <select value={(catForm.menu_section_id as string) || ''} onChange={(e) => setCatForm({ ...catForm, menu_section_id: e.target.value })} className="input">
-                  <option value="">— ไม่มี Section —</option>
+                  <option value="">— ไม่อยู่ในกลุ่ม —</option>
                   {sections.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
                 </select>
               </div>
@@ -359,7 +359,7 @@ export function AdminProducts() {
       {/* Sections manager (CAT-01, migration 055): Menu → Section → Category → Product */}
       <div className="card mb-6">
         <div className="flex items-center justify-between mb-3">
-          <h2 className="font-bold text-brand-accent">📚 Sections (หัวข้อเมนู)</h2>
+          <h2 className="font-bold text-brand-accent">📚 กลุ่มเมนู (Section — กลุ่มใหญ่ครอบหลายหมวด)</h2>
           <button onClick={() => { setEditingSection(null); setSectionForm({ name: '', sort_order: sections.reduce((m, s) => Math.max(m, s.sort_order || 0), 0) + 1 }); setShowSectionForm(true) }} className="btn btn-outline text-xs">+ Section</button>
         </div>
         {showSectionForm && (

@@ -38,7 +38,7 @@ import { FloatingCart, StickyCartBar } from '@/components/home/FloatingCart'
 import { useOrderBuilderStore } from '@/store/orderBuilderStore'
 import { useBrandContextStore } from '@/store/resolvedBrandStore'
 import { filterProductsByBranch } from '@/lib/homeProviders'
-import type { VerifiedCustomerReview, Product, ProductCategory, SameDayOrderPayload, PreOrderPayload, HomeReview } from '@/types'
+import type { VerifiedCustomerReview, Product, ProductCategory, MenuSection, SameDayOrderPayload, PreOrderPayload, HomeReview } from '@/types'
 
 /** PRE_ORDER lead/date policy is DB-driven (order_policy) — no client hardcode.
  * The date is chosen in /checkout?mode=pre-order (server validates lead time). */
@@ -50,6 +50,8 @@ export function HomePage() {
 
   const [products, setProducts] = useState<Product[]>([])
   const [categories, setCategories] = useState<ProductCategory[]>([])
+  // B-fix (owner 2026-10-01): กลุ่มเมนู (menu_sections) — ให้ผลกับหน้าแรกเหมือนหน้าเมนู
+  const [sections, setSections] = useState<MenuSection[]>([])
   const [rounds, setRounds] = useState<any[]>([])
   const [promoRows, setPromoRows] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
@@ -62,19 +64,21 @@ export function HomePage() {
     async function loadData() {
       try {
         // PERF: supabase chunks load only after first paint (kept off critical path).
-        const { getProducts, getCategories } = await import('@/lib/bmbAdminApi_products')
+        const { getProducts, getCategories, getSections } = await import('@/lib/bmbAdminApi_products')
         const { getDeliveryRoundsAdmin } = await import('@/lib/bmbAdminApi_rounds')
         const { getPromotionsAdmin } = await import('@/lib/bmbAdminApi_promotions')
-        const [rows, cats, rounds, promos] = await Promise.all([
+        const [rows, cats, rounds, promos, secs] = await Promise.all([
           getProducts(),
           getCategories(),
           getDeliveryRoundsAdmin(),
           getPromotionsAdmin(),
+          getSections().catch(() => []), // B-fix: กลุ่มเมนู — ถ้าโหลดไม่ได้แสดงแบบไม่มีกลุ่ม
         ])
         setProducts(rows)
         setCategories(cats)
         setRounds(rounds)
         setPromoRows(promos)
+        setSections(secs)
         // CAT-04: Load verified reviews for all products
         const { getVerifiedReviewsForProducts } = await import('@/lib/reviewApi')
         const allProductIds = rows.map((r: any) => r.id)
@@ -290,7 +294,7 @@ export function HomePage() {
       )}
 
       {/* 5. Category carousels — DB-driven: แสดงทุกหมวดที่แอดมินสร้าง (จานเดียว/เครื่องดื่ม/ของทานเล่น/ผลไม้/สินค้าสำเร็จรูป) ซิงก์จริง */}
-      <CategorySections products={products} categories={categories} onSameDay={handleSameDay} onPreOrder={handlePreOrder} />
+      <CategorySections products={products} categories={categories} sections={sections} onSameDay={handleSameDay} onPreOrder={handlePreOrder} />
 
       {/* 6. Social Proof Review Carousel */}
       <ReviewCarouselSection reviews={reviews} products={products} onReviewCta={handleReviewCta} />

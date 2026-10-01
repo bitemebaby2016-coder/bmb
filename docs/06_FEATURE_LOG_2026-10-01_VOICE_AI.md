@@ -25,3 +25,15 @@
 - Edge-TTS: Microsoft ตัด websocket จาก datacenter IP (turn.start→disconnect) — โค้ดพร้อม ใช้ได้ทันทีเมื่อ MS ปลด (เสียงไทย Achara/Anan ธรรมชาติกว่า)
 - Botnoi/Groq: ตั้ง key ผ่าน `supabase secrets set BOTNOI_API_KEY=...` / `GROQ_API_KEY=...` — ระบบพร้อมรออยู่แล้ว
 - LLM ตาม spec เดิม (Nemotron/Gemini): เปลี่ยนได้จาก env `VITE_OPENROUTER_MODEL` — admin ควบคุมเองไม่ต้องแก้โค้ด
+
+---
+
+# FIX ROUND — 2026-10-01 (owner report: พูด eng + พูดขาดตอน)
+
+| ปัญหาที่รายงาน | สาเหตุที่ตรวจพบ | แก้ด้วย | ทดสอบ |
+|---|---|---|---|
+| เสียงพูดภาษาอังกฤษ/เพี้ยน | `.env` จริงไม่มี `VITE_VOICE_SERVER_TTS=1` → ใช้ speechSynthesis ของ browser ซึ่งเครื่องไม่มี Thai voice; LLM ตอบผสม eng ได้ | **V1** เปิด server TTS ใน `.env` + **V4** directive บังคับ "ตอบภาษาไทยเท่านั้น" + browser fallback กรองเฉพาะ Thai voice (`pickThaiVoice`) | tsc 0 · vitest 358/358 · build PASS |
+| พูดขาดตอนกลางประโยค | Google TTS จำกัด ~200 chars/req — วิธีแบ่ง chunk เดิมหาช่องว่าง แต่ **ไทยไม่มีช่องว่างระหว่างคำ** → ตัดกลางคำ | **V2** แบ่งที่ "ขอบคำ" ด้วย `Intl.Segmenter` (ไฟล์ `splitWordSafe` ทั้ง client + voice-tts EF, deploy แล้ว) + **V3** เล่นเป็นคิว gapless (`playAudioQueue` — ชิ้นถัดไปต่อทันที ไม่มีช่องว่าง; barge-in เคลียร์คิวทั้งหมด) | **V5 live prod**: ข้อความไทยยาว >180 ผ่าน EF → `200 audio/mpeg`; unit test ยืนยันต่อชิ้นได้ข้อความเดิม + ไม่ตัดกลางคำสำคัญ |
+
+- tsconfig: เพิ่ม lib `ES2022.Intl` (type ของ Intl.Segmenter)
+- ไฟล์ที่แก้: `.env`, `src/lib/aiVoice.ts`, `src/lib/aiService.ts` (directive), `supabase/functions/voice-tts/index.ts` (deploy แล้ว), `src/__tests__/aiVoiceServer.test.ts`, `src/__tests__/aiVoice.test.ts` (stub env ให้ test deterministic), `tsconfig.json`
