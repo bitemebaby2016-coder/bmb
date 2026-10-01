@@ -26,3 +26,17 @@
 1. `/admin/products` → สร้าง **กลุ่มเมนู (Section)** เช่น "ของว่าง & ขนม"
 2. แก้หมวดหมู่ (เช่น ขนมครก) → เลือกกลุ่มที่สร้างใน dropdown "กลุ่มเมนู"
 3. หน้าแรก + หน้าเมนู → เห็นหัวข้อกลุ่มใหญ่ครอบ carousel/รายการของหมวดนั้นทันที (hard refresh Ctrl+Shift+R)
+
+---
+
+# HOTFIX — 2026-10-01 (owner report: CI ตก + เสียงยัง eng + แอดมินไม่รู้เมนูไปหมวดไหน)
+
+| ปัญหา | สาเหตุ | แก้ |
+|---|---|---|
+| **CI / Test + Lint + Build ตก** (GitHub Actions แดง) | eslint `no-misleading-character-class` — ใส่ variation selector (U+FE0F, combining char) ใน character class ของ `speakableText` | แยก `.replace(/\uFE0F/g,'')` ออกจาก char class → lint 0 ผ่าน |
+| **เสียงยังพูดอังกฤษบนเว็บจริง** | Cloudflare Pages build **ไม่มี** `VITE_VOICE_SERVER_TTS` (env ต้องตั้งที่ Pages ไม่ได้อ่านจาก .env ใน repo) → production ยังใช้ browser TTS | เปลี่ยนเป็น **AUTO**: ถ้าเครื่องลูกค้าไม่มี Thai voice → ใช้ server TTS อัตโนมัติ (ไม่ต้องตั้ง env เลย) พร้อม env override: `=1` บังคับใช้, `=0` ปิด |
+| **เพิ่มเมนูไม่รู้ไปหมวดไหน** (ปกติ/preorder/ส่งวันนี้ ใส่ไม่ถูก) | ฟอร์มเมนูไม่มีช่องเลือกโหมดขาย (`is_preorder` ไม่เคยมีในฟอร์ม) | เพิ่ม **🛒 โหมดขาย** dropdown ในฟอร์มเพิ่ม/แก้ไขเมนู: "ส่งวันนี้ (same-day)" / "จองล่วงหน้า (pre-order)" — sync `is_preorder` + `available_same_day` + `available_preorder`; การ์ดเมนูใน admin แสดง badge "📅 จองล่วงหน้า / 🛒 ส่งวันนี้" |
+
+**ทดสอบ:** lint 0 · tsc 0 · vitest 358/358 · build PASS
+
+**ทางเลือกเสริมสำหรับ owner:** ถ้าต้องการบังคับเสียง server ทุกเครื่อง (เสียงไทยจาก server เสมอ) → เพิ่ม env var ใน Cloudflare Pages → Settings → Environment variables: `VITE_VOICE_SERVER_TTS = 1` แล้ว redeploy — แต่ตอนนี้ AUTO จัดการให้แล้วโดยไม่ต้องทำ

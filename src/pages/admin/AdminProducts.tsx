@@ -21,6 +21,7 @@ export function AdminProducts() {
     image_url: '',
     is_available: true,
     is_featured: false,
+    is_preorder: false,
     prep_minutes: 10
   })
   const [addons, setAddons] = useState<AddonDraft[]>([])
@@ -97,6 +98,7 @@ export function AdminProducts() {
       image_url: product.image_url,
       is_available: product.is_available,
       is_featured: product.is_featured,
+      is_preorder: product.is_preorder ?? false,
       prep_minutes: product.prep_minutes
     })
     setAddons(toAddonDrafts(product.addons))
@@ -218,6 +220,7 @@ export function AdminProducts() {
       image_url: '',
       is_available: true,
       is_featured: false,
+      is_preorder: false,
       prep_minutes: 10
     })
     setEditingProduct(null)
@@ -301,7 +304,7 @@ export function AdminProducts() {
               <AddonsEditor value={addons} onChange={setAddons} />
             </div>
             
-            <div className="flex items-center gap-4">
+            <div className="flex flex-wrap items-center gap-4">
               <label className="flex items-center gap-2">
                 <input type="checkbox" checked={formData.is_available} onChange={(e) => setFormData({ ...formData, is_available: e.target.checked })} />
                 <span className="text-sm">เปิดขาย</span>
@@ -310,6 +313,27 @@ export function AdminProducts() {
               <label className="flex items-center gap-2">
                 <input type="checkbox" checked={formData.is_featured} onChange={(e) => setFormData({ ...formData, is_featured: e.target.checked })} />
                 <span className="text-sm">แนะนำ</span>
+              </label>
+
+              {/* Owner report 2026-10-01: แอดมินไม่รู้เมนูไปอยู่หมวดไหน — เพิ่มช่องเลือกโหมดขายชัดเจน */}
+              <label className="flex items-center gap-2">
+                <span className="text-sm font-medium text-brand-accent">🛒 โหมดขาย:</span>
+                <select
+                  className="input max-w-60"
+                  value={formData.is_preorder ? 'preorder' : 'sameday'}
+                  onChange={(e) => {
+                    const preorder = e.target.value === 'preorder'
+                    setFormData({
+                      ...formData,
+                      is_preorder: preorder,
+                      available_same_day: !preorder,
+                      available_preorder: preorder,
+                    } as typeof formData)
+                  }}
+                >
+                  <option value="sameday">ส่งวันนี้ (same-day) — สั่งได้วันนี้ทันที</option>
+                  <option value="preorder">จองล่วงหน้า (pre-order) — เลือกวันจัดส่ง</option>
+                </select>
               </label>
             </div>
           </div>
@@ -432,6 +456,9 @@ export function AdminProducts() {
               {product.archived && <span className="badge badge-danger text-xs">📦 Archived</span>}
               <span className={`badge ${product.is_available ? 'badge-success' : 'badge-danger'}`}>
                 {product.is_available ? '✅ เปิดขาย' : '❌ ปิดขาย'}
+              </span>
+              <span className="badge badge-info text-xs">
+                {product.is_preorder ? '📅 จองล่วงหน้า' : '🛒 ส่งวันนี้'}
               </span>
             </div>
             <div className="text-brand-primary font-bold text-xl mb-2">฿{product.price}</div>

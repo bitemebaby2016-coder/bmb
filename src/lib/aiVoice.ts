@@ -138,8 +138,11 @@ export function speakableText(text: string): string {
       .replace(/^\s*\|.*\|\s*$/gm, (m) => m.replace(/\|/g, ' '))
       .replace(/^>\s?/gm, '')
       // emoji / pictographs / สัญลักษณ์ตกแต่ง (อ่าน TTS ได้แปลกหรือไม่อ่าน)
+      // หมายเหตุ: variation selectors (U+FE00-FE0F) แยก replace เพราะ eslint
+      // no-misleading-character-class ห้ามใส่ combining char ใน character class
+      .replace(/\uFE0F/g, '')
       .replace(
-        /[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{FE00}-\u{FE0F}\u{2190}-\u{21FF}\u{2B00}-\u{2BFF}\u{2500}-\u{25FF}]/gu,
+        /[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{2190}-\u{21FF}\u{2B00}-\u{2BFF}\u{2500}-\u{25FF}]/gu,
         ''
       )
       // markdown residue
@@ -406,9 +409,14 @@ export class AIVoiceService {
   }
 
   async speak(text: string): Promise<void> {
-    // WS-2f: server TTS (Edge-TTS หลัก / Botnoi รอง) เปิดผ่าน env VITE_VOICE_SERVER_TTS=1
-    // (admin ควบคุมที่ env ได้ ไม่ต้องแก้โค้ด; ปิด/EF ล้ม → fallback browser synthesis ทันที)
-    if (import.meta.env.VITE_VOICE_SERVER_TTS === '1' && import.meta.env.VITE_SUPABASE_URL) {
+    // WS-2f: server TTS (Edge-TTS หลัก / Google TTS / Botnoi รอง) — เปิดผ่าน env
+    // VITE_VOICE_SERVER_TTS=1 หรือ AUTO: เครื่องไม่มี Thai voice → ใช้ server เอง
+    // (แก้ owner report 2026-10-01: เครื่องที่ไม่มี Thai voice อ่านไทยเป็น eng เพี้ยน
+    //  และ production build บน Cloudflare ไม่ต้องตั้ง env ก็ได้เสียงไทยที่ถูกต้อง)
+    const envTts = String(import.meta.env.VITE_VOICE_SERVER_TTS ?? '')
+    const serverTtsEnabled =
+      envTts === '1' || (envTts !== '0' && !!import.meta.env.VITE_SUPABASE_URL && !pickThaiVoice())
+    if (serverTtsEnabled) {
       try {
         // V2/V3: แบ่งที่ขอบคำฝั่ง client แล้วเล่นเป็นคิวต่อเนื่อง (gapless) —
         // ข้อความสั้น = ชิ้นเดียวเหมือนเดิม; ยาว >180 = หลายชิ้นไม่มีช่องว่างพูด
