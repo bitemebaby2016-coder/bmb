@@ -45,6 +45,12 @@ beforeEach(() => {
   Object.defineProperty(globalThis, 'localStorage', { configurable: true, value: { getItem: vi.fn(), setItem: vi.fn() } })
 })
 
+// VITE_VOICE_SERVER_TTS=1 ใน .env จริงจะทำ speak() ยิง network จริงใน test —
+// บังคับปิดใน test ให้เดิน browser synthesis mock เหมือนเดิม (deterministic)
+beforeEach(() => {
+  vi.stubEnv('VITE_VOICE_SERVER_TTS', '0')
+})
+
 // --- aiService mock: voice must ride the SAME chat pipeline (WS-2 เดียวกับ chat) ---
 vi.mock('@/lib/aiService', () => ({
   chatWithAI: vi.fn(async (text: string, _ctx: unknown, opts?: { voiceMode?: boolean }) => {

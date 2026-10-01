@@ -207,6 +207,52 @@ export async function serverTranscribe(blob: Blob): Promise<string> {
 }
 
 /** TTS ผ่าน voice-tts EF (Edge-TTS หลัก / Botnoi รอง) — คืน blob เสียง mp3 */
+const SERVER_TTS_CHUNK = 180 // ต่ำกว่าขีดจำกัด Google TTS (~200) เผื่อ padding
+
+/**
+ * V2 FIX (owner report: พูดขาดตอน): แบ่งข้อความยาวเป็นชิ้นตัดที่ "ขอบคำ" ด้วย
+ * Intl.Segmenter — ภาษาไทยไม่มีช่องว่าง วิธีหาช่องว่างตัดกลางคำเสมอ → เสียงหลุด
+ * ทดสอบได้ offline (unit test) และใช้จริงใน serverSpeak (V3 เล่นเป็นคิว gapless)
+ */
+export function splitWordSafe(text: string, max: number): string[] {
+  if (text.length <= max) return [text]
+  let segments: string[]
+  try {
+    const seg = new Intl.Segmenter('th', { granularity: 'word' })
+    segments = Array.from(seg.segment(text), (s) => s.segment)
+  } catch {
+    segments = [text] // ไม่มี Segmenter → ตรง ๆ (ไม่แย่กว่าเดิม)
+  }
+  const chunks: string[] = []
+  let buf = ''
+  for (const word of segments) {
+    if (word.length > max) {
+      if (buf) { chunks.push(buf); buf = '' }
+      for (let i = 0; i < word.length; i += max) chunks.push(word.slice(i, i + max))
+      continue
+    }
+    if ((buf + word).length > max && buf) {
+      chunks.push(buf)
+      buf = word
+    } else {
+      buf += word
+    }
+  }
+  if (buf) chunks.push(buf)
+  return chunks
+}
+
+/**
+ * V4 FIX (owner report: พูด eng): เลือกเสียงไทยเท่านั้นจาก browser —
+ * เครื่องที่ไม่มี Thai voice จะอ่านไทยด้วยเสียงอังกฤษเพี้ยน ๆ
+ * คืน null = ไม่มี Thai voice → caller ควรใช้ server TTS แทน
+ */
+export function pickThaiVoice(): SpeechSynthesisVoice | null {
+  if (typeof window === 'undefined' || !('speechSynthesis' in window)) return null
+  const voices = window.speechSynthesis.getVoices()
+  return voices.find((v) => v.lang?.toLowerCase().startsWith('th')) || null
+}
+
 export async function serverSpeak(text: string, voice?: string): Promise<Blob> {
   const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/voice-tts`
   const session = await supabase.auth.getSession()
@@ -246,6 +292,9 @@ export class AIVoiceService {
   private isSpeakingFlag = false;
   private currentUtterance: SpeechSynthesisUtterance | null = null;
   private currentAudio: HTMLAudioElement | null = null;
+  /** V3: คิวเสียง gapless — ชิ้นถัดไปเล่นทันทีเมื่อชิ้นปัจจุบันจบ */
+  private audioQueue: Blob[] = [];
+  private queueActive = false;
   private mediaRecorder: MediaRecorder | null = null;
   private recordedChunks: Blob[] = [];
   private abortController: AbortController | null = null;
@@ -361,8 +410,10 @@ export class AIVoiceService {
     // (admin ควบคุมที่ env ได้ ไม่ต้องแก้โค้ด; ปิด/EF ล้ม → fallback browser synthesis ทันที)
     if (import.meta.env.VITE_VOICE_SERVER_TTS === '1' && import.meta.env.VITE_SUPABASE_URL) {
       try {
-        const blob = await serverSpeak(text)
-        await this.playAudioBlob(blob)
+        // V2/V3: แบ่งที่ขอบคำฝั่ง client แล้วเล่นเป็นคิวต่อเนื่อง (gapless) —
+        // ข้อความสั้น = ชิ้นเดียวเหมือนเดิม; ยาว >180 = หลายชิ้นไม่มีช่องว่างพูด
+        const blobs = await this.serverSpeakChunks(text)
+        await this.playAudioQueue(blobs)
         return
       } catch {
         /* fall through to browser TTS */
@@ -381,8 +432,9 @@ export class AIVoiceService {
       this.currentUtterance.pitch = this.config.pitch;
       this.currentUtterance.volume = this.config.volume;
 
-      if (this.config.voice) {
-        this.currentUtterance.voice = this.config.voice;
+      const thaiVoice = this.config.voice || pickThaiVoice()
+      if (thaiVoice) {
+        this.currentUtterance.voice = thaiVoice;
       }
 
       this.isSpeakingFlag = true;
@@ -412,6 +464,8 @@ export class AIVoiceService {
       this.synthesis.cancel();
       this.isSpeakingFlag = false;
     }
+    this.audioQueue = [] // V3: เคลียร์คิว — barge-in หยุดทันทีทั้งคิว
+    this.queueActive = false
     if (this.currentAudio) {
       this.currentAudio.pause();
       this.currentAudio = null;
@@ -420,6 +474,39 @@ export class AIVoiceService {
   }
 
   /** WS-2f: เล่น mp3 จาก voice-tts EF (barge-in ได้ผ่าน stopSpeaking) */
+  /**
+ * V2/V3 (owner report: พูดขาดตอน): แบ่งข้อความที่ "ขอบคำ" (Intl.Segmenter) แล้ว
+ * ดึงเสียงทีละชิ้นจาก voice-tts EF — ชิ้นสั้น ≤180 จึงไม่เจอการตัดกลางคำใน EF
+ */
+  private async serverSpeakChunks(text: string): Promise<Blob[]> {
+    const chunks = splitWordSafe(text, SERVER_TTS_CHUNK)
+    const blobs: Blob[] = []
+    for (const c of chunks) blobs.push(await serverSpeak(c))
+    return blobs
+  }
+
+  /**
+   * V3: เล่นเป็นคิวต่อเนื่อง (gapless) — ชิ้นถัดไปเริ่มทันทีเมื่อชิ้นปัจจุบันจบ
+   * stopSpeaking (barge-in) เคลียร์คิว = หยุดทันทีทั้งประโยค
+   */
+  private playAudioQueue(blobs: Blob[]): Promise<void> {
+    return new Promise((resolve, reject) => {
+      if (blobs.length === 0) { resolve(); return }
+      this.audioQueue = [...blobs]
+      this.queueActive = true
+      const next = () => {
+        if (!this.queueActive) { resolve(); return } // barge-in → หยุดเงียบ ๆ
+        const blob = this.audioQueue.shift()
+        if (!blob) { this.queueActive = false; this.isSpeakingFlag = false; resolve(); return }
+        this.playAudioBlob(blob)
+          .then(() => { this.currentAudio = null; next() })
+          .catch((e) => { this.queueActive = false; this.audioQueue = []; this.isSpeakingFlag = false; this.currentAudio = null; reject(e) })
+      }
+      this.isSpeakingFlag = true
+      next()
+    })
+  }
+
   private playAudioBlob(blob: Blob): Promise<void> {
     return new Promise((resolve, reject) => {
       const url = URL.createObjectURL(blob)

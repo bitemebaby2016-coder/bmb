@@ -43,6 +43,65 @@ function sanitizeText(raw: unknown): string | null {
   return text.slice(0, MAX_CHARS)
 }
 
+/**
+ * V2 FIX (owner report: พูดขาดตอน): แบ่งข้อความยาวเป็นชิ้น ≤190 ตัวอักษร
+ * ตัดที่ "ขอบคำ" ด้วย Intl.Segmenter (ตัดคำไทยได้จริง) — ห้ามตัดกลางคำ
+ * ภาษาไทยไม่มีช่องว่าง วิธีเดิม (lastIndexOf ' ') จึงตัดกลางคำ → เสียงหลุด
+ */
+export function splitWordSafe(text: string, max: number): string[] {
+  if (text.length <= max) return [text]
+  // ใช้ Segmenter word granularity; ถ้าไม่มี → fallback ตัดที่ max ตรง ๆ (ไม่แย่กว่าเดิม)
+  let segments: string[]
+  try {
+    const seg = new Intl.Segmenter('th', { granularity: 'word' })
+    segments = Array.from(seg.segment(text), (s) => s.segment)
+  } catch {
+    segments = [text]
+  }
+  const chunks: string[] = []
+  let buf = ''
+  for (const word of segments) {
+    // คำเดี่ยวยาวเกิน max (ผิดปกติ) → บังคับตัด
+    if (word.length > max) {
+      if (buf) { chunks.push(buf); buf = '' }
+      for (let i = 0; i < word.length; i += max) chunks.push(word.slice(i, i + max))
+      continue
+    }
+    if ((buf + word).length > max && buf) {
+      chunks.push(buf)
+      buf = word
+    } else {
+      buf += word
+    }
+  }
+  if (buf) chunks.push(buf)
+  return chunks
+}
+
+/** รองที่ใช้ได้จริงตอนนี้: Google Translate TTS (ฟรี, ไม่ต้องมี key) — ต่อ mp3 หลายชิ้น */
+async function googleTts(text: string): Promise<ArrayBuffer> {
+  const chunks = splitWordSafe(text, GOOGLE_CHUNK)
+  const parts: Uint8Array[] = []
+  for (const [i, c] of chunks.entries()) {
+    const url = GOOGLE_TTS_URL + '?ie=UTF-8&tl=th&client=tw-ob&q=' + encodeURIComponent(c) + '&idx=' + i + '&total=' + chunks.length
+    const r = await fetch(url, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36',
+        Referer: 'https://translate.google.com/',
+      },
+    })
+    if (!r.ok) throw new Error('google tts ' + r.status)
+    parts.push(new Uint8Array(await r.arrayBuffer()))
+  }
+  let size = 0
+  for (const p of parts) size += p.byteLength
+  const out = new Uint8Array(size)
+  let off = 0
+  for (const p of parts) { out.set(p, off); off += p.byteLength }
+  if (out.byteLength < 100) throw new Error('google tts empty audio')
+  return out.buffer
+}
+
 /** หลัก: Edge-TTS (ฟรี 100%) — คืน audio/mpeg bytes */
 async function edgeTts(text: string, voice: string): Promise<ArrayBuffer> {
   const tts = new MsEdgeTTS()
@@ -80,43 +139,6 @@ async function botnoiTts(text: string, apiKey: string): Promise<ArrayBuffer> {
   const audio = await fetch(url)
   if (!audio.ok) throw new Error('botnoi audio fetch ' + audio.status)
   return audio.arrayBuffer()
-}
-
-/** ฟรี ไม่ต้องมี key: Google Translate TTS — แบ่งตามประโยค ≤190 chars แล้วต่อ mp3 */
-async function googleTts(text: string): Promise<ArrayBuffer> {
-  // แบ่งข้อความเป็นชิ้น ≤190 ตัวอักษร ตัดที่ช่องว่าง/เครื่องหมายจบประโยคเมื่อทำได้
-  const chunks: string[] = []
-  let rest = text
-  while (rest.length > 0) {
-    if (rest.length <= GOOGLE_CHUNK) { chunks.push(rest); break }
-    let cut = -1
-    for (const m of [' ', '。', '!', '?', 'ั', 'ฯ', ',']) { // Thai sentence ends: first check spaces/punct
-      const i = rest.lastIndexOf(m, GOOGLE_CHUNK)
-      if (i > GOOGLE_CHUNK / 2) { cut = i + 1; break }
-    }
-    if (cut <= 0) cut = GOOGLE_CHUNK
-    chunks.push(rest.slice(0, cut))
-    rest = rest.slice(cut)
-  }
-  const parts: Uint8Array[] = []
-  for (const [i, c] of chunks.entries()) {
-    const url = GOOGLE_TTS_URL + '?ie=UTF-8&tl=th&client=tw-ob&q=' + encodeURIComponent(c) + '&idx=' + i + '&total=' + chunks.length
-    const r = await fetch(url, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36',
-        Referer: 'https://translate.google.com/',
-      },
-    })
-    if (!r.ok) throw new Error('google tts ' + r.status)
-    parts.push(new Uint8Array(await r.arrayBuffer()))
-  }
-  let size = 0
-  for (const p of parts) size += p.byteLength
-  const out = new Uint8Array(size)
-  let off = 0
-  for (const p of parts) { out.set(p, off); off += p.byteLength }
-  if (out.byteLength < 100) throw new Error('google tts empty audio')
-  return out.buffer
 }
 
 Deno.serve(async (req: Request) => {
