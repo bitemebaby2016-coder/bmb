@@ -45,8 +45,11 @@ export async function uploadMediaAsset(
 
   const { data: urlData } = supabase.storage.from(MEDIA_BUCKET).getPublicUrl(path)
   const { data: user } = await supabase.auth.getUser()
+  const callerTenant = await getCallerTenantId()
   const id = `media-${Date.now()}-${Math.floor(Math.random() * 10000)}`
-  const row: MediaAssetRow = { id, url: urlData.publicUrl, alt, kind, created_by: user?.user?.id }
+  // G2-RV Option 3: tenant_id required for non-global rows (scope CHECK, migration 107).
+  // Authorization is re-validated server-side by RLS (is_tenant_admin_of) — client value is never trusted alone.
+  const row = { id, url: urlData.publicUrl, alt, kind, created_by: user?.user?.id, tenant_id: callerTenant } as MediaAssetRow
 
   const { data, error } = await supabase.from('media_assets').insert(row).select().single()
   if (error) {
@@ -185,6 +188,22 @@ export interface UploadAssetOptions {
 }
 
 /**
+ * Derives the caller's tenant_id server-side (profiles row of the authenticated
+ * admin; RLS-protected own read). media_assets scope constraints (migration 107)
+ * require tenant_id for non-global rows — NULL is NOT global per G2-RV Option 3.
+ */
+export async function getCallerTenantId(): Promise<string | null> {
+  const { data: user } = await supabase.auth.getUser()
+  if (!user?.user?.id) return null
+  const { data } = await supabase
+    .from('profiles')
+    .select('tenant_id')
+    .eq('id', user.user.id)
+    .single()
+  return (data?.tenant_id as string) ?? null
+}
+
+/**
  * Upload + register with optional registry fields. Backward compatible:
  * existing callers (uploadProductImage, AdminMedia generic upload) keep working.
  */
@@ -197,6 +216,7 @@ export async function uploadRegisteredAsset(
   const v = validateImageFile(file)
   if (!v.ok) return null
   const { data: user } = await supabase.auth.getUser()
+  const callerTenant = await getCallerTenantId()
   const path = `uploads/${Date.now()}-${sanitizeName(file.name)}`
   const { data: up, error: upErr } = await supabase.storage
     .from(MEDIA_BUCKET)
@@ -212,7 +232,7 @@ export async function uploadRegisteredAsset(
     created_by: user?.user?.id,
     asset_key: opts.assetKey ?? null,
     category: opts.category ?? null,
-    tenant_id: opts.tenantId ?? null,
+    tenant_id: opts.tenantId ?? callerTenant,
     brand_id: opts.brandId ?? null,
     is_active: true,
     is_mock: opts.isMock ?? false,
