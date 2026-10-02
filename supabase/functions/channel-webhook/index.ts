@@ -60,6 +60,24 @@ async function restNoKey(method: string, path: string, body?: unknown) {
   return { status: r.status, j }
 }
 
+
+/** Constant-time hex comparison (G4/D4-2): equal-length XOR fold over the
+ *  two candidate signatures so early-exit on mismatching bytes is impossible.
+ *  Length is leaked only via the boolean result, which is safe here (both
+ *  candidates are fixed 71-char 'sha256=<64 hex>' strings in the happy path). */
+function timingSafeEqualHex(a: string, b: string): boolean {
+  const enc = new TextEncoder()
+  const ab = enc.encode(a)
+  const bb = enc.encode(b)
+  const len = ab.length ^ bb.length
+  let diff = len
+  const n = Math.max(ab.length, bb.length)
+  for (let i = 0; i < n; i++) {
+    diff |= (ab[i] ?? 0) ^ (bb[i] ?? 0)
+  }
+  return len === 0 && diff === 0
+}
+
 async function hmacSha256Hex(secret: string, payload: string): Promise<string> {
   const enc = new TextEncoder()
   const key = await crypto.subtle.importKey('raw', enc.encode(secret), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign'])
@@ -261,7 +279,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
   const raw = await req.text()
   const sig = req.headers.get('x-hub-signature-256') || ''
   const expected = 'sha256=' + (await hmacSha256Hex(APP_SECRET, raw))
-  if (!sig || sig !== expected) {
+  if (!sig || !timingSafeEqualHex(sig, expected)) {
     return json({ error: 'invalid signature' }, 401)
   }
 
@@ -283,6 +301,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
   }
   return json({ object: payload.object, processed: out.length, entries: out })
 })
+
 
 
 
