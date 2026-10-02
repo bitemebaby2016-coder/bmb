@@ -306,9 +306,22 @@ export function createSupabaseMock(opts?: { failReadTable?: string; noAdmin?: bo
       const total = Math.max(0, subtotal - discount + delivery_fee)
       const orderId = `ord-test-${Date.now()}-${Math.floor(Math.random() * 1000)}`
       const schedDate = mode === 'PRE_ORDER' ? String(p.scheduled_date) : String(round.scheduled_date)
-      const orderNumber = mode === 'PRE_ORDER'
-        ? `PO-${schedDate.replace(/-/g, '')}-${String(Math.floor(Math.random() * 900) + 100)}`
-        : `BMB-TEST-${String(Math.floor(Math.random() * 900) + 100)}`
+      // B-1 fix (migration 104): orders.order_number is DB-unique. The mock mirrors
+      // the canonical contract — uniqueness is enforced and a collision regenerates
+      // + retries instead of trusting a random draw (the old check-then-insert race).
+      const takenNumbers = new Set((tables['orders'] || []).map((o: any) => String(o.order_number)))
+      let orderNumber = ''
+      let genAttempts = 0
+      while (genAttempts < 200) {
+        genAttempts++
+        orderNumber = mode === 'PRE_ORDER'
+          ? `PO-${schedDate.replace(/-/g, '')}-${String(Math.floor(Math.random() * 900) + 100)}`
+          : `BMB-TEST-${String(Math.floor(Math.random() * 900) + 100)}`
+        if (!takenNumbers.has(orderNumber)) break
+      }
+      if (takenNumbers.has(orderNumber)) {
+        return { data: null, error: { code: 'ERR_ORDER_NUMBER_EXHAUSTED', message: 'ERR_ORDER_NUMBER_EXHAUSTED' } }
+      }
       // atomic persist mirrors server: order + order_items + capacity increment
       const orderRow = {
         id: orderId,
