@@ -87,6 +87,11 @@ CREATE POLICY media_assets_public_read ON public.media_assets
   TO anon, authenticated
   USING (is_active = true);
 
+-- 6. Public runtime consumers (brand logo etc.) need anon SELECT of active public
+--    asset metadata. Existing production ACL had no anon grant on media_assets;
+--    Owner public-read rule (active-only) is enforced by the SELECT policy above.
+GRANT SELECT ON public.media_assets TO anon;
+
 COMMIT;
 
 -- ROLLBACK reference (manual, if ever needed):
@@ -94,5 +99,5 @@ COMMIT;
 --   DROP POLICY IF EXISTS media_assets_platform_global ON public.media_assets;
 --   CREATE POLICY media_assets_admin ON public.media_assets FOR ALL TO authenticated USING (is_admin()) WITH CHECK (is_admin());
 --   DROP POLICY IF EXISTS media_assets_public_read ON public.media_assets;
-CREATE POLICY media_assets_public_read ON public.media_assets FOR SELECT TO anon, authenticated USING (true);
+-- CREATE POLICY media_assets_public_read_replaced_BY_COMMENT ON public.media_assets FOR SELECT TO anon, authenticated USING (true);
 --   DROP FUNCTION IF EXISTS public.is_platform_admin();
