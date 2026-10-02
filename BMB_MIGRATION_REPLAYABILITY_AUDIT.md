@@ -35,3 +35,32 @@ Repo migration folder **ไม่ replayable** เพราะประวัต
 **S3 — Archived folder:** ย้าย 035 ไป `supabase/migrations/_archived/` + สลับ 065/066 ลำดับด้วยการ rename (060-series ใหม่). แบบเจาะจงน้อยกว่า S2.
 
 ทุกทาง: หลัง apply ต้อง fresh-replay บน local จนผ่านครบ แล้ว diff schema เทียบ production (pg_dump --schema-only) เพื่อพิสูจน์ "production schema = unchanged"
+# APPENDIX — Live Replay Experiment (2026-10-02, post-Owner-decision evidence)
+
+## สิ่งที่ทำ (read-only ต่อ production, isolated local เท่านั้น)
+
+- ดึง production migration history จริง (supabase_migrations.schema_migrations, 102 entries รวม 001-103 ยกเว้น 035)
+- สร้าง replay manifest 104 ไฟล (prod order + 104/105 tail)
+- เปิด local Docker stack (port 54342) แล้ว replay ไฟลจริงผ่าน psql ทีละไฟล (ON_ERROR_STOP)
+
+## ผล: S1 แบบบริสุทิ = ไม่ผ่าน (ตาม D2 → HARD STOP, ไม่ fallback S2 เอง)
+
+1. physical row order (ctid) ของ history table ไม่ใช่ลำดับ apply จริง (014 ขึ้นก่อน 001 เพราะ row ถก update ย้าย location) → ลำดับ apply จริงของ prod ไม่สามารถ recover จาก DB ได้ดยตรง
+2. 062/063/064/066 ฝัง assertion กับ production DATA: ERR_VERIFY_TENANT (expected exactly 1 tenant-bmb-001), ERR_PLATFORM_ADMIN (expected exactly 1 platform admin UUID dddf4b57-...) — fresh DB ไม่มี auth users จึง fail ทุกลำดับ
+3. 065 (SQL-language is_tenant_admin) ต้องมี profiles.tenant_id ก่อน → ต้อง reorder 066 มาก่อน 065 ใน manifest (ไม่แตะ identity)
+4. 011 ต้องมี storage schema ก่อน → replay ต้องเกิดหลัง stack services พร้อม
+5. ใน prod, 065/066 ถก apply ตามลำดับ 065->066 แต่ repo 065 ไม่สามารถรันได้ที่ตำแหน่งนั้น = หลักาน content drift ระหว่าง repo กับสิ่งที่ prod รันจริง (final function จริงบน prod มาจาก 077 ึ่ง re-create ด้วย is_platform)
+
+## NEW REPAIR PROPOSAL S1-prime (รอ Owner review — ยังไม่ implement)
+
+คงหลัก S1: ไม่ rename / ไม่ rewrite / ไม่แก้ production history — เพิ่ม deterministic replay harness 4 ขั้น:
+
+1. STEP-0 SEED (ไฟลใหม่ supabase/replay/00_seed_auth.sql — ไฟลใหม่ ไม่แตะ migration เดิม):
+   สร้าง auth.users minimal deterministic (platform admin UUID dddf4b57-... + 1 tenant admin + 1 staff) เพื่อให้ data assertions ของ 062-064/066 ผ่านแบบ deterministic บน fresh DB
+2. STEP-1 SERVICE-READY: เปิด full stack (storage schema ถกสร้างดย storage service) ก่อน replay 011
+3. STEP-2 MANIFEST REPLAY ตามลำดับ numeric (001->105) ดย: EXCLUDE 035 (prod ไม่เคย apply); ใส่ 066 ก่อน 065; ที่เหลือตามลำดับไฟล = deterministic (ไม่ต้องพึ่ง ctid)
+4. STEP-3 SCHEMA DIFF: pg_dump schema-only ทั้งสองฝั่ง (local replay vs production) + normalize + diff ทุก object (tables/columns/functions/policies/indexes/constraints) — drift ใด ๆ ต้องอิบายได้; หากมี drift ที่อิบายไม่ได้ → STOP แล้วรายงาน (ห้าม patch สด)
+
+ข้อแตกต่างจาก S1 เดิม: เพิ่ม SEED ไฟลใหม่ (additive, ไม่กระทบ production) + ลำดับ numeric ที่ deterministic แทน ctid + รับข้อจริงที่ว่า history order ไม่ recover ได้
+
+ความเสี่ยงคงเหลือ: อาจมี failure อื่นหลังจุดที่ replay เดิมตาย (container ถกลบ) — ต้อง run ้ำเปนรอบ ๆ จน diff สะอาด; แต่ละรอบเปน isolated local เท่านั้น
