@@ -64,3 +64,73 @@ Repo migration folder **ไม่ replayable** เพราะประวัต
 ข้อแตกต่างจาก S1 เดิม: เพิ่ม SEED ไฟลใหม่ (additive, ไม่กระทบ production) + ลำดับ numeric ที่ deterministic แทน ctid + รับข้อจริงที่ว่า history order ไม่ recover ได้
 
 ความเสี่ยงคงเหลือ: อาจมี failure อื่นหลังจุดที่ replay เดิมตาย (container ถกลบ) — ต้อง run ้ำเปนรอบ ๆ จน diff สะอาด; แต่ละรอบเปน isolated local เท่านั้น
+
+# S1-prime-A PROOF REPORT (Owner-approved 2026-10-02) — RESULT: PROVEN
+
+## A. Assertion dependency matrix
+
+| Migration | Assertion | Required object | Required row | Required exact UUID? | Source |
+|---|---|---|---|---|---|
+| 062 | ERR_BACKFILL_CONFLICT | drivers/delivery_rounds/delivery_zones/delivery_assignments tables | 0 rows with tenant_id set (empty tables PASS) | No | 062 L25 |
+| 063 | ERR_VERIFY_TENANT | tenants row | exactly 1 x tenant-bmb-001 (inserted by 062 itself) | No (text id) | 063 L16 |
+| 063 | ERR_VERIFY_DRIVERS/ROUNDS/ZONES/ASSIGNMENTS | ops tables | 0 null-tenant rows (empty tables PASS) | No | 063 L26-65 |
+| 064 | ERR_ENFORCEMENT_NULLS | ops tables | 0 null rows (empty PASS) | No | 064 L19 |
+| 066 | ERR_PLATFORM_ADMIN | profiles row with is_platform=true | exactly 1 | **YES - hard-coded dddf4b57-405f-4852-a985-76d8d52b1b72 (066 L37)** | 066 L52 |
+| 065 | CREATE-time validation | profiles.tenant_id column | must exist BEFORE 065 (SQL-language is_tenant_admin) | n/a | 065 L18-27 |
+| 011/057 | CREATE POLICY on storage.objects | storage schema | services initialized | n/a | files |
+| 081 | CREATE-time validation | profiles.branch_id column | must exist BEFORE 081 (added by 090) | n/a | 081 |
+| 090 | ADD CONSTRAINT FK | branches table | must exist (circular dep with 081) | n/a | 090 |
+| 096 | ERR_ENCODING_REPAIR_INCOMPLETE | seeded data post-095 + valid Postgres regex | repair coverage == 0 remaining | n/a | 096 |
+
+Minimal dependency closure = 1 auth.users row (platform admin UUID) + its profiles row. NO cloning of production dataset. (Case A confirmed - 066 hard-codes the UUID.)
+
+## B. Minimal seed specification
+
+supabase/replay/00_seed_auth.sql: 1 auth.users row (id=dddf4b57-..., email=replay-platform-admin@bmb.local, crypt password deterministic-per-run) + fallback profiles insert (same UUID) ON CONFLICT DO NOTHING. Placed AFTER 064 (trigger on_auth_user_created exists from 006) and BEFORE 066.
+
+## C. Exact replay order (supabase/replay/manifest.txt)
+
+Numeric 001->105 with deterministic exceptions: 035 EXCLUDED (prod never applied); 066 applied BEFORE 065; 00_seed_auth.sql before 066; 070 via PATCH (replay/patches/070_catalog_not_null.sql); 090 split = column-only PATCH before 081 + real 090 (FK) after 081; 096 via PATCH (replay/patches/096_encoding_fix.sql); prod_align PATCH after 105. NO ctid. NO physical history order.
+
+## D. Migration failures encountered (all resolved via HARNESS ONLY - no migration file modified)
+
+1. 014-first ctid artifact - resolved by numeric deterministic order (ctid proven unusable)
+2. 066 ERR_PLATFORM_ADMIN - resolved by 00_seed_auth.sql
+3. 065 needs tenant_id before - resolved by 066-before-065 manifest order
+4. 067 invalid dollar-quote tag $$_ (parses as empty-tag $$ + content _) - resolved by harness preprocessor $$_->$$ (semantics-preserving)
+5. 070 PL/pgSQL compile error (RAISE 3 placeholders / 0 params) - resolved by patches/070_catalog_not_null.sql (reproduces verified production NOT NULL state)
+6. 077 corrupted comment line (====...====BEGIN;) - resolved by harness rule ^=+BEGIN; -> BEGIN;
+7. 081/090 circular dependency (branch_id column vs branches FK) - resolved by patches/090a + real 090 after 081
+8. 096 double-encoded Thai + invalid ARE regexes - resolved by patches/096_encoding_fix.sql (deterministic Latin1->UTF8 decode of literals + valid regex classes)
+9. prod-only objects not produced by repo files (profiles read policy; _mg_adm policies absent in prod) - resolved by patches/prod_align.sql
+
+## E. Final replay result
+
+RUN #1 (iterative, resumed): REPLAY_OK 105 files + patches, 0 failures after fixes
+RUN #2 (single clean pass): REPLAY_OK FILES=108 FAILURES=0
+
+## F. Production-vs-isolated schema diff
+
+Structured comparison (1002 objects: columns/functions/policies/indexes/triggers/constraints/views/sequences/tables):
+RUN #1 DIFF=0 - RUN #2 DIFF=0 - **SCHEMA IDENTICAL. No unexplained drift.**
+(EXPECTED: supabase_migrations history contents differ by design; EXPLAINED HISTORICAL: the drifts documented in D; REAL DRIFT: none; UNKNOWN: none)
+
+## G. Repeatability result
+
+RUN #1 = PASS, RUN #2 = PASS, object diff consistent (0/0). Deterministic.
+
+## H. Security assessment
+
+- No production mutation: production touched ONLY via read-only probes (db query SELECT / migration list)
+- No migration identity mutation: every repo migration file byte-identical (git status confirms only supabase/replay/ added)
+- No production data copied: seed = 1 synthetic auth user with production UUID (Case A, isolated only); 095 seed = repo file content (already public in repo)
+- No RLS change / no media backfill / no consumer wiring / no feature flag change
+- Replay harness + patches live ONLY in supabase/replay/ - never deployed to production
+- The isolated DB contains synthetic credentials only (replay-only password), stack stopped after proof
+
+## GATE STATUS
+
+D2 REPLAY SAFETY:
+DEPENDENCY AUDIT = PASS / SEED DESIGN = PASS (Case A) / SERVICE READY = PASS / REPLAY RUN #1 = PASS / SCHEMA DIFF = PASS (0 drift) / REPLAY RUN #2 = PASS
+
+G2-RV = BLOCKED (unchanged - replay is only one prerequisite; RLS Option 3 / E2E / consumer still pending Owner go)
