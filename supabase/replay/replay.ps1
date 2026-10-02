@@ -1,6 +1,10 @@
-# S1-prime-A replay harness (AUDIT TOOL - never deployed to production)
+﻿# S1-prime-A replay harness (AUDIT TOOL - never deployed to production)
 param([string]$Container = 'supabase_db_ivkdfognyiwjcmrhcnwz', [string]$ResumeAfter = '')
 $ErrorActionPreference = 'Continue'
+# Bootstrap bare supabase/postgres: postgres needs role memberships for patch DDL
+$bootOut = docker exec $Container psql -U supabase_admin -d postgres -c "GRANT supabase_storage_admin TO postgres; GRANT supabase_auth_admin TO postgres;" 2>&1
+if ($LASTEXITCODE -ne 0) { Write-Output "BOOTSTRAP_NOTE: $((($bootOut | Out-String).Trim() -split "`n")[0])" }
+
 $manifest = Join-Path $PSScriptRoot 'manifest.txt'
 $tmpSql = Join-Path $env:TEMP 'bmb_replay_current.sql'
 $resuming = $false

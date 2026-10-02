@@ -1,19 +1,19 @@
-// ============================================
-// Bite Me Baby — Edge Function: channel-webhook (W3-C-EXTERNAL)
+﻿// ============================================
+// Bite Me Baby â€” Edge Function: channel-webhook (W3-C-EXTERNAL)
 // Facebook / Facebook Group / Messenger inbound adapter (foundation).
 //
 // Flow (server-authoritative, no client trust):
-//   GET  → webhook verification (hub.challenge + VERIFY_TOKEN)
-//   POST → X-Hub-Signature-256 (HMAC-SHA256 of raw body with APP_SECRET)
-//        → parse Meta events (object=page)
-//        → derive channel: MESSENGER (messaging) / FACEBOOK (page changes) /
+//   GET  â†’ webhook verification (hub.challenge + VERIFY_TOKEN)
+//   POST â†’ X-Hub-Signature-256 (HMAC-SHA256 of raw body with APP_SECRET)
+//        â†’ parse Meta events (object=page)
+//        â†’ derive channel: MESSENGER (messaging) / FACEBOOK (page changes) /
 //          FACEBOOK_GROUP (only when payload explicitly carries group id)
-//          — never guessed; unknown origin → rejected + audited
-//        → dedupe by event id (durable, audit_logs-backed)
-//        → identity resolution/provisioning (customer_channel_identities)
-//        → canonical order RPC (create_order_with_items w/ service path,
+//          â€” never guessed; unknown origin â†’ rejected + audited
+//        â†’ dedupe by event id (durable, audit_logs-backed)
+//        â†’ identity resolution/provisioning (customer_channel_identities)
+//        â†’ canonical order RPC (create_order_with_items w/ service path,
 //          p_source_channel + p_external_ref_id + p_customer_ref)
-//        → audit trail
+//        â†’ audit trail
 //
 // Channel adapter has NO business authority: price/promo/capacity/mode/fee/
 // payment/state are validated by the canonical backend RPC.
@@ -134,7 +134,7 @@ function parseEvent(obj: string, entry: any, ev: any): { channel: string; extUse
       try {
         const parsed = JSON.parse(text)
         if (parsed && parsed.order) order = parsed.order
-      } catch { /* plain text chat — no order intent */ }
+      } catch { /* plain text chat â€” no order intent */ }
     }
     return { channel: 'MESSENGER', extUser, eventId, order }
   }
@@ -156,7 +156,7 @@ async function processEntry(obj: string, entry: any, ctx: Ctx) {
   const parsed = parseEvent(obj, entry, entry)
   if ('error' in parsed) {
     ctx.errors.push(parsed.error)
-    await audit('channel_event_rejected', (parsed.error + ':' + (entry.id || 'unknown')).slice(0, 120), 'event rejected — ' + parsed.error, { object: obj })
+    await audit('channel_event_rejected', (parsed.error + ':' + (entry.id || 'unknown')).slice(0, 120), 'event rejected â€” ' + parsed.error, { object: obj })
     return
   }
   const { channel, extUser, eventId, order } = parsed as { channel: string; extUser: string; eventId: string; order: any | null }
@@ -164,9 +164,46 @@ async function processEntry(obj: string, entry: any, ctx: Ctx) {
   ctx.channel = channel
   ctx.extUser = extUser
 
+    // ===== G3: durable social event ingestion (Owner hard constraints) =====
+  // Server-side page allowlist + tenant derivation (HC-1): page_id must be
+  // bound in channel_page_bindings; tenant/brand derived in the RPC. The
+  // caller (external webhook) NEVER supplies tenant identity. DB-level
+  // idempotency UNIQUE(platform,event_id) (HC-4); NULL/empty identifiers
+  // rejected by the RPC (HC-5). service_role is transport only - the
+  // security boundary is HMAC + fail-closed secret + allowlist + validation
+  // + DB uniqueness (HC-2).
+  const eventType = channel === 'MESSENGER' ? 'message' : 'comment'
+  const ingestRes = await restNoKey('POST', '/rest/v1/rpc/ingest_social_event', {
+    p_platform: channel,
+    p_event_id: eventId,
+    p_page_id: entry.id || '',
+    p_event_type: eventType,
+    p_sender_id: extUser || null,
+    p_sender_name: null,
+    p_content: null,
+    p_payload: entry,
+  })
+  if (ingestRes.status !== 200) {
+    ctx.errors.push('social ingest http ' + ingestRes.status)
+    await audit('channel_event_rejected', ('ingest-http:' + eventId).slice(0, 120), 'social event ingestion failed', { channel })
+    return
+  }
+  const ingest = typeof ingestRes.j === 'string' ? ingestRes.j : (ingestRes.j && ingestRes.j[0])
+  if (ingest === 'UNBOUND_PAGE') {
+    ctx.results.page_unbound = true
+    await audit('channel_event_rejected', ('page:' + (entry.id || 'unknown')).slice(0, 120), 'event rejected - page not in server-side allowlist', { channel })
+    return
+  }
+  if (ingest === 'REJECTED') {
+    ctx.results.ingest_rejected = true
+    await audit('channel_event_rejected', ('invalid:' + eventId).slice(0, 120), 'event rejected - invalid identifiers/platform', { channel })
+    return
+  }
+  ctx.results.social_event = ingest
+
   if (await eventSeen(eventId)) {
     ctx.results.duplicate_event = true
-    await audit('channel_event_duplicate', eventId, 'duplicate external event — no new effect', { channel })
+    await audit('channel_event_duplicate', eventId, 'duplicate external event â€” no new effect', { channel })
     return
   }
 
@@ -178,7 +215,7 @@ async function processEntry(obj: string, entry: any, ctx: Ctx) {
       p_items: order.items,
       p_delivery_round_id: order.delivery_round_id || null,
       p_delivery_method: order.delivery_method || 'self_delivery',
-      p_delivery_address: order.delivery_address || 'ไม่ได้ระบุ (channel intake)',
+      p_delivery_address: order.delivery_address || 'à¹„à¸¡à¹ˆà¹„à¸”à¹‰à¸£à¸°à¸šà¸¸ (channel intake)',
       p_dropoff_latitude: order.dropoff_latitude ?? 10.7016,
       p_dropoff_longitude: order.dropoff_longitude ?? 102.1429,
       p_customer_name: order.customer_name || extUser,
@@ -246,5 +283,6 @@ Deno.serve(async (req: Request): Promise<Response> => {
   }
   return json({ object: payload.object, processed: out.length, entries: out })
 })
+
 
 

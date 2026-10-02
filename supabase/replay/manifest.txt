@@ -1,4 +1,4 @@
-001_initial_schema.sql
+﻿001_initial_schema.sql
 002_complete_schema.sql
 003_add_missing_columns.sql
 004_fix_uuid_to_text.sql
@@ -8,6 +8,7 @@
 008_payment_state_machine_and_phase_d.sql
 009_fix_007_extract_epoch.sql
 010_fix_record_payment_result_idempotency.sql
+ZZZ_replay_base.sql|PATCH:patches/replay_base.sql
 011_storage_bmb_images_policies.sql
 012_products_stock_rating_review_count.sql
 013_fix_submit_offline_payment_reference.sql
@@ -104,5 +105,6 @@
 103_tenant_id_defaults.sql
 104_b1_order_number_uniqueness.sql
 105_asset_registry_media_assets.sql
+ZZ_prod_align.sql|PATCH:patches/prod_align.sql
 ZZ_prod_align.sql|PATCH:patches/prod_align.sql
 ZZ_prod_align.sql|PATCH:patches/prod_align.sql
