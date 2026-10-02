@@ -31,16 +31,24 @@ INSERT INTO public.media_assets (id, url, alt, kind, asset_key, category, tenant
  ('m-a1-inactive','https://isolated.local/A1-old.webp','A1 old','image','A1-logo-old','brand','tenant-a','brand-a1',false,false),
  ('m-a1-mock','https://isolated.local/A1-mock.webp','A1 mock','image','A1-mock','brand','tenant-a','brand-a1',true,true)
 ON CONFLICT (id) DO NOTHING;
--- T1: Anonymous has NO table grants (existing production ACL 031-034) - access DENIED.
--- Public customers consume assets via public Storage URLs; media_assets table is authenticated-only.
+-- T1: Anonymous ACL contract (POST-106): anon has SELECT on media_assets ONLY
+-- (public read boundary, is_active=true enforced by media_assets_public_read);
+-- every other table stays anon-DENIED (no grants). Assert both sides.
 SET ROLE anon;
 DO $$ BEGIN
   BEGIN
-    PERFORM 1 FROM public.media_assets LIMIT 1;
-    RAISE EXCEPTION 'FAIL T1: anon queried media_assets (GRANT LEAK vs production ACL)';
+    PERFORM 1 FROM public.orders LIMIT 1;
+    RAISE EXCEPTION 'FAIL T1: anon queried orders (ACL LEAK - anon must have no grant on sensitive tables)';
   EXCEPTION WHEN insufficient_privilege THEN
-    RAISE NOTICE 'PASS T1 anon table access denied (ACL contract preserved)';
+    RAISE NOTICE 'PASS T1a anon denied on orders (ACL contract preserved)';
   END;
+  IF (SELECT count(*) FROM public.media_assets WHERE is_active) = 0 THEN
+    RAISE EXCEPTION 'FAIL T1b: anon public read on media_assets missing (106 GRANT regression)';
+  END IF;
+  IF (SELECT count(*) FROM public.media_assets WHERE NOT is_active) <> 0 THEN
+    RAISE EXCEPTION 'FAIL T1c: anon read inactive asset (public-read policy leak)';
+  END IF;
+  RAISE NOTICE 'PASS T1 anon: media_assets public read ONLY (active rows), others denied';
 END $$;
 RESET ROLE;
 
