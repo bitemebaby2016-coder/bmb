@@ -19,6 +19,7 @@
 import { useEffect } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { resolveBrand } from '@/lib/brandResolver'
+import { getRuntimeAssetUrl } from '@/lib/bmbAdminApi_media'
 import { useBrandContextStore } from '@/store/resolvedBrandStore'
 import { useCartStore } from '@/store/cartStore'
 
@@ -98,15 +99,27 @@ export function BrandProvider({ children }: { children: React.ReactNode }) {
           applyThemeToRoot(result.brand.theme_tokens)
           applyDynamicMetadata(result.brand)
           
+          // G2-RV first runtime consumer (Owner Decision D3): brand logo/icon comes
+          // from the canonical asset registry via getRuntimeAssetUrl(). Selection
+          // policy: active approved > active mock > null. Missing/inactive asset →
+          // deterministic fallback to brands.logo_url_icon (never hardcoded assets).
+          let logoHref = result.brand.logo_url_icon
+          try {
+            const runtimeLogo = await getRuntimeAssetUrl(`brand.logo.${result.brand.id}`)
+            if (runtimeLogo) logoHref = runtimeLogo
+          } catch {
+            // registry unavailable → keep brands.logo_url_icon fallback
+          }
+          
           // Dynamic favicon/logo injection
-          if (result.brand.logo_url_icon) {
+          if (logoHref) {
             let linkEl = document.querySelector<HTMLLinkElement>('link[rel*="icon"]')
             if (!linkEl) {
               linkEl = document.createElement('link')
               linkEl.rel = 'icon'
               document.head.appendChild(linkEl)
             }
-            linkEl.href = result.brand.logo_url_icon
+            linkEl.href = logoHref
           }
         }
       } catch (err) {
