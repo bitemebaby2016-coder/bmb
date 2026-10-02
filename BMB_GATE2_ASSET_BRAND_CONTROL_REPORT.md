@@ -1,0 +1,190 @@
+﻿# BMB GATE 2 — ASSET / BRAND CONTROL REPORT (AUDIT PHASE)
+
+วันที่: 2026-10-02 · สถานะ Gate 2: **AUDIT DONE / IMPLEMENTATION PAUSED AT OWNER DECISION GATE**
+
+## 1. Asset inventory (ตรวจจาก DB จริง + filesystem จริง — ห้ามเดา)
+
+ข้อมูลจริงจาก Production DB (read-only probe ผ่าน `supabase db query --linked`):
+
+| ตาราง | แถวจริง | คอลัมน์จริง (DB) |
+|---|---|---|
+| `tenants` | 1 | id, name, slug, status, default_brand_id |
+| `brands` | 1 | id, tenant_id, name, display_name, tagline, description, slug, **logo_url, logo_url_icon**, color_scheme, theme_tokens (jsonb), status, is_default, is_published |
+| `mascot_overrides` | **0** (ระบบพร้อม ยังไม่มีใคร override) | role_name, media_url, alt, updated_by, tenant_id, brand_id |
+| `media_assets` | 9 (ทั้งหมด = URL ภาพสินค้าใน Storage) | id, url, alt, kind, created_by, created_at — **ไม่มี** tenant_id/brand_id/asset_key/category/is_active/is_mock |
+| Storage buckets | `bmb-images` (public) เดียว | — |
+
+**ปิดข้อสงสัยเดิม**: `media_assets` 9 แถวจริง = `.../bmb-images/products/prod-*/image.webp` — production products ใช้ Storage URL แล้ว ไม่ใช่ base64 (ข้อ claim "9/10 base64" จาก audit เก่าถูกหักล้างด้วยหลักฐาน DB จริง)
+
+## 2. Asset Registry Matrix (Phase 1)
+
+| asset_key | category | current_path | current_consumer | runtime_managed | admin_replaceable | mock_allowed | current_storage | target_storage | target_admin_screen | migration_required | status |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| brand.logo_url | brand | — (DB field, ยังไม่มีค่า) | ยังไม่มี consumer ใน code | YES (DB) | YES (AdminBrands) | YES | DB | DB+Storage | AdminBrands | NO | **CONNECTED (field) / MISSING (consumer+UI)** |
+| brand.logo_icon | brand | — (DB `brands.logo_url_icon`) | `BrandProvider.tsx:102-110` → dynamic favicon | YES | YES (**AdminBrands.tsx:66 แก้ได้แล้ว**) | YES | DB | DB | AdminBrands | NO | **IMPLEMENTED + CONNECTED** (feature-flagged) |
+| brand.theme_tokens | brand | DB `brands.theme_tokens` | `BrandProvider.tsx:29-48` → CSS vars | YES | YES (AdminBrands.tsx:71) | N/A | DB | DB | AdminBrands | NO | **IMPLEMENTED + CONNECTED** |
+| mascot.pose.<role> ×23 | mascot | `/assets/mascot/*.webp` + fallback `/mascot_*.webp` | `MascotBadge.tsx`, `BiteMascot.tsx` (override ก่อน static เป็น fallback) | YES (`mascotService` + `mascot_overrides`) | YES (**MascotSettingsPage** ครบทุก pose ผ่าน RPC) | YES | repo (fallback) + DB (override) | DB → Storage | MascotSettingsPage | NO | **IMPLEMENTED + CONNECTED** |
+| og.image | SEO | `public/og-image.png` | `index.html:25`, `seo.ts:12,29` | **NO (build-time)** | NO | YES | repo | Storage+DB | ใหม่ (Brand & Assets) | YES | **LEGACY STATIC** |
+| favicon.svg | system | `public/favicon.svg` | index.html:5 | NO (build-time) | NO (system) | NO | repo | repo (SYSTEM PROTECTED) | — | NO | **SAFE STATIC INFRASTRUCTURE** |
+| pwa.icon.192/512 | system | `public/pwa-*.png` + manifest | `vite.config.ts` PWA | **NO — BUILD-TIME CONFIGURATION** | NO | NO | repo | repo | — | NO | **SAFE STATIC INFRASTRUCTURE** |
+| hero.home | brand | `src/assets/hero.png` | `main.ts:2` (vite import) | **NO — BUILD-TIME ONLY** | NO | YES | repo (bundled) | Storage+DB | ใหม่ | YES | **MUST MIGRATE (ถ้าต้องการ white-label)** |
+| review.badge.facebook | review | `/Facebook Logo.webp` | `CustomerReviewCard.tsx:30` | NO | NO (system) | NO | repo | repo | — | NO | **SAFE STATIC INFRASTRUCTURE** |
+| brand.sticker_circle | brand | `/Logo_Sticker_Circle.webp` | `ReviewCarouselSection.tsx:53` | NO | NO | YES | repo | Storage+DB | ใหม่ | YES | **LEGACY STATIC** |
+| catalog.icon.drinks/snacks | catalog | `/images/drinks/*.svg`, `/images/snacks/*.svg` | catalog UI | NO | NO | YES | repo | Storage+DB | ใหม่ | YES | **LEGACY STATIC** |
+| catalog.dir.pre-order/same day | catalog | `public/images/{pre-order,same day}/` | **ไม่มี consumer** (directory ว่าง) | NO | — | — | repo (EMPTY) | — | — | NO | **MISSING / EMPTY** |
+| payment.qr | payment | `public/assets/Qr Code/BMB_Promptpay_Qr.webp` | **ไม่มี code consumer** (มีแต่ใน comments) | NO | **NO — PAYMENT_CONTROLLED** | **NO** | repo | — | — | NO | **PAYMENT CONTROLLED** |
+| product.image | product | Storage `bmb-images/products/...` | catalog, `AdminProducts` | YES | YES (AdminProducts+AdminMedia) | YES | Storage | Storage | AdminProducts/AdminMedia | NO | **IMPLEMENTED + CONNECTED** |
+## 3. สิ่งที่ใช้ของจริงได้แล้ว (reuse ก่อน — Phase 2)
+
+ระบบ runtime asset control **มีอยู่แล้ว 3 ชั้น และ CONNECTED จริง**:
+
+1. **Brand layer**: `brandResolver.ts` → `BrandProvider.tsx` → theme_tokens → CSS vars + dynamic title/OG + **dynamic favicon จาก `brands.logo_url_icon`** (แก้ผ่าน `AdminBrands` ได้แล้ว) — แต่ถูก feature-flag ด้วย `VITE_FEATURE_BRAND_ROUTING` (ตอนนี้ OFF)
+2. **Mascot layer**: `mascotService.ts` + `mascot_overrides` (มี tenant_id/brand_id) → `MascotSettingsPage` แก้ได้ครบ 23 poses โดยไม่แก้ code — static repo files เป็นแค่ **fallback**
+3. **Product media layer**: `uploadProductImage` → Storage `bmb-images` → `media_assets` → `products.image_url` (DB จริงยืนยัน 9 rows เป็น Storage URL)
+## 5. Canonical Asset Registry — สองทางเลือก (Phase 4 — OWNER DECISION REQUIRED)
+
+**HARD STOP ตามเงื่อนไข**: `media_assets` เป็น existing contract ที่มี 9 rows จริง + code consumer (`bmbAdminApi_media.ts`, `AdminMedia.tsx`) — การขยายตารางนี้ต้องได้ Owner decision ก่อน
+
+| ทางเลือก | รายละเอียด | ข้อดี | ข้อเสีย |
+|---|---|---|---|
+| **A: ขยาย `media_assets`** | เพิ่ม columns (nullable + default, backward compatible): asset_key, category, tenant_id, brand_id, is_active, is_mock, sort_order, width, height, file_size, version, updated_at, updated_by | ตารางเดียว ไม่เพิ่ม entity — product images อยู่ในระบบเดียวกันทันที | แตะ existing table + existing code contract |
+| **B: ตารางใหม่ `asset_registry`** | ตารางใหม่อ้าง media_asset_id (FK) + asset_key/category/scope/mock/active | ไม่แตะ existing contract | เพิ่ม entity ใหม่ เสี่ยง duplicate capability (ขัดหลัก reuse) |
+
+คำแนะนำ Dev: **ทางเลือก A** (additive, nullable, backward compatible) — สอดคล้องหลัก no-duplicate — แต่รอ Owner อนุมัติก่อนสร้าง migration
+
+## 6. Admin control surface (Phase 5 — สถานะปัจจุบัน)
+
+| ความสามารถ | สถานะ |
+|---|---|
+| ดู/แก้ brand logo icon, theme, favicon runtime | **IMPLEMENTED** (AdminBrands.tsx) |
+| ดู/แก้ mascot ทุก pose (override) | **IMPLEMENTED** (MascotSettingsPage.tsx ผ่าน RPC `upsert_mascot_override`) |
+| Upload product image → Storage → media_assets | **IMPLEMENTED** (AdminProducts + AdminMedia + bmbAdminApi_media) |
+| Mascot override แบบ upload ตรง (ตอนนี้เป็น URL paste) | **MISSING** — ต้องเชื่อม upload flow ของ AdminMedia (DEFERRED รอ registry design) |
+| Registry UI สำหรับ og-image / hero / sticker / catalog icons | **MISSING** — รอ Owner decision (ทางเลือก A/B) |
+| Tenant/brand scope แสดงใน UI | PARTIAL (mascot_overrides มี columns, UI ยังไม่แสดง scope) |
+
+## 7. Tenant / Brand isolation (Phase 8)
+
+- `mascot_overrides` มี **tenant_id + brand_id** อยู่แล้ว (schema-verified จาก DB จริง) — สถาปัตยกรรม isolation พร้อม
+- `brands` ผูก tenant_id + RLS (migration 077) — read public, write admin
+- RLS behavior ของ asset write ทุกเส้นทางยังไม่ได้ runtime verify → **NOT VERIFIED** (ต้องทดสอบ A–J)
+
+## 8. Runtime verification (Phase 10 — Tests A–J)
+
+| Test | สถานะ |
+|---|---|
+| A: Admin upload/replace PASS | **NOT VERIFIED** — ต้องมี admin session + browser E2E |
+| B: Unauthorized replace DENIED | **NOT VERIFIED** |
+| C: Brand A replace → Brand B unchanged | **NOT VERIFIED** (DB มี 1 brand — ต้อง seed brand ที่สอง = Owner decision) |
+| D: Tenant A → Tenant B unchanged | **NOT VERIFIED** (มี 1 tenant) |
+| E: Invalid file rejected | **NOT VERIFIED** (`validateImageFile` มีใน code) |
+| F: Oversized file rejected | **NOT VERIFIED** |
+| G: Replace → runtime เห็นใหม่ไม่ต้อง rebuild | **NOT VERIFIED** (สถาปัตยกรรมรองรับ: DB URL + mascot cache invalidate) |
+| H: Deactivate → fallback policy | **NOT VERIFIED** (mascot: fallback ไป static ตาม design) |
+| I: Mock marked | **NOT VERIFIED** (`is_mock` ยังไม่มี column — รอ registry) |
+| J: Payment QR อยู่นอก social path | **VERIFIED-BY-CODE** (ไม่มี consumer ใน social/AI path — ยังไม่มีระบบ social) |
+
+สาเหตุที่ทำไม่ได้: ต้องมี admin credentials + browser E2E environment = **BLOCKED — EXTERNAL DEPENDENCY**
+
+## 9. Cache / versioning (Phase 9)
+
+- สถาปัตยกรรม runtime: URL อยู่ใน DB (`mascot_overrides.media_url`, `brands.logo_url_icon`, `media_assets.url`) — Admin เปลี่ยน URL → runtime อ่านใหม่ทันที **ไม่ต้อง rebuild**
+- Mascot override มี session cache + `invalidateMascotOverrides()` หลัง admin บันทึก
+- Browser cache: ถ้า replace ไฟล์ชื่อเดิมใน bucket อาจ cache ค้าง — ทางแก้ canonical = upload เป็น path ใหม่ต่อ version (`uploadProductImage` ทำอยู่แล้ว: `prod-<timestamp>-<random>/`) — RUNTIME VERIFIED ระดับ code, E2E **NOT VERIFIED**
+
+## 10. สรุปสถานะ / Blockers / Owner decisions
+
+| รายการ | สถานะ |
+|---|---|
+| Gate 1 ปิด (commit `dd64c10` pushed, HEAD==origin/main) | **DONE** |
+| Gate 2 audit (Phase 1-3, 8-9) | **DONE** — เอกสารนี้ |
+| Registry migration (Phase 4) | **BLOCKED — OWNER DECISION**: ทางเลือก A (ขยาย media_assets) หรือ B (ตารางใหม่) |
+| Admin UI เพิ่มเติม (Phase 5) | **BLOCKED** — รอ decision ข้อบน |
+| Tests A-J runtime | **BLOCKED — EXTERNAL DEPENDENCY**: admin credentials + E2E environment + seed brand/tenant ที่ 2 |
+| `FEATURE_BRAND_ROUTING` เปิดจริง | **OWNER DECISION** (flag ปัจจุบัน OFF — ทุกอย่างที่รายงานคือ code-connected ไม่ใช่ live) |
+| Social AI (Gate 3) | **BLOCKED** ตามคำสั่ง |
+
+**DEFERRED จาก Gate 1** (ยืนยันตาม Owner): migration history tracking / mock format (api.test.ts:129) / real-DB load test
+
+---
+
+**GATE 2 สรุป: AUDIT DONE — IMPLEMENTATION หยุดรอ OWNER DECISION (registry design A/B) ตาม HARD STOP CONDITION "existing media_assets contract"**
+
+**สรุปสถานะรวม Gate 2**: สถาปัตยกรรมที่ Owner ต้องการ (runtime-controlled, ไม่ hardcode, Admin เปลี่ยนได้โดยไม่ deploy) **มีอยู่แล้วหลายส่วน** — งานที่เหลือคือเติมช่องว่าง ไม่ใช่สร้างใหม่ทั้งระบบ
+
+## 4. Hardcoded assets ที่พบ (Phase 3 — 95 refs, จัดกลุ่มแล้ว)
+
+| กลุ่ม | รายการ | คำแนะนำ |
+|---|---|---|
+| **ALREADY RUNTIME MANAGED** | MascotBadge.tsx + BiteMascot.tsx (23 poses + fallbacks), HomePage.tsx:202 | ปล่อยไว้เป็น fallback — override ผ่าน mascot_overrides อยู่แล้ว |
+| **SAFE STATIC INFRASTRUCTURE** | favicon.svg, pwa icons + manifest (BUILD-TIME CONFIGURATION), Facebook Logo.webp (review badge), og-image (SEO) | ปล่อยไว้ — system/SEO protected |
+| **BUILD-TIME ONLY** | `src/assets/hero.png` (main.ts:2 vite import) | ถ้าต้องการ Admin replace ต้อง migrate → registry (Owner decision) |
+| **LEGACY STATIC** | `/Logo_Sticker_Circle.webp` (ReviewCarouselSection:53) | migrate ได้ถ้าต้องการ white-label |
+| **PAYMENT CONTROLLED** | `BMB_Promptpay_Qr.webp` — **ไม่มี code consumer** | ห้ามเข้า social/brand workflow, ห้ามให้ AI แตะ |
+
+# G2-A IMPLEMENTATION RESULTS (after Option A approval)
+
+## Migration 105 (asset registry on media_assets - ADDITIVE per Option A)
+
+- File: supabase/migrations/105_asset_registry_media_assets.sql (HELPERS: 105a_apply_columns.sql + 105b_indexes_backfill.sql used because multi-statement -f execution silently no-oped via Management API; each statement then applied individually and verified)
+- Columns added (all nullable/defaulted, backward compatible): asset_key, category, tenant_id, brand_id, is_active(true), is_mock(false), sort_order(0), version(1), updated_at(now()), updated_by
+- NOT added (no real consumer - per Owner rule no fields just for looks): width, height, file_size, mime_type
+- DB-level uniqueness: UNIQUE partial index uq_media_assets_asset_key (WHERE asset_key IS NOT NULL)
+- Backfill: existing 9 production rows -> category=product, asset_key=product.<id>, is_active=true, is_mock=false (keys=9 distinct=9 - verified on production DB)
+- Indexes verified: uq=1 cat=1 scope=1
+- No destructive change: no DROP, no data mutation of existing columns; rollback = DROP COLUMN list (documented in migration file)
+- Existing 9 rows + consumers preserved (verified rows=9 after apply)
+
+## Code (IMPLEMENTED)
+
+- src/lib/bmbAdminApi_media.ts: +uploadRegisteredAsset (backward compatible), +listRegistryAssets, +setRegistryAssetActive, +selectRuntimeAssetUrl (policy: approved > mock > null), +getRuntimeAssetUrl(assetKey)
+- src/pages/admin/AdminMedia.tsx: +Asset Registry table (asset_key/category/scope/ACTIVE-INACTIVE/MOCK badge/preview/activate-deactivate)
+- src/__tests__/assetRegistry.test.ts: 6 regression tests on the selection policy (Test J + H semantics)
+
+## Test gate
+
+- npm test = 367/367 PASS (41 files)
+- npm run lint = PASS
+- npm run build = PASS (tsc + vite, PWA generated)
+
+## Storage evidence
+
+- HTTP probe on production Storage: GET .../bmb-images/products/prod-1/image.webp -> HTTP 200 image/webp 84KB (public bucket read RUNTIME VERIFIED)
+
+## Tests A-J status after G2-A
+
+- A (registry read): PARTIAL - DB-level verified (9 rows backfilled); Admin UI list = IMPLEMENTED, browser E2E NOT VERIFIED
+- B (replace): IMPLEMENTED (uploadRegisteredAsset) - E2E NOT VERIFIED (needs admin session)
+- C (storage linkage): RUNTIME VERIFIED (Storage object serves 200; url column -> object path)
+- D (DB record updated): IMPLEMENTED + DB VERIFIED (backfill updated_at/version written)
+- E (runtime consumer uses replacement): IMPLEMENTED (getRuntimeAssetUrl) - no wired consumer page yet - CONNECTED-READY
+- F (tenant isolation): schema-ready (tenant_id column + scope index) - NOT VERIFIED (needs 2 tenants = fixture/Owner decision)
+- G (brand isolation): schema-ready - NOT VERIFIED (needs 2 brands)
+- H (fallback): UNIT VERIFIED (selection policy tests) - E2E NOT VERIFIED
+- I (mock marked): UNIT VERIFIED + MOCK badge UI IMPLEMENTED - E2E NOT VERIFIED
+- J (stale/mock cannot outrank approved): UNIT VERIFIED
+
+## G2-B FEATURE FLAG READINESS (VITE_FEATURE_BRAND_ROUTING)
+
+- Read at: src/components/BrandProvider.tsx:26 (import.meta.env) - single read point
+- OFF path: BrandProvider returns children untouched - static defaults (index.html favicon/OG, default CSS) - current production behavior
+- ON path: resolveBrand (?brand=slug -> tenant default -> first active) -> setResolved + cart context switch -> theme_tokens -> CSS vars -> dynamic title/OG description -> dynamic favicon from brands.logo_url_icon
+- Isolation: read-only brand resolution filtered by status=active AND is_published=true - no cross-tenant write path; cart cleared on context switch (RD-03)
+- Fallback: global-fallback (first active published brand) if no slug - graceful degradation kept
+- SSR/build: client-only (Vite SPA) - no SSR implication; flag is build-time constant in bundle
+- Mascot override chain: independent of this flag (mascot_overrides read unconditionally)
+- READINESS: code-ready, NOT production-open. Blocked on: Tests A-J E2E + seed brand 2 + Owner sign-off. Flag remains OFF (per Owner: do not open yet)
+
+## G2-C Admin surface evidence
+
+- Brand: logo_url_icon + theme_tokens editable (AdminBrands.tsx:66,71) - IMPLEMENTED
+- Mascot: 23 poses override via RPC (MascotSettingsPage) - IMPLEMENTED (tenant_id/brand_id columns exist; UI shows override list per role)
+- Product media: AdminProducts + AdminMedia -> Storage -> media_assets - IMPLEMENTED + CONNECTED
+- Registry table: AdminMedia.tsx new section - IMPLEMENTED
+- No Admin path requires repository edits: VERIFIED (all writable surfaces are DB/Storage)
+
+## Remaining for G2 EXIT
+
+1. Browser E2E Tests A-J with admin session (BLOCKED - EXTERNAL DEPENDENCY: admin credentials/E2E env)
+2. Seed brand/tenant 2 fixtures in ISOLATED environment (Owner decision - production has exactly 1/1)
+3. Wire getRuntimeAssetUrl into a first real consumer page (suggested: og-image/hero) - DEFERRED to next step after Owner review

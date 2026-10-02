@@ -149,3 +149,130 @@ export function isValidWebp(bytes: Uint8Array): boolean {
   const webp = String.fromCharCode(bytes[8], bytes[9], bytes[10], bytes[11])
   return riff === 'RIFF' && webp === 'WEBP'
 }
+
+// ============================================
+// G2-A: Asset Registry (migration 105 — Option A, additive columns on media_assets)
+// Canonical chain: Admin Command Center -> registry row -> Storage object -> runtime
+// ============================================
+
+export const ASSET_CATEGORIES = [
+  'product', 'brand', 'mascot', 'social', 'review', 'pwa', 'seo', 'payment', 'system',
+] as const
+export type AssetCategory = (typeof ASSET_CATEGORIES)[number]
+
+export interface RegistryFields {
+  asset_key?: string | null
+  category?: string | null
+  tenant_id?: string | null
+  brand_id?: string | null
+  is_active?: boolean
+  is_mock?: boolean
+  sort_order?: number
+  version?: number
+  updated_at?: string
+  updated_by?: string | null
+}
+
+export type RegistryAssetRow = MediaAssetRow & RegistryFields
+
+export interface UploadAssetOptions {
+  assetKey?: string
+  category?: AssetCategory
+  tenantId?: string
+  brandId?: string
+  isMock?: boolean
+  sortOrder?: number
+}
+
+/**
+ * Upload + register with optional registry fields. Backward compatible:
+ * existing callers (uploadProductImage, AdminMedia generic upload) keep working.
+ */
+export async function uploadRegisteredAsset(
+  file: File,
+  kind: MediaAssetRow['kind'],
+  alt: string,
+  opts: UploadAssetOptions = {},
+): Promise<RegistryAssetRow | null> {
+  const v = validateImageFile(file)
+  if (!v.ok) return null
+  const { data: user } = await supabase.auth.getUser()
+  const path = `uploads/${Date.now()}-${sanitizeName(file.name)}`
+  const { data: up, error: upErr } = await supabase.storage
+    .from(MEDIA_BUCKET)
+    .upload(path, file, { cacheControl: '3600', upsert: false })
+  if (upErr || !up) { console.error('[uploadRegisteredAsset] storage error:', upErr); return null }
+  const { data: urlData } = supabase.storage.from(MEDIA_BUCKET).getPublicUrl(path)
+  const id = `media-${Date.now()}-${Math.floor(Math.random() * 10000)}`
+  const row = {
+    id,
+    url: urlData.publicUrl,
+    alt,
+    kind,
+    created_by: user?.user?.id,
+    asset_key: opts.assetKey ?? null,
+    category: opts.category ?? null,
+    tenant_id: opts.tenantId ?? null,
+    brand_id: opts.brandId ?? null,
+    is_active: true,
+    is_mock: opts.isMock ?? false,
+    sort_order: opts.sortOrder ?? 0,
+    version: 1,
+    updated_by: user?.user?.id,
+  }
+  const { data, error } = await supabase.from('media_assets').insert(row).select().single()
+  if (error) {
+    console.error('[uploadRegisteredAsset] insert error:', error)
+    await supabase.storage.from(MEDIA_BUCKET).remove([path])
+    return null
+  }
+  return data as RegistryAssetRow
+}
+
+export async function listRegistryAssets(category?: AssetCategory): Promise<RegistryAssetRow[]> {
+  let q = supabase.from('media_assets').select('*').order('sort_order', { ascending: true })
+  if (category) q = q.eq('category', category)
+  const { data, error } = await q
+  if (error) { console.error('[listRegistryAssets] error:', error); return [] }
+  return (data || []) as RegistryAssetRow[]
+}
+
+/** Admin activate/deactivate (runtime fallback policy reads is_active). */
+export async function setRegistryAssetActive(id: string, isActive: boolean): Promise<boolean> {
+  const { data: user } = await supabase.auth.getUser()
+  const { error } = await supabase
+    .from('media_assets')
+    .update({ is_active: isActive, updated_at: new Date().toISOString(), updated_by: user?.user?.id })
+    .eq('id', id)
+  return !error
+}
+
+/**
+ * Runtime consumer lookup — canonical selection policy:
+ *   1. active + NOT mock (production-approved) — lowest sort_order wins
+ *   2. active + mock (explicit placeholder) — lowest sort_order wins
+ *   3. null (consumer falls back to its own static default)
+ * Stale/mock assets can never silently outrank an approved active asset (Test J).
+ */
+export function selectRuntimeAssetUrl(assets: RegistryAssetRow[]): string | null {
+  const eligible = assets.filter((a) => a.is_active && a.url)
+  const approved = eligible.filter((a) => !a.is_mock)
+  if (approved.length > 0) {
+    return approved.sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0))[0].url
+  }
+  if (eligible.length > 0) {
+    return eligible.sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0))[0].url
+  }
+  return null
+}
+
+/** Fetch + select in one call (runtime consumer helper). */
+export async function getRuntimeAssetUrl(assetKey: string): Promise<string | null> {
+  const { data, error } = await supabase
+    .from('media_assets')
+    .select('*')
+    .eq('asset_key', assetKey)
+    .eq('is_active', true)
+  if (error || !data || data.length === 0) return null
+  return selectRuntimeAssetUrl(data as RegistryAssetRow[])
+}
