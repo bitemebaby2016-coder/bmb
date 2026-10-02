@@ -188,3 +188,47 @@
 1. Browser E2E Tests A-J with admin session (BLOCKED - EXTERNAL DEPENDENCY: admin credentials/E2E env)
 2. Seed brand/tenant 2 fixtures in ISOLATED environment (Owner decision - production has exactly 1/1)
 3. Wire getRuntimeAssetUrl into a first real consumer page (suggested: og-image/hero) - DEFERRED to next step after Owner review
+
+# G2-RV (verification round) — 2026-10-02
+
+## Git reconciliation (Item 1)
+
+- rls_check.txt (untracked local evidence per D-10, no secrets, reproducible) = DELETED
+- Worktree after reconciliation = CLEAN
+- Apply-helpers 105a/105b moved out of migrations/ (db push skipped invalid filenames) = commit 6479f10
+- Migration list re-verified after accidental remote repair attempt: 035 NOT applied on linked DB (matches documented reality: 035 corrupted+superseded, never pushed) = NO production impact
+
+## Isolated E2E attempt (Items 2-4) = BLOCKED by pre-existing migration defects
+
+Local Docker stack was started (supabase start OK, port 54342 to avoid another project stack on 54322) but full migration replay failed on FRESH database:
+
+1. 035_m1_closure_p0_blockers.sql -> SQLSTATE 42P13 (cannot change return type of compute_delivery_fee). Known: 035 corrupted+superseded by 037, never applied to production. NOT modified.
+2. 065_rls_isolation.sql -> SQLSTATE 42703 (column p.tenant_id does not exist) — references profiles.tenant_id which is added by LATER tenancy migrations (TEN-02, future architecture). Production was migrated incrementally so this never surfaced.
+
+Conclusion: supabase/migrations is NOT replayable on a fresh DB (order/dependency defects). Fixing migration order/history = explicitly Owner-deferred (Gate 1) and outside G2 boundary. All temporary local changes reverted (config.toml port, 035 location, stack stopped). No RLS/auth change was made to force tests to pass.
+
+## Tests A-J result
+
+- A registry read: DB-level RUNTIME VERIFIED (9 rows backfilled, keys unique); Admin UI table IMPLEMENTED; browser E2E = NOT RUN (blocked above)
+- B replace: IMPLEMENTED (uploadRegisteredAsset) — browser E2E NOT RUN
+- C storage linkage: RUNTIME VERIFIED (production object HTTP 200 image/webp)
+- D DB record: DB VERIFIED (backfill wrote category/asset_key/version/updated_at on production rows)
+- E runtime consumer: BLOCKED — no wired consumer; CONSUMER WIRING = OWNER DECISION REQUIRED (not self-wired per order)
+- F tenant isolation: FAIL BY DESIGN (root cause) — media_assets RLS = media_assets_admin USING is_admin() only; no tenant scoping; media_assets table has NO tenant_id column in production contract. Fixing requires Owner-approved RLS design (forbidden to change ad hoc per Item 5)
+- G brand isolation: FAIL BY DESIGN (same root cause — no brand scoping on media_assets)
+- H fallback: UNIT VERIFIED (selectRuntimeAssetUrl policy tests) — browser NOT RUN
+- I unauthorized mutation: policy-level evidence (is_admin() gate exists on media_assets_admin) — browser E2E NOT RUN = NOT VERIFIED
+- J mock/stale protection: UNIT VERIFIED (approved outranks mock even with lower sort_order)
+
+## Feature flag
+
+VITE_FEATURE_BRAND_ROUTING = OFF (verified: absent in .env/.env.local/.env.example/dist bundle; BrandProvider.tsx:26 requires === true)
+
+## Gate
+
+npm test = 367/367 PASS (41 files) / lint PASS / build PASS
+Git: HEAD 6479f10 == origin/main, worktree CLEAN
+
+## G2-RV = NOT READY
+
+Unmet: A/B browser evidence, E consumer decision, F/G/I verified. Root causes documented above; no auth/RLS/migration change was made to force PASS.
