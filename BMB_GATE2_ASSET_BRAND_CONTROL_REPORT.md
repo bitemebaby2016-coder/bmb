@@ -232,3 +232,103 @@ Git: HEAD 6479f10 == origin/main, worktree CLEAN
 ## G2-RV = NOT READY
 
 Unmet: A/B browser evidence, E consumer decision, F/G/I verified. Root causes documented above; no auth/RLS/migration change was made to force PASS.
+
+# G2-RV FINAL CLOSURE REPORT (2026-10-02)
+
+## Status legend applied per Owner order
+
+| Item | Status |
+|---|---|
+| Migration 106 (RLS Option 3 boundary) | IMPLEMENTED + DEPLOYED + ISOLATION VERIFIED |
+| Migration 107 (9-row backfill + scope constraints) | IMPLEMENTED + DEPLOYED + VERIFIED |
+| RLS policy matrix (T1-T11, isolated DB, real role switching + JWT claims) | RUNTIME VERIFIED |
+| Browser E2E A/B/D/E/I+H (Playwright, real Admin UI + runtime consumer) | RUNTIME VERIFIED (5/5 PASS) |
+| First runtime consumer (brand logo/icon -> BrandProvider) | IMPLEMENTED + CONNECTED + RUNTIME VERIFIED (isolated) |
+| Feature flag VITE_FEATURE_BRAND_ROUTING | OFF in production (verified: absent from bundle; local E2E ran TEST-ONLY with flag=true) |
+| Asset registry (migration 105) | RUNTIME VERIFIED |
+| D2 replay safety | PASS (S1-prime-A, Owner-approved) |
+
+## Evidence
+
+### 1. Migration 106 (commit a13bd25 + grant amendment in 4b35035)
+- Replaces global is_admin() policy on media_assets with:
+  media_assets_tenant_write USING is_tenant_admin_of(tenant_id) (ALL, authenticated)
+  media_assets_platform_global USING category=global AND is_platform_admin()
+  media_assets_public_read USING is_active=true (SELECT, anon+authenticated)
+- NEW server-side authority fn is_tenant_admin_of() (SECURITY DEFINER, derives from profiles)
+- SECURITY ROOT CAUSE DOCUMENTED: production is_tenant_admin(p_tenant_id) OVERWRITES its
+  parameter with the caller tenant (SELECT ... INTO p_tenant_id) => returns true for ANY admin
+  against ANY tenant. Production function NOT rewritten; is_tenant_admin_of has correct semantics.
+- GRANT SELECT to anon added (public read boundary; is_active=true enforced by policy).
+
+### 2. Migration 107 (commit 0513b70)
+- Preconditions verified on production: rows=9, dup asset_key=0, legacy NULL-tenant=9
+- Backfill tenant_id=tenant-bmb-001 for the 9 product assets
+- Post-verify: rows=9, NULL=0, dup=0, bmb001=9
+- Scope invariants: ck_media_assets_tenant_or_global (NULL not global),
+  ck_media_assets_global_explicit, FK brands(id,tenant_id) <- media_assets(tenant_id,brand_id)
+
+### 3. Production DB evidence (live probes)
+- Policies: media_assets_tenant_write / media_assets_platform_global / media_assets_public_read
+  with exact USING expressions as designed; media_assets_admin DROPPED
+- Backfill: rows=9 null_tenant=0 bmb001=9; constraints: checks=2 fk=1 brand_uq=1
+- anon_grant=1 (SELECT only)
+
+### 4. RLS policy matrix (isolated replay DB — supabase/replay/tests/rls_matrix.sql)
+T1 anon table access denied (ACL contract) PASS
+T2/T3 customer+admin public read of active assets PASS
+T4/T5/T6 admin-a cross-tenant UPDATE/DELETE/INSERT on tenant-b DENIED PASS
+T7 admin-a own-tenant INSERT/UPDATE/DELETE + activate/deactivate PASS
+T8 tenant admin GLOBAL (NULL-scope) INSERT DENIED PASS
+T9 platform admin cross-tenant + global PASS
+T10 admin-b symmetric cross-tenant deny PASS
+T11 brand FK cross-tenant brand_id DENIED PASS (migration 107 FK)
+
+### 5. Browser E2E (Playwright 1.63, chromium, isolated stack; e2e/g2rv.spec.ts)
+A admin sees own registry rows in Admin UI PASS
+B tenant-B inactive asset NOT visible to tenant-A admin PASS
+D own inactive asset visible (own-scope read) PASS
+E cross-tenant mutation from real browser session blocked by RLS PASS
+I+H runtime consumer: favicon href = registry asset URL; approved wins over mock; PASS
+(Fallback verified separately: no registry asset -> brands.logo_url_icon -> static default)
+
+### 6. Runtime consumer (commit 7910528)
+BrandProvider (flag-gated): logo = getRuntimeAssetUrl(brand.logo.<brand_id>)
+selection policy approved > mock > null; fallback chain brands.logo_url_icon -> static.
+Production: flag OFF => behavior unchanged (verified bundle contains no flag wiring change).
+
+### 7. Storage integrity
+asset_keys unchanged (product.<id>), URLs unchanged, HTTP 200 image/webp on production object.
+
+### 8. Feature flag
+Production VITE_FEATURE_BRAND_ROUTING = OFF (bundle scan: no flag wiring change; 0 hits).
+Local E2E used flag=true via environment ONLY (TEST-ONLY; never committed).
+
+### 9. Security notes
+- service_role never in browser/bundle (secret scan: 0 secret patterns; 1 supabase-js vendor string constant)
+- production is_tenant_admin defect documented as REAL SECURITY ROOT CAUSE — requires Owner
+  decision for production remediation (currently harmless single-tenant; becomes critical at G3)
+
+## GATE VERDICT
+
+D2 Replay Safety          = PASS
+RLS Tenant Isolation      = PASS (isolated matrix + browser E2E)
+RLS Brand Isolation       = PASS (FK + policy; per-brand operation scoping = app-layer next)
+Public Read Boundary      = PASS
+Admin Authorization       = PASS
+9 Asset Backfill          = PASS
+Storage Integrity         = PASS
+Runtime Asset Registry    = PASS
+Brand Runtime Consumer    = PASS (isolated runtime verified; production stays flag-OFF)
+Browser E2E               = PASS (A/B/D/E/I+H; full J regression = product images via URLs unchanged)
+Production Runtime Verify = PASS (policies/backfill/grant/storage probes)
+Feature Flag              = OFF
+npm test                  = PASS 367/367
+lint/build                = PASS
+secret scan               = PASS
+HEAD == origin/main       = PASS (post-push verify)
+WORKTREE CLEAN            = PASS
+
+**G2-RV = PASS**
+
+STOP per Owner order — G3..G9 remain BLOCKED until Owner issues next command.
