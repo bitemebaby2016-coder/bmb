@@ -75,13 +75,27 @@ function typeOf(v: unknown): FieldType | 'null' | 'other' {
 /**
  * Validate a parsed value against the schema (fail-closed):
  * missing required field / wrong type / invalid enum / empty container → reject.
+ *
+ * opts.rejectUnknown (additive, G7-S3): when true, keys NOT in the schema cause
+ * rejection instead of being silently ignored. Default false = exact previous
+ * behavior for existing G5/G6 callers (behavior-preserving).
  */
-export function validateStructured(raw: unknown, schema: SchemaSpec): StructuredResult {
+export function validateStructured(
+  raw: unknown,
+  schema: SchemaSpec,
+  opts: { rejectUnknown?: boolean } = {}
+): StructuredResult {
   if (typeOf(raw) !== 'object' || raw === null || Array.isArray(raw)) {
     return { ok: false, reason: 'not_an_object' }
   }
   const value: Record<string, unknown> = {}
   const obj = raw as Record<string, unknown>
+  if (opts.rejectUnknown) {
+    const allowed = new Set(Object.keys(schema))
+    for (const key of Object.keys(obj)) {
+      if (!allowed.has(key)) return { ok: false, reason: `unknown_field:${key}` }
+    }
+  }
   for (const [key, spec] of Object.entries(schema)) {
     const v = obj[key]
     const t = typeOf(v)
@@ -108,10 +122,14 @@ export function validateStructured(raw: unknown, schema: SchemaSpec): Structured
 }
 
 /** Full pipeline: raw LLM text → parsed → validated. Never throws. */
-export function parseStructuredOutput(text: string, schema: SchemaSpec): StructuredResult {
+export function parseStructuredOutput(
+  text: string,
+  schema: SchemaSpec,
+  opts: { rejectUnknown?: boolean } = {}
+): StructuredResult {
   const raw = extractJson(text)
   if (raw === undefined) return { ok: false, reason: 'malformed_json_or_empty' }
-  return validateStructured(raw, schema)
+  return validateStructured(raw, schema, opts)
 }
 
 /** Validate a JSON ARRAY of objects against an item schema (fail-closed). */

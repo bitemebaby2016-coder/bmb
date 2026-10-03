@@ -133,7 +133,7 @@ function semanticPostDraft(v: PostDraftOutput, draftRef: string, sourceReference
   const badFlags = v.safety_flags.filter((f) => !SAFETY_FLAG_VALUES.includes(f))
   if (badFlags.length > 0) return { ok: false, reason: 'invalid_safety_flag:' + badFlags.join(','), value: v }
   // BANNED semantic content — publication/credential/authority/mutation language never accepted
-  const banned = /(auto[_-]publish|publish now|โพสต์ทันที|ยืนยันการโพสต์|page access token|access_token|place the order|confirm payment|ยืนยันการชำระเงิน|สั่งซื้อให้เลย|ตัดสินใจแทนร้านเรื่องราคา)/i
+  const banned = /(auto[_-]publish|publish now|publish[^"]{0,30}(meta|facebook)|meta[^"]{0,20}publish|โพสต์ลง(เพจ|meta|facebook)|โพสต์ทันที|ยืนยันการโพสต์|page access token|access_token|place the order|confirm payment|ยืนยันการชำระเงิน|สั่งซื้อให้เลย|ตัดสินใจแทนร้านเรื่องราคา)/i
   if (banned.test(v.title) || banned.test(v.body)) return { ok: false, reason: 'banned_content_in_draft', value: v }
   // server-side override — the model can never lower the human-review requirement
   const mustReview = v.safety_flags.some((f) => f !== 'none')
@@ -320,8 +320,8 @@ Deno.serve(async (req: Request): Promise<Response> => {
     return json({ error: reason }, ai.status === 'invalid_task' ? 400 : 502)
   }
 
-  // --- FAIL CLOSED validation chain ---
-  const parsed = parseStructuredOutput(ai.text, POST_DRAFT_SCHEMA)
+  // --- FAIL CLOSED validation chain (rejectUnknown — G7 contract: unknown fields rejected) ---
+  const parsed = parseStructuredOutput(ai.text, POST_DRAFT_SCHEMA, { rejectUnknown: true })
   if (!parsed.ok) {
     usage(draftRef, ai.model || '-', 'rejected:' + parsed.reason)
     return json({ error: 'AI_OUTPUT_REJECTED:' + parsed.reason }, 422)

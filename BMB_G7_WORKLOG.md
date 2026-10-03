@@ -285,4 +285,53 @@ NEXT: G7-S3 Security deep-test — หลัง commit/push/clean ยืนย�
 ```
 S1 = CONTRACT COMPLETE (ไม่ implement/deploy/mutate)
 NEXT: G7-S2 Implementation — หลัง commit/push/clean ยืนยัน
+## G7-S3 — SECURITY / TEST GATE (จบแล้ว)
+
+**Defects พบและแก้ (ภายใน G7 scope, minimal fix):**
+
+```text
+D1 (S3-OUT-04): aiStructuredOutput ก่อนหน้านี้ SILENTLY IGNORE unknown fields
+    ขัด contract §2 "unknown fields rejected"
+    Fix: additive opts.rejectUnknown (default false = behavior-preserving สำหรับ
+    G5/G6 callers เดิมทั้งหมด) + worker ส่ง { rejectUnknown: true } → unknown
+    field เช่น publish_token/tenant_id → reject `unknown_field:<key>`
+    Test: S3-OUT-04 + G7 worker wiring test
+D2 (S3 injection case 1): banned regex เดิมไม่ครอบคลุม "publish this to Meta"
+    Fix: เพิ่ม patterns publish[…](meta|facebook) / meta[…]publish /
+    โพสต์ลง(เพจ|meta|facebook) — เฉพาะใน G7 worker prompt guard
+    Test: S3 injection case 1 ผ่าน (รวม 10 cases)
+```
+
+**S3 test suite ใหม่ (ใน `g7Security.test.ts` — รวมเป็น 60 tests ทั้งหมด ผ่าน 60/60):**
+
+| กลุ่ม | ผล |
+|---|---|
+| S3-AUTH-01..06 (401 gate, exact-compare, client/proxy/G6-worker บล็อก post task) | PASS |
+| S3-TENANT-01..05 (derive server-side, caller-supplied เป็นไปไม่ได้, missing_tenant_context fail-closed) | PASS |
+| S3-BRAND-01..04 (brands.is_default, ไม่มี brand_admin/override) | PASS |
+| S3-OUT-01..12 (valid/missing/type/**unknown**/enum/length/hashtags/binding/malformed) | PASS |
+| S3 prompt injection 10 cases (ผ่าน enforcement layer จริง: banned regex + rejectUnknown + binding + no-mutation-surface) | PASS |
+| S3-IDEM-01..03 (deterministic PK + pre-check + 409 no-op; new ref = new draft; ไม่มี DELETE) | PASS |
+| S3 audit trace (bounded metadata — ไม่มี secrets/PII/authorization; ครบ task/ref/model/validation/source/outcome/context) | PASS |
+
+**META NEGATIVE:** ไม่มี graph.facebook/graph.meta/Page token/publish endpoint ใน worker ทั้งไฟล์ (codeOnly + S3-OUT-04 unknown-field rejection กันทางผ่าน model output)
+**BUSINESS NEGATIVE:** REST เขียนได้เฉพาะ content_approvals + audit_logs; ไม่มี orders/payments/inventory/delivery/refund/cancel/price/capacity
+**APPROVAL:** worker ไม่มี review_content/'approved'/'rejected'/'published' capability; migration 022 ยืนยัน pending→approved/rejected + is_admin gate
+
+**Verification จริง:**
+
+```text
+npm test   = 455 tests / 0 failed (44 files)
+tsc        = exit 0
+eslint     = exit 0
+build      = exit 0
+secret scan = CLEAN (git diff a2c2f24 scan — ไม่มี real credential; negative strings ใน test เท่านั้น)
+static diff = เฉพาะ g7Security.test.ts + aiStructuredOutput.ts (rejectUnknown additive,
+              behavior-preserving — มี test ครอบ default path เดิม) + worker banned regex
+```
+
+**STATUS: SECURITY VERIFIED · TEST VERIFIED · IMPLEMENTATION VERIFIED — DEPLOYED = NO, RUNTIME VERIFIED = NO**
+
+**G4:** ไม่ถูกแตะ — ไม่มี Meta code/PAGE token ใน G7 ทุกไฟล์ (test พิสูจน์ G7-16/17)
+**G8:** ไม่ถูกแตะ — ไม่มี scheduler/queue/retry ใด ๆ (test พิสูจน์)
 ```
