@@ -6,6 +6,7 @@ import type { Message, Product } from '@/types'
 import { supabase } from './supabase'
 import { MODEL_A_FALLBACK, resolveModelA } from './aiModels'
 import { getDbContextPrompt } from './aiDbContext'
+import { parseStructuredListOutput } from '../../supabase/functions/_shared/aiStructuredOutput.ts'
 
 // SEC-02 (Phase 4): the OpenRouter key is SERVER-SIDE in the ai-proxy Edge Function.
 // The client only stores the model id (public) for display/fallback purposes.
@@ -122,7 +123,10 @@ async function requestCompletion(messages: ChatMessage[], model: string): Promis
   }
 
   const { data: proxy, error } = await supabase.functions.invoke('ai-proxy', {
-    body: { messages: trimForProxy(messages), model, maxTokens: 700 },
+    // G5 (D5-01): task is validated and the model is chosen SERVER-SIDE by
+    // _shared/aiPolicy.ts. `model` is only a whitelist hint — an id outside the
+    // task policy is ignored by the gateway.
+    body: { messages: trimForProxy(messages), model, task: 'chat', maxTokens: 700 },
     // Explicit headers: never let a stale session token silently become the
     // only credential — the apikey header always carries the public guest key
     // so ai-proxy can degrade to the guest path if the JWT is rejected.
@@ -174,7 +178,7 @@ async function streamCompletionOnce(
       apikey: import.meta.env.VITE_SUPABASE_ANON_KEY || '',
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({ messages: trimForProxy(messages), model, maxTokens: 700, stream: true }),
+    body: JSON.stringify({ messages: trimForProxy(messages), model, task: 'streaming', maxTokens: 700, stream: true }),
   })
   const ctype = res.headers.get('content-type') || ''
   if (!res.ok || !res.body || !ctype.includes('text/event-stream')) {
@@ -326,6 +330,7 @@ export async function getMenuRecommendations(
           { role: 'user', content: prompt }
         ],
         model: OPENROUTER_MODEL,
+        task: 'recommendation',
         maxTokens: 300,
       },
       headers: {
@@ -335,18 +340,28 @@ export async function getMenuRecommendations(
     })
     if (error || !proxy || proxy.error) return products.slice(0, 3)
     const content = proxy.data?.choices?.[0]?.message?.content || '[]'
-    
-    // Parse JSON response
-    const jsonMatch = content.match(/\[[\s\S]*\]/)
-    if (jsonMatch) {
-      const recommended = JSON.parse(jsonMatch[0]) as Array<{ id: string; name: string; reason: string }>
-      return recommended
-        .map((r: { id: string; name: string; reason: string }) => products.find((p: Product) => p.id === r.id))
-        .filter((p: Product | undefined): p is Product => p !== undefined)
-        .slice(0, 3)
-    }
 
-    return products.filter(p => p.is_available).slice(0, 3)
+    // G5 (STEP 6): AI output = untrusted data — HTTP 200 alone is NOT valid.
+    // Structured-output contract: parse → schema validate → accept / reject
+    // (reject → non-AI fallback below, never a business mutation).
+    const parsed = parseStructuredListOutput(
+      content,
+      {
+        id: { type: 'string', required: true },
+        name: { type: 'string', required: true },
+        reason: { type: 'string', required: true },
+      },
+      { maxItems: 10 }
+    )
+    if (!parsed.ok) {
+      console.error('[Bite Me Baby] Recommendation structured-output rejected:', parsed.reason)
+      return products.filter(p => p.is_available).slice(0, 3)
+    }
+    const recommended = parsed.value as Array<{ id: string; name: string; reason: string }>
+    return recommended
+      .map((r) => products.find((p: Product) => p.id === r.id))
+      .filter((p: Product | undefined): p is Product => p !== undefined)
+      .slice(0, 3)
   } catch (error) {
     console.error('Recommendation API Error:', error)
     const apiModule = await import('@/lib/bmbAdminApi_products')

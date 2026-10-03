@@ -164,7 +164,7 @@ Customer preferences: ${customerPreferences ? JSON.stringify(customerPreferences
           ...conversationHistory.slice(-10),
           { role: 'user', content: userMessage }
         ],
-        model, maxTokens: 1000, temperature: 0.7,
+        model, task: 'tool_support', maxTokens: 1000, temperature: 0.7,
         tools: getToolDefinitions(), tool_choice: 'auto'
       }
     })
