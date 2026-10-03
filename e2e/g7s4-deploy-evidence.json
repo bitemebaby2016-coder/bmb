@@ -1,6 +1,6 @@
 {
   "step": "G7-S4-C DEPLOY v5 (repo-relative filenames)",
-  "timestamp": "2026-10-03T03:40:44.976Z",
+  "timestamp": "2026-10-03T08:42:39.855Z",
   "project": "ivkdfognyiwjcmrhcnwz",
   "status": 201,
   "response": {
@@ -8,16 +8,16 @@
     "slug": "social-post-worker",
     "name": "social-post-worker",
     "status": "ACTIVE",
-    "version": 2,
+    "version": 3,
     "created_at": 1790997034153,
-    "updated_at": 1790998844526,
+    "updated_at": 1791016959290,
     "verify_jwt": true,
     "import_map": false,
-    "entrypoint_path": "file:///tmp/user_fn_ivkdfognyiwjcmrhcnwz_e9c3cda2-dd75-4c1d-868b-731348f1f732_2/source/supabase/functions/social-post-worker/index.ts",
-    "ezbr_sha256": "1c1e3fab75661c844de80c74db0498672040e2ae77964f6ae9f6c5ca698a16d9"
+    "entrypoint_path": "file:///tmp/user_fn_ivkdfognyiwjcmrhcnwz_e9c3cda2-dd75-4c1d-868b-731348f1f732_3/source/supabase/functions/social-post-worker/index.ts",
+    "ezbr_sha256": "58000a334a0e21b6d86ff29394664fc0d36efc8172e7a755ba37e54f99dd42c7"
   },
   "sha256": {
-    "supabase/functions/social-post-worker/index.ts": "145a867e6e07edae31e98500623ee2936b645f8a6368fab3f4722bed7c907926",
+    "supabase/functions/social-post-worker/index.ts": "4fe98bece096e9d04a63dcc1056ed88a7a1a60a7b6f0f8f0f81445d078fcf760",
     "supabase/functions/_shared/aiPolicy.ts": "83f0b6d3fafc6cb606d8e2f13209d2cd1f801c42b4c644c04a96049c9286de58",
     "supabase/functions/_shared/aiTimeout.ts": "4601485401d80f48e3dda16f8fb83ee8d5648afbc3fd53c5dcdf57936a9a14d2",
     "supabase/functions/_shared/aiStructuredOutput.ts": "a09679c527a4d06edf28c8dbff98be022c1f9b41827ae9b491b7db24a254f3fa"

@@ -1,0 +1,24 @@
+{
+  "timestamp": "2026-10-03T08:46:24.593Z",
+  "status": 200,
+  "response": {
+    "ok": true,
+    "duplicate": false,
+    "draft_ref": "g7-s4r2-20261003T091500Z-m3k8v6",
+    "draft_id": "g7cap-g7-s4r2-20261003T091500Z-m3k8v6",
+    "source_reference": "g7src-g7-s4r2-20261003T091500Z-m3k8v6",
+    "title": "ยินดีต้อนรับสู่ Bite Me Baby ร้านขนมหวานสไตล์เกาหลี",
+    "language": "th",
+    "requires_human_review": true,
+    "safety_flags": [
+      "none"
+    ],
+    "boundary": {
+      "content_type": "post",
+      "status": "pending",
+      "created_by": null,
+      "approval": "human review pending — canonical admin review RPC is the ONLY path to approved/rejected",
+      "publish": "NEVER — APPROVED != PUBLISHED; no publish path exists in G7"
+    }
+  }
+}
