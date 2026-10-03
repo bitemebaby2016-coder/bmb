@@ -202,3 +202,37 @@ Commit: fd4e687 — HEAD == origin/main, WORKTREE/INDEX CLEAN ยืนยัน
 S4 = PRODUCTION RUNTIME VERIFIED (probe PASS 12/12, cleanup เหลือ 0 rows)
 Commit นี้: worklog + probe script + worker fix (reasoning flag)
 ```
+## G6 SCOPE RECONCILIATION (เพิ่มหลังคำสั่ง Controller 2026-10-03 — AUDIT ONLY)
+
+**หัวข้อ:** job `hourly-social-ai` ที่เพิ่มใน S2 ต้องถูกพิจารณาว่าเป็น **scheduling change**
+
+**ข้อเท็จจริงจาก git/code (read-only):**
+
+```text
+Scheduler infrastructure        = PRE-EXISTING (automation-scheduler.yml, commit f639762 W3-E-1;
+                                  crons '*/5 * * * *' และ '7 * * * *' มีอยู่ก่อน G6)
+hourly-social-ai job            = NEW (เพิ่มใน commit a1835d4 ของ G6-S2)
+owner scheduler                 = GitHub Actions (workflow เดิม) — job ไม่ได้เพิ่ม cron ใหม่
+                                  (ลงทะเบียนบน cron '7 * * * *' ที่มีอยู่แล้ว ร่วมกับ hourly-low-stock)
+job เรียก                       = social-ai-worker (trigger เดียวกับ manual probe)
+queue/retry/backoff/dead-letter = ไม่มีทั้งหมด (job = pure trigger, fail-visible เท่านั้น)
+concurrency control             = อยู่ใน worker (optimistic claim + DB UNIQUE) — ไม่ใช่ scheduler
+G8 overlap                      = YES — ในมิติ "operational scheduling" (การลงทะเบียน job
+                                  รันอัตโนมัติทุกชั่วโมงเป็นการตัดสิน scheduling ที่ G8 ต้องรีวิว)
+```
+
+**การตัดสิน:** แม้ไม่มี queue/retry/backoff/dead-letter architecture ใหม่เกิดขึ้น (สิ่งเหล่านั้นยังอยู่ครบใน G8) แต่ตามกฎ §4 ของคำสั่ง reconciliation — **การลงทะเบียน job ใหม่ลง scheduler ถือเป็น scheduling change** ที่ต้อง reconcile กับ G8 ก่อนปิด G6 อย่างสมบูรณ์
+
+**สถานะที่ถูกต้องตาม evidence:**
+
+```text
+G6 = HOLD — SCOPE RECONCILIATION REQUIRED
+     (capability + security + runtime ยัง PASS ตามเดิม — HOLD เฉพาะ scheduling registration)
+G6 worker independently invokable = YES (พิสูจน์จริงใน S4: manual invoke โดยไม่ผูก scheduler)
+     → architecture ที่เสนอ: G6 = worker capability / G8 = scheduler+queue+retry+orchestration
+PRODUCTION SCHEDULER CHANGED = YES (yml pushed; ไม่มี Supabase runtime config ถูกเปลี่ยน)
+```
+
+**ห้าม:** ลบ/revert/force push/แก้ scheduler/แก้ worker — รอ reconciliation plan จาก Owner/Controller
+
+**การแก้ไขเอกสารครั้งนี้** = document correction ที่จำเป็นตามข้อ 6 ของคำสั่ง (เพิ่มมาตรา reconciliation ใน WORKLOG + FINAL_REPORT เท่านั้น — ไม่มี code change, ไม่มี scheduler change, ไม่มี deploy)

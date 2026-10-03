@@ -7,7 +7,12 @@ Gate: **G6 — Social Comment AI Foundation**
 
 ```text
 ==================================================
-G6 = PASS
+G6 = HOLD — SCOPE RECONCILIATION REQUIRED
+     (หลังคำสั่ง Controller 2026-10-03: job registration 'hourly-social-ai'
+      ที่เพิ่มใน S2 = scheduling change → G8 overlap ในมิติ "operational scheduling"
+      — รายละเอียดใน BMB_G6_WORKLOG.md §"G6 SCOPE RECONCILIATION")
+
+Capability / Security / Runtime ยังยืนยันตามนี้:
 SOCIAL COMMENT AI FOUNDATION = IMPLEMENTED + DEPLOYED + RUNTIME VERIFIED
    (classification + reply DRAFT เท่านั้น — ไม่มี outbound Meta)
 REAL META E2E = BLOCKED / DEFERRED (รอ G4 Meta approval — ตามที่ G6 กำหนดไว้ตั้งแต่ต้น)
