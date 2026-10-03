@@ -171,3 +171,71 @@ Design (Option A — ตาม D01): GitHub Actions ยังเป็น trigge
 - OD-4: ยืนยัน G6/G7 ยังไม่ register จนกว่า claim-adapter design ผ่าน gate แยก
 - OD-5: rollback drain policy — drain รอจบ หรือ force-requeue ทันที
 
+## 19. DUPLICATE / IDEMPOTENCY ANALYSIS (S3-06 — from actual code)
+
+| Scenario | What happens | Existing protection | New boundary needed? |
+|---|---|---|---|
+| GitHub Actions retries the run | same minute → same `gh-*-<yyyyMMddTHHmm>` eventId → `previousExecution` sees succeeded trace → `{duplicate:true}` no-op | audit trace PK (`auto-exec-<eventId>`) | NO |
+| GH re-run later (new eventId) | worker re-runs, but each canonical event notified via `notifyOnce` deterministic id + `resolution=ignore-duplicates` | notifications PK | NO |
+| enqueue twice (same reference) | queue id = PK → second INSERT 409, original untouched (S2 QUEUE-13) | PK constraint | adapter skip optional (OD-2) |
+| two workers claim concurrently | `FOR UPDATE SKIP LOCKED` single UPDATE → 1 winner (S2 QUEUE-03: 8→1) | atomic claim RPC | NO |
+| worker completes but ack lost (crash before complete) | lease expires → requeue → attempt 2 → same eventId → prior trace `succeeded` → duplicate no-op (side effects NOT duplicated) | audit trace PK + notification PK | NO |
+| worker failed (partial/failed trace) then requeued | trace not `succeeded` → re-execute; `notifyOnce` per-event dedupe กัน notification ซ้ำ | notifications PK | NO |
+| worker times out mid-execution | legacy: killed, no trace → next run retry ปลอดภัย; queue: lease expiry → requeue, attempt preserved | worker dedupe เดิม | NO |
+| lease expires AFTER business op completed, before ack | side effects persisted idempotently → retry = duplicate no-op (never double notification) | audit trace + notification PK | NO |
+| same logical canonical event appears again | `notifyOnce(e.id …)` keyed by canonical event id → duplicate | canonical event id | NO |
+
+**สรุป: ทุก duplicate scenario ถูกคุมโดย worker-level durable idempotency ที่มีอยู่จริง (audit trace PK + notifications deterministic PK + atomic claim)** — ไม่ต้องเพิ่ม worker-level dedupe → ไม่ HARD STOP จาก S3-06
+- ข้อยกเว้นเดียว: enqueue-dedupe ระหว่าง schedule ticks (active-row skip) = adapter concern → OD-2 (ไม่ใช่ duplicate-execution risk — เป็น row hygiene)
+
+## 20. RETRY CLASS VERIFICATION (S3-07 — code = migration 110 `fail_automation_job`)
+
+`base := case p_reason when 'db_transient' then 30 when 'ai_failure' then 120 else 60 end; nxt := now() + base * 2^(attempt-1) * (0.8+random()*0.4)`
+
+| D03 class | Spec | Code reality | Verdict |
+|---|---|---|---|
+| NETWORK | 3 attempts, 60→120→240 ±20% | base 60 (default), ×2^(n-1)×jitter(0.8–1.2), max_attempts=3 ที่ enqueue | MATCH |
+| AI 5xx/429 | 3 attempts, 120s exp ±20% | p_reason='ai_failure' → base 120 | MATCH |
+| AI timeout | **2 attempts**, 120s base ±20% | p_reason='ai_timeout' → **ตก else = 60s**; attempts = max_attempts ตอน enqueue (DB ไม่ enforce 2) | **GAP → OD-6** |
+| DB transient | 3 attempts, 30→60→120 ±20% | p_reason='db_transient' → base 30 | MATCH |
+| Worker timeout | lease expiry → requeue, attempt preserved | `requeue_stale_automation_jobs` (S2 QUEUE-05) | MATCH |
+| Non-retryable 401/403/malformed/schema/safety/unknown | NOT retried | p_retryable=false → dead ทันที (S2 QUEUE-12); adapter ต้อง classify 400/401/422 → non-retryable | MATCH (design) |
+
+- **Legacy 3 jobs ใช้ class เดียว (db_transient 30→60→120, 3 attempts) — ตรง D03 ทุกข้อ → ไม่ HARD STOP จาก S3-07**
+- OD-6 (ใหม่): AI-timeout — patch migration `'ai_timeout'` → base 120 + max_attempts 2 (additive) หรือ adapter ส่ง reason='ai_failure' (ผลเท่ากัน) — ไม่กระทบ legacy cutover
+
+## 21. PRODUCTION READINESS — OPEN SHOP ASSESSMENT (S3-08)
+
+**A. software-ready** (จาก code audit):
+- ORDER: order/checkout RPCs + RLS ใน repo migrations · PAYMENT: stripe-webhook/create-checkout/stripe-refund deployed · KITCHEN: ready-to-make gate (migration 054) · DISPATCH/DELIVERY: delivery_assignments (migration 020) + driver RPCs · TRACKING: order_status_history trigger (migration 040) · FAILURE HANDLING: automation notify path + queue infra (S2)
+- Automation notify/observability = software-ready หลัง cutover ตาม plan นี้
+
+**B. production-runtime-ready** — ยังไม่ครบ:
+- cutover ยังไม่เกิด (legacy path ยัง active) · queue-dispatcher ยังไม่มี (B-1) · OD-1/OD-2/OD-5 ยังไม่ตัดสิน
+- Meta/social messaging automation = FROZEN (G4 HOLD)
+
+**C. external-service-ready**:
+- Stripe: keys deployed (webhook/refund) — ต้องยืนยัน live-mode webhook ก่อน OPEN SHOP
+- OpenRouter: ใช้งานได้ (G5–G7 evidence) — ไม่ใช่ dependency ของ order/payment path
+- Meta/LINE/EMAIL/SMS/PUSH: **ไม่มี credentials** (declared, NOT configured — by design) → การแจ้งเตือนลูกค้าภายนอก in-app ยังไม่มี
+
+**D. physical-operation-ready**: นอก scope software — Owner ต้องกำหนด: เปิดร้านจริง (menu_schedule publish, capacity), ครัว/ไรเดอร์ใช้ UI จริง, กระบวนการรับเหตุขัดข้อง
+
+**GAPS ต่อ OPEN SHOP (โซ่ REAL ORDER→…→FAILURE HANDLING)**
+| Chain | Gap |
+|---|---|
+| ORDER | E2E order จริง 1 รอบใน production (OWNER-LED) |
+| PAYMENT | Stripe live-mode keys + webhook verify (OWNER-LED) |
+| KITCHEN | ผู้ใช้จริง + device (OWNER-LED) |
+| DISPATCH/DELIVERY | ไรเดอร์ account + assignment จริง (OWNER-LED) |
+| TRACKING | order_status_history พร้อม (auto) — READY |
+| FAILURE HANDLING | queue cutover (gate ถัดไป) · external notification transports ยังว่าง (design, G4-adjacent) |
+| SOCIAL/MESSAGING | G4 HOLD — ไม่ block order flow ทางเว็บ |
+
+## 22. NEXT GATE RECOMMENDATION
+
+1. **G8-S4 (proposed)**: implement `queue-dispatcher` enqueue/claim boundary (ใหม่, additive) + synthetic e2e + ตัดสิน OD-1/OD-2/OD-5/OD-6 — ยังไม่ cutover
+2. **G8-S5 (proposed)**: controlled cutover ตาม §11/§12 (single-commit toggle + observe) — หลัง S4 PASS + Owner authorize
+3. **G8-S6 (proposed, optional)**: G6/G7 registration แยก gate (double-claim adapter design) — หลัง queue path นิ่ง
+4. คู่ขนาน: OWNER-LED OPEN SHOP readiness (§21 C/D) — ไม่ผูกกับ G8 gates
+
