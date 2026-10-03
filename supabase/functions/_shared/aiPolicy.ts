@@ -64,17 +64,32 @@ export const TASK_POLICY: Record<AiTask, AiTaskPolicy> = {
 
 export const DEFAULT_TASK: AiTask = 'chat'
 
+/** G6: social tasks are executable ONLY by the server-side social-ai-worker —
+ *  never by client calls through ai-proxy (stays 400 there). */
+export type PolicyContext = 'proxy' | 'worker'
+export const WORKER_ACTIVE_TASKS: ReadonlySet<string> = new Set([
+  'social_comment_classify',
+  'social_reply_draft',
+])
+
 export type TaskResolution =
   | { ok: true; task: AiTask; policy: AiTaskPolicy }
   | { ok: false; reason: 'invalid_task' | 'reserved_task' }
 
 /** Server-side task validation (STEP 3): unknown task → invalid_task, reserved → reserved_task. */
-export function resolveTaskPolicy(task: unknown): TaskResolution {
+export function resolveTaskPolicy(task: unknown, context: PolicyContext = 'proxy'): TaskResolution {
   const t = typeof task === 'string' ? task.trim() : ''
   if (!t) return { ok: true, task: DEFAULT_TASK, policy: TASK_POLICY[DEFAULT_TASK] }
   const policy = (TASK_POLICY as Record<string, AiTaskPolicy | undefined>)[t]
   if (!policy) return { ok: false, reason: 'invalid_task' }
-  if (policy.status !== 'ACTIVE') return { ok: false, reason: 'reserved_task' }
+  if (policy.status !== 'ACTIVE') {
+    // G6: the social-ai-worker may execute the two social tasks listed in
+    // WORKER_ACTIVE_TASKS; ai-proxy (client path) NEVER can.
+    if (context === 'worker' && WORKER_ACTIVE_TASKS.has(t)) {
+      return { ok: true, task: t as AiTask, policy }
+    }
+    return { ok: false, reason: 'reserved_task' }
+  }
   return { ok: true, task: t as AiTask, policy }
 }
 

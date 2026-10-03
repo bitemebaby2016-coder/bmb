@@ -125,5 +125,20 @@ Commit: ce0254a — HEAD == origin/main, WORKTREE/INDEX CLEAN ยืนยัน
 
 ```text
 S1 = CONTRACT COMPLETE (docs เท่านั้น)
+Commit: 4408ecf — HEAD == origin/main, WORKTREE/INDEX CLEAN ยืนยันแล้ว
 NEXT: G6-S2 Implementation หลัง commit/push/clean ยืนยัน
 ```
+
+## G6-S2 — IMPLEMENTATION (จบแล้ว)
+
+ไฟล์ที่ implement จริง:
+
+| ไฟล์ | สถานะ | เนื้อหา |
+|---|---|---|
+| `supabase/functions/social-ai-worker/index.ts` | IMPLEMENTED (ใหม่, 391 บรรทัด) | classify + reply draft worker ตาม contract §2-§7: auth (AUTOMATION_TOKEN), claim แบบ optimistic conditional PATCH (race-safe, ไม่มี schema ใหม่), AI routing ผ่าน `_shared/aiPolicy.ts` (task → approved model, timeout, fallback 1 ครั้ง), structured validation + semantic validation (FAIL CLOSED), เขียน `ai_model/ai_reply_text/ai_validated/ai_guardrail_flags` + `status='SUCCEEDED'`, failure → RETRYABLE/FAILED, **ไม่แตะ reply_status/action_type/order_number** |
+| `supabase/functions/_shared/aiPolicy.ts` | IMPLEMENTED (แก้เล็กน้อย) | เพิ่ม `PolicyContext ('proxy'|'worker')` + `WORKER_ACTIVE_TASKS` — social tasks ทำงานได้**เฉพาะใน worker**; ai-proxy (client path) ยัง 400 `reserved_task` ตามเดิม (ไม่ล้าง T-G5-17) |
+| `.github/workflows/automation-scheduler.yml` | IMPLEMENTED (แก้ additive) | เพิ่ม job `hourly-social-ai` dispatch → `social-ai-worker` (scheduler เดิม, secret `AUTOMATION_TOKEN` เดิม — ไม่มี scheduler ใหม่) |
+
+ไม่แตะ: `ai-proxy` logic เดิม, `channel-webhook`, migrations ทั้งหมด, RLS/grants, G4 ทุกอย่าง
+
+หมายเหตุ design: `resolveTaskPolicy(task)` ยัง default = `'proxy'` → caller เดิมทุกจุด (ai-proxy, tests) ไม่เปลี่ยนพฤติกรรม
