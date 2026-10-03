@@ -109,7 +109,21 @@ Human review ของ reply draft     → เสนอ additive UI/RPC (ต้�
 ### S0 gate result
 
 ```text
-npm test (baseline regression) = ผ่านทั้งหมด (ไม่มี code change ใน S0)
+npm test (baseline regression) = 42 files passed (ไม่มี code change ใน S0)
 S0 = AUDIT COMPLETE — ไม่มี implementation
-NEXT: G6-S1 (Contract + Design) หลัง commit/push S0 และ clean ยืนยัน
+Commit: ce0254a — HEAD == origin/main, WORKTREE/INDEX CLEAN ยืนยันแล้ว
+```
+
+## G6-S1 — CONTRACT + DESIGN (จบแล้ว)
+
+- สร้าง `BMB_G6_CONTRACT.md`: task activation (`social_comment_classify` + `social_reply_draft` = ACTIVE, `social_post_draft` = RESERVED), input/output schema, validation (FAIL CLOSED), failure behavior, authorization (automation-token pattern เดิม), tenant/brand scope (derived เท่านั้น), idempotency (UNIQUE + claim), retention/PII, approval/publish boundary
+- **Critical approval rule ตรวจของจริงแล้ว (S0):** `pending→approved/rejected` + `is_content_approved` gate = **มี semantic ครบ** → ไม่ HARD STOP; mapping บันทึกชัด: DRAFT ≈ 'pending', APPROVED != PUBLISHED ✅
+- **`G6 DB CHANGE REQUIRED` = ไม่มี** — ใช้คอลัมน์ที่ migration 109 มีอยู่แล้วทั้งหมด (`ai_model/ai_reply_text/ai_validated/ai_guardrail_flags` jsonb) — ไม่มี migration, ไม่แตะ RLS/grant
+- Processing component (proposal ที่ S2 จะ implement): EF ใหม่ `social-ai-worker` — auth pattern เดียวกับ `automation-worker` (`AUTOMATION_TOKEN`), เขียนผ่าน `SUPABASE_SERVICE_ROLE_KEY` (grant เดิมจาก migration 109), AI routing import `_shared/aiPolicy.ts` + validator `_shared/aiStructuredOutput.ts` (G5 reuse), trigger = manual + automation-scheduler.yml (scheduler เดิม)
+- Human review UI = **DEFERRED**; outbound Meta = **BLOCKED** (G4); `reply_status` คง NULL ตลอด G6; `action_type` คง 'none'
+- S1 verification: contract เทียบกับ production evidence (S0) ตรงทุกจุด — ไม่มี authority ใหม่, ไม่มี business rule ใหม่, ไม่มี destructive change
+
+```text
+S1 = CONTRACT COMPLETE (docs เท่านั้น)
+NEXT: G6-S2 Implementation หลัง commit/push/clean ยืนยัน
 ```
