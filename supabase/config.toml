@@ -59,6 +59,14 @@ verify_jwt = false
 # same auth pattern as automation-worker (platform JWT + x-automation-token).
 [functions.social-ai-worker]
 enabled = true
+# queue-enqueue: G8-T2 trusted enqueue TRANSPORT (Owner D06 = OPTION A).
+# Called by GitHub Actions with the EXISTING AUTOMATION_TOKEN secret (no new secret).
+# verify_jwt = true (same platform layer as automation-worker).
+# Handler: authenticate → validate allowlisted job/payload template →
+# call enqueue_automation_job() (DB authority) → propagate canonical result.
+[functions.queue-enqueue]
+enabled = true
+verify_jwt = true
 # social-post-worker: G7 post DRAFT generation (Owner D-G7-A — draft creation only;
 # no publish path). Internal invocation like automation-worker.
 [functions.social-post-worker]

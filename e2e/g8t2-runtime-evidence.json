@@ -1,0 +1,15 @@
+[
+  "P1_VALID_ENQUEUE={\"status\":200,\"result\":\"ENQUEUED\",\"rowStatus\":\"queued\",\"payload\":{\"synthetic\":true},\"maxAttempts\":3,\"worker\":\"synthetic-evidence\"}",
+  "P2_DUPLICATE={\"status\":200,\"result\":\"DUPLICATE\",\"duplicate\":true,\"attemptUnchanged\":true,\"statusUnchanged\":true}",
+  "P3_LEGACY_TEMPLATE={\"status\":200,\"result\":\"ENQUEUED\",\"payload\":{\"limit\":200,\"lookbackMinutes\":360},\"worker\":\"automation-worker\"}",
+  "P4_CONCURRENT_ENQUEUE={\"attempts\":8,\"enqueued\":1,\"duplicates\":7,\"exactlyOne\":true}",
+  "N1_NO_TOKEN={\"status\":401,\"denied\":true}",
+  "N2_WRONG_TOKEN={\"status\":401,\"denied\":true}",
+  "N3_MALFORMED={\"status\":400,\"denied\":true}",
+  "N4_UNKNOWN_JOB={\"status\":400,\"denied\":true}",
+  "N5_INVALID_REF={\"status\":400,\"denied\":true}",
+  "N6_INVALID_PARAMS={\"status\":400,\"denied\":true}",
+  "N7_INJECTION_IGNORED={\"status\":200,\"extraPayloadKeys\":[],\"attemptUntouched\":true,\"statusQueued\":true,\"noAuthorityColumns\":true}",
+  "N8_NO_PROXY={\"status\":400,\"note\":\"unknown job — no generic RPC/table path exists\"}",
+  "CLEANUP={\"deleteStatus\":204,\"residueSynthetic\":0}"
+]
