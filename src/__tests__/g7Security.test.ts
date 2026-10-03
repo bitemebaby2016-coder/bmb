@@ -115,7 +115,7 @@ describe('G7-07/08 prompt injection + oversized untrusted input', () => {
 // ---------- G7-09..13 tenant/brand authority ----------
 describe('G7-09..13 tenant derivation + brand boundary', () => {
   it('G7-09 tenant/brand derived server-side from canonical brands (is_default)', () => {
-    expect(workerSrc).toMatch(/\/rest\/v1\/brands\?select=id,tenant_id&is_default=true/)
+    expect(workerSrc).toContain('/rest/v1/brands?select=id,tenant_id&is_default=eq.true&limit=1')
     expect(workerSrc).toMatch(/missing_tenant_context/)
   })
   it('G7-10/11/12 caller-supplied tenant/brand authority impossible (no such input fields)', () => {
@@ -279,15 +279,28 @@ describe('S3-AUTH authentication boundary', () => {
 
 describe('S3-TENANT / S3-BRAND authority security', () => {
   it('S3-TENANT-01 tenant derived server-side from canonical brands table only', () => {
-    expect(workerSrc).toMatch(/\/rest\/v1\/brands\?select=id,tenant_id&is_default=true/)
+    expect(workerSrc).toContain('/rest/v1/brands?select=id,tenant_id&is_default=eq.true&limit=1')
   })
   it('S3-TENANT-02..05 NULL/empty/cross-tenant/caller-supplied tenant fail closed', () => {
     expect(workerSrc).not.toMatch(/payload\.tenant|body\.tenant|payload\.tenant_id/)
+    expect(workerSrc).not.toMatch(/payload\.brand_id|body\.brand_id/)
     expect(workerSrc).toMatch(/missing_tenant_context/)
     expect(workerSrc).toMatch(/if \(!brandRow\?\.tenant_id \|\| !brandRow\?\.id\)/)
   })
+  it('S3R1-D3-01 default brand query uses canonical PostgREST operator (is_default=eq.true)', () => {
+    expect(workerSrc).toContain('is_default=eq.true')
+  })
+  it('S3R1-D3-02 bare is_default=true filter (PostgREST PGRST100 -> missing_tenant_context) is forbidden', () => {
+    const g7B = String.fromCharCode(92)
+    expect(workerSrc).not.toMatch(new RegExp('is_default=(?!eq)' + g7B + '+true'))
+  })
+  it('S3R1-D3-03 tenant/brand authority model unchanged (server derive, single default row, fail-closed)', () => {
+    expect(workerSrc).toMatch(/brands\?select=id,tenant_id/)
+    expect(workerSrc).toMatch(/limit=1/)
+    expect(workerSrc).toMatch(/missing_tenant_context/)
+  })
   it('S3-BRAND-01 brand from existing authoritative relation (brands.is_default)', () => {
-    expect(workerSrc).toMatch(/is_default=true/)
+    expect(workerSrc).toMatch(/is_default=eq\.true/)
   })
   it('S3-BRAND-02/03 caller and model cannot override brand', () => {
     expect(workerSrc).not.toMatch(/payload\.brand|body\.brand|v\.brand|out\.brand/)

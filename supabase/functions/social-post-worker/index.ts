@@ -298,7 +298,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
 
   // --- single authoritative tenant/brand context (single-brand launch, S0) ---
   // derived from canonical config tables — NEVER from caller/model
-  const ctx = await rest('GET', '/rest/v1/brands?select=id,tenant_id&is_default=true&limit=1')
+  const ctx = await rest('GET', '/rest/v1/brands?select=id,tenant_id&is_default=eq.true&limit=1')
   const brandRow = Array.isArray(ctx.j) ? ctx.j[0] : null
   if (!brandRow?.tenant_id || !brandRow?.id) return json({ error: 'missing_tenant_context' }, 502)
   const tenantContext = `${brandRow.tenant_id}/${brandRow.id}`

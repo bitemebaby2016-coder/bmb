@@ -346,3 +346,32 @@ static diff = เฉพาะ g7Security.test.ts + aiStructuredOutput.ts (reject
 **ตามกติกา S4-J:** source change เพราะพบ defect → **HARD STOP กลับไป S3** (แก้ D3 + test ครอบ → แล้วขอรัน S4 รอบใหม่) — ห้ามประกาศ S4 PASS
 รายละเอียดเตม: `BMB_G7_S4_RUNTIME_REPORT.md` · evidence: `e2e/g7s4-*.cjs`, `e2e/g7s4-deploy-evidence.json`, `e2e/g7s4-invoke-*.json`
 **STATUS: DEPLOYED · RUNTIME VERIFIED = NO (FAIL: D3) · CLEANUP VERIFIED (nothing to clean) — ห้ามเริ่ม G8/G9/G10**
+
+## G7-S3-R1 — D3 REMEDIATION (จบแล้ว)
+
+**D3 (พบใน S4-R1):**
+```text
+BUG:   social-post-worker/index.ts:301 — GET /rest/v1/brands?select=id,tenant_id&is_default=true&limit=1
+       → PostgREST 400 PGRST100 ("failed to parse filter (true)")
+       → brandRow ว่าง → fail-closed missing_tenant_context (HTTP 502)
+       → S4-E synthetic invocation ทำงานไม่สำเรจทุกครั้ง (ไม่มี row ใดถกสร้าง)
+FIX:   is_default=true → is_default=eq.true (canonical PostgREST operator) — 1 บรรทัด
+       REST reproduction: eq.true → 200 [{"id":"brand-bmb-main","tenant_id":"tenant-bmb-001"}] ✅
+```
+
+**Regression test ใหม่ (S3R1-D3-01..03 ใน g7Security.test.ts):**
+- D3-01 assert canonical `is_default=eq.true` ใน worker source
+- D3-02 ห้ามกลับไปใช้ bare `is_default=true` (negative-lookahead regex — จะ FAIL ทันทีถ้า regression)
+- D3-03 authority model ไม่เปลี่ยน (server derive + single default row + fail-closed guard)
+- อัปเดต S3-TENANT-01 / S3-BRAND-01 ที่เคย assert รปแบบบัก (is_default=true) ให้ assert รปแบบ canonical — รวมกับ S3 เดิม: caller-supplied tenant/brand ยังเปนไปไม่ได้, NULL/empty/cross-tenant ยัง fail-closed, ไม่มี brand_admin
+
+**Verification:**
+```text
+g7Security = 63/63 ผ่าน · full npm test = 488 passed / 0 failed
+tsc = 0 · eslint = 0 · build = 0 · secret scan (diff f8f0cf7) = CLEAN
+static scope diff = เพาะ social-post-worker/index.ts (1 บรรทัด) + g7Security.test.ts + worklog — ไม่มี migration/schema/G3-G6/scheduler/queue/Meta/business mutation
+```
+
+**S4 runtime verification remains pending**
+**Production deployment remains the defective v2 until S4-R2 redeploy**
+(รอบนี้ไม่ deploy ไม่ probe — ตามคำสั่ง S3-R1; รอ Owner สั่ง S4-R2 พร้อม synthetic ref ใหม่)
