@@ -1,31 +1,36 @@
-﻿# ============================================
-# BMB â€” automation-scheduler (W3-E-1)
+# ============================================
+# BMB — automation-scheduler (G8-S5 CUTOVER)
 #
-# External HTTP scheduler for the native BMB automation-worker.
-# Architecture (unchanged, per Owner approval):
-#   Supabase = Source of Truth Â· automation-worker = the ONLY worker Â·
-#   HTTP + x-automation-token = invocation Â· DB deterministic-id = idempotency authority
+# SINGLE-PATH queue architecture (Owner-authorized G8-S5):
+#   GitHub Actions (this workflow)
+#     → queue-enqueue  (secure enqueue transport: verify_jwt + x-automation-token,
+#                       allowlisted jobs, server-side payload templates, DB idempotency)
+#     → automation_queue (deterministic identity 'sched-<job>-<ref>')
+#     → queue-dispatcher (atomic claim FOR UPDATE SKIP LOCKED → canonical worker
+#                         automation-worker UNCHANGED → complete/fail RPC)
 #
-# NOTE: GitHub Actions schedule is BEST-EFFORT â€” runs may be delayed under
-# load. Do NOT treat 5 minutes as an exact SLA.
+# LEGACY DIRECT WORKER INVOCATION REMOVED in this commit (single-commit toggle).
+# No dual path: each schedule event = ONE enqueue + ONE dispatch.
 #
-# Concurrency: queued (never cancels an in-flight execution).
-# Failure behavior: job FAILS if any worker call is non-succeeded or
-# non-HTTP-200 â€” visible in Actions run history. The token is never echoed.
+# Identity: ref gh-dispatch-YYYYMMDDTHHMM / gh-stale-YYYYMMDDTHHMM / gh-stock-YYYYMMDDTHH
+# (same cadence granularity as the legacy eventId scheme).
+#
+# Failure behavior: the step FAILS if enqueue result is neither ENQUEUED nor
+# DUPLICATE, or any dispatch result is not queue-final 'SUCCEEDED' — visible in
+# Actions history. Token is never echoed.
+# G6/G7 remain NOT REGISTERED (separate gate).
 # ============================================
 
 name: automation-scheduler
 
 on:
   schedule:
-    # every 5 minutes â€” canonical-event notifications + stale orders
     - cron: '*/5 * * * *'
-    # hourly (offset from top-of-hour to reduce GitHub top-of-hour congestion)
     - cron: '7 * * * *'
   workflow_dispatch:
     inputs:
       job:
-        description: 'Which worker call to run (all | dispatch | stale | stock)'
+        description: 'Which job to run (all | dispatch | stale | stock)'
         required: false
         default: 'all'
 
@@ -41,49 +46,89 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - name: notification_dispatch
+      - name: notification_dispatch_enqueue
         env:
-          WORKER_URL: https://ivkdfognyiwjcmrhcnwz.supabase.co/functions/v1/automation-worker
+          ENQUEUE_URL: https://ivkdfognyiwjcmrhcnwz.supabase.co/functions/v1/queue-enqueue
           TOKEN: ${{ secrets.AUTOMATION_TOKEN }}
         run: |
           EV="gh-dispatch-$(date -u +%Y%m%dT%H%M)"
-          RESP=$(curl -sS -f -X POST "$WORKER_URL" \
+          RESP=$(curl -sS -f -X POST "$ENQUEUE_URL" \
             -H "Content-Type: application/json" \
             -H "apikey: sb_publishable_Q7AHrjSYOrysDjxS9_ZB-g_NMmytLOH" \
             -H "x-automation-token: $TOKEN" \
-            -d "{\"job\":\"notification_dispatch\",\"eventId\":\"$EV\",\"lookbackMinutes\":360,\"limit\":200}") || {
-            echo "::error::notification_dispatch HTTP call failed"; exit 1; }
+            -d "{\"job\":\"notification_dispatch\",\"ref\":\"$EV\",\"params\":{\"lookbackMinutes\":360,\"limit\":200}}") || {
+            echo "::error::notification_dispatch enqueue HTTP failed"; exit 1; }
           echo "$RESP" | node -e '
             let s=""; process.stdin.on("data",d=>s+=d).on("end",()=>{
               try { const j=JSON.parse(s);
-                if (!(j.duplicate === true) && j.status !== "succeeded" && j.status !== "partial") {
-                  console.error("::error::notification_dispatch worker status=" + j.status + " errors=" + JSON.stringify(j.errors||[]));
-                  process.exit(1);
+                if (j.result !== "ENQUEUED" && j.result !== "DUPLICATE") {
+                  console.error("::error::notification_dispatch enqueue result=" + (j.result || j.error)); process.exit(1);
                 }
-                console.log("notification_dispatch " + j.status + " created=" + ((j.results.notification_dispatch||{}).created||[]).length + " duplicate=" + ((j.results.notification_dispatch||{}).duplicate||[]).length);
-              } catch(e) { console.error("::error::invalid worker response"); process.exit(1); }
+                console.log("notification_dispatch enqueue " + j.result + " id=" + j.id);
+              } catch(e) { console.error("::error::invalid enqueue response"); process.exit(1); }
             })'
-      - name: orders_stale_pending
+      - name: notification_dispatch_dispatch
+        if: always()
+        needs: notification_dispatch_enqueue
         env:
-          WORKER_URL: https://ivkdfognyiwjcmrhcnwz.supabase.co/functions/v1/automation-worker
+          DISPATCH_URL: https://ivkdfognyiwjcmrhcnwz.supabase.co/functions/v1/queue-dispatcher
+          TOKEN: ${{ secrets.AUTOMATION_TOKEN }}
+        run: |
+          RESP=$(curl -sS -f -X POST "$DISPATCH_URL" \
+            -H "Content-Type: application/json" \
+            -H "apikey: sb_publishable_Q7AHrjSYOrysDjxS9_ZB-g_NMmytLOH" \
+            -H "x-automation-token: $TOKEN" \
+            -d "{\"jobType\":\"notification_dispatch\"}") || {
+            echo "::error::notification_dispatch dispatcher HTTP failed"; exit 1; }
+          echo "$RESP" | node -e '
+            let s=""; process.stdin.on("data",d=>s+=d).on("end",()=>{
+              try { const j=JSON.parse(s);
+                const bad=(j.results||[]).filter(r=>r.queueResult!=="SUCCEEDED");
+                if (bad.length) { console.error("::error::notification_dispatch queue results not all SUCCEEDED: " + JSON.stringify(bad)); process.exit(1); }
+                console.log("notification_dispatch claimed=" + j.claimed + " all SUCCEEDED");
+              } catch(e) { console.error("::error::invalid dispatcher response"); process.exit(1); }
+            })'
+      - name: orders_stale_pending_enqueue
+        env:
+          ENQUEUE_URL: https://ivkdfognyiwjcmrhcnwz.supabase.co/functions/v1/queue-enqueue
           TOKEN: ${{ secrets.AUTOMATION_TOKEN }}
         run: |
           EV="gh-stale-$(date -u +%Y%m%dT%H%M)"
-          RESP=$(curl -sS -f -X POST "$WORKER_URL" \
+          RESP=$(curl -sS -f -X POST "$ENQUEUE_URL" \
             -H "Content-Type: application/json" \
             -H "apikey: sb_publishable_Q7AHrjSYOrysDjxS9_ZB-g_NMmytLOH" \
             -H "x-automation-token: $TOKEN" \
-            -d "{\"job\":\"orders_stale_pending\",\"eventId\":\"$EV\",\"maxAgeMinutes\":120}") || {
-            echo "::error::orders_stale_pending HTTP call failed"; exit 1; }
+            -d "{\"job\":\"orders_stale_pending\",\"ref\":\"$EV\",\"params\":{\"maxAgeMinutes\":120}}") || {
+            echo "::error::orders_stale_pending enqueue HTTP failed"; exit 1; }
           echo "$RESP" | node -e '
             let s=""; process.stdin.on("data",d=>s+=d).on("end",()=>{
               try { const j=JSON.parse(s);
-                if (!(j.duplicate === true) && j.status !== "succeeded" && j.status !== "partial") {
-                  console.error("::error::orders_stale_pending worker status=" + j.status + " errors=" + JSON.stringify(j.errors||[]));
-                  process.exit(1);
+                if (j.result !== "ENQUEUED" && j.result !== "DUPLICATE") {
+                  console.error("::error::orders_stale_pending enqueue result=" + (j.result || j.error)); process.exit(1);
                 }
-                console.log("orders_stale_pending " + j.status);
-              } catch(e) { console.error("::error::invalid worker response"); process.exit(1); }
+                console.log("orders_stale_pending enqueue " + j.result + " id=" + j.id);
+              } catch(e) { console.error("::error::invalid enqueue response"); process.exit(1); }
+            })'
+      - name: orders_stale_pending_dispatch
+        if: always()
+        needs: orders_stale_pending_enqueue
+        env:
+          DISPATCH_URL: https://ivkdfognyiwjcmrhcnwz.supabase.co/functions/v1/queue-dispatcher
+          TOKEN: ${{ secrets.AUTOMATION_TOKEN }}
+        run: |
+          RESP=$(curl -sS -f -X POST "$DISPATCH_URL" \
+            -H "Content-Type: application/json" \
+            -H "apikey: sb_publishable_Q7AHrjSYOrysDjxS9_ZB-g_NMmytLOH" \
+            -H "x-automation-token: $TOKEN" \
+            -d "{\"jobType\":\"orders_stale_pending\"}") || {
+            echo "::error::orders_stale_pending dispatcher HTTP failed"; exit 1; }
+          echo "$RESP" | node -e '
+            let s=""; process.stdin.on("data",d=>s+=d).on("end",()=>{
+              try { const j=JSON.parse(s);
+                const bad=(j.results||[]).filter(r=>r.queueResult!=="SUCCEEDED");
+                if (bad.length) { console.error("::error::orders_stale_pending queue results not all SUCCEEDED: " + JSON.stringify(bad)); process.exit(1); }
+                console.log("orders_stale_pending claimed=" + j.claimed + " all SUCCEEDED");
+              } catch(e) { console.error("::error::invalid dispatcher response"); process.exit(1); }
             })'
 
   hourly-low-stock:
@@ -91,32 +136,45 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - name: inventory_low_stock
+      - name: inventory_low_stock_enqueue
         env:
-          WORKER_URL: https://ivkdfognyiwjcmrhcnwz.supabase.co/functions/v1/automation-worker
+          ENQUEUE_URL: https://ivkdfognyiwjcmrhcnwz.supabase.co/functions/v1/queue-enqueue
           TOKEN: ${{ secrets.AUTOMATION_TOKEN }}
         run: |
           EV="gh-stock-$(date -u +%Y%m%dT%H)"
-          RESP=$(curl -sS -f -X POST "$WORKER_URL" \
+          RESP=$(curl -sS -f -X POST "$ENQUEUE_URL" \
             -H "Content-Type: application/json" \
             -H "apikey: sb_publishable_Q7AHrjSYOrysDjxS9_ZB-g_NMmytLOH" \
             -H "x-automation-token: $TOKEN" \
-            -d "{\"job\":\"inventory_low_stock\",\"eventId\":\"$EV\",\"stockThreshold\":3}") || {
-            echo "::error::inventory_low_stock HTTP call failed"; exit 1; }
+            -d "{\"job\":\"inventory_low_stock\",\"ref\":\"$EV\",\"params\":{\"stockThreshold\":3}}") || {
+            echo "::error::inventory_low_stock enqueue HTTP failed"; exit 1; }
           echo "$RESP" | node -e '
             let s=""; process.stdin.on("data",d=>s+=d).on("end",()=>{
               try { const j=JSON.parse(s);
-                if (!(j.duplicate === true) && j.status !== "succeeded" && j.status !== "partial") {
-                  console.error("::error::inventory_low_stock worker status=" + j.status + " errors=" + JSON.stringify(j.errors||[]));
-                  process.exit(1);
+                if (j.result !== "ENQUEUED" && j.result !== "DUPLICATE") {
+                  console.error("::error::inventory_low_stock enqueue result=" + (j.result || j.error)); process.exit(1);
                 }
-                console.log("inventory_low_stock " + j.status);
-              } catch(e) { console.error("::error::invalid worker response"); process.exit(1); }
+                console.log("inventory_low_stock enqueue " + j.result + " id=" + j.id);
+              } catch(e) { console.error("::error::invalid enqueue response"); process.exit(1); }
             })'
-
-# G6 SCOPE RECONCILIATION (Owner decision 2026-10-03):
-#   G6 = AI capability (classify/draft/validate/safety/idempotency)
-#   G8 = Operational orchestration (scheduler/queue/retry/backoff/concurrency/recovery)
-# A social-ai scheduler job registration added in G6-S2 was REMOVED here —
-# social-ai-worker remains deployed and is invoked manually/internally (owner/admin
-# trigger with x-automation-token). G8 will register the scheduling job itself.
+      - name: inventory_low_stock_dispatch
+        if: always()
+        needs: inventory_low_stock_enqueue
+        env:
+          DISPATCH_URL: https://ivkdfognyiwjcmrhcnwz.supabase.co/functions/v1/queue-dispatcher
+          TOKEN: ${{ secrets.AUTOMATION_TOKEN }}
+        run: |
+          RESP=$(curl -sS -f -X POST "$DISPATCH_URL" \
+            -H "Content-Type: application/json" \
+            -H "apikey: sb_publishable_Q7AHrjSYOrysDjxS9_ZB-g_NMmytLOH" \
+            -H "x-automation-token: $TOKEN" \
+            -d "{\"jobType\":\"inventory_low_stock\"}") || {
+            echo "::error::inventory_low_stock dispatcher HTTP failed"; exit 1; }
+          echo "$RESP" | node -e '
+            let s=""; process.stdin.on("data",d=>s+=d).on("end",()=>{
+              try { const j=JSON.parse(s);
+                const bad=(j.results||[]).filter(r=>r.queueResult!=="SUCCEEDED");
+                if (bad.length) { console.error("::error::inventory_low_stock queue results not all SUCCEEDED: " + JSON.stringify(bad)); process.exit(1); }
+                console.log("inventory_low_stock claimed=" + j.claimed + " all SUCCEEDED");
+              } catch(e) { console.error("::error::invalid dispatcher response"); process.exit(1); }
+            })'

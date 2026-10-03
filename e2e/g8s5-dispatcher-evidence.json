@@ -1,0 +1,21 @@
+[
+  "D1_NO_TOKEN = {\"status\":401,\"denied\":true}",
+  "D2_WRONG_TOKEN = {\"status\":401,\"denied\":true}",
+  "D3_UNKNOWN_JOBTYPE = {\"status\":400,\"denied\":true}",
+  "D4_INVALID_JSON = {\"status\":400,\"denied\":true}",
+  "CTRL_notification_dispatch = {\"enqueue\":\"ENQUEUED\",\"dispatchHttp\":200,\"workerStatus\":\"succeeded\",\"workerHttp\":200,\"queueResult\":\"SUCCEEDED\",\"queueFinal\":\"succeeded\",\"trace\":\"succeeded\"}",
+  "IDEMP_notification_dispatch = {\"reEnqueue\":\"DUPLICATE\",\"reDispatchClaimed\":0}",
+  "CTRL_orders_stale_pending = {\"enqueue\":\"ENQUEUED\",\"dispatchHttp\":200,\"workerStatus\":\"succeeded\",\"workerHttp\":200,\"queueResult\":\"SUCCEEDED\",\"queueFinal\":\"succeeded\",\"trace\":\"succeeded\"}",
+  "IDEMP_orders_stale_pending = {\"reEnqueue\":\"DUPLICATE\",\"reDispatchClaimed\":0}",
+  "CTRL_inventory_low_stock = {\"enqueue\":\"ENQUEUED\",\"dispatchHttp\":200,\"workerStatus\":\"succeeded\",\"workerHttp\":200,\"queueResult\":\"SUCCEEDED\",\"queueFinal\":\"succeeded\",\"trace\":\"succeeded\"}",
+  "IDEMP_inventory_low_stock = {\"reEnqueue\":\"DUPLICATE\",\"reDispatchClaimed\":0}",
+  "D5_EMPTY_CLAIM = {\"status\":200,\"claimed\":0}",
+  "F1_CLAIM = {\"claimed\":false}",
+  "F2_RETRYABLE = {\"result\":\"REQUEUED\"}",
+  "F3_AFTER_RETRY = {\"status\":\"queued\"}",
+  "F4_NONRETRYABLE = {\"result\":\"DEAD\"}",
+  "F5_DEAD = {\"status\":\"dead\"}",
+  "F6_REPLAY = {\"newId\":true}",
+  "F7_LEASE_EXPIRY = {\"updated\":true,\"requeuedFn\":true,\"status\":\"queued\"}",
+  "CLEANUP = {\"deleted\":5,\"residue\":1}"
+]

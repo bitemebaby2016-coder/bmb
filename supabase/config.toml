@@ -67,6 +67,13 @@ enabled = true
 [functions.queue-enqueue]
 enabled = true
 verify_jwt = true
+
+# queue-dispatcher: G8-S5 — queue → canonical worker bridge (claim SKIP LOCKED →
+# invoke automation-worker UNCHANGED (eventId = queue id) → complete/fail via RPC).
+# verify_jwt = true (same platform layer as queue-enqueue).
+[functions.queue-dispatcher]
+enabled = true
+verify_jwt = true
 # social-post-worker: G7 post DRAFT generation (Owner D-G7-A — draft creation only;
 # no publish path). Internal invocation like automation-worker.
 [functions.social-post-worker]
