@@ -151,6 +151,60 @@ WORKTREE CLEAN:       YES (หลัง commit)
 ```
 
 **STOP — ไม่เริ่ม S1 ใน execution นี้**
+## G7-S2 — HARD STOP (blocker ยืนยันจริงจาก production — ยังไม่ implement)
+
+**วันที่:** 2026-10-03 BKK · สถานะ: STOP ตามคำสั่ง S2 ("If implementation reveals that any of
+the above is required: HARD STOP. Do not invent a workaround.")
+
+### Blocker: §2 (internal automation auth) × §8 (ต้องใช้ `submit_content_for_approval`) ขัดกันจริง
+
+**Evidence (production probe จริง, ไม่มี mutation — input ที่ abort ก่อน INSERT ทั้งสองกรณี,
+script `e2e/g7s2RpcProbe.cjs`):**
+
+```text
+POST /rest/v1/rpc/submit_content_for_approval  (Authorization: Bearer SERVICE_ROLE_KEY)
+p_content_type='post', p_title='' (invalid → abort ก่อน INSERT เสมอ)
+→ HTTP 400 {"code":"P0001","message":"ERR_NOT_AUTHENTICATED"}
+```
+
+- RPC `submit_content_for_approval` (migration 022) ตรวจ `v_uid := auth.uid(); IF v_uid IS NULL
+  THEN RAISE 'ERR_NOT_AUTHENTICATED'` — **ต้องมี user JWT เท่านั้น**
+- worker แบบ internal (AUTOMATION_TOKEN) มีเพียง `SUPABASE_SERVICE_ROLE_KEY` — **ไม่มี user JWT
+  ใด** ใน secret store (ไม่มี FACEBOOK_/PAGE token, ไม่มี user credential ที่ reuse ได้)
+- ทางเลือกที่เหลือทั้งหมดละเมิดคำสั่ง S2 ข้อใดข้อหนึ่ง:
+  1. service_role direct INSERT ลง content_approvals → ละเมิด §8 "Do not insert around the RPC"
+  2. ให้ worker ใช้ client JWT / เปิด client activation path → ละเมิด §2 "no client/public
+     activation path"
+  3. แก้ RPC/migration เพิ่ม service_role path → ละเมิด HARD RULE (create migration / new authority)
+
+**สิ่งที่ยังไม่ถูก implement** (จงใจ — รอ Owner decision): worker, policy activation,
+tests G7-01..28 — ห้ามทำบางส่วนแล้วปล่อยค้าง
+
+### Owner decisions ที่ต้องตัดสิน (เลือก 1):
+
+```text
+D-G7-A: อนุญาตให้ worker (service_role) INSERT ลง content_approvals ตรง ๆ
+        ด้วย status='pending', created_by=NULL (ไม่มี authority ใหม่ — service_role
+        มี INSERT grant อยู่แล้วจาก migration 022; review ยังเป็น human ผ่าน
+        review_content RPC เดิม; APPROVED != PUBLISHED คงอยู่)
+        → ต้องแก้ S1 contract §3 wording ให้ตรง
+
+D-G7-B: Owner จัดหา internal service user (JWT แบบ long-lived) ให้ worker
+        เพื่อเรียก submit_content_for_approval ตามตัวอักษรของ §8
+
+D-G7-C: แก้ RPC (migration) ให้ service_role เรียกได้ — authority change
+        (ไม่แนะนำ — แตะ approval authority เดิม)
+```
+
+**สถานะ:**
+
+```text
+G7 = HARD STOP — OWNER DECISION REQUIRED (D-G7-A / B / C)
+S2 = NOT IMPLEMENTED (ไม่มี code ของ G7 ถูกเขียน/commit)
+G6/G5/G4 = ไม่ถูกแตะ
+COMMIT นี้ = evidence เท่านั้น (worklog + probe script)
+```
+
 ## G7-S1 — CONTRACT (จบแล้ว — docs เท่านั้น)
 
 สร้าง `BMB_G7_CONTRACT.md` — จุดตัดสินสำคัญ (grounded บน S0 evidence):
