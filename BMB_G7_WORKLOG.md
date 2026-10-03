@@ -335,3 +335,14 @@ static diff = เฉพาะ g7Security.test.ts + aiStructuredOutput.ts (reject
 **G4:** ไม่ถูกแตะ — ไม่มี Meta code/PAGE token ใน G7 ทุกไฟล์ (test พิสูจน์ G7-16/17)
 **G8:** ไม่ถูกแตะ — ไม่มี scheduler/queue/retry ใด ๆ (test พิสูจน์)
 ```
+## G7-S4 — PRODUCTION DEPLOY + RUNTIME (จบแล้วด้วย HARD STOP)
+
+**DEPLOYED = PASS:** `social-post-worker` v2 ACTIVE (201, verify_jwt=true) ผ่าน Management API multipart deploy (mechanism เดิมของ repo) — เพาะ slug นี้ + `_shared` deps ที่ import; ตัวอื่นไม่ถกแตะ (list functions ก่อน-หลัง); selfprint (คนละ repo/local stack) ไม่เกี่ยว
+**S4-D AUTH NEG = PASS:** 401 ทั้ง 5 แบบ (publishable ไม่มี automation token / invalid / blank / Bearer ปลอม / Basic)
+**S4-E RUNTIME = FAIL (DEFECT D3):** synthetic ref `g7-s4-20261003T030303Z-j4vf18` → **502 missing_tenant_context** — สาเหตุพิสจนแล้ว: `social-post-worker/index.ts:301` ใช้ `is_default=true` แต่ PostgREST ต้องใช้ `is_default=eq.true` (REST reproduction ได้ 400 PGRST100) → fail-closed ทำงานถกต้อง ไม่มี row ใดถกสร้าง แต่ draft flow ใช้ไม่ได้จริง
+**S4-F/G:** ยังทดสอบไม่ได้ (blocked ดย D3)
+**CLEANUP = PASS:** post-probe CA=0, trace=0, totals=0 — ไม่มี synthetic residue, ไม่มี broad DELETE, ไม่มี unrelated row ถกแตะ
+**REGRESSION = PASS:** tsc 0 · eslint 0 · build 0 · npm test 485/0 · secret scan CLEAN
+**ตามกติกา S4-J:** source change เพราะพบ defect → **HARD STOP กลับไป S3** (แก้ D3 + test ครอบ → แล้วขอรัน S4 รอบใหม่) — ห้ามประกาศ S4 PASS
+รายละเอียดเตม: `BMB_G7_S4_RUNTIME_REPORT.md` · evidence: `e2e/g7s4-*.cjs`, `e2e/g7s4-deploy-evidence.json`, `e2e/g7s4-invoke-*.json`
+**STATUS: DEPLOYED · RUNTIME VERIFIED = NO (FAIL: D3) · CLEANUP VERIFIED (nothing to clean) — ห้ามเริ่ม G8/G9/G10**
