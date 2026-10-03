@@ -27,8 +27,9 @@ export {
   pickModelForTask,
   sanitizeRoutingRequest,
   CLIENT_ROUTING_KEYS,
+  WORKER_ACTIVE_TASKS,
 } from '../../supabase/functions/_shared/aiPolicy.ts'
-export type { AiTask, AiTaskPolicy, RoutingDecision, TaskResolution } from '../../supabase/functions/_shared/aiPolicy.ts'
+export type { AiTask, AiTaskPolicy, RoutingDecision, TaskResolution, PolicyContext } from '../../supabase/functions/_shared/aiPolicy.ts'
 
 import { MODEL_A_PRIMARY } from '../../supabase/functions/_shared/aiPolicy.ts'
 

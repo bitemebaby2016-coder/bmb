@@ -142,3 +142,31 @@ NEXT: G6-S2 Implementation หลัง commit/push/clean ยืนยัน
 ไม่แตะ: `ai-proxy` logic เดิม, `channel-webhook`, migrations ทั้งหมด, RLS/grants, G4 ทุกอย่าง
 
 หมายเหตุ design: `resolveTaskPolicy(task)` ยัง default = `'proxy'` → caller เดิมทุกจุด (ai-proxy, tests) ไม่เปลี่ยนพฤติกรรม
+
+## G6-S3 — SECURITY + TEST (จบแล้ว)
+
+ชุดใหม่: `src/__tests__/g6Security.test.ts` (27 tests บน source จริงผ่าน `?raw` — ไม่มี AI traffic/production mutation)
+
+| กลุ่ม | ผล |
+|---|---|
+| G6-01..05 (valid/malformed/missing/enum/confidence) | PASS (offline) |
+| G6-06..08 (prompt injection: DATA≠INSTRUCTION, system prompt เป็น constant, ไม่มี tools surface) | PASS (offline) |
+| G6-09 (order mutation instruction; banned draft content; เฉพาะ social_events ที่ถูก PATCH) | PASS (offline) |
+| G6-10..12 (cross-tenant/NULL/empty tenant — derived-only + NOT NULL + UNBOUND_PAGE) | PASS (offline, migration 109 evidence) |
+| G6-13 (unauthorized → 401) | PASS (offline) |
+| G6-14/15 (duplicate event = UNIQUE+ON CONFLICT; duplicate invocation = optimistic claim) | PASS (offline) |
+| G6-16..18 (draft validation, human-review override, pending_review only) | PASS (offline) |
+| G6-19 (ไม่มี Meta write endpoint/PAGE token; reply_status/action_type ไม่ถูกเขียน) | PASS (offline) |
+| G6-20 (`social_post_draft` ยัง RESERVED ทั้ง proxy+worker) | PASS (offline) |
+| G6-21..24 (ไม่มี business mutation ใน worker/scheduler/policy) | PASS (offline) |
+| G6-25 (secret scan — log เฉพาะ event_id/task/model/status) | PASS (offline) |
+| G6-R* runtime matrix | ย้ายไป S4 (ต้อง production จริง) |
+
+**Code search (S3):** `graph.facebook|graph.meta|PAGE_ACCESS_TOKEN|/messages|/comments` ใน root `src/` + `supabase/functions/` → พบเฉพาะไฟล์ test เอง (negative assertions) — **ไม่มี Meta write path**; ไม่มี migration ถูกแตะใน G6; ไม่มี SECURITY DEFINER/grant ใหม่
+
+Regression: `npm test` = **43 test files passed** · `tsc --noEmit` clean · `eslint` clean · `build` success
+
+```text
+S3 = SECURITY + TEST COMPLETE
+NEXT: G6-S4 Production Runtime Verification
+```
