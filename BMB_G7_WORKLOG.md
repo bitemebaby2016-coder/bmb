@@ -151,3 +151,30 @@ WORKTREE CLEAN:       YES (หลัง commit)
 ```
 
 **STOP — ไม่เริ่ม S1 ใน execution นี้**
+## G7-S1 — CONTRACT (จบแล้ว — docs เท่านั้น)
+
+สร้าง `BMB_G7_CONTRACT.md` — จุดตัดสินสำคัญ (grounded บน S0 evidence):
+
+- **Storage:** `content_approvals` (content_type='post' มีอยู่จริง) + AI metadata ลง `audit_logs`
+  (deterministic id `g7-draft-<draft_ref>`, pattern เดิมของ automation-worker) → **ไม่ต้อง migration,
+  ไม่สร้างตารางใหม่** — STOP CONDITION #2/#3 ไม่ trigger
+- **Approval:** authority เดิม (submit/review/is_content_approved) — `APPROVED != PUBLISHED` คงอยู่;
+  approved = human approval เท่านั้น ไม่ใช่ Meta authorization
+- **G5 routing:** activation = `TASK_POLICY.social_post_draft.status: RESERVED→ACTIVE` (additive เดียว);
+  **ไม่เพิ่ม** WORKER_ACTIVE_TASKS; worker ใหม่แยกต่างหาก resolve ด้วย context เฉพาะ
+  (`PolicyContext` ใหม่แบบ additive) — ไม่ redesign G5, ไม่ expose ผ่าน ai-proxy client path
+- **G6 compatibility:** EF ใหม่ `social-post-worker` แยกจาก `social-ai-worker` สมบูรณ์
+  (ไม่มี shared mode) → comment reply/Meta reply/publish ไม่มีทาง activate โดยไม่ตั้งใจ
+- **Idempotency:** source_reference (server-generated) + trace ใน audit_logs (deterministic PK)
+  — replay = duplicate no-op; การสร้างใหม่ = draft_ref ใหม่ — ไม่ต้อง migration
+- **Trigger:** manual/internal (AUTOMATION_TOKEN) — scheduler/queue/retry = G8
+- **Security:** reuse pattern G6 (DATA≠INSTRUCTION, schema-forced, semantic+banned regex,
+  fail-closed พิสูจน์จริง); ห้าม business/external authority ทุกประเภท
+- **Test contract:** G7-01..25 + เพิ่ม G7-26..28 (binding mismatch, banned content, AI trace)
+
+S1 STOP CONDITIONS 12 ข้อ: **ไม่มีข้อใด trigger**
+
+```text
+S1 = CONTRACT COMPLETE (ไม่ implement/deploy/mutate)
+NEXT: G7-S2 Implementation — หลัง commit/push/clean ยืนยัน
+```
