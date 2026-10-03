@@ -168,5 +168,37 @@ Regression: `npm test` = **43 test files passed** · `tsc --noEmit` clean · `es
 
 ```text
 S3 = SECURITY + TEST COMPLETE
-NEXT: G6-S4 Production Runtime Verification
+Commit: fd4e687 — HEAD == origin/main, WORKTREE/INDEX CLEAN ยืนยันแล้ว
+```
+
+## G6-S4 — PRODUCTION RUNTIME VERIFICATION (จบแล้ว)
+
+**DEPLOYED:** `social-ai-worker` → production `ivkdfognyiwjcmrhcnwz` (config.toml verify_jwt=true, pattern เดียวกับ automation-worker)
+
+**Safe synthetic data justification (ตามเงื่อนไข S4):** 1 synthetic comment event ผ่าน canonical `ingest_social_event` RPC, event_id prefix `g6probe-`, เนื้อหาไร้ PII, cleanup ทันที + evidence remaining=0 — ไม่มี real customer event ใดถูกสร้าง/แก้ไข
+
+**Runtime probe จริง (`e2e/g6RuntimeProbe.cjs`) = PASS 12/12:**
+
+| Check | ผล production จริง |
+|---|---|
+| R1 unauthorized | 401 ✅ |
+| R0 ingest derived | `INSERTED` + tenant/brand derive server-side (`tenant-bmb-001` / `brand-bmb-main`) ✅ |
+| R5 tenant isolation | row ผูก tenant ที่ derive จาก page binding เท่านั้น ✅ |
+| R2 classify+draft | `succeeded=1`, `intent=question`, `ai_validated=true`, `ai_model=qwen/qwen3.7-flash` ✅ |
+| R7 review state | `review_status='pending_review'`, `requires_human_review=false` (คำถามปกติ) ✅ |
+| R8 no Meta write | `reply_status=null`, `action_type='none'`, `order_number=null` ✅ |
+| R9 no business mutation | แตะเฉพาะ AI columns + status ✅ |
+| G6-15 duplicate invocation | ครั้งที่ 2 → `processed=0` (no RECEIVED) — no-op ✅ |
+| R4 reserved task | ai-proxy `social_post_draft` → 400 `task_reserved_not_active` ✅ |
+| R6 NULL/empty tenant | unbound page → `UNBOUND_PAGE` ✅ |
+| R10 server-side routing | `ai_model` มาจาก policy เท่านั้น ✅ |
+| CLEANUP | `deleted=[g6probe-...]`, `remaining=0` ✅ |
+
+**Fail-closed runtime evidence (จริง):** รอบ probe แรกพบ defect (worker ไม่ปิด `reasoning` ของ qwen3.7-flash → upstream คืน empty content) — worker ทำงานถูกตาม design: `status='FAILED'`, `last_error='AI_OUTPUT_REJECTED:no message content'`, **AI columns คง null, boundary columns คง null** → แก้ 1 บรรทัด (`reasoning:{enabled:false}` เหมือน ai-proxy) → redeploy → probe รอบสอง PASS. นี่คือพยานหลักฐานว่า malformed/empty output = FAIL CLOSED จริงบน production
+
+**R11 rate/usage boundary:** runtime ไม่ burn quota โดยไม่จำเป็น — ยืนยันผ่าน unit (`SlidingWindowRateLimiter`) + source contract (LIMITER 60/min/caller); **RUNTIME VERIFIED = DEFERRED (ไม่จำเป็นต่อ safety ตอนนี้)**
+
+```text
+S4 = PRODUCTION RUNTIME VERIFIED (probe PASS 12/12, cleanup เหลือ 0 rows)
+Commit นี้: worklog + probe script + worker fix (reasoning flag)
 ```

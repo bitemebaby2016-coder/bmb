@@ -182,7 +182,7 @@ async function aiCall(task: AiTask, system: string, userContent: string): Promis
     fetchWithTimeout(OPENROUTER_URL, {
       method: 'POST',
       headers: { Authorization: `Bearer ${AI_KEY}`, 'Content-Type': 'application/json', 'X-Title': 'Bite Me Baby social-ai-worker' },
-      body: JSON.stringify({ model, messages, max_tokens: policy.maxTokens, temperature: 0.3 }),
+      body: JSON.stringify({ model, messages, max_tokens: policy.maxTokens, temperature: 0.3, reasoning: { enabled: false } }),
     }, policy.timeoutMs)
 
   let modelUsed = decision.model

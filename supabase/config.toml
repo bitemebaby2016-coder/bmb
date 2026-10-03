@@ -54,3 +54,9 @@ verify_jwt = true
 # channel-webhook: FB/Messenger inbound adapter (W3-C-EXTERNAL) � Meta verify + HMAC signature.
 [functions.channel-webhook]
 verify_jwt = false
+# social-ai-worker: G6 classify + reply DRAFT for social comment events.
+# Called by automation-scheduler (GH Actions) / owner probe with shared token —
+# same auth pattern as automation-worker (platform JWT + x-automation-token).
+[functions.social-ai-worker]
+enabled = true
+verify_jwt = true
