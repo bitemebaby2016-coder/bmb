@@ -174,8 +174,11 @@ describe('G6-21..24 no business mutation anywhere in G6 path', () => {
     expect(codeOnly).not.toMatch(/orders\b.*PATCH|payments|inventory|delivery/i)
     expect(workerSrc).toMatch(/NEVER mutates business authority/)
   })
-  it('scheduler workflow only calls social-ai-worker (no business endpoints added)', () => {
-    expect(schedulerYml).toMatch(/social-ai-worker/)
+  it('scheduler has NO social-ai job registration (G8 owns scheduling — Owner reconciliation 2026-10-03)', () => {
+    // hourly-social-ai was REMOVED per scope reconciliation: G6 = AI capability,
+    // G8 = operational orchestration. Worker is invoked manually/internally only.
+    expect(schedulerYml).not.toMatch(/hourly-social-ai/)
+    expect(schedulerYml).not.toMatch(/functions\/v1\/social-ai-worker/)
     expect(schedulerYml).not.toMatch(/stripe|checkout|refund/)
   })
   it('aiPolicy has no new ACTIVE authority task beyond G5 + the two social tasks', () => {

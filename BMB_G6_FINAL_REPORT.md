@@ -7,12 +7,11 @@ Gate: **G6 — Social Comment AI Foundation**
 
 ```text
 ==================================================
-G6 = HOLD — SCOPE RECONCILIATION REQUIRED
-     (หลังคำสั่ง Controller 2026-10-03: job registration 'hourly-social-ai'
-      ที่เพิ่มใน S2 = scheduling change → G8 overlap ในมิติ "operational scheduling"
-      — รายละเอียดใน BMB_G6_WORKLOG.md §"G6 SCOPE RECONCILIATION")
-
-Capability / Security / Runtime ยังยืนยันตามนี้:
+G6 = PASS (AI capability — scope reconciled per Owner decision 2026-10-03)
+     G6 = AI capability (classify/draft/validate/safety/idempotency)
+     G8 = Operational orchestration (scheduler/queue/retry/backoff/concurrency/recovery)
+     job registration 'hourly-social-ai' ถูกถอดออกจาก scheduler แล้ว (commit นี้)
+     — worker invoke แบบ manual/internal เท่านั้น; G8 จะ register เอง
 SOCIAL COMMENT AI FOUNDATION = IMPLEMENTED + DEPLOYED + RUNTIME VERIFIED
    (classification + reply DRAFT เท่านั้น — ไม่มี outbound Meta)
 REAL META E2E = BLOCKED / DEFERRED (รอ G4 Meta approval — ตามที่ G6 กำหนดไว้ตั้งแต่ต้น)
@@ -40,7 +39,7 @@ Production DB probe จริง (`e2e/g6s0DbAudit.cjs`, READ-ONLY): `social_eve
 |---|---|
 | `supabase/functions/social-ai-worker/index.ts` | IMPLEMENTED · DEPLOYED · RUNTIME VERIFIED |
 | `supabase/functions/_shared/aiPolicy.ts` (PolicyContext/WORKER_ACTIVE_TASKS) | IMPLEMENTED (additive, ai-proxy ยัง reject reserved ตามเดิม) |
-| `.github/workflows/automation-scheduler.yml` (job `hourly-social-ai`) | IMPLEMENTED (scheduler เดิม — ไม่มี scheduler ใหม่) |
+| `.github/workflows/automation-scheduler.yml` | **ไม่มีการเปลี่ยนแปลงหลัง reconcile** (job `hourly-social-ai` ที่เคยเพิ่มใน S2 ถูกถอดออกตาม Owner reconciliation — G8 เป็นผู้ register scheduling) |
 | `supabase/config.toml` | IMPLEMENTED (เพิ่ม block ของ worker, verify_jwt=true) |
 
 ## 6. Task activation
@@ -98,8 +97,8 @@ G6 REAL META E2E = BLOCKED / DEFERRED — จะเปิดเมื่อ G4 �
 
 ## 18. Known limitations
 
-1. `hourly-social-ai` job ยังไม่เคยรันผ่าน GitHub Actions schedule จริง (production events = 0 ตาม G4 HOLD) — trigger ยืนยันผ่าน manual invoke จริงแล้ว; scheduled run จะพิสูจน์เมื่อมี event จริง
-2. `RETRYABLE` rows ยังไม่มี auto-retry (ตั้งใจ — retry queue เป็นของ G8); ต้อง invoke ซ้ำ
+1. `social-ai-worker` ยังไม่มี scheduled run จริง (การ register ลง scheduler เป็นของ G8 ตาม Owner reconciliation 2026-10-03) — worker พิสูจน์ผ่าน manual invoke จริงแล้ว; production events = 0 ตาม G4 HOLD
+2. `RETRYABLE` rows ยังไม่มี auto-retry (ตั้งใจ — retry/recovery เป็นของ G8); ต้อง invoke ซ้ำ
 3. Rate/usage counter ของ worker เป็น in-memory per-isolate (minimal ตาม D5-02)
 
 ## 19. Deferred work
@@ -107,7 +106,7 @@ G6 REAL META E2E = BLOCKED / DEFERRED — จะเปิดเมื่อ G4 �
 - Social inbox / human review UI (approve/reject draft ใน admin) — DEFERRED (รอ outbound พร้อม)
 - `social_post_draft` + G7 publish — RESERVED/DEFERRED
 - Outbound Meta reply (`reply_status='sent'`) — BLOCKED (G4 + Meta permission)
-- Retry queue/scheduler — G8
+- Scheduler/queue/retry/backoff/concurrency/recovery รวมถึงการ register `social-ai-worker` — **G8**
 
 ## 20. Git closure
 
@@ -117,5 +116,8 @@ S1 docs(G6): define social comment AI contract            4408ecf
 S2 feat(G6): implement social comment AI foundation       a1835d4
 S3 test(G6): verify social comment AI security boundary   fd4e687
 S4 verify(G6): record production runtime verification     ef9d6a5
-HEAD == origin/main == ef9d6a5 · WORKTREE CLEAN · INDEX CLEAN
+S5 docs(G6): final gate report                            aa042e4
+    docs(G6): record scope reconciliation (HOLD)          67cba88
+    fix(G6): reconcile scheduler scope per Owner decision (job ถอดออก) = commit นี้
+HEAD == origin/main · WORKTREE CLEAN · INDEX CLEAN
 ```

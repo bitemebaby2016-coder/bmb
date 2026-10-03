@@ -236,3 +236,29 @@ PRODUCTION SCHEDULER CHANGED = YES (yml pushed; ไม่มี Supabase runtime
 **ห้าม:** ลบ/revert/force push/แก้ scheduler/แก้ worker — รอ reconciliation plan จาก Owner/Controller
 
 **การแก้ไขเอกสารครั้งนี้** = document correction ที่จำเป็นตามข้อ 6 ของคำสั่ง (เพิ่มมาตรา reconciliation ใน WORKLOG + FINAL_REPORT เท่านั้น — ไม่มี code change, ไม่มี scheduler change, ไม่มี deploy)
+
+## G6 SCOPE RECONCILIATION — RESOLVED (Owner decision 2026-10-03)
+
+**Owner ตัดสิน:** แบ่งขอบเขตชัดเจน —
+
+```text
+G6 = AI capability        : classify / draft / validate / safety / idempotency
+G8 = Operational orchestration : scheduler / queue / retry / backoff / concurrency / failure recovery
+```
+
+**การนำไปปฏิบัติ (reconciliation action):**
+
+1. ถอด job `hourly-social-ai` ออกจาก `.github/workflows/automation-scheduler.yml` (พร้อม comment บันทึกเหตุผล) — scheduler กลับสู่ state เดิมก่อน G6 (pre-existing jobs เท่านั้น)
+2. `social-ai-worker` คง deployed + invokable แบบ manual/internal (AUTOMATION_TOKEN) — พิสูจน์จริงแล้วใน S4 (probe ใช้ manual invoke ทั้งหมด, ไม่พึ่ง scheduler)
+3. G8 จะ register scheduling job ของ social-ai-worker เองพร้อม queue/retry/backoff/concurrency
+4. เอกสารอัปเดตให้ตรง: CONTRACT §4 (trigger), FINAL_REPORT (Executive + implementation + limitations), test `g6Security.test.ts` ปรับเป็น **ปฏิเสธ** job registration ของ social-ai ใน scheduler
+
+**ผลหลัง reconcile:** G6 ไม่มี scheduling/orchestration ใด ๆ แล้ว → overlap = หมดไป →
+
+```text
+G6 = PASS (AI capability — implementation + security + runtime verified)
+G8 = จะรับผิดชอบ scheduler/queue/retry/backoff/concurrency/recovery รวมถึง
+     การ register social-ai-worker ลง scheduler
+```
+
+Test รวมหลังแก้: `g6Security.test.ts` 27/27 (ปรับ 1 test ตามขอบเขตใหม่) — full suite ตรวจใน commit นี้

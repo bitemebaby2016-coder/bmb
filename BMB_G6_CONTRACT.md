@@ -122,9 +122,9 @@ AI routing  : import _shared/aiPolicy.ts (policy เดียวกับ ai-pro
               source of truth) + OPENROUTER_API_KEY (secret ที่มีอยู่แล้ว) —
               timeout/fallback ตาม TASK_POLICY, model whitelist เดียวกัน
 Structured  : import _shared/aiStructuredOutput.ts (validator เดียวกับ G5)
-Trigger     : (ก) manual invoke สำหรับ S4 probe; (ข) automation-scheduler.yml
-              (scheduler เดิมของ GitHub Actions — ไม่มี scheduler ใหม่) เพิ่ม 1 step
-              dispatch เรียก social-ai-worker (additive, ตามหลัก G8 "reuse/extend")
+Trigger     : (ก) manual/internal invoke สำหรับ ops/probe (AUTOMATION_TOKEN);
+              การ register ลง scheduler เป็นของ G8 ตาม Owner reconciliation
+              2026-10-03 (G6 = AI capability / G8 = operational orchestration)
 Idempotency : ประมวลผลเฉพาะ rows status='RECEIVED' AND event_type='comment' —
               ใช้ claimed_at/claimed_by pattern เหมือน automation-worker เดิม;
               UNIQUE(platform,event_id) กัน duplicate event อยู่แล้ว (HC-4)

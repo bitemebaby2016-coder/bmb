@@ -114,27 +114,9 @@ jobs:
               } catch(e) { console.error("::error::invalid worker response"); process.exit(1); }
             })'
 
-  hourly-social-ai:
-    # G6: classify + reply DRAFT for social comment events (read-only AI;
-    # no outbound Meta, no business mutation — see BMB_G6_CONTRACT.md)
-    if: github.event_name == 'schedule' && github.event.schedule == '7 * * * *' || github.event_name == 'workflow_dispatch' && github.event.inputs.job == 'social-ai'
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-    steps:
-      - name: social_ai_process
-        env:
-          WORKER_URL: https://ivkdfognyiwjcmrhcnwz.supabase.co/functions/v1/social-ai-worker
-          TOKEN: ${{ secrets.AUTOMATION_TOKEN }}
-        run: |
-          RESP=$(curl -sS -X POST "$WORKER_URL" \
-            -H "Content-Type: application/json" \
-            -H "x-automation-token: $TOKEN" \
-            -d '{"limit":5}') || {
-            echo "::error::social-ai-worker HTTP call failed"; exit 1; }
-          echo "$RESP" | node -e '
-            let s=""; process.stdin.on("data",d=>s+=d).on("end",()=>{
-              try { const j=JSON.parse(s);
-                if (j.error) { console.error("::error::social-ai-worker error=" + j.error); process.exit(1); }
-                console.log("social_ai processed=" + j.processed + " succeeded=" + j.succeeded + " failed=" + j.failed + " retryable=" + j.retryable);
-              } catch(e) { console.error("::error::invalid social-ai-worker response"); process.exit(1); }
-            })'
+# G6 SCOPE RECONCILIATION (Owner decision 2026-10-03):
+#   G6 = AI capability (classify/draft/validate/safety/idempotency)
+#   G8 = Operational orchestration (scheduler/queue/retry/backoff/concurrency/recovery)
+# A social-ai scheduler job registration added in G6-S2 was REMOVED here —
+# social-ai-worker remains deployed and is invoked manually/internally (owner/admin
+# trigger with x-automation-token). G8 will register the scheduling job itself.
