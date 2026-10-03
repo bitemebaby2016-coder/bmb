@@ -73,13 +73,21 @@ Model ต้องตอบ JSON เท่านั้น (system prompt บั�
 Failure ที่ขั้นใดขั้นหนึ่ง = **FAIL CLOSED** — ไม่ repair, ไม่ rewrite, ไม่ fallback ไปใช้ text ที่ไม่ผ่าน validation
 ## 3. CONTENT STORAGE CONTRACT — `content_approvals` (canonical เดิม, ไม่มี migration)
 
+> **แก้ไขโดย OWNER DECISION D-G7-A (ดู §OWNER DECISION ด้านล่าง):** draft creation
+> **ไม่ใช้** `submit_content_for_approval()` (RPC ต้องมี authenticated user — service_role
+> ถูกปฏิเสธ `ERR_NOT_AUTHENTICATED` จริง) — ใช้ direct service_role INSERT แบบ hard-coded
+> `content_type='post' · status='pending' · created_by=null` แทน; human review ยังใช้
+> `review_content()` เดิมเป็น authority เดียว
+
 ใช้ production `content_approvals` ที่ S0 probe ยืนยันแล้ว (`content_type='post'` อยู่ใน CHECK จริง):
 
 ```text
-draft creation   : เรียก RPC public.submit_content_for_approval(p_content_type='post',
-                   p_title=<validated title>, p_body=<validated body>)
-                   — SECURITY DEFINER เดิม, ต้อง authenticated → status='pending'
-owner            : created_by = auth.uid() (คอลัมน์เดิม) — ไม่มี tenant_id/brand_id คอลัมน์ใหม่
+draft creation   : direct service_role INSERT (D-G7-A) — id = 'g7cap-<draft_ref>',
+                   content_type='post' (hard-coded), status='pending' (hard-coded),
+                   created_by=null (hard-coded), review_note=''
+                   — ห้ามมี generic write helper; ค่า authority ทั้งหมด hard-code ใน worker
+owner            : created_by = NULL (คอลัมน์เดิม, nullable ยืนยัน production probe) —
+                   ไม่มี tenant_id/brand_id คอลัมน์ใหม่
 tenant/brand     : single-brand/tenant launch (S0) — draft เป็น platform-scoped record ตาม
                    authority model เดิมของ content_approvals (B2 data matrix); G7 ไม่ invent
                    brand/tenant column ใหม่
@@ -195,6 +203,41 @@ trace id ใน audit_logs (deterministic PK) ไม่ใช่ที่ conten
 | model timeout / provider error | FAIL (`AI_UPSTREAM`) — ไม่ persist, ไม่ auto-retry (G8 รับผิดชอบ retry/backoff) |
 | malformed output / schema violation | FAIL (`AI_OUTPUT_REJECTED:...`) — ไม่ persist |
 | semantic safety violation / injection | FAIL (`AI_OUTPUT_REJECTED:banned_content_in_draft` ฯลฯ) — ไม่ persist |
+## OWNER DECISION D-G7-A (2026-10-03) — persistence path correction
+
+**ที่มา:** S2 เดิม HARD STOP เพราะ §8 (ฉบับ S1) บังคับใช้ `submit_content_for_approval()`
+แต่ RPC นั้นตรวจ `auth.uid()` — production probe จริงยืนยัน: service_role เรียก →
+`HTTP 400 {"code":"P0001","message":"ERR_NOT_AUTHENTICATED"}` (probe ไม่มี mutation)
+
+**Owner ตัดสิน D-G7-A:**
+
+```text
+AI draft creation (ทางเดียวที่ worker มีสิทธิ์):
+  social-post-worker → service_role → canonical content_approvals
+  content_type='post' · status='pending' · created_by=NULL   (hard-coded ใน worker)
+
+Human review (authority เดิม ไม่เปลี่ยน):
+  pending → review_content() [is_admin() เท่านั้น] → approved | rejected
+
+ห้ามสร้าง state 'published' · APPROVED != PUBLISHED คงบังคับ
+```
+
+**เหตุผลของการตัดสิน (บันทึกตามคำสั่ง Owner):**
+
+- ทำไม `submit_content_for_approval()` ใช้ไม่ได้กับ service_role: RPC ตรวจ `auth.uid()`;
+  service_role JWT ไม่มี `sub` → `ERR_NOT_AUTHENTICATED` (evidence จริงด้านบน)
+- ทำไมปฏิเสธ client JWT: §2 กำหนด internal automation boundary — เปิด client/public
+  activation path จะทำให้ AI draft generation กลายเป็น public capability
+- ทำไมปฏิเสธการแก้ RPC: เป็น authority change ต่อ approval function เดิม (ต้อง migration)
+- ทำไม direct service-role INSERT จึงอนุญาต: service_role **มี INSERT grant อยู่แล้ว**
+  (migration 022 — ยืนยัน production probe สด); created_by nullable จริง; เป็น persistence
+  capability เท่านั้น ไม่ใช่ approval/publish capability; review path เดิมยังเป็น gate เดียว
+- D-G7-A ไม่ใช่ approval authority ใหม่ — worker **ห้าม** approve/reject/publish/call Meta/
+  สร้าง publish token/แก้ review state หลัง insertion/bypass human review
+
+**Security constraint ที่บังคับใน implementation:** INSERT hard-code `content_type='post'`,
+`status='pending'`, `created_by=null` — ห้าม generic `insertContentApproval(...)` ที่ caller/
+model เลือก arbitrary fields; ไม่มี migration/ALTER/new table/new RPC/new grant/new role
 | duplicate request | `{ duplicate: true }` — no-op |
 | persistence failure | FAIL (`AI_PERSIST_ERROR`) — ไม่มี partial publish state, ไม่มี business mutation |
 

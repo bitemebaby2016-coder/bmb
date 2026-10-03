@@ -28,6 +28,8 @@ export {
   sanitizeRoutingRequest,
   CLIENT_ROUTING_KEYS,
   WORKER_ACTIVE_TASKS,
+  PROXY_BLOCKED_TASKS,
+  POST_WORKER_ACTIVE_TASKS,
 } from '../../supabase/functions/_shared/aiPolicy.ts'
 export type { AiTask, AiTaskPolicy, RoutingDecision, TaskResolution, PolicyContext } from '../../supabase/functions/_shared/aiPolicy.ts'
 

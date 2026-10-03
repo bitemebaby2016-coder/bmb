@@ -256,12 +256,12 @@ describe('T-G5-16: AI output is never business authority', () => {
   })
 })
 
-// ---------- T-G5-17: reserved social tasks stay dormant (D5-05) ----------
-describe('T-G5-17: reserved social tasks are policy-defined but NOT executable', () => {
-  it('all three social tasks are RESERVED in policy', () => {
-    for (const t of ['social_comment_classify', 'social_reply_draft', 'social_post_draft'] as const) {
-      expect(TASK_POLICY[t].status).toBe('RESERVED')
-    }
+// ---------- T-G5-17: social tasks stay client-dormant (D5-05 + G7 D-G7-A) ----------
+describe('T-G5-17: social tasks are NOT executable via the client ai-proxy path', () => {
+  it('G6 tasks RESERVED in policy; G7 post task ACTIVE but client-blocked (D-G7-A)', () => {
+    expect(TASK_POLICY.social_comment_classify.status).toBe('RESERVED')
+    expect(TASK_POLICY.social_reply_draft.status).toBe('RESERVED')
+    expect(TASK_POLICY.social_post_draft.status).toBe('ACTIVE')
   })
 
   it('resolveTaskPolicy refuses to execute a reserved task', () => {

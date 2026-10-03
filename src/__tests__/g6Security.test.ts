@@ -16,6 +16,7 @@ import {
   TASK_POLICY,
   resolveTaskPolicy,
   WORKER_ACTIVE_TASKS,
+  PROXY_BLOCKED_TASKS,
 } from '@/lib/aiModels'
 
 const CLASSIFY_SCHEMA = {
@@ -153,18 +154,18 @@ describe('G6-19/20 Meta boundary + reserved task', () => {
     expect(codeOnly).not.toMatch(/action_type/)
     expect(codeOnly).not.toMatch(/reply_provider_id/)
   })
-  it('G6-20 social_post_draft remains RESERVED (proxy + worker both blocked)', () => {
-    expect(TASK_POLICY.social_post_draft.status).toBe('RESERVED')
+  it('G7/D-G7-A: social_post_draft is ACTIVE but client-blocked; only post-worker context executes it', () => {
+    expect(TASK_POLICY.social_post_draft.status).toBe('ACTIVE')
+    expect(PROXY_BLOCKED_TASKS.has('social_post_draft')).toBe(true)
     expect(WORKER_ACTIVE_TASKS.has('social_post_draft')).toBe(false)
-    expect(resolveTaskPolicy('social_post_draft', 'worker').ok).toBe(false)
     expect(resolveTaskPolicy('social_post_draft', 'proxy').ok).toBe(false)
+    expect(resolveTaskPolicy('social_post_draft', 'worker').ok).toBe(false)
+    expect(resolveTaskPolicy('social_post_draft', 'post_worker').ok).toBe(true)
   })
-  it('G5 regression: ai-proxy client path still rejects reserved social tasks', () => {
+  it('G6 regression: comment tasks remain worker-only, never proxy', () => {
     expect(resolveTaskPolicy('social_comment_classify', 'proxy').ok).toBe(false)
-    expect(resolveTaskPolicy('social_reply_draft', 'proxy').ok).toBe(false)
-    // worker context accepts exactly the two G6 tasks
     expect(resolveTaskPolicy('social_comment_classify', 'worker').ok).toBe(true)
-    expect(resolveTaskPolicy('social_reply_draft', 'worker').ok).toBe(true)
+    expect(resolveTaskPolicy('social_comment_classify', 'post_worker').ok).toBe(false)
   })
 })
 

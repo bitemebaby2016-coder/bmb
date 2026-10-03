@@ -229,6 +229,60 @@ COMMIT นี้ = evidence เท่านั้น (worklog + probe script)
 S1 STOP CONDITIONS 12 ข้อ: **ไม่มีข้อใด trigger**
 
 ```text
+## G7-S2 — RESUMED (Owner Decision D-G7-A) — IMPLEMENTATION + TESTS COMPLETE
+
+**Contract corrected:** §3 (direct service_role INSERT, D-G7-A) + มาตรา OWNER DECISION D-G7-A
+เพิ่มใน `BMB_G7_CONTRACT.md` — `submit_content_for_approval()` ยังเป็น human-side authority
+เดิม (client เรียกผ่าน UI ได้ตามเดิม) — แต่ AI draft persistence ใช้ direct INSERT ตาม D-G7-A
+
+**Prerequisite ยืนยัน production สด (`e2e/g7s2ResumeProbe.cjs`, READ-ONLY):**
+`content_approvals.created_by` IS NULLABLE=YES ✅ · service_role INSERT grant ✅ · audit_logs schema ตรวจ ✅
+
+**ไฟล์ implement จริง:**
+
+| ไฟล์ | เนื้อหา |
+|---|---|
+| `supabase/functions/social-post-worker/index.ts` (ใหม่, 362 บรรทัด) | post-draft worker: AUTOMATION_TOKEN auth (401), draft_ref/source_reference server-generated, brief/source_text ≤2000 reject, DATA≠INSTRUCTION prompt (constant), OpenRouter ผ่าน `resolveTaskPolicy('social_post_draft','post_worker')` (policy model, timeout, fallback, reasoning off), schema+semantic validation (binding mismatch/title/body/hashtags/safety_flags/banned regex/review override) FAIL CLOSED, direct INSERT `content_approvals` (hard-coded post/pending/created_by=null), trace `audit_logs` id='g7-draft-<draft_ref>' (deterministic PK → replay=duplicate no-op), logs เฉพาะ draft_ref/model/status |
+| `supabase/functions/_shared/aiPolicy.ts` | `social_post_draft` RESERVED→**ACTIVE** (additive เดียวตาม S1) + `PolicyContext 'post_worker'` + `PROXY_BLOCKED_TASKS` (ai-proxy/G6-worker ยัง 400 — **fix bug ที่พบระหว่าง implement: ACTIVE task ต้องถูกบล็อกทุก context ยกเว้น post_worker**) |
+| `src/lib/aiModels.ts` | re-export เพิ่ม (PROXY_BLOCKED_TASKS/POST_WORKER_ACTIVE_TASKS) |
+| `src/__tests__/g7Security.test.ts` (ใหม่) | G7-01..42 = **30 tests ผ่านทั้งหมด** (source-contract บน ?raw + schema unit) |
+| `src/__tests__/g6Security.test.ts` | G6-20 อัปเดตตาม D-G7-A (ACTIVE + client-blocked + worker-blocked) → **27/27** |
+| `src/__tests__/aiRouting.test.ts` | T-G5-17 อัปเดต: social_post_draft ACTIVE but client-blocked → **31/31** |
+| `supabase/config.toml` | เพิ่ม `[functions.social-post-worker]` verify_jwt=true (ยัง **ไม่ deploy** — เป็น S4) |
+| `e2e/g7s2ResumeProbe.cjs`, `e2e/g7s2RpcProbe.cjs`, `e2e/g7s2ReadTestJson.cjs` | probe/evidence helpers (read-only) |
+
+**D-G7-A boundary ใน code:** `DRAFT_CONTENT_TYPE='post'`, `DRAFT_STATUS='pending'`,
+`created_by: null` hard-coded — payload/model เปลี่ยนไม่ได้ (ไม่มี generic write helper);
+worker ไม่มี approve/reject/publish/review_content capability ใด ๆ (test พิสูจน์ G7-33..37)
+
+**Verification จริง (ทั้งหมดรันจริง):**
+
+```text
+npm test        = 44 files / 455 tests PASSED (0 failed)  [รวม G7 30, G6 27, G5 aiRouting 31]
+g7Security      = 30/30 · g6Security = 27/27 · aiRouting = 31/31
+tsc --noEmit    = clean
+eslint          = clean (0 error/warning)
+npm run build   = built in 4.70s (no error)
+secret scan     = CLEAN (hit เดียว = negative-assertion pattern ใน test เอง)
+```
+
+**ไม่มี:** migration · schema change · Meta code · Page token · scheduler · queue · retry ·
+G6 modification (behavior-preserving เฉพาะ test expectation ตาม D-G7-A) · G4 modification ·
+production deploy · production mutation
+
+**Known limitations (S2):**
+1. ยังไม่ deploy / ไม่ runtime verify (S4) — `social-post-worker` ยังไม่ได้ deploy ไป production
+2. draft id deterministic 'g7cap-<draft_ref>' — replay กันที่ trace pre-check; race ระหว่าง
+   concurrent duplicate จะได้ 409 → duplicate no-op (จัดการแล้วใน worker)
+3. scheduler registration = G8; worker invoke ด้วย manual/internal เท่านั้น
+
+**G4:** ไม่ถูกแตะ — ไม่มี Meta code/PAGE token ใน G7 ทุกไฟล์ (test พิสูจน์ G7-16/17)
+**G8:** ไม่ถูกแตะ — ไม่มี scheduler/queue/retry ใด ๆ (test พิสูจน์)
+
+```text
+S2 = IMPLEMENTED + TESTED + DOCUMENTED (DEPLOYED = NO, RUNTIME VERIFIED = NO)
+NEXT: G7-S3 Security deep-test — หลัง commit/push/clean ยืนยัน
+```
 S1 = CONTRACT COMPLETE (ไม่ implement/deploy/mutate)
 NEXT: G7-S2 Implementation — หลัง commit/push/clean ยืนยัน
 ```

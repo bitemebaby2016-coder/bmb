@@ -59,18 +59,24 @@ export const TASK_POLICY: Record<AiTask, AiTaskPolicy> = {
   support: { primary: MODEL_A_PRIMARY, fallback: MODEL_A_FALLBACK, maxTokens: 700, timeoutMs: 30_000, status: 'ACTIVE' },
   social_comment_classify: { primary: MODEL_A_PRIMARY, fallback: MODEL_A_FALLBACK, maxTokens: 300, timeoutMs: 30_000, status: 'RESERVED' },
   social_reply_draft: { primary: MODEL_A_PRIMARY, fallback: MODEL_A_FALLBACK, maxTokens: 500, timeoutMs: 30_000, status: 'RESERVED' },
-  social_post_draft: { primary: MODEL_A_PRIMARY, fallback: MODEL_A_FALLBACK, maxTokens: 700, timeoutMs: 60_000, status: 'RESERVED' },
+  social_post_draft: { primary: MODEL_A_PRIMARY, fallback: MODEL_A_FALLBACK, maxTokens: 700, timeoutMs: 60_000, status: 'ACTIVE' },
 }
 
 export const DEFAULT_TASK: AiTask = 'chat'
 
-/** G6: social tasks are executable ONLY by the server-side social-ai-worker —
+/** G6: social comment tasks are executable ONLY by the server-side social-ai-worker —
  *  never by client calls through ai-proxy (stays 400 there). */
-export type PolicyContext = 'proxy' | 'worker'
+export type PolicyContext = 'proxy' | 'worker' | 'post_worker'
 export const WORKER_ACTIVE_TASKS: ReadonlySet<string> = new Set([
   'social_comment_classify',
   'social_reply_draft',
 ])
+
+/** G7 (D-G7-A): social_post_draft is executable ONLY by social-post-worker.
+ *  Even when ACTIVE, ai-proxy (client path) must keep rejecting it — otherwise
+ *  a guest client could generate post drafts through the public chat gateway. */
+export const PROXY_BLOCKED_TASKS: ReadonlySet<string> = new Set(['social_post_draft'])
+export const POST_WORKER_ACTIVE_TASKS: ReadonlySet<string> = new Set(['social_post_draft'])
 
 export type TaskResolution =
   | { ok: true; task: AiTask; policy: AiTaskPolicy }
@@ -88,6 +94,13 @@ export function resolveTaskPolicy(task: unknown, context: PolicyContext = 'proxy
     if (context === 'worker' && WORKER_ACTIVE_TASKS.has(t)) {
       return { ok: true, task: t as AiTask, policy }
     }
+    return { ok: false, reason: 'reserved_task' }
+  }
+  // G7 (D-G7-A): social_post_draft is post-worker-ONLY. Even when ACTIVE it is
+  // blocked on the proxy (client) path and on the G6 worker context — a client
+  // must never generate post drafts through the public chat gateway.
+  if (PROXY_BLOCKED_TASKS.has(t)) {
+    if (context === 'post_worker') return { ok: true, task: t as AiTask, policy }
     return { ok: false, reason: 'reserved_task' }
   }
   return { ok: true, task: t as AiTask, policy }

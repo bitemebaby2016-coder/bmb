@@ -59,4 +59,11 @@ verify_jwt = false
 # same auth pattern as automation-worker (platform JWT + x-automation-token).
 [functions.social-ai-worker]
 enabled = true
+# social-post-worker: G7 post DRAFT generation (Owner D-G7-A — draft creation only;
+# no publish path). Internal invocation like automation-worker.
+[functions.social-post-worker]
+enabled = true
+verify_jwt = true
+
+# social-ai-worker: G6 classify + reply DRAFT for social comment events.
 verify_jwt = true
