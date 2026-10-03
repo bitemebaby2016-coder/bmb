@@ -67,7 +67,7 @@ P4: 8 parallel HTTP same identity → exactly one canonical queue execution iden
 
 ## 12. SECRET SCAN — VERIFIED
 
-- `Select-String 'SUPABASE_SERVICE_ROLE_KEY\s*=["'].+|eyJhbGciOi|sk-or-'` บน EF + workflow + deploy/runtime scripts = **0 hits**
+- scan patterns: service-key assignment / JWT-signature prefix / OpenRouter key prefix — บน EF + workflow + deploy/runtime scripts = **0 hits**
 - publishable apikey inline ใน workflow = public by design (มีอยู่ก่อน G8 — ไม่ใช่ secret)
 
 ## 13. SERVICE_ROLE EXPOSURE AUDIT — VERIFIED
