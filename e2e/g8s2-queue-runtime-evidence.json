@@ -1,0 +1,21 @@
+[
+  "QUEUE01_ENQUEUE=201",
+  "QUEUE01_ROW={\"status\":\"queued\",\"attempt\":0}",
+  "QUEUE02_CLAIM={\"got\":1,\"id\":true,\"attempt\":1}",
+  "QUEUE04_LEASE={\"lease_set\":true,\"within_5min\":true}",
+  "QUEUE03_CONCURRENT={\"claimers\":8,\"winners\":1,\"uniqueWinner\":true}",
+  "QUEUE05_STALE_RECOVERY={\"requeued\":1,\"status\":\"queued\",\"attempt_preserved\":true}",
+  "QUEUE05_RECLAIM={\"secondClaim\":true,\"attempt\":2}",
+  "QUEUE06_ATTEMPT_PERSISTED={\"attempt2Claimed\":false,\"attempt\":2,\"status\":\"queued\"}",
+  "QUEUE07_RETRY_SCHEDULED={\"fail\":\"REQUEUED\",\"next_retry_set\":true}",
+  "QUEUE08_BACKOFF={\"expectedBaseSec\":120,\"actualSec\":111}",
+  "QUEUE09_JITTER_BOUNDS={\"within20pct\":true}",
+  "QUEUE10_MAX_ATTEMPTS={\"failResult\":\"DEAD\",\"attempt\":3,\"max\":3}",
+  "QUEUE11_DEAD={\"status\":\"dead\",\"failed_at\":true,\"reason\":\"exhausted_retries\",\"lastError\":true}",
+  "QUEUE12_NON_RETRYABLE={\"failResult\":\"DEAD\",\"status\":\"dead\",\"reason\":\"auth\",\"attempt\":1}",
+  "QUEUE13_DUPLICATE={\"secondEnqueueStatus\":409,\"originalUntouched\":true,\"attemptUnchanged\":true}",
+  "QUEUE14_REPLAY_NEW_IDENTITY={\"newIdDistinct\":true,\"newStatus\":\"queued\",\"newAttempt\":0}",
+  "QUEUE15_ORIGINAL_PRESERVED={\"originalStatus\":\"dead\",\"originalFailedAt\":true,\"originalReason\":\"exhausted_retries\"}",
+  "SUCCEEDED_PATH={\"completed\":\"SUCCEEDED\"}",
+  "CLEANUP={\"deleteStatus\":204,\"remainingExact\":0,\"residueSynthetic\":0}"
+]
