@@ -1,13 +1,13 @@
 # ============================================
-# BMB — automation-scheduler (G8-S5 CUTOVER)
+# BMB â€” automation-scheduler (G8-S5 CUTOVER)
 #
 # SINGLE-PATH queue architecture (Owner-authorized G8-S5):
 #   GitHub Actions (this workflow)
-#     → queue-enqueue  (secure enqueue transport: verify_jwt + x-automation-token,
+#     â†’ queue-enqueue  (secure enqueue transport: verify_jwt + x-automation-token,
 #                       allowlisted jobs, server-side payload templates, DB idempotency)
-#     → automation_queue (deterministic identity 'sched-<job>-<ref>')
-#     → queue-dispatcher (atomic claim FOR UPDATE SKIP LOCKED → canonical worker
-#                         automation-worker UNCHANGED → complete/fail RPC)
+#     â†’ automation_queue (deterministic identity 'sched-<job>-<ref>')
+#     â†’ queue-dispatcher (atomic claim FOR UPDATE SKIP LOCKED â†’ canonical worker
+#                         automation-worker UNCHANGED â†’ complete/fail RPC)
 #
 # LEGACY DIRECT WORKER INVOCATION REMOVED in this commit (single-commit toggle).
 # No dual path: each schedule event = ONE enqueue + ONE dispatch.
@@ -16,7 +16,7 @@
 # (same cadence granularity as the legacy eventId scheme).
 #
 # Failure behavior: the step FAILS if enqueue result is neither ENQUEUED nor
-# DUPLICATE, or any dispatch result is not queue-final 'SUCCEEDED' — visible in
+# DUPLICATE, or any dispatch result is not queue-final 'SUCCEEDED' â€” visible in
 # Actions history. Token is never echoed.
 # G6/G7 remain NOT REGISTERED (separate gate).
 # ============================================
@@ -69,7 +69,6 @@ jobs:
             })'
       - name: notification_dispatch_dispatch
         if: always()
-        needs: notification_dispatch_enqueue
         env:
           DISPATCH_URL: https://ivkdfognyiwjcmrhcnwz.supabase.co/functions/v1/queue-dispatcher
           TOKEN: ${{ secrets.AUTOMATION_TOKEN }}
@@ -111,7 +110,6 @@ jobs:
             })'
       - name: orders_stale_pending_dispatch
         if: always()
-        needs: orders_stale_pending_enqueue
         env:
           DISPATCH_URL: https://ivkdfognyiwjcmrhcnwz.supabase.co/functions/v1/queue-dispatcher
           TOKEN: ${{ secrets.AUTOMATION_TOKEN }}
@@ -159,7 +157,6 @@ jobs:
             })'
       - name: inventory_low_stock_dispatch
         if: always()
-        needs: inventory_low_stock_enqueue
         env:
           DISPATCH_URL: https://ivkdfognyiwjcmrhcnwz.supabase.co/functions/v1/queue-dispatcher
           TOKEN: ${{ secrets.AUTOMATION_TOKEN }}
