@@ -180,3 +180,74 @@ G8-S5                     = HOLD — ทุก phase ผ่าน ยกเว�
                             (รอ ≥2 scheduled executions; ไม่ประกาศ PASS ก่อนได้ evidence)
 ========================================
 ```
+
+---
+
+## §17 OBSERVATION RESULT (update 2026-10-04T00:45Z — ~10 ชม. หลัง cutover)
+
+SCHEDULED RUNTIME observed:
+
+```text
+scheduled notification_dispatch  = 0 (ยังไม่เกิด)
+scheduled orders_stale_pending   = 0
+scheduled inventory_low_stock    = 0
+legacy runtime invocation        = 0 (ต่อเนื่องทุก poll)
+dual-path                        = 0
+unexpected queue record          = 0
+```
+
+Observation timeline (watcher poll ทุก 2 นาที ต่อเนื่อง, logs = transient ไม่ commit):
+- 14:52Z cutover push → 23:55Z: quiet ต่อเนื่อง, legacySinceCutover=0 ทุก poll
+- 23:25Z deep probe: automation_queue sched-*-gh-* since cutover = [] · traces 6 ชม. = [] · legacy = 0
+- 23:25Z→00:45Z: quiet ต่อเนื่อง
+
+OPERATIONAL OBSERVATION (ไม่ใช่ proof ว่า queue path ล้มเหลว):
+- GH Actions scheduler ไม่ได้ fire ตั้งแต่ก่อน cutover (last pre-cutover scheduled run 14:09Z) — เงียบรวม >10 ชม. ทั้ง legacy และ queue path → เป็นพฤติกรรม/สถานะของ GitHub Actions infra (free-plan cron delay รุนแรง หรือ schedule ถูกระงับ) ไม่เกี่ยวกับสถาปัตยกรรม queue
+- ต่อ mandate §8: ไม่แก้ cron, ไม่ manual dispatch, ไม่ enqueue manual, ไม่ประกาศ PASS — สถานะคง HOLD จนกว่าจะได้ scheduled executions จริง
+- watcher ถูกหยุด cleanly เมื่อจบรอบ observation นี้; re-run `node e2e/g8s5Watch.cjs` เมื่อเริ่มรอบใหม่
+
+---
+
+## §23 FINAL GATE — RECHECK (2026-10-04T00:45Z)
+
+```text
+========================================
+G8-S5 FINAL OBSERVATION GATE
+========================================
+
+scheduled notification_dispatch = 0 (ยังไม่พบ — รอต่อ)
+scheduled orders_stale_pending  = 0 (ยังไม่พบ — รอต่อ)
+scheduled inventory_low_stock   = 0 (ยังไม่พบ — รอต่อ)
+
+secure enqueue                 = PASS (CONTROLLED RUNTIME — ENQUEUED/DUPLICATE)
+queue claim                    = PASS (CONTROLLED RUNTIME — claim SKIP LOCKED 1 ต่อ identity)
+canonical worker               = PASS (CONTROLLED RUNTIME — succeeded 3/3, worker ไม่แตะ)
+terminal result                = PASS (CONTROLLED RUNTIME — queue terminal succeeded)
+
+legacy runtime invocation      = 0 (9.9 ชม. หลัง cutover — ต่อเนื่องทุก poll)
+dual-path                      = 0
+duplicate execution            = 0
+
+retry/failure                  = PASS (synthetic: backoff/dead/replay/lease — คงเดิม)
+security                       = PASS (scan clean; token เดียว; RPC/RLS ไม่แตะ)
+regression                     = PASS (npm test 488/488)
+rollback readiness             = PASS (git revert 8666026 พร้อม)
+
+unexpected real mutation       = NONE
+
+G6 registered                  = NO
+G7 registered                  = NO
+
+OPEN SHOP                      = NOT AUTHORIZED
+
+HEAD                           = (ดู git block ด้านล่าง)
+origin/main                    = (ดู git block ด้านล่าง)
+HEAD == origin/main            = (ดู git block ด้านล่าง)
+WORKTREE                       = (ดู git block ด้านล่าง)
+
+G8-S5                          = HOLD — scheduled executions ยังไม่เกิด
+                                 (GH Actions infra ไม่ fire >10 ชม. ทั้ง pre/post cutover
+                                  = operational observation; ไม่ใช่ความล้มเหลวของ queue path;
+                                  ห้าม PASS ก่อนได้ >=2 scheduled executions/job)
+========================================
+```
