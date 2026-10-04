@@ -12,7 +12,9 @@
 # LEGACY DIRECT WORKER INVOCATION REMOVED in this commit (single-commit toggle).
 # No dual path: each schedule event = ONE enqueue + ONE dispatch.
 #
-# Identity: ref gh-dispatch-YYYYMMDDTHHMM / gh-stale-YYYYMMDDTHHMM / gh-stock-YYYYMMDDTHH
+# Identity: ref gh-dispatch-YYYYMMDDtHHMM / gh-stale-YYYYMMDDtHHMM / gh-stock-YYYYMMDDtHH
+# (lowercase t is REQUIRED: queue-enqueue ref allowlist regex = [a-z0-9][a-z0-9-]{3,63}
+#  — an uppercase T in the date template makes the ref REJECTED at enqueue, all jobs fail)
 # (same cadence granularity as the legacy eventId scheme).
 #
 # Failure behavior: the step FAILS if enqueue result is neither ENQUEUED nor
@@ -51,7 +53,7 @@ jobs:
           ENQUEUE_URL: https://ivkdfognyiwjcmrhcnwz.supabase.co/functions/v1/queue-enqueue
           TOKEN: ${{ secrets.AUTOMATION_TOKEN }}
         run: |
-          EV="gh-dispatch-$(date -u +%Y%m%dT%H%M)"
+          EV="gh-dispatch-$(date -u +%Y%m%dt%H%M)"
           RESP=$(curl -sS -f -X POST "$ENQUEUE_URL" \
             -H "Content-Type: application/json" \
             -H "apikey: sb_publishable_Q7AHrjSYOrysDjxS9_ZB-g_NMmytLOH" \
@@ -92,7 +94,7 @@ jobs:
           ENQUEUE_URL: https://ivkdfognyiwjcmrhcnwz.supabase.co/functions/v1/queue-enqueue
           TOKEN: ${{ secrets.AUTOMATION_TOKEN }}
         run: |
-          EV="gh-stale-$(date -u +%Y%m%dT%H%M)"
+          EV="gh-stale-$(date -u +%Y%m%dt%H%M)"
           RESP=$(curl -sS -f -X POST "$ENQUEUE_URL" \
             -H "Content-Type: application/json" \
             -H "apikey: sb_publishable_Q7AHrjSYOrysDjxS9_ZB-g_NMmytLOH" \
@@ -139,7 +141,7 @@ jobs:
           ENQUEUE_URL: https://ivkdfognyiwjcmrhcnwz.supabase.co/functions/v1/queue-enqueue
           TOKEN: ${{ secrets.AUTOMATION_TOKEN }}
         run: |
-          EV="gh-stock-$(date -u +%Y%m%dT%H)"
+          EV="gh-stock-$(date -u +%Y%m%dt%H)"
           RESP=$(curl -sS -f -X POST "$ENQUEUE_URL" \
             -H "Content-Type: application/json" \
             -H "apikey: sb_publishable_Q7AHrjSYOrysDjxS9_ZB-g_NMmytLOH" \
