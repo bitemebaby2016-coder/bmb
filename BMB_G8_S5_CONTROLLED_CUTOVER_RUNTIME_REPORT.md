@@ -337,3 +337,23 @@ G8-S5                           = HOLD — workflow กลับมา valid แ
                                   จึงยังไม่มี scheduled executions ให้นับ
 ========================================
 ```
+
+---
+
+## §17c OBSERVATION-ONLY ROUND (2026-10-04 03:08Z–03:35Z, หลัง fix 3310601)
+
+```text
+last successful event=schedule  = 2026-10-03T14:09:18Z (run 37128641566, success)
+latest event=schedule after fix = NONE (ไม่มี SRUN ใหม่ถกสร้างเลย)
+latest push                     = 2026-10-04T02:38:18Z (d84c2a9) — CI success,
+                                  ไม่มี automation-scheduler startup_failure run (parser PASS ยืนยัน)
+workflow state                  = ACTIVE
+observation window              = 03:08Z → 03:35Z (watcher poll ทุก 2 นาที + observe)
+production queue evidence       = sched-*-gh-* since cutover = 0 · traces = 0 · legacy = 0
+duration since workflow fix     = ~1.9 ชม.
+```
+
+GitHub Actions scheduler infra ยังไม่สร้าง schedule event ใหม่ (รวม >13 ชม. เงียบทั้ง pre/post cutover)
+= operational observation — ตาม mandate: ไม่เดาสาเหตุ, ไม่ workaround, ไม่แก้ cron, ไม่ประกาศ PASS
+
+G8-S5 = HOLD (scheduled executions ยังไม่เกิด — controlled runtime คง PASS ตามเดิม)
