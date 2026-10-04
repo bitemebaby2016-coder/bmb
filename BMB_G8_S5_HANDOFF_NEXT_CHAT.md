@@ -17,6 +17,18 @@ REAL ORDER → REAL PAYMENT → REAL KITCHEN → REAL DISPATCH → REAL DELIVERY
 ## 3. Evidence hierarchy
 
 `SCHEDULED RUNTIME (event=schedule จริง)` > `CONTROLLED RUNTIME (E2E transport จริง)` > `synthetic (RPC-driven)` > `source-code inspection` — ห้ามประกาศ PASS จาก single source check; ห้ามนับ push/dispatch/manual/synthetic เป็น scheduled
+
+## 4. Owner operating rules / HARD STOP
+
+- เปลี่ยนใด ๆ ต้อง Owner decision ก่อน · พบ defect → HARD STOP รายงาน ไม่เดา
+- ห้ามเริ่ม G6/G7, Open Shop, Stripe live, Meta, physical delivery จาก automation gate
+- ห้ามแก้ payload/identity/retry/RLS/authority โดยไม่มี Owner authorization
+- Session recovery: verify `HEAD==origin/main`, worktree clean; evidence scripts ผ่าน PowerShell here-string + `node --check`; commit dedupe ด้วย reset --soft + force-with-lease
+
+## 5. Completed G8 gates (CLOSED — ห้ามเปิดซ้ำ)
+
+G8-S0 (audit) · G8-S1 (decision package) · G8-S2 (DB queue, migration 110) · G8-S3 (cutover prep + contracts) · G8-S4 (enqueue idempotency migration 111, OD-6 ai_timeout fix) · G8-T1 (transport audit → D06 Option A) · G8-T2 (queue-enqueue EF deployed, 488/0 tests)
+
 ## 6. Owner decisions (CLOSED)
 
 - G8-D01..D05: ตามรายงาน G8-S1/S2/S3 (scope 3 legacy jobs, synthetic_selftest runner, retry classes D03, identity scheme, dispatcher boundary)
@@ -36,6 +48,13 @@ REAL ORDER → REAL PAYMENT → REAL KITCHEN → REAL DISPATCH → REAL DELIVERY
 - Scheduled runtime evidence: = 0 — last successful event=schedule = `2026-10-03T14:09:18Z` (run 37128641566); หลัง fix ไม่มี schedule event ถูกสร้างเลย (observation windows: 14:52Z→16:55Z, 23:25Z→00:45Z, 03:08Z→03:35Z; legacy invocation = 0 ตลอด; dual-path = 0)
 - Final gate: HOLD — ต้องได้ ≥2 scheduled executions/job (≥6 รวม) พร้อม chain เต็มจึง PASS
 
+## 8. Current Git state
+
+HEAD `d84c2a9` = origin/main · WORKTREE CLEAN · ลำดับคอมมิตล่าสุด: `d84c2a9` (docs restoration) → `3310601` (parser fix) → `d943f08` → `6a5392d` → `8666026` (cutover)
+
+## 9. Production blockers ที่ไม่เกี่ยวกับ G8
+
+Stripe live-mode verify · external notification credentials · physical delivery ops · real dispatch provider integration · tracking dependencies
 
 ## 10. Status ที่ห้ามเปลี่ยนโดยไม่มี Owner decision
 
@@ -70,22 +89,3 @@ AUTOMATION_TOKEN (verified — ห้าม rotate/สร้างใหม่) 
 
 **"Continue from this handoff. Do not restart completed waves. Do not reopen closed Owner decisions."**
 
-## 8. Current Git state
-
-HEAD `d84c2a9` = origin/main · WORKTREE CLEAN · ลำดับคอมมิตล่าสุด: `d84c2a9` (docs restoration) → `3310601` (parser fix) → `d943f08` → `6a5392d` → `8666026` (cutover)
-
-## 9. Production blockers ที่ไม่เกี่ยวกับ G8
-
-Stripe live-mode verify · external notification credentials · physical delivery ops · real dispatch provider integration · tracking dependencies
-
-
-## 4. Owner operating rules / HARD STOP
-
-- เปลี่ยนใด ๆ ต้อง Owner decision ก่อน · พบ defect → HARD STOP รายงาน ไม่เดา
-- ห้ามเริ่ม G6/G7, Open Shop, Stripe live, Meta, physical delivery จาก automation gate
-- ห้ามแก้ payload/identity/retry/RLS/authority โดยไม่มี Owner authorization
-- Session recovery: verify `HEAD==origin/main`, worktree clean; evidence scripts ผ่าน PowerShell here-string + `node --check`; commit dedupe ด้วย reset --soft + force-with-lease
-
-## 5. Completed G8 gates (CLOSED — ห้ามเปิดซ้ำ)
-
-G8-S0 (audit) · G8-S1 (decision package) · G8-S2 (DB queue, migration 110) · G8-S3 (cutover prep + contracts) · G8-S4 (enqueue idempotency migration 111, OD-6 ai_timeout fix) · G8-T1 (transport audit → D06 Option A) · G8-T2 (queue-enqueue EF deployed, 488/0 tests)
