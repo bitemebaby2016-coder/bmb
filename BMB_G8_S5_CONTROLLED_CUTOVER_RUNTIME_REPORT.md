@@ -251,3 +251,89 @@ G8-S5                          = HOLD — scheduled executions ยังไม�
                                   ห้าม PASS ก่อนได้ >=2 scheduled executions/job)
 ========================================
 ```
+
+---
+
+## §17b SCHEDULER TRIGGER RESTORATION ROUND (2026-10-04T02:45Z — Owner-authorized inspect/restore)
+
+### ROOT CAUSE FOUND (defect of cutover workflow file, NOT queue architecture)
+
+```text
+GitHub Actions runs API evidence:
+- scheduled runs: last = 2026-10-03T14:09:18Z (success) — NONE after
+- push runs of automation-scheduler.yml (created only AFTER cutover commit):
+  14:46Z / 16:56Z / 00:41Z — event=push, conclusion=failure, jobs total_count=0
+  => startup_failure = GitHub parser REJECTED the workflow file
+- cause: 3 dispatch steps declared `needs:` (job-level key) at STEP level
+  => invalid workflow file => ALL triggers ignored incl. schedule
+- timeline aligns exactly: last schedule 14:09Z < first invalid-file push 14:46Z (8666026)
+```
+
+### RESTORATION ACTION (RESTORE EXISTING TRIGGER ONLY)
+
+- UI/enable state: workflow state = `active` both before and after (API) — **UI restoration NOT required**
+- Fix commit `3310601`: remove 3 step-level `needs:` keys ONLY — cron expressions, schedule triggers,
+  event types, cadence, jobs, steps, identity scheme, architecture: UNCHANGED (single-file diff proves)
+- Post-fix proof: push 01:45Z created CI run only — **NO automation-scheduler failure run**
+  (invalid-file runs stopped) => file now parses on GitHub
+
+### POST-FIX OBSERVATION (01:45Z → 02:45Z)
+
+```text
+scheduled notification_dispatch = 0 (ยังไม่เกิด)
+scheduled orders_stale_pending  = 0
+scheduled inventory_low_stock   = 0
+legacy runtime invocation       = 0 (ต่อเนื่องทุก poll)
+dual-path                       = 0
+unexpected queue record         = 0
+```
+
+GitHub schedule infra ยังไม่สร้าง schedule event ใหม่เลยหลังไฟล์กลับมา valid
+(รวมเวลาเงียบของ scheduler > 12 ชม. ทั้ง pre/post cutover — operational observation,
+ไม่ใช่ defect ของ queue path; watcher/observe เก็บ evidence ต่อเนื่อง)
+
+---
+
+## §23b FINAL GATE RECHECK (2026-10-04T02:45Z — หลัง scheduler trigger restoration)
+
+```text
+========================================
+G8-S5 FINAL OBSERVATION GATE (post-restoration)
+========================================
+
+scheduled notification_dispatch = 0 (ยังไม่เกิด — GH schedule infra ยังเงียบ)
+scheduled orders_stale_pending  = 0
+scheduled inventory_low_stock   = 0
+
+workflow enabled                = YES (state=active, before AND after)
+UI restoration required         = NO
+schedule/cron changed           = NO (fix 3310601 ลบเฉพาะ step-level needs)
+workflow parses on GitHub       = YES (post-fix push ไม่สร้าง startup_failure run)
+
+secure enqueue                  = PASS (CONTROLLED RUNTIME)
+queue claim                     = PASS (CONTROLLED RUNTIME)
+canonical worker                = PASS (CONTROLLED RUNTIME)
+terminal result                 = PASS (CONTROLLED RUNTIME)
+
+legacy runtime invocation       = 0 (ต่อเนื่องทุก poll ทั้งก่อน/หลัง fix)
+dual-path                       = 0
+duplicate execution             = 0
+
+retry/failure                   = PASS (synthetic suite คงเดิม)
+security                        = PASS (scan clean)
+regression                      = PASS (npm test 488/488 @ post-fix)
+rollback readiness              = PASS (git revert 8666026..3310601 ตามลำดับ หรือ revert 3310601 เพื่อคง cutover)
+
+unexpected real mutation        = NONE
+
+G6 registered                   = NO
+G7 registered                   = NO
+OPEN SHOP                       = NOT AUTHORIZED
+
+HEAD / origin/main / WORKTREE   = (ดู git block commit นี้)
+
+G8-S5                           = HOLD — workflow กลับมา valid แล้ว (root cause แก้แล้ว
+                                  commit 3310601) แต่ GH schedule infra ยังไม่ fire
+                                  จึงยังไม่มี scheduled executions ให้นับ
+========================================
+```
