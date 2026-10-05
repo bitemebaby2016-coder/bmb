@@ -84,13 +84,13 @@ SECRETS (ดูแค่ชื่อ) Stripe/OpenRouter/AUTOMATION_TOKEN/CHANNEL
 
 | ค่า | ตอนนี้อยู่ที่ไหน | แอดมินปรับได้? | หมายเหตุ |
 |---|---|---|---|
-| ระยะส่ง Bite Drive (5 กม.) | **hardcode `5.00` ใน RPC `create_order_with_items` + `compute_delivery_fee`** · `branches.service_radius_km` = 5.00 (มี column แต่ RPC ไม่อ่าน) · `platformConfig.biteDriveMaxDistanceKm = 5` (ฝั่ง client) · `business_settings.delivery_policy.radius_km = 10` (ไม่ตรงกัน) | **NO → ต้องแก้ (W-1.4)** | มีค่าเดียวกันอยู่ 4 ที่และไม่ตรงกัน ⇒ ต้องรวมให้เหลือแหล่งเดียว (server authority) |
-| ค่าส่ง Bite Drive (25 บาท flat) | `platformConfig` (client) + `delivery_zones.fee` (DB) | zones ปรับได้ใน DB / client ปรับไม่ได้ | ต้องยืนยันว่าแหล่งไหนเป็นตัวจริง |
+| ระยะส่ง Bite Drive (5 กม.) | อ่านจาก `business_settings.delivery_policy.bite_drive_radius_km` แล้ว (migration 112) · `branches.service_radius_km` ยังไม่ถูกอ่าน (informational) · ค่า `radius_km=10` เก่าไม่ถูกใช้ | **✅ YES (หลัง 112)** | แอดมินแก้ผ่าน `/admin/settings` → RPC บังคับทันที (พิสูจน์แล้ว T3) |
+| ค่าส่ง Bite Drive | `delivery_zones` (DB, 6 แถว) · ไม่มี zone คลุม → `ERR_NO_DELIVERY_ZONE` (ไม่ fallback สูตรลับ) | **✅ YES** | แก้ fee ต่อแถวใน zones |
 | markup ไรเดอร์ภายนอก 12% · free shipping 300 · cutoff 2 ชม. · quota 120/วัน | `DEFAULT_PLATFORM_CONFIG` (hardcode ฝั่ง client) | **NO → ต้องแก้ (W-1.4)** | client-only ⇒ ไม่ใช่ server authority |
-| สวิต์เปิด/ปิดรับงาน SAME_DAY + เลือกวิธีส่ง | **ยังไม่มี** (D-01 กำหนด) | **NO → ต้องสร้างใหม่ (W-1.4)** | ต้องมีทั้งใน UI และ enforce ใน RPC |
+| สวิต์เปิด/ปิดรับงาน SAME_DAY + เลือกวิธีส่ง | `operating_hours.same_day_open` (trigger `enforce_operating_hours`) + `allow_external_within_radius`/`external_methods_enabled` ใน `delivery_policy` (112) | **✅ YES** | พิสูจน์แล้ว T2/T5/T6 · แก้ผ่าน `/admin/settings` |
 | รอบส่ง / zones | `delivery_rounds` / `delivery_zones` (DB, มี branch_id) | YES (AdminRounds, DeliveryManagement) | — |
 | เวลาทำการ / order policy | `business_settings` (hours, operating_hours, order_policy) | YES (AdminSettings = ตัวแก้ JSON แบบ generic) | UI ยังเป็นการแก้ key/value ดิบ |
-| ไรเดอร์ภายนอกที่เปิดใช้ | allowlist ใน RPC (`grab_rider/linemen_rider/foodpanda_rider`) + client registry | **NO → ต้องแก้ (W-1.4)** | การเพิ่ม/ปิด provider ต้องแก้โค้ด |
+| ไรเดอร์ภายนอกที่เปิดใช้ | `delivery_policy.external_methods_enabled` (array ใน DB, seed `[]`) | **✅ YES (หลัง 112)** | ยังไม่มี provider รายใดเปิดจริง (รอคีย์ D-04) · พิสูจน์แล้ว T4a/T4b |
 | แบรนด์ / ธีม / โลโก้ | brands + AdminBrands/AdminMedia; theme ใน `platformConfig` = hardcode | PARTIAL → ต้องแก้ |  |
 | สาขา | branches + BranchSwitcher | PARTIAL → ต้องแก้ | ยังไม่มีหน้า CRUD สาขาโดยเฉพาะ (ต้องตรวจ AdminTenants) |
 
@@ -284,7 +284,7 @@ SECRETS (ดูแค่ชื่อ) Stripe/OpenRouter/AUTOMATION_TOKEN/CHANNEL
 | W-1.1 | ตั้ง **deploy pipeline** GitHub Actions → Cloudflare Pages (`bitemebaby`) แล้ว deploy `main` | ⛔ **BLOCKED — ไม่พบ `CLOUDFLARE_*` ในไฟล์ env ใด ๆ** (Owner แจงว่าใส่ ".env local" แล้ว แต่ตรวจ `.env`/`.env.local`/`.env.example` + recursive = 0 รายการ · เครื่องนี้ไม่มี `gh` CLI) — ต้องยืนยันที่อยู่ key ก่อน | AI DEV + Owner ยืนยันตำแหน่ง key | prod bundle = build ของ main ณ เวลา deploy · smoke 200 |
 | W-1.2 | ยกเลิกออเดอร์ทดสอบ (D-02) | ✅ **DONE 2026-10-05** | AI DEV (canonical `cancel_order` + audit) | ยกเลิก 172 = 165 (RPC ตรง) + 7 (PRE_ORDER เกิน cutoff — ปิด trigger `trg_pre_order_cancel_window` ใน transaction เดียวแล้วเปิดคืน) · **active = 0** · trigger ครบ 11 ตัว `tgenabled=O` · เหลือ delivered 1 + cancelled 29 = ประวัติ |
 | W-1.3 | แก้โดเมนโค้ด `bitemebaby.com` → `biteme-baby.com` (index.html, sitemap, robots, SeoHelmet, seo.ts, checkProductionHeaders, ai-proxy referer) | ✅ **CODE DONE 2026-10-05** — ขึ้น production พร้อม W-1.1 | AI DEV | 7 ไฟล์ / 40 บรรทัด (เปลี่ยนเฉพาะสตริงโดเมน) · เหลือโดเมนเก่าในโค้ด = 0 · TSC=0 · LINT=0 · **VITEST 488/488** · BUILD=0 · dist มีโดเมนใหม่ 13/เก่า 0 |
-| W-1.4 | **Admin configurability ทุกค่าใน §4.1** + สวิต์เปิด/ปิดรับงาน SAME_DAY + เลือกวิธีส่ง (D-01): รวม distance/fee/markup/cutoff/quota/free-ship/provider เป็น `business_settings` ต่อ tenant/branch, ให้ RPC อ่านจาก DB (แทน hardcode 5.00), UI แอดมิน | OPEN — **ต้อง migration (ขออนุมัติแยก)** | AI DEV | แอดมินเปลี่ยนค่าแล้ว RPC บังคับจริง · tests ผ่าน |
+| W-1.4 | **Admin configurability — ค่าปกครองทั้งหมดต้องอ่านจาก DB (Owner mandate ห้ามฮาร์ดโค้ด)** | ✅ **SERVER AUTHORITY DONE 2026-10-05** — migration **112** สมัคร production แล้ว · คงเหลือ **W-1.4b**: ค่า display ฝั่ง client (`platformConfig.ts`: markup/free-ship/cutoff ชม./quota/flat-fee) ยังเป็น constant → ต้องดึงจาก settings | AI DEV | **หลักฐาน:** ไม่มี `5.00` hardcode ใน 2 functions · `delivery_policy` seed = `bite_drive_radius_km 5 / allow_external_within_radius false / external_methods_enabled []` · **`node e2e/w14ContractProbe.cjs` = W14_ALL_PASS 11 checks** (T1 baseline · T2 สวิต์ same_day_open · T3 รัศมี 1km บังคับจริง · T4a/b provider gate · T5 method choice ในรัศมี · T6 default คืนพฤติกรรมเดิม · T7 ERR_NO_DELIVERY_ZONE · T8 ERR_CONFIG_MISSING · rollback สะอาด) · เก็บ error code เดิม (contract 023/028/037 ยังเขียนเงื่อนไขเดิม) |
 | W-1.5 | redeploy `channel-webhook` (ข้อความไทย, D-06 อนุมัติ) | APPROVED | AI DEV | v11 active |
 | W-1.6 | ลบ `BMB_TEST_*` ออกจาก production secrets | OPEN (security) | Owner/AI DEV | secrets list สะอาด |
 
@@ -354,7 +354,7 @@ G3 · G5 · G6 (capability) · G7 (S0–S4-R2) · G8 (S0–S5, T1, T2) · G8-S5 
 1. เว็บยังไม่ตรง `main` (prod = `index-x8kY75kI.js` ≠ build ปัจจุบัน `index-CCiimpoZ.js`) และไม่มี deploy pipeline (W-1.1)
 2. canonical/og:url/Stripe/Auth ยังชี้โดเมนผิด `bitemebaby.com` (W-1.3) — โดเมนจริงต่อแล้ว ✅
 3. ข้อมูลทดสอบค้าง 155 pending (W-1.2 — อนุมัติแล้ว)
-4. ทุกค่าใน §4.1 แอดมินยังปรับไม่ได้ + ยังไม่มีสวิต์เปิด/ปิดรับงาน SAME_DAY (W-1.4)
+4. ค่าปกครองฝั่ง server (รัศมี/โซน/เมธอด/สวิต์ SAME_DAY) ✅ อ่านจาก DB แล้ว (112) — แต่ค่า display ฝั่ง client ยัง constant (W-1.4b) + `ensure_rounds_for_date` มีบั๊ก branch_id (DEFECT ใหม่) และยังไม่มีสวิต์ UI สำหรับเปิด/ปิดในหน้าแอดมินแบบ form (แก้ผ่าน JSON ได้)
 5. ยังไม่มีออเดอร์จริงครบวงจรสบายจริง (W-2.1/W-2.2)
 
 **AI AUTOMATION BLOCKERS** — ไม่มีข้อไหนขวางเปิดร้าน
@@ -393,6 +393,8 @@ G3 · G5 · G6 (capability) · G7 (S0–S4-R2) · G8 (S0–S5, T1, T2) · G8-S5 
 | หน้า live | มีแท็ก `facebook-domain-verification` แล้ว ✅ · แต่ canonical/og:url ยังเป็น `bitemebaby.com` (ผิด) |
 | build เทียบ | prod = `index-x8kY75kI.js` · `main` build จริง ≠ (hash เปลี่ยนอีกครั้งหลัง W-1.3) ⇒ **ยังไม่ตรงกัน = W-1.1 ยังค้าง** |
 | **EXEC LOG 2026-10-05 (W-1.2 + W-1.3)** | **W-1.2 DONE** (active=0, canonical path, trigger ครบ) · **W-1.3 CODE DONE** (gate: TSC=0 · LINT=0 · VITEST 488/488 · BUILD=0) · **W-1.1 BLOCKED** = ไม่พบ `CLOUDFLARE_API_TOKEN`/`CLOUDFLARE_ACCOUNT_ID` ในไฟล์ env ใด ๆ · Edge functions ที่แก้ (ai-proxy) **ยังไม่ deploy** — ขึ้นพร้อม W-1.1/W-1.5 |
+| **EXEC LOG 2026-10-05 (W-1.4)** | Migration **112** สร้างด้วย `e2e/w14BuildMigration112.cjs` (anchor-guarded, reproducible) → สมัคร production **APPLY_OK** → **`e2e/w14ContractProbe.cjs` = W14_ALL_PASS (11 checks, BEGIN…ROLLBACK)** · gate: TSC=0 · LINT=0 · VITEST 488/488 · คงเหลือ W-1.4b = client `platformConfig` constants |
+| **DEFECT ใหม่ (เจอตอน W-1.4)** | `ensure_rounds_for_date` **พัง**: INSERT ไม่เขียน `delivery_rounds.branch_id` (ฟังก์ชันเก่ากว่า NOT NULL) → instantiate วันใหม่ fail (`23502`) — **rounds ของวันนี้สร้างอัตโนมัติไม่ได้** · workaround ใน probe = insert เอง · **ต้อง follow-up migration (นอก scope ที่อนุมัติ — ขออนุมัติแยก)** |
 | **OWNER MANDATE 2026-10-05** | ห้ามมีฮาร์ดโค้ดเพื่อใช้งานจริง 100% · ทำงานเสร็จทุกครั้งต้อง**ทดสอบจนผ่าน** · **อัปเดตเอกสารสถานะไฟล์นี้ก่อน push ทุกครั้ง** · ทำงานซื่อสัตย์ |
 | ไวท์ลาเบล | ทุกค่าใน §4.1 ต้องแอดมินปรับได้ทั้งหมด (คำสั่ง Owner) |
 | แผน | ✅ ปรับเป็น PHASE แล้ว — ดู §11 |
