@@ -19,7 +19,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 import { getOrdersByStatuses, getDeliveryAssignmentsFor, updateOrderStatus } from '@/lib/bmbAdminApi_orders'
 import type { OrderForm, DeliveryAssignmentLiteRow } from '@/lib/bmbAdminApi_orders'
-import { adminListDrivers, assignDriver, type AdminDriverRow } from '@/lib/driverService'
+import { adminListDrivers, assignDriver, adminAdvanceDelivery, type AdminDriverRow } from '@/lib/driverService'
 import { showToast } from '@/components/ui/ToastContainer'
 
 const ASSIGN_LABEL: Record<string, { label: string; cls: string }> = {
@@ -86,6 +86,24 @@ export function DeliveryManagement() {
       const res: any = await updateOrderStatus(orderNumber, 'dispatched')
       if (res && res.status === 'dispatched') { showToast('🚚 Dispatch สำเร็จ: ' + orderNumber, 'success'); await load() }
       else showToast('Dispatch ไม่สำเร็จ (server ปฏิเสธ)', 'error')
+    } catch (e: any) {
+      showToast('ผิดพลาด: ' + String(e?.message || e).slice(0, 80), 'error')
+    } finally { setActing(null) }
+  }
+
+  // GAP A-1 (m116): close the loop in one call — the RPC walks every hop to the
+  // target with the same forward-only rules as the rider PWA, so the admin can
+  // never invent a state the order machine rejects.
+  async function handleAdminAdvance(orderNumber: string) {
+    setActing(orderNumber)
+    try {
+      const r = await adminAdvanceDelivery(orderNumber, 'delivered')
+      if (r.ok) {
+        showToast('🏁 Admin ปิดวงจรสำเร็จ: ' + orderNumber + ' → ' + (r.order_status || 'delivered') + (r.driver_released ? ' (ปล่อยไรเดอร์กลับ available)' : ''), 'success')
+        await load()
+      } else {
+        showToast('Admin advance ไม่สำเร็จ: ' + String(r.error || 'ERR_ADVANCE_REJECTED').slice(0, 80), 'error')
+      }
     } catch (e: any) {
       showToast('ผิดพลาด: ' + String(e?.message || e).slice(0, 80), 'error')
     } finally { setActing(null) }
@@ -165,6 +183,19 @@ export function DeliveryManagement() {
                     <button onClick={() => { void handleDispatch(o.order_number) }} disabled={acting === o.order_number} className="btn btn-outline text-sm disabled:opacity-50">
                       🚚 Dispatch (transition)
                     </button>
+                    {/* GAP A-1 (m116): admin close-the-loop override — same forward-only
+                        hops as the rider PWA, audit-tagged 'admin_advance_delivery_status'. */}
+                    {a?.status && ['assigned', 'accepted', 'picked_up', 'in_transit', 'arrived'].includes(a.status) ? (
+                      <button
+                        onClick={() => { void handleAdminAdvance(o.order_number) }}
+                        disabled={acting === o.order_number}
+                        className="btn btn-outline text-sm disabled:opacity-50"
+                        data-testid={`admin-advance-${o.order_number}`}
+                        title="ปิดวงจรแทนไรเดอร์ (geolocation/POD ของไรเดอร์ถูกข้าม — บันทึก audit ว่าเป็นฝีมือแอดมิน)"
+                      >
+                        🏁 แอดมินปิดวงจร (admin_advance)
+                      </button>
+                    ) : null}
                   </div>
                 </div>
               )

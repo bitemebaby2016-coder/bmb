@@ -95,6 +95,29 @@ export async function assignDriver(orderNumber: string, driverId: string): Promi
   return !error
 }
 
+// ============================================
+// GAP A-1 (migration 116) — admin closes the delivery loop.
+//
+// The rider PWA owns the day-to-day advance (picked_up/in_transit/delivered)
+// and keeps its stricter geolocation+POD gate. This admin path exists for when
+// the rider cannot tap (device/app failure): it reuses the SAME forward-only
+// hop rules and writes an audit trail tagged 'admin_advance_delivery_status'.
+// It is an override, not a second rider.
+// ============================================
+export async function adminAdvanceDelivery(
+  orderNumber: string,
+  status: 'picked_up' | 'in_transit' | 'delivered',
+): Promise<{ ok: boolean; error?: string; order_status?: string; driver_released?: boolean }> {
+  const { data, error } = await supabase.rpc('admin_advance_delivery_status', {
+    p_order_number: orderNumber,
+    p_status: status,
+  })
+  if (error) return { ok: false, error: error.message }
+  const res = data as { ok?: boolean; order_status?: string; driver_released?: boolean } | null
+  if (!res || res.ok !== true) return { ok: false, error: 'ERR_ADVANCE_REJECTED' }
+  return { ok: true, order_status: res.order_status, driver_released: res.driver_released === true }
+}
+
 /**
  * Admin provisioning (Owner Decision 06): link an existing Supabase Auth user
  * to a driver record. The auth user must be created via Supabase Dashboard /

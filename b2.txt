@@ -1,0 +1,7 @@
+[33m[33m[INEFFECTIVE_DYNAMIC_IMPORT] [0msrc/lib/notificationService.ts is dynamically imported by src/store/notificationStore.ts but also statically imported by src/components/notification/NotificationDropdown.tsx, src/pages/NotificationCenterPage.tsx, dynamic import will not move module into another chunk.
+[39m
+[33m[33m[INEFFECTIVE_DYNAMIC_IMPORT] [0msrc/components/ai/BiteAIChat.tsx is dynamically imported by src/components/ai/BiteMascot.tsx but also statically imported by src/components/home/BiteHero.tsx, dynamic import will not move module into another chunk.
+[39m
+
+[43m[30m WARN [39m[49m [36minlineDynamicImports[39m option is deprecated, please use [36mcodeSplitting: false[39m instead.
+

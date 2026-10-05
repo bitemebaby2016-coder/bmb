@@ -1,0 +1,57 @@
+
+[1m[46m RUN [49m[22m [36mv3.2.7 [39m[90mD:/A PROJECT/Bite Me Baby[39m
+
+ [32m✓[39m src/__tests__/aiServerMemory.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 186[2mms[22m[39m
+ [32m✓[39m src/__tests__/phases5_7.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 272[2mms[22m[39m
+ [32m✓[39m src/__tests__/adminUi.test.ts [2m([22m[2m11 tests[22m[2m)[22m[32m 245[2mms[22m[39m
+ [32m✓[39m src/__tests__/kitchenControl.test.ts [2m([22m[2m30 tests[22m[2m)[22m[32m 122[2mms[22m[39m
+ [32m✓[39m src/__tests__/canonicalOrderFlow.test.ts [2m([22m[2m15 tests[22m[2m)[22m[33m 356[2mms[22m[39m
+ [32m✓[39m src/__tests__/api.test.ts [2m([22m[2m36 tests[22m[2m)[22m[33m 432[2mms[22m[39m
+ [32m✓[39m src/__tests__/aiRouting.test.ts [2m([22m[2m31 tests[22m[2m)[22m[33m 470[2mms[22m[39m
+   [33m[2m✓[22m[39m T-G5-16: AI output is never business authority[2m > [22mno mutation tool is reachable via executeToolCall [33m 311[2mms[22m[39m
+ [32m✓[39m src/__tests__/paymentExceptions.test.ts [2m([22m[2m16 tests[22m[2m)[22m[32m 60[2mms[22m[39m
+ [32m✓[39m src/__tests__/dispatchContract.test.ts [2m([22m[2m14 tests[22m[2m)[22m[32m 130[2mms[22m[39m
+ [32m✓[39m src/__tests__/adminOrdersOp.test.ts [2m([22m[2m20 tests[22m[2m)[22m[32m 60[2mms[22m[39m
+ [32m✓[39m src/__tests__/paymentStateMachine.test.ts [2m([22m[2m14 tests[22m[2m)[22m[32m 67[2mms[22m[39m
+ [32m✓[39m src/__tests__/aiVoiceServer.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 72[2mms[22m[39m
+ [32m✓[39m src/__tests__/preOrderQueue.test.ts [2m([22m[2m13 tests[22m[2m)[22m[32m 84[2mms[22m[39m
+ [32m✓[39m src/__tests__/aiVoice.test.ts [2m([22m[2m10 tests[22m[2m)[22m[32m 54[2mms[22m[39m
+ [32m✓[39m src/__tests__/orderNumberUniqueness.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 29[2mms[22m[39m
+ [32m✓[39m src/__tests__/offlineUtils.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 80[2mms[22m[39m
+ [32m✓[39m src/__tests__/g7Security.test.ts [2m([22m[2m63 tests[22m[2m)[22m[32m 45[2mms[22m[39m
+ [32m✓[39m src/__tests__/pushTransport.test.ts [2m([22m[2m20 tests[22m[2m)[22m[32m 36[2mms[22m[39m
+ [32m✓[39m src/__tests__/menuSchedule.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 28[2mms[22m[39m
+ [32m✓[39m src/__tests__/mediaFlow.test.ts [2m([22m[2m17 tests[22m[2m)[22m[32m 39[2mms[22m[39m
+ [32m✓[39m src/__tests__/ordersPaged.test.ts [2m([22m[2m11 tests[22m[2m)[22m[32m 30[2mms[22m[39m
+ [32m✓[39m src/__tests__/providers.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 28[2mms[22m[39m
+ [32m✓[39m src/__tests__/w5h1Tracking.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 25[2mms[22m[39m
+ [32m✓[39m src/__tests__/stripeWebhookSignature.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 20[2mms[22m[39m
+ [32m✓[39m src/__tests__/g6Security.test.ts [2m([22m[2m27 tests[22m[2m)[22m[32m 26[2mms[22m[39m
+ [32m✓[39m src/__tests__/orderVocabulary.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 24[2mms[22m[39m
+ [32m✓[39m src/__tests__/catalogGate.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 20[2mms[22m[39m
+ [32m✓[39m src/__tests__/menuScheduleGate.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 22[2mms[22m[39m
+ [32m✓[39m src/__tests__/aiGuardrails.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 16[2mms[22m[39m
+ [32m✓[39m src/__tests__/adminDeliveryAdvance.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 16[2mms[22m[39m
+ [32m✓[39m src/__tests__/addonDisplay.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 17[2mms[22m[39m
+ [32m✓[39m src/__tests__/cartIsolationStore.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 19[2mms[22m[39m
+ [32m✓[39m src/__tests__/aiDbContext.test.ts [2m([22m[2m10 tests[22m[2m)[22m[32m 36[2mms[22m[39m
+ [32m✓[39m src/__tests__/homeShowcase.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 18[2mms[22m[39m
+ [32m✓[39m src/__tests__/inventoryAdmin.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 16[2mms[22m[39m
+ [32m✓[39m src/__tests__/orderStateMachine.test.ts [2m([22m[2m10 tests[22m[2m)[22m[32m 17[2mms[22m[39m
+ [32m✓[39m src/__tests__/catalogControl.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 14[2mms[22m[39m
+ [32m✓[39m src/__tests__/kitchenService.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 17[2mms[22m[39m
+ [32m✓[39m src/__tests__/platformConfigBootstrap.test.ts [2m([22m[2m9 tests[22m[2m)[22m[32m 16[2mms[22m[39m
+ [32m✓[39m src/__tests__/biteAIStore.test.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 12[2mms[22m[39m
+ [32m✓[39m src/__tests__/deliveryRouter.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 13[2mms[22m[39m
+ [32m✓[39m src/__tests__/deliveryFeeApi.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 11[2mms[22m[39m
+ [32m✓[39m src/__tests__/assetRegistry.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 11[2mms[22m[39m
+ [32m✓[39m src/__tests__/availabilityEngine.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 9[2mms[22m[39m
+ [32m✓[39m src/__tests__/routeEta.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 10[2mms[22m[39m
+ [32m✓[39m src/__tests__/deliveryRouterStore.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 10[2mms[22m[39m
+ [32m✓[39m src/__tests__/stripeRefundLogic.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 9[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m47 passed[39m[22m[90m (47)[39m
+[2m      Tests [22m [1m[32m522 passed[39m[22m[90m (522)[39m
+[2m   Start at [22m 00:07:20
+[2m   Duration [22m 29.68s[2m (transform 6.33s, setup 1.38s, collect 10.69s, tests 3.35s, environment 143.10s, prepare 14.81s)[22m
+
