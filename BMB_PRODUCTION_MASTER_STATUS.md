@@ -376,7 +376,9 @@ G3 · G5 · G6 (capability) · G7 (S0–S4-R2) · G8 (S0–S5, T1, T2) · G8-S5 
 
 ---
 
-## 14. DECISION LOG (2026-10-05) + การตรวจซ้ำหลังมติ
+## 14. DECISION LOG (2026-10-05) + STATUS อัปเดตหลังมติ — **ACTIVE PLAN OF RECORD**
+
+> สถานะเอกสาร: มติ D-01..D-06 ครบ → §11 คือแผนที่ใช้ทำงานจริง (แทนลำดับเดิม) · รออนุมัติ 2 อย่าง: (1) GitHub secret `CLOUDFLARE_API_TOKEN` (2) migration ของ W-1.4
 
 | หัวข้อ | หลักฐาน/มติ |
 |---|---|
