@@ -80,5 +80,3 @@ verify_jwt = true
 enabled = true
 verify_jwt = true
 
-# social-ai-worker: G6 classify + reply DRAFT for social comment events.
-verify_jwt = true
