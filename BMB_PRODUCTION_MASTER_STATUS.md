@@ -447,6 +447,23 @@ G3 · G5 · G6 (capability) · G7 (S0–S4-R2) · G8 (S0–S5, T1, T2) · G8-S5 
 | REAL DELIVERY | NOT YET VERIFIED (delivered 1 รายการ = ทดสอบ) |
 | REAL TRACKING | NOT YET VERIFIED (เงื่อนไขเดียวกัน) |
 | REAL FAILURE HANDLING | RUNTIME VERIFIED ระดับระบบ (G8-S5) — ยังไม่มี failure จริงของลูกค้า |
+
+**PART 7 verify สรุป:** `fcVerify114` = 25 PASS · `fcProbe6` = 22 PASS · `fcProdVerify` = **9 PASS** (bundle hydrate keys ใหม่ · anon อ่านค่าใหม่ครบ · legacy radius retire · RPC FC live · legacy row ปลอดภัย · active orders = 0)
+
+---
+
+## 16. FINAL MASTER REVIEW (PART 9 — read-only หลังงานเสร็จ)
+
+**Q: "ถ้า Owner จะเปิดร้านให้ลูกค้าจริงวันนี้ ยังขาดอะไรบ้าง?"**
+
+- **A. CORE SHOP BLOCKER** — **ไม่พบ**: ordering · delivery (fee/radius/methods/bite-drive) · configuration (admin ปรับครบ) · tracking · web notification = RUNTIME VERIFIED · web+domain = DEPLOYED — *หมายเหตุซื่อสัตย์: ทุกอย่างพิสูจน์ด้วย test data — ยังไม่เคยมีลูกค้า/คำสั่งซื้อจริงแม้แต่รายการเดียว*
+- **B. EXTERNAL BLOCKER** — Stripe **LIVE keys** (ขวางรับเงินจริง) · **Meta Verify & Save** (ขวาง G4/G9 real event) · rider credentials **D-04** (ขวาง external >5 กม.; ตอนนี้ส่ง ≤5 กม. ด้วย Bite Drive ได้) · **SMS credentials** (ขวางแจ้งเตือน SMS)
+- **C. AI AUTOMATION BLOCKER** — G9 partial (#3/#4/#5/#7/#10 evidence compiled §7.2) **รอ Owner review** — ไม่ขวางเปิดร้าน (D-03) · outbound Meta ปิดตาม design จน G4 · ai-proxy ยังไม่มี rate limiting (W3A gap เดิม — non-blocking แต่ควรปิดก่อนใช้ AI หนัก)
+- **D. OWNER ACTION REQUIRED** — 1) ส่ง Stripe LIVE keys → W-2.2 (order จริง 2 รายการ end-to-end) 2) กด Verify & Save (Meta AppID/secret) 3) คีย์/สมัคร rider (Grab → LINE MAN → Bolt) 4) คีย์ SMS 5) review G9 evidence ใน §7.2
+- **E. NON-BLOCKER** — F-01 demo creds หน้า login · `business_settings.hours` dead-key suspect (F-23) · local zone mirror มี 3/6 zones (fallback offline เท่านั้น — server = authority) · **Kitchen/Dispatch/Delivery ของออเดอร์จริง = ยังไม่เคยลอง** (E2E chain §15)
+- **F. DEFERRED** — multi-tenant onboarding + หลายร้านจริง (schema/RLS READY) · admin page เฉพาะทาง (ตอนนี้ใช้ cards ใน /admin/settings) · theme กว้างกว่า glass tokens · physical delivery
+
+**สรุป:** *Software พร้อมเปิดร้านรับออเดอร์ทดสอบ/ลูกค้าได้ในเงื่อนไข Bite Drive ≤ 5 กม. + COD/QR จริง — แต่ "เปิดร้านรับเงินจริง" ยังติด **EXTERNAL: Stripe LIVE keys** — ยังไม่มีการประกาศ Open Shop Ready*
 | ไวท์ลาเบล | ทุกค่าใน §4.1 ต้องแอดมินปรับได้ทั้งหมด (คำสั่ง Owner) |
 | แผน | ✅ ปรับเป็น PHASE แล้ว — ดู §11 |
 
