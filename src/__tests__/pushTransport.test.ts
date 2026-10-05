@@ -284,4 +284,63 @@ describe('W3-D-7 Web Push transport', () => {
       expect(await listMyPushSubscriptions()).toEqual([])
     })
   })
+
+  // Regression guard for a bug that actually shipped once: the VAPID key format.
+  // web-push validates the server-side key with /^[A-Za-z0-9\-_]+$/, so the
+  // stored value must be the bare 87-char unpadded base64url body — no '=' and
+  // no leading 'B'. The browser side must still decode it to the 65-byte point.
+  describe('VAPID key format (regression)', () => {
+    // Real deployed value shape: 65-byte uncompressed point, unpadded.
+    const REAL_KEY = 'BMwKuaU1rBMs6w-7GAxocIdxLcvMyQmRoClMZyzn3ClB7c8rJi3Wl83rSf6UzkKiyfG4L_0fQnV2KbfpKYkFLJE'
+
+    function decodeKey(key: string): Uint8Array {
+      const padded = key + '='.repeat((4 - (key.length % 4)) % 4)
+      const b64 = padded.replace(/-/g, '+').replace(/_/g, '/')
+      const bin = atob(b64)
+      return Uint8Array.from(bin, (c) => c.charCodeAt(0))
+    }
+
+    it('the deployed public key is 87 unpadded base64url chars', () => {
+      expect(REAL_KEY.length).toBe(87)
+      expect(REAL_KEY).toMatch(/^[A-Za-z0-9\-_]+$/)
+      expect(REAL_KEY).not.toContain('=')
+    })
+
+    it('decodes to a 65-byte uncompressed P-256 point starting with 0x04', () => {
+      const bytes = decodeKey(REAL_KEY)
+      expect(bytes.length).toBe(65)
+      expect(bytes[0]).toBe(0x04)
+    })
+
+    it('stripping the first character would corrupt the point (why we never do)', () => {
+      // 87 chars is exactly the encoding of 65 bytes, so char 0 IS key data.
+      // A stray `.replace(/^B/,'')` here silently yields a 64-byte point and the
+      // browser rejects the subscription with an opaque error.
+      expect(decodeKey(REAL_KEY.slice(1)).length).toBe(64)
+      expect(decodeKey(REAL_KEY).length).toBe(65)
+    })
+
+    it('enablePush passes the correct 65-byte applicationServerKey to the browser', async () => {
+      let capturedKey: ArrayBuffer | ArrayBufferView | null = null
+      const { calls } = installPushEnvironment()
+      ;(navigator.serviceWorker as any).ready = Promise.resolve({
+        pushManager: {
+          getSubscription: async () => null,
+          subscribe: async (opts: { applicationServerKey: ArrayBuffer | ArrayBufferView }) => {
+            capturedKey = opts.applicationServerKey
+            calls.subscribe++
+            return { endpoint: SUB_JSON.endpoint, toJSON: () => SUB_JSON }
+          },
+        },
+      })
+      // Use the REAL 87-char key, not the short placeholder: a fake short key would
+      // decode to the wrong byte length and hide exactly the bug under test.
+      route({ data: { id: 'push-1' }, error: null }, true, REAL_KEY)
+
+      expect((await enablePush()).ok).toBe(true)
+      const bytes = new Uint8Array(capturedKey as unknown as ArrayBuffer)
+      expect(bytes.length).toBe(65)
+      expect(bytes[0]).toBe(0x04)
+    })
+  })
 })

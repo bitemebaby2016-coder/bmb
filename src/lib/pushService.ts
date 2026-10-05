@@ -71,7 +71,18 @@ export async function getPushConfig(): Promise<PushConfig> {
   }
 }
 
-/** base64url (VAPID) -> Uint8Array, as PushManager.subscribe requires. */
+/**
+ * base64url (VAPID) -> Uint8Array, as PushManager.subscribe requires.
+ *
+ * Format facts learned from web-push's own validator (scripts/vapidWebpushCheck.cjs):
+ *   - the stored server-side key is the BARE 87-char unpadded base64url body;
+ *     a 65-byte uncompressed point encodes to exactly 87 significant chars, so
+ *     the first character is real key data and must NOT be stripped;
+ *   - there is no 'B' marker anywhere in the server-side value. The 'B' prefix
+ *     seen in some examples belongs to a different convention and would corrupt
+ *     the point if removed here.
+ * The only transformation needed is base64url -> base64 + padding.
+ */
 function urlBase64ToUint8Array(base64String: string): Uint8Array {
   const padding = '='.repeat((4 - (base64String.length % 4)) % 4)
   const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/')

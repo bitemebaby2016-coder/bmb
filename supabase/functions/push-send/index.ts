@@ -30,7 +30,18 @@
 // ============================================
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.4'
-import webpush from 'https://esm.sh/web-push@3.6.7'
+// web-push is CommonJS; esm.sh wraps it as a default export object. Import the
+// namespace AND keep the default so either interop shape resolves — a bare
+// default import alone yields an object whose methods are not callable.
+import * as webpushNs from 'https://esm.sh/web-push@3.6.7'
+import webpushDefault from 'https://esm.sh/web-push@3.6.7'
+
+const webpush: any =
+  (webpushNs as any)?.setVapidDetails
+    ? webpushNs
+    : (webpushDefault as any)?.default?.setVapidDetails
+      ? (webpushDefault as any).default
+      : webpushDefault
 
 const SB_URL = Deno.env.get('SUPABASE_URL') || ''
 const SERVICE = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || ''
@@ -82,6 +93,29 @@ function tokenMatches(provided: string): boolean {
 
 Deno.serve(async (req: Request): Promise<Response> => {
   if (req.method === 'OPTIONS') return new Response('ok', { status: 200 })
+
+  // Diagnostics: reports which dependency/config piece is missing without ever
+  // echoing a secret value. Required to distinguish "bad import" from
+  // "missing env" from "auth rejected" — a bare 500 tells us nothing.
+  if (req.method === 'GET' && new URL(req.url).searchParams.get('diag') === '1') {
+    return json({
+      ok: true,
+      module: {
+        webpushResolved: !!webpush,
+        hasSetVapidDetails: typeof webpush?.setVapidDetails === 'function',
+        hasSendNotification: typeof webpush?.sendNotification === 'function',
+      },
+      env: {
+        SUPABASE_URL: SB_URL !== '',
+        SERVICE_ROLE: SERVICE !== '',
+        AUTOMATION_TOKEN: AUTOMATION_TOKEN !== '',
+        VAPID_PUBLIC_KEY: VAPID_PUBLIC_KEY !== '',
+        VAPID_PRIVATE_KEY: VAPID_PRIVATE_KEY !== '',
+        VAPID_SUBJECT: VAPID_SUBJECT !== '',
+      },
+    })
+  }
+
   if (req.method !== 'POST') return json({ error: 'method not allowed' }, 405)
 
   // --- auth: platform JWT + shared automation token (mirrors automation-worker) ---
@@ -95,7 +129,13 @@ Deno.serve(async (req: Request): Promise<Response> => {
     // Honest failure: the transport is not configured yet (Owner sets the secret).
     return json({ error: 'ERR_PUSH_NOT_CONFIGURED', hint: 'set VAPID_PRIVATE_KEY secret' }, 503)
   }
-  webpush.setVapidDetails(VAPID_SUBJECT, VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY)
+  try {
+    // web-push validates the keypair eagerly and THROWS on a malformed key.
+    // That must surface as a typed 503, never as an opaque 500.
+    webpush.setVapidDetails(VAPID_SUBJECT, VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY)
+  } catch (e) {
+    return json({ error: 'ERR_VAPID_REJECTED', detail: (e as Error)?.message ?? 'setVapidDetails failed' }, 503)
+  }
 
   let body: { customerId?: string; title?: string; body?: string; url?: string; tag?: string; notificationId?: string }
   try {
