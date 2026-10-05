@@ -233,7 +233,7 @@ async function processEntry(obj: string, entry: any, ctx: Ctx) {
       p_items: order.items,
       p_delivery_round_id: order.delivery_round_id || null,
       p_delivery_method: order.delivery_method || 'self_delivery',
-      p_delivery_address: order.delivery_address || 'à¹„à¸¡à¹ˆà¹„à¸”à¹‰à¸£à¸°à¸šà¸¸ (channel intake)',
+      p_delivery_address: order.delivery_address || 'ไม่ได้ระบุที่อยู่ (channel intake)',
       p_dropoff_latitude: order.dropoff_latitude ?? 10.7016,
       p_dropoff_longitude: order.dropoff_longitude ?? 102.1429,
       p_customer_name: order.customer_name || extUser,
