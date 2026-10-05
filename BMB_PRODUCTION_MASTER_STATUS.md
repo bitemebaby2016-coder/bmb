@@ -33,7 +33,9 @@ WEB      https://bitemebaby-5f7.pages.dev = 200 · bundle assets/index-DphkYgGq.
          ไม่มี facebook-domain-verification (repo มีแล้วตั้งแต่ commit 882feab) ⇒ production = build เก่า
          Cloudflare Pages project = "bitemebaby" · deploy แบบ manual (wrangler direct upload)
          cache ฝั่ง wrangler ล่าสุด 2026-09-27 ⇒ main นำหน้าไปแล้ว 207 commits · ci.yml ไม่มี deploy step
-DOMAIN   biteme-baby.com / www = NXDOMAIN (ยังไม่มี nameserver) · bitemebaby.com = NXDOMAIN
+DOMAIN   ✅ CONNECTED (อัปเดต 2026-10-05 ~10:15): NS = carlane/eoin.ns.cloudflare.com · A = Cloudflare
+         https://biteme-baby.com = 200 · https://www.biteme-baby.com = 200 (SSL enabled, ขึ้น Active ทั้งคู่)
+         แต่ canonical/og:url บนเว็บยังชี้ bitemebaby.com (ผิดโดเมน) และ bundle ยัง ≠ main (ดู §11)
 TENANCY  tenants 1 · brands 1 · branches 1 (service_radius_km = 5.00, active, default)
 ORDERS   202 รายการ (2026-09-17 → 2026-09-28; ไม่มีออเดอร์ใหม่มา 7 วัน) · delivery_method = self_delivery 202/202
          SAME_DAY: pending 150 · cancelled 29 · ready_for_dispatch 8 · dispatched 5 · confirmed 2
@@ -78,14 +80,19 @@ SECRETS (ดูแค่ชื่อ) Stripe/OpenRouter/AUTOMATION_TOKEN/CHANNEL
 
 | ค่า | ตอนนี้อยู่ที่ไหน | แอดมินปรับได้? | หมายเหตุ |
 |---|---|---|---|
-| ระยะส่ง Bite Drive (5 กม.) | **hardcode `5.00` ใน RPC `create_order_with_items` + `compute_delivery_fee`** · `branches.service_radius_km` = 5.00 (มี column แต่ RPC ไม่อ่าน) · `platformConfig.biteDriveMaxDistanceKm = 5` (ฝั่ง client) · `business_settings.delivery_policy.radius_km = 10` (ไม่ตรงกัน) | **NO** | มีค่าเดียวกันอยู่ 4 ที่และไม่ตรงกัน ⇒ ต้องรวมให้เหลือแหล่งเดียว (server authority) |
+> 🔒 ** OWNER MANDATE (2026-10-05): ทุกแถวในตารางนี้ แอดมินต้องปรับได้ทั้งหมด** เพราะเป็นไวท์ลาเบล — งานรวมค่าทั้งหมด = **W-1.4** (§11 PHASE 0)
+
+| ค่า | ตอนนี้อยู่ที่ไหน | แอดมินปรับได้? | หมายเหตุ |
+|---|---|---|---|
+| ระยะส่ง Bite Drive (5 กม.) | **hardcode `5.00` ใน RPC `create_order_with_items` + `compute_delivery_fee`** · `branches.service_radius_km` = 5.00 (มี column แต่ RPC ไม่อ่าน) · `platformConfig.biteDriveMaxDistanceKm = 5` (ฝั่ง client) · `business_settings.delivery_policy.radius_km = 10` (ไม่ตรงกัน) | **NO → ต้องแก้ (W-1.4)** | มีค่าเดียวกันอยู่ 4 ที่และไม่ตรงกัน ⇒ ต้องรวมให้เหลือแหล่งเดียว (server authority) |
 | ค่าส่ง Bite Drive (25 บาท flat) | `platformConfig` (client) + `delivery_zones.fee` (DB) | zones ปรับได้ใน DB / client ปรับไม่ได้ | ต้องยืนยันว่าแหล่งไหนเป็นตัวจริง |
-| markup ไรเดอร์ภายนอก 12% · free shipping 300 · cutoff 2 ชม. · quota 120/วัน | `DEFAULT_PLATFORM_CONFIG` (hardcode ฝั่ง client) | **NO** | client-only ⇒ ไม่ใช่ server authority |
+| markup ไรเดอร์ภายนอก 12% · free shipping 300 · cutoff 2 ชม. · quota 120/วัน | `DEFAULT_PLATFORM_CONFIG` (hardcode ฝั่ง client) | **NO → ต้องแก้ (W-1.4)** | client-only ⇒ ไม่ใช่ server authority |
+| สวิต์เปิด/ปิดรับงาน SAME_DAY + เลือกวิธีส่ง | **ยังไม่มี** (D-01 กำหนด) | **NO → ต้องสร้างใหม่ (W-1.4)** | ต้องมีทั้งใน UI และ enforce ใน RPC |
 | รอบส่ง / zones | `delivery_rounds` / `delivery_zones` (DB, มี branch_id) | YES (AdminRounds, DeliveryManagement) | — |
 | เวลาทำการ / order policy | `business_settings` (hours, operating_hours, order_policy) | YES (AdminSettings = ตัวแก้ JSON แบบ generic) | UI ยังเป็นการแก้ key/value ดิบ |
-| ไรเดอร์ภายนอกที่เปิดใช้ | allowlist ใน RPC (`grab_rider/linemen_rider/foodpanda_rider`) + client registry | **NO** | การเพิ่ม/ปิด provider ต้องแก้โค้ด |
-| แบรนด์ / ธีม / โลโก้ | brands + AdminBrands/AdminMedia; theme ใน `platformConfig` = hardcode | PARTIAL | — |
-| สาขา | branches + BranchSwitcher | PARTIAL | ยังไม่มีหน้า CRUD สาขาโดยเฉพาะ (ต้องตรวจ AdminTenants) |
+| ไรเดอร์ภายนอกที่เปิดใช้ | allowlist ใน RPC (`grab_rider/linemen_rider/foodpanda_rider`) + client registry | **NO → ต้องแก้ (W-1.4)** | การเพิ่ม/ปิด provider ต้องแก้โค้ด |
+| แบรนด์ / ธีม / โลโก้ | brands + AdminBrands/AdminMedia; theme ใน `platformConfig` = hardcode | PARTIAL → ต้องแก้ |  |
+| สาขา | branches + BranchSwitcher | PARTIAL → ต้องแก้ | ยังไม่มีหน้า CRUD สาขาโดยเฉพาะ (ต้องตรวจ AdminTenants) |
 
 ### 4.2 White-label / multi-branch
 
@@ -250,44 +257,76 @@ SECRETS (ดูแค่ชื่อ) Stripe/OpenRouter/AUTOMATION_TOKEN/CHANNEL
 
 ---
 
-## 10. OWNER DECISIONS REQUIRED
+## 10. OWNER DECISIONS — ✅ RESOLVED ทั้ง 6 ข้อ (2026-10-05)
 
-| ID | คำถาม | ทำไมต้องถาม |
-|---|---|---|
-| D-01 | Bite Drive ใช้กับ **SAME_DAY** ด้วยไหม หรือใช้กับ **PRE_ORDER** เท่านั้น? ถ้า SAME_DAY ≤ 5 กม. จะส่งด้วยอะไร? | RPC ตอนนี้บังคับว่า ≤ 5 กม. ต้องเป็น self_delivery ทั้งสองโหมด — ขัดกับที่ Owner อธิบาย |
-| D-02 | ออเดอร์ทดสอบ 202 รายการ (pending 155) จะ archive/cancel หรือเก็บไว้? | ถ้าเปิดร้านทั้งที่ยังมี pending ค้าง ครัวจะเห็นปนกับของจริง — ต้องได้อนุมัติก่อนแตะ production data |
-| D-03 | ลำดับ G4 กับ G9: จะให้ G9 ปิดส่วนที่ไม่ต้องใช้ Meta ก่อน แล้วทำส่วน real event หลัง G4 ไหม? | spine conflict §6 |
-| D-04 | ไรเดอร์ภายนอก: เจ้าไหนก่อน (Grab / LINE MAN / Foodpanda) และมีสัญญาหรือยัง? | ต้องมี API key จริงก่อน |
-| D-05 | ช่องทางแจ้งเตือนลูกค้า (LINE OA / SMS / ไม่ใช้)? | ไม่มี credential |
-| D-06 | อนุมัติให้ AI DEV deploy เว็บ (W-01) และ redeploy `channel-webhook` (ข้อความไทย)? | เป็น production deployment |
+| ID | คำถาม | มติ | ผลกระทบต่อแผน |
+|---|---|---|---|
+| D-01 | Bite Drive ใช้กับ SAME_DAY? | **ใช้ทั้งคู่** — PRE_ORDER เป็นหลัก; SAME_DAY ส่งได้ แต่**ต้องมีสวิต์เปิด/ปิดรับงาน + เลือกวิธีส่งได้** | W-1.4 |
+| D-02 | ออเดอร์ทดสอบ 202? | **ยกเลิก (cancel) แล้วทดสอบใหม่** | W-1.2 |
+| D-03 | ลำดับ G4/G9? | **ใช่** — G9 ส่วนที่ไม่ต้องใช้ Meta ทำก่อน | W-4.1 |
+| D-04 | ไรเดอร์ภายนอก? | **Grab = เจ้าหลัก รอ API (ทำเรื่องแล้ว)** · **LINE MAN = รอง ทำเรื่องแล้ว** · **Bolt = กำลังทำเรื่อง** | W-3.x · ⚠️ gap: โค้ดมี foodpanda แต่ Owner ไม่ได้ใช้; **ยังไม่มี adapter ของ Bolt** |
+| D-05 | แจ้งเตือนลูกค้า? | **SMS + ระบบแจ้งเตือนของเว็บเอง** | W-2.x |
+| D-06 | อนุมัติ deploy? | **อนุมัติ** (deploy เว็บ + redeploy `channel-webhook`) | W-1.1 · W-1.5 |
+
+**คำสั่งเพิ่มจาก Owner:** ตาราง §4.1 ทุกแถว "แอดมินปรับได้?" **ต้องปรับได้ทั้งหมด** เพราะเป็นไวท์ลาเบล (ร้านไหนก็ใช้ได้) ⇒ W-1.4 ขยายเป็น **รวมทุกค่า (distance/fee/markup/cutoff/quota/free-ship/provider allowlist) → business_settings ต่อ tenant/branch + UI แอดมิน + ให้ RPC อ่านจาก DB**
+และตอบคำถาม "ต้องวางแผนทำใหม่เป็นเฟสก่อนไหม?" → **ใช่** → PHASE ใหม่ทั้งหมดอยู่ที่ §11
 
 ---
 
-## 11. MASTER WORK LIST — เรียงตาม dependency (ห้ามข้ามลำดับ)
+## 11. MASTER WORK LIST — แผนเป็น PHASE (เรียงตาม dependency; มติ D-01..D-06 แล้ว)
 
-ประเภท: **BLOCKER** · **EXTERNAL BLOCKER** · **REQUIRED NEXT** · **NON-BLOCKER** · **DEFERRED** · **ALREADY CLOSED**
+> คำถาม "ต้องวางแผนใหม่เป็นเฟสไหม" → **ใช่ ปรับแล้ว** · PHASE นี้แทนลำดับเดิม · ห้ามข้ามเฟสที่มี dependency
 
-### PHASE A — เปิดร้านจริง (Bite Me Baby @ biteme-baby.com)
+### PHASE 0 — เว็บตรงกับ main + โดเมนถูกต้อง (สำคัญสุด ทำก่อนอย่างอื่น)
 
-| # | งาน | ประเภท | ใครทำ | Evidence ที่ต้องได้ |
+| # | งาน | สถานะ | ใครทำ | Evidence |
 |---|---|---|---|---|
-| W-01 | ระบุสถานะ deploy ของ Pages แล้วตั้ง **deploy pipeline** (GitHub Actions → Cloudflare Pages) → deploy main | **REQUIRED NEXT** | AI DEV (+ Owner ใส่ `CLOUDFLARE_API_TOKEN` เป็น GitHub secret) | bundle บน prod = build ของ main · มีแท็ก FB · deploy record |
-| W-02 | ต่อโดเมน biteme-baby.com (§9 ขั้น 1–2) | BLOCKER | **Owner** | DNS resolve + HTTPS 200 |
-| W-02b | แก้โดเมนในโค้ด/SEO/Stripe/Auth/ai-proxy → `biteme-baby.com` | BLOCKER | AI DEV | grep `bitemebaby.com` = 0 · Auth redirect ใช้งานได้ |
-| W-03 | จัดการข้อมูลทดสอบ (ตาม D-02) | BLOCKER | AI DEV หลัง Owner อนุมัติ | orders ที่ active = 0 ก่อนเปิดร้าน |
-| W-04 | **Admin-configurable delivery**: รวมระยะ Bite Drive เป็นแหล่งเดียว (`branches.service_radius_km` ต่อสาขา) + ให้ RPC อ่านค่านี้ + UI แอดมิน + ย้ายค่าที่ client hardcode (markup/cutoff/quota/free-ship) เป็น settings ต่อ tenant/branch | BLOCKER (ตาม requirement Owner) | AI DEV หลัง D-01 (ต้องมี migration — ต้องอนุมัติ) | ปรับ 5→3 กม. ในแอดมินแล้ว RPC บังคับตามจริง · tests |
-| W-05 | Stripe LIVE: ใส่ live keys + register live webhook | EXTERNAL BLOCKER | **Owner** | livemode=true ใน payment_intents |
-| W-06 | **Live acceptance**: ออเดอร์จริง SAME_DAY 1 + PRE_ORDER 1 (จ่ายจริง) → ครัว → Bite Drive → delivered → (refund 1 ครั้ง) | BLOCKER | Owner จ่าย + AI DEV ตรวจ read-only | lifecycle ครบ + audit + payment reconcile |
-| W-06b | redeploy `channel-webhook` (ข้อความไทย) | NON-BLOCKER | AI DEV หลัง D-06 | v11 active |
-| W-06c | ลบ `BMB_TEST_*` ออกจาก production secrets | NON-BLOCKER (security hygiene) | Owner/AI DEV หลังอนุมัติ | secrets list ไม่มี BMB_TEST_* |
+| W-1.1 | ตั้ง **deploy pipeline** GitHub Actions → Cloudflare Pages (`bitemebaby`) แล้ว deploy `main` | **NEXT REQUIRED** (Owner อนุมัติแล้ว D-06) | AI DEV + Owner ใส่ secret `CLOUDFLARE_API_TOKEN`/`CLOUDFLARE_ACCOUNT_ID` | prod bundle = `index-CCiimpoZ.js` (build ปัจจุบันของ main) · workflow run ผ่าน |
+| W-1.2 | ยกเลิกออเดอร์ทดสอบ (D-02) | APPROVED | AI DEV (read-then-write + audit) | orders active/pending = 0 |
+| W-1.3 | แก้โดเมนโค้ด `bitemebaby.com` → `biteme-baby.com` (index.html, sitemap, robots, Stripe success/cancel, Supabase Auth Site/Redirect, ai-proxy referer) | OPEN | AI DEV | canonical/og:url บน prod = biteme-baby.com · Auth redirect ใช้ได้ |
+| W-1.4 | **Admin configurability ทุกค่าใน §4.1** + สวิต์เปิด/ปิดรับงาน SAME_DAY + เลือกวิธีส่ง (D-01): รวม distance/fee/markup/cutoff/quota/free-ship/provider เป็น `business_settings` ต่อ tenant/branch, ให้ RPC อ่านจาก DB (แทน hardcode 5.00), UI แอดมิน | OPEN — **ต้อง migration (ขออนุมัติแยก)** | AI DEV | แอดมินเปลี่ยนค่าแล้ว RPC บังคับจริง · tests ผ่าน |
+| W-1.5 | redeploy `channel-webhook` (ข้อความไทย, D-06 อนุมัติ) | APPROVED | AI DEV | v11 active |
+| W-1.6 | ลบ `BMB_TEST_*` ออกจาก production secrets | OPEN (security) | Owner/AI DEV | secrets list สะอาด |
 
-### PHASE B — Social AI (ไม่ขวางการเปิดร้าน)
+### PHASE 1 — เปิดร้านรับเงินจริง
 
-| # | งาน | ประเภท | ใครทำ |
+| # | งาน | สถานะ | ใครทำ |
 |---|---|---|---|
-| W-07 | Meta: Verify & Save webhook + Domain verification (หลัง W-01/W-02) | EXTERNAL BLOCKER | **Owner** |
-| W-08 | G9 ส่วนที่ไม่ต้องใช้ Meta: harness สำหรับ #3 #4 #5 #7 #10 (หลัง Owner review contract + D-03) | REQUIRED (หลัง review) | AI DEV |
-| W-09 | G4 real event → G9 ส่วน REAL EVENT/INGEST/#2/#6 → G9 final report | EXTERNAL-dependent | AI DEV หลัง W-07 |
+| W-2.1 | Stripe LIVE keys + register live webhook | EXTERNAL (Owner) | Owner |
+| W-2.2 | **Live acceptance**: SAME_DAY 1 + PRE_ORDER 1 จ่ายจริง → ครัว → Bite Drive → delivered → refund 1 ครั้ง | หลัง W-2.1 | Owner จ่าย + AI DEV ตรวจ |
+| W-2.3 | แจ้งเตือน: SMS (ตาม D-05) + in-app/web notification ของเว็บเอง | OPEN | AI DEV (ต้อง credential SMS จาก Owner) |
+| W-2.4 | เปิดร้านจริง (ประกาศ Open Shop) | หลังข้อ 1–3 ผ่านทั้งหมด | Owner 宣布 |
+
+### PHASE 2 — ไรเดอร์ภายนอก (D-04)
+
+| # | งาน | สถานะ |
+|---|---|---|
+| W-3.1 | ย้าย adapter ทั้งหมดไป Edge Function + secret ฝั่ง server + webhook รับสถานะ (ป้องกันคีย์รั่วใน bundle) | OPEN — ต้องทำก่อนใส่ key จริง |
+| W-3.2 | **Grab** (เจ้าหลัก): รอ API ที่ทำเรื่องไว้ → ต่อ key → E2E dispatch+tracking | EXTERNAL |
+| W-3.3 | **LINE MAN** (รอง): ตามหลัง Grab | EXTERNAL |
+| W-3.4 | **Bolt**: ⚠️ ยังไม่มี adapter ในโค้ด (ตอนนี้มี foodpanda ที่ Owner ไม่ได้ใช้) → เขียน adapter ใหม่ | OPEN (software) |
+| W-3.5 | ปิดงาน foodpanda adapter (mockup) หรือเก็บเป็น deferred | ตัดสินใจภายหลัง |
+
+### PHASE 3 — Social AI (ไม่ขวางเปิดร้าน; ตาม D-03)
+
+| # | งาน | สถานะ |
+|---|---|---|
+| W-4.1 | G9 ส่วนที่ไม่ต้องใช้ Meta: harness #3 #4 #5 #7 #10 (ก่อนเลย) | OPEN หลัง Owner review contract |
+| W-4.2 | Owner: Meta Verify & Save + Domain verification (ตอนนี้มีแท็กแล้ว โดเมนก็ Active) | EXTERNAL — Owner กดได้เลย |
+| W-4.3 | G4 real event → G9 REAL EVENT/INGEST/#2/#6 → G9 report | หลัง W-4.2 |
+| W-4.4 | G10 TRUE PRODUCTION CLOSURE | ท้ายสุด |
+
+### PHASE 4 — White-label hardening (ตามคำสั่ง Owner: ปรับได้ทุกอย่าง)
+
+| # | งาน |
+|---|---|
+| W-5.1 | runtime test ด้วย tenant ที่ 2 + สาขาที่ 2 จริง |
+| W-5.2 | SEO/domain/theme ต่อ tenant (ไม่ hardcode `bitemebaby.com` ใน sitemap/robots) |
+| W-5.3 | onboarding ร้านใหม่ (สร้าง tenant+brand+branch+settings ครบจากหน้าแอดมิน) |
+| W-5.4 | Settings UI แบบ form (แทน JSON ดิบ) |
+
+### DEFERRED (Owner ตั้งใจเลื่อน) · ALREADY CLOSED
+ดังเดิม — migration drift 104–111 · D4-3/D4-4 · `social_post_draft` · Meta production write · cleanup `bmb/` · **G3 · G5 · G6 (capability) · G7 · G8 (รวม S5) · G8-S5 root cause · mojibake code · G9 contract draft · Stripe TEST webhook · RLS WAVE 3 = CLOSED ห้ามทำซ้ำ**
 
 
 ### PHASE C — ขยาย / White-label
@@ -311,34 +350,55 @@ G3 · G5 · G6 (capability) · G7 (S0–S4-R2) · G8 (S0–S5, T1, T2) · G8-S5 
 
 ## 12. "ถ้าวันนี้จะเปิดให้ลูกค้าสั่งอาหารจริง BMB ขาดอะไร?"
 
-**CORE SHOP BLOCKERS**
-1. เว็บ production เป็น build เก่า ไม่มี deploy pipeline (W-01)
-2. โดเมน biteme-baby.com ยังไม่ต่อ และโค้ดอ้างโดเมนผิด (W-02/W-02b)
-3. ข้อมูลทดสอบค้าง 155 pending (W-03)
-4. ระยะส่ง Bite Drive แอดมินยังปรับไม่ได้ (W-04 — ตาม requirement Owner; ถ้ายอมใช้ 5 กม. ตายตัวไปก่อน ข้อนี้ลดเป็น NON-BLOCKER)
-5. ยังไม่มีออเดอร์จริงที่ครบวงจรด้วยการจ่ายจริง (W-06)
+**CORE SHOP BLOCKERS (อัปเดตหลังมติ 2026-10-05)**
+1. เว็บยังไม่ตรง `main` (prod = `index-x8kY75kI.js` ≠ build ปัจจุบัน `index-CCiimpoZ.js`) และไม่มี deploy pipeline (W-1.1)
+2. canonical/og:url/Stripe/Auth ยังชี้โดเมนผิด `bitemebaby.com` (W-1.3) — โดเมนจริงต่อแล้ว ✅
+3. ข้อมูลทดสอบค้าง 155 pending (W-1.2 — อนุมัติแล้ว)
+4. ทุกค่าใน §4.1 แอดมินยังปรับไม่ได้ + ยังไม่มีสวิต์เปิด/ปิดรับงาน SAME_DAY (W-1.4)
+5. ยังไม่มีออเดอร์จริงครบวงจรสบายจริง (W-2.1/W-2.2)
 
-**AI AUTOMATION BLOCKERS** — ไม่มีข้อไหนขวางการเปิดร้าน (Social AI ไม่ใช่ dependency ของหน้าร้าน)
+**AI AUTOMATION BLOCKERS** — ไม่มีข้อไหนขวางเปิดร้าน
 
-**EXTERNAL BLOCKERS** — Stripe LIVE keys (W-05) · Meta Verify & Save (W-07, ไม่ขวางร้าน) · สัญญาไรเดอร์ภายนอก (W-10, ขวางเฉพาะการส่งไกลกว่า 5 กม.)
+**EXTERNAL BLOCKERS** — Stripe LIVE keys (W-2.1) · คีย์ Grab/LINE MAN/Bolt (W-3.x) · SMS credential (W-2.3) · Meta Verify & Save (W-4.2 — ไม่ขวางร้าน)
 
-**OPTIONAL / DEFERRED** — notifications · white-label tenant ที่ 2 · Lighthouse · settings UI แบบ form · รายการใน DEFERRED
+**OPTIONAL / DEFERRED** — white-label tenant ที่ 2 · Lighthouse · settings UI แบบ form · รายการ DEFERRED
 
 ---
 
 ## 13. NEXT REQUIRED ACTION (งานเดียว)
 
-**W-01 — ตั้ง deploy pipeline ของ Cloudflare Pages แล้ว deploy `main` ขึ้น production** (ต้องให้ Owner อนุมัติ + ใส่ `CLOUDFLARE_API_TOKEN` / `CLOUDFLARE_ACCOUNT_ID` เป็น GitHub secret)
+**W-1.1 — ตั้ง deploy pipeline ของ Cloudflare Pages แล้ว deploy `main` ขึ้น production** (D-06 อนุมัติแล้ว)
 
-- **ทำไมต้องทำก่อน:** ทุกงานถัดไป (ต่อโดเมน, Meta domain verify, live order test, การแก้ทุกอย่างหลังจากนี้) ต้องมีเว็บที่ตรงกับ `main` ก่อน ตอนนี้ main นำหน้า prod ~207 commits
-- **ถ้าไม่ทำ:** ทดสอบออเดอร์จริงบนโค้ดเก่า · Meta domain verification ไม่ผ่าน · แก้อะไรไปก็ไม่ขึ้น prod
-- **Dependency:** Owner สร้าง Cloudflare API token (สิทธิ์ Cloudflare Pages: Edit) แล้วใส่เป็น GitHub secret เอง (ห้ามส่งในแชท)
-- **Evidence ที่ต้องได้:** workflow run สำเร็จ · bundle hash บน `bitemebaby-5f7.pages.dev` = ผล build ของ main · HTML มีแท็ก `facebook-domain-verification` · smoke test home/menu/checkout = 200
-- **ทำคู่กันได้ทันที (Owner):** W-02 ต่อโดเมน (§9) — ไม่ต้องรอ W-01
-- **ถัดไปหลัง W-01:** W-02b → ตอบ D-01/D-02 → W-03 + W-04 → W-05 → W-06
+- หลักฐานว่ายังค้าง: prod เสิร์ฟ `index-x8kY75kI.js` แต่ build จาก `main` = `index-CCiimpoZ.js` (ตรวจ 2026-10-05 10:24) · `ci.yml` ไม่มี deploy step
+- Dependency: Owner สร้าง **Cloudflare API token (สิทธิ์ Cloudflare Pages: Edit)** ใส่เป็น GitHub secret `CLOUDFLARE_API_TOKEN` + `CLOUDFLARE_ACCOUNT_ID` เอง (ห้ามส่งในแชท)
+- Evidence ที่ต้องได้: workflow run ผ่าน · prod bundle = `index-CCiimpoZ.js` · smoke test 200
+- **ทำคู่กันได้ทันที (Owner):** W-4.2 Meta Verify & Save + Domain verification (โดเมน Active + แท็กขึ้นแล้ว)
 
 ---
 
-**HARD STOP — รอ Owner review เอกสารนี้ + ตอบ D-01..D-06**
+## 14. DECISION LOG (2026-10-05) + การตรวจซ้ำหลังมติ
+
+| หัวข้อ | หลักฐาน/มติ |
+|---|---|
+| D-01 ขนส่ง | Bite Drive ใช้ทั้ง PRE_ORDER (หลัก) และ SAME_DAY — SAME_DAY ต้องมีสวิต์เปิด/ปิดรับงาน + เลือกวิธีส่ง |
+| D-02 ข้อมูลทดสอบ | ยกเลิกออเดอร์ทดสอบ 202 รายการ แล้วทดสอบใหม่ |
+| D-03 G4/G9 | ใช่ — G9 ส่วนไม่ต้องใช้ Meta ทำก่อน |
+| D-04 ไรเดอร์ | Grab (หลัก, รอ API) → LINE MAN (รอง) → Bolt (กำลังทำเรื่อง) · ยังไม่มี Bolt adapter ในโค้ด |
+| D-05 แจ้งเตือน | SMS + ระบบแจ้งเตือนของเว็บเอง |
+| D-06 deploy | อนุมัติ (เว็บ + `channel-webhook`) |
+| โดเมน | ✅ **CONNECTED แล้ว** — NS = `carlane/eoin.ns.cloudflare.com` · apex A = 172.67.169.233 / 104.21.79.97 · `https://biteme-baby.com` = 200 · `https://www.biteme-baby.com` = 200 (SSL enabled, ทั้งคู่ Active ใน Pages) |
+| หน้า live | มีแท็ก `facebook-domain-verification` แล้ว ✅ · แต่ canonical/og:url ยังเป็น `bitemebaby.com` (ผิด) |
+| build เทียบ | prod = `index-x8kY75kI.js` · `main` build จริง = `index-CCiimpoZ.js` ⇒ **ยังไม่ตรงกัน = W-1.1 ยังค้าง** |
+| ไวท์ลาเบล | ทุกค่าใน §4.1 ต้องแอดมินปรับได้ทั้งหมด (คำสั่ง Owner) |
+| แผน | ✅ ปรับเป็น PHASE แล้ว — ดู §11 |
+
+- ถัดไปหลัง W-1.1: W-1.2 ยกเลิกออเดอร์ทดสอบ → W-1.3 แก้โดเมนโค้ด → W-1.4 admin config (ขออนุมัติ migration) → W-2.1 Stripe LIVE → W-2.2 live acceptance
+
+---
+
+**STATUS — มติ D-01..D-06 ครบแล้ว (§10) · แผน PHASE §11 · รออนุมัติ 2 เรื่องก่อนลงมือ:**
+1. **Secret GitHub ของ Cloudflare** (สำหรับ W-1.1)
+2. **Migration ของ W-1.4** (แก้ RPC ให้อ่าน `business_settings`/`branches` + เพิ่มสวิต์ SAME_DAY) — ต้องอนุมัติก่อนทำ
+
 ห้ามประกาศ project complete · ห้ามประกาศ Open Shop complete · ห้ามประกาศ G9 PASS
 
