@@ -8,7 +8,7 @@ Allow: /faq
 Allow: /contact
 Allow: /promotions
 
-Sitemap: https://bitemebaby.com/sitemap.xml
+Sitemap: https://biteme-baby.com/sitemap.xml
 
 # Disallow admin/private routes
 Disallow: /admin*

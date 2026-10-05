@@ -1,4 +1,4 @@
-// Production deploy robots/canonical gate for https://bitemebaby.com
+// Production deploy robots/canonical gate for https://biteme-baby.com
 // Usage: node scripts/checkProductionHeaders.cjs [url]
 // Exit 0 = safe to be indexed · exit 1 = noindex/robots problem found.
 // Checks:
@@ -6,13 +6,13 @@
 //      pages.dev PREVIEW URLs send "X-Robots-Tag: noindex" automatically —
 //      this gate catches it leaking into production)
 //   2. <meta name="robots"> in served HTML must not be noindex
-//   3. exactly ONE canonical and it must match https://bitemebaby.com/
+//   3. exactly ONE canonical and it must match https://biteme-baby.com/
 //      (guards against the double-URL canonical regression)
 //   4. /robots.txt reachable, not disallowing /
 //   5. /sitemap.xml reachable
 'use strict'
-const BASE = (process.argv[2] || 'https://bitemebaby.com').replace(/\/+$/, '')
-const EXPECTED_HOME = 'https://bitemebaby.com/'
+const BASE = (process.argv[2] || 'https://biteme-baby.com').replace(/\/+$/, '')
+const EXPECTED_HOME = 'https://biteme-baby.com/'
 
 function fail(msg) { console.log('FAIL ' + msg) }
 function pass(msg) { console.log('PASS ' + msg) }

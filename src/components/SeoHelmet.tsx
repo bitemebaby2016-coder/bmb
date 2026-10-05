@@ -9,7 +9,7 @@ import type { SEOMeta } from '@/types'
 
 const helmetContext = { context: {} }
 
-const SITE_URL = 'https://bitemebaby.com'
+const SITE_URL = 'https://biteme-baby.com'
 
 function canonicalUrl(url?: string): string {
   if (!url || url === '/') return SITE_URL + '/'

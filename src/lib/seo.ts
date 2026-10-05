@@ -7,7 +7,7 @@ export function generateJsonLd(schema: Record<string, any>): string {
 export const SITE_CONFIG = {
   name: 'Bite Me Baby',
   nameShort: 'BMB',
-  url: 'https://bitemebaby.com',
+  url: 'https://biteme-baby.com',
   description: 'ร้านอาหารไทยจัดส่งถึงบ้านในรัศมี 5 กม. จากตัวเมืองจันทบุรี ให้บริการรอบเช้า กลางวัน เย็น ส่งด้วยรถไฟฟ้าอัจฉริยะ',
   ogImage: '/og-image.png',
   keywords: ['สั่งอาหารจันทบุรี', 'อาหารจัดส่ง', 'ร้านอาหารเมืองจันทบุรี', 'Bite Me Baby', 'ส่งอาหารจันทบุรี', 'cloud kitchen จันทบุรี'],
@@ -23,10 +23,10 @@ const HOME_SCHEMA = {
   "@graph": [
     {
       "@type": "Restaurant",
-      "@id": "https://bitemebaby.com/#restaurant",
+      "@id": "https://biteme-baby.com/#restaurant",
       "name": SITE_CONFIG.name,
-      "url": "https://bitemebaby.com/",
-      "image": "https://bitemebaby.com/og-image.png",
+      "url": "https://biteme-baby.com/",
+      "image": "https://biteme-baby.com/og-image.png",
       "servesCuisine": ["Thai", "Asian"],
       "priceRange": "$$",
       "currenciesAccepted": "THB",
@@ -47,7 +47,7 @@ const HOME_SCHEMA = {
         "closes": "20:00"
       }],
       "areaServed": { "@type": "AdministrativeArea", "name": "Chanthaburi" },
-      "hasMenu": { "@type": "Menu", "name": "Bite Me Baby Menu", "url": "https://bitemebaby.com/menu" },
+      "hasMenu": { "@type": "Menu", "name": "Bite Me Baby Menu", "url": "https://biteme-baby.com/menu" },
       "sameAs": [
         "https://facebook.com/bitemebaby",
         "https://instagram.com/bitemebaby",
@@ -56,12 +56,12 @@ const HOME_SCHEMA = {
     },
     {
       "@type": "WebSite",
-      "@id": "https://bitemebaby.com/#website",
-      "url": "https://bitemebaby.com/",
+      "@id": "https://biteme-baby.com/#website",
+      "url": "https://biteme-baby.com/",
       "name": SITE_CONFIG.name,
       "description": "สั่งอาหารจัดส่งเมืองจันทบุรี รัศมี 5 กม.",
       "inLanguage": ["th", "en"],
-      "publisher": { "@id": "https://bitemebaby.com/#restaurant" }
+      "publisher": { "@id": "https://biteme-baby.com/#restaurant" }
     }
   ]
 }

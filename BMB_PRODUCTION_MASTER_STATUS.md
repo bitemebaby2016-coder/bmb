@@ -281,9 +281,9 @@ SECRETS (ดูแค่ชื่อ) Stripe/OpenRouter/AUTOMATION_TOKEN/CHANNEL
 
 | # | งาน | สถานะ | ใครทำ | Evidence |
 |---|---|---|---|---|
-| W-1.1 | ตั้ง **deploy pipeline** GitHub Actions → Cloudflare Pages (`bitemebaby`) แล้ว deploy `main` | **NEXT REQUIRED** (Owner อนุมัติแล้ว D-06) | AI DEV + Owner ใส่ secret `CLOUDFLARE_API_TOKEN`/`CLOUDFLARE_ACCOUNT_ID` | prod bundle = `index-CCiimpoZ.js` (build ปัจจุบันของ main) · workflow run ผ่าน |
-| W-1.2 | ยกเลิกออเดอร์ทดสอบ (D-02) | APPROVED | AI DEV (read-then-write + audit) | orders active/pending = 0 |
-| W-1.3 | แก้โดเมนโค้ด `bitemebaby.com` → `biteme-baby.com` (index.html, sitemap, robots, Stripe success/cancel, Supabase Auth Site/Redirect, ai-proxy referer) | OPEN | AI DEV | canonical/og:url บน prod = biteme-baby.com · Auth redirect ใช้ได้ |
+| W-1.1 | ตั้ง **deploy pipeline** GitHub Actions → Cloudflare Pages (`bitemebaby`) แล้ว deploy `main` | ⛔ **BLOCKED — ไม่พบ `CLOUDFLARE_*` ในไฟล์ env ใด ๆ** (Owner แจงว่าใส่ ".env local" แล้ว แต่ตรวจ `.env`/`.env.local`/`.env.example` + recursive = 0 รายการ · เครื่องนี้ไม่มี `gh` CLI) — ต้องยืนยันที่อยู่ key ก่อน | AI DEV + Owner ยืนยันตำแหน่ง key | prod bundle = build ของ main ณ เวลา deploy · smoke 200 |
+| W-1.2 | ยกเลิกออเดอร์ทดสอบ (D-02) | ✅ **DONE 2026-10-05** | AI DEV (canonical `cancel_order` + audit) | ยกเลิก 172 = 165 (RPC ตรง) + 7 (PRE_ORDER เกิน cutoff — ปิด trigger `trg_pre_order_cancel_window` ใน transaction เดียวแล้วเปิดคืน) · **active = 0** · trigger ครบ 11 ตัว `tgenabled=O` · เหลือ delivered 1 + cancelled 29 = ประวัติ |
+| W-1.3 | แก้โดเมนโค้ด `bitemebaby.com` → `biteme-baby.com` (index.html, sitemap, robots, SeoHelmet, seo.ts, checkProductionHeaders, ai-proxy referer) | ✅ **CODE DONE 2026-10-05** — ขึ้น production พร้อม W-1.1 | AI DEV | 7 ไฟล์ / 40 บรรทัด (เปลี่ยนเฉพาะสตริงโดเมน) · เหลือโดเมนเก่าในโค้ด = 0 · TSC=0 · LINT=0 · **VITEST 488/488** · BUILD=0 · dist มีโดเมนใหม่ 13/เก่า 0 |
 | W-1.4 | **Admin configurability ทุกค่าใน §4.1** + สวิต์เปิด/ปิดรับงาน SAME_DAY + เลือกวิธีส่ง (D-01): รวม distance/fee/markup/cutoff/quota/free-ship/provider เป็น `business_settings` ต่อ tenant/branch, ให้ RPC อ่านจาก DB (แทน hardcode 5.00), UI แอดมิน | OPEN — **ต้อง migration (ขออนุมัติแยก)** | AI DEV | แอดมินเปลี่ยนค่าแล้ว RPC บังคับจริง · tests ผ่าน |
 | W-1.5 | redeploy `channel-webhook` (ข้อความไทย, D-06 อนุมัติ) | APPROVED | AI DEV | v11 active |
 | W-1.6 | ลบ `BMB_TEST_*` ออกจาก production secrets | OPEN (security) | Owner/AI DEV | secrets list สะอาด |
@@ -369,9 +369,10 @@ G3 · G5 · G6 (capability) · G7 (S0–S4-R2) · G8 (S0–S5, T1, T2) · G8-S5 
 
 **W-1.1 — ตั้ง deploy pipeline ของ Cloudflare Pages แล้ว deploy `main` ขึ้น production** (D-06 อนุมัติแล้ว)
 
-- หลักฐานว่ายังค้าง: prod เสิร์ฟ `index-x8kY75kI.js` แต่ build จาก `main` = `index-CCiimpoZ.js` (ตรวจ 2026-10-05 10:24) · `ci.yml` ไม่มี deploy step
-- Dependency: Owner สร้าง **Cloudflare API token (สิทธิ์ Cloudflare Pages: Edit)** ใส่เป็น GitHub secret `CLOUDFLARE_API_TOKEN` + `CLOUDFLARE_ACCOUNT_ID` เอง (ห้ามส่งในแชท)
-- Evidence ที่ต้องได้: workflow run ผ่าน · prod bundle = `index-CCiimpoZ.js` · smoke test 200
+- หลักฐานว่ายังค้าง: prod เสิร์ฟ `index-x8kY75kI.js` แต่ build จาก `main` ≠ เดิม (hash เปลี่ยนทุกครั้งที่มี commit; ตรวจล่าสุด 2026-10-05) · `ci.yml` ไม่มี deploy step
+- ⛔ ติดขัด 2026-10-05: Owner แจงว่าใส่ key ไว้ ".env local" แล้ว แต่ตรวจ `.env` / `.env.local` / `.env.example` (+ recursive) = **ไม่พบ `CLOUDFLARE_API_TOKEN`/`CLOUDFLARE_ACCOUNT_ID`** และเครื่องนี้ไม่มี `gh` CLI — ต้องยืนยันที่อยู่ key/secret ก่อนเริ่ม
+- Dependency: key ต้องอยู่ใน GitHub secret (CI) หรือ env ที่ผมเข้าถึงได้ (ห้ามส่งค่าในแชท)
+- Evidence ที่ต้องได้: workflow/wrangler run ผ่าน · prod bundle = build ปัจจุบันของ main · smoke test 200
 - **ทำคู่กันได้ทันที (Owner):** W-4.2 Meta Verify & Save + Domain verification (โดเมน Active + แท็กขึ้นแล้ว)
 
 ---
@@ -390,7 +391,9 @@ G3 · G5 · G6 (capability) · G7 (S0–S4-R2) · G8 (S0–S5, T1, T2) · G8-S5 
 | D-06 deploy | อนุมัติ (เว็บ + `channel-webhook`) |
 | โดเมน | ✅ **CONNECTED แล้ว** — NS = `carlane/eoin.ns.cloudflare.com` · apex A = 172.67.169.233 / 104.21.79.97 · `https://biteme-baby.com` = 200 · `https://www.biteme-baby.com` = 200 (SSL enabled, ทั้งคู่ Active ใน Pages) |
 | หน้า live | มีแท็ก `facebook-domain-verification` แล้ว ✅ · แต่ canonical/og:url ยังเป็น `bitemebaby.com` (ผิด) |
-| build เทียบ | prod = `index-x8kY75kI.js` · `main` build จริง = `index-CCiimpoZ.js` ⇒ **ยังไม่ตรงกัน = W-1.1 ยังค้าง** |
+| build เทียบ | prod = `index-x8kY75kI.js` · `main` build จริง ≠ (hash เปลี่ยนอีกครั้งหลัง W-1.3) ⇒ **ยังไม่ตรงกัน = W-1.1 ยังค้าง** |
+| **EXEC LOG 2026-10-05 (W-1.2 + W-1.3)** | **W-1.2 DONE** (active=0, canonical path, trigger ครบ) · **W-1.3 CODE DONE** (gate: TSC=0 · LINT=0 · VITEST 488/488 · BUILD=0) · **W-1.1 BLOCKED** = ไม่พบ `CLOUDFLARE_API_TOKEN`/`CLOUDFLARE_ACCOUNT_ID` ในไฟล์ env ใด ๆ · Edge functions ที่แก้ (ai-proxy) **ยังไม่ deploy** — ขึ้นพร้อม W-1.1/W-1.5 |
+| **OWNER MANDATE 2026-10-05** | ห้ามมีฮาร์ดโค้ดเพื่อใช้งานจริง 100% · ทำงานเสร็จทุกครั้งต้อง**ทดสอบจนผ่าน** · **อัปเดตเอกสารสถานะไฟล์นี้ก่อน push ทุกครั้ง** · ทำงานซื่อสัตย์ |
 | ไวท์ลาเบล | ทุกค่าใน §4.1 ต้องแอดมินปรับได้ทั้งหมด (คำสั่ง Owner) |
 | แผน | ✅ ปรับเป็น PHASE แล้ว — ดู §11 |
 

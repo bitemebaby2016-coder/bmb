@@ -100,7 +100,7 @@ async function audioToTranscript(apiKey: string, p: TranscribePayload): Promise<
       headers: {
         Authorization: `Bearer ${apiKey}`,
         'Content-Type': 'application/json',
-        'HTTP-Referer': 'https://bitemebaby-5f7.pages.dev',
+        'HTTP-Referer': 'https://biteme-baby.com',
         'X-Title': 'Bite Me Baby App',
       },
       body: JSON.stringify({
@@ -177,7 +177,7 @@ async function streamCompletion(req: Request, apiKey: string, model: string, saf
     headers: {
       Authorization: `Bearer ${apiKey}`,
       'Content-Type': 'application/json',
-      'HTTP-Referer': req.headers.get('origin') || 'https://bitemebaby-5f7.pages.dev',
+      'HTTP-Referer': req.headers.get('origin') || 'https://biteme-baby.com',
       'X-Title': 'Bite Me Baby App',
     },
     body: JSON.stringify({ model, messages: safeMessages, max_tokens: maxTokens, temperature: 0.7, reasoning: REASONING_OFF, stream: true }),
@@ -335,7 +335,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
       headers: {
         Authorization: `Bearer ${apiKey}`,
         'Content-Type': 'application/json',
-        'HTTP-Referer': req.headers.get('origin') || 'https://bitemebaby-5f7.pages.dev',
+        'HTTP-Referer': req.headers.get('origin') || 'https://biteme-baby.com',
         'X-Title': 'Bite Me Baby App',
       },
       body: JSON.stringify({
