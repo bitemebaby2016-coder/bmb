@@ -16,23 +16,26 @@ import { create } from 'zustand'
 export type OrderMode = 'SAME_DAY' | 'PRE_ORDER'
 
 export interface DeliveryConfig {
-  /** Canonical: business_settings.delivery_policy.bite_drive_radius_km (hydrated at boot — W-1.4b) */
+  /** Canonical: delivery_policy.bite_drive_radius_km + branch override branches.service_radius_km (hydrated — FC-3) */
   biteDriveMaxDistanceKm: number
-  /** Display default; ค่าจริง = delivery_zones ผ่าน fetchServerDeliveryFee (DistanceChecker ดึงตอนมีพิกัด — W-1.4b) */
+  /** Canonical: delivery_policy.bite_drive_enabled — server gate (ERR_BITE_DRIVE_DISABLED, FC-5) */
+  biteDriveEnabled: boolean
+  /** Display default; ค่าจริง = delivery_zones ผ่าน fetchServerDeliveryFee (DistanceChecker ดึงตอนมีพิกัด) */
   biteDriveFlatFee: number
-  /** HARD STOP: ไม่มี key/column ใน DB — คงเป็น fallback รอ Owner กำหนด schema (รายงาน W-1.4b) */
+  /** Canonical: delivery_policy.tier2_markup_pct (hydrated — migration 114) */
   tier2MarkupPct: number
-  /** HARD STOP: ไม่มี key ใน DB (promotions = code-coupon ไม่ใช่ threshold) — รอ Owner */
+  /** Canonical: delivery_policy.free_shipping_threshold (hydrated — migration 114) */
   freeShippingThreshold: number
-  /** HARD STOP: ไม่มี key หน่วย ชม. (rounds = time-of-day, order_policy = วัน) — รอ Owner */
+  /** Canonical: order_policy.cutoff_hours — enforce_pre_order_window/cancel อ่านอันเดียวกัน (FC-4) */
   cutoffHours: number
-  /** HARD STOP: ไม่มี key quota/วัน (max_items_per_order = ต่อออเดอร์) — ใช้ใน AdminControl demo เท่านั้น */
+  /** Canonical: order_policy.daily_quota (hydrated — display/monitor) */
   dailyQuota: number
-  /** UX timing (ไม่ใช่ค่าขาย/ส่ง/brand — อยู่นอกขอบเขต Owner mandate) */
+  /** UX timing (ไม่ใช่ค่าขาย/ส่ง/brand) */
   debounceMs: number
 }
 
 export interface GlassTheme {
+  /** CSS values จาก brands.theme_tokens.glass (hydrated — migration 114) */
   glassBg: string
   glassBlur: string
   glassBorder: string
@@ -47,10 +50,6 @@ export interface PlatformConfig {
   currency: string
   delivery: DeliveryConfig
   theme: GlassTheme
-  weeklyRotator: {
-    availableWeekAttr: 'available_week' | 'available_date'
-    maxWeeks: number
-  }
 }
 
 // ---------------------------------------------------------------------------
@@ -64,6 +63,7 @@ export const DEFAULT_PLATFORM_CONFIG: PlatformConfig = {
   currency: 'THB',
   delivery: {
     biteDriveMaxDistanceKm: 5,
+    biteDriveEnabled: true,
     biteDriveFlatFee: 25,
     tier2MarkupPct: 12,
     freeShippingThreshold: 300,
@@ -72,15 +72,11 @@ export const DEFAULT_PLATFORM_CONFIG: PlatformConfig = {
     debounceMs: 500,
   },
   theme: {
-    glassBg: 'bg-white/70',
-    glassBlur: 'backdrop-blur-md',
-    glassBorder: 'border border-white/20',
-    glassText: 'text-slate-800',
-    depthShadow: 'drop-shadow-[0_15px_12px_rgba(0,0,0,0.18)]',
-  },
-  weeklyRotator: {
-    availableWeekAttr: 'available_week',
-    maxWeeks: 4,
+    glassBg: 'rgba(255,255,255,0.7)',
+    glassBlur: '12px',
+    glassBorder: 'rgba(255,255,255,0.2)',
+    glassText: '#1f2937',
+    depthShadow: 'drop-shadow(0 15px 12px rgba(0,0,0,0.18))',
   },
 }
 
@@ -98,7 +94,6 @@ export function getPlatformConfig(tenantId?: string, overrides: Partial<Platform
     ...overrides,
     delivery: { ...base.delivery, ...overrides.delivery },
     theme: { ...base.theme, ...overrides.theme },
-    weeklyRotator: { ...base.weeklyRotator, ...overrides.weeklyRotator },
   }
 }
 

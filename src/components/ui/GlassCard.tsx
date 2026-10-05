@@ -12,7 +12,8 @@
 // `decorative` — tags an anchor with `pointer-events-none select-none` so
 // decorative layers never swallow taps/clicks from real controls.
 
-import { forwardRef, type HTMLAttributes } from 'react'
+import { forwardRef, type CSSProperties, type HTMLAttributes } from 'react'
+import { usePlatformConfig } from '@/config/platformConfig'
 
 export interface GlassCardProps extends HTMLAttributes<HTMLDivElement> {
   /** Elevate the card out of the layout (hero product / mascot). */
@@ -22,23 +23,30 @@ export interface GlassCardProps extends HTMLAttributes<HTMLDivElement> {
 }
 
 export const GlassCard = forwardRef<HTMLDivElement, GlassCardProps>(
-  ({ elevated = false, decorative = false, className = '', children, ...rest }, ref) => {
-    const base =
-      'rounded-3xl bg-white/70 backdrop-blur-md border border-white/20 text-slate-800'
+  ({ elevated = false, decorative = false, className = '', children, style, ...rest }, ref) => {
+    // FINAL CONFIG CLOSURE: glass tokens = brands.theme_tokens.glass (hydrated ตอน boot)
+    // default ของ config = ค่า look เดิมเป๊ะ (rgba/blur CSS values — ไม่ใช่ Tailwind class)
+    const { theme } = usePlatformConfig()
 
-    // 3D depth layering: negative margin lifts the hero, drop-shadow casts a
-    // soft virtual shadow onto the glass behind. No box-shadow on content.
-    const depth = elevated
-      ? 'relative -mt-12 z-10 filter drop-shadow-[0_15px_12px_rgba(0,0,0,0.18)]'
-      : ''
-
-    // Decorative placement guard — cannot hijack clicks (e.g. ordering CTA).
+    const base = 'rounded-3xl'
+    const depth = elevated ? 'relative -mt-12 z-10' : ''
     const guard = decorative ? 'pointer-events-none select-none' : ''
+
+    const glassStyle: CSSProperties = {
+      background: theme.glassBg,
+      backdropFilter: `blur(${theme.glassBlur})`,
+      WebkitBackdropFilter: `blur(${theme.glassBlur})`,
+      border: `1px solid ${theme.glassBorder}`,
+      color: theme.glassText,
+      ...(elevated ? { filter: theme.depthShadow } : {}),
+      ...style,
+    }
 
     return (
       <div
         ref={ref}
         className={[base, depth, guard, className].filter(Boolean).join(' ')}
+        style={glassStyle}
         {...rest}
       >
         {children}

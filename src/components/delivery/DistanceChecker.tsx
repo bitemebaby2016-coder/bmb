@@ -74,6 +74,12 @@ export function DistanceChecker({ origin = null, destination = null, label = '�
         {evaluating && <span className="text-xs text-slate-500">กำลังคำนวณ...</span>}
       </div>
 
+      {!config.delivery.biteDriveEnabled && (
+        <p className="mt-2 text-xs font-medium text-amber-600" data-testid="bite-drive-disabled-note">
+          ร้านปิดรับงาน Bite Drive ชั่วคราว — ติดต่อร้านเพื่อสอบถามวิธีจัดส่งที่เปิดรับ
+        </p>
+      )}
+
       {!destination && <p className="text-sm text-slate-500 mt-2">กรุณาเลือกที่อยู่หรือปักหมุดแผนที่เพื่อตรวจสอบค่าจัดส่ง</p>}
 
       {destination && !evaluating && quote && (

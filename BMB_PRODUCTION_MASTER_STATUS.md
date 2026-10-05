@@ -84,15 +84,16 @@ SECRETS (ดูแค่ชื่อ) Stripe/OpenRouter/AUTOMATION_TOKEN/CHANNEL
 
 | ค่า | ตอนนี้อยู่ที่ไหน | แอดมินปรับได้? | หมายเหตุ |
 |---|---|---|---|
-| ระยะส่ง Bite Drive (5 กม.) | อ่านจาก `business_settings.delivery_policy.bite_drive_radius_km` แล้ว (migration 112) · `branches.service_radius_km` ยังไม่ถูกอ่าน (informational) · ค่า `radius_km=10` เก่าไม่ถูกใช้ | **✅ YES (หลัง 112)** | แอดมินแก้ผ่าน `/admin/settings` → RPC บังคับทันที (พิสูจน์แล้ว T3) |
-| ค่าส่ง Bite Drive | `delivery_zones` (DB, 6 แถว) · ไม่มี zone คลุม → `ERR_NO_DELIVERY_ZONE` (ไม่ fallback สูตรลับ) | **✅ YES** | แก้ fee ต่อแถวใน zones |
-| markup ไรเดอร์ภายนอก 12% · free shipping 300 · cutoff 2 ชม. · quota 120/วัน | `DEFAULT_PLATFORM_CONFIG` (hardcode ฝั่ง client) | **NO → ต้องแก้ (W-1.4)** | client-only ⇒ ไม่ใช่ server authority |
-| สวิต์เปิด/ปิดรับงาน SAME_DAY + เลือกวิธีส่ง | `operating_hours.same_day_open` (trigger `enforce_operating_hours`) + `allow_external_within_radius`/`external_methods_enabled` ใน `delivery_policy` (112) | **✅ YES** | พิสูจน์แล้ว T2/T5/T6 · แก้ผ่าน `/admin/settings` |
-| รอบส่ง / zones | `delivery_rounds` / `delivery_zones` (DB, มี branch_id) | YES (AdminRounds, DeliveryManagement) | — |
-| เวลาทำการ / order policy | `business_settings` (hours, operating_hours, order_policy) | YES (AdminSettings = ตัวแก้ JSON แบบ generic) | UI ยังเป็นการแก้ key/value ดิบ |
-| ไรเดอร์ภายนอกที่เปิดใช้ | `delivery_policy.external_methods_enabled` (array ใน DB, seed `[]`) | **✅ YES (หลัง 112)** | ยังไม่มี provider รายใดเปิดจริง (รอคีย์ D-04) · พิสูจน์แล้ว T4a/T4b |
-| แบรนด์ / ธีม / โลโก้ | brands + AdminBrands/AdminMedia; theme ใน `platformConfig` = hardcode | PARTIAL → ต้องแก้ |  |
-| สาขา | branches + BranchSwitcher | PARTIAL → ต้องแก้ | ยังไม่มีหน้า CRUD สาขาโดยเฉพาะ (ต้องตรวจ AdminTenants) |
+| ระยะส่ง Bite Drive | **branch canonical**: `branches.service_radius_km` (override — FC-3) · **global default**: `delivery_policy.bite_drive_radius_km` (112) — RPC ทั้ง `create_order_with_items`/`compute_delivery_fee` อ่านทั้งคู่ · legacy `radius_km=10` **RETIRED แล้ว (114)** | **✅ YES** | แก้ผ่าน `/admin/settings` (การ์ด Branch) → RPC บังคับทันที (probe C3/C4) |
+| ค่าส่ง Bite Drive | `delivery_zones` (DB, 6 แถว, branch-scoped) · ไม่มี zone คลุม → `ERR_NO_DELIVERY_ZONE` | **✅ YES** | แก้ fee ต่อแถวใน `/admin/settings` (การ์ด Delivery Zones — UI ใหม่ 114) · probe B2 |
+| markup 12% · free shipping 300 · cutoff 2 ชม. · quota 120/วัน | **`delivery_policy.tier2_markup_pct` + `free_shipping_threshold` · `order_policy.cutoff_hours` + `daily_quota` (seed guarded — 114)** · server: `enforce_pre_order_*` อ่าน `cutoff_hours` ตัวเดียวกัน (FC-4) | **✅ YES (114)** | client hydrate ตอน boot · probe B1/C7/C8 · admin แก้ JSON ผ่าน AdminSettings |
+| สวิต์เปิด/ปิดรับงาน SAME_DAY + เลือกวิธีส่ง | `operating_hours.same_day_open` (trigger) + `allow_external_within_radius`/`external_methods_enabled` (112) · **ปิด/เปิด Bite Drive = `delivery_policy.bite_drive_enabled` (114, gate `ERR_BITE_DRIVE_DISABLED`)** | **✅ YES** | probe C11/C5b/C6 · w14 T2/T5/T6 |
+| รอบส่ง / zones | `delivery_rounds` / `delivery_zones` (branch_id) | YES (AdminRounds + zones card ใหม่) | — |
+| เวลาทำการ / order policy | `business_settings` (hours, operating_hours, order_policy) | YES (AdminSettings) | UI แก้ key/value + JSON form |
+| ไรเดอร์ภายนอกที่เปิดใช้ | `delivery_policy.external_methods_enabled` (array) | **✅ YES (112)** | ยังไม่มี provider รายใดเปิดจริง (รอคีย์ D-04) |
+| แบรนด์ / ธีม glass | `brands.display_name` + `brands.theme_tokens.glass` (seed 114 — bg/blur/border/text/shadow) · **GlassCard อ่านค่า hydrated ตอน boot (consumer จริง)** | **✅ YES (114)** | แก้ผ่าน `/admin/settings` (การ์ด Brand) · probe B3 · hydration มี unit test |
+| สาขา (รัศมี/เวลา) | `branches.service_radius_km` + `branches.operating_hours` | **✅ YES (114)** | แก้ผ่าน `/admin/settings` (การ์ด Branch) · probe B4 |
+| เปิด/ปิดรับออเดอร์ (mode) | `operating_hours.same_day_open` / `pre_order_open` / `round_open.*` | **✅ YES** | trigger `enforce_operating_hours` (probe C5b) |
 
 ### 4.2 White-label / multi-branch
 
@@ -286,7 +287,8 @@ SECRETS (ดูแค่ชื่อ) Stripe/OpenRouter/AUTOMATION_TOKEN/CHANNEL
 | W-1.3 | แก้โดเมนโค้ด `bitemebaby.com` → `biteme-baby.com` (index.html, sitemap, robots, SeoHelmet, seo.ts, checkProductionHeaders, ai-proxy referer) | ✅ **CODE DONE 2026-10-05** — ขึ้น production พร้อม W-1.1 | AI DEV | 7 ไฟล์ / 40 บรรทัด (เปลี่ยนเฉพาะสตริงโดเมน) · เหลือโดเมนเก่าในโค้ด = 0 · TSC=0 · LINT=0 · **VITEST 488/488** · BUILD=0 · dist มีโดเมนใหม่ 13/เก่า 0 |
 | W-1.4 | **Admin configurability — ค่าปกครองทั้งหมดต้องอ่านจาก DB (Owner mandate ห้ามฮาร์ดโค้ด)** | ✅ **SERVER AUTHORITY DONE 2026-10-05** — migration **112** สมัคร production แล้ว · W-1.4b (ส่วน client) เสร็จแล้ว — ดูแถวถัดไป | AI DEV | **หลักฐาน:** ไม่มี `5.00` hardcode ใน 2 functions · `delivery_policy` seed = `bite_drive_radius_km 5 / allow_external_within_radius false / external_methods_enabled []` · **`node e2e/w14ContractProbe.cjs` = W14_ALL_PASS 11 checks** (T1 baseline · T2 สวิต์ same_day_open · T3 รัศมี 1km บังคับจริง · T4a/b provider gate · T5 method choice ในรัศมี · T6 default คืนพฤติกรรมเดิม · T7 ERR_NO_DELIVERY_ZONE · T8 ERR_CONFIG_MISSING · rollback สะอาด) · เก็บ error code เดิม (contract 023/028/037 ยังเขียนเงื่อนไขเดิม) |
 | W-1.5 | redeploy `channel-webhook` (ข้อความไทย, D-06 อนุมัติ) | ✅ **DONE 2026-10-05** | AI DEV | **v11 ACTIVE** · deploy สำเร็จผ่าน CLI (ข้อความไทย mojibake fix ของ `f6b0c0a` ขึ้น production แล้ว) · เส้นทาง deploy ถูกขัดข้องโดย `supabase/config.toml` ที่มี `verify_jwt` ซ้ำ (TOML parse error) — แก้แล้วในรอบเดียวกัน |
-| W-1.4b | เลิก hardcode display/config จาก `platformConfig.ts` → อ่านจาก canonical ที่มีอยู่จริง (D-06 อนุมัติ) | ✅ **DONE 2026-10-05** (มี **HARD STOP 5 จุด** รอ Owner schema) | AI DEV | **ทำแล้ว:** `src/lib/platformConfigBootstrap.ts` (pure map + hydrate ตอน boot: `biteDriveMaxDistanceKm`←`delivery_policy.bite_drive_radius_km` · `currency`←`delivery_policy.currency` · `brandName`/`tenantId`←`brands` default) · boot ใน `main.tsx` (fire-and-forget) · DistanceChecker Tier-1 แสดงค่าจาก `fetchServerDeliveryFee` (server authority แทนคงที่ 25) · comment ใน `platformConfig.ts` ระบุ canonical/HARD STOP ทุก field · **tests +6** = **494/494** · TSC=0 · LINT=0 · **PROD VERIFY 2026-10-05**: push `3be4169` → auto Production build (`source=github`) → `biteme-baby.com` เสิร์ฟ `index-BmSPF2hV.js` ซึ่งมี `bite_drive_radius_km` + `delivery_policy` + brands query ✓ · lazy chunk `CheckoutPage-KvwV78Zr.js` มี `compute_delivery_fee` + server-fee display path ✓ · `business_settings` REST anon = 200 (input ของ hydrate อ่านได้จาก browser) · **HARD STOP (ไม่มี schema จริง — ไม่สร้าง migration เพื่อความสะดวก):** `tier2MarkupPct` · `freeShippingThreshold` · `cutoffHours` · `dailyQuota` · `theme.glass*` (+ `weeklyRotator` = dead config ไม่มี consumer — รายงานไม่แก้) |
+| W-1.4b | เลิก hardcode display/config จาก `platformConfig.ts` → อ่านจาก canonical ที่มีอยู่จริง (D-06 อนุมัติ) | ✅ **DONE 2026-10-05** (มี **HARD STOP 5 จุด** รอ Owner schema) | AI DEV | **ทำแล้ว:** `src/lib/platformConfigBootstrap.ts` (pure map + hydrate ตอน boot: `biteDriveMaxDistanceKm`←`delivery_policy.bite_drive_radius_km` · `currency`←`delivery_policy.currency` · `brandName`/`tenantId`←`brands` default) · boot ใน `main.tsx` (fire-and-forget) · DistanceChecker Tier-1 แสดงค่าจาก `fetchServerDeliveryFee` (server authority แทนคงที่ 25) · comment ใน `platformConfig.ts` ระบุ canonical/HARD STOP ทุก field · **tests +6** = **494/494** · TSC=0 · LINT=0 · **PROD VERIFY 2026-10-05**: push `3be4169` → auto Production build (`source=github`) → `biteme-baby.com` เสิร์ฟ `index-BmSPF2hV.js` ซึ่งมี `bite_drive_radius_km` + `delivery_policy` + brands query ✓ · lazy chunk `CheckoutPage-KvwV78Zr.js` มี `compute_delivery_fee` + server-fee display path ✓ · `business_settings` REST anon = 200 (input ของ hydrate อ่านได้จาก browser) · **HARD STOP เดิม 5 จุด → ปิดแล้วโดย migration 114 (Owner APPROVED — ดูแถว W-1.4c)** |
+| W-1.4c | **FINAL CONFIGURATION CLOSURE** — HARD STOP ทั้งหมดของ Owner ทำให้ Admin-configurable โดยไม่สร้าง source ใหม่/ไม่ย้าย business rule (D-06) | ✅ **DONE 2026-10-05** — migration **114** สมัคร production | AI DEV | **Migration 114** (`e2e/fcBuildMigration114.cjs` anchor-guarded จาก live defs): FC-1 branch-scoped `delivery_policy` (ใช้ `business_settings.branch_id` ที่มีอยู่) · FC-2 config load หลัง branch resolution · FC-3 radius branch canonical = `branches.service_radius_km` (ไม่ duplicate) · FC-4 `order_policy.cutoff_hours` แทน `interval '2 hours'` hardcode (ค่า default = พฤติกรรมเดิม; hotfix 2 รอบ: `make_interval` ไม่รับ numeric + time-wrap → `timestamp + v_start - interval`) · FC-5 `delivery_policy.bite_drive_enabled` gate `ERR_BITE_DRIVE_DISABLED` · seeds guarded (markup/free-ship/cutoff/quota/glass — ไม่ทับค่า Admin) · **retire `delivery_policy.radius_km`** (precondition: 0 function consumers — fcAudit2) · **NEW `admin_sync_legacy_pre_order`** (admin-gated + canonical-terminal-only — ไม่ bypass ไม่ DELETE) · client: hydrate เพิ่ม (markup/freeship/cutoff/quota/enable/radius branch/theme glass) + **GlassCard อ่าน theme tokens จริง** + **AdminSettings เพิ่ม zones/brand/branch cards** + `weeklyRotator` RETIRED (dead) · **หลักฐาน: fcVerify114 = 25 PASS · fcProbe6 = 22 PASS** (RLS read/update/denied · tenant/brand/branch isolation · C1-C8 flow · D1-D4 legacy sync จริง) · gates TSC0/LINT0/VITEST 497/497/BUILD0 |
 | W-1.6 | ลบ `BMB_TEST_*` ออกจาก production secrets | OPEN (security) | Owner/AI DEV | secrets list สะอาด |
 
 ### PHASE 1 — เปิดร้านรับเงินจริง
@@ -355,7 +357,7 @@ G3 · G5 · G6 (capability) · G7 (S0–S4-R2) · G8 (S0–S5, T1, T2) · G8-S5 
 1. ~~เว็บไม่ตรง `main` + ไม่มี pipeline~~ → **RESOLVED 2026-10-05**: deploy ด้วย wrangler สำเร็จ · `biteme-baby.com` 200 (W-1.1 ✅)
 2. ~~โดเมนผิดใน canonical/robots/sitemap~~ → **RESOLVED**: ขึ้น production แล้ว (W-1.3 ✅ — robots ยืนยันโดเมนใหม่/เก่า = True/False)
 3. ~~ข้อมูลทดสอบค้าง~~ → **RESOLVED**: active = 0 (W-1.2 ✅)
-4. ค่าปกครองฝั่ง server ✅ (112 + 113) + client hydrated จาก DB ✅ (W-1.4b) — **คงเหลือ HARD STOP 5 จุดรอ Owner schema** (tier2MarkupPct/freeShippingThreshold/cutoffHours/dailyQuota/theme.glass*) · ไม่มีสวิต์ UI แบบ form (แก้ผ่าน JSON ได้) · **orphan legacy `pre_orders` pending 1 แถว** (`PO-20260919-430` — canonical cancelled แล้ว ไม่มี path canonical แก้ status แถว legacy — รอ Owner สั่ง: ปล่อยไว้ / อนุมัติ direct update เดียว)
+4. ค่าปกครองฝั่ง server ✅ (112+113+**114**) + client hydrated ✅ — **HARD STOP configuration ทั้งหมดปิดแล้ว (W-1.4c)**: Admin แก้ได้ครบ (settings/zones/brand/branch ผ่าน `/admin/settings`) · legacy `radius_km` RETIRED · legacy pre_orders row = **cancelled แล้ว** (controlled RPC `admin_sync_legacy_pre_order` — probe D2/D4) · คงเหลือ: ไม่มีสวิต์ UI รูปแบบ form สำหรับ JSON ซับซ้อน (แก้ผ่าน JSON editor ได้)
 5. ยังไม่มีออเดอร์จริงครบวงจรสบายจริง (W-2.1/W-2.2)
 
 **AI AUTOMATION BLOCKERS** — ไม่มีข้อไหนขวางเปิดร้าน
@@ -399,7 +401,52 @@ G3 · G5 · G6 (capability) · G7 (S0–S4-R2) · G8 (S0–S5, T1, T2) · G8-S5 
 | **EXEC LOG 2026-10-05 (W-1.5)** | **`channel-webhook` v11 ACTIVE** (deploy ผ่าน CLI สำเร็จ — ข้อความไทยขึ้น production) · แก้ `supabase/config.toml` ที่มี `verify_jwt` ซ้ำท้ายไฟล์ (TOML duplicate key → `CliConfigParseError` ขวางทุกคำสั่ง supabase CLI) |
 | **EXEC LOG 2026-10-05 (W-1.1 + M113)** | **W-1.1**: build 0 → `wrangler pages deploy` 0 → `biteme-baby.com` 200 (title/robots ใหม่ live) · **M113**: dump def จาก production (`e2e/m113Dump.cjs`) → สร้างด้วย anchor-guard (`e2e/m113BuildMigration113.cjs`) → APPLY_OK → `e2e/m113ApplyVerify.cjs verify` = **M113_RUNTIME_PASS** (rounds 05+06 ต.ค. ถูกสร้างจริง, idempotent) · หมายเหตุ: Management API คืนผลเฉพาะ statement สุดท้ายของ batch → verify ใช้ single-statement ต่อ check |
 | **EXEC LOG 2026-10-05 (W-1.4b + TASK B/C/D)** | **A**: audit `platformConfig.ts` → implement hydrate (`platformConfigBootstrap.ts` + `main.tsx` + DistanceChecker server-fee) + tests 494/494 · **B**: 9 จุด canonical — มีครบ 7 · HARD STOP 2 จุด = สวิต์ปิด Bite Drive แบบเดี่ยว/ต่อสาขา (ไม่มี key; ตาม D-01 สวิต์ที่สั่งมีครบแล้ว) + legacy `delivery_policy.radius_km`=10 = dead key (ไม่ลบเอง) · **C**: orders active = **0** (cancelled 194+7 · delivered 1 history) · legacy `pre_orders` pending 1 = test row (Guest/phoneว่าง/migrated/schedule เกิน) — canonical `cancel_pre_order` ไม่แตะ status แถว legacy (delegate `cancel_order` อย่างเดียว + canonical cancelled แล้ว) → **HARD STOP จุดเดียว** รอ Owner (ไม่ direct-update) · **D**: #3/#4/#5/#7/#10 EVIDENCE COMPILED ใน §7.2 (reuse G5/G6/G8 · ไม่ rerun G8-S5 · ไม่แตะ Meta) · **ค้นพบ**: Pages `source=github` → push = auto Production build (wrangler = preview) |
+| **EXEC LOG 2026-10-05 (FINAL CONFIG CLOSURE)** | **PART1** audit ทุก HARD STOP field (A/B/C/D) → **PART2/3** migration **114** (FC-1..FC-5 + guarded seeds + retire radius_km + `admin_sync_legacy_pre_order`) สมัคร production → hotfix 2 รอบ (make_interval numeric / time-wrap) → **PART4** legacy radius = 0 consumer → retire สำเร็จ · **PART5** legacy row `PO-20260919-430` = **cancelled ผ่าน controlled RPC** (probe D2 real + D3 idempotent + D4 audit; ไม่ direct SQL ไม่ DELETE) · **PART6** gates TSC0/LINT0/VITEST **497/497**/BUILD0 + fcVerify114 **25 PASS** + fcProbe6 **22 PASS** (admin read/update/denied · tenant/brand/branch isolation · radius/fee/methods/bite-drive/cutoff/quota · order flow no-regress) · **PART7** verify = ดู §15 |
 | **OWNER MANDATE 2026-10-05** | ห้ามมีฮาร์ดโค้ดเพื่อใช้งานจริง 100% · ทำงานเสร็จทุกครั้งต้อง**ทดสอบจนผ่าน** · **อัปเดตเอกสารสถานะไฟล์นี้ก่อน push ทุกครั้ง** · ทำงานซื่อสัตย์ |
+
+---
+
+## 15. MASTER STATUS BOARD (FINAL CONFIG CLOSURE 2026-10-05) — ตาม PART 8
+
+> ใช้เฉพาะสถานะ: IMPLEMENTED · CONNECTED · DEPLOYED · RUNTIME VERIFIED · READY · BLOCKED · MISSING · DEFERRED
+
+|  Area | สถานะ | หลักฐาน / เงื่อนไข |
+|---|---|---|
+| Core Web | DEPLOYED | PWA build ขึ้น production ทุก push (Pages `source=github` auto-build) |
+| Domain | DEPLOYED | `biteme-baby.com` + `www` active, HTTP 200 |
+| Deployment | DEPLOYED | push `main` → auto Production build · wrangler manual = preview เท่านั้น |
+| Ordering | RUNTIME VERIFIED | `create_order_with_items` full path + mode/round/cutoff/capacity/method gates (w14 11 checks + fcProbe6 C) |
+| Payment | RUNTIME VERIFIED (TEST) | promptpay/COD/QR flows เคยผ่านใน test · **LIVE = BLOCKED ใต้ Stripe LIVE** |
+| Kitchen | IMPLEMENTED | AdminKitchen/batching มีครบ — ไม่ได้ re-verify รอบนี้ |
+| Delivery | RUNTIME VERIFIED | fee จาก `delivery_zones` (probe C4) · radius branch override (C3) · Bite Drive gate (C11) · method selection (C6) |
+| Tracking | IMPLEMENTED | track page + RPC/RLS (ยังไม่มี live order ใหม่ให้ track) |
+| Failure handling | RUNTIME VERIFIED | G8-S5: 28 scheduled executions, terminal succeeded, dup=0, legacy=0, dual-path=0 · retry paths ใน probes |
+| White-label (config) | RUNTIME VERIFIED | admin read/update ทุก canonical (B1-B4) + RLS deny (A2/A3) + isolation (A4-A6) + hydration client (unit 9 + prod bundle) — ข้อมูล production ยัง single-tenant |
+| White-label (multi-tenant runtime) | READY | schema+RLS tenant-scoped พร้อม — production มี 1 tenant/1 brand/1 branch · หลายร้านจริง = ยังไม่ทดลอง (ไม่ blocker เปิดร้านเดียว) |
+| G3 | RUNTIME VERIFIED | BMB_G3_FINAL_REPORT (harness + negative probes) |
+| G4 | BLOCKED | รอ Meta verification จริง (external — Owner กด Verify & Save) |
+| G5 | RUNTIME VERIFIED | 6/6 + ai-proxy runtime evidence |
+| G6 | RUNTIME VERIFIED | classification/draft + fail-closed validation (code path ครบตาม §7.2) |
+| G7 | RUNTIME VERIFIED | FG-01..09 + approval boundary (APPROVED ≠ PUBLISHED) |
+| G8 | RUNTIME VERIFIED | G8-S5 PASS — ห้าม rerun (reuse evidence) |
+| G9 | IMPLEMENTED (partial) | Contract + §7.2: #3/#4/#5/#7/#10 EVIDENCE COMPILED (D-03) · ห้ามประกาศ PASS — รอ Owner review |
+| External Rider (Grab/LINE MAN/Bolt) | BLOCKED | D-04: ยังไม่ใส่ production credential (รอ Owner/ผู้ให้บริการ) |
+| Stripe LIVE | BLOCKED | รอ LIVE keys จาก Owner (W-2.1) |
+| Meta verification | BLOCKED | รอ Owner กด Verify & Save (external) |
+| SMS | MISSING | ยังไม่มี credentials (รอ Owner — W-2.3) |
+| Web notification | RUNTIME VERIFIED | notification center + `notification_dispatch` succeeded ทุกรอบ (G8-S5) |
+
+**E2E chain (PART 9 ตรวจแยก — ห้ามสร้าง transaction จริงเพื่อพิสูจน์):**
+
+| ขั้น | สถานะ |
+|---|---|
+| REAL ORDER | RUNTIME VERIFIED (test orders 202 รายการ + probes) — **order ลูกค้าจริง = ยังไม่เคยมี** |
+| REAL PAYMENT | BLOCKED BY EXTERNAL DEPENDENCY (Stripe LIVE keys) |
+| REAL KITCHEN | NOT YET VERIFIED (ไม่เคยมี order จริงเข้าครัว) |
+| REAL DISPATCH | NOT YET VERIFIED (dispatch 0 รายการจริง) |
+| REAL DELIVERY | NOT YET VERIFIED (delivered 1 รายการ = ทดสอบ) |
+| REAL TRACKING | NOT YET VERIFIED (เงื่อนไขเดียวกัน) |
+| REAL FAILURE HANDLING | RUNTIME VERIFIED ระดับระบบ (G8-S5) — ยังไม่มี failure จริงของลูกค้า |
 | ไวท์ลาเบล | ทุกค่าใน §4.1 ต้องแอดมินปรับได้ทั้งหมด (คำสั่ง Owner) |
 | แผน | ✅ ปรับเป็น PHASE แล้ว — ดู §11 |
 
