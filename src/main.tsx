@@ -6,6 +6,7 @@ import App from './App'
 import './index.css'
 import { useAuthStore } from './store/authStore'
 import { installGlobalErrorReporter } from './lib/errorReporter'
+import { hydratePlatformConfigFromServer } from './lib/platformConfigBootstrap'
 
 // ⚡ PERF (2026-09-17): admin seeding hashes a bcrypt password at boot, which is
 // heavy on the main thread. Defer it until after first paint / idle so LCP and
@@ -23,6 +24,10 @@ afterFirstPaint(() => {
   // ADM-01: report uncaught errors to the server-side feed.
   if (typeof window !== 'undefined') installGlobalErrorReporter()
 })
+
+// W-1.4b: ดึงค่าปกครอง (delivery_policy/brand) จาก server ทับ bootstrap fallback
+// (fire-and-forget — ถ้า fail คงค่า default ไว้ ดู platformConfigBootstrap.ts)
+void hydratePlatformConfigFromServer()
 
 // F-02 FIX (Wave 1): restore the Supabase Auth session BEFORE first render.
 // ก่อนหน้า: checkAuth ถูก defer 1.5s → บน reload ของ /admin/* ทุก route guard

@@ -9,6 +9,7 @@ import { useEffect, useRef, useState } from 'react'
 import { GlassCard } from '@/components/ui/GlassCard'
 import { useDeliveryRouter, type LatLng } from '@/stores/useDeliveryRouter'
 import { usePlatformConfig } from '@/config/platformConfig'
+import { fetchServerDeliveryFee } from '@/lib/deliveryFeeApi'
 
 export interface DistanceCheckerProps {
   origin?: LatLng | null
@@ -24,6 +25,25 @@ export function DistanceChecker({ origin = null, destination = null, label = '�
   // Debounce 500ms before evaluating — throttles coordinate-change API calls.
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [evaluating, setEvaluating] = useState(false)
+
+  // W-1.4b: ค่าจัดส่ง display ของ Tier 1 (Bite Drive) ดึงจาก server authority
+  // (delivery_zones ผ่าน compute_delivery_fee_rpc) — แทนค่าคงที่ biteDriveFlatFee
+  const [serverFee, setServerFee] = useState<{ delivery_fee: number; source: 'server' | 'local-mirror' } | null>(null)
+  useEffect(() => {
+    let cancelled = false
+    if (!destination || !quote || quote.tier !== 'bite_drive') {
+      setServerFee(null)
+      return
+    }
+    void fetchServerDeliveryFee({
+      dropoffLatitude: destination.latitude,
+      dropoffLongitude: destination.longitude,
+      distanceKm: quote.distanceKm,
+    })
+      .then((r) => { if (!cancelled) setServerFee(r) })
+      .catch(() => { if (!cancelled) setServerFee(null) })
+    return () => { cancelled = true }
+  }, [destination, quote])
 
   // Hydrate the store from props without re-evaluating on every keystroke.
   useEffect(() => {
@@ -74,7 +94,12 @@ export function DistanceChecker({ origin = null, destination = null, label = '�
           )}
           <div className="flex items-baseline justify-between text-sm border-t border-white/30 pt-2">
             <span className="text-slate-500">ค่าจัดส่งรวม</span>
-            <span className="font-bold text-lg text-slate-800">฿{quote.finalFee}</span>
+            <span className="font-bold text-lg text-slate-800">
+              ฿{serverFee ? serverFee.delivery_fee : quote.finalFee}
+              {serverFee?.source === 'server' && (
+                <span className="ml-1 text-[10px] font-normal text-emerald-600">(จากโซนร้าน)</span>
+              )}
+            </span>
           </div>
           <p className="text-xs text-slate-500 mt-1 leading-relaxed">{quote.rationale}</p>
         </div>

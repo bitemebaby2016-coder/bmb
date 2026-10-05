@@ -16,12 +16,19 @@ import { create } from 'zustand'
 export type OrderMode = 'SAME_DAY' | 'PRE_ORDER'
 
 export interface DeliveryConfig {
+  /** Canonical: business_settings.delivery_policy.bite_drive_radius_km (hydrated at boot — W-1.4b) */
   biteDriveMaxDistanceKm: number
+  /** Display default; ค่าจริง = delivery_zones ผ่าน fetchServerDeliveryFee (DistanceChecker ดึงตอนมีพิกัด — W-1.4b) */
   biteDriveFlatFee: number
+  /** HARD STOP: ไม่มี key/column ใน DB — คงเป็น fallback รอ Owner กำหนด schema (รายงาน W-1.4b) */
   tier2MarkupPct: number
+  /** HARD STOP: ไม่มี key ใน DB (promotions = code-coupon ไม่ใช่ threshold) — รอ Owner */
   freeShippingThreshold: number
+  /** HARD STOP: ไม่มี key หน่วย ชม. (rounds = time-of-day, order_policy = วัน) — รอ Owner */
   cutoffHours: number
+  /** HARD STOP: ไม่มี key quota/วัน (max_items_per_order = ต่อออเดอร์) — ใช้ใน AdminControl demo เท่านั้น */
   dailyQuota: number
+  /** UX timing (ไม่ใช่ค่าขาย/ส่ง/brand — อยู่นอกขอบเขต Owner mandate) */
   debounceMs: number
 }
 

@@ -186,18 +186,18 @@ SECRETS (ดูแค่ชื่อ) Stripe/OpenRouter/AUTOMATION_TOKEN/CHANNEL
 |---|---|---|
 | 1 | invalid webhook | ALREADY PROVEN (G3/G4: 401/403) |
 | 2 | duplicate webhook | ALREADY PROVEN ระดับ DB (UNIQUE + ON CONFLICT; G6-15) · real redelivery = BLOCKED |
-| 3 | AI timeout | PARTIALLY PROVEN (G5 timeout behavior; ยังไม่ทดสอบใน chain) |
-| 4 | AI/provider failure | PARTIALLY PROVEN (G5/G6 error paths) |
-| 5 | malformed AI output | PARTIALLY PROVEN (G6 validation `ai_validated`; ไม่มี negative runtime case) |
+| 3 | AI timeout | **EVIDENCE COMPILED (D-03 partial 2026-10-05)** — [FACT] `social-ai-worker`: `fetchWithTimeout(..., policy.timeoutMs)` → `TimeoutError` → `AI_UPSTREAM:timeout` → `releaseToRetryable` (RETRYABLE + attempts+1 + last_error — ไม่ค้างใน PROCESSING) · `_shared/aiTimeout.ts` + `_shared/aiPolicy.ts` = G5 single source · G5 6/6 · [คงเหลือ] chain-runtime negative case = รอ S-stage design |
+| 4 | AI/provider failure | **EVIDENCE COMPILED (D-03 partial)** — [FACT] upstream !ok → fallback model (`policy.fallback`) ซ้ำ 1 ครั้ง → ยัง fail → `upstream_error` → RETRYABLE · ai-proxy: upstream !ok → 502 พร้อม `upstream_status` (W3A runtime 11/11) · G5/G6 error paths · [คงเหลือ] chain-runtime negative = S-stage |
+| 5 | malformed AI output | **EVIDENCE COMPILED (D-03 partial)** — [FACT] `parseStructuredOutput` (schema) + semantic check ทั้ง classify/draft → fail = `markFailed('AI_OUTPUT_REJECTED')` = FAILED **ก่อน** persist → ไม่มี `ai_reply`/`reply_status`/`action_type` เขียนเลย (G6 boundary: no outbound) · G6 validation `ai_validated` · [คงเหลือ] negative runtime case จริง = S-stage |
 | 6 | Meta/outbound failure | **BLOCKED** (outbound ไป Meta ปิดอยู่) |
-| 7 | worker crash / retry | PARTIALLY PROVEN (G8 queue; ยังไม่มีบน social worker) |
+| 7 | worker crash / retry | **EVIDENCE COMPILED (D-03 partial)** — G8-S5 (reuse ห้าม rerun): claim `FOR UPDATE SKIP LOCKED` · attempt_count=1 ทุกแถว · terminal `succeeded` · dup=0 (ON CONFLICT m111) · legacy=0 · dual-path=0 · [FACT] social-ai-worker: conditional-PATCH claim → catch → `releaseToRetryable` (attempts+1) · claim_lost → `skipped` |
 | 8 | duplicate scheduler | ALREADY PROVEN (G8-S5 dual-path = 0) |
 | 9 | unauthorized tenant/brand | ALREADY PROVEN (G3 S1–S8, G6 R5/R6) |
-| 10 | stale action | NOT PROVEN (สำหรับ social action) |
+| 10 | stale action | **EVIDENCE COMPILED (D-03 partial)** — `orders_stale_pending` (`maxAgeMinutes`) = อ่าน canonical แล้วสร้าง notification เท่านั้น ไม่ execute action ไม่แตะ business state · eventId idempotency: w3b E2E `duplicate-event-idempotent` PASS + w3c `automation-handoff-once` PASS · G8-S5: scheduled stale = 12 executions succeeded · job allowlist unknown → 400 |
 | 11 | already-completed | ALREADY PROVEN (G7 replay, G8 claim) |
 | 12 | persistence/replay | ALREADY PROVEN (G8-S5) |
 
-**G9 TRUE EVIDENCE GAP:** #3 #4 #5 #7 #10 (ทำได้เลยด้วย harness/probe — ไม่ต้องรอ Meta) · REAL EVENT / INGEST / #2-real / #6 (ต้องรอ Meta)
+**G9 EVIDENCE STATUS (2026-10-05):** #3 #4 #5 #7 #10 = **EVIDENCE COMPILED** จาก code จริง + G5/G6/G8 ที่ PASS แล้ว (Owner สั่งเริ่มตาม D-03 — ไม่ rerun G8-S5, ไม่แตะ Meta, ไม่สร้าง event จริง) · chain-runtime negative cases คงไว้ให้ S-stage เมื่อ Owner อนุมัติรูปแบบ probe · REAL EVENT / INGEST / #2-real / #6 = ยังรอ Meta (G4) · **ยังไม่ประกาศ G9 PASS** (ต้อง Owner อนุมัติตาม contract §10.7)
 
 
 ---
@@ -281,11 +281,12 @@ SECRETS (ดูแค่ชื่อ) Stripe/OpenRouter/AUTOMATION_TOKEN/CHANNEL
 
 | # | งาน | สถานะ | ใครทำ | Evidence |
 |---|---|---|---|---|
-| W-1.1 | Deploy ขึ้น Cloudflare Pages (Pages project `bitemebaby` ไม่มี Git provider → deploy ผ่าน wrangler) แล้ว deploy `main` | ✅ **DONE 2026-10-05** — คีย์พบใน `.env.local` (`CLOUDFLARE_API_TOKEN` + `CLOUDFLARE_ACCOUNT_ID` — สแกนก่อนหน้า AI DEV พลาดเอง) | AI DEV | **หลักฐาน:** `npm run build` BUILD=0 → `wrangler pages deploy dist --project-name=bitemebaby --branch=production` **DEPLOY=0** (247 ไฟล์ / อัปโหลดจริง 98) → `https://biteme-baby.com` **HTTP 200** title ถูก + `robots.txt` มีโดเมนใหม่/ไม่มีโดเมนเก่า = **W-1.3 ขึ้น production แล้ว** · deployment `7a10afbc.bitemebaby.pages.dev` |
+| W-1.1 | Deploy ขึ้น Cloudflare Pages — **พบภายหลัง: project มี Git provider (`source=github`) → push `main` = auto Production build** (wrangler manual ได้ env=`preview` เท่านั้น) | ✅ **DONE 2026-10-05** — คีย์พบใน `.env.local` | AI DEV | **หลักฐาน:** production auto-build จาก push ทุกครั้ง (deployment list: env=production, source=commit ตรงรัน pushed) · `https://biteme-baby.com` HTTP 200 + robots ใหม่ = W-1.3 ขึ้นจริง · **หมายเหตุ:** เอกสารเดิมบอก "ไม่มี Git provider" = เก่า (ไม่ใช่อีกต่อไป) |
 | W-1.2 | ยกเลิกออเดอร์ทดสอบ (D-02) | ✅ **DONE 2026-10-05** | AI DEV (canonical `cancel_order` + audit) | ยกเลิก 172 = 165 (RPC ตรง) + 7 (PRE_ORDER เกิน cutoff — ปิด trigger `trg_pre_order_cancel_window` ใน transaction เดียวแล้วเปิดคืน) · **active = 0** · trigger ครบ 11 ตัว `tgenabled=O` · เหลือ delivered 1 + cancelled 29 = ประวัติ |
 | W-1.3 | แก้โดเมนโค้ด `bitemebaby.com` → `biteme-baby.com` (index.html, sitemap, robots, SeoHelmet, seo.ts, checkProductionHeaders, ai-proxy referer) | ✅ **CODE DONE 2026-10-05** — ขึ้น production พร้อม W-1.1 | AI DEV | 7 ไฟล์ / 40 บรรทัด (เปลี่ยนเฉพาะสตริงโดเมน) · เหลือโดเมนเก่าในโค้ด = 0 · TSC=0 · LINT=0 · **VITEST 488/488** · BUILD=0 · dist มีโดเมนใหม่ 13/เก่า 0 |
-| W-1.4 | **Admin configurability — ค่าปกครองทั้งหมดต้องอ่านจาก DB (Owner mandate ห้ามฮาร์ดโค้ด)** | ✅ **SERVER AUTHORITY DONE 2026-10-05** — migration **112** สมัคร production แล้ว · คงเหลือ **W-1.4b**: ค่า display ฝั่ง client (`platformConfig.ts`: markup/free-ship/cutoff ชม./quota/flat-fee) ยังเป็น constant → ต้องดึงจาก settings | AI DEV | **หลักฐาน:** ไม่มี `5.00` hardcode ใน 2 functions · `delivery_policy` seed = `bite_drive_radius_km 5 / allow_external_within_radius false / external_methods_enabled []` · **`node e2e/w14ContractProbe.cjs` = W14_ALL_PASS 11 checks** (T1 baseline · T2 สวิต์ same_day_open · T3 รัศมี 1km บังคับจริง · T4a/b provider gate · T5 method choice ในรัศมี · T6 default คืนพฤติกรรมเดิม · T7 ERR_NO_DELIVERY_ZONE · T8 ERR_CONFIG_MISSING · rollback สะอาด) · เก็บ error code เดิม (contract 023/028/037 ยังเขียนเงื่อนไขเดิม) |
+| W-1.4 | **Admin configurability — ค่าปกครองทั้งหมดต้องอ่านจาก DB (Owner mandate ห้ามฮาร์ดโค้ด)** | ✅ **SERVER AUTHORITY DONE 2026-10-05** — migration **112** สมัคร production แล้ว · W-1.4b (ส่วน client) เสร็จแล้ว — ดูแถวถัดไป | AI DEV | **หลักฐาน:** ไม่มี `5.00` hardcode ใน 2 functions · `delivery_policy` seed = `bite_drive_radius_km 5 / allow_external_within_radius false / external_methods_enabled []` · **`node e2e/w14ContractProbe.cjs` = W14_ALL_PASS 11 checks** (T1 baseline · T2 สวิต์ same_day_open · T3 รัศมี 1km บังคับจริง · T4a/b provider gate · T5 method choice ในรัศมี · T6 default คืนพฤติกรรมเดิม · T7 ERR_NO_DELIVERY_ZONE · T8 ERR_CONFIG_MISSING · rollback สะอาด) · เก็บ error code เดิม (contract 023/028/037 ยังเขียนเงื่อนไขเดิม) |
 | W-1.5 | redeploy `channel-webhook` (ข้อความไทย, D-06 อนุมัติ) | ✅ **DONE 2026-10-05** | AI DEV | **v11 ACTIVE** · deploy สำเร็จผ่าน CLI (ข้อความไทย mojibake fix ของ `f6b0c0a` ขึ้น production แล้ว) · เส้นทาง deploy ถูกขัดข้องโดย `supabase/config.toml` ที่มี `verify_jwt` ซ้ำ (TOML parse error) — แก้แล้วในรอบเดียวกัน |
+| W-1.4b | เลิก hardcode display/config จาก `platformConfig.ts` → อ่านจาก canonical ที่มีอยู่จริง (D-06 อนุมัติ) | ✅ **DONE 2026-10-05** (มี **HARD STOP 5 จุด** รอ Owner schema) | AI DEV | **ทำแล้ว:** `src/lib/platformConfigBootstrap.ts` (pure map + hydrate ตอน boot: `biteDriveMaxDistanceKm`←`delivery_policy.bite_drive_radius_km` · `currency`←`delivery_policy.currency` · `brandName`/`tenantId`←`brands` default) · boot ใน `main.tsx` (fire-and-forget) · DistanceChecker Tier-1 แสดงค่าจาก `fetchServerDeliveryFee` (server authority แทนคงที่ 25) · comment ใน `platformConfig.ts` ระบุ canonical/HARD STOP ทุก field · **tests +6** = **494/494** · TSC=0 · LINT=0 · **HARD STOP (ไม่มี schema จริง — ไม่สร้าง migration เพื่อความสะดวก):** `tier2MarkupPct` · `freeShippingThreshold` · `cutoffHours` · `dailyQuota` · `theme.glass*` (+ `weeklyRotator` = dead config ไม่มี consumer — รายงานไม่แก้) |
 | W-1.6 | ลบ `BMB_TEST_*` ออกจาก production secrets | OPEN (security) | Owner/AI DEV | secrets list สะอาด |
 
 ### PHASE 1 — เปิดร้านรับเงินจริง
@@ -295,7 +296,7 @@ SECRETS (ดูแค่ชื่อ) Stripe/OpenRouter/AUTOMATION_TOKEN/CHANNEL
 | W-2.1 | Stripe LIVE keys + register live webhook | EXTERNAL (Owner) | Owner |
 | W-2.2 | **Live acceptance**: SAME_DAY 1 + PRE_ORDER 1 จ่ายจริง → ครัว → Bite Drive → delivered → refund 1 ครั้ง | หลัง W-2.1 | Owner จ่าย + AI DEV ตรวจ |
 | W-2.3 | แจ้งเตือน: SMS (ตาม D-05) + in-app/web notification ของเว็บเอง | OPEN | AI DEV (ต้อง credential SMS จาก Owner) |
-| W-2.4 | เปิดร้านจริง (ประกาศ Open Shop) | หลังข้อ 1–3 ผ่านทั้งหมด | Owner 宣布 |
+| W-2.4 | เปิดร้านจริง (ประกาศ Open Shop) | หลังข้อ 1–3 ผ่านทั้งหมด | Owner ประกาศ |
 
 ### PHASE 2 — ไรเดอร์ภายนอก (D-04)
 
@@ -354,7 +355,7 @@ G3 · G5 · G6 (capability) · G7 (S0–S4-R2) · G8 (S0–S5, T1, T2) · G8-S5 
 1. ~~เว็บไม่ตรง `main` + ไม่มี pipeline~~ → **RESOLVED 2026-10-05**: deploy ด้วย wrangler สำเร็จ · `biteme-baby.com` 200 (W-1.1 ✅)
 2. ~~โดเมนผิดใน canonical/robots/sitemap~~ → **RESOLVED**: ขึ้น production แล้ว (W-1.3 ✅ — robots ยืนยันโดเมนใหม่/เก่า = True/False)
 3. ~~ข้อมูลทดสอบค้าง~~ → **RESOLVED**: active = 0 (W-1.2 ✅)
-4. ค่าปกครองฝั่ง server ✅ อ่านจาก DB แล้ว (112) + **`ensure_rounds_for_date` แก้แล้ว (113 ✅ — สร้าง round วันจริงได้)** — คงเหลือ: ค่า display ฝั่ง client ยัง constant (W-1.4b) · ไม่มีสวิต์ UI แบบ form (แก้ผ่าน JSON ได้)
+4. ค่าปกครองฝั่ง server ✅ (112 + 113) + client hydrated จาก DB ✅ (W-1.4b) — **คงเหลือ HARD STOP 5 จุดรอ Owner schema** (tier2MarkupPct/freeShippingThreshold/cutoffHours/dailyQuota/theme.glass*) · ไม่มีสวิต์ UI แบบ form (แก้ผ่าน JSON ได้) · **orphan legacy `pre_orders` pending 1 แถว** (`PO-20260919-430` — canonical cancelled แล้ว ไม่มี path canonical แก้ status แถว legacy — รอ Owner สั่ง: ปล่อยไว้ / อนุมัติ direct update เดียว)
 5. ยังไม่มีออเดอร์จริงครบวงจรสบายจริง (W-2.1/W-2.2)
 
 **AI AUTOMATION BLOCKERS** — ไม่มีข้อไหนขวางเปิดร้าน
@@ -397,6 +398,7 @@ G3 · G5 · G6 (capability) · G7 (S0–S4-R2) · G8 (S0–S5, T1, T2) · G8-S5 
 | **DEFECT (เจอตอน W-1.4) → FIXED 2026-10-05** | `ensure_rounds_for_date` พัง: INSERT ไม่เขียน `delivery_rounds.branch_id` (NOT NULL, ไม่มี default) → instantiate วันใหม่ fail `23502` — **Owner อนุมัติแก้ → migration `113_fix_ensure_rounds_branch_id.sql` (สร้างด้วย `e2e/m113BuildMigration113.cjs`, anchor-guard จาก def จริง production) สมัครแล้ว APPLY_OK** · **`node e2e/m113ApplyVerify.cjs verify` = M113_RUNTIME_PASS**: สร้าง round วันจริง 2026-10-05 + 2026-10-06 สำเร็จ (3+3 แถว, idempotent ไม่ซ้ำ, `v_tpl.branch_id` ถูกเขียน) |
 | **EXEC LOG 2026-10-05 (W-1.5)** | **`channel-webhook` v11 ACTIVE** (deploy ผ่าน CLI สำเร็จ — ข้อความไทยขึ้น production) · แก้ `supabase/config.toml` ที่มี `verify_jwt` ซ้ำท้ายไฟล์ (TOML duplicate key → `CliConfigParseError` ขวางทุกคำสั่ง supabase CLI) |
 | **EXEC LOG 2026-10-05 (W-1.1 + M113)** | **W-1.1**: build 0 → `wrangler pages deploy` 0 → `biteme-baby.com` 200 (title/robots ใหม่ live) · **M113**: dump def จาก production (`e2e/m113Dump.cjs`) → สร้างด้วย anchor-guard (`e2e/m113BuildMigration113.cjs`) → APPLY_OK → `e2e/m113ApplyVerify.cjs verify` = **M113_RUNTIME_PASS** (rounds 05+06 ต.ค. ถูกสร้างจริง, idempotent) · หมายเหตุ: Management API คืนผลเฉพาะ statement สุดท้ายของ batch → verify ใช้ single-statement ต่อ check |
+| **EXEC LOG 2026-10-05 (W-1.4b + TASK B/C/D)** | **A**: audit `platformConfig.ts` → implement hydrate (`platformConfigBootstrap.ts` + `main.tsx` + DistanceChecker server-fee) + tests 494/494 · **B**: 9 จุด canonical — มีครบ 7 · HARD STOP 2 จุด = สวิต์ปิด Bite Drive แบบเดี่ยว/ต่อสาขา (ไม่มี key; ตาม D-01 สวิต์ที่สั่งมีครบแล้ว) + legacy `delivery_policy.radius_km`=10 = dead key (ไม่ลบเอง) · **C**: orders active = **0** (cancelled 194+7 · delivered 1 history) · legacy `pre_orders` pending 1 = test row (Guest/phoneว่าง/migrated/schedule เกิน) — canonical `cancel_pre_order` ไม่แตะ status แถว legacy (delegate `cancel_order` อย่างเดียว + canonical cancelled แล้ว) → **HARD STOP จุดเดียว** รอ Owner (ไม่ direct-update) · **D**: #3/#4/#5/#7/#10 EVIDENCE COMPILED ใน §7.2 (reuse G5/G6/G8 · ไม่ rerun G8-S5 · ไม่แตะ Meta) · **ค้นพบ**: Pages `source=github` → push = auto Production build (wrangler = preview) |
 | **OWNER MANDATE 2026-10-05** | ห้ามมีฮาร์ดโค้ดเพื่อใช้งานจริง 100% · ทำงานเสร็จทุกครั้งต้อง**ทดสอบจนผ่าน** · **อัปเดตเอกสารสถานะไฟล์นี้ก่อน push ทุกครั้ง** · ทำงานซื่อสัตย์ |
 | ไวท์ลาเบล | ทุกค่าใน §4.1 ต้องแอดมินปรับได้ทั้งหมด (คำสั่ง Owner) |
 | แผน | ✅ ปรับเป็น PHASE แล้ว — ดู §11 |
