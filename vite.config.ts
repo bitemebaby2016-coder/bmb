@@ -15,6 +15,18 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.ico', 'robots.txt', 'apple-touch-icon.png'],
+      // W3-D-7: Web Push requires a hand-written service worker (the `push` and
+      // `notificationclick` handlers cannot be expressed through generateSW).
+      // injectManifest keeps the existing offline precache behaviour and adds
+      // the push handlers on top — see src/sw.ts.
+      strategies: 'injectManifest',
+      srcDir: 'src',
+      filename: 'sw.ts',
+      injectRegister: 'auto',
+      injectManifest: {
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
+        maximumFileSizeToCacheInBytes: 3 * 1024 * 1024,
+      },
       manifest: {
         name: 'Bite Me Baby - สั่งอาหารจัดส่งจันทบุรี',
         short_name: 'BMB',
@@ -43,8 +55,8 @@ export default defineConfig({
         ],
       },
       workbox: {
-        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
-        maximumFileSizeToCacheInBytes: 3 * 1024 * 1024,
+        // ignored in injectManifest mode — the values live under injectManifest above
+        globPatterns: [],
       },
     }),
   ],

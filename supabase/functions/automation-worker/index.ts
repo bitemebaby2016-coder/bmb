@@ -73,6 +73,10 @@ const SB_URL = Deno.env.get('SUPABASE_URL') || ''
 const SERVICE = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || ''
 const TOKEN = Deno.env.get('AUTOMATION_TOKEN') || ''
 
+// W3-D-7: Web Push transport. Empty string = push not wired on this deployment,
+// in which case notification_dispatch behaves exactly as before (no push call).
+const PUSH_SEND_URL = Deno.env.get('PUSH_SEND_URL') || (SB_URL ? `${SB_URL}/functions/v1/push-send` : '')
+
 /** Deterministic event window: one logical event per job per hour bucket. */
 function defaultEventId(job: string): string {
   const now = new Date()
@@ -341,6 +345,49 @@ async function runNotificationDispatch(ctx: Ctx, p: { lookbackMinutes?: number; 
     if (r.startsWith('failed:')) ctx.errors.push(`notify ${e.id}: ${r}`)
     else ;(r === 'created' ? created : duplicate).push(e.id)
   }
+  // W3-D-7: after a durable notification is CREATED, fan it out to the customer's
+  // devices through push-send. Transport-only: the in-app row above remains the
+  // single authority, and every failure is recorded in ctx.errors rather than
+  // failing the job (a push outage must not roll back order notifications).
+  if (PUSH_SEND_URL) {
+    const pushed: string[] = []
+    let pushErrors = 0
+    for (const eventId of created) {
+      const e = events.find((x) => x.id === eventId)
+      const o = e ? byOrder.get(e.orderNumber) : undefined
+      const recipient = o && o.customer_id ? userToCustomer.get(o.customer_id) : undefined
+      if (!e || !recipient) continue
+      const copy = EVENT_COPY[e.eventType]
+      try {
+        const res = await fetch(PUSH_SEND_URL, {
+          method: 'POST',
+          headers: {
+            apikey: SERVICE,
+            Authorization: 'Bearer ' + SERVICE,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            customerId: recipient,
+            title: copy.title,
+            body: copy.body({ orderNumber: e.orderNumber }),
+            url: '/notifications',
+            tag: `bmb-${e.orderNumber}`,
+            notificationId: eventId,
+          }),
+        })
+        if (res.ok) pushed.push(eventId)
+        else {
+          pushErrors++
+          if (pushErrors <= 3) ctx.errors.push(`push-send ${eventId}: HTTP ${res.status}`)
+        }
+      } catch (err: any) {
+        pushErrors++
+        if (pushErrors <= 3) ctx.errors.push(`push-send ${eventId}: ${err?.message ?? 'fetch failed'}`)
+      }
+    }
+    ctx.results.notification_push = { attempted: created.length, pushed: pushed.length, errors: pushErrors }
+  }
+
   ctx.results.notification_dispatch = {
     window_minutes: lookback,
     order_events: orderEventsScanned,

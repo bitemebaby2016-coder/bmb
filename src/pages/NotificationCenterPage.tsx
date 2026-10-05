@@ -13,6 +13,14 @@ import {
   type NotificationRow,
   type NotificationChannel,
 } from '@/lib/notificationService'
+import {
+  enablePush,
+  disablePush,
+  getPushStatus,
+  requestPushPermission,
+  reregisterPushedSubscription,
+  type PushSubscriptionLike,
+} from '@/lib/pushService'
 import { MascotBadge } from '@/components/MascotBadge'
 
 const CHANNEL_ICON: Record<NotificationChannel, string> = {
@@ -55,6 +63,80 @@ export function NotificationCenterPage() {
     return map
   }, [rows])
 
+  // --- Web Push transport (separate from the category toggles above) ---
+  const [pushBusy, setPushBusy] = useState(false)
+  const [pushSubscribed, setPushSubscribed] = useState(false)
+  const [pushSupported, setPushSupported] = useState(true)
+  const [pushServerEnabled, setPushServerEnabled] = useState(false)
+  const [pushPermission, setPushPermission] = useState<string>('default')
+  const [pushMessage, setPushMessage] = useState('')
+
+  useEffect(() => {
+    let active = true
+    void (async () => {
+      const st = await getPushStatus()
+      if (!active) return
+      setPushSupported(st.supported)
+      setPushSubscribed(st.subscribed)
+      setPushServerEnabled(st.serverEnabled)
+      setPushPermission(st.permission)
+    })()
+    // The SW hands back a rotated subscription here; re-register it (it cannot
+    // authenticate on its own — the page session does).
+    const onMessage = (event: MessageEvent) => {
+      const d = event.data as { type?: string; subscription?: PushSubscriptionLike | null } | null
+      if (d?.type === 'bmb:pushsubscriptionchange') {
+        void reregisterPushedSubscription(d.subscription ?? null)
+      }
+    }
+    navigator.serviceWorker?.addEventListener('message', onMessage)
+    return () => {
+      active = false
+      navigator.serviceWorker?.removeEventListener('message', onMessage)
+    }
+  }, [])
+
+  async function togglePush(enabled: boolean) {
+    setPushBusy(true)
+    setPushMessage('')
+    try {
+      if (enabled) {
+        const r = await enablePush()
+        if (!r.ok) {
+          setPushMessage(
+            r.error === 'ERR_PUSH_DISABLED' || r.error === 'ERR_NO_VAPID_KEY'
+              ? 'ยังไม่ได้เปิดใช้ Push โดยผู้ดูแลระบบ'
+              : r.error === 'ERR_PERMISSION_DENIED'
+                ? 'เบราว์เซอร์ไม่อนุญาตการแจ้งเตือน'
+                : 'เปิด Push ไม่สำเร็จ',
+          )
+          return
+        }
+        setPushSubscribed(true)
+      } else {
+        const r = await disablePush()
+        if (!r.ok) {
+          setPushMessage('ปิด Push ไม่สำเร็จ')
+          return
+        }
+        setPushSubscribed(false)
+      }
+    } finally {
+      setPushBusy(false)
+    }
+  }
+
+  async function askPermissionOnly() {
+    setPushBusy(true)
+    try {
+      const p = await requestPushPermission()
+      setPushPermission(p)
+      if (p === 'granted') setPushMessage('อนุญาตแล้ว — กดสวิตช์เพื่อเปิดใช้งาน')
+    } finally {
+      setPushBusy(false)
+    }
+  }
+
   async function toggle(channel: NotificationChannel, enabled: boolean) {
     const next = await setNotificationPref(channel, enabled)
     if (next) setPrefs((prev) => ({ ...prev, ...next }))
@@ -78,6 +160,42 @@ export function NotificationCenterPage() {
           </label>
         ))}
       </div>
+
+      {/* Web Push transport — how the notification REACHES the device. */}
+      <section className="bg-white rounded-xl p-3 shadow-sm border border-slate-100" data-testid="push-transport">
+        <div className="flex items-center justify-between">
+          <span className="text-sm font-semibold text-slate-700">📲 แจ้งเตือนผ่าน Web Push</span>
+          <input
+            type="checkbox"
+            disabled={pushBusy || !pushSupported || !pushServerEnabled}
+            checked={pushSubscribed}
+            onChange={(e) => void togglePush(e.target.checked)}
+            data-testid="push-toggle"
+          />
+        </div>
+        <p className="text-xs text-slate-400 mt-1">
+          {!pushSupported
+            ? 'เบราว์เซอร์นี้ไม่รองรับ Push'
+            : !pushServerEnabled
+              ? 'ยังไม่ได้เปิดใช้งาน Push โดยผู้ดูแลระบบ'
+              : pushPermission === 'denied'
+                ? 'เบราว์เซอร์บล็อกการแจ้งเตือน — ต้องไปตั้งค่าในเบราว์เซอร์'
+                : pushSubscribed
+                  ? 'เปิดอยู่บนเครื่องนี้'
+                  : 'ปิดอยู่'}
+        </p>
+        {pushPermission === 'default' && pushSupported && pushServerEnabled && (
+          <button
+            onClick={() => void askPermissionOnly()}
+            disabled={pushBusy}
+            className="mt-2 text-xs px-3 py-1 rounded-lg border border-brand-border disabled:opacity-40"
+            data-testid="push-ask-permission"
+          >
+            อนุญาตการแจ้งเตือน
+          </button>
+        )}
+        {pushMessage && <p className="text-xs text-amber-600 mt-1">{pushMessage}</p>}
+      </section>
 
       {loading && <p className="text-sm text-slate-400">กำลังโหลด…</p>}
 

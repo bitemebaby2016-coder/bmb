@@ -404,6 +404,9 @@ G3 · G5 · G6 (capability) · G7 (S0–S4-R2) · G8 (S0–S5, T1, T2) · G8-S5 
 | **EXEC LOG 2026-10-05 (FINAL CONFIG CLOSURE)** | **PART1** audit ทุก HARD STOP field (A/B/C/D) → **PART2/3** migration **114** (FC-1..FC-5 + guarded seeds + retire radius_km + `admin_sync_legacy_pre_order`) สมัคร production → hotfix 2 รอบ (make_interval numeric / time-wrap) → **PART4** legacy radius = 0 consumer → retire สำเร็จ · **PART5** legacy row `PO-20260919-430` = **cancelled ผ่าน controlled RPC** (probe D2 real + D3 idempotent + D4 audit; ไม่ direct SQL ไม่ DELETE) · **PART6** gates TSC0/LINT0/VITEST **497/497**/BUILD0 + fcVerify114 **25 PASS** + fcProbe6 **22 PASS** (admin read/update/denied · tenant/brand/branch isolation · radius/fee/methods/bite-drive/cutoff/quota · order flow no-regress) · **PART7** verify = ดู §15 |
 | **OWNER DIRECTIVE 2026-10-05 (OPEN-SHOP ACCEPTANCE)** | เกณฑ์เปิดร้านเปลี่ยน = **"ลูกค้าสั่ง จ่าย กิน ได้รับอาหารจริง โดย Admin คุมทุกขั้นตอน"** (แทน "software ไม่มี blocker") → งานถัดไป = **OPEN-SHOP ACCEPTANCE CLOSURE**: Stripe LIVE → G9 Non-Meta → SMS → Real Bite Drive Pilot → OPEN SHOP GATE (Owner ตัดสินเท่านั้น) · **ไม่เขียนโค้ดใหม่** · แผนฉบับเต็มอยู่ใน **`BMB_OPEN_SHOP_ACCEPTANCE_HANDOFF.md`** |
 | **OWNER MANDATE 2026-10-05** | ห้ามมีฮาร์ดโค้ดเพื่อใช้งานจริง 100% · ทำงานเสร็จทุกครั้งต้อง**ทดสอบจนผ่าน** · **อัปเดตเอกสารสถานะไฟล์นี้ก่อน push ทุกครั้ง** · ทำงานซื่อสัตย์ |
+| **OWNER DIRECTIVE 2026-10-05 #2 (สั่งเปลี่ยนลำดับงาน)** | **Stripe LIVE = รอยืนยันตัวตน Stripe** (จึงยังทำ Stage A ไม่ได้) · **โดเมน verified ใน Meta Business แล้ว** (`biteme-baby.com` = Verified) · ลำดับงานใหม่ = **G9 → Meta/G4 → ระบบแจ้งเตือน → ระบบแอดมิน** (ทำก่อน Stage A/D) · **ช่องทางแจ้งเตือน = Web Push + SMS** (ตัดสินโดย Owner) · ให้"ทำเรียงลำดับตามกฎเดิม" + อัปเดตสถานะ → เทสต์ผ่าน → อัปเดตเอกสาร → commit/push |
+| **ค้นพบ 2026-10-05 (Meta credentials)** | Owner แจ้งว่ามี Meta App ID/Secret/Page Access Token "ใน env local" → **ตรวจแล้วไม่พบ**: `.env.local` / `.env` / `supabase/secrets.local.env` / `.kilo\worktrees\*` **ไม่มีตัวแปร META|FACEBOOK|FB_|PAGE ใด ๆ** · `CHANNEL_WEBHOOK_APP_SECRET` = webhook verify token (ค่าเทียบเอง) **ไม่ใช่ Meta App Secret** → Owner ต้องใส่ค่าใหม่ก่อน G4 จะเดินต่อได้ · **โค้ดปัจจุบันไม่มี Meta write path เลย** (ตั้งใจตาม G6/G7 negative assertion) → ต้อง**สร้างใหม่** = ขัดกฎ "ห้ามสร้าง phase/contract ใหม่" → ต้องขอ Owner อนุมัติ scope ก่อน |
+| **EXEC LOG 2026-10-05 (W3-D-7 WEB PUSH)** | **ข้อ 1 ตามลำดับใหม่ = Web Push** ทำเสร็จในรอบนี้: migration **115** (`push_subscriptions` + RLS + 7 RPC · `notification_prefs` เพิ่ม `push_enabled`/`sms_enabled` · `business_settings.push_config`) + `src/sw.ts` (เปลี่ยน PWA จาก generateSW → **injectManifest** เพราะ push/notificationclick เขียนผ่าน generateSW ไม่ได้) + `src/lib/pushService.ts` + toggle UI ใน NotificationCenter + EF `push-send` (web-push + VAPID, endpoint resolve ผ่าน service_role-only RPC) + ต่อจาก `notification_dispatch` (fan-out หลัง durable notification สร้างสำเร็จ; ล้มเหลว → บันทึก error ไม่ fail job) + tests 16 ข้อ · **GATES: TSC0 / LINT0 / VITEST 513/513 (เดิม 497 + ใหม่ 16) / BUILD0** · build ยืนยัน `injectManifest` precache 131 entries · `dist/sw.js` มี push/notificationclick/showNotification จริง · **ยังไม่ apply migration 115 ขึ้น production และยังไม่มี VAPID key — runtime จริง = ยังไม่ verify** |
 
 ---
 
@@ -436,6 +439,8 @@ G3 · G5 · G6 (capability) · G7 (S0–S4-R2) · G8 (S0–S5, T1, T2) · G8-S5 
 | Meta verification | BLOCKED | รอ Owner กด Verify & Save (external) |
 | SMS | MISSING | ยังไม่มี credentials (รอ Owner — W-2.3) |
 | Web notification | RUNTIME VERIFIED | notification center + `notification_dispatch` succeeded ทุกรอบ (G8-S5) |
+| Web Push (transport) | IMPLEMENTED (not deployed) | migration 115 + `src/sw.ts` (injectManifest) + `pushService` + EF `push-send` + tests 16 · gates 513/513 BUILD0 · **ยังไม่ apply migration / ยังไม่มี VAPID key → runtime ยังไม่ verify** |
+| SMS (transport) | MISSING | ยังไม่มี adapter/provider/credentials (Owner เลือกเป็นช่องทางที่ 2) · schema เผื่อแล้ว (`notification_prefs.sms_enabled`) |
 
 **E2E chain (PART 9 ตรวจแยก — ห้ามสร้าง transaction จริงเพื่อพิสูจน์):**
 
@@ -464,7 +469,20 @@ G3 · G5 · G6 (capability) · G7 (S0–S4-R2) · G8 (S0–S5, T1, T2) · G8-S5 
 - **E. NON-BLOCKER** — F-01 demo creds หน้า login · `business_settings.hours` dead-key suspect (F-23) · local zone mirror มี 3/6 zones (fallback offline เท่านั้น — server = authority) · **Kitchen/Dispatch/Delivery ของออเดอร์จริง = ยังไม่เคยลอง** (E2E chain §15)
 - **F. DEFERRED** — multi-tenant onboarding + หลายร้านจริง (schema/RLS READY) · admin page เฉพาะทาง (ตอนนี้ใช้ cards ใน /admin/settings) · theme กว้างกว่า glass tokens · physical delivery
 
-**สรุป:** *Software ไม่มี blocker ในตัวเอง — แต่ Owner เปลี่ยนเกณฑ์เปิดร้านเป็น **"ลูกค้าสั่ง จ่าย กิน ได้รับจริง โดย Admin คุมทุกขั้นตอน"** → งานถัดไป = **OPEN-SHOP ACCEPTANCE CLOSURE** (Stripe LIVE → G9 Non-Meta → SMS → Real Bite Drive Pilot → Open Shop Gate) ตาม `BMB_OPEN_SHOP_ACCEPTANCE_HANDOFF.md` — **ยังไม่มีการประกาศ Open Shop Ready** (Owner เท่านั้น)*
+**สรุป:** *Software ไม่มี blocker ในตัวเอง — แต่ Owner เปลี่ยนเกณฑ์เปิดร้านเป็น **"ลูกค้าสั่ง จ่าย กิน ได้รับจริง โดย Admin คุมทุกขั้นตอน"** → งานถัดไป = **OPEN-SHOP ACCEPTANCE CLOSURE** ตาม `BMB_OPEN_SHOP_ACCEPTANCE_HANDOFF.md` — **ยังไม่มีการประกาศ Open Shop Ready** (Owner เท่านั้น)*
+
+**ลำดับงานปัจจุบัน (Owner directive #2, 2026-10-05 — สูงกว่าแผนเดิม):** **G9 → Meta/G4 → ระบบแจ้งเตือน → ระบบแอดมิน** (ทำก่อน Stage A/D) · Stripe LIVE **รอยืนยันตัวตน** · โดเมน Meta **verified แล้ว**
+
+| # | งานที่เหลือ | สถานะ | ติดอะไร |
+|---|---|---|---|
+| 1 | **Web Push** | ✅ **โค้ดเสร็จ + gates ผ่าน** (513/513, BUILD0) | ต้อง apply migration 115 + ตั้ง VAPID key/secret → runtime verify |
+| 2 | **SMS** | ⬜ adapter/provider ยังไม่มี | SMS provider + credentials |
+| 3 | **G9 Non-Meta** | ⬜ พร้อมทำ (evidence #3/#4/#5/#7/#10 มีแล้ว) | **ห้ามประกาศ PASS เอง** — ยื่น Owner review (contract §10) |
+| 4 | **Meta / G4** | ⛔ ยังเริ่มไม่ได้ | **Meta 3 ค่าไม่พบใน env** + ต้องสร้าง Meta write path ใหม่ (ขัดกฎ "ห้ามสร้าง phase/contract ใหม่") → ขออนุมัติ scope ก่อน |
+| 5 | **ระบบแอดมิน** | ⬜ ยังไม่สำรวจ gap | — |
+| 6 | Stage A Stripe LIVE | 🔒 รอยืนยันตัวตน Stripe | LIVE keys + webhook |
+| 7 | Stage D Bite Drive pilot | 🔒 ตามลำดับเดิม | order จริง ≤5 กม. |
+| 8 | Stage E Open Shop Gate | 🔒 | **Owner ตัดสินเท่านั้น** |
 | ไวท์ลาเบล | ทุกค่าใน §4.1 ต้องแอดมินปรับได้ทั้งหมด (คำสั่ง Owner) |
 | แผน | ✅ ปรับเป็น PHASE แล้ว — ดู §11 |
 
