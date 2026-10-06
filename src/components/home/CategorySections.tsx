@@ -130,10 +130,38 @@ export function CategorySections({
   let carouselIdx = 0
   const renderCategoryCarousel = (cat: ProductCategory, grouped: boolean) => {
     const items = selectHomeShowcase(products, categories, cat.slug)
-    if (items.length === 0) return null
     const idx = carouselIdx++
     const headingId = `home-cat-${cat.slug}`
     const pose = SECTION_POSES[idx % SECTION_POSES.length]
+    // FIX (owner 2026-10-06): หมวดที่แอดมินเพิ่มต้องโชว์บนหน้าแรกเสมอ (ต่อจาก
+    // หมวดเดิม ก่อนเซกชันรีวิว) — ถ้ายังไม่มีสินค้าพร้อมขายแสดง empty state
+    // "เร็ว ๆ นี้" แทนการซ่อนทั้งเซกชัน
+    if (items.length === 0) {
+      return (
+        <section key={cat.id} className={`${grouped ? 'mb-8' : 'mb-10'} scroll-mt-20`} aria-labelledby={headingId} data-testid={`home-cat-empty-${cat.slug}`}>
+          <div className="flex items-center justify-between mb-2">
+            <h3
+              id={headingId}
+              className={`${grouped ? 'text-lg' : 'text-xl'} font-display font-bold text-brand-accent flex items-center gap-2`}
+            >
+              <MascotBadge
+                pose={pose}
+                size="sm"
+                alt={`น้อง Bite ประจำหมวด ${cat.name}`}
+                className="section-float-mascot"
+              />
+              <span>{cat.icon ? `${cat.icon} ` : ''}{cat.name}</span>
+            </h3>
+            <Link to="/menu" className="text-sm text-brand-primary font-medium hover:underline">ดูทั้งหมด →</Link>
+          </div>
+          <div className="drink-card flex items-center justify-center text-center" data-testid="home-showcase-empty">
+            <p className="drink-card-desc py-6">
+              ยังไม่มีเมนูในหมวดนี้ — เร็ว ๆ นี้ 🍽️
+            </p>
+          </div>
+        </section>
+      )
+    }
     return (
       <section key={cat.id} className={`${grouped ? 'mb-8' : 'mb-10'} scroll-mt-20`} aria-labelledby={headingId}>
         <div className="flex items-center justify-between mb-2">

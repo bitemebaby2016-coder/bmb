@@ -124,9 +124,9 @@ SECRETS  Stripe(LIVE)/OpenRouter/AUTOMATION_TOKEN/CHANNEL_WEBHOOK_*/META_* ม�
 | Page token | ✅ long-lived `expires=never` · อยู่ใน EF secrets + `.env.local` (mirrored) |
 | Page binding | RUNTIME VERIFIED — page `862940416913026` → tenant-bmb-001 (FACEBOOK + MESSENGER) |
 | Publish (reply/post) | ✅ **RUNTIME VERIFIED จริง** — social-publish-worker deployed · negative probe 5/5 · g9PublishJourney 6/6 (โพสต์จริง 2 + replay idempotent + audit) · **เปิดตาม G9 ที่ Owner อนุมัติแล้ว** · โพสต์ทดสอบ 3 รายการรอ Owner ลบ |
-| Webhook receive (G4 feed) | ⚠️ **HOLD — EXTERNAL (Meta lock ชั่วคราว)** · root cause ยืนยันแล้ว: Development mode ส่ง webhook เฉพาะ user ที่มี role ใน `GET /{app}/roles` (BM access/page role ไม่นับ) · **Meta ปิดสร้าง Test User + ล็อกการ add role ชั่วคราว** (roles = administrators เท่านั้น) · **ชดเชยแล้ว: simulated delivery ผ่าน endpoint ตรง = `g4SimulatedDelivery` 9/9** (Messenger postback + order message + FB feed comment + duplicate idempotent → social_events + orders + identities ครบ) |
-| สิ่งที่ Owner ต้องทำ (G4) | **เมื่อ Meta ปลดล็อก:** add Pual เป็น **Tester** บน app-roles/ (Pual ติดสิทธิ์ Admin ครบอยู่แล้ว — Meta ล็อกไม่ให้เพิ่มบทบาทซ้ำ) → Pual คอมเมนต์/DM ใหม่ → รัน `node e2e/g4CheckRealEvents.cjs` (ยืนยันแล้วว่า script + intake→DB ทำงานถูกต้องกับ simulated rows) |
-| Messenger receive (G4) | intake path ผ่าน simulated delivery แล้ว (postback + order message) · เหลือ real DM: re-issue token w/ `pages_messaging` → subscribe `messages`,`message_deliveries` → Pual DM → verify |
+| Webhook receive (G4 feed) | ✅ **CLOSED (Owner ยอมรับ 100% จาก simulated delivery 2026-10-06)** — `g4SimulatedDelivery` **9/9** (Messenger postback + order message + FB feed comment + duplicate idempotent → social_events + orders + identities ครบ) · real event เลื่อนไว้ในอนาคต (Meta ปิด Test User + ล็อก add role ชั่วคราว — ไม่ block อีกต่อไป) | simulated (Owner-approved) |
+| สิ่งที่ Owner ต้องทำ (G4) | — (ย้ายไป backlog อนาคต) เมื่อ Meta ปลดล็อก: add Pual เป็น Tester → Pual คอมเมนต์/DM จริง → รัน `node e2e/g4CheckRealEvents.cjs` (script ยืนยันทำงานถูกต้องแล้ว) |
+| Messenger receive (G4) | intake path ผ่าน simulated delivery แล้ว (postback + order message) · real DM ค้างเฉพาะ token `pages_messaging` (backlog อนาคต) |
 | ทำต่อได้โดยไม่รอ Meta | — (ที่ทำได้ทำแล้วหมด — simulated delivery ครอบคลุม receive path ทั้งหมด) |
 
 ### 5.3 อื่น ๆ
@@ -224,7 +224,7 @@ CONNECTED แล้วทั้งระบบ: NS Cloudflare (carlane/eoin) · 
 | W-1.3 | แก้โดเมนในโค้ด | ✅ DONE 2026-10-05 | เหลือโดเมนเก่า = 0 · TSC=0 · LINT=0 · BUILD=0 |
 | W-1.4(+b/c) | Admin configurability | ✅ DONE 2026-10-05 | migration 112/113/114 + platformConfigBootstrap · HARD STOP ปิดครบ · w14 probe PASS |
 | W-1.5 | redeploy channel-webhook (ข้อความไทย) | ✅ DONE 2026-10-05 | v11 ACTIVE |
-| W-1.6 | ลบ `BMB_TEST_*` ออกจาก production secrets | ⬜ OPEN (security) | secrets list สะอาด |
+| W-1.6 | ลบ `BMB_TEST_*` ออกจาก production secrets | ⏸ BLOCKED — `SUPABASE_ACCESS_TOKEN` หมดอายุ (Management API + CLI ทั้งคู่ 401) — **รอ Owner สร้าง access token ใหม่** (`e2e/w16TestSecretsClean.cjs` พร้อมรัน `--delete`) |
 
 ### PHASE 1 — เปิดร้านรับเงินจริง
 
@@ -232,7 +232,7 @@ CONNECTED แล้วทั้งระบบ: NS Cloudflare (carlane/eoin) · 
 |---|---|---|---|
 | W-2.1 | Stripe LIVE: keys ✅ (3a6cba3) · card flow ✅ (438217a) — **เหลือ register live webhook** | ⏳ ค้าง webhook | Owner + AI DEV |
 | W-2.2 | Live acceptance: สั่งจริง → ครัว → Bite Drive → delivered → refund | ⬜ หลัง W-2.1 | Owner จ่าย + AI DEV ตรวจ |
-| W-2.3 | แจ้งเตือน: SMS (D-05) — **Web Push ส่วน config/auth เสร็จ (115 + push-send)** เหลือทดสอบเครื่องจริง | ⏳ SMS รอ credential | Owner (SMS) + AI DEV |
+| W-2.3 | แจ้งเตือน: SMS — **โค้ดวางเตรียมแล้ว (Owner 2026-10-06)**: EF `sms-send` (provider-agnostic generic HTTP, honest 503 จนกว่ามี credentials · resolve phone server-side · ยึด `sms_enabled`) + `_shared/sms.ts` + tests 5/5 | ⏳ รอ Owner: SMS provider credential (`SMS_PROVIDER/SMS_API_URL/SMS_API_KEY`) → deploy EF |
 | W-2.4 | เปิดร้านจริง (ประกาศ Open Shop) | ⬜ หลังข้อ 1–3 ผ่าน | Owner |
 
 ### PHASE 2 — ไรเดอร์ภายนอก (D-04)
@@ -242,7 +242,7 @@ CONNECTED แล้วทั้งระบบ: NS Cloudflare (carlane/eoin) · 
 | W-3.1 | ย้าย adapter → Edge Function + secret ฝั่ง server + webhook สถานะ | ⬜ ต้องทำก่อนใส่ key จริง |
 | W-3.2 | Grab (หลัก): รอ API → ต่อ key → E2E | ⏳ EXTERNAL |
 | W-3.3 | LINE MAN (รอง) | ⏳ EXTERNAL |
-| W-3.4 | Bolt: เขียน adapter ใหม่ (โค้ดยังไม่มี) | ⬜ OPEN (software) |
+| W-3.4 | Bolt: เขียน adapter ใหม่ | ❌ **ตัดออก (Owner decision 2026-10-06: ไม่ใช้ Bolt แล้ว)** — Grab/LINE MAN sandbox + Bite Drive เพียงพอ |
 | W-3.5 | foodpanda adapter: ปิด/defer | ตัดสินใจภายหลัง |
 
 ### PHASE 3 — Social AI
@@ -295,4 +295,5 @@ G3 · G5 · G6 (capability) · G7 · G8 (+S5) · G9 (2026-10-06) · G9 contract 
 
 - 2026-10-05: W-1.1..W-1.5 ปิด · G9 ส่วน non-Meta ทำได้ (D-03) · โดเมน + deploy pipeline พร้อม
 - 2026-10-06: G9 CLOSED (Owner อนุมัติ PASS — journey 11 stages · failure matrix 12/12 · publish จริง 6/6 · gates TSC0/LINT0/VITEST 522/BUILD0) · Meta app#2 ใหม่ LIVE + page token long-lived · push 115 + EF push-send deployed (probe 17/17) · card flow Stripe.js LIVE · GAP A-1 ปิด (116) · **ค้นพบ channel-intake drift → migration 117 authored → Owner อนุมัติ → APPLIED + VERIFIED (probe 15/15, test orders cancelled)** · โพสต์ทดสอบบนเพจ Owner ลบแล้ว · **G4: Meta ปิด Test User + ล็อก add role ชั่วคราว → ชดเชยด้วย simulated delivery `g4SimulatedDelivery` 9/9** (postback + order + comment + duplicate → DB ครบ · g4CheckRealEvents เห็น rows) · **Stripe: บัญชี Review in progress 2–3 วัน — LIVE รออนุมัติ**
-- **ค้างทั้งหมด:** G4 real event (รอ Meta ปลดล็อก) · Stripe review → live webhook + acceptance · push เครื่องจริง · SMS · Bolt adapter · W-1.6 test secrets · G10
+- **ค้างทั้งหมด:** Stripe review → live webhook + acceptance · push เครื่องจริง · SMS credential · W-1.6 (รอ access token ใหม่) · G10
+- 2026-10-06 (รอบ 3): **G4 CLOSED** (Owner ยอมรับ simulated 9/9 — Meta unblock/Test User เลื่อน backlog) · **W-3.4 Bolt ตัดออก** (Owner: ไม่ใช้แล้ว) · **W-1.6 BLOCKED** (SUPABASE_ACCESS_TOKEN หมดอายุ — รอ Owner token ใหม่; script `w16TestSecretsClean.cjs` พร้อม) · **หน้าแรก: หมวดที่แอดมินเพิ่มโชว์เสมอ** — CategorySections เรนเดอร์หมวด active ทุกหมวดตาม sort_order ก่อนเซกชันรีวิว, หมวดที่ยังไม่มีสินค้าแสดง empty "เร็ว ๆ นี้" (แก้: หมวด "สินค้าสำเร็จรูป" เคยถูกซ่อนเพราะ 0 สินค้า) + tests 3/3 · **W-2.3 โค้ด SMS วางเตรียม**: EF `sms-send` + `_shared/sms.ts` + tests (รอ credentials) · gates TSC0/LINT0/VITEST 527/BUILD0
