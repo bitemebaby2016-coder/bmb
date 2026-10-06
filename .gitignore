@@ -48,3 +48,6 @@ public/assets/reviews/*.jpg
 
 # CAT-03A migration artifacts (Base64 backups + manifest â€” local only, 14-day retention)
 e2e/artifacts/
+
+# local DB dumps (contain customer data — never commit)
+backups/
