@@ -60,7 +60,7 @@ export function CheckoutPage() {
   const [feeSource, setFeeSource] = useState<'server' | 'local-mirror' | null>(null)
   const [leadDays, setLeadDays] = useState(1) // DISPLAY ONLY — server policy enforces the real lead
   const [couponCode, setCouponCode] = useState('')
-  const [paymentMethod, setPaymentMethod] = useState<'promptpay_qr' | 'cash_on_delivery'>('promptpay_qr')
+  const [paymentMethod, setPaymentMethod] = useState<'promptpay_qr' | 'cash_on_delivery' | 'credit_card'>('promptpay_qr')
   const [deliveryAddress, setDeliveryAddress] = useState(() => {
     const saved = useLocationStore.getState().location
     return {
@@ -266,11 +266,20 @@ export function CheckoutPage() {
     }
 
     // Payment intent created at checkout (server amount; validated again by 008).
+    let cardClientSecret: string | undefined
     try {
-      await createPaymentIntent(order.order_number, order.total_amount, paymentMethod, {
+      const intent = await createPaymentIntent(order.order_number, order.total_amount, paymentMethod, {
         providerId: 'self_delivery',
         providerName: 'Bite Me Baby (self delivery)',
       })
+      // Card flow (P0-5 completion): PaymentConfirmationPage needs the
+      // client_secret to run Stripe.js confirmCardPayment. It is returned only
+      // by the create-checkout EF (server-derived amount) and handed through
+      // navigation state — never stored anywhere durable.
+      cardClientSecret = intent?.payment_intent?.client_secret
+      if (paymentMethod === 'credit_card' && !cardClientSecret) {
+        showToast('ระบบบัตรยังไม่พร้อม — เลือกช่องทางอื่นหรือลองใหม่', 'error')
+      }
     } catch (e) {
       console.warn('[Checkout] Payment intent creation failed (non-critical):', e)
     }
@@ -298,7 +307,9 @@ export function CheckoutPage() {
       itemCount: items.length,
     })
 
-    navigate(`/payment/${order.order_number}`)
+    navigate(`/payment/${order.order_number}`, {
+      state: paymentMethod === 'credit_card' && cardClientSecret ? { clientSecret: cardClientSecret } : undefined,
+    })
     justPlaced.current = true
     clearCart()
     setIsProcessing(false)
@@ -445,6 +456,13 @@ export function CheckoutPage() {
             <div>
               <div className="font-medium">QR PromptPay</div>
               <div className="text-sm text-brand-muted">สแกนจ่ายได้เลย</div>
+            </div>
+          </label>
+          <label className="flex items-center gap-3 p-3 rounded-lg border-2 border-brand-border cursor-pointer hover:border-brand-primary transition-colors">
+            <input type="radio" name="payment" value="credit_card" checked={paymentMethod === 'credit_card'} onChange={(e) => setPaymentMethod(e.target.value as any)} className="w-5 h-5" />
+            <div>
+              <div className="font-medium">บัตรเครดิต/เดบิต (Stripe)</div>
+              <div className="text-sm text-brand-muted">ปลอดภัยผ่าน Stripe — ตัดเงินจริงทันทีที่ยืนยัน</div>
             </div>
           </label>
           <label className="flex items-center gap-3 p-3 rounded-lg border-2 border-brand-border cursor-pointer hover:border-brand-primary transition-colors">

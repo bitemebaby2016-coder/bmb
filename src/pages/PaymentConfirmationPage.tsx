@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { Link } from 'react-router-dom'
 import { getOrder } from '@/lib/bmbAdminApi_orders'
 import { submitOfflinePaymentReference, getPaymentIntents, createPaymentIntent } from '@/lib/paymentGateway'
+import { CardPaymentSection } from '@/components/payment/CardPaymentForm'
 import { writeAuditLog } from '@/lib/auditLog'
 import { showToast } from '@/components/ui/ToastContainer'
 import { MascotBadge } from '@/components/MascotBadge'
@@ -72,6 +73,11 @@ export function PaymentConfirmationPage() {
 
   const isPaid = order.payment_status === 'paid'
   const isPending = order.payment_status === 'pending'
+  // Card flow (P0-5): the client_secret is handed through navigation state by
+  // CheckoutPage. A page refresh loses it — the customer then sees the honest
+  // "not ready" card and can retry from the failed-payment path instead.
+  const locationState = (typeof window !== 'undefined' && (window.history?.state as { usr?: { clientSecret?: string } })?.usr) || null
+  const cardClientSecret = (locationState as { clientSecret?: string } | null)?.clientSecret ?? paymentIntent?.client_secret ?? null
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-6">
@@ -105,6 +111,9 @@ export function PaymentConfirmationPage() {
             {isConfirming ? 'กำลังส่ง...' : 'ส่งข้อมูลการชำระเงิน'}
           </button>
         </div>
+      )}
+      {isPending && order.payment_method === 'credit_card' && (
+        <CardPaymentSection clientSecret={cardClientSecret} orderNumber={order.order_number} amount={order.total_amount} />
       )}
       {isPending && order.payment_method === 'cash_on_delivery' && (
         <div className="card mb-6 bg-gradient-to-br from-blue-50 to-indigo-50 border-2 border-blue-200">
