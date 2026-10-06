@@ -1,0 +1,18 @@
+{
+  "ran_at": "2026-10-06T04:11:44.004Z",
+  "page_id": "862940416913026",
+  "evidence": [
+    {
+      "approval_id": "g9-journey-preorder-001",
+      "post_id": "862940416913026_122142901857204867",
+      "replay_already": true,
+      "audit": "g9-publish-g9-journey-preorder-001"
+    },
+    {
+      "approval_id": "g9-journey-sameday-001",
+      "post_id": "862940416913026_122142901881204867",
+      "replay_already": true,
+      "audit": "g9-publish-g9-journey-sameday-001"
+    }
+  ]
+}

@@ -2,7 +2,7 @@
 
 **สถานะเอกสาร:** รายงานเพื่อ**ยื่น Owner review** — **ไม่ใช่การประกาศ G9 PASS** (contract §10.7: *Owner อนุมัติ report ก่อนปิด G9 — AI ห้ามประกาศเอง*)
 **HEAD:** `816994b` · worktree CLEAN · gates: TSC0 / LINT0 / VITEST **517/517** / BUILD0
-**Scope:** G9 ส่วนที่**ไม่ต้องใช้ Meta real event** ตามมติ D-03 · reuse G5/G6/G7/G8 · **ไม่ rerun G8-S5** · **ไม่แตะ Meta** · **ไม่สร้าง event จริง**
+**Scope:** G9 ส่วนที่**ไม่ต้องใช้ Meta real event** ตามมติ D-03 · reuse G5/G6/G7/G8 · **ไม่ rerun G8-S5** · **ไม่แตะ Meta** · **ไม่สร้าง event จริง** — *อัปเดต 2026-10-06: รอบ 2 (§6) เพิ่ม REAL PUBLISH 2 โพสต์ตามคำสั่ง Owner โดยตรง (deploy worker + G9 journey) — ยังไม่ประกาศ PASS*
 
 ---
 
@@ -56,4 +56,44 @@
 
 ---
 
-**HARD STOP:** เอกสารนี้ = รายงานรอ Owner review — **ไม่ใช่การประกาศ G9 PASS** · ไม่มีการแก้โค้ดใด ๆ ในรอบนี้ (probe อย่างเดียว)
+## 6. รอบ 2026-10-06 — REAL META PUBLISH (Owner สั่ง: "ทำ G9 journey") — รอ Owner review เหมือนเดิม
+
+**ไม่ใช่การประกาศ G9 PASS** — เป็นหลักฐานชิ้นใหม่ยื่น Owner ตัดสิน (§10.7)
+
+### 6.1 Meta credentials (แอปใหม่ — แอปเก่า 1746001833371898 ถูกลบระหว่าง permission flow)
+
+| รายการ | ค่า |
+|---|---|
+| App ID ใหม่ | `1737887467512190` (App Mode LIVE) |
+| Token chain | user token (Explorer) → `e2e/metaTokenExchange.cjs exchange` → **Page token `expires = never`** (long-lived) |
+| debug_token scopes | `pages_show_list` · `pages_read_engagement` · `pages_manage_metadata` · **`pages_manage_posts`** ✅ · `pages_manage_engagement` · `business_management` |
+| EF secrets | `META_PAGE_ACCESS_TOKEN` + `META_PAGE_ID` อัปเดตแล้ว · `social-publish-worker` **redeployed** |
+| `.env.local` | คีย์เก่าทั้งหมดถูกลบ (เหลือ APP_ID/APP_SECRET/USER/PAGE token ของแอปใหม่ล้วน) |
+
+### 6.2 ผลวิ่งจริงบน production
+
+| Probe | ผล |
+|---|---|
+| `e2e/publishWorkerProbe.cjs` (negative paths) | **5/5 PASS** (401 anon · 400 invalid approval · 400 bad json · 404 not found · pending refused) |
+| `e2e/g9PublishJourney.cjs` (Owner-approved REAL publish) | **6/6 PASS** — ดูตารางล่าง |
+
+### 6.3 G9 publish journey — โพสต์จริง 2 รายการ (1 PRE_ORDER + 1 SAME_DAY)
+
+| approval_id | publish | post_id (บนเพจจริง) | replay | audit |
+|---|---|---|---|---|
+| `g9-journey-preorder-001` | ✅ 200 | `862940416913026_122142901857204867` | ✅ `already=true` (ไม่โพสต์ซ้ำ) | ✅ `g9-publish-g9-journey-preorder-001` |
+| `g9-journey-sameday-001` | ✅ 200 | `862940416913026_122142901881204867` | ✅ `already=true` (ไม่โพสต์ซ้ำ) | ✅ `g9-publish-g9-journey-sameday-001` |
+
+- Evidence file: `e2e/g9-publish-journey-evidence.json` (posts จริงบนเพจ BITE ME BABY - Main Page TH — **ขึ้น "[G9 Acceptance]" นำหัว เพื่อให้ Owner กดลบได้หลังตรวจ** · ยังไม่ลบ รอ Owner สั่ง)
+- โพสต์ทดสอบหน้าแรก 1 โพสต์ (`862940416913026_122142901371204867`, `[acceptance-test] publish probe`) — Owner ขอดูบนเพจก่อนแจ้งลบ
+- Idempotency ยืนยันจริง: replay คืน `already=true` + post_id เดิมทั้งคู่ → **0 duplicate post** · audit PK ตายตัว 1 แถว/โพสต์
+
+### 6.4 ยังต้องการจาก Owner
+
+1. **G9 decision** — ยืนยัน/ปฏิเสธ report ชุดนี้ (§10.7: AI ห้ามประกาศ PASS เอง)
+2. ลบโพสต์ทดสอบบนเพจเมื่อ Owner ตรวจเสร็จ (3 โพสต์: 1 probe + 2 journey)
+3. §9 PROPOSED: จำนวน journey runs + ระยะเวลาเก็บ evidence (ข้อเดิมยังเปิดค้าง)
+
+---
+
+**HARD STOP:** เอกสารนี้ = รายงานรอ Owner review — **ไม่ใช่การประกาศ G9 PASS** · รอบนี้มีการเขียน production จริง 2 โพสต์ตามคำสั่ง Owner "ดำเนินการต่อเลยตามกฏเดิม (เริ่มจาก deploy worker + G9 journey)"

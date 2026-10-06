@@ -414,7 +414,9 @@ G3 · G5 · G6 (capability) · G7 (S0–S4-R2) · G8 (S0–S5, T1, T2) · G8-S5 
 | **ADMIN GAP SURVEY (Owner สั่งสำรวจ)** | รายงาน = **`BMB_ADMIN_GAP_SURVEY.md`** · แอดมินคุมได้ ~95% ของวงจร (confirm/kitchen batch+ready/assign/dispatch/refund/cancel-preorder ครบ) · **GAP A-1 (สำคัญสุด)**: **Admin UI ไม่มีปุ่ม advance `in_transit → arrived → delivered`** — ปิดวงจรได้เฉพาะ `RiderPwaPage` (ไรเดอร์, geolocation+POD) → ถ้าไรเดอร์ไม่กด order ค้างตลอดชีพ **ขวาง acceptance bar ข้อ 5 โดยตรง** · A-2 force-cancel+auto-refund บน order จ่ายแล้ว · A-3 `AdminPaymentExceptions` read-only · A-4 ไม่มี widget order ค้างสถานะ · ไม่มีข้อไหนต้อง migration ใหม่ (ใช้ RPC admin-gated pattern ที่มี) — **รอ Owner เลือกก่อนลงมือ** |
 | **EXEC LOG 2026-10-05 (W3-D-7 WEB PUSH — ROUND 1)** | **ข้อ 1 ตามลำดับใหม่ = Web Push** ทำเสร็จในรอบนี้: migration **115** (`push_subscriptions` + RLS + 7 RPC · `notification_prefs` เพิ่ม `push_enabled`/`sms_enabled` · `business_settings.push_config`) + `src/sw.ts` (เปลี่ยน PWA จาก generateSW → **injectManifest** เพราะ push/notificationclick เขียนผ่าน generateSW ไม่ได้) + `src/lib/pushService.ts` + toggle UI ใน NotificationCenter + EF `push-send` (web-push + VAPID, endpoint resolve ผ่าน service_role-only RPC) + ต่อจาก `notification_dispatch` (fan-out หลัง durable notification สร้างสำเร็จ; ล้มเหลว → บันทึก error ไม่ fail job) + tests 16 ข้อ · **GATES: TSC0 / LINT0 / VITEST 513/513 (เดิม 497 + ใหม่ 16) / BUILD0** · build ยืนยัน `injectManifest` precache 131 entries · `dist/sw.js` มี push/notificationclick/showNotification จริง · **ยังไม่ apply migration 115 ขึ้น production และยังไม่มี VAPID key — runtime จริง = ยังไม่ verify** |
 
----
+| **EXEC LOG 2026-10-06 (Meta app#2 + G9 REAL PUBLISH)** | แอป Meta เดิม (1746001833371898) ถูกลบระหว่าง flow ขอสิทธิ์ → **แอปใหม่ 1737887467512190** (LIVE) · scope ครบรวม `pages_manage_posts` (debug_token ยืนยัน) · `metaTokenExchange.cjs exchange` → **Page token long-lived (expires=never)** + EF secrets อัปเดต · `.env.local` ล้างคีย์เก่าหมด · **`social-publish-worker` redeployed** · `e2e/publishWorkerProbe.cjs` = **5/5 PASS** · **`e2e/g9PublishJourney.cjs` = 6/6 PASS — โพสต์จริง 2 โพสต์ (PRE_ORDER + SAME_DAY) บนเพจจริง + replay idempotent (already=true, 0 duplicate) + audit ครบ** (evidence: `e2e/g9-publish-journey-evidence.json` · รายงาน: `BMB_G9_NONMETA_OWNER_REVIEW.md` §6 — **รอ Owner G9 decision**) · fix: `.env.local` BOM ทำ supabase CLI พัง (เขียนใหม่แบบ no-BOM) |
+
+--- 
 
 ## 15. MASTER STATUS BOARD (FINAL CONFIG CLOSURE 2026-10-05) — ตาม PART 8
 
@@ -426,7 +428,7 @@ G3 · G5 · G6 (capability) · G7 (S0–S4-R2) · G8 (S0–S5, T1, T2) · G8-S5 
 | Domain | DEPLOYED | `biteme-baby.com` + `www` active, HTTP 200 |
 | Deployment | DEPLOYED | push `main` → auto Production build · wrangler manual = preview เท่านั้น |
 | Ordering | RUNTIME VERIFIED | `create_order_with_items` full path + mode/round/cutoff/capacity/method gates (w14 11 checks + fcProbe6 C) |
-| Payment | **RUNTIME VERIFIED (LIVE — config layer)** | EF secrets = **LIVE** (`livemode=true` ยืนยันผ่าน Stripe API) + digest match + `create-checkout`/`stripe-webhook`/`stripe-refund` redeployed · **ยังไม่มี live order = เงินเข้าจริงยังไม่ verify** · GAP: โฟลว์บัตรฝั่งหน้าบ้านยังไม่มี Stripe.js (client_secret ไม่มีใคร consume) — promptpay/COD เป็น offline-confirm |
+| Payment | **RUNTIME VERIFIED (LIVE — card flow code complete)** | EF secrets = **LIVE** (`livemode=true` ยืนยันผ่าน Stripe API) + digest match + `create-checkout`/`stripe-webhook`/`stripe-refund` redeployed · **card flow ฝั่งหน้าบ้านปิดแล้ว** (`438217a`: Stripe.js + `CardPaymentForm`  consume `client_secret`) · **ยังไม่มี live order = เงินเข้าจริงยังไม่ verify** · GAP เดิม (ไม่มี Stripe.js) ปิดแล้ว · promptpay/COD ยังเป็น offline-confirm |
 | Kitchen | IMPLEMENTED | AdminKitchen/batching มีครบ — ไม่ได้ re-verify รอบนี้ |
 | Delivery | RUNTIME VERIFIED | fee จาก `delivery_zones` (probe C4) · radius branch override (C3) · Bite Drive gate (C11) · method selection (C6) |
 | Tracking | IMPLEMENTED | track page + RPC/RLS (ยังไม่มี live order ใหม่ให้ track) |
@@ -439,7 +441,7 @@ G3 · G5 · G6 (capability) · G7 (S0–S4-R2) · G8 (S0–S5, T1, T2) · G8-S5 
 | G6 | RUNTIME VERIFIED | classification/draft + fail-closed validation (code path ครบตาม §7.2) |
 | G7 | RUNTIME VERIFIED | FG-01..09 + approval boundary (APPROVED ≠ PUBLISHED) |
 | G8 | RUNTIME VERIFIED | G8-S5 PASS — ห้าม rerun (reuse evidence) |
-| G9 | IMPLEMENTED (partial) | Contract + §7.2: #3/#4/#5/#7/#10 EVIDENCE COMPILED (D-03) · ห้ามประกาศ PASS — รอ Owner review |
+| G9 | IMPLEMENTED (partial — publish path RUNTIME VERIFIED) | Contract + §7.2: #3/#4/#5/#7/#10 EVIDENCE COMPILED (D-03) · **2026-10-06**: `publishWorkerProbe` 5/5 + `g9PublishJourney` 6/6 — **โพสต์จริง 2 โพสต์บนเพจจริง (PRE_ORDER + SAME_DAY) + replay idempotent + audit ครบ** (`BMB_G9_NONMETA_OWNER_REVIEW.md` §6) · ห้ามประกาศ PASS — **รอ Owner review** · ยังขาด REAL EVENT/INGEST (รอ G4/Meta) |
 | External Rider (Grab/LINE MAN/Bolt) | BLOCKED | D-04: ยังไม่ใส่ production credential (รอ Owner/ผู้ให้บริการ) |
 | Stripe LIVE | BLOCKED | รอ LIVE keys จาก Owner (W-2.1) |
 | Meta verification | BLOCKED | รอ Owner กด Verify & Save (external) |
@@ -447,6 +449,7 @@ G3 · G5 · G6 (capability) · G7 (S0–S4-R2) · G8 (S0–S5, T1, T2) · G8-S5 
 | Web notification | RUNTIME VERIFIED | notification center + `notification_dispatch` succeeded ทุกรอบ (G8-S5) |
 | Web Push (transport) | **RUNTIME VERIFIED (config/auth layer)** | migration **115 APPLIED** production · `business_settings.push_config.vapid_public_key` เขียนจริง (87 chars) · EF `push-send` **deployed** + ทดสอบจริงทุก path (401 no-auth · 400 invalid json/customer/title · 200 `no_subscriptions`) · probe `push115Probe` = **17/17 PASS** (anon ถูกปฏิเสธทุก RPC · service_role-only RPC ปิด · config ไม่รั่ว private key) · **ยังไม่ verify = การส่ง push ถึงเครื่องจริง** (ยังไม่มีอุปกรณ์ subscribe) |
 | SMS (transport) | MISSING | ยังไม่มี adapter/provider/credentials (Owner เลือกเป็นช่องทางที่ 2) · schema เผื่อแล้ว (`notification_prefs.sms_enabled`) |
+| Meta publish transport (G4/G9) | **RUNTIME VERIFIED** | แอปใหม่ `1737887467512190` (LIVE) · Page token long-lived (`expires=never`) scope ครบรวม **`pages_manage_posts`** (debug_token) · EF `social-publish-worker` deployed + secrets อัปเดต · negative probe 5/5 · **journey จริง 6/6** (publish 2 + replay idempotent 2 + audit 2) · evidence `e2e/g9-publish-journey-evidence.json` — โพสต์ทดสอบบนเพจ 3 รายการรอ Owner สั่งลบ |
 
 **E2E chain (PART 9 ตรวจแยก — ห้ามสร้าง transaction จริงเพื่อพิสูจน์):**
 
@@ -484,8 +487,8 @@ G3 · G5 · G6 (capability) · G7 (S0–S4-R2) · G8 (S0–S5, T1, T2) · G8-S5 
 | 1 | **Web Push** | ✅ **โค้ด + migration + secrets + EF deploy เสร็จ** · probe 17/17 · gates 517/517 BUILD0 | เหลือ**ทดสอบส่งถึงเครื่องจริง** (เปิดเว็บ → อนุญาต Push → สั่งของจริง) |
 | 2 | **SMS** | ⬜ adapter/provider ยังไม่มี | SMS provider + credentials |
 | 5 | **ระบบแอดมิน** | ⬜ ยังไม่สำรวจ gap | — |
-| 3b | **G9 Non-Meta** | ✅ **PROBE 21/21 PASS** (`e2e/g9NonMetaProbe.cjs` · live state สะอาด: FAILED/RETRYABLE/PROCESSING = 0/0/0 · 0 violations ของ G6 boundary) — รายงานยื่น Owner ที่ **`BMB_G9_NONMETA_OWNER_REVIEW.md`** · **ยังไม่ปิด G9** (รอ Meta + รอ Owner approve ตาม §10.7) · **3 คำถามถึง Owner**: (1) อนุมัติ implement Meta write path ใหม่? (2) กำหนดจำนวน journey runs + ระยะเวลาเก็บ evidence (§9 PROPOSED) (3) ยืนยันผ่าน Non-Meta ส่วนนี้หรือยัง |
-| 6 | Stage A Stripe LIVE | 🔒 รอยืนยันตัวตน Stripe | LIVE keys + webhook |
+| 3b | **G9** | ✅ **Non-Meta probe 21/21 + publish path RUNTIME VERIFIED (2026-10-06): worker negative 5/5 · REAL journey 6/6 = โพสต์จริง 2 โพสต์ (PRE_ORDER + SAME_DAY) + replay idempotent + audit ครบ** · รายงาน = **`BMB_G9_NONMETA_OWNER_REVIEW.md` (§6)** · **ยังไม่ปิด G9** (รอ Owner approve §10.7 + REAL EVENT รอ G4) · **คำถามถึง Owner**: (1) G9 decision (2) จำนวน journey runs + ระยะเวลาเก็บ evidence (§9 PROPOSED) (3) สั่งลบโพสต์ทดสอบบนเพจ 3 รายการเมื่อตรวจเสร็จ |
+| 6 | Stage A Stripe LIVE | 🔶 LIVE keys แล้ว + **card flow ฝั่งหน้าบ้านเสร็จ (`438217a`)** — เหลือ **live webhook endpoint ใน Stripe Dashboard** + live order แรก | รอยืนยันตัวตน Stripe/Owner ตั้ง webhook |
 | 7 | Stage D Bite Drive pilot | 🔒 ตามลำดับเดิม | order จริง ≤5 กม. |
 | 8 | Stage E Open Shop Gate | 🔒 | **Owner ตัดสินเท่านั้น** |
 | ไวท์ลาเบล | ทุกค่าใน §4.1 ต้องแอดมินปรับได้ทั้งหมด (คำสั่ง Owner) |
