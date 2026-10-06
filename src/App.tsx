@@ -206,6 +206,9 @@ export default function App() {
         <Route path="/admin/orders" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminNav><AdminOrders /></AdminNav></Layout></AdminRoute></Suspense>} />
         <Route path="/admin/products" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminNav><AdminProducts /></AdminNav></Layout></AdminRoute></Suspense>} />
         <Route path="/admin/menu-schedule" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminNav><AdminMenuSchedule /></AdminNav></Layout></AdminRoute></Suspense>} />
+        <Route path="/admin/pre-orders" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminNav><AdminPreOrders /></AdminNav></Layout></AdminRoute></Suspense>} />
+        <Route path="/admin/kitchen" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminNav><AdminKitchen /></AdminNav></Layout></AdminRoute></Suspense>} />
+        <Route path="/admin/recipes" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminNav><AdminRecipes /></AdminNav></Layout></AdminRoute></Suspense>} />
 
         <Route path="/admin/content-approvals" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminNav><AdminContentApprovals /></AdminNav></Layout></AdminRoute></Suspense>} />
         <Route path="/admin/audit-log" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminNav><AuditLogPage /></AdminNav></Layout></AdminRoute></Suspense>} />
