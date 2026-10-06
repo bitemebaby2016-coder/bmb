@@ -224,7 +224,7 @@ CONNECTED แล้วทั้งระบบ: NS Cloudflare (carlane/eoin) · 
 | W-1.3 | แก้โดเมนในโค้ด | ✅ DONE 2026-10-05 | เหลือโดเมนเก่า = 0 · TSC=0 · LINT=0 · BUILD=0 |
 | W-1.4(+b/c) | Admin configurability | ✅ DONE 2026-10-05 | migration 112/113/114 + platformConfigBootstrap · HARD STOP ปิดครบ · w14 probe PASS |
 | W-1.5 | redeploy channel-webhook (ข้อความไทย) | ✅ DONE 2026-10-05 | v11 ACTIVE |
-| W-1.6 | ลบ `BMB_TEST_*` ออกจาก production secrets | ⏸ BLOCKED — `SUPABASE_ACCESS_TOKEN` หมดอายุ (Management API + CLI ทั้งคู่ 401) — **รอ Owner สร้าง access token ใหม่** (`e2e/w16TestSecretsClean.cjs` พร้อมรัน `--delete`) |
+| W-1.6 | ลบ `BMB_TEST_*` ออกจาก production secrets | ✅ **DONE 2026-10-06** — verified clean: 22 secrets ทั้งหมดจำเป็น (Stripe/Meta/Channel/VAPID/automation) ไม่มี BMB_TEST_* หลงเหลือ (`e2e/w16TestSecretsClean.cjs`) |
 
 ### PHASE 1 — เปิดร้านรับเงินจริง
 
@@ -232,7 +232,7 @@ CONNECTED แล้วทั้งระบบ: NS Cloudflare (carlane/eoin) · 
 |---|---|---|---|
 | W-2.1 | Stripe LIVE: keys ✅ (3a6cba3) · card flow ✅ (438217a) — **เหลือ register live webhook** | ⏳ ค้าง webhook | Owner + AI DEV |
 | W-2.2 | Live acceptance: สั่งจริง → ครัว → Bite Drive → delivered → refund | ⬜ หลัง W-2.1 | Owner จ่าย + AI DEV ตรวจ |
-| W-2.3 | แจ้งเตือน: SMS — **โค้ดวางเตรียมแล้ว (Owner 2026-10-06)**: EF `sms-send` (provider-agnostic generic HTTP, honest 503 จนกว่ามี credentials · resolve phone server-side · ยึด `sms_enabled`) + `_shared/sms.ts` + tests 5/5 | ⏳ รอ Owner: SMS provider credential (`SMS_PROVIDER/SMS_API_URL/SMS_API_KEY`) → deploy EF |
+| W-2.3 | แจ้งเตือน: SMS — **โค้ด + DEPLOY + runtime verified (2026-10-06)**: EF `sms-send` deployed (unauth 401 · service-role 503 honest "not configured") · resolve phone server-side · ยึด `sms_enabled` | ⏳ รอ Owner: SMS provider credential (`SMS_PROVIDER/SMS_API_URL/SMS_API_KEY`) → probe จริง |
 | W-2.4 | เปิดร้านจริง (ประกาศ Open Shop) | ⬜ หลังข้อ 1–3 ผ่าน | Owner |
 
 ### PHASE 2 — ไรเดอร์ภายนอก (D-04)
@@ -287,7 +287,8 @@ G3 · G5 · G6 (capability) · G7 · G8 (+S5) · G9 (2026-10-06) · G9 contract 
 **ทำขนานกันได้ 3 ทาง:**
 1. **Owner (G4):** รอ Meta ปลดล็อก → add Pual เป็น **Tester** บน app-roles/ → Pual คอมเมนต์/DM ใหม่ → รัน `node e2e/g4CheckRealEvents.cjs` (หมายเหตุ: Meta ปิดสร้าง Test User + ล็อก add role ชั่วคราว — ชดเชยด้วย simulated delivery 9/9 แล้ว ดู §5.1)
 2. **Owner (Stripe):** รอบัญชีผ่าน Review (2–3 วัน) → register live webhook → live acceptance (W-2.1/W-2.2)
-3. **AI DEV:** gates (TSC0/LINT0/VITEST/BUILD) → commit+push งานรอบนี้ (migration 117 + probes + env merge) — กำลังทำ
+3. **AI DEV:** G10 TRUE PRODUCTION CLOSURE (ตามกฎ W-4.4) — งานที่ dev ทำเองหมดแล้ว ยกเว้น: SMS credential (Owner) · push เครื่องจริง (Owner) · Stripe review (Owner) · backup (ตัวเลือก: (ก) ติดตั้ง Docker Desktop ที่เครื่อง dev แล้ว AI DEV รัน `supabase db dump` ตามรอบ (ข) อัปเกรด Supabase Pro plan เพื่อ automatic daily backup + PITR)
+4. **Owner (backup):** เลือกตัวเลือกจากข้อ 3 — Free plan ไม่มี automatic backup; ทางเร็วสุดคือติดตั้ง Docker Desktop แล้วให้ AI DEV จัด dump ตามรอบ
 
 ---
 
@@ -295,5 +296,6 @@ G3 · G5 · G6 (capability) · G7 · G8 (+S5) · G9 (2026-10-06) · G9 contract 
 
 - 2026-10-05: W-1.1..W-1.5 ปิด · G9 ส่วน non-Meta ทำได้ (D-03) · โดเมน + deploy pipeline พร้อม
 - 2026-10-06: G9 CLOSED (Owner อนุมัติ PASS — journey 11 stages · failure matrix 12/12 · publish จริง 6/6 · gates TSC0/LINT0/VITEST 522/BUILD0) · Meta app#2 ใหม่ LIVE + page token long-lived · push 115 + EF push-send deployed (probe 17/17) · card flow Stripe.js LIVE · GAP A-1 ปิด (116) · **ค้นพบ channel-intake drift → migration 117 authored → Owner อนุมัติ → APPLIED + VERIFIED (probe 15/15, test orders cancelled)** · โพสต์ทดสอบบนเพจ Owner ลบแล้ว · **G4: Meta ปิด Test User + ล็อก add role ชั่วคราว → ชดเชยด้วย simulated delivery `g4SimulatedDelivery` 9/9** (postback + order + comment + duplicate → DB ครบ · g4CheckRealEvents เห็น rows) · **Stripe: บัญชี Review in progress 2–3 วัน — LIVE รออนุมัติ**
-- **ค้างทั้งหมด:** Stripe review → live webhook + acceptance · push เครื่องจริง · SMS credential · W-1.6 (รอ access token ใหม่) · G10
+- **ค้างทั้งหมด:** Stripe review → live webhook + acceptance · push เครื่องจริง · SMS credential · backup อัตโนมัติ (เครื่อง dev ไม่มี Docker/pg_dump — ดูตัวเลือกใน §13) · G10
+- 2026-10-06 (รอบ 4): Owner สร้าง access token ใหม่ (`bmb-dev-2026-10` exp 05 Nov 2026) → **W-1.6 DONE** (secrets 22 รายการ verified clean ไม่มี BMB_TEST_*) · **migration history RECONCILED 117/117** (เติม 035+104–117 เข้า supabase_migrations หลัง verify objects จริงใน prod → **`db push` ปลดล็อก อย่ากด --include-all อีกต่อไป**) · **`sms-send` DEPLOYED + runtime verified** (W-2.3) · backup: `supabase db dump` ติดเพราะเครื่อง dev ไม่มี Docker Desktop/pg_dump (BLOCKED — ตัวเลือกอยู่ §13)
 - 2026-10-06 (รอบ 3): **G4 CLOSED** (Owner ยอมรับ simulated 9/9 — Meta unblock/Test User เลื่อน backlog) · **W-3.4 Bolt ตัดออก** (Owner: ไม่ใช้แล้ว) · **W-1.6 BLOCKED** (SUPABASE_ACCESS_TOKEN หมดอายุ — รอ Owner token ใหม่; script `w16TestSecretsClean.cjs` พร้อม) · **หน้าแรก: หมวดที่แอดมินเพิ่มโชว์เสมอ** — CategorySections เรนเดอร์หมวด active ทุกหมวดตาม sort_order ก่อนเซกชันรีวิว, หมวดที่ยังไม่มีสินค้าแสดง empty "เร็ว ๆ นี้" (แก้: หมวด "สินค้าสำเร็จรูป" เคยถูกซ่อนเพราะ 0 สินค้า) + tests 3/3 · **W-2.3 โค้ด SMS วางเตรียม**: EF `sms-send` + `_shared/sms.ts` + tests (รอ credentials) · gates TSC0/LINT0/VITEST 527/BUILD0
