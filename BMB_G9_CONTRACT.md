@@ -210,11 +210,11 @@ OWNER DECISIONS ระหว่างทาง
 ## 14. CURRENT STAGE / NEXT STAGE
 
 ```text
-G9 CURRENT STAGE = CONTRACT DRAFT (เอกสารนี้) — รอ Owner review
-G9 NEXT STAGE    = หลัง Owner อนุมัติ/แก้ contract → S-stage breakdown (รอ Owner กำหนด ห้ามออกแบบเอง)
-G9 IMPLEMENTATION = NOT STARTED
-PRODUCTION MUTATION = NO
+G9 CURRENT STAGE = CLOSED — PASS (Owner approved 2026-10-06, §10.7)
+G9 NEXT STAGE    = G4 (Real Meta Verification — inbound REAL EVENT) ตาม spine §2
+G9 FINAL REPORT  = BMB_G9_FINAL_REPORT.md (committed)
+PRODUCTION MUTATION = YES (Owner-approved: EF social-publish-worker + 2 real posts 2026-10-06)
 MIGRATION = NO
 ```
 
-**HARD STOP — รอ Owner review ของ `BMB_G9_CONTRACT.md`**
+**ปิดแล้วตาม §10.7 — Owner อนุมัติ 2026-10-06: "G9 decision อนุมัติทำครบ ตามกฏ ทดสอบผ่านทั้งหมด"**

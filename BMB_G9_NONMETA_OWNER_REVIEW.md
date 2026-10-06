@@ -1,6 +1,6 @@
 # BMB — G9 NON-META VERIFICATION REPORT (D-03) · 2026-10-05
 
-**สถานะเอกสาร:** รายงานเพื่อ**ยื่น Owner review** — **ไม่ใช่การประกาศ G9 PASS** (contract §10.7: *Owner อนุมัติ report ก่อนปิด G9 — AI ห้ามประกาศเอง*)
+**สถานะเอกสาร:** ✅ **OWNER APPROVED 2026-10-06** ("G9 decision อนุมัติทำครบ ตามกฏ ทดสอบผ่านทั้งหมด") — ปิด G9 ตาม contract §10.7 → ผลสรุปอยู่ที่ **`BMB_G9_FINAL_REPORT.md`** (PASS)
 **HEAD:** `816994b` · worktree CLEAN · gates: TSC0 / LINT0 / VITEST **517/517** / BUILD0
 **Scope:** G9 ส่วนที่**ไม่ต้องใช้ Meta real event** ตามมติ D-03 · reuse G5/G6/G7/G8 · **ไม่ rerun G8-S5** · **ไม่แตะ Meta** · **ไม่สร้าง event จริง** — *อัปเดต 2026-10-06: รอบ 2 (§6) เพิ่ม REAL PUBLISH 2 โพสต์ตามคำสั่ง Owner โดยตรง (deploy worker + G9 journey) — ยังไม่ประกาศ PASS*
 
