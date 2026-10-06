@@ -124,10 +124,10 @@ SECRETS  Stripe(LIVE)/OpenRouter/AUTOMATION_TOKEN/CHANNEL_WEBHOOK_*/META_* ม�
 | Page token | ✅ long-lived `expires=never` · อยู่ใน EF secrets + `.env.local` (mirrored) |
 | Page binding | RUNTIME VERIFIED — page `862940416913026` → tenant-bmb-001 (FACEBOOK + MESSENGER) |
 | Publish (reply/post) | ✅ **RUNTIME VERIFIED จริง** — social-publish-worker deployed · negative probe 5/5 · g9PublishJourney 6/6 (โพสต์จริง 2 + replay idempotent + audit) · **เปิดตาม G9 ที่ Owner อนุมัติแล้ว** · โพสต์ทดสอบ 3 รายการรอ Owner ลบ |
-| Webhook receive (G4 feed) | ⚠️ **HOLD — EXTERNAL** · root cause ยืนยันแล้ว: Development mode ส่ง webhook เฉพาะ user ที่มี role ใน `GET /{app}/roles` (BM access/page role ไม่นับ) · ตรวจวันนี้: roles = administrators เท่านั้น · comment จริง 3 รายการ (07:44–08:04Z) ไม่เข้า webhook ตามคาด |
-| สิ่งที่ Owner ต้องทำ (G4) | (1) Pual สมัคร Facebook Developer Account (developers.facebook.com → Get Started) (2) Owner add Pual เป็น **Tester** บน app-roles/ (error เดิมจะหาย) (3) Pual คอมเมนต์ใหม่ → รัน `node e2e/g4CheckRealEvents.cjs` |
-| Messenger receive (G4) | ยังไม่เริ่ม — หลัง feed ผ่าน: re-issue token w/ `pages_messaging` → subscribe `messages`,`message_deliveries` → Pual DM → verify |
-| ทำต่อได้โดยไม่รอ Meta | — (ที่ทำได้ทำแล้วหมด) |
+| Webhook receive (G4 feed) | ⚠️ **HOLD — EXTERNAL (Meta lock ชั่วคราว)** · root cause ยืนยันแล้ว: Development mode ส่ง webhook เฉพาะ user ที่มี role ใน `GET /{app}/roles` (BM access/page role ไม่นับ) · **Meta ปิดสร้าง Test User + ล็อกการ add role ชั่วคราว** (roles = administrators เท่านั้น) · **ชดเชยแล้ว: simulated delivery ผ่าน endpoint ตรง = `g4SimulatedDelivery` 9/9** (Messenger postback + order message + FB feed comment + duplicate idempotent → social_events + orders + identities ครบ) |
+| สิ่งที่ Owner ต้องทำ (G4) | **เมื่อ Meta ปลดล็อก:** add Pual เป็น **Tester** บน app-roles/ (Pual ติดสิทธิ์ Admin ครบอยู่แล้ว — Meta ล็อกไม่ให้เพิ่มบทบาทซ้ำ) → Pual คอมเมนต์/DM ใหม่ → รัน `node e2e/g4CheckRealEvents.cjs` (ยืนยันแล้วว่า script + intake→DB ทำงานถูกต้องกับ simulated rows) |
+| Messenger receive (G4) | intake path ผ่าน simulated delivery แล้ว (postback + order message) · เหลือ real DM: re-issue token w/ `pages_messaging` → subscribe `messages`,`message_deliveries` → Pual DM → verify |
+| ทำต่อได้โดยไม่รอ Meta | — (ที่ทำได้ทำแล้วหมด — simulated delivery ครอบคลุม receive path ทั้งหมด) |
 
 ### 5.3 อื่น ๆ
 
@@ -188,7 +188,7 @@ SECRETS  Stripe(LIVE)/OpenRouter/AUTOMATION_TOKEN/CHANNEL_WEBHOOK_*/META_* ม�
 | External Rider API | NOT CONNECTED | provider_orders 0 | NO สำหรับร้าน (≤5 กม. ใช้ Bite Drive) | **EXTERNAL**: Grab/LINE MAN key + ย้าย adapter | W-3.1→W-3.3 · Bolt = W-3.4 |
 | Notifications | in-app ✅ · push config ✅ · SMS ⬜ | push-send probe 17/17 | NO (soft) | push เครื่องจริง · SMS credential | W-2.3 |
 | Test data hygiene | ✅ RESOLVED | active = 0 (D-02) | NO | — | ลบโพสต์ทดสอบบนเพจ (Owner) |
-| Facebook/Meta | G4 HOLD — EXTERNAL | roles = admins เท่านั้น | YES สำหรับ real event | Owner: Pual Tester + comment ใหม่ | W-4.2/W-4.3 |
+| Facebook/Meta | G4 HOLD — EXTERNAL (Meta ปิด Test User + ล็อก add role ชั่วคราว) | roles = admins เท่านั้น · **simulated delivery 9/9 ชดเชยแล้ว** | YES เมื่อ Meta ปลดล็อก | Owner: add Pual Tester เมื่อปลดล็อก | W-4.2/W-4.3 |
 | G3/G5/G6/G7/G8 | ✅ PASS/COMPLETE — ห้ามทำซ้ำ | reports | NO | — | — |
 | G9 | ✅ **CLOSED — PASS (Owner อนุมัติ 2026-10-06)** | BMB_G9_FINAL_REPORT.md | NO | — | ห้าม rerun |
 | G10 | NOT STARTED | — | — | G4 + Phase 1 | W-4.4 ท้ายสุด |
@@ -285,7 +285,7 @@ G3 · G5 · G6 (capability) · G7 · G8 (+S5) · G9 (2026-10-06) · G9 contract 
 ## 13. NEXT REQUIRED ACTION
 
 **ทำขนานกันได้ 3 ทาง:**
-1. **Owner (G4):** (1) Pual สมัคร Facebook Developer Account (2) add Pual เป็น **Tester** บน app-roles/ (3) Pual คอมเมนต์ใหม่ → รัน `node e2e/g4CheckRealEvents.cjs` → จากนั้นฝั่ง messenger (§5.2)
+1. **Owner (G4):** รอ Meta ปลดล็อก → add Pual เป็น **Tester** บน app-roles/ → Pual คอมเมนต์/DM ใหม่ → รัน `node e2e/g4CheckRealEvents.cjs` (หมายเหตุ: Meta ปิดสร้าง Test User + ล็อก add role ชั่วคราว — ชดเชยด้วย simulated delivery 9/9 แล้ว ดู §5.1)
 2. **Owner (Stripe):** รอบัญชีผ่าน Review (2–3 วัน) → register live webhook → live acceptance (W-2.1/W-2.2)
 3. **AI DEV:** gates (TSC0/LINT0/VITEST/BUILD) → commit+push งานรอบนี้ (migration 117 + probes + env merge) — กำลังทำ
 
@@ -294,5 +294,5 @@ G3 · G5 · G6 (capability) · G7 · G8 (+S5) · G9 (2026-10-06) · G9 contract 
 ## 14. STATUS รวมย่อ (แทน EXEC LOG เดิมทั้งหมด)
 
 - 2026-10-05: W-1.1..W-1.5 ปิด · G9 ส่วน non-Meta ทำได้ (D-03) · โดเมน + deploy pipeline พร้อม
-- 2026-10-06: G9 CLOSED (Owner อนุมัติ PASS — journey 11 stages · failure matrix 12/12 · publish จริง 6/6 · gates TSC0/LINT0/VITEST 522/BUILD0) · Meta app#2 ใหม่ LIVE + page token long-lived · push 115 + EF push-send deployed (probe 17/17) · card flow Stripe.js LIVE · GAP A-1 ปิด (116) · **ค้นพบ channel-intake drift → migration 117 authored → Owner อนุมัติ → APPLIED + VERIFIED (probe 15/15, test orders cancelled)** · โพสต์ทดสอบบนเพจ Owner ลบแล้ว · G4 = HOLD — รอ Owner เพิ่ม Pual เป็น Tester · **Stripe: บัญชี Review in progress 2–3 วัน — LIVE รออนุมัติ**
-- **ค้างทั้งหมด:** G4 (Owner/Meta) · Stripe review → live webhook + acceptance · push เครื่องจริง · SMS · Bolt adapter · W-1.6 test secrets · G10
+- 2026-10-06: G9 CLOSED (Owner อนุมัติ PASS — journey 11 stages · failure matrix 12/12 · publish จริง 6/6 · gates TSC0/LINT0/VITEST 522/BUILD0) · Meta app#2 ใหม่ LIVE + page token long-lived · push 115 + EF push-send deployed (probe 17/17) · card flow Stripe.js LIVE · GAP A-1 ปิด (116) · **ค้นพบ channel-intake drift → migration 117 authored → Owner อนุมัติ → APPLIED + VERIFIED (probe 15/15, test orders cancelled)** · โพสต์ทดสอบบนเพจ Owner ลบแล้ว · **G4: Meta ปิด Test User + ล็อก add role ชั่วคราว → ชดเชยด้วย simulated delivery `g4SimulatedDelivery` 9/9** (postback + order + comment + duplicate → DB ครบ · g4CheckRealEvents เห็น rows) · **Stripe: บัญชี Review in progress 2–3 วัน — LIVE รออนุมัติ**
+- **ค้างทั้งหมด:** G4 real event (รอ Meta ปลดล็อก) · Stripe review → live webhook + acceptance · push เครื่องจริง · SMS · Bolt adapter · W-1.6 test secrets · G10
