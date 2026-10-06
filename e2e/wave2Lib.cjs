@@ -20,9 +20,23 @@ const crypto = require('crypto')
 
 function readSecrets() {
   const out = {}
-  for (const line of fs.readFileSync(SECRETS_PATH, 'utf8').split(/\r?\n/)) {
-    const m = line.match(/^([A-Z0-9_]+)=(.*)$/)
-    if (m && m[2]) out[m[1]] = m[2]
+  // 1) project .env.local (lowest precedence — client/build + Meta keys live here)
+  try {
+    for (const line of fs.readFileSync(path.join(process.cwd(), '.env.local'), 'utf8').split(/\r?\n/)) {
+      const m = line.match(/^\s*([A-Za-z0-9_]+)\s*=\s*(.*)\s*$/)
+      if (m && !line.trim().startsWith('#') && m[2]) out[m[1]] = m[2]
+    }
+  } catch { /* optional */ }
+  // 2) supabase/secrets.local.env (gitignored — server secrets; overrides .env.local)
+  try {
+    for (const line of fs.readFileSync(SECRETS_PATH, 'utf8').split(/\r?\n/)) {
+      const m = line.match(/^([A-Z0-9_]+)=(.*)$/)
+      if (m && m[2]) out[m[1]] = m[2]
+    }
+  } catch { /* file missing — env only */ }
+  // 3) real environment variables override both files
+  for (const [k, v] of Object.entries(process.env)) {
+    if (/^[A-Z0-9_]+$/.test(k) && v) out[k] = v
   }
   return out
 }

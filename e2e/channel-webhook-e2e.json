@@ -1,5 +1,5 @@
 {
-  "date": "2026-09-27T13:33:23.550Z",
+  "date": "2026-10-06T11:08:14.965Z",
   "target": "https://ivkdfognyiwjcmrhcnwz.supabase.co/functions/v1/channel-webhook",
   "tests": [
     {
@@ -40,17 +40,17 @@
     {
       "name": "setup-round-product",
       "pass": true,
-      "detail": "round=round-w3b-test product=prod-1789607383214-t8rm95"
+      "detail": "round=round-w3c-ext-20261006 product=prod-4"
     },
     {
       "name": "messenger-order-intake",
       "pass": true,
-      "detail": "status=200 channel=MESSENGER order=BMB-20260927-181 body={\"status\":200,\"body\":{\"order_number\":\"BMB-20260927-181\",\"duplicate\":false}}"
+      "detail": "status=200 channel=MESSENGER order=BMB-20261006-154 body={\"status\":200,\"body\":{\"order_number\":\"BMB-20261006-154\",\"duplicate\":false}}"
     },
     {
       "name": "messenger-order-row-tagged",
       "pass": true,
-      "detail": "rows=1 ref=msg-f14-mid-1790516003549"
+      "detail": "rows=1 ref=msg-f14-mid-1791284894965"
     },
     {
       "name": "duplicate-event-idempotent",

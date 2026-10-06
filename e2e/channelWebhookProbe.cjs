@@ -14,6 +14,9 @@ const { SB, ANON, SERVICE, S, api, login, rpc } = require('./wave2Lib.cjs')
 const FN = SB + '/functions/v1/channel-webhook'
 const SECRET = S.CHANNEL_WEBHOOK_APP_SECRET
 const TOKEN = S.CHANNEL_WEBHOOK_VERIFY_TOKEN
+// Real page id — must exist in channel_page_bindings (G3 HC-1 allowlist);
+// synthetic page ids are rejected as page_unbound by design.
+const PAGE = '862940416913026'
 const ts = Date.now()
 
 const sign = (body) => 'sha256=' + crypto.createHmac('sha256', SECRET).update(body).digest('hex')
@@ -65,11 +68,24 @@ const sig = (body) => ({ 'x-hub-signature-256': sign(body) })
   const u4e = u4.j && u4.j.entries && u4.j.entries[0]
   t('unknown-origin-rejected', u4.status === 200 && u4e && u4e.errors.length > 0 && !u4e.channel, 'channel=' + (u4e && u4e.channel) + ' errors=' + JSON.stringify(u4e && u4e.errors))
 
-  // 6. setup: today round + product (canonical contract)
-  const today = new Date().toISOString().slice(0, 10)
-  const rounds = await api(SERVICE, 'GET', '/rest/v1/delivery_rounds?select=id,status,scheduled_date&limit=50')
-  const actives = (rounds.j || []).filter((r) => r.status === 'active')
-  const round = actives.find((r) => r.id === 'round-w3b-test') || actives.find((r) => (r.scheduled_date || r.date) === today) || actives[0]
+  // 6. setup: today round (cutoff ยังไม่ผ่าน) + product (canonical contract)
+  const today = new Date(Date.now() + 7 * 3600 * 1000).toISOString().slice(0, 10) // Asia/Bangkok date
+  const nowT = new Date(Date.now() + 7 * 3600 * 1000).toISOString().slice(11, 16)
+  const rounds = await api(SERVICE, 'GET', '/rest/v1/delivery_rounds?select=id,status,scheduled_date,cutoff_time,branch_id&order=scheduled_date.desc&limit=50')
+  const actives = (rounds.j || []).filter((r) => r.status === 'active' && (r.scheduled_date || r.date) === today && (r.cutoff_time || '00:00') > nowT)
+  let round = actives[0]
+  if (!round) {
+    // สร้าง test round ของวันนี้ (cutoff 23:59) — idempotent ต่อวัน
+    const rid = 'round-w3c-ext-' + today.replace(/-/g, '')
+    const br = (await api(SERVICE, 'GET', '/rest/v1/delivery_rounds?select=branch_id&limit=1')).j?.[0]?.branch_id
+    const ins = await api(SERVICE, 'POST', '/rest/v1/delivery_rounds?on_conflict=id', {
+      id: rid, display_name: 'W3C-EXT test round', name: 'W3C-EXT test round',
+      branch_id: br, scheduled_date: today, cutoff_time: '23:59:00',
+      delivery_start: '08:00:00', delivery_end: '20:00:00', status: 'active',
+    })
+    if (ins.status !== 200 && ins.status !== 201) throw new Error('create test round failed ' + ins.status + ' ' + JSON.stringify(ins.j))
+    round = { id: rid }
+  }
   const products = await api(SERVICE, 'GET', '/rest/v1/products?select=id,is_available,available_same_day&limit=50')
   const product = (products.j || []).find((p) => p.is_available !== false)
   t('setup-round-product', !!round && !!product, 'round=' + (round && round.id) + ' product=' + (product && product.id))
@@ -89,7 +105,7 @@ const sig = (body) => ({ 'x-hub-signature-256': sign(body) })
       payment_method: 'promptpay_qr',
     },
   }
-  const msgev = { id: 'page-1', time: ts, messaging: [{ sender: { id: 'ext-msgr-' + ts }, recipient: { id: 'page-1' }, timestamp: ts, message: { mid, text: JSON.stringify(orderPayload) } }] }
+  const msgev = { id: PAGE, time: ts, messaging: [{ sender: { id: 'ext-msgr-' + ts }, recipient: { id: 'page-1' }, timestamp: ts, message: { mid, text: JSON.stringify(orderPayload) } }] }
   const b2 = payload(msgev)
   const r1 = await call('', b2, sig(b2))
   const r1e = r1.j && r1.j.entries && r1.j.entries[0]
@@ -111,7 +127,7 @@ const sig = (body) => ({ 'x-hub-signature-256': sign(body) })
     'dup_event=' + (r2e && r2e.results.duplicate_event) + ' order_dup=' + (r2e && r2e.results && r2e.results.order && r2e.results.order.body && r2e.results.order.body.duplicate) + ' rows=' + (cnt2.j || []).length)
 
   // 10. FACEBOOK page-change event (item metadata) → audited, channel=FACEBOOK
-  const fbev = { id: 'page-1', time: ts, changes: [{ field: 'feed', value: { item: 'post', post_id: 'post-' + ts, from: { id: 'ext-fbuser-' + ts } } }] }
+  const fbev = { id: PAGE, time: ts, changes: [{ field: 'feed', value: { item: 'post', post_id: 'post-' + ts, from: { id: 'ext-fbuser-' + ts } } }] }
   const b3 = payload(fbev)
   const r3 = await call('', b3, sig(b3))
   const r3e = r3.j && r3.j.entries && r3.j.entries[0]
@@ -119,7 +135,7 @@ const sig = (body) => ({ 'x-hub-signature-256': sign(body) })
     'channel=' + (r3e && r3e.channel))
 
   // 11. FACEBOOK_GROUP event (explicit group_id) → channel=FACEBOOK_GROUP
-  const grev = { id: 'page-1', time: ts, changes: [{ field: 'feed', value: { item: 'comment', group_id: 'grp-' + ts, comment_id: 'cmt-' + ts, from: { id: 'ext-fbuser-g-' + ts } } }] }
+  const grev = { id: PAGE, time: ts, changes: [{ field: 'feed', value: { item: 'comment', group_id: 'grp-' + ts, comment_id: 'cmt-' + ts, from: { id: 'ext-fbuser-g-' + ts } } }] }
   const b4 = payload(grev)
   const r4 = await call('', b4, sig(b4))
   const r4e = r4.j && r4.j.entries && r4.j.entries[0]
@@ -127,7 +143,7 @@ const sig = (body) => ({ 'x-hub-signature-256': sign(body) })
 
   // 12. concurrency: parallel identical MESSENGER order events → ONE order
   const mid2 = 'f14-mid-c-' + ts
-  const ev2 = { id: 'page-1', time: ts, messaging: [{ sender: { id: 'ext-msgr-c-' + ts }, recipient: { id: 'page-1' }, timestamp: ts, message: { mid: mid2, text: JSON.stringify(orderPayload) } }] }
+  const ev2 = { id: PAGE, time: ts, messaging: [{ sender: { id: 'ext-msgr-c-' + ts }, recipient: { id: 'page-1' }, timestamp: ts, message: { mid: mid2, text: JSON.stringify(orderPayload) } }] }
   const b5 = payload(ev2)
   const [p1, p2] = await Promise.all([call('', b5, sig(b5)), call('', b5, sig(b5))])
   await new Promise((r) => setTimeout(r, 1500))
