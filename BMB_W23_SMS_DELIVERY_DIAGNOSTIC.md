@@ -114,3 +114,38 @@ body ทุกครั้ง: `{"success":false,"status_code":404,"error":"Not 
 - Owner คัดลอกคีย์จากแผง THSMS ใหม่ (เมนู API / Settings) ให้ครบ 64 hex + prefix `thsms_`
 - ยืนยันว่า **sender `SMSOTP` ลงทะเบียนในบัญชีนั้น** (คนละ sender กับ `Direct SMS` เดิม)
 - เมื่อคีย์ถูกต้องแล้ว จึงรัน E1–E7 ซ้ำ (ยิงตรง) เพื่อวัดว่า sender `SMSOTP` ถึงเครื่องหรือไม่
+
+---
+
+## 9. อัปเดต รอบ 8g — ย้ายผู้ให้บริการไป `thsms.org`
+
+**สาเหตุย้าย:** คีย์ที่ Owner ให้เป็น **คนละบัญชี** (404 `User Not Found`) · แอดมิน SMS แนะนำเปลี่ยนเว็บใหม่ → **`https://thsms.org/dashboard`** (คนละแพลตฟอร์มกับ `thsms.com` เดิม)
+
+**API ใหม่ (จาก docs ทางการ):**
+
+| item | ค่า |
+|---|---|
+| Base URL | `https://api.thsms.org/v1` |
+| Auth | header **`X-API-Key: <key>`** (เดิมใช้ `Authorization: Bearer`) |
+| ส่ง SMS | `POST /sms/send` body `{ sender_name, recipient, message, message_type }` |
+| ยกเลิก | `POST /sms/:id/cancel` |
+| เช็กเครดิต | `GET /credits` |
+| message_type | ตัวอย่าง `superfast` (อาจมีค่าอื่น) |
+
+> **ข้อดีที่ได้เพิ่ม:** `POST /sms/send` คืน **`:id`** → สามารถ track/ยกเลิกได้ (thsms.com ไม่มี) — แก้จุดอ่อนเดิมที่ไม่มี delivery report
+
+**โค้ดที่แก้ (commit `34dd39d`):**
+- `supabase/functions/sms-send/index.ts` — เพิ่ม provider switch:
+  - `SMS_PROVIDER=thsms_org` → header `X-API-Key` + body `{ sender_name, recipient, message, message_type }`
+  - `SMS_PROVIDER=thsms` (legacy) → `Authorization: Bearer` + `{ msisdn:[to], message, sender }`
+  - เพิ่ม secret `SMS_MESSAGE_TYPE` (default `superfast`) · response คืน `provider` + `provider_body` (≤160) เพื่อวินิจฉัย
+- `e2e/w23SetSmsSecrets.cjs` — ชี้ `SMS_API_URL=https://api.thsms.org/v1/sms/send` + `SMS_PROVIDER=thsms_org`
+- `e2e/thsmsOrgProbe.cjs` (ใหม่) — ยิงตรง `GET /credits` + `POST /sms/send` 3 เบอร์ (X-API-Key)
+
+**Gates:** TSC 0 · LINT 0 · VITEST 527/527 · BUILD 0
+
+**ยังต้องได้จาก Owner (เพื่อทดสอบจริง):**
+1. **API key ของ thsms.org** (dashboard → API)
+2. **sender_name ที่ลงทะเบียน** บน thsms.org
+3. (ถ้าต้องการ) `message_type` เช่น `superfast`
+→ วางใน `.env.local`: `THSMS_API_KEY=` และ `THSMS_SENDER_NAME=` แล้วแจ้งกลับ → ผมรัน probe 3 เบอร์ + ตั้ง secrets + deploy EF
