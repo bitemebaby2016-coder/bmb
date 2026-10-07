@@ -21,7 +21,8 @@
 //   - anything else    → 202 acknowledged, no side effects
 //
 // Env (supabase secrets set ...):
-//   OMISE_WEBHOOK_SECRET, SUPABASE_URL,
+//   OMISE_WEBHOOK_SECRET_API_KEY_TEST_MODE (ชื่อตาม convention ของ owner —
+//   fallback: OMISE_WEBHOOK_SECRET), SUPABASE_URL,
 //   bmb_backend_production_supabase_service_role_key (fallback:
 //   SUPABASE_SERVICE_ROLE_KEY — same binding as stripe-webhook).
 // ============================================
@@ -103,7 +104,8 @@ Deno.serve(async (req: Request): Promise<Response> => {
 
   const payload = await req.text()
   const signature = req.headers.get('omise-signature') || ''
-  const secret = Deno.env.get('OMISE_WEBHOOK_SECRET') || ''
+  // Owner's naming convention first (…_TEST_MODE), legacy short name as fallback.
+  const secret = Deno.env.get('OMISE_WEBHOOK_SECRET_API_KEY_TEST_MODE') || Deno.env.get('OMISE_WEBHOOK_SECRET') || ''
   if (!secret) {
     return json({ error: 'ERR_WEBHOOK_NOT_CONFIGURED' }, 500)
   }
