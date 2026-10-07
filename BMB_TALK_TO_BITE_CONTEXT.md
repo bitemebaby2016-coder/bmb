@@ -96,7 +96,6 @@ chat หน้า: ทำ Omise cutover ตาม `docs/BMB_HANDOFF_AI_AUTOMOTIO
 - Tests +4 ไฟล์/+28 (signature/refund/checkout logic + cutover path) · Gates: TSC 0 · LINT 0 · VITEST 55/589 · BUILD 0
 
 ## 18. Next exact step
-1. **เจอบล็อก: คีย์ใน `.env.local` ยังเป็น placeholder** (L51/L52 มีคำว่า `REPLACE` — เจ้าของต้องวาง `pkey_test_…`/`skey_test_…` จริง) → `supabase secrets set OMISE_SECRET_API_KEY_TEST_MODE=…`
-2. สร้าง webhook ใน Omise Dashboard ชี้ `…/functions/v1/omise-webhook` → `supabase secrets set OMISE_WEBHOOK_SECRET=whsec_…`
-3. `npm run dev` → checkout บัตร test (`4242 4242 4242 4242` ของ Omise) → ผ่าน 3DS/สำเร็จ → ตรวจ `orders.payment_status='paid'` ใน DB (มาจาก webhook เท่านั้น) → ค่อยขอ live key รอบหลัง
+1. ~~คีย์ placeholder~~ ✅ คีย์จริง + webhook secret (`OMISE_WEBHOOK_SECRET_API_KEY_TEST_MODE`) วางแล้ว → `supabase secrets set` ทั้งคู่ + deploy `omise-webhook` ใหม่ → **probes ผ่าน 3/3** (sig ถูกต้อง → HMAC → RPC `record_payment_result` · Omise API 200 · dist leak 0)
+2. เหลือขั้นเดียว = **ทดสอบจ่ายบัตร test ใน browser**: `npm run dev` → checkout บัตร test Omise (`4242 4242 4242 4242`) → สำเร็จ → ตรวจ `orders.payment_status='paid'` ใน DB (ต้องมาจาก webhook เท่านั้น) → ทดสอบ admin refund → ผ่านแล้วค่อยขอ live key รอบหลัง
 

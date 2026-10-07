@@ -246,8 +246,12 @@ TSC 0 · LINT 0 · VITEST 51 files/561 · BUILD 0
 ### Gates (ผ่านจริง)
 TSC 0 · LINT 0 · VITEST **55 files/589** (+4/+28) · BUILD 0
 
-### ⚠️ ค้าง owner action (ตรวจแล้ว 2026-10-07 — ยังไม่ผ่าน)
-1. **คีย์ใน `.env.local` ยังเป็น placeholder อยู่จริง** — L51/L52 = `pkey_test_REPLACE_…`/`skey_test_REPLACE_…` (len=37 = ยาวเท่า placeholder เป๊ะ, ตรวจด้วย regex `REPLACE` = True; Windows env ก็ไม่ได้ตั้ง) → **ต้องวาง test key จริง** (Omise Dashboard → Settings → API keys → `pkey_test_…`/`skey_test_…`) แล้วแจ้งเพื่อ `supabase secrets set OMISE_SECRET_API_KEY_TEST_MODE=…`
-2. **`OMISE_WEBHOOK_SECRET` ยังไม่มี** — สร้าง webhook endpoint ใน Omise Dashboard ชี้ `https://ivkdfognyiwjcmrhcnwz.supabase.co/functions/v1/omise-webhook` (event: charge.* + refund.*) แล้วคัดลอก signing secret (ขึ้นต้น `whsec_`) → `supabase secrets set`
-3. ครบแล้วค่อย ทดสอบจ่ายบัตร test ใน browser → ผ่านแล้วขอ live key (รอบหลัง)
+### ✅ Owner action ทำครบแล้ว (รอบ 15 ต่อ) — secrets set + runtime probes ผ่าน 3/3
+1. **คีย์จริง + webhook secret วางแล้ว** — เจ้าของตั้งชื่อ `OMISE_WEBHOOK_SECRET_API_KEY_TEST_MODE` ตาม convention `_TEST_MODE` → EF แก้ให้อ่านชื่อนี้ก่อน (fallback `OMISE_WEBHOOK_SECRET`) + deploy ใหม่ · `supabase secrets set` ทั้งคู่ exit 0 · sync `supabase/secrets.local.env`
+2. **Runtime probes production ผ่าน 3/3**: ไม่มี signature → `400 ERR_INVALID_SIGNATURE` (secret ทำงาน — ก่อนหน้าเป็น 500) · signature ถูกต้อง (order ปลอม) → **ผ่าน HMAC → เรียก RPC `record_payment_result` → 400 ERR_ORDER_NOT_FOUND** (chain ครบ ไม่มี side effect) · Omise API `GET /charges` → **200** (secret key ใช้ได้จริง)
+3. **Leak check dist**: `pkey_test_` (client-safe, จำเป็น) มี · `skey_test_` / webhook secret / placeholder = **0** ✅
+4. บันทึกบั๊ก: probe แรกพลาดเพราะ **`Get-Date -UFormat %s` ของ Windows PowerShell 5.1 คืน epoch ผิด +7 ชม. (25,200 วิ)** — ใช้ `[DateTimeOffset]::Now.ToUnixTimeSeconds()` แทน · ฝั่ง EF ไม่มีปัญหา
+5. Gates รันซ้ำผ่าน: TSC 0 · LINT 0 · VITEST 55/589 · BUILD 0
+
+### ⬜ เหลือขั้นเดียว: ทดสอบจ่ายบัตร test ใน browser (handoff §8) → ผ่านแล้วค่อยขอ live key (รอบหลัง)
 

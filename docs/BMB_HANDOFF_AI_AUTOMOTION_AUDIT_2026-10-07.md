@@ -88,7 +88,7 @@
 เส้น Stripe เดิมยังเป็น fallback เมื่อคีย์ Omise ยังไม่ถูกตั้งค่าจริง · สลับอัตโนมัติตาม env (ไม่ hard-switch)
 
 ลำดับ cutover:
-1. ⬜ **Owner วาง test key จริง** ใน `.env.local` + `supabase secrets set OMISE_SECRET_API_KEY_TEST_MODE=…` (secret ห้ามอยู่ client) — **ยังเป็น placeholder อยู่จริง (ตรวจแล้ว 2026-10-07: `REPLACE` ยังอยู่ทั้งคู่)** + เพิ่ม: สร้าง webhook ใน Omise Dashboard ชี้ `…/functions/v1/omise-webhook` แล้ว `supabase secrets set OMISE_WEBHOOK_SECRET=whsec_…`
+1. ✅ **Owner วาง test key จริง + webhook secret แล้ว** (ชื่อเว็บฮุก `OMISE_WEBHOOK_SECRET_API_KEY_TEST_MODE` ตาม convention owner — EF อ่านชื่อนี้ก่อน fallback) → `supabase secrets set` ทั้งคู่ + deploy `omise-webhook` ใหม่ + **runtime probes ผ่าน 3/3** (ไม่มี sig → 400 · sig ถูก → ผ่าน HMAC → RPC → 400 ERR_ORDER_NOT_FOUND · Omise API GET → 200) + dist leak check = 0
 2. ✅ **EF `omise-checkout`**: อ่าน secret key, re-derive amount จาก DB (ห้าม trust client), เรียก Omise Charges API (card token / return_uri) → คืน charge id / authorize_uri — **deploy แล้ว + probe ผ่าน**
 3. ✅ **Client `CardPaymentForm`**: Omise.js สร้าง card token → ส่งเข้า `omise-checkout` → redirect 3DS `authorize_uri`
 4. ✅ **EF `omise-webhook`**: ตรวจ `Omise-Signature` (HMAC-SHA256) → `record_payment_result` (RPC เดิม idempotent) — **deploy แล้ว + probe ผ่าน**
@@ -124,7 +124,7 @@
 - [ ] voice states ใน Bite Hero (`error`/`device`)
 - [ ] voice E2E (mock)
 ### 7.3 Payment (สำคัญ — ตาม §5)
-- [ ] owner วาง Omise test key จริง + `supabase secrets set` — **ยัง placeholder (ตรวจแล้ว 2026-10-07)** + `OMISE_WEBHOOK_SECRET` จาก Omise Dashboard
+- [x] owner วาง Omise test key จริง + `supabase secrets set` (ทั้งคู่: secret key + `OMISE_WEBHOOK_SECRET_API_KEY_TEST_MODE`) — runtime probes ผ่าน 3/3 · dist leak 0
 - [x] EF `omise-checkout` + `omise-webhook` + refund (deploy แล้ว 3/3 · probe ผ่าน)
 - [x] `CardPaymentForm` → Omise.js · `paymentGateway` → omise (env-driven, fallback Stripe ยังทำงาน)
 - [x] แทนที่ stripe tests ด้วย omise tests (เพิ่มชุด omise 4 ไฟล์ +28 — stripe tests คงไว้คุม fallback)
@@ -155,6 +155,7 @@ npm run dev
 ## 9. Git
 - HEAD: `local == remote` หลัง push รอบนี้
 - Gates: TSC 0 · LINT 0 · VITEST 55 files/589 · BUILD 0 · EF deploy 3/3 (`omise-checkout`/`omise-webhook`/`omise-refund`) + probe ผ่าน
+- Omise runtime (production): secrets set แล้ว (secret key + webhook signature) · HMAC→RPC chain พิสูจน์จริง · Omise API key ใช้ได้ · dist leak 0
 
 ---
 *จัดทำโดย Cline (AI) — handoff สำหรับพัฒนระบบต่อ*
