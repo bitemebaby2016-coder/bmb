@@ -42,7 +42,22 @@
 | **ราก Omise** (env keys + client config + tests) | `.env.local`/`vite.config`/`src/lib/omise.ts` | รอบ 14 · omise.test 4/4 |
 | **Omise cutover — code ครบ (steps 2–7)** (EF 3 ตัว deploy+probe · paymentGateway omise · OmiseCardForm · tests +28) | `supabase/functions/omise-*` · `paymentGateway.ts` · `CardPaymentForm.tsx` | **รอบ 15** · probe 3/3 · VITEST 55/589 |
 | Gates green | `tsc 0 · lint 0 · vitest 55/589 · build 0` | ✅ |
----
+
+### 2.1 ชั้น B — สถานะ Automation (อัปเดตรอบ 15 · EF ACTIVE = Management API จริง)
+| ระบบ | สถานะ | หลักฐาน |
+|---|---|---|
+| Inventory auto-deduct | ✅ DONE | migration `026` + `inventory_transactions` · job `inventory_low_stock` รันอัตโนมัติจริง (G8-S5: 4 runs success) · `inventoryAdmin.test` ผ่าน |
+| Kitchen auto-queue | ✅ DONE | `kitchenService`/`kitchenControl` + ready-to-make gate (054) · tests ผ่าน · ผ่าน queue จริง `queue-enqueue` → `claim_automation_jobs` → `queue-dispatcher` |
+| Delivery auto-dispatch | ✅ DONE | `deliveryRouter`/`delivery_assignments` (020) + migration 116 (GAP A-1 ปิดแล้ว) · `dispatchContract`/`deliveryRouter` tests ผ่าน |
+| Availability Engine | ✅ DONE | `availabilityEngine` (same_day/preorder) · test ผ่าน |
+| Webhook idempotent → **Omise** | ✅ **DONE รอบ 15** | EF `omise-webhook` ACTIVE + probes 3/3 · RPC `record_payment_result` idempotent เดิม (ไม่แตะ migration) · Stripe คงเป็น fallback |
+| SMS transport | ✅ **LIVE (รอบ 8h, 2026-10-07)** | thsms.org · EF `sms-send` ACTIVE · probe 3/3 · `message_type=standard` = 1 เครดิต/ข้อความ · `smsTransport.test` ผ่าน |
+| Automation queue runtime (G8 S0–S5) | ✅ PASS | G8-S5: 28 executions success · 0 duplicate (migration 111) · allowlist/dual-path/security ผ่าน · `automation-worker`/`queue-enqueue`/`queue-dispatcher` = ACTIVE |
+| Push transport | ✅ (ข้อจำกัดเล็ก) | migration 115 + EF `push-send` ACTIVE · probe 17/17 — เครื่องจริงยังไม่ทดสอบ (ตาม master status) |
+| Social AI publish pipeline | ✅ G9 CLOSED | `social-ai-worker`/`social-post-worker`/`social-publish-worker` ACTIVE · approval RPC gate |
+| Grab / LINE MAN delivery provider | ⬜ BLOCKED | sandbox credentials ไม่ถูกส่งมอบ — มีแค่ test offline (`api.test.ts` Delivery Providers suite) |
+| Meta comment/postback → order | ⬜ backlog | G4 ปิดด้วย simulated delivery 9/9 · รอ owner เปิด Test User/meta unblock แล้วค่อย re-test ของจริง |
+
 
 ## 3. PARTIAL — มีพื้นฐาน แต่ยังไม่ครบ
 
