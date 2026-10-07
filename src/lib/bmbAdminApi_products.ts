@@ -181,9 +181,26 @@ export async function getActiveDeliveryRounds(): Promise<DeliveryRound[]> {
   return (data || []) as DeliveryRound[]
 }
 
+/** TEN-07: resolve the branch for admin writes — delivery_rounds RLS (is_branch_admin) requires branch_id. */
+export async function resolveAdminBranchId(): Promise<string> {
+  const ctx = useAdminTenantContextStore.getState().activeBranchId
+  if (ctx) return ctx
+  const tenant = resolveAdminTenantId()
+  const { data } = await supabase
+    .from('branches')
+    .select('id')
+    .eq('tenant_id', tenant)
+    .eq('status', 'active')
+    .order('created_at', { ascending: true })
+    .limit(1)
+  return (data?.[0]?.id as string) || 'branch-tenant-bmb-001-main'
+}
+
 export async function createDeliveryRound(data: DeliveryRoundForm): Promise<DeliveryRound | null> {
   // DB columns: scheduled_date (not 'date'), name/round_key (not 'round_key')
-  const { data: result, error } = await supabase.from('delivery_rounds').insert({ id: data.id || `round-${Date.now()}`, name: data.round_key, round_key: data.round_key, display_name: data.display_name, cutoff_time: data.cutoff_time, delivery_start: data.delivery_start, delivery_end: data.delivery_end, max_capacity: data.max_capacity, scheduled_date: data.date, date: data.date, status: 'active', current_count: 0, tenant_id: resolveAdminTenantId() }).select().single()
+  // MIG-119 FIX: delivery_rounds RLS = is_branch_admin(branch_id) → without
+  //   branch_id every create failed ("violates row-level security policy").
+  const { data: result, error } = await supabase.from('delivery_rounds').insert({ id: data.id || `round-${Date.now()}`, name: data.round_key, round_key: data.round_key, display_name: data.display_name, cutoff_time: data.cutoff_time, delivery_start: data.delivery_start, delivery_end: data.delivery_end, max_capacity: data.max_capacity, scheduled_date: data.date, date: data.date, status: 'active', current_count: 0, tenant_id: resolveAdminTenantId(), branch_id: await resolveAdminBranchId() }).select().single()
   if (error) { console.error('[createDeliveryRound] Error:', error); return null }
   return result as DeliveryRound
 }

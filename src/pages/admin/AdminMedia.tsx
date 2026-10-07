@@ -55,7 +55,7 @@ export function AdminMedia() {
         setAlt('')
         await load()
       } else {
-        showToast('อัปโหลดไม่สำเร็จ (ยังต้องมี storage policy จาก migration 011)', 'error')
+        showToast('อัปโหลดไม่สำเร็จ (ตรวจ storage policy / การล็อกอิน admin)', 'error')
       }
     } finally {
       setUploading(false)
