@@ -280,9 +280,8 @@ export function BiteMascot({ userName, activeSection = 'home' }: BiteMascotProps
 
       {chatVisible && (
         <Suspense fallback={null}>
-          <div className="fixed inset-0 z-[96] flex items-center justify-center p-4 bg-black/40" role="dialog" aria-modal="true">
-            <TalkToBite onClose={closeChat} />
-          </div>
+          {/* Full-screen unified Talk to Bite — starts in conversation on tap */}
+          <TalkToBite initialPhase="conversation" onClose={closeChat} />
         </Suspense>
       )}
     </>

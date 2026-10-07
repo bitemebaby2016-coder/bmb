@@ -14,17 +14,14 @@
 import { Link, useNavigate } from 'react-router-dom'
 import { useCartStore } from '@/store/cartStore'
 import { useAuthStore } from '@/store/authStore'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, lazy, Suspense } from 'react'
 import { showToast } from '@/components/ui/ToastContainer'
 import {
   getHomeProducts,
   getHomeReviews,
-  getBiteMessage,
   getStoreStatusFromRounds,
   getHomePromotionsFromRows,
-  getBitePose,
 } from '@/lib/homeProviders'
-import { BiteHero } from '@/components/home/BiteHero'
 import { StoreStatusStrip } from '@/components/home/StoreStatusStrip'
 import { FloatingAdBanners, type FloatingBannerPromo } from '@/components/home/FloatingAdBanners'
 import { HorizontalCarousel } from '@/components/home/HorizontalCarousel'
@@ -39,6 +36,10 @@ import { useOrderBuilderStore } from '@/store/orderBuilderStore'
 import { useBrandContextStore } from '@/store/resolvedBrandStore'
 import { filterProductsByBranch } from '@/lib/homeProviders'
 import type { VerifiedCustomerReview, Product, ProductCategory, MenuSection, SameDayOrderPayload, PreOrderPayload, HomeReview } from '@/types'
+
+// ⚡ The Talk-to-Bite experience is code-split (aiService/aiVoice are heavy); the
+// landing hero on Home is an inline view of the SAME component used everywhere.
+const TalkToBite = lazy(() => import('@/components/ai/TalkToBite').then((m) => ({ default: m.TalkToBite })))
 
 /** PRE_ORDER lead/date policy is DB-driven (order_policy) — no client hardcode.
  * The date is chosen in /checkout?mode=pre-order (server validates lead time). */
@@ -123,11 +124,6 @@ export function HomePage() {
       image: r.banner_image,
     }))
   const storeStatus = getStoreStatusFromRounds(rounds)
-  const biteMessage = getBiteMessage({
-    storeStatus,
-    sameDayCount: sameDay.length,
-    preOrderCount: preOrder.length,
-  })
 
   const handleSameDay = (payload: SameDayOrderPayload) => {
     const product = products.find((p) => p.id === payload.productId)
@@ -212,8 +208,10 @@ export function HomePage() {
       {/* SEO: Visually hidden H1 with primary keywords */}
       <h1 className="sr-only">Bite Me Baby — สั่งอาหารจัดส่งเมืองจันทบุรี รัศมี 5 กม. AI แนะนำเมนู 24/7</h1>
       
-      {/* 1. Bite Conversational Hero */}
-      <BiteHero message={biteMessage} pose={getBitePose(storeStatus.state)} />
+      {/* 1. Talk to Bite Home — the unified full-screen AI-waiter experience (landing hero) */}
+      <Suspense fallback={null}>
+        <TalkToBite mode="hero" />
+      </Suspense>
 
       {/* 2. Store / Delivery Status — compact strip (replaces the 3-round grid) */}
       <StoreStatusStrip status={storeStatus} />

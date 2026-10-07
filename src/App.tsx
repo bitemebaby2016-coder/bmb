@@ -52,6 +52,7 @@ const AdminRounds = lazy(() => import('./pages/admin/AdminRounds').then(m => ({ 
 const AdminCustomers = lazy(() => import('./pages/admin/AdminCustomers').then(m => ({ default: m.AdminCustomers })))
 const AdminSettings = lazy(() => import('./pages/admin/AdminSettings').then(m => ({ default: m.AdminSettings })))
 const AdminMedia = lazy(() => import('./pages/admin/AdminMedia').then(m => ({ default: m.AdminMedia })))
+const AdminAssetAudit = lazy(() => import('./pages/admin/AdminAssetAudit').then(m => ({ default: m.AdminAssetAudit })))
 
 // Lazy loaded: Protected pages (4 pages)
 const ProfilePage = lazy(() => import('./pages/ProfilePage').then(m => ({ default: m.ProfilePage })))
@@ -216,6 +217,7 @@ export default function App() {
 
         <Route path="/admin/content-approvals" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminNav><AdminContentApprovals /></AdminNav></Layout></AdminRoute></Suspense>} />
         <Route path="/admin/audit-log" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminNav><AuditLogPage /></AdminNav></Layout></AdminRoute></Suspense>} />
+        <Route path="/admin/asset-audit" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminNav><AdminAssetAudit /></AdminNav></Layout></AdminRoute></Suspense>} />
 <Route path="/admin/payment-exceptions" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminNav><AdminPaymentExceptions /></AdminNav></Layout></AdminRoute></Suspense>} />
             <Route path="/admin/notifications" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminNav><AdminNotificationsPage /></AdminNav></Layout></AdminRoute></Suspense>} />
         <Route path="/admin/delivery" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminNav><DeliveryManagement /></AdminNav></Layout></AdminRoute></Suspense>} />

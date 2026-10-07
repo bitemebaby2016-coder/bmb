@@ -105,3 +105,26 @@
 1. Owner เปิด `npm run dev` → ตรวจ `/` (Talk-to-Bite home), Floating Bite (ลาก/snap), `/talk-to-bite` (guest), voice, + ทักทาย 7 วัน (เปิดใหม่ทุกวันเจอข้อความต่างกัน)
 2. รูปสินค้าขาด → admin ใส่ใน Admin → สินค้า (ตาม §5 ชี้เป้า)
 3. รัน verification ซ้ำ (gates เดิม) แล้วปิดรอบ/commit (ตาม Git Rule ในคำสั่ง)
+---
+
+## 8. Round 10 — talk to bite เต็มจอ 2 เฟส + Admin Asset Audit (ล่าสุด)
+
+### Talk to Bite → เต็มจอ (experience เดียว ไม่ใช่ 2 โปรเจกต์)
+- `TalkToBite.tsx` redesign เป็น **เต็มจอ** มี 2 เฟสในคอมโพเนนต์เดียว:
+  - **Landing ("Talk to Bite Home")**: แบรนด์ `BITE ME BABY` + มาสคอต (pose `greeting`) + ทักทาย 7 วัน (§5.1) + ปุ่มใหญ่ **"🎙 พูดกับ Bite"** (เริ่มฟัง mic เมื่อกด = user gesture) + chip [🔄 สั่งเหมือนเดิม][🍊 ช่วยเลือกให้หน่อย][🍽️ ดูเมนู] + **"เข้าสู่ร้าน →"**
+  - **Conversation**: header `←` กลับหน้าแรก + "Talk to Bite" + 🛒 ตะกร้า; ข้อความ/การ์ดสินค้า/draft; mic + input
+- `mode="hero"` → landing แสดง **inline บนหน้า Home `/`**; กดไหนก็เปิด conversation เป็น overlay **เต็มจอ** ทับทั้งแอป
+- `mode="overlay"` (default) → ทั้งคอมโพเนนต์เป็นเลเยอร์เต็มจอ (Floating Bite / `/talk-to-bite`); Floating เปิดที่ `initialPhase="conversation"` แตะแล้วคุยได้เลย
+- **ลบทิ้ง `BiteHero.tsx`** (แทนที่ด้วย Talk-to-Bite hero บน Home ตรง ๆ) — scan แล้วไม่มี ref เหลือ (เหลือแค่ comment ใน App.tsx)
+- `HomePage` → `<TalkToBite mode="hero" />`; ลบ import/`getBiteMessage`/`getBitePose`|`biteMessage` ที่เลิกใช้
+- ข้อ: ไม่ใช่ "landing เปล่า" ไม่ใช่ "chat box มายัดกลางจอ" — Landing+Conversation เป็นเฟสของ experience เดียวกัน เต็มจอ; ออกสนทนา → กลับ Land/Home + Floating Bite ตามเดิม
+
+### Admin Asset Audit (read-only) — `/admin/asset-audit`
+- 🔍 หน้าใหม่ **read-only**: การ์ดสรุป (สินค้าทั้งหมด / ขายได้ / ขาดรูป / ขายได้แต่ขาดรูป ⚠️)
+- ตาราง "สินค้าขาดรูป" (`image_url` ว่าง) — **ชี้เป้าให้แอดมิน** พร้อมลิงก์ไป `/admin/products`; **ไม่เจนรูปเด็ดขาด** (image เดิมใน catalog เท่านั้น)
+- manifest ไฟล์มาสคอต (24 pose) ให้ดูว่าใช้ไฟล์อะไรบ้าง
+- เพิ่ม nav item `🔍 Asset Audit` (`src/lib/adminUi.ts`) + route `/admin/asset-audit` (AdminRoute)
+
+### Gates (ผ่านจริง)
+TSC 0 · LINT 0 · VITEST 50 files/**545** · BUILD 0 (PWA precache 134)
+

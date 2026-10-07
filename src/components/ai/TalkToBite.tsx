@@ -1,20 +1,24 @@
 // ============================================
-// Bite Me Baby — Talk to Bite (Unified AI Waiter experience)
+// Bite Me Baby — Talk to Bite (Unified AI Waiter — full screen)
 // ============================================
-// THE single "Talk to Bite" conversational UI, shared verbatim by:
-//   - the Homepage (Talk-to-Bite home)
-//   - the persistent Floating Bite
-//   - the /talk-to-bite page
-// No separate "Ai Chat" engine — this component is the one experience a
-// customer opens, and the conversation continues across those surfaces via the
-// shared `useBiteAIStore` state + real data sources.
+// ONE experience with two full-screen phases:
+//   - "Talk to Bite Home" (landing) — brand + mascot + 7-day greeting + a big
+//     "🎙 พูดกับ Bite" CTA + quick actions + เข้าสู่ร้าน
+//   - Conversation — the actual chat (header, messages, product cards, mic bar)
+// The SAME component drives both phases (not two projects).
+//   - mode="hero"  → landing renders inline on the app Home; the conversation
+//                    becomes a full-screen layer on top.
+//   - mode="overlay" (default) → the whole component is always a full-screen
+//                    layer (Floating Bite, /talk-to-bite page) and starts at the
+//                    landing unless initialPhase="conversation".
 //
-// Data & authority rules:
+// Data & authority rules (unchanged):
 //   - Menu / price / availability  → real catalog (`getProducts`, DB-backed)
 //   - Order history / status        → real customer orders (`getOrdersByCustomer`, RLS-own)
 //   - Free-text answers             → `chatWithAI` (ai-proxy, server-side key) with DB context
 //   - Add-to-cart                   → canonical `cartStore.addItem` ONLY (mode + isolation)
-// The AI never fabricates prices/products and never mutates privileged state.
+// The AI never fabricates prices/products, never generates images, and never
+// mutates privileged state.
 // ============================================
 
 import { useEffect, useRef, useState } from 'react'
@@ -51,10 +55,10 @@ import {
 import type { OrderMode } from '@/config/platformConfig'
 
 interface TalkToBiteProps {
-  /** Rendered full-width (the /talk-to-bite page). When false it renders as an overlay panel. */
-  fullPage?: boolean
-  /** Auto-run the real "ช่วยเลือกให้หน่อย" recommendation on open (Homepage entry). */
-  autoRecommend?: boolean
+  /** 'overlay' (default): always a full-screen layer. 'hero': landing inline on Home. */
+  mode?: 'overlay' | 'hero'
+  /** Which phase to open in ('landing' = Talk to Bite Home, 'conversation' = straight to chat). */
+  initialPhase?: 'landing' | 'conversation'
   onClose?: () => void
 }
 
@@ -69,50 +73,49 @@ function nextId(): string {
   return `ttb-${Date.now()}-${uid}`
 }
 
-export function TalkToBite({ fullPage = false, autoRecommend = false, onClose }: TalkToBiteProps) {
+const FALLBACK_GREETING =
+  'สวัสดีครับ ผม Bite พนักงานเสิร์ฟของ Bite Me Baby 🍊 วันนี้อยากกินอะไรดีครับ?'
+
+export function TalkToBite({ mode = 'overlay', initialPhase = 'landing', onClose }: TalkToBiteProps) {
   const navigate = useNavigate()
   const customer = useAuthStore((s) => s.customer)
   const biteState = useBiteAIStore((s) => s.biteState)
   const setBiteState = useBiteAIStore((s) => s.setBiteState)
 
+  const [realm, setRealm] = useState<'landing' | 'conversation'>(initialPhase)
   const [messages, setMessages] = useState<ChatMsg[]>([])
   const [input, setInput] = useState('')
   const [typing, setTyping] = useState(false)
   const [listening, setListening] = useState(false)
   const [voiceReply, setVoiceReply] = useState(isVoiceReplyEnabled())
+  const [greeting, setGreeting] = useState('')
   const micSupported = isSpeechRecognitionSupported()
   const ttsSupported = isSpeechSynthesisSupported()
   const voiceRef = useRef<AIVoiceService | null>(null)
   const endRef = useRef<HTMLDivElement>(null)
-  const autoRanRef = useRef(false)
+  const seededRef = useRef(false)
 
-  // Greeting — a deterministic 7-day rotation (buildBiteGreeting) personalised
-  // ONLY with VERIFIED server memory for the signed-in customer (name + favorite
-  // category); guests get the same rotation without a name. Re-runs cleanly if
-  // the customer identity (re)loads. autoRecommend stays ORDERED after the
-  // greeting and never double-runs within a session.
+  // Greeting — deterministic 7-day rotation personalised ONLY with verified
+  // server memory for the signed-in customer (name + favorite category); guests
+  // get the same rotation without a name. Re-runs cleanly if identity loads.
   useEffect(() => {
     let active = true
     void (async () => {
       const index = getGreetingIndex()
-      let greeting: string
+      let text: string
       if (customer?.id) {
         const mem = await hydrateMemoryFromServer(customer.id).catch(() => null)
         if (!active) return
-        greeting = buildBiteGreeting({
+        text = buildBiteGreeting({
           index,
           name: mem?.name ?? customer?.name ?? null,
           favoriteCategory: mem?.favorite_categories?.[0] ?? null,
         })
       } else {
-        greeting = buildBiteGreeting({ index })
+        text = buildBiteGreeting({ index })
       }
       if (!active) return
-      setMessages([{ kind: 'text', id: nextId(), role: 'assistant', content: greeting }])
-      if (autoRecommend && !autoRanRef.current) {
-        autoRanRef.current = true
-        await handleRecommend()
-      }
+      setGreeting(text)
     })()
     return () => {
       active = false
@@ -120,7 +123,7 @@ export function TalkToBite({ fullPage = false, autoRecommend = false, onClose }:
   }, [customer?.id])
 
   // Voice engine — the same shared singleton as the rest of Bite. Autoplay-safe:
-  // subtitles/text are ALWAYS shown; voice only speaks after a user interaction.
+  // subtitles/text are ALWAYS shown; voice only speaks/listens after a gesture.
   useEffect(() => {
     if (!micSupported) return
     const service = getAIVoiceService()
@@ -158,7 +161,26 @@ export function TalkToBite({ fullPage = false, autoRecommend = false, onClose }:
     return false
   }
 
-  // --- Real quick actions (each executes a real flow) ---
+  // Enter the conversation (seeding the greeting once) and optionally run a flow.
+  function openConversation(fn?: () => void) {
+    setRealm('conversation')
+    if (!seededRef.current) {
+      seededRef.current = true
+      setMessages([{ kind: 'text', id: nextId(), role: 'assistant', content: greeting || FALLBACK_GREETING }])
+      setBiteState('WELCOME')
+    }
+    if (fn) fn()
+  }
+
+  function startListen() {
+    const service = voiceRef.current
+    if (service && service.startListening()) {
+      setBiteState('LISTENING')
+      setListening(true)
+    } else {
+      setBiteState('IDLE')
+    }
+  }
 
   async function handleRecommend() {
     setBiteState('RECOMMENDING')
@@ -224,23 +246,21 @@ export function TalkToBite({ fullPage = false, autoRecommend = false, onClose }:
     }
   }
 
-
   async function handleCheckOrders() {
     setBiteState('THINKING')
-    pushAssistant('เดี๋ยวครับ Bite ตรวจสถานะออเดอร์ของคุณให้…')
+    pushAssistant('เดี๋ยวครับ Bite เช็กออเดอร์ของคุณให้ก่อน…')
     if (!requireAuth()) return
     setTyping(true)
     try {
       const orders = await getOrdersByCustomer(customer!.id)
       if (!orders || orders.length === 0) {
-        pushAssistant('ยังไม่มีออเดอร์ในระบบสำหรับคุณครับ 🍊')
-      } else {
-        const lines = orders.slice(0, 5).map((o) => {
-          const mode = (o.order_mode ?? 'SAME_DAY') as OrderMode
-          return `• ${o.order_number} — ${getServerStatusLabel(String(o.status), mode)}`
-        })
-        pushAssistant(`ออเดอร์ล่าสุดของคุณ (${Math.min(orders.length, 5)}/${orders.length}) ที่ยังเข้าถึงได้:\n${lines.join('\n')}`)
+        pushAssistant('ยังไม่มีออเดอร์ที่ร้านนี้เลยครับ อยากให้ Bite แนะนำเมนูแทนไหมครับ? 🍊')
+        setBiteState('IDLE')
+        return
       }
+      const recent = [...orders].slice(0, 5)
+      const lines = recent.map((o) => `• ${o.order_number} — ${getServerStatusLabel(String(o.status), (o.order_mode ?? 'SAME_DAY') as OrderMode)}`)
+      pushAssistant(`ออเดอร์ล่าสุดของคุณ (${Math.min(orders.length, 5)}/${orders.length}) ที่ยังเข้าถึงได้:\n${lines.join('\n')}`)
       setBiteState('IDLE')
     } catch {
       pushAssistant('ขอโทษครับ อ่านสถานะออเดอร์ไม่สำเร็จครับ 🙏')
@@ -330,6 +350,12 @@ export function TalkToBite({ fullPage = false, autoRecommend = false, onClose }:
     if (!next) voiceRef.current?.stopSpeaking()
   }
 
+  function goLanding() {
+    voiceRef.current?.stopSpeaking()
+    setBiteState('IDLE')
+    setRealm('landing')
+  }
+
   function handleClose() {
     voiceRef.current?.stopSpeaking()
     voiceRef.current?.stopListening()
@@ -337,21 +363,90 @@ export function TalkToBite({ fullPage = false, autoRecommend = false, onClose }:
       onClose()
       return
     }
-    if (fullPage) navigate('/')
+    if (mode === 'hero') {
+      setRealm('landing')
+      return
+    }
+    navigate('/')
   }
 
   const cartCount = useCartStore((s) => s.items).reduce((sum, i) => sum + i.quantity, 0)
 
+  const liveGreeting = greeting || FALLBACK_GREETING
+  // Fixed full-screen layer unless we are the inline hero landing on the Home page.
+  const fixed = realm === 'conversation' || mode === 'overlay'
 
-  return (
-    <div
-      data-testid="talk-to-bite"
-      className={`overflow-hidden bg-white rounded-2xl shadow-xl flex flex-col ${
-        fullPage ? 'w-full h-full max-w-3xl mx-auto min-h-[70vh]' : 'w-full max-w-md'
-      }`}
-    >
-      {/* Header — Bite identity + cart context */}
+  // ---------------------------------------------------------------------------
+  // Landing — "Talk to Bite Home"
+  // ---------------------------------------------------------------------------
+  const landingView = (
+    <div className="flex flex-col items-center justify-center text-center px-6 py-10 gap-5">
+      <p className="font-display font-bold text-2xl text-brand-accent tracking-wide">BITE ME BABY</p>
+      <MascotBadge pose="greeting" size="lg" alt="Bite ทักทาย" className="animate-float" loading="eager" />
+      <p className="text-lg md:text-xl text-brand-text whitespace-pre-line max-w-md" data-testid="ttb-greeting">
+        “{liveGreeting}”
+      </p>
+
+      <button
+        type="button"
+        onClick={() => openConversation(micSupported ? startListen : undefined)}
+        className="btn btn-primary text-base px-8 py-3 rounded-full gap-2"
+        data-testid="ttb-talk"
+      >
+        🎙 พูดกับ Bite
+      </button>
+
+      <div className="flex flex-wrap items-center justify-center gap-2">
+        <button type="button" onClick={() => openConversation(() => void handleOrderAgain())} data-testid="ttb-again" className="px-4 py-1.5 text-brand-accent border border-brand-border bg-white hover:bg-brand-bg rounded-full text-sm font-medium">
+          🔄 สั่งเหมือนเดิม
+        </button>
+        <button type="button" onClick={() => openConversation(() => void handleRecommend())} data-testid="ttb-recommend" className="px-4 py-1.5 text-brand-accent border border-brand-border bg-white hover:bg-brand-bg rounded-full text-sm font-medium">
+          🍊 ช่วยเลือกให้หน่อย
+        </button>
+        <button type="button" onClick={handleViewMenu} data-testid="ttb-menu" className="px-4 py-1.5 text-brand-accent border border-brand-border bg-white hover:bg-brand-bg rounded-full text-sm font-medium">
+          🍽️ ดูเมนู
+        </button>
+      </div>
+
+      <button
+        type="button"
+        onClick={handleViewMenu}
+        className="text-brand-primary font-medium hover:underline mt-1"
+        data-testid="ttb-enter-store"
+      >
+        เข้าสู่ร้าน →
+      </button>
+
+      {fixed && (
+        <button
+          type="button"
+          onClick={handleClose}
+          className="btn btn-outline btn-sm absolute top-4 right-4"
+          aria-label="ปิด Talk to Bite"
+          data-testid="ttb-close"
+        >
+          ✕
+        </button>
+      )}
+    </div>
+  )
+
+  // ---------------------------------------------------------------------------
+  // Conversation
+  // ---------------------------------------------------------------------------
+  const conversationView = (
+    <div className="flex flex-col h-full max-w-3xl mx-auto w-full overflow-hidden">
+      {/* Header — back to landing + identity + cart */}
       <header className="flex items-center gap-3 px-4 py-3 bg-gradient-to-r from-brand-bg to-white border-b border-brand-border shrink-0">
+        <button
+          type="button"
+          onClick={goLanding}
+          className="btn btn-outline btn-sm"
+          aria-label="กลับไปหน้าแรกของ Talk to Bite"
+          data-testid="ttb-back"
+        >
+          ←
+        </button>
         <MascotBadge pose={bitePoseForState(biteState)} size="sm" alt="Bite" loading="eager" />
         <div className="flex-1 min-w-0 text-left">
           <h2 className="font-display font-bold text-brand-accent leading-tight">Talk to Bite</h2>
@@ -363,8 +458,8 @@ export function TalkToBite({ fullPage = false, autoRecommend = false, onClose }:
           <span className="text-xs font-semibold text-brand-primary bg-brand-bg rounded-full px-2 py-1" title="สินค้าในตะกร้า">
             🛒 {cartCount}
           </span>
-          <button type="button" onClick={handleClose} className="btn btn-outline btn-sm" aria-label="ปิด Talk to Bite">
-            {fullPage ? 'Back' : '✕'}
+          <button type="button" onClick={handleClose} className="btn btn-outline btn-sm" aria-label="ปิด Talk to Bite" data-testid="ttb-close-2">
+            ✕
           </button>
         </div>
       </header>
@@ -437,14 +532,13 @@ export function TalkToBite({ fullPage = false, autoRecommend = false, onClose }:
         <div ref={endRef} />
       </div>
 
-
       {/* Quick actions — real interactions, not placeholder input */}
       <div className="flex gap-2 px-4 pb-2 overflow-x-auto no-scrollbar shrink-0">
         {[
-          { label: '🔄 สั่งเหมือนเดิม', fn: handleOrderAgain, id: 'ttb-again' },
-          { label: '🍊 ช่วยเลือกให้หน่อย', fn: handleRecommend, id: 'ttb-recommend' },
+          { label: '🔄 สั่งเหมือนเดิม', fn: () => void handleOrderAgain(), id: 'ttb-again' },
+          { label: '🍊 ช่วยเลือกให้หน่อย', fn: () => void handleRecommend(), id: 'ttb-recommend' },
           { label: '🍽️ ดูเมนู', fn: handleViewMenu, id: 'ttb-menu' },
-          { label: '📦 เช็กออเดอร์', fn: handleCheckOrders, id: 'ttb-orders' },
+          { label: '📦 เช็กออเดอร์', fn: () => void handleCheckOrders(), id: 'ttb-orders' },
           ...(customer ? [] : [{ label: '🔐 เข้าสู่ระบบ', fn: goLogin, id: 'ttb-login' }]),
         ].map((qa) => (
           <button
@@ -506,9 +600,20 @@ export function TalkToBite({ fullPage = false, autoRecommend = false, onClose }:
       </div>
     </div>
   )
+
+  return (
+    <div
+      data-testid="talk-to-bite"
+      role={fixed ? 'dialog' : undefined}
+      aria-modal={fixed ? true : undefined}
+      aria-label="Talk to Bite"
+      className={fixed ? 'fixed inset-0 z-[96] bg-white overflow-hidden flex flex-col' : 'relative w-full'}
+    >
+      {realm === 'landing' ? landingView : conversationView}
+    </div>
+  )
 }
 
 function speakable(text: string): string {
   return text.replace(/[#*`_~]/g, '').slice(0, 800)
 }
-

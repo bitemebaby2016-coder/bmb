@@ -23,6 +23,7 @@
 - EDIT: `src/stores/useBiteAIStore.ts`, `src/components/home/BiteHero.tsx`, `src/components/ai/BiteMascot.tsx`, `src/components/layout/BottomNav.tsx`, `src/App.tsx`, `src/lib/homeProviders.ts`
 - DELETE: `src/components/ai/BiteAIChat.tsx`, `src/pages/ai/AiChatPage.tsx`
 - **Round 9.1:** `talkToBite.ts` + (`getGreetingIndex`, `buildBiteGreeting` — 7-day rotation) · `TalkToBite.tsx` boot: `hydrateMemoryFromServer` → personalized greeting · `talkToBite.test.ts` +6 tests
+- **Round 10:** `TalkToBite.tsx` เป็นเต็มจอ 2 เฟส (Landing → Conversation) ชุดเดียว; `mode=hero` (Home) / `overlay` (Floating `/talk-to-bite`); ลบ `BiteHero.tsx`; **ใหม่** `src/pages/admin/AdminAssetAudit.tsx` (read-only สินค้าขาดรูป + manifest มาสคอต) + nav item + route `/admin/asset-audit`
 
 ## 4. Completed work (evidence)
 - Gates ผ่าน: TSC 0 · LINT 0 · VITEST 50 files/**545** · BUILD PASS
