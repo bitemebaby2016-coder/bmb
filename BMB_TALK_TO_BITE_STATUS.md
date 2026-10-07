@@ -8,8 +8,8 @@
 
 ## 1. Current HEAD / สถานะ
 
-- **HEAD (รอบล่าสุด) = `162d319`** (`main` = `origin/main` — NL order + chat layout)
-- **Push:** ✅ `origin/main` แล้ว · `local == remote == 162d319` · worktree clean
+- **HEAD (รอบล่าสุด) = `89d2051`** (`main` = `origin/main` — NL customize + auto-TTS + audit)
+- **Push:** ✅ `origin/main` แล้ว · `local == remote == 89d2051` · worktree clean
 - Gates ปิดรอบ (หลังแก้) — **ผ่านจริง:**
   - `npx tsc --noEmit` = **0 error**
   - `npm run lint` = **0 error**
