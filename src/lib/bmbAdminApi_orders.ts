@@ -86,6 +86,9 @@ export interface OrderForm {
   // ✅ STEP 3B-2A: channel attribution + external reference (display only)
   source_channel?: string
   external_ref_id?: string
+  // ✅ Owner feature 2026-10-08: customer identity for delivery-place photo lookup
+  // (orders.customer_ref = auth user id; select('*') returns it at runtime)
+  customer_ref?: string
   created_at: string
   updated_at: string
 }

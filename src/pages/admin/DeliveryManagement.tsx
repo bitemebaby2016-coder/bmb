@@ -17,6 +17,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { Link } from 'react-router-dom'
+import { supabase } from '@/lib/supabase'
 import { getOrdersByStatuses, getDeliveryAssignmentsFor, updateOrderStatus } from '@/lib/bmbAdminApi_orders'
 import type { OrderForm, DeliveryAssignmentLiteRow } from '@/lib/bmbAdminApi_orders'
 import { adminListDrivers, assignDriver, adminAdvanceDelivery, type AdminDriverRow } from '@/lib/driverService'
@@ -43,6 +44,8 @@ export function DeliveryManagement() {
   const [loading, setLoading] = useState(true)
   const [acting, setActing] = useState<string | null>(null)
   const [pending, setPending] = useState<Record<string, string>>({}) // order_number -> driver_id
+  // รูปสถานที่จัดส่งของลูกค้า ( customers.delivery_photo_url ) — ช่วยไรเดอร์หาบ้านเจอ
+  const [photoByUser, setPhotoByUser] = useState<Record<string, string>>({})
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -63,6 +66,26 @@ export function DeliveryManagement() {
   }, [])
 
   useEffect(() => { void load() }, [load])
+
+  // โหลดรูปสถานที่จัดส่งของลูกค้าในคิว (READ-ONLY) — customers RLS เปิดให้ is_admin
+  useEffect(() => {
+    const refs = Array.from(new Set(orders.map((o) => o.customer_ref).filter(Boolean))) as string[]
+    if (refs.length === 0) return
+    let cancelled = false
+    void (async () => {
+      const { data } = await supabase
+        .from('customers')
+        .select('user_id, delivery_photo_url')
+        .in('user_id', refs)
+      if (cancelled || !data) return
+      const map: Record<string, string> = {}
+      for (const row of data) {
+        if (row.user_id && row.delivery_photo_url) map[row.user_id] = row.delivery_photo_url
+      }
+      setPhotoByUser(map)
+    })()
+    return () => { cancelled = true }
+  }, [orders])
 
   // Canonical assignment: UI → assign_driver RPC → backend validation → DB → audit
   async function handleAssign(orderNumber: string) {
@@ -168,7 +191,14 @@ export function DeliveryManagement() {
                       {o.order_mode ? <span className="badge badge-primary">{o.order_mode}</span> : null}
                       {o.payment_status ? <span className={'badge ' + (o.payment_status === 'paid' ? 'badge-success' : 'badge-warning')}>{o.payment_status}</span> : null}
                     </div>
-                    <span className="text-xs text-brand-muted">📍 {o.delivery_address || '—'}</span>
+                    <span className="text-xs text-brand-muted flex items-center gap-1">
+                      {o.customer_ref && photoByUser[o.customer_ref] ? (
+                        <a href={photoByUser[o.customer_ref]} target="_blank" rel="noreferrer" title="ดูรูปสถานที่จัดส่ง">
+                          <img src={photoByUser[o.customer_ref]} alt="รูปสถานที่จัดส่ง" className="w-9 h-9 object-cover rounded border border-brand-border" />
+                        </a>
+                      ) : null}
+                      📍 {o.delivery_address || '—'}
+                    </span>
                   </div>
                   {/* exception visibility: order not dispatchable but assignment active */}
                   {!['ready_for_dispatch', 'dispatched'].includes(o.status) ? <p className="text-xs text-red-500 mt-2">⚠ สถานะออเดอร์ = {o.status} (ไม่อยู่ในช่วง dispatch)</p> : null}

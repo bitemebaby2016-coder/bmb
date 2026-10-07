@@ -38,7 +38,14 @@ function json(body: unknown, status = 200): Response {
 function normalizePhone(raw: string): string {
   let p = String(raw ?? '').replace(/[^\d+]/g, '')
   if (p.startsWith('00')) p = '+' + p.slice(2)
-  return p
+  if (p.startsWith('+')) return p
+  const digits = p.replace(/\D/g, '')
+  // Thai local format 0XXXXXXXXX (10 digits) → E.164 +66XXXXXXXXX.
+  // GoTrue's admin API REQUIRES E.164 (finding 2026-10-08: quick login failed
+  // with "Invalid phone number format (E.164 required)" for 08xxxxxxxx).
+  if (digits.length === 10 && digits.startsWith('0')) return '+66' + digits.slice(1)
+  if (digits.length === 9 && /^[1-9]\d{8}$/.test(digits)) return '+66' + digits
+  return digits
 }
 
 function randomPassword(): string {
@@ -76,6 +83,56 @@ Deno.serve(async (req: Request): Promise<Response> => {
   let latitude = Number(body?.latitude)
   let longitude = Number(body?.longitude)
   const addressDetail: string = String(body?.address_detail ?? '').trim()
+  const deliveryPhotoUrl: string = String(body?.delivery_photo_url ?? '').trim()
+  const deliveryPhotoPath: string = String(body?.delivery_photo_path ?? '').trim()
+
+  // ---- update_profile mode: save customer details + delivery photo ----
+  // Called AFTER login (JWT required — caller is an authenticated user) so the
+  // quick-login form can store the delivery-place photo + address once and the
+  // system remembers them (Owner feature, 2026-10-08).
+  if (String(body?.action ?? '').trim() === 'update_profile') {
+    const authHeader = req.headers.get('authorization') || ''
+    if (!authHeader.startsWith('Bearer ')) return json({ error: 'ERR_UNAUTHORIZED' }, 401)
+    const caller = await ghFetch(supabaseUrl, anonKey, '/auth/v1/user', { headers: { Authorization: authHeader } })
+    if (!caller.ok || !caller.data?.id) return json({ error: 'ERR_UNAUTHORIZED' }, 401)
+    const callerId = String(caller.data.id)
+
+    const row: Record<string, unknown> = {}
+    if (name) row.full_name = name
+    if (phone) row.phone = phone
+    if (addressDetail) { row.address = addressDetail; row.default_address_detail = addressDetail }
+    const latU = Number(body?.latitude)
+    const lngU = Number(body?.longitude)
+    if (latU >= -90 && latU <= 90 && lngU >= -180 && lngU <= 180) {
+      row.default_latitude = latU
+      row.default_longitude = lngU
+    }
+    if (deliveryPhotoUrl) row.delivery_photo_url = deliveryPhotoUrl
+    if (deliveryPhotoPath) row.delivery_photo_path = deliveryPhotoPath
+
+    if (phone) {
+      // deterministic id per phone — merge into the existing row when present
+      await ghFetch(supabaseUrl, serviceKey, '/rest/v1/customers', {
+        method: 'POST',
+        headers: { Prefer: 'resolution=merge-duplicates' },
+        body: JSON.stringify({ id: `cust-${phone.replace(/\D/g, '').slice(-14)}`, user_id: callerId, ...row }),
+      })
+    } else if (Object.keys(row).length > 0) {
+      // no phone in the payload — update the caller's existing row by user_id
+      await ghFetch(supabaseUrl, serviceKey, `/rest/v1/customers?user_id=eq.${callerId}`, {
+        method: 'PATCH',
+        body: JSON.stringify(row),
+      })
+    }
+    // sync profile name/phone (best effort — filter by id = auth uid)
+    if (name || phone) {
+      await ghFetch(supabaseUrl, serviceKey, `/rest/v1/profiles?id=eq.${callerId}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ ...(name ? { name } : {}), ...(phone ? { phone } : {}) }),
+      })
+    }
+    return json({ ok: true, action: 'update_profile' })
+  }
 
   if (!name || phone.length < 7) return json({ error: 'ERR_MISSING_NAME_OR_PHONE' }, 400)
   // coords optional → fall back to the kitchen point (routes/delivery unsupported until set)
@@ -188,11 +245,13 @@ Deno.serve(async (req: Request): Promise<Response> => {
       default_latitude: latitude,
       default_longitude: longitude,
       default_address_detail: addressDetail,
+      ...(deliveryPhotoUrl ? { delivery_photo_url: deliveryPhotoUrl } : {}),
+      ...(deliveryPhotoPath ? { delivery_photo_path: deliveryPhotoPath } : {}),
     }),
   })
 
-  // sync profile name/phone (best effort)
-  await ghFetch(supabaseUrl, serviceKey, '/rest/v1/profiles', {
+  // sync profile name/phone (best effort — filter by id = auth uid)
+  await ghFetch(supabaseUrl, serviceKey, `/rest/v1/profiles?id=eq.${uid}`, {
     method: 'PATCH',
     headers: { Prefer: 'resolution=merge-duplicates' },
     body: JSON.stringify({ phone, name }),

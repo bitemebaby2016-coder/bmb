@@ -15,6 +15,8 @@ export interface QuickLoginInput {
   latitude?: number
   longitude?: number
   addressDetail?: string
+  /** URL รูปสถานที่จัดส่ง (อัปโหลดแล้ว) — บันทึกลง customers ให้ไรเดอร์เห็น */
+  deliveryPhotoUrl?: string
 }
 
 export interface QuickLoginResult {
@@ -99,6 +101,7 @@ export async function quickLoginByPhone(input: QuickLoginInput): Promise<QuickLo
         latitude: input.latitude ?? gps.latitude,
         longitude: input.longitude ?? gps.longitude,
         address_detail: input.addressDetail ?? '',
+        delivery_photo_url: input.deliveryPhotoUrl ?? '',
       },
     })
 
@@ -137,5 +140,66 @@ export async function quickLoginByPhone(input: QuickLoginInput): Promise<QuickLo
     return result
   } catch (err) {
     return { ok: false, error: err instanceof Error ? err.message : 'ERR_NETWORK' }
+  }
+}
+
+/**
+ * อัปโหลดรูปสถานที่จัดส่ง (หน้าบ้าน/เลขที่บ้าน ฯลฯ) เข้า storage bmb-images
+ * ต้อง login แล้ว (policy authenticated INSERT) · ย่อรูปก่อน ~1280px เพื่อลดขนาดไฟล์
+ */
+export async function uploadDeliveryPhoto(file: File): Promise<{ ok: boolean; url?: string; path?: string; error?: string }> {
+  try {
+    const { data: userData } = await supabase.auth.getUser()
+    const uid = userData?.user?.id
+    if (!uid) return { ok: false, error: 'ERR_NOT_AUTHENTICATED' }
+    // ย่อรูปด้วย canvas (ไม่เปลี่ยนไฟล์ต้นฉบับ)
+    const bmp = await createImageBitmap(file)
+    const maxSide = 1280
+    const scale = Math.min(1, maxSide / Math.max(bmp.width, bmp.height))
+    const canvas = document.createElement('canvas')
+    canvas.width = Math.max(1, Math.round(bmp.width * scale))
+    canvas.height = Math.max(1, Math.round(bmp.height * scale))
+    canvas.getContext('2d')?.drawImage(bmp, 0, 0, canvas.width, canvas.height)
+    bmp.close?.()
+    const blob: Blob | null = await new Promise((resolve) => canvas.toBlob((b) => resolve(b), 'image/jpeg', 0.82))
+    if (!blob) return { ok: false, error: 'ERR_IMAGE_PROCESS' }
+    const path = `delivery-photos/${uid}/${Date.now()}.jpg`
+    const { error } = await supabase.storage.from('bmb-images').upload(path, blob, { contentType: 'image/jpeg', upsert: false })
+    if (error) return { ok: false, error: error.message }
+    const { data: pub } = supabase.storage.from('bmb-images').getPublicUrl(path)
+    return { ok: true, url: pub?.publicUrl || '', path }
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : 'ERR_UPLOAD' }
+  }
+}
+
+/**
+ * บันทึกโปรไฟล์ลูกค้าหลัง login (ชื่อ/เบอร์/ที่อยู่/รูปสถานที่) — "ให้ข้อมูลครั้งเดียวแล้วระบบจำตลอด"
+ * เรียก EF phone-auto-login mode=update_profile (ตรวจ JWT server-side)
+ */
+export async function saveDeliveryProfile(input: {
+  name?: string
+  phone?: string
+  addressDetail?: string
+  latitude?: number
+  longitude?: number
+  deliveryPhotoUrl?: string
+}): Promise<{ ok: boolean; error?: string }> {
+  try {
+    const { data, error } = await supabase.functions.invoke('phone-auto-login', {
+      body: {
+        action: 'update_profile',
+        name: input.name,
+        phone: input.phone,
+        address_detail: input.addressDetail ?? '',
+        latitude: input.latitude,
+        longitude: input.longitude,
+        delivery_photo_url: input.deliveryPhotoUrl ?? '',
+      },
+    })
+    if (error) return { ok: false, error: error.message }
+    return { ok: !!data?.ok, error: data?.error }
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : 'ERR_NETWORK' }
   }
 }
