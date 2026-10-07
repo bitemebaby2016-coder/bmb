@@ -8,8 +8,8 @@
 
 ## 1. Current HEAD / สถานะ
 
-- **HEAD (รอบล่าสุด) = `6c7af5f`** (`main` = `origin/main` — Talk to Bite เต็มจอ + Admin Asset Audit)
-- **Push:** ✅ `origin/main` แล้ว · `local == remote == 6c7af5f` · worktree clean
+- **HEAD (รอบล่าสุด) = `4b3cc7b`** (`main` = `origin/main` — `/` Landing เต็มจอ + Voice Bar)
+- **Push:** ✅ `origin/main` แล้ว · `local == remote == 4b3cc7b` · worktree clean
 - Gates ปิดรอบ (หลังแก้) — **ผ่านจริง:**
   - `npx tsc --noEmit` = **0 error**
   - `npm run lint` = **0 error**
