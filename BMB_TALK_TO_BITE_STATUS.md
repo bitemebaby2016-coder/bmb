@@ -8,8 +8,8 @@
 
 ## 1. Current HEAD / สถานะ
 
-- **HEAD (รอบล่าสุด) = `89d2051`** (`main` = `origin/main` — NL customize + auto-TTS + audit)
-- **Push:** ✅ `origin/main` แล้ว · `local == remote == 89d2051` · worktree clean
+- **HEAD (รอบล่าสุด) = `df4a621`** (`main` = `origin/main` — แก้ภาษา + ราก Omise)
+- **Push:** ✅ `origin/main` แล้ว · `local == remote == df4a621` · worktree clean
 - Gates ปิดรอบ (หลังแก้) — **ผ่านจริง:**
   - `npx tsc --noEmit` = **0 error**
   - `npm run lint` = **0 error**
