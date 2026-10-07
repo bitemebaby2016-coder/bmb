@@ -224,3 +224,30 @@ TSC 0 · LINT 0 · VITEST 50 files/557 · BUILD 0
 
 ### Gates (ผ่านจริง)
 TSC 0 · LINT 0 · VITEST 51 files/561 · BUILD 0
+
+---
+
+## 13. Round 15 — Omise cutover เต็มเส้น (code + EF + tests + deploy)
+
+### EF ใหม่ 3 ตัว (mirror pattern เดิมเป๊ะ · deploy แล้ว + probe ผ่าน)
+- **`omise-checkout`** (JWT on): ตรวจ JWT → สั่งออเดอร์ผ่าน token ผู้ใช้ (RLS) → **amount re-derive จาก `orders.total_amount` เสมอ** → single-open-intent guard (กัน charge ซ้ำ, reuse `pi-chrg_*` เดิม) → เรียก Omise Charges API (Basic auth ด้วย secret key ฝั่ง server เท่านั้น) → insert `payment_intents` (provider=omise, `payment_intent_id=NULL` ให้ webhook เป็นคนเขียน — ตาม contract RPC เดิม 010) → คืน `charge_id`/`authorize_uri`/`charge_status`
+- **`omise-webhook`** (no-verify-jwt): ตรวจ `Omise-Signature` (t/v1 = HMAC-SHA256 ของ `ts.payload`, constant-time + กรอบ 300 วิ) → `charge.complete` → `record_payment_result` (idempotent + amount-match RPC เดิม ไม่ต้องแตะ migration) → `refund.complete` → sync ledger (`refund_ids`/`refunded_total_minor` + `orders.payment_status`) แบบ mirror stripe-webhook
+- **`omise-refund`** (JWT on): ตรวจ `is_admin()` → เลือก intent ที่ `provider='omise'` → ledger guard (ไม่เกินยอดที่เคย charge) → เรียก Omise Refunds API → persist ผล (idempotency key `bmb-omise-refund-<order>-<minor>`)
+- Probe production จริง: `GET omise-webhook → 200 ok` · `GET checkout/refund → 401 JWT` · `POST webhook ไร้ signature → 500 ERR_WEBHOOK_NOT_CONFIGURED` (จะผ่านเมื่อตั้ง secret) — **3/3 ตรงออกแบบ**
+
+### Client (env-driven สลับกลับ Stripe ได้ ไม่พังกลางทาง)
+- `paymentGateway`: `PaymentProvider` + `'omise'` · `createCheckout(orderNumber, {cardToken})` → invoke `omise-checkout` เมื่อ `isOmiseConfigured()` (คีย์ placeholder → fallback Stripe เดิมอัตโนมัติ) · `createPaymentIntent` ฝั่ง omise คืน pending UI-only **ไม่เขียนแถวอะไรจาก browser**
+- `CardPaymentForm`: branch ใหม่ `OmiseCardForm` — กรอกบัตร → `omiseCreateCardToken` (Omise.js ตรงจาก browser, PCI อยู่ที่ Omise) → `omise-checkout` → ถ้า `pending`+`authorize_uri` → redirect 3DS แล้วกลับ `/payment/:order` (ผลจริงให้ webhook บันทึก) · Stripe เดิมอยู่ครบเป็น fallback
+- `PaymentConfirmationPage` label `(Omise)`/`(Stripe)` ตามคีย์ · `stripeRefundOrder` เลือก `omise-refund`/`stripe-refund` ตาม `payment_intents.provider`
+
+### Tests ใหม่ 4 ไฟล์ (+28)
+`omiseWebhookSignature` (t/v1 HMAC + replay window + importKey guard) · `omiseRefundLogic` (ledger/idempotency/provider filter) · `omiseCheckoutLogic` (satang/return_uri/guard/ reuse decisions) · `omiseCutover` (paymentGateway omise path + fallback + money-out refusal) — **stripe tests เดิมคงไว้** ทดสอบ fallback path
+
+### Gates (ผ่านจริง)
+TSC 0 · LINT 0 · VITEST **55 files/589** (+4/+28) · BUILD 0
+
+### ⚠️ ค้าง owner action (ตรวจแล้ว 2026-10-07 — ยังไม่ผ่าน)
+1. **คีย์ใน `.env.local` ยังเป็น placeholder อยู่จริง** — L51/L52 = `pkey_test_REPLACE_…`/`skey_test_REPLACE_…` (len=37 = ยาวเท่า placeholder เป๊ะ, ตรวจด้วย regex `REPLACE` = True; Windows env ก็ไม่ได้ตั้ง) → **ต้องวาง test key จริง** (Omise Dashboard → Settings → API keys → `pkey_test_…`/`skey_test_…`) แล้วแจ้งเพื่อ `supabase secrets set OMISE_SECRET_API_KEY_TEST_MODE=…`
+2. **`OMISE_WEBHOOK_SECRET` ยังไม่มี** — สร้าง webhook endpoint ใน Omise Dashboard ชี้ `https://ivkdfognyiwjcmrhcnwz.supabase.co/functions/v1/omise-webhook` (event: charge.* + refund.*) แล้วคัดลอก signing secret (ขึ้นต้น `whsec_`) → `supabase secrets set`
+3. ครบแล้วค่อย ทดสอบจ่ายบัตร test ใน browser → ผ่านแล้วขอ live key (รอบหลัง)
+

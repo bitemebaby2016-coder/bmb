@@ -89,3 +89,14 @@
 
 ## 16. Next exact step
 chat หน้า: ทำ Omise cutover ตาม `docs/BMB_HANDOFF_AI_AUTOMOTION_AUDIT_2026-10-07.md` §5 (EF `omise-checkout`/`omise-webhook` + `CardPaymentForm`→Omise.js + แทน stripe tests) — เริ่มจาก owner วาง test key จริงใน `.env.local` + `supabase secrets set`
+
+## 17. Round 15 — Omise cutover (code + EF + tests + deploy)
+- EF ใหม่ 3 ตัว deploy แล้ว + probe ผ่าน: `omise-checkout` (JWT, amount re-derive, guard charge ซ้ำ) · `omise-webhook` (Omise-Signature t/v1 HMAC → `record_payment_result` idempotent, no-verify-jwt) · `omise-refund` (is_admin + ledger) — contract RPC เดิม (010) ใช้ได้เลย ไม่แตะ migration
+- Client: `paymentGateway` provider `omise` + `createCheckout({cardToken})` (env-driven — placeholder → fallback Stripe) · `OmiseCardForm` (Omise.js token → charge → redirect 3DS) · label/refund เลือกตาม provider
+- Tests +4 ไฟล์/+28 (signature/refund/checkout logic + cutover path) · Gates: TSC 0 · LINT 0 · VITEST 55/589 · BUILD 0
+
+## 18. Next exact step
+1. **เจอบล็อก: คีย์ใน `.env.local` ยังเป็น placeholder** (L51/L52 มีคำว่า `REPLACE` — เจ้าของต้องวาง `pkey_test_…`/`skey_test_…` จริง) → `supabase secrets set OMISE_SECRET_API_KEY_TEST_MODE=…`
+2. สร้าง webhook ใน Omise Dashboard ชี้ `…/functions/v1/omise-webhook` → `supabase secrets set OMISE_WEBHOOK_SECRET=whsec_…`
+3. `npm run dev` → checkout บัตร test (`4242 4242 4242 4242` ของ Omise) → ผ่าน 3DS/สำเร็จ → ตรวจ `orders.payment_status='paid'` ใน DB (มาจาก webhook เท่านั้น) → ค่อยขอ live key รอบหลัง
+

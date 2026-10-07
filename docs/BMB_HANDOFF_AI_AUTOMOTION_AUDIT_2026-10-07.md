@@ -1,7 +1,7 @@
 # BMB — Handoff: AI Automation Audit + Payment Omise (2026-10-07)
 
 > **สถานะ:** AUDIT + HANDOFF สำหรับพัฒนระบบต่อให้ครบ
-> **Branch:** `main == origin/main` · รอบล่าสุด = Round 13 (NL customize + auto-TTS) + ราก Omise
+> **Branch:** `main == origin/main` · รอบล่าสุด = Round 15 (Omise cutover code ครบ + EF deploy) · ก่อนหน้า = Round 13 (NL customize + auto-TTS) + ราก Omise (รอบ 14)
 > เอกสารนี้คือจุดออกเดิน — อ่านให้ครบก่อนเริ่มงานใหม่
 > **หมายเหตุ:** เขียนบทภาษาไทยใหม่ทั้งหมด (รอบก่อนไฟล์นี้พังจาก encoding — แทนที่ของเดิมแล้ว)
 
@@ -39,8 +39,9 @@
 | Quick actions execute จริง | TalkToBite handlers | Round 11 |
 | Data authority (menu/history/cart จาก source จริง ไม่ fake) | `getProducts`/`getOrdersByCustomer`/`cartStore.addItem` | ทุกชั้น |
 | No AI image-gen (0 hits) | grep | Round 9.1–11 |
-| **ราก Omise** (env keys + client config + tests) | `.env.local`/`vite.config`/`src/lib/omise.ts` | **รอบนี้** · omise.test 4/4 |
-| Gates green | `tsc 0 · lint 0 · vitest 51/561 · build 0` | ✅ |
+| **ราก Omise** (env keys + client config + tests) | `.env.local`/`vite.config`/`src/lib/omise.ts` | รอบ 14 · omise.test 4/4 |
+| **Omise cutover — code ครบ (steps 2–7)** (EF 3 ตัว deploy+probe · paymentGateway omise · OmiseCardForm · tests +28) | `supabase/functions/omise-*` · `paymentGateway.ts` · `CardPaymentForm.tsx` | **รอบ 15** · probe 3/3 · VITEST 55/589 |
+| Gates green | `tsc 0 · lint 0 · vitest 55/589 · build 0` | ✅ |
 ---
 
 ## 3. PARTIAL — มีพื้นฐาน แต่ยังไม่ครบ
@@ -73,19 +74,28 @@
 - **`src/lib/omise.ts`**: config client-safe (`omiseConfig`/`isOmiseConfigured`/`omiseIsTestMode`) + seam `OMISE_CHECKOUT_FUNCTION='omise-checkout'` — ไม่แตะ secret key (ฝั่ง server เท่านั้น)
 - **`src/__tests__/omise.test.ts`**: 4 tests ผ่าน
 - **Stripe path เดิมยังทำงานได้** ไม่ได้ถอด — card checkout ใช้ได้จนกว่า cutover เสร็จ
+- **รอบ 15 (2026-10-07) — cutover code ครบ (ขั้น 2–7):**
+  - EF ใหม่ **`omise-checkout`** (JWT · amount re-derive จาก DB · single-open-intent guard `pi-chrg_*` กัน charge ซ้ำ · insert `payment_intents` provider=omise · `payment_intent_id=NULL` ให้ webhook เขียนตาม contract 010)
+  - EF ใหม่ **`omise-webhook`** (deploy แล้ว, no-verify-jwt · ตรวจ `Omise-Signature` t/v1 HMAC-SHA256 constant-time + กรอบ 300 วิ → `record_payment_result` idempotent · `refund.complete` → ledger sync mirror stripe-webhook)
+  - EF ใหม่ **`omise-refund`** (deploy แล้ว · JWT + `is_admin()` · ledger guard · เรียก Omise Refunds API · key `bmb-omise-refund-<order>-<minor>`)
+  - **`paymentGateway.ts`**: `PaymentProvider` + `'omise'` · `createCheckout(orderNumber,{cardToken})` → `omise-checkout` เมื่อ `isOmiseConfigured()` (**คีย์ placeholder → fallback Stripe อัตโนมัติ ไม่พังกลางทาง**) · `createPaymentIntent` card ฝั่ง omise = pending UI-only (browser ไม่เขียนแถวใด ๆ)
+  - **`CardPaymentForm`**: branch `OmiseCardForm` — กรอกบัตร → Omise.js token (browser → Omise ตรง, PCI ที่ Omise) → `omise-checkout` → redirect `authorize_uri` (3DS) แล้วกลับ `/payment/:order` · Stripe branch เดิมอยู่ครบ
+  - `PaymentConfirmationPage` label ตาม provider · `stripeRefundOrder` เลือก `omise-refund`/`stripe-refund` จาก `payment_intents.provider`
+  - **Tests ใหม่ 4 ไฟล์ +28**: `omiseWebhookSignature`/`omiseRefundLogic`/`omiseCheckoutLogic`/`omiseCutover` — stripe tests เดิมคงไว้ (คุม fallback path)
+  - Probe production 3/3 ผ่าน · **ยังไม่ switch live**
 
-### 5.2 ยังต้องทำ (next chat) — card flow ปัจจุบัน = Stripe ทั้งเส้น
-ปัจจุบัน: `paymentGateway.createCheckout` → EF `create-checkout` (Stripe PaymentIntent) → client_secret → `CardPaymentForm` (Stripe.js) → EF `stripe-webhook` → `record_payment_result` (idempotent) · refund = EF `stripe-refund`
+### 5.2 สถานะ cutover (อัปเดต รอบ 15) — code ครบทุกขั้น เหลือ owner action
+เส้น Stripe เดิมยังเป็น fallback เมื่อคีย์ Omise ยังไม่ถูกตั้งค่าจริง · สลับอัตโนมัติตาม env (ไม่ hard-switch)
 
-ลำดับ cutover (เก็บให้ test ผ่านก่อน ค่อยขอ live):
-1. **Owner วาง test key จริง** ใน `.env.local` + `supabase secrets set OMISE_SECRET_API_KEY_TEST_MODE=…` (secret ห้ามอยู่ client)
-2. **EF ใหม่ `omise-checkout`**: อ่าน secret key, re-derive amount จาก DB (ห้าม trust client), เรียก Omise Charges API (card token / return_uri) → คืน charge id / authorize URL
-3. **Client `CardPaymentForm`**: ใช้ Omise.js (public key) สร้าง card token → ส่งเข้า `omise-checkout` (หรือ Omise Checkout redirect flow)
-4. **EF `omise-webhook`**: ตรวจ `Omise-Signature` (HMAC-SHA256) → `record_payment_result` (RPC เดิม idempotent)
-5. **`paymentGateway.ts`**: `PaymentProvider 'stripe'→'omise'` + `createCheckout` → `omise-checkout`
-6. **Refund**: Omise Refunds API แทน `stripe-refund`
-7. **Tests**: แทน `stripeWebhookSignature`/`stripeRefundLogic` ด้วยชุด omise; อัปเดต `paymentStateMachine`/`canonicalOrderFlow`/`g6Security`
-8. **ทดสอบใน browser จนผ่าน** → ขอ live key → สลับ `*_LIVE` (รอบหลัง)
+ลำดับ cutover:
+1. ⬜ **Owner วาง test key จริง** ใน `.env.local` + `supabase secrets set OMISE_SECRET_API_KEY_TEST_MODE=…` (secret ห้ามอยู่ client) — **ยังเป็น placeholder อยู่จริง (ตรวจแล้ว 2026-10-07: `REPLACE` ยังอยู่ทั้งคู่)** + เพิ่ม: สร้าง webhook ใน Omise Dashboard ชี้ `…/functions/v1/omise-webhook` แล้ว `supabase secrets set OMISE_WEBHOOK_SECRET=whsec_…`
+2. ✅ **EF `omise-checkout`**: อ่าน secret key, re-derive amount จาก DB (ห้าม trust client), เรียก Omise Charges API (card token / return_uri) → คืน charge id / authorize_uri — **deploy แล้ว + probe ผ่าน**
+3. ✅ **Client `CardPaymentForm`**: Omise.js สร้าง card token → ส่งเข้า `omise-checkout` → redirect 3DS `authorize_uri`
+4. ✅ **EF `omise-webhook`**: ตรวจ `Omise-Signature` (HMAC-SHA256) → `record_payment_result` (RPC เดิม idempotent) — **deploy แล้ว + probe ผ่าน**
+5. ✅ **`paymentGateway.ts`**: `PaymentProvider` + `'omise'` + `createCheckout` → `omise-checkout` (env-driven fallback)
+6. ✅ **Refund**: EF `omise-refund` (Omise Refunds API) + admin เลือกตาม provider — **deploy แล้ว**
+7. ✅ **Tests**: ชุด omise ใหม่ 4 ไฟล์ +28 · paymentStateMachine/canonicalOrderFlow/g6Security เดิมผ่านครบ (fallback path) · **stripe tests คงไว้คุม fallback**
+8. ⬜ **ทดสอบใน browser จนผ่าน** → ขอ live key → สลับ `*_LIVE` (รอบหลัง)
 
 ### 5.3 ความปลอดภัย (ห้ามละเมิด)
 - Secret key อยู่ server เท่านั้น (ไม่เคยใน bundle client)
@@ -114,10 +124,10 @@
 - [ ] voice states ใน Bite Hero (`error`/`device`)
 - [ ] voice E2E (mock)
 ### 7.3 Payment (สำคัญ — ตาม §5)
-- [ ] owner วาง Omise test key จริง + `supabase secrets set`
-- [ ] EF `omise-checkout` + `omise-webhook` + refund
-- [ ] `CardPaymentForm` → Omise.js · `paymentGateway` → omise
-- [ ] แทนที่ stripe tests ด้วย omise tests
+- [ ] owner วาง Omise test key จริง + `supabase secrets set` — **ยัง placeholder (ตรวจแล้ว 2026-10-07)** + `OMISE_WEBHOOK_SECRET` จาก Omise Dashboard
+- [x] EF `omise-checkout` + `omise-webhook` + refund (deploy แล้ว 3/3 · probe ผ่าน)
+- [x] `CardPaymentForm` → Omise.js · `paymentGateway` → omise (env-driven, fallback Stripe ยังทำงาน)
+- [x] แทนที่ stripe tests ด้วย omise tests (เพิ่มชุด omise 4 ไฟล์ +28 — stripe tests คงไว้คุม fallback)
 - [ ] ทดสอบ browser ผ่าน → ขอ live key → สลับรอบหลัง
 ### 7.4 ทดสอบ (สำคัญ)
 - [ ] E2E: landing → conversation → order-again → customize → add → checkout
@@ -144,7 +154,7 @@ npm run dev
 
 ## 9. Git
 - HEAD: `local == remote` หลัง push รอบนี้
-- Gates: TSC 0 · LINT 0 · VITEST 51 files/561 · BUILD 0
+- Gates: TSC 0 · LINT 0 · VITEST 55 files/589 · BUILD 0 · EF deploy 3/3 (`omise-checkout`/`omise-webhook`/`omise-refund`) + probe ผ่าน
 
 ---
 *จัดทำโดย Cline (AI) — handoff สำหรับพัฒนระบบต่อ*
