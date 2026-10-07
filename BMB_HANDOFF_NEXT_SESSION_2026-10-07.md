@@ -56,6 +56,7 @@
 - Probes ใหม่รอบ 7: `g10ProdSnapshot` · `metaTokenScopeCheck` · `w23SetSmsSecrets` · `w23SmsProbe` · `deploySmsSend` · `m118BuildFromLive` · `m118Verify`
 - Probes ใหม่รอบ 8: `fcApply118` (apply 118) · `m118StateProbe` (เช็ค prod def) · `metaTokenDiag` (debug token metadata) · `metaPageTokenExtend` (exchange page token → long-lived) · `migHistory` · `migHistoryReconcile` (มีอยู่เดิม) · `smsPhoneLookup` · `whoIs` · `w23SmsSendOwner` (ส่ง SMS ไปเบอร์ Owner)
 - ⚠️ **`.env.local` META_USER_ACCESS_TOKEN หมดอายุแล้ว** — ถ้าต้อง exchange user token ใหม่ Owner ต้อง generate จาก Graph API Explorer ใส่ env
+- 🔎 **SMS ไม่ถึงเครื่อง (W-2.3): วิเคราะห์ครบใน `BMB_W23_SMS_DELIVERY_DIAGNOSTIC.md`** — สรุป: ฝั่ง BMB ถูกต้องหมด · ปัญหาอยู่ชั้น THSMS→carrier→มือถือ · สงสัย #1 = sender-id ไม่ผ่าน whitelist ค่าย · ทำ T1 (ดู panel) + T5 (ถาม THSMS) ก่อนแก้
 - คู่มือแอดมิน: `docs/03_ADMIN_USER_GUIDE.md`
 
 ## 6. เปิดเซสชันใหม่ด้วยข้อความนี้
