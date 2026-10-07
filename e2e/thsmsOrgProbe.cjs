@@ -12,7 +12,7 @@ for (const l of fs.readFileSync(path.join(ROOT, '.env.local'), 'utf8').split(/\r
 }
 const KEY = h.SMS_API_KEY || h.THSMS_API_KEY || ''
 const SENDER = h.SMS_SENDER_NAME || h.THSMS_SENDER_NAME || 'BiteMeBaby'
-const MTYPE = h.SMS_MESSAGE_TYPE || h.THSMS_MESSAGE_TYPE || 'superfast'
+const MTYPE = process.argv[3] || h.SMS_MESSAGE_TYPE || h.THSMS_MESSAGE_TYPE || 'superfast'
 const BASE = (h.THSMS_ORG_BASE || 'https://api.thsms.org/v1').replace(/\/$/, '')
 const raw = (process.argv[2] || '0826378546').replace(/\D/g, '')
 const mask = (p) => String(p || '').replace(/(\d{3})\d{3}(\d{3,4})/, '$1***$2')

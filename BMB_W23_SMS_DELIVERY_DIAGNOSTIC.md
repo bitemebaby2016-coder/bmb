@@ -174,3 +174,21 @@ body ทุกครั้ง: `{"success":false,"status_code":404,"error":"Not 
 - แก้ `deploySmsSend.cjs` ให้ไล่ทุก `SUPABASE_ACCESS_TOKEN` (ตัวท้ายหมดอายุ → 401)
 
 **ยืนยันแล้ว (2026-10-07):** ✅ **Owner ยืนยัน SMS เข้าเครื่องจริงทั้ง 3 เบอร์** → **W-2.3 DELIVERY CONFIRMED** — ปัญหา "SMS ไม่ถึง" จบสมบูรณ์ด้วยผู้ให้บริการ **thsms.org** + sender `SMSOTP` · **root cause เดิม: ชี้ผิดแพลตฟอร์ม (`thsms.com`) ทั้งที่คีย์/บัญชีเป็นของ `thsms.org`**
+
+---
+
+## 11. อัปเดต รอบ 8i — เครดิต 1/ข้อความ + แก้ token ซ้ำ
+
+**การค้นพบสำคัญ:** thsms.org คิดเครดิตตาม **`message_type`** (ไม่ใช่ความยาวข้อความ — ข้อความ ≤70 ตัวแต่ `superfast` ก็ยัง 3):
+
+| `message_type` | `credits_used` |
+|---|---|
+| **`standard`** | **1** ✅ |
+| `express` | 2 |
+| `superfast` | 3 |
+
+> หน้าเว็บ thsms.org ระบุว่ารองรับ `Superfast`, `Express`, `Standard`
+
+**แก้แล้ว:** `SMS_MESSAGE_TYPE=standard` (default ในโค้ด + secret prod) + `THSMS_MESSAGE_TYPE=standard` ใน `.env.local` → re-set secrets (201) + redeploy · probe → **`credits_used:1`** ✅ · EF send 200
+
+**แก้ token ซ้ำ:** `.env.local` มี `SUPABASE_ACCESS_TOKEN` **2 บรรทัด** — ตัวเก่า `sbp_fcf…` (มี**เว้นวรรค**ก่อน `=`) ถูกดึงไปใช้ก่อน → 401 · แก้โดย **comment ปิดตัวเก่า** เหลือตัวถูก `bmb-dev-2026-10` (`sbp_fceb…1936`, exp 05 Nov 2026) → ตั้ง secrets ผ่านด้วย 201 (ไม่มี 401)

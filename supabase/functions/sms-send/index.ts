@@ -21,7 +21,7 @@
 //   SMS_API_URL       — endpoint POST JSON (thsms_org: https://api.thsms.org/v1/sms/send)
 //   SMS_API_KEY       — credential (thsms_org: header 'X-API-Key'; thsms.com: 'Authorization: Bearer')
 //   SMS_SENDER_NAME   — sender id ที่ลงทะเบียน (thsms_org body field: sender_name)
-//   SMS_MESSAGE_TYPE  — thsms_org เท่านั้น (เช่น 'superfast'/'standard') default 'superfast'
+//   SMS_MESSAGE_TYPE  — thsms_org เท่านั้น: 'standard' = 1 เครดิต · 'express' = 2 · 'superfast' = 3 (default 'standard')
 //   thsms_org body: { sender_name, recipient, message, message_type }   (docs api.thsms.org/v1)
 //   thsms.com body: { msisdn: ['08...'], message, sender }              (legacy)
 //   SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY — auto-injected
@@ -37,7 +37,7 @@ const SMS_PROVIDER = Deno.env.get('SMS_PROVIDER') || ''
 const SMS_API_URL = Deno.env.get('SMS_API_URL') || ''
 const SMS_API_KEY = Deno.env.get('SMS_API_KEY') || ''
 const SMS_SENDER_NAME = Deno.env.get('SMS_SENDER_NAME') || 'BiteMeBaby'
-const SMS_MESSAGE_TYPE = Deno.env.get('SMS_MESSAGE_TYPE') || 'superfast'
+const SMS_MESSAGE_TYPE = Deno.env.get('SMS_MESSAGE_TYPE') || 'standard'
 
 function json(body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body), {
