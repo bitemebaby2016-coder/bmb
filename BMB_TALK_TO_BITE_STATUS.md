@@ -8,8 +8,8 @@
 
 ## 1. Current HEAD / สถานะ
 
-> อัปเดตค่าจริงหลัง commit ในตอนท้ายของรอบ (เดิม): HEAD = `56a43dc` (`main` = `origin/main`)
-
+- **HEAD = `ffdef88`** (`main` = `origin/main` — commit อ้างอิงของรอบนี้)
+- **Push:** ✅ `origin/main` แล้ว · `local == remote == ffdef88` · worktree clean
 - Gates ปิดรอบ (หลังแก้) — **ผ่านจริง:**
   - `npx tsc --noEmit` = **0 error**
   - `npm run lint` = **0 error**
