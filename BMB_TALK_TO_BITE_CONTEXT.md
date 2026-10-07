@@ -81,4 +81,11 @@
 - Gates: TSC 0 · LINT 0 · VITEST 50/557 · BUILD 0
 
 ## 14. Next exact step
-`npm run dev` → `/` → type "เพิ่ม прыгать" in an order → see draft note → add → checkout → verify `order_items.customizations` in DB. Then follow the handoff checklist (mapping table / continuous-listen / E2E).
+`npm run dev` → `/` → พิมพ์ "เพิ่มไข่" ในออเดอร์ → ดู draft note → add → checkout → ตรวจ `order_items.customizations` ใน DB. แล้วทำต่อตาม handoff (mapping table / continuous-listen / E2E / Omise cutover)
+## 15. Round 14
+- แก้เอกสารไทยพังทั้งหมด (handoff ใหม่ + STATUS §11 + CONTEXT §13) — ตรวจแล้วสะอาด
+- ราก Omise: `.env.local` test keys + `vite.config envPrefix` + `src/lib/omise.ts` + 4 tests (Stripe path ยังใช้ได้; cutover = next chat ตาม handoff §5)
+- Gates: TSC 0 · LINT 0 · VITEST 51/561 · BUILD 0
+
+## 16. Next exact step
+chat หน้า: ทำ Omise cutover ตาม `docs/BMB_HANDOFF_AI_AUTOMOTION_AUDIT_2026-10-07.md` §5 (EF `omise-checkout`/`omise-webhook` + `CardPaymentForm`→Omise.js + แทน stripe tests) — เริ่มจาก owner วาง test key จริงใน `.env.local` + `supabase secrets set`

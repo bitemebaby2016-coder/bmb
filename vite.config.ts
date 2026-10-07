@@ -9,6 +9,11 @@ const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
 
 export default defineConfig({
+  // Omise published key: the owner configured the exact name
+  // `OMISE_PUBLISHED_API_KEY_TEST_MODE` (no VITE_ prefix). Vite only ships
+  // VITE_* to the client by default, so whitelist exactly that one name while
+  // keeping 'VITE_' first so every existing public var still works.
+  envPrefix: ['VITE_', 'OMISE_PUBLISHED_API_KEY_TEST_MODE'],
   plugins: [
     react(),
     tailwindcss(),

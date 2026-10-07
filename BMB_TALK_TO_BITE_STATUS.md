@@ -184,26 +184,43 @@ TSC 0 · LINT 0 · VITEST 50 files/**553** (เพิ่ม 4) · BUILD 0
 - auto-TTS reply เต็ม voice loop (ตอบเสียงอัตโนมัติหลัง draft) — ใช้ `aiVoice` ได้ต่อ
 ---
 
-## 11. Round 13 — NL customize (flag→item note) + Auto-TTS loop + Automation Audit handoff
+## 11. Round 13 — NL customize (flag → item note) + Auto-TTS loop + Automation audit
 
-### NL customize → item note (เข้าใจสั�จริง)
-- `talkToBite.ts`: `extractCustomizers(text)` — Thai-block generic ("เพิ่ม X / не X" → plain note map) + `attachCustomizersToDraft(draft, customizers, targetId?)` — attach note + customizations map to target line.
-- **Wired end-to-end**: `tryOrderIntent` attaches customizers to the modified/replaced line; draft card shows the note (`data-testid="ttb-draft-note"`); **`confirmDraft` → `cartStore.addItem(p, qty, line.customizations)`** — the REAL order_items.customizations (jsonb) gets them. No fake notes.
-- Tests: attachCustomizersToDraft mechanics ×3 + parseOrderIntent empty customizers ×1 → **VITEST 50/557**.
+### NL customize → item note
+- `talkToBite.ts`: เพิ่ม `extractCustomizers(text)` — จับ phrase "เพิ่ม X / ไม่ X" เป็น plain-note map (Thai block) + `attachCustomizersToDraft(draft, customizers, targetId?)` — ผูก note + customizations map เข้า line ที่เลือก
+- ต่อ end-to-end: `tryOrderIntent` ผูก customizers เข้า line ที่ swap/replace; draft card แสดง note (`ttb-draft-note`); `confirmDraft` → `cartStore.addItem(p, qty, line.customizations)` — ลง `order_items.customizations` (jsonb) จริง ไม่ fake
+- Tests: attach mechanics ×3 + parse empty ×1 → VITEST 50/557
 
 ### Auto-TTS full voice loop
-- `pushAssistant` now auto-speaks every Bite reply when voice is on (text ALWAYS shows — never voice-only; entry greeting still silent → no autoplay).
-- Voice default ON (`voiceReply=useState(true)`); voiceRef loads even without mic (TTS-only) via `if(!micSupported && !ttsSupported) return`.
-- Toggle listener 🔇/🔊 stays; no double-speak (removed old explicit speak in `handleSend`).
+- `pushAssistant` auto-speak ทุก reply เมื่อ voice เปิด (text แสดงเสมอ — ไม่มี autoplay ตอนเข้า)
+- Voice default ON; voiceRef โหลดได้แม้ไม่มี mic (TTS-only) ผ่าน `if(!micSupported && !ttsSupported) return`
+- ปุ่ม 🔇/🔊 ยังใช้ได้ ไม่ double-speak (ลบ speak เก่าใน `handleSend`)
 
 ### Automation audit handoff
-- New `docs/BMB_HANDOFF_AI_AUTOMOTION_AUDIT_2026-10-07.md` — DONE/PARTIAL/NOT-DONE + checklist to reach 100% (NL mapping table, continuous-listen, real-based recommendations, E2E, etc.).
+- `docs/BMB_HANDOFF_AI_AUTOMOTION_AUDIT_2026-10-07.md` — DONE/PARTIAL/NOT-DONE + checklist ถึง 100%
 
 ### Gates (ผ่านจริง)
-TSC 0 · LINT 0 · VITEST 50 files/**557** · BUILD 0
+TSC 0 · LINT 0 · VITEST 50 files/557 · BUILD 0
 
-### ยังเหลือ (priority in handoff)
-1. canonical keys ↔ Thai table (extra_egg/spicy/nões_ice) — сейчас только generic
-2. перенос прошлых customizations в order-again
-3. Continuous-listen после reply (policy-safe) · E2E
-4. remove dead `getBiteMessage`/`getBitePose` · migrate `useCartStore` shim
+### ยังเหลือ (ดู handoff)
+1. canonical keys ↔ Thai table (extra_egg/spicy/no_ice) — ตอนนี้ generic อย่างเดียว
+2. ต่อ customizations เก่าเข้า order-again
+3. Continuous-listen หลัง reply (policy-safe) · E2E
+4. ลบ dead `getBiteMessage`/`getBitePose` · migrate `useCartStore` shim
+---
+
+## 12. Round 14 — แก้ภาษาพัง + ราก Omise (Stripe→Omise, TEST MODE)
+
+### แก้ภาษาทั้งหมด
+- รอบก่อนเอกสารไทยพัง (encoding/mojibake) — เขียนใหม่ทั้งหมด: `BMB_HANDOFF_AI_AUTOMOTION_AUDIT_2026-10-07.md` (ลบ+แทนของเก่า) · STATUS §11 · CONTEXT §13 — ตรวจแล้วไทยสะอาด
+
+### ราก Omise (ยังไม่ switch live — cutover = next chat ตาม handoff §5)
+- `.env.local` (gitignored): `OMISE_PUBLISHED_API_KEY_TEST_MODE` + `OMISE_SECRET_API_KEY_TEST_MODE` (owner วาง test key จริงแทน placeholder)
+- `.env.example` บันทึกชื่อตัวแปร
+- `vite.config.ts`: `envPrefix: ['VITE_', 'OMISE_PUBLISHED_API_KEY_TEST_MODE']` (ชื่อไม่มี VITE_ prefix → whitelist ให้ client อ่านได้)
+- `src/lib/omise.ts`: config client-safe (`omiseConfig`/`isOmiseConfigured`/`omiseIsTestMode`) + seam `omise-checkout` — ไม่แตะ secret (server only)
+- `src/__tests__/omise.test.ts`: 4 tests
+- **Stripe path เดิมยังใช้ได้** — card checkout ทำงานต่อจนกว่า cutover เสร็จ
+
+### Gates (ผ่านจริง)
+TSC 0 · LINT 0 · VITEST 51 files/561 · BUILD 0
