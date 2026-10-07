@@ -8,8 +8,8 @@
 
 ## 1. Current HEAD / สถานะ
 
-- **HEAD (รอบล่าสุด) = `4b3cc7b`** (`main` = `origin/main` — `/` Landing เต็มจอ + Voice Bar)
-- **Push:** ✅ `origin/main` แล้ว · `local == remote == 4b3cc7b` · worktree clean
+- **HEAD (รอบล่าสุด) = `162d319`** (`main` = `origin/main` — NL order + chat layout)
+- **Push:** ✅ `origin/main` แล้ว · `local == remote == 162d319` · worktree clean
 - Gates ปิดรอบ (หลังแก้) — **ผ่านจริง:**
   - `npx tsc --noEmit` = **0 error**
   - `npm run lint` = **0 error**
