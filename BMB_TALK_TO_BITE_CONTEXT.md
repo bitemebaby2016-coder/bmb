@@ -5,7 +5,7 @@
 
 ## 1. Project state / HEAD
 - Repo: `D:\A PROJECT\Bite Me Baby` (branch `main`) — **search_codebase สแกน workspace copy เก่า `chat\bmb` ไม่ใช่ repo จริง** → ใช้ `run_commands`+`Get-Content` กับ D: เสมอ
-- **HEAD (รอบนี้) = `ffdef88`** · `main == origin/main` · pushed ✅ · worktree clean
+- **HEAD (รอบล่าสุด) = `6c7af5f`** (Talk to Bite เต็มจอ + Admin Asset Audit) · `main == origin/main` · pushed ✅ · worktree clean
 - baseline gates: TSC 0 / LINT 0 / VITEST 50 files **545** / BUILD 0
 - Environment: Windows / React 19 + Vite 8 + Tailwind 4 + Zustand 5 + Supabase; node_modules พร้อม
 

@@ -8,8 +8,8 @@
 
 ## 1. Current HEAD / สถานะ
 
-- **HEAD = `ffdef88`** (`main` = `origin/main` — commit อ้างอิงของรอบนี้)
-- **Push:** ✅ `origin/main` แล้ว · `local == remote == ffdef88` · worktree clean
+- **HEAD (รอบล่าสุด) = `6c7af5f`** (`main` = `origin/main` — Talk to Bite เต็มจอ + Admin Asset Audit)
+- **Push:** ✅ `origin/main` แล้ว · `local == remote == 6c7af5f` · worktree clean
 - Gates ปิดรอบ (หลังแก้) — **ผ่านจริง:**
   - `npx tsc --noEmit` = **0 error**
   - `npm run lint` = **0 error**
