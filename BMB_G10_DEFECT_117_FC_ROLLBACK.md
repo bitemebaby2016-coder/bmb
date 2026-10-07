@@ -1,6 +1,6 @@
 # BMB — G10 DEFECT REPORT: MIGRATION 117 CLOBBERED FC GATES (112/114)
 
-**สถานะ:** DEFECT ยืนยันแล้วด้วย production evidence (read-only) · **FIX = migration 118 AUTHORED + VERIFIED (16/16) — PENDING Owner approval ห้าม apply ก่อนอนุมัติ**
+**สถานะ:** ✅ **RESOLVED (2026-10-07 รอบ 8)** — Owner อนุมัติลายลักษณ์อักษร → migration **118 APPLIED ขึ้น production** → `fcVerify114` **25/25** · `fcProdVerify` **9/9** · `intakeDriftProbe` 18-param OK · migration history บันทึก 118 แล้ว (118/118)
 **ค้นพบ:** 2026-10-07 ระหว่าง G10 TRUE PRODUCTION CLOSURE verification (อ่านต่อจาก BMB_HANDOFF_NEXT_SESSION_2026-10-06 §4)
 **Severity:** HIGH — ธุรกิจ regression จริงใน production (ระบบ gate ตามที่ Owner กำหนดไม่ถูกบังคับที่ order RPC)
 
@@ -39,38 +39,45 @@ Migration **117** (2026-10-06, Owner อนุมัติ) สร้าง `pub
 
 > สาเหตุที่หลุด: รอบ apply 117 รันแค่ `intakeDriftProbe` + `channelWebhookProbe` (เช็ก channel intake) — **ไม่ได้ re-run `fcProdVerify`/`fcVerify114`** หลัง apply → regression ไม่ถูกจับจนรอบ G10 นี้
 
-## 3. FIX — migration 118 (AUTHORED, ยังไม่ apply)
+## 3. FIX — migration 118 (✅ APPLIED 2026-10-07 รอบ 8)
 
-- ไฟล์: `supabase/migrations/118_restore_fc_gates_after_117.sql` — header `Owner approval: PENDING`
+- ไฟล์: `supabase/migrations/118_restore_fc_gates_after_117.sql` — header เดิม `Owner approval: PENDING` (ไฟล์ยัง pin ข้อความนี้ไว้ตามที่ `m118Verify` ตรวจ — ไม่แก้ไฟล์หลังอนุมัติ)
 - วิธีสร้าง: `node e2e/m118BuildFromLive.cjs` (anchor-guarded) — เอา live def (= 117 body) + แทรก **FC block 16 บรรทัด + zone block 8 บรรทัด จากไฟล์ 114 แบบ verbatim** + fee arg + FC declarations (4 transforms: T1–T4)
 - **ไม่ทำลาย channel intake ของ 117** (18-param signature, dup guard, channel tag, auth 048 — คงเดิมทุกประการ)
 - **verify: `node e2e/m118Verify.cjs` = 16/16 ALL PASS** — 3-way textual diff: (ก) FC markers ครบ + ไม่มี 5.00 (ข) เสียจาก 117 แค่ 3 บรรทัดที่ถูกแทนที่จริง (ค) หายจาก 114 เฉพาะ 9 บรรทัดที่ตั้งใจไม่ restore (auth/INSERT branch_id/audit+return แบบ channel)
 - Preconditions ผ่านแล้ว (read-only): `delivery_policy` มีครบทุก key ที่ FC block บังคับ (`bite_drive_radius_km:5`, `allow_external_within_radius:false`, `external_methods_enabled:[]`, `bite_drive_enabled:true`) → apply แล้วไม่เจอ `ERR_CONFIG_MISSING`
 
-### หลัง Owner อนุมัติ — ลำดับ apply + verify
+### 3.1 Build defect ที่เจอตอน apply (แก้แล้ว — สำคัญต่อ handoff)
+
+- **รอบแรก apply 118 ล้มเหลว:** `ERROR 42601 syntax error at or near "REVOKE"` (LINE 280) — สาเหตุ: `pg_get_functiondef()` **ไม่รวม `;` ปิดท้าย** แต่ `m118BuildFromLive.cjs` tail ขึ้นต้นด้วย `\n` → ได้ `$function$\nREVOKE` (ไม่มี `;`)
+- Transaction `BEGIN...COMMIT` **rollback อัตโนมัติ** → prod ไม่ถูกแก้ (ยืนยันด้วย `m118StateProbe`: FC markers ยัง false, `5.00` ยังอยู่ = ยังเป็น 117)
+- แก้ build script: tail ขึ้นต้นด้วย `;` → regenerate + `m118Verify` 16/16 อีกครั้ง → apply สำเร็จ `APPLY118_OK`
+- บทเรียน: `m118Verify` เป็น **textual** เท่านั้น — ไม่จับ syntax ระดับ SQL ต้องพึ่ง apply จริง/parse
+
+### 3.2 ลำดับ apply + verify (ทำครบแล้ว)
 
 ```text
-1. ยืนยัน worktree clean + gates ผ่าน
-2. apply ผ่าน Management API (precedent 117) หรือ supabase db push
-3. node e2e/intakeDriftProbe.cjs      → INTAKE SIGNATURE: OK (18-param) ต้องยังผ่าน
-4. node e2e/m118BuildFromLive.cjs     → live == 118 file + summary has_fc5=true no_500=true
-5. node e2e/fcVerify114.cjs           → FC_VERIFY_114_ALL_PASS (ทุกข้อ)
-6. node e2e/fcProdVerify.cjs          → FC_PROD_ALL_PASS (ทุกข้อ)
-7. node e2e/w23SmsProbe-style ไม่เกี่ยว · channel probe = เฉพาะถ้า Owner สั่ง (สร้าง test orders)
-Rollback: apply ใหม่ 117_channel_intake_repair.sql (ย้อนเป็น 117 body — เสีย FC กลับเป็นเหมือนเดิม)
+1. m118Verify (16/16) + worktree check ✓
+2. apply ผ่าน Management API: node e2e/fcApply118.cjs → APPLY118_OK ✓
+3. node e2e/intakeDriftProbe.cjs   → INTAKE SIGNATURE: OK (18-param) ✓
+4. node e2e/m118StateProbe.cjs     → ERR_BITE_DRIVE_DISABLED=true · v_radius_override=true · no 5.00 ✓
+5. node e2e/fcVerify114.cjs        → FC_VERIFY_114_ALL_PASS (25 checks) ✓
+6. node e2e/fcProdVerify.cjs       → FC_PROD_ALL_PASS (9 checks) · no_active_orders ✓
+7. node e2e/migHistoryReconcile.cjs --write → history 118/118 ✓
+Rollback (ไม่ใช้): apply ใหม่ 117_channel_intake_repair.sql
 ```
 
-## 4. FLAGS
+## 4. FLAGS (รอบ 8 — APPLIED)
 
 ```text
-LOGIC CHANGED       = NO (ยังไม่ได้แก้ production — 118 ยังเป็นแค่ไฟล์)
-DB CHANGED          = NO
-MIGRATION           = NO (118 = AUTHORED PENDING — ยังไม่ apply)
+LOGIC CHANGED       = NO (restore FC gates ให้ตรง 112/114 เดิม — ไม่เปลี่ยน business rule)
+DB CHANGED          = YES — create_order_with_items ถูก CREATE OR REPLACE (118 APPLIED)
+MIGRATION           = YES — 118 applied + recorded in schema_migrations (118/118)
 SECURITY CHANGED    = NO
-PRODUCTION MUTATION = NO รอบนี้ เฉพาะ SMS secrets + sms-send deploy + META_PAGE_ACCESS_TOKEN (Owner สั่ง)
+PRODUCTION MUTATION = YES — apply 118 (ตาม Owner approval) · set secrets · ส่ง SMS ทดสอบ (Owner สั่ง)
 ```
 
-## 5. OWNER DECISION ที่ต้องการ (HARD STOP)
+## 5. OWNER DECISION (ปิดแล้ว รอบ 8)
 
-1. **อนุมัติ apply migration 118** (หรือสั่งเลื่อน — ระบบยังทำงานได้จากค่า config ปัจจุบันที่ตรงกับ hardcode แต่ admin config ถูกปิดเงียบ)
-2. ระหว่างไม่อนุมัติ — ห้ามมีการแก้ค่า radius/zone/bite_drive ใน admin โดยหวังผลที่ RPC (ไม่มีผลจนกว่า 118 apply)
+1. ✅ **อนุมัติ apply migration 118** (Owner decision message 2026-10-07) → APPLIED + VERIFIED แล้ว
+2. ✅ ระหว่างนี้ไม่มีการแก้ radius/zone/bite_drive ที่ไม่ผ่าน RPC อีก — FC gates กลับมาบังคับจริงที่ `create_order_with_items`

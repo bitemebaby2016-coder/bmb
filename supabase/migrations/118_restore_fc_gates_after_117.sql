@@ -276,7 +276,7 @@ BEGIN
   );
 END;
 $function$
-
+;
 REVOKE EXECUTE ON FUNCTION public.create_order_with_items FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION public.create_order_with_items TO authenticated;
 

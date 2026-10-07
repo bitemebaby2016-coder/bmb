@@ -142,7 +142,9 @@ main().then(({ b117, live, fcBlock, zoneBlock }) => {
   const xb = extractBody(live)
   const lines = live.split('\n')
   const patched = [...lines.slice(0, xb.si + 1), ...body.split('\n'), ...lines.slice(xb.ei)].join('\n')
-  const tail = '\nREVOKE EXECUTE ON FUNCTION public.create_order_with_items FROM PUBLIC;\nGRANT EXECUTE ON FUNCTION public.create_order_with_items TO authenticated;\n\nCOMMIT;\n'
+  // NOTE: pg_get_functiondef() ไม่รวม ';' ปิดท้าย — patched จบด้วย '$function$'+\n
+  //       tail ต้องขึ้นต้นด้วย ';' ไม่งั้นได้ '$function$\nREVOKE' = syntax error 42601
+  const tail = ';\nREVOKE EXECUTE ON FUNCTION public.create_order_with_items FROM PUBLIC;\nGRANT EXECUTE ON FUNCTION public.create_order_with_items TO authenticated;\n\nCOMMIT;\n'
   const out = path.join(ROOT, 'supabase', 'migrations', '118_restore_fc_gates_after_117.sql')
   fs.writeFileSync(out, HEADER + patched + tail)
   console.log('WRITTEN', out)
