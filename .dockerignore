@@ -1,0 +1,53 @@
+# Dependencies
+node_modules/
+npm-debug.log
+
+# Build outputs
+dist/
+
+# Git
+.git
+.gitignore
+.github
+
+# IDE & editor files
+.vscode
+.idea
+*.swp
+*.swo
+*.log
+
+# Environment files
+.env
+.env.local
+
+# Test files
+coverage/
+.vitest
+playwright-report/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.tmp
+temp/
+
+# Documentation & config
+*.md
+docs/
+LICENSE
+.rooignore
+.roorules
+.clinerules
+.clineignore
+
+# Project-specific
+.kilo/
+.wrangler/
+supabase.temp/
+lighthouse/
+v1.txt
+v2.txt
+BMB_*.md

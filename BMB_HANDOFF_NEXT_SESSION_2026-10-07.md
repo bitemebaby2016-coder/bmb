@@ -1,8 +1,24 @@
-# BMB HANDOFF — เซสชันถัดไป (2026-10-07 หลังรอบ 7: SMS THSMS + G10 verification + defect 118)
+# BMB HANDOFF — เซสชันถัดไป (2026-10-07 · ปิดรอบ 8j: SMS ผ่านจริง + Admin แก้ครบ)
 
-> อ่านก่อนเริ่มทำอะไรทุกครั้ง · ตัวตนต่อจากเซสชัน G10-verification+SMS (HEAD = commit รอบนี้ @ `origin/main`)
+> อ่านก่อนเริ่มทำอะไรทุกครั้ง · HEAD = commit รอบนี้ @ `origin/main` (worktree clean)
 > Master status อยู่ที่ `BMB_PRODUCTION_MASTER_STATUS.md` (§14 = changelog จริง — อัปเดตทุกรอบ)
-> อ่านคู่: `BMB_G10_FINAL_REPORT.md` (สถานะ closure) + `BMB_G10_DEFECT_117_FC_ROLLBACK.md` (defect หลัก)
+> อ่านคู่: `BMB_ADMIN_AUDIT_2026-10-07.md` (admin fix รอบ 8j) + `BMB_W23_SMS_DELIVERY_DIAGNOSTIC.md` (SMS)
+
+## 0. สถานะปิดเซสชันล่าสุด (2026-10-07 · รอบ 8g–8j) — อ่านก่อน §1
+
+**ผ่านจริง (Owner ยืนยัน):**
+- ✅ **W-2.3 SMS = CONFIRMED** — ย้าย provider `thsms.com` → **`thsms.org`** (sender `SMSOTP` · `message_type=standard` = **1 เครดิต/ข้อความ** · `express`=2 · `superfast`=3) · **Owner ยืนยันข้อความเข้าทั้ง 3 เบอร์ (082/094/081)** · EF `sms-send` deployed (provider switch `thsms_org` · secret 6/6) · `w23SmsProbe` 3/3
+- ✅ **Admin: เพิ่มรูปเมนูได้จริง (Owner ยืนยัน)** — แก้ด้วย **Migration 119 = APPLIED + VERIFIED 6/6** (storage policy ใช้ `bucket_id='bmb-images'` แทน subquery `storage.buckets` ที่ RLS ซ่อน → 42501) · **ADMIN_CRUD 20/20 PASS** (categories · products(+รูป) · menu_sections · delivery_rounds · promotions · media_assets · storage upload/publicUrl) · `createDeliveryRound` ใส่ `branch_id` แล้ว (RLS `is_branch_admin`) · history migration **119/119**
+- ✅ Gates ปิดรอบ: **TSC 0 · LINT 0 · VITEST 49 files/527 · BUILD 0** · worktree clean (Dockerfile/docker-compose/.dockerignore commit แล้ว)
+
+**ยังไม่ได้ลอง (Owner บอกเอง):**
+- ⏳ **ขนส่ง (delivery rounds) ใน UI** — โค้ดแก้แล้ว (branch_id) · probe ผ่าน insert/update/delete · รอ Owner ลองจริงใน `/admin/*`
+
+**สำคัญสำหรับแชทหน้า:**
+- ⚠️ `search_codebase` สแกน workspace `chat\bmb` (สำเนาเก่า) **ไม่ใช่** repo จริง `D:\A PROJECT\Bite Me Baby` → ใช้ `run_commands` + `Get-Content`/`Select-String` กับ D: เสมอ
+- `.env.local`: token เดี่ยวถูกต้อง (`bmb-dev-2026-10` = `sbp_fceb…1936` exp **05 Nov 2026**) — ตัวเก่า `sbp_fcf…` comment ปิดแล้ว
+- THSMS ใหม่: base `https://api.thsms.org/v1` · auth **`X-API-Key`** · `POST /sms/send` `{sender_name,recipient,message,message_type}` · `GET /credits`
+- Probes ใหม่รอบ 8g–8j: `thsmsOrgProbe` · `adminDbDiag` · `adminDbDiag2` · `dbq` · `adminMediaProbe` · `adminCrudProbe` · `m119ApplyVerify`
 
 ## 1. กฎการทำงาน (ห้ามลืม — จาก BMB_G9_CONTRACT.md §2 spine + กติกาสะสม)
 
@@ -15,7 +31,7 @@
 7. **Secrets/passwords ห้าม print/commit** — `.dbpw.tmp` ลบทิ้ง · `backups/` gitignored
 8. แก้ prod DB: ผ่าน migration + `supabase db push` (history reconcile แล้ว — อย่า `--include-all`)
 9. EF deploy: **Management API multipart ใช้ไม่ได้กับ multi-file function (400)** → ใช้ `npx supabase functions deploy <name> --project-ref ivkdfognyiwjcmrhcnwz` (มี example: `e2e/deploySmsSend.cjs`)
-10. `.env.local` มี `SUPABASE_ACCESS_TOKEN` ซ้ำ 2 บรรทัด — script ต้อง try token ย้อนหลัง (reverse) เสมอ (rule 10 เดิม)
+10. `.env.local` เคยมี `SUPABASE_ACCESS_TOKEN` ซ้ำ 2 บรรทัด (ตัวเก่า comment ปิดแล้ว 2026-10-07) — script ควร try token ย้อนหลัง (reverse) เสมอ
 
 ## 2. สถานะ ณ ปิดเซสชัน (2026-10-07 รอบ 8)
 
@@ -44,7 +60,7 @@
 ## 4. งานที่ทำได้โดยไม่ติด Owner
 
 - **ปิด G10 เมื่อข้อค้างบนหมด** — รัน verification ซ้ำทั้งชุด + อัปเดต `BMB_G10_FINAL_REPORT.md` → HARD STOP รอ Owner sign-off (AI ห้ามประกาศ PASS เอง)
-- งานค้างเล็กน้อย: ตัดสินใจ untracked 4 ไฟล์ (Dockerfile/docker-compose/.dockerignore/openapi-paths) — Docker deploy ไม่เกี่ยวกับ BMB prod = Cloudflare Pages
+- งานค้างเล็กน้อย: untracked 4 ไฟล์ — ✅ **จัดการแล้วรอบ 8j**: `openapi-paths.txt` (ว่าง 0 bytes) ลบทิ้ง · `Dockerfile`/`docker-compose.yml`/`.dockerignore` commit แล้ว (worktree clean)
 - ✅ **118 apply แล้ว** — admin config (radius/zone/bite_drive/external) **มีผลที่ order RPC จริง** (FC gates บังคับที่ `create_order_with_items` แล้ว)
 
 ## 5. ข้อมูลอ้างอิงเร็ว
