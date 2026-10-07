@@ -10,14 +10,18 @@ for (const l of fs.readFileSync(path.join(ROOT, '.env.local'), 'utf8').split(/\r
   const m = l.match(/^\s*([A-Za-z0-9_]+)\s*=\s*(.*)\s*$/)
   if (m && m[1] === 'SUPABASE_ACCESS_TOKEN' && m[2]) tokens.push(m[2])
 }
-const tok = tokens[tokens.length - 1]
-const r = spawnSync('npx', ['supabase', 'functions', 'deploy', 'sms-send', '--project-ref', 'ivkdfognyiwjcmrhcnwz'], {
-  cwd: ROOT,
-  env: { ...process.env, SUPABASE_ACCESS_TOKEN: tok },
-  encoding: 'utf8',
-  shell: true,
-})
-process.stdout.write((r.stdout || '').split('\n').slice(-8).join('\n') + '\n')
-if (r.status !== 0) process.stderr.write((r.stderr || '').split('\n').slice(-8).join('\n') + '\n')
+let r = null
+// token ตัวสุดท้ายอาจหมดอายุ → ไล่จากตัวท้ายไปหัว, ใช้ตัวแรกที่ deploy สำเร็จ
+for (const t of [...tokens].reverse()) {
+  r = spawnSync('npx', ['supabase', 'functions', 'deploy', 'sms-send', '--project-ref', 'ivkdfognyiwjcmrhcnwz'], {
+    cwd: ROOT,
+    env: { ...process.env, SUPABASE_ACCESS_TOKEN: t },
+    encoding: 'utf8',
+    shell: true,
+  })
+  process.stdout.write((r.stdout || '').split('\n').slice(-8).join('\n') + '\n')
+  if (r.status === 0) break
+  process.stderr.write((r.stderr || '').split('\n').slice(-6).join('\n') + '\n')
+}
 console.log('CLI_DEPLOY_EXIT=' + r.status)
 process.exit(r.status || 0)

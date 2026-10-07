@@ -149,3 +149,28 @@ body ทุกครั้ง: `{"success":false,"status_code":404,"error":"Not 
 2. **sender_name ที่ลงทะเบียน** บน thsms.org
 3. (ถ้าต้องการ) `message_type` เช่น `superfast`
 → วางใน `.env.local`: `THSMS_API_KEY=` และ `THSMS_SENDER_NAME=` แล้วแจ้งกลับ → ผมรัน probe 3 เบอร์ + ตั้ง secrets + deploy EF
+
+---
+
+## 10. อัปเดต รอบ 8h — `thsms.org` ทำงานได้จริง (คีย์ + EF + deploy)
+
+**การค้นพบสำคัญ:** คีย์ `thsms_75c7…bbe8` เป็น **ตัวเดียวกันทุกอักษร** กับที่เคย 404 บน thsms.com — แต่ใช้ได้กับ **thsms.org** → ยืนยันว่าเป็น **คีย์ของบัญชี thsms.org** (คนละแพลตฟอร์ม) จริง ไม่ใช่คีย์เสีย
+
+**ทดสอบยิงตรง 3 เบอร์ (`X-API-Key`):**
+
+| เบอร์ | `GET /credits` | `POST /sms/send` |
+|---|---|---|
+| `0826378546` | 200 `available=511` | 200 `{credits_used:3, messages_queued:1, status:"queued", success:true, valid_count:1}` |
+| `0942649269` | 200 `available=508` | เหมือนกัน |
+| `0817847992` | 200 `available=505` | เหมือนกัน |
+
+- ✅ คีย์ถูกต้อง · sender `SMSOTP` ผ่าน · ทุกเบอร์ `queued` + `valid_count:1`
+- ⚠️ **`credits_used: 3` ต่อข้อความ** (message_type=`superfast`) — ถ้าต้องการประหยัด อาจลอง `message_type` อื่น
+
+**EF + production:**
+- **secrets ตั้งแล้ว** (HTTP 201): `SMS_PROVIDER=thsms_org` · `SMS_API_URL=https://api.thsms.org/v1/sms/send` · `SMS_API_KEY` · `SMS_SENDER_NAME=SMSOTP` · `SMS_MESSAGE_TYPE=superfast` · `META_PAGE_ACCESS_TOKEN` → verify 6/6 PRESENT
+- **EF `sms-send` deploy สำเร็จ** (`Deployed Functions on project ivkdfognyiwjcmrhcnwz: sms-send`)
+- `w23SmsProbe` → **3/3 ALL PASS** (`provider=thsms_org`) · `w23SmsSendOwner` → `SMS_HTTP=200 ok=true provider_status=200`
+- แก้ `deploySmsSend.cjs` ให้ไล่ทุก `SUPABASE_ACCESS_TOKEN` (ตัวท้ายหมดอายุ → 401)
+
+**ยืนยันแล้ว (2026-10-07):** ✅ **Owner ยืนยัน SMS เข้าเครื่องจริงทั้ง 3 เบอร์** → **W-2.3 DELIVERY CONFIRMED** — ปัญหา "SMS ไม่ถึง" จบสมบูรณ์ด้วยผู้ให้บริการ **thsms.org** + sender `SMSOTP` · **root cause เดิม: ชี้ผิดแพลตฟอร์ม (`thsms.com`) ทั้งที่คีย์/บัญชีเป็นของ `thsms.org`**
