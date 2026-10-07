@@ -184,6 +184,103 @@ export function sumDraftTotal(draft: DraftLine[]): number {
 }
 
 // ---------------------------------------------------------------------------
+// NL order intent — understand free-text like "เอาของเมื่อวาน แต่เปลี่ยนน้ำเป็นชาเขียว".
+// Deterministic + testable heuristic. Falls back to ignore (normal chat) when
+// there is no clear signal; the actual cart mutation still flows through the
+// canonical cart path. No AI/network here.
+// ---------------------------------------------------------------------------
+
+export interface OrderIntent {
+  /** Wants "order like before / again / same as yesterday". */
+  likeBefore: boolean
+  /** Raw "change FROM ... " token (fuzzy). */
+  modifyFrom?: string
+  /** Raw " ... TO ..." token (fuzzy). */
+  modifyTo?: string
+}
+
+const LIKE_BEFORE_RE =
+  /(เหมือนเดิม|เหมือนครั้งก่อน|เหมือนครั้งที่แล้ว|เหมือนเมื่อวาน|สั่งเหมือนเดิม|สั่งเหมือน|เอาเหมือนเดิม|เอาเหมือนเมื่อวาน|ของเมื่อวาน|เมื่อวาน|ครั้งก่อน|ครั้งล่าสุด|ล่าสุด|สั่งซ้ำ|เอาเดิม|อีกครั้ง)/
+
+export function parseOrderIntent(text: string): OrderIntent {
+  const t = String(text || '').toLowerCase()
+  const likeBefore = LIKE_BEFORE_RE.test(t)
+  // change X -> Y  (Thai has no spaces between words; capture before/after "เป็น")
+  const m = t.match(/เปลี่ยน\s*([^*\n]*?)\s*(?:เป็น|มาเป็น|แทนที่ด้วย|ด้วย)\s*([^*\n]*)/)
+  const intent: OrderIntent = { likeBefore }
+  if (m && m[1] && m[2]) {
+    const fromToken = m[1].trim()
+    const toToken = m[2].trim()
+    if (fromToken && toToken) {
+      intent.modifyFrom = fromToken
+      intent.modifyTo = toToken
+    }
+  }
+  return intent
+}
+
+export interface OrderModify {
+  draft: DraftLine[]
+  unavailable: UnavailableLine[]
+  total: number
+  count: number
+  /** The line that was swapped out (if a match was found). */
+  replacedFrom?: string
+  /** The product added in its place. */
+  replacedTo?: string
+}
+
+/**
+ * Base an order draft on a REAL past order (like "สั่งเหมือนเดิม"), then if a
+ * modification was requested, swap the matching line for the requested product
+ * from the real catalog. Best-effort fuzzy matching; unmatched parts are kept as
+ * the normal order-again draft (never invented).
+ */
+export function applyOrderModify(
+  order: OrderLike,
+  catalog: Product[],
+  intent: { modifyFrom?: string; modifyTo?: string },
+): OrderModify {
+  const base = resolveOrderAgainFromOrder(order, catalog)
+  if (!intent.modifyFrom || !intent.modifyTo) {
+    return { ...base }
+  }
+  const fromT = intent.modifyFrom.toLowerCase()
+  const toT = intent.modifyTo.toLowerCase()
+
+  // Line to swap out — match against the order-again draft / the real past order.
+  const dropped = base.draft.find((d) => {
+    const name = d.product.name.toLowerCase()
+    if (fromT && (name.includes(fromT) || fromT.includes(name))) return true
+    return (order?.items || []).some(
+      (o) => o.product_id === d.product.id && String(o.product_name || '').toLowerCase().includes(fromT),
+    )
+  })
+
+  // Product to add — match against the real catalog by name.
+  const addProduct = (catalog || []).find(
+    (p) => p.is_available && !p.archived && (p.name.toLowerCase().includes(toT) || toT.includes(p.name.toLowerCase())),
+  )
+
+  const qty = dropped?.quantity ?? 1
+  const draft = base.draft.filter((d) => d !== dropped)
+  const replacedFrom = dropped?.product.name
+  if (addProduct) {
+    draft.push({ product: addProduct, quantity: qty })
+  }
+  const replacedTo = addProduct?.name
+
+  return {
+    draft,
+    unavailable: base.unavailable,
+    total: sumDraftTotal(draft),
+    count: draft.reduce((sum, d) => sum + d.quantity, 0),
+    ...(replacedFrom ? { replacedFrom } : {}),
+    ...(replacedTo ? { replacedTo } : {}),
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Talk-to-Bite greeting — deterministic 7-day rotation, personalised ONLY with
 // VERIFIED data (customer name / favorite category from server memory).
 // The AI never fabricates a name or a dish; with no verified identity we fall

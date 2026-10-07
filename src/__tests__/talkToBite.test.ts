@@ -9,11 +9,13 @@ import { describe, it, expect } from 'vitest'
 import type { Product } from '@/types'
 import {
   BITE_STATES,
+  applyOrderModify,
   bitePoseForState,
   buildBiteGreeting,
   chatStatusLabel,
   getGreetingIndex,
   isBiteState,
+  parseOrderIntent,
   pickFavoriteProducts,
   pickTopAvailable,
   resolveOrderAgainFromOrder,
@@ -225,5 +227,55 @@ describe('pickFavoriteProducts', () => {
     ]
     const favs = pickFavoriteProducts(catalog, [], 2)
     expect(favs).toHaveLength(2)
+  })
+})
+
+describe('parseOrderIntent / applyOrderModify (NL order like-a-human)', () => {
+  it('detects "order like before" from natural Thai phrases', () => {
+    expect(parseOrderIntent('สั่งเหมือนเดิม').likeBefore).toBe(true)
+    expect(parseOrderIntent('เอาเหมือนเมื่อวาน').likeBefore).toBe(true)
+    expect(parseOrderIntent('เอาของเมื่อวาน').likeBefore).toBe(true)
+    expect(parseOrderIntent('สวัสดีครับ').likeBefore).toBe(false)
+  })
+
+  it('extracts modify-from/to from "เปลี่ยน X เป็น Y"', () => {
+    const intent = parseOrderIntent('เอาของเมื่อวาน แต่เปลี่ยนน้ำเป็นชาเขียว')
+    expect(intent.likeBefore).toBe(true)
+    expect(intent.modifyFrom).toContain('น้ำ')
+    expect(intent.modifyTo).toContain('ชาเขียว')
+  })
+
+  it('swaps the matching order line for the requested catalog product', () => {
+    const catalog = [
+      product('p_rice', 'ข้าวมันไก่', 60, { category_id: 'c1' }),
+      product('p_water', 'น้ำผลไม้', 25, { category_id: 'c2' }),
+      product('p_tea', 'ชาเขียวเย็น', 35, { category_id: 'c3' }),
+    ]
+    const order = {
+      order_number: 'B-100',
+      items: [
+        { product_id: 'p_rice', product_name: 'ข้าวมันไก่', quantity: 1 },
+        { product_id: 'p_water', product_name: 'น้ำผลไม้', quantity: 1 },
+      ],
+    }
+    const res = applyOrderModify(order, catalog, { modifyFrom: 'น้ำ', modifyTo: 'ชาเขียว' })
+    expect(res.replacedFrom).toBe('น้ำผลไม้')
+    expect(res.replacedTo).toBe('ชาเขียวเย็น')
+    expect(res.draft.map((d) => d.product.name).sort()).toEqual(['ข้าวมันไก่', 'ชาเขียวเย็น'])
+    expect(res.total).toBe(60 + 35)
+  })
+
+  it('order-like-before without a modification = plain order-again draft', () => {
+    const catalog = [product('p_rice', 'ข้าวมันไก่', 60), product('p_water', 'น้ำผลไม้', 25)]
+    const order = {
+      items: [
+        { product_id: 'p_rice', product_name: 'ข้าวมันไก่', quantity: 1 },
+        { product_id: 'p_water', product_name: 'น้ำผลไม้', quantity: 2 },
+      ],
+    }
+    const res = applyOrderModify(order, catalog, {})
+    expect(res.draft).toHaveLength(2)
+    expect(res.total).toBe(60 + 25 * 2)
+    expect(res.replacedFrom).toBeUndefined()
   })
 })

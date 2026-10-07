@@ -43,14 +43,17 @@ import { getServerStatusLabel } from '@/lib/orderVocabulary'
 import { hydrateMemoryFromServer } from '@/lib/aiServerMemory'
 import type { Product } from '@/types'
 import {
+  applyOrderModify,
   bitePoseForState,
   buildBiteGreeting,
   chatStatusLabel,
   getGreetingIndex,
+  parseOrderIntent,
   pickFavoriteProducts,
   pickTopAvailable,
   resolveOrderAgainFromOrder,
   type DraftLine,
+  type OrderModify,
   type UnavailableLine,
 } from '@/lib/talkToBite'
 import type { OrderMode } from '@/config/platformConfig'
@@ -378,6 +381,12 @@ export function TalkToBite({ mode = 'overlay', initialPhase = 'landing', landing
     setBiteState('THINKING')
     setTyping(true)
     voiceRef.current?.stopSpeaking()
+    // NL order intent first ("เอาของเมื่อวาน แต่เปลี่ยนน้ำเป็นชาเขียว") — if handled,
+    // we stay in Talk to Bite and show a real order-again/modified draft.
+    if (await tryOrderIntent(text)) {
+      setTyping(false)
+      return
+    }
     try {
       const reply = await chatWithAI(text, undefined, { voiceMode: voiceReply })
       setBiteState('SPEAKING')
@@ -389,6 +398,46 @@ export function TalkToBite({ mode = 'overlay', initialPhase = 'landing', landing
       setBiteState('ERROR')
     } finally {
       setTyping(false)
+    }
+  }
+
+  // Understand free-text order intent from real data (never fabricated). Only
+  // fires when the customer clearly asks to re-order; otherwise passes through.
+  async function tryOrderIntent(text: string): Promise<boolean> {
+    const intent = parseOrderIntent(text)
+    if (!intent.likeBefore || !customer?.id) return false
+    try {
+      const [orders, catalog] = await Promise.all([
+        getOrdersByCustomer(customer.id),
+        (await import('@/lib/bmbAdminApi_products')).getProducts(),
+      ])
+      if (!orders || orders.length === 0) {
+        pushAssistant('ยังไม่มีออเดอร์เก่าเลยครับ อยากให้แนะนำเมนูแทนไหมครับ? 🍊')
+        setBiteState('IDLE')
+        return true
+      }
+      const res: OrderModify =
+        intent.modifyFrom && intent.modifyTo
+          ? applyOrderModify(orders[0], catalog, { modifyFrom: intent.modifyFrom, modifyTo: intent.modifyTo })
+          : ({ ...resolveOrderAgainFromOrder(orders[0], catalog) })
+      if (res.draft.length === 0) {
+        pushAssistant('ออเดอร์เดิมส่วนใหญ่หมดแล้วครับ ขอแนะนำเมนูอื่นที่ยังมีแทนนะครับ 🙏')
+        setBiteState('IDLE')
+        return true
+      }
+      setBiteState('ORDER_DRAFT')
+      const intro =
+        res.replacedFrom && res.replacedTo
+          ? `ได้ครับ 😎 เมื่อวานคุณสั่ง ${res.replacedFrom} ผมเปลี่ยนเป็น ${res.replacedTo} ให้แล้ว ตรวจทานได้เลย:`
+          : `ได้ครับ 😎 นี่คือรายการออเดอร์ล่าสุดของคุณ (#${orders[0].order_number || '-'}) ที่ยังขายได้ ตรวจทานแล้วกดเพิ่มได้เลย:`
+      push({ kind: 'draft', id: nextId(), intro, draft: res.draft, unavailable: res.unavailable, total: res.total, applied: false })
+      if (res.unavailable.length > 0) {
+        pushAssistant(`หมายเหตุ: ${res.unavailable.map((u) => `${u.name} (${u.requested})`).join(', ')} หมด/เปลี่ยนไปแล้ว จึงไม่รวมในรายการนี้ครับ`)
+      }
+      setBiteState('ORDER_DRAFT')
+      return true
+    } catch {
+      return false // never fake — fall through to normal chat
     }
   }
 
@@ -547,6 +596,26 @@ export function TalkToBite({ mode = 'overlay', initialPhase = 'landing', landing
           </button>
         </div>
       </header>
+
+      {/* Bite Hero Area — visual focal point; pose follows the live state */}
+      <div className="flex items-center gap-4 px-4 py-4 border-b border-brand-border bg-gradient-to-b from-brand-bg/80 to-white shrink-0">
+        <MascotBadge
+          pose={bitePoseForState(biteState)}
+          size="lg"
+          alt="Bite"
+          className="animate-float w-20 h-20 md:w-24 md:h-24 rounded-2xl"
+          loading="eager"
+        />
+        <div className="min-w-0">
+          <p className="font-display font-bold text-brand-accent text-lg">Bite</p>
+          <p className="text-sm text-brand-muted leading-snug" data-testid="ttb-status-2">
+            {chatStatusLabel(biteState)}
+          </p>
+          {listening && (
+            <p className="text-xs text-brand-primary animate-pulse mt-0.5" data-testid="ttb-listening-status">● ● ● กำลังฟัง…</p>
+          )}
+        </div>
+      </div>
 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3">

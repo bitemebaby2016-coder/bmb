@@ -67,3 +67,10 @@
 
 ## 10. Next exact step
 เปิด `npm run dev` → ดู `/` (Landing เต็มจอ) → กด 🎙 คุยกับ Bite / quick actions → ดู Voice Bar + สรุปออเดอร์ + "ดูออเดอร์" → `/shop` เข้าร้าน → รัน gates → commit→push→verify
+## 11. Round 12 — NL order + chat layout
+- NL: `parseOrderIntent` + `applyOrderModify` ใน `talkToBite.ts` (pure, tested) · wire ใน `handleSend` (fallback `chatWithAI` ถ้าไม่ใช่ order intent)
+- Layout: Bite Hero Area (mascot per state) + conversation scroll area + unified voice-first input; reuse เดิมทั้งหมด
+- Gates: TSC 0 · LINT 0 · VITEST 50/553 · BUILD 0
+
+## 12. Next exact step
+`npm run dev` → `/` Landing → 🎙/พิมพ์ "เอาของเมื่อวาน แต่เปลี่ยนน้ำเป็นชาเขียว" → ดู draft เปลี่ยนจริง → [เพิ่มทั้งหมด] · เช็ค Bite Hero + scroll + keyboard

@@ -158,3 +158,27 @@ TSC 0 · LINT 0 · VITEST 50 files/**549** (เพิ่ม 4) · BUILD 0
 ### ⚠️ ยังไม่ทำ (ขอบเขตถัดไป — ต้อง design กับ safe tool-calling)
 - **"เข้าใจคำสั่งแบบคน" แบบเต็ม** เช่น "เอาของเมื่อวาน แต่เปลี่ยนน้ำเป็นชาเขียว" (ต้องการ LLM tool-call สรุปออเดอร์ + แก้สินค้า) — วางโครงแล้ว (`resolveOrderAgainFromOrder`) ยังไม่ทำ NL-modify
 - จริง ๆ voice "ฟัง→คิด→ตอบเสียง" รอบนี้แกะ Voice Bar แล้ว แต่ auto-TTS reply ใช้ `aiVoice` (มีอยู่แล้ว)
+---
+
+## 10. Round 12 — NL order (เข้าใจสั่งแบบคน) + Chat Layout Framework
+
+### NL-modify (WOW)
+- **`talkToBite.ts`** เพิ่ม logic บริสุทธิ์ (test ได้ ไม่แตะ network):
+  - `parseOrderIntent(text)` → จับ "สั่งเหมือนเดิม/เหมือนเมื่อวาน/ครั้งก่อน" (`likeBefore`) + ดึง `modifyFrom`/`modifyTo` จาก "เปลี่ยน X เป็น Y"
+  - `applyOrderModify(order, catalog, intent)` → base = order-again จริง แล้ว swap รายการที่ match เป็นสินค้าจาก catalog จริง (fuzzy แบบ best-effort, ไม่ fake)
+- **Wire เข้า `handleSend`**: พิมพ์/พูด "เอาของเมื่อวาน แต่เปลี่ยนน้ำเป็นชาเขียว" → Bite สรุปย้อน + ยก draft (ตรวจทาน + [เพิ่มทั้งหมด]); ไม่ถือว่า order intent → fallback `chatWithAI` ปกติ
+- Cart mutation ยังผ่าน canonical `cartStore.addItem` (ความปลอดภัยคงเดิม)
+
+### Chat Layout / Framework
+- **Bite Hero Area** (Main chat): มาสคอตตาม state (bitePoseForState) + status + listening indicator — เป็น visual focal เหนือ conversation (compact ไม่ท่วมพื้นที่)
+- Conversation เป็น **scroll area ชัดเจน** (flex-1 overflow-y-auto ภายใน container h-full — header/hero/input/actions เป็น shrink-0)
+- Unified voice-first input อยู่ล่าง (voice bar + `⌨️` โหมดพิมพ์ + live transcript ตอนฟัง — ใช้ `aiVoice` จริง)
+- Quick actions  горизонтал scroll ใกล้ input (real actions)
+- reuse: `useBiteAIStore`/`aiVoice`/`aiMemory`/`ProductCard`/`cartStore` เดิม — **ไม่สร้าง chat system ซ้ำ**
+
+### Gates (ผ่านจริง)
+TSC 0 · LINT 0 · VITEST 50 files/**553** (เพิ่ม 4) · BUILD 0
+
+### ยังเหลือ (next)
+- NL "ไม่เผ็ด/เพิ่มไข่" (customization flag) ต่อจาก swap — โครงพร้อม, ยังไม่ทำ
+- auto-TTS reply เต็ม voice loop (ตอบเสียงอัตโนมัติหลัง draft) — ใช้ `aiVoice` ได้ต่อ
