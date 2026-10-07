@@ -13,7 +13,7 @@
 - Gates ปิดรอบ (หลังแก้) — **ผ่านจริง:**
   - `npx tsc --noEmit` = **0 error**
   - `npm run lint` = **0 error**
-  - `npm test` (vitest) = **50 files / 539 tests PASS** (เดิม 527 + ใหม่ 12)
+  - `npm test` (vitest) = **50 files / 545 tests PASS** (เดิม 527 + ใหม่ 18)
   - `npm run build` = **PASS** (client + PWA `injectManifest`)
 
 ---
@@ -75,17 +75,33 @@
 
 ---
 
-## 5. ยังเหลือ / Known issues / Blockers
+## 5. รูปภาพ — ห้าม AI เจนรูปเด็ดขาด (ชี้เป้าให้แอดมิน)
 
-- ⏳ Owner ต้อง verify บนเครื่องจริง/เบราว์เซอร์จริง (UX runtime: ลาก snap, voice autoplay, guest flow) —**ยังไม่ถูกยืนยันโดย Owner** (AI ห้ามประกาศ PASS เอง)
+- **กฎเหล็ก:** AI **ห้ามเจนรูปเองเด็ดขาด** — scan `src` ทั้งหมดแล้ว **ไม่มี**โค้ดเจนรูป (0 hits: `imagegen`/`replicate`/`stable-diffusion`/`dall-e`/`/v1/images` ฯลฯ) ทุกภาพที่โชว์เป็น **ของจริงเท่านั้น**
+- **เมนูสินค้า:** `ProductCard` ใช้ `product.image_url` จาก admin catalog จริงเท่านั้น; สินค้าไหนยังไม่มีรูป → แสดง placeholder `img-fallback` (gradient + 🍽️) เป็นสัญลักษณ์ว่า "ยังไม่มีรูป" — **ไม่ fake / ไม่เจน**
+- **ชี้เป้าให้แอดมิน (ของที่ขาด):** รูปสินค้าอยู่ที่ **Admin → สินค้า (inventory/products) → เพิ่มภาพ → save** (เขียน `image_url`) แล้ว Talk-to-Bite ฯลฯ จะดึงรูปจริงมาเอง; สินค้าที่ `image_url` ว่าง/ว่างหลัง จะโชว์ placeholder จนกว่าแอดมินจะใส่
+- **มาสคอต Bite:** ตรวจแล้ว asset **ครบ** — `public/assets/mascot/*` มี 24 pose + `Bite_Main` + `bite_hero_greeting` ครบ (ใช้ผ่าน MascotBadge) → ไม่ต้องเจนเพิ่ม
+- วิธีหา "สินค้าขาดรูป": ดูหน้า Admin สินค้า (ช่องรูปว่าง) หรือ query ตาราง `products` ที่ `image_url IS NULL`/'' แล้ว admin ตามไปใส่
+
+## 5.1 การทักทาย — verified memory + หมุน 7 วัน (ใหม่รอบนี้)
+
+- `getGreetingIndex()` = 0..6 **หมุนสลับทุกวัน** (7 แบบ ต่างกันในแต่ละวัน)
+- `buildBiteGreeting({ index, name, favoriteCategory })` = รวม 7 ฐาน + ใส่**ชื่อ** (verified จาก server memory) + **หมวดที่ชอบ**; guest = แบบกรุ๊ปไม่มีชื่อ; **กันอีเมลเป็นชื่อ** (ไม่ทักด้วยอีเมล)
+- **ต่อเชื่อม verified memory แล้ว:** `TalkToBite` ตอนเปิด → `hydrateMemoryFromServer(customer.id)` (ถ้า authed) → ทักทาย personalized ชุดเดียวทุกทางเข้า (Homepage / Floating / `/talk-to-bite`)
+- `autoRecommend` ถูกเลื่อนให้รันหลังทักทายเสมอ และไม่รันซ้ำ (guard `autoRanRef`) — ลำดับข้อความถูกต้อง
+
+
+## 6. ยังเหลือ / Known issues / Blockers
+
+- ⏳ Owner ต้อง verify บนเครื่องจริง/เบราว์เซอร์จริง (UX runtime: ลาก snap, voice autoplay, guest flow, ทักทาย 7 วัน) —**ยังไม่ถูกยืนยันโดย Owner** (AI ห้ามประกาศ PASS เอง)
 - ⏳ `/admin/ai-studio` และหน้า AI อื่นของ admin ยังแยกจาก Talk to Bite (ไม่ได้รวมในรอบนี้)
-- ℹ️ Memory ใช้ bridge เดิม (`aiServerMemory`); หน้าบทสนทนาใหม่ยังไม่ hydrate server memory ให้ "ทักชื่อได้" ทันที — เป็น next step ที่ชัดเจน
+- ✅ Memory bridge (`aiServerMemory`) ถูกต่อเข้ากับทักทายแล้ว (round 9.1) — อัปเดตจากเดิม
 - ℹ️ `BiteAIChat.tsx`/`AiChatPage.tsx` ถูกลบแล้ว — ถ้ามีลิงก์/bookmark เก่า `/ai-chat` จะ redirect ไป `/talk-to-bite` อัตโนมัติ
 
 ---
 
-## 6. Next action
+## 7. Next action
 
-1. Owner เปิด `npm run dev` → ตรวจ `/` (Talk-to-Bite home), Floating Bite (ลาก/snap), `/talk-to-bite` (guest), voice
-2. ต่อเชื่อม memory: ใน `TalkToBite` เรียก `hydrateMemoryFromServer(customer.id)` เมื่อเปิดเพื่อให้ Bite ทักชื่อ/ความชอบจาก verified data
+1. Owner เปิด `npm run dev` → ตรวจ `/` (Talk-to-Bite home), Floating Bite (ลาก/snap), `/talk-to-bite` (guest), voice, + ทักทาย 7 วัน (เปิดใหม่ทุกวันเจอข้อความต่างกัน)
+2. รูปสินค้าขาด → admin ใส่ใน Admin → สินค้า (ตาม §5 ชี้เป้า)
 3. รัน verification ซ้ำ (gates เดิม) แล้วปิดรอบ/commit (ตาม Git Rule ในคำสั่ง)

@@ -182,3 +182,57 @@ export function resolveOrderAgainFromOrder(
 export function sumDraftTotal(draft: DraftLine[]): number {
   return (draft || []).reduce((sum, d) => sum + (Number(d.product.price) || 0) * d.quantity, 0)
 }
+
+// ---------------------------------------------------------------------------
+// Talk-to-Bite greeting — deterministic 7-day rotation, personalised ONLY with
+// VERIFIED data (customer name / favorite category from server memory).
+// The AI never fabricates a name or a dish; with no verified identity we fall
+// back to a friendly generic greeting. Images are never generated here (product
+// imagery comes exclusively from the admin catalog `image_url`).
+// ---------------------------------------------------------------------------
+
+const GREETING_BASES = [
+  'สวัสดีครับ ผม Bite พนักงานเสิร์ฟของ Bite Me Baby 🍊 วันนี้อยากกินอะไรดีครับ?',
+  'ยินดีต้อนรับครับ ผม Bite จาก Bite Me Baby 🍊 จะให้ช่วยเลือกเมนู หรือจะสั่งเลยก็ได้ครับ',
+  'สวัสดีครับ ผม Bite พร้อมแนะนำเมนูของจริงวันนี้ให้เลยครับ 🍊',
+  'สวัสดีครับ! ผม Bite ของ Bite Me Baby 🍊 วันนี้มีของอร่อย ๆ อยากให้เลือกไหมครับ?',
+  'สวัสดีครับ ผม Bite พนักงานเสิร์ฟ AI ของ Bite Me Baby 🙂 จะสั่งเลยหรือให้ช่วยเลือกก็ได้ครับ',
+  'สวัสดีครับ ผม Bite 🍊 วันนี้อยากลองอะไรใหม่ ๆ ไหมครับ มีของอร่อยเพียบเลยครับ',
+  'สวัสดีครับ Bite อยู่ตรงนี้แล้วพร้อมเสิร์ฟครับ 🙂 วันนี้รับอะไรดีครับ?',
+] as const
+
+export interface BiteGreetingOptions {
+  /** 0..6 — which of the 7 rotating greetings to use (pass `getGreetingIndex()`). */
+  index?: number
+  /** VERIFIED display name. An email-like value is silently ignored. */
+  name?: string | null
+  /** VERIFIED favorite category (from authoritative customer memory). */
+  favoriteCategory?: string | null
+}
+
+/** Day-based rotation: a stable 0..6 index that advances daily (7 distinct greetings). */
+export function getGreetingIndex(date: Date = new Date()): number {
+  const day = Math.floor(date.getTime() / 86_400_000)
+  return ((day % 7) + 7) % 7
+}
+
+/** Build the 7-day rotating greeting, personalised ONLY with verified data. */
+export function buildBiteGreeting({
+  index = getGreetingIndex(),
+  name,
+  favoriteCategory,
+}: BiteGreetingOptions = {}): string {
+  const normalized = ((index % 7) + 7) % 7
+  let base: string = GREETING_BASES[normalized]
+  const cleanName = typeof name === 'string' ? name.trim() : ''
+  const usableName = cleanName && !cleanName.includes('@') ? cleanName : null
+  if (usableName) {
+    // Strip any leading greeting so we don't double-greet, then prefix the name.
+    base = base.replace(/^(สวัสดีครับ|ยินดีต้อนรับครับ)\s*/, '')
+    base = `สวัสดีครับคุณ${usableName} 🙌 ${base}`
+  }
+  if (favoriteCategory) {
+    base += ` เห็นว่าคุณชอบ ${favoriteCategory} อยากให้เน้นเมนูหมวดนั้นไหมครับ? 🍊`
+  }
+  return base
+}

@@ -10,7 +10,9 @@ import type { Product } from '@/types'
 import {
   BITE_STATES,
   bitePoseForState,
+  buildBiteGreeting,
   chatStatusLabel,
+  getGreetingIndex,
   isBiteState,
   pickTopAvailable,
   resolveOrderAgainFromOrder,
@@ -137,5 +139,51 @@ describe('sumDraftTotal', () => {
       { product: CATALOG[1], quantity: 1 },
     ]
     expect(sumDraftTotal(draft)).toBe(45 * 2 + 60)
+  })
+})
+
+describe('getGreetingIndex / buildBiteGreeting (7-day rotation)', () => {
+  it('returns a stable 0..6 index that advances daily', () => {
+    const d0 = new Date(2026, 0, 1, 12, 0, 0) // midday — exact-day arithmetic (+24h/+7d) is TZ-safe
+    const i0 = getGreetingIndex(d0)
+    expect(i0).toBeGreaterThanOrEqual(0)
+    expect(i0).toBeLessThanOrEqual(6)
+    // Exact same instant → same index
+    expect(getGreetingIndex(new Date(d0.getTime()))).toBe(i0) // padded for determinism
+    // Next day → next index (mod 7)
+    expect((getGreetingIndex(new Date(d0.getTime() + 24 * 3600 * 1000)) - i0 + 7) % 7).toBe(1)
+    // 7 days later → same index again
+    expect(getGreetingIndex(new Date(d0.getTime() + 7 * 24 * 3600 * 1000))).toBe(i0)
+  })
+
+  it('produces 7 distinct greetings across the rotation (day 0..6)', () => {
+    const texts = Array.from({ length: 7 }, (_, i) => buildBiteGreeting({ index: i }))
+    expect(new Set(texts).size).toBe(7)
+  })
+
+  it('never personalises a guest / no-name greeting', () => {
+    const guest = buildBiteGreeting({ index: getGreetingIndex() })
+    expect(guest).toBeTruthy()
+    expect(guest).not.toContain('ครับคุณ')
+  })
+
+  it('prepends a VERIFIED name and avoids double greeting', () => {
+    const named = buildBiteGreeting({ index: 0, name: 'สมชาย' })
+    expect(named).toContain('สวัสดีครับคุณสมชาย')
+    // Original leading greeting is stripped → only ONE สวัสดีครับ reference
+    expect(named.match(/สวัสดีครับ/g)?.length).toBe(1)
+  })
+
+  it('ignores an email-shaped "name" (never greets with an address)', () => {
+    const g = buildBiteGreeting({ index: 1, name: 'user@example.com' })
+    expect(g).not.toContain('ครับคุณ')
+    expect(g).toBe(buildBiteGreeting({ index: 1 }))
+  })
+
+  it('appends a favorite-category nudge only when verified', () => {
+    const g = buildBiteGreeting({ index: 2, name: 'แอน', favoriteCategory: 'ของหวาน' })
+    expect(g).toContain('ของหวาน')
+    const withCatOnly = buildBiteGreeting({ favoriteCategory: 'ของหวาน' })
+    expect(withCatOnly).toContain('ของหวาน')
   })
 })

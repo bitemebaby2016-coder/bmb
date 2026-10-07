@@ -36,10 +36,13 @@ import {
 } from '@/lib/aiVoice'
 import { getOrdersByCustomer } from '@/lib/bmbAdminApi_orders'
 import { getServerStatusLabel } from '@/lib/orderVocabulary'
+import { hydrateMemoryFromServer } from '@/lib/aiServerMemory'
 import type { Product } from '@/types'
 import {
   bitePoseForState,
+  buildBiteGreeting,
   chatStatusLabel,
+  getGreetingIndex,
   pickTopAvailable,
   resolveOrderAgainFromOrder,
   type DraftLine,
@@ -66,8 +69,6 @@ function nextId(): string {
   return `ttb-${Date.now()}-${uid}`
 }
 
-const WELCOME = 'สวัสดีครับ ผม Bite พนักงานเสิร์ฟของ Bite Me Baby 🍊 วันนี้อยากกินอะไรดีครับ?'
-
 export function TalkToBite({ fullPage = false, autoRecommend = false, onClose }: TalkToBiteProps) {
   const navigate = useNavigate()
   const customer = useAuthStore((s) => s.customer)
@@ -83,10 +84,40 @@ export function TalkToBite({ fullPage = false, autoRecommend = false, onClose }:
   const ttsSupported = isSpeechSynthesisSupported()
   const voiceRef = useRef<AIVoiceService | null>(null)
   const endRef = useRef<HTMLDivElement>(null)
+  const autoRanRef = useRef(false)
 
+  // Greeting — a deterministic 7-day rotation (buildBiteGreeting) personalised
+  // ONLY with VERIFIED server memory for the signed-in customer (name + favorite
+  // category); guests get the same rotation without a name. Re-runs cleanly if
+  // the customer identity (re)loads. autoRecommend stays ORDERED after the
+  // greeting and never double-runs within a session.
   useEffect(() => {
-    setMessages([{ kind: 'text', id: nextId(), role: 'assistant', content: WELCOME }])
-  }, [])
+    let active = true
+    void (async () => {
+      const index = getGreetingIndex()
+      let greeting: string
+      if (customer?.id) {
+        const mem = await hydrateMemoryFromServer(customer.id).catch(() => null)
+        if (!active) return
+        greeting = buildBiteGreeting({
+          index,
+          name: mem?.name ?? customer?.name ?? null,
+          favoriteCategory: mem?.favorite_categories?.[0] ?? null,
+        })
+      } else {
+        greeting = buildBiteGreeting({ index })
+      }
+      if (!active) return
+      setMessages([{ kind: 'text', id: nextId(), role: 'assistant', content: greeting }])
+      if (autoRecommend && !autoRanRef.current) {
+        autoRanRef.current = true
+        await handleRecommend()
+      }
+    })()
+    return () => {
+      active = false
+    }
+  }, [customer?.id])
 
   // Voice engine — the same shared singleton as the rest of Bite. Autoplay-safe:
   // subtitles/text are ALWAYS shown; voice only speaks after a user interaction.
@@ -109,10 +140,6 @@ export function TalkToBite({ fullPage = false, autoRecommend = false, onClose }:
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages, typing])
-
-  useEffect(() => {
-    if (autoRecommend) void handleRecommend()
-  }, [autoRecommend])
 
   const push = (msg: ChatMsg) => setMessages((prev) => [...prev, msg])
 
