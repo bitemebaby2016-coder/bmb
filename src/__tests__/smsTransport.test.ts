@@ -8,6 +8,8 @@ describe('sms helpers (W-2.3)', () => {
     expect(normalizeThaiPhone('+66812345678')).toBe('0812345678')
     expect(normalizeThaiPhone('+66 81 234 5678')).toBe('0812345678')
     expect(normalizeThaiPhone('0812345678')).toBe('0812345678')
+    expect(normalizeThaiPhone('66812345678')).toBe('0812345678') // bare 66… (profiles จริงรูปแบบนี้)
+    expect(normalizeThaiPhone('6681234567')).toBe('081234567')   // 66 + 8 หลัก
   })
 
   it('masks phone numbers for logs/responses', () => {

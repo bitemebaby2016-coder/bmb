@@ -1,10 +1,10 @@
 # BMB — PRODUCTION MASTER STATUS (เอกสารหลัก — เขียนทับฉบับ 2026-10-06)
 
 **ประเภทเอกสาร:** STATUS / RECONCILIATION + MASTER WORK LIST — สะท้อนสถานะโค้ดจริง ณ วันที่อัปเดต (เขียนทับ ไม่ต่อท้าย)
-**วันที่อัปเดต:** 2026-10-06 (รอบ 2 — migration 117 applied) · **Baseline:** HEAD == origin/main == `24506ab` (docs(g9): CLOSE G9 — Owner approved PASS)
-**รอบนี้ (2026-10-06 รอบ 2):** IMPLEMENTATION = YES (repo, commit ตามหลังรอบนี้) · MIGRATION = **YES — 117 APPLIED (Owner อนุมัติ 2026-10-06, verify ผ่าน)** · DEPLOYMENT = NO · PRODUCTION MUTATION = YES (apply 117 + probe test orders ถูก cancel คืน — active = 0)
-**สถานะ Stripe:** บัญชี **Review in progress (Stripe รีวิว 2–3 วัน)** — LIVE รับเงินจริงยังใช้ไม่ได้จนกว่าอนุมัติ · LIVE webhook register เมื่อบัญชีผ่าน (W-2.1)
-**งานที่ยังไม่ commit ใน repo:** `supabase/migrations/117_channel_intake_repair.sql` (+ replay manifest) · `e2e/intakeDriftProbe.cjs` · `e2e/intake117Verify.cjs` · `e2e/wave2Lib.cjs` (env merge) · `e2e/g4CheckRealEvents.cjs` (เขียนใหม่) · `e2e/channelWebhookProbe.cjs` (แก้ page id จริง) — จะ commit หลังผ่าน gates ตามกฏ
+**วันที่อัปเดต:** 2026-10-07 (รอบ 7 — G10 verification + SMS THSMS) · **Baseline:** HEAD == origin/main == `1fefddc` (docs: master status round 6)
+**รอบนี้ (2026-10-07):** IMPLEMENTATION = YES (sms-send THSMS body + `_shared/sms` normalize 66xx→0xx + tests) · MIGRATION = **NO — 118 AUTHORED + VERIFIED 16/16 (PENDING Owner approval, ยังไม่ apply)** · DEPLOYMENT = YES (`sms-send` EF ผ่าน CLI — 2 ไฟล์) · PRODUCTION MUTATION = YES (set secrets SMS_* 4 + META_PAGE_ACCESS_TOKEN · deploy sms-send · ส่ง SMS ทดสอบ 1 ข้อความ — ทั้งหมดตามคำสั่ง Owner 2026-10-07)
+**สถานะ Stripe:** **ยังไม่อนุมัติ** — ภาพ dashboard 2026-10-07 = "Paused soon" (Payments) + 2 tasks In review → W-2.1/W-2.2 ค้างต่อ · LIVE webhook register เมื่อบัญชีผ่าน (W-2.1)
+**งานที่ยังไม่ commit ใน repo (รอบ 7):** โค้ด sms-send + `_shared/sms.ts` + `smsTransport.test.ts` · scripts (`g10ProdSnapshot`, `m118BuildFromLive`, `m118Verify`, `w23SetSmsSecrets`, `w23SmsProbe`, `deploySmsSend`, `metaTokenScopeCheck`, `intakeDriftProbe` fix reverse-token) · `118_restore_fc_gates_after_117.sql` (**PENDING Owner**) · `g10-prod-snapshot.json` · `BMB_G10_FINAL_REPORT.md` · `BMB_G10_DEFECT_117_FC_ROLLBACK.md` — commit หลัง gates ผ่านตามกฏ
 
 Evidence priority: PRODUCTION DB → CURRENT CODE → MIGRATIONS/CONTRACTS → VERIFIED REPORTS → DOCS → OLD DOCS
 Status legend: IMPLEMENTED · CONNECTED · DEPLOYED · RUNTIME VERIFIED · DOCUMENTED · READY · BLOCKED · MISSING · DEFERRED
@@ -191,7 +191,7 @@ SECRETS  Stripe(LIVE)/OpenRouter/AUTOMATION_TOKEN/CHANNEL_WEBHOOK_*/META_* ม�
 | Facebook/Meta | G4 HOLD — EXTERNAL (Meta ปิด Test User + ล็อก add role ชั่วคราว) | roles = admins เท่านั้น · **simulated delivery 9/9 ชดเชยแล้ว** | YES เมื่อ Meta ปลดล็อก | Owner: add Pual Tester เมื่อปลดล็อก | W-4.2/W-4.3 |
 | G3/G5/G6/G7/G8 | ✅ PASS/COMPLETE — ห้ามทำซ้ำ | reports | NO | — | — |
 | G9 | ✅ **CLOSED — PASS (Owner อนุมัติ 2026-10-06)** | BMB_G9_FINAL_REPORT.md | NO | — | ห้าม rerun |
-| G10 | NOT STARTED | — | — | G4 + Phase 1 | W-4.4 ท้ายสุด |
+| G10 | ⏳ **IN PROGRESS — verification รอบ 2026-10-07** · พบ **defect 117 clobber FC** (112/114) → 118 authored PENDING · evidence pack = `BMB_G10_FINAL_REPORT.md` (**NOT CLOSED**) | g10 snapshot + probes + gates | YES (defect จริง) | Owner อนุมัติ 118 · page token · SMS เข้าเครื่อง · Stripe | W-4.4 |
 
 ---
 
@@ -232,7 +232,7 @@ CONNECTED แล้วทั้งระบบ: NS Cloudflare (carlane/eoin) · 
 |---|---|---|---|
 | W-2.1 | Stripe LIVE: keys ✅ (3a6cba3) · card flow ✅ (438217a) — **เหลือ register live webhook** | ⏳ ค้าง webhook | Owner + AI DEV |
 | W-2.2 | Live acceptance: สั่งจริง → ครัว → Bite Drive → delivered → refund | ⬜ หลัง W-2.1 | Owner จ่าย + AI DEV ตรวจ |
-| W-2.3 | แจ้งเตือน: SMS — **โค้ด + DEPLOY + runtime verified (2026-10-06)**: EF `sms-send` deployed (unauth 401 · service-role 503 honest "not configured") · resolve phone server-side · ยึด `sms_enabled` | ⏳ รอ Owner: SMS provider credential (`SMS_PROVIDER/SMS_API_URL/SMS_API_KEY`) → probe จริง |
+| W-2.3 | แจ้งเตือน: SMS — ✅ **RUNTIME VERIFIED 2026-10-07 (THSMS)**: secrets ตั้งแล้ว (`SMS_PROVIDER=thsms` · `SMS_API_URL=https://thsms.com/api/send-sms` · `SMS_API_KEY` · `SMS_SENDER_NAME` — HTTP 201) · THSMS `/api/me` = success, credit 10.00 · EF deploy ผ่าน CLI (2 ไฟล์ — Management API multipart 400 ใช้ไม่ได้) · **`w23SmsProbe` 3/3** (unauth 401 · bad token 401 · ส่งจริง `ok:true provider_status:200 to_masked=090***1544`) · normalize `66xx→0xx` ทำงานจริง | ⏳ เหลือ Owner ยืนยันเข้าเครื่องจริง (ข้อความ `[W-2.3 TEST]`) |
 | W-2.4 | เปิดร้านจริง (ประกาศ Open Shop) | ⬜ หลังข้อ 1–3 ผ่าน | Owner |
 
 ### PHASE 2 — ไรเดอร์ภายนอก (D-04)
@@ -252,7 +252,7 @@ CONNECTED แล้วทั้งระบบ: NS Cloudflare (carlane/eoin) · 
 | W-4.1 | G9 ส่วนไม่ใช้ Meta | ✅ DONE — G9 CLOSED (Owner อนุมัติ 2026-10-06) |
 | W-4.2 | Owner: Meta Verify & Save + domain verification ใน Meta | ⬜ EXTERNAL — Owner กดได้เลย |
 | W-4.3 | G4 real event (feed → messenger) → G9 REAL EVENT ปิดสมบูรณ์ | ⬜ รอ Owner 3 ขั้น (ดู §5.2) |
-| W-4.4 | G10 TRUE PRODUCTION CLOSURE | ⬜ ท้ายสุด |
+| W-4.4 | G10 TRUE PRODUCTION CLOSURE | ⏳ IN PROGRESS — evidence pack แล้ว (`BMB_G10_FINAL_REPORT.md`) · **NOT CLOSED** — รอ Owner: อนุมัติ apply 118 · exchange page token · ยืนยัน SMS เข้าเครื่อง · Stripe review |
 | (ใหม่) | **migration 117 channel-intake repair** | ✅ **DONE 2026-10-06** — applied (Owner อนุมัติ) + probe 15/15 + test orders cancelled (ดู §7) |
 
 ### PHASE 4 — White-label hardening
@@ -284,11 +284,12 @@ G3 · G5 · G6 (capability) · G7 · G8 (+S5) · G9 (2026-10-06) · G9 contract 
 
 ## 13. NEXT REQUIRED ACTION
 
-**ทำขนานกันได้ 3 ทาง:**
-1. **Owner (G4):** รอ Meta ปลดล็อก → add Pual เป็น **Tester** บน app-roles/ → Pual คอมเมนต์/DM ใหม่ → รัน `node e2e/g4CheckRealEvents.cjs` (หมายเหตุ: Meta ปิดสร้าง Test User + ล็อก add role ชั่วคราว — ชดเชยด้วย simulated delivery 9/9 แล้ว ดู §5.1)
-2. **Owner (Stripe):** รอบัญชีผ่าน Review (2–3 วัน) → register live webhook → live acceptance (W-2.1/W-2.2)
-3. **AI DEV:** G10 TRUE PRODUCTION CLOSURE (ตามกฎ W-4.4) — งานที่ dev ทำเองหมดแล้ว ยกเว้น: SMS credential (Owner) · push เครื่องจริง (Owner) · Stripe review (Owner) · backup (ตัวเลือก: (ก) ติดตั้ง Docker Desktop ที่เครื่อง dev แล้ว AI DEV รัน `supabase db dump` ตามรอบ (ข) อัปเกรด Supabase Pro plan เพื่อ automatic daily backup + PITR)
-4. **Owner/AI DEV (backup):** ✅ **ทำงานได้แล้ว (2026-10-06)** — วิธี: `node e2e\dbBackup.cjs` (rotate password → set secret `BMB_DB_PASSWORD`) แล้ว `e2e\dbDump.cmd` (pg_dump ผ่าน temp container postgres:17-alpine → `backups/` gitignored) · dump จริง 3 ไฟล์ × 4.67 MB · **ตัวเก่า `SUPABASE_DB_URL` ใน secrets = platform-managed ลบไม่ได้ และค่าเป็น password เก่า — ห้ามใช้ ใช้ `BMB_DB_PASSWORD` แทน** · หมายเหตุ: การ rotate password ต้องรัน dbBackup.cjs ทั้งรอบ (rotate+set secret) เสมอ เพื่อให้ secret ตรงกัน · Supabase Free plan ไม่มี automatic backup — dump ตามรอบ (สัปดาห์ละครั้งพอ) หรืออัปเกรด Pro ถ้าต้องการ PITR
+**ทำขนานกันได้:**
+1. **Owner (ด่วน — 2026-10-07):** (ก) **อนุมัติ apply migration 118** (FC rollback defect — `BMB_G10_DEFECT_117_FC_ROLLBACK.md` §5) (ข) **exchange Page token ใหม่** — ตัวปัจจุบันหมดอายุ 2026-10-07 01:00 UTC (`node e2e/metaTokenExchange.cjs exchange` หรือ Owner สร้างใหม่ → set secret ด้วย `e2e/w23SetSmsSecrets.cjs` ส่วน META_PAGE_ACCESS_TOKEN) (ค) ยืนยันว่าได้รับ SMS ทดสอบ (`[W-2.3 TEST]...` → `090***1544`) → ปิด W-2.3
+2. **Owner (G4):** รอ Meta ปลดล็อก → add Pual เป็น Tester → รัน `node e2e/g4CheckRealEvents.cjs` (เดิม — simulated 9/9 ชดเชยแล้ว)
+3. **Owner (Stripe):** รอบัญชีผ่าน review (ยังไม่อนุมัติ — Paused soon/In review) → register live webhook → live acceptance (W-2.1/W-2.2)
+4. **AI DEV:** **HARD STOP** — รอ Owner ข้อ 1–3 (รอบ 7 ทำหมดแล้ว: SMS runtime verified · page token secrets + scope ✓ · G10 evidence pack ✓ · 118 authored + 16/16 ✓)
+5. **Owner/AI DEV (backup):** ✅ ทำงานได้แล้ว (2026-10-06): `node e2e\dbBackup.cjs` → `e2e\dbDump.cmd` (dump จริง 3 ไฟล์ × 4.67 MB · `SUPABASE_DB_URL` เก่า = stale ห้ามใช้ ใช้ `BMB_DB_PASSWORD`) · Free plan ไม่มี auto backup — dump รายสัปดาห์หรืออัปเกรด Pro (ดู §13 เดิม)
 
 ---
 
@@ -299,5 +300,7 @@ G3 · G5 · G6 (capability) · G7 · G8 (+S5) · G9 (2026-10-06) · G9 contract 
 - **ค้างทั้งหมด:** Stripe review → live webhook + acceptance · push เครื่องจริง · SMS credential · backup อัตโนมัติ (เครื่อง dev ไม่มี Docker/pg_dump — ดูตัวเลือกใน §13) · G10
 - 2026-10-06 (รอบ 4): Owner สร้าง access token ใหม่ (`bmb-dev-2026-10` exp 05 Nov 2026) → **W-1.6 DONE** (secrets verified clean ไม่มี BMB_TEST_*) · **migration history RECONCILED 117/117** (เติม 035+104–117 หลัง verify objects จริงใน prod → `db push` ปลดล็อก) · **`sms-send` DEPLOYED + runtime verified** (W-2.3)
 - 2026-10-06 (รอบ 6): **ADMIN FULL AUDIT + FIX** — สำรวจ 28 หน้า admin ครบ (`AdminNav` 26 items + BranchSwitcher; `AdminRoute` ตรวจ role จาก DB `profiles`/`is_admin()` ไม่ใช้ localStorage) · **พบ gap จริง: `/admin/pre-orders`, `/admin/kitchen`, `/admin/recipes` มี page + nav link แต่ไม่มี route (กดแล้ว unreachable) → เพิ่ม 3 routes ใน App.tsx** (commit `12640ab`) · gates หลังแก้: TSC 0 / VITEST 527/527 / BUILD 0 · **ส่วนที่ยังไม่สมบูรณ์ (ติด "รอ Owner" ทั้งหมด ตาม HARD STOP):** (ก) SMS key · Stripe live review · push เครื่องจริง · ไรเดอร์ภายนอก key (ข) Asset Registry รอ Owner decision → OG/hero/สติกเกอร์/ไอคอนหมวดเปลี่ยนผ่าน admin ไม่ได้ (build-time) · Brand routing flag OFF · AI Studio ตั้งเวลาโพสต์ = ไม่โพสต์อัตโนมัติ (G4 HOLD) · หน้า Brand & Assets รวมยังไม่มี · E2E admin session จริง (Test A–J) NOT VERIFIED (ค) white-label runtime 1/1/1 · pre-order ราคา = price×qty เท่านั้น
+- **2026-10-07 (รอบ 7): G10 verification เริ่มจริง → ค้นพบ DEFECT: migration 117 clobber FC gates 112/114 ใน `create_order_with_items`** (`fcProdVerify` FAIL `rpc_fc1_fc5_live` · `fcVerify114` FAIL `create_fc1_branch_scoped_policy` · live def = FC markers หายหมด + hardcode `5.00` กลับมา + fee ไม่รับ branch — ทั้งหมดมีเฉพาะใน 114 เท่านั้น · live body == 117 file 225 บรรทัด — รายละเอียด `BMB_G10_DEFECT_117_FC_ROLLBACK.md`) → **migration 118 authored** (anchor-guarded: live/117 body + FC blocks verbatim จาก 114) + **`m118Verify` 16/16 ALL PASS — PENDING Owner approval, ห้าม apply** · **W-2.3 SMS = RUNTIME VERIFIED (THSMS)** — secrets ตั้ง (HTTP 201) · THSMS `/api/me` = success credit 10.00 · EF deploy ผ่าน CLI 2 ไฟล์ (Management API multipart = 400 ใช้ไม่ได้) · **`w23SmsProbe` 3/3** ส่งจริง `ok:true provider_status:200 to_masked=090***1544` · normalize `66xx→0xx` ทำงานจริง (+2 unit cases) · **Page token ใหม่ (USER token app#2, scope มี `pages_messaging`) set EF secret แล้ว + `metaTokenScopeCheck` ผ่านเพจ BmB 200 — ⚠️ หมดอายุ 2026-10-07 01:00 UTC ต้อง exchange ใหม่** (ผล `/me` = "P Jin Pao" = identity เจ้าของเพจ ไม่ใช่เพจผิด) · **Stripe = ยังไม่อนุมัติ** (Paused soon + 2 tasks In review ตามภาพ Owner) · gates: **TSC 0 / LINT 0 / VITEST 527/527 / BUILD 0** · reports: `BMB_G10_FINAL_REPORT.md` (NOT CLOSED) + `BMB_G10_DEFECT_117_FC_ROLLBACK.md`
+- **ค้างใหม่ (HARD STOP รอ Owner):** อนุมัติ apply 118 · exchange page token (ก่อนหมดอายุ) · ยืนยัน SMS เข้าเครื่องจริง · (เดิม: Stripe review → live webhook + acceptance · push เครื่องจริง · SMS อื่น ๆ ไม่มีแล้ว · Asset Registry · brand flag · G4 Meta)
 - 2026-10-06 (รอบ 5): **BACKUP WORKING** — Docker Desktop ติดตั้งแล้ว (Owner) → pg_dump ผ่าน temp container postgres:17-alpine (ไม่แตะ supabase stack ของ selfprint ที่รันอยู่) · DB password rotated ×2 + secret `BMB_DB_PASSWORD` (201) — `SUPABASE_DB_URL` เก่า platform-managed ลบไม่ได้ = stale ห้ามใช้ · dump จริง 3 × 4.67 MB ใน `backups/` (gitignored) · scripts: `e2e/dbBackup.cjs` + `e2e/dbDump.cmd`
 - 2026-10-06 (รอบ 3): **G4 CLOSED** (Owner ยอมรับ simulated 9/9 — Meta unblock/Test User เลื่อน backlog) · **W-3.4 Bolt ตัดออก** (Owner: ไม่ใช้แล้ว) · **W-1.6 BLOCKED** (SUPABASE_ACCESS_TOKEN หมดอายุ — รอ Owner token ใหม่; script `w16TestSecretsClean.cjs` พร้อม) · **หน้าแรก: หมวดที่แอดมินเพิ่มโชว์เสมอ** — CategorySections เรนเดอร์หมวด active ทุกหมวดตาม sort_order ก่อนเซกชันรีวิว, หมวดที่ยังไม่มีสินค้าแสดง empty "เร็ว ๆ นี้" (แก้: หมวด "สินค้าสำเร็จรูป" เคยถูกซ่อนเพราะ 0 สินค้า) + tests 3/3 · **W-2.3 โค้ด SMS วางเตรียม**: EF `sms-send` + `_shared/sms.ts` + tests (รอ credentials) · gates TSC0/LINT0/VITEST 527/BUILD0

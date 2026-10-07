@@ -16,14 +16,15 @@
 //   - Nothing here creates or mutates business rows. A per-customer
 //     rate/audit trail stays with notification_dispatch (author), not here.
 //
-// Provider abstraction (env, supabase secrets set ...):
-//   SMS_PROVIDER      — 'generic_http' (extendable: twilio later)
-//   SMS_API_URL       — provider endpoint (POST JSON)
-//   SMS_API_KEY       — provider credential (sent as Bearer)
-//   SMS_SENDER_NAME   — optional sender id shown on SMS
+// Provider: THSMS (Owner เลือก 2026-10-07 — credentials: THSMS_API_KEY / THSMS_SENDER_NAME)
+//   POST ${SMS_API_URL}   header Authorization: Bearer ${SMS_API_KEY}
+//   body { msisdn: ['08...'], message, sender }   (ตัวอย่างทางการ thsms.com/sms-api → gist 2df9c655…)
+//   GET  https://thsms.com/api/me                 = check credit
+//   Env (supabase secrets): SMS_PROVIDER / SMS_API_URL / SMS_API_KEY / SMS_SENDER_NAME
 //   SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY — auto-injected
 //   AUTOMATION_TOKEN  — shared secret for the scheduler path
 // ============================================
+import { normalizeThaiPhone, maskPhone } from '../_shared/sms.ts'
 
 const SB_URL = Deno.env.get('SUPABASE_URL') || ''
 const SERVICE = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || ''
@@ -45,22 +46,12 @@ function json(body: unknown, status = 200): Response {
   })
 }
 
-/** Thai mobile normalisation: keep leading 0, +66xx → 0xx; else passthrough (shared: _shared/sms.ts). */
-function normalizeThaiPhone(raw: string): string {
-  const t = (raw || '').replace(/[^\d+]/g, '')
-  if (/^\+66\d{8,9}$/.test(t)) return '0' + t.slice(3)
-  return t
-}
-function maskPhone(raw: string): string {
-  return (raw || '').replace(/(\d{3})\d{3}(\d{3,4})/, '$1***$2')
-}
-
-/** Provider-agnostic sender: generic HTTP gateway (POST JSON {to, message, sender}). */
+/** THSMS send: POST JSON { msisdn: [to], message, sender } + Bearer token. */
 async function sendViaProvider(to: string, message: string): Promise<{ ok: boolean; status: number; provider: string }> {
   const r = await fetch(SMS_API_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + SMS_API_KEY },
-    body: JSON.stringify({ to, message, sender: SMS_SENDER_NAME }),
+    body: JSON.stringify({ msisdn: [to], message, sender: SMS_SENDER_NAME }),
   })
   return { ok: r.ok, status: r.status, provider: SMS_PROVIDER }
 }

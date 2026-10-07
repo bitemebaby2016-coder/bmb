@@ -2,22 +2,29 @@
 'use strict'
 const fs = require('fs')
 const env = {}
+const tokens = []
 for (const l of fs.readFileSync('.env.local', 'utf8').split(/\r?\n/)) {
   const m = l.match(/^\s*([A-Za-z0-9_]+)\s*=\s*(.*)\s*$/)
-  if (m && !l.trim().startsWith('#') && m[2]) env[m[1]] = m[2]
+  if (m && !l.trim().startsWith('#') && m[2]) {
+    if (m[1] === 'SUPABASE_ACCESS_TOKEN') tokens.push(m[2])
+    else env[m[1]] = m[2]
+  }
 }
-const TOK = env.SUPABASE_ACCESS_TOKEN
 const REF = 'ivkdfognyiwjcmrhcnwz'
 
 async function q(sql) {
-  const r = await fetch('https://api.supabase.com/v1/projects/' + REF + '/database/query', {
-    method: 'POST',
-    headers: { Authorization: 'Bearer ' + TOK, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ query: sql }),
-  })
-  const j = await r.json()
-  if (!r.ok) throw new Error(JSON.stringify(j))
-  return j
+  let lastErr = ''
+  for (const tok of [...tokens].reverse()) {
+    const r = await fetch('https://api.supabase.com/v1/projects/' + REF + '/database/query', {
+      method: 'POST',
+      headers: { Authorization: 'Bearer ' + tok, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ query: sql }),
+    })
+    const j = await r.json().catch(() => ({}))
+    if (r.ok) return j
+    lastErr = JSON.stringify(j)
+  }
+  throw new Error(lastErr || 'no working SUPABASE_ACCESS_TOKEN')
 }
 
 ;(async () => {

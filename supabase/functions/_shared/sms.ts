@@ -1,8 +1,9 @@
 // Shared SMS helpers (W-2.3) — pure TS, importable by Edge Functions and vitest.
-/** Thai mobile normalisation: keep leading 0, +66xx → 0xx; else passthrough. */
+/** Thai mobile normalisation: keep leading 0; +66xx / 66xx → 0xx; else passthrough. */
 export function normalizeThaiPhone(raw: string): string {
   const t = (raw || '').replace(/[^\d+]/g, '')
   if (/^\+66\d{8,9}$/.test(t)) return '0' + t.slice(3)
+  if (/^66\d{8,9}$/.test(t)) return '0' + t.slice(2) // bare 66xxxxxxxxx (เก็บใน profiles รูปแบบนี้)
   return t
 }
 
