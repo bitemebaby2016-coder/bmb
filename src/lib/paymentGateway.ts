@@ -1,12 +1,18 @@
 // ============================================
-// Bite Me Baby — Payment Gateway Service (P0-5)
+// Bite Me Baby — Payment Gateway Service (P0-5 · Omise cutover)
 // ============================================
-// REAL integration contract (2026-09-18) — NO simulation, NO fake success:
+// REAL integration contract — NO simulation, NO fake success:
 //
-//   credit_card  → Edge Function `create-checkout` creates a Stripe
-//                  PaymentIntent SERVER-SIDE (amount re-derived from the DB).
-//                  Confirmation happens in Stripe (client_secret + Stripe.js),
-//                  and the stripe-webhook EF records the result idempotently.
+//   credit_card  → OMISE cutover (handoff §5.2): when a real Omise published
+//                  key is configured, createCheckout invokes the
+//                  `omise-checkout` Edge Function — the charge (amount
+//                  re-derived from the DB) is created SERVER-SIDE with the
+//                  Omise secret key. Confirmation happens on Omise
+//                  (Omise.js card token → charge → 3-D Secure authorize_uri),
+//                  and the `omise-webhook` EF records the result idempotently.
+//                  When Omise is NOT yet configured the legacy Stripe path
+//                  (`create-checkout` + Stripe.js + stripe-webhook) keeps
+//                  working as a fallback so card payment never breaks mid-way.
 //   promptpay_qr → create_payment_intent_record RPC (authoritative amount) →
 //                  customer submits TXN id (submit_offline_payment_reference,
 //                  intent pending→processing) → admin confirms
@@ -15,12 +21,13 @@
 //                  door; confirm_offline_payment requires order = delivered.
 //
 // Failure paths return explicit errors. If the Edge Function is not deployed,
-// the client reports ERR_STRIPE_NOT_CONFIGURED — never a fabricated success.
+// the client reports the EF error — never a fabricated success.
 // ============================================
 
 import { supabase } from './supabase'
+import { isOmiseConfigured, OMISE_CHECKOUT_FUNCTION } from './omise'
 
-export type PaymentProvider = 'stripe' | 'promptpay' | 'cod'
+export type PaymentProvider = 'stripe' | 'omise' | 'promptpay' | 'cod'
 export type PaymentStatus = 'pending' | 'processing' | 'completed' | 'failed' | 'refunded' | 'expired'
 export type PaymentMethod = 'credit_card' | 'promptpay_qr' | 'cash_on_delivery' | 'bank_transfer'
 
@@ -56,13 +63,58 @@ export interface CardCheckoutResult {
   amount?: number
   order_number?: string
   error?: string
+  /** Which provider minted this checkout (absent on the legacy Stripe path). */
+  provider?: 'stripe' | 'omise'
+  /** Omise charge id (`chrg_...`) — present on the Omise path. */
+  charge_id?: string
+  /** 3-D Secure / hosted authorization page — redirect here when present. */
+  authorize_uri?: string
+  /** Omise charge status: `pending` | `successful` | `failed` | ... */
+  charge_status?: string
 }
 
 // ============================================
-// REAL Stripe checkout — via Edge Function (no Stripe secret on the client)
+// REAL card checkout — via Edge Function (no provider secret on the client)
 // ============================================
-export async function createCheckout(orderNumber: string): Promise<CardCheckoutResult> {
+export async function createCheckout(orderNumber: string, options?: { cardToken?: string }): Promise<CardCheckoutResult> {
   try {
+    // ---- Omise cutover (handoff §5.2 step 5): used once a real published key
+    // is configured. Without it the legacy Stripe branch below keeps card
+    // payment working — the switch is env-driven, never a hard break.
+    if (isOmiseConfigured()) {
+      const { data, error } = await supabase.functions.invoke(OMISE_CHECKOUT_FUNCTION, {
+        body: { order_number: orderNumber, card_token: options?.cardToken },
+      })
+      if (error) {
+        console.error('[paymentGateway] omise-checkout invoke error:', error)
+        return { ok: false, error: error.message, provider: 'omise' }
+      }
+      const result = data as {
+        ok?: boolean
+        provider?: 'omise'
+        charge_id?: string
+        charge_status?: string
+        authorize_uri?: string
+        amount?: number
+        order_number?: string
+        error?: string
+      }
+      if (!result?.ok) {
+        return { ok: false, error: result?.error || 'ERR_CHECKOUT_FAILED', provider: 'omise' }
+      }
+      return {
+        ok: true,
+        provider: 'omise',
+        charge_id: result.charge_id,
+        payment_intent_id: result.charge_id,
+        charge_status: result.charge_status,
+        authorize_uri: result.authorize_uri ?? undefined,
+        amount: result.amount,
+        order_number: result.order_number,
+      }
+    }
+
+    // ---- Legacy Stripe path (fallback until the Omise cutover is verified) ----
     const { data, error } = await supabase.functions.invoke('create-checkout', {
       body: { order_number: orderNumber },
     })
@@ -110,6 +162,22 @@ export async function createPaymentIntent(
   } as PaymentIntent
 
   if (method === 'credit_card') {
+    // ---- Omise cutover: the charge is created server-side at CARD SUBMIT
+    // (CardPaymentForm → createCheckout(orderNumber, { cardToken })). Nothing is
+    // written here — the browser never fabricates an intent row and never marks
+    // an order paid; this pending object is UI-only until the EF responds.
+    if (isOmiseConfigured()) {
+      return {
+        success: true,
+        payment_intent: {
+          ...intentBase,
+          id: `omise-pending-${orderNumber}`,
+          status: 'pending' as PaymentStatus,
+          provider: 'omise',
+          metadata: { ...metadata, provider: 'omise', source: 'omise-card-form' },
+        },
+      }
+    }
     const checkout = await createCheckout(orderNumber)
     if (!checkout.ok) {
       return { success: false, error: checkout.error || 'ERR_CHECKOUT_FAILED' }
@@ -156,8 +224,9 @@ export async function createPaymentIntent(
   }
 }
 /**
- * Card confirmation is handled end-to-end by Stripe (client_secret → Stripe.js →
- * webhook → record_payment_result). This function only reports the current
+ * Card confirmation is handled end-to-end by the provider (Stripe.js
+ * client_secret / Omise.js token + authorize_uri → webhook →
+ * record_payment_result). This function only reports the current
  * intent state; it NEVER marks an order paid from the browser.
  */
 export async function confirmPayment(
@@ -211,12 +280,13 @@ export async function confirmOfflinePayment(orderNumber: string): Promise<Paymen
 }
 
 /**
- * Refunds are server-side only (requires service-role + Stripe API).
- * Admin flow lives in the `stripe-refund` Edge Function once deployed; the
- * browser NEVER touches money-out operations.
+ * Refunds are server-side only (requires service-role + provider API).
+ * Admin flows live in the `omise-refund` / `stripe-refund` Edge Functions
+ * (selected by payment_intents.provider); the browser NEVER touches
+ * money-out operations.
  */
 export async function refundPayment(_paymentIntentId: string, _reason: string = ''): Promise<PaymentConfirmResult> {
-  return { success: false, error: 'REFUND_SERVER_SIDE_ONLY — use the stripe-refund Edge Function (admin)' }
+  return { success: false, error: 'REFUND_SERVER_SIDE_ONLY — use the omise-refund / stripe-refund Edge Function (admin)' }
 }
 
 // ============================================

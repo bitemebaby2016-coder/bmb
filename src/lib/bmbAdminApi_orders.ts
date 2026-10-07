@@ -350,16 +350,31 @@ export async function cancelOrder(orderNumber: string, reason: string = ''): Pro
 // bmbAdminApi_users.getDashboardStats, now hardened with aggregated reads).
 
 // ============================================
-// C-6 (2026-09-19): server-side Stripe refund via Edge Function (admin-only).
-// The EF verifies the caller is an admin, validates the order/intent, calls the
-// Stripe Refund API with an Idempotency-Key, then persists the result.
+// C-6 (2026-09-19): server-side refund via Edge Function (admin-only).
+// The EF verifies the caller is an admin, validates the order/intent, calls
+// the provider Refund API, then persists the result (ledger idempotent).
+// Omise cutover (handoff §5.2 step 6): the target EF is chosen by
+// payment_intents.provider — omise-paid orders refund through `omise-refund`,
+// everything else keeps `stripe-refund`.
 // ============================================
 export async function stripeRefundOrder(
   orderNumber: string,
   reason?: string,
 ): Promise<{ success: boolean; data?: any; error?: string }> {
   try {
-    const { data, error } = await supabase.functions.invoke('stripe-refund', {
+    let fnName = 'stripe-refund'
+    try {
+      const { data: intents } = await supabase
+        .from('payment_intents')
+        .select('provider')
+        .eq('order_number', orderNumber)
+      if (Array.isArray(intents) && intents.some((i: any) => i?.provider === 'omise')) {
+        fnName = 'omise-refund'
+      }
+    } catch {
+      // provider lookup is best-effort — default to the legacy EF
+    }
+    const { data, error } = await supabase.functions.invoke(fnName, {
       body: { order_number: orderNumber, reason },
     })
     if (error || (data && data.error)) {

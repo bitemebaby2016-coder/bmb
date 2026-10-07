@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom'
 import { getOrder } from '@/lib/bmbAdminApi_orders'
 import { submitOfflinePaymentReference, getPaymentIntents, createPaymentIntent } from '@/lib/paymentGateway'
 import { CardPaymentSection } from '@/components/payment/CardPaymentForm'
+import { isOmiseConfigured } from '@/lib/omise'
 import { writeAuditLog } from '@/lib/auditLog'
 import { showToast } from '@/components/ui/ToastContainer'
 import { MascotBadge } from '@/components/MascotBadge'
@@ -96,7 +97,7 @@ export function PaymentConfirmationPage() {
         <div className="border-t border-brand-border pt-4 space-y-2">
           <div className="flex justify-between"><span>Customer</span><span>{order.customer_name}</span></div>
           <div className="flex justify-between"><span>Phone</span><span>{order.customer_phone}</span></div>
-          <div className="flex justify-between"><span>Payment</span><span>{order.payment_method === 'promptpay_qr' ? 'PromptPay QR' : order.payment_method === 'credit_card' ? 'บัตรเครดิต/เดบิต (Stripe)' : 'เงินสดตอนรับของ'}</span></div>
+          <div className="flex justify-between"><span>Payment</span><span>{order.payment_method === 'promptpay_qr' ? 'PromptPay QR' : order.payment_method === 'credit_card' ? `บัตรเครดิต/เดบิต (${isOmiseConfigured() ? 'Omise' : 'Stripe'})` : 'เงินสดตอนรับของ'}</span></div>
           <div className="flex justify-between text-xl font-bold pt-2 border-t border-brand-border"><span>Total</span><span className="text-brand-primary">฿{order.total_amount.toFixed(2)}</span></div>
         </div>
       </div>
