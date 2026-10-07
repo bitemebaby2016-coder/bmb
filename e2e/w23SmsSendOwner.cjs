@@ -25,7 +25,12 @@ if (fs.existsSync(sp)) {
 }
 const REF = 'ivkdfognyiwjcmrhcnwz'
 const ADMIN = 'ae12e10b-0f1f-45ff-b0f0-6dd7a682b064'
-const TARGET = '66942649269' // 0942649269 (profiles เก็บแบบ 66 + national9)
+// target = เบอร์ Owner (default 0826378546) — รับ arg ได้: node e2e/w23SmsSendOwner.cjs 0826378546
+const NATIONAL = (process.argv[2] || '0826378546').replace(/\D/g, '').replace(/^0/, '')
+const TARGET = '66' + NATIONAL // profiles เก็บแบบ 66 + national9
+// ข้อความทดสอบสั้น ≤70 ตัวอักษร (ASCII ล้วน = GSM-7 → 1 segment = 1 credit)
+const MSG = '[W-2.3 TEST] Bite Me Baby SMS - safe to ignore'
+if (MSG.length > 70) throw new Error('test message > 70 chars: ' + MSG.length)
 const mask = (p) => String(p || '').replace(/(\d{3})\d{3}(\d{3,4})/, '$1***$2')
 async function q(sql) {
   let last = ''
@@ -54,7 +59,7 @@ async function q(sql) {
     const r = await fetch(env.VITE_SUPABASE_URL + '/functions/v1/sms-send', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + SERVICE },
-      body: JSON.stringify({ customer_id: ADMIN, message: '[W-2.3 TEST] Bite Me Baby SMS gateway probe (Owner number 2026-10-07) — safe to ignore' }),
+      body: JSON.stringify({ customer_id: ADMIN, message: MSG }),
     })
     const j = await r.json().catch(() => ({}))
     console.log('SMS_HTTP=' + r.status)

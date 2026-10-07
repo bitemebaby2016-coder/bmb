@@ -24,6 +24,7 @@
   - ⚠️ **บทเรียน apply:** รอบแรก apply ล้ม `syntax error 42601 at REVOKE` LINE 280 เพราะ `pg_get_functiondef()` ไม่รวม `;` → build script tail ต้องขึ้นต้นด้วย `;` (แก้ใน `m118BuildFromLive.cjs` แล้ว) · DB transaction rollback อัตโนมัติ (prod ไม่เสียหาย — ยืนยัน `m118StateProbe`) · `m118Verify` เป็น textual เท่านั้น ไม่จับ syntax ระดับ SQL
 - ✅ **Meta page token = LONG-LIVED** — `node e2e/metaPageTokenExtend.cjs` (`fb_exchange_token` ด้วย page token) → token ใหม่ type=PAGE **expires_at=0 (NEVER)** · scope มี `pages_messaging` · `/me`+เพจ 200 · set secret (201) · `publishWorkerProbe` **5/5** · **(หมายเหตุ: user token ใน `.env.local` หมดอายุแล้ว → `metaTokenExchange` ล้ม step1 code190/467 — ไม่ใช้ ไม่ overwrite)
 - ✅ **SMS ไปเบอร์ Owner `0942649269`** — `node e2e/w23SmsSendOwner.cjs` (ตั้ง profiles.phone บัญชีทดสอบ `ae12e10b` ชั่วคราว → ส่ง → คืนค่าเดิมเสมอใน `finally`) → **HTTP 200 · `ok:true` · `provider_status:200` · `to_masked=094***9269`** · **เหลือ Owner ยืนยันเข้าเครื่องจริง**
+- ⚠️ **รอบ 8b/8c (Owner แจ้ง SMS ไม่ถึง):** ส่งซ้ำไป `082***8546` (Owner ยืนยัน 082+094 ถูกต้องทั้งคู่แต่ไม่ได้รับ) ทั้ง EF (`w23SmsSendOwner 0826378546` = HTTP 200) และ THSMS ตรง (`thsmsDirectProbe`) · ยืนยันรูปแบบทางการจาก gist หน้า docs = `msisdn` นำหน้าด้วย 0 → **EF ส่งถูกต้องแล้ว** · **ข้อความสั้น ≤70 ตัวอักษร → `credit_usage:1`** (ยาว ~90 → 2) · **THSMS wallet credit หมด (0.00)** → EF = HTTP 502/`provider_status:422` · **ปลายเหตุต้องสงสัย: `SMS_SENDER_NAME="Direct SMS"` มีเว้นวรรค** (Sender ID ปกติห้ามเว้นวรรค) → รอ Owner ยืนยันชื่อผู้ส่งที่ลงทะเบียน + เติมเครดิต
 - Gates ปิดรอบ: **TSC 0 / LINT 0 / VITEST 527/527 / BUILD 0**
 
 **จากรอบ 7 (ยังจริง):** W-2.3 SMS code (THSMS) deployed ผ่าน CLI · `_shared/sms` normalize `66xx→0xx` · DEFECT 117 clobber FC gates (ตอนนี้ปิดด้วย 118 แล้ว) · G10 evidence pack = `BMB_G10_FINAL_REPORT.md` (**NOT CLOSED**)
@@ -34,7 +35,7 @@
 |---|---|---|
 | ✅ **Migration 118** | DONE รอบ 8 | APPLIED + VERIFIED — `fcVerify114` 25/25 · `fcProdVerify` 9/9 · intake 18-param OK · history 118/118 |
 | ✅ **Page token** | DONE รอบ 8 | exchange → **LONG-LIVED (expires=NEVER)** · set secret · `publishWorkerProbe` 5/5 |
-| **SMS เข้าเครื่อง** | Owner ยืนยันรับ `[W-2.3 TEST]` ที่ **`094***9269`** (รอบ 8) | ปิด W-2.3 ใน master status |
+| **SMS เข้าเครื่อง** | Owner ยืนยันรับ `[W-2.3 TEST]` ที่ **`082***8546`** (หรือ `094***9269`) | **ก่อนอื่น:** เติมเครดิต THSMS (ตอนนี้ 0.00) + ยืนยัน Sender Name ที่ลงทะเบียน (สงสัย `"Direct SMS"` มีเว้นวรรค) → ส่งใหม่ → Owner ยืนยัน → ปิด W-2.3 |
 | Stripe LIVE | account review ผ่าน (Paused soon / 2 tasks In review) | live webhook + acceptance (W-2.1/W-2.2) |
 | Push เครื่องจริง | Owner ทดสอบ device | ยืนยัน subscription → ปิด |
 | G4 Meta real event | Meta ปลดล็อก | add Tester → `g4CheckRealEvents` |

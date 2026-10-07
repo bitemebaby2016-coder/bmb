@@ -24,7 +24,7 @@
 
 | รายการ | สถานะ | Evidence |
 |---|---|---|
-| W-2.3 SMS (THSMS) | ✅ **RUNTIME VERIFIED (ส่งจริง 200)** — เหลือ Owner ยืนยันเข้าเครื่อง | secrets ตั้ง (HTTP 201) · THSMS `/api/me` credit ✓ · EF deploy ผ่าน CLI (2 ไฟล์) · `w23SmsProbe` **3/3** (unauth 401 · bad token 401 · service send `ok:true provider_status:200`) · **รอบ 8: ส่งจริงไปเบอร์ Owner `094***9269` = HTTP 200 `provider_status:200`** (`w23SmsSendOwner` ตั้ง profiles.phone ชั่วคราว→ส่ง→คืนค่าเดิม) · normalize `66…→0…` ทำงานจริง |
+| W-2.3 SMS (THSMS) | ✅ **RUNTIME VERIFIED (ส่งจริง 200)** — เหลือ Owner ยืนยันเข้าเครื่อง | secrets ตั้ง (HTTP 201) · รูปแบบทางการ THSMS ยืนยันจาก gist หน้า docs (`msisdn` นำหน้าด้วย 0) · EF deploy ผ่าน CLI · `w23SmsProbe` **3/3** · **รอบ 8: `094***9269` = HTTP 200 (Owner แจ้งไม่ถึง) → รอบ 8b: `082***8546` ผ่าน EF = HTTP 200 `ok:true provider_status:200 to_masked=082***8546`** + `thsmsDirectProbe` ยิงตรง = HTTP 200 `{success:true,code:200}` หักเครดิตจริง · **รอบ 8c: ข้อความสั้น ≤70 → `credit_usage:1`** (ยืนยัน 1 เครดิต) · **⚠️ THSMS credit หมด 0.00** → EF = HTTP 502 / `provider_status:422` · **ข้อสงสัยปลายเหตุ: `SMS_SENDER_NAME="Direct SMS"` มีเว้นวรรค (Sender ID ห้ามเว้นวรรค) → รอ Owner ยืนยันชื่อผู้ส่งที่ลงทะเบียน + เติมเครดิต** · normalize `66…→0…` ทำงานจริง |
 | Page token | ✅ **LONG-LIVED (expires_at=0 NEVER)** — exchange สำเร็จ + set EF secret | รอบ 8: `fb_exchange_token` (grant_type) ด้วย page token → token ใหม่ type=PAGE · **expires=NEVER** · app Bite Me Baby · scope มี `pages_messaging` · `/me`+เพจ `862940416913026` = 200 (`metaTokenDiag`) · set secret (201) · `publishWorkerProbe` 5/5 |
 | Read-only prod snapshot | ✅ | `e2e/g10-prod-snapshot.json` — web 200/canonical ✓ · EF 15 ตัว · RLS 50 tables · triggers 31 |
 | Migration history | ✅ **118/118** | 118 recorded (`migHistoryReconcile --write` → HTTP 201) |
@@ -42,7 +42,7 @@
 |---|---|---|
 | ✅ **1. Migration 118** | DONE รอบ 8 (Owner อนุมัติแล้ว) | APPLIED → `fcVerify114` 25/25 · `fcProdVerify` 9/9 · intake 18-param OK · history 118/118 |
 | ✅ **2. Page token หมดอายุ** | DONE รอบ 8 | exchange → token ใหม่ **LONG-LIVED expires=NEVER** · set secret (201) · `publishWorkerProbe` 5/5 |
-| **3. SMS เข้าเครื่องจริง** | Owner ยืนยันรับ `[W-2.3 TEST]` ที่ **`094***9269`** (ส่งใหม่รอบ 8 — **ไม่นับ** `090***1544` เดิม) | ยืนยันแล้วปิด W-2.3 |
+| **3. SMS เข้าเครื่องจริง** | Owner ยืนยันรับ `[W-2.3 TEST]` ที่ **`082***8546`** (รอบ 8b — `094***9269` และ `090***1544` ไม่นับ) | ยืนยันแล้วปิด W-2.3 |
 | 4. Stripe LIVE | account review ผ่าน (2 tasks In review) | live webhook + acceptance (W-2.1/W-2.2) |
 | 5. Push เครื่องจริง | Owner ทดสอบ device | ยืนยัน subscription → ปิด |
 | 6. G4 real event (Meta) | Meta ปลดล็อก roles | add Tester → `g4CheckRealEvents` |
@@ -61,7 +61,7 @@ PRODUCTION MUTATION = YES — apply 118 (Owner อนุมัติ) · set sec
 ## 5. TESTS / TYPECHECK / LINT (ณ รอบนี้)
 
 - **TSC = 0 errors · LINT = 0 · VITEST = 527/527 (49 files) · BUILD = 0**
-- Probes ผ่านทั้งหมด (รอบ 8): `m118Verify` **16/16** → `fcApply118` **APPLY118_OK** · `intakeDriftProbe` **INTAKE SIGNATURE OK (18-param)** · `fcVerify114` **25/25** · `fcProdVerify` **9/9** · `migHistoryReconcile` **118/118** · `w23SmsSendOwner` **HTTP 200 / provider_status 200 / to_masked=094***9269** · `metaTokenDiag` **PAGE · expires=NEVER · pages_messaging** · `publishWorkerProbe` **5/5** · `metaTokenScopeCheck` BMB_PAGE 200
+- Probes ผ่านทั้งหมด (รอบ 8/8b): `m118Verify` **16/16** → `fcApply118` **APPLY118_OK** · `intakeDriftProbe` **INTAKE SIGNATURE OK (18-param)** · `fcVerify114` **25/25** · `fcProdVerify` **9/9** · `migHistoryReconcile` **118/118** · `w23SmsSendOwner 0826378546` **HTTP 200 / provider_status 200 / to_masked=082***8546** · `thsmsDirectProbe` **HTTP 200 `{success:true,code:200}`** (ทั้ง `082…` และ `668…`) · `metaTokenDiag` **PAGE · expires=NEVER · pages_messaging** · `publishWorkerProbe` **5/5** · `metaTokenScopeCheck` BMB_PAGE 200
 - ไม่มี probe ที่ FAIL ในรอบนี้
 
 ## 6. HEAD / WORKTREE
