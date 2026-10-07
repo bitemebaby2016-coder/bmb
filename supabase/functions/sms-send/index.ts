@@ -16,13 +16,17 @@
 //   - Nothing here creates or mutates business rows. A per-customer
 //     rate/audit trail stays with notification_dispatch (author), not here.
 //
-// Provider: THSMS (Owner เลือก 2026-10-07 — credentials: THSMS_API_KEY / THSMS_SENDER_NAME)
-//   POST ${SMS_API_URL}   header Authorization: Bearer ${SMS_API_KEY}
-//   body { msisdn: ['08...'], message, sender }   (ตัวอย่างทางการ thsms.com/sms-api → gist 2df9c655…)
-//   GET  https://thsms.com/api/me                 = check credit
-//   Env (supabase secrets): SMS_PROVIDER / SMS_API_URL / SMS_API_KEY / SMS_SENDER_NAME
+// Provider abstraction (supabase secrets):
+//   SMS_PROVIDER      — 'thsms_org' (ปัจจุบัน, api.thsms.org/v1) | 'thsms' (legacy thsms.com)
+//   SMS_API_URL       — endpoint POST JSON (thsms_org: https://api.thsms.org/v1/sms/send)
+//   SMS_API_KEY       — credential (thsms_org: header 'X-API-Key'; thsms.com: 'Authorization: Bearer')
+//   SMS_SENDER_NAME   — sender id ที่ลงทะเบียน (thsms_org body field: sender_name)
+//   SMS_MESSAGE_TYPE  — thsms_org เท่านั้น (เช่น 'superfast'/'standard') default 'superfast'
+//   thsms_org body: { sender_name, recipient, message, message_type }   (docs api.thsms.org/v1)
+//   thsms.com body: { msisdn: ['08...'], message, sender }              (legacy)
 //   SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY — auto-injected
 //   AUTOMATION_TOKEN  — shared secret for the scheduler path
+//   (ย้าย thsms.com → thsms.org 2026-10-07: คีย์เดิมเป็นคนละบัญชี → 404 'User Not Found')
 // ============================================
 import { normalizeThaiPhone, maskPhone } from '../_shared/sms.ts'
 
@@ -33,6 +37,7 @@ const SMS_PROVIDER = Deno.env.get('SMS_PROVIDER') || ''
 const SMS_API_URL = Deno.env.get('SMS_API_URL') || ''
 const SMS_API_KEY = Deno.env.get('SMS_API_KEY') || ''
 const SMS_SENDER_NAME = Deno.env.get('SMS_SENDER_NAME') || 'BiteMeBaby'
+const SMS_MESSAGE_TYPE = Deno.env.get('SMS_MESSAGE_TYPE') || 'superfast'
 
 function json(body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body), {
@@ -46,14 +51,25 @@ function json(body: unknown, status = 200): Response {
   })
 }
 
-/** THSMS send: POST JSON { msisdn: [to], message, sender } + Bearer token. */
-async function sendViaProvider(to: string, message: string): Promise<{ ok: boolean; status: number; provider: string }> {
-  const r = await fetch(SMS_API_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + SMS_API_KEY },
-    body: JSON.stringify({ msisdn: [to], message, sender: SMS_SENDER_NAME }),
-  })
-  return { ok: r.ok, status: r.status, provider: SMS_PROVIDER }
+/**
+ * Provider send.
+ *  - thsms_org (api.thsms.org/v1): header 'X-API-Key' + body { sender_name, recipient, message, message_type }
+ *  - thsms (legacy thsms.com):     header 'Authorization: Bearer' + body { msisdn: [to], message, sender }
+ * Success = HTTP ok && (JSON.success !== false). คืน snippet ของ provider body เพื่อวินิจฉัย (≤160 ตัวอักษร)
+ */
+async function sendViaProvider(to: string, message: string): Promise<{ ok: boolean; status: number; provider: string; body: string }> {
+  const isOrg = SMS_PROVIDER === 'thsms_org'
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' }
+  const payload = isOrg
+    ? { sender_name: SMS_SENDER_NAME, recipient: to, message, message_type: SMS_MESSAGE_TYPE }
+    : { msisdn: [to], message, sender: SMS_SENDER_NAME }
+  if (isOrg) headers['X-API-Key'] = SMS_API_KEY
+  else headers['Authorization'] = 'Bearer ' + SMS_API_KEY
+  const r = await fetch(SMS_API_URL, { method: 'POST', headers, body: JSON.stringify(payload) })
+  const text = await r.text().catch(() => '')
+  let ok = r.ok
+  if (ok) { try { const j = JSON.parse(text); if (j && j.success === false) ok = false } catch { /* non-JSON = ok */ } }
+  return { ok, status: r.status, provider: SMS_PROVIDER, body: text.slice(0, 160) }
 }
 
 async function authOk(req: Request): Promise<boolean> {
@@ -95,5 +111,8 @@ Deno.serve(async (req: Request): Promise<Response> => {
 
   const to = normalizeThaiPhone(profRow.phone)
   const res = await sendViaProvider(to, message)
-  return json({ ok: res.ok, to_masked: maskPhone(to), provider_status: res.status }, res.ok ? 200 : 502)
+  return json(
+    { ok: res.ok, to_masked: maskPhone(to), provider: res.provider, provider_status: res.status, provider_body: res.body },
+    res.ok ? 200 : 502,
+  )
 })

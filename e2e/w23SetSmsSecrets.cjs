@@ -17,14 +17,18 @@ for (const l of fs.readFileSync(path.join(ROOT, '.env.local'), 'utf8').split(/\r
 }
 const REF = 'ivkdfognyiwjcmrhcnwz'
 async function main() {
-  const thKey = h.THSMS_API_KEY, thSender = h.THSMS_SENDER_NAME, pageTok = h.META_PAGE_ACCESS_TOKEN
-  if (!thKey || !thSender) throw new Error('THSMS_API_KEY / THSMS_SENDER_NAME missing in .env.local')
+  const thKey = h.SMS_API_KEY || h.THSMS_API_KEY
+  const thSender = h.SMS_SENDER_NAME || h.THSMS_SENDER_NAME
+  const mtype = h.SMS_MESSAGE_TYPE || h.THSMS_MESSAGE_TYPE || 'superfast'
+  const pageTok = h.META_PAGE_ACCESS_TOKEN
+  if (!thKey || !thSender) throw new Error('SMS_API_KEY / SMS_SENDER_NAME (หรือ THSMS_*) missing in .env.local')
   if (!pageTok) throw new Error('META_PAGE_ACCESS_TOKEN missing in .env.local')
   const pairs = [
-    ['SMS_PROVIDER', 'thsms'],
-    ['SMS_API_URL', 'https://thsms.com/api/send-sms'],
+    ['SMS_PROVIDER', h.SMS_PROVIDER || 'thsms_org'],
+    ['SMS_API_URL', h.SMS_API_URL || 'https://api.thsms.org/v1/sms/send'],
     ['SMS_API_KEY', thKey],
     ['SMS_SENDER_NAME', thSender],
+    ['SMS_MESSAGE_TYPE', mtype],
     ['META_PAGE_ACCESS_TOKEN', pageTok],
   ]
   let ok = false
@@ -48,7 +52,7 @@ async function main() {
     if (!r.ok) continue
     const j = await r.json().catch(() => [])
     const names = (Array.isArray(j) ? j : (j.secrets || [])).map((s) => s.name)
-    const need = ['SMS_PROVIDER', 'SMS_API_URL', 'SMS_API_KEY', 'SMS_SENDER_NAME', 'META_PAGE_ACCESS_TOKEN']
+    const need = ['SMS_PROVIDER', 'SMS_API_URL', 'SMS_API_KEY', 'SMS_SENDER_NAME', 'SMS_MESSAGE_TYPE', 'META_PAGE_ACCESS_TOKEN']
     console.log('VERIFY:', need.map((n) => n + '=' + (names.includes(n) ? 'PRESENT' : 'MISSING')).join(' · '), '| total=' + names.length)
     return
   }
