@@ -10,6 +10,7 @@ import type { Product } from '@/types'
 import {
   BITE_STATES,
   applyOrderModify,
+  attachCustomizersToDraft,
   bitePoseForState,
   buildBiteGreeting,
   chatStatusLabel,
@@ -277,5 +278,31 @@ describe('parseOrderIntent / applyOrderModify (NL order like-a-human)', () => {
     expect(res.draft).toHaveLength(2)
     expect(res.total).toBe(60 + 25 * 2)
     expect(res.replacedFrom).toBeUndefined()
+  })
+
+  it('attachCustomizersToDraft attaches note + customizations to the target line', () => {
+    const draft = [product('p1', 'Rice', 60), product('p2', 'Tea', 35)].map((p) => ({ product: p, quantity: 1 }))
+    const customizers = [{ key: 'note', value: 'ADD EGG', note: 'ADD EGG' }]
+    const out = attachCustomizersToDraft(draft, customizers, 'p2')
+    expect(out[0].note).toBeUndefined()
+    expect(out[1].note).toBe('ADD EGG')
+    expect(out[1].customizations).toEqual({ note: 'ADD EGG' })
+    expect(out[0].customizations).toBeUndefined()
+  })
+
+  it('attachCustomizersToDraft targets the first line when no id given', () => {
+    const draft = [product('p1', 'Rice', 60)].map((p) => ({ product: p, quantity: 1 }))
+    const out = attachCustomizersToDraft(draft, [{ key: 'note', value: 'SPICY', note: 'SPICY' }])
+    expect(out[0].note).toBe('SPICY')
+    expect(out[0].customizations).toEqual({ note: 'SPICY' })
+  })
+
+  it('attachCustomizersToDraft is a no-op with no customizers', () => {
+    const draft = [product('p1', 'Rice', 60)].map((p) => ({ product: p, quantity: 1 }))
+    expect(attachCustomizersToDraft(draft, [])).toBe(draft)
+  })
+
+  it('parseOrderIntent exposes an empty customizers array when no flags are present', () => {
+    expect(parseOrderIntent('hello').customizers).toEqual([])
   })
 })

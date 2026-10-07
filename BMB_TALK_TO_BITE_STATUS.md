@@ -182,3 +182,28 @@ TSC 0 · LINT 0 · VITEST 50 files/**553** (เพิ่ม 4) · BUILD 0
 ### ยังเหลือ (next)
 - NL "ไม่เผ็ด/เพิ่มไข่" (customization flag) ต่อจาก swap — โครงพร้อม, ยังไม่ทำ
 - auto-TTS reply เต็ม voice loop (ตอบเสียงอัตโนมัติหลัง draft) — ใช้ `aiVoice` ได้ต่อ
+---
+
+## 11. Round 13 — NL customize (flag→item note) + Auto-TTS loop + Automation Audit handoff
+
+### NL customize → item note (เข้าใจสั�จริง)
+- `talkToBite.ts`: `extractCustomizers(text)` — Thai-block generic ("เพิ่ม X / не X" → plain note map) + `attachCustomizersToDraft(draft, customizers, targetId?)` — attach note + customizations map to target line.
+- **Wired end-to-end**: `tryOrderIntent` attaches customizers to the modified/replaced line; draft card shows the note (`data-testid="ttb-draft-note"`); **`confirmDraft` → `cartStore.addItem(p, qty, line.customizations)`** — the REAL order_items.customizations (jsonb) gets them. No fake notes.
+- Tests: attachCustomizersToDraft mechanics ×3 + parseOrderIntent empty customizers ×1 → **VITEST 50/557**.
+
+### Auto-TTS full voice loop
+- `pushAssistant` now auto-speaks every Bite reply when voice is on (text ALWAYS shows — never voice-only; entry greeting still silent → no autoplay).
+- Voice default ON (`voiceReply=useState(true)`); voiceRef loads even without mic (TTS-only) via `if(!micSupported && !ttsSupported) return`.
+- Toggle listener 🔇/🔊 stays; no double-speak (removed old explicit speak in `handleSend`).
+
+### Automation audit handoff
+- New `docs/BMB_HANDOFF_AI_AUTOMOTION_AUDIT_2026-10-07.md` — DONE/PARTIAL/NOT-DONE + checklist to reach 100% (NL mapping table, continuous-listen, real-based recommendations, E2E, etc.).
+
+### Gates (ผ่านจริง)
+TSC 0 · LINT 0 · VITEST 50 files/**557** · BUILD 0
+
+### ยังเหลือ (priority in handoff)
+1. canonical keys ↔ Thai table (extra_egg/spicy/nões_ice) — сейчас только generic
+2. перенос прошлых customizations в order-again
+3. Continuous-listen после reply (policy-safe) · E2E
+4. remove dead `getBiteMessage`/`getBitePose` · migrate `useCartStore` shim

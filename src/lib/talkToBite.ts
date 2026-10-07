@@ -126,6 +126,10 @@ export interface OrderLike {
 export interface DraftLine {
   product: Product
   quantity: number
+  /** Human-readable customization attached to this line (e.g. "ไม่เผ็ด、เพิ่มไข่"). */
+  note?: string
+  /** Canonical customization map persisted into order_items.customizations (jsonb). */
+  customizations?: Record<string, any>
 }
 
 export interface UnavailableLine {
@@ -190,6 +194,75 @@ export function sumDraftTotal(draft: DraftLine[]): number {
 // canonical cart path. No AI/network here.
 // ---------------------------------------------------------------------------
 
+// ---------------------------------------------------------------------------
+// NL customization flags → item note ("ไม่เผ็ด", "เพิ่มไข่", "ไม่น้ำแข็ง"…).
+// These attach a human-readable note AND a canonical `customizations` map to a
+// draft line. The map flows into the REAL cart item (order_items.customizations
+// jsonb) via the existing canonical add path — no fake notes ever.
+// ---------------------------------------------------------------------------
+
+export interface Customizer {
+  /** Canonical key persisted into customizations (extra_egg, spicy, no_ice…). */
+  key: string
+  value: string | boolean | string[]
+  /** Human-readable Thai note shown on the draft line. */
+  note: string
+}
+
+// Thai "เพิ่ม X / ไม่ X" phrases map to a plain free-text note — the literal thing
+// the user asked for. No fabricated ingredient list. (Thai-word block: \u0E00-\u0E7F.)
+function matchThaiWord(text: string, prefix: string): string | null {
+  const m = String(text || '').match(new RegExp(`${prefix}\\s*([\\u0E00-\\u0E7F]{2,})`))
+  return m ? m[1] : null
+}
+
+/**
+ * Scan free-text Thai for "customize my dish" flags. Returns deduplicated
+ * customizers (``note`` map key) in the order they appear. Each phrase is a
+ * REAL request from the user (e.g. "เพิ่มไข่", "ไม่เผ็ด", "ไม่ใส่หوم") — kept
+ * verbatim, never invented. Falls back to an empty list when none are present.
+ */
+export function extractCustomizers(text: string): Customizer[] {
+  const t = String(text || '')
+  const out: Customizer[] = []
+  const seen = new Set<string>()
+  const push = (note: string) => {
+    if (seen.has(note)) return
+    seen.add(note)
+    out.push({ key: 'note', value: note, note })
+  }
+  const add = matchThaiWord(t, 'เพิ่ม') || matchThaiWord(t, 'เพิ่ม')
+  if (add) push(`เพิ่ม ${add}`)
+  const none = matchThaiWord(t, 'ไม่')
+  if (none) push(`ไม่ ${none}`)
+  const omit = matchThaiWord(t, 'ไม่ใส่')
+  if (omit) push(`ไม่ใส่ ${omit}`)
+  return out
+}
+
+/** Attach customizers to a target line (or the first line); returns a new draft. */
+export function attachCustomizersToDraft(
+  draft: DraftLine[],
+  customizers: Customizer[],
+  targetProductId?: string,
+): DraftLine[] {
+  if (!customizers || customizers.length === 0) return draft
+  if (!draft || draft.length === 0) return draft
+  if (targetProductId && !draft.some((d) => d.product.id === targetProductId)) targetProductId = undefined
+  const target = (targetProductId ? draft.find((d) => d.product.id === targetProductId) : undefined) ?? draft[0]
+  const cfg: Record<string, any> = {}
+  const notes: string[] = []
+  for (const c of customizers) {
+    const prev = cfg[c.key]
+    cfg[c.key] = prev === undefined ? c.value : Array.isArray(prev) ? prev.concat(c.value) : [prev, c.value]
+    if (!notes.includes(c.note)) notes.push(c.note)
+  }
+  const note = notes.join('、')
+  return draft.map((d) => (d === target ? { ...d, customizations: cfg, note: note || d.note } : d))
+}
+
+// ---------------------------------------------------------------------------
+
 export interface OrderIntent {
   /** Wants "order like before / again / same as yesterday". */
   likeBefore: boolean
@@ -197,6 +270,8 @@ export interface OrderIntent {
   modifyFrom?: string
   /** Raw " ... TO ..." token (fuzzy). */
   modifyTo?: string
+  /** "Customize my dish" flags ("неเผ็ด", "เพิ่มไข่"…). */
+  customizers: Customizer[]
 }
 
 const LIKE_BEFORE_RE =
@@ -207,7 +282,7 @@ export function parseOrderIntent(text: string): OrderIntent {
   const likeBefore = LIKE_BEFORE_RE.test(t)
   // change X -> Y  (Thai has no spaces between words; capture before/after "เป็น")
   const m = t.match(/เปลี่ยน\s*([^*\n]*?)\s*(?:เป็น|มาเป็น|แทนที่ด้วย|ด้วย)\s*([^*\n]*)/)
-  const intent: OrderIntent = { likeBefore }
+  const intent: OrderIntent = { likeBefore, customizers: extractCustomizers(text) }
   if (m && m[1] && m[2]) {
     const fromToken = m[1].trim()
     const toToken = m[2].trim()

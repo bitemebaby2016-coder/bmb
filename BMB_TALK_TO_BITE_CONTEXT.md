@@ -74,3 +74,11 @@
 
 ## 12. Next exact step
 `npm run dev` → `/` Landing → 🎙/พิมพ์ "เอาของเมื่อวาน แต่เปลี่ยนน้ำเป็นชาเขียว" → ดู draft เปลี่ยนจริง → [เพิ่มทั้งหมด] · เช็ค Bite Hero + scroll + keyboard
+## 13. Round 13
+- NL customize flag→item note (`extractCustomizers`/`attachCustomizersToDraft`) → real cart `customizations` via `confirmDraft`
+- Auto-TTS reply loop (voice-first default, no autoplay on entry, TTS-only supported)
+- Handoff audit: `docs/BMB_HANDOFF_AI_AUTOMOTION_AUDIT_2026-10-07.md`
+- Gates: TSC 0 · LINT 0 · VITEST 50/557 · BUILD 0
+
+## 14. Next exact step
+`npm run dev` → `/` → type "เพิ่ม прыгать" in an order → see draft note → add → checkout → verify `order_items.customizations` in DB. Then follow the handoff checklist (mapping table / continuous-listen / E2E).

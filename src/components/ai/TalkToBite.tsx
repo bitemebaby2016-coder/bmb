@@ -34,7 +34,6 @@ import {
   getAIVoiceService,
   isSpeechRecognitionSupported,
   isSpeechSynthesisSupported,
-  isVoiceReplyEnabled,
   setVoiceReplyEnabled,
   type AIVoiceService,
 } from '@/lib/aiVoice'
@@ -44,6 +43,7 @@ import { hydrateMemoryFromServer } from '@/lib/aiServerMemory'
 import type { Product } from '@/types'
 import {
   applyOrderModify,
+  attachCustomizersToDraft,
   bitePoseForState,
   buildBiteGreeting,
   chatStatusLabel,
@@ -52,6 +52,7 @@ import {
   pickFavoriteProducts,
   pickTopAvailable,
   resolveOrderAgainFromOrder,
+  type Customizer,
   type DraftLine,
   type OrderModify,
   type UnavailableLine,
@@ -97,7 +98,7 @@ export function TalkToBite({ mode = 'overlay', initialPhase = 'landing', landing
   const [input, setInput] = useState('')
   const [typing, setTyping] = useState(false)
   const [listening, setListening] = useState(false)
-  const [voiceReply, setVoiceReply] = useState(isVoiceReplyEnabled())
+  const [voiceReply, setVoiceReply] = useState(true)
   const [greeting, setGreeting] = useState('')
   const [favoriteCats, setFavoriteCats] = useState<string[]>([])
   const [showTyping, setShowTyping] = useState(false)
@@ -137,9 +138,9 @@ export function TalkToBite({ mode = 'overlay', initialPhase = 'landing', landing
   }, [customer?.id])
 
   // Voice engine — the same shared singleton as the rest of Bite. Autoplay-safe:
-  // subtitles/text are ALWAYS shown; voice only speaks/listens after a gesture.
+  // subtitles/text are ALWAYS shown; speech only happens after a user gesture.
   useEffect(() => {
-    if (!micSupported) return
+    if (!micSupported && !ttsSupported) return
     const service = getAIVoiceService()
     voiceRef.current = service
     service.setCallbacks({
@@ -162,6 +163,10 @@ export function TalkToBite({ mode = 'overlay', initialPhase = 'landing', landing
 
   function pushAssistant(content: string) {
     push({ kind: 'text', id: nextId(), role: 'assistant', content })
+    // Auto-TTS full voice loop: every Bite reply is voiced when voice is on.
+    // Content is ALWAYS also shown as text (subtitles) — never voice-only.
+    // Entry greeting is seeded via setMessages (not this) so there is NO autoplay.
+    if (voiceReply && ttsSupported && content) void voiceRef.current?.speak(speakable(content))
   }
 
   function pushUser(content: string) {
@@ -357,7 +362,7 @@ export function TalkToBite({ mode = 'overlay', initialPhase = 'landing', landing
     for (const line of draft) {
       const p = line.product
       const mode: OrderMode = p.available_preorder && !p.available_same_day ? 'PRE_ORDER' : 'SAME_DAY'
-      useCartStore.getState().addItem(p, line.quantity, {}, mode)
+      useCartStore.getState().addItem(p, line.quantity, line.customizations ?? {}, mode)
     }
     setMessages((prev) => prev.map((m) => (m.kind === 'draft' ? { ...m, applied: true } : m)))
     setBiteState('SUCCESS')
@@ -391,7 +396,6 @@ export function TalkToBite({ mode = 'overlay', initialPhase = 'landing', landing
       const reply = await chatWithAI(text, undefined, { voiceMode: voiceReply })
       setBiteState('SPEAKING')
       pushAssistant(reply)
-      if (voiceReply && ttsSupported) await voiceRef.current?.speak(speakable(reply))
       setBiteState('IDLE')
     } catch {
       pushAssistant('ขอโทษครับ เกิดข้อผิดพลาดในการเชื่อมต่อ กรุณาลองใหม่อีกครั้งนะ 🙏')
@@ -420,6 +424,18 @@ export function TalkToBite({ mode = 'overlay', initialPhase = 'landing', landing
         intent.modifyFrom && intent.modifyTo
           ? applyOrderModify(orders[0], catalog, { modifyFrom: intent.modifyFrom, modifyTo: intent.modifyTo })
           : ({ ...resolveOrderAgainFromOrder(orders[0], catalog) })
+      // Attach NL customization flags to the draft line — real user requests that
+      // persist into cart customizations (extra_egg / spicy / free-text note). Never fabricated.
+      const customizers: Customizer[] = intent.customizers || []
+      let targetId: string | undefined
+      if (customizers.length && res.replacedTo && intent.modifyTo) {
+        const m2 = intent.modifyTo.toLowerCase()
+        const toP = (catalog || []).find(
+          (p) => p.is_available && !p.archived && (p.name.toLowerCase().includes(m2) || m2.includes(p.name.toLowerCase())),
+        )
+        targetId = toP?.id
+      }
+      const draft = customizers.length ? attachCustomizersToDraft(res.draft, customizers, targetId) : res.draft
       if (res.draft.length === 0) {
         pushAssistant('ออเดอร์เดิมส่วนใหญ่หมดแล้วครับ ขอแนะนำเมนูอื่นที่ยังมีแทนนะครับ 🙏')
         setBiteState('IDLE')
@@ -430,7 +446,7 @@ export function TalkToBite({ mode = 'overlay', initialPhase = 'landing', landing
         res.replacedFrom && res.replacedTo
           ? `ได้ครับ 😎 เมื่อวานคุณสั่ง ${res.replacedFrom} ผมเปลี่ยนเป็น ${res.replacedTo} ให้แล้ว ตรวจทานได้เลย:`
           : `ได้ครับ 😎 นี่คือรายการออเดอร์ล่าสุดของคุณ (#${orders[0].order_number || '-'}) ที่ยังขายได้ ตรวจทานแล้วกดเพิ่มได้เลย:`
-      push({ kind: 'draft', id: nextId(), intro, draft: res.draft, unavailable: res.unavailable, total: res.total, applied: false })
+      push({ kind: 'draft', id: nextId(), intro, draft, unavailable: res.unavailable, total: res.total, applied: false })
       if (res.unavailable.length > 0) {
         pushAssistant(`หมายเหตุ: ${res.unavailable.map((u) => `${u.name} (${u.requested})`).join(', ')} หมด/เปลี่ยนไปแล้ว จึงไม่รวมในรายการนี้ครับ`)
       }
@@ -659,9 +675,14 @@ export function TalkToBite({ mode = 'overlay', initialPhase = 'landing', landing
               <p className="text-sm text-brand-text">{m.intro}</p>
               <ul className="space-y-1">
                 {m.draft.map((d) => (
-                  <li key={d.product.id} className="flex items-center justify-between text-sm">
-                    <span className="text-brand-text truncate">{d.quantity} × {d.product.name}</span>
-                    <span className="text-brand-muted whitespace-nowrap">฿{Number(d.product.price) * d.quantity}</span>
+                  <li key={d.product.id} className="flex flex-col gap-0.5 text-sm">
+                    <span className="flex items-center justify-between">
+                      <span className="text-brand-text truncate">{d.quantity} × {d.product.name}</span>
+                      <span className="text-brand-muted whitespace-nowrap">฿{Number(d.product.price) * d.quantity}</span>
+                    </span>
+                    {d.note && (
+                      <span className="text-[11px] text-brand-accent truncate" data-testid="ttb-draft-note">· {d.note}</span>
+                    )}
                   </li>
                 ))}
               </ul>
