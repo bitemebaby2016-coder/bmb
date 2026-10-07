@@ -59,6 +59,7 @@ const ProfilePage = lazy(() => import('./pages/ProfilePage').then(m => ({ defaul
 const RewardsPage = lazy(() => import('./pages/RewardsPage').then(m => ({ default: m.RewardsPage })))
 const ViralPage = lazy(() => import('./pages/ViralPage').then(m => ({ default: m.ViralPage })))
 const TalkToBitePage = lazy(() => import('./pages/TalkToBitePage').then(m => ({ default: m.TalkToBitePage })))
+const TalkToBiteHomePage = lazy(() => import('./pages/TalkToBiteHomePage').then(m => ({ default: m.TalkToBiteHomePage })))
 const VoiceDemoPage = lazy(() => import('./pages/VoiceDemoPage').then(m => ({ default: m.VoiceDemoPage })))
 const RiderPwaPage = lazy(() => import('./pages/RiderPwaPage').then(m => ({ default: m.RiderPwaPage })))
 const NotificationCenterPage = lazy(() => import('./pages/NotificationCenterPage').then(m => ({ default: m.NotificationCenterPage })))
@@ -161,7 +162,8 @@ export default function App() {
       
       <Routes>
         {/* Public Routes — Home eager (LCP); the rest Suspense-wrapped lazy chunks */}
-        <Route path="/" element={<Layout><HomePage /></Layout>} />
+        <Route path="/" element={<Suspense fallback={<LoadingSpinner />}><Layout><TalkToBiteHomePage /></Layout></Suspense>} />
+        <Route path="/shop" element={<Suspense fallback={<LoadingSpinner />}><Layout><HomePage /></Layout></Suspense>} />
         <Route path="/login" element={<Suspense fallback={<LoadingSpinner />}><Layout hideBottomNav={true}><LoginPage /></Layout></Suspense>} />
         <Route path="/register" element={<Suspense fallback={<LoadingSpinner />}><Layout hideBottomNav={true}><RegisterPage /></Layout></Suspense>} />
         <Route path="/menu" element={<Suspense fallback={<LoadingSpinner />}><Layout><MenuPage /></Layout></Suspense>} />

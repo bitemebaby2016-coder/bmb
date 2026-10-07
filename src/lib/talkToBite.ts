@@ -201,8 +201,20 @@ const GREETING_BASES = [
   'สวัสดีครับ Bite อยู่ตรงนี้แล้วพร้อมเสิร์ฟครับ 🙂 วันนี้รับอะไรดีครับ?',
 ] as const
 
+const RETURNING_BASES = [
+  'กลับมาแล้วนะครับ 😎 วันนี้เอาเหมือนเดิม หรือลองอะไรใหม่ดีครับ?',
+  'Hey! กลับมาแล้ว 😎 ให้เอาของเดิมเลยไหมครับ หรืออยากลองของใหม่?',
+  'ยินดีต้อนรับกลับครับ 🙌 วันนี้ Bite เตรียมของอร่อยไว้ให้แล้ว จะเอาอะไรดีครับ?',
+  'กลับมาอีกแล้ว 🍊 วันนี้อยากให้ Bite เลือกให้ หรือสั่งเหมือนเดิมครับ?',
+  'สวัสดีครับ คุณกลับมาแล้วนะ 😎 ให้ผมดูออเดอร์ที่แล้วมาให้ไหมครับ?',
+  'ยินดีที่ได้เจออีกครั้งครับ 🍊 วันนี้มีโปรน่าสนใจด้วย อยากฟังไหมครับ?',
+  'กลับมาแล้วครับ 😎 ครั้งก่อนลองมาแล้ว ครั้งนี้อยากลองอะไรใหม่ ๆ ไหมครับ?',
+] as const
+
 export interface BiteGreetingOptions {
   /** 0..6 — which of the 7 rotating greetings to use (pass `getGreetingIndex()`). */
+  /** Return-shopper flavour — only when we have VERIFIED evidence they ordered before. */
+  returning?: boolean
   index?: number
   /** VERIFIED display name. An email-like value is silently ignored. */
   name?: string | null
@@ -221,18 +233,40 @@ export function buildBiteGreeting({
   index = getGreetingIndex(),
   name,
   favoriteCategory,
+  returning = false,
 }: BiteGreetingOptions = {}): string {
   const normalized = ((index % 7) + 7) % 7
-  let base: string = GREETING_BASES[normalized]
+  let base: string = (returning ? RETURNING_BASES : GREETING_BASES)[normalized]
   const cleanName = typeof name === 'string' ? name.trim() : ''
   const usableName = cleanName && !cleanName.includes('@') ? cleanName : null
   if (usableName) {
     // Strip any leading greeting so we don't double-greet, then prefix the name.
-    base = base.replace(/^(สวัสดีครับ|ยินดีต้อนรับครับ)\s*/, '')
+    base = base.replace(/^(สวัสดีครับ|ยินดีต้อนรับครับ|ยินดีต้อนรับกลับครับ|ยินดีที่ได้เจออีกครั้งครับ|กลับมาแล้ว|กลับมาอีกแล้ว)\s*/, '')
     base = `สวัสดีครับคุณ${usableName} 🙌 ${base}`
   }
   if (favoriteCategory) {
     base += ` เห็นว่าคุณชอบ ${favoriteCategory} อยากให้เน้นเมนูหมวดนั้นไหมครับ? 🍊`
   }
   return base
+}
+
+/**
+ * Pick up to `count` sellable products, nudging toward the customer's VERIFIED
+ * favorite categories first, then featured, then name (deterministic, real data).
+ */
+export function pickFavoriteProducts(products: Product[], favoriteCategories: string[], count = 3): Product[] {
+  const sellable = (products || []).filter((p) => p.is_available && !p.archived)
+  const favs = new Set((favoriteCategories || []).map((c) => String(c).trim()).filter(Boolean))
+  const score = (p: Product): number => {
+    const cat = String(p.category_id || '')
+    if (favs.size > 0 && favs.has(cat)) return 3
+    if (p.is_featured) return 2
+    return 1
+  }
+  const sorted = [...sellable].sort((a, b) => {
+    const s = score(b) - score(a)
+    if (s !== 0) return s
+    return a.name.localeCompare(b.name, 'th')
+  })
+  return sorted.slice(0, Math.max(0, count))
 }

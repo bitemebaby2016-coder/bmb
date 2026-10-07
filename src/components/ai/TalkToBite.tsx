@@ -47,6 +47,7 @@ import {
   buildBiteGreeting,
   chatStatusLabel,
   getGreetingIndex,
+  pickFavoriteProducts,
   pickTopAvailable,
   resolveOrderAgainFromOrder,
   type DraftLine,
@@ -55,10 +56,15 @@ import {
 import type { OrderMode } from '@/config/platformConfig'
 
 interface TalkToBiteProps {
-  /** 'overlay' (default): always a full-screen layer. 'hero': landing inline on Home. */
-  mode?: 'overlay' | 'hero'
+  /**
+   * 'overlay' (default): always a full-screen layer (Floating Bite / /talk-to-bite).
+   * 'hero': landing inline on the store Home. 'home': full-screen Landing for the "/" page.
+   */
+  mode?: 'overlay' | 'hero' | 'home'
   /** Which phase to open in ('landing' = Talk to Bite Home, 'conversation' = straight to chat). */
   initialPhase?: 'landing' | 'conversation'
+  /** Hide the close (✕) affordance on the landing phase (used on the full-screen Home page). */
+  landingClose?: boolean
   onClose?: () => void
 }
 
@@ -66,6 +72,7 @@ type ChatMsg =
   | { kind: 'text'; id: string; role: 'user' | 'assistant'; content: string }
   | { kind: 'products'; id: string; intro: string; products: Product[] }
   | { kind: 'draft'; id: string; intro: string; draft: DraftLine[]; unavailable: UnavailableLine[]; total: number; applied: boolean }
+  | { kind: 'cta'; id: string; label: string; to: string }
 
 let uid = 0
 function nextId(): string {
@@ -76,7 +83,7 @@ function nextId(): string {
 const FALLBACK_GREETING =
   'สวัสดีครับ ผม Bite พนักงานเสิร์ฟของ Bite Me Baby 🍊 วันนี้อยากกินอะไรดีครับ?'
 
-export function TalkToBite({ mode = 'overlay', initialPhase = 'landing', onClose }: TalkToBiteProps) {
+export function TalkToBite({ mode = 'overlay', initialPhase = 'landing', landingClose = true, onClose }: TalkToBiteProps) {
   const navigate = useNavigate()
   const customer = useAuthStore((s) => s.customer)
   const biteState = useBiteAIStore((s) => s.biteState)
@@ -89,6 +96,8 @@ export function TalkToBite({ mode = 'overlay', initialPhase = 'landing', onClose
   const [listening, setListening] = useState(false)
   const [voiceReply, setVoiceReply] = useState(isVoiceReplyEnabled())
   const [greeting, setGreeting] = useState('')
+  const [favoriteCats, setFavoriteCats] = useState<string[]>([])
+  const [showTyping, setShowTyping] = useState(false)
   const micSupported = isSpeechRecognitionSupported()
   const ttsSupported = isSpeechSynthesisSupported()
   const voiceRef = useRef<AIVoiceService | null>(null)
@@ -106,10 +115,12 @@ export function TalkToBite({ mode = 'overlay', initialPhase = 'landing', onClose
       if (customer?.id) {
         const mem = await hydrateMemoryFromServer(customer.id).catch(() => null)
         if (!active) return
+        setFavoriteCats(mem?.favorite_categories ?? [])
         text = buildBiteGreeting({
           index,
           name: mem?.name ?? customer?.name ?? null,
           favoriteCategory: mem?.favorite_categories?.[0] ?? null,
+          returning: (mem?.total_orders ?? 0) > 0,
         })
       } else {
         text = buildBiteGreeting({ index })
@@ -201,6 +212,55 @@ export function TalkToBite({ mode = 'overlay', initialPhase = 'landing', onClose
     } finally {
       setTyping(false)
     }
+  }
+
+  // 🔥 เมนูขายดีวันนี้ — real featured/available picks (proxy for best sellers)
+  async function handleBestSellers() {
+    setBiteState('RECOMMENDING')
+    pushAssistant('ขายดีวันนี้จากของจริงครับ Bite เอามาให้เลย 🔥')
+    setTyping(true)
+    try {
+      const { getProducts: load } = await import('@/lib/bmbAdminApi_products')
+      const products = pickTopAvailable(await load(), 3)
+      if (products.length === 0) {
+        pushAssistant('วันนี้ยังไม่มีเมนูขายได้ครับ เดี๋ยวแวะมาอีกทีนะครับ 🙏')
+      } else {
+        push({ kind: 'products', id: nextId(), intro: 'เมนูขายดีวันนี้ รีบจองกันก่อนหมด:', products })
+      }
+      setBiteState('IDLE')
+    } catch {
+      pushAssistant('ขอโทษครับ ดึงเมนูไม่สำเร็จ ลองใหม่นะครับ 🙏')
+      setBiteState('ERROR')
+    } finally {
+      setTyping(false)
+    }
+  }
+
+  // ❤️ ของโปรด — pick from VERIFIED favorite categories
+  async function handleFavorites() {
+    setBiteState('RECOMMENDING')
+    pushAssistant('เดี๋ยวครับ Bite หยิบเมนูที่คุณชอบมาให้เลย ❤️')
+    if (!requireAuth()) return
+    setTyping(true)
+    try {
+      const { getProducts: load } = await import('@/lib/bmbAdminApi_products')
+      const products = pickFavoriteProducts(await load(), favoriteCats, 3)
+      if (products.length === 0) {
+        pushAssistant('ยังไม่เจอหมวดของโปรดเลยครับ ขอแนะนำเมนูขายดีแทนนะครับ 🙏')
+      } else {
+        push({ kind: 'products', id: nextId(), intro: 'เมนูในแนวที่คุณชอบครับ:', products })
+      }
+      setBiteState('IDLE')
+    } catch {
+      pushAssistant('ขอโทษครับ ดึงเมนูไม่สำเร็จ ลองใหม่นะครับ 🙏')
+      setBiteState('ERROR')
+    } finally {
+      setTyping(false)
+    }
+  }
+
+  function handleViewOrders() {
+    navigate('/orders')
   }
 
   async function handleOrderAgain() {
@@ -298,7 +358,8 @@ export function TalkToBite({ mode = 'overlay', initialPhase = 'landing', onClose
     }
     setMessages((prev) => prev.map((m) => (m.kind === 'draft' ? { ...m, applied: true } : m)))
     setBiteState('SUCCESS')
-    pushAssistant('เรียบร้อยครับ เอารายการออเดอร์เดิมใส่ตะกร้าแล้ว คุณสามารถตรวจและจ่ายเงินได้ที่หน้ากระเป๋า/ชำระเงินครับ 🛒 ราคาจริงยืนยันตอนชำระเงินเท่านั้นครับ')
+    pushAssistant('เรียบร้อยครับ เอารายการเจ้าออเดอร์เดิมใส่ตะกร้าแล้ว 😎 ราคาจริงยืนยันตอนชำระเงินเท่านั้นครับ')
+    push({ kind: 'cta', id: nextId(), label: 'ดูออเดอร์ →', to: '/orders' })
     window.setTimeout(() => setBiteState('IDLE'), 900)
   }
 
@@ -374,60 +435,83 @@ export function TalkToBite({ mode = 'overlay', initialPhase = 'landing', onClose
 
   const liveGreeting = greeting || FALLBACK_GREETING
   // Fixed full-screen layer unless we are the inline hero landing on the Home page.
-  const fixed = realm === 'conversation' || mode === 'overlay'
+  const fixed = realm === 'conversation' || mode === 'overlay' || mode === 'home'
 
   // ---------------------------------------------------------------------------
   // Landing — "Talk to Bite Home"
   // ---------------------------------------------------------------------------
   const landingView = (
-    <div className="flex flex-col items-center justify-center text-center px-6 py-10 gap-5">
-      <p className="font-display font-bold text-2xl text-brand-accent tracking-wide">BITE ME BABY</p>
-      <MascotBadge pose="greeting" size="lg" alt="Bite ทักทาย" className="animate-float" loading="eager" />
-      <p className="text-lg md:text-xl text-brand-text whitespace-pre-line max-w-md" data-testid="ttb-greeting">
-        “{liveGreeting}”
-      </p>
-
-      <button
-        type="button"
-        onClick={() => openConversation(micSupported ? startListen : undefined)}
-        className="btn btn-primary text-base px-8 py-3 rounded-full gap-2"
-        data-testid="ttb-talk"
-      >
-        🎙 พูดกับ Bite
-      </button>
-
-      <div className="flex flex-wrap items-center justify-center gap-2">
-        <button type="button" onClick={() => openConversation(() => void handleOrderAgain())} data-testid="ttb-again" className="px-4 py-1.5 text-brand-accent border border-brand-border bg-white hover:bg-brand-bg rounded-full text-sm font-medium">
-          🔄 สั่งเหมือนเดิม
-        </button>
-        <button type="button" onClick={() => openConversation(() => void handleRecommend())} data-testid="ttb-recommend" className="px-4 py-1.5 text-brand-accent border border-brand-border bg-white hover:bg-brand-bg rounded-full text-sm font-medium">
-          🍊 ช่วยเลือกให้หน่อย
-        </button>
-        <button type="button" onClick={handleViewMenu} data-testid="ttb-menu" className="px-4 py-1.5 text-brand-accent border border-brand-border bg-white hover:bg-brand-bg rounded-full text-sm font-medium">
-          🍽️ ดูเมนู
-        </button>
+    <div className="flex flex-col h-full">
+      {/* Brand row */}
+      <div className="flex items-center justify-between px-5 pt-4">
+        <div className="flex items-center gap-2">
+          <span className="w-8 h-8 rounded-xl bg-gradient-to-br from-brand-primary to-orange-400 flex items-center justify-center text-white font-black text-sm">B</span>
+          <span className="font-display font-bold text-brand-accent">BITE&nbsp;ME&nbsp;BABY</span>
+        </div>
+        {fixed && landingClose && (
+          <button
+            type="button"
+            onClick={handleClose}
+            className="btn btn-outline btn-sm"
+            aria-label="ปิด Talk to Bite"
+            data-testid="ttb-close"
+          >
+            ✕
+          </button>
+        )}
       </div>
 
-      <button
-        type="button"
-        onClick={handleViewMenu}
-        className="text-brand-primary font-medium hover:underline mt-1"
-        data-testid="ttb-enter-store"
-      >
-        เข้าสู่ร้าน →
-      </button>
+      {/* Bite alive — mascot pose follows state */}
+      <div className="flex-1 flex flex-col items-center justify-center text-center px-6 py-6">
+        <MascotBadge
+          pose={bitePoseForState(biteState)}
+          size="lg"
+          alt="Bite"
+          className="animate-float w-36 h-36 md:w-44 md:h-44"
+          loading="eager"
+        />
+        <p className="mt-4 text-lg md:text-xl text-brand-text font-medium max-w-md" data-testid="ttb-greeting">
+          “{liveGreeting}”
+        </p>
 
-      {fixed && (
         <button
           type="button"
-          onClick={handleClose}
-          className="btn btn-outline btn-sm absolute top-4 right-4"
-          aria-label="ปิด Talk to Bite"
-          data-testid="ttb-close"
+          onClick={() => openConversation(micSupported ? startListen : undefined)}
+          className="mt-6 btn btn-primary text-base px-8 py-3 rounded-full gap-2 shadow-lg"
+          data-testid="ttb-talk"
         >
-          ✕
+          🎙 คุยกับ Bite ได้เลย
         </button>
-      )}
+        <p className="text-xs text-brand-muted mt-2">แตะแล้วพูด ฟัง → คิด → ตอบเสียง</p>
+
+        {/* Quick actions */}
+        <div className="mt-5 flex flex-wrap items-center justify-center gap-2 max-w-sm">
+          <button type="button" onClick={() => openConversation(() => void handleOrderAgain())} data-testid="ttb-again" className="px-4 py-1.5 text-brand-accent border border-brand-border bg-white hover:bg-brand-bg rounded-full text-sm font-medium">
+            🔄 สั่งเหมือนเดิม
+          </button>
+          <button type="button" onClick={() => openConversation(() => void handleRecommend())} data-testid="ttb-recommend" className="px-4 py-1.5 text-brand-accent border border-brand-border bg-white hover:bg-brand-bg rounded-full text-sm font-medium">
+            ✨ แนะนำให้หน่อย
+          </button>
+          <button type="button" onClick={handleViewMenu} data-testid="ttb-menu" className="px-4 py-1.5 text-brand-accent border border-brand-border bg-white hover:bg-brand-bg rounded-full text-sm font-medium">
+            🍽️ เมนูทั้งหมด
+          </button>
+          <button type="button" onClick={() => openConversation(() => void handleBestSellers())} data-testid="ttb-bestsell" className="px-4 py-1.5 text-brand-accent border border-brand-border bg-white hover:bg-brand-bg rounded-full text-sm font-medium">
+            🔥 ขายดีวันนี้
+          </button>
+          {customer && (
+            <button type="button" onClick={() => openConversation(() => void handleFavorites())} data-testid="ttb-fav" className="px-4 py-1.5 text-brand-primary border border-brand-primary bg-brand-bg rounded-full text-sm font-medium">
+              ❤️ ของโปรด
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* into the store */}
+      <div className="px-6 pb-8 pt-2 flex justify-center">
+        <button type="button" onClick={() => navigate('/shop')} className="text-brand-primary font-medium hover:underline" data-testid="ttb-enter-store">
+          เข้าสู่ร้าน →
+        </button>
+      </div>
     </div>
   )
 
@@ -489,6 +573,15 @@ export function TalkToBite({ mode = 'overlay', initialPhase = 'landing', onClose
                 {m.products.map((p) => (
                   <ProductCard key={p.id} product={p} onAdd={addToCart} />
                 ))}
+              </div>
+            )
+          }
+          if (m.kind === 'cta') {
+            return (
+              <div key={m.id} className="flex justify-start">
+                <button type="button" onClick={() => navigate(m.to)} className="btn btn-primary btn-sm" data-testid="ttb-cta">
+                  {m.label}
+                </button>
               </div>
             )
           }
@@ -554,49 +647,79 @@ export function TalkToBite({ mode = 'overlay', initialPhase = 'landing', onClose
         ))}
       </div>
 
-      {/* Input + voice */}
-      <div className="flex items-center gap-2 px-4 py-3 border-t border-brand-border bg-white shrink-0">
-        <input
-          type="text"
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-          placeholder={listening ? 'กำลังฟัง... พูดได้เลยครับ' : 'พิมพ์ข้อความ หรือกดไมค์เพื่อพูด…'}
-          disabled={typing}
-          className="input flex-1"
-          data-testid="ttb-input"
-        />
-        {micSupported && (
-          <button
-            type="button"
-            onClick={toggleMic}
-            className={listening ? 'btn btn-primary' : 'btn btn-outline'}
-            aria-label={listening ? 'หยุดฟัง' : 'กดเพื่อพูด'}
-            data-testid="ttb-mic"
-          >
-            {listening ? '⏹' : '🎤'}
-          </button>
+      {/* Input + voice — Bite Voice Bar is first-class; typing is a fallback */}
+      <div className="border-t border-brand-border bg-white shrink-0">
+        {showTyping ? (
+          <div className="flex items-center gap-2 px-4 py-3">
+            <button type="button" onClick={() => setShowTyping(false)} className="text-brand-muted px-1 text-xl" aria-label="กลับไปโหมดเสียง" data-testid="ttb-back-voice">
+              🎙
+            </button>
+            <input
+              type="text"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleSend()}
+              placeholder="พิมพ์ข้อความ แล้วกดส่ง…"
+              disabled={typing}
+              className="input flex-1"
+              data-testid="ttb-input"
+            />
+            <button
+              type="button"
+              onClick={handleSend}
+              disabled={!input.trim() || typing}
+              className="btn btn-primary shrink-0"
+              data-testid="ttb-send"
+            >
+              ส่ง
+            </button>
+          </div>
+        ) : (
+          <div className="flex items-center gap-2 px-4 py-4">
+            {micSupported ? (
+              <button
+                type="button"
+                onClick={toggleMic}
+                className={`flex-1 rounded-full py-3 px-5 text-base gap-2 transition-colors ${
+                  listening
+                    ? 'btn btn-primary shadow-lg'
+                    : 'bg-brand-bg text-brand-accent border border-brand-border hover:bg-brand-secondary'
+                }`}
+                data-testid="ttb-mic"
+              >
+                {listening ? '● ● ● กำลังฟัง… แตะเพื่อหยุด' : '🎙 คุยกับ Bite ได้เลย'}
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setShowTyping(true)}
+                className="flex-1 rounded-full py-3 px-5 bg-brand-bg text-brand-accent border border-brand-border"
+                data-testid="ttb-typing"
+              >
+                พิมพ์ข้อความ…
+              </button>
+            )}
+            <button type="button" onClick={() => setShowTyping(true)} className="btn btn-outline shrink-0" aria-label="โหมดพิมพ์" data-testid="ttb-typing">
+              ⌨️
+            </button>
+            {ttsSupported && (
+              <button
+                type="button"
+                onClick={toggleVoiceReply}
+                className={voiceReply ? 'btn btn-primary shrink-0' : 'btn btn-outline shrink-0'}
+                aria-label={voiceReply ? 'ปิดเสียงตอบ' : 'เปิดเสียงตอบ'}
+                title={voiceReply ? 'ปิดเสียงตอบ' : 'เปิดเสียงตอบ'}
+              >
+                {voiceReply ? '🔊' : '🔇'}
+              </button>
+            )}
+          </div>
         )}
-        {ttsSupported && (
-          <button
-            type="button"
-            onClick={toggleVoiceReply}
-            className={voiceReply ? 'btn btn-primary' : 'btn btn-outline'}
-            aria-label={voiceReply ? 'ปิดเสียงตอบ' : 'เปิดเสียงตอบ'}
-            title={voiceReply ? 'ปิดเสียงตอบ' : 'เปิดเสียงตอบ'}
-          >
-            {voiceReply ? '🔊' : '🔇'}
-          </button>
+        {listening && micSupported && (
+          <p className="px-5 pb-3 -mt-1 text-xs text-brand-muted truncate" data-testid="ttb-listening-hint">
+            {input || 'กำลังฟัง... พูดได้เลยครับ'}
+          </p>
         )}
-        <button
-          type="button"
-          onClick={handleSend}
-          disabled={!input.trim() || typing}
-          className="btn btn-primary"
-          data-testid="ttb-send"
-        >
-          ส่ง
-        </button>
       </div>
     </div>
   )

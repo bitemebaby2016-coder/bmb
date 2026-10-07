@@ -51,3 +51,19 @@
 
 ## 7. Next exact step
 เปิด `npm run dev` → ตรวจ 3 ทางเข้าประสบการณ์ Talk to Bite + voice/ลาก snap + ทักทาย 7 วัน (เปิดวันถัดไปเห็นข้อความเปลี่ยน) → รัน gates ซ้ำ → (ถ้าผ่าน) อัปเดต docs → commit → push → ยืนยัน `local HEAD == remote HEAD` แล้วบันทึก hash ใน status/context
+## 8. Round 11 — เต็มจอ Landing `/` + Voice Bar + quick actions dynamic + memory
+- `/` = `TalkToBiteHomePage` (full-screen Landing, ไม่มี store) · `HomePage` (store) ย้ายไป `/shop` · `เข้าสู่ร้าน →` → `/shop`
+- `TalkToBite`: mode `'home'` + `landingClose`; Landing มาสคอต live + bubble; Conversation = **Voice Bar** (ปุ่มใหญ่ + `⌨️` สลับโหมดพิมพ์); quick actions + 🔥 ขายดี / ❤️ ของโปรด; สรุปออเดอร์ recap + "ดูออเดอร์ →"
+- `talkToBite.ts`: `buildBiteGreeting.returning` (กลับมาแล้ว) + `pickFavoriteProducts`
+
+## 9. DUPLICATION / งานซ้ำซ้อนทั่วโปรเจกต์ (audit ภาษาไทย — สรุป)
+1. **Cart store คู่** — `src/store/cartStore.ts` (canonical, 9 importers) + `src/stores/useCartStore.ts` (100 บรรทัด, 3 importers: `BiteMascot`, `CartIsolationModal`, `cartIsolationStore.test`) — **เป็น delegating shim ที่ mirror canonical (ไม่มี state machine ซ้ำ)** → แนะนำค่อย ๆ migrate 3 ที่ไปใช้ `@/store/cartStore` แล้วลบ shim
+2. **Dead exports** — `getBiteMessage`/`getBitePose` ใน `homeProviders.ts` ไม่มีใคร import แล้ว (หลังรอบ 10 เปลี่ยน Home เป็น TalkToBite) → dead code ควรลบ
+3. **Hard-coded bubble กระจัดกระจาย** — default bubble "สวัสดีค่ะ น้อง Bite..." ใน `useBiteAIStore` ต่างจาก greeting ของ Talk to Bite (ครับ) → ควรให้ bubbling มาจากชุดเดียว
+4. **AI chat** — ตอนนี้ **รวมเป็นหนึ่งแล้ว** (`TalkToBite` ใช้ที่ Home + /talk-to-bite + Floating) — `AiChatPage`/`BiteAIChat` ถูกลบ; ที่เหลือแยกเป็นเจตนา: `VoiceDemoPage` (Edge voice demo) + `/admin/ai-studio` (admin content) → ไม่ใช่ซ้ำ
+5. **Voice/chat lib** — `chatWithAI` (31 refs) + `getAIVoiceService` (4 refs) เป็นโมดูลเดียว (canonical) → ถูกต้อง ไม่ซ้ำ
+6. **Mascot** — `MascotBadge` (avatar reusable) vs `BiteMascot` (floating interactive) → คนละบทบาท ไม่ซ้ำ
+> ข้อ 1–3 = improvement backlog (ไม่ด่วนทำในรอบนี้เพื่อความเสถียรของ gates)
+
+## 10. Next exact step
+เปิด `npm run dev` → ดู `/` (Landing เต็มจอ) → กด 🎙 คุยกับ Bite / quick actions → ดู Voice Bar + สรุปออเดอร์ + "ดูออเดอร์" → `/shop` เข้าร้าน → รัน gates → commit→push→verify

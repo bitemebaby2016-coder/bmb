@@ -14,6 +14,7 @@ import {
   chatStatusLabel,
   getGreetingIndex,
   isBiteState,
+  pickFavoriteProducts,
   pickTopAvailable,
   resolveOrderAgainFromOrder,
   sumDraftTotal,
@@ -185,5 +186,44 @@ describe('getGreetingIndex / buildBiteGreeting (7-day rotation)', () => {
     expect(g).toContain('ของหวาน')
     const withCatOnly = buildBiteGreeting({ favoriteCategory: 'ของหวาน' })
     expect(withCatOnly).toContain('ของหวาน')
+  })
+
+  it('uses a returning-shopper flavour when returning=true (verified evidence)', () => {
+    const r = buildBiteGreeting({ index: 0, returning: true })
+    expect(r).toMatch(/กลับมาแล้ว|Hey!|ยินดีต้อนรับกลับ/)
+    // default (non-returning) is the normal base, not returning
+    expect(buildBiteGreeting({ index: 0 })).not.toMatch(/กลับมาแล้ว|Hey!/)
+  })
+
+  it('keeps 7 returning variants and 7 normal variants distinct', () => {
+    const ret = Array.from({ length: 7 }, (_, i) => buildBiteGreeting({ index: i, returning: true }))
+    expect(new Set(ret).size).toBe(7)
+    const norm = Array.from({ length: 7 }, (_, i) => buildBiteGreeting({ index: i }))
+    expect(new Set(norm).size).toBe(7)
+  })
+})
+
+describe('pickFavoriteProducts', () => {
+  it('prefers verified favorite-category products, then featured, deterministic', () => {
+    const catalog = [
+      product('f1', 'ของหวานA', 40, { category_id: 'cat-sweet', is_featured: true }),
+      product('f2', 'ของหวานB', 45, { category_id: 'cat-sweet' }),
+      product('g1', 'จานหลัก', 70, { is_featured: true, category_id: 'cat-main' }),
+      product('g2', 'จานหลัก2', 80, { category_id: 'cat-main', is_available: false }),
+    ]
+    const favs = pickFavoriteProducts(catalog, ['cat-sweet'], 3)
+    expect(favs.map((p) => p.id).slice(0, 2)).toEqual(['f1', 'f2'])
+    // sold-out never appears
+    expect(favs.some((p) => p.id === 'g2')).toBe(false)
+  })
+
+  it('falls back to featured-then-name when no favorites known', () => {
+    const catalog = [
+      product('x', 'ข้าวผัด', 40, { is_featured: true }),
+      product('y', 'ส้มตำ', 45),
+      product('z', 'ไก่ทอด', 60, { is_featured: true }),
+    ]
+    const favs = pickFavoriteProducts(catalog, [], 2)
+    expect(favs).toHaveLength(2)
   })
 })

@@ -128,3 +128,33 @@
 ### Gates (ผ่านจริง)
 TSC 0 · LINT 0 · VITEST 50 files/**545** · BUILD 0 (PWA precache 134)
 
+---
+
+## 9. Round 11 — เต็มจอ Landing + Voice Bar + quick actions dynamic + memory (ล่าสุด)
+
+### `/` = Talk to Bite Home เต็มจอ (ไม่มีแผง Store ช่วงล่าง)
+- หน้าใหม่ **`src/pages/TalkToBiteHomePage.tsx`** → route `/` = **Landing เต็มจอ** (`<TalkToBite mode="home" landingClose={false}/>`) — ไม่มีแผง Store ข้างล่าง
+- **Store Homepage ถูกย้ายไป `/shop`** (คงเนื้อหาทุกอย่างไว้) — เข้า via "เข้าสู่ร้าน →" → `/shop` หรือ BottomNav
+- `TalkToBite` เพิ่ม mode `'home'` (fixed เต็มจอ + ซ่อน ✕ บน Landing) + prop `landingClose`
+- Landing ใหม่: แบรนด์บน + **มาสคอต live ตาม state** (`bitePoseForState`) + bubble ทักทาย (7 วัน / "กลับมาแล้ว") + ปุ่มใหญ่ **"🎙 คุยกับ Bite ได้เลย"** + quick actions + "เข้าสู่ร้าน →"
+
+### Voice First-Class (Voice Bar)
+- Conversation เปลี่ยน input เล็ก → **Bite Voice Bar**: ปุ่มโค้งใหญ่ "🎙 คุยกับ Bite ได้เลย" (แตะ=ฟัง), ขณะฟังเปลี่ยนเป็น "● ● ● กำลังฟัง… แตะเพื่อหยุด" + แสดง live transcript
+- มีปุ่ม `⌨️` สลับเป็นโหมดพิมพ์ (พิมพ์→ป้อนส่ง) + ปุ่มโหมดเสียงกลับ ยังใช้ `aiVoice` เดิม (STT/TTS)
+
+### Quick Actions + dynamic
+- Landing/Conversation: `🔄 สั่งเหมือนเดิม` · `✨ แนะนำให้หน่อย` · `🍽️ เมนูทั้งหมด` · **`🔥 ขายดีวันนี้`** (featured จริง) · **`❤️ ของโปรด`** (ถ้า authed — ใช้ `pickFavoriteProducts` จาก verified favorite category) · `📦 เช็กออเดอร์` · `🔐 เข้าสู่ระบบ` (guest)
+
+### Bite จำคุณได้ (memory in UX)
+- `buildBiteGreeting` + **`returning`** → 7 แบบ "กลับมาแล้ว/ Hey! กลับมาแล้ว 😎" สำหรับลูกค้าประจำ (evidence = `mem.total_orders>0`)
+- `pickFavoriteProducts` ใหม่: ลำดับ favorite-category → featured → ชื่อ (deterministic)
+
+### สรุปออเดอร์แบบพนักงาน + ตามหลัง
+- draft เป็น "วันนี้ของคุณมี" recap + [เพิ่มทั้งหมด]; หลังยืนยัน Bite พูดยืนยัน + ปุ่ม **"ดูออเดอร์ →"** (msg `kind:'cta'`) → `/orders`
+
+### Gates (ผ่านจริง)
+TSC 0 · LINT 0 · VITEST 50 files/**549** (เพิ่ม 4) · BUILD 0
+
+### ⚠️ ยังไม่ทำ (ขอบเขตถัดไป — ต้อง design กับ safe tool-calling)
+- **"เข้าใจคำสั่งแบบคน" แบบเต็ม** เช่น "เอาของเมื่อวาน แต่เปลี่ยนน้ำเป็นชาเขียว" (ต้องการ LLM tool-call สรุปออเดอร์ + แก้สินค้า) — วางโครงแล้ว (`resolveOrderAgainFromOrder`) ยังไม่ทำ NL-modify
+- จริง ๆ voice "ฟัง→คิด→ตอบเสียง" รอบนี้แกะ Voice Bar แล้ว แต่ auto-TTS reply ใช้ `aiVoice` (มีอยู่แล้ว)
