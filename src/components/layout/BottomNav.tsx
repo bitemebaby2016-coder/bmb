@@ -5,7 +5,6 @@ import { shouldShowAdminLink } from '@/lib/adminUi'
 const navItems = [
   { path: '/', label: 'หน้าแรก', icon: '🏠' },
   { path: '/menu', label: 'เมนู', icon: '🍽️' },
-  { path: '/ai-chat', label: 'ไบต์', icon: '/icon_chat.webp' },
   { path: '/orders', label: 'ออเดอร์', icon: '📦' },
   { path: '/profile', label: 'บัญชี', icon: '👤' },
 ]
@@ -26,7 +25,6 @@ const role = useAuthStore((s) => s.role)
       <div className="max-w-7xl mx-auto px-4 py-2 flex justify-around">
         {items.map((item) => {
           const isActive = location.pathname === item.path ||
-            (item.path === '/ai-chat' && location.pathname.startsWith('/ai-chat')) ||
             (item.path === '/orders' && location.pathname.startsWith('/orders')) ||
             (item.path === '/admin' && location.pathname.startsWith('/admin'))
           return (

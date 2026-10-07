@@ -57,7 +57,7 @@ const AdminMedia = lazy(() => import('./pages/admin/AdminMedia').then(m => ({ de
 const ProfilePage = lazy(() => import('./pages/ProfilePage').then(m => ({ default: m.ProfilePage })))
 const RewardsPage = lazy(() => import('./pages/RewardsPage').then(m => ({ default: m.RewardsPage })))
 const ViralPage = lazy(() => import('./pages/ViralPage').then(m => ({ default: m.ViralPage })))
-const AiChatPage = lazy(() => import('./pages/ai/AiChatPage').then(m => ({ default: m.AiChatPage })))
+const TalkToBitePage = lazy(() => import('./pages/TalkToBitePage').then(m => ({ default: m.TalkToBitePage })))
 const VoiceDemoPage = lazy(() => import('./pages/VoiceDemoPage').then(m => ({ default: m.VoiceDemoPage })))
 const RiderPwaPage = lazy(() => import('./pages/RiderPwaPage').then(m => ({ default: m.RiderPwaPage })))
 const NotificationCenterPage = lazy(() => import('./pages/NotificationCenterPage').then(m => ({ default: m.NotificationCenterPage })))
@@ -193,7 +193,11 @@ export default function App() {
         <Route path="/viral" element={<Suspense fallback={<LoadingSpinner />}><ProtectedRoute><Layout><ViralPage /></Layout></ProtectedRoute></Suspense>} />
         
         {/* AI Routes — Lazy Loaded */}
-        <Route path="/ai-chat" element={<Suspense fallback={<LoadingSpinner />}><ProtectedRoute><Layout><AiChatPage /></Layout></ProtectedRoute></Suspense>} />
+        {/* Talk to Bite is the unified AI-Waiter experience. Public route so guests
+            get safe capabilities (chat/menu/recommend); personal actions prompt
+            auth inside the conversation. Legacy /ai-chat redirects here. */}
+        <Route path="/talk-to-bite" element={<Suspense fallback={<LoadingSpinner />}><Layout><TalkToBitePage /></Layout></Suspense>} />
+        <Route path="/ai-chat" element={<Navigate to="/talk-to-bite" replace />} />
         <Route path="/voice-demo" element={<Suspense fallback={<LoadingSpinner />}><ProtectedRoute><Layout><VoiceDemoPage /></Layout></ProtectedRoute></Suspense>} />
         
         {/* Ops Routes — Rider PWA (public demo) + Admin Control (admin-only) */}

@@ -10,6 +10,7 @@
 // and financial layers are off-limits to the chat bot (security boundary).
 
 import { create } from 'zustand'
+import type { BiteState } from '@/lib/talkToBite'
 
 export type BiteStage = 'ambient' | 'personalization' | 'microhook' | 'fullchat'
 
@@ -28,6 +29,12 @@ interface BiteAIStore {
   upsell: UpsellInfo | null
   chatOpen: boolean
   fullContext: string
+  /**
+   * Talk-to-Bite fine-grained state (unified across Homepage / Floating Bite /
+   * Conversation). Drives the mascot pose + header status label. This is a
+   * *view* state only — no business authority.
+   */
+  biteState: BiteState
 
   /** Fire on the user's first click/interaction (enables Web Audio greeting). */
   firstInteraction: () => void
@@ -39,6 +46,10 @@ interface BiteAIStore {
   openChat: (context: string) => void
   closeChat: () => void
   setBubble: (bubble: string | null) => void
+  /** Set the unified Talk-to-Bite view state (visual only). */
+  setBiteState: (state: BiteState) => void
+  /** Reset to a clean IDLE state (no greeting/overflow). */
+  resetBite: () => void
   /** The ONLY transactional hook the AI layer may emit. */
   emitAction: () => BiteAction
 }
@@ -50,6 +61,7 @@ export const useBiteAIStore = create<BiteAIStore>((set) => ({
   upsell: null,
   chatOpen: false,
   fullContext: '',
+  biteState: 'IDLE',
 
   firstInteraction: () =>
     set((state) => (state.greetingPlayed ? state : { greetingPlayed: true })),
@@ -100,9 +112,14 @@ export const useBiteAIStore = create<BiteAIStore>((set) => ({
     }),
 
   closeChat: () =>
-    set({ chatOpen: false, stage: 'ambient', bubble: 'กลับมาหา Bite ได้เสมอค่ะ 😊' }),
+    set({ chatOpen: false, stage: 'ambient', bubble: 'กลับมาหา Bite ได้เสมอค่ะ 😊', biteState: 'IDLE' }),
 
   setBubble: (bubble) => set({ bubble }),
+
+  setBiteState: (biteState) => set({ biteState }),
+
+  resetBite: () =>
+    set({ biteState: 'IDLE', bubble: null, upsell: null, fullContext: '' }),
 
   emitAction: () => 'EXECUTE_ADD_TO_CART',
 }))

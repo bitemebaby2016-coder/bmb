@@ -4,11 +4,14 @@
 // Data comes ONLY from the message contract (BiteMessage) — no hard-coded business text.
 // ============================================
 
-import { useState } from 'react'
+import { useState, lazy, Suspense } from 'react'
 import { Link } from 'react-router-dom'
 import type { BiteMessage } from '@/types'
 import { MascotBadge } from '@/components/MascotBadge'
-import { BiteAIChat } from '@/components/ai/BiteAIChat'
+
+const TalkToBite = lazy(() =>
+  import('@/components/ai/TalkToBite').then((m) => ({ default: m.TalkToBite })),
+)
 
 /** ไอคอนบรรทัด: 'mascot:<pose>' → มาสคอตน้อง Bite (แทนอีโมจิหุ่นยนต์), อื่น ๆ → อีโมจิปกติ */
 function InlineIcon({ icon, className = '' }: { icon: string; className?: string }) {
@@ -26,7 +29,13 @@ const USP_ITEMS = [
 ] as const
 
 export function BiteHero({ message, pose = 'greeting' }: { message: BiteMessage; pose?: 'greeting' | 'thinking' | 'pointing' | 'empty' }) {
-  const [showAIChat, setShowAIChat] = useState(false)
+  const [showBite, setShowBite] = useState(false)
+  const [autoRecommend, setAutoRecommend] = useState(false)
+
+  const openBite = (recommend: boolean) => {
+    setAutoRecommend(recommend)
+    setShowBite(true)
+  }
 
   return (
     <section className="bite-hero card relative overflow-hidden" aria-label="Bite ผู้ช่วยแนะนำเมนู">
@@ -47,9 +56,9 @@ export function BiteHero({ message, pose = 'greeting' }: { message: BiteMessage;
           {message.recommendLabel && (
             <button
               type="button"
-              onClick={() => setShowAIChat(true)}
+              onClick={() => openBite(true)}
               className="inline-flex items-center gap-1 mt-2 text-brand-primary font-medium hover:underline"
-              aria-label="เปิดแชทกับ AI ไบต์"
+              aria-label="เปิด Talk to Bite ให้แนะนำเมนู"
             >
               <MascotBadge pose="recommend" size="sm" className="inline-block align-middle" />
               {message.recommendLabel}
@@ -88,7 +97,7 @@ export function BiteHero({ message, pose = 'greeting' }: { message: BiteMessage;
               <button
                 key={qa.id}
                 type="button"
-                onClick={() => setShowAIChat(true)}
+                onClick={() => openBite(true)}
                 className="quick-action"
                 aria-label={qa.label}
               >
@@ -112,31 +121,23 @@ export function BiteHero({ message, pose = 'greeting' }: { message: BiteMessage;
         })}
       </div>
 
-      {/* AI Chat Modal */}
-      {showAIChat && (
+      {/* Talk to Bite — the same experience as the Floating Bite / /talk-to-bite page */}
+      {showBite && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50"
           role="dialog"
           aria-modal="true"
-          aria-labelledby="ai-chat-title"
-          onClick={() => setShowAIChat(false)}
+          aria-labelledby="talk-to-bite-title"
+          onClick={() => setShowBite(false)}
         >
           <div
-            className="bg-white rounded-2xl max-w-md w-full max-h-[80vh] overflow-hidden"
+            className="w-full max-w-md"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between p-4 border-b border-brand-border">
-              <h2 id="ai-chat-title" className="font-display font-bold text-brand-accent">💬 แชทกับ AI ไบต์</h2>
-              <button
-                type="button"
-                onClick={() => setShowAIChat(false)}
-                className="p-2 rounded-lg hover:bg-brand-bg transition-colors"
-                aria-label="ปิดแชท"
-              >
-                ✕
-              </button>
-            </div>
-            <BiteAIChat />
+            <h2 id="talk-to-bite-title" className="sr-only">Talk to Bite</h2>
+            <Suspense fallback={<div className="card bg-brand-surface p-6 text-center text-sm text-brand-muted">Bite กำลังเตรียมตัว…</div>}>
+              <TalkToBite autoRecommend={autoRecommend} onClose={() => setShowBite(false)} />
+            </Suspense>
           </div>
         </div>
       )}

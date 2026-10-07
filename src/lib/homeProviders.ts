@@ -225,7 +225,7 @@ export function getBiteMessage(ctx: BiteContext): BiteMessage {
     quickActions: [
       { id: 'home-menu', label: 'เมนูวันนี้', icon: 'mascot:menu', to: '/menu', mascotPose: 'menu' },
       { id: 'home-preorder', label: 'สั่งล่วงหน้า', icon: '📅', to: '/menu' },
-      { id: 'home-bite', label: 'ให้ Bite แนะนำ', icon: 'mascot:recommend', to: '/ai-chat' },
+      { id: 'home-bite', label: 'ให้ Bite แนะนำ', icon: 'mascot:recommend', to: '/talk-to-bite' },
       { id: 'home-orders', label: 'ดูออเดอร์', icon: '📦', to: '/orders' },
     ],
   }

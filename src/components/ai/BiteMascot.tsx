@@ -4,12 +4,12 @@
 //                      on the user's first click (bypasses autoplay policy).
 // Stage 2 Upsell     : cart vs free-shipping config → sweetener prompt.
 // Stage 3 Micro-Hook : scroll-stall monitor (>5s) on the pre-order grid.
-// Stage 4 Full-Chat  : mascot tap → full-screen contextual BiteAIChat.
+// Stage 4 Full-Chat  : mascot tap → full-screen unified Talk to Bite.
 // Guard: wrapper is fixed pointer-events-none; only the tap target has
 // pointer-events-auto so order CTAs are never blocked.
 // ============================================
 
-import { useEffect, useRef, useState, useCallback, lazy, Suspense } from 'react'
+import { useEffect, useRef, useState, useCallback, lazy, Suspense, type PointerEvent as ReactPointerEvent } from 'react'
 import { MascotWrapper } from '@/components/ui/MascotWrapper'
 import { GlassCard } from '@/components/ui/GlassCard'
 import { useBiteAIStore } from '@/stores/useBiteAIStore'
@@ -17,16 +17,16 @@ import { useCartStore } from '@/stores/useCartStore'
 import { usePlatformConfig } from '@/config/platformConfig'
 import { loadMascotOverrides, getOverrideUrl } from '@/lib/mascotService'
 
-// ⚡ PERF: the full AI chat UI + aiService/OpenRouter chain is only needed when
-// the user taps the mascot — load it on demand instead of at boot (TBT).
-const BiteAIChat = lazy(() => import('@/components/ai/BiteAIChat').then(m => ({ default: m.BiteAIChat })))
+// ⚡ PERF: the unified Talk to Bite UI + aiService/OpenRouter chain is only needed
+// when the user taps the mascot — load it on demand instead of at boot (TBT).
+const TalkToBite = lazy(() => import('@/components/ai/TalkToBite').then(m => ({ default: m.TalkToBite })))
 
 export interface BiteMascotProps {
   userName?: string
   activeSection?: string
 }
 
-// All 24 mascot poses from public/assets/mascot/ (ต้องตรงกับไฟล์จริงในโฟลเดอร์)
+// All 24 mascot poses from public/assets/mascot/
 const MASCOT_POSES = [
   'bite_ready',
   'bite_menu',
@@ -83,30 +83,86 @@ function playGreetingSound() {
   }
 }
 
-// AI-UI: one-time reset of saved mascot drag positions - the anchor side changed from
-// bottom-LEFT to bottom-RIGHT; stale left-anchored offsets would misplace the mascot.
-try { localStorage.removeItem('bmb_mascot_position') } catch { /* ignore */ }
-
 export function BiteMascot({ userName, activeSection = 'home' }: BiteMascotProps) {
   const { bubble, upsell, stage, greetingPlayed, chatOpen } = useBiteAIStore()
   const firstInteraction = useBiteAIStore((s) => s.firstInteraction)
   const evaluateUpsell = useBiteAIStore((s) => s.evaluateUpsell)
   const triggerMicroHook = useBiteAIStore((s) => s.triggerMicroHook)
   const openChat = useBiteAIStore((s) => s.openChat)
+  const closeChat = useBiteAIStore((s) => s.closeChat)
 
   const cartCount = useCartStore((s) => s.items.length)
   const cartTotal = useCartStore((s) => s.cartTotal)
   const { delivery } = usePlatformConfig()
 
-
   const stallTimer = useRef<ReturnType<typeof setInterval> | null>(null)
   const [chatVisible, setChatVisible] = useState(false)
-  // ท่าเริ่มต้น = บริบทหน้าที่ลูกค้ากำลังดู (home→ready, menu→menu, pre-order→shopping …)
+  // ท่าเริ่มต้น = บริบทหน้าที่ลูกค้ากำลังดู
   const [currentPoseIndex, setCurrentPoseIndex] = useState(() =>
     Math.max(0, MASCOT_POSES.indexOf(contextPose(activeSection)))
   )
-  // Admin override ต่อ pose (mascot_overrides — role_name = pose key ตัดคำว่า bite_)
   const [overrideUrl, setOverrideUrl] = useState<string | undefined>(undefined)
+
+  // --- Persistent Floating Bite ---
+  // Draggable, snaps to an edge, remembers position, respects safe area and
+  // never overlaps the BottomNav / FloatingCart / order CTAs.
+  const EDGE_PAD = 16
+  const SAFE_BOTTOM = 96 // above BottomNav (~72px) + margin
+  const DRAG_KEY = 'bmb_talk_to_bite_pos'
+  const [pos, setPos] = useState<{ x: number; y: number } | null>(() => {
+    try {
+      const raw = localStorage.getItem(DRAG_KEY)
+      if (!raw) return null
+      const p = JSON.parse(raw)
+      if (p && typeof p.x === 'number' && typeof p.y === 'number') return p
+    } catch { /* ignore */ }
+    return null
+  })
+  const dragRef = useRef<{ offX: number; offY: number; moved: boolean } | null>(null)
+
+  useEffect(() => {
+    if (pos) {
+      try { localStorage.setItem(DRAG_KEY, JSON.stringify(pos)) } catch { /* ignore */ }
+    }
+  }, [pos])
+
+  const clamp = (v: number, min: number, max: number) => Math.max(min, Math.min(max, v))
+
+  const onBtnPointerDown = (e: ReactPointerEvent<HTMLButtonElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect()
+    dragRef.current = { offX: e.clientX - rect.left, offY: e.clientY - rect.top, moved: false }
+    try { e.currentTarget.setPointerCapture(e.pointerId) } catch { /* ignore */ }
+  }
+
+  const onBtnPointerMove = (e: ReactPointerEvent<HTMLButtonElement>) => {
+    const d = dragRef.current
+    if (!d) return
+    const rect = e.currentTarget.getBoundingClientRect()
+    const startX = e.clientX - rect.left
+    const startY = e.clientY - rect.top
+    if (Math.abs(startX - d.offX) > 4 || Math.abs(startY - d.offY) > 4) d.moved = true
+    if (!d.moved) return
+    const w = e.currentTarget.offsetWidth
+    const h = e.currentTarget.offsetHeight
+    const x = clamp(e.clientX - d.offX, EDGE_PAD, window.innerWidth - w - EDGE_PAD)
+    const y = clamp(e.clientY - d.offY, EDGE_PAD, window.innerHeight - h - SAFE_BOTTOM)
+    setPos({ x, y })
+  }
+
+  const onBtnPointerUp = (e: ReactPointerEvent<HTMLButtonElement>) => {
+    const d = dragRef.current
+    dragRef.current = null
+    if (!d || !d.moved) return
+    try { e.currentTarget.releasePointerCapture(e.pointerId) } catch { /* ignore */ }
+    const w = e.currentTarget.offsetWidth
+    const h = e.currentTarget.offsetHeight
+    const rect = e.currentTarget.getBoundingClientRect()
+    // Snap to the nearest horizontal edge; keep above the BottomNav.
+    const centerX = rect.left + rect.width / 2
+    const x = centerX < window.innerWidth / 2 ? EDGE_PAD : window.innerWidth - w - EDGE_PAD
+    const y = clamp(rect.top, EDGE_PAD, window.innerHeight - h - SAFE_BOTTOM)
+    setPos({ x, y })
+  }
 
   // AI-UI: เมื่อ activeSection เปลี่ยน → สลับไปท่าตามบริบท + อ่าน override ล่าสุด
   useEffect(() => {
@@ -160,8 +216,10 @@ export function BiteMascot({ userName, activeSection = 'home' }: BiteMascotProps
     }
   }, [activeSection, chatOpen, triggerMicroHook])
 
-  // Stage 4 — clicking the mascot opens the full-screen chat with piped context.
+
+  // Stage 4 — clicking (not dragging) the mascot opens the unified Talk to Bite.
   function handleTap() {
+    if (dragRef.current?.moved) { dragRef.current.moved = false; return }
     const name = userName ?? readHistoryName() ?? 'คุณ'
     const context = `ลูกค้าชื่อ ${name} มีของในตะกร้า ${cartTotal} บาท กำลังดูเซกชั่น ${activeSection}`
     openChat(context)
@@ -180,10 +238,11 @@ export function BiteMascot({ userName, activeSection = 'home' }: BiteMascotProps
         position="bottom-right"
         className="z-[95]"
         ariaHidden={false}
-        // Single AI entry point: right:16px, bottom:84px above BottomNav —
-        // lifts to bottom:152px while the FloatingCart button occupies the
-        // 84px slot (cart visible only when items > 0), so they never overlap.
-        style={{ bottom: cartCount > 0 ? 152 : 84 }}
+        // Persistent Floating Bite: pinned by absolute viewport coords after the
+        // customer drags it; otherwise rests above the BottomNav / cart.
+        style={pos
+          ? { left: pos.x, top: pos.y }
+          : { bottom: cartCount > 0 ? 152 : 84 }}
       >
         <div className="relative flex flex-col items-end">
           {bubble && stage !== 'fullchat' && (
@@ -196,9 +255,12 @@ export function BiteMascot({ userName, activeSection = 'home' }: BiteMascotProps
           )}
           <button
             type="button"
+            onPointerDown={onBtnPointerDown}
+            onPointerMove={onBtnPointerMove}
+            onPointerUp={onBtnPointerUp}
             onClick={handleTap}
-            aria-label="เปิดแชทกับน้อง Bite"
-            className="pointer-events-auto flex h-16 w-16 items-center justify-center rounded-full shadow-lg animate-float hover:scale-105 active:scale-95 transition-transform overflow-hidden cursor-grab active:cursor-grabbing bg-transparent"
+            aria-label="คุยกับน้อง Bite (ลากเพื่อย้ายตำแหน่ง)"
+            className="pointer-events-auto touch-none flex h-16 w-16 items-center justify-center rounded-full shadow-lg animate-float hover:scale-105 active:scale-95 transition-transform overflow-hidden cursor-grab active:cursor-grabbing bg-transparent"
             data-testid="bite-mascot"
           >
             <img
@@ -218,7 +280,9 @@ export function BiteMascot({ userName, activeSection = 'home' }: BiteMascotProps
 
       {chatVisible && (
         <Suspense fallback={null}>
-          <BiteAIChat />
+          <div className="fixed inset-0 z-[96] flex items-center justify-center p-4 bg-black/40" role="dialog" aria-modal="true">
+            <TalkToBite onClose={closeChat} />
+          </div>
         </Suspense>
       )}
     </>
@@ -236,3 +300,4 @@ function readHistoryName(): string | null {
     return null
   }
 }
+
