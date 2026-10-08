@@ -93,9 +93,15 @@ Deno.serve(async (req: Request): Promise<Response> => {
   if (String(body?.action ?? '').trim() === 'update_profile') {
     const authHeader = req.headers.get('authorization') || ''
     if (!authHeader.startsWith('Bearer ')) return json({ error: 'ERR_UNAUTHORIZED' }, 401)
-    const caller = await ghFetch(supabaseUrl, anonKey, '/auth/v1/user', { headers: { Authorization: authHeader } })
-    if (!caller.ok || !caller.data?.id) return json({ error: 'ERR_UNAUTHORIZED' }, 401)
-    const callerId = String(caller.data.id)
+    // NOTE: ต้องเรียก /auth/v1/user ด้วย fetch ตรง ๆ (ไม่ผ่าน ghFetch)
+    // เพราะ ghFetch เขียนทับ Authorization ด้วย service key เสมอ → GoTrue 401
+    const callerRes = await fetch(`${supabaseUrl}/auth/v1/user`, {
+      headers: { apikey: anonKey, Authorization: authHeader },
+    })
+    let callerData: any = {}
+    try { callerData = await callerRes.json() } catch { /* non-JSON */ }
+    if (!callerRes.ok || !callerData?.id) return json({ error: 'ERR_UNAUTHORIZED' }, 401)
+    const callerId = String(callerData.id)
 
     const row: Record<string, unknown> = {}
     if (name) row.full_name = name
