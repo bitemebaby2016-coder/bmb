@@ -2,7 +2,8 @@
 
 **ประเภท:** STATUS / OPEN ITEMS — **รวมทุกอย่างที่ยังไม่เสร็จไว้ที่เดียว** (อัปเดตหลัง Baseline 2026-10-07)
 **Baseline อ้างอิง:** `BMB_CURRENT_PRODUCTION_CLOSURE_BASELINE.md` (sections A–O + P0–P3) — เอกสารนี้ = **addendum รอบ 2026-10-08** (ของใหม่ + สถานะเทสต์ Owner)
-**Repo:** `D:\A PROJECT\Bite Me Baby` (branch `main`) · HEAD ณ วันนี้ = `f214ad8` (= `origin/main`, worktree clean)
+**Repo:** `D:\A PROJECT\Bite Me Baby` (branch `main`) · HEAD ณ วันนี้ = `eb10e6a` (= `origin/main`, worktree clean)
+**เพิ่มเติม (2026-10-08 รอบ 2):** งาน **BITE FOOD THEATER** (Visual Theater × AI Waiter) เสร็จแล้ว — รายงานปิดงาน + gates evidence → `BMB_FOOD_THEATER_REPORT_2026-10-08.md` (vitest 57 files/607 tests · tsc/lint/build = 0 · /shop เปลี่ยนเป็น Food Theaters stage แล้ว · Floating Bite มี context จริง)
 **คำสถานะ:** ✅ DONE · ⬜ PENDING (รอ Owner) · 🟨 IN PROGRESS · 🟥 BLOCKED · ⏸ DEFERRED (ตามคำสั่ง Owner)
 
 ---
@@ -77,7 +78,8 @@ LLM safe tool-calling · trend/personalization ขั้นสูง · กู�
 ---
 
 ## 4. 🔗 เอกสารคู่
-- **Handoff สั่งงาน UX/UI รอบถัดไป** → `BMB_HANDOFF_UXUI_2026-10-08.md`
+- **รายงานปิดงาน Visual Theater (ใหม่ — เสร็จแล้ว)** → `BMB_FOOD_THEATER_REPORT_2026-10-08.md`
+- **Handoff สั่งงาน UX/UI รอบถัดไป** → `BMB_HANDOFF_UXUI_2026-10-08.md` (UX-1..UX-5 ยังเปิดอยู่ — งาน theater รอบนี้แยกจากกัน)
 - Baseline (source of truth หลัก) → `BMB_CURRENT_PRODUCTION_CLOSURE_BASELINE.md`
 - รายงาน G10 (ยังไม่ปิด) → `BMB_G10_FINAL_REPORT.md`
 
