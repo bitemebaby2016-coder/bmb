@@ -2,8 +2,8 @@
 -- POST-G2 SECURITY REMEDIATION MATRIX (ISOLATED LOCAL ONLY)
 -- Runs AFTER migration 108. Any failure RAISEs EXCEPTION (nonzero exit).
 -- Reuses fixtures seeded by tests/rls_matrix.sql:
---   admin-a 11111111-... (tenant-a) Â· admin-b 22222222-... (tenant-b)
---   customer-a 33333333-... Â· platform dddf4b57-...
+--   admin-a 11111111-... (tenant-a) · admin-b 22222222-... (tenant-b)
+--   customer-a 33333333-... · platform dddf4b57-...
 -- ============================================
 
 -- Fixture: admin with NULL tenant_id (NULL-caller bypass probe)

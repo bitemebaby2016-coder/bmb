@@ -1,7 +1,7 @@
 ﻿-- ============================================
--- 109: G3 â€” SOCIAL EVENTS FOUNDATION (Owner-authorized 2026-10-02)
--- Owner decisions: D1 G3=Social Events Foundation Â· D2 social_events per
--- design Â§6 + UNIQUE(platform,event_id) + 90-day retention Â· D3 Auto-Post
+-- 109: G3 — SOCIAL EVENTS FOUNDATION (Owner-authorized 2026-10-02)
+-- Owner decisions: D1 G3=Social Events Foundation · D2 social_events per
+-- design §6 + UNIQUE(platform,event_id) + 90-day retention · D3 Auto-Post
 -- single-brand at launch (NO brand-level authority â€” derive brand from the
 -- existing approved brands.is_default configuration boundary).
 --

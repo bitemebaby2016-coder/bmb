@@ -44,7 +44,7 @@ export function DeliveryManagement() {
   const [loading, setLoading] = useState(true)
   const [acting, setActing] = useState<string | null>(null)
   const [pending, setPending] = useState<Record<string, string>>({}) // order_number -> driver_id
-  // รูปสถานที่จัดส่งของลูกค้า ( customers.delivery_photo_url ) — ช่วยไรเดอร์หาบ้านเจอ
+  // รูปสถานที่จัดส่งของลูกค้า (Owner feature 2026-10-08) — user_id -> photo URL
   const [photoByUser, setPhotoByUser] = useState<Record<string, string>>({})
 
   const load = useCallback(async () => {
@@ -66,6 +66,26 @@ export function DeliveryManagement() {
   }, [])
 
   useEffect(() => { void load() }, [load])
+
+  // โหลดรูปสถานที่จัดส่งของลูกค้าในคิว (READ-ONLY) — customers RLS เปิดให้ is_admin
+  useEffect(() => {
+    const refs = Array.from(new Set(orders.map((o) => o.customer_ref).filter(Boolean))) as string[]
+    if (refs.length === 0) return
+    let cancelled = false
+    void (async () => {
+      const { data } = await supabase
+        .from('customers')
+        .select('user_id, delivery_photo_url')
+        .in('user_id', refs)
+      if (cancelled || !data) return
+      const map: Record<string, string> = {}
+      for (const row of data) {
+        if (row.user_id && row.delivery_photo_url) map[row.user_id] = row.delivery_photo_url
+      }
+      setPhotoByUser(map)
+    })()
+    return () => { cancelled = true }
+  }, [orders])
 
   // โหลดรูปสถานที่จัดส่งของลูกค้าในคิว (READ-ONLY) — customers RLS เปิดให้ is_admin
   useEffect(() => {
