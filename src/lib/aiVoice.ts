@@ -150,6 +150,12 @@ export function speakableText(text: string): string {
       .replace(/\s+/g, ' ')
       .trim()
   )
+    // TTS safety: ถ้าข้อความมีภาษาไทย ห้ามมี Latin "Bite"/"Bite Me Baby" หลงเหลือ —
+    // เอนจินอ่านเป็น /bit/ ("บิท") ผิดทุกครั้ง → แทนด้วยการออกเสียงไทยที่ถูกต้อง
+    .replace(/Bite Me Baby/gi, (m, _offset, whole: string) =>
+      /[\u0E00-\u0E7F]/.test(whole) ? 'ไบ๊ท์มีเบบี้' : m)
+    .replace(/\bBite\b/g, (m, _offset, whole: string) =>
+      /[\u0E00-\u0E7F]/.test(whole) ? 'ไบ๊ท์' : m)
 }
 
 // WS-2c: จำการตั้งค่าเปิด/ปิดเสียงตอบ (localStorage — aiMemory ไม่มี key นี้)
@@ -408,7 +414,16 @@ export class AIVoiceService {
     }
   }
 
+  // V3/V4: token ของ "เสียงที่มีสิทธิ์เล่น" — เรียก speak/stop ใหม่ทีไรค่าเปลี่ยนทันที
+  // ทำให้ await ค้างจาก network เก่าหมดสิทธิ์ (กัน two-voice overlap)
+  private speakToken = 0
+
   async speak(text: string): Promise<void> {
+    // Serialize: ยกเลิกเสียง/คิวที่กำลังเล่นอยู่ก่อนเสมอ — หนึ่งข้อความ = หนึ่งเสียง
+    this.stopSpeaking()
+    const token = ++this.speakToken
+    const stale = () => token !== this.speakToken
+
     // WS-2f: server TTS (Edge-TTS หลัก / Google TTS / Botnoi รอง) — เปิดผ่าน env
     // VITE_VOICE_SERVER_TTS=1 หรือ AUTO: เครื่องไม่มี Thai voice → ใช้ server เอง
     // (แก้ owner report 2026-10-01: เครื่องที่ไม่มี Thai voice อ่านไทยเป็น eng เพี้ยน
@@ -421,15 +436,18 @@ export class AIVoiceService {
         // V2/V3: แบ่งที่ขอบคำฝั่ง client แล้วเล่นเป็นคิวต่อเนื่อง (gapless) —
         // ข้อความสั้น = ชิ้นเดียวเหมือนเดิม; ยาว >180 = หลายชิ้นไม่มีช่องว่างพูด
         const blobs = await this.serverSpeakChunks(text)
-        await this.playAudioQueue(blobs)
+        if (stale()) return // เสียงใหม่แทรกมาขณะดึง blob → เงียบ ๆ ปล่อยเสียงใหม่เล่น
+        await this.playAudioQueue(blobs, token)
         return
       } catch {
+        if (stale()) return
         /* fall through to browser TTS */
       }
     }
     if (!this.synthesis) {
       throw new Error('Speech synthesis not supported in this browser');
     }
+    if (stale()) return
 
     return new Promise((resolve, reject) => {
       this.synthesis!.cancel();
@@ -448,13 +466,13 @@ export class AIVoiceService {
       this.isSpeakingFlag = true;
 
       this.currentUtterance.onend = () => {
-        this.isSpeakingFlag = false;
+        if (token === this.speakToken) this.isSpeakingFlag = false;
         this.currentUtterance = null;
         resolve();
       };
 
       this.currentUtterance.onerror = (event) => {
-        this.isSpeakingFlag = false;
+        if (token === this.speakToken) this.isSpeakingFlag = false;
         this.currentUtterance = null;
         if (event.error !== 'interrupted' && event.error !== 'canceled') {
           reject(new Error('Speech synthesis error: ' + event.error));
@@ -468,6 +486,7 @@ export class AIVoiceService {
   }
 
   stopSpeaking(): void {
+    this.speakToken++ // เสียงที่กำลังส่ง/ค้างอยู่หมดสิทธิ์ทันที
     if (this.synthesis) {
       this.synthesis.cancel();
       this.isSpeakingFlag = false;
@@ -497,18 +516,22 @@ export class AIVoiceService {
    * V3: เล่นเป็นคิวต่อเนื่อง (gapless) — ชิ้นถัดไปเริ่มทันทีเมื่อชิ้นปัจจุบันจบ
    * stopSpeaking (barge-in) เคลียร์คิว = หยุดทันทีทั้งประโยค
    */
-  private playAudioQueue(blobs: Blob[]): Promise<void> {
+  private playAudioQueue(blobs: Blob[], token: number): Promise<void> {
     return new Promise((resolve, reject) => {
       if (blobs.length === 0) { resolve(); return }
       this.audioQueue = [...blobs]
       this.queueActive = true
       const next = () => {
-        if (!this.queueActive) { resolve(); return } // barge-in → หยุดเงียบ ๆ
+        // barge-in / เสียงใหม่แทรก → หยุดคิวนี้เงียบ ๆ (หมดสิทธิ์เล่น)
+        if (!this.queueActive || token !== this.speakToken) { resolve(); return }
         const blob = this.audioQueue.shift()
         if (!blob) { this.queueActive = false; this.isSpeakingFlag = false; resolve(); return }
         this.playAudioBlob(blob)
           .then(() => { this.currentAudio = null; next() })
-          .catch((e) => { this.queueActive = false; this.audioQueue = []; this.isSpeakingFlag = false; this.currentAudio = null; reject(e) })
+          .catch((e) => {
+            if (token !== this.speakToken) { resolve(); return } // เสียงใหม่接管แล้ว → เงียบ
+            this.queueActive = false; this.audioQueue = []; this.isSpeakingFlag = false; this.currentAudio = null; reject(e)
+          })
       }
       this.isSpeakingFlag = true
       next()

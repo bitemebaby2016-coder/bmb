@@ -277,7 +277,19 @@ export function AdminProducts() {
             <div className="md:col-span-2">
               <label className="block text-sm font-medium text-brand-accent mb-2">รูปเมนู</label>
               <div className="flex flex-wrap items-center gap-3">
-                <input type="file" accept="image/*" onChange={handleImageUpload} className="input" />
+                <input type="file" accept="image/*" onChange={handleImageUpload} className="input" data-testid="product-image-file" />
+                {/* Owner request: เพิ่มรูปต้องถ่ายจากกล้องได้ด้วย (มีแต่เลือกจากอัลบั้ม) */}
+                <label className="btn btn-outline btn-sm cursor-pointer" title="ถ่ายรูปด้วยกล้อง">
+                  📷 ถ่ายรูป
+                  <input
+                    type="file"
+                    accept="image/*"
+                    capture="environment"
+                    onChange={handleImageUpload}
+                    className="hidden"
+                    data-testid="product-image-camera"
+                  />
+                </label>
                 {formData.image_url && (
                   <button onClick={() => setFormData({ ...formData, image_url: '' })} className="btn btn-outline text-sm text-red-500">✖ Remove image</button>
                 )}

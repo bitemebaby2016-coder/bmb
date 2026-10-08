@@ -61,7 +61,7 @@ export function Footer() {
             เมนูจานเดียว ข้าว แกง เครื่องดื่ม ของหวาน • 
             ส่งเช้า กลางวัน เย็น • 
             รองรับ Same-day Order และ Pre-order • 
-            AI Assistant "ไบต์" ตอบคำถาม 24/7
+            AI Assistant "ไบ๊ท์" ตอบคำถาม 24/7
           </p>
         </div>
 

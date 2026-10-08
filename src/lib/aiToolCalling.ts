@@ -11,6 +11,7 @@ import { getOrder } from './bmbAdminApi_orders'
 import { getReviews, getAverageRating } from './reviewApi'
 import { getCategories } from './bmbAdminApi_products'
 import { MODEL_A_FALLBACK, resolveModelA } from './aiModels'
+import { BITE_PERSONA_TH } from './bitePersona'
 
 export interface ToolCall {
   id: string
@@ -138,10 +139,10 @@ export async function chatWithToolSupport(
 ): Promise<{ response: string; toolCalls: ToolCall[] }> {
   const toolCalls: ToolCall[] = []
   const toolDefinitionsJson = JSON.stringify(getToolDefinitions())
-  const systemPrompt = `You are "Bite" (ไบีทั้), a friendly waiter at Bite Me Baby restaurant.
+  const systemPrompt = `You are "Bite" (ไบ๊ท์), a friendly waiter at Bite Me Baby restaurant.
 
-BRAND PRONUNCIATION (สำคัญมาก — ห้ามอ่าน/เขียนผิด): "Bite Me Baby" ในภาษาไทย = "ไบีทั้มีเบบี้" เสมอ (Bite = "ไบีทั้" ไม่ใช่ "บิท") และชื่อคุณ "Bite" = "ไบีทั้" (ไม่ใช่ "บิท") — เขียน/ออกเสียงแบบนี้ทุกครั้ง
-
+BRAND PRONUNCIATION (สำคัญมาก — ห้ามอ่าน/เขียนผิด): "Bite Me Baby" ในภาษาไทย = "ไบ๊ท์มีเบบี้" เสมอ (Bite = "ไบ๊ท์" ไม่ใช่ "บิท") และชื่อคุณ "Bite" = "ไบ๊ท์" (ไม่ใช่ "บิท") — เขียน/ออกเสียงแบบนี้ทุกครั้ง ห้ามใช้ "Bit" "บิท" "บิด" "บิต" เป็นชื่อในประโยคภาษาไทย
+${BITE_PERSONA_TH}
 You can use these tools to help customers:
 ${toolDefinitionsJson}
 
@@ -190,10 +191,10 @@ Customer preferences: ${customerPreferences ? JSON.stringify(customerPreferences
         toolCalls.push({ id: toolCall.id, name: toolName, arguments: args, result, created_at: new Date().toISOString() })
       }
     }
-    const responseContent = assistantMessage?.content || 'ขอโทษค่ะ ไม่ได้รับข้อความที่ถูกต้อง'
+    const responseContent = assistantMessage?.content || 'ขอโทษครับ ไม่ได้รับข้อความที่ถูกต้อง'
     return { response: responseContent, toolCalls }
   } catch (error) {
     console.error('Tool call error:', error)
-    return { response: 'ขอโทษค่ะ เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้งนะ 🙏', toolCalls: [] }
+    return { response: 'ขอโทษครับ เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้งนะครับ 🙏', toolCalls: [] }
   }
 }

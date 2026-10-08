@@ -68,7 +68,7 @@ describe('useBiteAIStore — 4-Stage Mascot Service', () => {
     const s = useBiteAIStore.getState()
     expect(s.chatOpen).toBe(false)
     expect(s.stage).toBe('ambient')
-    expect(s.bubble).toContain('Bite')
+    expect(s.bubble).toContain('ไบ๊ท์')
   })
 
   it('Security boundary: the ONLY transactional hook is EXECUTE_ADD_TO_CART', () => {

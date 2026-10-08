@@ -5,7 +5,7 @@ import { useAuthStore, fetchProfileRole } from './store/authStore'
 import { Layout } from './components/layout/Layout'
 import { ErrorBoundary } from './components/ErrorBoundary'
 import { AdminNav } from './components/admin/AdminNav'
-// Bite / AI accessibility lives in BottomNav ('ไบต์' → /ai-chat) + BiteHero quick actions (UI v5)
+// Bite / AI accessibility lives in BottomNav ('ไบ๊ท์' → /ai-chat) + BiteHero quick actions (UI v5)
 import { SeoHelmet } from './components/SeoHelmet'
 import { MascotBadge } from './components/MascotBadge'
 import { getHomeMeta, getMenuMeta, getCartMeta, getCheckoutMeta, getOrderTrackMeta, getAboutMeta, getFaqMeta, getBlogMeta, getContactMeta, getPrivacyMeta, getTermsMeta, getPromotionsMeta, getRewardsMeta, getVoteMeta, getRandomMenuMeta, getShareMeta, getViralMeta, getProfileMeta, getAdminMeta, getLoginMeta } from './lib/seo'
@@ -246,7 +246,7 @@ export default function App() {
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
       
-      {/* Bite / AI entry moved to BottomNav ('ไบต์') + BiteHero quick actions (UI v5) */}
+      {/* Bite / AI entry moved to BottomNav ('ไบ๊ท์') + BiteHero quick actions (UI v5) */}
     </ErrorBoundary>
     </HelmetProvider>
     </BrandProvider>

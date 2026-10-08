@@ -57,7 +57,7 @@ interface BiteAIStore {
 export const useBiteAIStore = create<BiteAIStore>((set) => ({
   stage: 'ambient',
   greetingPlayed: false,
-  bubble: 'สวัสดีค่ะ น้อง Bite อยู่นี่แล้ว 🍊 มีอะไรให้ช่วยไหมคะ',
+  bubble: 'สวัสดีครับ ไบ๊ท์อยู่นี่แล้ว 🍊 มีอะไรให้ช่วยไหมครับ',
   upsell: null,
   chatOpen: false,
   fullContext: '',
@@ -75,16 +75,16 @@ export const useBiteAIStore = create<BiteAIStore>((set) => ({
           stage: 'personalization',
           upsell: {
             remaining,
-            message: `รับขนมหวานเพิ่มอีก ${remaining} บาท เพื่อรับสิทธิ์ส่งฟรีทันทีไหมคะ? 🍊`,
+            message: `รับขนมหวานเพิ่มอีก ${remaining} บาท เพื่อรับสิทธิ์ส่งฟรีทันทีไหมครับ? 🍊`,
           },
-          bubble: `รับขนมหวานเพิ่มอีก ${remaining} บาท เพื่อรับสิทธิ์ส่งฟรีทันทีไหมคะ? 🍊`,
+          bubble: `รับขนมหวานเพิ่มอีก ${remaining} บาท เพื่อรับสิทธิ์ส่งฟรีทันทีไหมครับ? 🍊`,
         })
       } else {
         // Cart meets or exceeds free shipping threshold
         set({
           stage: 'personalization',
-          upsell: { remaining: 0, message: 'ได้สิทธิ์ส่งฟรีแล้วค่ะ! 🎉' },
-          bubble: 'ได้สิทธิ์ส่งฟรีแล้วค่ะ! 🎉',
+          upsell: { remaining: 0, message: 'ได้สิทธิ์ส่งฟรีแล้วครับ! 🎉' },
+          bubble: 'ได้สิทธิ์ส่งฟรีแล้วครับ! 🎉',
         })
       }
     } else {
@@ -100,7 +100,7 @@ export const useBiteAIStore = create<BiteAIStore>((set) => ({
   triggerMicroHook: (quotaLabel) =>
     set({
       stage: 'microhook',
-      bubble: `ออเดอร์รอบนี้ quota เหลือไม่เยอะแล้วนะคะ (${quotaLabel}) รีบกดจองด่วนเลย 🕒`,
+      bubble: `ออเดอร์รอบนี้ quota เหลือไม่เยอะแล้วครับ (${quotaLabel}) รีบกดจองด่วนเลย 🕒`,
     }),
 
   openChat: (context) =>
@@ -112,7 +112,7 @@ export const useBiteAIStore = create<BiteAIStore>((set) => ({
     }),
 
   closeChat: () =>
-    set({ chatOpen: false, stage: 'ambient', bubble: 'กลับมาหา Bite ได้เสมอค่ะ 😊', biteState: 'IDLE' }),
+    set({ chatOpen: false, stage: 'ambient', bubble: 'กลับมาหาไบ๊ท์ได้เสมอครับ 😊', biteState: 'IDLE' }),
 
   setBubble: (bubble) => set({ bubble }),
 

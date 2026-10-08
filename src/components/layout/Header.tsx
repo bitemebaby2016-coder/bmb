@@ -4,6 +4,7 @@ import { useCartStore } from '@/store/cartStore'
 import { useAuthStore } from '@/store/authStore'
 import { shouldShowAdminLink } from '@/lib/adminUi'
 import { NotificationDropdown } from '@/components/notification/NotificationDropdown'
+import { applyTheme, cycleTheme, getTheme, THEME_LABELS, type ThemeName } from '@/lib/theme'
 
 const MOBILE_NAV_LINKS = [
   { path: '/menu', label: 'เมนู' },
@@ -19,6 +20,13 @@ export function Header() {
   const logout = useAuthStore((s) => s.logout)
   const location = useLocation()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [theme, setTheme] = useState<ThemeName>(() => getTheme())
+
+  function handleCycleTheme() {
+    const next = cycleTheme(theme)
+    setTheme(next)
+    applyTheme(next)
+  }
 
   useEffect(() => {
     setMobileMenuOpen(false)
@@ -50,6 +58,16 @@ export function Header() {
         </nav>
 
         <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={handleCycleTheme}
+            className="px-2 py-1 rounded-lg border border-brand-border text-brand-muted hover:text-brand-primary hover:bg-brand-bg transition-colors text-sm"
+            aria-label={`เปลี่ยนธีม (ปัจจุบัน: ${THEME_LABELS[theme]})`}
+            title={`ธีมปัจจุบัน: ${THEME_LABELS[theme]} — คลิกเพื่อเปลี่ยน`}
+            data-testid="theme-toggle"
+          >
+            {theme === 'orange' ? '🟠' : theme === 'gray' ? '⚪' : '🌙'}
+          </button>
           {customer ? (
             <div className="flex items-center gap-3">
               <NotificationDropdown />

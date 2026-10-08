@@ -9,6 +9,7 @@ import { showToast } from '@/components/ui/ToastContainer'
 import {
   listMediaAssets,
   uploadMediaAsset,
+  uploadRegisteredAsset,
   deleteMediaAsset,
   listRegistryAssets,
   setRegistryAssetActive,
@@ -31,6 +32,7 @@ export function AdminMedia() {
   const [uploading, setUploading] = useState(false)
   const [kind, setKind] = useState<MediaAssetRow['kind']>('image')
   const [alt, setAlt] = useState('')
+  const [assetKey, setAssetKey] = useState('')
 
   useEffect(() => { load() }, [])
 
@@ -49,7 +51,12 @@ export function AdminMedia() {
     if (!file) { showToast('เลือกไฟล์ก่อนอัปโหลด', 'error'); return }
     setUploading(true)
     try {
-      const row = await uploadMediaAsset(file, kind, alt.trim())
+      // asset_key ที่กรอก (เช่น ai.chat_background) → ลงทะเบียนใน media_assets
+      // เพื่อให้ runtime (เช่น พื้นหลังแชท Talk to Bite) ดึงไปใช้ได้
+      const key = assetKey.trim()
+      const row = key
+        ? await uploadRegisteredAsset(file, kind, alt.trim(), { assetKey: key, category: 'system' })
+        : await uploadMediaAsset(file, kind, alt.trim())
       if (row) {
         showToast('อัปโหลดสำเร็จ', 'success')
         setAlt('')
@@ -95,14 +102,42 @@ export function AdminMedia() {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-brand-muted mb-1">ไฟล์</label>
+            <label className="block text-sm font-medium text-brand-muted mb-1">
+              asset_key <span className="text-xs font-normal">(ถ้ามี — เช่น <code>ai.chat_background</code>)</span>
+            </label>
             <input
-              type="file"
               className="input border rounded px-3 py-2"
-              accept="image/*,video/mp4"
-              disabled={uploading}
-              onChange={(e) => handleUpload(e.target.files?.[0] || undefined)}
+              placeholder="เว้นว่างได้ ใส่เพื่อให้ runtime ใช้ภาพนี้"
+              value={assetKey}
+              onChange={(e) => setAssetKey(e.target.value)}
+              data-testid="media-asset-key"
             />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-brand-muted mb-1">ไฟล์</label>
+            <div className="flex flex-wrap items-center gap-2">
+              <input
+                type="file"
+                className="input border rounded px-3 py-2"
+                accept="image/*,video/mp4"
+                disabled={uploading}
+                onChange={(e) => handleUpload(e.target.files?.[0] || undefined)}
+                data-testid="media-file-input"
+              />
+              {/* Owner request: เพิ่มรูปต้องถ่ายจากกล้องได้ด้วย (มีแต่เลือกจากอัลบั้ม) */}
+              <label className="btn btn-outline btn-sm cursor-pointer" title="ถ่ายภาพ/อัดวิดีโอด้วยกล้อง">
+                📷 ถ่ายภาพ
+                <input
+                  type="file"
+                  accept="image/*,video/mp4"
+                  capture="environment"
+                  disabled={uploading}
+                  onChange={(e) => handleUpload(e.target.files?.[0] || undefined)}
+                  className="hidden"
+                  data-testid="media-camera-input"
+                />
+              </label>
+            </div>
           </div>
         </div>
         <p className="text-xs text-brand-muted mt-2">

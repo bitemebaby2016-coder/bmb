@@ -39,6 +39,8 @@ import {
   type AIVoiceService,
 } from '@/lib/aiVoice'
 import { getOrdersByCustomer } from '@/lib/bmbAdminApi_orders'
+import { getRuntimeAssetUrl } from '@/lib/bmbAdminApi_media'
+import { applyTheme, cycleTheme, getTheme, THEME_LABELS, type ThemeName } from '@/lib/theme'
 import { getServerStatusLabel } from '@/lib/orderVocabulary'
 import { hydrateMemoryFromServer } from '@/lib/aiServerMemory'
 import type { Product } from '@/types'
@@ -86,7 +88,7 @@ function nextId(): string {
 }
 
 const FALLBACK_GREETING =
-  'สวัสดีครับ ผม Bite พนักงานเสิร์ฟของ Bite Me Baby 🍊 วันนี้อยากกินอะไรดีครับ?'
+  'สวัสดีครับ ผมไบ๊ท์ พนักงานเสิร์ฟของไบ๊ท์มีเบบี้ 🍊 วันนี้อยากกินอะไรดีครับ?'
 
 export function TalkToBite({ mode = 'overlay', initialPhase = 'landing', landingClose = true, onClose }: TalkToBiteProps) {
   const navigate = useNavigate()
@@ -108,6 +110,30 @@ export function TalkToBite({ mode = 'overlay', initialPhase = 'landing', landing
   const voiceRef = useRef<AIVoiceService | null>(null)
   const endRef = useRef<HTMLDivElement>(null)
   const seededRef = useRef(false)
+  // Custom chat backdrop — admin can register asset_key `ai.chat_background`
+  // via Media Library; no asset → the built-in gradient (ttb-backdrop) shows.
+  const [bgUrl, setBgUrl] = useState<string | null>(null)
+  // ธีม — ปุ่มสลับอยู่ในแชทเองด้วย เพราะบน "/" Header ถูก full-screen layer ทับ
+  const [theme, setTheme] = useState<ThemeName>(() => getTheme())
+
+  function handleCycleTheme() {
+    const next = cycleTheme(theme)
+    setTheme(next)
+    applyTheme(next)
+  }
+
+  useEffect(() => {
+    let active = true
+    void (async () => {
+      try {
+        const url = await getRuntimeAssetUrl('ai.chat_background')
+        if (active && url) setBgUrl(url)
+      } catch {
+        // registry unavailable → keep the gradient fallback
+      }
+    })()
+    return () => { active = false }
+  }, [])
 
   // Greeting — deterministic 7-day rotation personalised ONLY with verified
   // server memory for the signed-in customer (name + favorite category); guests
@@ -188,6 +214,8 @@ export function TalkToBite({ mode = 'overlay', initialPhase = 'landing', landing
       seededRef.current = true
       setMessages([{ kind: 'text', id: nextId(), role: 'assistant', content: greeting || FALLBACK_GREETING }])
       setBiteState('WELCOME')
+      // เข้าแชทครั้งแรก → ยกเมนูวันนี้ขึ้นมาให้เลือก/เพิ่มลงตะกร้าได้ทันที
+      void showMenu(true)
     }
     if (fn) fn()
   }
@@ -268,6 +296,33 @@ export function TalkToBite({ mode = 'overlay', initialPhase = 'landing', landing
     }
   }
 
+  // 🍽️ เมนูทั้งหมดในแชท — real catalog presented as add-to-cart cards
+  // (quiet = seed อัตโนมัติตอนเปิดแชท ไม่พูด/ไม่ autoplay เสียง)
+  async function showMenu(quiet = false) {
+    const say = (text: string) => {
+      if (quiet) push({ kind: 'text', id: nextId(), role: 'assistant', content: text })
+      else pushAssistant(text)
+    }
+    setBiteState('RECOMMENDING')
+    say('นี่คือเมนูทั้งหมดที่สั่งได้วันนี้ครับ กดปุ่ม 🛒 บนเมนูเพื่อเพิ่มลงตะกร้าได้เลย:')
+    setTyping(true)
+    try {
+      const { getProducts: load } = await import('@/lib/bmbAdminApi_products')
+      const products = pickTopAvailable(await load(), 12)
+      if (products.length === 0) {
+        say('วันนี้ยังไม่มีเมนูที่สั่งได้ครับ แนะนำลองแวะมาอีกที หรือดูที่หน้าเมนูแทนครับ 🙏')
+      } else {
+        push({ kind: 'products', id: nextId(), intro: 'เมนูวันนี้ — กดเพิ่มลงตะกร้าได้เลย:', products })
+      }
+      setBiteState('IDLE')
+    } catch {
+      say('ขอโทษครับ ดึงเมนูไม่สำเร็จ กรุณาลองใหม่นะครับ 🙏')
+      setBiteState('ERROR')
+    } finally {
+      setTyping(false)
+    }
+  }
+
   function handleViewOrders() {
     navigate('/orders')
   }
@@ -339,9 +394,7 @@ export function TalkToBite({ mode = 'overlay', initialPhase = 'landing', landing
     }
   }
 
-  function handleViewMenu() {
-    navigate('/menu')
-  }
+
 
   // --- Commerce actions (via the canonical cart path only) ---
 
@@ -520,17 +573,29 @@ export function TalkToBite({ mode = 'overlay', initialPhase = 'landing', landing
           <span className="w-8 h-8 rounded-xl bg-gradient-to-br from-brand-primary to-orange-400 flex items-center justify-center text-white font-black text-sm">B</span>
           <span className="font-display font-bold text-brand-accent">BITE&nbsp;ME&nbsp;BABY</span>
         </div>
-        {fixed && landingClose && (
+        <div className="flex items-center gap-2">
           <button
             type="button"
-            onClick={handleClose}
-            className="btn btn-outline btn-sm"
-            aria-label="ปิด Talk to Bite"
-            data-testid="ttb-close"
+            onClick={handleCycleTheme}
+            className="w-9 h-9 rounded-full border border-brand-border text-brand-muted hover:text-brand-primary hover:bg-brand-bg transition-colors"
+            aria-label={`เปลี่ยนธีม (ปัจจุบัน: ${THEME_LABELS[theme]})`}
+            title={`ธีมปัจจุบัน: ${THEME_LABELS[theme]} — แตะเพื่อเปลี่ยน`}
+            data-testid="ttb-theme-toggle"
           >
-            ✕
+            {theme === 'orange' ? '🟠' : theme === 'gray' ? '⚪' : '🌙'}
           </button>
-        )}
+          {fixed && landingClose && (
+            <button
+              type="button"
+              onClick={handleClose}
+              className="btn btn-outline btn-sm"
+              aria-label="ปิด Talk to Bite"
+              data-testid="ttb-close"
+            >
+              ✕
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Bite alive — mascot pose follows state */}
@@ -564,7 +629,7 @@ export function TalkToBite({ mode = 'overlay', initialPhase = 'landing', landing
           <button type="button" onClick={() => openConversation(() => void handleRecommend())} data-testid="ttb-recommend" className="px-4 py-1.5 text-brand-accent border border-brand-border bg-white hover:bg-brand-bg rounded-full text-sm font-medium">
             ✨ แนะนำให้หน่อย
           </button>
-          <button type="button" onClick={handleViewMenu} data-testid="ttb-menu" className="px-4 py-1.5 text-brand-accent border border-brand-border bg-white hover:bg-brand-bg rounded-full text-sm font-medium">
+          <button type="button" onClick={() => openConversation(() => void showMenu())} data-testid="ttb-menu" className="px-4 py-1.5 text-brand-accent border border-brand-border bg-white hover:bg-brand-bg rounded-full text-sm font-medium">
             🍽️ เมนูทั้งหมด
           </button>
           <button type="button" onClick={() => openConversation(() => void handleBestSellers())} data-testid="ttb-bestsell" className="px-4 py-1.5 text-brand-accent border border-brand-border bg-white hover:bg-brand-bg rounded-full text-sm font-medium">
@@ -611,6 +676,16 @@ export function TalkToBite({ mode = 'overlay', initialPhase = 'landing', landing
           </p>
         </div>
         <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={handleCycleTheme}
+            className="w-8 h-8 rounded-full border border-brand-border text-brand-muted hover:text-brand-primary hover:bg-brand-bg transition-colors text-sm"
+            aria-label={`เปลี่ยนธีม (ปัจจุบัน: ${THEME_LABELS[theme]})`}
+            title={`ธีม: ${THEME_LABELS[theme]}`}
+            data-testid="ttb-theme-toggle-2"
+          >
+            {theme === 'orange' ? '🟠' : theme === 'gray' ? '⚪' : '🌙'}
+          </button>
           <span className="text-xs font-semibold text-brand-primary bg-brand-bg rounded-full px-2 py-1" title="สินค้าในตะกร้า">
             🛒 {cartCount}
           </span>
@@ -741,7 +816,7 @@ export function TalkToBite({ mode = 'overlay', initialPhase = 'landing', landing
         {[
           { label: '🔄 สั่งเหมือนเดิม', fn: () => void handleOrderAgain(), id: 'ttb-again' },
           { label: '🍊 ช่วยเลือกให้หน่อย', fn: () => void handleRecommend(), id: 'ttb-recommend' },
-          { label: '🍽️ ดูเมนู', fn: handleViewMenu, id: 'ttb-menu' },
+          { label: '🍽️ ดูเมนู', fn: () => void showMenu(), id: 'ttb-menu' },
           { label: '📦 เช็กออเดอร์', fn: () => void handleCheckOrders(), id: 'ttb-orders' },
           ...(customer ? [] : [{ label: '🔐 เข้าสู่ระบบ', fn: goLogin, id: 'ttb-login' }]),
         ].map((qa) => (
@@ -841,13 +916,33 @@ export function TalkToBite({ mode = 'overlay', initialPhase = 'landing', landing
       role={fixed ? 'dialog' : undefined}
       aria-modal={fixed ? true : undefined}
       aria-label="Talk to Bite"
-      className={fixed ? 'fixed inset-0 z-[96] bg-white overflow-hidden flex flex-col' : 'relative w-full'}
+      className={fixed ? 'fixed inset-0 z-[96] overflow-hidden flex flex-col' : 'relative w-full'}
     >
-      {realm === 'landing' ? landingView : conversationView}
+      {/* Blurred restaurant backdrop — gradient ไล่ระดับตามภาพตั้งต้น
+          หรือภาพที่แอดมินลงทะเบียนเป็น asset_key `ai.chat_background` */}
+      <div className="ttb-backdrop" aria-hidden="true">
+        {bgUrl && (
+          <div
+            className="ttb-backdrop__img"
+            style={{ backgroundImage: `url("${bgUrl}")` }}
+          />
+        )}
+        <div className="ttb-backdrop__tint" />
+      </div>
+      <div className="relative z-10 flex-1 flex flex-col overflow-hidden">
+        {realm === 'landing' ? landingView : conversationView}
+      </div>
     </div>
   )
 }
 
 function speakable(text: string): string {
-  return text.replace(/[#*`_~]/g, '').slice(0, 800)
+  // TTS safety: ประโยคไทยห้ามมี Latin "Bite" — เอนจินอ่านเป็น /bit/ ("บิท") ผิดเสมอ
+  // แทนที่เฉพาะตอนส่งเสียง ข้อความบนหน้ายังคงรูปแบบเดิม
+  const thai = /[\u0E00-\u0E7F]/.test(text)
+  let t = text.replace(/[#*`_~]/g, '').slice(0, 800)
+  if (thai) {
+    t = t.replace(/Bite Me Baby/gi, 'ไบ๊ท์มีเบบี้').replace(/\bBite\b/g, 'ไบ๊ท์')
+  }
+  return t
 }

@@ -9,6 +9,16 @@
 <!-- Meta Domain Verification (facebook-domain-verification) -->
     <meta name="facebook-domain-verification" content="hb1g366z66y96vsxzmmyarkqk6a2ef" />
 
+    <!-- Apply saved theme BEFORE first paint (กันกระพริบธีม) -->
+    <script>
+      (function () {
+        try {
+          var t = localStorage.getItem('bmb-theme');
+          if (t === 'gray' || t === 'dark') document.documentElement.setAttribute('data-theme', t);
+        } catch (e) { /* private mode → default orange */ }
+      })();
+    </script>
+
     <!-- Primary SEO -->
     <title>Bite Me Baby - สั่งอาหารจัดส่งเมืองจันทบุรี รัศมี 5 กม.</title>
     <meta name="description" content="Bite Me Baby - ร้านอาหารไทยจัดส่งถึงบ้านในรัศมี 5 กม. จากตัวเมืองจันทบุรี จัดส่งเช้า กลางวัน เย็น สั่งออนไลน์ได้พร้อม AI Assistant 24/7" />
