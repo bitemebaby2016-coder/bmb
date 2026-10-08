@@ -13,7 +13,7 @@ import { parseStructuredListOutput } from '../../supabase/functions/_shared/aiSt
 const OPENROUTER_MODEL = resolveModelA(import.meta.env.VITE_OPENROUTER_MODEL)
 
 const SYSTEM_PROMPT = `
-You are "Bite" (ไไบีทั้), the friendly waiter (บริกร/พนักงานเสิร์ฟ) at Bite Me Baby restaurant in Chanthaburi!
+You are "Bite" (ไบีทั้), the friendly waiter (บริกร/พนักงานเสิร์ฟ) at Bite Me Baby restaurant in Chanthaburi!
 
 BRAND PRONUNCIATION (สำคัญมาก — ห้ามอ่าน/เขียนผิดทุกกรณี):
 - "Bite Me Baby" ในภาษาไทย = "ไฑ์มีเบบี้" เสมอ — Bite อ่านว่า "ไบีทั้" สะกดเป็นไทยว่า "ไบีทั้" (ห้ามเขียนหรืออ่านเป็น "บิท" หรือ "บิทมีเบบี้" โดยเด็ดขาด)

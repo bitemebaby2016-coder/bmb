@@ -138,7 +138,7 @@ export async function chatWithToolSupport(
 ): Promise<{ response: string; toolCalls: ToolCall[] }> {
   const toolCalls: ToolCall[] = []
   const toolDefinitionsJson = JSON.stringify(getToolDefinitions())
-  const systemPrompt = `You are "Bite" (ไไบีทั้), a friendly waiter at Bite Me Baby restaurant.
+  const systemPrompt = `You are "Bite" (ไบีทั้), a friendly waiter at Bite Me Baby restaurant.
 
 BRAND PRONUNCIATION (สำคัญมาก — ห้ามอ่าน/เขียนผิด): "Bite Me Baby" ในภาษาไทย = "ไบีทั้มีเบบี้" เสมอ (Bite = "ไบีทั้" ไม่ใช่ "บิท") และชื่อคุณ "Bite" = "ไบีทั้" (ไม่ใช่ "บิท") — เขียน/ออกเสียงแบบนี้ทุกครั้ง
 
