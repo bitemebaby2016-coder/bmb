@@ -10,12 +10,14 @@
 // ============================================
 
 import { useEffect, useRef, useState, useCallback, lazy, Suspense, type PointerEvent as ReactPointerEvent } from 'react'
+import { useLocation } from 'react-router-dom'
 import { MascotWrapper } from '@/components/ui/MascotWrapper'
 import { GlassCard } from '@/components/ui/GlassCard'
 import { useBiteAIStore } from '@/stores/useBiteAIStore'
 import { useCartStore } from '@/stores/useCartStore'
 import { usePlatformConfig } from '@/config/platformConfig'
 import { loadMascotOverrides, getOverrideUrl } from '@/lib/mascotService'
+import { sectionFromPath, pageContextLine } from '@/lib/bitePageContext'
 
 // ⚡ PERF: the unified Talk to Bite UI + aiService/OpenRouter chain is only needed
 // when the user taps the mascot — load it on demand instead of at boot (TBT).
@@ -53,9 +55,11 @@ function getMascotUrl(pose: MascotPose): string {
 function contextPose(activeSection: string): MascotPose {
   switch (activeSection) {
     case 'menu': return 'bite_menu'
+    case 'cart': case 'checkout': return 'bite_shopping'
     case 'pre-order': return 'bite_shopping'
-    case 'orders': return 'bite_delivery_run'
+    case 'orders': case 'rider': return 'bite_delivery_run'
     case 'ai-chat': return 'bite_recommend'
+    case 'account': return 'bite_ready'
     default: return 'bite_ready'
   }
 }
@@ -90,6 +94,13 @@ export function BiteMascot({ userName, activeSection = 'home' }: BiteMascotProps
   const triggerMicroHook = useBiteAIStore((s) => s.triggerMicroHook)
   const openChat = useBiteAIStore((s) => s.openChat)
   const closeChat = useBiteAIStore((s) => s.closeChat)
+  const setBubble = useBiteAIStore((s) => s.setBubble)
+
+  // Context-aware: derive the REAL page section from the router (routes do not
+  // pass activeSection) — drives the pose + the conversation context line.
+  const location = useLocation()
+  const routeSection = sectionFromPath(location.pathname)
+  const section = activeSection !== 'home' ? activeSection : routeSection
 
   const cartCount = useCartStore((s) => s.items.length)
   const cartTotal = useCartStore((s) => s.cartTotal)
@@ -97,9 +108,9 @@ export function BiteMascot({ userName, activeSection = 'home' }: BiteMascotProps
 
   const stallTimer = useRef<ReturnType<typeof setInterval> | null>(null)
   const [chatVisible, setChatVisible] = useState(false)
-  // ท่าเริ่มต้น = บริบทหน้าที่ลูกค้ากำลังดู
+  // ท่าเริ่มต้น = บริบทหน้าจริง (route-derived)
   const [currentPoseIndex, setCurrentPoseIndex] = useState(() =>
-    Math.max(0, MASCOT_POSES.indexOf(contextPose(activeSection)))
+    Math.max(0, MASCOT_POSES.indexOf(contextPose(section)))
   )
   const [overrideUrl, setOverrideUrl] = useState<string | undefined>(undefined)
 
@@ -164,10 +175,10 @@ export function BiteMascot({ userName, activeSection = 'home' }: BiteMascotProps
     setPos({ x, y })
   }
 
-  // AI-UI: เมื่อ activeSection เปลี่ยน → สลับไปท่าตามบริบท + อ่าน override ล่าสุด
+  // AI-UI: pose follows the REAL page context (route-derived) + admin override
   useEffect(() => {
-    setCurrentPoseIndex(Math.max(0, MASCOT_POSES.indexOf(contextPose(activeSection))))
-  }, [activeSection])
+    setCurrentPoseIndex(Math.max(0, MASCOT_POSES.indexOf(contextPose(section))))
+  }, [section])
 
   useEffect(() => {
     let active = true
@@ -206,7 +217,7 @@ export function BiteMascot({ userName, activeSection = 'home' }: BiteMascotProps
     const onScroll = () => (lastMove = Date.now())
     window.addEventListener('scroll', onScroll, { passive: true })
     stallTimer.current = setInterval(() => {
-      if (activeSection === 'pre-order' && Date.now() - lastMove > 5000) {
+      if (section === 'pre-order' && Date.now() - lastMove > 5000) {
         triggerMicroHook('เหลือน้อย')
       }
     }, 1000)
@@ -214,14 +225,26 @@ export function BiteMascot({ userName, activeSection = 'home' }: BiteMascotProps
       window.removeEventListener('scroll', onScroll)
       if (stallTimer.current) clearInterval(stallTimer.current)
     }
-  }, [activeSection, chatOpen, triggerMicroHook])
+  }, [section, chatOpen, triggerMicroHook])
 
+  // Context-aware bubble — a Thai line derived ONLY from real route + cart
+  // state (bitePageContext). Skipped while an upsell/full-chat is active so it
+  // never overwrites the Stage-2 upsell message.
+  useEffect(() => {
+    if (chatOpen || stage === 'personalization') return
+    const line = pageContextLine(section, { cartCount, cartTotal })
+    if (line) setBubble(line)
+  }, [section, cartCount, cartTotal, chatOpen, stage, setBubble])
 
-  // Stage 4 — clicking (not dragging) the mascot opens the unified Talk to Bite.
+  // Stage 4 — clicking (not dragging) the mascot opens the unified Talk to Bite
+  // DIRECTLY into the conversation (existing initialPhase="conversation" path).
   function handleTap() {
     if (dragRef.current?.moved) { dragRef.current.moved = false; return }
     const name = userName ?? readHistoryName() ?? 'คุณ'
-    const context = `ลูกค้าชื่อ ${name} มีของในตะกร้า ${cartTotal} บาท กำลังดูเซกชั่น ${activeSection}`
+    const line = pageContextLine(section, { cartCount, cartTotal })
+    const context = line
+      ? `ลูกค้าชื่อ ${name} อยู่หน้า ${section} (${location.pathname}) · ${line}`
+      : `ลูกค้าชื่อ ${name} อยู่หน้า ${section} (${location.pathname}) มีของในตะกร้า ${cartCount} รายการ รวม ${cartTotal} บาท`
     openChat(context)
     setChatVisible(true)
     cyclePose() // Cycle to next pose on tap

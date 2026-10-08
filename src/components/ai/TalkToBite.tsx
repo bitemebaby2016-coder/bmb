@@ -27,7 +27,8 @@ import { useAuthStore } from '@/store/authStore'
 import { useCartStore } from '@/store/cartStore'
 import { useBiteAIStore } from '@/stores/useBiteAIStore'
 import { MascotBadge } from '@/components/MascotBadge'
-import { ProductCard } from './ProductCard'
+import { RecommendationCard } from '@/components/theater/TheaterCards'
+import { recommendReason } from '@/lib/theaterReasons'
 import { showToast } from '@/components/ui/ToastContainer'
 import { chatWithAI } from '@/lib/aiService'
 import {
@@ -393,7 +394,10 @@ export function TalkToBite({ mode = 'overlay', initialPhase = 'landing', landing
       return
     }
     try {
-      const reply = await chatWithAI(text, undefined, { voiceMode: voiceReply })
+      // Context pipe — the Floating Bite / page context stored by openChat()
+      // rides along as runtimeContext (existing aiService parameter, no new engine).
+      const uiContext = useBiteAIStore.getState().fullContext
+      const reply = await chatWithAI(text, uiContext || undefined, { voiceMode: voiceReply })
       setBiteState('SPEAKING')
       pushAssistant(reply)
       setBiteState('IDLE')
@@ -496,7 +500,8 @@ export function TalkToBite({ mode = 'overlay', initialPhase = 'landing', landing
     navigate('/')
   }
 
-  const cartCount = useCartStore((s) => s.items).reduce((sum, i) => sum + i.quantity, 0)
+  const cartItems = useCartStore((s) => s.items)
+  const cartCount = cartItems.reduce((sum, i) => sum + i.quantity, 0)
 
   const liveGreeting = greeting || FALLBACK_GREETING
   // Fixed full-screen layer unless we are the inline hero landing on the Home page.
@@ -506,7 +511,9 @@ export function TalkToBite({ mode = 'overlay', initialPhase = 'landing', landing
   // Landing — "Talk to Bite Home"
   // ---------------------------------------------------------------------------
   const landingView = (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full relative">
+      {/* Theater language accent — subtle stage light, layout untouched */}
+      <div className="ttb-stage-glow" aria-hidden="true" />
       {/* Brand row */}
       <div className="flex items-center justify-between px-5 pt-4">
         <div className="flex items-center gap-2">
@@ -652,12 +659,26 @@ export function TalkToBite({ mode = 'overlay', initialPhase = 'landing', landing
             )
           }
           if (m.kind === 'products') {
+            // Visual food response — Bite speaks (intro above) then PRESENTS the
+            // food as a theater strip (LEVEL 2 cards + real-data reason chips),
+            // not a generic chat transcript. Same canonical add path.
             return (
-              <div key={m.id} className="space-y-2">
+              <div key={m.id} className="space-y-2" data-testid="ttb-products">
                 <p className="text-xs text-brand-muted">{m.intro}</p>
-                {m.products.map((p) => (
-                  <ProductCard key={p.id} product={p} onAdd={addToCart} />
-                ))}
+                <div className="theater-strip" role="list" aria-label="เมนูที่ Bite นำเสนอ">
+                  {m.products.map((p) => (
+                    <div key={p.id} role="listitem">
+                      <RecommendationCard
+                        product={p}
+                        reason={recommendReason(p, {
+                          favoriteCats,
+                          cartCategoryIds: cartItems.map((i) => i.product.category_id).filter(Boolean),
+                        })}
+                        onAdd={addToCart}
+                      />
+                    </div>
+                  ))}
+                </div>
               </div>
             )
           }

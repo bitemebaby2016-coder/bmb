@@ -1615,3 +1615,226 @@ nav.no-print > div > a { min-width: 44px; min-height: 44px; justify-content: cen
 nav.no-print > div { gap: 12px; }
 
 
+/* ============================================
+   BITE FOOD THEATER — Visual Theater × AI Waiter Stage
+   Dark stage surfaces + BMB blue accent lighting; brand orange stays the
+   action color. Pure transforms/opacity (no heavy libs), reduced-motion safe.
+   ============================================ */
+.theater-stage {
+  position: relative;
+  border-radius: 24px;
+  padding: 20px 16px 18px;
+  margin-bottom: 20px;
+  overflow: hidden;
+  color: #fff;
+  background:
+    radial-gradient(1200px 420px at 80% -10%, rgba(56, 130, 246, 0.28), transparent 60%),
+    radial-gradient(900px 380px at 0% 110%, rgba(14, 165, 233, 0.18), transparent 55%),
+    linear-gradient(160deg, #0b1220 0%, #111827 55%, #0f172a 100%);
+  border: 1px solid rgba(59, 130, 246, 0.35);
+  box-shadow: 0 24px 60px rgba(2, 6, 23, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+.theater-head { display: flex; align-items: center; gap: 12px; }
+.theater-head-mascot {
+  width: 64px; height: 64px; flex-shrink: 0;
+  filter: drop-shadow(0 10px 18px rgba(56, 189, 248, 0.35));
+}
+.theater-kicker { font-size: 10px; font-weight: 800; letter-spacing: 0.18em; color: #7dd3fc; margin-bottom: 2px; }
+.theater-title {
+  font-family: var(--font-family-display);
+  font-size: clamp(16px, 4.2vw, 22px);
+  font-weight: 800; line-height: 1.25; color: #fff;
+}
+.theater-cart-btn {
+  flex-shrink: 0; min-height: 44px; padding: 8px 14px;
+  border-radius: 999px; font-size: 13px; font-weight: 700; color: #fff;
+  background: rgba(59, 130, 246, 0.22);
+  border: 1px solid rgba(125, 211, 252, 0.45);
+  transition: background 0.18s ease, transform 0.18s ease;
+}
+.theater-cart-btn:hover { background: rgba(59, 130, 246, 0.4); transform: translateY(-1px); }
+
+/* --- Carousel track: scroll-snap, peek side cards for depth --- */
+.theater-track {
+  display: flex; gap: 16px;
+  margin-top: 16px; padding-bottom: 6px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  outline: none;
+}
+.theater-track::-webkit-scrollbar { display: none; }
+.theater-track:focus-visible { outline: 3px solid rgba(56, 189, 248, 0.7); outline-offset: 4px; border-radius: 16px; }
+.theater-slide {
+  flex: 0 0 86%;
+  scroll-snap-align: center;
+  transition: transform 0.28s ease, opacity 0.28s ease, filter 0.28s ease;
+  transform: perspective(1000px) rotateY(6deg) scale(0.92);
+  opacity: 0.55;
+  filter: saturate(0.75);
+}
+.theater-slide--active {
+  transform: perspective(1000px) rotateY(0deg) scale(1);
+  opacity: 1; filter: none;
+  z-index: 1;
+}
+@media (min-width: 768px) { .theater-slide { flex-basis: 54%; } }
+
+
+/* --- LEVEL 3 hero card (2.5D) --- */
+.theater-hero {
+  border-radius: 20px; overflow: hidden;
+  background: linear-gradient(180deg, rgba(15, 23, 42, 0.9), rgba(2, 6, 23, 0.96));
+  border: 1px solid rgba(59, 130, 246, 0.4);
+  box-shadow: 0 26px 54px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(148, 197, 255, 0.08),
+    0 -8px 30px rgba(56, 130, 246, 0.18);
+}
+.theater-hero-media {
+  position: relative; aspect-ratio: 16 / 10; overflow: hidden;
+  background: linear-gradient(145deg, #1e293b, #0f172a);
+}
+.theater-hero-media img { width: 100%; height: 100%; object-fit: cover; }
+.theater-hero-shade {
+  position: absolute; inset: 0;
+  background: linear-gradient(180deg, rgba(2, 6, 23, 0) 45%, rgba(2, 6, 23, 0.85) 100%),
+    radial-gradient(70% 50% at 85% 0%, rgba(56, 130, 246, 0.35), transparent 70%);
+  pointer-events: none;
+}
+.theater-hero-badges {
+  position: absolute; left: 12px; bottom: 10px; right: 12px;
+  display: flex; flex-wrap: wrap; gap: 6px; align-items: center;
+}
+.theater-hero-body { padding: 14px 14px 16px; display: flex; flex-direction: column; gap: 12px; }
+.theater-price { font-family: var(--font-family-display); font-size: 24px; font-weight: 900; color: #fb923c; white-space: nowrap; }
+.theater-price-sm { font-size: 14px; font-weight: 800; color: #fb923c; white-space: nowrap; }
+.theater-reason {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 3px 9px; border-radius: 999px;
+  font-size: 11px; font-weight: 700; color: #dbeafe;
+  background: rgba(37, 99, 235, 0.35);
+  border: 1px solid rgba(147, 197, 253, 0.5);
+}
+.theater-cta-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.theater-qty {
+  display: inline-flex; align-items: center; gap: 2px;
+  background: rgba(15, 23, 42, 0.9);
+  border: 1px solid rgba(148, 163, 184, 0.45);
+  border-radius: 999px; padding: 4px;
+}
+.theater-qty button {
+  width: 34px; height: 34px; border-radius: 50%;
+  background: rgba(59, 130, 246, 0.25); color: #fff;
+  border: 1px solid rgba(125, 211, 252, 0.4);
+  font-size: 16px; font-weight: 700; line-height: 1;
+  transition: background 0.15s ease;
+}
+.theater-qty button:hover:not(:disabled) { background: rgba(59, 130, 246, 0.5); }
+.theater-qty button:disabled { opacity: 0.35; cursor: not-allowed; }
+.btn-theater-outline { background: transparent; color: #e2e8f0; border: 1px solid rgba(148, 163, 184, 0.55); }
+.btn-theater-outline:hover { background: rgba(148, 163, 184, 0.16); border-color: #7dd3fc; color: #fff; }
+
+/* --- LEVEL 2 recommendation card --- */
+.theater-rec-card {
+  display: flex; flex-direction: column;
+  border-radius: 16px; overflow: hidden;
+  background: linear-gradient(180deg, rgba(15, 23, 42, 0.92), rgba(2, 6, 23, 0.95));
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  box-shadow: 0 14px 32px rgba(0, 0, 0, 0.45);
+}
+.theater-rec-media { position: relative; aspect-ratio: 16 / 9; overflow: hidden; background: #1e293b; }
+.theater-rec-media img { width: 100%; height: 100%; object-fit: cover; }
+.theater-rec-media-glow {
+  position: absolute; inset: 0;
+  background: radial-gradient(60% 50% at 90% 0%, rgba(56, 130, 246, 0.4), transparent 70%);
+  pointer-events: none;
+}
+.theater-rec-body { padding: 10px 12px 12px; display: flex; flex-direction: column; gap: 6px; }
+.theater-img-fallback {
+  display: block; width: 100%; height: 100%;
+  background: linear-gradient(145deg, #1e293b, #0f172a);
+}
+.theater-img-fallback::after { content: '🍽️'; display: grid; place-items: center; height: 100%; font-size: 28px; opacity: 0.7; }
+.theater-img-fallback--lg::after { font-size: 44px; }
+
+
+/* --- Controls: prev / dots / next --- */
+.theater-controls {
+  display: flex; align-items: center; justify-content: center;
+  gap: 14px; margin-top: 12px;
+}
+.theater-nav {
+  width: 44px; height: 44px; border-radius: 50%;
+  font-size: 22px; line-height: 1; color: #fff;
+  background: rgba(59, 130, 246, 0.25);
+  border: 1px solid rgba(125, 211, 252, 0.45);
+  transition: background 0.15s ease, transform 0.15s ease;
+}
+.theater-nav:hover:not(:disabled) { background: rgba(59, 130, 246, 0.45); transform: scale(1.06); }
+.theater-nav:disabled { opacity: 0.3; cursor: not-allowed; }
+.theater-dots { display: flex; gap: 6px; align-items: center; }
+.theater-dot {
+  width: 24px; height: 24px; padding: 0; background: transparent;
+  border: 0; cursor: pointer; display: grid; place-items: center;
+}
+.theater-dot::after {
+  content: ''; width: 8px; height: 8px; border-radius: 999px;
+  background: rgba(148, 163, 184, 0.65);
+  transition: all 0.2s ease;
+}
+.theater-dot--active::after {
+  width: 22px; border-radius: 999px; background: #38bdf8;
+  box-shadow: 0 0 10px rgba(56, 189, 248, 0.8);
+}
+
+/* --- Side picks (mini row) --- */
+.theater-others { display: flex; gap: 8px; margin-top: 12px; overflow-x: auto; scrollbar-width: none; }
+.theater-others::-webkit-scrollbar { display: none; }
+.theater-other-chip {
+  display: flex; align-items: center; gap: 8px;
+  flex: 0 0 auto; max-width: 46%; min-height: 44px;
+  padding: 6px 10px 6px 6px; border-radius: 999px;
+  background: rgba(15, 23, 42, 0.85);
+  border: 1px solid rgba(59, 130, 246, 0.35);
+  transition: border-color 0.15s ease, transform 0.15s ease;
+}
+.theater-other-chip:hover { border-color: #38bdf8; transform: translateY(-1px); }
+.theater-other-chip img, .theater-other-fallback {
+  width: 34px; height: 34px; border-radius: 50%; object-fit: cover; flex-shrink: 0;
+  background: #1e293b;
+}
+.theater-other-fallback { display: grid; place-items: center; font-size: 16px; }
+
+/* --- Empty state --- */
+.theater-empty {
+  display: flex; flex-direction: column; align-items: center; gap: 12px;
+  text-align: center; padding: 28px 16px 12px;
+}
+
+/* --- Conversation food response strip (TalkToBite visual stage) --- */
+.theater-strip { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 6px; scrollbar-width: none; }
+.theater-strip::-webkit-scrollbar { display: none; }
+.theater-strip > * { flex: 0 0 72%; max-width: 260px; scroll-snap-align: start; }
+@media (min-width: 768px) { .theater-strip > * { flex-basis: 46%; } }
+
+/* --- Landing stage accent (connect / to the theater language) --- */
+.ttb-stage-glow {
+  position: absolute; inset: 0; pointer-events: none;
+  background:
+    radial-gradient(420px 220px at 50% 0%, rgba(56, 130, 246, 0.16), transparent 70%),
+    radial-gradient(320px 200px at 85% 100%, rgba(14, 165, 233, 0.12), transparent 70%);
+}
+
+/* --- Mobile / reduced motion --- */
+@media (max-width: 480px) {
+  .theater-slide { flex-basis: 92%; }
+  .theater-hero-body { padding: 12px; }
+  .theater-price { font-size: 20px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .theater-slide, .theater-nav, .theater-dot::after, .theater-other-chip, .theater-cart-btn { transition: none; }
+  .theater-slide { transform: none; }
+  .theater-slide:not(.theater-slide--active) { opacity: 0.6; }
+}
+
+

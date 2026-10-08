@@ -1,7 +1,7 @@
 // ============================================
-// Bite Me Baby — Home Page (UI v5)
+// Bite Me Baby — Home Page "/shop" (UI v5 + Food Theater stage)
 // Information Architecture (shorter + scan-able):
-//   [1 Bite Conversational Hero] -> [2 Store/Delivery Status]
+//   [1 Bite Food Theater (AI waiter stage × menu theater)] -> [2 Store/Delivery Status]
 //   -> [3 Same-day Carousel] -> [4 Pre-order Carousel]
 //   -> [5 Drinks Carousel (mockup)] -> [5b Snacks Carousel (mockup)]
 //   -> [6 Social Proof Review Carousel]
@@ -9,6 +9,7 @@
 // + FloatingCart. No low-stock dashboard, no long vertical grids.
 // Business flows preserved: add-to-cart (cartStore), pre-order (createPreOrder),
 // review deep-link (cart/checkout by mode).
+// The full-screen Bite landing lives at "/" (TalkToBiteHomePage) — no duplicate here.
 // ============================================
 
 import { Link, useNavigate } from 'react-router-dom'
@@ -37,9 +38,9 @@ import { useBrandContextStore } from '@/store/resolvedBrandStore'
 import { filterProductsByBranch } from '@/lib/homeProviders'
 import type { VerifiedCustomerReview, Product, ProductCategory, MenuSection, SameDayOrderPayload, PreOrderPayload, HomeReview } from '@/types'
 
-// ⚡ The Talk-to-Bite experience is code-split (aiService/aiVoice are heavy); the
-// landing hero on Home is an inline view of the SAME component used everywhere.
-const TalkToBite = lazy(() => import('@/components/ai/TalkToBite').then((m) => ({ default: m.TalkToBite })))
+// ⚡ The Food Theater stage is code-split (aiServerMemory chain); it renders
+// real catalog picks + canonical cart actions as the first section of /shop.
+const FoodTheater = lazy(() => import('@/components/theater/FoodTheater').then((m) => ({ default: m.FoodTheater })))
 
 /** PRE_ORDER lead/date policy is DB-driven (order_policy) — no client hardcode.
  * The date is chosen in /checkout?mode=pre-order (server validates lead time). */
@@ -208,9 +209,10 @@ export function HomePage() {
       {/* SEO: Visually hidden H1 with primary keywords */}
       <h1 className="sr-only">Bite Me Baby — สั่งอาหารจัดส่งเมืองจันทบุรี รัศมี 5 กม. AI แนะนำเมนู 24/7</h1>
       
-      {/* 1. Talk to Bite Home — the unified full-screen AI-waiter experience (landing hero) */}
+      {/* 1. BITE FOOD THEATER — food-first stage (replaces the duplicated Bite landing; the
+          full-screen landing lives at "/", the conversation engine stays in TalkToBite) */}
       <Suspense fallback={null}>
-        <TalkToBite mode="hero" />
+        <FoodTheater products={products} onCustomize={handleSameDay} onPreOrder={handlePreOrder} />
       </Suspense>
 
       {/* 2. Store / Delivery Status — compact strip (replaces the 3-round grid) */}
