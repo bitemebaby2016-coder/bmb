@@ -74,8 +74,16 @@ export default defineConfig({
     },
   },
   server: {
-    port: 3000,
-    open: true,
+    // TUNNEL (Owner 2026-10-08): เปิดให้เครื่องภายนอก (มือถือคนละวงเน็ต)
+    // เข้า dev server ผ่าน ngrok / localtunnel ได้
+    host: '0.0.0.0',      // รับ connection ทุก interface (ไม่ใช่แค่ 127.0.0.1)
+    port: 3000,           // ล็อกพอร์ตคงที่ — tunnel ชี้ 3000 เสมอ
+    strictPort: true,     // ถ้า 3000 ถูกใช้ → error ทันที ห้ามเลื่อนไป 3001/5173
+                          // (การเลื่อนพอร์ต = สาเหตุ Bad Gateway เมื่อเข้าผ่าน tunnel)
+    open: false,          // ปิด auto-open ตอนมี tunnel (ไม่จำเป็นต้องเปิดเบราว์เซอร์เครื่อง dev)
+    allowedHosts: true,   // Vite 5.1+: อนุญาต Host ของ ngrok/loca.lt
+                          // (ไม่งั้นเจอ "Blocked request. This host is not allowed")
+    hmr: { clientPort: 443 }, // HMR websocket ผ่าน https ของ tunnel (กัน console ws error)
   },
   build: {
     target: 'es2019',
