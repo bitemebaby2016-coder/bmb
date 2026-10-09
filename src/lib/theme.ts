@@ -38,7 +38,7 @@ export function applyTheme(theme: ThemeName): void {
   }
   // theme-color ของ browser chrome ให้ตรงธีม
   const meta = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]')
-  if (meta) meta.content = theme === 'dark' ? '#0C0C0E' : theme === 'gray' ? '#4B5563' : '#F97316'
+  if (meta) meta.content = theme === 'dark' ? '#0C0C0E' : theme === 'gray' ? '#737373' : '#F97316'
 }
 
 /** วน theme ถัดไป: orange → gray → dark → orange */

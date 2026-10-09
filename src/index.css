@@ -1634,12 +1634,13 @@ nav.no-print > div { gap: 12px; }
   --theater-shadow-rgb: 10, 6, 3;
 }
 html[data-theme='gray'] {
-  --theater-accent-rgb: 156, 163, 175;
-  --theater-accent2-rgb: 209, 213, 219;
-  --theater-accent-light-rgb: 229, 231, 235;
-  --theater-hi: #e5e7eb;
-  --theater-hi-soft: #d1d5db;
-  --theater-chip-text: #f3f4f6;
+  /* glow = สีแบรนด (ส้ม) เหมือนธีมอื่น — เทาใช้เฉพาะ stage พื้นเข้มเท่านั้น */
+  --theater-accent-rgb: 249, 115, 22;
+  --theater-accent2-rgb: 251, 191, 36;
+  --theater-accent-light-rgb: 253, 186, 116;
+  --theater-hi: #fb923c;
+  --theater-hi-soft: #fdba74;
+  --theater-chip-text: #ffedd5;
   --theater-stage-1: #17181a;
   --theater-stage-2: #26282c;
   --theater-stage-3: #1e2023;
@@ -1929,22 +1930,24 @@ html[data-theme='dark'] .ttb-backdrop__tint {
    จึงเปลี่ยนสีได้ที่จุดเดียว
    ============================================ */
 html[data-theme='gray'] {
-  color-scheme: light;
-  --color-brand-primary: #4B5563;
-  --color-brand-primary-light: #6B7280;
-  --color-brand-primary-dark: #374151;
-  --color-brand-secondary: #9CA3AF;
-  --color-brand-accent: #1F2937;
-  --color-brand-accent-light: #374151;
-  --color-brand-bg: #F3F4F6;
-  --color-brand-bg-warm: #E5E7EB;
-  --color-brand-surface: #FFFFFF;
-  --color-brand-surface-warm: #F9FAFB;
-  --color-brand-text: var(--theater-stage-2);
-  --color-brand-text-secondary: #374151;
-  --color-brand-muted: #6B7280;
-  --color-brand-border: #D1D5DB;
-  --color-brand-border-light: #E5E7EB;
+  color-scheme: dark;
+  /* สีหลัก = ส้มคงเดิม (owner: "หลักยังเป็นส้ม") — เทาใช้เฉพาะพื้นหลัง/การ์ด/เส้นขอบ */
+  --color-brand-primary: #F97316;
+  --color-brand-primary-light: #FB923C;
+  --color-brand-primary-dark: #EA580C;
+  --color-brand-secondary: #FBBF24;
+  --color-brand-accent: #FFFFFF;
+  --color-brand-accent-light: #F3F4F6;
+  /* พื้นหลังเทากลางช่วง #6B6B6B–#808080 (owner เลือกตามภาพอ้างอิง) */
+  --color-brand-bg: #737373;
+  --color-brand-bg-warm: #6B6B6B;
+  --color-brand-surface: #5E5E61;
+  --color-brand-surface-warm: #67676A;
+  --color-brand-text: #FFFFFF;
+  --color-brand-text-secondary: #E5E7EB;
+  --color-brand-muted: #D1D5DB;
+  --color-brand-border: #8A8A8D;
+  --color-brand-border-light: #7E7E81;
 }
 /* hardcode ที่กระจายอยู่ในคอมโพเนนต์ (bg-white / neutral-*) ให้ตามธีมด้วย */
 html[data-theme='gray'] .bg-white { background-color: var(--color-brand-surface); }
@@ -1958,6 +1961,21 @@ html[data-theme='gray'] .text-neutral-700,
 html[data-theme='gray'] .text-neutral-800,
 html[data-theme='gray'] .text-neutral-900,
 html[data-theme='gray'] .text-black { color: var(--color-brand-text); }
+
+/* พื้นหลังไล่ระดับเทากลางทั้งหน้า (แทนค่าเริ่มต้น cream ที่มองไม่เห็นความต่าง) */
+html[data-theme='gray'] body {
+  background: linear-gradient(180deg, var(--color-brand-bg) 0%, var(--color-brand-bg-warm) 100%);
+}
+/* a11y hardcode ส้มเข้ม (คำนวณบนพื้นขาว) — บนพื้นเทากลาง #c2410c จะกลืนไปกับเทาจนมองไม่เห็น
+   → ธีมเทาใช้ส้มอ่อน (ยังเป็นครอบครัวส้มตามที่ owner สั่ง: "หลักยังเป็นส้ม") */
+html[data-theme='gray'] .text-brand-primary { color: #FDBA74; }
+html[data-theme='gray'] .hover\:text-brand-primary:hover { color: #FDBA74; }
+html[data-theme='gray'] .category-chip:not(.text-white) { color: #FDBA74; }
+html[data-theme='gray'] .flad-cta { color: #FDBA74; }
+html[data-theme='gray'] .text-slate-300,
+html[data-theme='gray'] .text-slate-400 { color: var(--color-brand-text-secondary); }
+/* accent เป็นสีข้อความหลัก = ขาว → จุดที่ใช้ accent เป็นพื้น (เช่น chip ที่เลือก) สลับเป็นเทาเข้ม */
+html[data-theme='gray'] .bg-brand-accent { background-color: #33363b; }
 
 html[data-theme='dark'] {
   color-scheme: dark;
@@ -2001,16 +2019,20 @@ html[data-theme='dark'] div.text-brand-primary { color: #FB923C; }
 html[data-theme='dark'] .category-chip:not(.text-white) { color: #FDBA74; }
 html[data-theme='dark'] .flad-cta { color: #FB923C; }
 /* gradient stops ที่ hardcode ขาว (header/hero ของแชท) ให้ตามธีม */
-html[data-theme='gray'] .to-white { --tw-gradient-to: #FFFFFF; }
+html[data-theme='gray'] .to-white { --tw-gradient-to: #5E5E61; }
+html[data-theme='gray'] .from-orange-50 { --tw-gradient-from: #6B6259; }
 html[data-theme='dark'] .to-white { --tw-gradient-to: #16161A; }
 html[data-theme='dark'] .from-white { --tw-gradient-from: #16161A; }
 html[data-theme='dark'] .via-white { --tw-gradient-via: #16161A; }
 /* Chat backdrop — gradient ไล่ระดับเข้าชุดธีมเดียวกับเว็บ */
 html[data-theme='gray'] .ttb-backdrop {
   background:
-    radial-gradient(1200px 520px at 85% -10%, rgba(156, 163, 175, 0.45), transparent 60%),
-    radial-gradient(900px 480px at 0% 110%, rgba(107, 114, 128, 0.4), transparent 55%),
-    linear-gradient(165deg, #FFFFFF 0%, #F3F4F6 40%, #E5E7EB 70%, #9CA3AF 100%);
+    radial-gradient(1200px 520px at 85% -10%, rgba(249, 115, 22, 0.22), transparent 60%),
+    radial-gradient(900px 480px at 0% 110%, rgba(15, 23, 42, 0.3), transparent 55%),
+    linear-gradient(165deg, #808080 0%, #737373 45%, #6B6B6B 75%, #616164 100%);
+}
+html[data-theme='gray'] .ttb-backdrop__tint {
+  background: linear-gradient(180deg, rgba(45, 45, 45, 0.5) 0%, rgba(40, 40, 40, 0.35) 100%);
 }
 html[data-theme='dark'] .ttb-backdrop {
   background:

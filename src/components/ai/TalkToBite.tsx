@@ -939,10 +939,15 @@ export function TalkToBite({ mode = 'overlay', initialPhase = 'landing', landing
 function speakable(text: string): string {
   // TTS safety: ประโยคไทยห้ามมี Latin "Bite" — เอนจินอ่านเป็น /bit/ ("บิท") ผิดเสมอ
   // แทนที่เฉพาะตอนส่งเสียง ข้อความบนหน้ายังคงรูปแบบเดิม
+  // ชื่อไทยทุกรูปสะกด (ไบ๊ท์ / ไบท๊ / ไบท์) → "ไบท": วรรณยุกต์ ๊ ติดไม้หัวอากาศ ท์ ทำให้
+  // เอนจินอ่านชื่อเพี้ยน (owner report: ออกมาเป็น "บั๊บ") — รูปบนหน้าจอไม่ถูกแตะ
   const thai = /[\u0E00-\u0E7F]/.test(text)
   let t = text.replace(/[#*`_~]/g, '').slice(0, 800)
   if (thai) {
-    t = t.replace(/Bite Me Baby/gi, 'ไบ๊ท์มีเบบี้').replace(/\bBite\b/g, 'ไบ๊ท์')
+    t = t
+      .replace(/Bite Me Baby/gi, 'ไบทมีเบบี้')
+      .replace(/\bBite\b/g, 'ไบท')
+      .replace(/ไบ๊ท์|ไบ๊ท|ไบท๊|ไบท์/g, 'ไบท')
   }
   return t
 }

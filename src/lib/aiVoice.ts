@@ -152,10 +152,13 @@ export function speakableText(text: string): string {
   )
     // TTS safety: ถ้าข้อความมีภาษาไทย ห้ามมี Latin "Bite"/"Bite Me Baby" หลงเหลือ —
     // เอนจินอ่านเป็น /bit/ ("บิท") ผิดทุกครั้ง → แทนด้วยการออกเสียงไทยที่ถูกต้อง
+    // รูปชื่อไทยทุกเวอร์ชัน (ไบ๊ท์ / ไบท๊ / ไบท์) → "ไบท": วรรณยุกต์ ๊ ติดไม้หัวอากาศ ท์
+    // ทำให้เอนจินไทยอ่านชื่อเพี้ยน (owner report: ออกมาเป็น "บั๊บ") — เขียนบนหน้ายังคงรูปเดิม
     .replace(/Bite Me Baby/gi, (m, _offset, whole: string) =>
-      /[\u0E00-\u0E7F]/.test(whole) ? 'ไบ๊ท์มีเบบี้' : m)
+      /[\u0E00-\u0E7F]/.test(whole) ? 'ไบทมีเบบี้' : m)
     .replace(/\bBite\b/g, (m, _offset, whole: string) =>
-      /[\u0E00-\u0E7F]/.test(whole) ? 'ไบ๊ท์' : m)
+      /[\u0E00-\u0E7F]/.test(whole) ? 'ไบท' : m)
+    .replace(/ไบ๊ท์|ไบ๊ท|ไบท๊|ไบท์/g, 'ไบท')
 }
 
 // WS-2c: จำการตั้งค่าเปิด/ปิดเสียงตอบ (localStorage — aiMemory ไม่มี key นี้)

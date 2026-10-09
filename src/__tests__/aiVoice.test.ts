@@ -104,6 +104,21 @@ describe('speakableText (WS-2c — กรองข้อความก่อน
   it('keeps plain Thai sentences intact', () => {
     expect(speakableText('มีขนมครกกับข้าวเหนียวมะม่วงค่ะ')).toBe('มีขนมครกกับข้าวเหนียวมะม่วงค่ะ')
   })
+
+  it('normalizes every Thai spelling of the brand name to the speakable form ไบท', () => {
+    // regression: TTS อ่าน "ไบท๊"/"ไบ๊ท์" (๊ ติด ท์) เพี้ยนเป็น "บั๊บ" → ต้องแทนเป็น "ไบท" เสมอ
+    expect(speakableText('สวัสดีครับ ผมไบท๊พร้อมแนะนำเมนูครับ')).toBe('สวัสดีครับ ผมไบทพร้อมแนะนำเมนูครับ')
+    expect(speakableText('ผมไบ๊ท์จากไบ๊ท์มีเบบี้ครับ')).toBe('ผมไบทจากไบทมีเบบี้ครับ')
+    expect(speakableText('ร้านไบท์ของคุณไบท์')).toBe('ร้านไบทของคุณไบท')
+    // idempotent — รูปที่แทนแล้วต้องไม่ถูกแตะซ้ำ
+    expect(speakableText('ผมไบทครับ')).toBe('ผมไบทครับ')
+  })
+
+  it('replaces Latin "Bite" in Thai sentences but keeps it in pure-English text', () => {
+    expect(speakableText('ยินดีต้อนรับสู่ Bite Me Baby ครับ')).toBe('ยินดีต้อนรับสู่ ไบทมีเบบี้ ครับ')
+    expect(speakableText('ผม Bite ครับ')).toBe('ผม ไบท ครับ')
+    expect(speakableText('Welcome to Bite Me Baby')).toBe('Welcome to Bite Me Baby')
+  })
 })
 
 describe('Voice reply setting persistence (WS-2c — จำการตั้งค่า)', () => {
