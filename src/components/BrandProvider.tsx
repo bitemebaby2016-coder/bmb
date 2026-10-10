@@ -33,7 +33,7 @@ function applyThemeToRoot(tokens: Record<string, any>): void {
   const obj = tokens as Record<string, string>
   const root = document.documentElement
   const vars: Record<string, string> = {
-    '--bmb-primary': obj.primary_color || '#F97316',
+    '--bmb-primary': obj.primary_color || '#FF5E1E',
     '--bmb-secondary': obj.secondary_color || '#FBBF24',
     '--bmb-accent': obj.accent_color || '#92400E',
     '--bmb-bg-base': obj.bg_base || '#FFF7ED',

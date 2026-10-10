@@ -3,7 +3,7 @@
 // ============================================
 // Visual presentation layer ONLY — data comes from the REAL catalog row and
 // every add action funnels through the canonical cart path (parent →
-// cartStore.addItem). Dark "theater" surface with BMB blue accent lighting;
+// cartStore.addItem). Theme-driven stage surfaces (light/dark) with brand orange accent lighting;
 // orange stays the action color (existing design language preserved).
 //   LEVEL 2 = RecommendationCard (Bite recommendations in conversation/stage)
 //   LEVEL 3 = TheaterHeroCard     (the signature 2.5D hero on /shop)
@@ -47,7 +47,7 @@ export function RecommendationCard({ product, reason, onAdd }: RecommendationCar
       </div>
       <div className="theater-rec-body">
         <div className="flex items-start justify-between gap-2">
-          <h4 className="font-display font-bold text-white text-sm leading-snug line-clamp-2">{product.name}</h4>
+          <h4 className="font-display font-bold text-[var(--theater-fg)] text-sm leading-snug line-clamp-2">{product.name}</h4>
           <span className="theater-price-sm">฿{Number(product.price) || 0}</span>
         </div>
         <ReasonChip reason={reason} />
@@ -99,7 +99,7 @@ export function TheaterHeroCard({ product, reason, onAdd, onCustomize }: Theater
             </span>
           ) : null}
           {preorderOnly && (
-            <span className="text-[11px] font-bold px-2 py-1 rounded-full bg-sky-500/25 border border-sky-400/50 text-sky-100">
+            <span className="text-[11px] font-bold px-2 py-1 rounded-full bg-amber-500/25 border border-amber-400/50 text-amber-100">
               📅 สั่งล่วงหน้า
             </span>
           )}
@@ -109,9 +109,9 @@ export function TheaterHeroCard({ product, reason, onAdd, onCustomize }: Theater
       <div className="theater-hero-body">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
-            <h3 className="font-display font-bold text-white text-lg leading-tight line-clamp-2">{product.name}</h3>
+            <h3 className="font-display font-bold text-[var(--theater-fg)] text-lg leading-tight line-clamp-2">{product.name}</h3>
             {product.description && (
-              <p className="text-xs text-slate-300 mt-1 line-clamp-2">{product.description}</p>
+              <p className="text-xs text-[var(--theater-fg-muted)] mt-1 line-clamp-2">{product.description}</p>
             )}
           </div>
           <span className="theater-price">฿{Number(product.price) || 0}</span>
@@ -130,7 +130,7 @@ export function TheaterHeroCard({ product, reason, onAdd, onCustomize }: Theater
             </button>
             <span
               aria-live="polite"
-              className="min-w-5 text-center text-sm font-bold text-white"
+              className="min-w-5 text-center text-sm font-bold text-[var(--theater-fg)]"
               data-testid="theater-qty-value"
             >
               {qty}

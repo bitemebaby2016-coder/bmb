@@ -40,6 +40,7 @@ import {
 } from '@/lib/aiVoice'
 import { getOrdersByCustomer } from '@/lib/bmbAdminApi_orders'
 import { getRuntimeAssetUrl } from '@/lib/bmbAdminApi_media'
+import { defaultBackground } from '@/lib/backgrounds'
 import { applyTheme, cycleTheme, getTheme, THEME_LABELS, type ThemeName } from '@/lib/theme'
 import { getServerStatusLabel } from '@/lib/orderVocabulary'
 import { hydrateMemoryFromServer } from '@/lib/aiServerMemory'
@@ -582,7 +583,7 @@ export function TalkToBite({ mode = 'overlay', initialPhase = 'landing', landing
             title={`ธีมปัจจุบัน: ${THEME_LABELS[theme]} — แตะเพื่อเปลี่ยน`}
             data-testid="ttb-theme-toggle"
           >
-            {theme === 'orange' ? '🟠' : theme === 'gray' ? '⚪' : '🌙'}
+            {theme === 'light' ? '☀️' : '🌙'}
           </button>
           {fixed && landingClose && (
             <button
@@ -684,7 +685,7 @@ export function TalkToBite({ mode = 'overlay', initialPhase = 'landing', landing
             title={`ธีม: ${THEME_LABELS[theme]}`}
             data-testid="ttb-theme-toggle-2"
           >
-            {theme === 'orange' ? '🟠' : theme === 'gray' ? '⚪' : '🌙'}
+            {theme === 'light' ? '☀️' : '🌙'}
           </button>
           <span className="text-xs font-semibold text-brand-primary bg-brand-bg rounded-full px-2 py-1" title="สินค้าในตะกร้า">
             🛒 {cartCount}
@@ -716,7 +717,7 @@ export function TalkToBite({ mode = 'overlay', initialPhase = 'landing', landing
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3">
+      <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3" role="log" aria-live="polite" aria-relevant="additions text">
         {messages.map((m) => {
           if (m.kind === 'text') {
             return (
@@ -787,7 +788,7 @@ export function TalkToBite({ mode = 'overlay', initialPhase = 'landing', landing
                 <span className="font-bold text-brand-primary">฿{m.total}</span>
               </div>
               {m.unavailable.length > 0 && (
-                <p className="text-[11px] text-amber-700">หมด/มีเฉพาะออเดอร์เก่า: {m.unavailable.map((u) => u.name).join(', ')}</p>
+                <p className="text-[11px] text-brand-primary">หมด/มีเฉพาะออเดอร์เก่า: {m.unavailable.map((u) => u.name).join(', ')}</p>
               )}
               <button
                 type="button"
@@ -826,7 +827,7 @@ export function TalkToBite({ mode = 'overlay', initialPhase = 'landing', landing
             onClick={qa.fn}
             data-testid={qa.id}
             disabled={typing}
-            className="px-3 py-1.5 bg-brand-bg text-brand-accent rounded-full text-xs whitespace-nowrap hover:bg-brand-secondary transition-colors disabled:opacity-50"
+            className="px-3 py-1.5 bg-brand-bg text-brand-accent rounded-full text-xs whitespace-nowrap hover:bg-brand-primary-dark hover:text-white transition-colors disabled:opacity-50"
           >
             {qa.label}
           </button>
@@ -869,7 +870,7 @@ export function TalkToBite({ mode = 'overlay', initialPhase = 'landing', landing
                 className={`flex-1 rounded-full py-3 px-5 text-base gap-2 transition-colors ${
                   listening
                     ? 'btn btn-primary shadow-lg'
-                    : 'bg-brand-bg text-brand-accent border border-brand-border hover:bg-brand-secondary'
+                    : 'bg-brand-bg text-brand-accent border border-brand-border hover:bg-brand-primary-dark hover:text-white'
                 }`}
                 data-testid="ttb-mic"
               >
@@ -921,12 +922,10 @@ export function TalkToBite({ mode = 'overlay', initialPhase = 'landing', landing
       {/* Blurred restaurant backdrop — gradient ไล่ระดับตามภาพตั้งต้น
           หรือภาพที่แอดมินลงทะเบียนเป็น asset_key `ai.chat_background` */}
       <div className="ttb-backdrop" aria-hidden="true">
-        {bgUrl && (
-          <div
-            className="ttb-backdrop__img"
-            style={{ backgroundImage: `url("${bgUrl}")` }}
-          />
-        )}
+        <div
+          className="ttb-backdrop__img"
+          style={{ backgroundImage: `url("${bgUrl ?? defaultBackground(theme)}")` }}
+        />
         <div className="ttb-backdrop__tint" />
       </div>
       <div className="relative z-10 flex-1 flex flex-col overflow-hidden">

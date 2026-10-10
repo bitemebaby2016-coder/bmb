@@ -9,9 +9,9 @@
 
 @theme {
   /* Primary Colors - Warm Peach / Orange */
-  --color-brand-primary: #F97316;
-  --color-brand-primary-light: #FB923C;
-  --color-brand-primary-dark: #EA580C;
+  --color-brand-primary: #FF5E1E;
+  --color-brand-primary-light: #FF7F47;
+  --color-brand-primary-dark: #E04B12;
   --color-brand-secondary: #FBBF24;
   --color-brand-accent: #92400E;
   --color-brand-accent-light: #B45309;
@@ -71,6 +71,8 @@ html {
 
 body {
   min-height: 100vh;
+  min-height: 100dvh;
+  overflow-x: clip;
   line-height: 1.6;
   background: linear-gradient(180deg, var(--color-brand-bg) 0%, var(--color-brand-surface-warm) 100%);
 }
@@ -133,12 +135,12 @@ p { color: var(--color-brand-text-secondary); }
 .btn-primary {
   background: linear-gradient(135deg, var(--color-brand-primary), var(--color-brand-primary-dark));
   color: white;
-  box-shadow: 0 4px 6px -1px rgba(249, 115, 22, 0.3);
+  box-shadow: 0 4px 6px -1px rgba(255, 94, 30, 0.3);
 }
 
 .btn-primary:hover {
   transform: translateY(-1px);
-  box-shadow: 0 6px 8px -1px rgba(249, 115, 22, 0.4);
+  box-shadow: 0 6px 8px -1px rgba(255, 94, 30, 0.4);
 }
 
 .btn-outline {
@@ -182,7 +184,7 @@ p { color: var(--color-brand-text-secondary); }
 .input:focus {
   outline: none;
   border-color: var(--color-brand-primary);
-  box-shadow: 0 0 0 4px rgba(249, 115, 22, 0.1);
+  box-shadow: 0 0 0 4px rgba(255, 94, 30, 0.1);
 }
 
 .toast-container {
@@ -235,7 +237,7 @@ p { color: var(--color-brand-text-secondary); }
 
 .bg-organic {
   background-image: 
-    radial-gradient(circle at 20% 50%, rgba(249, 115, 22, 0.05) 0%, transparent 50%),
+    radial-gradient(circle at 20% 50%, rgba(255, 94, 30, 0.05) 0%, transparent 50%),
     radial-gradient(circle at 80% 80%, rgba(251, 191, 36, 0.05) 0%, transparent 50%);
 }
 
@@ -293,7 +295,7 @@ p { color: var(--color-brand-text-secondary); }
 .category-icon.active {
   background: linear-gradient(135deg, var(--color-brand-primary), var(--color-brand-primary-dark));
   color: white;
-  box-shadow: 0 4px 6px -1px rgba(249, 115, 22, 0.3);
+  box-shadow: 0 4px 6px -1px rgba(255, 94, 30, 0.3);
 }
 
 @keyframes float {
@@ -535,7 +537,7 @@ p { color: var(--color-brand-text-secondary); }
   font-weight: 800;
   color: #fff;
   background: linear-gradient(135deg, var(--color-brand-primary), var(--color-brand-primary-dark));
-  box-shadow: 0 3px 8px rgba(249, 115, 22, 0.35);
+  box-shadow: 0 3px 8px rgba(255, 94, 30, 0.35);
 }
 
 .review-name {
@@ -577,13 +579,13 @@ p { color: var(--color-brand-text-secondary); }
   font-weight: 800;
   font-size: 0.9rem;
   text-decoration: none;
-  box-shadow: 0 4px 10px rgba(249, 115, 22, 0.35);
+  box-shadow: 0 4px 10px rgba(255, 94, 30, 0.35);
   transition: transform 0.2s ease;
 }
 
 .review-cta:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 16px rgba(249, 115, 22, 0.45);
+  box-shadow: 0 8px 16px rgba(255, 94, 30, 0.45);
 }
 
 .review-cta-arrow {
@@ -694,8 +696,8 @@ p { color: var(--color-brand-text-secondary); }
 /* Bite Hero — conversational hero with soft glow */
 .bite-hero {
   position: relative;
-  background: linear-gradient(135deg, rgba(249, 115, 22, 0.10), rgba(255, 251, 235, 0.9) 55%, rgba(251, 191, 36, 0.14));
-  border: 1px solid rgba(249, 115, 22, 0.25);
+  background: linear-gradient(135deg, rgba(255, 94, 30, 0.10), rgba(255, 251, 235, 0.9) 55%, rgba(251, 191, 36, 0.14));
+  border: 1px solid rgba(255, 94, 30, 0.25);
   border-radius: 24px;
   padding: 20px 18px 16px;
   margin-bottom: 14px;
@@ -723,11 +725,11 @@ p { color: var(--color-brand-text-secondary); }
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.7);
   backdrop-filter: blur(4px);
-  border: 1px solid rgba(249, 115, 22, 0.12);
+  border: 1px solid rgba(255, 94, 30, 0.12);
   white-space: nowrap;
   transition: all 0.18s ease;
 }
-.usp-item:hover { background: #fff; border-color: rgba(249, 115, 22, 0.25); }
+.usp-item:hover { background: #fff; border-color: rgba(255, 94, 30, 0.25); }
 
 /* Trust Badges — Social Proof Summary */
 .trust-badges { flex-wrap: wrap; gap: 6px 10px; }
@@ -736,11 +738,11 @@ p { color: var(--color-brand-text-secondary); }
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.6);
   backdrop-filter: blur(4px);
-  border: 1px solid rgba(249, 115, 22, 0.1);
+  border: 1px solid rgba(255, 94, 30, 0.1);
   white-space: nowrap;
   transition: all 0.18s ease;
 }
-.trust-badge:hover { background: #fff; border-color: rgba(249, 115, 22, 0.2); }
+.trust-badge:hover { background: #fff; border-color: rgba(255, 94, 30, 0.2); }
 
 /* Search & Category Filter Bar (HomePage) */
 .search-input {
@@ -757,7 +759,7 @@ p { color: var(--color-brand-text-secondary); }
 .search-input:focus {
   outline: none;
   border-color: var(--color-brand-primary);
-  box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.15);
+  box-shadow: 0 0 0 3px rgba(255, 94, 30, 0.15);
 }
 .category-chips { scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch; }
 .category-chip {
@@ -771,30 +773,7 @@ p { color: var(--color-brand-text-secondary); }
   box-shadow: 0 2px 6px rgba(28, 25, 23, 0.06);
 }
 .category-chip:hover { transform: translateY(-1px); box-shadow: 0 4px 10px rgba(28, 25, 23, 0.1); }
-.category-chip:focus-visible { outline: 3px solid rgba(249, 115, 22, 0.5); outline-offset: 2px; }
-
-/* Quick Actions (BiteHero) */
-.quick-actions { gap: 8px; }
-.quick-action {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
-  min-height: 52px;
-  padding: 10px 6px;
-  background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(8px);
-  border: 1px solid rgba(249, 115, 22, 0.18);
-  border-radius: 16px;
-  color: var(--color-brand-accent, #92400E);
-  box-shadow: 0 2px 6px rgba(146, 64, 14, 0.08);
-  transition: transform 0.18s ease;
-  text-align: center;
-}
-.quick-action:hover { transform: translateY(-2px); box-shadow: 0 8px 18px rgba(249, 115, 22, 0.18); background: #fff; }
-.quick-action:active { transform: scale(0.97); }
-.quick-action:focus-visible { outline: 3px solid rgba(249, 115, 22, 0.45); outline-offset: 2px; }
+.category-chip:focus-visible { outline: 3px solid rgba(255, 94, 30, 0.5); outline-offset: 2px; }
 
 /* Store Status Strip */
 .store-strip {
@@ -832,7 +811,7 @@ p { color: var(--color-brand-text-secondary); }
   scrollbar-width: none;
 }
 .hc-track::-webkit-scrollbar { display: none; }
-.hc-track:focus-visible { outline: 3px solid rgba(249, 115, 22, 0.4); outline-offset: 2px; border-radius: 12px; }
+.hc-track:focus-visible { outline: 3px solid rgba(255, 94, 30, 0.4); outline-offset: 2px; border-radius: 12px; }
 .hc-slide { scroll-snap-align: start; flex-shrink: 0; width: min(78vw, 250px); }
 /* Frameless arrows: no border / no background / no frame — float over cards & images. */
 .hc-nav {
@@ -863,7 +842,7 @@ p { color: var(--color-brand-text-secondary); }
 .hc-nav--next { right: 0; }
 .hc-nav:hover { transform: translateY(-50%) scale(1.15); opacity: 1; text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8), 0 0 20px rgba(0, 0, 0, 0.55); }
 .hc-nav:active { transform: translateY(-50%) scale(0.95); }
-.hc-nav:focus-visible { outline: 3px solid rgba(249, 115, 22, 0.6); outline-offset: 2px; border-radius: 50%; }
+.hc-nav:focus-visible { outline: 3px solid rgba(255, 94, 30, 0.6); outline-offset: 2px; border-radius: 50%; }
 
 /* Home Product Card — 2.5D layered depth */
 .home-card {
@@ -871,7 +850,7 @@ p { color: var(--color-brand-text-secondary); }
   flex-direction: column;
   height: 100%;
   background: #fff;
-  border: 1px solid rgba(249, 115, 22, 0.14);
+  border: 1px solid rgba(255, 94, 30, 0.14);
   border-radius: 20px;
   overflow: hidden;
   box-shadow: 0 10px 24px rgba(146, 64, 14, 0.12);
@@ -901,12 +880,12 @@ p { color: var(--color-brand-text-secondary); }
 .home-card-badge {
   position: absolute;
   top: 8px; left: 8px;
-  background: linear-gradient(135deg, #F97316, #FBBF24);
+  background: linear-gradient(135deg, #FF5E1E, #FBBF24);
   color: #fff;
   font-size: 11px; font-weight: 700;
   padding: 3px 8px;
   border-radius: 999px;
-  box-shadow: 0 4px 10px rgba(249, 115, 22, 0.35);
+  box-shadow: 0 4px 10px rgba(255, 94, 30, 0.35);
 }
 .home-card-stock {
   position: absolute;
@@ -948,7 +927,7 @@ p { color: var(--color-brand-text-secondary); }
 .promo-card {
   width: min(78vw, 260px);
   background: linear-gradient(135deg, rgba(255, 247, 237, 1), rgba(255, 251, 235, 1));
-  border: 1px solid rgba(249, 115, 22, 0.2);
+  border: 1px solid rgba(255, 94, 30, 0.2);
   border-radius: 20px;
   padding: 14px;
   display: flex;
@@ -957,10 +936,10 @@ p { color: var(--color-brand-text-secondary); }
   transition: transform 0.18s ease;
 }
 .promo-card:hover { transform: translateY(-3px); box-shadow: 0 12px 24px rgba(146, 64, 14, 0.16); }
-.promo-card-cta { color: var(--color-brand-primary, #F97316); font-weight: 700; font-size: 14px; }
+.promo-card-cta { color: var(--color-brand-primary, #FF5E1E); font-weight: 700; font-size: 14px; }
 
 .share-card {
-  border: 1px dashed rgba(249, 115, 22, 0.3);
+  border: 1px dashed rgba(255, 94, 30, 0.3);
   background: rgba(255, 251, 235, 0.8);
   border-radius: 16px;
   transition: transform 0.18s ease;
@@ -1030,8 +1009,8 @@ p { color: var(--color-brand-text-secondary); }
   border-radius: 16px;
   overflow: hidden;
   background: #fff;
-  border: 1px solid rgba(249, 115, 22, 0.4);
-  box-shadow: 0 14px 28px rgba(249, 115, 22, 0.25);
+  border: 1px solid rgba(255, 94, 30, 0.4);
+  box-shadow: 0 14px 28px rgba(255, 94, 30, 0.25);
   animation: fladIn 0.35s ease-out;
   display: flex;
   align-items: center;
@@ -1045,7 +1024,7 @@ p { color: var(--color-brand-text-secondary); }
   overflow: hidden;
   flex-shrink: 0;
   /* โชว์สติกเกอร์โลโก้แบรนด์ทับ gradient ส้ม เมื่อ promo ไม่มีรูป (หรือรูปเสีย) */
-  background: url('/Logo_Sticker_Circle.webp') center / cover no-repeat, linear-gradient(135deg, #F97316, #FBBF24);
+  background: url('/Logo_Sticker_Circle.webp') center / cover no-repeat, linear-gradient(135deg, #FF5E1E, #FBBF24);
 }
 .flad-media img { width: 100%; height: 100%; object-fit: cover; display: block; }
 /* มาสคอตน้อง Bite ในช่องสื่อ fallback — ไม่ทับโลโก้/gradient ทั้งช่อง */
@@ -1074,7 +1053,7 @@ p { color: var(--color-brand-text-secondary); }
   padding: 2px 8px;
   white-space: nowrap;
 }
-.flad-cta { font-size: 12px; font-weight: 700; color: var(--color-brand-primary, #F97316); }
+.flad-cta { font-size: 12px; font-weight: 700; color: var(--color-brand-primary, #FF5E1E); }
 .flad-close {
   position: absolute;
   top: 4px;
@@ -1117,7 +1096,7 @@ p { color: var(--color-brand-text-secondary); }
 }
 .home-card-fallback-img.img-fallback { width: 100%; height: 100%; }
 .ob-thumb.img-fallback, .ob-rec-img.img-fallback { width: 44px; height: 44px; border-radius: 8px; flex-shrink: 0; }
-.flad-media-fallback { background: linear-gradient(135deg, #F97316 0%, #FC6076 100%); min-width: 64px; min-height: 64px; }
+.flad-media-fallback { background: linear-gradient(135deg, #FF5E1E 0%, #FC6076 100%); min-width: 64px; min-height: 64px; }
 
 @media (prefers-reduced-motion: reduce) {
   .flad-card { animation: none; }
@@ -1191,7 +1170,7 @@ p { color: var(--color-brand-text-secondary); }
 .drink-card-price,
 .snack-card-price {
   font-weight: 800;
-  color: var(--color-brand-primary, #F97316);
+  color: var(--color-brand-primary, #FF5E1E);
   white-space: nowrap;
 }
 .drink-card-desc,
@@ -1311,9 +1290,9 @@ p { color: var(--color-brand-text-secondary); }
   width: 34px;
   height: 34px;
   border-radius: 50%;
-  border: 1px solid rgba(249, 115, 22, 0.4);
+  border: 1px solid rgba(255, 94, 30, 0.4);
   background: #fff;
-  color: var(--color-brand-primary, #F97316);
+  color: var(--color-brand-primary, #FF5E1E);
   font-size: 18px;
   cursor: pointer;
 }
@@ -1361,7 +1340,7 @@ p { color: var(--color-brand-text-secondary); }
   margin-top: 6px;
 }
 .ob-chip {
-  border: 1px solid rgba(249, 115, 22, 0.35);
+  border: 1px solid rgba(255, 94, 30, 0.35);
   background: #fff;
   color: var(--color-brand-accent, #92400E);
   border-radius: 999px;
@@ -1371,9 +1350,9 @@ p { color: var(--color-brand-text-secondary); }
   transition: transform 0.15s ease;
 }
 .ob-chip--on {
-  background: linear-gradient(135deg, #F97316, #FBBF24);
+  background: linear-gradient(135deg, #FF5E1E, #FBBF24);
   color: #fff;
-  border-color: #F97316;
+  border-color: #FF5E1E;
 }
 .ob-recs {
   display: flex;
@@ -1427,13 +1406,13 @@ p { color: var(--color-brand-text-secondary); }
   justify-content: center;
   width: 56px; height: 56px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #F97316, #FBBF24);
+  background: linear-gradient(135deg, #FF5E1E, #FBBF24);
   color: #fff;
-  box-shadow: 0 12px 24px rgba(249, 115, 22, 0.4);
+  box-shadow: 0 12px 24px rgba(255, 94, 30, 0.4);
   transition: transform 0.18s ease;
 }
 .floating-cart:hover { transform: scale(1.06); }
-.floating-cart:focus-visible { outline: 3px solid rgba(249, 115, 22, 0.5); outline-offset: 3px; }
+.floating-cart:focus-visible { outline: 3px solid rgba(255, 94, 30, 0.5); outline-offset: 3px; }
 .floating-cart-badge {
   position: absolute;
   top: -4px; right: -4px;
@@ -1498,22 +1477,22 @@ p { color: var(--color-brand-text-secondary); }
 .sticky-cart-cta {
   display: block;
   text-align: center;
-  background: linear-gradient(135deg, #F97316, #FBBF24);
+  background: linear-gradient(135deg, #FF5E1E, #FBBF24);
   color: #fff;
   font-weight: 800;
   font-size: 16px;
   padding: 14px;
   border-radius: 12px;
-  box-shadow: 0 4px 14px rgba(249, 115, 22, 0.35);
+  box-shadow: 0 4px 14px rgba(255, 94, 30, 0.35);
   transition: transform 0.18s ease;
 }
-.sticky-cart-cta:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(249, 115, 22, 0.45); }
+.sticky-cart-cta:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(255, 94, 30, 0.45); }
 .sticky-cart-cta:active { transform: scale(0.98); }
-.sticky-cart-cta:focus-visible { outline: 3px solid rgba(249, 115, 22, 0.5); outline-offset: 2px; }
+.sticky-cart-cta:focus-visible { outline: 3px solid rgba(255, 94, 30, 0.5); outline-offset: 2px; }
 
 /* Reduced motion — kill ambient animation, keep static states usable */
 @media (prefers-reduced-motion: reduce) {
-  .home-card, .promo-card, .quick-action, .hc-nav, .floating-cart { transition: none; }
+  .home-card, .promo-card, .hc-nav, .floating-cart { transition: none; }
   .home-card:hover, .home-card:hover .home-card-media img { transform: none; }
 }
 
@@ -1544,7 +1523,7 @@ p { color: var(--color-brand-text-secondary); }
   transition: transform 0.2s ease;
 }
 .review-gallery-item:hover .review-gallery-img { transform: scale(1.04); }
-.review-gallery-item:focus-visible { outline: 3px solid rgba(249, 115, 22, 0.5); outline-offset: 2px; }
+.review-gallery-item:focus-visible { outline: 3px solid rgba(255, 94, 30, 0.5); outline-offset: 2px; }
 
 .review-gallery-lightbox {
   position: fixed;
@@ -1614,59 +1593,80 @@ a.text-brand-primary, span.text-brand-primary, p.text-brand-primary, div.text-br
 nav.no-print > div > a { min-width: 44px; min-height: 44px; justify-content: center; }
 nav.no-print > div { gap: 12px; }
 
+/* Global focus ring - keyboard navigation (both themes) */
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid var(--color-brand-primary);
+  outline-offset: 2px;
+}
+/* Reduced motion - disable ambient animation site-wide (states stay usable) */
+@media (prefers-reduced-motion: reduce) {
+  .animate-float, .animate-pulse { animation: none; }
+  html { scroll-behavior: auto; }
+}
+
 
 ﻿/* ============================================
    THEATER TOKENS — stage ทั้งหมดอ่านจากีม (ส้ม/เทา/ดำ)
    เล่าเรื่องเดียวกับเวบทุกหน้า: glow = สีแบรนด, stage = พื้นเข้มเข้าชุด
    ============================================ */
 :root {
-  --theater-accent-rgb: 249, 115, 22;
+  --theater-accent-rgb: 255, 94, 30;
   --theater-accent2-rgb: 251, 191, 36;
-  --theater-accent-light-rgb: 253, 186, 116;
-  --theater-hi: #fb923c;
-  --theater-hi-soft: #fdba74;
-  --theater-chip-text: #ffedd5;
-  --theater-stage-1: #160e07;
-  --theater-stage-2: #1f140b;
-  --theater-stage-3: #19100a;
-  --theater-stage-2-rgb: 31, 20, 11;
-  --theater-surface-dark: #2a1c10;
-  --theater-shadow-rgb: 10, 6, 3;
-}
-html[data-theme='gray'] {
-  /* glow = สีแบรนด (ส้ม) เหมือนธีมอื่น — เทาใช้เฉพาะ stage พื้นเข้มเท่านั้น */
-  --theater-accent-rgb: 249, 115, 22;
-  --theater-accent2-rgb: 251, 191, 36;
-  --theater-accent-light-rgb: 253, 186, 116;
-  --theater-hi: #fb923c;
-  --theater-hi-soft: #fdba74;
-  --theater-chip-text: #ffedd5;
-  --theater-stage-1: #17181a;
-  --theater-stage-2: #26282c;
-  --theater-stage-3: #1e2023;
-  --theater-stage-2-rgb: 38, 40, 44;
-  --theater-surface-dark: #33363b;
-  --theater-shadow-rgb: 8, 8, 9;
+  --theater-accent-light-rgb: 255, 160, 117;
+  --theater-hi: #FF5E1E;
+  --theater-hi-soft: #B3410E;
+  --theater-price: #E04B12;
+  --theater-fg: #1C1917;
+  --theater-fg-muted: #57534E;
+  --theater-btn-fg: #B3410E;
+  --theater-chip-text: #9A3412;
+  --theater-stage-1: #FFFFFF;
+  --theater-stage-2: #FFF7ED;
+  --theater-stage-3: #FFFBF5;
+  --theater-stage-2-rgb: 255, 247, 237;
+  --theater-surface-dark: #FFEDD5;
+  --theater-shadow-rgb: 28, 25, 23;
+  --theater-card-top: rgba(255, 255, 255, 0.97);
+  --theater-card-bottom: #FFF4E9;
+  --theater-stage-shadow: 0 24px 60px rgba(28, 25, 23, 0.12);
+  --theater-card-shadow: 0 20px 40px rgba(28, 25, 23, 0.14);
+  --theater-rec-shadow: 0 14px 32px rgba(28, 25, 23, 0.12);
 }
 html[data-theme='dark'] {
-  --theater-accent-rgb: 251, 146, 60;
+  --theater-accent-rgb: 255, 127, 71;
   --theater-accent2-rgb: 251, 191, 36;
-  --theater-accent-light-rgb: 253, 186, 116;
-  --theater-hi: #fb923c;
-  --theater-hi-soft: #fdba74;
-  --theater-chip-text: #ffedd5;
-  --theater-stage-1: #0a0a0c;
-  --theater-stage-2: #131316;
-  --theater-stage-3: #0e0e10;
-  --theater-stage-2-rgb: 19, 19, 22;
-  --theater-surface-dark: #1b1b1f;
+  --theater-accent-light-rgb: 255, 160, 117;
+  --theater-hi: #FF7F47;
+  --theater-hi-soft: #FFA680;
+  --theater-price: #FF7F47;
+  --theater-fg: #F5F5F5;
+  --theater-fg-muted: #A1A1AA;
+  --theater-btn-fg: #FFFFFF;
+  --theater-chip-text: #FFEDD5;
+  --theater-stage-1: #121214;
+  --theater-stage-2: #1B1B20;
+  --theater-stage-3: #16161A;
+  --theater-stage-2-rgb: 27, 27, 32;
+  --theater-surface-dark: #232329;
   --theater-shadow-rgb: 0, 0, 0;
+  --theater-card-top: rgba(22, 22, 26, 0.95);
+  --theater-card-bottom: rgba(0, 0, 0, 0.96);
+  --theater-stage-shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
+  --theater-card-shadow: 0 26px 54px rgba(0, 0, 0, 0.55);
+  --theater-rec-shadow: 0 14px 32px rgba(0, 0, 0, 0.45);
 }
+
 
 /* ============================================
    BITE FOOD THEATER — Visual Theater × AI Waiter Stage
-   Dark stage surfaces + BMB blue accent lighting; brand orange stays the
-   action color. Pure transforms/opacity (no heavy libs), reduced-motion safe.
+   Theme-driven stage surfaces (Light Minimal / Dark Glass) + brand orange
+   (#FF5E1E) accent lighting. Pure transforms/opacity (no heavy libs),
+   reduced-motion safe. ทุกสีอ่านจาก --theater-* tokens ข้างบนเท่านั้น.
    ============================================ */
 .theater-stage {
   position: relative;
@@ -1674,13 +1674,13 @@ html[data-theme='dark'] {
   padding: 20px 16px 18px;
   margin-bottom: 20px;
   overflow: hidden;
-  color: #fff;
+  color: var(--theater-fg);
   background:
     radial-gradient(1200px 420px at 80% -10%, rgba(var(--theater-accent-rgb), 0.28), transparent 60%),
     radial-gradient(900px 380px at 0% 110%, rgba(var(--theater-accent2-rgb), 0.18), transparent 55%),
     linear-gradient(160deg, var(--theater-stage-1) 0%, var(--theater-stage-2) 55%, var(--theater-stage-3) 100%);
   border: 1px solid rgba(var(--theater-accent-rgb), 0.35);
-  box-shadow: 0 24px 60px rgba(var(--theater-shadow-rgb), 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  box-shadow: var(--theater-stage-shadow), inset 0 1px 0 rgba(255, 255, 255, 0.06);
 }
 .theater-head { display: flex; align-items: center; gap: 12px; }
 .theater-head-mascot {
@@ -1691,11 +1691,11 @@ html[data-theme='dark'] {
 .theater-title {
   font-family: var(--font-family-display);
   font-size: clamp(16px, 4.2vw, 22px);
-  font-weight: 800; line-height: 1.25; color: #fff;
+  font-weight: 800; line-height: 1.25; color: var(--theater-fg);
 }
 .theater-cart-btn {
   flex-shrink: 0; min-height: 44px; padding: 8px 14px;
-  border-radius: 999px; font-size: 13px; font-weight: 700; color: #fff;
+  border-radius: 999px; font-size: 13px; font-weight: 700; color: var(--theater-btn-fg);
   background: rgba(var(--theater-accent-rgb), 0.22);
   border: 1px solid rgba(var(--theater-accent-light-rgb), 0.45);
   transition: background 0.18s ease, transform 0.18s ease;
@@ -1733,9 +1733,9 @@ html[data-theme='dark'] {
 /* --- LEVEL 3 hero card (2.5D) --- */
 .theater-hero {
   border-radius: 20px; overflow: hidden;
-  background: linear-gradient(180deg, rgba(var(--theater-stage-2-rgb), 0.9), rgba(var(--theater-shadow-rgb), 0.96));
+  background: linear-gradient(180deg, var(--theater-card-top), var(--theater-card-bottom));
   border: 1px solid rgba(var(--theater-accent-rgb), 0.4);
-  box-shadow: 0 26px 54px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(var(--theater-accent-light-rgb), 0.08),
+  box-shadow: var(--theater-card-shadow), 0 0 0 1px rgba(var(--theater-accent-light-rgb), 0.08),
     0 -8px 30px rgba(var(--theater-accent-rgb), 0.18);
 }
 .theater-hero-media {
@@ -1754,14 +1754,14 @@ html[data-theme='dark'] {
   display: flex; flex-wrap: wrap; gap: 6px; align-items: center;
 }
 .theater-hero-body { padding: 14px 14px 16px; display: flex; flex-direction: column; gap: 12px; }
-.theater-price { font-family: var(--font-family-display); font-size: 24px; font-weight: 900; color: #fb923c; white-space: nowrap; }
-.theater-price-sm { font-size: 14px; font-weight: 800; color: #fb923c; white-space: nowrap; }
+.theater-price { font-family: var(--font-family-display); font-size: 24px; font-weight: 900; color: var(--theater-price); white-space: nowrap; }
+.theater-price-sm { font-size: 14px; font-weight: 800; color: var(--theater-price); white-space: nowrap; }
 .theater-reason {
   display: inline-flex; align-items: center; gap: 4px;
   padding: 3px 9px; border-radius: 999px;
   font-size: 11px; font-weight: 700; color: var(--theater-chip-text);
   background: rgba(var(--theater-accent-rgb), 0.35);
-  border: 1px solid rgba(147, 197, 253, 0.5);
+  border: 1px solid rgba(var(--theater-accent-light-rgb), 0.55);
 }
 .theater-cta-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
 .theater-qty {
@@ -1772,23 +1772,23 @@ html[data-theme='dark'] {
 }
 .theater-qty button {
   width: 34px; height: 34px; border-radius: 50%;
-  background: rgba(var(--theater-accent-rgb), 0.25); color: #fff;
+  background: rgba(var(--theater-accent-rgb), 0.25); color: var(--theater-btn-fg);
   border: 1px solid rgba(var(--theater-accent-light-rgb), 0.4);
   font-size: 16px; font-weight: 700; line-height: 1;
   transition: background 0.15s ease;
 }
 .theater-qty button:hover:not(:disabled) { background: rgba(var(--theater-accent-rgb), 0.5); }
 .theater-qty button:disabled { opacity: 0.35; cursor: not-allowed; }
-.btn-theater-outline { background: transparent; color: #e2e8f0; border: 1px solid rgba(148, 163, 184, 0.55); }
-.btn-theater-outline:hover { background: rgba(148, 163, 184, 0.16); border-color: var(--theater-hi-soft); color: #fff; }
+.btn-theater-outline { background: transparent; color: var(--theater-fg-muted); border: 1px solid rgba(148, 163, 184, 0.55); }
+.btn-theater-outline:hover { background: rgba(148, 163, 184, 0.16); border-color: var(--theater-hi-soft); color: var(--theater-fg); }
 
 /* --- LEVEL 2 recommendation card --- */
 .theater-rec-card {
   display: flex; flex-direction: column;
   border-radius: 16px; overflow: hidden;
-  background: linear-gradient(180deg, rgba(var(--theater-stage-2-rgb), 0.92), rgba(var(--theater-shadow-rgb), 0.95));
+  background: linear-gradient(180deg, var(--theater-card-top), var(--theater-card-bottom));
   border: 1px solid rgba(var(--theater-accent-rgb), 0.3);
-  box-shadow: 0 14px 32px rgba(0, 0, 0, 0.45);
+  box-shadow: var(--theater-rec-shadow);
 }
 .theater-rec-media { position: relative; aspect-ratio: 16 / 9; overflow: hidden; background: var(--theater-surface-dark); }
 .theater-rec-media img { width: 100%; height: 100%; object-fit: cover; }
@@ -1813,7 +1813,7 @@ html[data-theme='dark'] {
 }
 .theater-nav {
   width: 44px; height: 44px; border-radius: 50%;
-  font-size: 22px; line-height: 1; color: #fff;
+  font-size: 22px; line-height: 1; color: var(--theater-btn-fg);
   background: rgba(var(--theater-accent-rgb), 0.25);
   border: 1px solid rgba(var(--theater-accent-light-rgb), 0.45);
   transition: background 0.15s ease, transform 0.15s ease;
@@ -1898,9 +1898,9 @@ html[data-theme='dark'] {
   pointer-events: none;
   overflow: hidden;
   background:
-    radial-gradient(1200px 520px at 85% -10%, rgba(167, 139, 250, 0.55), transparent 60%),
-    radial-gradient(900px 480px at 0% 110%, rgba(139, 92, 246, 0.45), transparent 55%),
-    linear-gradient(165deg, #FFFFFF 0%, #F5F3FF 35%, #DDD6FE 65%, #A78BFA 100%);
+    radial-gradient(1200px 520px at 85% -10%, rgba(255, 94, 30, 0.16), transparent 60%),
+    radial-gradient(900px 480px at 0% 110%, rgba(251, 191, 36, 0.18), transparent 55%),
+    linear-gradient(165deg, #FFFFFF 0%, #FFF7ED 40%, #FFEDD5 75%, #FFD9BC 100%);
 }
 .ttb-backdrop__img {
   position: absolute;
@@ -1915,89 +1915,53 @@ html[data-theme='dark'] {
   inset: 0;
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.55) 0%, rgba(255, 255, 255, 0.35) 100%);
 }
-html[data-theme='dark'] .ttb-backdrop__tint {
-  background: linear-gradient(180deg, rgba(12, 12, 14, 0.72) 0%, rgba(12, 12, 14, 0.55) 100%);
-}
+
 @media (prefers-reduced-motion: reduce) {
   .ttb-backdrop__img { filter: blur(22px); transform: none; }
 }
 
 /* ============================================
-   THEME VARIANTS — orange (default) / gray / dark
-   เปลี่ยนธีมทั้งเว็บด้วย html[data-theme="gray" | "dark"]
-   ค่าเริ่มต้น (ไม่มี data-theme) = ส้ม-ขาวเดิมทุกประการ
+   THEME VARIANTS — TWO THEMES ONLY (Owner 2026-10-10)
+   base = Light Minimal (html[data-theme='light'] / default)
+   html[data-theme='dark'] = Dark Glass (charcoal + frosted glass)
+   legacy 'gray' ถูก migrate -> 'dark' ตอนอ่านค่า (src/lib/theme.ts)
    ทุก utility (.bg-brand-*, .text-brand-*) อ้าง var() อยู่แล้ว
    จึงเปลี่ยนสีได้ที่จุดเดียว
    ============================================ */
-html[data-theme='gray'] {
-  color-scheme: dark;
-  /* สีหลัก = ส้มคงเดิม (owner: "หลักยังเป็นส้ม") — เทาใช้เฉพาะพื้นหลัง/การ์ด/เส้นขอบ */
-  --color-brand-primary: #F97316;
-  --color-brand-primary-light: #FB923C;
-  --color-brand-primary-dark: #EA580C;
-  --color-brand-secondary: #FBBF24;
-  --color-brand-accent: #FFFFFF;
-  --color-brand-accent-light: #F3F4F6;
-  /* พื้นหลังเทากลางช่วง #6B6B6B–#808080 (owner เลือกตามภาพอ้างอิง) */
-  --color-brand-bg: #737373;
-  --color-brand-bg-warm: #6B6B6B;
-  --color-brand-surface: #5E5E61;
-  --color-brand-surface-warm: #67676A;
-  --color-brand-text: #FFFFFF;
-  --color-brand-text-secondary: #E5E7EB;
-  --color-brand-muted: #D1D5DB;
-  --color-brand-border: #8A8A8D;
-  --color-brand-border-light: #7E7E81;
-}
-/* hardcode ที่กระจายอยู่ในคอมโพเนนต์ (bg-white / neutral-*) ให้ตามธีมด้วย */
-html[data-theme='gray'] .bg-white { background-color: var(--color-brand-surface); }
-html[data-theme='gray'] .bg-neutral-50,
-html[data-theme='gray'] .bg-neutral-100 { background-color: var(--color-brand-bg); }
-html[data-theme='gray'] .border-neutral-100,
-html[data-theme='gray'] .border-neutral-200 { border-color: var(--color-brand-border); }
-html[data-theme='gray'] .text-neutral-500,
-html[data-theme='gray'] .text-neutral-600,
-html[data-theme='gray'] .text-neutral-700,
-html[data-theme='gray'] .text-neutral-800,
-html[data-theme='gray'] .text-neutral-900,
-html[data-theme='gray'] .text-black { color: var(--color-brand-text); }
-
-/* พื้นหลังไล่ระดับเทากลางทั้งหน้า (แทนค่าเริ่มต้น cream ที่มองไม่เห็นความต่าง) */
-html[data-theme='gray'] body {
-  background: linear-gradient(180deg, var(--color-brand-bg) 0%, var(--color-brand-bg-warm) 100%);
-}
-/* a11y hardcode ส้มเข้ม (คำนวณบนพื้นขาว) — บนพื้นเทากลาง #c2410c จะกลืนไปกับเทาจนมองไม่เห็น
-   → ธีมเทาใช้ส้มอ่อน (ยังเป็นครอบครัวส้มตามที่ owner สั่ง: "หลักยังเป็นส้ม") */
-html[data-theme='gray'] .text-brand-primary { color: #FDBA74; }
-html[data-theme='gray'] .hover\:text-brand-primary:hover { color: #FDBA74; }
-html[data-theme='gray'] .category-chip:not(.text-white) { color: #FDBA74; }
-html[data-theme='gray'] .flad-cta { color: #FDBA74; }
-html[data-theme='gray'] .text-slate-300,
-html[data-theme='gray'] .text-slate-400 { color: var(--color-brand-text-secondary); }
-/* accent เป็นสีข้อความหลัก = ขาว → จุดที่ใช้ accent เป็นพื้น (เช่น chip ที่เลือก) สลับเป็นเทาเข้ม */
-html[data-theme='gray'] .bg-brand-accent { background-color: #33363b; }
-
 html[data-theme='dark'] {
   color-scheme: dark;
-  --color-brand-primary: #FB923C;
-  --color-brand-primary-light: #FDBA74;
-  --color-brand-primary-dark: #EA580C;
+  /* Dark Glass — charcoal (ไม่ดำทึบ) + brand orange ค่าเดียวกับ light */
+  --color-brand-primary: #FF5E1E;
+  --color-brand-primary-light: #FF7F47;
+  --color-brand-primary-dark: #E04B12;
   --color-brand-secondary: #FBBF24;
   --color-brand-accent: #FAFAFA;
   --color-brand-accent-light: #E5E5E4;
-  --color-brand-bg: #0C0C0E;
-  --color-brand-bg-warm: #141417;
-  --color-brand-surface: #16161A;
-  --color-brand-surface-warm: #1C1C21;
+  --color-brand-bg: #121214;
+  --color-brand-bg-warm: #17171B;
+  --color-brand-surface: #1B1B20;
+  --color-brand-surface-warm: #232329;
   --color-brand-text: #F5F5F5;
   --color-brand-text-secondary: #D4D4D8;
   --color-brand-muted: #A1A1AA;
   --color-brand-border: #2E2E33;
   --color-brand-border-light: #26262B;
+  /* Frosted glass — เฉพาะผิวที่เหมาะสม (ไม่ใช่ทุกการ์ด) */
+  --glass-bg: rgba(18, 18, 20, 0.75);
+  --glass-border: rgba(255, 255, 255, 0.12);
+  --glass-blur: 16px;
+}
+/* Light Minimal glass tokens (ใช้กับ .glass-surface เท่านั้น) */
+:root,
+html[data-theme='light'] {
+  --glass-bg: rgba(255, 255, 255, 0.80);
+  --glass-border: rgba(0, 0, 0, 0.06);
+  --glass-blur: 16px;
 }
 html[data-theme='dark'] body {
   background: linear-gradient(180deg, var(--color-brand-bg) 0%, var(--color-brand-bg-warm) 100%);
 }
+/* hardcode ที่กระจายอยู่ในคอมโพเนนต์ (bg-white / neutral-*) ให้ตามธีม */
 html[data-theme='dark'] .bg-white { background-color: var(--color-brand-surface); }
 html[data-theme='dark'] .bg-neutral-50,
 html[data-theme='dark'] .bg-neutral-100 { background-color: var(--color-brand-bg); }
@@ -2011,37 +1975,86 @@ html[data-theme='dark'] .text-neutral-900,
 html[data-theme='dark'] .text-black { color: var(--color-brand-text); }
 html[data-theme='dark'] .text-slate-300,
 html[data-theme='dark'] .text-slate-400 { color: var(--color-brand-text-secondary); }
-/* a11y rules เดิมบังคับส้มเข้ม — ในธีมดำใช้ส้มอ่อนเพื่อให้อ่านออก */
+/* a11y บังคับส้มเข้มบนพื้นสว่าง — Dark Glass ใช้ส้มอ่อนเพื่อให้อ่านออก */
 html[data-theme='dark'] a.text-brand-primary,
 html[data-theme='dark'] span.text-brand-primary,
 html[data-theme='dark'] p.text-brand-primary,
-html[data-theme='dark'] div.text-brand-primary { color: #FB923C; }
-html[data-theme='dark'] .category-chip:not(.text-white) { color: #FDBA74; }
-html[data-theme='dark'] .flad-cta { color: #FB923C; }
+html[data-theme='dark'] div.text-brand-primary { color: #FF7F47; }
+html[data-theme='dark'] .category-chip:not(.text-white) { color: #FFA680; }
+html[data-theme='dark'] .flad-cta { color: #FF7F47; }
 /* gradient stops ที่ hardcode ขาว (header/hero ของแชท) ให้ตามธีม */
-html[data-theme='gray'] .to-white { --tw-gradient-to: #5E5E61; }
-html[data-theme='gray'] .from-orange-50 { --tw-gradient-from: #6B6259; }
-html[data-theme='dark'] .to-white { --tw-gradient-to: #16161A; }
-html[data-theme='dark'] .from-white { --tw-gradient-from: #16161A; }
-html[data-theme='dark'] .via-white { --tw-gradient-via: #16161A; }
-/* Chat backdrop — gradient ไล่ระดับเข้าชุดธีมเดียวกับเว็บ */
-html[data-theme='gray'] .ttb-backdrop {
-  background:
-    radial-gradient(1200px 520px at 85% -10%, rgba(249, 115, 22, 0.22), transparent 60%),
-    radial-gradient(900px 480px at 0% 110%, rgba(15, 23, 42, 0.3), transparent 55%),
-    linear-gradient(165deg, #808080 0%, #737373 45%, #6B6B6B 75%, #616164 100%);
-}
-html[data-theme='gray'] .ttb-backdrop__tint {
-  background: linear-gradient(180deg, rgba(45, 45, 45, 0.5) 0%, rgba(40, 40, 40, 0.35) 100%);
-}
+html[data-theme='dark'] .to-white { --tw-gradient-to: #1B1B20; }
+html[data-theme='dark'] .from-white { --tw-gradient-from: #1B1B20; }
+html[data-theme='dark'] .via-white { --tw-gradient-via: #1B1B20; }
+/* Chat backdrop — fallback gradient เข้าชุดธีม (ปกติใช้ภาพ restaurant-bg) */
 html[data-theme='dark'] .ttb-backdrop {
   background:
-    radial-gradient(1200px 520px at 85% -10%, rgba(251, 146, 60, 0.28), transparent 60%),
-    radial-gradient(900px 480px at 0% 110%, rgba(124, 58, 237, 0.22), transparent 55%),
-    linear-gradient(165deg, #0C0C0E 0%, #16161A 45%, #1C1C21 75%, #3B1D6E 100%);
+    radial-gradient(1200px 520px at 85% -10%, rgba(255, 127, 71, 0.28), transparent 60%),
+    radial-gradient(900px 480px at 0% 110%, rgba(255, 94, 30, 0.18), transparent 55%),
+    linear-gradient(165deg, #121214 0%, #1B1B20 45%, #232329 75%, #2A1710 100%);
 }
 html[data-theme='dark'] .ttb-backdrop__tint {
-  background: linear-gradient(180deg, rgba(12, 12, 14, 0.72) 0%, rgba(12, 12, 14, 0.55) 100%);
+  background: linear-gradient(180deg, rgba(18, 18, 20, 0.72) 0%, rgba(18, 18, 20, 0.55) 100%);
+}
+/* ---- Dark Glass surfaces — frosted panel เฉพาะผิวที่เหมาะสม (fallback = พื้นทึบเดิม) ---- */
+@supports (backdrop-filter: blur(4px)) or (-webkit-backdrop-filter: blur(4px)) {
+  html[data-theme='dark'] .glass-surface {
+    background: var(--glass-bg);
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+  }
+}
+html[data-theme='dark'] .glass-surface { border-color: var(--glass-border); }
+
+/* ============================================
+   SITE BACKGROUND LAYER (Stage C) — ภาพพื้นหลังระดับเว็บ
+   แยกชั้นจาก content (fixed, z-0, pointer-events: none)
+   default = /assets/restaurant-bg (สลับตามธีม) · admin เปลี่ยนผ่าน
+   asset_key `site.background` ใน media_assets registry เดิม
+   ============================================ */
+.site-background {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+.site-background__img {
+  position: absolute;
+  inset: -32px;
+  background-size: cover;
+  background-position: center;
+  filter: blur(16px) saturate(1.05);
+  transform: scale(1.06);
+}
+.site-background__scrim {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.82) 0%, rgba(255, 247, 237, 0.74) 100%);
+}
+html[data-theme='dark'] .site-background__scrim {
+  background: linear-gradient(180deg, rgba(18, 18, 20, 0.86) 0%, rgba(18, 18, 20, 0.78) 100%);
+}
+@media (prefers-reduced-motion: reduce) {
+  .site-background__img { transform: none; }
 }
 
-
+/* ---- Dark Glass: hardcode ผิวสีขาวในคอมโพเนนต์ให้ตามธีม (color sweep) ---- */
+html[data-theme='dark'] .home-card,
+html[data-theme='dark'] .snack-card,
+html[data-theme='dark'] .flad-card,
+html[data-theme='dark'] .ob-sheet,
+html[data-theme='dark'] .ob-chip,
+html[data-theme='dark'] .ob-qty-btn,
+html[data-theme='dark'] .review-source-badge,
+html[data-theme='dark'] .share-card,
+html[data-theme='dark'] .usp-item:hover,
+html[data-theme='dark'] .trust-badge:hover,
+html[data-theme='dark'] .share-card:hover {
+  background: var(--color-brand-surface);
+}
+html[data-theme='dark'] .ob-header { border-bottom-color: var(--color-brand-border); }
+html[data-theme='dark'] .border-orange-50 { border-color: var(--color-brand-border); }
+html[data-theme='dark'] .sticky-cart-bar {
+  background: linear-gradient(180deg, rgba(27, 27, 32, 0.92), #121214);
+}

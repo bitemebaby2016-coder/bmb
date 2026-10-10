@@ -82,7 +82,7 @@ export class ErrorBoundary extends Component<Props, State> {
                   margin: '0 auto 1rem',
                   padding: '0.6rem 1.25rem',
                   borderRadius: '9999px',
-                  background: '#F97316',
+                  background: '#FF5E1E',
                   color: '#fff',
                   fontWeight: 600,
                   border: 'none',
@@ -119,7 +119,7 @@ export class ErrorBoundary extends Component<Props, State> {
                 style={{
                   marginTop: '1rem',
                   padding: '0.75rem 1.5rem',
-                  backgroundColor: '#F97316',
+                  backgroundColor: '#FF5E1E',
                   color: 'white',
                   border: 'none',
                   borderRadius: '9999px',

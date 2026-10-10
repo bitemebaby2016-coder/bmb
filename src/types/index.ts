@@ -814,7 +814,7 @@ export interface UIConfig {
 }
 
 export const UI_CONFIG: UIConfig = {
-  primaryColor: '#F97316',    // ส้มหลัก (Bite Me Baby brand)
+  primaryColor: '#FF5E1E',    // ส้มหลัก (Bite Me Baby brand)
   secondaryColor: '#FBBF24',  // เหลือง (secondary)
   accentColor: '#92400E',     // น้ำตาลเข้ม (text/accents)
   bgColor: '#FFF7ED',         // Cream/Beige background

@@ -37,7 +37,7 @@ function extractCssVars(tokens: Record<string, any>): Record<string, string> {
   if (!tokens || typeof tokens !== 'object') return {}
   const obj = tokens as Record<string, string>
   return {
-    '--bmb-primary': obj.primary_color || '#F97316',
+    '--bmb-primary': obj.primary_color || '#FF5E1E',
     '--bmb-secondary': obj.secondary_color || '#FBBF24',
     '--bmb-accent': obj.accent_color || '#92400E',
     '--bmb-bg-base': obj.bg_base || '#FFF7ED',
@@ -73,7 +73,7 @@ export const useBrandContextStore = create<BrandContextStore>((set, get) => ({
 export function useThemeTokens(): Record<string, string> {
   const tokens = useBrandContextStore(s => s.resolved?.brand?.theme_tokens)
   if (!tokens) return {
-    '--bmb-primary': '#F97316',
+    '--bmb-primary': '#FF5E1E',
     '--bmb-secondary': '#FBBF24',
     '--bmb-accent': '#92400E',
     '--bmb-bg-base': '#FFF7ED',

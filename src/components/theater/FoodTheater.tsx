@@ -168,7 +168,7 @@ export function FoodTheater({ products, onCustomize, onPreOrder }: FoodTheaterPr
       {picks.length === 0 ? (
         <div className="theater-empty" data-testid="theater-empty">
           <MascotBadge pose="cooking" size="lg" alt="Bite กำลังเตรียมเมนู" />
-          <p className="text-sm text-slate-200">ยังไม่มีเมนูที่พร้อมขายตอนนี้ครับ ดูเมนูทั้งหมดรอสักครู่ได้เลย</p>
+          <p className="text-sm text-[var(--theater-fg-muted)]">ยังไม่มีเมนูที่พร้อมขายตอนนี้ครับ ดูเมนูทั้งหมดรอสักครู่ได้เลย</p>
           <button type="button" className="btn btn-primary" onClick={() => navigate('/menu')}>
             🍽️ ดูเมนูทั้งหมด
           </button>
@@ -263,8 +263,8 @@ export function FoodTheater({ products, onCustomize, onPreOrder }: FoodTheaterPr
                 >
                   {p.image_url ? <img src={p.image_url} alt="" loading="lazy" decoding="async" /> : <span className="theater-other-fallback" aria-hidden="true">🍽️</span>}
                   <span className="min-w-0 text-left">
-                    <span className="block text-xs font-bold text-white truncate">{p.name}</span>
-                    <span className="block text-[11px] text-sky-300">฿{Number(p.price) || 0}</span>
+                    <span className="block text-xs font-bold text-[var(--theater-fg)] truncate">{p.name}</span>
+                    <span className="block text-[11px] text-[var(--theater-price)]">฿{Number(p.price) || 0}</span>
                   </span>
                 </button>
               ))}

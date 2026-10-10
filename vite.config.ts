@@ -36,7 +36,7 @@ export default defineConfig({
         name: 'Bite Me Baby - สั่งอาหารจัดส่งจันทบุรี',
         short_name: 'BMB',
         description: 'ร้านอาหารไทยจัดส่งถึงบ้านในรัศมี 5 กม. จากตัวเมืองจันทบุรี',
-        theme_color: '#F97316',
+        theme_color: '#FF5E1E',
         background_color: '#FFF7ED',
         display: 'standalone',
         orientation: 'portrait',

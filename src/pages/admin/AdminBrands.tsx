@@ -69,7 +69,7 @@ export function AdminBrands() {
       is_default: formDataIsDefault,
       is_published: formDataIsPublished,
       theme_tokens: JSON.parse(JSON.stringify({
-        primary_color: '#F97316', secondary_color: '#FBBF24', accent_color: '#92400E',
+        primary_color: '#FF5E1E', secondary_color: '#FBBF24', accent_color: '#92400E',
         bg_base: '#FFF7ED', surface_color: '#FFFFFF', text_base: '#1C1917',
         font_display: 'Nunito', font_body: 'Quicksand'
       }))

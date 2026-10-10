@@ -103,7 +103,7 @@ export function AdminMedia() {
           </div>
           <div>
             <label className="block text-sm font-medium text-brand-muted mb-1">
-              asset_key <span className="text-xs font-normal">(ถ้ามี — เช่น <code>ai.chat_background</code>)</span>
+              asset_key <span className="text-xs font-normal">(ถ้ามี — เช่น <code>ai.chat_background</code> / <code>site.background</code>)</span>
             </label>
             <input
               className="input border rounded px-3 py-2"

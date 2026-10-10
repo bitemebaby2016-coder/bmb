@@ -43,7 +43,7 @@ export function Header() {
 
   return (
     <Fragment>
-      <header className="relative z-50 bg-brand-surface border-b border-brand-border">
+      <header className="relative z-50 bg-brand-surface border-b border-brand-border glass-surface">
       <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
         <Link to="/" className="flex items-center gap-2">
           <img src="/Head Logo.webp" alt="Bite Me Baby" width={40} height={40} className="rounded-lg object-cover" />
@@ -66,7 +66,7 @@ export function Header() {
             title={`ธีมปัจจุบัน: ${THEME_LABELS[theme]} — คลิกเพื่อเปลี่ยน`}
             data-testid="theme-toggle"
           >
-            {theme === 'orange' ? '🟠' : theme === 'gray' ? '⚪' : '🌙'}
+            {theme === 'light' ? '☀️' : '🌙'}
           </button>
           {customer ? (
             <div className="flex items-center gap-3">
