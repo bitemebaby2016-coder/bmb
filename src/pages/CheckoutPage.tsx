@@ -29,6 +29,7 @@ import { getBusinessSettings } from '@/lib/bmbAdminApi_settings'
 import { resolvePublicBranch } from '@/lib/brandResolver'
 import { getProducts } from '@/lib/bmbAdminApi_products'
 import { revalidateWithCatalog, reportToToastMessage } from '@/lib/cartPersistence'
+import { isBangkokCutoffPassed } from '@/lib/bangkokTime'
 import type { OrderMode } from '@/config/platformConfig'
 
 function todayStr(): string {
@@ -220,18 +221,15 @@ export function CheckoutPage() {
     // Client-side gate — the RPC enforces the same rules again server-side.
     const selectedRound = rounds.find(r => r.id === selectedRoundId)
     if (selectedRound && orderMode === 'SAME_DAY') {
-      // Parse round cutoff_time (HH:mm) and compare with current ICT time
-      const now = new Date()
-      const ictOffset = 7 * 60 // ICT is UTC+7; assume local is also ICT or close
-      const ictNow = new Date(now.getTime() + (ictOffset - now.getTimezoneOffset()) * 60000)
-      const [cutoffH, cutoffM] = String(selectedRound.cutoff_time || '08:00').split(':').map(Number)
-      const cutoffMs = ictNow.getFullYear() + '-' + 
-        String(ictNow.getMonth()+1).padStart(2,'0') + '-' + 
-        String(ictNow.getDate()).padStart(2,'0') + 'T' + 
-        String(cutoffH).padStart(2,'0') + ':' + 
-        String(cutoffM).padStart(2,'0') + ':00'
-      const cutoffTime = new Date(cutoffMs).getTime()
-      if (ictNow.getTime() > cutoffTime) {
+      // ✅ P0-1: deterministic Asia/Bangkok cutoff gate — CLIENT pre-check only;
+      // the server remains the authority (create_order_with_items raises
+      // ERR_CUTOFF_PASSED comparing Bangkok `time` with strict `>`). The
+      // previous implementation derived "ICT now" with
+      // `(ictOffset - getTimezoneOffset())`; getTimezoneOffset() is NEGATIVE
+      // east of UTC, so on Thai browsers +7h was applied twice (+14h) and the
+      // gate was inverted (blocked BEFORE cutoff / allowed AFTER it). The
+      // helper uses UTC getters only → identical in every browser timezone.
+      if (isBangkokCutoffPassed(String(selectedRound.cutoff_time || '08:00'))) {
         showToast(`รอบจัดส่งนี้ปิดรับออเดอร์แล้ว (cutoff เวลา ${selectedRound.cutoff_time} น.)`, 'error')
         setIsProcessing(false)
         return
