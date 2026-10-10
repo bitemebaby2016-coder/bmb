@@ -57,14 +57,17 @@ export function Layout({ children, hideBottomNav = false, activeSection = 'home'
       {/* Site background layer — Stage C: z-0 fixed, pointer-events none,
           content/overlays below stay above it via the relative z-10 wrapper */}
       <BackgroundLayer />
-      <div className="relative z-10 flex flex-col flex-1 min-h-0">
+      <div className={`relative z-10 flex flex-col flex-1 min-h-0${hideBottomNav ? '' : ' nav-visible'}`}>
         {/* Header - hidden when scrolling down */}
         <div className={`transition-transform duration-300 ${headerHidden ? '-translate-y-full' : 'translate-y-0'} relative z-50`}>
           <Header />
         </div>
 
-        {/* Main content - scroll window, not main */}
-        <main ref={mainRef} className="flex-1 min-h-0 overflow-y-auto pb-24">
+        {/* Main content - scroll window, not main.
+            D02: bottom clearance = measured BottomNav + StickyCartBar heights
+            (set as --bmb-bottom-nav-h / --bmb-sticky-h), so content can always
+            scroll fully above both fixed bars on any viewport/safe-area. */}
+        <main ref={mainRef} className="flex-1 min-h-0 overflow-y-auto main-scroll">
           {children}
         </main>
 

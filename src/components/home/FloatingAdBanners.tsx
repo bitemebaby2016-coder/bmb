@@ -3,10 +3,12 @@
 // Replaces the old inline home strip: promos flagged `is_banner` float in as an
 // overlay card stack (max 2 at once, promo data pulled from the real DB rows
 // below the creative). Each banner has a prominent ✕ — dismissing stores the
-// promo id in localStorage (per-promo) so it never pops up repeatedly.
+// promo id in sessionStorage (per-promo, D03: current session only) so it never
+// pops up again this session even when the promo query returns a different
+// order or the next row enters the limited slice.
 // ============================================
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 
 export interface FloatingBannerPromo {
@@ -23,8 +25,21 @@ function dismissKey(id: string): string {
 
 function isDismissed(id: string): boolean {
   try {
-    return localStorage.getItem(dismissKey(id)) === '1'
+    return sessionStorage.getItem(dismissKey(id)) === '1'
   } catch { return false }
+}
+
+// D03: deterministic selection — filter dismissed promos, order by stable DB id
+// (justified tie-breaker: immutable primary identity, independent of query row
+// order), then take the existing limited slice of 2.
+export function pickVisibleBannerPromos(
+  promos: FloatingBannerPromo[],
+  dismissed: ReadonlySet<string>,
+): FloatingBannerPromo[] {
+  return [...(promos || [])]
+    .filter((p) => p.id && !dismissed.has(p.id) && !isDismissed(p.id))
+    .sort((a, b) => String(a.id).localeCompare(String(b.id)))
+    .slice(0, 2)
 }
 
 // AI-CLEANUP: mock banner asset removed — banners without a creative render a
@@ -33,23 +48,34 @@ function isDismissed(id: string): boolean {
 export function FloatingAdBanners({ promos }: { promos: FloatingBannerPromo[] }) {
   const [dismissedIds, setDismissedIds] = useState<Set<string>>(new Set())
 
-  // max 2 banners; skip already-dismissed ones
-  const visible = (promos || [])
-    .filter((p) => p.id && !dismissedIds.has(p.id) && !isDismissed(p.id))
-    .slice(0, 2)
-
-  if (visible.length === 0) return null
+  // max 2 banners; skip already-dismissed ones (state + sessionStorage)
+  const visible = pickVisibleBannerPromos(promos, dismissedIds)
+  const visibleKey = visible.map((p) => p.id).join(',')
 
   function dismiss(id: string) {
-    try { localStorage.setItem(dismissKey(id), '1') } catch { /* ignore */ }
-    dismissedIds.add(id)
-    setDismissedIds(new Set(dismissedIds))
+    try { sessionStorage.setItem(dismissKey(id), '1') } catch { /* ignore */ }
+    setDismissedIds((prev) => new Set(prev).add(id))
   }
+
+  // D03/keyboard: Esc dismisses the currently visible banners (parity with ✕).
+  // Only active while at least one banner is on screen; removed on dismiss.
+  useEffect(() => {
+    if (!visibleKey) return
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape') return
+      visibleKey.split(',').filter(Boolean).forEach((id) => dismiss(id))
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [visibleKey])
+
+  if (visible.length === 0) return null
 
   return (
     <div className="flad-overlay" role="dialog" aria-modal="true" aria-label="โปรโมชั่น" data-testid="floating-ad-banners">
       {/* Backdrop: dims the page so the promo never hides menu items */}
       <div className="flad-backdrop" onClick={() => visible.forEach((p) => dismiss(p.id))} />
+
       <div className="flad-stack">
         {visible.map((promo) => (
           <div key={promo.id} className="flad-card" data-testid="floating-ad-banner">

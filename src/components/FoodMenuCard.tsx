@@ -51,7 +51,7 @@ export function FoodMenuCard({ product, category, mode, availability, onSameDayO
       {/* TOP SECTION: 3D Food Image Container */}
       {/* Clear padding/margin, no overflow, no absolute */}
       {/* ============================================ */}
-      <div className="w-full bg-gradient-to-b from-orange-50 to-white py-6 px-4 flex flex-col items-center">
+      <div className="fmc-media w-full py-6 px-4 flex flex-col items-center">
         
         {/* Category Badge (Inline, not absolute) */}
         {category && (
@@ -63,7 +63,7 @@ export function FoodMenuCard({ product, category, mode, availability, onSameDayO
 
         {/* Status Pill (Inline, not absolute) */ }
         {!isAvail && (
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium bg-red-100 text-red-700 mb-3">
+          <div className="fmc-status-pill inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium mb-3">
             <MascotBadge pose="empty" size="sm" alt="Bite the mascot - sold out" loading="eager" />
             {AVAIL[avail]}
           </div>
@@ -107,7 +107,7 @@ export function FoodMenuCard({ product, category, mode, availability, onSameDayO
           <span className="text-2xl font-bold text-brand-primary">
             {price.toLocaleString('th-TH')} บาท
           </span>
-          <span className="text-xs text-brand-muted bg-orange-50 px-2 py-1 rounded-full">
+          <span className="fmc-prep-pill text-xs px-2 py-1 rounded-full">
             ⏱ {prep} min
           </span>
         </div>

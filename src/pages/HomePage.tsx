@@ -265,7 +265,7 @@ export function HomePage() {
         )}
       </section>
 
-      {/* 2c. Floating ad banners — max 2 overlay cards, dismissible per promo (localStorage) */}
+      {/* 2c. Floating ad banners — max 2 overlay cards, dismissible per promo (sessionStorage, D03) */}
       <FloatingAdBanners promos={bannerPromos} />
       {/* 3. Same-day Menu — horizontal carousel */}
       <section className="mb-10 scroll-mt-20" aria-labelledby="home-sameday-heading">

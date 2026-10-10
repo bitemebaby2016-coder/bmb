@@ -7,6 +7,7 @@ import './index.css'
 import { useAuthStore } from './store/authStore'
 import { installGlobalErrorReporter } from './lib/errorReporter'
 import { hydratePlatformConfigFromServer } from './lib/platformConfigBootstrap'
+import { initCartPersistence } from './lib/cartPersistence'
 
 // ⚡ PERF (2026-09-17): admin seeding hashes a bcrypt password at boot, which is
 // heavy on the main thread. Defer it until after first paint / idle so LCP and
@@ -35,6 +36,11 @@ void hydratePlatformConfigFromServer()
 // ตอนนี้: checkAuth เริ่มตรงนี้ (sync ตอน module load) และ guards รอผ่าน
 // authStore.isInitializing จนกว่า session restore เสร็จจริง
 void useAuthStore.getState().checkAuth()
+
+// D01: restore the customer's persisted cart (minimal data, catalog-validated,
+// canonical addItem path) — fire-and-forget async; never blocks first paint
+// and never mutates orders / payments / stock.
+void initCartPersistence(() => import('./lib/bmbAdminApi_products').then((m) => m.getProducts()))
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>

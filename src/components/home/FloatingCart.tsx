@@ -3,6 +3,7 @@
 // Transactional floating cart (badge count) → existing /cart flow.
 // ============================================
 
+import { useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { useCartStore } from '@/store/cartStore'
 import { usePlatformConfig } from '@/config/platformConfig'
@@ -23,13 +24,29 @@ export function StickyCartBar() {
   const { items, subtotal, total, deliveryFee } = useCartStore()
   const { delivery } = usePlatformConfig()
   const freeShippingThreshold = delivery.freeShippingThreshold ?? 200
+  const barRef = useRef<HTMLDivElement>(null)
+
+  // D02: publish measured height as --bmb-sticky-h so main-scroll content
+  // clears BOTH fixed bars; cleanup on unmount resets it to fallback 0px.
+  useEffect(() => {
+    const el = barRef.current
+    if (!el) return
+    const publish = () => document.documentElement.style.setProperty('--bmb-sticky-h', `${el.offsetHeight}px`)
+    publish()
+    const ro = new ResizeObserver(publish)
+    ro.observe(el)
+    return () => {
+      ro.disconnect()
+      document.documentElement.style.removeProperty('--bmb-sticky-h')
+    }
+  }, [items.length])
 
   if (items.length === 0) return null
 
   const remainingForFreeShipping = Math.max(0, freeShippingThreshold - subtotal)
 
   return (
-    <div className="sticky-cart-bar md:hidden" role="region" aria-label="ตะกร้าสินค้า">
+    <div ref={barRef} className="sticky-cart-bar md:hidden" role="region" aria-label="ตะกร้าสินค้า">
       <div className="sticky-cart-inner">
         <div className="sticky-cart-summary">
           <span className="sticky-cart-count">{items.length} รายการ</span>

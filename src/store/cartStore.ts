@@ -57,6 +57,11 @@ interface CartStore {
   /** TEN-05: Set active context AND clear incompatible cart atomically */
   setContextAndClearIfIncompatible: (tenantId: string, brandId: string) => void
 
+  /** D01: true once persisted-cart hydration has finished (even if nothing
+      was stored) — lets Checkout avoid mistaking "restoring" for "empty". */
+  isHydrated: boolean
+  setHydrated: () => void
+
   recalculate: () => void
   getCartCount: () => number
 }
@@ -75,6 +80,8 @@ export const useCartStore = create<CartStore>((set, get) => ({
   cartTotal: 0,
   active_context_tenant_id: null,
   active_context_brand_id: null,
+  isHydrated: false,
+  setHydrated: () => set({ isHydrated: true }),
 
   addItem: (product, quantity = 1, customizations = {}, mode = 'SAME_DAY') => {
     const { order_mode, pendingMode, items, active_context_tenant_id, active_context_brand_id } = get()

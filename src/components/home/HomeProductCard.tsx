@@ -73,7 +73,7 @@ export function HomeProductCard({ item, onSameDay, onPreOrder }: HomeProductCard
         <button
           type="button"
           onClick={handleCta}
-          className="btn btn-primary btn-sm w-full mt-2 home-card-cta"
+          className="btn btn-primary btn-sm w-full mt-auto home-card-cta"
           disabled={soldOut}
         >
           {soldOut ? 'หมดแล้ว' : item.cta}

@@ -27,6 +27,8 @@ import { getPublishedScheduleForDate, mirrorPreOrderScheduleGate, type MenuSched
 import { fetchServerDeliveryFee } from '@/lib/deliveryFeeApi'
 import { getBusinessSettings } from '@/lib/bmbAdminApi_settings'
 import { resolvePublicBranch } from '@/lib/brandResolver'
+import { getProducts } from '@/lib/bmbAdminApi_products'
+import { revalidateWithCatalog, reportToToastMessage } from '@/lib/cartPersistence'
 import type { OrderMode } from '@/config/platformConfig'
 
 function todayStr(): string {
@@ -42,7 +44,7 @@ function addDays(date: string, days: number): string {
 export function CheckoutPage() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
-  const { items, subtotal, discount, deliveryFee, total, clearCart, order_mode } = useCartStore()
+  const { items, subtotal, discount, deliveryFee, total, clearCart, order_mode, isHydrated } = useCartStore()
   const customer = useAuthStore((s) => s.customer)
   const justPlaced = useRef(false)
 
@@ -83,6 +85,7 @@ export function CheckoutPage() {
 
   // ✅ Canonical rounds for the selected date (deterministic ids, DB authority).
   useEffect(() => {
+    if (!customer) return // guests are redirected above — skip fetch (no 401 noise)
     let active = true
     void (async () => {
       const list = await listRoundsForDate(scheduledDate)
@@ -91,11 +94,12 @@ export function CheckoutPage() {
       setSelectedRoundId((prev) => (list.some((r) => r.id === prev) ? prev : (list[0]?.id ?? '')))
     })()
     return () => { active = false }
-  }, [scheduledDate])
+  }, [scheduledDate, customer])
 
   // ✅ CAT-02: canonical published menu schedule for the selected PRE_ORDER date.
   // DISPLAY MIRROR ONLY — server (trg_menu_gate, migration 039) re-decides at order time.
   useEffect(() => {
+    if (!customer) { setDaySchedule([]); return } // guest redirect above — no fetch
     if (orderMode !== 'PRE_ORDER') { setDaySchedule([]); return }
     let active = true
     void (async () => {
@@ -104,10 +108,11 @@ export function CheckoutPage() {
       setDaySchedule(rows)
     })()
     return () => { active = false }
-  }, [orderMode, scheduledDate])
+  }, [orderMode, scheduledDate, customer])
 
   // ✅ Server-authoritative delivery fee display (DEL-01 / migration 020 RPC).
   useEffect(() => {
+    if (!customer) return // guest redirect above — skip fee RPC (no 401 noise)
     let active = true
     void (async () => {
       const q = await fetchServerDeliveryFee({
@@ -123,7 +128,7 @@ export function CheckoutPage() {
       useCartStore.getState().setDeliveryFee(q.delivery_fee)
     })()
     return () => { active = false }
-  }, [deliveryAddress.latitude, deliveryAddress.longitude, items])
+  }, [deliveryAddress.latitude, deliveryAddress.longitude, items, customer])
 
   // order_policy display values (lead days for the PRE_ORDER date picker).
   useEffect(() => {
@@ -162,13 +167,42 @@ export function CheckoutPage() {
 
   // TEN-07: Resolve branch_id from selected delivery_round for multi-branch routing
   useEffect(() => {
-    if (!selectedRoundId) { setResolvedBranchId(null); return }
+    if (!selectedRoundId || !customer) { setResolvedBranchId(null); return }
     const resolve = async () => {
       const branch = await resolvePublicBranch({ urlParams: { roundId: selectedRoundId } })
       setResolvedBranchId(branch.branch_id || null)
     }
     resolve()
-  }, [selectedRoundId])
+  }, [selectedRoundId, customer])
+
+  // D01: revalidate the (possibly persisted) cart against the CURRENT trusted
+  // catalog before checkout — removed/unavailable items are dropped with an
+  // explicit notice; canonical store pricing recalculates; the server stays
+  // the final authority at order creation.
+  const revalidatedRef = useRef(false)
+  useEffect(() => {
+    if (!customer || revalidatedRef.current) return
+    if (useCartStore.getState().items.length === 0) return
+    revalidatedRef.current = true
+    void (async () => {
+      try {
+        const products = await getProducts()
+        const report = revalidateWithCatalog(products)
+        const msg = reportToToastMessage(report, 'checkout')
+        if (msg) showToast(msg, 'warning')
+      } catch (e) {
+        console.warn('[Checkout] cart revalidation skipped (catalog unavailable):', e)
+      }
+    })()
+  }, [customer])
+
+  // P2-9: empty-cart redirect runs in an EFFECT — calling navigate() inside
+  // the render body (previous code) triggered React's "Cannot update a
+  // component (BrowserRouter) while rendering a different component
+  // (CheckoutPage)". isHydrated (D01) waits for async cart restore first.
+  useEffect(() => {
+    if (customer && items.length === 0 && isHydrated && !justPlaced.current) navigate('/cart')
+  }, [customer, items.length, isHydrated, navigate])
 
   async function handlePlaceOrder() {
     if (!customer) {
@@ -315,12 +349,7 @@ export function CheckoutPage() {
     setIsProcessing(false)
   }
 
-  if (items.length === 0) {
-    if (!justPlaced.current) {
-      navigate('/cart')
-    }
-    return null
-  }
+  if (items.length === 0) return null
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-6">

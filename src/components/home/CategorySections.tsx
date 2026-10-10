@@ -154,7 +154,7 @@ export function CategorySections({
             </h3>
             <Link to="/menu" className="text-sm text-brand-primary font-medium hover:underline">ดูทั้งหมด →</Link>
           </div>
-          <div className="drink-card flex items-center justify-center text-center" data-testid="home-showcase-empty">
+          <div className="drink-card drink-card-empty flex items-center justify-center text-center" data-testid="home-showcase-empty">
             <p className="drink-card-desc py-6">
               ยังไม่มีเมนูในหมวดนี้ — เร็ว ๆ นี้ 🍽️
             </p>

@@ -907,7 +907,7 @@ p { color: var(--color-brand-text-secondary); }
   border-radius: 999px;
   box-shadow: 0 2px 6px rgba(var(--theater-accent2-rgb), 0.35);
 }
-.home-card-body { padding: 10px 12px 12px; display: flex; flex-direction: column; }
+.home-card-body { padding: 10px 12px 12px; display: flex; flex-direction: column; gap: 4px; flex: 1; }
 .home-card-cta { margin-top: auto; }
 
 /* Pre-order card — calendar-ish motif */
@@ -977,7 +977,7 @@ p { color: var(--color-brand-text-secondary); }
 
 /* Floating Ad Banners — CENTER POPUP MODAL (UI refactor).
    Promos flagged is_banner appear as a centered dialog over a dimmed backdrop;
-   max 2 cards at once. Customers dismiss each with ✕ (per-promo localStorage).
+   max 2 cards at once. Customers dismiss each with ✕ (per-promo sessionStorage).
    Center placement guarantees zero overlap with BottomNav / mascot / cart. */
 .flad-overlay {
   position: fixed;
@@ -1127,7 +1127,7 @@ p { color: var(--color-brand-text-secondary); }
 .snack-card-media {
   position: relative;
   aspect-ratio: 4 / 3;
-  background: linear-gradient(to bottom, rgba(224, 242, 254, 0.85), #fff);
+  background: linear-gradient(to bottom, rgba(255, 237, 213, 0.8), #fff);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1146,7 +1146,7 @@ p { color: var(--color-brand-text-secondary); }
 .snack-card-badge {
   position: absolute;
   top: 8px; left: 8px;
-  background: linear-gradient(135deg, #0EA5E9, #22D3EE);
+  background: linear-gradient(135deg, var(--color-brand-primary), var(--color-brand-secondary));
   color: #fff;
   font-size: 11px; font-weight: 700;
   padding: 3px 8px;
@@ -1159,6 +1159,7 @@ p { color: var(--color-brand-text-secondary); }
   display: flex;
   flex-direction: column;
   gap: 4px;
+  flex: 1;
 }
 .drink-card-name,
 .snack-card-name {
@@ -1178,6 +1179,9 @@ p { color: var(--color-brand-text-secondary); }
   font-size: 0.8rem;
   color: var(--color-brand-muted);
   line-height: 1.4;
+  /* P1-3: constant 2-line description slot — cards without a description keep
+     the same CTA position as cards with one (matches home-card's 1-line slot) */
+  min-height: calc(2 * 1.4em);
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
@@ -1189,8 +1193,8 @@ p { color: var(--color-brand-text-secondary); }
   align-self: flex-start;
   font-size: 11px;
   font-weight: 700;
-  color: #0C4A6E;
-  background: rgba(224, 242, 254, 0.9);
+  color: var(--color-brand-primary-dark);
+  background: rgba(255, 94, 30, 0.10);
   border: 1px dashed rgba(var(--theater-accent2-rgb), 0.45);
   padding: 3px 10px;
   border-radius: 999px;
@@ -1232,12 +1236,54 @@ p { color: var(--color-brand-text-secondary); }
 .snack-card-coming-soon-overlay span {
   font-size: 14px;
   font-weight: 700;
-  color: #0C4A6E;
-  background: rgba(224, 242, 254, 0.95);
+  color: var(--color-brand-primary-dark);
+  background: rgba(255, 247, 237, 0.95);
   border: 1px dashed rgba(var(--theater-accent2-rgb), 0.5);
   padding: 6px 16px;
   border-radius: 999px;
   white-space: nowrap;
+}
+
+/* FoodMenuCard (MenuPage) — theme-aware surfaces (P2-6): replace the
+   light-only Tailwind gradient/pills with tokens so Dark Theme stays coherent. */
+.fmc-media {
+  background: linear-gradient(to bottom, #FFF7ED, #fff);
+}
+.fmc-status-pill {
+  background: #FEE2E2;
+  color: #B91C1C;
+}
+.fmc-prep-pill {
+  background: #FFF7ED;
+  color: var(--color-brand-muted);
+}
+html[data-theme='dark'] .fmc-media {
+  background: linear-gradient(to bottom, #232329, #1B1B20);
+}
+html[data-theme='dark'] .fmc-status-pill {
+  background: rgba(239, 68, 68, 0.18);
+  color: #FCA5A5;
+}
+html[data-theme='dark'] .fmc-prep-pill {
+  background: rgba(255, 94, 30, 0.12);
+  color: var(--color-brand-text-secondary);
+}
+
+/* Category empty state — readable, non-collapsed placeholder (P0-1/D04) */
+.drink-card-empty {
+  min-height: 96px;
+  justify-content: center;
+}
+.drink-card-empty .drink-card-desc { padding: 1.5rem 1rem; }
+
+/* D02/P0-2: fixed-BottomNav-aware clearances. Heights measured at runtime:
+   --bmb-bottom-nav-h (BottomNav ResizeObserver, includes safe-area inset)
+   and --bmb-sticky-h (StickyCartBar ResizeObserver, 0 when hidden/unmounted). */
+.nav-visible > footer {
+  padding-bottom: calc(var(--bmb-bottom-nav-h, 0px) + var(--bmb-sticky-h, 0px) + 1rem);
+}
+.main-scroll {
+  padding-bottom: calc(var(--bmb-bottom-nav-h, 0px) + var(--bmb-sticky-h, 0px) + 1rem);
 }
 
 /* Order Builder Modal — upsell / add-on / topping sheet (Grab & 7-Eleven style) */
@@ -1427,10 +1473,13 @@ p { color: var(--color-brand-text-secondary); }
   justify-content: center;
 }
 
-/* Sticky Bottom Cart Bar — Mobile only */
+/* Sticky Bottom Cart Bar — Mobile only.
+   D02: sits directly ABOVE the fixed BottomNav (nav height measured at
+   runtime via --bmb-bottom-nav-h from BottomNav) — never obscures it.
+   Safe-area padding lives on the BottomNav below, so no double inset. */
 .sticky-cart-bar {
   position: fixed;
-  bottom: 0;
+  bottom: var(--bmb-bottom-nav-h, 0px);
   left: 0;
   right: 0;
   z-index: 60; /* above bottom nav (50) */
@@ -1439,7 +1488,6 @@ p { color: var(--color-brand-text-secondary); }
   border-top: 1px solid var(--color-brand-border);
   box-shadow: 0 -4px 20px rgba(28, 25, 23, 0.08);
   padding: 8px 16px 12px;
-  padding-bottom: calc(8px + env(safe-area-inset-bottom, 12px));
 }
 .sticky-cart-inner {
   max-width: 480px;
@@ -2042,6 +2090,7 @@ html[data-theme='dark'] .site-background__scrim {
 /* ---- Dark Glass: hardcode ผิวสีขาวในคอมโพเนนต์ให้ตามธีม (color sweep) ---- */
 html[data-theme='dark'] .home-card,
 html[data-theme='dark'] .snack-card,
+html[data-theme='dark'] .drink-card,
 html[data-theme='dark'] .flad-card,
 html[data-theme='dark'] .ob-sheet,
 html[data-theme='dark'] .ob-chip,
@@ -2054,6 +2103,50 @@ html[data-theme='dark'] .share-card:hover {
   background: var(--color-brand-surface);
 }
 html[data-theme='dark'] .ob-header { border-bottom-color: var(--color-brand-border); }
+html[data-theme='dark'] .ob-addon,
+html[data-theme='dark'] .ob-rec {
+  background: var(--color-brand-surface-warm);
+  border-color: var(--color-brand-border);
+}
+html[data-theme='dark'] .badge-primary {
+  background: rgba(255, 94, 30, 0.14);
+  color: #FFA680;
+}
+html[data-theme='dark'] .usp-item,
+html[data-theme='dark'] .trust-badge {
+  background: rgba(27, 27, 32, 0.75);
+  border-color: rgba(255, 94, 30, 0.28);
+}
+html[data-theme='dark'] .usp-item:hover,
+html[data-theme='dark'] .trust-badge:hover {
+  border-color: rgba(255, 94, 30, 0.45);
+}
+html[data-theme='dark'] .promo-card {
+  background: linear-gradient(135deg, var(--color-brand-surface), var(--color-brand-bg-warm));
+  border-color: var(--color-brand-border);
+}
+html[data-theme='dark'] .store-strip {
+  background: rgba(16, 185, 129, 0.12);
+  border-color: rgba(16, 185, 129, 0.35);
+}
+html[data-theme='dark'] .store-strip.is-closed {
+  background: rgba(239, 68, 68, 0.12);
+  border-color: rgba(239, 68, 68, 0.38);
+}
+html[data-theme='dark'] .drink-card-coming-soon-overlay,
+html[data-theme='dark'] .snack-card-coming-soon-overlay {
+  background: rgba(18, 18, 20, 0.72);
+}
+html[data-theme='dark'] .drink-card-coming-soon-overlay span,
+html[data-theme='dark'] .snack-card-coming-soon-overlay span {
+  background: rgba(27, 27, 32, 0.92);
+  color: #FFA680;
+}
+html[data-theme='dark'] .home-card-media,
+html[data-theme='dark'] .drink-card-media,
+html[data-theme='dark'] .snack-card-media {
+  background: linear-gradient(to bottom, rgba(35, 35, 41, 0.9), var(--color-brand-bg));
+}
 html[data-theme='dark'] .border-orange-50 { border-color: var(--color-brand-border); }
 html[data-theme='dark'] .sticky-cart-bar {
   background: linear-gradient(180deg, rgba(27, 27, 32, 0.92), #121214);

@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { useAuthStore } from '@/store/authStore'
 import { shouldShowAdminLink } from '@/lib/adminUi'
@@ -13,6 +14,23 @@ export function BottomNav() {
   const location = useLocation()
 const role = useAuthStore((s) => s.role)
   const customer = useAuthStore((s) => s.customer)
+  const navRef = useRef<HTMLElement>(null)
+
+  // D02: publish the measured height (incl. safe-area inset padding) as a CSS
+  // custom property so Footer clearance, StickyCartBar and main-scroll padding
+  // can stack above the nav on any viewport — no hardcoded offsets.
+  useEffect(() => {
+    const el = navRef.current
+    if (!el) return
+    const publish = () => document.documentElement.style.setProperty('--bmb-bottom-nav-h', `${el.offsetHeight}px`)
+    publish()
+    const ro = new ResizeObserver(publish)
+    ro.observe(el)
+    return () => {
+      ro.disconnect()
+      document.documentElement.style.removeProperty('--bmb-bottom-nav-h')
+    }
+  }, [])
 
   // PHASE 6 UI/admin: admins get a Dashboard entry instead of the customer
   // account tab, so they can always jump back to /admin without browser Back.
@@ -21,7 +39,7 @@ const role = useAuthStore((s) => s.role)
     : navItems
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-brand-surface border-t border-brand-border z-50 no-print glass-surface pb-[env(safe-area-inset-bottom)]">
+    <nav ref={navRef} className="fixed bottom-0 left-0 right-0 bg-brand-surface border-t border-brand-border z-50 no-print glass-surface pb-[env(safe-area-inset-bottom)]">
       <div className="max-w-7xl mx-auto px-4 py-2 flex justify-around">
         {items.map((item) => {
           const isActive = location.pathname === item.path ||

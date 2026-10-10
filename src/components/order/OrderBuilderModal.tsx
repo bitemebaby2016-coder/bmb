@@ -29,6 +29,18 @@ export function OrderBuilderModal() {
     }
   }, [open, product, catalog])
 
+  // P2-8: Esc closes the sheet through the SAME closeBuilder lifecycle as the
+  // ✕ button and backdrop click. Only active while the builder is open; other
+  // dialogs (promo banners / cart isolation) keep their own dismissal paths.
+  useEffect(() => {
+    if (!open) return
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') closeBuilder()
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [open, closeBuilder])
+
   if (!open || !product) return null
 
   const addonsList: ProductAddon[] = Array.isArray(product.addons) ? product.addons : []
