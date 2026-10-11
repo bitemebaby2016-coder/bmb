@@ -127,7 +127,7 @@ npm run preview             # เสิร์ฟ dist ที่ build แล้�
 
 ### SEO / AEO / GEO
 
-- **SEO:** meta ทุกหน้ามาจาก `src/lib/seo.ts` + `SeoHelmet` (title/description/canonical/hreflang/JSON-LD) — **คงที่ ไม่ผูกกับ copy หมุนเวียน** (มี test ล็อก) · static tags ใน `index.html` ทำเครื่องหมาย `data-rh` เพื่อให้ Helmet "แทนที่" แทนที่จะซ้ำ (แก้ duplicate canonical/title/og ที่ตรวจพบจากของจริง) · canonical = URL ตัวเอง · `public/sitemap.xml` (+`/shop`, namespace ถูกต้อง) + `robots.txt`
+- **SEO:** meta ทุกหน้ามาจาก `src/lib/seo.ts` + `SeoHelmet` (title/description/canonical/hreflang/JSON-LD) — **คงที่ ไม่ผูกกับ copy หมุนเวียน** (มี test ล็อก) · ไม่มี static SEO block ใน `index.html` — React 19 hoist แท็กที่ SeoHelmet render เข้า `<head>` เองโดยตรง (การมี static copy ซ้ำทำให้ทุกหน้าโดน canonical/title/og ของหน้าโฮม — ตรวจพบและแก้จากของจริง) · canonical = URL ตัวเอง · `public/sitemap.xml` (+`/shop`, namespace ถูกต้อง) + `robots.txt`
 - **AEO:** FAQ JSON-LD สร้างจาก `src/lib/faqContent.ts` ไฟล์เดียวกับที่หน้า `/faq` แสดง (schema ไม่มีทางเพี้ยนจากเนื้อหาที่เห็น) — เพิ่มคำตอบใหม่ = แก้ที่เดียว
 - **GEO:** ข้อมูลธุรกิจใน `SITE_CONFIG`/`HOME_SCHEMA` (ชื่อ ที่ตั้ง รัศมี 5 กม. เวลาเปิด ช่องทางติดต่อ) ต้องตรงกับความจริง — **ห้ามเพิ่มที่อยู่/สาขา/รีวิว/ราคา ที่ Owner ยังไม่ยืนยัน**
 - **ข้อจำกัดที่ทราบ:** metadata บาง route (orders/reviews/notifications, /track ใช้พารามิเตอร์ literal) ยังไม่ครบ/ไม่ถูก — บันทึกใน Launch Readiness ไม่ขยายไปแก้ในชุดงานนี้
@@ -140,7 +140,7 @@ npm run preview             # เสิร์ฟ dist ที่ build แล้�
 2. **Production E2E matrix** — ยัง 0/10 ต้องผ่านครบก่อนเปิด
 3. **Production DB audit** (aggregate/EF probe) — รอ Owner approval
 4. **Chat-hang** ของ `mascotService` (timeout) — ต้องปิดก่อนใช้แชทจริงในงานจริง
-5. **SEO route metadata** บางหน้าไม่ครบ + `bitemebaby-5f7.pages.dev` stale ต้องระบุ/ลบจาก Dashboard
+5. **SEO route metadata ไม่ครบ** — `App.tsx` มี SEO entry 24 เส้นทาง ขาด `/orders`, `/notifications`, `/reviews`, `/reviews/:productId` (เดิมมี static fallback ผิด ๆ ใน index.html คอยบัง — ตอนนี้ถูกเอาออกแล้ว หน้าเหล่านี้จึง "ไม่มี meta" จนกว่าจะเพิ่ม entry) และ `/track/:orderNumber` ได้ canonical/title เป็น string literal `:orderNumber` — ต้องแก้ที่ SEO Routes block + `bitemebaby-5f7.pages.dev` stale ต้องระบุ/ลบจาก Dashboard
 6. ข้อความ FAQ เดิมมีตัวอักษรภาษาไทยบางจุดผิดรูป (ของเก่า) — รอ Owner ตรวจแก้, คำกล่าวอ้างราคา/โปรโมชั่นใน FAQ (`฿30` คูปอง, รหัสโปร) ต้องยืนยันกับระบบจริงก่อนพึ่งพา
 
 ## 11. เอกสารประกอบ + กติกาการทำงานของ repo

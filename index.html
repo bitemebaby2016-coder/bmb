@@ -22,33 +22,12 @@
       })();
     </script>
 
-    <!-- Primary SEO — static tags are Helmet-OWNED (data-rh) so the
-         per-page SeoHelmet REPLACES them instead of duplicating them; they still
-         serve as fallback on routes with no SEO route entry. -->
-    <title data-rh="true">Bite Me Baby - สั่งอาหารจัดส่งเมืองจันทบุรี รัศมี 5 กม.</title>
-    <meta data-rh="true" name="description" content="Bite Me Baby - ร้านอาหารไทยจัดส่งถึงบ้านในรัศมี 5 กม. จากตัวเมืองจันทบุรี จัดส่งเช้า กลางวัน เย็น สั่งออนไลน์ได้พร้อม AI Assistant 24/7" />
-    <meta data-rh="true" name="keywords" content="สั่งอาหารจันทบุรี, อาหารจัดส่ง, ร้านอาหารเมืองจันทบุรี, Bite Me Baby, ส่งอาหารจันทบุรี, cloud kitchen จันทบุรี" />
-
-    <!-- Canonical + hreflang (TH/EN) -->
-    <link data-rh="true" rel="canonical" href="https://biteme-baby.com/" />
-    <link data-rh="true" rel="alternate" hreflang="th" href="https://biteme-baby.com/" />
-    <link data-rh="true" rel="alternate" hreflang="en" href="https://biteme-baby.com/?lang=en" />
-    <link data-rh="true" rel="alternate" hreflang="x-default" href="https://biteme-baby.com/" />
-
-    <!-- Open Graph -->
-    <meta data-rh="true" property="og:title" content="Bite Me Baby - สั่งอาหารจัดส่งเมืองจันทบุรี" />
-    <meta data-rh="true" property="og:description" content="ร้านอาหารไทยจัดส่งถึงบ้าน รัศมี 5 กม. จากตัวเมืองจันทบุรี สั่งออนไลน์ได้เลย" />
-    <meta data-rh="true" property="og:type" content="website" />
-    <meta data-rh="true" property="og:image" content="https://biteme-baby.com/og-image.png" />
-    <meta data-rh="true" property="og:url" content="https://biteme-baby.com/" />
-    <meta data-rh="true" property="og:site_name" content="Bite Me Baby" />
-    <meta data-rh="true" property="og:locale" content="th_TH" />
-    <meta data-rh="true" property="og:locale:alternate" content="en_US" />
-
-    <!-- Twitter -->
-    <meta data-rh="true" name="twitter:card" content="summary_large_image" />
-    <meta data-rh="true" name="twitter:title" content="Bite Me Baby" />
-    <meta data-rh="true" name="twitter:description" content="สั่งอาหารจัดส่งเมืองจันทบุรี รัศมี 5 กม." />
+    <!-- No static SEO tags here on purpose: React 19 natively HOISTS the
+         <title>/<meta>/<link> rendered by SeoHelmet (src/lib/seo.ts) into <head>.
+         A static copy used to shadow every page — verified live: two <title>,
+         two canonicals, two og:url per URL, document.title stuck on the home
+         title. Routes without an SEO entry in App.tsx currently render no
+         per-page meta; tracked in the launch checklist. -->
 
     <!-- GEO (Local SEO) -->
     <meta name="geo.region" content="TH-22" />
@@ -66,7 +45,6 @@
     <link rel="stylesheet" href="/fonts/fonts.css" />
 
     <!-- PWA facade -->
-    <!-- name="description" already set above for the landing page -->
   </head>
   <body>
     <div id="root"></div>

@@ -104,27 +104,24 @@ describe('sitemap.xml + robots.txt — /shop discoverable, valid namespace', () 
   })
 })
 
-describe('index.html — static head is Helmet-owned, no duplicate SEO blocks', () => {
-  it('every static title/canonical/og/twitter tag is marked data-react-helmet', () => {
-    // SeoHelmet (react-helmet-async v3) only replaces tags carrying its `data-rh`
-    // attribute; unmarked static tags would DUPLICATE every per-page tag (verified
-    // live: two <title>, two canonicals, two og:url on /shop before this fix).
-    const lines = indexHtml.split('\n').filter((l) =>
-      /<(title|meta|link)\s/.test(l) &&
-      /(<title|rel="canonical"|rel="alternate"|name="description"|name="keywords"|name="twitter:|property="og:)/.test(l),
-    )
-    expect(lines.length).toBeGreaterThan(0)
-    // react-helmet-async v3 manages tags marked with its attribute: data-rh
-    for (const line of lines) expect(line).toContain('data-rh="true"')
+describe('index.html — no static SEO block (React 19 hoists SeoHelmet tags)', () => {
+  it('has no static title/description/canonical/og/twitter tags', () => {
+    // React 19 natively hoists <title>/<meta>/<link> rendered by SeoHelmet into
+    // <head>; a static copy co-existed with them (verified live: two <title>,
+    // two canonicals, two og:url on /shop; document.title stuck on home title).
+    const staticSeo = indexHtml.match(
+      /<(title|link|meta)\s[^>]*(rel="canonical"|rel="alternate"|name="description"|name="keywords"|name="twitter:|property="og:|>Bite Me Baby)[^>]*>/g,
+    ) ?? []
+    expect(staticSeo).toHaveLength(0)
   })
 
-  it('no static JSON-LD script — structured data comes only from seo.ts via Helmet', () => {
+  it('no static JSON-LD script — structured data comes only from seo.ts', () => {
     expect(indexHtml).not.toContain('application/ld+json')
   })
 
-  it('exactly one static canonical, pointing at the site root as fallback', () => {
-    const canonicals = indexHtml.match(/rel="canonical" href="([^"]+)"/g) ?? []
-    expect(canonicals).toHaveLength(1)
-    expect(canonicals[0]).toContain('https://biteme-baby.com/"')
+  it('still declares charset/viewport/robots basics', () => {
+    expect(indexHtml).toContain('charset="UTF-8"')
+    expect(indexHtml).toContain('name="viewport"')
+    expect(indexHtml).toContain('name="robots"')
   })
 })
