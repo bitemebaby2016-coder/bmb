@@ -1760,7 +1760,7 @@ html[data-theme='dark'] {
   z-index: 1; /* cards paint above the stage floor ring (::after) */
   display: flex; gap: 12px;
   margin-top: 16px; padding-bottom: 6px;
-  padding-inline: 9%; /* room so the first/last slide can snap centered */
+  padding-inline: 9%; /* = (100% − slide share)/2 — pairs with .theater-slide flex-basis:100% (share 82%) so slide 0/last snap centered at scrollLeft 0 */
   margin-bottom: 14px; /* room for the centered card's floor reflection */
   overflow-x: auto;
   scroll-snap-type: x mandatory;
@@ -1772,7 +1772,12 @@ html[data-theme='dark'] {
 .theater-track:focus-visible { outline: 3px solid rgba(var(--theater-accent-rgb), 0.7); outline-offset: 4px; border-radius: 16px; }
 .theater-slide {
   position: relative;
-  flex: 0 0 78%;
+  /* flex-basis % resolves against the track CONTENT box (full width minus padding-inline),
+     so 100% = the intended share of the full track per bp (82% base / 42% / 31% / 26%).
+     The old per-bp values (78/82/42/31/26%) were % of the content box → card rendered
+     share² of the track (e.g. 26%×26%≈7%, min-content-clamped ~11%) and off-center.
+     Keep flex-basis:100% and vary ONLY .theater-track padding-inline = (100% − share)/2. */
+  flex: 0 0 100%;
   scroll-snap-align: center;
   transition: transform 0.32s cubic-bezier(0.22, 0.61, 0.36, 1), opacity 0.32s ease, filter 0.32s ease;
   transform: perspective(1200px) rotateY(44deg) translateX(-8%) translateY(60px) scale(0.62);
@@ -1855,18 +1860,16 @@ html[data-theme='dark'] {
   pointer-events: none;
   z-index: 0;
 }
-/* Desktop ring — several cards visible at once along the arc */
+/* Desktop ring — several cards visible at once along the arc.
+   Slide width follows .theater-slide flex-basis:100% (content box); only padding changes. */
 @media (min-width: 768px) {
-  .theater-slide { flex-basis: 42%; }
-  .theater-track { padding-inline: 29%; }
+  .theater-track { padding-inline: 29%; } /* share 42% */
 }
 @media (min-width: 1024px) {
-  .theater-slide { flex-basis: 31%; }
-  .theater-track { padding-inline: 34.5%; }
+  .theater-track { padding-inline: 34.5%; } /* share 31% */
 }
 @media (min-width: 1280px) {
-  .theater-slide { flex-basis: 26%; }
-  .theater-track { padding-inline: 37%; }
+  .theater-track { padding-inline: 37%; } /* share 26% */
 }
 
 
@@ -2058,7 +2061,6 @@ html[data-theme='dark'] {
 
 /* --- Mobile / reduced motion --- */
 @media (max-width: 480px) {
-  .theater-slide { flex-basis: 82%; }
   .theater-hero-body { padding: 12px; }
   .theater-price { font-size: 20px; }
   .theater-greeting-bubble { max-width: 62%; font-size: 12px; }
