@@ -15,6 +15,7 @@
 // (aiService) ซึ่งจัดการ ai-proxy + JWT + fallback ให้เอง
 import { chatWithAI } from './aiService'
 import { supabase } from './supabase'
+import { emitVoiceActivity } from './audioEvents'
 
 // Web Speech API types (not in standard lib.dom.d.ts)
 interface SpeechRecognition extends EventTarget {
@@ -302,6 +303,15 @@ export class AIVoiceService {
   private conversation: VoiceMessage[] = [];
   private isListeningFlag = false;
   private isSpeakingFlag = false;
+  /**
+   * Single writer for isSpeakingFlag — emits VOICE_ACTIVITY_EVENT on change
+   * so ambient music can duck/restore. Called on EVERY start/stop/error path.
+   */
+  private setSpeaking(v: boolean): void {
+    if (this.isSpeakingFlag === v) return;
+    this.isSpeakingFlag = v;
+    emitVoiceActivity(v);
+  }
   private currentUtterance: SpeechSynthesisUtterance | null = null;
   private currentAudio: HTMLAudioElement | null = null;
   /** V3: คิวเสียง gapless — ชิ้นถัดไปเล่นทันทีเมื่อชิ้นปัจจุบันจบ */
@@ -466,16 +476,16 @@ export class AIVoiceService {
         this.currentUtterance.voice = thaiVoice;
       }
 
-      this.isSpeakingFlag = true;
+      this.setSpeaking(true);
 
       this.currentUtterance.onend = () => {
-        if (token === this.speakToken) this.isSpeakingFlag = false;
+        if (token === this.speakToken) this.setSpeaking(false);
         this.currentUtterance = null;
         resolve();
       };
 
       this.currentUtterance.onerror = (event) => {
-        if (token === this.speakToken) this.isSpeakingFlag = false;
+        if (token === this.speakToken) this.setSpeaking(false);
         this.currentUtterance = null;
         if (event.error !== 'interrupted' && event.error !== 'canceled') {
           reject(new Error('Speech synthesis error: ' + event.error));
@@ -492,14 +502,14 @@ export class AIVoiceService {
     this.speakToken++ // เสียงที่กำลังส่ง/ค้างอยู่หมดสิทธิ์ทันที
     if (this.synthesis) {
       this.synthesis.cancel();
-      this.isSpeakingFlag = false;
+      this.setSpeaking(false);
     }
     this.audioQueue = [] // V3: เคลียร์คิว — barge-in หยุดทันทีทั้งคิว
     this.queueActive = false
     if (this.currentAudio) {
       this.currentAudio.pause();
       this.currentAudio = null;
-      this.isSpeakingFlag = false;
+      this.setSpeaking(false);
     }
   }
 
@@ -528,15 +538,15 @@ export class AIVoiceService {
         // barge-in / เสียงใหม่แทรก → หยุดคิวนี้เงียบ ๆ (หมดสิทธิ์เล่น)
         if (!this.queueActive || token !== this.speakToken) { resolve(); return }
         const blob = this.audioQueue.shift()
-        if (!blob) { this.queueActive = false; this.isSpeakingFlag = false; resolve(); return }
+        if (!blob) { this.queueActive = false; this.setSpeaking(false); resolve(); return }
         this.playAudioBlob(blob)
           .then(() => { this.currentAudio = null; next() })
           .catch((e) => {
             if (token !== this.speakToken) { resolve(); return } // เสียงใหม่接管แล้ว → เงียบ
-            this.queueActive = false; this.audioQueue = []; this.isSpeakingFlag = false; this.currentAudio = null; reject(e)
+            this.queueActive = false; this.audioQueue = []; this.setSpeaking(false); this.currentAudio = null; reject(e)
           })
       }
-      this.isSpeakingFlag = true
+      this.setSpeaking(true)
       next()
     })
   }
@@ -546,16 +556,16 @@ export class AIVoiceService {
       const url = URL.createObjectURL(blob)
       const audio = new Audio(url)
       this.currentAudio = audio
-      this.isSpeakingFlag = true
+      this.setSpeaking(true)
       const done = () => {
         URL.revokeObjectURL(url)
         this.currentAudio = null
-        this.isSpeakingFlag = false
+        this.setSpeaking(false)
         resolve()
       }
       audio.onended = done
-      audio.onerror = () => { URL.revokeObjectURL(url); this.currentAudio = null; this.isSpeakingFlag = false; reject(new Error('audio playback failed')) }
-      audio.play().catch((e) => { URL.revokeObjectURL(url); this.currentAudio = null; this.isSpeakingFlag = false; reject(e as Error) })
+      audio.onerror = () => { URL.revokeObjectURL(url); this.currentAudio = null; this.setSpeaking(false); reject(new Error('audio playback failed')) }
+      audio.play().catch((e) => { URL.revokeObjectURL(url); this.currentAudio = null; this.setSpeaking(false); reject(e as Error) })
     })
   }
 

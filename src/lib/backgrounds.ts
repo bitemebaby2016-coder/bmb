@@ -13,6 +13,7 @@ import type { ThemeName } from '@/lib/theme'
 export const SITE_BACKGROUNDS: Record<ThemeName, string> = {
   light: '/assets/restaurant-bg/bg_1.webp',
   dark: '/assets/restaurant-bg/bg_2.webp',
+  graphite: '/assets/restaurant-bg/bg_2.webp',
 }
 
 /** default image ตามธีมปัจจุบัน — ไม่ใช่ URL ที่ hardcode ไว้เปลี่ยน production (เปลี่ยนผ่าน admin registry) */

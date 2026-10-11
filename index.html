@@ -14,10 +14,10 @@
       (function () {
         try {
           var t = localStorage.getItem('bmb-theme');
-          var dark = (t === 'dark' || t === 'gray');
-          document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+          var theme = (t === 'dark' || t === 'gray') ? 'dark' : (t === 'graphite' ? 'graphite' : 'light');
+          document.documentElement.setAttribute('data-theme', theme);
           var m = document.querySelector('meta[name="theme-color"]');
-          if (m) m.content = dark ? '#121214' : '#FF5E1E';
+          if (m) m.content = theme === 'light' ? '#FF5E1E' : theme === 'graphite' ? '#1B1B20' : '#121214';
         } catch (e) { document.documentElement.setAttribute('data-theme', 'light'); }
       })();
     </script>

@@ -21,6 +21,9 @@ export function Header() {
   const location = useLocation()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [theme, setTheme] = useState<ThemeName>(() => getTheme())
+  // Admin area keeps a slim header: no customer menu links, no hamburger
+  // (navigation there = AdminNav sidebar/drawer only — single nav set).
+  const isAdminArea = location.pathname.startsWith('/admin')
 
   function handleCycleTheme() {
     const next = cycleTheme(theme)
@@ -50,12 +53,14 @@ export function Header() {
           <span className="font-display font-bold text-brand-accent text-xl">Bite Me Baby</span>
         </Link>
 
-        <nav className="hidden md:flex items-center gap-6">
-          <Link to="/menu" className="text-brand-accent hover:text-brand-primary transition-colors font-medium">เมนู</Link>
-          <Link to="/promotions" className="text-brand-accent hover:text-brand-primary transition-colors font-medium">โปรโมชั่น</Link>
-          <Link to="/vote" className="text-brand-accent hover:text-brand-primary transition-colors font-medium">โหวตเมนู</Link>
-          <Link to="/random-menu" className="text-brand-accent hover:text-brand-primary transition-colors font-medium">สุ่มเมนู</Link>
-        </nav>
+        {!isAdminArea && (
+          <nav className="hidden md:flex items-center gap-6">
+            <Link to="/menu" className="text-brand-accent hover:text-brand-primary transition-colors font-medium">เมนู</Link>
+            <Link to="/promotions" className="text-brand-accent hover:text-brand-primary transition-colors font-medium">โปรโมชั่น</Link>
+            <Link to="/vote" className="text-brand-accent hover:text-brand-primary transition-colors font-medium">โหวตเมนู</Link>
+            <Link to="/random-menu" className="text-brand-accent hover:text-brand-primary transition-colors font-medium">สุ่มเมนู</Link>
+          </nav>
+        )}
 
         <div className="flex items-center gap-3">
           <button
@@ -66,7 +71,8 @@ export function Header() {
             title={`ธีมปัจจุบัน: ${THEME_LABELS[theme]} — คลิกเพื่อเปลี่ยน`}
             data-testid="theme-toggle"
           >
-            {theme === 'light' ? '☀️' : '🌙'}
+            <span className="sr-only">ธีม: {THEME_LABELS[theme]}</span>
+            {theme === 'light' ? '☀️' : theme === 'graphite' ? '🎭' : '🌙'}
           </button>
           {customer ? (
             <div className="flex items-center gap-3">
@@ -95,6 +101,7 @@ export function Header() {
           </Link>
 
           {/* Mobile Hamburger Button */}
+          {!isAdminArea && (
           <button
             type="button"
             className="md:hidden p-2 rounded-lg text-brand-accent hover:bg-brand-bg transition-colors"
@@ -107,12 +114,13 @@ export function Header() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
             </svg>
           </button>
+          )}
         </div>
       </div>
     </header>
 
       {/* Mobile Menu Drawer */}
-      {mobileMenuOpen && (
+      {(mobileMenuOpen && !isAdminArea) && (
         <div className="md:hidden fixed inset-0 z-50" role="dialog" aria-modal="true" aria-labelledby="mobile-menu-title" id="mobile-menu-drawer">
           {/* Backdrop */}
           <div

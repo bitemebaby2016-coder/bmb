@@ -61,6 +61,35 @@ describe('adminUi — admin navigation catalogue', () => {
     expect(paths.every((p) => p.startsWith('/admin'))).toBe(true)
   })
 })
+
+describe('adminUi — ADMIN_NAV_GROUPS (sidebar grouping, single nav set)', () => {
+  it('flattening the groups yields exactly ADMIN_NAV_ITEMS (no lost or duplicated menu)', async () => {
+    const { ADMIN_NAV_GROUPS, ADMIN_NAV_ITEMS } = await import('@/lib/adminUi')
+    const flat = ADMIN_NAV_GROUPS.flatMap((g) => g.items)
+    expect(flat.length).toBe(ADMIN_NAV_ITEMS.length)
+    expect(new Set(flat.map((i) => i.to)).size).toBe(flat.length) // no duplicates inside groups
+    expect(new Set(flat.map((i) => i.to))).toEqual(new Set(ADMIN_NAV_ITEMS.map((i) => i.to)))
+  })
+
+  it('every group has an id, a label and at least one item', async () => {
+    const { ADMIN_NAV_GROUPS } = await import('@/lib/adminUi')
+    const ids = ADMIN_NAV_GROUPS.map((g) => g.id)
+    expect(new Set(ids).size).toBe(ids.length)
+    for (const g of ADMIN_NAV_GROUPS) {
+      expect(g.id.length).toBeGreaterThan(0)
+      expect(g.label.length).toBeGreaterThan(0)
+      expect(g.items.length).toBeGreaterThan(0)
+    }
+  })
+
+  it('every grouped route is registered in App.tsx (menu never points at a dead path)', async () => {
+    const { ADMIN_NAV_ITEMS } = await import('@/lib/adminUi')
+    const app = (await import('../App.tsx?raw')).default
+    for (const item of ADMIN_NAV_ITEMS) {
+      expect(app, `${item.to} must have a Route in App.tsx`).toContain(`path="${item.to}"`)
+    }
+  })
+})
 describe('PHASE 6 — category CRUD via admin API (Supabase mock)', () => {
   beforeEach(() => {
     (supabase as any).__reset?.()

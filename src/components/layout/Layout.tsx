@@ -1,4 +1,5 @@
 import { ReactNode, useEffect, useRef, useState } from 'react'
+import { useLocation } from 'react-router-dom'
 import { Header } from './Header'
 import { BottomNav } from './BottomNav'
 import { Footer } from './Footer'
@@ -7,6 +8,7 @@ import { OrderBuilderModal } from '../order/OrderBuilderModal'
 import { BiteMascot } from '../ai/BiteMascot'
 import { CartIsolationModal } from '../cart/CartIsolationModal'
 import { BackgroundLayer } from './BackgroundLayer'
+import { AmbientMusicToggle } from '../audio/AmbientMusicToggle'
 
 interface LayoutProps {
   children?: ReactNode
@@ -19,6 +21,11 @@ export function Layout({ children, hideBottomNav = false, activeSection = 'home'
   const [headerHidden, setHeaderHidden] = useState(false)
   const [lastScrollY, setLastScrollY] = useState(0)
   const mainRef = useRef<HTMLElement>(null)
+  const location = useLocation()
+  // Single-nav discipline: admin area uses the AdminNav sidebar/drawer only —
+  // the customer BottomNav must never render there (structural gate, not CSS).
+  const isAdminArea = location.pathname.startsWith('/admin')
+  const showBottomNav = !hideBottomNav && !isAdminArea
 
   // Header hide-on-scroll — listen on the ACTUAL scroll container (`main` has
   // overflow-y-auto, so window.scrollY never moves on long pages) → this makes
@@ -57,7 +64,7 @@ export function Layout({ children, hideBottomNav = false, activeSection = 'home'
       {/* Site background layer — Stage C: z-0 fixed, pointer-events none,
           content/overlays below stay above it via the relative z-10 wrapper */}
       <BackgroundLayer />
-      <div className={`relative z-10 flex flex-col flex-1 min-h-0${hideBottomNav ? '' : ' nav-visible'}`}>
+      <div className={`relative z-10 flex flex-col flex-1 min-h-0${showBottomNav ? '' : ' nav-visible'}`}>
         {/* Header - hidden when scrolling down */}
         <div className={`transition-transform duration-300 ${headerHidden ? '-translate-y-full' : 'translate-y-0'} relative z-50`}>
           <Header />
@@ -74,8 +81,10 @@ export function Layout({ children, hideBottomNav = false, activeSection = 'home'
         {/* Footer - always visible at bottom */}
         <Footer />
 
-        {!hideBottomNav && <BottomNav />}
+        {showBottomNav && <BottomNav />}
         <ToastContainer />
+        {/* Ambient music player — session-persistent singleton state */}
+        <AmbientMusicToggle />
         <OrderBuilderModal />
         {/* Decorative + floating AI mascot (pointer-events guarded) */}
         <BiteMascot activeSection={activeSection} />

@@ -17,7 +17,7 @@ import {
 // - applyTheme เขียน attribute + localStorage + meta theme-color + dispatch event
 // ============================================
 
-describe('theme manager (two themes only)', () => {
+describe('theme manager (3 themes: light / dark / graphite)', () => {
   beforeEach(() => {
     localStorage.clear()
     document.documentElement.removeAttribute('data-theme')
@@ -40,6 +40,9 @@ describe('theme manager (two themes only)', () => {
     it("keeps 'light' -> 'light'", () => {
       expect(migrateTheme('light')).toBe('light')
     })
+    it("maps 'graphite' -> 'graphite' (theme 3 stays)", () => {
+      expect(migrateTheme('graphite')).toBe('graphite')
+    })
     it('falls back to light for null/unknown values', () => {
       expect(migrateTheme(null)).toBe('light')
       expect(migrateTheme(undefined)).toBe('light')
@@ -59,11 +62,15 @@ describe('theme manager (two themes only)', () => {
       localStorage.setItem(THEME_STORAGE_KEY, 'orange')
       expect(getTheme()).toBe('light')
     })
-    it('never returns a third theme', () => {
+    it('reads graphite as graphite', () => {
+      localStorage.setItem(THEME_STORAGE_KEY, 'graphite')
+      expect(getTheme()).toBe('graphite')
+    })
+    it('only returns one of the 3 valid themes', () => {
       for (const v of ['orange', 'gray', 'dark', 'light', 'blue', '']) {
         localStorage.setItem(THEME_STORAGE_KEY, v)
         const t: ThemeName = getTheme()
-        expect(['light', 'dark']).toContain(t)
+        expect(['light', 'dark', 'graphite']).toContain(t)
       }
     })
   })
@@ -94,20 +101,35 @@ describe('theme manager (two themes only)', () => {
       expect(spy).toHaveBeenCalledTimes(1)
       window.removeEventListener(THEME_CHANGE_EVENT, spy)
     })
-  })
 
-  describe('cycleTheme — exactly two themes', () => {
-    it('light -> dark -> light', () => {
-      expect(cycleTheme('light')).toBe('dark')
-      expect(cycleTheme('dark')).toBe('light')
+    it('applyTheme(graphite) sets data-theme + persists + graphite theme-color', () => {
+      const meta = document.createElement('meta')
+      meta.setAttribute('name', 'theme-color')
+      document.head.appendChild(meta)
+
+      applyTheme('graphite')
+      expect(document.documentElement.getAttribute('data-theme')).toBe('graphite')
+      expect(localStorage.getItem(THEME_STORAGE_KEY)).toBe('graphite')
+      expect(meta.content).toBe('#1B1B20')
+
+      meta.remove()
     })
   })
 
-  describe('THEME_LABELS — Thai labels for both themes', () => {
-    it('has labels for exactly light + dark', () => {
-      expect(Object.keys(THEME_LABELS).sort()).toEqual(['dark', 'light'])
+  describe('cycleTheme - 3 themes round-robin', () => {
+    it('light -> dark -> graphite -> light', () => {
+      expect(cycleTheme('light')).toBe('dark')
+      expect(cycleTheme('dark')).toBe('graphite')
+      expect(cycleTheme('graphite')).toBe('light')
+    })
+  })
+
+  describe('THEME_LABELS - labels for all 3 themes', () => {
+    it('has labels for exactly light + dark + graphite', () => {
+      expect(Object.keys(THEME_LABELS).sort()).toEqual(['dark', 'graphite', 'light'])
       expect(THEME_LABELS.light).toContain('Light Minimal')
       expect(THEME_LABELS.dark).toContain('Dark Glass')
+      expect(THEME_LABELS.graphite).toContain('Graphite Theatre')
     })
   })
 })
