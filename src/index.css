@@ -1257,14 +1257,14 @@ p { color: var(--color-brand-text-secondary); }
   background: #FFF7ED;
   color: var(--color-brand-muted);
 }
-html[data-theme='dark'], html[data-theme='graphite'] .fmc-media {
+html[data-theme='dark'] .fmc-media, html[data-theme='graphite'] .fmc-media {
   background: linear-gradient(to bottom, #232329, #1B1B20);
 }
-html[data-theme='dark'], html[data-theme='graphite'] .fmc-status-pill {
+html[data-theme='dark'] .fmc-status-pill, html[data-theme='graphite'] .fmc-status-pill {
   background: rgba(239, 68, 68, 0.18);
   color: #FCA5A5;
 }
-html[data-theme='dark'], html[data-theme='graphite'] .fmc-prep-pill {
+html[data-theme='dark'] .fmc-prep-pill, html[data-theme='graphite'] .fmc-prep-pill {
   background: rgba(255, 94, 30, 0.12);
   color: var(--color-brand-text-secondary);
 }
@@ -2117,9 +2117,9 @@ html[data-theme='dark'], html[data-theme='graphite'] {
 }
 
 /* ============================================
-   THEME VARIANTS — TWO THEMES ONLY (Owner 2026-10-10)
+   THEME VARIANTS — THREE THEMES (light / dark / graphite) (Owner 2026-10-10)
    base = Light Minimal (html[data-theme='light'] / default)
-   html[data-theme='dark'], html[data-theme='graphite'] = Dark Glass (charcoal + frosted glass)
+   html[data-theme='dark'], html[data-theme='graphite'] = dark-family tokens (Dark Glass base, graphite overrides at EOF)
    legacy 'gray' ถูก migrate -> 'dark' ตอนอ่านค่า (src/lib/theme.ts)
    ทุก utility (.bg-brand-*, .text-brand-*) อ้าง var() อยู่แล้ว
    จึงเปลี่ยนสีได้ที่จุดเดียว
@@ -2154,53 +2154,53 @@ html[data-theme='light'] {
   --glass-border: rgba(0, 0, 0, 0.06);
   --glass-blur: 16px;
 }
-html[data-theme='dark'], html[data-theme='graphite'] body {
+html[data-theme='dark'] body, html[data-theme='graphite'] body {
   background: linear-gradient(180deg, var(--color-brand-bg) 0%, var(--color-brand-bg-warm) 100%);
 }
 /* hardcode ที่กระจายอยู่ในคอมโพเนนต์ (bg-white / neutral-*) ให้ตามธีม */
-html[data-theme='dark'], html[data-theme='graphite'] .bg-white { background-color: var(--color-brand-surface); }
-html[data-theme='dark'], html[data-theme='graphite'] .bg-neutral-50,
-html[data-theme='dark'], html[data-theme='graphite'] .bg-neutral-100 { background-color: var(--color-brand-bg); }
-html[data-theme='dark'], html[data-theme='graphite'] .border-neutral-100,
-html[data-theme='dark'], html[data-theme='graphite'] .border-neutral-200 { border-color: var(--color-brand-border); }
-html[data-theme='dark'], html[data-theme='graphite'] .text-neutral-500,
-html[data-theme='dark'], html[data-theme='graphite'] .text-neutral-600,
-html[data-theme='dark'], html[data-theme='graphite'] .text-neutral-700,
-html[data-theme='dark'], html[data-theme='graphite'] .text-neutral-800,
-html[data-theme='dark'], html[data-theme='graphite'] .text-neutral-900,
-html[data-theme='dark'], html[data-theme='graphite'] .text-black { color: var(--color-brand-text); }
-html[data-theme='dark'], html[data-theme='graphite'] .text-slate-300,
-html[data-theme='dark'], html[data-theme='graphite'] .text-slate-400 { color: var(--color-brand-text-secondary); }
+html[data-theme='dark'] .bg-white, html[data-theme='graphite'] .bg-white { background-color: var(--color-brand-surface); }
+html[data-theme='dark'] .bg-neutral-50, html[data-theme='graphite'] .bg-neutral-50,
+html[data-theme='dark'] .bg-neutral-100, html[data-theme='graphite'] .bg-neutral-100 { background-color: var(--color-brand-bg); }
+html[data-theme='dark'] .border-neutral-100, html[data-theme='graphite'] .border-neutral-100,
+html[data-theme='dark'] .border-neutral-200, html[data-theme='graphite'] .border-neutral-200 { border-color: var(--color-brand-border); }
+html[data-theme='dark'] .text-neutral-500, html[data-theme='graphite'] .text-neutral-500,
+html[data-theme='dark'] .text-neutral-600, html[data-theme='graphite'] .text-neutral-600,
+html[data-theme='dark'] .text-neutral-700, html[data-theme='graphite'] .text-neutral-700,
+html[data-theme='dark'] .text-neutral-800, html[data-theme='graphite'] .text-neutral-800,
+html[data-theme='dark'] .text-neutral-900, html[data-theme='graphite'] .text-neutral-900,
+html[data-theme='dark'] .text-black, html[data-theme='graphite'] .text-black { color: var(--color-brand-text); }
+html[data-theme='dark'] .text-slate-300, html[data-theme='graphite'] .text-slate-300,
+html[data-theme='dark'] .text-slate-400, html[data-theme='graphite'] .text-slate-400 { color: var(--color-brand-text-secondary); }
 /* a11y บังคับส้มเข้มบนพื้นสว่าง — Dark Glass ใช้ส้มอ่อนเพื่อให้อ่านออก */
-html[data-theme='dark'], html[data-theme='graphite'] a.text-brand-primary,
-html[data-theme='dark'], html[data-theme='graphite'] span.text-brand-primary,
-html[data-theme='dark'], html[data-theme='graphite'] p.text-brand-primary,
-html[data-theme='dark'], html[data-theme='graphite'] div.text-brand-primary { color: #FF7F47; }
-html[data-theme='dark'], html[data-theme='graphite'] .category-chip:not(.text-white) { color: #FFA680; }
-html[data-theme='dark'], html[data-theme='graphite'] .flad-cta { color: #FF7F47; }
+html[data-theme='dark'] a.text-brand-primary, html[data-theme='graphite'] a.text-brand-primary,
+html[data-theme='dark'] span.text-brand-primary, html[data-theme='graphite'] span.text-brand-primary,
+html[data-theme='dark'] p.text-brand-primary, html[data-theme='graphite'] p.text-brand-primary,
+html[data-theme='dark'] div.text-brand-primary, html[data-theme='graphite'] div.text-brand-primary { color: #FF7F47; }
+html[data-theme='dark'] .category-chip:not(.text-white), html[data-theme='graphite'] .category-chip:not(.text-white) { color: #FFA680; }
+html[data-theme='dark'] .flad-cta, html[data-theme='graphite'] .flad-cta { color: #FF7F47; }
 /* gradient stops ที่ hardcode ขาว (header/hero ของแชท) ให้ตามธีม */
-html[data-theme='dark'], html[data-theme='graphite'] .to-white { --tw-gradient-to: #1B1B20; }
-html[data-theme='dark'], html[data-theme='graphite'] .from-white { --tw-gradient-from: #1B1B20; }
-html[data-theme='dark'], html[data-theme='graphite'] .via-white { --tw-gradient-via: #1B1B20; }
+html[data-theme='dark'] .to-white, html[data-theme='graphite'] .to-white { --tw-gradient-to: #1B1B20; }
+html[data-theme='dark'] .from-white, html[data-theme='graphite'] .from-white { --tw-gradient-from: #1B1B20; }
+html[data-theme='dark'] .via-white, html[data-theme='graphite'] .via-white { --tw-gradient-via: #1B1B20; }
 /* Chat backdrop — fallback gradient เข้าชุดธีม (ปกติใช้ภาพ restaurant-bg) */
-html[data-theme='dark'], html[data-theme='graphite'] .ttb-backdrop {
+html[data-theme='dark'] .ttb-backdrop, html[data-theme='graphite'] .ttb-backdrop {
   background:
     radial-gradient(1200px 520px at 85% -10%, rgba(255, 127, 71, 0.28), transparent 60%),
     radial-gradient(900px 480px at 0% 110%, rgba(255, 94, 30, 0.18), transparent 55%),
     linear-gradient(165deg, #121214 0%, #1B1B20 45%, #232329 75%, #2A1710 100%);
 }
-html[data-theme='dark'], html[data-theme='graphite'] .ttb-backdrop__tint {
+html[data-theme='dark'] .ttb-backdrop__tint, html[data-theme='graphite'] .ttb-backdrop__tint {
   background: linear-gradient(180deg, rgba(18, 18, 20, 0.72) 0%, rgba(18, 18, 20, 0.55) 100%);
 }
 /* ---- Dark Glass surfaces — frosted panel เฉพาะผิวที่เหมาะสม (fallback = พื้นทึบเดิม) ---- */
 @supports (backdrop-filter: blur(4px)) or (-webkit-backdrop-filter: blur(4px)) {
-  html[data-theme='dark'], html[data-theme='graphite'] .glass-surface {
+  html[data-theme='dark'] .glass-surface, html[data-theme='graphite'] .glass-surface{
     background: var(--glass-bg);
     backdrop-filter: blur(var(--glass-blur));
     -webkit-backdrop-filter: blur(var(--glass-blur));
   }
 }
-html[data-theme='dark'], html[data-theme='graphite'] .glass-surface { border-color: var(--glass-border); }
+html[data-theme='dark'] .glass-surface, html[data-theme='graphite'] .glass-surface { border-color: var(--glass-border); }
 
 /* ============================================
    SITE BACKGROUND LAYER (Stage C) — ภาพพื้นหลังระดับเว็บ
@@ -2228,7 +2228,7 @@ html[data-theme='dark'], html[data-theme='graphite'] .glass-surface { border-col
   inset: 0;
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.82) 0%, rgba(255, 247, 237, 0.74) 100%);
 }
-html[data-theme='dark'], html[data-theme='graphite'] .site-background__scrim {
+html[data-theme='dark'] .site-background__scrim, html[data-theme='graphite'] .site-background__scrim {
   background: linear-gradient(180deg, rgba(18, 18, 20, 0.86) 0%, rgba(18, 18, 20, 0.78) 100%);
 }
 @media (prefers-reduced-motion: reduce) {
@@ -2236,67 +2236,67 @@ html[data-theme='dark'], html[data-theme='graphite'] .site-background__scrim {
 }
 
 /* ---- Dark Glass: hardcode ผิวสีขาวในคอมโพเนนต์ให้ตามธีม (color sweep) ---- */
-html[data-theme='dark'], html[data-theme='graphite'] .home-card,
-html[data-theme='dark'], html[data-theme='graphite'] .snack-card,
-html[data-theme='dark'], html[data-theme='graphite'] .drink-card,
-html[data-theme='dark'], html[data-theme='graphite'] .flad-card,
-html[data-theme='dark'], html[data-theme='graphite'] .ob-sheet,
-html[data-theme='dark'], html[data-theme='graphite'] .ob-chip,
-html[data-theme='dark'], html[data-theme='graphite'] .ob-qty-btn,
-html[data-theme='dark'], html[data-theme='graphite'] .review-source-badge,
-html[data-theme='dark'], html[data-theme='graphite'] .share-card,
-html[data-theme='dark'], html[data-theme='graphite'] .usp-item:hover,
-html[data-theme='dark'], html[data-theme='graphite'] .trust-badge:hover,
-html[data-theme='dark'], html[data-theme='graphite'] .share-card:hover {
+html[data-theme='dark'] .home-card, html[data-theme='graphite'] .home-card,
+html[data-theme='dark'] .snack-card, html[data-theme='graphite'] .snack-card,
+html[data-theme='dark'] .drink-card, html[data-theme='graphite'] .drink-card,
+html[data-theme='dark'] .flad-card, html[data-theme='graphite'] .flad-card,
+html[data-theme='dark'] .ob-sheet, html[data-theme='graphite'] .ob-sheet,
+html[data-theme='dark'] .ob-chip, html[data-theme='graphite'] .ob-chip,
+html[data-theme='dark'] .ob-qty-btn, html[data-theme='graphite'] .ob-qty-btn,
+html[data-theme='dark'] .review-source-badge, html[data-theme='graphite'] .review-source-badge,
+html[data-theme='dark'] .share-card, html[data-theme='graphite'] .share-card,
+html[data-theme='dark'] .usp-item:hover, html[data-theme='graphite'] .usp-item:hover,
+html[data-theme='dark'] .trust-badge:hover, html[data-theme='graphite'] .trust-badge:hover,
+html[data-theme='dark'] .share-card:hover, html[data-theme='graphite'] .share-card:hover {
   background: var(--color-brand-surface);
 }
-html[data-theme='dark'], html[data-theme='graphite'] .ob-header { border-bottom-color: var(--color-brand-border); }
-html[data-theme='dark'], html[data-theme='graphite'] .ob-addon,
-html[data-theme='dark'], html[data-theme='graphite'] .ob-rec {
+html[data-theme='dark'] .ob-header, html[data-theme='graphite'] .ob-header { border-bottom-color: var(--color-brand-border); }
+html[data-theme='dark'] .ob-addon, html[data-theme='graphite'] .ob-addon,
+html[data-theme='dark'] .ob-rec, html[data-theme='graphite'] .ob-rec {
   background: var(--color-brand-surface-warm);
   border-color: var(--color-brand-border);
 }
-html[data-theme='dark'], html[data-theme='graphite'] .badge-primary {
+html[data-theme='dark'] .badge-primary, html[data-theme='graphite'] .badge-primary {
   background: rgba(255, 94, 30, 0.14);
   color: #FFA680;
 }
-html[data-theme='dark'], html[data-theme='graphite'] .usp-item,
-html[data-theme='dark'], html[data-theme='graphite'] .trust-badge {
+html[data-theme='dark'] .usp-item, html[data-theme='graphite'] .usp-item,
+html[data-theme='dark'] .trust-badge, html[data-theme='graphite'] .trust-badge {
   background: rgba(27, 27, 32, 0.75);
   border-color: rgba(255, 94, 30, 0.28);
 }
-html[data-theme='dark'], html[data-theme='graphite'] .usp-item:hover,
-html[data-theme='dark'], html[data-theme='graphite'] .trust-badge:hover {
+html[data-theme='dark'] .usp-item:hover, html[data-theme='graphite'] .usp-item:hover,
+html[data-theme='dark'] .trust-badge:hover, html[data-theme='graphite'] .trust-badge:hover {
   border-color: rgba(255, 94, 30, 0.45);
 }
-html[data-theme='dark'], html[data-theme='graphite'] .promo-card {
+html[data-theme='dark'] .promo-card, html[data-theme='graphite'] .promo-card {
   background: linear-gradient(135deg, var(--color-brand-surface), var(--color-brand-bg-warm));
   border-color: var(--color-brand-border);
 }
-html[data-theme='dark'], html[data-theme='graphite'] .store-strip {
+html[data-theme='dark'] .store-strip, html[data-theme='graphite'] .store-strip {
   background: rgba(16, 185, 129, 0.12);
   border-color: rgba(16, 185, 129, 0.35);
 }
-html[data-theme='dark'], html[data-theme='graphite'] .store-strip.is-closed {
+html[data-theme='dark'] .store-strip.is-closed, html[data-theme='graphite'] .store-strip.is-closed {
   background: rgba(239, 68, 68, 0.12);
   border-color: rgba(239, 68, 68, 0.38);
 }
-html[data-theme='dark'], html[data-theme='graphite'] .drink-card-coming-soon-overlay,
-html[data-theme='dark'], html[data-theme='graphite'] .snack-card-coming-soon-overlay {
+html[data-theme='dark'] .drink-card-coming-soon-overlay, html[data-theme='graphite'] .drink-card-coming-soon-overlay,
+html[data-theme='dark'] .snack-card-coming-soon-overlay, html[data-theme='graphite'] .snack-card-coming-soon-overlay {
   background: rgba(18, 18, 20, 0.72);
 }
-html[data-theme='dark'], html[data-theme='graphite'] .drink-card-coming-soon-overlay span,
-html[data-theme='dark'], html[data-theme='graphite'] .snack-card-coming-soon-overlay span {
+html[data-theme='dark'] .drink-card-coming-soon-overlay span, html[data-theme='graphite'] .drink-card-coming-soon-overlay span,
+html[data-theme='dark'] .snack-card-coming-soon-overlay span, html[data-theme='graphite'] .snack-card-coming-soon-overlay span {
   background: rgba(27, 27, 32, 0.92);
   color: #FFA680;
 }
-html[data-theme='dark'], html[data-theme='graphite'] .home-card-media,
-html[data-theme='dark'], html[data-theme='graphite'] .drink-card-media,
-html[data-theme='dark'], html[data-theme='graphite'] .snack-card-media {
+html[data-theme='dark'] .home-card-media, html[data-theme='graphite'] .home-card-media,
+html[data-theme='dark'] .drink-card-media, html[data-theme='graphite'] .drink-card-media,
+html[data-theme='dark'] .snack-card-media, html[data-theme='graphite'] .snack-card-media {
   background: linear-gradient(to bottom, rgba(35, 35, 41, 0.9), var(--color-brand-bg));
 }
-html[data-theme='dark'], html[data-theme='graphite'] .border-orange-50 { border-color: var(--color-brand-border); }
-html[data-theme='dark'], html[data-theme='graphite'] .sticky-cart-bar {
+html[data-theme='dark'] .border-orange-50, html[data-theme='graphite'] .border-orange-50 { border-color: var(--color-brand-border); }
+html[data-theme='dark'] .sticky-cart-bar, html[data-theme='graphite'] .sticky-cart-bar {
   background: linear-gradient(180deg, rgba(27, 27, 32, 0.92), #121214);
 }
 /* ============================================
