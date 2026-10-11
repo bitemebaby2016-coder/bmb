@@ -106,15 +106,16 @@ describe('sitemap.xml + robots.txt — /shop discoverable, valid namespace', () 
 
 describe('index.html — static head is Helmet-owned, no duplicate SEO blocks', () => {
   it('every static title/canonical/og/twitter tag is marked data-react-helmet', () => {
-    // SeoHelmet (react-helmet-async) only replaces tags carrying this attribute;
-    // unmarked static tags would DUPLICATE every per-page tag (verified live:
-    // two <title>, two canonicals, two og:url on /shop before this fix).
+    // SeoHelmet (react-helmet-async v3) only replaces tags carrying its `data-rh`
+    // attribute; unmarked static tags would DUPLICATE every per-page tag (verified
+    // live: two <title>, two canonicals, two og:url on /shop before this fix).
     const lines = indexHtml.split('\n').filter((l) =>
       /<(title|meta|link)\s/.test(l) &&
       /(<title|rel="canonical"|rel="alternate"|name="description"|name="keywords"|name="twitter:|property="og:)/.test(l),
     )
     expect(lines.length).toBeGreaterThan(0)
-    for (const line of lines) expect(line).toContain('data-react-helmet="true"')
+    // react-helmet-async v3 manages tags marked with its attribute: data-rh
+    for (const line of lines) expect(line).toContain('data-rh="true"')
   })
 
   it('no static JSON-LD script — structured data comes only from seo.ts via Helmet', () => {
