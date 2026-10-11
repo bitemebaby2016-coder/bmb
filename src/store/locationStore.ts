@@ -12,6 +12,8 @@ export interface CustomerLocation {
   longitude: number
   addressDetail: string
   source: 'gps' | 'ip' | 'kitchen' | 'manual' | 'saved' | ''
+  /** ORIGINAL capture source — CR-2 P0 trusted-provenance policy. */
+  provenance?: 'gps' | 'ip' | 'kitchen' | 'manual' | 'saved' | ''
   name?: string
   phone?: string
 }
@@ -21,6 +23,57 @@ interface LocationState {
   lastUpdatedAt: number | null
   setLocation: (loc: Partial<CustomerLocation> & { source: CustomerLocation['source'] }) => void
   clearLocation: () => void
+}
+
+/** CR-2 P0: sources that may be used/persisted as a real delivery coordinate. */
+export const TRUSTED_SOURCES: ReadonlyArray<'gps' | 'manual'> = ['gps', 'manual']
+
+/** True when a coordinate source may be used as (and persisted as) a delivery point. */
+export function isTrustedSource(source: string | undefined | null): boolean {
+  return source === 'gps' || source === 'manual'
+}
+
+/** Empty "no delivery point yet" state — deliberately NOT the kitchen coords. */
+export function emptyLocation(): CustomerLocation {
+  return { latitude: 0, longitude: 0, addressDetail: '', source: '', provenance: '' }
+}
+
+/** Delivery-point draft shape used by the checkout confirmation logic. */
+export interface DeliveryPointDraft {
+  latitude: number | null
+  longitude: number | null
+  /** Display source for the CURRENT session ('gps' | 'manual' | 'saved' | ''). */
+  source: '' | 'gps' | 'manual' | 'saved'
+  /** ORIGINAL capture provenance — a saved point keeps gps/manual, is never relabeled. */
+  provenance: '' | 'gps' | 'manual'
+  /** Explicit customer confirmation (Owner decision). */
+  confirmed: boolean
+}
+
+/**
+ * CR-2 PROVENANCE CORRECTION (Owner 2026-10-10):
+ * source/provenance (WHERE the point came from) is kept SEPARATE from
+ * trust/confirmation status (WHETHER it may be ordered with).
+ * - trusted ⇔ provenance is gps/manual (a restored 'saved' point keeps its
+ *   original provenance — it is NEVER called 'gps');
+ * - orderable ⇔ trusted AND explicitly confirmed;
+ * - any point failing the trust check can never reach `orderable: true`.
+ */
+export function deliveryPointStatus(p: DeliveryPointDraft): {
+  hasPoint: boolean
+  trusted: boolean
+  confirmable: boolean
+  orderable: boolean
+} {
+  const hasPoint =
+    p.latitude != null && p.longitude != null && !(p.latitude === 0 && p.longitude === 0)
+  const trusted = hasPoint && isTrustedSource(p.provenance)
+  return {
+    hasPoint,
+    trusted,
+    confirmable: trusted && !p.confirmed,
+    orderable: trusted && p.confirmed,
+  }
 }
 
 // Kitchen default (owner can edit .env VITE_DELIVERY_KITCHEN_LAT / LNG)
@@ -35,11 +88,17 @@ function loadSaved(): CustomerLocation {
     if (raw) {
       const parsed = JSON.parse(raw) as CustomerLocation
       if (typeof parsed?.latitude === 'number' && typeof parsed?.longitude === 'number') {
-        return { ...parsed, source: 'saved' }
+        // CR-2 P0: restore ONLY trusted provenance (gps/manual). Anything else
+        // (ip / kitchen / legacy payloads without trusted provenance) is
+        // discarded so a stale approximate point never silently pre-fills checkout.
+        const provenance = (parsed.provenance ?? parsed.source) as CustomerLocation['source']
+        if (isTrustedSource(provenance) && parsed.latitude !== 0 && parsed.longitude !== 0) {
+          return { ...parsed, source: 'saved', provenance }
+        }
       }
     }
   } catch { /* ignore corrupted storage */ }
-  return { latitude: KITCHEN_LAT, longitude: KITCHEN_LNG, addressDetail: '', source: '' }
+  return emptyLocation()
 }
 
 export const useLocationStore = create<LocationState>((set, get) => ({
@@ -47,14 +106,18 @@ export const useLocationStore = create<LocationState>((set, get) => ({
   lastUpdatedAt: null,
 
   setLocation: (loc) => {
+    const prev = get().location
     const next: CustomerLocation = {
-      ...get().location,
+      ...prev,
       ...(loc.latitude !== undefined ? { latitude: loc.latitude } : {}),
       ...(loc.longitude !== undefined ? { longitude: loc.longitude } : {}),
       ...(loc.addressDetail !== undefined ? { addressDetail: loc.addressDetail } : {}),
       ...(loc.name !== undefined ? { name: loc.name } : {}),
       ...(loc.phone !== undefined ? { phone: loc.phone } : {}),
       source: loc.source,
+      // CR-2 P0: keep the ORIGINAL capture source as provenance
+      // (a 'saved' re-save keeps the previous provenance).
+      provenance: loc.source === 'saved' ? (prev.provenance ?? prev.source) : loc.source,
     }
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(next))
@@ -64,6 +127,6 @@ export const useLocationStore = create<LocationState>((set, get) => ({
 
   clearLocation: () => {
     try { localStorage.removeItem(STORAGE_KEY) } catch { /* ignore */ }
-    set({ location: { latitude: KITCHEN_LAT, longitude: KITCHEN_LNG, addressDetail: '', source: '' }, lastUpdatedAt: null })
+    set({ location: emptyLocation(), lastUpdatedAt: null })
   },
 }))

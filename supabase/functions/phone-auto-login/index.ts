@@ -20,6 +20,9 @@
 //   legacy SUPABASE_SERVICE_ROLE_KEY kept as fallback)
 // ============================================
 
+// CR-3 coordinate persistence policy (pure — shared with repo unit tests)
+import { shouldPersistDefaultCoords } from './locationPolicy.ts'
+
 function corsHeaders(): Record<string, string> {
   return {
     'Access-Control-Allow-Origin': '*',
@@ -80,8 +83,10 @@ Deno.serve(async (req: Request): Promise<Response> => {
 
   const name: string = String(body?.name ?? '').trim()
   const phone: string = normalizePhone(String(body?.phone ?? ''))
-  let latitude = Number(body?.latitude)
-  let longitude = Number(body?.longitude)
+  const latitude = Number(body?.latitude)
+  const longitude = Number(body?.longitude)
+  // CR-3: client-declared coordinate provenance (metadata, not proof — see locationPolicy.ts)
+  const source: string = String(body?.source ?? '').trim()
   const addressDetail: string = String(body?.address_detail ?? '').trim()
   const deliveryPhotoUrl: string = String(body?.delivery_photo_url ?? '').trim()
   const deliveryPhotoPath: string = String(body?.delivery_photo_path ?? '').trim()
@@ -109,7 +114,9 @@ Deno.serve(async (req: Request): Promise<Response> => {
     if (addressDetail) { row.address = addressDetail; row.default_address_detail = addressDetail }
     const latU = Number(body?.latitude)
     const lngU = Number(body?.longitude)
-    if (latU >= -90 && latU <= 90 && lngU >= -180 && lngU <= 180) {
+    // CR-3: default_* written ONLY with a trusted source (gps/manual) + valid coords —
+    // a request that does not send `source` can NEVER write coordinates here.
+    if (shouldPersistDefaultCoords({ latitude: latU, longitude: lngU, source })) {
       row.default_latitude = latU
       row.default_longitude = lngU
     }
@@ -141,9 +148,9 @@ Deno.serve(async (req: Request): Promise<Response> => {
   }
 
   if (!name || phone.length < 7) return json({ error: 'ERR_MISSING_NAME_OR_PHONE' }, 400)
-  // coords optional → fall back to the kitchen point (routes/delivery unsupported until set)
-  if (!(latitude >= -90 && latitude <= 90)) latitude = 10.7016
-  if (!(longitude >= -180 && longitude <= 180)) longitude = 102.1429
+  // CR-3 (Owner 2026-10-10): NO kitchen fallback — invalid/missing coords simply
+  // mean "no coordinates". default_* are written only when
+  // shouldPersistDefaultCoords() passes (trusted source + WGS84-valid pair).
 
   const email = phone.includes('@') ? phone : `${phone}@phone.bmb.local`
 
@@ -248,8 +255,11 @@ Deno.serve(async (req: Request): Promise<Response> => {
       phone,
       email,
       address: addressDetail,
-      default_latitude: latitude,
-      default_longitude: longitude,
+      // CR-3: default_* written ONLY for trusted (gps/manual) valid coords —
+      // a missing/invalid/fallback point persists NO coordinate columns.
+      ...(shouldPersistDefaultCoords({ latitude, longitude, source })
+        ? { default_latitude: latitude, default_longitude: longitude }
+        : {}),
       default_address_detail: addressDetail,
       ...(deliveryPhotoUrl ? { delivery_photo_url: deliveryPhotoUrl } : {}),
       ...(deliveryPhotoPath ? { delivery_photo_path: deliveryPhotoPath } : {}),

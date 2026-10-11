@@ -97,17 +97,37 @@ export function PaymentConfirmationPage() {
         <div className="border-t border-brand-border pt-4 space-y-2">
           <div className="flex justify-between"><span>Customer</span><span>{order.customer_name}</span></div>
           <div className="flex justify-between"><span>Phone</span><span>{order.customer_phone}</span></div>
-          <div className="flex justify-between"><span>Payment</span><span>{order.payment_method === 'promptpay_qr' ? 'PromptPay QR' : order.payment_method === 'credit_card' ? `บัตรเครดิต/เดบิต (${isOmiseConfigured() ? 'Omise' : 'Stripe'})` : 'เงินสดตอนรับของ'}</span></div>
+          <div className="flex justify-between"><span>Payment</span><span>{order.payment_method === 'promptpay_qr' ? 'PromptPay (โอนผ่าน QR ของร้าน — ยืนยันโดยแอดมิน)' : order.payment_method === 'credit_card' ? `บัตรเครดิต/เดบิต (${isOmiseConfigured() ? 'Omise' : 'Stripe'})` : 'เงินสดตอนรับของ'}</span></div>
           <div className="flex justify-between text-xl font-bold pt-2 border-t border-brand-border"><span>Total</span><span className="text-brand-primary">฿{order.total_amount.toFixed(2)}</span></div>
         </div>
       </div>
       {isPending && order.payment_method === 'promptpay_qr' && (
         <div className="card mb-6 bg-gradient-to-br from-green-50 to-emerald-50 border-2 border-green-200">
-          <h3 className="font-bold text-brand-accent mb-4">PromptPay Confirmation</h3>
+          <h3 className="font-bold text-brand-accent mb-2">PromptPay — ชำระเงินด้วยตนเอง</h3>
+          {/* CR-2 P3: static shop QR (Owner-verified asset). No dynamic amount. */}
+          <div className="text-center mb-3">
+            <img
+              src="/assets/Qr%20Code/BMB_Promptpay_Qr.webp"
+              alt="QR PromptPay ของร้าน Bite Me Baby"
+              width={220}
+              height={220}
+              className="mx-auto rounded-lg border border-green-300 bg-white p-2"
+              data-testid="promptpay-qr"
+            />
+            <p className="text-xs text-brand-muted mt-1">สแกนด้วยแอปธนาคาร/ PromptPay แล้วโอนตามยอดออเดอร์ด้านบน</p>
+          </div>
+          <ol className="text-sm mb-4 list-decimal list-inside space-y-1">
+            <li>สแกน QR ด้านบนและโอน <strong>฿{order.total_amount.toFixed(2)}</strong></li>
+            <li>คัดลอก <strong>เลขธุรกรรม (Transaction ID / Ref.)</strong> จากสลิป</li>
+            <li>นำมาใส่ด้านล่างแล้วกด “ส่งข้อมูลการชำระเงิน”</li>
+          </ol>
           <div className="mb-4">
             <label className="block text-sm font-medium text-brand-accent mb-2">Transaction ID</label>
             <input data-testid="txn-input" type="text" placeholder="Enter Transaction ID" value={transactionId} onChange={(e) => setTransactionId(e.target.value)} className="input mb-3" />
           </div>
+          <p className="text-xs mb-3" style={{ color: '#b45309' }}>
+            ⚠️ การส่งเลขธุรกรรม <strong>ยังไม่เท่ากับการชำระเงินได้รับการยืนยัน</strong> — แอดมินตรวจสอบสลิปก่อน แล้วระบบจะเปลี่ยนสถานะเป็น “ชำระเงินแล้ว” ให้
+          </p>
           <button data-testid="confirm-payment" onClick={handlePromptPaySubmit} disabled={isConfirming || !transactionId} className="btn btn-success w-full text-lg py-3 disabled:opacity-50">
             {isConfirming ? 'กำลังส่ง...' : 'ส่งข้อมูลการชำระเงิน'}
           </button>

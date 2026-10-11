@@ -34,6 +34,12 @@ export function zoneFeeForDistance(distanceKm: number, zones: DeliveryZonesRow[]
 }
 
 /** Server-authoritative fee quote (migration 020 RPC). Falls back to local mirror. */
+export interface DeliveryFeeQuote {
+  /** null = could NOT be computed (error) — callers must NOT present it as a valid fee. */
+  delivery_fee: number | null
+  source: 'server' | 'local-mirror' | 'error'
+}
+
 export async function fetchServerDeliveryFee(params: {
   dropoffLatitude: number | null
   dropoffLongitude: number | null
@@ -41,7 +47,7 @@ export async function fetchServerDeliveryFee(params: {
   itemsCount?: number
   distanceKm?: number | null
   kitchen?: { latitude: number; longitude: number }
-}): Promise<{ delivery_fee: number; source: 'server' | 'local-mirror' }> {
+}): Promise<DeliveryFeeQuote> {
   try {
     const { data, error } = await supabase.rpc('compute_delivery_fee_rpc', {
       p_dropoff_latitude: params.dropoffLatitude ?? null,
@@ -53,10 +59,33 @@ export async function fetchServerDeliveryFee(params: {
     if (!error && data && typeof (data as { delivery_fee: number }).delivery_fee === 'number') {
       return { delivery_fee: (data as { delivery_fee: number }).delivery_fee, source: 'server' }
     }
+    // CR-2 P2: an RPC rejection (e.g. out-of-area guard) or malformed response is
+    // NOT a zero fee — surface an explicit error state instead of a silent mirror
+    // value that the UI could present as a computed price.
+    console.warn('[DeliveryFee] server quote rejected:', error?.message ?? 'malformed response')
+    return { delivery_fee: null, source: 'error' }
   } catch (e) {
-    console.warn('[DeliveryFee] server quote unavailable, using mirror:', String(e).slice(0, 100))
+    console.warn('[DeliveryFee] server quote unavailable:', String(e).slice(0, 100))
+    return { delivery_fee: null, source: 'error' }
   }
-  return { delivery_fee: localZoneFee(params), source: 'local-mirror' }
+}
+
+/** Pure: how the checkout should present a fee quote. Exported for tests. */
+export function feeUiState(
+  quote: { delivery_fee: number | null; source: 'server' | 'local-mirror' | 'error' },
+): { label: string; detail: string; tone: 'ok' | 'error' } {
+  if (quote.source === 'error' || quote.delivery_fee == null) {
+    return {
+      label: 'ยังคำนวณไม่สำเร็จ',
+      detail: 'ระบบยังคำนวณค่าจัดส่งไม่ได้ — กดคำนวณใหม่ หรือสั่งซื้อได้ เซิร์ฟเวอร์จะตรวจค่าจัดส่งอีกครั้งตอนสร้างออเดอร์',
+      tone: 'error',
+    }
+  }
+  return {
+    label: `${quote.delivery_fee.toFixed(2)} ฿`,
+    detail: quote.source === 'server' ? 'คำนวณจากเซิร์ฟเวอร์' : 'ประมาณการ (ออฟไลน์)',
+    tone: 'ok',
+  }
 }
 
 /** Local mirror — identical zone math, no network. */

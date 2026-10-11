@@ -148,12 +148,15 @@ export function LoginPage() {
         else showToast(up.error || 'อัปโหลดรูปสถานที่ไม่สำเร็จ', 'error')
       }
       if (photoUrl || qAddress) {
+        // CR-2 P0: persist customer default coordinates ONLY from trusted sources
+        // (real GPS or a manual pin) — IP-geo / kitchen fallback never get stored.
+        const locState = useLocationStore.getState().location
+        const trusted = locState.source === 'gps' || locState.source === 'manual'
         await saveDeliveryProfile({
           name: qName,
           phone: qPhone,
           addressDetail: qAddress,
-          latitude: useLocationStore.getState().location.latitude,
-          longitude: useLocationStore.getState().location.longitude,
+          ...(trusted ? { latitude: locState.latitude, longitude: locState.longitude, source: locState.source } : {}),
           deliveryPhotoUrl: photoUrl,
         })
       }

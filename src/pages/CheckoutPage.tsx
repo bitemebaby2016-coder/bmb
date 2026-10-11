@@ -18,18 +18,19 @@ import { showToast } from '@/components/ui/ToastContainer'
 import { createOrder, type OrderInput } from '@/lib/bmbAdminApi_orders'
 import { createPaymentIntent } from '@/lib/paymentGateway'
 import { writeAuditLog } from '@/lib/auditLog'
-import { useLocationStore } from '@/store/locationStore'
-import { getGpsLocation } from '@/lib/locationLogin'
+import { useLocationStore, isTrustedSource, deliveryPointStatus } from '@/store/locationStore'
 import { resolveAddOnLines } from '@/lib/addonDisplay'
 import { DistanceChecker } from '@/components/delivery/DistanceChecker'
 import { listRoundsForDate, type DeliveryRoundRow } from '@/lib/bmbAdminApi_rounds'
 import { getPublishedScheduleForDate, mirrorPreOrderScheduleGate, type MenuScheduleRow } from '@/lib/bmbMenuSchedule'
-import { fetchServerDeliveryFee } from '@/lib/deliveryFeeApi'
+import { fetchServerDeliveryFee, feeUiState } from '@/lib/deliveryFeeApi'
 import { getBusinessSettings } from '@/lib/bmbAdminApi_settings'
 import { resolvePublicBranch } from '@/lib/brandResolver'
 import { getProducts } from '@/lib/bmbAdminApi_products'
 import { revalidateWithCatalog, reportToToastMessage } from '@/lib/cartPersistence'
 import { isBangkokCutoffPassed } from '@/lib/bangkokTime'
+import { getTrustedGpsLocation } from '@/lib/locationLogin'
+import { DeliveryMapPicker } from '@/components/delivery/DeliveryMapPicker'
 import type { OrderMode } from '@/config/platformConfig'
 
 function todayStr(): string {
@@ -60,16 +61,32 @@ export function CheckoutPage() {
   const [selectedRoundId, setSelectedRoundId] = useState('')
   const [resolvedBranchId, setResolvedBranchId] = useState<string | null>(null) // TEN-07: resolve from round
   const [serverFee, setServerFee] = useState<number | null>(null)
-  const [feeSource, setFeeSource] = useState<'server' | 'local-mirror' | null>(null)
+  const [feeSource, setFeeSource] = useState<'server' | 'local-mirror' | 'error' | null>(null)
   const [leadDays, setLeadDays] = useState(1) // DISPLAY ONLY — server policy enforces the real lead
   const [couponCode, setCouponCode] = useState('')
   const [paymentMethod, setPaymentMethod] = useState<'promptpay_qr' | 'cash_on_delivery' | 'credit_card'>('promptpay_qr')
-  const [deliveryAddress, setDeliveryAddress] = useState(() => {
+  // CR-2 P0: delivery point = candidate until the customer confirms it.
+  // Trusted prefill ONLY (saved provenance gps/manual); kitchen/IP never pre-fill.
+  const [deliveryAddress, setDeliveryAddress] = useState<{
+    latitude: number | null
+    longitude: number | null
+    detail: string
+    source: '' | 'gps' | 'manual' | 'saved'
+    provenance: '' | 'gps' | 'manual'
+    confirmed: boolean
+  }>(() => {
     const saved = useLocationStore.getState().location
+    const savedProvenance = saved?.provenance ?? saved?.source
+    const trusted = isTrustedSource(savedProvenance) && saved?.latitude !== 0 && saved?.longitude !== 0
     return {
-      latitude: saved?.latitude ?? 10.7016,
-      longitude: saved?.longitude ?? 102.1429,
+      latitude: trusted ? saved.latitude : null,
+      longitude: trusted ? saved.longitude : null,
       detail: saved?.addressDetail ?? '',
+      source: trusted ? ('saved' as const) : ('' as const),
+      // CR-2 correction: keep the ORIGINAL provenance of a saved point
+      // (gps/manual) — it stays 'saved' for display and is never relabeled 'gps'.
+      provenance: trusted && (savedProvenance === 'gps' || savedProvenance === 'manual') ? savedProvenance : '',
+      confirmed: false, // saved point still needs an explicit confirmation
     }
   })
   const [locating, setLocating] = useState(false)
@@ -112,24 +129,42 @@ export function CheckoutPage() {
   }, [orderMode, scheduledDate, customer])
 
   // ✅ Server-authoritative delivery fee display (DEL-01 / migration 020 RPC).
+  // CR-2 P2: no silent zero fee — error quotes render as an explicit error state;
+  // debounced + keyed on the item COUNT (not the items array identity) so
+  // unrelated cart re-renders cannot spam the RPC.
+  const itemCount = Math.max(1, items.reduce((s, i) => s + i.quantity, 0))
+  const [feeRetry, setFeeRetry] = useState(0)
+  const feeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   useEffect(() => {
     if (!customer) return // guest redirect above — skip fee RPC (no 401 noise)
+    if (deliveryAddress.latitude == null || deliveryAddress.longitude == null) {
+      // no candidate point yet — do NOT call the RPC (would only error)
+      setServerFee(null)
+      setFeeSource(null)
+      return
+    }
     let active = true
-    void (async () => {
-      const q = await fetchServerDeliveryFee({
-        dropoffLatitude: deliveryAddress.latitude,
-        dropoffLongitude: deliveryAddress.longitude,
-        deliveryMethod: 'self_delivery',
-        itemsCount: Math.max(1, items.reduce((s, i) => s + i.quantity, 0)),
-      })
-      if (!active) return
-      setServerFee(q.delivery_fee)
-      setFeeSource(q.source)
-      // DISPLAY ONLY — the server re-derives the fee again inside the create RPC.
-      useCartStore.getState().setDeliveryFee(q.delivery_fee)
-    })()
-    return () => { active = false }
-  }, [deliveryAddress.latitude, deliveryAddress.longitude, items, customer])
+    if (feeTimerRef.current) clearTimeout(feeTimerRef.current)
+    feeTimerRef.current = setTimeout(() => {
+      void (async () => {
+        const q = await fetchServerDeliveryFee({
+          dropoffLatitude: deliveryAddress.latitude,
+          dropoffLongitude: deliveryAddress.longitude,
+          deliveryMethod: 'self_delivery',
+          itemsCount: itemCount,
+        })
+        if (!active) return
+        setServerFee(q.delivery_fee)
+        setFeeSource(q.source)
+        // DISPLAY ONLY — the server re-derives the fee again inside the create RPC.
+        if (q.delivery_fee != null) useCartStore.getState().setDeliveryFee(q.delivery_fee)
+      })()
+    }, 500)
+    return () => {
+      active = false
+      if (feeTimerRef.current) clearTimeout(feeTimerRef.current)
+    }
+  }, [deliveryAddress.latitude, deliveryAddress.longitude, itemCount, customer, feeRetry])
 
   // order_policy display values (lead days for the PRE_ORDER date picker).
   useEffect(() => {
@@ -147,23 +182,34 @@ export function CheckoutPage() {
     }
   }, [orderMode, scheduledDate, leadDays, today])
 
+  // CR-2 P0: TRUSTED GPS ONLY — no IP-geo, no kitchen fallback, honest toast.
   async function handleUseGps() {
     setLocating(true)
     try {
-      const loc = await getGpsLocation()
-      useLocationStore.getState().setLocation({
-        latitude: loc.latitude,
-        longitude: loc.longitude,
-        addressDetail: deliveryAddress.detail,
-        source: loc.source,
-      })
-      setDeliveryAddress((a) => ({ ...a, latitude: loc.latitude, longitude: loc.longitude }))
-      showToast('Location set via GPS', 'success')
-    } catch {
-      showToast('GPS not available — please type your address', 'error')
+      const loc = await getTrustedGpsLocation()
+      if (!loc) {
+        showToast('📍 ไม่สามารถระบุตำแหน่งจาก GPS ได้ — กรุณาปักหมุดบนแผนที่หรือกรอกพิกัดเอง', 'error')
+        return
+      }
+      setDeliveryAddress((a) => ({ ...a, latitude: loc.latitude, longitude: loc.longitude, source: 'gps', provenance: 'gps', confirmed: true }))
+      showToast('📍 ตำแหน่งจาก GPS — ปรับหมุดบนแผนที่ได้ หรือกดสั่งซื้อได้เลย', 'success')
     } finally {
       setLocating(false)
     }
+  }
+
+  // CR-2 P1: candidate pin from the map / manual fallback — requires confirmation.
+  function handleMapPick(lat: number, lng: number) {
+    setDeliveryAddress((a) => ({ ...a, latitude: lat, longitude: lng, source: 'manual', provenance: 'manual', confirmed: false }))
+  }
+
+  function handleConfirmLocation() {
+    // CR-2 correction: trust/confirmation is decided by deliveryPointStatus —
+    // a saved point keeps its provenance ('saved' + gps/manual origin) and is
+    // confirmed as-is; nothing is ever relabeled as 'gps' here.
+    if (!deliveryPointStatus(deliveryAddress).confirmable) return
+    setDeliveryAddress((a) => ({ ...a, confirmed: true }))
+    showToast('✅ ยืนยันตำแหน่งจัดส่งแล้ว', 'success')
   }
 
   // TEN-07: Resolve branch_id from selected delivery_round for multi-branch routing
@@ -212,6 +258,12 @@ export function CheckoutPage() {
       return
     }
     if (items.length === 0) return
+    // CR-2 P0: a confirmed, trusted delivery coordinate is REQUIRED before ordering.
+    // (deliveryPointStatus keeps source/provenance separate from trust status.)
+    if (!deliveryPointStatus(deliveryAddress).orderable) {
+      showToast('กรุณาระบุและยืนยันตำแหน่งจัดส่งบนแผนที่ก่อนสั่งซื้อ', 'error')
+      return
+    }
     if (!selectedRoundId) {
       showToast('กรุณาเลือกรอบการจัดส่ง', 'error')
       return
@@ -277,8 +329,9 @@ export function CheckoutPage() {
       delivery_round_id: selectedRoundId,
       delivery_method: 'self_delivery',
       delivery_address: deliveryAddress.detail,
-      dropoff_latitude: deliveryAddress.latitude,
-      dropoff_longitude: deliveryAddress.longitude,
+      // guarded above: confirmed + trusted coords are non-null at this point
+      dropoff_latitude: deliveryAddress.latitude as number,
+      dropoff_longitude: deliveryAddress.longitude as number,
       customer_name: customer?.name || 'Guest',
       customer_phone: customer?.phone || '',
       payment_method: paymentMethod,
@@ -442,16 +495,45 @@ export function CheckoutPage() {
           <button type="button" disabled={locating} onClick={handleUseGps} className="btn btn-outline text-sm">
             {locating ? 'Locating...' : '📍 Use my location (GPS)'}
           </button>
-          <span className="text-xs text-brand-muted">
-            current point: ({deliveryAddress.latitude.toFixed(4)}, {deliveryAddress.longitude.toFixed(4)})
+          <span className="text-xs text-brand-muted" data-testid="location-status">
+            {deliveryAddress.latitude != null && deliveryAddress.longitude != null
+              ? `ตำแหน่ง: (${deliveryAddress.latitude.toFixed(4)}, ${deliveryAddress.longitude.toFixed(4)}) · แหล่งที่มา: ${
+                  deliveryAddress.source === 'gps' ? 'GPS' : deliveryAddress.source === 'manual' ? 'ปักหมุดเอง' : 'ที่บันทึกไว้'
+                }${deliveryAddress.confirmed ? ' · ✅ ยืนยันแล้ว' : ' · ⏳ ยังไม่ยืนยัน'}`
+              : 'ยังไม่มีตำแหน่งจัดส่ง — กด GPS หรือปักหมุดบนแผนที่ด้านล่าง'}
           </span>
+        </div>
+
+        {/* CR-2 P1: visible map + draggable/clickable marker + manual fallback */}
+        <DeliveryMapPicker
+          latitude={deliveryAddress.latitude}
+          longitude={deliveryAddress.longitude}
+          onPick={handleMapPick}
+        />
+        <div className="flex items-center gap-3 flex-wrap">
+          <button
+            type="button"
+            className="btn btn-primary btn-sm"
+            data-testid="confirm-location"
+            disabled={!deliveryPointStatus(deliveryAddress).confirmable}
+            onClick={handleConfirmLocation}
+          >
+            ✅ ยืนยันตำแหน่งจัดส่งนี้
+          </button>
+          {!deliveryAddress.confirmed && deliveryAddress.latitude != null && (
+            <span className="text-xs text-amber-600">กรุณายืนยันตำแหน่งก่อนสั่งซื้อ</span>
+          )}
         </div>
       </div>
 
       {/* Two-Tier routing estimation (debounced) — display-only informational panel */}
       <div className="mb-6">
         <DistanceChecker
-          destination={{ latitude: deliveryAddress.latitude, longitude: deliveryAddress.longitude }}
+          destination={
+            deliveryAddress.latitude != null && deliveryAddress.longitude != null
+              ? { latitude: deliveryAddress.latitude, longitude: deliveryAddress.longitude }
+              : null
+          }
         />
       </div>
 
@@ -466,10 +548,25 @@ export function CheckoutPage() {
             </div>
           </div>
           <div className="text-right">
-            <div className="font-bold text-brand-primary" data-testid="server-fee">
-              {serverFee != null ? `${Number(serverFee).toFixed(2)} ฿` : '—'}
-            </div>
-            <div className="text-[10px] text-brand-muted">{feeSource === 'server' ? 'คำนวณจากเซิร์ฟเวอร์' : 'ประมาณการ'}</div>
+            {(() => {
+              const ui = feeUiState({ delivery_fee: serverFee, source: feeSource ?? 'error' })
+              return (
+                <>
+                  <div
+                    className={`font-bold ${ui.tone === 'error' ? 'text-amber-600' : 'text-brand-primary'}`}
+                    data-testid="server-fee"
+                  >
+                    {ui.label}
+                  </div>
+                  <div className="text-[10px] text-brand-muted">{ui.detail}</div>
+                  {ui.tone === 'error' && (
+                    <button type="button" className="btn btn-ghost btn-xs mt-1" onClick={() => setFeeRetry((n) => n + 1)}>
+                      ลองคำนวณใหม่
+                    </button>
+                  )}
+                </>
+              )
+            })()}
           </div>
         </div>
       </div>
@@ -481,8 +578,8 @@ export function CheckoutPage() {
           <label className="flex items-center gap-3 p-3 rounded-lg border-2 border-brand-border cursor-pointer hover:border-brand-primary transition-colors">
             <input type="radio" name="payment" value="promptpay_qr" checked={paymentMethod === 'promptpay_qr'} onChange={(e) => setPaymentMethod(e.target.value as any)} className="w-5 h-5" />
             <div>
-              <div className="font-medium">QR PromptPay</div>
-              <div className="text-sm text-brand-muted">สแกนจ่ายได้เลย</div>
+              <div className="font-medium">PromptPay (สแกน QR ของร้าน → โอนเอง)</div>
+              <div className="text-sm text-brand-muted">โอนแล้วใส่เลขธุรกรรม — แอดมินตรวจสอบและยืนยันการชำระเงินให้</div>
             </div>
           </label>
           <label className="flex items-center gap-3 p-3 rounded-lg border-2 border-brand-border cursor-pointer hover:border-brand-primary transition-colors">

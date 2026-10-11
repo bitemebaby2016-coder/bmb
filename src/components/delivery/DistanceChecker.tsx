@@ -9,7 +9,7 @@ import { useEffect, useRef, useState } from 'react'
 import { GlassCard } from '@/components/ui/GlassCard'
 import { useDeliveryRouter, type LatLng } from '@/stores/useDeliveryRouter'
 import { usePlatformConfig } from '@/config/platformConfig'
-import { fetchServerDeliveryFee } from '@/lib/deliveryFeeApi'
+import { fetchServerDeliveryFee, type DeliveryFeeQuote } from '@/lib/deliveryFeeApi'
 
 export interface DistanceCheckerProps {
   origin?: LatLng | null
@@ -28,7 +28,7 @@ export function DistanceChecker({ origin = null, destination = null, label = '�
 
   // W-1.4b: ค่าจัดส่ง display ของ Tier 1 (Bite Drive) ดึงจาก server authority
   // (delivery_zones ผ่าน compute_delivery_fee_rpc) — แทนค่าคงที่ biteDriveFlatFee
-  const [serverFee, setServerFee] = useState<{ delivery_fee: number; source: 'server' | 'local-mirror' } | null>(null)
+  const [serverFee, setServerFee] = useState<DeliveryFeeQuote | null>(null)
   useEffect(() => {
     let cancelled = false
     if (!destination || !quote || quote.tier !== 'bite_drive') {
@@ -101,8 +101,8 @@ export function DistanceChecker({ origin = null, destination = null, label = '�
           <div className="flex items-baseline justify-between text-sm border-t border-white/30 pt-2">
             <span className="text-slate-500">ค่าจัดส่งรวม</span>
             <span className="font-bold text-lg text-slate-800">
-              ฿{serverFee ? serverFee.delivery_fee : quote.finalFee}
-              {serverFee?.source === 'server' && (
+              ฿{serverFee && serverFee.delivery_fee != null ? serverFee.delivery_fee : quote.finalFee}
+              {serverFee?.source === 'server' && serverFee.delivery_fee != null && (
                 <span className="ml-1 text-[10px] font-normal text-emerald-600">(จากโซนร้าน)</span>
               )}
             </span>

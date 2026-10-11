@@ -41,7 +41,7 @@ interface BrowserGeolocation {
   getCurrentPosition?: (
     success: (pos: BrowserGeolocationPosition) => void,
     error?: () => void,
-    options?: { timeout?: number },
+    options?: { timeout?: number; maximumAge?: number; enableHighAccuracy?: boolean },
   ) => void
 }
 
@@ -90,16 +90,90 @@ export async function getGpsLocation(): Promise<{ latitude: number; longitude: n
   return { latitude: KITCHEN_LAT, longitude: KITCHEN_LNG, source: 'kitchen' }
 }
 
+/**
+ * CR-2 P0 (Owner 2026-10-10): TRUSTED GPS ONLY for delivery coordinates.
+ * Browser Geolocation API — NO IP-geo, NO saved, NO kitchen fallback.
+ * Resolves `null` when permission is denied / unavailable / timed out so the
+ * caller can send the customer to the map pin flow instead of silently using
+ * an approximate (wrong) point. Used by the checkout delivery flow.
+ */
+export function getTrustedGpsLocation(timeoutMs = 10_000): Promise<{ latitude: number; longitude: number } | null> {
+  return new Promise((resolve) => {
+    try {
+      const geo = (navigator as Navigator & { geolocation?: BrowserGeolocation }).geolocation
+      if (!geo || typeof geo.getCurrentPosition !== 'function') { resolve(null); return }
+      let settled = false
+      const done = (value: { latitude: number; longitude: number } | null) => {
+        if (!settled) { settled = true; resolve(value) }
+      }
+      const timer = setTimeout(() => done(null), timeoutMs)
+      geo.getCurrentPosition!(
+        (pos) => {
+          clearTimeout(timer)
+          // support both the minimal shape and the DOM GeolocationPosition shape
+          const raw = pos as unknown as {
+            latitude?: number; longitude?: number
+            coords?: { latitude: number; longitude: number }
+          }
+          const lat = typeof raw.latitude === 'number' ? raw.latitude : raw.coords?.latitude
+          const lng = typeof raw.longitude === 'number' ? raw.longitude : raw.coords?.longitude
+          if (
+            typeof lat === 'number' && typeof lng === 'number' &&
+            Math.abs(lat) <= 90 && Math.abs(lng) <= 180 &&
+            !(lat === 0 && lng === 0)
+          ) {
+            done({ latitude: lat, longitude: lng })
+          } else done(null)
+        },
+        () => { clearTimeout(timer); done(null) },
+        { timeout: timeoutMs, maximumAge: 30_000, enableHighAccuracy: true },
+      )
+    } catch { resolve(null) }
+  })
+}
+
 /** Call the Edge Function → real Supabase Auth session (connected to existing system). */
+
+/**
+ * CR-3: build the coordinate payload for quick login — REAL coordinates only.
+ * - caller-provided coordinates are sent ONLY with explicit source metadata;
+ * - the browser-GPS result is sent ONLY when `gps.source === 'gps'`;
+ * - kitchen / ip / saved fallbacks are sent as `null` so the Edge Function
+ *   persists NO default coordinates instead of writing a fake point;
+ *   login itself still works without coordinates.
+ * NOTE: `source` is client metadata (a claim), NOT proof against spoofing —
+ * the Edge Function applies its own policy independently.
+ */
+export function buildQuickLoginCoords(
+  input: { latitude?: number; longitude?: number; source?: string },
+  gps: { latitude: number; longitude: number; source: string },
+): { latitude: number | null; longitude: number | null; source: string } {
+  const inputValid =
+    typeof input.latitude === 'number' && typeof input.longitude === 'number' &&
+    Number.isFinite(input.latitude) && Number.isFinite(input.longitude) &&
+    !(input.latitude === 0 && input.longitude === 0)
+  if (inputValid && input.source) {
+    return { latitude: input.latitude as number, longitude: input.longitude as number, source: input.source }
+  }
+  if (gps.source === 'gps') {
+    return { latitude: gps.latitude, longitude: gps.longitude, source: 'gps' }
+  }
+  // no trustworthy point in this session → no coordinates in the payload
+  return { latitude: null, longitude: null, source: gps.source }
+}
+
 export async function quickLoginByPhone(input: QuickLoginInput): Promise<QuickLoginResult> {
   try {
     const gps = await getGpsLocation()
+    // CR-3: stop shipping fallback (kitchen/ip) points as customer coordinates
+    const coords = buildQuickLoginCoords(input, gps)
     const { data, error } = await supabase.functions.invoke<QuickLoginResult>('phone-auto-login', {
       body: {
         name: input.name,
         phone: input.phone,
-        latitude: input.latitude ?? gps.latitude,
-        longitude: input.longitude ?? gps.longitude,
+        latitude: coords.latitude,
+        longitude: coords.longitude,
+        source: coords.source,
         address_detail: input.addressDetail ?? '',
         delivery_photo_url: input.deliveryPhotoUrl ?? '',
       },
@@ -183,6 +257,8 @@ export async function saveDeliveryProfile(input: {
   addressDetail?: string
   latitude?: number
   longitude?: number
+  /** CR-3: coordinate provenance (gps|manual) — EF writes default_* ONLY with a trusted source. */
+  source?: string
   deliveryPhotoUrl?: string
 }): Promise<{ ok: boolean; error?: string }> {
   try {
@@ -194,6 +270,7 @@ export async function saveDeliveryProfile(input: {
         address_detail: input.addressDetail ?? '',
         latitude: input.latitude,
         longitude: input.longitude,
+        source: input.source,
         delivery_photo_url: input.deliveryPhotoUrl ?? '',
       },
     })

@@ -3,7 +3,7 @@
 // ============================================
 
 import { describe, it, expect } from 'vitest'
-import { zoneFeeForDistance, localZoneFee, SEEDED_DELIVERY_ZONES } from '@/lib/deliveryFeeApi'
+import { zoneFeeForDistance, localZoneFee, feeUiState, SEEDED_DELIVERY_ZONES } from '@/lib/deliveryFeeApi'
 
 describe('zoneFeeForDistance (DEL-01 — fee จาก delivery_zones)', () => {
   it('picks the zone that contains the distance', () => {
@@ -48,5 +48,38 @@ describe('localZoneFee (DEL-01 — offline mirror)', () => {
 
   it('uses the supplied distance when coordinates are absent', () => {
     expect(localZoneFee({ distanceKm: 8 })).toBe(45)
+  })
+})
+
+describe('feeUiState (CR-2 P2 — error must never look like a valid zero fee)', () => {
+  it('server fee renders as a price with the server label', () => {
+    const ui = feeUiState({ delivery_fee: 25, source: 'server' })
+    expect(ui.tone).toBe('ok')
+    expect(ui.label).toBe('25.00 ฿')
+    expect(ui.detail).toBe('คำนวณจากเซิร์ฟเวอร์')
+  })
+
+  it('mirror fee renders as an estimate', () => {
+    const ui = feeUiState({ delivery_fee: 45, source: 'local-mirror' })
+    expect(ui.tone).toBe('ok')
+    expect(ui.detail).toContain('ประมาณการ')
+  })
+
+  it('error state shows a failure message — NOT 0.00', () => {
+    const ui = feeUiState({ delivery_fee: null, source: 'error' })
+    expect(ui.tone).toBe('error')
+    expect(ui.label).not.toContain('0.00')
+    expect(ui.label).toBe('ยังคำนวณไม่สำเร็จ')
+  })
+
+  it('a null fee with any source is treated as error', () => {
+    expect(feeUiState({ delivery_fee: null, source: 'server' }).tone).toBe('error')
+    expect(feeUiState({ delivery_fee: null, source: 'local-mirror' }).tone).toBe('error')
+  })
+
+  it('a real zero fee from the server is still shown as a price (server-authorized)', () => {
+    const ui = feeUiState({ delivery_fee: 0, source: 'server' })
+    expect(ui.tone).toBe('ok')
+    expect(ui.label).toBe('0.00 ฿')
   })
 })
