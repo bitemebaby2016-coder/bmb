@@ -1,4 +1,5 @@
 import type { SEOMeta } from '@/types'
+import { faqs } from './faqContent'
 
 export function generateJsonLd(schema: Record<string, any>): string {
   return JSON.stringify(schema).replace(/<\/script>/g, '<\\/script>')
@@ -146,7 +147,17 @@ export function getFaqMeta(): SEOMeta {
     keywords: [...SITE_CONFIG.keywords, 'FAQ', 'คำถามที่พบบ่อย'],
     ogImage: SITE_CONFIG.ogImage,
     url: seoUrl('/faq'),
-    schema: { "@context": "https://schema.org", "@type": "FAQPage" }
+    // AEO: FAQPage JSON-LD built from the SAME array FaqPage renders
+    // (lib/faqContent) — structured data can never drift from visible content.
+    schema: {
+      '@context': 'https://schema.org',
+      '@type': 'FAQPage',
+      mainEntity: faqs.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    },
   }
 }
 

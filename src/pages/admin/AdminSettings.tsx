@@ -6,12 +6,14 @@ import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { showToast } from '@/components/ui/ToastContainer'
 import { getBusinessSettings, setBusinessSetting } from '@/lib/bmbAdminApi_settings'
+import { THEATER_DAILY_COPY_KEY, THEATER_DAILY_COPY_STARTER } from '@/lib/theaterDailyCopy'
 import { supabase } from '@/lib/supabase'
 
 export function AdminSettings() {
   const [settings, setSettings] = useState<Record<string, any>>({})
   const [loading, setLoading] = useState(true)
   const [textMode, setTextMode] = useState<Record<string, boolean>>({})
+  const [newKey, setNewKey] = useState('')
   // FINAL CONFIG CLOSURE: admin แก้ canonical นอก business_settings ได้โดยไม่ต้องแก้ code
   const [zones, setZones] = useState<any[] | null>(null)
   const [brand, setBrand] = useState<any>(null)
@@ -46,6 +48,26 @@ export function AdminSettings() {
     }
     showToast(allOk ? 'All settings saved' : 'Some settings failed', allOk ? 'success' : 'error')
     await load()
+  }
+
+  // Add a key to the EXISTING key/value editor (nothing persists until Save).
+  // theater_daily_copy gets the 7-day starter template prefilled for review.
+  function handleAddKey() {
+    const key = newKey.trim()
+    if (!/^[a-z][a-z0-9_]{1,63}$/.test(key)) {
+      showToast('Key ต้องเป็น a-z/0/_/ ขึ้นต้นด้วยตัวอักษร', 'error')
+      return
+    }
+    if (key in settings) {
+      showToast(`Key ${key} มีอยู่แล้ว`, 'error')
+      return
+    }
+    const initial = key === THEATER_DAILY_COPY_KEY
+      ? JSON.parse(JSON.stringify(THEATER_DAILY_COPY_STARTER))
+      : {}
+    setSettings({ ...settings, [key]: initial })
+    setNewKey('')
+    showToast(`เพิ่ม ${key} ในหน้านี้แล้ว — กด Save เพื่อบันทึกลง business_settings`, 'success')
   }
 
   async function saveZone(z: any) {
@@ -128,6 +150,27 @@ export function AdminSettings() {
             </div>
           ))}
           <button onClick={handleSaveAll} className="btn btn-primary w-full">💾 Save All Settings</button>
+        </div>
+      )}
+
+      {/* Add a NEW key into the same editor — no separate CMS, persists only on Save */}
+      {!loading && (
+        <div className="card mt-4" data-testid="add-setting-key">
+          <div className="font-mono text-sm font-bold text-brand-accent mb-2">➕ เพิ่ม key ใหม่</div>
+          <div className="flex gap-2">
+            <input
+              className="input flex-1"
+              placeholder="เช่น theater_daily_copy"
+              value={newKey}
+              onChange={(e) => setNewKey(e.target.value)}
+              onKeyDown={(e) => { if (e.key === 'Enter') handleAddKey() }}
+            />
+            <button className="btn btn-outline" onClick={handleAddKey}>➕ เพิ่ม key</button>
+          </div>
+          <p className="text-xs text-brand-muted mt-2">
+            เพิ่ม key ในหน้านี้ก่อน แล้วกด Save เพื่อเขียนลง business_settings —
+            key <code>theater_daily_copy</code> จะถูกเติมเทมเพลตคัดลอก 7 วันให้ตรวจแก้ก่อนบันทึก
+          </p>
         </div>
       )}
 

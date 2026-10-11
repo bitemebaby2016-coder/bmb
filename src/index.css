@@ -1745,6 +1745,12 @@ html[data-theme='dark'] {
   font-size: clamp(16px, 4.2vw, 22px);
   font-weight: 800; line-height: 1.25; color: var(--theater-fg);
 }
+/* Daily rotation recommendation line (admin copy) — theme-safe via theater vars */
+.theater-daily-rec {
+  font-size: 12px; font-weight: 700; color: var(--theater-hi-soft); margin-top: 4px;
+}
+/* Persistent menu CTA under the stage floor (daily/editorial label) */
+.theater-menu-cta { display: block; margin: 10px auto 0; }
 .theater-cart-btn {
   flex-shrink: 0; min-height: 44px; padding: 8px 14px;
   border-radius: 999px; font-size: 13px; font-weight: 700; color: var(--theater-btn-fg);

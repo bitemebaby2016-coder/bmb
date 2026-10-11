@@ -24,7 +24,8 @@ import { MascotBadge } from '@/components/MascotBadge'
 import { pickTopAvailable } from '@/lib/talkToBite'
 import { recommendReason } from '@/lib/theaterReasons'
 import { theaterPosFor, clampIndex } from '@/lib/theaterGeometry'
-import { resolveTheaterEditorial, renderTheaterTitle, THEATER_EDITORIAL_DEFAULTS } from '@/lib/theaterEditorial'
+import { resolveTheaterEditorial, THEATER_EDITORIAL_DEFAULTS } from '@/lib/theaterEditorial'
+import { selectDailyCopy, resolveStageCopy, type TheaterDailyCopyItem } from '@/lib/theaterDailyCopy'
 import { hydrateMemoryFromServer } from '@/lib/aiServerMemory'
 import { showToast } from '@/components/ui/ToastContainer'
 import { TheaterHeroCard, RecommendationCard } from './TheaterCards'
@@ -48,18 +49,25 @@ export function FoodTheater({ products, onCustomize, onPreOrder }: FoodTheaterPr
   const [favoriteCats, setFavoriteCats] = useState<string[]>([])
   const [index, setIndex] = useState(0)
   const [editorial, setEditorial] = useState(THEATER_EDITORIAL_DEFAULTS)
+  // Daily rotation layer — SAME settings fetch as editorial (one swap on load).
+  const [dailyCopy, setDailyCopy] = useState<TheaterDailyCopyItem | null>(null)
   const trackRef = useRef<HTMLDivElement>(null)
   const scrollTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  // Admin-editable copy — EXISTING `business_settings` key `theater_editorial`
-  // (JSON, edited via AdminSettings). Missing/unreadable → today's defaults.
+  // Admin-editable copy — EXISTING `business_settings` keys `theater_editorial`
+  // (base copy) + `theater_daily_copy` (7-day rotation), edited via AdminSettings.
+  // Missing/unreadable → today's honest defaults (null daily = fallback chain).
   useEffect(() => {
     let active = true
     void import('@/lib/bmbAdminApi_settings')
       .then(({ getBusinessSettings }) => getBusinessSettings())
       .then((settings) => {
-        if (active && settings?.theater_editorial) {
+        if (!active) return
+        if (settings?.theater_editorial) {
           setEditorial(resolveTheaterEditorial(settings.theater_editorial))
+        }
+        if (settings?.theater_daily_copy) {
+          setDailyCopy(selectDailyCopy(settings.theater_daily_copy))
         }
       })
       .catch(() => undefined)
@@ -84,6 +92,11 @@ export function FoodTheater({ products, onCustomize, onPreOrder }: FoodTheaterPr
 
   // Real sellable picks — deterministic featured-first ordering (no fabrication).
   const picks = useMemo(() => pickTopAvailable(products, PICK_COUNT), [products])
+  // What the stage renders — daily copy → admin editorial → defaults (pure chain).
+  const stage = useMemo(
+    () => resolveStageCopy(editorial, dailyCopy, picks.length),
+    [editorial, dailyCopy, picks.length],
+  )
   const cartCategoryIds = useMemo(
     () => cartItems.map((i) => i.product.category_id).filter(Boolean),
     [cartItems],
@@ -185,8 +198,11 @@ export function FoodTheater({ products, onCustomize, onPreOrder }: FoodTheaterPr
         <div className="min-w-0 flex-1">
           <p className="theater-kicker">{editorial.kicker}</p>
           <h2 className="theater-title" data-testid="theater-title">
-            {renderTheaterTitle(editorial, picks.length)}
+            {stage.headline}
           </h2>
+          {stage.recommendationLabel && (
+            <p className="theater-daily-rec" data-testid="theater-daily-rec">{stage.recommendationLabel}</p>
+          )}
         </div>
         <button
           type="button"
@@ -288,8 +304,18 @@ export function FoodTheater({ products, onCustomize, onPreOrder }: FoodTheaterPr
           {/* Stage floor — Bite stands on the glowing ring with a speech bubble (mockup) */}
           <div className="theater-greeting" data-testid="theater-greeting">
             <MascotBadge pose="recommend" size="md" alt="Bite กำลังแนะนำเมนู" loading="eager" className="theater-greeting-mascot" />
-            <p className="theater-greeting-bubble">{editorial.greeting}</p>
+            <p className="theater-greeting-bubble" data-testid="theater-subheadline">{stage.subheadline}</p>
           </div>
+
+          {/* Daily/editorial CTA — same destination as the empty-state menu button */}
+          <button
+            type="button"
+            className="btn btn-outline theater-menu-cta"
+            onClick={() => navigate('/menu')}
+            data-testid="theater-menu-cta"
+          >
+            {stage.ctaLabel}
+          </button>
 
           {/* Side picks — tap to bring one forward */}
           {others.length > 0 && (
