@@ -121,6 +121,13 @@ export function FoodTheater({ products, onCustomize, onPreOrder }: FoodTheaterPr
     if (scrollTimer.current) clearTimeout(scrollTimer.current)
     scrollTimer.current = setTimeout(() => {
       const step = stepWidth(el)
+      // Snap-align correction: Chromium resolves a programmatic smooth-scroll target against
+      // the slides' TRANSFORMED snap areas, so a jump starting from the ring "deep" state
+      // (visual center sits +33px off layout) lands past the exact step multiple and is never
+      // re-snapped afterwards. Track padding is symmetric, so the true snap position is always
+      // i*step — nudge back first, then derive the index from the corrected offset.
+      const desired = Math.round(el.scrollLeft / step) * step
+      if (Math.abs(el.scrollLeft - desired) > 1) el.scrollLeft = desired
       setIndex(Math.max(0, Math.min(picks.length - 1, Math.round(el.scrollLeft / step))))
     }, 90)
   }
