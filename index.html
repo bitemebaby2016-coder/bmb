@@ -22,31 +22,33 @@
       })();
     </script>
 
-    <!-- Primary SEO -->
-    <title>Bite Me Baby - สั่งอาหารจัดส่งเมืองจันทบุรี รัศมี 5 กม.</title>
-    <meta name="description" content="Bite Me Baby - ร้านอาหารไทยจัดส่งถึงบ้านในรัศมี 5 กม. จากตัวเมืองจันทบุรี จัดส่งเช้า กลางวัน เย็น สั่งออนไลน์ได้พร้อม AI Assistant 24/7" />
-    <meta name="keywords" content="สั่งอาหารจันทบุรี, อาหารจัดส่ง, ร้านอาหารเมืองจันทบุรี, Bite Me Baby, ส่งอาหารจันทบุรี, cloud kitchen จันทบุรี" />
+    <!-- Primary SEO — static tags are Helmet-OWNED (data-react-helmet) so the
+         per-page SeoHelmet REPLACES them instead of duplicating them; they still
+         serve as fallback on routes with no SEO route entry. -->
+    <title data-react-helmet="true">Bite Me Baby - สั่งอาหารจัดส่งเมืองจันทบุรี รัศมี 5 กม.</title>
+    <meta data-react-helmet="true" name="description" content="Bite Me Baby - ร้านอาหารไทยจัดส่งถึงบ้านในรัศมี 5 กม. จากตัวเมืองจันทบุรี จัดส่งเช้า กลางวัน เย็น สั่งออนไลน์ได้พร้อม AI Assistant 24/7" />
+    <meta data-react-helmet="true" name="keywords" content="สั่งอาหารจันทบุรี, อาหารจัดส่ง, ร้านอาหารเมืองจันทบุรี, Bite Me Baby, ส่งอาหารจันทบุรี, cloud kitchen จันทบุรี" />
 
     <!-- Canonical + hreflang (TH/EN) -->
-    <link rel="canonical" href="https://biteme-baby.com/" />
-    <link rel="alternate" hreflang="th" href="https://biteme-baby.com/" />
-    <link rel="alternate" hreflang="en" href="https://biteme-baby.com/?lang=en" />
-    <link rel="alternate" hreflang="x-default" href="https://biteme-baby.com/" />
+    <link data-react-helmet="true" rel="canonical" href="https://biteme-baby.com/" />
+    <link data-react-helmet="true" rel="alternate" hreflang="th" href="https://biteme-baby.com/" />
+    <link data-react-helmet="true" rel="alternate" hreflang="en" href="https://biteme-baby.com/?lang=en" />
+    <link data-react-helmet="true" rel="alternate" hreflang="x-default" href="https://biteme-baby.com/" />
 
     <!-- Open Graph -->
-    <meta property="og:title" content="Bite Me Baby - สั่งอาหารจัดส่งเมืองจันทบุรี" />
-    <meta property="og:description" content="ร้านอาหารไทยจัดส่งถึงบ้าน รัศมี 5 กม. จากตัวเมืองจันทบุรี สั่งออนไลน์ได้เลย" />
-    <meta property="og:type" content="website" />
-    <meta property="og:image" content="https://biteme-baby.com/og-image.png" />
-    <meta property="og:url" content="https://biteme-baby.com/" />
-    <meta property="og:site_name" content="Bite Me Baby" />
-    <meta property="og:locale" content="th_TH" />
-    <meta property="og:locale:alternate" content="en_US" />
+    <meta data-react-helmet="true" property="og:title" content="Bite Me Baby - สั่งอาหารจัดส่งเมืองจันทบุรี" />
+    <meta data-react-helmet="true" property="og:description" content="ร้านอาหารไทยจัดส่งถึงบ้าน รัศมี 5 กม. จากตัวเมืองจันทบุรี สั่งออนไลน์ได้เลย" />
+    <meta data-react-helmet="true" property="og:type" content="website" />
+    <meta data-react-helmet="true" property="og:image" content="https://biteme-baby.com/og-image.png" />
+    <meta data-react-helmet="true" property="og:url" content="https://biteme-baby.com/" />
+    <meta data-react-helmet="true" property="og:site_name" content="Bite Me Baby" />
+    <meta data-react-helmet="true" property="og:locale" content="th_TH" />
+    <meta data-react-helmet="true" property="og:locale:alternate" content="en_US" />
 
     <!-- Twitter -->
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="Bite Me Baby" />
-    <meta name="twitter:description" content="สั่งอาหารจัดส่งเมืองจันทบุรี รัศมี 5 กม." />
+    <meta data-react-helmet="true" name="twitter:card" content="summary_large_image" />
+    <meta data-react-helmet="true" name="twitter:title" content="Bite Me Baby" />
+    <meta data-react-helmet="true" name="twitter:description" content="สั่งอาหารจัดส่งเมืองจันทบุรี รัศมี 5 กม." />
 
     <!-- GEO (Local SEO) -->
     <meta name="geo.region" content="TH-22" />
@@ -54,57 +56,9 @@
     <meta name="geo.position" content="10.7016;102.1429" />
     <meta name="ICBM" content="10.7016, 102.1429" />
 
-    <!-- SEO Schema / AEO: Restaurant + LocalBusiness + WebSite (JSON-LD) -->
-    <script type="application/ld+json">
-    {
-      "@context": "https://schema.org",
-      "@graph": [
-        {
-          "@type": "Restaurant",
-          "@id": "https://biteme-baby.com/#restaurant",
-          "name": "Bite Me Baby",
-          "url": "https://biteme-baby.com/",
-          "image": "https://biteme-baby.com/og-image.png",
-          "servesCuisine": ["Thai", "Asian"],
-          "priceRange": "$$",
-          "currenciesAccepted": "THB",
-          "paymentAccepted": "QR PromptPay, Cash",
-          "address": {
-            "@type": "PostalAddress",
-            "streetAddress": "ในตัวเมืองจันทบุรี",
-            "addressLocality": "Chanthaburi",
-            "addressRegion": "Chanthaburi",
-            "postalCode": "22000",
-            "addressCountry": "TH"
-          },
-          "geo": { "@type": "GeoCoordinates", "latitude": 10.7016, "longitude": 102.1429 },
-          "telephone": "+66-8X-XXX-XXXX",
-          "openingHoursSpecification": [{
-            "@type": "OpeningHoursSpecification",
-            "dayOfWeek": ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"],
-            "opens": "06:00",
-            "closes": "20:00"
-          }],
-          "areaServed": { "@type": "AdministrativeArea", "name": "Chanthaburi" },
-          "hasMenu": { "@type": "Menu", "name": "Bite Me Baby Menu", "url": "https://biteme-baby.com/menu" },
-          "sameAs": [
-            "https://facebook.com/bitemebaby",
-            "https://instagram.com/bitemebaby",
-            "https://line.me/R/ti/p/@bitemebaby"
-          ]
-        },
-        {
-          "@type": "WebSite",
-          "@id": "https://biteme-baby.com/#website",
-          "url": "https://biteme-baby.com/",
-          "name": "Bite Me Baby",
-          "description": "สั่งอาหารจัดส่งเมืองจันทบุรี รัศมี 5 กม.",
-          "inLanguage": ["th", "en"],
-          "publisher": { "@id": "https://biteme-baby.com/#restaurant" }
-        }
-      ]
-    }
-    </script>
+    <!-- JSON-LD lives ONLY in SeoHelmet (src/lib/seo.ts) — a static copy here
+         duplicated the schema on every page and carried a placeholder phone. -->
+
 <!-- Self-hosted fonts (Nunito + Quicksand) — no render-blocking third-party request -->
     <link rel="preload" href="/fonts/nunito-400-normal-latin.woff2" as="font" type="font/woff2" crossorigin />
     <link rel="preload" href="/fonts/nunito-700-normal-latin.woff2" as="font" type="font/woff2" crossorigin />

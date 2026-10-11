@@ -127,7 +127,7 @@ npm run preview             # เสิร์ฟ dist ที่ build แล้�
 
 ### SEO / AEO / GEO
 
-- **SEO:** meta ทุกหน้ามาจาก `src/lib/seo.ts` + `SeoHelmet` (title/description/canonical/hreflang/JSON-LD) — **คงที่ ไม่ผูกกับ copy หมุนเวียน** (มี test ล็อก) · canonical = URL ตัวเอง · `public/sitemap.xml` (+`/shop`, namespace ถูกต้อง) + `robots.txt`
+- **SEO:** meta ทุกหน้ามาจาก `src/lib/seo.ts` + `SeoHelmet` (title/description/canonical/hreflang/JSON-LD) — **คงที่ ไม่ผูกกับ copy หมุนเวียน** (มี test ล็อก) · static tags ใน `index.html` ทำเครื่องหมาย `data-react-helmet` เพื่อให้ Helmet "แทนที่" แทนที่จะซ้ำ (แก้ duplicate canonical/title/og ที่ตรวจพบจากของจริง) · canonical = URL ตัวเอง · `public/sitemap.xml` (+`/shop`, namespace ถูกต้อง) + `robots.txt`
 - **AEO:** FAQ JSON-LD สร้างจาก `src/lib/faqContent.ts` ไฟล์เดียวกับที่หน้า `/faq` แสดง (schema ไม่มีทางเพี้ยนจากเนื้อหาที่เห็น) — เพิ่มคำตอบใหม่ = แก้ที่เดียว
 - **GEO:** ข้อมูลธุรกิจใน `SITE_CONFIG`/`HOME_SCHEMA` (ชื่อ ที่ตั้ง รัศมี 5 กม. เวลาเปิด ช่องทางติดต่อ) ต้องตรงกับความจริง — **ห้ามเพิ่มที่อยู่/สาขา/รีวิว/ราคา ที่ Owner ยังไม่ยืนยัน**
 - **ข้อจำกัดที่ทราบ:** metadata บาง route (orders/reviews/notifications, /track ใช้พารามิเตอร์ literal) ยังไม่ครบ/ไม่ถูก — บันทึกใน Launch Readiness ไม่ขยายไปแก้ในชุดงานนี้

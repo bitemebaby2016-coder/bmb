@@ -12,6 +12,7 @@ import { faqs } from '@/lib/faqContent'
 // Vite `?raw` imports — no node types in this project; these resolve at test build time.
 import sitemap from '../../public/sitemap.xml?raw'
 import robots from '../../public/robots.txt?raw'
+import indexHtml from '../../index.html?raw'
 
 describe('SEO meta — stable, correct canonical, no rotation leakage', () => {
   it('site config points at the production origin', () => {
@@ -100,5 +101,29 @@ describe('sitemap.xml + robots.txt — /shop discoverable, valid namespace', () 
     expect(robots).toContain('Sitemap: https://biteme-baby.com/sitemap.xml')
     expect(robots).toContain('Disallow: /admin*')
     expect(robots).toContain('Disallow: /track/*')
+  })
+})
+
+describe('index.html — static head is Helmet-owned, no duplicate SEO blocks', () => {
+  it('every static title/canonical/og/twitter tag is marked data-react-helmet', () => {
+    // SeoHelmet (react-helmet-async) only replaces tags carrying this attribute;
+    // unmarked static tags would DUPLICATE every per-page tag (verified live:
+    // two <title>, two canonicals, two og:url on /shop before this fix).
+    const lines = indexHtml.split('\n').filter((l) =>
+      /<(title|meta|link)\s/.test(l) &&
+      /(<title|rel="canonical"|rel="alternate"|name="description"|name="keywords"|name="twitter:|property="og:)/.test(l),
+    )
+    expect(lines.length).toBeGreaterThan(0)
+    for (const line of lines) expect(line).toContain('data-react-helmet="true"')
+  })
+
+  it('no static JSON-LD script — structured data comes only from seo.ts via Helmet', () => {
+    expect(indexHtml).not.toContain('application/ld+json')
+  })
+
+  it('exactly one static canonical, pointing at the site root as fallback', () => {
+    const canonicals = indexHtml.match(/rel="canonical" href="([^"]+)"/g) ?? []
+    expect(canonicals).toHaveLength(1)
+    expect(canonicals[0]).toContain('https://biteme-baby.com/"')
   })
 })
