@@ -8,7 +8,7 @@ import { AdminNav } from './components/admin/AdminNav'
 // Bite / AI accessibility lives in BottomNav ('ไบ๊ท์' → /ai-chat) + BiteHero quick actions (UI v5)
 import { SeoHelmet } from './components/SeoHelmet'
 import { MascotBadge } from './components/MascotBadge'
-import { getHomeMeta, getMenuMeta, getCartMeta, getCheckoutMeta, getOrderTrackMeta, getAboutMeta, getFaqMeta, getBlogMeta, getContactMeta, getPrivacyMeta, getTermsMeta, getPromotionsMeta, getRewardsMeta, getVoteMeta, getRandomMenuMeta, getShareMeta, getViralMeta, getProfileMeta, getAdminMeta, getLoginMeta } from './lib/seo'
+import { getHomeMeta, getShopMeta, getMenuMeta, getCartMeta, getCheckoutMeta, getOrderTrackMeta, getAboutMeta, getFaqMeta, getBlogMeta, getContactMeta, getPrivacyMeta, getTermsMeta, getPromotionsMeta, getRewardsMeta, getVoteMeta, getRandomMenuMeta, getShareMeta, getViralMeta, getProfileMeta, getAdminMeta, getLoginMeta } from './lib/seo'
 import { BrandProvider } from './components/BrandProvider'
 import { useAdminTenantContextStore } from './lib/adminTenantContext'
 import { listTenants } from './lib/adminTenantApi'
@@ -137,6 +137,9 @@ export default function App() {
         {/* SEO Helmet — per-page meta tags */}
         <Routes>
         <Route path="/" element={<SeoHelmet seo={getHomeMeta()} />} />
+        {/* P0 fix: /shop must be registered in EVERY <Routes> block — a block
+            with no match logs "No routes matched location" (production warning). */}
+        <Route path="/shop" element={<SeoHelmet seo={getShopMeta()} />} />
         <Route path="/menu" element={<SeoHelmet seo={getMenuMeta()} />} />
         <Route path="/cart" element={<SeoHelmet seo={getCartMeta()} />} />
         <Route path="/checkout" element={<SeoHelmet seo={getCheckoutMeta()} />} />

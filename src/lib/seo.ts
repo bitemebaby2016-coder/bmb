@@ -77,6 +77,18 @@ export function getHomeMeta(): SEOMeta {
   }
 }
 
+/** /shop — the food-shopping home (FoodTheater stage). Canonical = itself. */
+export function getShopMeta(): SEOMeta {
+  return {
+    title: `${SITE_CONFIG.name} - ร้านอาหารออนไลน์ สั่งอาหารจัดส่งเมืองจันทบุรี`,
+    description: SITE_CONFIG.description,
+    keywords: SITE_CONFIG.keywords,
+    ogImage: SITE_CONFIG.ogImage,
+    url: seoUrl('/shop'),
+    schema: HOME_SCHEMA,
+  }
+}
+
 export function getMenuMeta(): SEOMeta {
   return {
     title: `เมนูอาหาร | ${SITE_CONFIG.name}`,
