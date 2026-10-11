@@ -29,7 +29,7 @@ import { hydrateMemoryFromServer } from '@/lib/aiServerMemory'
 import { showToast } from '@/components/ui/ToastContainer'
 import { TheaterHeroCard, RecommendationCard } from './TheaterCards'
 
-const PICK_COUNT = 5
+const PICK_COUNT = 7
 
 interface FoodTheaterProps {
   /** Real catalog rows already loaded by the page (single source of truth). */
@@ -95,12 +95,18 @@ export function FoodTheater({ products, onCustomize, onPreOrder }: FoodTheaterPr
 
 
   // --- Carousel: native scroll-snap + buttons + dots (HorizontalCarousel pattern) ---
+  /** Snap step = current slide width + the live CSS gap (stays correct if CSS changes). */
+  function stepWidth(el: HTMLElement): number {
+    const slide = el.querySelector('[data-slide]') as HTMLElement | null
+    if (!slide) return 1
+    const gap = Number.parseFloat(window.getComputedStyle(el).gap) || 0
+    return slide.offsetWidth + gap
+  }
+
   function scrollTo(i: number) {
     const el = trackRef.current
     if (!el) return
-    const slide = el.querySelector('[data-slide]') as HTMLElement | null
-    if (!slide) return
-    el.scrollTo({ left: (slide.offsetWidth + 16) * i, behavior: 'smooth' })
+    el.scrollTo({ left: stepWidth(el) * i, behavior: 'smooth' })
   }
 
   function go(i: number) {
@@ -114,8 +120,7 @@ export function FoodTheater({ products, onCustomize, onPreOrder }: FoodTheaterPr
     if (!el) return
     if (scrollTimer.current) clearTimeout(scrollTimer.current)
     scrollTimer.current = setTimeout(() => {
-      const slide = el.querySelector('[data-slide]') as HTMLElement | null
-      const step = slide ? slide.offsetWidth + 16 : 1
+      const step = stepWidth(el)
       setIndex(Math.max(0, Math.min(picks.length - 1, Math.round(el.scrollLeft / step))))
     }, 90)
   }
@@ -170,7 +175,6 @@ export function FoodTheater({ products, onCustomize, onPreOrder }: FoodTheaterPr
     <section className="theater-stage" aria-label="Bite Food Theater" data-testid="food-theater">
       {/* AI waiter stage header */}
       <div className="theater-head">
-        <MascotBadge pose="recommend" size="md" alt="Bite กำลังแนะนำเมนู" loading="eager" className="theater-head-mascot" />
         <div className="min-w-0 flex-1">
           <p className="theater-kicker">{editorial.kicker}</p>
           <h2 className="theater-title" data-testid="theater-title">
@@ -272,6 +276,12 @@ export function FoodTheater({ products, onCustomize, onPreOrder }: FoodTheaterPr
             >
               ›
             </button>
+          </div>
+
+          {/* Stage floor — Bite stands on the glowing ring with a speech bubble (mockup) */}
+          <div className="theater-greeting" data-testid="theater-greeting">
+            <MascotBadge pose="recommend" size="md" alt="Bite กำลังแนะนำเมนู" loading="eager" className="theater-greeting-mascot" />
+            <p className="theater-greeting-bubble">{editorial.greeting}</p>
           </div>
 
           {/* Side picks — tap to bring one forward */}

@@ -17,9 +17,16 @@ describe('theaterGeometry — ring position math (pure)', () => {
     expect(theaterPosFor(3, 2, 5)).toBe('near-right')
   })
 
-  it('far-left / far-right = offset beyond ±1', () => {
+  it('far-left / far-right = offset ±2', () => {
     expect(theaterPosFor(0, 2, 5)).toBe('far-left')
     expect(theaterPosFor(4, 2, 5)).toBe('far-right')
+  })
+
+  it('deep-left / deep-right = outer ring layer (offset beyond ±2)', () => {
+    expect(theaterPosFor(0, 3, 7)).toBe('deep-left')   // offset -3
+    expect(theaterPosFor(6, 3, 7)).toBe('deep-right')  // offset +3
+    expect(theaterPosFor(1, 4, 7)).toBe('deep-left')   // offset -3
+    expect(theaterPosFor(2, 4, 7)).toBe('far-left')    // boundary stays far
   })
 
   it('clamps an out-of-range active index before positioning', () => {
@@ -67,12 +74,19 @@ describe('theaterEditorial — admin copy with honest fallback', () => {
     const r = resolveTheaterEditorial({
       kicker: 'PICK OF THE DAY',
       title_template: '',
+      greeting: 'สวัสดีครับ วันนี้พิเศษมากครับ',
       empty_body: 'ว่างงง',
     })
     expect(r.kicker).toBe('PICK OF THE DAY')
     expect(r.titleTemplate).toBe(THEATER_EDITORIAL_DEFAULTS.titleTemplate)
+    expect(r.greeting).toBe('สวัสดีครับ วันนี้พิเศษมากครับ')
     expect(r.emptyBody).toBe('ว่างงง')
     expect(r.menuCta).toBe(THEATER_EDITORIAL_DEFAULTS.menuCta)
+  })
+
+  it('greeting falls back to the default when missing/blank', () => {
+    expect(resolveTheaterEditorial({}).greeting).toBe(THEATER_EDITORIAL_DEFAULTS.greeting)
+    expect(resolveTheaterEditorial({ greeting: '   ' }).greeting).toBe(THEATER_EDITORIAL_DEFAULTS.greeting)
   })
 
   it('renders {count} in title; 0 picks uses titleEmpty', () => {

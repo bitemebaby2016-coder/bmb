@@ -12,6 +12,7 @@ export interface TheaterEditorialRaw {
   kicker?: unknown
   title_template?: unknown
   title_empty?: unknown
+  greeting?: unknown
   empty_body?: unknown
   menu_cta?: unknown
 }
@@ -21,6 +22,8 @@ export interface TheaterEditorial {
   /** `{count}` placeholder = number of picks. */
   titleTemplate: string
   titleEmpty: string
+  /** Stage-floor mascot speech bubble (below the ring). */
+  greeting: string
   emptyBody: string
   menuCta: string
 }
@@ -29,6 +32,7 @@ export const THEATER_EDITORIAL_DEFAULTS: TheaterEditorial = {
   kicker: 'BITE · AI WAITER STAGE',
   titleTemplate: 'วันนี้ผมเลือกมาให้ {count} อย่างครับ',
   titleEmpty: 'เดี๋ยวผมไปดูเมนูให้ก่อนครับ',
+  greeting: 'สวัสดีครับ ไม่บอกก็ไม่เป็นไร ผมเลือกเมนูอร่อยๆ มาให้แล้วครับ 🧡',
   emptyBody: 'ยังไม่มีเมนูที่พร้อมขายตอนนี้ครับ ดูเมนูทั้งหมดรอสักครู่ได้เลย',
   menuCta: '🍽️ ดูเมนูทั้งหมด',
 }
@@ -45,6 +49,7 @@ export function resolveTheaterEditorial(raw: unknown): TheaterEditorial {
     kicker: pickString(obj.kicker, d.kicker),
     titleTemplate: pickString(obj.title_template, d.titleTemplate),
     titleEmpty: pickString(obj.title_empty, d.titleEmpty),
+    greeting: pickString(obj.greeting, d.greeting),
     emptyBody: pickString(obj.empty_body, d.emptyBody),
     menuCta: pickString(obj.menu_cta, d.menuCta),
   }

@@ -2,8 +2,9 @@
 
 แอปสั่งอาหารจัดส่ง (PWA) สำหรับร้าน **Bite Me Baby** จันทบุรี — หน้าร้านลูกค้า, Admin Dashboard แบบ Multi-Branch, ระบบชำระเงิน Stripe, รอบจัดส่งรายสาขา และผู้ช่วย AI "น้อง Bite" (แชท + เสียง)
 
-**สถานะ:** Production-Ready · Migrations M081–M095 deploy ครบ · Tests 331/331 · tsc 0 errors · Build ผ่าน
-**Production:** https://bitemebaby-5f7.pages.dev · Supabase project `ivkdfognyiwjcmrhcnwz`
+**สถานะ:** Production-Ready · Tests 705+ · tsc 0 errors · Build ผ่าน (ตรวจจาก HEAD ปัจจุบันเสมอ — ห้ามเชื่อตัวเลขนี้ถ้าไม่ได้รันเอง)
+**Production:** https://biteme-baby.com (CF Pages auto-deploy จาก `main`) · Supabase project `ivkdfognyiwjcmrhcnwz`
+**⚠️ `bitemebaby-5f7.pages.dev` = build เก่าค้าง (stale) — ห้ามใช้ตรวจงาน visual/behavior โดยไม่เช็ค asset hash ก่อน
 
 ## 📂 โครงสร้างโฟลเดอร์หลัก
 ```
@@ -30,6 +31,15 @@
 | [02_API_INTEGRATIONS.md](docs/02_API_INTEGRATIONS.md) | Stripe Webhook, Edge Functions (ai-proxy SSE), Delivery Providers |
 | [03_ADMIN_USER_GUIDE.md](docs/03_ADMIN_USER_GUIDE.md) | คู่มือ Admin Dashboard, Branch Switcher, AI Studio v2 |
 | [04_DEPLOYMENT_RUNBOOK.md](docs/04_DEPLOYMENT_RUNBOOK.md) | Env Variables, Supabase Secrets, Cutover สั่งซื้อจริง |
+
+## 📏 วิธีทำงานที่ถูกต้องของโปรเจค (Working Rules — ห้ามละเมิด)
+
+1. **เริ่มงานจากสถานะล่าสุดจริงเท่านั้น** — ทุกครั้งก่อนแตะงาน ให้ `git fetch` + ตรวจ `git log` / `git status` / `git diff` ของ repo (`D:\A PROJECT\Bite Me Baby`) ว่า HEAD ตรงกับ `origin/main` หรือยัง เอกสาร/แฮนด์ออฟ/รายงานเก่า = **ข้อมูลประกอบเท่านั้น** ห้ามเชื่อเป็นพระเจ้า ต้องตรวจสถานะปัจจุบันจาก git และโค้ดจริงเสมอ
+2. **ก่อนปิดงาน / ส่งแฮนด์ออฟ / เริ่มงานใหม่** — ต้อง re-verify จากสถานะปัจจุบันทุกครั้ง: commit SHA ล่าสุด, ผล gates ที่รันจริงรอบล่าสุด, และของจริงที่ deploy แล้ว (asset hash / URL) ห้ามอ้างอิงตัวเลขจากย่อหน้าก่อนหน้าโดยไม่ตรวจซ้ำ
+3. **ลูปการทำงาน (Work Loop)** — ตรวจสถานะจริง → วางแผน → แก้ไข → รัน gates (`npx vitest run`, `tsc`, `eslint`, `build`) → ตรวจของจริง (preview/live ด้วย Playwright หรือ HTTP) → รายงาน → **รับอนุมัติ** → commit/push (ไม่มี push/deploy โดยไม่รายงานก่อน)
+4. **Context compact** — โน้ตแฮนด์ออฟทุกฉบับต้องอ้าง **commit SHA ล่าสุด** + ผล gates ล่าสุดที่รันจริง; รอบถัดไป hydrate จาก git เป็นอันดับแรก ไม่ใช่จากโน้ต
+5. **ปรับปรุงเอกสารทันทีที่สถานะเปลี่ยน** — deploy ใหม่ / commit ใหม่ / ตัดสินใจของ Owner เปลี่ยน → อัปเดตเอกสารที่เกี่ยวข้อง (README / docs / gate doc) ในรอบนั้นเลย ห้ามปล่อยให้เอกสารไล่หลังโค้ด
+6. **Workspace ที่ถูกต้อง** — งานทั้งหมดทำใน repo จริงเท่านั้น ห้ามทำงานใน chat workspace หรือสำเนาเก่า
 
 ## 🚀 เริ่มต้นใช้งาน (Development)
 ```bash

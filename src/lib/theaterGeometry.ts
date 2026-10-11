@@ -6,7 +6,14 @@
 // ============================================
 
 /** Ring slot of a slide relative to the active (center) slide. */
-export type TheaterPos = 'center' | 'near-left' | 'near-right' | 'far-left' | 'far-right'
+export type TheaterPos =
+  | 'center'
+  | 'near-left'
+  | 'near-right'
+  | 'far-left'
+  | 'far-right'
+  | 'deep-left'
+  | 'deep-right'
 
 /** Keep an index inside [0, count-1]; an empty list always resolves to 0. */
 export function clampIndex(index: number, count: number): number {
@@ -17,7 +24,7 @@ export function clampIndex(index: number, count: number): number {
 /**
  * Position of slide `index` when `active` is centered:
  * offset < 0 → left side (already scrolled past), offset > 0 → right side.
- * ±1 = near (full card, curved in), anything further = far (depth layer).
+ * ±1 = near, ±2 = far, anything further = deep (outer ring layer).
  */
 export function theaterPosFor(index: number, active: number, count: number): TheaterPos {
   if (count <= 0) return 'center'
@@ -25,5 +32,7 @@ export function theaterPosFor(index: number, active: number, count: number): The
   if (offset === 0) return 'center'
   if (offset === -1) return 'near-left'
   if (offset === 1) return 'near-right'
-  return offset < 0 ? 'far-left' : 'far-right'
+  if (offset === -2) return 'far-left'
+  if (offset === 2) return 'far-right'
+  return offset < 0 ? 'deep-left' : 'deep-right'
 }
