@@ -86,7 +86,7 @@ export function TheaterHeroCard({ product, reason, onAdd, onCustomize }: Theater
     <article className="theater-hero" data-testid="theater-hero">
       <div className="theater-hero-media">
         {product.image_url ? (
-          <img src={product.image_url} alt={product.name} loading="lazy" decoding="async" />
+          <img src={product.image_url} alt={product.name} loading="eager" decoding="async" />
         ) : (
           <span role="img" aria-label={product.name} className="theater-img-fallback theater-img-fallback--lg" />
         )}

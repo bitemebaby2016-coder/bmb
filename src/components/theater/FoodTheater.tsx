@@ -23,6 +23,8 @@ import { useBiteAIStore } from '@/stores/useBiteAIStore'
 import { MascotBadge } from '@/components/MascotBadge'
 import { pickTopAvailable } from '@/lib/talkToBite'
 import { recommendReason } from '@/lib/theaterReasons'
+import { theaterPosFor, clampIndex } from '@/lib/theaterGeometry'
+import { resolveTheaterEditorial, renderTheaterTitle, THEATER_EDITORIAL_DEFAULTS } from '@/lib/theaterEditorial'
 import { hydrateMemoryFromServer } from '@/lib/aiServerMemory'
 import { showToast } from '@/components/ui/ToastContainer'
 import { TheaterHeroCard, RecommendationCard } from './TheaterCards'
@@ -45,8 +47,26 @@ export function FoodTheater({ products, onCustomize, onPreOrder }: FoodTheaterPr
   const setBiteState = useBiteAIStore((s) => s.setBiteState)
   const [favoriteCats, setFavoriteCats] = useState<string[]>([])
   const [index, setIndex] = useState(0)
+  const [editorial, setEditorial] = useState(THEATER_EDITORIAL_DEFAULTS)
   const trackRef = useRef<HTMLDivElement>(null)
   const scrollTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  // Admin-editable copy — EXISTING `business_settings` key `theater_editorial`
+  // (JSON, edited via AdminSettings). Missing/unreadable → today's defaults.
+  useEffect(() => {
+    let active = true
+    void import('@/lib/bmbAdminApi_settings')
+      .then(({ getBusinessSettings }) => getBusinessSettings())
+      .then((settings) => {
+        if (active && settings?.theater_editorial) {
+          setEditorial(resolveTheaterEditorial(settings.theater_editorial))
+        }
+      })
+      .catch(() => undefined)
+    return () => {
+      active = false
+    }
+  }, [])
 
   // Verified server memory only — same source TalkToBite uses for ❤️ favorites.
   useEffect(() => {
@@ -104,6 +124,12 @@ export function FoodTheater({ products, onCustomize, onPreOrder }: FoodTheaterPr
     if (scrollTimer.current) clearTimeout(scrollTimer.current)
   }, [])
 
+  // Ring safety: when the catalog shrinks, the active index must stay in range
+  // so a center card always exists (picks recompute from real products).
+  useEffect(() => {
+    setIndex((prev) => clampIndex(prev, picks.length))
+  }, [picks.length])
+
   // --- Canonical add-to-cart (identical semantics to TalkToBite.addToCart) ---
   function add(p: Product, quantity: number) {
     const mode = p.available_preorder && !p.available_same_day ? 'PRE_ORDER' : 'SAME_DAY'
@@ -146,11 +172,9 @@ export function FoodTheater({ products, onCustomize, onPreOrder }: FoodTheaterPr
       <div className="theater-head">
         <MascotBadge pose="recommend" size="md" alt="Bite กำลังแนะนำเมนู" loading="eager" className="theater-head-mascot" />
         <div className="min-w-0 flex-1">
-          <p className="theater-kicker">BITE · AI WAITER STAGE</p>
+          <p className="theater-kicker">{editorial.kicker}</p>
           <h2 className="theater-title" data-testid="theater-title">
-            {picks.length > 0
-              ? `วันนี้ผมเลือกมาให้ ${picks.length} อย่างครับ`
-              : 'เดี๋ยวผมไปดูเมนูให้ก่อนครับ'}
+            {renderTheaterTitle(editorial, picks.length)}
           </h2>
         </div>
         <button
@@ -168,9 +192,9 @@ export function FoodTheater({ products, onCustomize, onPreOrder }: FoodTheaterPr
       {picks.length === 0 ? (
         <div className="theater-empty" data-testid="theater-empty">
           <MascotBadge pose="cooking" size="lg" alt="Bite กำลังเตรียมเมนู" />
-          <p className="text-sm text-[var(--theater-fg-muted)]">ยังไม่มีเมนูที่พร้อมขายตอนนี้ครับ ดูเมนูทั้งหมดรอสักครู่ได้เลย</p>
+          <p className="text-sm text-[var(--theater-fg-muted)]">{editorial.emptyBody}</p>
           <button type="button" className="btn btn-primary" onClick={() => navigate('/menu')}>
-            🍽️ ดูเมนูทั้งหมด
+            {editorial.menuCta}
           </button>
         </div>
       ) : (
@@ -193,6 +217,7 @@ export function FoodTheater({ products, onCustomize, onPreOrder }: FoodTheaterPr
               <div
                 key={p.id}
                 data-slide
+                data-pos={theaterPosFor(i, index, picks.length)}
                 role="listitem"
                 className={`theater-slide${i === index ? ' theater-slide--active' : ''}`}
                 aria-hidden={i === index ? undefined : true}

@@ -1684,6 +1684,8 @@ textarea:focus-visible,
   --theater-stage-shadow: 0 24px 60px rgba(28, 25, 23, 0.12);
   --theater-card-shadow: 0 20px 40px rgba(28, 25, 23, 0.14);
   --theater-rec-shadow: 0 14px 32px rgba(28, 25, 23, 0.12);
+  --theater-edge-glow: inset 0 0 0 1px rgba(255, 94, 30, 0.14), 0 0 18px rgba(255, 94, 30, 0.10);
+  --theater-reflection: rgba(255, 94, 30, 0.07);
 }
 html[data-theme='dark'] {
   --theater-accent-rgb: 255, 127, 71;
@@ -1707,6 +1709,8 @@ html[data-theme='dark'] {
   --theater-stage-shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
   --theater-card-shadow: 0 26px 54px rgba(0, 0, 0, 0.55);
   --theater-rec-shadow: 0 14px 32px rgba(0, 0, 0, 0.45);
+  --theater-edge-glow: inset 0 0 0 1px rgba(255, 127, 71, 0.22), 0 0 22px rgba(255, 127, 71, 0.14);
+  --theater-reflection: rgba(255, 127, 71, 0.12);
 }
 
 
@@ -1750,10 +1754,11 @@ html[data-theme='dark'] {
 }
 .theater-cart-btn:hover { background: rgba(var(--theater-accent-rgb), 0.4); transform: translateY(-1px); }
 
-/* --- Carousel track: scroll-snap, peek side cards for depth --- */
+/* --- Carousel ring: center card + curved near/far side cards (data-pos) --- */
 .theater-track {
   display: flex; gap: 16px;
   margin-top: 16px; padding-bottom: 6px;
+  margin-bottom: 14px; /* room for the centered card's floor reflection */
   overflow-x: auto;
   scroll-snap-type: x mandatory;
   -webkit-overflow-scrolling: touch;
@@ -1763,17 +1768,56 @@ html[data-theme='dark'] {
 .theater-track::-webkit-scrollbar { display: none; }
 .theater-track:focus-visible { outline: 3px solid rgba(var(--theater-accent-rgb), 0.7); outline-offset: 4px; border-radius: 16px; }
 .theater-slide {
+  position: relative;
   flex: 0 0 86%;
   scroll-snap-align: center;
-  transition: transform 0.28s ease, opacity 0.28s ease, filter 0.28s ease;
-  transform: perspective(1000px) rotateY(6deg) scale(0.92);
+  transition: transform 0.32s cubic-bezier(0.22, 0.61, 0.36, 1), opacity 0.32s ease, filter 0.32s ease;
+  transform: perspective(1200px) rotateY(22deg) translateZ(-70px) scale(0.86);
   opacity: 0.55;
-  filter: saturate(0.75);
+  filter: saturate(0.8);
 }
-.theater-slide--active {
-  transform: perspective(1000px) rotateY(0deg) scale(1);
-  opacity: 1; filter: none;
+/* Ring positions — pure transforms/opacity; every color reads --theater-* tokens */
+.theater-slide[data-pos='center'] {
+  transform: perspective(1200px) rotateY(0deg) translateZ(0) scale(1);
+  opacity: 1;
+  filter: none;
+  z-index: 2;
+}
+.theater-slide[data-pos='near-left'] {
+  transform: perspective(1200px) rotateY(24deg) translateZ(-70px) scale(0.87);
+  opacity: 0.6;
+  filter: saturate(0.82);
   z-index: 1;
+}
+.theater-slide[data-pos='near-right'] {
+  transform: perspective(1200px) rotateY(-24deg) translateZ(-70px) scale(0.87);
+  opacity: 0.6;
+  filter: saturate(0.82);
+  z-index: 1;
+}
+.theater-slide[data-pos='far-left'] {
+  transform: perspective(1200px) rotateY(40deg) translateZ(-150px) scale(0.76);
+  opacity: 0.3;
+  filter: saturate(0.6);
+  z-index: 0;
+}
+.theater-slide[data-pos='far-right'] {
+  transform: perspective(1200px) rotateY(-40deg) translateZ(-150px) scale(0.76);
+  opacity: 0.3;
+  filter: saturate(0.6);
+  z-index: 0;
+}
+/* Restrained floor reflection under the centered card (gradient only, GPU-cheap) */
+.theater-slide[data-pos='center']::after {
+  content: '';
+  position: absolute;
+  left: 10%;
+  right: 10%;
+  bottom: -16px;
+  height: 28px;
+  background: radial-gradient(55% 100% at 50% 0%, var(--theater-reflection), transparent 72%);
+  filter: blur(4px);
+  pointer-events: none;
 }
 @media (min-width: 768px) { .theater-slide { flex-basis: 54%; } }
 
@@ -1784,10 +1828,10 @@ html[data-theme='dark'] {
   background: linear-gradient(180deg, var(--theater-card-top), var(--theater-card-bottom));
   border: 1px solid rgba(var(--theater-accent-rgb), 0.4);
   box-shadow: var(--theater-card-shadow), 0 0 0 1px rgba(var(--theater-accent-light-rgb), 0.08),
-    0 -8px 30px rgba(var(--theater-accent-rgb), 0.18);
+    0 -8px 30px rgba(var(--theater-accent-rgb), 0.18), var(--theater-edge-glow);
 }
 .theater-hero-media {
-  position: relative; aspect-ratio: 16 / 10; overflow: hidden;
+  position: relative; aspect-ratio: 4 / 3; overflow: hidden;
   background: linear-gradient(145deg, var(--theater-surface-dark), var(--theater-stage-3));
 }
 .theater-hero-media img { width: 100%; height: 100%; object-fit: cover; }
@@ -1802,7 +1846,7 @@ html[data-theme='dark'] {
   display: flex; flex-wrap: wrap; gap: 6px; align-items: center;
 }
 .theater-hero-body { padding: 14px 14px 16px; display: flex; flex-direction: column; gap: 12px; }
-.theater-price { font-family: var(--font-family-display); font-size: 24px; font-weight: 900; color: var(--theater-price); white-space: nowrap; }
+.theater-price { font-family: var(--font-family-display); font-size: clamp(21px, 4.6vw, 26px); font-weight: 900; color: var(--theater-price); white-space: nowrap; }
 .theater-price-sm { font-size: 14px; font-weight: 800; color: var(--theater-price); white-space: nowrap; }
 .theater-reason {
   display: inline-flex; align-items: center; gap: 4px;
@@ -1929,8 +1973,10 @@ html[data-theme='dark'] {
 }
 @media (prefers-reduced-motion: reduce) {
   .theater-slide, .theater-nav, .theater-dot::after, .theater-other-chip, .theater-cart-btn { transition: none; }
-  .theater-slide { transform: none; }
+  .theater-slide[data-pos] { transform: none !important; filter: none !important; }
+  .theater-slide[data-pos] { opacity: 1; }
   .theater-slide:not(.theater-slide--active) { opacity: 0.6; }
+  .theater-slide[data-pos='center']::after { display: none; }
 }
 
 /* ============================================
