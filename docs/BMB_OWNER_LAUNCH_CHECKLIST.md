@@ -142,9 +142,43 @@ supabase functions deploy guest-checkout-session --project-ref ivkdfognyiwjcmrhc
 
 ---
 
-## 6. P3 — Facebook OAuth (ยังไม่เริ่ม)
+## 6. P3 — Facebook Login (โค้ดพร้อมแล้ว — เหลือ Owner ตั้งค่า 2 ฝั่ง)
 
-`signInWithOAuth` = **0** · `META_APP_ID` / `META_APP_SECRET` มีใน `.env.local` แล้ว (ตรวจเฉพาะชื่อ) · ต้องมี callback route + test user จริง
+**ทำแล้วในโค้ด:**
+- `src/lib/socialLogin.ts` — `signInWithFacebook` · `socialRedirectTo` · `readSocialNext` · `consumeSocialCallbackError` · `describeSocialError`
+- `LoginPage.tsx` — ปุ่ม Facebook + แปล error callback เป็นภาษาไทย + อ่าน `?next=` คืนหน้าที่ผู้ใช้ตั้งใจ
+- `src/__tests__/socialLogin.test.ts` — **12 tests**
+
+**3 ข้อคุ้มครองที่ test ยืนยัน:**
+1. **กัน open-redirect** — `//evil.com` / `https://evil.com` ถูกปฏิเสธ → fallback เป็น `/`
+2. **ไม่ leak raw error code** ให้ลูกค้าเห็น
+3. **เส้นขอบบัญชีคงเดิม** — ข้อความ error ห้ามพูดถึงการชำระเงินหรือ "รวมบัญชี"
+
+**ทำไม Facebook เข้าถึงบัญชี Quick Login/Guest Checkout ไม่ได้ (โดยการออกแบบ)**
+บัญชีเหล่านั้นใช้ synthetic email `<phone>@phone.bmb.local` — Facebook ไม่มีทางคืนอีเมลรูปนี้
+⇒ ยืนยันด้วย Facebook แล้วได้บัญชีของตัวเองเท่านั้น **ไม่มีทาง takeover บัญชีเบอร์โทรได้**
+และระบบ **ไม่รวมบัญชีอัตโนมัติ** ระหว่าง Facebook กับบัญชีอีเมล/รหัสผ่านเดิม
+
+### ⚠️ Owner ต้องตั้ง 2 ฝั่งนี้เอง (ตั้งให้ไม่ได้ — ไม่มีใน Management API)
+
+**1) Supabase Dashboard** → `https://supabase.com/dashboard/project/ivkdfognyiwjcmrhcnwz`
+- **Authentication → Providers → Facebook** → Enable → ใส่ **App ID** + **App Secret** (จาก `.env.local`)
+- **Authentication → URL Configuration → Redirect URLs** → เพิ่ม:
+  ```
+  https://biteme-baby.com/login
+  https://biteme-baby.com/login/**
+  ```
+
+**2) Meta for Developers** → App Settings
+- **Facebook Login → Settings → Valid OAuth Redirect URIs** → เพิ่ม:
+  ```
+  https://ivkdfognyiwjcmrhcnwz.supabase.co/auth/v1/callback
+  ```
+- **App Review → Permissions and Features** → ยืนยัน `email` + `public_profile`
+- ถ้า App ยังอยู่สถานะ **Development** → เพิ่มบัญชี Facebook ที่จะทดสอบเป็น **Test User**
+  (บัญชีอื่นจะเห็นปุ่มแต่กดไม่ได้)
+
+**ทดสอบ:** เข้า `/login` → ปุ่ม "เข้าสู่ระบบด้วย Facebook" → ได้ session → กลับหน้าเดิมที่มาก่อน
 
 ## 7. P4 — Passkeys (ยังไม่เริ่ม)
 

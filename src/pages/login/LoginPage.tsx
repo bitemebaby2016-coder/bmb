@@ -5,6 +5,8 @@ import { useLocationStore, KITCHEN_LAT, KITCHEN_LNG } from '@/store/locationStor
 import { getGpsLocation, uploadDeliveryPhoto, saveDeliveryProfile, sendQuickLoginOtp } from '@/lib/locationLogin'
 import { showToast } from '@/components/ui/ToastContainer'
 import { sendPasswordReset } from '@/lib/authRecovery'
+// P3 — Facebook Login
+import { signInWithFacebook, consumeSocialCallbackError, describeSocialError, readSocialNext } from '@/lib/socialLogin'
 import { writeAuditLog } from '@/lib/auditLog'
 
 // จำข้อมูล Quick login ครั้งเดียวใช้ตลอด (localStorage — รอบหน้ากรอกให้อัตโนมัติ)
@@ -33,7 +35,9 @@ export function LoginPage() {
   const navigate = useNavigate()
   const routerLocation = useLocation()
   // Launch-closure (case B/D): กลับไปหน้าที่ผู้ใช้ตั้งใจ (ProtectedRoute/Checkout ส่งมา)
-  const returnTo = (routerLocation.state as { from?: string } | null)?.from || null
+  const returnTo =
+    (routerLocation.state as { from?: string } | null)?.from ||
+    readSocialNext() || null
   const login = useAuthStore((s) => s.login)
   const loginByLocation = useAuthStore((s) => s.loginByLocation)
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
@@ -83,6 +87,13 @@ export function LoginPage() {
       navigate(returnTo || '/', { replace: true })
     }
   }, [isInitializing, isAuthenticated, returnTo, navigate])
+
+  // P3 — จับ error จาก OAuth callback (Facebook) แล้วแปลเป็นภาษาไทย
+  // (เกิดขึ้นตอน user กด "ยกเลิก" หรือ Facebook ปฏิเสธสิทธิ์)
+  useEffect(() => {
+    const code = consumeSocialCallbackError()
+    if (code) setError(describeSocialError(code))
+  }, [])
 
   // Redirect after login based on DB role + กลับหน้าที่ผู้ใช้ตั้งใจ (case B/D)
   async function finishLogin(userLabel: string) {
@@ -554,6 +565,27 @@ return (
               <Link to="/register" className="text-brand-primary font-medium hover:underline">
                 สมัครสมาชิก
               </Link>
+            </p>
+          </div>
+
+          {/* P3 — Facebook Login
+              ข้อจำกัดด้านความปลอดภัย (Owner): การยืนยันผ่าน Facebook "ไม่มีทาง" เข้าถึง
+              บัญชี Quick Login/Guest Checkout ได้ เพราะบัญชีเหล่านั้นใช้ synthetic email
+              `<phone>@phone.bmb.local` ซึ่ง Facebook ไม่มีทางคืนมา
+              และระบบ "ไม่รวมบัญชีอัตโนมัติ" ระหว่าง Facebook กับบัญชีอีเมล/รหัสผ่านเดิม */}
+          <div className="mt-5 pt-5 border-t border-brand-border">
+            <button
+              type="button"
+              onClick={() => void signInWithFacebook(returnTo || readSocialNext())}
+              className="w-full flex items-center justify-center gap-2 border border-brand-border rounded-lg bg-white text-[#1877F2] font-medium py-2.5 hover:bg-gray-50 transition-colors"
+            >
+              <svg viewBox="0 0 24 24" className="w-5 h-5" fill="currentColor" aria-hidden="true">
+                <path d="M24 12.073C24 5.405 18.627 0 12 0S0 5.405 0 12.073C0 18.1 4.388 23.094 10.125 24v-8.437H7.078v-3.49h3.047V9.414c0-3.025 1.792-4.697 4.533-4.697 1.313 0 2.686.236 2.686.236v2.97h-1.513c-1.49 0-1.956.93-1.956 1.886v2.267h3.328l-.532 3.49h-2.796V24C19.612 23.094 24 18.1 24 12.073z" />
+              </svg>
+              เข้าสู่ระบบด้วย Facebook
+            </button>
+            <p className="text-[11px] text-brand-muted text-center mt-2">
+              การยืนยันผ่าน Facebook เป็นการยืนยันตัวตนเท่านั้น ไม่เกี่ยวข้องกับการชำระเงิน
             </p>
           </div>
         </div>
