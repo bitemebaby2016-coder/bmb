@@ -14,7 +14,7 @@ const footerSections = [
   {
     title: 'เกี่ยวกับเรา',
     links: [
-      { label: 'เกี่ยวกับ Bite Me Baby', path: '/about' },
+      { label: 'เกี่ยวกับ ไบ๊มีเบบี้', path: '/about' },
       { label: 'FAQ', path: '/faq' },
       { label: 'บทความ & ข่าวสาร', path: '/blog' },
       { label: 'นโยบายความเป็นส่วนตัว', path: '/privacy' },
@@ -55,7 +55,7 @@ export function Footer() {
       <div className="max-w-7xl mx-auto">
         {/* SEO Content Block - GEO/AEO optimized */}
         <div className="mb-8 text-sm text-brand-muted">
-          <p className="font-semibold text-brand-accent mb-2">🍽️ Bite Me Baby — Cloud Kitchen Operating Platform เมืองจันทบุรี</p>
+          <p className="font-semibold text-brand-accent mb-2">🍽️ ไบ๊มีเบบี้ — Cloud Kitchen Operating Platform เมืองจันทบุรี</p>
           <p>
             บริการสั่งอาหารจัดส่งเมืองจันทบุรี รัศมี 5 กม. ส่งฟรีเมื่อครบ ฿200 • 
             เมนูจานเดียว ข้าว แกง เครื่องดื่ม ของหวาน • 
@@ -102,7 +102,7 @@ export function Footer() {
         {/* Copyright & Legal */}
         <div className="border-t border-brand-border pt-6 text-center">
           <p className="text-sm text-brand-muted">
-            © 2026 Bite Me Baby Cloud Kitchen • เมืองจันทบุรี • สงวนลิขสิทธิ์
+            © 2026 ไบ๊มีเบบี้ Cloud Kitchen • เมืองจันทบุรี • สงวนลิขสิทธิ์
           </p>
           <p className="text-xs text-brand-muted mt-2">
             จัดส่งอาหาร • รัศมี 5 กม. • ส่งฟรีเมื่อครบ ฿200 • Same-day & Pre-order • AI Assistant 24/7

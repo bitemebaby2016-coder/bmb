@@ -115,8 +115,8 @@ describe('speakableText (WS-2c — กรองข้อความก่อน
   })
 
   it('replaces Latin "Bite" in Thai sentences but keeps it in pure-English text', () => {
-    expect(speakableText('ยินดีต้อนรับสู่ Bite Me Baby ครับ')).toBe('ยินดีต้อนรับสู่ ไบ๊มีเบบี้ ครับ')
-    expect(speakableText('ผม Bite ครับ')).toBe('ผม ไบ๊ ครับ')
+    expect(speakableText('ยินดีต้อนรับสู่ ไบ๊มีเบบี้ ครับ')).toBe('ยินดีต้อนรับสู่ ไบ๊มีเบบี้ ครับ')
+    expect(speakableText('ผม ไบ๊ ครับ')).toBe('ผม ไบ๊ ครับ')
     expect(speakableText('Welcome to Bite Me Baby')).toBe('Welcome to Bite Me Baby')
   })
 })

@@ -76,7 +76,7 @@ export function DistanceChecker({ origin = null, destination = null, label = '�
 
       {!config.delivery.biteDriveEnabled && (
         <p className="mt-2 text-xs font-medium text-amber-600" data-testid="bite-drive-disabled-note">
-          ร้านปิดรับงาน Bite Drive ชั่วคราว — ติดต่อร้านเพื่อสอบถามวิธีจัดส่งที่เปิดรับ
+          ร้านปิดรับงาน ไบ๊ Drive ชั่วคราว — ติดต่อร้านเพื่อสอบถามวิธีจัดส่งที่เปิดรับ
         </p>
       )}
 

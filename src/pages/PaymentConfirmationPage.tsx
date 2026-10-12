@@ -108,7 +108,7 @@ export function PaymentConfirmationPage() {
           <div className="text-center mb-3">
             <img
               src="/assets/Qr%20Code/BMB_Promptpay_Qr.webp"
-              alt="QR PromptPay ของร้าน Bite Me Baby"
+              alt="QR PromptPay ของร้าน ไบ๊มีเบบี้"
               width={220}
               height={220}
               className="mx-auto rounded-lg border border-green-300 bg-white p-2"

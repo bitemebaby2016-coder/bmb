@@ -221,11 +221,11 @@ export function getBiteMessage(ctx: BiteContext): BiteMessage {
   return {
     greeting: `สวัสดีจ๊ะ ❤️ อยากกินอะไรดี?`,
     statusLine,
-    recommendLabel: `เดี๋ยว Bite แนะนำให้เอง${recos}${preOrderLine}🍽️`,
+    recommendLabel: `เดี๋ยว ไบ๊ แนะนำให้เอง${recos}${preOrderLine}🍽️`,
     quickActions: [
       { id: 'home-menu', label: 'เมนูวันนี้', icon: 'mascot:menu', to: '/menu', mascotPose: 'menu' },
       { id: 'home-preorder', label: 'สั่งล่วงหน้า', icon: '📅', to: '/menu' },
-      { id: 'home-bite', label: 'ให้ Bite แนะนำ', icon: 'mascot:recommend', to: '/talk-to-bite' },
+      { id: 'home-bite', label: 'ให้ ไบ๊ แนะนำ', icon: 'mascot:recommend', to: '/talk-to-bite' },
       { id: 'home-orders', label: 'ดูออเดอร์', icon: '📦', to: '/orders' },
     ],
   }

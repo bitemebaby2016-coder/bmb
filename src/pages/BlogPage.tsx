@@ -31,7 +31,7 @@ const posts: BlogPost[] = [
     emoji: '🍜'
   },
   {
-    title: 'วิธีประหยัดค่าจัดส่งกับ Bite Me Baby',
+    title: 'วิธีประหยัดค่าจัดส่งกับ ไบ๊มีเบบี้',
     excerpt: 'เคล็ดลับการสั่งออเดอร์ให้ได้รับสิทธิส่งฟรีและโปรโมชั่นดีๆ...',
     date: '5 ก.ย. 2026',
     readTime: '3 นาที',
@@ -50,7 +50,7 @@ export function BlogPage() {
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold text-brand-accent mb-2">Blog & News</h1>
-      <p className="text-brand-muted mb-8">บทความ เคล็ดลับ ข่าวสาร และโปรโมชั่นล่าสุดจาก Bite Me Baby</p>
+      <p className="text-brand-muted mb-8">บทความ เคล็ดลับ ข่าวสาร และโปรโมชั่นล่าสุดจาก ไบ๊มีเบบี้</p>
 
       {/* Featured Post */}
       <div className="card mb-6 bg-gradient-to-r from-orange-50 to-yellow-50 border-2 border-orange-200">

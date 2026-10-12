@@ -160,7 +160,7 @@ export function DeliveryManagement() {
   return (
     <div className="max-w-7xl mx-auto px-4 py-6">
       <div className="flex items-center justify-between mb-6 flex-wrap gap-2">
-        <h1 className="text-3xl font-bold text-brand-accent">🛵 Dispatch / ไรเดอร์ (Bite Drive)</h1>
+        <h1 className="text-3xl font-bold text-brand-accent">🛵 Dispatch / ไรเดอร์ (ไบ๊ Drive)</h1>
         <div className="flex gap-2">
           <button onClick={() => { void load() }} className="btn btn-outline text-sm" disabled={loading}>รีเฟรช</button>
           <Link to="/admin" className="btn btn-outline">← กลับแดชบอร์ด</Link>

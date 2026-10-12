@@ -54,7 +54,7 @@ export function AmbientMusicToggle() {
           className="text-[10px] font-semibold text-brand-muted leading-none"
           data-testid="ambient-music-status"
         >
-          {state.playing ? (state.ducked ? 'ลดเสียง (Bite กำลังพูด)' : 'กำลังเล่น') : 'เพลงปิด'}
+          {state.playing ? (state.ducked ? 'ลดเสียง (ไบ๊ กำลังพูด)' : 'กำลังเล่น') : 'เพลงปิด'}
         </span>
         <input
           type="range"

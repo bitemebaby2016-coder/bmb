@@ -72,7 +72,7 @@ export function routeOrder(input: RouteInput): RoutingQuote {
       finalFee: biteDriveFlatFee,
       executorFee: biteDriveFlatFee,
       markup: 0,
-      providerLabel: 'Bite Drive (ไรเดอร์ร้านเอง)',
+      providerLabel: 'ไบ๊ Drive (ไรเดอร์ร้านเอง)',
       distanceKm,
       rationale: `Tier 1: ระยะทาง ${distanceKm.toFixed(1)} กม. ≤ ${biteDriveMaxDistanceKm} กม. — ส่งเรือธงของร้านเอง ค่าธรรมเนียมคงที่ คุณภาพ 100%`,
     }
@@ -127,7 +127,7 @@ export async function routeOrderWithGoogle(
       finalFee: biteDriveFlatFee,
       executorFee: biteDriveFlatFee,
       markup: 0,
-      providerLabel: 'Bite Drive (ไรเดอร์ร้านเอง)',
+      providerLabel: 'ไบ๊ Drive (ไรเดอร์ร้านเอง)',
       distanceKm,
       rationale: `Tier 1: ${distanceKm.toFixed(1)} กม. (real driving via Google Routes ≤ ${biteDriveMaxDistanceKm} กม.)`,
       estimatedDurationSec: durationSec,

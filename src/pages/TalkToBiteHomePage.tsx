@@ -11,7 +11,7 @@ import { TalkToBite } from '@/components/ai/TalkToBite'
 export function TalkToBiteHomePage() {
   return (
     <>
-      <h1 className="sr-only">Bite Me Baby — Talk to Bite ผู้ช่วยเสิร์ฟ AI · สั่งอาหารเมืองจันทบุรี</h1>
+      <h1 className="sr-only">ไบ๊มีเบบี้ — Talk to ไบ๊ ผู้ช่วยเสิร์ฟ AI · สั่งอาหารเมืองจันทบุรี</h1>
       <TalkToBite mode="home" landingClose={false} />
     </>
   )

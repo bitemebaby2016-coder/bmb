@@ -20,7 +20,7 @@ export const BITE_DRIVE_DEFAULTS: BiteDriveAdapterDeps = {
 export class BiteDriveAdapter implements ProviderAdapter {
   readonly id = 'bite_drive' as const
   readonly status = 'live' as const
-  readonly label = 'Bite Drive (ไรเดอร์ร้านเอง)'
+  readonly label = 'ไบ๊ Drive (ไรเดอร์ร้านเอง)'
 
   private readonly deps: BiteDriveAdapterDeps
 
@@ -37,7 +37,7 @@ export class BiteDriveAdapter implements ProviderAdapter {
       etaMinutes: estimateEtaMinutes(km, req.itemsCount),
       status: this.status,
       note: overMax
-        ? 'ไกลเกินระยะ Bite Drive — ต้องเลือกพันธมิตรภายนอก'
+        ? 'ไกลเกินระยะ ไบ๊ Drive — ต้องเลือกพันธมิตรภายนอก'
         : 'ส่งโดยไรเดอร์ร้านเอง คุณภาพ 100%',
     }
   }

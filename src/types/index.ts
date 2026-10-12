@@ -756,7 +756,7 @@ export type MascotPose =
   | 'feedback'  // ฟีดแบ็ก — Review Forms
   | 'menu'      // ถือเมนู — Menu Page
   | 'ready'     // พร้อมเสิร์ฟ — Ready for Pickup
-  | 'recommend' // แนะนำเมนู — AI Recommendation / Bite Hero
+  | 'recommend' // แนะนำเมนู — AI Recommendation / ไบ๊ Hero
   | 'reviewing' // อ่านรีวิว — Review Carousel
   | 'shopping'  // ถือตะกร้า — Cart / Add-ons
   | 'success'   // ชนะ/สำเร็จ — Payment Success / Vote Success
@@ -826,7 +826,7 @@ export interface UIConfig {
 }
 
 export const UI_CONFIG: UIConfig = {
-  primaryColor: '#FF5E1E',    // ส้มหลัก (Bite Me Baby brand)
+  primaryColor: '#FF5E1E',    // ส้มหลัก (ไบ๊มีเบบี้ brand)
   secondaryColor: '#FBBF24',  // เหลือง (secondary)
   accentColor: '#92400E',     // น้ำตาลเข้ม (text/accents)
   bgColor: '#FFF7ED',         // Cream/Beige background

@@ -9,7 +9,7 @@ export const VoiceDemoPage: React.FC = () => {
         <header className="demo-header">
           <h1>🎙️ AI Voice Assistant Demo</h1>
           <p className="demo-subtitle">
-            พูดคุยกับ AI Voice ของ Bite Me Baby — ใช้ OpenRouter (Qwen 3.7 Flash / GLM 5.3 Flash Fallback)
+            พูดคุยกับ AI Voice ของ ไบ๊มีเบบี้ — ใช้ OpenRouter (Qwen 3.7 Flash / GLM 5.3 Flash Fallback)
           </p>
         </header>
 

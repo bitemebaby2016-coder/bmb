@@ -76,7 +76,7 @@ export function AdminAssetAudit() {
       <h1 className="text-2xl font-bold text-brand-accent mt-2 mb-1">🔍 Asset Audit (read-only)</h1>
       <p className="text-sm text-brand-muted mb-4">
         สถานะรูปสินค้าในแคตตาล็อกจริง — <b>อ่านอย่างเดียว ไม่บันทึก</b> · AI ไม่เจนรูปเด็ดขาด ·
-        Product card (Talk to Bite) แสดงเฉพาะ <code>image_url</code> จริง; รายการที่ยังไม่มีรูปจะเห็น placeholder ไปก่อน
+        Product card (Talk to ไบ๊) แสดงเฉพาะ <code>image_url</code> จริง; รายการที่ยังไม่มีรูปจะเห็น placeholder ไปก่อน
       </p>
 
       {/* Summary cards */}
@@ -149,7 +149,7 @@ export function AdminAssetAudit() {
       {/* Mascot asset manifest (reference — files live in public/assets/mascot/) */}
       <div className="card overflow-hidden">
         <div className="px-4 py-2 bg-brand-bg border-b border-brand-border font-bold text-brand-accent">
-          🧬 ไฟล์มาสคอต Bite ที่ระบบใช้ ({MASCOT_ASSETS.length} ไฟล์) — อ้างอิงเท่านั้น
+          🧬 ไฟล์มาสคอต ไบ๊ ที่ระบบใช้ ({MASCOT_ASSETS.length} ไฟล์) — อ้างอิงเท่านั้น
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 p-4">
           {MASCOT_ASSETS.map((a) => (

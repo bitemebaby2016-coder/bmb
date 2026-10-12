@@ -49,7 +49,7 @@ export function AdminDashboard() {
     <div className="max-w-7xl mx-auto px-4 py-6 space-y-8">
       <header>
         <h1 className="text-2xl sm:text-3xl font-bold text-brand-accent">📊 แดชบอร์ดจัดการร้าน</h1>
-        <p className="text-sm text-brand-muted mt-1">ภาพรวม Bite Me Baby — ข้อมูลจริงจากออเดอร์/สต็อก/ลูกค้า</p>
+        <p className="text-sm text-brand-muted mt-1">ภาพรวม ไบ๊มีเบบี้ — ข้อมูลจริงจากออเดอร์/สต็อก/ลูกค้า</p>
       </header>
 
       <section aria-label="KPI ภาพรวม" data-testid="admin-kpi-zone" className="space-y-4">
