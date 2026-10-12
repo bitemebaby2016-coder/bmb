@@ -193,6 +193,18 @@ export interface BranchForm {
 // ============================================
 
 export interface Customer {
+  /**
+   * Auth user ที่เป็นเจ้าของบัญชีนี้
+   * `null` = "orphan row" — ข้อมูลลูกค้าที่ไม่มีบัญชีผูก (ข้อมูลย้ายมาก่อนมีระบบ login)
+   *
+   * สำคัญ: **ห้ามสมมติว่ามีค่า** ทุกจุดที่อ่านต้องยอมรับ null
+   * RLS `customers_own_read` ใช้ `user_id = auth.uid()` → แถว null
+   * "มองไม่เห็น" สำหรับ user ทั่วไป (ไม่รั่ว, ไม่ error, เห็นเฉพาะ admin)
+   *
+   * Guest Checkout (P2) สร้าง account phone-keyed แล้วผูก user_id เสมอ
+   * ดังนั้นแขกใหม่จะ "ไม่มีทาง" ได้แถวนี้ — เป็นของยุคก่อนระบบเท่านั้น
+   */
+  user_id?: string | null;
   id: string;
   email: string;
   phone: string;

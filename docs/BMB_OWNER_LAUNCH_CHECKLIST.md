@@ -211,20 +211,54 @@ supabase functions deploy guest-checkout-session --project-ref ivkdfognyiwjcmrhc
 
 ## 8. งาน Owner ที่ยังค้าง — เรียงลำดับที่ควรทำ
 
-| ลำดับ | งาน | ทำไมสำคัญ |
+> อัปเดตอัตโนมัติหลัง Owner ตั้งค่า Facebook/Passkeys ครบ และผม probe production จริง (read-only)
+
+| ลำดับ | งาน | สถานะ (ยืนยันแล้วเมื่อ 2026-10-12) |
 |---|---|---|
-| **1** | **apply migration 122** (`supabase db push`) | ตาราง OTP ต้องมาก่อน deploy `otp-send` |
-| **2** | **deploy `otp-send` + `phone-auto-login`** | EF ใหม่/ที่แก้ |
-| **3** | **ทดสอบ SMS จริง 1 ข้อความ** | ยืนยันว่า `api.thsms.org/v1` + `SMSOTP` ใช้ได้จริง |
-| **4** | **เปิด flag** `QUICK_LOGIN_REQUIRE_OTP=true` | เมื่อข้อ 3 ผ่านเท่านั้น — rollback ได้ในคลิกเดียว |
-| 5 | ทดสอบ Quick Login ด้วย OTP บนมือถือจริง | ต้องพิสูจน์บนอุปกรณ์จริง ห้ามอ้าง unit test |
-| 6 | ตรวจ Email Confirmation ใน Dashboard + ทดสอบกู้คืนรหัสผ่านจริง | P1 |
-| 7 | ทำ Omise TEST E2E ทุกสถานะ + ตรวจ webhook | ยังไม่มีหลักฐานการจ่ายจริง |
-| 8 | GPS matrix บนมือถือจริง (เคส 1–4 ทำได้เลย) | handoff §8 |
-| 9 | Copy 7 วัน (`theater_daily_copy`) | Admin → Settings |
-| 10 | ลบ/noindex `bitemebaby-5f7.pages.dev` (build แช่แข็ง) | Cloudflare dashboard |
-| 11 | Omise LIVE onboarding/identity verification | ก่อนรับเงินจริง |
-| 12 | แก้ `no_user_id = 3` แถว | ต้องทำก่อน P2 account linking |
+| ~~1~~ | ~~apply migration 122~~ | ✅ **ทำแล้ว** — Owner รัน `supabase db push` สำเร็จ |
+| ~~2~~ | ~~deploy `otp-send` + `phone-auto-login`~~ | ✅ **ทำแล้ว** — ขึ้น production ทั้งคู่ |
+| 3 | ทดสอบ SMS จริง 1 ข้อความ | ⬜ ยังไม่มีหลักฐาน — ยืนยัน `api.thsms.org/v1` + `SMSOTP` |
+| 4 | เปิด flag `QUICK_LOGIN_REQUIRE_OTP=true` | ⬜ **ทำได้หลังข้อ 3 ผ่านเท่านั้น** — rollback ได้ในคลิกเดียว |
+| 5 | ทดสอบ Quick Login ด้วย OTP บนมือถือจริง | ⬜ ต้องพิสูจน์บนอุปกรณ์จริง ห้ามอ้าง unit test |
+| 6 | ตรวจ Email Confirmation ใน Dashboard + ทดสอบกู้คืนรหัสผ่านจริง | ⬜ ไม่มี API อ่านค่านี้ — ต้องดูใน Dashboard เอง |
+| 7 | ทำ Omise TEST E2E ทุกสถานะ + ตรวจ webhook | ⬜ ยังไม่มีหลักฐานการจ่ายจริง |
+| 8 | GPS matrix บนมือถือจริง (เคส 1–4 ทำได้เลย) | ⬜ handoff §8 |
+| ~~9~~ | ~~Copy 7 วัน (`theater_daily_copy`)~~ | ⚠️ **ข้อมูลในเช็คลิสต์เดิม "ผิด"** — ผม probe แล้วตาราง `theater_daily_copy` **ไม่มีอยู่จริง** ในสคีมา (และไม่มีตารางที่ชื่อขึ้นต้นด้วย copy/daily/theater/announcement เลย) จึงไม่มีอะไรให้กรอกใน Admin → Settings · **ต้องถาม Owner ก่อนว่าฟีเจอร์นี้หมายถึงอะไรจริง ๆ แล้วค่อยออกแบบให้ถูก** |
+| 10 | ลบ/noindex `bitemebaby-5f7.pages.dev` | ⬜ **ยัง live อยู่จริง** — ผม probe แล้วได้ HTTP **200** (production `biteme-baby.com` ก็ 200) |
+| 11 | Omise LIVE onboarding/identity verification | ⬜ ก่อนรับเงินจริง |
+| ~~12~~ | ~~แก้ `no_user_id = 3` แถว~~ | ✅ **ปิดแล้ว** — ดูรายละเอียดด้านล่าง |
+
+### ข้อ 12 (`no_user_id`) — สิ่งที่ probe จริง + สิ่งที่แก้แล้ว
+
+**ตัวเลขจริงจาก production (read-only):**
+
+| สิ่งที่วัด | ค่า |
+|---|---|
+| แถว `customers` ทั้งหมด | 37 |
+| มี `user_id` ผูกบัญชี | 34 |
+| `user_id IS NULL` (orphan) | **3** |
+| ออเดอร์ `customer_ref IS NULL` | **15** ← Owner ยืนยันแล้วว่าเป็นข้อมูลทดสอบ ไม่กระทบเงินจริง |
+
+**ทำไมไม่ต้อง "ย้าย/ลบ" ข้อมูล 3 แถวนั้น:**
+RLS `customers_own_read` ใช้ `user_id = auth.uid()` → `NULL = anything` ได้ `NULL`
+⇒ แถว orphan **มองไม่เห็นสำหรับ user ทั่วไปโดยอัตโนมัติ** — ไม่รั่ว, ไม่ error, เห็นเฉพาะ `is_admin()`
+ดังนั้นการ "แก้ไขข้อมูล" จึง**ไม่จำเป็นและมีความเสี่ยงมากกว่าปล่อยไว้**
+
+**สิ่งที่ทำจริง (code, commit ล่าสุด):**
+- `src/types/index.ts` — เพิ่ม `user_id?: string | null` ลง `Customer` พร้อม comment อธิบายว่าห้ามสมมติว่ามีค่า
+  (ก่อนหน้านี้ type **ไม่มี field นี้เลย** จึงไม่มีทางบังคับให้คนเขียนโค้ดรุ่นหลังรองรับ null)
+- `src/lib/customerOwnership.ts` — pure helpers ที่ null-safe ทุกตัว:
+  `isOrphanCustomer` · `canCustomerBeReadBy` · `describeOwnershipState` · `countOwnedAndOrphan`
+- `src/__tests__/customerOwnership.test.ts` — **14 tests** ยืนยัน:
+  - แถว null **ไม่มีทาง** อ่านได้โดย user ทั่วไป (ตรงกับ SQL semantics)
+  - anon ถูกปฏิเสธเสมอ
+  - admin เห็นรวมแถว orphan
+  - ฟังก์ชิน **ไม่มีทาง throw** ไม่ว่า input จะเป็นอะไร
+  - ข้อความแอดมินไม่ leak uid/PII
+
+**Guest Checkout (P2) จะไม่มีทางสร้าง orphan row:** EF สร้าง auth user ก่อนแล้วจึงผูก `user_id` เสมอ
+ดังนั้นแถวนี้เป็นของยุคก่อนระบบเท่านั้น
+
 
 
 | OD-8 | Payment / Order State Machine | รักษาระบบเดิม ห้ามแก้เพื่อให้ Guest Checkout ผ่าน |
