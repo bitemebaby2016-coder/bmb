@@ -30,6 +30,9 @@ export const supabase: SupabaseClient = createClient(supabaseUrl, supabaseAnonKe
     autoRefreshToken: true,
     persistSession: true,
     detectSessionInUrl: true,
+    // P4 — Passkeys เป็น experimental ใน supabase-js 2.116.0
+    // ถ้าไม่เปิด flag นี้ ทุกเมธอดของ auth.passkey จะโยน error ทันที
+    experimental: { passkey: true },
   },
   realtime: {
     params: {

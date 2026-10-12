@@ -6,22 +6,29 @@ import {
 } from '@/lib/passkeyLogin'
 
 vi.mock('@/lib/supabase', () => ({
-  supabase: { auth: { signInWithPasskey: vi.fn(), registerPasskey: vi.fn(), mfa: { passkey: { list: vi.fn(), delete: vi.fn() } } } },
+  supabase: {
+    auth: {
+      signInWithPasskey: vi.fn(),
+      registerPasskey: vi.fn(),
+      passkey: { list: vi.fn(), delete: vi.fn(), update: vi.fn() },
+    },
+  },
 }))
 
 describe('P4 passkey — support detection', () => {
   it('returns false when PublicKeyCredential is absent', () => {
-    const original = (window as Record<string, unknown>).PublicKeyCredential
+    const w = window as unknown as Record<string, unknown>
+    const original = w.PublicKeyCredential
     try {
-      delete (window as Record<string, unknown>).PublicKeyCredential
+      delete w.PublicKeyCredential
       expect(isPasskeySupported()).toBe(false)
     } finally {
-      if (original !== undefined) (window as Record<string, unknown>).PublicKeyCredential = original
+      if (original !== undefined) w.PublicKeyCredential = original
     }
   })
 
   it('returns true when PublicKeyCredential and navigator.credentials exist', () => {
-    const w = window as Record<string, unknown>
+    const w = window as unknown as Record<string, unknown>
     const n = navigator as unknown as Record<string, unknown>
     const hadCred = 'credentials' in n
     const originalCred = n.credentials

@@ -124,7 +124,7 @@ export function ProfilePage() {
               type="button"
               onClick={() => {
                 void (async () => {
-                  const r = await registerPasskey(customer.full_name || 'Passkey ของฉัน')
+                  const r = await registerPasskey()
                   if (!r.ok) {
                     showToast(describePasskeyError(r.code), 'error')
                     return

@@ -57,30 +57,28 @@ export async function signInWithPasskey(): Promise<PasskeyResult> {
   }
 }
 
-/** สมัคร Passkey ใหม่ (ต้องมี session อยู่แล้ว — เรียกจากหน้าโปรไฟล์) */
-export async function registerPasskey(label?: string): Promise<PasskeyResult> {
+// สมัคร Passkey ใหม่ (ต้องมี session อยู่แล้ว — เรียกจากหน้าโปรไฟล์)
+// NOTE: `registerPasskey()` ใน SDK 2.116.0 "ไม่รับ label" — คืนชื่อที่เซิร์ฟเวอร์ตั้งให้
+export async function registerPasskey(): Promise<PasskeyResult> {
   if (!isPasskeySupported()) return { ok: false, code: 'ERR_PASSKEY_UNSUPPORTED' }
   try {
-    const { data, error } = await supabase.auth.registerPasskey(
-      label ? { label } : undefined,
-    )
+    const { data, error } = await supabase.auth.registerPasskey()
     if (error) return { ok: false, code: codeOf(error) }
-    const label2 =
-      label || (data as { label?: string } | undefined)?.label || 'Passkey ของฉัน'
-    return { ok: true, label: label2 }
+    const meta = data as { friendly_name?: string } | undefined
+    return { ok: true, label: meta?.friendly_name || 'Passkey ของฉัน' }
   } catch (e) {
     return { ok: false, code: codeOf(e) }
   }
 }
 
-/** รายชื่อ passkey ที่ผูกกับบัญชี (อ่านอย่างเดียว) */
+/** รายชื่อ passkey ที่ผูกกับบัญชี (อ่านอย่างเดียว) — AuthPasskeyApi.list() */
 export async function listPasskeys(): Promise<{ ok: boolean; items: PasskeyInfo[]; code?: string }> {
   try {
-    const { data, error } = await supabase.auth.mfa.passkey.list()
+    const { data, error } = await supabase.auth.passkey.list()
     if (error) return { ok: false, items: [], code: codeOf(error) }
-    const items = (Array.isArray(data) ? data : []).map((r: Record<string, unknown>) => ({
-      id: String(r.id ?? r.friendly_id ?? ''),
-      label: String(r.label ?? r.name ?? 'Passkey'),
+    const items = (Array.isArray(data) ? data : []).map((r: { id?: string; friendly_name?: string; created_at?: string }) => ({
+      id: String(r.id ?? ''),
+      label: r.friendly_name || 'Passkey',
       createdAt: String(r.created_at ?? ''),
     }))
     return { ok: true, items }
@@ -92,7 +90,7 @@ export async function listPasskeys(): Promise<{ ok: boolean; items: PasskeyInfo[
 /** ลบ passkey — ถ้าเหลือวิธีเข้าสู่ระบบอื่นอยู่ก็ไม่ทำให้ถูกล็อกออกจากบัญชี */
 export async function removePasskey(id: string): Promise<PasskeyResult> {
   try {
-    const { error } = await supabase.auth.mfa.passkey.delete({ id })
+    const { error } = await supabase.auth.passkey.delete({ passkeyId: id })
     if (error) return { ok: false, code: codeOf(error) }
     return { ok: true }
   } catch (e) {
