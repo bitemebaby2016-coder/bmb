@@ -105,18 +105,18 @@ describe('speakableText (WS-2c — กรองข้อความก่อน
     expect(speakableText('มีขนมครกกับข้าวเหนียวมะม่วงค่ะ')).toBe('มีขนมครกกับข้าวเหนียวมะม่วงค่ะ')
   })
 
-  it('normalizes every Thai spelling of the brand name to the speakable form ไบท', () => {
-    // regression: TTS อ่าน "ไบท๊"/"ไบ๊ท์" (๊ ติด ท์) เพี้ยนเป็น "บั๊บ" → ต้องแทนเป็น "ไบท" เสมอ
-    expect(speakableText('สวัสดีครับ ผมไบท๊พร้อมแนะนำเมนูครับ')).toBe('สวัสดีครับ ผมไบทพร้อมแนะนำเมนูครับ')
-    expect(speakableText('ผมไบ๊ท์จากไบ๊ท์มีเบบี้ครับ')).toBe('ผมไบทจากไบทมีเบบี้ครับ')
-    expect(speakableText('ร้านไบท์ของคุณไบท์')).toBe('ร้านไบทของคุณไบท')
+  it('normalizes every Thai spelling of the brand name to the speakable form ไบ๊', () => {
+    // regression: TTS เคยอ่านชื่อแบรนด์ผิด → ต้องแปลงเป็นชื่อไทยที่ถูกต้องเสมอ
+    expect(speakableText('สวัสดีครับ ผมไบ๊พร้อมแนะนำเมนูครับ')).toBe('สวัสดีครับ ผมไบ๊พร้อมแนะนำเมนูครับ')
+    expect(speakableText('ผมไบ๊จากไบ๊มีเบบี้ครับ')).toBe('ผมไบ๊จากไบ๊มีเบบี้ครับ')
+    expect(speakableText('ร้านไบ๊ของคุณไบ๊')).toBe('ร้านไบ๊ของคุณไบ๊')
     // idempotent — รูปที่แทนแล้วต้องไม่ถูกแตะซ้ำ
-    expect(speakableText('ผมไบทครับ')).toBe('ผมไบทครับ')
+    expect(speakableText('ผมไบ๊ครับ')).toBe('ผมไบ๊ครับ')
   })
 
   it('replaces Latin "Bite" in Thai sentences but keeps it in pure-English text', () => {
-    expect(speakableText('ยินดีต้อนรับสู่ Bite Me Baby ครับ')).toBe('ยินดีต้อนรับสู่ ไบทมีเบบี้ ครับ')
-    expect(speakableText('ผม Bite ครับ')).toBe('ผม ไบท ครับ')
+    expect(speakableText('ยินดีต้อนรับสู่ Bite Me Baby ครับ')).toBe('ยินดีต้อนรับสู่ ไบ๊มีเบบี้ ครับ')
+    expect(speakableText('ผม Bite ครับ')).toBe('ผม ไบ๊ ครับ')
     expect(speakableText('Welcome to Bite Me Baby')).toBe('Welcome to Bite Me Baby')
   })
 })

@@ -31,6 +31,7 @@ import {
 } from '../_shared/aiPolicy.ts'
 import { SlidingWindowRateLimiter, callerKeyFromToken } from '../_shared/aiRateLimit.ts'
 import { fetchWithTimeout, TimeoutError } from '../_shared/aiTimeout.ts'
+import { sanitizeStreamChunk, mascotNameRule } from '../_shared/brandName.ts'
 
 const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions'
 
@@ -58,8 +59,8 @@ function json(body: unknown, status = 200): Response {
 /** AI-02 base guardrail (injected server-side, immutable by clients). */
 const GUARDRAIL_SEGMENT =
   'SYSTEM GUARDRAILS (non-negotiable): ' +
-  'You are Bite (ไบ๊ท์), a friendly MALE Thai waiter assistant for Bite Me Baby restaurant — playful, service-loving, from the countryside with a light local flavor, neat and tidy, and may crack short friendly jokes. Always end sentences with "ครับ" (never "ค่ะ"/"คะ"). ' +
-  'Brand pronunciation: "Bite Me Baby" in Thai is always "ไบ๊ท์มีเบบี้" (Bite = "ไบ๊ท์", never "บิท") and the mascot/waiter name "Bite" is "ไบ๊ท์" (never "บิท") — write and pronounce it that way every time. ' +
+  'You are Bite (ไบ๊), a friendly MALE Thai waiter assistant for Bite Me Baby restaurant — playful, service-loving, from the countryside with a light local flavor, neat and tidy, and may crack short friendly jokes. Always end sentences with "ครับ" (never "ค่ะ"/"คะ"). ' +
+  'Brand name: always write the brand as "ไบ๊มีเบบี้" and the mascot/waiter name as "ไบ๊" — never any other spelling. ' +
   'You MUST answer in Thai unless the user writes in another language. ' +
   'You have READ-ONLY information skills only. ' +
   'You MUST NEVER promise, modify or confirm prices/stock/payments/orders/delivery statuses. ' +
@@ -192,6 +193,11 @@ async function streamCompletion(req: Request, apiKey: string, model: string, saf
   const body = new ReadableStream({
     async start(controller) {
       const reader = upstream.body!.getReader()
+      // P-brand: กักท้ายบัฟเฟอร์ไว้ไม่ให้ชื่อแบรนด์ถูกตัดข้าม delta
+      // (เช่น delta1="บั" delta2="๊บ") แล้วค่อย sanitize ก่อนปล่อยออก
+      let brandCarry = ''
+      const push = (payload: unknown) =>
+        controller.enqueue(encoder.encode(`data: ${JSON.stringify(payload)}\n\n`))
       try {
         for (;;) {
           const { done, value } = await reader.read()
@@ -201,13 +207,30 @@ async function streamCompletion(req: Request, apiKey: string, model: string, saf
             const trimmed = line.trim()
             if (!trimmed.startsWith('data:')) continue
             const data = trimmed.slice(5).trim()
-            if (data === '[DONE]') { controller.enqueue(encoder.encode('data: [DONE]\n\n')); continue }
+            if (data === '[DONE]') {
+              // สตรีมจบ → ปล่ายบัฟเฟอร์ที่เหลือ (ผ่าน sanitizer แล้ว)
+              const tail = sanitizeStreamChunk(brandCarry, '', true)
+              if (tail.emit) push({ t: tail.emit })
+              brandCarry = ''
+              controller.enqueue(encoder.encode('data: [DONE]\n\n'))
+              continue
+            }
             try {
               const chunk = JSON.parse(data)
               const delta = chunk.choices?.[0]?.delta?.content
-              if (delta) controller.enqueue(encoder.encode(`data: ${JSON.stringify({ t: delta })}\n\n`))
+              if (delta) {
+                const r = sanitizeStreamChunk(brandCarry, delta)
+                brandCarry = r.carry
+                if (r.emit) push({ t: r.emit })
+              }
             } catch { /* partial json line — skip */ }
           }
+        }
+        // กัน case ที่ upstream จบโดยไม่มี [DONE]
+        if (brandCarry) {
+          const tail = sanitizeStreamChunk(brandCarry, '', true)
+          if (tail.emit) push({ t: tail.emit })
+          brandCarry = ''
         }
       } finally {
         controller.close()
@@ -315,7 +338,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
   // WS-3 fix: keep ALL client system messages (DB context / voice directive live
   // there) — the old slice(-10) silently dropped the second system message when
   // the conversation grew past 10 turns.
-  const systemMessage: ChatMessage = { role: 'system', content: GUARDRAIL_SEGMENT }
+  const systemMessage: ChatMessage = { role: 'system', content: GUARDRAIL_SEGMENT + '\n\n' + mascotNameRule() }
   const safeMessages = [
     systemMessage,
     ...messages.filter((m) => m.role === 'system'),

@@ -89,7 +89,7 @@ function nextId(): string {
 }
 
 const FALLBACK_GREETING =
-  'สวัสดีครับ ผมไบ๊ท์ พนักงานเสิร์ฟของไบ๊ท์มีเบบี้ 🍊 วันนี้อยากกินอะไรดีครับ?'
+  'สวัสดีครับ ผมไบ๊ พนักงานเสิร์ฟของไบ๊มีเบบี้ 🍊 วันนี้อยากกินอะไรดีครับ?'
 
 export function TalkToBite({ mode = 'overlay', initialPhase = 'landing', landingClose = true, onClose }: TalkToBiteProps) {
   const navigate = useNavigate()
@@ -936,17 +936,17 @@ export function TalkToBite({ mode = 'overlay', initialPhase = 'landing', landing
 }
 
 function speakable(text: string): string {
-  // TTS safety: ประโยคไทยห้ามมี Latin "Bite" — เอนจินอ่านเป็น /bit/ ("บิท") ผิดเสมอ
+  // TTS safety: ห้ามอ่านชื่อแบรนด์เป็นภาษาอังกฤษ — แปลงเป็นชื่อไทยที่ถูกต้องเสมอ
   // แทนที่เฉพาะตอนส่งเสียง ข้อความบนหน้ายังคงรูปแบบเดิม
-  // ชื่อไทยทุกรูปสะกด (ไบ๊ท์ / ไบท๊ / ไบท์) → "ไบท": วรรณยุกต์ ๊ ติดไม้หัวอากาศ ท์ ทำให้
-  // เอนจินอ่านชื่อเพี้ยน (owner report: ออกมาเป็น "บั๊บ") — รูปบนหน้าจอไม่ถูกแตะ
+  // ชื่อไทยทุกรูปสะกด (ไบ๊ / ไบ๊ / ไบ๊) → "ไบ๊": วรรณยุกต์ ๊ ติดไม้หัวอากาศ ท์ ทำให้
+  // แก้ชื่อมาสคอตให้ถูกต้อง (owner report: เคยออกเสียงผิด) — sanitizer บังคับชื่อที่ถูกต้อง
   const thai = /[\u0E00-\u0E7F]/.test(text)
   let t = text.replace(/[#*`_~]/g, '').slice(0, 800)
   if (thai) {
     t = t
-      .replace(/Bite Me Baby/gi, 'ไบทมีเบบี้')
-      .replace(/\bBite\b/g, 'ไบท')
-      .replace(/ไบ๊ท์|ไบ๊ท|ไบท๊|ไบท์/g, 'ไบท')
+      .replace(/Bite Me Baby/gi, 'ไบ๊มีเบบี้')
+      .replace(/\bBite\b/g, 'ไบ๊')
+      .replace(/ไบ๊|ไบ๊|ไบ๊|ไบ๊/g, 'ไบ๊')
   }
   return t
 }

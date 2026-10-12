@@ -57,7 +57,7 @@ interface BiteAIStore {
 export const useBiteAIStore = create<BiteAIStore>((set) => ({
   stage: 'ambient',
   greetingPlayed: false,
-  bubble: 'สวัสดีครับ ไบ๊ท์อยู่นี่แล้ว 🍊 มีอะไรให้ช่วยไหมครับ',
+  bubble: 'สวัสดีครับ ไบ๊อยู่นี่แล้ว 🍊 มีอะไรให้ช่วยไหมครับ',
   upsell: null,
   chatOpen: false,
   fullContext: '',
@@ -112,7 +112,7 @@ export const useBiteAIStore = create<BiteAIStore>((set) => ({
     }),
 
   closeChat: () =>
-    set({ chatOpen: false, stage: 'ambient', bubble: 'กลับมาหาไบ๊ท์ได้เสมอครับ 😊', biteState: 'IDLE' }),
+    set({ chatOpen: false, stage: 'ambient', bubble: 'กลับมาหาไบ๊ได้เสมอครับ 😊', biteState: 'IDLE' }),
 
   setBubble: (bubble) => set({ bubble }),
 
