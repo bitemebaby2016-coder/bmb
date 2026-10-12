@@ -22,6 +22,20 @@
 
 // CR-3 coordinate persistence policy (pure — shared with repo unit tests)
 import { shouldPersistDefaultCoords } from './locationPolicy.ts'
+// P0 interim hardening (SF-01) — pure module, shared with repo unit tests
+import {
+  checkRateLimit,
+  recordAttempt,
+  clientIpOf,
+  normalizePhoneKey,
+  QUICK_LOGIN_PHONE_RULE,
+  QUICK_LOGIN_IP_RULE,
+} from './rateLimit.ts'
+
+// Rate-limit store — in-memory per instance (interim measure; resets on cold
+// start). Permanent control requires phone OTP (blocked on SMS_* secrets).
+const rateStore = new Map<string, number[]>()
+
 
 function corsHeaders(): Record<string, string> {
   return {
@@ -148,6 +162,33 @@ Deno.serve(async (req: Request): Promise<Response> => {
   }
 
   if (!name || phone.length < 7) return json({ error: 'ERR_MISSING_NAME_OR_PHONE' }, 400)
+
+  // ---- P0 interim hardening (SF-01) — rate limit ทั้งต่อเบอร์และต่อ IP ----
+  // บันทึกทุกความพยายาม (ไม่ว่าจะสำเร็จหรือไม่) เพื่อกัน brute force
+  // ข้อจำกัด: in-memory ต่อ instance — reset เมื่อ cold start (interim เท่านั้น)
+  const nowMs = Date.now()
+  const ipKey = 'i:' + clientIpOf(req.headers)
+  const phoneKey = 'p:' + normalizePhoneKey(phone)
+
+  const byPhone = checkRateLimit(rateStore, phoneKey, QUICK_LOGIN_PHONE_RULE, nowMs)
+  const byIp = checkRateLimit(rateStore, ipKey, QUICK_LOGIN_IP_RULE, nowMs)
+  if (byPhone.limited || byIp.limited) {
+    const retryAfterSec = Math.max(byPhone.retryAfterSec, byIp.retryAfterSec)
+    return new Response(
+      JSON.stringify({ error: 'ERR_RATE_LIMITED', retry_after_sec: retryAfterSec }),
+      {
+        status: 429,
+        headers: {
+          ...corsHeaders(),
+          'Content-Type': 'application/json',
+          'Retry-After': String(retryAfterSec),
+        },
+      },
+    )
+  }
+  recordAttempt(rateStore, phoneKey, QUICK_LOGIN_PHONE_RULE, nowMs)
+  recordAttempt(rateStore, ipKey, QUICK_LOGIN_IP_RULE, nowMs)
+
   // CR-3 (Owner 2026-10-10): NO kitchen fallback — invalid/missing coords simply
   // mean "no coordinates". default_* are written only when
   // shouldPersistDefaultCoords() passes (trusted source + WGS84-valid pair).

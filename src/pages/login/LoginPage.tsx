@@ -4,6 +4,7 @@ import { useAuthStore, fetchProfileRole, describeLoginError, restoreProfileAddre
 import { useLocationStore, KITCHEN_LAT, KITCHEN_LNG } from '@/store/locationStore'
 import { getGpsLocation, uploadDeliveryPhoto, saveDeliveryProfile } from '@/lib/locationLogin'
 import { showToast } from '@/components/ui/ToastContainer'
+import { sendPasswordReset } from '@/lib/authRecovery'
 import { writeAuditLog } from '@/lib/auditLog'
 
 // จำข้อมูล Quick login ครั้งเดียวใช้ตลอด (localStorage — รอบหน้ากรอกให้อัตโนมัติ)
@@ -47,6 +48,12 @@ export function LoginPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [isLocating, setIsLocating] = useState(false)
   const [error, setError] = useState('')
+
+  // P1 / SF-04 — ลืมรหัสผ่าน (ไม่มีในระบบมาก่อน 2026-10-12)
+  const [isForgot, setIsForgot] = useState(false)
+  const [forgotEmail, setForgotEmail] = useState('')
+  const [isSendingReset, setIsSendingReset] = useState(false)
+  const [resetSent, setResetSent] = useState(false)
   // รูปสถานที่จัดส่ง (Owner feature 2026-10-08)
   const [qPhotoFile, setQPhotoFile] = useState<File | null>(null)
   const [qPhotoPreview, setQPhotoPreview] = useState<string>('') // objectURL หรือ URL เดิม
@@ -84,6 +91,21 @@ export function LoginPage() {
     })
     showToast('เข้าสู่ระบบสำเร็จ!', 'success')
     navigate(role === 'admin' ? '/admin' : (returnTo || '/'), { replace: true })
+  }
+
+  // P1 / SF-04 — ส่งลิงก์ตั้งรหัสผ่านใหม่ (กัน enumeration: ตอบสำเร็จเสมอถ้าอีเมลไม่มีในระบบ)
+  async function handleSendReset(e: React.FormEvent) {
+    e.preventDefault()
+    if (isSendingReset) return
+    setIsSendingReset(true)
+    setError('')
+    const res = await sendPasswordReset(forgotEmail)
+    setIsSendingReset(false)
+    if (!res.ok) {
+      setError('ส่งลิงก์ไม่สำเร็จ กรุณาลองใหม่อีกครั้ง')
+      return
+    }
+    setResetSent(true)
   }
 
   async function handleLogin(e: React.FormEvent) {
@@ -149,6 +171,8 @@ export function LoginPage() {
             ? 'ระบบยืนยันตัวตนขัดข้อง — ลองใหม่อีกครั้ง หรือใช้แท็บอีเมล/รหัสผ่าน'
             : res.error === 'ERR_TIMEOUT'
             ? 'ระบบช้าเกินไป — ตรวจสอบเน็ตเวิร์กแล้วลองใหม่อีกครั้ง'
+            : res.error === 'ERR_RATE_LIMITED'
+            ? 'พยายามมากเกินไป — กรุณารอสักครู่แล้วลองใหม่ หรือใช้แท็บอีเมล/รหัสผ่าน'
             : (res.error || 'เข้าสู่ระบบด่วนไม่สำเร็จ'),
         )
         setIsLoading(false)
@@ -247,7 +271,60 @@ return (
             </div>
           )}
 
-          {mode === 'email' ? (
+          {mode === 'email' && isForgot ? (
+            <form onSubmit={handleSendReset} className="space-y-4">
+              <div className="text-sm font-semibold text-brand-accent">ลืมรหัสผ่าน</div>
+              {error && (
+                <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+                  {error}
+                </div>
+              )}
+              {resetSent ? (
+                <>
+                  <div className="bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg text-sm">
+                    ส่งลิงก์ตั้งรหัสผ่านใหม่ไปที่อีเมลของคุณแล้ว (ถ้าอีเมลมีบัญชีอยู่ในระบบ)
+                    กรุณาตรวจสอบกล่องจดหมาย — ลิงก์มีอายุจำกัด
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => { setIsForgot(false); setResetSent(false); setError('') }}
+                    className="btn btn-outline w-full"
+                  >
+                    กลับไปเข้าสู่ระบบ
+                  </button>
+                </>
+              ) : (
+                <>
+                  <div>
+                    <label className="block text-sm font-medium text-brand-accent mb-2">อีเมล</label>
+                    <input
+                      type="email"
+                      value={forgotEmail}
+                      onChange={(e) => setForgotEmail(e.target.value)}
+                      className="input"
+                      placeholder="your@email.com"
+                      required
+                      autoFocus
+                    />
+                  </div>
+                  <button
+                    type="submit"
+                    disabled={isSendingReset}
+                    className={`btn btn-primary w-full ${isSendingReset ? 'btn-disabled' : ''}`}
+                  >
+                    {isSendingReset ? 'กำลังส่ง…' : 'ส่งลิงก์ตั้งรหัสผ่านใหม่'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setIsForgot(false); setError('') }}
+                    className="btn btn-outline w-full"
+                  >
+                    กลับไปเข้าสู่ระบบ
+                  </button>
+                </>
+              )}
+            </form>
+          ) : mode === 'email' ? (
             <form onSubmit={handleLogin} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-brand-accent mb-2">อีเมล</label>
@@ -271,6 +348,15 @@ return (
                   placeholder="••••••••"
                   required
                 />
+                <div className="text-right mt-2">
+                  <button
+                    type="button"
+                    onClick={() => { setIsForgot(true); setError('') }}
+                    className="text-sm text-brand-primary hover:underline"
+                  >
+                    ลืมรหัสผ่าน?
+                  </button>
+                </div>
               </div>
 
               <button

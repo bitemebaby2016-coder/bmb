@@ -136,7 +136,9 @@ async function gotoRoute(page, route) {
       const page = await ctx.newPage()
       const routes = {}
       for (const [route, expect] of [
-        ['/orders', BASE + '/orders'],
+        // /orders เป็น ProtectedRoute (P1/SF-08) -> guest ถูก redirect ไป /login
+        // จึงต้องเสิร์ฟ meta ของ /login ให้ guest (ไม่ใช่ fake /orders canonical)
+        ['/orders', BASE + '/login'],
         ['/reviews', BASE + '/reviews'],
         ['/notifications', BASE + '/login'],
       ]) {
@@ -163,7 +165,7 @@ async function gotoRoute(page, route) {
       R.checks.L2_new_route_meta = {
         routes,
         verdict: Object.values(routes).every((r) => r.verdict === 'PASS') ? 'PASS' : 'FAIL',
-        note: 'ก่อน 5cc693a /orders /notifications /reviews ไม่มี SeoHelmet entry เลย · /notifications = auth-gated จึงเสิร์ฟ meta ของ /login ให้ guest',
+        note: 'ก่อน 5cc693a /orders /notifications /reviews ไม่มี SeoHelmet entry เลย · /orders และ /notifications เป็น auth-gated จึงเสิร์ฟ meta ของ /login ให้ guest',
       }
       await ctx.close()
     }

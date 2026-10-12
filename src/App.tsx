@@ -29,6 +29,7 @@ const VotePage = lazy(() => import('./pages/VotePage').then(m => ({ default: m.V
 const RandomMenuPage = lazy(() => import('./pages/RandomMenuPage').then(m => ({ default: m.RandomMenuPage })))
 const SharePage = lazy(() => import('./pages/SharePage').then(m => ({ default: m.SharePage })))
 const LoginPage = lazy(() => import('./pages/login/LoginPage').then(m => ({ default: m.LoginPage })))
+const ResetPasswordPage = lazy(() => import('./pages/ResetPasswordPage').then(m => ({ default: m.ResetPasswordPage })))
 const RegisterPage = lazy(() => import('./pages/login/RegisterPage').then(m => ({ default: m.RegisterPage })))
 const PaymentConfirmationPage = lazy(() => import('./pages/PaymentConfirmationPage').then(m => ({ default: m.PaymentConfirmationPage })))
 
@@ -184,11 +185,14 @@ export default function App() {
         <Route path="/shop" element={<Suspense fallback={<LoadingSpinner />}><Layout><HomePage /></Layout></Suspense>} />
         <Route path="/login" element={<Suspense fallback={<LoadingSpinner />}><Layout hideBottomNav={true}><LoginPage /></Layout></Suspense>} />
         <Route path="/register" element={<Suspense fallback={<LoadingSpinner />}><Layout hideBottomNav={true}><RegisterPage /></Layout></Suspense>} />
+      {/* P1/SF-04 — ตั้งรหัสผ่านใหม่หลังกดลิงก์จากอีเมล (ไม่ครอบ ProtectedRoute:
+          ผู้ใช้มี session ชั่วคราวจากลิงก์อีเมลและ detectSessionInUrl จะแปลงให้เอง) */}
+      <Route path="/reset-password" element={<Suspense fallback={<LoadingSpinner />}><Layout hideBottomNav={true}><ResetPasswordPage /></Layout></Suspense>} />
         <Route path="/menu" element={<Suspense fallback={<LoadingSpinner />}><Layout><MenuPage /></Layout></Suspense>} />
         <Route path="/cart" element={<Suspense fallback={<LoadingSpinner />}><Layout><CartPage /></Layout></Suspense>} />
         <Route path="/checkout" element={<Suspense fallback={<LoadingSpinner />}><Layout><CheckoutPage /></Layout></Suspense>} />
         <Route path="/track/:orderNumber" element={<Suspense fallback={<LoadingSpinner />}><Layout><OrderTrackPage /></Layout></Suspense>} />
-        <Route path="/orders" element={<Suspense fallback={<LoadingSpinner />}><Layout><OrdersPage /></Layout></Suspense>} />
+        <Route path="/orders" element={<Suspense fallback={<LoadingSpinner />}><ProtectedRoute><Layout><OrdersPage /></Layout></ProtectedRoute></Suspense>} />
         {/* Phase 3B: legacy /profile/orders link — canonical history lives at /orders */}
         <Route path="/profile/orders" element={<Navigate to="/orders" replace />} />
         <Route path="/payment/:orderNumber" element={<Suspense fallback={<LoadingSpinner />}><Layout><PaymentConfirmationPage /></Layout></Suspense>} />
