@@ -5,7 +5,9 @@
 // ============================================
 
 import { Helmet, HelmetProvider } from 'react-helmet-async'
+import { useParams } from 'react-router-dom'
 import type { SEOMeta } from '@/types'
+import { getOrderTrackMeta, getReviewDetailMeta } from '@/lib/seo'
 
 const helmetContext = { context: {} }
 
@@ -62,6 +64,22 @@ export function SeoHelmet({ seo }: { seo: SEOMeta | null }) {
       )}
     </Helmet>
   )
+}
+
+/**
+ * Param-route SEO wrappers — read the REAL matched param instead of the path
+ * placeholder. Regression: `getOrderTrackMeta(':orderNumber')` used to ship a
+ * literal canonical `https://biteme-baby.com/track/:orderNumber` + title with
+ * the placeholder to crawlers.
+ */
+export function TrackOrderSeo() {
+  const { orderNumber } = useParams()
+  return <SeoHelmet seo={getOrderTrackMeta(orderNumber || '')} />
+}
+
+export function ReviewDetailSeo() {
+  const { productId } = useParams()
+  return <SeoHelmet seo={getReviewDetailMeta(productId || '')} />
 }
 
 export { HelmetProvider }

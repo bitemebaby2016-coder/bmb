@@ -13,6 +13,37 @@ import { BITE_PERSONA_TH } from './bitePersona'
 // The client only stores the model id (public) for display/fallback purposes.
 const OPENROUTER_MODEL = resolveModelA(import.meta.env.VITE_OPENROUTER_MODEL)
 
+// ============================================
+// Chat-hang guard (launch-closure 2026-10-12)
+// ----------------------------------------
+// ก่อนหน้านี้ไม่มี timeout/AbortSignal ที่ไหนในสาย chat เลย — ai-proxy ค้าง =
+// Promise ค้าง = หน้าแชตค้างถาวร (ปุ่มส่ง disable ตลอดกาล). ตอนนี้:
+//   - ทุก attempt ถูก time-box (stream มีทั้ง total + idle abort จริงผ่าน AbortController)
+//   - ทั้งสาย fallback ถูก deadline รวม — ไม่มีทางใช้เวลารวมเกินค่านี้
+//   - fallback คือข้อความไทยเหมือนเดิม (ไม่ retry ไม่จำกัด — model A → model B → จบ)
+// ============================================
+export const CHAT_ATTEMPT_TIMEOUT_MS = 30_000
+export const CHAT_TOTAL_TIMEOUT_MS = 60_000
+export const CHAT_STREAM_IDLE_TIMEOUT_MS = 20_000
+export const CHAT_CONTEXT_TIMEOUT_MS = 8_000
+export const CHAT_FALLBACK_THAI =
+  'ขอโทษครับ เกิดข้อผิดพลาดในการเชื่อมต่อ กรุณาลองใหม่อีกครั้งนะครับ 🙏'
+
+function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error(`${label}_timeout`)), ms)
+    promise.then(
+      (value) => { clearTimeout(timer); resolve(value) },
+      (err) => { clearTimeout(timer); reject(err) },
+    )
+  })
+}
+
+/** จำกัดเวลาที่เหลือจนถึง deadline — ใช้ร่วมกับ withTimeout(…, min(attempt, remaining)) */
+function remainingMs(deadline: number): number {
+  return Math.max(0, deadline - Date.now())
+}
+
 const SYSTEM_PROMPT = `
 You are "Bite" (ไบ๊ท์), the friendly waiter (บริกร/พนักงานเสิร์ฟ) at Bite Me Baby restaurant in Chanthaburi!
 
@@ -70,6 +101,9 @@ VOICE MODE (โหมดเสียง):
 export interface ChatOptions {
   /** WS-2e: เปิดโหมดเสียง — system prompt บังคับตอบสั้นแบบประโยคพูด */
   voiceMode?: boolean
+  /** Chat-hang guard overrides (tests / กรณีพิเศษ) — ค่าปกติ = CHAT_*_TIMEOUT_MS */
+  attemptTimeoutMs?: number
+  totalTimeoutMs?: number
 }
 
 let conversationHistory: ChatMessage[] = [
@@ -118,7 +152,11 @@ function buildSystemMessage(
  * Throws on any non-OK HTTP status or when the response has no usable content,
  * so the caller can decide whether to fall back to another model.
  */
-async function requestCompletion(messages: ChatMessage[], model: string): Promise<string> {
+async function requestCompletion(
+  messages: ChatMessage[],
+  model: string,
+  timeoutMs: number = CHAT_ATTEMPT_TIMEOUT_MS,
+): Promise<string> {
   // Guest-safe: functions.invoke sends the anon key as Bearer when there is no
   // (valid) session — the deployed ai-proxy accepts that as a guest JWT. If a
   // stale session lingers in storage with an already-expired access token, we
@@ -132,19 +170,25 @@ async function requestCompletion(messages: ChatMessage[], model: string): Promis
     void supabase.auth.signOut({ scope: 'local' }).catch(() => {})
   }
 
-  const { data: proxy, error } = await supabase.functions.invoke('ai-proxy', {
-    // G5 (D5-01): task is validated and the model is chosen SERVER-SIDE by
-    // _shared/aiPolicy.ts. `model` is only a whitelist hint — an id outside the
-    // task policy is ignored by the gateway.
-    body: { messages: trimForProxy(messages), model, task: 'chat', maxTokens: 700 },
-    // Explicit headers: never let a stale session token silently become the
-    // only credential — the apikey header always carries the public guest key
-    // so ai-proxy can degrade to the guest path if the JWT is rejected.
-    headers: {
-      Authorization: `Bearer ${sessionValid ? s.access_token : import.meta.env.VITE_SUPABASE_ANON_KEY || ''}`,
-      apikey: import.meta.env.VITE_SUPABASE_ANON_KEY || '',
-    },
-  })
+  // withTimeout: functions.invoke ไม่รับ AbortSignal — กันค้างด้วยPromise race
+  // (attempt นี้ reject → caller เลื่อนไป model fallback ตามเดิม)
+  const { data: proxy, error } = await withTimeout(
+    supabase.functions.invoke('ai-proxy', {
+      // G5 (D5-01): task is validated and the model is chosen SERVER-SIDE by
+      // _shared/aiPolicy.ts. `model` is only a whitelist hint — an id outside the
+      // task policy is ignored by the gateway.
+      body: { messages: trimForProxy(messages), model, task: 'chat', maxTokens: 700 },
+      // Explicit headers: never let a stale session token silently become the
+      // only credential — the apikey header always carries the public guest key
+      // so ai-proxy can degrade to the guest path if the JWT is rejected.
+      headers: {
+        Authorization: `Bearer ${sessionValid ? s.access_token : import.meta.env.VITE_SUPABASE_ANON_KEY || ''}`,
+        apikey: import.meta.env.VITE_SUPABASE_ANON_KEY || '',
+      },
+    }),
+    timeoutMs,
+    'ai-proxy',
+  )
   if (error) throw new Error(`proxy error: ${error.message || 'upstream'}`)
   if (!proxy || proxy.error) throw new Error(proxy?.error || 'Empty proxy response')
   // proxy.data carries the OpenRouter completion payload (choices[0].message.content).
@@ -166,6 +210,7 @@ async function streamCompletionOnce(
   messages: ChatMessage[],
   model: string,
   onDelta: (text: string) => void,
+  timeoutMs: number = CHAT_ATTEMPT_TIMEOUT_MS,
   signal?: AbortSignal,
 ): Promise<string> {
   // Guest-safe: use the user's JWT when logged in, otherwise the platform anon
@@ -179,45 +224,66 @@ async function streamCompletionOnce(
   const token = sessionValid ? s.access_token : import.meta.env.VITE_SUPABASE_ANON_KEY || ''
   if (!token) throw new Error('no auth token')
 
-  const url = `${import.meta.env.VITE_SUPABASE_URL || 'https://ivkdfognyiwjcmrhcnwz.supabase.co'}/functions/v1/ai-proxy`
-  const res = await fetch(url, {
-    method: 'POST',
-    signal,
-    headers: {
-      Authorization: `Bearer ${token}`,
-      apikey: import.meta.env.VITE_SUPABASE_ANON_KEY || '',
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ messages: trimForProxy(messages), model, task: 'streaming', maxTokens: 700, stream: true }),
-  })
-  const ctype = res.headers.get('content-type') || ''
-  if (!res.ok || !res.body || !ctype.includes('text/event-stream')) {
-    throw new Error(`stream unavailable (status ${res.status}, type ${ctype})`)
+  // Chat-hang guard: abort จริงทั้งสาย — total timeout ครอบ fetch + อ่านทั้งหมด,
+  // idle timeout ตัด stream ที่เปิดแล้วค้างกลางทาง (ไม่มี byte ใหม่),
+  // สัญญาณจาก caller (ถ้ามี) ยกเลิกพร้อมกัน
+  const ctrl = new AbortController()
+  const idleMs = Math.min(CHAT_STREAM_IDLE_TIMEOUT_MS, timeoutMs)
+  const totalTimer = setTimeout(() => ctrl.abort(), timeoutMs)
+  let idleTimer = setTimeout(() => ctrl.abort(), idleMs)
+  const pokeIdle = () => {
+    clearTimeout(idleTimer)
+    idleTimer = setTimeout(() => ctrl.abort(), idleMs)
   }
+  const onExternalAbort = () => ctrl.abort()
+  signal?.addEventListener('abort', onExternalAbort)
 
-  const reader = res.body.getReader()
-  const decoder = new TextDecoder()
-  let buffer = ''
-  let full = ''
-  for (;;) {
-    const { done, value } = await reader.read()
-    if (done) break
-    buffer += decoder.decode(value, { stream: true })
-    const events = buffer.split('\n\n')
-    buffer = events.pop() ?? ''
-    for (const ev of events) {
-      const line = ev.split('\n').find((l) => l.startsWith('data:'))
-      if (!line) continue
-      const data = line.slice(5).trim()
-      if (data === '[DONE]') continue
-      try {
-        const parsed = JSON.parse(data) as { t?: string }
-        if (parsed.t) { full += parsed.t; onDelta(parsed.t) }
-      } catch { /* partial event — skip */ }
+  try {
+    const url = `${import.meta.env.VITE_SUPABASE_URL || 'https://ivkdfognyiwjcmrhcnwz.supabase.co'}/functions/v1/ai-proxy`
+    const res = await fetch(url, {
+      method: 'POST',
+      signal: ctrl.signal,
+      headers: {
+        Authorization: `Bearer ${token}`,
+        apikey: import.meta.env.VITE_SUPABASE_ANON_KEY || '',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ messages: trimForProxy(messages), model, task: 'streaming', maxTokens: 700, stream: true }),
+    })
+    const ctype = res.headers.get('content-type') || ''
+    if (!res.ok || !res.body || !ctype.includes('text/event-stream')) {
+      throw new Error(`stream unavailable (status ${res.status}, type ${ctype})`)
     }
+
+    const reader = res.body.getReader()
+    const decoder = new TextDecoder()
+    let buffer = ''
+    let full = ''
+    for (;;) {
+      const { done, value } = await reader.read()
+      if (done) break
+      pokeIdle()
+      buffer += decoder.decode(value, { stream: true })
+      const events = buffer.split('\n\n')
+      buffer = events.pop() ?? ''
+      for (const ev of events) {
+        const line = ev.split('\n').find((l) => l.startsWith('data:'))
+        if (!line) continue
+        const data = line.slice(5).trim()
+        if (data === '[DONE]') continue
+        try {
+          const parsed = JSON.parse(data) as { t?: string }
+          if (parsed.t) { full += parsed.t; onDelta(parsed.t) }
+        } catch { /* partial event — skip */ }
+      }
+    }
+    if (!full) throw new Error('stream produced no content')
+    return full
+  } finally {
+    clearTimeout(totalTimer)
+    clearTimeout(idleTimer)
+    signal?.removeEventListener('abort', onExternalAbort)
   }
-  if (!full) throw new Error('stream produced no content')
-  return full
 }
 
 export async function chatWithAIStream(
@@ -226,8 +292,15 @@ export async function chatWithAIStream(
   onDelta: (text: string) => void,
   options?: ChatOptions
 ): Promise<string> {
-  // WS-3: ดึง context จริงจาก DB (cache 7 นาที) — ผิดพลาด → '' แล้วใช้ base prompt
-  const dbContext = await getDbContextPrompt()
+  // WS-3: ดึง context จริงจาก DB (cache 7 นาที) — ผิดพลาด/ค้าง → '' แล้วใช้ base prompt
+  // Chat-hang guard: ทั้งสายผูก deadline เดียว — เหลือเวลาเท่าไร attempt ถัดไปใช้เท่านั้น
+  const deadline = Date.now() + (options?.totalTimeoutMs ?? CHAT_TOTAL_TIMEOUT_MS)
+  const attempt = options?.attemptTimeoutMs ?? CHAT_ATTEMPT_TIMEOUT_MS
+  const dbContext = await withTimeout(
+    getDbContextPrompt().catch(() => ''),
+    Math.max(1, Math.min(CHAT_CONTEXT_TIMEOUT_MS, remainingMs(deadline))),
+    'db-context',
+  ).catch(() => '')
   const messages = [...conversationHistory, { role: 'user' as const, content: userMessage }]
   if (runtimeContext || dbContext || options?.voiceMode) {
     const base = conversationHistory[0]?.content ?? ''
@@ -240,11 +313,18 @@ export async function chatWithAIStream(
   try {
     let aiResponse: string
     try {
-      aiResponse = await streamCompletionOnce(messages, OPENROUTER_MODEL, onDelta)
+      aiResponse = await streamCompletionOnce(
+        messages, OPENROUTER_MODEL, onDelta,
+        Math.max(1, Math.min(attempt, remainingMs(deadline))),
+      )
     } catch (primaryError) {
+      if (remainingMs(deadline) <= 0) throw primaryError
       // Model A failed to stream → retry once with the fallback model.
       console.error(`[Bite Me Baby] Stream with ${OPENROUTER_MODEL} failed, falling back to ${MODEL_A_FALLBACK}:`, primaryError)
-      aiResponse = await streamCompletionOnce(messages, MODEL_A_FALLBACK, onDelta)
+      aiResponse = await streamCompletionOnce(
+        messages, MODEL_A_FALLBACK, onDelta,
+        Math.max(1, Math.min(attempt, remainingMs(deadline))),
+      )
     }
 
     conversationHistory.push({ role: 'user' as const, content: userMessage })
@@ -253,7 +333,12 @@ export async function chatWithAIStream(
   } catch (error) {
     console.error('OpenRouter streaming failed — falling back to blocking call:', error)
     // Graceful degradation: same conversation, non-streaming path.
-    return chatWithAI(userMessage, runtimeContext)
+    // options ถูกส่งต่อ (เดิม voiceMode หายตอน fallback) + เหลือเวลาจาก deadline เดิม
+    return chatWithAI(userMessage, runtimeContext, {
+      ...options,
+      attemptTimeoutMs: Math.max(1, Math.min(attempt, remainingMs(deadline))),
+      totalTimeoutMs: remainingMs(deadline),
+    })
   }
 }
 
@@ -266,7 +351,14 @@ export async function chatWithAI(
   // so the model answers with live store data. Replaces the static system slot.
   // WS-3: + DB context (เมนู/ราคา/โปรโมชัน/ตั้งค่าร้าน จาก Supabase, cache 7 นาที)
   // WS-2e: + voice directive เมื่อ options.voiceMode
-  const dbContext = await getDbContextPrompt()
+  // Chat-hang guard: deadline เดียวครอบทั้งสาย — attempt ถัดไปใช้เฉพาะเวลาที่เหลือ
+  const deadline = Date.now() + (options?.totalTimeoutMs ?? CHAT_TOTAL_TIMEOUT_MS)
+  const attempt = options?.attemptTimeoutMs ?? CHAT_ATTEMPT_TIMEOUT_MS
+  const dbContext = await withTimeout(
+    getDbContextPrompt().catch(() => ''),
+    Math.max(1, Math.min(CHAT_CONTEXT_TIMEOUT_MS, remainingMs(deadline))),
+    'db-context',
+  ).catch(() => '')
   const messages = [...conversationHistory, { role: 'user' as const, content: userMessage }]
   if (runtimeContext || dbContext || options?.voiceMode) {
     const base = conversationHistory[0]?.content ?? ''
@@ -279,11 +371,18 @@ export async function chatWithAI(
   try {
     let aiResponse: string
     try {
-      aiResponse = await requestCompletion(messages, OPENROUTER_MODEL)
+      aiResponse = await requestCompletion(
+        messages, OPENROUTER_MODEL,
+        Math.max(1, Math.min(attempt, remainingMs(deadline))),
+      )
     } catch (primaryError) {
+      if (remainingMs(deadline) <= 0) throw primaryError
       // Model A (GLM 5.2 free) failed → retry once with Qwen 3.7 Flash.
       console.error(`[Bite Me Baby] Model A (${OPENROUTER_MODEL}) failed, falling back to ${MODEL_A_FALLBACK}:`, primaryError)
-      aiResponse = await requestCompletion(messages, MODEL_A_FALLBACK)
+      aiResponse = await requestCompletion(
+        messages, MODEL_A_FALLBACK,
+        Math.max(1, Math.min(attempt, remainingMs(deadline))),
+      )
     }
 
     conversationHistory.push({ role: 'user' as const, content: userMessage })
@@ -292,7 +391,7 @@ export async function chatWithAI(
     return aiResponse
   } catch (error) {
     console.error('OpenRouter API Error:', error)
-    return 'ขอโทษครับ เกิดข้อผิดพลาดในการเชื่อมต่อ กรุณาลองใหม่อีกครั้งนะครับ 🙏'
+    return CHAT_FALLBACK_THAI
   }
 }
 

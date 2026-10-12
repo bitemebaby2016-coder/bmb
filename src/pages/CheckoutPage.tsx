@@ -94,10 +94,11 @@ export function CheckoutPage() {
   const [daySchedule, setDaySchedule] = useState<MenuScheduleRow[]>([]) // CAT-02: published schedule mirror for the selected date
 
   // 007/025: order creation is authenticated-only → guests are redirected.
+  // Launch-closure: ส่ง from=/checkout เพื่อให้ login สำเร็จแล้วกลับมา checkout ต่อ
   useEffect(() => {
     if (!customer && !justPlaced.current) {
       showToast('กรุณาเข้าสู่ระบบก่อนสั่งซื้อ', 'info')
-      navigate('/login')
+      navigate('/login', { state: { from: '/checkout' } })
     }
   }, [customer, navigate])
 

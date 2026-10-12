@@ -2,6 +2,7 @@ import { create } from "zustand"
 import type { Customer } from "@/types"
 import { supabase } from "@/lib/supabase"
 import { quickLoginByPhone, type QuickLoginInput } from "@/lib/locationLogin"
+import { useLocationStore } from "./locationStore"
 
 // P0-2 FIX (2026-09-18): Authentication ถูกย้ายไป Supabase Auth แล้ว
 // ---------------------------------------------------------------
@@ -239,6 +240,41 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
     }
   }
 }))
+
+/**
+ * Launch-closure (case D — ลูกค้าเก่ากลับมาสั่งซ้ำ): ดึง "ข้อความที่อยู่" ที่บันทึก
+ * ไว้ในแถว customers ของตัวเอง (RLS own-read, migration 006/015) มาเติม
+ * locationStore ให้อัตโนมัติ — อุปกรณ์ใหม่/browser ใหม้ไม่ต้องกรอกที่อยู่ซ้ำ
+ * (quick-login เคยบันทึกผ่าน EF update_profile แล้ว).
+ *
+ * ข้อจำกัดโดยเจตนา:
+ *   - คืน "ข้อความที่อยู่" เท่านั้น — ไม่คืนพิกัด default_* เพราะ migration 015
+ *     ไม่มีคอลัมน์ provenance และ CR-2 ห้ามมอบความน่าเชื่อถือแบบที่พิสูจน์ไม่ได้
+ *     (EF เก่าบน production เคยเขียน default_*=0,0 — ห้ามเอามาใช้เด็ดขาด)
+ *   - best-effort: ถ้าตารางไม่มี SELECT grant ให้ authenticated (กรณีเดียวกับ
+ *     profiles ก่อนหน้านี้) จะเงียบ ๆ ไม่ block การ login
+ */
+export async function restoreProfileAddress(): Promise<void> {
+  try {
+    const { data: { session } } = await supabase.auth.getSession()
+    const uid = session?.user?.id
+    if (!uid) return
+    const { data } = await supabase
+      .from("customers")
+      .select("default_address_detail")
+      .eq("user_id", uid)
+      .maybeSingle()
+    const detail = (data as { default_address_detail?: string | null } | null)
+      ?.default_address_detail?.trim()
+    if (!detail) return
+    const loc = useLocationStore.getState()
+    if (loc.location.addressDetail) return // ข้อมูลในเครื่องมีอยู่แล้ว — ไม่ทับ
+    // source เดิมคงไว้ (provenance policy ของ locationStore จัดการต่อเอง)
+    loc.setLocation({ addressDetail: detail, source: loc.location.source })
+  } catch {
+    /* best-effort — never blocks login */
+  }
+}
 
 // สมัครสมาชิกผ่าน Supabase Auth (แทน createUser ที่เขียน localStorage)
 export async function signUpWithEmail(data: {

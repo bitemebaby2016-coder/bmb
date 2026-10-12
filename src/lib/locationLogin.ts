@@ -60,8 +60,24 @@ export async function getGpsLocation(): Promise<{ latitude: number; longitude: n
       const pos = await new Promise<BrowserGeolocationPosition | null>((resolve) => {
         geo.getCurrentPosition!(resolve, () => resolve(null))
       })
-      if (pos && typeof pos.latitude === 'number' && typeof pos.longitude === 'number' && Math.abs(pos.latitude) < 90 && Math.abs(pos.longitude) < 180) {
-        return { latitude: pos.latitude, longitude: pos.longitude, source: 'gps' }
+      // CR-4 P1 fix (2026-10-12): browser จริงส่ง GeolocationPosition { coords: {...} }
+      // (ไม่ใช่ latitude ชั้นบน) — เงื่อนไขเดิมทำให้ gps-branch ตายเสมอใน browser จริง
+      // แล้ว fallback ไป IP เงียบ ๆ (หลักฐาน production: e2e/cr4-prod-e2e.json finding
+      // getGpsLocation-dead-gps-branch). รองรับทั้ง shape มาตรฐานและแบบ top-level (mock/legacy).
+      const raw = pos as unknown as {
+        latitude?: number
+        longitude?: number
+        coords?: { latitude?: number; longitude?: number }
+      }
+      const lat = typeof raw?.latitude === 'number' ? raw.latitude : raw?.coords?.latitude
+      const lng = typeof raw?.longitude === 'number' ? raw.longitude : raw?.coords?.longitude
+      if (
+        typeof lat === 'number' && typeof lng === 'number' &&
+        Number.isFinite(lat) && Number.isFinite(lng) &&
+        Math.abs(lat) < 90 && Math.abs(lng) < 180 &&
+        !(lat === 0 && lng === 0)
+      ) {
+        return { latitude: lat, longitude: lng, source: 'gps' }
       }
     }
   } catch { /* fall through */ }
@@ -162,22 +178,39 @@ export function buildQuickLoginCoords(
   return { latitude: null, longitude: null, source: gps.source }
 }
 
+/** Client-side guard — a hung Edge Function call must never freeze the login form. */
+export const QUICK_LOGIN_TIMEOUT_MS = 30_000
+
+function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error(label)), ms)
+    promise.then(
+      (value) => { clearTimeout(timer); resolve(value) },
+      (err) => { clearTimeout(timer); reject(err) },
+    )
+  })
+}
+
 export async function quickLoginByPhone(input: QuickLoginInput): Promise<QuickLoginResult> {
   try {
     const gps = await getGpsLocation()
     // CR-3: stop shipping fallback (kitchen/ip) points as customer coordinates
     const coords = buildQuickLoginCoords(input, gps)
-    const { data, error } = await supabase.functions.invoke<QuickLoginResult>('phone-auto-login', {
-      body: {
-        name: input.name,
-        phone: input.phone,
-        latitude: coords.latitude,
-        longitude: coords.longitude,
-        source: coords.source,
-        address_detail: input.addressDetail ?? '',
-        delivery_photo_url: input.deliveryPhotoUrl ?? '',
-      },
-    })
+    const { data, error } = await withTimeout(
+      supabase.functions.invoke<QuickLoginResult>('phone-auto-login', {
+        body: {
+          name: input.name,
+          phone: input.phone,
+          latitude: coords.latitude,
+          longitude: coords.longitude,
+          source: coords.source,
+          address_detail: input.addressDetail ?? '',
+          delivery_photo_url: input.deliveryPhotoUrl ?? '',
+        },
+      }),
+      QUICK_LOGIN_TIMEOUT_MS,
+      'ERR_TIMEOUT',
+    )
 
     if (error) {
       // Function-level error (e.g., not deployed / not configured)

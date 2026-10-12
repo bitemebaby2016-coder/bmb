@@ -1,4 +1,4 @@
-import { Routes, Route, Navigate } from 'react-router-dom'
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { HelmetProvider } from 'react-helmet-async'
 import { lazy, Suspense, useEffect, useState } from 'react'
 import { useAuthStore, fetchProfileRole } from './store/authStore'
@@ -6,9 +6,9 @@ import { Layout } from './components/layout/Layout'
 import { ErrorBoundary } from './components/ErrorBoundary'
 import { AdminNav } from './components/admin/AdminNav'
 // Bite / AI accessibility lives in BottomNav ('ไบ๊ท์' → /ai-chat) + BiteHero quick actions (UI v5)
-import { SeoHelmet } from './components/SeoHelmet'
+import { SeoHelmet, TrackOrderSeo, ReviewDetailSeo } from './components/SeoHelmet'
 import { MascotBadge } from './components/MascotBadge'
-import { getHomeMeta, getShopMeta, getMenuMeta, getCartMeta, getCheckoutMeta, getOrderTrackMeta, getAboutMeta, getFaqMeta, getBlogMeta, getContactMeta, getPrivacyMeta, getTermsMeta, getPromotionsMeta, getRewardsMeta, getVoteMeta, getRandomMenuMeta, getShareMeta, getViralMeta, getProfileMeta, getAdminMeta, getLoginMeta } from './lib/seo'
+import { getHomeMeta, getShopMeta, getMenuMeta, getCartMeta, getCheckoutMeta, getOrdersMeta, getNotificationsMeta, getReviewsMeta, getAboutMeta, getFaqMeta, getBlogMeta, getContactMeta, getPrivacyMeta, getTermsMeta, getPromotionsMeta, getRewardsMeta, getVoteMeta, getRandomMenuMeta, getShareMeta, getViralMeta, getProfileMeta, getAdminMeta, getLoginMeta } from './lib/seo'
 import { BrandProvider } from './components/BrandProvider'
 import { useAdminTenantContextStore } from './lib/adminTenantContext'
 import { listTenants } from './lib/adminTenantApi'
@@ -91,11 +91,21 @@ function LoadingSpinner() {
 
 // F-02 FIX (Wave 1): ProtectedRoute รอ session restore (isInitializing) ก่อนตัดสิน
 // — reload ต้องไม่พาผู้ใช้ไป /login ขณะ Supabase กำลัง restore session
+// Launch-closure: ส่ง `from` เพื่อพาผู้ใช้กลับหน้าที่ตั้งใจหลัง login (case B/D)
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
   const isInitializing = useAuthStore((s) => s.isInitializing)
+  const location = useLocation()
   if (isInitializing) return <LoadingSpinner />
-  if (!isAuthenticated) return <Navigate to="/login" replace />
+  if (!isAuthenticated) {
+    return (
+      <Navigate
+        to="/login"
+        replace
+        state={{ from: location.pathname + location.search }}
+      />
+    )
+  }
   return <>{children}</>
 }
 
@@ -143,7 +153,7 @@ export default function App() {
         <Route path="/menu" element={<SeoHelmet seo={getMenuMeta()} />} />
         <Route path="/cart" element={<SeoHelmet seo={getCartMeta()} />} />
         <Route path="/checkout" element={<SeoHelmet seo={getCheckoutMeta()} />} />
-        <Route path="/track/:orderNumber" element={<SeoHelmet seo={getOrderTrackMeta(':orderNumber')} />} />
+        <Route path="/track/:orderNumber" element={<TrackOrderSeo />} />
         <Route path="/payment/:orderNumber" element={<SeoHelmet seo={getCheckoutMeta()} />} />
         <Route path="/about" element={<SeoHelmet seo={getAboutMeta()} />} />
         <Route path="/faq" element={<SeoHelmet seo={getFaqMeta()} />} />
@@ -161,6 +171,11 @@ export default function App() {
         <Route path="/admin/*" element={<SeoHelmet seo={getAdminMeta()} />} />
         <Route path="/login" element={<SeoHelmet seo={getLoginMeta()} />} />
         <Route path="/register" element={<SeoHelmet seo={getLoginMeta()} />} />
+        {/* Account/UGC routes — meta was missing entirely (no SeoHelmet entry) */}
+        <Route path="/orders" element={<SeoHelmet seo={getOrdersMeta()} />} />
+        <Route path="/notifications" element={<SeoHelmet seo={getNotificationsMeta()} />} />
+        <Route path="/reviews" element={<SeoHelmet seo={getReviewsMeta()} />} />
+        <Route path="/reviews/:productId" element={<ReviewDetailSeo />} />
       </Routes>
       
       <Routes>

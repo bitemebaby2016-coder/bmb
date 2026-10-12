@@ -265,6 +265,48 @@ export function getProfileMeta(): SEOMeta {
   }
 }
 
+export function getOrdersMeta(): SEOMeta {
+  return {
+    title: `ออเดอร์ของฉัน | ${SITE_CONFIG.name}`,
+    description: `ประวัติออเดอร์และติดตามสถานะการจัดส่งของฉัน | ${SITE_CONFIG.name}`,
+    keywords: [...SITE_CONFIG.keywords, 'ออเดอร์ของฉัน', 'ประวัติการสั่งซื้อ', 'ติดตามออเดอร์'],
+    ogImage: SITE_CONFIG.ogImage, url: seoUrl('/orders'), schema: {}
+  }
+}
+
+export function getNotificationsMeta(): SEOMeta {
+  return {
+    title: `การแจ้งเตือน | ${SITE_CONFIG.name}`,
+    description: `ศูนย์แจ้งเตือนสถานะออเดอร์ โปรโมชั่น และข่าวสารจาก ${SITE_CONFIG.name}`,
+    keywords: [...SITE_CONFIG.keywords, 'การแจ้งเตือน', 'notification'],
+    ogImage: SITE_CONFIG.ogImage, url: seoUrl('/notifications'), schema: {}
+  }
+}
+
+export function getReviewsMeta(): SEOMeta {
+  return {
+    title: `รีวิวจากลูกค้า | ${SITE_CONFIG.name}`,
+    description: `รีวิวจริงจากลูกค้าที่สั่งอาหารผ่าน ${SITE_CONFIG.name} — เมนูแนะนำจากรีวิว`,
+    keywords: [...SITE_CONFIG.keywords, 'รีวิว', 'รีวิวลูกค้า', 'review'],
+    ogImage: SITE_CONFIG.ogImage, url: seoUrl('/reviews'), schema: {}
+  }
+}
+
+/**
+ * /reviews/:productId — the param page shares ONE canonical with its list page
+ * (same precedent as /payment/:orderNumber → /checkout): the route has no
+ * product-name data at SEO time, so a self-canonical per id would index thin
+ * near-duplicate pages. NEVER emit the literal ':productId' placeholder.
+ */
+export function getReviewDetailMeta(productId: string): SEOMeta {
+  return {
+    title: `รีวิวสินค้า | ${SITE_CONFIG.name}`,
+    description: `รีวิวจากลูกค้าจริงสินค้ารหัส ${productId} | ${SITE_CONFIG.name}`,
+    keywords: [...SITE_CONFIG.keywords, 'รีวิวสินค้า', 'review'],
+    ogImage: SITE_CONFIG.ogImage, url: seoUrl('/reviews'), schema: {}
+  }
+}
+
 export function getAdminMeta(): SEOMeta {
   return {
     title: `Admin Dashboard | ${SITE_CONFIG.name}`,

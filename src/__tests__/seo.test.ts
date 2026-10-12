@@ -7,12 +7,18 @@ import {
   getMenuMeta,
   getFaqMeta,
   generateJsonLd,
+  getOrderTrackMeta,
+  getOrdersMeta,
+  getNotificationsMeta,
+  getReviewsMeta,
+  getReviewDetailMeta,
 } from '@/lib/seo'
 import { faqs } from '@/lib/faqContent'
 // Vite `?raw` imports — no node types in this project; these resolve at test build time.
 import sitemap from '../../public/sitemap.xml?raw'
 import robots from '../../public/robots.txt?raw'
 import indexHtml from '../../index.html?raw'
+import appSource from '../App.tsx?raw'
 
 describe('SEO meta — stable, correct canonical, no rotation leakage', () => {
   it('site config points at the production origin', () => {
@@ -123,5 +129,67 @@ describe('index.html — no static SEO block (React 19 hoists SeoHelmet tags)', 
     expect(indexHtml).toContain('charset="UTF-8"')
     expect(indexHtml).toContain('name="viewport"')
     expect(indexHtml).toContain('name="robots"')
+  })
+})
+
+describe('Param-route SEO — no literal placeholders, canonical uses REAL params', () => {
+  it('/track/:orderNumber uses the real order number in title + canonical', () => {
+    const m = getOrderTrackMeta('BM-20261012-001')
+    expect(m.title).toContain('BM-20261012-001')
+    expect(m.url).toBe('https://biteme-baby.com/track/BM-20261012-001')
+    expect(JSON.stringify(m)).not.toContain(':orderNumber')
+  })
+
+  it('/reviews/:productId shares the /reviews canonical (thin param pages, like /payment → /checkout)', () => {
+    const m = getReviewDetailMeta('prod-42')
+    expect(m.url).toBe('https://biteme-baby.com/reviews')
+    expect(m.description).toContain('prod-42')
+    expect(JSON.stringify(m)).not.toContain(':productId')
+  })
+
+  it('meta stays deterministic per call (no rotation leakage)', () => {
+    expect(JSON.stringify(getOrderTrackMeta('X1'))).toBe(JSON.stringify(getOrderTrackMeta('X1')))
+    expect(JSON.stringify(getReviewDetailMeta('p9'))).toBe(JSON.stringify(getReviewDetailMeta('p9')))
+  })
+})
+
+describe('Account/UGC routes — meta exists with correct canonical', () => {
+  it('/orders canonical is itself', () => {
+    const m = getOrdersMeta()
+    expect(m.url).toBe('https://biteme-baby.com/orders')
+    expect(m.title).toContain(SITE_CONFIG.name)
+    expect(m.description.length).toBeGreaterThan(0)
+    expect(JSON.stringify(m)).toBe(JSON.stringify(getOrdersMeta()))
+  })
+
+  it('/notifications canonical is itself', () => {
+    const m = getNotificationsMeta()
+    expect(m.url).toBe('https://biteme-baby.com/notifications')
+    expect(m.title).toContain(SITE_CONFIG.name)
+  })
+
+  it('/reviews canonical is itself', () => {
+    const m = getReviewsMeta()
+    expect(m.url).toBe('https://biteme-baby.com/reviews')
+    expect(m.title).toContain(SITE_CONFIG.name)
+  })
+})
+
+describe('App.tsx SEO route wiring — source contract (regression guard)', () => {
+  it('never passes the literal ":orderNumber" placeholder into a meta builder', () => {
+    expect(appSource).not.toMatch(/getOrderTrackMeta\(\s*':orderNumber'\s*\)/)
+    expect(appSource).not.toMatch(/getReviewDetailMeta\(\s*':productId'\s*\)/)
+  })
+
+  it('registers SeoHelmet entries for /orders, /notifications, /reviews and the param variants', () => {
+    expect(appSource).toContain('path="/orders" element={<SeoHelmet seo={getOrdersMeta()} />}')
+    expect(appSource).toContain('path="/notifications" element={<SeoHelmet seo={getNotificationsMeta()} />}')
+    expect(appSource).toContain('path="/reviews" element={<SeoHelmet seo={getReviewsMeta()} />}')
+    expect(appSource).toContain('<TrackOrderSeo />')
+    expect(appSource).toContain('<ReviewDetailSeo />')
+  })
+
+  it('ProtectedRoute forwards the intended path as login state (returnTo)', () => {
+    expect(appSource).toContain('state={{ from: location.pathname + location.search }}')
   })
 })

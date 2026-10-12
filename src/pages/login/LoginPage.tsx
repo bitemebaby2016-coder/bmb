@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
-import { useAuthStore, fetchProfileRole, describeLoginError } from '@/store/authStore'
+import { Link, useNavigate, useLocation } from 'react-router-dom'
+import { useAuthStore, fetchProfileRole, describeLoginError, restoreProfileAddress } from '@/store/authStore'
 import { useLocationStore, KITCHEN_LAT, KITCHEN_LNG } from '@/store/locationStore'
 import { getGpsLocation, uploadDeliveryPhoto, saveDeliveryProfile } from '@/lib/locationLogin'
 import { showToast } from '@/components/ui/ToastContainer'
@@ -30,8 +30,13 @@ function saveQuickProfile(p: QuickProfile) {
 
 export function LoginPage() {
   const navigate = useNavigate()
+  const routerLocation = useLocation()
+  // Launch-closure (case B/D): กลับไปหน้าที่ผู้ใช้ตั้งใจ (ProtectedRoute/Checkout ส่งมา)
+  const returnTo = (routerLocation.state as { from?: string } | null)?.from || null
   const login = useAuthStore((s) => s.login)
   const loginByLocation = useAuthStore((s) => s.loginByLocation)
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
+  const isInitializing = useAuthStore((s) => s.isInitializing)
   const [mode, setMode] = useState<'email' | 'quick'>('email')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -58,9 +63,19 @@ export function LoginPage() {
     if (saved.photoUrl) { setQPhotoUrl(saved.photoUrl); setQPhotoPreview(saved.photoUrl) }
   }, [])
 
-  // Redirect after login based on DB role
+  // Launch-closure (case A): มี session อยู่แล้ว → ไม่ต้องเห็นฟอร์ม login ซ้ำ
+  // (รอ isInitializing เสร็จก่อนกัน redirect ผิดจังหวะตอน restore session)
+  useEffect(() => {
+    if (!isInitializing && isAuthenticated) {
+      navigate(returnTo || '/', { replace: true })
+    }
+  }, [isInitializing, isAuthenticated, returnTo, navigate])
+
+  // Redirect after login based on DB role + กลับหน้าที่ผู้ใช้ตั้งใจ (case B/D)
   async function finishLogin(userLabel: string) {
     const role = await fetchProfileRole()
+    // case D: คืนข้อความที่อยู่ที่บันทึกไว้ในโปรไฟล์ (best-effort, ไม่บล็อก login)
+    void restoreProfileAddress()
     writeAuditLog({
       action: 'user_login',
       entity_type: 'user',
@@ -68,7 +83,7 @@ export function LoginPage() {
       description: userLabel + ' - login success',
     })
     showToast('เข้าสู่ระบบสำเร็จ!', 'success')
-    navigate(role === 'admin' ? '/admin' : '/')
+    navigate(role === 'admin' ? '/admin' : (returnTo || '/'), { replace: true })
   }
 
   async function handleLogin(e: React.FormEvent) {
@@ -132,6 +147,8 @@ export function LoginPage() {
         setError(
           res.error === 'ERR_ACCOUNT_CREATE_FAILED' || res.error === 'ERR_ACCOUNT_UPDATE_FAILED' || res.error === 'ERR_SESSION_MINT_FAILED'
             ? 'ระบบยืนยันตัวตนขัดข้อง — ลองใหม่อีกครั้ง หรือใช้แท็บอีเมล/รหัสผ่าน'
+            : res.error === 'ERR_TIMEOUT'
+            ? 'ระบบช้าเกินไป — ตรวจสอบเน็ตเวิร์กแล้วลองใหม่อีกครั้ง'
             : (res.error || 'เข้าสู่ระบบด่วนไม่สำเร็จ'),
         )
         setIsLoading(false)
