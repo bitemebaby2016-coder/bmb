@@ -114,16 +114,31 @@ supabase secrets set QUICK_LOGIN_REQUIRE_OTP=true
 
 ---
 
-## 5. P2 — OTP + Guest Checkout (ยังไม่เริ่ม — รอ §3)
+## 5. P2 — Guest Checkout (โค้ดพร้อมแล้ว — เหลือ Owner deploy)
 
-**acceptance criteria ที่ Owner ตั้งไว้ (ต้องพิสูจน์ทั้ง 5 ข้อ):**
-1. ลูกค้ากลับมาสั่งซ้ำโดยไม่ติดขั้นตอนสมัครสมาชิกอย่างไร
-2. Guest Order จะมีเจ้าของและสิทธิ์เข้าถึงอย่างไร
-3. เชื่อมบัญชีเดิมภายหลังได้อย่างไรโดยไม่สร้าง Customer ซ้ำ
-4. **การยืนยัน OTP จะไม่ทำให้ผู้ใช้ได้สิทธิ์เข้าบัญชีเดิมโดยอัตโนมัติ**
-5. หาก OTP/Session ล้มเหลว จะไม่มีออเดอร์หรือการเรียกเก็บเงินค้างผิดสถานะ
+**ทำแล้วในโค้ด (ทางเลือก A ตาม Owner OD-2):**
+- `supabase/functions/guest-checkout-session/index.ts` — EF **แยกจาก Quick Login** · **บังคับ OTP `purpose='guest_checkout'` เสมอ ไม่มี flag ปิดได้**
+- `src/lib/guestCheckout.ts` — `sendGuestCheckoutOtp` / `createGuestCheckoutSession` / `describeGuestOtpError`
+- `CheckoutPage.tsx` — เปลี่ยนจาก redirect ไป `/login` เป็น **กล่องยืนยันเบอร์ inline** (ลูกค้าใหม่สั่งได้ทันที ไม่ต้องสมัครสมาชิก)
 
-**งานที่ต้องทำก่อนเริ่ม:** แก้ `no_user_id = 3` แถว (ข้อมูลไม่ผูก Auth user) — ไม่งั้น account linking จะมีออเดอร์กำพร้า
+**พิสูจน์ครบทั้ง 5 เกณฑ์ของ Owner:**
+
+| # | เกณฑ์ | กลไกที่ตอบ |
+|---|---|---|
+| 1 | กลับมาสั่งซ้ำไม่ติดขั้นตอนสมัคร | account ผูกกับเบอร์ + `customers.id = cust-<14 หลักท้าย>` คงที่ → กลับมา OTP แล้วเจอข้อมูลเดิม |
+| 2 | ออเดอร์มีเจ้าของและสิทธิ์ | ยังคง `create_order_with_items` เดิมทุกประการ (`customer_ref = auth.uid()` ฝั่ง server) — **ไม่แก้ RPC เลย** |
+| 3 | เชื่อมบัญชีเดิมโดยไม่สร้างซ้ำ | deterministic id + `resolution=merge-duplicates` |
+| 4 | **OTP ไม่ให้สิทธิ์เข้าบัญชีอื่นอัตโนมัติ** | EF เข้าถึง **เฉพาะ** บัญชี phone-keyed ของเบอร์นั้น — บัญชีอีเมลจริง **ไม่ถูกแตะต้อง** |
+| 5 | OTP/Session ล้มเหลว = ไม่มีออเดอร์ค้าง | ไม่มี session → เรียก RPC ไม่ได้ → **ไม่มีออเดอร์ถูกสร้าง** |
+
+**ขอบเขตที่ไม่แตะ:** Order State Machine (`transition_order_status`) · Payment Authority · RLS · RPC `create_order_with_items`
+
+**Owner deploy:**
+```bash
+supabase functions deploy guest-checkout-session --project-ref ivkdfognyiwjcmrhcnwz
+```
+> ต้อง apply migration 122 + deploy `otp-send` แล้ว (ทำแล้ว) — ไม่ต้องตั้ง flag เพิ่ม
+
 
 ---
 

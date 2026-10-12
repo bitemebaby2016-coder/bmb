@@ -19,6 +19,8 @@ import { createOrder, type OrderInput } from '@/lib/bmbAdminApi_orders'
 import { createPaymentIntent } from '@/lib/paymentGateway'
 import { writeAuditLog } from '@/lib/auditLog'
 import { useLocationStore, isTrustedSource, deliveryPointStatus } from '@/store/locationStore'
+// P2 (Owner OD-2 option A) — Guest Checkout: ยืนยันเบอร์ด้วย OTP แล้วออก session
+import { sendGuestCheckoutOtp, createGuestCheckoutSession, describeGuestOtpError } from '@/lib/guestCheckout'
 import { resolveAddOnLines } from '@/lib/addonDisplay'
 import { DistanceChecker } from '@/components/delivery/DistanceChecker'
 import { listRoundsForDate, type DeliveryRoundRow } from '@/lib/bmbAdminApi_rounds'
@@ -93,14 +95,54 @@ export function CheckoutPage() {
   const [isProcessing, setIsProcessing] = useState(false)
   const [daySchedule, setDaySchedule] = useState<MenuScheduleRow[]>([]) // CAT-02: published schedule mirror for the selected date
 
-  // 007/025: order creation is authenticated-only → guests are redirected.
-  // Launch-closure: ส่ง from=/checkout เพื่อให้ login สำเร็จแล้วกลับมา checkout ต่อ
-  useEffect(() => {
-    if (!customer && !justPlaced.current) {
-      showToast('กรุณาเข้าสู่ระบบก่อนสั่งซื้อ', 'info')
-      navigate('/login', { state: { from: '/checkout' } })
+  // ---- P2 (Owner OD-2 option A) — Guest Checkout ----
+  // ลูกค้าใหม่สั่งได้โดย "ไม่ต้องสมัครสมาชิกเต็มรูปแบบ": ยืนยันเบอร์ด้วย OTP
+  // แล้วระบบออก session ให้เรียก create_order_with_items (authenticated) ได้ตามเดิม
+  // **ไม่แก้** RPC / Payment Authority / Order State Machine ใด ๆ
+  const [gOtpSent, setGOtpSent] = useState(false)
+  const [gOtpCode, setGOtpCode] = useState('')
+  const [gPhone, setGPhone] = useState('')
+  const [gName, setGName] = useState('')
+  const [gSending, setGSending] = useState(false)
+  const [gSubmitting, setGSubmitting] = useState(false)
+  const [gError, setGError] = useState('')
+
+  async function handleGuestSendOtp(e: React.FormEvent) {
+    e.preventDefault()
+    if (gSending) return
+    setGError('')
+    setGSending(true)
+    const res = await sendGuestCheckoutOtp(gPhone)
+    setGSending(false)
+    if (!res.ok) {
+      setGError(describeGuestOtpError(res.error))
+      return
     }
-  }, [customer, navigate])
+    setGOtpSent(true)
+    showToast('ส่งรหัสยืนยันทาง SMS แล้ว', 'success')
+  }
+
+  async function handleGuestVerify(e: React.FormEvent) {
+    e.preventDefault()
+    if (gSubmitting) return
+    setGError('')
+    setGSubmitting(true)
+    const res = await createGuestCheckoutSession({
+      phone: gPhone,
+      otpCode: gOtpCode,
+      name: gName,
+      addressDetail: useLocationStore.getState().location?.addressDetail ?? '',
+    })
+    setGSubmitting(false)
+    if (!res.ok) {
+      setGError(describeGuestOtpError(res.error))
+      return
+    }
+    showToast('ยืนยันตัวตนสำเร็จ — ดำเนินการสั่งซื้อต่อได้เลย', 'success')
+    // หลัง setSession ใน createGuestCheckoutSession ตัว `customer` จะถูก
+    // เติมโดย authStore.checkAuth -> component re-render เข้าสู่ฟอร์มสั่งซื้อปกติ
+    void useAuthStore.getState().checkAuth()
+  }
 
   // ✅ Canonical rounds for the selected date (deterministic ids, DB authority).
   useEffect(() => {
@@ -402,6 +444,94 @@ export function CheckoutPage() {
   }
 
   if (items.length === 0) return null
+
+  // ---- P2 gate: ลูกค้าที่ยังไม่มี session -> แสดงช่องยืนยันเบอร์แทนการ redirect ----
+  // (Owner OD-2 option A: สั่งได้โดยไม่ต้องสมัครสมาชิกเต็มรูปแบบ)
+  // หมายเหตุ: การยืนยันนี้ "ไม่ใช่" หลักฐานการชำระเงิน และไม่ให้สิทธิ์เข้าบัญชีอื่น
+  if (!customer && !justPlaced.current) {
+    return (
+      <div className="max-w-md mx-auto px-4 py-10">
+        <div className="card bg-brand-surface">
+          <h2 className="text-2xl font-bold text-brand-accent mb-2">ยืนยันเบอร์โทรศัพท์</h2>
+          <p className="text-sm text-brand-muted mb-5">
+            ไม่ต้องสมัครสมาชิก — ยืนยันว่าคุณเป็นเจ้าของเบอร์นี้ แล้วสั่งซื้อได้ทันที
+          </p>
+
+          {gError && (
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4 text-sm">
+              {gError}
+            </div>
+          )}
+
+          <form onSubmit={handleGuestSendOtp} className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-brand-accent mb-2">ชื่อ-นามสกุล</label>
+              <input
+                value={gName}
+                onChange={(e) => setGName(e.target.value)}
+                className="input"
+                placeholder="ชื่อของคุณ"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-brand-accent mb-2">เบอร์โทรศัพท์</label>
+              <input
+                type="tel"
+                value={gPhone}
+                onChange={(e) => setGPhone(e.target.value)}
+                className="input"
+                placeholder="เช่น 0812345678"
+                required
+              />
+            </div>
+            <button
+              type="submit"
+              disabled={gSending || gPhone.trim().length < 9}
+              className={`btn btn-outline w-full ${gSending ? 'btn-disabled' : ''}`}
+            >
+              {gSending ? 'กำลังส่ง…' : gOtpSent ? 'ส่งรหัสใหม่' : 'ส่งรหัสยืนยัน'}
+            </button>
+          </form>
+
+          {gOtpSent && (
+            <form onSubmit={handleGuestVerify} className="space-y-3 mt-4 pt-4 border-t border-brand-border">
+              <div>
+                <label className="block text-sm font-medium text-brand-accent mb-2">รหัส 6 หลักจาก SMS</label>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  autoComplete="one-time-code"
+                  maxLength={6}
+                  value={gOtpCode}
+                  onChange={(e) => setGOtpCode(e.target.value.replace(/\D/g, ''))}
+                  className="input tracking-[0.4em]"
+                  placeholder="รหัสยืนยัน"
+                />
+              </div>
+              <button
+                type="submit"
+                disabled={gSubmitting || gOtpCode.length !== 6}
+                className={`btn btn-primary w-full ${gSubmitting ? 'btn-disabled' : ''}`}
+              >
+                {gSubmitting ? 'กำลังยืนยัน…' : 'ยืนยันและสั่งซื้อต่อ'}
+              </button>
+            </form>
+          )}
+
+          <div className="text-center mt-5">
+            <button
+              type="button"
+              onClick={() => navigate('/login', { state: { from: '/checkout' } })}
+              className="text-sm text-brand-primary hover:underline"
+            >
+              มีบัญชีอยู่แล้ว? เข้าสู่ระบบ
+            </button>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-6">

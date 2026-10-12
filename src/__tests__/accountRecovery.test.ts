@@ -36,6 +36,7 @@ import {
   canUpdatePassword,
   MIN_PASSWORD_LENGTH,
 } from '@/lib/authRecovery'
+import { describeGuestOtpError } from '@/lib/guestCheckout'
 import {
   checkRateLimit,
   recordAttempt,
@@ -187,5 +188,33 @@ describe('phone-auto-login rate limit — SF-01 interim hardening', () => {
     expect(store.size).toBe(2)
     sweep(store, T0 + QUICK_LOGIN_IP_RULE.windowMs + 1, QUICK_LOGIN_IP_RULE.windowMs)
     expect(store.size).toBe(0)
+  })
+})
+
+// ---- P2 (Owner OD-2 option A) — guest checkout error mapping ----
+describe('describeGuestOtpError — ข้อความภาษาไทยครบทุก reason', () => {
+  it('maps every OTP failure reason to a distinct Thai message', () => {
+    const seen = new Set<string>()
+    for (const code of [
+      'ERR_OTP_REQUIRED', 'ERR_OTP_INVALID', 'ERR_OTP_EXPIRED', 'ERR_OTP_ALREADY_USED',
+      'ERR_OTP_TOO_MANY_TRIES', 'ERR_OTP_NOT_FOUND', 'ERR_RATE_LIMITED', 'ERR_TIMEOUT',
+    ]) {
+      const msg = describeGuestOtpError(code)
+      expect(msg.length).toBeGreaterThan(0)
+      seen.add(msg)
+    }
+    // ข้อความต้องไม่ซ้ำกันทุกกรณี (ผู้ใช้ต้องแยกแยะได้ว่าปัญหาคืออะไร)
+    expect(seen.size).toBe(8)
+  })
+
+  it('never leaks the raw error code to the customer', () => {
+    expect(describeGuestOtpError('ERR_OTP_INVALID')).not.toContain('ERR_')
+    expect(describeGuestOtpError(undefined)).not.toContain('ERR_')
+  })
+
+  it('keeps the OTP boundary — messages never claim payment', () => {
+    for (const code of ['ERR_OTP_INVALID', 'ERR_OTP_EXPIRED', 'ERR_RATE_LIMITED']) {
+      expect(describeGuestOtpError(code)).not.toMatch(/ชำระเงิน|จ่ายเงิน|payment/i)
+    }
   })
 })
