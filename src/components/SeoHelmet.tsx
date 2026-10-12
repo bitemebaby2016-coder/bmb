@@ -7,7 +7,7 @@
 import { Helmet, HelmetProvider } from 'react-helmet-async'
 import { useParams } from 'react-router-dom'
 import type { SEOMeta } from '@/types'
-import { getOrderTrackMeta, getReviewDetailMeta } from '@/lib/seo'
+import { getOrderTrackMeta, getReviewDetailMeta, getPaymentMeta } from '@/lib/seo'
 
 const helmetContext = { context: {} }
 
@@ -80,6 +80,12 @@ export function TrackOrderSeo() {
 export function ReviewDetailSeo() {
   const { productId } = useParams()
   return <SeoHelmet seo={getReviewDetailMeta(productId || '')} />
+}
+
+/** /payment/:orderNumber — title ต่อออเดอร์ แต่ canonical คงชี้ /checkout */
+export function PaymentSeo() {
+  const { orderNumber } = useParams()
+  return <SeoHelmet seo={getPaymentMeta(orderNumber || '')} />
 }
 
 export { HelmetProvider }

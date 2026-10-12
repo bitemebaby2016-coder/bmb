@@ -119,6 +119,23 @@ export function getCheckoutMeta(): SEOMeta {
   }
 }
 
+/**
+ * /payment/:orderNumber — canonical ชี้ /checkout (thin/ซ้ำ ไม่ต้องการให้ index ซ้ำ
+ * ตาม precedent เดิม) แต่ title/description ต้อง carry เลขออเดอร์จริง:
+ * ลูกค้าที่เปิดหลายแท็บต้องแยกหน้าจ่ายเงินของออเดอร์ตัวเองออก (handoff §11 P2#2)
+ * ต้องเรียกผ่าน <PaymentSeo/> เท่านั้น — ห้ามส่ง literal ':orderNumber'
+ */
+export function getPaymentMeta(orderNumber: string): SEOMeta {
+  const n = (orderNumber || '').trim()
+  const base = getCheckoutMeta()
+  if (!n) return base
+  return {
+    ...base,
+    title: `ชำระเงิน ออเดอร์ ${n} | ${SITE_CONFIG.name}`,
+    description: `หน้าชำระเงิน ออเดอร์ ${n} — สั่งซื้ออาหารจาก ${SITE_CONFIG.name}`,
+  }
+}
+
 export function getOrderTrackMeta(orderNumber: string): SEOMeta {
   return {
     title: `ติดตามออเดอร์ ${orderNumber} | ${SITE_CONFIG.name}`,

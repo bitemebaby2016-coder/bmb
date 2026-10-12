@@ -1,0 +1,125 @@
+{
+  "run": "launch-verify",
+  "runAt": "2026-10-12T03:57:40.616Z",
+  "target": "https://biteme-baby.com",
+  "note": "read-only production verification of the 5cc693a deploy — no login, no order, no data mutation",
+  "checks": {
+    "L1_track_param_canonical": {
+      "route": "/track/LV-20261012-01",
+      "expectedCanonical": "https://biteme-baby.com/track/LV-20261012-01",
+      "canonical": "https://biteme-baby.com/track/LV-20261012-01",
+      "canonicalCount": 1,
+      "title": "ติดตามออเดอร์ LV-20261012-01 | Bite Me Baby",
+      "headHasLiteralParam": false,
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 401 ()",
+        "[getOrder] Error: {code: 42501, details: null, hint: Grant the required privileges to the current role with: GRANT SELECT ON public.orders TO anon;, message: pe"
+      ],
+      "err": null,
+      "verdict": "PASS",
+      "note": "regression ที่เคยยิง https://biteme-baby.com/track/:orderNumber ขึ้น Google จริง"
+    },
+    "L1b_track_guest_phone_gate": {
+      "guestPhoneGate": true,
+      "err": null,
+      "verdict": "PASS",
+      "note": "หน้า /track ของ guest ต้องแสดงช่องกรอกเบอร์ (secure RPC track_order) ไม่ใช่หน้าว่าง/พัง"
+    },
+    "L2_new_route_meta": {
+      "routes": {
+        "/orders": {
+          "expectedCanonical": "https://biteme-baby.com/orders",
+          "title": "ออเดอร์ของฉัน | Bite Me Baby",
+          "descriptionLen": 58,
+          "canonical": "https://biteme-baby.com/orders",
+          "err": null,
+          "verdict": "PASS"
+        },
+        "/reviews": {
+          "expectedCanonical": "https://biteme-baby.com/reviews",
+          "title": "รีวิวจากลูกค้า | Bite Me Baby",
+          "descriptionLen": 67,
+          "canonical": "https://biteme-baby.com/reviews",
+          "err": null,
+          "verdict": "PASS"
+        },
+        "/notifications": {
+          "expectedCanonical": "https://biteme-baby.com/login",
+          "title": "เข้าสู่ระบบ | Bite Me Baby",
+          "descriptionLen": 40,
+          "canonical": "https://biteme-baby.com/login",
+          "err": null,
+          "verdict": "PASS"
+        }
+      },
+      "verdict": "PASS",
+      "note": "ก่อน 5cc693a /orders /notifications /reviews ไม่มี SeoHelmet entry เลย · /notifications = auth-gated จึงเสิร์ฟ meta ของ /login ให้ guest"
+    },
+    "L3_param_canonical_policy": {
+      "cases": {
+        "/reviews/LVPROD-1": {
+          "expectedCanonical": "https://biteme-baby.com/reviews",
+          "canonical": "https://biteme-baby.com/reviews",
+          "title": "รีวิวสินค้า | Bite Me Baby",
+          "headHasLiteralParam": false,
+          "err": null,
+          "verdict": "PASS"
+        },
+        "/payment/LV-20261012-01": {
+          "expectedCanonical": "https://biteme-baby.com/checkout",
+          "canonical": "https://biteme-baby.com/checkout",
+          "title": "ชำระเงิน | Bite Me Baby",
+          "headHasLiteralParam": false,
+          "err": null,
+          "verdict": "PASS"
+        }
+      },
+      "verdict": "PASS",
+      "note": "thin param page ชี้หน้า list ตาม precedent — ห้ามมี \":productId\"/\":orderNumber\" ใน head"
+    },
+    "L4_gps_granted": {
+      "badge": "ตำแหน่งของฉัน: ตำแหน่งจาก GPS · 10.7050, 102.1350",
+      "err": null,
+      "claimsGps": true,
+      "coordsShown": true,
+      "consoleErrors": [],
+      "verdict": "PASS",
+      "note": "CR-4 S4b เคย FAIL (badge อ้าง IP ทั้งที่ permission granted) — gps-branch แก้แล้วใน 5cc693a"
+    },
+    "L5_gps_denied_honest": {
+      "badge": "ตำแหน่งของฉัน: ตำแหน่งโดยประมาณ (IP) · 13.4680, 101.0953",
+      "err": null,
+      "claimsGps": false,
+      "consoleErrors": [],
+      "verdict": "PASS",
+      "note": "badge ต้องบอกแหล่งที่มาจริง (IP/ครัว) — ห้ามมีคำว่า GPS เมื่อ permission ถูกปฏิเสธ"
+    },
+    "L6_chat_deadline": {
+      "elapsedMs": 4070,
+      "elapsedSec": 4.1,
+      "replyChars": 80,
+      "replyPreview": "มีครับเจ้า ไล่ให้เลยนะ ลุยสวนหมู+กุ้ง กับ ผัดไทยกุ้งสด สองจานนี้ยอดฮิตมาก ๆ ครับ",
+      "addedBlocks": 1,
+      "sawTypingIndicator": true,
+      "isThaiFallback": false,
+      "budgetMs": 60000,
+      "consoleErrors": [],
+      "err": null,
+      "verdict": "PASS",
+      "note": "วัดจากกดส่งจนมีข้อความตอบของ Bite — ก่อนแก้ไม่มี timeout เลย = ค้างถาวร"
+    },
+    "L7_deploy_marker": {
+      "bundleUrl": "https://biteme-baby.com/assets/index-BYNsKEcM.js",
+      "bundleBytes": 161065,
+      "markerERR_TIMEOUT": true,
+      "verdict": "PASS",
+      "note": "ยืนยันว่า production เสิร์ฟ build ที่มี 5cc693a (login timeout + GPS unwrap + SEO fix) แล้วจริง"
+    }
+  },
+  "summary": {
+    "total": 8,
+    "pass": 8,
+    "fail": 0,
+    "error": 0
+  }
+}

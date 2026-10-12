@@ -6,12 +6,14 @@ import {
   getShopMeta,
   getMenuMeta,
   getFaqMeta,
+  getCheckoutMeta,
   generateJsonLd,
   getOrderTrackMeta,
   getOrdersMeta,
   getNotificationsMeta,
   getReviewsMeta,
   getReviewDetailMeta,
+  getPaymentMeta,
 } from '@/lib/seo'
 import { faqs } from '@/lib/faqContent'
 // Vite `?raw` imports — no node types in this project; these resolve at test build time.
@@ -107,6 +109,9 @@ describe('sitemap.xml + robots.txt — /shop discoverable, valid namespace', () 
     expect(robots).toContain('Sitemap: https://biteme-baby.com/sitemap.xml')
     expect(robots).toContain('Disallow: /admin*')
     expect(robots).toContain('Disallow: /track/*')
+    // /payment/:orderNumber มีเลขออเดอร์ใน URL — canonical ชี้ /checkout อยู่แล้ว
+    // และต้องไม่ถูก crawl/index (กันเลขที่ออเดอร์หลุดเข้า search index)
+    expect(robots).toContain('Disallow: /payment/*')
   })
 })
 
@@ -145,6 +150,21 @@ describe('Param-route SEO — no literal placeholders, canonical uses REAL param
     expect(m.url).toBe('https://biteme-baby.com/reviews')
     expect(m.description).toContain('prod-42')
     expect(JSON.stringify(m)).not.toContain(':productId')
+  })
+
+  it('/payment/:orderNumber keeps the /checkout canonical but the title names the real order', () => {
+    // canonical คงชี้ /checkout (กัน index ซ้ำ) — แต่ title ต่างจาก /checkout
+    // เพื่อให้ลูกค้าที่เปิดหลายแท็บแยกหน้าจ่ายเงินได้ (handoff §11 P2#2)
+    const m = getPaymentMeta('BM-20261012-001')
+    expect(m.url).toBe('https://biteme-baby.com/checkout')
+    expect(m.title).toContain('BM-20261012-001')
+    expect(m.title).not.toBe(getCheckoutMeta().title)
+    expect(JSON.stringify(m)).not.toContain(':orderNumber')
+  })
+
+  it('/payment meta falls back to plain checkout meta when the order number is missing', () => {
+    expect(JSON.stringify(getPaymentMeta(''))).toBe(JSON.stringify(getCheckoutMeta()))
+    expect(JSON.stringify(getPaymentMeta('   '))).toBe(JSON.stringify(getCheckoutMeta()))
   })
 
   it('meta stays deterministic per call (no rotation leakage)', () => {
@@ -187,6 +207,14 @@ describe('App.tsx SEO route wiring — source contract (regression guard)', () =
     expect(appSource).toContain('path="/reviews" element={<SeoHelmet seo={getReviewsMeta()} />}')
     expect(appSource).toContain('<TrackOrderSeo />')
     expect(appSource).toContain('<ReviewDetailSeo />')
+  })
+
+  it('/payment/:orderNumber is wired to PaymentSeo, not a static checkout meta', () => {
+    // เดิมใช้ getCheckoutMeta() ตรง ๆ -> title เท่ากันทุกออเดอร์และไม่มีเลขออเดอร์
+    expect(appSource).not.toContain('path="/payment/:orderNumber" element={<SeoHelmet seo={getCheckoutMeta()} />}')
+    expect(appSource).toContain('<PaymentSeo />')
+    // guard: ห้ามส่ง literal placeholder เข้า PaymentSeo/meta builder
+    expect(appSource).not.toMatch(/getPaymentMeta\(\s*':orderNumber'\s*\)/)
   })
 
   it('ProtectedRoute forwards the intended path as login state (returnTo)', () => {

@@ -257,3 +257,61 @@ npm run build       # tsc && vite build
 **ต้องให้ Owner ยืนยัน/ตัดสินใจเท่านั้น:**
 deploy EF · OTP/rate-limit decision · test account/OTP · Omise TEST ทำเอง (§12.3) · Omise LIVE readiness · GPS matrix บนมือถือจริง · Facebook scope · Copy 7 วัน save · DB grants/schema (provenance column) · ข้อมูล test ใด ๆ ที่ Owner จะให้ — ให้ผ่านช่องทางที่เหมาะสม ห้ามวางในแชตสาธารณะ/ไฟล์ที่ commit ได้
 
+---
+
+## 15. รอบ 2026-10-12 (รอบที่ 2) — ตรวจสอบหลัง deploy จริง + ปิดงานที่เหลือ
+
+> อ่านเอกสารข้างบนจบแล้ว อ่านส่วนนี้ต่อ — เป็นรอบที่ "verify production จริง" และปิดงาน
+> ที่ AI ทำได้เองให้หมด เหลือไว้เฉพาะงานที่ต้องใช้สิทธิ์/อุปกรณ์/การตัดสินใจของ Owner
+
+### 15.1 ตรวจฐานก่อนเริ่ม
+
+- `HEAD = origin/main = eb6b7e6` · CI `eb6b7e6` = completed/**success** (2 รอบ)
+- production `biteme-baby.com` เสิร์ฟ `/assets/index-BYNsKEcM.js` ซึ่ง **มี `ERR_TIMEOUT`**
+  (สตริงนี้เพิ่มเข้ามาครั้งแรกใน `5cc693a` ไม่มีใน `255e677`) → **ยืนยันว่า build ใหม่ deploy แล้วจริง**
+- stash เดิม `stash@{0}: local-edits-before-sync-2026-09-21` **ไม่ถูกแตะ**
+- worktree เหลือเฉพาะ screenshots evidence + รูป `public/**` ที่ Owner วางไว้ (ไม่ commit ตามเดิม)
+
+### 15.2 สิ่งที่ทำในรอบนี้
+
+| ไฟล์ | สิ่งที่เปลี่ยน |
+|---|---|
+| `e2e/launchVerify.cjs` (ใหม่) | production harness **read-only/guest-safe** 8 ข้อ — รัน `node e2e/launchVerify.cjs` → `e2e/launch-verify.json` · ไม่ login ไม่สั่งของ ไม่แก้ข้อมูล · ข้อเดียวที่ยิงออกไปคือแชต 1 ข้อความ (guest surface ปกติของหน้าแรก) เพื่อวัด deadline |
+| `e2e/launch-verify.json` | หลักฐานผลรัน 2026-10-12 — **8/8 PASS** |
+| `supabase/migrations/121_grants_customers_select.sql` (ใหม่) | เตรียม GRANT `SELECT ON customers TO authenticated` ตามรูปแบบ migr 102 (idempotent + verification block) — **ยังไม่ apply** รออนุมัติจาก Owner (§11 P1#5) |
+| `src/lib/seo.ts` · `src/components/SeoHelmet.tsx` · `src/App.tsx` | เพิ่ม `getPaymentMeta(orderNumber)` + `<PaymentSeo/>` — `/payment/:orderNumber` title มีเลขออเดอร์จริง (canonical คงชี้ `/checkout`) ปิด §11 P2#2 |
+| `src/__tests__/seo.test.ts` | +3 tests: payment meta/canonical · fallback เมื่อไม่มีเลข · source-contract ว่า `/payment` ต้องใช้ `<PaymentSeo/>` และ `robots.txt` ต้องบล็อก `/payment/*` |
+| `public/robots.txt` | เพิ่ม `Disallow: /payment/*` — URL มีเลขออเดอร์ ห้าม crawl/index |
+| `docs/BMB_OWNER_LAUNCH_CHECKLIST.md` (ใหม่) | เช็กลิสต์ Owner **ภาษาไทย** เรียงตามลำดับความสำคัญ — ทุกขั้นตอนมีคำสั่ง/SQL ให้ copy ไปรันได้เลย |
+
+** gates รอบนี้ (ก่อน commit):** `lint = 0` · `vitest 786/786 ผ่าน (73 ไฟล์)` · `build = 0`
+
+### 15.3 หลักฐาน production จริง (ห้ามแทนที่ด้วย unit test)
+
+| ข้อ | ตรวจอะไร | ผล | รายละเอียด |
+|---|---|---|---|
+| L1 | `/track/LV-20261012-01` canonical จริง ไม่มี `:orderNumber` | **PASS** | canonical = `https://biteme-baby.com/track/LV-20261012-01` |
+| L1b | `/track` ของ guest มี phone gate | **PASS** | ตรง migr 050 (anon ถูกปิดอ่าน `orders` → ต้องใช้ RPC) · หมายเหตุ: console ที่เห็น `[getOrder] 42501` คือ **control flow ที่ตั้งใจ** (ลองอ่านตรง ๆ แล้ว fallback ไป phone gate) **ไม่ใช่ defect** |
+| L2 | meta `/orders` `/reviews` ถูกเสิร์ฟจริง | **PASS** | `/notifications` = ProtectedRoute → guest ถูก redirect ไป `/login` จึงเสิร์ฟ meta ของ `/login` — ถูกต้องแล้ว ไม่ใช่ defect |
+| L3 | `/reviews/:id` → `/reviews` · `/payment/:n` → `/checkout` | **PASS** | canonical ทั้งคู่ถูก ไม่มี placeholder |
+| L4 | GPS **granted** → badge ต้องบอก "ตำแหน่งจาก GPS" | **PASS** | badge = `ตำแหน่งของฉัน: ตำแหน่งจาก GPS · 10.7050, 102.1350` — **ก่อนแก้ CR-4 เคย FAIL** (S4b) → แก้ gps-branch ใน `5cc693a` แล้ว **ยืนยันซ้ำบน production แล้ว** |
+| L5 | GPS **denied** → ห้ามอ้าง GPS | **PASS** | badge = `ตำแหน่งโดยประมาณ (IP) · 13.4680, 101.0953` |
+| L6 | แชต production ตอบจริงภายในงบ | **PASS — 4.1 วิ** | คำตอบจริงจาก AI (`มีครับเจ้า...`) **ไม่ใช่** fallback · เห็น typing indicator `Bite กำลัง…` ระหว่างรอ · console error = 0 |
+| L7 | bundle production มี `5cc693a` | **PASS** | `/assets/index-BYNsKEcM.js` มี `ERR_TIMEOUT` |
+
+### 15.4 ข้อควรระวังสำหรับคนเขียน harness ถัดไป (บทเรียนจากรอบนี้)
+
+1. `<link rel="canonical">` ไม่ใช่ visible element → `waitForSelector` ต้องใช้ `{ state: 'attached' }` (ไม่งั้น timeout ทั้งที่ tag อยู่จริง)
+2. ข้อความตัวเองในแชต ≠ คำตอบ และ indicator `Bite กำลัง…` ก็ ≠ คำตอบ — ต้องกรองทั้งสองอย่างมิฉะนั้นได้ PASS ปลอม
+3. `/notifications` เป็น ProtectedRoute — เกสต์ถูกพาไป `/login` จึงต้องคาดหวัง canonical `/login` ไม่ใช่ `/notifications`
+
+### 15.5 สรุป P0–P2 หลังรอบนี้
+
+**ปิดแล้ว (มีหลักฐาน production):** P1#1 GPS gps-branch · P1#2 SEO literal/missing meta · P1#3 chat timeout · P2#2 `/payment` title · P2#1 (บางส่วน) — `/payment/*` ถูกบล็อกแล้วใน production จริง
+
+**ยังค้าง = เฉพาะงานที่ต้อง Owner เท่านั้น** — ดูครบทุกขั้นตอนใน `docs/BMB_OWNER_LAUNCH_CHECKLIST.md`:
+deploy EF `phone-auto-login` · ตัดสินใจ OTP vs ยอมรับความเสี่ยง · apply migration 121 · test account/OTP · Omise TEST E2E จริง · GPS matrix เคส 1–10 บนมือถือจริง · Copy 7 วัน · Facebook scope · จัดการ `bitemebaby-5f7.pages.dev` (build แช่แข็ง เปลี่ยนจาก repo ไม่ได้) · Omise LIVE onboarding · provenance column
+
+**ยังไม่กล่าวว่า "พร้อมเปิดร้านจริง"** — payment gate (Omise TEST จริง) + test account + EF deploy ยังไม่มีหลักฐาน
+
+

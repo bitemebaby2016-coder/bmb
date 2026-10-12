@@ -6,7 +6,7 @@ import { Layout } from './components/layout/Layout'
 import { ErrorBoundary } from './components/ErrorBoundary'
 import { AdminNav } from './components/admin/AdminNav'
 // Bite / AI accessibility lives in BottomNav ('ไบ๊ท์' → /ai-chat) + BiteHero quick actions (UI v5)
-import { SeoHelmet, TrackOrderSeo, ReviewDetailSeo } from './components/SeoHelmet'
+import { SeoHelmet, TrackOrderSeo, ReviewDetailSeo, PaymentSeo } from './components/SeoHelmet'
 import { MascotBadge } from './components/MascotBadge'
 import { getHomeMeta, getShopMeta, getMenuMeta, getCartMeta, getCheckoutMeta, getOrdersMeta, getNotificationsMeta, getReviewsMeta, getAboutMeta, getFaqMeta, getBlogMeta, getContactMeta, getPrivacyMeta, getTermsMeta, getPromotionsMeta, getRewardsMeta, getVoteMeta, getRandomMenuMeta, getShareMeta, getViralMeta, getProfileMeta, getAdminMeta, getLoginMeta } from './lib/seo'
 import { BrandProvider } from './components/BrandProvider'
@@ -154,7 +154,7 @@ export default function App() {
         <Route path="/cart" element={<SeoHelmet seo={getCartMeta()} />} />
         <Route path="/checkout" element={<SeoHelmet seo={getCheckoutMeta()} />} />
         <Route path="/track/:orderNumber" element={<TrackOrderSeo />} />
-        <Route path="/payment/:orderNumber" element={<SeoHelmet seo={getCheckoutMeta()} />} />
+        <Route path="/payment/:orderNumber" element={<PaymentSeo />} />
         <Route path="/about" element={<SeoHelmet seo={getAboutMeta()} />} />
         <Route path="/faq" element={<SeoHelmet seo={getFaqMeta()} />} />
         <Route path="/blog" element={<SeoHelmet seo={getBlogMeta()} />} />

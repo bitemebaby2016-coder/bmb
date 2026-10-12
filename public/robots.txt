@@ -15,3 +15,6 @@ Disallow: /admin*
 Disallow: /api*
 Disallow: /track/*
 Disallow: /profile*
+# order-status URLs carry an order number; canonical ชี้ /checkout อยู่แล้ว
+# และต้องไม่ถูก index (กันเลขออเดอร์หลุดเข้า search index)
+Disallow: /payment/*
