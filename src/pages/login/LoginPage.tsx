@@ -7,6 +7,8 @@ import { showToast } from '@/components/ui/ToastContainer'
 import { sendPasswordReset } from '@/lib/authRecovery'
 // P3 — Facebook Login
 import { signInWithFacebook, consumeSocialCallbackError, describeSocialError, readSocialNext } from '@/lib/socialLogin'
+// P4 — Passkey / WebAuthn
+import { signInWithPasskey, describePasskeyError, isPasskeySupported } from '@/lib/passkeyLogin'
 import { writeAuditLog } from '@/lib/auditLog'
 
 // จำข้อมูล Quick login ครั้งเดียวใช้ตลอด (localStorage — รอบหน้ากรอกให้อัตโนมัติ)
@@ -588,6 +590,36 @@ return (
               การยืนยันผ่าน Facebook เป็นการยืนยันตัวตนเท่านั้น ไม่เกี่ยวข้องกับการชำระเงิน
             </p>
           </div>
+
+          {/* P4 — Passkey / WebAuthn
+              แสดงเฉพาะเมื่อเบราว์เซอร์รองรับจริง และ "ยังไม่มี session"
+              (ถ้ามี session อยู่แล้ว effect ด้านบนจะพาไปหน้าแรกทันที) */}
+          {isPasskeySupported() && !isAuthenticated && (
+            <div className="mt-4">
+              <button
+                type="button"
+                onClick={() => {
+                  setError('')
+                  setIsLoading(true)
+                  void signInWithPasskey().then((r) => {
+                    setIsLoading(false)
+                    if (!r.ok) setError(describePasskeyError(r.code))
+                  })
+                }}
+                disabled={isLoading}
+                className={`w-full flex items-center justify-center gap-2 border border-brand-border rounded-lg bg-brand-bg text-brand-accent font-medium py-2.5 hover:bg-brand-surface transition-colors ${isLoading ? 'btn-disabled' : ''}`}
+              >
+                <svg viewBox="0 0 24 24" className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                  <path d="M12 2a5 5 0 0 1 5 5v3a5 5 0 0 1-10 0V7a5 5 0 0 1 5-5z" />
+                  <path d="M3 21v-2a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4v2" />
+                </svg>
+                {isLoading ? 'กำลังยืนยันตัวตน…' : 'เข้าสู่ระบบด้วย Passkey'}
+              </button>
+              <p className="text-[11px] text-brand-muted text-center mt-2">
+                ใช้ Face / Touch ID / ล็อกหน้าจอของเครื่องคุณ — ไม่ต้องจำรหัสผ่าน
+              </p>
+            </div>
+          )}
         </div>
 
         <div className="text-center mt-6">

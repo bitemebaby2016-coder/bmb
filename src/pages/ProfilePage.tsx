@@ -1,10 +1,32 @@
 import { Link } from 'react-router-dom'
 import { useAuthStore } from '@/store/authStore'
 import { useRewardsStore } from '@/store/rewardsStore'
+// P4 — Passkey / WebAuthn (สมัคร/ลบ ต้องมี session อยู่แล้ว — หน้านี้เป็น ProtectedRoute)
+import { useState, useEffect } from 'react'
+import { showToast } from '@/components/ui/ToastContainer'
+import {
+  registerPasskey,
+  listPasskeys,
+  removePasskey,
+  describePasskeyError,
+  isPasskeySupported,
+  type PasskeyInfo,
+} from '@/lib/passkeyLogin'
 
 export function ProfilePage() {
   const customer = useAuthStore((s) => s.customer)
   const loyaltyPoints = useRewardsStore((s) => s.loyaltyPoints)
+
+  // P4 — รายการ passkey ที่ผูกกับบัญชีนี้ (โหลดครั้งเดียวตอนเปิดหน้า)
+  const [passkeys, setPasskeys] = useState<PasskeyInfo[]>([])
+  useEffect(() => {
+    if (!customer || !isPasskeySupported()) return
+    let active = true
+    void listPasskeys().then((r) => {
+      if (active && r.ok) setPasskeys(r.items)
+    })
+    return () => { active = false }
+  }, [customer])
 
   if (!customer) {
     return (
@@ -83,6 +105,74 @@ export function ProfilePage() {
           </div>
         </Link>
       </div>
+
+      {/* P4 — Passkey / WebAuthn
+          วิธีเข้าสู่ระบบวิธีที่ 3 — ไม่แตะ business rules / RPC / Payment Authority
+          การสมัครต้องทำตอน "มี session อยู่แล้ว" จึงกันไม่ให้ใครผูก passkey เข้าบัญชีคนอื่น */}
+      {isPasskeySupported() && (
+        <div className="card mt-6">
+          <div className="flex items-center gap-2 mb-1">
+            <span className="text-xl">🔑</span>
+            <h3 className="font-bold text-brand-accent">Passkey</h3>
+          </div>
+          <p className="text-sm text-brand-muted mb-4">
+            เข้าสู่ระบบครั้งต่อไปด้วย Face / Touch ID / ล็อกหน้าจอของเครื่องคุณ — ไม่ต้องจำรหัสผ่าน
+          </p>
+
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => {
+                void (async () => {
+                  const r = await registerPasskey(customer.full_name || 'Passkey ของฉัน')
+                  if (!r.ok) {
+                    showToast(describePasskeyError(r.code), 'error')
+                    return
+                  }
+                  showToast('สร้าง Passkey สำเร็จ', 'success')
+                  const l = await listPasskeys()
+                  if (l.ok) setPasskeys(l.items)
+                })()
+              }}
+              className="btn btn-primary btn-sm"
+            >
+              + สร้าง Passkey
+            </button>
+          </div>
+
+          {passkeys.length > 0 && (
+            <ul className="mt-4 space-y-2">
+              {passkeys.map((p) => (
+                <li key={p.id} className="flex items-center justify-between rounded-lg border border-brand-border px-3 py-2">
+                  <div>
+                    <div className="text-sm font-medium text-brand-accent">{p.label}</div>
+                    <div className="text-xs text-brand-muted">
+                      {p.createdAt ? new Date(p.createdAt).toLocaleDateString('th-TH') : ''}
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      void (async () => {
+                        const r = await removePasskey(p.id)
+                        if (!r.ok) {
+                          showToast(describePasskeyError(r.code), 'error')
+                          return
+                        }
+                        showToast('ลบ Passkey แล้ว', 'success')
+                        setPasskeys((prev) => prev.filter((x) => x.id !== p.id))
+                      })()
+                    }}
+                    className="text-xs text-red-500 hover:underline"
+                  >
+                    ลบ
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
     </div>
   )
 }

@@ -180,9 +180,32 @@ supabase functions deploy guest-checkout-session --project-ref ivkdfognyiwjcmrhc
 
 **ทดสอบ:** เข้า `/login` → ปุ่ม "เข้าสู่ระบบด้วย Facebook" → ได้ session → กลับหน้าเดิมที่มาก่อน
 
-## 7. P4 — Passkeys (ยังไม่เริ่ม)
+## 7. P4 — Passkeys (โค้ดพร้อมแล้ว — เหลือ Owner ทดสอบบนเครื่องจริง)
 
-`navigator.credentials` / `webauthn` = **0** · ต้องยืนยันความพร้อมของ Supabase SDK ก่อนเริ่ม
+**ความพร้อมของ SDK ตรวจแล้ว:** `@supabase/supabase-js` **2.116.0** (ติดตั้งอยู่แล้ว)
+มีครบ → `supabase.auth.signInWithPasskey()` · `registerPasskey()` · `mfa.passkey.{list,delete}`
+
+**ทำแล้วในโค้ด:**
+- `src/lib/passkeyLogin.ts` — `signInWithPasskey` · `registerPasskey` · `listPasskeys` · `removePasskey` · `isPasskeySupported` · `describePasskeyError`
+- `LoginPage.tsx` — ปุ่ม "เข้าสู่ระบบด้วย Passkey" (แสดงเฉพาะเบราว์เซอร์ที่รองรับ และยังไม่มี session)
+- `ProfilePage.tsx` (`/profile`) — สร้าง / รายชื่อ / ลบ Passkey
+- `src/__tests__/passkeyLogin.test.ts` — **6 tests**
+
+**ข้อคุ้มครองที่ test ยืนยัน:**
+1. ไม่ leak raw error code (`webauthn_challenge_expired` / `ERROR_CEREMONY_ABORTED`) ให้ลูกค้าเห็น
+2. แยกแยะได้ว่า "ยกเลิกเอง" ต่างจาก "challenge หมดอายุ" (คนละวิธีแก้)
+3. ผู้ใช้ที่ยังไม่มี Passkey ถูกบอกทางชัดเจนว่าต้องทำอะไรต่อ
+4. ข้อความห้ามพูดถึงการชำระเงินหรือ "รวมบัญชี"
+5. **สมัครต้องมี session อยู่แล้ว** → ไม่มีทางผูก passkey เข้าบัญชีคนอื่น
+
+**Owner ต้องเปิด (Dashboard):**
+- **Authentication → Passkeys** → เปิดใช้งาน (ถ้ายังไม่ขึ้น ให้รีเฟรชหรือรอ propage หลัง deploy)
+- ไม่ต้องตั้งอะไรใน Meta
+
+**ทดสอบบนเครื่องจริง:**
+1. เข้า `/login` → ปุ่ม "เข้าสู่ระบบด้วย Passkey" ต้อง**ไม่ขึ้น**ถ้าเครื่องไม่รองรับ
+2. login ด้วยวิธีอื่น → `/profile` → "+ สร้าง Passkey" → ยืนยัน Face/Touch ID
+3. logout → `/login` → กดปุ่ม Passkey → เข้าได้โดยไม่ต้องพิมพ์อะไร
 
 ---
 
