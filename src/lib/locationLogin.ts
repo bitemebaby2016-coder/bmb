@@ -17,6 +17,8 @@ export interface QuickLoginInput {
   addressDetail?: string
   /** URL รูปสถานที่จัดส่ง (อัปโหลดแล้ว) — บันทึกลง customers ให้ไรเดอร์เห็น */
   deliveryPhotoUrl?: string
+  /** P0 (Owner OD-1) — รหัส OTP ที่ผู้ใช้กรอก ต้องถูกต้องเมื่อ flag QUICK_LOGIN_REQUIRE_OTP เปิด */
+  otpCode?: string
 }
 
 export interface QuickLoginResult {
@@ -191,6 +193,50 @@ function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise
   })
 }
 
+/** P0 (Owner OD-1) — เวลาขอยรหัส OTP (คนละ attempt กับการ login) */
+export const OTP_SEND_TIMEOUT_MS = 30_000
+
+export interface SendOtpResult {
+  ok: boolean
+  error?: string
+  maskedPhone?: string
+  expiresInSec?: number
+}
+
+/**
+ * ขอยรหัส OTP เพื่อยืนยัน "การควบคุมเบอร์โทร" ก่อนเข้าสู่ระบบด่วน
+ * (Owner §1.2: OTP แยกจาก Login Authorization และ Payment — ฟังก์ชันนี้
+ * ไม่ออก session ใด ๆ ทั้งสิ้น)
+ */
+export async function sendQuickLoginOtp(phone: string): Promise<SendOtpResult> {
+  try {
+    const { data, error } = await withTimeout(
+      supabase.functions.invoke('otp-send', {
+        body: { phone, purpose: 'quick_login' },
+      }),
+      OTP_SEND_TIMEOUT_MS,
+      'ERR_TIMEOUT',
+    )
+    if (error) {
+      try {
+        const errBody = JSON.parse(String(error.message || '{}'))
+        return { ok: false, error: errBody?.error ?? error.message }
+      } catch {
+        return { ok: false, error: error.message }
+      }
+    }
+    if (data?.error) return { ok: false, error: data.error }
+    return {
+      ok: !!data?.ok,
+      maskedPhone: data?.masked_phone,
+      expiresInSec: data?.expires_in_sec,
+      error: data?.ok ? undefined : (data?.error ?? 'ERR_OTP_SEND'),
+    }
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : 'ERR_NETWORK' }
+  }
+}
+
 export async function quickLoginByPhone(input: QuickLoginInput): Promise<QuickLoginResult> {
   try {
     const gps = await getGpsLocation()
@@ -206,6 +252,8 @@ export async function quickLoginByPhone(input: QuickLoginInput): Promise<QuickLo
           source: coords.source,
           address_detail: input.addressDetail ?? '',
           delivery_photo_url: input.deliveryPhotoUrl ?? '',
+          // P0 (Owner OD-1) — ส่งรหัส OTP ไปให้ EF ตรวจ (สตริงว่างเมื่อยังไม่กรอก)
+          otp_code: input.otpCode ?? '',
         },
       }),
       QUICK_LOGIN_TIMEOUT_MS,

@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { useAuthStore, fetchProfileRole, describeLoginError, restoreProfileAddress } from '@/store/authStore'
 import { useLocationStore, KITCHEN_LAT, KITCHEN_LNG } from '@/store/locationStore'
-import { getGpsLocation, uploadDeliveryPhoto, saveDeliveryProfile } from '@/lib/locationLogin'
+import { getGpsLocation, uploadDeliveryPhoto, saveDeliveryProfile, sendQuickLoginOtp } from '@/lib/locationLogin'
 import { showToast } from '@/components/ui/ToastContainer'
 import { sendPasswordReset } from '@/lib/authRecovery'
 import { writeAuditLog } from '@/lib/auditLog'
@@ -54,6 +54,12 @@ export function LoginPage() {
   const [forgotEmail, setForgotEmail] = useState('')
   const [isSendingReset, setIsSendingReset] = useState(false)
   const [resetSent, setResetSent] = useState(false)
+
+  // P0 (Owner OD-1) — OTP ยืนยันการควบคุมเบอร์ก่อนเข้าสู่ระบบด่วน
+  const [otpCode, setOtpCode] = useState('')
+  const [otpSent, setOtpSent] = useState(false)
+  const [isSendingOtp, setIsSendingOtp] = useState(false)
+  const [otpMasked, setOtpMasked] = useState('')
   // รูปสถานที่จัดส่ง (Owner feature 2026-10-08)
   const [qPhotoFile, setQPhotoFile] = useState<File | null>(null)
   const [qPhotoPreview, setQPhotoPreview] = useState<string>('') // objectURL หรือ URL เดิม
@@ -147,6 +153,31 @@ export function LoginPage() {
   }
 
   // เข้าสู่ระบบด่วน — ชื่อ + เบอร์โทร + ตำแหน่ง (Edge Function phone-auto-login)
+  // P0 (Owner OD-1) — ขอยรหัส OTP (ไม่ออก session ใด ๆ — ยืนยันแค่การควบคุมเบอร์)
+  async function handleSendOtp(e: React.FormEvent) {
+    e.preventDefault()
+    if (isSendingOtp) return
+    setError('')
+    setIsSendingOtp(true)
+    const res = await sendQuickLoginOtp(qPhone)
+    setIsSendingOtp(false)
+    if (!res.ok) {
+      setError(
+        res.error === 'ERR_RATE_LIMITED'
+          ? 'ขอรหัสยืนยันบ่อยเกินไป — กรุณารอสักครู่แล้วลองใหม่'
+          : res.error === 'ERR_TIMEOUT'
+          ? 'ระบบช้าเกินไป — ตรวจสอบเน็ตเวิร์กแล้วลองใหม่อีกครั้ง'
+          : res.error === 'ERR_SMS_SEND_FAILED'
+          ? 'ส่ง SMS ไม่สำเร็จ — กรุณาลองใหม่อีกครั้ง'
+          : 'ขอรหัสยืนยันไม่สำเร็จ กรุณาลองใหม่อีกครั้ง',
+      )
+      return
+    }
+    setOtpSent(true)
+    setOtpMasked(res.maskedPhone || '')
+    showToast('ส่งรหัสยืนยันทาง SMS แล้ว', 'success')
+  }
+
   async function handleQuickLogin(e: React.FormEvent) {
     e.preventDefault()
     setIsLoading(true)
@@ -164,6 +195,8 @@ export function LoginPage() {
         name: qName,
         phone: qPhone,
         addressDetail: qAddress,
+        // P0 (Owner OD-1) — ส่งรหัส OTP ไปให้ EF ตรวจก่อนออก session
+        otpCode,
       })
       if (!res.ok) {
         setError(
@@ -173,6 +206,14 @@ export function LoginPage() {
             ? 'ระบบช้าเกินไป — ตรวจสอบเน็ตเวิร์กแล้วลองใหม่อีกครั้ง'
             : res.error === 'ERR_RATE_LIMITED'
             ? 'พยายามมากเกินไป — กรุณารอสักครู่แล้วลองใหม่ หรือใช้แท็บอีเมล/รหัสผ่าน'
+            : res.error === 'ERR_OTP_REQUIRED' || res.error === 'ERR_OTP_INVALID'
+            ? 'รหัสยืนยันไม่ถูกต้อง — กรุณากรอกรหัส 6 หลักที่ได้รับทาง SMS'
+            : res.error === 'ERR_OTP_EXPIRED'
+            ? 'รหัสยืนยันหมดอายุแล้ว — กรุณากดขอรหัสใหม่'
+            : res.error === 'ERR_OTP_ALREADY_USED'
+            ? 'รหัสนี้ถูกใช้ไปแล้ว — กรุณากดขอรหัสใหม่'
+            : res.error === 'ERR_OTP_TOO_MANY_TRIES'
+            ? 'กรอกรหัสผิดบ่อยเกินไป — กรุณารอสักครู่แล้วขอยรหัสใหม่'
             : (res.error || 'เข้าสู่ระบบด่วนไม่สำเร็จ'),
         )
         setIsLoading(false)
@@ -394,6 +435,41 @@ return (
                   className="input"
                   placeholder="เช่น 0812345678"
                   required
+                />
+              </div>
+
+              {/* P0 (Owner OD-1) — ยืนยันการควบคุมเบอร์ก่อนเข้าสู่ระบบด่วน
+                  หมายเหตุ: รหัสนี้ "ไม่ใช่" หลักฐานยืนยันการชำระเงิน และ
+                  ไม่ให้สิทธิ์เข้าบัญชีอื่นนอกจากบัญชีของเบอร์นี้ */}
+              <div className="rounded-lg bg-brand-bg border border-brand-border p-3 space-y-2">
+                <div className="text-sm font-medium text-brand-accent">ยืนยันเบอร์โทรศัพท์</div>
+                <p className="text-xs text-brand-muted">
+                  กดปุ่มด้านล่างเพื่อรับรหัส 6 หลักทาง SMS เพื่อยืนยันว่าคุณเป็นเจ้าของเบอร์นี้
+                </p>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={(e) => void handleSendOtp(e)}
+                    disabled={isSendingOtp || qPhone.trim().length < 9}
+                    className={`btn btn-outline btn-sm ${isSendingOtp ? 'btn-disabled' : ''}`}
+                  >
+                    {isSendingOtp ? 'กำลังส่ง…' : otpSent ? 'ส่งรหัสใหม่' : 'ส่งรหัสยืนยัน'}
+                  </button>
+                  {otpSent && (
+                    <span className="text-xs text-brand-muted self-center">
+                      ส่งไปที่ {otpMasked || 'เบอร์ของคุณ'}
+                    </span>
+                  )}
+                </div>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  autoComplete="one-time-code"
+                  maxLength={6}
+                  value={otpCode}
+                  onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, ''))}
+                  className="input tracking-[0.4em]"
+                  placeholder="รหัส 6 หลัก"
                 />
               </div>
 

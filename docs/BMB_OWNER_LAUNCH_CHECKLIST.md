@@ -69,19 +69,37 @@
 
 ---
 
-## 3. P0 — Security Remediation (ค้าง: ต้องมี OTP)
+## 3. P0 — Quick Login ใช้ OTP (โค้ดพร้อมแล้ว — เหลือ Owner deploy)
 
-**ทำแล้ว (interim):** rate limit 5/15 นาทีต่อเบอร์ + 20/ชม.ต่อ IP · ค่า IP สูงกว่าเพราะลูกค้าไทยหลายคนอยู่หลัง CGNAT
+**ทำแล้วในโค้ด:**
+- `supabase/migrations/122_otp_challenges.sql` — ตารางเก็บ **hash+salt เท่านั้น** (ไม่มี plaintext) · ใช้ครั้งเดียว · หมดอายุ 5 นาที · ทายผิดได้ไม่เกิน 5 · RLS deny-all
+- `supabase/functions/_shared/otpPolicy.ts` — pure module (15 tests): สุ่ม CSPRNG · hash SHA-256 · constant-time compare · rate limit แยกส่ง/ทาย
+- `supabase/functions/_shared/otpVerify.ts` — `consumeOtpChallenge()` ใช้ร่วมกันได้ทั้ง Quick Login และ Guest Checkout (P2)
+- `supabase/functions/otp-send/index.ts` — ออก OTP + เรียก `sms-send` (rate limit 3/10นาทีต่อเบอร์)
+- `phone-auto-login` — บังคับ OTP **เมื่อเปิด flag** `QUICK_LOGIN_REQUIRE_OTP=true`
+- `src/lib/locationLogin.ts` — `sendQuickLoginOtp()` + ส่ง `otp_code` ไป EF
+- `LoginPage` — กล่อง "ยืนยันเบอร์โทรศัพท์" + ปุ่มส่งรหัส + ช่องกรอกรหัส 6 หลัก + ข้อความ error ภาษาไทยครบทุกกรณี
 
-**ยังต้องทำ (blocked):** ให้ Quick Login ใช้ OTP ก่อนออก session → **ต้อง Owner provision `SMS_*` secret ก่อน**
-
+**Rollback ทันที (Owner ควบคุม):**
 ```bash
-supabase secrets set SMS_PROVIDER=thsms_org SMS_API_KEY=<key> SMS_SENDER_NAME=<sender> SMS_MESSAGE_TYPE=standard
-supabase functions deploy phone-auto-login --project-ref ivkdfognyiwjcmrhcnwz
+supabase secrets set QUICK_LOGIN_REQUIRE_OTP=false   # ปิด — กลับพฤติกรรมเดิม (มี rate limit แล้ว)
+supabase secrets set QUICK_LOGIN_REQUIRE_OTP=true    # เปิด — บังคับ OTP
 ```
-> credential `THSMS_*` มีใน `.env.local` ของเครื่อง Owner แล้ว (ตรวจเฉพาะชื่อ key) — ต้องทดสอบส่ง 1 ข้อความจริงก่อนขั้นถัดไป
+> จงใจให้เป็น flag ไม่ใช่ hard-code → **ลูกค้า 33 รายเดิมจะไม่ถูกตัดออกโดยไม่ได้ตั้งใจ**
 
-**ข้อจำกัดที่ต้องยอมรับ:** rate limit เป็น in-memory ต่อ instance → reset เมื่อ cold start · เป็น interim เท่านั้น
+**ขั้นตอน Owner deploy (เมื่อพร้อม):**
+```bash
+# 1. apply migration (ตาราง OTP ต้องมีก่อน)
+supabase db push
+# 2. deploy EF ใหม่ + EF ที่แก้
+supabase functions deploy otp-send --project-ref ivkdfognyiwjcmrhcnwz
+supabase functions deploy phone-auto-login --project-ref ivkdfognyiwjcmrhcnwz
+# 3. เปิด flag เมื่อทดสอบ sms-send สำเร็จแล้วเท่านั้น
+supabase secrets set QUICK_LOGIN_REQUIRE_OTP=true
+```
+
+**ข้อจำกัดที่ต้องยอมรับ:** rate limit ของ OTP เป็น in-memory ต่อ instance → reset ตอน cold start (interim)
+
 
 ---
 
@@ -119,19 +137,23 @@ supabase functions deploy phone-auto-login --project-ref ivkdfognyiwjcmrhcnwz
 
 ---
 
-## 8. งาน Owner ที่ยังค้างอยู่ทั้งหมด
+## 8. งาน Owner ที่ยังค้าง — เรียงลำดับที่ควรทำ
 
-| ลำดับ | งาน | สถานะ |
+| ลำดับ | งาน | ทำไมสำคัญ |
 |---|---|---|
-| 1 | ตั้ง `SMS_*` secret + ทดสอบส่ง SMS จริง 1 ข้อความ | **เปิดทางให้ P0/P2** |
-| 2 | ตรวจ Email Confirmation ใน Dashboard + ทดสอบกู้คืนรหัสผ่านจริง | P1 |
-| 3 | ทำ Omise TEST E2E ทุกสถานะ + ตรวจ webhook | ยังไม่มีหลักฐานการจ่ายจริง |
-| 4 | GPS matrix บนมือถือจริง (เคส 1–4 ทำได้เลย) | handoff §8 |
-| 5 | Copy 7 วัน (`theater_daily_copy`) | Admin → Settings |
-| 6 | ลบ/noindex `bitemebaby-5f7.pages.dev` (build แช่แข็ง) | Cloudflare dashboard |
-| 7 | Omise LIVE onboarding/identity verification | ก่อนรับเงินจริง |
-| 8 | ตัดสินใจ provenance column ถ้าต้องการ restore พิกัด | optional |
-| 9 | ยืนยัน revision hash ของ EF (Management API `/versions` คืน 404) | ยืนยันได้แค่วันเวลา |
+| **1** | **apply migration 122** (`supabase db push`) | ตาราง OTP ต้องมาก่อน deploy `otp-send` |
+| **2** | **deploy `otp-send` + `phone-auto-login`** | EF ใหม่/ที่แก้ |
+| **3** | **ทดสอบ SMS จริง 1 ข้อความ** | ยืนยันว่า `api.thsms.org/v1` + `SMSOTP` ใช้ได้จริง |
+| **4** | **เปิด flag** `QUICK_LOGIN_REQUIRE_OTP=true` | เมื่อข้อ 3 ผ่านเท่านั้น — rollback ได้ในคลิกเดียว |
+| 5 | ทดสอบ Quick Login ด้วย OTP บนมือถือจริง | ต้องพิสูจน์บนอุปกรณ์จริง ห้ามอ้าง unit test |
+| 6 | ตรวจ Email Confirmation ใน Dashboard + ทดสอบกู้คืนรหัสผ่านจริง | P1 |
+| 7 | ทำ Omise TEST E2E ทุกสถานะ + ตรวจ webhook | ยังไม่มีหลักฐานการจ่ายจริง |
+| 8 | GPS matrix บนมือถือจริง (เคส 1–4 ทำได้เลย) | handoff §8 |
+| 9 | Copy 7 วัน (`theater_daily_copy`) | Admin → Settings |
+| 10 | ลบ/noindex `bitemebaby-5f7.pages.dev` (build แช่แข็ง) | Cloudflare dashboard |
+| 11 | Omise LIVE onboarding/identity verification | ก่อนรับเงินจริง |
+| 12 | แก้ `no_user_id = 3` แถว | ต้องทำก่อน P2 account linking |
+
 
 | OD-8 | Payment / Order State Machine | รักษาระบบเดิม ห้ามแก้เพื่อให้ Guest Checkout ผ่าน |
 | OD-9 | Email Confirmation / Omise TEST | ต้องตรวจ Dashboard + ทดสอบจริง ห้ามอนุมานจาก Build/CI |

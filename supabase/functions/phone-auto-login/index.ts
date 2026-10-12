@@ -31,10 +31,24 @@ import {
   QUICK_LOGIN_PHONE_RULE,
   QUICK_LOGIN_IP_RULE,
 } from './rateLimit.ts'
+// P0 security remediation (Owner OD-1) — บังคับ OTP ก่อนออก session
+import { consumeOtpChallenge } from '../_shared/otpVerify.ts'
 
 // Rate-limit store — in-memory per instance (interim measure; resets on cold
 // start). Permanent control requires phone OTP (blocked on SMS_* secrets).
 const rateStore = new Map<string, number[]>()
+
+// ตาข่ายชั้นที่สองของ OTP (จำกัดจำนวนทายต่อเบอร์) — in-memory เช่นกัน
+const otpVerifyStore = new Map<string, number[]>()
+
+/**
+ * Feature flag (Owner-controlled rollback switch):
+ *   QUICK_LOGIN_REQUIRE_OTP = 'true'  -> บังคับ OTP ก่อนออก session
+ *   ไม่ตั้ง / ค่าอื่น                  -> พฤติกรรมเดิม (มี rate limit แล้ว)
+ * จงใจให้ "ปิดได้ในคลิกเดียว" หากลูกค้าเดิมมีปัญหาหลังเปิดใช้
+ */
+const REQUIRE_OTP = (Deno.env.get('QUICK_LOGIN_REQUIRE_OTP') || '').trim() === 'true'
+
 
 
 function corsHeaders(): Record<string, string> {
@@ -188,6 +202,30 @@ Deno.serve(async (req: Request): Promise<Response> => {
   }
   recordAttempt(rateStore, phoneKey, QUICK_LOGIN_PHONE_RULE, nowMs)
   recordAttempt(rateStore, ipKey, QUICK_LOGIN_IP_RULE, nowMs)
+
+  // ---- P0 security remediation (Owner OD-1) ----
+  // เมื่อ QUICK_LOGIN_REQUIRE_OTP='true' จะ "ไม่มีทาง" ออก session
+  // โดยไม่มี OTP ที่ยังไม่ถูกใช้และยังไม่หมดอายุของเบอร์นี้ก่อน
+  // (Owner §1.2: OTP ยืนยันการควบคุมเบอร์ — ไม่ใช่หลักฐานการจ่ายเงิน)
+  if (REQUIRE_OTP) {
+    const otpCode = String(body?.otp_code ?? '').trim()
+    if (!otpCode) return json({ error: 'ERR_OTP_REQUIRED' }, 401)
+    const verdict = await consumeOtpChallenge({
+      supabaseUrl,
+      serviceKey,
+      phone,
+      code: otpCode,
+      purpose: 'quick_login',
+      now: nowMs,
+      verifyStore: otpVerifyStore,
+    })
+    if (!verdict.ok) {
+      return json(
+        { error: verdict.reason, ...(verdict.retryAfterSec ? { retry_after_sec: verdict.retryAfterSec } : {}) },
+        verdict.reason === 'ERR_RATE_LIMITED' ? 429 : 401,
+      )
+    }
+  }
 
   // CR-3 (Owner 2026-10-10): NO kitchen fallback — invalid/missing coords simply
   // mean "no coordinates". default_* are written only when
