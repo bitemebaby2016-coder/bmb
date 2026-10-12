@@ -157,8 +157,8 @@ export const THEATER_DAILY_COPY_STARTER: TheaterDailyCopyConfig & {
     mon: [
       {
         id: 'mon-1',
-        headline: 'วันนี้อยากกินอะไรดี? ให้ Bite ช่วยสำรวจเมนู',
-        subheadline: 'เลื่อนดูเมนูที่ Bite เลือกมาให้ แล้วแตะการ์ดที่ใช่ได้เลย',
+        headline: 'วันนี้อยากกินอะไรดี? ให้ไบ๊ช่วยสำรวจเมนู',
+        subheadline: 'เลื่อนดูเมนูที่ไบ๊เลือกมาให้ แล้วแตะการ์ดที่ใช่ได้เลย',
         recommendation_label: 'เริ่มจากเมนูพร้อมขายวันนี้',
         published: true,
       },
@@ -167,7 +167,7 @@ export const THEATER_DAILY_COPY_STARTER: TheaterDailyCopyConfig & {
     tue: [
       {
         id: 'tue-1',
-        headline: 'ยังเลือกไม่ถูก ให้ Bite ช่วยแนะนำ',
+        headline: 'ยังเลือกไม่ถูก ให้ไบ๊ช่วยแนะนำ',
         subheadline: 'ป้ายบนการ์ดมาจากรสนิยมและเมนูในตะกร้าของคุณจริงๆ ลองดูได้เลย',
         recommendation_label: 'ดูป้ายแนะนำบนการ์ด',
         published: true,
@@ -178,7 +178,7 @@ export const THEATER_DAILY_COPY_STARTER: TheaterDailyCopyConfig & {
       {
         id: 'wed-1',
         headline: 'มื้อถัดไปอยากได้รสชาติแบบไหน?',
-        subheadline: 'เลือกแนวที่ใช่ แล้วให้ Bite จัดเมนูมาให้',
+        subheadline: 'เลือกแนวที่ใช่ แล้วให้ไบ๊จัดเมนูมาให้',
         published: true,
       },
     ],
@@ -214,7 +214,7 @@ export const THEATER_DAILY_COPY_STARTER: TheaterDailyCopyConfig & {
     sun: [
       {
         id: 'sun-1',
-        headline: 'สงสัยเรื่องเมนูหรือการสั่ง? ถาม Bite ได้เลย',
+        headline: 'สงสัยเรื่องเมนูหรือการสั่ง? ถามไบ๊ได้เลย',
         subheadline: 'ถามได้ตั้งแต่เรื่องเมนู ไปจนถึงวิธีสั่งและติดตามออเดอร์',
         published: true,
       },
