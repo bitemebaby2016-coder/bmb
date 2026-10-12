@@ -1,0 +1,143 @@
+{
+  "cr": "CR-4",
+  "runAt": "2026-10-12T01:31:05.993Z",
+  "target": "https://biteme-baby.com",
+  "note": "guest-safe read-only production runtime evidence — no login, no order, no data mutation",
+  "scenarios": {
+    "route_smoke": {
+      "routes": {
+        "/": {
+          "docStatus": 200,
+          "finalUrl": "/",
+          "title": "Bite Me Baby - สั่งอาหารจัดส่งเมืองจันทบุรี รัศมี 5 กม.",
+          "bodyTextLen": 2455,
+          "marker": "text=Talk to Bite",
+          "markerOk": true,
+          "ok": true
+        },
+        "/shop": {
+          "docStatus": 200,
+          "finalUrl": "/shop",
+          "title": "Bite Me Baby - ร้านอาหารออนไลน์ สั่งอาหารจัดส่งเมืองจันทบุรี",
+          "bodyTextLen": 5211,
+          "marker": "#home-sameday-heading",
+          "markerOk": true,
+          "ok": true
+        },
+        "/cart": {
+          "docStatus": 200,
+          "finalUrl": "/cart",
+          "title": "ตะกร้า | Bite Me Baby",
+          "bodyTextLen": 955,
+          "marker": null,
+          "markerOk": null,
+          "ok": true
+        },
+        "/checkout": {
+          "docStatus": 200,
+          "finalUrl": "/login",
+          "title": "เข้าสู่ระบบ | Bite Me Baby",
+          "bodyTextLen": 968,
+          "marker": null,
+          "markerOk": null,
+          "ok": true
+        },
+        "/track": {
+          "docStatus": 200,
+          "finalUrl": "/",
+          "title": "Bite Me Baby - สั่งอาหารจัดส่งเมืองจันทบุรี รัศมี 5 กม.",
+          "bodyTextLen": 2455,
+          "marker": null,
+          "markerOk": null,
+          "ok": true
+        },
+        "/login": {
+          "docStatus": 200,
+          "finalUrl": "/login",
+          "title": "เข้าสู่ระบบ | Bite Me Baby",
+          "bodyTextLen": 968,
+          "marker": null,
+          "markerOk": null,
+          "ok": true
+        }
+      },
+      "consoleErrors": [],
+      "verdict": "PASS"
+    },
+    "dark_theme_regression": {
+      "probe": {
+        "theme": "dark",
+        "bodyBgImage": "linear-gradient(rgb(18, 18, 20) 0%, rgb(23, 23, 27) 100%)",
+        "scrimBg": "linear-gradient(rgba(18, 18, 20, 0.86) 0%, rgba(18, 18, 20, 0.78) 100%)",
+        "bgWhiteBg": "rgb(27, 27, 32)",
+        "textBlackColor": null
+      },
+      "scrimDark": true,
+      "scrimLightLeak": false,
+      "consoleErrors": [],
+      "verdict": "PASS"
+    },
+    "checkout_guest_gate": {
+      "redirectedToLogin": true,
+      "finalUrl": "/login",
+      "consoleErrors": [],
+      "verdict": "PASS"
+    },
+    "gps_denied_honest_label": {
+      "badge": "ตำแหน่งของฉัน: ตำแหน่งโดยประมาณ (IP) · 16.4467, 102.8330",
+      "err": null,
+      "claimsGps": false,
+      "consoleErrors": [],
+      "verdict": "PASS"
+    },
+    "gps_granted_label": {
+      "badge": "ตำแหน่งของฉัน: ตำแหน่งโดยประมาณ (IP) · 16.4467, 102.8330",
+      "err": null,
+      "claimsGps": false,
+      "coordsShown": false,
+      "consoleErrors": [],
+      "verdict": "FAIL"
+    },
+    "saved_provenance_honesty": {
+      "badge": "ตำแหน่งของฉัน: ตำแหน่งโดยประมาณ (IP) · 16.4467, 102.8330",
+      "err": null,
+      "claimsGps": false,
+      "note": "GPS permission = denied -> แม้จะมี saved point ใน storage badge ต้องไม่กล้าอ้างว่ามาจาก GPS (ระบุ saved/ip/ครัว ตามจริง)",
+      "consoleErrors": [],
+      "verdict": "PASS"
+    },
+    "promptpay_qr_asset": {
+      "qrUrl": "https://biteme-baby.com/assets/Qr%20Code/BMB_Promptpay_Qr.webp",
+      "status": 200,
+      "prodBytes": 99890,
+      "localBytes": 99890,
+      "verdict": "PASS"
+    }
+  },
+  "matrix": {
+    "1": "PARTIAL - guest surface (login locate): GPS denied -> badge บอก IP/ครัว ตามจริง ไม่มี \"GPS\" ปลอม (screenshot cr4-05)",
+    "2": "FAIL (production evidence 2026-10-12) - geolocation granted + mock coords Chanthaburi -> badge อ้าง IP แทน GPS (ไม่มี label \"ตำแหน่งจาก GPS\") - root cause อยู่ที่ frontend: getGpsLocation gps-branch ไม่ unwrap pos.coords (locationLogin.ts:63) - checkout handler ยัง BLOCKED (ต้อง test account)",
+    "3": "BLOCKED - ปักหมุด/เลื่อนหมุด (DeliveryMapPicker) อยู่ที่ /checkout ซึ่ง guest ถูก redirect เข้า /login (ต้อง test account)",
+    "4": "PARTIAL - saved point ใน storage + GPS denied -> ไม่มีการปลอม label GPS (badge อ้างอิงตามจริง)",
+    "5": "BLOCKED - orderable guard (ไม่มี trusted point -> สั่งไม่ได้) อยู่ที่ /checkout (auth-gated)",
+    "6": "BLOCKED - fee RPC error != 0.00 อยู่ที่ /checkout (auth-gated)",
+    "7": "BLOCKED - out-of-zone server authority อยู่ที่ fee RPC (auth-gated)",
+    "8": "PARTIAL - QR asset production 200 + bytes ตรง local เท่ากัน - flow runtime ต้องมี order จริง",
+    "9": "BLOCKED - ต้อง login จริง + DB read: ตรวจว่า quick login ไม่มี coords -> default_* IS NULL (EF prod ยังเป็น rev เก่า)",
+    "10": "BLOCKED - production DB read (SELECT-only aggregate) รอ Owner approval"
+  },
+  "blocked": {
+    "ef-live-risk": "frontend CR-2/3 (36028ab) deployed แล้ว + production EF ยังเป็น rev เก่า (e49c24b): quick login ไม่มี trusted coords ส่ง latitude=null -> EF เก่า Number(null)=0 (บรรทัด 83) -> ผ่าน range check (145) -> persist default_*=0,0 (251) = NULL ISLAND ทุกครั้ง - ต้อง Owner deploy EF ใหม่ (17.2 preflight) โดยเร็ว",
+    "auth-needed": "matrix #3,5,6,7 (checkout surface) + #9 (login+DB) ต้องการ test account/OTP ที่ Owner จัดหา - hard-stop: ห้ามใช้ข้อมูลลูกค้าจริง"
+  },
+  "findings": [
+    {
+      "id": "getGpsLocation-dead-gps-branch",
+      "severity": "P1",
+      "evidence": "S4b: ctx.grantPermissions([geolocation]) + setGeolocation(10.705,102.135) -> badge = \"ตำแหน่งของฉัน: ตำแหน่งโดยประมาณ (IP) · 16.4467, 102.8330\" (cr4-06-login-gps-granted.png)",
+      "root": "src/lib/locationLogin.ts:63-66 - ตรวจ typeof pos.latitude === \"number\" บน GeolocationPosition ดิบ แต่ browser จริงวางพิกัดไว้ที่ pos.coords.latitude (getTrustedGpsLocation มี unwrap ทั้งสองแบบแล้ว getGpsLocation ไม่มี) -> gps branch ตายใน browser จริง -> fallback IP เสมอ",
+      "impact": "quick-login locate ไม่มีทางรายงาน source=gps ได้เลย (matrix #2 login surface) - label ยัง honest (บอก IP/ครัว ตามจริง) จึงไม่ใช่เรื่องหลอก แต่คือฟังก์ชัน GPS success พัง",
+      "fix": "unwrap raw.coords แบบ getTrustedGpsLocation (locationLogin.ts:113-116) - เปลี่ยนฝั่ง frontend แล้ว deploy (ไม่เกี่ยวกับ EF order)"
+    }
+  ]
+}
