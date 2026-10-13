@@ -6,19 +6,27 @@
 
 import type { HomeProduct, SameDayOrderPayload, PreOrderPayload } from '@/types'
 
+type SectionMode = 'same_day' | 'pre_order' | 'auto'
+
 interface HomeProductCardProps {
   item: HomeProduct
   onSameDay: (p: SameDayOrderPayload) => void
   onPreOrder: (p: PreOrderPayload) => void
+  /** Phase 5B (A1 · INV-16): mode ของ section ที่ครอบการ์ด — 'same_day'/'pre_order'
+   *  บังคับ CTA ตาม section (ข้อมูล item ขัดกันก็ตาม) · 'auto' = พฤติกรรมเดิม (item.mode) */
+  mode?: SectionMode
 }
 
-export function HomeProductCard({ item, onSameDay, onPreOrder }: HomeProductCardProps) {
+export function HomeProductCard({ item, onSameDay, onPreOrder, mode = 'auto' }: HomeProductCardProps) {
   const soldOut = item.availability === 'sold_out'
   const lowStock = typeof item.stock === 'number' && item.stock > 0 && item.stock <= 5
+  // A1: effective mode — explicit section mode ชนะ item.mode → section ไม่มีวันมีปุ่มอีกโหมด
+  const isPreOrderCta = mode === 'pre_order' ? true : mode === 'same_day' ? false : item.mode === 'pre-order'
+  const ctaLabel = soldOut ? 'หมดแล้ว' : isPreOrderCta ? '📅 จองล่วงหน้า' : '🛒 เพิ่มลงตะกร้า'
 
   const handleCta = () => {
     if (soldOut) return
-    if (item.mode === 'pre-order') {
+    if (isPreOrderCta) {
       onPreOrder({ productId: item.id, quantity: 1, deliveryRoundId: '', scheduledDate: item.scheduledDate || '' })
       return
     }
@@ -36,7 +44,7 @@ export function HomeProductCard({ item, onSameDay, onPreOrder }: HomeProductCard
   }
 
   return (
-    <article className={`home-card${item.mode === 'pre-order' ? ' home-card--preorder' : ''}`}>
+    <article className={`home-card${isPreOrderCta ? ' home-card--preorder' : ''}`}>
       <div className="home-card-media">
         {item.image ? (
           <img src={item.image} alt={item.name} loading="lazy" decoding="async" />
@@ -49,7 +57,7 @@ export function HomeProductCard({ item, onSameDay, onPreOrder }: HomeProductCard
         )}
         {item.badge && <span className="home-card-badge">{item.badge}</span>}
         {lowStock && <span className="home-card-stock">🔥 เหลือ {item.stock} กล่อง</span>}
-        {item.mode === 'pre-order' && item.scheduledDate && (
+        {isPreOrderCta && item.scheduledDate && (
           <span className="home-card-scheduled">
             📅 พร้อมส่ง {formatThaiDate(item.scheduledDate)}
           </span>
@@ -75,8 +83,9 @@ export function HomeProductCard({ item, onSameDay, onPreOrder }: HomeProductCard
           onClick={handleCta}
           className="btn btn-primary btn-sm w-full mt-auto home-card-cta"
           disabled={soldOut}
+          data-testid="home-card-cta"
         >
-          {soldOut ? 'หมดแล้ว' : item.cta}
+          {ctaLabel}
         </button>
       </div>
     </article>

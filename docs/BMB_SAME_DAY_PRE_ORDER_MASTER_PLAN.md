@@ -70,7 +70,7 @@
 | **RC-1** | `AdminOrders` ไม่ส่ง `filterMode` เข้า `getOrdersPaged` → ปุ่มกรองโหมด **ไม่กรองจริง** (มีผลแค่เปิด grouping) | `AdminOrders.tsx:70-78,191,195,245` vs `bmbAdminApi_orders.ts:138,147` | CONFIRMED (SOURCE) | สูง | **3** |
 | **RC-2** | `getHomeProducts` else-branch ไม่เช็ค `available_same_day` · `pickTopAvailable` ไม่เช็ค mode flags → สินค้าไม่มีสิทธิ์ถูกเสนอให้สั่ง | `homeProviders.ts:85-89` · `talkToBite.ts` · failure path `118…sql:153-154` | CONFIRMED (SOURCE) | สูง | **1** |
 | **RC-3** | `handlePreOrder` เพิกเฉย `AddToCartResult` + `?mode=pre-order` ชนะ cart lock → โหมดอาจเปลี่ยนเงียบ ๆ | `HomePage.tsx:158-167` · `CheckoutPage.tsx:56-57` · `cartStore.ts:103-105` | CONFIRMED (SOURCE) — พฤติกรรมที่ถูกต้อง = OD-4 | กลาง | **2** |
-| **RC-4** | สินค้าซ้ำ 3 ผิวบนหน้าเดียว (FoodTheater + คารูเซล×2 + CategorySections) ไม่มี dedupe | `HomePage.tsx:215,279,292,297` | CONFIRMED (SOURCE) | กลาง | **5** |
+| **RC-4** | สินค้าซ้ำ 3 ผิวบนหน้าเดียว (FoodTheater + คารูเซล×2 + CategorySections) ไม่มี dedupe | `HomePage.tsx:215,279,292,297` · **แก้แล้ว (per-surface)** `homeProviders.ts:89-100` + EV-020 | CONFIRMED (SOURCE) → dedupe UX per-surface COVERED · cross-surface = A2 DEFERRED | กลาง | **5 (DONE ส่วน A1/RC-4)** |
 | **RC-5** | อาการ "การ์ดใต้หัวข้อมีปุ่มอีกโหมด" — **NOT REPRODUCED** จาก source ปัจจุบัน (`HomeProductCard` ปุ่มเดียวตาม mode) · ปุ่มคู่จริงอยู่ที่ `ShowcaseCard`/`FoodMenuCard` | `HomeProductCard.tsx:21-36,73-80` · `CategorySections.tsx:71-95` · `FoodMenuCard.tsx:123-134` | NOT REPRODUCED — ต้องตรวจ production build (OD-2) | ต้องยืนยันก่อน | **5** (BLOCKED) |
 | **RC-6** | `AdminPreOrders` = subset 100% ของ `AdminOrders` + N+1 query · no pagination · dead code `paymentBadge` · ข้อความไทยพังหลายจุด | `AdminPreOrders.tsx:24-29,33-37,77-84,49,54,91,107,111` · ไม่มี test/e2e อ้าง (0 จุด) | CONFIRMED (SOURCE) | กลาง | **4** (รอ 3) |
 | **RC-7** | `MenuPage.tsx:169` ใช้ alias เก่า `is_preorder` ต่างจาก fallback L46-47 | `MenuPage.tsx:46-47 vs 169` · `types/index.ts:28-30` | SUSPECTED (ผลเท่ากันวันนี้) | ต่ำ | **6** |
@@ -108,7 +108,7 @@
 
 **Execution protocol (ทุก phase):** audit scope → แสดง Phase Contract → ขอ approval → implement → quality gates → ตรวจ no unrelated changes → อัปเดตเอกสาร → commit เฉพาะ path ใน scope → push → ตรวจ CI `completed/success` → ยืนยัน `HEAD == origin/main` + worktree → รายงาน SHA/evidence/residual risks → หยุดรอ approval ถัดไป
 
-**สถานะล่าสุด (2026-10-13 ICT):** Phase 0 = **DONE** (`fbe5ac6`, CI#410 ✓) · Phase 3 = **DONE** (`4cb22eb`, CI#411 ✓) · Phase 1 = **DONE** (`3dd44ce`, CI#412 ✓) · Phase 2 = **DONE** (`f20a6be`, CI#413 ✓) · Phase 4 = **DONE** (`8bd6276`, CI#414 ✓) · Phase 5A = **DONE (read-only)** — EV-019: RC-5 ไม่ reproduce บน DOM จริง · SHA binding MISSING → formal RC-5 = BLOCKED · ต่อไป = Phase 5B (A1) → Phase 6 (RC-7) → Phase 7 (production closure)
+**สถานะล่าสุด (2026-10-13 ICT):** Phase 0 = **DONE** (`fbe5ac6`, CI#410 ✓) · Phase 3 = **DONE** (`4cb22eb`, CI#411 ✓) · Phase 1 = **DONE** (`3dd44ce`, CI#412 ✓) · Phase 2 = **DONE** (`f20a6be`, CI#413 ✓) · Phase 4 = **DONE** (`8bd6276`, CI#414 ✓) · Phase 5A = **DONE (read-only)** — EV-019, CI#416 ✓ · RC-5 formal = **BLOCKED** (SHA binding MISSING) · Phase 5B = **DONE (source+tests)** — EV-020: mode prop chain + per-carousel dedupe + 10 tests · proof 5 fail · 896/896 · A2 = DEFERRED · ต่อไป = Phase 6 (RC-7 audit) → Phase 7 (production closure — อ่านอย่างเดียวก่อน)
 
 **Quality gates ทุกครั้ง (fresh เท่านั้น):** `npx tsc --noEmit --incremental false` · `npm run lint` · `npm test` · `npm run build` = 0 ทุกตัว
 

@@ -18,10 +18,14 @@ function ShowcaseCard({
   item,
   onSameDay,
   onPreOrder,
+  mode = 'auto',
 }: {
   item: HomeShowcaseItem
   onSameDay: (p: SameDayOrderPayload) => void
   onPreOrder: (p: PreOrderPayload) => void
+  /** Phase 5B (A1 · INV-16): section mode — 'same_day' ซ่อนปุ่มจองล่วงหน้า ·
+   *  'pre_order' ซ่อนปุ่มเพิ่มลงตะกร้า · 'auto' = พฤติกรรมเดิม (ปุ่มตามสิทธิ์สินค้า) */
+  mode?: 'same_day' | 'pre_order' | 'auto'
 }) {
   // FIX (owner report 2026-10-01): showcase cards in admin-added sections had
   // NO add-to-cart button at all — mirror HomeProductCard's CTA behavior here:
@@ -68,7 +72,7 @@ function ShowcaseCard({
         </div>
         <p className="drink-card-desc">{item.description}</p>
         <div className="flex flex-col gap-2 mt-2">
-          {item.sameDay && !soldOut && (
+          {(mode !== 'pre_order') && item.sameDay && !soldOut && (
             <button
               type="button"
               onClick={handleSameDay}
@@ -79,7 +83,7 @@ function ShowcaseCard({
               🛒 เพิ่มลงตะกร้า
             </button>
           )}
-          {item.preorder && (
+          {(mode !== 'same_day') && item.preorder && (
             <button
               type="button"
               onClick={handlePreOrder}
@@ -105,6 +109,7 @@ export function CategorySections({
   sections = [],
   onSameDay,
   onPreOrder,
+  mode = 'auto',
 }: {
   products: Product[]
   categories: ProductCategory[]
@@ -112,6 +117,9 @@ export function CategorySections({
   sections?: MenuSection[]
   onSameDay: (p: SameDayOrderPayload) => void
   onPreOrder: (p: PreOrderPayload) => void
+  /** Phase 5B (A1 · INV-16): mode ของ section ทั้งหมดในกลุ่มนี้ — default 'auto'
+   *  = พื้นที่หมวดกลาง ๆ คง dual ปุ่มสำหรับสินค้า dual-mode (A2 = DEFERRED) */
+  mode?: 'same_day' | 'pre_order' | 'auto'
 }) {
   const active = [...categories]
     .filter((c) => c.is_active && !c.archived)
@@ -182,7 +190,7 @@ export function CategorySections({
         <h4 className="sr-only">{cat.name}</h4>
         <HorizontalCarousel
           items={items.map((item) => (
-            <ShowcaseCard key={item.id} item={item} onSameDay={onSameDay} onPreOrder={onPreOrder} />
+            <ShowcaseCard key={item.id} item={item} mode={mode} onSameDay={onSameDay} onPreOrder={onPreOrder} />
           ))}
           aria-label={`${cat.name} เลื่อนได้`}
         />

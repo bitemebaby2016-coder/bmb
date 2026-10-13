@@ -76,6 +76,8 @@ export function getHomeProducts(
   const catMap = new Map((categories || []).map((c) => [c.id, c]))
   const sameDay: HomeProduct[] = []
   const preOrder: HomeProduct[] = []
+  const seenSameDay = new Set<string>()
+  const seenPreOrder = new Set<string>()
   for (const p of products || []) {
     const cat = catMap.get(p.category_id)
     // FIX (owner report 2026-10-01): the pre-order carousel leaked unavailable
@@ -86,10 +88,18 @@ export function getHomeProducts(
     // Phase 1 (RC-2 / OD-3): eligibility ตาม canonical rule (matrix §3.1) —
     // else-branch เดิมใส่ sameDay bucket โดยไม่เช็ค `available_same_day`
     // → สินค้าไร้สิทธิ์ทั้งสองโหมด = ไม่เข้า bucket ใด (ห้าม offer)
-    if (sellable && preorderEligible(p)) {
-      if (p.is_featured || preOrder.length < 6) preOrder.push(toHomeProduct(p, cat, 'pre-order'))
-    } else if (sellable && sameDayEligible(p)) {
-      if (p.is_featured || sameDay.length < 6) sameDay.push(toHomeProduct(p, cat, 'same-day'))
+    // Phase 5B (RC-4 · INV-19): กันสินค้าซ้ำในคารูเซลเดียวกันเมื่อ rows ซ้ำจาก data/API —
+    // ข้าม surface (Theater + คารูเซล×2 + CategorySections) = BY DESIGN จนกว่า A2 (OD-1 DEFERRED)
+    if (sellable && preorderEligible(p) && !seenPreOrder.has(p.id)) {
+      if (p.is_featured || preOrder.length < 6) {
+        seenPreOrder.add(p.id)
+        preOrder.push(toHomeProduct(p, cat, 'pre-order'))
+      }
+    } else if (sellable && sameDayEligible(p) && !seenSameDay.has(p.id)) {
+      if (p.is_featured || sameDay.length < 6) {
+        seenSameDay.add(p.id)
+        sameDay.push(toHomeProduct(p, cat, 'same-day'))
+      }
     }
   }
   return { sameDay: sameDay.slice(0, 8), preOrder: preOrder.slice(0, 8) }

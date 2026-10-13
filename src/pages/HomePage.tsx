@@ -204,10 +204,10 @@ export function HomePage() {
   }
 
   const sameDayItems = filteredSameDay.map((item) => (
-    <HomeProductCard key={item.id} item={item} onSameDay={handleSameDay} onPreOrder={handlePreOrder} />
+    <HomeProductCard key={item.id} item={item} mode="same_day" onSameDay={handleSameDay} onPreOrder={handlePreOrder} />
   ))
   const preOrderItems = filteredPreOrder.map((item) => (
-    <HomeProductCard key={item.id} item={item} onSameDay={handleSameDay} onPreOrder={handlePreOrder} />
+    <HomeProductCard key={item.id} item={item} mode="pre_order" onSameDay={handleSameDay} onPreOrder={handlePreOrder} />
   ))
 
   if (loading) {
