@@ -29,7 +29,7 @@ call() {
       (SELECT id FROM public.delivery_rounds
         WHERE scheduled_date = (now() AT TIME ZONE 'Asia/Bangkok')::date
           AND status = 'active' LIMIT 1),
-      'self_delivery', '', 13.7563, 100.5018, 'ConcQA', '${PHONE}', 'cash_on_delivery',
+      'self_delivery', '', ((public.kitchen_location()->>'latitude')::numeric + 0.002), ((public.kitchen_location()->>'longitude')::numeric + 0.002), 'ConcQA', '${PHONE}', 'cash_on_delivery',
       '', NULL, 0, 'SAME_DAY', NULL, NULL, NULL, NULL, NULL, '${KEY}')::text;"
 }
 
