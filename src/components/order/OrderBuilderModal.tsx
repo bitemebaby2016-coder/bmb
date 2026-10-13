@@ -143,7 +143,7 @@ return (
             <button type="button" className="ob-qty-btn" aria-label="Decrease quantity" onClick={() => setQuantity(Math.max(1, quantity - 1))}>−</button>
             <span data-testid="ob-quantity" className="ob-qty">{quantity}</span>
             <button type="button" className="ob-qty-btn" aria-label="Increase quantity" onClick={() => setQuantity(Math.min(99, quantity + 1))}>+</button>
-            <button type="button" className="ob-close" aria-label="Close" onClick={closeBuilder}>✕</button>
+            <button type="button" className="ob-close" aria-label="ปิด" onClick={closeBuilder}>✕</button>
           </div>
         </div>
 

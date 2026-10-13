@@ -223,7 +223,7 @@ supabase functions deploy guest-checkout-session --project-ref ivkdfognyiwjcmrhc
 | 6 | ตรวจ Email Confirmation ใน Dashboard + ทดสอบกู้คืนรหัสผ่านจริง | ⬜ ไม่มี API อ่านค่านี้ — ต้องดูใน Dashboard เอง |
 | 7 | ทำ Omise TEST E2E ทุกสถานะ + ตรวจ webhook | ⬜ ยังไม่มีหลักฐานการจ่ายจริง |
 | 8 | GPS matrix บนมือถือจริง (เคส 1–4 ทำได้เลย) | ⬜ handoff §8 |
-| ~~9~~ | ~~Copy 7 วัน (`theater_daily_copy`)~~ | ⚠️ **ข้อมูลในเช็คลิสต์เดิม "ผิด"** — ผม probe แล้วตาราง `theater_daily_copy` **ไม่มีอยู่จริง** ในสคีมา (และไม่มีตารางที่ชื่อขึ้นต้นด้วย copy/daily/theater/announcement เลย) จึงไม่มีอะไรให้กรอกใน Admin → Settings · **ต้องถาม Owner ก่อนว่าฟีเจอร์นี้หมายถึงอะไรจริง ๆ แล้วค่อยออกแบบให้ถูก** |
+| 9 | Copy 7 วัน (`theater_daily_copy`) | ✅ **ปิดแล้ว** — ข้อความเดิมในเช็คลิสต์ผิดคนละเรื่อง: ฟีเจอร์นี้ **ไม่ใช่ตาราง** แต่เป็น **key ใน `business_settings`** (JSON) แก้ผ่าน key/value editor เดิมใน Admin → Settings โค้ดครบทั้งสายตั้งแต่ก่อน (`src/lib/theaterDailyCopy.ts` หมุนตามวันไทย UTC+7 + 15 tests + starter 7 วัน + `FoodTheater` ดึงมาแสดง) · **Owner เพิ่มคีย์และเซฟแล้ว (2026-10-13)** |
 | 10 | ลบ/noindex `bitemebaby-5f7.pages.dev` | ⬜ **ยัง live อยู่จริง** — ผม probe แล้วได้ HTTP **200** (production `biteme-baby.com` ก็ 200) |
 | 11 | Omise LIVE onboarding/identity verification | ⬜ ก่อนรับเงินจริง |
 | ~~12~~ | ~~แก้ `no_user_id = 3` แถว~~ | ✅ **ปิดแล้ว** — ดูรายละเอียดด้านล่าง |
