@@ -16,6 +16,8 @@ import { useAuthStore } from '@/store/authStore'
 import { useNotificationStore } from '@/store/notificationStore'
 import { showToast } from '@/components/ui/ToastContainer'
 import { createOrder, type OrderInput } from '@/lib/bmbAdminApi_orders'
+import { planSplitCheckout, type PaymentMethodT, type PlanLine } from '@/lib/m1CheckoutPlan'
+import { submitSplitOrders, describeSplitResult } from '@/lib/m1Submit'
 import { createPaymentIntent } from '@/lib/paymentGateway'
 import { writeAuditLog } from '@/lib/auditLog'
 import { useLocationStore, isTrustedSource, deliveryPointStatus } from '@/store/locationStore'
@@ -304,6 +306,10 @@ export function CheckoutPage() {
     if (customer && items.length === 0 && isHydrated && !justPlaced.current) navigate('/cart')
   }, [customer, items.length, isHydrated, navigate])
 
+  // ✅ WAVE 4-B: shared in-flight lock for the M1 split engine — prevents
+  // double-click/concurrent submit (UI guard ONLY — not database idempotency).
+  const submitLockRef = useRef({ busy: false })
+
   async function handlePlaceOrder() {
     if (!customer) {
       showToast('กรุณาเข้าสู่ระบบก่อนสั่งซื้อ', 'info')
@@ -413,6 +419,99 @@ export function CheckoutPage() {
       scheduled_date: orderMode === 'PRE_ORDER' ? scheduledDate : undefined,
       // TEN-07: resolve branch from selected delivery_round (round has branch_id column)
       branch_id: resolvedBranchId ?? undefined,
+    }
+
+    // ✅ WAVE 4-B: M1 mixed cart (SAME_DAY + PRE_ORDER) → split child orders.
+    // Single-mode carts (the overwhelming common case) skip this entirely and
+    // keep the exact legacy path below — all payment methods unchanged (B1).
+    const planLines: PlanLine[] = items.map((i) => ({
+      product_id: i.product.id,
+      name: i.product.name,
+      quantity: i.quantity,
+      line_mode: i.line_mode ?? orderMode,
+    }))
+    const isMixedCart = new Set(planLines.map((l) => l.line_mode)).size > 1
+    if (isMixedCart) {
+      // B3/B4: mixed = cash_on_delivery ONLY → promptpay/credit REJECTED here,
+      // BEFORE any create-order RPC is invoked (no order, no intent, no charge).
+      if (paymentMethod !== 'cash_on_delivery') {
+        showToast('ออเดอร์ผสม (SAME_DAY + PRE_ORDER) รองรับ "เงินสดปลายทาง" เท่านั้น — เปลี่ยนวิธีชำระเงิน หรือสั่งแยกทีละโหมด', 'error')
+        return
+      }
+      const plan = planSplitCheckout(planLines, {
+        fallback_mode: orderMode,
+        payment_method: paymentMethod as PaymentMethodT,
+        delivery_round_id: selectedRoundId,
+        scheduled_date: scheduledDate,
+      })
+      if (!plan.ok) {
+        showToast(plan.errors.map((e) => `${e.code}${e.detail ? ` (${e.detail})` : ''}`).join(', '), 'error')
+        return
+      }
+      setIsProcessing(true)
+      // child order_number → server total, for 1:1 payment-intent creation.
+      const childTotals = new Map<string, number>()
+      const result = await submitSplitOrders(plan.children, paymentMethod as PaymentMethodT, {
+        lock: submitLockRef.current, // shared across clicks → concurrent submit = 'conflict'
+        createChild: async (child) => {
+          try {
+            const order = await createOrder({
+              ...orderInput,
+              items: child.lines.map((l) => ({ product_id: l.product_id, quantity: l.quantity })),
+              delivery_round_id: child.delivery_round_id,
+              order_mode: child.order_mode,
+              payment_method: child.payment_method,
+              scheduled_date: child.scheduled_date ?? undefined,
+            })
+            if (!order) {
+              // Ambiguous: RPC failed without a definite server code → order MAY
+              // exist → classify as 'ambiguous' so the engine NEVER auto-resubmits.
+              return { status: 'ambiguous' as const }
+            }
+            childTotals.set(order.order_number, order.total_amount)
+            return { status: 'created' as const, order_number: order.order_number }
+          } catch (e) {
+            const code = (e as { code?: string })?.code
+            // Definite server rejection (transaction rolled back ⇒ no order) = safe
+            // to retry later; anything else is ambiguous → pending, never resubmit.
+            return code ? { status: 'failed' as const, code } : { status: 'ambiguous' as const }
+          }
+        },
+      })
+      if (result.status !== 'all_created') {
+        // Never claim overall success on partial/ambiguous results; keep the cart
+        // so the customer can reconcile and retry ONLY proven-failed children (B7-B9).
+        showToast(describeSplitResult(result), 'error')
+        setIsProcessing(false)
+        return
+      }
+      const createdOrders = result.children.flatMap((s) => (s.outcome?.status === 'created' ? [s.outcome] : []))
+      for (const co of createdOrders) {
+        // Payment intent 1:1 with its OWN child order number — never a second
+        // charge/intent for the same order (B5/B10).
+        try {
+          await createPaymentIntent(co.order_number, childTotals.get(co.order_number) ?? 0, paymentMethod, {
+            providerId: 'self_delivery',
+            providerName: 'Bite Me Baby (self delivery)',
+          })
+        } catch (e) {
+          console.warn('[Checkout] Mixed-split payment intent failed (non-critical):', e)
+        }
+        writeAuditLog({
+          action: 'order_create',
+          entity_type: 'order',
+          entity_id: co.order_number,
+          description: `ออเดอร์ใหม่ #${co.order_number} (mixed split) โดย ${customer?.name || customer?.email || 'Guest'} รวม ${(childTotals.get(co.order_number) ?? 0).toFixed(2)} บาท`,
+          metadata: { paymentMethod, split: true, scheduledDate, deliveryRoundId: selectedRoundId },
+        })
+      }
+      const firstNumber = createdOrders[0]?.order_number ?? ''
+      showToast(`สั่งซื้อสำเร็จ ${createdOrders.length} ออเดอร์: ${createdOrders.map((c) => c.order_number).join(', ')}`, 'success')
+      justPlaced.current = true
+      clearCart()
+      navigate(`/payment/${firstNumber}`)
+      setIsProcessing(false)
+      return
     }
 
     // Server-authoritative: mode gate / cutoff / capacity / pricing inside the RPC.
