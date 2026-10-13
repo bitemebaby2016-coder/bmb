@@ -108,7 +108,7 @@
 
 **Execution protocol (ทุก phase):** audit scope → แสดง Phase Contract → ขอ approval → implement → quality gates → ตรวจ no unrelated changes → อัปเดตเอกสาร → commit เฉพาะ path ใน scope → push → ตรวจ CI `completed/success` → ยืนยัน `HEAD == origin/main` + worktree → รายงาน SHA/evidence/residual risks → หยุดรอ approval ถัดไป
 
-**สถานะล่าสุด (2026-10-13 ICT):** Phase 0 = **DONE** (`fbe5ac6`, CI#410 ✓) · Phase 3 = **DONE** (`4cb22eb`, CI#411 ✓) · Phase 1 = **DONE** (`3dd44ce`, CI#412 ✓) · Phase 2 = **IMPLEMENTED** (gates 0 · 879/879 — EV-017; CI ตรวจอีกทีหลัง push) · Phases 4/5/6/7 = PENDING (ตามลำดับ OD-7 · Phase 4 รอ Phase 3 evidence ✓ แล้ว)
+**สถานะล่าสุด (2026-10-13 ICT):** Phase 0 = **DONE** (`fbe5ac6`, CI#410 ✓) · Phase 3 = **DONE** (`4cb22eb`, CI#411 ✓) · Phase 1 = **DONE** (`3dd44ce`, CI#412 ✓) · Phase 2 = **DONE** (`f20a6be`, CI#413 ✓) · Phase 4 = **IMPLEMENTED** (gates 0 · 886/886 — EV-018; CI ตรวจอีกทีหลัง push) · Phases 5/6/7 = PENDING (Phase 5 รอ OD-2 build identity check บน `biteme-baby.com`)
 
 **Quality gates ทุกครั้ง (fresh เท่านั้น):** `npx tsc --noEmit --incremental false` · `npm run lint` · `npm test` · `npm run build` = 0 ทุกตัว
 

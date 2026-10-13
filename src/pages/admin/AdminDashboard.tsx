@@ -11,7 +11,7 @@ type Stats = Awaited<ReturnType<typeof getDashboardStats>>
 const QUICK_ACTIONS: { to: string; label: string; icon: string; hint: string }[] = [
   { to: '/admin/orders', label: 'จัดการออเดอร์', icon: '📦', hint: 'รับ/ทำ/ส่งออเดอร์' },
   { to: '/admin/kitchen', label: 'ครัว/ผลิต', icon: '🍳', hint: 'คิวผลิตประจำวัน' },
-  { to: '/admin/pre-orders', label: 'Pre-Orders', icon: '📅', hint: 'ยอดสั่งล่วงหน้า' },
+  { to: '/admin/orders?mode=PRE_ORDER', label: 'Pre-Orders', icon: '📅', hint: 'ยอดสั่งล่วงหน้า (กรองใน Orders)' },
   { to: '/admin/products', label: 'เมนู', icon: '🍽️', hint: 'สินค้า/ราคา/หมวด' },
   { to: '/admin/inventory', label: 'สต็อก', icon: '🥬', hint: 'วัตถุดิบ' },
   { to: '/admin/promotions', label: 'โปรโมชั่น', icon: '🎁', hint: 'ส่วนลด/แคมเปญ' },

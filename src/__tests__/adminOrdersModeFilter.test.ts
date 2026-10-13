@@ -52,9 +52,10 @@ vi.mock('@/components/ui/ToastContainer', () => ({
 }))
 
 vi.mock('react-router-dom', () => ({
-  // AdminOrders ใช้แค่ <Link> — ไม่ต้องมี Router ใน test นี้
+  // AdminOrders ใช้แค่ <Link> + useSearchParams (Phase 4 preset) — ไม่ต้องมี Router เต็ม
   Link: (props: { to: string; className?: string; children?: React.ReactNode }) =>
     React.createElement('a', { href: props.to, className: props.className }, props.children),
+  useSearchParams: () => [new URLSearchParams('')],
 }))
 
 import { AdminOrders } from '@/pages/admin/AdminOrders'

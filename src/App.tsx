@@ -39,7 +39,6 @@ const AdminDashboard = lazy(() => import('./pages/admin/AdminDashboard').then(m 
 const AdminOrders = lazy(() => import('./pages/admin/AdminOrders').then(m => ({ default: m.AdminOrders })))
 const AdminProducts = lazy(() => import('./pages/admin/AdminProducts').then(m => ({ default: m.AdminProducts })))
 const AdminMenuSchedule = lazy(() => import('./pages/admin/AdminMenuSchedule').then(m => ({ default: m.AdminMenuSchedule })))
-const AdminPreOrders = lazy(() => import('./pages/admin/AdminPreOrders').then(m => ({ default: m.AdminPreOrders })))
 const AdminKitchen = lazy(() => import('./pages/admin/AdminKitchen').then(m => ({ default: m.AdminKitchen })))
 const AdminRecipes = lazy(() => import('./pages/admin/AdminRecipes').then(m => ({ default: m.AdminRecipes })))
 const AuditLogPage = lazy(() => import('./pages/admin/AuditLogPage').then(m => ({ default: m.AuditLogPage })))
@@ -235,7 +234,8 @@ export default function App() {
         <Route path="/admin/orders" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminNav><AdminOrders /></AdminNav></Layout></AdminRoute></Suspense>} />
         <Route path="/admin/products" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminNav><AdminProducts /></AdminNav></Layout></AdminRoute></Suspense>} />
         <Route path="/admin/menu-schedule" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminNav><AdminMenuSchedule /></AdminNav></Layout></AdminRoute></Suspense>} />
-        <Route path="/admin/pre-orders" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminNav><AdminPreOrders /></AdminNav></Layout></AdminRoute></Suspense>} />
+        {/* Phase 4 (RC-6): /admin/pre-orders = redirect ไป AdminOrders + preset filter (bookmark เดิมไม่ตาย) */}
+        <Route path="/admin/pre-orders" element={<Navigate to="/admin/orders?mode=PRE_ORDER" replace />} />
         <Route path="/admin/kitchen" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminNav><AdminKitchen /></AdminNav></Layout></AdminRoute></Suspense>} />
         <Route path="/admin/recipes" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminNav><AdminRecipes /></AdminNav></Layout></AdminRoute></Suspense>} />
 

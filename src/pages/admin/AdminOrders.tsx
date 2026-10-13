@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { useNotificationStore } from '@/store/notificationStore'
 import { showToast } from '@/components/ui/ToastContainer'
 import {
@@ -52,7 +52,13 @@ export function AdminOrders() {
   const [filterStatus, setFilterStatus] = useState('all')
   // STEP 3B-2A: SAME_DAY / PRE_ORDER is a server-side filter (Phase D display only —
   // the pre-order queue/cutoff/capacity workflow itself belongs to 3B-2B).
-  const [filterMode, setFilterMode] = useState<'all' | 'SAME_DAY' | 'PRE_ORDER'>('all')
+  // Phase 4 (RC-6): preset จาก URL (?mode=PRE_ORDER|SAME_DAY) — redirect ของหน้าแยก
+  // bookmark เก่า (/admin/pre-orders) ชี้มานี่ → ยังเห็นเฉพาะ PRE_ORDER โดยไม่ต้องมีหน้าแยก
+  const [searchParams] = useSearchParams()
+  const [filterMode, setFilterMode] = useState<'all' | 'SAME_DAY' | 'PRE_ORDER'>(() => {
+    const p = searchParams.get('mode')
+    return p === 'SAME_DAY' || p === 'PRE_ORDER' ? p : 'all'
+  })
   const [productById, setProductById] = useState<Record<string, Product>>({})
   // W4-A: server-side pagination — avoids loading the full orders table on every visit.
   const [page, setPage] = useState(0)

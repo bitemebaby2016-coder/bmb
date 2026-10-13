@@ -84,7 +84,7 @@
 - **Acceptance criteria:** bookmark `/admin/pre-orders` เปิดแล้วเห็นเฉพาะ PRE_ORDER จริง (พิสูจน์ด้วย test data) · gates = 0 · CI success
 - **Risks:** nav invariant test ตกถ้าลบรายการผิดจุด · redirect เสีย preset ถ้าไม่แก้ `AdminOrders` ให้อ่าน URL
 - **Rollback:** `git revert` — คืนไฟล์ `AdminPreOrders.tsx` + route เดิมได้ทันที
-- **Approval:** **BLOCKED** — รอ Phase 3 มีหลักฐานผ่าน
+- **Approval:** ~~**BLOCKED** — รอ Phase 3 มีหลักฐานผ่าน~~ → **ดำเนินการแล้ว** (2026-10-13, Phase 3 evidence = `4cb22eb`/CI#411 ✓): ลบ `AdminPreOrders.tsx` + redirect + nav ลบ 2 จุด + preset · tests 7 tests · grep = 0 · gates 0 ทั้ง 4 · 886/886 (EV-018)
 
 ---
 
@@ -136,4 +136,5 @@
 - 2026-10-13 — Phase 3 ดำเนินการเสร็จตาม Owner authorization (อนุมัติเขียน) — เหตุผล: Owner สั่ง "เริ่มจาก Documentation Commit → Git/CI Verification → Phase 3" — ผล: EV-014, INV-11 = COVERED
 - 2026-10-13 — Phase 1 ดำเนินการเสร็จตาม Owner authorization (ลำดับต่อจาก Phase 3 ตาม OD-7) — ผล: EV-016, INV-15/INV-17 = COVERED
 - 2026-10-13 — Phase 2 ดำเนินการเสร็จตาม Owner authorization (ลำดับต่อจาก Phase 1 ตาม OD-7) — ผล: EV-017, INV-04 = COVERED · design ตาม OD-4 ตรงตัวอักษร (ไม่เข้า HARD STOP)
+- 2026-10-13 — Phase 4 ดำเนินการเสร็จ (ปลดบล็อกด้วย Phase 3 evidence `4cb22eb`) — ผล: EV-018, INV-12 = COVERED · grep AdminPreOrders = 0
 

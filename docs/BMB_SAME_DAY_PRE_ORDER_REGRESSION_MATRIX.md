@@ -36,7 +36,7 @@
 | ID | Invariant | Existing tests | สถานะ | Phase | Acceptance assertion |
 |---|---|---|---|---|---|
 | INV-11 | `AdminOrders` mode filter เปลี่ยนผลลัพธ์จริง (page-level) | `adminOrdersModeFilter.test.ts` (page-level, 6 tests — **ใหม่**) · `adminOrdersOp.test.ts:79-83` (API) · `ordersPaged.test.ts` · `preOrderQueue.test.ts:67` | **COVERED** (2026-10-13, EV-014) — regression พิสูจน์แล้ว: ถอด fix = 6/6 fail | **3 (DONE)** | page-level test ยืนยัน `filterMode` → `getOrdersPaged({orderMode})` ทั้ง 3 ค่า + pagination ถูก — ผ่านแล้ว |
-| INV-12 | bookmark `/admin/pre-orders` ยังใช้ได้และเห็นเฉพาะ PRE_ORDER หลังยุบ | ไม่มี (ไม่มี test ใดอ้าง `AdminPreOrders`) | **MISSING** | **4** | redirect + preset มี test · grep `AdminPreOrders` = 0 |
+| INV-12 | bookmark `/admin/pre-orders` ยังใช้ได้และเห็นเฉพาะ PRE_ORDER หลังยุบ | `adminPreOrdersConsolidation.test.ts` (7 tests — ใหม่: redirect source contract + preset page-level + recursive scan) | **COVERED** (2026-10-13, EV-018) | **4 (DONE)** | redirect + preset มี test ✓ · grep `AdminPreOrders` = 0 ✓ |
 | INV-13 | nav set เดียว — `flatten(ADMIN_NAV_GROUPS) === ADMIN_NAV_ITEMS` | มี invariant test ใน `adminUi`/`adminShell` (ต้องคง) | COVERED | 4 (คงเดิม) | test เดิมผ่านหลังแก้ L15/L68 |
 | INV-14 | `AdminKitchen` / `AdminMenuSchedule` / `AdminRounds` ยังแยกจากกัน | ไม่มี test เชิงโครงสร้าง | PARTIAL | 4 (checklist) | ไม่มีการแก้/ลบ 3 ไฟล์นี้ใน Phase 4 (ตรวจจาก diff) |
 | INV-12b | การยกเลิกออเดอร์ใช้ canonical `cancelOrder` RPC เท่ากันทั้งสองหน้าเดิม | `adminOrdersOp.test.ts:175-182` | COVERED | 4 | cancel path ไม่เปลี่ยน |
