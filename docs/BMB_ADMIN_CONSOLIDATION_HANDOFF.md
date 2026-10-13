@@ -176,4 +176,12 @@ npm run build
 
 **Owner decisions อนุมัติแล้ว (2026-10-13):** OD-1 A1 ก่อน/A2 deferred · OD-2 ตรวจ production ที่ `biteme-baby.com` · OD-3 สินค้าไร้สิทธิ์ทั้งสองโหมดไม่แสดงในพื้นที่สั่งซื้อ · OD-4 cart lock เป็นหลัก ห้ามเปลี่ยนโหมดเงียบ ๆ · OD-5 FoodTheater ใช้ eligibility ตามโหมด · OD-6 เอกสาร 4 ชิ้น + ไฟล์นี้ · OD-7 ลำดับ Phase 3 → 1 → 2 (Phase 4 รอ 3)
 
+---
+
+## 7. Business-model alignment (Owner ยืนยัน 2026-10-13) + checkpoint ล่าสุด
+
+- **Model ที่ยืนยันแล้ว:** PRE_ORDER = **2 เมนู/วัน** ต่อวันที่ publish · Admin ตั้ง schedule รายสัปดาห์ · delivery rounds = **เช้า/เที่ยง** · SAME_DAY รวมใน PRE_ORDER delivery plan ได้เมื่อ date/round/capacity/operational rules อนุญาต · canonical eligibility ยังเป็น authority · **RC-5 = BLOCKED ต่อ** (รอ SHA-level build binding)
+- **สถานะ checkpoint (2026-10-13):** Phase 5A = DONE (EV-019, CI#416) · Phase 5B = DONE (`f7bfab1`, CI#417, EV-020) · Phase 6 = DONE (`94664eb`, CI#418, EV-021) · **BM-1 audit = DONE (EV-022)** = documentation/design checkpoint เท่านั้น · Phase 7 = PENDING (test order / toggle settings = authorization เฉพาะ)
+- **Conflict ที่ต้อง Owner review ก่อน implement:** mixed cart ขัด OD-4 + schema ปัจจุบัน (`orders.order_mode` ค่าเดียว, `order_items` ไม่มี mode) — ข้อเสนอ **M1 = แยก order ต่อ delivery plan** vs M2 = item-level mode อยู่ใน EV-022 · **ห้าม implement business logic ใหม่ก่อน Owner เลือกสถาปัตยกรรม**
+
 
