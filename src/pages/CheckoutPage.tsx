@@ -673,7 +673,7 @@ export function CheckoutPage() {
         <h3 className="font-bold text-brand-accent mb-4">🛵 ช่องทางจัดส่ง</h3>
         <div className="flex items-start gap-3 p-3 rounded-lg border-2 border-brand-primary bg-orange-50">
           <div className="flex-1">
-            <div className="font-medium">ไบ๊มีเบบี้ Delivery (ระบบเลือกช่องทางให้)</div>
+            <div className="font-medium">Bite Me Baby Delivery (ระบบเลือกช่องทางให้)</div>
             <div className="text-xs text-brand-muted">
               เซิร์ฟเวอร์คำนวณระยะทาง ช่องทาง และค่าส่งจริงตอนสร้างออเดอร์ (ลูกค้าไม่ส่งค่าส่งเอง)
             </div>

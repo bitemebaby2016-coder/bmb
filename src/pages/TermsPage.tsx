@@ -10,7 +10,7 @@ export function TermsPage() {
         <section className="card">
           <h2 className="text-xl font-bold text-brand-accent mb-3">1. บทนำ</h2>
           <p className="text-brand-text-secondary">
-            โดยการใช้งานบริการ ไบ๊มีเบบี้ ("บริการ") คุณยอมรับข้อกำหนดเหล่านี้ หากไม่ยอมรับ กรุณาอย่าใช้บริการของเรา
+            โดยการใช้งานบริการ Bite Me Baby ("บริการ") คุณยอมรับข้อกำหนดเหล่านี้ หากไม่ยอมรับ กรุณาอย่าใช้บริการของเรา
           </p>
         </section>
 
@@ -56,7 +56,7 @@ export function TermsPage() {
         <section className="card">
           <h2 className="text-xl font-bold text-brand-accent mb-3">6. ข้อจำกัดความรับผิดชอบ</h2>
           <p className="text-brand-text-secondary">
-            ไบ๊มีเบบี้ จะไม่รับผิดชอบต่อความเสียหายใดๆ arising from การใช้บริการนี้ รวมถึงแต่ไม่จำกัดเพียง:
+            Bite Me Baby จะไม่รับผิดชอบต่อความเสียหายใดๆ arising from การใช้บริการนี้ รวมถึงแต่ไม่จำกัดเพียง:
           </p>
           <ul className="list-disc list-inside space-y-2 text-brand-text-secondary mt-2">
             <li>Food allergy matters — please inform us of any allergy before ordering</li>

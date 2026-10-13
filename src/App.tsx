@@ -84,8 +84,8 @@ const TermsPage = lazy(() => import('./pages/TermsPage').then(m => ({ default: m
 function LoadingSpinner() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 8, justifyContent: 'center', alignItems: 'center', minHeight: '200px' }}>
-      <MascotBadge pose="ready" size="md" alt="น้อง ไบ๊ กำลังโหลด" className="animate-bounce" loading="eager" />
-      <span className="text-sm text-brand-muted">น้อง ไบ๊ กำลังจัดเตรียมของ…</span>
+      <MascotBadge pose="ready" size="md" alt="น้อง Bite กำลังโหลด" className="animate-bounce" loading="eager" />
+      <span className="text-sm text-brand-muted">น้อง Bite กำลังจัดเตรียมของ…</span>
     </div>
   )
 }
@@ -268,7 +268,7 @@ export default function App() {
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
       
-      {/* ไบ๊ / AI entry moved to BottomNav ('ไบ๊') + BiteHero quick actions (UI v5) */}
+      {/* Bite / AI entry moved to BottomNav ('ไบ๊') + BiteHero quick actions (UI v5) */}
     </ErrorBoundary>
     </HelmetProvider>
     </BrandProvider>

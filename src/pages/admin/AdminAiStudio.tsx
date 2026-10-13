@@ -98,7 +98,7 @@ export function AdminAiStudio() {
       case 'portfolio':
         return [
           `✨ ผลงานล่าสุดจากครัวเรา${pf ? ` — ${pf.title}` : ''}`,
-          pf?.description ?? 'ทุกจานคือความตั้งใจของทีมครัว ไบ๊มีเบบี้',
+          pf?.description ?? 'ทุกจานคือความตั้งใจของทีมครัว Bite Me Baby',
           rev ? `ฟีดแบ็คจริงจากลูกค้า: "${rev.comment ?? ''}" ⭐${rev.rating}/5` : 'ขอบคุณลูกค้าทุกท่านที่ไว้ใจเรา 💛',
         ].join('\n')
       default:

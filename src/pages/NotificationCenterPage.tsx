@@ -33,7 +33,7 @@ const CHANNEL_ICON: Record<NotificationChannel, string> = {
 /** ช่อง Bite ใช้มาสคอตน้อง Bite แทนอีโมจิหุ่นยนต์ */
 function ChannelIcon({ channel }: { channel: NotificationChannel }) {
   if (channel === 'Bite') {
-    return <MascotBadge pose="recommend" size="sm" alt="น้อง ไบ๊" className="inline-block align-middle" />
+    return <MascotBadge pose="recommend" size="sm" alt="น้อง Bite" className="inline-block align-middle" />
   }
   return <span aria-hidden="true">{CHANNEL_ICON[channel]}</span>
 }
@@ -145,7 +145,7 @@ export function NotificationCenterPage() {
   return (
     <div className="max-w-2xl mx-auto px-4 py-6 space-y-4">
       <h1 className="text-2xl font-bold text-brand-accent">🔔 Notification Center</h1>
-      <p className="text-sm text-slate-500">แยกช่อง Transactional / Marketing / ไบ๊ / Operational — ปิดได้ต่อช่อง</p>
+      <p className="text-sm text-slate-500">แยกช่อง Transactional / Marketing / Bite / Operational — ปิดได้ต่อช่อง</p>
 
       <div className="grid grid-cols-2 gap-3">
         {NOTIFICATION_CHANNELS.map((c) => (

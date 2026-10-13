@@ -203,7 +203,7 @@ export function TalkToBite({ mode = 'overlay', initialPhase = 'landing', landing
 
   function requireAuth(): boolean {
     if (customer?.id) return true
-    pushAssistant('เรื่องนี้ต้องเข้าสู่ระบบก่อนนะครับ เพื่อให้ ไบ๊ จำออเดอร์เดิมของคุณได้อย่างปลอดภัย 🍊 กด "เข้าสู่ระบบ" เพื่อดำเนินการต่อ')
+    pushAssistant('เรื่องนี้ต้องเข้าสู่ระบบก่อนนะครับ เพื่อให้ Bite จำออเดอร์เดิมของคุณได้อย่างปลอดภัย 🍊 กด "เข้าสู่ระบบ" เพื่อดำเนินการต่อ')
     setBiteState('IDLE')
     return false
   }
@@ -233,7 +233,7 @@ export function TalkToBite({ mode = 'overlay', initialPhase = 'landing', landing
 
   async function handleRecommend() {
     setBiteState('RECOMMENDING')
-    pushAssistant('เดี๋ยวครับ ไบ๊ เลือกจากเมนูจริงของวันนี้ให้เลย 🍊')
+    pushAssistant('เดี๋ยวครับ Bite เลือกจากเมนูจริงของวันนี้ให้เลย 🍊')
     setTyping(true)
     try {
       const { getProducts: load } = await import('@/lib/bmbAdminApi_products')
@@ -241,7 +241,7 @@ export function TalkToBite({ mode = 'overlay', initialPhase = 'landing', landing
       if (products.length === 0) {
         pushAssistant('วันนี้ยังไม่มีเมนูที่สั่งได้ครับ แนะนำลองแวะมาอีกที หรือดูที่หน้าเมนูแทนครับ 🙏')
       } else {
-        push({ kind: 'products', id: nextId(), intro: 'เมนูที่ ไบ๊ แนะนำจากของจริงวันนี้ครับ:', products })
+        push({ kind: 'products', id: nextId(), intro: 'เมนูที่ Bite แนะนำจากของจริงวันนี้ครับ:', products })
       }
       setBiteState('IDLE')
     } catch {
@@ -255,7 +255,7 @@ export function TalkToBite({ mode = 'overlay', initialPhase = 'landing', landing
   // 🔥 เมนูขายดีวันนี้ — real featured/available picks (proxy for best sellers)
   async function handleBestSellers() {
     setBiteState('RECOMMENDING')
-    pushAssistant('ขายดีวันนี้จากของจริงครับ ไบ๊ เอามาให้เลย 🔥')
+    pushAssistant('ขายดีวันนี้จากของจริงครับ Bite เอามาให้เลย 🔥')
     setTyping(true)
     try {
       const { getProducts: load } = await import('@/lib/bmbAdminApi_products')
@@ -277,7 +277,7 @@ export function TalkToBite({ mode = 'overlay', initialPhase = 'landing', landing
   // ❤️ ของโปรด — pick from VERIFIED favorite categories
   async function handleFavorites() {
     setBiteState('RECOMMENDING')
-    pushAssistant('เดี๋ยวครับ ไบ๊ หยิบเมนูที่คุณชอบมาให้เลย ❤️')
+    pushAssistant('เดี๋ยวครับ Bite หยิบเมนูที่คุณชอบมาให้เลย ❤️')
     if (!requireAuth()) return
     setTyping(true)
     try {
@@ -330,7 +330,7 @@ export function TalkToBite({ mode = 'overlay', initialPhase = 'landing', landing
 
   async function handleOrderAgain() {
     setBiteState('THINKING')
-    pushAssistant('เดี๋ยวครับ ไบ๊ เช็กออเดอร์เดิมของคุณให้ก่อน…')
+    pushAssistant('เดี๋ยวครับ Bite เช็กออเดอร์เดิมของคุณให้ก่อน…')
     if (!requireAuth()) return
     setTyping(true)
     try {
@@ -339,7 +339,7 @@ export function TalkToBite({ mode = 'overlay', initialPhase = 'landing', landing
         (await import('@/lib/bmbAdminApi_products')).getProducts(),
       ])
       if (!orders || orders.length === 0) {
-        pushAssistant('ยังไม่มีประวัติออเดอร์ที่ร้านนี้เลยครับ อยากให้ ไบ๊ แนะนำเมนูแทนไหมครับ? 🍊')
+        pushAssistant('ยังไม่มีประวัติออเดอร์ที่ร้านนี้เลยครับ อยากให้ Bite แนะนำเมนูแทนไหมครับ? 🍊')
         setBiteState('IDLE')
         return
       }
@@ -373,13 +373,13 @@ export function TalkToBite({ mode = 'overlay', initialPhase = 'landing', landing
 
   async function handleCheckOrders() {
     setBiteState('THINKING')
-    pushAssistant('เดี๋ยวครับ ไบ๊ เช็กออเดอร์ของคุณให้ก่อน…')
+    pushAssistant('เดี๋ยวครับ Bite เช็กออเดอร์ของคุณให้ก่อน…')
     if (!requireAuth()) return
     setTyping(true)
     try {
       const orders = await getOrdersByCustomer(customer!.id)
       if (!orders || orders.length === 0) {
-        pushAssistant('ยังไม่มีออเดอร์ที่ร้านนี้เลยครับ อยากให้ ไบ๊ แนะนำเมนูแทนไหมครับ? 🍊')
+        pushAssistant('ยังไม่มีออเดอร์ที่ร้านนี้เลยครับ อยากให้ Bite แนะนำเมนูแทนไหมครับ? 🍊')
         setBiteState('IDLE')
         return
       }
@@ -590,7 +590,7 @@ export function TalkToBite({ mode = 'overlay', initialPhase = 'landing', landing
               type="button"
               onClick={handleClose}
               className="btn btn-outline btn-sm"
-              aria-label="ปิด Talk to ไบ๊"
+              aria-label="ปิด Talk to Bite"
               data-testid="ttb-close"
             >
               ✕
@@ -618,7 +618,7 @@ export function TalkToBite({ mode = 'overlay', initialPhase = 'landing', landing
           className="mt-6 btn btn-primary text-base px-8 py-3 rounded-full gap-2 shadow-lg"
           data-testid="ttb-talk"
         >
-          🎙 คุยกับ ไบ๊ ได้เลย
+          🎙 คุยกับ Bite ได้เลย
         </button>
         <p className="text-xs text-brand-muted mt-2">แตะแล้วพูด ฟัง → คิด → ตอบเสียง</p>
 
@@ -664,7 +664,7 @@ export function TalkToBite({ mode = 'overlay', initialPhase = 'landing', landing
           type="button"
           onClick={goLanding}
           className="btn btn-outline btn-sm"
-          aria-label="กลับไปหน้าแรกของ Talk to ไบ๊"
+          aria-label="กลับไปหน้าแรกของ Talk to Bite"
           data-testid="ttb-back"
         >
           ←
@@ -690,7 +690,7 @@ export function TalkToBite({ mode = 'overlay', initialPhase = 'landing', landing
           <span className="text-xs font-semibold text-brand-primary bg-brand-bg rounded-full px-2 py-1" title="สินค้าในตะกร้า">
             🛒 {cartCount}
           </span>
-          <button type="button" onClick={handleClose} className="btn btn-outline btn-sm" aria-label="ปิด Talk to ไบ๊" data-testid="ttb-close-2">
+          <button type="button" onClick={handleClose} className="btn btn-outline btn-sm" aria-label="ปิด Talk to Bite" data-testid="ttb-close-2">
             ✕
           </button>
         </div>
@@ -741,7 +741,7 @@ export function TalkToBite({ mode = 'overlay', initialPhase = 'landing', landing
             return (
               <div key={m.id} className="space-y-2" data-testid="ttb-products">
                 <p className="text-xs text-brand-muted">{m.intro}</p>
-                <div className="theater-strip" role="list" aria-label="เมนูที่ ไบ๊ นำเสนอ">
+                <div className="theater-strip" role="list" aria-label="เมนูที่ Bite นำเสนอ">
                   {m.products.map((p) => (
                     <div key={p.id} role="listitem">
                       <RecommendationCard
@@ -805,7 +805,7 @@ export function TalkToBite({ mode = 'overlay', initialPhase = 'landing', landing
         {typing && (
           <div className="flex justify-start">
             <div className="card bg-brand-bg border border-brand-border flex items-center gap-2 px-3 py-2">
-              <span className="text-xs text-brand-muted">ไบ๊ กำลัง…</span>
+              <span className="text-xs text-brand-muted">Bite กำลัง…</span>
             </div>
           </div>
         )}
@@ -874,7 +874,7 @@ export function TalkToBite({ mode = 'overlay', initialPhase = 'landing', landing
                 }`}
                 data-testid="ttb-mic"
               >
-                {listening ? '● ● ● กำลังฟัง… แตะเพื่อหยุด' : '🎙 คุยกับ ไบ๊ ได้เลย'}
+                {listening ? '● ● ● กำลังฟัง… แตะเพื่อหยุด' : '🎙 คุยกับ Bite ได้เลย'}
               </button>
             ) : (
               <button

@@ -147,7 +147,7 @@ export function CategorySections({
               <MascotBadge
                 pose={pose}
                 size="sm"
-                alt={`น้อง ไบ๊ ประจำหมวด ${cat.name}`}
+                alt={`น้อง Bite ประจำหมวด ${cat.name}`}
                 className="section-float-mascot"
               />
               <span>{cat.icon ? `${cat.icon} ` : ''}{cat.name}</span>
@@ -172,7 +172,7 @@ export function CategorySections({
             <MascotBadge
               pose={pose}
               size="sm"
-              alt={`น้อง ไบ๊ ประจำหมวด ${cat.name}`}
+              alt={`น้อง Bite ประจำหมวด ${cat.name}`}
               className="section-float-mascot"
             />
             <span>{cat.icon ? `${cat.icon} ` : ''}{cat.name}</span>

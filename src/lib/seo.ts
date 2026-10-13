@@ -11,7 +11,7 @@ export const SITE_CONFIG = {
   url: 'https://biteme-baby.com',
   description: 'ร้านอาหารไทยจัดส่งถึงบ้านในรัศมี 5 กม. จากตัวเมืองจันทบุรี ให้บริการรอบเช้า กลางวัน เย็น ส่งด้วยรถไฟฟ้าอัจฉริยะ',
   ogImage: '/og-image.png',
-  keywords: ['สั่งอาหารจันทบุรี', 'อาหารจัดส่ง', 'ร้านอาหารเมืองจันทบุรี', 'ไบ๊มีเบบี้', 'ส่งอาหารจันทบุรี', 'cloud kitchen จันทบุรี'],
+  keywords: ['สั่งอาหารจันทบุรี', 'อาหารจัดส่ง', 'ร้านอาหารเมืองจันทบุรี', 'Bite Me Baby', 'ส่งอาหารจันทบุรี', 'cloud kitchen จันทบุรี'],
 }
 
 /** Absolute page URL used for canonical / hreflang / og:url. */
@@ -93,7 +93,7 @@ export function getShopMeta(): SEOMeta {
 export function getMenuMeta(): SEOMeta {
   return {
     title: `เมนูอาหาร | ${SITE_CONFIG.name}`,
-    description: `ดูเมนูอาหารทั้งหมดของ ไบ๊มีเบบี้ สั่งออนไลน์ได้ ส่งถึงบ้านในรัศมี 5 กม.`,
+    description: `ดูเมนูอาหารทั้งหมดของ Bite Me Baby สั่งออนไลน์ได้ ส่งถึงบ้านในรัศมี 5 กม.`,
     keywords: [...SITE_CONFIG.keywords, 'menu food', 'อาหารจันทบุรี', 'order online'],
     ogImage: SITE_CONFIG.ogImage,
     url: seoUrl('/menu'),
@@ -113,7 +113,7 @@ export function getCartMeta(): SEOMeta {
 export function getCheckoutMeta(): SEOMeta {
   return {
     title: `ชำระเงิน | ${SITE_CONFIG.name}`,
-    description: `หน้าชำระเงิน สั่งซื้ออาหารจาก ไบ๊มีเบบี้`,
+    description: `หน้าชำระเงิน สั่งซื้ออาหารจาก Bite Me Baby`,
     keywords: [...SITE_CONFIG.keywords, 'ชำระเงิน', 'checkout', 'payment'],
     ogImage: SITE_CONFIG.ogImage, url: seoUrl('/checkout'), schema: {}
   }
@@ -149,7 +149,7 @@ export function getOrderTrackMeta(orderNumber: string): SEOMeta {
 export function getAboutMeta(): SEOMeta {
   return {
     title: `เกี่ยวกับเรา | ${SITE_CONFIG.name}`,
-    description: `เรียนรู้เกี่ยวกับ ไบ๊มีเบบี้ Cloud Kitchen ในเมืองจันทบุรี บริการจัดส่งอาหารสดใหม่คุณภาพสูง`,
+    description: `เรียนรู้เกี่ยวกับ Bite Me Baby Cloud Kitchen ในเมืองจันทบุรี บริการจัดส่งอาหารสดใหม่คุณภาพสูง`,
     keywords: [...SITE_CONFIG.keywords, 'about us', 'cloud kitchen'],
     ogImage: SITE_CONFIG.ogImage,
     url: seoUrl('/about'),
@@ -192,7 +192,7 @@ export function getBlogMeta(): SEOMeta {
 export function getContactMeta(): SEOMeta {
   return {
     title: `ติดต่อเรา | ${SITE_CONFIG.name}`,
-    description: `ติดต่อ ไบ๊มีเบบี้ สำหรับคำถาม ข้อเสนอแนะ หรือร่วมงานกับเรา`,
+    description: `ติดต่อ Bite Me Baby สำหรับคำถาม ข้อเสนอแนะ หรือร่วมงานกับเรา`,
     keywords: [...SITE_CONFIG.keywords, 'contact', 'ติดต่อเรา'],
     ogImage: SITE_CONFIG.ogImage,
     url: seoUrl('/contact'),
@@ -203,7 +203,7 @@ export function getContactMeta(): SEOMeta {
 export function getPrivacyMeta(): SEOMeta {
   return {
     title: `นโยบายความเป็นส่วนตัว | ${SITE_CONFIG.name}`,
-    description: `นโยบายความเป็นส่วนตัวในการใช้ข้อมูลส่วนบุคคลของคุณที่ ไบ๊มีเบบี้`,
+    description: `นโยบายความเป็นส่วนตัวในการใช้ข้อมูลส่วนบุคคลของคุณที่ Bite Me Baby`,
     keywords: [...SITE_CONFIG.keywords, 'privacy', 'ส่วนตัว', 'GDPR'],
     ogImage: SITE_CONFIG.ogImage, url: seoUrl('/privacy'), schema: {}
   }
@@ -212,7 +212,7 @@ export function getPrivacyMeta(): SEOMeta {
 export function getTermsMeta(): SEOMeta {
   return {
     title: `ข้อกำหนดในการใช้งาน | ${SITE_CONFIG.name}`,
-    description: `ข้อกำหนดและเงื่อนไขในการใช้งานบริการ ไบ๊มีเบบี้`,
+    description: `ข้อกำหนดและเงื่อนไขในการใช้งานบริการ Bite Me Baby`,
     keywords: [...SITE_CONFIG.keywords, 'terms', 'ข้อกำหนด', 'เงื่อนไข'],
     ogImage: SITE_CONFIG.ogImage, url: seoUrl('/terms'), schema: {}
   }
@@ -221,7 +221,7 @@ export function getTermsMeta(): SEOMeta {
 export function getPromotionsMeta(): SEOMeta {
   return {
     title: `โปรโมชั่น | ${SITE_CONFIG.name}`,
-    description: `ดูโปรโมชั่นและส่วนลดสุดพิเศษจาก ไบ๊มีเบบี้ คูปองโค้ดและข้อเสนอจำกัดเวลา`,
+    description: `ดูโปรโมชั่นและส่วนลดสุดพิเศษจาก Bite Me Baby คูปองโค้ดและข้อเสนอจำกัดเวลา`,
     keywords: [...SITE_CONFIG.keywords, 'promotions', 'โปรโมชั่น', 'คูปอง'],
     ogImage: SITE_CONFIG.ogImage,
     url: seoUrl('/promotions'),
@@ -232,7 +232,7 @@ export function getPromotionsMeta(): SEOMeta {
 export function getRewardsMeta(): SEOMeta {
   return {
     title: `รางวัลและแต้ม | ${SITE_CONFIG.name}`,
-    description: `สะสมแต้มแลกของขวัญกับโปรแกรม Loyalty ของ ไบ๊มีเบบี้`,
+    description: `สะสมแต้มแลกของขวัญกับโปรแกรม Loyalty ของ Bite Me Baby`,
     keywords: [...SITE_CONFIG.keywords, 'rewards', 'แต้มสะสม', 'loyalty'],
     ogImage: SITE_CONFIG.ogImage, url: seoUrl('/rewards'), schema: {}
   }
@@ -241,7 +241,7 @@ export function getRewardsMeta(): SEOMeta {
 export function getVoteMeta(): SEOMeta {
   return {
     title: `โหวตเมนู | ${SITE_CONFIG.name}`,
-    description: `ช่วยเลือกเมนูใหม่ของ ไบ๊มีเบบี้ โหวตเมนูที่คุณอยากกิน!`,
+    description: `ช่วยเลือกเมนูใหม่ของ Bite Me Baby โหวตเมนูที่คุณอยากกิน!`,
     keywords: [...SITE_CONFIG.keywords, 'vote', 'โหวต', 'เมนูใหม่'],
     ogImage: SITE_CONFIG.ogImage, url: seoUrl('/vote'), schema: {}
   }
@@ -250,7 +250,7 @@ export function getVoteMeta(): SEOMeta {
 export function getRandomMenuMeta(): SEOMeta {
   return {
     title: `สุ่มเมนู | ${SITE_CONFIG.name}`,
-    description: `ให้ ไบ๊มีเบบี้ สุ่มเมนูอร่อยให้คุณ ลองสุ่มเมนูวันนี้เลย!`,
+    description: `ให้ Bite Me Baby สุ่มเมนูอร่อยให้คุณ ลองสุ่มเมนูวันนี้เลย!`,
     keywords: [...SITE_CONFIG.keywords, 'random menu', 'สุ่มเมนู'],
     ogImage: SITE_CONFIG.ogImage, url: seoUrl('/random-menu'), schema: {}
   }
@@ -259,7 +259,7 @@ export function getRandomMenuMeta(): SEOMeta {
 export function getShareMeta(): SEOMeta {
   return {
     title: `เชิญเพื่อน รับแต้ม | ${SITE_CONFIG.name}`,
-    description: `เชิญเพื่อนมาสั่งอาหารกับ ไบ๊มีเบบี้ รับคูปองคนละ ฿30`,
+    description: `เชิญเพื่อนมาสั่งอาหารกับ Bite Me Baby รับคูปองคนละ ฿30`,
     keywords: [...SITE_CONFIG.keywords, 'share', 'เชิญเพื่อน', 'referral'],
     ogImage: SITE_CONFIG.ogImage, url: seoUrl('/share'), schema: {}
   }
@@ -267,7 +267,7 @@ export function getShareMeta(): SEOMeta {
 export function getViralMeta(): SEOMeta {
   return {
     title: `ไวรัล | ${SITE_CONFIG.name}`,
-    description: `เข้าร่วมกิจกรรมไวรัลของ ไบ๊มีเบบี้ เพื่อรับรางวัลพิเศษ`,
+    description: `เข้าร่วมกิจกรรมไวรัลของ Bite Me Baby เพื่อรับรางวัลพิเศษ`,
     keywords: [...SITE_CONFIG.keywords, 'viral', 'กิจกรรมไวรัล'],
     ogImage: SITE_CONFIG.ogImage, url: seoUrl('/viral'), schema: {}
   }
@@ -276,7 +276,7 @@ export function getViralMeta(): SEOMeta {
 export function getProfileMeta(): SEOMeta {
   return {
     title: `โปรไฟล์ | ${SITE_CONFIG.name}`,
-    description: `ดูประวัติการสั่งอาหาร แต้มสะสม และคูปองของคุณที่ ไบ๊มีเบบี้`,
+    description: `ดูประวัติการสั่งอาหาร แต้มสะสม และคูปองของคุณที่ Bite Me Baby`,
     keywords: [...SITE_CONFIG.keywords, 'profile', 'แต้มสะสม'],
     ogImage: SITE_CONFIG.ogImage, url: seoUrl('/profile'), schema: {}
   }
@@ -327,7 +327,7 @@ export function getReviewDetailMeta(productId: string): SEOMeta {
 export function getAdminMeta(): SEOMeta {
   return {
     title: `Admin Dashboard | ${SITE_CONFIG.name}`,
-    description: `แดชบอร์ดจัดการร้าน ไบ๊มีเบบี้ จัดการออเดอร์ เมนู สต็อก และโปรโมชั่น`,
+    description: `แดชบอร์ดจัดการร้าน Bite Me Baby จัดการออเดอร์ เมนู สต็อก และโปรโมชั่น`,
     keywords: [...SITE_CONFIG.keywords, 'admin', 'dashboard'],
     ogImage: SITE_CONFIG.ogImage, url: seoUrl('/admin'), schema: {}
   }

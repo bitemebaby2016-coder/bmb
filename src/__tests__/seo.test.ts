@@ -50,7 +50,7 @@ describe('SEO meta — stable, correct canonical, no rotation leakage', () => {
     const metas = [getHomeMeta(), getShopMeta(), getMenuMeta()]
     for (const m of metas) {
       expect(m.title).not.toContain('วันนี้อยากกิน')
-      expect(m.description).not.toContain('ไบ๊ ช่วย')
+      expect(m.description).not.toContain('Bite ช่วย')
     }
   })
 

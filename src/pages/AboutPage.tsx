@@ -3,13 +3,13 @@ import { Link } from 'react-router-dom'
 export function AboutPage() {
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold text-brand-accent mb-6">เกี่ยวกับ ไบ๊มีเบบี้</h1>
+      <h1 className="text-3xl font-bold text-brand-accent mb-6">เกี่ยวกับ Bite Me Baby</h1>
       
       <div className="prose prose-lg max-w-none">
         <div className="bg-brand-surface rounded-xl p-6 shadow-md mb-6">
           <h2 className="text-2xl font-bold text-brand-accent mb-4">🍽️ Cloud Kitchen Operating Platform</h2>
           <p className="text-brand-text-secondary leading-relaxed">
-            <strong>ไบ๊มีเบบี้</strong> คือแพลตฟอร์ม Cloud Kitchen ที่รวมระบบจัดการออเดอร์ 
+            <strong>Bite Me Baby</strong> คือแพลตฟอร์ม Cloud Kitchen ที่รวมระบบจัดการออเดอร์ 
             การควบคุมสต็อก ลูกค้า และระบบ AI มาไว้ในระบบเดียว สำหรับร้านค้าผู้ปรุงอาหารเมืองจันทบุรี
           </p>
         </div>

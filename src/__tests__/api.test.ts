@@ -446,7 +446,7 @@ describe('AI Model A Configuration', () => {
         return { data: null, error: { message: 'upstream 429' } }
       }
       return {
-        data: { data: { choices: [{ message: { content: 'สวัสดีค่ะ ยินดีต้อนรับสู่ ไบ๊มีเบบี้ ค่ะ 😊' } }] } },
+        data: { data: { choices: [{ message: { content: 'สวัสดีค่ะ ยินดีต้อนรับสู่ Bite Me Baby ค่ะ 😊' } }] } },
         error: null,
       }
     })

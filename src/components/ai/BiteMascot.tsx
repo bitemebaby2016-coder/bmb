@@ -282,7 +282,7 @@ export function BiteMascot({ userName, activeSection = 'home' }: BiteMascotProps
             onPointerMove={onBtnPointerMove}
             onPointerUp={onBtnPointerUp}
             onClick={handleTap}
-            aria-label="คุยกับน้อง ไบ๊ (ลากเพื่อย้ายตำแหน่ง)"
+            aria-label="คุยกับน้อง Bite (ลากเพื่อย้ายตำแหน่ง)"
             className="pointer-events-auto touch-none flex h-16 w-16 items-center justify-center rounded-full shadow-lg animate-float hover:scale-105 active:scale-95 transition-transform overflow-hidden cursor-grab active:cursor-grabbing bg-transparent"
             data-testid="bite-mascot"
           >

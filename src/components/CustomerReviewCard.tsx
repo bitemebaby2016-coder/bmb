@@ -130,15 +130,15 @@ export function CustomerReviewCard({ review, product, mode, deepLinkTo, ctaLabel
       <MascotBadge
         pose="peeking"
         size="sm"
-        alt="น้อง ไบ๊ โผล่มุมการ์ดรีวิว"
+        alt="น้อง Bite โผล่มุมการ์ดรีวิว"
         className="mascot-peek"
       />
 
-      {/* 3D Mascot "น้อง ไบ๊" จิ๋ว มุมล่างการ์ด (MascotBadge pose=heart — Mini Heart) */}
+      {/* 3D Mascot "น้อง Bite" จิ๋ว มุมล่างการ์ด (MascotBadge pose=heart — Mini Heart) */}
       <MascotBadge
         pose="heart"
         size="sm"
-        alt="น้อง ไบ๊ มิ่งขวัญร้าน ไบ๊มีเบบี้"
+        alt="น้อง Bite มิ่งขวัญร้าน Bite Me Baby"
         className="mascot-mini"
       />
     </article>

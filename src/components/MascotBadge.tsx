@@ -114,7 +114,7 @@ export function MascotBadge({ pose, size = 'sm', alt, className = '', loading = 
   }
 
   const sizeClass = size === 'fluid' ? '' : `mascot-badge--${size}`
-  const roleLabel = alt || `น้อง ไบ๊ — ${POSE_LABELS[pose]}`
+  const roleLabel = alt || `น้อง Bite — ${POSE_LABELS[pose]}`
 
   return (
     <img

@@ -10,10 +10,10 @@ export function SharePage() {
     const shareUrl = `https://biteme.co.th/ref/${referralCode}`
     let shareUrlFinal = shareUrl
     
-    if (platform === 'line') shareUrlFinal = `https://line.me/R/msg/text/?text=${encodeURIComponent('มาสั่งอาหารกับ ไบ๊มีเบบี้! ใช้โค้ด ' + referralCode + ' ลด 30 บาท!')}`
+    if (platform === 'line') shareUrlFinal = `https://line.me/R/msg/text/?text=${encodeURIComponent('มาสั่งอาหารกับ Bite Me Baby! ใช้โค้ด ' + referralCode + ' ลด 30 บาท!')}`
     else if (platform === 'facebook') shareUrlFinal = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`
-    else if (platform === 'twitter') shareUrlFinal = `https://twitter.com/intent/tweet?text=${encodeURIComponent('มาสั่งอาหารกับ ไบ๊มีเบบี้! ' + shareUrl)}`
-    else if (platform === 'whatsapp') shareUrlFinal = `https://wa.me/?text=${encodeURIComponent('มาสั่งอาหารกับ ไบ๊มีเบบี้! ใช้โค้ด ' + referralCode + ' ลด 30 บาท! ' + shareUrl)}`
+    else if (platform === 'twitter') shareUrlFinal = `https://twitter.com/intent/tweet?text=${encodeURIComponent('มาสั่งอาหารกับ Bite Me Baby! ' + shareUrl)}`
+    else if (platform === 'whatsapp') shareUrlFinal = `https://wa.me/?text=${encodeURIComponent('มาสั่งอาหารกับ Bite Me Baby! ใช้โค้ด ' + referralCode + ' ลด 30 บาท! ' + shareUrl)}`
     else if (platform === 'copy') {
       navigator.clipboard.writeText(shareUrl)
       showToast('คัดลอกลิงก์แล้ว!', 'success')

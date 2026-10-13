@@ -218,7 +218,7 @@ export function FoodTheater({ products, onCustomize, onPreOrder }: FoodTheaterPr
       {/* Empty state — real catalog says nothing sellable right now */}
       {picks.length === 0 ? (
         <div className="theater-empty" data-testid="theater-empty">
-          <MascotBadge pose="cooking" size="lg" alt="ไบ๊ กำลังเตรียมเมนู" />
+          <MascotBadge pose="cooking" size="lg" alt="Bite กำลังเตรียมเมนู" />
           <p className="text-sm text-[var(--theater-fg-muted)]">{editorial.emptyBody}</p>
           <button type="button" className="btn btn-primary" onClick={() => navigate('/menu')}>
             {editorial.menuCta}
@@ -232,7 +232,7 @@ export function FoodTheater({ products, onCustomize, onPreOrder }: FoodTheaterPr
             className="theater-track"
             role="list"
             tabIndex={0}
-            aria-label="เมนูที่ ไบ๊ เลือกมาให้ เลื่อนได้"
+            aria-label="เมนูที่ Bite เลือกมาให้ เลื่อนได้"
             onScroll={handleScroll}
             onKeyDown={(e) => {
               if (e.key === 'ArrowRight') { e.preventDefault(); go(index + 1) }
@@ -303,7 +303,7 @@ export function FoodTheater({ products, onCustomize, onPreOrder }: FoodTheaterPr
 
           {/* Stage floor — Bite stands on the glowing ring with a speech bubble (mockup) */}
           <div className="theater-greeting" data-testid="theater-greeting">
-            <MascotBadge pose="recommend" size="md" alt="ไบ๊ กำลังแนะนำเมนู" loading="eager" className="theater-greeting-mascot" />
+            <MascotBadge pose="recommend" size="md" alt="Bite กำลังแนะนำเมนู" loading="eager" className="theater-greeting-mascot" />
             <p className="theater-greeting-bubble" data-testid="theater-subheadline">{stage.subheadline}</p>
           </div>
 
@@ -319,7 +319,7 @@ export function FoodTheater({ products, onCustomize, onPreOrder }: FoodTheaterPr
 
           {/* Side picks — tap to bring one forward */}
           {others.length > 0 && (
-            <div className="theater-others" role="list" aria-label="อื่นที่ ไบ๊ เลือกมาให้">
+            <div className="theater-others" role="list" aria-label="อื่นที่ Bite เลือกมาให้">
               {others.slice(0, 3).map((p) => (
                 <button
                   key={p.id}
