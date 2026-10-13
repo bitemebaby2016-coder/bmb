@@ -8,23 +8,29 @@ KEY='CK-CONC-1'
 PHONE='0911111111'
 ITEMS='[{"product_id":"prod-1","quantity":1,"options":{},"special_request":null}]'
 
-# fixtures (contracts_123/124 ROLLBACK ไปแล้ว → สร้าง round/สินค้าวันนี้เอง)
+# fixtures (contracts_123/124 ROLLBACK ไปแล้ว → สร้างเองทั้งหมด)
 psql -X -v ON_ERROR_STOP=1 -q -c \
   "SELECT public.ensure_rounds_for_date((now() AT TIME ZONE 'Asia/Bangkok')::date);
    UPDATE public.delivery_rounds SET cutoff_time='23:59', max_capacity=50, current_count=0
     WHERE scheduled_date=(now() AT TIME ZONE 'Asia/Bangkok')::date;
-   UPDATE public.products SET is_available=true, available_same_day=true WHERE id='prod-1';"
+   UPDATE public.products SET is_available=true, available_same_day=true WHERE id='prod-1';
+   INSERT INTO auth.users (id, email, encrypted_password, created_at, updated_at, raw_app_meta_data, raw_user_meta_data, aud, role)
+   VALUES ('a1111111-1111-1111-1111-111111111111','conc@bmb.test','x',now(),now(),'{}','{}','authenticated','authenticated')
+   ON CONFLICT (id) DO NOTHING;"
 
 
 call() {
+  # 19 positional args (18 ของ wrapper ปัจจุบัน + p_client_submit_key) + claims
+  # เพื่อให้ 118 ผ่าน identity gate (v_uid := COALESCE(auth.uid(), p_customer_ref))
   psql -X -At -v ON_ERROR_STOP=1 -c "
+    SELECT set_config('request.jwt.claims', '{\"sub\":\"a1111111-1111-1111-1111-111111111111\",\"role\":\"authenticated\"}', false);
     SELECT public.create_order_with_items_i(
       '${ITEMS}'::jsonb,
       (SELECT id FROM public.delivery_rounds
         WHERE scheduled_date = (now() AT TIME ZONE 'Asia/Bangkok')::date
           AND status = 'active' LIMIT 1),
       'self_delivery', '', NULL, NULL, 'ConcQA', '${PHONE}', 'cash_on_delivery',
-      '', NULL, 0, 'SAME_DAY', NULL, '${KEY}')::text;"
+      '', NULL, 0, 'SAME_DAY', NULL, NULL, NULL, NULL, NULL, '${KEY}')::text;"
 }
 
 call > /tmp/conc_a.out 2>/tmp/conc_a.err &
