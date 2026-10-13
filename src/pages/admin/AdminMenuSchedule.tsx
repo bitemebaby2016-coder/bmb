@@ -8,7 +8,7 @@ import { Link } from 'react-router-dom'
 import { showToast } from '@/components/ui/ToastContainer'
 import { getProducts, getDeliveryRounds } from '@/lib/bmbAdminApi_products'
 import { getBusinessSettings } from '@/lib/bmbAdminApi_settings'
-import { setMenuSchedule, publishMenuSchedule, getScheduleForDateAdmin, type ScheduleSetItem } from '@/lib/bmbMenuSchedule'
+import { setMenuSchedule, publishMenuSchedule, getScheduleForDateAdmin, getScheduleForWeek, isoWeekRange, summarizeWeek, checkPublishReady, type ScheduleSetItem, type MenuScheduleRow } from '@/lib/bmbMenuSchedule'
 import type { Product, DeliveryRound } from '@/types'
 
 const ROUND_KEY_OPTIONS = ['', 'morning', 'midday', 'evening']
@@ -18,7 +18,8 @@ export function AdminMenuSchedule() {
   const [maxDays, setMaxDays] = useState(50)
   const [products, setProducts] = useState<Product[]>([])
   const [rounds, setRounds] = useState<DeliveryRound[]>([])
-  const [rows, setRows] = useState<{ id: string; product_id: string; delivery_round_key: string | null; is_published: boolean; note: string }[]>([])
+  const [rows, setRows] = useState<MenuScheduleRow[]>([])
+  const [weekRows, setWeekRows] = useState<MenuScheduleRow[]>([])
   const [draft, setDraft] = useState<Record<string, string>>({}) // productId → round key ('' = all rounds, '__off__' = not on menu)
   const [loading, setLoading] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -27,7 +28,7 @@ export function AdminMenuSchedule() {
   useEffect(() => {
     void (async () => {
       const [prods, rnds, settings] = await Promise.all([getProducts(), getDeliveryRounds(), getBusinessSettings()])
-      setProducts(prods.filter((p) => !p.archived && p.is_available))
+      setProducts(prods) // raw list — selectable/valid filters derived per render (canonical)
       setRounds(rnds)
       const policy = (settings?.order_policy ?? {}) as Record<string, any>
       if (policy.preorder_max_days != null) setMaxDays(Number(policy.preorder_max_days) || 50)
@@ -42,8 +43,10 @@ export function AdminMenuSchedule() {
     setLoading(true)
     setServerError('')
     try {
-      const r = await getScheduleForDateAdmin(d)
+      const [ws, we] = isoWeekRange(d)
+      const [r, week] = await Promise.all([getScheduleForDateAdmin(d), getScheduleForWeek(ws, we)])
       setRows(r)
+      setWeekRows(week)
       const next: Record<string, string> = {}
       for (const row of r) next[row.product_id] = row.delivery_round_key ?? ''
       setDraft(next)
@@ -51,6 +54,14 @@ export function AdminMenuSchedule() {
       setLoading(false)
     }
   }
+
+  // ✅ Phase 1: canonical validity = not archived, available, PRE_ORDER-eligible.
+  // Client mirror only — publish_menu_schedule (migration 123) re-validates server-side.
+  const isProductValid = (id: string) =>
+    products.some((p) => p.id === id && !p.archived && p.is_available && (p.available_preorder ?? p.is_preorder ?? false))
+  const selectable = products.filter((p) => !p.archived && p.is_available && (p.available_preorder ?? p.is_preorder ?? false))
+  const weekSummary = summarizeWeek(isoWeekRange(date)[0], weekRows)
+  const publishReady = checkPublishReady(rows, isProductValid)
 
   const isPublished = rows.length > 0 && rows.every((r) => r.is_published)
 
@@ -117,15 +128,39 @@ export function AdminMenuSchedule() {
           )}
         </div>
 
+        {/* ✅ Phase 1 week strip — Owner #1: 14 entries/week = exactly 2/day × 7 days.
+            Color: green = published & exactly 2 · red = published แต่ count ≠ 2 (ผิดกฎ) ·
+            yellow = draft · white = ยังไม่มี schedule */}
+        <div className="flex flex-wrap gap-1 mb-4" data-testid="week-strip">
+          {weekSummary.map((d) => {
+            const sel = d.scheduled_date === date
+            const cls = d.published
+              ? (d.rows === 2 ? 'bg-green-100 text-green-800 border-green-300' : 'bg-red-100 text-red-800 border-red-300')
+              : (d.rows > 0 ? 'bg-yellow-50 text-yellow-800 border-yellow-300' : 'bg-white text-brand-muted border')
+            return (
+              <button
+                key={d.scheduled_date}
+                type="button"
+                onClick={() => setDate(d.scheduled_date)}
+                data-testid={`week-day-${d.scheduled_date}`}
+                className={`px-2 py-1 rounded-lg border text-xs font-medium ${cls} ${sel ? 'ring-2 ring-blue-400' : ''}`}
+                title={`${d.scheduled_date} — ${d.rows} entries · ${d.published ? 'PUBLISHED' : d.rows > 0 ? 'draft' : 'ว่าง'}`}
+              >
+                {d.scheduled_date.slice(5)} · {d.rows}/2 {d.published ? '✓' : ''}
+              </button>
+            )
+          })}
+        </div>
+
         {serverError && (
           <div data-testid="schedule-server-error" className="mb-4 p-3 rounded-lg bg-red-50 text-red-700 text-sm border border-red-200">
             Server validation: <b>{serverError}</b>
           </div>
         )}
 
-        <h3 className="font-bold text-brand-accent mb-2">เลือกสินค้าที่ขายได้ในวันนี้ (round key; ว่าง = ทุกรอบ)</h3>
+        <h3 className="font-bold text-brand-accent mb-2">เลือก 2 เมนู PRE_ORDER ของวันนี้ (round key; ว่าง = ทุกรอบ) — draft ได้ไม่จำกัด, Publish ต้อง exactly 2 ที่ valid</h3>
         <div className="space-y-2 mb-4 max-h-96 overflow-y-auto">
-          {products.map((p) => {
+          {selectable.map((p) => {
             const on = draft[p.id] !== undefined && draft[p.id] !== '__off__'
             return (
               <div key={p.id} className="flex items-center justify-between gap-3 px-3 py-2 rounded-lg bg-white">
@@ -153,11 +188,16 @@ export function AdminMenuSchedule() {
         <div className="flex gap-2">
           <button onClick={handleSave} disabled={saving} data-testid="schedule-save" className="btn btn-primary">💾 Save (replace-all)</button>
           {!isPublished ? (
-            <button onClick={() => handlePublish(true)} disabled={saving || rows.length === 0} data-testid="schedule-publish" className="btn btn-outline">📢 Publish</button>
+            <button onClick={() => handlePublish(true)} disabled={saving || !publishReady.ready} data-testid="schedule-publish" className="btn btn-outline">📢 Publish</button>
           ) : (
             <button onClick={() => handlePublish(false)} disabled={saving} className="btn btn-outline">🔕 Unpublish</button>
           )}
         </div>
+        {!publishReady.ready && publishReady.reason && (
+          <p className="text-xs text-amber-600 mt-2" data-testid="publish-reason">
+            {publishReady.reason} — server บังคับเช่นกัน (ERR_MENU_COUNT_INVALID / ERR_PRODUCT_INVALID, migration 123)
+          </p>
+        )}
         {rows.length === 0 && !loading && <p className="text-xs text-brand-muted mt-2">ยังไม่มี schedule ของวันนี้ — Publish ต้อง Save ก่อน</p>}
       </div>
 
@@ -170,8 +210,12 @@ export function AdminMenuSchedule() {
             {rows.map((r) => {
               const prod = products.find((p) => p.id === r.product_id)
               return (
-                <li key={r.id}>
-                  {r.is_published ? '✅' : '🟡'} <b>{prod?.name ?? r.product_id}</b> — round: {r.delivery_round_key || 'ทุกรอบ'} {r.note ? `· ${r.note}` : ''}
+                <li key={r.id} data-testid={`effective-${r.product_id}`}>
+                  {r.is_published ? '✅' : '🟡'} <b>{prod?.name ?? r.product_id}</b> — round: {r.delivery_round_key || 'ทุกรอบ'}{' '}
+                  {!isProductValid(r.product_id) && (
+                    <span className="text-red-600 font-bold">⚠️ ถูกปิด/ไม่ผ่านเกณฑ์ PRE_ORDER — Publish จะถูก server ปฏิเสธ</span>
+                  )}{' '}
+                  {r.note ? `· ${r.note}` : ''}
                 </li>
               )
             })}

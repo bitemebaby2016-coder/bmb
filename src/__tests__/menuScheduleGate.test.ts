@@ -45,7 +45,7 @@ describe('CAT-02 · order-time gate via canonical create_order path (mock mirror
 
   it('control: published schedule day, on-menu product → order created', async () => {
     futureRound()
-    await setMenuSchedule(TOMORROW, [{ product_id: 'prod-1' }])
+    await setMenuSchedule(TOMORROW, [{ product_id: 'prod-1' }, { product_id: 'prod-5' }])
     await publishMenuSchedule(TOMORROW, true)
     const res = await preOrder('prod-1')
     expect(res.error).toBeNull()
@@ -54,7 +54,7 @@ describe('CAT-02 · order-time gate via canonical create_order path (mock mirror
 
   it('off-menu product on a published-schedule day → ERR_PRODUCT_NOT_ON_MENU', async () => {
     futureRound()
-    await setMenuSchedule(TOMORROW, [{ product_id: 'prod-1' }])
+    await setMenuSchedule(TOMORROW, [{ product_id: 'prod-1' }, { product_id: 'prod-5' }])
     await publishMenuSchedule(TOMORROW, true)
     const res = await preOrder('prod-2')
     expect(res.error?.code).toBe('ERR_PRODUCT_NOT_ON_MENU')

@@ -66,6 +66,7 @@ export function createSupabaseMock(opts?: { failReadTable?: string; noAdmin?: bo
   function from(table: string) {
     let filters: Array<{ col: string; val: any }> = []
     let gteFilters: Array<{ col: string; val: any }> = []
+    let lteFilters: Array<{ col: string; val: any }> = []
     let inFilters: Array<{ col: string; vals: any[] }> = []
     let orderSpec: { col: string; ascending: boolean } | null = null
     let rangeSpec: { from: number; to: number } | null = null
@@ -81,6 +82,11 @@ export function createSupabaseMock(opts?: { failReadTable?: string; noAdmin?: bo
         const a = row[f.col]
         const b = f.val
         return (typeof a === 'number' || typeof b === 'number') ? Number(a) >= Number(b) : String(a) >= String(b)
+      }) &&
+      lteFilters.every(f => {
+        const a = row[f.col]
+        const b = f.val
+        return (typeof a === 'number' || typeof b === 'number') ? Number(a) <= Number(b) : String(a) <= String(b)
       }) &&
       inFilters.every(f => f.vals.includes(row[f.col]))
 
@@ -135,6 +141,7 @@ export function createSupabaseMock(opts?: { failReadTable?: string; noAdmin?: bo
     const builder: any = {
       eq(col: string, val: any) { filters.push({ col, val }); return builder },
       gte(col: string, val: any) { gteFilters.push({ col, val }); return builder },
+      lte(col: string, val: any) { lteFilters.push({ col, val }); return builder },
       in(col: string, vals: any[]) { inFilters.push({ col, vals }); return builder },
       order(col: string, opts?: { ascending?: boolean }) { orderSpec = { col, ascending: opts?.ascending ?? true }; return builder },
       limit(_n: number) { return builder },
@@ -1119,9 +1126,11 @@ if (name === 'customer_intelligence') {
           return { data: null, error: { code: 'ERR_PRODUCT_NOT_FOUND', message: 'ERR_PRODUCT_NOT_FOUND' } }
         }
       }
-      tables['menu_schedule'] = (tables['menu_schedule'] || []).filter((s: any) => s.scheduled_date !== pDate)
+      // Mirror migration 039 ON CONFLICT semantics: duplicate payload entries
+      // for the same (date, product) collapse to one row (last wins).
+      const byProduct = new Map<string, any>()
       for (const it of p.p_items) {
-        ;(tables['menu_schedule'] ||= []).push({
+        byProduct.set(String(it.product_id), {
           id: `ms-${pDate}-${it.product_id}`,
           scheduled_date: pDate,
           product_id: it.product_id,
@@ -1133,15 +1142,35 @@ if (name === 'customer_intelligence') {
           updated_at: new Date().toISOString(),
         })
       }
-      return { data: { ok: true, date: pDate, items: p.p_items.length, published: false }, error: null }
+      tables['menu_schedule'] = (tables['menu_schedule'] || []).filter((s: any) => s.scheduled_date !== pDate)
+      for (const row of byProduct.values()) (tables['menu_schedule'] ||= []).push(row)
+      return { data: { ok: true, date: pDate, items: byProduct.size, published: false }, error: null }
     }
 
     if (name === 'publish_menu_schedule') {
       const p = params ?? {}
       if (mockNoAdmin) return { data: null, error: { code: 'ERR_FORBIDDEN', message: 'ERR_FORBIDDEN' } }
-      const rows = (tables['menu_schedule'] || []).filter((s: any) => s.scheduled_date === String(p.p_scheduled_date || ''))
+      const pDate2 = String(p.p_scheduled_date || '')
+      const rows = (tables['menu_schedule'] || []).filter((s: any) => s.scheduled_date === pDate2)
+      // === Migration 123 mirror (server remains the only authority) ===
+      if (p.p_publish !== false) {
+        if (rows.length === 0) {
+          return { data: null, error: { code: 'ERR_MENU_NOT_FOUND', message: `ERR_MENU_NOT_FOUND: no schedule for ${pDate2}` } }
+        }
+        if (rows.length !== 2) {
+          return { data: null, error: { code: 'ERR_MENU_COUNT_INVALID', message: `ERR_MENU_COUNT_INVALID: ${rows.length} entries (exactly 2 required)` } }
+        }
+        const prods = tables['products'] || []
+        const validCount = rows.filter((r: any) => {
+          const prod = prods.find((x: any) => x.id === r.product_id)
+          return !!prod && prod.is_available === true && (prod.available_preorder ?? prod.is_preorder ?? false) === true && prod.archived !== true
+        }).length
+        if (validCount !== 2) {
+          return { data: null, error: { code: 'ERR_PRODUCT_INVALID', message: `ERR_PRODUCT_INVALID: ${validCount} valid PRE_ORDER menus (disabled/archived/non-preorder product in schedule)` } }
+        }
+      }
       for (const r of rows) r.is_published = p.p_publish !== false
-      return { data: { ok: true, date: String(p.p_scheduled_date || ''), rows: rows.length }, error: null }
+      return { data: { ok: true, date: pDate2, rows: rows.length }, error: null }
     }
 
     return { data: null, error: { code: 'PGRST202', message: 'rpc not mocked' } }

@@ -52,6 +52,79 @@ export async function getScheduleForDateAdmin(scheduledDate: string): Promise<Me
   return (data || []) as MenuScheduleRow[]
 }
 
+// ---------- Weekly view (7-day strip — Owner #1: 14 entries/week, 2/day) ----------
+
+/** ISO week (Mon–Sun) containing `date` — returns [weekStart, weekEnd] YYYY-MM-DD. */
+export function isoWeekRange(date: string): [string, string] {
+  const d = new Date(date + 'T00:00:00')
+  const day = (d.getDay() + 6) % 7 // Mon=0 … Sun=6
+  d.setDate(d.getDate() - day)
+  const fmt = (x: Date) => `${x.getFullYear()}-${String(x.getMonth() + 1).padStart(2, '0')}-${String(x.getDate()).padStart(2, '0')}`
+  const start = fmt(d)
+  const endD = new Date(d)
+  endD.setDate(endD.getDate() + 6)
+  return [start, fmt(endD)]
+}
+
+/** All schedule rows of an inclusive [from, to] range (one query for the week strip). */
+export async function getScheduleForWeek(from: string, to: string): Promise<MenuScheduleRow[]> {
+  const { data, error } = await supabase
+    .from('menu_schedule').select('*')
+    .gte('scheduled_date', from).lte('scheduled_date', to)
+  if (error) { console.error('[getScheduleForWeek] Error:', error); return [] }
+  return (data || []) as MenuScheduleRow[]
+}
+
+export interface WeekDaySummary {
+  scheduled_date: string
+  rows: number
+  published: boolean
+}
+
+/**
+ * Convenience mirror of migration 123 publish rules for the week strip:
+ * per date = number of scheduled entries + whether the date is published.
+ * Server (publish_menu_schedule) remains the only authority.
+ */
+export function summarizeWeek(weekStart: string, rows: MenuScheduleRow[]): WeekDaySummary[] {
+  const out: WeekDaySummary[] = []
+  const d = new Date(weekStart + 'T00:00:00')
+  for (let i = 0; i < 7; i++) {
+    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+    const dayRows = rows.filter((r) => r.scheduled_date === key)
+    out.push({
+      scheduled_date: key,
+      rows: dayRows.length,
+      published: dayRows.length > 0 && dayRows.every((r) => r.is_published),
+    })
+    d.setDate(d.getDate() + 1)
+  }
+  return out
+}
+
+export interface PublishReadyResult {
+  ready: boolean
+  reason?: string
+}
+
+/**
+ * UI convenience mirror of migration 123 publish validation:
+ * exactly 2 rows, and every product is still valid & PRE_ORDER-eligible.
+ * Server re-validates — this only pre-disables the Publish button.
+ */
+export function checkPublishReady(
+  rows: MenuScheduleRow[],
+  isProductValid: (productId: string) => boolean,
+): PublishReadyResult {
+  if (rows.length === 0) return { ready: false, reason: 'ยังไม่มี schedule — Save ก่อน' }
+  if (rows.length !== 2) return { ready: false, reason: `ต้องมี exactly 2 เมนู (ตอนนี้ ${rows.length})` }
+  const invalid = rows.filter((r) => !isProductValid(r.product_id))
+  if (invalid.length > 0) {
+    return { ready: false, reason: `มีเมนูที่ถูกปิด/ไม่ผ่านเกณฑ์ PRE_ORDER ${invalid.length} รายการ` }
+  }
+  return { ready: true }
+}
+
 // ---------- Customer (published rows only — anon-safe via 056 policy) ----------
 
 export async function getPublishedScheduleForDate(scheduledDate: string): Promise<MenuScheduleRow[]> {

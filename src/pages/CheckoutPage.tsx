@@ -577,11 +577,11 @@ export function CheckoutPage() {
           <p className="text-xs text-brand-muted">จองล่วงหน้าได้ตั้งแต่ {minDate} เป็นต้นไป (lead time {leadDays} วัน)</p>
           {daySchedule.length > 0 ? (
             <div data-testid="schedule-banner" className="mt-2 p-2 rounded-lg bg-blue-50 border border-blue-200 text-xs text-blue-700">
-              📅 วันที่เลือกเปิดเมนูจำกัด ({daySchedule.length} รายการ) — สินค้าที่ไม่อยู่ในเมนูวันนี้ server จะปฏิเสธ (ERR_PRODUCT_NOT_ON_MENU)
+              📅 วันที่ {scheduledDate} เปิดเมนูจำกัด ({daySchedule.length} รายการ) — สินค้าที่ไม่อยู่ในเมนูวันนี้ server จะปฏิเสธ (ERR_PRODUCT_NOT_ON_MENU)
             </div>
           ) : (
             <div data-testid="schedule-banner" className="mt-2 p-2 rounded-lg bg-gray-50 border border-gray-200 text-xs text-brand-muted">
-              ไม่มีเมนูจำกัดพิเศษสำหรับวันนี้ — ใช้เงื่อนไข pre-order ปกติ
+              ไม่มีเมนูจำกัดพิเศษสำหรับวันที่ {scheduledDate} — ใช้เงื่อนไข pre-order ปกติ
             </div>
           )}
         </div>
