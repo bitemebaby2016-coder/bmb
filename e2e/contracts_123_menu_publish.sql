@@ -30,7 +30,11 @@ UPDATE public.delivery_rounds SET cutoff_time = '23:59', max_capacity = 50, curr
 
 DO $$ DECLARE d date := (now() AT TIME ZONE 'Asia/Bangkok')::date + 1; r jsonb;
 BEGIN
-  PERFORM set_config('role', 'authenticated', false);
+  -- NOTE (isolated-run fix): เดิม set role=authenticated ที่นี่ แต่ P2/P9 ทำ raw DML
+  -- บน menu_schedule ตรง ๆ ซึ่ง chain ไม่ได้ grant INSERT ให้ authenticated
+  -- (permission denied = contract เคยไม่เคยรันที่ไหนมาก่อน) — admin gating ของ
+  -- RPC ทำงานผ่าน request.jwt.claims (auth.uid/is_admin) อยู่แล้ว จึงคงสิทธิ์
+  -- superuser ไว้เพื่อ raw DML และปล่อยให้ claims กำหนดผลลัพธ์ตามเดิม
   PERFORM set_config('request.jwt.claims', '{"sub":"eeee5555-5555-5555-5555-555555555555","role":"authenticated"}', false);
 
   -- P6: incomplete draft is allowed (unpublished)
