@@ -56,7 +56,7 @@ BEGIN
 
   -- T1: first request with key → exactly one order
   v_r := public.create_order_with_items_i(v_items, v_round, 'self_delivery', '', NULL, NULL,
-    'QA', '0900000000', 'cash_on_delivery', '', NULL, 0, 'SAME_DAY', NULL, 'CK-T1');
+    'QA', '0900000000', 'cash_on_delivery', '', NULL, 0, 'SAME_DAY', NULL, NULL, NULL, NULL, NULL, 'CK-T1');
   ASSERT (v_r->>'ok')::boolean, 'T1 expected ok';
   v_n1 := v_r->>'order_number';
   ASSERT v_n1 IS NOT NULL, 'T1 order_number missing';
@@ -65,7 +65,7 @@ BEGIN
 
   -- T2: same key + same payload → same order, no new order
   v_r := public.create_order_with_items_i(v_items, v_round, 'self_delivery', '', NULL, NULL,
-    'QA', '0900000000', 'cash_on_delivery', '', NULL, 0, 'SAME_DAY', NULL, 'CK-T1');
+    'QA', '0900000000', 'cash_on_delivery', '', NULL, 0, 'SAME_DAY', NULL, NULL, NULL, NULL, NULL, 'CK-T1');
   ASSERT (v_r->>'order_number') = v_n1, 'T2 replay must return the SAME order_number';
   ASSERT pg_temp.c_orders() = v_base_orders + 1, 'T2 must not create a second order';
   ASSERT pg_temp.c_subs(NULL) = 1, 'T2 submission count unchanged';
@@ -81,7 +81,7 @@ BEGIN
   -- T3: same key + changed payload → rejected
   BEGIN
     PERFORM public.create_order_with_items_i(v_items2, v_round, 'self_delivery', '', NULL, NULL,
-      'QA', '0900000000', 'cash_on_delivery', '', NULL, 0, 'SAME_DAY', NULL, 'CK-T1');
+      'QA', '0900000000', 'cash_on_delivery', '', NULL, 0, 'SAME_DAY', NULL, NULL, NULL, NULL, NULL, 'CK-T1');
     RAISE EXCEPTION 'T3 expected idempotency conflict';
   EXCEPTION WHEN raise_exception THEN
     ASSERT SQLERRM LIKE '%ERR_IDEMPOTENCY_CONFLICT%', 'T3 got: ' || SQLERRM;
@@ -93,7 +93,7 @@ BEGIN
     '{"sub":"b2222222-2222-2222-2222-222222222222","role":"authenticated"}', false);
   BEGIN
     PERFORM public.create_order_with_items_i(v_items, v_round, 'self_delivery', '', NULL, NULL,
-      'Other', '0999999999', 'cash_on_delivery', '', NULL, 0, 'SAME_DAY', NULL, 'CK-T1');
+      'Other', '0999999999', 'cash_on_delivery', '', NULL, 0, 'SAME_DAY', NULL, NULL, NULL, NULL, NULL, 'CK-T1');
     RAISE EXCEPTION 'T4 expected idempotency conflict';
   EXCEPTION WHEN raise_exception THEN
     ASSERT SQLERRM LIKE '%ERR_IDEMPOTENCY_CONFLICT%', 'T4 got: ' || SQLERRM;
@@ -104,7 +104,7 @@ BEGIN
 
   -- T5: different keys → independent orders
   v_r := public.create_order_with_items_i(v_items, v_round, 'self_delivery', '', NULL, NULL,
-    'QA', '0900000000', 'cash_on_delivery', '', NULL, 0, 'SAME_DAY', NULL, 'CK-T5');
+    'QA', '0900000000', 'cash_on_delivery', '', NULL, 0, 'SAME_DAY', NULL, NULL, NULL, NULL, NULL, 'CK-T5');
   ASSERT (v_r->>'ok')::boolean AND (v_r->>'order_number') <> v_n1, 'T5 must create a distinct order';
   ASSERT pg_temp.c_orders() = v_base_orders + 2, 'T5 order count';
 
@@ -121,7 +121,7 @@ BEGIN
   PERFORM set_config('role','authenticated',false);
   BEGIN
     PERFORM public.create_order_with_items_i(v_items, v_round, 'self_delivery', '', NULL, NULL,
-      'QA', '0900000000', 'cash_on_delivery', '', NULL, 0, 'SAME_DAY', NULL, 'CK-T7');
+      'QA', '0900000000', 'cash_on_delivery', '', NULL, 0, 'SAME_DAY', NULL, NULL, NULL, NULL, NULL, 'CK-T7');
     RAISE EXCEPTION 'T7 expected product unavailable';
   EXCEPTION WHEN raise_exception THEN
     ASSERT SQLERRM LIKE '%ERR_PRODUCT_UNAVAILABLE%', 'T7 got: ' || SQLERRM;
@@ -133,12 +133,12 @@ BEGIN
   UPDATE public.products SET is_available = true WHERE id = 'prod-1';
   PERFORM set_config('role','authenticated',false);
   v_r := public.create_order_with_items_i(v_items, v_round, 'self_delivery', '', NULL, NULL,
-    'QA', '0900000000', 'cash_on_delivery', '', NULL, 0, 'SAME_DAY', NULL, 'CK-T7');
+    'QA', '0900000000', 'cash_on_delivery', '', NULL, 0, 'SAME_DAY', NULL, NULL, NULL, NULL, NULL, 'CK-T7');
   ASSERT (v_r->>'ok')::boolean, 'T7 retry failed';
   v_n2 := v_r->>'order_number';
   ASSERT pg_temp.c_orders() = v_base_orders + 4, 'T7 retry must create exactly one order';
   v_r := public.create_order_with_items_i(v_items, v_round, 'self_delivery', '', NULL, NULL,
-    'QA', '0900000000', 'cash_on_delivery', '', NULL, 0, 'SAME_DAY', NULL, 'CK-T7');
+    'QA', '0900000000', 'cash_on_delivery', '', NULL, 0, 'SAME_DAY', NULL, NULL, NULL, NULL, NULL, 'CK-T7');
   ASSERT (v_r->>'order_number') = v_n2, 'T7 replay number';
   ASSERT pg_temp.c_orders() = v_base_orders + 4, 'T7 replay must not create order';
 
@@ -160,7 +160,7 @@ BEGIN
     '{"sub":"b2222222-2222-2222-2222-222222222222","role":"authenticated"}', false);
   BEGIN
     PERFORM public.create_order_with_items_i(v_items, v_round, 'self_delivery', '', NULL, NULL,
-      'Other', '0999999999', 'cash_on_delivery', '', NULL, 0, 'SAME_DAY', NULL, 'CK-T1');
+      'Other', '0999999999', 'cash_on_delivery', '', NULL, 0, 'SAME_DAY', NULL, NULL, NULL, NULL, NULL, 'CK-T1');
     RAISE EXCEPTION 'T10 expected idempotency conflict';
   EXCEPTION WHEN raise_exception THEN
     ASSERT SQLERRM LIKE '%ERR_IDEMPOTENCY_CONFLICT%', 'T10 got: ' || SQLERRM;
