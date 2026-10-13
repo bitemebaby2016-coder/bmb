@@ -1,0 +1,69 @@
+# ISOLATED SQL contract tests — ephemeral PostgreSQL service (CI only).
+# แยกจาก ci.yml (production build path) อย่างเด็ดขาด: ไม่มี production
+# credentials, ไม่มี supabase URL fallback, DB หายไปพร้อม job ทุกครั้ง
+name: Contract Tests (isolated PostgreSQL)
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  sql-contracts:
+    name: Migrations + SQL contracts (ephemeral PG)
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: bmb_contract
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready --health-interval 5s --health-timeout 5s --health-retries 12
+    env:
+      PGHOST: localhost
+      PGPORT: '5432'
+      PGUSER: postgres
+      PGPASSWORD: postgres
+      PGDATABASE: bmb_contract
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install psql client
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq postgresql-client
+
+      - name: Prelude — Supabase stubs (roles/auth/storage)
+        run: psql -v ON_ERROR_STOP=1 -f e2e/ci/00_prelude_supabase_stubs.sql
+
+      - name: Apply migrations 001-123 (skip PROPOSED_* and 124_*)
+        run: |
+          set -euo pipefail
+          for f in supabase/migrations/*.sql; do
+            b=$(basename "$f")
+            case "$b" in PROPOSED_*|124_*) echo "== skip $b"; continue ;; esac
+            echo "== apply $b"
+            psql -v ON_ERROR_STOP=1 -q -f "$f"
+          done
+
+      - name: Contract 123 — menu publish enforcement (transaction ROLLBACK)
+        run: psql -v ON_ERROR_STOP=1 -f e2e/contracts_123_menu_publish.sql
+
+      - name: Apply migration 124 — idempotency (isolated only, NOT production)
+        run: psql -v ON_ERROR_STOP=1 -f supabase/migrations/124_order_submit_idempotency.sql
+
+      - name: Contract 124 — idempotency matrix (transaction ROLLBACK)
+        run: psql -v ON_ERROR_STOP=1 -f e2e/contracts_124_idempotency.sql
+
+      - name: Verify contracts left zero persisted test data
+        run: |
+          set -euo pipefail
+          test "$(psql -Atc 'SELECT count(*) FROM public.order_submissions')" = "0"
+          test "$(psql -Atc "SELECT count(*) FROM public.orders WHERE customer_phone IN ('0900000000','0999999999')")" = "0"
+          echo "cleanup OK — no persisted contract data"
+
+      - name: Concurrency — two sessions, same key (ephemeral leftovers OK)
+        run: bash e2e/ci/concurrency_124.sh
