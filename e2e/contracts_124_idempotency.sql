@@ -35,6 +35,7 @@ CREATE FUNCTION pg_temp.c_orders() RETURNS bigint LANGUAGE sql SECURITY DEFINER 
 CREATE FUNCTION pg_temp.c_subs(k text) RETURNS bigint LANGUAGE sql SECURITY DEFINER SET search_path = public AS $$ SELECT count(*) FROM public.order_submissions WHERE ($1 IS NULL OR client_submit_key = $1) $$;
 CREATE FUNCTION pg_temp.c_phone(ph text) RETURNS bigint LANGUAGE sql SECURITY DEFINER SET search_path = public AS $$ SELECT count(*) FROM public.orders WHERE customer_phone = $1 $$;
 CREATE FUNCTION pg_temp.sub_num(k text) RETURNS text LANGUAGE sql SECURITY DEFINER SET search_path = public AS $$ SELECT result->>'order_number' FROM public.order_submissions WHERE client_submit_key = $1 $$;
+CREATE FUNCTION pg_temp.c_pint(ph text) RETURNS bigint LANGUAGE sql SECURITY DEFINER SET search_path = public AS $$ SELECT count(*) FROM public.payment_intents pi JOIN public.orders o ON o.order_number = pi.order_number WHERE o.customer_phone = $1 $$;
 
 DO $$
 DECLARE
@@ -159,6 +160,11 @@ BEGIN
     'T8 stored replay result mismatch';
   ASSERT pg_temp.c_phone('0900000000') = 4,
     'T8 unexpected order count for phone';
+  -- T8b: submit/replay ไม่แตะ payment_intents เลย — ไม่มี intent/charge ซ้ำที่มาจาก
+  -- การ submit ซ้ำ (intent สร้างโดย RPC แยกต่อ order_number; ไม่มี order ที่สอง =
+  -- ไม่มีฐานสร้างซ้ำ · การชาร์จจริงอยู่นอก isolated tier)
+  ASSERT pg_temp.c_pint('0900000000') = 0,
+    'T8b replay must not create payment intents';
 
   -- T9: order_number uniqueness index ยังคงอยู่
   ASSERT (SELECT count(*) FROM pg_indexes
