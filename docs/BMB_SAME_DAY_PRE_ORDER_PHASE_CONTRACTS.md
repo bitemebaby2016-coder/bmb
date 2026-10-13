@@ -30,7 +30,7 @@
 - **Acceptance criteria:** เลือก `PRE_ORDER` แล้วจำนวนผลลัพธ์ ≠ `all` (เมื่อมีออเดอร์ทั้งสองโหมดใน test data) · gates 4 ตัว = 0 · CI success
 - **Risks:** ถ้าส่ง `orderMode` ผิดชนิด → type error (กันด้วย tsc) · `total` count ต้องนับแบบ filtered (API ทำอยู่แล้ว)
 - **Rollback:** `git revert` commit เดียว — ไม่มี schema/persistence ที่ต้องถอย
-- **Approval:** ยังไม่อนุมัติ implementation
+- **Approval:** Owner "PHASE 0 ACCEPTED → CONTROLLED EXECUTION" (2026-10-13) — **ดำเนินการแล้ว**: fix ที่ `AdminOrders.tsx:70-79` + `adminOrdersModeFilter.test.ts` (6 tests, พิสูจน์ regression แล้ว) · gates = 0 ทั้ง 4 (EV-014)
 
 ---
 
@@ -131,4 +131,5 @@
 **บันทึกเวอร์ชัน contract:** ทุกครั้งที่แก้ contract หลัง approval ให้เพิ่มบรรทัด "ปรับปรุง: วันที่ — เหตุผล — อนุมัติโดย Owner" ท้ายไฟล์นี้
 
 - 2026-10-13 — สร้างฉบับแรก (Phase 0) — โดย Owner approval "PHASE 0 DOCUMENTATION ONLY"
+- 2026-10-13 — Phase 3 ดำเนินการเสร็จตาม Owner authorization (อนุมัติเขียน) — เหตุผล: Owner สั่ง "เริ่มจาก Documentation Commit → Git/CI Verification → Phase 3" — ผล: EV-014, INV-11 = COVERED
 

@@ -67,12 +67,15 @@ export function AdminOrders() {
   const [expandedOrder, setExpandedOrder] = useState<string | null>(null)
   const [inspect, setInspect] = useState<{ history: any[]; audit: any[]; loading: boolean }>({ history: [], audit: [], loading: false })
 
-  const loadOrders = useCallback(async (p: number = page, status: string = filterStatus, mode: string = filterMode) => {
+  const loadOrders = useCallback(async (p: number = page, status: string = filterStatus, mode: 'all' | 'SAME_DAY' | 'PRE_ORDER' = filterMode) => {
     setLoadError('')
     const res = await getOrdersPaged({
       page: p,
       pageSize: PAGE_SIZE,
       status: status === 'all' ? undefined : status,
+      // RC-1 / Phase 3: mode filter ต้องเป็น server-side — ส่ง `orderMode` เข้า query จริง
+      // (bmbAdminApi_orders.ts:147 ทำ .eq('order_mode', ...) อยู่แล้ว) — 'all' = ไม่กรอง
+      orderMode: mode === 'all' ? undefined : mode,
       
       // TEN-07: filter by active admin branch context\n      branchId: useAdminTenantContextStore.getState().activeBranchId || undefined,
     })
