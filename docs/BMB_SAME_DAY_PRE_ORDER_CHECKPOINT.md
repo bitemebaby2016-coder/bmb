@@ -36,7 +36,7 @@
 
 ## 2. Baseline ที่ห้ามคลาดเคลื่อน (ตรวจอัตโนมัติก่อนเริ่มงานทุกครั้ง)
 
-- `HEAD == origin/main` (ปัจจุบัน: `fbe5ac6` — อัปเดตเมื่อมี commit ใหม่)
+- `HEAD == origin/main` (ปัจจุบัน: `3bacfd9` — อัปเดตเมื่อมี commit ใหม่)
 - untracked เดิม **13 ไฟล์** (png 10 + webp 3) อยู่ครบ + ไฟล์เพิ่มใหม่ในรอบนี้ (เช่นเอกสารนี้) ต้องระบุไว้ใน status
 - stash `local-edits-before-sync-2026-09-21` ไม่ถูกแตะ
 - Quality gates (fresh): `npx tsc --noEmit --incremental false` · `npm run lint` · `npm test` · `npm run build` = 0 ทุกตัว
