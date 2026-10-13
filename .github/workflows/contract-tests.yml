@@ -41,11 +41,13 @@ jobs:
 
       - name: Apply migrations 001-123 (inventory mode — collect ALL failures)
         run: |
+          set +e   # GitHub รันด้วย bash -e — inventory mode ต้องจัดการ exit เอง
           set -uo pipefail
           # preprocessor: แก้เฉพาะ TEMP COPY (ไฟล์ history ไม่ถูกแตะ)
           # 1) '}' ที่ใช้แทน dollar-quote ใน 035 (4 บรรทัด, manual-apply era)
-          # 2) แทรก DROP POLICY IF EXISTS ก่อนทุก CREATE POLICY (production =
-          #    "definition ล่าสุดชนะ" — chain มี CREATE POLICY ซ้ำ ≥34 จุดโดยไม่มี DROP)
+          # 2) แทรก DROP POLICY IF EXISTS ก่อนทุก CREATE POLICY ที่อยู่นอก
+          #    dollar-quote (production = "definition ล่าสุดชนะ" — chain มี
+          #    CREATE POLICY ซ้ำโดยไม่มี DROP)
           preprocess() {
             local src="$1" dst="$2"
             sed -E \
@@ -58,12 +60,15 @@ jobs:
               BEGIN { inq=0 }
               {
                 line=$0
-                if (line ~ /\$\$/) { n=gsub(/\$\$/,"&&"); if (n%2==1) inq=!inq }
+                tmp=line; n=0
+                while (match(tmp, /\$\$/)) { n++; tmp=substr(tmp, RSTART+RLENGTH) }
+                if (n%2==1) inq=!inq
                 if (!inq && line ~ /^[[:space:]]*CREATE POLICY[[:space:]]+/) {
                   t=line; sub(/^[[:space:]]*/,"",t); m=split(t,a,/[[:space:]]+/)
-                  if (m>=4 && a[3]=="ON") printf "DROP POLICY IF EXISTS %s ON %s;\n", a[2], a[4]
+                  if (m>=5 && a[1]=="CREATE" && a[2]=="POLICY" && a[4]=="ON")
+                    printf "DROP POLICY IF EXISTS %s ON %s;\n", a[3], a[5]
                 }
-                print
+                print line
               }
             ' "$dst" > "$dst.awk" && mv "$dst.awk" "$dst"
           }
