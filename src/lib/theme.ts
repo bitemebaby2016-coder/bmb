@@ -5,7 +5,7 @@
 // `html[data-theme]` — CSS variants ทั้งหมดอยู่ใน src/index.css
 // - 'light'    = Light Minimal (ค่าเริ่มต้น)
 // - 'dark'     = Dark Glass (charcoal + frosted glass)
-// - 'graphite' = Graphite Theatre (เทาถ่าน + แผ่นกระจกเงา + accent ส้ม Bite)
+// - 'graphite' = Deep Blue Intelligence (น้ำเงินลึก + แผ่นกระจก + accent ส้ม Bite)
 // index.html มี inline script อ่านค่าก่อน paint กันกระพริบ
 // MIGRATION (Owner 2026-10-10 เคยยกเลิก 'gray' — คงไว้เช่นเดิม):
 // - ค่าเก่า 'orange' -> 'light' · 'gray' -> 'dark' · 'dark' -> 'dark'
@@ -20,7 +20,7 @@ export const THEME_STORAGE_KEY = 'bmb-theme'
 export const THEME_LABELS: Record<ThemeName, string> = {
   light: 'สว่าง (Light Minimal)',
   dark: 'มืด (Dark Glass)',
-  graphite: 'เทาถ่าน (Graphite Theatre)',
+  graphite: 'น้ำเงินลึก (Deep Blue Intelligence)',
 }
 
 /** custom event ให้ component ที่ไม่ได้ถือ state (เช่น BackgroundLayer) รู้ว่าธีมเปลี่ยน */
@@ -52,7 +52,7 @@ export function applyTheme(theme: ThemeName): void {
   }
   // theme-color ของ browser chrome ให้ตรงธีม (light = brand orange #FF5E1E)
   const meta = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]')
-  if (meta) meta.content = theme === 'light' ? '#FF5E1E' : theme === 'graphite' ? '#1B1B20' : '#121214'
+  if (meta) meta.content = theme === 'light' ? '#FF5E1E' : theme === 'graphite' ? '#0A1026' : '#121214'
   window.dispatchEvent(new CustomEvent(THEME_CHANGE_EVENT, { detail: theme }))
 }
 

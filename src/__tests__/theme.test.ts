@@ -110,7 +110,7 @@ describe('theme manager (3 themes: light / dark / graphite)', () => {
       applyTheme('graphite')
       expect(document.documentElement.getAttribute('data-theme')).toBe('graphite')
       expect(localStorage.getItem(THEME_STORAGE_KEY)).toBe('graphite')
-      expect(meta.content).toBe('#1B1B20')
+      expect(meta.content).toBe('#0A1026')
 
       meta.remove()
     })
@@ -129,7 +129,7 @@ describe('theme manager (3 themes: light / dark / graphite)', () => {
       expect(Object.keys(THEME_LABELS).sort()).toEqual(['dark', 'graphite', 'light'])
       expect(THEME_LABELS.light).toContain('Light Minimal')
       expect(THEME_LABELS.dark).toContain('Dark Glass')
-      expect(THEME_LABELS.graphite).toContain('Graphite Theatre')
+      expect(THEME_LABELS.graphite).toContain('Deep Blue Intelligence')
     })
   })
 })

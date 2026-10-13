@@ -1258,7 +1258,7 @@ p { color: var(--color-brand-text-secondary); }
   color: var(--color-brand-muted);
 }
 html[data-theme='dark'] .fmc-media, html[data-theme='graphite'] .fmc-media {
-  background: linear-gradient(to bottom, #232329, #1B1B20);
+  background: linear-gradient(to bottom, var(--color-brand-surface-warm), var(--color-brand-surface));
 }
 html[data-theme='dark'] .fmc-status-pill, html[data-theme='graphite'] .fmc-status-pill {
   background: rgba(239, 68, 68, 0.18);
@@ -2179,18 +2179,18 @@ html[data-theme='dark'] div.text-brand-primary, html[data-theme='graphite'] div.
 html[data-theme='dark'] .category-chip:not(.text-white), html[data-theme='graphite'] .category-chip:not(.text-white) { color: #FFA680; }
 html[data-theme='dark'] .flad-cta, html[data-theme='graphite'] .flad-cta { color: #FF7F47; }
 /* gradient stops ที่ hardcode ขาว (header/hero ของแชท) ให้ตามธีม */
-html[data-theme='dark'] .to-white, html[data-theme='graphite'] .to-white { --tw-gradient-to: #1B1B20; }
-html[data-theme='dark'] .from-white, html[data-theme='graphite'] .from-white { --tw-gradient-from: #1B1B20; }
-html[data-theme='dark'] .via-white, html[data-theme='graphite'] .via-white { --tw-gradient-via: #1B1B20; }
+html[data-theme='dark'] .to-white, html[data-theme='graphite'] .to-white { --tw-gradient-to: var(--color-brand-surface); }
+html[data-theme='dark'] .from-white, html[data-theme='graphite'] .from-white { --tw-gradient-from: var(--color-brand-surface); }
+html[data-theme='dark'] .via-white, html[data-theme='graphite'] .via-white { --tw-gradient-via: var(--color-brand-surface); }
 /* Chat backdrop — fallback gradient เข้าชุดธีม (ปกติใช้ภาพ restaurant-bg) */
 html[data-theme='dark'] .ttb-backdrop, html[data-theme='graphite'] .ttb-backdrop {
   background:
     radial-gradient(1200px 520px at 85% -10%, rgba(255, 127, 71, 0.28), transparent 60%),
     radial-gradient(900px 480px at 0% 110%, rgba(255, 94, 30, 0.18), transparent 55%),
-    linear-gradient(165deg, #121214 0%, #1B1B20 45%, #232329 75%, #2A1710 100%);
+    linear-gradient(165deg, var(--color-brand-bg) 0%, var(--color-brand-surface) 45%, var(--color-brand-surface-warm) 75%, #2A1710 100%);
 }
 html[data-theme='dark'] .ttb-backdrop__tint, html[data-theme='graphite'] .ttb-backdrop__tint {
-  background: linear-gradient(180deg, rgba(18, 18, 20, 0.72) 0%, rgba(18, 18, 20, 0.55) 100%);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--color-brand-bg) 72%, transparent) 0%, color-mix(in srgb, var(--color-brand-bg) 55%, transparent) 100%);
 }
 /* ---- Dark Glass surfaces — frosted panel เฉพาะผิวที่เหมาะสม (fallback = พื้นทึบเดิม) ---- */
 @supports (backdrop-filter: blur(4px)) or (-webkit-backdrop-filter: blur(4px)) {
@@ -2293,71 +2293,74 @@ html[data-theme='dark'] .snack-card-coming-soon-overlay span, html[data-theme='g
 html[data-theme='dark'] .home-card-media, html[data-theme='graphite'] .home-card-media,
 html[data-theme='dark'] .drink-card-media, html[data-theme='graphite'] .drink-card-media,
 html[data-theme='dark'] .snack-card-media, html[data-theme='graphite'] .snack-card-media {
-  background: linear-gradient(to bottom, rgba(35, 35, 41, 0.9), var(--color-brand-bg));
+  background: linear-gradient(to bottom, color-mix(in srgb, var(--color-brand-surface-warm) 90%, transparent), var(--color-brand-bg));
 }
 html[data-theme='dark'] .border-orange-50, html[data-theme='graphite'] .border-orange-50 { border-color: var(--color-brand-border); }
 html[data-theme='dark'] .sticky-cart-bar, html[data-theme='graphite'] .sticky-cart-bar {
-  background: linear-gradient(180deg, rgba(27, 27, 32, 0.92), #121214);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--color-brand-surface) 92%, transparent), var(--color-brand-bg));
 }
 /* ============================================
-   GRAPHITE THEATRE — ธีมที่ 3 (เทาถ่านมีมิติ + แผ่นกระจกเงา + accent ส้ม Bite)
+   GRAPHITE THEATRE = Deep Blue Intelligence — ธีมที่ 3 (น้ำเงินลึก + แผ่นกระจก + accent ส้ม Bite)
    บล็อกนี้อยู่ท้ายไฟล์เพื่อให้ทับค่าของ selector ที่รวมกับ dark ด้านบน
    (html[data-theme='dark'], html[data-theme='graphite'] = ... ทั้ง 66 จุด)
    ทุกค่าอ่านผ่าน token เดิม — ไม่มี CSS ซ้ำรายหน้า
+   จุดสำคัญ: hex hardcode ในบล็อก shared ด้านบน ต้องเป็น var(--color-brand-*)
+   ไม่งั้น graphite จะถูกย้อมด้วยค่าของ dark (เทาถ่าน)
    ============================================ */
 html[data-theme='graphite'] {
   color-scheme: dark;
-  /* Graphite charcoal + silver เงา + brand orange ค่าเดียวกับธีมอื่น */
+  /* Deep Blue Intelligence — น้ำเงินลึกทั้งพื้น (แทนเทาถ่านที่ดูใกล้ดำ)
+     accent ยังเป็นส้มแบรนด์ค่าเดิม ตัดกับพื้นน้ำเงินแล้วคมขึ้น */
   --color-brand-primary: #FF5E1E;
   --color-brand-primary-light: #FF7F47;
   --color-brand-primary-dark: #E04B12;
   --color-brand-secondary: #FBBF24;
-  --color-brand-accent: #E9EAEE;
-  --color-brand-accent-light: #C6C8CF;
-  --color-brand-bg: #17181C;
-  --color-brand-bg-warm: #1D1E23;
-  --color-brand-surface: #212329;
-  --color-brand-surface-warm: #282A31;
-  --color-brand-text: #EDEEF2;
-  --color-brand-text-secondary: #C7CAD1;
-  --color-brand-muted: #9BA0AA;
-  --color-brand-border: #353841;
-  --color-brand-border-light: #2A2C33;
-  /* Glass-like panels (พอดี ไม่จัดเกิน) */
-  --glass-bg: rgba(33, 35, 41, 0.72);
-  --glass-border: rgba(216, 216, 222, 0.14);
+  --color-brand-accent: #DCE5F8;
+  --color-brand-accent-light: #B4C2E4;
+  --color-brand-bg: #0A1026;
+  --color-brand-bg-warm: #0D1530;
+  --color-brand-surface: #111A38;
+  --color-brand-surface-warm: #16214A;
+  --color-brand-text: #E9EEF9;
+  --color-brand-text-secondary: #BAC5DE;
+  --color-brand-muted: #8A97B8;
+  --color-brand-border: #22305C;
+  --color-brand-border-light: #1A254A;
+  /* Glass-like panels (พอดี ไม่จัดเกิน) — ขอบอมฟ้า */
+  --glass-bg: rgba(17, 26, 56, 0.74);
+  --glass-border: rgba(174, 197, 247, 0.16);
   --glass-blur: 16px;
 }
 html[data-theme='graphite'] body {
   background: linear-gradient(180deg, var(--color-brand-bg) 0%, var(--color-brand-bg-warm) 100%);
 }
-/* Graphite Theatre — Food Theater stage tokens (พื้นชาร์โค + เงาเงิน + ขอบส้ม) */
+/* Deep Blue Intelligence — Food Theater stage tokens (พื้นน้ำเงินลึก + เงาฟ้า + ขอบส้มแบรนด์) */
 html[data-theme='graphite'] {
   --theater-accent-rgb: 255, 127, 71;
   --theater-accent2-rgb: 251, 191, 36;
-  --theater-accent-light-rgb: 180, 183, 192;
+  --theater-accent-light-rgb: 150, 168, 214;
   --theater-hi: #FF7F47;
   --theater-hi-soft: #FFA680;
   --theater-price: #FF7F47;
-  --theater-fg: #EDEEF2;
-  --theater-fg-muted: #9BA0AA;
+  --theater-fg: #E9EEF9;
+  --theater-fg-muted: #8A97B8;
   --theater-btn-fg: #FFE7DC;
   --theater-chip-text: #FFEDD5;
-  --theater-stage-1: #1C1D22;
-  --theater-stage-2: #23242A;
-  --theater-stage-3: #1F2025;
-  --theater-stage-2-rgb: 35, 36, 42;
-  --theater-surface-dark: #2C2E36;
+  --theater-stage-1: #0C1330;
+  --theater-stage-2: #111B3C;
+  --theater-stage-3: #0E1636;
+  --theater-stage-2-rgb: 17, 27, 60;
+  --theater-surface-dark: #1A2856;
   --theater-shadow-rgb: 0, 0, 0;
-  --theater-card-top: rgba(33, 35, 41, 0.96);
-  --theater-card-bottom: rgba(18, 19, 23, 0.97);
-  --theater-stage-shadow: 0 24px 60px rgba(0, 0, 0, 0.5);
-  --theater-card-shadow: 0 26px 54px rgba(0, 0, 0, 0.58);
-  --theater-rec-shadow: 0 14px 32px rgba(0, 0, 0, 0.5);
-  --theater-edge-glow: inset 0 0 0 1px rgba(216, 216, 222, 0.16), 0 0 22px rgba(255, 127, 71, 0.16);
+  --theater-card-top: rgba(17, 26, 56, 0.96);
+  --theater-card-bottom: rgba(10, 16, 38, 0.97);
+  --theater-stage-shadow: 0 24px 60px rgba(2, 6, 23, 0.62);
+  --theater-card-shadow: 0 26px 54px rgba(2, 6, 23, 0.68);
+  --theater-rec-shadow: 0 14px 32px rgba(2, 6, 23, 0.6);
+  --theater-edge-glow: inset 0 0 0 1px rgba(174, 197, 247, 0.18), 0 0 22px rgba(255, 127, 71, 0.16);
   --theater-reflection: rgba(255, 127, 71, 0.1);
 }
-/* hardcoded dark shades ใน component override บางจุด — ปรับให้เข้าชาร์โคของ graphite */
+/* hardcoded dark shades ใน component override บางจุด — ปรับให้เข้ากับน้ำเงินลึก */
 html[data-theme='graphite'] .sticky-cart-bar {
-  background: linear-gradient(180deg, rgba(33, 35, 41, 0.94), #17181C);
+  background: linear-gradient(180deg, rgba(17, 26, 56, 0.95), #0A1026);
 }
