@@ -39,47 +39,65 @@ jobs:
       - name: Prelude — Supabase stubs (roles/auth/storage)
         run: psql -v ON_ERROR_STOP=1 -f e2e/ci/00_prelude_supabase_stubs.sql
 
-      - name: Apply migrations 001-123 (skip PROPOSED_* and 124_*)
+      - name: Apply migrations 001-123 (inventory mode — collect ALL failures)
         run: |
-          set -euo pipefail
+          set -uo pipefail
+          # preprocessor: แก้เฉพาะ TEMP COPY (ไฟล์ history ไม่ถูกแตะ)
+          # 1) '}' ที่ใช้แทน dollar-quote ใน 035 (4 บรรทัด, manual-apply era)
+          # 2) แทรก DROP POLICY IF EXISTS ก่อนทุก CREATE POLICY (production =
+          #    "definition ล่าสุดชนะ" — chain มี CREATE POLICY ซ้ำ ≥34 จุดโดยไม่มี DROP)
+          preprocess() {
+            local src="$1" dst="$2"
+            sed -E \
+              -e 's/^DO \} BEGIN$/DO $$ BEGIN/' \
+              -e 's/^END \};$/END $$;/' \
+              -e 's/^AS \}$/AS $$/' \
+              -e 's/^\} SECURITY DEFINER;/$$ SECURITY DEFINER;/' \
+              "$src" > "$dst"
+            awk '
+              BEGIN { inq=0 }
+              {
+                line=$0
+                if (line ~ /\$\$/) { n=gsub(/\$\$/,"&&"); if (n%2==1) inq=!inq }
+                if (!inq && line ~ /^[[:space:]]*CREATE POLICY[[:space:]]+/) {
+                  t=line; sub(/^[[:space:]]*/,"",t); m=split(t,a,/[[:space:]]+/)
+                  if (m>=4 && a[3]=="ON") printf "DROP POLICY IF EXISTS %s ON %s;\n", a[2], a[4]
+                }
+                print
+              }
+            ' "$dst" > "$dst.awk" && mv "$dst.awk" "$dst"
+          }
+          fail_count=0
+          fail_sum=""
           for f in supabase/migrations/*.sql; do
             b=$(basename "$f")
             case "$b" in PROPOSED_*|124_*) echo "== skip $b"; continue ;; esac
-            # CI-only compatibility shim: 035 เปลี่ยน return type ของ
-            # compute_delivery_fee (CREATE OR REPLACE ปฏิเสธการเปลี่ยน return type
-            # ของ function ที่มีอยู่) — production เคยผ่านยุค manual-apply
-            # ห้ามแก้ตัว migration เอง: drop ตัวเก่าก่อน replace = definition
-            # สุดท้ายเท่ากับที่ 035 ตั้งใจสร้าง
             if [ "$b" = "035_m1_closure_p0_blockers.sql" ]; then
-              echo "== shim: drop pre-035 compute_delivery_fee before replace"
-              psql -v ON_ERROR_STOP=1 -q -c \
-                "DROP FUNCTION IF EXISTS public.compute_delivery_fee(numeric,numeric,text,integer,numeric);"
-              # PROVEN DEFECT (fresh-DB provisioning gap): ไม่มี migration ตัวใดใน
-              # chain 001-123 เพิ่ม orders.delivery_address (001/003/004 มีเฉพาะ
-              # pre_orders.delivery_address) — production มีคอลัมน์นี้จาก manual-era
-              # drift เท่านั้น · 035 trigger ตัวแรกที่บังคับใช้ → CI-only shim เพิ่ม
-              # คอลัมน์ (IF NOT EXISTS = no-op บน schema ที่มีแล้ว) · รายงาน Owner:
-              # ต้องเสนอ migration fix แยก (ยังไม่ถูกอนุมัติ)
-              psql -v ON_ERROR_STOP=1 -q -c \
-                "ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS delivery_address TEXT DEFAULT '';"
-              # CI-only: ไฟล์ 035 (ตามที่ commit ไว้) พิมพ์ '}' แทน dollar-quote
-              # 4 บรรทัด (L121/134/144/154 — ยุค manual-apply ไม่เคยรันผ่าน psql
-              # ทั้งไฟล์) — ห้ามแก้ไฟล์ history: แก้บน TEMP COPY เฉย ๆ แล้ว apply
-              tmp35=$(mktemp)
-              sed -E \
-                -e 's/^DO \} BEGIN$/DO $$ BEGIN/' \
-                -e 's/^END \};$/END $$;/' \
-                -e 's/^AS \}$/AS $$/' \
-                -e 's/^\} SECURITY DEFINER;/$$ SECURITY DEFINER;/' \
-                "$f" > "$tmp35"
-              echo "== apply $b (via dollar-quote temp copy)"
-              psql -v ON_ERROR_STOP=1 -q -f "$tmp35"
-              rm -f "$tmp35"
-              continue
+              echo "== shims for 035 (documented CI-only; history file untouched)"
+              psql -q -c "DROP FUNCTION IF EXISTS public.compute_delivery_fee(numeric,numeric,text,integer,numeric);" || true
+              # PROVEN fresh-DB gap: ไม่มี migration 001-123 สร้าง orders.delivery_address
+              # (001/003/004 มีเฉพาะ pre_orders) — production มีจาก manual-era drift
+              psql -q -c "ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS delivery_address TEXT DEFAULT '';" || true
             fi
+            tmp=$(mktemp)
+            preprocess "$f" "$tmp"
             echo "== apply $b"
-            psql -v ON_ERROR_STOP=1 -q -f "$f"
+            out=$(psql -v ON_ERROR_STOP=1 -q -f "$tmp" 2>&1); rc=$?
+            rm -f "$tmp"
+            printf '%s\n' "$out"
+            if [ $rc -ne 0 ]; then
+              fail_count=$((fail_count+1))
+              fail_sum="$fail_sum $b"
+              msg=$(printf '%s\n' "$out" | grep -m1 'ERROR:' || echo "failed rc=$rc")
+              ln=$(printf '%s\n' "$out" | grep -m1 -oE ':[0-9]+: ERROR' | grep -oE '[0-9]+' | head -1 || true)
+              echo "::error file=supabase/migrations/$b,line=${ln:-1}::$msg"
+            fi
           done
+          if [ $fail_count -gt 0 ]; then
+            echo "::error::Migration inventory: $fail_count file(s) failed:$fail_sum"
+            exit 1
+          fi
+          echo "All migrations 001-123 applied cleanly on isolated DB"
 
       - name: Contract 123 — menu publish enforcement (transaction ROLLBACK)
         run: psql -v ON_ERROR_STOP=1 -f e2e/contracts_123_menu_publish.sql

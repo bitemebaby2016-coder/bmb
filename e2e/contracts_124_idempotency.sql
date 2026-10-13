@@ -15,7 +15,8 @@
 --                                    (ไม่มี order ที่สอง = ไม่มีฐานของ intent ซ้ำ)
 --   T9  order_number UNIQUE        → index ยังอยู่ครบ
 --   T10 unauthorized replay        → conflict, ไม่ leak เลขออเดอร์ของผู้อื่น
---   T11 definitions                → wrapper มี p_client_submit_key · ตัวเดิมยัง 14 args
+--   T11 definitions                → wrapper มี p_client_submit_key + ครบ 18 args · original ไม่มี key
+--   T13 direct-table access       → authenticated อ่าน order_submissions ตรง ๆ ไม่ได้
 -- ============================================================
 BEGIN;
 RESET ROLE;
@@ -30,6 +31,9 @@ SELECT public.ensure_rounds_for_date((now() AT TIME ZONE 'Asia/Bangkok')::date);
 UPDATE public.delivery_rounds SET cutoff_time = '23:59', max_capacity = 50, current_count = 0
  WHERE scheduled_date = (now() AT TIME ZONE 'Asia/Bangkok')::date;
 UPDATE public.products SET is_available = true, available_same_day = true WHERE id = 'prod-1';
+CREATE FUNCTION pg_temp.c_orders() RETURNS bigint LANGUAGE sql SECURITY DEFINER SET search_path = public AS $$ SELECT count(*) FROM public.orders $$;
+CREATE FUNCTION pg_temp.c_subs(k text) RETURNS bigint LANGUAGE sql SECURITY DEFINER SET search_path = public AS $$ SELECT count(*) FROM public.order_submissions WHERE ($1 IS NULL OR client_submit_key = $1) $$;
+CREATE FUNCTION pg_temp.c_phone(ph text) RETURNS bigint LANGUAGE sql SECURITY DEFINER SET search_path = public AS $$ SELECT count(*) FROM public.orders WHERE customer_phone = $1 $$;
 
 DO $$
 DECLARE
@@ -45,7 +49,7 @@ DECLARE
   v_items2 jsonb := '[{"product_id":"prod-1","quantity":2,"options":{},"special_request":null}]'::jsonb;
 BEGIN
   ASSERT v_round IS NOT NULL, 'fixture: active SAME_DAY round missing';
-  v_base_orders := (SELECT count(*) FROM public.orders);
+  v_base_orders := pg_temp.c_orders();
   PERFORM set_config('role', 'authenticated', false);
   PERFORM set_config('request.jwt.claims',
     '{"sub":"a1111111-1111-1111-1111-111111111111","role":"authenticated"}', false);
@@ -56,15 +60,23 @@ BEGIN
   ASSERT (v_r->>'ok')::boolean, 'T1 expected ok';
   v_n1 := v_r->>'order_number';
   ASSERT v_n1 IS NOT NULL, 'T1 order_number missing';
-  ASSERT (SELECT count(*) FROM public.orders) = v_base_orders + 1, 'T1 must create exactly one order';
-  ASSERT (SELECT count(*) FROM public.order_submissions WHERE client_submit_key = 'CK-T1') = 1, 'T1 submission row';
+  ASSERT pg_temp.c_orders() = v_base_orders + 1, 'T1 must create exactly one order';
+  ASSERT pg_temp.c_subs('CK-T1') = 1, 'T1 submission row';
 
   -- T2: same key + same payload → same order, no new order
   v_r := public.create_order_with_items_i(v_items, v_round, 'self_delivery', '', NULL, NULL,
     'QA', '0900000000', 'cash_on_delivery', '', NULL, 0, 'SAME_DAY', NULL, 'CK-T1');
   ASSERT (v_r->>'order_number') = v_n1, 'T2 replay must return the SAME order_number';
-  ASSERT (SELECT count(*) FROM public.orders) = v_base_orders + 1, 'T2 must not create a second order';
-  ASSERT (SELECT count(*) FROM public.order_submissions) = 1, 'T2 submission count unchanged';
+  ASSERT pg_temp.c_orders() = v_base_orders + 1, 'T2 must not create a second order';
+  ASSERT pg_temp.c_subs(NULL) = 1, 'T2 submission count unchanged';
+
+  -- T13: ?????????????? order_submissions ??? ? (REVOKE ALL + RLS ????? policy)
+  BEGIN
+    PERFORM set_config('role','authenticated',false);
+    PERFORM (SELECT count(*) FROM public.order_submissions);
+    RAISE EXCEPTION 'T13 expected insufficient_privilege';
+  EXCEPTION WHEN insufficient_privilege THEN NULL;
+  END;
 
   -- T3: same key + changed payload → rejected
   BEGIN
@@ -74,7 +86,7 @@ BEGIN
   EXCEPTION WHEN raise_exception THEN
     ASSERT SQLERRM LIKE '%ERR_IDEMPOTENCY_CONFLICT%', 'T3 got: ' || SQLERRM;
   END;
-  ASSERT (SELECT count(*) FROM public.orders) = v_base_orders + 1, 'T3 must not create order';
+  ASSERT pg_temp.c_orders() = v_base_orders + 1, 'T3 must not create order';
 
   -- T4: same key + different ownership → rejected (no data of the other party)
   PERFORM set_config('request.jwt.claims',
@@ -94,17 +106,19 @@ BEGIN
   v_r := public.create_order_with_items_i(v_items, v_round, 'self_delivery', '', NULL, NULL,
     'QA', '0900000000', 'cash_on_delivery', '', NULL, 0, 'SAME_DAY', NULL, 'CK-T5');
   ASSERT (v_r->>'ok')::boolean AND (v_r->>'order_number') <> v_n1, 'T5 must create a distinct order';
-  ASSERT (SELECT count(*) FROM public.orders) = v_base_orders + 2, 'T5 order count';
+  ASSERT pg_temp.c_orders() = v_base_orders + 2, 'T5 order count';
 
   -- T6: legacy caller (original function, no key) → compatibility contract unchanged
   v_r := public.create_order_with_items(v_items, v_round, 'self_delivery', '', NULL, NULL,
     'QA', '0900000000', 'cash_on_delivery', '', NULL, 0, 'SAME_DAY', NULL);
   ASSERT (v_r->>'ok')::boolean, 'T6 legacy call failed';
-  ASSERT (SELECT count(*) FROM public.orders) = v_base_orders + 3, 'T6 legacy order count';
-  ASSERT (SELECT count(*) FROM public.order_submissions) = 2, 'T6 legacy must not write submissions';
+  ASSERT pg_temp.c_orders() = v_base_orders + 3, 'T6 legacy order count';
+  ASSERT pg_temp.c_subs(NULL) = 2, 'T6 legacy must not write submissions';
 
   -- T7: failed transaction with key → nothing persisted → safe retry → exactly once
+  PERFORM set_config('role','none',false); -- catalog edit = superuser (RLS admin-only)
   UPDATE public.products SET is_available = false WHERE id = 'prod-1';
+  PERFORM set_config('role','authenticated',false);
   BEGIN
     PERFORM public.create_order_with_items_i(v_items, v_round, 'self_delivery', '', NULL, NULL,
       'QA', '0900000000', 'cash_on_delivery', '', NULL, 0, 'SAME_DAY', NULL, 'CK-T7');
@@ -112,26 +126,28 @@ BEGIN
   EXCEPTION WHEN raise_exception THEN
     ASSERT SQLERRM LIKE '%ERR_PRODUCT_UNAVAILABLE%', 'T7 got: ' || SQLERRM;
   END;
-  ASSERT (SELECT count(*) FROM public.order_submissions WHERE client_submit_key = 'CK-T7') = 0,
+  ASSERT pg_temp.c_subs('CK-T7') = 0,
     'T7 failed txn must leave no partial submission row';
-  ASSERT (SELECT count(*) FROM public.orders) = v_base_orders + 3, 'T7 failed txn must leave no order';
+  ASSERT pg_temp.c_orders() = v_base_orders + 3, 'T7 failed txn must leave no order';
+  PERFORM set_config('role','none',false);
   UPDATE public.products SET is_available = true WHERE id = 'prod-1';
+  PERFORM set_config('role','authenticated',false);
   v_r := public.create_order_with_items_i(v_items, v_round, 'self_delivery', '', NULL, NULL,
     'QA', '0900000000', 'cash_on_delivery', '', NULL, 0, 'SAME_DAY', NULL, 'CK-T7');
   ASSERT (v_r->>'ok')::boolean, 'T7 retry failed';
   v_n2 := v_r->>'order_number';
-  ASSERT (SELECT count(*) FROM public.orders) = v_base_orders + 4, 'T7 retry must create exactly one order';
+  ASSERT pg_temp.c_orders() = v_base_orders + 4, 'T7 retry must create exactly one order';
   v_r := public.create_order_with_items_i(v_items, v_round, 'self_delivery', '', NULL, NULL,
     'QA', '0900000000', 'cash_on_delivery', '', NULL, 0, 'SAME_DAY', NULL, 'CK-T7');
   ASSERT (v_r->>'order_number') = v_n2, 'T7 replay number';
-  ASSERT (SELECT count(*) FROM public.orders) = v_base_orders + 4, 'T7 replay must not create order';
+  ASSERT pg_temp.c_orders() = v_base_orders + 4, 'T7 replay must not create order';
 
   -- T8: duplicate retry cannot double payment intents — replay source is the SAME
   -- order_number (client สร้าง intent ต่อ order_number ใหม่เท่านั้น; ไม่มี order ที่สอง
   -- = ไม่มีฐานสร้าง intent ซ้ำ) และ result เก็บฉบับเต็ม
   ASSERT (SELECT result->>'order_number' FROM public.order_submissions WHERE client_submit_key = 'CK-T1') = v_n1,
     'T8 stored replay result mismatch';
-  ASSERT (SELECT count(*) FROM public.orders WHERE customer_phone = '0900000000') = 4,
+  ASSERT pg_temp.c_phone('0900000000') = 4,
     'T8 unexpected order count for phone';
 
   -- T9: order_number uniqueness index ยังคงอยู่
@@ -158,8 +174,15 @@ BEGIN
     'T11 wrapper missing p_client_submit_key';
   ASSERT (SELECT count(*) FROM pg_proc p JOIN pg_namespace n ON n.oid = p.pronamespace
            WHERE n.nspname = 'public' AND p.proname = 'create_order_with_items'
-             AND pg_get_function_identity_arguments(p.oid) NOT LIKE '%p_client_submit_key%') = 1,
-    'T11 original signature must stay key-less (14 args)';
+             AND pg_get_function_identity_arguments(p.oid) LIKE '%p_client_submit_key%') = 0,
+    'T11 original must stay key-less (no key param leaked into original name)';
+  -- T11b: wrapper ต้องครอบคลุม signature 18 ตัวปัจจุบัน (branch/channel/ref)
+  ASSERT (SELECT count(*) FROM pg_proc p JOIN pg_namespace n ON n.oid = p.pronamespace
+           WHERE n.nspname = 'public' AND p.proname = 'create_order_with_items_i'
+             AND pg_get_function_identity_arguments(p.oid) LIKE '%p_branch_id%'
+             AND pg_get_function_identity_arguments(p.oid) LIKE '%p_customer_ref%'
+             AND pg_get_function_identity_arguments(p.oid) LIKE '%p_client_submit_key%') = 1,
+    'T11b wrapper must cover the current 18-arg signature + key';
 END $$;
 
 ROLLBACK;
