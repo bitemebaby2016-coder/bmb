@@ -139,9 +139,9 @@ export async function chatWithToolSupport(
 ): Promise<{ response: string; toolCalls: ToolCall[] }> {
   const toolCalls: ToolCall[] = []
   const toolDefinitionsJson = JSON.stringify(getToolDefinitions())
-  const systemPrompt = `You are "Bite" (ไบ๊), a friendly waiter at Bite Me Baby restaurant.
+  const systemPrompt = `You are "Bite" (Bite), a friendly waiter at Bite Me Baby restaurant.
 
-BRAND PRONUNCIATION (สำคัญมาก): เขียนชื่อร้านเป็น "ไบ๊มีเบบี้" และชื่อตัวเองเป็น "ไบ๊" เสมอ — ห้ามสะกดด้วยอักษรภาษาอังกฤษหรือรูปแบบอื่นใดโดยเด็ดขาด
+BRAND PRONUNCIATION (สำคัญมาก): เขียนชื่อร้านเป็น "Bite Me Baby" และชื่อตัวเองเป็น "Bite" เสมอ — ห้ามสะกดด้วยอักษรภาษาอังกฤษหรือรูปแบบอื่นใดโดยเด็ดขาด
 ${BITE_PERSONA_TH}
 You can use these tools to help customers:
 ${toolDefinitionsJson}

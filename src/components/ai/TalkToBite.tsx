@@ -89,7 +89,7 @@ function nextId(): string {
 }
 
 const FALLBACK_GREETING =
-  'สวัสดีครับ ผมไบ๊ พนักงานเสิร์ฟของไบ๊มีเบบี้ 🍊 วันนี้อยากกินอะไรดีครับ?'
+  'สวัสดีครับ ผมBite พนักงานเสิร์ฟของBite Me Baby 🍊 วันนี้อยากกินอะไรดีครับ?'
 
 export function TalkToBite({ mode = 'overlay', initialPhase = 'landing', landingClose = true, onClose }: TalkToBiteProps) {
   const navigate = useNavigate()
@@ -938,7 +938,7 @@ export function TalkToBite({ mode = 'overlay', initialPhase = 'landing', landing
 function speakable(text: string): string {
   // TTS safety: ห้ามอ่านชื่อแบรนด์เป็นภาษาอังกฤษ — แปลงเป็นชื่อไทยที่ถูกต้องเสมอ
   // แทนที่เฉพาะตอนส่งเสียง ข้อความบนหน้ายังคงรูปแบบเดิม
-  // ชื่อไทยทุกรูปสะกด (ไบ๊ / ไบ๊ / ไบ๊) → "ไบ๊": วรรณยุกต์ ๊ ติดไม้หัวอากาศ ท์ ทำให้
+  // ชื่อไทยทุกรูปสะกด (Bite / Bite / Bite) → "Bite": วรรณยุกต์ ๊ ติดไม้หัวอากาศ ท์ ทำให้
   // แก้ชื่อมาสคอตให้ถูกต้อง (owner report: เคยออกเสียงผิด) — sanitizer บังคับชื่อที่ถูกต้อง
   const thai = /[\u0E00-\u0E7F]/.test(text)
   let t = text.replace(/[#*`_~]/g, '').slice(0, 800)
