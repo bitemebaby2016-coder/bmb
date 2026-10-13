@@ -24,7 +24,7 @@ import { sendGuestCheckoutOtp, createGuestCheckoutSession, describeGuestOtpError
 import { resolveAddOnLines } from '@/lib/addonDisplay'
 import { DistanceChecker } from '@/components/delivery/DistanceChecker'
 import { listRoundsForDate, type DeliveryRoundRow } from '@/lib/bmbAdminApi_rounds'
-import { getPublishedScheduleForDate, mirrorPreOrderScheduleGate, type MenuScheduleRow } from '@/lib/bmbMenuSchedule'
+import { getPublishedScheduleForDate, mirrorPreOrderScheduleGate, checkModeEligibility, type MenuScheduleRow } from '@/lib/bmbMenuSchedule'
 import { fetchServerDeliveryFee, feeUiState } from '@/lib/deliveryFeeApi'
 import { getBusinessSettings } from '@/lib/bmbAdminApi_settings'
 import { resolvePublicBranch } from '@/lib/brandResolver'
@@ -350,6 +350,26 @@ export function CheckoutPage() {
     if (orderMode === 'PRE_ORDER' && scheduledDate < addDays(today, leadDays)) {
       showToast(`จองล่วงหน้าต้องเลือกวันที่อย่างน้อย ${leadDays} วันข้างหน้า`, 'error')
       return
+    }
+
+    // ✅ WAVE 2B: stale-cart guard — product disabled/mode-restricted AFTER it
+    // entered the (persisted) cart must not reach the RPC. Server re-validates.
+    {
+      const elig = checkModeEligibility(
+        items.map((i) => ({
+          product_id: i.product.id,
+          name: i.product.name,
+          is_available: i.product.is_available === true,
+          preorder_ok: (i.product.available_preorder ?? (i.product as any).is_preorder ?? false) === true,
+          same_day_ok: (i.product.available_same_day ?? true) === true,
+        })),
+        orderMode,
+      )
+      if (!elig.ok) {
+        showToast(`สินค้าถูกปิดหรือไม่รองรับโหมด${orderMode === 'PRE_ORDER' ? ' PRE_ORDER ' : ' SAME_DAY '}: ${elig.rejected.join(', ')} — นำออกจากรถเข็นแล้วลองใหม่`, 'error')
+        setIsProcessing(false)
+        return
+      }
     }
 
     // ✅ CAT-02: canonical menu schedule mirror (migration 039 trg_menu_gate).

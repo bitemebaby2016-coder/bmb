@@ -125,6 +125,38 @@ export function checkPublishReady(
   return { ready: true }
 }
 
+// ---------- WAVE 2B: stale-cart eligibility guard (client mirror of 025 §5) ----------
+
+export interface EligibilityItem {
+  product_id: string
+  name?: string
+  is_available: boolean
+  preorder_ok: boolean
+  same_day_ok: boolean
+}
+
+export interface EligibilityResult {
+  ok: boolean
+  rejected: string[]
+}
+
+/**
+ * Client mirror of migration 025 §5 (ERR_PRODUCT_UNAVAILABLE /
+ * ERR_PRODUCT_MODE_NOT_ALLOWED) for carts hydrated from older persisted state:
+ * a product disabled (or mode-restricted) AFTER it entered the cart must not
+ * reach the order RPC. Server remains the only authority — this only blocks
+ * the submit early with a clear message instead of a late RPC rejection.
+ */
+export function checkModeEligibility(
+  items: EligibilityItem[],
+  mode: 'SAME_DAY' | 'PRE_ORDER',
+): EligibilityResult {
+  const rejected = items
+    .filter((it) => !it.is_available || (mode === 'PRE_ORDER' ? !it.preorder_ok : !it.same_day_ok))
+    .map((it) => it.name || it.product_id)
+  return { ok: rejected.length === 0, rejected }
+}
+
 // ---------- Customer (published rows only — anon-safe via 056 policy) ----------
 
 export async function getPublishedScheduleForDate(scheduledDate: string): Promise<MenuScheduleRow[]> {

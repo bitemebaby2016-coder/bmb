@@ -17,7 +17,7 @@ vi.mock('@/lib/supabase', async () => {
 })
 
 import { supabase } from '@/lib/supabase'
-import { setMenuSchedule, publishMenuSchedule, getScheduleForDateAdmin, getPublishedScheduleForDate, mirrorPreOrderScheduleGate, getScheduleForWeek, isoWeekRange, summarizeWeek, checkPublishReady } from '@/lib/bmbMenuSchedule'
+import { setMenuSchedule, publishMenuSchedule, getScheduleForDateAdmin, getPublishedScheduleForDate, mirrorPreOrderScheduleGate, getScheduleForWeek, isoWeekRange, summarizeWeek, checkPublishReady, checkModeEligibility, type EligibilityItem } from '@/lib/bmbMenuSchedule'
 
 const TOMORROW = new Date(Date.now() + 86400000).toISOString().slice(0, 10)
 
@@ -210,5 +210,26 @@ describe('PHASE 1 · weekly helpers (14 entries/week = 2/day × 7 days — UI mi
     expect(checkPublishReady([row('a'), row('b')], valid).ready).toBe(true)
     expect(checkPublishReady([row('a'), row('b')], (id) => id === 'a').ready).toBe(false)
     expect(checkPublishReady([row('a'), row('x')], valid).reason).toContain('ปิด')
+  })
+})
+
+describe('WAVE 2B · stale-cart eligibility guard (mirror of 025 §5 — client early block)', () => {
+  const mk = (over: Partial<EligibilityItem>): EligibilityItem => ({
+    product_id: 'p1', name: 'เมนู A', is_available: true, preorder_ok: true, same_day_ok: true, ...over,
+  })
+  it('disabled product → rejected for both modes', () => {
+    expect(checkModeEligibility([mk({ is_available: false })], 'PRE_ORDER').ok).toBe(false)
+    expect(checkModeEligibility([mk({ is_available: false })], 'SAME_DAY').rejected).toEqual(['เมนู A'])
+  })
+  it('PRE_ORDER-only product rejected in SAME_DAY and vice versa (canonical fallback)', () => {
+    expect(checkModeEligibility([mk({ same_day_ok: false })], 'SAME_DAY').ok).toBe(false)
+    expect(checkModeEligibility([mk({ preorder_ok: false })], 'PRE_ORDER').ok).toBe(false)
+    expect(checkModeEligibility([mk({ same_day_ok: false })], 'PRE_ORDER').ok).toBe(true)
+    expect(checkModeEligibility([mk({ preorder_ok: false })], 'SAME_DAY').ok).toBe(true)
+  })
+  it('all valid → ok; rejected list carries display names', () => {
+    expect(checkModeEligibility([mk({}), mk({ product_id: 'p2', name: 'เมนู B' })], 'PRE_ORDER').ok).toBe(true)
+    const r = checkModeEligibility([mk({ product_id: 'p9', name: 'ปิดแล้ว', is_available: false })], 'PRE_ORDER')
+    expect(r.rejected).toEqual(['ปิดแล้ว'])
   })
 })
