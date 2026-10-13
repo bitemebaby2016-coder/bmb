@@ -52,11 +52,21 @@ export function CheckoutPage() {
   const customer = useAuthStore((s) => s.customer)
   const justPlaced = useRef(false)
 
-  // ✅ Deep link ?mode=pre-order wins; otherwise the cart's locked mode decides.
-  const orderMode: OrderMode =
-    searchParams.get('mode') === 'pre-order' ? 'PRE_ORDER' : (order_mode ?? 'SAME_DAY')
+  // Phase 2 (RC-3 · OD-4): cart mode lock เป็นหลัก — deep link ?mode=pre-order
+  // ห้ามสลับโหมดเงียบ ๆ เมื่อตะกร้าล็อกโหมดอื่นอยู่ → lock ชนะ + แจ้งผู้ใช้ (ด้านล่าง)
+  const deepLinkPreOrder = searchParams.get('mode') === 'pre-order'
+  const lockLabel = order_mode === 'PRE_ORDER' ? 'สั่งล่วงหน้า' : 'ซื้อวันนี้'
+  const modeConflict = !!order_mode && deepLinkPreOrder && order_mode !== 'PRE_ORDER'
+  const orderMode: OrderMode = order_mode ?? (deepLinkPreOrder ? 'PRE_ORDER' : 'SAME_DAY')
   const today = todayStr()
   const minDate = orderMode === 'PRE_ORDER' ? addDays(today, 1) : today
+
+  useEffect(() => {
+    if (modeConflict) {
+      showToast(`ตะกร้าถูกล็อกโหมด ${lockLabel} อยู่ — ใช้โหมดเดิมตามที่เลือกไว้`, 'info')
+    }
+    // notify ครั้งเดียวตอน mount ถ้ามี conflict
+  }, [])
 
   const [scheduledDate, setScheduledDate] = useState(orderMode === 'PRE_ORDER' ? addDays(today, 1) : today)
   const [rounds, setRounds] = useState<DeliveryRoundRow[]>([])

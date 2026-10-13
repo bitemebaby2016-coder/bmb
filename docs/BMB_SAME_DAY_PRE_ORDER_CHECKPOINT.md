@@ -20,7 +20,7 @@
 | 0.3 | CI ของ `fbe5ac6` (ME-04) | **DONE** | 2026-10-13 09:06 | 2026-10-13 09:07 | GH Actions run #410 `completed/success` (updated 02:07:33Z) | ME-04 ปิดแล้ว |
 | 3 | Phase 3 — AdminOrders filter wiring (RC-1) | **DONE** | 2026-10-13 09:11 | 2026-10-13 09:31 | commit `4cb22eb` · CI run #411 `completed/success` · `AdminOrders.tsx:70-79` + `adminOrdersModeFilter.test.ts` (6 tests) · EV-014 | gates 4/4 = 0 · 866/866 tests · regression พิสูจน์แล้ว (ถอด fix = 6/6 fail) · HEAD == origin/main ✓ |
 | 1 | Phase 1 — Storefront eligibility (RC-2) | **DONE** | 2026-10-13 09:33 | 2026-10-13 09:44 | `talkToBite.ts` helpers + `homeProviders.ts` + `FoodTheater.tsx` + `HomePage.tsx` · `storefrontEligibility.test.ts` (8 tests) · EV-016 | gates 4/4 = 0 · 874/874 tests · proof: ถอด fix = 3 fail · caller survey: `handleReviewCta` แก้เพิ่ม · MenuPage/FoodMenuCard/homeShowcase ดีอยู่แล้ว |
-| 2 | Phase 2 — Cart/Checkout consistency (RC-3) | **PENDING** | — | — | — | หลัง Phase 1 · HARD STOP ถ้าไม่ตรง OD-4 |
+| 2 | Phase 2 — Cart/Checkout consistency (RC-3) | **DONE** | 2026-10-13 09:50 | 2026-10-13 10:07 | `HomePage.tsx` guard + `CheckoutPage.tsx:55-69` lock-wins · `homePreOrderModeGuard.test.ts` (2) + `checkoutModeLock.test.ts` (3) · EV-017 | gates 4/4 = 0 · 879/879 tests · proof 2 ทาง (guard/behavior เก่า = fail) · design ตาม OD-4 → ไม่เข้า HARD STOP |
 | 4 | Phase 4 — ยุบ AdminPreOrders (RC-6) | **PENDING** | — | — | — | **BLOCKED ตามสัญญา** — รอ Phase 3 มี evidence |
 | 5 | Phase 5 — Homepage UX / A1 (RC-4, RC-5) | **PENDING** | — | — | — | หลัง Phase 1 + ตรวจ build identity บน `biteme-baby.com` (OD-2) · A2=DEFERRED |
 | 6 | Phase 6 — Canonical field audit (RC-7) | **PENDING** | — | — | — | หลัง Phase 1 |

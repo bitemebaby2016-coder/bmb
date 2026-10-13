@@ -65,6 +65,7 @@
 - **HARD STOP:** ถ้า design ที่จะ implement ไม่ตรง OD-4 หรือกระทบ business rule → หยุดและถาม Owner ก่อน
 - **Risks:** การเปลี่ยน behavior deep-link กระทบ link เก่าที่แชร์ไว้ (ต้องกันโดยให้ user ยืนยัน ไม่ใช่ block)
 - **Rollback:** `git revert` เดียว
+- **Approval/ผล:** Owner "PHASE 0 ACCEPTED → CONTROLLED EXECUTION" (2026-10-13) — **ดำเนินการแล้ว**: `handlePreOrder` guard + `handleSameDay` feedback + `CheckoutPage` lock-wins (L55-69) · tests 5 tests (page-level 2 ไฟล์) · proof 2 ทาง = fail เมื่อถอด · gates 0 ทั้ง 4 · 879/879 (EV-017) · design = OD-4 ตามตัวอักษร (lock ชนะ + แจ้ง) ไม่มี business rule ใหม่ → ไม่เข้า HARD STOP
 
 ---
 
@@ -134,4 +135,5 @@
 - 2026-10-13 — สร้างฉบับแรก (Phase 0) — โดย Owner approval "PHASE 0 DOCUMENTATION ONLY"
 - 2026-10-13 — Phase 3 ดำเนินการเสร็จตาม Owner authorization (อนุมัติเขียน) — เหตุผล: Owner สั่ง "เริ่มจาก Documentation Commit → Git/CI Verification → Phase 3" — ผล: EV-014, INV-11 = COVERED
 - 2026-10-13 — Phase 1 ดำเนินการเสร็จตาม Owner authorization (ลำดับต่อจาก Phase 3 ตาม OD-7) — ผล: EV-016, INV-15/INV-17 = COVERED
+- 2026-10-13 — Phase 2 ดำเนินการเสร็จตาม Owner authorization (ลำดับต่อจาก Phase 1 ตาม OD-7) — ผล: EV-017, INV-04 = COVERED · design ตาม OD-4 ตรงตัวอักษร (ไม่เข้า HARD STOP)
 
