@@ -54,6 +54,20 @@ jobs:
               echo "== shim: drop pre-035 compute_delivery_fee before replace"
               psql -v ON_ERROR_STOP=1 -q -c \
                 "DROP FUNCTION IF EXISTS public.compute_delivery_fee(numeric,numeric,text,integer,numeric);"
+              # CI-only: ไฟล์ 035 (ตามที่ commit ไว้) พิมพ์ '}' แทน dollar-quote
+              # 4 บรรทัด (L121/134/144/154 — ยุค manual-apply ไม่เคยรันผ่าน psql
+              # ทั้งไฟล์) — ห้ามแก้ไฟล์ history: แก้บน TEMP COPY เฉย ๆ แล้ว apply
+              tmp35=$(mktemp)
+              sed -E \
+                -e 's/^DO \} BEGIN$/DO $$ BEGIN/' \
+                -e 's/^END \};$/END $$;/' \
+                -e 's/^AS \}$/AS $$/' \
+                -e 's/^\} SECURITY DEFINER;/$$ SECURITY DEFINER;/' \
+                "$f" > "$tmp35"
+              echo "== apply $b (via dollar-quote temp copy)"
+              psql -v ON_ERROR_STOP=1 -q -f "$tmp35"
+              rm -f "$tmp35"
+              continue
             fi
             echo "== apply $b"
             psql -v ON_ERROR_STOP=1 -q -f "$f"
