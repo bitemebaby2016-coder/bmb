@@ -5,6 +5,7 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { useCartStore, type IsolationCartItem } from '@/stores/useCartStore'
 import { planSplitCheckout, buildDeliveryManifest } from '@/lib/m1CheckoutPlan'
+import { submitSplitOrders, describeSplitResult } from '@/lib/m1Submit'
 
 const sameDayItem: IsolationCartItem = { id: 'p-1', name: 'ข้าวผัด', price: 50, quantity: 1, mode: 'SAME_DAY' }
 const preItem: IsolationCartItem = { id: 'p-2', name: 'ทุเรียนชีสเค้ก', price: 120, quantity: 1, mode: 'PRE_ORDER' }
@@ -122,6 +123,85 @@ describe('2D-2 · planSplitCheckout (deterministic, no RPC)', () => {
     const fb = planSplitCheckout([{ product_id: 'px', quantity: 1 }, { product_id: 'px', quantity: 1 }], ctx({ fallback_mode: 'SAME_DAY' }))
     expect(fb.ok).toBe(true)
     expect(fb.children[0].lines).toHaveLength(2) // duplicates kept — never silently merged
+  })
+})
+
+describe('3.1 · submitSplitOrders engine (injected createChild — no RPC)', () => {
+  const lock = () => ({ busy: false })
+  const child = (mode: 'SAME_DAY' | 'PRE_ORDER') => ({
+    order_mode: mode,
+    lines: [{ product_id: mode === 'SAME_DAY' ? 'p1' : 'p2', quantity: 1, line_mode: mode }],
+    delivery_round_id: 'r1',
+    scheduled_date: mode === 'PRE_ORDER' ? '2026-10-14' : null,
+    payment_method: 'cash_on_delivery' as const,
+  })
+  const two = [child('SAME_DAY'), child('PRE_ORDER')]
+
+  it('double click / concurrent submit → conflict, only one execution', async () => {
+    const calls: string[] = []
+    const deps = { lock: lock(), createChild: async (c: any) => { calls.push(c.order_mode); await new Promise((r) => setTimeout(r, 5)); return { status: 'created' as const, order_number: 'X1' } } }
+    const p1 = submitSplitOrders(two, 'cash_on_delivery', deps)
+    const r2 = await submitSplitOrders(two, 'cash_on_delivery', deps) // แทรก mid-flight
+    const r1 = await p1
+    expect(r2.status).toBe('conflict')
+    expect(r1.status).toBe('all_created')
+    expect(calls).toEqual(['SAME_DAY', 'PRE_ORDER']) // deterministic order, no duplicates
+  })
+
+  it('first child succeeds, second fails → partial (never all_created)', async () => {
+    const r = await submitSplitOrders(two, 'cash_on_delivery', { lock: lock(), createChild: async (c) => c.order_mode === 'SAME_DAY' ? { status: 'created', order_number: 'A1' } : { status: 'failed', code: 'ERR_CAPACITY_FULL' } })
+    expect(r.status).toBe('partial')
+    expect(r.children.map((s) => s.outcome?.status)).toEqual(['created', 'failed'])
+    expect(describeSplitResult(r)).toContain('บางส่วน')
+  })
+
+  it('retry resumes: skips created, retries ONLY the confirmed-failed child', async () => {
+    const calls: string[] = []
+    const deps = { lock: lock(), createChild: async (c: any) => { calls.push(c.order_mode); return c.order_mode === 'SAME_DAY' ? { status: 'created' as const, order_number: 'A1' } : { status: 'failed' as const, code: 'ERR_X' } } }
+    const first = await submitSplitOrders(two, 'cash_on_delivery', deps)
+    calls.length = 0
+    const second = await submitSplitOrders(two, 'cash_on_delivery', { ...deps, createChild: async (c: any) => { calls.push(c.order_mode); return { status: 'created' as const, order_number: 'B2' } } }, first.children)
+    expect(calls).toEqual(['PRE_ORDER']) // created child ไม่ถูก resubmit (duplicate-safe)
+    expect(second.status).toBe('all_created')
+    expect(second.children[0].outcome?.status).toBe('created')
+  })
+
+  it('network timeout → ambiguous ⇒ pending status, never auto-resubmitted on retry', async () => {
+    const calls: string[] = []
+    const deps = { lock: lock(), createChild: async (c: any) => { calls.push(c.order_mode); return { status: 'ambiguous' as const, detail: 'timeout' } } }
+    const first = await submitSplitOrders([child('PRE_ORDER')], 'cash_on_delivery', deps)
+    expect(first.status).toBe('pending')
+    expect(describeSplitResult(first)).toContain('อย่าสั่งซ้ำ')
+    calls.length = 0
+    const second = await submitSplitOrders([child('PRE_ORDER')], 'cash_on_delivery', deps, first.children)
+    expect(calls).toEqual([]) // ambiguous → ไม่ resubmit อัตโนมัติ (รอ reconciliation)
+    expect(second.status).toBe('pending')
+  })
+
+  it('mixed + promptpay_qr / credit_card → blocked BEFORE any createChild call', async () => {
+    let called = 0
+    const deps = { lock: lock(), createChild: async () => { called++; return { status: 'created' as const, order_number: 'X' } } }
+    for (const m of ['promptpay_qr', 'credit_card'] as const) {
+      const r = await submitSplitOrders(two, m, deps)
+      expect(r.status).toBe('blocked')
+      expect(r.reason).toContain('cash_on_delivery')
+    }
+    expect(called).toBe(0)
+  })
+
+  it('mixed + COD → proceeds; single-mode any payment method → proceeds (regression)', async () => {
+    const deps = () => ({ lock: lock(), createChild: async () => ({ status: 'created' as const, order_number: 'S1' }) })
+    expect((await submitSplitOrders(two, 'cash_on_delivery', deps())).status).toBe('all_created')
+    for (const m of ['promptpay_qr', 'credit_card', 'cash_on_delivery'] as const) {
+      const r = await submitSplitOrders([child('SAME_DAY')], m, deps())
+      expect(r.status).toBe('all_created')
+    }
+  })
+
+  it('all children failed → failed status, accurate message', async () => {
+    const r = await submitSplitOrders(two, 'cash_on_delivery', { lock: lock(), createChild: async () => ({ status: 'failed' as const, code: 'ERR_CUTOFF_PASSED' }) })
+    expect(r.status).toBe('failed')
+    expect(describeSplitResult(r)).toContain('ไม่สำเร็จ')
   })
 })
 
