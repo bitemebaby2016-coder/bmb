@@ -1,5 +1,7 @@
 # BMB WAVE 5B — OWNER REVIEW PACK (สัญญา 124 + Fresh-DB Gap Assessment)
 
+> ⚠️ **คำตัดสิน Owner 2026-10-13: 124 "ยังไม่ให้ผ่าน"** — ผลทดสอบด้านล่างเป็น EXECUTED & PASSED จริงบน isolated แต่**ยังไม่ถือว่าปิดสัญญา 124** จนกว่า risk register (R1-R15) ใน `docs/BMB_WAVE5B_HANDOFF.md` จะปิดครบ — จุดเสี่ยงที่พิสูจน์แล้ว: fingerprint ไม่เสถียรกับ numeric scale (R1) · submit key ไม่ normalize (R2) · replay คืน payload เก่า (R3)
+
 > สร้าง 2026-10-13 · repo `D:\A PROJECT\Bite Me Baby` · ทุกอย่างทดสอบบน isolated DB (Docker postgres:16 โลคอล + CI ephemeral PG) — **ไม่มีการแตะ Production ใด ๆ ทั้งสิ้น**
 > Evidence tiers: **SOURCE ✅ · AUTOMATED ✅ · ISOLATED-DB ✅ (ทุก step รวม contract 124 + concurrency) · PRODUCTION-RUNTIME ❌ (ยังห้ามประกาศพร้อมเปิดร้าน)**
 
