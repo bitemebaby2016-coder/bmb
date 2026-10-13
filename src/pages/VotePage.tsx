@@ -14,7 +14,9 @@ export function VotePage() {
     async function loadData() {
       try {
         const [products, rounds] = await Promise.all([getProducts(), getActiveDeliveryRounds()])
-        setPollOptions(products.filter((p: Product) => p.is_preorder))
+        // Phase 6 (RC-7 · INV-18): canonical fallback — เมนูที่เปิดให้จองจริง = available_preorder
+        // (alias is_preorder อาจค้างจาก canonical migration 023)
+        setPollOptions(products.filter((p: Product) => p.available_preorder ?? p.is_preorder))
         setDeliveryRounds(rounds)
       } catch (err) {
         console.error('[VotePage] Load error:', err)

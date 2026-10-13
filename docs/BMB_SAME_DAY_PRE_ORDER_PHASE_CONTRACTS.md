@@ -139,4 +139,5 @@
 - 2026-10-13 — Phase 4 ดำเนินการเสร็จ (ปลดบล็อกด้วย Phase 3 evidence `4cb22eb`) — ผล: EV-018, INV-12 = COVERED · grep AdminPreOrders = 0
 - 2026-10-13 — Phase 5A (read-only production identity + RC-5) เสร็จ — ผล: EV-019 · content markers ครบ (deployed ≈ f96ba33 ระดับ content) · **SHA binding MISSING → RC-5 formal verdict = BLOCKED** · DOM ไม่ reproduce dual-CTA บน mode sections · ไม่มี production write
 - 2026-10-13 — Phase 5B (A1 mode prop chain + RC-4 per-carousel dedupe) เสร็จ — ผล: EV-020 · `homeSectionModeCta.test.ts` 10 tests · proof ถอด fix = 5/10 fail · INV-16/INV-19 COVERED · full suite 896/896 · **A2 = DEFERRED (OD-1) ไม่เริ่ม** · source-level เท่านั้น — ห้ามอ้างเป็น production PASS · คง `homeShowcase.ts` mirror ไว้ไม่แก้
+- 2026-10-13 — Phase 6 (RC-7 audit) เสร็จ — ผล: EV-021 · classification ครบ (CANONICAL 7 / COMPAT 7 / UNSAFE 2 แก้แล้ว / STALE 0) · แก้ `MenuPage:169` + `VotePage:17` → canonical · `canonicalFallbackContract.test.ts` 5 tests · proof 2/5 fail · 901/901 · INV-18 COVERED · ไม่ลบ compatibility fields · ไม่แตะ schema/production data
 

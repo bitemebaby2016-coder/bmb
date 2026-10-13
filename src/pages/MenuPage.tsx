@@ -165,8 +165,9 @@ export function MenuPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {group.categories.flatMap(({ category, products: catProducts }) =>
               catProducts.map((product) => {
-                // ✓ v3.1: Use correct mode based on product.is_preorder
-                const mode: OrderMode = product.is_preorder ? 'pre-order' : 'same-day'
+                // Phase 6 (RC-7 · INV-18): canonical fallback เหมือน L46-47 — ห้ามอ่าน alias
+                // `is_preorder` ตรง ๆ (one-way mirror ของ migration 023 อาจค้างจาก canonical)
+                const mode: OrderMode = (product.available_preorder ?? product.is_preorder) ? 'pre-order' : 'same-day'
                 return (
                   <FoodMenuCard
                     key={product.id}

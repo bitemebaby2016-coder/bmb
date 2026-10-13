@@ -73,7 +73,7 @@
 | **RC-4** | สินค้าซ้ำ 3 ผิวบนหน้าเดียว (FoodTheater + คารูเซล×2 + CategorySections) ไม่มี dedupe | `HomePage.tsx:215,279,292,297` · **แก้แล้ว (per-surface)** `homeProviders.ts:89-100` + EV-020 | CONFIRMED (SOURCE) → dedupe UX per-surface COVERED · cross-surface = A2 DEFERRED | กลาง | **5 (DONE ส่วน A1/RC-4)** |
 | **RC-5** | อาการ "การ์ดใต้หัวข้อมีปุ่มอีกโหมด" — **NOT REPRODUCED** จาก source ปัจจุบัน (`HomeProductCard` ปุ่มเดียวตาม mode) · ปุ่มคู่จริงอยู่ที่ `ShowcaseCard`/`FoodMenuCard` | `HomeProductCard.tsx:21-36,73-80` · `CategorySections.tsx:71-95` · `FoodMenuCard.tsx:123-134` | NOT REPRODUCED — ต้องตรวจ production build (OD-2) | ต้องยืนยันก่อน | **5** (BLOCKED) |
 | **RC-6** | `AdminPreOrders` = subset 100% ของ `AdminOrders` + N+1 query · no pagination · dead code `paymentBadge` · ข้อความไทยพังหลายจุด | `AdminPreOrders.tsx:24-29,33-37,77-84,49,54,91,107,111` · ไม่มี test/e2e อ้าง (0 จุด) | CONFIRMED (SOURCE) | กลาง | **4** (รอ 3) |
-| **RC-7** | `MenuPage.tsx:169` ใช้ alias เก่า `is_preorder` ต่างจาก fallback L46-47 | `MenuPage.tsx:46-47 vs 169` · `types/index.ts:28-30` | SUSPECTED (ผลเท่ากันวันนี้) | ต่ำ | **6** |
+| **RC-7** | `MenuPage.tsx:169` ใช้ alias เก่า `is_preorder` ต่างจาก fallback L46-47 — **audit เพิ่มพบ** `VotePage.tsx:17` raw filter ด้วย | `MenuPage.tsx:169` → canonical แล้ว · `VotePage.tsx:17` → canonical แล้ว · EV-021 | CONFIRMED (FIXED + TESTED) — proof 2/5 fail | ต่ำ | **6 (DONE)** |
 
 **Safeguards ที่มีอยู่แล้ว (SOURCE + AUTOMATED TEST — ยังไม่ใช่ production proof):** server gates ใน `118…sql:89-160` · `trg_menu_gate` (`039`) · cart mode lock + `pendingMode` · `cartPersistence` validate · tests: `canonicalOrderFlow.test.ts:106-130`, `cartIsolationStore`, `cartPersistence`, `menuScheduleGate`, `kitchenControl`, `preOrderQueue`, `adminOrdersOp.test.ts:79-83` (API level เท่านั้น)
 
@@ -108,7 +108,7 @@
 
 **Execution protocol (ทุก phase):** audit scope → แสดง Phase Contract → ขอ approval → implement → quality gates → ตรวจ no unrelated changes → อัปเดตเอกสาร → commit เฉพาะ path ใน scope → push → ตรวจ CI `completed/success` → ยืนยัน `HEAD == origin/main` + worktree → รายงาน SHA/evidence/residual risks → หยุดรอ approval ถัดไป
 
-**สถานะล่าสุด (2026-10-13 ICT):** Phase 0 = **DONE** (`fbe5ac6`, CI#410 ✓) · Phase 3 = **DONE** (`4cb22eb`, CI#411 ✓) · Phase 1 = **DONE** (`3dd44ce`, CI#412 ✓) · Phase 2 = **DONE** (`f20a6be`, CI#413 ✓) · Phase 4 = **DONE** (`8bd6276`, CI#414 ✓) · Phase 5A = **DONE (read-only)** — EV-019, CI#416 ✓ · RC-5 formal = **BLOCKED** (SHA binding MISSING) · Phase 5B = **DONE (source+tests)** — EV-020: mode prop chain + per-carousel dedupe + 10 tests · proof 5 fail · 896/896 · A2 = DEFERRED · ต่อไป = Phase 6 (RC-7 audit) → Phase 7 (production closure — อ่านอย่างเดียวก่อน)
+**สถานะล่าสุด (2026-10-13 ICT):** Phase 0 = **DONE** (`fbe5ac6`, CI#410 ✓) · Phase 3 = **DONE** (`4cb22eb`, CI#411 ✓) · Phase 1 = **DONE** (`3dd44ce`, CI#412 ✓) · Phase 2 = **DONE** (`f20a6be`, CI#413 ✓) · Phase 4 = **DONE** (`8bd6276`, CI#414 ✓) · Phase 5A = **DONE (read-only)** — EV-019, CI#416 ✓ · RC-5 formal = **BLOCKED** (SHA binding MISSING) · Phase 5B = **DONE (source+tests)** — `f7bfab1`, CI#417 ✓ · EV-020 · Phase 6 = **DONE (source+tests)** — EV-021: audit ครบ + แก้ 2 UNSAFE + 5 tests · 901/901 · ต่อไป = Phase 7 (production closure — read-only ก่อน แล้วหยุดที่ boundary ที่ต้องอนุมัติ)
 
 **Quality gates ทุกครั้ง (fresh เท่านั้น):** `npx tsc --noEmit --incremental false` · `npm run lint` · `npm test` · `npm run build` = 0 ทุกตัว
 
