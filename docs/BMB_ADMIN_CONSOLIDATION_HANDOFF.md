@@ -1,0 +1,149 @@
+# BMB — แฮนออฟ: ปรับระบบแอดมิน + หน้าร้าน (same-day / preorder)
+
+> **สร้าง:** 2026-10-13 · **HEAD:** `f297424` = `origin/main` · **CI:** run#408 success
+> **จุดประสงค์:** ส่งต่องานให้แชทใหม่ทำต่อ **โดยไม่ต้องสำรวจซ้ำ** — เนื้อหาในไฟล์นี้ผ่านการ probe โค้ดจริงแล้ว
+
+---
+
+## 0. กฏของ Owner (ห้ามฝ่าฝืน)
+
+1. **typecheck แบบ fresh เท่านั้น** — `npx tsc --noEmit --incremental false` · ห้ามเช็คจาก cache
+2. **闸门 100%** ก่อนส่งงานเสมอ: tsc 0 · `npm run lint` 0 · `npm test` 0 · `npm run build` 0
+3. **เอกสาร overwrite ห้าม append** — ทวนไฟล์เดิมทั้งหมด ไม่ใช่ต่อท้าย
+4. **ไม่มี secret ในเอกสารหรือในแชท** (token/password/URL ภายใน)
+5. **stage ด้วย path เฉพาะเท่านั้น** — ห้าม `git add -A` · และ **ห้ามปล่อยไฟล์ค้างใน staged**
+6. **ภาษาไทย** ทั้งเอกสารและข้อความ UI
+7. **PowerShell อ่านภาษาไทยเพี้ยน** — งานที่ต้องอ่าน/เขียนไทยให้ใช้ **node script** เสมอ
+8. **push แล้วต้องเช็ค CI** จน `completed/success` แล้วจึงรายงานว่าเสร็จ
+
+---
+
+## 1. สถานะปัจจุบัน (ตรวจแล้ว 2026-10-13)
+
+| รายการ | ค่า |
+|---|---|
+| HEAD | `f297424` |
+| origin/main | `f297424` (ตรงกัน) |
+| staged files | **0** |
+| uncommitted repo files | **0** (working tree สะอาด) |
+| stash | `local-edits-before-sync-2026-09-21` — **ห้ามแตะ** |
+| CI | run#408 `completed/success` |
+| `tsc --incremental false` | 0 |
+| lint + `brandNameGuard.cjs` | 0 (สแกน 340 ไฟล์) |
+| vitest | 79 ไฟล์ / 860 tests |
+| build | 0 |
+
+### หัวข้อที่ปิดแล้วในรอบก่อน (ไม่ต้องทำซ้ำ)
+
+- **ชื่อมาสคอต** — จอแสดง `Bite` · TTS ออกเสียง `ไบ๊` · guard ดักชื่อไทยผิด (`scripts/brandNameGuard.cjs` ผูกกับ `npm run lint`) · prompt ทุกจุดบอกโมเดลว่าชื่อ `Bite` แล้ว
+- **ธีม** — `graphite` เปลี่ยนเป็น **Deep Blue Intelligence** (พื้น `#0A1026` / surface `#111A38` / border `#22305C`) · accent ส้มแบรนด์คงเดิม
+- **`theater_daily_copy`** — เป็น **key ใน `business_settings`** (ไม่ใช่ตาราง) · Owner เพิ่มคีย์และเซฟแล้ว · โค้ดครบทั้งสาย (`src/lib/theaterDailyCopy.ts` + 15 tests + `FoodTheater`)
+- label อังกฤษตัวสุดท้าย (`aria-label="Close"`) → `ปิด`
+
+---
+
+## 2. ปัญหาที่ต้องแก้ (วิเคราะห์จากโค้ดจริง)
+
+### 2.1 หน้าร้าน — สินค้าซ้ำ 4 ชั้น + ปุ่มขัดกับหัวข้อ
+
+`src/pages/HomePage.tsx` ยิงสินค้าซ้ำกันบนหน้าเดียว:
+
+| บรรทัด | Section | หัวข้อที่ประกาศ | การ์ดที่ offer |
+|---|---|---|---|
+| 215 | `FoodTheater` | — | ปุ่มทั้งสอง |
+| 271–280 | คารูเซล "🔥 **เมนูวันนี้**" | same-day | **ปุ่มทั้งสอง** ⚠️ |
+| 282–294 | คารูเซล "📅 **จองล่วงหน้า**" | preorder | **ปุ่มทั้งสอง** ⚠️ |
+| 297 | `CategorySections` | ทุกหมวด | ปุ่มทั้งสอง |
+
+**อาการที่ Owner รายงาน ("มั่วระหว่าง same day กับ preorder"):**
+- การ์ดใต้หัวข้อ "เมนูวันนี้" ยังมีปุ่ม *"จองล่วงหน้า"*
+- การ์ดใต้หัวข้อ "จองล่วงหน้า" ยังมีปุ่ม *"สั่งเลย"*
+- → หัวข้อประกาศโหมดเดียว แต่การ์ดเสนอทั้งสองโหมด
+
+**หลักฐานโค้ด:**
+- `HomePage.tsx:181-185` — ทั้ง `sameDayItems` และ `preOrderItems` ส่ง `onSameDay` **และ** `onPreOrder` เข้า `HomeProductCard` เหมือนกันเป๊ะ
+- `HomeProductCard.tsx:11-12, 22, 25` — component รับทั้งสอง callback และ render ทั้งสองปุ่ม ไม่เคยเช็คว่าตัวเองอยู่ใน section ไหน
+- `CategorySections.tsx:185` — `ShowcaseCard` ก็รับทั้งสองเหมือนกัน
+
+**ผลข้างเคียง:** สินค้าชิ้นเดียวกันโผล่ 3–4 ครั้งบนหน้าเดียว
+
+### 2.2 แอดมิน — ซ้ำจริง 1 คู่
+
+| หน้า | บรรทัด | หน้าที่ (probe จริง) | 判定 |
+|---|---|---|---|
+| `src/pages/admin/AdminOrders.tsx` | 420 | ออเดอร์ทั้งหมด · `filterMode: 'all'\|'SAME_DAY'\|'PRE_ORDER'` (L55) · grouping เมื่อ `filterMode==='PRE_ORDER'` (L195) · cancel | **canonical** |
+| `src/pages/admin/AdminPreOrders.tsx` | 160 | `.from('orders').eq('order_mode','PRE_ORDER')` (L25-27) · status filter (L68) · `cancelOrder` | 🔴 **ซ้ำ 100%** |
+| `src/pages/admin/AdminKitchen.tsx` | 256 | แบ่ง `⚡ SAME_DAY` / `📅 PRE_ORDER (ถึงรอบแล้ว)` / `รอบหน้า — แสดงเพื่อวางแผน` (L150-153) | ✅ production view — **ห้ามรวม** |
+| `src/pages/admin/AdminMenuSchedule.tsx` | 187 | `productId → round key` (`''`=ทุกรอบ, `'__off__'`=ปิด) · canonical = migration 039 `menu_schedule` | ✅ catalog schedule — **ห้ามรวม** |
+| `src/pages/admin/AdminRounds.tsx` | 127 | Delivery Rounds & Capacity | ✅ capacity — **ห้ามรวม** |
+
+**`AdminPreOrders` ไม่มีอะไรที่ `AdminOrders` ทำไม่ได้** — query ชุดเดียวกัน, filter ชุดเดียวกัน, action (`cancelOrder`) ชุดเดียวกัน ต่างแค่ hardcode filter ไว้ตอนโหลด
+
+> `src/lib/homeShowcase.ts` = pure display mirror ใช้โดย `CategorySections` ที่เดียว → **ไม่ซ้ำ** ห้ามแตะ
+
+---
+
+## 3. แผนงานที่ต้องทำ (เรียงตามลำดับ)
+
+### งาน A — หน้าร้าน: การ์ดต้องตรงกับโหมดของ section
+
+**เป้า:** การ์ดใน section ใด ต้อง offer เฉพาะโหมดของ section นั้น
+
+- `HomeProductCard` + `ShowcaseCard` ต้องรับ prop บอกโหมด เช่น `mode?: 'same_day' | 'pre_order' | 'auto'`
+- `mode='same_day'` → render เฉพาะปุ่มสั่งเลย
+- `mode='pre_order'` → render เฉพาะปุ่มจองล่วงหน้า
+- `mode='auto'` (section หมวด ไม่มีโหมดกำกับ) → ตัดสินจาก `available_preorder ?? is_preorder` ของสินค้า
+- `HomePage.tsx:181-185` ต้องส่ง `mode` ต่างกันตาม section (ต่างจากปัจจุบันที่ส่งเหมือนกัน)
+- **ต้องมี test** ยืนยันว่าการ์ดใน section same-day ไม่มีปุ่ม preorder
+
+### งาน B — หน้าร้าน: ยุบ section ที่ซ้ำ
+
+*ยังไม่ได้เลือกทาง — ให้ Owner เลือกก่อนเริ่ม*
+
+- **B1** เอา section 3+4 (คารูเซล two-mode) ออก → เหลือ `CategorySections` (ขับด้วย DB, แอดมินแก้ได้ไม่ต้อง deploy)
+- **B2** เอา showcase ของ `CategorySections` ออก → เหลือคารูเซลสองอันตามโหมด (ชัดเรื่องโหมด แต่ hardcode กว่า)
+
+### งาน C — แอดมิน: ยุบ `AdminPreOrders` เข้า `AdminOrders`
+
+1. `AdminOrders` มี `filterMode='PRE_ORDER'` + grouping + cancel อยู่แล้ว → **ไม่ต้องเพิ่มฟีเจอร์**
+2. ลบ `src/pages/admin/AdminPreOrders.tsx`
+3. ลบ route ใน `src/App.tsx` แล้วให้ `/admin/pre-orders` **redirect** ไป `AdminOrders` พร้อม preset `filterMode='PRE_ORDER'` (กัน bookmark เดิมตาย)
+4. ตรวจว่ามี menu/nav item ชี้หน้าเดิม — อัปเดตให้ชี้หน้าใหม่
+5. ตรวจ `src/__tests__/` มี test อ้าง `AdminPreOrders` ไหม แล้วโยกตาม
+6. **ห้ามลบ** `AdminKitchen` / `AdminMenuSchedule` / `AdminRounds` — คนละหน้าที่
+
+### งาน D — งานค้างอื่นที่ยังไม่ได้ทำ
+
+| งาน | หมายเหตุ |
+|---|---|
+| ตรวจตัวสะกดภาษาไทยทุกหน้า | โปรแกรมจับไม่ได้ ต้องอ่านเอง |
+| ลบ/noindex `bitemebaby-5f7.pages.dev` | ยัง live HTTP 200 — ทำใน Cloudflare |
+| SMS จริง 1 ข้อความ → เปิด flag `QUICK_LOGIN_REQUIRE_OTP` | ต้องทดสอบก่อนเปิด · rollback ได้ในคลิกเดียว |
+| GPS matrix บนมือถือจริง (เคส 1–4) | ต้องอุปกรณ์จริง |
+| Omise TEST E2E ทุกสถานะ + webhook | ต้องหลักฐานจ่ายจริง |
+| Email Confirmation ใน Dashboard | ไม่มี API อ่านค่า ต้องดูเอง |
+
+---
+
+## 4. คำสั่งที่ใช้บ่อย
+
+```powershell
+# 闸门แบบ fresh (ห้ามใช้แบบไม่มี --incremental false)
+Set-Location 'D:\A PROJECT\Bite Me Baby'
+npx tsc --noEmit --incremental false
+npm run lint        # eslint + scripts/brandNameGuard.cjs
+npm test
+npm run build
+```
+
+**หมายเหตุ PowerShell:** คำสั่งที่อ่าน/เขียนภาษาไทยให้รันผ่าน **node script** (`node xxx.cjs`) เสมอ — console จะเพี้ยนแต่ไฟล์ที่ node เขียนจะถูก
+
+---
+
+## 5. จุดที่ห้ามพลาด (บทเรียนจากสองรอบก่อน)
+
+1. **แก้ display อย่างเดียวไม่พอ** — ถ้า prompt ยังบอกโมเดลว่าชื่อ `ไบ๊` โมเดลก็เขียน `ไบ๊` กลับมาทุกข้อความ (เกิดจริงแล้วรอบ `f297424`)
+2. **hex hardcode ในบล็อก CSS ที่แชร์ dark+graphite** จะย้อมธีมใหม่ทิ้ง — ต้องเป็น `var(--color-brand-*)` (เกิดจริงตอนทำธีม)
+3. **ลิสต์ชื่อห้ามต้องไม่ชนคำไทยปกติ** — `บิต` ⊂ เครดิต/เดบิต, `บับ` ⊂ บับเบิล → guard จะจับผิดแล้วแก้ไม่จบ (เกิดจริง)
+4. **อย่าสร้างของซ้ำโดยไม่อ่านของเดิม** — เคยสร้าง migration+EF+component สำหรับ `theater_daily_copy` ทั้งที่ของเดิมมีครบและเขียนไว้ชัด "no second store, no migration" → ต้องลบออก
+5. **local build ผ่านไม่ใช่หลักฐาน** — stale incremental cache เคยซ่อน type error 8 จุดให้ CI ตก
