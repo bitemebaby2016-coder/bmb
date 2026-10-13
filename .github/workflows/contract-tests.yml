@@ -123,6 +123,14 @@ jobs:
               echo "== shim 081: pre-add profiles.branch_id (added by 090)"
               shim "supabase/migrations/$b" "ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS branch_id TEXT;"
             fi
+            if [ "$b" = "107_product_backfill_scope_constraints.sql" ]; then
+              # DATA PRECONDITION DEFECT: 107 กำหนด media_assets ต้องมี exactly 9 แถว
+              # (production มี 9 แถวจริงจาก manual-era data migration — DB ใหม่ไม่มี)
+              # → seed 9 fixture แถว (CI-only urls, category=product, asset_key ไม่ซ้ำ)
+              # เพื่อให้ backfill+verify+CHECK constraints รันได้ครบ
+              echo "== shim 107: seed 9 legacy media_assets fixture rows"
+              shim "supabase/migrations/$b" "INSERT INTO public.media_assets (id, url, asset_key, category) VALUES ('fx-ma-1','https://example.invalid/legacy1.png','fx-key-1','product'),('fx-ma-2','https://example.invalid/legacy2.png','fx-key-2','product'),('fx-ma-3','https://example.invalid/legacy3.png','fx-key-3','product'),('fx-ma-4','https://example.invalid/legacy4.png','fx-key-4','product'),('fx-ma-5','https://example.invalid/legacy5.png','fx-key-5','product'),('fx-ma-6','https://example.invalid/legacy6.png','fx-key-6','product'),('fx-ma-7','https://example.invalid/legacy7.png','fx-key-7','product'),('fx-ma-8','https://example.invalid/legacy8.png','fx-key-8','product'),('fx-ma-9','https://example.invalid/legacy9.png','fx-key-9','product') ON CONFLICT (id) DO NOTHING;"
+            fi
             tmp=$(mktemp)
             preprocess "$f" "$tmp"
             echo "== apply $b"

@@ -19,6 +19,7 @@ CREATE SCHEMA IF NOT EXISTS auth;
 CREATE TABLE IF NOT EXISTS auth.users (
   id uuid PRIMARY KEY,
   email text,
+  phone text,            -- real Supabase auth.users มี phone; 006 handle_new_user อ่าน NEW.phone
   encrypted_password text,
   email_confirmed_at timestamptz,
   created_at timestamptz,
