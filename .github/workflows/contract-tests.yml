@@ -80,36 +80,48 @@ jobs:
           }
           fail_count=0
           fail_sum=""
+          # shim helper: รัน SQL เงียบ ๆ — ถ้า fail ต้อง emit annotation (ห้ามกลืน)
+          shim() { # $1 = annotation path, $2 = sql
+            local out rc
+            out=$(psql -q -c "$2" 2>&1); rc=$?
+            if [ $rc -ne 0 ]; then
+              echo "::error file=$1::shim SQL failed: $out"
+            fi
+          }
           for f in supabase/migrations/*.sql; do
             b=$(basename "$f")
             case "$b" in PROPOSED_*|124_*) echo "== skip $b"; continue ;; esac
             if [ "$b" = "035_m1_closure_p0_blockers.sql" ]; then
               echo "== shims for 035 (documented CI-only; history file untouched)"
-              psql -q -c "DROP FUNCTION IF EXISTS public.compute_delivery_fee(numeric,numeric,text,integer,numeric);" || true
+              shim "supabase/migrations/$b" "DROP FUNCTION IF EXISTS public.compute_delivery_fee(numeric,numeric,text,integer,numeric);"
               # PROVEN fresh-DB gap: ไม่มี migration 001-123 สร้าง orders.delivery_address
               # (001/003/004 มีเฉพาะ pre_orders) — production มีจาก manual-era drift
-              psql -q -c "ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS delivery_address TEXT DEFAULT '';" || true
+              shim "supabase/migrations/$b" "ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS delivery_address TEXT DEFAULT '';"
             fi
             if [ "$b" = "037_m1_p0_blockers_repaired.sql" ]; then
-              # 035 (temp-fixed) สร้าง compute_delivery_fee RETURNS jsonb แต่ 037
-              # คืนเป็น RETURNS numeric (ตัว repair) — CREATE OR REPLACE เปลี่ยน
-              # return type ไม่ได้ → drop signature เดิม (args ตรงกัน) ก่อน replace
+              # 035 (temp-fixed) สร้าง compute_delivery_fee RETURNS jsonb แต่ 037 คืน
+              # เป็น RETURNS numeric (ตัว repair) — CREATE OR REPLACE เปลี่ยน return
+              # type ไม่ได้ → drop signature เดิม (args ตรงกัน) ก่อน replace
               echo "== shim 037: drop 035 jsonb compute_delivery_fee before numeric repair"
-              psql -q -c "DROP FUNCTION IF EXISTS public.compute_delivery_fee(numeric,numeric,text,integer,numeric);" || true
+              shim "supabase/migrations/$b" "DROP FUNCTION IF EXISTS public.compute_delivery_fee(numeric,numeric,text,integer,numeric);"
             fi
             if [ "$b" = "065_rls_isolation.sql" ]; then
-              # AUTHORING-ORDER DEFECT: 065 อ้าง profiles.tenant_id/is_platform
-              # แต่คอลัมน์ถูกเพิ่มโดย 066 (ไฟล์ถัดไป) — pre-add แบบ IF NOT EXISTS
-              # (066 จะ no-op และ backfill ตามเดิม)
+              # AUTHORING-ORDER DEFECT: 065 อ้าง profiles.tenant_id/is_platform แต่
+              # คอลัมน์ถูกเพิ่มโดย 066 (ไฟล์ถัดไป) — pre-add IF NOT EXISTS (066 no-op)
               echo "== shim 065: pre-add profiles.tenant_id/is_platform (added by 066)"
-              psql -q -c "ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS tenant_id TEXT; ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS is_platform BOOLEAN DEFAULT false;" || true
+              shim "supabase/migrations/$b" "ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS tenant_id TEXT; ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS is_platform BOOLEAN DEFAULT false;"
             fi
             if [ "$b" = "066_profiles_tenant_authority.sql" ]; then
-              # 066 ตรวจสอบ is_platform=true ต้องมี 1 แถว — production มี profile
-              # owner dddf4b57 (พิสูจน์จาก production identity evidence) แต่ DB
-              # ใหม่ไม่มี → seed fixture (066 backfill จะตั้ง is_platform=true ให้)
+              # 066 ตรวจสอบ is_platform=true ต้องมี 1 แถว — production มี profile owner
+              # dddf4b57 (production identity evidence) แต่ DB ใหม่ไม่มี → seed
               echo "== shim 066: seed platform-owner profile fixture (dddf4b57)"
-              psql -q -c "INSERT INTO auth.users (id, email, encrypted_password, created_at, updated_at, raw_app_meta_data, raw_user_meta_data, aud, role) VALUES ('dddf4b57-405f-4852-a985-76d8d52b1b72','fixture-owner@bmb.test','x',now(),now(),'{}','{}','authenticated','authenticated') ON CONFLICT (id) DO NOTHING; INSERT INTO public.profiles (id, role) VALUES ('dddf4b57-405f-4852-a985-76d8d52b1b72','admin') ON CONFLICT (id) DO NOTHING;" || true
+              shim "supabase/migrations/$b" "INSERT INTO auth.users (id, email, encrypted_password, created_at, updated_at, raw_app_meta_data, raw_user_meta_data, aud, role) VALUES ('dddf4b57-405f-4852-a985-76d8d52b1b72','fixture-owner@bmb.test','x',now(),now(),'{}','{}','authenticated','authenticated') ON CONFLICT (id) DO NOTHING; INSERT INTO public.profiles (id, role) VALUES ('dddf4b57-405f-4852-a985-76d8d52b1b72','admin') ON CONFLICT (id) DO NOTHING;"
+            fi
+            if [ "$b" = "081_branches_table.sql" ]; then
+              # AUTHORING-ORDER DEFECT: 081 policy อ้าง profiles.branch_id แต่คอลัมน์
+              # ถูกเพิ่มโดย 090 (ย้อนหลังไม่ได้) — pre-add IF NOT EXISTS (090 no-op)
+              echo "== shim 081: pre-add profiles.branch_id (added by 090)"
+              shim "supabase/migrations/$b" "ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS branch_id TEXT;"
             fi
             tmp=$(mktemp)
             preprocess "$f" "$tmp"
