@@ -45,6 +45,16 @@ jobs:
           for f in supabase/migrations/*.sql; do
             b=$(basename "$f")
             case "$b" in PROPOSED_*|124_*) echo "== skip $b"; continue ;; esac
+            # CI-only compatibility shim: 035 เปลี่ยน return type ของ
+            # compute_delivery_fee (CREATE OR REPLACE ปฏิเสธการเปลี่ยน return type
+            # ของ function ที่มีอยู่) — production เคยผ่านยุค manual-apply
+            # ห้ามแก้ตัว migration เอง: drop ตัวเก่าก่อน replace = definition
+            # สุดท้ายเท่ากับที่ 035 ตั้งใจสร้าง
+            if [ "$b" = "035_m1_closure_p0_blockers.sql" ]; then
+              echo "== shim: drop pre-035 compute_delivery_fee before replace"
+              psql -v ON_ERROR_STOP=1 -q -c \
+                "DROP FUNCTION IF EXISTS public.compute_delivery_fee(numeric,numeric,text,integer,numeric);"
+            fi
             echo "== apply $b"
             psql -v ON_ERROR_STOP=1 -q -f "$f"
           done
