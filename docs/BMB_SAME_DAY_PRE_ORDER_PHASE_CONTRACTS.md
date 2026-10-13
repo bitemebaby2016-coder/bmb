@@ -137,4 +137,5 @@
 - 2026-10-13 — Phase 1 ดำเนินการเสร็จตาม Owner authorization (ลำดับต่อจาก Phase 3 ตาม OD-7) — ผล: EV-016, INV-15/INV-17 = COVERED
 - 2026-10-13 — Phase 2 ดำเนินการเสร็จตาม Owner authorization (ลำดับต่อจาก Phase 1 ตาม OD-7) — ผล: EV-017, INV-04 = COVERED · design ตาม OD-4 ตรงตัวอักษร (ไม่เข้า HARD STOP)
 - 2026-10-13 — Phase 4 ดำเนินการเสร็จ (ปลดบล็อกด้วย Phase 3 evidence `4cb22eb`) — ผล: EV-018, INV-12 = COVERED · grep AdminPreOrders = 0
+- 2026-10-13 — Phase 5A (read-only production identity + RC-5) เสร็จ — ผล: EV-019 · content markers ครบ (deployed ≈ f96ba33 ระดับ content) · **SHA binding MISSING → RC-5 formal verdict = BLOCKED** · DOM ไม่ reproduce dual-CTA บน mode sections · ไม่มี production write
 

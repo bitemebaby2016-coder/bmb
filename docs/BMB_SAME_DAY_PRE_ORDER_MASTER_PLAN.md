@@ -108,7 +108,7 @@
 
 **Execution protocol (ทุก phase):** audit scope → แสดง Phase Contract → ขอ approval → implement → quality gates → ตรวจ no unrelated changes → อัปเดตเอกสาร → commit เฉพาะ path ใน scope → push → ตรวจ CI `completed/success` → ยืนยัน `HEAD == origin/main` + worktree → รายงาน SHA/evidence/residual risks → หยุดรอ approval ถัดไป
 
-**สถานะล่าสุด (2026-10-13 ICT):** Phase 0 = **DONE** (`fbe5ac6`, CI#410 ✓) · Phase 3 = **DONE** (`4cb22eb`, CI#411 ✓) · Phase 1 = **DONE** (`3dd44ce`, CI#412 ✓) · Phase 2 = **DONE** (`f20a6be`, CI#413 ✓) · Phase 4 = **DONE** (`8bd6276`, CI#414 ✓) · Phases 5/6/7 = PENDING (Phase 5 = A1 + production RC-5 check ที่ `biteme-baby.com` (OD-2) · Phase 6 = RC-7 · Phase 7 = production closure)
+**สถานะล่าสุด (2026-10-13 ICT):** Phase 0 = **DONE** (`fbe5ac6`, CI#410 ✓) · Phase 3 = **DONE** (`4cb22eb`, CI#411 ✓) · Phase 1 = **DONE** (`3dd44ce`, CI#412 ✓) · Phase 2 = **DONE** (`f20a6be`, CI#413 ✓) · Phase 4 = **DONE** (`8bd6276`, CI#414 ✓) · Phase 5A = **DONE (read-only)** — EV-019: RC-5 ไม่ reproduce บน DOM จริง · SHA binding MISSING → formal RC-5 = BLOCKED · ต่อไป = Phase 5B (A1) → Phase 6 (RC-7) → Phase 7 (production closure)
 
 **Quality gates ทุกครั้ง (fresh เท่านั้น):** `npx tsc --noEmit --incremental false` · `npm run lint` · `npm test` · `npm run build` = 0 ทุกตัว
 
