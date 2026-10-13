@@ -192,7 +192,7 @@ afterEach(async () => {
 })
 
 describe('HomePage.handlePreOrder — AddToCartResult guard (RC-3 · OD-4)', () => {
-  it('needs_confirmation → ห้าม navigate ไป /checkout (lock ชนะ ไม่สลับโหมดเงียบ ๆ)', async () => {
+  it('M1 2D-1: mode-mismatch add → mixed line KEPT (no discard, no silent switch) → navigate /checkout?mode=pre-order', async () => {
     // ล็อกตะกร้าด้วย SAME_DAY ก่อน
     const lockRes = useCartStore.getState().addItem(SD_PRODUCT, 1, {}, 'SAME_DAY')
     expect(lockRes).toBe('added')
@@ -202,17 +202,18 @@ describe('HomePage.handlePreOrder — AddToCartResult guard (RC-3 · OD-4)', () 
     await clickPreOrderCta()
     expect(capturedCb).toBeTruthy()
 
-    // เรียก callback ของ OrderBuilder — addItem(PRE_ORDER) ต้องคืน needs_confirmation
+    // M1: addItem(PRE_ORDER) คืน 'added' — ใส่เป็น line ตัวเอง ไม่ discard ไม่สลับโหมดเงียบ ๆ
     await act(async () => {
       capturedCb!({ product: PRE_PRODUCT, quantity: 1, addOns: [], recommended: [] })
     })
     await flush()
 
     const st = useCartStore.getState()
-    expect(st.pendingMode).toBe('PRE_ORDER') // modal ยืนยันโหมดรอผู้ใช้อยู่
-    expect(st.items.length).toBe(1) // ยังไม่มีสินค้า PRE_ORDER ถูกใส่จริง
-    expect(lastPath).toBe('/') // ✅ ห้าม navigate
-    expect(m.showToast).toHaveBeenCalledWith(expect.stringContaining('ยืนยันการเปลี่ยนโหมด'), 'info')
+    expect(st.pendingMode).toBeNull()
+    expect(st.items.length).toBe(2) // ทั้งสองบรรทัดอยู่ครบ
+    expect(st.order_mode).toBe('SAME_DAY') // primary mode คงเดิม
+    expect((st.items[1] as { line_mode?: string }).line_mode).toBe('PRE_ORDER')
+    expect(lastPath).toBe('/checkout')
   })
 
   it('added (ไม่มี conflict) → navigate /checkout?mode=pre-order ตามเดิม', async () => {

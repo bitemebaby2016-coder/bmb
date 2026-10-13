@@ -21,9 +21,11 @@ export interface IsolationCartItem {
   price: number
   quantity: number
   mode?: OrderMode
+  /** M1 (2D-1): per-line mode mirrored from the canonical store */
+  line_mode?: OrderMode
 }
 
-export type AddToCartResult = 'added' | 'needs_confirmation' | 'context_blocked'
+export type AddToCartResult = 'added' | 'needs_confirmation' | 'context_blocked' | 'blocked'
 
 interface CartIsolationStore {
   items: IsolationCartItem[]
@@ -41,12 +43,13 @@ interface CartIsolationStore {
   clearCart: () => void
 }
 
-function toIsolationItems(items: CartItem[]): IsolationCartItem[] {
+function toIsolationItems(items: Array<CartItem & { line_mode?: OrderMode }>): IsolationCartItem[] {
   return items.map((i) => ({
     id: i.product.id,
     name: i.product.name,
     price: Number(i.product.price) || 0,
     quantity: i.quantity,
+    line_mode: i.line_mode,
   }))
 }
 

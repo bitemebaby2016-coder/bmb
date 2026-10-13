@@ -54,7 +54,7 @@ describe('serializeCart — minimal data only (D01)', () => {
     const parsed = JSON.parse(raw)
     expect(parsed.v).toBe(1)
     expect(parsed.items).toEqual([
-      { productId: 'p-a', quantity: 2, customizations: { topping: ['ไข่'] } },
+      { productId: 'p-a', quantity: 2, customizations: { topping: ['ไข่'] }, mode: 'SAME_DAY' },
     ])
     expect(parsed.couponCode).toBe('WELCOME10')
     expect(parsed.order_mode).toBe('SAME_DAY')
@@ -125,15 +125,28 @@ describe('restoreWithCatalog — trusted catalog rebuild (D01)', () => {
     expect(msg).toContain('นำรายการที่ใช้ไม่ได้ออกจากตะกร้า')
   })
 
-  it('respects mode isolation: conflicting-mode rows are dropped, not merged', () => {
+  it('M1 2D-1: mixed rows restore with their own line mode; primary order_mode untouched', () => {
     useCartStore.getState().addItem(mkProduct({ id: 'p-pre', price: 100 }), 1, {}, 'PRE_ORDER')
     const report = restoreWithCatalog(
-      stored({ order_mode: 'SAME_DAY', items: [{ productId: 'p-a', quantity: 1 }] }),
+      stored({ order_mode: 'SAME_DAY', items: [{ productId: 'p-a', quantity: 1, mode: 'SAME_DAY' }] }),
       [prodA],
     )
+    expect(report.restored).toBe(1)
+    expect(report.dropped).toEqual([])
+    expect(useCartStore.getState().order_mode).toBe('PRE_ORDER') // primary (first) mode untouched
+    expect(useCartStore.getState().items).toHaveLength(2)
+    expect((useCartStore.getState().items[1] as { line_mode?: string }).line_mode).toBe('SAME_DAY')
+  })
+
+  it('M1 2D-1: stored row explicitly ineligible for its mode → dropped with reason (clear, not silent)', () => {
+    useCartStore.getState().addItem(mkProduct({ id: 'p-sd', price: 50 }), 1, {}, 'SAME_DAY')
+    const report = restoreWithCatalog(
+      stored({ order_mode: 'SAME_DAY', items: [{ productId: 'p-bad', quantity: 1, mode: 'PRE_ORDER' }] }),
+      [mkProduct({ id: 'p-bad', price: 60, available_preorder: false })],
+    )
     expect(report.restored).toBe(0)
-    expect(report.dropped[0].reason).toBe('mode_conflict')
-    expect(useCartStore.getState().order_mode).toBe('PRE_ORDER') // existing lock untouched
+    expect(report.dropped[0].reason).toBe('blocked')
+    expect(useCartStore.getState().items).toHaveLength(1)
   })
 
   it('restores the coupon code only (server still re-validates it)', () => {

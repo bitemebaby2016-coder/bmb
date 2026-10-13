@@ -32,6 +32,9 @@ export interface StoredCartItem {
   productId: string
   quantity: number
   customizations?: Record<string, string | string[]>
+  /** M1 (2D-1): optional per-line mode — absent in legacy v1 carts (falls back
+      to StoredCart.order_mode at restore). No migration: field is optional. */
+  mode?: OrderMode
   /** display-only hint for explicit drop notices (never persisted — see parse) */
   name?: string
 }
@@ -56,7 +59,7 @@ export interface RestoreReport {
 }
 
 interface SerializeSource {
-  items: Array<{ product: Product; quantity: number; customizations?: Record<string, string | string[]> }>
+  items: Array<{ product: Product; quantity: number; customizations?: Record<string, string | string[]>; line_mode?: OrderMode }>
   order_mode: OrderMode | null
   couponCode: string
 }
@@ -84,6 +87,7 @@ export function serializeCart(state: SerializeSource): string {
         productId: String(item.product?.id ?? ''),
         quantity: Math.max(1, Math.floor(Number(item.quantity) || 1)),
         customizations: plainCustomizations(item.customizations),
+        mode: item.line_mode, // omitted by JSON when undefined (legacy single-mode carts)
       }))
       .filter((row) => row.productId.length > 0),
   }
@@ -112,6 +116,7 @@ export function parseStoredCart(raw: string | null): StoredCart | null {
       productId: item.productId,
       quantity: Math.min(99, Math.floor(qty)),
       customizations: plainCustomizations(item.customizations),
+      mode: item.mode === 'PRE_ORDER' || item.mode === 'SAME_DAY' ? item.mode : undefined,
     })
   }
   return {
@@ -142,7 +147,8 @@ export function restoreWithCatalog(stored: StoredCart, products: Product[]): Res
       dropped.push({ productId: product.id, name: product.name, reason: 'unavailable' })
       continue
     }
-    const mode: OrderMode = stored.order_mode ?? 'SAME_DAY'
+    // M1 2D-1: per-line mode when present (mixed carts), else legacy order_mode.
+    const mode: OrderMode = row.mode ?? stored.order_mode ?? 'SAME_DAY'
     const res = useCartStore.getState().addItem(product, row.quantity, row.customizations ?? {}, mode)
     if (res === 'added') restored += 1
     else dropped.push({ productId: product.id, name: product.name, reason: res === 'needs_confirmation' ? 'mode_conflict' : 'blocked' })
@@ -170,6 +176,7 @@ export function revalidateWithCatalog(products: Product[]): RestoreReport {
       productId: item.product.id,
       quantity: item.quantity,
       customizations: plainCustomizations(item.customizations),
+      mode: (item as { line_mode?: OrderMode }).line_mode ?? undefined,
       name: item.product.name, // in-memory hint for the drop notice only
     })),
   }

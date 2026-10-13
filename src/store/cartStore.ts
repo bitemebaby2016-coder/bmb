@@ -24,10 +24,10 @@ import type { CartItem as CartItemType, Promotion, Product } from "@/types"
 import type { OrderMode } from "@/config/platformConfig"
 import { addOnTotalFor } from "@/lib/addonDisplay"
 
-export type AddToCartResult = 'added' | 'needs_confirmation' | 'context_blocked'
+export type AddToCartResult = 'added' | 'needs_confirmation' | 'context_blocked' | 'blocked'
 
 interface CartStore {
-  items: Array<CartItemType & { __context_tenant_id?: string }>
+  items: Array<CartItemType & { __context_tenant_id?: string; line_mode?: OrderMode }>
   couponCode: string
   appliedPromotion: Promotion | null
   subtotal: number
@@ -99,16 +99,29 @@ export const useCartStore = create<CartStore>((set, get) => ({
       }
     }
 
-    // ✅ Isolation rule: a non-empty cart is locked to one order mode.
+    // ✅ M1 (Owner Wave 2D-1, supersedes OD-4 single-mode lock): a cart may
+    // REPRESENT eligible lines of both modes — a mismatched add no longer
+    // discards. Each line keeps its own `line_mode`; `order_mode` stays the
+    // primary (first) mode until checkout splitting (2D-2). Blocked ONLY when
+    // the line is explicitly ineligible for its requested mode (server
+    // (025 §5) remains the authority — this is an early, clear client guard).
     if (order_mode !== null && order_mode !== mode && items.length > 0) {
-      set({ pendingMode: mode })
-      return 'needs_confirmation'
+      const avail = product.is_available !== false
+      // Lenient on missing flags (server 025 is the authority); block only on
+      // an EXPLICIT canonical false (disabled for this mode).
+      const eligible = mode === 'PRE_ORDER'
+        ? product.available_preorder !== false
+        : product.available_same_day !== false
+      if (!avail || !eligible) {
+        console.warn('[CartStore] Mixed line blocked: product not eligible for its mode.')
+        return 'blocked'
+      }
     }
 
     set((state) => {
       const existingItem = state.items.find(item => item.product.id === product.id)
-      let newItems: Array<CartItemType & { __context_tenant_id?: string }>
-      
+      let newItems: Array<CartItemType & { __context_tenant_id?: string; line_mode?: OrderMode }>
+
       if (existingItem) {
         newItems = state.items.map(item =>
           item.product.id === product.id
@@ -122,10 +135,11 @@ export const useCartStore = create<CartStore>((set, get) => ({
           quantity,
           customizations,
           subtotal: unit * quantity,
-          __context_tenant_id: active_context_tenant_id!
+          __context_tenant_id: active_context_tenant_id!,
+          line_mode: mode
         }]
       }
-      
+
       return { items: newItems, order_mode: state.order_mode ?? mode }
     })
     get().recalculate()
