@@ -37,6 +37,7 @@ import type {
   AvailabilityState,
 } from '@/types'
 import { SOCIAL_PROOF_REVIEWS } from './socialProofReviews'
+import { sameDayEligible, preorderEligible } from './talkToBite'
 
 function availabilityOf(p: Product): AvailabilityState {
   if (!p.is_available) return 'sold_out'
@@ -82,9 +83,12 @@ export function getHomeProducts(
     // because availability was only checked on the same-day branch. Both modes
     // now require is_available && !archived (mirror of the catalog gate).
     const sellable = !!p.is_available && !p.archived
-    if (p.available_preorder ?? p.is_preorder) {
-      if (sellable && (p.is_featured || preOrder.length < 6)) preOrder.push(toHomeProduct(p, cat, 'pre-order'))
-    } else if (sellable) {
+    // Phase 1 (RC-2 / OD-3): eligibility ตาม canonical rule (matrix §3.1) —
+    // else-branch เดิมใส่ sameDay bucket โดยไม่เช็ค `available_same_day`
+    // → สินค้าไร้สิทธิ์ทั้งสองโหมด = ไม่เข้า bucket ใด (ห้าม offer)
+    if (sellable && preorderEligible(p)) {
+      if (p.is_featured || preOrder.length < 6) preOrder.push(toHomeProduct(p, cat, 'pre-order'))
+    } else if (sellable && sameDayEligible(p)) {
       if (p.is_featured || sameDay.length < 6) sameDay.push(toHomeProduct(p, cat, 'same-day'))
     }
   }

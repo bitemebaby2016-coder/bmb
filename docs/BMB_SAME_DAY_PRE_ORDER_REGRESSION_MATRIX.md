@@ -24,9 +24,9 @@
 
 | ID | Invariant | Existing tests | สถานะ | Phase | Acceptance assertion |
 |---|---|---|---|---|---|
-| INV-15 | สินค้าไม่มีสิทธิ์ทั้งสองโหมด **ไม่ถูกเสนอ**ในพื้นที่สั่งซื้อ (OD-3) | `homeShowcase.test.ts:71-80` (preOrder leak fix — เฉพาะ availability) | **MISSING** (โหมด) | **1** | `getHomeProducts`/`pickTopAvailable` ไม่คืนสินค้า `available_same_day=false & available_preorder=false` |
+| INV-15 | สินค้าไม่มีสิทธิ์ทั้งสองโหมด **ไม่ถูกเสนอ**ในพื้นที่สั่งซื้อ (OD-3) | `storefrontEligibility.test.ts` (8 tests — ใหม่) · `homeShowcase.test.ts:71-80` (availability เดิม) | **COVERED** (2026-10-13, EV-016) — proof: ถอด fix = 3 fail | **1 (DONE)** | `getHomeProducts`/`pickTopAvailable` ไม่คืนสินค้า `available_same_day=false & available_preorder=false` — ผ่านแล้ว |
 | INV-16 | การ์ดใน section ตามโหมดของ section (A1) — same-day ไม่มีปุ่มจองล่วงหน้า · preorder ไม่มีปุ่มสั่งเลย | ไม่มี | **MISSING** | **5** | test render `HomeProductCard`/`ShowcaseCard` ตาม prop `mode` |
-| INV-17 | FoodTheater เสนอเฉพาะสินค้าที่มีสิทธิ์ตามโหมดที่ขาย (OD-5) | `theaterStage.test.ts` (14 tests — ไม่ครอบคลุม mode eligibility) | **MISSING** | **1** | picks ไม่มีสินค้าไร้สิทธิ์ · `add()` mode derive ตรง canonical rule |
+| INV-17 | FoodTheater เสนอเฉพาะสินค้าที่มีสิทธิ์ตามโหมดที่ขาย (OD-5) | `storefrontEligibility.test.ts` (pickTopAvailable + `deriveOrderMode`) · `theaterStage.test.ts` (14 tests) | **COVERED** (helper level + SOURCE wiring — EV-016) | **1 (DONE)** | picks ไม่มีสินค้าไร้สิทธิ์ ✓ · `add()` mode derive ตรง canonical rule ✓ (component wiring = SOURCE) |
 | INV-18 | ทุกผิวใช้ canonical fallback สม่ำเสมอ (`available_* ?? alias`) | ไม่มี (RC-7) | **MISSING** | **6** | grep จุดแก้ + assertion |
 | INV-19 | การแสดงสินค้าซ้ำข้าม section ไม่สร้าง cart item/order ซ้ำ (การแสดงซ้ำ ≠ ข้อมูลซ้ำ) | `cartPersistence.test.ts` (merge/quantity) · `cartIsolationStore` | COVERED (cart) · **dedupe UX = MISSING** | **5** (RC-4 ส่วน UX) | invariant ระดับ dedupe ตาม design ที่อนุมัติ (A2 = DEFERRED) |
 | INV-20 | ห้ามลบ FoodTheater/sections อื่นด้วยเหตุ "จำนวนซ้ำ" เพียงอย่างเดียว | — | เงื่อนไขใน contract | 5 | checklist ก่อนลบอะไรก็ตาม (ตอนนี้ A2 deferred = ไม่ลบ) |

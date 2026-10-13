@@ -21,7 +21,7 @@ import { useCartStore } from '@/store/cartStore'
 import { useAuthStore } from '@/store/authStore'
 import { useBiteAIStore } from '@/stores/useBiteAIStore'
 import { MascotBadge } from '@/components/MascotBadge'
-import { pickTopAvailable } from '@/lib/talkToBite'
+import { pickTopAvailable, deriveOrderMode } from '@/lib/talkToBite'
 import { recommendReason } from '@/lib/theaterReasons'
 import { theaterPosFor, clampIndex } from '@/lib/theaterGeometry'
 import { resolveTheaterEditorial, THEATER_EDITORIAL_DEFAULTS } from '@/lib/theaterEditorial'
@@ -157,7 +157,13 @@ export function FoodTheater({ products, onCustomize, onPreOrder }: FoodTheaterPr
 
   // --- Canonical add-to-cart (identical semantics to TalkToBite.addToCart) ---
   function add(p: Product, quantity: number) {
-    const mode = p.available_preorder && !p.available_same_day ? 'PRE_ORDER' : 'SAME_DAY'
+    // Phase 1 (OD-3 / OD-5): derive จาก canonical rule (matrix §3.1) —
+    // null = ไม่มีสิทธิ์ทั้งสองโหมด → ห้าม offer (คิวเดิม reject ด้วย ERR_PRODUCT_MODE_NOT_ALLOWED)
+    const mode = deriveOrderMode(p)
+    if (!mode) {
+      showToast('สินค้านี้ยังไม่เปิดให้สั่งในขณะนี้ค่ะ', 'warning')
+      return
+    }
     const res = useCartStore.getState().addItem(p, quantity, {}, mode)
     if (res === 'added') {
       showToast(`เพิ่ม ${p.name} ลงตะกร้าแล้ว 🛒`)
@@ -171,7 +177,13 @@ export function FoodTheater({ products, onCustomize, onPreOrder }: FoodTheaterPr
   }
 
   function customize(p: Product) {
-    if (p.available_preorder && !p.available_same_day) {
+    // Phase 1 (OD-3): โหมดเดียวกับ add() — canonical derive เท่านั้น
+    const mode = deriveOrderMode(p)
+    if (!mode) {
+      showToast('สินค้านี้ยังไม่เปิดให้สั่งในขณะนี้ค่ะ', 'warning')
+      return
+    }
+    if (mode === 'PRE_ORDER') {
       onPreOrder({ productId: p.id, quantity: 1, deliveryRoundId: '', scheduledDate: '' })
       return
     }

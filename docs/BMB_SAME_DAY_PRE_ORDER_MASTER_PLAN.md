@@ -108,7 +108,7 @@
 
 **Execution protocol (ทุก phase):** audit scope → แสดง Phase Contract → ขอ approval → implement → quality gates → ตรวจ no unrelated changes → อัปเดตเอกสาร → commit เฉพาะ path ใน scope → push → ตรวจ CI `completed/success` → ยืนยัน `HEAD == origin/main` + worktree → รายงาน SHA/evidence/residual risks → หยุดรอ approval ถัดไป
 
-**สถานะล่าสุด (2026-10-13 ICT):** Phase 0 = **DONE** (commit `fbe5ac6`, CI run#410 success, EV-015) · Phase 3 = **IMPLEMENTED** (fix + page test 6 tests + gates 0 — EV-014; CI ของ commit Phase 3 ตรวจอีกทีหลัง push) · Phases 1/2/4/5/6/7 = PENDING (ตามลำดับ OD-7)
+**สถานะล่าสุด (2026-10-13 ICT):** Phase 0 = **DONE** (commit `fbe5ac6`, CI run#410 ✓, EV-015) · Phase 3 = **DONE** (commit `4cb22eb`, CI run#411 ✓, EV-014) · Phase 1 = **IMPLEMENTED** (gates 0 · 874/874 — EV-016; CI ตรวจอีกทีหลัง push) · Phases 2/4/5/6/7 = PENDING (ตามลำดับ OD-7)
 
 **Quality gates ทุกครั้ง (fresh เท่านั้น):** `npx tsc --noEmit --incremental false` · `npm run lint` · `npm test` · `npm run build` = 0 ทุกตัว
 

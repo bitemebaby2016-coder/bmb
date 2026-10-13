@@ -18,8 +18,8 @@
 | 0.1 | Phase 0 — audit + เอกสาร 5 ไฟล์ | **DONE** | 2026-10-13 (รอบ audit) | 2026-10-13 | EV-001..013 · ผล review = PASS ทุกหัวข้อ | Owner ACCEPTED |
 | 0.2 | Phase 0 commit + push | **DONE** | 2026-10-13 09:06 | 2026-10-13 09:06 | `fbe5ac6` (5 ไฟล์ +430/−21) | HEAD == origin/main ✓ · worktree ✓ · stash ✓ |
 | 0.3 | CI ของ `fbe5ac6` (ME-04) | **DONE** | 2026-10-13 09:06 | 2026-10-13 09:07 | GH Actions run #410 `completed/success` (updated 02:07:33Z) | ME-04 ปิดแล้ว |
-| 3 | Phase 3 — AdminOrders filter wiring (RC-1) | **DONE** | 2026-10-13 09:11 | 2026-10-13 09:33 | `AdminOrders.tsx:70-79` + `adminOrdersModeFilter.test.ts` (6 tests) · EV-014 | gates 4/4 = 0 · 866/866 tests · regression พิสูจน์แล้ว (ถอด fix = 6/6 fail) · commit: ดู `git log --grep 'Phase 3'` |
-| 1 | Phase 1 — Storefront eligibility (RC-2) | **PENDING** | — | — | — | หลัง Phase 3 ผ่าน (OD-7) |
+| 3 | Phase 3 — AdminOrders filter wiring (RC-1) | **DONE** | 2026-10-13 09:11 | 2026-10-13 09:31 | commit `4cb22eb` · CI run #411 `completed/success` · `AdminOrders.tsx:70-79` + `adminOrdersModeFilter.test.ts` (6 tests) · EV-014 | gates 4/4 = 0 · 866/866 tests · regression พิสูจน์แล้ว (ถอด fix = 6/6 fail) · HEAD == origin/main ✓ |
+| 1 | Phase 1 — Storefront eligibility (RC-2) | **DONE** | 2026-10-13 09:33 | 2026-10-13 09:44 | `talkToBite.ts` helpers + `homeProviders.ts` + `FoodTheater.tsx` + `HomePage.tsx` · `storefrontEligibility.test.ts` (8 tests) · EV-016 | gates 4/4 = 0 · 874/874 tests · proof: ถอด fix = 3 fail · caller survey: `handleReviewCta` แก้เพิ่ม · MenuPage/FoodMenuCard/homeShowcase ดีอยู่แล้ว |
 | 2 | Phase 2 — Cart/Checkout consistency (RC-3) | **PENDING** | — | — | — | หลัง Phase 1 · HARD STOP ถ้าไม่ตรง OD-4 |
 | 4 | Phase 4 — ยุบ AdminPreOrders (RC-6) | **PENDING** | — | — | — | **BLOCKED ตามสัญญา** — รอ Phase 3 มี evidence |
 | 5 | Phase 5 — Homepage UX / A1 (RC-4, RC-5) | **PENDING** | — | — | — | หลัง Phase 1 + ตรวจ build identity บน `biteme-baby.com` (OD-2) · A2=DEFERRED |

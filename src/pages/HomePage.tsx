@@ -36,6 +36,7 @@ import { FloatingCart, StickyCartBar } from '@/components/home/FloatingCart'
 import { useOrderBuilderStore } from '@/store/orderBuilderStore'
 import { useBrandContextStore } from '@/store/resolvedBrandStore'
 import { filterProductsByBranch } from '@/lib/homeProviders'
+import { deriveOrderMode } from '@/lib/talkToBite'
 import type { VerifiedCustomerReview, Product, ProductCategory, MenuSection, SameDayOrderPayload, PreOrderPayload, HomeReview } from '@/types'
 
 // ⚡ The Food Theater stage is code-split (aiServerMemory chain); it renders
@@ -169,12 +170,20 @@ export function HomePage() {
 
   const handleReviewCta = (review: HomeReview) => {
     const product = products.find((p) => p.id === (review.relatedProduct?.id ?? review.relatedProductName ?? ''))
-    // ✅ Phase 3B: canonical mode columns drive the deep link (alias fallback).
-    const isPre = !!(product && (product.available_preorder ?? product.is_preorder))
-    if (product) {
-      addItem(product, 1, {}, isPre ? 'PRE_ORDER' : 'SAME_DAY')
-      showToast('เพิ่มลงตะกร้าแล้ว!', 'success')
+    if (!product) {
+      navigate('/cart')
+      return
     }
+    // Phase 1 (OD-3): canonical derive (matrix §3.1) — ไร้สิทธิ์ทั้งสองโหมด = ห้ามเพิ่ม/เสนอ
+    // (เดิม fallback เป็น SAME_DAY แล้วถูก server reject ตอน checkout)
+    const mode = deriveOrderMode(product)
+    if (!mode) {
+      showToast('สินค้านี้ยังไม่เปิดให้สั่งในขณะนี้ค่ะ', 'warning')
+      return
+    }
+    const isPre = mode === 'PRE_ORDER'
+    addItem(product, 1, {}, isPre ? 'PRE_ORDER' : 'SAME_DAY')
+    showToast('เพิ่มลงตะกร้าแล้ว!', 'success')
     navigate(isPre ? '/checkout?mode=pre-order' : '/cart')
   }
 

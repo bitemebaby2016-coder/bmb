@@ -99,8 +99,30 @@ export function bitePoseForState(state: BiteState): MascotPose {
  * Featured products sort first; ties break on localeCompare(name) so the result
  * is stable for tests and identical across renders. Never fabricates a dish.
  */
+// Canonical eligibility — BMB_SAME_DAY_PRE_ORDER_REGRESSION_MATRIX.md §3.1 (OD-3 / OD-5):
+//   sameDayEligible(p)  = p.available_same_day  ?? !p.is_preorder
+//   preorderEligible(p) = p.available_preorder ??  p.is_preorder
+export function sameDayEligible(p: Product): boolean {
+  return p.available_same_day ?? !p.is_preorder
+}
+
+export function preorderEligible(p: Product): boolean {
+  return p.available_preorder ?? p.is_preorder
+}
+
+/** 'SAME_DAY' | 'PRE_ORDER' ตามสิทธิ์จริง · `null` = ไม่มีสิทธิ์ทั้งสองโหมด → ห้าม offer ในพื้นที่สั่งซื้อ (OD-3) */
+export function deriveOrderMode(p: Product): 'SAME_DAY' | 'PRE_ORDER' | null {
+  if (preorderEligible(p) && !sameDayEligible(p)) return 'PRE_ORDER'
+  if (sameDayEligible(p)) return 'SAME_DAY'
+  return null
+}
+
 export function pickTopAvailable(products: Product[], count = 3): Product[] {
-  const sellable = (products || []).filter((p) => p.is_available && !p.archived)
+  // Phase 1 (RC-2 / OD-3 / OD-5): ไม่ใช่แค่กรอง — ต้องมีสิทธิ์อย่างน้อยหนึ่งโหมดด้วย
+  // — สินค้าไร้สิทธิ์ทั้งสองโหมดจะถูก server reject ตอน checkout (ERR_PRODUCT_MODE_NOT_ALLOWED)
+  const sellable = (products || []).filter(
+    (p) => p.is_available && !p.archived && deriveOrderMode(p) !== null,
+  )
   const sorted = [...sellable].sort((a, b) => {
     if (!!a.is_featured !== !!b.is_featured) return a.is_featured ? -1 : 1
     return a.name.localeCompare(b.name, 'th')

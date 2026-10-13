@@ -48,6 +48,7 @@
 - **Acceptance criteria:** matrix rows ของ Phase 1 ผ่านทั้งหมด · gates = 0 · ไม่มีการแก้ server/RPC
 - **Risks:** ถ้า catalog ปัจจุบันมีสินค้า `available_same_day=false & available_preorder=false` ที่เคยโชว์ → จะหายไปจากหน้าแรก (**ตรง OD-3 แต่ต้องรายงานจำนวนที่หายในผลรายงาน**) · Theater picks อาจน้อยลง
 - **Rollback:** `git revert` เดียว
+- **Approval/ผล:** Owner "PHASE 0 ACCEPTED → CONTROLLED EXECUTION" (2026-10-13) — **ดำเนินการแล้ว**: canonical helpers + 4 จุดแก้ + `storefrontEligibility.test.ts` (8 tests) · proof ถอด fix = 3 fail · gates 0 ทั้ง 4 · 874/874 (EV-016) · caller survey: `handleReviewCta` gap แก้แล้ว · `MenuPage`/`FoodMenuCard`/`homeShowcase` canonical อยู่แล้ว
 
 ---
 
@@ -132,4 +133,5 @@
 
 - 2026-10-13 — สร้างฉบับแรก (Phase 0) — โดย Owner approval "PHASE 0 DOCUMENTATION ONLY"
 - 2026-10-13 — Phase 3 ดำเนินการเสร็จตาม Owner authorization (อนุมัติเขียน) — เหตุผล: Owner สั่ง "เริ่มจาก Documentation Commit → Git/CI Verification → Phase 3" — ผล: EV-014, INV-11 = COVERED
+- 2026-10-13 — Phase 1 ดำเนินการเสร็จตาม Owner authorization (ลำดับต่อจาก Phase 3 ตาม OD-7) — ผล: EV-016, INV-15/INV-17 = COVERED
 
