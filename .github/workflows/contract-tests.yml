@@ -152,20 +152,62 @@ jobs:
           echo "All migrations 001-123 applied cleanly on isolated DB"
 
       - name: Contract 123 — menu publish enforcement (transaction ROLLBACK)
-        run: psql -v ON_ERROR_STOP=1 -f e2e/contracts_123_menu_publish.sql
+        run: |
+          set +e
+          out=$(psql -v ON_ERROR_STOP=1 -f e2e/contracts_123_menu_publish.sql 2>&1); rc=$?
+          printf '%s\n' "$out"
+          if [ $rc -ne 0 ]; then
+            ln=$(printf '%s\n' "$out" | grep -m1 -oE ':[0-9]+: ERROR' | grep -oE '[0-9]+' | head -1 || true)
+            msg=$(printf '%s\n' "$out" | grep -m1 'ERROR:' || echo "rc=$rc")
+            echo "::error file=e2e/contracts_123_menu_publish.sql,line=${ln:-1}::$msg"
+            exit 1
+          fi
 
       - name: Apply migration 124 — idempotency (isolated only, NOT production)
-        run: psql -v ON_ERROR_STOP=1 -f supabase/migrations/124_order_submit_idempotency.sql
+        run: |
+          set +e
+          out=$(psql -v ON_ERROR_STOP=1 -f supabase/migrations/124_order_submit_idempotency.sql 2>&1); rc=$?
+          printf '%s\n' "$out"
+          if [ $rc -ne 0 ]; then
+            ln=$(printf '%s\n' "$out" | grep -m1 -oE ':[0-9]+: ERROR' | grep -oE '[0-9]+' | head -1 || true)
+            msg=$(printf '%s\n' "$out" | grep -m1 'ERROR:' || echo "rc=$rc")
+            echo "::error file=supabase/migrations/124_order_submit_idempotency.sql,line=${ln:-1}::$msg"
+            exit 1
+          fi
 
       - name: Contract 124 — idempotency matrix (transaction ROLLBACK)
-        run: psql -v ON_ERROR_STOP=1 -f e2e/contracts_124_idempotency.sql
+        run: |
+          set +e
+          out=$(psql -v ON_ERROR_STOP=1 -f e2e/contracts_124_idempotency.sql 2>&1); rc=$?
+          printf '%s\n' "$out"
+          if [ $rc -ne 0 ]; then
+            ln=$(printf '%s\n' "$out" | grep -m1 -oE ':[0-9]+: ERROR' | grep -oE '[0-9]+' | head -1 || true)
+            msg=$(printf '%s\n' "$out" | grep -m1 'ERROR:' || echo "rc=$rc")
+            echo "::error file=e2e/contracts_124_idempotency.sql,line=${ln:-1}::$msg"
+            exit 1
+          fi
 
       - name: Verify contracts left zero persisted test data
         run: |
-          set -euo pipefail
-          test "$(psql -Atc 'SELECT count(*) FROM public.order_submissions')" = "0"
-          test "$(psql -Atc "SELECT count(*) FROM public.orders WHERE customer_phone IN ('0900000000','0999999999')")" = "0"
+          set +e
+          out=$(
+            echo "order_submissions=$(psql -Atc 'SELECT count(*) FROM public.order_submissions')"
+            echo "orders_09=$(psql -Atc "SELECT count(*) FROM public.orders WHERE customer_phone IN ('0900000000','0999999999')")"
+          2>&1); rc=$?
+          printf '%s\n' "$out"
+          if ! printf '%s' "$out" | grep -q 'order_submissions=0' || ! printf '%s' "$out" | grep -q 'orders_09=0'; then
+            echo "::error file=e2e/contracts_124_idempotency.sql::cleanup verification failed: $out"
+            exit 1
+          fi
           echo "cleanup OK — no persisted contract data"
 
       - name: Concurrency — two sessions, same key (ephemeral leftovers OK)
-        run: bash e2e/ci/concurrency_124.sh
+        run: |
+          set +e
+          out=$(bash e2e/ci/concurrency_124.sh 2>&1); rc=$?
+          printf '%s\n' "$out"
+          if [ $rc -ne 0 ]; then
+            msg=$(printf '%s\n' "$out" | grep -m1E 'FAIL|ERROR:' || echo "rc=$rc")
+            echo "::error file=e2e/ci/concurrency_124.sh::$msg"
+            exit 1
+          fi
