@@ -7,7 +7,7 @@
 
 Baseline: repo `D:/A PROJECT/Bite Me Baby` · branch `main` · origin/main = `4e0453eb385166c36c23f416d7345ac19d3a42db` · HEAD (local) = `8075f5d` (4 commits: `06a697b`/`7f808ce`/`34385c7`/`8075f5d`)
 รอบงานนี้: 2026-10-14 (Owner Master Directive — Unified Catalog + Cart + Checkout + W5C) · ต่อเนื่อง 2026-10-14 (Owner mandate: loop ต่อจนผ่าน gate — อัปเดตเอกสาร/commit/push อนุญาตแล้ว; production data mutation = gate แยก)
-**อัปเดตรอบต่อเนื่อง:** Gate 1 admin preflight = DONE (หลักฐาน `docs/BMB_GATE1_PREFLIGHT_GATE3_RELEASE_EVIDENCE_2026-10-14.md`) · Gate 2 Option A = **BLOCKED** (พบ drift 2 จุด — ต้อง Owner ยืนยัน) · Gate 3 release review = PASS (CI re-run จริง 972/972 · tsc 0 · lint 0 · build 0)
+**อัปเดตรอบต่อเนื่อง:** Gate 1 admin preflight = DONE (หลักฐาน `docs/BMB_GATE1_PREFLIGHT_GATE3_RELEASE_EVIDENCE_2026-10-14.md`) · Gate 2 Option A = **EXECUTED** (4 UPDATE rows ตามมติ Owner — ผลตรวจครบใน evidence doc §2) · Gate 3 release review = PASS · Gate 4 push+deploy = DONE · Gate 5 smoke = PASS 9/9
 
 ---
 
@@ -51,7 +51,7 @@ Baseline: repo `D:/A PROJECT/Bite Me Baby` · branch `main` · origin/main = `4e
 > **แต่พบ plan drift:** ID จริง 2 ตัวมี suffix (`prod-1789607383214-t8rm95`, `prod-1789610117076-2p5e8u`) — ตารางล่าง = ID จริงที่ต้องใช้เท่านั้น
 > **Preflight ฐานะ admin (ทำแล้ว 2026-10-14 รอบต่อเนื่อง — หลักฐาน `docs/BMB_GATE1_PREFLIGHT_GATE3_RELEASE_EVIDENCE_2026-10-14.md`):** cat-1 `is_active=false` / cat-2 `archived=false` ตรง hard pre-check ✓ · 6 สินค้าตรงแผน ✓ · `count(products cat-2)=1` ✓ · **baseline order_items 6 สินค้า = 141 แถว** (orders ตาราง = 206, order_items ตาราง = 203)
 > **แต่พบ drift เพิ่ม 2 จุด (ค่าจริงต่างจากแผน):** DRIFT-A = ชื่อหมวดจริง 'ส่งวันนี้ / Same Day' / 'จองล่วงหน้า / พรีออเดอร์' (ไม่ใช่ 'จานเดียว'/'ข้าว' ตาม seed) · DRIFT-B = มีสินค้าที่ 7 `prod-w3c-test-pre` (is_available=false) อยู่ใน cat-1 → ตัวเลขหลังรัน "cat-1 = 6" จะเป็น 7 ตามจริง (ลูกค้าไม่เห็นตัวนี้)
-> **ดังนั้น: ยังไม่รัน SQL เปลี่ยนข้อมูล (Gate 2 = BLOCKED รอ Owner ยืนยัน drift + execution gate — ตามเงื่อนไข Owner หาก preflight ไม่ครบ/ไม่ตรง = หยุด ห้ามเดา)**
+> **ดังนั้น: Gate 2 = EXECUTED แล้ว 2026-10-14 (Owner ยืนยัน drift + สั่ง execute):** ทำจริง **4 UPDATE rows** (U1 cat-1 is_active · U2 prod-3 → cat-1 · U3 cat-2 archived · U4 prod-w3c-test-pre archived ตามมติ) · 0 DELETE · after-verify ครบ — cat-1 active รับ 6 สินค้าขายได้ (แถวรวม 7 = ตรง DRIFT-B) · cat-2 archived · order_items 141 แถวเท่า baseline · ลูกค้าเห็น 5 หมวด/6 สินค้า ทั้ง anon RLS + UI จริง (รายละเอียด + rollback: `docs/BMB_GATE1_PREFLIGHT_GATE3_RELEASE_EVIDENCE_2026-10-14.md` §2)
 
 **หลักฐานจริง (anon read = มุมมองลูกค้า, 2026-10-14):** หมวดที่ลูกค้าเห็น 4 = `cat-3` เมนูสุขภาพ, `cat-4` เครื่องดื่ม (sort 1), `cat-5` ของทานเล่น/ผลไม้, `cat-1790830853978` สินค้าสำเร็จรูป
 **ที่หายไป:** `cat-1` 'จานเดียว' 🍜 และ `cat-2` 'ข้าว' 🍚 (ชื่อจาก seed 001/004 — แถวจริงถูก RLS `is_active` บัง ต้องตรวจด้วย query ฝั่งแอดมิน) — สินค้า 6 ตัว (`is_available=true` ทั้งหมด) ผูกอยู่ = **หายจากหน้าลูกค้าทั้งที่พร้อมขาย**
@@ -205,7 +205,7 @@ FROM products p WHERE p.category_id IN ('cat-1','cat-2');
 | Idempotent submit (124) | ✓ (code) | ✗ (ไม่ wire) | ✗ | isolated harness เท่านั้น | W5C docs | prod apply NOT AUTHORIZED |
 
 ### Owner acceptance checklist (ต้องทำก่อนประกาศพร้อมเปิด)
-- [ ] เลือกแผน §3 + ยืนยัน execution gate → apply + ตรวจด้วย verification queries *(preflight ครบแล้ว 2026-10-14 — ติด DRIFT-A/B รอ Owner ยืนยันก่อน execute)*
+- [x] เลือกแผน §3 + ยืนยัน execution gate → apply + ตรวจด้วย verification queries — **ทำแล้ว 2026-10-14** (Option A + จัดการ prod-w3c-test-pre = 4 UPDATE rows · after-verify ครบ · rollback 100% เตรียมไว้ — evidence doc §2)
 - [x] Review diff รอบนี้ → อนุมัติ commit boundaries → **อนุมัติ push (= deploy)** — ทำแล้ว 2026-10-14 (release review ผ่าน + Owner mandate อนุญาต commit/push; deployed + marker verified)
 - [x] Smoke บน production ฝั่ง client-side (เพิ่มของ→ตะกร้า/line identity/reload/cart/visibility gate/checkout guest gate) — PASS 9/9 (evidence doc §6) · [ ] แอดมินบันทึกเมนู live (production write) · [ ] สั่งซื้อสำเร็จ 1 ออเดอร์จริง (ทดสอบโดย Owner)
 - [ ] ตรวจ sticky cart bar ไม่ทับ BottomNav บนมือถือจริง

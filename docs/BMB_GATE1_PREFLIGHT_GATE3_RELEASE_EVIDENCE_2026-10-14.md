@@ -59,11 +59,42 @@
 | cat-5 | ของทานเล่น/ผลไม้ | 5 | true | false |
 | cat-1790830853978 | สินค้าสำเร็จรูป | 6 | true | false |
 
-## 2. Gate 2 — Category Option A: สถานะ BLOCKED (ยังไม่ execute — 0 rows เปลี่ยน)
+## 2. Gate 2 — Category Option A: EXECUTED 2026-10-14 (4 UPDATE rows, 0 DELETE, 0 INSERT)
 
-- hard pre-check ทั้ง 4 ข้อของ script ตรง ✓ แต่พบ **DRIFT-A/B** → ตามกติกา "ค่าจริงต่างจากแผน = หยุด/รายงาน ห้ามเดา" และ "การ Execute Production SQL ต้องได้รับการยืนยันแยกจากการเตรียมแผน"
-- ดังนั้น **ยังไม่รัน 3 UPDATE** (เปลี่ยนข้อมูล production = 0 rows จนถึงตอนนี้) — script + rollback 100% เตรียมไว้แล้วที่ master §3
-- สิ่งที่ต้อง Owner ยืนยันก่อน execute: (1) ยืนยัน Option A กับชื่อหมวดปัจจุบัน (DRIFT-A) (2) แนวทางจัดการ `prod-w3c-test-pre` (DRIFT-B — ข้อเสนอ: ปล่อยไว้ ไม่กระทบลูกค้า / หรือแยก archive) (3) สั่ง execution gate
+**Owner decision (ถาม-ตอบ 2026-10-14):** execute Option A + จัดการ `prod-w3c-test-pre` (archive เพิ่ม) = **รวม 4 UPDATE rows**
+
+**Pre-check ซ้ำทันทีก่อน execute (ฐานะ admin):** cat-1 `is_active=false` ✓ · cat-2 `archived=false` ✓ · prod-3 `category_id=cat-2` ✓ · prod-w3c-test-pre `archived=false` ✓ · products cat-1=6 / cat-2=1 ✓ — ตรงก่อนเขียนทุกค่า
+
+**Execute (guarded UPDATE ฐานะ admin — PostgREST PATCH พร้อม value-filter เป็น guard, ถ้าแถวไม่ตรง = rollback):**
+
+| # | คำสั่ง (guard) | affected |
+|---|---|---|
+| U1 | `product_categories` cat-1 `is_active=false → true` | **1** |
+| U2 | `products` prod-3 `category_id cat-2 → cat-1` | **1** |
+| U3 | `product_categories` cat-2 `archived=false → true` | **1** |
+| U4 | `products` prod-w3c-test-pre `archived=false → true` | **1** |
+| รวม | | **4 rows** (0 DELETE · 0 INSERT · orders/order_items เขียน 0) |
+
+**After-verify (ทันทีหลัง execute):**
+
+| ตรวจ | ผล |
+|---|---|
+| cat-1 | `is_active=true`, `archived=false` ✓ |
+| cat-2 | `is_active=false`, `archived=true` (archive ไม่ลบ) ✓ |
+| prod-3 | `category_id=cat-1` ✓ |
+| prod-w3c-test-pre | `archived=true`, `is_available=false` ✓ |
+| products ใน cat-1 / cat-2 | **7** (6 ขายได้ + 1 test archived — ตรงที่แจ้ง DRIFT-B) / **0** ✓ |
+| order_items baseline (6 สินค้า) | **141 = 9/2/0/129/0/1 — เท่า baseline เดิมทุกตัว** → ประวัติออเดอร์ไม่กระทบ ✓ |
+| Customer (anon RLS) | เห็น **5 หมวด** (cat-1 'ส่งวันนี้ / Same Day' เข้าแล้ว) · cat-1 เห็น **6 สินค้า** (รวม prod-3) · test product ไม่รั่ว ✓ |
+| UI ลูกค้าจริง (Playwright `/menu`) | `ok:true` — หมวด visible + ครบ 6 ชื่อสินค้า + test product ไม่แสดง ✓ |
+
+**Rollback (ย้อนได้ 100%):**
+```sql
+UPDATE product_categories SET is_active = false WHERE id = 'cat-1';
+UPDATE products SET category_id = 'cat-2' WHERE id = 'prod-3';
+UPDATE product_categories SET archived = false WHERE id = 'cat-2';
+UPDATE products SET archived = false WHERE id = 'prod-w3c-test-pre';
+```
 
 ## 3. Gate 3 — Release review ของ 4 commits (diff จริง)
 
