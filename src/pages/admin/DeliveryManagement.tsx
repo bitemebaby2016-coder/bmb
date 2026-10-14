@@ -20,7 +20,8 @@ import { Link } from 'react-router-dom'
 import { supabase } from '@/lib/supabase'
 import { getOrdersByStatuses, getDeliveryAssignmentsFor, updateOrderStatus } from '@/lib/bmbAdminApi_orders'
 import type { OrderForm, DeliveryAssignmentLiteRow } from '@/lib/bmbAdminApi_orders'
-import { adminListDrivers, assignDriver, adminAdvanceDelivery, type AdminDriverRow } from '@/lib/driverService'
+import { adminListDrivers, assignDriver, adminAdvanceDelivery, upsertDriver, linkDriverUser, getDriverAccounts, type AdminDriverRow, type DriverAccountRow } from '@/lib/driverService'
+import { getUsers, type User } from '@/lib/bmbAdminApi_users'
 import { showToast } from '@/components/ui/ToastContainer'
 
 const ASSIGN_LABEL: Record<string, { label: string; cls: string }> = {
@@ -46,16 +47,26 @@ export function DeliveryManagement() {
   const [pending, setPending] = useState<Record<string, string>>({}) // order_number -> driver_id
   // รูปสถานที่จัดส่งของลูกค้า (Owner feature 2026-10-08) — user_id -> photo URL
   const [photoByUser, setPhotoByUser] = useState<Record<string, string>>({})
+  // Provision ไรเดอร์ (Owner Decision 06 / F-06) — Admin สร้าง driver + ผูกบัญชี login เอง
+  const [accounts, setAccounts] = useState<DriverAccountRow[]>([])
+  const [users, setUsers] = useState<User[]>([])
+  const [provName, setProvName] = useState('')
+  const [provPhone, setProvPhone] = useState('')
+  const [provVehicle, setProvVehicle] = useState('')
+  const [linkPick, setLinkPick] = useState<Record<string, string>>({}) // driver_id -> user_id
+  const [provisioning, setProvisioning] = useState<string | null>(null)
 
   const load = useCallback(async () => {
     setLoading(true)
     try {
-      const [dispatchOrders, drv] = await Promise.all([
+      const [dispatchOrders, drv, accts] = await Promise.all([
         getOrdersByStatuses(['ready_for_dispatch', 'dispatched', 'in_transit', 'arrived', 'delivered']),
         adminListDrivers(),
+        getDriverAccounts(),
       ])
       setOrders(dispatchOrders)
       setDrivers(drv.drivers)
+      setAccounts(accts)
       // assignments are read AFTER we know the order numbers (scoped read, 041 RLS)
       setAssignments(await getDeliveryAssignmentsFor(dispatchOrders.map((o) => o.order_number)))
     } catch (e) {
@@ -63,6 +74,16 @@ export function DeliveryManagement() {
     } finally {
       setLoading(false)
     }
+  }, [])
+
+  // รายชื่อบัญชีผู้ใช้สำหรับผูกไรเดอร์ (public_profiles; READ-ONLY, admin RLS)
+  useEffect(() => {
+    let cancelled = false
+    void (async () => {
+      const list = await getUsers()
+      if (!cancelled) setUsers(list)
+    })()
+    return () => { cancelled = true }
   }, [])
 
   useEffect(() => { void load() }, [load])
@@ -152,6 +173,43 @@ export function DeliveryManagement() {
     } finally { setActing(null) }
   }
 
+  // ===== Provision ไรเดอร์ (Owner Decision 06 / F-06) — admin RPC เท่านั้น: upsert_driver / link_driver_user =====
+  async function handleCreateDriver() {
+    if (!provName.trim() || !provPhone.trim()) { showToast('กรอกชื่อและเบอร์โทรก่อน', 'error'); return }
+    setProvisioning('create')
+    try {
+      const r = await upsertDriver(provName.trim(), provPhone.trim(), provVehicle.trim())
+      if (r.ok) {
+        showToast('✅ บันทึกไรเดอร์แล้ว: ' + r.driver_id + ' (เบอร์ซ้ำ = อัปเดตตัวเดิม)', 'success')
+        setProvName(''); setProvPhone(''); setProvVehicle('')
+        await load()
+      } else {
+        showToast('บันทึกไม่สำเร็จ: ' + String(r.error || 'ERR_UPSERT_REJECTED').slice(0, 80), 'error')
+      }
+    } catch (e: any) {
+      showToast('ผิดพลาด: ' + String(e?.message || e).slice(0, 80), 'error')
+    } finally { setProvisioning(null) }
+  }
+
+  async function handleLinkUser(driverId: string) {
+    const userId = linkPick[driverId]
+    if (!userId) { showToast('เลือกบัญชีผู้ใช้ก่อน', 'error'); return }
+    setProvisioning('link:' + driverId)
+    try {
+      const r = await linkDriverUser(driverId, userId)
+      if (r.ok) {
+        showToast('✅ ผูกบัญชีสำเร็จ: ' + driverId + ' — ไรเดอร์ login ที่ /rider ได้เลย', 'success')
+        setLinkPick((p) => { const n = { ...p }; delete n[driverId]; return n })
+        await load()
+      } else {
+        const msg = r.error || 'ERR_LINK_REJECTED'
+        showToast('ผูกบัญชีไม่สำเร็จ: ' + (msg === 'ERR_USER_ALREADY_LINKED' ? 'บัญชีนี้ถูกผูกกับไรเดอร์คนอื่นแล้ว' : msg).slice(0, 90), 'error')
+      }
+    } catch (e: any) {
+      showToast('ผิดพลาด: ' + String(e?.message || e).slice(0, 80), 'error')
+    } finally { setProvisioning(null) }
+  }
+
   const driverName = (id?: string | null) => drivers.find((d) => d.id === id)?.driver_name || (id ? String(id).slice(0, 14) : null)
   const readyQ = orders.filter((o) => o.status === 'ready_for_dispatch')
   const enroute = orders.filter((o) => ['dispatched', 'in_transit', 'arrived', 'delivered'].includes(o.status))
@@ -173,6 +231,61 @@ export function DeliveryManagement() {
         <div className="card bg-blue-50 border-2 border-blue-200"><h3 className="font-bold text-brand-accent">✅ พร้อมส่งทั้งหมด</h3><p className="text-3xl font-bold mt-2">{readyQ.length}</p></div>
         <div className="card bg-green-50 border-2 border-green-200"><h3 className="font-bold text-brand-accent">🛵 บนถนน</h3><p className="text-3xl font-bold mt-2">{enroute.filter((o) => o.status !== 'delivered').length}</p></div>
         <div className="card bg-purple-50 border-2 border-purple-200"><h3 className="font-bold text-brand-accent">👨‍✈️ ไรเดอร์พร้อม</h3><p className="text-3xl font-bold mt-2">{drivers.filter((d) => d.status === 'available').length}</p></div>
+      </div>
+
+      {/* Provision ไรเดอร์ (Owner Decision 06 / F-06) — upsert_driver + link_driver_user (admin RPC; ไม่มี self-signup) */}
+      <div className="card mb-6" data-testid="driver-provision-panel">
+        <h3 className="font-bold text-brand-accent mb-1">🧑‍✈️ จัดการไรเดอร์ (Provision)</h3>
+        <p className="text-xs text-brand-muted mb-4">
+          สร้าง/อัปเดตไรเดอร์ด้วย <code>upsert_driver</code> (คีย์ด้วยเบอร์โทร — เบอร์ซ้ำ = อัปเดตตัวเดิม) แล้วผูกบัญชี login ด้วย <code>link_driver_user</code>
+          · บัญชีผู้ใช้ต้องมีใน Supabase Auth ก่อน (ลงทะเบียน/สร้างจาก dashboard) แล้วนำมาผูกที่นี่ — ไรเดอร์จะใช้ <code>/rider</code> ได้เฉพาะคนที่ผูกแล้ว (JWT)
+        </p>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-3 mb-4">
+          <input className="input" placeholder="ชื่อ-นามสกุล *" value={provName} onChange={(e) => setProvName(e.target.value)} data-testid="drv-prov-name" />
+          <input className="input" placeholder="เบอร์โทร * (คีย์ยืนยันตัวตน)" value={provPhone} onChange={(e) => setProvPhone(e.target.value)} data-testid="drv-prov-phone" />
+          <input className="input" placeholder="ยานพาหนะ (เช่น มอเตอร์ไซค์)" value={provVehicle} onChange={(e) => setProvVehicle(e.target.value)} data-testid="drv-prov-vehicle" />
+          <button onClick={() => { void handleCreateDriver() }} disabled={provisioning !== null} className="btn btn-primary disabled:opacity-50" data-testid="drv-prov-create">
+            {provisioning === 'create' ? '⏳…' : '➕ บันทึกไรเดอร์'}
+          </button>
+        </div>
+        {accounts.length === 0 ? <p className="text-brand-muted text-sm">ยังไม่มีไรเดอร์ในตาราง drivers</p> : (
+          <div className="space-y-2">
+            {accounts.map((a) => {
+              const linkedUser = users.find((u) => u.id === a.user_id)
+              const takenByOthers = new Set(accounts.filter((x) => x.id !== a.id && x.user_id).map((x) => x.user_id))
+              return (
+                <div key={a.id} className="flex flex-wrap items-center gap-2 border border-brand-border rounded-lg p-2 bg-brand-bg/40">
+                  <span className="font-bold text-sm w-40">{a.name}</span>
+                  <span className={'badge ' + (a.user_id ? 'badge-success' : 'badge-warning')}>
+                    {a.user_id ? '✅ ผูกบัญชีแล้ว' : '⚠ ยังไม่ผูกบัญชี'}
+                  </span>
+                  <span className="text-xs text-brand-muted">{a.user_id ? (linkedUser ? linkedUser.name || linkedUser.email || a.user_id : a.user_id) : '—'}</span>
+                  <select
+                    className="input text-sm w-auto"
+                    value={linkPick[a.id] || ''}
+                    onChange={(e) => setLinkPick((p) => ({ ...p, [a.id]: e.target.value }))}
+                    data-testid={`drv-prov-link-select-${a.id}`}
+                  >
+                    <option value="">— เลือกบัญชีผู้ใช้ —</option>
+                    {users.map((u) => (
+                      <option key={u.id} value={u.id} disabled={takenByOthers.has(u.id)}>
+                        {(u.name || u.email || u.phone || u.id) + (takenByOthers.has(u.id) ? ' (ถูกผูกแล้ว)' : '')}
+                      </option>
+                    ))}
+                  </select>
+                  <button
+                    onClick={() => { void handleLinkUser(a.id) }}
+                    disabled={provisioning !== null || !linkPick[a.id]}
+                    className="btn btn-outline text-sm disabled:opacity-50"
+                    data-testid={`drv-prov-link-btn-${a.id}`}
+                  >
+                    {provisioning === 'link:' + a.id ? '⏳…' : '🔗 ผูกบัญชี (link_driver_user)'}
+                  </button>
+                </div>
+              )
+            })}
+          </div>
+        )}
       </div>
 
       {/* Drivers status — display only (availability is backend authority) */}

@@ -105,8 +105,8 @@ describe('3B-2D · assign_driver contract (admin authority, 020)', () => {
 // ---------------------------------------------------------------------------
 describe('3B-2D · driver identity + assignment ownership (041)', () => {
   async function seedLinkedDriver() {
-    const drvId = await upsertDriver('JWT Rider', '0900000001', 'bike')
-    expect(await linkDriverUser(drvId as string, 'auth-test-user')).toBe(true)
+    const drvId = (await upsertDriver('JWT Rider', '0900000001', 'bike')).driver_id
+    expect((await linkDriverUser(drvId as string, 'auth-test-user')).ok).toBe(true)
     return drvId as string
   }
   it('JWT-linked driver logs in; unlinked caller does NOT become a driver (ERR_NOT_A_DRIVER)', async () => {
@@ -161,7 +161,7 @@ describe('3B-2D · dispatch state transitions (canonical spine only)', () => {
     expect(await updateOrderStatus('D-ILLEGAL', 'dispatched')).toBeNull()
   })
   it('full rider flow reaches delivered (in_transit→arrived→delivered multi-hop)', async () => {
-    const drvId = await upsertDriver('Flow Rider', '0900000001', 'bike')
+    const drvId = (await upsertDriver('Flow Rider', '0900000001', 'bike')).driver_id
     await linkDriverUser(drvId as string, 'auth-test-user')
     await seedOrder({ order_number: 'D-FULL', status: 'ready_for_dispatch' })
     await assignDriver('D-FULL', drvId as string)
@@ -175,7 +175,7 @@ describe('3B-2D · dispatch state transitions (canonical spine only)', () => {
     expect(await driverUpdateDeliveryStatus('D-FULL', 'in_transit')).toBe(false)
   })
   it('cancelled/failed/delivered never sync to a driving state (terminal lock)', async () => {
-    const drvId = await upsertDriver('Term Rider', '0900000001', 'bike')
+    const drvId = (await upsertDriver('Term Rider', '0900000001', 'bike')).driver_id
     await linkDriverUser(drvId as string, 'auth-test-user')
     await seedOrder({ order_number: 'D-TERMX', status: 'cancelled' })
     await assignDriver('D-TERMX', drvId as string) // canonical allows pre-dispatch assign

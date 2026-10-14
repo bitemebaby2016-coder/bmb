@@ -122,17 +122,53 @@ export async function adminAdvanceDelivery(
  * Admin provisioning (Owner Decision 06): link an existing Supabase Auth user
  * to a driver record. The auth user must be created via Supabase Dashboard /
  * Admin API first (no SMS OTP infrastructure — reported gap, Wave 2 report).
+ * Returns a detailed result so the Admin UI can surface server errors
+ * (ERR_USER_NOT_FOUND / ERR_USER_ALREADY_LINKED / ERR_DRIVER_NOT_FOUND).
  */
-export async function linkDriverUser(driverId: string, userId: string): Promise<boolean> {
-  const { error } = await supabase.rpc('link_driver_user', { p_driver_id: driverId, p_user_id: userId })
-  return !error
+export async function linkDriverUser(driverId: string, userId: string): Promise<{ ok: boolean; error?: string }> {
+  const { data, error } = await supabase.rpc('link_driver_user', { p_driver_id: driverId, p_user_id: userId })
+  if (error) return { ok: false, error: error.message }
+  const res = data as { ok?: boolean } | null
+  return { ok: res?.ok === true, error: res?.ok === true ? undefined : 'ERR_LINK_REJECTED' }
 }
 
-/** Admin: upsert a driver record. */
-export async function upsertDriver(name: string, phone: string, vehicleLabel = ''): Promise<string | null> {
+/**
+ * Admin provisioning (Owner Decision 06): create/update a driver record.
+ * NOTE: upsert_driver is keyed by PHONE (ON CONFLICT (phone) DO UPDATE) —
+ * re-submitting an existing phone updates that driver instead of duplicating.
+ * Returns a detailed result so the Admin UI can surface server errors
+ * (ERR_MISSING_DRIVER_INFO / ERR_FORBIDDEN).
+ */
+export async function upsertDriver(
+  name: string,
+  phone: string,
+  vehicleLabel = '',
+): Promise<{ ok: boolean; driver_id?: string; error?: string }> {
   const { data, error } = await supabase.rpc('upsert_driver', { p_name: name, p_phone: phone, p_vehicle_label: vehicleLabel })
-  if (error) return null
-  return (data as unknown as { driver_id?: string }).driver_id ?? null
+  if (error) return { ok: false, error: error.message }
+  const res = data as { ok?: boolean; driver_id?: string } | null
+  if (!res?.ok || !res.driver_id) return { ok: false, error: 'ERR_UPSERT_REJECTED' }
+  return { ok: true, driver_id: res.driver_id }
+}
+
+/**
+ * Admin provisioning: read driver rows (id/name/user_id/status) so the UI can
+ * show which drivers are linked to a login account. READ-ONLY via RLS
+ * (is_admin) — same pattern as the customers photo lookup on the board.
+ */
+export interface DriverAccountRow {
+  id: string
+  name: string
+  user_id: string | null
+  status: string
+}
+
+export async function getDriverAccounts(): Promise<DriverAccountRow[]> {
+  const { data, error } = await supabase
+    .from('drivers')
+    .select('id, name, user_id, status')
+  if (error) { console.error('[Driver] drivers read failed:', error); return [] }
+  return (data ?? []) as DriverAccountRow[]
 }
 
 // ============================================
