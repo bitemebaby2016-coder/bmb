@@ -4,6 +4,7 @@ import { showToast } from '@/components/ui/ToastContainer'
 import { getProducts, createProduct, updateProduct, archiveProduct, restoreProduct, getCategories, getCategoriesAdmin, createCategory, updateCategory, archiveCategory, restoreCategory, getSectionsAdmin, createSection, updateSection, archiveSection, restoreSection } from '@/lib/bmbAdminApi_products'
 import { uploadProductImage, validateImageFile } from '@/lib/bmbAdminApi_media'
 import { slugifyCategory, blankCategoryForm } from '@/lib/adminUi'
+import { customerVisibilityIssue, CUSTOMER_VISIBILITY_LABEL } from '@/lib/catalogStructure'
 import { AddonsEditor, toAddonDrafts, addonDraftsToJson, type AddonDraft } from '@/components/admin/AddonsEditor'
 import type { Product, ProductCategory, MenuSection } from '@/types'
 
@@ -36,6 +37,10 @@ export function AdminProducts() {
   const [sections, setSections] = useState<MenuSection[]>([])
   const [sectionForm, setSectionForm] = useState({ name: '', sort_order: 0 })
   const [editingSection, setEditingSection] = useState<MenuSection | null>(null)
+  // P0 WS2: category lifecycle — move all products from one category to another
+  // (merge/move support using the existing canonical updateProduct API only).
+  const [moveFrom, setMoveFrom] = useState<string | null>(null)
+  const [moveTarget, setMoveTarget] = useState('')
   const [showSectionForm, setShowSectionForm] = useState(false)
 
   useEffect(() => { loadAll() }, [])
@@ -81,7 +86,14 @@ export function AdminProducts() {
     }
     
     // Sanitize add-on draft rows into the products.addons JSON shape.
-    await createProduct({ ...formData, addons: addonDraftsToJson(addons) })
+    // P0 2026-10-14: ต้องเช็คผลลัพธ์ก่อน — createProduct คืน null เมื่อบันทึกล้ม
+    // (RLS is_tenant_admin / validation / เครือข่าย) — ห้ามปิดฟอร์ม + toast สำเร็จ
+    // ทั้งที่ไม่มีอะไรเข้าฐานข้อมูล (สาเหตุหลักที่แอดมินเข้าใจว่าบันทึกแล้วแต่เมนูไม่เปลี่ยน)
+    const created = await createProduct({ ...formData, addons: addonDraftsToJson(addons) })
+    if (!created) {
+      showToast('บันทึกเมนูไม่สำเร็จ — ยังไม่มีข้อมูลเข้าฐานข้อมูล (ตรวจสิทธิ์แอดมิน/การเชื่อมต่อ แล้วลองใหม่)', 'error')
+      return
+    }
     loadAll()
     resetForm()
     setShowAddForm(false)
@@ -108,7 +120,13 @@ export function AdminProducts() {
   async function handleUpdateProduct() {
     if (!editingProduct) return
     
-    await updateProduct(editingProduct.id, { ...formData, addons: addonDraftsToJson(addons) })
+    // P0 2026-10-14: เช็คผลลัพธ์เหมือน handleAddProduct — updateProduct คืน null
+    // เมื่อ write ล้ม → ห้าม toast สำเร็จ/ปิดฟอร์มทั้งที่ไม่บันทึก
+    const updated = await updateProduct(editingProduct.id, { ...formData, addons: addonDraftsToJson(addons) })
+    if (!updated) {
+      showToast('อัปเดตเมนูไม่สำเร็จ — ยังไม่มีการเปลี่ยนแปลงในฐานข้อมูล (ตรวจสิทธิ์แอดมิน/การเชื่อมต่อ แล้วลองใหม่)', 'error')
+      return
+    }
     loadAll()
     resetForm()
     setShowAddForm(false)
@@ -116,6 +134,36 @@ export function AdminProducts() {
   }
 
   // ── Archive / Restore (CAT-01, migration 055 — CAT-D04=B: hard delete is NOT the normal mechanism) ──
+  // P0 WS2: move/merge — reassign every product of `moveFrom` to `moveTarget`
+  // through the canonical updateProduct API (no parallel catalog writes).
+  // The source category is NOT deleted here: the admin archives it explicitly
+  // afterwards ("hard delete is NOT the normal mechanism" — CAT-D04=B).
+  async function handleMoveProducts() {
+    if (!moveFrom || !moveTarget || moveFrom === moveTarget) return
+    const moving = products.filter((p) => p.category_id === moveFrom)
+    if (moving.length === 0) {
+      showToast('หมวดนี้ไม่มีสินค้าให้ย้าย — กดจัดเก็บหมวดได้เลย', 'info')
+      setMoveFrom(null)
+      return
+    }
+    if (!confirm(`ย้ายสินค้า ${moving.length} รายการไปยังหมวดเป้าหมาย? (ไม่ลบข้อมูลใด ๆ)`)) return
+    let ok = 0
+    const failed: string[] = []
+    for (const p of moving) {
+      const res = await updateProduct(p.id, { category_id: moveTarget })
+      if (res) ok += 1
+      else failed.push(p.name)
+    }
+    if (failed.length > 0) {
+      showToast(`ย้ายได้ ${ok}/${moving.length} รายการ — ที่ไม่สำเร็จ: ${failed.join(', ')}`, 'error')
+    } else {
+      showToast(`ย้ายสินค้า ${ok} รายการเรียบร้อย — หน้าลูกค้าจะเห็นหมวดใหม่ในการโหลดข้อมูลรอบถัดไป`, 'success')
+    }
+    setMoveFrom(null)
+    setMoveTarget('')
+    loadAll()
+  }
+
   async function handleArchiveProduct(id: string) {
     if (confirm('จัดเก็บเมนูนี้ (ซ่อนจากลูกค้า + หยุดรับออเดอร์ — กู้คืนได้) ?')) {
       const ok = await archiveProduct(id)
@@ -429,6 +477,23 @@ export function AdminProducts() {
       </div>
 
         <div className="space-y-2">
+          {moveFrom && (
+            <div className="p-3 rounded-lg border-2 border-brand-primary/40 bg-brand-bg" data-testid="admin-move-products-panel">
+              <div className="text-sm font-medium text-brand-accent mb-2">
+                ย้ายสินค้าทั้งหมดจากหมวด: {adminCats.find((c) => c.id === moveFrom)?.name} ({products.filter((p) => p.category_id === moveFrom).length} รายการ)
+              </div>
+              <div className="flex flex-wrap items-center gap-2">
+                <select className="input max-w-64" value={moveTarget} onChange={(e) => setMoveTarget(e.target.value)}>
+                  <option value="">เลือกหมวดปลายทาง…</option>
+                  {adminCats.filter((c) => c.id !== moveFrom && !c.archived).map((c) => (
+                    <option key={c.id} value={c.id}>{c.name}{c.is_active ? '' : ' (ปิดอยู่ — ลูกค้าจะไม่เห็น)'}</option>
+                  ))}
+                </select>
+                <button className="btn btn-primary text-sm" disabled={!moveTarget} onClick={() => void handleMoveProducts()}>ย้ายทั้งหมด</button>
+                <button className="btn btn-outline text-sm" onClick={() => { setMoveFrom(null); setMoveTarget('') }}>ยกเลิก</button>
+              </div>
+            </div>
+          )}
           {adminCats.map((cat) => {
             const count = products.filter((p) => p.category_id === cat.id).length
             return (
@@ -439,9 +504,16 @@ export function AdminProducts() {
                   <span className="text-xs text-brand-muted">({count} dishes)</span>
                   {!cat.is_active && <span className="badge badge-warning text-xs">Hidden</span>}
                   {cat.archived && <span className="badge badge-danger text-xs">Archived</span>}
+                  <span
+                    className={`text-xs font-medium ${cat.is_active && !cat.archived ? 'text-green-600' : 'text-red-500'}`}
+                    data-testid={`cat-customer-visibility-${cat.id}`}
+                  >
+                    {cat.is_active && !cat.archived ? 'ลูกค้าเห็น' : 'ซ่อนจากลูกค้า'}
+                  </span>
                 </div>
                 <div className="flex gap-2">
                   <button onClick={() => openCategoryForm(cat)} className="btn btn-outline text-xs">✏️ Edit</button>
+                  <button onClick={() => { setMoveFrom(cat.id); setMoveTarget('') }} className="btn btn-outline text-xs" data-testid={`admin-move-products-${cat.id}`}>ย้ายสินค้า</button>
                   <button onClick={() => (cat.archived ? handleRestoreCategory(cat) : handleArchiveCategory(cat))} className="btn btn-outline text-xs text-red-500">📦 Archive</button>
                 </div>
               </div>
@@ -466,6 +538,11 @@ export function AdminProducts() {
             <div className="flex items-center justify-between mb-2">
               <h3 className="font-bold text-brand-accent">{product.name}</h3>
               {product.archived && <span className="badge badge-danger text-xs">📦 Archived</span>}
+              {customerVisibilityIssue(product, adminCats) && (
+                <span className="badge badge-warning text-xs" data-testid="admin-product-customer-hidden">
+                  ⚠️ ซ่อนจากหน้าลูกค้า: {CUSTOMER_VISIBILITY_LABEL[customerVisibilityIssue(product, adminCats) ?? 'category_missing']}
+                </span>
+              )}
               <span className={`badge ${product.is_available ? 'badge-success' : 'badge-danger'}`}>
                 {product.is_available ? '✅ เปิดขาย' : '❌ ปิดขาย'}
               </span>

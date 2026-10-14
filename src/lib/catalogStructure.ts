@@ -14,6 +14,34 @@ export interface CatalogGroup {
   }>
 }
 
+export type CustomerVisibilityIssue = 'category_missing' | 'category_inactive' | 'category_archived'
+
+/**
+ * P0 (2026-10-14): explain WHY a product never renders on the customer menu —
+ * buildCatalogGroups only shows products whose category is present, active and
+ * unarchived in the CUSTOMER category read (RLS product_categories_public_read
+ * = is_active). The admin screens must surface this gate, otherwise the admin
+ * cannot tell that customers never see the item (live case: products bound to
+ * cat-1/cat-2 while only cat-3/4/5/... are customer-visible).
+ */
+export function customerVisibilityIssue(
+  product: Pick<Product, 'category_id'>,
+  categories: Array<Pick<ProductCategory, 'id' | 'is_active' | 'archived'>>,
+): CustomerVisibilityIssue | null {
+  const cat = categories.find((c) => c.id === product.category_id)
+  if (!cat) return 'category_missing'
+  if (cat.archived) return 'category_archived'
+  if (!cat.is_active) return 'category_inactive'
+  return null
+}
+
+/** Thai label for the admin badge (customer-hidden reason). */
+export const CUSTOMER_VISIBILITY_LABEL: Record<CustomerVisibilityIssue, string> = {
+  category_missing: 'ไม่มีหมวดหมู่นี้แล้ว',
+  category_inactive: 'หมวดหมู่ปิดอยู่',
+  category_archived: 'หมวดหมู่ถูกจัดเก็บ',
+}
+
 /**
  * Group products by category → section (CAT-D01=B canonical hierarchy).
  * - skips archived categories/products and unavailable products (mirror of the
