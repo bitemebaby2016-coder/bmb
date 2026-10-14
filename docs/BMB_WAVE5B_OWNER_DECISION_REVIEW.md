@@ -218,3 +218,54 @@
 
 Probe ถูกลบทิ้งหลังใช้งาน (temp files + container) — ไม่มีของค้างใน repo (untracked กลับเป็น 13 เดิม)
 
+---
+
+## 5. W5C results (2026-10-14) — หลังอนุมัติ (ข) แบบมีเงื่อนไข
+
+**สถานะ:** W5C-1 (R1/R2/R3 + guard) + W5C-2 (T14-T18/R4-R8/R13/R14) = **DONE · isolated ALL_GREEN** (`local_stack_replica.sh` = CI ทุก step) · **ยังไม่ stage/commit/push** (รอ Owner ตรวจ staged diff — Checkpoint B) · W5C-3 (caller wiring) = plan-only ตาม scope · Workstream D = แยกต่างหาก
+
+### 5.1 Risk register — CLOSED / OPEN / BLOCKED
+
+| Risk | สถานะ | Evidence |
+|---|---|---|
+| R1 fingerprint numeric-scale | **CLOSED** | canonical `trim_scale` ก่อน md5 · T3b replay (1.000/0.0/trailing zero) · T3c conflict (qty/round/dist/special) |
+| R2 key normalize/size | **CLOSED** | btrim + cap 128 (อ้าง caller จริง: UUID36/`cev-`+UUID40/CK-*≤11 + 118:66 extref cap) + fail-closed `ERR_IDEMPOTENCY_KEY_INVALID` · คง case · T5b/T5c/T5d/T6b |
+| R3 stale replay | **CLOSED** | replay = identity เดิม + status/payment_status ปัจจุบันจาก `orders` + `replay:true` (ทั้ง 2 path) · T2b preparing/delivered/cancelled + no-mutate |
+| failed-JSON persist | **CLOSED** | `ERR_IDEMPOTENCY_BAD_RESULT` + CHECK `os_result_has_order` · T14/T15/T16 |
+| **owner_key false conflict (cross-shape)** | **OPEN — ACCEPTED ตาม (ข)** | ยัง conflict ตามสัญญา (ไม่ใช่ FIXED — แก้ comment ≠ แก้พฤติกรรม) · T17/T18 ตรึงไว้ · caller evidence: journey จริงเข้าไม่ถึง (web `U1\|` เสมอ, channel `\|Ux` เสมอ, key ต่าง namespace) · **เงื่อนไข W5C-3:** ห้ามใช้ key ข้าม path + ห้าม web ส่ง cref=auth.uid() ร่วมกับ key ของอีก path |
+| R4 concurrency authenticated | **CLOSED** | `SET ROLE authenticated` ทั้งสอง session + scenario 1 PASS |
+| R5 concurrent diff payload | **CLOSED** | ชนะ 1/conflict 1/orders=1/subs=1 |
+| R6 fail-then-win | **CLOSED** | orders=1/subs=1 · A ล้มตามคาด (EMPTY_ORDER\|CONFLICT) · B สร้างครั้งเดียว |
+| R7 extref interplay | **CLOSED** | R7a replay · R7b conflict · T14 (reduced persist/replay) |
+| R8 service-role path | **CLOSED** | T17-e create + T17-c same-shape replay + T17-d fail-closed |
+| R9 retention+PII | **OPEN — Owner decision** | `order_submissions` เก็บชื่อ/เบอร์ใน result — ต้องกำหนด retention/PII policy |
+| R10 prod precheck 18-param | **BLOCKED** | ไม่มี production access ในรอบนี้ |
+| R11 staging PostgREST+pgbouncer | **OPEN — ops task** | ต้อง staging run |
+| R12 hash algo | **OPEN — Owner decision** | md5→sha256 = drop-in ภายหลัง (column 64 hex พอ) |
+| R13 FK ghost replay | **CLOSED** | R13: delete (CASCADE) + replay → identity เดิม + `replay:true` ไม่พัง |
+| R14 T3 leak | **CLOSED** | assert `SQLERRM NOT LIKE '%<order>%'` เพิ่มใน T3 |
+| R15 concurrency leftovers | **CLOSED** | CLEANUP VERIFY ผ่าน + asserts ทุก scenario |
+
+### 5.2 Policy interpretations ที่ตรึง (ยืนยันตามเงื่อนไข (ข))
+1. **false conflict = ยังอยู่** — รายงานตรงนี้ตามจริง: สิ่งที่แก้ใน W5B คือ "ข้อความ comment ที่ผิด" เท่านั้น
+2. T17/T18 = characterization (ข) — ถ้า Owner เลือก (ก) เมื่อไร ให้ flip expectations + แก้ `124` owner_key เป็น COALESCE
+3. key non-NULL ว่างหลัง trim = fail-closed (เดิม fallback no-key) · array order คงเดิม (สลับลำดับ = conflict)
+
+### 5.3 Remediation รอบ 2 (2026-10-14) — ตาม Owner diff review directive
+
+**Root cause + patch ของแต่ละจุด (EV-033):**
+1. **CHECK `os_result_has_order` รับ `{"order_number": null}` ได้จริง** — `btrim(NULL) <> ''` = NULL และ SQL CHECK ถือ NULL = ผ่าน → **patch**: expression ทั้งก้อนต้องเป็น TRUE ชัด ๆ (`(... ) IS TRUE`) + `jsonb_typeof(result)='object'` + key มี + `jsonb_typeof(result->'order_number')='string'` + trim ไม่ว่าง · wrapper guard align (non-string → `ERR_IDEMPOTENCY_BAD_RESULT`) · **T16 matrix 8 กรณี** = invalid ถูกปฏิเสธหมด / valid ผ่าน
+2. **R6 เดิมไม่ได้พิสูจน์ fail-then-retry** (A ได้ CONFLICT จาก race เสมอ — ไม่เคยผ่าน `ERR_EMPTY_ORDER`) → แยก **R6a deterministic** (`ERR_EMPTY_ORDER` เป๊ะ + 0/0 + valid retry ครั้งเดียว + replay `replay:true`) ออกจาก **R6b race** (A ∈ {EMPTY_ORDER|CONFLICT} ตาม scheduling — ระบุชัดว่าห้ามใช้แทน R6a) + นับ fixture แยก KEY3/PHONE3 vs KEY4/PHONE4
+3. **round-pick nondeterminism ฝั่ง test** — `delivery_rounds … LIMIT 1` ไม่มี ORDER BY (6 active rounds/วัน) → 2 call ต่างกันได้เองหลัง create → **fingerprint conflict เท็จ** (หลักฐาน R6a run แรก: คำสั่งเดียวกันเป๊ะ แต่ conflict) → `ORDER BY id` ทั้ง `call()`/`callx()` — ไม่แตะ assertion ใด
+4. **R1 nested** — unit assert + T3d (nested trailing zeros → replay) + T3e (nested value/array order/string digits → conflict) — **policy เดิมคง** · ข้อจำกัดจริง: 118:119 แคสท์ `quantity` เป็น int → `"1.000"` ใช้เป็น create payload ไม่ได้ (ตรวจผ่าน retry path)
+5. **R3 ghost** — asserts เพิ่ม: identity คง + status/payment_status = stored snapshot (ไม่ปั้นสถานะ) + ไม่สร้าง order/intent · **unique_violation branch = defense-in-depth ใต้ advisory lock → ยั่ว deterministic ไม่ได้ = ยังไม่มี runtime coverage (ห้ามอ้างว่ามี)**
+
+**สถานะตามขั้น (ห้ามระบุ Production-ready/verified):**
+- IMPLEMENTED — ✓ 2026-10-14 (W5C-1/2 + remediation รอบ 2)
+- ISOLATED TEST VERIFIED — ✓ `local_stack_replica.sh` ALL_GREEN · **HARNESS_EXIT=0** (recorded ทันทีหลังจบคำสั่ง)
+- OWNER DIFF REVIEW — รอบ remediation นี้อยู่ระหว่าง Owner ตรวจ
+- COMMIT/PUSH — ยังไม่ทำ (รอคำสั่ง)
+- PRODUCTION APPLY — ยังไม่ทำ (R10 BLOCKED · R11 OPEN · ห้าม apply จนครบเกณฑ์ปิด)
+
+**คงเดิมตาม directive:** owner_key policy (ข) + T17/T18 characterization (false conflict = ACCEPTED+DOCUMENTED ไม่ใช่ FIXED) · R9/R12 = OPEN (รอ Owner decision) · R10 = BLOCKED · R11 = OPEN — ไม่เปลี่ยนสถานะเอง
+

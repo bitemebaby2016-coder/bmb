@@ -95,6 +95,7 @@ BEGIN
     RAISE EXCEPTION 'T3 expected idempotency conflict';
   EXCEPTION WHEN raise_exception THEN
     ASSERT SQLERRM LIKE '%ERR_IDEMPOTENCY_CONFLICT%', 'T3 got: ' || SQLERRM;
+    ASSERT SQLERRM NOT LIKE '%' || v_n1 || '%', 'T3 leaked order number';
   END;
   ASSERT pg_temp.c_orders() = v_base_orders + 1, 'T3 must not create order';
 
@@ -199,6 +200,468 @@ BEGIN
              AND pg_get_function_identity_arguments(p.oid) LIKE '%p_customer_ref%'
              AND pg_get_function_identity_arguments(p.oid) LIKE '%p_client_submit_key%') = 1,
     'T11b wrapper must cover the current 18-arg signature + key';
+  -- ============ W5C (2026-10-14) — Owner-approved R1/R2/R3 + T14-T18/R7/R8/R13/R14 ============
+  -- T17/T18 = characterization ของ composite owner_key (ทางเลือก ข): false conflict
+  --   ข้าม shape "ยังอยู่" ตามสัญญา — ACCEPTED+DOCUMENTED ไม่ใช่ FIXED (การแก้ comment
+  --   ไม่ใช่การแก้พฤติกรรม) · ถ้า Owner เลือก (ก) ให้ flip คาดหวังใน T17/T18
+  -- ทุกเคส snapshot ฐานเอง (v_mark/v_smark) — ไม่แตะ offset ของ T1-T13 เดิม
+  DECLARE
+    v_mark int;
+    v_smark bigint;
+    v_bad text;
+    v_n3 text;
+    v_n4 text;
+  BEGIN
+    v_mark := pg_temp.c_orders();
+    v_smark := pg_temp.c_subs(NULL);
+    PERFORM set_config('role', 'authenticated', false);
+    PERFORM set_config('request.jwt.claims',
+      '{"sub":"a1111111-1111-1111-1111-111111111111","role":"authenticated"}', false);
+
+    -- T2b [W5C R3]: เปลี่ยนสถานะแล้ว replay → identity เดิม + สถานะปัจจุบัน + ไม่ mutate
+    -- (ใช้ trusted sync context แบบ 036 + allow-list 030 adjacency chain)
+    PERFORM set_config('role', 'none', false);
+    UPDATE public.inventory SET current_stock = GREATEST(current_stock, 99999); -- fixture: confirmed หักสต๊อกตาม design
+    PERFORM set_config('request.jwt.claims', '{"role":"service_role"}', false); -- server-side: guard_profile_mutation ให้ service เปลี่ยน role
+    UPDATE public.profiles SET role = 'admin' WHERE id = 'dddf4b57-405f-4852-a985-76d8d52b1b72'; -- fixture: is_admin() ต้องผ่าน (deduct inventory เป็น admin-only)
+    PERFORM set_config('request.jwt.claims',
+      '{"sub":"dddf4b57-405f-4852-a985-76d8d52b1b72","role":"authenticated"}', false); -- admin fixture สำหรับ trigger ฝั่ง inventory
+    PERFORM set_config('app.delivery_sync_order', v_n1, true);
+    UPDATE public.orders SET status = 'confirmed' WHERE order_number = v_n1;
+    UPDATE public.orders SET status = 'preparing' WHERE order_number = v_n1;
+    PERFORM set_config('app.delivery_sync_order', '', true);
+    PERFORM set_config('role', 'authenticated', false);
+    PERFORM set_config('request.jwt.claims',
+      '{"sub":"a1111111-1111-1111-1111-111111111111","role":"authenticated"}', false);
+    v_r := public.create_order_with_items_i(v_items, v_round, 'self_delivery', '', v_lat, v_lon,
+      'QA', '0900000000', 'cash_on_delivery', '', NULL, 0, 'SAME_DAY', NULL, NULL, NULL, NULL, NULL, 'CK-T1');
+    ASSERT (v_r->>'order_number') = v_n1, 'T2b identity must be preserved';
+    ASSERT v_r->>'replay' = 'true', 'T2b replay marker';
+    ASSERT v_r->>'status' = 'preparing', 'T2b current status, got: ' || (v_r->>'status');
+    ASSERT v_r->>'payment_status' = 'pending', 'T2b current payment_status';
+    ASSERT pg_temp.c_orders() = v_mark, 'T2b replay must not create order';
+    ASSERT (SELECT status::text FROM public.orders WHERE order_number = v_n1) = 'preparing',
+      'T2b replay must not mutate status';
+
+    PERFORM set_config('role', 'none', false);
+    PERFORM set_config('request.jwt.claims',
+      '{"sub":"dddf4b57-405f-4852-a985-76d8d52b1b72","role":"authenticated"}', false);
+    PERFORM set_config('app.delivery_sync_order', v_n1, true);
+    UPDATE public.orders SET status = 'ready_for_dispatch' WHERE order_number = v_n1;
+    UPDATE public.orders SET status = 'dispatched' WHERE order_number = v_n1;
+    UPDATE public.orders SET status = 'in_transit' WHERE order_number = v_n1;
+    UPDATE public.orders SET status = 'arrived' WHERE order_number = v_n1;
+    UPDATE public.orders SET status = 'delivered', payment_status = 'paid' WHERE order_number = v_n1;
+    PERFORM set_config('app.delivery_sync_order', '', true);
+    PERFORM set_config('role', 'authenticated', false);
+    PERFORM set_config('request.jwt.claims',
+      '{"sub":"a1111111-1111-1111-1111-111111111111","role":"authenticated"}', false);
+    v_r := public.create_order_with_items_i(v_items, v_round, 'self_delivery', '', v_lat, v_lon,
+      'QA', '0900000000', 'cash_on_delivery', '', NULL, 0, 'SAME_DAY', NULL, NULL, NULL, NULL, NULL, 'CK-T1');
+    ASSERT (v_r->>'order_number') = v_n1 AND v_r->>'replay' = 'true', 'T2b delivered replay identity';
+    ASSERT v_r->>'status' = 'delivered' AND v_r->>'payment_status' = 'paid', 'T2b delivered/paid current state';
+    ASSERT pg_temp.c_orders() = v_mark, 'T2b delivered replay must not create order';
+    ASSERT pg_temp.c_pint('0900000000') = 0, 'T2b replay must not create payment intents';
+
+    -- cancelled (order ใหม่ — แยกเคส)
+    v_r := public.create_order_with_items_i(v_items, v_round, 'self_delivery', '', v_lat, v_lon,
+      'T2bC', '0900000000', 'cash_on_delivery', '', NULL, 0, 'SAME_DAY', NULL, NULL, NULL, NULL, NULL, 'CK-T2B');
+    v_n3 := v_r->>'order_number';
+    ASSERT v_n3 IS NOT NULL, 'T2b cancelled: create failed';
+    PERFORM set_config('role', 'none', false);
+    PERFORM set_config('request.jwt.claims',
+      '{"sub":"dddf4b57-405f-4852-a985-76d8d52b1b72","role":"authenticated"}', false);
+    PERFORM set_config('app.delivery_sync_order', v_n3, true);
+    UPDATE public.orders SET status = 'cancelled' WHERE order_number = v_n3;
+    PERFORM set_config('app.delivery_sync_order', '', true);
+    PERFORM set_config('role', 'authenticated', false);
+    PERFORM set_config('request.jwt.claims',
+      '{"sub":"a1111111-1111-1111-1111-111111111111","role":"authenticated"}', false);
+    v_r := public.create_order_with_items_i(v_items, v_round, 'self_delivery', '', v_lat, v_lon,
+      'T2bC', '0900000000', 'cash_on_delivery', '', NULL, 0, 'SAME_DAY', NULL, NULL, NULL, NULL, NULL, 'CK-T2B');
+    ASSERT v_r->>'status' = 'cancelled', 'T2b cancelled current status';
+    ASSERT v_r->>'replay' = 'true' AND (v_r->>'order_number') = v_n3, 'T2b cancelled replay';
+    ASSERT pg_temp.c_orders() = v_mark + 1, 'T2b cancelled: exactly the one create';
+
+    -- T3b [W5C R1+]: ตัวเลขค่าเท่ากันต่าง scale (1.000/0.0/trailing zero) → replay
+    v_r := public.create_order_with_items_i(v_items, v_round, 'self_delivery', '', v_lat, v_lon,
+      'T3b', '0900000000', 'cash_on_delivery', '', NULL, 0, 'SAME_DAY', NULL, NULL, NULL, NULL, NULL, 'CK-R1');
+    v_n3 := v_r->>'order_number';
+    ASSERT v_n3 IS NOT NULL, 'T3b create failed';
+    v_r := public.create_order_with_items_i(
+      '[{"product_id":"prod-1","quantity":1.000,"options":{},"special_request":null}]'::jsonb,
+      v_round, 'self_delivery', '', v_lat + 0.00000, v_lon + 0.00000,
+      'T3b', '0900000000', 'cash_on_delivery', '', NULL, 0.0, 'SAME_DAY', NULL, NULL, NULL, NULL, NULL, 'CK-R1');
+    ASSERT (v_r->>'order_number') = v_n3, 'T3b numeric-scale variants must replay (R1)';
+    ASSERT v_r->>'replay' = 'true', 'T3b replay marker';
+    ASSERT pg_temp.c_orders() = v_mark + 2, 'T3b replay must not create order';
+
+    -- T3c [W5C R1-]: ข้อมูลธุรกิจเปลี่ยน (qty/dist/round/special) → conflict ตามสัญญา
+    BEGIN
+      PERFORM public.create_order_with_items_i(v_items2, v_round, 'self_delivery', '', v_lat, v_lon,
+        'T3b', '0900000000', 'cash_on_delivery', '', NULL, 0, 'SAME_DAY', NULL, NULL, NULL, NULL, NULL, 'CK-R1');
+      RAISE EXCEPTION 'T3c expected conflict (quantity change)';
+    EXCEPTION WHEN raise_exception THEN
+      ASSERT SQLERRM LIKE '%ERR_IDEMPOTENCY_CONFLICT%', 'T3c qty: ' || SQLERRM;
+    END;
+    BEGIN
+      PERFORM public.create_order_with_items_i(v_items, v_round, 'self_delivery', '', v_lat, v_lon,
+        'T3b', '0900000000', 'cash_on_delivery', '', NULL, 5, 'SAME_DAY', NULL, NULL, NULL, NULL, NULL, 'CK-R1');
+      RAISE EXCEPTION 'T3c expected conflict (distance change)';
+    EXCEPTION WHEN raise_exception THEN
+      ASSERT SQLERRM LIKE '%ERR_IDEMPOTENCY_CONFLICT%', 'T3c dist: ' || SQLERRM;
+    END;
+    BEGIN
+      PERFORM public.create_order_with_items_i(v_items, 'other-round-x', 'self_delivery', '', v_lat, v_lon,
+        'T3b', '0900000000', 'cash_on_delivery', '', NULL, 0, 'SAME_DAY', NULL, NULL, NULL, NULL, NULL, 'CK-R1');
+      RAISE EXCEPTION 'T3c expected conflict (round change)';
+    EXCEPTION WHEN raise_exception THEN
+      ASSERT SQLERRM LIKE '%ERR_IDEMPOTENCY_CONFLICT%', 'T3c round: ' || SQLERRM;
+    END;
+    BEGIN
+      PERFORM public.create_order_with_items_i(
+        '[{"product_id":"prod-1","quantity":1,"options":{},"special_request":"changed"}]'::jsonb,
+        v_round, 'self_delivery', '', v_lat, v_lon,
+        'T3b', '0900000000', 'cash_on_delivery', '', NULL, 0, 'SAME_DAY', NULL, NULL, NULL, NULL, NULL, 'CK-R1');
+      RAISE EXCEPTION 'T3c expected conflict (special_request change)';
+    EXCEPTION WHEN raise_exception THEN
+      ASSERT SQLERRM LIKE '%ERR_IDEMPOTENCY_CONFLICT%', 'T3c special: ' || SQLERRM;
+    END;
+    ASSERT pg_temp.c_orders() = v_mark + 2, 'T3c conflicts must not create orders';
+    -- T5b [W5C R2]: btrim key — padded retry map เดิม · ไม่เก็บ key ดิบ
+    v_r := public.create_order_with_items_i(v_items, v_round, 'self_delivery', '', v_lat, v_lon,
+      'T5b', '0900000000', 'cash_on_delivery', '', NULL, 0, 'SAME_DAY', NULL, NULL, NULL, NULL, NULL, '  CK-PAD  ');
+    v_n3 := v_r->>'order_number';
+    ASSERT v_n3 IS NOT NULL, 'T5b create failed';
+    ASSERT pg_temp.sub_num('CK-PAD') = v_n3, 'T5b trimmed key must be stored (R2)';
+    ASSERT pg_temp.sub_num('  CK-PAD  ') IS NULL, 'T5b raw padded key must not exist (R2)';
+    v_r := public.create_order_with_items_i(v_items, v_round, 'self_delivery', '', v_lat, v_lon,
+      'T5b', '0900000000', 'cash_on_delivery', '', NULL, 0, 'SAME_DAY', NULL, NULL, NULL, NULL, NULL, ' CK-PAD');
+    ASSERT (v_r->>'order_number') = v_n3 AND v_r->>'replay' = 'true', 'T5b padded retry must replay (R2)';
+    ASSERT pg_temp.c_orders() = v_mark + 3, 'T5b replay must not create order';
+
+    -- T5c [W5C R2]: invalid keys fail closed (ว่างหลัง trim / control char / ยาว > 128)
+    FOREACH v_bad IN ARRAY ARRAY['', '   ', E'bad\tkey', repeat('x', 129)] LOOP
+      BEGIN
+        PERFORM public.create_order_with_items_i(v_items, v_round, 'self_delivery', '', v_lat, v_lon,
+          'T5c', '0900000000', 'cash_on_delivery', '', NULL, 0, 'SAME_DAY', NULL, NULL, NULL, NULL, NULL, v_bad);
+        RAISE EXCEPTION 'T5c expected ERR_IDEMPOTENCY_KEY_INVALID';
+      EXCEPTION WHEN raise_exception THEN
+        ASSERT SQLERRM LIKE '%ERR_IDEMPOTENCY_KEY_INVALID%', 'T5c(len=' || length(v_bad) || '): ' || SQLERRM;
+      END;
+    END LOOP;
+    -- boundary: 128 chars ต้องผ่าน (cap = 128)
+    v_r := public.create_order_with_items_i(v_items, v_round, 'self_delivery', '', v_lat, v_lon,
+      'T5c', '0900000000', 'cash_on_delivery', '', NULL, 0, 'SAME_DAY', NULL, NULL, NULL, NULL, NULL, repeat('k', 128));
+    ASSERT v_r->>'order_number' IS NOT NULL, 'T5c 128-char key must be accepted (cap boundary)';
+    ASSERT pg_temp.c_orders() = v_mark + 4, 'T5c invalid keys must not create orders (only the boundary key)';
+
+    -- T5d [W5C R2]: case-sensitive — 'ck-a' ≠ 'ck-A' (ห้าม normalize ตัวพิมพ์)
+    v_r := public.create_order_with_items_i(v_items, v_round, 'self_delivery', '', v_lat, v_lon,
+      'T5d', '0900000000', 'cash_on_delivery', '', NULL, 0, 'SAME_DAY', NULL, NULL, NULL, NULL, NULL, 'ck-a');
+    v_n3 := v_r->>'order_number';
+    v_r := public.create_order_with_items_i(v_items, v_round, 'self_delivery', '', v_lat, v_lon,
+      'T5d', '0900000000', 'cash_on_delivery', '', NULL, 0, 'SAME_DAY', NULL, NULL, NULL, NULL, NULL, 'ck-A');
+    v_n4 := v_r->>'order_number';
+    ASSERT v_n3 <> v_n4, 'T5d case-sensitive keys must map to distinct orders';
+    ASSERT pg_temp.c_orders() = v_mark + 6, 'T5d two distinct orders';
+
+    -- T6b: _i กับ key=NULL → legacy passthrough ไม่เขียน order_submissions
+    v_smark := pg_temp.c_subs(NULL); -- baseline ณ จุดเรียก (T2b-T5d เขียนไปแล้ว — ต้องไม่เพิ่มอีก)
+    v_r := public.create_order_with_items_i(v_items, v_round, 'self_delivery', '', v_lat, v_lon,
+      'T6b', '0900000000', 'cash_on_delivery', '', NULL, 0, 'SAME_DAY', NULL, NULL, NULL, NULL, NULL, NULL);
+    ASSERT v_r->>'order_number' IS NOT NULL, 'T6b _i NULL-key passthrough failed';
+    ASSERT v_r->>'duplicate' = 'false', 'T6b must return original success shape';
+    ASSERT pg_temp.c_subs(NULL) = v_smark, 'T6b legacy path must not write submissions';
+    ASSERT pg_temp.c_orders() = v_mark + 7, 'T6b legacy creates exactly one order';
+    -- T14 [reduced duplicate shape persist + replay] ≡ R7c — 118:78 extref durable guard
+    v_r := public.create_order_with_items_i(v_items, v_round, 'self_delivery', '', v_lat, v_lon,
+      'T14', '0900000000', 'cash_on_delivery', '', NULL, 0, 'SAME_DAY', NULL, NULL, 'LINE', 'EXT-14', NULL, 'CK-T14');
+    v_n3 := v_r->>'order_number';
+    ASSERT v_n3 IS NOT NULL AND v_r->>'duplicate' = 'false', 'T14 first create';
+    -- R7a: same key + same extref → replay
+    v_r := public.create_order_with_items_i(v_items, v_round, 'self_delivery', '', v_lat, v_lon,
+      'T14', '0900000000', 'cash_on_delivery', '', NULL, 0, 'SAME_DAY', NULL, NULL, 'LINE', 'EXT-14', NULL, 'CK-T14');
+    ASSERT (v_r->>'order_number') = v_n3 AND v_r->>'replay' = 'true', 'R7a same-key same-extref replay';
+    -- R7b: same key + different extref → conflict
+    BEGIN
+      PERFORM public.create_order_with_items_i(v_items, v_round, 'self_delivery', '', v_lat, v_lon,
+        'T14', '0900000000', 'cash_on_delivery', '', NULL, 0, 'SAME_DAY', NULL, NULL, 'LINE', 'EXT-14B', NULL, 'CK-T14');
+      RAISE EXCEPTION 'R7b expected conflict (extref change)';
+    EXCEPTION WHEN raise_exception THEN
+      ASSERT SQLERRM LIKE '%ERR_IDEMPOTENCY_CONFLICT%', 'R7b: ' || SQLERRM;
+    END;
+    -- T14: NEW key + SAME extref → 118 คืน reduced duplicate:true → persist ใต้ key ใหม่
+    v_r := public.create_order_with_items_i(v_items, v_round, 'self_delivery', '', v_lat, v_lon,
+      'T14', '0900000000', 'cash_on_delivery', '', NULL, 0, 'SAME_DAY', NULL, NULL, 'LINE', 'EXT-14', NULL, 'CK-T14B');
+    ASSERT v_r->>'duplicate' = 'true', 'T14 reduced duplicate shape expected';
+    ASSERT (v_r->>'order_number') = v_n3, 'T14 duplicate must point to the original order';
+    ASSERT pg_temp.sub_num('CK-T14B') = v_n3, 'T14 reduced result must persist (has order_number)';
+    ASSERT pg_temp.c_orders() = v_mark + 8, 'T14 must not create a second order';
+    v_r := public.create_order_with_items_i(v_items, v_round, 'self_delivery', '', v_lat, v_lon,
+      'T14', '0900000000', 'cash_on_delivery', '', NULL, 0, 'SAME_DAY', NULL, NULL, 'LINE', 'EXT-14', NULL, 'CK-T14B');
+    ASSERT v_r->>'replay' = 'true' AND (v_r->>'order_number') = v_n3, 'T14 replay of reduced result';
+    ASSERT v_r->>'status' = 'pending', 'T14 replay carries current canonical status';
+
+    -- T15: failed result ไม่ persist → retry ดีสร้างครั้งเดียว → replay ได้
+    BEGIN
+      PERFORM public.create_order_with_items_i('[]'::jsonb, v_round, 'self_delivery', '', v_lat, v_lon,
+        'T15', '0900000000', 'cash_on_delivery', '', NULL, 0, 'SAME_DAY', NULL, NULL, NULL, NULL, NULL, 'CK-T15');
+      RAISE EXCEPTION 'T15 expected ERR_EMPTY_ORDER';
+    EXCEPTION WHEN raise_exception THEN
+      ASSERT SQLERRM LIKE '%ERR_EMPTY_ORDER%', 'T15 got: ' || SQLERRM;
+    END;
+    ASSERT pg_temp.c_subs('CK-T15') = 0, 'T15 failed result must not persist';
+    v_r := public.create_order_with_items_i(v_items, v_round, 'self_delivery', '', v_lat, v_lon,
+      'T15', '0900000000', 'cash_on_delivery', '', NULL, 0, 'SAME_DAY', NULL, NULL, NULL, NULL, NULL, 'CK-T15');
+    v_n3 := v_r->>'order_number';
+    ASSERT v_n3 IS NOT NULL, 'T15 retry must succeed';
+    ASSERT pg_temp.c_orders() = v_mark + 9, 'T15 retry creates exactly one order';
+    v_r := public.create_order_with_items_i(v_items, v_round, 'self_delivery', '', v_lat, v_lon,
+      'T15', '0900000000', 'cash_on_delivery', '', NULL, 0, 'SAME_DAY', NULL, NULL, NULL, NULL, NULL, 'CK-T15');
+    ASSERT v_r->>'replay' = 'true' AND (v_r->>'order_number') = v_n3, 'T15 replay after recovery';
+
+    -- T16: CHECK os_result_has_order — [remediation 2026-10-14] matrix เข้มงวดชนิด:
+    --   result = JSON object · order_number = JSON string · trim ไม่ว่าง · expression = TRUE ชัด ๆ
+    PERFORM set_config('role', 'none', false);
+    -- T16-1: ไม่มี key order_number เลย
+    BEGIN
+      INSERT INTO public.order_submissions (client_submit_key, owner_key, payload_fingerprint, result, order_number)
+      VALUES ('CK-T16', 'x|y', 'fp-t16', '{"no_order": true}'::jsonb, 'T16-ORPHAN');
+      RAISE EXCEPTION 'T16-1 expected check_violation';
+    EXCEPTION WHEN check_violation THEN NULL;
+    END;
+    -- T16-2: order_number: null — ของเดิมรอด (btrim(NULL) <> '' = NULL → CHECK ผ่าน) = bug ที่ปิดแล้ว
+    BEGIN
+      INSERT INTO public.order_submissions (client_submit_key, owner_key, payload_fingerprint, result, order_number)
+      VALUES ('CK-T16N', 'x|y', 'fp-t16n', '{"order_number": null}'::jsonb, 'T16-NULL');
+      RAISE EXCEPTION 'T16-2 expected check_violation (order_number: null)';
+    EXCEPTION WHEN check_violation THEN NULL;
+    END;
+    -- T16-3: order_number: "" / whitespace-only
+    BEGIN
+      INSERT INTO public.order_submissions (client_submit_key, owner_key, payload_fingerprint, result, order_number)
+      VALUES ('CK-T16E', 'x|y', 'fp-t16e', '{"order_number": ""}'::jsonb, 'T16-EMPTY');
+      RAISE EXCEPTION 'T16-3 expected check_violation (empty string)';
+    EXCEPTION WHEN check_violation THEN NULL;
+    END;
+    BEGIN
+      INSERT INTO public.order_submissions (client_submit_key, owner_key, payload_fingerprint, result, order_number)
+      VALUES ('CK-T16W', 'x|y', 'fp-t16w', '{"order_number": "   "}'::jsonb, 'T16-WS');
+      RAISE EXCEPTION 'T16-3 expected check_violation (whitespace-only)';
+    EXCEPTION WHEN check_violation THEN NULL;
+    END;
+    -- T16-4: order_number ไม่ใช่ JSON string (number / boolean / object / array)
+    FOREACH v_bad IN ARRAY ARRAY['{"order_number": 123}', '{"order_number": true}',
+                                 '{"order_number": {"a": 1}}', '{"order_number": ["BMB-1"]}'] LOOP
+      BEGIN
+        INSERT INTO public.order_submissions (client_submit_key, owner_key, payload_fingerprint, result, order_number)
+        VALUES ('CK-T16T', 'x|y', 'fp-t16t', v_bad::jsonb, 'T16-TYPE');
+        RAISE EXCEPTION 'T16-4 expected check_violation (non-string): %', v_bad;
+      EXCEPTION WHEN check_violation THEN NULL;
+      END;
+    END LOOP;
+    -- T16-5: valid non-empty string (มี padding — trim แล้วไม่ว่าง) ต้องผ่าน
+    INSERT INTO public.order_submissions (client_submit_key, owner_key, payload_fingerprint, result, order_number)
+    VALUES ('CK-T16OK', 'x|y', 'fp-t16ok', '{"order_number": " T16-OK-ORDER  "}'::jsonb, 'T16-OK');
+    ASSERT (SELECT count(*) FROM public.order_submissions WHERE client_submit_key = 'CK-T16OK') = 1,
+      'T16-5 valid non-empty order_number must persist';
+    ASSERT (SELECT count(*) FROM pg_constraint WHERE conname = 'os_result_has_order') = 1,
+      'T16 os_result_has_order constraint missing';
+    PERFORM set_config('role', 'authenticated', false);
+    ASSERT pg_temp.c_subs('CK-T16') = 0 AND pg_temp.c_subs('CK-T16N') = 0
+       AND pg_temp.c_subs('CK-T16E') = 0 AND pg_temp.c_subs('CK-T16W') = 0
+       AND pg_temp.c_subs('CK-T16T') = 0,
+      'T16 bad results must not persist';
+    -- ==== T17/T18: owner_key composite (ทางเลือก ข) — false conflict ยังอยู่ตามสัญญา ====
+    -- (ACCEPTED+DOCUMENTED — ไม่ใช่ FIXED · ถ้า Owner เลือก (ก) ให้ flip เคสเหล่านี้)
+    v_n4 := 'a1111111-1111-1111-1111-111111111111';
+
+    -- T17-b: (uid=X, cref=X) vs service (NULL, X) — same key → conflict + ไม่ leak
+    v_r := public.create_order_with_items_i(v_items, v_round, 'self_delivery', '', v_lat, v_lon,
+      'T17', '0900000000', 'cash_on_delivery', '', NULL, 0, 'SAME_DAY', NULL, NULL, NULL, NULL,
+      'a1111111-1111-1111-1111-111111111111'::uuid, 'CK-T17');
+    v_n3 := v_r->>'order_number';
+    ASSERT v_n3 IS NOT NULL, 'T17-b create (auth+cref)';
+    PERFORM set_config('request.jwt.claims', '{"role":"service_role"}', false);
+    BEGIN
+      PERFORM public.create_order_with_items_i(v_items, v_round, 'self_delivery', '', v_lat, v_lon,
+        'T17', '0900000000', 'cash_on_delivery', '', NULL, 0, 'SAME_DAY', NULL, NULL, NULL, NULL,
+        'a1111111-1111-1111-1111-111111111111'::uuid, 'CK-T17');
+      RAISE EXCEPTION 'T17-b expected conflict (cross-shape)';
+    EXCEPTION WHEN raise_exception THEN
+      ASSERT SQLERRM LIKE '%ERR_IDEMPOTENCY_CONFLICT%', 'T17-b: ' || SQLERRM;
+      ASSERT SQLERRM NOT LIKE '%' || v_n3 || '%', 'T17-b leaked order number';
+    END;
+
+    -- R8 + T17-c/e: service-role path (NULL, X) — key ใหม่ สร้างได้ · same-shape replay ได้
+    v_r := public.create_order_with_items_i(v_items, v_round, 'self_delivery', '', v_lat, v_lon,
+      'R8', '0900000000', 'cash_on_delivery', '', NULL, 0, 'SAME_DAY', NULL, NULL, NULL, NULL,
+      'a1111111-1111-1111-1111-111111111111'::uuid, 'CK-T17E');
+    v_n2 := v_r->>'order_number';
+    ASSERT v_n2 IS NOT NULL, 'R8 service-role create must succeed';
+    ASSERT pg_temp.sub_num('CK-T17E') = v_n2, 'R8 service submission persisted';
+    v_r := public.create_order_with_items_i(v_items, v_round, 'self_delivery', '', v_lat, v_lon,
+      'R8', '0900000000', 'cash_on_delivery', '', NULL, 0, 'SAME_DAY', NULL, NULL, NULL, NULL,
+      'a1111111-1111-1111-1111-111111111111'::uuid, 'CK-T17E');
+    ASSERT (v_r->>'order_number') = v_n2 AND v_r->>'replay' = 'true', 'T17-c service same-shape replay';
+    PERFORM set_config('request.jwt.claims',
+      '{"sub":"a1111111-1111-1111-1111-111111111111","role":"authenticated"}', false);
+    BEGIN
+      PERFORM public.create_order_with_items_i(v_items, v_round, 'self_delivery', '', v_lat, v_lon,
+        'R8', '0900000000', 'cash_on_delivery', '', NULL, 0, 'SAME_DAY', NULL, NULL, NULL, NULL,
+        'a1111111-1111-1111-1111-111111111111'::uuid, 'CK-T17E');
+      RAISE EXCEPTION 'T17-e expected conflict (reverse cross-shape)';
+    EXCEPTION WHEN raise_exception THEN
+      ASSERT SQLERRM LIKE '%ERR_IDEMPOTENCY_CONFLICT%', 'T17-e: ' || SQLERRM;
+      ASSERT SQLERRM NOT LIKE '%' || v_n2 || '%', 'T17-e leaked order number';
+    END;
+
+    -- T17-d: service (NULL, NULL) + key ใหม่ → ERR_NOT_AUTHENTICATED + ไม่ persist
+    PERFORM set_config('request.jwt.claims', '{"role":"service_role"}', false);
+    BEGIN
+      PERFORM public.create_order_with_items_i(v_items, v_round, 'self_delivery', '', v_lat, v_lon,
+        'T17d', '0900000000', 'cash_on_delivery', '', NULL, 0, 'SAME_DAY', NULL, NULL, NULL, NULL, NULL, 'CK-T17D');
+      RAISE EXCEPTION 'T17-d expected ERR_NOT_AUTHENTICATED';
+    EXCEPTION WHEN raise_exception THEN
+      ASSERT SQLERRM LIKE '%ERR_NOT_AUTHENTICATED%', 'T17-d: ' || SQLERRM;
+    END;
+    ASSERT pg_temp.c_subs('CK-T17D') = 0, 'T17-d must not persist';
+
+    -- T18-d: service (NULL, X) vs service (NULL, NULL) เดิม key → conflict + ไม่ leak
+    BEGIN
+      PERFORM public.create_order_with_items_i(v_items, v_round, 'self_delivery', '', v_lat, v_lon,
+        'R8', '0900000000', 'cash_on_delivery', '', NULL, 0, 'SAME_DAY', NULL, NULL, NULL, NULL, NULL, 'CK-T17E');
+      RAISE EXCEPTION 'T18-d expected conflict (service cref drop)';
+    EXCEPTION WHEN raise_exception THEN
+      ASSERT SQLERRM LIKE '%ERR_IDEMPOTENCY_CONFLICT%', 'T18-d: ' || SQLERRM;
+      ASSERT SQLERRM NOT LIKE '%' || v_n2 || '%', 'T18-d leaked order number';
+    END;
+
+    PERFORM set_config('request.jwt.claims',
+      '{"sub":"a1111111-1111-1111-1111-111111111111","role":"authenticated"}', false);
+
+    -- T18-a: (X, NULL) [web shape] vs (X, X) เดิม key → conflict + ไม่ leak
+    v_r := public.create_order_with_items_i(v_items, v_round, 'self_delivery', '', v_lat, v_lon,
+      'T18', '0900000000', 'cash_on_delivery', '', NULL, 0, 'SAME_DAY', NULL, NULL, NULL, NULL, NULL, 'CK-T18');
+    v_n3 := v_r->>'order_number';
+    ASSERT v_n3 IS NOT NULL, 'T18-a create (web shape)';
+    BEGIN
+      PERFORM public.create_order_with_items_i(v_items, v_round, 'self_delivery', '', v_lat, v_lon,
+        'T18', '0900000000', 'cash_on_delivery', '', NULL, 0, 'SAME_DAY', NULL, NULL, NULL, NULL,
+        'a1111111-1111-1111-1111-111111111111'::uuid, 'CK-T18');
+      RAISE EXCEPTION 'T18-a expected conflict (cref presence change)';
+    EXCEPTION WHEN raise_exception THEN
+      ASSERT SQLERRM LIKE '%ERR_IDEMPOTENCY_CONFLICT%', 'T18-a: ' || SQLERRM;
+      ASSERT SQLERRM NOT LIKE '%' || v_n3 || '%', 'T18-a leaked order number';
+    END;
+
+    -- T18-b: (X, X) vs (X, NULL) เดิม key → conflict (กลับทิศ)
+    v_r := public.create_order_with_items_i(v_items, v_round, 'self_delivery', '', v_lat, v_lon,
+      'T18b', '0900000000', 'cash_on_delivery', '', NULL, 0, 'SAME_DAY', NULL, NULL, NULL, NULL,
+      'a1111111-1111-1111-1111-111111111111'::uuid, 'CK-T18B');
+    v_n3 := v_r->>'order_number';
+    BEGIN
+      PERFORM public.create_order_with_items_i(v_items, v_round, 'self_delivery', '', v_lat, v_lon,
+        'T18b', '0900000000', 'cash_on_delivery', '', NULL, 0, 'SAME_DAY', NULL, NULL, NULL, NULL, NULL, 'CK-T18B');
+      RAISE EXCEPTION 'T18-b expected conflict (reverse cref change)';
+    EXCEPTION WHEN raise_exception THEN
+      ASSERT SQLERRM LIKE '%ERR_IDEMPOTENCY_CONFLICT%', 'T18-b: ' || SQLERRM;
+      ASSERT SQLERRM NOT LIKE '%' || v_n3 || '%', 'T18-b leaked order number';
+    END;
+
+    -- T18-c: (X, Y≠X) + key ใหม่ → ERR_FORBIDDEN_CUSTOMER_REF + ไม่ persist
+    BEGIN
+      PERFORM public.create_order_with_items_i(v_items, v_round, 'self_delivery', '', v_lat, v_lon,
+        'T18c', '0900000000', 'cash_on_delivery', '', NULL, 0, 'SAME_DAY', NULL, NULL, NULL, NULL,
+        'b2222222-2222-2222-2222-222222222222'::uuid, 'CK-T18C');
+      RAISE EXCEPTION 'T18-c expected ERR_FORBIDDEN_CUSTOMER_REF';
+    EXCEPTION WHEN raise_exception THEN
+      ASSERT SQLERRM LIKE '%ERR_FORBIDDEN_CUSTOMER_REF%', 'T18-c: ' || SQLERRM;
+    END;
+    ASSERT pg_temp.c_subs('CK-T18C') = 0, 'T18-c must not persist';
+
+    -- R13: order ถูกลบ (CASCADE) แล้ว replay → identity เดิม + replay:true (ไม่พัง)
+    v_r := public.create_order_with_items_i(v_items, v_round, 'self_delivery', '', v_lat, v_lon,
+      'R13', '0900000000', 'cash_on_delivery', '', NULL, 0, 'SAME_DAY', NULL, NULL, NULL, NULL, NULL, 'CK-R13');
+    v_n3 := v_r->>'order_number';
+    ASSERT v_n3 IS NOT NULL, 'R13 create failed';
+    PERFORM set_config('role', 'none', false);
+    DELETE FROM public.orders WHERE order_number = v_n3; -- FKs ON DELETE CASCADE
+    PERFORM set_config('role', 'authenticated', false);
+    v_r := public.create_order_with_items_i(v_items, v_round, 'self_delivery', '', v_lat, v_lon,
+      'R13', '0900000000', 'cash_on_delivery', '', NULL, 0, 'SAME_DAY', NULL, NULL, NULL, NULL, NULL, 'CK-R13');
+    ASSERT (v_r->>'order_number') = v_n3, 'R13 ghost replay must keep original identity';
+    ASSERT v_r->>'replay' = 'true', 'R13 ghost replay marker';
+    ASSERT pg_temp.c_orders() = v_mark + 13, 'R13 ghost replay must not recreate the order';
+    ASSERT pg_temp.c_pint('0900000000') = 0, 'R13 replay must not create payment intents';
+    -- [remediation 2026-10-14] R3 ghost contract: identity fields คงเดิม + สถานะ =
+    -- stored snapshot (118:269-273 คืน status/payment_status 'pending') — ไม่มี live
+    -- order ให้ merge → ห้ามปั้นสถานะใหม่ (และไม่สร้าง order/intent ใหม่ = asserts บน)
+    ASSERT v_r->>'id' IS NOT NULL, 'R13 ghost replay must keep stored identity fields';
+    ASSERT v_r->>'status' = 'pending', 'R13 ghost replay must keep stored snapshot status';
+    ASSERT v_r->>'payment_status' = 'pending', 'R13 ghost replay must keep stored snapshot payment_status';
+
+    -- ===== [remediation 2026-10-14] R1 nested canonicalization characterization =====
+    -- (ไม่เปลี่ยน policy: array order / string / business values ต่าง → conflict ตามสัญญา)
+    v_mark := pg_temp.c_orders(); -- rebaseline เฉพาะ section นี้ (อยู่หลัง R13 — ไม่แตะ offset เดิม)
+    -- unit: helper ตรง ๆ (as session user — helper REVOKE ทุก role ภายนอก)
+    PERFORM set_config('role', 'none', false);
+    ASSERT public.order_submit_canonical_jsonb('{"a": [1.00, {"b": 2.500}, "3.00"], "c": 0.0}'::jsonb)
+           = '{"a": [1, {"b": 2.5}, "3.00"], "c": 0}'::jsonb,
+      'R1 unit nested canonicalization (numbers only, strings untouched)';
+    PERFORM set_config('role', 'authenticated', false);
+    PERFORM set_config('request.jwt.claims',
+      '{"sub":"a1111111-1111-1111-1111-111111111111","role":"authenticated"}', false);
+    -- T3d: nested object/array + trailing zeros ลึก → canonical เดียวกัน → replay
+    -- (หมายเหตุ: create call ใช้ quantity=1 เพราะ 118:119 แคสท์ quantity เป็น int —
+    --  เลขอย่าง "1.000" ใช้เป็น create payload ไม่ได้ · scale variants ตรวจผ่าน retry
+    --  path ที่จบตั้งแต่ fingerprint/replay แบบ T3b)
+    v_r := public.create_order_with_items_i(
+      '[{"product_id":"prod-1","quantity":1,"options":{"discount":1.00,"nested":{"x":2.50},"tags":["a",1.0]},"special_request":"1.00"}]'::jsonb,
+      v_round, 'self_delivery', '', v_lat, v_lon,
+      'T3d', '0900000000', 'cash_on_delivery', '', NULL, 0.0, 'SAME_DAY', NULL, NULL, NULL, NULL, NULL, 'CK-R1N');
+    v_n3 := v_r->>'order_number';
+    ASSERT v_n3 IS NOT NULL, 'T3d create failed';
+    v_r := public.create_order_with_items_i(
+      '[{"product_id":"prod-1","quantity":1,"options":{"discount":1,"nested":{"x":2.5},"tags":["a",1.000]},"special_request":"1.00"}]'::jsonb,
+      v_round, 'self_delivery', '', v_lat, v_lon,
+      'T3d', '0900000000', 'cash_on_delivery', '', NULL, 0, 'SAME_DAY', NULL, NULL, NULL, NULL, NULL, 'CK-R1N');
+    ASSERT (v_r->>'order_number') = v_n3, 'T3d nested numeric-scale variants must replay (R1)';
+    ASSERT v_r->>'replay' = 'true', 'T3d replay marker';
+    ASSERT pg_temp.c_orders() = v_mark + 1, 'T3d replay must not create order';
+    -- T3e: nested business value / array order / string digits เปลี่ยน → conflict ตามสัญญา
+    BEGIN
+      PERFORM public.create_order_with_items_i(
+        '[{"product_id":"prod-1","quantity":1,"options":{"discount":1.5,"nested":{"x":2.5},"tags":["a",1]},"special_request":"1.00"}]'::jsonb,
+        v_round, 'self_delivery', '', v_lat, v_lon,
+        'T3d', '0900000000', 'cash_on_delivery', '', NULL, 0, 'SAME_DAY', NULL, NULL, NULL, NULL, NULL, 'CK-R1N');
+      RAISE EXCEPTION 'T3e expected conflict (nested discount change)';
+    EXCEPTION WHEN raise_exception THEN
+      ASSERT SQLERRM LIKE '%ERR_IDEMPOTENCY_CONFLICT%', 'T3e nested value: ' || SQLERRM;
+    END;
+    BEGIN
+      PERFORM public.create_order_with_items_i(
+        '[{"product_id":"prod-1","quantity":1,"options":{"discount":1,"nested":{"x":2.5},"tags":[1.0,"a"]},"special_request":"1.00"}]'::jsonb,
+        v_round, 'self_delivery', '', v_lat, v_lon,
+        'T3d', '0900000000', 'cash_on_delivery', '', NULL, 0, 'SAME_DAY', NULL, NULL, NULL, NULL, NULL, 'CK-R1N');
+      RAISE EXCEPTION 'T3e expected conflict (array order change)';
+    EXCEPTION WHEN raise_exception THEN
+      ASSERT SQLERRM LIKE '%ERR_IDEMPOTENCY_CONFLICT%', 'T3e array order: ' || SQLERRM;
+    END;
+    BEGIN
+      PERFORM public.create_order_with_items_i(
+        '[{"product_id":"prod-1","quantity":1,"options":{"discount":1,"nested":{"x":2.5},"tags":["a",1]},"special_request":"1.0"}]'::jsonb,
+        v_round, 'self_delivery', '', v_lat, v_lon,
+        'T3d', '0900000000', 'cash_on_delivery', '', NULL, 0, 'SAME_DAY', NULL, NULL, NULL, NULL, NULL, 'CK-R1N');
+      RAISE EXCEPTION 'T3e expected conflict (string digits must not be canonicalized)';
+    EXCEPTION WHEN raise_exception THEN
+      ASSERT SQLERRM LIKE '%ERR_IDEMPOTENCY_CONFLICT%', 'T3e string digits: ' || SQLERRM;
+    END;
+    ASSERT pg_temp.c_orders() = v_mark + 1, 'T3e conflicts must not create orders';
+  END;
 END $$;
+
+\echo 'CONTRACT 124: ALL ASSERTIONS PASSED (T1-T13 + W5C + remediation 2026-10-14)'
 
 ROLLBACK;
