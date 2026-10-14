@@ -53,7 +53,7 @@
 
 1. **`CREATE TABLE order_submissions`** — PK `client_submit_key`, `owner_key`, `payload_fingerprint`, `result jsonb`, `order_number`, `created_at` · RLS ENABLE ไม่มี policy (ทุก role โดนบล็อก) + `REVOKE ALL` จาก PUBLIC/anon/authenticated/service_role
 2. **`create_order_with_items_i` (19 params = 18 ของ 118 + `p_client_submit_key DEFAULT NULL`)** — SECURITY DEFINER, owner=postgres:
-   - `owner_key = coalesce(auth.uid()::text,'') || '|' || coalesce(p_customer_ref::text,'')` — ผูกเจ้าของสองมิติ (uid + customer_ref) — **เข้มกว่า 118:49 (`COALESCE(uid, cref)`) เล็กน้อย** แต่ behavior เข้ากันได้: caller เดิม → owner_key เดิม → ไม่มี false conflict
+   - `owner_key = coalesce(auth.uid()::text,'') || '|' || coalesce(p_customer_ref::text,'')` — ผูกเจ้าของสองมิติ (uid + customer_ref) — **เข้มกว่า 118:49 (`COALESCE(uid, cref)`) เล็กน้อย** แต่ behavior เข้ากันได้ในภาพรวม: caller เดิม → owner_key เดิม → ไม่มี false conflict ในภาพเดิม **⚠️ แก้ไข 2026-10-14: ข้อความ "ไม่มี false conflict" พิสูจน์แล้วว่าผิด — probe A3 (docs/BMB_WAVE5B_OWNER_DECISION_REVIEW.md §2.5): auth+cref vs svc+cref (เจ้าของทางตรรกะเดียวกันตาม 118:49, args เท่ากัน) โดน `ERR_IDEMPOTENCY_CONFLICT` = false conflict ข้าม shape จริง · comment ที่อ้างว่า "ตรง 118:49 (COALESCE)" ก็ผิด (โค้ดเป็น concat สองมิติ)**
    - `payload_fingerprint = md5(jsonb_build_object(18 args))` — ทุก arg รวม coords
    - **key NULL/'' → เรียกตัวเดิมด้วย named args ครบ 18 ตัว** (pin overload 118 ไม่ให้กำกวม) = backward-compatible เดิมเป๊ะ
    - key ใหม่ → `pg_advisory_xact_lock(hashtextextended('bmb_order_submit:'||key, 42))` serialize ทุก session → ตรวจซ้ำ → สร้างออเดอร์ตามกติกาเดิม → INSERT result ฉบับเต็ม
