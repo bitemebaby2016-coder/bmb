@@ -1,12 +1,14 @@
 // ============================================
-// Bite Me Baby — FoodMenuCard v3.0 (Fixed Layout)
+// Bite Me Baby — FoodMenuCard v4.0 (กรอบสี่เหลี่ยมเหมือนหน้าหลัก)
 // Layout: Normal Document Flow (Vertical Flexbox)
-// ✅ No overflow-visible, no negative margin, no absolute positioning
-// ✅ Clear spacing between sections (Image → Info → Buttons)
+// ✅ กรอบรูปเมนูเป็นสี่เหลี่ยม (4:3 เต็มใบ) เหมือนการ์ดหน้าหลัก
+// ✅ hover รูปเมนูลอยเหนือกรอบ (ดู .fmc-card ใน index.css)
+// ✅ เมนูจองล่วงหน้ามีป้ายปฏิทินมุมรูป — hover เห็นวันจัดส่งจริง
 // ============================================
 
 import type { Product, ProductCategory, SameDayOrderPayload, PreOrderPayload, AvailabilityState, OrderMode } from '@/types'
 import { MascotBadge } from '@/components/MascotBadge'
+import { ScheduleDateBadge } from '@/components/home/ScheduleDateBadge'
 
 interface FoodMenuCardProps {
   product: Product
@@ -21,7 +23,7 @@ const AVAIL = {
   available: 'พร้อมขาย',
   limited: 'เหลือจำกัด',
   sold_out: 'ขายหมดแล้ว',
-  temporarily_unavailable: 'ขายหมดชั่วคราว — กลับมาใหม่เรวๆ นี้',
+  temporarily_unavailable: 'ขายหมดชั่วคราว — กลับมาใหม่เร็ว ๆ นี้',
   store_closed: 'ร้านปิด',
   delivery_unavailable: 'ส่งไม่ถึงตอนนี้'
 } as const
@@ -30,7 +32,7 @@ export function FoodMenuCard({ product, category, mode, availability, onSameDayO
   const imageUrl = product.image_url ?? ''
   const avail = availability as keyof typeof AVAIL
   const isAvail = availability === 'available' || availability === 'limited'
-  const name = product.name ?? 'Unnamed Product'
+  const name = product.name ?? 'เมนูยังไม่มีชื่อ'
   const desc = product.description ?? ''
   const price = Number(product.price) ?? 0
   const prep = Number(product.prep_minutes) ?? 15
@@ -45,43 +47,43 @@ export function FoodMenuCard({ product, category, mode, availability, onSameDayO
   }
 
   return (
-    <div className="group flex flex-col items-center bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 ease-out overflow-hidden border border-orange-50">
+    <div className="fmc-card group flex flex-col bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 ease-out border border-orange-50">
       
-      {/* ============================================ */}
-      {/* TOP SECTION: 3D Food Image Container */}
-      {/* Clear padding/margin, no overflow, no absolute */}
-      {/* ============================================ */}
-      <div className="fmc-media w-full py-6 px-4 flex flex-col items-center">
+      {/* TOP: กรอบรูปสี่เหลี่ยม (4:3 เต็มใบ) — เหมือนหน้าหลัก */}
+      <div className="fmc-img-wrap">
         
-        {/* Category Badge (Inline, not absolute) */}
+        {/* ป้ายหมวดหมู่บนรูป */}
         {category && (
-          <div className="inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold bg-brand-primary text-white mb-3">
+          <div className="fmc-chip fmc-chip-cat">
             <span>{category.icon}</span>
             <span>{category.name}</span>
           </div>
         )}
 
-        {/* Status Pill (Inline, not absolute) */ }
+        {/* ป้ายสถานะบนรูป */}
         {!isAvail && (
-          <div className="fmc-status-pill inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium mb-3">
-            <MascotBadge pose="empty" size="sm" alt="Bite the mascot - sold out" loading="eager" />
-            {AVAIL[avail]}
+          <div className="fmc-chip fmc-chip-status">
+            <MascotBadge pose="empty" size="sm" alt="น้อง Bite — เมนูนี้ขายหมดแล้ว" loading="eager" />
+            <span>{AVAIL[avail]}</span>
           </div>
         )}
 
-        {/* 3D Food Image Container (Fixed size, centered) */}
-        <div className="relative w-48 h-48 mx-auto mb-4 flex items-center justify-center group-hover:scale-105 transition-transform duration-300 ease-out">
-          {imageUrl ? (
-            <img 
-              src={imageUrl} 
-              alt={`ภาพอาหาร ${name}`} 
-              className="w-full h-full object-contain rounded-full shadow-lg"
-              loading="lazy"
-            />
-          ) : (
-            <span className="img-fallback" role="img" aria-label={`ภาพอาหาร ${name}`} />
-          )}
-        </div>
+        {/* กรอบรูปสี่เหลี่ยม */}
+        {imageUrl ? (
+          <img
+            src={imageUrl}
+            alt={`ภาพอาหาร ${name}`}
+            className="fmc-img"
+            loading="lazy"
+          />
+        ) : (
+          <span className="img-fallback" role="img" aria-label={`ภาพอาหาร ${name}`} />
+        )}
+
+        {/* ป้ายปฏิทินมุมรูป — วันจัดส่งจริงของเมนูจองล่วงหน้า (hover ขึ้นปฏิทิน) */}
+        {(product.available_preorder ?? product.is_preorder) && product.scheduled_date && (
+          <ScheduleDateBadge date={product.scheduled_date} />
+        )}
       </div>
 
       {/* ============================================ */}
@@ -108,7 +110,7 @@ export function FoodMenuCard({ product, category, mode, availability, onSameDayO
             {price.toLocaleString('th-TH')} บาท
           </span>
           <span className="fmc-prep-pill text-xs px-2 py-1 rounded-full">
-            ⏱ {prep} min
+            ⏱ เตรียม {prep} นาที
           </span>
         </div>
       </div>

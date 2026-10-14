@@ -10,6 +10,9 @@
 
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { DEFAULT_SITE_COPY } from '@/lib/homePopular'
+
+const DEFAULT_AD_NOTICE = DEFAULT_SITE_COPY.adNotice
 
 export interface FloatingBannerPromo {
   id: string
@@ -45,7 +48,7 @@ export function pickVisibleBannerPromos(
 // AI-CLEANUP: mock banner asset removed — banners without a creative render a
 // branded CSS gradient placeholder instead (dynamic promo data from DB only).
 
-export function FloatingAdBanners({ promos }: { promos: FloatingBannerPromo[] }) {
+export function FloatingAdBanners({ promos, notice }: { promos: FloatingBannerPromo[]; notice?: string }) {
   const [dismissedIds, setDismissedIds] = useState<Set<string>>(new Set())
 
   // max 2 banners; skip already-dismissed ones (state + sessionStorage)
@@ -103,10 +106,14 @@ export function FloatingAdBanners({ promos }: { promos: FloatingBannerPromo[] })
             {promo.description?.trim() && <p className="flad-desc">{promo.description}</p>}
             <div className="flad-actions">
               {promo.coupon && (
-                <span className="flad-coupon" data-testid="floating-ad-coupon">Code: {promo.coupon}</span>
+                <span className="flad-coupon" data-testid="floating-ad-coupon">รหัสส่วนลด: {promo.coupon}</span>
               )}
               <Link to="/promotions" className="flad-cta">ดูดีลเลย →</Link>
             </div>
+            {/* อักษรเตือนใต้แคมเปญ */}
+            {(notice ?? DEFAULT_AD_NOTICE).trim() && (
+              <p className="flad-notice" data-testid="floating-ad-notice">⚠️ {notice ?? DEFAULT_AD_NOTICE}</p>
+            )}
           </div>
           <button
             type="button"

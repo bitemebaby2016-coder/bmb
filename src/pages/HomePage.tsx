@@ -37,6 +37,18 @@ import { useOrderBuilderStore } from '@/store/orderBuilderStore'
 import { useBrandContextStore } from '@/store/resolvedBrandStore'
 import { filterProductsByBranch } from '@/lib/homeProviders'
 import { deriveOrderMode } from '@/lib/talkToBite'
+import {
+  DEFAULT_HOME_POPULAR,
+  DEFAULT_SITE_COPY,
+  HOME_POPULAR_KEY,
+  SITE_COPY_KEY,
+  parseHomePopularConfig,
+  parseSiteCopy,
+  resolvePopularItems,
+  toPopularHomeProduct,
+  type HomePopularConfig,
+  type SiteCopy,
+} from '@/lib/homePopular'
 import type { VerifiedCustomerReview, Product, ProductCategory, MenuSection, SameDayOrderPayload, PreOrderPayload, HomeReview } from '@/types'
 
 // ⚡ The Food Theater stage is code-split (aiServerMemory chain); it renders
@@ -62,6 +74,9 @@ export function HomePage() {
   const [activeCategory, setActiveCategory] = useState<string | null>(null)
   // CAT-04: verified customer reviews on homepage
   const [verifiedReviews, setVerifiedReviews] = useState<any[]>([])
+  // "เมนูยอดนิยม" + ข้อความบนหน้า — แอดมินแก้ได้ที่หน้าแอดมิน (business_settings, ไม่ต้อง deploy)
+  const [popularCfg, setPopularCfg] = useState<HomePopularConfig>(DEFAULT_HOME_POPULAR)
+  const [siteCopy, setSiteCopy] = useState<SiteCopy>(DEFAULT_SITE_COPY)
 
   useEffect(() => {
     async function loadData() {
@@ -82,6 +97,16 @@ export function HomePage() {
         setRounds(rounds)
         setPromoRows(promos)
         setSections(secs)
+        // ค่าตั้งเว็บ (เมนูยอดนิยม/ข้อความ) — โหลดแบบไม่ขวางการวาดหน้า (fire-and-forget)
+        // ถ้าอ่านไม่สำเร็จ/ค้าง หน้ายังแสดงได้ตามค่า default เสมอ
+        void (async () => {
+          try {
+            const { getBusinessSettings } = await import('@/lib/bmbAdminApi_settings')
+            const settings = await getBusinessSettings()
+            setPopularCfg(parseHomePopularConfig(settings?.[HOME_POPULAR_KEY]))
+            setSiteCopy(parseSiteCopy(settings?.[SITE_COPY_KEY]))
+          } catch { /* ใช้ค่า default ต่อไป */ }
+        })()
         // CAT-04: Load verified reviews for all products
         const { getVerifiedReviewsForProducts } = await import('@/lib/reviewApi')
         const allProductIds = rows.map((r: any) => r.id)
@@ -112,6 +137,11 @@ export function HomePage() {
   const reviews = getHomeReviews(products)
   const promotions = getHomePromotionsFromRows(promoRows)
 
+  // "เมนูยอดนิยม" — คัดจากทุกกลุ่ม/ทุกหมวด (รวมเมนูจองล่วงหน้า) แล้วสลับโชว์ตามรอบเวลา
+  const popularCatMap = new Map(categories.map((c) => [c.id, c]))
+  const popularAll = resolvePopularItems(products, categories, popularCfg)
+    .map((p) => toPopularHomeProduct(p, popularCatMap.get(p.category_id)))
+
   // Filter products by search query and category
   const filteredSameDay = sameDay.filter((item) => {
     const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase())
@@ -119,6 +149,11 @@ export function HomePage() {
     return matchesSearch && matchesCategory
   })
   const filteredPreOrder = preOrder.filter((item) => {
+    const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase())
+    const matchesCategory = !activeCategory || item.category_id === activeCategory
+    return matchesSearch && matchesCategory
+  })
+  const filteredPopular = popularAll.filter((item) => {
     const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase())
     const matchesCategory = !activeCategory || item.category_id === activeCategory
     return matchesSearch && matchesCategory
@@ -138,7 +173,7 @@ export function HomePage() {
   const handleSameDay = (payload: SameDayOrderPayload) => {
     const product = products.find((p) => p.id === payload.productId)
     if (!product) {
-      showToast('Item not found', 'error')
+      showToast('ไม่พบเมนูที่ต้องการค่ะ', 'error')
       return
     }
     // Grab / 7-Eleven style upsell: toppings + recommended companions.
@@ -156,14 +191,18 @@ export function HomePage() {
       for (const rec of result.recommended) {
         addItem(rec, 1)
       }
-      showToast('Added: ' + result.product.name + (result.addOns.length > 0 ? ' (+toppings)' : '') + (result.recommended.length > 0 ? ' +' + result.recommended.length + ' recommended' : ''), 'success')
+      const extras = [
+        result.addOns.length > 0 ? 'เพิ่มท็อปปิ้งแล้ว' : '',
+        result.recommended.length > 0 ? `แนะนำเพิ่มอีก ${result.recommended.length} อย่าง` : '',
+      ].filter(Boolean).join(' · ')
+      showToast(`เพิ่ม ${result.product.name} ลงตะกร้าแล้ว${extras ? ' — ' + extras : ''}`, 'success')
     })
   }
 
   const handlePreOrder = (payload: PreOrderPayload) => {
     const product = products.find((p) => p.id === payload.productId)
     if (!product) {
-      showToast('Item not found', 'error')
+      showToast('ไม่พบเมนูที่ต้องการค่ะ', 'error')
       return
     }
     // ✅ Phase 3B: PRE_ORDER flows through the canonical cart → /checkout?mode=pre-order.
@@ -211,6 +250,9 @@ export function HomePage() {
     navigate(isPre ? '/checkout?mode=pre-order' : '/cart')
   }
 
+  const popularItems = filteredPopular.map((item) => (
+    <HomeProductCard key={item.id} item={item} mode="auto" onSameDay={handleSameDay} onPreOrder={handlePreOrder} />
+  ))
   const sameDayItems = filteredSameDay.map((item) => (
     <HomeProductCard key={item.id} item={item} mode="same_day" onSameDay={handleSameDay} onPreOrder={handlePreOrder} />
   ))
@@ -228,7 +270,7 @@ export function HomePage() {
             width={72}
             height={72}
             className="mx-auto mb-3 animate-float"
-            style={{ borderRadius: '50%', objectFit: 'cover', background: '#FFF7ED' }}
+            style={{ objectFit: 'contain' }}
             onError={(e) => { (e.currentTarget as HTMLImageElement).src = '/mascot_Bite_Main.webp' }}
           />
           <p>กำลังเตรียมเมนูให้จ้า…</p>
@@ -299,8 +341,20 @@ export function HomePage() {
       </section>
 
       {/* 2c. Floating ad banners — max 2 overlay cards, dismissible per promo (sessionStorage, D03) */}
-      <FloatingAdBanners promos={bannerPromos} />
-      {/* 3. Same-day Menu — horizontal carousel */}
+      <FloatingAdBanners promos={bannerPromos} notice={siteCopy.adNotice} />
+      {/* 3. เมนูยอดนิยม — สลับโชว์จากทุกกลุ่มเมนู (รวมเมนูจองล่วงหน้า) */}
+      <section className="mb-10 scroll-mt-20" aria-labelledby="home-popular-heading">
+        <div className="flex items-center justify-between mb-2">
+          <h2 id="home-popular-heading" className="text-xl font-display font-bold text-brand-accent">
+            🔥 {popularCfg.title}
+          </h2>
+          <Link to="/menu" className="text-sm text-brand-primary font-medium hover:underline">ดูทั้งหมด →</Link>
+        </div>
+        <h3 className="sr-only">{popularCfg.title}</h3>
+        <HorizontalCarousel items={popularItems} aria-label={`${popularCfg.title} เลื่อนได้`} />
+      </section>
+
+      {/* 3b. Same-day Menu — horizontal carousel */}
       <section className="mb-10 scroll-mt-20" aria-labelledby="home-sameday-heading">
         <div className="flex items-center justify-between mb-2">
           <h2 id="home-sameday-heading" className="text-xl font-display font-bold text-brand-accent">
@@ -317,7 +371,7 @@ export function HomePage() {
         <section className="mb-10 scroll-mt-20" aria-labelledby="home-preorder-heading">
           <div className="flex items-center justify-between mb-2">
             <h2 id="home-preorder-heading" className="text-xl font-display font-bold text-brand-accent">
-              📅 จองล่วงหน้า — สั่งอาหารจันทบุรี เตรียมพร้อมส่ง
+              📅 {siteCopy.homePreOrderTitle}
             </h2>
             <Link to="/menu" className="text-sm text-brand-primary font-medium hover:underline">ดูทั้งหมด →</Link>
           </div>

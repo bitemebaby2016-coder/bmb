@@ -999,14 +999,14 @@ p { color: var(--color-brand-text-secondary); }
   position: relative;
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  width: min(420px, calc(100vw - 32px));
+  gap: 12px;
+  width: min(640px, calc(100vw - 32px));
   pointer-events: none;
 }
 .flad-stack > .flad-card { pointer-events: auto; }
 .flad-card {
   position: relative;
-  border-radius: 16px;
+  border-radius: 18px;
   overflow: hidden;
   background: #fff;
   border: 1px solid rgba(255, 94, 30, 0.4);
@@ -1014,13 +1014,13 @@ p { color: var(--color-brand-text-secondary); }
   animation: fladIn 0.35s ease-out;
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 10px 12px 10px 10px;
+  gap: 12px;
+  padding: 14px 16px 14px 14px;
 }
 .flad-media {
-  width: 118px;
-  height: 74px;
-  border-radius: 10px;
+  width: 190px;
+  height: 124px;
+  border-radius: 12px;
   overflow: hidden;
   flex-shrink: 0;
   /* โชว์สติกเกอร์โลโก้แบรนด์ทับ gradient ส้ม เมื่อ promo ไม่มีรูป (หรือรูปเสีย) */
@@ -1038,12 +1038,12 @@ p { color: var(--color-brand-text-secondary); }
 .flad-body { flex: 1; min-width: 0; }
 .flad-title {
   font-weight: 800;
-  font-size: 13px;
+  font-size: 16px;
   color: var(--color-brand-accent, #92400E);
-  line-height: 1.2;
+  line-height: 1.25;
   padding-right: 22px;
 }
-.flad-desc { font-size: 11px; color: var(--color-brand-muted, #78716C); margin-top: 2px; }
+.flad-desc { font-size: 12.5px; color: var(--color-brand-muted, #78716C); margin-top: 3px; }
 .flad-actions { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-top: 4px; }
 .flad-coupon {
   font-family: monospace;
@@ -1074,7 +1074,18 @@ p { color: var(--color-brand-text-secondary); }
   to   { opacity: 1; transform: translateY(0); }
 }
 @media (max-width: 480px) {
-  .flad-media { width: 104px; height: 66px; }
+  .flad-media { width: 150px; height: 98px; }
+}
+/* ข้อความเตือนใต้แคมเปญ (อักษรเตือนด้านล่าง) */
+.flad-notice {
+  margin-top: 6px;
+  font-size: 11px;
+  line-height: 1.4;
+  color: #B45309;
+  background: rgba(251, 191, 36, 0.20);
+  border: 1px dashed rgba(180, 83, 9, 0.5);
+  border-radius: 10px;
+  padding: 5px 8px;
 }
 /* --- AI-CLEANUP: brand fallback visuals (replaces mock svg assets) --- */
 .img-fallback {
@@ -1281,6 +1292,247 @@ html[data-theme='dark'] .fmc-prep-pill, html[data-theme='graphite'] .fmc-prep-pi
    and --bmb-sticky-h (StickyCartBar ResizeObserver, 0 when hidden/unmounted). */
 .nav-visible > footer {
   padding-bottom: calc(var(--bmb-bottom-nav-h, 0px) + var(--bmb-sticky-h, 0px) + 1rem);
+}
+
+/* ============================================
+   UX 2026-10-14 — กรอบเมนูสี่เหลี่ยม + รูปเมนู hover ลอยเหนือกรอบ
+   (ใช้กับทุกการ์ด ทุกเซกชัน — ทั้งที่มีอยู่และที่เพิ่ม/แก้ไขทีหลัง:
+    การ์ดใหม่เพียงใช้คลาส .menu-card + .menu-card-media ก็ได้ผลเหมือนกัน)
+   ============================================ */
+.fmc-img-wrap {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  border-radius: 16px 16px 0 0;
+  background: linear-gradient(to bottom, #FFF7ED, #fff);
+}
+.fmc-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.fmc-chip {
+  position: absolute;
+  left: 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 5px 10px;
+  border-radius: 999px;
+  z-index: 24;
+}
+.fmc-chip-cat {
+  top: 10px;
+  background: var(--color-brand-primary, #FF5E1E);
+  color: #fff;
+  box-shadow: 0 4px 10px rgba(255, 94, 30, 0.35);
+}
+.fmc-chip-status {
+  bottom: 10px;
+  background: rgba(254, 226, 226, 0.95);
+  color: #B91C1C;
+  border: 1px dashed rgba(185, 28, 28, 0.5);
+}
+.fmc-chip-status .mascot-badge--sm { width: 34px; height: 34px; }
+html[data-theme='dark'] .fmc-img-wrap, html[data-theme='graphite'] .fmc-img-wrap {
+  background: linear-gradient(to bottom, var(--color-brand-surface-warm), var(--color-brand-surface));
+}
+html[data-theme='dark'] .fmc-chip-status, html[data-theme='graphite'] .fmc-chip-status {
+  background: rgba(239, 68, 68, 0.18);
+  color: #FCA5A5;
+}
+
+/* --- hover: รูปเมนูลอยเหนือกรอบ (ทุกการ์ด) --- */
+.drink-card, .snack-card, .home-card, .fmc-card, .menu-card { position: relative; }
+.drink-card-media, .snack-card-media, .home-card-media { border-radius: 20px 20px 0 0; }
+.drink-card-media img, .snack-card-media img, .home-card-media img, .fmc-img, .menu-card-media img {
+  transition: transform 0.32s ease, box-shadow 0.32s ease, border-radius 0.32s ease;
+}
+.drink-card:hover, .snack-card:hover, .home-card:hover, .fmc-card:hover, .menu-card:hover {
+  overflow: visible;
+  z-index: 20;
+}
+.drink-card:hover .drink-card-media,
+.snack-card:hover .snack-card-media,
+.home-card:hover .home-card-media,
+.fmc-card:hover .fmc-img-wrap,
+.menu-card:hover .menu-card-media {
+  overflow: visible;
+  z-index: 21;
+}
+.drink-card:hover .drink-card-media img,
+.snack-card:hover .snack-card-media img,
+.home-card:hover .home-card-media img,
+.fmc-card:hover .fmc-img,
+.menu-card:hover .menu-card-media img {
+  transform: translateY(-14px) scale(1.08);
+  border-radius: 18px;
+  box-shadow: 0 22px 38px rgba(28, 25, 23, 0.32);
+  position: relative;
+  z-index: 30;
+}
+
+/* ============================================
+   ป้ายปฏิทินมุมการ์ด + ปฏิทินลอยตอน hover (เมนูจองล่วงหน้า)
+   — แสดง "วันจริงของเมนู" ที่หัวมุม แล้วลอยเป็นปฏิทินเดือนนั้นตอน hover
+   ============================================ */
+.sched-cal {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 32;
+  pointer-events: none;
+}
+.sched-cal-corner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 48px;
+  border-radius: 12px;
+  background: #fff;
+  border: 2px solid var(--color-brand-primary, #FF5E1E);
+  box-shadow: 0 6px 14px rgba(28, 25, 23, 0.22);
+  overflow: hidden;
+  line-height: 1;
+}
+.sched-cal-corner-day {
+  font-size: 17px;
+  font-weight: 800;
+  color: var(--color-brand-primary, #FF5E1E);
+}
+.sched-cal-corner-month {
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--color-brand-muted, #78716C);
+  background: rgba(255, 94, 30, 0.12);
+  width: 100%;
+  text-align: center;
+  padding: 2px 0;
+}
+.sched-cal-pop {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  width: 232px;
+  background: #fff;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 94, 30, 0.35);
+  box-shadow: 0 18px 36px rgba(28, 25, 23, 0.28);
+  padding: 10px;
+  opacity: 0;
+  transform: translateY(-6px);
+  transition: opacity 0.22s ease, transform 0.22s ease;
+}
+/* ลอยขึ้นเมื่อ hover บนเมนู */
+.sched-cal:hover .sched-cal-pop,
+.drink-card:hover .sched-cal-pop,
+.snack-card:hover .sched-cal-pop,
+.home-card:hover .sched-cal-pop,
+.fmc-card:hover .sched-cal-pop,
+.menu-card:hover .sched-cal-pop {
+  opacity: 1;
+  transform: translateY(0);
+}
+.sched-cal-pop-title {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--color-brand-accent, #92400E);
+  margin-bottom: 4px;
+  line-height: 1.35;
+}
+.sched-cal-month {
+  font-size: 12px;
+  font-weight: 700;
+  text-align: center;
+  color: var(--color-brand-text, #1C1917);
+  margin-bottom: 6px;
+}
+.sched-cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+  text-align: center;
+}
+.sched-cal-dow {
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--color-brand-muted, #78716C);
+  padding: 2px 0;
+}
+.sched-cal-cell {
+  font-size: 11px;
+  padding: 3px 0;
+  border-radius: 8px;
+  color: var(--color-brand-text, #1C1917);
+}
+.sched-cal-cell.is-target {
+  background: var(--color-brand-primary, #FF5E1E);
+  color: #fff;
+  font-weight: 800;
+  box-shadow: 0 3px 8px rgba(255, 94, 30, 0.45);
+}
+html[data-theme='dark'] .sched-cal-pop, html[data-theme='graphite'] .sched-cal-pop {
+  background: var(--color-brand-surface, #1B1B20);
+}
+html[data-theme='dark'] .sched-cal-corner, html[data-theme='graphite'] .sched-cal-corner {
+  background: var(--color-brand-surface, #1B1B20);
+}
+
+/* ============================================
+   ปุ่มเปิด-ปิด (Toggle) ของหน้าแอดมิน
+   ============================================ */
+.bmb-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  user-select: none;
+}
+.bmb-toggle-track {
+  position: relative;
+  width: 46px;
+  height: 26px;
+  border-radius: 999px;
+  background: #D6D3D1;
+  border: none;
+  cursor: pointer;
+  transition: background 0.2s ease;
+  flex-shrink: 0;
+  padding: 0;
+}
+.bmb-toggle-track.is-on { background: var(--color-brand-primary, #FF5E1E); }
+.bmb-toggle-knob {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+  transition: transform 0.2s ease;
+}
+.bmb-toggle-track.is-on .bmb-toggle-knob { transform: translateX(20px); }
+.bmb-toggle-label { font-size: 14px; color: var(--color-brand-accent, #92400E); }
+.bmb-toggle.is-disabled { opacity: 0.55; cursor: not-allowed; }
+.bmb-toggle-track:focus-visible { outline: 3px solid rgba(255, 94, 30, 0.45); outline-offset: 2px; }
+
+/* ผู้ใช้ขอลดการเคลื่อนไหว — ไม่ต้องให้รูปลอย */
+@media (prefers-reduced-motion: reduce) {
+  .drink-card:hover .drink-card-media img,
+  .snack-card:hover .snack-card-media img,
+  .home-card:hover .home-card-media img,
+  .fmc-card:hover .fmc-img,
+  .menu-card:hover .menu-card-media img {
+    transform: none;
+    box-shadow: none;
+  }
 }
 .main-scroll {
   padding-bottom: calc(var(--bmb-bottom-nav-h, 0px) + var(--bmb-sticky-h, 0px) + 1rem);

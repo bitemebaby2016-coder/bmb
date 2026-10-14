@@ -9,6 +9,7 @@
 import { Link } from 'react-router-dom'
 import { MascotBadge } from '@/components/MascotBadge'
 import { HorizontalCarousel } from './HorizontalCarousel'
+import { ScheduleDateBadge } from './ScheduleDateBadge'
 import { selectHomeShowcase, type HomeShowcaseItem } from '@/lib/homeShowcase'
 import type { Product, ProductCategory, MenuSection, SameDayOrderPayload, PreOrderPayload } from '@/types'
 
@@ -64,6 +65,10 @@ function ShowcaseCard({
           decoding="async"
           onError={(e) => { (e.currentTarget as HTMLImageElement).style.visibility = 'hidden' }}
         />
+        {/* ป้ายปฏิทินมุมรูป — วันจัดส่งจริงของเมนูจองล่วงหน้า */}
+        {item.preorder && item.scheduledDate && (
+          <ScheduleDateBadge date={item.scheduledDate} />
+        )}
       </div>
       <div className="drink-card-body">
         <div className="drink-card-name">

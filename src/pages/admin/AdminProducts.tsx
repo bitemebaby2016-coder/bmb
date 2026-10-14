@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { showToast } from '@/components/ui/ToastContainer'
 import { getProducts, createProduct, updateProduct, archiveProduct, restoreProduct, getCategories, getCategoriesAdmin, createCategory, updateCategory, archiveCategory, restoreCategory, getSectionsAdmin, createSection, updateSection, archiveSection, restoreSection } from '@/lib/bmbAdminApi_products'
+import { ToggleSwitch } from '@/components/admin/ToggleSwitch'
+import { HomePopularManager } from '@/components/admin/HomePopularManager'
 import { uploadProductImage, validateImageFile } from '@/lib/bmbAdminApi_media'
 import { slugifyCategory, blankCategoryForm } from '@/lib/adminUi'
 import { customerVisibilityIssue, CUSTOMER_VISIBILITY_LABEL } from '@/lib/catalogStructure'
@@ -365,19 +367,23 @@ export function AdminProducts() {
             </div>
             
             <div className="flex flex-wrap items-center gap-4">
-              <label className="flex items-center gap-2">
-                <input type="checkbox" checked={formData.is_available} onChange={(e) => setFormData({ ...formData, is_available: e.target.checked })} />
-                <span className="text-sm">เปิดขาย</span>
-              </label>
-              
-              <label className="flex items-center gap-2">
-                <input type="checkbox" checked={formData.is_featured} onChange={(e) => setFormData({ ...formData, is_featured: e.target.checked })} />
-                <span className="text-sm">แนะนำ</span>
-              </label>
+              <ToggleSwitch
+                checked={formData.is_available}
+                onChange={(v) => setFormData({ ...formData, is_available: v })}
+                label="เปิดขาย"
+                testId="product-available-toggle"
+              />
+
+              <ToggleSwitch
+                checked={formData.is_featured}
+                onChange={(v) => setFormData({ ...formData, is_featured: v })}
+                label="แนะนำ"
+                testId="product-featured-toggle"
+              />
 
               {/* Owner report 2026-10-01: แอดมินไม่รู้เมนูไปอยู่หมวดไหน — เพิ่มช่องเลือกโหมดขายชัดเจน */}
               <label className="flex items-center gap-2">
-                <span className="text-sm font-medium text-brand-accent">🛒 โหมดขาย:</span>
+                <span className="text-sm font-medium text-brand-accent">🛒 วิธีขาย:</span>
                 <select
                   className="input max-w-60"
                   value={formData.is_preorder ? 'preorder' : 'sameday'}
@@ -391,8 +397,8 @@ export function AdminProducts() {
                     } as typeof formData)
                   }}
                 >
-                  <option value="sameday">ส่งวันนี้ (same-day) — สั่งได้วันนี้ทันที</option>
-                  <option value="preorder">จองล่วงหน้า (pre-order) — เลือกวันจัดส่ง</option>
+                  <option value="sameday">สั่งได้วันนี้ — ส่งวันนี้</option>
+                  <option value="preorder">จองล่วงหน้า — เลือกวันจัดส่ง</option>
                 </select>
               </label>
             </div>
@@ -428,10 +434,14 @@ export function AdminProducts() {
                   {sections.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
                 </select>
               </div>
-              <label className="flex items-center gap-2 text-sm">
-                <input type="checkbox" checked={catForm.is_active} onChange={(e) => setCatForm({ ...catForm, is_active: e.target.checked })} />
-                Active
-              </label>
+              <div className="flex items-center">
+                <ToggleSwitch
+                  checked={catForm.is_active}
+                  onChange={(v) => setCatForm({ ...catForm, is_active: v })}
+                  label="แสดงหมวดนี้"
+                  testId="category-active-toggle"
+                />
+              </div>
             </div>
             <div className="flex gap-2 mt-3">
               <button onClick={handleSaveCategory} className="btn btn-success text-sm">💾 Save</button>
@@ -475,6 +485,9 @@ export function AdminProducts() {
           {sections.length === 0 && <p className="text-brand-muted text-sm">ยังไม่มี Section — หมวดทั้งหมดแสดงแบบเดิมจนกว่าจะสร้าง Section</p>}
         </div>
       </div>
+
+      {/* แผงจัดการ "เมนูยอดนิยม" + ข้อความหน้าเว็บ (dropdown + ปุ่มเปิด-ปิด) */}
+      <HomePopularManager products={products} categories={adminCats} sections={sections} />
 
         <div className="space-y-2">
           {moveFrom && (

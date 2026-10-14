@@ -5,6 +5,7 @@
 // ============================================
 
 import type { HomeProduct, SameDayOrderPayload, PreOrderPayload } from '@/types'
+import { ScheduleDateBadge } from '@/components/home/ScheduleDateBadge'
 
 type SectionMode = 'same_day' | 'pre_order' | 'auto'
 
@@ -58,9 +59,7 @@ export function HomeProductCard({ item, onSameDay, onPreOrder, mode = 'auto' }: 
         {item.badge && <span className="home-card-badge">{item.badge}</span>}
         {lowStock && <span className="home-card-stock">🔥 เหลือ {item.stock} กล่อง</span>}
         {isPreOrderCta && item.scheduledDate && (
-          <span className="home-card-scheduled">
-            📅 พร้อมส่ง {formatThaiDate(item.scheduledDate)}
-          </span>
+          <ScheduleDateBadge date={item.scheduledDate} />
         )}
       </div>
 
@@ -90,9 +89,4 @@ export function HomeProductCard({ item, onSameDay, onPreOrder, mode = 'auto' }: 
       </div>
     </article>
   )
-}
-
-function formatThaiDate(dateStr: string): string {
-  const date = new Date(dateStr + 'T00:00:00')
-  return date.toLocaleDateString('th-TH', { day: 'numeric', month: 'short' })
 }

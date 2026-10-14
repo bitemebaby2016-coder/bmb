@@ -592,8 +592,14 @@ export function TalkToBite({ mode = 'overlay', initialPhase = 'landing', landing
       {/* Brand row */}
       <div className="flex items-center justify-between px-5 pt-4">
         <div className="flex items-center gap-2">
-          <span className="w-8 h-8 rounded-xl bg-gradient-to-br from-brand-primary to-orange-400 flex items-center justify-center text-white font-black text-sm">B</span>
-          <span className="font-display font-bold text-brand-accent">BITE&nbsp;ME&nbsp;BABY</span>
+          {/* โลโก้จริงของแบรนด์ (แทนโลโก้ตัว B แบบเดิม) */}
+          <img
+            src="/Head Logo.webp"
+            alt="Bite Me Baby"
+            className="h-10 w-auto"
+            data-testid="ttb-logo"
+            onError={(e) => { (e.currentTarget as HTMLImageElement).src = '/Logo_Sticker_Circle.webp' }}
+          />
         </div>
         <div className="flex items-center gap-2">
           <button

@@ -63,7 +63,7 @@ export function MenuPage() {
     console.log('[Log#same-day]', payload)
     const product = products.find(p => p.id === payload.productId)
     if (!product) {
-      showToast('Item not found', 'error')
+      showToast('ไม่พบเมนูที่ต้องการค่ะ', 'error')
       return
     }
     // Grab / 7-Eleven style upsell: toppings + recommended companions.
@@ -177,7 +177,7 @@ export function MenuPage() {
           <div className="flex items-start gap-3">
             <span className="text-2xl">📅</span>
             <div>
-              <h3 className="font-bold text-blue-900 mb-1">จองล่วงหน้า (Pre-order)</h3>
+              <h3 className="font-bold text-blue-900 mb-1">จองล่วงหน้า</h3>
               <p className="text-sm text-blue-700">เมนูที่โหวตแล้วจะส่งในรอบถัดไป — เลือกวันที่ต้องการรับอาหาร</p>
               {deliveryRounds.length > 0 && (
                 <div className="flex gap-2 mt-2 flex-wrap">
