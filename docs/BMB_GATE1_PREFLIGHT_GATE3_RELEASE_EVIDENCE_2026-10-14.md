@@ -106,3 +106,31 @@
 ## 4. Blockers คงเดิม (ไม่เปลี่ยนในรอบนี้)
 
 Payment Live/KYC · SMS/Meta runtime verify · staging env · W5C R9/R10/R11/R12 · migration 124 prod apply = NOT AUTHORIZED · Open Shop = ห้ามประกาศ จนกว่า Acceptance Journey ผ่านจริง
+
+## 5. Gate 4 — Push + Deploy verification (2026-10-14)
+
+- **Push แล้ว:** `4e0453e..3926254` (4 release commits + 1 docs) — `origin/main` = HEAD = `3926254` · push = Cloudflare auto-deploy (ตามกลไกจริง §3.4)
+- **Deployed identity หลัง push (GET):** `assets/index-0s4lXvhI.js` + `assets/index-BMJYc1f5.css` (baseline ก่อน push = `index-Cp4VvREX.js`/`index-BRC9VQ30.css` — เปลี่ยนแล้ว = deploy ใหม่ live)
+- **Marker verification บน deployed chunks จริง (ยืนยัน semantic — chunk hash ต่าง local เพราะ env inline ตอน build; `catalogStructure-Dp0PRVhq.js` hash เดียวกับ local = โค้ดเดียวกัน):**
+  - main `index-0s4lXvhI.js`: `__line_key` ✓ · `context_blocked` ✓ · `needs_confirmation` ✓ · `bmb-cart-v1` ✓ · `line_mode` ✓
+  - `AdminProducts-C4iWrOwP.js`: `admin-product-customer-hidden` ✓
+  - `MenuPage-D1M88d73.js`: `context_blocked` ✓ · `needs_confirmation` ✓ · `visibilitychange` ✓
+  - `CartPage-PArEDyGv.js`: `__line_key` ✓
+- **HTTP GET** `/` `/menu` `/cart` `/checkout` `/admin/products` = 200 ทั้งหมด
+
+## 6. Gate 5 — Production smoke (ไม่สร้างออเดอร์จริง — Playwright chromium headless 390×844, client-side only)
+
+| # | ทดสอบ | ผล |
+|---|---|---|
+| S1 | `/menu` โหลด catalog จริง (ปุ่มสั่งวันนี้ 5 ปุ่ม) | **PASS** |
+| S2a | กดสั่ง → OrderBuilderModal เปิด (มี `ob-item-total`) | **PASS** |
+| S2c | ยืนยันใน modal → เข้าตะกร้า (1 line, mode=SAME_DAY) | **PASS** |
+| S3 | กดซ้ำ → line เดิม qty รวม=2 (canonical line identity ทำงานจริง) | **PASS** |
+| S4 | Reload → ตะกร้าคงอยู่ (1 line) + revalidate ไม่พัง | **PASS** |
+| S5 | `/cart` แสดงรายการ + ราคา + ปุ่ม `go-checkout` | **PASS** |
+| S6 | Visibility gate: 6 สินค้า cat-1/cat-2 ไม่รั่วบนเมนู · สินค้าหมวด active แสดง | **PASS** |
+| S7 | สลับ tab จองล่วงหน้า (ตะกร้ามีของ) → ตะกร้าคงอยู่ ไม่โดนล้าง | **PASS** (INFO: ไม่มี isolation modal — tab นี้เป็น filter ไม่ใช่ context change) |
+| S8 | `/checkout` แสดง guest gate (ยืนยันเบอร์ OTP) — **ไม่กดสั่งซื้อ** | **PASS** |
+| — | Console errors ตลอดรอบ | **0** |
+
+**ยังไม่ได้ทดสอบในรอบนี้ (ติดเงื่อนไข — ห้ามเดา):** admin save → customer visibility แบบ live (**production write = gate แยก ต้องอนุมัติ**) · sold-out guard (ไม่มีสินค้าหมดใน catalog จริงให้กด — ครอบคลุมด้วย unit tests) · submit lock บน UI จริง (การกด submit จริง = ออเดอร์จริง — ห้ามจนมี test plan ที่ Owner ยืนยัน; ครอบคลุมด้วย `submitLockGuard` tests) · ยอดรวมละเอียด (ครอบคลุมด้วย cart tests) · Payment/Kitchen/Dispatch E2E (Gate 6) · ออเดอร์จริง 1 ออเดอร์โดย Owner

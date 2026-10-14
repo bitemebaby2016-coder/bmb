@@ -179,6 +179,7 @@ FROM products p WHERE p.category_id IN ('cat-1','cat-2');
 4. `8075f5d` `docs: opening readiness master + P0 evidence + session handoff` — docs ×3
 5. *(docs รอบต่อเนื่อง — preflight/release evidence + สถานะนี้)*
 **ผล release review:** ขอบเขตตรงทุก commit · ไม่มี protected paths/env/workflow/secret · ไม่มี migration ถูก apply จาก push (`ci.yml` = lint/test/build เท่านั้น; 124 = isolated-only) · ไม่มี commit จาก session อื่น
+**Push + deploy (2026-10-14 รอบต่อเนื่อง — ทำแล้ว):** push `4e0453e..3926254` (4 release + 1 docs) · deployed ใหม่ = `assets/index-0s4lXvhI.js`/`index-BMJYc1f5.css` (marker scan ผ่าน — evidence doc §5) · smoke Gate 5 = PASS ทั้ง 9 ข้อ (client-side, ไม่สร้างออเดอร์จริง — evidence doc §6) · **rollback โค้ด = `git revert`**
 **กติกา:** ห้ามปนรูปภาพ/screenshots/webp/pre-order assets
 
 **Rollback ของโค้ด:** revert commit (คืนสภาพเดิมทั้งหมด — ไม่มี schema/data change ในชุดนี้) · **Rollback ของแผน §3:** reverse UPDATE (ย้อนได้ 100%)
@@ -188,10 +189,10 @@ FROM products p WHERE p.category_id IN ('cat-1','cat-2');
 
 | Capability | IMPLEMENTED | CONNECTED | DEPLOYED | RUNTIME VERIFIED | เอกสาร | ข้อจำกัด |
 |---|---|---|---|---|---|---|
-| Admin catalog CRUD + move/merge + visibility truth | ✓ (รอบนี้) | ✓ (products/categories API) | ✗ (ยังไม่ push) | ✗ | master + P0 doc | รอ deploy + live QA |
-| Customer menu = canonical reads + refetch | ✓ | ✓ | ✗ (โค้ดใหม่) | ✗ | §1 | — |
-| Canonical cart (1 store, line identity, persistence) | ✓ | ✓ | ✗ (โค้ดใหม่) | ✗ | §1/§4 | — |
-| Checkout revalidate + submit lock + server authority | ✓ | ✓ (RPC 025) | ✓ (ส่วนเดิม) | บางส่วน (tests เท่านั้น) | canonicalOrderFlow/checkoutMixedSplit | ไม่มี live order test (ห้าม) |
+| Admin catalog CRUD + move/merge + visibility truth | ✓ (รอบนี้) | ✓ (products/categories API) | ✓ (deploy แล้ว) | บางส่วน (deployed marker — admin save live = production write ยังไม่ทดสอบ) | master + P0 + evidence doc | รอ Owner อนุมัติ write-test |
+| Customer menu = canonical reads + refetch | ✓ | ✓ | ✓ (deploy แล้ว) | ✓ (smoke S1/S6 — visibility gate ทำงานจริง) | §1 + evidence doc §6 | — |
+| Canonical cart (1 store, line identity, persistence) | ✓ | ✓ | ✓ (deploy แล้ว) | ✓ (smoke S2-S5 — add/merge/reload/cart page) | §1/§4 + evidence doc §6 | — |
+| Checkout revalidate + submit lock + server authority | ✓ | ✓ (RPC 025) | ✓ (ส่วนเดิม) | บางส่วน (tests + smoke S8 guest gate — ไม่กด submit จริง) | canonicalOrderFlow/checkoutMixedSplit | ไม่มี live order test (ห้ามจนมี test plan) |
 | Login (Supabase Auth) + guest OTP | ✓ | ✓ | ✓ | ผ่าน QA รอบก่อน (cr4 screenshots) | P0-2 docs | SMS runtime ยังไม่ verify |
 | GPS/location + denied path | ✓ | ✓ | ✓ | ✓ (หลักฐาน launch-03/04) | — | — |
 | SAME_DAY / PRE_ORDER modes + gates | ✓ | ✓ | ✓ | ✓ (contract tests + harness) | 023/025 | — |
@@ -204,9 +205,9 @@ FROM products p WHERE p.category_id IN ('cat-1','cat-2');
 | Idempotent submit (124) | ✓ (code) | ✗ (ไม่ wire) | ✗ | isolated harness เท่านั้น | W5C docs | prod apply NOT AUTHORIZED |
 
 ### Owner acceptance checklist (ต้องทำก่อนประกาศพร้อมเปิด)
-- [ ] เลือกแผน §3 + ยืนยัน execution gate → apply + ตรวจด้วย verification queries
-- [ ] Review diff รอบนี้ → อนุมัติ commit boundaries → **อนุมัติ push (= deploy)**
-- [ ] Smoke บน production หลัง deploy: แอดมินบันทึกเมนู → ลูกค้า refetch เห็นทันที / เพิ่มของ (same-day + pre-order + ตัวเลือกซ้ำ) → ตะกร้าถูกต้อง / reload คงตะกร้า → revalidate ก่อน checkout / สั่งซื้อสำเร็จ 1 ออเดอร์จริง (ทดสอบโดย Owner)
+- [ ] เลือกแผน §3 + ยืนยัน execution gate → apply + ตรวจด้วย verification queries *(preflight ครบแล้ว 2026-10-14 — ติด DRIFT-A/B รอ Owner ยืนยันก่อน execute)*
+- [x] Review diff รอบนี้ → อนุมัติ commit boundaries → **อนุมัติ push (= deploy)** — ทำแล้ว 2026-10-14 (release review ผ่าน + Owner mandate อนุญาต commit/push; deployed + marker verified)
+- [x] Smoke บน production ฝั่ง client-side (เพิ่มของ→ตะกร้า/line identity/reload/cart/visibility gate/checkout guest gate) — PASS 9/9 (evidence doc §6) · [ ] แอดมินบันทึกเมนู live (production write) · [ ] สั่งซื้อสำเร็จ 1 ออเดอร์จริง (ทดสอบโดย Owner)
 - [ ] ตรวจ sticky cart bar ไม่ทับ BottomNav บนมือถือจริง
 - [ ] ตัดสินใจ payment live cutover + ยืนยัน SMS/Meta runtime
 - [ ] (ถ้าต้องการ) staging environment สำหรับ E2E ก่อน production
