@@ -414,10 +414,31 @@ export function TalkToBite({ mode = 'overlay', initialPhase = 'landing', landing
   }
 
   function confirmDraft(draft: DraftLine[]) {
+    // P0 WS4: handle every AddToCartResult per line — never claim success for
+    // lines that were not actually added (before: results were ignored and the
+    // assistant always reported success).
+    let addedCount = 0
+    const failedNames: string[] = []
     for (const line of draft) {
       const p = line.product
       const mode: OrderMode = p.available_preorder && !p.available_same_day ? 'PRE_ORDER' : 'SAME_DAY'
-      useCartStore.getState().addItem(p, line.quantity, line.customizations ?? {}, mode)
+      const res = useCartStore.getState().addItem(p, line.quantity, line.customizations ?? {}, mode)
+      if (res === 'added') addedCount += 1
+      else failedNames.push(p.name)
+    }
+    if (failedNames.length > 0) {
+      showToast(
+        addedCount > 0
+          ? `เพิ่มลงตะกร้าได้ ${addedCount} รายการ — เพิ่มไม่ได้: ${failedNames.join(', ')}`
+          : `เพิ่มลงตะกร้าไม่ได้ (${failedNames.join(', ')}) — กรุณาลองใหม่อีกครั้ง`,
+        addedCount > 0 ? 'warning' : 'error',
+      )
+      if (addedCount === 0) {
+        setBiteState('IDLE')
+        return
+      }
+      setMessages((prev) => prev.map((m) => (m.kind === 'draft' ? { ...m, applied: true } : m)))
+      return
     }
     setMessages((prev) => prev.map((m) => (m.kind === 'draft' ? { ...m, applied: true } : m)))
     setBiteState('SUCCESS')

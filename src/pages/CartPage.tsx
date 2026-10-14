@@ -43,7 +43,7 @@ export function CartPage() {
       {/* Cart Items */}
       <div className="space-y-4 mb-6">
         {items.map((item) => (
-          <div key={item.product.id} className="card flex gap-4">
+          <div key={item.__line_key ?? item.product.id} className="card flex gap-4">
             <img src={item.product.image_url || '/placeholder.png'} alt={item.product.name} className="w-24 h-24 rounded-xl object-cover" />
             <div className="flex-1">
               <h3 className="font-bold text-brand-accent">{item.product.name}</h3>
@@ -65,20 +65,20 @@ export function CartPage() {
 
               <div className="flex items-center gap-3 mt-2">
                 <button
-                  onClick={() => updateQuantity(item.product.id, item.quantity - 1)}
+                  onClick={() => updateQuantity(item.product.id, item.quantity - 1, item.__line_key)}
                   className="w-8 h-8 rounded-full bg-brand-bg text-brand-accent font-bold hover:bg-brand-primary hover:text-white transition-colors"
                 >
                   -
                 </button>
                 <span className="font-bold text-brand-accent w-8 text-center">{item.quantity}</span>
                 <button
-                  onClick={() => updateQuantity(item.product.id, item.quantity + 1)}
+                  onClick={() => updateQuantity(item.product.id, item.quantity + 1, item.__line_key)}
                   className="w-8 h-8 rounded-full bg-brand-bg text-brand-accent font-bold hover:bg-brand-primary hover:text-white transition-colors"
                 >
                   +
                 </button>
                 <button
-                  onClick={() => removeItem(item.product.id)}
+                  onClick={() => removeItem(item.product.id, item.__line_key)}
                   className="ml-auto text-brand-danger text-sm hover:underline"
                 >
                   ลบ

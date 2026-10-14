@@ -23,11 +23,28 @@ import { create } from "zustand"
 import type { CartItem as CartItemType, Promotion, Product } from "@/types"
 import type { OrderMode } from "@/config/platformConfig"
 import { addOnTotalFor } from "@/lib/addonDisplay"
+import { showToast } from "@/components/ui/ToastContainer"
 
 export type AddToCartResult = 'added' | 'needs_confirmation' | 'context_blocked' | 'blocked'
 
+/**
+ * P0 WS4 (2026-10-14): stable identity for one cart LINE = product + mode +
+ * options (object key order insensitive). Same product with DIFFERENT options
+ * = separate lines (before: the 2nd add silently merged and DROPPED its
+ * options); same product+mode+options merges quantities.
+ */
+export function lineKeyFor(
+  productId: string,
+  mode: OrderMode | undefined,
+  customizations: Record<string, unknown> | undefined,
+): string {
+  const keys = Object.keys(customizations ?? {}).sort()
+  const sig = JSON.stringify(keys.map((k) => [k, (customizations ?? {})[k]]))
+  return `${productId}::${mode ?? 'SAME_DAY'}::${sig}`
+}
+
 interface CartStore {
-  items: Array<CartItemType & { __context_tenant_id?: string; line_mode?: OrderMode }>
+  items: Array<CartItemType & { __context_tenant_id?: string; line_mode?: OrderMode; __line_key?: string }>
   couponCode: string
   appliedPromotion: Promotion | null
   subtotal: number
@@ -43,8 +60,8 @@ interface CartStore {
   active_context_brand_id: string | null
 
   addItem: (product: Product, quantity?: number, customizations?: Record<string, any>, mode?: OrderMode) => AddToCartResult
-  removeItem: (productId: string) => void
-  updateQuantity: (productId: string, quantity: number) => void
+  removeItem: (productId: string, lineKey?: string) => void
+  updateQuantity: (productId: string, quantity: number, lineKey?: string) => void
   clearCart: () => void
   setCouponCode: (code: string) => void
   setAppliedPromotion: (promo: Promotion | null) => void
@@ -119,15 +136,20 @@ export const useCartStore = create<CartStore>((set, get) => ({
     }
 
     set((state) => {
-      const existingItem = state.items.find(item => item.product.id === product.id)
-      let newItems: Array<CartItemType & { __context_tenant_id?: string; line_mode?: OrderMode }>
+      const key = lineKeyFor(product.id, mode, customizations)
+      const lineId = (item: { __line_key?: string; product: Product; line_mode?: OrderMode; customizations: Record<string, any> }) =>
+        item.__line_key ?? lineKeyFor(item.product.id, item.line_mode, item.customizations)
+      const existingItem = state.items.find(item => lineId(item) === key)
+      let newItems: Array<CartItemType & { __context_tenant_id?: string; line_mode?: OrderMode; __line_key?: string }>
 
       if (existingItem) {
-        newItems = state.items.map(item =>
-          item.product.id === product.id
-            ? { ...item, quantity: item.quantity + quantity }
-            : item
-        )
+        newItems = state.items.map(item => {
+          if (lineId(item) !== key) return item
+          const mergedQty = item.quantity + quantity
+          // P0 WS4: recompute the line subtotal on merge — the old code kept the
+          // stale subtotal while raising quantity → cart totals under-reported.
+          return { ...item, quantity: mergedQty, subtotal: (Number(item.product.price) + addOnTotalFor(item)) * mergedQty }
+        })
       } else {
         const unit = Number(product.price) + addOnTotalFor({ product, customizations })
         newItems = [...state.items, {
@@ -136,7 +158,8 @@ export const useCartStore = create<CartStore>((set, get) => ({
           customizations,
           subtotal: unit * quantity,
           __context_tenant_id: active_context_tenant_id!,
-          line_mode: mode
+          line_mode: mode,
+          __line_key: key,
         }]
       }
 
@@ -146,22 +169,31 @@ export const useCartStore = create<CartStore>((set, get) => ({
     return 'added'
   },
 
-  removeItem: (productId: string) => {
+  removeItem: (productId: string, lineKey?: string) => {
     set((state) => ({
-      items: state.items.filter(item => item.product.id !== productId)
+      items: state.items.filter(item =>
+        lineKey ? item.__line_key !== lineKey : item.product.id !== productId)
     }))
     get().recalculate()
   },
 
-  updateQuantity: (productId: string, quantity: number) => {
+  updateQuantity: (productId: string, quantity: number, lineKey?: string) => {
     if (quantity <= 0) {
-      get().removeItem(productId)
+      get().removeItem(productId, lineKey)
       return
     }
+
+    // P0 WS4: line-precise targeting (same product with different options can be
+    // separate lines). No lineKey -> first line of that product (single-line
+    // carts behave exactly as before).
+    const target = lineKey
+      ? get().items.find(i => i.__line_key === lineKey)
+      : get().items.find(i => i.product.id === productId)
+    if (!target) return
     
     set((state) => ({
       items: state.items.map(item =>
-        item.product.id === productId
+        item === target
           ? { ...item, quantity, subtotal: (Number(item.product.price) + addOnTotalFor(item)) * quantity }
           : item
       )
@@ -173,8 +205,15 @@ export const useCartStore = create<CartStore>((set, get) => ({
 
   // TEN-05: Resolve whether cart survives context change
   resolveContextChange: (newTenantId: string, newBrandId: string) => {
-    const { items } = get()
+    const { items, active_context_tenant_id, active_context_brand_id } = get()
     if (items.length === 0) return 'kept'
+
+    // P0 2026-10-14: context เดิมทุกประการ → คงตะกร้าไว้ (RD-03: ต้องเปลี่ยน
+    // context เท่านั้นจึงล้าง — ของเดิมคืน 'cleared' ทุกกรณี = ล้างตะกร้าทิ้งเอง
+    // ทุกครั้งที่ resolve ซ้ำด้วยค่าเดิม ทั้งที่ไม่มี boundary ใดถูกข้าม)
+    if (active_context_tenant_id === newTenantId && active_context_brand_id === newBrandId) {
+      return 'kept'
+    }
     
     // Check if ANY item belongs to a DIFFERENT tenant
     const hasCrossTenant = items.some(item => 
@@ -195,6 +234,8 @@ export const useCartStore = create<CartStore>((set, get) => ({
       if (count > 0) {
         console.warn(`[CartStore] Context changed (t=${tenantId}, b=${brandId}) — clearing ${count} incompatible items.`)
         get().clearCart()
+        // P0 WS4: never discard items SILENTLY — tell the user why the cart went away.
+        showToast('เปลี่ยนร้าน/บริบทการสั่ง — ตะกร้าเดิมถูกล้างเพื่อให้ราคาและสต็อกตรงกับร้านใหม่', 'warning')
       }
     }
     set({ active_context_tenant_id: tenantId, active_context_brand_id: brandId })

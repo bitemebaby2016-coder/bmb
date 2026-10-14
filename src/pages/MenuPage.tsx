@@ -39,6 +39,14 @@ export function MenuPage() {
       }
     }
     loadData()
+    // P0 WS3: multi-tab/session freshness — refetch the live catalog whenever
+    // this tab becomes visible again (Admin menu changes reflect without a
+    // reload; each tab updates on its own next navigation/focus).
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') void loadData()
+    }
+    document.addEventListener('visibilitychange', onVisible)
+    return () => document.removeEventListener('visibilitychange', onVisible)
   }, [])
 
   // ✓ v3.1: Filter by tab — canonical mode columns (migration 023), alias fallback
@@ -64,7 +72,20 @@ export function MenuPage() {
       if (result.addOns.length > 0) {
         customizations['addOns'] = result.addOns.map((a) => ({ addonId: a.addonId, selections: a.selections, note: a.note ?? '' }))
       }
-      addItem(result.product, result.quantity, customizations)
+      // P0 2026-10-14: เช็ค AddToCartResult ก่อน (แบบ HomePage RC-3/OD-4) —
+      // ห้าม toast "Added" ทั้งที่ addItem ไม่ได้เพิ่มอะไร (blocked/needs_confirmation/context_blocked)
+      const res = addItem(result.product, result.quantity, customizations)
+      if (res !== 'added') {
+        showToast(
+          res === 'needs_confirmation'
+            ? 'ตะกร้ามีสินค้าอีกโหมดอยู่ — กรุณายืนยันการเปลี่ยนโหมดก่อนค่ะ'
+            : res === 'context_blocked'
+              ? 'เพิ่มไม่ได้ในตอนนี้ กรุณาลองใหม่อีกครั้ง'
+              : 'เพิ่มสินค้านี้ไม่ได้ในโหมดนี้ — สินค้าอาจไม่เปิดขายในโหมดที่เลือก',
+          'info',
+        )
+        return
+      }
       for (const rec of result.recommended) addItem(rec, 1)
       showToast('Added: ' + result.product.name + (result.addOns.length > 0 ? ' (+toppings)' : '') + (result.recommended.length > 0 ? ' +' + result.recommended.length + ' recommended' : ''), 'success')
     })
@@ -90,7 +111,20 @@ export function MenuPage() {
       if (result.addOns.length > 0) {
         customizations['addOns'] = result.addOns.map((a) => ({ addonId: a.addonId, selections: a.selections, note: a.note ?? '' }))
       }
-      addItem(result.product, result.quantity, customizations, 'PRE_ORDER')
+      // P0 2026-10-14: เช็คผลก่อน navigate — ถ้าไม่ได้เพิ่มจริงห้ามส่งไป checkout
+      // ทั้งที่ตะกร้าไม่มีสินค้า (ปุ่มกดแล้วไม่มีอะไรเข้าตะกร้า = อาการที่ Owner เจอ)
+      const res = addItem(result.product, result.quantity, customizations, 'PRE_ORDER')
+      if (res !== 'added') {
+        showToast(
+          res === 'needs_confirmation'
+            ? 'ตะกร้ามีสินค้าอีกโหมดอยู่ — กรุณายืนยันการเปลี่ยนโหมดก่อนค่ะ'
+            : res === 'context_blocked'
+              ? 'เพิ่มไม่ได้ในตอนนี้ กรุณาลองใหม่อีกครั้ง'
+              : 'เพิ่มสินค้านี้ไม่ได้ในโหมดนี้ — สินค้าอาจไม่เปิดขายในโหมดที่เลือก',
+          'info',
+        )
+        return
+      }
       for (const rec of result.recommended) addItem(rec, 1, {}, 'PRE_ORDER')
       showToast('เลือกวันที่/รอบ/ที่อยู่ แล้วชำระเงินเพื่อยืนยันการจอง', 'info')
       navigate('/checkout?mode=pre-order')

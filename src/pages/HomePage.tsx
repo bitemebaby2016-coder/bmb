@@ -98,6 +98,14 @@ export function HomePage() {
       }
     }
     loadData()
+    // P0 WS3: multi-tab/session freshness — refetch the live catalog whenever
+    // this tab becomes visible again (Admin menu changes reflect without a
+    // reload; each tab updates on its own next navigation/focus).
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') void loadData()
+    }
+    document.addEventListener('visibilitychange', onVisible)
+    return () => document.removeEventListener('visibilitychange', onVisible)
   }, [])
 
   const { sameDay, preOrder } = getHomeProducts(products, categories)
