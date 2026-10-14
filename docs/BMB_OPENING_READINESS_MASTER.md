@@ -5,8 +5,9 @@
 **สถานะรวม: ยังไม่พร้อมเปิดร้าน (NOT open-ready)** — ทุกอย่างในนี้คือ local verification + plan
 จนกว่าเส้นทาง Admin → ลูกค้า → สั่งซื้อ จะได้รับการพิสูจน์บนสภาพแวดล้อมจริง/ยอมรับโดย Owner
 
-Baseline: repo `D:/A PROJECT/Bite Me Baby` · branch `main` · HEAD = `origin/main` = `4e0453eb385166c36c23f416d7345ac19d3a42db`
-รอบงานนี้: 2026-10-14 (Owner Master Directive — Unified Catalog + Cart + Checkout + W5C)
+Baseline: repo `D:/A PROJECT/Bite Me Baby` · branch `main` · origin/main = `4e0453eb385166c36c23f416d7345ac19d3a42db` · HEAD (local) = `8075f5d` (4 commits: `06a697b`/`7f808ce`/`34385c7`/`8075f5d`)
+รอบงานนี้: 2026-10-14 (Owner Master Directive — Unified Catalog + Cart + Checkout + W5C) · ต่อเนื่อง 2026-10-14 (Owner mandate: loop ต่อจนผ่าน gate — อัปเดตเอกสาร/commit/push อนุญาตแล้ว; production data mutation = gate แยก)
+**อัปเดตรอบต่อเนื่อง:** Gate 1 admin preflight = DONE (หลักฐาน `docs/BMB_GATE1_PREFLIGHT_GATE3_RELEASE_EVIDENCE_2026-10-14.md`) · Gate 2 Option A = **BLOCKED** (พบ drift 2 จุด — ต้อง Owner ยืนยัน) · Gate 3 release review = PASS (CI re-run จริง 972/972 · tsc 0 · lint 0 · build 0)
 
 ---
 
@@ -48,8 +49,9 @@ Baseline: repo `D:/A PROJECT/Bite Me Baby` · branch `main` · HEAD = `origin/ma
 > **สถานะ:** Owner เลือก Option A เป็นแผนหลัก (ห้ามถาม A/B ซ้ำ) · ต้องมี read-only preflight ตรงกับแผนก่อนรันจริง
 > **Preflight ฝั่ง products (ทำแล้ว 2026-10-14, anon REST = มุมมองลูกค้า):** โครงสร้างตรงแผน (cat-1 = 5 สินค้า, cat-2 = 1 สินค้า, ทั้ง 6 `is_available=true`)
 > **แต่พบ plan drift:** ID จริง 2 ตัวมี suffix (`prod-1789607383214-t8rm95`, `prod-1789610117076-2p5e8u`) — ตารางล่าง = ID จริงที่ต้องใช้เท่านั้น
-> **Preflight ที่ยังขาด (anon เข้าไม่ถึง ต้องรันฐานะ admin):** ค่า `is_active/archived` จริงของแถว cat-1/cat-2 + จำนวน `order_items` ที่อ้าง 6 สินค้า
-> **ดังนั้น: ยังไม่รัน SQL เปลี่ยนข้อมูล** (ตามเงื่อนไข Owner — หาก preflight ไม่ครบ/ไม่ตรง = หยุด ห้ามเดา)
+> **Preflight ฐานะ admin (ทำแล้ว 2026-10-14 รอบต่อเนื่อง — หลักฐาน `docs/BMB_GATE1_PREFLIGHT_GATE3_RELEASE_EVIDENCE_2026-10-14.md`):** cat-1 `is_active=false` / cat-2 `archived=false` ตรง hard pre-check ✓ · 6 สินค้าตรงแผน ✓ · `count(products cat-2)=1` ✓ · **baseline order_items 6 สินค้า = 141 แถว** (orders ตาราง = 206, order_items ตาราง = 203)
+> **แต่พบ drift เพิ่ม 2 จุด (ค่าจริงต่างจากแผน):** DRIFT-A = ชื่อหมวดจริง 'ส่งวันนี้ / Same Day' / 'จองล่วงหน้า / พรีออเดอร์' (ไม่ใช่ 'จานเดียว'/'ข้าว' ตาม seed) · DRIFT-B = มีสินค้าที่ 7 `prod-w3c-test-pre` (is_available=false) อยู่ใน cat-1 → ตัวเลขหลังรัน "cat-1 = 6" จะเป็น 7 ตามจริง (ลูกค้าไม่เห็นตัวนี้)
+> **ดังนั้น: ยังไม่รัน SQL เปลี่ยนข้อมูล (Gate 2 = BLOCKED รอ Owner ยืนยัน drift + execution gate — ตามเงื่อนไข Owner หาก preflight ไม่ครบ/ไม่ตรง = หยุด ห้ามเดา)**
 
 **หลักฐานจริง (anon read = มุมมองลูกค้า, 2026-10-14):** หมวดที่ลูกค้าเห็น 4 = `cat-3` เมนูสุขภาพ, `cat-4` เครื่องดื่ม (sort 1), `cat-5` ของทานเล่น/ผลไม้, `cat-1790830853978` สินค้าสำเร็จรูป
 **ที่หายไป:** `cat-1` 'จานเดียว' 🍜 และ `cat-2` 'ข้าว' 🍚 (ชื่อจาก seed 001/004 — แถวจริงถูก RLS `is_active` บัง ต้องตรวจด้วย query ฝั่งแอดมิน) — สินค้า 6 ตัว (`is_available=true` ทั้งหมด) ผูกอยู่ = **หายจากหน้าลูกค้าทั้งที่พร้อมขาย**
@@ -148,7 +150,9 @@ FROM products p WHERE p.category_id IN ('cat-1','cat-2');
 | `e2e/ci/local_stack_replica.sh` (docker postgres:16, isolated) | **HARNESS_EXIT=0 · ALL_GREEN** ×2 รอบ — 001-123 applied clean · CONTRACT 124 ALL PASSED · cleanup 0/0 · scenario1/R5/R6a/R6b PASS |
 | live browser E2E (menu→cart→checkout / admin save→refetch) | **NOT RUN** — ไม่มี non-prod instance (§6/§8) |
 
-**หลักฐานสนับสนุน:** `docs/BMB_P0_ADMIN_MENU_CART_EVIDENCE_2026-10-14.md` (root cause + live anon evidence) · `docs/BMB_WAVE5B_OWNER_DECISION_REVIEW.md` (W5C review) · `docs/BMB_SAME_DAY_PRE_ORDER_EVIDENCE_LOG.md` (EV-032/33)
+**หลักฐานสนับสนุน:** `docs/BMB_P0_ADMIN_MENU_CART_EVIDENCE_2026-10-14.md` (root cause + live anon evidence) · `docs/BMB_WAVE5B_OWNER_DECISION_REVIEW.md` (W5C review) · `docs/BMB_SAME_DAY_PRE_ORDER_EVIDENCE_LOG.md` (EV-032/33) · `docs/BMB_GATE1_PREFLIGHT_GATE3_RELEASE_EVIDENCE_2026-10-14.md` (Gate 1 preflight + Gate 3 release review — รอบต่อเนื่อง)
+
+**Re-run รอบต่อเนื่อง 2026-10-14 (Gate 3 — รันจริงซ้ำบนเครื่อง dev):** `npm test` **972/972 exit 0** · `npx tsc --noEmit` **exit 0** · `npm run lint` **exit 0** (1 warning เดิม + brandNameGuard OK 356 ไฟล์) · `npm run build` **exit 0** (precache 144 entries → `dist/assets/index-B7d67ygF.js`)
 
 ## 6. ยังไม่ตัดสินใจ / ภายนอกที่ค้าง
 
@@ -168,11 +172,13 @@ FROM products p WHERE p.category_id IN ('cat-1','cat-2');
 **กลไก deploy จริง:** push → `main` = Cloudflare auto-deploy `biteme-baby.com` (production) — ตรวจแล้ว: CI (`ci.yml`) มีแค่ lint/test/build ไม่มี deploy job = deploy ถูกขับโดย Cloudflare Git integration
 **ดังนั้นการ push = การ deploy production โดยปริยาย → ต้องได้รับอนุมัติแยกเสมอ (ไม่ push เงียบ ๆ)**
 
-**Commits ที่สร้างแล้ว (2026-10-14, ยังไม่ push):**
+**Commits ที่สร้างแล้ว (2026-10-14) — release review ผ่านแล้ว (Gate 3, หลักฐาน §5 + evidence doc):**
 1. `06a697b` `fix(orders): W5C migration-124 contract remediation R1/R2/R3 + strict result CHECK` — W5C 6 ไฟล์
 2. `7f808ce` `fix(admin): catalog save truth + customer-visibility + category move/merge` — AdminProducts, catalogStructure + tests ×2
 3. `34385c7` `fix(cart): canonical line identity + honest AddToCartResult handling on every entry point` — cartStore, CartPage, MenuPage, HomePage, TalkToBite + tests ×5
-4. *(docs commit ถัดไป)* — master doc + P0 evidence + session handoff
+4. `8075f5d` `docs: opening readiness master + P0 evidence + session handoff` — docs ×3
+5. *(docs รอบต่อเนื่อง — preflight/release evidence + สถานะนี้)*
+**ผล release review:** ขอบเขตตรงทุก commit · ไม่มี protected paths/env/workflow/secret · ไม่มี migration ถูก apply จาก push (`ci.yml` = lint/test/build เท่านั้น; 124 = isolated-only) · ไม่มี commit จาก session อื่น
 **กติกา:** ห้ามปนรูปภาพ/screenshots/webp/pre-order assets
 
 **Rollback ของโค้ด:** revert commit (คืนสภาพเดิมทั้งหมด — ไม่มี schema/data change ในชุดนี้) · **Rollback ของแผน §3:** reverse UPDATE (ย้อนได้ 100%)
