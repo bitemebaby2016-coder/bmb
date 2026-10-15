@@ -150,19 +150,24 @@ describe('homePopular — resolvePopularItems', () => {
 })
 
 describe('homePopular — toPopularHomeProduct', () => {
-  it('map เป็น HomeProduct พร้อมโหมดขายจริง + วันจัดส่งของเมนูจองล่วงหน้า', () => {
+  it('map เป็น HomeProduct พร้อมโหมดขายจริง + วันจัดส่งจาก menu_schedule', () => {
     const p = prod('p9', {
       category_id: 'cat-b',
       price: 120,
       available_preorder: true,
       is_preorder: true,
-      scheduled_date: '2026-10-25',
+      scheduled_date: '2026-10-25', // ค่าเก่า (products.scheduled_date) — ต้องไม่ถูกใช้
     })
-    const item = toPopularHomeProduct(p, cat('cat-b', { name: 'ของคาว', icon: '🍛' }))
+    const item = toPopularHomeProduct(p, cat('cat-b', { name: 'ของคาว', icon: '🍛' }), { p9: '2026-10-25' })
     expect(item.mode).toBe('pre-order')
     expect(item.scheduledDate).toBe('2026-10-25')
     expect(item.cta).toBe('📅 จองล่วงหน้า')
     expect(item.categoryName).toBe('ของคาว')
     expect(item.price).toBe(120)
+  })
+
+  it('ค่าเก่า products.scheduled_date ไม่ถูกใช้ — ไม่มี map (menu_schedule) = ไม่มีวันจัดส่งบนการ์ด', () => {
+    const p = prod('p9', { available_preorder: true, is_preorder: true, scheduled_date: '2026-10-25' })
+    expect(toPopularHomeProduct(p, cat('cat-b')).scheduledDate).toBeUndefined()
   })
 })

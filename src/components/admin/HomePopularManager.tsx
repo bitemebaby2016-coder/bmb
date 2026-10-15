@@ -7,9 +7,11 @@
 //   ลูกค้าเห็นผลทันที ไม่ต้อง deploy)
 // ============================================
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState, type ChangeEvent } from 'react'
 import { showToast } from '@/components/ui/ToastContainer'
 import { getBusinessSettings, setBusinessSetting } from '@/lib/bmbAdminApi_settings'
+import { updateProduct } from '@/lib/bmbAdminApi_products'
+import { uploadProductImage, validateImageFile } from '@/lib/bmbAdminApi_media'
 import {
   HOME_POPULAR_KEY,
   SITE_COPY_KEY,
@@ -38,6 +40,11 @@ export function HomePopularManager({ products, categories, sections }: HomePopul
   const [pickId, setPickId] = useState('')
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  // A3 (UX fix 2026-10-15): รูปเมนูต่อรายการ — thumbnail + ปุ่มเปลี่ยนรูป (อัปเดต products.image_url)
+  const [imgOverrides, setImgOverrides] = useState<Record<string, string>>({})
+  const [imgTarget, setImgTarget] = useState<string | null>(null)
+  const [uploading, setUploading] = useState(false)
+  const fileRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     void (async () => {
@@ -110,6 +117,38 @@ export function HomePopularManager({ products, categories, sections }: HomePopul
     setConfig({ ...config, productIds: arr })
   }
 
+  // A3: เปลี่ยนรูปเมนูในรายการยอดนิยม — Storage → media_assets → products.image_url
+  function pickImage(id: string) {
+    setImgTarget(id)
+    fileRef.current?.click()
+  }
+
+  async function handleImageChosen(e: ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    const id = imgTarget
+    e.target.value = ''
+    if (!file || !id || uploading) return
+    const v = validateImageFile(file)
+    if (!v.ok) {
+      showToast('รูปไม่ผ่านเงื่อนไข: ' + v.error, 'error')
+      return
+    }
+    setUploading(true)
+    const res = await uploadProductImage(file)
+    setUploading(false)
+    if (!res.ok || !res.url) {
+      showToast('อัปโหลดรูปไม่สำเร็จ: ' + (res.error || ''), 'error')
+      return
+    }
+    const updated = await updateProduct(id, { image_url: res.url })
+    if (!updated) {
+      showToast('บันทึกรูปลงเมนูไม่สำเร็จ — ลองใหม่อีกครั้ง', 'error')
+      return
+    }
+    setImgOverrides((prev) => ({ ...prev, [id]: res.url as string }))
+    showToast('เปลี่ยนรูปเมนูแล้ว — ลูกค้าเห็นผลทันที', 'success')
+  }
+
   async function save() {
     setSaving(true)
     const okA = await setBusinessSetting(HOME_POPULAR_KEY, config)
@@ -127,8 +166,9 @@ export function HomePopularManager({ products, categories, sections }: HomePopul
         </button>
       </div>
       <p className="text-xs text-brand-muted mb-3">
-        เลือกเมนูจากทุกกลุ่ม (รวมเมนูจองล่วงหน้า) มาโชว์ในช่องแรกของหน้าแรก — ระบบสลับสับเปลี่ยนรายการให้อัตโนมัติ
+        เลือกเมนูจากทุกกลุ่ม (รวมเมนูจองล่วงหน้า) มาโชว์ในช่องแรกของหน้าแรก — ระบบสลับสับเปลี่ยนรายการให้อัตโนมัติ · เปลี่ยนรูปเมนูได้จากปุ่ม "เปลี่ยนรูป" ในแต่ละรายการ
       </p>
+      <input ref={fileRef} type="file" accept="image/*" className="hidden" aria-hidden="true" tabIndex={-1} onChange={handleImageChosen} data-testid="popular-image-file" />
 
       {loading ? (
         <p className="text-sm text-brand-muted">กำลังโหลด…</p>
@@ -187,10 +227,16 @@ export function HomePopularManager({ products, categories, sections }: HomePopul
             {config.productIds.map((id, idx) => {
               const p = byId.get(id)
               const on = !disabledSet.has(id)
+              const imgUrl = imgOverrides[id] ?? p?.image_url ?? ''
               return (
                 <div key={id} className="flex items-center justify-between gap-2 px-3 py-2 rounded-lg bg-white">
                   <div className="flex items-center gap-2 min-w-0">
                     <span className="text-xs text-brand-muted">#{idx + 1}</span>
+                    {imgUrl ? (
+                      <img src={imgUrl} alt={p?.name ?? id} className="w-10 h-10 rounded-lg object-cover border border-brand-border shrink-0" />
+                    ) : (
+                      <span className="w-10 h-10 rounded-lg bg-brand-bg border border-dashed border-brand-border shrink-0 flex items-center justify-center text-xs text-brand-muted" aria-label="ยังไม่มีรูป">🍽️</span>
+                    )}
                     <span className="font-medium text-brand-accent truncate">{p?.name ?? id}</span>
                     <span className="text-xs text-brand-muted truncate">{catLabelOf.get(p?.category_id ?? '') ?? ''}</span>
                     <span className={`text-xs px-2 py-0.5 rounded-full ${p && productModeOf(p) === 'pre-order' ? 'bg-blue-100 text-blue-800' : 'bg-orange-100 text-orange-800'}`}>
@@ -200,6 +246,7 @@ export function HomePopularManager({ products, categories, sections }: HomePopul
                   <div className="flex items-center gap-2">
                     <button onClick={() => moveItem(id, -1)} className="btn btn-outline text-xs" aria-label="เลื่อนขึ้น">↑</button>
                     <button onClick={() => moveItem(id, 1)} className="btn btn-outline text-xs" aria-label="เลื่อนลง">↓</button>
+                    <button onClick={() => pickImage(id)} className="btn btn-outline text-xs" disabled={uploading} data-testid="popular-change-image">เปลี่ยนรูป</button>
                     <ToggleSwitch checked={on} onChange={(v) => toggleItem(id, v)} label="โชว์" testId="popular-item-toggle" />
                     <button onClick={() => removeItem(id)} className="btn btn-outline text-xs text-red-500">เอาออก</button>
                   </div>

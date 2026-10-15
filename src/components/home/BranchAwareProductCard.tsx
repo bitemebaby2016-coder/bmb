@@ -9,6 +9,7 @@
 
 import { Link } from 'react-router-dom'
 import type { HomeProduct, SameDayOrderPayload, PreOrderPayload } from '@/types'
+import { ScheduleDateBadge } from '@/components/home/ScheduleDateBadge'
 
 interface BranchAwareProductCardProps {
   item: HomeProduct
@@ -78,10 +79,11 @@ export function BranchAwareProductCard({ item, onSameDay, onPreOrder, branchId, 
             <span className="home-card-badge home-card-badge-preorder">Pre-Order</span>
           )}
           {lowStock && !branchOos && <span className="home-card-stock">เหลือ {item.stock} กล่อง</span>}
-          {item.mode === 'pre-order' && item.scheduledDate && !branchOos && (
-            <span className="home-card-scheduled">พร้อมส่ง {formatThaiDate(item.scheduledDate)}</span>
-          )}
         </div>
+        {/* ป้ายปฏิทินมุมรูป — ดีไซน์มาตรฐานเดียวกับ HomeProductCard/FoodMenuCard (ScheduleDateBadge) */}
+        {item.mode === 'pre-order' && item.scheduledDate && !branchOos && (
+          <ScheduleDateBadge date={item.scheduledDate} />
+        )}
       </div>
 
       <div className="home-card-body">
@@ -119,9 +121,4 @@ export function BranchAwareProductCard({ item, onSameDay, onPreOrder, branchId, 
       </div>
     </article>
   )
-}
-
-function formatThaiDate(dateStr: string): string {
-  const date = new Date(dateStr + 'T00:00:00')
-  return date.toLocaleDateString('th-TH', { day: 'numeric', month: 'short' })
 }

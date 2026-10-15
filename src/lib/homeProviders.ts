@@ -38,13 +38,14 @@ import type {
 } from '@/types'
 import { SOCIAL_PROOF_REVIEWS } from './socialProofReviews'
 import { sameDayEligible, preorderEligible } from './talkToBite'
+import type { ProductScheduleMap } from './productSchedule'
 
 function availabilityOf(p: Product): AvailabilityState {
   if (!p.is_available) return 'sold_out'
   return 'available'
 }
 
-function toHomeProduct(p: Product, cat?: ProductCategory, mode: 'same-day' | 'pre-order' = 'same-day'): HomeProduct {
+function toHomeProduct(p: Product, cat: ProductCategory | undefined, mode: 'same-day' | 'pre-order' = 'same-day', schedule: ProductScheduleMap = {}): HomeProduct {
   // migration 012 real columns win; MOCK_* overlays removed.
   const stock = p.stock ?? 0
   // RE-D3: products.rating/review_count are LEGACY SEED VALUES (migration 012),
@@ -64,7 +65,7 @@ function toHomeProduct(p: Product, cat?: ProductCategory, mode: 'same-day' | 'pr
     availability: availabilityOf(p),
     stock,
     cta: mode === 'pre-order' ? '📅 จองล่วงหน้า' : '🛒 เพิ่มลงตะกร้า',
-    scheduledDate: p.scheduled_date,
+    scheduledDate: schedule[p.id],
   }
 }
 
@@ -72,6 +73,7 @@ function toHomeProduct(p: Product, cat?: ProductCategory, mode: 'same-day' | 'pr
 export function getHomeProducts(
   products: Product[],
   categories: ProductCategory[],
+  schedule: ProductScheduleMap = {},
 ): { sameDay: HomeProduct[]; preOrder: HomeProduct[] } {
   const catMap = new Map((categories || []).map((c) => [c.id, c]))
   const sameDay: HomeProduct[] = []
@@ -93,12 +95,12 @@ export function getHomeProducts(
     if (sellable && preorderEligible(p) && !seenPreOrder.has(p.id)) {
       if (p.is_featured || preOrder.length < 6) {
         seenPreOrder.add(p.id)
-        preOrder.push(toHomeProduct(p, cat, 'pre-order'))
+        preOrder.push(toHomeProduct(p, cat, 'pre-order', schedule))
       }
     } else if (sellable && sameDayEligible(p) && !seenSameDay.has(p.id)) {
       if (p.is_featured || sameDay.length < 6) {
         seenSameDay.add(p.id)
-        sameDay.push(toHomeProduct(p, cat, 'same-day'))
+        sameDay.push(toHomeProduct(p, cat, 'same-day', schedule))
       }
     }
   }

@@ -1,6 +1,7 @@
 // Phase 5B (A1 · RC-5 UX · RC-4 dedupe · INV-16/INV-19 · OD-3):
 // การ์ดใน section ต้องมี CTA ตามโหมดของ section — ไม่ใช่ตามข้อมูลสินค้าเพียงอย่างเดียว
-// + dedupe invariant ระดับคารูเซล (per-surface) — พื้นที่หมวดกลาง ๆ คง dual ปุ่มไว้ (A2 = DEFERRED)
+// + dedupe invariant ระดับคารูเซล (per-surface) — UX fix 2026-10-15 (E):
+//   บังคับปุ่มเดียวต่อการ์ดทุกช่อง (A2 ปลด DEFERRED — auto ใช้โหมดขายจริงของสินค้า)
 import { beforeAll, describe, expect, it, vi } from 'vitest'
 import { createElement as h, type ReactElement } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
@@ -8,10 +9,10 @@ import { MemoryRouter } from 'react-router-dom'
 import { HomeProductCard } from '@/components/home/HomeProductCard'
 import { CategorySections } from '@/components/home/CategorySections'
 import { getHomeProducts } from '@/lib/homeProviders'
+import { saleModeOfCategory } from '@/lib/catalogStructure'
 import type { HomeProduct, Product, ProductCategory } from '@/types'
 
 declare global {
-  // eslint-disable-next-line no-var
   var IS_REACT_ACT_ENVIRONMENT: boolean
 }
 
@@ -112,13 +113,13 @@ describe('A1 · ShowcaseCard mode-aware ผ่าน CategorySections (INV-16 ·
       ...over,
     } as Product)
 
-  async function renderSections(products: Product[], mode?: 'same_day' | 'pre_order' | 'auto') {
-    const categories = [cat('c1', 'จานเดียว', 1)]
+  async function renderSections(products: Product[], mode?: 'same_day' | 'pre_order' | 'auto', catName = 'จานเดียว', schedule: Record<string, string> = {}) {
+    const categories = [cat('c1', catName, 1)]
     const { container, root, flush } = mount(
       h(MemoryRouter, {},
         h(CategorySections, {
           products, categories, sections: [],
-          onSameDay: () => {}, onPreOrder: () => {}, mode,
+          onSameDay: () => {}, onPreOrder: () => {}, mode, schedule,
         } as never)),
     )
     await flush()
@@ -144,10 +145,28 @@ describe('A1 · ShowcaseCard mode-aware ผ่าน CategorySections (INV-16 ·
     container.remove()
   })
 
-  it("default (auto): สินค้า dual คงทั้งสองปุ่ม — พื้นที่หมวดกลาง ๆ (A2 = DEFERRED)", async () => {
+  it("default (auto): สินค้า dual แสดงปุ่มเดียวตามโหมดขายจริง (ปุ่มจองล่วงหน้า) — บังคับปุ่มเดียวต่อการ์ด (A2)", async () => {
     const { html, root, container } = await renderSections([dualProd()])
-    expect(html).toContain('home-showcase-add-to-cart')
     expect(html).toContain('home-showcase-preorder')
+    expect(html).not.toContain('home-showcase-add-to-cart')
+    root.unmount()
+    container.remove()
+  })
+
+  it("หมวด 'ส่งวันนี้ / Same Day' (auto): สินค้า dual แสดงเฉพาะปุ่มเพิ่มลงตะกร้า — ไม่มีปุ่มจอง/ไม่มีปฏิทินซ้อน", async () => {
+    const { html, root, container } = await renderSections([dualProd()], 'auto', 'ส่งวันนี้ / Same Day', { 'p-dual': '2026-10-20' })
+    expect(html).toContain('home-showcase-add-to-cart')
+    expect(html).not.toContain('home-showcase-preorder')
+    expect(html).not.toContain('schedule-date-badge')
+    root.unmount()
+    container.remove()
+  })
+
+  it("หมวด 'จองล่วงหน้า / พรีออเดอร์' (auto): สินค้า dual แสดงเฉพาะปุ่มจองล่วงหน้า + ป้ายปฏิทินวันจาก menu_schedule", async () => {
+    const { html, root, container } = await renderSections([dualProd()], 'auto', 'จองล่วงหน้า / พรีออเดอร์', { 'p-dual': '2026-10-20' })
+    expect(html).toContain('home-showcase-preorder')
+    expect(html).not.toContain('home-showcase-add-to-cart')
+    expect(html).toContain('schedule-date-badge')
     root.unmount()
     container.remove()
   })
@@ -187,5 +206,14 @@ describe('RC-4 · dedupe ระดับคารูเซล (INV-19 — per-su
     const { sameDay, preOrder } = getHomeProducts([dual], [cat])
     expect(preOrder.map((i) => i.id)).toEqual(['p-dual'])
     expect(sameDay).toHaveLength(0)
+  })
+})
+
+describe('E · saleModeOfCategory — หมวด/ช่องผูกโหมดขาย (SectionMode)', () => {
+  it("maps ชื่อหมวด → SaleMode: 'ส่งวันนี้' → same_day · 'จองล่วงหน้า/พรีออเดอร์' → pre_order · อื่น ๆ → auto", () => {
+    expect(saleModeOfCategory({ name: 'ส่งวันนี้ / Same Day', slug: 'same-day' })).toBe('same_day')
+    expect(saleModeOfCategory({ name: 'จองล่วงหน้า / พรีออเดอร์', slug: 'preorder' })).toBe('pre_order')
+    expect(saleModeOfCategory({ name: 'จานเดียว', slug: 'dish' })).toBe('auto')
+    expect(saleModeOfCategory({ name: 'เครื่องดื่ม', slug: 'drinks' })).toBe('auto')
   })
 })

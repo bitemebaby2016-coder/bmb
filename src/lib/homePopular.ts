@@ -10,6 +10,7 @@
 // ============================================
 
 import type { HomeProduct, Product, ProductCategory } from '@/types'
+import type { ProductScheduleMap } from './productSchedule'
 
 export const HOME_POPULAR_KEY = 'home_popular_menu'
 export const SITE_COPY_KEY = 'site_copy'
@@ -140,8 +141,8 @@ export function resolvePopularItems(
   return rotated.slice(0, Math.min(config.showCount, rotated.length))
 }
 
-/** map Product → HomeProduct ของการ์ด "เมนูยอดนิยม" (โหมดขายจริง + วันจัดส่งของเมนูจองล่วงหน้า) */
-export function toPopularHomeProduct(p: Product, cat?: ProductCategory): HomeProduct {
+/** map Product → HomeProduct ของการ์ด "เมนูยอดนิยม" (โหมดขายจริง + วันจัดส่งจาก menu_schedule) */
+export function toPopularHomeProduct(p: Product, cat: ProductCategory | undefined, schedule: ProductScheduleMap = {}): HomeProduct {
   const mode = productModeOf(p)
   return {
     id: p.id,
@@ -156,6 +157,6 @@ export function toPopularHomeProduct(p: Product, cat?: ProductCategory): HomePro
     availability: p.is_available ? 'available' : 'sold_out',
     stock: p.stock ?? 0,
     cta: mode === 'pre-order' ? '📅 จองล่วงหน้า' : '🛒 เพิ่มลงตะกร้า',
-    scheduledDate: p.scheduled_date,
+    scheduledDate: schedule[p.id],
   }
 }

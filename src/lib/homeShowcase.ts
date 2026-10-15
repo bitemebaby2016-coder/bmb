@@ -5,6 +5,7 @@
 // ============================================
 
 import type { Product, ProductCategory } from '@/types'
+import type { ProductScheduleMap } from './productSchedule'
 
 export interface HomeShowcaseItem {
   id: string
@@ -20,7 +21,7 @@ export interface HomeShowcaseItem {
   sameDay: boolean
   /** pre-orderable (canonical migration 023 + alias fallback) */
   preorder: boolean
-  /** วันจัดส่งจริงของเมนูจองล่วงหน้า (products.scheduled_date) */
+  /** วันจัดส่งจริงของเมนูจองล่วงหน้า (menu_schedule — ผ่าน ProductScheduleMap; ไม่ใช้ products.scheduled_date) */
   scheduledDate?: string
 }
 
@@ -34,6 +35,7 @@ export function selectHomeShowcase(
   products: Product[],
   categories: ProductCategory[],
   slug: string,
+  schedule: ProductScheduleMap = {},
 ): HomeShowcaseItem[] {
   const cat = categories.find((c) => c.slug === slug && c.is_active)
   if (!cat) return []
@@ -50,6 +52,6 @@ export function selectHomeShowcase(
       isAvailable: !!p.is_available && !p.archived,
       sameDay: !!(p.available_same_day ?? !p.is_preorder),
       preorder: !!(p.available_preorder ?? p.is_preorder),
-      scheduledDate: p.scheduled_date,
+      scheduledDate: schedule[p.id],
     }))
 }

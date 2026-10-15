@@ -3,11 +3,12 @@
 // @see docs/COMPONENT_SPEC_UI.md v1.1 spec
 // ============================================
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Fragment } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import type { Product, ProductCategory, SameDayOrderPayload, PreOrderPayload, AvailabilityState, OrderMode, DeliveryRound, MenuSection } from '@/types'
 import { getProducts, getCategories, getDeliveryRounds, getSections } from '@/lib/bmbAdminApi_products'
-import { buildCatalogGroups } from '@/lib/catalogStructure'
+import { buildCatalogGroups, groupCategoriesForChips } from '@/lib/catalogStructure'
+import { getProductScheduleMap, type ProductScheduleMap } from '@/lib/productSchedule'
 import { useCartStore } from '@/store/cartStore'
 import { showToast } from '@/components/ui/ToastContainer'
 import { FoodMenuCard } from '@/components/FoodMenuCard'
@@ -24,6 +25,8 @@ export function MenuPage() {
   const [categories, setCategories] = useState<ProductCategory[]>([])
   const [deliveryRounds, setDeliveryRounds] = useState<DeliveryRound[]>([]) // ✓ v3.1: Delivery rounds
   const [sections, setSections] = useState<MenuSection[]>([]) // ✓ CAT-01: Menu → Section → Category
+  // วันจัดส่งจริงจาก menu_schedule (UX fix 2026-10-15 — ไม่ใช้ products.scheduled_date)
+  const [scheduleMap, setScheduleMap] = useState<ProductScheduleMap>({})
   const addItem = useCartStore((s) => s.addItem)
 
   useEffect(() => {
@@ -34,6 +37,8 @@ export function MenuPage() {
         setCategories(cats)
         setDeliveryRounds(rounds)
         setSections(secs)
+        // ปฏิทินมุมการ์ด: วันจัดส่งจริงจาก menu_schedule (fire-and-forget — ไม่ขวางหน้า)
+        void getProductScheduleMap().then(setScheduleMap).catch(() => setScheduleMap({}))
       } catch (err) {
         console.error('[MenuPage] Load error:', err)
       }
@@ -131,7 +136,8 @@ export function MenuPage() {
     })
   }
 
-  const availableCats = categories.filter((c) => c.is_active)
+  // ปุ่มกรองหมวด — จัดกลุ่มตามหมวดหลัก (D2 · เหมือน /shop; หมวดว่าง = ซ่อน)
+  const chipGroups = groupCategoriesForChips(categories, sections, products)
   // ✅ Phase 3B: canonical mode columns (migration 023) — alias fallback kept.
   const sameDayCount = products.filter(p => (p.available_same_day ?? !p.is_preorder) && p.is_available).length
   const preOrderCount = products.filter(p => (p.available_preorder ?? p.is_preorder)).length
@@ -165,8 +171,15 @@ export function MenuPage() {
         </div>
         <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
           <button onClick={() => setSelectedCategory('all')} className={`flex items-center gap-2 px-4 py-2 rounded-full font-medium whitespace-nowrap transition-all ${selectedCategory === 'all' ? 'bg-brand-primary text-white shadow-md' : 'bg-white text-brand-accent hover:bg-orange-50'}`}>🜽 ทั้งหมด</button>
-          {availableCats.map((cat) => (
-            <button key={cat.id} onClick={() => setSelectedCategory(cat.slug)} className={`flex items-center gap-2 px-4 py-2 rounded-full font-medium whitespace-nowrap transition-all ${selectedCategory === cat.slug ? 'bg-brand-primary text-white shadow-md' : 'bg-white text-brand-accent hover:bg-orange-50'}`}>{cat.icon} {cat.name}</button>
+          {chipGroups.map((g, gi) => (
+            <Fragment key={g.section?.id ?? `chip-loose-${gi}`}>
+              {g.section && (
+                <span className="self-center px-3 py-2 rounded-full text-xs font-semibold text-brand-muted bg-white border border-dashed border-stone-200 whitespace-nowrap" aria-hidden="true">{g.section.name}</span>
+              )}
+              {g.categories.map((cat) => (
+                <button key={cat.id} onClick={() => setSelectedCategory(cat.slug)} className={`flex items-center gap-2 px-4 py-2 rounded-full font-medium whitespace-nowrap transition-all ${selectedCategory === cat.slug ? 'bg-brand-primary text-white shadow-md' : 'bg-white text-brand-accent hover:bg-orange-50'}`}>{cat.icon} {cat.name}</button>
+              ))}
+            </Fragment>
           ))}
         </div>
       </div>
@@ -196,26 +209,31 @@ export function MenuPage() {
           {group.section && (
             <h2 id={`catsec-${gi}`} className="text-lg font-display font-bold text-brand-accent mb-3">{group.section.name}</h2>
           )}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {group.categories.flatMap(({ category, products: catProducts }) =>
-              catProducts.map((product) => {
-                // Phase 6 (RC-7 · INV-18): canonical fallback เหมือน L46-47 — ห้ามอ่าน alias
-                // `is_preorder` ตรง ๆ (one-way mirror ของ migration 023 อาจค้างจาก canonical)
-                const mode: OrderMode = (product.available_preorder ?? product.is_preorder) ? 'pre-order' : 'same-day'
-                return (
-                  <FoodMenuCard
-                    key={product.id}
-                    product={product}
-                    category={category}
-                    mode={mode}
-                    availability={product.is_available ? 'available' : 'sold_out'}
-                    onSameDayOrder={handleSameDay}
-                    onPreOrder={handlePreOrder}
-                  />
-                )
-              }),
-            )}
-          </div>
+          {/* D2: หัวข้อ หมวดหลัก (Section) → หมวดรอง (Category) → การ์ด */}
+          {group.categories.map(({ category, products: catProducts }) => (
+            <div key={category.id} className="mb-6">
+              <h3 className="font-semibold text-brand-accent mb-2">{category.icon ? `${category.icon} ` : ''}{category.name}</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                {catProducts.map((product) => {
+                  // Phase 6 (RC-7 · INV-18): canonical fallback เหมือน L46-47 — ห้ามอ่าน alias
+                  // `is_preorder` ตรง ๆ (one-way mirror ของ migration 023 อาจค้างจาก canonical)
+                  const mode: OrderMode = (product.available_preorder ?? product.is_preorder) ? 'pre-order' : 'same-day'
+                  return (
+                    <FoodMenuCard
+                      key={product.id}
+                      product={product}
+                      category={category}
+                      mode={mode}
+                      availability={product.is_available ? 'available' : 'sold_out'}
+                      scheduledDate={scheduleMap[product.id]}
+                      onSameDayOrder={handleSameDay}
+                      onPreOrder={handlePreOrder}
+                    />
+                  )
+                })}
+              </div>
+            </div>
+          ))}
         </section>
       ))}
       {filtered.length === 0 && (

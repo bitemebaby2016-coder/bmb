@@ -1,8 +1,12 @@
 // ============================================
 // Bite Me Baby — CategorySections (Home) — DB-driven canonical carousels
-// AI-UI: renders ONE carousel per active product_category (real DB sync):
-//   หัวข้อ = category.name + icon (แอดมินแก้ที่ /admin/products → sync ทันที)
-//   เรียงตาม sort_order, ซ่อนเองถ้าหมวดไม่มีสินค้าพร้อมขาย
+// ============================================
+// UX fix 2026-10-15 (แผน D/E):
+// - จัดกลุ่มด้วย buildCatalogGroups ตัวเดียวกับ /menu → หมวดหลัก (Section) →
+//   หมวดรอง (Category) → การ์ด เหมือนกันทั้ง /shop และ /menu
+// - หมวดว่าง/หมวดในกลุ่มปิด = ซ่อน (ไม่โชว์การ์ดเปล่า "เร็ว ๆ นี้" — owner ยืนยัน default)
+// - การ์ดหนึ่งใบ = ปุ่มเดียวเสมอ (SectionMode ตามช่อง/หมวดที่การ์ดอยู่)
+// - วันจัดส่งบนป้ายปฏิทิน = menu_schedule (ProductScheduleMap) — ไม่ใช้ products.scheduled_date
 // มาสคอตประจำเซกชันสลับทุกตัวใน MASCOT_POSES (หน้า/เซกชันซ้ำ = ตัวถัดไป)
 // ============================================
 
@@ -11,26 +15,34 @@ import { MascotBadge } from '@/components/MascotBadge'
 import { HorizontalCarousel } from './HorizontalCarousel'
 import { ScheduleDateBadge } from './ScheduleDateBadge'
 import { selectHomeShowcase, type HomeShowcaseItem } from '@/lib/homeShowcase'
+import { buildCatalogGroups, saleModeOfCategory, type SaleMode } from '@/lib/catalogStructure'
+import type { ProductScheduleMap } from '@/lib/productSchedule'
 import type { Product, ProductCategory, MenuSection, SameDayOrderPayload, PreOrderPayload } from '@/types'
 
 const SECTION_POSES = ['peeking', 'thumbsup', 'running', 'pointing', 'cooking', 'menu', 'greeting', 'heart'] as const
 
 function ShowcaseCard({
   item,
+  cat,
   onSameDay,
   onPreOrder,
   mode = 'auto',
 }: {
   item: HomeShowcaseItem
+  cat: ProductCategory
   onSameDay: (p: SameDayOrderPayload) => void
   onPreOrder: (p: PreOrderPayload) => void
-  /** Phase 5B (A1 · INV-16): section mode — 'same_day' ซ่อนปุ่มจองล่วงหน้า ·
-   *  'pre_order' ซ่อนปุ่มเพิ่มลงตะกร้า · 'auto' = พฤติกรรมเดิม (ปุ่มตามสิทธิ์สินค้า) */
-  mode?: 'same_day' | 'pre_order' | 'auto'
+  /** SectionMode ของช่อง/หมวดที่การ์ดอยู่ — 'same_day'/'pre_order' บังคับปุ่มเดียวตามช่อง ·
+   *  'auto' = หมวดกลาง ๆ → ใช้โหมดขายจริงของสินค้า (preorder-capable = ปุ่มจองล่วงหน้า) */
+  mode?: SaleMode
 }) {
   // FIX (owner report 2026-10-01): showcase cards in admin-added sections had
-  // NO add-to-cart button at all — mirror HomeProductCard's CTA behavior here:
-  // sold-out → disabled label; same-day → add-to-cart; preorder-only → pre-order.
+  // NO add-to-cart button at all — mirror HomeProductCard's CTA behavior here.
+  // UX fix 2026-10-15 (E): บังคับปุ่มเดียวต่อการ์ด — โหมดมาจากช่อง/หมวดก่อน
+  // (เช่น หมวด "ส่งวันนี้" → ปุ่มตะกร้าอย่างเดียว ไม่มีปุ่มจอง/ปฏิทินซ้อน)
+  // แล้วค่อย fallback เป็นโหมดขายจริงของสินค้า
+  const effective: SaleMode = mode === 'auto' ? saleModeOfCategory(cat) : mode
+  const isPreOrderCta = effective === 'pre_order' ? true : effective === 'same_day' ? false : item.preorder
   const handleSameDay = () => {
     if (!item.isAvailable || !item.sameDay) return
     onSameDay({
@@ -65,8 +77,8 @@ function ShowcaseCard({
           decoding="async"
           onError={(e) => { (e.currentTarget as HTMLImageElement).style.visibility = 'hidden' }}
         />
-        {/* ป้ายปฏิทินมุมรูป — วันจัดส่งจริงของเมนูจองล่วงหน้า */}
-        {item.preorder && item.scheduledDate && (
+        {/* ป้ายปฏิทินมุมรูป — วันจัดส่งจริงจาก menu_schedule (เฉพาะช่อง/การ์ดโหมดจอง) */}
+        {isPreOrderCta && item.scheduledDate && (
           <ScheduleDateBadge date={item.scheduledDate} />
         )}
       </div>
@@ -77,7 +89,7 @@ function ShowcaseCard({
         </div>
         <p className="drink-card-desc">{item.description}</p>
         <div className="flex flex-col gap-2 mt-2">
-          {(mode !== 'pre_order') && item.sameDay && !soldOut && (
+          {!isPreOrderCta && item.sameDay && !soldOut && (
             <button
               type="button"
               onClick={handleSameDay}
@@ -88,12 +100,12 @@ function ShowcaseCard({
               🛒 เพิ่มลงตะกร้า
             </button>
           )}
-          {(mode !== 'same_day') && item.preorder && (
+          {isPreOrderCta && item.preorder && (
             <button
               type="button"
               onClick={handlePreOrder}
               data-testid="home-showcase-preorder"
-              className={`btn btn-sm w-full ${soldOut ? 'btn-outline' : 'btn-outline'}`}
+              className="btn btn-outline btn-sm w-full"
               aria-label={`จอง ${item.name} ล่วงหน้า`}
             >
               📅 จองล่วงหน้า
@@ -115,66 +127,30 @@ export function CategorySections({
   onSameDay,
   onPreOrder,
   mode = 'auto',
+  schedule = {},
 }: {
   products: Product[]
   categories: ProductCategory[]
-  /** B-fix (owner 2026-10-01): กลุ่มใหญ่ menu_sections — ถ้ามี จะแสดงหัวข้อกลุ่มครอบ carousel หมวด (ให้ผลทุกหน้าเหมือน MenuPage) */
+  /** B-fix (owner 2026-10-01): กลุ่มใหญ่ menu_sections — หัวข้อกลุ่มครอบ carousel หมวด */
   sections?: MenuSection[]
   onSameDay: (p: SameDayOrderPayload) => void
   onPreOrder: (p: PreOrderPayload) => void
-  /** Phase 5B (A1 · INV-16): mode ของ section ทั้งหมดในกลุ่มนี้ — default 'auto'
-   *  = พื้นที่หมวดกลาง ๆ คง dual ปุ่มสำหรับสินค้า dual-mode (A2 = DEFERRED) */
-  mode?: 'same_day' | 'pre_order' | 'auto'
+  /** SectionMode ของทั้งพื้นที่ — 'same_day'/'pre_order' บังคับปุ่มตามช่อง · 'auto' = ตามหมวด/สินค้า */
+  mode?: SaleMode
+  /** วันจัดส่งจริงจาก menu_schedule (productSchedule) — ใช้กับป้ายปฏิทินทุกใบ */
+  schedule?: ProductScheduleMap
 }) {
-  const active = [...categories]
-    .filter((c) => c.is_active && !c.archived)
-    .sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0))
-
-  const activeSections = [...sections]
-    .filter((s) => s.is_active)
-    .sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0))
-
-  // หมวดที่อยู่ใน Section ที่กำลังแสดงอยู่ (หมวดใน Section ที่ปิดจะถูกซ่อนตาม server gate CAT-D01=B)
-  const shownSectionCatIds = new Set(
-    activeSections.flatMap((s) => active.filter((c) => c.menu_section_id === s.id).map((c) => c.id)),
-  )
-  const loose = active.filter((c) => !shownSectionCatIds.has(c.id))
+  // D1/D3 (2026-10-15): จัดกลุ่มด้วย buildCatalogGroups ตัวเดียวกับ /menu —
+  // หมวดหลัก (Section) → หมวดรอง (Category) → การ์ด · หมวดว่าง/กลุ่มปิด = ซ่อน
+  const groups = buildCatalogGroups(products, categories, sections)
 
   let carouselIdx = 0
   const renderCategoryCarousel = (cat: ProductCategory, grouped: boolean) => {
-    const items = selectHomeShowcase(products, categories, cat.slug)
+    const items = selectHomeShowcase(products, categories, cat.slug, schedule)
+    if (items.length === 0) return null
     const idx = carouselIdx++
     const headingId = `home-cat-${cat.slug}`
     const pose = SECTION_POSES[idx % SECTION_POSES.length]
-    // FIX (owner 2026-10-06): หมวดที่แอดมินเพิ่มต้องโชว์บนหน้าแรกเสมอ (ต่อจาก
-    // หมวดเดิม ก่อนเซกชันรีวิว) — ถ้ายังไม่มีสินค้าพร้อมขายแสดง empty state
-    // "เร็ว ๆ นี้" แทนการซ่อนทั้งเซกชัน
-    if (items.length === 0) {
-      return (
-        <section key={cat.id} className={`${grouped ? 'mb-8' : 'mb-10'} scroll-mt-20`} aria-labelledby={headingId} data-testid={`home-cat-empty-${cat.slug}`}>
-          <div className="flex items-center justify-between mb-2">
-            <h3
-              id={headingId}
-              className={`${grouped ? 'text-lg' : 'text-xl'} font-display font-bold text-brand-accent flex items-center gap-2`}
-            >
-              <MascotBadge
-                pose={pose}
-                size="sm"
-                alt={`น้อง Bite ประจำหมวด ${cat.name}`}
-                className="section-float-mascot"
-              />
-              <span>{cat.icon ? `${cat.icon} ` : ''}{cat.name}</span>
-            </h3>
-            <Link to="/menu" className="text-sm text-brand-primary font-medium hover:underline">ดูทั้งหมด →</Link>
-          </div>
-          <div className="drink-card drink-card-empty flex items-center justify-center text-center" data-testid="home-showcase-empty">
-            <p className="drink-card-desc py-6">
-              ยังไม่มีเมนูในหมวดนี้ — เร็ว ๆ นี้ 🍽️
-            </p>
-          </div>
-        </section>
-      )
-    }
     return (
       <section key={cat.id} className={`${grouped ? 'mb-8' : 'mb-10'} scroll-mt-20`} aria-labelledby={headingId}>
         <div className="flex items-center justify-between mb-2">
@@ -195,7 +171,7 @@ export function CategorySections({
         <h4 className="sr-only">{cat.name}</h4>
         <HorizontalCarousel
           items={items.map((item) => (
-            <ShowcaseCard key={item.id} item={item} mode={mode} onSameDay={onSameDay} onPreOrder={onPreOrder} />
+            <ShowcaseCard key={item.id} item={item} cat={cat} mode={mode} onSameDay={onSameDay} onPreOrder={onPreOrder} />
           ))}
           aria-label={`${cat.name} เลื่อนได้`}
         />
@@ -203,25 +179,19 @@ export function CategorySections({
     )
   }
 
-  // ไม่มี Section → แสดงแบบเดิม (1 carousel ต่อ 1 หมวด)
-  if (activeSections.length === 0) {
-    return <>{active.map((cat) => renderCategoryCarousel(cat, false))}</>
-  }
-
-  // มี Section → หัวข้อกลุ่มใหญ่ครอบหมวด (เดียวกับ MenuPage: Menu → Section → Category)
+  // หัวข้อ: หมวดหลัก (Section) → หมวดรอง (Category) → การ์ด (D2 — เหมือน /menu)
   return (
     <>
-      {activeSections.map((s) => (
-        <div key={s.id} className="mb-12">
-          <h2 className="text-2xl font-display font-bold text-brand-primary border-b-2 border-brand-primary/20 pb-2 mb-5">
-            {s.name}
-          </h2>
-          {active
-            .filter((c) => c.menu_section_id === s.id)
-            .map((cat) => renderCategoryCarousel(cat, true))}
+      {groups.map((group, gi) => (
+        <div key={group.section?.id ?? `loose-${gi}`} className="mb-12">
+          {group.section && (
+            <h2 className="text-2xl font-display font-bold text-brand-primary border-b-2 border-brand-primary/20 pb-2 mb-5">
+              {group.section.name}
+            </h2>
+          )}
+          {group.categories.map(({ category }) => renderCategoryCarousel(category, !!group.section))}
         </div>
       ))}
-      {loose.map((cat) => renderCategoryCarousel(cat, true))}
     </>
   )
 }

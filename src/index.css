@@ -903,16 +903,6 @@ p { color: var(--color-brand-text-secondary); }
   border-radius: 999px;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
 }
-.home-card-scheduled {
-  position: absolute;
-  bottom: 8px; right: 8px;
-  background: rgba(var(--theater-accent2-rgb), 0.95);
-  color: #fff;
-  font-size: 11px; font-weight: 700;
-  padding: 3px 8px;
-  border-radius: 999px;
-  box-shadow: 0 2px 6px rgba(var(--theater-accent2-rgb), 0.35);
-}
 .home-card-body { padding: 10px 12px 12px; display: flex; flex-direction: column; gap: 4px; flex: 1; }
 .home-card-cta { margin-top: auto; }
 
@@ -926,6 +916,10 @@ p { color: var(--color-brand-text-secondary); }
   border-radius: 999px;
   padding: 4px 6px;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+}
+/* ป้ายปฏิทินมาตรฐาน (sched-cal) อยู่มุมเดียวกัน — ซ่อน motif 📅 กัน "ปฏิทินซ้อน" */
+.home-card--preorder .home-card-media:has(.sched-cal)::after {
+  content: none;
 }
 .home-card--preorder { border-style: dashed; }
 
@@ -1383,8 +1377,10 @@ html[data-theme='dark'] .fmc-chip-status, html[data-theme='graphite'] .fmc-chip-
 }
 
 /* ============================================
-   ป้ายปฏิทินมุมการ์ด + ปฏิทินลอยตอน hover (เมนูจองล่วงหน้า)
-   — แสดง "วันจริงของเมนู" ที่หัวมุม แล้วลอยเป็นปฏิทินเดือนนั้นตอน hover
+   ป้ายปฏิทินมุมการ์ด + ปฏิทินลอย (เมนูจองล่วงหน้า)
+   — แสดง "วันจริงของเมนู" ที่หัวมุม แล้วลอยเป็นปฏิทินเดือนนั้น (hover/โฟกัส/แตะ)
+   — UX fix 2026-10-15: popup คลิกทะลุได้เสมอ (ไม่บังปุ่ม CTA/การ์ดข้าง ๆ)
+     เปิดด้วย hover การ์ด / :focus-within / แตะปุ่มมุมรูป (.is-open)
    ============================================ */
 .sched-cal {
   position: absolute;
@@ -1406,6 +1402,15 @@ html[data-theme='dark'] .fmc-chip-status, html[data-theme='graphite'] .fmc-chip-
   box-shadow: 0 6px 14px rgba(28, 25, 23, 0.22);
   overflow: hidden;
   line-height: 1;
+  /* ปุ่มจริง: รับแตะ/โฟกัสได้บนมือถือ (ส่วน wrapper ยัง pointer-events: none) */
+  pointer-events: auto;
+  cursor: pointer;
+  font: inherit;
+  padding: 0;
+}
+.sched-cal-corner:focus-visible {
+  outline: 3px solid rgba(255, 94, 30, 0.45);
+  outline-offset: 2px;
 }
 .sched-cal-corner-day {
   font-size: 17px;
@@ -1426,6 +1431,7 @@ html[data-theme='dark'] .fmc-chip-status, html[data-theme='graphite'] .fmc-chip-
   top: calc(100% + 8px);
   right: 0;
   width: 232px;
+  max-width: calc(100vw - 16px);
   background: #fff;
   border-radius: 14px;
   border: 1px solid rgba(255, 94, 30, 0.35);
@@ -1434,9 +1440,16 @@ html[data-theme='dark'] .fmc-chip-status, html[data-theme='graphite'] .fmc-chip-
   opacity: 0;
   transform: translateY(-6px);
   transition: opacity 0.22s ease, transform 0.22s ease;
+  /* info-only: คลิก/แตะทะลุเสมอ — ไม่บังปุ่ม CTA หรือการ์ดข้าง ๆ */
+  pointer-events: none;
 }
-/* ลอยขึ้นเมื่อ hover บนเมนู */
+/* พลิกตำแหน่งอัตโนมัติเมื่อชนขอบจอ (ScheduleDateBadge คำนวณจากตำแหน่งจริง) */
+.sched-cal-pop--left { right: auto; left: 0; }
+.sched-cal-pop--up { top: auto; bottom: calc(100% + 8px); }
+/* ลอยขึ้นเมื่อ hover บนเมนู / โฟกัสคีย์บอร์ด / แตะปุ่มมุมรูป (.is-open) */
 .sched-cal:hover .sched-cal-pop,
+.sched-cal:focus-within .sched-cal-pop,
+.sched-cal.is-open .sched-cal-pop,
 .drink-card:hover .sched-cal-pop,
 .snack-card:hover .sched-cal-pop,
 .home-card:hover .sched-cal-pop,

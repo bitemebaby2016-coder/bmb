@@ -15,7 +15,7 @@
 import { Link, useNavigate } from 'react-router-dom'
 import { useCartStore } from '@/store/cartStore'
 import { useAuthStore } from '@/store/authStore'
-import { useEffect, useState, lazy, Suspense } from 'react'
+import { useEffect, useState, lazy, Suspense, Fragment } from 'react'
 import { showToast } from '@/components/ui/ToastContainer'
 import {
   getHomeProducts,
@@ -29,15 +29,14 @@ import { FloatingAdBanners, type FloatingBannerPromo } from '@/components/home/F
 import { HorizontalCarousel } from '@/components/home/HorizontalCarousel'
 import { HomeProductCard } from '@/components/home/HomeProductCard'
 import { PromotionStrip } from '@/components/home/PromotionStrip'
-import { BranchAwareProductCard } from '@/components/home/BranchAwareProductCard'
 import { VerifiedReviewsSection } from '@/components/home/VerifiedReviewsSection'
 import { ReviewCarouselSection } from '@/components/home/ReviewCarouselSection'
 import { CategorySections } from '@/components/home/CategorySections'
 import { FloatingCart, StickyCartBar } from '@/components/home/FloatingCart'
 import { useOrderBuilderStore } from '@/store/orderBuilderStore'
-import { useBrandContextStore } from '@/store/resolvedBrandStore'
-import { filterProductsByBranch } from '@/lib/homeProviders'
 import { deriveOrderMode } from '@/lib/talkToBite'
+import { getProductScheduleMap, type ProductScheduleMap } from '@/lib/productSchedule'
+import { groupCategoriesForChips } from '@/lib/catalogStructure'
 import {
   DEFAULT_HOME_POPULAR,
   DEFAULT_SITE_COPY,
@@ -78,6 +77,8 @@ export function HomePage() {
   // "เมนูยอดนิยม" + ข้อความบนหน้า — แอดมินแก้ได้ที่หน้าแอดมิน (business_settings, ไม่ต้อง deploy)
   const [popularCfg, setPopularCfg] = useState<HomePopularConfig>(DEFAULT_HOME_POPULAR)
   const [siteCopy, setSiteCopy] = useState<SiteCopy>(DEFAULT_SITE_COPY)
+  // วันจัดส่งจริงจาก menu_schedule (UX fix 2026-10-15 — ไม่ใช้ products.scheduled_date)
+  const [scheduleMap, setScheduleMap] = useState<ProductScheduleMap>({})
 
   useEffect(() => {
     async function loadData() {
@@ -109,6 +110,8 @@ export function HomePage() {
             setSiteCopy(parseSiteCopy(settings?.[SITE_COPY_KEY]))
           } catch { /* ใช้ค่า default ต่อไป */ }
         })()
+        // ปฏิทินมุมการ์ด: วันจัดส่งจริงจาก menu_schedule (fire-and-forget — ไม่ขวางหน้า)
+        void getProductScheduleMap().then(setScheduleMap).catch(() => setScheduleMap({}))
         // CAT-04: Load verified reviews for all products
         const { getVerifiedReviewsForProducts } = await import('@/lib/reviewApi')
         const allProductIds = rows.map((r: any) => r.id)
@@ -135,21 +138,18 @@ export function HomePage() {
     return () => document.removeEventListener('visibilitychange', onVisible)
   }, [])
 
-  const { sameDay, preOrder } = getHomeProducts(products, categories)
+  const { preOrder } = getHomeProducts(products, categories, scheduleMap)
   const reviews = getHomeReviews(products)
   const promotions = getHomePromotionsFromRows(promoRows)
 
   // "เมนูยอดนิยม" — คัดจากทุกกลุ่ม/ทุกหมวด (รวมเมนูจองล่วงหน้า) แล้วสลับโชว์ตามรอบเวลา
   const popularCatMap = new Map(categories.map((c) => [c.id, c]))
   const popularAll = resolvePopularItems(products, categories, popularCfg)
-    .map((p) => toPopularHomeProduct(p, popularCatMap.get(p.category_id)))
+    .map((p) => toPopularHomeProduct(p, popularCatMap.get(p.category_id), scheduleMap))
+  // ปุ่มกรองหมวด — จัดกลุ่มตามหมวดหลัก (D2 · เหมือน /menu; หมวดว่าง = ซ่อน)
+  const chipGroups = groupCategoriesForChips(categories, sections, products)
 
   // Filter products by search query and category
-  const filteredSameDay = sameDay.filter((item) => {
-    const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase())
-    const matchesCategory = !activeCategory || item.category_id === activeCategory
-    return matchesSearch && matchesCategory
-  })
   const filteredPreOrder = preOrder.filter((item) => {
     const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase())
     const matchesCategory = !activeCategory || item.category_id === activeCategory
@@ -255,9 +255,6 @@ export function HomePage() {
   const popularItems = filteredPopular.map((item) => (
     <HomeProductCard key={item.id} item={item} mode="auto" onSameDay={handleSameDay} onPreOrder={handlePreOrder} />
   ))
-  const sameDayItems = filteredSameDay.map((item) => (
-    <HomeProductCard key={item.id} item={item} mode="same_day" onSameDay={handleSameDay} onPreOrder={handlePreOrder} />
-  ))
   const preOrderItems = filteredPreOrder.map((item) => (
     <HomeProductCard key={item.id} item={item} mode="pre_order" onSameDay={handleSameDay} onPreOrder={handlePreOrder} />
   ))
@@ -315,7 +312,7 @@ export function HomePage() {
             />
           </div>
         </div>
-        {categories.length > 0 && (
+        {chipGroups.length > 0 && (
           <div className="category-chips flex gap-2 overflow-x-auto pb-2 mt-3" role="group" aria-label="กรองตามหมวดหมู่">
             <button
               type="button"
@@ -325,26 +322,36 @@ export function HomePage() {
             >
               ทั้งหมด
             </button>
-            {categories
-              .filter((c) => c.is_active)
-              .map((cat) => (
-                <button
-                  key={cat.id}
-                  type="button"
-                  onClick={() => setActiveCategory(activeCategory === cat.id ? null : cat.id)}
-                  className={`category-chip whitespace-nowrap px-4 py-2 rounded-full text-sm font-medium transition-colors ${activeCategory === cat.id ? 'bg-brand-primary text-white' : 'bg-white text-brand-accent border border-brand-border'}`}
-                  aria-pressed={activeCategory === cat.id}
-                >
-                  {cat.icon} {cat.name}
-                </button>
-              ))}
+            {chipGroups.map((g, gi) => (
+              <Fragment key={g.section?.id ?? `chip-loose-${gi}`}>
+                {g.section && (
+                  <span
+                    className="self-center whitespace-nowrap px-3 py-2 rounded-full text-xs font-semibold text-brand-muted bg-brand-bg border border-dashed border-brand-border"
+                    aria-hidden="true"
+                  >
+                    {g.section.name}
+                  </span>
+                )}
+                {g.categories.map((cat) => (
+                  <button
+                    key={cat.id}
+                    type="button"
+                    onClick={() => setActiveCategory(activeCategory === cat.id ? null : cat.id)}
+                    className={`category-chip whitespace-nowrap px-4 py-2 rounded-full text-sm font-medium transition-colors ${activeCategory === cat.id ? 'bg-brand-primary text-white' : 'bg-white text-brand-accent border border-brand-border'}`}
+                    aria-pressed={activeCategory === cat.id}
+                  >
+                    {cat.icon} {cat.name}
+                  </button>
+                ))}
+              </Fragment>
+            ))}
           </div>
         )}
       </section>
 
       {/* 2c. Floating ad banners — max 2 overlay cards, dismissible per promo (sessionStorage, D03) */}
       <FloatingAdBanners promos={bannerPromos} notice={siteCopy.adNotice} />
-      {/* 3. เมนูยอดนิยม — สลับโชว์จากทุกกลุ่มเมนู (รวมเมนูจองล่วงหน้า) */}
+      {/* 3. เมนูยอดนิยม — สลับโชว์จากทุกกลุ่มเมนู (รวมเมนูจองล่วงหน้า) — ช่องเดียว ไม่มี "เมนูวันนี้" ซ้ำ */}
       <section className="mb-10 scroll-mt-20" aria-labelledby="home-popular-heading">
         <div className="flex items-center justify-between mb-2">
           <h2 id="home-popular-heading" className="text-xl font-display font-bold text-brand-accent">
@@ -354,18 +361,6 @@ export function HomePage() {
         </div>
         <h3 className="sr-only">{popularCfg.title}</h3>
         <HorizontalCarousel items={popularItems} aria-label={`${popularCfg.title} เลื่อนได้`} />
-      </section>
-
-      {/* 3b. Same-day Menu — horizontal carousel */}
-      <section className="mb-10 scroll-mt-20" aria-labelledby="home-sameday-heading">
-        <div className="flex items-center justify-between mb-2">
-          <h2 id="home-sameday-heading" className="text-xl font-display font-bold text-brand-accent">
-            🔥 เมนูวันนี้ — สั่งอาหารจัดส่งจันทบุรี ได้เลย
-          </h2>
-          <Link to="/menu" className="text-sm text-brand-primary font-medium hover:underline">ดูทั้งหมด →</Link>
-        </div>
-        <h3 className="sr-only">เมนูวันนี้</h3>
-        <HorizontalCarousel items={sameDayItems} aria-label="เมนูวันนี้ เลื่อนได้" />
       </section>
 
       {/* 4. Pre-order Menu — horizontal carousel */}
@@ -382,8 +377,8 @@ export function HomePage() {
         </section>
       )}
 
-      {/* 5. Category carousels — DB-driven: แสดงทุกหมวดที่แอดมินสร้าง (จานเดียว/เครื่องดื่ม/ของทานเล่น/ผลไม้/สินค้าสำเร็จรูป) ซิงก์จริง */}
-      <CategorySections products={products} categories={categories} sections={sections} onSameDay={handleSameDay} onPreOrder={handlePreOrder} />
+      {/* 5. Category carousels — DB-driven + จัดกลุ่มด้วย buildCatalogGroups เดียวกับ /menu */}
+      <CategorySections products={products} categories={categories} sections={sections} schedule={scheduleMap} onSameDay={handleSameDay} onPreOrder={handlePreOrder} />
 
       {/* 6. Social Proof Review Carousel */}
       <ReviewCarouselSection reviews={reviews} products={products} onReviewCta={handleReviewCta} />

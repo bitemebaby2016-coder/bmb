@@ -5,7 +5,7 @@ import { createElement as h } from 'react'
 import { createRoot } from 'react-dom/client'
 import { MemoryRouter } from 'react-router-dom'
 import { CategorySections } from '@/components/home/CategorySections'
-import type { Product, ProductCategory } from '@/types'
+import type { Product, ProductCategory, MenuSection } from '@/types'
 
 // jsdom ไม่มี matchMedia — HorizontalCarousel ใช้ตรวจ reduced-motion
 beforeAll(() => {
@@ -27,7 +27,7 @@ const prod = (id: string, category_id: string): Product =>
     sort_order: 0, created_at: '', updated_at: '',
   } as Product)
 
-async function renderHtml(products: Product[], categories: ProductCategory[]): Promise<string> {
+async function renderHtml(products: Product[], categories: ProductCategory[], sections: MenuSection[] = []): Promise<string> {
   const div = document.createElement('div')
   document.body.appendChild(div)
   const root = createRoot(div)
@@ -35,7 +35,7 @@ async function renderHtml(products: Product[], categories: ProductCategory[]): P
     root.render(
       h(MemoryRouter, {},
         h(CategorySections, {
-          products, categories, sections: [],
+          products, categories, sections,
           onSameDay: () => {}, onPreOrder: () => {},
         }) as never),
     )
@@ -48,20 +48,20 @@ async function renderHtml(products: Product[], categories: ProductCategory[]): P
   return html
 }
 
-describe('CategorySections — admin-added categories always visible on home', () => {
-  it('renders an admin-added category with zero products as an empty section (not hidden)', async () => {
+describe('CategorySections — จัดกลุ่ม buildCatalogGroups + หมวดว่างซ่อน (UX fix 2026-10-15)', () => {
+  it('หมวดว่างถูกซ่อน (owner ยืนยัน default — ไม่โชว์การ์ดเปล่า "เร็ว ๆ นี้")', async () => {
     const existing = cat('cat-1', 'จานเดียว', 1)
     const adminAdded = cat('cat-new-1', 'สินค้าสำเร็จรูป', 6)
     const html = await renderHtml([prod('p1', 'cat-1')], [existing, adminAdded])
-    expect(html).toContain('สินค้าสำเร็จรูป')
-    expect(html).toContain('เร็ว ๆ นี้')
-    expect(html).toContain('home-cat-empty-cat-new-1')
+    expect(html).not.toContain('สินค้าสำเร็จรูป')
+    expect(html).not.toContain('เร็ว ๆ นี้')
+    expect(html).not.toContain('home-cat-empty-cat-new-1')
   })
 
-  it('keeps existing categories with products as carousels and orders sections by sort_order', async () => {
+  it('หมวดที่มีสินค้าโชว์เป็น carousel และเรียงตาม sort_order', async () => {
     const existing = cat('cat-1', 'จานเดียว', 1)
     const adminAdded = cat('cat-new-1', 'สินค้าสำเร็จรูป', 6)
-    const html = await renderHtml([prod('p1', 'cat-1')], [existing, adminAdded])
+    const html = await renderHtml([prod('p1', 'cat-1'), prod('p2', 'cat-new-1')], [existing, adminAdded])
     const iExisting = html.indexOf('จานเดียว')
     const iNew = html.indexOf('สินค้าสำเร็จรูป')
     expect(iExisting).toBeGreaterThanOrEqual(0)
@@ -73,5 +73,12 @@ describe('CategorySections — admin-added categories always visible on home', (
     const archived = { ...cat('cat-arch', 'หมวดปิด', 2), archived: true } as ProductCategory
     const html = await renderHtml([], [archived])
     expect(html).not.toContain('หมวดปิด')
+  })
+
+  it('หมวดในหมวดหลัก (Section) ที่ปิดอยู่ = ซ่อนทั้งหมวด (ตรงกับ /menu)', async () => {
+    const closedSec = { id: 's1', name: 'กลุ่มปิด', slug: 's1', sort_order: 1, is_active: false, created_at: '' } as never
+    const inSec = { ...cat('cat-s', 'ในกลุ่มปิด', 1), menu_section_id: 's1' } as ProductCategory
+    const html = await renderHtml([prod('p1', 'cat-s')], [inSec], [closedSec])
+    expect(html).not.toContain('ในกลุ่มปิด')
   })
 })

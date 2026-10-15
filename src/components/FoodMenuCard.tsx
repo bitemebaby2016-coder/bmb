@@ -17,6 +17,8 @@ interface FoodMenuCardProps {
   availability: AvailabilityState
   onSameDayOrder: (p: SameDayOrderPayload) => void
   onPreOrder: (p: PreOrderPayload) => void
+  /** วันจัดส่งจริงจาก menu_schedule (ผ่าน productSchedule) — ไม่ใช้ products.scheduled_date */
+  scheduledDate?: string
 }
 
 const AVAIL = {
@@ -28,7 +30,7 @@ const AVAIL = {
   delivery_unavailable: 'ส่งไม่ถึงตอนนี้'
 } as const
 
-export function FoodMenuCard({ product, category, mode, availability, onSameDayOrder, onPreOrder }: FoodMenuCardProps) {
+export function FoodMenuCard({ product, category, mode, availability, onSameDayOrder, onPreOrder, scheduledDate }: FoodMenuCardProps) {
   const imageUrl = product.image_url ?? ''
   const avail = availability as keyof typeof AVAIL
   const isAvail = availability === 'available' || availability === 'limited'
@@ -80,9 +82,9 @@ export function FoodMenuCard({ product, category, mode, availability, onSameDayO
           <span className="img-fallback" role="img" aria-label={`ภาพอาหาร ${name}`} />
         )}
 
-        {/* ป้ายปฏิทินมุมรูป — วันจัดส่งจริงของเมนูจองล่วงหน้า (hover ขึ้นปฏิทิน) */}
-        {(product.available_preorder ?? product.is_preorder) && product.scheduled_date && (
-          <ScheduleDateBadge date={product.scheduled_date} />
+        {/* ป้ายปฏิทินมุมรูป — วันจัดส่งจริงจาก menu_schedule (hover/แตะ ขึ้นปฏิทิน) */}
+        {(product.available_preorder ?? product.is_preorder) && scheduledDate && (
+          <ScheduleDateBadge date={scheduledDate} />
         )}
       </div>
 

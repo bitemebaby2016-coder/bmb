@@ -305,9 +305,9 @@ export function AdminProducts() {
             </div>
             
             <div>
-              <label className="block text-sm font-medium text-brand-accent mb-2">หมวดหมู่</label>
+              <label className="block text-sm font-medium text-brand-accent mb-2">หมวดรอง (หมวดหมู่)</label>
               <select value={formData.category_id} onChange={(e) => setFormData({ ...formData, category_id: e.target.value })} className="input">
-                <option value="">เลือกหมวดหมู่</option>
+                <option value="">เลือกหมวดรอง (หมวดหมู่)</option>
                 {categories.map(cat => (
                   <option key={cat.id} value={cat.id}>{cat.icon} {cat.name}</option>
                 ))}
@@ -416,7 +416,7 @@ export function AdminProducts() {
       {/* ── PHASE 6 UI/admin: Category headings manager (add / rename / reorder / hide) ── */}
       <div className="card mb-6 bg-brand-bg">
         <div className="flex items-center justify-between mb-3">
-          <h3 className="text-lg font-bold text-brand-accent">🏷️ หมวดหมู่ (Category — ปุ่มกรองในหน้าเมนู)</h3>
+          <h3 className="text-lg font-bold text-brand-accent">🏷️ หมวดรอง (หมวดหมู่ — ปุ่มกรองในหน้าเมนู)</h3>
           <button onClick={() => openCategoryForm()} className="btn btn-primary text-sm">+ เพิ่มหมวดหมู่</button>
         </div>
 
@@ -428,7 +428,7 @@ export function AdminProducts() {
               <input type="text" className="input" placeholder="Icon (e.g. 🍔)" value={catForm.icon} onChange={(e) => setCatForm({ ...catForm, icon: e.target.value })} />
               <input type="number" className="input" placeholder="Order" value={catForm.sort_order || ''} onChange={(e) => setCatForm({ ...catForm, sort_order: parseInt(e.target.value || '0') })} />
               <div>
-                <label className="block text-sm font-medium text-brand-accent mb-2">กลุ่มเมนู (Section)</label>
+                <label className="block text-sm font-medium text-brand-accent mb-2">หมวดหลัก (กลุ่มเมนู)</label>
                 <select value={(catForm.menu_section_id as string) || ''} onChange={(e) => setCatForm({ ...catForm, menu_section_id: e.target.value })} className="input">
                   <option value="">— ไม่อยู่ในกลุ่ม —</option>
                   {sections.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
@@ -453,7 +453,7 @@ export function AdminProducts() {
       {/* Sections manager (CAT-01, migration 055): Menu → Section → Category → Product */}
       <div className="card mb-6">
         <div className="flex items-center justify-between mb-3">
-          <h2 className="font-bold text-brand-accent">📚 กลุ่มเมนู (Section — กลุ่มใหญ่ครอบหลายหมวด)</h2>
+          <h2 className="font-bold text-brand-accent">📚 หมวดหลัก (กลุ่มเมนู — กลุ่มใหญ่ครอบหลายหมวด)</h2>
           <button onClick={() => { setEditingSection(null); setSectionForm({ name: '', sort_order: sections.reduce((m, s) => Math.max(m, s.sort_order || 0), 0) + 1 }); setShowSectionForm(true) }} className="btn btn-outline text-xs">+ Section</button>
         </div>
         {showSectionForm && (
