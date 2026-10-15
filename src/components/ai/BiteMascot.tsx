@@ -18,6 +18,8 @@ import { useCartStore } from '@/stores/useCartStore'
 import { usePlatformConfig } from '@/config/platformConfig'
 import { loadMascotOverrides, getOverrideUrl } from '@/lib/mascotService'
 import { sectionFromPath, pageContextLine } from '@/lib/bitePageContext'
+import { useStoreClosed } from '@/lib/storeStatus'
+import { enforceClosedFloatingPose, floatingPosePool } from '@/lib/mascotClosed'
 
 // ⚡ PERF: the unified Talk to Bite UI + aiService/OpenRouter chain is only needed
 // when the user taps the mascot — load it on demand instead of at boot (TBT).
@@ -176,23 +178,30 @@ export function BiteMascot({ userName, activeSection = 'home' }: BiteMascotProps
   }
 
   // AI-UI: pose follows the REAL page context (route-derived) + admin override
+  // ร้านปิด → จำกัดชุดท่าเป็น bite_closed / bite_empty_sad / bite_sad เท่านั้น
+  const storeClosed = useStoreClosed()
+  const posePool = floatingPosePool(storeClosed, MASCOT_POSES)
   useEffect(() => {
-    setCurrentPoseIndex(Math.max(0, MASCOT_POSES.indexOf(contextPose(section))))
-  }, [section])
+    const target = enforceClosedFloatingPose(contextPose(section), storeClosed)
+    const idx = posePool.indexOf(target as (typeof MASCOT_POSES)[number])
+    setCurrentPoseIndex(Math.max(0, idx))
+  }, [section, storeClosed, posePool])
 
   useEffect(() => {
     let active = true
     void loadMascotOverrides().then(() => {
       if (!active) return
-      setOverrideUrl(getOverrideUrl(MASCOT_POSES[currentPoseIndex].replace('bite_', '')))
+      const pool = floatingPosePool(storeClosed, MASCOT_POSES)
+      const p = pool[Math.min(currentPoseIndex, pool.length - 1)]
+      setOverrideUrl(getOverrideUrl(p.replace('bite_', '')))
     })
     return () => { active = false }
-  }, [currentPoseIndex])
+  }, [currentPoseIndex, storeClosed])
 
-  // Cycle to next pose on each tap/interaction
+  // Cycle to next pose on each tap/interaction (ภายในชุดท่าที่อนุญาตเท่านั้น)
   const cyclePose = useCallback(() => {
-    setCurrentPoseIndex((prev) => (prev + 1) % MASCOT_POSES.length)
-  }, [])
+    setCurrentPoseIndex((prev) => (prev + 1) % posePool.length)
+  }, [posePool.length])
 
   // Stage 1 — greet via Web Audio on the user's first click anywhere (once).
   useEffect(() => {
@@ -252,7 +261,7 @@ export function BiteMascot({ userName, activeSection = 'home' }: BiteMascotProps
 
   useEffect(() => setChatVisible(chatOpen), [chatOpen])
 
-  const currentPose = MASCOT_POSES[currentPoseIndex]
+  const currentPose = posePool[Math.min(currentPoseIndex, posePool.length - 1)] as (typeof MASCOT_POSES)[number]
   const mascotUrl = overrideUrl || getMascotUrl(currentPose)
 
   return (

@@ -23,6 +23,7 @@ import {
   getStoreStatusFromRounds,
   getHomePromotionsFromRows,
 } from '@/lib/homeProviders'
+import { publishDeliveryRounds } from '@/lib/storeStatus'
 import { StoreStatusStrip } from '@/components/home/StoreStatusStrip'
 import { FloatingAdBanners, type FloatingBannerPromo } from '@/components/home/FloatingAdBanners'
 import { HorizontalCarousel } from '@/components/home/HorizontalCarousel'
@@ -95,6 +96,7 @@ export function HomePage() {
         setProducts(rows)
         setCategories(cats)
         setRounds(rounds)
+        publishDeliveryRounds(rounds) // มาสคอตทุกหน้าใช้สถานะเปิด/ปิดเดียวกับแถบร้าน
         setPromoRows(promos)
         setSections(secs)
         // ค่าตั้งเว็บ (เมนูยอดนิยม/ข้อความ) — โหลดแบบไม่ขวางการวาดหน้า (fire-and-forget)

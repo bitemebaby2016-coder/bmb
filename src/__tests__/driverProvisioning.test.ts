@@ -23,7 +23,7 @@ vi.mock('@/lib/supabase', () => ({
   default: null,
 }))
 
-import { upsertDriver, linkDriverUser, getDriverAccounts } from '@/lib/driverService'
+import { upsertDriver, linkDriverUser, getDriverAccounts, driverErrorText } from '@/lib/driverService'
 
 describe('driver provisioning (upsert_driver / link_driver_user)', () => {
   beforeEach(() => { rpcMock.mockReset(); fromSelectMock.mockReset() })
@@ -89,5 +89,24 @@ describe('getDriverAccounts (READ-ONLY provisioning lookup)', () => {
   it('returns [] on read failure (never invents rows)', async () => {
     fromSelectMock.mockResolvedValue({ data: null, error: { message: 'ERR_RLS' } })
     expect(await getDriverAccounts()).toEqual([])
+  })
+})
+
+describe('driverErrorText (ข้อความ error ภาษาไทย — ไม่โชว์รหัสระบบ)', () => {
+  it('แปลงรหัส ERR_* ที่รู้จักเป็นภาษาไทย', () => {
+    expect(driverErrorText('ERR_MISSING_DRIVER_INFO')).toContain('กรอกข้อมูลไม่ครบ')
+    expect(driverErrorText('ERR_USER_ALREADY_LINKED')).toContain('ผูกกับไรเดอร์คนอื่นแล้ว')
+    expect(driverErrorText('PGRST301: ERR_FORBIDDEN')).toContain('ไม่มีสิทธิ์')
+  })
+
+  it('แปลง error ของฐานข้อมูล (23502 null value) เป็นข้อความเรื่องสาขา', () => {
+    expect(driverErrorText('null value in column "home_branch_id" (23502)')).toContain('สาขา')
+  })
+
+  it('error ที่ไม่รู้จัก → ตัดให้สั้นพออ่านได้ ไม่ว่างเปล่า', () => {
+    const long = 'X'.repeat(200)
+    const out = driverErrorText(long)
+    expect(out.length).toBeLessThanOrEqual(91)
+    expect(driverErrorText('')).toContain('ลองใหม่')
   })
 })

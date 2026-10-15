@@ -10,6 +10,8 @@
 import { useEffect, useState } from 'react'
 import type { MascotPose, MascotSize } from '@/types'
 import { loadMascotOverrides, getOverrideUrl } from '@/lib/mascotService'
+import { useStoreClosed } from '@/lib/storeStatus'
+import { enforceClosedPose } from '@/lib/mascotClosed'
 
 export interface MascotBadgeProps {
   pose: MascotPose
@@ -85,28 +87,31 @@ const POSE_LABELS: Record<MascotPose, string> = {
 }
 
 export function MascotBadge({ pose, size = 'sm', alt, className = '', loading = 'lazy' }: MascotBadgeProps) {
-  const [src, setSrc] = useState<string>(POSE_ASSETS[pose].src)
+  // บังคับท่าตอนร้านปิด (กติกาเจ้าของร้าน) — คุมทุกเซกชันที่จุดนี้จุดเดียว
+  const storeClosed = useStoreClosed()
+  const effectivePose = enforceClosedPose(pose, storeClosed)
+  const [src, setSrc] = useState<string>(POSE_ASSETS[effectivePose].src)
 
-  // pose เปลี่ยน → reset src (มีโอกาสถูกเรียกใหม่)
+  // pose เปลี่ยน (รวมตอนร้านเปิด/ปิดสลับกัน) → reset src
   useEffect(() => {
-    setSrc(POSE_ASSETS[pose].src)
-  }, [pose])
+    setSrc(POSE_ASSETS[effectivePose].src)
+  }, [effectivePose])
 
   // Admin override (mascot_overrides) — role_name = pose key, โหลดครั้งเดียวต่อ session
   useEffect(() => {
     let active = true
     void loadMascotOverrides().then(() => {
       if (!active) return
-      const o = getOverrideUrl(pose)
+      const o = getOverrideUrl(effectivePose)
       if (o) setSrc(o)
     })
     return () => { active = false }
-  }, [pose])
+  }, [effectivePose])
 
   // ลำดับ fallback: admin override → 3D asset จริง → เวกเตอร์เดิม (กัน infinite loop)
   const handleError = () => {
     setSrc((current) => {
-      const { src: asset, fallback } = POSE_ASSETS[pose]
+      const { src: asset, fallback } = POSE_ASSETS[effectivePose]
       if (current === asset) return fallback
       if (current === fallback) return current
       return asset
@@ -114,7 +119,7 @@ export function MascotBadge({ pose, size = 'sm', alt, className = '', loading = 
   }
 
   const sizeClass = size === 'fluid' ? '' : `mascot-badge--${size}`
-  const roleLabel = alt || `น้อง Bite — ${POSE_LABELS[pose]}`
+  const roleLabel = alt || `น้อง Bite — ${POSE_LABELS[effectivePose]}`
 
   return (
     <img

@@ -59,7 +59,13 @@
   --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
 }
 
-* { margin: 0; padding: 0; box-sizing: border-box; }
+/* Base reset — ต้องอยู่ใน @layer base เท่านั้น!
+   (ถ้าเขียนลอย ๆ จะชนะ Tailwind utilities เพราะ unlayered > layered
+   → margin/padding utilities ทั้งเว็บ (mt-3/mb-6/mb-10/pb-2 …) จะตายหมด
+   → บล็อกบนหน้าเว็บชิดกัน/ทับกัน — บั๊ก UX 2026-10-14) */
+@layer base {
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+}
 
 html {
   font-family: var(--font-family-body);
@@ -2480,6 +2486,15 @@ html[data-theme='dark'] .glass-surface, html[data-theme='graphite'] .glass-surfa
   inset: 0;
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.82) 0%, rgba(255, 247, 237, 0.74) 100%);
 }
+/* ชั้นย้อมโทนสีพื้นหลัง — แสดงเฉพาะธีมน้ำเงิน (คุมใน index.css: graphite block) */
+.site-background__tint {
+  display: none;
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, #0A1026 0%, #0D1530 100%);
+  mix-blend-mode: color;
+  opacity: 0.92;
+}
 html[data-theme='dark'] .site-background__scrim, html[data-theme='graphite'] .site-background__scrim {
   background: linear-gradient(180deg, rgba(18, 18, 20, 0.86) 0%, rgba(18, 18, 20, 0.78) 100%);
 }
@@ -2615,4 +2630,20 @@ html[data-theme='graphite'] {
 /* hardcoded dark shades ใน component override บางจุด — ปรับให้เข้ากับน้ำเงินลึก */
 html[data-theme='graphite'] .sticky-cart-bar {
   background: linear-gradient(180deg, rgba(17, 26, 56, 0.95), #0A1026);
+}
+
+/* ============================================
+   Deep Blue Intelligence — พื้นหลังต้องออกมา "เป็นสีน้ำเงิน"
+   (เดิมยืมสคริมเทาถ่าน rgba(18,18,20) ของธีมมืด → ทับรูปแล้วดูดำ ไม่ใช่น้ำเงิน)
+   · ส่วนพื้นทึบ  = #0A1026 (deep navy)
+   · ส่วนทับรูป  = scrim น้ำเงินเข้ม #0A1026 → #0D1530 + ชั้นย้อมโทนน้ำเงิน
+   ============================================ */
+html[data-theme='graphite'] .site-background {
+  background: var(--color-brand-bg);
+}
+html[data-theme='graphite'] .site-background__tint {
+  display: block;
+}
+html[data-theme='graphite'] .site-background__scrim {
+  background: linear-gradient(180deg, rgba(10, 16, 38, 0.88) 0%, rgba(13, 21, 48, 0.82) 100%);
 }

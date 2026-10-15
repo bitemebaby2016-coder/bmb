@@ -41,6 +41,8 @@ export function BackgroundLayer() {
   return (
     <div className="site-background" aria-hidden="true">
       <div className="site-background__img" style={{ backgroundImage: `url("${src}")` }} />
+      {/* ชั้นย้อมโทนน้ำเงิน — เฉพาะธีม "น้ำเงินลึก" (แสดง/ซ่อนด้วย CSS ตาม data-theme) */}
+      <div className="site-background__tint" />
       <div className="site-background__scrim" />
     </div>
   )

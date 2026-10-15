@@ -193,3 +193,38 @@ export async function adminListDrivers(): Promise<{ ok: boolean; drivers: AdminD
   const d = data as unknown as { ok?: boolean; drivers?: AdminDriverRow[] }
   return { ok: !!d?.ok, drivers: d?.drivers ?? [] }
 }
+
+// ============================================
+// ข้อความแจ้งเตือนเป็นภาษาไทยสำหรับแอดมิน (ไม่แสดงรหัสระบบ)
+// ============================================
+const DRIVER_ERROR_TH: Record<string, string> = {
+  ERR_MISSING_DRIVER_INFO: 'กรอกข้อมูลไม่ครบ — ต้องมีชื่อและเบอร์โทร',
+  ERR_MISSING_ASSIGNMENT: 'เลือกออเดอร์และไรเดอร์ให้ครบก่อนมอบหมาย',
+  ERR_FORBIDDEN: 'บัญชีนี้ไม่มีสิทธิ์จัดการไรเดอร์',
+  ERR_NOT_AUTHENTICATED: 'เซสชันหมดอายุ — กรุณาเข้าสู่ระบบใหม่',
+  ERR_DRIVER_NOT_FOUND: 'ไม่พบไรเดอร์ที่เลือก',
+  ERR_ORDER_NOT_FOUND: 'ไม่พบออเดอร์นี้',
+  ERR_ORDER_NOT_DISPATCHABLE: 'ออเดอร์นี้ยังไม่อยู่ในสถานะพร้อมส่ง',
+  ERR_BRANCH_UNAVAILABLE: 'ยังไม่มีสาขาของร้าน — ตั้งค่าสาขาในระบบก่อน',
+  ERR_USER_NOT_FOUND: 'ไม่พบบัญชีผู้ใช้นี้',
+  ERR_USER_ALREADY_LINKED: 'บัญชีนี้ถูกผูกกับไรเดอร์คนอื่นแล้ว',
+  ERR_UPSERT_REJECTED: 'บันทึกไม่สำเร็จ — ตรวจสอบข้อมูลแล้วลองใหม่',
+  ERR_LINK_REJECTED: 'ผูกบัญชีไม่สำเร็จ — ลองใหม่อีกครั้ง',
+  ERR_ADVANCE_REJECTED: 'เดินหน้าสถานะไม่สำเร็จ — ออเดอร์อาจอยู่ในสถานะที่ไม่รองรับ',
+}
+
+/** แปลงรหัส error / ข้อความจากฐานข้อมูล เป็นภาษาไทยที่คนอ่านเข้าใจ */
+export function driverErrorText(raw: unknown): string {
+  const s = String(raw ?? '')
+  for (const code of Object.keys(DRIVER_ERROR_TH)) {
+    if (s.includes(code)) return DRIVER_ERROR_TH[code]
+  }
+  if (s.includes('23502') || s.toLowerCase().includes('null value')) {
+    return 'ข้อมูลสาขาของร้านยังไม่สมบูรณ์ — ตั้งค่าสาขาในระบบก่อน'
+  }
+  if (s.includes('23505') || s.toLowerCase().includes('duplicate')) {
+    return 'มีข้อมูลนี้อยู่แล้วในระบบ'
+  }
+  if (s.trim() === '') return 'เกิดข้อผิดพลาด กรุณาลองใหม่'
+  return s.length > 90 ? s.slice(0, 90) + '…' : s
+}

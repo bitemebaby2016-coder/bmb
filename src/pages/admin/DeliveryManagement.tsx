@@ -20,7 +20,7 @@ import { Link } from 'react-router-dom'
 import { supabase } from '@/lib/supabase'
 import { getOrdersByStatuses, getDeliveryAssignmentsFor, updateOrderStatus } from '@/lib/bmbAdminApi_orders'
 import type { OrderForm, DeliveryAssignmentLiteRow } from '@/lib/bmbAdminApi_orders'
-import { adminListDrivers, assignDriver, adminAdvanceDelivery, upsertDriver, linkDriverUser, getDriverAccounts, type AdminDriverRow, type DriverAccountRow } from '@/lib/driverService'
+import { adminListDrivers, assignDriver, adminAdvanceDelivery, upsertDriver, linkDriverUser, getDriverAccounts, driverErrorText, type AdminDriverRow, type DriverAccountRow } from '@/lib/driverService'
 import { getUsers, type User } from '@/lib/bmbAdminApi_users'
 import { showToast } from '@/components/ui/ToastContainer'
 
@@ -139,7 +139,7 @@ export function DeliveryManagement() {
         showToast('✅ มอบหมายสำเร็จ: ' + orderNumber, 'success')
         setPending((p) => { const n = { ...p }; delete n[orderNumber]; return n })
         await load()
-      } else showToast('มอบหมายไม่สำเร็จ (server ปฏิเสธ)', 'error')
+      } else showToast('มอบหมายไม่สำเร็จ — ตรวจสอบสถานะออเดอร์และไรเดอร์แล้วลองใหม่', 'error')
     } finally { setActing(null) }
   }
 
@@ -148,10 +148,10 @@ export function DeliveryManagement() {
     setActing(orderNumber)
     try {
       const res: any = await updateOrderStatus(orderNumber, 'dispatched')
-      if (res && res.status === 'dispatched') { showToast('🚚 Dispatch สำเร็จ: ' + orderNumber, 'success'); await load() }
-      else showToast('Dispatch ไม่สำเร็จ (server ปฏิเสธ)', 'error')
+      if (res && res.status === 'dispatched') { showToast('🚚 ส่งงานให้ไรเดอร์สำเร็จ: ' + orderNumber, 'success'); await load() }
+      else showToast('ส่งงานไม่สำเร็จ — ตรวจสอบสถานะออเดอร์แล้วลองใหม่', 'error')
     } catch (e: any) {
-      showToast('ผิดพลาด: ' + String(e?.message || e).slice(0, 80), 'error')
+      showToast('ส่งงานไม่สำเร็จ: ' + driverErrorText(e?.message || e), 'error')
     } finally { setActing(null) }
   }
 
@@ -166,10 +166,10 @@ export function DeliveryManagement() {
         showToast('🏁 Admin ปิดวงจรสำเร็จ: ' + orderNumber + ' → ' + (r.order_status || 'delivered') + (r.driver_released ? ' (ปล่อยไรเดอร์กลับ available)' : ''), 'success')
         await load()
       } else {
-        showToast('Admin advance ไม่สำเร็จ: ' + String(r.error || 'ERR_ADVANCE_REJECTED').slice(0, 80), 'error')
+        showToast('เดินหน้าสถานะไม่สำเร็จ: ' + driverErrorText(r.error || 'ERR_ADVANCE_REJECTED'), 'error')
       }
     } catch (e: any) {
-      showToast('ผิดพลาด: ' + String(e?.message || e).slice(0, 80), 'error')
+      showToast('เดินหน้าสถานะไม่สำเร็จ: ' + driverErrorText(e?.message || e), 'error')
     } finally { setActing(null) }
   }
 
@@ -184,10 +184,10 @@ export function DeliveryManagement() {
         setProvName(''); setProvPhone(''); setProvVehicle('')
         await load()
       } else {
-        showToast('บันทึกไม่สำเร็จ: ' + String(r.error || 'ERR_UPSERT_REJECTED').slice(0, 80), 'error')
+        showToast('บันทึกไม่สำเร็จ: ' + driverErrorText(r.error || 'ERR_UPSERT_REJECTED'), 'error')
       }
     } catch (e: any) {
-      showToast('ผิดพลาด: ' + String(e?.message || e).slice(0, 80), 'error')
+      showToast('บันทึกไม่สำเร็จ: ' + driverErrorText(e?.message || e), 'error')
     } finally { setProvisioning(null) }
   }
 
@@ -202,11 +202,10 @@ export function DeliveryManagement() {
         setLinkPick((p) => { const n = { ...p }; delete n[driverId]; return n })
         await load()
       } else {
-        const msg = r.error || 'ERR_LINK_REJECTED'
-        showToast('ผูกบัญชีไม่สำเร็จ: ' + (msg === 'ERR_USER_ALREADY_LINKED' ? 'บัญชีนี้ถูกผูกกับไรเดอร์คนอื่นแล้ว' : msg).slice(0, 90), 'error')
+        showToast('ผูกบัญชีไม่สำเร็จ: ' + driverErrorText(r.error || 'ERR_LINK_REJECTED'), 'error')
       }
     } catch (e: any) {
-      showToast('ผิดพลาด: ' + String(e?.message || e).slice(0, 80), 'error')
+      showToast('ผูกบัญชีไม่สำเร็จ: ' + driverErrorText(e?.message || e), 'error')
     } finally { setProvisioning(null) }
   }
 
