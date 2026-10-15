@@ -3,8 +3,8 @@
 
 > **เอกสารนี้คือชุดงานที่เปิดให้ทำต่อได้ทันทีในแชทใหม่**
 > โปรเจกต์: `D:\A PROJECT\Bite Me Baby` (ห้ามใช้ `chat\bmb` — เก่า)
-> สถานะ: งานเพิ่มไรเดอร์ (migration 125) **ปิดแล้ว** — เหลือ 4 งาน UX ด้านล่าง
-> กติกา: ไม่มี placeholder · ชุดทดสอบต้องผ่านจริงก่อนรายงาน · **ห้าม commit/push จนกว่าเจ้าของสั่ง**
+> สถานะ: **ปิดงานแล้ว 2026-10-15** — งาน UX A–F ครบ + commit/push แล้ว (ดู §6 ปิดงานท้ายเอกสาร)
+> กติกา: ไม่มี placeholder · ชุดทดสอบต้องผ่านจริงก่อนรายงาน · commit/push = **อนุญาตแล้ว 2026-10-15** (ดำเนินการแล้ว)
 
 ---
 
@@ -145,4 +145,26 @@
 | `src/__tests__/homePopular.test.ts`, `menuSchedule*.test.ts`, `homeSectionModeCta.test.ts` | ชุดทดสอบที่ต้องอัปเดต/ดูแล |
 
 ---
-*สร้างเมื่อ 2026-10-15 · สถานะ: พร้อมเริ่มงานทันที*
+
+## 6. ปิดงาน 2026-10-15 — ผลลัพธ์จริง (A–F ครบ)
+
+| แผน | สถานะ | สิ่งที่ทำจริง |
+|---|---|---|
+| A รวมเซกชัน | ✅ | ลบช่อง "เมนูวันนี้" ทั้งเซกชัน + sr-only/aria (เหลือ 0 จุด) · `HomePopularManager` เพิ่ม thumbnail + ปุ่ม "เปลี่ยนรูป" (validate → upload → `products.image_url`) · คงช่อง "จองล่วงหน้า" |
+| B ปฏิทินหนึ่งเดียว | ✅ | `BranchAwareProductCard` → `ScheduleDateBadge` · ลบ `.home-card-scheduled` · popup คลิกทะลุไม่บัง CTA · เปิดด้วย hover/:focus-within/แตะ + Esc ปิด · พลิกซ้าย/ขึ้นเมื่อชนขอบจอ · **แก้ "ปฏิทินซ้อน" = motif 📅 ของ `.home-card--preorder` ทับป้าย → ซ่อนด้วย `:has(.sched-cal)`** |
+| C ผูกข้อมูลจริง | ✅ | ใหม่ `src/lib/productSchedule.ts` — query ตาราง **`menu_schedule`** (ชื่อตารางจริงไม่มี s ตาม migration 039/056) เฉพาะ `is_published` + วัน ≥ วันนี้ (Asia/Bangkok) → map product_id → วันจัดส่งถัดไป · เลิกใช้ `products.scheduled_date` ทุกจุด (homeShowcase/homePopular/homeProviders/FoodMenuCard) · ไม่มีแถว published = ไม่มีป้าย |
+| D หมวดสองชั้น | ✅ | `CategorySections` ใช้ `buildCatalogGroups` ตัวเดียวกับ /menu · หมวดว่าง/ในกลุ่มปิด = ซ่อน · ปุ่มกรองจัดกลุ่มตามหมวดหลัก (`groupCategoriesForChips`) ทั้ง /shop,/menu · ป้ายแอดมิน "หมวดหลัก (กลุ่มเมนู) / หมวดรอง (หมวดหมู่)" |
+| E ปุ่มเดียวต่อการ์ด | ✅ | `saleModeOfCategory` (ส่งวันนี้→ตะกร้าล้วนไม่มีปฏิทิน / จองล่วงหน้า→ปุ่มจอง+ปฏิทิน) · หมวดกลาง ๆ ใช้โหมดขายจริงของสินค้า (A2 ปลด DEFERRED) |
+| F regression | ✅ | `npx tsc --noEmit` 0 · `npm test` **98 ไฟล์ 1,017 เทสต์** ผ่าน (ใหม่ 6: productSchedule ×6 เคส + homeSectionModeCta ×3 + homePopular ×1) · `npm run build` 0 · `npm run lint` 0 (**เก็บ warning unused eslint-disable แล้ว**) · Playwright 390/768/1280 บน /shop,/menu = **39/39** · คู่มือ บ.9/9.2/9.3/9.4 + บ.10 อัปเดตแล้ว |
+
+**Commit/push (Owner อนุญาต 2026-10-15):**
+1. `d52f9a2` `fix(ux): 2026-10-15 UX fix pass - ...` (20 ไฟล์) — งาน A–F
+2. `9d4f747` `chore(assets+evidence): ...` (32 ไฟล์) — ของค้าง session ก่อน (ภาพย้ายโฟลเดอร์โหมดขาย + e2e evidence + baseline re-audit)
+→ push `origin/main` แล้ว = auto-deploy `biteme-baby.com` (ตามกลไก Cloudflare Git integration)
+
+**งานต่อที่ยังค้าง (ติดตามต่อใน `docs/BMB_OPENING_READINESS_MASTER.md` §8):**
+1. **menu_schedule ยังไม่มีแถว published** (probe anon 2026-10-15 = 0 แถว) → ป้ายปฏิทินยังไม่แสดงที่หน้าเว็บ = ถูกต้องตามกติกา "ไม่เดา/ไม่โชว์วันเก่า" — พอแอดมินเพิ่ม/เผยแพร่ตารางเมนู (บ.10 คู่มือ) ป้ายจะขึ้นเองทุกใบ
+2. Visual QA ป้ายปฏิทินบนหน้าจริง + ทดสอบแตะบนมือถือ **หลังมีป้ายแล้ว** (รอบนี้เช็กได้เฉพาะกรณี 0 ป้าย)
+3. Production smoke หลัง deploy commit นี้ (Gate 5-style)
+
+*สร้างเมื่อ 2026-10-15 · ปิดงาน 2026-10-15 · commit `d52f9a2`+`9d4f747`*

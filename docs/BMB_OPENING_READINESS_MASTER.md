@@ -177,6 +177,36 @@ FROM products p WHERE p.category_id IN ('cat-1','cat-2');
 2. `7f808ce` `fix(admin): catalog save truth + customer-visibility + category move/merge` — AdminProducts, catalogStructure + tests ×2
 3. `34385c7` `fix(cart): canonical line identity + honest AddToCartResult handling on every entry point` — cartStore, CartPage, MenuPage, HomePage, TalkToBite + tests ×5
 4. `8075f5d` `docs: opening readiness master + P0 evidence + session handoff` — docs ×3
+
+---
+
+## 8. อัปเดตสถานะรวม 2026-10-15 (post UX-fix pass — สำรวจของค้างทั้งโปรเจค)
+
+**ปิดไปแล้วรอบนี้ (Owner อนุญาต commit/push 2026-10-15):**
+- UX fix 2026-10-15 A–F ครบ (รวมช่อง "เมนูวันนี้" → "เมนูยอดนิยม" · ปฏิทิน `ScheduleDateBadge` มาตรฐานเดียว · วันจัดส่งผูก `menu_schedule` จริง · หมวดสองชั้นเหมือนกันทุกหน้า · ปุ่มเดียวต่อการ์ด) — รายละเอียด `docs/BMB_UX_FIX_HANDOFF_2026-10-15.md` §6
+- commit `d52f9a2` (fix(ux) 20 ไฟล์) + `9d4f747` (chore(assets+evidence) 32 ไฟล์ — ของค้าง session 2026-10-14: ภาพย้ายโฟลเดอร์ `same day`/`pre-order`, e2e evidence launch/cr4, baseline re-audit) → push แล้ว = auto-deploy production
+- Regression ปัจจุบัน: `npx tsc --noEmit` 0 · `npm test` **98 ไฟล์ / 1,017 เทสต์** (972 เดิม + ใหม่ 10 + เดิมที่นับเพิ่ม) · build 0 · lint 0 (**warning `homeSectionModeCta.test.ts` เก็บแล้ว — §5 เดิมอ้างว่ายังมี = stale**) · Playwright 3 viewports 39/39
+- **§6 ข้อ 1 (cat-1/cat-2) = stale** — ปิดแล้ว: Gate 2 Option A EXECUTED 2026-10-14 (4 UPDATE rows, after-verify ครบ — §3/หลักฐาน Gate doc)
+
+### ของค้างทั้งโปรเจค ณ 2026-10-15 (รวมทุกแหล่ง — single list)
+
+| # | เรื่อง | สถานะ | ผลกระทบ / เจ้าของที่ต้องตัดสินใจ |
+|---|---|---|---|
+| 1 | migration **124** (order idempotency contract) | **ยังไม่ apply** — contract ยังไม่ accept (W5B R1–R3 remediate แล้ว W5C · **R9 owner_key / R12 replay payload = รอ Owner** · R10 prod precheck = BLOCKED · R11 staging pgbouncer = OPEN) | ห้าม apply จนปิด R9–R12 · local harness `local_stack_replica.sh` ALL_GREEN แล้ว (§5) |
+| 2 | `PROPOSED_wave5_orders_delivery_address` | DEFERRED ตั้งแต่ W5B — ยังไม่ apply; RPC ยัง map `p_delivery_address` → `dropoff_detail` | ที่อยู่จัดส่งยังเก็บใน dropoff_detail |
+| 3 | Payment live cutover (Omise live key / Stripe live) | ค้างภายนอก — ตอนนี้ key ทดสอบเท่านั้น (payment_intents: omise 0) | รับเงินจริงไม่ได้จน Owner cutover |
+| 4 | SMS (THSMS) / Meta channel | key มี — **runtime ยังไม่ verify จริง** | OTP / guest flow พึ่งพา |
+| 5 | Push notifications | `push_subscriptions` = 0 (ยังไม่มี subscriber) + `automation_queue` dead 13 (`notification_dispatch`) ยังไม่ clear | แจ้งเตือนออเดอร์/รอบส่งยังไม่ถึงมือถือลูกค้า |
+| 6 | Non-prod staging environment | ยังไม่มี | live E2E นอก production ถูกบล็อก (§5/§6 เดิม) |
+| 7 | `VITE_FEATURE_BRAND_ROUTING` runtime-under-flag | OFF ทุก env (deploy ผ่านแล้วหลายรอบ) — latent clear-cart ยังไม่ runtime verify ใต้ flag | ต่ำ — มี test ครอบ logic แล้ว |
+| 8 | `unique_violation` branch (124) | ไม่มี runtime coverage (ยอมรับ+บันทึกไว้แล้ว) | defense-in-depth |
+| 9 | **`menu_schedule` ยังไม่มีแถว published** (probe anon 2026-10-15 = 0 แถว) | **รอแอดมินเพิ่ม/เผยแพร่ตารางเมนู** (คู่มือ บ.10) | ป้ายปฏิทินวันจัดส่งยังไม่แสดง = ถูกต้องตามกติกา "ไม่เดา/ไม่โชว์วันเก่า" — เผยแพร่แล้วป้ายขึ้นเองทุกใบ/ทุกหน้า |
+| 10 | Visual QA ป้ายปฏิทินบนหน้าจริง + แตะมือถือ (มีป้ายจริง) | ค้าง — รอบ 2026-10-15 เช็กได้เฉพาะกรณี 0 ป้าย (Playwright 39/39 แล้ว) | ทำต่อหลังข้อ 9 |
+| 11 | Production smoke หลัง push `d52f9a2`/`9d4f747` (auto-deploy `biteme-baby.com`) | ค้าง | Gate 5-style 9 จุด |
+| 12 | `stash@{0}` `local-edits-before-sync-2026-09-21` (เครื่อง dev) | ยังอยู่ | Owner ตัดสินใจทิ้ง/กู้ |
+| 13 | ข้อมูลเมนูในแอดมิน (ชื่อ/รูป/หมวด/คำบรรยาย เช่น "Test description") | เจ้าของจัดการเอง (handoff UX 2026-10-15 §0) | หน้าเว็บจะโชว์คำบรรยายปลอมจนกว่าแก้ในแอดมิน |
+
+**หมายเหตุ:** รายการนี้ = สรุปของค้างทั้งโปรเจค ณ วันที่ระบุ · รายการเก่าใน §6 ที่ซ้ำกันให้ยึดตารางนี้ (ข้อ 1 = §6 ข้อ 2/3 รวม, ข้อ 3 = §6 ข้อ 5, ฯลฯ)
 5. *(docs รอบต่อเนื่อง — preflight/release evidence + สถานะนี้)*
 **ผล release review:** ขอบเขตตรงทุก commit · ไม่มี protected paths/env/workflow/secret · ไม่มี migration ถูก apply จาก push (`ci.yml` = lint/test/build เท่านั้น; 124 = isolated-only) · ไม่มี commit จาก session อื่น
 **Push + deploy (2026-10-14 รอบต่อเนื่อง — ทำแล้ว):** push `4e0453e..3926254` (4 release + 1 docs) · deployed ใหม่ = `assets/index-0s4lXvhI.js`/`index-BMJYc1f5.css` (marker scan ผ่าน — evidence doc §5) · smoke Gate 5 = PASS ทั้ง 9 ข้อ (client-side, ไม่สร้างออเดอร์จริง — evidence doc §6) · **rollback โค้ด = `git revert`**
