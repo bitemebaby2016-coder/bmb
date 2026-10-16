@@ -7,9 +7,14 @@
 //   - src/lib/aiModels.ts (re-export so the client can only ever see the
 //     server-approved ids — the client can NEVER extend this list)
 //
-// Policy (owner directive 2026-10-01 + G5 owner decisions 2026-10-03):
-//   Primary  : qwen/qwen3.7-flash      (OpenRouter, ~free)
-//   Fallback : z-ai/glm-5.3-flash      (OpenRouter, ~free)
+// Policy (owner directive 2026-10-16 — replaces the 2026-10-01/10-03 model
+// picks; ERNIE Bot cancelled by owner — not available on OpenRouter):
+//   Web "น้อง Bite" chain (chat/recommendation on the website):
+//     Primary  : qwen/qwen3.7-flash         (OpenRouter)
+//     Fallback : xiaomi/mimo-v2.6-flash     (OpenRouter)
+//   Facebook automation chain (posts / comment replies / Messenger chat):
+//     Primary  : deepseek/deepseek-v4-flash (OpenRouter)
+//     Fallback : qwen/qwen3.7-flash         (OpenRouter)
 //
 // Rules locked by Owner (D5-01):
 //   - A client-supplied model id is accepted ONLY if it equals a model that
@@ -20,8 +25,12 @@
 //   - Only ACTIVE tasks may be executed. RESERVED tasks are policy-defined
 //     for G6/G7 but MUST NOT be executed by ai-proxy in G5.
 
+/** Web "น้อง Bite" chain (Owner 2026-10-16). */
 export const MODEL_A_PRIMARY = 'qwen/qwen3.7-flash'
-export const MODEL_A_FALLBACK = 'z-ai/glm-5.3-flash'
+export const MODEL_A_FALLBACK = 'xiaomi/mimo-v2.6-flash'
+/** Facebook automation chain (Owner 2026-10-16). */
+export const MODEL_FB_PRIMARY = 'deepseek/deepseek-v4-flash'
+export const MODEL_FB_FALLBACK = 'qwen/qwen3.7-flash'
 
 export type AiTask =
   | 'chat'
@@ -58,12 +67,12 @@ export const TASK_POLICY: Record<AiTask, AiTaskPolicy> = {
   recommendation: { primary: MODEL_A_PRIMARY, fallback: MODEL_A_FALLBACK, maxTokens: 1500, timeoutMs: 30_000, status: 'ACTIVE' },
   voice_stt: { primary: 'google/gemini-2.5-flash', fallback: 'whisper-large-v3 (Groq)', maxTokens: 300, timeoutMs: 60_000, status: 'ACTIVE' },
   tool_support: { primary: MODEL_A_PRIMARY, fallback: MODEL_A_FALLBACK, maxTokens: 2500, timeoutMs: 30_000, status: 'ACTIVE' },
-  content_automation: { primary: MODEL_A_PRIMARY, fallback: MODEL_A_FALLBACK, maxTokens: 2200, timeoutMs: 60_000, status: 'ACTIVE' },
+  content_automation: { primary: MODEL_FB_PRIMARY, fallback: MODEL_FB_FALLBACK, maxTokens: 2200, timeoutMs: 60_000, status: 'ACTIVE' },
   admin_ai: { primary: MODEL_A_PRIMARY, fallback: MODEL_A_FALLBACK, maxTokens: 1800, timeoutMs: 30_000, status: 'ACTIVE' },
   support: { primary: MODEL_A_PRIMARY, fallback: MODEL_A_FALLBACK, maxTokens: 1800, timeoutMs: 30_000, status: 'ACTIVE' },
-  social_comment_classify: { primary: MODEL_A_PRIMARY, fallback: MODEL_A_FALLBACK, maxTokens: 1500, timeoutMs: 30_000, status: 'RESERVED' },
-  social_reply_draft: { primary: MODEL_A_PRIMARY, fallback: MODEL_A_FALLBACK, maxTokens: 1800, timeoutMs: 30_000, status: 'RESERVED' },
-  social_post_draft: { primary: MODEL_A_PRIMARY, fallback: MODEL_A_FALLBACK, maxTokens: 2200, timeoutMs: 60_000, status: 'ACTIVE' },
+  social_comment_classify: { primary: MODEL_FB_PRIMARY, fallback: MODEL_FB_FALLBACK, maxTokens: 1500, timeoutMs: 30_000, status: 'RESERVED' },
+  social_reply_draft: { primary: MODEL_FB_PRIMARY, fallback: MODEL_FB_FALLBACK, maxTokens: 1800, timeoutMs: 30_000, status: 'RESERVED' },
+  social_post_draft: { primary: MODEL_FB_PRIMARY, fallback: MODEL_FB_FALLBACK, maxTokens: 2200, timeoutMs: 60_000, status: 'ACTIVE' },
 }
 
 export const DEFAULT_TASK: AiTask = 'chat'

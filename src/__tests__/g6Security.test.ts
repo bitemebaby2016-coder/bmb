@@ -139,20 +139,30 @@ describe('G6-16..18 reply draft boundary', () => {
     expect(workerSrc).toMatch(/const mustReview = v\.safety_flags\.some\(\(f\) => f !== 'none'\)/)
     expect(workerSrc).toMatch(/requires_human_review: requiresHumanReview/)
   })
-  it('G6-18 every draft lands as pending_review — no auto-publish state', () => {
-    expect(workerSrc).toMatch(/review_status: 'pending_review'/)
+  it('G6-18v2 (Owner 2026-10-16 full-auto): auto-published unless safety-gated; gated drafts stay pending_review', () => {
+    expect(workerSrc).toMatch(/review_status: reviewStatus/)
+    expect(workerSrc).toMatch(/'auto_published'/)
+    expect(workerSrc).toMatch(/'pending_review'/)
     expect(workerSrc).not.toMatch(/review_status:\s*'(approved|published)'/)
-    expect(workerSrc).not.toMatch(/auto.?publish/i)
+    // safety flags are the ONLY thing that blocks auto-send (Owner 2026-10-16)
+    expect(workerSrc).toMatch(/const safetyHold = draftOut\.safety_flags\.some/)
+    expect(workerSrc).toMatch(/const canAutoSend = !safetyHold/)
   })
 })
 
-// ---------- G6-19/20: no Meta write / social_post_draft remains blocked ----------
+// ---------- G6-19/20: bounded Meta write / social_post_draft remains blocked ----------
 describe('G6-19/20 Meta boundary + reserved task', () => {
-  it('G6-19 no Meta write endpoint or Page Access Token in worker; reply delivery state never written', () => {
-    expect(codeOnly).not.toMatch(/graph\.facebook\.com|graph\.meta\.com|PAGE_ACCESS_TOKEN|page_access_token/i)
-    expect(codeOnly).not.toMatch(/reply_status/)
-    expect(codeOnly).not.toMatch(/action_type/)
-    expect(codeOnly).not.toMatch(/reply_provider_id/)
+  it('G6-19v2 (Owner 2026-10-16 full-auto): outbound limited to comment reply + Messenger send of validated text', () => {
+    expect(workerSrc).toMatch(/Deno\.env\.get\('META_PAGE_ACCESS_TOKEN'\)/)
+    expect(codeOnly).not.toMatch(/access_token[=:]/)
+    expect(codeOnly).not.toMatch(/graph\.meta\.com/)
+    const graphUrls = [...workerSrc.matchAll(/https:\/\/graph\.facebook\.com\/v21\.0\/[^'"\`]+/g)].map((m) => m[0])
+    expect(graphUrls.length).toBeGreaterThan(0)
+    for (const u of graphUrls) expect(u).toMatch(/\$\{[^}]+\}\/(comments|messages)$/)
+    expect(workerSrc).toMatch(/reply_status: 'sent'/)
+    expect(workerSrc).toMatch(/reply_status: 'failed'/)
+    // send step still writes no business authority fields
+    expect(codeOnly).not.toMatch(/action_type|order_number/)
   })
   it('G7/D-G7-A: social_post_draft is ACTIVE but client-blocked; only post-worker context executes it', () => {
     expect(TASK_POLICY.social_post_draft.status).toBe('ACTIVE')

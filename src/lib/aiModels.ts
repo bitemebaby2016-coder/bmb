@@ -7,8 +7,9 @@
 // server-approved model ids and can never extend/override them.
 //
 // Policy (owner directive 2026-10-01, supersedes 2026-09-25):
-//   Primary  : Qwen 3.7 Flash     - qwen/qwen3.7-flash     (OpenRouter, ~free)
-//   Fallback : Z-AI GLM 5.3 Flash - z-ai/glm-5.3-flash    (OpenRouter, ~free)
+//   Primary  : Qwen 3.7 Flash       - qwen/qwen3.7-flash         (OpenRouter)
+//   Fallback : Xiaomi MiMo 2.6 Flash - xiaomi/mimo-v2.6-flash    (OpenRouter)
+//   (Facebook automation tasks use deepseek/deepseek-v4-flash → qwen/qwen3.7-flash)
 // Both ids verified against https://openrouter.ai/api/v1/models on 2026-10-01.
 //
 // G5 routing contract (Owner decisions D5-01..D5-05, locked 2026-10-03):
@@ -21,6 +22,8 @@
 export {
   MODEL_A_PRIMARY,
   MODEL_A_FALLBACK,
+  MODEL_FB_PRIMARY,
+  MODEL_FB_FALLBACK,
   TASK_POLICY,
   DEFAULT_TASK,
   resolveTaskPolicy,

@@ -428,7 +428,7 @@ describe('Rewards Store', () => {
 describe('AI Model A Configuration', () => {
   it('should use Qwen 3.7 Flash as Model A primary with Z-AI GLM 5.3 Flash fallback', () => {
     expect(MODEL_A_PRIMARY).toBe('qwen/qwen3.7-flash')
-    expect(MODEL_A_FALLBACK).toBe('z-ai/glm-5.3-flash')
+    expect(MODEL_A_FALLBACK).toBe('xiaomi/mimo-v2.6-flash')
   })
 
   it('chatWithAI should fall back to Z-AI GLM 5.3 Flash when Qwen 3.7 Flash fails (via ai-proxy EF)', async () => {

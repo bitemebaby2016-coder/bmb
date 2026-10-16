@@ -166,7 +166,7 @@ describe('G7-16..21 no Meta publish / no Page token / no business mutation', () 
       if (/method 'POST'|'POST'/.test('')) { /* noop */ }
       // GET may only read canonical context (brands) or own traces
       if (p.startsWith && p.startsWith('/rest/v1/brands')) continue
-      expect(p).toMatch(/audit_logs|content_approvals/)
+      expect(p).toMatch(/audit_logs|content_approvals|business_settings/)
       expect(p).not.toMatch(/orders|payments|inventory|delivery|refunds|create_order|record_payment/i)
       void isWrite
     }
@@ -395,7 +395,7 @@ describe('S3 prompt injection (10 cases, enforced via banned regex + schema + bi
   })
   it('mutation instruction (case 8) is DATA — never executed (no mutation surface in worker)', () => {
     const paths = [...codeOnly.matchAll(/rest\('(?:PATCH|GET|POST|DELETE)',\s*(?:`([^`]+)`|'([^']+)')/g)].map((x) => x[1] || x[2])
-    for (const p of paths) expect(p).toMatch(/audit_logs|content_approvals|brands/)
+    for (const p of paths) expect(p).toMatch(/audit_logs|content_approvals|brands|business_settings/)
     expect(workerSrc).toMatch(/NO business mutation|no business mutation/i)
   })
   it('malicious URL / nested instruction cannot gain authority (no link field; binding enforced)', () => {
@@ -451,7 +451,11 @@ describe('G7-24/25 G5 + G6 regression', () => {
     expect(g6CodeOnly).toMatch(/resolveTaskPolicy\(task, 'worker'\)/)
     expect(g6WorkerSrc).not.toMatch(/social_post_draft/)
     // G6 worker never gained publish capability
-    expect(g6CodeOnly).not.toMatch(/graph\.facebook\.com|PAGE_ACCESS_TOKEN/i)
+    // Owner 2026-10-16: G6 worker may send validated replies only (comment
+    // reply + Messenger send) — page token env-only; no other Graph surface.
+    expect(g6WorkerSrc).toMatch(/Deno\.env\.get\('META_PAGE_ACCESS_TOKEN'\)/)
+    const g6GraphUrls = [...g6WorkerSrc.matchAll(/https:\/\/graph\.facebook\.com\/v21\.0\/[^'"\`]+/g)].map((m) => m[0])
+    for (const u of g6GraphUrls) expect(u).toMatch(/\$\{[^}]+\}\/(comments|messages)$/)
   })
   it('G6 contract columns untouched: no migration in G7 (022/109 sources intact in repo)', () => {
     expect(migration022).toMatch(/CREATE TABLE IF NOT EXISTS public\.content_approvals/)

@@ -49,6 +49,8 @@
 5. `/track/<เลขที่>` timeline ตรง · ยอด = subtotal + ค่าส่ง − ส่วนลด
 
 ## F. Automation loop
+0. ✅ **FULL-AUTO AI (23:50 — Owner directive):** คอมเมนต์/Messenger → AI ตอบเองทันที **ไม่ต้องอนุมัติ** (ยกเว้น safety flags) — webhook trigger `social-ai-worker` อัตโนมัติ → classify+draft → **ส่งออก Meta จริง** (comment reply / Messenger send) → `reply_status='sent'` + `reply_provider_id` · verified จริง: auto-reply ใหม่ใต้คอมเมนต์จริง (`..._940089778887913`) + synthetic ผ่าน webhook → auto-trigger ทำงาน
+   โมเดล (Owner 2026-10-16): FB automation = `deepseek/deepseek-v4-flash` → `qwen/qwen3.7-flash` (ERNIE ยกเลิก — ไม่มีบน OpenRouter) · เว็บน้อง Bite = `qwen/qwen3.7-flash` → `xiaomi/mimo-v2.6-flash` · prompt: Marketing AI (โพส+คอมเมนต์, ผูก THEME_OF_DAY จาก Theater Daily Copy) + น้อง Bite AI Waiter (Messenger/เว็บ, แนะนำจากแคตตาล็อกจริงเท่านั้น → /shop → /checkout PromptPay/Omise)
 1. ✅ โพสรูปเมนูจริงขึ้นแล้วผ่าน chain จริง (`content_approvals` → `social-publish-worker` → Graph · รูปผ่าน unpublished /photos + attached_media)
 2. ✅ **AI ตอบคอมเมนต์ทำงานแล้ว (22:30):** คอมเมนต์จริง "น่ากินมากเลยครับ สั่งยังไง" → `channel-webhook` รับ (HMAC) → `social_events` (content ครบ) → `social-ai-worker` จัดหมวด+ร่างคำตอบ (validated) → **คำตอบ AI ใต้คอมเมนต์จริงแล้ว** ชวนสั่งผ่าน `biteme-baby.com/menu`
    แก้ 3 บั๊กคืนนี้: ① `event_id` เดิมใช้ `post_id` ก่อน → reaction/comment ชนกัน คอมเมนต์จริงโดน dedupe ทิ้ง (เปลี่ยนเป็น `comment_id`-first + composite สำหรับ item อื่น + เก็บ `content`) ② reaction ไม่เข้าคิว AI (item ≠ comment → skip) ③ `AI_EMPTY_CONTENT` ทั้งระบบ — โมเดลกลายเป็น reasoning models โควตา 300-700 ไม่พอ (ยก maxTokens ทุก task 1500-2500)

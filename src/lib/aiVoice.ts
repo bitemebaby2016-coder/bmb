@@ -1,7 +1,7 @@
 // ============================================
 // Bite Me Baby — AI Voice (Web Speech API + ai-proxy)
 // Primary: qwen/qwen3.7-flash
-// Fallback: z-ai/glm-5.3-flash
+// Fallback: xiaomi/mimo-v2.6-flash (Owner 2026-10-16 web chain)
 // Architecture: Voice Input → STT → chatWithAI (ai-proxy, server-side key) → TTS
 // F-17 FIX (Wave 1): NO OpenRouter API key on the client. The key lives ONLY in
 // the ai-proxy Edge Function env — voice requests ride the same JWT-authenticated
@@ -183,7 +183,7 @@ export function setVoiceReplyEnabled(enabled: boolean): void {
 
 const DEFAULT_CONFIG: VoiceConfig = {
   model: import.meta.env.VITE_OPENROUTER_MODEL || 'qwen/qwen3.7-flash',
-  fallbackModel: 'z-ai/glm-5.3-flash',
+  fallbackModel: 'xiaomi/mimo-v2.6-flash',
   voice: null,
   language: 'th-TH',
   rate: 1.0,

@@ -25,6 +25,7 @@ const SB_URL = Deno.env.get('SUPABASE_URL') || ''
 const SERVICE = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || ''
 const APP_SECRET = Deno.env.get('CHANNEL_WEBHOOK_APP_SECRET') || ''
 const VERIFY_TOKEN = Deno.env.get('CHANNEL_WEBHOOK_VERIFY_TOKEN') || ''
+const AUTOMATION = Deno.env.get('AUTOMATION_TOKEN') || ''
 
 function json(body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body), {
@@ -148,13 +149,14 @@ function parseEvent(obj: string, entry: any, ev: any): { channel: string; extUse
     const eventId = (mid ? 'msg-' + mid : 'ev-' + (entry.id || 'unknown') + '-' + (m.timestamp || ev.time || '0'))
     let order: any = null
     const text = m.message && m.message.text
+    const content = typeof text === 'string' ? text.slice(0, 2000) : null
     if (typeof text === 'string' && text.trim().startsWith('{')) {
       try {
         const parsed = JSON.parse(text)
         if (parsed && parsed.order) order = parsed.order
       } catch { /* plain text chat â€” no order intent */ }
     }
-    return { channel: 'MESSENGER', extUser, eventId, order }
+    return { channel: 'MESSENGER', extUser, eventId, order, content, item: 'message' }
   }
   if (Array.isArray(ev.changes)) {
     const ch = ev.changes[0]
@@ -176,6 +178,25 @@ function parseEvent(obj: string, entry: any, ev: any): { channel: string; extUse
     return { error: 'cannot determine channel origin (missing group_id/item metadata)' }
   }
   return { error: 'unrecognized event shape' }
+}
+
+/** G6-AUTO (Owner 2026-10-16 full-auto): kick social-ai-worker for one event.
+ *  AI failure must NEVER fail webhook delivery — errors are swallowed here. */
+async function triggerAi(eventId: string): Promise<void> {
+  if (!AUTOMATION || !SERVICE) return
+  try {
+    await fetch(SB_URL + '/functions/v1/social-ai-worker', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        apikey: SERVICE,
+        Authorization: 'Bearer ' + SERVICE,
+        'x-automation-token': AUTOMATION,
+      },
+      body: JSON.stringify({ event_id: eventId, limit: 1 }),
+      signal: AbortSignal.timeout(40000),
+    })
+  } catch { /* AI trigger failure must never fail webhook delivery */ }
 }
 
 async function processEntry(obj: string, entry: any, ctx: Ctx) {
@@ -205,6 +226,12 @@ async function processEntry(obj: string, entry: any, ctx: Ctx) {
   // it must NOT claim an AI queue slot (audited, not silently dropped).
   if (channel !== 'MESSENGER' && item !== 'comment') {
     await audit('channel_event_rejected', ('ignored-item:' + eventId).slice(0, 120), 'event ignored — feed item is not a comment (' + (item || 'unknown') + ')', { channel })
+    return
+  }
+  // no-text Messenger echoes (delivery/read receipts, stickers): nothing to
+  // answer — keep them out of the AI queue (audited, not silently dropped)
+  if (channel === 'MESSENGER' && !content && !order) {
+    await audit('channel_event_rejected', ('ignored-empty:' + eventId).slice(0, 120), 'event ignored — messenger echo without text', { channel })
     return
   }
   const eventType = channel === 'MESSENGER' ? 'message' : 'comment'
@@ -240,6 +267,15 @@ async function processEntry(obj: string, entry: any, ctx: Ctx) {
     ctx.results.duplicate_event = true
     await audit('channel_event_duplicate', eventId, 'duplicate external event â€” no new effect', { channel })
     return
+  }
+
+  // G6-AUTO (Owner 2026-10-16 full-auto): kick the AI reply loop for this
+  // event — dedupe already handled above, only fresh events reach this point.
+  if (ingest !== 'DUPLICATE') {
+    const kick = triggerAi(eventId)
+    const ert = (globalThis as { EdgeRuntime?: { waitUntil?: (p: Promise<unknown>) => void } }).EdgeRuntime
+    if (ert && typeof ert.waitUntil === 'function') ert.waitUntil(kick)
+    else await kick
   }
 
   const customerRef = await resolveCustomer(extUser, channel, ctx)

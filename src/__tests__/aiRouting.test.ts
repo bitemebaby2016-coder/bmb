@@ -15,6 +15,8 @@ import aiVoiceSrc from '../lib/aiVoice.ts?raw'
 import {
   MODEL_A_PRIMARY,
   MODEL_A_FALLBACK,
+  MODEL_FB_PRIMARY,
+  MODEL_FB_FALLBACK,
   TASK_POLICY,
   resolveTaskPolicy,
   pickModelForTask,
@@ -87,11 +89,20 @@ describe('T-G5-05/06: server-side model selection + fallback policy', () => {
     expect(TASK_POLICY.chat.primary).toBe(MODEL_A_PRIMARY)
   })
 
-  it('fallback policy = z-ai/glm-5.3-flash for every general task', () => {
-    expect(MODEL_A_FALLBACK).toBe('z-ai/glm-5.3-flash')
-    for (const t of ['chat', 'streaming', 'recommendation', 'tool_support', 'content_automation', 'admin_ai', 'support'] as const) {
+  it('fallback policy = xiaomi/mimo-v2.6-flash for every web task (Owner 2026-10-16)', () => {
+    expect(MODEL_A_FALLBACK).toBe('xiaomi/mimo-v2.6-flash')
+    for (const t of ['chat', 'streaming', 'recommendation', 'tool_support', 'admin_ai', 'support'] as const) {
       expect(TASK_POLICY[t].fallback).toBe(MODEL_A_FALLBACK)
       expect(TASK_POLICY[t].status).toBe('ACTIVE')
+    }
+  })
+
+  it('Facebook automation tasks use the deepseek chain (Owner 2026-10-16)', () => {
+    expect(MODEL_FB_PRIMARY).toBe('deepseek/deepseek-v4-flash')
+    expect(MODEL_FB_FALLBACK).toBe('qwen/qwen3.7-flash')
+    for (const t of ['content_automation', 'social_post_draft', 'social_comment_classify', 'social_reply_draft'] as const) {
+      expect(TASK_POLICY[t].primary).toBe(MODEL_FB_PRIMARY)
+      expect(TASK_POLICY[t].fallback).toBe(MODEL_FB_FALLBACK)
     }
   })
 
