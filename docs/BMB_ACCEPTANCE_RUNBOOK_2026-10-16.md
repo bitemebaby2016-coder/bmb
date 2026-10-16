@@ -50,7 +50,9 @@
 
 ## F. Automation loop
 1. ✅ โพสรูปเมนูจริงขึ้นแล้วผ่าน chain จริง (`content_approvals` → `social-publish-worker` → Graph · รูปผ่าน unpublished /photos + attached_media)
-2. **คอมเมนต์ใต้โพส** จากบัญชีจริง → `channel-webhook` รับ → แอดมินได้แจ้งเตือน
+2. ✅ **AI ตอบคอมเมนต์ทำงานแล้ว (22:30):** คอมเมนต์จริง "น่ากินมากเลยครับ สั่งยังไง" → `channel-webhook` รับ (HMAC) → `social_events` (content ครบ) → `social-ai-worker` จัดหมวด+ร่างคำตอบ (validated) → **คำตอบ AI ใต้คอมเมนต์จริงแล้ว** ชวนสั่งผ่าน `biteme-baby.com/menu`
+   แก้ 3 บั๊กคืนนี้: ① `event_id` เดิมใช้ `post_id` ก่อน → reaction/comment ชนกัน คอมเมนต์จริงโดน dedupe ทิ้ง (เปลี่ยนเป็น `comment_id`-first + composite สำหรับ item อื่น + เก็บ `content`) ② reaction ไม่เข้าคิว AI (item ≠ comment → skip) ③ `AI_EMPTY_CONTENT` ทั้งระบบ — โมเดลกลายเป็น reasoning models โควตา 300-700 ไม่พอ (ยก maxTokens ทุก task 1500-2500)
+   ⚠️ วงจรนี้ยัง **human-trigger + human-approve** (G6: ห้าม auto-approve) — auto-trigger/auto-publish = รอคำสั่ง Owner
 3. ✅ scheduler jobs ทั้ง 3 = ALL_GREEN (1,042 tests)
 
 ## G. งบ + rollback

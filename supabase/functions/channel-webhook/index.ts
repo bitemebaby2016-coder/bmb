@@ -161,10 +161,18 @@ function parseEvent(obj: string, entry: any, ev: any): { channel: string; extUse
     const value = ch && ch.value
     if (!value) return { error: 'empty change value' }
     const extUser = (value.from && (value.from.id || value.from.name)) || null
-    const eventId = (value.post_id || value.comment_id || value.id || 'chg-' + (entry.id || 'unknown') + '-' + (ev.time || '0')) + ''
+    // G6 fix 2026-10-16: event identity must be UNIQUE PER ITEM. The old
+    // `post_id || comment_id` order collapsed every comment/reaction on the
+    // same post into ONE event id — the real customer comment got deduped
+    // away after the first reaction. comment_id wins for comments; other feed
+    // items get a deterministic composite id (stable across re-deliveries).
+    const eventId = (value.comment_id
+      || ((value.post_id || value.id || 'chg-' + (entry.id || 'unknown')) + ':' + (value.item || 'chg') + ':' + (extUser || '') + ':' + (value.created_time || ev.time || '0')))
+    // comment text travels with the event (was dropped before: p_content null)
+    const content = typeof value.message === 'string' ? value.message.slice(0, 2000) : null
     // channel derivation ONLY from explicit metadata (never guessed)
-    if (value.group_id) return { channel: 'FACEBOOK_GROUP', extUser, eventId, order: null }
-    if (entry.id && value.item) return { channel: 'FACEBOOK', extUser: extUser || ('page-' + entry.id), eventId, order: null }
+    if (value.group_id) return { channel: 'FACEBOOK_GROUP', extUser, eventId, order: null, content, item: value.item }
+    if (entry.id && value.item) return { channel: 'FACEBOOK', extUser: extUser || ('page-' + entry.id), eventId, order: null, content, item: value.item }
     return { error: 'cannot determine channel origin (missing group_id/item metadata)' }
   }
   return { error: 'unrecognized event shape' }
@@ -177,7 +185,9 @@ async function processEntry(obj: string, entry: any, ctx: Ctx) {
     await audit('channel_event_rejected', (parsed.error + ':' + (entry.id || 'unknown')).slice(0, 120), 'event rejected â€” ' + parsed.error, { object: obj })
     return
   }
-  const { channel, extUser, eventId, order } = parsed as { channel: string; extUser: string; eventId: string; order: any | null }
+  const { channel, extUser, eventId, order, content, item } = parsed as {
+    channel: string; extUser: string; eventId: string; order: any | null; content?: string | null; item?: string | null
+  }
   ctx.eventId = eventId
   ctx.channel = channel
   ctx.extUser = extUser
@@ -190,6 +200,13 @@ async function processEntry(obj: string, entry: any, ctx: Ctx) {
   // rejected by the RPC (HC-5). service_role is transport only - the
   // security boundary is HMAC + fail-closed secret + allowlist + validation
   // + DB uniqueness (HC-2).
+  // G6 fix 2026-10-16: only comment/message are replyable (schema CHECK
+  // comment|message|mention). A plain feed reaction has no reply semantics —
+  // it must NOT claim an AI queue slot (audited, not silently dropped).
+  if (channel !== 'MESSENGER' && item !== 'comment') {
+    await audit('channel_event_rejected', ('ignored-item:' + eventId).slice(0, 120), 'event ignored — feed item is not a comment (' + (item || 'unknown') + ')', { channel })
+    return
+  }
   const eventType = channel === 'MESSENGER' ? 'message' : 'comment'
   const ingestRes = await restNoKey('POST', '/rest/v1/rpc/ingest_social_event', {
     p_platform: channel,
@@ -198,7 +215,7 @@ async function processEntry(obj: string, entry: any, ctx: Ctx) {
     p_event_type: eventType,
     p_sender_id: extUser || null,
     p_sender_name: null,
-    p_content: null,
+    p_content: content ?? null,
     p_payload: entry,
   })
   if (ingestRes.status !== 200) {

@@ -49,17 +49,21 @@ export interface AiTaskPolicy {
 }
 
 export const TASK_POLICY: Record<AiTask, AiTaskPolicy> = {
-  chat: { primary: MODEL_A_PRIMARY, fallback: MODEL_A_FALLBACK, maxTokens: 700, timeoutMs: 30_000, status: 'ACTIVE' },
-  streaming: { primary: MODEL_A_PRIMARY, fallback: MODEL_A_FALLBACK, maxTokens: 700, timeoutMs: 45_000, status: 'ACTIVE' },
-  recommendation: { primary: MODEL_A_PRIMARY, fallback: MODEL_A_FALLBACK, maxTokens: 300, timeoutMs: 30_000, status: 'ACTIVE' },
+  // maxTokens 2026-10-16: budgets raised — MODEL_A_* are REASONING models now;
+  // the thinking pass consumed the old 300-700 budgets before any content was
+  // emitted (content=null -> AI_EMPTY_CONTENT across the AI pipeline). Budgets
+  // must cover reasoning + final content (verified against live OpenRouter).
+  chat: { primary: MODEL_A_PRIMARY, fallback: MODEL_A_FALLBACK, maxTokens: 1800, timeoutMs: 30_000, status: 'ACTIVE' },
+  streaming: { primary: MODEL_A_PRIMARY, fallback: MODEL_A_FALLBACK, maxTokens: 1800, timeoutMs: 45_000, status: 'ACTIVE' },
+  recommendation: { primary: MODEL_A_PRIMARY, fallback: MODEL_A_FALLBACK, maxTokens: 1500, timeoutMs: 30_000, status: 'ACTIVE' },
   voice_stt: { primary: 'google/gemini-2.5-flash', fallback: 'whisper-large-v3 (Groq)', maxTokens: 300, timeoutMs: 60_000, status: 'ACTIVE' },
-  tool_support: { primary: MODEL_A_PRIMARY, fallback: MODEL_A_FALLBACK, maxTokens: 1000, timeoutMs: 30_000, status: 'ACTIVE' },
-  content_automation: { primary: MODEL_A_PRIMARY, fallback: MODEL_A_FALLBACK, maxTokens: 700, timeoutMs: 60_000, status: 'ACTIVE' },
-  admin_ai: { primary: MODEL_A_PRIMARY, fallback: MODEL_A_FALLBACK, maxTokens: 700, timeoutMs: 30_000, status: 'ACTIVE' },
-  support: { primary: MODEL_A_PRIMARY, fallback: MODEL_A_FALLBACK, maxTokens: 700, timeoutMs: 30_000, status: 'ACTIVE' },
-  social_comment_classify: { primary: MODEL_A_PRIMARY, fallback: MODEL_A_FALLBACK, maxTokens: 300, timeoutMs: 30_000, status: 'RESERVED' },
-  social_reply_draft: { primary: MODEL_A_PRIMARY, fallback: MODEL_A_FALLBACK, maxTokens: 500, timeoutMs: 30_000, status: 'RESERVED' },
-  social_post_draft: { primary: MODEL_A_PRIMARY, fallback: MODEL_A_FALLBACK, maxTokens: 700, timeoutMs: 60_000, status: 'ACTIVE' },
+  tool_support: { primary: MODEL_A_PRIMARY, fallback: MODEL_A_FALLBACK, maxTokens: 2500, timeoutMs: 30_000, status: 'ACTIVE' },
+  content_automation: { primary: MODEL_A_PRIMARY, fallback: MODEL_A_FALLBACK, maxTokens: 2200, timeoutMs: 60_000, status: 'ACTIVE' },
+  admin_ai: { primary: MODEL_A_PRIMARY, fallback: MODEL_A_FALLBACK, maxTokens: 1800, timeoutMs: 30_000, status: 'ACTIVE' },
+  support: { primary: MODEL_A_PRIMARY, fallback: MODEL_A_FALLBACK, maxTokens: 1800, timeoutMs: 30_000, status: 'ACTIVE' },
+  social_comment_classify: { primary: MODEL_A_PRIMARY, fallback: MODEL_A_FALLBACK, maxTokens: 1500, timeoutMs: 30_000, status: 'RESERVED' },
+  social_reply_draft: { primary: MODEL_A_PRIMARY, fallback: MODEL_A_FALLBACK, maxTokens: 1800, timeoutMs: 30_000, status: 'RESERVED' },
+  social_post_draft: { primary: MODEL_A_PRIMARY, fallback: MODEL_A_FALLBACK, maxTokens: 2200, timeoutMs: 60_000, status: 'ACTIVE' },
 }
 
 export const DEFAULT_TASK: AiTask = 'chat'

@@ -100,7 +100,10 @@ describe('T-G5-05/06: server-side model selection + fallback policy', () => {
       expect(p.timeoutMs, `timeout for ${task}`).toBeGreaterThan(0)
       expect(p.timeoutMs, `timeout for ${task}`).toBeLessThanOrEqual(60_000)
       expect(p.maxTokens, `maxTokens for ${task}`).toBeGreaterThan(0)
-      expect(p.maxTokens, `maxTokens for ${task}`).toBeLessThanOrEqual(1000)
+      // cap 3000 (was 1000): MODEL_A_* are REASONING models — the thinking
+      // pass consumes budget before content; 2026-10-16 AI_EMPTY_CONTENT fix.
+      // The cap stays bounded on purpose (cost control).
+      expect(p.maxTokens, `maxTokens for ${task}`).toBeLessThanOrEqual(3000)
     }
   })
 })
