@@ -9,9 +9,11 @@
 // Boundary rules (mirror push-send W3-D-7):
 //   - Caller must be authenticated with the platform JWT AND the shared
 //     AUTOMATION_TOKEN, or a service_role key — never an anon caller.
-//   - The caller supplies ONLY a customer id + message text. The recipient
-//     phone is resolved SERVER-SIDE (profiles.phone via service_role); a phone
-//     number in the request body is never accepted.
+//   - Preferred: caller supplies customer id + message text — the recipient
+//     phone is resolved SERVER-SIDE (profiles.phone via service_role).
+//   - Trusted exception [2026-10-16]: pre-login flows (otp-send) have NO
+//     profile yet, so an authOk caller (service_role / AUTOMATION_TOKEN only)
+//     may pass `to` directly. Per-phone/IP rate limits live in otp-send.
 //   - notification_prefs.sms_enabled is honoured (transport opt-out).
 //   - Nothing here creates or mutates business rows. A per-customer
 //     rate/audit trail stays with notification_dispatch (author), not here.
@@ -88,28 +90,37 @@ Deno.serve(async (req: Request): Promise<Response> => {
     return json({ error: 'not configured (SMS_PROVIDER/SMS_API_URL/SMS_API_KEY missing)' }, 503)
   }
 
-  let body: { customer_id?: string; message?: string } = {}
+  let body: { customer_id?: string; message?: string; to?: string } = {}
   try { body = await req.json() } catch { return json({ error: 'invalid json' }, 400) }
   const customerId = String(body.customer_id || '')
+  const directTo = String(body.to || '').trim()
   const message = String(body.message || '').slice(0, 480)
-  if (!customerId || !message.trim()) return json({ error: 'customer_id and message are required' }, 400)
-
-  // server-side recipient resolution (service_role) — never from request body
-  const prof = await fetch(SB_URL + '/rest/v1/profiles?id=eq.' + encodeURIComponent(customerId) + '&select=phone&limit=1', {
-    headers: { apikey: SERVICE, Authorization: 'Bearer ' + SERVICE },
-  })
-  const profRow = prof.ok ? (await prof.json().catch(() => []))[0] : null
-  if (!profRow?.phone) return json({ error: 'no phone on file for customer' }, 404)
-
-  const prefs = await fetch(SB_URL + '/rest/v1/notification_prefs?customer_id=eq.' + encodeURIComponent(customerId) + '&select=sms_enabled&limit=1', {
-    headers: { apikey: SERVICE, Authorization: 'Bearer ' + SERVICE },
-  })
-  const prefsRow = prefs.ok ? (await prefs.json().catch(() => []))[0] : null
-  if (prefsRow && prefsRow.sms_enabled === false) {
-    return json({ ok: true, skipped: 'sms_disabled_by_customer' })
+  if ((!customerId && !directTo) || !message.trim()) {
+    return json({ error: 'customer_id (or trusted to) and message are required' }, 400)
   }
 
-  const to = normalizeThaiPhone(profRow.phone)
+  let to: string
+  if (customerId) {
+    // server-side recipient resolution (service_role) — preferred path
+    const prof = await fetch(SB_URL + '/rest/v1/profiles?id=eq.' + encodeURIComponent(customerId) + '&select=phone&limit=1', {
+      headers: { apikey: SERVICE, Authorization: 'Bearer ' + SERVICE },
+    })
+    const profRow = prof.ok ? (await prof.json().catch(() => []))[0] : null
+    if (!profRow?.phone) return json({ error: 'no phone on file for customer' }, 404)
+
+    const prefs = await fetch(SB_URL + '/rest/v1/notification_prefs?customer_id=eq.' + encodeURIComponent(customerId) + '&select=sms_enabled&limit=1', {
+      headers: { apikey: SERVICE, Authorization: 'Bearer ' + SERVICE },
+    })
+    const prefsRow = prefs.ok ? (await prefs.json().catch(() => []))[0] : null
+    if (prefsRow && prefsRow.sms_enabled === false) {
+      return json({ ok: true, skipped: 'sms_disabled_by_customer' })
+    }
+    to = normalizeThaiPhone(profRow.phone)
+  } else {
+    // trusted direct recipient (otp-send pre-login path) — see header note
+    to = normalizeThaiPhone(directTo)
+    if (!/^0\d{8,9}$/.test(to)) return json({ error: 'invalid to' }, 400)
+  }
   const res = await sendViaProvider(to, message)
   return json(
     { ok: res.ok, to_masked: maskPhone(to), provider: res.provider, provider_status: res.status, provider_body: res.body },
