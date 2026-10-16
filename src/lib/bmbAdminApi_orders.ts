@@ -4,6 +4,7 @@
 
 import { supabase } from './supabase'
 import { resolveOrderDeliveryAddress } from './orderAddress'
+import { extractIdempotencyErrorCode, payloadFingerprint } from './orderSubmitKey'
 
 // P0-4 SPLIT (2026-09-18):
 //   OrderInput  — client payload (INPUT ONLY, no financial authority)
@@ -35,6 +36,9 @@ export interface OrderInput {
   scheduled_date?: string
   // TEN-07: branch_id from public checkout or admin context
   branch_id?: string
+  // WAVE 5A (migration 124): idempotency key — one per submission; reused on a
+  // retry of the SAME payload (orderSubmitKey.ts ring). Omitting = legacy path.
+  client_submit_key?: string
   // intentionally NO price/subtotal/discount/delivery_fee/total_amount
 }
 
@@ -52,6 +56,9 @@ export interface OrderResult {
   payment_method: string
   delivery_round_id: string
   customer_ref: string
+  // WAVE 5A (124 R3): true = idempotent replay of a previous submit — the same
+  // order identity + CURRENT status, no new order was created.
+  replay?: boolean
 }
 
 export interface OrderForm {
@@ -238,6 +245,45 @@ export async function getOrder(orderNumber: string): Promise<OrderForm | null> {
 // P0-4: createOrder per RPC (server-authoritative). Client sends ONLY input.
 // NOTE (2026-09-19): payload keys MUST match the RPC parameter names exactly
 // (p_* prefix) — PostgREST returns PGRST202 "no matches found" otherwise.
+// WAVE 5A (migration 124): routed through the 19-arg wrapper
+// `create_order_with_items_i` — p_client_submit_key gives DB-level double-submit
+// protection (same key + same payload = replay of the ORIGINAL order, R3).
+
+/** Thrown ONLY for the three 124 idempotency rejections (definite rollback —
+ *  no order exists). Every other failure keeps the legacy `null` contract. */
+export class OrderSubmitError extends Error {
+  readonly code: string
+  constructor(code: string) {
+    super(code)
+    this.name = 'OrderSubmitError'
+    this.code = code
+  }
+}
+
+/**
+ * Deterministic fingerprint of the args createOrder sends (client-side mirror
+ * of 124 R1): the submit-key ring reuses a key only while this is unchanged.
+ */
+export function orderInputFingerprint(input: OrderInput): string {
+  return payloadFingerprint({
+    items: input.items.map((it) => ({ product_id: it.product_id, quantity: it.quantity, options: it.options ?? {}, special_request: it.special_request ?? '' })),
+    round: input.delivery_round_id,
+    method: input.delivery_method ?? 'self_delivery',
+    address: input.delivery_address ?? '',
+    lat: input.dropoff_latitude ?? null,
+    lon: input.dropoff_longitude ?? null,
+    name: input.customer_name,
+    phone: input.customer_phone ?? '',
+    payment: input.payment_method ?? 'promptpay_qr',
+    special: input.special_instructions ?? '',
+    promo: input.promotion_code ?? null,
+    dist: input.distance_km ?? null,
+    mode: input.order_mode ?? 'SAME_DAY',
+    date: input.scheduled_date ?? null,
+    branch: input.branch_id ?? null,
+  })
+}
+
 export async function createOrder(input: OrderInput): Promise<OrderResult | null> {
   const payload = {
     p_items: input.items.map((it) => ({
@@ -264,9 +310,18 @@ export async function createOrder(input: OrderInput): Promise<OrderResult | null
     // TEN-07: optional branch_id for multi-branch routing from public checkout or admin context
     p_scheduled_date: input.scheduled_date ?? undefined,
     p_branch_id: input.branch_id ?? null,
+    // WAVE 5A (124): omitted/NULL = legacy path; non-null = idempotent submit
+    p_client_submit_key: input.client_submit_key ?? undefined,
   }
-  const { data, error } = await supabase.rpc('create_order_with_items', payload)
-  if (error) { console.error('[createOrder] RPC error:', error); return null }
+  const { data, error } = await supabase.rpc('create_order_with_items_i', payload)
+  if (error) {
+    // 124 idempotency rejections are DEFINITE (tx rolled back — no order) and
+    // the caller must know which one (UI message / key-ring recovery) → throw.
+    const idem = extractIdempotencyErrorCode(error)
+    if (idem) throw new OrderSubmitError(idem)
+    console.error('[createOrder] RPC error:', error)
+    return null
+  }
   return data as OrderResult
 }
 // P0-6 (2026-09-18): order status changes go through the state machine RPC

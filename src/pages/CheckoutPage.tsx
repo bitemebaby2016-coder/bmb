@@ -2,7 +2,8 @@
 // Bite Me Baby — Checkout (Phase 3B · ONE canonical order path)
 // ============================================
 // SAME_DAY and PRE_ORDER both create the order through RPC
-// `create_order_with_items` (migration 025 v3 — p_order_mode/p_scheduled_date).
+// `create_order_with_items_i` (migration 025 v3 + 124 — p_order_mode/
+// p_scheduled_date + p_client_submit_key double-submit protection).
 // Server authority kept intact: round status/cutoff/capacity, product mode
 // gate, prices, promotion, delivery fee/tier. Client-side numbers are
 // DISPLAY ONLY. Round ids come from the DB (`round-YYYYMMDD-<key>`, 024) —
@@ -15,10 +16,11 @@ import { useCartStore } from '@/store/cartStore'
 import { useAuthStore } from '@/store/authStore'
 import { useNotificationStore } from '@/store/notificationStore'
 import { showToast } from '@/components/ui/ToastContainer'
-import { createOrder, type OrderInput } from '@/lib/bmbAdminApi_orders'
+import { createOrder, orderInputFingerprint, type OrderInput, type OrderResult } from '@/lib/bmbAdminApi_orders'
+import { SubmitKeyRing, describeIdempotencyError } from '@/lib/orderSubmitKey'
 import { planSplitCheckout, type PaymentMethodT, type PlanLine } from '@/lib/m1CheckoutPlan'
 import { submitSplitOrders, describeSplitResult } from '@/lib/m1Submit'
-import { createPaymentIntent } from '@/lib/paymentGateway'
+import { createPaymentIntent, getPaymentIntents } from '@/lib/paymentGateway'
 import { writeAuditLog } from '@/lib/auditLog'
 import { useLocationStore, isTrustedSource, deliveryPointStatus } from '@/store/locationStore'
 // P2 (Owner OD-2 option A) — Guest Checkout: ยืนยันเบอร์ด้วย OTP แล้วออก session
@@ -45,6 +47,29 @@ function addDays(date: string, days: number): string {
   const d = new Date(date + 'T00:00:00')
   d.setDate(d.getDate() + days)
   return d.toISOString().slice(0, 10)
+}
+
+// ✅ WAVE 5A (124) — B5/B10: NEVER a second payment intent for the same order.
+// A REPLAYED submit (double-click / retry after timeout) returns the ORIGINAL
+// order; the intent is only created when no intent exists yet (timeout gap).
+// A read failure falls through to create — a missing intent blocks the
+// customer's payment, an extra pending intent is reconcilable by the admin.
+async function ensureReplaySafeIntent(
+  orderNumber: string,
+  amount: number,
+  paymentMethod: Parameters<typeof createPaymentIntent>[2],
+  replay: boolean,
+  metadata: Record<string, any>,
+): Promise<Awaited<ReturnType<typeof createPaymentIntent>> | null> {
+  if (replay) {
+    try {
+      const existing = await getPaymentIntents({ orderNumber })
+      if (existing.length > 0) return null // original attempt already recorded it
+    } catch (e) {
+      console.warn('[Checkout] replay intent check failed (creating to avoid unpaid gap):', e)
+    }
+  }
+  return await createPaymentIntent(orderNumber, amount, paymentMethod, metadata)
 }
 
 export function CheckoutPage() {
@@ -310,6 +335,12 @@ export function CheckoutPage() {
   // double-click/concurrent submit (UI guard ONLY — not database idempotency).
   const submitLockRef = useRef({ busy: false })
 
+  // ✅ WAVE 5A (migration 124): per-payload submit key ring — a retry of the
+  // SAME payload reuses its key (server replays the original order), an edited
+  // payload gets a fresh one. Survives reload (sessionStorage) so refresh +
+  // resubmit cannot create a duplicate order. This is the DATABASE guarantee.
+  const submitKeysRef = useRef(new SubmitKeyRing())
+
   async function handlePlaceOrder() {
     if (!customer) {
       showToast('กรุณาเข้าสู่ระบบก่อนสั่งซื้อ', 'info')
@@ -454,24 +485,34 @@ export function CheckoutPage() {
       const result = await submitSplitOrders(plan.children, paymentMethod as PaymentMethodT, {
         lock: submitLockRef.current, // shared across clicks → concurrent submit = 'conflict'
         createChild: async (child) => {
+          const childInput: OrderInput = {
+            ...orderInput,
+            items: child.lines.map((l) => ({ product_id: l.product_id, quantity: l.quantity })),
+            delivery_round_id: child.delivery_round_id,
+            order_mode: child.order_mode,
+            payment_method: child.payment_method,
+            scheduled_date: child.scheduled_date ?? undefined,
+          }
+          // WAVE 5A (124): one submit key per child payload — reused on retry,
+          // refreshed when the payload is edited (R1/R2/R3 contract).
+          const childFp = orderInputFingerprint(childInput)
+          const submitKey = submitKeysRef.current.keyFor(childFp)
           try {
-            const order = await createOrder({
-              ...orderInput,
-              items: child.lines.map((l) => ({ product_id: l.product_id, quantity: l.quantity })),
-              delivery_round_id: child.delivery_round_id,
-              order_mode: child.order_mode,
-              payment_method: child.payment_method,
-              scheduled_date: child.scheduled_date ?? undefined,
-            })
+            const order = await createOrder({ ...childInput, client_submit_key: submitKey })
             if (!order) {
               // Ambiguous: RPC failed without a definite server code → order MAY
               // exist → classify as 'ambiguous' so the engine NEVER auto-resubmits.
               return { status: 'ambiguous' as const }
             }
+            submitKeysRef.current.release(childFp) // created/replayed — settled
             childTotals.set(order.order_number, order.total_amount)
-            return { status: 'created' as const, order_number: order.order_number }
+            return { status: 'created' as const, order_number: order.order_number, replay: !!order.replay }
           } catch (e) {
             const code = (e as { code?: string })?.code
+            // ERR_IDEMPOTENCY_CONFLICT/KEY_INVALID can never succeed with THIS
+            // key → drop it so a retry of the same payload starts clean
+            // (BAD_RESULT keeps the key: tx rolled back, no submission row).
+            if (code === 'ERR_IDEMPOTENCY_CONFLICT' || code === 'ERR_IDEMPOTENCY_KEY_INVALID') submitKeysRef.current.release(childFp)
             // Definite server rejection (transaction rolled back ⇒ no order) = safe
             // to retry later; anything else is ambiguous → pending, never resubmit.
             return code ? { status: 'failed' as const, code } : { status: 'ambiguous' as const }
@@ -490,7 +531,8 @@ export function CheckoutPage() {
         // Payment intent 1:1 with its OWN child order number — never a second
         // charge/intent for the same order (B5/B10).
         try {
-          await createPaymentIntent(co.order_number, childTotals.get(co.order_number) ?? 0, paymentMethod, {
+          // B5/B10: a replayed child (double-submit) must not add a 2nd intent.
+          await ensureReplaySafeIntent(co.order_number, childTotals.get(co.order_number) ?? 0, paymentMethod, !!co.replay, {
             providerId: 'self_delivery',
             providerName: 'Bite Me Baby (self delivery)',
           })
@@ -501,8 +543,10 @@ export function CheckoutPage() {
           action: 'order_create',
           entity_type: 'order',
           entity_id: co.order_number,
-          description: `ออเดอร์ใหม่ #${co.order_number} (mixed split) โดย ${customer?.name || customer?.email || 'Guest'} รวม ${(childTotals.get(co.order_number) ?? 0).toFixed(2)} บาท`,
-          metadata: { paymentMethod, split: true, scheduledDate, deliveryRoundId: selectedRoundId },
+          description: co.replay
+            ? `ส่งซ้ำ (replay 124) — ใช้ออเดอร์เดิม #${co.order_number} (mixed split) ไม่มีการสร้างออเดอร์ใหม่`
+            : `ออเดอร์ใหม่ #${co.order_number} (mixed split) โดย ${customer?.name || customer?.email || 'Guest'} รวม ${(childTotals.get(co.order_number) ?? 0).toFixed(2)} บาท`,
+          metadata: { paymentMethod, split: true, scheduledDate, deliveryRoundId: selectedRoundId, replay: !!co.replay },
         })
       }
       const firstNumber = createdOrders[0]?.order_number ?? ''
@@ -515,17 +559,34 @@ export function CheckoutPage() {
     }
 
     // Server-authoritative: mode gate / cutoff / capacity / pricing inside the RPC.
-    const order = await createOrder(orderInput)
+    // WAVE 5A (migration 124): submit key = double-submit protection. A retry of
+    // the SAME payload reuses its key → the server replays the original order
+    // (order_submissions) instead of creating a second one; an edited payload
+    // gets a fresh key (R1 fingerprint / R2 key policy / R3 replay).
+    const submitFp = orderInputFingerprint(orderInput)
+    let order: OrderResult | null = null
+    try {
+      order = await createOrder({ ...orderInput, client_submit_key: submitKeysRef.current.keyFor(submitFp) })
+    } catch (e) {
+      const code = (e as { code?: string })?.code
+      // CONFLICT/KEY_INVALID can never succeed with THIS key → drop it so the
+      // next attempt of the same payload starts clean (BAD_RESULT keeps it).
+      if (code === 'ERR_IDEMPOTENCY_CONFLICT' || code === 'ERR_IDEMPOTENCY_KEY_INVALID') submitKeysRef.current.release(submitFp)
+      showToast(describeIdempotencyError(code), 'error')
+      setIsProcessing(false)
+      return
+    }
     if (!order) {
       showToast('สร้างออเดอร์ล้มเหลว กรุณาลองใหม่', 'error')
       setIsProcessing(false)
       return
     }
+    submitKeysRef.current.release(submitFp) // created/replayed — payload settled
 
     // Payment intent created at checkout (server amount; validated again by 008).
     let cardClientSecret: string | undefined
     try {
-      const intent = await createPaymentIntent(order.order_number, order.total_amount, paymentMethod, {
+      const intent = await ensureReplaySafeIntent(order.order_number, order.total_amount, paymentMethod, !!order.replay, {
         providerId: 'self_delivery',
         providerName: 'Bite Me Baby (self delivery)',
       })
@@ -534,7 +595,7 @@ export function CheckoutPage() {
       // by the create-checkout EF (server-derived amount) and handed through
       // navigation state — never stored anywhere durable.
       cardClientSecret = intent?.payment_intent?.client_secret
-      if (paymentMethod === 'credit_card' && !cardClientSecret) {
+      if (paymentMethod === 'credit_card' && intent !== null && !cardClientSecret) {
         showToast('ระบบบัตรยังไม่พร้อม — เลือกช่องทางอื่นหรือลองใหม่', 'error')
       }
     } catch (e) {
@@ -545,7 +606,9 @@ export function CheckoutPage() {
       action: 'order_create',
       entity_type: 'order',
       entity_id: order.order_number,
-      description: `ออเดอร์ใหม่ #${order.order_number} โดย ${customer?.name || customer?.email || 'Guest'} รวม ${order.total_amount.toFixed(2)} บาท (${orderMode})`,
+      description: order.replay
+        ? `ส่งซ้ำ (replay 124) — ใช้ออเดอร์เดิม #${order.order_number} ไม่มีการสร้างออเดอร์ใหม่ (${orderMode})`
+        : `ออเดอร์ใหม่ #${order.order_number} โดย ${customer?.name || customer?.email || 'Guest'} รวม ${order.total_amount.toFixed(2)} บาท (${orderMode})`,
       metadata: {
         itemCount: items.length,
         totalAmount: order.total_amount,
@@ -553,10 +616,17 @@ export function CheckoutPage() {
         orderMode,
         scheduledDate: orderMode === 'PRE_ORDER' ? scheduledDate : today,
         deliveryRoundId: selectedRoundId,
+        replay: !!order.replay,
       },
     })
 
-    showToast(`สั่งซื้อสำเร็จ! เลขที่ ${order.order_number}`, 'success')
+    if (order.replay) {
+      // 124 R3 evidence: double-submit/retry returns the ORIGINAL order — the
+      // customer sees the same number and NO second order exists anywhere.
+      showToast(`ตรวจพบการส่งซ้ำ — ใช้ออเดอร์เดิม #${order.order_number} (ไม่มีการสร้างออเดอร์ใหม่)`, 'success')
+    } else {
+      showToast(`สั่งซื้อสำเร็จ! เลขที่ ${order.order_number}`, 'success')
+    }
     useNotificationStore.getState().triggerEvent('order_placed', {
       orderNumber: order.order_number,
       userId: customer?.id || '',

@@ -36,8 +36,19 @@ const m = vi.hoisted(() => ({
 }))
 
 vi.mock('@/components/ui/ToastContainer', () => ({ showToast: m.showToast }))
-vi.mock('@/lib/bmbAdminApi_orders', () => ({ createOrder: m.createOrder }))
-vi.mock('@/lib/paymentGateway', () => ({ createPaymentIntent: m.createPaymentIntent }))
+vi.mock('@/lib/bmbAdminApi_orders', () => ({
+  createOrder: m.createOrder,
+  // pure 124 helpers — deterministic stub (no DB side effects in UI tests)
+  orderInputFingerprint: (input: unknown) => JSON.stringify(input),
+  OrderSubmitError: class extends Error {
+    code: string
+    constructor(code: string) { super(code); this.code = code }
+  },
+}))
+vi.mock('@/lib/paymentGateway', () => ({
+  createPaymentIntent: m.createPaymentIntent,
+  getPaymentIntents: vi.fn(async () => []),
+}))
 vi.mock('@/lib/auditLog', () => ({ writeAuditLog: vi.fn() }))
 vi.mock('@/lib/guestCheckout', () => ({
   sendGuestCheckoutOtp: vi.fn(),

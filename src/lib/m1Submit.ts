@@ -2,24 +2,23 @@
 // Bite Me Baby — M1 split-checkout SUBMISSION ENGINE (Wave 3.1 / 2D-3)
 // Pure orchestration over an INJECTED createChild (no RPC import here).
 //
-// Idempotency findings (025:280-297): order_number = random 3-digit suffix,
-// UNIQUE on orders — a retried request generates a NEW number ⇒ a NEW order.
-// There is NO client-supplied idempotency key ⇒ DB cannot distinguish retry
-// from new order. Policy implemented here (provable WITHOUT schema change):
-//   • 'failed'   = RPC returned a definite error ⇒ the transaction rolled
-//                  back ⇒ NO order exists ⇒ retrying this child is SAFE.
+// Idempotency (updated 2026-10-16 — migration 124 APPLIED + WIRED):
+// createOrder routes through `create_order_with_items_i` with a client submit
+// key (order_submissions table): a retry of the SAME payload REPLAYS the
+// original order instead of creating a second one. Outcome policy unchanged:
+//   • 'failed'   = definite server rejection ⇒ transaction rolled back ⇒ NO
+//                  order exists ⇒ retrying this child is SAFE.
 //   • 'ambiguous'= timeout/unknown ⇒ order MAY exist ⇒ NEVER auto-resubmit;
 //                  surfaces a pending/reconciliation state instead.
-//   • 'created'  = order_number returned ⇒ never resubmitted.
-// Optional schema enhancement (NOT approved, NOT applied): stable per-child
-// idempotency key column + unique index — see readiness doc §Idempotency.
-// UI submit lock (lock.busy) prevents concurrent attempts but is NOT claimed
-// as database idempotency.
+//   • 'created'  = order_number returned (or its idempotent replay) ⇒ never
+//                  resubmitted.
+// UI submit lock (lock.busy) prevents concurrent attempts; the submit key is
+// the database-level guarantee (R1 fingerprint / R2 key policy / R3 replay).
 // ============================================
 import type { ChildOrderPlan, PaymentMethodT } from './m1CheckoutPlan'
 
 export type ChildOutcome =
-  | { status: 'created'; order_number: string }
+  | { status: 'created'; order_number: string; replay?: boolean }
   | { status: 'failed'; code?: string }
   | { status: 'ambiguous'; detail?: string }
 
@@ -98,7 +97,7 @@ export function describeSplitResult(r: SplitSubmitResult): string {
   if (r.status === 'conflict') return 'มีการสั่งซื้อค้างอยู่ — รอสักครู่แล้วตรวจสอบออเดอร์ของคุณ'
   const parts = r.children.map((s) => {
     const m = s.child.order_mode
-    if (s.outcome?.status === 'created') return `${m}: สำเร็จ (${s.outcome.order_number})`
+    if (s.outcome?.status === 'created') return `${m}: สำเร็จ (${s.outcome.order_number}${s.outcome.replay ? ' · ซ้ำ — ใช้ออเดอร์เดิม' : ''})`
     if (s.outcome?.status === 'ambiguous') return `${m}: ยังตรวจสอบไม่ได้ — อย่าสั่งซ้ำ โปรดตรวจสอบออเดอร์ก่อน`
     return `${m}: ไม่สำเร็จ${s.outcome?.code ? ` (${s.outcome.code})` : ''}`
   })

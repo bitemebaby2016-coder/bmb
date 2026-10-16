@@ -224,10 +224,11 @@ describe('§18 delivery — forged client distance is input-only; no client mone
         order_mode: 'SAME_DAY',
       })
       expect(created).not.toBeNull()
-      expect(spy.mock.calls[0][0]).toBe('create_order_with_items')
+      expect(spy.mock.calls[0][0]).toBe('create_order_with_items_i')
       const args = Object.keys(spy.mock.calls[0][1] as Record<string, any>)
       // allow-list of inputs only — money authority never crosses the boundary
-      expect(args.every((k) => ['p_items', 'p_delivery_round_id', 'p_delivery_method', 'p_delivery_address', 'p_dropoff_latitude', 'p_dropoff_longitude', 'p_customer_name', 'p_customer_phone', 'p_payment_method', 'p_special_instructions', 'p_promotion_code', 'p_distance_km', 'p_order_mode', 'p_scheduled_date', 'p_branch_id'].includes(k))).toBe(true)
+      // (p_client_submit_key = 124 idempotency token — an input, not money)
+      expect(args.every((k) => ['p_items', 'p_delivery_round_id', 'p_delivery_method', 'p_delivery_address', 'p_dropoff_latitude', 'p_dropoff_longitude', 'p_customer_name', 'p_customer_phone', 'p_payment_method', 'p_special_instructions', 'p_promotion_code', 'p_distance_km', 'p_order_mode', 'p_scheduled_date', 'p_branch_id', 'p_client_submit_key'].includes(k))).toBe(true)
       expect(args).not.toContain('p_total_amount')
       expect(args).not.toContain('p_delivery_fee')
       expect(args).not.toContain('p_subtotal')
@@ -336,3 +337,109 @@ describe('§18 payment — COD never paid before delivery; Stripe server-only; r
   })
 })
 
+
+describe('create_order_with_items_i — client submit key (migration 124 / WAVE 5A)', () => {
+  const baseParams = (key?: string) => ({
+    p_items: [{ product_id: 'prod-1', quantity: 1 }],
+    p_delivery_round_id: 'round-1',
+    p_customer_name: 'Idempotency Test User', // unique — isolates rows from other tests
+    p_order_mode: 'SAME_DAY',
+    ...(key !== undefined ? { p_client_submit_key: key } : {}),
+  })
+
+  it('same key + same payload → replay of the ORIGINAL order (no second order)', async () => {
+    const first = await supabase.rpc('create_order_with_items_i', baseParams('CK-e2e-replay'))
+    expect(first.error).toBeNull()
+    expect(first.data.replay).toBeUndefined()
+    const second = await supabase.rpc('create_order_with_items_i', baseParams('CK-e2e-replay'))
+    expect(second.error).toBeNull()
+    expect(second.data.order_number).toBe(first.data.order_number)
+    expect(second.data.id).toBe(first.data.id)
+    expect(second.data.replay).toBe(true)
+    const rows = ((await supabase.from('orders').select('*')).data as any[]).filter((o: any) => o.customer_name === 'Idempotency Test User')
+    expect(rows).toHaveLength(1) // ONE order despite TWO submits
+  })
+
+  it('R3 replay returns the CURRENT status, not the submit-time snapshot', async () => {
+    const first = await supabase.rpc('create_order_with_items_i', baseParams('CK-e2e-status'))
+    expect(first.error).toBeNull()
+    const rows = (supabase as any).__tables['orders'] as any[]
+    const row = rows.find((o: any) => o.order_number === first.data.order_number)
+    row.status = 'confirmed'
+    row.payment_status = 'paid'
+    const replay = await supabase.rpc('create_order_with_items_i', baseParams('CK-e2e-status'))
+    expect(replay.data.replay).toBe(true)
+    expect(replay.data.status).toBe('confirmed')
+    expect(replay.data.payment_status).toBe('paid')
+  })
+
+  it('same key + DIFFERENT payload → ERR_IDEMPOTENCY_CONFLICT (no new order)', async () => {
+    const ok = await supabase.rpc('create_order_with_items_i', baseParams('CK-e2e-conflict'))
+    expect(ok.error).toBeNull()
+    const before = ((await supabase.from('orders').select('*')).data as any[]).length
+    const conflict = await supabase.rpc('create_order_with_items_i', {
+      ...baseParams('CK-e2e-conflict'),
+      p_items: [{ product_id: 'prod-1', quantity: 2 }], // different payload
+    })
+    expect(conflict.error?.code).toBe('ERR_IDEMPOTENCY_CONFLICT')
+    expect(conflict.data).toBeNull()
+    const after = ((await supabase.from('orders').select('*')).data as any[]).length
+    expect(after).toBe(before) // nothing created
+  })
+
+  it('R2 fail closed: invalid keys are rejected BEFORE any order is created', async () => {
+    const before = ((await supabase.from('orders').select('*')).data as any[]).length
+    for (const bad of ['', '   ', 'x'.repeat(129), 'CK-a\u0007b']) {
+      const res = await supabase.rpc('create_order_with_items_i', baseParams(bad))
+      expect(res.error?.code).toBe('ERR_IDEMPOTENCY_KEY_INVALID')
+      expect(res.data).toBeNull()
+    }
+    const after = ((await supabase.from('orders').select('*')).data as any[]).length
+    expect(after).toBe(before) // zero orders created by rejected keys
+  })
+
+  it('key omitted → legacy path still works (no idempotency semantics)', async () => {
+    const a = await supabase.rpc('create_order_with_items_i', baseParams())
+    const b = await supabase.rpc('create_order_with_items_i', baseParams())
+    expect(a.error).toBeNull()
+    expect(b.error).toBeNull()
+    expect(a.data.replay).toBeUndefined()
+    expect(a.data.order_number).not.toBe(b.data.order_number) // legacy = NEW order per call
+  })
+
+  it('client createOrder wires the key end-to-end and throws OrderSubmitError on conflict', async () => {
+    const { createOrder, orderInputFingerprint, OrderSubmitError } = await import('@/lib/bmbAdminApi_orders')
+    const input = {
+      items: [{ product_id: 'prod-1', quantity: 1 }],
+      delivery_round_id: 'round-1',
+      customer_name: 'Somchai Rakdee',
+      order_mode: 'SAME_DAY' as const,
+    }
+    // fingerprint: deterministic per payload, changes when the payload is edited
+    expect(orderInputFingerprint(input)).toBe(orderInputFingerprint({ ...input }))
+    expect(orderInputFingerprint(input)).not.toBe(
+      orderInputFingerprint({ ...input, items: [{ product_id: 'prod-1', quantity: 3 }] }),
+    )
+
+    const first = await createOrder({ ...input, client_submit_key: 'CK-client-wire' })
+    expect(first).not.toBeNull()
+    const replayed = await createOrder({ ...input, client_submit_key: 'CK-client-wire' })
+    expect(replayed!.order_number).toBe(first!.order_number)
+    expect(replayed!.replay).toBe(true) // double-submit ⇒ SAME order (R3)
+
+    // same key + EDITED payload → typed throw (UI surfaces it; no new order)
+    try {
+      await createOrder({
+        ...input,
+        items: [{ product_id: 'prod-1', quantity: 3 }],
+        client_submit_key: 'CK-client-wire',
+      })
+      throw new Error('expected OrderSubmitError')
+    } catch (e) {
+      expect(e).toBeInstanceOf(OrderSubmitError)
+      expect((e as InstanceType<typeof OrderSubmitError>).code).toBe('ERR_IDEMPOTENCY_CONFLICT')
+    }
+    // invalid key → typed throw too (fail closed before create)
+    await expect(createOrder({ ...input, client_submit_key: '   ' })).rejects.toThrow('ERR_IDEMPOTENCY_KEY_INVALID')
+  })
+})

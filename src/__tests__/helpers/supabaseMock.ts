@@ -10,6 +10,8 @@
 // The user is planning a full Supabase reset + rebuild later (001→004); until
 // then the whole suite must be green offline.
 
+import { payloadFingerprint, hasControlChar } from '@/lib/orderSubmitKey'
+
 export interface MockRow {
   [key: string]: any
 }
@@ -62,6 +64,12 @@ export function createSupabaseMock(opts?: { failReadTable?: string; noAdmin?: bo
   // STEP 3B-2C: when true, order_ready_to_make behaves as the server does for a
   // NON-admin caller (ERR_FORBIDDEN) — mirrors is_admin() = false in migr 054.
   let mockNoAdmin = !!opts?.noAdmin
+  // ===== migration 124 mirror — order_submissions (client submit key) =====
+  // Reproduces create_order_with_items_i: R2 key policy (fail closed BEFORE
+  // creating), R1 payload fingerprint conflict, R3 replay (stored identity +
+  // CURRENT status + replay:true). Core creation delegates to the
+  // create_order_with_items handler below (same server-authoritative rules).
+  const orderSubmissions = new Map<string, { owner: string; fp: string; result: any }>()
 
   function from(table: string) {
     let filters: Array<{ col: string; val: any }> = []
@@ -168,6 +176,45 @@ export function createSupabaseMock(opts?: { failReadTable?: string; noAdmin?: bo
   // client payload must NOT carry financial fields; server computes everything,
   // validates the order-mode gate / scheduled-date invariant / capacity.
   async function rpc(name: string, params: any): Promise<{ data: any; error: any }> {
+    // ===== migration 124 — create_order_with_items_i (19-arg wrapper) =====
+    if (name === 'create_order_with_items_i') {
+      const rawKey = (params as any)?.p_client_submit_key
+      const core: any = { ...(params ?? {}) }
+      delete core.p_client_submit_key
+      if (rawKey === undefined || rawKey === null) {
+        // legacy contract: no key → original function, no idempotency
+        return rpc('create_order_with_items', core)
+      }
+      // R2: btrim(spaces) + cap 128 + no control chars → fail closed BEFORE create
+      const key = String(rawKey).replace(/^ +| +$/g, '')
+      if (key === '' || key.length > 128 || hasControlChar(key)) {
+        return { data: null, error: { code: 'ERR_IDEMPOTENCY_KEY_INVALID', message: 'ERR_IDEMPOTENCY_KEY_INVALID' } }
+      }
+      // R1 fingerprint over the canonical args (minus the key itself)
+      const owner = `${MOCK_USER}|${(params as any)?.p_customer_ref ?? ''}`
+      const fp = payloadFingerprint(core)
+      const prev = orderSubmissions.get(key)
+      if (prev) {
+        if (prev.owner !== owner || prev.fp !== fp) {
+          return { data: null, error: { code: 'ERR_IDEMPOTENCY_CONFLICT', message: 'ERR_IDEMPOTENCY_CONFLICT' } }
+        }
+        // R3 replay: stored identity + CURRENT status + replay:true (SELECT only)
+        const replayed: any = { ...clone(prev.result), replay: true }
+        const cur = (tables['orders'] || []).find((o: any) => o.order_number === prev.result.order_number)
+        if (cur) {
+          replayed.status = cur.status
+          replayed.payment_status = cur.payment_status
+        }
+        return { data: replayed, error: null }
+      }
+      const created = await rpc('create_order_with_items', core)
+      if (created.error) return created // failed → tx rollback → NO submission row
+      if (!created.data || typeof created.data.order_number !== 'string' || String(created.data.order_number).trim() === '') {
+        return { data: null, error: { code: 'ERR_IDEMPOTENCY_BAD_RESULT', message: 'ERR_IDEMPOTENCY_BAD_RESULT' } }
+      }
+      orderSubmissions.set(key, { owner, fp, result: clone(created.data) })
+      return created
+    }
     if (name === 'create_order_with_items') {
       const p: any = { ...(params ?? {}) }
       // Client sends p_* prefixed keys matching the real RPC signature (2026-09-19 fix).
@@ -1243,6 +1290,7 @@ if (name === 'customer_intelligence') {
     __setNoAdmin: setNoAdmin,
     __tables: tables,
     __reset() {
+      orderSubmissions.clear()
       const fresh = clone(seed) as Record<string, MockRow[]>
       for (const k of Object.keys(fresh)) tables[k] = fresh[k]
       for (const k of Object.keys(tables)) {
