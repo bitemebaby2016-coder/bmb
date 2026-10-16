@@ -62,8 +62,45 @@ async function rest(method: string, path: string, body?: unknown) {
   return { status: r.status, j }
 }
 
+/** Publish to the Page feed — plain text or multi-photo with real menu images
+ *  (Owner 2026-10-16: auto posts must use the real menu images). Photos are
+ *  uploaded unpublished first, then attached to a single feed post. */
+async function publishToFeed(pageId: string, message: string, imageUrls: string[]) {
+  const form = new URLSearchParams()
+  form.set('message', message)
+  const photos: string[] = []
+  for (const url of imageUrls.slice(0, 4)) {
+    const upForm = new URLSearchParams()
+    upForm.set('url', url)
+    upForm.set('published', 'false')
+    const upRes = await fetch(`${GRAPH}/${pageId}/photos`, {
+      method: 'POST',
+      headers: { Authorization: 'Bearer ' + PAGE_TOKEN, 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: upForm.toString(),
+    })
+    const upJ = await upRes.json().catch(() => null)
+    if (!upRes.ok || !upJ?.id) {
+      const reason = (upJ && (upJ.error?.message || '')) || `HTTP ${upRes.status}`
+      return { ok: false as const, reason }
+    }
+    photos.push(upJ.id)
+  }
+  photos.forEach((id, i) => form.set(`attached_media[${i}]`, JSON.stringify({ media_fbid: id })))
+  const pubRes = await fetch(`${GRAPH}/${pageId}/feed`, {
+    method: 'POST',
+    headers: { Authorization: 'Bearer ' + PAGE_TOKEN, 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: form.toString(),
+  })
+  const pubJ = await pubRes.json().catch(() => null)
+  if (!pubRes.ok || !pubJ?.id) {
+    const reason = (pubJ && (pubJ.error?.message || '')) || `HTTP ${pubRes.status}`
+    return { ok: false as const, reason }
+  }
+  return { ok: true as const, id: pubJ.id as string, photos }
+}
+
 /** Publish an APPROVED post draft to the Page feed — idempotent by draft id. */
-async function publishDraft(approvalId: string) {
+async function publishDraft(approvalId: string, imageUrls: string[] = []) {
   // 1) the approval row must be an APPROVED post (never pending/rejected)
   const rowRes = await rest('GET', `/rest/v1/content_approvals?id=eq.${encodeURIComponent(approvalId)}&select=id,title,body,status,content_type`)
   if (rowRes.status !== 200 || !Array.isArray(rowRes.j) || rowRes.j.length === 0) {
@@ -99,19 +136,12 @@ async function publishDraft(approvalId: string) {
     return { ok: false, error: 'ERR_META_PAGE_RESOLVE', detail: reason, http: 502 }
   }
 
-  // 4) publish the feed post (message = the approved body)
-  const form = new URLSearchParams()
-  form.set('message', `${row.title}\n\n${row.body}`.trim())
-  const pubRes = await fetch(`${GRAPH}/${pageJ.id}/feed`, {
-    method: 'POST',
-    headers: { Authorization: 'Bearer ' + PAGE_TOKEN, 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: form.toString(),
-  })
-  const pubJ = await pubRes.json().catch(() => null)
-  if (!pubRes.ok || !pubJ?.id) {
-    const reason = (pubJ && (pubJ.error?.message || '')) || `HTTP ${pubRes.status}`
-    await auditFailure(approvalId, reason)
-    return { ok: false, error: 'ERR_META_PUBLISH', detail: reason, http: 502 }
+  // 4) publish the feed post (message = the approved body; real menu images
+  //    when provided — multi-photo via unpublished /photos + attached_media)
+  const published = await publishToFeed(pageJ.id, `${row.title}\n\n${row.body}`.trim(), imageUrls)
+  if (!published.ok) {
+    await auditFailure(approvalId, published.reason)
+    return { ok: false, error: 'ERR_META_PUBLISH', detail: published.reason, http: 502 }
   }
 
   // 5) record the outcome on the approval row (status stays 'approved' — the
@@ -119,10 +149,11 @@ async function publishDraft(approvalId: string) {
   const meta = {
     page_id: pageJ.id,
     page_name: pageJ.name || null,
-    post_id: pubJ.id,
+    post_id: published.id,
+    image_count: published.photos.length,
     published_at: new Date().toISOString(),
   }
-  await rest('PATCH', `/rest/v1/content_approvals?id=eq.${encodeURIComponent(approvalId)}`, { review_note: 'PUBLISHED ' + pubJ.id })
+  await rest('PATCH', `/rest/v1/content_approvals?id=eq.${encodeURIComponent(approvalId)}`, { review_note: 'PUBLISHED ' + published.id })
   await rest('POST', '/rest/v1/audit_logs', {
     id: 'g9-publish-' + approvalId,
     action: 'social.publish',
@@ -158,7 +189,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
 
   if (!PAGE_TOKEN) return json({ error: 'ERR_NO_PAGE_TOKEN', hint: 'set META_PAGE_ACCESS_TOKEN secret' }, 503)
 
-  let body: { approvalId?: string }
+  let body: { approvalId?: string; imageUrls?: unknown }
   try {
     body = await req.json()
   } catch {
@@ -166,8 +197,12 @@ Deno.serve(async (req: Request): Promise<Response> => {
   }
   const approvalId = (body.approvalId || '').trim()
   if (!approvalId) return json({ error: 'ERR_INVALID_APPROVAL' }, 400)
+  // optional real menu/product images (https only, max 4) — Owner 2026-10-16
+  const imageUrls = Array.isArray(body.imageUrls)
+    ? body.imageUrls.filter((u): u is string => typeof u === 'string' && /^https:\/\//.test(u)).slice(0, 4)
+    : []
 
-  const result = await publishDraft(approvalId)
+  const result = await publishDraft(approvalId, imageUrls)
   const http = result.ok ? 200 : (result.http ?? 500)
   // No secrets, no tokens in the response — page/post ids and errors only.
   return json(result, http)
