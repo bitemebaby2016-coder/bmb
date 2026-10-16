@@ -19,6 +19,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '@/lib/supabase'
 import { getOrdersByStatuses, getDeliveryAssignmentsFor, updateOrderStatus } from '@/lib/bmbAdminApi_orders'
+import { resolveOrderDeliveryAddress } from '@/lib/orderAddress'
 import type { OrderForm, DeliveryAssignmentLiteRow } from '@/lib/bmbAdminApi_orders'
 import { adminListDrivers, assignDriver, adminAdvanceDelivery, upsertDriver, linkDriverUser, getDriverAccounts, driverErrorText, type AdminDriverRow, type DriverAccountRow } from '@/lib/driverService'
 import { getUsers, type User } from '@/lib/bmbAdminApi_users'
@@ -329,7 +330,7 @@ export function DeliveryManagement() {
                           <img src={photoByUser[o.customer_ref]} alt="รูปสถานที่จัดส่ง" className="w-9 h-9 object-cover rounded border border-brand-border" />
                         </a>
                       ) : null}
-                      📍 {o.delivery_address || '—'}
+                      📍 {resolveOrderDeliveryAddress(o) || '—'}
                     </span>
                   </div>
                   {/* exception visibility: order not dispatchable but assignment active */}

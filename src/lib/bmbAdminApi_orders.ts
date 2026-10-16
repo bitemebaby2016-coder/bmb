@@ -3,6 +3,7 @@
 // ============================================
 
 import { supabase } from './supabase'
+import { resolveOrderDeliveryAddress } from './orderAddress'
 
 // P0-4 SPLIT (2026-09-18):
 //   OrderInput  — client payload (INPUT ONLY, no financial authority)
@@ -69,6 +70,8 @@ export interface OrderForm {
   payment_method: string
   payment_status: string
   delivery_address: string
+  // canonical written address column (orders.dropoff_detail) — fallback source
+  dropoff_detail?: string | null
   dropoff_latitude: number
   dropoff_longitude: number
   items: Array<{
@@ -99,8 +102,14 @@ export interface OrderForm {
  * Keeps the existing OrderForm.items contract used across Admin/Orders pages.
  */
 export async function hydrateOrderItems(orders: OrderForm[]): Promise<OrderForm[]> {
-  const withId = (orders || []).filter((o) => !!o.id)
-  if (withId.length === 0) return orders || []
+  // WAVE 5B parity fix (2026-10-16): Production orders has NO delivery_address
+  // column — the canonical written address is dropoff_detail (RPC maps
+  // p_delivery_address -> dropoff_detail). Normalize every row through the safe
+  // fallback so admin reads (เช่น DeliveryManagement ที่อยู่จัดส่ง) แสดงที่อยู่จริง.
+  const list = orders || []
+  for (const o of list) o.delivery_address = resolveOrderDeliveryAddress(o)
+  const withId = list.filter((o) => !!o.id)
+  if (withId.length === 0) return list
   const ids = Array.from(new Set(withId.map((o) => o.id as string)))
   let data: any[] | null = null
   try {
@@ -125,7 +134,7 @@ export async function hydrateOrderItems(orders: OrderForm[]): Promise<OrderForm[
       customizations: oi.customizations || {},
     }))
   }
-  return orders || []
+  return list
 }
 
 // ============================================
