@@ -27,12 +27,14 @@ function readToken() {
 
 // Page id จริงของเพจหลัก (จาก social_events.page_id ที่ probe เจอ)
 const PAGE_ID = process.env.META_PAGE_ID || '862940416913026'
-const FIELDS = 'messages,messaging_postbacks,messaging_optins,messaging_referrals,feed,messages_postbacks'
+// เฉพาะ field ที่ Meta รับจริง (ตัด messages_postbacks ออก — ไม่มีใน enum ของ Graph API)
+const FIELDS = 'feed,messages,messaging_postbacks,messaging_optins,messaging_referrals'
 
-async function graph(path, params) {
+async function graph(path, params, method) {
   const url = new URL('https://graph.facebook.com/v21.0/' + path)
+  const m = method || (params ? 'POST' : 'GET')
   for (const [k, v] of Object.entries(params || {})) url.searchParams.set(k, v)
-  const r = await fetch(url, { method: params ? 'POST' : 'GET' })
+  const r = await fetch(url, { method: m })
   return { status: r.status, body: await r.json().catch(() => ({})) }
 }
 
@@ -41,11 +43,11 @@ async function graph(path, params) {
   if (!token) { console.error('NO_TOKEN: ใส่ META_PAGE_ACCESS_TOKEN ใน .env.local ก่อน'); process.exit(1) }
 
   // 1) สมัคร app เข้ากับเพจ พร้อม fields ที่ต้องรับ
-  const sub = await graph(PAGE_ID + '/subscribed_apps', { subscribed_fields: FIELDS, access_token: token })
+  const sub = await graph(PAGE_ID + '/subscribed_apps', { subscribed_fields: FIELDS, access_token: token }, 'POST')
   console.log('SUBSCRIBE', sub.status, JSON.stringify(sub.body))
 
-  // 2) ตรวจผล
-  const check = await graph(PAGE_ID + '/subscribed_apps', { access_token: token })
+  // 2) ตรวจผล (GET — ไม่ใช่ POST)
+  const check = await graph(PAGE_ID + '/subscribed_apps', { access_token: token }, 'GET')
   console.log('CHECK', check.status, JSON.stringify(check.body))
   console.log('ถ้า CHECK แสดง fields ครบ (มี messages) → ทัก Messenger ทดสอบได้เลย')
 })().catch((e) => { console.error('META_SUB_ERR', String(e.message || e).slice(0, 400)); process.exit(1) })

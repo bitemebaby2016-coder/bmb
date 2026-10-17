@@ -38,7 +38,7 @@
 | # | งาน | สถานะจริง |
 |---|---|---|
 | 0 | 🔴 **งบ OpenRouter ใกล้หมด** — key limit $155.00/$160 (เหลือ $5, 97% ณ 10:22 น. 17 ต.ค. ที่มา: หน้า OpenRouter ของ Owner) — AI ตอบคอมเมนต์/Messenger/แชต จะหยุดเมื่อถึงเพดาน | ⬜ **ต้องขึ้น key limit/เติมงบก่อนเทสต์ AI จริง** |
-| 0b | 🔴 **Messenger: AI ไม่ตอบ — probe จริงพบว่าข้อความที่ทักเข้าไม่เข้าระบบเลย**: `social_events` ไม่มี event แบบ `message` มาตั้งแต่ 6 ต.ค. (12 DUPLICATE + 2 RECEIVED ค้าง content ว่าง) ขณะที่ comment เข้าปกติ + AI ตอบสำเร็จ (16 ต.ค.) → webhook ใช้ได้ แต่ field **`messages` ไม่ได้ subscribe** | ⬜ รัน `node e2e/metaSubscribeMessages.cjs` (ใส่ META_PAGE_ACCESS_TOKEN) หรือ subscribe `messages` ใน Meta App Dashboard แล้วทักใหม่ |
+| 0b | **Messenger: AI ไม่ตอบ** — probe จริงพบว่าข้อความไม่เข้าระบบเลยตั้งแต่ 6 ต.ค. (`social_events` ไม่มี event แบบ `message`) ขณะที่ comment เข้าปกติ → สาเหตุคือ field `messages` ไม่ได้ subscribe → **สมัครแล้วสำเร็จ 17 ต.ค.** (`subscribed_fields: feed, messages, messaging_postbacks, messaging_optins, messaging_referrals`) | ✅ subscribe แล้ว — ⬜ รอ Owner ทัก Messenger เข้าเพจ "BITE ME BABY - Main Page TH" ใหม่เพื่อยืนยัน AI ตอบ |
 | 1 | **เทสต์รับจริง** same-day 1 ใบ + pre-order 1 ใบ (เพื่อน 085 810 1984, ≤300฿) ผ่านสายจริง: จ่าย → Admin confirm → ครัว → ส่ง → เช็ค `📍dropoff_detail` + tracking | ⬜ ยังไม่มีออเดอร์จริงสักใบ — ระบบพร้อม (runbook §C–E) |
 | 2 | **เทสต์ Messenger จริง** — ทักแชทเพจ "สวัสดีครับ มีอะไรน่ากินบ้าง" → น้อง Bite ตอบ ≤ ~1 นาที | ⬜ code+deploy แล้ว (ที่มา: แฮนด์ออฟ 17 ต.ค.) ขาดผู้ใช้จริง |
 | 3 | **เปิด `QUICK_LOGIN_REQUIRE_OTP=true`** ใน EF `phone-auto-login` แล้วเทสต์ OTP มือถือจริง | ⬜ default = ปิดอยู่ (โค้ดบรรทัด 50) — ใครรู้เบอร์เข้าบัญชีลูกค้าได้ · เงื่อนไข SMS จริงผ่านแล้ว |
