@@ -10,8 +10,10 @@ import { GlassCard } from '@/components/ui/GlassCard'
 import { useDeliveryRouter, type LatLng } from '@/stores/useDeliveryRouter'
 import { usePlatformConfig } from '@/config/platformConfig'
 import { fetchServerDeliveryFee, type DeliveryFeeQuote } from '@/lib/deliveryFeeApi'
+import { KITCHEN_LAT, KITCHEN_LNG } from '@/store/locationStore'
 
 export interface DistanceCheckerProps {
+  /** Routing origin — defaults to the shop kitchen (delivery always starts there). */
   origin?: LatLng | null
   /** Controlled destination (from geolocation / map pin). */
   destination?: LatLng | null
@@ -45,10 +47,17 @@ export function DistanceChecker({ origin = null, destination = null, label = '�
     return () => { cancelled = true }
   }, [destination, quote])
 
+  // Owner 2026-10-17 (แก้ "ระยะทาง 0.00 กม."): เดิมไม่เคยส่ง origin เข้า
+  // useDeliveryRouter → routeOrder คำนวณระยะทางเป็น 0 เสมอ ทั้งที่ลูกค้าอยู่ห่าง
+  // ครัว ~500 ม. — ใช้พิกัดครัวเป็น origin เริ่มต้น (ค่า display เท่านั้น
+  // server คำนวณค่าส่งจริงอีกครั้งตอนสร้างออเดอร์)
+  const originLat = origin?.latitude ?? KITCHEN_LAT
+  const originLng = origin?.longitude ?? KITCHEN_LNG
+
   // Hydrate the store from props without re-evaluating on every keystroke.
   useEffect(() => {
-    setOrigin(origin)
-  }, [origin, setOrigin])
+    setOrigin({ latitude: originLat, longitude: originLng })
+  }, [originLat, originLng, setOrigin])
 
   useEffect(() => {
     if (timer.current) clearTimeout(timer.current)

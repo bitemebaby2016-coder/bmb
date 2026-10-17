@@ -102,11 +102,16 @@ export function DeliveryMapPicker({ latitude, longitude, onPick }: DeliveryMapPi
 
   return (
     <div className="mb-3" data-testid="delivery-map-picker">
-      <div
-        ref={mapRef}
-        data-testid="delivery-map-canvas"
-        className="w-full h-64 rounded-xl border-2 border-brand-border"
-      />
+      {/* Owner 2026-10-17 (แก้ "แผนที่ซ้ำ/ค้าง"): เดิม canvas เปล่า h-64 แสดงค้าง
+          ทับกับกล่อง fallback ตอน Maps โหลดไม่สำเร็จ → ดูเหมือนแผนที่ 2 อัน
+          — แสดง canvas เฉพาะตอน loading/ready เท่านั้น */}
+      {status !== 'unavailable' && (
+        <div
+          ref={mapRef}
+          data-testid="delivery-map-canvas"
+          className="w-full h-64 rounded-xl border-2 border-brand-border"
+        />
+      )}
       {status === 'loading' && (
         <p className="text-xs text-brand-muted mt-1" data-testid="map-status">⏳ กำลังโหลดแผนที่…</p>
       )}

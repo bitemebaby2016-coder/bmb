@@ -35,6 +35,7 @@ import { resolvePublicBranch } from '@/lib/brandResolver'
 import { getProducts } from '@/lib/bmbAdminApi_products'
 import { revalidateWithCatalog, reportToToastMessage } from '@/lib/cartPersistence'
 import { isBangkokCutoffPassed } from '@/lib/bangkokTime'
+import { roundBookability, roundStatusLabel } from '@/lib/deliveryRoundStatus'
 import { getTrustedGpsLocation } from '@/lib/locationLogin'
 import { DeliveryMapPicker } from '@/components/delivery/DeliveryMapPicker'
 import type { OrderMode } from '@/config/platformConfig'
@@ -182,6 +183,9 @@ export function CheckoutPage() {
   }
 
   // ✅ Canonical rounds for the selected date (deterministic ids, DB authority).
+  // Owner 2026-10-17 "รอบส่งมั่ว": auto-select the FIRST still-bookable round —
+  // rows past cutoff/delivery window show as disabled (display mirror only; the
+  // create RPC remains the authority and re-checks everything at order time).
   useEffect(() => {
     if (!customer) return // guests are redirected above — skip fetch (no 401 noise)
     let active = true
@@ -189,7 +193,12 @@ export function CheckoutPage() {
       const list = await listRoundsForDate(scheduledDate)
       if (!active) return
       setRounds(list)
-      setSelectedRoundId((prev) => (list.some((r) => r.id === prev) ? prev : (list[0]?.id ?? '')))
+      setSelectedRoundId((prev) => {
+        const isToday = scheduledDate === todayStr()
+        const prevRow = list.find((r) => r.id === prev)
+        if (prevRow && roundBookability(prevRow, { isToday }) === 'open') return prev
+        return list.find((r) => roundBookability(r, { isToday }) === 'open')?.id ?? ''
+      })
     })()
     return () => { active = false }
   }, [scheduledDate, customer])
@@ -741,7 +750,8 @@ export function CheckoutPage() {
 
       {/* Mode banner — ONE canonical checkout, mode decides date/round UX */}
       <div className={`mb-6 border-2 p-4 rounded-xl ${orderMode === 'PRE_ORDER' ? 'bg-blue-50 border-blue-200' : 'bg-orange-50 border-orange-200'}`}>
-        <h3 className="font-bold text-brand-accent mb-1">
+        {/* พื้น banner เป็นสีอ่อน → หัวข้อต้องสีเข้มเสมอ (dark mode เห็นชัด) */}
+        <h3 className="font-bold text-slate-900 mb-1">
           {orderMode === 'PRE_ORDER' ? '📅 สั่งซื้อแบบจองล่วงหน้า (Pre-order)' : '🔥 สั่งซื้อวันนี้ (Same-day)'}
         </h3>
         {orderMode === 'PRE_ORDER' ? (
@@ -769,7 +779,7 @@ export function CheckoutPage() {
               📅 วันที่ {scheduledDate} เปิดเมนูจำกัด ({daySchedule.length} รายการ) — สินค้าที่ไม่อยู่ในเมนูวันนี้ server จะปฏิเสธ (ERR_PRODUCT_NOT_ON_MENU)
             </div>
           ) : (
-            <div data-testid="schedule-banner" className="mt-2 p-2 rounded-lg bg-gray-50 border border-gray-200 text-xs text-brand-muted">
+            <div data-testid="schedule-banner" className="mt-2 p-2 rounded-lg bg-gray-50 border border-gray-200 text-xs text-slate-600">
               ไม่มีเมนูจำกัดพิเศษสำหรับวันที่ {scheduledDate} — ใช้เงื่อนไข pre-order ปกติ
             </div>
           )}
@@ -787,22 +797,36 @@ export function CheckoutPage() {
           <div className="space-y-3">
             {rounds.map((r) => {
               const remaining = Math.max(0, Number(r.max_capacity) - Number(r.current_count))
+              const status = roundBookability(r, { isToday: scheduledDate === today })
+              const closed = status !== 'open'
+              const selected = selectedRoundId === r.id
               return (
-                <label key={r.id} className={`flex items-start gap-3 p-3 rounded-lg border-2 cursor-pointer transition-colors ${selectedRoundId === r.id ? 'border-brand-primary bg-orange-50' : 'border-brand-border hover:border-brand-primary/50'}`}>
+                <label
+                  key={r.id}
+                  data-testid={`round-row-${r.id}`}
+                  className={`flex items-start gap-3 p-3 rounded-lg border-2 transition-colors ${selected ? 'border-brand-primary bg-orange-50' : 'border-brand-border hover:border-brand-primary/50'} ${closed ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}`}
+                >
                   <input
                     type="radio"
                     name="round"
                     value={r.id}
-                    checked={selectedRoundId === r.id}
+                    checked={selected}
+                    disabled={closed}
                     onChange={() => setSelectedRoundId(r.id)}
                     className="w-5 h-5 mt-1"
                   />
                   <div className="min-w-0 flex-1">
-                    <div className="font-medium">{r.display_name || r.round_key || r.id}</div>
-                    <div className="text-xs text-brand-muted">
-                      ส่ง {String(r.delivery_start).slice(0, 5)}–{String(r.delivery_end).slice(0, 5)} · สั่งได้ถึง {String(r.cutoff_time).slice(0, 5)} · เหลือ {remaining} ที่
+                    {/* พื้นปุ่มเลือกเป็นสีครีม (bg-orange-50) → ตัวอักษรต้องเข้มเสมอ ห้ามใช้สีธีม */}
+                    <div className={`font-medium ${selected ? 'text-slate-900' : ''}`}>{r.display_name || r.round_key || r.id}</div>
+                    <div className={`text-xs ${selected ? 'text-slate-600' : 'text-brand-muted'}`}>
+                      ส่ง {String(r.delivery_start).slice(0, 5)}–{String(r.delivery_end).slice(0, 5)} · สั่งได้ถึง {String(r.cutoff_time).slice(0, 5)} · {closed ? roundStatusLabel(status) : `เหลือ ${remaining} ที่`}
                     </div>
                   </div>
+                  {closed && (
+                    <span className="text-[10px] font-semibold px-2 py-1 rounded-full bg-slate-200 text-slate-700 whitespace-nowrap">
+                      {roundStatusLabel(status)}
+                    </span>
+                  )}
                 </label>
               )
             })}
@@ -872,8 +896,9 @@ export function CheckoutPage() {
         <h3 className="font-bold text-brand-accent mb-4">🛵 ช่องทางจัดส่ง</h3>
         <div className="flex items-start gap-3 p-3 rounded-lg border-2 border-brand-primary bg-orange-50">
           <div className="flex-1">
-            <div className="font-medium">Bite Me Baby Delivery (ระบบเลือกช่องทางให้)</div>
-            <div className="text-xs text-brand-muted">
+            {/* พื้นครีม → ตัวอักษรเข้มเสมอ (เดิมใช้สีธีม ทำให้ขาวบนขาวใน dark mode) */}
+            <div className="font-medium text-slate-900">Bite Me Baby Delivery (ระบบเลือกช่องทางให้)</div>
+            <div className="text-xs text-slate-600">
               เซิร์ฟเวอร์คำนวณระยะทาง ช่องทาง และค่าส่งจริงตอนสร้างออเดอร์ (ลูกค้าไม่ส่งค่าส่งเอง)
             </div>
           </div>
@@ -888,7 +913,7 @@ export function CheckoutPage() {
                   >
                     {ui.label}
                   </div>
-                  <div className="text-[10px] text-brand-muted">{ui.detail}</div>
+                  <div className="text-[10px] text-slate-600">{ui.detail}</div>
                   {ui.tone === 'error' && (
                     <button type="button" className="btn btn-ghost btn-xs mt-1" onClick={() => setFeeRetry((n) => n + 1)}>
                       ลองคำนวณใหม่
@@ -985,7 +1010,7 @@ export function CheckoutPage() {
         disabled={isProcessing || !selectedRoundId}
         className="btn btn-primary w-full text-lg py-4 disabled:opacity-50 disabled:cursor-not-allowed"
       >
-        {isProcessing ? '⏳ กำลังยืนยัน...' : !selectedRoundId ? '⚠️ เลือกรอบจัดส่งก่อน' : `✅ ยืนยันสั่งซื้อ${orderMode === 'PRE_ORDER' ? ' (จองล่วงหน้า)' : ''}`}
+        {isProcessing ? '⏳ กำลังยืนยัน...' : !selectedRoundId ? (rounds.length > 0 ? '⚠️ ยังไม่มีรอบที่เปิดรับสำหรับวันนี้' : '⚠️ เลือกรอบจัดส่งก่อน') : `✅ ยืนยันสั่งซื้อ${orderMode === 'PRE_ORDER' ? ' (จองล่วงหน้า)' : ''}`}
       </button>
     </div>
   )

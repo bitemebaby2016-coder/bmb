@@ -813,7 +813,7 @@ p { color: var(--color-brand-text-secondary); }
   overflow-x: auto;
   scroll-snap-type: x proximity;
   -webkit-overflow-scrolling: touch;
-  padding: 4px;
+  padding: 22px 4px 4px; /* 22px บน = เว้นที่ให้รูปเมนูยกเหนือกรอบ (Owner 2026-10-17) โดยไม่ถูก scroll-clip */
   scrollbar-width: none;
 }
 .hc-track::-webkit-scrollbar { display: none; }
@@ -1303,7 +1303,7 @@ html[data-theme='dark'] .fmc-prep-pill, html[data-theme='graphite'] .fmc-prep-pi
   position: relative;
   width: 100%;
   aspect-ratio: 4 / 3;
-  overflow: hidden;
+  overflow: visible; /* Owner 2026-10-17: รูปเมนูลอยเหนือกรอบได้ — ห้าม clip */
   border-radius: 16px 16px 0 0;
   background: linear-gradient(to bottom, #FFF7ED, #fff);
 }
@@ -1346,12 +1346,28 @@ html[data-theme='dark'] .fmc-chip-status, html[data-theme='graphite'] .fmc-chip-
   color: #FCA5A5;
 }
 
-/* --- hover: รูปเมนูลอยเหนือกรอบ (ทุกการ์ด) --- */
-.drink-card, .snack-card, .home-card, .fmc-card, .menu-card { position: relative; }
+/* --- hover: รูปเมนูลอยเหนือกรอบ (ทุกการ์ด) ---
+   Owner 2026-10-17: รูปเมนู "ลอยเหนือกรอบของตัวเองขึ้นด้านบนนิดหน่อย" ตั้งแต่
+   สถานะปกติ (มือถือดูเหมือนมี hover ตลอด) ส่วนเดสก์ท็อป hover = ขยับขึ้นอีก
+   ชั้นจากจุดที่ยกอยู่แล้ว (รูป pointer-events: none — กันกินพื้นที่แตะของการ์ดข้าง) */
+.drink-card, .snack-card, .home-card, .fmc-card, .menu-card { position: relative; overflow: visible; }
+/* การ์ดแนวตั้ง (หน้าเมนู) — เว้นที่เหนือการ์ดให้รูปยกไม่ทับหัวข้อเซกชัน */
+.fmc-card, .menu-card { margin-top: 18px; }
+.drink-card-media, .snack-card-media, .home-card-media, .fmc-img-wrap, .menu-card-media { overflow: visible; }
 .drink-card-media, .snack-card-media, .home-card-media { border-radius: 20px 20px 0 0; }
 .drink-card-media img, .snack-card-media img, .home-card-media img, .fmc-img, .menu-card-media img {
   transition: transform 0.32s ease, box-shadow 0.32s ease, border-radius 0.32s ease;
+  position: relative;
+  z-index: 5;
+  pointer-events: none;
+  /* สถานะปกติ = ยกเหนือกรอบนิดหน่อย (กรอบ/เงา เหมือน hover อ่อน ๆ) */
+  transform: translateY(-10px) scale(1.04);
+  border-radius: 18px;
+  box-shadow: 0 14px 22px rgba(28, 25, 23, 0.22);
 }
+/* ป้ายบนรูป (badge/chip) ต้องอยู่ "เหนือ" รูปที่ยกเสมอ */
+.home-card-badge, .home-card-stock, .fmc-chip { z-index: 10; }
+.home-card--preorder .home-card-media::after { z-index: 10; }
 .drink-card:hover, .snack-card:hover, .home-card:hover, .fmc-card:hover, .menu-card:hover {
   overflow: visible;
   z-index: 20;
@@ -1369,7 +1385,7 @@ html[data-theme='dark'] .fmc-chip-status, html[data-theme='graphite'] .fmc-chip-
 .home-card:hover .home-card-media img,
 .fmc-card:hover .fmc-img,
 .menu-card:hover .menu-card-media img {
-  transform: translateY(-14px) scale(1.08);
+  transform: translateY(-16px) scale(1.08);
   border-radius: 18px;
   box-shadow: 0 22px 38px rgba(28, 25, 23, 0.32);
   position: relative;
@@ -1542,8 +1558,16 @@ html[data-theme='dark'] .sched-cal-corner, html[data-theme='graphite'] .sched-ca
 .bmb-toggle.is-disabled { opacity: 0.55; cursor: not-allowed; }
 .bmb-toggle-track:focus-visible { outline: 3px solid rgba(255, 94, 30, 0.45); outline-offset: 2px; }
 
-/* ผู้ใช้ขอลดการเคลื่อนไหว — ไม่ต้องให้รูปลอย */
+/* ผู้ใช้ขอลดการเคลื่อนไหว — ไม่ต้องให้รูปลอย (รวมสถานะปกติ ไม่ใช่แค่ hover) */
 @media (prefers-reduced-motion: reduce) {
+  .drink-card-media img,
+  .snack-card-media img,
+  .home-card-media img,
+  .fmc-img,
+  .menu-card-media img {
+    transform: none;
+    box-shadow: none;
+  }
   .drink-card:hover .drink-card-media img,
   .snack-card:hover .snack-card-media img,
   .home-card:hover .home-card-media img,

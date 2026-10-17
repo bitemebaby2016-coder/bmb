@@ -277,8 +277,16 @@ export function BiteMascot({ userName, activeSection = 'home' }: BiteMascotProps
           : { bottom: cartCount > 0 ? 152 : 84 }}
       >
         <div className="relative flex flex-col items-end">
-          {bubble && stage !== 'fullchat' && (
-            <GlassCard className="px-3 py-1.5 text-xs animate-bounce mb-1 mr-4 max-w-[220px]">
+          {/* Owner 2026-10-17: bubble ต้องไม่ทับฟอร์มหน้า checkout และปิดได้ด้วยการแตะ
+              (เดิมลอยค้าง animate-bounce บัง input/ปุ่มบนมือถือ) */}
+          {bubble && stage !== 'fullchat' && section !== 'checkout' && (
+            <GlassCard
+              className="px-3 py-1.5 text-xs animate-bounce mb-1 mr-4 max-w-[220px] cursor-pointer"
+              role="button"
+              title="แตะเพื่อซ่อนข้อความ"
+              aria-label="ซ่อนข้อความจากน้อง Bite"
+              onClick={() => setBubble(null)}
+            >
               {bubble}
             </GlassCard>
           )}

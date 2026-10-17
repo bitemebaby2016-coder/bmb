@@ -31,7 +31,8 @@ export function AmbientMusicToggle() {
   return (
     <div
       className="fixed right-3 z-40 flex items-center gap-2 rounded-2xl glass-surface border border-brand-border px-3 py-2 shadow-lg no-print"
-      style={{ bottom: 'calc(var(--bmb-bottom-nav-h, 0px) + var(--bmb-sticky-h, 0px) + 12px)' }}
+      // เหนือ Floating Bite (bottom ~84-152px) — ปุ่มยุบแล้วเคยมุดใต้มาสคอตจนกดไม่ได้
+      style={{ bottom: 'calc(var(--bmb-bottom-nav-h, 0px) + var(--bmb-sticky-h, 0px) + 168px)' }}
       data-testid="ambient-music"
     >
       <button
@@ -49,24 +50,28 @@ export function AmbientMusicToggle() {
       >
         <span aria-hidden="true">{state.playing ? '⏸' : '♪'}</span>
       </button>
-      <div className="flex flex-col gap-0.5">
-        <span
-          className="text-[10px] font-semibold text-brand-muted leading-none"
-          data-testid="ambient-music-status"
-        >
-          {state.playing ? (state.ducked ? 'ลดเสียง (Bite กำลังพูด)' : 'กำลังเล่น') : 'เพลงปิด'}
-        </span>
-        <input
-          type="range"
-          min={0}
-          max={100}
-          value={Math.round(state.volume * 100)}
-          onChange={(e) => manager.setVolume(Number(e.target.value) / 100)}
-          aria-label="ระดับเสียงเพลงบรรเลง"
-          className="w-20 h-1 accent-[var(--color-brand-primary)] cursor-pointer"
-          data-testid="ambient-music-volume"
-        />
-      </div>
+      {/* Owner 2026-10-17: ตอนปิดเพลงเหลือเฉพาะปุ่มกลม — pill กว้าง ๆ เดิมทับราคา/
+          ปุ่มบนการ์ดบนมือถือ (แสดง label + slider เฉพาะตอนกำลังเล่น) */}
+      {state.playing && (
+        <div className="flex flex-col gap-0.5">
+          <span
+            className="text-[10px] font-semibold text-brand-muted leading-none"
+            data-testid="ambient-music-status"
+          >
+            {state.ducked ? 'ลดเสียง (Bite กำลังพูด)' : 'กำลังเล่น'}
+          </span>
+          <input
+            type="range"
+            min={0}
+            max={100}
+            value={Math.round(state.volume * 100)}
+            onChange={(e) => manager.setVolume(Number(e.target.value) / 100)}
+            aria-label="ระดับเสียงเพลงบรรเลง"
+            className="w-20 h-1 accent-[var(--color-brand-primary)] cursor-pointer"
+            data-testid="ambient-music-volume"
+          />
+        </div>
+      )}
     </div>
   )
 }
