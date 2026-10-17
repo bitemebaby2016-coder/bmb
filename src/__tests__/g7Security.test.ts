@@ -454,7 +454,7 @@ describe('G7-24/25 G5 + G6 regression', () => {
     // Owner 2026-10-16: G6 worker may send validated replies only (comment
     // reply + Messenger send) — page token env-only; no other Graph surface.
     expect(g6WorkerSrc).toMatch(/Deno\.env\.get\('META_PAGE_ACCESS_TOKEN'\)/)
-    const g6GraphUrls = [...g6WorkerSrc.matchAll(/https:\/\/graph\.facebook\.com\/v21\.0\/[^'"\`]+/g)].map((m) => m[0])
+    const g6GraphUrls = [...g6WorkerSrc.matchAll(/https:\/\/graph\.facebook\.com\/v21\.0\/[^'"`]+/g)].map((m) => m[0])
     for (const u of g6GraphUrls) expect(u).toMatch(/\$\{[^}]+\}\/(comments|messages)$/)
   })
   it('G6 contract columns untouched: no migration in G7 (022/109 sources intact in repo)', () => {

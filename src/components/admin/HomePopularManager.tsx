@@ -24,17 +24,16 @@ import {
   type SiteCopy,
 } from '@/lib/homePopular'
 import { ToggleSwitch } from './ToggleSwitch'
-import type { MenuSection, Product, ProductCategory } from '@/types'
+import type { Product, ProductCategory } from '@/types'
 
 interface HomePopularManagerProps {
   products: Product[]
   categories: ProductCategory[]
-  sections: MenuSection[]
 }
 
 const SHOW_COUNT_CHOICES = [4, 6, 8, 10, 12, 16]
 
-export function HomePopularManager({ products, categories, sections }: HomePopularManagerProps) {
+export function HomePopularManager({ products, categories }: HomePopularManagerProps) {
   const [config, setConfig] = useState<HomePopularConfig>({ ...DEFAULT_HOME_POPULAR })
   const [copy, setCopy] = useState<SiteCopy>({ ...DEFAULT_SITE_COPY })
   const [pickId, setPickId] = useState('')
@@ -62,24 +61,15 @@ export function HomePopularManager({ products, categories, sections }: HomePopul
     return m
   }, [categories])
 
-  // dropdown จัดกลุ่ม: กลุ่มเมนู (Section) · หมวดหมู่ → เมนู (รวมเมนูจองล่วงหน้า)
+  // dropdown จัดกลุ่มตาม "หัวข้อเมนู" (หมวดหมู่) → เมนู (รวมเมนูจองล่วงหน้า)
   const optionGroups = useMemo(() => {
-    const secName = new Map(sections.map((s) => [s.id, s.name]))
     const groups: Array<{ label: string; items: Product[] }> = []
-    const seenCats = new Set<string>()
-    for (const s of [...sections].sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0))) {
-      for (const c of categories.filter((x) => (x.menu_section_id ?? '') === s.id && !x.archived)) {
-        const items = products.filter((p) => p.category_id === c.id && !p.archived)
-        if (items.length > 0) groups.push({ label: `${s.name} · ${catLabelOf.get(c.id) ?? c.name}`, items })
-        seenCats.add(c.id)
-      }
-    }
-    for (const c of categories.filter((x) => !x.archived && !seenCats.has(x.id))) {
+    for (const c of [...categories].filter((x) => !x.archived).sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0))) {
       const items = products.filter((p) => p.category_id === c.id && !p.archived)
-      if (items.length > 0) groups.push({ label: `ไม่อยู่ในกลุ่ม · ${catLabelOf.get(c.id) ?? c.name}`, items })
+      if (items.length > 0) groups.push({ label: catLabelOf.get(c.id) ?? c.name, items })
     }
     return groups
-  }, [products, categories, sections, catLabelOf])
+  }, [products, categories, catLabelOf])
 
   const disabledSet = useMemo(() => new Set(config.disabledIds), [config.disabledIds])
 

@@ -1,28 +1,29 @@
 // ============================================
-// Bite Me Baby — Catalog structure mirror (CAT-01, migration 055)
-// Pure display logic: Menu → Section → Category → Product grouping
-// for the Customer PWA menu page. No fetching, no mutation.
+// Bite Me Baby — Catalog structure (UNIFIED "หัวข้อเมนู" model, 2026-10-17)
+// ============================================
+// เดิม: Menu → Section → Category → Product (3 ชั้น) — Section ชั้นบนซ้ำชื่อกับหมวด
+// และการซ่อน section ทำให้เมนูหายทั้งหมวดทั้งที่แอดมินเห็นป้าย "ลูกค้าเห็น"
+// (Owner directive 2026-10-17: รวมเป็นระบบเดียว — หัวข้อเมนู = หมวดหมู่ (category)
+// ชั้นเดียว ใช้แสดงทั้ง /shop และ /menu จากตัวจัดกลุ่มเดียวกัน ครบทุกเมนู
+// ไม่มีตัวซ้อน · แอดมินเพิ่ม/แก้/ลบหัวข้อได้ตลอด · menu_sections เกษียณแล้ว)
+//
+// Pure display logic: no fetching, no mutation.
 // ============================================
 
-import type { MenuSection, Product, ProductCategory } from '@/types'
+import type { Product, ProductCategory } from '@/types'
 
-export interface CatalogGroup {
-  section: MenuSection | null          // null = categories without a section (legacy)
-  categories: Array<{
-    category: ProductCategory
-    products: Product[]
-  }>
+/** หนึ่ง "หัวข้อเมนู" (heading) = หมวดหมู่ 1 หมวด + เมนูที่ขายได้ในหมวดนั้น */
+export interface HeadingGroup {
+  category: ProductCategory
+  products: Product[]
 }
 
 export type CustomerVisibilityIssue = 'category_missing' | 'category_inactive' | 'category_archived'
 
 /**
  * P0 (2026-10-14): explain WHY a product never renders on the customer menu —
- * buildCatalogGroups only shows products whose category is present, active and
- * unarchived in the CUSTOMER category read (RLS product_categories_public_read
- * = is_active). The admin screens must surface this gate, otherwise the admin
- * cannot tell that customers never see the item (live case: products bound to
- * cat-1/cat-2 while only cat-3/4/5/... are customer-visible).
+ * visibility ของเมนู = หมวดหมู่ต้องมีอยู่ เปิดอยู่ และไม่ถูกจัดเก็บ
+ * (ระบบหัวข้อเมนูเดียว 2026-10-17 — ไม่มีชั้น section ซ่อนอีกต่อไป)
  */
 export function customerVisibilityIssue(
   product: Pick<Product, 'category_id'>,
@@ -43,47 +44,42 @@ export const CUSTOMER_VISIBILITY_LABEL: Record<CustomerVisibilityIssue, string> 
 }
 
 /**
- * Group products by category → section (CAT-D01=B canonical hierarchy).
- * - skips archived categories/products and unavailable products (mirror of the
- *   server gate in migration 055 — server remains the transaction authority)
- * - skips inactive categories
- * - section order: menu_sections.sort_order; category order: sort_order
+ * จัดกลุ่มเมนูเป็น "หัวข้อเมนู" — แหล่งความจริงเดียวของทั้ง /shop และ /menu
+ * - หัวข้อ = หมวดหมู่ที่ is_active และไม่ archived (เรียง sort_order)
+ * - เมนูในหัวข้อ = is_available และไม่ archived (mirror ของ gate ฝั่ง server —
+ *   server ยังคงเป็น authority ตอนสั่งซื้อ)
+ * - หัวข้อว่าง = ซ่อน (ไม่โชว์แถวเปล่า) — กติกาเดียวกันทุกหน้า
+ * - ค่า menu_section_id เก่า (ชั้นที่เกษียณแล้ว) ถูกละเลย — ไม่มีวันทำให้เมนูหายอีก
  */
-export function buildCatalogGroups(
+export function buildHeadingGroups(
   products: Product[],
   categories: ProductCategory[],
-  sections: MenuSection[],
-): CatalogGroup[] {
-  const activeCats = categories.filter((c) => c.is_active && !c.archived)
-  const groups: CatalogGroup[] = []
-
-  for (const section of [...sections].filter((s) => s.is_active).sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0))) {
-    const cats = activeCats
-      .filter((c) => c.menu_section_id === section.id)
-      .sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0))
-      .map((category) => ({
-        category,
-        products: products
-          .filter((p) => p.category_id === category.id && p.is_available && !p.archived)
-          .sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0)),
-      }))
-      .filter((g) => g.products.length > 0)
-    if (cats.length > 0) groups.push({ section, categories: cats })
-  }
-
-  const looseCats = activeCats
-    .filter((c) => !c.menu_section_id) // a category assigned to a (closed) section stays hidden — server-enforced (CAT-D01=B)
+): HeadingGroup[] {
+  const sellable = (products || []).filter((p) => p.is_available && !p.archived)
+  return (categories || [])
+    .filter((c) => c.is_active && !c.archived)
     .sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0))
     .map((category) => ({
       category,
-      products: products
-        .filter((p) => p.category_id === category.id && p.is_available && !p.archived)
+      products: sellable
+        .filter((p) => p.category_id === category.id)
         .sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0)),
     }))
     .filter((g) => g.products.length > 0)
-  if (looseCats.length > 0) groups.push({ section: null, categories: looseCats })
+}
 
-  return groups
+/**
+ * ปุ่มกรองหมวด (chips) — ใช้กติกาการมองเห็นเดียวกับ buildHeadingGroups
+ * (หัวข้อที่โชว์ใน chips = หัวข้อที่โชว์ในหน้าเมนูเสมอ — "เชื่อเป็นแบบเดียวกัน")
+ */
+export function headingChips(
+  categories: ProductCategory[],
+  products: Pick<Product, 'category_id' | 'is_available' | 'archived'>[],
+): ProductCategory[] {
+  return buildHeadingGroups(
+    products as Product[],
+    categories,
+  ).map((g) => g.category)
 }
 
 // ============================================
@@ -103,38 +99,4 @@ export function saleModeOfCategory(cat: Pick<ProductCategory, 'name' | 'slug'>):
   if (/จองล่วงหน้า|พรีออเดอร์|ล่วงหน้า|pre[\s-]?order/.test(s)) return 'pre_order'
   if (/ส่งวันนี้|สั่งวันนี้|same[\s-]?day/.test(s)) return 'same_day'
   return 'auto'
-}
-
-export interface CategoryChipGroup {
-  section: MenuSection | null
-  categories: ProductCategory[]
-}
-
-/**
- * ปุ่มกรองหมวด — จัดกลุ่ม/เรียงตามหมวดหลัก (MenuSection) เหมือนกันทั้ง /shop และ /menu
- * (D2) — หมวดว่าง/หมวดในกลุ่มปิด = ซ่อน ตามกติกาเดียวกับ buildCatalogGroups (D3)
- */
-export function groupCategoriesForChips(
-  categories: ProductCategory[],
-  sections: MenuSection[],
-  products: Pick<Product, 'category_id' | 'is_available' | 'archived'>[],
-): CategoryChipGroup[] {
-  const sellable = (products || []).filter((p) => p.is_available && !p.archived)
-  const hasItems = (catId: string) => sellable.some((p) => p.category_id === catId)
-  const activeCats = categories.filter((c) => c.is_active && !c.archived && hasItems(c.id))
-  const groups: CategoryChipGroup[] = []
-
-  for (const section of [...sections].filter((s) => s.is_active).sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0))) {
-    const cats = activeCats
-      .filter((c) => c.menu_section_id === section.id)
-      .sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0))
-    if (cats.length > 0) groups.push({ section, categories: cats })
-  }
-
-  const loose = activeCats
-    .filter((c) => !c.menu_section_id)
-    .sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0))
-  if (loose.length > 0) groups.push({ section: null, categories: loose })
-
-  return groups
 }

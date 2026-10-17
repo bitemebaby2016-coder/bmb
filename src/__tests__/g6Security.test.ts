@@ -156,7 +156,7 @@ describe('G6-19/20 Meta boundary + reserved task', () => {
     expect(workerSrc).toMatch(/Deno\.env\.get\('META_PAGE_ACCESS_TOKEN'\)/)
     expect(codeOnly).not.toMatch(/access_token[=:]/)
     expect(codeOnly).not.toMatch(/graph\.meta\.com/)
-    const graphUrls = [...workerSrc.matchAll(/https:\/\/graph\.facebook\.com\/v21\.0\/[^'"\`]+/g)].map((m) => m[0])
+    const graphUrls = [...workerSrc.matchAll(/https:\/\/graph\.facebook\.com\/v21\.0\/[^'"`]+/g)].map((m) => m[0])
     expect(graphUrls.length).toBeGreaterThan(0)
     for (const u of graphUrls) expect(u).toMatch(/\$\{[^}]+\}\/(comments|messages)$/)
     expect(workerSrc).toMatch(/reply_status: 'sent'/)

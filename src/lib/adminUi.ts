@@ -136,8 +136,8 @@ export function isImageSourceValid(source: string | null | undefined): boolean {
   return pattern.test(source) || httpPattern.test(source)
 }
 
-/** Blank category form defaults. */
+/** Blank category form defaults (ระบบหัวข้อเมนูเดียว — ไม่มีชั้น Section แล้ว). */
 export function blankCategoryForm() {
-  return { name: '', icon: '\uD83C\uDF7D\uFE0F', sort_order: 0, is_active: true, menu_section_id: '' }
+  return { name: '', icon: '\uD83C\uDF7D\uFE0F', sort_order: 0, is_active: true }
 }
 

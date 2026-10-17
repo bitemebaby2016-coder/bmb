@@ -1,14 +1,14 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { showToast } from '@/components/ui/ToastContainer'
-import { getProducts, createProduct, updateProduct, archiveProduct, restoreProduct, getCategories, getCategoriesAdmin, createCategory, updateCategory, archiveCategory, restoreCategory, getSectionsAdmin, createSection, updateSection, archiveSection, restoreSection } from '@/lib/bmbAdminApi_products'
+import { getProducts, createProduct, updateProduct, archiveProduct, restoreProduct, getCategories, getCategoriesAdmin, createCategory, updateCategory, archiveCategory, restoreCategory, deleteCategory, deleteProduct } from '@/lib/bmbAdminApi_products'
 import { ToggleSwitch } from '@/components/admin/ToggleSwitch'
 import { HomePopularManager } from '@/components/admin/HomePopularManager'
 import { uploadProductImage, validateImageFile } from '@/lib/bmbAdminApi_media'
 import { slugifyCategory, blankCategoryForm } from '@/lib/adminUi'
 import { customerVisibilityIssue, CUSTOMER_VISIBILITY_LABEL } from '@/lib/catalogStructure'
 import { AddonsEditor, toAddonDrafts, addonDraftsToJson, type AddonDraft } from '@/components/admin/AddonsEditor'
-import type { Product, ProductCategory, MenuSection } from '@/types'
+import type { Product, ProductCategory } from '@/types'
 
 
 export function AdminProducts() {
@@ -29,31 +29,25 @@ export function AdminProducts() {
   })
   const [addons, setAddons] = useState<AddonDraft[]>([])
 
-  // ── Category headings (PHASE 6 UI/admin) — add / rename / reorder / hide ──
+  // ── ระบบ "หัวข้อเมนู" เดียว (2026-10-17): หัวข้อ = หมวดหมู่ (category) —
+  //    เพิ่ม/แก้/เรียง/ซ่อน/ลบ + ย้ายเมนูระหว่างหัวข้อ · ไม่มีชั้น Section ซ้ำซ้อน ──
   const [adminCats, setAdminCats] = useState<ProductCategory[]>([])
   const [catForm, setCatForm] = useState(blankCategoryForm())
   const [showCatForm, setShowCatForm] = useState(false)
   const [editingCat, setEditingCat] = useState<ProductCategory | null>(null)
-
-  // ── Sections (CAT-01, migration 055): Menu → Section → Category → Product ──
-  const [sections, setSections] = useState<MenuSection[]>([])
-  const [sectionForm, setSectionForm] = useState({ name: '', sort_order: 0 })
-  const [editingSection, setEditingSection] = useState<MenuSection | null>(null)
   // P0 WS2: category lifecycle — move all products from one category to another
   // (merge/move support using the existing canonical updateProduct API only).
   const [moveFrom, setMoveFrom] = useState<string | null>(null)
   const [moveTarget, setMoveTarget] = useState('')
-  const [showSectionForm, setShowSectionForm] = useState(false)
 
   useEffect(() => { loadAll() }, [])
 
   async function loadAll() {
     try {
-      const [products, cats, allCats, secs] = await Promise.all([getProducts(), getCategories(), getCategoriesAdmin(), getSectionsAdmin()])
+      const [products, cats, allCats] = await Promise.all([getProducts(), getCategories(), getCategoriesAdmin()])
       setProducts(products)
       setCategories(cats)
       setAdminCats(allCats)
-      setSections(secs)
     } catch (err) {
       console.error('[AdminProducts] Load error:', err)
     }
@@ -184,7 +178,7 @@ export function AdminProducts() {
   function openCategoryForm(cat?: ProductCategory) {
     if (cat) {
       setEditingCat(cat)
-      setCatForm({ name: cat.name, icon: cat.icon, sort_order: cat.sort_order, is_active: cat.is_active, menu_section_id: cat.menu_section_id ?? '' })
+      setCatForm({ name: cat.name, icon: cat.icon, sort_order: cat.sort_order, is_active: cat.is_active })
     } else {
       setEditingCat(null)
       setCatForm(blankCategoryForm())
@@ -194,17 +188,17 @@ export function AdminProducts() {
 
   async function handleSaveCategory() {
     const name = catForm.name.trim()
-    if (!name) { showToast('กรุณาใส่ชื่อหมวดหมู่', 'warning'); return }
+    if (!name) { showToast('กรุณาใส่ชื่อหัวข้อเมนู', 'warning'); return }
     const maxSort = adminCats.reduce((m, c) => Math.max(m, c.sort_order || 0), 0)
     const sortOrder = editingCat ? (catForm.sort_order || maxSort) : (catForm.sort_order > 0 ? catForm.sort_order : maxSort + 1)
     if (editingCat) {
-      const ok = await updateCategory(editingCat.id, { name, icon: catForm.icon, sort_order: sortOrder, is_active: catForm.is_active, menu_section_id: (catForm.menu_section_id || null) as string | null })
-      if (!ok) { showToast('ไม่สามารถอ্যাপডেটประเภท', 'error'); return }
-      showToast('หมวดหมู่อัปเดตแล้ว!', 'success')
+      const ok = await updateCategory(editingCat.id, { name, icon: catForm.icon, sort_order: sortOrder, is_active: catForm.is_active })
+      if (!ok) { showToast('บันทึกหัวข้อเมนูไม่สำเร็จ', 'error'); return }
+      showToast('อัปเดตหัวข้อเมนูแล้ว!', 'success')
     } else {
-      const ok = await createCategory({ name, slug: slugifyCategory(name), icon: catForm.icon, sort_order: sortOrder, is_active: catForm.is_active, menu_section_id: (catForm.menu_section_id || null) as string | null })
-      if (!ok) { showToast('ไม่สามารถเพิ่มประเภท', 'error'); return }
-      showToast('เพิ่มหมวดหมู่สำเร็จ!', 'success')
+      const ok = await createCategory({ name, slug: slugifyCategory(name), icon: catForm.icon, sort_order: sortOrder, is_active: catForm.is_active })
+      if (!ok) { showToast('เพิ่มหัวข้อเมนูไม่สำเร็จ', 'error'); return }
+      showToast('เพิ่มหัวข้อเมนูสำเร็จ!', 'success')
     }
     setShowCatForm(false)
     setEditingCat(null)
@@ -213,51 +207,39 @@ export function AdminProducts() {
   }
 
   async function handleArchiveCategory(cat: ProductCategory) {
-    const used = false // CAT-D04=B: archive allowed regardless of order references
-    if (used) {
-      showToast('ไม่สามารถลб: มีเมনুในหมวดนี้', 'error')
-      return
-    }
-    if (confirm(`ต้องการลبหมวด "${cat.name}" ใช่หรือไม่?`)) {
+    if (confirm(`จัดเก็บหัวข้อ "${cat.name}" (ซ่อนจากลูกค้า — กู้คืนได้)?`)) {
       const ok = await archiveCategory(cat.id)
-      showToast(ok ? 'لبหมڈสำเร็จ' : 'ลбไม่สำเร็จ', ok ? 'success' : 'error')
+      showToast(ok ? 'จัดเก็บหัวข้อแล้ว (กู้คืนได้)' : 'จัดเก็บไม่สำเร็จ', ok ? 'success' : 'error')
       loadAll()
     }
   }
 
   async function handleRestoreCategory(cat: ProductCategory) {
     const ok = await restoreCategory(cat.id)
-    showToast(ok ? 'กู้คืนหมวดแล้ว' : 'กู้คืนไม่สำเร็จ', ok ? 'success' : 'error')
+    showToast(ok ? 'กู้คืนหัวข้อเมนูแล้ว' : 'กู้คืนไม่สำเร็จ', ok ? 'success' : 'error')
     loadAll()
   }
 
-  // ── Sections (CAT-01, migration 055) ──
-  async function handleSaveSection() {
-    const name = sectionForm.name.trim()
-    if (!name) { showToast('กรุณาใส่ชื่อ Section', 'warning'); return }
-    if (editingSection) {
-      const ok = await updateSection(editingSection.id, { name, sort_order: sectionForm.sort_order })
-      showToast(ok ? 'อัปเดต Section แล้ว!' : 'บันทึกไม่สำเร็จ', ok ? 'success' : 'error')
-    } else {
-      const ok = await createSection({ name, slug: slugifyCategory(name), sort_order: sectionForm.sort_order, is_active: true })
-      showToast(ok ? 'เพิ่ม Section แล้ว!' : 'บันทึกไม่สำเร็จ', ok ? 'success' : 'error')
+  // ── ลบถาวร (Owner 17 ต.ค.: "ลบได้เลย ยังไม่มีออเดอร์จริง") — คนละปุ่มกับจัดเก็บ ──
+  async function handleDeleteCategory(cat: ProductCategory) {
+    const count = products.filter((p) => p.category_id === cat.id).length
+    if (count > 0) {
+      showToast(`หัวข้อ "${cat.name}" ยังมีเมนู ${count} รายการ — ย้ายเมนูออกก่อน (ปุ่ม "ย้ายสินค้า")`, 'warning')
+      setMoveFrom(cat.id)
+      setMoveTarget('')
+      return
     }
-    setShowSectionForm(false)
-    setEditingSection(null)
+    if (!confirm(`ลบถาวรหัวข้อ "${cat.name}"? (ไม่มีเมนูค้างอยู่ — ลบแล้วเอาคืนไม่ได้)`)) return
+    const ok = await deleteCategory(cat.id)
+    showToast(ok ? 'ลบหัวข้อเมนูถาวรแล้ว' : 'ลบไม่สำเร็จ (อาจมีข้อมูลผูกอยู่ — ใช้ "จัดเก็บ" แทน)', ok ? 'success' : 'error')
     loadAll()
   }
 
-  async function handleArchiveSection(id: string) {
-    if (confirm('ซ่อน Section นี้ (ลูกค้าไม่เห็น + server จะไม่รับสินค้าใน Section นี้ — กู้คืนได้)?')) {
-      const ok = await archiveSection(id)
-      showToast(ok ? 'จัดเก็บ Section แล้ว (กู้คืนได้)' : 'ไม่สำเร็จ', ok ? 'success' : 'error')
-      loadAll()
-    }
-  }
-
-  async function handleRestoreSection(id: string) {
-    const ok = await restoreSection(id)
-    showToast(ok ? 'กู้คืน Section แล้ว' : 'ไม่สำเร็จ', ok ? 'success' : 'error')
+  async function handleDeleteProduct(id: string) {
+    const p = products.find((x) => x.id === id)
+    if (!confirm(`ลบถาวรเมนู "${p?.name ?? ''}"? (ลบแล้วเอาคืนไม่ได้ — ถ้ามีประวัติผูกอยู่ ใช้ "จัดเก็บ" แทน)`)) return
+    const ok = await deleteProduct(id)
+    showToast(ok ? 'ลบเมนูถาวรแล้ว' : 'ลบไม่ได้ (มีประวัติผูกอยู่) — ใช้ "จัดเก็บ" แทน', ok ? 'success' : 'error')
     loadAll()
   }
 
@@ -413,32 +395,25 @@ export function AdminProducts() {
         </div>
       )}
 
-      {/* ── PHASE 6 UI/admin: Category headings manager (add / rename / reorder / hide) ── */}
+      {/* ── ระบบ "หัวข้อเมนู" เดียว (2026-10-17) — เพิ่ม/แก้/เรียง/ซ่อน/ลบ + ย้ายเมนู ── */}
       <div className="card mb-6 bg-brand-bg">
         <div className="flex items-center justify-between mb-3">
-          <h3 className="text-lg font-bold text-brand-accent">🏷️ หมวดรอง (หมวดหมู่ — ปุ่มกรองในหน้าเมนู)</h3>
-          <button onClick={() => openCategoryForm()} className="btn btn-primary text-sm">+ เพิ่มหมวดหมู่</button>
+          <h3 className="text-lg font-bold text-brand-accent">🍜 หัวข้อเมนู (แสดงทั้งหน้าแรกและเมนูรวม)</h3>
+          <button onClick={() => openCategoryForm()} className="btn btn-primary text-sm">+ เพิ่มหัวข้อเมนู</button>
         </div>
 
         {showCatForm && (
           <div className="card p-4 mb-3 bg-white">
-            <h4 className="font-bold text-brand-accent mb-3">{editingCat ? 'แก้ไขหมวดหมู่' : 'เพิ่มหมวดหมู่ใหม่'}</h4>
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              <input type="text" className="input" placeholder="ชื่อหมวดหมู่ (เช่น ขนมครก)" value={catForm.name} onChange={(e) => setCatForm({ ...catForm, name: e.target.value })} />
+            <h4 className="font-bold text-brand-accent mb-3">{editingCat ? 'แก้ไขหัวข้อเมนู' : 'เพิ่มหัวข้อเมนูใหม่'}</h4>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              <input type="text" className="input" placeholder="ชื่อหัวข้อเมนู (เช่น เครื่องดื่ม)" value={catForm.name} onChange={(e) => setCatForm({ ...catForm, name: e.target.value })} />
               <input type="text" className="input" placeholder="Icon (e.g. 🍔)" value={catForm.icon} onChange={(e) => setCatForm({ ...catForm, icon: e.target.value })} />
-              <input type="number" className="input" placeholder="Order" value={catForm.sort_order || ''} onChange={(e) => setCatForm({ ...catForm, sort_order: parseInt(e.target.value || '0') })} />
-              <div>
-                <label className="block text-sm font-medium text-brand-accent mb-2">หมวดหลัก (กลุ่มเมนู)</label>
-                <select value={(catForm.menu_section_id as string) || ''} onChange={(e) => setCatForm({ ...catForm, menu_section_id: e.target.value })} className="input">
-                  <option value="">— ไม่อยู่ในกลุ่ม —</option>
-                  {sections.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
-                </select>
-              </div>
+              <input type="number" className="input" placeholder="ลำดับการแสดง" value={catForm.sort_order || ''} onChange={(e) => setCatForm({ ...catForm, sort_order: parseInt(e.target.value || '0') })} />
               <div className="flex items-center">
                 <ToggleSwitch
                   checked={catForm.is_active}
                   onChange={(v) => setCatForm({ ...catForm, is_active: v })}
-                  label="แสดงหมวดนี้"
+                  label="แสดงหัวข้อนี้"
                   testId="category-active-toggle"
                 />
               </div>
@@ -449,45 +424,6 @@ export function AdminProducts() {
             </div>
           </div>
         )}
-
-      {/* Sections manager (CAT-01, migration 055): Menu → Section → Category → Product */}
-      <div className="card mb-6">
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="font-bold text-brand-accent">📚 หมวดหลัก (กลุ่มเมนู — กลุ่มใหญ่ครอบหลายหมวด)</h2>
-          <button onClick={() => { setEditingSection(null); setSectionForm({ name: '', sort_order: sections.reduce((m, s) => Math.max(m, s.sort_order || 0), 0) + 1 }); setShowSectionForm(true) }} className="btn btn-outline text-xs">+ Section</button>
-        </div>
-        {showSectionForm && (
-          <div className="flex flex-wrap gap-2 items-center mb-3">
-            <input className="input max-w-xs" placeholder="ชื่อ Section" value={sectionForm.name} onChange={(e) => setSectionForm({ ...sectionForm, name: e.target.value })} />
-            <input type="number" className="input max-w-24" aria-label="ลำดับ" value={sectionForm.sort_order} onChange={(e) => setSectionForm({ ...sectionForm, sort_order: parseInt(e.target.value || '0', 10) })} />
-            <button onClick={handleSaveSection} className="btn btn-primary text-xs">Save</button>
-            <button onClick={() => { setShowSectionForm(false); setEditingSection(null) }} className="btn btn-outline text-sm">Cancel</button>
-          </div>
-        )}
-        <div className="space-y-1">
-          {sections.map((s) => (
-            <div key={s.id} className="flex items-center justify-between gap-2 px-3 py-2 rounded-lg bg-white">
-              <div className="flex items-center gap-2">
-                <span className="font-medium text-brand-accent">{s.name}</span>
-                <span className="text-xs text-brand-muted">(#{s.sort_order})</span>
-                {!s.is_active && <span className="badge badge-warning text-xs">Hidden</span>}
-              </div>
-              <div className="flex gap-2">
-                <button onClick={() => { setEditingSection(s); setSectionForm({ name: s.name, sort_order: s.sort_order }); setShowSectionForm(true) }} className="btn btn-outline text-xs">✏️ Edit</button>
-                {s.is_active ? (
-                  <button onClick={() => handleArchiveSection(s.id)} className="btn btn-outline text-xs text-red-500">📦 Archive</button>
-                ) : (
-                  <button onClick={() => handleRestoreSection(s.id)} className="btn btn-outline text-xs">↩ Restore</button>
-                )}
-              </div>
-            </div>
-          ))}
-          {sections.length === 0 && <p className="text-brand-muted text-sm">ยังไม่มี Section — หมวดทั้งหมดแสดงแบบเดิมจนกว่าจะสร้าง Section</p>}
-        </div>
-      </div>
-
-      {/* แผงจัดการ "เมนูยอดนิยม" + ข้อความหน้าเว็บ (dropdown + ปุ่มเปิด-ปิด) */}
-      <HomePopularManager products={products} categories={adminCats} sections={sections} />
 
         <div className="space-y-2">
           {moveFrom && (
@@ -528,6 +464,7 @@ export function AdminProducts() {
                   <button onClick={() => openCategoryForm(cat)} className="btn btn-outline text-xs">✏️ Edit</button>
                   <button onClick={() => { setMoveFrom(cat.id); setMoveTarget('') }} className="btn btn-outline text-xs" data-testid={`admin-move-products-${cat.id}`}>ย้ายสินค้า</button>
                   <button onClick={() => (cat.archived ? handleRestoreCategory(cat) : handleArchiveCategory(cat))} className="btn btn-outline text-xs text-red-500">📦 Archive</button>
+                  <button onClick={() => handleDeleteCategory(cat)} className="btn btn-outline text-xs text-red-500" data-testid={`admin-delete-category-${cat.id}`}>🗑️ ลบถาวร</button>
                 </div>
               </div>
             )
@@ -537,6 +474,9 @@ export function AdminProducts() {
           )}
         </div>
       </div>
+
+      {/* แผงจัดการ "เมนูยอดนิยม" (แถวพิเศษหน้าแรก) + ข้อความหน้าเว็บ */}
+      <HomePopularManager products={products} categories={adminCats} />
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {products.map((product) => (
@@ -573,6 +513,7 @@ export function AdminProducts() {
             <div className="flex gap-2">
               <button onClick={() => handleEditProduct(product)} className="btn btn-outline text-sm flex-1">✏️ แก้ไข</button>
               <button onClick={() => (product.archived ? handleRestoreProduct(product.id) : handleArchiveProduct(product.id))} className="btn btn-outline text-sm text-red-500 flex-1">{product.archived ? '↩ กู้คืน' : '📦 จัดเก็บ'}</button>
+              <button onClick={() => handleDeleteProduct(product.id)} className="btn btn-outline text-sm text-red-500" data-testid={`admin-delete-product-${product.id}`}>🗑️ ลบ</button>
             </div>
           </div>
         ))}

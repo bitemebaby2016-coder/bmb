@@ -1,11 +1,11 @@
 // ============================================
 // Bite Me Baby — CategorySections (Home) — DB-driven canonical carousels
 // ============================================
-// UX fix 2026-10-15 (แผน D/E):
-// - จัดกลุ่มด้วย buildCatalogGroups ตัวเดียวกับ /menu → หมวดหลัก (Section) →
-//   หมวดรอง (Category) → การ์ด เหมือนกันทั้ง /shop และ /menu
-// - หมวดว่าง/หมวดในกลุ่มปิด = ซ่อน (ไม่โชว์การ์ดเปล่า "เร็ว ๆ นี้" — owner ยืนยัน default)
-// - การ์ดหนึ่งใบ = ปุ่มเดียวเสมอ (SectionMode ตามช่อง/หมวดที่การ์ดอยู่)
+// ระบบ "หัวข้อเมนู" เดียว (2026-10-17):
+// - หัวข้อ = หมวดหมู่ (ชั้นเดียว) → การ์ด — จัดกลุ่มด้วย buildHeadingGroups
+//   ตัวเดียวกับ /menu → หน้าแรกและเมนูรวมแสดงตรงกัน ครบทุกเมนู ไม่มีตัวซ้อน
+// - หัวข้อว่าง/ปิด/จัดเก็บ = ซ่อน (ไม่โชว์การ์ดเปล่า "เร็ว ๆ นี้")
+// - การ์ดหนึ่งใบ = ปุ่มเดียวเสมอ (SectionMode ตามหัวข้อที่การ์ดอยู่)
 // - วันจัดส่งบนป้ายปฏิทิน = menu_schedule (ProductScheduleMap) — ไม่ใช้ products.scheduled_date
 // มาสคอตประจำเซกชันสลับทุกตัวใน MASCOT_POSES (หน้า/เซกชันซ้ำ = ตัวถัดไป)
 // ============================================
@@ -15,9 +15,9 @@ import { MascotBadge } from '@/components/MascotBadge'
 import { HorizontalCarousel } from './HorizontalCarousel'
 import { ScheduleDateBadge } from './ScheduleDateBadge'
 import { selectHomeShowcase, type HomeShowcaseItem } from '@/lib/homeShowcase'
-import { buildCatalogGroups, saleModeOfCategory, type SaleMode } from '@/lib/catalogStructure'
+import { buildHeadingGroups, saleModeOfCategory, type SaleMode } from '@/lib/catalogStructure'
 import type { ProductScheduleMap } from '@/lib/productSchedule'
-import type { Product, ProductCategory, MenuSection, SameDayOrderPayload, PreOrderPayload } from '@/types'
+import type { Product, ProductCategory, SameDayOrderPayload, PreOrderPayload } from '@/types'
 
 const SECTION_POSES = ['peeking', 'thumbsup', 'running', 'pointing', 'cooking', 'menu', 'greeting', 'heart'] as const
 
@@ -123,7 +123,6 @@ function ShowcaseCard({
 export function CategorySections({
   products,
   categories,
-  sections = [],
   onSameDay,
   onPreOrder,
   mode = 'auto',
@@ -131,8 +130,6 @@ export function CategorySections({
 }: {
   products: Product[]
   categories: ProductCategory[]
-  /** B-fix (owner 2026-10-01): กลุ่มใหญ่ menu_sections — หัวข้อกลุ่มครอบ carousel หมวด */
-  sections?: MenuSection[]
   onSameDay: (p: SameDayOrderPayload) => void
   onPreOrder: (p: PreOrderPayload) => void
   /** SectionMode ของทั้งพื้นที่ — 'same_day'/'pre_order' บังคับปุ่มตามช่อง · 'auto' = ตามหมวด/สินค้า */
@@ -140,13 +137,13 @@ export function CategorySections({
   /** วันจัดส่งจริงจาก menu_schedule (productSchedule) — ใช้กับป้ายปฏิทินทุกใบ */
   schedule?: ProductScheduleMap
 }) {
-  // D1/D3 (2026-10-15): จัดกลุ่มด้วย buildCatalogGroups ตัวเดียวกับ /menu —
-  // หมวดหลัก (Section) → หมวดรอง (Category) → การ์ด · หมวดว่าง/กลุ่มปิด = ซ่อน
-  const groups = buildCatalogGroups(products, categories, sections)
+  // ระบบหัวข้อเมนูเดียว (2026-10-17): จัดกลุ่มด้วย buildHeadingGroups ตัวเดียวกับ
+  // /menu — หัวข้อ (หมวดหมู่) → การ์ด · หัวข้อว่าง/ปิด = ซ่อน เหมือนกันทุกหน้า
+  const groups = buildHeadingGroups(products, categories)
 
   let carouselIdx = 0
   const renderCategoryCarousel = (cat: ProductCategory, grouped: boolean) => {
-    const items = selectHomeShowcase(products, categories, cat.slug, schedule)
+    const items = selectHomeShowcase(products, categories, cat.id, schedule)
     if (items.length === 0) return null
     const idx = carouselIdx++
     const headingId = `home-cat-${cat.slug}`
@@ -179,19 +176,10 @@ export function CategorySections({
     )
   }
 
-  // หัวข้อ: หมวดหลัก (Section) → หมวดรอง (Category) → การ์ด (D2 — เหมือน /menu)
+  // แถวหัวข้อเมนู — เรียงตาม sort_order เหมือน /menu ทุกประการ (ไม่มีชั้นซ้อน)
   return (
     <>
-      {groups.map((group, gi) => (
-        <div key={group.section?.id ?? `loose-${gi}`} className="mb-12">
-          {group.section && (
-            <h2 className="text-2xl font-display font-bold text-brand-primary border-b-2 border-brand-primary/20 pb-2 mb-5">
-              {group.section.name}
-            </h2>
-          )}
-          {group.categories.map(({ category }) => renderCategoryCarousel(category, !!group.section))}
-        </div>
-      ))}
+      {groups.map(({ category }) => renderCategoryCarousel(category, false))}
     </>
   )
 }

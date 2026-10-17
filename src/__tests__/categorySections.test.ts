@@ -1,11 +1,12 @@
-// CAT (owner 2026-10-06): หมวดหมู่ที่แอดมินเพิ่มต้องโชว์บนหน้าแรกเสมอ —
-// ต่อจากหมวดเดิม (sort_order) ก่อนเซกชันรีวิว — แม้ยังไม่มีสินค้า (empty state)
+// ระบบ "หัวข้อเมนู" เดียว (2026-10-17):
+// หัวข้อ (หมวดหมู่) ที่แอดมินเพิ่มต้องโชว์บนหน้าแรกเสมอ — เรียงตาม sort_order
+// ก่อนเซกชันรีวิว — หัวข้อว่าง = ซ่อน (empty state) · ค่า menu_section_id เก่าห้ามทำเมนูหาย
 import { describe, expect, it, beforeAll } from 'vitest'
 import { createElement as h } from 'react'
 import { createRoot } from 'react-dom/client'
 import { MemoryRouter } from 'react-router-dom'
 import { CategorySections } from '@/components/home/CategorySections'
-import type { Product, ProductCategory, MenuSection } from '@/types'
+import type { Product, ProductCategory } from '@/types'
 
 // jsdom ไม่มี matchMedia — HorizontalCarousel ใช้ตรวจ reduced-motion
 beforeAll(() => {
@@ -27,7 +28,7 @@ const prod = (id: string, category_id: string): Product =>
     sort_order: 0, created_at: '', updated_at: '',
   } as Product)
 
-async function renderHtml(products: Product[], categories: ProductCategory[], sections: MenuSection[] = []): Promise<string> {
+async function renderHtml(products: Product[], categories: ProductCategory[]): Promise<string> {
   const div = document.createElement('div')
   document.body.appendChild(div)
   const root = createRoot(div)
@@ -35,7 +36,7 @@ async function renderHtml(products: Product[], categories: ProductCategory[], se
     root.render(
       h(MemoryRouter, {},
         h(CategorySections, {
-          products, categories, sections,
+          products, categories,
           onSameDay: () => {}, onPreOrder: () => {},
         }) as never),
     )
@@ -48,8 +49,8 @@ async function renderHtml(products: Product[], categories: ProductCategory[], se
   return html
 }
 
-describe('CategorySections — จัดกลุ่ม buildCatalogGroups + หมวดว่างซ่อน (UX fix 2026-10-15)', () => {
-  it('หมวดว่างถูกซ่อน (owner ยืนยัน default — ไม่โชว์การ์ดเปล่า "เร็ว ๆ นี้")', async () => {
+describe('CategorySections — ระบบหัวข้อเมนูเดียว (buildHeadingGroups + หัวข้อว่างซ่อน)', () => {
+  it('หัวข้อว่างถูกซ่อน (owner ยืนยัน default — ไม่โชว์การ์ดเปล่า "เร็ว ๆ นี้")', async () => {
     const existing = cat('cat-1', 'จานเดียว', 1)
     const adminAdded = cat('cat-new-1', 'สินค้าสำเร็จรูป', 6)
     const html = await renderHtml([prod('p1', 'cat-1')], [existing, adminAdded])
@@ -58,7 +59,7 @@ describe('CategorySections — จัดกลุ่ม buildCatalogGroups + ห
     expect(html).not.toContain('home-cat-empty-cat-new-1')
   })
 
-  it('หมวดที่มีสินค้าโชว์เป็น carousel และเรียงตาม sort_order', async () => {
+  it('หัวข้อที่มีสินค้าโชว์เป็น carousel และเรียงตาม sort_order', async () => {
     const existing = cat('cat-1', 'จานเดียว', 1)
     const adminAdded = cat('cat-new-1', 'สินค้าสำเร็จรูป', 6)
     const html = await renderHtml([prod('p1', 'cat-1'), prod('p2', 'cat-new-1')], [existing, adminAdded])
@@ -69,16 +70,17 @@ describe('CategorySections — จัดกลุ่ม buildCatalogGroups + ห
     expect(html).toContain('home-showcase-add-to-cart')
   })
 
-  it('still hides archived categories entirely', async () => {
+  it('หัวข้อที่ archived ถูกซ่อนทั้งหัวข้อ', async () => {
     const archived = { ...cat('cat-arch', 'หมวดปิด', 2), archived: true } as ProductCategory
     const html = await renderHtml([], [archived])
     expect(html).not.toContain('หมวดปิด')
   })
 
-  it('หมวดในหมวดหลัก (Section) ที่ปิดอยู่ = ซ่อนทั้งหมวด (ตรงกับ /menu)', async () => {
-    const closedSec = { id: 's1', name: 'กลุ่มปิด', slug: 's1', sort_order: 1, is_active: false, created_at: '' } as never
-    const inSec = { ...cat('cat-s', 'ในกลุ่มปิด', 1), menu_section_id: 's1' } as ProductCategory
-    const html = await renderHtml([prod('p1', 'cat-s')], [inSec], [closedSec])
-    expect(html).not.toContain('ในกลุ่มปิด')
+  it('REGRESSION (บั๊กจริง 17 ต.ค.): หัวข้อที่เคยผูก Section ที่ปิด/ถูกลบ = โชว์ปกติ ไม่หาย', async () => {
+    // เดิม: หมวดใต้ section ปิด → หายจากหน้าแรกทั้งแถว (ชาไทย 3 รายการหายจริง)
+    const staleLinked = { ...cat('cat-s', 'เครื่องดื่ม', 1), menu_section_id: 'sec-deleted' } as ProductCategory
+    const html = await renderHtml([prod('p1', 'cat-s')], [staleLinked])
+    expect(html).toContain('เครื่องดื่ม')
+    expect(html).toContain('p1')
   })
 })

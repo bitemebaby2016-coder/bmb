@@ -2,10 +2,9 @@
 // Bite Me Baby — Home Page "/shop" (UI v5 + Food Theater stage)
 // Information Architecture (shorter + scan-able):
 //   [1 Bite Food Theater (AI waiter stage × menu theater)] -> [2 Store/Delivery Status]
-//   -> [3 Same-day Carousel] -> [4 Pre-order Carousel]
-//   -> [5 Drinks Carousel (mockup)] -> [5b Snacks Carousel (mockup)]
-//   -> [6 Social Proof Review Carousel]
-//   -> [7 Promotions / Social]
+//   -> [2b Search + heading chips] -> [3 เมนูยอดนิยม (admin-curated spotlight)]
+//   -> [4 หัวข้อเมนู rows — ตัวเดียวกับ /menu ครบทุกเมนู ไม่มีตัวซ้อน]
+//   -> [5 Social Proof Review Carousel] -> [6 Promotions / Social]
 // + FloatingCart. No low-stock dashboard, no long vertical grids.
 // Business flows preserved: add-to-cart (cartStore), pre-order (createPreOrder),
 // review deep-link (cart/checkout by mode).
@@ -15,10 +14,9 @@
 import { Link, useNavigate } from 'react-router-dom'
 import { useCartStore } from '@/store/cartStore'
 import { useAuthStore } from '@/store/authStore'
-import { useEffect, useState, lazy, Suspense, Fragment } from 'react'
+import { useEffect, useState, lazy, Suspense } from 'react'
 import { showToast } from '@/components/ui/ToastContainer'
 import {
-  getHomeProducts,
   getHomeReviews,
   getStoreStatusFromRounds,
   getHomePromotionsFromRows,
@@ -36,7 +34,7 @@ import { FloatingCart, StickyCartBar } from '@/components/home/FloatingCart'
 import { useOrderBuilderStore } from '@/store/orderBuilderStore'
 import { deriveOrderMode } from '@/lib/talkToBite'
 import { getProductScheduleMap, type ProductScheduleMap } from '@/lib/productSchedule'
-import { groupCategoriesForChips } from '@/lib/catalogStructure'
+import { headingChips } from '@/lib/catalogStructure'
 import {
   DEFAULT_HOME_POPULAR,
   DEFAULT_SITE_COPY,
@@ -49,7 +47,7 @@ import {
   type HomePopularConfig,
   type SiteCopy,
 } from '@/lib/homePopular'
-import type { VerifiedCustomerReview, Product, ProductCategory, MenuSection, SameDayOrderPayload, PreOrderPayload, HomeReview } from '@/types'
+import type { VerifiedCustomerReview, Product, ProductCategory, SameDayOrderPayload, PreOrderPayload, HomeReview } from '@/types'
 
 // ⚡ The Food Theater stage is code-split (aiServerMemory chain); it renders
 // real catalog picks + canonical cart actions as the first section of /shop.
@@ -65,8 +63,6 @@ export function HomePage() {
 
   const [products, setProducts] = useState<Product[]>([])
   const [categories, setCategories] = useState<ProductCategory[]>([])
-  // B-fix (owner 2026-10-01): กลุ่มเมนู (menu_sections) — ให้ผลกับหน้าแรกเหมือนหน้าเมนู
-  const [sections, setSections] = useState<MenuSection[]>([])
   const [rounds, setRounds] = useState<any[]>([])
   const [promoRows, setPromoRows] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
@@ -84,22 +80,20 @@ export function HomePage() {
     async function loadData() {
       try {
         // PERF: supabase chunks load only after first paint (kept off critical path).
-        const { getProducts, getCategories, getSections } = await import('@/lib/bmbAdminApi_products')
+        const { getProducts, getCategories } = await import('@/lib/bmbAdminApi_products')
         const { getDeliveryRoundsAdmin } = await import('@/lib/bmbAdminApi_rounds')
         const { getPromotionsAdmin } = await import('@/lib/bmbAdminApi_promotions')
-        const [rows, cats, rounds, promos, secs] = await Promise.all([
+        const [rows, cats, rounds, promos] = await Promise.all([
           getProducts(),
           getCategories(),
           getDeliveryRoundsAdmin(),
           getPromotionsAdmin(),
-          getSections().catch(() => []), // B-fix: กลุ่มเมนู — ถ้าโหลดไม่ได้แสดงแบบไม่มีกลุ่ม
         ])
         setProducts(rows)
         setCategories(cats)
         setRounds(rounds)
         publishDeliveryRounds(rounds) // มาสคอตทุกหน้าใช้สถานะเปิด/ปิดเดียวกับแถบร้าน
         setPromoRows(promos)
-        setSections(secs)
         // ค่าตั้งเว็บ (เมนูยอดนิยม/ข้อความ) — โหลดแบบไม่ขวางการวาดหน้า (fire-and-forget)
         // ถ้าอ่านไม่สำเร็จ/ค้าง หน้ายังแสดงได้ตามค่า default เสมอ
         void (async () => {
@@ -138,23 +132,16 @@ export function HomePage() {
     return () => document.removeEventListener('visibilitychange', onVisible)
   }, [])
 
-  const { preOrder } = getHomeProducts(products, categories, scheduleMap)
   const reviews = getHomeReviews(products)
   const promotions = getHomePromotionsFromRows(promoRows)
 
-  // "เมนูยอดนิยม" — คัดจากทุกกลุ่ม/ทุกหมวด (รวมเมนูจองล่วงหน้า) แล้วสลับโชว์ตามรอบเวลา
+  // "เมนูยอดนิยม" — คัดจากทุกหมวด (รวมเมนูจองล่วงหน้า) แล้วสลับโชว์ตามรอบเวลา
   const popularCatMap = new Map(categories.map((c) => [c.id, c]))
   const popularAll = resolvePopularItems(products, categories, popularCfg)
     .map((p) => toPopularHomeProduct(p, popularCatMap.get(p.category_id), scheduleMap))
-  // ปุ่มกรองหมวด — จัดกลุ่มตามหมวดหลัก (D2 · เหมือน /menu; หมวดว่าง = ซ่อน)
-  const chipGroups = groupCategoriesForChips(categories, sections, products)
+  // ปุ่มกรองหัวข้อเมนู — กติกาเดียวกับแถวหัวข้อด้านล่าง (หัวข้อว่าง = ซ่อน)
+  const chips = headingChips(categories, products)
 
-  // Filter products by search query and category
-  const filteredPreOrder = preOrder.filter((item) => {
-    const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase())
-    const matchesCategory = !activeCategory || item.category_id === activeCategory
-    return matchesSearch && matchesCategory
-  })
   const filteredPopular = popularAll.filter((item) => {
     const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase())
     const matchesCategory = !activeCategory || item.category_id === activeCategory
@@ -255,9 +242,6 @@ export function HomePage() {
   const popularItems = filteredPopular.map((item) => (
     <HomeProductCard key={item.id} item={item} mode="auto" onSameDay={handleSameDay} onPreOrder={handlePreOrder} />
   ))
-  const preOrderItems = filteredPreOrder.map((item) => (
-    <HomeProductCard key={item.id} item={item} mode="pre_order" onSameDay={handleSameDay} onPreOrder={handlePreOrder} />
-  ))
 
   if (loading) {
     return (
@@ -312,8 +296,8 @@ export function HomePage() {
             />
           </div>
         </div>
-        {chipGroups.length > 0 && (
-          <div className="category-chips flex gap-2 overflow-x-auto pb-2 mt-3" role="group" aria-label="กรองตามหมวดหมู่">
+        {chips.length > 0 && (
+          <div className="category-chips flex gap-2 overflow-x-auto pb-2 mt-3" role="group" aria-label="กรองตามหัวข้อเมนู">
             <button
               type="button"
               onClick={() => setActiveCategory(null)}
@@ -322,28 +306,16 @@ export function HomePage() {
             >
               ทั้งหมด
             </button>
-            {chipGroups.map((g, gi) => (
-              <Fragment key={g.section?.id ?? `chip-loose-${gi}`}>
-                {g.section && (
-                  <span
-                    className="self-center whitespace-nowrap px-3 py-2 rounded-full text-xs font-semibold text-brand-muted bg-brand-bg border border-dashed border-brand-border"
-                    aria-hidden="true"
-                  >
-                    {g.section.name}
-                  </span>
-                )}
-                {g.categories.map((cat) => (
-                  <button
-                    key={cat.id}
-                    type="button"
-                    onClick={() => setActiveCategory(activeCategory === cat.id ? null : cat.id)}
-                    className={`category-chip whitespace-nowrap px-4 py-2 rounded-full text-sm font-medium transition-colors ${activeCategory === cat.id ? 'bg-brand-primary text-white' : 'bg-white text-brand-accent border border-brand-border'}`}
-                    aria-pressed={activeCategory === cat.id}
-                  >
-                    {cat.icon} {cat.name}
-                  </button>
-                ))}
-              </Fragment>
+            {chips.map((cat) => (
+              <button
+                key={cat.id}
+                type="button"
+                onClick={() => setActiveCategory(activeCategory === cat.id ? null : cat.id)}
+                className={`category-chip whitespace-nowrap px-4 py-2 rounded-full text-sm font-medium transition-colors ${activeCategory === cat.id ? 'bg-brand-primary text-white' : 'bg-white text-brand-accent border border-brand-border'}`}
+                aria-pressed={activeCategory === cat.id}
+              >
+                {cat.icon} {cat.name}
+              </button>
             ))}
           </div>
         )}
@@ -363,22 +335,10 @@ export function HomePage() {
         <HorizontalCarousel items={popularItems} aria-label={`${popularCfg.title} เลื่อนได้`} />
       </section>
 
-      {/* 4. Pre-order Menu — horizontal carousel */}
-      {preOrder.length > 0 && (
-        <section className="mb-10 scroll-mt-20" aria-labelledby="home-preorder-heading">
-          <div className="flex items-center justify-between mb-2">
-            <h2 id="home-preorder-heading" className="text-xl font-display font-bold text-brand-accent">
-              📅 {siteCopy.homePreOrderTitle}
-            </h2>
-            <Link to="/menu" className="text-sm text-brand-primary font-medium hover:underline">ดูทั้งหมด →</Link>
-          </div>
-          <h3 className="sr-only">เมนูล่วงหน้า</h3>
-          <HorizontalCarousel items={preOrderItems} aria-label="เมนูจองล่วงหน้า เลื่อนได้" />
-        </section>
-      )}
-
-      {/* 5. Category carousels — DB-driven + จัดกลุ่มด้วย buildCatalogGroups เดียวกับ /menu */}
-      <CategorySections products={products} categories={categories} sections={sections} schedule={scheduleMap} onSameDay={handleSameDay} onPreOrder={handlePreOrder} />
+      {/* 4. หัวข้อเมนู — ตัวจัดกลุ่มเดียวกับ /menu (buildHeadingGroups) — ครบทุกเมนู
+          ไม่มีตัวซ้อน: เมนูจองล่วงหน้าแสดงในหัวข้อของตัวเอง + ปุ่ม 📅 ต่อการ์ด
+          (แยกแท็บจองล่วงหน้าอยู่ที่ /menu ตามเดิม) */}
+      <CategorySections products={products} categories={categories} schedule={scheduleMap} onSameDay={handleSameDay} onPreOrder={handlePreOrder} />
 
       {/* 6. Social Proof Review Carousel */}
       <ReviewCarouselSection reviews={reviews} products={products} onReviewCta={handleReviewCta} />
