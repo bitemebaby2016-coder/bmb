@@ -100,3 +100,17 @@ export function saleModeOfCategory(cat: Pick<ProductCategory, 'name' | 'slug'>):
   if (/ส่งวันนี้|สั่งวันนี้|same[\s-]?day/.test(s)) return 'same_day'
   return 'auto'
 }
+
+/**
+ * ทางเข้า Pre-order workflow เดียวที่ปุ่มทุกตำแหน่งใช้ร่วมกัน (Directive §8: จุดบน
+ * HomePage ก่อน Popular Menu + ปุ่ม Footer ต้องเข้าสู่ workflow เดียวกัน ไม่คนละชุด):
+ * - มีหมวดพรีออเดอร์ (ตาม saleModeOfCategory) → /menu?category=<id> (deep-link ที่
+ *   MenuPage รองรับอยู่แล้ว — เทียบด้วย category id) → ลูกค้าเลือกสินค้า → ปุ่ม
+ *   "จองล่วงหน้า" ทุกใบ → handlePreOrder → /checkout?mode=pre-order (เลือกวัน/รอบ
+ *   จาก delivery_rounds จริง + menu_schedule gate)
+ * - ไม่มีหมวดพรีออเดอร์ → /menu (เมนูรวม — สินค้า pre-order มีปุ่มจองล่วงหน้าทุกใบ)
+ */
+export function preOrderEntryPath(categories: Array<Pick<ProductCategory, 'id' | 'name' | 'slug'>>): string {
+  const cat = categories.find((c) => saleModeOfCategory(c) === 'pre_order')
+  return cat ? `/menu?category=${encodeURIComponent(cat.id)}` : '/menu'
+}

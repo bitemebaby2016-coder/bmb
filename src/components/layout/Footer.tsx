@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import type { ProductCategory } from '@/types'
 import { DEFAULT_SOCIAL_LINKS, getSocialLinks, socialLinkItems, type SocialLinkItem } from '@/lib/socialLinks'
+import { preOrderEntryPath } from '@/lib/catalogStructure'
 
 // ── ข้อมูลร้านจริง (Owner ยืนยัน 2026-10-17) — ใช้ตรงกันทั้ง footer/หน้าติดต่อ ──
 export const SHOP_CONTACT = {
@@ -54,12 +55,15 @@ export function Footer() {
   // ลิงก์ "เมนูอาหาร" ดึงจากหัวข้อเมนูจริงในฐานข้อมูล (active + ไม่ archived เรียงตามลำดับ)
   // — แอดมินเพิ่ม/แก้/เรียงหัวข้อเมื่อไร ฟุตเตอร์ตามทันที ไม่ต้องแก้โค้ด
   const [menuLinks, setMenuLinks] = useState<FooterLink[]>([{ label: 'ดูเมนูทั้งหมด', path: '/menu' }])
+  // ปุ่ม Pre-order (Directive §8) — เข้า Pre-order workflow เดียวกับบน HomePage ผ่าน preOrderEntryPath
+  const [preOrderPath, setPreOrderPath] = useState('/menu')
   useEffect(() => {
     let alive = true
     import('@/lib/bmbAdminApi_products')
       .then(({ getCategories }) => getCategories())
       .then((cats: ProductCategory[]) => {
         if (!alive) return
+        setPreOrderPath(preOrderEntryPath(cats.filter((c) => c.is_active && !c.archived)))
         const links: FooterLink[] = cats
           .filter((c) => c.is_active && !c.archived)
           .sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0))
@@ -103,7 +107,18 @@ export function Footer() {
           </p>
         </div>
 
-        {/* Footer Links Grid */}
+        {/* Pre-order entry (Directive §8) — ปุ่ม Footer เข้าสู่ Pre-order workflow เดียวกับบน HomePage */}
+      <div className="mb-6 text-center">
+        <Link
+          to={preOrderPath}
+          data-testid="footer-preorder-entry"
+          className="inline-block px-6 py-3 rounded-xl bg-brand-primary text-white font-medium hover:opacity-90 transition-opacity"
+        >
+          📅 จองล่วงหน้า (Pre-order) — เลือกวันและรอบจัดส่ง
+        </Link>
+      </div>
+
+      {/* Footer Links Grid */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-8">
           {footerSections.map((section) => (
             <div key={section.title}>

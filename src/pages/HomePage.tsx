@@ -48,6 +48,7 @@ import {
   type SiteCopy,
 } from '@/lib/homePopular'
 import type { VerifiedCustomerReview, Product, ProductCategory, SameDayOrderPayload, PreOrderPayload, HomeReview } from '@/types'
+import { preOrderEntryPath } from '@/lib/catalogStructure'
 
 // ⚡ The Food Theater stage is code-split (aiServerMemory chain); it renders
 // real catalog picks + canonical cart actions as the first section of /shop.
@@ -323,6 +324,21 @@ export function HomePage() {
 
       {/* 2c. Floating ad banners — max 2 overlay cards, dismissible per promo (sessionStorage, D03) */}
       <FloatingAdBanners promos={bannerPromos} notice={siteCopy.adNotice} />
+
+      {/* 2d. Pre-order entry (Directive §8: จุดเข้าใช้งาน Pre-order บนสุดก่อน Popular Menu)
+          — ใช้ workflow เดียวกับปุ่ม Footer ผ่าน preOrderEntryPath (ไม่สร้างระบบคนละชุด)
+          — หัวข้อแก้ได้ในแอดมิน (homePreOrderTitle: business_settings) */}
+      <section className="mb-6" aria-labelledby="home-preorder-entry-heading">
+        <div className="rounded-2xl border border-brand-border bg-white p-4 flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h2 id="home-preorder-entry-heading" className="font-bold text-brand-accent">📅 {siteCopy.homePreOrderTitle}</h2>
+            <p className="text-sm text-brand-muted">เลือกวันและรอบจัดส่งล่วงหน้าตามรอบที่ร้านเปิดรับ</p>
+          </div>
+          <Link to={preOrderEntryPath(categories)} data-testid="home-preorder-entry" className="btn btn-primary">
+            เลือกเมนูจองล่วงหน้า →
+          </Link>
+        </div>
+      </section>
       {/* 3. เมนูยอดนิยม — สลับโชว์จากทุกกลุ่มเมนู (รวมเมนูจองล่วงหน้า) — ช่องเดียว ไม่มี "เมนูวันนี้" ซ้ำ */}
       <section className="mb-10 scroll-mt-20" aria-labelledby="home-popular-heading">
         <div className="flex items-center justify-between mb-2">

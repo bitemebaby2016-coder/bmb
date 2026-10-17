@@ -6,18 +6,18 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { showToast } from '@/components/ui/ToastContainer'
-import { getProducts, getDeliveryRounds } from '@/lib/bmbAdminApi_products'
+import { getProducts } from '@/lib/bmbAdminApi_products'
+import { getRoundsForDateAdmin, setRoundStatus, ensureRoundsForDate, type DeliveryRoundRow } from '@/lib/bmbAdminApi_rounds'
 import { getBusinessSettings } from '@/lib/bmbAdminApi_settings'
-import { setMenuSchedule, publishMenuSchedule, getScheduleForDateAdmin, getScheduleForWeek, isoWeekRange, summarizeWeek, checkPublishReady, type ScheduleSetItem, type MenuScheduleRow } from '@/lib/bmbMenuSchedule'
-import type { Product, DeliveryRound } from '@/types'
-
-const ROUND_KEY_OPTIONS = ['', 'morning', 'midday', 'evening']
+import { setMenuSchedule, publishMenuSchedule, getScheduleForDateAdmin, getScheduleForWeek, isoWeekRange, summarizeWeek, checkPublishReady, roundKeyOptions, toggleDraftEntry, type ScheduleSetItem, type MenuScheduleRow } from '@/lib/bmbMenuSchedule'
+import { ToggleSwitch } from '@/components/admin/ToggleSwitch'
+import type { Product } from '@/types'
 
 export function AdminMenuSchedule() {
   const [date, setDate] = useState(new Date(Date.now() + 86400000).toISOString().slice(0, 10))
   const [maxDays, setMaxDays] = useState(50)
   const [products, setProducts] = useState<Product[]>([])
-  const [rounds, setRounds] = useState<DeliveryRound[]>([])
+  const [dateRounds, setDateRounds] = useState<DeliveryRoundRow[]>([]) // delivery_rounds ของวันที่เลือก (round key จริง)
   const [rows, setRows] = useState<MenuScheduleRow[]>([])
   const [weekRows, setWeekRows] = useState<MenuScheduleRow[]>([])
   const [draft, setDraft] = useState<Record<string, string>>({}) // productId → round key ('' = all rounds, '__off__' = not on menu)
@@ -27,9 +27,8 @@ export function AdminMenuSchedule() {
 
   useEffect(() => {
     void (async () => {
-      const [prods, rnds, settings] = await Promise.all([getProducts(), getDeliveryRounds(), getBusinessSettings()])
+      const [prods, settings] = await Promise.all([getProducts(), getBusinessSettings()])
       setProducts(prods) // raw list — selectable/valid filters derived per render (canonical)
-      setRounds(rnds)
       const policy = (settings?.order_policy ?? {}) as Record<string, any>
       if (policy.preorder_max_days != null) setMaxDays(Number(policy.preorder_max_days) || 50)
     })()
@@ -44,9 +43,10 @@ export function AdminMenuSchedule() {
     setServerError('')
     try {
       const [ws, we] = isoWeekRange(d)
-      const [r, week] = await Promise.all([getScheduleForDateAdmin(d), getScheduleForWeek(ws, we)])
+      const [r, week, rnds] = await Promise.all([getScheduleForDateAdmin(d), getScheduleForWeek(ws, we), getRoundsForDateAdmin(d)])
       setRows(r)
       setWeekRows(week)
+      setDateRounds(rnds)
       const next: Record<string, string> = {}
       for (const row of r) next[row.product_id] = row.delivery_round_key ?? ''
       setDraft(next)
@@ -152,6 +152,51 @@ export function AdminMenuSchedule() {
           })}
         </div>
 
+        {/* ✅ Round-key link (Owner 2026-10-17): ปุ่มเปิด/ปิดทุกรอบส่ง — ผูกกับ
+            delivery_rounds ของวันนี้จริง (round key ชุดเดียวกับที่ pre-order/checkout ใช้) */}
+        <div className="mb-4 p-3 rounded-xl bg-brand-surface border" data-testid="round-toggles">
+          <h3 className="font-bold text-brand-accent mb-2">🚦 รอบส่งของวันนี้ (round key — ผูกกับ pre-order)</h3>
+          {dateRounds.length === 0 ? (
+            <div className="flex items-center gap-3">
+              <p className="text-sm text-brand-muted">ยังไม่มีรอบส่งของวันนี้ — สร้างจากรอบหลัก (morning/midday/evening)</p>
+              <button type="button" data-testid="rounds-ensure" className="btn btn-outline text-sm"
+                onClick={async () => {
+                  const ok = await ensureRoundsForDate(date)
+                  showToast(ok ? 'สร้างรอบส่งของวันนี้แล้ว' : 'สร้างรอบไม่สำเร็จ — ใช้รอบที่มีอยู่', ok ? 'success' : 'error')
+                  setDateRounds(await getRoundsForDateAdmin(date))
+                }}>➕ สร้างรอบส่งของวันนี้</button>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {dateRounds.map((r) => (
+                <div key={r.id} className="flex items-center justify-between gap-3 px-3 py-2 rounded-lg bg-white">
+                  <div>
+                    <div className="font-medium text-brand-accent">
+                      {r.display_name} <span className="text-xs text-brand-muted">({r.round_key})</span>
+                    </div>
+                    <div className="text-xs text-brand-muted">
+                      cutoff {String(r.cutoff_time || '').slice(0, 5)} • {String(r.delivery_start || '').slice(0, 5)}–{String(r.delivery_end || '').slice(0, 5)} • ⚡ {r.current_count}/{r.max_capacity}
+                    </div>
+                  </div>
+                  <ToggleSwitch
+                    checked={r.status === 'active'}
+                    onChange={async (v) => {
+                      const ok = await setRoundStatus(r.id, v ? 'active' : 'closed')
+                      showToast(ok ? `รอบ ${r.display_name} ${v ? 'เปิดรับแล้ว' : 'ปิดรับแล้ว'}` : 'เปลี่ยนสถานะรอบไม่สำเร็จ', ok ? 'success' : 'error')
+                      setDateRounds(await getRoundsForDateAdmin(date))
+                    }}
+                    label={r.status === 'active' ? 'เปิดรับ' : 'ปิดรับ'}
+                    testId={`round-toggle-${r.round_key}`}
+                  />
+                </div>
+              ))}
+            </div>
+          )}
+          <p className="text-xs text-brand-muted mt-2">
+            สวิตช์นี้คือ <code>delivery_rounds.status</code> — รอบปิดรับ = ลูกค้าเลือกไม่ได้ใน checkout และ create RPC ปฏิเสธ (ERR_ROUND_CLOSED) · dropdown รอบของเมนูด้านล่างผูกด้วย round key ชุดเดียวกัน
+          </p>
+        </div>
+
         {serverError && (
           <div data-testid="schedule-server-error" className="mb-4 p-3 rounded-lg bg-red-50 text-red-700 text-sm border border-red-200">
             Server validation: <b>{serverError}</b>
@@ -164,20 +209,17 @@ export function AdminMenuSchedule() {
             const on = draft[p.id] !== undefined && draft[p.id] !== '__off__'
             return (
               <div key={p.id} className="flex items-center justify-between gap-3 px-3 py-2 rounded-lg bg-white">
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input type="checkbox" checked={on}
-                    onChange={(e) => setDraft((d) => {
-                      const n = { ...d }
-                      if (e.target.checked) n[p.id] = n[p.id] === '__off__' ? '' : (n[p.id] ?? '')
-                      else n[p.id] = '__off__'
-                      return n
-                    })} />
-                  <span className="font-medium text-brand-accent">{p.name}</span>
-                  <span className="text-xs text-brand-muted">฿{p.price}</span>
-                </label>
+                <ToggleSwitch
+                  checked={on}
+                  onChange={(v) => setDraft((d) => toggleDraftEntry(d, p.id, v))}
+                  label={`${p.name} ฿${p.price}`}
+                  testId={`schedule-product-${p.id}`}
+                />
                 {on && (
-                  <select value={draft[p.id] || ''} onChange={(e) => setDraft((d) => ({ ...d, [p.id]: e.target.value }))} className="input max-w-40 text-xs">
-                    {ROUND_KEY_OPTIONS.map((rk) => <option key={rk || 'all'} value={rk}>{rk === '' ? 'ทุกรอบ' : rk}</option>)}
+                  <select value={draft[p.id] || ''} data-testid={`schedule-round-${p.id}`}
+                    onChange={(e) => setDraft((d) => ({ ...d, [p.id]: e.target.value }))}
+                    className="input max-w-56 text-xs">
+                    {roundKeyOptions(dateRounds).map((o) => <option key={o.key || 'all'} value={o.key}>{o.label}</option>)}
                   </select>
                 )}
               </div>
@@ -225,7 +267,6 @@ export function AdminMenuSchedule() {
           Order-time authority: trg_menu_gate (039) — PRE_ORDER วันที่มี published menu สินค้านอกเมนูถูกปฏิเสธ (ERR_PRODUCT_NOT_ON_MENU) · trg_operating_hours — mode/round open-close · 038 — lead time + 2h cutoff
         </p>
       </div>
-      {void rounds}
     </div>
   )
 }

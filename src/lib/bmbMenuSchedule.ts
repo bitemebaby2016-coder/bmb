@@ -165,6 +165,65 @@ export async function getPublishedScheduleForDate(scheduledDate: string): Promis
   return (data || []) as MenuScheduleRow[]
 }
 
+// ---------- Round-key link (menu_schedule ↔ delivery_rounds — Owner 2026-10-17) ----------
+// The schedule's per-product round selector must show the REAL rounds of the
+// chosen date (delivery_rounds.round_key), never a hardcoded vocabulary — this
+// is the same key CheckoutPage passes to mirrorPreOrderScheduleGate / the
+// create RPC, so menu schedule and pre-order stay linked end-to-end.
+
+export interface RoundKeyOptionSource {
+  round_key?: string | null
+  display_name?: string | null
+  delivery_start?: string | null
+  delivery_end?: string | null
+  status?: string | null
+}
+
+export interface RoundKeyOption {
+  key: string
+  label: string
+}
+
+/** Dropdown options for the schedule round selector — `''` (ทุกรอบ) first, then
+ *  one option per REAL delivery_rounds row of the selected date (keyed by
+ *  round_key). Closed rounds stay listed (with a ปิดรับ mark) so the admin can
+ *  re-assign a menu row to them after reopening. */
+export function roundKeyOptions(rounds: RoundKeyOptionSource[]): RoundKeyOption[] {
+  const opts: RoundKeyOption[] = [{ key: '', label: 'ทุกรอบ' }]
+  const seen = new Set<string>()
+  for (const r of rounds) {
+    const key = (r.round_key || '').trim()
+    if (!key || seen.has(key)) continue
+    seen.add(key)
+    const time = [r.delivery_start, r.delivery_end]
+      .filter(Boolean)
+      .map((t) => String(t).slice(0, 5))
+      .join('–')
+    const closed = (r.status || '').toLowerCase() !== 'active' ? ' · ปิดรับ' : ''
+    opts.push({ key, label: `${r.display_name || key}${time ? ` (${time})` : ''}${closed}` })
+  }
+  return opts
+}
+
+/** Admin switch semantics for one delivery round: 'active' ↔ 'closed'. */
+export function nextRoundStatus(current: string | null | undefined): 'active' | 'closed' {
+  return (current || '').toLowerCase() === 'active' ? 'closed' : 'active'
+}
+
+/** Menu on/off switch for one product row of the schedule draft.
+ *  on  = on-menu (`''` = ทุกรอบ unless the row already had a round key),
+ *  off = '__off__' (excluded on save — same sentinel as the legacy checkbox UI). */
+export function toggleDraftEntry(
+  draft: Record<string, string>,
+  productId: string,
+  on: boolean,
+): Record<string, string> {
+  const n = { ...draft }
+  if (on) n[productId] = n[productId] === '__off__' ? '' : (n[productId] ?? '')
+  else n[productId] = '__off__'
+  return n
+}
+
 // ---------- Display mirror (NOT authority — server gate re-decides) ----------
 // Mirrors migration 039 trg_menu_gate + 025 mode gate so the customer never
 // sees "open" when the order RPC would reject with a schedule rule.

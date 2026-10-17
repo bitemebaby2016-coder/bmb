@@ -102,3 +102,16 @@ export async function listRoundsForDate(date: string): Promise<DeliveryRoundRow[
   await ensureRoundsForDate(date)
   return getActiveRoundsForDate(date)
 }
+
+/** ALL rounds of a date (admin — includes closed ones so the schedule admin can
+ *  show a per-round open/close switch; customer checkout keeps listRoundsForDate
+ *  = active only, create RPC is still the only authority). */
+export async function getRoundsForDateAdmin(date: string): Promise<DeliveryRoundRow[]> {
+  const { data, error } = await supabase
+    .from('delivery_rounds')
+    .select('*')
+    .eq('scheduled_date', date)
+    .order('delivery_start', { ascending: true })
+  if (error) { console.error('[getRoundsForDateAdmin] Error:', error); return [] }
+  return (data || []) as DeliveryRoundRow[]
+}

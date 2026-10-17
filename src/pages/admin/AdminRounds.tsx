@@ -6,6 +6,8 @@ import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { showToast } from '@/components/ui/ToastContainer'
 import { getDeliveryRoundsAdmin, upsertDeliveryRound, setRoundStatus, resetRoundCapacity, type DeliveryRoundRow } from '@/lib/bmbAdminApi_rounds'
+import { nextRoundStatus } from '@/lib/bmbMenuSchedule'
+import { ToggleSwitch } from '@/components/admin/ToggleSwitch'
 
 export function AdminRounds() {
   const [rounds, setRounds] = useState<DeliveryRoundRow[]>([])
@@ -103,13 +105,14 @@ export function AdminRounds() {
                 </div>
               </div>
             ) : (
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap items-center gap-3">
                 <button onClick={() => openEdit(r)} className="btn btn-outline text-sm">✏️ Edit</button>
-                {r.status === 'active' ? (
-                  <button onClick={() => handleStatus(r, 'closed')} className="btn btn-outline text-sm">⏸ Close round</button>
-                ) : (
-                  <button onClick={() => handleStatus(r, 'active')} className="btn btn-success text-sm">▶ Open round</button>
-                )}
+                <ToggleSwitch
+                  checked={r.status === 'active'}
+                  onChange={() => handleStatus(r, nextRoundStatus(r.status))}
+                  label={r.status === 'active' ? 'เปิดรับ' : 'ปิดรับ'}
+                  testId={`round-active-${r.id}`}
+                />
                 <button onClick={() => handleResetCapacity(r)} className="btn btn-outline text-sm">⟳ Reset capacity</button>
                 <span className={`badge ${r.status === 'active' ? 'badge-success' : 'badge-warning'}`}>{r.status}</span>
               </div>

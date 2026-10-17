@@ -42,3 +42,38 @@
 - `.clinerules` ห้าม commit · `chat\bmb\` ห้ามแตะ · HARD STOP ห้ามขายจริงจนกว่า Owner สั่ง go
 - Contract tests ที่ต้องรักษา: `socialAiContinuity` (ใหม่) + G6/G7 เดิม (`g6Security` ยังผ่าน — คงตรรกะ `source_event_id_mismatch`/`OPENROUTER_API_KEY`/claim ไว้ครบ)
 - Path ใหม่: `supabase/functions/_shared/shopContext.ts` · `src/lib/socialLinks.ts` · `src/__tests__/socialAiContinuity.test.ts`
+
+---
+
+# อัปเดต 17 ต.ค. 2026 รอบค่ำ — ROUND-LINK (Directive: menu schedule ↔ pre-order)
+
+## 5. สิ่งที่ทำ (รอบนี้)
+Owner สั่ง: "menu schedule ซ้ำซ้อนกับ pre-order ให้ลิ้งค์กันจริงด้วย round key + ปุ่มเปิดปิดทุกรอบส่ง + แอดมินเป็นสวิตช์/ดรอปดาวน์"
+
+| ปัญหาที่พบ (โค้ดจริง) | แก้ไขแล้ว |
+|---|---|
+| `AdminMenuSchedule` hardcode `ROUND_KEY_OPTIONS = ['', 'morning','midday','evening']` — **ไม่ผูก** `delivery_rounds` (สั่ง `rounds` มาแล้วทิ้งด้วย `void rounds`) ขณะที่ `CheckoutPage` ใช้รอบจริง (`listRoundsForDate` + `selectedRound.round_key` เข้า gate/RPC) | dropdown รอบสร้างจาก `delivery_rounds` ของวันที่เลือกจริง (`roundKeyOptions(dateRounds)`) — `menu_schedule.delivery_round_key ↔ delivery_rounds.round_key` ชุดเดียวกับ checkout |
+| ไม่มีปุ่มเปิด/ปิดทุกรอบส่งในหน้าจัดการเมนู | การ์ด "🚦 รอบส่งของวันนี้" + ToggleSwitch รายรอบ (เขียน `delivery_rounds.status` ผ่าน `setRoundStatus`) + ปุ่ม ensure rounds (`ensure_rounds_for_date`) ถ้ายังไม่มีรอบของวันนั้น |
+| แอดมินใช้ checkbox/ปุ่มคู่ open-close | ทั้ง `AdminMenuSchedule` (สินค้า) และ `AdminRounds` (รอบ) เป็น `ToggleSwitch` + ดรอปดาวน์ (มี testId ครบ) |
+| API ทับซ้อน 2 ชุด (`getDeliveryRounds` vs `getDeliveryRoundsAdmin`) | เพิ่ม `getRoundsForDateAdmin(date)` ใน `bmbAdminApi_rounds` (ชุดเดียวกับ checkout) — หน้า schedule เลิกใช้ตัวซ้ำ |
+
+**ไฟล์ที่เปลี่ยน:** `src/lib/bmbAdminApi_rounds.ts` (+`getRoundsForDateAdmin`) · `src/lib/bmbMenuSchedule.ts` (+`roundKeyOptions`/`nextRoundStatus`/`toggleDraftEntry`) · `src/pages/admin/AdminMenuSchedule.tsx` · `src/pages/admin/AdminRounds.tsx` · `src/__tests__/menuScheduleRoundLink.test.ts` (ใหม่ 9 ข้อ) · `AI_WORK_STATE.md` (ใหม่ — .clinerules บังคับ)
+
+## 6. Phase A audit snapshot (Directive §3 — ตรวจโค้ดจริง ยังไม่ครบ → งานถัดไป)
+
+| พื้นที่ | สถานะ | หลักฐาน |
+|---|---|---|
+| Pre-order/Same-day สั่งได้จริง (ไม่ใช่ปุ่มเปล่า) | ✅ มีและทำงานได้ (ระดับ test) | `CheckoutPage` round picker จาก DB + cutoff/capacity client guard + `create_order_with_items` (025/044/048/104) — ยังไม่มี E2E ออเดอร์จริง |
+| menu schedule ↔ pre-order ผูกด้วย round key | ✅ แก้แล้วรอบนี้ | `mirrorPreOrderScheduleGate` + `menuScheduleRoundLink.test.ts` |
+| ปุ่มเปิด/ปิดทุกรอบส่ง | ✅ แก้แล้วรอบนี้ | `AdminMenuSchedule` round-toggles + `AdminRounds` |
+| Mixed cart (SAME_DAY+PRE_ORDER ปน) | ⚠️ มี guard ฝั่งเพิ่มสินค้า (homePreOrderModeGuard: mixed line kept + navigate) — **ต้อง audit ฝั่ง checkout/payment ต่อ** ว่าเงื่อนไขชำระเงินตรงกับโหมดออเดอร์จริง | `homePreOrderModeGuard.test.ts` |
+| Homepage pre-order 2 จุด (บนก่อน Popular Menu + Footer) | ✅ แก้แล้วรอบนี้ | เพิ่มจุดเข้าบน HomePage (ก่อน Popular Menu — render `homePreOrderTitle` ที่เคยเป็น config เปล่า) + ปุ่ม Footer — ทั้งคู่ใช้ `preOrderEntryPath()` ตัวเดียว (workflow เดียว) · `preOrderEntry.test.ts` |
+| Audience Voices ผูกเมนู/รีวิวจริง | ✅ มีและตรง (audit แล้ว) | `SOCIAL_PROOF_REVIEWS` = curated marketing testimonials (มี sourceLabel ระบุชัด ไม่แอบอ้างเป็นรีวิวร้าน — RE-D2) + `VerifiedReviewsSection` (CAT-04) ดึงจากตาราง `reviews` จริงผ่าน `reviewApi` |
+| FB Comments/Messenger → ส่งต่อออเดอร์เข้า Cart/Order | ⚠️ สถาปัตยกรรมปัจจุบัน = AI workers **READ-ONLY ห้ามแตะ orders** (G6/G7 contract) — ช่องทางรับออเดอร์จริงจาก FB = `channel-webhook` → `create_order_with_items` trusted intake (048) เท่านั้น → **ต้องคุยกับ Owner ว่าจะเปิด auto-order จาก AI หรือคง human-in-loop** | `BMB_G6_CONTRACT.md`, migration 048 |
+| Webhook retry กันเพิ่มซ้ำ | ✅ มี | `channel_event_duplicate` + `eventSeen` + `p_client_submit_key` double-submit |
+
+## 7. งานเหลือก่อน Final E2E (ลำดับถัดไป)
+1. audit ต่อ: mixed-cart payment condition · homepage pre-order 2 จุด · audience voices · login→landing routing/theater context (Directive §3.1/§4/§7/§8/§9)
+2. ตัดสินใจเรื่อง FB order auto/human-in-loop (ต้องเลือกโดย Owner — กระทบ G6/G7 contract)
+3. E2E checklist รอบเปิดร้าน (Directive §11 ทั้ง 18 ข้อ) — ต้องทดสอบบน production กับ Owner
+

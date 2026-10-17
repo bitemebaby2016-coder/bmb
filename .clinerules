@@ -8,25 +8,23 @@ Before any substantial project work, read:
 2. UNIVERSAL_MASTER_AI_RULES.md
 3. AI_WORK_STATE.md
 
-These files are mandatory.
+These files are mandatory. Do not begin implementation before reading them.
 
-Do not begin implementation before reading them.
+---
+
+## CONTEXT & TOKEN BUDGET CONTROL (>= 200K COMPACT RULE)
+
+- **Automatic Compact Threshold:** If the conversation history approaches or exceeds **200,000 tokens** (or roughly 15-20 turns of deep discussion), the AI MUST immediately halt standard operations, invoke `/compact`, summarize core progress into `AI_WORK_STATE.md`, and clear out stale context to prevent Context Rot.
+- **Session Reset:** Switch to a fresh chat session immediately when shifting to an unrelated feature or bug group.
 
 ---
 
 ## RULE AUTHORITY
 
-UNIVERSAL_MASTER_AI_RULES.md
-= permanent universal rules
-
-AI_WORK_STATE.md
-= current project state and evidence ledger
-
-AI_ENTRYPOINT.md
-= session bootstrap and operating sequence
-
-.clinerules
-= Cline-specific adapter only
+UNIVERSAL_MASTER_AI_RULES.md = permanent universal rules
+AI_WORK_STATE.md = current project state and evidence ledger
+AI_ENTRYPOINT.md = session bootstrap and operating sequence
+.clinerules / Kilo Code rules = adapter only
 
 Do not redefine or contradict the universal rules here.
 
@@ -40,17 +38,14 @@ Before editing:
 2. Read UNIVERSAL_MASTER_AI_RULES.md
 3. Read AI_WORK_STATE.md
 4. Identify the current Task ID
-5. Check status
-6. Check known blockers
-7. Check last inspected commit
-8. Inspect only relevant source files
+5. Check status, known blockers, and last inspected commit
+6. Inspect only relevant source files (avoid broad blind searches)
 
 ---
 
 ## SOURCE OF TRUTH
 
 Use:
-
 1. Actual Code
 2. Database / Migration
 3. API / Edge / Runtime
@@ -63,22 +58,10 @@ Never treat documentation as proof of implementation.
 
 ## VERIFICATION
 
-Every meaningful fix must be verified.
-
-Do not claim:
-
-PASS
-COMPLETE
-DONE
-100%
-PRODUCTION READY
-
-without appropriate evidence.
+Every meaningful fix must be verified. Do not claim PASS, COMPLETE, DONE, 100%, or PRODUCTION READY without appropriate evidence.
 
 SKIPPED != PASS
-
 UNVERIFIED != PASS
-
 MOCKED != production verification
 
 ---
@@ -87,49 +70,19 @@ MOCKED != production verification
 
 For one bug, build failure, test failure, or tightly coupled failure:
 
-ATTEMPT 1:
-Diagnose → targeted fix → verify
+ATTEMPT 1: Diagnose -> targeted fix -> verify
+ATTEMPT 2: Reassess -> materially different approach -> verify
 
-ATTEMPT 2:
-Reassess → materially different approach → verify
-
-If Attempt 2 fails:
-
-STOP.
-
-Do not continue trial-and-error.
-
-Produce the Mandatory Halt Report defined by
-UNIVERSAL_MASTER_AI_RULES.md.
-
-Changing models does not reset the attempt counter.
-
----
-
-## SELFPRINT CURRENT CONTEXT
-
-Verify the repository before making architecture claims.
-
-Current known architecture:
-
-- Product: Selfprint
-- Deployment direction: Cloudflare
-- AI provider: OpenRouter
-- SICE: 16 engines
-- Do not restore obsolete 12-API/Vercel architecture
-- Do not reduce SICE to 12 engines
-- Do not create duplicate visible AI without verifying the current architecture
+If Attempt 2 fails: **STOP.** Do not continue trial-and-error. Produce the Mandatory Halt Report. Changing models does not reset the attempt counter.
 
 ---
 
 ## ANTI-GAMING
 
 Never:
-
 - delete failing tests to obtain PASS
 - skip tests to obtain PASS
-- weaken assertions
-- disable validation
+- weaken assertions or disable validation
 - modify requirements to match implementation
 - rewrite documentation to hide missing implementation
 - claim production readiness without evidence
@@ -139,40 +92,22 @@ Never:
 
 ## WORK STATE
 
-After meaningful work update:
+After meaningful work update `AI_WORK_STATE.md`:
 
-AI_WORK_STATE.md
-
-Include:
-
-Task ID:
-Status:
-Objective:
-Completed:
-Verified:
-Failed:
-Blocked:
-Files Changed:
-Tests / Commands Run:
-Known Risks:
-Next Exact Action:
+- Task ID:
+- Status:
+- Objective:
+- Completed:
+- Verified:
+- Failed:
+- Blocked:
+- Files Changed:
+- Tests / Commands Run:
+- Known Risks:
+- Next Exact Action:
 
 ---
 
 ## COMPLETION
 
-A task is CLOSED only when the applicable verification gates are satisfied.
-
-If evidence is missing:
-
-UNVERIFIED
-
-If execution is blocked:
-
-BLOCKED
-
-If verification fails:
-
-FAIL
-
-Do not manufacture PASS.
+A task is CLOSED only when applicable verification gates are satisfied. If evidence is missing, mark UNVERIFIED, BLOCKED, or FAIL. Do not manufacture PASS.
