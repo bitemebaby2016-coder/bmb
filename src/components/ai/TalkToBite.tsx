@@ -31,6 +31,7 @@ import { RecommendationCard } from '@/components/theater/TheaterCards'
 import { recommendReason } from '@/lib/theaterReasons'
 import { showToast } from '@/components/ui/ToastContainer'
 import { chatWithAI } from '@/lib/aiService'
+import { pageContextLine, sectionFromPath } from '@/lib/bitePageContext'
 import {
   getAIVoiceService,
   isSpeechRecognitionSupported,
@@ -454,6 +455,22 @@ export function TalkToBite({ mode = 'overlay', initialPhase = 'landing', landing
 
   // --- Free-text send (real AI via chatWithAI) ---
 
+  // §5 (Owner 2026-10-17): Bite จำบริบทจาก "สถานะจริง" เท่านั้น — รายการ/จำนวนใน
+  // Cart จาก cart store (ยืนยันแล้วตอนกดเพิ่ม), route จริง, ช่องทางต้นทาง —
+  // ไม่ใช้ memory ของ AI แทนข้อมูล Cart/Order (fresh ทุกครั้งที่ส่ง, แยกตาม session)
+  function composeRealContext(): string {
+    const parts: string[] = ['ช่องทาง: เว็บไซต์ (Talk to Bite)']
+    const items = useCartStore.getState().items
+    const cartCount = items.reduce((s, i) => s + i.quantity, 0)
+    const cartTotal = items.reduce((s, i) => s + i.subtotal, 0)
+    const line = pageContextLine(sectionFromPath(window.location.pathname), { cartCount, cartTotal })
+    if (line) parts.push(line)
+    if (items.length > 0) {
+      parts.push('รายการในตะกร้า (ที่ลูกค้ายืนยันแล้ว): ' + items.map((i) => `${i.product.name} x${i.quantity}`).join(', '))
+    }
+    return parts.join(' | ')
+  }
+
   async function handleSend() {
     const text = input.trim()
     if (!text || typing) return
@@ -476,7 +493,7 @@ export function TalkToBite({ mode = 'overlay', initialPhase = 'landing', landing
       // Context pipe — the Floating Bite / page context stored by openChat()
       // rides along as runtimeContext (existing aiService parameter, no new engine).
       const uiContext = useBiteAIStore.getState().fullContext
-      const reply = (await chatWithAI(text, uiContext || undefined, { voiceMode: voiceReply })).trim()
+      const reply = (await chatWithAI(text, [uiContext, composeRealContext()].filter(Boolean).join(' | ') || undefined, { voiceMode: voiceReply })).trim()
       setBiteState('SPEAKING')
       pushAssistant(reply || 'ขอโทษครับ ผมตอบไม่ครบในรอบนี้ ลองถามใหม่อีกครั้งนะครับ 🙏')
       setBiteState('IDLE')

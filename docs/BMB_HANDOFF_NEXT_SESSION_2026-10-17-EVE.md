@@ -69,11 +69,44 @@ Owner สั่ง: "menu schedule ซ้ำซ้อนกับ pre-order ใ�
 | Mixed cart (SAME_DAY+PRE_ORDER ปน) | ⚠️ มี guard ฝั่งเพิ่มสินค้า (homePreOrderModeGuard: mixed line kept + navigate) — **ต้อง audit ฝั่ง checkout/payment ต่อ** ว่าเงื่อนไขชำระเงินตรงกับโหมดออเดอร์จริง | `homePreOrderModeGuard.test.ts` |
 | Homepage pre-order 2 จุด (บนก่อน Popular Menu + Footer) | ✅ แก้แล้วรอบนี้ | เพิ่มจุดเข้าบน HomePage (ก่อน Popular Menu — render `homePreOrderTitle` ที่เคยเป็น config เปล่า) + ปุ่ม Footer — ทั้งคู่ใช้ `preOrderEntryPath()` ตัวเดียว (workflow เดียว) · `preOrderEntry.test.ts` |
 | Audience Voices ผูกเมนู/รีวิวจริง | ✅ มีและตรง (audit แล้ว) | `SOCIAL_PROOF_REVIEWS` = curated marketing testimonials (มี sourceLabel ระบุชัด ไม่แอบอ้างเป็นรีวิวร้าน — RE-D2) + `VerifiedReviewsSection` (CAT-04) ดึงจากตาราง `reviews` จริงผ่าน `reviewApi` |
-| FB Comments/Messenger → ส่งต่อออเดอร์เข้า Cart/Order | ⚠️ สถาปัตยกรรมปัจจุบัน = AI workers **READ-ONLY ห้ามแตะ orders** (G6/G7 contract) — ช่องทางรับออเดอร์จริงจาก FB = `channel-webhook` → `create_order_with_items` trusted intake (048) เท่านั้น → **ต้องคุยกับ Owner ว่าจะเปิด auto-order จาก AI หรือคง human-in-loop** | `BMB_G6_CONTRACT.md`, migration 048 |
+| FB Comments/Messenger → ส่งต่อออเดอร์เข้า Cart/Order | ✅ แก้แล้วรอบนี้ (§3/§4) | `_shared/socialOrderIntake.ts` (create-only ผ่าน `rpc/create_order_with_items` + idempotent `p_external_ref_id` = event id) · worker intake เฉพาะ Messenger; comment สาธารณะชวนเข้า Inbox (ไม่เปิดเผยรายละเอียด) · `socialOrderIntake.test.ts` 20 ข้อ |
+| Bite จำบริบทจาก Cart/Order จริง (§5) | ✅ แก้แล้วรอบนี้ | `TalkToBite.composeRealContext()` — รายการ/จำนวนใน Cart จาก cart store + route จริง + ช่องทาง ส่งเข้า chatWithAI ทุกข้อความ |
+| Web: AI เพิ่มรายการที่ลูกค้ายืนยันลง Cart (§3) | ✅ มีอยู่แล้ว | `TalkToBite.confirmDraft` → canonical `cartStore.addItem` (human-in-loop: ลูกค้ากดยืนยัน draft ก่อน) + AddToCartResult guard |
+| G6/G7 rule ตาม §3 (สร้างใหม่ได้/แก้ของเดิมไม่ได้) | ✅ แก้แล้วรอบนี้ | G6-09 revised ใน `g6Security.test.ts` — create-only delegation + แบน mutation ทุกตัว |
 | Webhook retry กันเพิ่มซ้ำ | ✅ มี | `channel_event_duplicate` + `eventSeen` + `p_client_submit_key` double-submit |
 
 ## 7. งานเหลือก่อน Final E2E (ลำดับถัดไป)
-1. audit ต่อ: mixed-cart payment condition · homepage pre-order 2 จุด · audience voices · login→landing routing/theater context (Directive §3.1/§4/§7/§8/§9)
-2. ตัดสินใจเรื่อง FB order auto/human-in-loop (ต้องเลือกโดย Owner — กระทบ G6/G7 contract)
-3. E2E checklist รอบเปิดร้าน (Directive §11 ทั้ง 18 ข้อ) — ต้องทดสอบบน production กับ Owner
+1. audit ต่อ: mixed-cart payment condition · login→landing routing/theater context (Directive §3.1/§4/§9)
+2. ~~ตัดสินใจเรื่อง FB order auto/human-in-loop~~ → **Owner ตัดสินแล้ว (§3): AI สร้างออเดอร์ใหม่ได้ผ่าน workflow อนุญาต** — ทำแล้วรอบนี้
+3. E2E checklist รอบเปิดร้าน (ดู §8 ล่าง) — ต้องทดสอบบน production กับ Owner
+
+---
+
+# อัปเดต 17 ต.ค. 2026 รอบดึก — PRE-TEST CLOSURE (Directive §3/§4/§5)
+
+## 8. สิ่งที่ทำ (รอบนี้)
+
+| Directive | สิ่งที่พบ (โค้ดจริง) | แก้ไขแล้ว |
+|---|---|---|
+| §3 AI สร้างออเดอร์ใหม่ได้ / ห้ามแก้ของเดิม | worker เดิมตอบอย่างเดียว G6-09 แบน `create_order` ทั้งหมด | `_shared/socialOrderIntake.ts`: extraction→catalog match→identity (046)→round (active+ว่าง)→**create เดียว** `rpc/create_order_with_items` + `p_external_ref_id`=event id · G6-09 revised (แบน mutation ทุกตัว + worker ห้ามเรียก RPC ตรง) |
+| §4 รับรายการจาก Comments/Messenger เข้า workflow กลาง | — | Messenger (ส่วนตัว): intake เมื่อยืนยันชัดเจน · Comment สาธารณะ: ไม่สร้าง/ไม่เปิดเผย ชวนเข้า Inbox (§5.1) · ไม่ชัดเจน=ถามก่อน (semantic `confirmed` บังคับ) |
+| §4 Webhook retry ห้ามสร้างซ้ำ | RPC 048 มี dedupe ในตัว | `p_external_ref_id` = event id ทุก submit + test คุม (duplicate:true → เลขที่เดิม) |
+| §3 ห้ามเคลมสำเร็จก่อนระบบยืนยัน | — | `buildIntakeLine` (ระบบเขียนจากผล RPC เท่านั้น) + draft ถูก banned-regex คุม + fallback เมื่อ draft พัง (ไม่เงียบ) |
+| §5 Bite จำบริบทจริง | context pipe (openChat) เป็น dormant — ไม่มี component เรียก | `composeRealContext()` ใน TalkToBite: Cart รายการ/จำนวนจาก store + route + ช่องทาง ส่งทุกข้อความ |
+
+**ไฟล์ที่เปลี่ยน:** `supabase/functions/_shared/socialOrderIntake.ts` (ใหม่) ·
+`supabase/functions/social-ai-worker/index.ts` · `src/__tests__/g6Security.test.ts` ·
+`src/__tests__/socialOrderIntake.test.ts` (ใหม่ 20 ข้อ) · `src/components/ai/TalkToBite.tsx` ·
+`AI_WORK_STATE.md`
+
+## 9. Final E2E Checklist (Owner เริ่มทดสอบได้ทันที — ยังไม่ Production Verified)
+1. **เว็บ:** login → หน้าหลัก (ไม่วน Landing) → เลือกเมนู → Cart → checkout → เลือกวัน/รอบ (รอบปิด/เต็มเลือกไม่ได้) → ชำระเงิน → order แสดงใน /admin/orders
+2. **Same-day/Pre-order:** สั่งตามเวลาจริง · รอบหมดเวลา/เต็ม = ถูกบล็อก · Mixed cart = split orders + cash_on_delivery เท่านั้น
+3. **Pre-order 2 จุด:** ปุ่มบน HomePage (ก่อน Popular) + Footer → เข้า /menu?category=<หมวดพรีออเดอร์> ชุดเดียวกัน
+4. **แอดมิน:** Menu Schedule — dropdown รอบ = รอบจริงของวัน, สวิตช์เปิด/ปิดทุกรอบส่งมีผลทันที, สวิตช์สินค้า + Save/Publish
+5. **Bite (เว็บ):** ถามเรื่อง Cart ที่เพิ่งเพิ่ม → ตอบได้ตรงรายการ/จำนวน · แชตไม่ค้าง/ไม่หายเมื่อ AI ล่ม
+6. **Messenger (เพจจริง):** "สั่งผัดไทย 2 จาน" → ถามยืนยันถ้าไม่ครบ → ยืนยัน → ได้เลขที่ออเดอร์จริง + ลิงก์ /payment/... → เลขที่เดิมเมื่อส่งซ้ำ (idempotent) · ข้อความกำกวม → ถาม ไม่สั่งแทน
+7. **FB Comment:** คอมเมนต์สั่งของ → ไม่มีรายละเอียดรายการ/ราคาในคอมเมนต์สาธารณะ + ชวนทัก Inbox
+8. **AI Failure:** ปิด key/จำลอง AI ล่ม → ลูกค้ายังสั่งผ่านหน้าร้านได้ปกติ · intake ที่สำเร็จแล้ว reply ไม่เงียบ (fallback)
+9. **Regression:** ออเดอร์เดิมแก้ไข/ยกเลิกได้เฉพาะฝั่งแอดมิน/ลูกค้าตาม workflow (AI แตะไม่ได้ — ตรวจจาก audit_logs)
 

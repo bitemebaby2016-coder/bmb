@@ -78,13 +78,21 @@ describe('G6-06..08 prompt injection defense', () => {
 // not trip the not-match assertions below)
 const codeOnly = workerSrc.split('\n').filter((l) => !l.trim().startsWith('//')).join('\n')
 
-// ---------- G6-09: order mutation instruction ----------
-describe('G6-09 order mutation instruction is impossible', () => {
+// ---------- G6-09 (revised Owner 2026-10-17 §3): create-only intake; mutation impossible ----------
+describe('G6-09 order boundary: create-only via shared intake, mutation impossible', () => {
   it('worker has no order/payment/inventory/delivery mutation surface', () => {
-    expect(codeOnly).not.toMatch(/create_order|record_payment|confirm_offline_payment|transition_order_status|inventory|delivery_assignments|assign_driver/)
+    // ห้ามแก้ไข/ยกเลิก/เปลี่ยนแปลงออเดอร์เดิม — create ผ่าน shared intake เท่านั้น (§3)
+    expect(codeOnly).not.toMatch(/create_order|record_payment|confirm_offline_payment|transition_order_status|mark_payment_failed|cancel_order|refund|update_order|delete_order|inventory|delivery_assignments|assign_driver/)
     const patched = [...codeOnly.matchAll(/rest\('(PATCH|GET|POST)',\s*`([^`]+)`/g)].map((m) => m[2])
     expect(patched.length).toBeGreaterThan(0)
     for (const p of patched) expect(p).toContain('social_events')
+  })
+  it('worker creates NEW orders ONLY via the shared create-only intake (delegated, never inline)', () => {
+    expect(workerSrc).toMatch(/submitNewOrder/)
+    expect(workerSrc).toMatch(/_shared\/socialOrderIntake/)
+    // worker ไม่เรียก order RPC เอง — เส้นทาง create อยู่ใน shared module เดียว (idempotent ด้วย event id)
+    expect(codeOnly).not.toMatch(/rpc\/create_order/)
+    expect(workerSrc).toMatch(/externalRef: ev\.event_id/)
   })
   it('banned draft content regex blocks order/payment/publish language', () => {
     expect(workerSrc).toMatch(/banned_content_in_draft/)

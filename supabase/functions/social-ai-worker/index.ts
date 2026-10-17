@@ -8,9 +8,11 @@
 //   → validate (FAIL CLOSED) → write AI columns → status='SUCCEEDED'
 //   → AUTO-SEND validated reply (unless safety-gated) → reply_status recorded
 //
-// HARD BOUNDARIES (G6, revised by Owner 2026-10-16):
-//   - READ-ONLY intelligence: NEVER mutates business authority
-//     (no orders/payments/inventory/delivery — verified by tests)
+// HARD BOUNDARIES (G6, revised by Owner 2026-10-17 §3):
+//   - Order intake: MAY create a NEW order via the shared create-only intake
+//     (_shared/socialOrderIntake → canonical order service RPC, idempotent by
+//     event id). NEVER mutates business authority of EXISTING orders
+//     (no edit/cancel/pay/transition surface — verified by tests)
 //   - Outbound Meta LIMITED to two endpoints: comment reply + Messenger send
 //     of the validated draft text only; token from env, NEVER from a caller
 //   - Safety fail-safe kept: safety_flags ≠ none → NO auto-send; the draft
@@ -42,6 +44,18 @@ import {
   REPLY_CONTINUITY_RULES,
   getShopContext,
 } from '../_shared/shopContext.ts'
+import {
+  ORDER_EXTRACT_SCHEMA,
+  ORDER_EXTRACT_SYSTEM,
+  semanticOrderExtract,
+  matchOrderItems,
+  resolveOrCreateChannelIdentity,
+  resolveActiveRound,
+  ensureRoundsForDate,
+  bangkokDate,
+  submitNewOrder,
+  buildIntakeLine,
+} from '../_shared/socialOrderIntake.ts'
 
 const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions'
 
@@ -340,7 +354,104 @@ async function fetchRecentThread(ev: SocialEventRow): Promise<string> {
   return 'บทสนทนาล่าสุด (DATA — ใช้ตอบต่อเนื่อง ห้ามทักทายซ้ำ):\n' + lines.join('\n')
 }
 
-/** Process ONE event through classify → draft → persist. NEVER touches business state. */
+/** Order intake (Owner 2026-10-17 §3) — CREATE-ONLY through the approved
+ *  workflow: extract structured intent → match REAL catalog → resolve identity
+ *  (046 spine) → resolve real round → submitNewOrder (canonical RPC, idempotent
+ *  by event id). ไม่ชัดเจน/ไม่ครบ = ไม่สั่ง ให้ถามใน reply (ถามก่อน ห้ามเดา).
+ *  ผลสำเร็จ/ล้มเหลวรายงานโดย buildIntakeLine (ระบบเขียน) — ห้ามเคลมก่อนระบบยืนยัน. */
+async function runOrderIntake(ev: SocialEventRow, userMsg: string): Promise<{ footer: string; note: string }> {
+  const none = { footer: '', note: '' }
+  try {
+    const ex = await aiCall('social_reply_draft', ORDER_EXTRACT_SYSTEM, userMsg)
+    if (!ex.ok || !ex.text) return none
+    const parsed = parseStructuredOutput(ex.text, ORDER_EXTRACT_SCHEMA)
+    if (!parsed.ok) return none
+    const sem = semanticOrderExtract(parsed.value)
+    if (!sem.ok) return none
+    const x = sem.value
+    if (!x.wants_order) return none
+    if (!x.confirmed) {
+      return {
+        footer: '',
+        note: 'รายการยังไม่ได้รับการยืนยัน (' + (x.unclear || 'ข้อมูลไม่ครบ') + ') — ให้ถามยืนยันเมนู/จำนวน/รายละเอียดกับลูกค้า ห้ามสั่งแทนลูกค้า ห้ามพูดว่ารับออเดอร์แล้ว',
+      }
+    }
+    // Real catalog match — ห้ามเดาสินค้าแทนลูกค้า (§4: จับคู่กับ Catalog จริง)
+    const prods = await rest('GET', '/rest/v1/products?select=id,name,is_available&archived=eq.false&limit=300')
+    const catalog = (prods.status === 200 && Array.isArray(prods.j)) ? prods.j : []
+    const m = matchOrderItems(catalog, x.items)
+    if (m.matched.length === 0) {
+      return { footer: '', note: 'จับคู่เมนูไม่ได้ — ให้ถามชื่อเมนูที่ถูกต้องจากลูกค้า ห้ามเดาสินค้าแทน' }
+    }
+    if (m.unmatched.length > 0) {
+      return {
+        footer: '',
+        note: 'มีเมนูที่จับคู่ไม่ได้: ' + m.unmatched.join(', ') + ' — ให้ถามชื่อเมนูที่ถูกต้องก่อน ห้ามเดา/ห้ามสั่งแทน',
+      }
+    }
+    // Identity (046 customer_channel_identities — ใช้ร่วมกับ channel-webhook; ไม่เดาว่าเป็นลูกค้าคนเดียวกัน §5)
+    const id = ev.sender_id
+      ? await resolveOrCreateChannelIdentity(SB_URL, SERVICE, ev.platform, ev.sender_id)
+      : { customer_ref: null, provisioned: false }
+    if (!id.customer_ref) {
+      return { footer: '', note: 'ยังผูกบัญชีลูกค้าไม่ได้ — ให้ชวนลูกค้าสั่งต่อผ่านหน้าร้าน biteme-baby.com/checkout' }
+    }
+    // Real round of the target date (025 re-validates cutoff/capacity server-side)
+    const targetDate = x.order_mode === 'PRE_ORDER' ? x.scheduled_date : bangkokDate()
+    if (x.order_mode === 'PRE_ORDER') await ensureRoundsForDate(SB_URL, SERVICE, targetDate)
+    const round = await resolveActiveRound(SB_URL, SERVICE, targetDate)
+    if (!round) {
+      return { footer: '', note: 'ไม่มีรอบส่งเปิดรับสำหรับ ' + targetDate + ' — แจ้งตามจริงและให้ลูกค้าเลือกวัน/รอบอื่น' }
+    }
+    const res = await submitNewOrder(SB_URL, SERVICE, {
+      items: m.matched.map((i) => ({ product_id: i.product_id, quantity: i.quantity })),
+      roundId: round.id,
+      orderMode: x.order_mode === 'PRE_ORDER' ? 'PRE_ORDER' : 'SAME_DAY',
+      scheduledDate: x.order_mode === 'PRE_ORDER' ? x.scheduled_date : null,
+      customerName: ev.sender_name || '',
+      customerPhone: x.customer_phone,
+      address: x.address,
+      sourceChannel: ev.platform,
+      externalRef: ev.event_id, // idempotent — webhook/queue retry ไม่สร้างซ้ำ
+      customerRef: id.customer_ref,
+    })
+    const line = buildIntakeLine(res)
+    usage(ev.event_id, 'social_reply_draft', '-', res.ok ? 'intake_created' : 'intake_failed', { duplicate: !!res.duplicate })
+    return {
+      footer: line.text,
+      note: res.ok
+        ? 'ระบบบันทึกรายการแล้ว (ดูเลขที่ในบรรทัดท้ายข้อความจากระบบ) — รอบ: ' + round.label + ' วันที่ ' + targetDate + ' — ให้ลูกค้าตรวจรายการและชำระเงินผ่านลิงก์ ห้ามพูดว่าชำระเงินสำเร็จ ห้ามแต่งเลขที่ออเดอร์เอง'
+        : 'ระบบยังไม่ได้บันทึกรายการ — ห้ามพูดว่ารับออเดอร์สำเร็จ ให้ชวนลูกค้าสั่งต่อผ่านหน้าร้าน biteme-baby.com/checkout',
+    }
+  } catch {
+    return { footer: '', note: 'intake error — ห้ามพูดว่ารับออเดอร์สำเร็จ ให้ชวนสั่งต่อผ่านหน้าร้าน biteme-baby.com/checkout' }
+  }
+}
+
+/** Draft ไม่ผ่าน/ไม่ได้ แต่ระบบบันทึกรายการไว้แล้ว — ส่งบรรทัดระบบ (สร้างจากผล
+ *  บริการจริงโดย buildIntakeLine) อย่างน้อยไม่เงียบหาย และไม่เกินจริง. */
+async function fallbackIntakeReply(ev: SocialEventRow, footer: string, reason: string): Promise<{ id: string; result: string; detail?: string }> {
+  const stamp = new Date().toISOString()
+  const sent = await sendReply(ev, footer)
+  await rest('PATCH', `/rest/v1/social_events?id=eq.${encodeURIComponent(ev.id)}`, {
+    ai_model: null,
+    ai_reply_text: footer,
+    ai_validated: true,
+    ai_guardrail_flags: { fallback: reason.slice(0, 120) },
+    status: 'SUCCEEDED',
+    processed_at: stamp,
+    last_attempt_at: stamp,
+    reply_status: sent.ok ? 'sent' : 'failed',
+    reply_provider_id: sent.ok ? sent.providerId : null,
+    reply_attempted_at: stamp,
+    last_error: sent.ok ? null : 'META_SEND:' + String(sent.reason || 'error').slice(0, 100),
+  })
+  usage(ev.event_id, 'social_reply_send', '-', 'intake_fallback')
+  return { id: ev.id, result: 'succeeded', detail: 'intake_fallback:' + reason.slice(0, 60) + ' sent=' + sent.ok }
+}
+
+/** Process ONE event through classify → draft → persist. NEVER touches business authority
+ *  ของออเดอร์เดิม (create-only intake ด้านบนเท่านั้นที่เพิ่มออเดอร์ใหม่). */
 async function processEvent(ev: SocialEventRow): Promise<{ id: string; result: string; detail?: string }> {
   const content = (ev.content || '').slice(0, 2000)
   if (content.trim() === '') {
@@ -382,9 +493,26 @@ async function processEvent(ev: SocialEventRow): Promise<{ id: string; result: s
   }
   const classification = clsSem.value
 
+  // --- Task 1b (Owner 2026-10-17 §3): order intake — CREATE-ONLY via canonical RPC ---
+  // Messenger (ส่วนตัว): สร้างออเดอร์ "ใหม่" ได้เมื่อลูกค้ายืนยันชัดเจน — ผ่าน shared
+  // intake (idempotent ด้วย event id) เท่านั้น; ไม่ชัดเจน = ถามก่อน ห้ามเดา
+  // Public comment: ไม่สร้าง/ไม่เปิดเผยรายละเอียดรายการ (§5.1) — ชวนเข้า Inbox/หน้าร้าน
+  let intakeFooter = ''
+  let intakeNote = ''
+  if (classification.intent === 'order_request') {
+    if (ev.event_type === 'message') {
+      const intake = await runOrderIntake(ev, userMsg)
+      intakeFooter = intake.footer
+      intakeNote = intake.note
+    } else {
+      intakeNote = 'ลูกค้าสนใจสั่งอาหารในคอมเมนต์สาธารณะ — ให้ตอบเชิญทักข้อความ (Inbox) หรือเปิดหน้าร้าน biteme-baby.com/shop เพื่อยืนยันรายการ ห้ามเปิดเผยรายละเอียดรายการ/ราคา/ข้อมูลส่วนตัวในคอมเมนต์สาธารณะ'
+    }
+  }
+
   // --- Task 2: social_reply_draft (persona by surface: Messenger = น้อง Bite
   //     conversational waiter; Facebook comments = marketing reply + CTA) ---
-  const draftUser = userMsg + `\nผลวิเคราะห์ (DATA): ${JSON.stringify(classification)}`
+  const draftUser = userMsg + `\nผลวิเคราะห์ (DATA): ${JSON.stringify(classification)}` +
+    (intakeNote ? `\nสถานะระบบบันทึกรายการ (DATA — ตอบตามนี้เท่านั้น): ${intakeNote}` : '')
   const baseSystem = (ev.platform === 'MESSENGER' || ev.event_type === 'message') ? BITE_MESSENGER_SYSTEM : DRAFT_SYSTEM
   // บริบทสมบูรณ์ทุกช่องทาง (Owner 2026-10-17): persona ชุดเดียวกับเว็บ/เสียง
   // + ข้อมูลร้านจริงจาก DB (ห้ามมโน) + กติกาตอบต่อเนื่อง (กันตอบเบิ้ล/ทักซ้ำ/เงียบ)
@@ -398,6 +526,7 @@ async function processEvent(ev: SocialEventRow): Promise<{ id: string; result: s
     const reason = (draft.status === 'upstream_error' || draft.status === 'timeout' || draft.status === 'exception')
       ? 'AI_UPSTREAM:' + (draft.reason || draft.status)
       : 'AI_OUTPUT_REJECTED:' + (draft.reason || 'unknown')
+    if (intakeFooter) return fallbackIntakeReply(ev, intakeFooter, reason) // ระบบมีผลจริงแล้ว — ไม่เงียบ
     if (reason.startsWith('AI_UPSTREAM')) { await releaseToRetryable(ev.id, ev.attempts, reason); return { id: ev.id, result: 'retryable', detail: reason } }
     await markFailed(ev.id, ev.attempts, reason)
     return { id: ev.id, result: 'failed', detail: reason }
@@ -426,6 +555,9 @@ async function processEvent(ev: SocialEventRow): Promise<{ id: string; result: s
   // --- Persist AI state (columns from migration 109 — no schema change) ---
   // reply_status / reply_provider_id are written ONLY by the send step below
   // (validated draft text only — never caller-supplied content).
+  // ข้อความสุดท้าย = draft ที่ validate แล้ว + บรรทัดระบบจากผลบริการจริง (buildIntakeLine)
+  // — ระบบเป็นคนเขียนบรรทัดยืนยันเท่านั้น AI เคลมเองใน draft ไม่ได้ (§3)
+  const finalText = intakeFooter ? (draftOut.draft_text + '\n\n' + intakeFooter) : draftOut.draft_text
   const flags = {
     classification,
     reply: {
@@ -441,7 +573,7 @@ async function processEvent(ev: SocialEventRow): Promise<{ id: string; result: s
   }
   const patch = await rest('PATCH', `/rest/v1/social_events?id=eq.${encodeURIComponent(ev.id)}`, {
     ai_model: draft.model || null,
-    ai_reply_text: draftOut.draft_text,
+    ai_reply_text: finalText,
     ai_validated: true,
     ai_guardrail_flags: flags,
     status: 'SUCCEEDED',
@@ -457,7 +589,7 @@ async function processEvent(ev: SocialEventRow): Promise<{ id: string; result: s
     return { id: ev.id, result: 'succeeded', detail: `intent=${classification.intent} requires_human_review=${requiresHumanReview} sent=false` }
   }
   // --- AUTO-SEND step (Owner 2026-10-16): send the validated text now ---
-  const sent = await sendReply(ev, draftOut.draft_text)
+  const sent = await sendReply(ev, finalText)
   const stamp = new Date().toISOString()
   if (!sent.ok) {
     await rest('PATCH', `/rest/v1/social_events?id=eq.${encodeURIComponent(ev.id)}`, {
