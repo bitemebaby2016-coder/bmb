@@ -6,6 +6,7 @@ import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { showToast } from '@/components/ui/ToastContainer'
 import { getBusinessSettings, setBusinessSetting } from '@/lib/bmbAdminApi_settings'
+import { SOCIAL_LINKS_SETTING_KEY, getSocialLinks, type SocialLinks } from '@/lib/socialLinks'
 import { THEATER_DAILY_COPY_KEY, THEATER_DAILY_COPY_STARTER } from '@/lib/theaterDailyCopy'
 import { supabase } from '@/lib/supabase'
 
@@ -18,20 +19,23 @@ export function AdminSettings() {
   const [zones, setZones] = useState<any[] | null>(null)
   const [brand, setBrand] = useState<any>(null)
   const [branch, setBranch] = useState<any>(null)
+  const [socials, setSocials] = useState<SocialLinks | null>(null)
 
   useEffect(() => { load() }, [])
 
   async function load() {
-    const [s, z, b, br] = await Promise.all([
+    const [s, z, b, br, sl] = await Promise.all([
       getBusinessSettings(),
       supabase.from('delivery_zones').select('*').order('min_distance_km'),
       supabase.from('brands').select('id, display_name, name, theme_tokens').eq('is_default', true).maybeSingle(),
       supabase.from('branches').select('id, display_name, name, service_radius_km, operating_hours').eq('is_default', true).maybeSingle(),
+      getSocialLinks(true),
     ])
     setSettings(s)
     setZones(z.data ?? [])
     setBrand(b.data ?? null)
     setBranch(br.data ?? null)
+    setSocials(sl)
     setLoading(false)
   }
 
@@ -100,6 +104,13 @@ export function AdminSettings() {
       .eq('id', branch.id)
     showToast(error ? `Branch failed: ${error.message}` : 'Saved branch', error ? 'error' : 'success')
     if (!error) await load()
+  }
+
+  // ลิงก์โซเชียล/LINE — แอดมินใส่เองได้ทีหลัง (คีย์ business_settings: social_links)
+  async function saveSocials() {
+    if (!socials) return
+    const ok = await setBusinessSetting(SOCIAL_LINKS_SETTING_KEY, socials)
+    showToast(ok ? 'บันทึก social_links แล้ว — ฟุตเตอร์อัปเดตทันที' : 'Failed to save social_links', ok ? 'success' : 'error')
   }
 
   return (
@@ -176,6 +187,36 @@ export function AdminSettings() {
 
       {/* ===== FINAL CONFIG CLOSURE: canonical นอก business_settings (RLS admin manage) ===== */}
       <div className="space-y-4 mt-8" data-testid="admin-config-external">
+        <h2 className="text-xl font-bold text-brand-accent">📱 โซเชียล & LINE (แสดงในฟุตเตอร์)</h2>
+        {socials && (
+          <div className="card" data-testid="social-links-config">
+            <p className="text-xs text-brand-muted mb-2">
+              ช่องที่เว้นว่าง = ไม่แสดงปุ่มนั้นในฟุตเตอร์ · ใส่ URL เต็ม (เช่น https://line.me/R/ti/p/@xxxx) ·
+              LINE ID ใส่ได้ทีหลัง ระบบเก็บใน business_settings คีย์ <code>social_links</code>
+            </p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+              {([
+                ['facebook', 'Facebook (URL เต็ม)'],
+                ['messenger', 'Messenger (URL เต็ม)'],
+                ['line', 'LINE — ลิงก์เพิ่มเพื่อน (URL เต็ม)'],
+                ['line_id', 'LINE ID (เช่น @bitemebaby)'],
+                ['instagram', 'Instagram (URL)'],
+                ['tiktok', 'TikTok (URL)'],
+                ['youtube', 'YouTube (URL)'],
+              ] as const).map(([field, label]) => (
+                <label key={field} className="text-xs flex flex-col gap-1">{label}
+                  <input
+                    className="input"
+                    value={socials[field] ?? ''}
+                    onChange={(e) => setSocials({ ...socials, [field]: e.target.value })}
+                  />
+                </label>
+              ))}
+            </div>
+            <button onClick={() => void saveSocials()} className="btn btn-success text-sm mt-2">💾 บันทึกลิงก์โซเชียล</button>
+          </div>
+        )}
+
         <h2 className="text-xl font-bold text-brand-accent">🚚 Delivery Zones (ค่าส่ง — delivery_zones)</h2>
         {(zones ?? []).map((z) => (
           <div key={z.id} className="card" data-testid={`zone-${z.id}`}>

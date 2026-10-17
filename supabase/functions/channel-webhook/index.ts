@@ -213,6 +213,14 @@ async function processEntry(obj: string, entry: any, ctx: Ctx) {
   ctx.channel = channel
   ctx.extUser = extUser
 
+  // 2026-10-17 self-echo guard: the page's own outbound message/comment comes
+  // back as a webhook echo (sender id == page id). Ingesting it made the AI
+  // reply to ITSELF (the "ตอบเบิ้ล" the Owner saw). Never ingest self-echoes.
+  if (entry.id && extUser && extUser === entry.id) {
+    await audit('channel_event_rejected', ('self-echo:' + eventId).slice(0, 120), 'event ignored — page own echo (sender is the page)', { channel })
+    return
+  }
+
     // ===== G3: durable social event ingestion (Owner hard constraints) =====
   // Server-side page allowlist + tenant derivation (HC-1): page_id must be
   // bound in channel_page_bindings; tenant/brand derived in the RPC. The

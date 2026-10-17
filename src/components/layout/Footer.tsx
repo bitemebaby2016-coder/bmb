@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import type { ProductCategory } from '@/types'
+import { DEFAULT_SOCIAL_LINKS, getSocialLinks, socialLinkItems, type SocialLinkItem } from '@/lib/socialLinks'
 
 // ── ข้อมูลร้านจริง (Owner ยืนยัน 2026-10-17) — ใช้ตรงกันทั้ง footer/หน้าติดต่อ ──
 export const SHOP_CONTACT = {
@@ -46,10 +47,8 @@ const staticSections: Array<{ title: string; links: FooterLink[] }> = [
   },
 ]
 
-const socialLinks = [
-  { icon: '📘', label: 'Facebook', path: SHOP_CONTACT.facebook },
-  { icon: '💬', label: 'Messenger', path: SHOP_CONTACT.messenger },
-]
+// ปุ่มโซเชียล: ลิงก์จาก business_settings `social_links` (แอดมินแก้เองได้ที่
+// AdminSettings → โซเชียล & LINE) — ช่องว่าง = ไม่แสดงปุ่มนั้น
 
 export function Footer() {
   // ลิงก์ "เมนูอาหาร" ดึงจากหัวข้อเมนูจริงในฐานข้อมูล (active + ไม่ archived เรียงตามลำดับ)
@@ -71,6 +70,16 @@ export function Footer() {
         if (links.length > 0) setMenuLinks([{ label: 'ดูเมนูทั้งหมด', path: '/menu' }, ...links])
       })
       .catch(() => { /* โหลดไม่ได้ = โชว์ลิงก์เมนูทั้งหมดอย่างเดียว */ })
+    return () => { alive = false }
+  }, [])
+
+  // ปุ่มโซเชียล — โหลดจาก business_settings (fallback = ค่าจริงของร้าน)
+  const [socials, setSocials] = useState<SocialLinkItem[]>(() => socialLinkItems(DEFAULT_SOCIAL_LINKS))
+  useEffect(() => {
+    let alive = true
+    getSocialLinks()
+      .then((links) => { if (alive) setSocials(socialLinkItems(links)) })
+      .catch(() => { /* โหลดไม่ได้ = ใช้ค่าเริ่มต้นต่อ */ })
     return () => { alive = false }
   }, [])
 
@@ -118,12 +127,12 @@ export function Footer() {
           ))}
         </div>
 
-        {/* Social Links */}
+        {/* Social Links — ลิงก์จาก business_settings (แอดมินแก้ได้ที่ AdminSettings) */}
         <div className="flex justify-center gap-4 mb-6">
-          {socialLinks.map((social) => (
+          {socials.map((social) => (
             <a
               key={social.label}
-              href={social.path}
+              href={social.href}
               target="_blank"
               rel="noopener noreferrer"
               className="w-10 h-10 rounded-full bg-brand-bg flex items-center justify-center text-xl hover:bg-brand-primary hover:text-white transition-all"

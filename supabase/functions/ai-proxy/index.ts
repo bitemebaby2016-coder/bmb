@@ -285,7 +285,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
     }
   }
 
-  const apiKey = Deno.env.get('OPENROUTER_API_KEY') || ''
+  const apiKey = Deno.env.get('BMB_OPENROUTER_API_KEY') || Deno.env.get('OPENROUTER_API_KEY') || ''
   if (!apiKey) return json({ error: 'AI proxy not configured (OPENROUTER_API_KEY missing)' }, 500)
 
   let payload: { messages?: ChatMessage[]; model?: string; model_id?: string; provider?: string; endpoint?: string; task?: string; maxTokens?: number; stream?: boolean; mode?: 'transcribe'; audioBase64?: string; mimeType?: string }

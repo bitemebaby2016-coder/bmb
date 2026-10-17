@@ -461,20 +461,24 @@ export function TalkToBite({ mode = 'overlay', initialPhase = 'landing', landing
     setInput('')
     setBiteState('THINKING')
     setTyping(true)
-    voiceRef.current?.stopSpeaking()
-    // NL order intent first ("เอาของเมื่อวาน แต่เปลี่ยนน้ำเป็นชาเขียว") — if handled,
-    // we stay in Talk to Bite and show a real order-again/modified draft.
-    if (await tryOrderIntent(text)) {
-      setTyping(false)
-      return
-    }
+    // 2026-10-17: ทุกอย่างหลัง setTyping(true) ต้องอยู่ใน try/finally — ก่อนหน้านี้
+    // ถ้า voice/TTS โยน error ก่อนเข้า try (เช่น stopSpeaking) typing จะค้าง true
+    // ตลอดกาล = แชต "หายไปเลย" แบบที่ Owner เจอ — ตอนนี้ปุ่มส่งกลับมาใช้ได้เสมอ
     try {
+      try {
+        voiceRef.current?.stopSpeaking()
+      } catch {
+        // เสียงพัง ต้องไม่พังแชต
+      }
+      // NL order intent first ("เอาของเมื่อวาน แต่เปลี่ยนน้ำเป็นชาเขียว") — if handled,
+      // we stay in Talk to Bite and show a real order-again/modified draft.
+      if (await tryOrderIntent(text)) return
       // Context pipe — the Floating Bite / page context stored by openChat()
       // rides along as runtimeContext (existing aiService parameter, no new engine).
       const uiContext = useBiteAIStore.getState().fullContext
-      const reply = await chatWithAI(text, uiContext || undefined, { voiceMode: voiceReply })
+      const reply = (await chatWithAI(text, uiContext || undefined, { voiceMode: voiceReply })).trim()
       setBiteState('SPEAKING')
-      pushAssistant(reply)
+      pushAssistant(reply || 'ขอโทษครับ ผมตอบไม่ครบในรอบนี้ ลองถามใหม่อีกครั้งนะครับ 🙏')
       setBiteState('IDLE')
     } catch {
       pushAssistant('ขอโทษครับ เกิดข้อผิดพลาดในการเชื่อมต่อ กรุณาลองใหม่อีกครั้งนะ 🙏')
