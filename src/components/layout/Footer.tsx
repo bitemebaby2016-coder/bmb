@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import type { ProductCategory } from '@/types'
 import { DEFAULT_SOCIAL_LINKS, getSocialLinks, socialLinkItems, type SocialLinkItem } from '@/lib/socialLinks'
-import { preOrderEntryPath } from '@/lib/catalogStructure'
+import { preOrderEntryPath, withPreOrderTab } from '@/lib/catalogStructure'
+import { showToast } from '@/components/ui/ToastContainer'
 
 // ── ข้อมูลร้านจริง (Owner ยืนยัน 2026-10-17) — ใช้ตรงกันทั้ง footer/หน้าติดต่อ ──
 export const SHOP_CONTACT = {
@@ -56,14 +57,16 @@ export function Footer() {
   // — แอดมินเพิ่ม/แก้/เรียงหัวข้อเมื่อไร ฟุตเตอร์ตามทันที ไม่ต้องแก้โค้ด
   const [menuLinks, setMenuLinks] = useState<FooterLink[]>([{ label: 'ดูเมนูทั้งหมด', path: '/menu' }])
   // ปุ่ม Pre-order (Directive §8) — เข้า Pre-order workflow เดียวกับบน HomePage ผ่าน preOrderEntryPath
-  const [preOrderPath, setPreOrderPath] = useState('/menu')
+  // + แนบ tab=pre-order (Owner 2026-10-18: ปุ่มเดิมลิงก์กลับหน้าเดิมเฉย ๆ กดแล้วดูเหมือนพัง)
+  const location = useLocation()
+  const [preOrderPath, setPreOrderPath] = useState(withPreOrderTab('/menu'))
   useEffect(() => {
     let alive = true
     import('@/lib/bmbAdminApi_products')
       .then(({ getCategories }) => getCategories())
       .then((cats: ProductCategory[]) => {
         if (!alive) return
-        setPreOrderPath(preOrderEntryPath(cats.filter((c) => c.is_active && !c.archived)))
+        setPreOrderPath(withPreOrderTab(preOrderEntryPath(cats.filter((c) => c.is_active && !c.archived))))
         const links: FooterLink[] = cats
           .filter((c) => c.is_active && !c.archived)
           .sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0))
@@ -112,6 +115,13 @@ export function Footer() {
         <Link
           to={preOrderPath}
           data-testid="footer-preorder-entry"
+          onClick={() => {
+            // อยู่หน้าเป้าหมายอยู่แล้ว → แจ้ง + เลื่อนขึ้นบน (กดแล้วต้องเห็นผลเสมอ)
+            if (location.pathname + location.search === preOrderPath) {
+              showToast('อยู่ที่เมนู "จองล่วงหน้า" แล้ว — เลือกเมนูที่ต้องการจองได้เลยค่ะ', 'info')
+              window.scrollTo({ top: 0, behavior: 'smooth' })
+            }
+          }}
           className="inline-block px-6 py-3 rounded-xl bg-brand-primary text-white font-medium hover:opacity-90 transition-opacity"
         >
           📅 จองล่วงหน้า (Pre-order) — เลือกวันและรอบจัดส่ง

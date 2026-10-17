@@ -9,6 +9,24 @@
 
 ---
 
+## Task ID: PREORDER-ENTRY-2026-10-18 (ปุ่มจองล่วงหน้าก่อนฟุตเตอร์กดไม่ได้)
+- **Status:** CLOSED — gates ผ่านครบ (lint=0 · tests ผ่านทั้งชุด · build=0)
+- **Objective (Owner):** "ปุ่มจองล่วงหน้าตรงก่อนฟุตเตอร์มายังไง กดก็ไม่ได้" (หน้า `/menu?category=cat-2`)
+- **Root cause:** ① ปุ่มนี้คือ `Footer.tsx` "Pre-order entry (Directive §8)" — เป็น `<Link>` ไป `preOrderEntryPath()` = `/menu?category=<หมวดพรีออเดอร์>` ซึ่ง**เป็น URL ของหน้าที่ยืนอยู่แล้ว** → กดแล้วไม่มีอะไรเกิดขึ้น + MenuPage ไม่เคยอ่าน `?tab=` → แม้กดจากหน้าอื่นก็เปิดที่แท็บ "วันนี้" ไม่ใช่ "จองล่วงหน้า" ② ภาพ QA มาจาก **preview build เก่า** (`a0ffceac.bitemebaby.pages.dev` — ข้อความปุ่มยังเป็น "...รอบส่งจริง" ซึ่งถูกเปลี่ยนเป็น "...รอบจัดส่ง" ตั้งแต่ commit `ab50dc2`) ไม่ใช่ `biteme-baby.com`
+- **Completed:**
+  - `catalogStructure.ts` — เพิ่ม `withPreOrderTab()` ต่อ `?tab=pre-order` ให้ deep-link (path เดิมของ `preOrderEntryPath` ไม่แตะ — contract 5 ข้อเดิมคงเดิม)
+  - `MenuPage.tsx` — อ่าน `?tab=pre-order|same-day` → สลับแท็บเมนูให้ทันที
+  - `Footer.tsx` + `HomePage.tsx` — จุดเข้าทั้งสองใช้ `withPreOrderTab(preOrderEntryPath(...))`; Footer เพิ่ม feedback ตอนกดซ้ำขณะอยู่หน้าเป้าหมาย (toast แจ้ง + เลื่อนขึ้นบน) — กดแล้วเห็นผลเสมอ
+  - `preOrderEntry.test.ts` — เพิ่ม 4 ข้อ (withPreOrderTab + source invariants Footer/Home/MenuPage)
+- **Verified:** `npm run lint` = 0 · `npm test` ผ่านทั้งชุด · `npm run build` = 0 — flow ปุ่มการ์ด "📅 จองล่วงหน้า" = openBuilder (แผ่น topping) → เพิ่มตะกร้า PRE_ORDER → `/checkout?mode=pre-order` (กลไกเดียวกับปุ่มเพิ่มลงตะกร้าที่ Owner ยืนยันว่าใช้ได้แล้ว)
+- **Files Changed:** `src/lib/catalogStructure.ts` · `src/pages/MenuPage.tsx` · `src/components/layout/Footer.tsx` · `src/pages/HomePage.tsx` · `src/__tests__/preOrderEntry.test.ts`
+- **Known Risks / หมายเหตุ:**
+  - **ให้ทดสอบบน `biteme-baby.com` เท่านั้น** — `*.bitemebaby.pages.dev` เป็น stale/preview build (ตาม AGENTS.md) ปุ่มข้อความ "รอบส่งจริง" ในภาพ = เวอร์ชันก่อน `ab50dc2`
+  - `[Log#pre-order] {productId, quantity:1, deliveryRoundId:'', scheduledDate:''}` ใน console = **log ปกติ** ของปุ่มการ์ด (payload เริ่มต้น ไม่ใช่ error) — หลัง log ต้องเห็นแผ่น topping เด้ง; ถ้าไม่เด้งให้ดู console ต่อว่ามี error ไหม
+- **Next Exact Action:** ทดสอบบน biteme-baby.com — กดปุ่มจองล่วงหน้าก่อนฟุตเตอร์จากหน้าแรก/หน้าเมนู → ต้องได้แท็บ "จองล่วงหน้า (N)" + การ์ดพร้อมป้ายวันจัดส่ง
+
+---
+
 ## Task ID: UI-FIX-QA-2026-10-17 (แก้ UI จาก QA จริง + รูปเมนูลอยเหนือกรอบ)
 - **Status:** CLOSED — gates ผ่านครบ (lint=0 · tests 105 ไฟล์/1,108 · build=0)
 - **Objective (Owner):** แก้ UI จากการทดสอบจริงบน `biteme-baby.com/check` (เบอร์ทดสอบ, ห่างครัว ~500 ม., มือถือ dark mode) + งานใหม่ "รูปเมนูลอยเหนือกรอบขึ้นด้านบนนิดหน่อย (มือถือเหมือนมี hover ตลอด / เดสก์ท็อป hover ขยับซ้ำจากเดิม)" — **ข้ามปัญหา "เพิ่มลงตะกร้า" ตามคำสั่ง Owner ("ใช้ได้แล้วข้ามข้อนี้ไป")**

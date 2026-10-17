@@ -47,6 +47,13 @@ export function MenuPage() {
     if (cat && cat.id !== selectedCategory) setSelectedCategory(cat.id)
   }, [categories])
 
+  // ✓ Deep-link ?tab=pre-order (ปุ่มจองล่วงหน้า Footer/Home — Directive §8):
+  // เข้า /menu แล้วต้องเปิด "แท็บจองล่วงหน้า" ให้ทันที ไม่ใช่ค้างที่แท็บวันนี้
+  useEffect(() => {
+    const wantTab = searchParams.get('tab')
+    if (wantTab === 'pre-order' || wantTab === 'same-day') setMenuTab(wantTab)
+  }, [searchParams])
+
   useEffect(() => {
     async function loadData() {
       try {

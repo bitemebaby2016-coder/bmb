@@ -48,7 +48,7 @@ import {
   type SiteCopy,
 } from '@/lib/homePopular'
 import type { VerifiedCustomerReview, Product, ProductCategory, SameDayOrderPayload, PreOrderPayload, HomeReview } from '@/types'
-import { preOrderEntryPath } from '@/lib/catalogStructure'
+import { preOrderEntryPath, withPreOrderTab } from '@/lib/catalogStructure'
 
 // ⚡ The Food Theater stage is code-split (aiServerMemory chain); it renders
 // real catalog picks + canonical cart actions as the first section of /shop.
@@ -334,7 +334,7 @@ export function HomePage() {
             <h2 id="home-preorder-entry-heading" className="font-bold text-brand-accent">📅 {siteCopy.homePreOrderTitle}</h2>
             <p className="text-sm text-brand-muted">เลือกวันและรอบจัดส่งล่วงหน้าตามรอบที่ร้านเปิดรับ</p>
           </div>
-          <Link to={preOrderEntryPath(categories)} data-testid="home-preorder-entry" className="btn btn-primary">
+          <Link to={withPreOrderTab(preOrderEntryPath(categories))} data-testid="home-preorder-entry" className="btn btn-primary">
             เลือกเมนูจองล่วงหน้า →
           </Link>
         </div>

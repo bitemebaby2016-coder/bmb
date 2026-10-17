@@ -114,3 +114,12 @@ export function preOrderEntryPath(categories: Array<Pick<ProductCategory, 'id' |
   const cat = categories.find((c) => saleModeOfCategory(c) === 'pre_order')
   return cat ? `/menu?category=${encodeURIComponent(cat.id)}` : '/menu'
 }
+
+/**
+ * แนบ ?tab=pre-order ให้ deep-link เข้าหน้าเมนูแล้ว "เปิดแท็บจองล่วงหน้าทันที"
+ * (Owner 2026-10-18: ปุ่มจองล่วงหน้าก่อนฟุตเตอร์เดิมลิงก์กลับ URL เดิมเฉย ๆ
+ * กดแล้วไม่มีอะไรเกิดขึ้น — ต่อ tab นี้ให้ทุกจุดเข้า workflow เดียวกัน)
+ */
+export function withPreOrderTab(path: string): string {
+  return `${path}${path.includes('?') ? '&' : '?'}tab=pre-order`
+}

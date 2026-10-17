@@ -23,9 +23,10 @@
 
 ### 2.1 แก้ UI ที่เหลือ
 - [x] รายการ UI จากภาพ QA ของ Owner (หน้า /check + รูปเมนูลอยเหนือกรอบ) — ปิดใน task UI-FIX-QA-2026-10-17
+- [x] ปุ่มจองล่วงหน้าก่อนฟุตเตอร์กดไม่ได้ — ปิดใน task PREORDER-ENTRY-2026-10-18 (deep-link `?tab=pre-order` + feedback กดซ้ำ; ทดสอบบน biteme-baby.com เท่านั้น — preview pages.dev = build เก่า)
 - [ ] Theater/Waiting Stage unity (ค้างจาก PRE-OPENING audit)
 - [ ] Login context restoration (ค้างจาก PRE-OPENING audit)
-- [ ] **เช็กภาพจริงบนเครื่อง Owner หลัง deploy** — การ์ด fee error ("ยังคำนวณไม่สำเร็จ") ที่เคยดูเป็นการ์ดขาว label แปลก + รูปเมนู hover/ลอย + แถวรอบส่ง (disabled "ปิดรับแล้ว")
+- [ ] **เช็กภาพจริงบนเครื่อง Owner หลัง deploy** — การ์ด fee error ("ยังคำนวณไม่สำเร็จ") ที่เคยดูเป็นการ์ดขาว label แปลก + รูปเมนู hover/ลอย + แถวรอบส่ง (disabled "ปิดรับแล้ว") + ปุ่มจองล่วงหน้าก่อนฟุตเตอร์
 - [ ] Google Maps key/referrer — ทำให้แผนที่โหลดได้จริงบน prod (ทาง fallback ยังใช้ได้)
 - กติกา: ทุกครั้งปิดด้วย gates — tsc 0 · lint 0 · tests ทั้งชุดผ่าน · build 0
 

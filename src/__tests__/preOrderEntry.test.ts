@@ -5,9 +5,10 @@
 // ============================================
 
 import { describe, it, expect } from 'vitest'
-import { preOrderEntryPath, saleModeOfCategory } from '@/lib/catalogStructure'
+import { preOrderEntryPath, saleModeOfCategory, withPreOrderTab } from '@/lib/catalogStructure'
 import homePageSrc from '../pages/HomePage.tsx?raw'
 import footerSrc from '../components/layout/Footer.tsx?raw'
+import menuPageSrc from '../pages/MenuPage.tsx?raw'
 
 describe('preOrderEntryPath — ทางเข้า Pre-order workflow เดียว', () => {
   it('มีหมวดพรีออเดอร์ → /menu?category=<id> ของหมวดนั้น (deep-link ที่ MenuPage รองรับ)', () => {
@@ -29,6 +30,22 @@ describe('preOrderEntryPath — ทางเข้า Pre-order workflow เด�
   })
 })
 
+describe('withPreOrderTab — deep-link เปิดแท็บจองล่วงหน้า (Owner 2026-10-18: ปุ่มก่อนฟุตเตอร์กดแล้วไม่ไปไหน)', () => {
+  it('path ที่มี query อยู่แล้ว → ต่อ &tab=pre-order', () => {
+    expect(withPreOrderTab('/menu?category=cat-2')).toBe('/menu?category=cat-2&tab=pre-order')
+  })
+
+  it('path ไม่มี query → ต่อ ?tab=pre-order', () => {
+    expect(withPreOrderTab('/menu')).toBe('/menu?tab=pre-order')
+  })
+
+  it('รวมกับ preOrderEntryPath ได้ URL ที่ MenuPage ใช้เปิดแท็บทันที', () => {
+    const url = withPreOrderTab(preOrderEntryPath([{ id: 'cat-2', name: 'จองล่วงหน้า / พรีออเดอร์', slug: 'pre-order' }]))
+    expect(url).toBe('/menu?category=cat-2&tab=pre-order')
+    expect(url).toContain('tab=pre-order')
+  })
+})
+
 describe('source invariants — สองตำแหน่งเข้า workflow เดียวกัน', () => {
   it('HomePage: จุดเข้า Pre-order อยู่ก่อน Popular Menu และใช้ preOrderEntryPath(categories)', () => {
     expect(homePageSrc).toContain('data-testid="home-preorder-entry"')
@@ -46,5 +63,14 @@ describe('source invariants — สองตำแหน่งเข้า workf
     expect(footerSrc).toContain('data-testid="footer-preorder-entry"')
     expect(footerSrc).toContain('preOrderEntryPath(')
     expect(footerSrc).toContain('to={preOrderPath}')
+    // Owner 2026-10-18: ปุ่มต้องพาเข้า "แท็บ" จองล่วงหน้า + กดซ้ำขณะอยู่หน้านั้นต้องเห็นผล
+    expect(footerSrc).toContain('withPreOrderTab(')
+    expect(footerSrc).toContain('showToast(')
+  })
+
+  it('HomePage entry ใช้ withPreOrderTab เดียวกัน และ MenuPage รับ ?tab= (เปิดแท็บให้ทันที)', () => {
+    expect(homePageSrc).toContain('withPreOrderTab(preOrderEntryPath(categories))')
+    expect(menuPageSrc).toContain("searchParams.get('tab')")
+    expect(menuPageSrc).toContain("setMenuTab(wantTab)")
   })
 })
