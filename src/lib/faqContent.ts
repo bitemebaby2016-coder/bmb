@@ -51,7 +51,7 @@ export const faqs: FAQItem[] = [
   },
   {
     q: 'ติดต่อ Bite Me Baby ได้อย่างไร?',
-    a: 'คุสามารถติดต่อเราได้ผ่าน:\n• อีเมล: hello@bitemebaby.co.th\n• หน้า ติดต่อเรา — กรอกแบบฟอรมหรือแผนที่\n• แอพพลิเคชั่น — มีปุ่มแชท AI Avatar อย่มุมขวาล่างของทุกหน้า\n•social media — Facebook, LINE Official Account'
+    a: 'คุสามารถติดต่อเราได้ผ่าน:\n• โทรศัพท์: 094 2649269 (Open Daily 7.00 am. - 20.00 pm.)\n• อีเมล: admin@biteme-baby.com\n• Messenger / Facebook: ปุ่มโซเชียลในฟุตเตอร์\n• หน้า ติดต่อเรา — กรอกแบบฟอรมหรือแผนที่\n• แอพพลิเคชั่น — มีปุ่มแชท AI Avatar อย่มุมขวาล่างของทุกหน้า\n•social media — Facebook, Messenger'
   },
   {
     q: 'AI Assistant ตอบคำถามอะไรได้บ้าง?',

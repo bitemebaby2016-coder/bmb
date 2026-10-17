@@ -265,7 +265,7 @@ export function HomePage() {
   return (
     <div className="max-w-7xl mx-auto px-4 py-6 pb-28 bg-organic min-h-screen">
       {/* SEO: Visually hidden H1 with primary keywords */}
-      <h1 className="sr-only">Bite Me Baby — สั่งอาหารจัดส่งเมืองจันทบุรี รัศมี 5 กม. AI แนะนำเมนู 24/7</h1>
+      <h1 className="sr-only">Bite Me Baby — สั่งอาหารจัดส่งเมืองจันทบุรี AI แนะนำเมนู 24/7</h1>
       
       {/* 1. BITE FOOD THEATER — food-first stage (replaces the duplicated Bite landing; the
           full-screen landing lives at "/", the conversation engine stays in TalkToBite) */}

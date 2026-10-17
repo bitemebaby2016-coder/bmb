@@ -4,7 +4,7 @@
 // ============================================
 
 import { useState, useEffect } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import type { Product, ProductCategory, SameDayOrderPayload, PreOrderPayload, AvailabilityState, OrderMode, DeliveryRound } from '@/types'
 import { getProducts, getCategories, getDeliveryRounds } from '@/lib/bmbAdminApi_products'
 import { buildHeadingGroups, headingChips } from '@/lib/catalogStructure'
@@ -27,6 +27,25 @@ export function MenuPage() {
   // วันจัดส่งจริงจาก menu_schedule (UX fix 2026-10-15 — ไม่ใช้ products.scheduled_date)
   const [scheduleMap, setScheduleMap] = useState<ProductScheduleMap>({})
   const addItem = useCartStore((s) => s.addItem)
+  // ลิงก์ตรงจากฟุตเตอร์/ปุ่มแชร์: /menu?category=<slug หรือ id> → กรองหัวข้อเมนูให้ทันที
+  const [searchParams, setSearchParams] = useSearchParams()
+
+  function pickCategory(catId: string) {
+    setSelectedCategory(catId)
+    setSearchParams((prev) => {
+      const p = new URLSearchParams(prev)
+      if (catId === 'all') p.delete('category')
+      else p.set('category', catId)
+      return p
+    }, { replace: true })
+  }
+
+  useEffect(() => {
+    const want = searchParams.get('category')
+    if (!want || categories.length === 0) return
+    const cat = categories.find((c) => c.id === want) ?? categories.find((c) => c.slug === want)
+    if (cat && cat.id !== selectedCategory) setSelectedCategory(cat.id)
+  }, [categories])
 
   useEffect(() => {
     async function loadData() {
@@ -169,9 +188,9 @@ export function MenuPage() {
           <svg className="absolute left-3 top-3 w-5 h-5 text-brand-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
         </div>
         <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
-          <button onClick={() => setSelectedCategory('all')} className={`flex items-center gap-2 px-4 py-2 rounded-full font-medium whitespace-nowrap transition-all ${selectedCategory === 'all' ? 'bg-brand-primary text-white shadow-md' : 'bg-white text-brand-accent hover:bg-orange-50'}`}>🜽 ทั้งหมด</button>
+          <button onClick={() => pickCategory('all')} className={`flex items-center gap-2 px-4 py-2 rounded-full font-medium whitespace-nowrap transition-all ${selectedCategory === 'all' ? 'bg-brand-primary text-white shadow-md' : 'bg-white text-brand-accent hover:bg-orange-50'}`}>🜽 ทั้งหมด</button>
           {chips.map((cat) => (
-            <button key={cat.id} onClick={() => setSelectedCategory(cat.id)} className={`flex items-center gap-2 px-4 py-2 rounded-full font-medium whitespace-nowrap transition-all ${selectedCategory === cat.id ? 'bg-brand-primary text-white shadow-md' : 'bg-white text-brand-accent hover:bg-orange-50'}`}>{cat.icon} {cat.name}</button>
+            <button key={cat.id} onClick={() => pickCategory(cat.id)} className={`flex items-center gap-2 px-4 py-2 rounded-full font-medium whitespace-nowrap transition-all ${selectedCategory === cat.id ? 'bg-brand-primary text-white shadow-md' : 'bg-white text-brand-accent hover:bg-orange-50'}`}>{cat.icon} {cat.name}</button>
           ))}
         </div>
       </div>

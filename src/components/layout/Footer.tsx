@@ -1,16 +1,29 @@
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+import type { ProductCategory } from '@/types'
 
-const footerSections = [
-  {
-    title: 'เมนูอาหาร',
-    links: [
-      { label: 'จานเดียว', path: '/menu?category=dish' },
-      { label: 'ข้าว', path: '/menu?category=rice' },
-      { label: 'แกง', path: '/menu?category=curry' },
-      { label: 'เครื่องดื่ม', path: '/menu?category=drink' },
-      { label: 'ของหวาน', path: '/menu?category=dessert' },
-    ],
-  },
+// ── ข้อมูลร้านจริง (Owner ยืนยัน 2026-10-17) — ใช้ตรงกันทั้ง footer/หน้าติดต่อ ──
+export const SHOP_CONTACT = {
+  address: 'เมืองจันทบุรี',
+  phone: '094 2649269',
+  phoneHref: 'tel:0942649269',
+  email: 'admin@biteme-baby.com',
+  emailHref: 'mailto:admin@biteme-baby.com',
+  hours: 'Open Daily 7.00 am. - 20.00 pm.',
+  facebook: 'https://web.facebook.com/profile.php?id=61586146030943',
+  messenger: 'https://m.me/61586146030943',
+}
+
+type FooterLink = { label: string; path?: string; href?: string }
+
+const contactLinks: FooterLink[] = [
+  { label: `📍 ${SHOP_CONTACT.address}`, path: '/contact' },
+  { label: `📞 ${SHOP_CONTACT.phone}`, href: SHOP_CONTACT.phoneHref },
+  { label: `✉️ ${SHOP_CONTACT.email}`, href: SHOP_CONTACT.emailHref },
+  { label: `🕐 ${SHOP_CONTACT.hours}`, path: '/contact' },
+]
+
+const staticSections: Array<{ title: string; links: FooterLink[] }> = [
   {
     title: 'เกี่ยวกับเรา',
     links: [
@@ -31,25 +44,41 @@ const footerSections = [
       { label: 'แชร์เพื่อน รับแต้ม', path: '/viral' },
     ],
   },
-  {
-    title: 'ติดต่อเรา',
-    links: [
-      { label: '📍 เมืองจันทบุรี รัศมี 5 กม.', path: '/contact' },
-      { label: ' 08X-XXX-XXXX', path: '/contact' },
-      { label: '✉️ hello@bitemebaby.co.th', path: '/contact' },
-      { label: ' 08:00 - 22:00', path: '/contact' },
-    ],
-  },
 ]
 
 const socialLinks = [
-  { icon: '📘', label: 'Facebook', path: 'https://facebook.com/bitemebaby' },
-  { icon: '', label: 'Instagram', path: 'https://instagram.com/bitemebaby' },
-  { icon: '🐦', label: 'Twitter', path: 'https://twitter.com/bitemebaby' },
-  { icon: '💬', label: 'LINE', path: 'https://line.me/R/ti/p/@bitemebaby' },
+  { icon: '📘', label: 'Facebook', path: SHOP_CONTACT.facebook },
+  { icon: '💬', label: 'Messenger', path: SHOP_CONTACT.messenger },
 ]
 
 export function Footer() {
+  // ลิงก์ "เมนูอาหาร" ดึงจากหัวข้อเมนูจริงในฐานข้อมูล (active + ไม่ archived เรียงตามลำดับ)
+  // — แอดมินเพิ่ม/แก้/เรียงหัวข้อเมื่อไร ฟุตเตอร์ตามทันที ไม่ต้องแก้โค้ด
+  const [menuLinks, setMenuLinks] = useState<FooterLink[]>([{ label: 'ดูเมนูทั้งหมด', path: '/menu' }])
+  useEffect(() => {
+    let alive = true
+    import('@/lib/bmbAdminApi_products')
+      .then(({ getCategories }) => getCategories())
+      .then((cats: ProductCategory[]) => {
+        if (!alive) return
+        const links: FooterLink[] = cats
+          .filter((c) => c.is_active && !c.archived)
+          .sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0))
+          .map((c) => ({
+            label: `${c.icon ? c.icon + ' ' : ''}${c.name}`,
+            path: `/menu?category=${encodeURIComponent(c.slug || c.id)}`,
+          }))
+        if (links.length > 0) setMenuLinks([{ label: 'ดูเมนูทั้งหมด', path: '/menu' }, ...links])
+      })
+      .catch(() => { /* โหลดไม่ได้ = โชว์ลิงก์เมนูทั้งหมดอย่างเดียว */ })
+    return () => { alive = false }
+  }, [])
+
+  const footerSections = [
+    { title: 'เมนูอาหาร', links: menuLinks },
+    ...staticSections,
+    { title: 'ติดต่อเรา', links: contactLinks },
+  ]
   return (
     <footer className="bg-brand-surface border-t border-brand-border py-8 px-4 mt-8">
       <div className="max-w-7xl mx-auto">
@@ -57,7 +86,7 @@ export function Footer() {
         <div className="mb-8 text-sm text-brand-muted">
           <p className="font-semibold text-brand-accent mb-2">🍽️ Bite Me Baby — Cloud Kitchen Operating Platform เมืองจันทบุรี</p>
           <p>
-            บริการสั่งอาหารจัดส่งเมืองจันทบุรี รัศมี 5 กม. ส่งฟรีเมื่อครบ ฿200 • 
+            บริการสั่งอาหารจัดส่งเมืองจันทบุรี ส่งฟรีเมื่อครบ ฿200 • 
             เมนูจานเดียว ข้าว แกง เครื่องดื่ม ของหวาน • 
             ส่งเช้า กลางวัน เย็น • 
             รองรับ Same-day Order และ Pre-order • 
@@ -73,9 +102,15 @@ export function Footer() {
               <ul className="space-y-2">
                 {section.links.map((link) => (
                   <li key={link.label}>
-                    <Link to={link.path} className="block break-all text-sm text-brand-muted hover:text-brand-primary transition-colors">
-                      {link.label}
-                    </Link>
+                    {link.href ? (
+                      <a href={link.href} className="block break-all text-sm text-brand-muted hover:text-brand-primary transition-colors">
+                        {link.label}
+                      </a>
+                    ) : (
+                      <Link to={link.path || '/'} className="block break-all text-sm text-brand-muted hover:text-brand-primary transition-colors">
+                        {link.label}
+                      </Link>
+                    )}
                   </li>
                 ))}
               </ul>
@@ -105,7 +140,7 @@ export function Footer() {
             © 2026 Bite Me Baby Cloud Kitchen • เมืองจันทบุรี • สงวนลิขสิทธิ์
           </p>
           <p className="text-xs text-brand-muted mt-2">
-            จัดส่งอาหาร • รัศมี 5 กม. • ส่งฟรีเมื่อครบ ฿200 • Same-day & Pre-order • AI Assistant 24/7
+            จัดส่งอาหาร • ส่งฟรีเมื่อครบ ฿200 • Same-day & Pre-order • AI Assistant 24/7 • {SHOP_CONTACT.hours}
           </p>
         </div>
       </div>

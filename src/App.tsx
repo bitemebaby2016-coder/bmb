@@ -190,6 +190,7 @@ export default function App() {
         <Route path="/menu" element={<Suspense fallback={<LoadingSpinner />}><Layout><MenuPage /></Layout></Suspense>} />
         <Route path="/cart" element={<Suspense fallback={<LoadingSpinner />}><Layout><CartPage /></Layout></Suspense>} />
         <Route path="/checkout" element={<Suspense fallback={<LoadingSpinner />}><Layout><CheckoutPage /></Layout></Suspense>} />
+        <Route path="/track" element={<Suspense fallback={<LoadingSpinner />}><Layout><OrderTrackPage /></Layout></Suspense>} />
         <Route path="/track/:orderNumber" element={<Suspense fallback={<LoadingSpinner />}><Layout><OrderTrackPage /></Layout></Suspense>} />
         <Route path="/orders" element={<Suspense fallback={<LoadingSpinner />}><ProtectedRoute><Layout><OrdersPage /></Layout></ProtectedRoute></Suspense>} />
         {/* Phase 3B: legacy /profile/orders link — canonical history lives at /orders */}

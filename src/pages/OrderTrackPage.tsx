@@ -7,7 +7,7 @@
 // data. Migration 023/025 order domain is the only authority.
 // ============================================
 
-import { useParams, Link } from 'react-router-dom'
+import { useParams, Link, useNavigate } from 'react-router-dom'
 import { useState, useEffect, useCallback } from 'react'
 import { getOrder, hydrateOrderItems, cancelOrder, type OrderForm } from '@/lib/bmbAdminApi_orders'
 import { getServerStatusLabel } from '@/lib/orderVocabulary'
@@ -32,6 +32,8 @@ const REFRESH_MS = 20000 // READ-ONLY polling cadence (never mutates status)
 
 export function OrderTrackPage() {
   const { orderNumber } = useParams()
+  const navigate = useNavigate()
+  const [numInput, setNumInput] = useState('')
   const [order, setOrder] = useState<OrderForm | null>(null)
   const [intents, setIntents] = useState<Array<Record<string, any>>>([])
   const [missing, setMissing] = useState(false)
@@ -113,6 +115,43 @@ export function OrderTrackPage() {
     } finally {
       setLoaded(true)
     }
+  }
+
+  // ไม่มีเลขใน URL (ลิงก์ /track จากฟุตเตอร์) → ให้กรอกเลขที่ออเดอร์ก่อน
+  if (!orderNumber) {
+    return (
+      <div className="max-w-2xl mx-auto px-4 py-12">
+        <div className="card max-w-md mx-auto">
+          <div className="text-5xl mb-3 text-center">🛵</div>
+          <h1 className="text-xl font-bold text-brand-accent mb-2 text-center">ติดตามออเดอร์</h1>
+          <p className="text-sm text-brand-muted mb-4 text-center">
+            กรอกเลขที่ออเดอร์เพื่อดูสถานะ
+            (หรือ <Link to="/orders" className="text-brand-primary hover:underline">เข้าสู่ระบบ</Link> เพื่อดูออเดอร์ของคุณ)
+          </p>
+          <form
+            onSubmit={(e) => {
+              e.preventDefault()
+              const n = numInput.trim()
+              if (n) navigate('/track/' + encodeURIComponent(n))
+            }}
+            className="space-y-3"
+          >
+            <input
+              data-testid="track-order-input"
+              type="text"
+              className="input w-full"
+              placeholder="เลขที่ออเดอร์ เช่น BMB-20261017-001"
+              value={numInput}
+              onChange={(e) => setNumInput(e.target.value)}
+              autoFocus
+            />
+            <button data-testid="track-order-submit" type="submit" className="btn btn-primary w-full" disabled={!numInput.trim()}>
+              ติดตามออเดอร์
+            </button>
+          </form>
+        </div>
+      </div>
+    )
   }
 
   if (phoneGate && !order) {

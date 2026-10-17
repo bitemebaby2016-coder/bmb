@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { showToast } from '@/components/ui/ToastContainer'
 import { loadGoogleMapsJS, isGoogleMapsConfigured } from '@/lib/googleMaps'
+import { SHOP_CONTACT } from '@/components/layout/Footer'
 
 export function ContactPage() {
   const [formData, setFormData] = useState({ name: '', email: '', message: '' })
@@ -42,7 +43,7 @@ export function ContactPage() {
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold text-brand-accent mb-2">📍 ติดต่อเรา</h1>
-      <p className="text-brand-muted mb-8">เรามีปัหาหรือข้อเสนอแนะ? บอกเราได้เลย!</p>
+      <p className="text-brand-muted mb-8">มีคำถามหรือข้อเสนอแนะ? บอกเราได้เลย!</p>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         {/* Contact Form */}
@@ -51,7 +52,7 @@ export function ContactPage() {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-brand-accent mb-1">ชื่อ</label>
-              <input type="text" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} className="input w-full" placeholder="ชื่อของคุ" required />
+              <input type="text" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} className="input w-full" placeholder="ชื่อของคุณ" required />
             </div>
             <div>
               <label className="block text-sm font-medium text-brand-accent mb-1">อีเมล</label>
@@ -59,7 +60,7 @@ export function ContactPage() {
             </div>
             <div>
               <label className="block text-sm font-medium text-brand-accent mb-1">ข้อความ</label>
-              <textarea value={formData.message} onChange={(e) => setFormData({...formData, message: e.target.value})} className="input w-full" rows={5} placeholder="พิมพข้อความที่นี่..." required />
+              <textarea value={formData.message} onChange={(e) => setFormData({...formData, message: e.target.value})} className="input w-full" rows={5} placeholder="พิมพ์ข้อความที่นี่..." required />
             </div>
             <button type="submit" disabled={sending} className="btn btn-primary w-full">
               {sending ? '⏳ กำลังส่ง...' : '📨 ส่งข้อความ'}
@@ -70,14 +71,14 @@ export function ContactPage() {
         {/* Contact Info */}
         <div className="space-y-6">
           <div className="card bg-gradient-to-br from-orange-50 to-yellow-50">
-            <h3 className="font-bold text-brand-accent mb-3">ข้อมลติดต่อ</h3>
+            <h3 className="font-bold text-brand-accent mb-3">ข้อมูลติดต่อ</h3>
             <div className="space-y-3 text-sm">
-              <p>📍 เมืองจันทบุรี รัศมีจัดส่ง 5 กม.</p>
-              <p>📞 <a href="tel:+66xxxxxxxxx" className="text-brand-primary hover:underline">08X-XXX-XXXX</a></p>
-              <p>✉️ <a href="mailto:hello@bitemebaby.co.th" className="text-brand-primary hover:underline">hello@bitemebaby.co.th</a></p>
-              <p>💬 LINE: @BiteMeBaby</p>
+              <p>📍 {SHOP_CONTACT.address}</p>
+              <p>📞 <a href={SHOP_CONTACT.phoneHref} className="text-brand-primary hover:underline">{SHOP_CONTACT.phone}</a></p>
+              <p>✉️ <a href={SHOP_CONTACT.emailHref} className="text-brand-primary hover:underline">{SHOP_CONTACT.email}</a></p>
+              <p>💬 <a href={SHOP_CONTACT.messenger} target="_blank" rel="noopener noreferrer" className="text-brand-primary hover:underline">Messenger</a> · <a href={SHOP_CONTACT.facebook} target="_blank" rel="noopener noreferrer" className="text-brand-primary hover:underline">Facebook</a></p>
               <p className="pt-2 border-t border-brand-border-light"><strong>เวลาทำการ:</strong></p>
-              <p>ทุกวัน • 06:00 - 20:00</p>
+              <p>{SHOP_CONTACT.hours}</p>
             </div>
           </div>
 
