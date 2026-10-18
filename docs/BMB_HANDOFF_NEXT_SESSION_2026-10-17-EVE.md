@@ -19,7 +19,7 @@
 | EF `social-ai-worker` | ✅ deploy แล้ว (41 kB) — create-only + idempotent |
 | Bite บริบทจริง | ✅ `composeRealContext()` |
 | ⚠️ งบ OpenRouter | เหลือ ~$5 / $160 — **เติมงบก่อนเทสต์ AI จริง** |
-| Google Maps | ⚠️ **config ฝั่ง Owner ทำแล้ว แต่ env ยังไม่เข้า build จริง** — probe หลัง rebuild (`a6077d9`, entry `index-BmtVnCUU.js`, 97 chunks): key ยังไม่ฝังใน bundle (ขณะที่ build ในเครื่องมี key ใน `googleMaps-*.js` ปกติ) = **Cloudflare Pages ยังไม่ส่ง `VITE_GOOGLE_MAPS_API_KEY` เข้า build** — ตรวจ: ① โปรเจกต์ที่ตั้ง = ตัวที่ผูก biteme-baby.com (ระวังไปตั้งใน `bitemebaby-5f7`) ② แท็บ Environment = **Production** (ไม่ใช่ Preview) ③ ชื่อตรงตัวอักษร `VITE_GOOGLE_MAPS_API_KEY` ④ เสร็จแล้วกด **Retry deployment** · โค้ดพร้อมแล้ว (Map ID ไม่บังคับโหลด + guard ค่า mapId ขยะ + ส่ง mapId เข้า Map ถ้ามี) |
+| Google Maps | ✅ **คีย์ครบแล้ว (Owner เพิ่ม `VITE_GOOGLE_MAPS_API_KEY` ใน Cloudflare Pages 12:41 น. 18 ต.ค.)** — สาเหตุที่แผนที่ว่างทั้งหมด: build ไม่เคยเห็นคีย์ตัวนี้ (มีแค่ `VITE_GOOGLE_MAPS_MAP_ID`) + โค้ดเดิมบังคับ MAP_ID ตอนโหลด SDK → ตอนนี้โค้ด+env ครบ, build รอบถัดไปจะฝังคีย์ (ตรวจยืนยันในคอมมิตตาม) · เก็บตก: ลบตัวแปรขยะ `"BmB web Map"` ใน Cloudflare ด้วยปุ่มถังขยะ (ไม่ได้ถูกใช้) · `.env.local` ซ่อมแล้ว (คอมเมนต์ไทย+BOM; ค่า 32 บรรทัดเดิมทุกตัว) |
 
 ## 2. งานที่เหลือ — เป้าหมายแชทหน้า
 
