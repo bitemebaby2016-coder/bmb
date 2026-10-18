@@ -16,9 +16,9 @@
   - โค้ด (`c9ef4bc`): โหลด SDK **ไม่บังคับ Map ID อีกต่อไป** (เดิมถ้า env ไม่มี `VITE_GOOGLE_MAPS_MAP_ID` แผนที่จะไม่โหลดเงียบ ๆ) + ส่ง `mapId` เข้า Map constructor เมื่อมี
   - `getGoogleMapId()` guard: รับเฉพาะค่าที่เป็น Map ID จริง (`^[A-Za-z0-9_-]{6,}$`) — เจอค่า `BmB web Map=fe097bcf...` (ชื่อแผนที่ปน ID) ใน `.env.local` ของเครื่อง จัดการลบให้เหลือ `fe097bcf317b5ede7dab9ff8` (ค่าเดียวกับ `.env`)
   - badge/chip z-index 40 (เหนือรูปที่ยกเสมอ รวมตอน hover ที่รูปได้ z-30)
-  - Probe ฝั่ง prod: entry `index-FopldVLt.js` + 91 chunks — maps loader มี (`googleMaps-*.js`) แต่ **key ยังไม่ฝังใน bundle** (build รอบนั้นก่อน Owner ตั้ง env บน Cloudflare) → commit ปิดเซสชันสั่ง build ใหม่ให้ดึงค่า env เข้าเอง
+  - Probe ฝั่ง prod: entry `index-FopldVLt.js` + 91 chunks → หลัง rebuild (`a6077d9`) entry `index-BmtVnCUU.js` + 97 chunks — **key ยังไม่ฝังใน bundle ทั้งสองรอบ** ขณะที่ build ในเครื่องมี key ใน `dist/assets/googleMaps-PCdQaP5G.js` ปกติ (วิธี probe ถูกต้อง, `vite.config` envPrefix ปกติ) → สรุป: **Cloudflare Pages ยังไม่ส่ง `VITE_GOOGLE_MAPS_API_KEY` เข้า build จริง** (ตั้งผิดโปรเจกต์/ผิดแท็บ Production vs Preview/ชื่อไม่ตรง)
 - **Verified:** gates ผ่านครบ (lint=0 · tests 105/1,112 · build=0) · `.env/.env.local` ไม่ถูก commit (gitignore)
-- **Next Exact Action:** เปิด biteme-baby.com หน้า /check บนมือถือจริง — แผนที่ต้องโหลด; ถ้ายังว่างดู console หา `RefererNotAllowedError`/`ApiNotActivatedMapError`
+- **Next Exact Action:** ให้ Owner ตรวจ Cloudflare Pages env (① โปรเจกต์ที่ผูก biteme-baby.com ② แท็บ Production ③ ชื่อ `VITE_GOOGLE_MAPS_API_KEY` ④ Retry deployment) แล้วเปิด /check บนมือถือ — ถ้ายังว่างดู console หา `RefererNotAllowedError`/`ApiNotActivatedMapError`
 
 ---
 
