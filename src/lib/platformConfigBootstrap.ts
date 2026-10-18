@@ -59,6 +59,8 @@ export function mapServerConfigToOverrides(
   if (markup != null && markup >= 0) delivery.tier2MarkupPct = markup
   const freeship = num(dp.free_shipping_threshold)
   if (freeship != null && freeship >= 0) delivery.freeShippingThreshold = freeship
+  // ZERO-FAKE gate: เปิดสัญญา "ส่งฟรี" บน UI เมื่อ server บังคับใช้กฎจริงเท่านั้น
+  if (dp.free_shipping_enforced != null) delivery.freeShippingEnforced = Boolean(dp.free_shipping_enforced)
   const cutoff = num(op.cutoff_hours)
   if (cutoff != null && cutoff >= 0) delivery.cutoffHours = cutoff
   const quota = num(op.daily_quota)

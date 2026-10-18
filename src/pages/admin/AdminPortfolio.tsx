@@ -80,7 +80,7 @@ export function AdminPortfolioPage() {
       </div>
 
       <div className="mt-6">
-        <Link to="/admin/dashboard" className="text-sm text-brand-primary hover:underline">← Back to Admin Dashboard</Link>
+        <Link to="/admin" className="text-sm text-brand-primary hover:underline">← Back to Admin Dashboard</Link>
       </div>
     </div>
   )

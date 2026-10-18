@@ -28,6 +28,14 @@ export async function getPromotionsAdmin(): Promise<PromotionRow[]> {
   return (data || []) as PromotionRow[]
 }
 
+/** Like getPromotionsAdmin but SURFACES failure (no silent empty-on-error) —
+ *  public pages must distinguish "no promotions" from "load failed". */
+export async function getPromotionsWithStatus(): Promise<{ rows: PromotionRow[]; ok: boolean }> {
+  const { data, error } = await supabase.from('promotions').select('*').order('created_at', { ascending: false })
+  if (error) { console.error('[getPromotionsWithStatus] Error:', error); return { rows: [], ok: false } }
+  return { rows: (data || []) as PromotionRow[], ok: true }
+}
+
 export async function upsertPromotion(row: PromotionRow): Promise<PromotionRow | null> {
   const now = new Date().toISOString()
   const payload = { ...row, updated_at: now }

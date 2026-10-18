@@ -16,12 +16,22 @@ export function RewardsPage() {
     const reward = rewards.find(r => r.id === rewardId)
     if (!reward) return
     if (loyaltyPoints < reward.points) { showToast('แต้มไม่พอ', 'warning'); return }
-    if (redeemPoints(reward.points, reward.name, reward.description)) { showToast(`แลก ${reward.name} สำเร็จ!`, 'success') }
+    // ZERO-FAKE: แต้มยังเป็นพรีวิวฝั่งเครื่องลูกค้า — ห้ามแสร้งว่า "แลกสำเร็จ"
+    // (ยังไม่มีการออกคูปอง/ตัดแต้มจริงจนกว่าระบบสะสมแต้มจะเปิดใช้)
+    if (redeemPoints(reward.points, reward.name, reward.description)) {
+      showToast(`บันทึกรายการขอแลก ${reward.name} แล้ว (พรีวิว) — ยังไม่มีการออกคูปองจริงค่ะ`, 'info')
+    }
   }
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-6">
       <h1 className="text-3xl font-bold text-brand-accent mb-6">🎁 รางวัลและแต้ม</h1>
+      <div className="card mb-4 border-2 border-amber-300 bg-amber-50">
+        <p className="text-sm text-amber-800">
+          <strong>โปรแกรมพรีวิว:</strong> แต้มสะสมอยู่ระหว่างการทดสอบในเครื่องของคุณเท่านั้น
+          (ยังไม่ผูกกับบัญชีและยังไม่มีมูลค่าจริง) — ทีมจะเปิดระบบสะสมแต้มเต็มรูปแบบเร็วๆ นี้ค่ะ
+        </p>
+      </div>
       <div className="card mb-6 bg-gradient-to-r from-yellow-400 to-orange-400 text-white">
         <div className="text-center">
           <div className="text-sm mb-1">แต้มสะสมของคุณ</div>

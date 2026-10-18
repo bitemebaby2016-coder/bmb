@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { SHOP_CONTACT } from '@/components/layout/Footer'
 
 export function TermsPage() {
   return (
@@ -68,7 +69,7 @@ export function TermsPage() {
         <section className="card">
           <h2 className="text-xl font-bold text-brand-accent mb-3">7. ติดต่อเรา</h2>
           <p className="text-brand-text-secondary mb-2">หากมีคำถามเกี่ยวกับข้อกำหนดเหล่านี้:</p>
-          <p>✉️ <a href="mailto:legal@bitemebaby.co.th" className="text-brand-primary hover:underline">legal@bitemebaby.co.th</a></p>
+          <p>✉️ <a href={SHOP_CONTACT.emailHref} className="text-brand-primary hover:underline">{SHOP_CONTACT.email}</a></p>
         </section>
       </div>
 

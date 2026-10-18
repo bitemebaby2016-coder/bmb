@@ -13,6 +13,7 @@ import {
   floatingPosePool,
 } from '@/lib/mascotClosed'
 import { isStoreClosedNow, publishDeliveryRounds, currentStoreStatus } from '@/lib/storeStatus'
+import { getStoreStatusFromRounds } from '@/lib/homeProviders'
 import type { MascotPose } from '@/types'
 
 // ชุดท่าทั้งหมดที่ระบบประกาศไว้ (ต้องครบ 23 ท่า — เทียบกับ types/index.ts)
@@ -73,31 +74,44 @@ describe('mascotClosed — ตัวลอย (BiteMascot) หมุนวนเ
   })
 })
 
-describe('storeStatus — ตรรกะเปิด/ปิดร้าน (เดียวกับแถบหน้าแรก)', () => {
+describe('storeStatus — ตรรกะเปิด/ปิดร้านจากรอบส่งจริง (ZERO-FAKE 2026-10-18)', () => {
   beforeEach(() => { publishDeliveryRounds(null) })
-  afterEach(() => { vi.useRealTimers() })
 
-  it('นอกเวลาทำการ (20:30) → ร้านปิด · ในเวลาทำการ (07:00) → ร้านเปิด', () => {
-    expect(isStoreClosedNow(new Date('2026-10-14T20:30:00'))).toBe(true)
-    expect(isStoreClosedNow(new Date('2026-10-14T07:00:00'))).toBe(false)
+  it('ยังไม่มีข้อมูลรอบส่ง → ยังไม่ยืนยันว่าเปิด (ไม่เดาจากเวลา) ทุกช่วงเวลา', () => {
+    for (const t of ['2026-10-14T20:30:00', '2026-10-14T07:00:00', '2026-10-14T10:00:00']) {
+      const s = currentStoreStatus(new Date(t))
+      expect(s.isOpen, t).toBe(false)
+      expect(s.message, t).toContain('ยังไม่มีข้อมูลรอบจัดส่ง')
+    }
+    expect(isStoreClosedNow(new Date('2026-10-14T07:00:00'))).toBe(true)
   })
 
-  it('ช่วงพักรอบ (10:00) ยังนับว่าร้านเปิด (same_day_closed ไม่ใช่ร้านปิด)', () => {
-    expect(isStoreClosedNow(new Date('2026-10-14T10:00:00'))).toBe(false)
-  })
-
-  it('มีรอบส่งจริง → ใช้สถานะจากรอบส่ง (ปิดทุกรอบ = ร้านปิด)', () => {
-    publishDeliveryRounds([
-      { status: 'closed', display_name: 'รอบเช้า', cutoff_time: '08:00', delivery_start: '06:00', delivery_end: '09:00', max_capacity: 10, current_count: 10 },
-    ] as never)
-    // ทุกรอบปิด → fallback ไปตรรกะเวลา (10:00 = same_day_closed = เปิดอยู่)
-    expect(currentStoreStatus(new Date('2026-10-14T10:00:00')).isOpen).toBe(true)
-
+  it('มีรอบส่งจริงที่เปิด → ใช้สถานะจากรอบส่ง (เปิดแม้เลยเวลาทำการ)', () => {
     publishDeliveryRounds([
       { status: 'open', display_name: 'รอบเย็น', cutoff_time: '16:00', delivery_start: '17:00', delivery_end: '20:00', max_capacity: 10, current_count: 0 },
     ] as never)
     // มีรอบเปิด → ร้านเปิดแม้เลยเวลาทำการ
     expect(isStoreClosedNow(new Date('2026-10-14T21:00:00'))).toBe(false)
+  })
+
+  it('ทุกรอบปิด → ร้านปิดตามข้อมูลจริง (ไม่ fallback ไปตรรกะเวลาปลอม)', () => {
+    publishDeliveryRounds([
+      { status: 'closed', display_name: 'รอบเช้า', cutoff_time: '08:00', delivery_start: '06:00', delivery_end: '09:00', max_capacity: 10, current_count: 10 },
+    ] as never)
+    const s = currentStoreStatus(new Date('2026-10-14T10:00:00'))
+    expect(s.isOpen).toBe(false)
+    expect(s.message).toContain('ไม่มีรอบจัดส่งที่เปิดรับ')
+    // ตรรกะเวลาเดิมเคยบอก "เปิด" ตอน 10:00 — ห้ามเกิดอีก
+    expect(isStoreClosedNow(new Date('2026-10-14T10:00:00'))).toBe(true)
+  })
+
+  it('getStoreStatusFromRounds([]) → ไม่มี fallback ข้อมูลปลอม (ไม่มีป้ายเวลา/ความจุแต่งเอง)', () => {
+    const s = getStoreStatusFromRounds([], new Date('2026-10-14T07:00:00'))
+    expect(s.isOpen).toBe(false)
+    expect(s.capacityPct).toBeUndefined()
+    expect(s.currentRoundLabel).toBeUndefined()
+    expect(s.deliveryWindowLabel).toBeUndefined()
+    expect(s.message).toContain('ไม่มีรอบจัดส่งที่เปิดรับ')
   })
 })
 

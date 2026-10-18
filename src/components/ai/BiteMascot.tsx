@@ -215,9 +215,13 @@ export function BiteMascot({ userName, activeSection = 'home' }: BiteMascotProps
   }, [greetingPlayed, firstInteraction])
 
   // Stage 2 — free-shipping upsell recomputed whenever the cart total changes.
+  // ZERO-FAKE (closure 2026-10-18): แสดงเฉพาะเมื่อ server บังคับใช้กฎ free-shipping
+  // จริงเท่านั้น (delivery.freeShippingEnforced) — ห้ามมั่วว่า "ส่งฟรี" ทั้งที่
+  // compute_delivery_fee ยังคิดค่าส่งตาม zone เสมอ
   useEffect(() => {
+    if (!delivery.freeShippingEnforced) return
     evaluateUpsell(cartTotal, delivery.freeShippingThreshold)
-  }, [cartTotal, delivery.freeShippingThreshold, evaluateUpsell])
+  }, [cartTotal, delivery.freeShippingThreshold, delivery.freeShippingEnforced, evaluateUpsell])
 
   // Stage 3 — scroll-stall micro-hook: >5s without scrolling on the pre-order grid.
   useEffect(() => {
@@ -290,7 +294,7 @@ export function BiteMascot({ userName, activeSection = 'home' }: BiteMascotProps
               {bubble}
             </GlassCard>
           )}
-          {upsell && upsell.remaining > 0 && stage === 'personalization' && (
+          {delivery.freeShippingEnforced && upsell && upsell.remaining > 0 && stage === 'personalization' && (
             <p className="text-[10px] text-amber-700 mr-4 mb-0.5">ส่งฟรีเมื่อครบ ฿{upsell.remaining}</p>
           )}
           <button

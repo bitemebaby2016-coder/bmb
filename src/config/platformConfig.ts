@@ -26,6 +26,10 @@ export interface DeliveryConfig {
   tier2MarkupPct: number
   /** Canonical: delivery_policy.free_shipping_threshold (hydrated — migration 114) */
   freeShippingThreshold: number
+  /** ZERO-FAKE gate: server ยังไม่มีกฎ free-shipping ใน compute_delivery_fee —
+   *  ห้ามสัญญา "ส่งฟรี" บน UI จนกว่าจะเปิดค่านี้ (delivery_policy.free_shipping_enforced)
+   *  พร้อมกับนำกฎไปบังคับใช้ฝั่ง server จริง (ดูรายงาน closure 2026-10-18) */
+  freeShippingEnforced: boolean
   /** Canonical: order_policy.cutoff_hours — enforce_pre_order_window/cancel อ่านอันเดียวกัน (FC-4) */
   cutoffHours: number
   /** Canonical: order_policy.daily_quota (hydrated — display/monitor) */
@@ -67,6 +71,7 @@ export const DEFAULT_PLATFORM_CONFIG: PlatformConfig = {
     biteDriveFlatFee: 25,
     tier2MarkupPct: 12,
     freeShippingThreshold: 300,
+    freeShippingEnforced: false,
     cutoffHours: 2,
     dailyQuota: 120,
     debounceMs: 500,

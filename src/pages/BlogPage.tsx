@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { SHOP_CONTACT } from '@/components/layout/Footer'
 
 interface BlogPost {
   title: string
@@ -57,9 +58,8 @@ export function BlogPage() {
         <div className="flex items-start gap-4">
           <span className="text-4xl">{posts[0].emoji}</span>
           <div className="flex-1">
-            <Link to="/blog/post-1" className="font-bold text-lg text-brand-accent hover:text-brand-primary transition-colors">
-              {posts[0].title}
-            </Link>
+            {/* ZERO-FAKE: บทความยังไม่มีหน้ารายละเอียด — แสดงเป็นการ์ดบทความ (ไม่ใช่ลิงก์ตาย) */}
+            <h3 className="font-bold text-lg text-brand-accent">{posts[0].title}</h3>
             <p className="text-brand-muted text-sm mt-1">{posts[0].excerpt}</p>
             <div className="flex gap-4 mt-2 text-xs text-brand-muted">
               <span>{posts[0].date}</span>
@@ -74,7 +74,7 @@ export function BlogPage() {
       {/* Posts Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {posts.slice(1).map((post, idx) => (
-          <Link key={idx} to={`/blog/post-${idx + 2}`} className="card hover:shadow-lg transition-shadow">
+          <article key={idx} className="card">
             <div className="text-3xl mb-3">{post.emoji}</div>
             <h3 className="font-bold text-brand-accent mb-2 line-clamp-2">{post.title}</h3>
             <p className="text-sm text-brand-muted line-clamp-2 mb-3">{post.excerpt}</p>
@@ -82,17 +82,17 @@ export function BlogPage() {
               <span>{post.date}</span>
               <span>{post.readTime} อ่าน</span>
             </div>
-          </Link>
+          </article>
         ))}
       </div>
 
-      {/* Newsletter CTA */}
+      {/* Follow CTA — ช่องทางติดตามจริงของร้าน (เดิม: ฟอร์ม Subscribe ปุ่มไม่มี handler = fake CTA) */}
       <div className="mt-8 card bg-gradient-to-r from-purple-50 to-pink-50 text-center">
-        <h3 className="text-lg font-bold text-brand-accent mb-2">Get Our Newsletter</h3>
-        <p className="text-brand-muted mb-4">สมัครรับอีเมลเพื่อรับโปรโมชั่นและข่าวล่าสุด</p>
-        <div className="flex gap-2 max-w-md mx-auto">
-          <input type="email" placeholder="your@email.com" className="input flex-1" />
-          <button className="btn btn-primary">Subscribe</button>
+        <h3 className="text-lg font-bold text-brand-accent mb-2">ติดตามข่าวสารจาก Bite Me Baby</h3>
+        <p className="text-brand-muted mb-4">อัปเดตเมนูและโปรโมชันใหม่ผ่าน Facebook ของร้าน หรือทักถามเราได้ที่หน้าติดต่อ</p>
+        <div className="flex gap-2 justify-center flex-wrap">
+          <a href={SHOP_CONTACT.facebook} target="_blank" rel="noopener noreferrer" className="btn btn-primary">Facebook →</a>
+          <Link to="/contact" className="btn btn-outline">หน้าติดต่อเรา</Link>
         </div>
       </div>
     </div>

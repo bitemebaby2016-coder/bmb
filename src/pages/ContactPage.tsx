@@ -3,22 +3,48 @@ import { Link } from 'react-router-dom'
 import { showToast } from '@/components/ui/ToastContainer'
 import { loadGoogleMapsJS, isGoogleMapsConfigured } from '@/lib/googleMaps'
 import { SHOP_CONTACT } from '@/components/layout/Footer'
+import { DEFAULT_SOCIAL_LINKS, getSocialLinks, socialLinkItems, type SocialLinkItem } from '@/lib/socialLinks'
+
+// ปุ่มโซเชียล — สีตามเครือข่าย (ลิงก์จริงจาก business_settings เท่านั้น)
+const SOCIAL_BTN_STYLES: Record<string, string> = {
+  facebook: 'bg-blue-600 hover:bg-blue-700',
+  messenger: 'bg-blue-500 hover:bg-blue-600',
+  line: 'bg-green-500 hover:bg-green-600',
+  instagram: 'bg-pink-500 hover:bg-pink-600',
+  tiktok: 'bg-black hover:bg-gray-800',
+  youtube: 'bg-red-600 hover:bg-red-700',
+}
 
 export function ContactPage() {
   const [formData, setFormData] = useState({ name: '', email: '', message: '' })
   const [sending, setSending] = useState(false)
   const [mapReady, setMapReady] = useState(false)
   const mapRef = useRef<HTMLDivElement>(null)
+  // ปุ่มโซเชียล — ลิงก์จริงจาก business_settings (fallback = ค่าร้านที่ Owner ยืนยัน)
+  const [socials, setSocials] = useState<SocialLinkItem[]>(() => socialLinkItems(DEFAULT_SOCIAL_LINKS))
+
+  useEffect(() => {
+    let alive = true
+    getSocialLinks()
+      .then((links) => { if (alive) setSocials(socialLinkItems(links)) })
+      .catch(() => { /* โหลดไม่ได้ = ใช้ค่าเริ่มต้นต่อ */ })
+    return () => { alive = false }
+  }, [])
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setSending(true)
-    // Simulate sending
-    setTimeout(() => {
-      showToast('ส่งข้อความสำเร็จ! เราจะตอบกลับโดยเร็ว', 'success')
-      setFormData({ name: '', email: '', message: '' })
-      setSending(false)
-    }, 1000)
+    // ZERO-FAKE (closure 2026-10-18): เดิมฟอร์มนี้ "simulate sending" แล้วโชว์
+    // "ส่งข้อความสำเร็จ!" ทั้งที่ข้อความไม่เคยถูกส่งไปไหน — ตอนนี้ส่งต่อผ่าน
+    // แอปอีเมลของลูกค้า (mailto → กล่องจดหมายร้าน) ซึ่งเป็นช่องทางจริง
+    // และไม่มีการแสร้งว่าส่งสำเร็จจนกว่าผู้ใช้กดส่งในแอปอีเมลของตน
+    const subject = encodeURIComponent(`ข้อความจากเว็บไซต์ — ${formData.name}`)
+    const body = encodeURIComponent(
+      `${formData.message}\n\n---\nจาก: ${formData.name}\nอีเมลตอบกลับ: ${formData.email}`,
+    )
+    window.location.href = `mailto:${SHOP_CONTACT.email}?subject=${subject}&body=${body}`
+    showToast('เปิดแอปอีเมลของคุณแล้ว — กด "ส่ง" ในแอปอีเมลเพื่อส่งข้อความถึงเราค่ะ', 'info')
+    setSending(false)
   }
 
   // Load Google Maps & render interactive map
@@ -101,10 +127,23 @@ export function ContactPage() {
           <div className="card">
             <h3 className="font-bold text-brand-accent mb-3">🌐 Social Media</h3>
             <div className="flex gap-3">
-              <a href="#" className="w-10 h-10 bg-blue-600 text-white rounded-lg flex items-center justify-center hover:bg-blue-700 transition-colors">f</a>
-              <a href="#" className="w-10 h-10 bg-green-500 text-white rounded-lg flex items-center justify-center hover:bg-green-600 transition-colors">L</a>
-              <a href="#" className="w-10 h-10 bg-pink-500 text-white rounded-lg flex items-center justify-center hover:bg-pink-600 transition-colors">I</a>
-              <a href="#" className="w-10 h-10 bg-black text-white rounded-lg flex items-center justify-center hover:bg-gray-800 transition-colors">T</a>
+              {socials.length === 0 ? (
+                <p className="text-sm text-brand-muted">ยังไม่ได้ตั้งค่าลิงก์โซเชียล — ติดต่อผ่านโทรศัพท์/อีเมลด้านบนได้เลยค่ะ</p>
+              ) : (
+                socials.map((social) => (
+                  <a
+                    key={social.network}
+                    href={social.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={social.label}
+                    title={social.label}
+                    className={`w-10 h-10 text-white rounded-lg flex items-center justify-center transition-colors ${SOCIAL_BTN_STYLES[social.network] ?? 'bg-gray-700 hover:bg-gray-800'}`}
+                  >
+                    <span aria-hidden="true">{social.icon}</span>
+                  </a>
+                ))
+              )}
             </div>
           </div>
         </div>

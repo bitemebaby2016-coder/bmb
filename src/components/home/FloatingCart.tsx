@@ -23,7 +23,10 @@ export function FloatingCart() {
 export function StickyCartBar() {
   const { items, subtotal, total, deliveryFee } = useCartStore()
   const { delivery } = usePlatformConfig()
-  const freeShippingThreshold = delivery.freeShippingThreshold ?? 200
+  const freeShippingThreshold = delivery.freeShippingThreshold
+  // ZERO-FAKE: ห้ามสัญญา "ส่งฟรี" จนกว่า server จะบังคับใช้กฎนี้จริง
+  // (delivery_policy.free_shipping_enforced — ดูรายงาน closure 2026-10-18)
+  const freeShippingActive = delivery.freeShippingEnforced
   const barRef = useRef<HTMLDivElement>(null)
 
   // D02: publish measured height as --bmb-sticky-h so main-scroll content
@@ -43,7 +46,9 @@ export function StickyCartBar() {
 
   if (items.length === 0) return null
 
-  const remainingForFreeShipping = Math.max(0, freeShippingThreshold - subtotal)
+  const remainingForFreeShipping = freeShippingActive
+    ? Math.max(0, freeShippingThreshold - subtotal)
+    : 0
 
   return (
     <div ref={barRef} className="sticky-cart-bar md:hidden" role="region" aria-label="ตะกร้าสินค้า">

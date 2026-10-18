@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import type { ProductCategory } from '@/types'
 import { DEFAULT_SOCIAL_LINKS, getSocialLinks, socialLinkItems, type SocialLinkItem } from '@/lib/socialLinks'
+import { usePlatformConfig } from '@/config/platformConfig'
 import { preOrderEntryPath, withPreOrderTab } from '@/lib/catalogStructure'
 import { showToast } from '@/components/ui/ToastContainer'
 
@@ -53,6 +54,9 @@ const staticSections: Array<{ title: string; links: FooterLink[] }> = [
 // AdminSettings → โซเชียล & LINE) — ช่องว่าง = ไม่แสดงปุ่มนั้น
 
 export function Footer() {
+  // ZERO-FAKE: ข้อความ "ส่งฟรี" แสดงเมื่อ server บังคับใช้กฎจริงเท่านั้น
+  const { delivery } = usePlatformConfig()
+  const freeShippingActive = delivery.freeShippingEnforced
   // ลิงก์ "เมนูอาหาร" ดึงจากหัวข้อเมนูจริงในฐานข้อมูล (active + ไม่ archived เรียงตามลำดับ)
   // — แอดมินเพิ่ม/แก้/เรียงหัวข้อเมื่อไร ฟุตเตอร์ตามทันที ไม่ต้องแก้โค้ด
   const [menuLinks, setMenuLinks] = useState<FooterLink[]>([{ label: 'ดูเมนูทั้งหมด', path: '/menu' }])
@@ -102,7 +106,10 @@ export function Footer() {
         <div className="mb-8 text-sm text-brand-muted">
           <p className="font-semibold text-brand-accent mb-2">🍽️ Bite Me Baby — Cloud Kitchen Operating Platform เมืองจันทบุรี</p>
           <p>
-            บริการสั่งอาหารจัดส่งเมืองจันทบุรี ส่งฟรีเมื่อครบ ฿200 • 
+            บริการสั่งอาหารจัดส่งเมืองจันทบุรี
+            {freeShippingActive && (
+              <> ส่งฟรีเมื่อครบ ฿{delivery.freeShippingThreshold.toLocaleString('th-TH')}</>
+            )} • 
             เมนูจานเดียว ข้าว แกง เครื่องดื่ม ของหวาน • 
             ส่งเช้า กลางวัน เย็น • 
             รองรับ Same-day Order และ Pre-order • 

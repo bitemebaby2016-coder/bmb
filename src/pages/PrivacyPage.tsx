@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { SHOP_CONTACT } from '@/components/layout/Footer'
 
 export function PrivacyPage() {
   return (
@@ -52,8 +53,8 @@ export function PrivacyPage() {
         <section className="card">
           <h2 className="text-xl font-bold text-brand-accent mb-3">5. ติดต่อฝ่ายคุ้มครองข้อมูล</h2>
           <p className="text-brand-text-secondary mb-2">หากคุณมีคำถามเกี่ยวกับนโยบายความเป็นส่วนตัวหรือต้องการใช้สิทธิของคุณ:</p>
-          <p>✉️ <a href="mailto:privacy@bitemebaby.co.th" className="text-brand-primary hover:underline">privacy@bitemebaby.co.th</a></p>
-          <p className="mt-2">📞 <a href="tel:+66xxxxxxxxx" className="text-brand-primary hover:underline">08X-XXX-XXXX</a></p>
+          <p>✉️ <a href={SHOP_CONTACT.emailHref} className="text-brand-primary hover:underline">{SHOP_CONTACT.email}</a></p>
+          <p className="mt-2">📞 <a href={SHOP_CONTACT.phoneHref} className="text-brand-primary hover:underline">{SHOP_CONTACT.phone}</a></p>
         </section>
       </div>
 
