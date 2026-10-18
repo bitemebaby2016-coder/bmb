@@ -40,6 +40,19 @@ export function MenuPage() {
     }, { replace: true })
   }
 
+  // ✓ Owner 2026-10-18: แท็บโหมด = มุมมองของ "ทั้งหมด" — กดแท็บแล้วออกจากหัวข้อที่เลือก
+  // ไม่ให้สองตัวกรองแย่งกัน (หัวข้อ = แหล่งความจริงของรายการในหมวด)
+  function switchTab(t: 'same-day' | 'pre-order') {
+    setMenuTab(t)
+    setSelectedCategory('all')
+    setSearchParams((prev) => {
+      const p = new URLSearchParams(prev)
+      p.delete('category')
+      p.set('tab', t)
+      return p
+    }, { replace: true })
+  }
+
   useEffect(() => {
     const want = searchParams.get('category')
     if (!want || categories.length === 0) return
@@ -80,13 +93,19 @@ export function MenuPage() {
 
   // ✓ v3.1: Filter by tab — canonical mode columns (migration 023), alias fallback
   // หัวข้อเมนู: เทียบด้วย category id ตรง ๆ (ค่าเดิมเทียบ slug slice ทำให้กดกรองแล้วเมนูหาย)
+  // ✓ Owner 2026-10-18: เลือกหัวข้อไหน = โชว์ครบทุกจานในหัวข้อนั้น — แท็บโหมดกรองเฉพาะมุม
+  // "ทั้งหมด" เท่านั้น (เดิมกรองซ้อนสองชั้น ทำให้กดหัวข้อ "จองล่วงหน้า / พรีออเดอร์"
+  // แล้วเจอของไม่ครบ = งานซ้ำสองระบบแย่งกันกรอง)
   const filtered = products.filter((p) => {
     const isPre = p.available_preorder ?? p.is_preorder
     const isSame = p.available_same_day ?? !p.is_preorder
-    if (menuTab === 'same-day' && !isSame) return false
-    if (menuTab === 'pre-order' && !isPre) return false
     const matchCat = selectedCategory === 'all' || String(p.category_id) === selectedCategory
-    return matchCat && !p.archived && p.name.toLowerCase().includes(searchQuery.toLowerCase())
+    if (!matchCat) return false
+    if (selectedCategory === 'all') {
+      if (menuTab === 'same-day' && !isSame) return false
+      if (menuTab === 'pre-order' && !isPre) return false
+    }
+    return !p.archived && p.name.toLowerCase().includes(searchQuery.toLowerCase())
   })
 
   const handleSameDay = (payload: SameDayOrderPayload) => {
@@ -175,14 +194,14 @@ export function MenuPage() {
         {/* ✓ v3.1: Tab switch (Same-day / Pre-order) */}
         <div className="flex gap-2 mb-4 bg-white p-1 rounded-xl">
           <button
-            onClick={() => setMenuTab('same-day')}
+            onClick={() => switchTab('same-day')}
             data-testid="same-day-tab"
             className={`flex-1 py-2.5 px-4 rounded-lg font-semibold transition-all ${menuTab === 'same-day' ? 'bg-brand-primary text-white shadow-md' : 'text-brand-accent hover:bg-orange-50'}`}
           >
             🍽️ วันนี้ ({sameDayCount})
           </button>
           <button
-            onClick={() => setMenuTab('pre-order')}
+            onClick={() => switchTab('pre-order')}
             data-testid="pre-order-tab"
             className={`flex-1 py-2.5 px-4 rounded-lg font-semibold transition-all ${menuTab === 'pre-order' ? 'bg-brand-primary text-white shadow-md' : 'text-brand-accent hover:bg-orange-50'}`}
           >
