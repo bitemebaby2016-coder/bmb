@@ -5,6 +5,13 @@ Stage: **S1 — CONTRACT ONLY** (ไม่ implement/deploy/mutate production)
 อ้างอิง: `BMB_G7_WORKLOG.md` (S0 audit จริง, commit df43053) เท่านั้น
 วันที่: 2026-10-03 BKK
 
+> **RULE REVISION — G6/G7 ORDER BOUNDARY (Owner 2026-10-17 §3, reaffirmed 2026-10-18):**
+> Same boundary as `BMB_G6_CONTRACT.md`: AI MAY CREATE a NEW order only via the shared
+> `_shared/socialOrderIntake.ts` → `create_order_with_items` (create-only, idempotent);
+> NEVER modify / cancel / reprice / restate an EXISTING order, and never claim order or
+> payment success before the source system confirms. Post drafting (below) remains
+> draft-only with human/automation publish flow unchanged.
+
 ## 0. SCOPE
 
 ```text

@@ -5,6 +5,18 @@ Stage: S1 (Contract + Design — ไม่มี implementation)
 อ้างอิง: `BMB_G6_WORKLOG.md` (S0 audit จริง, commit ce0254a) เท่านั้น
 วันที่: 2026-10-03 BKK
 
+> **RULE REVISION — G6/G7 ORDER BOUNDARY (Owner 2026-10-17 §3, reaffirmed 2026-10-18):**
+> AI **MAY** accept items and **CREATE a NEW order** through the approved workflow ONLY =
+> shared `_shared/socialOrderIntake.ts` → RPC `create_order_with_items` (create-only,
+> idempotent via `p_external_ref_id`) + server-side validation in the canonical RPC
+> (025/048). AI **MUST NEVER** modify / cancel / change quantity / change price / change
+> status of an EXISTING order, nor touch payment / inventory / delivery of an existing
+> order, without an explicitly approved workflow + confirmation. AI **MUST NEVER** claim
+> "order accepted" or "payment successful" before the source system confirms the real
+> status. (Supersedes the older blanket "no order creation" reading of G6-09.)
+> Enforcement: `socialOrderIntake.ts` · `social-ai-worker` · tests `socialOrderIntake` (20) +
+> `g6Security` (G6-09 revised) + `g6g7OrderBoundary`
+
 ## 0. Task activation
 
 | Task | สถานะเดิม (G5) | สถานะใน G6 | เหตุผล |

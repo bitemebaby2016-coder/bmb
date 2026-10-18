@@ -3,9 +3,31 @@
 > Updated per `.clinerules` WORK STATE rule after each meaningful task.
 > Rule source of truth: `UNIVERSAL_MASTER_AI_RULES.md` (repo root, v2.0) ·
 > bootstrap: `AI_ENTRYPOINT.md` (repo root, v1.0) — ทั้งคู่อยู่ใน repo แล้ว
-> (เพิ่ม 17 ต.ค. 2026 รอบดึก จากไฟล์โลคอลของ Owner)
 > **กติกาเอกสาร (Owner 17 ต.ค. รอบดึก): อัปเดต = เขียนทับทั้งฉบับ ห้ามเขียนต่อ (append)**
 > ประวัติฉบับก่อน ๆ ดูจาก git history เท่านั้น
+
+---
+
+## Task ID: PRETEST-CLOSURE-2026-10-18 (ปิดงานค้างก่อนทดสอบเปิดร้าน — คำสั่ง FINAL PRE-TEST CLOSURE)
+- **Status:** CLOSED — ปิดได้ทุกข้อที่ทำได้ด้วยโค้ด+สิทธิ์ปัจจุบัน · commit ท้องถิ่นแล้ว (push = deploy → รายงานผลกระทบให้ Owner สั่ง)
+- **Objective (Owner):** ปิดงานค้างทั้งหมดเพื่อเตรียมทดสอบเปิดร้านจริง — §2 เว็บ (Login/Theater/Cart/Pre-order/Rounds/Mixed/Checkout) · §3 G6/G7 ตัดสินใจใหม่ · §4 FB · §5 Bite context · §6 Content · §7 tests · §8 เอกสาร — **Meta App Review = ชะลอ**
+- **Completed:**
+  - **Theater/Waiting Stage unity (ค้าง PRE-OPENING — ปิดแล้ว):** มาสคอตบนเวที FoodTheater (ทั้ง stage floor + empty state) = ปุ่มเปิด Talk to Bite **ชุดเดียวกับ** Floating Bite (`openChat()` → TalkToBite overlay ตัวเดียวที่ BiteMascot mount) + บริบทจริง (route + จำนวนตะกร้า) — `FoodTheater.tsx` · CSS `.theater-greeting-mascot-btn`
+  - **เปิด/ปิด Theater ได้ + ซื้อผ่านหน้าร้านปกติได้ (§2):** ปุ่ม `theater-toggle` ในหัวโรงละคร — preference รายเครื่อง `src/lib/theaterPreferences.ts` (`bmb_theater_open`, default เปิด, localStorage พังไม่พัง UI) — สถานะปิด = แถบสั้น + ปุ่มเปิดใหม่ + ปุ่มไป `/menu` (ส่วนร้านด้านล่าง /shop ใช้ได้เสมอ)
+  - **Login context restoration (ค้าง PRE-OPENING + §2 ข้อ 1 — ปิดแล้ว):** `LoginPage` พก `state.from` ไปหน้าสมัคร · `RegisterPage` รับ `from`/`?next=` และส่งต่อทั้ง `navigate('/login', {state})` ตอนสมัครสำเร็จ และลิงก์กลับ — ไม่วน Landing เมื่อมีหน้าเป้าหมาย (checkout/เดิม)
+  - **G6/G7 boundary alignment (§3):** ตรวจ enforcement ครบชั้นแล้วสอดคล้องกัน — Policy (`aiGuardrails` read-only allowlist + prompt block) · Tool permissions (`aiToolCalling` get_* 5 ตัว) · Web (TalkToBite `EXECUTE_ADD_TO_CART` ผ่าน cartStore เท่านั้น) · Server (`_shared/socialOrderIntake.ts` create-only + `p_external_ref_id` idempotent) · channel-webhook + social-ai-worker เดิน RPC `create_order_with_items` เดียวกัน ไม่มี surface แก้/ยกเลิก/จ่าย/คืนเงิน = **ไม่พบข้อขัดแย้ง** → แก้เฉพาะจุดจำเป็น: เอกสารสัญญา (`BMB_G6_CONTRACT.md`/`BMB_G7_CONTRACT.md` = RULE REVISION note, `BMB_G6_WORKLOG.md` แถว G6-09) + **tests ใหม่ `g6g7OrderBoundary` (12 ข้อ)** pin ทุกชั้น + doc-code alignment กัน drift
+  - **shopRoute heavy-mount timeout:** 20s → 60s (เจอชน 20s ครั้งเดียวใต้โหลด full-suite บนเครื่องช้า — **assertion คงเดิมเป๊ะ** ไม่ได้อ่อนลง)
+  - **ตรวจแล้วไม่ต้องแก้ (ระบบเดิมครบ):** Mixed cart (split 2 order + COD-only + ห้ามเคลมสำเร็จถ้า child พัง — `checkoutMixedSplit` 3) · rounds ปิด/เต็ม/พ้น cutoff (`deliveryRoundStatus` + `ERR_ROUND_CLOSED` server authority) · Pre-order 2 ปุ่ม workflow เดียวกัน (`preOrderEntry`) · Cart คงข้ามหน้า/login (`cartPersistence` + login ไม่แตะตะกร้า) · FB webhook (signature HMAC + verify token + self-echo guard + event dedup + `p_external_ref_id`) · Bite บริบทจริง (`composeRealContext` + `aiServerMemory` แยกตาม customerId + `cartContextIsolation`) · รีวิว = ตารางจริง/ภาพจริง + testimonial label (RE-D2)
+- **Verified:** `npm run lint` = 0 (384 ไฟล์) · `npm test` = **109 ไฟล์ / 1,172 ข้อ ผ่านทั้งหมด** (ใหม่ 3 ไฟล์ 30 ข้อ: `loginContextRestoration` 8 · `theaterUnity` 10 · `g6g7OrderBoundary` 12) · `npm run build` = 0 (tsc + vite + PWA)
+- **Failed:** —
+- **Blocked (ต้อง Owner/ภายนอก):** งบ OpenRouter เหลือ ~$5 (ต้องเติมก่อนเทสต์ AI จริง) · Meta App Review ชะลอ (ทดสอบ FB ได้เฉพาะสิทธิ์บัญชีปัจจุบัน) · "coming soon" 2 ตัว + หัวข้อ "สินค้าสำเร็จรูป" = รอคำสั่ง Owner · push/deploy + E2E จริงบน biteme-baby.com = Owner สั่ง/ทำเอง
+- **Files Changed:** `src/components/theater/FoodTheater.tsx` · `src/lib/theaterPreferences.ts` (ใหม่) · `src/index.css` · `src/pages/login/LoginPage.tsx` · `src/pages/login/RegisterPage.tsx` · `src/__tests__/shopRoute.test.ts` (timeout เฉพาะจุด) · `src/__tests__/theaterUnity.test.ts` (ใหม่ 10) · `src/__tests__/loginContextRestoration.test.ts` (ใหม่ 8) · `src/__tests__/g6g7OrderBoundary.test.ts` (ใหม่ 12) · `BMB_G6_CONTRACT.md` · `BMB_G7_CONTRACT.md` · `BMB_G6_WORKLOG.md` · `docs/BMB_HANDOFF_NEXT_SESSION_2026-10-17-EVE.md` (เขียนทับ)
+- **Tests / Commands Run:** `npx vitest run` เต็มชุด ×3 (baseline 106/1,142 เขียว · รอบเช็ก 1 fail = shopRoute ชน 20s timeout · รอบสุดท้าย 109/1,172 เขียว) · `npm run lint` ×2 = 0 · `npm run build` ×2 = 0
+- **Known Risks / ข้อควรระวัง:**
+  - test suite ทั้งชุดมี timing sensitivity บนเครื่องช้า (full-run ~3 นาที, environment รวม ~800s) — ถ้ามี fail ลักษณะ timeout ให้รันซ้ำก่อนสรุปเป็น regression
+  - ไม่มีโค้ด `supabase/functions` เปลี่ยนในรอบนี้ → **ไม่ต้อง deploy EF** · ยังไม่ได้ push (ถือเป็น production deploy — ดู Next)
+  - **ยังไม่ได้ทดสอบจริง = production E2E ทั้งหมด** (เว็บ/จ่ายเงิน/แอดมิน/เพจ FB ระดับสิทธิ์จริง) — checklist อยู่ใน `docs/BMB_HANDOFF_NEXT_SESSION_2026-10-17-EVE.md` §3
+- **Next Exact Action:** ① Owner สั่ง push (หรือสั่งให้รอ) → biteme-baby.com auto-deploy ② เริ่ม E2E checklist §3 ของ handoff (เติมงบ OpenRouter ก่อนตัว AI) ③ HARD STOP คงเดิม: ห้ามขายจริงจน Owner สั่ง go
 
 ---
 
@@ -121,7 +143,7 @@
   - `source_channel` จาก FB ต้องตรง channel naming ที่ webhook ใช้ (`MESSENGER`) · HARD STOP: ห้ามขายจริงจน Owner สั่ง go
   - `UNIVERSAL_MASTER_AI_RULES.md` มี label v3.0 (2026 Updated) ในเครื่อง (D:\selfprint-v3-react) — เนื้อหาเหมือน v2.0 ทุกบรรทัดยกเว้นบรรทัด version — ถ้า Owner ต้องการ label ใหม่ แก้บรรทัดเดียว
 - **Next Exact Action (เป้าหมายแชทหน้า — คำสั่ง Owner):**
-  1. **แก้ UI ที่เหลือ** — ~~รายการ UI จากภาพ QA~~ (ปิดแล้ว: task UI-FIX-QA-2026-10-17) · ยังเหลือ Theater/Waiting Stage unity + login context restoration (ค้างจาก PRE-OPENING audit)
+  1. ~~**แก้ UI ที่เหลือ**~~ **ปิดครบแล้ว** — UI-FIX-QA-2026-10-17 + Theater/Waiting Stage unity + login context restoration (ปิดใน PRETEST-CLOSURE-2026-10-18)
   2. **ทดสอบเปิดร้านจริง** — พา Owner ผ่าน E2E checklist ใน `docs/BMB_HANDOFF_NEXT_SESSION_2026-10-17-EVE.md` §2.2 (รวม Messenger สั่งออเดอร์จริง → เลขที่จริง → retry ได้เลขที่เดิม)
 
 ---

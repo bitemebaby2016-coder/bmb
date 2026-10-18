@@ -1,52 +1,101 @@
-# HANDOFF → แชทถัดไป (อัปเดต 18 ต.ค. 2026 — ปิดเซสชัน)
+# HANDOFF → แชทถัดไป (อัปเดต 18 ต.ค. 2026 — FINAL PRE-TEST CLOSURE)
 
-> **สถานะรวม:** งานตามคำสั่ง Owner 17–18 ต.ค. ปิดครบแล้ว (UI / pre-order / clean slate / rounds 3 รอบ/วัน / Maps config) — เหลือ **E2E ทดสอบเปิดร้านจริง** ตาม §2.2
+> **สถานะรวม:** ปิดงานค้างทุกข้อที่ทำได้ด้วยโค้ด+สิทธิ์ปัจจุบันแล้ว (Theater/Waiting Stage unity + เปิด/ปิด Theater / login context restoration / G6-G7 alignment + regression tests) — เหลือ **Owner E2E ทดสอบเปิดร้านจริง** ตาม §3 + Blocker ภายนอก §4
 > เอกสารนี้ถูก**เขียนทับทั้งฉบับ**ตามกติกา "อัปเดต = เขียนทับ ห้ามเขียนต่อ" — ประวัติเก่าดูจาก git
 
 ---
 
-## 1. สถานะปัจจุบัน (verified 18 ต.ค. 2026 ปิดเซสชัน)
+## 1. สถานะปัจจุบัน (verified 18 ต.ค. 2026 — gates รอบ PRE-TEST CLOSURE)
 
 | หัวข้อ | สถานะจริง |
 |---|---|
-| UI จากภาพ QA (หน้า /check) | ✅ **แก้แล้ว (UI-FIX-QA-2026-10-17)** — ระยะทาง 0 กม. / รอบส่งมั่ว / แผนที่ซ้ำ / ตัวอักษรขาว / bubble ทับฟอร์ม / music pill ทับราคา |
-| รูปเมนูลอยเหนือกรอบ | ✅ **ครบสเปกทุกข้อ** — ปกติ `translateY(-10px) scale(1.04)`+มุมมน/เงา · hover `-16px/1.08` · `pointer-events:none` · badge เหนือรูปเสมอ (z-40 รวมตอน hover) · เว้นที่เหนือการ์ด+padding carousel · reduced-motion ปิดลอย |
-| ปุ่มจองล่วงหน้า (home/footer) | ✅ (PREORDER-ENTRY-2026-10-18) — deep-link `?tab=pre-order` + feedback กดซ้ำ |
-| ของพรีออเดอร์ใต้หัวข้อเดิม | ✅ (PREORDER-MERGE-2026-10-18) — 7 ชิ้นใต้ "จองล่วงหน้า / พรีออเดอร์" + หน้าเมนูไม่มีตัวกรองซ้อน |
-| Clean slate ทดสอบจริง | ✅ (CLEAN-SLATE-ROUNDS-2026-10-18) — ออเดอร์ 208/เงิน 57/ประวัติ 458/ออโต้ 1,622/โซเชียล 34 + อื่น ๆ = **0 ทั้งหมด** |
-| Rounds จัดส่ง | ✅ **3 รอบ/วัน มาตรฐานเดียว** (18–24 ต.ค. 21 แถว) เช้า 06:00–09:00 ปิดรับ 08:00 (60) / เที่ยง 11:00–14:00 ปิดรับ 10:30 (80) / เย็น 17:00–20:00 ปิดรับ 16:00 (100) — template ที่ติด "W3C-EXT test round" ล้างแล้ว; วันใหม่ระบบสร้างเอง (`ensure_rounds_for_date`) |
-| Gates | ✅ lint=0 · tests **105 ไฟล์ / 1,112 ข้อ** ผ่าน · build=0 |
-| EF `social-ai-worker` | ✅ deploy แล้ว (41 kB) — create-only + idempotent |
-| Bite บริบทจริง | ✅ `composeRealContext()` |
+| Theater/Waiting Stage unity (ค้าง PRE-OPENING) | ✅ **ปิดแล้ว** — มาสคอตบนเวที FoodTheater (ทั้ง stage + empty) = ปุ่มเปิด Talk to Bite ชุดเดียวกับ Floating Bite (`openChat()` → overlay ตัวเดียว) + บริบทจริง (route + จำนวนตะกร้า) |
+| เปิด/ปิด Theater + ซื้อผ่านหน้าร้านปกติ | ✅ **ปิดแล้ว** — ปุ่ม `theater-toggle` (preference รายเครื่อง `bmb_theater_open`, default เปิด) — สถานะปิด = ปุ่มเปิดใหม่ + ปุ่มไป `/menu` (ส่วนร้าน /shop ใช้ได้เสมอ) |
+| Login context restoration (ค้าง PRE-OPENING) | ✅ **ปิดแล้ว** — returnTo (`state.from` + `?next=`) ไหลผ่าน Login ↔ Register ครบ — ไม่วน Landing เมื่อมีหน้าเป้าหมาย |
+| G6/G7 order boundary (§3 คำสั่งรอบนี้) | ✅ enforcement ครบชั้นสอดคล้องกัน (Policy read-only · Tool get_* · Web cart-only · Server create-only + idempotent) + อัปเดตสัญญา G6/G7 + tests ใหม่ 12 ข้อ |
+| ของพรีออเดอร์ใต้หัวข้อเดิม + ปุ่มจองล่วงหน้า 2 จุด | ✅ (PREORDER-MERGE / PREORDER-ENTRY 2026-10-18) — workflow เดียวกัน |
+| Rounds 3 รอบ/วัน + ปิด/เต็ม/พ้น cutoff | ✅ `delivery_rounds` จริง + UI disabled + `ERR_ROUND_CLOSED` server authority |
+| Mixed cart (same-day + pre-order) | ✅ split 2 order + COD-only + ห้ามเคลมสำเร็จถ้า child พัง (`checkoutMixedSplit`) |
+| Cart/Context คงข้ามหน้า/เข้าสู่ระบบ | ✅ `cartPersistence` (rebuild ผ่าน cartStore + revalidate) — login ไม่แตะตะกร้า |
+| Bite บริบทจริง (§5) | ✅ `composeRealContext()` + memory แยกตาม customerId + `cartContextIsolation` |
+| Facebook (webhook/dedup/intake กลาง — §4) | ✅ โค้ดพร้อม (HMAC signature · verify token · self-echo guard · event dedup · `p_external_ref_id`) — ทดสอบได้ระดับสิทธิ์ปัจจุบัน · Meta App Review ชะลอ |
+| Audience Voices / Content entry (§6) | ✅ รีวิว = ตารางจริง + ภาพลูกค้าจริง + testimonial label (RE-D2) · ทางเข้า 6 เส้นทางใช้ workflow จริง |
+| Gates รอบนี้ | ✅ lint=0 (384 ไฟล์) · tests **109 ไฟล์ / 1,172 ข้อ** ผ่านทั้งหมด · build=0 (tsc+vite+PWA) |
 | ⚠️ งบ OpenRouter | เหลือ ~$5 / $160 — **เติมงบก่อนเทสต์ AI จริง** |
-| Google Maps | ✅ **ใช้งานได้แล้ว — ตรวจยืนยันบน prod** — root cause: `VITE_GOOGLE_MAPS_API_KEY` ไม่มีใน Cloudflare Pages production vars (มีแค่ MAP_ID) + โค้ดเดิมบังคับ MAP_ID ตอนโหลด SDK — Owner เพิ่มคีย์ 12:41 น. 18 ต.ค. + build `1cada70` ฝังคีย์แล้ว (**key อยู่ใน bundle `googleMaps-zRFLJrop.js`, entry `index-B0wjuzIC.js`**; leak-scan ยืนยันไม่มีค่า secret/service-role หลุด — ที่เจอเป็น literal ใน supabase-js เอง) · เก็บตก: กดถังขยะลบตัวแปรขยะ `"BmB web Map"` ใน Cloudflare (ไม่ได้ถูกใช้) · `.env.local` ซ่อมแล้ว (คอมเมนต์ไทย+BOM; ค่า 32 บรรทัดเดิมทุกตัว) |
+| ⚠️ Git | commit ท้องถิ่นแล้ว — **ยังไม่ push** (push = auto-deploy production → รอคำสั่ง Owner) |
+| Google Maps | ✅ ใช้งานได้แล้วบน prod (ตรวจแล้วรอบก่อน — build `1cada70`) |
+| Clean slate ทดสอบจริง | ✅ ข้อมูลธุรกรรม = 0 ทั้งระบบ + บัญชีลูกค้า 37 ใช้ได้ (CLEAN-SLATE-ROUNDS-2026-10-18) |
 
-## 2. งานที่เหลือ — เป้าหมายแชทหน้า
+## 2. สิ่งที่ปิดรอบนี้ (PRETEST-CLOSURE-2026-10-18)
 
-### 2.1 เก็บตก
-- [ ] **เช็กภาพจริงบนเครื่อง Owner หลัง deploy รอบนี้** — Google Maps โหลดได้จริง · การ์ด fee error · รูปเมนู hover/ลอย · แถวรอบส่ง disabled · ปุ่มจองล่วงหน้า · หัวข้อ "จองล่วงหน้า / พรีออเดอร์ (7)"
-- [ ] Theater/Waiting Stage unity (ค้างจาก PRE-OPENING audit)
-- [ ] Login context restoration (ค้างจาก PRE-OPENING audit)
-- [ ] (ถ้า Owner สั่ง) เก็บ "coming soon" 2 ตัว + หัวข้อ "สินค้าสำเร็จรูป" ที่ไม่ทราบที่มา
-- กติกา: ทุกครั้งปิดด้วย gates — tsc 0 · lint 0 · tests ทั้งชุดผ่าน · build 0 · **ห้ามสร้างโครงสร้าง/ระบบคู่ขนานใหม่ — ใช้หัวข้อเมนูที่มีอยู่***
+1. **Theater/Waiting Stage unity** — `FoodTheater.tsx`: มาสคอตบนเวทีเป็นปุ่ม `theater-mascot-chat` → `openChat()` ของ `useBiteAIStore` = TalkToBite overlay **ตัวเดียวกับ** Floating Bite (ไม่มีแชตคู่ขนาน) + CSS `.theater-greeting-mascot-btn` — test `theaterUnity` (10 ข้อ)
+2. **เปิด/ปิด Theater** — ปุ่ม `theater-toggle` + `src/lib/theaterPreferences.ts` (ใหม่: `readTheaterOpen`/`writeTheaterOpen`, localStorage, default เปิด, ไม่ throw) — ปิดแล้วซื้อผ่านหน้าร้านปกติได้ทันที
+3. **Login context restoration** — `LoginPage.tsx` พก `state.from` ไป /register · `RegisterPage.tsx` รับ `from`/`?next=` และส่งต่อทั้ง `navigate('/login', {state})` + ลิงก์กลับ — test `loginContextRestoration` (8 ข้อ)
+4. **G6/G7 (§3)** — ตรวจ Policy/Tool/API/Server enforcement ครบชั้น = สอดคล้องกับการตัดสินใจ "AI สร้างออเดอร์ใหม่ผ่าน workflow อนุญาตได้ · ห้ามแก้ออเดอร์เดิม" → แก้เฉพาะจุดจำเป็น: `BMB_G6_CONTRACT.md`/`BMB_G7_CONTRACT.md` (RULE REVISION note) + `BMB_G6_WORKLOG.md` (แถว G6-09) + test ใหม่ `g6g7OrderBoundary` (12 ข้อ — pin ทุกชั้น + doc-code alignment)
+5. **shopRoute timeout** 20s → 60s เฉพาะ heavy-mount test (assertion คงเดิม — ที่เหลือไม่แตะ)
+6. **ไฟล์แก้ไข:** `FoodTheater.tsx` · `theaterPreferences.ts` (ใหม่) · `index.css` · `LoginPage.tsx` · `RegisterPage.tsx` · `shopRoute.test.ts` · tests ใหม่ 3 ไฟล์ · `BMB_G6_CONTRACT.md` · `BMB_G7_CONTRACT.md` · `BMB_G6_WORKLOG.md`
 
-### 2.2 ทดสอบเปิดร้านจริง (Owner E2E checklist — เริ่มได้ทันที)
-ก่อนเริ่ม: เติมงบ OpenRouter ให้พอกับการเทสต์ · ระบบพร้อม: ข้อมูลว่างทั้งหมด + รอบมาตรฐาน 3 รอบ/วัน + บัญชีลูกค้า 37 ใช้ได้
-- [ ] เว็บ login → checkout → order เข้า /admin
-- [ ] รอบปิด/รอบเต็ม → บล็อกจริง (`ERR_ROUND_CLOSED`) — UI แสดงแถวปิด/เต็ม disabled + ป้ายสถานะ ตรวจว่าตรงกับ server
-- [ ] Mixed cart (same-day + pre-order) → split 2 order + COD
-- [ ] Pre-order 2 ปุ่ม (home + footer) = workflow เดียวกัน
-- [ ] แอดมินสวิตช์รอบ/เมนู → มีผลทันที
-- [ ] Bite ตอบตาม Cart จริง (`composeRealContext`)
-- [ ] **Messenger:** "สั่งผัดไทย 2 จาน" → ได้**เลขที่ออเดอร์จริง** + ลิงก์จ่ายเงิน → **ส่งซ้ำ = เลขที่เดิม** (idempotent)
-- [ ] Comment สาธารณะ = ไม่เปิดเผยรายละเอียด ชวนเข้า Inbox
-- [ ] AI ล่ม → เว็บสั่งได้ตามปกติ
-- [ ] AI แตะออเดอร์เดิมไม่ได้ (ตรวจ `audit_logs`)
+---
 
-## 3. กติกา/ข้อควรระวัง (คงเดิม)
-- **เอกสารสถานะ = เขียนทับทั้งฉบับ ห้าม append** (คำสั่ง Owner 17 ต.ค. รอบดึก)
-- `.clinerules` ห้าม commit · `chat\bmb\` เคลียร์แล้ว (ห้ามมี staging copy ค้างอีก) · **HARD STOP ห้ามขายจริงจน Owner สั่ง go**
-- Meta App Review = ชะลอตามคำสั่ง · เพจ/สิทธิ์ FB จริง = Owner เทสต์เอง
-- Contract tests ที่ต้องรักษา: `g6Security` (G6-09 revised) · `socialOrderIntake` (20) · `socialAiContinuity` · `menuScheduleRoundLink` (9) · `preOrderEntry` (9) · `deliveryRoundStatus` (9) · `menuCartResultGuard` · `cartContextIsolation`
-- Deploy EF (เมื่อมีโค้ด EF เปลี่ยน): ใช้ `SUPABASE_ACCESS_TOKEN` จาก `D:\A PROJECT\Bite Me Baby\.env.local` แล้ว `supabase functions deploy <name> --project-ref ivkdfognyiwjcmrhcnwz` (งาน EF = รอ Owner อนุมัติเสมอก่อน deploy ที่กระทบ production flow)
-- หมายเหตุ rules: มี `UNIVERSAL_MASTER_AI_RULES.md` label v3.0 (2026 Updated) ในเครื่อง (D:\selfprint-v3-react) — เนื้อหาเหมือน v2.0 ในรีโปทุกบรรทัดยกเว้นบรรทัด version; ถ้า Owner ต้องการ label ใหม่ = แก้บรรทัดเดียว
+## 3. Owner E2E Checklist — Final (ทดสอบเปิดร้านจริง เริ่มได้ทันที)
+
+**ก่อนเริ่ม:** ① เติมงบ OpenRouter ให้พอ (ปัจจุบัน ~$5 — AI จะหยุดตอบเมื่อถึงเพดาน) ② ทดสอบบน **biteme-baby.com เท่านั้น** (`*.bitemebaby.pages.dev` = stale) ③ ข้อมูลธุรกรรมว่าง + รอบส่ง 3 รอบ/วัน + บัญชีลูกค้า 37 ใช้ได้
+**⚠️ จุดที่ต้องยืนยันก่อนดำเนินการ (เงินจริง/ตั้งค่าที่กระทบการรับออเดอร์):** การทดสอบจ่ายเงินจริง (PromptPay/Omise live) · การเปิดรับออเดอร์จริงจากลูกค้า · การเปลี่ยนคีย์ live — **ทั้งหมดให้ Owner ยืนยันก่อนเริ่ม**; ถ้าใช้ test mode ได้ให้เริ่มจาก test mode ก่อน
+
+### 3.1 เว็บไซต์ (Login / Cart / Pre-order / Rounds)
+- [ ] Login ด้วยบัญชีลูกค้า → เข้าหน้าที่ตั้งใจไว้ (ลองจาก /checkout: ต้องย้อนกลับ /checkout ไม่ใช่ Landing) + ตะกร้าที่มีของอยู่ก่อน login **ไม่หาย**
+- [ ] Register ใหม่จากหน้า /checkout → สมัครเสร็จ → ได้กลับ /checkout (context ไม่หลุด)
+- [ ] ปุ่ม "จองล่วงหน้า" หน้าแรก + ก่อนฟุตเตอร์ → แท็บ "จองล่วงหน้า (7)" + workflow เดียวกัน
+- [ ] **เปิด/ปิด Theater:** ปุ่ม `✕` บนโรงละคร → ปิด → กดเปิดใหม่ (`🎭`) ได้ + ตอนปิดยังซื้อผ่าน /menu + แถวร้านด้านล่างได้ครบ
+- [ ] มาสคอตบนเวทีโรงละคร → เปิดแชต Talk to Bite **ชุดเดียวกับ** Floating Bite (ไม่มีแชตซ้ำ)
+- [ ] Bite ตอบโดยอ้างอิงตะกร้าจริง (สั่งของเข้าตะกร้า 2 ชิ้น แล้วถาม "ตอนนี้ในตะกร้ามีอะไร" → ตอบตรง)
+- [ ] รอบที่ปิด/เต็ม/พ้น cutoff = เลือกไม่ได้ (แถว disabled + ป้ายสถานะ) และ server ปฏิเสธจริง (`ERR_ROUND_CLOSED`)
+- [ ] Mixed cart (same-day + pre-order ในตะกร้าเดียว) → ต้องได้ 2 ออเดอร์ + รับเงินสด/COD เท่านั้น (ถ้าเลือก PromptPay → ระบบปฏิเสธก่อนสร้างออเดอร์)
+- [ ] Cart คงอยู่ระหว่างเปลี่ยนหน้า / reload / กลับมาใช้วันถัดไป (localStorage)
+
+### 3.2 การชำระเงิน (⚠️ ยืนยันก่อนถ้าใช้เงินจริง)
+- [ ] Checkout → เลือกรอบ + ที่อยู่ → สร้างออเดอร์ → ได้เลขที่ออเดอร์จริง
+- [ ] PromptPay QR / Omise (test mode `4242 4242 4242 4242`) → ชำระสำเร็จ → `orders.payment_status='paid'` **มาจาก webhook เท่านั้น**
+- [ ] จ่ายไม่สำเร็จ/ยกเลิกกลางคัน → ระบบไม่เคลมสำเร็จ + ไม่ clearCart
+- [ ] หน้า `/track/<เลขที่>` เปิดได้โดยไม่ต้อง login (สำหรับลูกค้าจาก FB)
+
+### 3.3 ระบบจัดการร้าน (/admin)
+- [ ] ออเดอร์จากเว็บ + จาก Messenger ปรากฏใน /admin **ชุดเดียวกัน** (source_channel ระบุที่มา)
+- [ ] สวิตช์เปิด/ปิดรอบ + เมนูในแอดมิน → มีผลทันทีกับหน้าลูกค้า
+- [ ] เดินสถานะออเดอร์ (รับ → ทำ → ส่ง → สำเร็จ) → tracking ลูกค้าอัปเดตตาม
+- [ ] แอดมินแก้ราคา/สต็อก → หน้าร้าน/การคิดเงินใช้ค่าใหม่ (server re-derive)
+
+### 3.4 Facebook (ระดับสิทธิ์ปัจจุบัน — Meta App Review ชะลอ)
+- [ ] **Messenger:** "สั่งผัดไทย 2 จาน" → ถามยืนยันถ้าไม่ครบ → ยืนยัน → ได้**เลขที่ออเดอร์จริง** + ลิงก์จ่ายเงิน/ติดตาม
+- [ ] **ส่งข้อความเดิมซ้ำ (webhook retry) → เลขที่เดิม** (idempotent ไม่สร้างออเดอร์ซ้ำ — ตรวจ `audit_logs` เห็น `channel_event_duplicate`)
+- [ ] **Comment สาธารณะ** ใต้โพสต์ → ตอบไม่เปิดเผยรายละเอียดตะกร้า/ข้อมูลส่วนตัว + ชวนเข้า Inbox
+- [ ] ข้อความกำกวม ("เอาข้าวหน่อย") → AI ถามก่อน ไม่เดาสินค้า/จำนวน
+- [ ] ลูกค้าจาก FB เปิดเว็บ → ติดตามออเดอร์ผ่านลิงก์/เลขที่ได้ (ไม่เดาว่าเป็นลูกค้าคนเดียวกับบัญชีเว็บ)
+- [ ] **หมายเหตุสิทธิ์:** ทดสอบได้เฉพาะเพจ/บัญชีที่ผูก webhook แล้ว (ตัว Owner เอง) — **ห้ามอ้างว่าผ่านกับลูกค้าทั่วไป** จนกว่า Meta App Review จะอนุมัติ
+
+### 3.5 AI / Fallback
+- [ ] AI ตอบตามแคตตาล็อกจริง (ชื่อ/ราคาตรงเมนู ไม่มั่ว) — ทั้งเว็บและ Messenger
+- [ ] AI แตะ/แก้/ยกเลิกออเดอร์เดิมไม่ได้ (ลองสั่ง "ยกเลิกออเดอร์ BMB-xxx" → ต้องปฏิเสธ + `audit_logs` ไม่มี mutation)
+- [ ] AI ล่ม/งบหมด → เว็บสั่งซื้อเองได้ตามปกติทุกฟังก์ชัน
+
+---
+
+## 4. Blocker เหลือ (Owner / ภายนอก — ปิดเองไม่ได้ในรอบนี้)
+
+| # | Blocker | ใครต้องทำ |
+|---|---|---|
+| 1 | **งบ OpenRouter เหลือ ~$5 / $160** — AI ทุกตัว (Bite เว็บ + FB) จะหยุดตอบเมื่อถึงเพดาน | Owner เติมงบ/ขึ้น limit **ก่อน**เทสต์ AI |
+| 2 | **Push = deploy production** — โค้ดรอบนี้ commit ท้องถิ่นแล้ว (gates เขียว) | Owner สั่ง push (หรือสั่งให้รอก่อน) |
+| 3 | **Meta App Review ชะลอ** — สิทธิ์ FB ปัจจุบันทดสอบได้เฉพาะเพจ/บัญชีที่ผูก webhook (Owner เท่านั้น) | รอบถัดไปค่อยทำ App Review |
+| 4 | **"coming soon" 2 ตัว (฿1) + หัวข้อ "สินค้าสำเร็จรูป"** — ไม่ทราบที่มา ยังไม่แตะ | Owner สั่งลบ/ซ่อน/เก็บ |
+| 5 | **การจ่ายเงินจริง/เปิดรับออเดอร์จริง** — ต้องใช้เงินจริง/คีย์ live | Owner ยืนยันก่อนเริ่ม (ดู §3 ข้อ ⚠️) |
+| 6 | เช็กภาพจริงบนเครื่อง Owner หลัง deploy (Maps/fee error/รูปลอย/แถวรอบ/ปุ่มจองล่วงหน้า) | Owner ดูบนอุปกรณ์จริง |
+
+## 5. กติกา/สัญญาที่ต้องรักษา (คงเดิม)
+
+- **เอกสารสถานะ = เขียนทับทั้งฉบับ ห้าม append** (คำสั่ง Owner 17 ต.ค. รอบดึก) · `.clinerules` ห้าม commit · **HARD STOP ห้ามขายจริงจน Owner สั่ง go**
+- Contract tests ที่ต้องรักษา: `g6Security` (G6-09 revised) · `socialOrderIntake` (20) · `socialAiContinuity` · `menuScheduleRoundLink` (9) · `preOrderEntry` (9) · `deliveryRoundStatus` (9) · `menuCartResultGuard` · `cartContextIsolation` · **`g6g7OrderBoundary` (12 — ใหม่รอบนี้)** · `theaterUnity` (10) · `loginContextRestoration` (8)
+- **G6/G7 boundary (ประกาศในสัญญาแล้ว):** AI สร้างออเดอร์**ใหม่**ผ่าน `_shared/socialOrderIntake.ts` → `create_order_with_items` (create-only + `p_external_ref_id` idempotent) เท่านั้น — ห้ามแก้/ยกเลิก/เปลี่ยนจำนวน/ราคา/สถานะออเดอร์เดิมโดยพลการ · ห้ามเคลมว่ารับออเดอร์/จ่ายเงินสำเร็จก่อนระบบยืนยัน
+- Deploy EF (เมื่อมีโค้ด EF เปลี่ยน): ใช้ `SUPABASE_ACCESS_TOKEN` จาก `.env.local` แล้ว `supabase functions deploy <name> --project-ref ivkdfognyiwjcmrhcnwz` (งาน EF = รอ Owner อนุมัติเสมอก่อน deploy ที่กระทบ production flow) — **รอบนี้ไม่มีโค้ด EF เปลี่ยน ไม่ต้อง deploy**
+- Meta App Review = ชะลอตามคำสั่ง · เพจ/สิทธิ์ FB จริง = Owner เทสต์เอง · ทดสอบบน `biteme-baby.com` เท่านั้น (`*.bitemebaby.pages.dev` = stale)
+

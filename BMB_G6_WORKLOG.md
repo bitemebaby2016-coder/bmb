@@ -151,7 +151,7 @@ NEXT: G6-S2 Implementation หลัง commit/push/clean ยืนยัน
 |---|---|
 | G6-01..05 (valid/malformed/missing/enum/confidence) | PASS (offline) |
 | G6-06..08 (prompt injection: DATA≠INSTRUCTION, system prompt เป็น constant, ไม่มี tools surface) | PASS (offline) |
-| G6-09 (order mutation instruction; banned draft content; เฉพาะ social_events ที่ถูก PATCH) | PASS (offline) |
+| G6-09 (order boundary REVISED 2026-10-17: AI CREATE-new via shared socialOrderIntake only, idempotent; mutation of existing orders/payment/inventory/delivery = banned; banned draft content; เฉพาะ social_events ที่ถูก PATCH) | PASS (offline) |
 | G6-10..12 (cross-tenant/NULL/empty tenant — derived-only + NOT NULL + UNBOUND_PAGE) | PASS (offline, migration 109 evidence) |
 | G6-13 (unauthorized → 401) | PASS (offline) |
 | G6-14/15 (duplicate event = UNIQUE+ON CONFLICT; duplicate invocation = optimistic claim) | PASS (offline) |

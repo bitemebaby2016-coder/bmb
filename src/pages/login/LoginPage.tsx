@@ -564,7 +564,13 @@ return (
           <div className="mt-6 text-center">
             <p className="text-brand-muted text-sm">
               ยังไม่มีบัญชี?{' '}
-              <Link to="/register" className="text-brand-primary font-medium hover:underline">
+              {/* Login context restoration (PRE-OPENING): ส่งต่อ returnTo ไปหน้าสมัครด้วย —
+                  ไม่งั้น register → login จะลืมหน้าที่ผู้ใช้ตั้งใจ (ตก Landing ไม่จำเป็น) */}
+              <Link
+                to="/register"
+                state={returnTo ? { from: returnTo } : undefined}
+                className="text-brand-primary font-medium hover:underline"
+              >
                 สมัครสมาชิก
               </Link>
             </p>

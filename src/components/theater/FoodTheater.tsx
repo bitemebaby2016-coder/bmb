@@ -26,6 +26,7 @@ import { recommendReason } from '@/lib/theaterReasons'
 import { theaterPosFor, clampIndex } from '@/lib/theaterGeometry'
 import { resolveTheaterEditorial, THEATER_EDITORIAL_DEFAULTS } from '@/lib/theaterEditorial'
 import { selectDailyCopy, resolveStageCopy, type TheaterDailyCopyItem } from '@/lib/theaterDailyCopy'
+import { readTheaterOpen, writeTheaterOpen } from '@/lib/theaterPreferences'
 import { hydrateMemoryFromServer } from '@/lib/aiServerMemory'
 import { showToast } from '@/components/ui/ToastContainer'
 import { TheaterHeroCard, RecommendationCard } from './TheaterCards'
@@ -46,8 +47,12 @@ export function FoodTheater({ products, onCustomize, onPreOrder }: FoodTheaterPr
   const customer = useAuthStore((s) => s.customer)
   const cartItems = useCartStore((s) => s.items)
   const setBiteState = useBiteAIStore((s) => s.setBiteState)
+  const openChat = useBiteAIStore((s) => s.openChat)
   const [favoriteCats, setFavoriteCats] = useState<string[]>([])
   const [index, setIndex] = useState(0)
+  // directive §2 — "เปิด/ปิด Theater ได้": preference รายเครื่อง (default = เปิด)
+  // ปิดแล้วหน้าร้านปกติ (/shop sections + /menu) ใช้ได้เสมอ — ไม่ใช่ business state
+  const [theaterOpen, setTheaterOpen] = useState(() => readTheaterOpen())
   const [editorial, setEditorial] = useState(THEATER_EDITORIAL_DEFAULTS)
   // Daily rotation layer — SAME settings fetch as editorial (one swap on load).
   const [dailyCopy, setDailyCopy] = useState<TheaterDailyCopyItem | null>(null)
@@ -104,6 +109,24 @@ export function FoodTheater({ products, onCustomize, onPreOrder }: FoodTheaterPr
 
   function reasonFor(p: Product) {
     return recommendReason(p, { favoriteCats, cartCategoryIds })
+  }
+
+  // --- Theater on/off (directive §2) — ปิดได้โดยไม่กระทบการซื้อผ่านหน้าร้านปกติ ---
+  function toggleTheater() {
+    setTheaterOpen((prev) => {
+      writeTheaterOpen(!prev)
+      return !prev
+    })
+  }
+
+  // --- Theater/Waiting Stage unity (directive §2): มาสคอตบนเวที = ทางเข้า
+  //     Talk to Bite ชุดเดียวกับ Floating Bite (openChat → TalkToBite overlay
+  //     ตัวเดียวที่ BiteMascot mount ไว้) — บริบทส่งเฉพาะสถานะจริง (route + ตะกร้า) ---
+  function chatWithBite() {
+    const count = cartItems.reduce((s, i) => s + i.quantity, 0)
+    const context = `ลูกค้าอยู่หน้า /shop (Bite Food Theater) · มีของในตะกร้า ${count} รายการ`
+    openChat(context)
+    setBiteState('WELCOME')
   }
 
 
@@ -225,12 +248,45 @@ export function FoodTheater({ products, onCustomize, onPreOrder }: FoodTheaterPr
         >
           🛒{cartCount > 0 ? ` ${cartCount}` : ''}
         </button>
+        {/* เปิด/ปิด Theater (directive §2) — ปิดแล้วยังซื้อผ่านหน้าร้านปกติได้ */}
+        <button
+          type="button"
+          onClick={toggleTheater}
+          className="theater-cart-btn"
+          aria-expanded={theaterOpen}
+          aria-label={theaterOpen ? 'ปิดโรงละคร' : 'เปิดโรงละคร'}
+          data-testid="theater-toggle"
+        >
+          {theaterOpen ? '✕' : '🎭'}
+        </button>
       </div>
 
-      {/* Empty state — real catalog says nothing sellable right now */}
-      {picks.length === 0 ? (
+      {/* โรงละครปิดอยู่ — เหลือแถบสั้น + ทางเข้าหน้าร้านปกติ (ซื้อได้ตามปกติ) */}
+      {!theaterOpen ? (
+        <div className="theater-empty" data-testid="theater-closed">
+          <p className="text-sm text-[var(--theater-fg-muted)]">
+            ปิดโรงละครอยู่ — เลือกซื้อผ่านหน้าร้านปกติได้เลยครับ
+          </p>
+          <div className="flex flex-wrap items-center justify-center gap-2">
+            <button type="button" className="btn btn-primary" onClick={toggleTheater} data-testid="theater-reopen">
+              🎭 เปิดโรงละคร
+            </button>
+            <button type="button" className="btn btn-outline" onClick={() => navigate('/menu')} data-testid="theater-closed-menu">
+              {editorial.menuCta}
+            </button>
+          </div>
+        </div>
+      ) : picks.length === 0 ? (
         <div className="theater-empty" data-testid="theater-empty">
-          <MascotBadge pose="cooking" size="lg" alt="Bite กำลังเตรียมเมนู" />
+          <button
+            type="button"
+            onClick={chatWithBite}
+            className="theater-greeting-mascot-btn"
+            aria-label="คุยกับน้อง Bite"
+            data-testid="theater-mascot-chat"
+          >
+            <MascotBadge pose="cooking" size="lg" alt="Bite กำลังเตรียมเมนู — แตะเพื่อคุย" />
+          </button>
           <p className="text-sm text-[var(--theater-fg-muted)]">{editorial.emptyBody}</p>
           <button type="button" className="btn btn-primary" onClick={() => navigate('/menu')}>
             {editorial.menuCta}
@@ -313,9 +369,18 @@ export function FoodTheater({ products, onCustomize, onPreOrder }: FoodTheaterPr
             </button>
           </div>
 
-          {/* Stage floor — Bite stands on the glowing ring with a speech bubble (mockup) */}
+          {/* Stage floor — Bite ยืนบนเวทีพร้อม bubble: แตะ = เปิด Talk to Bite
+              ชุดเดียวกับ Floating Bite (Theater/Waiting Stage unity — directive §2) */}
           <div className="theater-greeting" data-testid="theater-greeting">
-            <MascotBadge pose="recommend" size="md" alt="Bite กำลังแนะนำเมนู" loading="eager" className="theater-greeting-mascot" />
+            <button
+              type="button"
+              onClick={chatWithBite}
+              className="theater-greeting-mascot-btn"
+              aria-label="คุยกับน้อง Bite"
+              data-testid="theater-mascot-chat"
+            >
+              <MascotBadge pose="recommend" size="md" alt="Bite กำลังแนะนำเมนู — แตะเพื่อคุย" loading="eager" className="theater-greeting-mascot" />
+            </button>
             <p className="theater-greeting-bubble" data-testid="theater-subheadline">{stage.subheadline}</p>
           </div>
 

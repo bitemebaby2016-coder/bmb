@@ -2314,6 +2314,24 @@ html[data-theme='dark'], html[data-theme='graphite'] {
   flex-shrink: 0;
   filter: drop-shadow(0 8px 14px rgba(var(--theater-accent-rgb), 0.4));
 }
+/* Theater/Waiting Stage unity (2026-10-18): มาสคอตบนเวที = ปุ่มเปิด Talk to Bite */
+.theater-greeting-mascot-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  border-radius: 9999px;
+  transition: transform 0.15s ease;
+}
+.theater-greeting-mascot-btn:hover { transform: scale(1.06); }
+.theater-greeting-mascot-btn:active { transform: scale(0.97); }
+.theater-greeting-mascot-btn:focus-visible {
+  outline: 2px solid var(--theater-accent, #f97316);
+  outline-offset: 3px;
+}
 .theater-greeting-bubble {
   position: relative;
   max-width: min(340px, 70%);

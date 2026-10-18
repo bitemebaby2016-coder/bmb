@@ -1,11 +1,20 @@
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { signUpWithEmail } from '@/store/authStore'
+import { readSocialNext } from '@/lib/socialLogin'
 import { showToast } from '@/components/ui/ToastContainer'
 import { writeAuditLog } from '@/lib/auditLog'
 
 export function RegisterPage() {
   const navigate = useNavigate()
+  const routerLocation = useLocation()
+  // Login context restoration (PRE-OPENING): หน้าที่ผู้ใช้ตั้งใจก่อนเข้าสู่ระบบ
+  // (ProtectedRoute/Checkout ส่ง state.from มา) — ส่งต่อผ่าน register → login
+  // เพื่อไม่ให้เด้งกลับ Landing โดยไม่จำเป็น
+  const returnTo =
+    (routerLocation.state as { from?: string } | null)?.from ||
+    readSocialNext() ||
+    null
 
   const [formData, setFormData] = useState({
     name: '',
@@ -60,7 +69,9 @@ export function RegisterPage() {
         description: `ผู้ใช้ใหม่ ${formData.name} (${formData.email}) ลงทะเบียนสำเร็จ`
       })
 
-      navigate('/login')
+      // ส่งต่อ returnTo ผ่านหน้า login — ถ้า Supabase ออก session ให้ทันที
+      // (ปิด email confirm) LoginPage จะพาไปหน้าเป้าหมายต่อเอง (case A)
+      navigate('/login', returnTo ? { state: { from: returnTo } } : undefined)
     } catch (err) {
       console.error('Register error:', err)
       setError('เกิดข้อผิดพลาด กรุณาลองใหม่')
@@ -125,7 +136,11 @@ export function RegisterPage() {
           <div className="mt-6 text-center">
             <p className="text-brand-muted text-sm">
               มีบัญชีแล้ว?{' '}
-              <Link to="/login" className="text-brand-primary font-medium hover:underline">
+              <Link
+                to="/login"
+                state={returnTo ? { from: returnTo } : undefined}
+                className="text-brand-primary font-medium hover:underline"
+              >
                 เข้าสู่ระบบ
               </Link>
             </p>

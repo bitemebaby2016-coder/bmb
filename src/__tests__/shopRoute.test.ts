@@ -170,5 +170,8 @@ describe('/shop runtime render (jsdom)', () => {
       console.error = origError
       console.warn = origWarn
     }
-  }, 20000)
+    // Heavy jsdom mount (App + lazy chunks) — 20s ไม่พอใต้โหลด test เต็มชุดบน
+    // เครื่องช้า (2026-10-18: ชน 20s timeout ทั้งที่ assertion ปกติดี) — ขยายเวลา
+    // เฉพาะการรอ mount เท่านั้น assertion สองตัวด้านบนคงเดิมเป๊ะ
+  }, 60000)
 })
