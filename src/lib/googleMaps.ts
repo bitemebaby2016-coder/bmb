@@ -203,7 +203,9 @@ export function loadGoogleMapsJS(): Promise<void> {
 
 /** Map ID (ถ้ามี) — ใช้ตอนสร้าง google.maps.Map เพื่อเปิด cloud styling/AdvancedMarker ได้ */
 export function getGoogleMapId(): string {
-  return MAP_ID
+  // รับเฉพาะค่าที่เป็น Map ID จริง (a-z0-9_- ไม่มีช่องว่าง/เครื่องหมาย =) —
+  // เคยเจอค่า "BmB web Map=fe097b..." (ชื่อแผนที่ติดมากับ ID) แล้ว Map ไม่ยอมใช้ mapId นั้น
+  return /^[A-Za-z0-9_-]{6,}$/.test(MAP_ID) ? MAP_ID : ''
 }
 
 export function isGoogleMapsJSReady(): boolean { return googleMapsLoaded && !!(window as any).google?.maps }

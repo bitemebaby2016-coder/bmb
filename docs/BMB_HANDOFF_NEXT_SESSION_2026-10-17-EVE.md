@@ -1,48 +1,44 @@
-# HANDOFF → แชทถัดไป (อัปเดต 17 ต.ค. 2026 รอบ QA จริง)
+# HANDOFF → แชทถัดไป (อัปเดต 18 ต.ค. 2026 — ปิดเซสชัน)
 
-> **เป้าหมายแชทหน้า (คำสั่ง Owner):** ① **แก้ UI ที่เหลือ** ② **ทดสอบเปิดร้านจริง**
+> **สถานะรวม:** งานตามคำสั่ง Owner 17–18 ต.ค. ปิดครบแล้ว (UI / pre-order / clean slate / rounds 3 รอบ/วัน / Maps config) — เหลือ **E2E ทดสอบเปิดร้านจริง** ตาม §2.2
 > เอกสารนี้ถูก**เขียนทับทั้งฉบับ**ตามกติกา "อัปเดต = เขียนทับ ห้ามเขียนต่อ" — ประวัติเก่าดูจาก git
 
 ---
 
-## 1. สถานะปัจจุบัน (verified 17 ต.ค. 2026 รอบ QA จริง)
+## 1. สถานะปัจจุบัน (verified 18 ต.ค. 2026 ปิดเซสชัน)
 
 | หัวข้อ | สถานะจริง |
 |---|---|
-| UI จากภาพ QA (หน้า /check) | ✅ **แก้แล้ว (task UI-FIX-QA-2026-10-17)** — ระยะทาง 0 กม. / รอบส่งมั่ว / แผนที่ซ้ำ / ตัวอักษรขาวบนพื้นขาว / bubble ทับฟอร์ม / music pill ทับราคา |
-| รูปเมนูลอยเหนือกรอบ (งานใหม่) | ✅ **แล้ว** — สถานะปกติยกเหนือกรอบนิดหน่อย (มือถือเหมือน hover), hover เดสก์ท็อปขยับซ้ำ |
-| "เพิ่มลงตะกร้า" | ⏭️ **ข้ามตามคำสั่ง Owner** ("ใช้ได้แล้วข้ามข้อนี้ไป") — ยังไม่เก็บ root cause ถ้าเกิดซ้ำให้ trace OrderBuilderModal → cartStore.addItem |
-| Gates | ✅ lint=0 · tests **105 ไฟล์ / 1,108 ข้อ** ผ่าน · build=0 |
-| EF `social-ai-worker` | ✅ deploy แล้ว (41 kB, project `ivkdfognyiwjcmrhcnwz` Seoul) — รวม order-intake create-only |
-| AI สร้างออเดอร์ | ✅ create-only ผ่าน `rpc/create_order_with_items` + `p_external_ref_id` (retry ไม่สร้างซ้ำ) · แก้ของเดิมไม่ได้ (G6-09) |
-| Bite บริบทจริง | ✅ `composeRealContext()` — Cart/route/ช่องทาง จาก store จริงทุกข้อความ |
-| ⚠️ งบ OpenRouter | เหลือ ~$5 / $160 — **เติมงบ/ขึ้น limit ก่อนเทสต์ AI จริง** |
-| ⚠️ Google Maps บน prod | โหลดไม่สำเร็จ (แผนที่ว่าง) — fallback กรอกพิกัด/GPS ใช้ได้; ควรตรวจ `VITE_GOOGLE_MAPS_API_KEY` (HTTP referrer) |
+| UI จากภาพ QA (หน้า /check) | ✅ **แก้แล้ว (UI-FIX-QA-2026-10-17)** — ระยะทาง 0 กม. / รอบส่งมั่ว / แผนที่ซ้ำ / ตัวอักษรขาว / bubble ทับฟอร์ม / music pill ทับราคา |
+| รูปเมนูลอยเหนือกรอบ | ✅ **ครบสเปกทุกข้อ** — ปกติ `translateY(-10px) scale(1.04)`+มุมมน/เงา · hover `-16px/1.08` · `pointer-events:none` · badge เหนือรูปเสมอ (z-40 รวมตอน hover) · เว้นที่เหนือการ์ด+padding carousel · reduced-motion ปิดลอย |
+| ปุ่มจองล่วงหน้า (home/footer) | ✅ (PREORDER-ENTRY-2026-10-18) — deep-link `?tab=pre-order` + feedback กดซ้ำ |
+| ของพรีออเดอร์ใต้หัวข้อเดิม | ✅ (PREORDER-MERGE-2026-10-18) — 7 ชิ้นใต้ "จองล่วงหน้า / พรีออเดอร์" + หน้าเมนูไม่มีตัวกรองซ้อน |
+| Clean slate ทดสอบจริง | ✅ (CLEAN-SLATE-ROUNDS-2026-10-18) — ออเดอร์ 208/เงิน 57/ประวัติ 458/ออโต้ 1,622/โซเชียล 34 + อื่น ๆ = **0 ทั้งหมด** |
+| Rounds จัดส่ง | ✅ **3 รอบ/วัน มาตรฐานเดียว** (18–24 ต.ค. 21 แถว) เช้า 06:00–09:00 ปิดรับ 08:00 (60) / เที่ยง 11:00–14:00 ปิดรับ 10:30 (80) / เย็น 17:00–20:00 ปิดรับ 16:00 (100) — template ที่ติด "W3C-EXT test round" ล้างแล้ว; วันใหม่ระบบสร้างเอง (`ensure_rounds_for_date`) |
+| Gates | ✅ lint=0 · tests **105 ไฟล์ / 1,112 ข้อ** ผ่าน · build=0 |
+| EF `social-ai-worker` | ✅ deploy แล้ว (41 kB) — create-only + idempotent |
+| Bite บริบทจริง | ✅ `composeRealContext()` |
+| ⚠️ งบ OpenRouter | เหลือ ~$5 / $160 — **เติมงบก่อนเทสต์ AI จริง** |
+| Google Maps | ✅ **ฝั่ง config ครบแล้ว (Owner 18 ต.ค.)** — Cloudflare env `VITE_GOOGLE_MAPS_API_KEY` + Map ID (ชื่อ "BmB web Map" = `fe097bcf317b5ede7dab9ff8`) + billing ผูกแล้ว · โค้ดแก้แล้ว (Map ID ไม่บังคับโหลด + guard ค่า mapId ขยะ) — **เหลือดูบนเครื่องจริงหลัง deploy รอบปิดเซสชัน** (probe รอบก่อน: key ยังไม่เข้า bundle เพราะ build ก่อนตั้ง env — รอบนี้ build ใหม่แล้ว) |
 
 ## 2. งานที่เหลือ — เป้าหมายแชทหน้า
 
-### 2.1 แก้ UI ที่เหลือ
-- [x] รายการ UI จากภาพ QA ของ Owner (หน้า /check + รูปเมนูลอยเหนือกรอบ) — ปิดใน task UI-FIX-QA-2026-10-17
-- [x] ปุ่มจองล่วงหน้าก่อนฟุตเตอร์กดไม่ได้ — ปิดใน task PREORDER-ENTRY-2026-10-18 (deep-link `?tab=pre-order` + feedback กดซ้ำ; ทดสอบบน biteme-baby.com เท่านั้น — preview pages.dev = build เก่า)
-- [x] ของพรีออเดอร์กระจัดกระจาย + หัวข้อ "จองล่วงหน้า / พรีออเดอร์" ว่าง — ปิดใน task PREORDER-MERGE-2026-10-18 (ย้ายรวม 7 ชิ้นใต้หัวข้อเดิม + ตัดตัวกรองซ้อนแท็บ×หัวข้อบนหน้าเมนู — หัวข้อ = แหล่งความจริง)
-- [x] Clean slate ก่อนทดสอบจริง — ปิดใน task CLEAN-SLATE-ROUNDS-2026-10-18 (ล้างออเดอร์/เงิน/ประวัติ/งานออโต้/โซเชียล = 0 ทั้งหมด + rounds จัดเป็น 3 รอบ/วันมาตรฐาน 18–24 ต.ค. — รอบเช้า template เดิมติด "W3C-EXT test round" ล้างแล้ว)
-- [ ] **เริ่ม E2E ทดสอบจริงทั้งวงจร** (same-day + pre-order, จ่ายจริง, ส่งจริง) ตาม §2.2 — ระบบพร้อม: ข้อมูลว่าง, รอบมาตรฐาน 3 รอบ/วัน, บัญชีลูกค้า 37 ใช้ได้
+### 2.1 เก็บตก
+- [ ] **เช็กภาพจริงบนเครื่อง Owner หลัง deploy รอบนี้** — Google Maps โหลดได้จริง · การ์ด fee error · รูปเมนู hover/ลอย · แถวรอบส่ง disabled · ปุ่มจองล่วงหน้า · หัวข้อ "จองล่วงหน้า / พรีออเดอร์ (7)"
 - [ ] Theater/Waiting Stage unity (ค้างจาก PRE-OPENING audit)
 - [ ] Login context restoration (ค้างจาก PRE-OPENING audit)
-- [ ] **เช็กภาพจริงบนเครื่อง Owner หลัง deploy** — การ์ด fee error ("ยังคำนวณไม่สำเร็จ") ที่เคยดูเป็นการ์ดขาว label แปลก + รูปเมนู hover/ลอย + แถวรอบส่ง (disabled "ปิดรับแล้ว") + ปุ่มจองล่วงหน้าก่อนฟุตเตอร์ + หัวข้อ "จองล่วงหน้า / พรีออเดอร์ (7)"
-- [ ] Google Maps key/referrer — ทำให้แผนที่โหลดได้จริงบน prod (ทาง fallback ยังใช้ได้)
 - [ ] (ถ้า Owner สั่ง) เก็บ "coming soon" 2 ตัว + หัวข้อ "สินค้าสำเร็จรูป" ที่ไม่ทราบที่มา
 - กติกา: ทุกครั้งปิดด้วย gates — tsc 0 · lint 0 · tests ทั้งชุดผ่าน · build 0 · **ห้ามสร้างโครงสร้าง/ระบบคู่ขนานใหม่ — ใช้หัวข้อเมนูที่มีอยู่***
 
 ### 2.2 ทดสอบเปิดร้านจริง (Owner E2E checklist — เริ่มได้ทันที)
-ก่อนเริ่ม: เติมงบ OpenRouter ให้พอกับการเทสต์
+ก่อนเริ่ม: เติมงบ OpenRouter ให้พอกับการเทสต์ · ระบบพร้อม: ข้อมูลว่างทั้งหมด + รอบมาตรฐาน 3 รอบ/วัน + บัญชีลูกค้า 37 ใช้ได้
 - [ ] เว็บ login → checkout → order เข้า /admin
-- [ ] รอบปิด/รอบเต็ม → บล็อกจริง (`ERR_ROUND_CLOSED`) — **ตอนนี้ UI แสดงแถวปิด/เต็ม disabled + ป้ายสถานะแล้ว ตรวจว่าตรงกับ server**
+- [ ] รอบปิด/รอบเต็ม → บล็อกจริง (`ERR_ROUND_CLOSED`) — UI แสดงแถวปิด/เต็ม disabled + ป้ายสถานะ ตรวจว่าตรงกับ server
 - [ ] Mixed cart (same-day + pre-order) → split 2 order + COD
 - [ ] Pre-order 2 ปุ่ม (home + footer) = workflow เดียวกัน
 - [ ] แอดมินสวิตช์รอบ/เมนู → มีผลทันที
 - [ ] Bite ตอบตาม Cart จริง (`composeRealContext`)
-- [ ] **Messenger:** "สั่งผัดไทย 2 จาน" → ยืนยันชัดเจน → ได้**เลขที่ออเดอร์จริง** + ลิงก์จ่ายเงิน → **ส่งซ้ำ = เลขที่เดิม** (idempotent)
+- [ ] **Messenger:** "สั่งผัดไทย 2 จาน" → ได้**เลขที่ออเดอร์จริง** + ลิงก์จ่ายเงิน → **ส่งซ้ำ = เลขที่เดิม** (idempotent)
 - [ ] Comment สาธารณะ = ไม่เปิดเผยรายละเอียด ชวนเข้า Inbox
 - [ ] AI ล่ม → เว็บสั่งได้ตามปกติ
 - [ ] AI แตะออเดอร์เดิมไม่ได้ (ตรวจ `audit_logs`)
@@ -51,6 +47,6 @@
 - **เอกสารสถานะ = เขียนทับทั้งฉบับ ห้าม append** (คำสั่ง Owner 17 ต.ค. รอบดึก)
 - `.clinerules` ห้าม commit · `chat\bmb\` เคลียร์แล้ว (ห้ามมี staging copy ค้างอีก) · **HARD STOP ห้ามขายจริงจน Owner สั่ง go**
 - Meta App Review = ชะลอตามคำสั่ง · เพจ/สิทธิ์ FB จริง = Owner เทสต์เอง
-- Contract tests ที่ต้องรักษา: `g6Security` (G6-09 revised) · `g7...` · `socialOrderIntake` (20) · `socialAiContinuity` · `menuScheduleRoundLink` (9) · `preOrderEntry` (5) · `deliveryRoundStatus` (9, ใหม่) · `menuCartResultGuard` · `cartContextIsolation`
+- Contract tests ที่ต้องรักษา: `g6Security` (G6-09 revised) · `socialOrderIntake` (20) · `socialAiContinuity` · `menuScheduleRoundLink` (9) · `preOrderEntry` (9) · `deliveryRoundStatus` (9) · `menuCartResultGuard` · `cartContextIsolation`
 - Deploy EF (เมื่อมีโค้ด EF เปลี่ยน): ใช้ `SUPABASE_ACCESS_TOKEN` จาก `D:\A PROJECT\Bite Me Baby\.env.local` แล้ว `supabase functions deploy <name> --project-ref ivkdfognyiwjcmrhcnwz` (งาน EF = รอ Owner อนุมัติเสมอก่อน deploy ที่กระทบ production flow)
 - หมายเหตุ rules: มี `UNIVERSAL_MASTER_AI_RULES.md` label v3.0 (2026 Updated) ในเครื่อง (D:\selfprint-v3-react) — เนื้อหาเหมือน v2.0 ในรีโปทุกบรรทัดยกเว้นบรรทัด version; ถ้า Owner ต้องการ label ใหม่ = แก้บรรทัดเดียว
