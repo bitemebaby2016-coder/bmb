@@ -36,6 +36,7 @@ import { getProducts } from '@/lib/bmbAdminApi_products'
 import { revalidateWithCatalog, reportToToastMessage } from '@/lib/cartPersistence'
 import { isBangkokCutoffPassed } from '@/lib/bangkokTime'
 import { roundBookability, roundStatusLabel } from '@/lib/deliveryRoundStatus'
+import { fetchCouponEvaluation, evaluateCoupon, describeCouponResult, normalizePromoCode } from '@/lib/promotionClient'
 import { getTrustedGpsLocation } from '@/lib/locationLogin'
 import { DeliveryMapPicker } from '@/components/delivery/DeliveryMapPicker'
 import type { OrderMode } from '@/config/platformConfig'
@@ -76,7 +77,7 @@ async function ensureReplaySafeIntent(
 export function CheckoutPage() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
-  const { items, subtotal, discount, deliveryFee, total, clearCart, order_mode, isHydrated } = useCartStore()
+  const { items, subtotal, discount, deliveryFee, total, clearCart, order_mode, isHydrated, couponCode, appliedPromotion, setCouponCode, setAppliedPromotion, recalculate } = useCartStore()
   const customer = useAuthStore((s) => s.customer)
   const justPlaced = useRef(false)
 
@@ -96,6 +97,52 @@ export function CheckoutPage() {
     // notify ครั้งเดียวตอน mount ถ้ามี conflict
   }, [])
 
+  // Coupon rehydration: cartPersistence stores the code only (D01 minimal
+  // persistence) — rebuild the applied promotion from REAL rows so a reload
+  // never leaves a phantom discount or a dead code behind.
+  useEffect(() => {
+    let cancelled = false
+    const code = useCartStore.getState().couponCode
+    if (!code.trim() || useCartStore.getState().appliedPromotion) return
+    void fetchCouponEvaluation(code, useCartStore.getState().subtotal).then((result) => {
+      if (cancelled) return
+      if (result.ok) {
+        setAppliedPromotion(result.promo)
+        recalculate()
+      } else {
+        setCouponCode('')
+        showToast(describeCouponResult(result), 'info')
+      }
+    })
+    return () => { cancelled = true }
+  }, [])
+
+  async function handleApplyCoupon() {
+    const code = couponCode.trim()
+    if (!code) {
+      showToast('กรุณาใส่รหัสโปรโมชั่นก่อนกดใช้โค้ด', 'warning')
+      return
+    }
+    const result = await fetchCouponEvaluation(code, subtotal)
+    if (!result.ok) {
+      setCouponCode('')
+      setAppliedPromotion(null)
+      recalculate()
+      showToast(describeCouponResult(result), 'error')
+      return
+    }
+    setAppliedPromotion(result.promo)
+    recalculate()
+    showToast(describeCouponResult(result), 'success')
+  }
+
+  function handleRemoveCoupon() {
+    setCouponCode('')
+    setAppliedPromotion(null)
+    recalculate()
+    showToast('เอาโค้ดส่วนลดออกแล้ว', 'info')
+  }
+
   const [scheduledDate, setScheduledDate] = useState(orderMode === 'PRE_ORDER' ? addDays(today, 1) : today)
   const [rounds, setRounds] = useState<DeliveryRoundRow[]>([])
   const [selectedRoundId, setSelectedRoundId] = useState('')
@@ -103,7 +150,6 @@ export function CheckoutPage() {
   const [serverFee, setServerFee] = useState<number | null>(null)
   const [feeSource, setFeeSource] = useState<'server' | 'local-mirror' | 'error' | null>(null)
   const [leadDays, setLeadDays] = useState(1) // DISPLAY ONLY — server policy enforces the real lead
-  const [couponCode, setCouponCode] = useState('')
   const [paymentMethod, setPaymentMethod] = useState<'promptpay_qr' | 'cash_on_delivery' | 'credit_card'>('promptpay_qr')
   // CR-2 P0: delivery point = candidate until the customer confirms it.
   // Trusted prefill ONLY (saved provenance gps/manual); kitchen/IP never pre-fill.
@@ -436,6 +482,23 @@ export function CheckoutPage() {
       }
     }
 
+    // Coupon gate: migration 114 silently IGNORES a non-qualifying code (no
+    // discount, no error) — so re-validate here and refuse to submit rather than
+    // let the customer pay full price believing a discount applied. The server
+    // still re-derives the authoritative amount inside the RPC.
+    let expectedDiscount = 0
+    if (couponCode.trim()) {
+      const check = await fetchCouponEvaluation(couponCode, subtotal)
+      if (!check.ok) {
+        showToast(describeCouponResult(check), 'error')
+        setIsProcessing(false)
+        return
+      }
+      expectedDiscount = check.discountAmount
+      setAppliedPromotion(check.promo)
+      recalculate()
+    }
+
     setIsProcessing(true)
     // ✅ ONE canonical creation RPC for BOTH modes (migration 025 v3).
     // The payload carries NO price/fee/total — the server derives everything.
@@ -635,6 +698,16 @@ export function CheckoutPage() {
       showToast(`ตรวจพบการส่งซ้ำ — ใช้ออเดอร์เดิม #${order.order_number} (ไม่มีการสร้างออเดอร์ใหม่)`, 'success')
     } else {
       showToast(`สั่งซื้อสำเร็จ! เลขที่ ${order.order_number}`, 'success')
+    }
+    // Server-truth coupon outcome (114 silently ignores non-qualifying codes) —
+    // report the amount ACTUALLY applied so the receipt never contradicts the UI.
+    if (couponCode.trim()) {
+      const serverDiscount = Number(order.discount_amount) || 0
+      if (serverDiscount > 0) {
+        showToast(`ระบบหักส่วนลดจากโค้ด ${normalizePromoCode(couponCode)} แล้ว ${serverDiscount.toFixed(2)} บาท`, 'success')
+      } else if (expectedDiscount > 0) {
+        showToast('ระบบไม่ได้หักส่วนลด (โค้ดไม่เข้าเงื่อนไข ณ เวลายืนยัน) — ยอดที่ชำระเป็นราคาเต็ม ตรวจสอบรายละเอียดได้ในออเดอร์', 'warning')
+      }
     }
     useNotificationStore.getState().triggerEvent('order_placed', {
       orderNumber: order.order_number,
@@ -957,17 +1030,40 @@ export function CheckoutPage() {
       {/* Coupon (server-authoritative promotion) */}
       <div className="card mb-6">
         <h3 className="font-bold text-brand-accent mb-3">🎟️ คูปอง/โปรโมชั่น</h3>
-        <div className="flex gap-2">
-          <input
-            type="text"
-            data-testid="coupon-input"
-            placeholder="ใส่รหัสคูปอง"
-            value={couponCode}
-            onChange={(e) => setCouponCode(e.target.value)}
-            className="input flex-1"
-          />
-        </div>
-        <p className="text-xs text-brand-muted mt-2">ระบบตรวจและหักส่วนลดจริงที่เซิร์ฟเวอร์ตอนสร้างออเดอร์</p>
+        {appliedPromotion ? (() => {
+          const status = evaluateCoupon([appliedPromotion], couponCode, subtotal)
+          return (
+            <div className={`rounded-xl border p-3 ${status.ok ? 'border-green-300 bg-green-50' : 'border-amber-300 bg-amber-50'}`} data-testid="applied-coupon">
+              <div className="flex items-start justify-between gap-2">
+                <div>
+                  <div className="font-bold text-brand-accent">{appliedPromotion.name}</div>
+                  <div className="font-mono text-sm">{couponCode}</div>
+                  {status.ok ? (
+                    <div className="text-sm text-green-700">คาดการณ์ส่วนลด {status.discountAmount.toFixed(2)} บาท — ระบบหักจริงตอนสร้างออเดอร์</div>
+                  ) : (
+                    <div className="text-sm text-amber-700">{describeCouponResult(status)}</div>
+                  )}
+                </div>
+                <button type="button" onClick={handleRemoveCoupon} className="text-sm text-brand-danger hover:underline shrink-0">เอาออก</button>
+              </div>
+            </div>
+          )
+        })() : (
+          <>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                data-testid="coupon-input"
+                placeholder="ใส่รหัสคูปอง"
+                value={couponCode}
+                onChange={(e) => setCouponCode(e.target.value)}
+                className="input flex-1"
+              />
+              <button type="button" onClick={handleApplyCoupon} className="btn btn-outline" data-testid="coupon-apply">ใช้โค้ด</button>
+            </div>
+            <p className="text-xs text-brand-muted mt-2">ระบบตรวจและหักส่วนลดจริงที่เซิร์ฟเวอร์ตอนสร้างออเดอร์ — โค้ดที่ไม่เข้าเงื่อนไขจะไม่ถูกหัก และระบบจะแจ้งให้ทราบก่อนยืนยัน</p>
+          </>
+        )}
       </div>
 
       {/* Order Summary — client estimate is DISPLAY ONLY */}

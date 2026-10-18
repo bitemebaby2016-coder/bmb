@@ -7,6 +7,7 @@ import { Link } from 'react-router-dom'
 import { showToast } from '@/components/ui/ToastContainer'
 import { getPromotionsAdmin, upsertPromotion, deletePromotion, togglePromotion, type PromotionRow } from '@/lib/bmbAdminApi_promotions'
 import { submitContentForApproval } from '@/lib/contentApproval'
+import { validatePromotionForm } from '@/lib/promotionClient'
 
 const EMPTY_FORM = {
   name: '',
@@ -59,44 +60,72 @@ export function AdminPromotions() {
   }
 
   async function handleSave() {
-    if (!form.name.trim()) {
-      showToast('Please enter a name', 'warning')
+    // Real validation: sane values, date order and UNIQUE code — migration 114
+    // looks codes up with LIMIT 1 so duplicates would make the discount applied
+    // to customers non-deterministic.
+    const validated = validatePromotionForm(form, promotions, editing?.id)
+    if (!validated.ok) {
+      showToast(validated.errors[0], 'warning')
       return
     }
+    const v = validated.values
     const row: PromotionRow = {
       id: editing?.id || '',
-      ...form,
-      discount_value: Number(form.discount_value),
-      min_order_amount: Number(form.min_order_amount),
+      name: v.name,
+      description: v.description || null,
+      code: v.code || null,
+      discount_type: v.discount_type,
+      discount_value: v.discount_value,
+      min_order_amount: v.min_order_amount,
+      // DATE/TEXT columns: empty string is NOT NULL — send null so a blank
+      // date field stores NULL (matches the114 "NULL = unbounded" rule).
+      start_date: v.start_date || null,
+      end_date: v.end_date || null,
+      is_active: v.is_active,
+      is_banner: v.is_banner,
+      banner_image: v.banner_image || null,
     }
     const saved = await upsertPromotion(row)
     if (!saved) {
-      showToast('Failed to save promotion', 'error')
+      showToast('บันทึกโปรโมชั่นไม่สำเร็จ — ตรวจการเชื่อมต่อ/สิทธิ์แอดมิน แล้วลองอีกครั้ง', 'error')
       return
     }
-    // CNT-01 (PHASE 7): banners must pass the content approval gate before
-    // they are customer-visible. Saving auto-submits for human review.
+    // CNT-01: banner content is submitted for human review (real workflow —
+    // `content_approvals` + review RPC). NOTE: customer visibility of the home
+    // banner is controlled by the Active toggle (HomePage/FloatingAdBanners read
+    // `is_banner AND is_active`) — this copy never claims an approval gate the
+    // renderer does not enforce.
     if (row.is_banner) {
       const approvalId = await submitContentForApproval('banner', row.name, row.description || '')
       if (approvalId) {
-        showToast('Banner submitted for approval — gate opens after approval', 'success')
+        showToast('บันทึกโปรโมชั่นแล้ว + ส่งแบนเนอร์เข้าคิวตรวจเนื้อหา (CNT-01) — แบนเนอร์จะขึ้นหน้าแรกเมื่อเปิดใช้งาน (แนะนำ: รอผลตรวจก่อนเปิดใช้งาน)', 'success')
       } else {
-        showToast('Promotion saved, but approval submit failed', 'error')
+        showToast('บันทึกโปรโมชั่นแล้ว แต่ส่งเข้าคิวตรวจเนื้อหาไม่สำเร็จ — แบนเนอร์จะแสดงตามปุ่มเปิดใช้งาน (Active) เท่านั้น', 'warning')
       }
+    } else {
+      showToast('บันทึกโปรโมชั่นแล้ว', 'success')
     }
-    showToast('Promotion saved!', 'success')
     setShowAddForm(false)
     loadPromotions()
   }
 
   async function handleToggle(promo: PromotionRow) {
-    if (await togglePromotion(promo.id, !promo.is_active)) loadPromotions()
+    const ok = await togglePromotion(promo.id, !promo.is_active)
+    if (ok) {
+      showToast(promo.is_active ? 'พักโปรโมชั่นแล้ว — ลูกค้าใช้โค้ดนี้ไม่ได้จนกว่าจะเปิดใหม่' : 'เปิดใช้งานโปรโมชั่นแล้ว — ลูกค้าใช้โค้ดได้ตามเงื่อนไข', 'success')
+      loadPromotions()
+    } else {
+      showToast('เปลี่ยนสถานะไม่สำเร็จ — ลองอีกครั้ง', 'error')
+    }
   }
 
   async function handleDelete(promo: PromotionRow) {
+    if (!window.confirm(`ลบโปรโมชั่น "${promo.name}"? — โค้ด ${promo.code || '(ไม่มีโค้ด)'} จะใช้ไม่ได้ทันที`)) return
     if (await deletePromotion(promo.id)) {
-      showToast('Promotion deleted', 'success')
+      showToast('ลบโปรโมชั่นแล้ว', 'success')
       loadPromotions()
+    } else {
+      showToast('ลบไม่สำเร็จ — ลองอีกครั้ง', 'error')
     }
   }
 

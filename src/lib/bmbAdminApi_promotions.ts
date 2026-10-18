@@ -8,16 +8,16 @@ import { supabase } from './supabase'
 export interface PromotionRow {
   id: string
   name: string
-  description?: string
-  code?: string
+  description?: string | null
+  code?: string | null
   discount_type: 'percentage' | 'fixed_amount'
   discount_value: number
   min_order_amount: number
-  start_date?: string
-  end_date?: string
+  start_date?: string | null
+  end_date?: string | null
   is_active: boolean
   is_banner?: boolean
-  banner_image?: string
+  banner_image?: string | null
   created_at?: string
   updated_at?: string
 }

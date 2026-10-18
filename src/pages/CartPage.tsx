@@ -1,11 +1,14 @@
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useCartStore } from '@/store/cartStore'
 import { showToast } from '@/components/ui/ToastContainer'
 import { MascotBadge } from '@/components/MascotBadge'
 import { resolveAddOnLines, addOnTotalFor } from '@/lib/addonDisplay'
+import { fetchCouponEvaluation, evaluateCoupon, describeCouponResult } from '@/lib/promotionClient'
 
 export function CartPage() {
-  const { items, subtotal, discount, deliveryFee, total, updateQuantity, removeItem, clearCart } = useCartStore()
+  const { items, subtotal, discount, deliveryFee, total, updateQuantity, removeItem, clearCart, couponCode, appliedPromotion, setCouponCode, setAppliedPromotion, recalculate } = useCartStore()
+  const [codeInput, setCodeInput] = useState('')
 
   if (items.length === 0) {
     return (
@@ -27,8 +30,35 @@ export function CartPage() {
     )
   }
 
-  function handleApplyCoupon() {
-    showToast('ระบบคำนวณโปรโมชั่น', 'info')
+  async function handleApplyCoupon() {
+    const code = codeInput.trim()
+    if (!code) {
+      showToast('กรุณาใส่รหัสโปรโมชั่นก่อนกดใช้โค้ด', 'warning')
+      return
+    }
+    // REAL validation against live `promotions` rows (server-mirror rules) —
+    // never a fake success toast. A failing new code clears any stale applied
+    // coupon so the displayed discount always matches the rule outcome.
+    const result = await fetchCouponEvaluation(code, subtotal)
+    if (!result.ok) {
+      setCouponCode('')
+      setAppliedPromotion(null)
+      recalculate()
+      showToast(describeCouponResult(result), 'error')
+      return
+    }
+    setCouponCode(code)
+    setAppliedPromotion(result.promo)
+    recalculate()
+    showToast(describeCouponResult(result), 'success')
+    setCodeInput('')
+  }
+
+  function handleRemoveCoupon() {
+    setCouponCode('')
+    setAppliedPromotion(null)
+    recalculate()
+    showToast('เอาโค้ดส่วนลดออกแล้ว', 'info')
   }
 
   return (
@@ -89,15 +119,45 @@ export function CartPage() {
         ))}
       </div>
 
-      {/* Coupon Section */}
+      {/* Coupon Section — real `promotions` rows + server-mirror rules */}
       <div className="card mb-6">
         <h3 className="font-bold text-brand-accent mb-3">🎟️ คูปอง/โปรโมชั่น</h3>
-        <div className="flex gap-2">
-          <input type="text" placeholder="ใส่รหัสคูปอง" className="input flex-1" />
-          <button onClick={handleApplyCoupon} className="btn btn-outline">
-            ใช้โค้ด
-          </button>
-        </div>
+        {appliedPromotion ? (() => {
+          const status = evaluateCoupon([appliedPromotion], couponCode, subtotal)
+          return (
+            <div className={`rounded-xl border p-3 ${status.ok ? 'border-green-300 bg-green-50' : 'border-amber-300 bg-amber-50'}`} data-testid="applied-coupon">
+              <div className="flex items-start justify-between gap-2">
+                <div>
+                  <div className="font-bold text-brand-accent">{appliedPromotion.name}</div>
+                  <div className="font-mono text-sm">{couponCode}</div>
+                  {status.ok ? (
+                    <div className="text-sm text-green-700">ลดได้ {status.discountAmount.toFixed(2)} บาท (คาดการณ์ — ระบบยืนยันยอดจริงตอนสั่งซื้อ)</div>
+                  ) : (
+                    <div className="text-sm text-amber-700">{describeCouponResult(status)}</div>
+                  )}
+                </div>
+                <button onClick={handleRemoveCoupon} className="text-sm text-brand-danger hover:underline shrink-0">เอาออก</button>
+              </div>
+            </div>
+          )
+        })() : (
+          <>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                placeholder="ใส่รหัสคูปอง"
+                className="input flex-1"
+                value={codeInput}
+                onChange={(e) => setCodeInput(e.target.value)}
+                aria-label="รหัสคูปอง"
+              />
+              <button onClick={handleApplyCoupon} className="btn btn-outline">
+                ใช้โค้ด
+              </button>
+            </div>
+            <p className="text-xs text-brand-muted mt-2">ระบบตรวจรหัสจากโปรโมชั่นจริงของร้านตามเงื่อนไข (วันที่/ยอดขั้นต่ำ) — ส่วนลดยืนยันอีกครั้งบนเซิร์ฟเวอร์ตอนสร้างออเดอร์</p>
+          </>
+        )}
       </div>
 
       {/* Summary */}

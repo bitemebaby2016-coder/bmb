@@ -12,7 +12,7 @@ import { getPromotionsWithStatus, type PromotionRow } from '@/lib/bmbAdminApi_pr
 // ============================================
 
 /** วันที่แบบ date-only → นับถึงสิ้นวัน (ไม่ตัดโปรโมชันก่อนหมดวันจริง) */
-function endDateMs(value?: string): number | null {
+function endDateMs(value?: string | null): number | null {
   if (!value) return null
   const raw = String(value).trim()
   if (!raw) return null
@@ -21,7 +21,7 @@ function endDateMs(value?: string): number | null {
   return Number.isFinite(ms) ? ms : null
 }
 
-function startDateMs(value?: string): number | null {
+function startDateMs(value?: string | null): number | null {
   if (!value) return null
   const raw = String(value).trim()
   if (!raw) return null

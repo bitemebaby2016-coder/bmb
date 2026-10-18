@@ -20,7 +20,9 @@
 // ============================================
 
 import { create } from "zustand"
-import type { CartItem as CartItemType, Promotion, Product } from "@/types"
+import type { CartItem as CartItemType, Product } from "@/types"
+import type { PromotionRow } from "@/lib/bmbAdminApi_promotions"
+import { evaluateCoupon } from "@/lib/promotionClient"
 import type { OrderMode } from "@/config/platformConfig"
 import { addOnTotalFor } from "@/lib/addonDisplay"
 import { showToast } from "@/components/ui/ToastContainer"
@@ -46,7 +48,7 @@ export function lineKeyFor(
 interface CartStore {
   items: Array<CartItemType & { __context_tenant_id?: string; line_mode?: OrderMode; __line_key?: string }>
   couponCode: string
-  appliedPromotion: Promotion | null
+  appliedPromotion: PromotionRow | null
   subtotal: number
   discount: number
   deliveryFee: number
@@ -64,7 +66,7 @@ interface CartStore {
   updateQuantity: (productId: string, quantity: number, lineKey?: string) => void
   clearCart: () => void
   setCouponCode: (code: string) => void
-  setAppliedPromotion: (promo: Promotion | null) => void
+  setAppliedPromotion: (promo: PromotionRow | null) => void
   setDeliveryFee: (fee: number) => void
   setCheckoutOpen: (open: boolean) => void
   confirmModeSwitch: () => void
@@ -266,17 +268,20 @@ export const useCartStore = create<CartStore>((set, get) => ({
   recalculate: () => {
     const state = get()
     const subtotal = state.items.reduce((sum, item) => sum + item.subtotal, 0)
-    const discount = state.appliedPromotion 
-      ? state.appliedPromotion.type === 'fixed_discount' 
-        ? Math.min(state.appliedPromotion.discount_value, subtotal)
-        : state.appliedPromotion.type === 'percentage_discount'
-          ? Math.min(subtotal * (state.appliedPromotion.discount_value / 100), state.appliedPromotion.max_discount_cap || subtotal)
-          : 0
-      : 0
-    
+    // REAL promotion rule (mirror of migration 114 — see promotionClient):
+    // discount comes only from a live `promotions` row evaluated with the same
+    // code lookup / date window / min-order / cap math the server applies.
+    // The legacy fake vocabulary (fixed_discount/percentage_discount) is gone —
+    // a real row that fails the rule yields a truthful 0 here and the server
+    // re-derives the authoritative amount at order creation anyway.
+    const evaluation = state.appliedPromotion
+      ? evaluateCoupon([state.appliedPromotion], state.couponCode, subtotal)
+      : null
+    const discount = evaluation?.ok ? evaluation.discountAmount : 0
+
     const total = Math.max(0, subtotal - discount + state.deliveryFee)
     const cartTotal = subtotal
-    
+
     set({ subtotal, discount, total, cartTotal })
   },
 
