@@ -18,7 +18,8 @@
   - badge/chip z-index 40 (เหนือรูปที่ยกเสมอ รวมตอน hover ที่รูปได้ z-30)
   - Probe ฝั่ง prod: entry `index-FopldVLt.js` + 91 chunks → หลัง rebuild (`a6077d9`) entry `index-BmtVnCUU.js` + 97 chunks — **key ยังไม่ฝังใน bundle ทั้งสองรอบ** ขณะที่ build ในเครื่องมี key ใน `dist/assets/googleMaps-PCdQaP5G.js` ปกติ → root cause สุดท้าย: **`VITE_GOOGLE_MAPS_API_KEY` ไม่มีอยู่ใน Cloudflare Pages production vars** (มีแต่ MAP_ID) — Owner เพิ่มคีย์เอง 12:41 น. 18 ต.ค. (ยืนยันผ่าน API: ครบ 16 ตัวแปรแล้ว)
   - เก็บกวาดที่ค้าง: `.env.local` ซ่อมกลับ (BOM ออก + คอมเมนต์ไทย 6 บรรทัดกู้จาก double/triple cp1252-mojibake; **ค่า KEY=VALUE 32 บรรทัด checksum เดิมทุกตัว**) · ตัวแปรขยะ `"BmB web Map"` ใน Cloudflare (ชื่อแผนที่พิมพ์ปนค่า) = ไม่ได้ถูกใช้ ให้ Owner กดถังขยะลบเอง (ไม่แตะ production env ผ่าน API กันความเสี่ยงทับค่า secret ที่อ่านกลับไม่ได้)
-  - ความปลอดภัยเช็กแล้ว: `VITE_SUPABASE_SERVICE_ROLE_KEY` (ที่เห็นใน Cloudflare) **ไม่มีโค้ดฝั่งเว็บเรียกใช้** (เหลือแค่คอมเมนต์เก่าใน `supabase.ts` + test กัน) → Vite ไม่ฝังเข้า bundle
+  - ความปลอดภัยเช็กแล้ว: `VITE_SUPABASE_SERVICE_ROLE_KEY` (ที่เห็นใน Cloudflare) **ไม่มีโค้ดฝั่งเว็บเรียกใช้** (เหลือแค่คอมเมนต์เก่าใน `supabase.ts` + test กัน) → Vite ไม่ฝังเข้า bundle; leak-scan บน bundle จริง (133 chunks) ยืนยัน — ไม่มีค่า sb_secret_/sbp_/service-role หลุด (match ที่เจอ = literal ใน supabase-js เช็ก prefix คีย์เอง)
+  - **Verified บน prod (build `1cada70`, entry `index-B0wjuzIC.js`): MAPS KEY อยู่ใน `googleMaps-zRFLJrop.js` แล้ว** — แผนที่ Google พร้อมใช้บน biteme-baby.com (เหลือดูบนเครื่องจริงตาเดียว)
 - **Verified:** gates ผ่านครบ (lint=0 · tests 105/1,112 · build=0) · `.env/.env.local` ไม่ถูก commit (gitignore)
 - **Next Exact Action:** ให้ Owner ตรวจ Cloudflare Pages env (① โปรเจกต์ที่ผูก biteme-baby.com ② แท็บ Production ③ ชื่อ `VITE_GOOGLE_MAPS_API_KEY` ④ Retry deployment) แล้วเปิด /check บนมือถือ — ถ้ายังว่างดู console หา `RefererNotAllowedError`/`ApiNotActivatedMapError`
 

@@ -19,7 +19,7 @@
 | EF `social-ai-worker` | ✅ deploy แล้ว (41 kB) — create-only + idempotent |
 | Bite บริบทจริง | ✅ `composeRealContext()` |
 | ⚠️ งบ OpenRouter | เหลือ ~$5 / $160 — **เติมงบก่อนเทสต์ AI จริง** |
-| Google Maps | ✅ **คีย์ครบแล้ว (Owner เพิ่ม `VITE_GOOGLE_MAPS_API_KEY` ใน Cloudflare Pages 12:41 น. 18 ต.ค.)** — สาเหตุที่แผนที่ว่างทั้งหมด: build ไม่เคยเห็นคีย์ตัวนี้ (มีแค่ `VITE_GOOGLE_MAPS_MAP_ID`) + โค้ดเดิมบังคับ MAP_ID ตอนโหลด SDK → ตอนนี้โค้ด+env ครบ, build รอบถัดไปจะฝังคีย์ (ตรวจยืนยันในคอมมิตตาม) · เก็บตก: ลบตัวแปรขยะ `"BmB web Map"` ใน Cloudflare ด้วยปุ่มถังขยะ (ไม่ได้ถูกใช้) · `.env.local` ซ่อมแล้ว (คอมเมนต์ไทย+BOM; ค่า 32 บรรทัดเดิมทุกตัว) |
+| Google Maps | ✅ **ใช้งานได้แล้ว — ตรวจยืนยันบน prod** — root cause: `VITE_GOOGLE_MAPS_API_KEY` ไม่มีใน Cloudflare Pages production vars (มีแค่ MAP_ID) + โค้ดเดิมบังคับ MAP_ID ตอนโหลด SDK — Owner เพิ่มคีย์ 12:41 น. 18 ต.ค. + build `1cada70` ฝังคีย์แล้ว (**key อยู่ใน bundle `googleMaps-zRFLJrop.js`, entry `index-B0wjuzIC.js`**; leak-scan ยืนยันไม่มีค่า secret/service-role หลุด — ที่เจอเป็น literal ใน supabase-js เอง) · เก็บตก: กดถังขยะลบตัวแปรขยะ `"BmB web Map"` ใน Cloudflare (ไม่ได้ถูกใช้) · `.env.local` ซ่อมแล้ว (คอมเมนต์ไทย+BOM; ค่า 32 บรรทัดเดิมทุกตัว) |
 
 ## 2. งานที่เหลือ — เป้าหมายแชทหน้า
 
