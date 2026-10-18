@@ -1,55 +1,55 @@
-﻿# BMB TEN-06 HANDOFF â€” PRODUCTION CLOSURE PENDING
+﻿# BMB TEN-06 HANDOFF — PRODUCTION CLOSURE PENDING
 
 **Session End Date:** 2026-09-30  
 **Previous Phase:** TEN-05 = PASS / DEPLOYED / PUSHED  
 **Current Phase:** TEN-06 = PARTIAL (code complete, migration NOT deployed)  
-**Next Phase:** TEN-06 Runtime Verification â†’ TEN-07 (Branch/Location Operations)
+**Next Phase:** TEN-06 Runtime Verification → TEN-07 (Branch/Location Operations)
 
 ---
 
-## ðŸ”´ BLOCKER â€” MUST BE DONE FIRST
+## 🔴 BLOCKER — MUST BE DONE FIRST
 
 ### Migration Deployment (PENDING)
 
 Two migrations must be deployed to production BEFORE any runtime verification:
 
-#### 1. Migration 079 â€” Tenant CRUD RPCs + RLS Rewrite
+#### 1. Migration 079 — Tenant CRUD RPCs + RLS Rewrite
 File: `supabase/migrations/079_tenant_crud_rpc_and_rls.sql`
 
 Contains:
 - **RLS Rewrite:** tenants table policies changed from `is_admin()` to `tenant-aware is_tenant_admin(tenant_id)`
 - **5 Canonical PostgreSQL RPCs:**
-  - `tenant_list_admin()` â€” List all tenants (admin/tenant_admin role check)
-  - `tenant_get_admin(p_tenant_id)` â€” Get single tenant (platformâ†’any, tenantâ†’own only)
-  - `tenant_create_admin(p_name, p_slug)` â€” Create tenant (platform admin ONLY, slug normalization, duplicate check)
-  - `tenant_update_admin(p_tenant_id, p_name, p_slug, p_status)` â€” Update tenant metadata (auth checks, slug uniqueness)
-  - `tenant_set_status(p_tenant_id, p_status)` â€” Status toggle (enum validation active/inactive/suspended)
+  - `tenant_list_admin()` — List all tenants (admin/tenant_admin role check)
+  - `tenant_get_admin(p_tenant_id)` — Get single tenant (platform→any, tenant→own only)
+  - `tenant_create_admin(p_name, p_slug)` — Create tenant (platform admin ONLY, slug normalization, duplicate check)
+  - `tenant_update_admin(p_tenant_id, p_name, p_slug, p_status)` — Update tenant metadata (auth checks, slug uniqueness)
+  - `tenant_set_status(p_tenant_id, p_status)` — Status toggle (enum validation active/inactive/suspended)
 
-#### 2. Migration 080 â€” Default Brand Authority (Additive)
+#### 2. Migration 080 — Default Brand Authority (Additive)
 File: `supabase/migrations/080_tenant_default_brand.sql`
 
 Contains:
 - **1 Canonical PostgreSQL RPC:**
-  - `tenant_set_default_brand(p_tenant_id, p_brand_id)` â€” Set default brand for tenant (brand must belong to same tenant, must be active+published)
+  - `tenant_set_default_brand(p_tenant_id, p_brand_id)` — Set default brand for tenant (brand must belong to same tenant, must be active+published)
 
 ### How to Deploy:
 
-**Option A â€” Dashboard SQL Editor (recommended):**
+**Option A — Dashboard SQL Editor (recommended):**
 1. Go to https://app.supabase.com/project/ivkdfognyiwjcmrhcnwz/sql/new
 2. Copy/paste content of each migration file and Run separately
 3. Verify no errors
 
-**Option B â€” CLI (if authentication works):**
+**Option B — CLI (if authentication works):**
 ```bash
 cd 'D:\A PROJECT\Bite Me Baby'
 npx supabase db push --linked --include-all
 ```
 
-âš ï¸ DO NOT proceed with runtime verification until migrations are deployed.
+⚠️ DO NOT proceed with runtime verification until migrations are deployed.
 
 ---
 
-## âœ… WHAT IS ALREADY COMMITTED/PUSHED (Local Only)
+## ✅ WHAT IS ALREADY COMMITTED/PUSHED (Local Only)
 
 HEAD = dac2530 | origin/main = dac2530 | WORKTREE DIRTY (4 files staged)
 

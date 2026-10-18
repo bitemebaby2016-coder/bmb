@@ -1,19 +1,19 @@
 ﻿// ============================================
-// Bite Me Baby â€” Edge Function: channel-webhook (W3-C-EXTERNAL)
+// Bite Me Baby — Edge Function: channel-webhook (W3-C-EXTERNAL)
 // Facebook / Facebook Group / Messenger inbound adapter (foundation).
 //
 // Flow (server-authoritative, no client trust):
-//   GET  â†’ webhook verification (hub.challenge + VERIFY_TOKEN)
-//   POST â†’ X-Hub-Signature-256 (HMAC-SHA256 of raw body with APP_SECRET)
-//        â†’ parse Meta events (object=page)
-//        â†’ derive channel: MESSENGER (messaging) / FACEBOOK (page changes) /
+//   GET  → webhook verification (hub.challenge + VERIFY_TOKEN)
+//   POST → X-Hub-Signature-256 (HMAC-SHA256 of raw body with APP_SECRET)
+//        → parse Meta events (object=page)
+//        → derive channel: MESSENGER (messaging) / FACEBOOK (page changes) /
 //          FACEBOOK_GROUP (only when payload explicitly carries group id)
-//          â€” never guessed; unknown origin â†’ rejected + audited
-//        â†’ dedupe by event id (durable, audit_logs-backed)
-//        â†’ identity resolution/provisioning (customer_channel_identities)
-//        â†’ canonical order RPC (create_order_with_items w/ service path,
+//          — never guessed; unknown origin → rejected + audited
+//        → dedupe by event id (durable, audit_logs-backed)
+//        → identity resolution/provisioning (customer_channel_identities)
+//        → canonical order RPC (create_order_with_items w/ service path,
 //          p_source_channel + p_external_ref_id + p_customer_ref)
-//        â†’ audit trail
+//        → audit trail
 //
 // Channel adapter has NO business authority: price/promo/capacity/mode/fee/
 // payment/state are validated by the canonical backend RPC.
@@ -154,7 +154,7 @@ function parseEvent(obj: string, entry: any, ev: any): { channel: string; extUse
       try {
         const parsed = JSON.parse(text)
         if (parsed && parsed.order) order = parsed.order
-      } catch { /* plain text chat â€” no order intent */ }
+      } catch { /* plain text chat — no order intent */ }
     }
     return { channel: 'MESSENGER', extUser, eventId, order, content, item: 'message' }
   }
@@ -203,7 +203,7 @@ async function processEntry(obj: string, entry: any, ctx: Ctx) {
   const parsed = parseEvent(obj, entry, entry)
   if ('error' in parsed) {
     ctx.errors.push(parsed.error)
-    await audit('channel_event_rejected', (parsed.error + ':' + (entry.id || 'unknown')).slice(0, 120), 'event rejected â€” ' + parsed.error, { object: obj })
+    await audit('channel_event_rejected', (parsed.error + ':' + (entry.id || 'unknown')).slice(0, 120), 'event rejected — ' + parsed.error, { object: obj })
     return
   }
   const { channel, extUser, eventId, order, content, item } = parsed as {
@@ -273,7 +273,7 @@ async function processEntry(obj: string, entry: any, ctx: Ctx) {
 
   if (await eventSeen(eventId)) {
     ctx.results.duplicate_event = true
-    await audit('channel_event_duplicate', eventId, 'duplicate external event â€” no new effect', { channel })
+    await audit('channel_event_duplicate', eventId, 'duplicate external event — no new effect', { channel })
     return
   }
 

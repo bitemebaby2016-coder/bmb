@@ -1,5 +1,5 @@
 ﻿// ============================================
-// Admin â€” Delivery Rounds + Capacity (D8/D9 gap, Phase D)
+// Admin — Delivery Rounds + Capacity (D8/D9 gap, Phase D)
 // ============================================
 
 import { useState, useEffect } from 'react'
@@ -54,7 +54,7 @@ export function AdminRounds() {
       showToast('บันทึกรอบไม่สำเร็จ - ลองอีกครั้ง', 'error')
       return
     }
-    showToast('à¸šà¸±à¸™à¸—à¸¶à¸à¸£à¸­à¸šà¹€à¸£à¸µà¸¢à¸šà¸£à¹‰à¸­à¸¢à¹à¸¥à¹‰à¸§', 'success')
+    showToast('บันทึกรอบเรียบร้อยแล้ว', 'success')
     setEditing(null)
     loadRounds()
   }
@@ -68,31 +68,31 @@ export function AdminRounds() {
 
   async function handleResetCapacity(round: DeliveryRoundRow) {
     if (await resetRoundCapacity(round.id)) {
-      showToast('à¸£à¸µà¹€à¸‹à¹‡à¸•à¸ˆà¸³à¸™à¸§à¸™à¸—à¸µà¹ˆà¸£à¸±à¸šà¹„à¸§à¹‰à¹€à¸›à¹‡à¸™ 0 à¹à¸¥à¹‰à¸§', 'success')
+      showToast('รีเซ็ตจำนวนที่รับไว้เป็น 0 แล้ว', 'success')
       loadRounds()
     }
   }
 
   async function handleDelete(round: DeliveryRoundRow) {
-    if (!window.confirm(`à¸¥à¸šà¸£à¸­à¸š "${round.display_name}" à¸§à¸±à¸™à¸—à¸µà¹ˆ ${round.scheduled_date}?\nâ€¢ à¸£à¸­à¸šà¸—à¸µà¹ˆà¸¡à¸µà¸­à¸­à¹€à¸”à¸­à¸£à¹Œà¸­à¹‰à¸²à¸‡à¸­à¸´à¸‡à¸­à¸¢à¸¹à¹ˆà¸ˆà¸°à¸¥à¸šà¹„à¸¡à¹ˆà¹„à¸”à¹‰ (à¹€à¸à¹‡à¸šà¹„à¸§à¹‰à¹€à¸žà¸·à¹ˆà¸­à¸„à¸§à¸²à¸¡à¸–à¸¹à¸à¸•à¹‰à¸­à¸‡à¸‚à¸­à¸‡à¸šà¸±à¸à¸Šà¸µ)`)) return
+    if (!window.confirm(`ลบรอบ "${round.display_name}" วันที่ ${round.scheduled_date}?\n• รอบที่มีออเดอร์อ้างอิงอยู่จะลบไม่ได้ (เก็บไว้เพื่อความถูกต้องของบัญชี)`)) return
     const { error } = await supabase.from('delivery_rounds').delete().eq('id', round.id)
     if (error) {
       if (String(error.code || '') === '23503' || String(error.message).includes('violates foreign key')) {
-        showToast('à¸¥à¸šà¹„à¸¡à¹ˆà¹„à¸”à¹‰ â€” à¸£à¸­à¸šà¸™à¸µà¹‰à¸¡à¸µà¸­à¸­à¹€à¸”à¸­à¸£à¹Œà¸­à¹‰à¸²à¸‡à¸­à¸´à¸‡à¸­à¸¢à¸¹à¹ˆ', 'error')
+        showToast('ลบไม่ได้ — รอบนี้มีออเดอร์อ้างอิงอยู่', 'error')
       } else {
-        showToast(`à¸¥à¸šà¸£à¸­à¸šà¹„à¸¡à¹ˆà¸ªà¸³à¹€à¸£à¹‡à¸ˆ: ${error.message}`, 'error')
+        showToast(`ลบรอบไม่สำเร็จ: ${error.message}`, 'error')
       }
       return
     }
-    showToast('à¸¥à¸šà¸£à¸­à¸šà¹à¸¥à¹‰à¸§', 'success')
+    showToast('ลบรอบแล้ว', 'success')
     loadRounds()
   }
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-6">
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-3xl font-bold text-brand-accent">ðŸ• à¸£à¸­à¸šà¸ˆà¸±à¸”à¸ªà¹ˆà¸‡à¹à¸¥à¸°à¸„à¸§à¸²à¸¡à¸ˆà¸¸</h1>
-        <Link to="/admin" className="btn btn-outline">â† à¸à¸¥à¸±à¸šà¸«à¸™à¹‰à¸²à¸ à¸²à¸žà¸£à¸§à¸¡</Link>
+        <h1 className="text-3xl font-bold text-brand-accent">🕐 รอบจัดส่งและความจุ</h1>
+        <Link to="/admin" className="btn btn-outline">← กลับหน้าภาพรวม</Link>
       </div>
 
       <div className="grid gap-4">
@@ -102,10 +102,10 @@ export function AdminRounds() {
               <div>
                 <div className="font-bold text-brand-accent">{r.display_name}</div>
                 <div className="text-sm text-brand-muted">
-                  à¸›à¸´à¸”à¸£à¸±à¸š {r.cutoff_time} â€¢ à¸ªà¹ˆà¸‡ {r.delivery_start}â€“{r.delivery_end} â€¢ {r.scheduled_date}
+                  ปิดรับ {r.cutoff_time} • ส่ง {r.delivery_start}–{r.delivery_end} • {r.scheduled_date}
                 </div>
               </div>
-              <span className="badge badge-success">âš¡ {r.current_count}/{r.max_capacity}</span>
+              <span className="badge badge-success">⚡ {r.current_count}/{r.max_capacity}</span>
             </div>
 
             {editing?.id === r.id ? (
@@ -122,16 +122,16 @@ export function AdminRounds() {
               </div>
             ) : (
               <div className="flex flex-wrap items-center gap-3">
-                <button onClick={() => openEdit(r)} className="btn btn-outline text-sm">âœï¸ แก้ไข</button>
+                <button onClick={() => openEdit(r)} className="btn btn-outline text-sm">✏️ แก้ไข</button>
                 <ToggleSwitch
                   checked={r.status === 'active'}
                   onChange={() => handleStatus(r, nextRoundStatus(r.status))}
-                  label={r.status === 'active' ? 'à¹€à¸›à¸´à¸”à¸£à¸±à¸š' : 'à¸›à¸´à¸”à¸£à¸±à¸š'}
+                  label={r.status === 'active' ? 'เปิดรับ' : 'ปิดรับ'}
                   testId={`round-active-${r.id}`}
                 />
-                <button onClick={() => handleResetCapacity(r)} className="btn btn-outline text-sm">âŸ³ à¸£à¸µà¹€à¸‹à¹‡à¸•à¸ˆà¸³à¸™à¸§à¸™à¸—à¸µà¹ˆà¸£à¸±à¸š</button>
-                <button onClick={() => void handleDelete(r)} className="btn btn-danger text-sm">ðŸ—‘ à¸¥à¸šà¸£à¸­à¸šà¸™à¸µà¹‰</button>
-                <span className={`badge ${r.status === 'active' ? 'badge-success' : 'badge-warning'}`}>{r.status === 'active' ? 'à¹€à¸›à¸´à¸”à¸£à¸±à¸š' : 'à¸›à¸´à¸”à¸£à¸±à¸š'}</span>
+                <button onClick={() => handleResetCapacity(r)} className="btn btn-outline text-sm">⟳ รีเซ็ตจำนวนที่รับ</button>
+                <button onClick={() => void handleDelete(r)} className="btn btn-danger text-sm">🗑 ลบรอบนี้</button>
+                <span className={`badge ${r.status === 'active' ? 'badge-success' : 'badge-warning'}`}>{r.status === 'active' ? 'เปิดรับ' : 'ปิดรับ'}</span>
               </div>
             )}
           </div>
@@ -139,7 +139,7 @@ export function AdminRounds() {
       </div>
 
       <div className="card mt-6 bg-brand-surface text-brand-muted text-sm">
-        âš ï¸ Capacity is enforced atomically in <code>create_order_with_items</code> (row lock) â€” raising
+        ⚠️ Capacity is enforced atomically in <code>create_order_with_items</code> (row lock) — raising
         <code>max_capacity</code> here takes effect immediately for new orders; existing pre-orders are unaffected.
       </div>
     </div>

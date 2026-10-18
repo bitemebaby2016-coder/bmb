@@ -166,7 +166,7 @@ describe('§18 tracking — no timer mutates status; refresh reflects server', (
       for (let i = 0; i < 4; i++) vi.advanceTimersByTime(20000)
 
       const mid = await supabase.from('orders').select('*').eq('order_number', onum).single()
-      expect((mid.data as any).status).toBe('pending') // elapsed time â‰  progression
+      expect((mid.data as any).status).toBe('pending') // elapsed time ≠ progression
       expect((mid.data as any).payment_status).toBe('pending')
 
       // Server-side lifecycle change (admin path) → visible ONLY through refetch.
