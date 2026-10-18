@@ -39,6 +39,8 @@ import type {
 } from '@/types'
 import { SOCIAL_PROOF_REVIEWS } from './socialProofReviews'
 import { sameDayEligible, preorderEligible } from './talkToBite'
+import { roundBookability } from './deliveryRoundStatus'
+import { bangkokMsOfDay } from './bangkokTime'
 import type { ProductScheduleMap } from './productSchedule'
 
 function availabilityOf(p: Product): AvailabilityState {
@@ -129,7 +131,11 @@ export function getHomeReviews(products: Product[]): HomeReview[] {
 /** Store / delivery status — derive ONLY from real `delivery_rounds` rows.
  * ZERO-FAKE (closure 2026-10-18): the old hour-based MOCK status is gone —
  * it fabricated open/closed + capacity when rounds were missing or failed to
- * load, masking integration failures. No open round ⇒ honestly closed. */
+ * load, masking integration failures. No bookable round ⇒ honestly closed.
+ * NOTE: real round status vocabulary is 'active' (↔ 'closed') per server
+ * authority (007/025/118) — the old `status === 'open'` filter matched NOTHING
+ * in production and silently forced the mock fallback. 'open' is still accepted
+ * for legacy/test rows. */
 export function getStoreStatusFromRounds(rounds: Array<{
   status?: string
   display_name?: string
@@ -138,31 +144,65 @@ export function getStoreStatusFromRounds(rounds: Array<{
   delivery_end?: string
   max_capacity?: number
   current_count?: number
+  scheduled_date?: string | null
 }>, now: Date = new Date()): StoreStatus {
-  const open = (rounds || []).filter((r) => r.status === 'open')
-  if (open.length === 0) {
+  const live = (rounds || []).filter((r) => {
+    const s = String(r.status || '').toLowerCase()
+    return s === 'active' || s === 'open'
+  })
+  if (live.length === 0) {
     return {
       isOpen: false,
       state: 'closed',
       message: 'ยังไม่เปิดรับออเดอร์ — ไม่มีรอบจัดส่งที่เปิดรับอยู่',
     }
   }
-  const hour = now.getHours()
-  const current = open.find((r) => {
-    const end = Number((r.delivery_end || '00').split(':')[0])
-    const start = Number((r.delivery_start || '00').split(':')[0])
-    return hour >= start && hour < end
-  }) || open[0]
+  // วันนี้ (ปฏิทิน Bangkok) — ตรงกับ scheduled_date ของรอบ หรือแถวที่ไม่ระบุวัน
+  const todayBkk = new Date(now.getTime() + 7 * 60 * 60_000).toISOString().slice(0, 10)
+  const todayRows = live.filter((r) => {
+    const d = r.scheduled_date ? String(r.scheduled_date).slice(0, 10) : null
+    return d === null || d === todayBkk
+  })
+  // ยังรับได้จริงวันนี้ = ไม่เต็ม + ไม่เลย cutoff/window (mirror เดียวกับ deliveryRoundStatus)
+  const bookable = todayRows.filter(
+    (r) => roundBookability(r, { isToday: true, nowUtcMs: now.getTime() }) === 'open',
+  )
+  if (bookable.length > 0) {
+    const bkkMs = bangkokMsOfDay(now.getTime())
+    const hour = bkkMs == null ? now.getHours() : Math.floor(bkkMs / 3_600_000)
+    const current = bookable.find((r) => {
+      const end = Number((r.delivery_end || '00').split(':')[0])
+      const start = Number((r.delivery_start || '00').split(':')[0])
+      return hour >= start && hour < end
+    }) || bookable[0]
+    return {
+      isOpen: true,
+      state: 'open',
+      currentRoundLabel: current.display_name || 'ปัจจุบัน',
+      cutoff: current.cutoff_time,
+      deliveryWindowLabel: `ส่ง ${current.delivery_start}–${current.delivery_end}`,
+      capacityPct: Number(current.max_capacity) > 0
+        ? Math.min(100, Math.round((Number(current.current_count || 0) / Number(current.max_capacity)) * 100))
+        : undefined,
+      message: `เปิดรับออเดอร์${current.display_name ? ' ' + current.display_name : ''}`,
+    }
+  }
+  // วันนี้ปิดรับหมด แต่ยังมีรอบวันถัดไป = เปิดรับจองล่วงหน้าเท่านั้น (ไม่มีตัวเลขแต่งเอง)
+  const futureRows = live.filter((r) => {
+    const d = r.scheduled_date ? String(r.scheduled_date).slice(0, 10) : null
+    return d !== null && d > todayBkk
+  })
+  if (futureRows.length > 0) {
+    return {
+      isOpen: true,
+      state: 'preorder_only',
+      message: 'เปิดรับออเดอร์จองล่วงหน้า — รอบวันนี้ปิดรับแล้ว',
+    }
+  }
   return {
-    isOpen: true,
-    state: 'open',
-    currentRoundLabel: current.display_name || 'ปัจจุบัน',
-    cutoff: current.cutoff_time,
-    deliveryWindowLabel: `ส่ง ${current.delivery_start}–${current.delivery_end}`,
-    capacityPct: Number(current.max_capacity) > 0
-      ? Math.min(100, Math.round((Number(current.current_count || 0) / Number(current.max_capacity)) * 100))
-      : undefined,
-    message: `เปิดรับออเดอร์${current.display_name ? ' ' + current.display_name : ''}`,
+    isOpen: false,
+    state: 'closed',
+    message: 'ยังไม่เปิดรับออเดอร์ — ไม่มีรอบจัดส่งที่เปิดรับอยู่',
   }
 }
 

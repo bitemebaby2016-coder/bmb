@@ -78,35 +78,61 @@ describe('storeStatus — ตรรกะเปิด/ปิดร้านจ�
   beforeEach(() => { publishDeliveryRounds(null) })
 
   it('ยังไม่มีข้อมูลรอบส่ง → ยังไม่ยืนยันว่าเปิด (ไม่เดาจากเวลา) ทุกช่วงเวลา', () => {
-    for (const t of ['2026-10-14T20:30:00', '2026-10-14T07:00:00', '2026-10-14T10:00:00']) {
+    for (const t of ['2026-10-14T13:30:00Z', '2026-10-14T00:00:00Z', '2026-10-14T03:00:00Z']) {
       const s = currentStoreStatus(new Date(t))
       expect(s.isOpen, t).toBe(false)
       expect(s.message, t).toContain('ยังไม่มีข้อมูลรอบจัดส่ง')
     }
-    expect(isStoreClosedNow(new Date('2026-10-14T07:00:00'))).toBe(true)
+    expect(isStoreClosedNow(new Date('2026-10-14T00:00:00Z'))).toBe(true)
   })
 
-  it('มีรอบส่งจริงที่เปิด → ใช้สถานะจากรอบส่ง (เปิดแม้เลยเวลาทำการ)', () => {
+  it("status='active' (ค่าจริงในฐานข้อมูล) + ยังไม่เลย cutoff → เปิดรับ", () => {
     publishDeliveryRounds([
-      { status: 'open', display_name: 'รอบเย็น', cutoff_time: '16:00', delivery_start: '17:00', delivery_end: '20:00', max_capacity: 10, current_count: 0 },
+      { status: 'active', display_name: 'รอบเช้า', cutoff_time: '08:00', delivery_start: '06:00', delivery_end: '09:00', max_capacity: 10, current_count: 2, scheduled_date: '2026-10-14' },
     ] as never)
-    // มีรอบเปิด → ร้านเปิดแม้เลยเวลาทำการ
-    expect(isStoreClosedNow(new Date('2026-10-14T21:00:00'))).toBe(false)
+    // 07:00 ICT = 2026-10-14T00:00:00Z — อยู่ในหน้าต่าง 06:00-09:00 และก่อน cutoff 08:00
+    expect(isStoreClosedNow(new Date('2026-10-14T00:00:00Z'))).toBe(false)
   })
 
-  it('ทุกรอบปิด → ร้านปิดตามข้อมูลจริง (ไม่ fallback ไปตรรกะเวลาปลอม)', () => {
+  it('legacy status="open" ก็ยังใช้ได้ (compat)', () => {
+    publishDeliveryRounds([
+      { status: 'open', display_name: 'รอบเย็น', cutoff_time: '23:59', delivery_start: '17:00', delivery_end: '20:00', max_capacity: 10, current_count: 0, scheduled_date: '2026-10-14' },
+    ] as never)
+    // 18:00 ICT = 2026-10-14T11:00:00Z — อยู่ในหน้าต่าง 17:00-20:00
+    expect(isStoreClosedNow(new Date('2026-10-14T11:00:00Z'))).toBe(false)
+  })
+
+  it('ทุกรอบปิด/ไม่มีรอบเปิด → ร้านปิดตามข้อมูลจริง (ไม่ fallback ไปตรรกะเวลาปลอม)', () => {
     publishDeliveryRounds([
       { status: 'closed', display_name: 'รอบเช้า', cutoff_time: '08:00', delivery_start: '06:00', delivery_end: '09:00', max_capacity: 10, current_count: 10 },
     ] as never)
-    const s = currentStoreStatus(new Date('2026-10-14T10:00:00'))
+    const s = currentStoreStatus(new Date('2026-10-14T03:00:00Z')) // 10:00 ICT
     expect(s.isOpen).toBe(false)
     expect(s.message).toContain('ไม่มีรอบจัดส่งที่เปิดรับ')
-    // ตรรกะเวลาเดิมเคยบอก "เปิด" ตอน 10:00 — ห้ามเกิดอีก
-    expect(isStoreClosedNow(new Date('2026-10-14T10:00:00'))).toBe(true)
+  })
+
+  it('เลย cutoff ทุกรอบวันนี้ + มีรอบอนาคต → เปิดเฉพาะจองล่วงหน้า (preorder_only)', () => {
+    publishDeliveryRounds([
+      { status: 'active', display_name: 'รอบเช้า', cutoff_time: '08:00', delivery_start: '06:00', delivery_end: '09:00', max_capacity: 10, current_count: 1, scheduled_date: '2026-10-14' },
+      { status: 'active', display_name: 'พรุ่งนี้เช้า', cutoff_time: '08:00', delivery_start: '06:00', delivery_end: '09:00', max_capacity: 10, current_count: 0, scheduled_date: '2026-10-15' },
+    ] as never)
+    // 10:00 ICT = 2026-10-14T03:00:00Z — cutoff 08:00 ของวันนี้ผ่านแล้ว
+    const s = currentStoreStatus(new Date('2026-10-14T03:00:00Z'))
+    expect(s.isOpen).toBe(true)
+    expect(s.state).toBe('preorder_only')
+    expect(s.message).toContain('จองล่วงหน้า')
+  })
+
+  it('เต็มทุกรอบวันนี้ = ปิดรับ (capacity gate ตามข้อมูลจริง)', () => {
+    publishDeliveryRounds([
+      { status: 'active', display_name: 'รอบเที่ยง', cutoff_time: '23:59', delivery_start: '11:00', delivery_end: '14:00', max_capacity: 10, current_count: 10, scheduled_date: '2026-10-14' },
+    ] as never)
+    // 11:00 ICT = 2026-10-14T04:00:00Z — เต็ม 10/10
+    expect(currentStoreStatus(new Date('2026-10-14T04:00:00Z')).isOpen).toBe(false)
   })
 
   it('getStoreStatusFromRounds([]) → ไม่มี fallback ข้อมูลปลอม (ไม่มีป้ายเวลา/ความจุแต่งเอง)', () => {
-    const s = getStoreStatusFromRounds([], new Date('2026-10-14T07:00:00'))
+    const s = getStoreStatusFromRounds([], new Date('2026-10-14T00:00:00Z'))
     expect(s.isOpen).toBe(false)
     expect(s.capacityPct).toBeUndefined()
     expect(s.currentRoundLabel).toBeUndefined()
