@@ -1365,9 +1365,9 @@ html[data-theme='dark'] .fmc-chip-status, html[data-theme='graphite'] .fmc-chip-
   border-radius: 18px;
   box-shadow: 0 14px 22px rgba(28, 25, 23, 0.22);
 }
-/* ป้ายบนรูป (badge/chip) ต้องอยู่ "เหนือ" รูปที่ยกเสมอ */
-.home-card-badge, .home-card-stock, .fmc-chip { z-index: 10; }
-.home-card--preorder .home-card-media::after { z-index: 10; }
+/* ป้ายบนรูป (badge/chip) ต้องอยู่ "เหนือ" รูปที่ยกเสมอ — รวมตอน hover ที่รูปได้ z-30 */
+.home-card-badge, .home-card-stock, .fmc-chip { z-index: 40; }
+.home-card--preorder .home-card-media::after { z-index: 40; }
 .drink-card:hover, .snack-card:hover, .home-card:hover, .fmc-card:hover, .menu-card:hover {
   overflow: visible;
   z-index: 20;

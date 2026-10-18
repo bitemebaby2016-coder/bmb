@@ -8,7 +8,7 @@
 // ============================================
 
 import { useEffect, useRef, useState } from 'react'
-import { loadGoogleMapsJS, isGoogleMapsConfigured } from '@/lib/googleMaps'
+import { loadGoogleMapsJS, isGoogleMapsConfigured, getGoogleMapId } from '@/lib/googleMaps'
 import { KITCHEN_LAT, KITCHEN_LNG } from '@/store/locationStore'
 
 export interface DeliveryMapPickerProps {
@@ -58,6 +58,7 @@ export function DeliveryMapPicker({ latitude, longitude, onPick }: DeliveryMapPi
           mapTypeControl: false,
           streetViewControl: false,
           fullscreenControl: false,
+          ...(getGoogleMapId() ? { mapId: getGoogleMapId() } : {}),
         })
         const map = mapInstanceRef.current as {
           addListener: (evt: string, cb: (e: { latLng?: { lat: () => number; lng: () => number } }) => void) => void

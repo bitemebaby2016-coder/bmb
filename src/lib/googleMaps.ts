@@ -182,8 +182,10 @@ let googleMapsPromise: Promise<void> | null = null
 export function loadGoogleMapsJS(): Promise<void> {
   if (googleMapsLoaded) return Promise.resolve()
   if (googleMapsPromise) return googleMapsPromise
-  if (!MAPS_KEY || MAPS_KEY.length < 10 || !MAP_ID) {
-    console.warn('[GoogleMaps] Missing API key or Map ID')
+  // Owner 2026-10-18: MAP_ID ต้องไม่บังคับ — ใช้แค่ key ก็โหลดแผนที่ได้ (Map ID เป็นคนละเรื่อง
+  // กับการโหลด SDK เดิมบังคับทั้งคู่ → ถ้า env ฝั่ง prod ไม่ได้ตั้ง MAP_ID แผนที่จะว่างเงียบ ๆ)
+  if (!MAPS_KEY || MAPS_KEY.length < 10) {
+    console.warn('[GoogleMaps] Missing API key')
     googleMapsLoaded = true
     return Promise.resolve()
   }
@@ -197,6 +199,11 @@ export function loadGoogleMapsJS(): Promise<void> {
     document.head.appendChild(s)
   })
   return googleMapsPromise
+}
+
+/** Map ID (ถ้ามี) — ใช้ตอนสร้าง google.maps.Map เพื่อเปิด cloud styling/AdvancedMarker ได้ */
+export function getGoogleMapId(): string {
+  return MAP_ID
 }
 
 export function isGoogleMapsJSReady(): boolean { return googleMapsLoaded && !!(window as any).google?.maps }
