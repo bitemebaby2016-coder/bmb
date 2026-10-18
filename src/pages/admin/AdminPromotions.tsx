@@ -8,6 +8,7 @@ import { showToast } from '@/components/ui/ToastContainer'
 import { getPromotionsAdmin, upsertPromotion, deletePromotion, togglePromotion, type PromotionRow } from '@/lib/bmbAdminApi_promotions'
 import { submitContentForApproval } from '@/lib/contentApproval'
 import { validatePromotionForm } from '@/lib/promotionClient'
+import { uploadMediaAsset } from '@/lib/bmbAdminApi_media'
 
 const EMPTY_FORM = {
   name: '',
@@ -28,6 +29,7 @@ export function AdminPromotions() {
   const [showAddForm, setShowAddForm] = useState(false)
   const [editing, setEditing] = useState<PromotionRow | null>(null)
   const [form, setForm] = useState({ ...EMPTY_FORM })
+  const [uploading, setUploading] = useState(false)
 
   useEffect(() => { loadPromotions() }, [])
 
@@ -86,8 +88,9 @@ export function AdminPromotions() {
       banner_image: v.banner_image || null,
     }
     const saved = await upsertPromotion(row)
-    if (!saved) {
-      showToast('บันทึกโปรโมชั่นไม่สำเร็จ — ตรวจการเชื่อมต่อ/สิทธิ์แอดมิน แล้วลองอีกครั้ง', 'error')
+    if (!saved.ok) {
+      // แสดงเหตุผลจริงจากฐานข้อมูลบนจอ — ไม่กลบปัญหาด้วยข้อความกว้าง ๆ
+      showToast(`บันทึกโปรโมชั่นไม่สำเร็จ: ${saved.error}`, 'error')
       return
     }
     // CNT-01: banner content is submitted for human review (real workflow —
@@ -110,75 +113,110 @@ export function AdminPromotions() {
   }
 
   async function handleToggle(promo: PromotionRow) {
-    const ok = await togglePromotion(promo.id, !promo.is_active)
-    if (ok) {
+    const res = await togglePromotion(promo.id, !promo.is_active)
+    if (res.ok) {
       showToast(promo.is_active ? 'พักโปรโมชั่นแล้ว — ลูกค้าใช้โค้ดนี้ไม่ได้จนกว่าจะเปิดใหม่' : 'เปิดใช้งานโปรโมชั่นแล้ว — ลูกค้าใช้โค้ดได้ตามเงื่อนไข', 'success')
       loadPromotions()
     } else {
-      showToast('เปลี่ยนสถานะไม่สำเร็จ — ลองอีกครั้ง', 'error')
+      showToast(`เปลี่ยนสถานะไม่สำเร็จ: ${res.error ?? 'ลองอีกครั้ง'}`, 'error')
     }
   }
 
   async function handleDelete(promo: PromotionRow) {
     if (!window.confirm(`ลบโปรโมชั่น "${promo.name}"? — โค้ด ${promo.code || '(ไม่มีโค้ด)'} จะใช้ไม่ได้ทันที`)) return
-    if (await deletePromotion(promo.id)) {
+    const res = await deletePromotion(promo.id)
+    if (res.ok) {
       showToast('ลบโปรโมชั่นแล้ว', 'success')
       loadPromotions()
     } else {
-      showToast('ลบไม่สำเร็จ — ลองอีกครั้ง', 'error')
+      showToast(`ลบไม่สำเร็จ: ${res.error ?? 'ลองอีกครั้ง'}`, 'error')
+    }
+  }
+
+  async function handleUploadBanner(file: File) {
+    setUploading(true)
+    try {
+      const asset = await uploadMediaAsset(file, 'image', form.name || 'banner')
+      if (asset?.url) {
+        setForm((f) => ({ ...f, banner_image: asset.url }))
+        showToast('อัปโหลดรูปสำเร็จ — รูปจะใช้เป็นแบนเนอร์ตามที่ตั้งค่าไว้', 'success')
+      } else {
+        showToast('อัปโหลดรูปไม่สำเร็จ — ลองอีกครั้ง หรือวางลิงก์รูปในช่องด้านบนแทน', 'error')
+      }
+    } finally {
+      setUploading(false)
     }
   }
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-6">
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-3xl font-bold text-brand-accent">🎁 Promotions</h1>
-        <Link to="/admin" className="btn btn-outline">← Dashboard</Link>
+        <h1 className="text-3xl font-bold text-brand-accent">🎁 โปรโมชั่น</h1>
+        <Link to="/admin" className="btn btn-outline">← กลับหน้าภาพรวม</Link>
       </div>
 
       <div className="mb-4">
-        <button onClick={openCreate} className="btn btn-primary">+ New Promotion</button>
+        <button onClick={openCreate} className="btn btn-primary">+ สร้างโปรโมชั่นใหม่</button>
       </div>
 
       {showAddForm && (
         <div className="card mb-6 p-4">
-          <h3 className="font-bold text-brand-accent mb-3">{editing ? 'Edit' : 'New'} Promotion</h3>
+          <h3 className="font-bold text-brand-accent mb-3">{editing ? 'แก้ไขโปรโมชั่น' : 'สร้างโปรโมชั่นใหม่'}</h3>
           <div className="grid grid-cols-2 gap-3">
-            <input className="input" placeholder="Name *" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
-            <input className="input" placeholder="Code (e.g. BMB10)" value={form.code} onChange={(e) => setForm({ ...form, code: e.target.value })} />
-            <input className="input" placeholder="Description" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
+            <input className="input" placeholder="ชื่อโปรโมชั่น *" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
+            <input className="input" placeholder="รหัสโค้ด (เช่น BMB10)" value={form.code} onChange={(e) => setForm({ ...form, code: e.target.value })} />
+            <input className="input" placeholder="รายละเอียด" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
             <select className="input" value={form.discount_type} onChange={(e) => setForm({ ...form, discount_type: e.target.value as any })}>
-              <option value="percentage">Percentage (%)</option>
-              <option value="fixed_amount">Fixed amount (฿)</option>
+              <option value="percentage">ลดเป็นเปอร์เซ็นต์ (%)</option>
+              <option value="fixed_amount">ลดเป็นจำนวนเงิน (บาท)</option>
             </select>
-            <input type="number" className="input" placeholder="Discount value" value={form.discount_value} onChange={(e) => setForm({ ...form, discount_value: Number(e.target.value) })} />
-            <input type="number" className="input" placeholder="Min order amount" value={form.min_order_amount} onChange={(e) => setForm({ ...form, min_order_amount: Number(e.target.value) })} />
+            <input type="number" className="input" placeholder="มูลค่าส่วนลด" value={form.discount_value} onChange={(e) => setForm({ ...form, discount_value: Number(e.target.value) })} />
+            <input type="number" className="input" placeholder="ยอดสั่งขั้นต่ำ (บาท)" value={form.min_order_amount} onChange={(e) => setForm({ ...form, min_order_amount: Number(e.target.value) })} />
             <label className="text-sm flex items-center gap-2">
-              Start:
+              เริ่ม:
               <input type="date" className="input" value={form.start_date} onChange={(e) => setForm({ ...form, start_date: e.target.value })} />
             </label>
             <label className="text-sm flex items-center gap-2">
-              End:
+              ถึง:
               <input type="date" className="input" value={form.end_date} onChange={(e) => setForm({ ...form, end_date: e.target.value })} />
             </label>
             <label className="flex items-center gap-2">
               <input type="checkbox" checked={form.is_active} onChange={(e) => setForm({ ...form, is_active: e.target.checked })} />
-              Active
+              เปิดใช้งาน
             </label>
             <label className="flex items-center gap-2">
               <input type="checkbox" checked={form.is_banner} onChange={(e) => setForm({ ...form, is_banner: e.target.checked })} />
-              🏠 Show as Home banner (dismissible by customers)
+              🏠 แสดงเป็นแบนเนอร์หน้าแรก (ลูกค้าปิดได้)
             </label>
             <input
               className="input"
-              placeholder="Banner image URL (optional)"
+              placeholder="ลิงก์รูปแบนเนอร์ (ไม่บังคับ)"
               value={form.banner_image}
               onChange={(e) => setForm({ ...form, banner_image: e.target.value })}
             />
+            <div className="flex items-center gap-2">
+              <input
+                type="file"
+                accept="image/*"
+                className="input"
+                aria-label="เลือกรูปแบนเนอร์จากเครื่อง"
+                onChange={(e) => {
+                  const f = e.target.files?.[0]
+                  if (f) void handleUploadBanner(f)
+                }}
+              />
+              {uploading && <span className="text-sm text-brand-muted">กำลังอัปโหลดรูป…</span>}
+            </div>
+            {form.banner_image && (
+              <div className="col-span-2">
+                <p className="text-xs text-brand-muted mb-1">รูปที่จะใช้:</p>
+                <img src={form.banner_image} alt="ตัวอย่างรูปแบนเนอร์" className="h-24 rounded-lg object-cover border border-brand-border" />
+              </div>
+            )}
           </div>
           <div className="flex gap-3 mt-4">
-            <button onClick={handleSave} className="btn btn-success">💾 Save</button>
-            <button onClick={() => setShowAddForm(false)} className="btn btn-outline">Cancel</button>
+            <button onClick={handleSave} className="btn btn-success">💾 บันทึก</button>
+            <button onClick={() => setShowAddForm(false)} className="btn btn-outline">ยกเลิก</button>
           </div>
         </div>
       )}
@@ -192,18 +230,18 @@ export function AdminPromotions() {
                   {p.code && <span className="ml-2 badge badge-primary">{p.code}</span>}
                 </div>
                 <div className="text-sm text-brand-muted">
-                  {p.discount_type === 'percentage' ? `${p.discount_value}%` : `฿${p.discount_value}`} • min ฿{p.min_order_amount} • {p.start_date || '—'} → {p.end_date || '—'}
+                  {p.discount_type === 'percentage' ? `ลด ${p.discount_value}%` : `ลด ฿${p.discount_value}`} • ขั้นต่ำ ฿{p.min_order_amount} • {p.start_date ? `เริ่ม ${p.start_date}` : 'เริ่มทันที'} → {p.end_date ? `ถึง ${p.end_date}` : 'ไม่กำหนดวันสิ้นสุด'}
                 </div>
               </div>
               <div className="text-right">
-                <span className={`badge ${p.is_active ? 'badge-success' : 'badge-warning'}`}>{p.is_active ? 'Active' : 'Paused'}</span>
+                <span className={`badge ${p.is_active ? 'badge-success' : 'badge-warning'}`}>{p.is_active ? 'เปิดใช้งาน' : 'พักชั่วคราว'}</span>
                 {p.is_banner && (
-                  <Link to="/admin/content-approvals" className="badge badge-info text-xs" title="Banners require content approval (CNT-01)">🛡️ Approval</Link>
+                  <Link to="/admin/content-approvals" className="badge badge-info text-xs" title="แบนเนอร์จะส่งเข้าคิวตรวจเนื้อหาก่อนแสดงผล">🛡️ รอตรวจเนื้อหา</Link>
                 )}
                 <div className="flex gap-2 mt-1">
-                  <button onClick={() => openEdit(p)} className="btn btn-outline text-sm">✏️ Edit</button>
-                  <button onClick={() => handleToggle(p)} className="btn btn-outline text-sm">{p.is_active ? '⏸ Pause' : '▶ Activate'}</button>
-                  <button onClick={() => handleDelete(p)} className="btn btn-danger text-sm">🗑 Delete</button>
+                  <button onClick={() => openEdit(p)} className="btn btn-outline text-sm">✏️ แก้ไข</button>
+                  <button onClick={() => handleToggle(p)} className="btn btn-outline text-sm">{p.is_active ? '⏸ พักใช้' : '▶ เปิดใช้'}</button>
+                  <button onClick={() => handleDelete(p)} className="btn btn-danger text-sm">🗑 ลบ</button>
                 </div>
               </div>
             </div>
@@ -212,7 +250,7 @@ export function AdminPromotions() {
       </div>
 
       {promotions.length === 0 && (
-        <div className="text-center py-12 text-brand-muted">No promotions yet — create one above.</div>
+        <div className="text-center py-12 text-brand-muted">ยังไม่มีโปรโมชั่น — กดปุ่ม "สร้างโปรโมชั่นใหม่" ด้านบนได้เลยค่ะ</div>
       )}
     </div>
   )

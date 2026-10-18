@@ -36,14 +36,16 @@ export async function getPromotionsWithStatus(): Promise<{ rows: PromotionRow[];
   return { rows: (data || []) as PromotionRow[], ok: true }
 }
 
-export async function upsertPromotion(row: PromotionRow): Promise<PromotionRow | null> {
+export type PromoWriteResult = { ok: true; row: PromotionRow } | { ok: false; error: string }
+
+export async function upsertPromotion(row: PromotionRow): Promise<PromoWriteResult> {
   const now = new Date().toISOString()
   const payload = { ...row, updated_at: now }
 
   if (row.id) {
     const { data, error } = await supabase.from('promotions').update(payload).eq('id', row.id).select().single()
-    if (error) { console.error('[upsertPromotion] update error:', error); return null }
-    return data as PromotionRow
+    if (error) { console.error('[upsertPromotion] update error:', error); return { ok: false, error: error.message } }
+    return { ok: true, row: data as PromotionRow }
   }
 
   const id = `promo-${Date.now()}-${Math.floor(Math.random() * 1000)}`
@@ -52,18 +54,18 @@ export async function upsertPromotion(row: PromotionRow): Promise<PromotionRow |
     .insert({ ...payload, id, created_at: now })
     .select()
     .single()
-  if (error) { console.error('[upsertPromotion] insert error:', error); return null }
-  return data as PromotionRow
+  if (error) { console.error('[upsertPromotion] insert error:', error); return { ok: false, error: error.message } }
+  return { ok: true, row: data as PromotionRow }
 }
 
-export async function deletePromotion(id: string): Promise<boolean> {
+export async function deletePromotion(id: string): Promise<{ ok: boolean; error?: string }> {
   const { error } = await supabase.from('promotions').delete().eq('id', id)
-  if (error) { console.error('[deletePromotion] Error:', error); return false }
-  return true
+  if (error) { console.error('[deletePromotion] Error:', error); return { ok: false, error: error.message } }
+  return { ok: true }
 }
 
-export async function togglePromotion(id: string, isActive: boolean): Promise<boolean> {
+export async function togglePromotion(id: string, isActive: boolean): Promise<{ ok: boolean; error?: string }> {
   const { error } = await supabase.from('promotions').update({ is_active: isActive, updated_at: new Date().toISOString() }).eq('id', id)
-  if (error) { console.error('[togglePromotion] Error:', error); return false }
-  return true
+  if (error) { console.error('[togglePromotion] Error:', error); return { ok: false, error: error.message } }
+  return { ok: true }
 }

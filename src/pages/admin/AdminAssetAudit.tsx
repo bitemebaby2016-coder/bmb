@@ -73,7 +73,7 @@ export function AdminAssetAudit() {
   return (
     <div className="p-6 max-w-6xl mx-auto">
       <Link to="/admin" className="text-sm text-brand-muted hover:underline">← กลับแดชบอร์ด</Link>
-      <h1 className="text-2xl font-bold text-brand-accent mt-2 mb-1">🔍 Asset Audit (read-only)</h1>
+      <h1 className="text-2xl font-bold text-brand-accent mt-2 mb-1">🔍 ตรวจรูปสินค้า</h1>
       <p className="text-sm text-brand-muted mb-4">
         สถานะรูปสินค้าในแคตตาล็อกจริง — <b>อ่านอย่างเดียว ไม่บันทึก</b> · AI ไม่เจนรูปเด็ดขาด ·
         Product card (Talk to Bite) แสดงเฉพาะ <code>image_url</code> จริง; รายการที่ยังไม่มีรูปจะเห็น placeholder ไปก่อน
@@ -90,7 +90,7 @@ export function AdminAssetAudit() {
           <div className="text-2xl font-bold text-brand-accent">{available.length}</div>
         </div>
         <div className="card p-3 border-red-200">
-          <div className="text-xs text-brand-muted">ขาดรูป (image_url ว่าง)</div>
+          <div className="text-xs text-brand-muted">ยังไม่ได้ใส่รูป</div>
           <div className="text-2xl font-bold text-red-600">{missing.length}</div>
         </div>
         <div className="card p-3 border-amber-200">
@@ -115,7 +115,7 @@ export function AdminAssetAudit() {
                 <th className="py-2 pr-3">ราคา</th>
                 <th className="py-2 pr-3">ขายได้</th>
                 <th className="py-2 pr-3">หมวด</th>
-                <th className="py-2 pr-3">image_url</th>
+                <th className="py-2 pr-3">รูปสินค้า</th>
                 <th className="py-2 pr-4">สถานะ/ชี้เป้า</th>
               </tr>
             </thead>
@@ -132,7 +132,7 @@ export function AdminAssetAudit() {
                     )}
                   </td>
                   <td className="py-2 pr-3 text-xs text-brand-muted">{p.category_id ? p.category_id.slice(0, 8) : '—'}</td>
-                  <td className="py-2 pr-3 font-mono text-xs text-red-600">{p.image_url ? '(ว่าง/ไม่ถูกต้อง)' : '(ว่าง)'}</td>
+                  <td className="py-2 pr-3 font-mono text-xs text-red-600">{p.image_url ? 'ยังไม่ได้ใส่รูป' : '(ว่าง)'}</td>
                   <td className="py-2 pr-4">
                     {p.is_available && !p.archived ? (
                       <Link to="/admin/products" className="text-brand-primary text-xs font-medium hover:underline">ไปใส่รูป →</Link>

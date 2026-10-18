@@ -59,13 +59,8 @@ describe('source invariants — สองตำแหน่งเข้า workf
     expect(entryIdx).toBeLessThan(popularIdx)
   })
 
-  it('Footer: มีปุ่ม Pre-order ที่ใช้ preOrderEntryPath ตัวเดียวกัน (ไม่คนละชุด)', () => {
-    expect(footerSrc).toContain('data-testid="footer-preorder-entry"')
-    expect(footerSrc).toContain('preOrderEntryPath(')
-    expect(footerSrc).toContain('to={preOrderPath}')
-    // Owner 2026-10-18: ปุ่มต้องพาเข้า "แท็บ" จองล่วงหน้า + กดซ้ำขณะอยู่หน้านั้นต้องเห็นผล
-    expect(footerSrc).toContain('withPreOrderTab(')
-    expect(footerSrc).toContain('showToast(')
+  it('Footer: ไม่มีปุ่ม Pre-order ค้างอยู่ (Owner 2026-10-18 สั่งนำปุ่มออกจากฟุตเตอร์ทุกหน้า)', () => {
+    expect(footerSrc).not.toContain('data-testid="footer-preorder-entry"')
   })
 
   it('HomePage entry ใช้ withPreOrderTab เดียวกัน และ MenuPage รับ ?tab= (เปิดแท็บให้ทันที)', () => {

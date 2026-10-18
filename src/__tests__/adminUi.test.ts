@@ -132,8 +132,9 @@ describe('PHASE 7 — CNT-01 content approval gate', () => {
   it('saving a banner promotion routes it through the approval workflow', async () => {
     const { upsertPromotion } = await import('@/lib/bmbAdminApi_promotions')
     const { submitContentForApproval, listContentApprovals } = await import('@/lib/contentApproval')
-    const promo = await upsertPromotion({ id: '', name: 'Flash 10%', discount_type: 'percentage', discount_value: 10, min_order_amount: 100, is_active: true, is_banner: true })
-    expect(promo).toBeTruthy()
+    const res = await upsertPromotion({ id: '', name: 'Flash 10%', discount_type: 'percentage', discount_value: 10, min_order_amount: 100, is_active: true, is_banner: true })
+    expect(res.ok).toBe(true)
+    const promo = res.ok ? res.row : null
     const id = await submitContentForApproval('banner', promo!.name, promo!.description || '')
     expect(id).toBeTruthy()
     expect((await listContentApprovals()).some((r) => r.id === id && r.status === 'pending')).toBe(true)

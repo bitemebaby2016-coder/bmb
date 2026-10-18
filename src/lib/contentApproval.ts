@@ -17,6 +17,8 @@ export interface ContentApprovalRow {
   status: ContentApprovalStatus
   created_by: string
   created_at: string
+  image_url?: string | null
+  mascot?: string | null
 }
 
 /** Pure publish gate — the ONLY check content automation may use. */
@@ -24,12 +26,21 @@ export function canPublish(status: ContentApprovalStatus | undefined): boolean {
   return status === 'approved'
 }
 
-/** Submit content for human review (never auto-published). */
-export async function submitContentForApproval(contentType: ContentType, title: string, body = ''): Promise<string | null> {
+/** Submit content for human review (never auto-published). Rich content: body
+ *  (รายละเอียด), image_url (ลิงก์/รูปที่อัปโหลด) และ mascot (ท่ามาสคอต). */
+export async function submitContentForApproval(
+  contentType: ContentType,
+  title: string,
+  body = '',
+  imageUrl?: string,
+  mascot?: string,
+): Promise<string | null> {
   const { data, error } = await supabase.rpc('submit_content_for_approval', {
     p_content_type: contentType,
     p_title: title,
     p_body: body,
+    p_image_url: imageUrl ?? null,
+    p_mascot: mascot ?? null,
   })
   if (error) return null
   return (data as unknown as { id: string }).id ?? null
@@ -45,7 +56,7 @@ export async function reviewContent(id: string, decision: ContentApprovalStatus,
 export async function listContentApprovals(): Promise<ContentApprovalRow[]> {
   const { data, error } = await supabase
     .from('content_approvals')
-    .select('id,content_type,title,body,status,created_by,created_at')
+    .select('id,content_type,title,body,status,created_by,created_at,image_url,mascot')
     .order('created_at', { ascending: false })
     .limit(100)
   if (error) return []

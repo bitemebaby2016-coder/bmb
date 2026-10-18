@@ -181,7 +181,7 @@ export function DeliveryManagement() {
     try {
       const r = await upsertDriver(provName.trim(), provPhone.trim(), provVehicle.trim())
       if (r.ok) {
-        showToast('✅ บันทึกไรเดอร์แล้ว: ' + r.driver_id + ' (เบอร์ซ้ำ = อัปเดตตัวเดิม)', 'success')
+        showToast('✅ บันทึกไรเดอร์แล้ว (หากเบอร์ซ้ำ = อัปเดตข้อมูลเดิม)', 'success')
         setProvName(''); setProvPhone(''); setProvVehicle('')
         await load()
       } else {
@@ -199,7 +199,7 @@ export function DeliveryManagement() {
     try {
       const r = await linkDriverUser(driverId, userId)
       if (r.ok) {
-        showToast('✅ ผูกบัญชีสำเร็จ: ' + driverId + ' — ไรเดอร์ login ที่ /rider ได้เลย', 'success')
+        showToast('✅ ผูกบัญชีเรียบร้อย — ไรเดอร์เข้าใช้งานที่หน้า ไรเดอร์ ได้แล้ว', 'success')
         setLinkPick((p) => { const n = { ...p }; delete n[driverId]; return n })
         await load()
       } else {
