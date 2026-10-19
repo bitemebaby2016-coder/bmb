@@ -2,10 +2,29 @@
 
 > **สถานะงานปัจจุบันของโปรเจกต์ Bite Me Baby** ใช้แนบเข้าสู่ Context ตอนเริ่มแชทเสมอ
 
-**last_updated:** 2026-10-19 (รอบ REAL-TEST FIX)
-**phase:** แก้ตามผลทดสอบจริงรอบแรก — ปิดพร้อม commit+push (Owner อนุญาต)
-**current_focus:** แก้ 9 จุดจากหน้าทดสอบจริงครบแล้ว — เหลือ Owner ทดสอบซ้ำบน production
-**blocked_by:** ไม่มีฝั่งโค้ด — รอ Owner ยืนยันผลรอบ 2 + เริ่มขายจริงเมื่อพร้อม
+**last_updated:** 2026-10-19 (รอบ BACKEND-CAPABILITY-CLOSURE)
+**phase:** ปิด Capability Gaps ทั้งระบบ (Pickup/Print/POS/Finance/GCS Backup) — เหลือ Owner ทดสอบจริงบน production
+**current_focus:** migrations 127-130 + Web POS + print_jobs + รายงานรายวัน + daily-backup→GCS — ผ่าน lint/tests/build/SQL contract แล้ว
+**blocked_by:** (1) Owner ตั้ง GitHub secrets GCS_SERVICE_ACCOUNT_JSON + BMB_DATABASE_URL (2) apply migrations 127-130 ขึ้น production (3) สร้าง service account + share bucket bmb-db-backups-prod
+
+---
+
+## ⚡ TASK: BACKEND-CAPABILITY-CLOSURE-2026-10-19 — ปิดช่องว่างระบบหลังบ้านให้เหลือแค่ทดสอบจริง (คำสั่ง Owner 19 ต.ค.)
+- **STATUS: ✅ CLOSED (commit+push)**
+- **ขอบเขตที่ทำ (ไม่แตะ SelfPrint — คนละโปรเจค, ไม่สร้าง order/payment engine ใหม่):**
+  - **Customer Pickup (127):** `delivery_method='pickup'` + `pickup_code` 6 หลัก (auto trigger) + `picked_up_at/handed_by` + ค่าจัดส่ง 0 (นโยบาย Owner) + `create_pickup_order_i` (idempotent ผ่าน 124) + transition `ready_for_dispatch→delivered` สำหรับส่งมอบหน้าร้าน
+  - **Print (128):** `print_jobs` (requested→sent→acknowledged→printed|failed) + auto-enqueue ใบเสร็จ/คิวครัว + `printService.ts` (template 80mm ไทย) + `AdminPrintSettings` + browser-print fallback — **ไม่อ้างพิมพ์สำเร็จจนกว่า operator ยืนยัน**
+  - **Web POS + Staff + Shift (129):** role `staff` (CHECK ขยาย) + `is_staff()` + staff SELECT policies + `transition_order_status`/`confirm_offline_payment` ให้ staff + `shifts` + `open_shift/close_shift` (กระทบยอดเงินสดจาก paid orders เท่านั้น) + `pos_closeout_order` (เดิน transition ถูกกฎหมาย + ยืนยันชำระ) + `AdminPos.tsx`
+  - **Finance (130):** `get_daily_sales` (gross/net/paid/unpaid/refunded × payment method, แยก pickup) + `daily_closings` + `close_day` (idempotent) + `AdminReports.tsx` + CSV export (BOM) — **ไม่คำนวณกำไร (ต้นทุนยังไม่ครบ)**
+  - **GCS Daily Backup:** `scripts/gcsBackup.mjs` (pg_dump→gzip→GCS JSON API→re-download sha256 verify→retention 30 daily/12 monthly) + `.github/workflows/daily-backup.yml` (07:30 น. เวลาไทย + alert) — bucket `bmb-db-backups-prod`
+- **EVIDENCE:**
+  - **SQL: `ALL MIGRATIONS APPLIED CLEANLY (001-130)` บน PostgreSQL 17 (docker ephemeral)** ด้วย `e2e/ci/apply_all_migrations.sh` (preprocess+shims port จาก contract-tests.yml verbatim) — แก้ typo sed `COUNT\(\*\)` ที่ port ผิดจน replay ได้ครบ
+  - **Functional smoke (DB จริง):** pickup fee=0 ✓ · handover transition: admin ผ่าน/ลูกค้าถูกบล็อก/pending→delivered ยังบล็อก ✓ · pickup code 6 หลัก ✓ · is_staff fail-closed ✓ · role CHECK รับ staff ปฏิเสธ cashier ✓ · print_jobs/shifts/daily_closings มีจริง ✓ · create_pickup_order_i ปฏิเสธ payment ผิด ✓ · mark_print_job ต้อง auth ✓
+  - **SQL contract:** `e2e/contracts_127_130.sql` (ROLLBACK) ผ่านบน PG17 + เพิ่ม step ใน `contract-tests.yml`
+  - **vitest:** printTemplates 7 · pickupRouting 6 · gcsBackupHelpers 6 = 19 tests ใหม่ผ่าน + ชุดเดิมทั้งหมด (ดูรอบ commit)
+  - **lint** = 0 (393 ไฟล์) · **tsc** = 0 · **build** = 0
+- **งานที่เหลือ = Owner เท่านั้น:** ตั้ง secrets 2 ตัวใน GitHub · apply migration 127-130 ขึ้น production · สร้าง service account ให้สิทธิ์ Object Admin บน bucket · ทดสอบจริง (ลูกค้า/ไรเดอร์/POS/พิมพ์/ปิดยอด/backup)
+- **DEFERRED (แจ้งไว้ชัด):** POS รับออเดอร์ delivery (ต้องมี geocoding/แผนที่ฝั่งพนักงาน — ปัจจุบัน POS = ขายหน้าร้าน/รับที่ร้าน), ESC/POS raw transport (ใช้ browser print ก่อน), storage-objects backup (ต่อจาก DB backup), profit reporting (รอต้นทุนครบ)
 
 ---
 

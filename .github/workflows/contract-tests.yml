@@ -211,3 +211,15 @@ jobs:
             echo "::error file=e2e/ci/concurrency_124.sh::$msg"
             exit 1
           fi
+
+      - name: Contract 127-130 — pickup / print_jobs / staff-shift / finance (ROLLBACK)
+        run: |
+          set +e
+          out=$(psql -v ON_ERROR_STOP=1 -f e2e/contracts_127_130.sql 2>&1); rc=$?
+          printf '%s\n' "$out"
+          if [ $rc -ne 0 ]; then
+            msg=$(printf '%s\n' "$out" | grep -m1 'ERROR:' || echo "rc=$rc")
+            echo "::error file=e2e/contracts_127_130.sql::$msg"
+            exit 1
+          fi
+          echo "Contract 127-130 OK — pickup/print/staff/finance gates hold"

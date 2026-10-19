@@ -70,6 +70,10 @@ const AdminContentApprovals = lazy(() => import('./pages/admin/AdminContentAppro
 const AdminPaymentExceptions = lazy(() => import('./pages/admin/AdminPaymentExceptions').then(m => ({ default: m.AdminPaymentExceptions })))
 const AdminPortfolioPage = lazy(() => import('./pages/admin/AdminPortfolio').then(m => ({ default: m.AdminPortfolioPage })))
 const AdminAiStudio = lazy(() => import('./pages/admin/AdminAiStudio').then(m => ({ default: m.AdminAiStudio })))
+// BACKEND-CAPABILITY-CLOSURE-2026-10-19: Web POS + Finance reports + Printer settings
+const AdminPos = lazy(() => import('./pages/admin/AdminPos').then(m => ({ default: m.AdminPos })))
+const AdminReports = lazy(() => import('./pages/admin/AdminReports').then(m => ({ default: m.AdminReports })))
+const AdminPrintSettings = lazy(() => import('./pages/admin/AdminPrintSettings').then(m => ({ default: m.AdminPrintSettings })))
 
 // Lazy loaded: Info pages (6 pages)
 const AboutPage = lazy(() => import('./pages/AboutPage').then(m => ({ default: m.AboutPage })))
@@ -134,7 +138,7 @@ function AdminRoute({ children }: { children: React.ReactNode }) {
   if (isInitializing) return <LoadingSpinner />
   if (!isAuthenticated) return <Navigate to="/login" replace />
   if (checking) return <LoadingSpinner />
-  if (role !== 'admin') return <Navigate to="/" replace />
+  if (role !== 'admin' && role !== 'staff') return <Navigate to="/" replace />
 
   return <>{children}</>
 }
@@ -251,6 +255,9 @@ export default function App() {
         <Route path="/admin/rounds" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminNav><AdminRounds /></AdminNav></Layout></AdminRoute></Suspense>} />
         <Route path="/admin/customers" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminNav><AdminCustomers /></AdminNav></Layout></AdminRoute></Suspense>} />
         <Route path="/admin/settings" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminNav><AdminSettings /></AdminNav></Layout></AdminRoute></Suspense>} />
+        <Route path="/admin/pos" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminNav><AdminPos /></AdminNav></Layout></AdminRoute></Suspense>} />
+        <Route path="/admin/reports" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminNav><AdminReports /></AdminNav></Layout></AdminRoute></Suspense>} />
+        <Route path="/admin/print-settings" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminNav><AdminPrintSettings /></AdminNav></Layout></AdminRoute></Suspense>} />
         <Route path="/admin/media" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminNav><AdminMedia /></AdminNav></Layout></AdminRoute></Suspense>} />
         <Route path="/admin/errors" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminNav><AdminErrorsPage /></AdminNav></Layout></AdminRoute></Suspense>} />
         <Route path="/admin/mascot" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminNav><MascotSettingsPage /></AdminNav></Layout></AdminRoute></Suspense>} />

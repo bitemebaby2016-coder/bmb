@@ -151,6 +151,8 @@ export function CheckoutPage() {
   const [feeSource, setFeeSource] = useState<'server' | 'local-mirror' | 'error' | null>(null)
   const [leadDays, setLeadDays] = useState(1) // DISPLAY ONLY — server policy enforces the real lead
   const [paymentMethod, setPaymentMethod] = useState<'promptpay_qr' | 'cash_on_delivery' | 'credit_card'>('promptpay_qr')
+  // ✅ 127 pickup fulfillment: 'delivery' (เดิม) | 'pickup' (รับที่ร้าน, ค่าส่ง 0)
+  const [fulfillment, setFulfillment] = useState<'delivery' | 'pickup'>('delivery')
   // CR-2 P0: delivery point = candidate until the customer confirms it.
   // Trusted prefill ONLY (saved provenance gps/manual); kitchen/IP never pre-fill.
   const [deliveryAddress, setDeliveryAddress] = useState<{
@@ -283,6 +285,13 @@ export function CheckoutPage() {
   const feeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   useEffect(() => {
     if (!customer) return // guest redirect above — skip fee RPC (no 401 noise)
+    if (fulfillment === 'pickup') {
+      // ✅ 127 PICKUP POLICY: delivery_fee = 0 — no fee RPC, no address needed.
+      setServerFee(0)
+      setFeeSource('server')
+      useCartStore.getState().setDeliveryFee(0)
+      return
+    }
     if (deliveryAddress.latitude == null || deliveryAddress.longitude == null) {
       // no candidate point yet — do NOT call the RPC (would only error)
       setServerFee(null)
@@ -310,7 +319,7 @@ export function CheckoutPage() {
       active = false
       if (feeTimerRef.current) clearTimeout(feeTimerRef.current)
     }
-  }, [deliveryAddress.latitude, deliveryAddress.longitude, itemCount, customer, feeRetry])
+  }, [deliveryAddress.latitude, deliveryAddress.longitude, itemCount, customer, feeRetry, fulfillment])
 
   // order_policy display values (lead days for the PRE_ORDER date picker).
   useEffect(() => {
@@ -416,12 +425,13 @@ export function CheckoutPage() {
     if (items.length === 0) return
     // CR-2 P0: a confirmed, trusted delivery coordinate is REQUIRED before ordering.
     // (deliveryPointStatus keeps source/provenance separate from trust status.)
-    if (!deliveryPointStatus(deliveryAddress).orderable) {
+    // ✅ 127: pickup orders collect at the store — no delivery point required.
+    if (fulfillment === 'delivery' && !deliveryPointStatus(deliveryAddress).orderable) {
       showToast('กรุณาระบุและยืนยันตำแหน่งจัดส่งบนแผนที่ก่อนสั่งซื้อ', 'error')
       return
     }
     if (!selectedRoundId) {
-      showToast('กรุณาเลือกรอบการจัดส่ง', 'error')
+      showToast(fulfillment === 'pickup' ? 'กรุณาเลือกช่วงเวลารับอาหาร' : 'กรุณาเลือกรอบการจัดส่ง', 'error')
       return
     }
 
@@ -520,9 +530,11 @@ export function CheckoutPage() {
         options: item.customizations,
       })),
       delivery_round_id: selectedRoundId,
-      delivery_method: 'self_delivery',
-      delivery_address: deliveryAddress.detail,
+      // ✅ 127: pickup => dedicated canonical path (create_pickup_order_i, fee=0)
+      delivery_method: fulfillment === 'pickup' ? 'pickup' : 'self_delivery',
+      delivery_address: fulfillment === 'pickup' ? 'รับที่ร้าน (Pickup)' : deliveryAddress.detail,
       // guarded above: confirmed + trusted coords are non-null at this point
+      // (pickup path ignores coords — server derives the pickup point)
       dropoff_latitude: deliveryAddress.latitude as number,
       dropoff_longitude: deliveryAddress.longitude as number,
       customer_name: customer?.name || 'Guest',
@@ -934,6 +946,36 @@ export function CheckoutPage() {
                 </label>
               )
             })}
+          </div>
+        )}
+      </div>
+
+      {/* ✅ 127: Fulfillment mode — Delivery vs Customer Pickup */}
+      <div className="card mb-6">
+        <h3 className="font-bold text-brand-accent mb-4">🛵 วิธีรับสินค้า</h3>
+        <div className="grid grid-cols-2 gap-3">
+          <button
+            type="button"
+            data-testid="fulfillment-delivery"
+            onClick={() => setFulfillment('delivery')}
+            className={`p-3 rounded-lg border-2 text-left transition-colors ${fulfillment === 'delivery' ? 'border-brand-primary bg-orange-50' : 'border-brand-border hover:border-brand-primary/50'}`}
+          >
+            <div className="font-medium text-slate-900">จัดส่งถึงที่</div>
+            <div className="text-xs text-slate-600">ค่าจัดส่งตามระยะทาง</div>
+          </button>
+          <button
+            type="button"
+            data-testid="fulfillment-pickup"
+            onClick={() => setFulfillment('pickup')}
+            className={`p-3 rounded-lg border-2 text-left transition-colors ${fulfillment === 'pickup' ? 'border-brand-primary bg-orange-50' : 'border-brand-border hover:border-brand-primary/50'}`}
+          >
+            <div className="font-medium text-slate-900">รับที่ร้าน</div>
+            <div className="text-xs text-slate-600">ค่าจัดส่งฟรี · รับตามช่วงเวลาที่เลือก</div>
+          </button>
+        </div>
+        {fulfillment === 'pickup' && (
+          <div className="mt-3 text-sm text-slate-700 bg-orange-50 border border-orange-200 rounded-lg p-3" data-testid="pickup-hint">
+            รับอาหารที่หน้าร้านตามช่วงเวลาที่เลือก — ระบบจะออก <b>รหัสรับอาหาร</b> ให้แสดงตอนรับ (ค่าจัดส่ง 0 บาท)
           </div>
         )}
       </div>

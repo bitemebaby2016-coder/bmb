@@ -98,6 +98,13 @@ export function PaymentConfirmationPage() {
           <div className="flex justify-between"><span>Customer</span><span>{order.customer_name}</span></div>
           <div className="flex justify-between"><span>Phone</span><span>{order.customer_phone}</span></div>
           <div className="flex justify-between"><span>Payment</span><span>{order.payment_method === 'promptpay_qr' ? 'PromptPay (โอนผ่าน QR ของร้าน — ยืนยันโดยแอดมิน)' : order.payment_method === 'credit_card' ? `บัตรเครดิต/เดบิต (${isOmiseConfigured() ? 'Omise' : 'Stripe'})` : 'เงินสดตอนรับของ'}</span></div>
+          {order.delivery_method === 'pickup' && (
+            <div className="rounded-lg border-2 border-brand-primary bg-orange-50 p-3 mt-2 text-center" data-testid="pickup-code-block">
+              <div className="text-sm text-slate-700">รหัสรับอาหาร (แสดงที่หน้าร้าน)</div>
+              <div className="text-3xl font-bold tracking-[0.3em] text-slate-900">{order.pickup_code || '------'}</div>
+              <div className="text-xs text-slate-600 mt-1">รับที่ร้าน · ค่าจัดส่งฟรี</div>
+            </div>
+          )}
           {/* Owner fix 2026-10-19: โชว์การคำนวณทั้งหมด — เดิมมีแค่ Total ทำให้ยอดดู
               "เหมือนมีส่วนลดลอย ๆ" (ส่วนลด/ค่าส่งถูกหักจริงโดย server แต่ไม่แสดง) */}
           <div className="flex justify-between"><span>สินค้า</span><span>฿{Number(order.subtotal ?? 0).toFixed(2)}</span></div>

@@ -39,6 +39,9 @@ export interface OrderInput {
   // WAVE 5A (migration 124): idempotency key — one per submission; reused on a
   // retry of the SAME payload (orderSubmitKey.ts ring). Omitting = legacy path.
   client_submit_key?: string
+  // 129 POS / 048 channel attribution: 'POS' for counter sales, 'WEB' default
+  source_channel?: string
+  external_ref_id?: string
   // intentionally NO price/subtotal/discount/delivery_fee/total_amount
 }
 
@@ -59,6 +62,8 @@ export interface OrderResult {
   // WAVE 5A (124 R3): true = idempotent replay of a previous submit — the same
   // order identity + CURRENT status, no new order was created.
   replay?: boolean
+  // ✅ 127 pickup: server-generated collection code (pickup orders only)
+  pickup_code?: string | null
 }
 
 export interface OrderForm {
@@ -99,6 +104,10 @@ export interface OrderForm {
   // ✅ Owner feature 2026-10-08: customer identity for delivery-place photo lookup
   // (orders.customer_ref = auth user id; select('*') returns it at runtime)
   customer_ref?: string
+  // ✅ 127 pickup fulfillment: server-generated collection code + handover stamp
+  pickup_code?: string | null
+  picked_up_at?: string | null
+  handed_by?: string | null
   created_at: string
   updated_at: string
 }
@@ -281,11 +290,16 @@ export function orderInputFingerprint(input: OrderInput): string {
     mode: input.order_mode ?? 'SAME_DAY',
     date: input.scheduled_date ?? null,
     branch: input.branch_id ?? null,
+    channel: input.source_channel ?? null,
+    extref: input.external_ref_id ?? null,
   })
 }
 
-export async function createOrder(input: OrderInput): Promise<OrderResult | null> {
-  const payload = {
+/** Build the RPC payload shared by the delivery + pickup creation paths.
+ *  Optional channel-attribution keys are included ONLY when actually set —
+ *  the PWA payload stays byte-identical to the pre-129 contract. */
+function buildCreatePayload(input: OrderInput) {
+  return {
     p_items: input.items.map((it) => ({
       product_id: it.product_id,
       quantity: it.quantity,
@@ -293,25 +307,43 @@ export async function createOrder(input: OrderInput): Promise<OrderResult | null
       special_request: it.special_request ?? '',
     })),
     p_delivery_round_id: input.delivery_round_id,
-    p_delivery_method: input.delivery_method ?? 'self_delivery',
-    p_delivery_address: input.delivery_address ?? '',
-    p_dropoff_latitude: input.dropoff_latitude,
-    p_dropoff_longitude: input.dropoff_longitude,
     p_customer_name: input.customer_name,
     p_customer_phone: input.customer_phone ?? '',
     p_payment_method: input.payment_method ?? 'promptpay_qr',
     p_special_instructions: input.special_instructions ?? '',
     p_promotion_code: input.promotion_code ?? undefined,
-    p_distance_km: input.distance_km ?? undefined,
-    // ✅ Phase 3B (migration 025 v3): canonical mode + scheduled date — the server
-    // remains the authority (mode gate / cutoff / lead time / round-date invariant).
     p_order_mode: input.order_mode ?? 'SAME_DAY',
-    
-    // TEN-07: optional branch_id for multi-branch routing from public checkout or admin context
     p_scheduled_date: input.scheduled_date ?? undefined,
     p_branch_id: input.branch_id ?? null,
-    // WAVE 5A (124): omitted/NULL = legacy path; non-null = idempotent submit
     p_client_submit_key: input.client_submit_key ?? undefined,
+    ...(input.source_channel ? { p_source_channel: input.source_channel } : {}),
+    ...(input.external_ref_id ? { p_external_ref_id: input.external_ref_id } : {}),
+  }
+}
+
+export async function createOrder(input: OrderInput): Promise<OrderResult | null> {
+  // 127 pickup: dedicated canonical path (fee=0 + pickup_code server-side).
+  if (input.delivery_method === 'pickup') {
+    const { data, error } = await supabase.rpc('create_pickup_order_i', {
+      ...buildCreatePayload(input),
+      p_promotion_code: input.promotion_code ?? undefined,
+    })
+    if (error) {
+      const idem = extractIdempotencyErrorCode(error)
+      if (idem) throw new OrderSubmitError(idem)
+      console.error('[createOrder:pickup] RPC error:', error)
+      return null
+    }
+    return data as OrderResult
+  }
+
+  const payload = {
+    ...buildCreatePayload(input),
+    p_delivery_method: input.delivery_method ?? 'self_delivery',
+    p_delivery_address: input.delivery_address ?? '',
+    p_dropoff_latitude: input.dropoff_latitude,
+    p_dropoff_longitude: input.dropoff_longitude,
+    p_distance_km: input.distance_km ?? undefined,
   }
   const { data, error } = await supabase.rpc('create_order_with_items_i', payload)
   if (error) {

@@ -1,0 +1,77 @@
+# ============================================
+# BMB — daily-backup (BACKEND-CAPABILITY-CLOSURE-2026-10-19)
+#
+# Daily PostgreSQL logical backup -> Google Cloud Storage bucket
+# `bmb-db-backups-prod` (GCS JSON API, service-account auth).
+#
+# Trigger: 07:30 Asia/Bangkok daily (cron '30 0 * * *' UTC) + manual dispatch.
+# Integrity: scripts/gcsBackup.mjs re-downloads + sha256-verifies every upload
+#   before success; manifest.json is the audit surface.
+# Retention: 30 daily / 12 monthly (first-of-month) — enforced in-script.
+# Failure behavior: job FAILS loudly (GitHub notification + ::error) — Owner
+#   must see missed backups. Optional LINE alert if LINE_NOTIFY_TOKEN is set.
+#
+# REQUIRED REPO SECRETS (Owner action — never committed):
+#   GCS_SERVICE_ACCOUNT_JSON  = service-account JSON (GCS Object Admin on bucket)
+#   BMB_DATABASE_URL          = Supabase pooler connection string (pg_dump)
+# Optional:
+#   LINE_NOTIFY_TOKEN         = LINE notify token for failure alerts
+# ============================================
+
+name: daily-backup
+
+on:
+  schedule:
+    - cron: '30 0 * * *'   # 07:30 Asia/Bangkok
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: 'backup | verify'
+        required: false
+        default: 'backup'
+
+concurrency:
+  group: bmb-daily-backup
+  cancel-in-progress: false
+
+permissions: {}
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      GCS_BUCKET_NAME: bmb-db-backups-prod
+      GCS_SERVICE_ACCOUNT_JSON: ${{ secrets.GCS_SERVICE_ACCOUNT_JSON }}
+      BMB_DATABASE_URL: ${{ secrets.BMB_DATABASE_URL }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Install pg_dump client
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq postgresql-client
+
+      - name: Daily dump + upload + integrity verify
+        if: github.event.inputs.mode != 'verify'
+        run: node scripts/gcsBackup.mjs
+
+      - name: Verify latest manifest integrity
+        if: github.event.inputs.mode == 'verify'
+        run: node scripts/gcsBackup.mjs --verify
+
+      - name: Alert on failure (optional LINE)
+        if: failure()
+        env:
+          LINE_NOTIFY_TOKEN: ${{ secrets.LINE_NOTIFY_TOKEN }}
+        run: |
+          echo "::error::daily-backup FAILED — สำรองข้อมูลไม่สำเร็จ ตรวจสอบ Actions log ทันที"
+          if [ -n "$LINE_NOTIFY_TOKEN" ]; then
+            curl -sS -X POST https://notify-api.line.me/api/notify \
+              -H "Authorization: Bearer $LINE_NOTIFY_TOKEN" \
+              --data-urlencode "message=[BMB] daily-backup FAILED (${GITHUB_RUN_ID}) — ต้องตรวจสอบทันที" || true
+          fi

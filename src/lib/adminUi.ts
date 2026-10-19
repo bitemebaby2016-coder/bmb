@@ -25,6 +25,9 @@ export const ADMIN_NAV_ITEMS: AdminNavItem[] = [
   { to: '/admin/audit-log', label: 'บันทึกการทำงาน', icon: '\uD83D\uDCCB' },
   { to: '/admin/asset-audit', label: 'ตรวจรูปสินค้า', icon: '\uD83D\uDD0D' },
 { to: '/admin/payment-exceptions', label: 'การชำระเงิน', icon: '\uD83D\uDCB3' },
+  { to: '/admin/pos', label: 'POS หน้าร้าน', icon: '🧾' },
+  { to: '/admin/reports', label: 'รายงานการเงิน', icon: '📊' },
+  { to: '/admin/print-settings', label: 'ตั้งค่าเครื่องพิมพ์', icon: '🖨️' },
   { to: '/admin/notifications', label: 'การแจ้งเตือน', icon: '\uD83D\uDD14' },
   { to: '/admin/route-optimization', label: 'เส้นทางจัดส่ง', icon: '\uD83D\uDDFA\uFE0F' },
   { to: '/admin/errors', label: 'ปัญหาระบบ', icon: '\uD83E\uDE79' },
@@ -64,6 +67,7 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
     label: '\u0E2D\u0E2D\u0E40\u0E14\u0E2D\u0E23\u0E4C \u0E41\u0E25\u0E30 \u0E04\u0E38\u0E13',
     items: [
       { to: '/admin/orders', label: 'ออเดอร์', icon: '\uD83D\uDCE6' },
+      { to: '/admin/pos', label: 'POS หน้าร้าน', icon: '🧾' },
       { to: '/admin/kitchen', label: 'ครัว/ผลิต', icon: '\uD83C\uDF73' },
       { to: '/admin/recipes', label: 'สูตรอาหาร', icon: '\uD83E\uDDEA' },
       { to: '/admin/rounds', label: 'รอบจัดส่ง', icon: '\uD83D\uDD50' },
@@ -97,6 +101,8 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
     label: '\u0E23\u0E30\u0E1A \u0E41\u0E25\u0E30 \u0E15\u0E23\u0E27\u0E08\u0E2A\u0E2D\u0E1A',
     items: [
       { to: '/admin/inventory', label: 'สต็อกวัตถุดิบ', icon: '\uD83E\uDD55' },
+      { to: '/admin/reports', label: 'รายงานการเงิน', icon: '📊' },
+      { to: '/admin/print-settings', label: 'ตั้งค่าเครื่องพิมพ์', icon: '🖨️' },
       { to: '/admin/delivery', label: 'จัดส่ง', icon: '\uD83D\uDED5' },
       { to: '/admin/route-optimization', label: 'เส้นทางจัดส่ง', icon: '\uD83D\uDDFA\uFE0F' },
       { to: '/admin/audit-log', label: 'บันทึกการทำงาน', icon: '\uD83D\uDCCB' },
@@ -114,8 +120,9 @@ export function shouldShowAdminLink(role: string | null | undefined, email?: str
   // F-01 FIX (Wave 1): legacy email fallback (admin@bmb.co.th / owner@bmb.co.th)
   // ถูกถอดออกตาม Owner Decision 12 (ROTATE & REVOKE public credential) —
   // สิทธิ์ admin ต้องอิง profiles.role จาก DB ผ่าน RLS เท่านั้น ห้ามอิง email ฝั่ง client
+  // 129: staff (POS/kitchen counter) เห็นลิงก์แอดมินได้เช่นกัน — RLS จำกัดข้อมูลตาม role
   void email
-  return role === 'admin'
+  return role === 'admin' || role === 'staff'
 }
 
 /** Normalize a category heading name into a URL-safe slug. */
