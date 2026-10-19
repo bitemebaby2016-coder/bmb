@@ -45,6 +45,11 @@ export function sha256Hex(data) {
   return createHash('sha256').update(data).digest('hex')
 }
 
+/** GitHub Actions annotation — แสดงบนหน้า run ได้โดยไม่ต้องเปิด log (log ต้อง sign-in) */
+export function notice(msg) {
+  if (process.env.GITHUB_ACTIONS === 'true') console.log(`::notice::${msg}`)
+}
+
 /**
  * Normalize + validate the pg connection string before use (fail closed).
  * Accepts libpq URI (postgres:// or postgresql://) or keyword/value format
@@ -243,6 +248,7 @@ export async function main(argv = process.argv.slice(2)) {
     for (const d of dumps.slice(-5)) console.log(`[dbBackup]   - ${d.name} (${d.size} B)`)
 
     console.log('[dbBackup] VERIFY OK — manifest hashes match, .sql.gz present, bucket private')
+  notice('daily-backup VERIFY OK — manifest hashes match, .sql.gz present, bucket private')
     return
   }
 
@@ -293,6 +299,7 @@ export async function main(argv = process.argv.slice(2)) {
     console.log(`[dbBackup] retention deleted ${d}`)
   }
   console.log(`[dbBackup] BACKUP OK ${name} · verified size+sha256 · retention pruned ${doomed.length}`)
+  notice(`daily-backup OK — ${name} · sha256=${sha} · gzip ${gz.length} B · retention pruned ${doomed.length}`)
 }
 
 // run as CLI only (importable for tests without side effects)

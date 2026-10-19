@@ -24,13 +24,14 @@ Task: `BACKEND-CAPABILITY-CLOSURE-2026-10-19` · Scope: ปิดช่องว
 - vitest ทั้ง suite ผ่าน · `tsc --noEmit` = 0 · `eslint` = 0 · `vite build` = 0
 - **Production (2026-10-19):** apply **migrations 126–130** ขึ้น production สำเร็จ (126 ค้างอยู่ด้วย — track เดิมถึง 125) + บันทึก `schema_migrations` ครบ · verify บน production: tables `print_jobs/shifts/daily_closings` · functions 9 ตัว · enum `pickup` · คอลัมน์ pickup · role CHECK รับ `staff` · RLS 4 policies · functional smoke (fee=0, handover matrix, fail-closed) ผ่าน
 - **Bucket `db-backups`:** Private + file_size_limit 50MB (ตั้งผ่าน Storage API) · pipeline test จริง (stub dump → upload → re-download sha256 → `--verify` ผ่าน → ลบไฟล์ทดสอบจน bucket สะอาด)
+- **`daily-backup` run #6 (2026-10-19 ~20:02 น. เวลาไทย): ✅ SUCCESS จริงบน production** — pg_dump binary 17.11 (PGDG) · สร้าง `db/bmb-db-*.sql.gz` + `manifest.json` ใน bucket จริง · step "Post-backup verify" (manifest hashes + .sql.gz presence + private bucket) ผ่านแบบบังคับ · **ลำดับการแก้ 5 รอบจนเขียว:** (1) log ต้อง sign-in → ระบบ annotation (2) secret ไม่ใช่ URI → validator fail-closed (3) Direct connection IPv6-only → Network unreachable → ใช้ **Session pooler** `aws-0-ap-northeast-2.pooler.supabase.com:5432` (4) Ubuntu pg_wrapper เลือก pg_dump 16.15 vs server 17.6 → **pin binary `/usr/lib/postgresql/17/bin/pg_dump`** + docker postgres:17 fallback (5) เขียว
 
 ## 3. สิ่งที่ Owner ต้องทำ (สถาปัตยกรรมใหม่ — ไม่มี GCP แล้ว)
 
-1. **GitHub Secrets 2 ตัว (ต้องมี):** `SUPABASE_SERVICE_ROLE_KEY` (ค่า `sb_secret_…` จาก Supabase Dashboard → Settings → API) และ `BMB_DATABASE_URL` (connection string ของ pooler สำหรับ pg_dump) · เลือกตั้ง `LINE_NOTIFY_TOKEN` สำหรับแจ้งเตือน backup ล้มเหลว
+1. ~~GitHub Secrets 2 ตัว~~ → **ตั้งแล้ว + ใช้จริงสำเร็จ (run #6 ผ่าน):** `SUPABASE_SERVICE_ROLE_KEY` (ค่า `sb_secret_…` จาก Supabase Dashboard → Settings → API) และ `BMB_DATABASE_URL` = **URI ของ Session pooler** (`postgresql://postgres.<ref>:<pass>@aws-0-ap-northeast-2.pooler.supabase.com:5432/postgres` — ไม่ใช่ Direct tab ที่เป็น IPv6) · เลือกตั้ง `LINE_NOTIFY_TOKEN` สำหรับแจ้งเตือน backup ล้มเหลว
 2. **ลบ secret เดิม `GCS_SERVICE_ACCOUNT_JSON`** ทิ้งได้เลย (เลิกใช้แล้ว) — workflow ใหม่ไม่อ้างถึง GCP เลย
 3. ~~Apply migrations~~ → **ทำแล้ว 2026-10-19** (126–130 ขึ้น production + verify ครบ)
-4. **ทดสอบจริงตาม Checklist:** `docs/BMB_OWNER_PRODUCTION_TEST_CHECKLIST_2026-10-19.md` (PWA pickup · POS เงินสด+ปิดกะ · พิมพ์ใบเสร็จ/คิวครัว · ปิดยอดรายวัน+CSV · ฟีเจอร์อื่นครบ · trigger `daily-backup` ด้วยมือ 1 ครั้ง + ตรวจไฟล์ใน bucket + `--verify`)
+4. **ทดสอบจริงตาม Checklist:** `docs/BMB_OWNER_PRODUCTION_TEST_CHECKLIST_2026-10-19.md` (PWA pickup · POS เงินสด+ปิดกะ · พิมพ์ใบเสร็จ/คิวครัว · ปิดยอดรายวัน+CSV · ฟีเจอร์อื่นครบ · ~~trigger `daily-backup`~~ → **run #6 ผ่านแล้ว** — เหลือหมวดทดสอบ UI/POS/ปิดยอดเท่านั้น)
 
 ## 4. ขอบเขตที่ยังไม่ทำ (DEFERRED — แจ้งตรงไปตรงมา)
 

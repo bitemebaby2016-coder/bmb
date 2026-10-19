@@ -2,15 +2,15 @@
 
 > **สถานะงานปัจจุบันของโปรเจกต์ Bite Me Baby** ใช้แนบเข้าสู่ Context ตอนเริ่มแชทเสมอ
 
-**last_updated:** 2026-10-19 (รอบ BACKUP→SUPABASE STORAGE + APPLY MIGRATIONS)
-**phase:** Backup refactor สำเร็จ + migrations 126-130 ขึ้น production แล้ว — เหลือ Owner trigger daily-backup + ทดสอบจริงตาม checklist
-**current_focus:** daily-backup ย้ายจาก GCS → Supabase Storage bucket `db-backups` (private) · production verify ครบ · เอกสาร checklist ไทยพร้อม
-**blocked_by:** (1) GitHub secrets: ต้องมี SUPABASE_SERVICE_ROLE_KEY + BMB_DATABASE_URL (ลบ GCS_SERVICE_ACCOUNT_JSON ได้) (2) Owner กด Run workflow 1 ครั้ง (3) ทดสอบจริงตาม docs/BMB_OWNER_PRODUCTION_TEST_CHECKLIST_2026-10-19.md
+**last_updated:** 2026-10-19 (รอบปิดงาน BACKUP→SUPABASE STORAGE — daily-backup เขียวจริงแล้ว)
+**phase:** ปิดงานรอบ capability closure + backup refactor สมบูรณ์ — migrations 126-130 บน production · daily-backup LIVE บน Supabase Storage (run #6 ผ่านจริง) · เหลือ Owner ทดสอบจริงตาม checklist เท่านั้น
+**current_focus:** เสร็จแล้ว — รอ Owner รัน docs/BMB_OWNER_PRODUCTION_TEST_CHECKLIST_2026-10-19.md (8 หมวด) · daily-backup จะรันเอง 07:30 น. ทุกวัน (cron)
+**blocked_by:** ไม่มี — เหลือเพียงการทดสอบจริงโดย Owner (ระบบหลังบ้านปิดช่องว่างครบแล้ว)
 
 ---
 
 ## ⚡ TASK: BACKUP-TO-SUPABASE-STORAGE-2026-10-19 — ย้าย Backup พ้น GCP + apply migrations ขึ้นโปรดักชั่น (คำสั่ง Owner 19 ต.ค.)
-- **STATUS: ✅ CLOSED (เหลือ manual trigger 1 คลิก + commit+push รอบสุดท้าย)**
+- **STATUS: ✅ CLOSED สมบูรณ์ — daily-backup run #6 เขียวจริงบน production (19 ต.ค. ~20:02 น. เวลาไทย, commit 5fb1447)**
 - **เหตุผล:** GCP Organization Policy "Secure by Default" บล็อกการสร้าง Service Account Key JSON → ตัด GCP ออกทั้งระบบ
 - **สิ่งที่ทำ:**
   - **`scripts/dbBackup.mjs`** (แทน gcsBackup.mjs ที่ลบแล้ว): pg_dump→gzip→**Supabase Storage bucket `db-backups`** (REST + service-role key `sb_secret_…` ต้องส่ง **2 headers** apikey+Authorization) · **size+sha256 ก่อน upload** + **ดาวน์โหลดกลับมาเทียบ byte-for-byte หลัง upload** (fail closed) · `--verify` ตรวจ manifest hash + มีไฟล์ .sql.gz + **bucket ต้องเป็น private** · retention 30 daily/12 monthly เดิม · `PGDUMP_CMD` override (คู่มือ docker pg_dump)
@@ -18,7 +18,7 @@
   - **Production:** bucket `db-backups` = **Private + limit 50MB** แล้ว · **apply migrations 126–130** (126 ค้างอยู่ด้วย — track เดิมถึง 125) + บันทึก schema_migrations ครบ · verify: tables/functions/enum/columns/RLS/functional smoke ผ่านทั้งหมด
   - **Pipeline test จริงก่อน push:** stub dump → upload → verify hash → `--verify` ผ่าน (manifest hash ตรง + .sql.gz อยู่จริง + bucket private) → ลบไฟล์ทดสอบจน bucket สะอาด
   - **เอกสาร:** checklist ไทย `docs/BMB_OWNER_PRODUCTION_TEST_CHECKLIST_2026-10-19.md` (8 หมวด: pickup/delivery/POS/พิมพ์/ปิดยอด/ชำระเงิน/หลังบ้าน/backup + กติกาข้อมูล) · อัปเดต closure doc
-- **EVIDENCE:** vitest dbBackupHelpers 8/8 (เพิ่ม size gate tests) · lint/tsc/build ผ่านรอบ commit · production query verify ครบ (enum pickup, role CHECK staff, RLS 4 policies, fee=0, handover matrix)
+- **EVIDENCE:** vitest dbBackupHelpers 8/8 (เพิ่ม size gate tests) · lint/tsc/build ผ่านรอบ commit · production query verify ครบ (enum pickup, role CHECK staff, RLS 4 policies, fee=0, handover matrix) · **run #6 SUCCESS:** secret shape len=114 (Session pooler URI) · pg_dump binary 17.11 (PGDG, bypass pg_wrapper ที่จะเลือก 16.15) · ไฟล์จริง `db/bmb-db-*.sql.gz` + `manifest.json` ใน bucket · post-backup verify (hashes+.sql.gz+private) ผ่านบังคับ · แก้ครบ 5 รอบ: annotation→validator→Session pooler→pin pg_dump 17→เขียว
 - **หมายเหตุสัตย์จริง:** `npx supabase db push` ติดที่ต้องใช้รหัสผ่าน DB (ไม่มีในเครื่อง) → apply ผ่าน **Supabase Management API** (access token ของ Owner เอง) = ผลเทียบเท่า (SQL เดียวกัน + บันทึก history แบบเดียวกัน) · ถ้าต้องการรันคำสั่งเดิมเป๊ะ: ใส่รหัสผ่านลง `.dbpw.tmp` แล้วรันได้ทันที (ระบบจะขึ้น "already up to date")
 
 ---
