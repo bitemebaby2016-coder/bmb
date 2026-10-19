@@ -78,8 +78,11 @@ jobs:
             echo "::error::SUPABASE_SERVICE_ROLE_KEY is EMPTY — ตั้งค่า Repository secret ชื่อ SUPABASE_SERVICE_ROLE_KEY"
           fi
 
-      # pg_dump client major MUST be >= server major (Supabase = PostgreSQL 17.6)
-      - name: Install pg_dump 17 (PGDG, fallback to distro client)
+      # pg_dump client major MUST be >= server (Supabase = PostgreSQL 17.6.1).
+      # Use the REAL versioned binary (bypass Ubuntu's pg_wrapper version
+      # dispatch) and fall back to docker postgres:17-alpine — never a distro
+      # client that can be older than the server.
+      - name: Install pg_dump 17 (PGDG binary; docker fallback)
         run: |
           set +e
           sudo apt-get update -qq
@@ -88,12 +91,15 @@ jobs:
           sudo curl -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc
           echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" | sudo tee /etc/apt/sources.list.d/pgdg.list
           sudo apt-get update -qq
-          if sudo apt-get install -y -qq postgresql-client-17; then
-            echo "installed PGDG postgresql-client-17"; pg_dump --version; exit 0
+          sudo apt-get install -y -qq postgresql-client-17
+          echo "::notice::runner=$(lsb_release -ds) pg_wrapper=$( (pg_dump --version 2>/dev/null) || echo none ) clients=$( (ls /usr/lib/postgresql 2>/dev/null | tr '\n' ' ') || echo none )"
+          if [ -x /usr/lib/postgresql/17/bin/pg_dump ]; then
+            echo "PGDUMP_CMD=/usr/lib/postgresql/17/bin/pg_dump" >> "$GITHUB_ENV"
+            echo "::notice::pg_dump binary=$(/usr/lib/postgresql/17/bin/pg_dump --version)"
+            exit 0
           fi
-          echo "::warning::PGDG postgresql-client-17 unavailable (distro ใหม่กว่า PGDG) — fallback ไป distro postgresql-client"
-          sudo apt-get install -y -qq postgresql-client
-          pg_dump --version
+          echo "::warning::PGDG postgresql-client-17 unavailable — fallback docker postgres:17-alpine pg_dump"
+          echo "PGDUMP_CMD=docker run --rm -i postgres:17-alpine pg_dump" >> "$GITHUB_ENV"
 
       - name: Daily dump + upload + integrity verify
         if: github.event.inputs.mode != 'verify'

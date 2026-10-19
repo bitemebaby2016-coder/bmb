@@ -188,8 +188,8 @@ function runPgDump(databaseUrl) {
     let hint = ''
     if (/no password supplied|password authentication failed/i.test(err)) {
       hint = ' — ตรวจว่า secret BMB_DATABASE_URL มีรหัสผ่านใน URI (postgresql://user:PASSWORD@host:port/db) และไม่มีช่องว่าง/บรรทัดใหม่ต่อท้าย'
-    } else if (/newer than this pg_dump/i.test(err)) {
-      hint = ' — pg_dump client เก่ากว่า server ต้องติดตั้ง postgresql-client 17+ (PGDG)'
+    } else if (/newer than this pg_dump|server version mismatch/i.test(err)) {
+      hint = ' — pg_dump client version ไม่ตรงกับ server (17.6) — ต้องใช้ client 17.x ล่าสุด (PGDG binary หรือ docker postgres:17)'
     }
     throw new Error(`pg_dump exit ${r.status}: ${err}${hint}`)
   }
