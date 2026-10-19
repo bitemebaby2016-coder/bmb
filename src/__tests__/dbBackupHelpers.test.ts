@@ -1,5 +1,5 @@
 // ============================================
-// GCS backup helper unit tests (scripts/gcsBackup.mjs)
+// dbBackup helper unit tests (scripts/dbBackup.mjs — Supabase Storage backup)
 // Task: BACKEND-CAPABILITY-CLOSURE-2026-10-19
 // ============================================
 import { describe, it, expect } from 'vitest'
@@ -7,10 +7,11 @@ import {
   sha256Hex,
   buildDbObjectName,
   buildManifest,
+  checkBackupSize,
   retentionCandidates,
-} from '../../scripts/gcsBackup.mjs'
+} from '../../scripts/dbBackup.mjs'
 
-describe('gcsBackup — object naming + hashing', () => {
+describe('dbBackup — object naming + hashing', () => {
   it('builds deterministic db object names', () => {
     const d = new Date(Date.UTC(2026, 9, 19, 7, 30, 0))
     expect(buildDbObjectName(d)).toBe('db/bmb-db-20261019-073000.sql.gz')
@@ -25,11 +26,25 @@ describe('gcsBackup — object naming + hashing', () => {
   it('manifest records name/size/sha256 per file', () => {
     const m = buildManifest([{ name: 'db/a.sql.gz', size: 10, sha256: 'ff' }])
     expect(m.files[0]).toEqual({ name: 'db/a.sql.gz', size: 10, sha256: 'ff' })
-    expect(m.tool).toBe('bmb-gcs-backup/1')
+    expect(m.tool).toBe('bmb-db-backup/1')
   })
 })
 
-describe('gcsBackup — retention policy', () => {
+describe('dbBackup — size gate before upload', () => {
+  it('accepts sizes within the bucket limit', () => {
+    expect(checkBackupSize(52428800, 52428800)).toEqual({ ok: true, size: 52428800, limit: 52428800 })
+    expect(checkBackupSize(1, 52428800).ok).toBe(true)
+  })
+
+  it('fails closed when the dump exceeds the limit', () => {
+    const r = checkBackupSize(52428801, 52428800)
+    expect(r.ok).toBe(false)
+    expect(r.size).toBe(52428801)
+    expect(r.limit).toBe(52428800)
+  })
+})
+
+describe('dbBackup — retention policy', () => {
   const now = new Date(Date.UTC(2026, 9, 19, 0, 0, 0)) // 2026-10-19
   const names = [
     'db/bmb-db-20261018-003000.sql.gz', // 1 day old — daily keep

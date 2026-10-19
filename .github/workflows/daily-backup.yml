@@ -1,21 +1,26 @@
 # ============================================
 # BMB — daily-backup (BACKEND-CAPABILITY-CLOSURE-2026-10-19)
+# Refactored 2026-10-19: GCS → Supabase Storage (GCP Organization Policy
+# "Secure by Default" บล็อกการสร้าง service-account key JSON — ระบบจึงไม่
+# พึ่งพา GCP credentials อีกต่อไป)
 #
-# Daily PostgreSQL logical backup -> Google Cloud Storage bucket
-# `bmb-db-backups-prod` (GCS JSON API, service-account auth).
+# Daily PostgreSQL logical backup -> Supabase Storage PRIVATE bucket `db-backups`
+# (service-role key auth, Storage REST API).
 #
 # Trigger: 07:30 Asia/Bangkok daily (cron '30 0 * * *' UTC) + manual dispatch.
-# Integrity: scripts/gcsBackup.mjs re-downloads + sha256-verifies every upload
-#   before success; manifest.json is the audit surface.
+# Integrity (fail closed): scripts/dbBackup.mjs วัด size + sha256 ก่อน upload,
+#   ดาวน์โหลดกลับมาเทียบ byte-for-byte หลัง upload, แล้ว step --verify ซ้ำอีกชั้น
+#   (manifest hash + มีไฟล์ .sql.gz ใน bucket + bucket ยังเป็น private).
 # Retention: 30 daily / 12 monthly (first-of-month) — enforced in-script.
 # Failure behavior: job FAILS loudly (GitHub notification + ::error) — Owner
 #   must see missed backups. Optional LINE alert if LINE_NOTIFY_TOKEN is set.
 #
 # REQUIRED REPO SECRETS (Owner action — never committed):
-#   GCS_SERVICE_ACCOUNT_JSON  = service-account JSON (GCS Object Admin on bucket)
+#   SUPABASE_SERVICE_ROLE_KEY = Supabase service_role key (storage R/W on bucket)
 #   BMB_DATABASE_URL          = Supabase pooler connection string (pg_dump)
 # Optional:
 #   LINE_NOTIFY_TOKEN         = LINE notify token for failure alerts
+# (GCS_SERVICE_ACCOUNT_JSON ถูกลบออกจากการใช้งานแล้ว — ลบ secret เดิมทิ้งได้)
 # ============================================
 
 name: daily-backup
@@ -41,8 +46,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     env:
-      GCS_BUCKET_NAME: bmb-db-backups-prod
-      GCS_SERVICE_ACCOUNT_JSON: ${{ secrets.GCS_SERVICE_ACCOUNT_JSON }}
+      SUPABASE_URL: https://ivkdfognyiwjcmrhcnwz.supabase.co
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      SUPABASE_BACKUP_BUCKET: db-backups
       BMB_DATABASE_URL: ${{ secrets.BMB_DATABASE_URL }}
     steps:
       - name: Checkout
@@ -53,16 +59,29 @@ jobs:
         with:
           node-version: 24
 
-      - name: Install pg_dump client
-        run: sudo apt-get update -qq && sudo apt-get install -y -qq postgresql-client
+      # pg_dump client major MUST be >= server major (Supabase = PostgreSQL 17.6)
+      - name: Install pg_dump 17 (PGDG)
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq curl ca-certificates lsb-release
+          sudo install -d /usr/share/postgresql-common/pgdg
+          sudo curl -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc
+          echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" | sudo tee /etc/apt/sources.list.d/pgdg.list
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq postgresql-client-17
+          pg_dump --version
 
       - name: Daily dump + upload + integrity verify
         if: github.event.inputs.mode != 'verify'
-        run: node scripts/gcsBackup.mjs
+        run: node scripts/dbBackup.mjs
 
-      - name: Verify latest manifest integrity
+      - name: Post-backup verify (manifest hashes + .sql.gz presence + private bucket)
+        if: github.event.inputs.mode != 'verify'
+        run: node scripts/dbBackup.mjs --verify
+
+      - name: Verify only (no dump)
         if: github.event.inputs.mode == 'verify'
-        run: node scripts/gcsBackup.mjs --verify
+        run: node scripts/dbBackup.mjs --verify
 
       - name: Alert on failure (optional LINE)
         if: failure()
