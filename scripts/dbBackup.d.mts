@@ -11,6 +11,7 @@ export declare function buildManifest(files: Array<{ name: string; size: number;
   files: Array<{ name: string; size: number; sha256: string }>
 }
 export declare function checkBackupSize(bytes: number, maxBytes?: number): { ok: boolean; size: number; limit: number }
+export declare function normalizeDatabaseUrl(raw: unknown): string | null
 export declare function retentionCandidates(
   names: string[],
   now: Date,

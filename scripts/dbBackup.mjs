@@ -45,6 +45,19 @@ export function sha256Hex(data) {
   return createHash('sha256').update(data).digest('hex')
 }
 
+/**
+ * Normalize + validate the pg connection string before use (fail closed).
+ * Accepts libpq URI (postgres:// or postgresql://) or keyword/value format
+ * (host=… user=… password=…). Returns null for anything else — a bare
+ * host/name string would make pg_dump silently try the LOCAL socket.
+ */
+export function normalizeDatabaseUrl(raw) {
+  const v = String(raw || '').trim().replace(/^["']|["']$/g, '')
+  if (/^postgres(ql)?:\/\//i.test(v)) return v
+  if (/^[a-zA-Z_][a-zA-Z0-9_]*\s*=/.test(v)) return v // libpq keyword/value format
+  return null
+}
+
 /** db/bmb-db-YYYYMMDD-HHMMSS.sql.gz — deterministic per timestamp (UTC). */
 export function buildDbObjectName(date) {
   const iso = date.toISOString().replace(/[-:T]/g, '').slice(0, 14)
@@ -234,7 +247,15 @@ export async function main(argv = process.argv.slice(2)) {
   }
 
   if (!databaseUrl) throw new Error('BMB_DATABASE_URL (or DATABASE_URL) is required for backup')
-  const dump = runPgDump(databaseUrl)
+  const conn = normalizeDatabaseUrl(databaseUrl)
+  if (!conn) {
+    throw new Error(
+      'BMB_DATABASE_URL ไม่ใช่ connection string ที่ถูกต้อง (ค่าปัจจุบันไม่มี "://" และไม่ใช่รูปแบบ host=…) — ' +
+        'ต้องเป็น URI: postgresql://USER:PASSWORD@HOST:PORT/DB · คัดลอกจาก Supabase Dashboard → ปุ่ม Connect → แท็บ URI → Session pooler ' +
+        'แล้วแทน [YOUR-PASSWORD] ด้วยรหัสผ่านฐานข้อมูลจริง (ห้ามมีเครื่องหมายคำพูดครอบ/ช่องว่างต่อท้าย)',
+    )
+  }
+  const dump = runPgDump(conn)
   const gz = gzipSync(dump)
   const name = buildDbObjectName(new Date())
   const sha = sha256Hex(gz)

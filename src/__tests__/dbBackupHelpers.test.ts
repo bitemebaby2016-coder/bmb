@@ -8,8 +8,28 @@ import {
   buildDbObjectName,
   buildManifest,
   checkBackupSize,
+  normalizeDatabaseUrl,
   retentionCandidates,
 } from '../../scripts/dbBackup.mjs'
+
+describe('dbBackup — connection string validation', () => {
+  it('accepts libpq URIs (with trim/quote cleanup)', () => {
+    expect(normalizeDatabaseUrl('postgresql://user:pass@host:5432/db')).toBe('postgresql://user:pass@host:5432/db')
+    expect(normalizeDatabaseUrl('  postgres://user:pass@host/db  ')).toBe('postgres://user:pass@host/db')
+    expect(normalizeDatabaseUrl('"postgresql://user:pass@host/db"')).toBe('postgresql://user:pass@host/db')
+  })
+
+  it('accepts libpq keyword/value format', () => {
+    expect(normalizeDatabaseUrl('host=db.example.com port=5432 user=u password=p dbname=postgres')).toContain('host=')
+  })
+
+  it('rejects bare names/hosts — pg_dump would silently hit the LOCAL socket', () => {
+    expect(normalizeDatabaseUrl('aws-0-ap-northeast-2.pooler.supabase.com:5432')).toBeNull()
+    expect(normalizeDatabaseUrl('postgres')).toBeNull()
+    expect(normalizeDatabaseUrl('')).toBeNull()
+    expect(normalizeDatabaseUrl(undefined)).toBeNull()
+  })
+})
 
 describe('dbBackup — object naming + hashing', () => {
   it('builds deterministic db object names', () => {
