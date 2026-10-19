@@ -243,6 +243,17 @@ export function CheckoutPage() {
         const isToday = scheduledDate === todayStr()
         const prevRow = list.find((r) => r.id === prev)
         if (prevRow && roundBookability(prevRow, { isToday }) === 'open') return prev
+        // Owner 2026-10-19: same-day "จัดส่งทันที" — เลือกรอบที่เวลาปัจจุบันอยู่ใน
+        // หน้าต่างจัดส่งก่อน (ส่งเลย) ถ้าไม่มีค่อยใช้รอบเปิดถัดไป (อัตโนมัติเสมอ)
+        const now = new Date()
+        const nowMin = now.getHours() * 60 + now.getMinutes()
+        const inWindow = list.find((r) => {
+          if (roundBookability(r, { isToday }) !== 'open') return false
+          const [sh, sm] = String(r.delivery_start).slice(0, 5).split(':').map(Number)
+          const [eh, em] = String(r.delivery_end).slice(0, 5).split(':').map(Number)
+          return nowMin >= sh * 60 + sm && nowMin <= eh * 60 + em
+        })
+        if (inWindow) return inWindow.id
         return list.find((r) => roundBookability(r, { isToday }) === 'open')?.id ?? ''
       })
     })()
@@ -814,6 +825,8 @@ export function CheckoutPage() {
     )
   }
 
+  const selectedRound = rounds.find((r) => r.id === selectedRoundId) ?? null
+
   return (
     <div className="max-w-4xl mx-auto px-4 py-6">
       <div className="flex items-center justify-between mb-6">
@@ -830,7 +843,7 @@ export function CheckoutPage() {
         {orderMode === 'PRE_ORDER' ? (
           <p className="text-sm text-blue-700">เลือกวันที่และรอบจัดส่งล่วงหน้า — ระบบเซิร์ฟเวอร์ตรวจ lead time ({leadDays} วัน) และความจุรอบให้อีกครั้ง</p>
         ) : (
-          <p className="text-sm text-orange-700">รอบที่เปิดรับวันนี้ — เซิร์ฟเวอร์ตรวจ cutoff (เวลาไทย) และความจุรอบให้อีกครั้ง</p>
+          <p className="text-sm text-orange-700">🛵 สั่งวันนี้ = จัดส่งทันที ระบบเลือกรอบเปิดรับให้อัตโนมัติ (แยกจากพรีออเดอร์ที่เลือกวัน/รอบล่วงหน้า) — เซิร์ฟเวอร์ตรวจ cutoff (เวลาไทย) และความจุรอบให้อีกครั้ง</p>
         )}
       </div>
 
@@ -859,10 +872,28 @@ export function CheckoutPage() {
         </div>
       )}
 
-      {/* ✅ Round picker — ACTIVE rounds only (the create RPC rejects the rest) */}
+      {/* ✅ Round selection — Owner 2026-10-19: SAME_DAY = "จัดส่งทันที" อัตโนมัติ
+          (ระบบเลือกรอบเปิดรับให้เอง ไม่ให้ลูกค้าเลือก) · PRE_ORDER = เลือกรอบตามวันที่จอง
+          (server create RPC ยังตรวจ cutoff/ความจุ/วันที่ของรอบที่เลือกเหมือนเดิม) */}
       <div className="card mb-6">
-        <h3 className="font-bold text-brand-accent mb-4">🚚 รอบการจัดส่ง</h3>
-        {rounds.length === 0 ? (
+        <h3 className="font-bold text-brand-accent mb-4">{orderMode === 'PRE_ORDER' ? '🚚 รอบการจัดส่ง' : '🛵 จัดส่งทันที'}</h3>
+        {orderMode !== 'PRE_ORDER' ? (
+          selectedRound ? (
+            <div data-testid="same-day-auto-round" className="p-3 rounded-lg border-2 border-brand-primary bg-orange-50">
+              <div className="font-medium text-slate-900">จัดส่งทันที — ระบบเลือกรอบเปิดรับให้อัตโนมัติ</div>
+              <div className="text-xs text-slate-600 mt-1">
+                รอบที่ระบบเลือก: {selectedRound.display_name || selectedRound.round_key || selectedRound.id} · ส่ง {String(selectedRound.delivery_start).slice(0, 5)}–{String(selectedRound.delivery_end).slice(0, 5)} · เหลือ {Math.max(0, Number(selectedRound.max_capacity) - Number(selectedRound.current_count))} ที่
+              </div>
+              <div className="text-xs text-slate-500 mt-1">
+                ออเดอร์วันนี้ส่งทันทีตามรอบที่เปิดรับอยู่ ไม่ต้องเลือกรอบเอง (การจองล่วงหน้าจะเลือกวัน/รอบแยกต่างหาก)
+              </div>
+            </div>
+          ) : (
+            <p className="text-sm text-brand-muted" data-testid="no-rounds">
+              ยังไม่มีรอบที่เปิดรับสำหรับวันนี้ — ลองใหม่ภายหลัง หรือสั่งแบบจองล่วงหน้า
+            </p>
+          )
+        ) : rounds.length === 0 ? (
           <p className="text-sm text-brand-muted" data-testid="no-rounds">
             ยังไม่มีรอบที่เปิดรับสำหรับวันที่เลือก — ลองเลือกวันอื่น
           </p>

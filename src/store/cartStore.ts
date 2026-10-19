@@ -243,9 +243,17 @@ export const useCartStore = create<CartStore>((set, get) => ({
     set({ active_context_tenant_id: tenantId, active_context_brand_id: brandId })
   },
 
-  setCouponCode: (code: string) => set({ couponCode: code }),
+  setCouponCode: (code: string) => {
+    set({ couponCode: code })
+    // Owner fix 2026-10-19: ใส่โค้ดแล้วสรุปราคาต้องขยับทันที (เดิม discount ค้าง 0
+    // จนกว่าจะมี event อื่นมาเรียก recalculate — ดูเหมือน "โปรโมชั่นใช้ไม่ได้")
+    get().recalculate()
+  },
 
-  setAppliedPromotion: (promo) => set({ appliedPromotion: promo }),
+  setAppliedPromotion: (promo) => {
+    set({ appliedPromotion: promo })
+    get().recalculate()
+  },
 
   setDeliveryFee: (fee) => {
     set({ deliveryFee: fee })

@@ -56,6 +56,11 @@ export function DeliveryManagement() {
   const [provVehicle, setProvVehicle] = useState('')
   const [linkPick, setLinkPick] = useState<Record<string, string>>({}) // driver_id -> user_id
   const [provisioning, setProvisioning] = useState<string | null>(null)
+  // Owner 2026-10-19: ลงทะเบียนไรเดอร์แบบ dropdown — เลือกจากคนที่ลงทะเบียนบนเว็บแล้ว
+  // (ไม่ต้องพิมพ์ชื่อ/เบอร์ใหม่) + เลือกพาหนะจาก dropdown
+  const [regUsers, setRegUsers] = useState<{ id: string; name: string | null; phone: string | null; email: string | null }[]>([])
+  const [provPick, setProvPick] = useState('')
+  const [provVehicleOther, setProvVehicleOther] = useState('')
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -87,27 +92,22 @@ export function DeliveryManagement() {
     return () => { cancelled = true }
   }, [])
 
-  useEffect(() => { void load() }, [load])
-
-  // โหลดรูปสถานที่จัดส่งของลูกค้าในคิว (READ-ONLY) — customers RLS เปิดให้ is_admin
+  // Owner 2026-10-19: รายชื่อผู้ใช้ที่ลงทะเบียนบนเว็บ (profiles — admin RLS) สำหรับ
+  // dropdown ลงทะเบียนไรเดอร์ (ชื่อ+เบอร์ เติมให้เอง ไม่ต้องกรอกซ้ำ)
   useEffect(() => {
-    const refs = Array.from(new Set(orders.map((o) => o.customer_ref).filter(Boolean))) as string[]
-    if (refs.length === 0) return
     let cancelled = false
     void (async () => {
-      const { data } = await supabase
-        .from('customers')
-        .select('user_id, delivery_photo_url')
-        .in('user_id', refs)
+      const { data } = await supabase.from('profiles').select('id, name, phone, email, role')
       if (cancelled || !data) return
-      const map: Record<string, string> = {}
-      for (const row of data) {
-        if (row.user_id && row.delivery_photo_url) map[row.user_id] = row.delivery_photo_url
-      }
-      setPhotoByUser(map)
+      setRegUsers(
+        (data as { id: string; name: string | null; phone: string | null; email: string | null; role: string | null }[])
+          .filter((u) => (u.role ?? 'customer') !== 'admin'),
+      )
     })()
     return () => { cancelled = true }
-  }, [orders])
+  }, [])
+
+  useEffect(() => { void load() }, [load])
 
   // โหลดรูปสถานที่จัดส่งของลูกค้าในคิว (READ-ONLY) — customers RLS เปิดให้ is_admin
   useEffect(() => {
@@ -176,13 +176,14 @@ export function DeliveryManagement() {
 
   // ===== Provision ไรเดอร์ (Owner Decision 06 / F-06) — admin RPC เท่านั้น: upsert_driver / link_driver_user =====
   async function handleCreateDriver() {
-    if (!provName.trim() || !provPhone.trim()) { showToast('กรอกชื่อและเบอร์โทรก่อน', 'error'); return }
+    if (!provName.trim() || !provPhone.trim()) { showToast('เลือกผู้ใช้ที่ลงทะเบียนแล้ว หรือกรอกชื่อและเบอร์โทรก่อน', 'error'); return }
+    const vehicleLabel = (provVehicle === 'อื่น ๆ' ? provVehicleOther : provVehicle).trim()
     setProvisioning('create')
     try {
-      const r = await upsertDriver(provName.trim(), provPhone.trim(), provVehicle.trim())
+      const r = await upsertDriver(provName.trim(), provPhone.trim(), vehicleLabel)
       if (r.ok) {
         showToast('✅ บันทึกไรเดอร์แล้ว (หากเบอร์ซ้ำ = อัปเดตข้อมูลเดิม)', 'success')
-        setProvName(''); setProvPhone(''); setProvVehicle('')
+        setProvName(''); setProvPhone(''); setProvVehicle(''); setProvPick(''); setProvVehicleOther('')
         await load()
       } else {
         showToast('บันทึกไม่สำเร็จ: ' + driverErrorText(r.error || 'ERR_UPSERT_REJECTED'), 'error')
@@ -240,10 +241,41 @@ export function DeliveryManagement() {
           สร้าง/อัปเดตไรเดอร์ด้วย <code>upsert_driver</code> (คีย์ด้วยเบอร์โทร — เบอร์ซ้ำ = อัปเดตตัวเดิม) แล้วผูกบัญชี login ด้วย <code>link_driver_user</code>
           · บัญชีผู้ใช้ต้องมีใน Supabase Auth ก่อน (ลงทะเบียน/สร้างจาก dashboard) แล้วนำมาผูกที่นี่ — ไรเดอร์จะใช้ <code>/rider</code> ได้เฉพาะคนที่ผูกแล้ว (JWT)
         </p>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-2">
+          {/* Owner 2026-10-19: dropdown เลือกจากผู้ใช้ที่ลงทะเบียนบนเว็บแล้ว — ไม่ต้องกรอกชื่อ/เบอร์ใหม่ */}
+          <select
+            className="input"
+            value={provPick}
+            onChange={(e) => {
+              const id = e.target.value
+              setProvPick(id)
+              const u = regUsers.find((x) => x.id === id)
+              if (u) { setProvName(u.name ?? ''); setProvPhone(u.phone ?? '') }
+            }}
+            data-testid="drv-prov-user-select"
+          >
+            <option value="">— เลือกผู้ใช้ที่ลงทะเบียนแล้ว (เติมชื่อ/เบอร์ให้อัตโนมัติ) —</option>
+            {regUsers.map((u) => (
+              <option key={u.id} value={u.id}>{(u.name || u.email || u.phone || u.id) + (u.phone ? ' · ' + u.phone : '')}</option>
+            ))}
+          </select>
+          {/* Owner 2026-10-19: เลือกพาหนะจาก dropdown (ตรวพาหนะไรเดอร์) */}
+          <select className="input" value={provVehicle} onChange={(e) => setProvVehicle(e.target.value)} data-testid="drv-prov-vehicle">
+            <option value="">— เลือกพาหนะ —</option>
+            <option value="มอเตอร์ไซค์">มอเตอร์ไซค์</option>
+            <option value="รถยนต์">รถยนต์</option>
+            <option value="จักรยาน">จักรยาน</option>
+            <option value="อื่น ๆ">อื่น ๆ (กรอกเอง)</option>
+          </select>
+        </div>
         <div className="grid grid-cols-1 md:grid-cols-4 gap-3 mb-4">
           <input className="input" placeholder="ชื่อ-นามสกุล *" value={provName} onChange={(e) => setProvName(e.target.value)} data-testid="drv-prov-name" />
           <input className="input" placeholder="เบอร์โทร * (คีย์ยืนยันตัวตน)" value={provPhone} onChange={(e) => setProvPhone(e.target.value)} data-testid="drv-prov-phone" />
-          <input className="input" placeholder="ยานพาหนะ (เช่น มอเตอร์ไซค์)" value={provVehicle} onChange={(e) => setProvVehicle(e.target.value)} data-testid="drv-prov-vehicle" />
+          {provVehicle === 'อื่น ๆ' ? (
+            <input className="input" placeholder="ระบุพาหนะ" value={provVehicleOther} onChange={(e) => setProvVehicleOther(e.target.value)} data-testid="drv-prov-vehicle-other" />
+          ) : (
+            <div className="text-xs text-brand-muted self-center">เลือกผู้ใช้ด้านบนเพื่อเติมชื่อ/เบอร์อัตโนมัติ — ตรวจความถูกต้องก่อนบันทึก</div>
+          )}
           <button onClick={() => { void handleCreateDriver() }} disabled={provisioning !== null} className="btn btn-primary disabled:opacity-50" data-testid="drv-prov-create">
             {provisioning === 'create' ? '⏳…' : '➕ บันทึกไรเดอร์'}
           </button>

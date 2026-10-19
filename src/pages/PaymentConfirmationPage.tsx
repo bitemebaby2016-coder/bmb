@@ -98,7 +98,15 @@ export function PaymentConfirmationPage() {
           <div className="flex justify-between"><span>Customer</span><span>{order.customer_name}</span></div>
           <div className="flex justify-between"><span>Phone</span><span>{order.customer_phone}</span></div>
           <div className="flex justify-between"><span>Payment</span><span>{order.payment_method === 'promptpay_qr' ? 'PromptPay (โอนผ่าน QR ของร้าน — ยืนยันโดยแอดมิน)' : order.payment_method === 'credit_card' ? `บัตรเครดิต/เดบิต (${isOmiseConfigured() ? 'Omise' : 'Stripe'})` : 'เงินสดตอนรับของ'}</span></div>
+          {/* Owner fix 2026-10-19: โชว์การคำนวณทั้งหมด — เดิมมีแค่ Total ทำให้ยอดดู
+              "เหมือนมีส่วนลดลอย ๆ" (ส่วนลด/ค่าส่งถูกหักจริงโดย server แต่ไม่แสดง) */}
+          <div className="flex justify-between"><span>สินค้า</span><span>฿{Number(order.subtotal ?? 0).toFixed(2)}</span></div>
+          {Number(order.discount_amount ?? 0) > 0 && (
+            <div className="flex justify-between text-green-600"><span>ส่วนลด</span><span>-฿{Number(order.discount_amount).toFixed(2)}</span></div>
+          )}
+          <div className="flex justify-between"><span>ค่าจัดส่ง</span><span>฿{Number(order.delivery_fee ?? 0).toFixed(2)}</span></div>
           <div className="flex justify-between text-xl font-bold pt-2 border-t border-brand-border"><span>Total</span><span className="text-brand-primary">฿{order.total_amount.toFixed(2)}</span></div>
+          <p className="text-xs text-brand-muted">ยอดนี้ = สินค้า − ส่วนลด + ค่าจัดส่ง (ระบบคำนวณจากเซิร์ฟเวอร์ตอนสร้างออเดอร์)</p>
         </div>
       </div>
       {isPending && order.payment_method === 'promptpay_qr' && (

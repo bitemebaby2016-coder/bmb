@@ -3,6 +3,8 @@
 // Optimizes delivery routes for Bite Drive
 // ============================================
 
+import { KITCHEN_LAT, KITCHEN_LNG } from '@/config/kitchenLocation'
+
 export interface DeliveryOrder {
   id: string
   order_number: string
@@ -227,8 +229,8 @@ export function calculateDeliveryCost(distanceKm: number, ordersCount: number): 
 export function isWithinDeliveryZone(
   lat: number,
   lon: number,
-  kitchenLat: number = 10.7016,
-  kitchenLon: number = 102.1429,
+  kitchenLat: number = KITCHEN_LAT,
+  kitchenLon: number = KITCHEN_LNG,
   maxDistanceKm: number = 5
 ): boolean {
   const distance = calculateDistance(lat, lon, kitchenLat, kitchenLon)

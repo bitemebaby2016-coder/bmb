@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { showToast } from '@/components/ui/ToastContainer'
 import { loadGoogleMapsJS, isGoogleMapsConfigured } from '@/lib/googleMaps'
+import { KITCHEN_LAT, KITCHEN_LNG } from '@/config/kitchenLocation'
 import { SHOP_CONTACT } from '@/components/layout/Footer'
 import { DEFAULT_SOCIAL_LINKS, getSocialLinks, socialLinkItems, type SocialLinkItem } from '@/lib/socialLinks'
 
@@ -52,8 +53,8 @@ export function ContactPage() {
     if (!isGoogleMapsConfigured()) return
     loadGoogleMapsJS().then(() => {
       if (mapRef.current && !mapReady && (window as any).google?.maps) {
-        const kitchenLat = parseFloat(import.meta.env.VITE_DELIVERY_KITCHEN_LAT ?? '10.7016')
-        const kitchenLng = parseFloat(import.meta.env.VITE_DELIVERY_KITCHEN_LNG ?? '102.1429')
+        const kitchenLat = KITCHEN_LAT
+        const kitchenLng = KITCHEN_LNG
         try {
           new ((window as any).google.maps.Map)(mapRef.current, {
             center: { lat: kitchenLat, lng: kitchenLng },

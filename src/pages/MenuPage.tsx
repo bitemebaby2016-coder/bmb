@@ -252,6 +252,12 @@ export function MenuPage() {
                 // Phase 6 (RC-7 · INV-18): canonical fallback เหมือน L46-47 — ห้ามอ่าน alias
                 // `is_preorder` ตรง ๆ (one-way mirror ของ migration 023 อาจค้างจาก canonical)
                 const mode: OrderMode = (product.available_preorder ?? product.is_preorder) ? 'pre-order' : 'same-day'
+                // Owner 2026-10-19: พรีออเดอร์ที่เลยวันจัดส่งไปแล้ว → แสตมป์ out of stock
+                const schedDate = scheduleMap[product.id]
+                const preorderExpired = Boolean(
+                  (product.available_preorder ?? product.is_preorder) &&
+                  schedDate && schedDate < new Date().toLocaleDateString('en-CA'),
+                )
                 return (
                   <FoodMenuCard
                     key={product.id}
@@ -259,7 +265,8 @@ export function MenuPage() {
                     category={category}
                     mode={mode}
                     availability={product.is_available ? 'available' : 'sold_out'}
-                    scheduledDate={scheduleMap[product.id]}
+                    scheduledDate={schedDate}
+                    preorderExpired={preorderExpired}
                     onSameDayOrder={handleSameDay}
                     onPreOrder={handlePreOrder}
                   />

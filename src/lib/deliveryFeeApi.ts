@@ -7,6 +7,7 @@
 
 import { supabase } from './supabase'
 import { haversineDistanceKm } from './deliveryRouter'
+import { KITCHEN_POINT } from '@/config/kitchenLocation'
 
 export interface DeliveryZonesRow {
   id: string
@@ -95,7 +96,7 @@ export function localZoneFee(params: {
   distanceKm?: number | null
   kitchen?: { latitude: number; longitude: number }
 }): number {
-  const kitchen = params.kitchen ?? { latitude: 10.7016, longitude: 102.1429 }
+  const kitchen = params.kitchen ?? KITCHEN_POINT
   const distanceKm =
     params.distanceKm ??
     (params.dropoffLatitude != null && params.dropoffLongitude != null

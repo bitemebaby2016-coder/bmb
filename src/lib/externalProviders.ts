@@ -2,6 +2,8 @@
 // Bite Me Baby — External Delivery Providers Integration
 // ============================================
 
+import { KITCHEN_LAT, KITCHEN_LNG } from '@/config/kitchenLocation'
+
 export type ProviderType = 'grab_rider' | 'linemen_rider' | 'foodpanda_rider' | 'self_delivery' | 'custom'
 
 /**
@@ -90,8 +92,8 @@ export const DEFAULT_PROVIDERS: DeliveryProvider[] = [
     is_active: true,
     rating: 4.5,
     coverage_area: {
-      center_latitude: 10.7016,
-      center_longitude: 102.1429,
+      center_latitude: KITCHEN_LAT,
+      center_longitude: KITCHEN_LNG,
       radius_km: 15
     }
   },
@@ -107,8 +109,8 @@ export const DEFAULT_PROVIDERS: DeliveryProvider[] = [
     is_active: true,
     rating: 4.3,
     coverage_area: {
-      center_latitude: 10.7016,
-      center_longitude: 102.1429,
+      center_latitude: KITCHEN_LAT,
+      center_longitude: KITCHEN_LNG,
       radius_km: 12
     }
   },
@@ -124,8 +126,8 @@ export const DEFAULT_PROVIDERS: DeliveryProvider[] = [
     is_active: true,
     rating: 4.4,
     coverage_area: {
-      center_latitude: 10.7016,
-      center_longitude: 102.1429,
+      center_latitude: KITCHEN_LAT,
+      center_longitude: KITCHEN_LNG,
       radius_km: 14
     }
   },
@@ -141,8 +143,8 @@ export const DEFAULT_PROVIDERS: DeliveryProvider[] = [
     is_active: true,
     rating: 4.6,
     coverage_area: {
-      center_latitude: 10.7016,
-      center_longitude: 102.1429,
+      center_latitude: KITCHEN_LAT,
+      center_longitude: KITCHEN_LNG,
       radius_km: 5
     }
   }
@@ -171,8 +173,8 @@ export function getBestProvider(
     items_count: number
     estimated_weight: number
   },
-  kitchenLat: number = 10.7016,
-  kitchenLon: number = 102.1429,
+  kitchenLat: number = KITCHEN_LAT,
+  kitchenLon: number = KITCHEN_LNG,
   providers: DeliveryProvider[] = DEFAULT_PROVIDERS
 ): { provider: DeliveryProvider; cost: number; estimatedTime: number } | null {
   const distance = calculateDistanceSimple(kitchenLat, kitchenLon, order.dropoff_latitude, order.dropoff_longitude)

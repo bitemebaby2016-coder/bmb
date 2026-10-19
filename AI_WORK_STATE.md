@@ -2,42 +2,39 @@
 
 > **สถานะงานปัจจุบันของโปรเจกต์ Bite Me Baby** ใช้แนบเข้าสู่ Context ตอนเริ่มแชทเสมอ
 
-**last_updated:** 2026-10-18 (รอบ FINAL PRE-TEST)
-**phase:** ปิดงานก่อนเปิดทดสอบจริง — พร้อมทดสอบ 100%
-**current_focus:** ทุกงานตามคำสั่งรอบดึกปิดแล้ว — เหลือ Owner เดิน E2E checklist บน production
-**blocked_by:** ไม่มีฝั่งโค้ด — รอ Owner เริ่มทดสอบจริง + สั่งการหลังทดสอบ
+**last_updated:** 2026-10-19 (รอบ REAL-TEST FIX)
+**phase:** แก้ตามผลทดสอบจริงรอบแรก — ปิดพร้อม commit+push (Owner อนุญาต)
+**current_focus:** แก้ 9 จุดจากหน้าทดสอบจริงครบแล้ว — เหลือ Owner ทดสอบซ้ำบน production
+**blocked_by:** ไม่มีฝั่งโค้ด — รอ Owner ยืนยันผลรอบ 2 + เริ่มขายจริงเมื่อพร้อม
 
 ---
 
-## ⚡ TASK: PRETEST-FINAL-2026-10-18 — ปิดงานก่อนเปิดทดสอบจริง 100% (คำสั่ง Owner รอบดึก 18 ต.ค.)
-- **STATUS: ✅ CLOSED**
-- **วันที่:** 2026-10-18
-- **งานที่ต้องทำ (ตามคำสั่ง Owner):**
-  1. แก้ภาษาหน้ารอบจัดส่ง `/admin/rounds` (ขึ้นตัวอักษรเพี้ยน)
-  2. บันทึกการตัดสินใจ: งบ OpenRouter ฝั่ง dev กับฝั่งเอไอในเว็บ = **คนละคีย์กัน ไม่ต้องเตือนเติมงบ**
-  3. "coming soon" 2 ตัว + หัวข้อ "สินค้าสำเร็จรูป" = **ของจริงที่ Owner จะเปลี่ยนเอง — เก็บไว้ ห้ามลบ/ห้ามซ่อน**
-  4. ลูกค้าทุกตนถูกลบแล้วเหลือแอดมิน (Owner ลบเอง) — รับทราบ + ยืนยันใน DB (customers=0, auth.users=1)
-  5. ไรเดอร์ยังค้าง — **ลบทิ้งให้หมด** เริ่มทดสอบใหม่จริงหลังอนุมัติ (Owner จะลงทะเบียนใหม่เอง)
-  6. ทุกระบบ/ฟีเจอร์พร้อมทดสอบจริง 100% + **อนุญาต commit+push** + อัปเดตเอกสาร
-- **สิ่งที่ทำ:**
-  - **Root cause ตัวอักษรเพี้ยน:** string ในซอร์สถูก double-encode (UTF-8 → CP1252 → UTF-8) ปนกับไทยปกติในไฟล์เดียว + ไบต์ `0xA0` (NBSP = ร่องรอยของ "ภ"/สระบางตัว) ถูก normalize เป็น space ทำให้ run บางชุด decode ไม่ผ่าน — แสดงเป็น "à¸£à¸­à¸š…" บนหน้าเว็บ (เช่น หัวข้อ/ปุ่ม/บรรทัดรอบส่งของ /admin/rounds + หน้า FAQ)
-  - เขียนเครื่องมือซ่อม (แผนที่ถอยหลัง CP1252→UTF-8 เฉพาะ run ที่เสีย, กิน space เป็น NBSP artifact) — ซ่อมสำเร็จ **896 runs / 15 ไฟล์** (src 6 ไฟล์: AdminRounds.tsx 37 · FaqPage.tsx 12 · AdminOrders.tsx 1 · bmbAdminApi_orders.ts 1 · canonicalOrderFlow.test.ts 1 + channel-webhook 14 + archive docs 8 ไฟล์ ~868) — เหลือ residual 0 ทั้ง repo
-  - **ตรวจฝั่งข้อมูล:** สแกนทุก public table = ข้อมูลไม่มี mojibake (บั๊กอยู่ที่ซอร์สอย่างเดียว)
-  - **ข้อมูล:** normalize รอบเช้า 18 ต.ค. ที่เบี่ยงมาตรฐาน → "เช้า (06:00-09:00)" cutoff 08:00 ความจุ 60 (ตรงกับ 19–24 ต.ค.) · **ลบไรเดอร์ 6 ราย** (drivers=0 — รวม QA/STEP2/ไบท์ ไดรฟ์; ไม่มี auth account ผูกอยู่) · เก็บ test leftovers ให้เริ่มทดสอบสะอาด: social_events 9 → 0, order_submissions 2 → 0, automation_queue 3 → 0 · auth.users เหลือ 1 = แอดมิน (bitemebaby2016) · audit_logs เก็บไว้ตามสัญญา
-- **GATES/EVIDENCE:** lint=0 (384 ไฟล์, brandNameGuard OK) · tests [ดูผลลัพธ์รอบปิดงาน] · build (tsc+vite+PWA)=0 · mojibake scan 0 runs / 0 residual
-- **BLOCKER:** ไม่มีฝั่ง AI — push แล้ว = deploy production (Owner อนุญาตแล้วรอบนี้)
-- **หมายเหตุ:** ไฟล์ `tools-mojibake.mjs`/`tools-db.mjs`/`tools-probe.mjs` = เครื่องมือชั่วคราวรอบนี้ (ลบก่อน commit)
+## ⚡ TASK: REAL-TEST-FIX-2026-10-19 — แก้ตามผลทดสอบจริง + audit ตามจริง (คำสั่ง Owner 19 ต.ค.)
+- **STATUS: ✅ CLOSED (รอ push)**
+- **คำถาม audit ("งานที่สั่งไปแล้ว ค้างอยู่ในสเตจ/คอมมิทไหนรึเปล่า?") — ตอบตามจริง:**
+  - **ไม่มีงานค้างใน staging/stash** (worktree สะอาด ทุกอย่างอยู่ใน commit แล้ว)
+  - สิ่งที่เคยสั่งและ**ปิดแล้ว**: Master Plan same-day/pre-order phases 0-6 (commit `4cb22eb`,`3dd44ce`,`f20a6be`,`8bd6276`,`f7bfab1` + EV logs) · promo engine (`4c0bc9f`) · mode consistency (`f20a6be`) · distance 0.00 fix (`33724ce`)
+  - สิ่งที่เจอวันนี้ = **ช่องว่าง/บั๊กที่ phase เหล่านั้นไม่ครอบคลุม** (ไม่ใช่ของค้าง): ค่า fallback พิกัดครัวผิดคนละจุด · คูปองไม่ trigger recalc · หน้าจ่ายเงินไม่แสดงการคำนวณ · หน้า checkout ให้เลือกรอบเองทั้งที่ same-day ควรทันทีอัตโนมัติ · พรีออเดอร์เกินวันไม่มีแสตมป์ · ฟอร์มไรเดอร์ต้องพิมพ์เอง
+- **สิ่งที่แก้รอบนี้ (ทั้งหมดอยู่ใน commit เดียว):**
+  1. **พิกัดครัว single source** — `src/config/kitchenLocation.ts` (ค่า fallback = ครัวจริง 12.615659, 102.098063) — root cause "ปักที่ครัวแต่ห่าง 200+ กม." = fallback เก่า (10.7016, 102.1429) ถูกใช้ใน 7 จุด (locationStore/deliveryFeeApi/externalProviders/routeOptimization/seo/ContactPage/RouteOptimizationPage) → ระยะทาง/ค่าส่ง/ช่องทางมั่วทั้งหมดเพราะต้นทางเดียว
+  2. **คูปองเห็นผลทันที** — `cartStore` setCouponCode/setAppliedPromotion เรียก recalculate (เดิม discount ค้าง 0 จนมี event อื่น = "โปรโมชั่นใช้ไม่ได้/ไม่คำนวณให้เห็น")
+  3. **หน้าชำระเงินแสดงการคำนวณ** — สินค้า/ส่วนลด/ค่าจัดส่ง/รวม (เดิมมีแค่ Total 149.20 ดูเหมือนมีส่วนลดลอย ๆ — จริง = 138 − 10% + 25)
+  4. **same-day = จัดส่งทันที อัตโนมัติ** — ไม่ให้เลือกรอบเอง (ระบบเลือกรอบที่เวลาปัจจุบันอยู่ในหน้าต่างส่งก่อน ไม่มีค่อยใช้รอบถัดไป) · พรีออเดอร์ยังเลือกวัน/รอบเหมือนเดิม = แยกทางกันชัด (server RPC ยังตรวจ cutoff/ความจุเหมือนเดิม — ไม่แตะ business rule)
+  5. **แสตมป์ Out of stock พรีออเดอร์เกินวัน** — FoodMenuCard + MenuPage (วันจาก menu_schedule < วันนี้ → แสตมป์ "หมดเวลาจอง (Out of stock)" + ปิดปุ่มจอง)
+  6. **ฟอร์มลงทะเบียนไรเดอร์ = dropdown** — เลือกจากผู้ใช้ที่ลงทะเบียนบนเว็บแล้ว (profiles — เติมชื่อ/เบอร์อัตโนมัติ) + dropdown พาหนะ (มอเตอร์ไซค์/รถยนต์/จักรยาน/อื่น ๆ) — ตรงคำสั่ง "จิ้มเลือกไม่ต้องกรอกใหม่ + ดรอบดาวเลือกพาหนะ" · ลบโค้ดซ้ำ (useEffect โหลดรูป 2 รอบ)
+  7. **แผนที่หน้า checkout ไม่ขึ้น** — fallback ป้อนพิกัดเองทำงานได้ (ใช้ GPS/ป้อนมือได้จริงระหว่างทดสอบ) · สาเหตุโหลด SDK ไม่สำเร็จบนเครื่อง = ต้องเช็ก Google Cloud key/referrer restriction (ฝั่ง Owner) — โค้ดพร้อมตั้งแต่ build `1cada70`
+- **หมายเหตุ encoding (Owner เตือน):** ทุกไฟล์ที่แก้เขียนผ่าน editor (UTF-8 ตรง) · สแกนซ้ำทั้ง repo = **0 mojibake / 358 ไฟล์** · BOM 21 ไฟล์คงเดิมครบ (ไม่ได้แตะ) · ค้นใน shell ใช้ `\uXXXX` เท่านั้น (PowerShell `Get-Content` ไฟล์ไม่มี BOM จะแสดงไทยเพี้ยนเอง — ไม่ใช่ไฟล์เสีย)
+- **ข้อมูลทดสอบจริง (Owner เพิ่ม):** ลูกค้า 2 คน (`jin.pao66` "Pual bite drive" = คนที่จะลงทะเบียนเป็นไดรเวอร์ + `siamportal` "Customer") — ใช้ dropdown ใหม่ลงทะเบียนได้ทันที
+- **GATES/EVIDENCE:** lint=0 (385) · tests [ดูผลรอบปิดงาน] · build=0 · mojibake scan 0 · BOM คงเดิม
 
 ---
 
 ## 📌 STALE ENTRY ที่ต้องระวัง (ระบบจะเตือนตอนดึงกลับ)
-- **AI_WORK_STATE.md เวอร์ชันก่อน 18 ต.ค. 2026** = STALE แล้ว — รอบ PRETEST-CLOSURE + PRETEST-FINAL เปลี่ยนสถานะทั้ง Theater unity, login context restoration, G6-G7 alignment, mojibake sweep, ข้อมูลทดสอบ (ไรเดอร์/test leftovers) — อย่าเชื่อสถานะเก่าก่อนหน้านี้ ให้ยึด task block นี้
+- **AI_WORK_STATE.md เวอร์ชันก่อน 19 ต.ค. 2026** = STALE — รอบนี้แก้ตามผลทดสอบจริง (ค่าครัว/คูปอง/จ่ายเงิน/ทันที/แสตมป์/ไรเดอร์) เปลี่ยนพฤติกรรมหน้าเว็บหลายจุด
 
 ---
 
 ## 📁 โครงสร้างโปรเจกต์ (Files & Docs)
-- `docs/BMB_HANDOFF_NEXT_SESSION_2026-10-17-EVE.md` — handoff ปัจจุบัน (สถานะ + **Final E2E Checklist** §3 + Blocker §4)
-- `docs/BMB_SESSION_HANDOFF_2026-10-14_PREOPENING.md` — handoff รอบก่อน (PRE-OPENING audit)
-- `BMB_G6_CONTRACT.md` / `BMB_G7_CONTRACT.md` — สัญญา G6/G7 (+RULE REVISION G6-09) · `BMB_G6_WORKLOG.md` — worklog (แถว G6-09)
-- `src/__tests__/g6g7OrderBoundary.test.ts` (12) · `theaterUnity.test.ts` (10) · `loginContextRestoration.test.ts` (8) — regression ใหม่
-- `src/lib/theaterPreferences.ts` — preference เปิด/ปิดโรงละคร (`bmb_theater_open`)
+- `docs/BMB_HANDOFF_NEXT_SESSION_2026-10-17-EVE.md` — handoff ปัจจุบัน (สถานะ + E2E Checklist §3 + Blocker §4)
+- `src/config/kitchenLocation.ts` — พิกัดครัว single source (ห้าม hardcode ที่อื่น)
+- `BMB_SAME_DAY_PRE_ORDER_MASTER_PLAN.md` + `PHASE_CONTRACTS` + `EVIDENCE_LOG` + `REGRESSION_MATRIX` — กติกาเดิม (phases 0-6 ปิดแล้ว)

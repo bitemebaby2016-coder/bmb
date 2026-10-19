@@ -1,88 +1,71 @@
-# HANDOFF → แชทถัดไป (อัปเดต 18 ต.ค. 2026 — FINAL PRE-TEST / พร้อมทดสอบ 100%)
+# HANDOFF → แชทถัดไป (อัปเดต 19 ต.ค. 2026 — REAL-TEST FIX / รอบแก้ตามผลทดสอบจริง)
 
-> **สถานะรวม:** ปิดงานทุกข้อตามคำสั่ง Owner รอบดึกแล้ว (mojibake หน้ารอบจัดส่ง+FAQ · ลบไรเดอร์หมด · เก็บ "coming soon"/"สินค้าสำเร็จรูป" ไว้ · ข้อมูลทดสอบสะอาด) — **พร้อมเปิดทดสอบจริง** ตาม §3
+> **สถานะรวม:** แก้ครบตามคำสั่ง Owner รอบทดสอบจริง 19 ต.ค. (ค่าครัวเพี้ยน 200+ กม. · คูปองไม่คำนวณ · หน้าจ่ายเงินไม่โชว์ส่วนลด · same-day ต้องทันทีอัตโนมัติ · แสตมป์พรีออเดอร์เกินวัน · ฟอร์มไรเดอร์ dropdown) — commit+push ได้รับอนุญาตแล้ว
 > เอกสารนี้ถูก**เขียนทับทั้งฉบับ**ตามกติกา "อัปเดต = เขียนทับ ห้ามเขียนต่อ" — ประวัติเก่าดูจาก git
 
 ---
 
-## 1. สถานะปัจจุบัน (verified 18 ต.ค. 2026 — รอบ FINAL PRE-TEST)
+## 1. สถานะปัจจุบัน (verified 19 ต.ค. 2026 — รอบ REAL-TEST FIX)
 
 | หัวข้อ | สถานะจริง |
 |---|---|
-| ภาษาหน้ารอบจัดส่ง `/admin/rounds` + หน้า FAQ (เพี้ยนเป็น à¸£à¸­à¸š…) | ✅ **ปิดแล้ว** — root cause: ซอร์สถูก double-encode (CP1252) + ไบต์ NBSP หาย → ซ่อม **896 runs / 15 ไฟล์** (src 6 + EF 1 + archive 8) · สแกนซ้ำทั้ง repo = 0 · ตรวจ DB ทุกตาราง = ไม่มีเพี้ยน (บั๊กอยู่ที่ซอร์สอย่างเดียว) |
-| Theater/Waiting Stage unity + เปิด/ปิด Theater | ✅ (PRETEST-CLOSURE 2026-10-18) — มาสคอตบนเวที = TalkToBite ตัวเดียวกับ Floating Bite + `theater-toggle` + fallback `/menu` |
-| Login context restoration | ✅ (PRETEST-CLOSURE) — `state.from` + `?next=` ไหลผ่าน Login ↔ Register |
-| G6/G7 order boundary | ✅ (PRETEST-CLOSURE) — create-only + idempotent + read-only tools · สัญญาอัปเดต · `g6g7OrderBoundary` (12) |
-| ข้อมูลทดสอบ (เริ่มใหม่จริง) | ✅ **พร้อม** — ลูกค้า 0 (Owner ลบเอง เหลือแอดมิน 1) · **ไรเดอร์ 0** (ลบ 6 รายตามคำสั่ง — Owner จะลงทะเบียนใหม่) · test leftovers 0 (social_events/order_submissions/automation_queue) · ออเดอร์/เงิน/รีวิว = 0 · audit_logs เก็บตามสัญญา |
-| Rounds 3 รอบ/วัน (18–24 ต.ค.) | ✅ 21 แถวตามมาตรฐาน — normalize รอบเช้า 18 ต.ค. ที่เบี่ยง ("(07:00-08:00)"/05:00/50) → "เช้า (06:00-09:00)"/08:00/60 แล้ว |
-| "coming soon" 2 ตัว + หัวข้อ "สินค้าสำเร็จรูป" | ✅ **เก็บไว้ตามคำสั่ง** — เป็นของจริงที่ Owner จะเปลี่ยนเอง (ห้ามลบ/ห้ามซ่อน) |
-| งบ OpenRouter | ✅ **ไม่ใช่ blocker** — งบ dev กับงบเอไอในเว็บ = คนละคีย์กัน (Owner ยืนยัน) |
-| Facebook (webhook/dedup/intake) | ✅ โค้ดพร้อม (comment/audit text ใน channel-webhook ซ่อมแล้ว) — ทดสอบได้ระดับสิทธิ์ปัจจุบัน · Meta App Review ชะลอ |
-| Gates รอบนี้ | ✅ lint=0 (384) · tests เต็มชุดผ่าน · build=0 (tsc+vite+PWA) |
-| ⚠️ Push | **Owner อนุญาตแล้ว** — commit+push รอบนี้ = deploy production อัตโนมัติ |
-| Google Maps | ✅ ใช้งานได้บน prod (build `1cada70`) |
+| Audit "งานสั่งแล้วค้างอยู่ไหม" | ✅ **ตอบแล้วตามจริง** — ไม่มีงานค้างใน stage/stash · Master Plan same-day/pre-order phases 0-6 + promo engine + mode consistency = commit แล้วทั้งหมด · สิ่งที่เจอ = ช่องว่างที่ phase ไม่ครอบคลุม (ดู AI_WORK_STATE รอบนี้) |
+| ค่าระยะทาง/ค่าส่ง/ช่องทางมั่ว (ห่างครัว 200+ กม.) | ✅ **ปิดแล้ว** — root cause: fallback พิกัดครัวผิด (10.7016, 102.1429) ใน 7 จุด → รวมเป็น `src/config/kitchenLocation.ts` (ครัวจริง 12.615659, 102.098063) จุดเดียว |
+| โปรโมชั่น "ใช้ไม่ได้/ไม่คำนวณให้เห็น" | ✅ — engine จริงมีอยู่แล้ว (WELCOME10 ใช้ได้) แต่ cart ไม่ recalc → แก้แล้ว + หน้าชำระเงินโชว์สินค้า/ส่วนลด/ค่าจัดส่ง/รวม |
+| same-day vs pre-order มั่ว | ✅ — same-day = **จัดส่งทันที ระบบเลือกรอบให้อัตโนมัติ** (ไม่ต้องเลือกเอง, เลือกรอบที่เวลาปัจจุบันอยู่ในหน้าต่างส่งก่อน) · pre-order = เลือกวัน/รอบเหมือนเดิม · server gates ไม่แตะ |
+| พรีออเดอร์เกินวันไม่มีแสตมป์ | ✅ — FoodMenuCard + MenuPage: วันจาก menu_schedule < วันนี้ → "หมดเวลาจอง (Out of stock)" + ปิดปุ่มจอง |
+| ลงทะเบียนไดรเวอร์ (Owner สั่ง 19 ต.ค.) | ✅ — dropdown เลือกจากผู้ใช้ที่ลงทะเบียนบนเว็บแล้ว (เติมชื่อ/เบอร์อัตโนมัติ) + dropdown พาหนะ · ลูกค้า 2 คนที่เพิ่ม: `jin.pao66` (Pual bite drive — จะเป็นไดรเวอร์) + `siamportal` |
+| แผนที่ checkout ไม่ขึ้น (บางเครื่อง) | ⚠️ ใช้ GPS/ป้อนพิกัดแทนได้จริงระหว่างทดสอบ — ถ้ายังโหลดไม่ขึ้น = เช็ก Google Cloud key/referrer restriction (ฝั่ง Owner) · โค้ดพร้อมตั้งแต่ build `1cada70` |
+| Encoding (Owner เตือน BOM/mojibake) | ✅ — แก้ผ่าน editor เท่านั้น · สแกนทั้ง repo = 0 mojibake / 358 ไฟล์ · BOM 21 ไฟล์คงเดิม |
+| "coming soon" 2 ตัว + "สินค้าสำเร็จรูป" | ✅ เก็บไว้ตามคำสั่ง — ของจริงที่ Owner จะเปลี่ยนเอง |
+| Gates รอบนี้ | ✅ lint=0 (385) · tests เต็มชุดผ่าน · build=0 |
 
-## 2. สิ่งที่ปิดรอบนี้ (PRETEST-FINAL-2026-10-18)
+## 2. สิ่งที่ปิดรอบนี้ (REAL-TEST-FIX-2026-10-19)
 
-1. **แก้ภาษาเพี้ยน (mojibake)** — เขียนเครื่องมือซ่อม CP1252→UTF-8 เฉพาะ run เสีย (จับเคสไบต์ `0xA0`/NBSP ถูก normalize เป็น space) — ซ่อม 896 runs / 15 ไฟล์: `AdminRounds.tsx` (37 — หัวข้อ/ปุ่ม/บรรทัดรอบส่ง), `FaqPage.tsx` (12), `AdminOrders.tsx`, `bmbAdminApi_orders.ts`, `canonicalOrderFlow.test.ts`, `channel-webhook/index.ts` (comment+audit text), archive docs 8 ไฟล์ — **residual 0** + ตรวจ DB ทุกตาราง = สะอาด
-2. **ลบไรเดอร์ 6 ราย** ตามคำสั่ง (QA Rider A/B, QA W52 Driver, [STEP2-CT] Rider A/B, ไบท์ ไดรฟ์) — drivers=0, auth.users เหลือ 1 (แอดมิน) · เก็บ test leftovers เพิ่ม (social_events 9, order_submissions 2, automation_queue 3 → 0) เพื่อเริ่มทดสอบจริงสะอาด
-3. **Normalize รอบเช้า 18 ต.ค.** ให้ตามมาตรฐาน (display_name/cutoff/capacity ตรงกับวันอื่น)
-4. **บันทึกการตัดสินใจ Owner:** OpenRouter คนละคีย์ (ไม่เตือนเติมงบ) · "coming soon"/"สินค้าสำเร็จรูป" = ของจริง เก็บไว้ · ลูกค้าลบแล้วเหลือแอดมิน · อนุญาต commit+push
-5. **Gates:** lint=0 · tests เต็มชุดผ่าน · build=0 · **commit + push (อนุญาตแล้ว)**
-
----
-
-## 3. Owner E2E Checklist — Final (เริ่มทดสอบเปิดร้านจริงได้ทันที)
-
-**ก่อนเริ่ม:** ① ทดสอบบน **biteme-baby.com เท่านั้น** (`*.bitemebaby.pages.dev` = stale) ② ข้อมูลว่าง+ไรเดอร์ 0 → เริ่มจาก **ลงทะเบียนไรเดอร์ใหม่** ในหน้าจัดส่ง (Owner จะลงทะเบียนเอง) ③ AI ใช้คีย์เว็บต่างหาก — ไม่ต้องเติมงบ dev
-**⚠️ จุดที่ต้องยืนยันก่อนดำเนินการ (เงินจริง/ตั้งค่ากระทบรับออเดอร์):** ทดสอบจ่ายเงินจริง (PromptPay/Omise live) · เปิดรับออเดอร์จริง · เปลี่ยนคีย์ live — ให้ Owner ยืนยันก่อน; ถ้าใช้ test mode ได้เริ่มจาก test mode
-
-### 3.1 เว็บไซต์ (Login / Cart / Pre-order / Rounds)
-- [ ] Login จาก /checkout → ย้อนกลับ /checkout (ไม่ Landing) + ตะกร้าไม่หาย · Register จาก /checkout → ได้กลับ /checkout
-- [ ] ปุ่ม "จองล่วงหน้า" หน้าแรก + ก่อนฟุตเตอร์ → แท็บ "จองล่วงหน้า (7)" workflow เดียวกัน
-- [ ] **เปิด/ปิด Theater:** `✕` ปิด → เปิดใหม่ `🎭` ได้ + ตอนปิดซื้อผ่าน /menu + แถวร้านได้ครบ · มาสคอตบนเวที = แชตตัวเดียวกับ Floating Bite
-- [ ] Bite ตอบอ้างอิงตะกร้าจริง (ถาม "ในตะกร้ามีอะไร" หลังสั่ง 2 ชิ้น → ตอบตรง)
-- [ ] รอบปิด/เต็ม/พ้น cutoff = เลือกไม่ได้ + server ปฏิเสธ (`ERR_ROUND_CLOSED`) · **เช็กหน้า /admin/rounds: ภาษาไทย/อิโมจิแสดงถูกต้องทุกจุด**
-- [ ] Mixed cart (same-day + pre-order) → 2 ออเดอร์ + COD เท่านั้น · Cart คงข้ามหน้า/reload/วันถัดไป
-
-### 3.2 การชำระเงิน (⚠️ ยืนยันก่อนถ้าใช้เงินจริง)
-- [ ] Checkout → เลือกรอบ+ที่อยู่ → ได้เลขที่ออเดอร์จริง
-- [ ] PromptPay/Omise test mode (`4242 4242 4242 4242`) → `payment_status='paid'` จาก webhook เท่านั้น
-- [ ] จ่ายไม่สำเร็จ → ไม่เคลมสำเร็จ + ไม่ clearCart · `/track/<เลขที่>` เปิดได้ไม่ต้อง login
-
-### 3.3 ระบบจัดการร้าน (/admin)
-- [ ] **ลงทะเบียนไรเดอร์ใหม่** (เริ่มจากรายการว่าง 0 คน) → เห็นในหน้าความคืบหน้า/จัดส่ง
-- [ ] ออเดอร์เว็บ + Messenger ชุดเดียวกันใน /admin (source_channel ระบุที่มา)
-- [ ] สวิตช์รอบ/เมนูในแอดมิน → มีผลทันที · เดินสถานะออเดอร์ → tracking ลูกค้าตาม
-- [ ] แอดมินแก้ราคา/สต็อก → หน้าร้าน/คิดเงินใช้ค่าใหม่
-
-### 3.4 Facebook (ระดับสิทธิ์ปัจจุบัน — Meta App Review ชะลอ)
-- [ ] Messenger: "สั่งผัดไทย 2 จาน" → ยืนยัน → ได้เลขที่จริง + ลิงก์จ่าย/ติดตาม
-- [ ] ส่งข้อความเดิมซ้ำ → เลขที่เดิม (idempotent — `audit_logs` เห็น `channel_event_duplicate`)
-- [ ] Comment สาธารณะ → ไม่เปิดเผยข้อมูลส่วนตัว/ตะกร้า + ชวนเข้า Inbox · ข้อความกำกวม → ถามก่อน
-- [ ] **หมายเหตุสิทธิ์:** ทดสอบได้เฉพาะเพจ/บัญชีที่ผูก webhook (Owner เอง) — ห้ามอ้างว่าผ่านกับลูกค้าทั่วไปจนกว่า App Review
-
-### 3.5 AI / Fallback
-- [ ] AI ตอบตามแคตตาล็อกจริง (ชื่อ/ราคาตรงเมนู) ทั้งเว็บ+Messenger
-- [ ] AI แตะ/แก้/ยกเลิกออเดอร์เดิมไม่ได้ (ลองสั่ง "ยกเลิกออเดอร์ BMB-xxx" → ปฏิเสธ + audit ไม่มี mutation)
-- [ ] AI ล่ม → เว็บสั่งซื้อเองได้ตามปกติ
+1. **พิกัดครัว single source** (`src/config/kitchenLocation.ts`) — แก้ fallback ใน locationStore/deliveryFeeApi/externalProviders/routeOptimization/seo/ContactPage/RouteOptimizationPage + อัปเดตเทสต์ค่าจัดส่ง
+2. **คูปอง recalc ทันที** (`cartStore.ts`) + **หน้าชำระเงินโชว์การคำนวณ** (PaymentConfirmationPage)
+3. **same-day "จัดส่งทันที" อัตโนมัติ** (CheckoutPage — แยกจากพรีออเดอร์ชัด + เลือกรอบตามหน้าต่างเวลาปัจจุบัน)
+4. **แสตมป์ Out of stock พรีออเดอร์เกินวัน** (FoodMenuCard + MenuPage)
+5. **ฟอร์มไรเดอร์ dropdown** (DeliveryManagement — เลือกคนลงทะเบียนแล้ว + พาหนะ) + ลบโค้ดซ้ำ
+6. หมายเหตุ audit: ไม่มีงานค้างใน stage — ทุกอย่าง commit แล้ว (รายละเอียด AI_WORK_STATE)
 
 ---
+
+## 3. Owner E2E Checklist — รอบทดสอบซ้ำ (เช็กจุดที่เพิ่งแก้ก่อน)
+
+**ก่อนเริ่ม:** ① ทดสอบบน **biteme-baby.com เท่านั้น** + hard refresh (Ctrl+F5) ② เงินจริง/เปิดรับจริง/คีย์ live = ยืนยันก่อนเสมอ
+
+### 3.1 จุดที่เพิ่งแก้ — เช็กก่อนเลย
+- [ ] หน้า /check (checkout): ปักหมุดที่ครัว → **ระยะทาง ≈ 0 กม. ค่าจัดส่งโซนร้าน ไม่ใช่ 200+ กม./฿1748** · แถวสรุปไม่มั่ว
+- [ ] ตะกร้า: พิมพ์ `WELCOME10` กดใช้โค้ด → **แถวส่วนลด -10% ขึ้นทันที** ในสรุป
+- [ ] หน้าชำระเงิน (/payment/...): **โชว์สินค้า/ส่วนลด/ค่าจัดส่ง/รวม** (ไม่ใช่แค่ยอดรวม)
+- [ ] สั่ง same-day: **ไม่ต้องเลือกรอบ** — เห็นการ์ด "จัดส่งทันที ระบบเลือกรอบให้อัตโนมัติ" · สั่งพรีออเดอร์: ยังเลือกวัน/รอบตามเดิม
+- [ ] เมนูพรีออเดอร์ที่เลยวันแล้ว → **แสตมป์ "หมดเวลาจอง (Out of stock)"** + ปุ่มจองปิด
+- [ ] หน้า /admin/delivery: **dropdown เลือกผู้ลงทะเบียนแล้ว (Pual bite drive) + dropdown พาหนะ** → บันทึกไรเดอร์ → ผูกบัญชี → เข้า /rider ได้
+- [ ] หน้า /admin/rounds: ภาษาไทย/อิโมจิครบ (ซ่อมแล้วรอบก่อน)
+
+### 3.2 เดินต่อตาม checklist รอบก่อน (ยังใช้ได้)
+- [ ] Login/Register จาก /checkout กลับ /checkout ครบ + ตะกร้าไม่หาย · Mixed cart = 2 ออเดอร์ + COD
+- [ ] จ่าย PromptPay/Omise test mode (`4242 4242 4242 4242`) → 'paid' จาก webhook · จ่ายไม่สำเร็จ = ไม่เคลมสำเร็จ
+- [ ] Messenger: สั่ง → เลขที่จริง · ซ้ำ = เลขที่เดิม (idempotent) · AI แตะออเดอร์เดิมไม่ได้
+- [ ] รอบปิด/เต็ม/พ้น cutoff = server ปฏิเสธ (`ERR_ROUND_CLOSED`)
 
 ## 4. Blocker เหลือ (Owner / ภายนอก)
 
 | # | Blocker | ใครต้องทำ |
 |---|---|---|
 | 1 | **Meta App Review ชะลอ** — สิทธิ์ FB ทดสอบได้เฉพาะเพจ/บัญชี Owner | รอบถัดไปค่อยทำ App Review |
-| 2 | **ลงทะเบียนไรเดอร์ใหม่** (รายการว่างแล้ว 0 คน) | Owner ลงทะเบียนเองเมื่อเริ่มทดสอบ |
+| 2 | **แผนที่ Google ไม่ขึ้นบางเครื่อง** — ถ้า GPS/ป้อนพิกัดแทนยังไม่พอ | Owner เช็ก Google Cloud key restriction (HTTP referrer) + billing |
 | 3 | **"coming soon" 2 ตัว + "สินค้าสำเร็จรูป"** = ของจริงรอ Owner เปลี่ยน | Owner แก้ข้อมูลสินค้าเอง (ระบบห้ามแตะ) |
-| 4 | เช็กภาพจริงบนอุปกรณ์ Owner หลัง deploy (หน้ารอบจัดส่งต้องไม่มีตัวเพี้ยน) | Owner ดูบนเครื่องจริง |
+| 4 | ลงทะเบียนไรเดอร์จริง (เริ่มจาก Pual bite drive) | Owner ทำผ่าน dropdown ใหม่ |
+| 5 | HARD STOP ห้ามขายจริงจน Owner สั่ง go | Owner เท่านั้น |
 
 ## 5. กติกา/สัญญาที่ต้องรักษา (คงเดิม)
 
 - **เอกสารสถานะ = เขียนทับทั้งฉบับ ห้าม append** · `.clinerules` ห้าม commit · **HARD STOP ห้ามขายจริงจน Owner สั่ง go**
-- Contract tests: `g6Security` (G6-09 revised) · `socialOrderIntake` (20) · `socialAiContinuity` · `menuScheduleRoundLink` (9) · `preOrderEntry` (9) · `deliveryRoundStatus` (9) · `menuCartResultGuard` · `cartContextIsolation` · `g6g7OrderBoundary` (12) · `theaterUnity` (10) · `loginContextRestoration` (8)
-- **G6/G7 boundary:** AI สร้างออเดอร์**ใหม่**ผ่าน `_shared/socialOrderIntake.ts` → `create_order_with_items` (create-only + `p_external_ref_id`) เท่านั้น — ห้ามแก้/ยกเลิก/เปลี่ยนราคา/สถานะออเดอร์เดิม · ห้ามเคลมสำเร็จก่อนระบบยืนยัน
-- Deploy EF (เมื่อมีโค้ด EF เปลี่ยน): `SUPABASE_ACCESS_TOKEN` จาก `.env.local` แล้ว `supabase functions deploy <name> --project-ref ivkdfognyiwjcmrhcnwz` — รอบนี้มี `channel-webhook` เปลี่ยน (comment/audit text ซ่อม mojibake) → deploy คู่กับ push เพื่อ source = deployed
-- Meta App Review ชะลอ · เพจ/สิทธิ์ FB จริง = Owner เทสต์เอง · ทดสอบบน `biteme-baby.com` เท่านั้น
+- **Encoding:** เขียนข้อความไทยผ่าน editor เท่านั้น (PowerShell `Get-Content` แสดงไฟล์ไม่มี BOM เพี้ยนได้เอง) · ค้นใน shell ใช้ `\uXXXX` · ก่อน commit ต้องสแกน mojibake = 0
+- **พิกัดครัว = `src/config/kitchenLocation.ts` เท่านั้น** ห้าม hardcode ค่าใหม่ที่อื่น
+- **G6/G7 boundary:** AI สร้างออเดอร์ใหม่ผ่าน `create_order_with_items` (create-only + idempotent) เท่านั้น · server gates (`ERR_ROUND_*`, cutoff, ความจุ, mode) = authority — ห้าม bypass ฝั่ง client
+- Contract tests หลัก: `deliveryFeeApi` · `deliveryRouter` · `checkoutModeLock` · `checkoutMixedSplit` · `promotionClient` · `menuScheduleRoundLink` · `g6g7OrderBoundary` · `theaterUnity` · `loginContextRestoration`
+- Deploy EF (ถ้ามีโค้ด EF เปลี่ยน): `SUPABASE_ACCESS_TOKEN` จาก `.env.local` → `supabase functions deploy <name> --project-ref ivkdfognyiwjcmrhcnwz` · ทดสอบบน `biteme-baby.com` เท่านั้น
 

@@ -477,12 +477,13 @@ describe('External Delivery Providers — offline sandbox logic', () => {
 
   it('selects the cheapest provider within coverage', async () => {
     const { getBestProvider, DEFAULT_PROVIDERS } = await import('@/lib/externalProviders')
+    // real kitchen (src/config/kitchenLocation.ts) — coverage areas center on it
     const best = getBestProvider({
-      dropoff_latitude: 10.7016,
-      dropoff_longitude: 102.1429,
+      dropoff_latitude: 12.615659,
+      dropoff_longitude: 102.098063,
       items_count: 2,
       estimated_weight: 2,
-    }, 10.7016, 102.1429, DEFAULT_PROVIDERS)
+    }, 12.615659, 102.098063, DEFAULT_PROVIDERS)
     expect(best).not.toBeNull()
     // Distance 0 → only 'self' (Bite Drive) has min_distance_km = 0
     expect(best!.provider.id).toBe('self')
@@ -495,7 +496,7 @@ describe('External Delivery Providers — offline sandbox logic', () => {
       dropoff_longitude: 102.0,
       items_count: 1,
       estimated_weight: 1,
-    }, 10.7016, 102.1429, DEFAULT_PROVIDERS)
+    }, 12.615659, 102.098063, DEFAULT_PROVIDERS)
     expect(best).toBeNull()
   })
 

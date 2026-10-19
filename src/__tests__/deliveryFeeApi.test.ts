@@ -40,8 +40,8 @@ describe('zoneFeeForDistance (DEL-01 — fee จาก delivery_zones)', () => {
 
 describe('localZoneFee (DEL-01 — offline mirror)', () => {
   it('computes server-style fee from drop-off coordinates', () => {
-    // near the default kitchen (10.7016,102.1429)
-    const near = localZoneFee({ dropoffLatitude: 10.71, dropoffLongitude: 102.15 })
+    // near the real kitchen (src/config/kitchenLocation.ts — 12.615659, 102.098063)
+    const near = localZoneFee({ dropoffLatitude: 12.62, dropoffLongitude: 102.10 })
     // ~1 km away → zone-city (25 THB)
     expect(near).toBe(25)
   })

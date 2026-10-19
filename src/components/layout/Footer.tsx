@@ -7,8 +7,8 @@ import { usePlatformConfig } from '@/config/platformConfig'
 // ── ข้อมูลร้านจริง (Owner ยืนยัน 2026-10-17) — ใช้ตรงกันทั้ง footer/หน้าติดต่อ ──
 export const SHOP_CONTACT = {
   address: 'เมืองจันทบุรี',
-  phone: '094 2649269',
-  phoneHref: 'tel:0942649269',
+  phone: '082 6096995',
+  phoneHref: 'tel:0826096995',
   email: 'admin@biteme-baby.com',
   emailHref: 'mailto:admin@biteme-baby.com',
   hours: 'Open Daily 7.00 am. - 20.00 pm.',

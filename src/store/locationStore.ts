@@ -76,9 +76,9 @@ export function deliveryPointStatus(p: DeliveryPointDraft): {
   }
 }
 
-// Kitchen default (owner can edit .env VITE_DELIVERY_KITCHEN_LAT / LNG)
-export const KITCHEN_LAT = Number(import.meta.env.VITE_DELIVERY_KITCHEN_LAT ?? '10.7016')
-export const KITCHEN_LNG = Number(import.meta.env.VITE_DELIVERY_KITCHEN_LNG ?? '102.1429')
+// Kitchen default — SINGLE SOURCE: src/config/kitchenLocation.ts
+// (ค่า fallback = พิกัดครัวจริง — 2026-10-19 แก้เคส fallback เก่าทำให้คิดระยะทางเพี้ยน 200+ กม.)
+export { KITCHEN_LAT, KITCHEN_LNG } from '@/config/kitchenLocation'
 
 const STORAGE_KEY = 'bmb_customer_location'
 

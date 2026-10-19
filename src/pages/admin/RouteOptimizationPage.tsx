@@ -5,6 +5,7 @@
 
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
+import { KITCHEN_LAT, KITCHEN_LNG } from '@/config/kitchenLocation'
 import {
   assignOrdersToDrivers,
   getRouteSummary,
@@ -15,8 +16,8 @@ import {
 
 export function RouteOptimizationPage() {
   const [routes, setRoutes] = useState<Route[]>([])
-  const [kitchenLat] = useState(10.7016)
-  const [kitchenLon] = useState(102.1429)
+  const [kitchenLat] = useState(KITCHEN_LAT)
+  const [kitchenLon] = useState(KITCHEN_LNG)
   const [isOptimizing, setIsOptimizing] = useState(false)
 
   const mockOrders: DeliveryOrder[] = [
@@ -143,7 +144,7 @@ export function RouteOptimizationPage() {
       <div className="mt-8 card bg-blue-50 border-2 border-blue-200">
         <h3 className="font-bold text-blue-900 mb-2">📍 Delivery Zone Info</h3>
         <div className="grid grid-cols-2 gap-4 text-sm text-blue-800">
-          <div><strong>Kitchen:</strong> 10.7016, 102.1429 (Chanthaburi)</div>
+          <div><strong>Kitchen:</strong> {KITCHEN_LAT}, {KITCHEN_LNG} (Chanthaburi)</div>
           <div><strong>Max Radius:</strong> 5 km</div>
           <div><strong>Distance Formula:</strong> Haversine</div>
           <div><strong>Algorithm:</strong> Nearest Neighbor</div>

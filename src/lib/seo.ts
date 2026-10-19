@@ -1,5 +1,6 @@
 import type { SEOMeta } from '@/types'
 import { faqs } from './faqContent'
+import { KITCHEN_LAT, KITCHEN_LNG } from '@/config/kitchenLocation'
 
 export function generateJsonLd(schema: Record<string, any>): string {
   return JSON.stringify(schema).replace(/<\/script>/g, '<\\/script>')
@@ -40,7 +41,7 @@ const HOME_SCHEMA = {
         "postalCode": "22000",
         "addressCountry": "TH"
       },
-      "geo": { "@type": "GeoCoordinates", "latitude": 10.7016, "longitude": 102.1429 },
+      "geo": { "@type": "GeoCoordinates", "latitude": KITCHEN_LAT, "longitude": KITCHEN_LNG },
       "openingHoursSpecification": [{
         "@type": "OpeningHoursSpecification",
         "dayOfWeek": ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"],

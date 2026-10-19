@@ -19,6 +19,8 @@ interface FoodMenuCardProps {
   onPreOrder: (p: PreOrderPayload) => void
   /** วันจัดส่งจริงจาก menu_schedule (ผ่าน productSchedule) — ไม่ใช้ products.scheduled_date */
   scheduledDate?: string
+  /** Owner 2026-10-19: พรีออเดอร์ที่เลยวัน/เกินรอบไปแล้ว → แสตมป์ out of stock + ปิดปุ่มจอง */
+  preorderExpired?: boolean
 }
 
 const AVAIL = {
@@ -30,7 +32,7 @@ const AVAIL = {
   delivery_unavailable: 'ส่งไม่ถึงตอนนี้'
 } as const
 
-export function FoodMenuCard({ product, category, mode, availability, onSameDayOrder, onPreOrder, scheduledDate }: FoodMenuCardProps) {
+export function FoodMenuCard({ product, category, mode, availability, onSameDayOrder, onPreOrder, scheduledDate, preorderExpired = false }: FoodMenuCardProps) {
   const imageUrl = product.image_url ?? ''
   const avail = availability as keyof typeof AVAIL
   const isAvail = availability === 'available' || availability === 'limited'
@@ -62,11 +64,11 @@ export function FoodMenuCard({ product, category, mode, availability, onSameDayO
           </div>
         )}
 
-        {/* ป้ายสถานะบนรูป */}
-        {!isAvail && (
+        {/* ป้ายสถานะบนรูป — รวมแสตมป์พรีออเดอร์เลยวัน (Owner 2026-10-19) */}
+        {(!isAvail || preorderExpired) && (
           <div className="fmc-chip fmc-chip-status">
             <MascotBadge pose="empty" size="sm" alt="น้อง Bite — เมนูนี้ขายหมดแล้ว" loading="eager" />
-            <span>{AVAIL[avail]}</span>
+            <span>{preorderExpired ? 'หมดเวลาจอง (Out of stock)' : AVAIL[avail]}</span>
           </div>
         )}
 
@@ -138,9 +140,10 @@ export function FoodMenuCard({ product, category, mode, availability, onSameDayO
         {(product.available_preorder ?? product.is_preorder) && (
           <button 
             onClick={handlePreOrder} data-testid="pre-order-btn" 
-            className="w-full border-2 border-brand-primary/40 text-brand-primary rounded-xl py-3 font-semibold text-sm hover:bg-brand-primary/10 active:bg-brand-primary/20 transition-all duration-200"
+            disabled={preorderExpired}
+            className="w-full border-2 border-brand-primary/40 text-brand-primary rounded-xl py-3 font-semibold text-sm hover:bg-brand-primary/10 active:bg-brand-primary/20 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            📅 จองล่วงหน้า
+            {preorderExpired ? '📅 หมดเวลาจอง (Out of stock)' : '📅 จองล่วงหน้า'}
           </button>
         )}
       </div>

@@ -291,7 +291,7 @@ export function HomePage() {
               type="search"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="ค้นหาเมนู... (เช่น ไข่เจียว, ผัดไทย)"
+              placeholder="ค้นหาเมนู... (เช่น ก๋วยเตี๋ยวลุยสวน, ปลาต้มผักกาดดองเสฉวน)"
               className="search-input w-full pl-10 pr-4 py-3 rounded-xl border border-brand-border bg-white text-brand-accent placeholder-brand-muted"
               aria-label="ค้นหาเมนู"
             />
