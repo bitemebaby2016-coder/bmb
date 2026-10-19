@@ -12,12 +12,15 @@
 #   ดาวน์โหลดกลับมาเทียบ byte-for-byte หลัง upload, แล้ว step --verify ซ้ำอีกชั้น
 #   (manifest hash + มีไฟล์ .sql.gz ใน bucket + bucket ยังเป็น private).
 # Retention: 30 daily / 12 monthly (first-of-month) — enforced in-script.
+# Diagnostics: error ของสคริปต์ถูกดันขึ้นเป็น ::error:: annotation (mask รหัสผ่าน
+#   ใน URI อัตโนมัติ) + preflight โชว์เฉพาะ metadata ปลอดภัยของ secret (ความยาว/
+#   รูปแบบ) ไม่โชว์ค่าจริง — Owner เห็นสาเหตุจากหน้า Summary โดยไม่ต้องเปิด log
 # Failure behavior: job FAILS loudly (GitHub notification + ::error) — Owner
 #   must see missed backups. Optional LINE alert if LINE_NOTIFY_TOKEN is set.
 #
 # REQUIRED REPO SECRETS (Owner action — never committed):
-#   SUPABASE_SERVICE_ROLE_KEY = Supabase service_role key (storage R/W on bucket)
-#   BMB_DATABASE_URL          = Supabase pooler connection string (pg_dump)
+#   SUPABASE_SERVICE_ROLE_KEY = Supabase service_role key (sb_secret_…, storage R/W)
+#   BMB_DATABASE_URL          = pooler connection string WITH password (pg_dump)
 # Optional:
 #   LINE_NOTIFY_TOKEN         = LINE notify token for failure alerts
 # (GCS_SERVICE_ACCOUNT_JSON ถูกลบออกจากการใช้งานแล้ว — ลบ secret เดิมทิ้งได้)
@@ -52,36 +55,84 @@ jobs:
       BMB_DATABASE_URL: ${{ secrets.BMB_DATABASE_URL }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: 24
 
-      # pg_dump client major MUST be >= server major (Supabase = PostgreSQL 17.6)
-      - name: Install pg_dump 17 (PGDG)
+      - name: Preflight — secrets shape (safe metadata only, never values)
         run: |
+          u="$BMB_DATABASE_URL"; k="$SUPABASE_SERVICE_ROLE_KEY"
+          if [ -n "$u" ]; then
+            case "$u" in *@*) at=yes;; *) at=no;; esac
+            case "$u" in *://*:*@*) pw=yes;; *) pw=no;; esac
+            echo "::notice::BMB_DATABASE_URL present=yes len=${#u} has_at=$at has_password_in_uri=$pw"
+          else
+            echo "::error::BMB_DATABASE_URL is EMPTY — ตั้งค่า Repository secret ชื่อ BMB_DATABASE_URL (URI พร้อมรหัสผ่าน)"
+          fi
+          if [ -n "$k" ]; then
+            echo "::notice::SUPABASE_SERVICE_ROLE_KEY present=yes len=${#k}"
+          else
+            echo "::error::SUPABASE_SERVICE_ROLE_KEY is EMPTY — ตั้งค่า Repository secret ชื่อ SUPABASE_SERVICE_ROLE_KEY"
+          fi
+
+      # pg_dump client major MUST be >= server major (Supabase = PostgreSQL 17.6)
+      - name: Install pg_dump 17 (PGDG, fallback to distro client)
+        run: |
+          set +e
           sudo apt-get update -qq
           sudo apt-get install -y -qq curl ca-certificates lsb-release
           sudo install -d /usr/share/postgresql-common/pgdg
           sudo curl -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc
           echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" | sudo tee /etc/apt/sources.list.d/pgdg.list
           sudo apt-get update -qq
-          sudo apt-get install -y -qq postgresql-client-17
+          if sudo apt-get install -y -qq postgresql-client-17; then
+            echo "installed PGDG postgresql-client-17"; pg_dump --version; exit 0
+          fi
+          echo "::warning::PGDG postgresql-client-17 unavailable (distro ใหม่กว่า PGDG) — fallback ไป distro postgresql-client"
+          sudo apt-get install -y -qq postgresql-client
           pg_dump --version
 
       - name: Daily dump + upload + integrity verify
         if: github.event.inputs.mode != 'verify'
-        run: node scripts/dbBackup.mjs
+        run: |
+          set +e
+          out=$(node scripts/dbBackup.mjs 2>&1)
+          rc=$?
+          printf '%s\n' "$out" | sed -E 's#(://[^:/@ ]+):[^@ ]+@#\1:***@#g'
+          if [ $rc -ne 0 ]; then
+            last=$(printf '%s' "$out" | grep -E 'FAILED|FAIL|error|Error' | tail -1 | sed -E 's#(://[^:/@ ]+):[^@ ]+@#\1:***@#g')
+            echo "::error::dbBackup FAILED: ${last:-rc=$rc}"
+          fi
+          exit $rc
 
       - name: Post-backup verify (manifest hashes + .sql.gz presence + private bucket)
         if: github.event.inputs.mode != 'verify'
-        run: node scripts/dbBackup.mjs --verify
+        run: |
+          set +e
+          out=$(node scripts/dbBackup.mjs --verify 2>&1)
+          rc=$?
+          printf '%s\n' "$out" | sed -E 's#(://[^:/@ ]+):[^@ ]+@#\1:***@#g'
+          if [ $rc -ne 0 ]; then
+            last=$(printf '%s' "$out" | grep -E 'FAILED|FAIL|error|Error' | tail -1 | sed -E 's#(://[^:/@ ]+):[^@ ]+@#\1:***@#g')
+            echo "::error::post-backup verify FAILED: ${last:-rc=$rc}"
+          fi
+          exit $rc
 
       - name: Verify only (no dump)
         if: github.event.inputs.mode == 'verify'
-        run: node scripts/dbBackup.mjs --verify
+        run: |
+          set +e
+          out=$(node scripts/dbBackup.mjs --verify 2>&1)
+          rc=$?
+          printf '%s\n' "$out" | sed -E 's#(://[^:/@ ]+):[^@ ]+@#\1:***@#g'
+          if [ $rc -ne 0 ]; then
+            last=$(printf '%s' "$out" | grep -E 'FAILED|FAIL|error|Error' | tail -1 | sed -E 's#(://[^:/@ ]+):[^@ ]+@#\1:***@#g')
+            echo "::error::verify FAILED: ${last:-rc=$rc}"
+          fi
+          exit $rc
 
       - name: Alert on failure (optional LINE)
         if: failure()

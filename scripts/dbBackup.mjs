@@ -170,7 +170,16 @@ function runPgDump(databaseUrl) {
   const args = [...cmdParts.slice(1), databaseUrl, '--no-owner', '--no-acl', '-F', 'p']
   const r = spawnSync(bin, args, { maxBuffer: 1024 * 1024 * 512 })
   if (r.error) throw new Error(`pg_dump failed to start: ${r.error.message}`)
-  if (r.status !== 0) throw new Error(`pg_dump exit ${r.status}: ${String(r.stderr).slice(0, 500)}`)
+  if (r.status !== 0) {
+    const err = String(r.stderr || '').slice(0, 500)
+    let hint = ''
+    if (/no password supplied|password authentication failed/i.test(err)) {
+      hint = ' — ตรวจว่า secret BMB_DATABASE_URL มีรหัสผ่านใน URI (postgresql://user:PASSWORD@host:port/db) และไม่มีช่องว่าง/บรรทัดใหม่ต่อท้าย'
+    } else if (/newer than this pg_dump/i.test(err)) {
+      hint = ' — pg_dump client เก่ากว่า server ต้องติดตั้ง postgresql-client 17+ (PGDG)'
+    }
+    throw new Error(`pg_dump exit ${r.status}: ${err}${hint}`)
+  }
   return r.stdout
 }
 
