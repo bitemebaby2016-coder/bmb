@@ -2,10 +2,19 @@
 
 > **สถานะงานปัจจุบันของโปรเจกต์ Bite Me Baby** ใช้แนบเข้าสู่ Context ตอนเริ่มแชทเสมอ
 
-**last_updated:** 2026-10-19 (รอบปิดงาน BACKUP→SUPABASE STORAGE — daily-backup เขียวจริงแล้ว)
-**phase:** ปิดงานรอบ capability closure + backup refactor สมบูรณ์ — migrations 126-130 บน production · daily-backup LIVE บน Supabase Storage (run #6 ผ่านจริง) · เหลือ Owner ทดสอบจริงตาม checklist เท่านั้น
-**current_focus:** เสร็จแล้ว — รอ Owner รัน docs/BMB_OWNER_PRODUCTION_TEST_CHECKLIST_2026-10-19.md (8 หมวด) · daily-backup จะรันเอง 07:30 น. ทุกวัน (cron)
-**blocked_by:** ไม่มี — เหลือเพียงการทดสอบจริงโดย Owner (ระบบหลังบ้านปิดช่องว่างครบแล้ว)
+**last_updated:** 2026-10-20 (รอบแก้ลูกค้าลงทะเบียนแล้วชื่อไม่เข้าระบบ — migration 131)
+**phase:** ปิดทุกรอบแล้ว — capability closure + backup LIVE (run #6) + 131 register→customers (ชื่อขึ้น list ทันทีที่ลงทะเบียน) · เหลือ Owner ทดสอบจริงตาม checklist
+**current_focus:** เสร็จ — รอ Owner ยืนยันหน้า /admin/customers (รีเฟรชแล้วเห็น 3 ชื่อ) + รัน checklist 8 หมวด
+**blocked_by:** ไม่มี
+
+---
+
+## ⚡ TASK: CUSTOMERS-VISIBLE-ON-REGISTER-2026-10-20 — ลูกค้าลงทะเบียนแล้วชื่อไม่เข้าระบบ (คำสั่ง Owner 20 ต.ค.)
+- **STATUS: ✅ CLOSED — ชื่อขึ้นหน้า /admin/customers แล้ว (verify บน production ครบ)**
+- **Root cause (2 จุด):** (1) `handle_new_user()` (006) สร้างแค่ `profiles` — หน้าลูกค้าอ่านตาราง `customers` ซึ่ง signup ไม่เคยเขียน (0 แถว) → คนลงทะเบียนไม่เคยขึ้น list (2) หน้ารวมนับ `public_profiles` (VIEW ไม่มีคอลัมน์ role) → `u.role ?? 'customer'` นับทุกคนรวมแอดมิน/สต๊าฟเป็น "ลูกค้า 3" ซึ่งหลอกตา
+- **Fix:** migration **131_register_user_to_customers.sql** — `handle_new_user()` upsert `customers` ด้วย convention เดียวกับ 017 (`id`=uid text, `user_id`=uid) + **backfill** ผู้ใช้ที่มีอยู่ · ON CONFLICT เติมเฉพาะช่องว่าง (ไม่ทับชื่อ/เบอร์/อีเมลเดิม) · `getDashboardStats` (bmbAdminApi_users.ts) นับจากตาราง `customers` จริง
+- **EVIDENCE:** replay 001–131 ผ่านบน PG17 (docker) · contract `e2e/contracts_131_register_customers.sql` (trigger + key convention + name fallback) + contracts 127–130 ผ่าน · backfill พิสูจน์ใน harness · **production:** apply 201 + verify `customers_rows=3, matched_profiles=3, trigger_ok=1, fn_has_customers=true` — ชื่อจริงขึ้นครบ (ADMIN_BMB / Pual bite drive / Customer) · gates lint/tsc/vitest/build 0 · commit `c89db34`
+- **หมายเหตุ:** ตั้งแต่นี้ทุกบัญชีที่ลงทะเบียน (หรือแอดมินเพิ่มผ่าน Supabase Auth) จะมีแถว `customers` อัตโนมัติ — หน้าลูกค้าใช้โค้ดเดิมเห็นทันทีโดยไม่ต้อง deploy (dashboard ตัวเลขนับจะตรงเป๊ะหลัง auto-deploy) · แถว customers = ทุกบัญชีในระบบ (รวม staff/admin เพื่อให้ตัวเลขหน้ารวมกับหน้าลูกค้าตรงกัน)
 
 ---
 
