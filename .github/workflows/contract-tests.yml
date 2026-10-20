@@ -235,3 +235,15 @@ jobs:
             exit 1
           fi
           echo "Contract 131 OK — signup → customers registry holds"
+
+      - name: Contract 133 — payment slip upload guards (ROLLBACK)
+        run: |
+          set +e
+          out=$(psql -v ON_ERROR_STOP=1 -f e2e/contracts_133_payment_slip.sql 2>&1); rc=$?
+          printf '%s\n' "$out"
+          if [ $rc -ne 0 ]; then
+            msg=$(printf '%s\n' "$out" | grep -m1 'ERROR:' || echo "rc=$rc")
+            echo "::error file=e2e/contracts_133_payment_slip.sql::$msg"
+            exit 1
+          fi
+          echo "Contract 133 OK — slip evidence + owner-only submit holds"

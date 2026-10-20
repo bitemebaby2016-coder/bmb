@@ -1,8 +1,8 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { Link } from 'react-router-dom'
 import { getOrder } from '@/lib/bmbAdminApi_orders'
-import { submitOfflinePaymentReference, getPaymentIntents, createPaymentIntent } from '@/lib/paymentGateway'
+import { submitOfflinePaymentReference, getPaymentIntents, createPaymentIntent, uploadPaymentSlip, submitPaymentSlip } from '@/lib/paymentGateway'
 import { CardPaymentSection } from '@/components/payment/CardPaymentForm'
 import { isOmiseConfigured } from '@/lib/omise'
 import { writeAuditLog } from '@/lib/auditLog'
@@ -17,6 +17,11 @@ export function PaymentConfirmationPage() {
   const [transactionId, setTransactionId] = useState('')
   const [isConfirming, setIsConfirming] = useState(false)
   const [retrying, setRetrying] = useState(false)
+  // mig 133: หลักฐานการโอน (รูปสลิป) — เก็บ object path ใน payment_intents.slip_path
+  const [slipPath, setSlipPath] = useState<string | null>(null)
+  const [slipPreview, setSlipPreview] = useState<string | null>(null)
+  const [slipUploading, setSlipUploading] = useState(false)
+  const ensuredIntent = useRef(false)
 
   // ✅ Phase 3B §10: server state is polled; intent selection prefers the
   // ACTIVE attempt (pending/processing) — never blindly intents[0] — and a
@@ -28,6 +33,15 @@ export function PaymentConfirmationPage() {
     const intents = await getPaymentIntents({ orderNumber })
     const active = intents.find((i) => i.status === 'pending' || i.status === 'processing')
     setPaymentIntent(active ?? intents[0] ?? null)
+    // mig 133: MISSING_INTENT กันหลุด — สร้าง intent ให้เองตอนเปิดหน้าจ่ายเงิน
+    // (create_payment_intent_record เช็คยอด + เจ้าของออเดอร์ฝั่ง server อยู่แล้ว)
+    if (!ensuredIntent.current && intents.length === 0 && o && o.payment_status === 'pending'
+      && (o.payment_method === 'promptpay_qr' || o.payment_method === 'cash_on_delivery')) {
+      ensuredIntent.current = true
+      await createPaymentIntent(orderNumber, o.total_amount ?? 0, o.payment_method)
+      const retry = await getPaymentIntents({ orderNumber })
+      setPaymentIntent(retry.find((i) => i.status === 'pending' || i.status === 'processing') ?? retry[0] ?? null)
+    }
   }, [orderNumber])
 
   useEffect(() => {
@@ -47,17 +61,58 @@ export function PaymentConfirmationPage() {
     setRetrying(false)
   }
 
+  async function handleSlipFile(file: File | undefined) {
+    if (!file || !orderNumber) return
+    if (!file.type.startsWith('image/')) { showToast('กรุณาเลือกไฟล์รูปภาพ', 'error'); return }
+    if (file.size > 8 * 1024 * 1024) { showToast('ไฟล์ใหญ่เกิน 8MB', 'error'); return }
+    setSlipUploading(true)
+    const res = await uploadPaymentSlip(orderNumber, file)
+    if (res.success && res.path) {
+      setSlipPath(res.path)
+      setSlipPreview((prev) => {
+        if (prev) URL.revokeObjectURL(prev)
+        return URL.createObjectURL(file)
+      })
+      showToast('อัปโหลดสลิปแล้ว ✓', 'success')
+    } else {
+      showToast(res.error || 'อัปโหลดสลิปไม่สำเร็จ', 'error')
+    }
+    setSlipUploading(false)
+  }
+
   async function handlePromptPaySubmit() {
     if (!orderNumber) return
     setIsConfirming(true)
-    // P0-5: customer only SUBMITS the TXN reference (pending -> processing).
+    // P0-5: customer only SUBMITS evidence (TXN ref + slip image).
     // The kitchen verifies and confirms the payment — the client cannot mark paid.
-    const result = await submitOfflinePaymentReference(orderNumber, transactionId)
-    if (result.success) {
-      writeAuditLog({ action: 'payment_processed', entity_type: 'order', entity_id: orderNumber, description: 'PromptPay TXN submitted #' + orderNumber, metadata: { transactionId } })
-      showToast('Payment info submitted — awaiting kitchen confirmation', 'success')
+    // Order matters: TXN first (pending → processing via 008 B.4), then the slip
+    // (mig 133 accepts pending|processing) so BOTH pieces of evidence land.
+    let ok = true
+    let errMsg = ''
+    if (transactionId) {
+      const result = await submitOfflinePaymentReference(orderNumber, transactionId)
+      if (result.success) {
+        writeAuditLog({ action: 'payment_processed', entity_type: 'order', entity_id: orderNumber, description: 'PromptPay TXN submitted #' + orderNumber, metadata: { transactionId } })
+      } else {
+        ok = false
+        errMsg = result.error || 'Failed'
+      }
+    }
+    if (ok && slipPath) {
+      const slipRes = await submitPaymentSlip(orderNumber, slipPath)
+      if (slipRes.success) {
+        writeAuditLog({ action: 'payment_processed', entity_type: 'order', entity_id: orderNumber, description: 'PromptPay slip attached #' + orderNumber, metadata: { slipPath } })
+      } else {
+        ok = false
+        errMsg = slipRes.error || 'Failed'
+      }
+    }
+    if (ok) {
+      showToast('ส่งข้อมูลการชำระเงินแล้ว — รอแอดมินตรวจสอบ', 'success')
       setTimeout(() => navigate('/track/' + orderNumber), 1500)
-    } else { showToast(result.error || 'Failed', 'error') }
+    } else {
+      showToast(errMsg || 'Failed', 'error')
+    }
     setIsConfirming(false)
   }
 
@@ -134,8 +189,30 @@ export function PaymentConfirmationPage() {
           <ol className="text-sm mb-4 list-decimal list-inside space-y-1">
             <li>สแกน QR ด้านบนและโอน <strong>฿{order.total_amount.toFixed(2)}</strong></li>
             <li>คัดลอก <strong>เลขธุรกรรม (Transaction ID / Ref.)</strong> จากสลิป</li>
-            <li>นำมาใส่ด้านล่างแล้วกด “ส่งข้อมูลการชำระเงิน”</li>
+            <li>นำมาใส่ด้านล่าง หรือแนบรูปสลิป (แนะนำ) แล้วกด “ส่งข้อมูลการชำระเงิน”</li>
           </ol>
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-brand-accent mb-2">📸 แนบสลิปการโอน (แนะนำ — แอดมินใช้ตรวจ)</label>
+            {slipPreview ? (
+              <div className="flex items-start gap-3" data-testid="slip-box">
+                <img src={slipPreview} alt="สลิปการโอน" data-testid="slip-preview" className="w-28 h-28 object-cover rounded-lg border-2 border-brand-border" />
+                <div>
+                  <p className="text-xs text-green-700 font-medium mb-1">✓ เลือกรูปสลิปแล้ว</p>
+                  <label className="btn btn-outline btn-sm cursor-pointer">
+                    เปลี่ยนรูป
+                    <input data-testid="slip-input" type="file" accept="image/*" className="hidden" onChange={(e) => { void handleSlipFile(e.target.files?.[0]); e.target.value = '' }} />
+                  </label>
+                </div>
+              </div>
+            ) : (
+              <label className="btn btn-outline w-full cursor-pointer">
+                📎 เลือกรูปสลิปการโอน
+                <input data-testid="slip-input" type="file" accept="image/*" className="hidden" onChange={(e) => { void handleSlipFile(e.target.files?.[0]); e.target.value = '' }} />
+              </label>
+            )}
+            {slipUploading && <p className="text-xs text-brand-muted mt-1">⏳ กำลังอัปโหลดสลิป…</p>}
+            {slipPath && !slipUploading && <p className="text-xs text-green-700 mt-1">✅ แนบสลิปแล้ว — รอแอดมินตรวจสอบ</p>}
+          </div>
           <div className="mb-4">
             <label className="block text-sm font-medium text-brand-accent mb-2">Transaction ID</label>
             <input data-testid="txn-input" type="text" placeholder="Enter Transaction ID" value={transactionId} onChange={(e) => setTransactionId(e.target.value)} className="input mb-3" />
@@ -143,7 +220,7 @@ export function PaymentConfirmationPage() {
           <p className="text-xs mb-3" style={{ color: '#b45309' }}>
             ⚠️ การส่งเลขธุรกรรม <strong>ยังไม่เท่ากับการชำระเงินได้รับการยืนยัน</strong> — แอดมินตรวจสอบสลิปก่อน แล้วระบบจะเปลี่ยนสถานะเป็น “ชำระเงินแล้ว” ให้
           </p>
-          <button data-testid="confirm-payment" onClick={handlePromptPaySubmit} disabled={isConfirming || !transactionId} className="btn btn-success w-full text-lg py-3 disabled:opacity-50">
+          <button data-testid="confirm-payment" onClick={handlePromptPaySubmit} disabled={isConfirming || slipUploading || (!transactionId && !slipPath)} className="btn btn-success w-full text-lg py-3 disabled:opacity-50">
             {isConfirming ? 'กำลังส่ง...' : 'ส่งข้อมูลการชำระเงิน'}
           </button>
         </div>

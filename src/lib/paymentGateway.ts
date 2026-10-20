@@ -47,6 +47,9 @@ export interface PaymentIntent {
   updated_at: string
   completed_at?: string
   failure_reason?: string
+  /** Storage path of the customer's transfer slip (private bucket `payment-slips`). */
+  slip_path?: string | null
+  slip_uploaded_at?: string | null
 }
 
 export interface PaymentConfirmResult {
@@ -277,6 +280,61 @@ export async function confirmOfflinePayment(orderNumber: string): Promise<Paymen
     return { success: false, error: error.message }
   }
   return { success: true }
+}
+
+// ============================================
+// PromptPay transfer slip (evidence upload — mig 133)
+// ============================================
+export interface SlipUploadResult {
+  success: boolean
+  path?: string
+  error?: string
+}
+
+/**
+ * Upload the transfer slip into the PRIVATE `payment-slips` bucket.
+ * Path is forced under the caller's own folder (`<uid>/<order>-<ts>.<ext>`) —
+ * storage RLS rejects any other folder, and `submit_payment_slip` re-checks.
+ */
+export async function uploadPaymentSlip(orderNumber: string, file: File): Promise<SlipUploadResult> {
+  const { data: userData, error: userError } = await supabase.auth.getUser()
+  if (userError || !userData?.user) {
+    return { success: false, error: 'ERR_NOT_AUTHENTICATED' }
+  }
+  const uid = userData.user.id
+  const ext = (file.name.split('.').pop() || 'jpg').toLowerCase().replace(/[^a-z0-9]/g, '') || 'jpg'
+  const path = `${uid}/${orderNumber}-${Date.now()}.${ext}`
+  const { error } = await supabase.storage.from('payment-slips').upload(path, file, {
+    contentType: file.type || 'image/jpeg',
+    upsert: false,
+  })
+  if (error) {
+    return { success: false, error: error.message }
+  }
+  return { success: true, path }
+}
+
+/**
+ * Record the uploaded slip on the order's payment intent (mig 133).
+ * pending → processing (evidence attached) — admin still confirms via
+ * confirm_offline_payment; the client can NEVER mark paid.
+ */
+export async function submitPaymentSlip(orderNumber: string, slipPath: string): Promise<PaymentConfirmResult> {
+  const { error } = await supabase.rpc('submit_payment_slip', {
+    p_order_number: orderNumber,
+    p_slip_path: slipPath,
+  })
+  if (error) {
+    return { success: false, error: error.message }
+  }
+  return { success: true }
+}
+
+/** Signed URL (1h) for slip preview — owner or admin only (storage RLS). */
+export async function getPaymentSlipSignedUrl(path: string): Promise<string | null> {
+  const { data, error } = await supabase.storage.from('payment-slips').createSignedUrl(path, 3600)
+  if (error) return null
+  return data?.signedUrl ?? null
 }
 
 /**

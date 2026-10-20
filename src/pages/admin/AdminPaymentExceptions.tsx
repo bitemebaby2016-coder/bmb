@@ -14,6 +14,7 @@ import { Link } from 'react-router-dom'
 import { getPaymentExceptionOrders, getPaymentIntentsFor, classifyPaymentException, groupPaymentExceptions, PAYMENT_EXCEPTION_META, type PaymentExceptionKind, type PaymentIntentLite } from '@/lib/paymentExceptions'
 import type { OrderForm } from '@/lib/bmbAdminApi_orders'
 import { orderModeBadge } from '@/lib/adminOrderDisplay'
+import { SlipThumb } from '@/components/admin/SlipThumb'
 import { showToast } from '@/components/ui/ToastContainer'
 
 const SECTION_ORDER: PaymentExceptionKind[] = [
@@ -96,7 +97,7 @@ export function AdminPaymentExceptions() {
                   <thead className="bg-brand-bg"><tr>
                     <th className="p-2">ออเดอร์</th><th className="p-2">โหมด</th><th className="p-2">สถานะ order</th>
                     <th className="p-2">วิธีชำระ</th><th className="p-2">สถานะชำระ</th><th className="p-2">จำนวน</th>
-                    <th className="p-2">อ้างอิง provider</th><th className="p-2">อัปเดต</th>
+                    <th className="p-2">อ้างอิง provider</th><th className="p-2">สลิป/อ้างอิง</th><th className="p-2">อัปเดต</th>
                   </tr></thead>
                   <tbody>
                     {groups[k].map((r) => {
@@ -113,6 +114,7 @@ export function AdminPaymentExceptions() {
                             {r.intent?.payment_intent_id ? String(r.intent.payment_intent_id).slice(0, 18) : (r.intent?.status ?? '—')}
                             {r.intent?.failure_reason ? <div className="text-red-500">{String(r.intent.failure_reason).slice(0, 40)}</div> : null}
                           </td>
+                          <td className="p-2"><SlipThumb orderNumber={r.order.order_number} /></td>
                           <td className="p-2 text-xs text-brand-muted">{new Date(r.order.updated_at || r.order.created_at).toLocaleString('th-TH')}</td>
                         </tr>
                       )

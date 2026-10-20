@@ -20,6 +20,7 @@ import type { RoundLite } from '@/lib/preOrderQueue'
 import type { OrderForm } from '@/lib/bmbAdminApi_orders'
 import type { Product } from '@/types'
 import { useAdminTenantContextStore } from '@/lib/adminTenantContext'
+import { SlipThumb } from '@/components/admin/SlipThumb'
 
 const PAGE_SIZE = 25
 
@@ -355,6 +356,10 @@ async function handleStripeRefund(orderNumber: string) {
                 🕘 History / Audit
               </button>
 
+              {/* mig 133: หลักฐานการโอน (สลิป + TXN ref) — ดูก่อนกดยืนยัน */}
+              {order.payment_method === 'promptpay_qr' && (
+                <SlipThumb orderNumber={order.order_number} />
+              )}
               {order.payment_status === 'pending' && (
                 <button onClick={() => handleConfirmPayment(order.order_number)} className="btn btn-success text-sm">💰 Confirm payment</button>
               )}

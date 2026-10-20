@@ -57,6 +57,11 @@ export interface PaymentIntentLite {
   payment_intent_id: string | null
   failure_reason: string | null
   updated_at: string
+  /** mig 133: transfer slip object path (private bucket payment-slips). */
+  slip_path?: string | null
+  slip_uploaded_at?: string | null
+  /** metadata.reference = customer-submitted PromptPay TXN id (008 B.4). */
+  metadata?: Record<string, any> | null
 }
 
 /**
@@ -109,7 +114,7 @@ export async function getPaymentIntentsFor(orderNumbers: string[]): Promise<Paym
   try {
     const { data, error } = await supabase
       .from('payment_intents')
-      .select('order_number, status, method, amount, payment_intent_id, failure_reason, updated_at, created_at')
+      .select('order_number, status, method, amount, payment_intent_id, failure_reason, updated_at, created_at, slip_path, slip_uploaded_at, metadata')
       .in('order_number', orderNumbers)
       .order('created_at', { ascending: false })
     if (error) { console.error('[paymentExceptions] intents read failed:', error); return [] }
