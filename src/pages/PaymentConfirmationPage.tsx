@@ -146,6 +146,15 @@ export function PaymentConfirmationPage() {
           <div>
             <div className="text-sm text-brand-muted">Order Number</div>
             <div className="text-xl font-bold text-brand-accent">{order.order_number}</div>
+            {/* Owner 2026-10-20: หน้าชำระเงินต้องบอกชัดว่าเป็นออเดอร์ประเภทไหน */}
+            <div className="mt-1 flex items-center gap-2">
+              <span className={'badge ' + (order.order_mode === 'PRE_ORDER' ? 'badge-info' : 'badge-warning')}>
+                {order.order_mode === 'PRE_ORDER' ? '📅 พรีออเดอร์ (สั่งล่วงหน้า)' : '⚡ สั่งวันนี้ (Same-day)'}
+              </span>
+              {order.order_mode === 'PRE_ORDER' && order.scheduled_date ? (
+                <span className="text-xs text-brand-muted">จัดส่งวันที่ {order.scheduled_date}</span>
+              ) : null}
+            </div>
           </div>
           <span className={'badge ' + (isPaid ? 'badge-success' : isPending ? 'badge-warning' : 'badge-primary')}>{order.payment_status}</span>
         </div>

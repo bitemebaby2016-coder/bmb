@@ -28,6 +28,8 @@ import { sendGuestCheckoutOtp, createGuestCheckoutSession, describeGuestOtpError
 import { resolveAddOnLines } from '@/lib/addonDisplay'
 import { DistanceChecker } from '@/components/delivery/DistanceChecker'
 import { listRoundsForDate, type DeliveryRoundRow } from '@/lib/bmbAdminApi_rounds'
+import { haversineDistanceKm } from '@/lib/deliveryRouter'
+import { KITCHEN_POINT } from '@/config/kitchenLocation'
 import { getPublishedScheduleForDate, mirrorPreOrderScheduleGate, checkModeEligibility, type MenuScheduleRow } from '@/lib/bmbMenuSchedule'
 import { fetchServerDeliveryFee, feeUiState } from '@/lib/deliveryFeeApi'
 import { getBusinessSettings } from '@/lib/bmbAdminApi_settings'
@@ -302,11 +304,18 @@ export function CheckoutPage() {
     if (feeTimerRef.current) clearTimeout(feeTimerRef.current)
     feeTimerRef.current = setTimeout(() => {
       void (async () => {
+        // Owner 2026-10-20 "ค่าส่งต้องซิงค์กับที่แอดมินตั้ง": ส่งระยะที่ลูกค้าเห็น
+        // (haversine จากจุดครัวเดียวกับที่แสดงบนแผนที่) เข้า RPC ด้วย — server จะใช้
+        // เลขนี้เลือก zone ตรงกับ delivery_zones ที่แอดมินตั้ง ไม่หล่นสูตร legacy
         const q = await fetchServerDeliveryFee({
           dropoffLatitude: deliveryAddress.latitude,
           dropoffLongitude: deliveryAddress.longitude,
           deliveryMethod: 'self_delivery',
           itemsCount: itemCount,
+          distanceKm: haversineDistanceKm(
+            KITCHEN_POINT.latitude, KITCHEN_POINT.longitude,
+            deliveryAddress.latitude as number, deliveryAddress.longitude as number,
+          ),
         })
         if (!active) return
         setServerFee(q.delivery_fee)

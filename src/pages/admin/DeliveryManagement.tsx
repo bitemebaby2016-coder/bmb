@@ -66,8 +66,11 @@ export function DeliveryManagement() {
   const load = useCallback(async () => {
     setLoading(true)
     try {
+      // Owner 2026-10-20: คิวมอบหมายต้องเห็นออเดอร์ที่ "จ่ายแล้ว" ทันที (confirmed/
+      // preparing) — assign_driver รองรับอยู่แล้ว (020/125) ไม่ต้องรอ ready_for_dispatch
+      // ไรเดอร์จะเห็นงานทันทีที่มอบหมาย (my_deliveries) ไม่ต้องรอครัวปิดงาน
       const [dispatchOrders, drv, accts] = await Promise.all([
-        getOrdersByStatuses(['ready_for_dispatch', 'dispatched', 'in_transit', 'arrived', 'delivered']),
+        getOrdersByStatuses(['confirmed', 'preparing', 'ready_for_dispatch', 'dispatched', 'in_transit', 'arrived', 'delivered']),
         adminListDrivers(),
         getDriverAccounts(),
       ])
