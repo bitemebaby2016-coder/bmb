@@ -1,9 +1,9 @@
 ﻿'use strict'
-// CAT-03A media migration â€” Base64 â†’ bmb-images â†’ media_assets â†’ products.image_url
+// CAT-03A media migration — Base64 → bmb-images → media_assets → products.image_url
 // Usage: node e2e/ct-cat03a-migrate.cjs 1   (batch 1 = prod-1..prod-6)
 //        node e2e/ct-cat03a-migrate.cjs 2   (batch 2 = admin-created products)
 //        node e2e/ct-cat03a-migrate.cjs verify  (verify current state, no mutation)
-// Safety contract: backup first, upload â†’ verify â†’ metadata â†’ verify read â†’ only then PATCH.
+// Safety contract: backup first, upload → verify → metadata → verify read → only then PATCH.
 const TOKEN = process.env.SUPABASE_ACCESS_TOKEN || ''
 const REF = 'ivkdfognyiwjcmrhcnwz'
 const SUPABASE_URL = `https://${REF}.supabase.co`
@@ -42,7 +42,7 @@ function validWebp(buf) {
   const BATCH1 = ['prod-1', 'prod-2', 'prod-3', 'prod-4', 'prod-5', 'prod-6']
   const rows = await q("select id, name, image_url from products where image_url like 'data:image%' order by id")
   if (mode === 'verify') {
-    console.log('VERIFY â€” current state:')
+    console.log('VERIFY — current state:')
     console.log('  base64 products:', JSON.stringify(await q("select count(*)::int c from products where image_url like 'data:image%'")))
     console.log('  storage products:', JSON.stringify(await q("select count(*)::int c from products where image_url like '%/object/public/bmb-images/%'")))
     console.log('  media_assets:', JSON.stringify(await q('select count(*)::int c from media_assets')))
@@ -55,7 +55,7 @@ function validWebp(buf) {
   if (!targets.length) { console.log('no targets in batch'); return }
   const jwt = await adminToken()
   const keys = await (async () => { const r = await fetch(`https://api.supabase.com/v1/projects/${REF}/api-keys`, { headers: { Authorization: 'Bearer ' + TOKEN } }); return (await r.json()).filter(k => k.type === 'legacy').map(k => k.api_key) })()
-  const svc = keys[1] // server-side trusted path (CAT-03 contract Â§4) â€” storage-api does not
+  const svc = keys[1] // server-side trusted path (CAT-03 contract §4) — storage-api does not
   // resolve user JWT claims in this project (verified 2026-09-29), so admin upload via
   // authenticated policy is impossible; svc used for storage upload ONLY, all DB writes stay admin-authenticated.
   const dbHdrs = { apikey: keys[0], Authorization: 'Bearer ' + jwt }
@@ -112,5 +112,5 @@ function validWebp(buf) {
   }
   fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2))
   fs.writeFileSync(backupPath, JSON.stringify(backup, null, 2))
-  console.log(`manifest: ${manifestPath} (${manifest.length}) Â· backup: ${backupPath} (${backup.length})`)
+  console.log(`manifest: ${manifestPath} (${manifest.length}) · backup: ${backupPath} (${backup.length})`)
 })().catch((e) => { console.error('FATAL', String(e).slice(0, 400)); process.exit(1) })

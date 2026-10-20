@@ -1,14 +1,14 @@
 ﻿# BMB_02_RPC_PRODUCTION_AUDIT.md
-**Read-only RPC audit (production)** Â· Evidence: `e2e/prod-phase2-audit.json → functions/rpc_grants/function_sources_key` (2026-09-27)
+**Read-only RPC audit (production)** · Evidence: `e2e/prod-phase2-audit.json → functions/rpc_grants/function_sources_key` (2026-09-27)
 
 ## ภาพรวม
 
 - 103 functions ใน schema public — เกือบทั้งหมด **SECURITY DEFINER** (ตรวจจาก probe functions)
 - RPC สำคัญทั้งหมดที่ architecture (Phase 1) อ้าง — **มีอยู่จริงบน production ทั้งหมด:**
-  - `create_order_with_items(p_items jsonb, p_delivery_round_id text, p_delivery_method, ...)` — def 13,523 chars Â· refs cutoff ✓ Â· refs max_capacity ✓
-  - `transition_order_status` Â· `order_transition_allowed` (มี ELSE fix 030 — ตรวจสอบก่อนหน้า แต่ re-probe ใน JSON)
-  - `record_payment_result` (3,221) Â· `create_payment_intent_record` Â· `submit_offline_payment_reference` Â· `confirm_offline_payment` (2,464) Â· `mark_payment_failed`
-  - `compute_delivery_fee_rpc` Â· `ensure_rounds_for_date(date)` (2,624) Â· `get_ai_memory`/`save_ai_memory` Â· `append_audit_log` Â· `customer_intelligence` Â· `submit_content_for_approval`/`review_content`
+  - `create_order_with_items(p_items jsonb, p_delivery_round_id text, p_delivery_method, ...)` — def 13,523 chars · refs cutoff ✓ · refs max_capacity ✓
+  - `transition_order_status` · `order_transition_allowed` (มี ELSE fix 030 — ตรวจสอบก่อนหน้า แต่ re-probe ใน JSON)
+  - `record_payment_result` (3,221) · `create_payment_intent_record` · `submit_offline_payment_reference` · `confirm_offline_payment` (2,464) · `mark_payment_failed`
+  - `compute_delivery_fee_rpc` · `ensure_rounds_for_date(date)` (2,624) · `get_ai_memory`/`save_ai_memory` · `append_audit_log` · `customer_intelligence` · `submit_content_for_approval`/`review_content`
 
 ## Enforcement จริงต่อ RPC (จาก body keyword probe)
 

@@ -1,4 +1,4 @@
-// Bite Me Baby â€” Production smoke test (Playwright)
+// Bite Me Baby — Production smoke test (Playwright)
 const fs = require('fs')
 const path = require('path')
 const { chromium } = require('playwright')

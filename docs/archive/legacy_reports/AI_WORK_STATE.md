@@ -10,7 +10,7 @@
 # ===============================================================================
 # Gate: TEN-02 IMPLEMENTATION — DEPLOYED TO PROD + VERIFIED
 # HEAD ตอนจบ gate: ดู git log — deployments on main (baseline 8169853b -> post-ten02)
-# Reports: BMB_TEN02_CLOSURE_REPORT.md Â· BMB_TEN02_IMPLEMENTATION_CONTRACT.md Â· BMB_TEN01_AUDIT.md Â· BMB_STORAGE_PLATFORM_BLOCKER.md
+# Reports: BMB_TEN02_CLOSURE_REPORT.md · BMB_TEN02_IMPLEMENTATION_CONTRACT.md · BMB_TEN01_AUDIT.md · BMB_STORAGE_PLATFORM_BLOCKER.md
 # Prod facts post-TEN-02 (verified e2e/ten02-verify.cjs):
 #   - tenants table: tenant-bmb-001 active (single tenant)
 #   - brands: 0 rows
@@ -19,9 +19,9 @@
 #   - order_number = BMB-YYYYMMDD-NNN global unchanged (orders=202, order_items=199, payment_intents=56)
 #   - RLS rewritten: *_tenant_admin_manage policies for ops tables; F-06 JWT driver identity preserved
 # Storage 403 ROOT CAUSE: STILL UNRESOLVED (ES256/JWT key issue) — Admin UI upload NOT runtime verified
-#   Workaround active: svc-key storage upload server-side only (CAT-03 Â§4)
-# Awaiting Owner: TEN-03 catalog tenancy progression decision Â· Storage platform fix action
-# ห้ามเริ่ม: TEN-03..09 Â· CAT-04 Â· CAT-03B (ก่อน >= 2026-10-13) Â· Catalog Runtime Verify Â· Open-Shop
+#   Workaround active: svc-key storage upload server-side only (CAT-03 §4)
+# Awaiting Owner: TEN-03 catalog tenancy progression decision · Storage platform fix action
+# ห้ามเริ่ม: TEN-03..09 · CAT-04 · CAT-03B (ก่อน >= 2026-10-13) · Catalog Runtime Verify · Open-Shop
 
 
 > IMPORTANT
@@ -457,7 +457,7 @@ Completed:
 - .env/.env.local purged of VITE_SUPABASE_SERVICE_ROLE_KEY / VITE_STRIPE_SECRET_KEY / VITE_STRIPE_WEBHOOK_SECRET.
 Verified: tsc 0 errors [VERIFIED]; vitest 50/50 [VERIFIED] (14 new P0-5/P0-6 tests); npm run build PASS [VERIFIED].
 Blocked (owner): apply migration 008 to live DB; re-run 007 grants; supabase link+secrets+deploy EFs; rotate leaked service-role key; live Stripe webhook test; auth e2e live (email rate-limit today).
-Files changed: see git status (migrations/008, 2Ã—supabase/functions, src/lib{paymentGateway,bmbAdminApi_orders,bmbAdminApi_{promotions,rounds,customers,settings}}, pages{PaymentConfirmation,admin/AdminOrders,admin/AdminDashboard,App.tsx}, 4 new admin pages, tests{paymentStateMachine, mockRef, supabaseMock}, docs).
+Files changed: see git status (migrations/008, 2×supabase/functions, src/lib{paymentGateway,bmbAdminApi_orders,bmbAdminApi_{promotions,rounds,customers,settings}}, pages{PaymentConfirmation,admin/AdminOrders,admin/AdminDashboard,App.tsx}, 4 new admin pages, tests{paymentStateMachine, mockRef, supabaseMock}, docs).
 === BMB-STRIPE-LIVE-VERIFY SESSION (2026-09-19) ===
 Task ID: BMB-STRIPE-GATE-2026-09-19 (continue BMB-SEC-2026-09-18)
 Status: LIVE VERIFY DONE / STRIPE GATE NOT PASSED (owner DB + Stripe blocked) — honest, not faked
@@ -598,7 +598,7 @@ REMAINING (owner): optional - retire/disable any other stale Stripe endpoints; k
   endpoint secret on Supabase in sync with the ACTIVE endpoint (dashboard shows it).
 === PHASE C-D REMAINING WORK SESSION (2026-09-19) — C-6 REFUND + C-7 MEDIA + PHASE D ===
 Task ID: BMB-OWNER-PHASE-CD-REMAINING-2026-09-19
-Status: ✅ C-6 DONE (LIVE VERIFIED) Â· C-7 code-complete (owner applies migration 011) Â· Phase D admin updated
+Status: ✅ C-6 DONE (LIVE VERIFIED) · C-7 code-complete (owner applies migration 011) · Phase D admin updated
 
 C-6 stripe-refund EF (supabase/functions/stripe-refund/index.ts, config.toml verify_jwt=true):
 - Admin-only (JWT + profiles.role='admin' server-side); Stripe Refund API with
@@ -642,7 +642,7 @@ LAYERS (mock → real without UI change):
 BUSINESS FLOWS PRESERVED (verified): add-to-cart (cartStore), pre-order (createPreOrder → real row),
 review CTA deep-link (cart/checkout by mode), [data-testid=home-menu-cta] kept for E2E.
 
-VALIDATION: tsc 0 errors Â· vitest 61/61 Â· npm run build PASS Â· Runtime QA (Playwright headless):
+VALIDATION: tsc 0 errors · vitest 61/61 · npm run build PASS · Runtime QA (Playwright headless):
   mobile 390x844: HERO_GREETING=true, 4 carousels, store strip, 4 quick actions, 0 console errors → PASS
   desktop 1440: 4 carousels, hero 1280px, scrollH shorter, 0 errors → PASS
   (screenshot: e2e/screenshots/home-v5-qa.png)
@@ -652,14 +652,14 @@ anon/authenticated), promotions wired to admin promotions, stock/rating wired to
 columns via migration 012 (owner applies; mock overlay stays as pre-migration fallback).
 === HOME UI v5 — COMPLETION SESSION (2026-09-19) — all remaining items closed ===
 Task ID: BMB-OWNER-HOME-UI-v5-FINAL-2026-09-19
-Status: ✅ ALL DONE — every test passed before commit (tsc 0 Â· vitest 61/61 Â· build PASS Â· runtime QA PASS)
+Status: ✅ ALL DONE — every test passed before commit (tsc 0 · vitest 61/61 · build PASS · runtime QA PASS)
 
 ADDED (final batch):
 - OrdersPage (/orders) — lists own orders + pre-orders (RLS), tracking deep-links; guest → login prompt.
-  Connected BottomNav to spec Â§13: Home / Menu / Bite / Orders / Account (removed Cart item; cart = Floating).
+  Connected BottomNav to spec §13: Home / Menu / Bite / Orders / Account (removed Cart item; cart = Floating).
 - Real-data adapters (providers): getStoreStatusFromRounds (delivery_rounds → StoreStatus, fallback mock),
   getHomePromotionsFromRows (admin promotions → HomePromotion, fallback mock), getBitePose (state→pose
-  mapping per spec Â§4/5, reusing existing mascot assets).
+  mapping per spec §4/5, reusing existing mascot assets).
 - BiteHero now reacts to store state (pose changes: closed→empty, same_day_closed→thinking...).
 - A11y: quick-action min-height 52px + carousel nav 40px touch targets; reduced-motion preserved.
 - HomePage loads products + categories + rounds + promotions in one dynamic-import batch.
@@ -667,10 +667,10 @@ ADDED (final batch):
 BUSINESS FLOWS UNSHAKEN: cart (cartStore), pre-order (createPreOrder→real row), review deep-link by mode,
 home-menu-cta testid. E2E selector contract preserved.
 
-VALIDATION (final): tsc --noEmit 0 Â· vitest 61/61 Â· npm run build PASS Â·
+VALIDATION (final): tsc --noEmit 0 · vitest 61/61 · npm run build PASS ·
   Runtime QA (Playwright, mobile 390x844 + desktop 1440):
-  hero/carousels=4/store strip/quick actions 4/menu cta ✓ Â· bottom nav 5 items (Home/Menu/Bite/Orders/Account) ✓
-  /orders guest prompt ✓ Â· 0 console errors → FINAL_ALL=PASS
+  hero/carousels=4/store strip/quick actions 4/menu cta ✓ · bottom nav 5 items (Home/Menu/Bite/Orders/Account) ✓
+  /orders guest prompt ✓ · 0 console errors → FINAL_ALL=PASS
   (screenshot e2e/screenshots/home-v5-qa.png)
 
 RESOLVED (2026-09-19): stock/rating via products columns (migration 012 written, owner applies);
@@ -682,7 +682,7 @@ migration 013 (to_jsonb, owner applies). Checkout now requires sign-in (007) →
 
 === HOME UI v6 + OWNER ADMIN BOOTSTRAP — SESSION (2026-09-19) ===
 Task ID: BMB-OWNER-HOME-UI-v6-ADMIN-2026-09-19
-Status: ✅ ALL DONE — verified before commit (tsc 0 Â· vitest 61/61 Â· build PASS Â· runtime QA PASS)
+Status: ✅ ALL DONE — verified before commit (tsc 0 · vitest 61/61 · build PASS · runtime QA PASS)
 
 ADDED:
 - DrinksSection (src/components/home/DrinksSection.tsx) — mockup carousel of เครื่องดื่ม,
@@ -705,9 +705,9 @@ VERIFICATION:
 - npx tsc --noEmit = PASS (exit 0)
 - npx vitest run = PASS 61/61 (4 files)
 - npm run build = PASS (tsc + vite build 2.06s; drink SVGs copied to dist)
-- Runtime QA (Playwright mobile 390x844, vite preview): drinks heading+5 cardsÂ·arrows frameless
-  (bg transparent, border 0, position absolute, overlay in section)Â·review floating logoÂ·star
-  animation "starPop, starBlink"Â·carousels=5Â·auto-slide advanced review+promo tracksÂ·0 console errors
+- Runtime QA (Playwright mobile 390x844, vite preview): drinks heading+5 cards·arrows frameless
+  (bg transparent, border 0, position absolute, overlay in section)·review floating logo·star
+  animation "starPop, starBlink"·carousels=5·auto-slide advanced review+promo tracks·0 console errors
   → ALL PASS (screenshot e2e/screenshots/home-v6-qa.png)
 
 REMAINING / BLOCKED:
@@ -733,7 +733,7 @@ P0 - Critical (6 items):
    Files: src/index.css (.flad-stack), src/components/ai/BiteMascot.tsx (position="bottom-left")
 3. Carousel Auto-slide Enhancement — Default 8000ms, pause on hover/focus/touch, indicator dots, loop-back.
    Files: src/components/home/HorizontalCarousel.tsx, ReviewCarouselSection.tsx, PromotionStrip.tsx
-4. USP Bar under Hero — "ส่งฟรีครบ ฿200 Â· AI แนะนำ 24/7 Â· จันทบุรี 5 กม." with pill badges.
+4. USP Bar under Hero — "ส่งฟรีครบ ฿200 · AI แนะนำ 24/7 · จันทบุรี 5 กม." with pill badges.
    Files: src/components/home/BiteHero.tsx (+USP_ITEMS const), src/index.css (.usp-bar, .usp-item)
 5. Drinks/Snacks Coming Soon Overlay — Visual overlay + disabled CTA + data-coming-soon attr.
    Files: src/components/home/DrinksSection.tsx, SnacksSection.tsx, src/index.css (.drink-card-scheduled, overlay)
@@ -794,9 +794,9 @@ Update documentation (AI_WORK_STATE.md), commit changes, push to origin/main for
 - Image/mascot sync: branded fallback SVG /images/mock/food-mock.svg for HomeProductCard & FoodMenuCard
   (products without image), floating peeking mascots on Drinks/Snacks section headings.
 
-VERIFICATION: tsc --noEmit 0 Â· vitest 61/61 Â· npm run build PASS Â· runtime QA (Playwright mobile 390):
-  drinks+snacks headings Â· snack cards 5 Â· carousels 6 Â· review mascot/logo Â· login quick tab (phone+GPS)
-  Â· checkout guest flow no crash Â· 0 console errors → PASS.
+VERIFICATION: tsc --noEmit 0 · vitest 61/61 · npm run build PASS · runtime QA (Playwright mobile 390):
+  drinks+snacks headings · snack cards 5 · carousels 6 · review mascot/logo · login quick tab (phone+GPS)
+  · checkout guest flow no crash · 0 console errors → PASS.
 
 REMAINING / NEXT:
 - Owner policy: phone quick login is single-factor (phone) — production hardening = phone OTP (SMS).
@@ -818,7 +818,7 @@ VERIFICATION:
 - npm run build = PASS (tsc + vite build 2.35s)
 
 CHANGES:
-C-07 Round Time Canonicalization (Spec Â§16.4):
+C-07 Round Time Canonicalization (Spec §16.4):
 - Updated migration 001 & 004 seed data to match Spec: Morning 06-09 (cutoff 08:00), Midday 11-14 (cutoff 10:30), Evening 17-20 (cutoff 16:00)
 - Updated AdminRounds form defaults to match Spec
 - Updated homeProviders.ts mock getStoreStatus() to match Spec
@@ -845,11 +845,11 @@ Tool Calling (SECURE - via ai-proxy):
 
 === SESSION 2026-09-20 (B): Upsell/add-on/topping sheet + dismissible home banner ===
 Task ID: BMB-SESSION-2026-09-20B
-Status: ✅ ALL DONE — migration 016 applied LIVE, verified (tsc 0 Â· vitest 61/61 Â· build Â· QA3 PASS)
+Status: ✅ ALL DONE — migration 016 applied LIVE, verified (tsc 0 · vitest 61/61 · build · QA3 PASS)
 
 VERIFIED ON LIVE:
-- Migration 016 applied → products.addons JSONB seeded for prod-1..4 (toppings w/ prices) Â·
-  promotions.is_banner/banner_image added Â· seeded promo-welcome-banner (is_banner=true) Â·
+- Migration 016 applied → products.addons JSONB seeded for prod-1..4 (toppings w/ prices) ·
+  promotions.is_banner/banner_image added · seeded promo-welcome-banner (is_banner=true) ·
   compute_addons_price() + create_order_with_items re-created so add-on surcharges are
   re-derived SERVER-SIDE (client sends ids+choices only; base+prices stay authoritative).
 
@@ -861,10 +861,10 @@ ADDED:
   per-promo); promo title/desc/coupon/image + "See deal" link; admin toggles it in /admin/promotions
   ("🏠 Show as Home banner" + banner image URL). e2e/runE2E updated for the new confirm-sheet flow.
 
-VERIFICATION: tsc --noEmit 0 Â· vitest 61/61 Â· npm run build PASS Â· Runtime QA (mobile 390):
-  home banner visible ✅ Â· banner dismissible ✅ Â· modal opens ✅ Â· add-ons shown (3) ✅ Â·
-  recommendations shown ✅ Â· topping raises total (65→80) ✅ Â· confirm adds to cart (badge 1) ✅ Â·
-  modal closes ✅ Â· 0 console errors → QA3 PASS.
+VERIFICATION: tsc --noEmit 0 · vitest 61/61 · npm run build PASS · Runtime QA (mobile 390):
+  home banner visible ✅ · banner dismissible ✅ · modal opens ✅ · add-ons shown (3) ✅ ·
+  recommendations shown ✅ · topping raises total (65→80) ✅ · confirm adds to cart (badge 1) ✅ ·
+  modal closes ✅ · 0 console errors → QA3 PASS.
 
 REMAINING / NEXT:
 - Admin product editor does not yet expose the add-ons JSON field (owners edit via DB/API for now;
@@ -872,8 +872,8 @@ REMAINING / NEXT:
 - Pre-order items skip the upsell sheet (booking flow keeps direct confirm).
 
 ---
-Status: ✅ PHASE 3B Â· WAVE 2 DONE (2026-09-22) — F-1 fixed + REAL-BROWSER cancel click-through + production migration runbook
-Full evidence: `PWA_CANONICAL_ORDER_CONSUMER_AUDIT.md` Â§13 (this file's earlier blocks are from
+Status: ✅ PHASE 3B · WAVE 2 DONE (2026-09-22) — F-1 fixed + REAL-BROWSER cancel click-through + production migration runbook
+Full evidence: `PWA_CANONICAL_ORDER_CONSUMER_AUDIT.md` §13 (this file's earlier blocks are from
 older phases and kept as history).
 
 SHIPPED THIS WAVE (all committed to main):
@@ -881,7 +881,7 @@ SHIPPED THIS WAVE (all committed to main):
   `ELSE RETURN false;` added to the admin CASE of `order_transition_allowed`. Pre-fix suite run
   reproduced `case not found` live; post-fix suite 4/4 PASS (`e2e/contracts_030_transition_else.sql`)
   with `ERR_INVALID_TRANSITION` surfacing end-to-end; `live_verify_022.sql` still 13/13 PASS.
-- Gates: vitest 179/179 Â· eslint clean Â· build PASS.
+- Gates: vitest 179/179 · eslint clean · build PASS.
 - `e2e/cancelClickThrough.cjs` — REAL browser click-through (Playwright, local stack): 11/11 PASS —
   login → full-UI SAME_DAY order → cancel clicked on Track page → toast/status/capacity 1→0 →
   second order → cancel clicked on Orders page → toast/row/capacity 1→0. Evidence:
@@ -901,46 +901,46 @@ KNOWN MACHINE/GRANTS NOTES (flagged, not changed):
 > **HISTORICAL (WAVE 2):** NEXT: owner confirms → `supabase db push` (028+029+030) → rerun contracts_023/028/029/030 on
 
 ---
-Status: ✅ PHASE 3B Â· WAVE 2 FULLY CLOSED (2026-09-22 evening) — production migrated + verified + security hole closed
+Status: ✅ PHASE 3B · WAVE 2 FULLY CLOSED (2026-09-22 evening) — production migrated + verified + security hole closed
 Production apply EXECUTED (owner-approved): `supabase db push` applied 028+029+030 (recorded), then
 contract suites on production revealed a REAL anon-execute hole (F-4: default-privileges drift from
 the manual-apply era → anon could execute 82 functions incl. writing delivery_rounds). Fixed by
 migrations 031 (default-privileges + 33 function REVOKEs) and 032 (5 PUBLIC EXECUTE revokes), both
-applied to local AND production. Final state: migration history 32/32 both sides Â· anon-callable
-functions LOCAL 49 == PROD 49 Â· REST anon probe on production → 401 Â· full contract suites on
-production 4/4 PASS (023/028/029/030) Â· evidence: `e2e/prod-contracts-result.json`,
-`e2e/prod-check-result.json`, audit doc Â§13.
+applied to local AND production. Final state: migration history 32/32 both sides · anon-callable
+functions LOCAL 49 == PROD 49 · REST anon probe on production → 401 · full contract suites on
+production 4/4 PASS (023/028/029/030) · evidence: `e2e/prod-contracts-result.json`,
+`e2e/prod-check-result.json`, audit doc §13.
 
 REMAINING / NEXT (owner queue):
 - F-3 follow-up: full table-ACL hardening pass (anon table grants from the same drift era — RLS
   currently governs, but grants should be aligned like the functions were).
 - Optionally: rerun older contract suites (017–022) on production for completeness; stale remote
   history rows 031/032/20260812000002 no longer exist (resolved during this wave).
-production → Â§13 post-apply checklist.
+production → §13 post-apply checklist.
 ---
 
-Status: ✅ PHASE 3B Â· WAVE 3 DONE (2026-09-22) — migration 033 table-ACL alignment applied + verified locally
+Status: ✅ PHASE 3B · WAVE 3 DONE (2026-09-22) — migration 033 table-ACL alignment applied + verified locally
 
-Full evidence: `RLS_MATRIX.md` v2.0 Â· `e2e/prodCheckGrants.cjs` Â· `e2e/contracts_033_table_acl.sql` Â·
+Full evidence: `RLS_MATRIX.md` v2.0 · `e2e/prodCheckGrants.cjs` · `e2e/contracts_033_table_acl.sql` ·
 `e2e/prod-check-grants-result.json`.
 
 SHIPPED THIS WAVE (PRODUCTION VERIFIED):
 - Migration `033_table_acl_alignment.sql` (F-3 closure) — GRANT/REVOKE only, no schema/policy change:
-  residue REVOKE (REFERENCES/TRIGGER/TRUNCATE anon+auth on every public rel) Â· service_role full
-  restore + default privileges Â· authenticated grants: business_settings S / content_approvals S /
-  media_assets S,I,U,D / mascot_overrides S,I,U,D Â· anon mascot_overrides S Â· `public_profiles`
+  residue REVOKE (REFERENCES/TRIGGER/TRUNCATE anon+auth on every public rel) · service_role full
+  restore + default privileges · authenticated grants: business_settings S / content_approvals S /
+  media_assets S,I,U,D / mascot_overrides S,I,U,D · anon mascot_overrides S · `public_profiles`
   view-write REVOKED (SECURITY: view runs as owner → view-write = profiles-RLS bypass = cross-user
-  write) Â· `pre_orders` auth I/U/D REVOKED (024 archive is RPC-write-only).
+  write) · `pre_orders` auth I/U/D REVOKED (024 archive is RPC-write-only).
 - Migration `034_production_acl_drift_remediation.sql` (F-3 follow-up) — REVOKE-only corrective:
   anon I/U/D on 16 tables + anon SELECT on 15 non-canonical tables/views
   authenticated ALL on payment_intents, inventory, profiles (F-5 tables)
   + GRANT SELECT,UPDATE ON inventory TO authenticated (minimal for contracts/RPCs).
 - Applied + registered via `npx supabase db push --yes --linked` (CLI 2.117.0) → history 34/34.
 - Verification ALL GREEN (local + production):
-  Â· `e2e/prodCheckGrants.cjs --remote` grant probe 7/7 PASS (anon_write_residue=0, anon_extra_select=0).
-  Â· Contract suites 023/028/029/030/033 → 5/5 PASS on production.
-  Â· REST probe (production, anon publishable key): business_settings 401 | mascot_overrides 200 | recipes 401 (leak CLOSED) | customer_intelligence 401 | public_profiles POST 401.
-  Â· F-5 policies dormant (grant-blocked).
+  · `e2e/prodCheckGrants.cjs --remote` grant probe 7/7 PASS (anon_write_residue=0, anon_extra_select=0).
+  · Contract suites 023/028/029/030/033 → 5/5 PASS on production.
+  · REST probe (production, anon publishable key): business_settings 401 | mascot_overrides 200 | recipes 401 (leak CLOSED) | customer_intelligence 401 | public_profiles POST 401.
+  · F-5 policies dormant (grant-blocked).
 - `RLS_MATRIX.md` v2.0 updated; Phase-B baseline preserved as `RLS_MATRIX_v1_phaseB_baseline.md`.
 
 RESOLVED the WAVE-2 "KNOWN MACHINE/GRANTS NOTES" items (locally): `service_role` full grants restored;
@@ -956,18 +956,18 @@ PRODUCTION APPLY EXECUTED (owner token + CLI, 2026-09-22 evening):
 - Contracts on production (`e2e/prodRunContracts.cjs`): **5/5 PASS** (023/028/029/030/033).
 - REST on production (publishable anon key): business_settings 401 ✅ | mascot_overrides 200 ✅ |
   recipes 401 ✅ (leak CLOSED) | customer_intelligence 401 ✅ | public_profiles POST 401 ✅.
-- EVIDENCE: `e2e/prod-verify-033-final.txt` Â· `e2e/prod-check-grants-result.json` (remote_pass:true)
-  Â· `e2e/prod-contracts-result.json` (pass:true) Â· `e2e/prod-check-result.json` (history 34/34).
+- EVIDENCE: `e2e/prod-verify-033-final.txt` · `e2e/prod-check-grants-result.json` (remote_pass:true)
+  · `e2e/prod-contracts-result.json` (pass:true) · `e2e/prod-check-result.json` (history 34/34).
 
 WAVE 3 PRODUCTION GATE = **VERIFIED** ✅
-All criteria met: history 34/34 consistent Â· anon residue 0/0 Â· 033/034 grants PASS Â·
-contracts 5/5 PASS Â· recipes leak closed Â· canonical public-read works Â· view-write blocked Â· no regression.
+All criteria met: history 34/34 consistent · anon residue 0/0 · 033/034 grants PASS ·
+contracts 5/5 PASS · recipes leak closed · canonical public-read works · view-write blocked · no regression.
 - ROOT CAUSE: production retained 004-era wide grants (`GRANT ALL ... TO anon/authenticated`); local had
   already shed them, so 033 step-1 residue cleanup (REFERENCES/TRIGGER/TRUNCATE only) did not cover the
   surviving anon INSERT/UPDATE/DELETE (16 rels) and extra anon SELECT (15) on prod. 033 did NOT create or
   worsen any of it; its own deliverables are all green on prod.
-- EVIDENCE: `e2e/prod-verify-033.txt` Â· `e2e/prod-acl-dump-post033.txt` (205 ACL rows) Â·
-  `e2e/prod-check-grants-result.json` Â· `e2e/prod-contracts-result.json` Â· `e2e/prod-check-result.json`.
+- EVIDENCE: `e2e/prod-verify-033.txt` · `e2e/prod-acl-dump-post033.txt` (205 ACL rows) ·
+  `e2e/prod-check-grants-result.json` · `e2e/prod-contracts-result.json` · `e2e/prod-check-result.json`.
 
 CURRENT STATUS:
 POST-WAVE 3 VERIFIED ✅

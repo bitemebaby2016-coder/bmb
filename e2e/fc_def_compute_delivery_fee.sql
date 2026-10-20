@@ -45,7 +45,7 @@ BEGIN
     RETURN v_fee;
   END IF;
 
-  -- W-1.4: no silent hardcode fallback â€” admin must cover distance with an active zone
+  -- W-1.4: no silent hardcode fallback — admin must cover distance with an active zone
   RAISE EXCEPTION 'ERR_NO_DELIVERY_ZONE: no active delivery_zone covers % km (admin: adjust delivery_zones)', v_dist;
   END;
 $function$

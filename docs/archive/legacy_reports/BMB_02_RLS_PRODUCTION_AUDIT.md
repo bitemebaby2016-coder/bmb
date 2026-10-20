@@ -1,5 +1,5 @@
 ﻿# BMB_02_RLS_PRODUCTION_AUDIT.md
-**Read-only RLS/GRANT reality (production)** Â· Evidence: `e2e/prod-phase2-audit.json → rls/policies/policy_exprs/table_grants`
+**Read-only RLS/GRANT reality (production)** · Evidence: `e2e/prod-phase2-audit.json → rls/policies/policy_exprs/table_grants`
 
 ## ผลจาก catalog จริง
 
@@ -15,12 +15,12 @@
 | orders UPDATE | none | **using=false (block ทุกกรณี — ต้องผ่าน RPC)** | full |
 | orders DELETE | none | none (เฉพาะ is_admin() ผ่าน orders_admin_manage) | full |
 | payment_intents | using=false (deny) | own + own_create (ผ่าน order_number→orders.customer_ref) | full |
-| business_settings | using=false | SELECT=true (อ่านได้) Â· write เฉพาะ is_admin() | full |
+| business_settings | using=false | SELECT=true (อ่านได้) · write เฉพาะ is_admin() | full |
 | customers | using=false | own read + is_admin() manage | full |
 | products | SELECT เมื่อ is_available=true | admin manage | full |
 | recipes | **SELECT=true (anon อ่านสูตรได้ทั้งหมด — by design แต่ mission ท้าทายจุดนี้)** | admin manage | full |
 | delivery_rounds | SELECT เมื่อ status='active' | admin manage | full |
-| drivers | deny | SELECT=true (อ่านได้ทุกคน login) Â· write is_admin() | full |
+| drivers | deny | SELECT=true (อ่านได้ทุกคน login) · write is_admin() | full |
 | public_profiles (view) | — | SELECT เท่านั้น | full |
 
 ## Grants (ผล table_grants)

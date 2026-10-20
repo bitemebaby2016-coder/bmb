@@ -1,14 +1,14 @@
 -- ============================================
--- Bite Me Baby â€” PHASE 3B SQL Contract Suite: M1-09 driver â†’ orders.status sync (036)
--- Baseline: e118c47 Â· Scope: owner-approved M1-09 defect fix ONLY
+-- Bite Me Baby — PHASE 3B SQL Contract Suite: M1-09 driver → orders.status sync (036)
+-- Baseline: e118c47 · Scope: owner-approved M1-09 defect fix ONLY
 -- Run as OWNER in Supabase SQL Editor (or via prodRunContracts.cjs).
--- ONE transaction, ROLLBACKs at the end â€” zero persisted data.
+-- ONE transaction, ROLLBACKs at the end — zero persisted data.
 --
 -- Proves:
---   G1  mapping: picked_upâ†’dispatched / in_transitâ†’in_transit / deliveredâ†’delivered
+--   G1  mapping: picked_up→dispatched / in_transit→in_transit / delivered→delivered
 --   G2  duplicates are safe (no backward move, no double transition)
---   G3  backward transitions rejected (deliveredâ†’in_transit / â†’picked_up,
---       in_transitâ†’picked_up) per canonical allow-list
+--   G3  backward transitions rejected (delivered→in_transit / →picked_up,
+--       in_transit→picked_up) per canonical allow-list
 --   G4  sync blocked on non-ready order (ERR_DELIVERY_SYNC_BLOCKED), order untouched
 --   G5  unauthorized driver rejected; unrelated order untouched
 --   G6  audit log rows created per hop (source=driver_update_delivery_status)
@@ -181,7 +181,7 @@ BEGIN
   PERFORM public.transition_order_status(v_on, 'ready_for_dispatch');
   PERFORM public.assign_driver(p_order_number => v_on, p_driver_id => 'drv-m109-2');
 
-  -- G2a duplicate picked_up: safe â€” order stays dispatched, no invalid transition
+  -- G2a duplicate picked_up: safe — order stays dispatched, no invalid transition
   PERFORM set_config('role', 'authenticated', false);
   PERFORM set_config('request.jwt.claims', '{"sub":"99999999-9999-9999-9999-999999999999","role":"authenticated"}', false);
   PERFORM public.driver_accept_assignment(v_on, '0900010002');
@@ -293,7 +293,7 @@ BEGIN
 END $$;
 
 -- ============================================
--- DONE â€” discard every test-created row
+-- DONE — discard every test-created row
 -- ============================================
 RESET ROLE;
 ROLLBACK;

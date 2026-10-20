@@ -6,7 +6,7 @@
 
 - LOCAL: 39 files (001–039) in `supabase/migrations/`
 - REMOTE: 39 recorded versions, 001→039 ตรงลำดับชื่อ
-- LOCAL ONLY: none Â· PRODUCTION ONLY (stale history rows): none
+- LOCAL ONLY: none · PRODUCTION ONLY (stale history rows): none
 
 ## Object-level drift
 

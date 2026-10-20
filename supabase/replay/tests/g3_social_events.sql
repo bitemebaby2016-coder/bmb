@@ -1,5 +1,5 @@
 ﻿-- ============================================
--- G3 SOCIAL EVENTS FOUNDATION â€” contract test matrix (ISOLATED LOCAL ONLY)
+-- G3 SOCIAL EVENTS FOUNDATION — contract test matrix (ISOLATED LOCAL ONLY)
 -- Runs AFTER migrations 106,108,109 + patches/g3_align.sql.
 -- Reuses rls_matrix/remediation_matrix fixtures (tenant-a/b, brand a1/a2/b1,
 -- admin-a/b, customer-a, platform, admin-nullt).
@@ -50,7 +50,7 @@ DO $$ BEGIN
   RAISE NOTICE 'PASS S3 NULL/empty identifiers REJECTED';
 END $$;
 
--- S4: page allowlist â€” unbound page DENIED server-side (HC-1)
+-- S4: page allowlist — unbound page DENIED server-side (HC-1)
 DO $$ BEGIN
   IF public.ingest_social_event('MESSENGER','evt-rogue','page-unknown','comment','s','n','x',NULL) <> 'UNBOUND_PAGE' THEN
     RAISE EXCEPTION 'FAIL S4: unbound page accepted (TENANT DERIVATION LEAK)';
@@ -58,7 +58,7 @@ DO $$ BEGIN
   RAISE NOTICE 'PASS S4 unbound page DENIED (server-side allowlist)';
 END $$;
 
--- S5: server-side tenant derivation â€” event landed in mapping tenant + default brand
+-- S5: server-side tenant derivation — event landed in mapping tenant + default brand
 DO $$ DECLARE r record; BEGIN
   SELECT tenant_id, brand_id INTO r FROM public.social_events WHERE platform='MESSENGER' AND event_id='evt-001';
   IF r.tenant_id <> 'tenant-a' THEN

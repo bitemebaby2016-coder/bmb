@@ -1,13 +1,13 @@
 -- ============================================
--- Bite Me Baby â€” PHASE 3B SQL Contract Suite: PRE_ORDER policy (038)
--- Baseline: b8c1c21 Â· Scope: PRE-04 â€” owner decisions Q1/Q2/Q3 (PRE-01 gate)
--- ONE transaction, ROLLBACKs at the end â€” zero persisted data.
+-- Bite Me Baby — PHASE 3B SQL Contract Suite: PRE_ORDER policy (038)
+-- Baseline: b8c1c21 · Scope: PRE-04 — owner decisions Q1/Q2/Q3 (PRE-01 gate)
+-- ONE transaction, ROLLBACKs at the end — zero persisted data.
 --
 -- Owner decisions under test (docs/BMB_PRE01_OWNER_DECISION_GATE_2026-09-24.md):
 --   Q1 window: future-only, max 40 days (business_settings configurable)
 --   Q1 cutoff: closes 2h before the scheduled round's delivery_start
---   Q2 cancel: only before that cutoff â†’ ERR_CANCEL_AFTER_CUTOFF; refund = none (2C)
---   Q3 deduct: at confirm (existing 019/026 mechanism â€” verified by existing suites)
+--   Q2 cancel: only before that cutoff → ERR_CANCEL_AFTER_CUTOFF; refund = none (2C)
+--   Q3 deduct: at confirm (existing 019/026 mechanism — verified by existing suites)
 -- ============================================
 
 BEGIN;
@@ -27,7 +27,7 @@ UPDATE public.delivery_rounds SET cutoff_time = '23:59', max_capacity = 50, curr
 UPDATE public.inventory SET current_stock = 999999;
 
 -- ============================================
--- G1. VALID PRE_ORDER (future date, before cutoff) â†’ created
+-- G1. VALID PRE_ORDER (future date, before cutoff) → created
 -- ============================================
 DO $$ DECLARE v_on text;
 BEGIN
@@ -102,12 +102,12 @@ BEGIN
 END $$;
 
 -- NOTE: create-path cutoff (2h rule) is unreachable for future-only dates
--- (cutoff = scheduled_date + delivery_start âˆ’ 2h is always future when date > today);
+-- (cutoff = scheduled_date + delivery_start − 2h is always future when date > today);
 -- it is exercised deterministically via the cancel path (G5) and round-date UPDATE.
 
 
 -- ============================================
--- G5. CANCEL WINDOW â€” before cutoff OK / after cutoff ERR_CANCEL_AFTER_CUTOFF
+-- G5. CANCEL WINDOW — before cutoff OK / after cutoff ERR_CANCEL_AFTER_CUTOFF
 -- ============================================
 DO $$ DECLARE v_on text; v_ord text; v_r jsonb;
 BEGIN
@@ -123,14 +123,14 @@ BEGIN
   ))->>'order_number';
   IF v_on IS NULL THEN RAISE EXCEPTION 'FAIL G5 create'; END IF;
 
-  -- G5a cancel BEFORE cutoff (round is tomorrow morning; cutoff = tomorrow 05:00) â†’ OK
+  -- G5a cancel BEFORE cutoff (round is tomorrow morning; cutoff = tomorrow 05:00) → OK
   v_r := public.cancel_order(p_order_number => v_on, p_reason => 'm038 pre-cutoff cancel');
   IF COALESCE((v_r->>'ok')::boolean, false) IS NOT TRUE THEN
     RAISE EXCEPTION 'FAIL G5a pre-cutoff cancel'; END IF;
   RAISE NOTICE 'PASS G5a cancel before cutoff allowed';
 
   -- G5b cancel AFTER cutoff: recreate, then force the scheduled date into the past
-  -- (owner-level fixture: temporarily disable the window trigger â€” rolled back)
+  -- (owner-level fixture: temporarily disable the window trigger — rolled back)
   v_on := (public.create_order_with_items(
     p_items => '[{"product_id":"prod-6","quantity":1}]'::jsonb,
     p_delivery_round_id => 'round-' || to_char((now() AT TIME ZONE 'Asia/Bangkok')::date + 1,'YYYYMMDD') || '-midday',

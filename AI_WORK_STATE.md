@@ -21,6 +21,7 @@
 - **EVIDENCE (fresh 20 ต.ค.):** tsc/eslint 0 · vitest **1205/1205** (เพิ่ม driverActionResults 9 + dbRestoreDrill 3) · build PWA ผ่าน · replay **001–132** สะอาดบน PG17 · `contracts_132` G1–G6 ผ่าน · `contracts_036` ผ่านทุกกลุ่ม (ซ่อม fixture ค้างก่อน 041 + POD gate) · 127-130/131 regression ผ่าน · probe ยืนยัน 126–130 recorded บน production
 - **ข้อค้นพบสำคัญ:** (1) migration **131 ไม่ได้ record ใน schema_migrations** (objects ทำงานจริงแล้ว — drift ต้อง repair เมื่ออนุมัติ) (2) restore drill ไม่เคยมี → เพิ่ม `scripts/dbRestoreDrill.mjs` (sha256+structure+guard ห้ามชี้ prod; รันจริงต้องใช้ service-role secret) (3) contract 036 เดิมไม่ผ่านจริงบน stack 041+ (fixture ไม่ผูก JWT) — ซ่อมแล้ว
 - **ขออนุมัติ:** apply `132_rider_pod_push_decline.sql` + deploy `automation-worker`/`push-send` + `supabase migration repair` 131 · **ห้ามประกาศ E2E PASS จนกว่าจะทดสอบจริงหลัง deploy**
+- **รอบแก้ 2 (บ่าย 20 ต.ค. — Owner สั่ง):** (1) CI #502 แดง TS7016 = ผมเพิ่ม test import `.mjs` หลังรัน build → เพิ่ม `scripts/dbRestoreDrill.d.mts` แล้ว `npm run build` ผ่าน (2) หน้าแรก `/` (landing ไม่มี Header) หาปุ่มไม่เจอ → เพิ่มปุ่มใหญ่ "เข้าสู่ร้าน"/"เข้าสู่ระบบ"/"🛵 งานจัดส่งของฉัน (ไรเดอร์, server-verified)" ใน `TalkToBite.tsx` (3) "ภาษาต่างดาว" = mojibake เก่า (ตั้งแต่รอบ 118) ใน e2e/docs ที่โผล่ในหน้า commit — `src/` สะอาด 0 จุด; ซ่อมแล้ว 17 ไฟล์ เหลือ 3 (migrations 106/109/112 ที่ apply แล้ว ไม่แตะกัน drift) · Gates รอบนี้: tsc/eslint 0 · vitest 1208/1208 · build ผ่าน · replay 001–132 exit 0 · contracts 132/036/127-130/131 exit 0 ทั้งหมด
 
 ---
 

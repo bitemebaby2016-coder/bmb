@@ -133,3 +133,13 @@
 | Migration 131 schema_migrations record | **DEFERRED — รอ Owner อนุมัติ repair** |
 | ADDENDUM rider entry (hidden-by-role + admin button + unlinked message) | IMPLEMENTED · CONNECTED |
 | Production E2E PASS | **ยังไม่ประกาศ** — รอ §5 ทดสอบจริงหลัง deploy |
+
+## 8. รอบแก้ 2 (20 ต.ค. บ่าย — ตามคำสั่ง Owner หลัง push แรก)
+
+| ปัญหาที่ Owner รายงาน | สาเหตุจริง | แก้ไข |
+|---|---|---|
+| CI #502 แดง (TS7016 ที่ `dbRestoreDrill.test.ts`) | ผมเพิ่ม test ที่ import `scripts/dbRestoreDrill.mjs` **หลัง**รัน build รอบสุดท้าย + tsconfig `allowJs:false` ไม่มี declaration ให้ `.mjs` | เพิ่ม `scripts/dbRestoreDrill.d.mts` · **`npm run build` (tsc && vite build) ผ่านแล้ว** (ตรงกับ step ที่แดงใน CI) |
+| เข้าสู่ร้านจากหน้าแรกไม่เห็น / ลองข้อ 1 ไม่ได้ / ขอปุ่มล็อกอิน | หน้าแรก `/` เป็น full-screen landing ไม่มี Header — ปุ่มที่เพิ่มไว้รอบแรกอยู่ Header/Profile ซึ่ง**เข้าไม่ถึงจากหน้าแรก** และ "เข้าสู่ร้าน" เดิมเป็นลิงก์ตัวหนังสือจาง + ไม่มีปุ่มล็อกอินบน landing | `TalkToBite.tsx` landing: **ปุ่มใหญ่ "🛍️ เข้าสู่ร้าน →"** + **"🔐 เข้าสู่ระบบ"** (เมื่อยังไม่ล็อกอิน) + **"🛵 งานจัดส่งของฉัน (ไรเดอร์)"** (เฉพาะบัญชีที่เซิร์ฟเวอร์ยืนยันว่าผูก drivers.user_id แล้ว — F-06) + ปุ่ม "🛵 งานส่งของฉัน" ในแถบ quick actions ตอนสนทนา |
+| ภาษาต่างดาวปน (ที่เห็นในหน้า commit) | mojibake จริงของ `— · → " § ×` (CP1252 ซ้อน 1-2 ชั้น) ในไฟล์**เก่าก่อนรอบนี้** (ตั้งแต่รอบ 118 ฯลฯ) ไม่ใช่จากโค้ดรอบนี้; `src/` ทั้งโฟลเดอร์ = 0 จุด (สแกนระดับ codepoint แล้ว) · ที่เห็นในเทอร์มินัลแชทเป็น artifact console ไม่ใช่เนื้อไฟล์ | ซ่อมแล้ว **17 ไฟล์** (e2e contracts 023/028/036/038 + e2e scripts 5 + docs/archive 7 + supabase/replay 2) ด้วยเครื่องมือปอกชั้น CP1252 แบบ fail-safe · **เหลือ 3 ไฟล์ที่ตั้งใจไม่แตะ** (migrations 106/109/112 — apply ขึ้น prod แล้ว, mojibake อยู่ในคอมเมนต์ล้วน; ถ้า Owner ต้องการให้ซ่อมบอกได้) |
+
+**Evidence รอบแก้ 2 (fresh):** tsc 0 · eslint 0 · vitest **1208/1208** (114 files) · `npm run build` ผ่าน · replay **001–132** exit 0 หลังซ่อมไฟล์ · contracts 132 (G1–G6) / 036 (G1–G9) / 127-130 / 131 = **exit 0 ทั้งหมด**

@@ -24,6 +24,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '@/store/authStore'
+import { useRiderIdentity } from '@/hooks/useRiderIdentity'
 import { useCartStore } from '@/store/cartStore'
 import { useBiteAIStore } from '@/stores/useBiteAIStore'
 import { MascotBadge } from '@/components/MascotBadge'
@@ -95,6 +96,8 @@ const FALLBACK_GREETING =
 export function TalkToBite({ mode = 'overlay', initialPhase = 'landing', landingClose = true, onClose }: TalkToBiteProps) {
   const navigate = useNavigate()
   const customer = useAuthStore((s) => s.customer)
+  // ปุ่มทางเข้าไรเดอร์ — แสดงเฉพาะบัญชีที่เซิร์ฟเวอร์ยืนยันว่าผูก drivers.user_id แล้ว (F-06)
+  const riderIdentity = useRiderIdentity()
   const biteState = useBiteAIStore((s) => s.biteState)
   const setBiteState = useBiteAIStore((s) => s.setBiteState)
 
@@ -692,11 +695,23 @@ export function TalkToBite({ mode = 'overlay', initialPhase = 'landing', landing
         </div>
       </div>
 
-      {/* into the store */}
-      <div className="px-6 pb-8 pt-2 flex justify-center">
-        <button type="button" onClick={() => navigate('/shop')} className="text-brand-primary font-medium hover:underline" data-testid="ttb-enter-store">
-          เข้าสู่ร้าน →
+      {/* into the store + login + rider entry — Owner 2026-10-20: ปุ่มต้องเห็นชัดจากหน้าแรก
+          (เดิม "เข้าสู่ร้าน" เป็นลิงก์ตัวหนังสือจาง และไม่มีปุ่มล็อกอิน/ปุ่มไรเดอร์เลย)
+          ปุ่มไรเดอร์แสดงเฉพาะบัญชีที่เซิร์ฟเวอร์ยืนยันแล้ว (useRiderIdentity) */}
+      <div className="px-6 pb-8 pt-2 flex flex-wrap items-center justify-center gap-3">
+        <button type="button" onClick={() => navigate('/shop')} className="btn btn-primary px-6 py-2.5 rounded-full text-sm font-medium shadow" data-testid="ttb-enter-store">
+          🛍️ เข้าสู่ร้าน →
         </button>
+        {!customer && (
+          <button type="button" onClick={goLogin} className="btn btn-outline px-6 py-2.5 rounded-full text-sm font-medium" data-testid="ttb-login-landing">
+            🔐 เข้าสู่ระบบ
+          </button>
+        )}
+        {!!riderIdentity.driver && (
+          <button type="button" onClick={() => navigate('/rider')} className="btn btn-outline px-6 py-2.5 rounded-full text-sm font-medium" data-testid="ttb-rider-entry">
+            🛵 งานจัดส่งของฉัน (ไรเดอร์)
+          </button>
+        )}
       </div>
     </div>
   )
@@ -867,6 +882,7 @@ export function TalkToBite({ mode = 'overlay', initialPhase = 'landing', landing
           { label: '🍊 ช่วยเลือกให้หน่อย', fn: () => void handleRecommend(), id: 'ttb-recommend' },
           { label: '🍽️ ดูเมนู', fn: () => void showMenu(), id: 'ttb-menu' },
           { label: '📦 เช็กออเดอร์', fn: () => void handleCheckOrders(), id: 'ttb-orders' },
+          ...(riderIdentity.driver ? [{ label: '🛵 งานส่งของฉัน', fn: () => navigate('/rider'), id: 'ttb-rider' }] : []),
           ...(customer ? [] : [{ label: '🔐 เข้าสู่ระบบ', fn: goLogin, id: 'ttb-login' }]),
         ].map((qa) => (
           <button

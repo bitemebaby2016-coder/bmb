@@ -1,4 +1,4 @@
-﻿-- REPLAY BASE PATCH (ISOLATED LOCAL ONLY) â€” bare supabase/postgres precondition
+﻿-- REPLAY BASE PATCH (ISOLATED LOCAL ONLY) — bare supabase/postgres precondition
 -- The bare supabase/postgres image does not create the storage schema
 -- (that is done by the storage-api service in a full stack). Replay storage
 -- policies need a minimal skeleton. Schema-only: no data, no grants change.

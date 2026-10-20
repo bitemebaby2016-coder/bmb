@@ -1,5 +1,5 @@
 ﻿# BMB_02_EDGE_FUNCTION_PRODUCTION_AUDIT.md
-**Edge Functions deployed จริง (Management API GET /functions)** Â· Evidence: `e2e/prod-phase2-audit.json → edge_functions`
+**Edge Functions deployed จริง (Management API GET /functions)** · Evidence: `e2e/prod-phase2-audit.json → edge_functions`
 
 ## Deployed จริงบน production: 4/14
 

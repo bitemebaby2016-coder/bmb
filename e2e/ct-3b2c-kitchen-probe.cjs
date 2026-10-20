@@ -1,6 +1,6 @@
 ﻿'use strict'
-// STEP 3B-2C â€” deploy migration 054 (DDL only) + READ-ONLY gate verification.
-// The gate SQL replicated here runs as pure SELECTs â€” zero data mutation.
+// STEP 3B-2C — deploy migration 054 (DDL only) + READ-ONLY gate verification.
+// The gate SQL replicated here runs as pure SELECTs — zero data mutation.
 const TOKEN = process.env.SUPABASE_ACCESS_TOKEN || ''
 const REF = 'ivkdfognyiwjcmrhcnwz'
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms))

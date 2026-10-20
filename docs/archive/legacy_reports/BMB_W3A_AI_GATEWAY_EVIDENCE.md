@@ -1,16 +1,16 @@
 ﻿# BMB_W3A_AI_GATEWAY_EVIDENCE.md
-**WAVE 3-A — AI GATEWAY (F-03/F-04) Â· วันที่: 2026-09-27** Â· ภาษาไทยเป็นหลัก Â· Technical identifiers คง English
+**WAVE 3-A — AI GATEWAY (F-03/F-04) · วันที่: 2026-09-27** · ภาษาไทยเป็นหลัก · Technical identifiers คง English
 
 ## 1. Owner Authorization
 - Owner command "BMB — OWNER AUTHORIZATION: START WAVE 3" (2026-09-27) อนุญาต: W3-0 Reality
   Reconciliation → W3-A AI Gateway (F-03/F-04 เท่านั้น) จนถึง Gate → COMMIT → PUSH → HANDOFF → HARD STOP
-- Step A2: อนุญาตใช้ existing OpenRouter API key ผ่าน server-side Supabase secret Â·
+- Step A2: อนุญาตใช้ existing OpenRouter API key ผ่าน server-side Supabase secret ·
   **DO NOT ROTATE** (ไม่ได้ rotate — key ตัวเดิมจาก `supabase/secrets.local.env`)
 - ข้อห้ามคงอยู่: ไม่เลือก AI provider ใหม่ / ไม่เปลี่ยน model strategy เชิง business /
   ไม่แก้ schema / ไม่ตัดสิน notification-omnichannel provider
 
 ## 2. Baseline (W3-0 เริ่มงาน)
-- HEAD = `84fbd75` = origin/main Â· worktree CLEAN (ยกเว้นไฟล์งาน W3-0/W3-A ที่สร้างภายหลัง)
+- HEAD = `84fbd75` = origin/main · worktree CLEAN (ยกเว้นไฟล์งาน W3-0/W3-A ที่สร้างภายหลัง)
 - CI lint FAIL: `eslint .` พบ error 46 รายการใน `scripts/*.cjs` (no-undef / no-require-imports)
   → fix: ขยาย eslint flat-config ignores เป็น `**/*.cjs`, `**/*.mjs`, `scripts/**`
   (scripts = Node tooling ที่รันด้วย node ตรง ๆ ไม่ใช่ app code) → lint = 0 errors
@@ -23,20 +23,20 @@
   (เทียบจากไฟล์ที่ดาวน์โหลดจาก production จริง)
 - ความขัดแย้งของเอกสาร: `c6a4014` (Wave 1 deployment id `42809703`) ถูก
   **overwrite ด้วย deployment ใหม่ก่อน Wave 2 gate** — `BMB_WAVE_2_HANDOFF.md` ไม่ตรง
-  Production และได้แก้ไขแล้ว Â· `BMB_WAVE_2_PRODUCTION_APPLY_EVIDENCE.md` (PROD_MATCH 6/6)
+  Production และได้แก้ไขแล้ว · `BMB_WAVE_2_PRODUCTION_APPLY_EVIDENCE.md` (PROD_MATCH 6/6)
   ถูกยืนยันด้วย runtime จริง
 - **ไม่มี DEPLOYMENT GAP** — Wave 2 client (RiderPWA, diff c6a4014..84fbd75 = driverService.ts +
   RiderPwaPage.tsx) deploy อยู่แล้ว → **ไม่ redeploy เพียงเพื่อความสะอาด** (ตามคำสั่ง)
-- ปิด W3-0 ด้วย: tsc 0 Â· vitest 44 files / 358 tests PASS Â· build ✓
+- ปิด W3-0 ด้วย: tsc 0 · vitest 44 files / 358 tests PASS · build ✓
 
 ## 4. Architecture Audit (Step A1)
 - AI Gateway กลางที่มีอยู่: **Supabase Edge Function `ai-proxy`** (`supabase/functions/ai-proxy/index.ts`)
-  — ไม่มี duplicate gateway Â· ไม่มี provider key ฝั่ง client
+  — ไม่มี duplicate gateway · ไม่มี provider key ฝั่ง client
 - Callers (ทั้งหมดผ่าน `supabase.functions.invoke('ai-proxy')` + user JWT): `aiService.ts`
-  (chat + recommendations) Â· `aiToolCalling.ts` (read-only tools) Â· `aiVoice.ts` (voice) Â·
+  (chat + recommendations) · `aiToolCalling.ts` (read-only tools) · `aiVoice.ts` (voice) ·
   `ai-daily-report` function ยังไม่ถูก deploy (นอก scope W3-A)
 - Contract: POST `{ messages, model?, maxTokens? }` → `{ data: <OpenRouter chat completion> }`
-  หรือ `{ error, upstream_status?, detail? }` Â· model default
+  หรือ `{ error, upstream_status?, detail? }` · model default
   `nvidia/nemotron-3-ultra-550b-a55b:free`
 - Guardrail (AI-02) inject **server-side** ที่หัว system context — client strip ไม่ได้
 - config.toml: `[functions.ai-proxy] verify_jwt = true`
@@ -47,7 +47,7 @@
 - ไม่มี rate limiting / quota / upstream timeout — จัดเป็น GAP (ไม่ blocker)
 
 ## 6. AI Gateway Contract (หลังแก้)
-- พร้อมกับข้อ 4 Â· เพิ่ม: Authorization ต้องเป็น **user JWT ที่ verify ได้กับ
+- พร้อมกับข้อ 4 · เพิ่ม: Authorization ต้องเป็น **user JWT ที่ verify ได้กับ
   `{SUPABASE_URL}/auth/v1/user`** มิฉะนั้น 401 (ปฏิเสธ `anon`, `service_role`,
   `sb_publishable_*` ทันที)
 
@@ -57,16 +57,16 @@
   deploy → ai-proxy จะกลายเป็น unrestricted AI relay บน server-side key
 - **แก้ภายใน W3-A (blocker ต่อ security contract):** เพิ่ม in-function JWT verification
   (defense-in-depth, verify กับ `{SUPABASE_URL}/auth/v1/user`) → redeploy → probe รอบสอง:
-  unauth = 401, anon-key = 401, valid JWT = 200 Â· พิสูจน์แล้วว่า anonymous caller
+  unauth = 401, anon-key = 401, valid JWT = 200 · พิสูจน์แล้วว่า anonymous caller
   ใช้เป็น relay ไม่ได้
 
 ## 8. OpenRouter Secret Handling
 - ตรวจ `npx supabase secrets list` (production `ivkdfognyiwjcmrhcnwz`): ยังไม่มี
   `OPENROUTER_API_KEY` → set ด้วย existing key จาก gitignored `supabase/secrets.local.env`
-  (ไม่ rotate Â· ไม่ print ค่า Â· ไม่ commit) → list ยืนยัน `OPENROUTER_API_KEY` มีอยู่แล้ว
+  (ไม่ rotate · ไม่ print ค่า · ไม่ commit) → list ยืนยัน `OPENROUTER_API_KEY` มีอยู่แล้ว
   (แสดงเฉพาะ digest)
 - หมายเหตุ: ค่า secret ปรากฏใน terminal echo ของคำสั่ง set หนึ่งครั้ง (ค่า key เดิมตามที่
-  Owner ห้าม rotate Â· session terminal ฝั่ง Owner) — ไม่เข้า git, ไม่เข้า server logs,
+  Owner ห้าม rotate · session terminal ฝั่ง Owner) — ไม่เข้า git, ไม่เข้า server logs,
   ไม่เข้า evidence นี้
 - `VITE_OPENROUTER_MODEL` ใน .env = ชื่อ model เท่านั้น (ไม่ใช่ secret)
 
@@ -78,7 +78,7 @@
   stripe-refund / phone-auto-login → **ai-proxy ไม่เคยถูก deploy มาก่อน**
 - Cloudflare: ไม่ต้อง deploy (production = 84fbd75 อยู่แล้ว ตามข้อ 3; งานนี้ไม่แตะ src/)
 
-## 10. Runtime Tests — `e2e/w3a-ai-proxy-runtime.json` (production จริง Â· PASS 11/11)
+## 10. Runtime Tests — `e2e/w3a-ai-proxy-runtime.json` (production จริง · PASS 11/11)
 | ตรวจ | ผล |
 |---|---|
 | login test admin → JWT | PASS |
@@ -94,21 +94,21 @@
 | secret scan ทุก response | PASS (0 hits ของ `sk-or-*`) |
 
 ## 11. Security Tests
-- JWT boundary: ดูข้อ 7/10 Â· CORS: ACAO=* + allow authorization/apikey headers (JWT ยังจำเป็น)
-- secret: OPENROUTER key ถูกอ่านจาก Deno.env เท่านั้น Â· response error ไม่รวม key
+- JWT boundary: ดูข้อ 7/10 · CORS: ACAO=* + allow authorization/apikey headers (JWT ยังจำเป็น)
+- secret: OPENROUTER key ถูกอ่านจาก Deno.env เท่านั้น · response error ไม่รวม key
 
 ## 12. Client Exposure Scan
 - dist scan (238+ ไฟล์): `OPENROUTER_API_KEY` / `sk-or-` = **0 hits**
-- actual key (`sk-or-v1-****…`) ใน **git tracked files: NONE** Â· ใน **dist: NONE**
+- actual key (`sk-or-v1-****…`) ใน **git tracked files: NONE** · ใน **dist: NONE**
 - git มีเพียงคำว่า "sk-or" ใน scan scripts/docs (ไม่ใช่ค่าจริง)
 
 ## 13. Error Handling
-- malformed json → 400 Â· no messages → 400 Â· method → 405 Â· upstream !ok → 502 พร้อม
-  upstream_status (ไม่พัง 500) Â· secret missing → 500 พร้อมข้อความชัดเจน (ไม่ leak)
+- malformed json → 400 · no messages → 400 · method → 405 · upstream !ok → 502 พร้อม
+  upstream_status (ไม่พัง 500) · secret missing → 500 พร้อมข้อความชัดเจน (ไม่ leak)
 
 ## 14. Provider Failure Tests
-- invalid model → OpenRouter 400 → function ตอบ 502 handled (runtime จริง) Â·
-  timeout: Supabase EF wall-clock ครอบคลุม Â· **GAP: ไม่มี explicit upstream timeout /
+- invalid model → OpenRouter 400 → function ตอบ 502 handled (runtime จริง) ·
+  timeout: Supabase EF wall-clock ครอบคลุม · **GAP: ไม่มี explicit upstream timeout /
   retry** (ดูข้อ 16)
 
 ## 15. Transaction Authority Boundary
@@ -116,7 +116,7 @@
   guardrail ห้าม AI ยืนยันราคา/สต๊อก/ออเดอร์/การชำระเงิน (inject server-side)
 - `aiToolCalling.ts` tools ทั้งหมดเป็น read-only getters (get_menu/get_order/get_product/
   get_reviews/get_categories) execute client-side บนข้อมูลที่ RLS กำหนด — AI ไม่มี
-  อำนาจตัดสิน transaction Â· Supabase ยังเป็น Source of Truth Â· **PASS**
+  อำนาจตัดสิน transaction · Supabase ยังเป็น Source of Truth · **PASS**
 
 ## 16. GAP (ไม่ blocker ต่อ W3-A Gate — บันทึกไว้)
 1. **No rate limiting / abuse controls** — authenticated users ใช้ได้ไม่จำกัด (ความเสี่ยง:
@@ -133,11 +133,11 @@
 - ไม่มีสิ่งใด BLOCKED ใน W3-A (Owner decisions คงค้างจาก Wave 2 ไม่กระทบ W3-A)
 
 ## 19. Gate Result
-source audit ✓ Â· gateway contract ✓ Â· server-side secret ✓ Â· secret configured ✓ Â·
-no key in client ✓ Â· no key in dist ✓ Â· no key in logs ✓ Â· auth boundary verified ✓ Â·
-valid request PASS ✓ Â· invalid request handled ✓ Â· provider error handled ✓ Â· CORS ✓ Â·
-runtime production probe PASS (11/11) ✓ Â· tsc PASS (0) ✓ Â· vitest PASS (358) ✓ Â·
-build PASS ✓ Â· secret scan PASS ✓ Â· lint PASS (หลัง fix CI) ✓ Â· deployment fingerprint ✓
+source audit ✓ · gateway contract ✓ · server-side secret ✓ · secret configured ✓ ·
+no key in client ✓ · no key in dist ✓ · no key in logs ✓ · auth boundary verified ✓ ·
+valid request PASS ✓ · invalid request handled ✓ · provider error handled ✓ · CORS ✓ ·
+runtime production probe PASS (11/11) ✓ · tsc PASS (0) ✓ · vitest PASS (358) ✓ ·
+build PASS ✓ · secret scan PASS ✓ · lint PASS (หลัง fix CI) ✓ · deployment fingerprint ✓
 → **W3-A GATE = PASS**
 
 ## 20. Exact Next Step
