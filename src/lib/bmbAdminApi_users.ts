@@ -69,12 +69,15 @@ export async function getDashboardStats(): Promise<DashboardStats> {
   // totals via count-exact + column-limited batched sum; today's slice is a
   // small gte(created_at) query. Aggregation math is unchanged.
   const today = new Date().toISOString().slice(0, 10)
-  const [agg, todays, inventory] = await Promise.all([
+  const [agg, todays, inventory, customerCount] = await Promise.all([
     getOrdersAggregated(),
     getOrdersSince({ sinceISO: `${today}T00:00:00.000Z`, columns: ['created_at', 'status', 'total_amount'] }),
     getInventory(),
+    // ลูกค้า = ตาราง customers (registry จริง — ทุกบัญชีที่ลงทะเบียนจะมีแถว
+    // จาก trigger handle_new_user ตั้งแต่ 131; เดิมนับ public_profiles ซึ่งไม่มี
+    // คอลัมน์ role เลยนับรวมแอดมิน/สต๊าฟเป็นลูกค้าด้วย)
+    supabase.from('customers').select('id', { count: 'exact', head: true }),
   ])
-  const users = await getUsers()
 
   const todayOrders = (todays as any[]).filter((o: any) => String(o.created_at).startsWith(today))
   const todayRevenue = todayOrders.reduce((sum: number, o: any) => sum + Number(o.total_amount || 0), 0)
@@ -91,6 +94,6 @@ export async function getDashboardStats(): Promise<DashboardStats> {
     lowStockItems,
     totalOrders: agg.total,
     totalRevenue: agg.totalRevenue,
-    totalCustomers: users.filter((u: User) => (u.role ?? 'customer') === 'customer').length
+    totalCustomers: customerCount.count ?? 0
   }
 }

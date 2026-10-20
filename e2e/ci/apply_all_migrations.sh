@@ -10,7 +10,7 @@
 # Usage: sh apply_all_migrations.sh /migrations /ci
 #   /migrations = mounted supabase/migrations (ro)
 #   /ci         = mounted e2e/ci (ro) — prelude stubs
-# Exit 0 only when EVERY migration 001-130 applies cleanly.
+# Exit 0 only when EVERY migration 001-131 applies cleanly.
 # ============================================================
 set -u
 MIG_DIR="${1:-/migrations}"
@@ -103,4 +103,4 @@ if [ $fail_count -gt 0 ]; then
   echo "MIGRATION INVENTORY: $fail_count file(s) FAILED:$fail_sum"
   exit 1
 fi
-echo "ALL MIGRATIONS APPLIED CLEANLY (001-130)"
+echo "ALL MIGRATIONS APPLIED CLEANLY (001-131)"
