@@ -1,9 +1,9 @@
 {
-  "timestamp": "2026-10-20T10:10:04.357Z",
+  "timestamp": "2026-10-20T10:24:42.991Z",
   "ref": "ivkdfognyiwjcmrhcnwz",
   "applied": [
     {
-      "file": "133_payment_slip_upload.sql",
+      "file": "134_kitchen_fee_sync.sql",
       "ok": true
     }
   ],
