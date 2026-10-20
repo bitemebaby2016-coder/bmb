@@ -2,10 +2,25 @@
 
 > **สถานะงานปัจจุบันของโปรเจกต์ Bite Me Baby** ใช้แนบเข้าสู่ Context ตอนเริ่มแชทเสมอ
 
-**last_updated:** 2026-10-20 (รอบแก้ลูกค้าลงทะเบียนแล้วชื่อไม่เข้าระบบ — migration 131)
-**phase:** ปิดทุกรอบแล้ว — capability closure + backup LIVE (run #6) + 131 register→customers (ชื่อขึ้น list ทันทีที่ลงทะเบียน) · เหลือ Owner ทดสอบจริงตาม checklist
-**current_focus:** เสร็จ — รอ Owner ยืนยันหน้า /admin/customers (รีเฟรชแล้วเห็น 3 ชื่อ) + รัน checklist 8 หมวด
-**blocked_by:** ไม่มี
+**last_updated:** 2026-10-20 (รอบ RIDER E2E CLOSURE — A1–A5 + map fix + portal entry + migration 132)
+**phase:** โค้ดปิดครบตามคำสั่ง + gates ทุกชุดเขียว (vitest 1205/1205, replay 001–132, contracts ผ่าน) · **เหลือ: Owner อนุมัติ apply 132 + deploy 2 edge functions → ทดสอบ E2E จริง**
+**current_focus:** รอ Owner อนุมัติ (ก) migration 132 (ข) migration repair 131 → แล้วทดสอบ checklist §5 ของ docs/BMB_RIDER_E2E_CLOSURE_2026-10-20.md บนอุปกรณ์จริง
+**blocked_by:** ไม่มีฝั่งโค้ด — ติดแค่การอนุมัติ production apply + ทดสอบจริง (ไม่ประกาศ PASS ก่อนมี runtime evidence)
+
+---
+
+## ⚡ TASK: RIDER-E2E-PRODUCTION-CLOSURE-2026-10-20 — Rider PWA ใช้งานจริง + Map + Portal entry (คำสั่ง Owner 20 ต.ค.)
+- **STATUS: 🟡 IMPLEMENTED + ทดสอบ local/DB ครบ — รออนุมัติ production apply + E2E จริง** (รายละเอียดเต็ม: `docs/BMB_RIDER_E2E_CLOSURE_2026-10-20.md`)
+- **A1:** /rider polling `my_deliveries` ทุก 25 วิ + รีเฟรชเอง/last-updated/error-retry + งานใหม่ (badge+เสียง WebAudio เปิด/ปิด) + กัน polling ซ้อน/หยุดหลัง logout (ไม่ใช้ Realtime)
+- **A2:** push ฝั่งไรเดอร์แยก audience ชัด (`push_subscriptions.driver_id` + `register_push_subscription(p_audience)` + `claim_push_driver_targets` service_role) · automation-worker ยิง "มีงานใหม่→/rider" เฉพาะงาน `assigned` ที่ยังไม่ push (`rider_pushed_at` claim กันซ้ำ) · push พังไม่แตะ order/assignment (polling=fallback) · ปุ่มเปิด/ปิด push ในหน้าไรเดอร์
+- **A3:** bucket `pod-photos` (private) + `driver_attach_pod` (path ต้องอยู่โฟลเดอร์ตน) + **`delivered` ต้องมี POD** (ERR_POD_REQUIRED) · client บีบอัด+ตรวจขนาดก่อน upload · แอดมินเห็นรูป (signed URL) ใน /admin/delivery หลัง refresh
+- **A4:** `driver_decline_assignment`/`admin_cancel_assignment` (เหตุผล+audit, ไม่ลบแถว) + trigger ปิดงานค้างเมื่อออเดอร์ cancelled/failed + assign_driver reset POD/decline/cancel ตอนมอบหมายใหม่
+- **A5:** action คืน `{ok,error,network|permission|state}` + retry เฉพาะ network + กดซ้ำไม่ได้ — เลิก boolean เงียบ
+- **Map:** `RiderMiniMap` (จุดปัก ปลายทาง/คุณGPS/ครัว แยกชนิด) + `getGoogleMapsLoadError()` บอกสาเหตุจริง (missing key/key ถูกปฏิเสธ/เครือข่าย) + ตรวจแล้วไม่มี lat/lng สลับ
+- **ADDENDUM:** ปุ่ม "งานจัดส่งของฉัน (ไรเดอร์)" ใน Header/Profile (server-verified — คนทั่วไปไม่เห็น) + ปุ่ม "เปิดหน้าไรเดอร์" ใน /admin/delivery + ข้อความ "ยังไม่ถูกผูกบัญชี ติดต่อแอดมิน" ที่ /rider
+- **EVIDENCE (fresh 20 ต.ค.):** tsc/eslint 0 · vitest **1205/1205** (เพิ่ม driverActionResults 9 + dbRestoreDrill 3) · build PWA ผ่าน · replay **001–132** สะอาดบน PG17 · `contracts_132` G1–G6 ผ่าน · `contracts_036` ผ่านทุกกลุ่ม (ซ่อม fixture ค้างก่อน 041 + POD gate) · 127-130/131 regression ผ่าน · probe ยืนยัน 126–130 recorded บน production
+- **ข้อค้นพบสำคัญ:** (1) migration **131 ไม่ได้ record ใน schema_migrations** (objects ทำงานจริงแล้ว — drift ต้อง repair เมื่ออนุมัติ) (2) restore drill ไม่เคยมี → เพิ่ม `scripts/dbRestoreDrill.mjs` (sha256+structure+guard ห้ามชี้ prod; รันจริงต้องใช้ service-role secret) (3) contract 036 เดิมไม่ผ่านจริงบน stack 041+ (fixture ไม่ผูก JWT) — ซ่อมแล้ว
+- **ขออนุมัติ:** apply `132_rider_pod_push_decline.sql` + deploy `automation-worker`/`push-send` + `supabase migration repair` 131 · **ห้ามประกาศ E2E PASS จนกว่าจะทดสอบจริงหลัง deploy**
 
 ---
 

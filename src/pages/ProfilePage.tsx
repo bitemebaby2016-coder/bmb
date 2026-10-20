@@ -4,6 +4,7 @@ import { useRewardsStore } from '@/store/rewardsStore'
 // P4 — Passkey / WebAuthn (สมัคร/ลบ ต้องมี session อยู่แล้ว — หน้านี้เป็น ProtectedRoute)
 import { useState, useEffect } from 'react'
 import { showToast } from '@/components/ui/ToastContainer'
+import { useRiderIdentity } from '@/hooks/useRiderIdentity'
 import {
   registerPasskey,
   listPasskeys,
@@ -14,6 +15,7 @@ import {
 } from '@/lib/passkeyLogin'
 
 export function ProfilePage() {
+  const riderIdentity = useRiderIdentity()
   const customer = useAuthStore((s) => s.customer)
   const loyaltyPoints = useRewardsStore((s) => s.loyaltyPoints)
 
@@ -74,6 +76,20 @@ export function ProfilePage() {
             <span className="ml-auto text-brand-muted">→</span>
           </div>
         </Link>
+        {/* ADDENDUM: ทางเข้า Rider Portal — เฉพาะบัญชีที่แอดมินผูกไรเดอร์แล้ว
+            (server-verified ผ่าน RPC driver_login — ผู้ใช้ทั่วไปไม่เห็นปุ่มนี้) */}
+        {riderIdentity.driver && (
+          <Link to="/rider" className="card block hover:scale-[1.02] transition-transform" data-testid="profile-rider-entry">
+            <div className="flex items-center gap-3">
+              <span className="text-2xl">🛵</span>
+              <div>
+                <div className="font-bold text-brand-accent">งานจัดส่งของฉัน (ไรเดอร์)</div>
+                <div className="text-sm text-brand-muted">เข้าสู่ Rider PWA เพื่อรับ/ส่งงาน</div>
+              </div>
+              <span className="ml-auto text-brand-muted">→</span>
+            </div>
+          </Link>
+        )}
         <Link to="/promotions" className="card block hover:scale-[1.02] transition-transform">
           <div className="flex items-center gap-3">
             <span className="text-2xl">🎟️</span>

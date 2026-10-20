@@ -17,15 +17,24 @@ export interface RiderPWAProps {
   dropOff: { latitude: number; longitude: number }
   /** Allowed margin (meters) around the drop-off to confirm delivery. */
   radiusMeters?: number
-  /** Called AFTER the client state machine reaches Delivered (server sync hook). */
-  onDelivered?: () => void
+  /**
+   * Called AFTER the gates pass, with the POD photo file so the caller can
+   * UPLOAD it to storage + record it server-side (driver_attach_pod) before the
+   * delivered transition — the photo must NOT live only in client state (A3).
+   */
+  onDelivered?: (photo: File, coords: { latitude: number; longitude: number }) => void | Promise<void>
+  /** True while the caller uploads/records — blocks double-submit. */
+  busy?: boolean
+  /** ส่งพิกัดที่ตรวจได้กลับไปให้หน้าแม่ (ใช้ปักหมุดแผนที่/แสดงระยะทาง) */
+  onCoordsChange?: (coords: { latitude: number; longitude: number }) => void
 }
 
-export function RiderPWA({ dropOff, radiusMeters = 300, onDelivered }: RiderPWAProps) {
+export function RiderPWA({ dropOff, radiusMeters = 300, onDelivered, busy = false, onCoordsChange }: RiderPWAProps) {
   const { status, transition } = useOrderStateMachine()
   const [coords, setCoords] = useState<{ latitude: number; longitude: number } | null>(null)
   const [geoError, setGeoError] = useState<string | null>(null)
   const [podUrl, setPodUrl] = useState<string | null>(null)
+  const [podFile, setPodFile] = useState<File | null>(null)
   const fileRef = useRef<HTMLInputElement>(null)
 
   function checkIn() {
@@ -35,8 +44,10 @@ export function RiderPWA({ dropOff, radiusMeters = 300, onDelivered }: RiderPWAP
     }
     navigator.geolocation.getCurrentPosition(
       (pos) => {
-        setCoords({ latitude: pos.coords.latitude, longitude: pos.coords.longitude })
+        const c = { latitude: pos.coords.latitude, longitude: pos.coords.longitude }
+        setCoords(c)
         setGeoError(null)
+        onCoordsChange?.(c)
       },
       (err) => setGeoError(`อ่านพิกัดไม่สำเร็จ: ${err.message}`),
       { enableHighAccuracy: true, timeout: 10000 },
@@ -46,8 +57,13 @@ export function RiderPWA({ dropOff, radiusMeters = 300, onDelivered }: RiderPWAP
   function onPickPhoto(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     if (!file) return
+    if (!file.type.startsWith('image/') || file.size > 15 * 1024 * 1024) {
+      setGeoError('ไฟล์ต้องเป็นรูปภาพไม่เกิน 15MB')
+      return
+    }
+    setPodFile(file)
     const reader = new FileReader()
-    reader.onload = () => setPodUrl(reader.result as string) // data URL → proof_of_delivery_url
+    reader.onload = () => setPodUrl(reader.result as string) // preview เท่านั้น — ของจริง upload ตอนยืนยัน
     reader.readAsDataURL(file)
   }
 
@@ -56,10 +72,9 @@ export function RiderPWA({ dropOff, radiusMeters = 300, onDelivered }: RiderPWAP
   const geoOk = coords !== null && distanceM !== null && distanceM <= radiusMeters
 
   function handleDeliver() {
-    if (!geoOk) return
-    if (!podUrl) return
+    if (!geoOk || !podFile || !coords || busy) return
     transition('Delivered')
-    onDelivered?.()
+    void onDelivered?.(podFile, coords)
   }
 
   return (
@@ -89,11 +104,11 @@ export function RiderPWA({ dropOff, radiusMeters = 300, onDelivered }: RiderPWAP
 
       <button
         onClick={handleDeliver}
-        disabled={!geoOk || !podUrl}
+        disabled={!geoOk || !podFile || busy}
         className="btn btn-primary w-full mt-3 disabled:opacity-50 disabled:cursor-not-allowed"
         data-testid="rider-deliver"
       >
-        {!geoOk ? '⛔ ตรวจพิกัดก่อนส่ง' : !podUrl ? '📸 ถ่ายรูป POD ก่อนส่ง' : '✅ ยืนยัน Delivered'}
+        {busy ? '⏳ กำลังบันทึก…' : !geoOk ? '⛔ ตรวจพิกัดก่อนส่ง' : !podFile ? '📸 ถ่ายรูป POD ก่อนส่ง' : '✅ ยืนยัน Delivered'}
       </button>
     </GlassCard>
   )

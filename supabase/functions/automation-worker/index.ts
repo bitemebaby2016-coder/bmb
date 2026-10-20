@@ -272,7 +272,8 @@ async function runNotificationDispatch(ctx: Ctx, p: { lookbackMinutes?: number; 
   }
 
   // 2) canonical DRIVER_* events (authoritative feed, driver-RPC-scoped)
-  const daPath = `/rest/v1/delivery_assignments?select=order_number,status&updated_at=gte.${encodeURIComponent(cutoff)}&status=in.(assigned,accepted,picked_up)&order=updated_at.desc&limit=${limit}`
+  //    + id/driver_id/assigned_at/rider_pushed_at สำหรับ A2 rider push (แยก audience)
+  const daPath = `/rest/v1/delivery_assignments?select=id,order_number,status,driver_id,assigned_at,rider_pushed_at&updated_at=gte.${encodeURIComponent(cutoff)}&status=in.(assigned,accepted,picked_up)&order=updated_at.desc&limit=${limit}`
   const da = await rest(SERVICE, 'GET', daPath)
   if (da.status !== 200) {
     // Read failure of the DRIVER_* feed must stay visible, but ORDER_* dispatch proceeds.
@@ -386,6 +387,58 @@ async function runNotificationDispatch(ctx: Ctx, p: { lookbackMinutes?: number; 
       }
     }
     ctx.results.notification_push = { attempted: created.length, pushed: pushed.length, errors: pushErrors }
+  }
+
+  // A2 (2026-10-20): RIDER push — คนละ audience กับลูกค้าอย่างชัดเจน
+  //   เฉพาะงานที่ status='assigned' และยังไม่เคย push (rider_pushed_at IS NULL)
+  //   claim แบบ atomic (PATCH ...&rider_pushed_at=is.null) → หนึ่งงาน = หนึ่ง push
+  //   ถึงแม้ scan window จะทับซ้อนหลายรอบ · มอบหมายใหม่ = rider_pushed_at ถูก
+  //   reset โดย assign_driver (132) → ไรเดอร์คนใหม่ได้รับแจ้งเตือนเอง
+  //   push ล้มเหลว "ไม่แตะ" assignment/order เลย — polling ของ /rider ยังเป็น fallback
+  if (PUSH_SEND_URL) {
+    type RiderRow = { id: string; order_number: string; driver_id: string | null; rider_pushed_at: string | null }
+    const riderRows = ((da.j || []) as RiderRow[]).filter(
+      (a) => a.driver_id && !a.rider_pushed_at &&
+             (da.j || []).some((x: { order_number: string; status: string }) => x.order_number === a.order_number && x.status === 'assigned'),
+    )
+    let riderPushed = 0
+    let riderErrors = 0
+    for (const a of riderRows) {
+      try {
+        const res = await fetch(PUSH_SEND_URL, {
+          method: 'POST',
+          headers: {
+            apikey: SERVICE,
+            Authorization: 'Bearer ' + SERVICE,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            driverId: a.driver_id,
+            title: '🛵 มีงานใหม่',
+            body: `ออเดอร์ ${a.order_number} มอบหมายให้คุณ — เปิดหน้างานจัดส่งเพื่อรับงาน`,
+            url: '/rider',
+            tag: `bmb-rider-${a.order_number}`,
+          }),
+        })
+        if (res.ok) {
+          riderPushed++
+          // idempotency marker — สำเร็จค่อยเขียน; แถวถูกเขียนไปก่อน = ข้าม (กันซ้ำ)
+          await rest(
+            SERVICE,
+            'PATCH',
+            `/rest/v1/delivery_assignments?id=eq.${encodeURIComponent(a.id)}&rider_pushed_at=is.null`,
+            { rider_pushed_at: new Date().toISOString() },
+          )
+        } else {
+          riderErrors++
+          if (riderErrors <= 3) ctx.errors.push(`rider-push ${a.order_number}: HTTP ${res.status}`)
+        }
+      } catch (err: any) {
+        riderErrors++
+        if (riderErrors <= 3) ctx.errors.push(`rider-push ${a.order_number}: ${err?.message ?? 'fetch failed'}`)
+      }
+    }
+    ctx.results.rider_push = { attempted: riderRows.length, pushed: riderPushed, errors: riderErrors }
   }
 
   ctx.results.notification_dispatch = {

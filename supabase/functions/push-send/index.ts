@@ -137,7 +137,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
     return json({ error: 'ERR_VAPID_REJECTED', detail: (e as Error)?.message ?? 'setVapidDetails failed' }, 503)
   }
 
-  let body: { customerId?: string; title?: string; body?: string; url?: string; tag?: string; notificationId?: string }
+  let body: { customerId?: string; driverId?: string; title?: string; body?: string; url?: string; tag?: string; notificationId?: string }
   try {
     body = await req.json()
   } catch {
@@ -145,28 +145,38 @@ Deno.serve(async (req: Request): Promise<Response> => {
   }
 
   const customerId = (body.customerId || '').trim()
+  const driverId = (body.driverId || '').trim()
   const title = (body.title || '').trim()
-  if (!customerId) return json({ error: 'ERR_INVALID_CUSTOMER' }, 400)
+  if (!customerId && !driverId) return json({ error: 'ERR_INVALID_CUSTOMER' }, 400)
+  if (customerId && driverId) return json({ error: 'ERR_AMBIGUOUS_TARGET' }, 400) // หนึ่งคำขอ = หนึ่ง audience
   if (!title) return json({ error: 'ERR_INVALID_TITLE' }, 400)
 
   const supabase = createClient(SB_URL, SERVICE, { auth: { persistSession: false } })
 
-  // 1) transport opt-out (push_enabled) — a prefs read failure is NOT silent success
-  const { data: prefs, error: prefErr } = await supabase
-    .from('notification_prefs')
-    .select('push_enabled')
-    .eq('customer_id', customerId)
-    .maybeSingle()
-  if (prefErr) return json({ error: 'prefs read failed', status: prefErr.message }, 502)
-  if (prefs && prefs.push_enabled === false) {
-    return json({ ok: true, sent: 0, skipped: 'push_disabled' })
+  // 1) transport opt-out (push_enabled) — customer audience ONLY
+  //    (driver ไม่มี notification_prefs — การเปิด/ปิดของไรเดอร์ = ตัว subscription เอง)
+  if (customerId) {
+    const { data: prefs, error: prefErr } = await supabase
+      .from('notification_prefs')
+      .select('push_enabled')
+      .eq('customer_id', customerId)
+      .maybeSingle()
+    if (prefErr) return json({ error: 'prefs read failed', status: prefErr.message }, 502)
+    if (prefs && prefs.push_enabled === false) {
+      return json({ ok: true, sent: 0, skipped: 'push_disabled' })
+    }
   }
 
   // 2) resolve the device endpoints server-side (never from the request body)
-  const claimed = await rpc('claim_push_targets', {
-    p_customer_id: customerId,
-    p_limit: MAX_TARGETS_PER_CUSTOMER,
-  })
+  const claimed = driverId
+    ? await rpc('claim_push_driver_targets', {
+        p_driver_id: driverId,
+        p_limit: MAX_TARGETS_PER_CUSTOMER,
+      })
+    : await rpc('claim_push_targets', {
+        p_customer_id: customerId,
+        p_limit: MAX_TARGETS_PER_CUSTOMER,
+      })
   const targets: Array<{ id: string; endpoint: string; p256dh: string; auth_secret: string }> =
     claimed?.targets ?? []
 

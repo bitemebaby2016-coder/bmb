@@ -534,6 +534,10 @@ export interface DeliveryAssignmentLiteRow {
   in_transit_at: string | null
   delivered_at: string | null
   cancelled_at: string | null
+  proof_of_delivery_path?: string | null
+  pod_captured_at?: string | null
+  decline_reason?: string | null
+  cancel_reason?: string | null
 }
 
 /** Assignment rows for a page of orders (020 lifecycle) — admin/driver RLS scoped. */

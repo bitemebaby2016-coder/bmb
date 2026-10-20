@@ -127,7 +127,7 @@ export async function requestPushPermission(): Promise<PushPermissionState> {
  * Idempotent: calling it again when already subscribed re-registers the same
  * endpoint (the migration upserts by endpoint) and never creates a duplicate.
  */
-export async function enablePush(): Promise<PushResult<{ id: string }>> {
+export async function enablePush(audience: 'customer' | 'driver' = 'customer'): Promise<PushResult<{ id: string }>> {
   if (!isPushCapable()) return { ok: false, error: 'ERR_PUSH_UNSUPPORTED' }
 
   const config = await getPushConfig()
@@ -161,6 +161,7 @@ export async function enablePush(): Promise<PushResult<{ id: string }>> {
     p_p256dh: p256dh,
     p_auth_secret: auth,
     p_user_agent: typeof navigator !== 'undefined' ? navigator.userAgent : null,
+    p_audience: audience,
   })
   if (error) return { ok: false, error: error.message }
 

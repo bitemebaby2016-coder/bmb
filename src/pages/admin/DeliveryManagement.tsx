@@ -15,13 +15,13 @@
 // not implemented.
 // NO cost/supplier/inventory fields are displayed here.
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '@/lib/supabase'
 import { getOrdersByStatuses, getDeliveryAssignmentsFor, updateOrderStatus } from '@/lib/bmbAdminApi_orders'
 import { resolveOrderDeliveryAddress } from '@/lib/orderAddress'
 import type { OrderForm, DeliveryAssignmentLiteRow } from '@/lib/bmbAdminApi_orders'
-import { adminListDrivers, assignDriver, adminAdvanceDelivery, upsertDriver, linkDriverUser, getDriverAccounts, driverErrorText, type AdminDriverRow, type DriverAccountRow } from '@/lib/driverService'
+import { adminListDrivers, assignDriver, adminAdvanceDelivery, upsertDriver, linkDriverUser, getDriverAccounts, driverErrorText, adminCancelAssignment, getPodSignedUrl, type AdminDriverRow, type DriverAccountRow } from '@/lib/driverService'
 import { getUsers, type User } from '@/lib/bmbAdminApi_users'
 import { showToast } from '@/components/ui/ToastContainer'
 
@@ -31,6 +31,7 @@ const ASSIGN_LABEL: Record<string, { label: string; cls: string }> = {
   picked_up: { label: '📦 รับของแล้ว', cls: 'badge-info' },
   in_transit: { label: '🛵 กำลังส่ง', cls: 'badge-info' },
   delivered: { label: '🏁 ส่งถึงแล้ว', cls: 'badge-success' },
+  declined: { label: '🚫 ไรเดอร์ปฏิเสธ', cls: 'badge-warning' },
   cancelled: { label: '⚠ ยกเลิก (exception)', cls: 'badge-danger' },
 }
 
@@ -159,6 +160,39 @@ export function DeliveryManagement() {
   // GAP A-1 (m116): close the loop in one call — the RPC walks every hop to the
   // target with the same forward-only rules as the rider PWA, so the admin can
   // never invent a state the order machine rejects.
+  // A4: แอดมินยกเลิกงานค้าง (เก็บประวัติไว้ — ไม่ลบ assignment; audit บันทึก actor+เหตุผล)
+  async function handleCancelAssignment(orderNumber: string) {
+    const reason = window.prompt('เหตุผลที่ยกเลิกงานนี้ (บันทึกลง audit):', '') ?? ''
+    setActing(orderNumber)
+    try {
+      const r = await adminCancelAssignment(orderNumber, reason)
+      if (r.ok) {
+        showToast('⛔ ยกเลิกงาน ' + orderNumber + ' แล้ว (มอบหมายใหม่ได้)', 'success')
+        await load()
+      } else {
+        showToast('ยกเลิกงานไม่สำเร็จ: ' + driverErrorText(r.error || 'ERR_ASSIGNMENT_CLOSED'), 'error')
+      }
+    } catch (e: any) {
+      showToast('ยกเลิกงานไม่สำเร็จ: ' + driverErrorText(e?.message || e), 'error')
+    } finally { setActing(null) }
+  }
+
+  // A3: signed URL ของรูป POD (bucket ส่วนตัว) — cache ต่อ path ไม่ยิงซ้ำตอน render
+  const podUrlCache = useRef<Record<string, string>>({})
+  const [podUrls, setPodUrls] = useState<Record<string, string>>({})
+  function podUrlOf(path?: string | null): string | null {
+    if (!path) return null
+    const hit = podUrlCache.current[path] || podUrls[path]
+    if (hit) return hit
+    void getPodSignedUrl(path).then((url) => {
+      if (url) {
+        podUrlCache.current[path] = url
+        setPodUrls((p) => ({ ...p, [path]: url }))
+      }
+    })
+    return null
+  }
+
   async function handleAdminAdvance(orderNumber: string) {
     setActing(orderNumber)
     try {
@@ -222,6 +256,11 @@ export function DeliveryManagement() {
         <h1 className="text-3xl font-bold text-brand-accent">🛵 Dispatch / ไรเดอร์ (Bite Drive)</h1>
         <div className="flex gap-2">
           <button onClick={() => { void load() }} className="btn btn-outline text-sm" disabled={loading}>รีเฟรช</button>
+          {/* ADDENDUM: ทางเข้า Rider PWA สำหรับแอดมินตรวจสอบระบบ — เปิดในแท็บใหม่
+              ไม่ทำให้แอดมินกลายเป็นไรเดอร์ (หน้า /rider ตรวจ JWT→drivers.user_id ของตัวเอง) */}
+          <a href="/rider" target="_blank" rel="noreferrer" className="btn btn-outline text-sm" data-testid="admin-open-rider">
+            🛵 เปิดหน้าไรเดอร์
+          </a>
           <Link to="/admin" className="btn btn-outline">← กลับแดชบอร์ด</Link>
         </div>
       </div>
@@ -391,7 +430,39 @@ export function DeliveryManagement() {
                         🏁 แอดมินปิดวงจร (admin_advance)
                       </button>
                     ) : null}
+                    {/* A4: ยกเลิกงานค้าง (คืนเข้าคิวมอบหมายใหม่; เหตุผล + audit) */}
+                    {a?.status && ['assigned', 'accepted', 'picked_up', 'in_transit'].includes(a.status) ? (
+                      <button
+                        onClick={() => { void handleCancelAssignment(o.order_number) }}
+                        disabled={acting === o.order_number}
+                        className="btn btn-outline text-sm disabled:opacity-50"
+                        data-testid={`admin-cancel-${o.order_number}`}
+                        title="ยกเลิกงานนี้ (assignment เก็บเป็นประวัติไว้ — มอบหมายใหม่ได้)"
+                      >
+                        ⛔ ยกเลิกงาน
+                      </button>
+                    ) : null}
+                    {/* A4: เหตุผลปฏิเสธ/ยกเลิก แสดงให้แอดมินรู้ว่าเกิดอะไรขึ้น */}
+                    {a?.status === 'declined' && (
+                      <span className="text-xs text-amber-600">เหตุผลที่ปฏิเสธ: {(a as any).decline_reason || '(ไม่ได้ระบุ)'}</span>
+                    )}
+                    {a?.status === 'cancelled' && (
+                      <span className="text-xs text-red-500">เหตุผลที่ยกเลิก: {(a as any).cancel_reason || '(ไม่ได้ระบุ)'}</span>
+                    )}
                   </div>
+                  {/* A3: รูปส่งมอบ (POD) ที่ไรเดอร์อัปโหลดไว้ — เปิดดูได้, ยังอยู่หลัง refresh/re-login */}
+                  {a?.proof_of_delivery_path ? (
+                    <div className="mt-2 flex items-center gap-2">
+                      <span className="text-xs text-brand-muted">📸 รูปส่งมอบ:</span>
+                      {podUrlOf(a.proof_of_delivery_path) ? (
+                        <a href={podUrlOf(a.proof_of_delivery_path)!} target="_blank" rel="noreferrer" title="ดูรูปส่งมอบ (POD)">
+                          <img src={podUrlOf(a.proof_of_delivery_path)!} alt="รูปส่งมอบ" className="w-12 h-12 object-cover rounded border border-brand-border" data-testid={`pod-thumb-${o.order_number}`} />
+                        </a>
+                      ) : (
+                        <span className="text-xs text-brand-muted">⏳ กำลังโหลดรูป…</span>
+                      )}
+                    </div>
+                  ) : null}
                 </div>
               )
             })}
@@ -405,17 +476,31 @@ export function DeliveryManagement() {
         {enroute.length === 0 ? <p className="text-brand-muted text-sm">ยังไม่มีออเดอร์บนถนน</p> : (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
-              <thead className="bg-brand-bg"><tr><th className="p-2">ออเดอร์</th><th className="p-2">สถานะ</th><th className="p-2">ไรเดอร์</th><th className="p-2">assignment</th></tr></thead>
+              <thead className="bg-brand-bg"><tr><th className="p-2">ออเดอร์</th><th className="p-2">สถานะ</th><th className="p-2">ไรเดอร์</th><th className="p-2">assignment</th><th className="p-2">รูปส่งมอบ</th></tr></thead>
               <tbody>
                 {enroute.map((o) => {
                   const a = asgFor(o.order_number)
                   const ab = assignmentBadge(a?.status)
+                  const podUrl = a?.proof_of_delivery_path ? podUrlOf(a.proof_of_delivery_path) : null
                   return (
                     <tr key={o.order_number} className="border-b border-brand-border">
                       <td className="p-2 font-mono">{o.order_number}</td>
                       <td className="p-2">{o.status}</td>
                       <td className="p-2">{a?.driver_id ? driverName(a.driver_id) : '—'}</td>
                       <td className="p-2"><span className={'badge ' + ab.cls}>{ab.label}</span></td>
+                      <td className="p-2">
+                        {a?.proof_of_delivery_path ? (
+                          podUrl ? (
+                            <a href={podUrl} target="_blank" rel="noreferrer" title="ดูรูปส่งมอบ (POD)">
+                              <img src={podUrl} alt="รูปส่งมอบ" className="w-10 h-10 object-cover rounded border border-brand-border" data-testid={`pod-thumb-enroute-${o.order_number}`} />
+                            </a>
+                          ) : (
+                            <span className="text-xs text-brand-muted">⏳</span>
+                          )
+                        ) : (
+                          <span className="text-xs text-brand-muted">—</span>
+                        )}
+                      </td>
                     </tr>
                   )
                 })}

@@ -29,7 +29,7 @@ export interface MyDeliveryItem {
 
 export interface MyDeliveryAssignment {
   order_number: string
-  assignment_status: 'assigned' | 'accepted' | 'picked_up' | 'in_transit' | 'delivered'
+  assignment_status: 'assigned' | 'accepted' | 'picked_up' | 'in_transit' | 'delivered' | 'declined' | 'cancelled'
   assigned_at: string
   accepted_at: string | null
   dropoff_detail: string
@@ -39,7 +39,38 @@ export interface MyDeliveryAssignment {
   total_amount: number
   payment_status: string
   payment_method: string
+  proof_of_delivery_path?: string | null
+  pod_captured_at?: string | null
   items: MyDeliveryItem[]
+}
+
+// ============================================
+// A5 (2026-10-20): action results แบบมีเหตุผล — เลิกคืน boolean เงียบ ๆ
+// kind แยกให้ UI บอกผู้ใช้ถูก: network = ลองใหม่ได้ / permission = เข้าสู่ระบบใหม่
+// / state = สถานะงานเปลี่ยนไปแล้ว (refresh) / unknown = ติดต่อแอดมิน
+// ============================================
+export type DriverActionKind = 'network' | 'permission' | 'state' | 'unknown'
+export type DriverActionResult =
+  | { ok: true; value?: unknown }
+  | { ok: false; error: string; kind: DriverActionKind }
+
+/** แปลง PostgREST error → หมวดที่ UI แสดงผล/ตัดสินใจ retry ได้ */
+export function classifyDriverError(raw: unknown): { error: string; kind: DriverActionKind } {
+  const s = String((raw as { message?: string })?.message ?? raw ?? '')
+  // driverErrorText expects the message STRING (raw object stringifies to [object Object])
+  const msg = driverErrorText(s)
+  const net =
+    typeof navigator !== 'undefined' && navigator.onLine === false
+  if (net || /failed to fetch|networkerror|fetch failed|load failed|timeout|timed out/i.test(s)) {
+    return { error: 'เครือข่ายขัดข้อง — ตรวจสอบอินเทอร์เน็ตแล้วลองใหม่', kind: 'network' }
+  }
+  if (/ERR_NOT_AUTHENTICATED|ERR_FORBIDDEN|ERR_NOT_A_DRIVER|JWT|401|403/i.test(s)) {
+    return { error: msg, kind: 'permission' }
+  }
+  if (/ERR_ASSIGNMENT|ERR_ALREADY_DELIVERED|ERR_POD|ERR_DELIVERY_SYNC_BLOCKED|ERR_INVALID|ERR_ORDER_/i.test(s)) {
+    return { error: msg, kind: 'state' }
+  }
+  return { error: msg, kind: 'unknown' }
 }
 
 /**
@@ -58,25 +89,38 @@ export async function driverLogin(): Promise<DriverRecord | null> {
   return (data as unknown as { driver: DriverRecord }).driver ?? null
 }
 
-export async function myDeliveries(): Promise<MyDeliveryAssignment[]> {
+export async function myDeliveriesResult(): Promise<
+  { ok: true; assignments: MyDeliveryAssignment[] } | { ok: false; error: string; kind: DriverActionKind }
+> {
   const { data, error } = await supabase.rpc('my_deliveries')
-  if (error) {
-    console.warn('[Driver] my_deliveries failed:', error.message)
-    return []
+  if (error) return { ok: false, ...classifyDriverError(error) }
+  return {
+    ok: true,
+    assignments: (data as unknown as { assignments: MyDeliveryAssignment[] }).assignments ?? [],
   }
-  return (data as unknown as { assignments: MyDeliveryAssignment[] }).assignments ?? []
 }
 
-export async function driverAcceptAssignment(orderNumber: string): Promise<boolean> {
+/** แบบเดิม (คืน array เปล่าเมื่อพัง) — เก็บไว้เพื่อความเข้ากันได้ของ caller เก่า */
+export async function myDeliveries(): Promise<MyDeliveryAssignment[]> {
+  const r = await myDeliveriesResult()
+  if (!r.ok) {
+    console.warn('[Driver] my_deliveries failed:', r.error)
+    return []
+  }
+  return r.assignments
+}
+
+export async function driverAcceptAssignment(orderNumber: string): Promise<DriverActionResult> {
   const { error } = await supabase.rpc('driver_accept_assignment', { p_order_number: orderNumber })
-  return !error
+  if (error) return { ok: false, ...classifyDriverError(error) }
+  return { ok: true }
 }
 
 export async function driverUpdateDeliveryStatus(
   orderNumber: string,
   status: 'picked_up' | 'in_transit' | 'delivered',
   coords?: { latitude: number; longitude: number },
-): Promise<boolean> {
+): Promise<DriverActionResult> {
   // p_driver_phone is REQUIRED by the 041 signature but IGNORED for identity
   // (JWT WINS, F-06) — sent as empty string for wire compatibility only.
   const { error } = await supabase.rpc('driver_update_delivery_status', {
@@ -86,7 +130,132 @@ export async function driverUpdateDeliveryStatus(
     p_latitude: coords?.latitude ?? null,
     p_longitude: coords?.longitude ?? null,
   })
-  return !error
+  if (error) return { ok: false, ...classifyDriverError(error) }
+  return { ok: true }
+}
+
+/** A4: ปฏิเสธงาน (ได้เฉพาะสถานะ assigned) — งานคืนสู่แอดมินมอบหมายใหม่ */
+export async function driverDeclineAssignment(orderNumber: string, reason: string): Promise<DriverActionResult> {
+  const { error } = await supabase.rpc('driver_decline_assignment', {
+    p_order_number: orderNumber,
+    p_reason: reason,
+  })
+  if (error) return { ok: false, ...classifyDriverError(error) }
+  return { ok: true }
+}
+
+/** A4: แอดมินยกเลิกงานค้าง (เก็บประวัติไว้ — ไม่ลบแถว assignment) */
+export async function adminCancelAssignment(orderNumber: string, reason: string): Promise<DriverActionResult> {
+  const { error } = await supabase.rpc('admin_cancel_assignment', {
+    p_order_number: orderNumber,
+    p_reason: reason,
+  })
+  if (error) return { ok: false, ...classifyDriverError(error) }
+  return { ok: true }
+}
+
+/** A3: บันทึก POD reference ฝั่งเซิร์ฟเวอร์ (path ต้องอยู่ในโฟลเดอร์ driver ของตน) */
+export async function driverAttachPod(
+  orderNumber: string,
+  objectPath: string,
+  coords?: { latitude: number; longitude: number },
+): Promise<DriverActionResult> {
+  const { error } = await supabase.rpc('driver_attach_pod', {
+    p_order_number: orderNumber,
+    p_object_path: objectPath,
+    p_latitude: coords?.latitude ?? null,
+    p_longitude: coords?.longitude ?? null,
+  })
+  if (error) return { ok: false, ...classifyDriverError(error) }
+  return { ok: true, value: objectPath }
+}
+
+// ============================================
+// A3 — POD photo upload (Private bucket `pod-photos`)
+// บีบอัดก่อน upload (≤1280px, JPEG q0.8) · ตรวจชนิด/ขนาดไฟล์ · path ใต้
+//โฟลเดอร์ driver ของตนเอง (storage policy บังคับซ้ำฝั่งเซิร์ฟเวอร์)
+// ============================================
+export const POD_MAX_INPUT_BYTES = 15 * 1024 * 1024 // รับเข้าไม่เกิน 15MB (ก่อนบีบ)
+export const POD_MAX_UPLOAD_BYTES = 5 * 1024 * 1024  // bucket limit = 5MB
+
+export function compressPodImage(file: File): Promise<Blob> {
+  return new Promise((resolve, reject) => {
+    if (!file.type.startsWith('image/')) {
+      reject(new Error('ERR_POD_NOT_IMAGE'))
+      return
+    }
+    const url = URL.createObjectURL(file)
+    const img = new Image()
+    img.onload = () => {
+      try {
+        const max = 1280
+        const scale = Math.min(1, max / Math.max(img.width, img.height))
+        const canvas = document.createElement('canvas')
+        canvas.width = Math.round(img.width * scale)
+        canvas.height = Math.round(img.height * scale)
+        const ctx = canvas.getContext('2d')
+        if (!ctx) { reject(new Error('ERR_POD_PROCESS_FAILED')); return }
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
+        canvas.toBlob(
+          (blob) => {
+            URL.revokeObjectURL(url)
+            if (!blob) { reject(new Error('ERR_POD_PROCESS_FAILED')); return }
+            resolve(blob)
+          },
+          'image/jpeg',
+          0.8,
+        )
+      } catch (e) {
+        URL.revokeObjectURL(url)
+        reject(e instanceof Error ? e : new Error('ERR_POD_PROCESS_FAILED'))
+      }
+    }
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('ERR_POD_PROCESS_FAILED')) }
+    img.src = url
+  })
+}
+
+export async function uploadPodPhoto(
+  file: File,
+  driverId: string,
+  orderNumber: string,
+): Promise<{ ok: true; path: string } | { ok: false; error: string; kind: DriverActionKind }> {
+  if (!file.type.startsWith('image/')) {
+    return { ok: false, error: 'ไฟล์ต้องเป็นรูปภาพ (JPG/PNG/WebP)', kind: 'state' }
+  }
+  if (file.size > POD_MAX_INPUT_BYTES) {
+    return { ok: false, error: 'ไฟล์ใหญ่เกิน 15MB — ถ่ายใหม่หรือเลือกรูปที่เล็กกว่า', kind: 'state' }
+  }
+  if (!driverId || !orderNumber) {
+    return { ok: false, error: 'ข้อมูลงานไม่ครบ — รีเฟรชหน้าแล้วลองใหม่', kind: 'state' }
+  }
+  let blob: Blob
+  try {
+    blob = await compressPodImage(file)
+  } catch (e) {
+    return { ok: false, error: 'อ่านรูปไม่สำเร็จ — ถ่ายใหม่อีกครั้ง', kind: 'state' }
+  }
+  if (blob.size > POD_MAX_UPLOAD_BYTES) {
+    return { ok: false, error: 'รูปหลังบีบอัดยังใหญ่เกิน 5MB — ถ่ายใหม่อีกครั้ง', kind: 'state' }
+  }
+  const path = `${driverId}/${orderNumber}-${Date.now()}.jpg`
+  const { error } = await supabase.storage.from('pod-photos').upload(path, blob, {
+    contentType: 'image/jpeg',
+    upsert: false,
+  })
+  if (error) return { ok: false, ...classifyDriverError(error) }
+  return { ok: true, path }
+}
+
+/** ฝั่งแอดมิน: ขอ signed URL ชั่วคราวเพื่อแสดงรูป POD (bucket ส่วนตัว) */
+export async function getPodSignedUrl(path: string, expiresSec = 3600): Promise<string | null> {
+  if (!path) return null
+  const { data, error } = await supabase.storage.from('pod-photos').createSignedUrl(path, expiresSec)
+  if (error) {
+    console.warn('[Driver] POD signed url failed:', error.message)
+    return null
+  }
+  return data?.signedUrl ?? null
 }
 
 /** Admin: assign an order to a driver (dispatch board). */
@@ -211,6 +380,14 @@ const DRIVER_ERROR_TH: Record<string, string> = {
   ERR_UPSERT_REJECTED: 'บันทึกไม่สำเร็จ — ตรวจสอบข้อมูลแล้วลองใหม่',
   ERR_LINK_REJECTED: 'ผูกบัญชีไม่สำเร็จ — ลองใหม่อีกครั้ง',
   ERR_ADVANCE_REJECTED: 'เดินหน้าสถานะไม่สำเร็จ — ออเดอร์อาจอยู่ในสถานะที่ไม่รองรับ',
+  ERR_POD_REQUIRED: 'ต้องแนบรูปส่งมอบ (POD) ก่อนยืนยันส่งสำเร็จ',
+  ERR_POD_MISSING: 'ยังไม่มีรูปส่งมอบ — ถ่ายรูปก่อนยืนยัน',
+  ERR_POD_PATH_FORBIDDEN: 'ไฟล์รูปไม่ได้อยู่ในโฟลเดอร์ของไรเดอร์คนนี้',
+  ERR_ASSIGNMENT_NOT_FOUND: 'ไม่พบงานนี้ของคุณ — อาจถูกยกเลิกหรือส่งต่อแล้ว รีเฟรชรายการงาน',
+  ERR_ASSIGNMENT_NOT_ACCEPTABLE: 'งานนี้เปลี่ยนสถานะแล้ว รับ/ปฏิเสธไม่ได้ — รีเฟรชรายการงาน',
+  ERR_ASSIGNMENT_CLOSED: 'งานนี้ปิดแล้ว (ส่งมอบ/ปฏิเสธ/ยกเลิก) แก้ไขไม่ได้',
+  ERR_SUBSCRIPTION_INVALID: 'ข้อมูลสมัครแจ้งเตือนไม่ถูกต้อง — ลองใหม่อีกครั้ง',
+  ERR_NO_CUSTOMER_PROFILE: 'บัญชีนี้ยังไม่มีโปรไฟล์ในระบบ — ติดต่อแอดมิน',
 }
 
 /** แปลงรหัส error / ข้อความจากฐานข้อมูล เป็นภาษาไทยที่คนอ่านเข้าใจ */

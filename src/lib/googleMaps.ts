@@ -178,6 +178,13 @@ export async function getPlaceDetails(placeId: string, apiKey: string = MAPS_KEY
 
 let googleMapsLoaded = false
 let googleMapsPromise: Promise<void> | null = null
+// PHASE 2 (2026-10-20): เหตุผลที่ SDK โหลดไม่สำเร็จ — UI แสดงได้ตรงจริง
+// (missing_key / script_error / no_maps_object) แทนที่จะ "แผนที่ว่างเงียบ ๆ"
+let googleMapsLoadError: string | null = null
+
+export function getGoogleMapsLoadError(): string | null {
+  return googleMapsLoadError
+}
 
 export function loadGoogleMapsJS(): Promise<void> {
   if (googleMapsLoaded) return Promise.resolve()
@@ -186,6 +193,7 @@ export function loadGoogleMapsJS(): Promise<void> {
   // กับการโหลด SDK เดิมบังคับทั้งคู่ → ถ้า env ฝั่ง prod ไม่ได้ตั้ง MAP_ID แผนที่จะว่างเงียบ ๆ)
   if (!MAPS_KEY || MAPS_KEY.length < 10) {
     console.warn('[GoogleMaps] Missing API key')
+    googleMapsLoadError = 'ไม่พบ VITE_GOOGLE_MAPS_API_KEY ในการ build นี้'
     googleMapsLoaded = true
     return Promise.resolve()
   }
@@ -194,8 +202,23 @@ export function loadGoogleMapsJS(): Promise<void> {
     const s = document.createElement('script')
     s.src = `https://maps.googleapis.com/maps/api/js?key=${MAPS_KEY}&loading=async&libraries=maps,places`
     s.async = true; s.defer = true
-    s.onload = () => { googleMapsLoaded = true; resolve() }
-    s.onerror = () => { console.error('[GoogleMaps] Failed to load SDK'); googleMapsLoaded = true; resolve() }
+    s.onload = () => {
+      if ((window as any).google?.maps) {
+        googleMapsLoaded = true
+        googleMapsLoadError = null
+      } else {
+        // key ถูกปฏิเสธ / API ยังไม่เปิด / billing — script โหลดได้แต่ไม่มี object
+        googleMapsLoadError = 'Google Maps ถูกปฏิเสธ — ตรวจ API key restrictions, การเปิด API และ billing'
+        googleMapsLoaded = true
+      }
+      resolve()
+    }
+    s.onerror = () => {
+      console.error('[GoogleMaps] Failed to load SDK')
+      googleMapsLoadError = 'โหลด Google Maps SDK ไม่สำเร็จ (เครือข่ายหรือ key ถูกบล็อก)'
+      googleMapsLoaded = true
+      resolve()
+    }
     document.head.appendChild(s)
   })
   return googleMapsPromise

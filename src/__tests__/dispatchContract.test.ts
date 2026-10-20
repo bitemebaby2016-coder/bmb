@@ -129,21 +129,21 @@ describe('3B-2D · driver identity + assignment ownership (041)', () => {
     const drvId = await seedLinkedDriver()
     await seedOrder({ order_number: 'D-ACCEPT', status: 'ready_for_dispatch' })
     await assignDriver('D-ACCEPT', drvId)
-    expect(await driverAcceptAssignment('D-ACCEPT')).toBe(true)
-    expect(await driverUpdateDeliveryStatus('D-ACCEPT', 'picked_up')).toBe(true)
+    expect((await driverAcceptAssignment('D-ACCEPT')).ok).toBe(true)
+    expect((await driverUpdateDeliveryStatus('D-ACCEPT', 'picked_up')).ok).toBe(true)
     const asg = (supabase as any).__tables.delivery_assignments as any[]
     expect(asg[0].status).toBe('picked_up')
     // canonical sync along the spine (036/041)
     const ord = (supabase as any).__tables.orders as any[]
     expect(ord[0].status).toBe('dispatched')
-    expect(await driverUpdateDeliveryStatus('D-ACCEPT', 'in_transit')).toBe(true)
+    expect((await driverUpdateDeliveryStatus('D-ACCEPT', 'in_transit')).ok).toBe(true)
     expect(ord[0].status).toBe('in_transit')
   })
   it('driver CANNOT act on an order not assigned to them (unassigned / other driver)', async () => {
     await seedLinkedDriver()
     await seedOrder({ order_number: 'D-NOTMINE', status: 'ready_for_dispatch' })
-    expect(await driverAcceptAssignment('D-NOTMINE')).toBe(false)
-    expect(await driverUpdateDeliveryStatus('D-NOTMINE', 'picked_up')).toBe(false)
+    expect((await driverAcceptAssignment('D-NOTMINE')).ok).toBe(false)
+    expect((await driverUpdateDeliveryStatus('D-NOTMINE', 'picked_up')).ok).toBe(false)
     await (supabase as any).__reset?.()
   })
 })
@@ -166,20 +166,20 @@ describe('3B-2D · dispatch state transitions (canonical spine only)', () => {
     await seedOrder({ order_number: 'D-FULL', status: 'ready_for_dispatch' })
     await assignDriver('D-FULL', drvId as string)
     await driverAcceptAssignment('D-FULL')
-    expect(await driverUpdateDeliveryStatus('D-FULL', 'delivered')).toBe(true)
+    expect((await driverUpdateDeliveryStatus('D-FULL', 'delivered')).ok).toBe(true)
     const ord = (supabase as any).__tables.orders as any[]
     const asg = (supabase as any).__tables.delivery_assignments as any[]
     expect(ord[0].status).toBe('delivered')
     expect(asg[0].status).toBe('delivered')
     // already delivered → blocked
-    expect(await driverUpdateDeliveryStatus('D-FULL', 'in_transit')).toBe(false)
+    expect((await driverUpdateDeliveryStatus('D-FULL', 'in_transit')).ok).toBe(false)
   })
   it('cancelled/failed/delivered never sync to a driving state (terminal lock)', async () => {
     const drvId = (await upsertDriver('Term Rider', '0900000001', 'bike')).driver_id
     await linkDriverUser(drvId as string, 'auth-test-user')
     await seedOrder({ order_number: 'D-TERMX', status: 'cancelled' })
     await assignDriver('D-TERMX', drvId as string) // canonical allows pre-dispatch assign
-    expect(await driverUpdateDeliveryStatus('D-TERMX', 'picked_up')).toBe(false) // sync blocked
+    expect((await driverUpdateDeliveryStatus('D-TERMX', 'picked_up')).ok).toBe(false) // sync blocked
     const ord = (supabase as any).__tables.orders as any[]
     expect(ord[0].status).toBe('cancelled')
   })

@@ -171,8 +171,13 @@ describe('W3-D-7 Web Push transport', () => {
       expect(args.p_endpoint).toBe(SUB_JSON.endpoint)
       expect(args.p_p256dh).toBe(SUB_JSON.keys.p256dh)
       expect(args.p_auth_secret).toBe(SUB_JSON.keys.auth)
-      // authority boundary: the client must not name the recipient
-      expect(JSON.stringify(args)).not.toMatch(/customer/i)
+      // authority boundary: the client must not name the recipient (ไม่มีการส่ง
+      // customer/driver id — identity ผูกกับ JWT ฝั่งเซิร์ฟเวอร์) · p_audience เป็น
+      // "ชนิดผู้รับ" (customer|driver) ไม่ใช่ identity
+      expect(args).not.toHaveProperty('p_customer_id')
+      expect(args).not.toHaveProperty('p_driver_id')
+      expect(JSON.stringify(args)).not.toMatch(/customer_id|driver_id/i)
+      expect(args.p_audience).toBe('customer')
     })
 
     it('reuses an existing subscription instead of creating a duplicate', async () => {

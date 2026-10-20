@@ -42,6 +42,16 @@ INSERT INTO public.drivers (id, name, phone, status, created_at, updated_at)
 VALUES ('drv-m109-1', 'M109 Rider One', '0900010001', 'available', NOW(), NOW()),
        ('drv-m109-2', 'M109 Rider Two', '0900010002', 'available', NOW(), NOW())
 ON CONFLICT (id) DO NOTHING;
+-- F-06 (041): driver identity = JWT — fixture ต้องผูก drivers.user_id กับ
+-- auth user ของไรเดอร์ (ไม่งั้น accept/update จะโดน ERR_NOT_A_DRIVER ซึ่งถูกแล้ว)
+UPDATE public.drivers SET user_id = '88888888-8888-8888-8888-888888888888' WHERE id = 'drv-m109-1';
+UPDATE public.drivers SET user_id = '99999999-9999-9999-9999-999999999999' WHERE id = 'drv-m109-2';
+
+-- harness parity: Supabase มี default table grants ให้ authenticated (RLS คุมแถว);
+-- prelude ของ replay ไม่มี → ให้สิทธิ์ชั่วคราวใน transaction นี้ (ROLLBACK ตอนจบ)
+GRANT SELECT ON public.orders, public.delivery_assignments, public.drivers, public.audit_logs, public.order_status_history TO authenticated;
+GRANT UPDATE ON public.orders TO authenticated;
+GRANT INSERT, UPDATE ON public.delivery_assignments TO authenticated;
 
 -- ============================================
 -- G8. FUNCTION SECURITY
@@ -114,6 +124,15 @@ BEGIN
   SELECT status::text INTO v_ord FROM public.orders WHERE order_number = v_on;
   IF v_ord <> 'in_transit' THEN RAISE EXCEPTION 'FAIL G1 in_transit -> expected in_transit, got %', v_ord; END IF;
 
+  -- 132 POD gate: delivered ต้องมีหลักฐานรูปก่อน (กันปิดงานอ้างรูปที่อยู่แค่ client)
+  BEGIN
+    PERFORM public.driver_update_delivery_status(v_on, '0900010001', 'delivered');
+    RAISE EXCEPTION 'FAIL G1-POD: delivered สำเร็จโดยไม่มี POD';
+  EXCEPTION WHEN OTHERS THEN
+    IF SQLERRM NOT LIKE '%ERR_POD_REQUIRED%' THEN RAISE; END IF;
+  END;
+  PERFORM public.driver_attach_pod(v_on, 'drv-m109-1/' || v_on || '-pod.jpg', 10.7016, 102.1429);
+
   PERFORM public.driver_update_delivery_status(v_on, '0900010001', 'delivered');
   SELECT status::text INTO v_ord FROM public.orders WHERE order_number = v_on;
   IF v_ord <> 'delivered' THEN RAISE EXCEPTION 'FAIL G1 delivered -> expected delivered, got %', v_ord; END IF;
@@ -179,9 +198,12 @@ BEGIN
   IF v_ord2 <> 'in_transit' THEN RAISE EXCEPTION 'FAIL G2b duplicate in_transit changed order to %', v_ord2; END IF;
   RAISE NOTICE 'PASS G2b duplicate in_transit idempotent-safe';
 
-  -- G5 unauthorized driver (no assignment on this order) must be rejected
+  -- G5 unauthorized driver must be rejected: JWT = rider1 (ไม่มีงานใน order นี้)
+  -- + phone ที่ส่งมาเป็นของอีกคน (spoof) — F-06: identity = JWT เท่านั้น
+  PERFORM set_config('role', 'authenticated', false);
+  PERFORM set_config('request.jwt.claims', '{"sub":"88888888-8888-8888-8888-888888888888","role":"authenticated"}', false);
   BEGIN
-    PERFORM public.driver_update_delivery_status(v_on, '0900010001', 'delivered');
+    PERFORM public.driver_update_delivery_status(v_on, '0900010002', 'delivered');
     RAISE EXCEPTION 'FAIL G5 unauthorized update ACCEPTED';
   EXCEPTION WHEN OTHERS THEN
     IF SQLERRM LIKE 'ERR_ASSIGNMENT_NOT_FOUND%' THEN
@@ -205,6 +227,7 @@ BEGIN
   PERFORM set_config('role', 'authenticated', false);
   PERFORM set_config('request.jwt.claims', '{"sub":"66666666-6666-6666-6666-666666666666","role":"authenticated"}', false);
   PERFORM public.transition_order_status(v_blk, 'confirmed');
+  RESET ROLE; -- fixture seeding (ไม่ใช่ข้อความปลอดภัย) — หลบ ACL ของ trigger helper
   INSERT INTO public.delivery_assignments (id, order_number, driver_id, status, assigned_at, notes, created_at, updated_at)
   VALUES ('das-m109-g4', v_blk, 'drv-m109-1', 'assigned', NOW(), 'test', NOW(), NOW())
   ON CONFLICT (order_number) DO UPDATE SET driver_id = 'drv-m109-1', status = 'assigned', updated_at = NOW();
@@ -235,6 +258,7 @@ END $$;
 -- ============================================
 DO $$ DECLARE v_n int;
 BEGIN
+  RESET ROLE; -- บทอ่าน audit = global (superuser session) — claims ถูกตั้งใหม่ในบล็อกถัดไป
   SELECT COUNT(*) INTO v_n FROM public.audit_logs
    WHERE action = 'order_status_change'
      AND description LIKE 'delivery sync%'
@@ -250,6 +274,7 @@ END $$;
 -- ============================================
 DO $$ DECLARE v_before text; v_after text; v_r int; v_ctrl text;
 BEGIN
+  RESET ROLE;
   SELECT order_number INTO v_ctrl FROM public.orders
    WHERE dropoff_detail = 'm109-g2-ctrl' AND status = 'pending'
    ORDER BY created_at DESC LIMIT 1;

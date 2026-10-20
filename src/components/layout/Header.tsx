@@ -3,6 +3,7 @@ import { useState, useEffect, Fragment } from 'react'
 import { useCartStore } from '@/store/cartStore'
 import { useAuthStore } from '@/store/authStore'
 import { shouldShowAdminLink } from '@/lib/adminUi'
+import { useRiderIdentity } from '@/hooks/useRiderIdentity'
 import { NotificationDropdown } from '@/components/notification/NotificationDropdown'
 import { applyTheme, cycleTheme, getTheme, THEME_LABELS, type ThemeName } from '@/lib/theme'
 
@@ -18,6 +19,7 @@ export function Header() {
   const customer = useAuthStore((s) => s.customer)
   const role = useAuthStore((s) => s.role)
   const logout = useAuthStore((s) => s.logout)
+const riderIdentity = useRiderIdentity()
   const location = useLocation()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [theme, setTheme] = useState<ThemeName>(() => getTheme())
@@ -183,6 +185,18 @@ export function Header() {
                     >
                       📦 ออเดอร์ของฉัน
                     </Link>
+                    {/* ADDENDUM: ทางเข้า Rider Portal — แสดงเฉพาะบัญชีที่แอดมินผูก
+                        ไรเดอร์แล้ว (server-verified ผ่าน driver_login) ผู้ใช้ทั่วไปไม่เห็น */}
+                    {riderIdentity.driver && (
+                      <Link
+                        to="/rider"
+                        onClick={closeMobileMenu}
+                        className="flex items-center px-3 py-3 rounded-xl font-medium text-brand-primary hover:bg-brand-bg transition-colors"
+                        data-testid="nav-rider-entry"
+                      >
+                        🛵 งานจัดส่งของฉัน (ไรเดอร์)
+                      </Link>
+                    )}
                     <Link
                       to="/profile"
                       onClick={closeMobileMenu}

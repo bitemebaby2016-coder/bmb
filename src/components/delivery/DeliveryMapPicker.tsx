@@ -8,7 +8,7 @@
 // ============================================
 
 import { useEffect, useRef, useState } from 'react'
-import { loadGoogleMapsJS, isGoogleMapsConfigured, getGoogleMapId } from '@/lib/googleMaps'
+import { loadGoogleMapsJS, isGoogleMapsConfigured, getGoogleMapId, getGoogleMapsLoadError } from '@/lib/googleMaps'
 import { KITCHEN_LAT, KITCHEN_LNG } from '@/store/locationStore'
 
 export interface DeliveryMapPickerProps {
@@ -119,7 +119,7 @@ export function DeliveryMapPicker({ latitude, longitude, onPick }: DeliveryMapPi
       {status === 'unavailable' && (
         <div className="mt-2 p-3 rounded-lg border border-amber-400" data-testid="map-unavailable">
           <p className="text-xs font-medium mb-2" style={{ color: '#b45309' }}>
-            ⚠️ แผนที่ยังไม่พร้อมใช้งาน (โหลด Google Maps ไม่สำเร็จ) — กรุณาระบุพิกัดเองด้านล่าง หรือใช้ปุ่ม GPS
+            ⚠️ แผนที่ยังไม่พร้อมใช้งาน (โหลด Google Maps ไม่สำเร็จ{getGoogleMapsLoadError() ? `: ${getGoogleMapsLoadError()}` : ''}) — กรุณาระบุพิกัดเองด้านล่าง หรือใช้ปุ่ม GPS
           </p>
           <div className="flex flex-wrap items-center gap-2">
             <input
