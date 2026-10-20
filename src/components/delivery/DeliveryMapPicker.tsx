@@ -44,9 +44,13 @@ export function DeliveryMapPicker({ latitude, longitude, onPick }: DeliveryMapPi
   // Load SDK once + create the map (kitchen = MAP REFERENCE center only).
   useEffect(() => {
     let cancelled = false
+    // PHASE 3 (2026-10-20): gm_authFailure แจ้งผ่าน event — สลับเป็น unavailable ทันที
+    const onMapsError = () => setStatus('unavailable')
+    window.addEventListener('bmb-maps-error', onMapsError)
     if (!isGoogleMapsConfigured()) { setStatus('unavailable'); return }
     void loadGoogleMapsJS().then(() => {
       if (cancelled) return
+      if (getGoogleMapsLoadError()) { setStatus('unavailable'); return }
       const g = (window as { google?: { maps?: Record<string, unknown> } }).google
       if (!mapRef.current || !g?.maps) { setStatus('unavailable'); return }
       try {
@@ -71,7 +75,7 @@ export function DeliveryMapPicker({ latitude, longitude, onPick }: DeliveryMapPi
         setStatus('ready')
       } catch { setStatus('unavailable') }
     })
-    return () => { cancelled = true }
+    return () => { cancelled = true; window.removeEventListener('bmb-maps-error', onMapsError) }
   }, [])
 
 

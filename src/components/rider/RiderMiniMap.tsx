@@ -27,9 +27,13 @@ export function RiderMiniMap({ dropOff, rider }: RiderMiniMapProps) {
 
   useEffect(() => {
     let cancelled = false
+    // PHASE 3 (2026-10-20): gm_authFailure แจ้งผ่าน event — สลับเป็น unavailable ทันที
+    const onMapsError = () => setStatus('unavailable')
+    window.addEventListener('bmb-maps-error', onMapsError)
     if (!isGoogleMapsConfigured()) { setStatus('unavailable'); return }
     void loadGoogleMapsJS().then(() => {
       if (cancelled) return
+      if (getGoogleMapsLoadError()) { setStatus('unavailable'); return }
       const g = (window as { google?: { maps?: Record<string, unknown> } }).google
       if (!mapRef.current || !g?.maps) { setStatus('unavailable'); return }
       try {
@@ -45,7 +49,7 @@ export function RiderMiniMap({ dropOff, rider }: RiderMiniMapProps) {
         setStatus('ready')
       } catch { setStatus('unavailable') }
     })
-    return () => { cancelled = true }
+    return () => { cancelled = true; window.removeEventListener('bmb-maps-error', onMapsError) }
     // สร้างแผนที่ครั้งเดียว — marker sync ใน effect ถัดไป
     // สร้างแผนที่ครั้งเดียวต่อ mount — marker sync ใน effect ถัดไป
   }, [])

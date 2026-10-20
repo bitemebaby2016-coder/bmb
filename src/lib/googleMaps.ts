@@ -199,6 +199,14 @@ export function loadGoogleMapsJS(): Promise<void> {
   }
   googleMapsPromise = new Promise<void>((resolve) => {
     if ((window as any).google?.maps) { googleMapsLoaded = true; resolve(); return }
+    // PHASE 3 (2026-10-20): จับ auth failure ของ Google Maps แบบเงียบ (key ถูกปฏิเสธ /
+    // Referer ไม่ผ่าน restriction / Maps JavaScript API ไม่ได้เปิดใน key) — เดิม
+    // โหลดได้แต่แผนที่ว่างและไม่รู้สาเหตุ → เก็บเหตุผล + แจ้ง UI ผ่าน event
+    const w = window as unknown as { gm_authFailure?: () => void }
+    w.gm_authFailure = () => {
+      googleMapsLoadError = 'Google Maps ปฏิเสธ key — ตรวจ API restrictions บน key (ต้องมี Maps JavaScript API), Website restrictions (ต้องครอบคลุม https://biteme-baby.com/*) และ billing'
+      window.dispatchEvent(new Event('bmb-maps-error'))
+    }
     const s = document.createElement('script')
     s.src = `https://maps.googleapis.com/maps/api/js?key=${MAPS_KEY}&loading=async&libraries=maps,places`
     s.async = true; s.defer = true
