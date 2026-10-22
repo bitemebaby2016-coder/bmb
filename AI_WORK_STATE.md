@@ -2,8 +2,8 @@
 
 > **สถานะงานปัจจุบันของโปรเจกต์ Bite Me Baby** ใช้แนบเข้าสู่ Context ตอนเริ่มแชทเสมอ
 
-**last_updated:** 2026-10-22 รอบ 9 (D1: ✅A5+M1 ✅A1+M2 ✅A2+A7(ก.)+M5 ✅A3 ✅E2 ✅E1+A4+A8+M4+M3 ✅E3/E4 ✅A6 ✅Marketing Part C — gates ครบ, SQL contracts 135-137 ผ่านบน PG จริง · ⚠️ รอ Owner approve deploy EF + secret)
-**phase:** 🔨 **D1 ครบทุกชิ้นตามลำดับแล้ว (A5→A1→A2/A7/M5→A3→E2→E1/A4/A8/M4/M3→E3/E4→A6→Marketing) · เหลือ runtime evidence บน production + deploy EF**
+**last_updated:** 2026-10-22 รอบ 10 (D1 ครบทุกชิ้น + apply 135/137 + deploy EF 4 ตัว + secrets บน production แล้ว — เหลือ runtime evidence จาก Owner)
+**phase:** 🟢 **D1 DONE (โค้ด+production infra ครบ) — รอ Owner เก็บ evidence บน biteme-baby.com แล้วปิดโครงการ**
 **current_focus:** D1 ตามลำดับ: ✅A5+M1 → ✅A1+M2 → ✅A2+A7(ก.)+M5 → ✅A3 → ✅E2 → ✅E1+A4+A8+M4+M3 → ✅E3/E4 → ✅A6 → ✅ก้อน Marketing
 **blocked_by:** ไม่มี — แต่ push/production = ต้อง Owner approve (auto-deploy จาก main) + เก็บ runtime evidence จากอุปกรณ์จริงก่อนประกาศ PASS
 
@@ -120,7 +120,7 @@
 - **Next Exact Action:** E3/E4 — live tracking ไรเดอร์บนแผนที่ Dispatch Center + เก็บประวัติเส้นทางหลังจบงาน + POD จบจริง (แอดมินเห็นทุกขั้น) · **และขอ Owner approve apply migration 135**
 
 ## ⚡ TASK: D1-CHUNK9-MARKETING-PART-C-2026-10-22 — AdminMarketing 7 tabs + marketing_publish pipeline + E5/E6 image-gen
-- **STATUS: 🟡 IMPLEMENTED + gates ผ่านครบ + SQL contract 137 ผ่านบน PG จริง (G1-G3) — ⚠️ รอ Owner approve: (1) apply migration 137 (2) deploy EF `image-gen` (ใหม่) + `automation-worker`/`queue-enqueue`/`queue-dispatcher` (แก้) (3) set secret OPENROUTER_API_KEY/IMAGE_GEN_MODEL**
+- **STATUS: 🟢 DONE — apply 137 + deploy EF 4 ตัว + set secrets บน production แล้ว (Owner approve 2026-10-22) · เหลือ runtime evidence จาก Owner**
 - **Task ID:** D1-CHUNK9-MARKETING-PART-C-2026-10-22
 - **Objective:** Part C (C1-C2): AdminMarketing Control Center 7 แท็บของจริง + วงจร PLAN→GENERATE→DRAFT→APPROVE(คน)→SCHEDULE→PUBLISH→RECORD + E5/E6 image-gen (prompt สำเร็จรูป + 3 สไตล์) — ไม่มี mockup/hardcode/stub
 - **Completed:**
@@ -132,7 +132,7 @@
   - เทสต์ใหม่ 19 ตัว `marketingClient.test.ts` (RPC wiring + contract G1-G3 + 7 แท็บของจริง + E5/E6 + queue ครบ 4 จุด + worker เช็ค approval ซ้ำ) + CI step contract 137
 - **Verified:** `npx tsc --noEmit`=0 · `npm run lint`=0 · `npm run test`=**1302/1302 (124 files)** (1283+19 ใหม่) · `npm run build`=0 · mojibake=0 · **SQL: apply 137 + contract 137 G1-G3 ผ่านบน PG จริง (Docker ephemeral)**
 - **Failed/แก้ระหว่างทาง:** (1) contract fixture โดน RLS content_approvals (แก้: fixture insert ฐานะเจ้าของ DB) (2) session role ค้างข้าม DO block (แก้: RESET ROLE ต้น G2/G3) (3) marketingClient assertion ผิด (testid เป็น template ไม่ใช่ literal) (4) adminUi.test invariant flatten(groups)==ITEMS ขาด (แก้: เพิ่ม nav item ทั้งสองที่)
-- **Blocked:** ⚠️ (1) **apply migration 137 ลง production** (2) **deploy EF**: `image-gen` (ใหม่) + `automation-worker`/`queue-enqueue`/`queue-dispatcher` (ของที่แก้จาก chunk6-9) (3) **set secrets**: `OPENROUTER_API_KEY` (= BMB_openrouter_api_key), `IMAGE_GEN_MODEL` — ทั้งหมดต้อง Owner approve (กติกา D2) · runtime evidence: สร้างโพสต์→คนอนุมัติ→ตั้งเวลา→ระบบโพสต์จริงบน Page→Analytics โชว์ provider post id · สร้างภาพ 3 สไตล์
+- **Blocked:** 🟢 ปลดล็อกแล้ว — apply 137 ✓ (MIG137-OK) · deploy EF ✓ (image-gen/automation-worker/queue-enqueue/queue-dispatcher = ACTIVE) · secrets ✓ (OPENROUTER_API_KEY + IMAGE_GEN_MODEL) · smoke image-gen = 401 (กัน anon ถูก) · เหลือ runtime evidence: สร้างโพสต์→คนอนุมัติ→ตั้งเวลา→ระบบโพสต์จริงบน Page→Analytics โชว์ provider post id · สร้างภาพ 3 สไตล์ · dispatch งาน → push ถึงไรเดอร์ทุกเครื่อง
 - **Files Changed:** `supabase/migrations/137_marketing_posts_rules.sql` (ใหม่) · `e2e/contracts_137_marketing_posts.sql` (ใหม่) · `supabase/functions/image-gen/index.ts` (ใหม่) · `src/lib/adminMarketing.ts` (ใหม่) · `src/pages/admin/AdminMarketing.tsx` (ใหม่) · `src/__tests__/marketingClient.test.ts` (ใหม่) · `supabase/functions/{automation-worker,queue-enqueue,queue-dispatcher}/index.ts` · `.github/workflows/{automation-scheduler.yml,contract-tests.yml}` · `supabase/config.toml` · `src/lib/adminUi.ts` · `src/App.tsx`
 - **Tests / Commands Run:** ดู Verified (รวม Docker ephemeral PG apply 137 + contract 137)
 - **Known Risks:** (1) จนกว่า deploy EF + apply 137 — แท็บการตลาดบน production จะสร้างโพสต์ไม่ได้ (error ชัด ไม่เงียบ) (2) image-gen ขึ้นกับโมเดล image ของ OpenRouter (ตั้ง IMAGE_GEN_MODEL ให้ถูก) (3) marketing_publish รันรายชั่วโมง — เวลาโพสต์จริงคลาดเคลื่อนได้ ≤1 ชม.
