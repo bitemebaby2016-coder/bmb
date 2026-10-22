@@ -125,8 +125,8 @@
 | AI text gen | **A/B** | `aiService.ts`, `aiModels.ts`, `aiGuardrails.ts`, `aiVoice.ts`, `contentAutomation.ts` | `contentAutomation.ts` **ไม่มีใคร import (ตายใน repo)** = ดึงมาใช้ ไม่ต้องเขียนใหม่ |
 | Content approval | **B** | RPC `submit_content_for_approval` (mig 126) + `AdminContentApprovals.tsx` | ต้องตรวจก่อนว่า draft อยู่ตารางไหน (verify) |
 | Social events/insights | **B/C** | mig `109` = `channel_page_bindings`+`social_events`+`ingest_social_event` (90-day) | ต้องมีตัวดึง insights เข้า · attribution แยก "มีจริง/ไม่มีสิทธิ์" |
-| Image generation | **D** | ไม่พบใน repo (มีแค่ upload/`AdminMedia`/`AdminAssetAudit`) | เลือก provider (เช่น Gemini image ผ่าน ai-proxy) — ตั้งค่าจาก Admin ได้ ห้าม hard-code |
-| Facebook/Meta publish | **D/E** | ไม่มี Graph API/OAuth/publish (มีแค่ลิงก์เพจ `Footer/seo`) | ต้องสร้างใหม่ + ติด Meta App review = **E (ต้องทำ Owner)** |
+| Image generation | **B (scope จำกัด)** | ai-proxy (`aiVoice.ts` STT ใช้ gemini) + ไม่มี service สร้างภาพอาหาร | **คำสั่ง E5: เจนเฉพาะภาพโปรโมชัน — ภาพเมนูใช้รูปจริง sync เท่านั้น ห้ามเจน** |
+| Facebook/Meta publish | **A/B (มีจริง! — แก้ไขจากที่เคยเขียนว่า "ไม่พบ")** | `supabase/functions/social-publish-worker` (Graph v21.0) + `social-post-worker` + `social-ai-worker` (comment/messages) + `channel-webhook` · commits `35ac7e0` (โพสต์ภาพเมนูจริง multi-photo), `b6b03c8` (webhook live), `eaa5105` (**Meta app LIVE verified, permalink จริง**), `9098a22` (runbook FB image funnel) | เคย publish สำเร็จจริง — **ต่อของเดิม ห้ามสร้างใหม่** (E6) |
 | Analytics/attribution | **B/C** | `AdminReports.tsx` + `social_events` | ห้ามอ้างยอดขายจากโพสต์โดยไม่มี attribution evidence |
 | Settings/audit | **A** | `AdminSettings.tsx` + `AuditLogPage.tsx` + `auditLog.ts` | ใช้เก็บ automation rules ต่อได้ |
 | Tests/RLS/migrations | **A** | vitest 1216 + `e2e/contracts_*.sql` + CI replay 001–134 | สัญญา SQL ใหม่ตามแบบ 132/133 |
@@ -158,12 +158,50 @@ HEAD+changed files · ของเดิมที่ reuse · ของใหม
 
 ---
 
+## PART E — คำสั่ง/คำตอบจาก Owner 2026-10-22 รอบ 2 (งานต่อในแชทหน้า — ผูกกับ Part A/B/C)
+
+> ทุกข้อ = **งานต่อ (work items)** ทำตามลำดับใน D1 · ห้ามละเมิดกติกา §0
+
+### E1. สายมอบหมายงาน — โมเดล "ประกาศ-รับงาน + แอดมินเลือกเองได้" (Owner สั่ง)
+- อาการจริง: เปิด `/admin/delivery` แล้ว **หาปุ่มมอบหมายไม่เจอ** (ภาพที่ 2 — คิวว่าง/อยู่ล่างจอ) + เดิมต้อง assign ทีละคน
+- โมเดลที่สั่ง (ผสม 2 ทาง — คำตอบ D4 ข้อ 2 "เลือกไรเดอร์ก่อน และไรเดอร์กดรับเองได้"):
+  1. กด **"ส่งออกงาน (Dispatch)"** → ระบบ **ประกาศ+push แจ้งไรเดอร์ทุกคนที่ลงทะเบียน/ผูกบัญชีแล้ว** (registered & linked — ผูกผ่าน `link_driver_user` มีอยู่แล้ว)
+  2. ไรเดอร์คนแรกที่กด **"รับงาน"** = จองงานคนเดียว → **สถานะถึงเปลี่ยนจริง** (การรับงาน = trigger สถานะ ไม่ใช่ปุ่มแอดมิน)
+  3. แอดมิน**เลือก/มอบหมายเองก็ได้** (`assign_driver` เดิม — "เลือกไรเดอร์ก่อน") + เห็นทันทีว่าใครรับ/ยังไม่มีใครรับ
+- ของเดิมที่ต่อ (ห้ามสร้างใหม่): `assign_driver` RPC (020/125), `driverAcceptAssignment` (`driverService.ts:113`), push audience ไรเดอร์ (`register_push_subscription(p_audience)` + `claim_push_driver_targets`), badge ใน `DeliveryManagement.tsx:28-49`
+- เก็บหลักฐาน: dispatch 1 งาน → ไรเดอร์ทุกเครื่องได้แจ้งเตือนพร้อมกัน → คนแรกกดรับ → สถานะเปลี่ยนทั้ง 3 หน้า ≤1 poll · คนอื่นเห็น "งานถูกจองแล้ว" · ทดสอบเส้น assign โดยแอดมินอีก 1 รอบ
+
+### E2. ลบ mock ไรเดอร์/ออเดอร์ปลอม — ใช้ของจริงเท่านั้น
+- หลักฐาน: `src/pages/admin/RouteOptimizationPage.tsx:23-40` = `mockOrders` (BMB-001..005 ที่อยู่ปลอม) + `mockDrivers` (Somchai/Somying/Wichai ปลอม) + `assignOrdersToDrivers(mockOrders, mockDrivers)` → "429.6 km / 884 min" = ตัวเลขจากของปลอมทั้งหมด (ภาพที่ 1) · `DeliveryManagement.tsx:12` ระบุเองว่าเป็น "old client-side route optimizer mock UI"
+- คำสั่ง: **ลบทิ้งทั้งหมด** — หน้าเส้นทาง/Driver status ต้องอ่าน `delivery_assignments`+`drivers` จริง (ที่ลงทะเบียน/ผูกแล้ว) เท่านั้น · ห้ามเหลือ mock/demo ในหน้าแอดมิน (กติกาข้อ 5)
+- เก็บหลักฐาน: หน้าเดิมแสดงเฉพาะออเดอร์จริงของวัน + ไรเดอร์จริงที่ผูกบัญชีแล้ว (แถว `drivers` จริง ไม่ใช่ Somchai ปลอม)
+
+### E3. แอดมินเห็นตลอด + เห็นการเดินทางของไรเดอร์ (live)
+- คำสั่ง: ระหว่างงาน แอดมินต้องเห็นตำแหน่ง/เส้นทางเดินทางของไรเดอร์คนนั้น ๆ แบบสด เห็นตลอดทุกขั้น
+- ของเดิมที่ต่อ: `RiderMiniMap` (ปลายทาง/คุณGPS/ครัว) + `drivers.current_latitude/longitude` + map diagnostics (`googleMaps.ts`) → ต่อเป็น: ไรเดอร์รายงานตำแหน่งเป็นระยะระหว่างงาน → Dispatch Center แสดงแผนที่+เส้นทางของไรเดอร์ที่กำลังส่ง + เก็บประวัติเส้นทางหลังจบงาน
+- เก็บหลักฐาน: แอดมินดูหน้าเดียวเห็นไรเดอร์ขยับจริงบนแผนที่ (2 จอพร้อมกันบนเครื่องจริง)
+
+### E4. ส่งจริง = ส่งรูปเสร็จ (POD) — แอดมินเห็นทุกขั้น
+- ของเดิมครบแล้ว: `driver_attach_pod` + **`delivered` ต้องมี POD** (`ERR_POD_REQUIRED`) + แอดมินเห็นรูป (signed URL) — คงไว้ + ปุ่ม "ส่งมอบสำเร็จ" ของไรเดอร์ทำงานได้เมื่อแนบรูปแล้วเท่านั้น + แอดมินเห็นสดทุกสถานะ (ผูกกับ E3)
+- เก็บหลักฐาน: วงจรจริง ถ่ายรูป → delivered บันทึก → ลูกค้า "ส่งสำเร็จ" + แอดมินเห็นรูป/เส้นทาง
+
+### E5. Image gen — เจน "ภาพโปรโมชัน" เท่านั้น
+- คำสั่ง: image gen มีอยู่แต่ใช้น้อย — **ใช้เจนภาพโปรโมชันเท่านั้น**; ภาพอาหาร/เมนู **ห้ามเจน** ใช้รูปจริงที่ sync เท่านั้น (แอดมินอัปเดตเมนู+รายละเอียดเรื่อย ๆ)
+- ผลกับ Part C: AI Content Studio สร้างภาพได้เฉพาะครีเอทีฟโปรโมชัน (banner/การ์ดโปร) · ภาพสินค้าในโพสต์ = ดึงจากคลังภาพสินค้าจริง (`AdminMedia`/สินค้า) เท่านั้น · validate บังคับข้อนี้ก่อน publish เสมอ
+
+### E6. Meta publish — ของเดิมที่เคยสำเร็จจริง (ใช้ไม่ใช่สร้างใหม่)
+- หลักฐานความสำเร็จจริง: `35ac7e0` (social-publish-worker แนบภาพเมนูจริง multi-photo), `b6b03c8` (webhook fields — messages live), `eaa5105` (**Meta app LIVE verified: post public=true + permalink จริง**), `9098a22` (runbook FB image post funnel + Meta app Live-mode fix)
+- คำสั่ง: **ตรวจ+ต่อยอด `social-publish-worker` ของเดิมก่อนเสมอ** (กติกาข้อ 2) — เสียบ Planner/Approval/Calendar ของ Part C เข้ากับ worker ตัวนี้; สร้างใหม่ได้เฉพาะเมื่อพิสูจน์แล้วว่าของเดิมใช้ไม่ได้จริง
+- **งานต่อเพิ่ม (จาก D4 ข้อ 4):** "เอไอโต้ตอบได้ ลองตรวจดูขาดอะไรปรับปรุงเอา" → audit `social-ai-worker` (comment/messages auto-reply ผ่าน Graph API) + `channel-webhook` + `social_events` ว่าขาด/พังจุดไหน → ปรับปรุงให้ครบวงจร (ตอบคอมเมนต์/ข้อความ, ขอบเขตที่ปลอดภัยตาม `aiGuardrails`, เก็บ event จริง)
+
+---
+
 ## PART D — ลำดับงานรวม + Gates + สิ่งที่ต้องถาม Owner
 
-### D1. ลำดับลงมือในแชทหน้า (รวมทั้ง 2 งาน)
-1. **ก้อนแก้บั๊กจริงก่อน** (PART A × ทำพร้อม M-merge ที่เกี่ยวข้อง): A5+M1 → A1+M2 → A2+A7(ก.)+M5 → A3 → A4+A8+M4+M3 → A6 — เสร็จทีละชิ้นผ่าน gates+ทดสอบจริง 3 อุปกรณ์ก่อนชิ้นถัดไป
-2. **ก้อน Marketing** (PART C): ตรวจ draft schema + ออกแบบตาราง marketing plans/posts/rules (migration 135+) → ต่อ `AdminMarketing` 7 แท็บ → image provider → job type `marketing_publish` ในคิวเดิม → Meta OAuth/publish (รอสิทธิ์) → analytics → E2E menu→publish
-3. **Test ก้อนจริงทุกรอบ**: ลูกค้า(มือถือ)→สลิป→แอดมินยืนยัน→มอบหมาย→ไรเดอร์รับ→POD→ส่งมอบ จบวงจร + พรีออเดอร์ 1 รอบ + คูปอง 1 ใบ
+### D1. ลำดับลงมือในแชทหน้า (รวมทั้ง 2 งาน + PART E)
+1. **ก้อนแก้บั๊กจริงก่อน** (PART A × M-merge × E): A5+M1 → A1+M2 → A2+A7(ก.)+M5 → A3 → **E2 ลบ mock ปลอม** → **E1+A4+A8+M4+M3 (โมเดลประกาศ-รับงาน + Dispatch Center)** → **E3+E4 (live tracking + POD จบจริง)** → A6 — เสร็จทีละชิ้นผ่าน gates+ทดสอบจริง 3 อุปกรณ์ก่อนชิ้นถัดไป
+2. **ก้อน Marketing** (PART C × E5/E6): ตรวจ draft schema + ตาราง marketing plans/posts/rules (migration 135+) → `AdminMarketing` 7 แท็บ → **เสียบเข้า `social-publish-worker` ของเดิม (E6)** → image gen **เฉพาะภาพโปรโมชัน** (E5) + ภาพเมนูใช้รูปจริง → job type `marketing_publish` ในคิวเดิม → analytics → E2E menu→publish
+3. **Test จริงทุกรอบ**: ลูกค้า(มือถือ)→สลิป→แอดมินยืนยัน→dispatch ประกาศ→ไรเดอร์(ทุกเครื่อง)รับ→live tracking→POD→ส่งมอบจบวงจร + พรีออเดอร์ 1 รอบ + คูปอง 1 ใบ
 
 ### D2. Gates ก่อน push ทุกครั้ง (ของเดิมทั้งหมด ห้ามลด)
 `npx tsc --noEmit` = 0 · `npm run lint` = 0 · `npm run test` = 1216/1216 (หรือมากกว่าเมื่อเพิ่มเทสต์) · `npm run build` ผ่าน · CI: migrations 001–134 replay + contracts 123/124/127–130/131/133 (+ของใหม่) เขียว · ห้ามประกาศ PASS โดยไม่มี runtime evidence (ภาพ/ล็อกจากอุปกรณ์จริง) · apply migration production = ต้อง Owner approve เท่านั้น
@@ -173,12 +211,12 @@ HEAD+changed files · ของเดิมที่ reuse · ของใหม
 - migration ใหม่: เขียน down/repair คู่เสมอ + ทดสอบ replay ทั้งขาขึ้น/ขาลงบน ephemeral PG ก่อนขอ apply · ถ้า production พัง: ย้อนโค้ดก่อน แล้วค่อย repair data ผ่าน RPC (ห้ามยิง SQL ตรงโดยไม่ผ่านแบบแผน)
 - Edge functions: deploy ด้วย Management API (multipart `metadata`+`file`, `verify_jwt=true`) + จดเลขเวอร์ชันก่อน/หลังเพื่อย้อน
 
-### D4. คำถามที่ Owner ต้องตอบก่อนเริ่ม (ค้างอยู่ ณ ตอนนี้)
-1. **การชำระเงิน (A7)**: เลือก ก. คง manual+ปิดช่องโหว่ / ข. ต่อ Omise auto / ค. ต่อ Stripe — (แนะนำ ก. ก่อน แล้วค่อย ข.)
-2. **สายจัดส่ง (A4)**: "พร้อมส่ง" ต้อง **บังคับเลือกไรเดอร์ก่อน** หรือ ให้ระบบมอบหมายอัตโนมัติให้ไรเดอร์ว่างคนแรก? (แนะนำ: บังคับเลือก + เตือนถ้าไม่เลือก)
-3. **Marketing ช่องทางไหนก่อน**: Facebook Page อย่างเดียว หรือ Facebook+Instagram+LINE? (กระทบขอบเขต Meta App review)
-4. **Meta App/สิทธิ์**: พี่มี Meta Developer App + Page admin แล้วหรือยัง (รายการ E — ถ้ายังต้องสมัครก่อนถึงจะ publish จริงได้)
-5. **Image provider**: ใช้ Gemini ผ่าน ai-proxy ที่มี หรือ ต้องการ provider อื่น?
+### D4. คำถาม 5 ข้อ — ✅ Owner ตอบแล้ว 2026-10-22 (คำตอบด้านล่าง = คำพี่ดัดแปลงน้อยที่สุด)
+1. **การชำระเงิน (A7)** = **ก. ตามแนะนำ (คง manual+ปิดช่องโหว่) — เพราะกำลังรอ Omise LIVE จะเปิดร้านจริงแล้ว** → เตรียมความพร้อมให้สลับเป็น auto ได้ทันทีเมื่อได้ live keys (webhook/refund path มีอยู่แล้ว: `omise-webhook`/`omise-checkout`/`omise-refund`) · ห้ามเปลี่ยนก่อนได้รับ live keys + อนุมัติ
+2. **สายจัดส่ง (A4)** = **เลือกไรเดอร์ก่อน (แอดมิน assign ได้) และไรเดอร์กดรับเองได้ด้วย** — ผสม E1: dispatch → ประกาศ+push ไรเดอร์ทุกคนที่ลงทะเบียน/ผูกแล้ว → คนแรกรับ = จอง → **สถานะเปลี่ยนจริงตอนรับงาน** · แอดมินจะเลือก/มอบหมายเองก็ได้ (assign_driver)
+3. **Marketing ช่องทาง** = **Facebook Page อย่างเดียวก่อน** — Instagram+LINE รอระบบทั้งหมดสมบูรณ์เปิดขายได้จริงก่อนจึงอนุญาต
+4. **Meta App/สิทธิ์** = **มีแล้วใน env local ทดสอบผ่านมาแล้ว พร้อมใช้งาน** + **"เอไอโต้ตอบได้ ลองตรวจดูขาดอะไรปรับปรุงเอา"** → งานต่อ: audit `social-ai-worker` (comment/messages auto-reply) ว่าขาดอะไร → ปรับปรุง (ดู E6)
+5. **Image provider** = **โอเค Gemini ผ่าน OpenRouter** — คีย์ใหม่ชื่อ **`BMB_openrouter_api_key`** (อยู่ใน env แล้ว; ห้ามแสดงค่าในเอกสาร/โค้ด/ล็อก) + ขอบเขตตาม E5 (เจนเฉพาะภาพโปรโมชัน)
 
 ### D5. หมายเหตุสภาพแวดล้อม (บทเรียนจากเซสชันนี้)
 - ทดสอบ CI บนเครื่องได้จริงด้วย Docker: `postgres:16` + `e2e/ci/apply_all_migrations.sh` (ต้อง `tr -d '\r'` ก่อนรันเพราะ checkout Windows เป็น CRLF) + contracts ตาม `e2e/contracts_*.sql`

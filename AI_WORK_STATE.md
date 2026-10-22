@@ -2,10 +2,10 @@
 
 > **สถานะงานปัจจุบันของโปรเจกต์ Bite Me Baby** ใช้แนบเข้าสู่ Context ตอนเริ่มแชทเสมอ
 
-**last_updated:** 2026-10-22 (รอบ HANDOFF-MASTER — รวมแผนบั๊ก 3 อุปกรณ์ + แผนรวมไฟล์ + Marketing Automation Control Center)
-**phase:** 📋 **HANDOFF READY — ห้ามโค้ดในรอบนี้ แผนทั้งหมดอยู่ที่ `docs/BMB_HANDOFF_MASTER_2026-10-22.md` (เปิดอ่านก่อนทำงานทุกครั้ง)**
-**current_focus:** เริ่มงานในแชทใหม่ตาม HANDOFF Part D1: แก้บั๊กจริง (A5+M1 → A1+M2 → A2+A7+M5 → A3 → A4+A8+M4+M3 → A6) แล้วต่อก้อน Marketing (Part C) — ทำพร้อมแผนรวมไฟล์ M1–M6 ห้ามเพิ่มของซ้ำประเภทเดิม
-**blocked_by:** รอ Owner ตอบ 5 คำถาม (HANDOFF §D4: ทางชำระเงิน ก/ข/ค, บังคับเลือกไรเดอร์?, ช่องทาง marketing, Meta App, image provider) · CI ที่ `2cbf203` เขียวทั้ง workflow แล้ว
+**last_updated:** 2026-10-22 รอบ 2 (HANDOFF อัปเดต: PART E งานต่อ + D4 ตอบครบ 5 ข้อ + แก้ C0 Meta publish = มีจริง)
+**phase:** 📋 **HANDOFF READY — ห้ามโค้ดจนกว่าจะเริ่มแชทใหม่ แผนทั้งหมด = `docs/BMB_HANDOFF_MASTER_2026-10-22.md` (§0 กติกา + Part A–E)**
+**current_focus:** แชทหน้าเริ่มตาม D1: A5+M1 → A1+M2 → A2+A7(ก.)+M5 → A3 → **E2 ลบ mock ปลอม** → **E1+A4+A8+M4+M3 (ประกาศ-รับงาน + แอดมินเลือกได้)** → **E3/E4 (live tracking+POD)** → A6 → แล้วต่อก้อน Marketing (เสียบ `social-publish-worker` เดิม + image gen โปรโมชันเท่านั้น + audit เอไอโต้ตอบ)
+**blocked_by:** ไม่มี — Owner ตอบครบ 5 ข้อแล้ว (D4): ชำระเงิน=ก. รอ Omise LIVE, จัดส่ง=assign+รับเอง, marketing=FB Page ก่อน, Meta=มีใน env local+ให้ปรับปรุงเอไอโต้ตอบ, image=Gemini ผ่าน `BMB_openrouter_api_key`
 
 ---
 
