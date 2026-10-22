@@ -259,3 +259,15 @@ jobs:
             exit 1
           fi
           echo "Contract 135 OK — announce-claim race safety + actor guards hold"
+
+      - name: Contract 136 — driver location history (E3) (ROLLBACK)
+        run: |
+          set +e
+          out=$(psql -v ON_ERROR_STOP=1 -f e2e/contracts_136_driver_location.sql 2>&1); rc=$?
+          printf '%s\n' "$out"
+          if [ $rc -ne 0 ]; then
+            msg=$(printf '%s\n' "$out" | grep -m1 'ERROR:' || echo "rc=$rc")
+            echo "::error file=e2e/contracts_136_driver_location.sql::$msg"
+            exit 1
+          fi
+          echo "Contract 136 OK — GPS heartbeat + active-order route binding hold"

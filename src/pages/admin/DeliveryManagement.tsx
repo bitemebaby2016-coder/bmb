@@ -21,7 +21,8 @@ import { supabase } from '@/lib/supabase'
 import { getOrdersByStatuses, getDeliveryAssignmentsFor } from '@/lib/bmbAdminApi_orders'
 import { resolveOrderDeliveryAddress } from '@/lib/orderAddress'
 import type { OrderForm, DeliveryAssignmentLiteRow } from '@/lib/bmbAdminApi_orders'
-import { adminListDrivers, assignDriver, adminAdvanceDelivery, upsertDriver, linkDriverUser, getDriverAccounts, driverErrorText, adminCancelAssignment, getPodSignedUrl, dispatchOrder, adminCancelOffer, type AdminDriverRow, type DriverAccountRow } from '@/lib/driverService'
+import { adminListDrivers, assignDriver, adminAdvanceDelivery, upsertDriver, linkDriverUser, getDriverAccounts, driverErrorText, adminCancelAssignment, getPodSignedUrl, dispatchOrder, adminCancelOffer, getRouteHistory, type RoutePoint, type AdminDriverRow, type DriverAccountRow } from '@/lib/driverService'
+import { AdminLiveMap } from '@/components/admin/AdminLiveMap'
 import { getUsers, type User } from '@/lib/bmbAdminApi_users'
 import { showToast } from '@/components/ui/ToastContainer'
 import { useNotificationStore } from '@/store/notificationStore'
@@ -219,6 +220,21 @@ export function DeliveryManagement() {
       showToast('ยกเลิกงานไม่สำเร็จ: ' + driverErrorText(e?.message || e), 'error')
     } finally { setActing(null) }
   }
+
+  // E3 (2026-10-22): แผนที่ live + ประวัติเส้นทาง — GPS จริงจาก heartbeat ไรเดอร์ (136)
+  const [routeFor, setRouteFor] = useState<string | null>(null)
+  const [routePoints, setRoutePoints] = useState<RoutePoint[] | null>(null)
+  async function loadRoute(orderNumber: string) {
+    setRouteFor(orderNumber)
+    setRoutePoints(await getRouteHistory(orderNumber))
+  }
+  // รีเฟรชตำแหน่งไรเดอร์ทุก 20 วิ (เฉพาะ drivers — เบา) ระหว่างเปิดหน้านี้
+  useEffect(() => {
+    const t = window.setInterval(() => {
+      void adminListDrivers().then((r) => { if (r.ok) setDrivers(r.drivers) })
+    }, 20_000)
+    return () => window.clearInterval(t)
+  }, [])
 
   // A3: signed URL ของรูป POD (bucket ส่วนตัว) — cache ต่อ path ไม่ยิงซ้ำตอน render
   const podUrlCache = useRef<Record<string, string>>({})
@@ -422,6 +438,27 @@ export function DeliveryManagement() {
         )}
       </div>
 
+      {/* E3: แผนที่ live — ไรเดอร์วิ่งจริง (GPS heartbeat) + เส้นทางย้อนหลังที่เลือกดู */}
+      <div className="card mb-6">
+        <h3 className="font-bold text-brand-accent mb-3">🗺️ ตำแหน่งไรเดอร์ (Live)</h3>
+        <AdminLiveMap
+          drivers={drivers.map((d) => ({
+            id: d.id,
+            name: d.driver_name ?? d.id,
+            latitude: (d as { current_latitude?: number | null }).current_latitude ?? null,
+            longitude: (d as { current_longitude?: number | null }).current_longitude ?? null,
+            status: d.status,
+          }))}
+          route={routePoints}
+        />
+        {routeFor && (
+          <p className="text-xs text-brand-muted mt-2">
+            📍 กำลังแสดงเส้นทางย้อนหลังของ {routeFor} ({routePoints?.length ?? 0} จุด){' '}
+            <button className="underline" onClick={() => { setRouteFor(null); setRoutePoints(null) }}>ปิดเส้นทาง</button>
+          </p>
+        )}
+      </div>
+
       {/* Dispatch queue */}
       <div className="card mb-6">
         <h3 className="font-bold text-brand-accent mb-4">📦 คิว Dispatch — พร้อมส่ง ({readyQ.length})</h3>
@@ -521,6 +558,23 @@ export function DeliveryManagement() {
                       <span className="text-xs text-red-500">เหตุผลที่ยกเลิก: {(a as any).cancel_reason || '(ไม่ได้ระบุ)'}</span>
                     )}
                   </div>
+                  {/* E4 (2026-10-22): แอดมินเห็นทุกขั้น — timeline จาก timestamps จริงของ assignment */}
+                  {a && (
+                    <div className="mt-2 text-xs text-brand-muted flex flex-wrap gap-x-3 gap-y-1" data-testid={`asg-timeline-${o.order_number}`}>
+                      <span>📌 มอบหมาย: {a.assigned_at ? new Date(a.assigned_at).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }) : '—'}</span>
+                      <span>🙋 รับงาน: {a.accepted_at ? new Date(a.accepted_at).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }) : '—'}</span>
+                      <span>🛍️ รับของ: {a.picked_up_at ? new Date(a.picked_up_at).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }) : '—'}</span>
+                      <span>🚚 ออกเดินทาง: {a.in_transit_at ? new Date(a.in_transit_at).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }) : '—'}</span>
+                      <span>✅ ส่งสำเร็จ: {a.delivered_at ? new Date(a.delivered_at).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }) : '—'}</span>
+                      <button
+                        onClick={() => { void loadRoute(o.order_number) }}
+                        className="underline text-brand-accent"
+                        data-testid={`route-history-${o.order_number}`}
+                      >
+                        📍 เส้นทางย้อนหลัง
+                      </button>
+                    </div>
+                  )}
                   {/* A3: รูปส่งมอบ (POD) ที่ไรเดอร์อัปโหลดไว้ — เปิดดูได้, ยังอยู่หลัง refresh/re-login */}
                   {a?.proof_of_delivery_path ? (
                     <div className="mt-2 flex items-center gap-2">

@@ -28,6 +28,7 @@ import {
   driverDeclineAssignment,
   claimDispatchOffer,
   driverDeclineOffer,
+  driverUpdateLocation,
   driverAttachPod,
   uploadPodPhoto,
   type DriverRecord,
@@ -374,6 +375,31 @@ export function RiderPwaPage() {
 
   // A5: retry สำหรับ network failure — เก็บ action ล่าสุดไว้กดซ้ำได้
   const lastActionRef = useRef<(() => void) | null>(null)
+
+  // E3 (2026-10-22): GPS heartbeat — ส่งตำแหน่งจริงทุก 30 วิ (10 วิระหว่างมีงาน
+  // กำลังส่ง) → drivers.current_* + driver_location_history (136) → แอดมินเห็น
+  // วิ่งจริงบนแผนที่ Dispatch และดูเส้นทางย้อนหลังตอนจบงาน
+  useEffect(() => {
+    if (!driver) return
+    let stopped = false
+    const send = () => {
+      if (stopped || typeof navigator === 'undefined' || !('geolocation' in navigator)) return
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          if (stopped) return
+          void driverUpdateLocation(
+            { latitude: pos.coords.latitude, longitude: pos.coords.longitude },
+            activeOrder?.order_number,
+          )
+        },
+        () => { /* heartbeat เงียบได้ — ไม่เด้ง error ทุกไม้ */ },
+        { enableHighAccuracy: true, timeout: 10000 },
+      )
+    }
+    send()
+    const t = window.setInterval(send, activeOrder ? 10_000 : 30_000)
+    return () => { stopped = true; window.clearInterval(t) }
+  }, [driver, activeOrder?.order_number])
 
   if (!authChecked) {
     return (

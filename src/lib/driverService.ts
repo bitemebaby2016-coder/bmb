@@ -181,6 +181,39 @@ export async function adminCancelOffer(orderNumber: string, reason: string): Pro
   return { ok: true }
 }
 
+// ============================================
+// E3 (2026-10-22): GPS heartbeat + ประวัติเส้นทาง (migration 136)
+// ============================================
+export async function driverUpdateLocation(
+  coords: { latitude: number; longitude: number },
+  orderNumber?: string,
+): Promise<DriverActionResult> {
+  const { error } = await supabase.rpc('driver_update_location', {
+    p_latitude: coords.latitude,
+    p_longitude: coords.longitude,
+    p_order_number: orderNumber ?? null,
+  })
+  if (error) return { ok: false, ...classifyDriverError(error) }
+  return { ok: true }
+}
+
+export interface RoutePoint {
+  latitude: number
+  longitude: number
+  recorded_at: string
+}
+
+/** ประวัติเส้นทางของงาน (สำหรับแอดมิน — ดูย้อนหลังตอนจบงาน) */
+export async function getRouteHistory(orderNumber: string): Promise<RoutePoint[]> {
+  const { data, error } = await supabase
+    .from('driver_location_history')
+    .select('latitude, longitude, recorded_at')
+    .eq('order_number', orderNumber)
+    .order('recorded_at', { ascending: true })
+  if (error) return []
+  return (data ?? []) as RoutePoint[]
+}
+
 /** A4: แอดมินยกเลิกงานค้าง (เก็บประวัติไว้ — ไม่ลบแถว assignment) */
 export async function adminCancelAssignment(orderNumber: string, reason: string): Promise<DriverActionResult> {
   const { error } = await supabase.rpc('admin_cancel_assignment', {
