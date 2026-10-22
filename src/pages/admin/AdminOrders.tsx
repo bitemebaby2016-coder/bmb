@@ -20,7 +20,8 @@ import type { RoundLite } from '@/lib/preOrderQueue'
 import type { OrderForm } from '@/lib/bmbAdminApi_orders'
 import type { Product } from '@/types'
 import { useAdminTenantContextStore } from '@/lib/adminTenantContext'
-import { SlipThumb } from '@/components/admin/SlipThumb'
+import { getPaymentIntentsFor, type PaymentIntentLite } from '@/lib/paymentExceptions'
+import { SlipReviewPanel } from '@/components/admin/SlipReviewPanel'
 
 const PAGE_SIZE = 25
 
@@ -67,6 +68,10 @@ export function AdminOrders() {
   const [loadError, setLoadError] = useState('')
   // STEP 3B-2A Phase B: delivery-assignment state per order (migration 020 rows, RLS admin).
   const [assignmentByOrder, setAssignmentByOrder] = useState<Record<string, DeliveryAssignmentLiteRow>>({})
+  // A2+M5 (2026-10-22): payment_intents ของทุกออเดอร์ในหน้านี้ — query ครั้งเดียวต่อ
+  // หน้า (getPaymentIntentsFor = เส้นอ่านเดียวผ่าน paymentGateway) แล้วส่งเป็น props
+  // เข้า SlipThumb/SlipReviewPanel (เลิก self-fetch ซ้ำทีละออเดอร์)
+  const [intentsByOrder, setIntentsByOrder] = useState<Record<string, PaymentIntentLite[]>>({})
   // STEP 3B-2B: delivery_rounds rows (canonical capacity/cutoff source of truth) for the
   // PRE_ORDER queue header — DISPLAY ONLY; server RPCs (025/038) enforce the rules.
   const [roundsById, setRoundsById] = useState<Record<string, RoundLite>>({})
@@ -93,6 +98,13 @@ export function AdminOrders() {
     const amap: Record<string, DeliveryAssignmentLiteRow> = {}
     for (const a of assignments) amap[a.order_number] = a
     setAssignmentByOrder(amap)
+    // A2+M5: intents ของทุกออเดอร์ในหน้า — query เดียว (batch) แล้ว map ตาม order_number
+    const intents = await getPaymentIntentsFor(numbers)
+    const imap: Record<string, PaymentIntentLite[]> = {}
+    for (const it of intents) {
+      ;(imap[it.order_number] ||= []).push(it)
+    }
+    setIntentsByOrder(imap)
     // 3B-2B: rounds for the current page (queue headers read the DB source of truth)
     const roundIds = Array.from(new Set(res.orders.map((o) => o.delivery_round_id).filter(Boolean))) as string[]
     const rounds = await getRoundsByIds(roundIds)
@@ -140,6 +152,9 @@ export function AdminOrders() {
 
   async function handleConfirmPayment(orderNumber: string) {
     // P0-5: server-authoritative — COD requires delivered, PromptPay requires TXN submitted.
+    // A2 (2026-10-22): this is the SINGLE confirm_offline_payment action — it lives
+    // only in the SlipReviewPanel ("แผงตรวจสลิปเดียว"); the order rows no longer
+    // carry a duplicate confirm button.
     const r = await confirmOfflinePayment(orderNumber)
     loadOrders()
 
@@ -245,6 +260,16 @@ async function handleStripeRefund(orderNumber: string) {
           </button>
         ))}
       </div>
+
+      {/* A2 (2026-10-22): "แผงตรวจสลิปเดียว" — จุดเดียวที่ตรวจหลักฐานการโอน +
+          กดยืนยันการชำระเงิน (confirm_offline_payment) · M5: intents query ครั้งเดียว
+          ใน loadOrders แล้วส่งต่อเป็น props (SlipThumb เลิก self-fetch) */}
+      <SlipReviewPanel
+        orders={filteredOrders}
+        intentsByOrder={intentsByOrder}
+        onConfirmPayment={handleConfirmPayment}
+      />
+
 <div className="space-y-4">
         {filteredOrders.map((order) => {
           const modeBadge = orderModeBadge(order.order_mode, order.scheduled_date)
@@ -356,13 +381,8 @@ async function handleStripeRefund(orderNumber: string) {
                 🕘 History / Audit
               </button>
 
-              {/* mig 133: หลักฐานการโอน (สลิป + TXN ref) — ดูก่อนกดยืนยัน */}
-              {order.payment_method === 'promptpay_qr' && (
-                <SlipThumb orderNumber={order.order_number} />
-              )}
-              {order.payment_status === 'pending' && (
-                <button onClick={() => handleConfirmPayment(order.order_number)} className="btn btn-success text-sm">💰 Confirm payment</button>
-              )}
+              {/* A2 (2026-10-22): หลักฐานการโอน + ปุ่มยืนยัน ย้ายไปที่ SlipReviewPanel
+                  ด้านบน (แผงตรวจสลิปเดียว — action เดียวกันห้ามมีสองที่) */}
               {order.payment_method === 'credit_card' && (order.payment_status === 'paid' || order.payment_status === 'partially_refunded') && (
                     <button onClick={() => handleStripeRefund(order.order_number)} className="btn btn-outline text-sm">💸 Refund (Stripe)</button>
                   )}

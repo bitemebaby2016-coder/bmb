@@ -41,6 +41,11 @@ vi.mock('@/lib/bmbAdminApi_orders', () => ({
 
 vi.mock('@/lib/bmbAdminApi_products', () => ({ getProductsAdmin: m.getProductsAdmin }))
 vi.mock('@/components/ui/ToastContainer', () => ({ showToast: m.showToast }))
+// A2+M5 (2026-10-22): AdminOrders batch-reads payment_intents per page (SlipReviewPanel)
+// — stub ให้ hermetic ไม่ต้องแตะ supabase จริงในเทสต์หน้านี้
+vi.mock('@/lib/paymentExceptions', () => ({
+  getPaymentIntentsFor: vi.fn(async () => []),
+}))
 vi.mock('react-router-dom', async () => {
   const actual = await vi.importActual<typeof import('react-router-dom')>('react-router-dom')
   return actual // ใช้ router จริง — Link/useSearchParams ต้องมี context

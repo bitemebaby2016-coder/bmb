@@ -35,7 +35,7 @@ const SECTION_TITLE: Record<PaymentExceptionKind, string> = {
 }
 
 export function AdminPaymentExceptions() {
-  const [rows, setRows] = useState<Array<{ order: OrderForm; kind: PaymentExceptionKind; intent: PaymentIntentLite | null }>>([])
+  const [rows, setRows] = useState<Array<{ order: OrderForm; kind: PaymentExceptionKind; intents: PaymentIntentLite[] }>>([])
   const [loading, setLoading] = useState(true)
 
   const load = useCallback(async () => {
@@ -52,7 +52,7 @@ export function AdminPaymentExceptions() {
       setRows(orders.map((o) => {
         const oi = byOrder.get(o.order_number) || []
         const c = classifyPaymentException(o, oi)
-        return { order: o, kind: c.kind, intent: oi[0] || null }
+        return { order: o, kind: c.kind, intents: oi }
       }))
     } catch (e) {
       console.error('[AdminPaymentExceptions] load failed:', e)
@@ -111,10 +111,17 @@ export function AdminPaymentExceptions() {
                           <td className="p-2"><span className={'badge ' + PAYMENT_EXCEPTION_META[r.kind].cls}>{PAYMENT_EXCEPTION_META[r.kind].label}</span></td>
                           <td className="p-2">{Number(r.order.total_amount || 0).toFixed(2)}</td>
                           <td className="p-2 text-xs text-brand-muted">
-                            {r.intent?.payment_intent_id ? String(r.intent.payment_intent_id).slice(0, 18) : (r.intent?.status ?? '—')}
-                            {r.intent?.failure_reason ? <div className="text-red-500">{String(r.intent.failure_reason).slice(0, 40)}</div> : null}
+                            {r.intents[0]?.payment_intent_id ? String(r.intents[0].payment_intent_id).slice(0, 18) : (r.intents[0]?.status ?? '—')}
+                            {r.intents[0]?.failure_reason ? <div className="text-red-500">{String(r.intents[0].failure_reason).slice(0, 40)}</div> : null}
                           </td>
-                          <td className="p-2"><SlipThumb orderNumber={r.order.order_number} /></td>
+                          <td className="p-2">
+                            <SlipThumb
+                              orderNumber={r.order.order_number}
+                              paymentStatus={r.order.payment_status || 'pending'}
+                              paymentMethod={r.order.payment_method || ''}
+                              intents={r.intents}
+                            />
+                          </td>
                           <td className="p-2 text-xs text-brand-muted">{new Date(r.order.updated_at || r.order.created_at).toLocaleString('th-TH')}</td>
                         </tr>
                       )

@@ -51,6 +51,12 @@ vi.mock('@/components/ui/ToastContainer', () => ({
   showToast: m.showToast,
 }))
 
+// A2+M5 (2026-10-22): AdminOrders batch-reads payment_intents per page (SlipReviewPanel)
+// — stub ให้ hermetic ไม่ต้องแตะ supabase จริงในเทสต์หน้านี้
+vi.mock('@/lib/paymentExceptions', () => ({
+  getPaymentIntentsFor: vi.fn(async () => []),
+}))
+
 vi.mock('react-router-dom', () => ({
   // AdminOrders ใช้แค่ <Link> + useSearchParams (Phase 4 preset) — ไม่ต้องมี Router เต็ม
   Link: (props: { to: string; className?: string; children?: React.ReactNode }) =>

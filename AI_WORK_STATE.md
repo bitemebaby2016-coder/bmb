@@ -2,9 +2,9 @@
 
 > **สถานะงานปัจจุบันของโปรเจกต์ Bite Me Baby** ใช้แนบเข้าสู่ Context ตอนเริ่มแชทเสมอ
 
-**last_updated:** 2026-10-22 รอบ 4 (D1: A5+M1 + A1+M2 เสร็จ — tests 1233/1233, tsc/lint/build เขียว · รอทดสอบ 3 อุปกรณ์ + push approval)
-**phase:** 🔨 **D1 IN PROGRESS — ✅A5+M1 ✅A1+M2 (รอ runtime evidence 3 อุปกรณ์) · ชิ้นถัดไป A2+A7(ก.)+M5**
-**current_focus:** D1 ตามลำดับ: ✅A5+M1 → ✅A1+M2 → A2+A7(ก.)+M5 → A3 → E2 → E1+A4+A8+M4+M3 → E3/E4 → A6 → ก้อน Marketing
+**last_updated:** 2026-10-22 รอบ 5 (D1: A5+M1 + A1+M2 + A2+A7(ก.)+M5 เสร็จ — tests 1247/1247 119 files, tsc/lint/build เขียว · Owner ทดสอบจาก production หลัง push)
+**phase:** 🔨 **D1 IN PROGRESS — ✅A5+M1 ✅A1+M2 ✅A2+A7(ก.)+M5 (รอ runtime evidence 3 อุปกรณ์บน production) · ชิ้นถัดไป A3**
+**current_focus:** D1 ตามลำดับ: ✅A5+M1 → ✅A1+M2 → ✅A2+A7(ก.)+M5 → A3 → E2 → E1+A4+A8+M4+M3 → E3/E4 → A6 → ก้อน Marketing
 **blocked_by:** ไม่มี — แต่ push/production = ต้อง Owner approve (auto-deploy จาก main) + เก็บ runtime evidence จากอุปกรณ์จริงก่อนประกาศ PASS
 
 ---
@@ -45,6 +45,23 @@
 - **Tests / Commands Run:** ดู Verified
 - **Known Risks:** (1) UI คูปอง Cart+Checkout รวมร่าง copy ต่างกันเล็กน้อยเหลือชุดเดียว (ตั้งใจตาม M2) (2) โค้ด typed-but-not-applied ไม่ถูกส่งเป็น promotion_code อีกต่อไป (ต้องกด "ใช้โค้ด" ก่อน — สม่ำเสมอทั้งสองหน้า) (3) A1+M2 ยังไม่ผ่าน E2E จริง 3 อุปกรณ์
 - **Next Exact Action:** A2+A7(ก.)+M5 — แผงตรวจสลิปเดียวใน AdminOrders + SlipThumb โชว์ error ชัดแทน "—" เงียบ + ทุกออเดอร์ต้องมี payment_intents row + paymentExceptions ใช้ `getPaymentIntents` ตัวเดียว
+
+## ⚡ TASK: D1-CHUNK3-A2-A7K-M5-SLIP-2026-10-22 — แผงตรวจสลิปเดียว + intent ทุกออเดอร์ + เส้นอ่านเดียว
+- **STATUS: 🟡 IMPLEMENTED + gates ผ่านครบ — UNVERIFIED บนอุปกรณ์จริง (Owner ทดสอบจาก production หลัง push)**
+- **Task ID:** D1-CHUNK3-A2-A7K-M5-SLIP-2026-10-22
+- **Objective:** A2 (แอดมินไม่เห็น/ตรวจสลิปยาก + SlipThumb เงียบเป็น "—") + A7(ก.) (ปิดช่องโหว่ intent หาย — Owner เลือกทาง ก. คง manual ตาม D4) + M5 (payment read สองทาง → เส้นเดียว)
+- **Completed:**
+  - **M5:** `paymentGateway.getPaymentIntents` รองรับ `orderNumbers[]` batch + `paymentExceptions.getPaymentIntentsFor` เลิกยิง `from('payment_intents')` เอง → delegate ไป `getPaymentIntents` ตัวเดียว (มี source-guarantee test คุม) + SlipThumb เลิก self-fetch — รับ `intents` props จากพ่อแม่ (AdminOrders query ครั้งเดียวต่อหน้า 25 ออเดอร์)
+  - **A2:** สร้าง `components/admin/SlipReviewPanel.tsx` = "แผงตรวจสลิปเดียว" — รายการออเดอร์ payment pending ทั้งหน้า + หลักฐาน (SlipThumb) + ปุ่ม `confirm_offline_payment` **จุดเดียว** (ลบปุ่ม Confirm payment + SlipThumb ซ้ำออกจากแถวออเดอร์แล้ว — action เดียวกันห้ามมีสองที่)
+  - **A7(ก.):** (1) SlipThumb ไม่มี "—" เงียบ — 6 สถานะชัด: ✓ ตรวจแล้ว / ไม่ต้องตรวจสลิป (COD/บัตร) / ⏳ รอตรวจ / ⏳ รอสลิปจากลูกค้า / ⚠ ไม่พบ payment intent / ⚠ โหลดสลิปไม่ได้ (signed URL พัง) (2) checkout: `ensureReplaySafeIntent` retry 1 ครั้งเมื่อ RPC ตอบ failure + toast เตือนชัดทั้ง single/split (เดิมเงียบเป็น console.warn) + self-heal เดิมที่หน้า /payment คงไว้ — ทุกออเดอร์มี intent ≥1 ตามเป้า (เขียนผ่าน RPC เดิมเท่านั้น ไม่แตะ logic เงิน)
+  - เทสต์ใหม่ 14 ตัว: `slipThumbStates.test.ts` (8) + `paymentIntentsSingleRead.test.ts` (6 รวม source guarantee) + mock `paymentExceptions` ในเทสต์ AdminOrders 2 ตัวให้ hermetic (จำนวนเทสต์เดิมไม่ลด)
+- **Verified:** `npx tsc --noEmit`=0 · `npm run lint`=0 · `npm run test`=**1247/1247 (119 files)** (1233+14 ใหม่) · `npm run build`=0 · mojibake/BOM scan=0 ทุกไฟล์ที่แตะ
+- **Failed:** ไม่มี (เทสต์รอบแรกมี parse error จาก `}` หายในเทสต์ใหม่ — แก้ทันที)
+- **Blocked:** runtime evidence 3 อุปกรณ์บน production (ลูกค้าอัปโหลดสลิป → แอดมินเห็น thumbnail ≤30 วิ + เปิดเต็มได้ + กดยืนยันแล้วสถานะลูกค้าเปลี่ยน) — Owner ทดสอบหลัง push · สาเหตุจริงของ "BMB-20261019-405 ไม่พบ payment intent" ต้อง verify บน production ว่ามาจากเส้นสร้างไหน (ตอนนี้ปิดฝั่ง client ครบทุกเส้น + โชว์สถานะชัดเมื่อยังขาด)
+- **Files Changed:** `src/lib/paymentGateway.ts` · `src/lib/paymentExceptions.ts` · `src/components/admin/SlipThumb.tsx` (rewrite) · `src/components/admin/SlipReviewPanel.tsx` (ใหม่) · `src/pages/admin/AdminOrders.tsx` · `src/pages/admin/AdminPaymentExceptions.tsx` · `src/pages/CheckoutPage.tsx` · `src/__tests__/slipThumbStates.test.ts` (ใหม่) · `src/__tests__/paymentIntentsSingleRead.test.ts` (ใหม่) · `src/__tests__/adminOrdersModeFilter.test.ts` (+mock) · `src/__tests__/adminPreOrdersConsolidation.test.ts` (+mock)
+- **Tests / Commands Run:** ดู Verified
+- **Known Risks:** (1) ปุ่ม "💰 Confirm payment" แถวออเดอร์ถูกย้ายเข้าแผง — แอดมินต้องเปิดแผงเพื่อยืนยัน (UI เปลี่ยนตามตั้งใจ A2) (2) intents query ต่อหน้า = 1 batch (RLS admin) — ถ้า policy พังจะเห็น "⚠ ไม่พบ payment intent" ซึ่งตรงกับความจริง (3) retry intent = เรียก create_payment_intent_record ซ้ำ 1 ครั้งเฉพาะกรณี RPC ตอบ failure ชัด — B5/B10 replay guard เดิมไม่กระทบ (เทสต์ call-count ผ่าน)
+- **Next Exact Action:** A3 — ตรวจ AdminSettings เขียนลง `delivery_zones` เดียวกับ RPC อ่าน + ตัด/ติดป้าย local-mirror + โชว์ `feeSource` บน checkout
 
 ---
 

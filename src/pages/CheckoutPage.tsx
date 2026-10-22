@@ -59,6 +59,9 @@ function addDays(date: string, days: number): string {
 // order; the intent is only created when no intent exists yet (timeout gap).
 // A read failure falls through to create — a missing intent blocks the
 // customer's payment, an extra pending intent is reconcilable by the admin.
+// A7(ก.) (2026-10-22): ทุกออเดอร์ต้องมี payment_intents ≥1 เสมอ — ถ้า RPC ตอบ
+// failure ชัดเจน ให้ retry อีกหนึ่งครั้งก่อนยอมแพ้ (ห้ามแตะ logic เงินเอง —
+// เรียก create_payment_intent_record ทาง createPaymentIntent เดิมเท่านั้น)
 async function ensureReplaySafeIntent(
   orderNumber: string,
   amount: number,
@@ -74,7 +77,12 @@ async function ensureReplaySafeIntent(
       console.warn('[Checkout] replay intent check failed (creating to avoid unpaid gap):', e)
     }
   }
-  return await createPaymentIntent(orderNumber, amount, paymentMethod, metadata)
+  const first = await createPaymentIntent(orderNumber, amount, paymentMethod, metadata)
+  if (first && first.success === false) {
+    console.warn('[Checkout] payment intent create reported failure — retrying once (A7 ก.):', first.error)
+    return (await createPaymentIntent(orderNumber, amount, paymentMethod, metadata)) ?? first
+  }
+  return first
 }
 
 export function CheckoutPage() {
@@ -589,12 +597,17 @@ export function CheckoutPage() {
         // charge/intent for the same order (B5/B10).
         try {
           // B5/B10: a replayed child (double-submit) must not add a 2nd intent.
-          await ensureReplaySafeIntent(co.order_number, childTotals.get(co.order_number) ?? 0, paymentMethod, !!co.replay, {
+          const childIntent = await ensureReplaySafeIntent(co.order_number, childTotals.get(co.order_number) ?? 0, paymentMethod, !!co.replay, {
             providerId: 'self_delivery',
             providerName: 'Bite Me Baby (self delivery)',
           })
+          // A7(ก.): failure ต้องเห็นชัด — เดิมเงียบเป็น console.warn
+          if (childIntent && childIntent.success === false) {
+            showToast(`⚠ ออเดอร์ ${co.order_number}: ยังบันทึกช่องทางชำระเงินไม่สำเร็จ — เปิดหน้าชำระเงินจะลองใหม่อัตโนมัติ`, 'warning')
+          }
         } catch (e) {
-          console.warn('[Checkout] Mixed-split payment intent failed (non-critical):', e)
+          console.warn('[Checkout] Mixed-split payment intent failed:', e)
+          showToast(`⚠ ออเดอร์ ${co.order_number}: ยังบันทึกช่องทางชำระเงินไม่สำเร็จ — เปิดหน้าชำระเงินจะลองใหม่อัตโนมัติ`, 'warning')
         }
         writeAuditLog({
           action: 'order_create',
@@ -647,6 +660,10 @@ export function CheckoutPage() {
         providerId: 'self_delivery',
         providerName: 'Bite Me Baby (self delivery)',
       })
+      // A7(ก.): failure ต้องเห็นชัด (หน้า /payment จะ self-heal intent ให้อัตโนมัติ)
+      if (intent && intent.success === false) {
+        showToast('⚠ ยังบันทึกช่องทางชำระเงินไม่สำเร็จ — ระบบจะลองอัตโนมัติในหน้าชำระเงิน (ถ้ายังพลาด แอดมินจะเห็น "ไม่พบ payment intent")', 'warning')
+      }
       // Card flow (P0-5 completion): PaymentConfirmationPage needs the
       // client_secret to run Stripe.js confirmCardPayment. It is returned only
       // by the create-checkout EF (server-derived amount) and handed through
@@ -656,7 +673,8 @@ export function CheckoutPage() {
         showToast('ระบบบัตรยังไม่พร้อม — เลือกช่องทางอื่นหรือลองใหม่', 'error')
       }
     } catch (e) {
-      console.warn('[Checkout] Payment intent creation failed (non-critical):', e)
+      console.warn('[Checkout] Payment intent creation failed:', e)
+      showToast('⚠ ยังบันทึกช่องทางชำระเงินไม่สำเร็จ — ระบบจะลองอัตโนมัติในหน้าชำระเงิน (ถ้ายังพลาด แอดมินจะเห็น "ไม่พบ payment intent")', 'warning')
     }
 
     writeAuditLog({

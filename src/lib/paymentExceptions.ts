@@ -16,8 +16,11 @@
 // operator attention. NOTHING here mutates orders/status/payment state, and it
 // never bypasses order_ready_to_make() (3B-2C) — kitchen gate is server-side.
 // NO card/CVV/secret/provider credentials are read or displayed.
+// M5 (2026-10-22): payment_intents reads go through paymentGateway.getPaymentIntents
+// (single read service) — no private query of payment_intents lives here.
 
 import { supabase } from './supabase'
+import { getPaymentIntents } from './paymentGateway'
 import type { OrderForm } from './bmbAdminApi_orders'
 
 // Operator attention threshold for stuck unpaid orders (display classification
@@ -108,17 +111,28 @@ export async function getPaymentExceptionOrders(): Promise<OrderForm[]> {
   }
 }
 
-/** READ-ONLY: existing payment_intents for the given orders (RLS admin scope). */
+/**
+ * READ-ONLY: existing payment_intents for the given orders (RLS admin scope).
+ * M5 (2026-10-22): ONE read path — delegates to paymentGateway.getPaymentIntents
+ * (the single payment read service). This module keeps no private
+ * payment_intents query of its own anymore.
+ */
 export async function getPaymentIntentsFor(orderNumbers: string[]): Promise<PaymentIntentLite[]> {
   if (!orderNumbers || orderNumbers.length === 0) return []
   try {
-    const { data, error } = await supabase
-      .from('payment_intents')
-      .select('order_number, status, method, amount, payment_intent_id, failure_reason, updated_at, created_at, slip_path, slip_uploaded_at, metadata')
-      .in('order_number', orderNumbers)
-      .order('created_at', { ascending: false })
-    if (error) { console.error('[paymentExceptions] intents read failed:', error); return [] }
-    return (data || []) as unknown as PaymentIntentLite[]
+    const rows = await getPaymentIntents({ orderNumbers })
+    return (rows || []).map((r) => ({
+      order_number: r.order_number,
+      status: r.status,
+      method: r.method,
+      amount: r.amount,
+      payment_intent_id: r.payment_intent_id ?? null,
+      failure_reason: r.failure_reason ?? null,
+      updated_at: r.updated_at,
+      slip_path: r.slip_path ?? null,
+      slip_uploaded_at: r.slip_uploaded_at ?? null,
+      metadata: r.metadata ?? null,
+    }))
   } catch (e) {
     console.warn('[paymentExceptions] intents unavailable:', String(e).slice(0, 120))
     return []

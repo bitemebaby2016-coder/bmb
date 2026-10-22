@@ -353,6 +353,8 @@ export async function refundPayment(_paymentIntentId: string, _reason: string = 
 
 export async function getPaymentIntents(filters?: {
   orderNumber?: string
+  /** M5 (2026-10-22): batch read for admin lists — one query per page of orders. */
+  orderNumbers?: string[]
   status?: PaymentStatus
   startDate?: string
   endDate?: string
@@ -360,6 +362,7 @@ export async function getPaymentIntents(filters?: {
   let query = supabase.from('payment_intents').select('*').order('created_at', { ascending: false })
 
   if (filters?.orderNumber) query = query.eq('order_number', filters.orderNumber)
+  if (filters?.orderNumbers && filters.orderNumbers.length > 0) query = query.in('order_number', filters.orderNumbers)
   if (filters?.status) query = query.eq('status', filters.status)
   if (filters?.startDate) query = query.gte('created_at', filters.startDate)
   if (filters?.endDate) query = query.lte('created_at', filters.endDate)
