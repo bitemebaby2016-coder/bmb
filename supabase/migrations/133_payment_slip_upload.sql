@@ -59,7 +59,9 @@ CREATE POLICY payment_slips_customer_upload ON storage.objects
   FOR INSERT TO authenticated
   WITH CHECK (
     bucket_id = 'payment-slips'
-    AND (storage.foldername(name))[1] = auth.uid()::text
+    -- split_part = โฟลเดอร์แรกของพาธ (parity กับ 132 — ให้ replay บน PG เปล่า/CI
+    -- ephemeral ผ่านด้วย โดยไม่ต้องพึ่ง storage.foldername() ที่มีเฉพาะ Supabase)
+    AND split_part(name, '/', 1) = auth.uid()::text
   );
 
 -- read: แอดมินเห็นทุกใบ / ลูกค้าเห็นเฉพาะของตัวเอง
@@ -70,7 +72,7 @@ CREATE POLICY payment_slips_admin_or_owner_read ON storage.objects
     bucket_id = 'payment-slips'
     AND (
       public.is_admin()
-      OR (storage.foldername(name))[1] = auth.uid()::text
+      OR split_part(name, '/', 1) = auth.uid()::text
     )
   );
 
