@@ -38,6 +38,12 @@ UPDATE public.profiles SET role = 'customer' WHERE id IN (
   '72727272-7272-7272-7272-727272727272',
   '73737373-7373-7373-7373-737373737373');
 
+-- harness parity: Supabase มี default table grants ให้ authenticated (RLS คุมแถว);
+-- prelude ของ replay ไม่มี → ให้สิทธิ์ชั่วคราวใน transaction นี้ (ROLLBACK ตอนจบ)
+GRANT SELECT ON public.orders, public.payment_intents TO authenticated;
+GRANT EXECUTE ON FUNCTION public.submit_payment_slip(text, text) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.confirm_offline_payment(text) TO authenticated;
+
 INSERT INTO public.orders (id, order_number, status, customer_name, customer_phone, total_amount, payment_method, payment_status, customer_ref, created_at, updated_at)
 VALUES ('ord-BMB-C133-1', 'BMB-C133-1', 'confirmed', 'QA133', '0990001331', 173, 'promptpay_qr', 'pending', '72727272-7272-7272-7272-727272727272', NOW(), NOW())
 ON CONFLICT (order_number) DO NOTHING;
