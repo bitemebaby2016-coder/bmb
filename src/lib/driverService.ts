@@ -29,7 +29,8 @@ export interface MyDeliveryItem {
 
 export interface MyDeliveryAssignment {
   order_number: string
-  assignment_status: 'assigned' | 'accepted' | 'picked_up' | 'in_transit' | 'delivered' | 'declined' | 'cancelled'
+  /** 'offered' = งานประกาศที่ยังไม่มีใครจอง (E1) — สถานะอื่น = งานของฉัน */
+  assignment_status: 'offered' | 'assigned' | 'accepted' | 'picked_up' | 'in_transit' | 'delivered' | 'declined' | 'cancelled'
   assigned_at: string
   accepted_at: string | null
   dropoff_detail: string
@@ -67,7 +68,7 @@ export function classifyDriverError(raw: unknown): { error: string; kind: Driver
   if (/ERR_NOT_AUTHENTICATED|ERR_FORBIDDEN|ERR_NOT_A_DRIVER|JWT|401|403/i.test(s)) {
     return { error: msg, kind: 'permission' }
   }
-  if (/ERR_ASSIGNMENT|ERR_ALREADY_DELIVERED|ERR_POD|ERR_DELIVERY_SYNC_BLOCKED|ERR_INVALID|ERR_ORDER_/i.test(s)) {
+  if (/ERR_ASSIGNMENT|ERR_ALREADY_DELIVERED|ERR_POD|ERR_DELIVERY_SYNC_BLOCKED|ERR_INVALID|ERR_ORDER_|ERR_OFFER/i.test(s)) {
     return { error: msg, kind: 'state' }
   }
   return { error: msg, kind: 'unknown' }
@@ -90,13 +91,15 @@ export async function driverLogin(): Promise<DriverRecord | null> {
 }
 
 export async function myDeliveriesResult(): Promise<
-  { ok: true; assignments: MyDeliveryAssignment[] } | { ok: false; error: string; kind: DriverActionKind }
+  { ok: true; assignments: MyDeliveryAssignment[]; offers: MyDeliveryAssignment[] } | { ok: false; error: string; kind: DriverActionKind }
 > {
   const { data, error } = await supabase.rpc('my_deliveries')
   if (error) return { ok: false, ...classifyDriverError(error) }
   return {
     ok: true,
     assignments: (data as unknown as { assignments: MyDeliveryAssignment[] }).assignments ?? [],
+    // E1: งานประกาศที่ยังว่าง (135) — ไม่มี key นี้ใน server เก่า = [] (ทนไหว)
+    offers: (data as unknown as { offers?: MyDeliveryAssignment[] }).offers ?? [],
   }
 }
 
@@ -137,6 +140,40 @@ export async function driverUpdateDeliveryStatus(
 /** A4: ปฏิเสธงาน (ได้เฉพาะสถานะ assigned) — งานคืนสู่แอดมินมอบหมายใหม่ */
 export async function driverDeclineAssignment(orderNumber: string, reason: string): Promise<DriverActionResult> {
   const { error } = await supabase.rpc('driver_decline_assignment', {
+    p_order_number: orderNumber,
+    p_reason: reason,
+  })
+  if (error) return { ok: false, ...classifyDriverError(error) }
+  return { ok: true }
+}
+
+// ============================================
+// E1 (2026-10-22): โมเดล "ประกาศ-รับงาน" (migration 135)
+//   dispatchOrder        — แอดมิน: ส่งออกงาน = ประกาศ+เปิดให้ไรเดอร์ทุกคนรับ
+//   claimDispatchOffer   — ไรเดอร์: รับงานประกาศ = จองคนเดียว (atomic, คนแรกได้)
+//   driverDeclineOffer   — ไรเดอร์: ไม่รับงานประกาศ (ต่อคน — คนอื่นยังรับได้)
+//   adminCancelOffer     — แอดมิน: ยกเลิกประกาศ
+// ============================================
+export async function dispatchOrder(orderNumber: string): Promise<DriverActionResult> {
+  const { error } = await supabase.rpc('dispatch_order', { p_order_number: orderNumber })
+  if (error) return { ok: false, ...classifyDriverError(error) }
+  return { ok: true }
+}
+
+export async function claimDispatchOffer(orderNumber: string): Promise<DriverActionResult> {
+  const { error } = await supabase.rpc('claim_dispatch_offer', { p_order_number: orderNumber })
+  if (error) return { ok: false, ...classifyDriverError(error) }
+  return { ok: true }
+}
+
+export async function driverDeclineOffer(orderNumber: string): Promise<DriverActionResult> {
+  const { error } = await supabase.rpc('driver_decline_offer', { p_order_number: orderNumber })
+  if (error) return { ok: false, ...classifyDriverError(error) }
+  return { ok: true }
+}
+
+export async function adminCancelOffer(orderNumber: string, reason: string): Promise<DriverActionResult> {
+  const { error } = await supabase.rpc('cancel_dispatch_offer', {
     p_order_number: orderNumber,
     p_reason: reason,
   })
@@ -386,6 +423,7 @@ const DRIVER_ERROR_TH: Record<string, string> = {
   ERR_ASSIGNMENT_NOT_FOUND: 'ไม่พบงานนี้ของคุณ — อาจถูกยกเลิกหรือส่งต่อแล้ว รีเฟรชรายการงาน',
   ERR_ASSIGNMENT_NOT_ACCEPTABLE: 'งานนี้เปลี่ยนสถานะแล้ว รับ/ปฏิเสธไม่ได้ — รีเฟรชรายการงาน',
   ERR_ASSIGNMENT_CLOSED: 'งานนี้ปิดแล้ว (ส่งมอบ/ปฏิเสธ/ยกเลิก) แก้ไขไม่ได้',
+  ERR_OFFER_NOT_AVAILABLE: 'งานนี้ถูกคนอื่นรับไปแล้ว หรือแอดมินยกเลิกประกาศ — รีเฟรชรายการงาน',
   ERR_SUBSCRIPTION_INVALID: 'ข้อมูลสมัครแจ้งเตือนไม่ถูกต้อง — ลองใหม่อีกครั้ง',
   ERR_NO_CUSTOMER_PROFILE: 'บัญชีนี้ยังไม่มีโปรไฟล์ในระบบ — ติดต่อแอดมิน',
 }

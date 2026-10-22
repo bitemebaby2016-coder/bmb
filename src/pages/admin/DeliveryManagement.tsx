@@ -16,14 +16,15 @@
 // NO cost/supplier/inventory fields are displayed here.
 
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { supabase } from '@/lib/supabase'
-import { getOrdersByStatuses, getDeliveryAssignmentsFor, updateOrderStatus } from '@/lib/bmbAdminApi_orders'
+import { getOrdersByStatuses, getDeliveryAssignmentsFor } from '@/lib/bmbAdminApi_orders'
 import { resolveOrderDeliveryAddress } from '@/lib/orderAddress'
 import type { OrderForm, DeliveryAssignmentLiteRow } from '@/lib/bmbAdminApi_orders'
-import { adminListDrivers, assignDriver, adminAdvanceDelivery, upsertDriver, linkDriverUser, getDriverAccounts, driverErrorText, adminCancelAssignment, getPodSignedUrl, type AdminDriverRow, type DriverAccountRow } from '@/lib/driverService'
+import { adminListDrivers, assignDriver, adminAdvanceDelivery, upsertDriver, linkDriverUser, getDriverAccounts, driverErrorText, adminCancelAssignment, getPodSignedUrl, dispatchOrder, adminCancelOffer, type AdminDriverRow, type DriverAccountRow } from '@/lib/driverService'
 import { getUsers, type User } from '@/lib/bmbAdminApi_users'
 import { showToast } from '@/components/ui/ToastContainer'
+import { useNotificationStore } from '@/store/notificationStore'
 
 const ASSIGN_LABEL: Record<string, { label: string; cls: string }> = {
   assigned: { label: '📌 มอบหมายแล้ว', cls: 'badge-warning' },
@@ -41,9 +42,14 @@ function assignmentBadge(status?: string | null): { label: string; cls: string }
 }
 
 export function DeliveryManagement() {
+  // M4: deep-link จาก AdminOrders (?focus=ORDERNO) — ไฮไลต์การ์ดออเดอร์ที่เลือกมา
+  const [searchParams] = useSearchParams()
+  const focusOrder = searchParams.get('focus')
   const [orders, setOrders] = useState<OrderForm[]>([])
   const [drivers, setDrivers] = useState<AdminDriverRow[]>([])
   const [assignments, setAssignments] = useState<DeliveryAssignmentLiteRow[]>([])
+  // E1: สถานะประกาศ (dispatch_offers) ต่อออเดอร์ — 'offered' = รอไรเดอร์รับ / 'claimed' = มีคนจองแล้ว
+  const [offerByOrder, setOfferByOrder] = useState<Record<string, { status: string; claimed_by_driver_id: string | null }>>({})
   const [loading, setLoading] = useState(true)
   const [acting, setActing] = useState<string | null>(null)
   const [pending, setPending] = useState<Record<string, string>>({}) // order_number -> driver_id
@@ -78,7 +84,18 @@ export function DeliveryManagement() {
       setDrivers(drv.drivers)
       setAccounts(accts)
       // assignments are read AFTER we know the order numbers (scoped read, 041 RLS)
-      setAssignments(await getDeliveryAssignmentsFor(dispatchOrders.map((o) => o.order_number)))
+      const numbers = dispatchOrders.map((o) => o.order_number)
+      setAssignments(await getDeliveryAssignmentsFor(numbers))
+      // E1: สถานะประกาศของทุกออเดอร์ในคิว (dispatch_offers, admin RLS)
+      const { data: offerRows } = await supabase
+        .from('dispatch_offers')
+        .select('order_number, status, claimed_by_driver_id')
+        .in('order_number', numbers)
+      const omap: Record<string, { status: string; claimed_by_driver_id: string | null }> = {}
+      for (const row of (offerRows || []) as { order_number: string; status: string; claimed_by_driver_id: string | null }[]) {
+        omap[row.order_number] = { status: row.status, claimed_by_driver_id: row.claimed_by_driver_id }
+      }
+      setOfferByOrder(omap)
     } catch (e) {
       console.error('[DeliveryManagement] load failed:', e)
     } finally {
@@ -148,15 +165,38 @@ export function DeliveryManagement() {
     } finally { setActing(null) }
   }
 
-  // Canonical admin hop: ready_for_dispatch → dispatched via transition RPC
-  async function handleDispatch(orderNumber: string) {
+  // E1 (2026-10-22) "ส่งออกงาน (Dispatch)" = ประกาศ+push แจ้งไรเดอร์ทุกคนที่ผูกบัญชี
+  // (คนแรกรับ = จองงานคนเดียว — atomic claim) — ไม่ใช่แค่สลับสถานะออเดอร์แบบเดิม
+  // (A4 เดิม: กด dispatch แล้วลูกค้าเปลี่ยน แต่ไรเดอร์รับงานไม่ได้)
+  async function handleAnnounce(orderNumber: string) {
     setActing(orderNumber)
     try {
-      const res: any = await updateOrderStatus(orderNumber, 'dispatched')
-      if (res && res.status === 'dispatched') { showToast('🚚 ส่งงานให้ไรเดอร์สำเร็จ: ' + orderNumber, 'success'); await load() }
-      else showToast('ส่งงานไม่สำเร็จ — ตรวจสอบสถานะออเดอร์แล้วลองใหม่', 'error')
+      const r = await dispatchOrder(orderNumber)
+      if (r.ok) {
+        showToast('📣 ส่งออกงาน ' + orderNumber + ' แล้ว — ประกาศ+แจ้งไรเดอร์ทุกคน คนแรกรับได้งาน', 'success')
+        await load()
+      } else {
+        showToast('ส่งออกงานไม่สำเร็จ: ' + driverErrorText(r.error), 'error')
+      }
     } catch (e: any) {
-      showToast('ส่งงานไม่สำเร็จ: ' + driverErrorText(e?.message || e), 'error')
+      showToast('ส่งออกงานไม่สำเร็จ: ' + driverErrorText(e?.message || e), 'error')
+    } finally { setActing(null) }
+  }
+
+  // E1: แอดมินยกเลิกประกาศ (งานกลับสู่การมอบหมายปกติ — เลือกไรเดอร์เอง)
+  async function handleCancelOffer(orderNumber: string) {
+    const reason = window.prompt('เหตุผลที่ยกเลิกประกาศ (บันทึกลง audit):', '') ?? ''
+    setActing(orderNumber)
+    try {
+      const r = await adminCancelOffer(orderNumber, reason)
+      if (r.ok) {
+        showToast('🔕 ยกเลิกประกาศ ' + orderNumber + ' แล้ว — มอบหมายเองได้จากคิวนี้', 'success')
+        await load()
+      } else {
+        showToast('ยกเลิกประกาศไม่สำเร็จ: ' + driverErrorText(r.error), 'error')
+      }
+    } catch (e: any) {
+      showToast('ยกเลิกประกาศไม่สำเร็จ: ' + driverErrorText(e?.message || e), 'error')
     } finally { setActing(null) }
   }
 
@@ -202,6 +242,8 @@ export function DeliveryManagement() {
       const r = await adminAdvanceDelivery(orderNumber, 'delivered')
       if (r.ok) {
         showToast('🏁 Admin ปิดวงจรสำเร็จ: ' + orderNumber + ' → ' + (r.order_status || 'delivered') + (r.driver_released ? ' (ปล่อยไรเดอร์กลับ available)' : ''), 'success')
+        // M4: notification event ของสายส่งถูกยิงจากเจ้าของปุ่ม (ที่นี่)
+        useNotificationStore.getState().triggerEvent('order_delivered', { orderNumber })
         await load()
       } else {
         showToast('เดินหน้าสถานะไม่สำเร็จ: ' + driverErrorText(r.error || 'ERR_ADVANCE_REJECTED'), 'error')
@@ -388,8 +430,9 @@ export function DeliveryManagement() {
             {readyQ.map((o) => {
               const a = asgFor(o.order_number)
               const ab = assignmentBadge(a?.status)
+              const offer = offerByOrder[o.order_number]
               return (
-                <div key={o.order_number} className="border border-brand-border rounded-lg p-3 bg-brand-bg/50">
+                <div key={o.order_number} className={`border border-brand-border rounded-lg p-3 bg-brand-bg/50 ${focusOrder === o.order_number ? 'ring-2 ring-brand-primary' : ''}`}>
                   <div className="flex items-center justify-between gap-2 flex-wrap">
                     <div className="flex items-center gap-2 flex-wrap">
                       <span className="font-mono text-sm font-bold">{o.order_number}</span>
@@ -417,9 +460,34 @@ export function DeliveryManagement() {
                     <button onClick={() => { void handleAssign(o.order_number) }} disabled={acting === o.order_number || !pending[o.order_number]} className="btn btn-primary text-sm disabled:opacity-50">
                       {acting === o.order_number ? '⏳…' : '📌 มอบหมาย (assign_driver)'}
                     </button>
-                    <button onClick={() => { void handleDispatch(o.order_number) }} disabled={acting === o.order_number} className="btn btn-outline text-sm disabled:opacity-50">
-                      🚚 Dispatch (transition)
+                    {/* E1: ส่งออกงาน = ประกาศ+push ไรเดอร์ทุกคน (คนแรกรับ = จองงานคนเดียว) */}
+                    <button
+                      onClick={() => { void handleAnnounce(o.order_number) }}
+                      disabled={acting === o.order_number}
+                      className="btn btn-outline text-sm disabled:opacity-50"
+                      data-testid={`dispatch-announce-${o.order_number}`}
+                      title="ประกาศงาน + แจ้งเตือนไรเดอร์ทุกคนที่ผูกบัญชีแล้ว — คนแรกที่กดรับได้งานไป"
+                    >
+                      📣 ส่งออกงาน (ประกาศ+push ทุกคน)
                     </button>
+                    {offer?.status === 'offered' && (
+                      <>
+                        <span className="badge badge-warning" data-testid={`offer-open-${o.order_number}`}>📣 ประกาศแล้ว — รอไรเดอร์รับ</span>
+                        <button
+                          onClick={() => { void handleCancelOffer(o.order_number) }}
+                          disabled={acting === o.order_number}
+                          className="btn btn-outline text-sm disabled:opacity-50"
+                          data-testid={`offer-cancel-${o.order_number}`}
+                        >
+                          🔕 ยกเลิกประกาศ
+                        </button>
+                      </>
+                    )}
+                    {offer?.status === 'claimed' && (
+                      <span className="badge badge-success" data-testid={`offer-claimed-${o.order_number}`}>
+                        🙋 มีคนรับงานประกาศแล้ว{offer.claimed_by_driver_id ? `: ${driverName(offer.claimed_by_driver_id)}` : ''}
+                      </span>
+                    )}
                     {/* GAP A-1 (m116): admin close-the-loop override — same forward-only
                         hops as the rider PWA, audit-tagged 'admin_advance_delivery_status'. */}
                     {a?.status && ['assigned', 'accepted', 'picked_up', 'in_transit', 'arrived'].includes(a.status) ? (

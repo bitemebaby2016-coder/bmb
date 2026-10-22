@@ -12,6 +12,7 @@ import { orderModeBadge, paymentStateBadge } from '@/lib/adminOrderDisplay'
 import { kitchenGatePreview, groupKitchenOrders, splitSameDayPreOrder, readyReasonLabel, kitchenItemLines } from '@/lib/kitchenQueueView'
 import { writeAuditLog } from '@/lib/auditLog'
 import { showToast } from '@/components/ui/ToastContainer'
+import { useNotificationStore } from '@/store/notificationStore'
 import type { DeliveryRoundRow } from '@/lib/bmbAdminApi_rounds'
 import type { OrderForm } from '@/lib/bmbAdminApi_orders'
 
@@ -87,6 +88,11 @@ export function AdminKitchen() {
       if (res && res.status === to) {
         showToast('✅ ' + o.order_number + ' → ' + to, 'success')
         writeAuditLog({ action: 'order_status_change', entity_type: 'order', entity_id: o.order_number, description: 'kitchen: ' + o.order_number + ' → ' + to })
+        // M4 (2026-10-22): notification event ของสายครัวถูกยิงจากเจ้าของปุ่ม (ที่นี่)
+        useNotificationStore.getState().triggerEvent(
+          to === 'preparing' ? 'order_preparing' : 'order_ready_for_dispatch',
+          { orderNumber: o.order_number },
+        )
         await load()
       } else {
         showToast('เปลี่ยนสถานะไม่สำเร็จ (server ปฏิเสธ)', 'error')

@@ -60,8 +60,11 @@ DELETE FROM public.inventory_transactions;
 
 -- helper: สร้างออเดอร์ SAME_DAY พร้อมเดินไป ready_for_dispatch (แบบ 036 G1)
 CREATE OR REPLACE FUNCTION pg_temp.c132_make_order(p_addr text) RETURNS text AS $fn$
-DECLARE v_on text;
+DECLARE v_on text; v_lat numeric; v_lon numeric;
 BEGIN
+  -- พิกัด dropoff = ครัวจริงใน DB + 0.002° (ห้าม hardcode — kitchen ย้ายได้; แบบ 124)
+  v_lat := (public.kitchen_location()->>'latitude')::numeric + 0.002;
+  v_lon := (public.kitchen_location()->>'longitude')::numeric + 0.002;
   PERFORM set_config('role', 'authenticated', false);
   PERFORM set_config('request.jwt.claims', '{"sub":"64646464-6464-6464-6464-646464646464","role":"authenticated"}', false);
   v_on := (public.create_order_with_items(
@@ -69,7 +72,7 @@ BEGIN
     p_delivery_round_id => 'round-' || to_char((now() AT TIME ZONE 'Asia/Bangkok')::date,'YYYYMMDD') || '-morning',
     p_delivery_method => 'self_delivery',
     p_delivery_address => p_addr,
-    p_dropoff_latitude => 10.7016, p_dropoff_longitude => 102.1429,
+    p_dropoff_latitude => v_lat, p_dropoff_longitude => v_lon,
     p_customer_name => 'C132', p_payment_method => 'cash_on_delivery',
     p_order_mode => 'SAME_DAY', p_scheduled_date => (now() AT TIME ZONE 'Asia/Bangkok')::date
   ))->>'order_number';

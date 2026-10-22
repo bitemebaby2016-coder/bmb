@@ -2,9 +2,9 @@
 
 > **สถานะงานปัจจุบันของโปรเจกต์ Bite Me Baby** ใช้แนบเข้าสู่ Context ตอนเริ่มแชทเสมอ
 
-**last_updated:** 2026-10-22 รอบ 7 (D1: ✅A5+M1 ✅A1+M2 ✅A2+A7(ก.)+M5 ✅A3 ✅E2 — chunk1-4 อยู่บน production แล้ว · E2 รอ push + evidence)
-**phase:** 🔨 **D1 IN PROGRESS — ✅A5+M1 ✅A1+M2 ✅A2+A7(ก.)+M5 ✅A3 ✅E2 (รอ runtime evidence บน production) · ชิ้นถัดไป E1+A4+A8+M4+M3 (โมเดลประกาศ-รับงาน + Dispatch Center)**
-**current_focus:** D1 ตามลำดับ: ✅A5+M1 → ✅A1+M2 → ✅A2+A7(ก.)+M5 → ✅A3 → ✅E2 → E1+A4+A8+M4+M3 → E3/E4 → A6 → ก้อน Marketing
+**last_updated:** 2026-10-22 รอบ 8 (D1: ✅A5+M1 ✅A1+M2 ✅A2+A7(ก.)+M5 ✅A3 ✅E2 ✅E1+A4+A8+M4+M3 — gates ครบ, SQL contracts 135 G1-G7 ผ่านบน PG จริง · ⚠️ รอ Owner approve apply migration 135)
+**phase:** 🔨 **D1 IN PROGRESS — ✅A5+M1 ✅A1+M2 ✅A2+A7(ก.)+M5 ✅A3 ✅E2 ✅E1+A4+A8+M4+M3 (⚠️ migration 135 รอ apply) · ชิ้นถัดไป E3/E4 (live tracking + POD จบจริง)**
+**current_focus:** D1 ตามลำดับ: ✅A5+M1 → ✅A1+M2 → ✅A2+A7(ก.)+M5 → ✅A3 → ✅E2 → ✅E1+A4+A8+M4+M3 → E3/E4 → A6 → ก้อน Marketing
 **blocked_by:** ไม่มี — แต่ push/production = ต้อง Owner approve (auto-deploy จาก main) + เก็บ runtime evidence จากอุปกรณ์จริงก่อนประกาศ PASS
 
 ---
@@ -100,6 +100,24 @@
 - **Tests / Commands Run:** ดู Verified
 - **Known Risks:** (1) ออเดอร์เก่าที่ไม่มีพิกัด dropoff จะไม่เข้าแผนเส้นทาง (ตั้งใจ — ดีกว่าหมุดปลอม) (2) `assignOrdersToDrivers` ยังเป็น heuristic อย่างง่าย (nearest/first-available) — คือเครื่องมือวางแผนเท่านั้น การมอบหมายจริงคือ assign_driver RPC
 - **Next Exact Action:** E1+A4+A8+M4+M3 — โมเดล "ส่งออกงาน (Dispatch) ประกาศ+push → ไรเดอร์คนแรกรับ = จอง (สถานะเปลี่ยนจริงตอนรับ)" + แอดมิน assign เองได้ + รวม Dispatch Center เดียวที่ DeliveryManagement + ดูด RiderPWA เข้า RiderPwaPage
+
+## ⚡ TASK: D1-CHUNK6-E1-A4-A8-M4-M3-DISPATCH-2026-10-22 — โมเดลประกาศ-รับงาน + Dispatch Center + พอร์ทัลไรเดอร์เดียว
+- **STATUS: 🟡 IMPLEMENTED + gates ผ่านครบ + SQL contract 135 พิสูจน์บน PG จริง (G1-G7) — ⚠️ BLOCKED: ต้อง Owner approve "apply migration 135" ลง production ก่อนฟีเจอร์ใช้งานได้จริง (กติกา D2) + runtime evidence 3 อุปกรณ์**
+- **Task ID:** D1-CHUNK6-E1-A4-A8-M4-M3-DISPATCH-2026-10-22
+- **Objective:** E1 (ประกาศ-รับงาน: คนแรกรับ=จอง สถานะเปลี่ยนจริง + แอดมิน assign เองได้) + A4 (ไรเดอร์เห็นงาน/รับงานได้จริง) + A8 (states ครบ+ชื่อจริง+push) + M4 (Dispatch Center เดียว) + M3 (พอร์ทัลไรเดอร์เดียว แยกจากลูกค้า) + กติกาใหม่: ไม่ hardcode/ไม่ mockup/ไม่ stub/ไม่ dead code
+- **Completed:**
+  - **Server (migration `135_dispatch_offers.sql` + `e2e/contracts_135_dispatch_offers.sql`):** `dispatch_offers` (1 แถว/ออเดอร์) + `dispatch_offer_declines` (ปฏิเสธต่อคน) + RPC `dispatch_order` (admin ประกาศ), `claim_dispatch_offer` (**atomic UPDATE..WHERE status='offered' — คนแรกได้คนเดียว; claim=accept: assignment เกิดเป็น 'accepted' ทันที**), `driver_decline_offer`, `cancel_dispatch_offer` + `my_deliveries` คืน `offers[]` + `assign_driver` ปิด offer เมื่อแอดมินมอบหมายตรง (แอดมินชนะ) + trigger ปิด offer เมื่อออเดอร์จบทาง + RLS/GRANT ตามแบบ 132
+  - **SQL contract พิสูจน์จริงบน ephemeral PG16 (Docker):** G1 ประกาศ/ประกาศซ้ำรีเซ็ต · **G2 คนแรกรับ=จอง คนสอง ERR_OFFER_NOT_AVAILABLE** · G3 assign ตรงชนะประกาศ · G4 ปฏิเสธต่อคน · G5 ยกเลิก+ออเดอร์จบปิดอัตโนมัติ · G6 my_deliveries offers[] · G7 security (no anon, non-admin ประกาศไม่ได้, non-driver รับไม่ได้) — ทั้ง 7 ผ่าน + regression contract 132 ผ่านครบ 6 หลัง replace ฟังก์ชันร่วม
+  - **แก้ของพังจริงที่เจอระหว่างทาง:** contract 132 fixture hardcode พิกัด (10.70) ห่างครัวจริง 212km → `SELF_DELIVERY_EXCEEDS_5KM_LIMIT` (พังมาตั้งแต่ครัวย้าย/134) — แก้ทั้ง 132+135 ให้ derive จาก `kitchen_location()` (แบบ 124 — ไม่ hardcode ตามกติกาใหม่)
+  - **Client:** `driverService` +4 RPC wrappers + offers mapping + ERR_OFFER_NOT_AVAILABLE · **DeliveryManagement = Dispatch Center**: ปุ่ม "📣 ส่งออกงาน (ประกาศ+push ทุกคน)" แทนปุ่มสลับสถานะเดิม + สถานะประกาศ/ยกเลิกประกาศ + ?focus= deep-link · **AdminOrders (M4)**: เหลือ "ยืนยันออเดอร์ (pending→confirmed)" + deep-link ไป Kitchen/Dispatch (forward chain ออก — ปุ่มเดียวกันอยู่ที่หน้าเจ้าของเดียว: ครัวที่ AdminKitchen, สายส่งที่ Dispatch) + notification events ยิงจากเจ้าของปุ่มแต่ละสาย · **RiderPwaPage (M3+E1+A8)**: งานประกาศใหม่ (รับงาน=claim/ไม่รับ) + ดูด RiderPWA เป็น `PodDeliveryPanel` (geo+POD gates, ไม่มี state จำลอง) + **ลบ `components/dashboard/RiderPWA.tsx`** · **automation-worker**: broadcast push งานประกาศถึงไรเดอร์ทุกคนที่ผูกบัญชี (marker rider_pushed_at กันซ้ำ)
+  - เทสต์ใหม่ 11 ตัว `dispatchOffersClient.test.ts` (RPC wiring + race-safety ใน migration + M4 ปุ่มไม่ซ้ำ + M3 ของซ้ำหาย + A8 วงจรครบ) + เพิ่ม contract 135 ใน CI workflow
+- **Verified:** `npx tsc --noEmit`=0 · `npm run lint`=0 · `npm run test`=**1272/1272 (121 files)** (1261+11 ใหม่) · `npm run build`=0 · mojibake=0 · **SQL: replay 001-135 ผ่าน + contract 135 G1-G7 + contract 132 regression ผ่านบน PG จริง**
+- **Failed/แก้ระหว่างทาง:** (1) contract fixture พิกัดแข็ง (แก้แล้ว — ของ 132 ที่พังค้างก็แก้ด้วย) (2) source-scan โดนคอมเมนต์ตัวเองรอบสอง (path ที่ห้าม) — แก้คำ
+- **Blocked:** ⚠️ **apply migration 135 ลง production = ต้อง Owner approve (กติกา D2)** — ฟีเจอร์ announce-claim จะทำงานบน production ไม่ได้จนกว่า apply (ก่อนหน้านั้นปุ่มส่งออกงานจะได้ ERR จากรอบ RPC) + runtime evidence: dispatch 1 งาน → ไรเดอร์ทุกเครื่องได้แจ้งเตือนพร้อมกัน → คนแรกกดรับ → สถานะเปลี่ยนทั้ง 3 หน้า ≤1 poll · คนอื่นเห็น "งานถูกจองแล้ว" · เส้น assign โดยแอดมินอีก 1 รอบ
+- **Files Changed:** `supabase/migrations/135_dispatch_offers.sql` (ใหม่) · `e2e/contracts_135_dispatch_offers.sql` (ใหม่) · `e2e/contracts_132_rider_pod_push_decline.sql` (แก้ fixture) · `.github/workflows/contract-tests.yml` (+step 135) · `src/lib/driverService.ts` · `src/pages/admin/DeliveryManagement.tsx` · `src/pages/admin/AdminOrders.tsx` · `src/pages/admin/AdminKitchen.tsx` · `src/pages/RiderPwaPage.tsx` · `supabase/functions/automation-worker/index.ts` · `src/components/dashboard/RiderPWA.tsx` (ลบ) · `src/__tests__/dispatchOffersClient.test.ts` (ใหม่)
+- **Tests / Commands Run:** ดู Verified (รวม Docker ephemeral PG16 replay + contracts)
+- **Known Risks:** (1) จนกว่า migration 135 ถูก apply — ปุ่มส่งออกงาน/รับงานประกาศบน production จะ error ชัด (ไม่ใช่เงียบ) (2) push broadcast ผ่าน automation-worker (cron) — latency สูงสุด ~5 นาทีเท่าระบบ push เดิม (3) `useOrderStateMachine` ไม่มี UI consumer แล้ว (RiderPWA ถูกลบ) แต่ยังมีเทสต์คุม — เก็บเป็น pure logic ตามมติเดิม
+- **Next Exact Action:** E3/E4 — live tracking ไรเดอร์บนแผนที่ Dispatch Center + เก็บประวัติเส้นทางหลังจบงาน + POD จบจริง (แอดมินเห็นทุกขั้น) · **และขอ Owner approve apply migration 135**
 
 ---
 

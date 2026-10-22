@@ -11,7 +11,7 @@ import { getProductsAdmin } from '@/lib/bmbAdminApi_products'
 import { addOnLinesFromChoices } from '@/lib/addonDisplay'
 import {
   orderModeBadge, paymentStateBadge, deliveryStateBadge,
-  nextForwardAction, isCancellable,
+  isCancellable,
 } from '@/lib/adminOrderDisplay'
 import {
   groupPreOrders, roundCapacityState, roundCutoffState, isPaymentException,
@@ -41,13 +41,9 @@ const STATUS_FILTERS = [
 
 // STEP 3B-2A: operational status → notification event (in-app surface only —
 // SMS/email/push/LINE/pg_cron remain FROZEN per Owner decision 3).
-const statusEventMap: Record<string, 'order_confirmed' | 'order_preparing' | 'order_ready_for_dispatch' | 'order_dispatched' | 'order_delivered'> = {
-  confirmed: 'order_confirmed',
-  preparing: 'order_preparing',
-  ready_for_dispatch: 'order_ready_for_dispatch',
-  dispatched: 'order_dispatched',
-  delivered: 'order_delivered',
-}
+// M4 (2026-10-22): ปุ่มสั่งงานไม่กระจัดอีกต่อไป — เหตุการณ์ notification ของ
+// แต่ละ transition ถูกยิงจากหน้าที่เป็นเจ้าของปุ่มนั้น (AdminOrders=ยืนยันออเดอร์
+// · AdminKitchen=สายครัว · DeliveryManagement=สายส่ง)
 
 export function AdminOrders() {
   const [orders, setOrders] = useState<OrderForm[]>([])
@@ -131,23 +127,18 @@ export function AdminOrders() {
     setPage(p)
   }
 
-  async function handleStatusUpdate(orderNumber: string, newStatus: string) {
-    // P0-6: transitions are validated server-side (allow-list + trigger);
-    // an illegal jump (e.g. skip state) returns null and nothing changes.
-    const updated = await updateOrderStatus(orderNumber, newStatus)
+  // M4 (2026-10-22): "รับออเดอร์" (pending→confirmed) = ปุ่มสั่งงานเดียวที่เหลือ
+  // ของหน้านี้ (การจัดการออเดอร์) — สายครัวอยู่ที่ AdminKitchen · สายส่งอยู่ที่
+  // Dispatch Center (DeliveryManagement) · ปุ่มเดียวกันห้ามมีสองที่
+  async function handleAcceptOrder(orderNumber: string) {
+    const updated = await updateOrderStatus(orderNumber, 'confirmed')
     loadOrders()
-
     if (!updated) {
-      showToast(`Cannot change status -> ${newStatus} (state machine rule)`, 'error')
+      showToast('ยืนยันออเดอร์ไม่สำเร็จ (state machine rule)', 'error')
       return
     }
-
-    const eventType = statusEventMap[newStatus]
-    if (eventType) {
-      useNotificationStore.getState().triggerEvent(eventType, { orderNumber })
-    }
-
-    showToast(`Status updated to ${newStatus}`, 'success')
+    useNotificationStore.getState().triggerEvent('order_confirmed', { orderNumber })
+    showToast('ยืนยันออเดอร์แล้ว (pending → confirmed)', 'success')
   }
 
   async function handleConfirmPayment(orderNumber: string) {
@@ -275,7 +266,6 @@ async function handleStripeRefund(orderNumber: string) {
           const modeBadge = orderModeBadge(order.order_mode, order.scheduled_date)
           const payBadge = paymentStateBadge(order.payment_status)
           const dlvBadge = deliveryStateBadge(assignmentByOrder[order.order_number])
-          const forward = nextForwardAction(order.status)
           // 3B-2B queue context: group header before the first order of each (date|round) group
           const grp = filterMode === 'PRE_ORDER' ? preGroupsByKey[`${order.scheduled_date || '—'}|${order.delivery_round_id || '—'}`] : null
           const cap = grp ? roundCapacityState(roundsById[grp.roundId] ?? null, grp.orders.length) : null
@@ -362,14 +352,21 @@ async function handleStripeRefund(orderNumber: string) {
             </div>
 
             <div className="flex flex-wrap gap-2">
-              {/* STEP 3B-2A GAP-A1: ONLY the canonical next hop (008 allow-list mirror).
-                  The server (transition_order_status RPC + guard trigger) remains the
-                  authority — an off-list click is still rejected server-side. */}
-              {forward && (
-                <button onClick={() => handleStatusUpdate(order.order_number, forward.to)} className="btn btn-primary text-sm">
-                  {forward.label}
+              {/* M4 (2026-10-22): ปุ่มสั่งงานรวมศูนย์ที่หน้าเจ้าของ — รับออเดอร์
+                  (pending→confirmed) อยู่ที่นี่ · สายครัว (confirmed→ready) ที่
+                  AdminKitchen · สายส่ง (assign/ส่งออกงาน/POD) ที่ Dispatch Center
+                  — ปุ่มเดียวกันห้ามมีสองที่ ที่เหลือคือ deep-link ไปบอร์ดที่รับผิดชอบ */}
+              {order.status === 'pending' && (
+                <button
+                  onClick={() => { void handleAcceptOrder(order.order_number) }}
+                  className="btn btn-primary text-sm"
+                  data-testid={`accept-order-${order.order_number}`}
+                >
+                  ✅ ยืนยันออเดอร์ (pending → confirmed)
                 </button>
               )}
+              <Link to="/admin/kitchen" className="btn btn-outline text-sm">🍳 ไป Kitchen</Link>
+              <Link to={`/admin/delivery?focus=${order.order_number}`} className="btn btn-outline text-sm">🛵 ไป Dispatch</Link>
 
               {/* GAP-A2: canonical atomic cancel via cancel_order RPC (any non-terminal state) */}
               {isCancellable(order.status) && (

@@ -247,3 +247,15 @@ jobs:
             exit 1
           fi
           echo "Contract 133 OK — slip evidence + owner-only submit holds"
+
+      - name: Contract 135 — dispatch offers (E1 announce-claim) (ROLLBACK)
+        run: |
+          set +e
+          out=$(psql -v ON_ERROR_STOP=1 -f e2e/contracts_135_dispatch_offers.sql 2>&1); rc=$?
+          printf '%s\n' "$out"
+          if [ $rc -ne 0 ]; then
+            msg=$(printf '%s\n' "$out" | grep -m1 'ERROR:' || echo "rc=$rc")
+            echo "::error file=e2e/contracts_135_dispatch_offers.sql::$msg"
+            exit 1
+          fi
+          echo "Contract 135 OK — announce-claim race safety + actor guards hold"

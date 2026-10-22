@@ -18,7 +18,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { GlassCard } from '@/components/ui/GlassCard'
-import { RiderPWA } from '@/components/dashboard/RiderPWA'
+import { haversineDistanceKm } from '@/lib/deliveryRouter'
 import { RiderMiniMap } from '@/components/rider/RiderMiniMap'
 import {
   driverLogin,
@@ -26,6 +26,8 @@ import {
   driverAcceptAssignment,
   driverUpdateDeliveryStatus,
   driverDeclineAssignment,
+  claimDispatchOffer,
+  driverDeclineOffer,
   driverAttachPod,
   uploadPodPhoto,
   type DriverRecord,
@@ -87,6 +89,9 @@ export function RiderPwaPage() {
   const [notLinked, setNotLinked] = useState(false)
 
   const [assignments, setAssignments] = useState<MyDeliveryAssignment[]>([])
+  // E1 (2026-10-22): งานประกาศที่ยังไม่มีใครจอง (dispatch_offers ผ่าน my_deliveries)
+  // — "คนแรกรับ = จอง" ต้องเห็นทันทีทุกเครื่องที่ผูกบัญชี
+  const [offers, setOffers] = useState<MyDeliveryAssignment[]>([])
   const [loading, setLoading] = useState(false)
   const [loadError, setLoadError] = useState<string | null>(null)
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null)
@@ -123,14 +128,19 @@ export function RiderPwaPage() {
       if (!mountedRef.current) return
       if (r.ok) {
         setAssignments(r.assignments)
+        setOffers(r.offers ?? [])
         setLoadError(null)
         setLastUpdated(new Date())
         const firstLoad = !firstPollDoneRef.current
         firstPollDoneRef.current = true
-        const fresh = r.assignments.filter(
-          (a) => a.assignment_status === 'assigned' && !knownOrdersRef.current.has(a.order_number),
-        )
-        knownOrdersRef.current = new Set(r.assignments.map((a) => a.order_number))
+        // E1: งานประกาศใหม่ = งานใหม่สำหรับไรเดอร์คนนี้ด้วย (เดิมนับเฉพาะ assigned)
+        const fresh = [
+          ...r.assignments.filter(
+            (a) => a.assignment_status === 'assigned' && !knownOrdersRef.current.has(a.order_number),
+          ),
+          ...(r.offers ?? []).filter((o) => !knownOrdersRef.current.has(o.order_number)),
+        ]
+        knownOrdersRef.current = new Set([...r.assignments, ...(r.offers ?? [])].map((a) => a.order_number))
         if (fresh.length > 0 && !firstLoad) {
           const first = fresh[0].order_number
           setNewJobPulse(fresh.length === 1 ? first : `${first} และอีก ${fresh.length - 1} งาน`)
@@ -254,6 +264,36 @@ export function RiderPwaPage() {
       const r = await driverDeclineAssignment(orderNumber, reason)
       if (!r.ok) { showActionError(orderNumber, r); return }
       setNotice(`🚫 ปฏิเสธงาน ${orderNumber} แล้ว — งานคืนสู่แอดมินเพื่อมอบหมายใหม่`)
+      void refresh({ silent: true })
+    } finally {
+      setBusyOn(null)
+    }
+  }
+
+  // E1: รับงานประกาศ = จองคนเดียว (atomic — คนแรกได้ คนที่เหลือเจอ "งานถูกจองแล้ว")
+  async function claimOffer(orderNumber: string) {
+    if (!driver || busyOn) return
+    setBusyOn(orderNumber)
+    setActionError(null)
+    try {
+      const r = await claimDispatchOffer(orderNumber)
+      if (!r.ok) { showActionError(orderNumber, r); return }
+      setNotice(`✅ จองงาน ${orderNumber} สำเร็จ — เริ่มส่งได้เลย`)
+      void refresh({ silent: true })
+    } finally {
+      setBusyOn(null)
+    }
+  }
+
+  // E1: ไม่รับงานประกาศ (ต่อคน — คนอื่นยังเห็น/รับได้จนกว่าจะมีคนจอง)
+  async function declineOffer(orderNumber: string) {
+    if (!driver || busyOn) return
+    setBusyOn(orderNumber)
+    setActionError(null)
+    try {
+      const r = await driverDeclineOffer(orderNumber)
+      if (!r.ok) { showActionError(orderNumber, r); return }
+      setNotice(`🚫 ไม่รับงานประกาศ ${orderNumber} — งานยังเปิดให้เพื่อนรับได้`)
       void refresh({ silent: true })
     } finally {
       setBusyOn(null)
@@ -478,7 +518,7 @@ export function RiderPwaPage() {
                     dropOff={{ latitude: Number(activeOrder.dropoff_latitude), longitude: Number(activeOrder.dropoff_longitude) }}
                     rider={riderGps}
                   />
-                  <RiderPWA
+                  <PodDeliveryPanel
                     dropOff={{ latitude: Number(activeOrder.dropoff_latitude), longitude: Number(activeOrder.dropoff_longitude) }}
                     busy={deliverBusy}
                     onCoordsChange={setRiderGps}
@@ -502,7 +542,51 @@ export function RiderPwaPage() {
             </GlassCard>
           ) : (
             <div className="space-y-3">
-              {assignments.length === 0 && (
+          {/* ===== E1: งานประกาศใหม่ (dispatch_offers) — คนแรกรับ = จองคนเดียว ===== */}
+          {!activeOrder && offers.length > 0 && (
+            <div className="space-y-3" data-testid="rider-offers">
+              <h2 className="text-sm font-semibold text-slate-700">📣 งานประกาศใหม่ ({offers.length}) — ใครรับก่อนได้ก่อน</h2>
+              {offers.map((o) => (
+                <GlassCard key={`offer-${o.order_number}`} className="p-4 border-2 border-amber-300" data-testid={`rider-offer-${o.order_number}`}>
+                  <div className="flex items-center justify-between mb-1">
+                    <h3 className="font-bold text-slate-800">📦 {o.order_number}</h3>
+                    <span className="text-xs text-amber-600 font-semibold">📣 งานประกาศ — ยังไม่มีใครจอง</span>
+                  </div>
+                  <ul className="text-sm text-slate-700 mb-2">
+                    {o.items.map((it) => (
+                      <li key={it.product_name}>• {it.product_name} × {it.quantity}</li>
+                    ))}
+                  </ul>
+                  <p className="text-xs text-slate-500 mb-3">📍 {o.dropoff_detail || '—'}</p>
+                  {actionError?.order === o.order_number && (
+                    <div className="mb-2 p-2 rounded-lg bg-red-50 border border-red-200 text-xs text-red-700">
+                      ⚠️ {actionError.error}
+                    </div>
+                  )}
+                  <div className="flex gap-2 flex-wrap">
+                    <button
+                      className="btn btn-primary text-xs"
+                      disabled={busyOn === o.order_number}
+                      onClick={() => { lastActionRef.current = () => void claimOffer(o.order_number); void claimOffer(o.order_number) }}
+                      data-testid="rider-claim-offer"
+                    >
+                      {busyOn === o.order_number ? '⏳…' : '🙋 รับงานนี้'}
+                    </button>
+                    <button
+                      className="btn btn-outline text-xs"
+                      disabled={busyOn === o.order_number}
+                      onClick={() => { lastActionRef.current = () => void declineOffer(o.order_number); void declineOffer(o.order_number) }}
+                      data-testid="rider-decline-offer"
+                    >
+                      🚫 ไม่รับ
+                    </button>
+                  </div>
+                </GlassCard>
+              ))}
+            </div>
+          )}
+
+          {assignments.length === 0 && (
                 <GlassCard className="p-5 text-center text-slate-500" data-testid="rider-empty">
                   ยังไม่มีงานที่ได้รับมอบหมาย — งานใหม่จะโหลดอัตโนมัติทุก ~25 วินาที
                 </GlassCard>
@@ -576,5 +660,100 @@ export function RiderPwaPage() {
         </>
       )}
     </div>
+  )
+}
+
+// ============================================
+// PodDeliveryPanel (M3 · 2026-10-22) — ดูดมาจาก Rider PWA component เดิม (ลบไฟล์ซ้ำแล้ว)
+// ============================================
+// แผ่นยืนยันส่งมอบ: ตรวจพิกัด (ต้องอยู่ในรัศมีปลายทาง) + ถ่ายรูป POD (บังคับ)
+// ก่อนกด "ยืนยันส่งสำเร็จ" — gates ฝั่งเครื่องช่วยให้ถ่ายทัน แต่ตัวจริงที่บังคับคือ
+// server (driver_update_delivery_status + ERR_POD_REQUIRED, 132) — ไม่มีสถานะ
+// จำลองใน component นี้ (สถานะจริงอยู่ที่ assignment_status ที่แสดงด้านบน)
+// (ใช้ import React/hooks จากหัวไฟล์เดียวกัน — ไม่มี import ซ้ำ)
+
+export function PodDeliveryPanel({ dropOff, radiusMeters = 300, onDelivered, busy = false, onCoordsChange }: {
+  dropOff: { latitude: number; longitude: number }
+  radiusMeters?: number
+  onDelivered?: (photo: File, coords: { latitude: number; longitude: number }) => void | Promise<void>
+  busy?: boolean
+  onCoordsChange?: (coords: { latitude: number; longitude: number }) => void
+}) {
+  const [coords, setCoords] = useState<{ latitude: number; longitude: number } | null>(null)
+  const [geoError, setGeoError] = useState<string | null>(null)
+  const [podUrl, setPodUrl] = useState<string | null>(null)
+  const [podFile, setPodFile] = useState<File | null>(null)
+  const fileRef = useRef<HTMLInputElement>(null)
+
+  function checkIn() {
+    if (!('geolocation' in navigator)) {
+      setGeoError('เบราว์เซอร์ไม่รองรับ Geolocation API')
+      return
+    }
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const c = { latitude: pos.coords.latitude, longitude: pos.coords.longitude }
+        setCoords(c)
+        setGeoError(null)
+        onCoordsChange?.(c)
+      },
+      (err) => setGeoError(`อ่านพิกัดไม่สำเร็จ: ${err.message}`),
+      { enableHighAccuracy: true, timeout: 10000 },
+    )
+  }
+
+  function onPickPhoto(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    if (!file.type.startsWith('image/') || file.size > 15 * 1024 * 1024) {
+      setGeoError('ไฟล์ต้องเป็นรูปภาพไม่เกิน 15MB')
+      return
+    }
+    setPodFile(file)
+    const reader = new FileReader()
+    reader.onload = () => setPodUrl(reader.result as string) // preview เท่านั้น — ของจริง upload ตอนยืนยัน
+    reader.readAsDataURL(file)
+  }
+
+  // Distance to the drop-off (m). Coords absent ⇒ cannot verify ⇒ gate blocked.
+  const distanceM = coords ? haversineDistanceKm(coords.latitude, coords.longitude, dropOff.latitude, dropOff.longitude) * 1000 : null
+  const geoOk = coords !== null && distanceM !== null && distanceM <= radiusMeters
+
+  function handleDeliver() {
+    if (!geoOk || !podFile || !coords || busy) return
+    void onDelivered?.(podFile, coords)
+  }
+
+  return (
+    <GlassCard className="p-5">
+      <h4 className="text-sm font-semibold text-slate-700 mb-2">1. เช็คอินตำแหน่งปลายทาง</h4>
+      <button onClick={checkIn} className="btn btn-outline text-sm mb-2" data-testid="rider-checkin">
+        📍 ตรวจพิกัดปัจจุบัน
+      </button>
+      {coords && (
+        <p className="text-xs text-slate-600 mb-1">
+          พิกัด: {coords.latitude.toFixed(5)}, {coords.longitude.toFixed(5)}{' '}
+          · ห่างปลายทาง {distanceM !== null ? Math.round(distanceM) : '-'} ม.
+        </p>
+      )}
+      {geoError && <p className="text-xs text-red-600 mb-1">{geoError}</p>}
+      {coords && !geoOk && (
+        <p className="text-xs text-amber-600 mb-2">⚠️ ยังอยู่นอกระยะ {radiusMeters} ม. — ยืนยันส่งไม่ได้</p>
+      )}
+      {geoOk && <p className="text-xs text-green-600 mb-2">✅ อยู่ในระยะที่กำหนด ตรวจพิกัดผ่านแล้ว</p>}
+
+      <h4 className="text-sm font-semibold text-slate-700 mb-2 mt-3">2. ถ่ายภาพ proof of delivery (POD)</h4>
+      <input ref={fileRef} type="file" accept="image/*" capture="environment" onChange={onPickPhoto} className="block text-xs mb-2" data-testid="rider-pod-input" />
+      {podUrl && <img src={podUrl} alt="Proof of delivery" className="w-32 h-32 object-cover rounded-xl mb-2" />}
+
+      <button
+        onClick={handleDeliver}
+        disabled={!geoOk || !podFile || busy}
+        className="btn btn-primary w-full mt-3 disabled:opacity-50 disabled:cursor-not-allowed"
+        data-testid="rider-deliver"
+      >
+        {busy ? '⏳ กำลังบันทึก…' : !geoOk ? '⛔ ตรวจพิกัดก่อนส่ง' : !podFile ? '📸 ถ่ายรูป POD ก่อนส่ง' : '✅ ยืนยันส่งสำเร็จ (POD)'}
+      </button>
+    </GlassCard>
   )
 }

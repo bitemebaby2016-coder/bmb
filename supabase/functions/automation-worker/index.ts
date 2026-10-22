@@ -441,6 +441,69 @@ async function runNotificationDispatch(ctx: Ctx, p: { lookbackMinutes?: number; 
     ctx.results.rider_push = { attempted: riderRows.length, pushed: riderPushed, errors: riderErrors }
   }
 
+  // E1 (2026-10-22): BROADCAST push สำหรับงานประกาศ (dispatch_offers) —
+  //   งาน status='offered' ที่ยังไม่เคย push (rider_pushed_at IS NULL) → แจ้ง
+  //   ไรเดอร์ "ทุกคน" ที่ผูกบัญชีแล้ว (drivers.user_id NOT NULL) — ใครมากดรับก่อน
+  //   = จอง (claim_dispatch_offer atomic) · marker แบบเดียวกับงานมอบหมาย
+  //   (push ก่อนค่อย mark — mark พลาด = push ซ้ำรอบหน้า (เบากว่าข่าวหาย))
+  if (PUSH_SEND_URL) {
+    type OfferRow = { id: string; order_number: string }
+    let offerPushed = 0
+    let offerErrors = 0
+    const offRes = await rest(
+      SERVICE,
+      'GET',
+      `/rest/v1/dispatch_offers?select=id,order_number&status=eq.offered&rider_pushed_at=is.null&updated_at=gte.${encodeURIComponent(cutoff)}&order=updated_at.desc&limit=${limit}`,
+    )
+    if (offRes.status !== 200) {
+      ctx.errors.push('dispatch_offers read failed: ' + offRes.status)
+    } else {
+      const drvRes = await rest(SERVICE, 'GET', '/rest/v1/drivers?select=id&user_id=not.is.null')
+      const driverIds: string[] = drvRes.status === 200
+        ? ((drvRes.j || []) as Array<{ id: string }>).map((d) => d.id)
+        : []
+      if (drvRes.status !== 200) ctx.errors.push('drivers read failed: ' + drvRes.status)
+      for (const o of ((offRes.j || []) as OfferRow[])) {
+        for (const dId of driverIds) {
+          try {
+            const res = await fetch(PUSH_SEND_URL, {
+              method: 'POST',
+              headers: {
+                apikey: SERVICE,
+                Authorization: 'Bearer ' + SERVICE,
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                driverId: dId,
+                title: '📣 งานประกาศใหม่ — ใครรับก่อนได้ก่อน',
+                body: `งานส่ง ${o.order_number} เปิดให้รับ — กดรับก่อนเพื่อน ได้งานไป`,
+                url: '/rider',
+                tag: `bmb-offer-${o.order_number}`,
+              }),
+            })
+            if (res.ok) offerPushed++
+            else {
+              offerErrors++
+              if (offerErrors <= 3) ctx.errors.push(`offer-push ${o.order_number}/${dId}: HTTP ${res.status}`)
+            }
+          } catch (err: any) {
+            offerErrors++
+            if (offerErrors <= 3) ctx.errors.push(`offer-push ${o.order_number}: ${err?.message ?? 'fetch failed'}`)
+          }
+        }
+        if (driverIds.length > 0) {
+          await rest(
+            SERVICE,
+            'PATCH',
+            `/rest/v1/dispatch_offers?id=eq.${encodeURIComponent(o.id)}&rider_pushed_at=is.null`,
+            { rider_pushed_at: new Date().toISOString() },
+          )
+        }
+      }
+    }
+    ctx.results.offer_broadcast = { pushed: offerPushed, errors: offerErrors }
+  }
+
   ctx.results.notification_dispatch = {
     window_minutes: lookback,
     order_events: orderEventsScanned,
