@@ -2,9 +2,9 @@
 
 > **สถานะงานปัจจุบันของโปรเจกต์ Bite Me Baby** ใช้แนบเข้าสู่ Context ตอนเริ่มแชทเสมอ
 
-**last_updated:** 2026-10-22 รอบ 10 (D1 ครบทุกชิ้น + apply 135/137 + deploy EF 4 ตัว + secrets บน production แล้ว — เหลือ runtime evidence จาก Owner)
-**phase:** 🟢 **D1 DONE (โค้ด+production infra ครบ) — รอ Owner เก็บ evidence บน biteme-baby.com แล้วปิดโครงการ**
-**current_focus:** D1 ตามลำดับ: ✅A5+M1 → ✅A1+M2 → ✅A2+A7(ก.)+M5 → ✅A3 → ✅E2 → ✅E1+A4+A8+M4+M3 → ✅E3/E4 → ✅A6 → ✅ก้อน Marketing
+**last_updated:** 2026-10-22 รอบ 11 (SESSION CLOSE — D1 ครบทั้งโค้ด+production infra · แฮนออฟสิ่งที่เหลือทั้งหมดไปแชทใหม่)
+**phase:** 🟢 **D1 DONE — รอ Owner เก็บ runtime evidence บน biteme-baby.com · งานที่เหลือ = ดูหัวข้อ "🤝 HANDOFF" ท้ายไฟล์**
+**current_focus:** ปิดเซสชัน · แชทใหม่เริ่มจากหัวข้อ "🤝 HANDOFF" ท้ายไฟล์นี้
 **blocked_by:** ไม่มี — แต่ push/production = ต้อง Owner approve (auto-deploy จาก main) + เก็บ runtime evidence จากอุปกรณ์จริงก่อนประกาศ PASS
 
 ---
@@ -136,7 +136,57 @@
 - **Files Changed:** `supabase/migrations/137_marketing_posts_rules.sql` (ใหม่) · `e2e/contracts_137_marketing_posts.sql` (ใหม่) · `supabase/functions/image-gen/index.ts` (ใหม่) · `src/lib/adminMarketing.ts` (ใหม่) · `src/pages/admin/AdminMarketing.tsx` (ใหม่) · `src/__tests__/marketingClient.test.ts` (ใหม่) · `supabase/functions/{automation-worker,queue-enqueue,queue-dispatcher}/index.ts` · `.github/workflows/{automation-scheduler.yml,contract-tests.yml}` · `supabase/config.toml` · `src/lib/adminUi.ts` · `src/App.tsx`
 - **Tests / Commands Run:** ดู Verified (รวม Docker ephemeral PG apply 137 + contract 137)
 - **Known Risks:** (1) จนกว่า deploy EF + apply 137 — แท็บการตลาดบน production จะสร้างโพสต์ไม่ได้ (error ชัด ไม่เงียบ) (2) image-gen ขึ้นกับโมเดล image ของ OpenRouter (ตั้ง IMAGE_GEN_MODEL ให้ถูก) (3) marketing_publish รันรายชั่วโมง — เวลาโพสต์จริงคลาดเคลื่อนได้ ≤1 ชม.
-- **Next Exact Action:** ขอ Owner approve: apply 137 + deploy EF 4 ตัว + set secrets → ทดสอบ E2E บน production (โพสต์จริงบน Page + ภาพ 3 สไตล์) → เก็บ evidence · เสร็จแล้ว D1 ปิดโครงการได้
+- **Next Exact Action:** ขอ Owner approve: apply 137 + deploy EF 4 ตัว + set secrets → ทดสอบ E2E บน production (โพสต์จริงบน Page + ภาพ 3 สไตล์) → เก็บ evidence · เสร็จแล้ว D1 ปิดโครงการได้ (✅ ทำแล้ว 2026-10-22 — apply+deploy+secrets ครบ, เหลือ evidence)
+
+---
+
+# 🤝 HANDOFF TO NEW CHAT (2026-10-22) — งานที่เหลือทั้งหมด
+
+## 0. สถานะจริง ณ วันปิดเซสชัน
+- **D1 ครบทุกชิ้นตามลำดับ** A5+M1 → A1+M2 → A2+A7(ก.)+M5 → A3 → E2 → E1+A4+A8+M4+M3 → E3/E4 → A6 → Marketing Part C
+- **Gates รอบสุดท้าย:** tsc=0 · lint=0 · **vitest 1302/1302 (124 files)** · build=0 · mojibake=0
+- **SQL จริง:** contracts 135 (G1-G7) / 136 (G1-G3) / 137 (G1-G3) ผ่านบน ephemeral PG16 · replay 001-137 ผ่าน · contract 132 regression ผ่าน
+- **Production ตอนนี้:** migration **135+137 applied** ✓ · EF **image-gen/automation-worker/queue-enqueue/queue-dispatcher = ACTIVE** ✓ · secrets **OPENROUTER_API_KEY + IMAGE_GEN_MODEL** ✓ · เว็บ auto-deploy จาก main (HEAD=`923ac1f`) ✓ · smoke image-gen=401 (กัน anon ถูก)
+- **ของอ่านอย่างเดียว:** `docs/BMB_HANDOFF_MASTER_2026-10-22.md` · `docs/BMB_DECISIONS.md` · `UNIVERSAL_MASTER_AI_RULES.md` (แก้ได้เฉพาะกฎทั่วไป)
+
+## 1. เหลือเพื่อ "ปิดโครงการ" = Owner เก็บ runtime evidence (No Evidence = Not Done)
+1. E1/A4/A8/E3: กด "ส่งออกงาน" → ไรเดอร์ทุกเครื่องได้ push พร้อมกัน → คนแรกรับ = จอง (คนอื่นเห็น "งานถูกจองแล้ว") · assign โดยแอดมิน = ชนะประกาศ
+2. ไรเดอร์ส่งครบวงจร (รับ→รับของ→กำลังส่ง→POD บังคับ→ส่งสำเร็จ) — ลูกค้าเห็น ≤20 วิ · แอดมินเห็น timeline ทุกขั้น + เส้นทางย้อนหลังบนแผนที่
+3. Marketing E2E: สร้างโพสต์ (Planner/Studio) → คนอนุมัติ → ตั้งเวลา → ระบบโพสต์จริงบน Page → Analytics โชว์ provider post id
+4. E5/E6: สร้างภาพ 3 สไตล์ → URL จริงแนบโพสต์ได้ (ถ้าโมเดล image ของ OpenRouter ยังไม่เปิด = ตั้ง `IMAGE_GEN_MODEL` เป็นตัวที่ใช้ได้จริง แล้วทดสอบใหม่)
+5. ตั้งเวลาโพสต์ที่ยังไม่อนุมัติ → ต้องโดน `ERR_APPROVAL_REQUIRED` · ราคาตรงทุกหน้า · คูปอง/สลิป/ค่าส่ง/route ตาม checklist เดิม
+
+## 2. เหลือตามสเปกเต็ม (นอก D1 หรือทำบางส่วน — เรียงตามคุณค่า)
+| งาน | สถานะจริง | จุดเริ่ม |
+|---|---|---|
+| Marketing Phase 2: FETCH insights (Meta) → UPDATE planning inputs | ยังไม่ทำ | `social_events` (mig 109) มีแล้ว · `AdminReports.tsx` เดิม |
+| Automation rules engine (บังคับ content mix / duplicate-cooldown / stop conditions) | config จริงอยู่ใน `marketing_rules` แล้ว แต่ยังไม่มี engine | ต่อยอด `adminMarketing.ts` + worker |
+| Calendar มุมมอง day/week/month แบบเต็ม (C1 #5) | ตอนนี้ = รายการตามเวลา + ตั้งเวลาจริง | `AdminMarketing.tsx` แท็บ calendar |
+| Analytics attribution "มีจริง/ไม่มีสิทธิ์" (C1 #7) | ตอนนี้ = ตารางผลโพสต์จริง (provider id/error/attempts) | ผูก `social_events` insights |
+| Retry backoff + cancel สำหรับ failed jobs ใน AdminJobs | ยังไม่ทำ (worker เก็บ attempts/error แล้ว) | `adminJobsApi.ts` + jobs view |
+| D2 payment: A7 ข. Omise auto-confirm / ค. Stripe | นอก D1 (ก. ทำแล้ว) | `omise-webhook` EF มีอยู่ · ต้อง live key + webhook secret + rollback plan |
+| E7 "AI โปรโมตสินค้าได้จริง" (auto-pilot ตาม rules) | บางส่วน: Planner แนะนำสินค้าขายดีจริง + Studio สร้างภาพ | ต่อกับ automation rules engine |
+| Push realtime (ตอนนี้ ≤5 นาทีตาม cron) | ยอมรับได้ตามระบบเดิม | ถ้าต้องการ realtime = เรียก push-send จาก trigger แทนรอ cron |
+| PART B ตกขอบอื่น ๆ | E2 + M3/M4/M5 เก็บใน D1 แล้ว | ไล่ตามตาราง PART B ใน handoff หลัก |
+
+## 3. ช่องทางทำงาน production (บทเรียนจริงจากเซสชันนี้)
+- **Apply migration (ต้อง Owner approve เท่านั้น):** Management API `POST https://api.supabase.com/v1/projects/ivkdfognyiwjcmrhcnwz/database/query` body `{"query":"BEGIN;<ไฟล์>;COMMIT;"}` · token = `SUPABASE_ACCESS_TOKEN` ใน `.env.local` (ห้าม print)
+- **Deploy EF (ต้อง Owner approve):** `npx supabase functions deploy <name> --project-ref ivkdfognyiwjcmrhcnwz` (อ่าน config.toml เอง) — **เว็บ auto-deploy แต่ EF ไม่** · แก้ EF แล้วต้อง deploy เสมอ
+- **Set secrets (ต้อง Owner approve):** `POST /v1/projects/{ref}/secrets` body เป็น **array** `[{"name":"...","value":"..."}]` (object = error)
+- **SQL contract ก่อนขึ้นจริง:** Docker `postgres:16` + `e2e/ci/apply_all_migrations.sh` (ต้อง `tr -d '\r'` ก่อน) → รัน `e2e/contracts_*.sql` (ROLLBACK ทุกไฟล์) · `schema_migrations` ไม่มีใน public → **ห้ามใช้ `db push`** (จะยิงทุกไฟล์)
+- **CI:** `contract-tests.yml` = replay + contracts 123/124/127-130/131/133/135/136/137 · ดูผลบน GitHub web (ไม่มี `gh` CLI)
+
+## 4. กติกา/บทเรียนห้ามลืม (สรุปจากของจริง)
+1. **ไทยห้ามผ่าน shell เด็ดขาด** — เขียน/อ่านเนื้อหาผ่าน editor/read_files เท่านั้น (console codepage เพี้ยนใน output; ถ้าเขียนไฟล์ผ่าน shell = เพี้ยนจริง)
+2. แก้ไฟล์ผ่าน editor · **preserve BOM เดิม** (เช่น MenuPage.tsx) · เช็ค `git diff` ว่าหัวไฟล์ไม่ขยับ · สแกน mojibake ทุกไฟล์ที่แตะ (`[\u00e0-\u00ef][\u00b0-\u00bf]` + UTF-8 strict + `\u0eXX` escape + read-back)
+3. Vitest include = `.js/.ts` ล้วน — component tests ใช้ `React.createElement` ใน `.ts` หรือ source-scan ด้วย `?raw`
+4. **เทสต์ห้ามลดจำนวน** · แก้ fixture ที่พังได้แต่ห้ามลบเทสต์ · assertion อย่าเช็ค literal ของ template string (`mk-tab-${id}` ≠ 'mk-tab-overview')
+5. invariant ต้องเช็คทั้งสองฝั่ง (เช่น `ADMIN_NAV_ITEMS` == flatten(`ADMIN_NAV_GROUPS`)) · แก้ nav/รายการต้องแก้ทุกที่ที่ invariant ผูก
+6. Commit อังกฤษ · คำสั่งยาวทำ PSReadLine crash — แบ่งสั้น/เขียนผลลง `_tmp_*.txt` (อยู่ใน .gitignore) แล้วอ่าน
+7. **production:** push main = เว็บ (loop ปกติ) · migration/EF/secret = ต้อง Owner approve · ทดสอบ production จริงเท่านั้น (ห้าม mockup/hardcode/stub/dead code) · เหลือ 3 บทบาท แอดมิน/ลูกค้า/ไรเดอร์ แยกเส้นเด็ดขาด · เส้นทางจริงทั้งหมด
+8. ปุ่มเดียวกันห้ามมีสองที่ — แต่ละ transition เจ้าของปุ่มเดียว + deep-link · คำ/ปุ่มต้องตรงสถานะจริง ("ถึงปลายทาง" ≠ "ส่งสำเร็จ")
+9. contract fixture ห้าม hardcode พิกัด (derive จาก `kitchen_location()`) · fixture insert ฐานะเจ้าของ DB (role ใช้ตอนเรียก RPC) · `RESET ROLE` ต้นทุก DO block
+10. `AI_WORK_STATE.md` = single source of truth — อัปเดตทุกก้อนงาน · กติกาเต็ม: `.clinerules` + `docs/BMB_HANDOFF_MASTER_2026-10-22.md` (อ่านอย่างเดียว)
 
 ---
 
