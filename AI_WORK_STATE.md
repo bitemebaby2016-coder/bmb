@@ -2,10 +2,10 @@
 
 > **สถานะงานปัจจุบันของโปรเจกต์ Bite Me Baby** ใช้แนบเข้าสู่ Context ตอนเริ่มแชทเสมอ
 
-**last_updated:** 2026-10-20 (รอบ RIDER E2E CLOSURE — A1–A5 + map fix + portal entry + migration 132)
-**phase:** โค้ดปิดครบตามคำสั่ง + gates ทุกชุดเขียว (vitest 1205/1205, replay 001–132, contracts ผ่าน) · **เหลือ: Owner อนุมัติ apply 132 + deploy 2 edge functions → ทดสอบ E2E จริง**
-**current_focus:** รอ Owner อนุมัติ (ก) migration 132 (ข) migration repair 131 → แล้วทดสอบ checklist §5 ของ docs/BMB_RIDER_E2E_CLOSURE_2026-10-20.md บนอุปกรณ์จริง
-**blocked_by:** ไม่มีฝั่งโค้ด — ติดแค่การอนุมัติ production apply + ทดสอบจริง (ไม่ประกาศ PASS ก่อนมี runtime evidence)
+**last_updated:** 2026-10-22 (รอบ HANDOFF-MASTER — รวมแผนบั๊ก 3 อุปกรณ์ + แผนรวมไฟล์ + Marketing Automation Control Center)
+**phase:** 📋 **HANDOFF READY — ห้ามโค้ดในรอบนี้ แผนทั้งหมดอยู่ที่ `docs/BMB_HANDOFF_MASTER_2026-10-22.md` (เปิดอ่านก่อนทำงานทุกครั้ง)**
+**current_focus:** เริ่มงานในแชทใหม่ตาม HANDOFF Part D1: แก้บั๊กจริง (A5+M1 → A1+M2 → A2+A7+M5 → A3 → A4+A8+M4+M3 → A6) แล้วต่อก้อน Marketing (Part C) — ทำพร้อมแผนรวมไฟล์ M1–M6 ห้ามเพิ่มของซ้ำประเภทเดิม
+**blocked_by:** รอ Owner ตอบ 5 คำถาม (HANDOFF §D4: ทางชำระเงิน ก/ข/ค, บังคับเลือกไรเดอร์?, ช่องทาง marketing, Meta App, image provider) · CI ที่ `2cbf203` เขียวทั้ง workflow แล้ว
 
 ---
 
