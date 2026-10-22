@@ -1,4 +1,0 @@
-LINT=0
-TEST=0
-BUILD=0
-[2m Test Files [22m [1m[32m122 passed[39m[22m[90m (122)[39m

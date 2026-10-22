@@ -51,3 +51,5 @@ e2e/artifacts/
 
 # local DB dumps (contain customer data — never commit)
 backups/
+
+_tmp_*.txt
