@@ -11,6 +11,8 @@ import { buildHeadingGroups, headingChips } from '@/lib/catalogStructure'
 import { getProductScheduleMap, type ProductScheduleMap } from '@/lib/productSchedule'
 import { useCartStore } from '@/store/cartStore'
 import { showToast } from '@/components/ui/ToastContainer'
+import { applyCouponCode } from '@/components/CouponBox'
+import { describeCouponResult } from '@/lib/promotionClient'
 import { FoodMenuCard } from '@/components/FoodMenuCard'
 import { MascotBadge } from '@/components/MascotBadge'
 import { useOrderBuilderStore } from '@/store/orderBuilderStore'
@@ -66,6 +68,22 @@ export function MenuPage() {
     const wantTab = searchParams.get('tab')
     if (wantTab === 'pre-order' || wantTab === 'same-day') setMenuTab(wantTab)
   }, [searchParams])
+
+  // ✓ A1 (2026-10-22): deep-link /menu?code=X — apply คูปองเข้าตะกร้าอัตโนมัติ
+  // (ทางเดียวกับปุ่ม "ใช้เลย" ที่หน้าโปรโมชัน — ใช้ applyCouponCode ตัวเดียว)
+  useEffect(() => {
+    const code = (searchParams.get('code') || '').trim()
+    if (!code) return
+    void (async () => {
+      const result = await applyCouponCode(code)
+      showToast(describeCouponResult(result), result.ok ? 'success' : result.reason === 'below_min' ? 'info' : 'error')
+      setSearchParams((prev) => {
+        const p = new URLSearchParams(prev)
+        p.delete('code')
+        return p
+      }, { replace: true })
+    })()
+  }, [searchParams, setSearchParams])
 
   useEffect(() => {
     async function loadData() {

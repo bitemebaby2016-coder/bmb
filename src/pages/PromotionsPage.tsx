@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { showToast } from '@/components/ui/ToastContainer'
 import { getPromotionsWithStatus, type PromotionRow } from '@/lib/bmbAdminApi_promotions'
+import { applyCouponCode } from '@/components/CouponBox'
+import { describeCouponResult } from '@/lib/promotionClient'
 
 // ============================================
 // Bite Me Baby — Promotions page (ZERO-FAKE closure 2026-10-18)
@@ -59,7 +61,7 @@ export function PromotionsPage() {
   const [rows, setRows] = useState<PromotionRow[]>([])
   const [loading, setLoading] = useState(true)
   const [loadFailed, setLoadFailed] = useState(false)
-  const [copiedId, setCopiedId] = useState<string | null>(null)
+  const [usedId, setUsedId] = useState<string | null>(null)
   const navigate = useNavigate()
 
   useEffect(() => {
@@ -81,28 +83,26 @@ export function PromotionsPage() {
 
   const promos = rows.filter((p) => isPromoLiveNow(p))
 
-  function handleUseCode(promo: PromotionRow) {
+  async function handleUseCode(promo: PromotionRow) {
     const code = (promo.code || '').trim()
     if (!code) {
       showToast('โปรโมชันนี้ไม่มีโค้ด — รับสิทธิ์อัตโนมัติเมื่อเข้าเงื่อนไขค่ะ', 'info')
       navigate('/menu')
       return
     }
-    // คัดลอกโค้ดจริง (clipboard) — ไม่มีการแสร้งว่า "ใช้ส่วนลดสำเร็จ"
-    const done = () => {
-      setCopiedId(promo.id)
-      showToast(`คัดลอกโค้ด ${code} แล้ว — วางที่ช่องโค้ดส่วนลดตอนชำระเงินค่ะ ระบบจะตรวจสอบส่วนลดบนเซิร์ฟเวอร์`, 'success')
-      navigate('/menu')
+    // A1 (2026-10-22): "ใช้เลย" ต้อง apply เข้าตะกร้าทันทีผ่าน applyCouponCode
+    // (ทางเดียวกับหน้าตะกร้า/ชำระเงิน) — โค้ดเข้า store ทันที ไม่ต้องพิมพ์เองตอนจ่าย
+    // clipboard = bonus เงียบเท่านั้น (ห้าม toast "คัดลอกแล้ว" ถ้าไม่ได้ก้อบจริง —
+    // โค้ดโชว์บนจออยู่แล้ว)
+    const result = await applyCouponCode(code)
+    setUsedId(promo.id)
+    try {
+      await navigator.clipboard?.writeText(code)
+    } catch {
+      /* clipboard ใช้ไม่ได้ (WebView/มือถือ/ไม่ใช่ https) — ไม่แสร้งว่าก้อบ */
     }
-    const copy = navigator.clipboard?.writeText(code)
-    if (copy && typeof copy.then === 'function') {
-      copy.then(done).catch(() => {
-        showToast(`โค้ด ${code} — กรอกที่ช่องโค้ดส่วนลดตอนชำระเงินค่ะ`, 'info')
-        navigate('/menu')
-      })
-    } else {
-      done()
-    }
+    showToast(describeCouponResult(result), result.ok ? 'success' : result.reason === 'below_min' ? 'info' : 'error')
+    navigate('/menu')
   }
 
   return (
@@ -112,8 +112,8 @@ export function PromotionsPage() {
       <div className="card mb-6 bg-gradient-to-r from-purple-50 to-pink-50">
         <h3 className="font-bold text-brand-accent mb-2">💡 วิธีใช้โค้ดส่วนลด</h3>
         <p className="text-sm text-brand-muted">
-          เลือกเมนู → ไปที่หน้าชำระเงิน → กรอกโค้ดในช่อง &quot;โค้ดส่วนลด&quot;
-          ระบบจะตรวจสอบและคำนวณส่วนลดบนเซิร์ฟเวอร์ตอนสั่งซื้อ
+          กดปุ่ม &quot;ใช้เลย&quot; — โค้ดจะเข้าตะกร้าของคุณทันที (ดูได้ในหน้าตะกร้า/ชำระเงิน)
+          ระบบตรวจส่วนลดจากโปรโมชั่นจริงตามเงื่อนไข (วันที่/ยอดขั้นต่ำ) และยืนยันยอดจริงอีกครั้งบนเซิร์ฟเวอร์ตอนสั่งซื้อ
         </p>
       </div>
 
@@ -164,7 +164,7 @@ export function PromotionsPage() {
                   className="btn btn-outline text-xs mt-2"
                   data-testid="promo-use-code"
                 >
-                  {copiedId === promo.id ? 'คัดลอกแล้ว ✓' : 'ใช้เลย'}
+                  {usedId === promo.id ? 'ใช้แล้ว ✓' : 'ใช้เลย'}
                 </button>
               </div>
             </div>

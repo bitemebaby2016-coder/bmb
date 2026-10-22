@@ -15,18 +15,10 @@ import { getPaymentIntents } from '@/lib/paymentGateway'
 import { trackOrderByPhone, getSavedTrackPhone } from '@/lib/trackingApi'
 import { showToast } from '@/components/ui/ToastContainer'
 import { MascotBadge } from '@/components/MascotBadge'
+import { OrderTimeline } from '@/components/customer/OrderTimeline'
 
-// Canonical server order_status chain (migration 001 enum) → display.
-const TIMELINE = [
-  { key: 'pending', label: 'รอการยืนยัน', icon: '⏳' },
-  { key: 'confirmed', label: 'ยืนยันแล้ว', icon: '✅' },
-  { key: 'preparing', label: 'กำลังทำ', icon: '👨‍🍳' },
-  { key: 'ready_for_dispatch', label: 'พร้อมส่ง', icon: '📦' },
-  { key: 'dispatched', label: 'กำลังจัดส่ง', icon: '🛵' },
-  { key: 'in_transit', label: 'กำลังจัดส่ง', icon: '🛵' },
-  { key: 'arrived', label: 'ถึงปลายทาง', icon: '📍' },
-  { key: 'delivered', label: 'ส่งสำเร็จ', icon: '🏁' },
-] as const
+// M1 (2026-10-22): progress steps ย้ายไป components/customer/OrderTimeline.tsx
+// — timeline ตัวเดียวขับจาก lib/orderVocabulary (A5: label ไม่ซ้ำอีกแล้ว)
 
 const REFRESH_MS = 20000 // READ-ONLY polling cadence (never mutates status)
 
@@ -201,9 +193,6 @@ export function OrderTrackPage() {
 
   const status = String(order.status)
   const mode = ((order as any).order_mode ?? 'SAME_DAY') as 'SAME_DAY' | 'PRE_ORDER'
-  const isTerminalBad = status === 'cancelled' || status === 'failed'
-  const stepIndex = TIMELINE.findIndex((s) => s.key === status)
-  const activeIdx = stepIndex >= 0 ? stepIndex : TIMELINE.length
   const intent = intents.find((i) => i.status === 'pending' || i.status === 'processing') ?? intents[0]
   const canCancel = status === 'pending'
   const paidCancelled = status === 'cancelled' && order.payment_status === 'paid'
@@ -225,28 +214,8 @@ export function OrderTrackPage() {
           <span className="badge">ชำระเงิน: {order.payment_status}</span>
         </div>
 
-        {/* Canonical progress steps — rendered from server state only */}
-        {!isTerminalBad && (
-          <div className="mb-6">
-            <div className="flex items-center justify-between relative">
-              <div className="absolute top-6 left-0 right-0 h-1 bg-brand-border z-0"></div>
-              <div
-                className="absolute top-6 left-0 h-1 w-full bg-brand-primary z-0 origin-left transition-transform duration-500"
-                style={{ transform: `scaleX(${Math.min(100, (activeIdx / (TIMELINE.length - 1)) * 100) / 100})` }}
-              ></div>
-              {TIMELINE.map((step, index) => (
-                <div key={step.key} className="relative z-10 flex flex-col items-center">
-                  <div className={`w-12 h-12 rounded-full flex items-center justify-center text-xl ${index <= activeIdx ? 'bg-brand-primary text-white' : 'bg-brand-border text-brand-muted'}`}>
-                    {step.icon}
-                  </div>
-                  <span className={`text-xs mt-2 text-center ${index <= activeIdx ? 'text-brand-primary font-bold' : 'text-brand-muted'}`}>
-                    {step.label}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+        {/* M1+A5: canonical progress steps — one component, one vocabulary */}
+        <OrderTimeline status={status} />
 
         {/* Current status — strictly what the server says */}
         <div className="bg-brand-bg p-4 rounded-xl mb-4" data-testid="track-status">

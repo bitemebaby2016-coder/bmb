@@ -38,7 +38,8 @@ import { getProducts } from '@/lib/bmbAdminApi_products'
 import { revalidateWithCatalog, reportToToastMessage } from '@/lib/cartPersistence'
 import { isBangkokCutoffPassed } from '@/lib/bangkokTime'
 import { roundBookability, roundStatusLabel } from '@/lib/deliveryRoundStatus'
-import { fetchCouponEvaluation, evaluateCoupon, describeCouponResult, normalizePromoCode } from '@/lib/promotionClient'
+import { normalizePromoCode } from '@/lib/promotionClient'
+import { CouponBox, revalidateCouponForSubmit } from '@/components/CouponBox'
 import { getTrustedGpsLocation } from '@/lib/locationLogin'
 import { DeliveryMapPicker } from '@/components/delivery/DeliveryMapPicker'
 import type { OrderMode } from '@/config/platformConfig'
@@ -79,7 +80,7 @@ async function ensureReplaySafeIntent(
 export function CheckoutPage() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
-  const { items, subtotal, discount, deliveryFee, total, clearCart, order_mode, isHydrated, couponCode, appliedPromotion, setCouponCode, setAppliedPromotion, recalculate } = useCartStore()
+  const { items, subtotal, discount, deliveryFee, total, clearCart, order_mode, isHydrated, couponCode } = useCartStore()
   const customer = useAuthStore((s) => s.customer)
   const justPlaced = useRef(false)
 
@@ -99,51 +100,7 @@ export function CheckoutPage() {
     // notify ครั้งเดียวตอน mount ถ้ามี conflict
   }, [])
 
-  // Coupon rehydration: cartPersistence stores the code only (D01 minimal
-  // persistence) — rebuild the applied promotion from REAL rows so a reload
-  // never leaves a phantom discount or a dead code behind.
-  useEffect(() => {
-    let cancelled = false
-    const code = useCartStore.getState().couponCode
-    if (!code.trim() || useCartStore.getState().appliedPromotion) return
-    void fetchCouponEvaluation(code, useCartStore.getState().subtotal).then((result) => {
-      if (cancelled) return
-      if (result.ok) {
-        setAppliedPromotion(result.promo)
-        recalculate()
-      } else {
-        setCouponCode('')
-        showToast(describeCouponResult(result), 'info')
-      }
-    })
-    return () => { cancelled = true }
-  }, [])
 
-  async function handleApplyCoupon() {
-    const code = couponCode.trim()
-    if (!code) {
-      showToast('กรุณาใส่รหัสโปรโมชั่นก่อนกดใช้โค้ด', 'warning')
-      return
-    }
-    const result = await fetchCouponEvaluation(code, subtotal)
-    if (!result.ok) {
-      setCouponCode('')
-      setAppliedPromotion(null)
-      recalculate()
-      showToast(describeCouponResult(result), 'error')
-      return
-    }
-    setAppliedPromotion(result.promo)
-    recalculate()
-    showToast(describeCouponResult(result), 'success')
-  }
-
-  function handleRemoveCoupon() {
-    setCouponCode('')
-    setAppliedPromotion(null)
-    recalculate()
-    showToast('เอาโค้ดส่วนลดออกแล้ว', 'info')
-  }
 
   const [scheduledDate, setScheduledDate] = useState(orderMode === 'PRE_ORDER' ? addDays(today, 1) : today)
   const [rounds, setRounds] = useState<DeliveryRoundRow[]>([])
@@ -512,22 +469,18 @@ export function CheckoutPage() {
       }
     }
 
-    // Coupon gate: migration 114 silently IGNORES a non-qualifying code (no
-    // discount, no error) — so re-validate here and refuse to submit rather than
-    // let the customer pay full price believing a discount applied. The server
-    // still re-derives the authoritative amount inside the RPC.
-    let expectedDiscount = 0
-    if (couponCode.trim()) {
-      const check = await fetchCouponEvaluation(couponCode, subtotal)
-      if (!check.ok) {
-        showToast(describeCouponResult(check), 'error')
-        setIsProcessing(false)
-        return
-      }
-      expectedDiscount = check.discountAmount
-      setAppliedPromotion(check.promo)
-      recalculate()
+    // Coupon gate (M2: validation logic ย้ายเข้า CouponBox module — ที่เดียว):
+    // migration 114 silently IGNORES a non-qualifying code (no discount, no
+    // error) — so re-validate here and refuse to submit rather than let the
+    // customer pay full price believing a discount applied. The server still
+    // re-derives the authoritative amount inside the RPC.
+    const couponCheck = await revalidateCouponForSubmit(subtotal)
+    if (!couponCheck.ok) {
+      showToast(couponCheck.message, 'error')
+      setIsProcessing(false)
+      return
     }
+    const expectedDiscount = couponCheck.discountAmount
 
     setIsProcessing(true)
     // ✅ ONE canonical creation RPC for BOTH modes (migration 025 v3).
@@ -1109,44 +1062,8 @@ export function CheckoutPage() {
         </div>
       </div>
 
-      {/* Coupon (server-authoritative promotion) */}
-      <div className="card mb-6">
-        <h3 className="font-bold text-brand-accent mb-3">🎟️ คูปอง/โปรโมชั่น</h3>
-        {appliedPromotion ? (() => {
-          const status = evaluateCoupon([appliedPromotion], couponCode, subtotal)
-          return (
-            <div className={`rounded-xl border p-3 ${status.ok ? 'border-green-300 bg-green-50' : 'border-amber-300 bg-amber-50'}`} data-testid="applied-coupon">
-              <div className="flex items-start justify-between gap-2">
-                <div>
-                  <div className="font-bold text-brand-accent">{appliedPromotion.name}</div>
-                  <div className="font-mono text-sm">{couponCode}</div>
-                  {status.ok ? (
-                    <div className="text-sm text-green-700">คาดการณ์ส่วนลด {status.discountAmount.toFixed(2)} บาท — ระบบหักจริงตอนสร้างออเดอร์</div>
-                  ) : (
-                    <div className="text-sm text-amber-700">{describeCouponResult(status)}</div>
-                  )}
-                </div>
-                <button type="button" onClick={handleRemoveCoupon} className="text-sm text-brand-danger hover:underline shrink-0">เอาออก</button>
-              </div>
-            </div>
-          )
-        })() : (
-          <>
-            <div className="flex gap-2">
-              <input
-                type="text"
-                data-testid="coupon-input"
-                placeholder="ใส่รหัสคูปอง"
-                value={couponCode}
-                onChange={(e) => setCouponCode(e.target.value)}
-                className="input flex-1"
-              />
-              <button type="button" onClick={handleApplyCoupon} className="btn btn-outline" data-testid="coupon-apply">ใช้โค้ด</button>
-            </div>
-            <p className="text-xs text-brand-muted mt-2">ระบบตรวจและหักส่วนลดจริงที่เซิร์ฟเวอร์ตอนสร้างออเดอร์ — โค้ดที่ไม่เข้าเงื่อนไขจะไม่ถูกหัก และระบบจะแจ้งให้ทราบก่อนยืนยัน</p>
-          </>
-        )}
-      </div>
+      {/* M2: coupon UI รวมเป็น CouponBox component เดียว — ใช้ร่วมกับ CartPage */}
+      <CouponBox />
 
       {/* Order Summary — client estimate is DISPLAY ONLY */}
       <div className="card mb-6">

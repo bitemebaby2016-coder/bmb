@@ -167,8 +167,10 @@ export const SERVER_STATUS_LABEL_TH: Record<ServerOrderStatus, string> = {
   confirmed: 'ยืนยันแล้ว',
   preparing: 'กำลังเตรียมอาหาร',
   ready_for_dispatch: 'พร้อมส่ง',
-  dispatched: 'กำลังจัดส่ง',
-  in_transit: 'คนส่งกำลังเดินทาง',
+  // A5 (2026-10-22): dispatched/in_transit ห้ามใช้ป้ายเดียวกัน — ป้ายซ้ำ 2 ช่อง
+  // ใน timeline เก่าทำให้ลูกค้าสับสน (fix ตามคำสั่ง Owner · ตรงกับฝั่งไรเดอร์)
+  dispatched: 'เริ่มจัดส่ง',
+  in_transit: 'กำลังเดินทาง',
   arrived: 'ถึงปลายทาง',
   delivered: 'ส่งสำเร็จ',
   cancelled: 'ยกเลิก',

@@ -2,10 +2,49 @@
 
 > **สถานะงานปัจจุบันของโปรเจกต์ Bite Me Baby** ใช้แนบเข้าสู่ Context ตอนเริ่มแชทเสมอ
 
-**last_updated:** 2026-10-22 รอบ 2 (HANDOFF อัปเดต: PART E งานต่อ + D4 ตอบครบ 5 ข้อ + แก้ C0 Meta publish = มีจริง)
-**phase:** 📋 **HANDOFF READY — ห้ามโค้ดจนกว่าจะเริ่มแชทใหม่ แผนทั้งหมด = `docs/BMB_HANDOFF_MASTER_2026-10-22.md` (§0 กติกา + Part A–E)**
-**current_focus:** แชทหน้าเริ่มตาม D1: A5+M1 → A1+M2 → A2+A7(ก.)+M5 → A3 → **E2 ลบ mock ปลอม** → **E1+A4+A8+M4+M3 (ประกาศ-รับงาน + แอดมินเลือกได้)** → **E3/E4 (live tracking+POD)** → A6 → แล้วต่อก้อน Marketing (เสียบ `social-publish-worker` เดิม + image gen โปรโมชันเท่านั้น + audit เอไอโต้ตอบ)
-**blocked_by:** ไม่มี — Owner ตอบครบ 5 ข้อแล้ว (D4): ชำระเงิน=ก. รอ Omise LIVE, จัดส่ง=assign+รับเอง, marketing=FB Page ก่อน, Meta=มีใน env local+ให้ปรับปรุงเอไอโต้ตอบ, image=Gemini ผ่าน `BMB_openrouter_api_key`
+**last_updated:** 2026-10-22 รอบ 4 (D1: A5+M1 + A1+M2 เสร็จ — tests 1233/1233, tsc/lint/build เขียว · รอทดสอบ 3 อุปกรณ์ + push approval)
+**phase:** 🔨 **D1 IN PROGRESS — ✅A5+M1 ✅A1+M2 (รอ runtime evidence 3 อุปกรณ์) · ชิ้นถัดไป A2+A7(ก.)+M5**
+**current_focus:** D1 ตามลำดับ: ✅A5+M1 → ✅A1+M2 → A2+A7(ก.)+M5 → A3 → E2 → E1+A4+A8+M4+M3 → E3/E4 → A6 → ก้อน Marketing
+**blocked_by:** ไม่มี — แต่ push/production = ต้อง Owner approve (auto-deploy จาก main) + เก็บ runtime evidence จากอุปกรณ์จริงก่อนประกาศ PASS
+
+---
+
+## ⚡ TASK: D1-CHUNK1-A5-M1-TIMELINE-2026-10-22 — รวม timeline ลูกค้าเหลือตัวเดียว + fix label ซ้ำ
+- **STATUS: 🟡 IMPLEMENTED + gates ผ่านครบ — UNVERIFIED บนอุปกรณ์จริง (รอ Owner ทดสอบ 3 อุปกรณ์ก่อน push)**
+- **Task ID:** D1-CHUNK1-A5-M1-TIMELINE-2026-10-22
+- **Objective:** A5 (label "กำลังจัดส่ง" ซ้ำ 2 ช่อง) + M1 (รวม timeline ซ้ำ 2 ชุด/2 คำศัพท์เหลือตัวเดียว)
+- **Completed:**
+  - สร้าง `src/components/customer/OrderTimeline.tsx` ตัวเดียว ขับจาก server enum + `orderVocabulary` (8 ขั้นเดินหน้า + terminal end card — ไม่มี progress ปลอม)
+  - `orderVocabulary.ts` fix label: `dispatched`='เริ่มจัดส่ง' / `in_transit`='กำลังเดินทาง' (ตรงฝั่งไรเดอร์) — label ไม่ซ้ำทุกสถานะ
+  - `OrderTrackPage.tsx` ลบ TIMELINE ในไฟล์ → เรียก `OrderTimeline` (ตัวเดียว)
+  - ลบ component ซ้ำ 2 ตัว: `components/customer/CustomerTimeline.tsx` + `components/dashboard/CustomerTimeline.tsx` (ไม่มี import ไหนใช้, ไม่มีเทสต์ผูก — ตรวจด้วย Get-ChildItem -Recurse)
+  - เพิ่มเทสต์ `src/__tests__/orderTimeline.test.ts` 6 ตัว (label ไม่ซ้ำ/A5 fix/enum ครบทุกสถานะ/terminal/unknown)
+- **Verified:** `npx tsc --noEmit`=0 · `npm run lint`=0 · `npm run test`=**1222/1222 (116 files)** (1216 เดิม+6 ใหม่) · `npm run build`=0 · mojibake scan ไฟล์ที่แตะ=0 · BOM=ไม่มีเพิ่ม
+- **Failed:** ไม่มี
+- **Blocked:** runtime evidence 3 อุปกรณ์ (track ทุกสถานะ ห้าม label ซ้ำ) — ต้อง Owner ทดสอบ · push = ต้อง Owner approve
+- **Files Changed:** `src/components/customer/OrderTimeline.tsx` (ใหม่) · `src/lib/orderVocabulary.ts` · `src/pages/OrderTrackPage.tsx` · `src/__tests__/orderTimeline.test.ts` (ใหม่) · ลบ `src/components/customer/CustomerTimeline.tsx`, `src/components/dashboard/CustomerTimeline.tsx`
+- **Tests / Commands Run:** ดู Verified
+- **Known Risks:** (1) `lib/orderStateMachine.ts`+`stores/useOrderStateMachine.ts` คงอยู่ (pure logic+เทสต์ — ห้ามลดจำนวนเทสต์ตาม gate) — UI เลิกใช้แล้ว เหลือ `dashboard/RiderPWA.tsx` (scope M3) (2) ป้ายสถานะ OrdersPage/TalkToBite เปลี่ยนตาม vocabulary อัตโนมัติ ('เริ่มจัดส่ง'/'กำลังเดินทาง')
+- **Next Exact Action:** A1+M2 — สร้าง `CouponBox` ตัวเดียว (Cart+Checkout) + `handleUseCode` apply เข้า cart store ทันที + deep-link `/menu?code=X`
+
+## ⚡ TASK: D1-CHUNK2-A1-M2-COUPON-2026-10-22 — คูปอง: UI เดียว + apply เข้าตะกร้าทันที
+- **STATUS: 🟡 IMPLEMENTED + gates ผ่านครบ — UNVERIFIED บนอุปกรณ์จริง (รอ Owner ทดสอบ 3 อุปกรณ์ก่อน push)**
+- **Task ID:** D1-CHUNK2-A1-M2-COUPON-2026-10-22
+- **Objective:** A1 (กด "ใช้เลย" ไม่ได้โค้ด + UI ซ้ำซ้อน) + M2 (รวม coupon UI เป็น component เดียว)
+- **Completed:**
+  - สร้าง `src/components/CouponBox.tsx` — UI เดียวใช้ทั้ง CartPage+CheckoutPage + ทาง apply เดียว: `applyCouponCode()` / `removeCouponCode()` / `revalidateCouponForSubmit()` (gate ตอนสั่งซื้อย้ายจาก CheckoutPage มาที่นี่ตาม M2)
+  - `PromotionsPage.handleUseCode` (A1): "ใช้เลย" → `applyCouponCode` เข้า `useCartStore` **ทันที** (โค้ด+โปรโมชันเข้าตะกร้า ไม่ต้องพิมพ์เองตอนจ่าย) · clipboard = bonus เงียบ (ไม่มี toast "คัดลอกแล้ว" ปลอม — fallback โชว์โค้ดบนจอ) · ปุ่มเปลี่ยนเป็น "ใช้แล้ว ✓"
+  - deep-link `/menu?code=X` auto-apply ใน MenuPage (strip param หลัง apply — ไม่ยิงซ้ำ)
+  - ลบ UI+handler ซ้ำใน CartPage/CheckoutPage (testids เดิม `applied-coupon`/`coupon-input`/`coupon-apply` คงไว้ใน CouponBox) · rehydration ของโค้ดย้ายเข้า CouponBox (ทุกหน้าที่โชว์กล่องคูปองได้ประโยชน์)
+  - สถานะใหม่ pending (below_min): เก็บโค้ดไว้ตรวจอีกครั้งตอนยอดถึง — ไม่แสร้งว่าหักส่วนลดแล้ว
+  - เพิ่มเทสต์ `src/__tests__/couponBox.test.ts` 11 ตัว (apply path/pending/dead-code/gate/UI)
+- **Verified:** `npx tsc --noEmit`=0 · `npm run lint`=0 (brandNameGuard OK 401 ไฟล์) · `npm run test`=**1233/1233 (117 files)** (1222+11 ใหม่) · `npm run build`=0 · mojibake scan=0 ทุกไฟล์ที่แตะ · BOM: MenuPage.tsx มี BOM เดิมค้างอยู่ก่อน (ตรวจ diff = hunk แรกที่บรรทัด 11 ไม่แตะหน้าไฟล์) — คงเดิมตามกติกา
+- **Failed:** ไม่มี (เทสต์ couponBox รอบแรก fail 1 ตัวจาก mock ไม่ตั้งค่าใน test setup — แก้ test setup ให้ครบ ไม่แตะ assertion)
+- **Blocked:** runtime evidence 3 อุปกรณ์ (กด "ใช้เลย" → checkout มีโค้ดในช่อง + ส่วนลดตรงโปรโมชันจริง) — ต้อง Owner ทดสอบ · push = ต้อง Owner approve
+- **Files Changed:** `src/components/CouponBox.tsx` (ใหม่) · `src/pages/CartPage.tsx` · `src/pages/CheckoutPage.tsx` · `src/pages/PromotionsPage.tsx` · `src/pages/MenuPage.tsx` · `src/__tests__/couponBox.test.ts` (ใหม่)
+- **Tests / Commands Run:** ดู Verified
+- **Known Risks:** (1) UI คูปอง Cart+Checkout รวมร่าง copy ต่างกันเล็กน้อยเหลือชุดเดียว (ตั้งใจตาม M2) (2) โค้ด typed-but-not-applied ไม่ถูกส่งเป็น promotion_code อีกต่อไป (ต้องกด "ใช้โค้ด" ก่อน — สม่ำเสมอทั้งสองหน้า) (3) A1+M2 ยังไม่ผ่าน E2E จริง 3 อุปกรณ์
+- **Next Exact Action:** A2+A7(ก.)+M5 — แผงตรวจสลิปเดียวใน AdminOrders + SlipThumb โชว์ error ชัดแทน "—" เงียบ + ทุกออเดอร์ต้องมี payment_intents row + paymentExceptions ใช้ `getPaymentIntents` ตัวเดียว
 
 ---
 
