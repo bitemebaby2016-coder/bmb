@@ -38,7 +38,7 @@ const WORKER_URL = SB_URL + '/functions/v1/automation-worker'
 // publishable key = public platform key (same one the scheduler workflow uses)
 const ANON = 'sb_publishable_Q7AHrjSYOrysDjxS9_ZB-g_NMmytLOH'
 
-const JOB_TYPES = ['notification_dispatch', 'orders_stale_pending', 'inventory_low_stock']
+const JOB_TYPES = ['notification_dispatch', 'orders_stale_pending', 'inventory_low_stock', 'marketing_publish']
 
 function json(body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body), {

@@ -72,6 +72,16 @@ const ALLOWED: Record<string, { worker: string; build: (p: Record<string, unknow
       return { stockThreshold: th }
     },
   },
+  // Part C (2026-10-22): เผยแพร่โพสต์การตลาดที่ถึงเวลา (สถานะ scheduled ที่คน
+  // อนุมัติแล้วเท่านั้น — บังคับที่ marketing_schedule_post) — จำกัดจำนวนต่อรัน
+  marketing_publish: {
+    worker: 'automation-worker',
+    build: (p) => {
+      const limit = Number(p.limit)
+      if (!Number.isInteger(limit) || limit < 1 || limit > 50) return 'limit must be integer 1..50'
+      return { limit }
+    },
+  },
   synthetic_selftest: {
     worker: 'synthetic-evidence',
     build: () => ({ synthetic: true }), // fixed shape — nothing caller-controllable

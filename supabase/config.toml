@@ -80,3 +80,8 @@ verify_jwt = true
 enabled = true
 verify_jwt = true
 
+
+# image-gen: E5/E6 marketing image generation (admin-only; OpenRouter key server-side)
+[functions.image-gen]
+enabled = true
+verify_jwt = true

@@ -515,6 +515,97 @@ async function runNotificationDispatch(ctx: Ctx, p: { lookbackMinutes?: number; 
   }
 }
 
+// ============================================
+// Part C (2026-10-22): marketing_publish — เผยแพร่โพสต์ที่ถึงเวลา
+//   · เลือกเฉพาะ status='scheduled' และ scheduled_for <= now (จำกัดด้วย limit)
+//   · ก่อนยิงทุกครั้งเช็ค approval ของโพสต์อีกรอบ (คนต้องอนุมัติแล้ว — ถ้าถูก
+//     reject ภายหลัง = ข้าม + รายงาน ไม่โพสต์)
+//   · เรียก social-publish-worker ของเดิม (publish จริงผ่าน Meta Graph) —
+//     โพสต์เนื้อหา "ที่อนุมัติ" จาก content_approvals (single source)
+//   · สำเร็จ = บันทึก provider_post_id + published_at · ล้ม = เก็บ error +
+//     attempts (retry รอบถัดไป) · โพสต์ที่ไม่มี approval = ห้ามยิงเด็ดขาด
+// ============================================
+async function runMarketingPublish(ctx: Ctx, p: { limit?: number }) {
+  const limit = Math.min(Math.max(Number(p.limit) || 10, 1), 50)
+  const nowIso = new Date().toISOString()
+  const due = await rest(
+    SERVICE,
+    'GET',
+    `/rest/v1/marketing_posts?select=id,approval_id,image_urls,publish_attempts&status=eq.scheduled&scheduled_for=lte.${encodeURIComponent(nowIso)}&order=scheduled_for.asc&limit=${limit}`,
+  )
+  if (due.status !== 200) {
+    ctx.errors.push('marketing_posts read failed: ' + due.status)
+    return
+  }
+  const rows = ((due.j || []) as Array<{ id: string; approval_id: string | null; image_urls: string[] | null; publish_attempts: number }>)
+  let published = 0
+  let failed = 0
+  let skipped = 0
+
+  for (const row of rows) {
+    // โพสต์ต้องมี approval ที่คนอนุมัติแล้ว — ไม่มี = ห้ามยิง (กันโพสต์ผี)
+    if (!row.approval_id) {
+      skipped++
+      await rest(SERVICE, 'PATCH', `/rest/v1/marketing_posts?id=eq.${encodeURIComponent(row.id)}`, {
+        status: 'failed', error: 'ERR_APPROVAL_REQUIRED', publish_attempts: row.publish_attempts + 1, updated_at: nowIso,
+      })
+      continue
+    }
+    const ap = await rest(SERVICE, 'GET', `/rest/v1/content_approvals?select=status&id=eq.${encodeURIComponent(row.approval_id)}`)
+    const apStatus = ap.status === 200 && Array.isArray(ap.j) && ap.j.length > 0 ? (ap.j[0] as { status: string }).status : null
+    if (apStatus !== 'approved') {
+      skipped++
+      await rest(SERVICE, 'PATCH', `/rest/v1/marketing_posts?id=eq.${encodeURIComponent(row.id)}`, {
+        status: 'failed', error: 'ERR_APPROVAL_REQUIRED:' + (apStatus || 'missing'), publish_attempts: row.publish_attempts + 1, updated_at: nowIso,
+      })
+      continue
+    }
+
+    try {
+      const res = await fetch(`${SB_URL}/functions/v1/social-publish-worker`, {
+        method: 'POST',
+        headers: {
+          apikey: SERVICE,
+          Authorization: 'Bearer ' + SERVICE,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ approvalId: row.approval_id, imageUrls: row.image_urls || [] }),
+      })
+      const j = await res.json().catch(() => ({} as Record<string, unknown>))
+      const meta = (j as { meta?: { post_id?: string } }).meta
+      if (res.ok && (j as { ok?: boolean }).ok) {
+        published++
+        await rest(SERVICE, 'PATCH', `/rest/v1/marketing_posts?id=eq.${encodeURIComponent(row.id)}`, {
+          status: 'published',
+          provider_post_id: meta?.post_id || null,
+          published_at: new Date().toISOString(),
+          error: null,
+          publish_attempts: row.publish_attempts + 1,
+          updated_at: new Date().toISOString(),
+        })
+      } else {
+        // retry รอบถัดไป — โพสต์จริงไม่เกิดถ้าไม่ ok (ไม่โพสต์ซ้ำ)
+        failed++
+        await rest(SERVICE, 'PATCH', `/rest/v1/marketing_posts?id=eq.${encodeURIComponent(row.id)}`, {
+          error: String((j as { detail?: string }).detail || (j as { error?: string }).error || ('HTTP ' + res.status)).slice(0, 500),
+          publish_attempts: row.publish_attempts + 1,
+          updated_at: new Date().toISOString(),
+        })
+        if (failed <= 3) ctx.errors.push(`marketing-publish ${row.id}: HTTP ${res.status}`)
+      }
+    } catch (err: unknown) {
+      failed++
+      await rest(SERVICE, 'PATCH', `/rest/v1/marketing_posts?id=eq.${encodeURIComponent(row.id)}`, {
+        error: String(err instanceof Error ? err.message : err).slice(0, 500),
+        publish_attempts: row.publish_attempts + 1,
+        updated_at: new Date().toISOString(),
+      })
+      if (failed <= 3) ctx.errors.push(`marketing-publish ${row.id}: ${err instanceof Error ? err.message : 'fetch failed'}`)
+    }
+  }
+  ctx.results.marketing_publish = { scanned: rows.length, published, failed, skipped }
+}
+
 Deno.serve(async (req: Request): Promise<Response> => {
   if (req.method === 'OPTIONS') return new Response('ok', { status: 200 })
   if (req.method !== 'POST') return json({ error: 'method not allowed' }, 405)
@@ -531,7 +622,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
   try { payload = await req.json() } catch { return json({ error: 'invalid json' }, 400) }
 
   const job = payload.job || ''
-  if (!['orders_stale_pending', 'inventory_low_stock', 'notification_dispatch'].includes(job)) return json({ error: 'unknown job' }, 400)
+  if (!['orders_stale_pending', 'inventory_low_stock', 'notification_dispatch', 'marketing_publish'].includes(job)) return json({ error: 'unknown job' }, 400)
 
   const eventId = payload.eventId || defaultEventId(job)
   const prev = await previousExecution(eventId)
@@ -550,6 +641,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
   try {
     if (job === 'orders_stale_pending') await runOrdersStalePending(ctx, payload)
     else if (job === 'notification_dispatch') await runNotificationDispatch(ctx, payload)
+    else if (job === 'marketing_publish') await runMarketingPublish(ctx, payload)
     else await runInventoryLowStock(ctx, payload)
   } catch (e) {
     ctx.errors.push(String(e && e instanceof Error ? e.message : e))

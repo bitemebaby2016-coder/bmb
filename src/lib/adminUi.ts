@@ -16,6 +16,7 @@ export const ADMIN_NAV_ITEMS: AdminNavItem[] = [
   { to: '/admin/menu-schedule', label: 'ตารางเมนู', icon: '\uD83D\uDDD3\uFE0F' },
   { to: '/admin/kitchen', label: 'ครัว/ผลิต', icon: '\uD83C\uDF73' },
   { to: '/admin/recipes', label: 'สูตรอาหาร', icon: '\uD83E\uDDEA' },
+  { to: '/admin/marketing', label: 'การตลาด', icon: '\uD83D\uDCE3' },
   { to: '/admin/content-approvals', label: 'ตรวจเนื้อหา', icon: '\uD83D\uDED6\uFE0F' },
   { to: '/admin/rounds', label: 'รอบจัดส่ง', icon: '\uD83D\uDD50' },
   { to: '/admin/promotions', label: 'โปรโมชั่น', icon: '\uD83C\uDF81' },
@@ -82,6 +83,7 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
       { to: '/admin/menu-schedule', label: 'ตารางเมนู', icon: '\uD83D\uDDD3\uFE0F' },
       { to: '/admin/promotions', label: 'โปรโมชั่น', icon: '\uD83C\uDF81' },
       { to: '/admin/content-approvals', label: 'ตรวจเนื้อหา', icon: '\uD83D\uDED6\uFE0F' },
+      { to: '/admin/marketing', label: 'การตลาด', icon: '\uD83D\uDCE3' },
     ],
   },
   {

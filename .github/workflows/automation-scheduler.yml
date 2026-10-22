@@ -177,3 +177,52 @@ jobs:
                 console.log("inventory_low_stock claimed=" + j.claimed + " all SUCCEEDED");
               } catch(e) { console.error("::error::invalid dispatcher response"); process.exit(1); }
             })'
+
+  # Part C (2026-10-22): marketing_publish — เผยแพร่โพสต์การตลาดที่ถึงเวลา
+  # (สถานะ scheduled ที่คนอนุมัติแล้วเท่านั้น — บังคับที่ marketing_schedule_post)
+  hourly-marketing:
+    if: github.event_name == 'schedule' && github.event.schedule == '7 * * * *' || github.event_name == 'workflow_dispatch' && (github.event.inputs.job == 'marketing' || github.event.inputs.job == 'all')
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: marketing_publish_enqueue
+        env:
+          ENQUEUE_URL: https://ivkdfognyiwjcmrhcnwz.supabase.co/functions/v1/queue-enqueue
+          TOKEN: ${{ secrets.AUTOMATION_TOKEN }}
+        run: |
+          EV="gh-mk-$(date -u +%Y%m%dt%H)"
+          RESP=$(curl -sS -f -X POST "$ENQUEUE_URL" \
+            -H "Content-Type: application/json" \
+            -H "apikey: sb_publishable_Q7AHrjSYOrysDjxS9_ZB-g_NMmytLOH" \
+            -H "x-automation-token: $TOKEN" \
+            -d "{\"job\":\"marketing_publish\",\"ref\":\"$EV\",\"params\":{\"limit\":10}}") || {
+            echo "::error::marketing_publish enqueue HTTP failed"; exit 1; }
+          echo "$RESP" | node -e '
+            let s=""; process.stdin.on("data",d=>s+=d).on("end",()=>{
+              try { const j=JSON.parse(s);
+                if (j.result !== "ENQUEUED" && j.result !== "DUPLICATE") {
+                  console.error("::error::marketing_publish enqueue result=" + (j.result || j.error)); process.exit(1);
+                }
+                console.log("marketing_publish enqueue " + j.result + " id=" + j.id);
+              } catch(e) { console.error("::error::invalid enqueue response"); process.exit(1); }
+            })'
+      - name: marketing_publish_dispatch
+        if: always()
+        env:
+          DISPATCH_URL: https://ivkdfognyiwjcmrhcnwz.supabase.co/functions/v1/queue-dispatcher
+          TOKEN: ${{ secrets.AUTOMATION_TOKEN }}
+        run: |
+          RESP=$(curl -sS -f -X POST "$DISPATCH_URL" \
+            -H "Content-Type: application/json" \
+            -H "apikey: sb_publishable_Q7AHrjSYOrysDjxS9_ZB-g_NMmytLOH" \
+            -H "x-automation-token: $TOKEN" \
+            -d "{\"jobType\":\"marketing_publish\"}") || {
+            echo "::error::marketing_publish dispatcher HTTP failed"; exit 1; }
+          echo "$RESP" | node -e '
+            let s=""; process.stdin.on("data",d=>s+=d).on("end",()=>{
+              try { const j=JSON.parse(s);
+                const bad=(j.results||[]).filter(r=>r.queueResult!=="SUCCEEDED");
+                if (bad.length) { console.error("::error::marketing_publish queue results not all SUCCEEDED: " + JSON.stringify(bad)); process.exit(1); }
+                console.log("marketing_publish claimed=" + j.claimed + " all SUCCEEDED");
+              } catch(e) { console.error("::error::invalid dispatcher response"); process.exit(1); }
+            })'
