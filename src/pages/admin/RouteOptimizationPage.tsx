@@ -3,43 +3,71 @@
 // GAP CLOSURE P1-2: Create UI for routeOptimization.ts algorithms
 // ============================================
 
-import { useState } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 import { KITCHEN_LAT, KITCHEN_LNG } from '@/config/kitchenLocation'
 import {
   assignOrdersToDrivers,
   getRouteSummary,
-  type DeliveryOrder,
-  type DeliveryDriver,
+  toRouteOrders,
+  toRouteDrivers,
   type Route,
 } from '@/lib/routeOptimization'
+import { getOrdersByStatuses } from '@/lib/bmbAdminApi_orders'
+import { adminListDrivers, type AdminDriverRow } from '@/lib/driverService'
+import { supabase } from '@/lib/supabase'
+
+// E2 (2026-10-22): หน้านี้อ่านข้อมูลจริงเท่านั้น — mock/demo data ของเดิม
+// (ออเดอร์/ไรเดอร์จำลองในไฟล์นี้) ถูกลบทิ้งทั้งหมด ตามกติกาข้อ 5
+// (ห้ามเหลือของปลอมในหน้าแอดมิน)
+//   - ออเดอร์จริงของรอบส่ง (orders สถานะกำลังส่ง) + ไรเดอร์จริงที่ลงทะเบียน/ผูกบัญชี
+//     แล้ว (drivers ผ่าน list_drivers RPC 037 — ตัวเดียวกับที่ DeliveryManagement ใช้)
+//   - เครื่องมือวางเส้นทาง "อ่านอย่างเดียว" — การมอบหมายจริงอยู่ที่
+//     DeliveryManagement (assign_driver RPC) เท่านั้น
+
+const ACTIVE_DELIVERY_STATUSES = ['ready_for_dispatch', 'dispatched', 'in_transit', 'arrived']
 
 export function RouteOptimizationPage() {
   const [routes, setRoutes] = useState<Route[]>([])
-  const [kitchenLat] = useState(KITCHEN_LAT)
-  const [kitchenLon] = useState(KITCHEN_LNG)
-  const [isOptimizing, setIsOptimizing] = useState(false)
+  const [realOrders, setRealOrders] = useState<ReturnType<typeof toRouteOrders>>([])
+  const [realDrivers, setRealDrivers] = useState<ReturnType<typeof toRouteDrivers>>([])
+  const [driverRows, setDriverRows] = useState<AdminDriverRow[]>([])
+  const [radiusKm, setRadiusKm] = useState<number | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState('')
+  const kitchenLat = KITCHEN_LAT
+  const kitchenLon = KITCHEN_LNG
 
-  const mockOrders: DeliveryOrder[] = [
-    { id: '1', order_number: 'BMB-001', dropoff_latitude: 10.71, dropoff_longitude: 102.15, dropoff_detail: '123/45 Soi Sukhumvit', items_count: 2, estimated_weight: 1.5, priority: 'normal' },
-    { id: '2', order_number: 'BMB-002', dropoff_latitude: 10.72, dropoff_longitude: 102.16, dropoff_detail: '456 Phaya Thai Rd', items_count: 3, estimated_weight: 2.0, priority: 'urgent' },
-    { id: '3', order_number: 'BMB-003', dropoff_latitude: 10.70, dropoff_longitude: 102.13, dropoff_detail: '789 Rama Rd', items_count: 1, estimated_weight: 0.8, priority: 'normal' },
-    { id: '4', order_number: 'BMB-004', dropoff_latitude: 10.73, dropoff_longitude: 102.17, dropoff_detail: '101 Soih Sukhumvit 21', items_count: 4, estimated_weight: 3.0, priority: 'vip' },
-    { id: '5', order_number: 'BMB-005', dropoff_latitude: 10.69, dropoff_longitude: 102.14, dropoff_detail: '202 Ploenchit Rd', items_count: 2, estimated_weight: 1.2, priority: 'normal' },
-  ]
+  const load = useCallback(async () => {
+    setLoading(true)
+    setLoadError('')
+    try {
+      const [orders, driverRes] = await Promise.all([
+        getOrdersByStatuses(ACTIVE_DELIVERY_STATUSES),
+        adminListDrivers(),
+      ])
+      setRealOrders(toRouteOrders(orders))
+      setDriverRows(driverRes.drivers)
+      setRealDrivers(toRouteDrivers(driverRes.drivers, { latitude: kitchenLat, longitude: kitchenLon }))
+      const { data } = await supabase
+        .from('branches')
+        .select('service_radius_km')
+        .eq('is_default', true)
+        .maybeSingle()
+      setRadiusKm(data?.service_radius_km != null ? Number(data.service_radius_km) : null)
+    } catch (e) {
+      setLoadError(String(e).slice(0, 120))
+    } finally {
+      setLoading(false)
+    }
+  }, [kitchenLat, kitchenLon])
 
-  const mockDrivers: DeliveryDriver[] = [
-    { id: 'driver-1', name: 'Somchai', current_latitude: kitchenLat, current_longitude: kitchenLon, current_orders: [], max_capacity: 10, current_load: 0, status: 'available' },
-    { id: 'driver-2', name: 'Somying', current_latitude: kitchenLat + 0.01, current_longitude: kitchenLon - 0.01, current_orders: [], max_capacity: 8, current_load: 0, status: 'available' },
-    { id: 'driver-3', name: 'Wichai', current_latitude: kitchenLat - 0.005, current_longitude: kitchenLon + 0.015, current_orders: [], max_capacity: 12, current_load: 0, status: 'busy' },
-  ]
+  useEffect(() => { void load() }, [load])
 
-  async function handleOptimizeRoutes() {
-    setIsOptimizing(true)
-    await new Promise(resolve => setTimeout(resolve, 800))
-    const optimizedRoutes = assignOrdersToDrivers(mockOrders, mockDrivers, kitchenLat, kitchenLon)
-    setRoutes(optimizedRoutes)
-    setIsOptimizing(false)
+  function handleOptimizeRoutes() {
+    // วางแผนจากข้อมูลจริงเท่านั้น — สำเนา driver objects เพราะ optimizer
+    // สะสม load ระหว่างคำนวณ (เครื่องมือนี้อ่านอย่างเดียว ไม่มอบหมายงานที่นี่)
+    setRoutes(assignOrdersToDrivers(realOrders, realDrivers.map((d) => ({ ...d })), kitchenLat, kitchenLon))
   }
 
   const summary = getRouteSummary(routes)
@@ -71,17 +99,27 @@ export function RouteOptimizationPage() {
         </div>
       </div>
 
-      {/* Optimize Button */}
-      <div className="mb-6">
-        <button onClick={handleOptimizeRoutes} disabled={isOptimizing || routes.length > 0} className="btn btn-primary text-lg py-3 px-8 disabled:opacity-50">
-          {isOptimizing ? '⏳ Optimizing...' : routes.length > 0 ? '✅ Optimized' : '🚀 Optimize Routes'}
+      {/* Optimize — E2: วางแผนจากข้อมูลจริง (ออเดอร์/ไรเดอร์ที่โหลดมา ไม่มีของปลอม) */}
+      <div className="flex flex-wrap items-center gap-3 mb-6">
+        <button
+          onClick={handleOptimizeRoutes}
+          disabled={loading || realOrders.length === 0}
+          className="btn btn-primary text-lg py-3 px-8 disabled:opacity-50"
+          data-testid="optimize-routes"
+        >
+          🗺️ วางแผนเส้นทาง (ข้อมูลจริง)
         </button>
+        <span className="text-sm text-brand-muted">
+          ออเดอร์กำลังส่ง {realOrders.length} · ไรเดอร์ผูกบัญชี {driverRows.length}
+        </span>
+        <button onClick={() => void load()} className="btn btn-outline text-sm" disabled={loading}>รีเฟรช</button>
       </div>
+      {loadError && <div className="mb-4 text-sm text-red-600">⚠ โหลดข้อมูลไม่สำเร็จ: {loadError}</div>}
       {/* Routes Display */}
       {routes.length > 0 && (
         <div className="space-y-4">
           {routes.map((route) => {
-            const driver = mockDrivers.find(d => d.id === route.driver_id)
+            const driver = realDrivers.find(d => d.id === route.driver_id)
             return (
               <div key={route.id} className="card border-2 border-brand-primary">
                 <div className="flex items-center justify-between mb-4">
@@ -89,7 +127,7 @@ export function RouteOptimizationPage() {
                     <div className="w-12 h-12 bg-brand-primary rounded-full flex items-center justify-center text-white font-bold text-lg">🛵</div>
                     <div>
                       <h3 className="font-bold text-lg text-brand-accent">{driver?.name || 'Unknown'}</h3>
-                      <p className="text-sm text-brand-muted">Load: {route.total_weight}/{driver?.max_capacity || 0} kg</p>
+                      <p className="text-sm text-brand-muted">งานที่ถือ: {route.orders.length} · โหลด {driver?.current_load ?? 0}/{driver?.max_capacity ?? '—'}</p>
                     </div>
                   </div>
                   <div className="text-right">
@@ -109,7 +147,7 @@ export function RouteOptimizationPage() {
                         </div>
                         <div className="text-sm text-brand-muted">{order.dropoff_detail}</div>
                       </div>
-                      <div className="text-sm text-brand-muted">📦 {order.items_count} items • ⚖️ {order.estimated_weight} kg</div>
+                      <div className="text-sm text-brand-muted">📦 {order.items_count} ชิ้น</div>
                     </div>
                   ))}
                 </div>
@@ -119,25 +157,34 @@ export function RouteOptimizationPage() {
         </div>
       )}
 
-      {/* Drivers Status */}
+      {/* Drivers Status — E2: ไรเดอร์จริงจากตาราง drivers (list_drivers RPC 037) */}
       <div className="mt-8">
-        <h2 className="text-xl font-bold text-brand-accent mb-4">Driver Status</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {mockDrivers.map((driver) => (
-            <div key={driver.id} className="card">
-              <div className="flex items-center gap-3 mb-3">
-                <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-bold ${driver.status === 'available' ? 'bg-green-500' : driver.status === 'busy' ? 'bg-yellow-500' : 'bg-gray-500'}`}>{driver.name[0]}</div>
-                <div>
-                  <div className="font-bold">{driver.name}</div>
-                  <div className={`text-sm ${driver.status === 'available' ? 'text-green-600' : driver.status === 'busy' ? 'text-yellow-600' : 'text-gray-600'}`}>
-                    {driver.status === 'available' ? 'Available' : driver.status === 'busy' ? 'On Delivery' : 'Offline'}
+        <h2 className="text-xl font-bold text-brand-accent mb-4">Driver Status (ไรเดอร์จริง)</h2>
+        {driverRows.length === 0 ? (
+          <div className="card text-center py-8 text-brand-muted" data-testid="route-no-drivers">
+            ยังไม่มีไรเดอร์ที่ลงทะเบียน/ผูกบัญชี — เพิ่มและผูกบัญชีได้ที่หน้า Delivery Management
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {driverRows.map((driver) => (
+              <div key={driver.id} className="card" data-testid="route-driver-row">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-bold ${driver.status === 'available' ? 'bg-green-500' : driver.status === 'busy' ? 'bg-yellow-500' : 'bg-gray-500'}`}>{(driver.driver_name || '?')[0]}</div>
+                  <div>
+                    <div className="font-bold">{driver.driver_name}</div>
+                    <div className={`text-sm ${driver.status === 'available' ? 'text-green-600' : driver.status === 'busy' ? 'text-yellow-600' : 'text-gray-600'}`}>
+                      {driver.status === 'available' ? 'Available' : driver.status === 'busy' ? 'On Delivery' : driver.status}
+                    </div>
                   </div>
                 </div>
+                <div className="text-sm text-brand-muted">
+                  งานที่ถืออยู่: {driver.active_assignments}/{driver.max_capacity ?? '—'}
+                  {driver.last_active && <div>ออนไลน์ล่าสุด: {new Date(driver.last_active).toLocaleString()}</div>}
+                </div>
               </div>
-              <div className="text-sm text-brand-muted">Capacity: {driver.current_load}/{driver.max_capacity}</div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Zone Info */}
@@ -145,17 +192,17 @@ export function RouteOptimizationPage() {
         <h3 className="font-bold text-blue-900 mb-2">📍 Delivery Zone Info</h3>
         <div className="grid grid-cols-2 gap-4 text-sm text-blue-800">
           <div><strong>Kitchen:</strong> {KITCHEN_LAT}, {KITCHEN_LNG} (Chanthaburi)</div>
-          <div><strong>Max Radius:</strong> 5 km</div>
+          <div><strong>รัศมีบริการ:</strong> {radiusKm != null ? `${radiusKm} km (branches.service_radius_km)` : '— (ยังไม่ได้ตั้งค่า)'}</div>
           <div><strong>Distance Formula:</strong> Haversine</div>
           <div><strong>Algorithm:</strong> Nearest Neighbor</div>
         </div>
       </div>
 
-      {!routes.length && !isOptimizing && (
+      {!routes.length && !loading && (
         <div className="text-center py-16 text-brand-muted">
           <div className="text-6xl mb-4">🗺️</div>
-          <h3 className="text-xl font-bold text-brand-accent mb-2">No routes yet</h3>
-          <p>Click "Optimize Routes" to calculate the best delivery routes for drivers</p>
+          <h3 className="text-xl font-bold text-brand-accent mb-2">ยังไม่มีแผนเส้นทาง</h3>
+          <p>กด "วางแผนเส้นทาง (ข้อมูลจริง)" เพื่อคำนวณจากออเดอร์ที่กำลังส่งและไรเดอร์ที่ผูกบัญชีแล้ว</p>
         </div>
       )}
     </div>

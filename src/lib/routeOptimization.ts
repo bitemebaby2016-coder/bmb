@@ -146,6 +146,57 @@ export function assignOrdersToDrivers(
 
   return routes
 }
+
+// ============================================
+// E2 (2026-10-22): REAL-data adapters — no demo rows ever
+// ============================================
+// The admin route tool reads live `orders` + `drivers` only. These pure mappers
+// convert real rows into the optimizer's input shape and are unit-tested
+// (routeRealData.test.ts). Fields the system does not really know (e.g. package
+// weight) stay zero — inventing numbers is exactly what E2 forbids.
+
+export function toRouteOrders(orders: ReadonlyArray<{
+  id?: string | null
+  order_number: string
+  dropoff_latitude: number | null
+  dropoff_longitude: number | null
+  delivery_address?: string | null
+  items?: Array<{ quantity?: number }> | null
+}>): DeliveryOrder[] {
+  return orders
+    .filter((o) => o.dropoff_latitude != null && o.dropoff_longitude != null)
+    .map((o) => ({
+      id: o.id || o.order_number,
+      order_number: o.order_number,
+      dropoff_latitude: o.dropoff_latitude as number,
+      dropoff_longitude: o.dropoff_longitude as number,
+      dropoff_detail: o.delivery_address || '',
+      items_count: Math.max(1, (o.items || []).reduce((s, i) => s + (i.quantity || 0), 0)),
+      estimated_weight: 0, // ไม่มีข้อมูลน้ำหนักจริงในระบบ — ห้ามเดา (E2)
+      priority: 'normal',
+    }))
+}
+
+export function toRouteDrivers(drivers: ReadonlyArray<{
+  id: string
+  driver_name: string
+  status: string
+  max_capacity?: number | null
+  current_latitude?: number | null
+  current_longitude?: number | null
+  active_assignments?: number | null
+}>, fallback: { latitude: number; longitude: number }): DeliveryDriver[] {
+  return drivers.map((d) => ({
+    id: d.id,
+    name: d.driver_name,
+    current_latitude: d.current_latitude ?? fallback.latitude,
+    current_longitude: d.current_longitude ?? fallback.longitude,
+    current_orders: [],
+    max_capacity: d.max_capacity && d.max_capacity > 0 ? d.max_capacity : 10, // 10 = ค่า default ของ schema
+    current_load: d.active_assignments ?? 0,
+    status: d.status === 'offline' ? 'offline' : d.status === 'busy' ? 'busy' : 'available',
+  }))
+}
 /**
  * DEL-04 — ETA calibration: a delivery report is accurate if the model error
  * is within the closure tolerance (< 15 minutes per stop).

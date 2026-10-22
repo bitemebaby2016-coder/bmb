@@ -2,9 +2,9 @@
 
 > **สถานะงานปัจจุบันของโปรเจกต์ Bite Me Baby** ใช้แนบเข้าสู่ Context ตอนเริ่มแชทเสมอ
 
-**last_updated:** 2026-10-22 รอบ 6 (D1: ✅A5+M1 ✅A1+M2 ✅A2+A7(ก.)+M5 ✅A3 — tests 1252/1252 119 files · chunk1-3 อยู่บน production แล้ว (push 8986e88) · A3 รอ push + evidence)
-**phase:** 🔨 **D1 IN PROGRESS — ✅A5+M1 ✅A1+M2 ✅A2+A7(ก.)+M5 ✅A3 (รอ runtime evidence 3 อุปกรณ์บน production) · ชิ้นถัดไป E2 (ลบ mock ปลอม)**
-**current_focus:** D1 ตามลำดับ: ✅A5+M1 → ✅A1+M2 → ✅A2+A7(ก.)+M5 → ✅A3 → E2 → E1+A4+A8+M4+M3 → E3/E4 → A6 → ก้อน Marketing
+**last_updated:** 2026-10-22 รอบ 7 (D1: ✅A5+M1 ✅A1+M2 ✅A2+A7(ก.)+M5 ✅A3 ✅E2 — chunk1-4 อยู่บน production แล้ว · E2 รอ push + evidence)
+**phase:** 🔨 **D1 IN PROGRESS — ✅A5+M1 ✅A1+M2 ✅A2+A7(ก.)+M5 ✅A3 ✅E2 (รอ runtime evidence บน production) · ชิ้นถัดไป E1+A4+A8+M4+M3 (โมเดลประกาศ-รับงาน + Dispatch Center)**
+**current_focus:** D1 ตามลำดับ: ✅A5+M1 → ✅A1+M2 → ✅A2+A7(ก.)+M5 → ✅A3 → ✅E2 → E1+A4+A8+M4+M3 → E3/E4 → A6 → ก้อน Marketing
 **blocked_by:** ไม่มี — แต่ push/production = ต้อง Owner approve (auto-deploy จาก main) + เก็บ runtime evidence จากอุปกรณ์จริงก่อนประกาศ PASS
 
 ---
@@ -81,6 +81,25 @@
 - **Tests / Commands Run:** ดู Verified
 - **Known Risks:** (1) server `compute_delivery_fee` ยังมี legacy formula fallback เมื่อไม่มีโซน match (020 L137 — "kept until all zones are seeded") — ฝั่ง server ห้ามแตะโดยไม่ผ่าน migration+approval; ถ้าโซนไม่ครบจะเห็นค่าผิดสูตรได้ (2) `localZoneFee` คงไว้เพราะเทสต์เดิม 12 ตัวอ้างถึง (gate ห้ามลดเทสต์) — ไม่มี production caller
 - **Next Exact Action:** E2 — ลบ mock ปลอมออกจากหน้า UI (ตามที่ handoff ระบุ: mock data ที่หลุดเข้า production UI)
+
+## ⚡ TASK: D1-CHUNK5-E2-REMOVE-MOCKS-2026-10-22 — ลบ mock ไรเดอร์/ออเดอร์ปลอม ใช้ของจริงเท่านั้น
+- **STATUS: 🟡 IMPLEMENTED + gates ผ่านครบ — UNVERIFIED บนอุปกรณ์จริง (Owner ทดสอบจาก production)**
+- **Task ID:** D1-CHUNK5-E2-REMOVE-MOCKS-2026-10-22
+- **Objective:** E2 — หน้าเส้นทาง/Driver status ต้องอ่าน `delivery_assignments`+`drivers` จริง ห้ามเหลือ mock/demo ในหน้าแอดมิน (กติกาข้อ 5)
+- **Completed:**
+  - ✅ **verify:** `DeliveryManagement.tsx` สะอาดอยู่แล้ว (comment L12 บอกว่า mock UI "ถูกลบไปแล้ว" — ไม่ใช่ประกาศตัวว่าเป็น mock; ใช้ `list_drivers`/`assign_driver` RPC จริง) — เหลือตัวการเดียว = `RouteOptimizationPage.tsx`
+  - **ลบทิ้งทั้งหมด:** `mockOrders` (BMB-001..005 ที่อยู่ปลอม), `mockDrivers` (Somchai/Somying/Wichai), fake 800ms delay, "Max Radius: 5 km" คงที่, ตัวเลข kg ปลอม (estimated_weight ที่ระบบไม่มีจริง)
+  - **แทนที่ด้วยของจริง:** ออเดอร์กำลังส่ง (`getOrdersByStatuses` — ready_for_dispatch/dispatched/in_transit/arrived) + ไรเดอร์จริงที่ลงทะเบียน/ผูกบัญชี (`adminListDrivers` = `list_drivers` RPC 037 ตัวเดียวกับ Dispatch board) + รัศมีจริงจาก `branches.service_radius_km`
+  - pure mappers ใน `routeOptimization.ts`: `toRouteOrders()` (ข้ามออเดอร์ไม่มีพิกัด — ไม่เดา 0,0; items_count จากจำนวนจริง; estimated_weight=0 เพราะไม่มีข้อมูลจริง) + `toRouteDrivers()` (ชื่อ/สถานะ/ตำแหน่ง/โหลด จากแถวจริง; ตำแหน่ง fallback = ครัว ไม่เดา)
+  - หน้าเป็นเครื่องมือวางแผน "อ่านอย่างเดียว" (การมอบหมายจริงอยู่ที่ DeliveryManagement/assign_driver เท่านั้น) + empty state จริง ("ยังไม่มีไรเดอร์ที่ผูกบัญชี")
+  - เทสต์ใหม่ 9 ตัว `routeRealData.test.ts` (mappers 5 + ผูก optimizer 1 + **source-guarantee**: หน้าห้ามมี mockOrders/mockDrivers/ชื่อปลอม/BMB-001 และต้องใช้ data services จริง)
+- **Verified:** `npx tsc --noEmit`=0 · `npm run lint`=0 · `npm run test`=**1261/1261 (120 files)** (1252+9 ใหม่) · `npm run build`=0 · mojibake scan=0
+- **Failed:** รอบแรก (1) tsc: `OrderForm.id` เป็น `string|undefined` — ปรับ mapper ให้ `id?` (2) source-scan โดนคอมเมนต์ตัวเองที่พิมพ์ชื่อปลอมไว้ — แก้คอมเมนต์
+- **Blocked:** runtime evidence: หน้าเดิมแสดงเฉพาะออเดอร์จริงของวัน + ไรเดอร์จริงที่ผูกบัญชีแล้ว (Owner ทดสอบบน production)
+- **Files Changed:** `src/pages/admin/RouteOptimizationPage.tsx` (rewrite ข้อมูลจริง) · `src/lib/routeOptimization.ts` (+mappers) · `src/__tests__/routeRealData.test.ts` (ใหม่)
+- **Tests / Commands Run:** ดู Verified
+- **Known Risks:** (1) ออเดอร์เก่าที่ไม่มีพิกัด dropoff จะไม่เข้าแผนเส้นทาง (ตั้งใจ — ดีกว่าหมุดปลอม) (2) `assignOrdersToDrivers` ยังเป็น heuristic อย่างง่าย (nearest/first-available) — คือเครื่องมือวางแผนเท่านั้น การมอบหมายจริงคือ assign_driver RPC
+- **Next Exact Action:** E1+A4+A8+M4+M3 — โมเดล "ส่งออกงาน (Dispatch) ประกาศ+push → ไรเดอร์คนแรกรับ = จอง (สถานะเปลี่ยนจริงตอนรับ)" + แอดมิน assign เองได้ + รวม Dispatch Center เดียวที่ DeliveryManagement + ดูด RiderPWA เข้า RiderPwaPage
 
 ---
 
