@@ -66,6 +66,7 @@ vi.mock('@/lib/bmbMenuSchedule', () => ({
 vi.mock('@/lib/deliveryFeeApi', () => ({
   fetchServerDeliveryFee: m.fetchServerDeliveryFee,
   feeUiState: vi.fn(() => ({ label: '', cls: '' })),
+  summaryFeeState: vi.fn(() => ({ feeLabel: '', feeValue: '', totalSuffix: '', exact: true })),
 }))
 vi.mock('@/lib/bmbAdminApi_settings', () => ({ getBusinessSettings: vi.fn(async () => ({})) }))
 vi.mock('@/lib/brandResolver', () => ({ resolvePublicBranch: vi.fn(async () => ({ branch_id: 'br1' })) }))

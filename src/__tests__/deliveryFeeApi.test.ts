@@ -3,7 +3,7 @@
 // ============================================
 
 import { describe, it, expect } from 'vitest'
-import { zoneFeeForDistance, localZoneFee, feeUiState, SEEDED_DELIVERY_ZONES } from '@/lib/deliveryFeeApi'
+import { zoneFeeForDistance, localZoneFee, feeUiState, summaryFeeState, SEEDED_DELIVERY_ZONES } from '@/lib/deliveryFeeApi'
 
 describe('zoneFeeForDistance (DEL-01 — fee จาก delivery_zones)', () => {
   it('picks the zone that contains the distance', () => {
@@ -81,5 +81,45 @@ describe('feeUiState (CR-2 P2 — error must never look like a valid zero fee)',
     const ui = feeUiState({ delivery_fee: 0, source: 'server' })
     expect(ui.tone).toBe('ok')
     expect(ui.label).toBe('0.00 ฿')
+  })
+})
+
+describe('summaryFeeState (A3 · 2026-10-22 — ยอดสรุปต้องตรงกับค่าที่แอดมินตั้ง ไม่โชว์ค่าเก่าเป็นจริง)', () => {
+  it('server quote → ค่าส่งตามโซนที่แอดมินตั้ง + ยอดไม่ติดป้ายโดยประมาณ', () => {
+    const s = summaryFeeState({ delivery_fee: 45, source: 'server' })
+    expect(s.feeLabel).toBe('ค่าจัดส่ง (ตามโซนที่แอดมินตั้ง)')
+    expect(s.feeValue).toBe('45.00 บาท')
+    expect(s.totalSuffix).toBe('บาท')
+    expect(s.exact).toBe(true)
+  })
+
+  it('local-mirror → ติดป้าย "โดยประมาณ" ทั้งค่าส่งและยอดรวม', () => {
+    const s = summaryFeeState({ delivery_fee: 25, source: 'local-mirror' })
+    expect(s.feeLabel).toContain('โดยประมาณ')
+    expect(s.totalSuffix).toContain('โดยประมาณ')
+    expect(s.exact).toBe(false)
+  })
+
+  it('error/null source → "รอระบบคำนวณ" ไม่โชว์ตัวเลขเก่า + ยอดโดยประมาณ', () => {
+    for (const source of ['error', null] as const) {
+      const s = summaryFeeState({ delivery_fee: 45, source })
+      expect(s.feeValue).toBe('รอระบบคำนวณ') // ค่า 45 ที่ค้างต้องไม่ถูกโชว์เป็นจริง
+      expect(s.feeValue).not.toContain('45')
+      expect(s.totalSuffix).toContain('โดยประมาณ')
+      expect(s.exact).toBe(false)
+    }
+  })
+
+  it('delivery_fee null แม้ source=server → ยังคงเป็นสถานะรอคำนวณ', () => {
+    const s = summaryFeeState({ delivery_fee: null, source: 'server' })
+    expect(s.feeValue).toBe('รอระบบคำนวณ')
+    expect(s.exact).toBe(false)
+  })
+
+  it('pickup → ค่าส่งฟรีชัดเจน + ยอดตรง (ไม่ใช่โดยประมาณ)', () => {
+    const s = summaryFeeState({ delivery_fee: 0, source: 'server' }, { pickup: true })
+    expect(s.feeLabel).toContain('รับที่ร้าน')
+    expect(s.feeValue).toBe('0.00 บาท')
+    expect(s.exact).toBe(true)
   })
 })

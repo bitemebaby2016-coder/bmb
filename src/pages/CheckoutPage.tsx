@@ -31,7 +31,7 @@ import { listRoundsForDate, type DeliveryRoundRow } from '@/lib/bmbAdminApi_roun
 import { haversineDistanceKm } from '@/lib/deliveryRouter'
 import { KITCHEN_POINT } from '@/config/kitchenLocation'
 import { getPublishedScheduleForDate, mirrorPreOrderScheduleGate, checkModeEligibility, type MenuScheduleRow } from '@/lib/bmbMenuSchedule'
-import { fetchServerDeliveryFee, feeUiState } from '@/lib/deliveryFeeApi'
+import { fetchServerDeliveryFee, feeUiState, summaryFeeState } from '@/lib/deliveryFeeApi'
 import { getBusinessSettings } from '@/lib/bmbAdminApi_settings'
 import { resolvePublicBranch } from '@/lib/brandResolver'
 import { getProducts } from '@/lib/bmbAdminApi_products'
@@ -88,7 +88,7 @@ async function ensureReplaySafeIntent(
 export function CheckoutPage() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
-  const { items, subtotal, discount, deliveryFee, total, clearCart, order_mode, isHydrated, couponCode } = useCartStore()
+  const { items, subtotal, discount, total, clearCart, order_mode, isHydrated, couponCode } = useCartStore()
   const customer = useAuthStore((s) => s.customer)
   const justPlaced = useRef(false)
 
@@ -1111,8 +1111,18 @@ export function CheckoutPage() {
         <div className="border-t border-brand-border pt-4 space-y-2">
           <div className="flex justify-between"><span>สินค้า</span><span>{subtotal.toFixed(2)} บาท</span></div>
           {discount > 0 && (<div className="flex justify-between text-green-600"><span>ส่วนลด (ประมาณการ)</span><span>-{discount.toFixed(2)} บาท</span></div>)}
-          <div className="flex justify-between"><span>ค่าจัดส่ง (ประมาณการ)</span><span>{deliveryFee.toFixed(2)} บาท</span></div>
-          <div className="flex justify-between text-xl font-bold pt-2 border-t border-brand-border"><span>รวมทั้งหมด</span><span className="text-brand-primary">{total.toFixed(2)} บาท</span></div>
+          {/* A3 (2026-10-22): ค่าส่งโซน = ค่าที่แอดมินตั้ง (ไม่ต้องเบลอเป็น "ประมาณการ");
+              ถ้า quote พัง/ยังไม่มี ต้องไม่โชว์ค่าเก่าเหมือนคำนวณแล้ว — ระบุ "รอระบบคำนวณ"
+              + ติดป้ายยอดโดยประมาณ (server re-derive ตอนสร้างออเดอร์เสมอ) */}
+          {(() => {
+            const s = summaryFeeState({ delivery_fee: serverFee, source: feeSource }, { pickup: fulfillment === 'pickup' })
+            return (
+              <>
+                <div className="flex justify-between"><span>{s.feeLabel}</span><span data-testid="summary-fee-value">{s.feeValue}</span></div>
+                <div className="flex justify-between text-xl font-bold pt-2 border-t border-brand-border"><span>รวมทั้งหมด</span><span className="text-brand-primary" data-testid="summary-total">{total.toFixed(2)} {s.totalSuffix}</span></div>
+              </>
+            )
+          })()}
           <p className="text-xs text-brand-muted">ยอดสุทธิคำนวณใหม่จากระบบตอนยืนยัน (ราคา/ส่วนลด/ค่าส่งเป็นสิทธิ์ของเซิร์ฟเวอร์)</p>
         </div>
       </div>

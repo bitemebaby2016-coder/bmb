@@ -2,9 +2,9 @@
 
 > **สถานะงานปัจจุบันของโปรเจกต์ Bite Me Baby** ใช้แนบเข้าสู่ Context ตอนเริ่มแชทเสมอ
 
-**last_updated:** 2026-10-22 รอบ 5 (D1: A5+M1 + A1+M2 + A2+A7(ก.)+M5 เสร็จ — tests 1247/1247 119 files, tsc/lint/build เขียว · Owner ทดสอบจาก production หลัง push)
-**phase:** 🔨 **D1 IN PROGRESS — ✅A5+M1 ✅A1+M2 ✅A2+A7(ก.)+M5 (รอ runtime evidence 3 อุปกรณ์บน production) · ชิ้นถัดไป A3**
-**current_focus:** D1 ตามลำดับ: ✅A5+M1 → ✅A1+M2 → ✅A2+A7(ก.)+M5 → A3 → E2 → E1+A4+A8+M4+M3 → E3/E4 → A6 → ก้อน Marketing
+**last_updated:** 2026-10-22 รอบ 6 (D1: ✅A5+M1 ✅A1+M2 ✅A2+A7(ก.)+M5 ✅A3 — tests 1252/1252 119 files · chunk1-3 อยู่บน production แล้ว (push 8986e88) · A3 รอ push + evidence)
+**phase:** 🔨 **D1 IN PROGRESS — ✅A5+M1 ✅A1+M2 ✅A2+A7(ก.)+M5 ✅A3 (รอ runtime evidence 3 อุปกรณ์บน production) · ชิ้นถัดไป E2 (ลบ mock ปลอม)**
+**current_focus:** D1 ตามลำดับ: ✅A5+M1 → ✅A1+M2 → ✅A2+A7(ก.)+M5 → ✅A3 → E2 → E1+A4+A8+M4+M3 → E3/E4 → A6 → ก้อน Marketing
 **blocked_by:** ไม่มี — แต่ push/production = ต้อง Owner approve (auto-deploy จาก main) + เก็บ runtime evidence จากอุปกรณ์จริงก่อนประกาศ PASS
 
 ---
@@ -62,6 +62,25 @@
 - **Tests / Commands Run:** ดู Verified
 - **Known Risks:** (1) ปุ่ม "💰 Confirm payment" แถวออเดอร์ถูกย้ายเข้าแผง — แอดมินต้องเปิดแผงเพื่อยืนยัน (UI เปลี่ยนตามตั้งใจ A2) (2) intents query ต่อหน้า = 1 batch (RLS admin) — ถ้า policy พังจะเห็น "⚠ ไม่พบ payment intent" ซึ่งตรงกับความจริง (3) retry intent = เรียก create_payment_intent_record ซ้ำ 1 ครั้งเฉพาะกรณี RPC ตอบ failure ชัด — B5/B10 replay guard เดิมไม่กระทบ (เทสต์ call-count ผ่าน)
 - **Next Exact Action:** A3 — ตรวจ AdminSettings เขียนลง `delivery_zones` เดียวกับ RPC อ่าน + ตัด/ติดป้าย local-mirror + โชว์ `feeSource` บน checkout
+
+## ⚡ TASK: D1-CHUNK4-A3-DELIVERY-FEE-2026-10-22 — ค่าส่ง: ยืนยันแหล่งเดียว + ยอดสรุปไม่โชว์ค่าเก่าเป็นจริง
+- **STATUS: 🟡 IMPLEMENTED + gates ผ่านครบ — UNVERIFIED บนอุปกรณ์จริง (Owner ทดสอบจาก production)**
+- **Task ID:** D1-CHUNK4-A3-DELIVERY-FEE-2026-10-22
+- **Objective:** A3 — ค่าส่ง/ค่ากำหนดต้องถูกใช้จริงจากตารางเดียวกับแอดมินตั้ง + ไม่มี fallback เงียบทำให้ราคาคลาดเคลื่อน
+- **Completed (ส่วนใหญ่เป็นการ verify สายข้อมูลจริง — ของเดิมดีอยู่แล้ว):**
+  - ✅ **verify แล้ว:** `AdminSettings.saveZone` เขียน `delivery_zones` (ตารางเดียวกับที่ `compute_delivery_fee` (020) อ่านเลือกโซน + `create_order_with_items` re-derive) — ตอบคำถามค้างใน handoff ได้ว่าเขียนลงตารางเดียวกัน
+  - ✅ **verify แล้ว:** `fetchServerDeliveryFee` ไม่มี local-mirror fallback จริง (RPC พัง → `source:'error'` ไม่ใช่ค่าเดา — CR-2 P2 เดิม) + checkout โชว์ `feeSource` ผ่าน `feeUiState` ('คำนวณจากเซิร์ฟเวอร์'/'ประมาณการ (ออฟไลน์)'/error + ปุ่มลองใหม่)
+  - ✅ **verify แล้ว:** rounds/capacity เขียน `delivery_rounds` ตรง (AdminRounds + bmbAdminApi_rounds/Products) ขณะที่ server RPC 025/038 คุม cutoff/capacity · lead days = `business_settings.order_policy` (getBusinessSettings/setBusinessSetting ตัวเดียวกัน + server คุมจริง)
+  - **แก้ไขจริง (A3 ช่องโหว่แสดงผล):** สร้าง `summaryFeeState()` ใน `deliveryFeeApi.ts` — แถว "ค่าจัดส่ง" ใน Order Summary เดิมติดป้าย "(ประมาณการ)" ทั้งที่ค่า server คือค่าโซนที่แอดมินตั้ง **และ** ตอน quote error โชว์ `deliveryFee` เก่าค้างเหมือนคำนวณแล้ว → ใหม่: server → "(ตามโซนที่แอดมินตั้ง)" / error/null → "รอระบบคำนวณ" (ไม่โชว์ตัวเลขเก่า) + ยอดรวมติดป้าย "(โดยประมาณ)" เมื่อไม่ใช่ค่าจริง · pickup → "รับที่ร้าน — ฟรี"
+  - comment `SEEDED_DELIVERY_ZONES` ชัดเจนว่าเป็น test/offline mirror เท่านั้น (admin แก้ delivery_zones จริง — mirror เลื่อนได้ ห้ามโชว์เป็นค่าตั้ง)
+  - เทสต์ใหม่ 5 ตัวใน `deliveryFeeApi.test.ts` (summaryFeeState: server/mirror/error/null/pickup) + เติม mock `summaryFeeState` ในเทสต์ checkout 2 ตัว (mock เดิมไม่ครบ)
+- **Verified:** `npx tsc --noEmit`=0 · `npm run lint`=0 · `npm run test`=**1252/1252 (119 files)** (1247+5 ใหม่) · `npm run build`=0 · mojibake/BOM=0 ทุกไฟล์ที่แตะ
+- **Failed:** เทสต์ checkout 6 ตัว fail รอบแรก (mock deliveryFeeApi ไม่มี summaryFeeState) — เติม mock ให้ครบ ไม่แตะ assertion
+- **Blocked:** runtime evidence: เปลี่ยนค่าโซนในแดชบอร์ด → สั่งจริงในรัศมีนั้น → ยอดลูกค้า = ค่าที่ตั้ง ±0 = ยอดที่แอดมินเห็น (Owner ทดสอบบน production)
+- **Files Changed:** `src/lib/deliveryFeeApi.ts` · `src/pages/CheckoutPage.tsx` · `src/__tests__/deliveryFeeApi.test.ts` · `src/__tests__/checkoutMixedSplit.test.ts` (+mock) · `src/__tests__/checkoutModeLock.test.ts` (+mock)
+- **Tests / Commands Run:** ดู Verified
+- **Known Risks:** (1) server `compute_delivery_fee` ยังมี legacy formula fallback เมื่อไม่มีโซน match (020 L137 — "kept until all zones are seeded") — ฝั่ง server ห้ามแตะโดยไม่ผ่าน migration+approval; ถ้าโซนไม่ครบจะเห็นค่าผิดสูตรได้ (2) `localZoneFee` คงไว้เพราะเทสต์เดิม 12 ตัวอ้างถึง (gate ห้ามลดเทสต์) — ไม่มี production caller
+- **Next Exact Action:** E2 — ลบ mock ปลอมออกจากหน้า UI (ตามที่ handoff ระบุ: mock data ที่หลุดเข้า production UI)
 
 ---
 

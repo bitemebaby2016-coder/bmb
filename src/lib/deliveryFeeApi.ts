@@ -20,6 +20,11 @@ export interface DeliveryZonesRow {
   tenant_id: string          // TEN-02: FK to tenants(id)
 }
 
+// Offline DISPLAY mirror of the seeded zone rows — used only by offline math and
+// tests (deliveryFeeApi.test.ts). NEVER a checkout/order fallback: the server RPC
+// is the single authority and its failure is surfaced as an explicit error state.
+// NOTE: admin edits land in `delivery_zones` (AdminSettings) — this mirror can
+// drift from the live table and must not be presented as the admin-set fee.
 export const SEEDED_DELIVERY_ZONES: DeliveryZonesRow[] = [
   { id: 'zone-city', name: 'ในเมือง', min_distance_km: 0, max_distance_km: 5, fee: 25, is_active: true, branch_id: 'branch-bite-me-baby-main', tenant_id: 'tenant-bmb-001' },
   { id: 'zone-suburb', name: 'ชานเมือง', min_distance_km: 5, max_distance_km: 10, fee: 45, is_active: true, branch_id: 'branch-bite-me-baby-main', tenant_id: 'tenant-bmb-001' },
@@ -86,6 +91,45 @@ export function feeUiState(
     label: `${quote.delivery_fee.toFixed(2)} ฿`,
     detail: quote.source === 'server' ? 'คำนวณจากเซิร์ฟเวอร์' : 'ประมาณการ (ออฟไลน์)',
     tone: 'ok',
+  }
+}
+
+/**
+ * Pure: how the ORDER SUMMARY fee/total lines present the current quote.
+ * A3 (2026-10-22) — "ยอดลูกค้า = ค่าที่แอดมินตั้ง": when the quote came from the
+ * server zone the fee IS the admin-set value and must not be watered down to
+ * "ประมาณการ"; when the quote failed, the summary must NOT present a stale
+ * deliveryFee as a computed fact — it says "รอระบบคำนวณ" and marks the total
+ * approximate instead (server re-derives at create either way).
+ */
+export function summaryFeeState(
+  quote: { delivery_fee: number | null; source: 'server' | 'local-mirror' | 'error' | null },
+  opts?: { pickup?: boolean },
+): { feeLabel: string; feeValue: string; totalSuffix: string; exact: boolean } {
+  if (opts?.pickup) {
+    return { feeLabel: 'ค่าจัดส่ง (รับที่ร้าน — ฟรี)', feeValue: '0.00 บาท', totalSuffix: 'บาท', exact: true }
+  }
+  if (quote.source === 'server' && quote.delivery_fee != null) {
+    return {
+      feeLabel: 'ค่าจัดส่ง (ตามโซนที่แอดมินตั้ง)',
+      feeValue: `${quote.delivery_fee.toFixed(2)} บาท`,
+      totalSuffix: 'บาท',
+      exact: true,
+    }
+  }
+  if (quote.source === 'local-mirror' && quote.delivery_fee != null) {
+    return {
+      feeLabel: 'ค่าจัดส่ง (โดยประมาณ)',
+      feeValue: `${quote.delivery_fee.toFixed(2)} บาท`,
+      totalSuffix: 'บาท (โดยประมาณ)',
+      exact: false,
+    }
+  }
+  return {
+    feeLabel: 'ค่าจัดส่ง (รอระบบคำนวณ)',
+    feeValue: 'รอระบบคำนวณ',
+    totalSuffix: 'บาท (โดยประมาณ — ระบบยืนยันราคาตอนสั่งซื้อ)',
+    exact: false,
   }
 }
 
