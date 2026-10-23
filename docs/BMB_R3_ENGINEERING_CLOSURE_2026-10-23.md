@@ -116,7 +116,7 @@
 ## 11. Commit / CI / Test inventory (รอบปิดงาน)
 | รายการ | ค่า |
 |---|---|
-| Closure commit | `fix(recovery R3): rounds audit+guards, coupon hydration race, focus refresh, restore drill proof` (SHA = commit ที่มีเอกสารนี้ — ดู `git log -1`) |
+| Closure commit | **`0b73189`** — `fix(recovery R3): rounds audit+guards, coupon hydration race, focus refresh, restore drill proof` |
 | CI (ก่อนรอบนี้) | `a6df293` Contract Tests=success · CI=success (13:22Z) |
 | CI (รอบนี้) | จะรันอัตโนมัติหลัง push — ดู Actions ที่ commit นี้ (Contract Tests รวม step 138/139) |
 | vitest | **1331/1331 PASS** (129 ไฟล์; รอบขนานเคย flaky `orderTimeline` 3 ตัว = ผ่านเดี่ยว+ผ่านรอบซ้ำ ไม่ใช่ regression) |
