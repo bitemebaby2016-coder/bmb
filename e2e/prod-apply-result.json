@@ -1,12 +1,31 @@
 {
-  "timestamp": "2026-10-20T10:24:42.991Z",
+  "timestamp": "2026-10-23T02:49:37.619Z",
   "ref": "ivkdfognyiwjcmrhcnwz",
   "applied": [
     {
       "file": "134_kitchen_fee_sync.sql",
-      "ok": true
+      "ok": true,
+      "at": "2026-10-20T10:24:42.991Z"
+    },
+    {
+      "file": "136_driver_location_history.sql",
+      "ok": true,
+      "at": "2026-10-23T02:49:37.619Z",
+      "owner_approved": true,
+      "evidence": "e2e/artifacts/prod-apply-136.json + prod-verify-136.json"
     }
   ],
-  "verify": {},
+  "drift_repair": {
+    "at": "2026-10-23T02:53:00Z",
+    "what": "supabase_migrations.schema_migrations backfilled 133-137 (objects live since earlier applies; history stopped at 132)",
+    "evidence": "e2e/artifacts/prod-apply-136-drift.json"
+  },
+  "verify": {
+    "136_table": "driver_location_history",
+    "136_fn": "driver_update_location(numeric,numeric,text)",
+    "136_grants": "authenticated/service_role EXECUTE; anon revoked",
+    "136_policies": "loc_history_auth_read, loc_history_deny_anon",
+    "history_top": "137,136,135,134,133,132"
+  },
   "pass": true
 }

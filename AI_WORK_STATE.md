@@ -2,10 +2,23 @@
 
 > **สถานะงานปัจจุบันของโปรเจกต์ Bite Me Baby** ใช้แนบเข้าสู่ Context ตอนเริ่มแชทเสมอ
 
-**last_updated:** 2026-10-22 รอบ 11 (SESSION CLOSE — D1 ครบทั้งโค้ด+production infra · แฮนออฟสิ่งที่เหลือทั้งหมดไปแชทใหม่)
-**phase:** 🟢 **D1 DONE — รอ Owner เก็บ runtime evidence บน biteme-baby.com · งานที่เหลือ = ดูหัวข้อ "🤝 HANDOFF" ท้ายไฟล์**
-**current_focus:** ปิดเซสชัน · แชทใหม่เริ่มจากหัวข้อ "🤝 HANDOFF" ท้ายไฟล์นี้
-**blocked_by:** ไม่มี — แต่ push/production = ต้อง Owner approve (auto-deploy จาก main) + เก็บ runtime evidence จากอุปกรณ์จริงก่อนประกาศ PASS
+**last_updated:** 2026-10-23 รอบ 2 (R0 ปิด + apply 136 สำเร็จ + drift repair · เขียนทับสถานะรอบ 1)
+**phase:** 🔴 **D1 NOT DONE — R0 ปิดแล้ว (ผลจริงครบ) · 136 ขึ้นโปรดักชั่นแล้ว · เหลือ R1.2-R3 = เขียนโค้ดซ่อม D-02..D-08 + เก็บ evidence — แผนเต็ม `docs/BMB_RECOVERY_PLAN_2026-10-23.md`**
+**current_focus:** รอบถัดไป = R1.2 สายเงิน/สลิป → R1.3 บอร์ดมอบหมาย → R1.4 วงจรไรเดอร์ → R1.5 ออเดอร์ค้าง → R2 สถานะ+ตั้งค่า → R3 evidence
+**blocked_by:** ไม่มีฝั่ง infra (136+drift ปิดแล้ว, EF/secrets ครบ) — เหลือเขียนโค้ดซ่อม + ทดสอบบนอุปกรณ์จริง 3 บัญชี (แอดมิน/ลูกค้า/ไรเดอร์ "พอล ไบท์ไดรฟ์")
+
+---
+
+## 🩺 REALITY CHECK (2026-10-23) — ผลทดสอบจริงของ Owner + ผล R0 (เขียนทับรอบ 1 — สถานะจริง ณ ปิดเซสชัน)
+
+- **สิ่ง Owner เจอจริงบนระบบ (ความจริงสูงสุด):** สร้างออเดอร์ใหม่ → ไม่เข้า/เป็นอันเก่าค้าง · สลิปตรวจไม่ได้ · มอบหมายงานไม่ได้ · ไรเดอร์รับงานไม่ได้ · งานไม่ต่อ · หน้าตั้งค่าร้านมีลิงก์โซเชียลซ้ำ + ทำงานซ้ำซ้อน · สถานะรวมไม่ตรงฟีเจอร์ที่สั่ง
+- **R0 ปิดแล้ว (evidence: `e2e/artifacts/r0-prod-audit.json` + `r0-prod-audit2.json` + `prod-sweep-final.json`):**
+  - ✅ **D-01 ปิด:** 136 ไม่มาจริง (loc_hist/loc_fn=null ตอน audit) → **apply แล้ว 2026-10-23** (Owner approve) + drift repair schema_migrations 133-137 — verify: table+fn+grants+policies ครบ (evidence `prod-apply-136*.json`/`prod-verify-136.json`)
+  - ✅ ยืนยัน D-02 (`social_links` ซ้ำ 2 ที่) · D-03 (`ready_only=0` vs `rpc_allowed=1` — ออเดอร์ paid ค้าง BMB-20261023-841 บอร์ดมองไม่เห็น) · H-04 (assignments/offers = 0 แถว — วงจรไรเดอร์ยังไม่เคยเริ่ม)
+  - ❌ หักล้าง H-02 (intent ขาด = 0 ใบ — intent มีครบทุกออเดอร์ ไม่ใช่ต้นเหตุ) · H-03 (branch resolve ได้ `branch-tenant-bmb-001-main`, NULL=0/4)
+  - **infra ครบ:** 21 EF ACTIVE · secrets ครบ · ไรเดอร์จริง linked 1 คน ("พอล ไบท์ไดรฟ์") · orders 4 ใบ (ค้าง confirmed+paid 1 = BMB-20261023-841)
+- **เหลือเขียนโค้ด (R1.2-R2):** สายเงิน/สลิป (D-04/D-05) · บอร์ดมอบหมาย (D-03) · วงจรไรเดอร์ (R1.4) · ออเดอร์ค้าง (D-06/D-07) · โซเชียลซ้ำ (D-02) · status truth walk — รายละเอียดทุกข้อ = `docs/BMB_RECOVERY_PLAN_2026-10-23.md`
+- **กติกาเอกสาร (D-08):** **ห้ามเขียน "DONE" ถ้า Owner ยังไม่ได้ทดสอบของจริงผ่าน** — งานโค้ดเขียว = "IMPLEMENTED" เท่านั้น · สถานะต้องเขียนทับของเดิมเสมอ (ห้ามเขียนต่อท้ายจนสถานะมั่ว) · ห้ามอ้างไฟล์ที่ไม่มีอยู่จริง (`docs/BMB_DECISIONS.md` = ไม่มี)
 
 ---
 
@@ -130,7 +143,7 @@
   - **E5/E6 image-gen EF (`supabase/functions/image-gen/`):** prompt สำเร็จรูป menu/promo/festival (E5) + 3 สไตล์ realistic/illustration/poster (E6) → OpenRouter (`OPENROUTER_API_KEY` server-side ชุดเดียวกับ ai-proxy) → อัปโหลด `site_assets` คืน URL จริง (ใช้กับ Meta publish ได้ทันที) + verify_jwt + เช็ค role=admin จากโปรไฟล์ผู้เรียก
   - **Client:** `src/lib/adminMarketing.ts` (list/create/schedule/rules/best-sellers จาก order_items จริง/stats) + `AdminMarketing.tsx` 7 แท็บ (Overview/Planner/AI Studio/Approval/Calendar/Rules/Analytics) + route `/admin/marketing` + nav item (แก้ทั้ง flat list + group ตาม invariant ของ adminUi.test)
   - เทสต์ใหม่ 19 ตัว `marketingClient.test.ts` (RPC wiring + contract G1-G3 + 7 แท็บของจริง + E5/E6 + queue ครบ 4 จุด + worker เช็ค approval ซ้ำ) + CI step contract 137
-- **Verified:** `npx tsc --noEmit`=0 · `npm run lint`=0 · `npm run test`=**1302/1302 (124 files)** (1283+19 ใหม่) · `npm run build`=0 · mojibake=0 · **SQL: apply 137 + contract 137 G1-G3 ผ่านบน PG จริง (Docker ephemeral)**
+- **Verified:** `npx tsc --noEmit`=0 · `npm run lint`=0 · `npm run test`=**1302/1302 (124 files)** (1283+19 ใหม่) · `npm run build`=0 · mojibake=0 · **SQL: apply 137 + contract 137 G1-G3 ผ่านบน PG จริง (Docker ephemeral)** — ⚠ correction 2026-10-23: วัดซ้ำบน HEAD เดิมได้ **1291/1291 (124 files)** = ตัวเลข 1302 คลาดเคลื่อน (โค้ดไม่ได้ถูกแตะ) ใช้ 1291 เป็น baseline
 - **Failed/แก้ระหว่างทาง:** (1) contract fixture โดน RLS content_approvals (แก้: fixture insert ฐานะเจ้าของ DB) (2) session role ค้างข้าม DO block (แก้: RESET ROLE ต้น G2/G3) (3) marketingClient assertion ผิด (testid เป็น template ไม่ใช่ literal) (4) adminUi.test invariant flatten(groups)==ITEMS ขาด (แก้: เพิ่ม nav item ทั้งสองที่)
 - **Blocked:** 🟢 ปลดล็อกแล้ว — apply 137 ✓ (MIG137-OK) · deploy EF ✓ (image-gen/automation-worker/queue-enqueue/queue-dispatcher = ACTIVE) · secrets ✓ (OPENROUTER_API_KEY + IMAGE_GEN_MODEL) · smoke image-gen = 401 (กัน anon ถูก) · เหลือ runtime evidence: สร้างโพสต์→คนอนุมัติ→ตั้งเวลา→ระบบโพสต์จริงบน Page→Analytics โชว์ provider post id · สร้างภาพ 3 สไตล์ · dispatch งาน → push ถึงไรเดอร์ทุกเครื่อง
 - **Files Changed:** `supabase/migrations/137_marketing_posts_rules.sql` (ใหม่) · `e2e/contracts_137_marketing_posts.sql` (ใหม่) · `supabase/functions/image-gen/index.ts` (ใหม่) · `src/lib/adminMarketing.ts` (ใหม่) · `src/pages/admin/AdminMarketing.tsx` (ใหม่) · `src/__tests__/marketingClient.test.ts` (ใหม่) · `supabase/functions/{automation-worker,queue-enqueue,queue-dispatcher}/index.ts` · `.github/workflows/{automation-scheduler.yml,contract-tests.yml}` · `supabase/config.toml` · `src/lib/adminUi.ts` · `src/App.tsx`
@@ -140,21 +153,24 @@
 
 ---
 
-# 🤝 HANDOFF TO NEW CHAT (2026-10-22) — งานที่เหลือทั้งหมด
+# 🤝 HANDOFF TO NEW CHAT (2026-10-23) — เริ่มจากแผนซ่อม ไม่ใช่งานใหม่
 
-## 0. สถานะจริง ณ วันปิดเซสชัน
-- **D1 ครบทุกชิ้นตามลำดับ** A5+M1 → A1+M2 → A2+A7(ก.)+M5 → A3 → E2 → E1+A4+A8+M4+M3 → E3/E4 → A6 → Marketing Part C
-- **Gates รอบสุดท้าย:** tsc=0 · lint=0 · **vitest 1302/1302 (124 files)** · build=0 · mojibake=0
-- **SQL จริง:** contracts 135 (G1-G7) / 136 (G1-G3) / 137 (G1-G3) ผ่านบน ephemeral PG16 · replay 001-137 ผ่าน · contract 132 regression ผ่าน
-- **Production ตอนนี้:** migration **135+137 applied** ✓ · EF **image-gen/automation-worker/queue-enqueue/queue-dispatcher = ACTIVE** ✓ · secrets **OPENROUTER_API_KEY + IMAGE_GEN_MODEL** ✓ · เว็บ auto-deploy จาก main (HEAD=`923ac1f`) ✓ · smoke image-gen=401 (กัน anon ถูก)
-- **ของอ่านอย่างเดียว:** `docs/BMB_HANDOFF_MASTER_2026-10-22.md` · `docs/BMB_DECISIONS.md` · `UNIVERSAL_MASTER_AI_RULES.md` (แก้ได้เฉพาะกฎทั่วไป)
+> ⚠ รอบก่อน (2026-10-22) เขียนว่า "D1 DONE" — **ไม่จริง** · ผลทดสอบจริงของ Owner เจอวงจรพังทั้งสาย · ถอนสถานะแล้ว · งานตอนนี้ = ปิด R0-R3 ใน `docs/BMB_RECOVERY_PLAN_2026-10-23.md`
 
-## 1. เหลือเพื่อ "ปิดโครงการ" = Owner เก็บ runtime evidence (No Evidence = Not Done)
-1. E1/A4/A8/E3: กด "ส่งออกงาน" → ไรเดอร์ทุกเครื่องได้ push พร้อมกัน → คนแรกรับ = จอง (คนอื่นเห็น "งานถูกจองแล้ว") · assign โดยแอดมิน = ชนะประกาศ
-2. ไรเดอร์ส่งครบวงจร (รับ→รับของ→กำลังส่ง→POD บังคับ→ส่งสำเร็จ) — ลูกค้าเห็น ≤20 วิ · แอดมินเห็น timeline ทุกขั้น + เส้นทางย้อนหลังบนแผนที่
-3. Marketing E2E: สร้างโพสต์ (Planner/Studio) → คนอนุมัติ → ตั้งเวลา → ระบบโพสต์จริงบน Page → Analytics โชว์ provider post id
-4. E5/E6: สร้างภาพ 3 สไตล์ → URL จริงแนบโพสต์ได้ (ถ้าโมเดล image ของ OpenRouter ยังไม่เปิด = ตั้ง `IMAGE_GEN_MODEL` เป็นตัวที่ใช้ได้จริง แล้วทดสอบใหม่)
-5. ตั้งเวลาโพสต์ที่ยังไม่อนุมัติ → ต้องโดน `ERR_APPROVAL_REQUIRED` · ราคาตรงทุกหน้า · คูปอง/สลิป/ค่าส่ง/route ตาม checklist เดิม
+## 0. สถานะจริง ณ 2026-10-23 ปิดเซสชัน (ตรง ๆ ไม่แต่ง)
+- **🔴 D1 NOT DONE** — แต่ **R0 ปิด + 136 ขึ้นโปรดักชั่นแล้ว**: infra ครบหมด (migration 001-137 live + history ครบ · 21 EF ACTIVE · secrets ครบ) เหลือ **เขียนโค้ดซ่อม R1.2-R2 + เก็บ evidence R3**
+- **ผล R0 (ความจริงที่ต้องรู้):** D-01 ปิดแล้ว · D-02/D-03/H-04 ยืนยันจริง (โซเชียลซ้ำ · บอร์ดมอบมองไม่เห็นออเดอร์ paid · วงจรไรเดอร์ 0 แถว) · H-02/H-03 หักล้าง (intent ครบทุกใบ · branch ปกติ) · ออเดอร์ค้าง 1 ใบ = `BMB-20261023-841` (confirmed+paid บอร์ดมองไม่เห็น = D-03 ของจริง)
+- **บัญชีจริงพร้อมทดสอบ:** แอดมิน · ลูกค้า · ไรเดอร์ "พอล ไบท์ไดรฟ์" (linked, online 2026-10-23) · auth users 4
+- **ของอ่านอย่างเดียว:** `docs/BMB_HANDOFF_MASTER_2026-10-22.md` · `UNIVERSAL_MASTER_AI_RULES.md` (แก้ได้เฉพาะกฎทั่วไป) · ~~`docs/BMB_DECISIONS.md`~~ **ไม่มีอยู่จริง — ห้ามอ้าง**
+
+## 1. งานต่อไป = R1.2 → R3 ใน `docs/BMB_RECOVERY_PLAN_2026-10-23.md` (R0+R1.1 ปิดแล้ว)
+0. ~~R0 ตรวจความจริง~~ ✅ ปิด 2026-10-23 (evidence: `e2e/artifacts/r0-prod-audit*.json`)
+1. ~~R1.1 apply 136~~ ✅ ปิด 2026-10-23 (contract EXIT=0 → apply → verify + drift repair)
+2. **R1.2 สายเงิน/สลิป (D-04/D-05):** intent ต้องมีจริงทุกใบ + แผงตรวจเห็นครบ + ทางแนบสลิปตรงเจ้าของจริง
+3. **R1.3 บอร์ดมอบหมาย (D-03):** คิวเดียวเห็น confirmed/preparing/ready (ตามที่ RPC รับจริง — ตอนนี้ `ready_only=0` ทั้งที่มีออเดอร์ paid รอ)
+4. **R1.4 วงจรไรเดอร์เต็ม (H-04):** ประกาศ→รับ→POD→สำเร็จ + heartbeat 136 จริง (assignments/offers ยัง 0 แถว = ต้องเริ่มวงจรแรกให้ได้)
+5. **R1.5 ออเดอร์ค้าง (D-06/D-07)** → **R2 โซเชียลซ้ำ + status truth walk (D-02)** → **R3 evidence 5 ข้อ + ผลทดสอบ 3 บัญชี = ปิดโครงการ**
+6. **ของใหม่ (Marketing Phase 2 / automation rules / Calendar / analytics / job retry / D2 payment / E7) = ยังไม่แตะ** จนกว่า R1-R3 ปิด — ตารางเต็มอยู่หัวข้อ HANDOFF ข้อ 2 ด้านล่าง
 
 ## 2. เหลือตามสเปกเต็ม (นอก D1 หรือทำบางส่วน — เรียงตามคุณค่า)
 | งาน | สถานะจริง | จุดเริ่ม |
@@ -187,6 +203,7 @@
 8. ปุ่มเดียวกันห้ามมีสองที่ — แต่ละ transition เจ้าของปุ่มเดียว + deep-link · คำ/ปุ่มต้องตรงสถานะจริง ("ถึงปลายทาง" ≠ "ส่งสำเร็จ")
 9. contract fixture ห้าม hardcode พิกัด (derive จาก `kitchen_location()`) · fixture insert ฐานะเจ้าของ DB (role ใช้ตอนเรียก RPC) · `RESET ROLE` ต้นทุก DO block
 10. `AI_WORK_STATE.md` = single source of truth — อัปเดตทุกก้อนงาน · กติกาเต็ม: `.clinerules` + `docs/BMB_HANDOFF_MASTER_2026-10-22.md` (อ่านอย่างเดียว)
+11. **ห้ามเขียน "DONE" ถ้า Owner ยังไม่ได้ทดสอบของจริงผ่าน** (2026-10-23) — งานโค้ดเขียว = "IMPLEMENTED" เท่านั้น · ข้อมูลในเอกสารต้องไม่ค้าง (เช็ค HEAD/ของจริงก่อนเขียนเสมอ) · ห้ามอ้างไฟล์ที่ไม่มีอยู่จริง
 
 ---
 
@@ -274,6 +291,7 @@
 ---
 
 ## 📁 โครงสร้างโปรเจกต์ (Files & Docs)
+- `docs/BMB_RECOVERY_PLAN_2026-10-23.md` — **แผนซ่อมปัจจุบัน (R0-R3 · D-01..D-08 · H-01..H-04) — อ่านก่อนเริ่มงานทุกครั้ง**
 - `docs/BMB_HANDOFF_NEXT_SESSION_2026-10-17-EVE.md` — handoff ปัจจุบัน (สถานะ + E2E Checklist §3 + Blocker §4)
 - `src/config/kitchenLocation.ts` — พิกัดครัว single source (ห้าม hardcode ที่อื่น)
 - `BMB_SAME_DAY_PRE_ORDER_MASTER_PLAN.md` + `PHASE_CONTRACTS` + `EVIDENCE_LOG` + `REGRESSION_MATRIX` — กติกาเดิม (phases 0-6 ปิดแล้ว)
