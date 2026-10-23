@@ -89,6 +89,23 @@ describe('CAT-02 · server gate mirror (trg_menu_gate semantics)', () => {
     const draft = rows.map((r) => ({ ...r, is_published: false }))
     expect(mirrorPreOrderScheduleGate([{ product_id: 'prod-5', quantity: 1 }], TOMORROW, draft).allowed).toBe(true)
   })
+
+  it('R5/141: สินค้าทั่วไป (ไม่มีเมนู) ส่งร่วมรอบเดียวกับเมนูพรีออเดอร์ได้ — ไม่ reject', () => {
+    const rows = [
+      { id: 'ms-1', scheduled_date: TOMORROW, product_id: 'prod-5', delivery_round_key: null, is_published: true, note: '' },
+    ]
+    const res = mirrorPreOrderScheduleGate([{ product_id: 'prod-regular', quantity: 1 }], TOMORROW, rows)
+    expect(res.allowed).toBe(true)
+  })
+
+  it('R5/141: สินค้าเมนูผูกวันอื่น (boundDates จากปฏิทินแอดมิน) → reject', () => {
+    const rows = [
+      { id: 'ms-1', scheduled_date: TOMORROW, product_id: 'prod-5', delivery_round_key: null, is_published: true, note: '' },
+    ]
+    const res = mirrorPreOrderScheduleGate([{ product_id: 'prod-5', quantity: 1 }], TOMORROW, rows, null, null, { 'prod-5': '2099-01-01' })
+    expect(res.allowed).toBe(false)
+    expect(res.rejected?.[0].code).toBe('ERR_PRODUCT_NOT_ON_MENU')
+  })
 })
 
 // ============================================
@@ -221,9 +238,9 @@ describe('WAVE 2B · stale-cart eligibility guard (mirror of 025 §5 — client 
     expect(checkModeEligibility([mk({ is_available: false })], 'PRE_ORDER').ok).toBe(false)
     expect(checkModeEligibility([mk({ is_available: false })], 'SAME_DAY').rejected).toEqual(['เมนู A'])
   })
-  it('PRE_ORDER-only product rejected in SAME_DAY and vice versa (canonical fallback)', () => {
+  it('R5/141: PRE_ORDER รับสินค้าทุกตัว (preorder_ok = hint) — SAME_DAY ยังเช็ก same_day_ok', () => {
     expect(checkModeEligibility([mk({ same_day_ok: false })], 'SAME_DAY').ok).toBe(false)
-    expect(checkModeEligibility([mk({ preorder_ok: false })], 'PRE_ORDER').ok).toBe(false)
+    expect(checkModeEligibility([mk({ preorder_ok: false })], 'PRE_ORDER').ok).toBe(true)
     expect(checkModeEligibility([mk({ same_day_ok: false })], 'PRE_ORDER').ok).toBe(true)
     expect(checkModeEligibility([mk({ preorder_ok: false })], 'SAME_DAY').ok).toBe(true)
   })

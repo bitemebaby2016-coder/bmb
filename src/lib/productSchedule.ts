@@ -82,3 +82,33 @@ export async function getProductScheduleMap(nowMs: number = Date.now()): Promise
 export function resetProductScheduleCache(): void {
   cache = null
 }
+
+// ---- R5 (Owner 2026-10-23): แยก "เมนูรอบพิเศษ" ออกจาก pre-order ทั่วไป ----
+
+/**
+ * วันจัดส่งของตะกร้าที่มีเมนูรอบพิเศษ "ถูกกำหนดโดยปฏิทินแอดมิน" (ป้ายมุมเมนู)
+ * - ไม่มีสินค้าผูกวัน → { date: null, conflict: [] } (pre-order ทั่วไป: ลูกค้าเลือกวัน+รอบเอง)
+ * - ผูกวันเดียวกัน → { date } (checkout ล็อกวันอัตโนมัติ — ลูกค้าเลือกแค่รอบจัดส่ง)
+ * - ผูกหลายวันต่างกัน → { date: null, conflict } (แจ้งแยกสั่งคนละรอบ — ไม่เดา/ไม่ merge)
+ */
+export function resolveMenuBoundDate(
+  items: ReadonlyArray<{ product_id: string }>,
+  scheduleMap: ProductScheduleMap,
+): { date: string | null; conflict: string[] } {
+  const dates: string[] = []
+  for (const it of items || []) {
+    const d = scheduleMap?.[it.product_id]
+    if (d && !dates.includes(d)) dates.push(d)
+  }
+  if (dates.length === 0) return { date: null, conflict: [] }
+  if (dates.length === 1) return { date: dates[0], conflict: [] }
+  return { date: null, conflict: [...dates].sort() }
+}
+
+/**
+ * วันเมนูที่ผ่านรอบจัดส่งไปแล้ว = archive (เก็บทันที): ไม่โชว์ลูกค้า,
+ * แอดมินยังเห็น/วนใช้รอบถัดไปได้ (pickNextScheduleDates กรอง d < today แล้ว)
+ */
+export function isMenuDateArchived(dateISO: string, today: string = bangkokTodayISO()): boolean {
+  return typeof dateISO === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(dateISO) && dateISO < today
+}

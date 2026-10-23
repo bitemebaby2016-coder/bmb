@@ -31,6 +31,7 @@ import { listRoundsForDate, type DeliveryRoundRow } from '@/lib/bmbAdminApi_roun
 import { haversineDistanceKm } from '@/lib/deliveryRouter'
 import { KITCHEN_POINT } from '@/config/kitchenLocation'
 import { getPublishedScheduleForDate, mirrorPreOrderScheduleGate, checkModeEligibility, type MenuScheduleRow } from '@/lib/bmbMenuSchedule'
+import { getProductScheduleMap, resolveMenuBoundDate, type ProductScheduleMap } from '@/lib/productSchedule'
 import { fetchServerDeliveryFee, feeUiState, summaryFeeState } from '@/lib/deliveryFeeApi'
 import { getBusinessSettings } from '@/lib/bmbAdminApi_settings'
 import { resolvePublicBranch } from '@/lib/brandResolver'
@@ -390,6 +391,24 @@ export function CheckoutPage() {
   // resubmit cannot create a duplicate order. This is the DATABASE guarantee.
   const submitKeysRef = useRef(new SubmitKeyRing())
 
+  // ✅ R5 (Owner 2026-10-23): แยกฟีเจอร์ "เมนูรอบพิเศษ" ออกจาก pre-order ทั่วไป —
+  // วันจัดส่งของเมนูที่แอดมินใส่ในปฏิทิน (ป้ายมุมเมนู = ProductScheduleMap)
+  // ถูกกำหนดอัตโนมัติตอนเช็คเอาท์ ลูกค้าเลือกเฉพาะรอบจัดส่ง · สินค้าทั่วไป
+  // เพิ่มได้ทั้งหมดและส่งร่วมรอบเดียวกัน
+  const [scheduleMap, setScheduleMap] = useState<ProductScheduleMap>({})
+  useEffect(() => {
+    let alive = true
+    void getProductScheduleMap().then((m) => { if (alive) setScheduleMap(m) })
+    return () => { alive = false }
+  }, [])
+  const menuBound = resolveMenuBoundDate(items.map((i) => ({ product_id: i.product.id })), scheduleMap)
+  // วันจัดส่งถูกกำหนดโดยปฏิทินเมนูอัตโนมัติ (ลูกค้าเลือกแค่รอบ) — ไม่ให้ค่าเดิมจาก minDate ทับ
+  useEffect(() => {
+    if (orderMode === 'PRE_ORDER' && menuBound.date && scheduledDate !== menuBound.date) {
+      setScheduledDate(menuBound.date)
+    }
+  }, [orderMode, menuBound.date, scheduledDate])
+
   async function handlePlaceOrder() {
     if (!customer) {
       showToast('กรุณาเข้าสู่ระบบก่อนสั่งซื้อ', 'info')
@@ -453,10 +472,17 @@ export function CheckoutPage() {
         orderMode,
       )
       if (!elig.ok) {
-        showToast(`สินค้าถูกปิดหรือไม่รองรับโหมด${orderMode === 'PRE_ORDER' ? ' PRE_ORDER ' : ' SAME_DAY '}: ${elig.rejected.join(', ')} — นำออกจากรถเข็นแล้วลองใหม่`, 'error')
+        showToast(`สินค้าที่ยังไม่พร้อมสำหรับ${orderMode === 'PRE_ORDER' ? 'รอบพรีออเดอร์' : 'สั่งวันนี้'}: ${elig.rejected.join(', ')} — นำออกจากตะกร้าหรือเลือกรอบใหม่`, 'error')
         setIsProcessing(false)
         return
       }
+    }
+
+    // ✅ R5: เมนูรอบพิเศษหลายวันในตะกร้าเดียว = แยกสั่งคนละรอบ (ไม่เดา/ไม่ merge)
+    if (menuBound.conflict.length > 1) {
+      showToast(`สินค้าเมนูรอบพิเศษถูกกำหนดวันจัดส่งต่างกันตามปฏิทินเมนู (${menuBound.conflict.join(', ')}) — แยกสั่งคนละรอบ`, 'error')
+      setIsProcessing(false)
+      return
     }
 
     // ✅ CAT-02: canonical menu schedule mirror (migration 039 trg_menu_gate).
@@ -468,10 +494,11 @@ export function CheckoutPage() {
         items.map((i) => ({ product_id: i.product.id, quantity: i.quantity })),
         scheduledDate, daySchedule,
         selectedRound?.round_key ?? null, selectedRound?.display_name ?? null,
+        scheduleMap,
       )
       if (!gate.allowed) {
         const off = (gate.rejected || []).map((r) => items.find((i) => i.product.id === r.product_id)?.product.name || r.product_id).join(', ')
-        showToast(`เมนูวันที่ ${scheduledDate} ไม่รับสินค้านี้: ${off} — เลือกวันอื่นที่เปิดเมนู`, 'error')
+        showToast(`เมนูรอบพิเศษถูกผูกวัน/รอบตามปฏิทินแอดมิน: ${off} — ย้ายไปวันที่เมนูกำหนด หรือเอาออกจากตะกร้า`, 'error')
         setIsProcessing(false)
         return
       }
@@ -525,6 +552,8 @@ export function CheckoutPage() {
       name: i.product.name,
       quantity: i.quantity,
       line_mode: i.line_mode ?? orderMode,
+      // R5: วันบังคับจากปฏิทินเมนู (เมนูรอบพิเศษ) — m1 ตรวจ conflict ไม่เดาวัน
+      required_scheduled_date: orderMode === 'PRE_ORDER' ? (scheduleMap[i.product.id] ?? null) : null,
     }))
     const isMixedCart = new Set(planLines.map((l) => l.line_mode)).size > 1
     if (isMixedCart) {
@@ -854,15 +883,28 @@ export function CheckoutPage() {
           <input
             type="date"
             data-testid="preorder-date"
-            min={minDate}
+            min={menuBound.date ?? minDate}
+            max={menuBound.date ?? undefined}
+            disabled={!!menuBound.date}
             value={scheduledDate}
             onChange={(e) => setScheduledDate(e.target.value)}
-            className="input mb-2"
+            className="input mb-2 disabled:bg-brand-bg disabled:text-brand-muted"
           />
-          <p className="text-xs text-brand-muted">จองล่วงหน้าได้ตั้งแต่ {minDate} เป็นต้นไป (lead time {leadDays} วัน)</p>
+          {menuBound.date ? (
+            <p className="text-xs text-blue-700" data-testid="menu-date-lock">
+              วันจัดส่งถูกกำหนดโดยเมนูรอบพิเศษของแอดมิน (ปฏิทินเมนู): <b>{menuBound.date}</b> — เลือกเฉพาะรอบจัดส่งด้านล่าง
+            </p>
+          ) : (
+            <p className="text-xs text-brand-muted">จองล่วงหน้าได้ตั้งแต่ {minDate} เป็นต้นไป (lead time {leadDays} วัน)</p>
+          )}
+          {menuBound.conflict.length > 1 && (
+            <p className="text-xs text-red-600 mt-1" data-testid="menu-date-conflict">
+              สินค้าเมนูรอบพิเศษถูกกำหนดวันจัดส่งต่างกันตามปฏิทินเมนู ({menuBound.conflict.join(', ')}) — แยกสั่งคนละรอบ
+            </p>
+          )}
           {daySchedule.length > 0 ? (
             <div data-testid="schedule-banner" className="mt-2 p-2 rounded-lg bg-blue-50 border border-blue-200 text-xs text-blue-700">
-              📅 วันที่ {scheduledDate} เปิดเมนูจำกัด ({daySchedule.length} รายการ) — สินค้าที่ไม่อยู่ในเมนูวันนี้ server จะปฏิเสธ (ERR_PRODUCT_NOT_ON_MENU)
+              📅 วันที่ {scheduledDate} มีเมนูรอบพิเศษ ({daySchedule.length} รายการ) — เมนูเหล่านี้ถูกผูกวัน/รอบตามปฏิทินแอดมิน สินค้าทั่วไปสั่งร่วมรอบเดียวกันได้ (server: ERR_PRODUCT_NOT_ON_MENU เฉพาะเมนูที่ผิดวัน/รอบ)
             </div>
           ) : (
             <div data-testid="schedule-banner" className="mt-2 p-2 rounded-lg bg-gray-50 border border-gray-200 text-xs text-slate-600">

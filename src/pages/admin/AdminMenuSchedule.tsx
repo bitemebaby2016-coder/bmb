@@ -134,6 +134,9 @@ export function AdminMenuSchedule() {
         <div className="flex flex-wrap gap-1 mb-4" data-testid="week-strip">
           {weekSummary.map((d) => {
             const sel = d.scheduled_date === date
+            // R5 (Owner 2026-10-23): วันที่ผ่านรอบจัดส่ง = archive (เก็บทันที) — วนใช้
+            // รอบถัดไปได้ แต่ไม่โชว์วันที่ผ่านแล้วแก่ลูกค้า
+            const past = d.scheduled_date < new Date().toISOString().slice(0, 10)
             const cls = d.published
               ? (d.rows === 2 ? 'bg-green-100 text-green-800 border-green-300' : 'bg-red-100 text-red-800 border-red-300')
               : (d.rows > 0 ? 'bg-yellow-50 text-yellow-800 border-yellow-300' : 'bg-white text-brand-muted border')
@@ -144,9 +147,9 @@ export function AdminMenuSchedule() {
                 onClick={() => setDate(d.scheduled_date)}
                 data-testid={`week-day-${d.scheduled_date}`}
                 className={`px-2 py-1 rounded-lg border text-xs font-medium ${cls} ${sel ? 'ring-2 ring-blue-400' : ''}`}
-                title={`${d.scheduled_date} — ${d.rows} entries · ${d.published ? 'PUBLISHED' : d.rows > 0 ? 'draft' : 'ว่าง'}`}
+                title={`${d.scheduled_date} — ${d.rows} entries · ${d.published ? 'PUBLISHED' : d.rows > 0 ? 'draft' : 'ว่าง'}${past ? ' · จัดเก็บแล้ว (ผ่านรอบจัดส่ง — วนใช้รอบถัดไปได้)' : ''}`}
               >
-                {d.scheduled_date.slice(5)} · {d.rows}/2 {d.published ? '✓' : ''}
+                {d.scheduled_date.slice(5)} · {d.rows}/2 {d.published ? '✓' : ''}{past ? ' 📦' : ''}
               </button>
             )
           })}

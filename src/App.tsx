@@ -37,8 +37,7 @@ const PaymentConfirmationPage = lazy(() => import('./pages/PaymentConfirmationPa
 const InventoryPage = lazy(() => import('./pages/admin/InventoryPage').then(m => ({ default: m.InventoryPage })))
 const AdminDashboard = lazy(() => import('./pages/admin/AdminDashboard').then(m => ({ default: m.AdminDashboard })))
 const AdminOrders = lazy(() => import('./pages/admin/AdminOrders').then(m => ({ default: m.AdminOrders })))
-const AdminProducts = lazy(() => import('./pages/admin/AdminProducts').then(m => ({ default: m.AdminProducts })))
-const AdminMenuSchedule = lazy(() => import('./pages/admin/AdminMenuSchedule').then(m => ({ default: m.AdminMenuSchedule })))
+const MenuScheduleRedirect = () => <Navigate to="/admin/products?tab=schedule" replace />
 const AdminKitchen = lazy(() => import('./pages/admin/AdminKitchen').then(m => ({ default: m.AdminKitchen })))
 const AdminRecipes = lazy(() => import('./pages/admin/AdminRecipes').then(m => ({ default: m.AdminRecipes })))
 const AuditLogPage = lazy(() => import('./pages/admin/AuditLogPage').then(m => ({ default: m.AuditLogPage })))
@@ -49,9 +48,9 @@ const RouteOptimizationPage = lazy(() => import('./pages/admin/RouteOptimization
 const OrdersHub = lazy(() => import('./components/admin/AdminHubs').then(m => ({ default: m.OrdersHub })))
 const DeliveryHub = lazy(() => import('./components/admin/AdminHubs').then(m => ({ default: m.DeliveryHub })))
 const SettingsHub = lazy(() => import('./components/admin/AdminHubs').then(m => ({ default: m.SettingsHub })))
+const MenuHub = lazy(() => import('./components/admin/AdminHubs').then(m => ({ default: m.MenuHub })))
+const OrgHub = lazy(() => import('./components/admin/AdminHubs').then(m => ({ default: m.OrgHub })))
 const AdminPromotions = lazy(() => import('./pages/admin/AdminPromotions').then(m => ({ default: m.AdminPromotions })))
-const AdminBrands = lazy(() => import('./pages/admin/AdminBrands').then(m => ({ default: m.AdminBrands })))
-const AdminTenants = lazy(() => import('./pages/admin/AdminTenants').then(m => ({ default: m.AdminTenants })))
 const AdminRounds = lazy(() => import('./pages/admin/AdminRounds').then(m => ({ default: m.AdminRounds })))
 const AdminCustomers = lazy(() => import('./pages/admin/AdminCustomers').then(m => ({ default: m.AdminCustomers })))
 const AdminSettings = lazy(() => import('./pages/admin/AdminSettings').then(m => ({ default: m.AdminSettings })))
@@ -242,8 +241,8 @@ export default function App() {
         <Route path="/admin" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminNav><AdminDashboard /></AdminNav></Layout></AdminRoute></Suspense>} />
         <Route path="/admin/inventory" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminNav><InventoryPage /></AdminNav></Layout></AdminRoute></Suspense>} />
         <Route path="/admin/orders" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminNav><OrdersHub /></AdminNav></Layout></AdminRoute></Suspense>} />
-        <Route path="/admin/products" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminNav><AdminProducts /></AdminNav></Layout></AdminRoute></Suspense>} />
-        <Route path="/admin/menu-schedule" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminNav><AdminMenuSchedule /></AdminNav></Layout></AdminRoute></Suspense>} />
+        <Route path="/admin/products" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminNav><MenuHub /></AdminNav></Layout></AdminRoute></Suspense>} />
+        <Route path="/admin/menu-schedule" element={<MenuScheduleRedirect />} />
         {/* Phase 4 (RC-6): /admin/pre-orders = redirect ไป AdminOrders + preset filter (bookmark เดิมไม่ตาย) */}
         <Route path="/admin/pre-orders" element={<Navigate to="/admin/orders?mode=PRE_ORDER" replace />} />
         <Route path="/admin/kitchen" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminNav><AdminKitchen /></AdminNav></Layout></AdminRoute></Suspense>} />
@@ -269,10 +268,10 @@ export default function App() {
         <Route path="/admin/mascot" element={<Navigate to="/admin/settings?tab=mascot" replace />} />
         
         {/* TEN-05: Brand Management */}
-        <Route path="/admin/brands" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminNav><AdminBrands /></AdminNav></Layout></AdminRoute></Suspense>} />
+        <Route path="/admin/brands" element={<Navigate to="/admin/tenants?tab=brands" replace />} />
         
         {/* TEN-06: Tenant Management */}
-        <Route path="/admin/tenants" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminNav><AdminTenants /></AdminNav></Layout></AdminRoute></Suspense>} />
+        <Route path="/admin/tenants" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminNav><OrgHub /></AdminNav></Layout></AdminRoute></Suspense>} />
         
         {/* CAT-04: Admin Portfolio / Past Works */}
         <Route path="/admin/portfolio" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminNav><AdminPortfolioPage /></AdminNav></Layout></AdminRoute></Suspense>} />

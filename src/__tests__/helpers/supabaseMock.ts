@@ -314,16 +314,20 @@ export function createSupabaseMock(opts?: { failReadTable?: string; noAdmin?: bo
         }
         if (!prod) return { data: null, error: { code: 'ERR_PRODUCT_NOT_FOUND', message: 'ERR_PRODUCT_NOT_FOUND' } }
         if (!prod.is_available) return { data: null, error: { code: 'ERR_PRODUCT_UNAVAILABLE', message: 'ERR_PRODUCT_UNAVAILABLE' } }
-        // === 039 trg_menu_gate mirror: PRE_ORDER on a day WITH a published menu →
-        // every product must be on that day's menu (round key NULL = all rounds).
+        // === 039/141 trg_menu_gate mirror (R5 Owner 2026-10-23): เมนูรอบพิเศษผูก
+        // วัน/รอบเฉพาะ "สินค้าในเมนู" — สินค้าทั่วไป (ไม่มีเมนูผูกวัน) ส่งร่วมรอบ
+        // เดียวกับเมนูพรีออเดอร์ได้ · แถวเมนูที่ผ่านรอบจัดส่งแล้ว = archived ไม่ผูกมัด
         if (mode === 'PRE_ORDER' && p.scheduled_date) {
-          const sched = (tables['menu_schedule'] || []).filter((s: any) => s.scheduled_date === p.scheduled_date && s.is_published)
-          if (sched.length > 0) {
+          const todayISO = new Date().toISOString().slice(0, 10)
+          const rows = (tables['menu_schedule'] || []).filter(
+            (s: any) => s.product_id === it.product_id && s.is_published)
+          const active = rows.filter((s: any) => String(s.scheduled_date) >= todayISO)
+          if (active.length > 0) {
             const roundKey = round?.round_key ?? round?.name ?? null
-            const onMenu = sched.some((s: any) =>
-              s.product_id === it.product_id &&
+            const boundOk = active.some((s: any) =>
+              String(s.scheduled_date) === String(p.scheduled_date) &&
               (!s.delivery_round_key || s.delivery_round_key === roundKey))
-            if (!onMenu) {
+            if (!boundOk) {
               return { data: null, error: { code: 'ERR_PRODUCT_NOT_ON_MENU', message: 'ERR_PRODUCT_NOT_ON_MENU' } }
             }
           }
@@ -334,12 +338,11 @@ export function createSupabaseMock(opts?: { failReadTable?: string; noAdmin?: bo
         if (mode === 'SAME_DAY' && oh.same_day_open === false) return { data: null, error: { code: 'ERR_ORDER_MODE_CLOSED', message: 'ERR_ORDER_MODE_CLOSED' } }
         const roundKeyForOh = round?.round_key ?? round?.name
         if (roundKeyForOh && oh[String(roundKeyForOh) + '_open'] === false) return { data: null, error: { code: 'ERR_ROUND_CLOSED', message: 'ERR_ROUND_CLOSED' } }
-        // === 025 §5 INVARIANT 1: server-authoritative mode gate (both directions) ===
-        // missing canonical columns fall back to the 023 DB defaults (same_day true / alias)
+        // === 025 §5 / migration 141 (R5 Owner 2026-10-23): mode gate ===
+        // PRE_ORDER รับสินค้า "ทุกตัว" (ยกเลิก gate available_preorder — สินค้าทั่วไป
+        // ส่งร่วมรอบเดียวกับเมนูพรีออเดอร์ได้) · SAME_DAY ยังเช็ก available_same_day
         const sameDayOk = prod.available_same_day ?? true
-        const preOrderOk = prod.available_preorder ?? prod.is_preorder ?? false
         if (mode === 'SAME_DAY' && !sameDayOk) return { data: null, error: { code: 'ERR_PRODUCT_MODE_NOT_ALLOWED', message: 'ERR_PRODUCT_MODE_NOT_ALLOWED' } }
-        if (mode === 'PRE_ORDER' && !preOrderOk) return { data: null, error: { code: 'ERR_PRODUCT_MODE_NOT_ALLOWED', message: 'ERR_PRODUCT_MODE_NOT_ALLOWED' } }
         const q = Number(it.quantity ?? 0)
         if (q <= 0 || q > 1000) return { data: null, error: { code: 'ERR_INVALID_QUANTITY', message: 'ERR_INVALID_QUANTITY' } }
         subtotal += q * Number(prod.price)

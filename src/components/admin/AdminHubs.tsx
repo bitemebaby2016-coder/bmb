@@ -14,6 +14,10 @@
 import { useState, type ReactNode } from 'react'
 import { AdminOrders } from '@/pages/admin/AdminOrders'
 import { AdminPaymentExceptions } from '@/pages/admin/AdminPaymentExceptions'
+import { AdminProducts } from '@/pages/admin/AdminProducts'
+import { AdminMenuSchedule } from '@/pages/admin/AdminMenuSchedule'
+import { AdminTenants } from '@/pages/admin/AdminTenants'
+import { AdminBrands } from '@/pages/admin/AdminBrands'
 import { DeliveryManagement } from '@/pages/admin/DeliveryManagement'
 import { RouteOptimizationPage } from '@/pages/admin/RouteOptimizationPage'
 import { AdminSettings } from '@/pages/admin/AdminSettings'
@@ -106,6 +110,36 @@ export function SettingsHub() {
         { key: 'store', label: 'ตั้งค่าร้าน/สาขา', icon: '⚙️', render: () => <AdminSettings /> },
         { key: 'print', label: 'เครื่องพิมพ์', icon: '🖨️', render: () => <AdminPrintSettings /> },
         { key: 'mascot', label: 'มาสคอต', icon: '🤖', render: () => <MascotSettingsPage /> },
+      ]}
+    />
+  )
+}
+
+// ---- R5 (Owner 2026-10-23): ยุบรวมระลอก 2 ----
+//   MenuHub = เมนู/สินค้า + ตารางเมนูรอบพิเศษ (menu_schedule 7 วัน/14 เมนู — ชุดเดียวกัน)
+//   OrgHub  = องค์กร/ร้านค้า + แบรนด์ (tenancy/white-label control plane ชุดเดียวกัน)
+
+export function MenuHub() {
+  return (
+    <HubShell
+      title="เมนูและตารางเมนู"
+      storageKey="bmb-hub-menu"
+      tabs={[
+        { key: 'products', label: 'เมนู/สินค้า', icon: '🍽️', render: () => <AdminProducts /> },
+        { key: 'schedule', label: 'ตารางเมนูรอบพิเศษ', icon: '📅', render: () => <AdminMenuSchedule /> },
+      ]}
+    />
+  )
+}
+
+export function OrgHub() {
+  return (
+    <HubShell
+      title="องค์กรและแบรนด์"
+      storageKey="bmb-hub-org"
+      tabs={[
+        { key: 'tenants', label: 'องค์กร/ร้านค้า', icon: '🏢', render: () => <AdminTenants /> },
+        { key: 'brands', label: 'แบรนด์', icon: '🏳️', render: () => <AdminBrands /> },
       ]}
     />
   )

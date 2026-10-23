@@ -307,3 +307,15 @@ jobs:
             exit 1
           fi
           echo "Contract 140 OK — auto-close cutoff policy + audit + idempotent hold"
+
+      - name: Contract 141 — PRE_ORDER universal products + menu-calendar binding (ROLLBACK)
+        run: |
+          set +e
+          out=$(psql -v ON_ERROR_STOP=1 -f e2e/contracts_141.sql 2>&1); rc=$?
+          printf '%s\n' "$out"
+          if [ $rc -ne 0 ]; then
+            msg=$(printf '%s\n' "$out" | grep -m1 'ERROR:' || echo "rc=$rc")
+            echo "::error file=e2e/contracts_141.sql::$msg"
+            exit 1
+          fi
+          echo "Contract 141 OK — PRE_ORDER all products + menu date binding + archived rows"

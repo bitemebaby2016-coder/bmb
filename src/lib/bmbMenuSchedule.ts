@@ -151,8 +151,12 @@ export function checkModeEligibility(
   items: EligibilityItem[],
   mode: 'SAME_DAY' | 'PRE_ORDER',
 ): EligibilityResult {
+  // R5 (Owner 2026-10-23): PRE_ORDER รับสินค้า "ทุกตัว" ที่ยังขายอยู่ — สินค้าทั่วไป
+  // (ไม่ใช่เมนูพรีออเดอร์) เพิ่มได้ทั้งหมดและส่งร่วมรอบเดียวกับเมนูพรีออเดอร์ได้
+  // (preorder_ok เหลือเป็น hint แสดงผล/ตารางเมนูเท่านั้น ไม่ใช่ตัว gate อีกต่อไป)
+  // เฉพาะ SAME_DAY ที่ยังเช็ก same_day_ok (สินค้า made-to-order ปิดรับวันนี้)
   const rejected = items
-    .filter((it) => !it.is_available || (mode === 'PRE_ORDER' ? !it.preorder_ok : !it.same_day_ok))
+    .filter((it) => !it.is_available || (mode === 'PRE_ORDER' ? false : !it.same_day_ok))
     .map((it) => it.name || it.product_id)
   return { ok: rejected.length === 0, rejected }
 }
@@ -239,10 +243,12 @@ export interface ScheduleGateResult {
 }
 
 /**
- * Mirror of the server PRE_ORDER schedule gate for a cart on a chosen date/round.
- * - date has NO published schedule → allowed (039: existing available_preorder gate)
- * - date HAS a published schedule → every product must be on it
- *   (round key NULL = all rounds, or matching the selected round's key/name)
+ * Mirror of the server PRE_ORDER schedule gate (migration 141 — R5 Owner 2026-10-23):
+ * - สินค้าทั่วไป (ไม่มีเมนูผูกวัน) → ผ่านเสมอ — ส่งร่วมรอบเดียวกับเมนูพรีออเดอร์ได้
+ *   (ยกเลิกกฎเดิม "วันที่มีเมนู = รับเฉพาะสินค้าในเมนู")
+ * - เมนูที่ถูกผูกวัน/รอบโดยปฏิทินแอดมิน (ตารางเมนู 7 วัน/14 เมนู) → ต้องตรงวันที่
+ *   และรอบที่เมนูกำหนด (round key NULL/'' = ทุกรอบ, หรือตรงกับรอบที่เลือก)
+ * - boundDates (ProductScheduleMap จากป้ายมุมเมนู): สินค้าผูกวันอื่นอยู่ → reject
  * Server remains authoritative — this only prevents showing "open" when the
  * RPC would reject with ERR_PRODUCT_NOT_ON_MENU.
  */
@@ -252,18 +258,26 @@ export function mirrorPreOrderScheduleGate(
   scheduleRows: MenuScheduleRow[],
   selectedRoundKey?: string | null,
   roundName?: string | null,
+  boundDates?: Readonly<Record<string, string>>,
 ): ScheduleGateResult {
   const published = scheduleRows.filter((r) => r.scheduled_date === scheduledDate && r.is_published)
-  if (published.length === 0) return { allowed: true }
   const rejected: ScheduleGateResult['rejected'] = []
   for (const it of cartItems) {
-    const onMenu = published.some(
-      (r) =>
-        r.product_id === it.product_id &&
-        (r.delivery_round_key == null || r.delivery_round_key === '' ||
-          r.delivery_round_key === selectedRoundKey || r.delivery_round_key === roundName),
-    )
-    if (!onMenu) rejected.push({ product_id: it.product_id, code: 'ERR_PRODUCT_NOT_ON_MENU' })
+    const row = published.find((r) => r.product_id === it.product_id)
+    if (row) {
+      const roundBound =
+        !(row.delivery_round_key == null || row.delivery_round_key === '') &&
+        row.delivery_round_key !== selectedRoundKey &&
+        row.delivery_round_key !== roundName
+      if (roundBound) {
+        rejected.push({ product_id: it.product_id, code: 'ERR_PRODUCT_NOT_ON_MENU' })
+        continue
+      }
+    }
+    const boundDate = boundDates?.[it.product_id]
+    if (boundDate && boundDate !== scheduledDate) {
+      rejected.push({ product_id: it.product_id, code: 'ERR_PRODUCT_NOT_ON_MENU' })
+    }
   }
   return rejected.length === 0 ? { allowed: true } : { allowed: false, rejected }
 }

@@ -104,18 +104,20 @@ describe('cancel_order — canonical cancellation (owner rules)', () => {
 })
 
 describe('server mode gate — client cannot order a product in a forbidden mode', () => {
-  it('rejects PRE_ORDER for a same-day-only product', async () => {
+  it('R5/141: PRE_ORDER accepts every available product (สินค้าทั่วไปส่งร่วมรอบเดียวกับเมนูพรีออเดอร์ได้)', async () => {
     const date = TOMORROW()
     await supabase.rpc('ensure_rounds_for_date', { p_date: date })
     const roundId = `round-${date.replace(/-/g, '')}-morning`
     const res = await supabase.rpc('create_order_with_items', {
-      p_items: [{ product_id: 'prod-2', quantity: 1 }], // available_preorder = false
+      p_items: [{ product_id: 'prod-2', quantity: 1 }], // available_preorder = false → ต้องผ่าน (141 ยกเลิก gate)
       p_delivery_round_id: roundId,
       p_customer_name: 'Somchai Rakdee',
+      p_customer_phone: '0900000000',
       p_order_mode: 'PRE_ORDER',
       p_scheduled_date: date,
     })
-    expect(res.error?.code).toBe('ERR_PRODUCT_MODE_NOT_ALLOWED')
+    expect(res.error).toBeNull()
+    expect(res.data?.order_number).toBeTruthy()
   })
 
   it('rejects SAME_DAY for a preorder-only product', async () => {

@@ -12,8 +12,7 @@ export interface AdminNavItem {
 export const ADMIN_NAV_ITEMS: AdminNavItem[] = [
   { to: '/admin', label: 'à¸ à¸²à¸žà¸£à¸§à¸¡', icon: '\uD83D\uDCCA' },
   { to: '/admin/orders', label: 'à¸­à¸­à¹€à¸”à¸­à¸£à¹Œ', icon: '\uD83D\uDCE6' },
-  { to: '/admin/products', label: 'à¹€à¸¡à¸™à¸¹', icon: '\uD83C\uDF7D\uFE0F' },
-  { to: '/admin/menu-schedule', label: 'à¸•à¸²à¸£à¸²à¸‡à¹€à¸¡à¸™à¸¹', icon: '\uD83D\uDDD3\uFE0F' },
+  { to: '/admin/products', label: 'เมนูและตารางเมนู', icon: '\uD83C\uDF7D\uFE0F' },
   { to: '/admin/kitchen', label: 'à¸„à¸£à¸±à¸§/à¸œà¸¥à¸´à¸•', icon: '\uD83C\uDF73' },
   { to: '/admin/recipes', label: 'à¸ªà¸¹à¸•à¸£à¸­à¸²à¸«à¸²à¸£', icon: '\uD83E\uDDEA' },
   { to: '/admin/marketing', label: 'à¸à¸²à¸£à¸•à¸¥à¸²à¸”', icon: '\uD83D\uDCE3' },
@@ -34,8 +33,7 @@ export const ADMIN_NAV_ITEMS: AdminNavItem[] = [
   { to: '/admin/ai-studio', label: 'à¸ªà¸•à¸¹à¸”à¸´à¹‚à¸­ AI', icon: '\uD83E\uDD16' },
   { to: '/admin/settings', label: 'à¸•à¸±à¹‰à¸‡à¸„à¹ˆà¸²à¸£à¹‰à¸²à¸™', icon: '\u2699\uFE0F' },
   // TEN-06: White-label control plane entries
-  { to: '/admin/tenants', label: 'à¸­à¸‡à¸„à¹Œà¸à¸£/à¸£à¹‰à¸²à¸™à¸„à¹‰à¸²', icon: '\uD83C\uDFE2' },
-  { to: '/admin/brands', label: 'à¹à¸šà¸£à¸™à¸”à¹Œ', icon: '\uD83C\uDFF3\uFE0F' },
+  { to: '/admin/tenants', label: 'องค์กรและแบรนด์', icon: '\uD83C\uDFE2' },
   { to: '/admin/control', label: 'à¸„à¸§à¸šà¸„à¸¸à¸¡à¸£à¹‰à¸²à¸™', icon: '\uD83D\uDED4\uFE0F' },
 ]
 
@@ -74,8 +72,7 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
     id: 'menu',
     label: '\u0E40\u0E21\u0E19\u0E39 \u0E41\u0E25\u0E30 \u0E1D\u0E23\u0E21\u0E2D\u0E1A\u0E1E\u0E34\u0E40\u0E28\u0E29',
     items: [
-      { to: '/admin/products', label: 'à¹€à¸¡à¸™à¸¹', icon: '\uD83C\uDF7D\uFE0F' },
-      { to: '/admin/menu-schedule', label: 'à¸•à¸²à¸£à¸²à¸‡à¹€à¸¡à¸™à¸¹', icon: '\uD83D\uDDD3\uFE0F' },
+      { to: '/admin/products', label: 'เมนูและตารางเมนู', icon: '\uD83C\uDF7D\uFE0F' },
       { to: '/admin/promotions', label: 'à¹‚à¸›à¸£à¹‚à¸¡à¸Šà¸±à¹ˆà¸™', icon: '\uD83C\uDF81' },
       { to: '/admin/content-approvals', label: 'à¸•à¸£à¸§à¸ˆà¹€à¸™à¸·à¹‰à¸­à¸«à¸²', icon: '\uD83D\uDED6\uFE0F' },
       { to: '/admin/marketing', label: 'à¸à¸²à¸£à¸•à¸¥à¸²à¸”', icon: '\uD83D\uDCE3' },
@@ -103,8 +100,7 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
       { to: '/admin/asset-audit', label: 'à¸•à¸£à¸§à¸ˆà¸£à¸¹à¸›à¸ªà¸´à¸™à¸„à¹‰à¸²', icon: '\uD83D\uDD0D' },
       { to: '/admin/errors', label: 'à¸›à¸±à¸à¸«à¸²à¸£à¸°à¸šà¸š', icon: '\uD83E\uDE79' },
       { to: '/admin/settings', label: 'à¸•à¸±à¹‰à¸‡à¸„à¹ˆà¸²à¸£à¹‰à¸²à¸™', icon: '\u2699\uFE0F' },
-      { to: '/admin/tenants', label: 'à¸­à¸‡à¸„à¹Œà¸à¸£/à¸£à¹‰à¸²à¸™à¸„à¹‰à¸²', icon: '\uD83C\uDFE2' },
-      { to: '/admin/brands', label: 'à¹à¸šà¸£à¸™à¸”à¹Œ', icon: '\uD83C\uDFF3\uFE0F' },
+      { to: '/admin/tenants', label: 'องค์กรและแบรนด์', icon: '\uD83C\uDFE2' },
     ],
   },
 ]

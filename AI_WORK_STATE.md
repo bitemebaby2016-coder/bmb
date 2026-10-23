@@ -2,12 +2,31 @@
 
 > **สถานะงานปัจจุบันของโปรเจกต์ Bite Me Baby** ใช้แนบเข้าสู่ Context ตอนเริ่มแชทเสมอ
 
-**last_updated:** 2026-10-23 รอบ 6 (R3 Whole-Project Engineering Closure — เขียนทับรอบ 5)
-**phase:** 🟡 **ENGINEERING CLOSURE READY FOR OWNER ACCEPTANCE** — งาน engineering ที่ทำได้จริงเสร็จ+verified ครบ · เหลือ Owner test A–Q + การตัดสินใจ 3 ข้อ
-**current_focus:** รอ Owner ทำ Production acceptance test ตาม `docs/BMB_R3_ENGINEERING_CLOSURE_2026-10-23.md` §12 (A–Q) + ตอบ §7 (กติการอบ/capacity/อนุมัติ repair 841-205)
-**blocked_by:** (1) Owner test A–Q บนอุปกรณ์จริง (2) การตัดสินใจ §7 ทั้ง 3 ข้อ (3) Google key restriction check (Owner console)
+**last_updated:** 2026-10-23 รอบ 7 (R5 Pre-order separation + admin hubs wave 2 — ต่อจาก R3 round-6b)
+**phase:** 🟢 **R5 SHIPPED — PRE_ORDER แยกฟีเจอร์เมนูรอบพิเศษ + ยุบรวมแอดมินระลอก 2** — เทสเขียว 1344/1344 + tsc + lint + contract 141 (production)
+**current_focus:** รอ Admin/Owner ทดสอบโปรดักชั่นจริงตาม `docs/BMB_R5_PRE_ORDER_SEPARATION_2026-10-23.md` §Checklist (ไทย) — โดยเฉพาะเคสพรีออเดอร์ผสมสินค้าทั่วไป + วันเมนูถูกล็อกโดยปฏิทินแอดมิน
+**blocked_by:** (1) ผลทดสอบโปรดักชั่นของ Admin (2) ยืนยัน cache/รีเฟรชหน้าก่อนทดสอบ (build เก่าโชว์ป้ายวันผิด)
 
 ---
+
+---
+
+## 🩺 REALITY CHECK (2026-10-23 รอบ 7 · Directive R5)
+- **คำสั่ง Owner:** "พรีออเดอร์ควรเพิ่มสินค้าที่ไม่ใช่พรีออเดอร์ได้ทั้งหมดและส่งในรอบเดียวกับพรีออเดอร์ได้ ... ต้องแยกระหว่างพรีออเดอร์ [ทั่วไป] กับเมนูที่แอดมินใส่เองทีละ 7 วัน 14 เมนู (วันถูกกำหนดโดยปฏิทินที่แอดมินใส่ — ป้ายมุมเมนู) แล้วลูกค้าเลือกแค่รอบ ... เมนูที่เลยวันไปแล้วให้เก็บ archive (ไม่โชว์วันที่ผ่านรอบจัดส่ง) ... ต้องการยุบรวมระลอก 2 ... ผ่านหมดค่อยคอมมิทพุช แอดมินจะทดสอบโปรดักชั่นจริง แจ้งรายการทดสอบละเอียดภาษาไทย"
+- **ทำรอบนี้ (ทั้งหมด verified):**
+  - **C1 PRE_ORDER รับสินค้าทุกตัว:** ยกเลิก gate `PRE_ORDER × available_preorder` (client checkModeEligibility + server create_order_with_items ใน migration 141) — สินค้าทั่วไปเพิ่มในตะกร้าพรีออเดอร์ได้ทั้งหมด · SAME_DAY gate (available_same_day) คงเดิม
+  - **C2 แยกเมนูรอบพิเศษตามปฏิทินแอดมิน:** menu_schedule (7 วัน/14 เมนู) ผูก "วันจัดส่ง" ให้สินค้าในเมนูเท่านั้น (ป้ายมุมเมนู = ProductScheduleMap) — checkout ล็อกวันอัตโนมัติ (resolveMenuBoundDate), ลูกค้าเลือกแค่รอบจัดส่ง · สินค้าทั่วไปส่งร่วมรอบเดียวกันได้ · ผูกหลายวัน = conflict แจ้งแยกสั่ง (ไม่เดา) · enforce_menu_gate ใหม่: สินค้าผูกวันต้องตรงวัน/รอบ, สินค้าทั่วไปผ่าน
+  - **C3 archive วันเมนูที่ผ่านรอบจัดส่ง:** pickNextScheduleDates กรอง d < today (ไม่โชว์ลูกค้า) + isMenuDateArchived + ป้าย "📦 จัดเก็บแล้ว" ใน week strip แอดมิน (วนใช้รอบถัดไปได้)
+  - **ยุบรวมระลอก 2:** MenuHub (เมนู/สินค้า + ตารางเมนูรอบพิเศษ, /admin/products) + OrgHub (องค์กร/ร้านค้า + แบรนด์, /admin/tenants) · เส้นทางเก่า /admin/menu-schedule → ?tab=schedule, /admin/brands → ?tab=brands (bookmark ไม่ตาย)
+  - **Gates:** vitest 1344/1344 (130 ไฟล์, preOrderUnification 10 ข้อใหม่) + tsc + lint + brandNameGuard + secret scan · contract 141 (G1–G5b) ใน CI + production
+- **เทสที่เปลี่ยนสัญญา (ตั้งใจ):** menuSchedule (PRE_ORDER eligibility + gate), menuScheduleGate (off-menu → created), canonicalOrderFlow (PRE_ORDER accepts) — ตามสัญญา migration 141 C1/C2
+
+## ⚡ TASK: R5-PRE-ORDER-SEPARATION-2026-10-23
+1. ✅ client (bmbMenuSchedule/productSchedule/CheckoutPage ล็อกวัน) + server (migration 141) + mock mirror
+2. ✅ archive วันเมนูผ่านรอบ + Hub ระลอก 2 + nav/redirect
+3. ✅ เทสเขียวหมด → commit/push → apply 141 production → contract 141 production → record
+4. ⏳ รอ Admin ทดสอบโปรดักชั่นตาม checklist (docs/BMB_R5_PRE_ORDER_SEPARATION_2026-10-23.md)
+
 
 ## 🩺 REALITY CHECK (2026-10-23 รอบ 6 · Directive R3)
 - **ทำรอบนี้:** Phase 0–10 ครบตามลำดับ — ปิด D-05 (round audit+guards), D-04 (coupon hydration race), D-07 (focus refresh rider/admin/rounds), D-06 (map env ครบ+verify wiring), **backup restore drill = RUNTIME VERIFIED จริง** (integrity + restore ลง scratch PG17 · แก้บั๊ก drill 4 จุดที่ทำให้ไม่เคยผ่านจริง) · เพิ่ม daily restore drill ใน `daily-backup.yml`
