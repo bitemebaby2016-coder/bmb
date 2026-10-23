@@ -68,6 +68,9 @@ export function AdminOrders() {
   // หน้า (getPaymentIntentsFor = เส้นอ่านเดียวผ่าน paymentGateway) แล้วส่งเป็น props
   // เข้า SlipThumb/SlipReviewPanel (เลิก self-fetch ซ้ำทีละออเดอร์)
   const [intentsByOrder, setIntentsByOrder] = useState<Record<string, PaymentIntentLite[]>>({})
+  // R3 (D-08): ถ้าอ่าน payment_intents ไม่ได้ ต้องแสดง banner ชัด — ห้ามเงียบจน
+  // แอดมินคิดว่า "ไม่มีสลิป" (ต้นเหตุ D-08 เดิมคือ read โดน REVOKE แล้วคืน [])
+  const [paymentReadError, setPaymentReadError] = useState('')
   // D-04 (R1.2, 2026-10-23): แผงตรวจสลิป = "ทุกออเดอร์ที่รอตรวจ" ไม่ผูกหน้า/ตัวกรอง/สาขา
   // (เดิมใช้ filteredOrders ของหน้า → ออเดอร์ที่อยู่คนละหน้า/ถูก filter/branch บัง
   //  ไม่โผล่ในแผงเลย = ที่ Owner เจอ "สลิปตรวจไม่ได้")
@@ -99,10 +102,17 @@ export function AdminOrders() {
     for (const a of assignments) amap[a.order_number] = a
     setAssignmentByOrder(amap)
     // A2+M5: intents ของทุกออเดอร์ในหน้า — query เดียว (batch) แล้ว map ตาม order_number
-    const intents = await getPaymentIntentsFor(numbers)
+    // R3 (D-08): อ่านไม่ได้ = log + banner ชัด (ไม่เงียบ) — ส่วน orders โหลดต่อได้ตามปกติ
     const imap: Record<string, PaymentIntentLite[]> = {}
-    for (const it of intents) {
-      ;(imap[it.order_number] ||= []).push(it)
+    let payReadErr = ''
+    try {
+      const intents = await getPaymentIntentsFor(numbers)
+      for (const it of intents) {
+        ;(imap[it.order_number] ||= []).push(it)
+      }
+    } catch (e) {
+      payReadErr = String((e as Error)?.message || e)
+      console.error('[AdminOrders] payment intents read failed:', payReadErr)
     }
     setIntentsByOrder(imap)
     // D-04: แผงตรวจสลิปโหลดรายการ "รอตรวจ" เองต่างหากจากตัวกรองหน้า/สาขา —
@@ -113,12 +123,22 @@ export function AdminOrders() {
     setReviewOrders(review)
     const reviewNumbers = review.map((o) => o.order_number).filter((n) => !imap[n])
     if (reviewNumbers.length > 0) {
-      const more = await getPaymentIntentsFor(reviewNumbers)
-      for (const it of more) {
-        ;(imap[it.order_number] ||= []).push(it)
+      try {
+        const more = await getPaymentIntentsFor(reviewNumbers)
+        for (const it of more) {
+          ;(imap[it.order_number] ||= []).push(it)
+        }
+        setIntentsByOrder({ ...imap })
+      } catch (e) {
+        payReadErr = payReadErr || String((e as Error)?.message || e)
+        console.error('[AdminOrders] payment intents (review set) read failed:', payReadErr)
       }
-      setIntentsByOrder({ ...imap })
     }
+    setPaymentReadError(
+      payReadErr
+        ? `โหลดข้อมูลการชำระเงิน/สลิปไม่สำเร็จ: ${payReadErr} — หลักฐานอาจไม่แสดงในแผงตรวจสลิป`
+        : '',
+    )
     // 3B-2B: rounds for the current page (queue headers read the DB source of truth)
     const roundIds = Array.from(new Set(res.orders.map((o) => o.delivery_round_id).filter(Boolean))) as string[]
     const rounds = await getRoundsByIds(roundIds)
@@ -271,6 +291,13 @@ async function handleStripeRefund(orderNumber: string) {
           </button>
         ))}
       </div>
+
+      {/* R3 (D-08): error ของการอ่าน payment_intents ต้องมองเห็น ไม่หายเงียบ */}
+      {paymentReadError && (
+        <div className="card mb-3 border border-red-400 bg-red-50 text-sm text-red-700" data-testid="payment-read-error">
+          ⚠️ {paymentReadError}
+        </div>
+      )}
 
       {/* A2 (2026-10-22): "แผงตรวจสลิปเดียว" — จุดเดียวที่ตรวจหลักฐานการโอน +
           กดยืนยันการชำระเงิน (confirm_offline_payment) · M5: intents query ครั้งเดียว

@@ -62,7 +62,15 @@ export function OrderTrackPage() {
       setPhoneGate(false)
       setOrder(o)
       // RPC path already carries receipt_url; payment_intents stay anon-denied
-      if (!viaRpc) setIntents((await getPaymentIntents({ orderNumber })) as Array<Record<string, any>>)
+      // R3 (D-08): read ผ่าน RPC แล้ว — error ต้อง log ไม่เงียบ (หน้า track ยังแสดง
+      // สถานะออเดอร์ต่อได้จาก order เดิม)
+      if (!viaRpc) {
+        try {
+          setIntents((await getPaymentIntents({ orderNumber })) as Array<Record<string, any>>)
+        } catch (e) {
+          console.error('[OrderTrack] intents read failed:', e)
+        }
+      }
       setMissing(false)
     } finally {
       setLoaded(true)

@@ -316,6 +316,8 @@ export function RiderPwaPage() {
 
   // ---------- A3: POD upload → attach → delivered (ทุกขั้นต้องผ่านก่อนปิดงาน) ----------
   const lastPhotoRef = useRef<{ order: string; file: File; coords: { latitude: number; longitude: number } } | null>(null)
+  // R3 (D-02/D-07): progress รายขั้นตอน — ผู้ใช้ต้องเห็นว่าค้างที่ upload/attach/ปิดงาน
+  const [deliverStep, setDeliverStep] = useState<'upload' | 'attach' | 'finalize' | null>(null)
 
   async function completeDelivery(orderNumber: string, photo: File, coords: { latitude: number; longitude: number }) {
     if (!driver || deliverBusy) return
@@ -323,10 +325,13 @@ export function RiderPwaPage() {
     setActionError(null)
     lastPhotoRef.current = { order: orderNumber, file: photo, coords }
     try {
+      setDeliverStep('upload')
       const up = await uploadPodPhoto(photo, driver.id, orderNumber)
       if (!up.ok) { showActionError(orderNumber, up); return }
+      setDeliverStep('attach')
       const att = await driverAttachPod(orderNumber, up.path, coords)
       if (!att.ok) { showActionError(orderNumber, att); return }
+      setDeliverStep('finalize')
       const del = await driverUpdateDeliveryStatus(orderNumber, 'delivered', coords)
       if (!del.ok) { showActionError(orderNumber, del); return }
       setNotice(`🏠 ส่งมอบ ${orderNumber} สำเร็จ (บันทึกรูป POD แล้ว)`)
@@ -335,6 +340,7 @@ export function RiderPwaPage() {
       void refresh({ silent: true })
     } finally {
       setDeliverBusy(false)
+      setDeliverStep(null)
     }
   }
 
@@ -547,6 +553,7 @@ export function RiderPwaPage() {
                   <PodDeliveryPanel
                     dropOff={{ latitude: Number(activeOrder.dropoff_latitude), longitude: Number(activeOrder.dropoff_longitude) }}
                     busy={deliverBusy}
+                    busyLabel={deliverStep === 'upload' ? '📤 กำลังอัปโหลดรูป POD…' : deliverStep === 'attach' ? '🔗 กำลังบันทึกหลักฐาน…' : deliverStep === 'finalize' ? '✅ กำลังปิดงาน…' : '⏳ กำลังบันทึก…'}
                     onCoordsChange={setRiderGps}
                     onDelivered={(photo, coords) => void completeDelivery(activeOrder.order_number, photo, coords)}
                   />
@@ -558,7 +565,9 @@ export function RiderPwaPage() {
               {actionError?.order === activeOrder.order_number && (
                 <div className="mt-3 p-3 rounded-xl border-2 border-red-300 bg-red-50 text-xs text-red-700">
                   ⚠️ {actionError.error}
-                  {actionError.kind === 'network' && lastPhotoRef.current && (
+                  {/* R3 (D-02): retry สำหรับทุกความล้มเหลวที่ลองซ้ำได้ (ยกเว้น state =
+                      ไฟล์/ข้อมูลไม่ถูกต้อง ต้องเลือกใหม่) */}
+                  {actionError.kind !== 'state' && lastPhotoRef.current && (
                     <button className="btn btn-outline text-xs ml-2" onClick={() => retryDeliver()} data-testid="rider-retry-deliver">
                       🔄 ลองยืนยันส่งอีกครั้ง
                     </button>
@@ -698,11 +707,13 @@ export function RiderPwaPage() {
 // จำลองใน component นี้ (สถานะจริงอยู่ที่ assignment_status ที่แสดงด้านบน)
 // (ใช้ import React/hooks จากหัวไฟล์เดียวกัน — ไม่มี import ซ้ำ)
 
-export function PodDeliveryPanel({ dropOff, radiusMeters = 300, onDelivered, busy = false, onCoordsChange }: {
+export function PodDeliveryPanel({ dropOff, radiusMeters = 300, onDelivered, busy = false, busyLabel, onCoordsChange }: {
   dropOff: { latitude: number; longitude: number }
   radiusMeters?: number
   onDelivered?: (photo: File, coords: { latitude: number; longitude: number }) => void | Promise<void>
   busy?: boolean
+  /** R3 (D-02): ป้าย progress รายขั้นตอน (upload → attach → ปิดงาน) */
+  busyLabel?: string
   onCoordsChange?: (coords: { latitude: number; longitude: number }) => void
 }) {
   const [coords, setCoords] = useState<{ latitude: number; longitude: number } | null>(null)
@@ -710,6 +721,7 @@ export function PodDeliveryPanel({ dropOff, radiusMeters = 300, onDelivered, bus
   const [podUrl, setPodUrl] = useState<string | null>(null)
   const [podFile, setPodFile] = useState<File | null>(null)
   const fileRef = useRef<HTMLInputElement>(null)
+  const galleryRef = useRef<HTMLInputElement>(null)
 
   function checkIn() {
     if (!('geolocation' in navigator)) {
@@ -768,8 +780,19 @@ export function PodDeliveryPanel({ dropOff, radiusMeters = 300, onDelivered, bus
       )}
       {geoOk && <p className="text-xs text-green-600 mb-2">✅ อยู่ในระยะที่กำหนด ตรวจพิกัดผ่านแล้ว</p>}
 
-      <h4 className="text-sm font-semibold text-slate-700 mb-2 mt-3">2. ถ่ายภาพ proof of delivery (POD)</h4>
-      <input ref={fileRef} type="file" accept="image/*" capture="environment" onChange={onPickPhoto} className="block text-xs mb-2" data-testid="rider-pod-input" />
+      <h4 className="text-sm font-semibold text-slate-700 mb-2 mt-3">2. ถ่าย/เลือกรูป proof of delivery (POD)</h4>
+      {/* R3 (D-02 ข): แยกปุ่ม "ถ่ายรูป" (กล้อง) กับ "เลือกรูปจากเครื่อง" (แกลเลอรี่) —
+          เดิมมีแค่ capture="environment" = บังคับกล้องอย่างเดียว */}
+      <div className="flex flex-wrap gap-2 mb-2">
+        <button type="button" onClick={() => fileRef.current?.click()} className="btn btn-outline text-xs" data-testid="rider-pod-camera">
+          📷 ถ่ายรูป
+        </button>
+        <button type="button" onClick={() => galleryRef.current?.click()} className="btn btn-outline text-xs" data-testid="rider-pod-gallery">
+          🖼️ เลือกรูปจากเครื่อง
+        </button>
+      </div>
+      <input ref={fileRef} type="file" accept="image/*" capture="environment" onChange={onPickPhoto} className="hidden" data-testid="rider-pod-input" />
+      <input ref={galleryRef} type="file" accept="image/*" onChange={onPickPhoto} className="hidden" data-testid="rider-pod-gallery-input" />
       {podUrl && <img src={podUrl} alt="Proof of delivery" className="w-32 h-32 object-cover rounded-xl mb-2" />}
 
       <button
@@ -778,7 +801,7 @@ export function PodDeliveryPanel({ dropOff, radiusMeters = 300, onDelivered, bus
         className="btn btn-primary w-full mt-3 disabled:opacity-50 disabled:cursor-not-allowed"
         data-testid="rider-deliver"
       >
-        {busy ? '⏳ กำลังบันทึก…' : !geoOk ? '⛔ ตรวจพิกัดก่อนส่ง' : !podFile ? '📸 ถ่ายรูป POD ก่อนส่ง' : '✅ ยืนยันส่งสำเร็จ (POD)'}
+        {busy ? (busyLabel || '⏳ กำลังบันทึก…') : !geoOk ? '⛔ ตรวจพิกัดก่อนส่ง' : !podFile ? '📸 ถ่าย/เลือกรูป POD ก่อนส่ง' : '✅ ยืนยันส่งสำเร็จ (POD)'}
       </button>
     </GlassCard>
   )

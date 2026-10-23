@@ -119,24 +119,21 @@ export async function getPaymentExceptionOrders(): Promise<OrderForm[]> {
  */
 export async function getPaymentIntentsFor(orderNumbers: string[]): Promise<PaymentIntentLite[]> {
   if (!orderNumbers || orderNumbers.length === 0) return []
-  try {
-    const rows = await getPaymentIntents({ orderNumbers })
-    return (rows || []).map((r) => ({
-      order_number: r.order_number,
-      status: r.status,
-      method: r.method,
-      amount: r.amount,
-      payment_intent_id: r.payment_intent_id ?? null,
-      failure_reason: r.failure_reason ?? null,
-      updated_at: r.updated_at,
-      slip_path: r.slip_path ?? null,
-      slip_uploaded_at: r.slip_uploaded_at ?? null,
-      metadata: r.metadata ?? null,
-    }))
-  } catch (e) {
-    console.warn('[paymentExceptions] intents unavailable:', String(e).slice(0, 120))
-    return []
-  }
+  // R3 (D-08): อ่านผ่าน paymentGateway (RPC เดียว) — ถ้าอ่านไม่ได้ต้อง "ส่งเสียง":
+  // log + throw ให้หน้า UI แสดง banner ไม่ใช่คืน [] เงียบ ๆ จนแอดมินคิดว่าไม่มีสลิป
+  const rows = await getPaymentIntents({ orderNumbers })
+  return (rows || []).map((r) => ({
+    order_number: r.order_number,
+    status: r.status,
+    method: r.method,
+    amount: r.amount,
+    payment_intent_id: r.payment_intent_id ?? null,
+    failure_reason: r.failure_reason ?? null,
+    updated_at: r.updated_at,
+    slip_path: r.slip_path ?? null,
+    slip_uploaded_at: r.slip_uploaded_at ?? null,
+    metadata: r.metadata ?? null,
+  }))
 }
 
 /** Group classified rows into the Owner §7 view sections (display only). */

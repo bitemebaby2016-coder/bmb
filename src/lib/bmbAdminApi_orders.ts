@@ -466,15 +466,18 @@ export async function stripeRefundOrder(
   try {
     let fnName = 'stripe-refund'
     try {
-      const { data: intents } = await supabase
-        .from('payment_intents')
-        .select('provider')
-        .eq('order_number', orderNumber)
-      if (Array.isArray(intents) && intents.some((i: any) => i?.provider === 'omise')) {
+      // R3 (D-08): provider lookup ต้องอ่านผ่าน RPC (ตาราง REVOKE'd) —
+      // best-effort แต่ไม่เงียบ: log ชัดเมื่ออ่านไม่ได้ แล้ว fallback EF เดิม
+      const { data: intents, error: readErr } = await supabase.rpc('get_payment_intents_for_orders', {
+        p_order_numbers: [orderNumber],
+      })
+      if (readErr) {
+        console.warn('[stripeRefundOrder] intent read failed (defaulting to stripe-refund):', readErr.message)
+      } else if (Array.isArray(intents) && intents.some((i: any) => i?.provider === 'omise')) {
         fnName = 'omise-refund'
       }
-    } catch {
-      // provider lookup is best-effort — default to the legacy EF
+    } catch (e) {
+      console.warn('[stripeRefundOrder] provider lookup failed (defaulting to stripe-refund):', String(e).slice(0, 120))
     }
     const { data, error } = await supabase.functions.invoke(fnName, {
       body: { order_number: orderNumber, reason },

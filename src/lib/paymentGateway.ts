@@ -207,9 +207,17 @@ export async function createPaymentIntent(
   // แถวเดิม R1.2 (2026-10-23, R0 พบ BMB-20261023-841/205 มี intent ซ้ำ 2 แถว):
   // ถ้ามี active (pending/processing) อยู่แล้ว คืนแถวเดิม ไม่ INSERT เพิ่ม
   // (ความพยายามที่ failed แล้วไม่ block — ปุ่มลองใหม่ยังสร้าง attempt ใหม่ได้)
-  const existingActive = (await getPaymentIntents({ orderNumber })).find(
-    (i) => i.method === method && (i.status === 'pending' || i.status === 'processing'),
-  )
+  // R3 (D-08, migration 138): dedupe จริงอยู่ฝั่ง server แล้ว (create_payment_intent_record
+  // คืนแถวเดิม + unique index กัน concurrency) — ถ้า read สำรวจนี้ล้ม ต้องรายงาน
+  // error (ไม่เงียบ) แต่ยัง proceed ต่อได้โดยไม่เสี่ยงสร้างแถวซ้ำ
+  let existingActive: PaymentIntent | undefined
+  try {
+    existingActive = (await getPaymentIntents({ orderNumber })).find(
+      (i) => i.method === method && (i.status === 'pending' || i.status === 'processing'),
+    )
+  } catch (e) {
+    console.error('[paymentGateway] dedupe pre-check failed (server dedupe still protects):', e)
+  }
   if (existingActive) {
     return { success: true, payment_intent: existingActive }
   }
@@ -249,16 +257,20 @@ export async function confirmPayment(
   paymentIntentId: string,
   _paymentMethodId: string,
 ): Promise<PaymentConfirmResult> {
-  const { data, error } = await supabase
-    .from('payment_intents')
-    .select('*')
-    .eq('id', paymentIntentId)
-    .maybeSingle()
+  // R3 (D-08, migration 138): read via the canonical RPC — table access is
+  // REVOKE'd; a read failure is reported (never a silent "not found").
+  const { data, error } = await supabase.rpc('get_payment_intents_for_orders', {
+    p_intent_id: paymentIntentId,
+  })
 
-  if (error || !data) {
+  if (error) {
+    console.error('[paymentGateway] intent read failed:', error.message)
+    return { success: false, error: `ERR_PAYMENT_INTENTS_READ: ${error.message}` }
+  }
+  const intent = ((data || []) as PaymentIntent[])[0]
+  if (!intent) {
     return { success: false, error: 'Payment intent not found' }
   }
-  const intent = data as PaymentIntent
   if (!intent.client_secret) {
     return {
       success: false,
@@ -372,15 +384,28 @@ export async function getPaymentIntents(filters?: {
   startDate?: string
   endDate?: string
 }): Promise<PaymentIntent[]> {
-  let query = supabase.from('payment_intents').select('*').order('created_at', { ascending: false })
-
-  if (filters?.orderNumber) query = query.eq('order_number', filters.orderNumber)
-  if (filters?.orderNumbers && filters.orderNumbers.length > 0) query = query.in('order_number', filters.orderNumbers)
-  if (filters?.status) query = query.eq('status', filters.status)
-  if (filters?.startDate) query = query.gte('created_at', filters.startDate)
-  if (filters?.endDate) query = query.lte('created_at', filters.endDate)
-
-  const { data } = await query
+  // R3 (D-08, migration 138): the ONLY read path — SECURITY DEFINER RPC
+  // get_payment_intents_for_orders. The table stays REVOKE'd for `authenticated`
+  // (canonical 034) and the old direct PostgREST table read was a silent []
+  // in production (permission denied swallowed) — that blinded the slip review
+  // AND the R1.2 dedupe (duplicate intents 841/205). Never swallow again:
+  // a read failure now THROWS a clear code so every caller must surface it.
+  const { data, error } = await supabase.rpc('get_payment_intents_for_orders', {
+    p_order_numbers:
+      filters?.orderNumbers && filters.orderNumbers.length > 0
+        ? filters.orderNumbers
+        : filters?.orderNumber
+          ? [filters.orderNumber]
+          : null,
+    p_intent_id: null,
+    p_status: filters?.status ?? null,
+    p_created_from: filters?.startDate ?? null,
+    p_created_to: filters?.endDate ?? null,
+  })
+  if (error) {
+    console.error('[paymentGateway] get_payment_intents_for_orders failed:', error.message)
+    throw new Error(`ERR_PAYMENT_INTENTS_READ: ${error.message || 'read failed'}`)
+  }
   return (data || []) as PaymentIntent[]
 }
 

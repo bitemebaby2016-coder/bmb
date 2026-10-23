@@ -457,12 +457,53 @@ export function createSupabaseMock(opts?: { failReadTable?: string; noAdmin?: bo
       }
     }
     // ============ P0-5 / P0-6 RPC handlers (migration 008 contract) ============
+    // R3 (migration 138): canonical READ path — mirrors get_payment_intents_for_orders
+    // (admin/staff = requested rows · customer = own orders only · no silent failure)
+    if (name === 'get_payment_intents_for_orders') {
+      const p = params ?? {}
+      let rows = [...(tables['payment_intents'] || [])]
+      if (p.p_intent_id) rows = rows.filter((x: any) => x.id === p.p_intent_id)
+      if (Array.isArray(p.p_order_numbers)) rows = rows.filter((x: any) => p.p_order_numbers.includes(x.order_number))
+      if (p.p_status) rows = rows.filter((x: any) => x.status === p.p_status)
+      if (p.p_created_from) rows = rows.filter((x: any) => String(x.created_at) >= String(p.p_created_from))
+      if (p.p_created_to) rows = rows.filter((x: any) => String(x.created_at) <= String(p.p_created_to))
+      if (mockNoAdmin) {
+        const own = new Set(
+          ((tables['orders'] || []) as any[])
+            .filter((o: any) => o.customer_ref === MOCK_USER)
+            .map((o: any) => o.order_number),
+        )
+        rows = rows.filter((x: any) => own.has(x.order_number))
+      }
+      rows.sort((a: any, b: any) => (a.created_at > b.created_at ? -1 : 1))
+      return { data: rows, error: null }
+    }
+
     if (name === 'create_payment_intent_record') {
       const p = params ?? {}
       const order = (tables['orders'] || []).find((o: any) => o.order_number === p.p_order_number)
       if (!order) return { data: null, error: { code: 'ERR_ORDER_NOT_FOUND', message: 'ERR_ORDER_NOT_FOUND' } }
       if (Number(p.p_amount) !== Number(order.total_amount)) {
         return { data: null, error: { code: 'ERR_AMOUNT_MISMATCH', message: 'ERR_AMOUNT_MISMATCH' } }
+      }
+      // R3 (migration 138): server-side dedupe — NEVER a second ACTIVE intent for
+      // the same (order_number, method); returns the existing row (idempotent).
+      const method0 = p.p_method || 'promptpay_qr'
+      const activeExisting = (tables['payment_intents'] || []).find(
+        (x: any) => x.order_number === p.p_order_number && x.method === method0 && (x.status === 'pending' || x.status === 'processing'),
+      )
+      if (activeExisting) {
+        return {
+          data: {
+            id: activeExisting.id,
+            order_number: activeExisting.order_number,
+            amount: activeExisting.amount,
+            status: activeExisting.status,
+            method: activeExisting.method,
+            idempotent: true,
+          },
+          error: null,
+        }
       }
       const piId = `pi-mock-${Date.now()}-${Math.floor(Math.random() * 1000)}`
       const row = {
@@ -479,7 +520,7 @@ export function createSupabaseMock(opts?: { failReadTable?: string; noAdmin?: bo
       }
       ;(tables['payment_intents'] ||= []).push(row)
       return {
-        data: { id: piId, order_number: p.p_order_number, amount: Number(p.p_amount), status: 'pending', method: p.p_method || 'promptpay_qr' },
+        data: { id: piId, order_number: p.p_order_number, amount: Number(p.p_amount), status: 'pending', method: p.p_method || 'promptpay_qr', idempotent: false },
         error: null,
       }
     }
@@ -511,7 +552,10 @@ export function createSupabaseMock(opts?: { failReadTable?: string; noAdmin?: bo
         const cands = intents
           .filter((x: any) => x.order_number === p.p_order_number && x.method === order.payment_method)
           .sort((a: any, b: any) => (a.created_at > b.created_at ? -1 : 1))
-        const pi = cands[0]
+        // R3 (migration 138): prefer the 'processing' (evidence) row over a newer
+        // 'completed' duplicate (the 841/205 trap) — mirror of ORDER BY
+        // (status = 'processing') DESC, created_at DESC
+        const pi = cands.find((x: any) => x.status === 'processing') ?? cands[0]
         if (!pi) return { data: null, error: { code: 'ERR_NO_PAYMENT_INTENT', message: 'ERR_NO_PAYMENT_INTENT' } }
         if (pi.status !== 'processing') {
           return { data: null, error: { code: 'ERR_INTENT_NOT_PROCESSING', message: 'ERR_INTENT_NOT_PROCESSING' } }

@@ -2,10 +2,37 @@
 
 > **สถานะงานปัจจุบันของโปรเจกต์ Bite Me Baby** ใช้แนบเข้าสู่ Context ตอนเริ่มแชทเสมอ
 
-**last_updated:** 2026-10-23 รอบ 4 (R2.2 root-cause analysis + แฮนออฟปิดเซสชั่น — เขียนทับรอบ 3)
-**phase:** 🔴 **D1 recovery — วิเคราะห์/วางแผนครบแล้ว (Root Cause Matrix D-01…D-08) · เหลือ "ลงมือแก้ + ทดสอบจริง" ในแชทถัดไป**
-**current_focus:** แชทถัดไปเริ่มงานตาม `docs/BMB_RECOVERY_PLAN_2026-10-23.md` §3 — เริ่ม P0-1 (D-08 ทางอ่าน payment_intents) → P0-2 (D-02 POD RLS) → P1 → P2/P3 แล้วปิดด้วย Test A–E บน `biteme-baby.com` + อุปกรณ์จริง
-**blocked_by:** (1) Owner ตัดสิน D-08 ทาง A (read RPC — แนะนำ) หรือ B (GRANT SELECT) (2) Owner approve ทุก migration ใหม่ (3) ถาม Owner: ใครปิดรอบ evening 23–25 เมื่อ 2026-10-22 10:33–10:35
+**last_updated:** 2026-10-23 รอบ 5 (R3 Gate 0–1 + P1-3 ปิดจริง · migration 138/139 ขึ้น production แล้ว — เขียนทับรอบ 4)
+**phase:** 🟡 **D1 recovery R3 — P0-1/P0-2/P1-3 ลงโค้ด+tests+SQL contract+apply production แล้ว · เหลือทดสอบจริง Test A–E (Owner) + P1-1/P1-2/P2/P3**
+**current_focus:** รอ Owner ทดสอบจริงบน `biteme-baby.com` + อุปกรณ์จริง (Test A–E) → ถ้าผ่านค่อยปิด P1-1 (รอบส่ง — ต้องถาม Owner ก่อน), P1-2 (UI sync), P2 (คูปอง), P3 (แผนที่ env)
+**blocked_by:** (1) Owner ทดสอบจริง Test A–E (2) Owner ตอบ: ใคร/ทำไมปิดรอบ evening 23–25 + กติกาเปิด/ปิดรอบ (3) Owner ตั้ง `VITE_GOOGLE_MAPS_API_KEY`/`VITE_GOOGLE_ROUTES_API_KEY` ใน Cloudflare Pages env (D-06)
+
+---
+
+## 🩺 REALITY CHECK (2026-10-23 รอบ 5) — ลงมือปิดงานจริงตามแผน R2.2 §2–§3
+
+- **รอบ 4 (ก่อนหน้า):** root-cause matrix D-01…D-08 + แผน P0–P3 + Test A–E (เอกสาร) — รอบ 5 คือการลงมือ
+- **P0-1 (D-08) — IMPLEMENTED + DEPLOYED (DB) + CONNECTED (client, รอ push):**
+  - migration `138_payment_intents_read_authority.sql` — **apply ขึ้น production แล้ว** (Management API, 2026-10-23 13:15 UTC, Owner approve "ถ้าผ่านจริง"): `get_payment_intents_for_orders` (SECURITY DEFINER read RPC — ทาง A ตามที่ Owner เลือก) + server-side dedupe ใน `create_payment_intent_record` + partial unique index `uq_payment_intents_active_order_method` (precheck ยืนยัน ACTIVE ซ้ำ = 0 ก่อน apply) + `confirm_offline_payment` เลือกแถวก่อน 'processing' + restore audit (`payment_processed` ที่ 129 ทำหลุด)
+  - client: `paymentGateway.getPaymentIntents/confirmPayment` → RPC เท่านั้น · **read failure = throw `ERR_PAYMENT_INTENTS_READ` (ไม่เงียบคืน [] อีก)** · `AdminOrders` มี banner · `PaymentConfirmationPage`/`OrderTrackPage`/`bmbAdminApi_orders` (refund provider lookup) รายงาน error ครบ
+  - ตาราง `payment_intents` ยัง REVOKE'd (canonical 034 คงเดิม — probe ยืนยัน `auth_select=false`)
+- **P0-2 (D-02) — IMPLEMENTED + DEPLOYED (DB) + CONNECTED (client, รอ push):**
+  - migration `139_pod_policies_trusted_helper.sql` — **apply ขึ้น production แล้ว**: helper `current_driver_id()` + `pod_path_is_driver()` (SECURITY DEFINER — ไม่มี scalar subquery ใน policy อีก บทเรียน 119/132) + policy ใหม่ 4 ตัว (verify: `pod_path_is_driver(name)` ทุกตัว) · ทน %20 encoding (drivers.id มี space) · ไม่ rename id ใน production
+  - client: `driverService.uploadPodPhoto` normalize/validate path · `RiderPwaPage` **แยกปุ่ม ถ่ายรูป (กล้อง) / เลือกรูปจากเครื่อง (แกลเลอรี่)** + progress รายขั้นตอน upload→attach→ปิดงาน + retry (ยกเว้น state error)
+- **Verification ที่รันจริงรอบนี้ (ทั้งหมดเขียว):** vitest **1325/1325** (1317 เดิม + 8 ใหม่) · `tsc --noEmit`=0 · `eslint`+brandNameGuard=0 · **SQL replay 001→139 บน PG16 ephemeral (docker) = ALL CLEAN** · `e2e/contracts_138_139.sql` **G1–G7 ผ่าน** (scope/dedupe/confirm-pick/policy-no-subquery/storage INSERT จริงด้วย driver id มี space ทั้ง raw + %20) · regression `contracts_132`+`contracts_133` ผ่าน
+- **Production evidence:** `e2e/artifacts/prod-{precheck,apply,verify,record}-138-139.json` (precheck: history=137 ก่อน · ACTIVE dupes=0 · pod-objects=0 · verify: funcs prosecdef ครบ · grants auth+service_role · policies ใช้ helper · history บันทึก 138/139 แล้ว)
+- **กติกาคงเดิม:** ห้ามเรียก "DONE" จน Owner ทดสอบจริงผ่าน (Test A–E) · ห้าม mock ใน production path · ทุก read ห้ามเงียบ error · เอกสารสถานะเขียนทับเสมอ
+
+---
+
+## ⚡ TASK: R3-PRODUCTION-CLOSURE-2026-10-23 — Gate 0–1 + P1-3 ปิด (เหลือ Test A–E + P1-1/2/P2/P3)
+- **STATUS: 🟡 P0 ปิดฝั่ง implement+deploy แล้ว · ยังไม่ RUNTIME VERIFIED (รอ Owner ทดสอบจริง)**
+- **Completed (รอบนี้):** ตาม REALITY CHECK ข้างบน — migration 138/139 + client payment/POD chain + tests + contracts + CI step (`contract-tests.yml` เพิ่ม Contract 138-139) + apply/verify production
+- **Verified:** ทุก gate ที่เครื่องพิสูจน์ได้ (unit/type/lint/replay/contract) + production object verify · **ยังไม่มี E2E จริงบนอุปกรณ์ = ยังไม่ผ่านเกณฑ์ปิดงาน**
+- **Failed:** ไม่มี (flaky `homeSectionModeCta` ตอนรันขนาน — ผ่านเมื่อรันเดี่ยว/รันซ้ำ ไม่เกี่ยวกับโค้ดที่แก้)
+- **Blocked:** Test A–E = Owner ต้องทดสอบจริง · P1-1 = รอคำตอบ "ใครปิดรอบ evening 23–25" · P3 = รอ Owner ตั้ง Cloudflare env
+- **Files Changed (รอบนี้):** `supabase/migrations/138_payment_intents_read_authority.sql` · `139_pod_policies_trusted_helper.sql` · `e2e/contracts_138_139.sql` · `e2e/r3Apply138139.cjs` · `.github/workflows/contract-tests.yml` · `src/lib/paymentGateway.ts` · `src/lib/paymentExceptions.ts` · `src/lib/bmbAdminApi_orders.ts` · `src/lib/driverService.ts` · `src/pages/admin/AdminOrders.tsx` · `src/pages/PaymentConfirmationPage.tsx` · `src/pages/OrderTrackPage.tsx` · `src/pages/RiderPwaPage.tsx` · `src/__tests__/helpers/supabaseMock.ts` · `src/__tests__/paymentReadAuthority.test.ts`
+- **Next Exact Action (แชทถัดไป):** (1) Owner ทดสอบ Test A–E บน biteme-baby.com + อุปกรณ์จริง (2) ถาม Owner 2 ข้อ: ใคร/ทำไมปิดรอบ evening 23–25 + กติกาเปิด/ปิดรอบ → ปิด P1-1 (3) ทำ P1-2 terminal-state gating + P2 คูปอง + P3 map fallback (4) data repair เสนอเฉพาะ: แถว intent ซ้ำคู่ 841/205 (processing+completed) — ห้ามลบ/merge จน Owner อนุมัติ
 
 ---
 

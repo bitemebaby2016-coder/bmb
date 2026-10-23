@@ -299,6 +299,17 @@ export async function uploadPodPhoto(
   if (!driverId || !orderNumber) {
     return { ok: false, error: 'ข้อมูลงานไม่ครบ — รีเฟรชหน้าแล้วลองใหม่', kind: 'state' }
   }
+  // R3 (D-02): normalize path — โฟลเดอร์ต้องเป็น drivers.id ดิบ (ห้ามมี '/' กัน
+  // หลุดโฟลเดอร์) + ชื่อไฟล์ sanitize · policy 139 เทียบโฟลเดอร์แบบทน %20 encoding
+  // (storage-js encodeURIComponent) แล้ว — ห้าม rename drivers.id ใน production
+  const folder = String(driverId).trim()
+  if (!folder || folder.includes('/') || folder.includes('\\')) {
+    return { ok: false, error: 'ข้อมูลงานไม่ครบ — รีเฟรชหน้าแล้วลองใหม่', kind: 'state' }
+  }
+  const safeOrder = String(orderNumber).replace(/[^A-Za-z0-9_-]/g, '')
+  if (!safeOrder) {
+    return { ok: false, error: 'ข้อมูลงานไม่ครบ — รีเฟรชหน้าแล้วลองใหม่', kind: 'state' }
+  }
   let blob: Blob
   try {
     blob = await compressPodImage(file)
@@ -308,7 +319,7 @@ export async function uploadPodPhoto(
   if (blob.size > POD_MAX_UPLOAD_BYTES) {
     return { ok: false, error: 'รูปหลังบีบอัดยังใหญ่เกิน 5MB — ถ่ายใหม่อีกครั้ง', kind: 'state' }
   }
-  const path = `${driverId}/${orderNumber}-${Date.now()}.jpg`
+  const path = `${folder}/${safeOrder}-${Date.now()}.jpg`
   const { error } = await supabase.storage.from('pod-photos').upload(path, blob, {
     contentType: 'image/jpeg',
     upsert: false,

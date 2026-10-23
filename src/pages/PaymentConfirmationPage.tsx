@@ -23,6 +23,8 @@ export function PaymentConfirmationPage() {
   const [slipPreview, setSlipPreview] = useState<string | null>(null)
   const [slipUploading, setSlipUploading] = useState(false)
   const ensuredIntent = useRef(false)
+  // R3 (D-08): error จากการอ่าน payment_intents ต้องแสดงบนหน้า ไม่หายเงียบ
+  const [loadError, setLoadError] = useState('')
 
   // ✅ Phase 3B §10: server state is polled; intent selection prefers the
   // ACTIVE attempt (pending/processing) — never blindly intents[0] — and a
@@ -31,7 +33,17 @@ export function PaymentConfirmationPage() {
     if (!orderNumber) return
     const o = await getOrder(orderNumber)
     if (o) setOrder(o)
-    const intents = await getPaymentIntents({ orderNumber })
+    // R3 (D-08, migration 138): intents อ่านผ่าน RPC แล้ว — error ต้องไม่เงียบ
+    // (log + banner) แต่ polling 15 วิห้าม toast รัว
+    let intents: Array<{ status: string; [k: string]: any }> = []
+    try {
+      intents = (await getPaymentIntents({ orderNumber })) as Array<{ status: string; [k: string]: any }>
+      setLoadError('')
+    } catch (e) {
+      const msg = String((e as Error)?.message || e)
+      console.error('[PaymentConfirmation] intents read failed:', msg)
+      setLoadError(`โหลดรายการชำระไม่สำเร็จ: ${msg} — ลองรีเฟรชหน้า`)
+    }
     const active = intents.find((i) => i.status === 'pending' || i.status === 'processing')
     setPaymentIntent(active ?? intents[0] ?? null)
     // mig 133: MISSING_INTENT กันหลุด — สร้าง intent ให้เองตอนเปิดหน้าจ่ายเงิน
@@ -42,8 +54,12 @@ export function PaymentConfirmationPage() {
       && (o.payment_method === 'promptpay_qr' || o.payment_method === 'cash_on_delivery')) {
       const created = await createPaymentIntent(orderNumber, o.total_amount ?? 0, o.payment_method)
       if (created?.success) ensuredIntent.current = true
-      const retry = await getPaymentIntents({ orderNumber })
-      setPaymentIntent(retry.find((i) => i.status === 'pending' || i.status === 'processing') ?? retry[0] ?? null)
+      try {
+        const retry = await getPaymentIntents({ orderNumber })
+        setPaymentIntent(retry.find((i) => i.status === 'pending' || i.status === 'processing') ?? retry[0] ?? null)
+      } catch (e) {
+        console.error('[PaymentConfirmation] intent re-read failed:', e)
+      }
     }
   }, [orderNumber])
 
@@ -158,6 +174,11 @@ export function PaymentConfirmationPage() {
             (ไม่มีการสร้างออเดอร์ใหม่เพิ่ม) ถ้านี่ไม่ใช่คำสั่งที่ต้องการ ดูได้ที่รายการสั่งซื้อของคุณ
           </p>
           <Link to="/orders" className="btn btn-outline btn-sm mt-2 self-start">📋 ไปที่รายการสั่งซื้อของฉัน</Link>
+        </div>
+      )}
+      {loadError && (
+        <div className="card mb-6 border-2 border-red-300 bg-red-50" data-testid="payment-load-error">
+          <p className="text-sm text-red-700">⚠️ {loadError}</p>
         </div>
       )}
       <div className="card mb-6">
