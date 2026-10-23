@@ -261,3 +261,42 @@ describe('P0-6 Order state machine — allow-list enforcement', () => {
     expect(failed!.status).toBe('failed')
   })
 })
+
+// ============================================
+// R1.2 (2026-10-23, D-04) — intent ห้ามซ้ำ: ปิดต้นเหตุ "ออเดอร์ค้าง/สลิปไม่เข้า"
+// ============================================
+// R0 พบ BMB-20261023-841/205 มี payment_intents ซ้ำ 2 แถว (completed+processing
+// ค้าง) — เกิดจาก timeout แล้ว retry ซ้ำโดยไม่เช็ค active intent ก่อน
+describe('R1.2 · createPaymentIntent — NEVER a second ACTIVE intent (B5/B10)', () => {
+  beforeEach(() => {
+    mockRef.current.__reset()
+  })
+
+  it('เรียกซ้ำขณะ intent ยัง active (pending/processing) = คืนแถวเดิม ไม่ INSERT เพิ่ม', async () => {
+    const order = await makeOrder('promptpay_qr')
+    const first = await createPaymentIntent(order!.order_number, order!.total_amount, 'promptpay_qr')
+    expect(first.success).toBe(true)
+    const again = await createPaymentIntent(order!.order_number, order!.total_amount, 'promptpay_qr')
+    expect(again.success).toBe(true)
+    const rows = mockRef.current.__tables['payment_intents'].filter((i: any) => i.order_number === order!.order_number)
+    expect(rows).toHaveLength(1)
+    // คืนแถวเดิมจริง (id เดียวกัน) — ไม่ใช่แถวใหม่
+    expect(again.payment_intent!.id).toBe(first.payment_intent!.id)
+  })
+
+  it('intent เดิม failed แล้ว = ลองใหม่ได้ (สร้าง attempt ใหม่) — failed ไม่ block', async () => {
+    const order = await makeOrder('promptpay_qr')
+    await createPaymentIntent(order!.order_number, order!.total_amount, 'promptpay_qr')
+    await mockRef.current.rpc('record_payment_result', {
+      p_order_number: order!.order_number,
+      p_payment_intent_id: 'pi_fail_1',
+      p_amount: order!.total_amount,
+      p_status: 'failed',
+    })
+    const retry = await createPaymentIntent(order!.order_number, order!.total_amount, 'promptpay_qr')
+    expect(retry.success).toBe(true)
+    const rows = mockRef.current.__tables['payment_intents'].filter((i: any) => i.order_number === order!.order_number)
+    expect(rows).toHaveLength(2) // failed attempt + retry
+    expect(rows.some((i: any) => i.status === 'pending')).toBe(true)
+  })
+})

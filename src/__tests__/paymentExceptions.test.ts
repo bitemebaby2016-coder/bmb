@@ -25,7 +25,11 @@ vi.mock('@/lib/supabase', async () => {
 })
 
 import { supabase } from '@/lib/supabase'
-import { classifyPaymentException, groupPaymentExceptions, getPaymentExceptionOrders, STALE_UNPAID_HOURS, type PaymentIntentLite } from '@/lib/paymentExceptions'
+import {
+  classifyPaymentException, groupPaymentExceptions, getPaymentExceptionOrders, STALE_UNPAID_HOURS,
+  paymentConfirmability, describePaymentConfirmError, describePaymentEvidenceError, shouldOfferPaymentRetry,
+  type PaymentIntentLite,
+} from '@/lib/paymentExceptions'
 import type { OrderForm } from '@/lib/bmbAdminApi_orders'
 
 const NOW = Date.now()
@@ -160,5 +164,73 @@ describe('3B-2E · read-only view helpers + integrity (mock DB)', () => {
     const d = await adminListDrivers()
     expect(d.ok).toBe(true)
     expect(d.drivers).toHaveLength(0)
+  })
+})
+
+// ============================================
+// R1.2 (2026-10-23, D-04/D-05) — confirmability + error mapping + retry
+// ============================================
+describe('R1.2 · paymentConfirmability — mirror เงื่อนไข confirm_offline_payment (008 B.5)', () => {
+  it('promptpay: มี intent processing (มีหลักฐาน) = ยืนยันได้ / pending = ยังไม่ได้ พร้อมเหตุผล', () => {
+    const o = order({ order_number: 'C1', payment_method: 'promptpay_qr' })
+    const ready = paymentConfirmability(o, [intent({ order_number: 'C1', method: 'promptpay_qr', status: 'processing' })])
+    expect(ready.confirmable).toBe(true)
+    const waiting = paymentConfirmability(o, [intent({ order_number: 'C1', method: 'promptpay_qr', status: 'pending' })])
+    expect(waiting.confirmable).toBe(false)
+    expect(waiting.reason).toContain('ยังไม่มีหลักฐานการโอน')
+  })
+  it('promptpay: ไม่มี intent เลย = ยืนยันไม่ได้ + บอกให้ลูกค้าเปิด /payment (self-heal)', () => {
+    const r = paymentConfirmability(order({ order_number: 'C2', payment_method: 'promptpay_qr' }), [])
+    expect(r.confirmable).toBe(false)
+    expect(r.reason).toContain('ไม่พบ payment intent')
+  })
+  it('COD: ยืนยันได้เมื่อ delivered เท่านั้น (ERR_COD_NOT_DELIVERED ล่วงหน้า)', () => {
+    const notYet = paymentConfirmability(order({ order_number: 'C3', payment_method: 'cash_on_delivery', status: 'in_transit' }), [])
+    expect(notYet.confirmable).toBe(false)
+    expect(notYet.reason).toContain('delivered')
+    const done = paymentConfirmability(order({ order_number: 'C3', payment_method: 'cash_on_delivery', status: 'delivered' }), [])
+    expect(done.confirmable).toBe(true)
+  })
+  it('paid แล้ว = ไม่ต้องยืนยันซ้ำ · failed = ให้ลูกค้าลองใหม่ · completed ค้าง = webhook mismatch', () => {
+    expect(paymentConfirmability(order({ order_number: 'C4', payment_status: 'paid' }), []).confirmable).toBe(false)
+    const failed = paymentConfirmability(order({ order_number: 'C5', payment_method: 'promptpay_qr' }), [intent({ order_number: 'C5', method: 'promptpay_qr', status: 'failed' })])
+    expect(failed.confirmable).toBe(false)
+    expect(failed.reason).toContain('ลองชำระเงินอีกครั้ง')
+    const mismatch = paymentConfirmability(order({ order_number: 'C6', payment_method: 'promptpay_qr' }), [intent({ order_number: 'C6', method: 'promptpay_qr', status: 'completed' })])
+    expect(mismatch.confirmable).toBe(false)
+    expect(mismatch.reason).toContain('webhook mismatch')
+  })
+  it('credit_card = webhook ยืนยันเอง ไม่ต้องกด (ไม่ใช่ทางของแอดมิน)', () => {
+    const r = paymentConfirmability(order({ order_number: 'C7', payment_method: 'credit_card' }), [])
+    expect(r.confirmable).toBe(false)
+    expect(r.reason).toContain('webhook')
+  })
+})
+
+describe('R1.2 · describePaymentConfirmError / describePaymentEvidenceError — เหตุผลชัดเป็นไทย', () => {
+  it('ERR code ของ confirm_offline_payment แปลเป็นข้อความที่บอกวิธีแก้', () => {
+    expect(describePaymentConfirmError('ERR_INTENT_NOT_PROCESSING: x')).toContain('ยังไม่มีหลักฐานการโอน')
+    expect(describePaymentConfirmError('ERR_NO_PAYMENT_INTENT')).toContain('ไม่พบ payment intent')
+    expect(describePaymentConfirmError('ERR_COD_NOT_DELIVERED')).toContain('delivered')
+    expect(describePaymentConfirmError('ERR_FORBIDDEN')).toContain('สิทธิ์')
+  })
+  it('D-05: ฝั่งลูกค้าส่งหลักฐานไม่ได้ ต้องบอกว่า "คนสั่ง = คนจ่าย"', () => {
+    expect(describePaymentEvidenceError('ERR_NO_PENDING_PROMPTPAY')).toContain('คนสั่ง = คนจ่าย')
+    expect(describePaymentEvidenceError('ERR_NOT_AUTHENTICATED')).toContain('คนสั่ง = คนจ่าย')
+    expect(describePaymentEvidenceError('ERR_SLIP_PATH_FORBIDDEN')).toContain('สลิปใหม่')
+    // error อื่นต้องไม่หายเงียบ
+    expect(describePaymentEvidenceError('ERR_SOMETHING_NEW')).toContain('ERR_SOMETHING_NEW')
+    expect(describePaymentEvidenceError(null)).toContain('ลองใหม่')
+  })
+})
+
+describe('R1.2 · shouldOfferPaymentRetry — การ์ดลองใหม่ต้องไม่ใช่ dead UI', () => {
+  it('intent ล่าสุด failed + ออเดอร์ยังไม่ paid = แสดงการ์ด (เดิมเช็ค payment_status=failed ซึ่งเป็นไปไม่ได้)', () => {
+    expect(shouldOfferPaymentRetry(order({ order_number: 'R1' }), intent({ order_number: 'R1', status: 'failed' }))).toBe(true)
+  })
+  it('paid แล้ว / intent ยังไม่ failed / ไม่มีข้อมูล = ไม่แสดง', () => {
+    expect(shouldOfferPaymentRetry(order({ order_number: 'R2', payment_status: 'paid' }), intent({ order_number: 'R2', status: 'failed' }))).toBe(false)
+    expect(shouldOfferPaymentRetry(order({ order_number: 'R3' }), intent({ order_number: 'R3', status: 'pending' }))).toBe(false)
+    expect(shouldOfferPaymentRetry(null, null)).toBe(false)
   })
 })

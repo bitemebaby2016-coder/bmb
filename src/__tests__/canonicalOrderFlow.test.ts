@@ -312,7 +312,14 @@ describe('§18 payment — COD never paid before delivery; Stripe server-only; r
     const onum = String((order.data as any).order_number)
     const amt = Number((order.data as any).total_amount)
     await createPaymentIntent(onum, amt, 'promptpay_qr')
-    await supabase.rpc('mark_payment_failed', { p_order_number: onum, p_reason: 'declined' })
+    // failure path จริง = webhook -> record_payment_result(p_status='failed')
+    // (mark_payment_failed ไม่มีอยู่ใน schema — เป็นได้แค่ comment ใน 025)
+    await supabase.rpc('record_payment_result', {
+      p_order_number: onum,
+      p_payment_intent_id: 'pi_failed_attempt',
+      p_amount: amt,
+      p_status: 'failed',
+    })
 
     const spy = vi.spyOn(supabase, 'rpc')
     try {

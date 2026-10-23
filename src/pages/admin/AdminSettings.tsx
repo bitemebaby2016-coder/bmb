@@ -40,6 +40,11 @@ export function AdminSettings() {
   }
 
   async function handleSave(key: string) {
+    // D-02 (R2.1): ทางบันทึกเดียว — social_links บันทึกจากฟอร์มเฉพาะทางด้านล่างเท่านั้น
+    if (key === SOCIAL_LINKS_SETTING_KEY) {
+      showToast('social_links บันทึกจากฟอร์ม "โซเชียล & LINE" ด้านล่างเท่านั้น (ทางบันทึกเดียว)', 'error')
+      return
+    }
     const ok = await setBusinessSetting(key, settings[key])
     showToast(ok ? `Saved ${key}` : `Failed to save ${key}`, ok ? 'success' : 'error')
     if (ok) await load()
@@ -48,6 +53,8 @@ export function AdminSettings() {
   async function handleSaveAll() {
     let allOk = true
     for (const key of Object.keys(settings)) {
+      // D-02 (R2.1): key ที่มีฟอร์มเฉพาะทางห้ามเขียนจากทางนี้ (ทางบันทึกเดียว)
+      if (key === SOCIAL_LINKS_SETTING_KEY) continue
       if (!(await setBusinessSetting(key, settings[key]))) allOk = false
     }
     showToast(allOk ? 'All settings saved' : 'Some settings failed', allOk ? 'success' : 'error')
@@ -107,10 +114,13 @@ export function AdminSettings() {
   }
 
   // ลิงก์โซเชียล/LINE — แอดมินใส่เองได้ทีหลัง (คีย์ business_settings: social_links)
+  // D-02 (R2.1): ฟอร์มนี้คือ "ทางบันทึกเดียว" ของ social_links — generic editor
+  // ด้านบนถูกตัด key นี้ออกแล้ว (แก้ที่หนึ่งแล้วอีกที่เขียนทับ = บั๊กที่ Owner เจอ)
   async function saveSocials() {
     if (!socials) return
     const ok = await setBusinessSetting(SOCIAL_LINKS_SETTING_KEY, socials)
     showToast(ok ? 'บันทึก social_links แล้ว — ฟุตเตอร์อัปเดตทันที' : 'Failed to save social_links', ok ? 'success' : 'error')
+    if (ok) await load()
   }
 
   return (
@@ -129,7 +139,11 @@ export function AdminSettings() {
         </div>
       ) : (
         <div className="space-y-4">
-          {Object.keys(settings).map((key) => (
+          {Object.keys(settings)
+            // D-02 (R2.1): key ที่มีฟอร์มเฉพาะทาง (social_links) ห้ามโผล่ใน generic
+            // editor — เหลือ "1 เรื่อง = 1 ที่ = ทางบันทึกเดียว" ตามที่ Owner สั่ง
+            .filter((key) => key !== SOCIAL_LINKS_SETTING_KEY)
+            .map((key) => (
             <div key={key} className="card">
               <div className="flex items-center justify-between mb-2">
                 <div className="font-mono text-sm font-bold text-brand-accent">{key}</div>

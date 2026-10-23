@@ -76,6 +76,9 @@ export function createSupabaseMock(opts?: { failReadTable?: string; noAdmin?: bo
     let gteFilters: Array<{ col: string; val: any }> = []
     let lteFilters: Array<{ col: string; val: any }> = []
     let inFilters: Array<{ col: string; vals: any[] }> = []
+    // PostgREST or=(...) — mirror สำหรับรูปแบบที่ใช้จริง: 'col.eq.val,col.is.null'
+    // (D-07: branch filter ต้องไม่ซ่อนออเดอร์ branch NULL)
+    let orGroups: string[] = []
     let orderSpec: { col: string; ascending: boolean } | null = null
     let rangeSpec: { from: number; to: number } | null = null
     let countExact = false
@@ -83,6 +86,15 @@ export function createSupabaseMock(opts?: { failReadTable?: string; noAdmin?: bo
     let action: { type: 'insert'; rows: MockRow[] } | { type: 'update'; patch: MockRow } | { type: 'delete' } | null = null
     let singleMode = false
     let maybeMode = false
+
+    const orExprMatches = (row: MockRow, expr: string) =>
+      expr.split(',').some((cond) => {
+        const [col, op, ...rest] = cond.split('.')
+        const val = rest.join('.')
+        if (op === 'is' && val === 'null') return row[col] == null
+        if (op === 'eq') return row[col] == val
+        return false
+      })
 
     const matches = (row: MockRow) =>
       filters.every(f => row[f.col] === f.val) &&
@@ -96,7 +108,8 @@ export function createSupabaseMock(opts?: { failReadTable?: string; noAdmin?: bo
         const b = f.val
         return (typeof a === 'number' || typeof b === 'number') ? Number(a) <= Number(b) : String(a) <= String(b)
       }) &&
-      inFilters.every(f => f.vals.includes(row[f.col]))
+      inFilters.every(f => f.vals.includes(row[f.col])) &&
+      orGroups.every(expr => orExprMatches(row, expr))
 
     async function run(): Promise<{ data: any; error: any; count?: number | null }> {
       if (action?.type === 'insert') {
@@ -148,6 +161,7 @@ export function createSupabaseMock(opts?: { failReadTable?: string; noAdmin?: bo
 
     const builder: any = {
       eq(col: string, val: any) { filters.push({ col, val }); return builder },
+      or(expr: string) { orGroups.push(String(expr)); return builder },
       gte(col: string, val: any) { gteFilters.push({ col, val }); return builder },
       lte(col: string, val: any) { lteFilters.push({ col, val }); return builder },
       in(col: string, vals: any[]) { inFilters.push({ col, vals }); return builder },
@@ -702,6 +716,15 @@ export function createSupabaseMock(opts?: { failReadTable?: string; noAdmin?: bo
       const asg = (tables['delivery_assignments'] || []).find((a: any) => a.order_number === p.p_order_number && a.driver_id === drv.id)
       if (!asg) return { data: null, error: { code: 'ERR_ASSIGNMENT_NOT_FOUND', message: 'ERR_ASSIGNMENT_NOT_FOUND' } }
       if (asg.status === 'delivered') return { data: null, error: { code: 'ERR_ALREADY_DELIVERED', message: 'ERR_ALREADY_DELIVERED' } }
+      // 132 (A4): งานที่ปิดไปแล้ว (declined/cancelled) เปลี่ยนสถานะไม่ได้
+      if (['declined', 'cancelled'].includes(String(asg.status))) {
+        return { data: null, error: { code: 'ERR_ASSIGNMENT_CLOSED', message: 'ERR_ASSIGNMENT_CLOSED' } }
+      }
+      // 132 (A3) 540: 'delivered' ต้องบันทึก POD แล้วเท่านั้น (ERR_POD_REQUIRED) —
+      // เดิม mock ปล่อยผ่าน = เทสต์เขียวแต่ของจริงพัง (สัญญา 132 แท้)
+      if (p.p_status === 'delivered' && !asg.proof_of_delivery_path) {
+        return { data: null, error: { code: 'ERR_POD_REQUIRED', message: 'ERR_POD_REQUIRED' } }
+      }
       const order = (tables['orders'] || []).find((o: any) => o.order_number === p.p_order_number)
       if (!order) return { data: null, error: { code: 'ERR_ORDER_NOT_FOUND', message: 'ERR_ORDER_NOT_FOUND' } }
       // forward-only multi-hop sync validated against the canonical chain (041)
@@ -740,7 +763,179 @@ export function createSupabaseMock(opts?: { failReadTable?: string; noAdmin?: bo
           }
         })
         .sort((a: any, b: any) => String(b.assigned_at).localeCompare(String(a.assigned_at)))
-      return { data: { ok: true, driver: drv, assignments: rows }, error: null }
+      // 135 §6: offers[] = งานประกาศที่ยังว่างและฉันยังไม่กด "ไม่รับ"
+      const offers = (tables['dispatch_offers'] || [])
+        .filter((of: any) => {
+          if (of.status !== 'offered') return false
+          const o = (tables['orders'] || []).find((x: any) => x.order_number === of.order_number)
+          if (!o || ['cancelled', 'failed', 'delivered'].includes(String(o.status))) return false
+          return !(tables['dispatch_offer_declines'] || [])
+            .some((d2: any) => d2.offer_id === of.id && d2.driver_id === drv.id)
+        })
+        .map((of: any) => {
+          const o = (tables['orders'] || []).find((x: any) => x.order_number === of.order_number)
+          return {
+            order_number: of.order_number, assignment_status: 'offered', assigned_at: of.created_at, accepted_at: null,
+            dropoff_detail: o?.delivery_address ?? '', dropoff_latitude: o?.dropoff_latitude ?? null, dropoff_longitude: o?.dropoff_longitude ?? null,
+            order_status: o?.status ?? null, total_amount: o?.total_amount ?? null, payment_status: o?.payment_status ?? null, payment_method: o?.payment_method ?? null,
+            items: (tables['order_items'] || []).filter((i: any) => i.order_id === o?.id).map((i: any) => ({ product_name: i.product_name, quantity: i.quantity })),
+          }
+        })
+      return { data: { ok: true, driver: drv, assignments: rows, offers }, error: null }
+    }
+
+    // ============ migration 132 (driver_attach_pod) + 136 (heartbeat) ============
+    // mirror สัญญา server จริง: identity = JWT (MOCK_USER) เท่านั้น,
+    // path ต้องอยู่ใต้โฟลเดอร์ driver ของตน, heartbeat เขียน driver_location_history
+    if (name === 'driver_attach_pod') {
+      const p = params ?? {}
+      const drv = (tables['drivers'] || []).find((d: any) => d.user_id === MOCK_USER)
+      if (!drv) return { data: null, error: { code: 'ERR_NOT_A_DRIVER', message: 'ERR_NOT_A_DRIVER' } }
+      const path = String(p.p_object_path || '')
+      if (!path) return { data: null, error: { code: 'ERR_POD_MISSING', message: 'ERR_POD_MISSING' } }
+      // 132 169-172: path ต้องอยู่ใต้โฟลเดอร์ driver ของตน '<driver_id>/<file>'
+      if (path.split('/')[0] !== drv.id) {
+        return { data: null, error: { code: 'ERR_POD_PATH_FORBIDDEN', message: 'ERR_POD_PATH_FORBIDDEN' } }
+      }
+      const asg = (tables['delivery_assignments'] || []).find((a: any) => a.order_number === p.p_order_number && a.driver_id === drv.id)
+      if (!asg) return { data: null, error: { code: 'ERR_ASSIGNMENT_NOT_FOUND', message: 'ERR_ASSIGNMENT_NOT_FOUND' } }
+      if (['delivered', 'declined', 'cancelled'].includes(String(asg.status))) {
+        return { data: null, error: { code: 'ERR_ASSIGNMENT_CLOSED', message: 'ERR_ASSIGNMENT_CLOSED' } }
+      }
+      asg.proof_of_delivery_path = path
+      asg.proof_of_delivery_url = path
+      asg.pod_captured_at = new Date().toISOString()
+      asg.pod_latitude = p.p_latitude ?? null
+      asg.pod_longitude = p.p_longitude ?? null
+      asg.updated_at = new Date().toISOString()
+      return { data: { ok: true, order_number: p.p_order_number, proof_of_delivery_path: path }, error: null }
+    }
+
+    if (name === 'driver_update_location') {
+      const p = params ?? {}
+      const drv = (tables['drivers'] || []).find((d: any) => d.user_id === MOCK_USER)
+      if (!drv) return { data: null, error: { code: 'ERR_NOT_A_DRIVER', message: 'ERR_NOT_A_DRIVER' } }
+      if (p.p_latitude == null || p.p_longitude == null) {
+        return { data: null, error: { code: 'ERR_MISSING_DRIVER_INFO', message: 'ERR_MISSING_DRIVER_INFO' } }
+      }
+      const now = new Date().toISOString()
+      drv.current_latitude = Number(p.p_latitude)
+      drv.current_longitude = Number(p.p_longitude)
+      drv.last_seen_at = now
+      drv.updated_at = now
+      ;(tables['driver_location_history'] ||= []).push({
+        id: 'loc-' + Math.random().toString(36).slice(2, 10),
+        driver_id: drv.id,
+        order_number: p.p_order_number ?? null,
+        latitude: Number(p.p_latitude),
+        longitude: Number(p.p_longitude),
+        recorded_at: now,
+      })
+      return { data: { ok: true, driver_id: drv.id }, error: null }
+    }
+
+    // ============ migration 135 (dispatch_offers) — ประกาศ/รับงาน atomic ============
+    if (name === 'dispatch_order') {
+      const p = params ?? {}
+      if (mockNoAdmin) return { data: null, error: { code: 'ERR_FORBIDDEN', message: 'ERR_FORBIDDEN' } }
+      const order = (tables['orders'] || []).find((o: any) => o.order_number === p.p_order_number)
+      if (!order) return { data: null, error: { code: 'ERR_ORDER_NOT_FOUND', message: 'ERR_ORDER_NOT_FOUND' } }
+      if (!['ready_for_dispatch', 'dispatched', 'confirmed', 'preparing'].includes(String(order.status))) {
+        return { data: null, error: { code: 'ERR_ORDER_NOT_DISPATCHABLE', message: 'ERR_ORDER_NOT_DISPATCHABLE' } }
+      }
+      const offers = (tables['dispatch_offers'] ||= [])
+      const existing = offers.find((o2: any) => o2.order_number === p.p_order_number)
+      const now = new Date().toISOString()
+      const offerId = existing?.id || ('dsp-' + Math.random().toString(36).slice(2, 10))
+      if (existing) {
+        // 135 §2: รอบประกาศใหม่ = เคลียร์ claim/push + ประวัติปฏิเสธของรอบก่อน
+        existing.status = 'offered'
+        existing.claimed_by_driver_id = null
+        existing.claimed_at = null
+        existing.rider_pushed_at = null
+        existing.updated_at = now
+        tables['dispatch_offer_declines'] = (tables['dispatch_offer_declines'] || []).filter((d2: any) => d2.offer_id !== offerId)
+      } else {
+        offers.push({
+          id: offerId, order_number: p.p_order_number, branch_id: order.branch_id || 'branch-tenant-bmb-001-main',
+          status: 'offered', claimed_by_driver_id: null, claimed_at: null, rider_pushed_at: null,
+          created_at: now, updated_at: now,
+        })
+      }
+      return { data: { ok: true, order_number: p.p_order_number, offer_id: offerId, status: 'offered' }, error: null }
+    }
+
+    if (name === 'claim_dispatch_offer') {
+      const p = params ?? {}
+      const drv = (tables['drivers'] || []).find((d: any) => d.user_id === MOCK_USER)
+      if (!drv) return { data: null, error: { code: 'ERR_NOT_A_DRIVER', message: 'ERR_NOT_A_DRIVER' } }
+      const order = (tables['orders'] || []).find((o: any) => o.order_number === p.p_order_number)
+      if (!order) return { data: null, error: { code: 'ERR_ORDER_NOT_FOUND', message: 'ERR_ORDER_NOT_FOUND' } }
+      if (!['ready_for_dispatch', 'dispatched', 'confirmed', 'preparing'].includes(String(order.status))) {
+        return { data: null, error: { code: 'ERR_ORDER_NOT_DISPATCHABLE', message: 'ERR_ORDER_NOT_DISPATCHABLE' } }
+      }
+      const offers = (tables['dispatch_offers'] ||= [])
+      const offer = offers.find((o2: any) => o2.order_number === p.p_order_number)
+      // 135 §3: atomic คนแรกได้คนเดียว — ไม่มีประกาศ/ถูกจองแล้ว = ERR_OFFER_NOT_AVAILABLE
+      if (!offer || offer.status !== 'offered') {
+        return { data: null, error: { code: 'ERR_OFFER_NOT_AVAILABLE', message: 'ERR_OFFER_NOT_AVAILABLE' } }
+      }
+      const asgAll = (tables['delivery_assignments'] ||= [])
+      const curAsg = asgAll.find((a: any) => a.order_number === p.p_order_number)
+      if (curAsg && ['assigned', 'accepted', 'picked_up', 'in_transit'].includes(String(curAsg.status))) {
+        return { data: null, error: { code: 'ERR_OFFER_NOT_AVAILABLE', message: 'ERR_OFFER_NOT_AVAILABLE' } }
+      }
+      const now = new Date().toISOString()
+      offer.status = 'claimed'
+      offer.claimed_by_driver_id = drv.id
+      offer.claimed_at = now
+      offer.updated_at = now
+      if (curAsg) {
+        // 135 §3 ON CONFLICT (order_number): claim = accept ในตัว + reset ของรอบก่อน
+        Object.assign(curAsg, {
+          driver_id: drv.id, status: 'accepted', assigned_at: now, accepted_at: now,
+          picked_up_at: null, in_transit_at: null, delivered_at: null,
+          proof_of_delivery_url: null, proof_of_delivery_path: null, pod_captured_at: null,
+          declined_at: null, decline_reason: null, cancelled_at: null, cancel_reason: null,
+          updated_at: now,
+        })
+      } else {
+        asgAll.push({
+          id: 'das-' + Math.random().toString(36).slice(2, 10), order_number: p.p_order_number, driver_id: drv.id,
+          status: 'accepted', assigned_at: now, accepted_at: now, picked_up_at: null, in_transit_at: null,
+          delivered_at: null, proof_of_delivery_url: null, proof_of_delivery_path: null, pod_captured_at: null,
+          declined_at: null, decline_reason: null, cancelled_at: null, cancel_reason: null,
+          notes: 'claimed by rider', created_at: now, updated_at: now,
+        })
+      }
+      drv.status = 'busy'
+      drv.last_seen_at = now
+      return { data: { ok: true, order_number: p.p_order_number, driver_id: drv.id, status: 'accepted' }, error: null }
+    }
+
+    if (name === 'driver_decline_offer') {
+      const p = params ?? {}
+      const drv = (tables['drivers'] || []).find((d: any) => d.user_id === MOCK_USER)
+      if (!drv) return { data: null, error: { code: 'ERR_NOT_A_DRIVER', message: 'ERR_NOT_A_DRIVER' } }
+      const offers = (tables['dispatch_offers'] ||= [])
+      const offer = offers.find((o2: any) => o2.order_number === p.p_order_number && o2.status === 'offered')
+      if (!offer) return { data: null, error: { code: 'ERR_OFFER_NOT_AVAILABLE', message: 'ERR_OFFER_NOT_AVAILABLE' } }
+      const declines = (tables['dispatch_offer_declines'] ||= [])
+      if (!declines.some((d2: any) => d2.offer_id === offer.id && d2.driver_id === drv.id)) {
+        declines.push({ offer_id: offer.id, driver_id: drv.id })
+      }
+      return { data: { ok: true, order_number: p.p_order_number, status: 'declined' }, error: null }
+    }
+
+    if (name === 'cancel_dispatch_offer') {
+      const p = params ?? {}
+      if (mockNoAdmin) return { data: null, error: { code: 'ERR_FORBIDDEN', message: 'ERR_FORBIDDEN' } }
+      const offers = (tables['dispatch_offers'] ||= [])
+      const offer = offers.find((o2: any) => o2.order_number === p.p_order_number && o2.status === 'offered')
+      if (!offer) return { data: null, error: { code: 'ERR_OFFER_NOT_AVAILABLE', message: 'ERR_OFFER_NOT_AVAILABLE' } }
+      offer.status = 'cancelled'
+      offer.updated_at = new Date().toISOString()
+      return { data: { ok: true, order_number: p.p_order_number, status: 'cancelled' }, error: null }
     }
 
     // ============ PHASE 3B handlers (migration 025 cancel_order + 024 ensure_rounds_for_date) ============

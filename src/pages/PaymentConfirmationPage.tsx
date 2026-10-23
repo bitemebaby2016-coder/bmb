@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { Link } from 'react-router-dom'
 import { getOrder } from '@/lib/bmbAdminApi_orders'
 import { submitOfflinePaymentReference, getPaymentIntents, createPaymentIntent, uploadPaymentSlip, submitPaymentSlip } from '@/lib/paymentGateway'
+import { describePaymentEvidenceError, shouldOfferPaymentRetry } from '@/lib/paymentExceptions'
 import { CardPaymentSection } from '@/components/payment/CardPaymentForm'
 import { isOmiseConfigured } from '@/lib/omise'
 import { writeAuditLog } from '@/lib/auditLog'
@@ -35,10 +36,12 @@ export function PaymentConfirmationPage() {
     setPaymentIntent(active ?? intents[0] ?? null)
     // mig 133: MISSING_INTENT กันหลุด — สร้าง intent ให้เองตอนเปิดหน้าจ่ายเงิน
     // (create_payment_intent_record เช็คยอด + เจ้าของออเดอร์ฝั่ง server อยู่แล้ว)
+    // R1.2 (2026-10-23): latch หลังสำเร็จเท่านั้น — ถ้า create ล้มเหลวชั่วคราว
+    // (network) รอบ poll ถัดไปต้องลองใหม่ได้ ไม่ใช่ล็อกตายตั้งแต่ครั้งแรกที่พลาด
     if (!ensuredIntent.current && intents.length === 0 && o && o.payment_status === 'pending'
       && (o.payment_method === 'promptpay_qr' || o.payment_method === 'cash_on_delivery')) {
-      ensuredIntent.current = true
-      await createPaymentIntent(orderNumber, o.total_amount ?? 0, o.payment_method)
+      const created = await createPaymentIntent(orderNumber, o.total_amount ?? 0, o.payment_method)
+      if (created?.success) ensuredIntent.current = true
       const retry = await getPaymentIntents({ orderNumber })
       setPaymentIntent(retry.find((i) => i.status === 'pending' || i.status === 'processing') ?? retry[0] ?? null)
     }
@@ -75,7 +78,7 @@ export function PaymentConfirmationPage() {
       })
       showToast('อัปโหลดสลิปแล้ว ✓', 'success')
     } else {
-      showToast(res.error || 'อัปโหลดสลิปไม่สำเร็จ', 'error')
+      showToast(describePaymentEvidenceError(res.error), 'error')
     }
     setSlipUploading(false)
   }
@@ -95,7 +98,7 @@ export function PaymentConfirmationPage() {
         writeAuditLog({ action: 'payment_processed', entity_type: 'order', entity_id: orderNumber, description: 'PromptPay TXN submitted #' + orderNumber, metadata: { transactionId } })
       } else {
         ok = false
-        errMsg = result.error || 'Failed'
+        errMsg = describePaymentEvidenceError(result.error)
       }
     }
     if (ok && slipPath) {
@@ -104,14 +107,14 @@ export function PaymentConfirmationPage() {
         writeAuditLog({ action: 'payment_processed', entity_type: 'order', entity_id: orderNumber, description: 'PromptPay slip attached #' + orderNumber, metadata: { slipPath } })
       } else {
         ok = false
-        errMsg = slipRes.error || 'Failed'
+        errMsg = describePaymentEvidenceError(slipRes.error)
       }
     }
     if (ok) {
       showToast('ส่งข้อมูลการชำระเงินแล้ว — รอแอดมินตรวจสอบ', 'success')
       setTimeout(() => navigate('/track/' + orderNumber), 1500)
     } else {
-      showToast(errMsg || 'Failed', 'error')
+      showToast(errMsg || 'ส่งหลักฐานไม่สำเร็จ กรุณาลองใหม่', 'error')
     }
     setIsConfirming(false)
   }
@@ -120,9 +123,13 @@ export function PaymentConfirmationPage() {
     return (
       <div className="max-w-2xl mx-auto px-4 py-12 text-center">
         <div className="text-6xl mb-4">🔍</div>
-        <h1 className="text-2xl font-bold text-brand-accent mb-4">Not Found</h1>
-        <p className="text-brand-muted mb-6">Invalid order number</p>
-        <Link to="/" className="btn btn-primary">Back</Link>
+        <h1 className="text-2xl font-bold text-brand-accent mb-4">ไม่พบออเดอร์</h1>
+        {/* D-05 (R1.2): บอกชัดว่าหน้านี้เปิดได้จาก "บัญชีผู้สั่ง" เท่านั้น (คนสั่ง = คนจ่าย) */}
+        <p className="text-brand-muted mb-6">
+          ตรวจสอบเลขที่ออเดอร์อีกครั้ง หรือเข้าสู่ระบบด้วยบัญชีที่ใช้สั่งซื้อ (คนสั่ง = คนจ่าย) —
+          ระบบแสดงหน้าชำระเงินนี้เฉพาะเจ้าของออเดอร์เท่านั้น
+        </p>
+        <Link to="/" className="btn btn-primary">กลับหน้าแรก</Link>
       </div>
     )
   }
@@ -132,8 +139,11 @@ export function PaymentConfirmationPage() {
   // Card flow (P0-5): the client_secret is handed through navigation state by
   // CheckoutPage. A page refresh loses it — the customer then sees the honest
   // "not ready" card and can retry from the failed-payment path instead.
-  const locationState = (typeof window !== 'undefined' && (window.history?.state as { usr?: { clientSecret?: string } })?.usr) || null
+  const locationState = (typeof window !== 'undefined' && (window.history?.state as { usr?: { clientSecret?: string; replay?: boolean } })?.usr) || null
   const cardClientSecret = (locationState as { clientSecret?: string } | null)?.clientSecret ?? paymentIntent?.client_secret ?? null
+  // D-06 (R1.5): replay ต้อง "เห็นชัด ไม่เงียบ" — แจ้งบนหน้าถาวร (ไม่ใช่แค่ toast)
+  // ว่าออเดอร์นี้คือคำสั่งเดิมที่ถูกส่งซ้ำ (idempotent, 124 R3) + ทางเลือกไปรายการของฉัน
+  const isReplay = !!(locationState as { replay?: boolean } | null)?.replay
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-6">
@@ -141,6 +151,15 @@ export function PaymentConfirmationPage() {
         <h1 className="text-3xl font-bold text-brand-accent">Payment Confirmation</h1>
         <Link to={'/track/' + orderNumber} className="btn btn-outline">Track Order</Link>
       </div>
+      {isReplay && (
+        <div className="card mb-6 border-2 border-blue-300 bg-blue-50" data-testid="replay-banner">
+          <p className="text-sm text-slate-800">
+            🔄 <strong>ตรวจพบการส่งซ้ำ</strong> — ระบบใช้ออเดอร์เดิม <strong>{order.order_number}</strong> ที่คุณสั่งไว้ก่อนหน้า
+            (ไม่มีการสร้างออเดอร์ใหม่เพิ่ม) ถ้านี่ไม่ใช่คำสั่งที่ต้องการ ดูได้ที่รายการสั่งซื้อของคุณ
+          </p>
+          <Link to="/orders" className="btn btn-outline btn-sm mt-2 self-start">📋 ไปที่รายการสั่งซื้อของฉัน</Link>
+        </div>
+      )}
       <div className="card mb-6">
         <div className="flex items-center justify-between mb-4">
           <div>
@@ -244,8 +263,11 @@ export function PaymentConfirmationPage() {
           <span className="badge badge-info">⏳ รอเก็บเงินตอนรับของ (delivered)</span>
         </div>
       )}
-      {/* ✅ Phase 3B §10: failed payment → retry on the SAME order */}
-      {order.payment_status === 'failed' && (
+      {/* ✅ Phase 3B §10: failed payment → retry on the SAME order.
+          R1.2 (D-04, 2026-10-23): เดิมเช็ค order.payment_status === 'failed' ซึ่งเป็น
+          ไปไม่ได้ตาม CHECK ของ orders.payment_status → การ์ดนี้ไม่เคยแสดง (dead UI)
+          สถานะ failed จริงอยู่ที่ payment_intents.status — ใช้ shouldOfferPaymentRetry */}
+      {shouldOfferPaymentRetry(order, paymentIntent) && (
         <div className="card mb-6 bg-gradient-to-br from-red-50 to-rose-50 border-2 border-red-200 text-center py-6">
           <h3 className="text-xl font-bold text-red-700 mb-2">การชำระเงินไม่สำเร็จ</h3>
           <p className="text-brand-muted mb-4">ลองชำระใหม่อีกครั้ง — ออเดอร์เดิมของคุณยังอยู่ (ไม่มีการสร้างออเดอร์ใหม่)</p>

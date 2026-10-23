@@ -147,3 +147,112 @@ export function groupPaymentExceptions<T extends { kind: PaymentExceptionKind }>
   for (const r of rows) groups[r.kind].push(r)
   return groups
 }
+
+// ============================================
+// R1.2 (2026-10-23, D-04) — confirmability ของ confirm_offline_payment
+// ============================================
+// PURE display helper ที่ mirror เงื่อนไข server จริง (008 B.5):
+//   · cash_on_delivery → ต้อง order.status = 'delivered' ก่อน
+//   · อื่น ๆ           → intent ล่าสุด (method เดียวกับ order) ต้อง status = 'processing'
+//     (ลูกค้าส่งสลิป/เลข TXN แล้ว — submit_payment_slip / submit_offline_payment_reference)
+// คืนเหตุผลเป็นข้อความไทยชัดเจนเสมอ — ปุ่มยืนยันในแผงตรวจสลิปจะปิดพร้อมบอกเหตุผล
+// เมื่อ server จะปฏิเสธอยู่แล้ว (ห้ามกดแล้ว error ลอย ๆ อีก)
+
+export interface PaymentConfirmability {
+  confirmable: boolean
+  reason: string
+}
+
+export function paymentConfirmability(o: OrderForm, intents: PaymentIntentLite[]): PaymentConfirmability {
+  const method = (o.payment_method || '').trim()
+  if (o.payment_status === 'paid') {
+    return { confirmable: false, reason: 'ชำระเงินแล้ว — ไม่ต้องยืนยันซ้ำ' }
+  }
+  if (method === 'cash_on_delivery') {
+    return o.status === 'delivered'
+      ? { confirmable: true, reason: 'ส่งถึงแล้ว (delivered) — ยืนยันการเก็บเงินสดได้' }
+      : { confirmable: false, reason: 'เงินสดเก็บตอนรับของ — ยืนยันได้เมื่อสถานะเป็น delivered เท่านั้น' }
+  }
+  if (method === 'credit_card') {
+    return {
+      confirmable: false,
+      reason: 'บัตรเครดิต/เดบิต ยืนยันอัตโนมัติผ่านระบบชำระเงิน (webhook) — ไม่ต้องกดยืนยันเอง',
+    }
+  }
+  // promptpay_qr / bank_transfer: เงื่อนไขเดียวกับ confirm_offline_payment (008 B.5)
+  const latest = intents.find((i) => i.method === method) ?? intents[0]
+  if (!latest) {
+    return { confirmable: false, reason: 'ไม่พบ payment intent — ให้ลูกค้าเปิดหน้า /payment เพื่อสร้างรายการชำระ (ระบบจะสร้างให้อัตโนมัติ)' }
+  }
+  switch (latest.status) {
+    case 'processing':
+      return { confirmable: true, reason: 'มีหลักฐานการโอนแล้ว (สลิป/เลข TXN) — พร้อมยืนยัน' }
+    case 'pending':
+      return { confirmable: false, reason: 'ยังไม่มีหลักฐานการโอน (สลิป/เลข TXN) — รอให้ลูกค้าส่งหลักฐานที่หน้า /payment ก่อน' }
+    case 'completed':
+      return { confirmable: false, reason: 'รายการชำระสำเร็จแล้ว แต่ออเดอร์ยังไม่เป็น paid — ตรวจสอบอีกครั้งหรือติดต่อทีม (webhook mismatch)' }
+    case 'failed':
+      return { confirmable: false, reason: 'การชำระล้มเหลว — ให้ลูกค้ากด "ลองชำระเงินอีกครั้ง" ที่หน้า /payment' }
+    default:
+      return { confirmable: false, reason: `รายการชำระอยู่ในสถานะ ${latest.status} — ยังยืนยันไม่ได้` }
+  }
+}
+
+/**
+ * PURE display mapping ของ error จาก confirm_offline_payment (008 B.5) →
+ * ข้อความไทยที่บอก "ทำไมยืนยันไม่ได้" ชัดเจน (แทน ERR code ลอย ๆ บน toast)
+ */
+export function describePaymentConfirmError(raw: string | undefined | null): string {
+  const msg = String(raw || '')
+  if (msg.includes('ERR_COD_NOT_DELIVERED')) {
+    return 'ยืนยันไม่ได้: เงินสดเก็บตอนรับของ — ต้องส่งถึงมือลูกค้า (delivered) ก่อน'
+  }
+  if (msg.includes('ERR_NO_PAYMENT_INTENT')) {
+    return 'ยืนยันไม่ได้: ไม่พบ payment intent — ให้ลูกค้าเปิดหน้า /payment เพื่อสร้างรายการชำระ (ระบบจะสร้างให้อัตโนมัติ)'
+  }
+  if (msg.includes('ERR_INTENT_NOT_PROCESSING')) {
+    return 'ยืนยันไม่ได้: ยังไม่มีหลักฐานการโอนในระบบ (สลิป/เลข TXN) — รอให้ลูกค้าส่งหลักฐานที่หน้า /payment ก่อน'
+  }
+  if (msg.includes('ERR_ORDER_NOT_FOUND')) {
+    return 'ยืนยันไม่ได้: ไม่พบออเดอร์นี้ในระบบ'
+  }
+  if (msg.includes('ERR_FORBIDDEN')) {
+    return 'ยืนยันไม่ได้: บัญชีนี้ไม่มีสิทธิ์ยืนยันการชำระเงิน'
+  }
+  return msg ? `ยืนยันไม่สำเร็จ: ${msg}` : 'ยืนยันไม่สำเร็จ (กฎ: ต้อง delivered สำหรับเงินสด / ต้องมีหลักฐานโอนสำหรับ PromptPay)'
+}
+
+/**
+ * PURE display mapping ของ error ฝั่งลูกค้า (submit_payment_slip /
+ * submit_offline_payment_reference) — D-05: ข้อความต้องบอกชัดว่า
+ * "คนสั่ง = คนจ่าย" เมื่อผู้เปิดหน้าไม่ใช่เจ้าของออเดอร์
+ */
+export function describePaymentEvidenceError(raw: string | undefined | null): string {
+  const msg = String(raw || '')
+  if (msg.includes('ERR_NOT_AUTHENTICATED')) {
+    return 'กรุณาเข้าสู่ระบบด้วยบัญชีที่สั่งซื้อเพื่อส่งหลักฐานการชำระเงิน (คนสั่ง = คนจ่าย)'
+  }
+  if (msg.includes('ERR_NO_PENDING_PROMPTPAY')) {
+    return 'ส่งหลักฐานไม่ได้: ต้องส่งจากบัญชีผู้สั่งซื้อ (คนสั่ง = คนจ่าย) และออเดอร์ต้องอยู่ในสถานะรอชำระ — ถ้าเห็นหน้านี้จากบัญชีอื่น ให้เข้าสู่ระบบด้วยบัญชีที่สั่งซื้อ'
+  }
+  if (msg.includes('ERR_SLIP_PATH_FORBIDDEN') || msg.includes('ERR_POD_PATH_FORBIDDEN')) {
+    return 'ไฟล์หลักฐานไม่ถูกต้อง — กรุณาเลือกรูปสลิปใหม่อีกครั้ง'
+  }
+  return msg ? `ส่งหลักฐานไม่สำเร็จ: ${msg}` : 'ส่งหลักฐานไม่สำเร็จ กรุณาลองใหม่'
+}
+
+/**
+ * PURE display decision ของ "การ์ดลองชำระใหม่" บนหน้า /payment —
+ * เดิมเช็ค `order.payment_status === 'failed'` ซึ่งเป็นไปไม่ได้ตาม CHECK ของ
+ * orders.payment_status ('pending'|'paid'|'refund'|'partially_refunded' — 001/035)
+ * ทำให้การ์ด retry ไม่เคยแสดง = ทางรอดของลูกค้าหาย (dead UI, R1.2/D-04).
+ * สถานะ failed จริงอยู่ที่ payment_intents.status — เช็คจาก intent ล่าสุดแทน
+ */
+export function shouldOfferPaymentRetry(
+  order: { payment_status?: string | null } | null | undefined,
+  latestIntent: { status?: string | null } | null | undefined,
+): boolean {
+  if (!order) return false
+  if (order.payment_status === 'paid') return false
+  return latestIntent?.status === 'failed'
+}

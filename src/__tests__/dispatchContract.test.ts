@@ -23,7 +23,7 @@ vi.mock('@/lib/supabase', async () => {
 })
 
 import { supabase } from '@/lib/supabase'
-import { adminListDrivers, assignDriver, driverLogin, myDeliveries, driverAcceptAssignment, driverUpdateDeliveryStatus, linkDriverUser, upsertDriver } from '@/lib/driverService'
+import { adminListDrivers, assignDriver, driverLogin, myDeliveries, driverAcceptAssignment, driverUpdateDeliveryStatus, driverAttachPod, linkDriverUser, upsertDriver } from '@/lib/driverService'
 import { updateOrderStatus } from '@/lib/bmbAdminApi_orders'
 import { ADMIN_ALLOWED_TRANSITIONS } from '@/lib/adminOrderDisplay'
 
@@ -64,6 +64,18 @@ describe('3B-2D · assign_driver contract (admin authority, 020)', () => {
     await seedOrder({ order_number: 'D-BADDRV' })
     const ok = await assignDriver('D-BADDRV', 'drv-does-not-exist')
     expect(ok).toBe(false)
+  })
+  it('confirmed/preparing (จ่ายแล้ว/ครัวทำ) → assign ได้ทันที — คิวมอบหมายห้ามบัง D-03', async () => {
+    // 020:610: assign_driver รับ confirmed/preparing/ready_for_dispatch/dispatched
+    // บอร์ดมอบหมายต้องเห็น + มอบหมายได้โดยไม่ต้องรอ ready_for_dispatch
+    for (const st of ['confirmed', 'preparing']) {
+      await seedOrder({ order_number: `D-${st.toUpperCase()}`, status: st })
+      await upsertDriver('Queue Rider', '0900000021', 'bike')
+      const drvId = (await adminListDrivers()).drivers.find((d) => d.driver_name === 'Queue Rider')!.id
+      expect(await assignDriver(`D-${st.toUpperCase()}`, drvId), `assign ต้องผ่านสำหรับ status=${st}`).toBe(true)
+      const asg = (supabase as any).__tables.delivery_assignments as any[]
+      expect(asg.find((a) => a.order_number === `D-${st.toUpperCase()}`)?.status).toBe('assigned')
+    }
   })
   it('unauthorized (non-admin) assignment → denied', async () => {
     ;(supabase as any).__setNoAdmin?.(true)
@@ -160,19 +172,39 @@ describe('3B-2D · dispatch state transitions (canonical spine only)', () => {
     // canonical wrapper returns null (never throws) — server rejects the hop
     expect(await updateOrderStatus('D-ILLEGAL', 'dispatched')).toBeNull()
   })
-  it('full rider flow reaches delivered (in_transit→arrived→delivered multi-hop)', async () => {
+  it('full rider flow reaches delivered (in_transit→arrived→delivered multi-hop, POD บังคับ)', async () => {
     const drvId = (await upsertDriver('Flow Rider', '0900000001', 'bike')).driver_id
     await linkDriverUser(drvId as string, 'auth-test-user')
     await seedOrder({ order_number: 'D-FULL', status: 'ready_for_dispatch' })
     await assignDriver('D-FULL', drvId as string)
     await driverAcceptAssignment('D-FULL')
+    expect((await driverUpdateDeliveryStatus('D-FULL', 'delivered')).ok).toBe(false) // 132:540 POD ยังไม่มี
+    expect((await driverAttachPod('D-FULL', `${drvId}/D-FULL-pod.jpg`)).ok).toBe(true)
     expect((await driverUpdateDeliveryStatus('D-FULL', 'delivered')).ok).toBe(true)
     const ord = (supabase as any).__tables.orders as any[]
     const asg = (supabase as any).__tables.delivery_assignments as any[]
     expect(ord[0].status).toBe('delivered')
     expect(asg[0].status).toBe('delivered')
+    expect(asg[0].proof_of_delivery_path).toBe(`${drvId}/D-FULL-pod.jpg`)
     // already delivered → blocked
     expect((await driverUpdateDeliveryStatus('D-FULL', 'in_transit')).ok).toBe(false)
+  })
+  it('delivered ต้องมี POD ก่อน (ERR_POD_REQUIRED) — ปิดทางส่งสำเร็จโดยไม่มีหลักฐาน', async () => {
+    const drvId = (await upsertDriver('Pod Rider', '0900000009', 'bike')).driver_id
+    await linkDriverUser(drvId as string, 'auth-test-user')
+    await seedOrder({ order_number: 'D-POD', status: 'ready_for_dispatch' })
+    await assignDriver('D-POD', drvId as string)
+    await driverAcceptAssignment('D-POD')
+    await driverUpdateDeliveryStatus('D-POD', 'picked_up')
+    await driverUpdateDeliveryStatus('D-POD', 'in_transit')
+    const noPod = await driverUpdateDeliveryStatus('D-POD', 'delivered')
+    expect(noPod.ok).toBe(false)
+    if (!noPod.ok) expect(noPod.kind).toBe('state') // ERR_POD_REQUIRED → state (ข้อความไทยจาก driverErrorText)
+    // POD ของคนอื่น/path ผิดโฟลเดอร์ = ใช้ไม่ได้ (132 169-172)
+    const badPath = await driverAttachPod('D-POD', 'someone-else/x.jpg')
+    expect(badPath.ok).toBe(false)
+    expect(await driverAttachPod('D-POD', `${drvId}/D-POD.jpg`)).toMatchObject({ ok: true })
+    expect((await driverUpdateDeliveryStatus('D-POD', 'delivered')).ok).toBe(true)
   })
   it('cancelled/failed/delivered never sync to a driving state (terminal lock)', async () => {
     const drvId = (await upsertDriver('Term Rider', '0900000001', 'bike')).driver_id

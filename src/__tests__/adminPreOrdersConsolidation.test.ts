@@ -43,8 +43,12 @@ vi.mock('@/lib/bmbAdminApi_products', () => ({ getProductsAdmin: m.getProductsAd
 vi.mock('@/components/ui/ToastContainer', () => ({ showToast: m.showToast }))
 // A2+M5 (2026-10-22): AdminOrders batch-reads payment_intents per page (SlipReviewPanel)
 // — stub ให้ hermetic ไม่ต้องแตะ supabase จริงในเทสต์หน้านี้
+// D-04 (R1.2): + getPaymentExceptionOrders (แผงตรวจสลิปโหลดรายการรอตรวจเอง)
 vi.mock('@/lib/paymentExceptions', () => ({
   getPaymentIntentsFor: vi.fn(async () => []),
+  getPaymentExceptionOrders: vi.fn(async () => []),
+  describePaymentConfirmError: (e: unknown) => String(e || ''),
+  paymentConfirmability: () => ({ confirmable: true, reason: '' }),
 }))
 vi.mock('react-router-dom', async () => {
   const actual = await vi.importActual<typeof import('react-router-dom')>('react-router-dom')

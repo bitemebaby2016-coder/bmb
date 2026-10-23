@@ -307,7 +307,13 @@ export function DeliveryManagement() {
   }
 
   const driverName = (id?: string | null) => drivers.find((d) => d.id === id)?.driver_name || (id ? String(id).slice(0, 14) : null)
-  const readyQ = orders.filter((o) => o.status === 'ready_for_dispatch')
+  // D-03 (R1.3, 2026-10-23): คิวมอบหมาย/ส่งออกต้องเห็นทุกสถานะที่ RPC รับจริง
+  // (assign_driver 020:610 + dispatch_order/claim 135:104/166 รับ
+  //  confirmed/preparing/ready_for_dispatch/dispatched) — เดิมกรองเฉพาะ
+  //  ready_for_dispatch ทำให้ออเดอร์ที่จ่ายเงินแล้ว (confirmed/preparing)
+  //  มองไม่เห็นในบอร์ด → มอบหมาย/ประกาศไม่ได้ (ตรงที่ Owner เจอ)
+  const DISPATCHABLE = ['confirmed', 'preparing', 'ready_for_dispatch']
+  const readyQ = orders.filter((o) => DISPATCHABLE.includes(o.status))
   const enroute = orders.filter((o) => ['dispatched', 'in_transit', 'arrived', 'delivered'].includes(o.status))
   const asgFor = (n: string) => assignments.find((a) => a.order_number === n)
 
@@ -329,7 +335,7 @@ export function DeliveryManagement() {
       {/* Summary */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
         <div className="card bg-orange-50 border-2 border-orange-200"><h3 className="font-bold text-brand-accent">📦 รอมอบหมาย</h3><p className="text-3xl font-bold mt-2">{readyQ.filter((o) => !asgFor(o.order_number)).length}</p></div>
-        <div className="card bg-blue-50 border-2 border-blue-200"><h3 className="font-bold text-brand-accent">✅ พร้อมส่งทั้งหมด</h3><p className="text-3xl font-bold mt-2">{readyQ.length}</p></div>
+        <div className="card bg-blue-50 border-2 border-blue-200"><h3 className="font-bold text-brand-accent">📋 คิวส่งออกทั้งหมด</h3><p className="text-3xl font-bold mt-2">{readyQ.length}</p></div>
         <div className="card bg-green-50 border-2 border-green-200"><h3 className="font-bold text-brand-accent">🛵 บนถนน</h3><p className="text-3xl font-bold mt-2">{enroute.filter((o) => o.status !== 'delivered').length}</p></div>
         <div className="card bg-purple-50 border-2 border-purple-200"><h3 className="font-bold text-brand-accent">👨‍✈️ ไรเดอร์พร้อม</h3><p className="text-3xl font-bold mt-2">{drivers.filter((d) => d.status === 'available').length}</p></div>
       </div>
@@ -461,7 +467,7 @@ export function DeliveryManagement() {
 
       {/* Dispatch queue */}
       <div className="card mb-6">
-        <h3 className="font-bold text-brand-accent mb-4">📦 คิว Dispatch — พร้อมส่ง ({readyQ.length})</h3>
+        <h3 className="font-bold text-brand-accent mb-4">📦 คิว Dispatch — มอบหมาย/ส่งออก ({readyQ.length})</h3>
         {loading ? <p className="text-brand-muted text-sm">กำลังโหลด…</p> : readyQ.length === 0 ? <p className="text-brand-muted text-sm py-4 text-center">ไม่มีออเดอร์รอ dispatch</p> : (
           <div className="space-y-3">
             {readyQ.map((o) => {
@@ -487,8 +493,9 @@ export function DeliveryManagement() {
                       📍 {resolveOrderDeliveryAddress(o) || '—'}
                     </span>
                   </div>
-                  {/* exception visibility: order not dispatchable but assignment active */}
-                  {!['ready_for_dispatch', 'dispatched'].includes(o.status) ? <p className="text-xs text-red-500 mt-2">⚠ สถานะออเดอร์ = {o.status} (ไม่อยู่ในช่วง dispatch)</p> : null}
+                  {/* exception visibility: แจ้งเฉพาะสถานะที่อยู่นอกช่วง dispatch จริง ๆ —
+                      confirmed/preparing อยู่ในคิวได้ตามสัญญา RPC (020:610 / 135:104) ห้ามเตือนมั่ว */}
+                  {!['confirmed', 'preparing', 'ready_for_dispatch', 'dispatched'].includes(o.status) ? <p className="text-xs text-red-500 mt-2">⚠ สถานะออเดอร์ = {o.status} (ไม่อยู่ในช่วง dispatch)</p> : null}
                   <div className="mt-3 flex gap-2 flex-wrap items-center">
                     <select value={pending[o.order_number] || ''} onChange={(e) => setPending((p) => ({ ...p, [o.order_number]: e.target.value }))} className="input text-sm w-auto">
                       <option value="">— เลือกไรเดอร์ —</option>

@@ -623,7 +623,10 @@ export function CheckoutPage() {
       showToast(`สั่งซื้อสำเร็จ ${createdOrders.length} ออเดอร์: ${createdOrders.map((c) => c.order_number).join(', ')}`, 'success')
       justPlaced.current = true
       clearCart()
-      navigate(`/payment/${firstNumber}`)
+      // D-06 (R1.5): mixed-split ก็ต้องรายงาน replay ให้หน้า /payment แสดง banner ชัดเจน
+      navigate(`/payment/${firstNumber}`, {
+        state: { replay: createdOrders.some((c) => c.replay) },
+      })
       setIsProcessing(false)
       return
     }
@@ -720,7 +723,12 @@ export function CheckoutPage() {
     })
 
     navigate(`/payment/${order.order_number}`, {
-      state: paymentMethod === 'credit_card' && cardClientSecret ? { clientSecret: cardClientSecret } : undefined,
+      // D-06 (R1.5): replay flag ไปกับ state ให้หน้า /payment แสดง banner ถาวร
+      // "ออเดอร์เดิม/ใหม่" — ไม่เงียบเหมือน toast ที่หายไป
+      state: {
+        ...(paymentMethod === 'credit_card' && cardClientSecret ? { clientSecret: cardClientSecret } : {}),
+        replay: !!order.replay,
+      },
     })
     justPlaced.current = true
     clearCart()

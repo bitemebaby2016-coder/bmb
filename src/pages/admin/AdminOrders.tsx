@@ -20,7 +20,7 @@ import type { RoundLite } from '@/lib/preOrderQueue'
 import type { OrderForm } from '@/lib/bmbAdminApi_orders'
 import type { Product } from '@/types'
 import { useAdminTenantContextStore } from '@/lib/adminTenantContext'
-import { getPaymentIntentsFor, type PaymentIntentLite } from '@/lib/paymentExceptions'
+import { getPaymentIntentsFor, getPaymentExceptionOrders, describePaymentConfirmError, type PaymentIntentLite } from '@/lib/paymentExceptions'
 import { SlipReviewPanel } from '@/components/admin/SlipReviewPanel'
 
 const PAGE_SIZE = 25
@@ -68,6 +68,10 @@ export function AdminOrders() {
   // หน้า (getPaymentIntentsFor = เส้นอ่านเดียวผ่าน paymentGateway) แล้วส่งเป็น props
   // เข้า SlipThumb/SlipReviewPanel (เลิก self-fetch ซ้ำทีละออเดอร์)
   const [intentsByOrder, setIntentsByOrder] = useState<Record<string, PaymentIntentLite[]>>({})
+  // D-04 (R1.2, 2026-10-23): แผงตรวจสลิป = "ทุกออเดอร์ที่รอตรวจ" ไม่ผูกหน้า/ตัวกรอง/สาขา
+  // (เดิมใช้ filteredOrders ของหน้า → ออเดอร์ที่อยู่คนละหน้า/ถูก filter/branch บัง
+  //  ไม่โผล่ในแผงเลย = ที่ Owner เจอ "สลิปตรวจไม่ได้")
+  const [reviewOrders, setReviewOrders] = useState<OrderForm[]>([])
   // STEP 3B-2B: delivery_rounds rows (canonical capacity/cutoff source of truth) for the
   // PRE_ORDER queue header — DISPLAY ONLY; server RPCs (025/038) enforce the rules.
   const [roundsById, setRoundsById] = useState<Record<string, RoundLite>>({})
@@ -101,6 +105,20 @@ export function AdminOrders() {
       ;(imap[it.order_number] ||= []).push(it)
     }
     setIntentsByOrder(imap)
+    // D-04: แผงตรวจสลิปโหลดรายการ "รอตรวจ" เองต่างหากจากตัวกรองหน้า/สาขา —
+    // payment_status='pending' ทั้งหมด (getPaymentExceptionOrders = read-only,
+    // RLS admin scope) แล้วเติม intents ของชุดนี้เข้า map เดิม (ยังเป็น
+    // query เดียวต่อหน้า — แยกเป็นครั้งที่สองเฉพาะเมื่อมีรายการใหม่ให้ตรวจ)
+    const review = (await getPaymentExceptionOrders()).filter((o) => o.payment_status === 'pending')
+    setReviewOrders(review)
+    const reviewNumbers = review.map((o) => o.order_number).filter((n) => !imap[n])
+    if (reviewNumbers.length > 0) {
+      const more = await getPaymentIntentsFor(reviewNumbers)
+      for (const it of more) {
+        ;(imap[it.order_number] ||= []).push(it)
+      }
+      setIntentsByOrder({ ...imap })
+    }
     // 3B-2B: rounds for the current page (queue headers read the DB source of truth)
     const roundIds = Array.from(new Set(res.orders.map((o) => o.delivery_round_id).filter(Boolean))) as string[]
     const rounds = await getRoundsByIds(roundIds)
@@ -153,7 +171,9 @@ export function AdminOrders() {
       useNotificationStore.getState().triggerEvent('payment_confirmed', { orderNumber })
       showToast('Payment confirmed', 'success')
     } else {
-      showToast(r.error || 'Cannot confirm (rule: delivered/TXN)', 'error')
+      // D-04 (R1.2): บอกเหตุผลชัดเจนเป็นภาษาไทย (ERR_NO_PAYMENT_INTENT /
+      // ERR_INTENT_NOT_PROCESSING / ERR_COD_NOT_DELIVERED ฯลฯ) แทน ERR code ลอย ๆ
+      showToast(describePaymentConfirmError(r.error), 'error')
     }
   }
 
@@ -254,9 +274,10 @@ async function handleStripeRefund(orderNumber: string) {
 
       {/* A2 (2026-10-22): "แผงตรวจสลิปเดียว" — จุดเดียวที่ตรวจหลักฐานการโอน +
           กดยืนยันการชำระเงิน (confirm_offline_payment) · M5: intents query ครั้งเดียว
-          ใน loadOrders แล้วส่งต่อเป็น props (SlipThumb เลิก self-fetch) */}
+          ใน loadOrders แล้วส่งต่อเป็น props (SlipThumb เลิก self-fetch)
+          · D-04 (R1.2): ส่ง reviewOrders (ทุกออเดอร์รอตรวจ ไม่ผูกตัวกรองหน้า/สาขา) */}
       <SlipReviewPanel
-        orders={filteredOrders}
+        orders={reviewOrders}
         intentsByOrder={intentsByOrder}
         onConfirmPayment={handleConfirmPayment}
       />

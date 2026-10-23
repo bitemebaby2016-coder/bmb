@@ -47,7 +47,7 @@
 
 ## 3. แผนซ่อม R0 → R3 (เรียงตามที่ระบบไหลจริง)
 
-> **สถานะ 2026-10-23 (ปิดงานรอบนี้):** R0 ✅ ครบ · R1.1 ✅ ปิด (136 applied + drift repair) · R1.2-R1.5 ⬜ เขียนโค้ดรอบหน้า · R2 ⬜ · R3 ⬜ (evidence 5 ข้อยังไม่ครบ)
+> **สถานะ 2026-10-23 รอบ 2 (เขียนทับ):** R0 ✅ · R1.1 ✅ · **R1.2-R1.5 + R2.1 = ✅ IMPLEMENTED (โค้ด+เทสต์เขียว 1317/1317 — ทุกตำแหน่งรอทดสอบจริงบน biteme-baby.com)** · R2.2 status walk = ⬜ รอทดสอบจริง · R3 evidence = ⬜ รอ Owner
 
 ### R0 — ตรวจความจริงบนโปรดักชั่น (read-only · ห้ามแก้อะไร · ทุกอย่างต้องมีหลักฐาน) ✅ DONE 2026-10-23
 1. **DB audit (อ่านอย่างเดียวผ่าน Management API `/database/query`):** ✅ ทำแล้ว — evidence `e2e/artifacts/r0-prod-audit.json` + `r0-prod-audit2.json` + `prod-sweep-final.json`
@@ -60,15 +60,19 @@
 
 ### R1 — ซ่อมสายหลัก P0: ออเดอร์ → เงิน → dispatch → ไรเดอร์ (ทุกข้อ = แก้ของจริง + เทสต์ใหม่ ≥ เดิม)
 - **R1.1 ปิด D-01:** ✅ DONE 2026-10-23 (Owner approve) — contract 136 G1-G3 EXIT=0 บน Docker PG16 (replay 001-137 ผ่านหมด) → apply `136_driver_location_history.sql` ผ่าน Management API → verify: table+fn มี, grants authenticated/service_role EXECUTE (anon revoked), policies ครบ · **แถม:** drift repair `schema_migrations` บันทึก 133-137 ย้อนหลัง (เดิมค้างที่ 132) — evidence `e2e/artifacts/prod-apply-136*.json`, `prod-verify-136.json` · เหลือ: ทดสอบ heartbeat จริงบนเครื่องไรเดอร์ตอน R1.4
-- **R1.2 สายเงิน/สลิป (ปิด D-04/D-05 + H-02):** (ก) ทุกออเดอร์ต้องมี payment intent จริงเสมอ (self-heal ตอนเปิด /payment ของจริง ไม่ใช่แค่ toast) (ข) แผงตรวจสลิปเห็น "ทุกออเดอร์ที่รอตรวจ" ไม่ว่าตัวกรองไหน + บอกเหตุผลชัดเมื่อยืนยันไม่ได้ (ค) ทางแนบสลิปต้องตรงเจ้าของจริง (คนสั่ง = คนจ่าย) — ถ้า R0 พบเคส guest ต้องออกแบบให้ตรงจริง ไม่ใช่ปลดล็อกมั่ว (ง) เทสต์เดิม `paymentSlipUpload`/`paymentIntentsSingleRead`/`paymentExceptions` + เคสใหม่ตามจริง
-- **R1.3 บอร์ดมอบหมาย/ประกาศ (ปิด D-03):** คิวเดียวแสดงออเดอร์ `confirmed`/`preparing`/`ready_for_dispatch` ทั้งหมด (ตามที่ RPC รับจริง) · ปุ่มเดียวต่อ transition (มอบหมาย/ประกาศ/ยกเลิก) · ข้อความตรงสถานะจริง · เทสต์เดิม `dispatchContract`/`adminDeliveryAdvance`/`dispatchOffersClient` + เคส confirmed→assign
-- **R1.4 วงจรไรเดอร์เต็ม (ปิด H-03/H-04):** ประกาศ → push → รับ (คนแรกจอง) → รับของ → กำลังส่ง → POD บังคับ → สำเร็จ → ลูกค้าเห็น ≤20 วิ → แอดมินเห็น timeline+เส้นทาง — ทดสอบบนเครื่องไรเดอร์จริง · เทสต์เดิม `statusTruthMatrix`/`driverActionResults`/`liveTrackingClient` + เคสจริง
-- **R1.5 "ออเดอร์ใหม่ไม่เข้า/อันเก่าค้าง" (ปิด D-06/D-07 + H-01):** แก้ตามผล R0 — ถ้าใช่ replay ผู้ใช้ต้อง "เห็น/เลือก" ได้ชัดว่าเป็นออเดอร์เดิมหรือใหม่ (ไม่เงียบ) · ถ้าใช่ branch filter ต้องไม่ซ่อนออเดอร์จริง · เทสต์เดิม `orderSubmitKey`/`canonicalOrderFlow`/`orderNumberUniqueness` + เคส payload ซ้ำ
+- **R1.2 สายเงิน/สลิป (D-04/D-05/H-02):** ✅ IMPLEMENTED 2026-10-23 (รอทดสอบจริง) —
+  (ก) `createPaymentIntent` **dedupe active intent** (คืนแถวเดิมถ้ายัง pending/processing — ปิดต้นเหตุ intent ซ้ำแบบที่ R0 เจอใน BMB-20261023-841/205) + self-heal บน /payment latch หลังสำเร็จเท่านั้น (retry ได้ถ้า create ล้มเหลวชั่วคราว) ·
+  (ข) `SlipReviewPanel` ใช้ **reviewOrders** (ทุกออเดอร์ `payment_status='pending'` ไม่ผูกหน้า/ตัวกรอง/สาขา — `getPaymentExceptionOrders`) + **ปุ่มยืนยันปิดพร้อมเหตุผลไทยชัด** (`paymentConfirmability` mirror เงื่อนไข 008 B.5) + error mapping (`describePaymentConfirmError`) ·
+  (ค) ข้อความ "คนสั่ง = คนจ่าย" ชัดเจนทุกจุดที่หลักฐานส่งไม่ได้ (`describePaymentEvidenceError`) ·
+  (ง) เทสต์ใหม่: `slipReviewPanel.test.ts` (4) + `paymentExceptions.test.ts` +12 + `paymentStateMachine.test.ts` +2 (dedupe) + `canonicalOrderFlow` แก้ phantom RPC `mark_payment_failed` → `record_payment_result` failed ของจริง
+- **R1.3 บอร์ดมอบหมาย (D-03):** ✅ IMPLEMENTED 2026-10-23 (รอทดสอบจริง) — `readyQ` = `confirmed/preparing/ready_for_dispatch` (ตามสัญญา assign_driver 020:610 + dispatch 135:104) + label ตรงสถานะ + exception warning ไม่เตือนมั่ว · เทสต์ใหม่: `dispatchContract` confirmed/preparing→assign + `riderFullCycle`
+- **R1.4 วงจรไรเดอร์เต็ม (H-03/H-04):** ✅ IMPLEMENTED 2026-10-23 (รอทดสอบจริงบนเครื่องไรเดอร์ "พอล ไบท์ไดรฟ์") — **mock ตรงสัญญาจริงแล้ว**: `driver_attach_pod`/`driver_update_location`/`dispatch_order`/`claim_dispatch_offer`/`driver_decline_offer`/`cancel_dispatch_offer` + `my_deliveries` คืน offers[] + **ERR_POD_REQUIRED บังคับจริง** (เดิม mock ปล่อย delivered โดยไม่มี POD = เทสต์เขียวแต่ของจริงพัง) · เทสต์ใหม่: `riderFullCycle.test.ts` (6 เคส: วงจรเต็ม/claim คนแรกจอง/decline ต่อคน/cancel/assign ชนะประกาศ/GPS heartbeat)
+- **R1.5 "ออเดอร์ใหม่ไม่เข้า/อันเก่าค้าง" (D-06/D-07):** ✅ IMPLEMENTED 2026-10-23 (รอทดสอบจริง) — (D-06) replay **เห็นชัด ไม่เงียบ**: `state.replay` ส่งไปหน้า /payment ทุกเส้นทาง (ทั้ง single + mixed-split) → banner ถาวร "ออเดอร์เดิม/ใหม่" + ทางไปรายการสั่งซื้อ · (D-07) branch filter `.or('branch_id.eq.X,branch_id.is.null')` — ออเดอร์ branch NULL ไม่หายจากทุก branch context (TEN-07 ของสาขาอื่นยังบังปกติ) · เทสต์ใหม่: `checkoutMixedSplit` replay-state + `ordersPaged` branch-NULL
 
 ### R2 — ความจริงของสถานะ + หน้าตั้งค่าไม่ซ้ำ (ปิด D-02 + "สถานะไม่ตรงฟีเจอร์")
-1. **ตั้งค่าร้าน (D-02):** 1 เรื่อง = 1 ที่ — `social_links` ออกจาก generic editor เหลือฟอร์มเดียว + ทางบันทึกเดียว · กวาด key อื่นที่ซ้ำแบบเดียวกัน · เทสต์เดิม `adminUi`/`socialAiContinuity` + เคส "ห้าม key ซ้ำสองที่"
-2. **Status truth walk (ทุกสถานะ × 3 บทบาท):** ไล่ `pending→confirmed→preparing→ready_for_dispatch→dispatched→in_transit→arrived→delivered` + `cancelled/failed` บนของจริง — ปุ่มเดียว/ที่, คำตรงสถานะ, timeline ลูกค้า/แอดมินชุดเดียวกัน (A5/M1/A6 ที่ทำไว้ = ต้อง verify ของจริง ไม่ใช่แค่เทสต์)
-3. **Marketing/ส่วนอื่น:** ของใหม่ยังไม่เริ่มจนกว่า R0-R2 ปิด (ตารางอนาคตอยู่ใน AI_WORK_STATE)
+1. **ตั้งค่าร้าน (D-02):** ✅ IMPLEMENTED 2026-10-23 (รอทดสอบจริง) — `social_links` ออกจาก generic editor + handleSave/handleSaveAll (เหลือฟอร์ม "โซเชียล & LINE" = ทางบันทึกเดียว · 1 เรื่อง = 1 ที่) · เทสต์ใหม่: `socialAiContinuity` "ห้าม key ซ้ำสองที่"
+2. **Status truth walk (ทุกสถานะ × 3 บทบาท):** ⬜ รอทดสอบจริง — ไล่ `pending→confirmed→preparing→ready_for_dispatch→dispatched→in_transit→arrived→delivered` + `cancelled/failed` บน biteme-baby.com (แอดมิน/ลูกค้า/ไรเดอร์ "พอล ไบท์ไดรฟ์") — ปุ่มเดียว/ที่, คำตรงสถานะ, timeline ลูกค้า/แอดมินชุดเดียวกัน (A5/M1/A6 + R1.3/R1.4 = ต้อง verify ของจริง ไม่ใช่แค่เทสต์)
+3. **Marketing/ส่วนอื่น:** ของใหม่ยังไม่เริ่มจนกว่า R1-R2 ผ่านการทดสอบจริง (ตารางอนาคตอยู่ใน AI_WORK_STATE)
 
 ### R3 — เก็บ evidence ปิดโครงการ (No Evidence = Not Done)
 Checklist เดิม 5 ข้อ (push พร้อมกัน → คนแรกรับ = จอง / วงจรไรเดอร์+POD+timeline+เส้นทาง / Marketing E2E โพสต์จริง / ภาพ 3 สไตล์ / ERR_APPROVAL_REQUIRED) **+** ผล R0-R2 แนบทุกข้อ — ครบ = D1 ปิดได้จริง
@@ -94,9 +98,9 @@ Checklist เดิม 5 ข้อ (push พร้อมกัน → คนแ�
 
 ## 6. Definition of Done ของแผนนี้
 - [x] R0 ครบ + artifacts audit ปิดทุก D-#/H-# ระดับ DB (2026-10-23)
-- [ ] D-01..D-08 ปิดหมด (ตอนนี้ D-01 ปิดแล้ว — เหลือ D-02..D-08 ฝั่งโค้ด R1.2-R2)
-- [ ] วงจรจริงครบ 1 ออเดอร์: สั่ง → จ่าย → ตรวจสลิป → ยืนยัน → ครัว → มอบหมาย/ประกาศ → ไรเดอร์รับ → POD → สำเร็จ (ทำซ้ำ 2 ครั้งติด = เสถียร)
-- [ ] หน้าตั้งค่าร้านไม่มีของซ้ำ · สถานะตรงฟีเจอร์ทุก transition
-- [ ] vitest ≥ 1291 (วัดจริง 2026-10-23) · tsc/lint/build = 0 · mojibake = 0
-- [ ] evidence 5 ข้อปิดโครงการครบ (R3)
-- [ ] `AI_WORK_STATE.md` ตรงของจริงเสมอ (อัปเดตทุกก้อนงาน)
+- [x] D-01..D-08 โค้ดครบทุกข้อ (D-01 DONE จริงแล้ว · D-02..D-07 = IMPLEMENTED 2026-10-23 รอบ 2 · D-08 = กติกาเอกสารใช้แล้ว) — **ทุกข้อรอทดสอบจริง**
+- [ ] วงจรจริงครบ 1 ออเดอร์: สั่ง → จ่าย → ตรวจสลิป → ยืนยัน → ครัว → มอบหมาย/ประกาศ → ไรเดอร์รับ → POD → สำเร็จ (ทำซ้ำ 2 ครั้งติด = เสถียร) — ⬜ รอทดสอบจริง
+- [ ] หน้าตั้งค่าร้านไม่มีของซ้ำ · สถานะตรงฟีเจอร์ทุก transition — ⬜ รอทดสอบจริง (โค้ดทำแล้ว)
+- [x] vitest ≥ 1291 (วัดจริง 2026-10-23 = **1317/1317** หลังเพิ่มเคส R1-R2) · tsc/lint/build = 0 · mojibake = 0
+- [ ] evidence 5 ข้อปิดโครงการครบ (R3) — ⬜ รอ Owner
+- [x] `AI_WORK_STATE.md` ตรงของจริงเสมอ (อัปเดตทุกก้อนงาน)

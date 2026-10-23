@@ -171,7 +171,10 @@ export async function getOrdersPaged(opts: { page: number; pageSize?: number; st
   // STEP 3B-2A: optional orderMode filter (SAME_DAY / PRE_ORDER) — server-side eq.
   if (opts.orderMode) q = q.eq('order_mode', opts.orderMode)
   // TEN-07: optional branch isolation — filter orders by active branch context
-  if (opts.branchId) q = q.eq('branch_id', opts.branchId)
+  // D-07 (R1.5, 2026-10-23): ห้ามซ่อนออเดอร์จริง — ออเดอร์ที่ยังไม่ผูกสาขา
+  // (branch_id NULL = สร้างจาก checkout ที่ round ไม่มี branch/resolve ไม่สำเร็จ)
+  // ต้องโผล่ในทุก branch context ไม่งั้น "ออเดอร์ไม่เข้า" แบบที่ Owner เจอ
+  if (opts.branchId) q = q.or(`branch_id.eq.${opts.branchId},branch_id.is.null`)
   const { data, error, count } = await q
   if (error) { console.error('[getOrdersPaged] Error:', error); return { orders: [], total: 0 } }
   const orders = await hydrateOrderItems((data || []) as OrderForm[])

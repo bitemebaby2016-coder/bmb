@@ -201,6 +201,19 @@ export async function createPaymentIntent(
 
   // Non-card methods: authoritative record on the server (amount re-checked).
   const provider: PaymentProvider = method === 'cash_on_delivery' ? 'cod' : 'promptpay'
+
+  // WAVE 5A B5/B10: NEVER a second ACTIVE intent for the same order+method —
+  // an ambiguous first response (เช่น timeout หลัง commit ไปแล้ว) ต้องไม่ทับ
+  // แถวเดิม R1.2 (2026-10-23, R0 พบ BMB-20261023-841/205 มี intent ซ้ำ 2 แถว):
+  // ถ้ามี active (pending/processing) อยู่แล้ว คืนแถวเดิม ไม่ INSERT เพิ่ม
+  // (ความพยายามที่ failed แล้วไม่ block — ปุ่มลองใหม่ยังสร้าง attempt ใหม่ได้)
+  const existingActive = (await getPaymentIntents({ orderNumber })).find(
+    (i) => i.method === method && (i.status === 'pending' || i.status === 'processing'),
+  )
+  if (existingActive) {
+    return { success: true, payment_intent: existingActive }
+  }
+
   const { data, error } = await supabase.rpc('create_payment_intent_record', {
     p_order_number: orderNumber,
     p_amount: amount,

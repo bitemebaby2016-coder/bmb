@@ -104,9 +104,12 @@ const round = {
 let container: HTMLDivElement
 let root: Root
 let lastPath = '/'
+let lastState: unknown = null
 
 function LocationProbe() {
-  lastPath = useLocation().pathname
+  const loc = useLocation()
+  lastPath = loc.pathname
+  lastState = loc.state
   return null
 }
 
@@ -220,5 +223,19 @@ describe('CheckoutPage — M1 mixed-split wiring (component level)', () => {
     expect(lastPath).toBe('/checkout') // ไม่ navigate ตอนผลไม่ครบ
     expect(useCartStore.getState().items.length).toBe(2) // cart คงไว้เพื่อ reconcile
     expect(m.showToast).not.toHaveBeenCalledWith(expect.stringContaining('สั่งซื้อสำเร็จ 2 ออเดอร์'), 'success')
+  })
+
+  it('D-06: child replay → ส่ง state.replay ไปหน้า /payment (เห็นชัด ไม่เงียบ)', async () => {
+    await mountMixedCart()
+    m.createOrder
+      .mockResolvedValueOnce({ order_number: 'BMB-20261013-111', total_amount: 100, replay: true })
+      .mockResolvedValueOnce({ order_number: 'PO-20261014-222', total_amount: 200 })
+    await act(async () => { selectCod() })
+    await act(async () => { placeOrderBtn().click() })
+    await flush()
+
+    expect(lastPath).toBe('/payment/BMB-20261013-111')
+    // หน้า /payment ต้องรู้ว่านี่คือออเดอร์เดิมจากการส่งซ้ำ → แสดง banner ถาวร
+    expect(lastState).toMatchObject({ replay: true })
   })
 })

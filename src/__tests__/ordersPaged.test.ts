@@ -170,3 +170,36 @@ describe('aggregated / filtered read helpers (W4-E-1 D1 contract)', () => {
     expect(recent.length).toBe(1)
   })
 })
+
+// ============================================
+// R1.5 (2026-10-23, D-07) — branch filter ห้ามซ่อนออเดอร์จริง
+// ============================================
+describe('R1.5 · getOrdersPaged branch filter — NULL branch ต้องไม่หาย (D-07)', () => {
+  it('branchId filter เห็นทั้งออเดอร์สาขานั้น + ออเดอร์ branch NULL ("ออเดอร์ไม่เข้า")', async () => {
+    await supabase.from('orders').insert([
+      {
+        id: 'br-null', order_number: 'BMB-BR-NULL', customer_id: 'auth-test-user', customer_name: 'N',
+        status: 'pending', payment_status: 'pending', total_amount: 10, delivery_round_id: 'round-1',
+        delivery_method: 'self_delivery', items: [], branch_id: null,
+        created_at: '2026-09-20T10:00:00Z', updated_at: '2026-09-20T10:00:00Z',
+      },
+      {
+        id: 'br-b1', order_number: 'BMB-BR-B1', customer_id: 'auth-test-user', customer_name: 'B',
+        status: 'pending', payment_status: 'pending', total_amount: 10, delivery_round_id: 'round-1',
+        delivery_method: 'self_delivery', items: [], branch_id: 'branch-b1',
+        created_at: '2026-09-20T11:00:00Z', updated_at: '2026-09-20T11:00:00Z',
+      },
+      {
+        id: 'br-b2', order_number: 'BMB-BR-B2', customer_id: 'auth-test-user', customer_name: 'X',
+        status: 'pending', payment_status: 'pending', total_amount: 10, delivery_round_id: 'round-1',
+        delivery_method: 'self_delivery', items: [], branch_id: 'branch-b2',
+        created_at: '2026-09-20T12:00:00Z', updated_at: '2026-09-20T12:00:00Z',
+      },
+    ] as any)
+    const res = await getOrdersPaged({ page: 0, pageSize: 50, branchId: 'branch-b1' })
+    const nums = res.orders.map((o) => o.order_number)
+    expect(nums).toContain('BMB-BR-B1') // สาขาตัวเอง
+    expect(nums).toContain('BMB-BR-NULL') // branch NULL = ต้องโผล่เสมอ ห้ามหาย
+    expect(nums).not.toContain('BMB-BR-B2') // สาขาอื่น = ยังถูกซ่อน (TEN-07 ไม่หาย)
+  })
+})

@@ -1,17 +1,22 @@
 // ============================================
-// Bite Me Baby — SlipReviewPanel (A2 · 2026-10-22)
+// Bite Me Baby — SlipReviewPanel (A2 · 2026-10-22 · R1.2/D-04 2026-10-23)
 // ============================================
 // "แผงตรวจสลิปเดียว" — the ONE place where offline-payment verification happens.
-// Lists every order on the loaded page with payment_status='pending', shows the
-// evidence via SlipThumb (M5: intents passed in from the parent's single read
-// path) and hosts the SINGLE canonical action — confirm_offline_payment —
-// delegated to AdminOrders.handleConfirmPayment. The order rows carry NO
-// duplicate confirm button anymore (same action = one place).
+// Lists EVERY order awaiting payment check (payment_status='pending') — NOT tied
+// to the page/status/mode/branch filters of AdminOrders (D-04: ออเดอร์ที่ถูก
+// ตัวกรอง/branch บัง ต้องไม่หายจากแผงตรวจเงิน) — shows the evidence via
+// SlipThumb (M5: intents passed in from the parent's single read path) and hosts
+// the SINGLE canonical action — confirm_offline_payment — delegated to
+// AdminOrders.handleConfirmPayment. The order rows carry NO duplicate confirm
+// button anymore (same action = one place).
+// R1.2 (D-04): ปุ่มยืนยันปิด + บอกเหตุผลชัดเมื่อ server จะปฏิเสธอยู่แล้ว
+// (paymentConfirmability = pure mirror ของเงื่อนไข 008 B.5) — ไม่มีการกดแล้ว
+// error ลอย ๆ อีกต่อไป
 // READ-ONLY + delegation: no payment/money logic lives here.
 
 import { useState } from 'react'
 import type { OrderForm } from '@/lib/bmbAdminApi_orders'
-import type { PaymentIntentLite } from '@/lib/paymentExceptions'
+import { paymentConfirmability, type PaymentIntentLite } from '@/lib/paymentExceptions'
 import { SlipThumb } from './SlipThumb'
 
 export function SlipReviewPanel({ orders, intentsByOrder, onConfirmPayment }: {
@@ -40,6 +45,7 @@ export function SlipReviewPanel({ orders, intentsByOrder, onConfirmPayment }: {
         <ul className="mt-3 space-y-3" data-testid="slip-review-list">
           {pending.map((o) => {
             const evidence = intentsByOrder[o.order_number] || []
+            const check = paymentConfirmability(o, evidence)
             return (
               <li key={o.order_number} className="rounded-lg border border-brand-border p-3" data-testid="slip-review-item">
                 <div className="flex flex-wrap items-center justify-between gap-2">
@@ -59,13 +65,19 @@ export function SlipReviewPanel({ orders, intentsByOrder, onConfirmPayment }: {
                     <button
                       type="button"
                       onClick={() => onConfirmPayment(o.order_number)}
-                      className="btn btn-success text-sm"
+                      disabled={!check.confirmable}
+                      className="btn btn-success text-sm disabled:opacity-50"
                       data-testid={`slip-confirm-${o.order_number}`}
                     >
                       ✅ ยืนยันการชำระเงิน
                     </button>
                   </div>
                 </div>
+                {!check.confirmable && (
+                  <p className="mt-2 text-xs text-amber-700" data-testid={`slip-reason-${o.order_number}`}>
+                    ⚠ {check.reason}
+                  </p>
+                )}
               </li>
             )
           })}
