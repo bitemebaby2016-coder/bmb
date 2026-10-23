@@ -1,0 +1,48 @@
+[
+  {
+    "label": "gate-line-must-be-gone",
+    "status": 201,
+    "body": [
+      {
+        "hits": 0
+      }
+    ]
+  },
+  {
+    "label": "menu-gate-new-shape",
+    "status": 201,
+    "body": [
+      {
+        "hits": 1
+      }
+    ]
+  },
+  {
+    "label": "func-def",
+    "status": 201,
+    "body": [
+      {
+        "proname": "create_order_with_items",
+        "prosecdef": true
+      },
+      {
+        "proname": "enforce_menu_gate",
+        "prosecdef": true
+      }
+    ]
+  },
+  {
+    "label": "grants-menu-gate",
+    "status": 201,
+    "body": [
+      {
+        "grantee": "postgres",
+        "privilege_type": "EXECUTE"
+      },
+      {
+        "grantee": "service_role",
+        "privilege_type": "EXECUTE"
+      }
+    ]
+  }
+]

@@ -1,0 +1,51 @@
+[
+  {
+    "label": "history",
+    "status": 201,
+    "body": [
+      {
+        "version": "140",
+        "name": "140_auto_close_expired_rounds"
+      },
+      {
+        "version": "139",
+        "name": "139_pod_policies_trusted_helper"
+      },
+      {
+        "version": "138",
+        "name": "138_payment_intents_read_authority"
+      },
+      {
+        "version": "137",
+        "name": "137_marketing_posts_rules"
+      }
+    ]
+  },
+  {
+    "label": "gate-line-must-still-exist",
+    "status": 201,
+    "body": [
+      {
+        "hits": 1
+      }
+    ]
+  },
+  {
+    "label": "menu-gate-old-shape",
+    "status": 201,
+    "body": [
+      {
+        "hits": 0
+      }
+    ]
+  },
+  {
+    "label": "backup-recency",
+    "status": 201,
+    "body": [
+      {
+        "recent_backups": 6
+      }
+    ]
+  }
+]

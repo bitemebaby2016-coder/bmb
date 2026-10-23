@@ -15,9 +15,14 @@
 BEGIN;
 RESET ROLE;
 
+-- จำลอง service-role JWT + ผู้ใช้สำหรับ FK (Management API ไม่มี JWT จริง —
+-- create_order_with_items ตรวจ auth.uid()/has_service_role() จะ.raise ERR_NOT_AUTHENTICATED)
+INSERT INTO auth.users (id, email) VALUES ('00000000-0000-4000-8000-000000c14101', 'c141@example.com');
+SELECT set_config('request.jwt.claims', '{"sub":"00000000-0000-4000-8000-000000c14101","role":"service_role"}', true);
+
 INSERT INTO public.business_settings (key, value) VALUES
-  ('delivery_policy', '{"external_methods_enabled":false,"bite_drive_radius_km":10}'::jsonb)
-ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value;
+  ('delivery_policy', '{"external_methods_enabled":[],"allow_external_within_radius":false,"bite_drive_radius_km":10,"bite_drive_enabled":true}'::jsonb)
+ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value || business_settings.value;
 
 INSERT INTO public.product_categories (id, name, slug, icon, sort_order, is_active) VALUES
   ('c141-cat', 'c141-cat', 'c141-cat', '', 0, true);
@@ -59,9 +64,11 @@ BEGIN
     p_delivery_round_id := 'c141-menu-day',
     p_order_mode := 'PRE_ORDER',
     p_scheduled_date := ((now() at time zone 'Asia/Bangkok')::date + 2),
-    p_customer_name := 'c141', p_customer_phone := '0900000000');
+    p_customer_name := 'c141', p_customer_phone := '0900000000', p_delivery_address := 'c141-addr',
+    p_dropoff_latitude := (SELECT COALESCE(b.kitchen_latitude, (public.kitchen_location()->>'latitude')::numeric) + 0.001 FROM public.branches b WHERE b.id = 'branch-tenant-bmb-001-main'),
+    p_dropoff_longitude := (SELECT COALESCE(b.kitchen_longitude, (public.kitchen_location()->>'longitude')::numeric) + 0.001 FROM public.branches b WHERE b.id = 'branch-tenant-bmb-001-main'));
   IF v_n <> 1 THEN RAISE EXCEPTION 'G1 FAIL: expected 1 row, got %', v_n; END IF;
-  RAISE NOTICE 'G1%20PASS';
+  RAISE NOTICE 'G1 PASS';
 END $$;
 
 -- G2: mixed cart (เมนูรอบพิเศษ + สินค้าทั่วไป) ส่งร่วมรอบเดียวกันในวันเมนู → created
@@ -73,9 +80,11 @@ BEGIN
     p_delivery_round_id := 'c141-menu-day',
     p_order_mode := 'PRE_ORDER',
     p_scheduled_date := ((now() at time zone 'Asia/Bangkok')::date + 2),
-    p_customer_name := 'c141', p_customer_phone := '0900000000');
+    p_customer_name := 'c141', p_customer_phone := '0900000000', p_delivery_address := 'c141-addr',
+    p_dropoff_latitude := (SELECT COALESCE(b.kitchen_latitude, (public.kitchen_location()->>'latitude')::numeric) + 0.001 FROM public.branches b WHERE b.id = 'branch-tenant-bmb-001-main'),
+    p_dropoff_longitude := (SELECT COALESCE(b.kitchen_longitude, (public.kitchen_location()->>'longitude')::numeric) + 0.001 FROM public.branches b WHERE b.id = 'branch-tenant-bmb-001-main'));
   IF v_n <> 1 THEN RAISE EXCEPTION 'G2 FAIL: expected 1 row, got %', v_n; END IF;
-  RAISE NOTICE 'G2%20PASS';
+  RAISE NOTICE 'G2 PASS';
 END $$;
 
 -- G3: เมนูรอบพิเศษสั่งวันอื่นที่ไม่ใช่วันเมนู → ERR_PRODUCT_NOT_ON_MENU
@@ -88,7 +97,9 @@ BEGIN
       p_delivery_round_id := 'c141-other-day',
       p_order_mode := 'PRE_ORDER',
       p_scheduled_date := ((now() at time zone 'Asia/Bangkok')::date + 3),
-      p_customer_name := 'c141', p_customer_phone := '0900000000');
+      p_customer_name := 'c141', p_customer_phone := '0900000000', p_delivery_address := 'c141-addr',
+    p_dropoff_latitude := (SELECT COALESCE(b.kitchen_latitude, (public.kitchen_location()->>'latitude')::numeric) + 0.001 FROM public.branches b WHERE b.id = 'branch-tenant-bmb-001-main'),
+    p_dropoff_longitude := (SELECT COALESCE(b.kitchen_longitude, (public.kitchen_location()->>'longitude')::numeric) + 0.001 FROM public.branches b WHERE b.id = 'branch-tenant-bmb-001-main'));
     v_ok := true;
   EXCEPTION WHEN OTHERS THEN
     v_err := SQLERRM;
@@ -96,7 +107,7 @@ BEGIN
   IF v_ok OR v_err NOT LIKE 'ERR_PRODUCT_NOT_ON_MENU%' THEN
     RAISE EXCEPTION 'G3 FAIL: expected ERR_PRODUCT_NOT_ON_MENU, got ok=% err=%', v_ok, v_err;
   END IF;
-  RAISE NOTICE 'G3%20PASS';
+  RAISE NOTICE 'G3 PASS';
 END $$;
 
 -- G4: สินค้าที่มีเฉพาะเมนู archived (วันผ่านรอบจัดส่ง) → ไม่ผูกมัด — สั่งวันอื่นได้
@@ -108,9 +119,11 @@ BEGIN
     p_delivery_round_id := 'c141-other-day',
     p_order_mode := 'PRE_ORDER',
     p_scheduled_date := ((now() at time zone 'Asia/Bangkok')::date + 3),
-    p_customer_name := 'c141', p_customer_phone := '0900000000');
+    p_customer_name := 'c141', p_customer_phone := '0900000000', p_delivery_address := 'c141-addr',
+    p_dropoff_latitude := (SELECT COALESCE(b.kitchen_latitude, (public.kitchen_location()->>'latitude')::numeric) + 0.001 FROM public.branches b WHERE b.id = 'branch-tenant-bmb-001-main'),
+    p_dropoff_longitude := (SELECT COALESCE(b.kitchen_longitude, (public.kitchen_location()->>'longitude')::numeric) + 0.001 FROM public.branches b WHERE b.id = 'branch-tenant-bmb-001-main'));
   IF v_n <> 1 THEN RAISE EXCEPTION 'G4 FAIL: expected 1 row, got %', v_n; END IF;
-  RAISE NOTICE 'G4%20PASS';
+  RAISE NOTICE 'G4 PASS';
 END $$;
 
 -- G5a: SAME_DAY + available_same_day=false → ERR_PRODUCT_MODE_NOT_ALLOWED (คงเดิม)
@@ -122,7 +135,9 @@ BEGIN
       p_items := '[{"product_id":"c141-sameday-closed","quantity":1}]'::jsonb,
       p_delivery_round_id := 'c141-today',
       p_order_mode := 'SAME_DAY',
-      p_customer_name := 'c141', p_customer_phone := '0900000000');
+      p_customer_name := 'c141', p_customer_phone := '0900000000', p_delivery_address := 'c141-addr',
+    p_dropoff_latitude := (SELECT COALESCE(b.kitchen_latitude, (public.kitchen_location()->>'latitude')::numeric) + 0.001 FROM public.branches b WHERE b.id = 'branch-tenant-bmb-001-main'),
+    p_dropoff_longitude := (SELECT COALESCE(b.kitchen_longitude, (public.kitchen_location()->>'longitude')::numeric) + 0.001 FROM public.branches b WHERE b.id = 'branch-tenant-bmb-001-main'));
     v_ok := true;
   EXCEPTION WHEN OTHERS THEN
     v_err := SQLERRM;
@@ -130,7 +145,7 @@ BEGIN
   IF v_ok OR v_err NOT LIKE 'ERR_PRODUCT_MODE_NOT_ALLOWED%' THEN
     RAISE EXCEPTION 'G5a FAIL: expected ERR_PRODUCT_MODE_NOT_ALLOWED, got ok=% err=%', v_ok, v_err;
   END IF;
-  RAISE NOTICE 'G5a%20PASS';
+  RAISE NOTICE 'G5a PASS';
 END $$;
 
 -- G5b: SAME_DAY control + สินค้าทั่วไป → created
@@ -141,9 +156,11 @@ BEGIN
     p_items := '[{"product_id":"c141-regular","quantity":1}]'::jsonb,
     p_delivery_round_id := 'c141-today',
     p_order_mode := 'SAME_DAY',
-    p_customer_name := 'c141', p_customer_phone := '0900000000');
+    p_customer_name := 'c141', p_customer_phone := '0900000000', p_delivery_address := 'c141-addr',
+    p_dropoff_latitude := (SELECT COALESCE(b.kitchen_latitude, (public.kitchen_location()->>'latitude')::numeric) + 0.001 FROM public.branches b WHERE b.id = 'branch-tenant-bmb-001-main'),
+    p_dropoff_longitude := (SELECT COALESCE(b.kitchen_longitude, (public.kitchen_location()->>'longitude')::numeric) + 0.001 FROM public.branches b WHERE b.id = 'branch-tenant-bmb-001-main'));
   IF v_n <> 1 THEN RAISE EXCEPTION 'G5b FAIL: expected 1 row, got %', v_n; END IF;
-  RAISE NOTICE 'G5b%20PASS';
+  RAISE NOTICE 'G5b PASS';
 END $$;
 
 ROLLBACK;
