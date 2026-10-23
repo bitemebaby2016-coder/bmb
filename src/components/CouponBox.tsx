@@ -90,6 +90,9 @@ export function CouponBox() {
   // Coupon rehydration (moved from CheckoutPage by M2): cartPersistence stores
   // the code only (D01 minimal persistence) — rebuild the applied promotion
   // from REAL rows so a reload never leaves a phantom discount or a dead code.
+  // R3 (D-04): deps = [couponCode] — เดิม [] ทำให้แข่งกับ cart hydration ที่เป็น
+  // async (initCartPersistence โหลด catalog ก่อน restore) → ถ้า mount เสร็จก่อน
+  // restore โค้ดจะถูก set แล้วไม่มีใคร re-validate อีกเลย (คูปองหาย/ค้าง pending)
   useEffect(() => {
     let cancelled = false
     const code = useCartStore.getState().couponCode
@@ -105,7 +108,7 @@ export function CouponBox() {
       }
     })
     return () => { cancelled = true }
-  }, [])
+  }, [couponCode])
 
   async function handleApply(raw: string) {
     const code = raw.trim()

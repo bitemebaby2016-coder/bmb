@@ -162,9 +162,15 @@ export function RiderPwaPage() {
     if (!driver) return
     void refresh({ silent: true })
     pollTimerRef.current = setInterval(() => void refresh({ silent: true }), POLL_MS)
+    // R3 (D-07): refresh ทันทีที่กลับเข้าหน้า (โปรเจกต์ไม่ใช้ realtime — polling/focus เท่านั้น)
+    const onFocus = () => { if (!document.hidden) void refresh({ silent: true }) }
+    window.addEventListener('focus', onFocus)
+    document.addEventListener('visibilitychange', onFocus)
     return () => {
       if (pollTimerRef.current) clearInterval(pollTimerRef.current)
       pollTimerRef.current = null
+      window.removeEventListener('focus', onFocus)
+      document.removeEventListener('visibilitychange', onFocus)
     }
   }, [driver, refresh])
 

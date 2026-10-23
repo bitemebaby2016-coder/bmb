@@ -2,10 +2,32 @@
 
 > **สถานะงานปัจจุบันของโปรเจกต์ Bite Me Baby** ใช้แนบเข้าสู่ Context ตอนเริ่มแชทเสมอ
 
-**last_updated:** 2026-10-23 รอบ 5 (R3 Gate 0–1 + P1-3 ปิดจริง · migration 138/139 ขึ้น production แล้ว — เขียนทับรอบ 4)
-**phase:** 🟡 **D1 recovery R3 — P0-1/P0-2/P1-3 ลงโค้ด+tests+SQL contract+apply production แล้ว · เหลือทดสอบจริง Test A–E (Owner) + P1-1/P1-2/P2/P3**
-**current_focus:** รอ Owner ทดสอบจริงบน `biteme-baby.com` + อุปกรณ์จริง (Test A–E) → ถ้าผ่านค่อยปิด P1-1 (รอบส่ง — ต้องถาม Owner ก่อน), P1-2 (UI sync), P2 (คูปอง), P3 (แผนที่ env)
-**blocked_by:** (1) Owner ทดสอบจริง Test A–E (2) Owner ตอบ: ใคร/ทำไมปิดรอบ evening 23–25 + กติกาเปิด/ปิดรอบ (3) Owner ตั้ง `VITE_GOOGLE_MAPS_API_KEY`/`VITE_GOOGLE_ROUTES_API_KEY` ใน Cloudflare Pages env (D-06)
+**last_updated:** 2026-10-23 รอบ 6 (R3 Whole-Project Engineering Closure — เขียนทับรอบ 5)
+**phase:** 🟡 **ENGINEERING CLOSURE READY FOR OWNER ACCEPTANCE** — งาน engineering ที่ทำได้จริงเสร็จ+verified ครบ · เหลือ Owner test A–Q + การตัดสินใจ 3 ข้อ
+**current_focus:** รอ Owner ทำ Production acceptance test ตาม `docs/BMB_R3_ENGINEERING_CLOSURE_2026-10-23.md` §12 (A–Q) + ตอบ §7 (กติการอบ/capacity/อนุมัติ repair 841-205)
+**blocked_by:** (1) Owner test A–Q บนอุปกรณ์จริง (2) การตัดสินใจ §7 ทั้ง 3 ข้อ (3) Google key restriction check (Owner console)
+
+---
+
+## 🩺 REALITY CHECK (2026-10-23 รอบ 6 · Directive R3)
+- **ทำรอบนี้:** Phase 0–10 ครบตามลำดับ — ปิด D-05 (round audit+guards), D-04 (coupon hydration race), D-07 (focus refresh rider/admin/rounds), D-06 (map env ครบ+verify wiring), **backup restore drill = RUNTIME VERIFIED จริง** (integrity + restore ลง scratch PG17 · แก้บั๊ก drill 4 จุดที่ทำให้ไม่เคยผ่านจริง) · เพิ่ม daily restore drill ใน `daily-backup.yml`
+- **สอบสวน D-05:** evening rounds 23–25 = ถูก toggle วันนี้ 13:42–13:43 UTC (เซสชันแอดมินผ่าน UI, ~2-3 วิ/รอบ) · **ก่อนหน้านี้ไม่มี audit trail ของรอบเลย** → ระบุผู้ปิดวันที่ 10-22 ไม่ได้ (ไม่เดา) · audit ถูกเพิ่มแล้วตั้งแต่รอบนี้
+- **Verification รอบนี้:** vitest **1331/1331** (129 ไฟล์) · tsc=0 · lint=0 · drill PASS · probes RO ครบ (`e2e/artifacts/r4-probe-*.json`) · flaky ขนาน `orderTimeline` 3 ตัว = ผ่านเดี่ยว+ผ่านรอบซ้ำ (ไม่ใช่ regression — รายงานตามจริง)
+- **Data repair 841/205:** PROPOSED เท่านั้น (แผน reversible ใน closure doc §5) — **ยังไม่แตะข้อมูล** จน Owner อนุมัติ
+- **กติกาคงเดิม:** ห้าม DONE ก่อน Owner test ผ่าน · ห้ามเงียบ error · ไม่ใช้ realtime · เขียนทับเอกสารสถานะเสมอ
+
+---
+
+## ⚡ TASK: R3-WHOLE-PROJECT-CLOSURE-2026-10-23
+- **STATUS: 🟡 ENGINEERING CLOSURE READY FOR OWNER ACCEPTANCE = YES (แต่ยังไม่ DONE/accepted)**
+- **Completed:** ดู REALITY CHECK + `docs/BMB_R3_ENGINEERING_CLOSURE_2026-10-23.md` §3
+- **Verified:** §6/§11 ของเอกสาร closure (vitest 1331 · tsc 0 · lint 0 · restore drill PASS · production probes)
+- **Failed:** ไม่มีค้าง (flaky ขนาน 2 ไฟล์ `orderTimeline`/`homeSectionModeCta` = ผ่านเมื่อรันซ้ำ — รายงาน ไม่ซ่อน)
+- **Blocked:** Owner test A–Q · §7 3 ข้อ (กติการอบ/capacity/repair approval) · Google key restriction (Owner)
+- **Files Changed (รอบนี้):** `src/lib/bmbAdminApi_rounds.ts` · `src/pages/admin/AdminRounds.tsx` · `src/pages/admin/AdminOrders.tsx` · `src/pages/RiderPwaPage.tsx` · `src/components/CouponBox.tsx` · `scripts/dbRestoreDrill.mjs` · `.github/workflows/daily-backup.yml` · `src/__tests__/couponHydrationRace.test.ts` · `src/__tests__/roundsAuditGuards.test.ts` · `e2e/r4BaselineProbe.cjs` · `docs/BMB_R3_ENGINEERING_CLOSURE_2026-10-23.md` · `AI_WORK_STATE.md`
+- **Tests/Commands:** vitest 1331/1331 · tsc 0 · eslint 0 · `node scripts/dbRestoreDrill.mjs [--psql]` PASS · `node e2e/r4BaselineProbe.cjs {baseline,money,rounds,ops,investigate}`
+- **Known Risks:** backup 05:16 ยังไม่รวม mig 138/139 (recovery ต้อง re-apply จนถึง backup รอบถัดไป) · storage objects ไม่อยู่ใน dump · กำไรสุทธิ = unsupported metric
+- **Next Exact Action (แชทถัดไป):** (1) รับผล Owner test A–Q (2) ถ้าอนุมัติ repair 841/205 → ทำตามแผน §5 พร้อม evidence (3) ถ้ามี FAIL → forward-fix ตาม §13 (4) ทำ auto-close rounds ตามนโยบายที่ Owner เลือกใน §7
 
 ---
 

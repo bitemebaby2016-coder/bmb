@@ -151,7 +151,17 @@ export function AdminOrders() {
     setProductById(map)
   }, [page, filterStatus, filterMode])
 
-  useEffect(() => { loadOrders() }, [loadOrders])
+  useEffect(() => {
+    loadOrders()
+    // R3 (D-07): refresh ทันทีที่กลับเข้าหน้า (ไม่ใช้ realtime — polling/focus เท่านั้น)
+    const onFocus = () => { if (!document.hidden) void loadOrders() }
+    window.addEventListener('focus', onFocus)
+    document.addEventListener('visibilitychange', onFocus)
+    return () => {
+      window.removeEventListener('focus', onFocus)
+      document.removeEventListener('visibilitychange', onFocus)
+    }
+  }, [loadOrders])
 
   function changeFilter(status: string) {
     setFilterStatus(status)

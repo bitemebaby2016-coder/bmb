@@ -22,10 +22,26 @@ export function AdminRounds() {
     status: 'active',
   })
 
-  useEffect(() => { loadRounds() }, [])
+  useEffect(() => {
+    loadRounds()
+    // R3 (D-07): refresh on focus/visibility (โปรเจกต์ไม่ใช้ realtime — polling เท่านั้น)
+    const onFocus = () => { void loadRounds() }
+    window.addEventListener('focus', onFocus)
+    document.addEventListener('visibilitychange', onFocus)
+    return () => {
+      window.removeEventListener('focus', onFocus)
+      document.removeEventListener('visibilitychange', onFocus)
+    }
+  }, [])
 
   async function loadRounds() {
-    setRounds(await getDeliveryRoundsAdmin())
+    // R3 (D-05): error ต้องแสดง — ไม่ใช่เงียบจนแอดมินคิดว่าไม่มีรอบ
+    try {
+      setRounds(await getDeliveryRoundsAdmin())
+    } catch (e) {
+      console.error('[AdminRounds] load failed:', e)
+      showToast(`โหลดรายการรอบส่งไม่สำเร็จ: ${String((e as Error)?.message || e)}`, 'error')
+    }
   }
 
   function openEdit(round: DeliveryRoundRow) {
@@ -63,6 +79,9 @@ export function AdminRounds() {
     if (await setRoundStatus(round.id, status)) {
       showToast(status === 'active' ? `เปิดรับ "${round.display_name}" แล้ว` : `ปิดรับ "${round.display_name}" แล้ว`, 'success')
       loadRounds()
+    } else {
+      // R3 (D-05): ห้ามเงียบ — toggle ที่ไม่มีผลต้องบอกผู้ใช้
+      showToast(`เปลี่ยนสถานะรอบ "${round.display_name}" ไม่สำเร็จ — ลองใหม่ หรือตรวจสิทธิ์`, 'error')
     }
   }
 
@@ -70,6 +89,8 @@ export function AdminRounds() {
     if (await resetRoundCapacity(round.id)) {
       showToast('รีเซ็ตจำนวนที่รับไว้เป็น 0 แล้ว', 'success')
       loadRounds()
+    } else {
+      showToast(`รีเซ็ตจำนวนรอบ "${round.display_name}" ไม่สำเร็จ — ลองใหม่`, 'error')
     }
   }
 

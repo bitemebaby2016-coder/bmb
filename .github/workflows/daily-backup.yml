@@ -127,6 +127,23 @@ jobs:
           fi
           exit $rc
 
+      - name: Restore drill (isolated integrity — never touches production)
+        if: github.event.inputs.mode != 'verify'
+        run: |
+          set +e
+          # R3 (Phase 5): พิสูจน์ recoverability ทุกวัน — ดาวน์โหลด backup ล่าสุด,
+          # เทียบ sha256 กับ manifest, ตรวจโครงสร้าง dump (fail closed) · ไม่มีการ
+          # restore ลง DB ใด ๆ (การ restore เต็มรูปแบบทำใน scratch เท่านั้น — ดู
+          # docs/BMB_R3_ENGINEERING_CLOSURE_2026-10-23.md §restore)
+          out=$(node scripts/dbRestoreDrill.mjs 2>&1)
+          rc=$?
+          printf '%s\n' "$out" | sed -E 's#(://[^:/@ ]+):[^@ ]+@#\1:***@#g'
+          if [ $rc -ne 0 ]; then
+            last=$(printf '%s' "$out" | grep -E 'FAILED|FAIL|error|Error' | tail -1 | sed -E 's#(://[^:/@ ]+):[^@ ]+@#\1:***@#g')
+            echo "::error::restore drill FAILED: ${last:-rc=$rc}"
+          fi
+          exit $rc
+
       - name: Verify only (no dump)
         if: github.event.inputs.mode == 'verify'
         run: |
