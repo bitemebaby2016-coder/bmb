@@ -37,6 +37,8 @@ export function AdminRounds() {
   async function loadRounds() {
     // R3 (D-05): error ต้องแสดง — ไม่ใช่เงียบจนแอดมินคิดว่าไม่มีรอบ
     try {
+      // R4: auto-close รอบหมด cutoff ก่อน list (policy ที่ Owner อนุมัติ)
+      await supabase.rpc('auto_close_expired_rounds').then(() => {}, () => {})
       setRounds(await getDeliveryRoundsAdmin())
     } catch (e) {
       console.error('[AdminRounds] load failed:', e)

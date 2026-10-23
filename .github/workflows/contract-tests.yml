@@ -295,3 +295,15 @@ jobs:
             exit 1
           fi
           echo "Contract 138-139 OK — payment read RPC scope/dedupe/confirm + POD folder ownership hold"
+
+      - name: Contract 140 — auto-close expired rounds (ROLLBACK)
+        run: |
+          set +e
+          out=$(psql -v ON_ERROR_STOP=1 -f e2e/contracts_140.sql 2>&1); rc=$?
+          printf '%s\n' "$out"
+          if [ $rc -ne 0 ]; then
+            msg=$(printf '%s\n' "$out" | grep -m1 'ERROR:' || echo "rc=$rc")
+            echo "::error file=e2e/contracts_140.sql::$msg"
+            exit 1
+          fi
+          echo "Contract 140 OK — auto-close cutoff policy + audit + idempotent hold"

@@ -49,6 +49,10 @@ const log = (label, r) => {
     log('system-errors', await q("SELECT created_at, left(error_message, 100) AS msg FROM public.system_errors ORDER BY created_at DESC LIMIT 5"))
     log('round-updates-today', await q("SELECT id, status, current_count, created_at, updated_at FROM public.delivery_rounds WHERE updated_at > created_at ORDER BY updated_at DESC LIMIT 10"))
     log('orders-today', await q("SELECT order_number, order_mode, status, payment_status, delivery_round_id, created_at FROM public.orders ORDER BY created_at DESC LIMIT 8"))
+  } else if (stage === 'tonight') {
+    log('menu-schedule-future', await q("SELECT scheduled_date, is_published, count(*) FROM public.menu_schedule WHERE scheduled_date >= CURRENT_DATE GROUP BY 1,2 ORDER BY 1 LIMIT 15"))
+    log('rounds-future', await q("SELECT id, scheduled_date, status, cutoff_time, delivery_start, delivery_end, max_capacity, current_count FROM public.delivery_rounds WHERE scheduled_date >= CURRENT_DATE ORDER BY scheduled_date, delivery_start LIMIT 15"))
+    log('products-ready', await q("SELECT count(*) FILTER (WHERE is_published) AS published, count(*) FILTER (WHERE is_available) AS available, count(*) AS total FROM public.products"))
   } else {
     console.log('UNKNOWN_STAGE'); process.exit(1)
   }

@@ -45,6 +45,10 @@ const AuditLogPage = lazy(() => import('./pages/admin/AuditLogPage').then(m => (
 const AdminNotificationsPage = lazy(() => import('./pages/admin/AdminNotifications').then(m => ({ default: m.AdminNotificationsPage })))
 const DeliveryManagement = lazy(() => import('./pages/admin/DeliveryManagement').then(m => ({ default: m.DeliveryManagement })))
 const RouteOptimizationPage = lazy(() => import('./pages/admin/RouteOptimizationPage').then(m => ({ default: m.RouteOptimizationPage })))
+// R4 (2026-10-23): Hubs ยุบรวมหน้าจอแอดมินที่ฟีเจอร์ซ้ำ/ใกล้เคียง (logic เดิมไม่ถูกแตะ)
+const OrdersHub = lazy(() => import('./components/admin/AdminHubs').then(m => ({ default: m.OrdersHub })))
+const DeliveryHub = lazy(() => import('./components/admin/AdminHubs').then(m => ({ default: m.DeliveryHub })))
+const SettingsHub = lazy(() => import('./components/admin/AdminHubs').then(m => ({ default: m.SettingsHub })))
 const AdminPromotions = lazy(() => import('./pages/admin/AdminPromotions').then(m => ({ default: m.AdminPromotions })))
 const AdminBrands = lazy(() => import('./pages/admin/AdminBrands').then(m => ({ default: m.AdminBrands })))
 const AdminTenants = lazy(() => import('./pages/admin/AdminTenants').then(m => ({ default: m.AdminTenants })))
@@ -237,7 +241,7 @@ export default function App() {
         {/* Admin Routes — Lazy Loaded (AdminNav = persistent admin sidebar across every /admin page) */}
         <Route path="/admin" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminNav><AdminDashboard /></AdminNav></Layout></AdminRoute></Suspense>} />
         <Route path="/admin/inventory" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminNav><InventoryPage /></AdminNav></Layout></AdminRoute></Suspense>} />
-        <Route path="/admin/orders" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminNav><AdminOrders /></AdminNav></Layout></AdminRoute></Suspense>} />
+        <Route path="/admin/orders" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminNav><OrdersHub /></AdminNav></Layout></AdminRoute></Suspense>} />
         <Route path="/admin/products" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminNav><AdminProducts /></AdminNav></Layout></AdminRoute></Suspense>} />
         <Route path="/admin/menu-schedule" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminNav><AdminMenuSchedule /></AdminNav></Layout></AdminRoute></Suspense>} />
         {/* Phase 4 (RC-6): /admin/pre-orders = redirect ไป AdminOrders + preset filter (bookmark เดิมไม่ตาย) */}
@@ -248,21 +252,21 @@ export default function App() {
         <Route path="/admin/content-approvals" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminNav><AdminContentApprovals /></AdminNav></Layout></AdminRoute></Suspense>} />
         <Route path="/admin/audit-log" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminNav><AuditLogPage /></AdminNav></Layout></AdminRoute></Suspense>} />
         <Route path="/admin/asset-audit" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminNav><AdminAssetAudit /></AdminNav></Layout></AdminRoute></Suspense>} />
-<Route path="/admin/payment-exceptions" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminNav><AdminPaymentExceptions /></AdminNav></Layout></AdminRoute></Suspense>} />
+<Route path="/admin/payment-exceptions" element={<Navigate to="/admin/orders?tab=payment" replace />} />
         <Route path="/admin/marketing" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminNav><AdminMarketing /></AdminNav></Layout></AdminRoute></Suspense>} />
             <Route path="/admin/notifications" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminNav><AdminNotificationsPage /></AdminNav></Layout></AdminRoute></Suspense>} />
-        <Route path="/admin/delivery" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminNav><DeliveryManagement /></AdminNav></Layout></AdminRoute></Suspense>} />
-        <Route path="/admin/route-optimization" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminNav><RouteOptimizationPage /></AdminNav></Layout></AdminRoute></Suspense>} />
+        <Route path="/admin/delivery" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminNav><DeliveryHub /></AdminNav></Layout></AdminRoute></Suspense>} />
+        <Route path="/admin/route-optimization" element={<Navigate to="/admin/delivery?tab=routes" replace />} />
         <Route path="/admin/promotions" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminNav><AdminPromotions /></AdminNav></Layout></AdminRoute></Suspense>} />
         <Route path="/admin/rounds" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminNav><AdminRounds /></AdminNav></Layout></AdminRoute></Suspense>} />
         <Route path="/admin/customers" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminNav><AdminCustomers /></AdminNav></Layout></AdminRoute></Suspense>} />
-        <Route path="/admin/settings" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminNav><AdminSettings /></AdminNav></Layout></AdminRoute></Suspense>} />
+        <Route path="/admin/settings" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminNav><SettingsHub /></AdminNav></Layout></AdminRoute></Suspense>} />
         <Route path="/admin/pos" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminNav><AdminPos /></AdminNav></Layout></AdminRoute></Suspense>} />
         <Route path="/admin/reports" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminNav><AdminReports /></AdminNav></Layout></AdminRoute></Suspense>} />
-        <Route path="/admin/print-settings" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminNav><AdminPrintSettings /></AdminNav></Layout></AdminRoute></Suspense>} />
+        <Route path="/admin/print-settings" element={<Navigate to="/admin/settings?tab=print" replace />} />
         <Route path="/admin/media" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminNav><AdminMedia /></AdminNav></Layout></AdminRoute></Suspense>} />
         <Route path="/admin/errors" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminNav><AdminErrorsPage /></AdminNav></Layout></AdminRoute></Suspense>} />
-        <Route path="/admin/mascot" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminNav><MascotSettingsPage /></AdminNav></Layout></AdminRoute></Suspense>} />
+        <Route path="/admin/mascot" element={<Navigate to="/admin/settings?tab=mascot" replace />} />
         
         {/* TEN-05: Brand Management */}
         <Route path="/admin/brands" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminNav><AdminBrands /></AdminNav></Layout></AdminRoute></Suspense>} />

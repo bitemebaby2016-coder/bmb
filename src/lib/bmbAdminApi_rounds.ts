@@ -140,6 +140,14 @@ export async function resetRoundCapacity(id: string): Promise<boolean> {
 /** Instantiate (idempotently) the canonical rounds of a date. Graceful when the
  * RPC is unavailable: falls back to listing whatever active rounds already exist. */
 export async function ensureRoundsForDate(date: string): Promise<boolean> {
+  // R4 (Owner policy 2026-10-23): auto-close รอบที่ cutoff ผ่านแล้วก่อนเสมอ
+  // (bookkeeping + audit — server order gate 025/118 ยังเป็น enforcement จริง)
+  // best-effort: RPC พังไม่ให้พังงาน list หลัก
+  try {
+    await supabase.rpc('auto_close_expired_rounds')
+  } catch {
+    /* bookkeeping only — order gate ฝั่ง server ยังกันของจริง */
+  }
   try {
     const { error } = await supabase.rpc('ensure_rounds_for_date', { p_date: date })
     if (error) {
