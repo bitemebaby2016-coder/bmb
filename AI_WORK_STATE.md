@@ -3,8 +3,8 @@
 > **สถานะงานปัจจุบันของโปรเจกต์ Bite Me Baby** ใช้แนบเข้าสู่ Context ตอนเริ่มแชทเสมอ
 
 **last_updated:** 2026-10-24 รอบ 12 (ปิดเซสชัน — ทำครบทั้ง 7 งานตามแฮนด์ออฟ 2026-10-24: ซ่อม CI + แจ้งเตือน 841 + เมนู/nav + รอบจัดส่ง 2-คัทออฟ (Owner อนุมัติ → apply production แล้ว) + เอกสาร matrices/acceptance + close-out)
-**phase:** 🟢 เซสชันเสร็จครบตาม scope — เหลือ verification 2 จุดที่ต้องรอ: (1) CI บน GitHub หลัง push (2) runtime เช็คบนเบราว์เซอร์จริง (ป้ายแจ้งเตือน 841 + desktop/mobile nav) = รายการใน checklist ของ Owner
-**current_focus:** ดูผล CI 2 workflows หลัง push → Owner รัน `docs/BMB_E2E_PRODUCTION_ACCEPTANCE_PLAN_2026-10-24.md` checklist #1-#13
+**phase:** 🟢 เซสชันเสร็จครบ — **CI เขียวทั้ง 2 workflows บน fa91c2a (CI success + Contract Tests success)** · เหลือ verification ที่ต้องรอ: runtime เช็คบนเบราว์เซอร์จริง (ป้ายแจ้งเตือน 841 + desktop/mobile nav) = checklist ของ Owner
+**current_focus:** Owner รัน `docs/BMB_E2E_PRODUCTION_ACCEPTANCE_PLAN_2026-10-24.md` checklist #1-#13 (CI #1 = ผ่านแล้ว)
 **blocked_by:** ไม่มี blocker ฝั่งโค้ด · เหลือ Owner decisions ค้างจากรอบก่อน: role matrix P1-P3 (docs เสร็จ รอ sign-off) เท่านั้น
 
 ---
@@ -46,8 +46,8 @@
   lint exit 0 · build exit 0 · Docker replay ALL_GREEN (migrations 001-145 + 123/124/concurrency)
   · contracts 127-145 ทุกไฟล์ PASS exit 0 · playwright routeNav **39/39** · production
   apply stages STAGE_OK ทุกขั้น
-- **Failed/ยังไม่ยืนยัน:** ผล CI บน GitHub ยังไม่ได้ดู (เพิ่ง push) · ป้ายแจ้งเตือน 841
-  ยัง **UNVERIFIED บนเบราว์เซอร์จริง** (ต้อง Owner รัน checklist #7) · mobile visual ตา Owner (#5)
+- **Failed/ยังไม่ยืนยัน:** ~~ผล CI~~ → **CI + Contract Tests = SUCCESS บน fa91c2a ทั้งคู่** ·
+  ป้ายแจ้งเตือน 841 ยัง **UNVERIFIED บนเบราว์เซอร์จริง** (ต้อง Owner รัน checklist #7) · mobile visual ตา Owner (#5)
 - **บทเรียนรอบนี้:** fixture ที่ "เปิดรอบรับเดี๋ยวนี้" ด้วยการอัปเดต `cutoff_time` อย่างเดียว
   พังทันทีที่มีคอลัมน์คัทออฟใหม่ — พอเพิ่ม column ต้องไล่แก้ทุกจุดที่เขียน cutoff เดี่ยว ๆ
 - **Next Exact Action:** (1) เช็ค CI ทั้ง 2 workflows หลัง push (2) Owner รัน checklist

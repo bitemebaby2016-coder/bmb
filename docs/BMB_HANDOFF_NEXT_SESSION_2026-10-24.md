@@ -286,7 +286,7 @@ Confirm HEAD == `ada7bb5` == origin/main (or note the drift), then start task 1 
 
 | งาน | สถานะ | หลักฐาน |
 |---|---|---|
-| 1 ซ่อม CI + wire 142-145 | DONE (โค้ด) — รอผล CI บน GitHub | vitest 133/1375 exit0 · lint0 · build0 · Docker replay ALL_GREEN · contracts 127-145 PASS · **แถม:** contract 141 G1/G4 reconcile (stale จาก 142) |
+| 1 ซ่อม CI + wire 142-145 | **DONE — CI + Contract Tests GREEN บน fa91c2a** | vitest 133/1375 exit0 · lint0 · build0 · Docker replay ALL_GREEN · contracts 127-145 PASS · GH Actions: CI success + Contract Tests success · **แถม:** contract 141 G1/G4 reconcile (stale จาก 142) |
 | 2 แจ้งเตือน 841 | DONE (โค้ด+เทสต์) — **runtime UNVERIFIED** | เทสต์ใหม่ 10 ข้อ · production probe 6 แถวจริง (preparing 11:29:07 ใหม่กว่า delivered 11:29:05) |
 | 3 เมนู/nav แอดมิน | DONE | audit ไม่มี dead link/placeholder · scroll-top on route change (jsdom-safe) · เทสต์ 7 ข้อ · playwright routeNav 39/39 |
 | 4 รอบจัดส่ง 2-คัทออฟ + กฎ ≥2 | **DONE + APPLIED PRODUCTION** | Owner อนุมัติรอบนี้ · migration 145 (ledger มี 145 แล้ว) · contract 145 G1-G6 เขียว Docker+production · 143/144 regression production PASS · evidence `e2e/r6Apply145-*.json` |
@@ -304,6 +304,6 @@ Confirm HEAD == `ada7bb5` == origin/main (or note the drift), then start task 1 
 - TEST RESULTS: vitest 133 files/1375 tests exit 0 (ใหม่ 3 files/28 tests) · lint 0 · build 0 · playwright 39/39
 - CONTRACT RESULTS: Docker replay ALL_GREEN (001-145) + contracts 127-145 PASS · production contract 145 + 143/144 PASS
 - PRODUCTION RUNTIME: ledger 118..145 (145 applied+verified+recorded) · ไม่มี production data mutation อื่น
-- CI RESULTS: รอ push (ดูผล 2 workflows หลัง commit นี้)
+- CI RESULTS: **fa91c2a → CI success + Contract Tests success (ทั้งคู่เขียว)** · รอบ e4d9a30 ก่อนหน้า = failure (คือบั๊กที่รอบนี้ซ่อม)
 - BLOCKERS: ไม่มีฝั่งโค้ด · Owner actions = checklist #1-#13 + role matrix P1-P3 sign-off
 - HANDOFF DOCUMENT: docs/BMB_HANDOFF_NEXT_SESSION_2026-10-24.md (§15 = ผลรอบนี้)
