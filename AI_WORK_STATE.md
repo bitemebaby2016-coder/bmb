@@ -81,6 +81,15 @@
 - **contracts 023/028/030/036/037/038/039/125 = stale, ไม่ได้อยู่ใน CI gate** (pre-existing drift) —
   ถ้าจะใช้ต้องซ่อม fixture radius/เมนู เป็นงานแยก (ยังไม่สั่ง)
 
+### หมายเหตุเซสชัน (ต้องไม่หาย)
+
+- **commit `9d5fc24`** นอกจากบันทึกผล CI แล้ว ยังครอบคลุมการแก้ไข **`UNIVERSAL_MASTER_AI_RULES.md`**
+  ที่ถูกเขียนลง working tree ระหว่างรอบนี้ (LastWriteTime 21:41 — **ไม่ใช่ฝั่ง AI ที่แก้**,
+  เนื้อหา = SECTION 6 governance ใหม่: SYSTEM AUDIT BEFORE IMPLEMENTATION / EXISTING CAPABILITY FIRST)
+  → `git add -A` ดึงเข้า commit ด้วย · **ยังไม่ได้ตรวจสอบว่าฉบับนั้นครบ/จบหรือยัง** = ถ้า Owner
+  กำลังเขียนต่อ ให้ commit เพิ่มในรอบถัดไป (ห้าม revert ไฟล์นี้ทิ้ง)
+- รอบนี้ไม่ได้แก้ไฟล์อื่นใดนอกจากที่ระบุใน `docs/BMB_HANDOFF_NEXT_SESSION_2026-10-24.md` §18
+
 ### Next Exact Action
 
 1. Owner: ตอบ **Q1–Q4** ใน `docs/BMB_ROUND_MODEL_ONE_PAGER_2026-10-24.md` (ถ้าอนุมัติรวม UI ค่อยเริ่มงาน P1-A ขั้นถัดไป)
