@@ -2,10 +2,41 @@
 
 > **สถานะงานปัจจุบันของโปรเจกต์ Bite Me Baby** ใช้แนบเข้าสู่ Context ตอนเริ่มแชทเสมอ
 
-**last_updated:** 2026-10-24 รอบ 12 (ปิดเซสชัน — ทำครบทั้ง 7 งานตามแฮนด์ออฟ 2026-10-24: ซ่อม CI + แจ้งเตือน 841 + เมนู/nav + รอบจัดส่ง 2-คัทออฟ (Owner อนุมัติ → apply production แล้ว) + เอกสาร matrices/acceptance + close-out)
-**phase:** 🟢 เซสชันเสร็จครบ — **CI เขียวทั้ง 2 workflows บน fa91c2a (CI success + Contract Tests success)** · เหลือ verification ที่ต้องรอ: runtime เช็คบนเบราว์เซอร์จริง (ป้ายแจ้งเตือน 841 + desktop/mobile nav) = checklist ของ Owner
-**current_focus:** Owner รัน `docs/BMB_E2E_PRODUCTION_ACCEPTANCE_PLAN_2026-10-24.md` checklist #1-#13 (CI #1 = ผ่านแล้ว)
-**blocked_by:** ไม่มี blocker ฝั่งโค้ด · เหลือ Owner decisions ค้างจากรอบก่อน: role matrix P1-P3 (docs เสร็จ รอ sign-off) เท่านั้น
+**last_updated:** 2026-10-24 รอบ 13 (Owner sign-off P1-P3 → ระบบ role 13 ค่า: missing ทั้งหมด + partial ทั้งหมด ทำเสร็จ · migrations 146+147 apply production แล้ว · contracts 146/147 เขียว Docker+production)
+**phase:** 🟢 งานครบตามคำสั่ง Owner — เหลือ Owner ทดสอบบนโปรดักชั่นจริงเท่านั้น (checklist #1–#14 ใน `docs/BMB_E2E_PRODUCTION_ACCEPTANCE_PLAN_2026-10-24.md`) + ดู CI หลัง push
+**current_focus:** Owner รัน acceptance #1–#14 (รวม #14a–#14j ทดสอบราย role) · แต่งตั้ง role แรกด้วยสูตร SQL ใน #14
+**blocked_by:** ไม่มี blocker ฝั่งโค้ด — รอผล runtime จาก Owner อย่างเดียว
+
+---
+
+---
+
+## 🩺 REALITY CHECK (2026-10-24 รอบ 13 · role system — sign-off → implement → production)
+
+- **คำสั่ง Owner:** "P1-p3 อนุมัติ signoff · missing ทำให้หมด · partial ให้สมบูรณ์ทั้งระบบ · รอทดสอบบนโปรดักชั่นจริงเท่านั้น"
+- **ทำเสร็จ (missing 3 + partial 6 + P1 nav + assignment):**
+  - **Migration 146** = `profiles_role_check` 13 ค่า · predicates 11 ตัว (is_admin+owner,
+    is_staff+pos, is_owner/kitchen/inventory/finance/marketing/pos/auditor/support/developer/rider)
+    · `set_user_role` (admin gate, owner-only promote→owner, self-guard, audit) · rider backfill+trigger
+    → **production verify:** constraint 13 ค่า, predicates 10, linked driver = 'rider' แล้ว
+  - **Migration 147** = policies: kitchen writes (recipes/batches/items + RPC guards canonical 3-arg),
+    inventory grant S/I/U/D คืน+write policy, finance (closings + close_day/get_daily_sales gate),
+    marketing (posts/rules + RPC guards×2), support read×4, auditor/dev `_audit_read` 16 ตาราง
+    (+GRANT audit_logs/system_errors/menu_schedule), rider 3 policies, grants parity ตาราง post-006
+  - **Client:** `isAdminCapableRole` (11 ค่า) ใน AdminRoute+shouldShowAdminLink · `navGroupsForRole`
+    ใน AdminNav (per-role hiding) · role sync เข้า authStore ตอน deep-link /admin
+  - **Contracts:** `contracts_146` (predicates/set_user_role/trigger) + `contracts_147` (G1–G8
+    access matrix ราย role) เสียบ workflow ครบ (ตอนนี้ contract ถึง 147)
+- **Verified (หลักฐานจริง):** vitest **134 files/1385 tests exit 0** (roleSystem +10, 4 เทสต์ nav/role รวม 38) ·
+  tsc 0 · lint 0 · build 0 · Docker replay **ALL_GREEN (001→147)** · contracts **127–147 ALL_PASS exit 0**
+  · production: precheck/apply146/verify146/apply147/verify147/contract146/contract147/record
+  **STAGE_OK ทุกขั้น** (evidence `e2e/r7Apply146-*.json`) · ledger = **147,146,145,144**
+- **บทเรียนรอบนี้:** (1) anchor-based edit ห้ามใช้บล็อกที่จะลบเป็น anchor โดยไม่ใส่กลับ
+  (GRANT/RETURN หาย 2 ครั้งติด) (2) ตารางหลัง 006 ต้อง explicit GRANT ใน CI แม้ production มี
+  (default privileges) (3) `create_production_batch` canonical = 3-arg (027 DROP 2-arg แล้ว)
+- **Failed/ยังไม่ยืนยัน:** runtime บนเบราว์เซอร์จริงทุกอย่าง = **Owner checklist #1–#14**
+  (รวมป้ายแจ้งเตือน 841, nav desktop/mobile, ราย role 14a–14j) · CI หลัง push = ดูรอบนี้
+- **Next Exact Action:** push → ดู CI 2 workflows → Owner รัน acceptance #1–#14 บน production
 
 ---
 

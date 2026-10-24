@@ -2,6 +2,7 @@ import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { HelmetProvider } from 'react-helmet-async'
 import { lazy, Suspense, useEffect, useState } from 'react'
 import { useAuthStore, fetchProfileRole } from './store/authStore'
+import { isAdminCapableRole } from './lib/adminUi'
 import { Layout } from './components/layout/Layout'
 import { ErrorBoundary } from './components/ErrorBoundary'
 import { AdminNav } from './components/admin/AdminNav'
@@ -124,6 +125,7 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 function AdminRoute({ children }: { children: React.ReactNode }) {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
   const isInitializing = useAuthStore((s) => s.isInitializing)
+  const setStoreRole = useAuthStore((s) => s.setRole)
   const [role, setRole] = useState<string | null>(null)
   const [checking, setChecking] = useState(true)
 
@@ -134,15 +136,18 @@ function AdminRoute({ children }: { children: React.ReactNode }) {
     fetchProfileRole().then((r) => {
       if (cancelled) return
       setRole(r)
+      // 146: sync เข้า store ด้วย — AdminNav ใช้ role นี้ซ่อนเมนูตามสิทธิ์ (per-role nav)
+      setStoreRole(r)
       setChecking(false)
     })
     return () => { cancelled = true }
-  }, [isAuthenticated, isInitializing])
+  }, [isAuthenticated, isInitializing, setStoreRole])
 
   if (isInitializing) return <LoadingSpinner />
   if (!isAuthenticated) return <Navigate to="/login" replace />
   if (checking) return <LoadingSpinner />
-  if (role !== 'admin' && role !== 'staff') return <Navigate to="/" replace />
+  // 146 (Owner signed P1): 11 admin-capable roles (rider/customer ไม่ผ่าน)
+  if (!isAdminCapableRole(role)) return <Navigate to="/" replace />
 
   return <>{children}</>
 }

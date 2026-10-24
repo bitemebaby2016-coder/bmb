@@ -8,7 +8,8 @@
 
 import { Link, useLocation } from 'react-router-dom'
 import { useEffect, useState, type ReactNode } from 'react'
-import { ADMIN_NAV_GROUPS } from '@/lib/adminUi'
+import { ADMIN_NAV_GROUPS, navGroupsForRole } from '@/lib/adminUi'
+import { useAuthStore } from '@/store/authStore'
 import { BranchSwitcher } from './BranchSwitcher'
 
 const COLLAPSE_KEY = 'bmb-admin-nav-collapsed'
@@ -53,6 +54,9 @@ function NavItem({
 }
 export function AdminNav({ children }: { children?: ReactNode }) {
   const location = useLocation()
+  // 146: per-role nav hiding (presentation layer — RLS ยังเป็นประตูจริง)
+  const role = useAuthStore((s) => s.role)
+  const groups = navGroupsForRole(role)
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [collapsed, setCollapsed] = useState(() => {
     try {
@@ -90,7 +94,7 @@ export function AdminNav({ children }: { children?: ReactNode }) {
   }
 
   const currentLabel =
-    ADMIN_NAV_GROUPS.flatMap((g) => g.items).find((i) => isActivePath(location.pathname, i.to))
+    groups.flatMap((g) => g.items).find((i) => isActivePath(location.pathname, i.to))
       ?.label ?? 'Dashboard'
 
   const navList = (onNavigate?: () => void) => (
@@ -99,7 +103,7 @@ export function AdminNav({ children }: { children?: ReactNode }) {
         <BranchSwitcher />
       </div>
       <nav aria-label="Admin navigation" className="flex-1 overflow-y-auto px-2 py-3 space-y-4">
-        {ADMIN_NAV_GROUPS.map((group) => (
+        {groups.map((group) => (
           <div key={group.id}>
             {!collapsed && (
               <div className="px-3 mb-1 text-[10px] font-bold tracking-wider uppercase text-brand-muted/80">

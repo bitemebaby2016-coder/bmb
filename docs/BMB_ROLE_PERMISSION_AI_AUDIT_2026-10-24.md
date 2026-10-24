@@ -138,3 +138,28 @@ Gate ร่วมของทุกแถว: **`AdminRoute` (admin|staff) + RLS
 - menu_schedule write = RPC เท่านั้น (grant scan + contract 145 G6)
 - Notifications: `src/lib/notificationService.ts` + RLS own/admin
 - Production: `supabase_migrations.schema_migrations` 118..145 (หลัง apply 145)
+
+## 9. STATUS UPDATE — 2026-10-24 round 13 (Owner sign-off → IMPLEMENTED ทั้งหมด)
+
+> Owner: **"P1-p3 อนุมัติ signoff · งาน missing ทำให้หมด · งาน partial ทำให้สมบูรณ์ทั้งระบบ ·
+> จะรอทดสอบบนโปรดักชั่นจริงเท่านั้น"** → ลงมือแล้วผ่าน contract ทั้ง Docker และ production
+
+| Gap/Stage | Label เดิม | **Label ใหม่ (หลักฐาน)** |
+|---|---|---|
+| #1 OWNER | MISSING | **IMPLEMENTED · DEPLOYED** — `owner` ใน profiles_role_check + `is_owner()` + is_admin ครอบ owner · แต่งตั้งด้วย `set_user_role` (สูตร SQL อยู่ acceptance #14) |
+| #3 KITCHEN | partial | **IMPLEMENTED · DEPLOYED** — `is_kitchen()` + policies recipes/batches/batch_items + RPC guards `kitchen_queue`/`create_production_batch` (canonical 3-arg) |
+| #4 INVENTORY | no-role | **IMPLEMENTED · DEPLOYED** — `is_inventory()` + inventory/inventory_transactions write policy + **GRANT S/I/U/D คืน** (034 เคยตัด = UI insert พังแฝง ตอนนี้ซ่อมแล้ว) |
+| #5 FINANCE | no-role | **IMPLEMENTED · DEPLOYED** — `is_finance()` + daily_closings write policy + `close_day`/`get_daily_sales` gate +is_finance |
+| #6 RIDER | PARTIAL | **IMPLEMENTED · DEPLOYED** — `rider` + backfill (production linked driver = rider แล้ว) + trigger `drivers_promote_rider` + 3 policies อ้าง `is_rider()` |
+| #8 SUPPORT | MISSING | **IMPLEMENTED · DEPLOYED** — `support` + SELECT policies orders/order_items/customers/notifications (read-only พิสูจน์โดย contract 147 G5) |
+| #9 MARKETING | no-role | **IMPLEMENTED · DEPLOYED** — `marketing` + posts/rules write policies + RPC gates 2 ตัว |
+| #10 READ-ONLY AUDITOR | MISSING role | **IMPLEMENTED · DEPLOYED** — `auditor` + `_audit_read` SELECT policies 16 ตาราง + GRANT audit_logs · read-only พิสูจน์ G6 |
+| #11 DEVELOPER | MISSING | **IMPLEMENTED · DEPLOYED** — `developer` (ชุด read เดียวกับ auditor) · พิสูจน์ G6 |
+| P1 per-role nav | DEFERRED | **IMPLEMENTED · DEPLOYED** — `navGroupsForRole()` + AdminNav filter + AdminRoute `isAdminCapableRole` (11 ค่า) + role sync เข้า store |
+| P1/P2/P3 staged proposal | BLOCKED | **SIGNED OFF 2026-10-24 → IMPLEMENTED** — migrations **146+147** (ledger 146/147 แล้ว) |
+| assignment RPC | — | **IMPLEMENTED** — `set_user_role` (admin gate · owner-only owner-promote · self-guard · audit) — ยังไม่มี UI (ตาม scope เดิม) |
+
+**หลักฐาน:** vitest 134 files/1385 tests exit 0 (roleSystem +10) · lint 0 · build 0 · tsc 0 ·
+Docker replay ALL_GREEN (001→147) · contracts 127–147 ALL_PASS exit 0 · production
+apply/verify/contract/record STAGE_OK ทุกขั้น (`e2e/r7Apply146-*.json`) ·
+**ยังไม่ได้พิสูจน์ = runtime บนเบราว์เซอร์จริง (Owner checklist #14a-#14j)**

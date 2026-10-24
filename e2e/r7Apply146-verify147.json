@@ -1,0 +1,78 @@
+[
+  {
+    "label": "role-policies",
+    "status": 201,
+    "body": [
+      {
+        "policyname": "batch_items_role_manage"
+      },
+      {
+        "policyname": "batches_role_manage"
+      },
+      {
+        "policyname": "customers_support_read"
+      },
+      {
+        "policyname": "daily_closings_finance_write"
+      },
+      {
+        "policyname": "drivers_scoped_read"
+      },
+      {
+        "policyname": "drivers_self_update"
+      },
+      {
+        "policyname": "inventory_role_write"
+      },
+      {
+        "policyname": "marketing_posts_role_write"
+      },
+      {
+        "policyname": "orders_audit_read"
+      },
+      {
+        "policyname": "orders_support_read"
+      },
+      {
+        "policyname": "recipes_role_manage"
+      }
+    ]
+  },
+  {
+    "label": "kitchen-guard",
+    "status": 201,
+    "body": [
+      {
+        "ok": true
+      }
+    ]
+  },
+  {
+    "label": "finance-guards",
+    "status": 201,
+    "body": [
+      {
+        "close_day_ok": true,
+        "sales_ok": true
+      }
+    ]
+  },
+  {
+    "label": "inventory-grant-restored",
+    "status": 201,
+    "body": [
+      {
+        "privs": "DELETE,INSERT,SELECT,UPDATE"
+      }
+    ]
+  },
+  {
+    "label": "rider-policy-count",
+    "status": 201,
+    "body": [
+      {
+        "n": 3
+      }
+    ]
+  }
+]

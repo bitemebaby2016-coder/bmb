@@ -53,8 +53,9 @@ describe('Permission-aware routing (AdminRoute gate)', () => {
     expect(gated.length, 'an admin page route is NOT gated by AdminRoute').toBe(pageRoutes.length)
   })
 
-  it('AdminRoute admits only admin/staff roles (DB role, not client email)', () => {
-    expect(appSrc).toContain("if (role !== 'admin' && role !== 'staff') return <Navigate to=\"/\" replace />")
+  it('AdminRoute admits only admin-capable roles (146: 11 ค่า — DB role ผ่าน RLS/SET CLAIMS)', () => {
+    expect(appSrc).toContain('if (!isAdminCapableRole(role)) return <Navigate to="/" replace />')
+    expect(appSrc).toContain('isAdminCapableRole')
   })
 })
 

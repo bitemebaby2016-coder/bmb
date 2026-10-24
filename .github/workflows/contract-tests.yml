@@ -367,3 +367,27 @@ jobs:
             exit 1
           fi
           echo "Contract 145 OK — same-day/pre-order cutoffs independent + shared capacity + >=2 publish holds"
+
+      - name: Contract 146 — role foundation (predicates, set_user_role, rider trigger) (ROLLBACK)
+        run: |
+          set +e
+          out=$(psql -v ON_ERROR_STOP=1 -f e2e/contracts_146.sql 2>&1); rc=$?
+          printf '%s\n' "$out"
+          if [ $rc -ne 0 ]; then
+            msg=$(printf '%s\n' "$out" | grep -m1 'ERROR:' || echo "rc=$rc")
+            echo "::error file=e2e/contracts_146.sql::$msg"
+            exit 1
+          fi
+          echo "Contract 146 OK — 13-role predicates + set_user_role gates + rider trigger"
+
+      - name: Contract 147 — role RLS access matrix (ROLLBACK)
+        run: |
+          set +e
+          out=$(psql -v ON_ERROR_STOP=1 -f e2e/contracts_147.sql 2>&1); rc=$?
+          printf '%s\n' "$out"
+          if [ $rc -ne 0 ]; then
+            msg=$(printf '%s\n' "$out" | grep -m1 'ERROR:' || echo "rc=$rc")
+            echo "::error file=e2e/contracts_147.sql::$msg"
+            exit 1
+          fi
+          echo "Contract 147 OK — kitchen/inventory/finance/marketing writes + support/auditor/dev read-only + rider gate"

@@ -111,8 +111,43 @@ export function shouldShowAdminLink(role: string | null | undefined, email?: str
   // ถูกถอดออกตาม Owner Decision 12 (ROTATE & REVOKE public credential) —
   // สิทธิ์ admin ต้องอิง profiles.role จาก DB ผ่าน RLS เท่านั้น ห้ามอิง email ฝั่ง client
   // 129: staff (POS/kitchen counter) เห็นลิงก์แอดมินได้เช่นกัน — RLS จำกัดข้อมูลตาม role
+  // 146 (Owner signed P1-P3): ใช้ชุดค่า role 11 ค่า (owner/admin/staff/pos/specialists/
+  // auditor/support/developer) — rider/customer ไม่เข้า /admin
   void email
-  return role === 'admin' || role === 'staff'
+  return isAdminCapableRole(role)
+}
+
+/** 146 — ชุด role ที่เข้า /admin ได้ (parity กับ server AdminRoute + RLS) */
+export const ADMIN_CAPABLE_ROLES: readonly string[] = [
+  'owner', 'admin', 'staff', 'pos', 'kitchen', 'inventory', 'finance',
+  'marketing', 'support', 'auditor', 'developer',
+]
+
+export function isAdminCapableRole(role: string | null | undefined): boolean {
+  return !!role && ADMIN_CAPABLE_ROLES.includes(role)
+}
+
+/**
+ * 146 — per-role nav (presentation only — RLS ยังเป็นประตูจริง):
+ *   ไม่มี allowlist (owner/admin/staff/auditor/developer/unknown) = ทุกกลุ่ม
+ *   specialist/pos/support = เฉพาะกลุ่มที่เกี่ยวข้อง
+ */
+const ROLE_NAV_ALLOW: Record<string, string[]> = {
+  pos: ['/admin', '/admin/orders', '/admin/pos', '/admin/customers', '/admin/reports'],
+  kitchen: ['/admin', '/admin/orders', '/admin/kitchen', '/admin/recipes', '/admin/rounds', '/admin/products'],
+  inventory: ['/admin', '/admin/inventory', '/admin/products'],
+  finance: ['/admin', '/admin/reports', '/admin/orders', '/admin/pos'],
+  marketing: ['/admin', '/admin/marketing', '/admin/promotions', '/admin/content-approvals', '/admin/media', '/admin/portfolio', '/admin/ai-studio'],
+  support: ['/admin', '/admin/orders', '/admin/customers', '/admin/notifications'],
+}
+
+export function navGroupsForRole(role: string | null | undefined): AdminNavGroup[] {
+  const allow = role ? ROLE_NAV_ALLOW[role] : undefined
+  if (!allow) return ADMIN_NAV_GROUPS
+  return ADMIN_NAV_GROUPS.map((g) => ({
+    ...g,
+    items: g.items.filter((i) => allow.some((p) => i.to === p || (p !== '/admin' && i.to.startsWith(p + '/')))),
+  })).filter((g) => g.items.length > 0)
 }
 
 /** Normalize a category heading name into a URL-safe slug. */

@@ -307,3 +307,27 @@ Confirm HEAD == `ada7bb5` == origin/main (or note the drift), then start task 1 
 - CI RESULTS: **fa91c2a → CI success + Contract Tests success (ทั้งคู่เขียว)** · รอบ e4d9a30 ก่อนหน้า = failure (คือบั๊กที่รอบนี้ซ่อม)
 - BLOCKERS: ไม่มีฝั่งโค้ด · Owner actions = checklist #1-#13 + role matrix P1-P3 sign-off
 - HANDOFF DOCUMENT: docs/BMB_HANDOFF_NEXT_SESSION_2026-10-24.md (§15 = ผลรอบนี้)
+
+---
+
+## 16. SESSION RESULTS — รอบ 13 (2026-10-24 ต่อเนื่อง · role system ตาม sign-off)
+
+| คำสั่ง Owner | สถานะ | หลักฐาน |
+|---|---|---|
+| P1-P3 sign-off | **DONE → IMPLEMENTED** | migrations **146+147** · ledger มี 146/147 แล้ว · contracts 146/147 เขียว Docker+production |
+| missing ทั้งหมด (#1 owner, #8 support, #11 developer) | **DONE** | predicates+CHECK 13 ค่า · support read×4 (G5) · auditor/dev read 16 ตาราง (G6) |
+| partial ทั้งหมด (#3 kitchen, #4 inventory, #5 finance, #6 rider, #9 marketing, #10 read-only) | **DONE** | kitchen writes+RPC guards (G1) · inventory grant คืน+write (G2) · finance close_day (G3) · marketing (G4) · rider backfill+3 policies (G8) · auditor read-only (G6) |
+| per-role nav hiding (P1) | **DONE** | `navGroupsForRole` + AdminRoute `isAdminCapableRole` + role sync · เทสต์ roleSystem 10 ข้อ |
+| assignment | **DONE (RPC)** | `set_user_role` gates ครบ (G2 contract 146) — สูตร SQL ใน acceptance #14 |
+
+**เพิ่มเติมระหว่างทาง:** คืน GRANT inventory S/I/U/D (034 เคยทำให้ UI insert พังแฝง) ·
+grants parity ตาราง post-006 ใน CI · canonical `create_production_batch` 3-arg (ไม่สร้าง overload เก่าคืน)
+
+**FINAL REPORT (รอบ 13):**
+- SESSION STATUS: COMPLETE — ตามคำสั่ง Owner ทั้งหมด · เหลือ Owner ทดสอบ production (checklist #1–#14)
+- TEST RESULTS: vitest 134 files/1385 tests exit 0 · tsc 0 · lint 0 · build 0
+- CONTRACT RESULTS: Docker replay ALL_GREEN (001→147) · contracts 127–147 ALL_PASS exit 0 · production contract 146+147 STAGE_OK
+- PRODUCTION RUNTIME: ledger **147,146,145,144** · rider backfill = linked driver เป็น 'rider' แล้ว · evidence `e2e/r7Apply146-*.json`
+- CI RESULTS: ดูหลัง push รอบนี้
+- BLOCKERS: ไม่มีฝั่งโค้ด · Owner actions = แต่งตั้ง role (สูตร SQL ใน #14) + รัน #1–#14
+- HANDOFF DOCUMENT: docs/BMB_HANDOFF_NEXT_SESSION_2026-10-24.md (§16 = ผลรอบนี้)

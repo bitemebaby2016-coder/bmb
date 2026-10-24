@@ -1,0 +1,53 @@
+[
+  {
+    "label": "history",
+    "status": 201,
+    "body": [
+      {
+        "version": "145"
+      },
+      {
+        "version": "144"
+      },
+      {
+        "version": "143"
+      }
+    ]
+  },
+  {
+    "label": "constraint-now",
+    "status": 201,
+    "body": [
+      {
+        "def": "CHECK ((role = ANY (ARRAY['customer'::text, 'staff'::text, 'admin'::text])))"
+      }
+    ]
+  },
+  {
+    "label": "predicates-absent",
+    "status": 201,
+    "body": [
+      {
+        "hits": 0
+      }
+    ]
+  },
+  {
+    "label": "linked-driver-role",
+    "status": 201,
+    "body": [
+      {
+        "role": "customer"
+      }
+    ]
+  },
+  {
+    "label": "backup-recency",
+    "status": 201,
+    "body": [
+      {
+        "recent_backups": 7
+      }
+    ]
+  }
+]

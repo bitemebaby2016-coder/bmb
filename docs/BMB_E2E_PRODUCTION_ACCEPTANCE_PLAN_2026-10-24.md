@@ -40,3 +40,65 @@
 3. หลักฐานทุกขั้น = screenshot/log/query result จริง — "จำไม่ได้" = ไม่ผ่าน
 4. contract/verify scripts ทั้งหมด = ROLLBACK / read-only ห้ามชี้ไป production โดย
    ไม่ตั้งใจ (ใช้เฉพาะผ่าน Management API + script ที่ระบุ)
+
+## 4. Ordered production acceptance checklist (Owner runbook)
+
+> รันบน `https://biteme-baby.com` เท่านั้น · เรียงตามลำดับที่พึ่งพิงกัน · เครื่องหมาย
+> `[R]` = อ่านอย่างเดียว · `[O]` = สร้างข้อมูลทดสอบของ Owner เอง (จด order number ไว้)
+
+| # | ขั้น | PASS = |
+|---|---|---|
+| 1 | `[R]` เปิด CI หลัง push ล่าสุด (Actions: CI + Contract Tests) | ทั้งสองเขียว — Contract รันถึง "Contract 147 OK" |
+| 2 | `[R]` หน้าแรก/เมนู/รอบ/โปรโมชันโหลดครบ (desktop + มือถือ) | ไม่มี console error, รูป/ป้ายไม่เพี้ยน |
+| 3 | `[O]` สั่ง SAME_DAY 1 ออเดอร์ (รอบยังไม่เลย cutoff) | สร้างสำเร็จ → ติดตามสถานะจริง |
+| 4 | `[O]` สั่ง PRE_ORDER บนวันที่มีเมนูปฏิทิน ภายใน 2 ชม. ก่อนส่ง | สำเร็จ · เกินคัทออฟต้องถูกปฏิเสธพร้อมเวลา HH:MM จริง |
+| 5 | `[R]` `/admin` ทุกเมนู (desktop sidebar + มือถือ drawer) | ทุกลิงก์ไปหน้าจริง · scroll ขึ้นบนสุดเมื่อเปลี่ยนหน้า · ป้ายคัทออฟ 2 ช่องแสดงในหน้ารอบจัดส่ง |
+| 6 | `[R]` หน้ารอบจัดส่ง: ตั้งคัทออฟ 2 ช่องคนละค่าบนรอบเดียว | บันทึกได้ · แถวรอบโชว์ทั้ง 2 ค่า · ล้างช่องพรีออเดอร์ = กลับไปใช้กฎ |
+| 7 | `[R]` เปิดเบราว์เซอร์ที่ค้างป้ายแดง (เคส 841) → reload 2 ครั้ง | ป้าย **หายและไม่กลับมา** · bell เห็น "จัดส่งสำเร็จ" บนสุด · "อ่านทั้งหมดแล้ว" ปิด popup เอง · ลิงก์ไป /notifications |
+| 8 | `[O]` เปิด push บนมือถือแล้วสั่งออเดอร์ทดสอบ | ได้รับ notification จริง 1 ครั้งต่อสถานะ |
+| 9 | `[O]` จ่ายเงินจริง 1 ออเดอร์ + ตรวจสลิปในแอดมิน | สลิปขึ้นหน้าตรวจ · อนุมัติผ่าน · สถานะ paid ตรง DB |
+| 10 | `[R]` ตรวจ SMS/ข้อความยืนยัน (ถ้าเปิดใช้) | ส่งถึงเบอร์จริง |
+| 11 | `[O]` Rider: อัปโหลด POD บนมือถือ 1 ครั้ง | รูปขึ้นจริง · สถานะจัดส่งเปลี่ยน |
+| 12 | `[R]` แผนที่ใน checkout (มือถือ + desktop) | แผนที่โหลด (Maps key ถูกต้อง) |
+| 13 | `[R]` `AI_WORK_STATE.md` + แฮนด์ออฟอัปเดต + commit/push ล่าสุดตรง production build | ข้อมูลสถานะไม่ drift |
+
+**ปิดแผนเมื่อ:** #1–#14 ผ่านครบ — รายการใดติดขัด = จด defect ใหม่ใน `AI_WORK_STATE.md`
+
+## 5. ระบบ role 13 ค่า (146/147 · Owner sign-off P1-P3 + missing/partial ทั้งหมด)
+
+### #14 แต่งตั้ง + ทดสอบบน production
+
+**วิธีแต่งตั้ง (ไม่มี UI — SQL Editor ของ Supabase Dashboard):**
+
+```sql
+-- (ก) แต่งตั้งบัญชี admin คนแรกเป็น owner
+SELECT set_config('request.jwt.claims',
+       '{"sub":"<ADMIN-UUID>","role":"authenticated"}', false);
+SELECT public.set_user_role('<ADMIN-UUID>'::uuid, 'owner');
+
+-- (ข) ตั้ง role รายบัญชี (ครบทุกกลุ่ม)
+SELECT public.set_user_role('<UUID-KITCHEN>'::uuid,   'kitchen');
+SELECT public.set_user_role('<UUID-INVENTORY>'::uuid, 'inventory');
+SELECT public.set_user_role('<UUID-FINANCE>'::uuid,   'finance');
+SELECT public.set_user_role('<UUID-MARKETING>'::uuid, 'marketing');
+SELECT public.set_user_role('<UUID-POS>'::uuid,       'pos');
+SELECT public.set_user_role('<UUID-SUPPORT>'::uuid,   'support');
+SELECT public.set_user_role('<UUID-AUDITOR>'::uuid,   'auditor');
+SELECT public.set_user_role('<UUID-DEV>'::uuid,       'developer');
+-- rider: ระบบตั้งให้เองเมื่อ link drivers.user_id (trigger drivers_promote_rider)
+```
+
+**ขั้นทดสอบ (login ด้วยบัญชีของ role นั้น บน biteme-baby.com):**
+
+| ขั้น | ทำอะไร | PASS = |
+|---|---|---|
+| 14a | login owner/admin | เห็นเมนูแอดมินครบทุกกลุ่ม |
+| 14b | login kitchen → /admin | เห็นเฉพาะ ภาพรวม/ออเดอร์/ครัว/สูตร/รอบ/เมนู — ไม่เห็น รายงาน/ตั้งค่า/องค์กร · สร้าง batch ในหน้าครัวได้จริง |
+| 14c | login inventory | เพิ่ม/แก้/ลบวัตถุดิบได้จริง (grant คืน + policy) |
+| 14d | login finance | ดูรายงานการเงิน + ปิดวัน (close_day) ได้ |
+| 14e | login marketing | สร้าง/อนุมัติโพสต์การตลาดได้ |
+| 14f | login pos | เห็น POS/ออเดอร์/ลูกค้า/รายงาน (parity staff เดิม) |
+| 14g | login support | เปิดออเดอร์/ลูกค้า/แจ้งเตือน — **แก้ไขอะไรไม่ได้** |
+| 14h | login auditor | เปิดได้ทุกหน้ารายงาน/บันทึก — **อ่านอย่างเดียวจริง** |
+| 14i | login rider → /rider | PWA ทำงานปกติ (backfill role='rider' แล้ว) |
+| 14j | login customer | ไม่เห็นลิงก์ Admin / เข้า /admin ไม่ได้ (redirect `/`) |

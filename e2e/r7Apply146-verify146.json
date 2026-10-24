@@ -1,0 +1,56 @@
+[
+  {
+    "label": "constraint-13-roles",
+    "status": 201,
+    "body": [
+      {
+        "def": "CHECK ((role = ANY (ARRAY['customer'::text, 'staff'::text, 'admin'::text, 'owner'::text, 'auditor'::text, 'support'::text, 'developer'::text, 'kitchen'::text, 'inventory'::text, 'finance'::text, 'marketing'::text, 'pos'::text, 'rider'::text])))"
+      }
+    ]
+  },
+  {
+    "label": "predicates-present",
+    "status": 201,
+    "body": [
+      {
+        "hits": 10
+      }
+    ]
+  },
+  {
+    "label": "set-user-role-exists",
+    "status": 201,
+    "body": [
+      {
+        "hits": 1
+      }
+    ]
+  },
+  {
+    "label": "is-admin-includes-owner",
+    "status": 201,
+    "body": [
+      {
+        "ok": true
+      }
+    ]
+  },
+  {
+    "label": "rider-trigger-exists",
+    "status": 201,
+    "body": [
+      {
+        "hits": 1
+      }
+    ]
+  },
+  {
+    "label": "linked-driver-is-rider",
+    "status": 201,
+    "body": [
+      {
+        "role": "rider"
+      }
+    ]
+  }
+]
