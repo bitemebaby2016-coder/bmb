@@ -1,9 +1,9 @@
 /**
- * Phase 2 — Cart/Checkout consistency (RC-3 · OD-4)
+ * Phase 2 — Cart/Checkout consistency (R5c · Owner 2026-10-23)
  *
  * Page-level test ของ HomePage.handlePreOrder:
- *  - ตะกร้าล็อกโหมดอื่นอยู่ → addItem คืน 'needs_confirmation' → ห้าม navigate ไป /checkout
- *    (ให้ CartIsolationModal ยืนยันตามกลไกเดิม — lock ชนะ ไม่สลับเงียบ ๆ)
+ *  - ตะกร้ามีสินค้าอีกโหมดอยู่ → addItem คืน 'added' — สินค้าทั่วไปติดรอบพรีออเดอร์
+ *    ในตะกร้าเดียว (ไม่มีป๊อปอัปล้างตะกร้า/ไม่สลับโหมด — CartIsolationModal ถูกถอดออก)
  *  - ตะกร้าว่าง/ตรงโหมด → เพิ่มได้ → navigate /checkout?mode=pre-order ตามเดิม
  *
  * NOTE: ไฟล์ต้องเป็น `.ts` (vitest include ไม่รับ .tsx) — ใช้ React.createElement
@@ -76,6 +76,12 @@ vi.mock('@/lib/reviewApi', () => ({
 vi.mock('@/components/ui/ToastContainer', () => ({
   showToast: m.showToast,
 }))
+
+// R5c: ปุ่ม "จองล่วงหน้า" บนการ์ดต้องมีป้ายปฏิทิน — mock วันเมนูให้สินค้า pre-1
+vi.mock('@/lib/productSchedule', async (importOriginal) => {
+  const orig = await importOriginal<typeof import('@/lib/productSchedule')>()
+  return { ...orig, getProductScheduleMap: vi.fn(async () => ({ 'pre-1': '2099-01-15' })) }
+})
 
 // lazy FoodTheater ถูกตัดออก — ไม่เกี่ยวกับ flow ที่ test (ทำให้ render เบา/เร็ว)
 vi.mock('@/components/theater/FoodTheater', () => ({
@@ -155,7 +161,6 @@ function resetCart() {
   useCartStore.setState({
     items: [],
     order_mode: null,
-    pendingMode: null,
     subtotal: 0,
     discount: 0,
     deliveryFee: 0,
@@ -191,9 +196,9 @@ afterEach(async () => {
   resetCart()
 })
 
-describe('HomePage.handlePreOrder — AddToCartResult guard (RC-3 · OD-4)', () => {
-  it('M1 2D-1: mode-mismatch add → mixed line KEPT (no discard, no silent switch) → navigate /checkout?mode=pre-order', async () => {
-    // ล็อกตะกร้าด้วย SAME_DAY ก่อน
+describe('HomePage.handlePreOrder — R5c: ตะกร้าเดียว ไม่สลับโหมด ไม่ล้างตะกร้า', () => {
+  it('R5c: mode-mismatch add → mixed line KEPT (no clear-cart popup) → navigate /checkout?mode=pre-order', async () => {
+    // ตะกร้ามีสินค้า SAME_DAY อยู่ก่อน
     const lockRes = useCartStore.getState().addItem(SD_PRODUCT, 1, {}, 'SAME_DAY')
     expect(lockRes).toBe('added')
     expect(useCartStore.getState().order_mode).toBe('SAME_DAY')
@@ -202,17 +207,17 @@ describe('HomePage.handlePreOrder — AddToCartResult guard (RC-3 · OD-4)', () 
     await clickPreOrderCta()
     expect(capturedCb).toBeTruthy()
 
-    // M1: addItem(PRE_ORDER) คืน 'added' — ใส่เป็น line ตัวเอง ไม่ discard ไม่สลับโหมดเงียบ ๆ
+    // R5c: addItem(PRE_ORDER) คืน 'added' — ใส่เป็น line ตัวเอง ไม่ล้างตะกร้าเดิม
     await act(async () => {
       capturedCb!({ product: PRE_PRODUCT, quantity: 1, addOns: [], recommended: [] })
     })
     await flush()
 
     const st = useCartStore.getState()
-    expect(st.pendingMode).toBeNull()
-    expect(st.items.length).toBe(2) // ทั้งสองบรรทัดอยู่ครบ
-    expect(st.order_mode).toBe('SAME_DAY') // primary mode คงเดิม
+    expect(st.items.length).toBe(2) // ทั้งสองบรรทัดอยู่ครบ (สินค้าทั่วไปติดรอบพรีออเดอร์)
     expect((st.items[1] as { line_mode?: string }).line_mode).toBe('PRE_ORDER')
+    // โหมดรวมของตะกร้า = PRE_ORDER (มีเมนูปฏิทินในตะกร้า)
+    expect(st.order_mode).toBe('PRE_ORDER')
     expect(lastPath).toBe('/checkout')
   })
 

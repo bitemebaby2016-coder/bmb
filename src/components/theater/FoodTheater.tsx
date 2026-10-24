@@ -192,8 +192,6 @@ export function FoodTheater({ products, onCustomize, onPreOrder }: FoodTheaterPr
       showToast(`เพิ่ม ${p.name} ลงตะกร้าแล้ว 🛒`)
       setBiteState('SUCCESS')
       window.setTimeout(() => setBiteState('IDLE'), 800)
-    } else if (res === 'needs_confirmation') {
-      showToast('มีสินค้ารอบอื่นในตะกร้า รอการยืนยันก่อนครับ', 'warning')
     } else {
       showToast('เพิ่มไม่ได้ในตอนนี้ กรุณาลองใหม่ครับ', 'warning')
     }

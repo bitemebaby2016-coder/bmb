@@ -104,12 +104,14 @@ describe('cancel_order — canonical cancellation (owner rules)', () => {
 })
 
 describe('server mode gate — client cannot order a product in a forbidden mode', () => {
-  it('R5/141: PRE_ORDER accepts every available product (สินค้าทั่วไปส่งร่วมรอบเดียวกับเมนูพรีออเดอร์ได้)', async () => {
+  it('R5c: PRE_ORDER รับสินค้าทั่วไป — แต่ต้องมี ≥1 เมนูปฏิทินในตะกร้า (สินค้าทั่วไปติดรอบพรีออเดอร์)', async () => {
     const date = TOMORROW()
     await supabase.rpc('ensure_rounds_for_date', { p_date: date })
     const roundId = `round-${date.replace(/-/g, '')}-morning`
+    // R5c/142: seed เมนูปฏิทินของวันนั้น (prod-1) — สินค้าทั่วไป (prod-2) ติดรอบเดียวกันได้
+    await supabase.from('menu_schedule').insert({ product_id: 'prod-1', scheduled_date: date, is_published: true })
     const res = await supabase.rpc('create_order_with_items', {
-      p_items: [{ product_id: 'prod-2', quantity: 1 }], // available_preorder = false → ต้องผ่าน (141 ยกเลิก gate)
+      p_items: [{ product_id: 'prod-2', quantity: 1 }, { product_id: 'prod-1', quantity: 1 }], // prod-2: available_preorder = false → ต้องผ่าน (141 ยกเลิก gate)
       p_delivery_round_id: roundId,
       p_customer_name: 'Somchai Rakdee',
       p_customer_phone: '0900000000',
@@ -118,6 +120,22 @@ describe('server mode gate — client cannot order a product in a forbidden mode
     })
     expect(res.error).toBeNull()
     expect(res.data?.order_number).toBeTruthy()
+  })
+
+  it('R5c: ตะกร้าสินค้าทั่วไปล้วนสั่งพรีออเดอร์ไม่ได้ → ERR_PRE_ORDER_REQUIRES_MENU', async () => {
+    const date = TOMORROW()
+    await supabase.rpc('ensure_rounds_for_date', { p_date: date })
+    const roundId = `round-${date.replace(/-/g, '')}-morning`
+    await supabase.from('menu_schedule').insert({ product_id: 'prod-1', scheduled_date: date, is_published: true })
+    const res = await supabase.rpc('create_order_with_items', {
+      p_items: [{ product_id: 'prod-2', quantity: 1 }], // ไม่มีเมนูปฏิทินในตะกร้า
+      p_delivery_round_id: roundId,
+      p_customer_name: 'Somchai Rakdee',
+      p_customer_phone: '0900000000',
+      p_order_mode: 'PRE_ORDER',
+      p_scheduled_date: date,
+    })
+    expect(res.error?.code).toBe('ERR_PRE_ORDER_REQUIRES_MENU')
   })
 
   it('rejects SAME_DAY for a preorder-only product', async () => {

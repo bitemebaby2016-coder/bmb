@@ -180,6 +180,9 @@ describe('PHASE 1 · publish validation exactly 2 valid PRE_ORDER menus (migrati
     const round = (supabase as any).__tables.delivery_rounds.find((x: any) => x.id === 'round-1')
     round.scheduled_date = TOMORROW
     round.date = TOMORROW
+    // R5c/142: มีเมนูปฏิทินของวันนั้นก่อน (publish 123 บังคับ 2 รายการ) — เพื่อข้าม requires-menu gate ไปทดสอบตัว product gate
+    await setMenuSchedule(TOMORROW, [{ product_id: 'prod-5' }, { product_id: 'prod-1' }])
+    await publishMenuSchedule(TOMORROW, true)
     const p5 = (supabase as any).__tables.products.find((x: any) => x.id === 'prod-5')
     const prev = p5.is_available
     p5.is_available = false

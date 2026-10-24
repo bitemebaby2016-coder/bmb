@@ -2,12 +2,12 @@
 // Bite Me Baby — Cart Store (Phase 3B + TEN-05 Context Isolation)
 // ============================================
 // Single canonical cart used by Menu/Home/Cart/Checkout. Owns the
-// SAME_DAY / PRE_ORDER isolation semantics previously duplicated in
-// `src/stores/useCartStore.ts` (that file is now a delegating shim):
-//   - a non-empty cart is locked to one order mode;
-//   - mismatched add → `pendingMode` + 'needs_confirmation'
-//     (the global CartIsolationModal surfaces the approval prompt; user
-//     confirms ⇒ clear the previous cart then switch).
+// SAME_DAY / PRE_ORDER semantics (R5c 2026-10-23):
+//   - one cart = ONE order; a cart with any menu-calendar line ships as
+//     PRE_ORDER on the menu date (general items ride along in the same order);
+//     no menu-calendar line = SAME_DAY only (no free-date pre-order);
+//   - NO mode-switch / cart-clear popup (CartIsolationModal is gone) —
+//     `deriveCartMode` derives the mode from the lines themselves.
 // Prices here are DISPLAY ONLY — the server re-derives subtotal/discount/
 // delivery fee/total at order creation (migrations 016/025).
 // 
@@ -27,7 +27,18 @@ import type { OrderMode } from "@/config/platformConfig"
 import { addOnTotalFor } from "@/lib/addonDisplay"
 import { showToast } from "@/components/ui/ToastContainer"
 
-export type AddToCartResult = 'added' | 'needs_confirmation' | 'context_blocked' | 'blocked'
+export type AddToCartResult = 'added' | 'context_blocked' | 'blocked'
+
+/**
+ * R5c (Owner 2026-10-23): โหมดออเดอร์ของตะกร้า = ผลจากเนื้อตะกร้าเอง
+ * - มีบรรทัดที่เพิ่มแบบ "จองล่วงหน้า" (เมนูจากปฏิทินแอดมิน) ≥ 1 → ทั้งตะกร้า = PRE_ORDER
+ *   (สินค้าทั่วไปติดไปกับรอบพรีออเดอร์ในออเดอร์เดียว — ไม่แยก 2 ออเดอร์)
+ * - ไม่มีเมนูปฏิทินในตะกร้า = SAME_DAY เท่านั้น (ไม่มีพรีออเดอร์วันอิสระ)
+ */
+export function deriveCartMode(items: ReadonlyArray<{ line_mode?: OrderMode } | undefined>): OrderMode | null {
+  if (!items || items.length === 0) return null
+  return items.some((i) => (i?.line_mode ?? 'SAME_DAY') === 'PRE_ORDER') ? 'PRE_ORDER' : 'SAME_DAY'
+}
 
 /**
  * P0 WS4 (2026-10-14): stable identity for one cart LINE = product + mode +
@@ -55,7 +66,6 @@ interface CartStore {
   total: number
   isCheckoutOpen: boolean
   order_mode: OrderMode | null
-  pendingMode: OrderMode | null
   cartTotal: number
   // ✅ TEN-05: Current active context (set/replaced by BrandProvider)
   active_context_tenant_id: string | null
@@ -69,8 +79,6 @@ interface CartStore {
   setAppliedPromotion: (promo: PromotionRow | null) => void
   setDeliveryFee: (fee: number) => void
   setCheckoutOpen: (open: boolean) => void
-  confirmModeSwitch: () => void
-  cancelModeSwitch: () => void
   /** TEN-05: Resolve whether cart survives context change */
   resolveContextChange: (newTenantId: string, newBrandId: string) => 'cleared' | 'kept' | 'error'
   /** TEN-05: Set active context AND clear incompatible cart atomically */
@@ -95,7 +103,6 @@ export const useCartStore = create<CartStore>((set, get) => ({
   total: 0,
   isCheckoutOpen: false,
   order_mode: null,
-  pendingMode: null,
   cartTotal: 0,
   active_context_tenant_id: null,
   active_context_brand_id: null,
@@ -103,10 +110,7 @@ export const useCartStore = create<CartStore>((set, get) => ({
   setHydrated: () => set({ isHydrated: true }),
 
   addItem: (product, quantity = 1, customizations = {}, mode = 'SAME_DAY') => {
-    const { order_mode, pendingMode, items, active_context_tenant_id, active_context_brand_id } = get()
-
-    // A switch is already awaiting confirmation — keep waiting.
-    if (pendingMode) return 'needs_confirmation'
+    const { items, active_context_tenant_id, active_context_brand_id } = get()
 
     // Check context compatibility before adding
     if (items.length > 0) {
@@ -118,24 +122,9 @@ export const useCartStore = create<CartStore>((set, get) => ({
       }
     }
 
-    // ✅ M1 (Owner Wave 2D-1, supersedes OD-4 single-mode lock): a cart may
-    // REPRESENT eligible lines of both modes — a mismatched add no longer
-    // discards. Each line keeps its own `line_mode`; `order_mode` stays the
-    // primary (first) mode until checkout splitting (2D-2). Blocked ONLY when
-    // the line is explicitly ineligible for its requested mode (server
-    // (025 §5) remains the authority — this is an early, clear client guard).
-    if (order_mode !== null && order_mode !== mode && items.length > 0) {
-      const avail = product.is_available !== false
-      // Lenient on missing flags (server 025 is the authority); block only on
-      // an EXPLICIT canonical false (disabled for this mode).
-      const eligible = mode === 'PRE_ORDER'
-        ? product.available_preorder !== false
-        : product.available_same_day !== false
-      if (!avail || !eligible) {
-        console.warn('[CartStore] Mixed line blocked: product not eligible for its mode.')
-        return 'blocked'
-      }
-    }
+    // R5c (Owner 2026-10-23): ไม่มีการสลับโหมด/ล้างตะกร้าอีกต่อไป — สินค้าทุกชิ้น
+    // อยู่ในตะกร้าเดียวและส่งร่วมรอบเดียวกัน (เมนูปฏิทินในตะกร้า = พรีออเดอร์ทั้งออเดอร์)
+    // (preorder_ok/same_day_ok ยังคงเป็น gate ตอน submit — server 025/142 คือ authority)
 
     set((state) => {
       const key = lineKeyFor(product.id, mode, customizations)
@@ -165,7 +154,7 @@ export const useCartStore = create<CartStore>((set, get) => ({
         }]
       }
 
-      return { items: newItems, order_mode: state.order_mode ?? mode }
+      return { items: newItems }
     })
     get().recalculate()
     return 'added'
@@ -203,7 +192,7 @@ export const useCartStore = create<CartStore>((set, get) => ({
     get().recalculate()
   },
 
-  clearCart: () => set({ items: [], couponCode: '', appliedPromotion: null, subtotal: 0, discount: 0, deliveryFee: 0, total: 0, order_mode: null, pendingMode: null, cartTotal: 0 }),
+  clearCart: () => set({ items: [], couponCode: '', appliedPromotion: null, subtotal: 0, discount: 0, deliveryFee: 0, total: 0, order_mode: null, cartTotal: 0 }),
 
   // TEN-05: Resolve whether cart survives context change
   resolveContextChange: (newTenantId: string, newBrandId: string) => {
@@ -262,17 +251,6 @@ export const useCartStore = create<CartStore>((set, get) => ({
 
   setCheckoutOpen: (open) => set({ isCheckoutOpen: open }),
 
-  confirmModeSwitch: () => {
-    const { pendingMode } = get()
-    if (!pendingMode) return
-    set({ items: [], subtotal: 0, discount: 0, total: 0, cartTotal: 0, order_mode: pendingMode, pendingMode: null })
-  },
-
-  cancelModeSwitch: () => {
-    if (!get().pendingMode) return
-    set({ pendingMode: null })
-  },
-
   recalculate: () => {
     const state = get()
     const subtotal = state.items.reduce((sum, item) => sum + item.subtotal, 0)
@@ -290,7 +268,8 @@ export const useCartStore = create<CartStore>((set, get) => ({
     const total = Math.max(0, subtotal - discount + state.deliveryFee)
     const cartTotal = subtotal
 
-    set({ subtotal, discount, total, cartTotal })
+    // R5c: โหมดของตะกร้า = ผลจากบรรทัดในตะกร้า (เมนูปฏิทิน ≥ 1 = พรีออเดอร์ทั้งออเดอร์)
+    set({ subtotal, discount, total, cartTotal, order_mode: deriveCartMode(state.items) })
   },
 
   getCartCount: () => get().items.reduce((sum, item) => sum + item.quantity, 0)

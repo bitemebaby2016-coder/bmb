@@ -115,13 +115,13 @@ export function MenuPage() {
   // "ทั้งหมด" เท่านั้น (เดิมกรองซ้อนสองชั้น ทำให้กดหัวข้อ "จองล่วงหน้า / พรีออเดอร์"
   // แล้วเจอของไม่ครบ = งานซ้ำสองระบบแย่งกันกรอง)
   const filtered = products.filter((p) => {
-    const isPre = p.available_preorder ?? p.is_preorder
     const isSame = p.available_same_day ?? !p.is_preorder
     const matchCat = selectedCategory === 'all' || String(p.category_id) === selectedCategory
     if (!matchCat) return false
     if (selectedCategory === 'all') {
       if (menuTab === 'same-day' && !isSame) return false
-      if (menuTab === 'pre-order' && !isPre) return false
+      // R5c (Owner 2026-10-23): แท็บจองล่วงหน้า = เมนูจากปฏิทินแอดมิน (มีป้ายวันจัดส่ง) เท่านั้น
+      if (menuTab === 'pre-order' && !scheduleMap[p.id]) return false
     }
     return !p.archived && p.name.toLowerCase().includes(searchQuery.toLowerCase())
   })
@@ -140,15 +140,13 @@ export function MenuPage() {
         customizations['addOns'] = result.addOns.map((a) => ({ addonId: a.addonId, selections: a.selections, note: a.note ?? '' }))
       }
       // P0 2026-10-14: เช็ค AddToCartResult ก่อน (แบบ HomePage RC-3/OD-4) —
-      // ห้าม toast "Added" ทั้งที่ addItem ไม่ได้เพิ่มอะไร (blocked/needs_confirmation/context_blocked)
+      // ห้าม toast "Added" ทั้งที่ addItem ไม่ได้เพิ่มอะไร (blocked/context_blocked)
       const res = addItem(result.product, result.quantity, customizations)
       if (res !== 'added') {
         showToast(
-          res === 'needs_confirmation'
-            ? 'ตะกร้ามีสินค้าอีกโหมดอยู่ — กรุณายืนยันการเปลี่ยนโหมดก่อนค่ะ'
-            : res === 'context_blocked'
-              ? 'เพิ่มไม่ได้ในตอนนี้ กรุณาลองใหม่อีกครั้ง'
-              : 'เพิ่มสินค้านี้ไม่ได้ในโหมดนี้ — สินค้าอาจไม่เปิดขายในโหมดที่เลือก',
+          res === 'context_blocked'
+            ? 'เพิ่มไม่ได้ในตอนนี้ กรุณาลองใหม่อีกครั้ง'
+            : 'เพิ่มสินค้านี้ไม่ได้ในตอนนี้ — สินค้าอาจปิดขายอยู่',
           'info',
         )
         return
@@ -183,17 +181,15 @@ export function MenuPage() {
       const res = addItem(result.product, result.quantity, customizations, 'PRE_ORDER')
       if (res !== 'added') {
         showToast(
-          res === 'needs_confirmation'
-            ? 'ตะกร้ามีสินค้าอีกโหมดอยู่ — กรุณายืนยันการเปลี่ยนโหมดก่อนค่ะ'
-            : res === 'context_blocked'
-              ? 'เพิ่มไม่ได้ในตอนนี้ กรุณาลองใหม่อีกครั้ง'
-              : 'เพิ่มสินค้านี้ไม่ได้ในโหมดนี้ — สินค้าอาจไม่เปิดขายในโหมดที่เลือก',
+          res === 'context_blocked'
+            ? 'เพิ่มไม่ได้ในตอนนี้ กรุณาลองใหม่อีกครั้ง'
+            : 'เพิ่มสินค้านี้ไม่ได้ในตอนนี้ — สินค้าอาจปิดขายอยู่',
           'info',
         )
         return
       }
       for (const rec of result.recommended) addItem(rec, 1, {}, 'PRE_ORDER')
-      showToast('เลือกวันที่/รอบ/ที่อยู่ แล้วชำระเงินเพื่อยืนยันการจอง', 'info')
+      showToast('วันจัดส่งถูกกำหนดโดยเมนูรอบพิเศษของแอดมิน — เลือกรอบ/ที่อยู่ แล้วชำระเงินเพื่อยืนยันการจอง', 'info')
       navigate('/checkout?mode=pre-order')
     })
   }
@@ -202,7 +198,8 @@ export function MenuPage() {
   const chips = headingChips(categories, products)
   // ✅ Phase 3B: canonical mode columns (migration 023) — alias fallback kept.
   const sameDayCount = products.filter(p => (p.available_same_day ?? !p.is_preorder) && p.is_available).length
-  const preOrderCount = products.filter(p => (p.available_preorder ?? p.is_preorder)).length
+  // R5c: จำนวนเมนู "จองล่วงหน้า" = เมนูที่อยู่ในปฏิทินแอดมิน (มีป้ายวันจัดส่ง) เท่านั้น
+  const preOrderCount = products.filter(p => !!scheduleMap[p.id]).length
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-6 bg-brand-bg min-h-screen">
@@ -245,8 +242,8 @@ export function MenuPage() {
           <div className="flex items-start gap-3">
             <span className="text-2xl">📅</span>
             <div>
-              <h3 className="font-bold text-blue-900 mb-1">จองล่วงหน้า</h3>
-              <p className="text-sm text-blue-700">เมนูที่โหวตแล้วจะส่งในรอบถัดไป — เลือกวันที่ต้องการรับอาหาร</p>
+              <h3 className="font-bold text-blue-900 mb-1">จองล่วงหน้า (เมนูรอบพิเศษ)</h3>
+              <p className="text-sm text-blue-700">เมนูจากปฏิทินรอบพิเศษของแอดมิน — วันจัดส่งถูกกำหนดตามป้ายมุมเมนู (เลือกเฉพาะรอบจัดส่ง) ไม่มีพรีออเดอร์วันอิสระ</p>
               {deliveryRounds.length > 0 && (
                 <div className="flex gap-2 mt-2 flex-wrap">
                   {deliveryRounds.map((round) => (

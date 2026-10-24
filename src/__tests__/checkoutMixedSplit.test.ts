@@ -1,9 +1,10 @@
 /**
- * WAVE 5-1 — CheckoutPage component tests: M1 mixed-split wiring (B1-B12)
- * 1) mixed + promptpay → ปฏิเสธก่อน createOrder RPC 2) mixed + COD → split 2 child
- * 3) partial → ไม่อ้าง success / ไม่ clearCart / ไม่ navigate
- * NOTE: ต้องเป็น `.ts` (vitest include ไม่รับ .tsx) — React.createElement ตาม harness
- * ของ checkoutModeLock.test.ts — ไม่มี production code ถูกแตะในเทสนี้
+ * R5c (Owner 2026-10-23) — mixed cart = ONE order (M1 split engine removed)
+ * 1) สินค้าทั่วไป + เมนูปฏิทิน → createOrder ครั้งเดียว ออเดอร์เดียว (PRE_ORDER, วันจากป้ายเมนู)
+ * 2) ทุกวิธีชำระเงินใช้ได้กับตะกร้าผสม (เดิม mixed บังคับ COD เพราะต้อง split)
+ * 3) ไม่มีการสร้างออเดอร์ที่ 2 (ไม่แยก Same-day/Pre-order)
+ *
+ * NOTE: ไฟล์ต้องเป็น `.ts` (vitest include ไม่รับ .tsx) — React.createElement
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import React, { act } from 'react'
@@ -26,19 +27,20 @@ if (typeof (globalThis as Record<string, unknown>).ResizeObserver === 'undefined
   ;(globalThis as Record<string, unknown>).ResizeObserver = RO
 }
 
+const MENU_DATE = '2099-01-15'
+
 const m = vi.hoisted(() => ({
   showToast: vi.fn(),
   createOrder: vi.fn(),
-  createPaymentIntent: vi.fn(),
   listRoundsForDate: vi.fn(),
   getPublishedScheduleForDate: vi.fn(),
+  getProductScheduleMap: vi.fn(),
   fetchServerDeliveryFee: vi.fn(),
 }))
 
 vi.mock('@/components/ui/ToastContainer', () => ({ showToast: m.showToast }))
 vi.mock('@/lib/bmbAdminApi_orders', () => ({
   createOrder: m.createOrder,
-  // pure 124 helpers — deterministic stub (no DB side effects in UI tests)
   orderInputFingerprint: (input: unknown) => JSON.stringify(input),
   OrderSubmitError: class extends Error {
     code: string
@@ -46,7 +48,7 @@ vi.mock('@/lib/bmbAdminApi_orders', () => ({
   },
 }))
 vi.mock('@/lib/paymentGateway', () => ({
-  createPaymentIntent: m.createPaymentIntent,
+  createPaymentIntent: vi.fn(async () => ({ success: true })),
   getPaymentIntents: vi.fn(async () => []),
 }))
 vi.mock('@/lib/auditLog', () => ({ writeAuditLog: vi.fn() }))
@@ -63,13 +65,17 @@ vi.mock('@/lib/bmbMenuSchedule', () => ({
   mirrorPreOrderScheduleGate: vi.fn(() => ({ allowed: true })),
   checkModeEligibility: vi.fn(() => ({ ok: true, rejected: [] })),
 }))
+vi.mock('@/lib/productSchedule', async (importOriginal) => {
+  const orig = await importOriginal<typeof import('@/lib/productSchedule')>()
+  return { ...orig, getProductScheduleMap: m.getProductScheduleMap }
+})
 vi.mock('@/lib/deliveryFeeApi', () => ({
   fetchServerDeliveryFee: m.fetchServerDeliveryFee,
-  feeUiState: vi.fn(() => ({ label: '', cls: '' })),
+  feeUiState: vi.fn(() => ({ label: '', cls: '', tone: '', detail: '' })),
   summaryFeeState: vi.fn(() => ({ feeLabel: '', feeValue: '', totalSuffix: '', exact: true })),
 }))
 vi.mock('@/lib/bmbAdminApi_settings', () => ({ getBusinessSettings: vi.fn(async () => ({})) }))
-vi.mock('@/lib/brandResolver', () => ({ resolvePublicBranch: vi.fn(async () => ({ branch_id: 'br1' })) }))
+vi.mock('@/lib/brandResolver', () => ({ resolvePublicBranch: vi.fn(async () => null) }))
 vi.mock('@/lib/bmbAdminApi_products', () => ({ getProducts: vi.fn(async () => []) }))
 vi.mock('@/lib/cartPersistence', () => ({
   revalidateWithCatalog: vi.fn(async () => ({ changed: false })),
@@ -82,7 +88,7 @@ vi.mock('@/store/locationStore', () => ({
     { getState: () => ({ location: null }) },
   ),
   isTrustedSource: () => false,
-  deliveryPointStatus: () => ({ orderable: true }), // ข้าม CR-2 gate (UI เท่านั้น ไม่แตะ server)
+  deliveryPointStatus: () => ({ orderable: true, confirmable: true }),
 }))
 
 import { CheckoutPage } from '@/pages/CheckoutPage'
@@ -92,29 +98,22 @@ import { useAuthStore } from '@/store/authStore'
 function product(id: string, name: string): Product {
   return {
     id, name, description: '', price: 45, image_url: '', is_available: true,
-    category_id: 'c1', display_order: 0, store_id: 's1',
+    category_id: 'c1', display_order: 0, store_id: 's1', available_same_day: true,
   } as unknown as Product
 }
 
 const round = {
-  id: 'r1', round_key: 'morning', display_name: 'รอบเช้า',
-  cutoff_time: '23:59', current_count: 0, max_capacity: 99,
+  id: 'r1', round_key: 'midday', display_name: 'Round Midday',
+  cutoff_time: '23:59', delivery_start: '10:00', delivery_end: '14:00',
+  current_count: 0, max_capacity: 99,
 }
 
 let container: HTMLDivElement
 let root: Root
-let lastPath = '/'
-let lastState: unknown = null
-
-function LocationProbe() {
-  const loc = useLocation()
-  lastPath = loc.pathname
-  lastState = loc.state
-  return null
-}
 
 async function flush() {
   await act(async () => {
+    await new Promise((r) => setTimeout(r, 0))
     await new Promise((r) => setTimeout(r, 0))
     await new Promise((r) => setTimeout(r, 0))
     await new Promise((r) => setTimeout(r, 0))
@@ -127,15 +126,18 @@ async function mountMixedCart() {
   root = createRoot(container)
   useCartStore.setState({
     items: [
-      { product: product('sd-1', 'ส้มตำ'), quantity: 1, customizations: {}, subtotal: 45, line_mode: 'SAME_DAY' },
-      { product: product('po-1', 'ข้าวผัดปู'), quantity: 1, customizations: {}, subtotal: 45, line_mode: 'PRE_ORDER' },
-    ] as never,
-    order_mode: 'SAME_DAY',
-    pendingMode: null,
+      { product: product('menu-1', 'Menu 1'), quantity: 1, customizations: {}, subtotal: 45, line_mode: 'PRE_ORDER' },
+      { product: product('gen-1', 'General 1'), quantity: 1, customizations: {}, subtotal: 45, line_mode: 'SAME_DAY' },
+    ],
+    order_mode: 'PRE_ORDER',
     isHydrated: true,
     couponCode: '',
     appliedPromotion: null,
-    subtotal: 90, discount: 0, deliveryFee: 0, total: 90, cartTotal: 90,
+    subtotal: 90,
+    discount: 0,
+    deliveryFee: 0,
+    total: 90,
+    cartTotal: 90,
   })
   useAuthStore.setState({
     customer: { id: 'u1', name: 'Test Customer', phone: '0800000000' } as never,
@@ -143,99 +145,79 @@ async function mountMixedCart() {
   })
   await act(async () => {
     root.render(
-      React.createElement(
-        MemoryRouter,
-        { initialEntries: ['/checkout'] },
-        React.createElement(LocationProbe),
-        React.createElement(CheckoutPage),
-      ),
+      React.createElement(MemoryRouter, { initialEntries: ['/checkout'] }, React.createElement(CheckoutPage)),
     )
   })
   await flush()
 }
 
-function placeOrderBtn(): HTMLButtonElement {
-  return container.querySelector('[data-testid="place-order"]') as HTMLButtonElement
-}
-function selectCod() {
-  ;(container.querySelector('input[value="cash_on_delivery"]') as HTMLInputElement).click()
+async function clickSubmit(paymentValue?: string) {
+  if (paymentValue) {
+    const radio = container.querySelector(`input[name="payment"][value="${paymentValue}"]`) as HTMLInputElement | null
+    await act(async () => {
+      radio!.click()
+    })
+    await flush()
+  }
+  const submit = Array.from(container.querySelectorAll('button')).find((b) => (b.textContent || '').includes('ยืนยันสั่งซื้อ'))
+  expect(submit).toBeTruthy()
+  await act(async () => {
+    submit!.click()
+  })
+  await flush()
 }
 
 beforeEach(() => {
   vi.clearAllMocks()
-  lastPath = '/'
   m.listRoundsForDate.mockResolvedValue([round])
   m.getPublishedScheduleForDate.mockResolvedValue([])
-  m.fetchServerDeliveryFee.mockResolvedValue({ fee: 0 })
+  m.getProductScheduleMap.mockResolvedValue({ 'menu-1': MENU_DATE })
+  m.fetchServerDeliveryFee.mockResolvedValue({ delivery_fee: 0, source: 'server' })
+  m.createOrder.mockResolvedValue({ order_number: 'BMB-TEST-1', total_amount: 90, replay: false })
 })
 
 afterEach(async () => {
-  await act(async () => { root.unmount() })
+  await act(async () => {
+    root.unmount()
+  })
   container.remove()
   useAuthStore.setState({ customer: null, isAuthenticated: false })
 })
 
-describe('CheckoutPage — M1 mixed-split wiring (component level)', () => {
-  it('mixed + promptpay (ค่าเริ่มต้น) → ปฏิเสธก่อน createOrder RPC ใด ๆ', async () => {
+describe('R5c — mixed cart (menu + general) = ONE order, never split', () => {
+  it('createOrder called ONCE with ALL items + PRE_ORDER + menu date (COD)', async () => {
     await mountMixedCart()
-    await act(async () => { placeOrderBtn().click() })
-    await flush()
+    await clickSubmit('cash_on_delivery')
 
-    expect(m.createOrder).not.toHaveBeenCalled() // B4: ไม่มี RPC ก่อน gate
-    expect(m.createPaymentIntent).not.toHaveBeenCalled()
-    expect(m.showToast).toHaveBeenCalledWith(expect.stringContaining('เงินสดปลายทาง'), 'error')
-    expect(lastPath).toBe('/checkout')
-    expect(useCartStore.getState().items.length).toBe(2) // cart คงเดิม
+    expect(m.createOrder).toHaveBeenCalledTimes(1)
+    const input = m.createOrder.mock.calls[0][0] as {
+      items: Array<{ product_id: string }>
+      order_mode: string
+      scheduled_date?: string
+      payment_method: string
+    }
+    expect(input.items.map((i) => i.product_id).sort()).toEqual(['gen-1', 'menu-1'])
+    expect(input.order_mode).toBe('PRE_ORDER')
+    expect(input.scheduled_date).toBe(MENU_DATE)
+    expect(input.payment_method).toBe('cash_on_delivery')
   })
 
-  it('mixed + COD → createOrder 2 ครั้ง (SAME_DAY ก่อน PRE_ORDER) + navigate + clearCart', async () => {
+  it('promptpay works for mixed carts too (mixed is no longer COD-only — no split)', async () => {
     await mountMixedCart()
-    m.createOrder
-      .mockResolvedValueOnce({ order_number: 'BMB-20261013-111', total_amount: 100 })
-      .mockResolvedValueOnce({ order_number: 'PO-20261014-222', total_amount: 200 })
-    await act(async () => { selectCod() })
-    await act(async () => { placeOrderBtn().click() })
-    await flush()
+    await clickSubmit('promptpay_qr')
 
-    expect(m.createOrder).toHaveBeenCalledTimes(2)
-    expect(m.createOrder.mock.calls[0][0].order_mode).toBe('SAME_DAY') // deterministic
-    expect(m.createOrder.mock.calls[1][0].order_mode).toBe('PRE_ORDER')
-    expect(m.createOrder.mock.calls[0][0].payment_method).toBe('cash_on_delivery')
-    // intent 1:1 ต่อ child (คนละ order_number — ไม่มี intent ซ้ำ)
-    expect(m.createPaymentIntent).toHaveBeenCalledTimes(2)
-    expect(m.createPaymentIntent.mock.calls.map((c) => c[0])).toEqual(['BMB-20261013-111', 'PO-20261014-222'])
-    expect(lastPath).toBe('/payment/BMB-20261013-111')
-    expect(useCartStore.getState().items.length).toBe(0)
-    expect(m.showToast).toHaveBeenCalledWith(expect.stringContaining('สั่งซื้อสำเร็จ 2 ออเดอร์'), 'success')
+    expect(m.createOrder).toHaveBeenCalledTimes(1)
+    expect(m.showToast).not.toHaveBeenCalledWith(expect.stringContaining('เงินสดปลายทาง'), 'error')
+    const input = m.createOrder.mock.calls[0][0] as { payment_method: string }
+    expect(input.payment_method).toBe('promptpay_qr')
   })
 
-  it('partial (child ที่ 2 = null/กำกวม) → ไม่อ้าง success + ไม่ clearCart + ไม่ navigate', async () => {
+  it('never creates a second (same-day) order for the general items', async () => {
     await mountMixedCart()
-    m.createOrder
-      .mockResolvedValueOnce({ order_number: 'BMB-20261013-333', total_amount: 100 })
-      .mockResolvedValueOnce(null) // ผลกำกวม → engine = ambiguous/pending
-    await act(async () => { selectCod() })
-    await act(async () => { placeOrderBtn().click() })
-    await flush()
+    await clickSubmit('cash_on_delivery')
 
-    expect(m.createOrder).toHaveBeenCalledTimes(2)
-    expect(m.showToast).toHaveBeenCalledWith(expect.stringContaining('ห้ามถือว่าสำเร็จ'), 'error')
-    expect(lastPath).toBe('/checkout') // ไม่ navigate ตอนผลไม่ครบ
-    expect(useCartStore.getState().items.length).toBe(2) // cart คงไว้เพื่อ reconcile
-    expect(m.showToast).not.toHaveBeenCalledWith(expect.stringContaining('สั่งซื้อสำเร็จ 2 ออเดอร์'), 'success')
-  })
-
-  it('D-06: child replay → ส่ง state.replay ไปหน้า /payment (เห็นชัด ไม่เงียบ)', async () => {
-    await mountMixedCart()
-    m.createOrder
-      .mockResolvedValueOnce({ order_number: 'BMB-20261013-111', total_amount: 100, replay: true })
-      .mockResolvedValueOnce({ order_number: 'PO-20261014-222', total_amount: 200 })
-    await act(async () => { selectCod() })
-    await act(async () => { placeOrderBtn().click() })
-    await flush()
-
-    expect(lastPath).toBe('/payment/BMB-20261013-111')
-    // หน้า /payment ต้องรู้ว่านี่คือออเดอร์เดิมจากการส่งซ้ำ → แสดง banner ถาวร
-    expect(lastState).toMatchObject({ replay: true })
+    expect(m.createOrder).toHaveBeenCalledTimes(1)
+    const modes = m.createOrder.mock.calls.map((c) => (c[0] as { order_mode: string }).order_mode)
+    expect(modes).toEqual(['PRE_ORDER'])
   })
 })

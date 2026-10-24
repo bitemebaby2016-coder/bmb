@@ -151,7 +151,7 @@ export function restoreWithCatalog(stored: StoredCart, products: Product[]): Res
     const mode: OrderMode = row.mode ?? stored.order_mode ?? 'SAME_DAY'
     const res = useCartStore.getState().addItem(product, row.quantity, row.customizations ?? {}, mode)
     if (res === 'added') restored += 1
-    else dropped.push({ productId: product.id, name: product.name, reason: res === 'needs_confirmation' ? 'mode_conflict' : 'blocked' })
+    else dropped.push({ productId: product.id, name: product.name, reason: 'blocked' })
   }
   if (restored > 0 && stored.couponCode) {
     useCartStore.getState().setCouponCode(stored.couponCode)

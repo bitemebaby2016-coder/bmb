@@ -535,6 +535,9 @@ describe('Pre-order API — canonical creation through create_order_with_items (
     storageClear()
     const { createOrder } = await import('@/lib/bmbAdminApi_orders')
     const roundId = await ensureFutureRound('2030-01-01')
+    // R5c/142: PRE_ORDER ต้องมีเมนูจากปฏิทินของวันนั้น — seed menu_schedule ก่อนสั่ง
+    const { supabase } = await import('@/lib/supabase')
+    await supabase.from('menu_schedule').insert({ product_id: 'prod-5', scheduled_date: '2030-01-01', is_published: true })
     const order = await createOrder({
       items: [{ product_id: 'prod-5', quantity: 1 }],
       delivery_round_id: roundId,
@@ -556,6 +559,9 @@ describe('Pre-order API — canonical creation through create_order_with_items (
   it('the created PRE_ORDER row lives in canonical orders (mode + scheduled_date)', async () => {
     const { createOrder, getOrders } = await import('@/lib/bmbAdminApi_orders')
     const roundId = await ensureFutureRound('2030-01-05')
+    // R5c/142: PRE_ORDER ต้องมีเมนูจากปฏิทินของวันนั้น — seed menu_schedule ก่อนสั่ง
+    const { supabase } = await import('@/lib/supabase')
+    await supabase.from('menu_schedule').insert({ product_id: 'prod-6', scheduled_date: '2030-01-05', is_published: true })
     const created = await createOrder({
       items: [{ product_id: 'prod-6', quantity: 2 }],
       delivery_round_id: roundId,

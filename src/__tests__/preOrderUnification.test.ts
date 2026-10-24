@@ -14,7 +14,7 @@ const TODAY = '2026-10-23'
 const TOMORROW = '2026-10-24'
 
 describe('R5 · resolveMenuBoundDate — วันจัดส่งถูกกำหนดโดยปฏิทินแอดมิน', () => {
-  it('ไม่มีสินค้าผูกวัน → date=null (pre-order ทั่วไป: เลือกวัน+รอบเอง)', () => {
+  it('ไม่มีสินค้าผูกวัน → date=null (R5c: ไม่มีพรีออเดอร์วันอิสระ — ต้องมีเมนูปฏิทินในตะกร้า)', () => {
     expect(resolveMenuBoundDate([{ product_id: 'a' }, { product_id: 'b' }], {})).toEqual({ date: null, conflict: [] })
   })
 

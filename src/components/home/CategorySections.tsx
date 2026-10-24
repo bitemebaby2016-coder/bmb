@@ -100,7 +100,8 @@ function ShowcaseCard({
               🛒 เพิ่มลงตะกร้า
             </button>
           )}
-          {isPreOrderCta && item.preorder && (
+          {/* R5c (Owner 2026-10-23): ปุ่มจองล่วงหน้าเฉพาะการ์ดที่มีป้ายปฏิทิน (เมนูปฏิทินแอดมิน) */}
+          {isPreOrderCta && item.preorder && item.scheduledDate && (
             <button
               type="button"
               onClick={handlePreOrder}
@@ -109,6 +110,16 @@ function ShowcaseCard({
               aria-label={`จอง ${item.name} ล่วงหน้า`}
             >
               📅 จองล่วงหน้า
+            </button>
+          )}
+          {isPreOrderCta && item.preorder && !item.scheduledDate && (
+            <button
+              type="button"
+              disabled
+              data-testid="home-showcase-preorder-unavailable"
+              className="btn btn-outline btn-sm w-full opacity-60 cursor-not-allowed"
+            >
+              📅 ยังไม่ลงปฏิทินรอบถัดไป
             </button>
           )}
           {soldOut && (

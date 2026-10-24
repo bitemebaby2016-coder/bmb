@@ -172,10 +172,10 @@ export function HomePage() {
       if (result.addOns.length > 0) {
         customizations['addOns'] = result.addOns.map((a) => ({ addonId: a.addonId, selections: a.selections, note: a.note ?? '' }))
       }
-      // Phase 2 (RC-3): แจ้งผลตามจริง — ห้ามบอก "Added" เมื่อต้องยืนยันโหมดก่อน (OD-4)
+      // Phase 2 (RC-3): แจ้งผลตามจริง — ห้ามบอก "Added" เมื่อ addItem ไม่ได้เพิ่มจริง
       const res = addItem(result.product, result.quantity, customizations)
       if (res !== 'added') {
-        showToast('ตะกร้ามีสินค้าอีกโหมดอยู่ — กรุณายืนยันการเปลี่ยนโหมดก่อนค่ะ', 'info')
+        showToast('เพิ่มไม่ได้ในตอนนี้ — สินค้าอาจปิดขายอยู่ กรุณาลองใหม่ครับ', 'info')
         return
       }
       for (const rec of result.recommended) {
@@ -204,19 +204,18 @@ export function HomePage() {
         customizations['addOns'] = result.addOns.map((a) => ({ addonId: a.addonId, selections: a.selections, note: a.note ?? '' }))
       }
       // Phase 2 (RC-3 · OD-4): ต้องเช็ค AddToCartResult ก่อน navigate —
-      // 'needs_confirmation' = ตะกร้าล็อกโหมดอื่นอยู่ → ห้ามสลับเงียบ ๆ ให้
-      // CartIsolationModal ยืนยันตามกลไกเดิม แล้วค่อยสั่งต่อ (ห้าม navigate)
+      // R5c: ไม่มีป๊อปอัปล้างตะกร้า/สลับโหมดแล้ว — สินค้าทั่วไปติดรอบพรีออเดอร์ในออเดอร์เดียว
       const res = addItem(result.product, result.quantity, customizations, 'PRE_ORDER')
-      if (res === 'needs_confirmation') {
-        showToast('ตะกร้ามีสินค้าอีกโหมดอยู่ — กรุณายืนยันการเปลี่ยนโหมดก่อนสั่งค่ะ', 'info')
-        return
-      }
       if (res === 'context_blocked') {
         showToast('เพิ่มไม่ได้ในตอนนี้ กรุณาลองใหม่ครับ', 'warning')
         return
       }
+      if (res !== 'added') {
+        showToast('เพิ่มไม่ได้ในตอนนี้ — สินค้าอาจปิดขายอยู่ กรุณาลองใหม่ครับ', 'warning')
+        return
+      }
       for (const rec of result.recommended) addItem(rec, 1, {}, 'PRE_ORDER')
-      showToast('เลือกวันที่/รอบ/ที่อยู่ แล้วชำระเงินเพื่อยืนยันการจอง', 'info')
+      showToast('วันจัดส่งถูกกำหนดโดยเมนูรอบพิเศษของแอดมิน — เลือกรอบ/ที่อยู่ แล้วชำระเงินเพื่อยืนยันการจอง', 'info')
       navigate('/checkout?mode=pre-order')
     })
   }

@@ -85,7 +85,7 @@ export function FoodMenuCard({ product, category, mode, availability, onSameDayO
         )}
 
         {/* ป้ายปฏิทินมุมรูป — วันจัดส่งจริงจาก menu_schedule (hover/แตะ ขึ้นปฏิทิน) */}
-        {(product.available_preorder ?? product.is_preorder) && scheduledDate && (
+        {scheduledDate && (
           <ScheduleDateBadge date={scheduledDate} />
         )}
       </div>
@@ -136,8 +136,9 @@ export function FoodMenuCard({ product, category, mode, availability, onSameDayO
           </button>
         )}
 
-        {/* Pre-order Button — only when the product is actually preorder-orderable */}
-        {(product.available_preorder ?? product.is_preorder) && (
+        {/* Pre-order Button — R5c (Owner 2026-10-23): เฉพาะการ์ดที่มี "ป้ายปฏิทิน"
+            (เมนูจากปฏิทินแอดมิน) เท่านั้น — ไม่มีพรีออเดอร์วันอิสระ */}
+        {scheduledDate ? (
           <button 
             onClick={handlePreOrder} data-testid="pre-order-btn" 
             disabled={preorderExpired}
@@ -145,7 +146,14 @@ export function FoodMenuCard({ product, category, mode, availability, onSameDayO
           >
             {preorderExpired ? '📅 หมดเวลาจอง (Out of stock)' : '📅 จองล่วงหน้า'}
           </button>
-        )}
+        ) : (product.available_preorder ?? product.is_preorder) ? (
+          <button 
+            type="button" disabled data-testid="pre-order-btn-unavailable"
+            className="w-full border-2 border-brand-border text-brand-muted rounded-xl py-3 font-semibold text-sm cursor-not-allowed opacity-60"
+          >
+            📅 ยังไม่ลงปฏิทินรอบถัดไป (ยังจองไม่ได้)
+          </button>
+        ) : null}
       </div>
     </div>
   )

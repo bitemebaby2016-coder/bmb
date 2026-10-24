@@ -53,8 +53,11 @@ describe('CheckoutPage.tsx — cart revalidation before ordering', () => {
     expect(checkoutSrc).toContain('reportToToastMessage(report, \'checkout\')')
   })
 
-  it('keeps the shared submit lock (double-click / repeated submit protection)', () => {
-    expect(checkoutSrc).toContain('const submitLockRef = useRef({ busy: false })')
-    expect(checkoutSrc).toContain('lock: submitLockRef.current')
+  it('keeps double-submit protection: 124 submit-key ring + processing lock (R5c: split engine removed)', () => {
+    expect(checkoutSrc).toContain('const submitKeysRef = useRef(new SubmitKeyRing())')
+    expect(checkoutSrc).toContain('client_submit_key: submitKeysRef.current.keyFor(submitFp)')
+    // R5c: M1 split engine is gone — one cart = one order
+    expect(checkoutSrc).not.toContain('submitSplitOrders')
+    expect(checkoutSrc).not.toContain('planSplitCheckout')
   })
 })

@@ -11,15 +11,13 @@
 // ============================================
 
 import { useState, useEffect, useRef } from 'react'
-import { useNavigate, Link, useSearchParams } from 'react-router-dom'
-import { useCartStore } from '@/store/cartStore'
+import { useNavigate, Link } from 'react-router-dom'
+import { useCartStore, deriveCartMode } from '@/store/cartStore'
 import { useAuthStore } from '@/store/authStore'
 import { useNotificationStore } from '@/store/notificationStore'
 import { showToast } from '@/components/ui/ToastContainer'
 import { createOrder, orderInputFingerprint, type OrderInput, type OrderResult } from '@/lib/bmbAdminApi_orders'
 import { SubmitKeyRing, describeIdempotencyError } from '@/lib/orderSubmitKey'
-import { planSplitCheckout, type PaymentMethodT, type PlanLine } from '@/lib/m1CheckoutPlan'
-import { submitSplitOrders, describeSplitResult } from '@/lib/m1Submit'
 import { createPaymentIntent, getPaymentIntents } from '@/lib/paymentGateway'
 import { writeAuditLog } from '@/lib/auditLog'
 import { useLocationStore, isTrustedSource, deliveryPointStatus } from '@/store/locationStore'
@@ -88,30 +86,28 @@ async function ensureReplaySafeIntent(
 
 export function CheckoutPage() {
   const navigate = useNavigate()
-  const [searchParams] = useSearchParams()
-  const { items, subtotal, discount, total, clearCart, order_mode, isHydrated, couponCode } = useCartStore()
+  const { items, subtotal, discount, total, clearCart, isHydrated, couponCode } = useCartStore()
   const customer = useAuthStore((s) => s.customer)
   const justPlaced = useRef(false)
 
-  // Phase 2 (RC-3 · OD-4): cart mode lock เป็นหลัก — deep link ?mode=pre-order
-  // ห้ามสลับโหมดเงียบ ๆ เมื่อตะกร้าล็อกโหมดอื่นอยู่ → lock ชนะ + แจ้งผู้ใช้ (ด้านล่าง)
-  const deepLinkPreOrder = searchParams.get('mode') === 'pre-order'
-  const lockLabel = order_mode === 'PRE_ORDER' ? 'สั่งล่วงหน้า' : 'ซื้อวันนี้'
-  const modeConflict = !!order_mode && deepLinkPreOrder && order_mode !== 'PRE_ORDER'
-  const orderMode: OrderMode = order_mode ?? (deepLinkPreOrder ? 'PRE_ORDER' : 'SAME_DAY')
+  // ✅ R5c (Owner 2026-10-23): โหมดออเดอร์ = ผลจากเนื้อตะกร้า (ไม่มีปุ่มสลับโหมด/ป๊อปอัปล้างตะกร้า)
+  // - มีเมนูจากปฏิทินแอดมิน (เพิ่มแบบ "จองล่วงหน้า") ≥ 1 ชิ้น → ทั้งตะกร้า = PRE_ORDER
+  //   (สินค้าทั่วไปติดไปกับรอบพรีออเดอร์ในออเดอร์เดียว รับพร้อมกันที่รอบนั้น)
+  // - ไม่มีเมนูปฏิทินในตะกร้า = สั่งวันนี้เท่านั้น (ไม่มีพรีออเดอร์วันอิสระ — deep link ?mode= ไม่เปลี่ยนโหมด)
+  const orderMode: OrderMode = deriveCartMode(items) ?? 'SAME_DAY'
   const today = todayStr()
-  const minDate = orderMode === 'PRE_ORDER' ? addDays(today, 1) : today
 
+  // ✅ R5 (Owner 2026-10-23): วันจัดส่งของเมนูรอบพิเศษ "ถูกกำหนดโดยปฏิทินแอดมิน"
+  // (ป้ายมุมเมนู = ProductScheduleMap) — ล็อกวันอัตโนมัติ ลูกค้าเลือกเฉพาะรอบจัดส่ง
+  const [scheduleMap, setScheduleMap] = useState<ProductScheduleMap>({})
   useEffect(() => {
-    if (modeConflict) {
-      showToast(`ตะกร้าถูกล็อกโหมด ${lockLabel} อยู่ — ใช้โหมดเดิมตามที่เลือกไว้`, 'info')
-    }
-    // notify ครั้งเดียวตอน mount ถ้ามี conflict
+    let alive = true
+    void getProductScheduleMap().then((m) => { if (alive) setScheduleMap(m) })
+    return () => { alive = false }
   }, [])
-
-
-
-  const [scheduledDate, setScheduledDate] = useState(orderMode === 'PRE_ORDER' ? addDays(today, 1) : today)
+  const menuBound = resolveMenuBoundDate(items.map((i) => ({ product_id: i.product.id })), scheduleMap)
+  // R5c: วันจัดส่ง = วันเมนูจากป้ายปฏิทินเท่านั้น (ไม่มีช่องเลือกวันอิสระ)
+  const scheduledDate = orderMode === 'PRE_ORDER' ? (menuBound.date ?? '') : today
   const [rounds, setRounds] = useState<DeliveryRoundRow[]>([])
   const [selectedRoundId, setSelectedRoundId] = useState('')
   const [resolvedBranchId, setResolvedBranchId] = useState<string | null>(null) // TEN-07: resolve from round
@@ -305,13 +301,6 @@ export function CheckoutPage() {
     })()
   }, [])
 
-  // Keep the PRE_ORDER date inside the allowed window (server re-validates).
-  useEffect(() => {
-    if (orderMode === 'PRE_ORDER' && scheduledDate < addDays(today, leadDays)) {
-      setScheduledDate(addDays(today, leadDays))
-    }
-  }, [orderMode, scheduledDate, leadDays, today])
-
   // CR-2 P0: TRUSTED GPS ONLY — no IP-geo, no kitchen fallback, honest toast.
   async function handleUseGps() {
     setLocating(true)
@@ -381,33 +370,11 @@ export function CheckoutPage() {
     if (customer && items.length === 0 && isHydrated && !justPlaced.current) navigate('/cart')
   }, [customer, items.length, isHydrated, navigate])
 
-  // ✅ WAVE 4-B: shared in-flight lock for the M1 split engine — prevents
-  // double-click/concurrent submit (UI guard ONLY — not database idempotency).
-  const submitLockRef = useRef({ busy: false })
-
   // ✅ WAVE 5A (migration 124): per-payload submit key ring — a retry of the
   // SAME payload reuses its key (server replays the original order), an edited
   // payload gets a fresh one. Survives reload (sessionStorage) so refresh +
   // resubmit cannot create a duplicate order. This is the DATABASE guarantee.
   const submitKeysRef = useRef(new SubmitKeyRing())
-
-  // ✅ R5 (Owner 2026-10-23): แยกฟีเจอร์ "เมนูรอบพิเศษ" ออกจาก pre-order ทั่วไป —
-  // วันจัดส่งของเมนูที่แอดมินใส่ในปฏิทิน (ป้ายมุมเมนู = ProductScheduleMap)
-  // ถูกกำหนดอัตโนมัติตอนเช็คเอาท์ ลูกค้าเลือกเฉพาะรอบจัดส่ง · สินค้าทั่วไป
-  // เพิ่มได้ทั้งหมดและส่งร่วมรอบเดียวกัน
-  const [scheduleMap, setScheduleMap] = useState<ProductScheduleMap>({})
-  useEffect(() => {
-    let alive = true
-    void getProductScheduleMap().then((m) => { if (alive) setScheduleMap(m) })
-    return () => { alive = false }
-  }, [])
-  const menuBound = resolveMenuBoundDate(items.map((i) => ({ product_id: i.product.id })), scheduleMap)
-  // วันจัดส่งถูกกำหนดโดยปฏิทินเมนูอัตโนมัติ (ลูกค้าเลือกแค่รอบ) — ไม่ให้ค่าเดิมจาก minDate ทับ
-  useEffect(() => {
-    if (orderMode === 'PRE_ORDER' && menuBound.date && scheduledDate !== menuBound.date) {
-      setScheduledDate(menuBound.date)
-    }
-  }, [orderMode, menuBound.date, scheduledDate])
 
   async function handlePlaceOrder() {
     if (!customer) {
@@ -453,11 +420,6 @@ export function CheckoutPage() {
       }
     }
 
-    if (orderMode === 'PRE_ORDER' && scheduledDate < addDays(today, leadDays)) {
-      showToast(`จองล่วงหน้าต้องเลือกวันที่อย่างน้อย ${leadDays} วันข้างหน้า`, 'error')
-      return
-    }
-
     // ✅ WAVE 2B: stale-cart guard — product disabled/mode-restricted AFTER it
     // entered the (persisted) cart must not reach the RPC. Server re-validates.
     {
@@ -482,6 +444,20 @@ export function CheckoutPage() {
     if (menuBound.conflict.length > 1) {
       showToast(`สินค้าเมนูรอบพิเศษถูกกำหนดวันจัดส่งต่างกันตามปฏิทินเมนู (${menuBound.conflict.join(', ')}) — แยกสั่งคนละรอบ`, 'error')
       setIsProcessing(false)
+      return
+    }
+
+    // ✅ R5c (Owner 2026-10-23 · mirror ของ server ERR_PRE_ORDER_REQUIRES_MENU):
+    // พรีออเดอร์ต้องมี ≥1 เมนูจากปฏิทินของวันนั้น — ไม่มีพรีออเดอร์วันอิสระ
+    if (orderMode === 'PRE_ORDER' && !menuBound.date) {
+      showToast('พรีออเดอร์ต้องมีเมนูจากปฏิทินรอบพิเศษของแอดมิน (ป้ายมุมเมนู) อย่างน้อย 1 รายการในตะกร้า — ไม่มีพรีออเดอร์วันอิสระ', 'error')
+      setIsProcessing(false)
+      return
+    }
+
+    // ✅ lead time (server order_setting('pre_order_lead_days') re-checks): วันเมนูต้องล่วงหน้าพอ
+    if (orderMode === 'PRE_ORDER' && scheduledDate < addDays(today, leadDays)) {
+      showToast(`จองล่วงหน้าต้องส่งวันที่อย่างน้อย ${leadDays} วันข้างหน้า (วันเมนูปัจจุบัน: ${scheduledDate})`, 'error')
       return
     }
 
@@ -544,121 +520,9 @@ export function CheckoutPage() {
       branch_id: resolvedBranchId ?? undefined,
     }
 
-    // ✅ WAVE 4-B: M1 mixed cart (SAME_DAY + PRE_ORDER) → split child orders.
-    // Single-mode carts (the overwhelming common case) skip this entirely and
-    // keep the exact legacy path below — all payment methods unchanged (B1).
-    const planLines: PlanLine[] = items.map((i) => ({
-      product_id: i.product.id,
-      name: i.product.name,
-      quantity: i.quantity,
-      line_mode: i.line_mode ?? orderMode,
-      // R5: วันบังคับจากปฏิทินเมนู (เมนูรอบพิเศษ) — m1 ตรวจ conflict ไม่เดาวัน
-      required_scheduled_date: orderMode === 'PRE_ORDER' ? (scheduleMap[i.product.id] ?? null) : null,
-    }))
-    const isMixedCart = new Set(planLines.map((l) => l.line_mode)).size > 1
-    if (isMixedCart) {
-      // B3/B4: mixed = cash_on_delivery ONLY → promptpay/credit REJECTED here,
-      // BEFORE any create-order RPC is invoked (no order, no intent, no charge).
-      if (paymentMethod !== 'cash_on_delivery') {
-        showToast('ออเดอร์ผสม (SAME_DAY + PRE_ORDER) รองรับ "เงินสดปลายทาง" เท่านั้น — เปลี่ยนวิธีชำระเงิน หรือสั่งแยกทีละโหมด', 'error')
-        return
-      }
-      const plan = planSplitCheckout(planLines, {
-        fallback_mode: orderMode,
-        payment_method: paymentMethod as PaymentMethodT,
-        delivery_round_id: selectedRoundId,
-        scheduled_date: scheduledDate,
-      })
-      if (!plan.ok) {
-        showToast(plan.errors.map((e) => `${e.code}${e.detail ? ` (${e.detail})` : ''}`).join(', '), 'error')
-        return
-      }
-      setIsProcessing(true)
-      // child order_number → server total, for 1:1 payment-intent creation.
-      const childTotals = new Map<string, number>()
-      const result = await submitSplitOrders(plan.children, paymentMethod as PaymentMethodT, {
-        lock: submitLockRef.current, // shared across clicks → concurrent submit = 'conflict'
-        createChild: async (child) => {
-          const childInput: OrderInput = {
-            ...orderInput,
-            items: child.lines.map((l) => ({ product_id: l.product_id, quantity: l.quantity })),
-            delivery_round_id: child.delivery_round_id,
-            order_mode: child.order_mode,
-            payment_method: child.payment_method,
-            scheduled_date: child.scheduled_date ?? undefined,
-          }
-          // WAVE 5A (124): one submit key per child payload — reused on retry,
-          // refreshed when the payload is edited (R1/R2/R3 contract).
-          const childFp = orderInputFingerprint(childInput)
-          const submitKey = submitKeysRef.current.keyFor(childFp)
-          try {
-            const order = await createOrder({ ...childInput, client_submit_key: submitKey })
-            if (!order) {
-              // Ambiguous: RPC failed without a definite server code → order MAY
-              // exist → classify as 'ambiguous' so the engine NEVER auto-resubmits.
-              return { status: 'ambiguous' as const }
-            }
-            submitKeysRef.current.release(childFp) // created/replayed — settled
-            childTotals.set(order.order_number, order.total_amount)
-            return { status: 'created' as const, order_number: order.order_number, replay: !!order.replay }
-          } catch (e) {
-            const code = (e as { code?: string })?.code
-            // ERR_IDEMPOTENCY_CONFLICT/KEY_INVALID can never succeed with THIS
-            // key → drop it so a retry of the same payload starts clean
-            // (BAD_RESULT keeps the key: tx rolled back, no submission row).
-            if (code === 'ERR_IDEMPOTENCY_CONFLICT' || code === 'ERR_IDEMPOTENCY_KEY_INVALID') submitKeysRef.current.release(childFp)
-            // Definite server rejection (transaction rolled back ⇒ no order) = safe
-            // to retry later; anything else is ambiguous → pending, never resubmit.
-            return code ? { status: 'failed' as const, code } : { status: 'ambiguous' as const }
-          }
-        },
-      })
-      if (result.status !== 'all_created') {
-        // Never claim overall success on partial/ambiguous results; keep the cart
-        // so the customer can reconcile and retry ONLY proven-failed children (B7-B9).
-        showToast(describeSplitResult(result), 'error')
-        setIsProcessing(false)
-        return
-      }
-      const createdOrders = result.children.flatMap((s) => (s.outcome?.status === 'created' ? [s.outcome] : []))
-      for (const co of createdOrders) {
-        // Payment intent 1:1 with its OWN child order number — never a second
-        // charge/intent for the same order (B5/B10).
-        try {
-          // B5/B10: a replayed child (double-submit) must not add a 2nd intent.
-          const childIntent = await ensureReplaySafeIntent(co.order_number, childTotals.get(co.order_number) ?? 0, paymentMethod, !!co.replay, {
-            providerId: 'self_delivery',
-            providerName: 'Bite Me Baby (self delivery)',
-          })
-          // A7(ก.): failure ต้องเห็นชัด — เดิมเงียบเป็น console.warn
-          if (childIntent && childIntent.success === false) {
-            showToast(`⚠ ออเดอร์ ${co.order_number}: ยังบันทึกช่องทางชำระเงินไม่สำเร็จ — เปิดหน้าชำระเงินจะลองใหม่อัตโนมัติ`, 'warning')
-          }
-        } catch (e) {
-          console.warn('[Checkout] Mixed-split payment intent failed:', e)
-          showToast(`⚠ ออเดอร์ ${co.order_number}: ยังบันทึกช่องทางชำระเงินไม่สำเร็จ — เปิดหน้าชำระเงินจะลองใหม่อัตโนมัติ`, 'warning')
-        }
-        writeAuditLog({
-          action: 'order_create',
-          entity_type: 'order',
-          entity_id: co.order_number,
-          description: co.replay
-            ? `ส่งซ้ำ (replay 124) — ใช้ออเดอร์เดิม #${co.order_number} (mixed split) ไม่มีการสร้างออเดอร์ใหม่`
-            : `ออเดอร์ใหม่ #${co.order_number} (mixed split) โดย ${customer?.name || customer?.email || 'Guest'} รวม ${(childTotals.get(co.order_number) ?? 0).toFixed(2)} บาท`,
-          metadata: { paymentMethod, split: true, scheduledDate, deliveryRoundId: selectedRoundId, replay: !!co.replay },
-        })
-      }
-      const firstNumber = createdOrders[0]?.order_number ?? ''
-      showToast(`สั่งซื้อสำเร็จ ${createdOrders.length} ออเดอร์: ${createdOrders.map((c) => c.order_number).join(', ')}`, 'success')
-      justPlaced.current = true
-      clearCart()
-      // D-06 (R1.5): mixed-split ก็ต้องรายงาน replay ให้หน้า /payment แสดง banner ชัดเจน
-      navigate(`/payment/${firstNumber}`, {
-        state: { replay: createdOrders.some((c) => c.replay) },
-      })
-      setIsProcessing(false)
-      return
-    }
+    // ✅ R5c (Owner 2026-10-23): ยกเลิกการแยกเป็น 2 ออเดอร์ (Same-day + Pre-order) —
+    // ตะกร้าเดียว = ออเดอร์เดียวเสมอ สินค้าทั่วไป + เมนูรอบพิเศษไปรอบเดียวกัน (ทุกวิธีชำระเงิน)
+
 
     // Server-authoritative: mode gate / cutoff / capacity / pricing inside the RPC.
     // WAVE 5A (migration 124): submit key = double-submit protection. A retry of
@@ -870,32 +734,33 @@ export function CheckoutPage() {
           {orderMode === 'PRE_ORDER' ? '📅 สั่งซื้อแบบจองล่วงหน้า (Pre-order)' : '🔥 สั่งซื้อวันนี้ (Same-day)'}
         </h3>
         {orderMode === 'PRE_ORDER' ? (
-          <p className="text-sm text-blue-700">เลือกวันที่และรอบจัดส่งล่วงหน้า — ระบบเซิร์ฟเวอร์ตรวจ lead time ({leadDays} วัน) และความจุรอบให้อีกครั้ง</p>
+          <p className="text-sm text-blue-700">วันจัดส่งถูกกำหนดโดยเมนูรอบพิเศษของแอดมิน (ป้ายมุมเมนู) — เลือกเฉพาะรอบจัดส่งด้านล่าง (ไม่มีพรีออเดอร์วันอิสระ) ระบบเซิร์ฟเวอร์ตรวจ lead time ({leadDays} วัน) และความจุรอบให้อีกครั้ง</p>
         ) : (
-          <p className="text-sm text-orange-700">🛵 สั่งวันนี้ = จัดส่งทันที ระบบเลือกรอบเปิดรับให้อัตโนมัติ (แยกจากพรีออเดอร์ที่เลือกวัน/รอบล่วงหน้า) — เซิร์ฟเวอร์ตรวจ cutoff (เวลาไทย) และความจุรอบให้อีกครั้ง</p>
+          <p className="text-sm text-orange-700">🛵 สั่งวันนี้ = จัดส่งทันที ระบบเลือกรอบเปิดรับให้อัตโนมัติ — เซิร์ฟเวอร์ตรวจ cutoff (เวลาไทย) และความจุรอบให้อีกครั้ง</p>
         )}
       </div>
 
-      {/* ✅ PRE_ORDER: scheduled date picker (server enforces lead time) */}
+      {/* ✅ R5c: PRE_ORDER — วันจัดส่ง "ล็อก" โดยเมนูปฏิทินแอดมิน (ไม่มีช่องเลือกวันอิสระ) */}
       {orderMode === 'PRE_ORDER' && (
         <div className="card mb-6">
-          <h3 className="font-bold text-brand-accent mb-4">📅 วันที่ต้องการรับอาหาร</h3>
-          <input
-            type="date"
-            data-testid="preorder-date"
-            min={menuBound.date ?? minDate}
-            max={menuBound.date ?? undefined}
-            disabled={!!menuBound.date}
-            value={scheduledDate}
-            onChange={(e) => setScheduledDate(e.target.value)}
-            className="input mb-2 disabled:bg-brand-bg disabled:text-brand-muted"
-          />
+          <h3 className="font-bold text-brand-accent mb-4">📅 วันจัดส่ง (กำหนดโดยเมนูรอบพิเศษ)</h3>
           {menuBound.date ? (
-            <p className="text-xs text-blue-700" data-testid="menu-date-lock">
-              วันจัดส่งถูกกำหนดโดยเมนูรอบพิเศษของแอดมิน (ปฏิทินเมนู): <b>{menuBound.date}</b> — เลือกเฉพาะรอบจัดส่งด้านล่าง
-            </p>
+            <>
+              <div
+                data-testid="preorder-date"
+                className="mb-2 px-3 py-2 rounded-lg border-2 border-brand-primary bg-orange-50 font-bold text-slate-900"
+              >
+                📅 {menuBound.date}
+              </div>
+              <p className="text-xs text-blue-700" data-testid="menu-date-lock">
+                วันจัดส่งถูกกำหนดโดยเมนูรอบพิเศษของแอดมิน (ปฏิทินเมนู): <b>{menuBound.date}</b> — เลือกเฉพาะรอบจัดส่งด้านล่าง
+              </p>
+            </>
           ) : (
-            <p className="text-xs text-brand-muted">จองล่วงหน้าได้ตั้งแต่ {minDate} เป็นต้นไป (lead time {leadDays} วัน)</p>
+            <p className="text-xs text-amber-700" data-testid="preorder-requires-menu">
+              พรีออเดอร์ต้องมีเมนูจากปฏิทินรอบพิเศษของแอดมิน (การ์ดที่มี "ป้ายปฏิทิน") อย่างน้อย 1 รายการในตะกร้า —
+              ไม่มีพรีออเดอร์วันอิสระ (ถ้าต้องการสั่งสินค้าทั่วไปวันนี้ ใช้โหมด "สั่งวันนี้")
+            </p>
           )}
           {menuBound.conflict.length > 1 && (
             <p className="text-xs text-red-600 mt-1" data-testid="menu-date-conflict">
@@ -908,7 +773,7 @@ export function CheckoutPage() {
             </div>
           ) : (
             <div data-testid="schedule-banner" className="mt-2 p-2 rounded-lg bg-gray-50 border border-gray-200 text-xs text-slate-600">
-              ไม่มีเมนูจำกัดพิเศษสำหรับวันที่ {scheduledDate} — ใช้เงื่อนไข pre-order ปกติ
+              ไม่มีเมนูรอบพิเศษของวันที่ {scheduledDate} ในตาราง — พรีออเดอร์ใช้ได้เฉพาะวันที่มีเมนูจากปฏิทินแอดมิน
             </div>
           )}
         </div>

@@ -6,7 +6,6 @@ import { Footer } from './Footer'
 import { ToastContainer } from '../ui/ToastContainer'
 import { OrderBuilderModal } from '../order/OrderBuilderModal'
 import { BiteMascot } from '../ai/BiteMascot'
-import { CartIsolationModal } from '../cart/CartIsolationModal'
 import { BackgroundLayer } from './BackgroundLayer'
 import { AmbientMusicToggle } from '../audio/AmbientMusicToggle'
 
@@ -88,8 +87,6 @@ export function Layout({ children, hideBottomNav = false, activeSection = 'home'
         <OrderBuilderModal />
         {/* Decorative + floating AI mascot (pointer-events guarded) */}
         <BiteMascot activeSection={activeSection} />
-        {/* Global cart-isolation confirmation modal */}
-        <CartIsolationModal />
       </div>
     </div>
   )

@@ -25,21 +25,15 @@ export interface IsolationCartItem {
   line_mode?: OrderMode
 }
 
-export type AddToCartResult = 'added' | 'needs_confirmation' | 'context_blocked' | 'blocked'
+export type AddToCartResult = 'added' | 'context_blocked' | 'blocked'
 
 interface CartIsolationStore {
   items: IsolationCartItem[]
   order_mode: OrderMode | null
-  /** Set when a mode-mismatch awaits the user's approval to clear the cart. */
-  pendingMode: OrderMode | null
   /** Subtotal of current items (used by Bite AI upsell / free-shipping logic). */
   cartTotal: number
 
   addToCart: (item: IsolationCartItem, mode: OrderMode) => AddToCartResult
-  /** Called by the modal on "ยืนยัน": clear the old cart, then apply the new mode. */
-  confirmModeSwitch: () => void
-  /** Called by the modal on "ยกเลิก": keep the current cart untouched. */
-  cancelModeSwitch: () => void
   clearCart: () => void
 }
 
@@ -77,7 +71,6 @@ export const useCartStore = create<CartIsolationStore>((set) => {
     set({
       items: toIsolationItems(s.items),
       order_mode: s.order_mode,
-      pendingMode: s.pendingMode,
       cartTotal: s.cartTotal,
     })
   })
@@ -85,7 +78,6 @@ export const useCartStore = create<CartIsolationStore>((set) => {
   return {
     items: toIsolationItems(base.items),
     order_mode: base.order_mode,
-    pendingMode: base.pendingMode,
     cartTotal: base.cartTotal,
 
     addToCart: (item, mode) =>
@@ -96,8 +88,6 @@ export const useCartStore = create<CartIsolationStore>((set) => {
         mode,
       ),
 
-    confirmModeSwitch: () => useBaseCartStore.getState().confirmModeSwitch(),
-    cancelModeSwitch: () => useBaseCartStore.getState().cancelModeSwitch(),
     clearCart: () => useBaseCartStore.getState().clearCart(),
   }
 })

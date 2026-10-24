@@ -278,6 +278,29 @@ export function createSupabaseMock(opts?: { failReadTable?: string; noAdmin?: bo
         if (leadDays < 1) {
           return { data: null, error: { code: 'ERR_LEAD_TIME', message: 'ERR_LEAD_TIME' } }
         }
+        // === migration 142 (R5c Owner 2026-10-23): PRE_ORDER ต้องมี ≥1 เมนูจาก
+        // ปฏิทินของวันนั้น (published) — ปิดช่อง API เลือกวันอิสระ
+        //   · ตะกร้าไม่มีเมนูเลย = ERR_PRE_ORDER_REQUIRES_MENU
+        //   · มีเมนูผูกวันแต่คนละวัน = ERR_PRODUCT_NOT_ON_MENU (§5-C เดิม)
+        {
+          const todayISO = new Date().toISOString().slice(0, 10)
+          const msRows: any[] = tables['menu_schedule'] || []
+          const onMenuForDate = (items as any[]).some((it) =>
+            msRows.some((s: any) =>
+              s.product_id === it.product_id && s.is_published &&
+              String(s.scheduled_date) === String(p.scheduled_date) &&
+              String(s.scheduled_date) >= todayISO))
+          if (!onMenuForDate) {
+            const anyFutureMenu = (items as any[]).some((it) =>
+              msRows.some((s: any) =>
+                s.product_id === it.product_id && s.is_published &&
+                String(s.scheduled_date) >= todayISO))
+            if (anyFutureMenu) {
+              return { data: null, error: { code: 'ERR_PRODUCT_NOT_ON_MENU', message: 'ERR_PRODUCT_NOT_ON_MENU' } }
+            }
+            return { data: null, error: { code: 'ERR_PRE_ORDER_REQUIRES_MENU', message: 'ERR_PRE_ORDER_REQUIRES_MENU' } }
+          }
+        }
       }
       if (!p.customer_name || String(p.customer_name).trim() === '') {
         return { data: null, error: { code: 'ERR_MISSING_CUSTOMER_NAME', message: 'ERR_MISSING_CUSTOMER_NAME' } }

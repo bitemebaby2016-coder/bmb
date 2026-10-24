@@ -70,8 +70,8 @@ describe('A1 · HomeProductCard CTA ตาม section mode (INV-16)', () => {
     container.remove()
   })
 
-  it("section pre_order: การ์ดมีเฉพาะ 'จองล่วงหน้า' + click เรียก onPreOrder เท่านั้น", async () => {
-    const { cta, onSameDay, onPreOrder, root, container } = await renderCard(dualItem({ mode: 'same-day' }), 'pre_order')
+  it("section pre_order: การ์ดมีป้ายปฏิทิน → 'จองล่วงหน้า' เท่านั้น + click เรียก onPreOrder เท่านั้น", async () => {
+    const { cta, onSameDay, onPreOrder, root, container } = await renderCard(dualItem({ mode: 'same-day', scheduledDate: '2026-10-20' }), 'pre_order')
     expect(cta.textContent).toContain('จองล่วงหน้า')
     expect(cta.textContent).not.toContain('เพิ่มลงตะกร้า')
     cta.dispatchEvent(new MouseEvent('click', { bubbles: true }))
@@ -81,8 +81,21 @@ describe('A1 · HomeProductCard CTA ตาม section mode (INV-16)', () => {
     container.remove()
   })
 
+  it('R5c: section pre_order แต่การ์ดไม่มีป้ายปฏิทิน → ปุ่ม disabled "ยังไม่ลงปฏิทิน" (ไม่มีพรีออเดอร์วันอิสระ)', async () => {
+    const { cta, onSameDay, onPreOrder, root, container } = await renderCard(dualItem({ mode: 'same-day' }), 'pre_order')
+    const buttons = Array.from(container.querySelectorAll('button'))
+    expect(buttons).toHaveLength(1) // INV-16: ปุ่มเดียวต่อการ์ด ไม่มีปุ่มอีกโหมด
+    expect(cta.textContent).toContain('ยังไม่ลงปฏิทิน')
+    expect(cta.disabled).toBe(true)
+    cta.dispatchEvent(new MouseEvent('click', { bubbles: true }))
+    expect(onSameDay).not.toHaveBeenCalled()
+    expect(onPreOrder).not.toHaveBeenCalled()
+    root.unmount()
+    container.remove()
+  })
+
   it("mode auto (default): พฤติกรรมเดิม — item.mode กำหนด CTA ทั้งสองทิศ", async () => {
-    const a = await renderCard(dualItem({ mode: 'pre-order' }))
+    const a = await renderCard(dualItem({ mode: 'pre-order', scheduledDate: '2026-10-20' }))
     expect(a.cta.textContent).toContain('จองล่วงหน้า')
     a.root.unmount()
     a.container.remove()

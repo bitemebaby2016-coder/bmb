@@ -29,19 +29,24 @@ export function BranchAwareProductCard({ item, onSameDay, onPreOrder, branchId, 
   const branchOos = branchBadge === 'out_of_stock_branch'
   
   // Build CTA text based on state
+  // R5c (Owner 2026-10-23): ปุ่มจองล่วงหน้ากดได้เฉพาะการ์ดที่มีป้ายปฏิทิน (เมนูปฏิทินแอดมิน)
+  const wantsPreOrder = item.mode === 'pre-order'
+  const preOrderReady = wantsPreOrder && !!item.scheduledDate
   let ctaText: string
   let ctaDisabled = soldOut || branchOos
   if (soldOut || branchOos) {
     ctaText = branchOos ? 'หมดชั่วคราว · สาขาที่เลือก' : 'หมดแล้ว'
-  } else if (item.mode === 'pre-order') {
-    ctaText = 'จองล่วงหน้า'
+  } else if (wantsPreOrder) {
+    ctaText = preOrderReady ? 'จองล่วงหน้า' : 'ยังไม่ลงปฏิทินรอบถัดไป'
+    if (!preOrderReady) ctaDisabled = true
   } else {
     ctaText = 'เพิ่มลงตะกร้า'
   }
 
   const handleCta = () => {
     if (ctaDisabled) return
-    if (item.mode === 'pre-order') {
+    if (wantsPreOrder) {
+      if (!preOrderReady) return
       onPreOrder({ productId: item.id, quantity: 1, deliveryRoundId: '', scheduledDate: item.scheduledDate || '' })
       return
     }

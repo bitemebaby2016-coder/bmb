@@ -1,6 +1,6 @@
 // ============================================
 // Bite Me Baby — CAT-02: order-time schedule gate (canonical create_order path)
-// (mirrors migration 039 trg_menu_gate + trg_operating_hours in supabaseMock)
+// (mirrors migration 039 trg_menu_gate + trg_operating_hours + 142 in supabaseMock)
 // ============================================
 
 import { describe, it, expect, vi, beforeEach } from 'vitest'
@@ -34,13 +34,13 @@ describe('CAT-02 · order-time gate via canonical create_order path (mock mirror
     r.date = TOMORROW
     return r
   }
-  const preOrder = (productId: string) => (supabase as any).rpc('create_order_with_items', {
+  const preOrder = (...productIds: string[]) => (supabase as any).rpc('create_order_with_items', {
     p_order_mode: 'PRE_ORDER',
     p_delivery_round_id: 'round-1',
     p_scheduled_date: TOMORROW,
     p_customer_name: 'QA',
     p_customer_phone: '0900000000',
-    p_items: [{ product_id: productId, quantity: 1, options: {} }],
+    p_items: productIds.map((id) => ({ product_id: id, quantity: 1, options: {} })),
   })
 
   it('control: published schedule day, on-menu product → order created', async () => {
@@ -52,13 +52,21 @@ describe('CAT-02 · order-time gate via canonical create_order path (mock mirror
     expect(res.data.order_number).toBeTruthy()
   })
 
-  it('R5/141: off-menu product on a published-schedule day → created (ส่งร่วมรอบเดียวกับเมนูพรีออเดอร์ได้)', async () => {
+  it('R5c: สินค้าทั่วไป + เมนูปฏิทินในตะกร้าเดียว → created (สินค้าทั่วไปติดรอบพรีออเดอร์)', async () => {
+    futureRound()
+    await setMenuSchedule(TOMORROW, [{ product_id: 'prod-1' }, { product_id: 'prod-5' }])
+    await publishMenuSchedule(TOMORROW, true)
+    const res = await preOrder('prod-2', 'prod-1')
+    expect(res.error).toBeNull()
+    expect(res.data?.order_number).toBeTruthy()
+  })
+
+  it('R5c: ตะกร้าสินค้าทั่วไปล้วน (ไม่มีเมนูปฏิทิน) → ERR_PRE_ORDER_REQUIRES_MENU (ไม่มีพรีออเดอร์วันอิสระ)', async () => {
     futureRound()
     await setMenuSchedule(TOMORROW, [{ product_id: 'prod-1' }, { product_id: 'prod-5' }])
     await publishMenuSchedule(TOMORROW, true)
     const res = await preOrder('prod-2')
-    expect(res.error).toBeNull()
-    expect(res.data?.order_number).toBeTruthy()
+    expect(res.error?.code).toBe('ERR_PRE_ORDER_REQUIRES_MENU')
   })
 
   it('R5/141: menu product ผูกวันอื่น → ERR_PRODUCT_NOT_ON_MENU (วันถูกกำหนดโดยปฏิทินแอดมิน)', async () => {
@@ -81,6 +89,8 @@ describe('CAT-02 · order-time gate via canonical create_order path (mock mirror
 
   it('mode closed via operating_hours → ERR_ORDER_MODE_CLOSED', async () => {
     futureRound()
+    await setMenuSchedule(TOMORROW, [{ product_id: 'prod-1' }, { product_id: 'prod-5' }])
+    await publishMenuSchedule(TOMORROW, true)
     ;((supabase as any).__tables.business_settings ||= []).push({ key: 'operating_hours', value: { pre_order_open: false } })
     const res = await preOrder('prod-1')
     expect(res.error?.code).toBe('ERR_ORDER_MODE_CLOSED')
@@ -88,6 +98,8 @@ describe('CAT-02 · order-time gate via canonical create_order path (mock mirror
 
   it('round closed via operating_hours → ERR_ROUND_CLOSED', async () => {
     futureRound()
+    await setMenuSchedule(TOMORROW, [{ product_id: 'prod-1' }, { product_id: 'prod-5' }])
+    await publishMenuSchedule(TOMORROW, true)
     ;((supabase as any).__tables.business_settings ||= []).push({ key: 'operating_hours', value: { morning_open: false } })
     const res = await preOrder('prod-1')
     expect(res.error?.code).toBe('ERR_ROUND_CLOSED')
