@@ -328,6 +328,6 @@ grants parity ตาราง post-006 ใน CI · canonical `create_production
 - TEST RESULTS: vitest 134 files/1385 tests exit 0 · tsc 0 · lint 0 · build 0
 - CONTRACT RESULTS: Docker replay ALL_GREEN (001→147) · contracts 127–147 ALL_PASS exit 0 · production contract 146+147 STAGE_OK
 - PRODUCTION RUNTIME: ledger **147,146,145,144** · rider backfill = linked driver เป็น 'rider' แล้ว · evidence `e2e/r7Apply146-*.json`
-- CI RESULTS: ดูหลัง push รอบนี้
+- CI RESULTS: **33df8ce → CI success (run#539) + Contract Tests success (run#113)** — contracts 146/147 รันเขียวใน CI
 - BLOCKERS: ไม่มีฝั่งโค้ด · Owner actions = แต่งตั้ง role (สูตร SQL ใน #14) + รัน #1–#14
 - HANDOFF DOCUMENT: docs/BMB_HANDOFF_NEXT_SESSION_2026-10-24.md (§16 = ผลรอบนี้)

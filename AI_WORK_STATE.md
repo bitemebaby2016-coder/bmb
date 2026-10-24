@@ -34,9 +34,10 @@
 - **บทเรียนรอบนี้:** (1) anchor-based edit ห้ามใช้บล็อกที่จะลบเป็น anchor โดยไม่ใส่กลับ
   (GRANT/RETURN หาย 2 ครั้งติด) (2) ตารางหลัง 006 ต้อง explicit GRANT ใน CI แม้ production มี
   (default privileges) (3) `create_production_batch` canonical = 3-arg (027 DROP 2-arg แล้ว)
-- **Failed/ยังไม่ยืนยัน:** runtime บนเบราว์เซอร์จริงทุกอย่าง = **Owner checklist #1–#14**
-  (รวมป้ายแจ้งเตือน 841, nav desktop/mobile, ราย role 14a–14j) · CI หลัง push = ดูรอบนี้
-- **Next Exact Action:** push → ดู CI 2 workflows → Owner รัน acceptance #1–#14 บน production
+- **Failed/ยังไม่ยืนยัน:** ~~CI~~ → **CI run#539 = success · Contract Tests run#113 = success บน 33df8ce** ·
+  runtime บนเบราว์เซอร์จริงทั้งหมด = **Owner checklist #1–#14** (รวมป้ายแจ้งเตือน 841,
+  nav desktop/mobile, ราย role 14a–14j)
+- **Next Exact Action:** Owner รัน acceptance #1–#14 บน production (สูตรแต่งตั้ง role ใน #14)
 
 ---
 
