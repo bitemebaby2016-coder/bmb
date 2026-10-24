@@ -2,12 +2,24 @@
 
 > **สถานะงานปัจจุบันของโปรเจกต์ Bite Me Baby** ใช้แนบเข้าสู่ Context ตอนเริ่มแชทเสมอ
 
-**last_updated:** 2026-10-23 รอบ 8 (R5c — สัญญาปิดท้ายเซสชัน: พรีออเดอร์ = เมนูปฏิทินเท่านั้น + same-day ไม่เลือกกรอบ + มรดก UI ภาษาพัง)
-**phase:** 🟢 R5 ขึ้น production แล้ว — แต่**สัญญาถูกแก้ไขปิดท้ายเซสชัน (R5c):** พรีออเดอร์ = เมนูจากปฏิทินแอดมินเท่านั้น (ไม่มีพรีออเดอร์วันอิสระ) · same-day = ส่งวันนี้ทันที ระบบผูกกรอบให้เอง ไม่ให้เลือกกรอบ
-**current_focus:** แชทถัดไปทำ R5c (§ด้านล่าง) — ตัดช่องเลือกวันอิสระ/สลับโหมด/แยกออเดอร์ + migration 142 บังคับ ERR_PRE_ORDER_REQUIRES_MENU แล้วปิดงานด้วยเทส Owner A–G
-**blocked_by:** (1) งาน R5c ยังไม่ได้เริ่ม (2) ปัญหา "ภาษาต่างดาว" ในหน้าแอดมิน production (ภาพแนบ — ที่อยู่ลูกค้าเพี้ยน) ต้องสอบสวนต้นตอ encoding ก่อนทำเทสจริง
+**last_updated:** 2026-10-23 รอบ 9 (R5c เสร็จฝั่งวิศวกรรม — พรีออเดอร์=เมนูปฏิทินเท่านั้น + migration 142 ขึ้น production + ซ่อม mojibake ต้นตอ "ภาษาต่างดาว" — เหลือรอ Owner เทส A–G)
+**phase:** 🟢 R5c ลงโค้ด+DB ครบแล้ว (commit `df5400e` ซ่อมภาษา + `eec55c7` R5c) — รอ Owner ทดสอบจริงตาม `docs/BMB_R5_PRE_ORDER_SEPARATION_2026-10-23.md` §7 (hard refresh ก่อน)
+**current_focus:** รอ Owner เทสโปรดักชั่น A–G (§7) — ถ้ามีเคสตก แก้ต่อในแชทนี้
+**blocked_by:** (1) รอ Owner ทดสอบจริง — ยังไม่ปิดงานจนกว่าเทสผ่านทั้งหมด (2) ไม่มี blocker ทางเทคนิค
 
 ---
+
+---
+
+## 🩺 REALITY CHECK (2026-10-23 รอบ 9 · R5c ทำครบฝั่งวิศวกรรม — รอ Owner เทส)
+
+- **ทำแล้ว (verified ทั้งหมด):**
+  - **ต้นตอ "ภาษาต่างดาว" = ไฟล์ซอร์ส mojibake จริง** (ไม่ใช่ข้อมูลลูกค้า): `src/lib/adminUi.ts` (ป้ายเมนูแอดมิน 48 จุด) + `src/lib/bmbAdminApi_rounds.ts` (ข้อความ validation 12 จุด) + `e2e/contracts_140.sql` (คอมเมนต์ 5 จุด) — เขียนไฟล์ผ่าน shell ที่ encoding พัง → ซ่อมด้วย `e2e/g9FixSourceMojibake.cjs` (cp1252→utf8 round-trip) → `e2e/g9LanguageAudit.cjs` = 0 ทั้งโปรเจกต์ · DB probe (`g9MojibakeDataProbe2/3.cjs`, read-only) = orders/customers/pre_orders **0 mojibake** (commit `df5400e`)
+  - **R5c client:** ตัดช่องเลือกวันอิสระ (วันล็อกจากป้ายเมนูเท่านั้น) · ตัดปุ่มสลับโหมด/ป๊อปอัปล้างตะกร้า (CartIsolationModal + m1 split engine ลบ: m1CheckoutPlan/m1Submit) · ตะกร้าเดียว = ออเดอร์เดียว (deriveCartMode: มีบรรทัด PRE_ORDER = ทั้งตะกร้า PRE_ORDER) · ปุ่ม "จองล่วงหน้า" เฉพาะการ์ดมีป้ายปฏิทิน (การ์ดอื่น disabled "ยังไม่ลงปฏิทินรอบถัดไป")
+  - **Migration 142** (`supabase/migrations/142_pre_order_requires_menu.sql`, สร้างโดย `e2e/m142Build.cjs` anchor-guarded จาก 141): PRE_ORDER ต้องมี ≥1 เมนูปฏิทินของวันนั้น → ไม่มีเมนูเลย = `ERR_PRE_ORDER_REQUIRES_MENU` · มีเมนูผูกวันแต่คนละวัน = `ERR_PRODUCT_NOT_ON_MENU` (§5-C เดิม) — **apply + verify + contract G1–G5 + record บน production แล้ว** (หลักฐาน `e2e/r5cApply142-*.json`, ledger 142, grants ครบ)
+  - **เทส:** เขียนใหม่ตามสัญญา (checkoutModeLock/checkoutMixedSplit/cartIsolationStore → R5c) + แก้ fixture (api/canonicalOrderFlow/menuSchedule/menuScheduleGate/homePreOrderModeGuard/homeSectionModeCta/cartPersistence/preOrderUnification/cartEntryPoints) + supabaseMock mirror 142 — **vitest 129/129 ไฟล์เขียว · tsc · eslint+brandNameGuard · secret scan 0**
+- **กติกาที่ยังใช้:** ห้าม text ไทยในคำสั่ง shell (เขียนผ่าน editor/temp node script UTF-8 เท่านั้น) · commit ระบุ path เท่านั้น (ห้าม `git add -A`) · ยังไม่เรียก DONE จน Owner เทสผ่าน
+- **Next Exact Action:** ให้ Owner hard refresh แล้วเทส `docs/BMB_R5_PRE_ORDER_SEPARATION_2026-10-23.md` §7 ข้อ 1–19 → รายงานผล (ผ่าน/ตกทีละข้อ) → ถ้าตก แก้ในแชทนี้ต่อ
 
 ---
 

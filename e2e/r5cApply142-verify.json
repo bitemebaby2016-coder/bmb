@@ -1,0 +1,43 @@
+[
+  {
+    "label": "gate-142-present",
+    "status": 201,
+    "body": [
+      {
+        "hits": 1
+      }
+    ]
+  },
+  {
+    "label": "func-def",
+    "status": 201,
+    "body": [
+      {
+        "proname": "create_order_with_items",
+        "prosecdef": true
+      },
+      {
+        "proname": "enforce_menu_gate",
+        "prosecdef": true
+      }
+    ]
+  },
+  {
+    "label": "grants",
+    "status": 201,
+    "body": [
+      {
+        "grantee": "authenticated",
+        "privilege_type": "EXECUTE"
+      },
+      {
+        "grantee": "postgres",
+        "privilege_type": "EXECUTE"
+      },
+      {
+        "grantee": "service_role",
+        "privilege_type": "EXECUTE"
+      }
+    ]
+  }
+]

@@ -37,6 +37,9 @@ VALUES
   ('c142-menu-day', 'midday', 'c142-menu-day', '10:30:00', '11:00:00', '14:00:00',
    50, 0, ((now() at time zone 'Asia/Bangkok')::date + 2), ((now() at time zone 'Asia/Bangkok')::date + 2),
    'midday', 'active', now(), now(), 'branch-tenant-bmb-001-main'),
+  ('c142-other-day', 'midday', 'c142-other-day', '10:30:00', '11:00:00', '14:00:00',
+   50, 0, ((now() at time zone 'Asia/Bangkok')::date + 3), ((now() at time zone 'Asia/Bangkok')::date + 3),
+   'midday', 'active', now(), now(), 'branch-tenant-bmb-001-main'),
   ('c142-today', 'evening', 'c142-today',
    CASE WHEN extract(hour from (now() at time zone 'Asia/Bangkok')) >= 22
         THEN time '23:59:00'
@@ -95,7 +98,7 @@ BEGIN
   BEGIN
     PERFORM 1 FROM public.create_order_with_items(
       p_items := '[{"product_id":"c142-menu","quantity":1}]'::jsonb,
-      p_delivery_round_id := 'c142-menu-day',
+      p_delivery_round_id := 'c142-other-day',
       p_order_mode := 'PRE_ORDER',
       p_scheduled_date := ((now() at time zone 'Asia/Bangkok')::date + 2) + 1,
       p_customer_name := 'c142', p_customer_phone := '0900000000', p_delivery_address := 'c142-addr',
