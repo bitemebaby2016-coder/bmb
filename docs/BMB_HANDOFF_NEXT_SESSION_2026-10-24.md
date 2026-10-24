@@ -331,3 +331,38 @@ grants parity ตาราง post-006 ใน CI · canonical `create_production
 - CI RESULTS: **33df8ce → CI success (run#539) + Contract Tests success (run#113)** — contracts 146/147 รันเขียวใน CI
 - BLOCKERS: ไม่มีฝั่งโค้ด · Owner actions = แต่งตั้ง role (สูตร SQL ใน #14) + รัน #1–#14
 - HANDOFF DOCUMENT: docs/BMB_HANDOFF_NEXT_SESSION_2026-10-24.md (§16 = ผลรอบนี้)
+
+---
+
+## 17. ปิดเซสชันรอบ 13 + คำสั่งใหม่ของ Owner → BACKLOG แชทหน้า (2026-10-24)
+
+> **Owner (ตอนปิด):** "รอบจัดส่งเซมเดย์ต้องวิ่งปกติตั้งแต่ร้านเปิด–ปิด **ไม่มีคัทออฟ** ·
+> ไม่ต้องสร้างคัทออฟอิสระ ใช้แค่ของพรีออเดอร์ **ไม่จำเป็น** · รอบรายวันคืออะไร งง เยอะไปหมด ·
+> บางอันลบไม่ได้ ที่ค้างทั้งหมดเป็นพวกลบไม่ได้ · **อัปเดตเอกสารเป็นสถานะล่าสุด ปิดเซสชัน
+> clear stage อัปเดตแฮนด์ออฟรวมปัญหา+งานที่เหลือทั้งหมด ไปทำแชทหน้า**"
+
+### ปัญหาที่ต้องแก้ทั้งหมด (จัดลำดับแล้ว — รายละเอียดเริ่มต้นอยู่ใน `AI_WORK_STATE.md` §ROUND-14 BACKLOG)
+
+| ID | ปัญหา | ทำไม่ในแชทนี้เพราะ |
+|---|---|---|
+| **P0-1** | **ถอด `same_day_cutoff` (145) + make SAME_DAY = เปิด–ปิดไม่มีคัทออฟ** (คัทออฟมีเฉพาะ PRE_ORDER) | สั่งตอนปิดเซสชัน — งานใหญ่ (migration 148 + orderPolicy + AdminRounds UI + **รื้อ contract 145 / roundsTwoCutoffs.test / fixture pairing 12 ไฟล์** ที่สร้างบน 2-คัทออฟ) |
+| **P0-2** | **รอบค้าง "ลบไม่ได้"** — ที่ค้างอยู่ทั้งหมดเป็นพวกนี้ | ต้อง reproduce/probe production ก่อน + แก้เป็น archive+cleanup (รูปแบบเดียวกับ products) |
+| **P1-A** | **แนวคิดรอบงง** — "รอบรายวัน" คืออะไร (ตอนนี้ = หัวข้อ UI จัดกลุ่มการ์ดตามวันใน AdminRounds คู่กับ 3 รอบ/วัน แพทเทิร์น) ต้อง one-pager ให้ Owner อนุมัติก่อนรวม | เดามั่วผิดกฎ "ห้ามเดา product decision" |
+| **P1-B** | **Owner acceptance #1–#14 ยังไม่รัน** (ยกเว้น #6 = ยกเลิกแล้วตามคำสั่งใหม่) — #7 ป้าย 841, #5 nav, #14a–#14j ราย role = UNVERIFIED runtime | เป็นของ Owner + รอแก้ P0-1 ก่อนขั้นที่เกี่ยวกับคัทออฟ |
+
+### หมายเหตุสถานะตอนปิด (ห้ามลืม)
+
+- **HEAD `14efe48` = origin/main · tree clean** · CI + Contract Tests = **success บน `33df8ce`** (contracts ถึง 147)
+- **Production ledger = 147,146,145,144** · หลักฐาน `e2e/r7Apply146-*.json` + `e2e/r6Apply145-*.json`
+- ระบบ role 13 ค่า deploy แล้ว (contracts 146/147 เขียว Docker+production) — ยังรอ runtime 14a–14j
+- **`same_day_cutoff` อยู่ใน production schema แล้ว** (145 applied) → P0-1 ต้องถอดอย่างปลอดภัย (มี audit/contract/ledger เหมือน migration อื่น)
+- สิ่งที่ย้อนคำสั่งใหม่: contract 145 (G1-G6), `roundsTwoCutoffs.test.ts`, acceptance ขั้น #6,
+  คอลัมน์ `same_day_cutoff` ใน AdminRounds UI, pairing fixtures 12 คอนแทรคต์รอบ 13 — **ทั้งหมดต้องถูกรื้อ/ปรับใน P0-1**
+
+### HANDOFF สำหรับแชทหน้า (คัดลอกข้อนี้เปิดแชทใหม่ได้เลย)
+
+> อ่าน `AI_WORK_STATE.md` (มี §ROUND-14 BACKLOG) + แฮนด์ออฟ §17 ก่อน แล้วทำตามลำดับ:
+> (1) P0-1 ถอด same-day cutoff → same-day เปิด–ปิดไม่มีคัทออฟ รื้อของที่ผูก 2-คัทออฟทั้งหมด
+> (2) P0-2 แก้รอบค้างลบไม่ได้ (probe → archive+cleanup)
+> (3) P1-A one-pager ชนิดรอบรอ Owner อนุมัติ
+> (4) P1-B ให้ Owner รัน acceptance ที่เหลือ

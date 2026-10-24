@@ -2,10 +2,10 @@
 
 > **สถานะงานปัจจุบันของโปรเจกต์ Bite Me Baby** ใช้แนบเข้าสู่ Context ตอนเริ่มแชทเสมอ
 
-**last_updated:** 2026-10-24 รอบ 13 (Owner sign-off P1-P3 → ระบบ role 13 ค่า: missing ทั้งหมด + partial ทั้งหมด ทำเสร็จ · migrations 146+147 apply production แล้ว · contracts 146/147 เขียว Docker+production)
-**phase:** 🟢 งานครบตามคำสั่ง Owner — เหลือ Owner ทดสอบบนโปรดักชั่นจริงเท่านั้น (checklist #1–#14 ใน `docs/BMB_E2E_PRODUCTION_ACCEPTANCE_PLAN_2026-10-24.md`) + ดู CI หลัง push
-**current_focus:** Owner รัน acceptance #1–#14 (รวม #14a–#14j ทดสอบราย role) · แต่งตั้ง role แรกด้วยสูตร SQL ใน #14
-**blocked_by:** ไม่มี blocker ฝั่งโค้ด — รอผล runtime จาก Owner อย่างเดียว
+**last_updated:** 2026-10-24 **ปิดเซสชันรอบ 13** (role system ครบ+production+CI เขียว `33df8ce` · Owner ออกคำสั่ง/กฎใหม่ 4 ข้อ + ปัญหาค้าง → ทั้งหมดย้ายไป **ROUND-14 BACKLOG** ด้านล่าง ให้ทำในแชทหน้า)
+**phase:** 🟢 ปิดเซสชัน — งานรอบ 13 เสร็จหมด (push + CI success ทั้ง 2 workflows) · ไม่มีงานค้างในแชทนี้
+**current_focus:** **แชทหน้า = ROUND-14 BACKLOG (P0-1 ถอด same-day cutoff, P0-2 รอบค้างลบไม่ได้, P1 แนวคิดรอบ, P1 Owner รัน acceptance #1–#14)**
+**blocked_by:** ไม่มี — เจ้าของสั่งเองว่าปัญหาทั้งหมด "ไปทำแชทหน้า"
 
 ---
 
@@ -38,6 +38,42 @@
   runtime บนเบราว์เซอร์จริงทั้งหมด = **Owner checklist #1–#14** (รวมป้ายแจ้งเตือน 841,
   nav desktop/mobile, ราย role 14a–14j)
 - **Next Exact Action:** Owner รัน acceptance #1–#14 บน production (สูตรแต่งตั้ง role ใน #14)
+
+---
+
+---
+
+## 🔴 ROUND-14 BACKLOG (คำสั่งใหม่ Owner ตอนปิดเซสชัน 2026-10-24 — "ไปทำแชทหน้า")
+
+### กฎใหม่ของ Owner (มีผลเหนือสิ่งที่ทำไปแล้ว — ห้ามฝ่าฝืนรอบหน้า)
+
+1. **SAME_DAY ห้ามมีคัทออฟ** — รอบจัดส่งเซมเดย์ต้องวิ่งปกติตั้งแต่**ร้านเปิด–ปิด**
+   ไม่มี cutoff ใด ๆ (ไม่ใช่ "คัทออฟเลยร้านปิด" — คือไม่มีเลย)
+2. **คัทออฟมีเฉพาะ PRE_ORDER เท่านั้น** — "คัทออฟอิสระ/สองช่อง" ที่เพิ่งสร้าง
+   (`same_day_cutoff` ใน migration **145**) = **ไม่จำเป็น สั่งถอด** (Owner เคยอนุมัติ 2-คัทออฟ
+   ตอนนี้ยกเลิกแนวนี้แล้ว)
+3. **แนวคิด "รอบ" งง ไปหมด** — รอบรายวันคืออะไร ฯลฯ ต้องรวบรวมให้ชัดก่อนแตะโค้ด
+4. **รอบที่ค้าง = ลบไม่ได้** — ที่ค้างอยู่ทั้งหมดเป็นพวก "ลบไม่ได้" ต้องแก้ให้จัดการได้
+
+### ปัญหาที่ต้องแก้ทั้งหมด (เรียงตามความสำคัญ)
+
+| ID | ปัญหา | ขอบเขตที่รู้แล้ว (เริ่มจากตรงนี้) |
+|---|---|---|
+| **P0-1** | ถอด same-day cutoff + same-day = เปิด–ปิดไม่มีคัทออฟ | migration **148** (ลบ/neutralize `same_day_cutoff` ที่อยู่ใน production แล้ว ปลอดภัย+audit+ledger) · `src/lib/orderPolicy.ts` (same_day check) · AdminRounds สองช่องคัทออฟ → เหลือช่อง pre-order เท่านั้น · **รื้อบางส่วนของรอบ 13:** contract 145 (G1-G6 สร้างบน 2-คัทออฟ), `roundsTwoCutoffs.test.ts` (11 ข้อ), fixture pairing 12 คอนแทรคต์ + concurrency_147-style ที่ทำไว้ · ขั้น #6 ใน acceptance = ยกเลิก (ดูหมายเหตุในไฟล์นั้น) |
+| **P0-2** | รอบจัดส่งค้าง "ลบไม่ได้" | พิสูจน์สาเหตุจริงก่อน (สมมติฐาน: FK/orders อ้างอิง หรือ guard ใน RPC/policy — ยังไม่ได้ยืนยัน) · ทางแก้รูปแบบเดียวกับ products = **archive/จัดเก็บ** แทนลบถาวร + SQL cleanup รอบเก่าที่ไม่มีออเดอร์ · ให้เหตุผลที่ UI แสดงเป็นจริงเสมอ |
+| **P1-A** | แนวคิดรอบงง (3 รอบ/วัน + "รอบรายวัน" + same-day + pre-order) | `AdminRounds.tsx` มี 2 ส่วน: (1) แพทเทิร์น 3 รอบ/วัน (2) หัวข้อ "📅 รอบรายวัน" = การ์ดจัดกลุ่มตามวัน (สัดส่วน UI ตอนนี้) · **ทำ one-pager สรุปชนิดรอบ/คำศัพท์/กติกา ให้ Owner อนุมัติก่อน** ค่อยยุบ/เปลี่ยน UI (ห้ามเดาเอง) |
+| **P1-B** | Owner ยังไม่ได้ runtime acceptance | `docs/BMB_E2E_PRODUCTION_ACCEPTANCE_PLAN_2026-10-24.md` #1–#14 (ยกเว้น #6 ที่ยกเลิกแล้ว) — โดย #7 (ป้าย 841), #5 (nav desktop/mobile), #14a–#14j (ราย role) ยัง UNVERIFIED บนเบราว์เซอร์จริง |
+
+### งานที่เหลือทั้งหมดของแชทหน้า ( checklist เปิดแชท )
+
+1. อ่านกฎ 4 ข้อด้านบนก่อนแตะอะไรทั้งสิ้น (มีผลเหนืองานรอบ 13 บางส่วน)
+2. P0-1 → design → migration 148 + contract 148 + รื้อ contract/test ที่ผูก 2-คัทออฟ → replay → production
+3. P0-2 → reproduce "ลบไม่ได้" บน production probe (read-only) → archive/cleanup path + contract
+4. P1-A → เขียน one-pager ชนิดรอบ → รอ Owner อนุมัติ → ค่อยรวม UI/คำ
+5. P1-B → Owner รัน acceptance (รอคำสั่ง/เวลาจาก Owner)
+6. ถ้ามี bootstrap rules ใหม่จาก chat นี้: อ่าน AI_ENTRYPOINT/UNIVERSAL_MASTER_AI_RULES/AI_WORK_STATE/.clinerules ก่อนเสมอ
+
+---
 
 ---
 
