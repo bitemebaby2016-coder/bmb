@@ -11,7 +11,7 @@ ITEMS='[{"product_id":"prod-1","quantity":1,"options":{},"special_request":null}
 # fixtures (contracts_123/124 ROLLBACK ไปแล้ว → สร้างเองทั้งหมด)
 psql -X -v ON_ERROR_STOP=1 -q -c \
   "SELECT public.ensure_rounds_for_date((now() AT TIME ZONE 'Asia/Bangkok')::date);
-   UPDATE public.delivery_rounds SET cutoff_time='23:59', max_capacity=50, current_count=0
+   UPDATE public.delivery_rounds SET cutoff_time='23:59', same_day_cutoff='23:59', max_capacity=50, current_count=0
     WHERE scheduled_date=(now() AT TIME ZONE 'Asia/Bangkok')::date;
    UPDATE public.products SET is_available=true, available_same_day=true WHERE id='prod-1';
    INSERT INTO auth.users (id, email, encrypted_password, created_at, updated_at, raw_app_meta_data, raw_user_meta_data, aud, role)

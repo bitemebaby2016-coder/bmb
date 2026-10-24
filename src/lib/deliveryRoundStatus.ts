@@ -19,6 +19,10 @@ export type RoundBookability = 'open' | 'cutoff_passed' | 'window_passed' | 'ful
 
 export interface RoundTimeInfo {
   cutoff_time?: string | null
+  /** 145: คัทออฟเซมเดย์ของรอบ — ไม่มีค่า = ใช้ cutoff_time เดิม */
+  same_day_cutoff?: string | null
+  /** 145: คัทออฟพรีออเดอร์ตั้งตรง — ไม่มีค่า = กฎเดิม delivery_start − cutoff_hours */
+  pre_order_cutoff?: string | null
   delivery_start?: string | null
   delivery_end?: string | null
   current_count?: number | string | null
@@ -49,10 +53,10 @@ function msOfDay(value: string | null | undefined): number | null {
 }
 
 /**
- * ms-of-day cutoff for the round in the given mode:
- *   PRE_ORDER → delivery_start − preOrderCutoffHours (อาจติดลบ = คัทออฟอยู่ "ก่อนเที่ยงคืน
- *     ของวันก่อนวันส่ง" — ผ่านเฉพาะการสั่งล่วงหน้า; วันส่งจริงเกินคัทออฟทุกเวลา)
- *   SAME_DAY  → cutoff_time ของรอบ (เดิม)
+ * ms-of-day cutoff for the round in the given mode (145: two independent cutoffs):
+ *   PRE_ORDER → pre_order_cutoff ของรอบ ถ้าตั้งไว้ ไม่งั้น delivery_start − preOrderCutoffHours
+ *     (อาจติดลบ = คัทออฟอยู่ "ก่อนเที่ยงคืนของวันก่อนวันส่ง" — ผ่านเฉพาะการสั่งล่วงหน้า)
+ *   SAME_DAY  → same_day_cutoff ของรอบ ถ้าตั้งไว้ ไม่งั้น cutoff_time เดิม
  */
 export function roundCutoffMs(
   round: RoundTimeInfo,
@@ -60,11 +64,14 @@ export function roundCutoffMs(
   preOrderCutoffHours = 2,
 ): number | null {
   if (mode === 'PRE_ORDER') {
+    const override = msOfDay(round.pre_order_cutoff)
+    if (override !== null) return override
     const startMs = msOfDay(round.delivery_start)
     const hours = Number.isFinite(preOrderCutoffHours) && preOrderCutoffHours >= 0 ? preOrderCutoffHours : 2
     if (startMs !== null) return startMs - hours * 3_600_000
+    return null
   }
-  return msOfDay(round.cutoff_time)
+  return msOfDay(round.same_day_cutoff) ?? msOfDay(round.cutoff_time)
 }
 
 /** ป้ายเวลาคัทออฟสำหรับโชว์ใน UI ('HH:MM' หรือข้อความเมื่อคำนวณไม่ได้/ติดลบ) */

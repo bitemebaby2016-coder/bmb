@@ -1,0 +1,51 @@
+[
+  {
+    "label": "history",
+    "status": 201,
+    "body": [
+      {
+        "version": "144",
+        "name": "144_round_pattern"
+      },
+      {
+        "version": "143",
+        "name": "143_pre_order_cutoff_settings"
+      },
+      {
+        "version": "142",
+        "name": "142_pre_order_requires_menu"
+      },
+      {
+        "version": "141",
+        "name": "141_pre_order_unify_menu_calendar"
+      }
+    ]
+  },
+  {
+    "label": "columns-absent-yet",
+    "status": 201,
+    "body": [
+      {
+        "has_cols": 0
+      }
+    ]
+  },
+  {
+    "label": "body-not-145-yet",
+    "status": 201,
+    "body": [
+      {
+        "hits": 0
+      }
+    ]
+  },
+  {
+    "label": "backup-recency",
+    "status": 201,
+    "body": [
+      {
+        "recent_backups": 7
+      }
+    ]
+  }
+]

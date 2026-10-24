@@ -331,7 +331,9 @@ export function CheckoutPage() {
     if (!selectedRoundId || !customer) { setResolvedBranchId(null); return }
     const resolve = async () => {
       const branch = await resolvePublicBranch({ urlParams: { roundId: selectedRoundId } })
-      setResolvedBranchId(branch.branch_id || null)
+      // CI fix (2026-10-24 handoff task 1): resolver MAY return null (tests mock
+      // it as null; production falls back to an object) — never dereference raw.
+      setResolvedBranchId(branch?.branch_id ?? null)
     }
     resolve()
   }, [selectedRoundId, customer])
@@ -404,8 +406,8 @@ export function CheckoutPage() {
       if (bookability === 'cutoff_passed') {
         showToast(
           orderMode === 'PRE_ORDER'
-            ? `เลยคัทออฟจองล่วงหน้าแล้ว (ปิดรับ ${cutoffHours} ชม. ก่อนเวลาส่ง) — เลือกรอบอื่น`
-            : `รอบจัดส่งนี้ปิดรับออเดอร์แล้ว (cutoff เวลา ${selectedRound.cutoff_time} น.)`,
+            ? `เลยคัทออฟจองล่วงหน้าแล้ว (ปิดรับ ${roundCutoffLabel(selectedRound, 'PRE_ORDER', cutoffHours)} น.) — เลือกรอบอื่น`
+            : `รอบจัดส่งนี้ปิดรับออเดอร์แล้ว (cutoff เวลา ${roundCutoffLabel(selectedRound, 'SAME_DAY', cutoffHours)} น.)`,
           'error',
         )
         setIsProcessing(false)

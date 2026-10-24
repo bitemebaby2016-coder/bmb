@@ -75,3 +75,13 @@ export async function markNotificationRead(id: string): Promise<boolean> {
   const { error } = await supabase.from('notifications').update({ is_read: true }).eq('id', id)
   return !error
 }
+
+/**
+ * Mark ALL own unread notifications as read — server-authoritative batch
+ * (RLS scopes the update to own rows; the local store cache follows only
+ * when this returns true).
+ */
+export async function markAllNotificationsRead(): Promise<boolean> {
+  const { error } = await supabase.from('notifications').update({ is_read: true }).eq('is_read', false)
+  return !error
+}

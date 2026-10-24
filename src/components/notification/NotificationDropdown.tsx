@@ -15,7 +15,7 @@ const icons: Record<string, string> = {
 export function NotificationDropdown() {
   const notifications = useNotificationStore((s) => s.notifications)
   const unreadCount = useNotificationStore((s) => s.unreadCount)
-  const markAllAsRead = useNotificationStore((s) => s.markAllAsRead)
+  const markAllAsReadServer = useNotificationStore((s) => s.markAllAsReadServer)
   const hydrateServerNotifications = useNotificationStore((s) => s.hydrateServerNotifications)
   const markServerAsRead = useNotificationStore((s) => s.markServerAsRead)
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
@@ -33,7 +33,15 @@ export function NotificationDropdown() {
     }
   }, [isAuthenticated, hydrated, hydrateServerNotifications])
 
-  if (unreadCount === 0 && !open) return null
+  // Bell stays visible even at 0 unread (2026-10-24 acceptance): the badge may
+  // clear, but notification HISTORY must remain reachable from the header.
+  // Header mounts this only for a signed-in customer.
+  async function handleMarkAllRead() {
+    // Server-authoritative: the badge clears (and the popup auto-dismisses)
+    // only after the rows actually persisted as read on the server.
+    const ok = await markAllAsReadServer()
+    if (ok) setOpen(false)
+  }
 
   return (
     <div className="relative">
@@ -58,7 +66,7 @@ export function NotificationDropdown() {
             {/* Header */}
             <div className="sticky top-0 bg-white border-b p-4 flex items-center justify-between rounded-t-xl">
               <h3 className="font-bold text-brand-accent">การแจ้งเตือน ({unreadCount} อันอ่าน)</h3>
-              <button onClick={markAllAsRead} className="text-xs text-brand-primary hover:underline">
+              <button onClick={() => void handleMarkAllRead()} className="text-xs text-brand-primary hover:underline">
                 อ่านทั้งหมดแล้ว ✓
               </button>
             </div>
@@ -71,8 +79,11 @@ export function NotificationDropdown() {
                   onClick={() => {
                     if (n.is_read) return
                     // Server-durable rows (evt-*/auto-*) persist "read" via RLS; local-only rows stay local.
-                    if (n.id.startsWith('evt-') || n.id.startsWith('auto-')) markServerAsRead(n.id)
+                    const wasLastUnread = unreadCount <= 1
+                    if (n.id.startsWith('evt-') || n.id.startsWith('auto-')) void markServerAsRead(n.id)
                     else useNotificationStore.getState().markAsRead(n.id)
+                    // popup auto-dismisses once the last unread item has been read
+                    if (wasLastUnread) setOpen(false)
                   }}
                   className={`w-full text-left p-3 transition-colors ${
                     n.is_read ? 'bg-white hover:bg-gray-50' : 'bg-orange-50 hover:bg-orange-100'
@@ -98,9 +109,9 @@ export function NotificationDropdown() {
               )}
             </div>
 
-            {/* Footer */}
-            <Link to="/profile" onClick={() => setOpen(false)} className="block p-3 text-center text-sm text-brand-primary border-t hover:bg-brand-bg">
-              ดูโปรไฟล์ →
+            {/* Footer — history lives in the Notification Center (/notifications) */}
+            <Link to="/notifications" onClick={() => setOpen(false)} className="block p-3 text-center text-sm text-brand-primary border-t hover:bg-brand-bg">
+              ดูการแจ้งเตือนทั้งหมด →
             </Link>
           </div>
         </>

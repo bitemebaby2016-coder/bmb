@@ -53,7 +53,7 @@ UPDATE public.drivers SET user_id = '62626262-6262-6262-6262-626262626262' WHERE
 UPDATE public.drivers SET user_id = '63636363-6363-6363-6363-636363636363' WHERE id = 'drv-132-b';
 
 SELECT public.ensure_rounds_for_date((now() AT TIME ZONE 'Asia/Bangkok')::date);
-UPDATE public.delivery_rounds SET cutoff_time = '23:59', max_capacity = 50, current_count = 0
+UPDATE public.delivery_rounds SET cutoff_time = '23:59', same_day_cutoff = '23:59', max_capacity = 50, current_count = 0
  WHERE scheduled_date >= (now() AT TIME ZONE 'Asia/Bangkok')::date;
 UPDATE public.inventory SET current_stock = 999999;
 DELETE FROM public.inventory_transactions;

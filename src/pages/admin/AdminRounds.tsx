@@ -136,10 +136,11 @@ export function AdminRounds() {
         <h2 className="text-xl font-bold text-brand-accent mb-1">📋 แพทเทิร์นรอบประจำวัน (ทุกวันใช้ชุดเดียวกัน)</h2>
         <p className="text-sm text-brand-muted mb-4">
           ค่านี้คือต้นแบบของรอบทุกวัน (ทั้งพรีออเดอร์และเซมเดย์) — แก้ที่นี่ที่เดียว แล้วกด "สร้าง/ซ่อมรอบ 30 วัน"
+          · คัทออฟแยกอิสระ: <b>ปรับของเซมเดย์</b> / <b>ปรับของพรีออเดอร์</b> (ช่องพรีออเดอร์ว่าง = ใช้กฎเดิม ก่อนส่ง X ชม.)
         </p>
         <div className="space-y-3">
           {pattern.map((p, idx) => (
-            <div key={p.round_key} className="grid grid-cols-2 lg:grid-cols-6 gap-3 items-end">
+            <div key={p.round_key} className="grid grid-cols-2 lg:grid-cols-7 gap-3 items-end">
               <label className="text-sm">ชื่อรอบ
                 <input className="input mt-1" value={p.display_name}
                   data-testid={`pattern-name-${p.round_key}`}
@@ -149,11 +150,24 @@ export function AdminRounds() {
                     setPattern(next)
                   }} />
               </label>
-              <label className="text-sm">ปิดรับ
-                <input type="time" className="input mt-1" value={p.cutoff_time}
+              <label className="text-sm">ปรับของเซมเดย์
+                <input type="time" className="input mt-1" value={p.same_day_cutoff || p.cutoff_time}
+                  data-testid={`pattern-sameday-cutoff-${p.round_key}`}
+                  title="คัทออฟเซมเดย์ของรอบนี้ (เซมเดย์ส่งได้ตลอดจนถึงเวลานี้)"
                   onChange={(e) => {
                     const next = [...pattern]
-                    next[idx] = { ...p, cutoff_time: e.target.value }
+                    next[idx] = { ...p, same_day_cutoff: e.target.value, cutoff_time: e.target.value || p.cutoff_time }
+                    setPattern(next)
+                  }} />
+              </label>
+              <label className="text-sm">ปรับของพรีออเดอร์
+                <input type="time" className="input mt-1" value={p.pre_order_cutoff}
+                  data-testid={`pattern-preorder-cutoff-${p.round_key}`}
+                  title="ว่าง = ใช้กฎเดิม (คัทออฟ X ชม. ก่อนเวลาส่ง)"
+                  placeholder="ตามกฎ"
+                  onChange={(e) => {
+                    const next = [...pattern]
+                    next[idx] = { ...p, pre_order_cutoff: e.target.value }
                     setPattern(next)
                   }} />
               </label>
@@ -215,7 +229,10 @@ export function AdminRounds() {
                     <div className="min-w-0 flex-1">
                       <div className="font-medium text-slate-800">{r.display_name || r.round_key || r.id}</div>
                       <div className="text-xs text-brand-muted">
-                        ส่ง {String(r.delivery_start).slice(0, 5)}–{String(r.delivery_end).slice(0, 5)} · ปิดรับ {String(r.cutoff_time).slice(0, 5)} · {r.current_count}/{r.max_capacity}
+                        ส่ง {String(r.delivery_start).slice(0, 5)}–{String(r.delivery_end).slice(0, 5)}
+                        {' '}· ปิดรับ เซมเดย์ {String(r.same_day_cutoff || r.cutoff_time).slice(0, 5)}
+                        {' '}· พรีออเดอร์ {r.pre_order_cutoff ? String(r.pre_order_cutoff).slice(0, 5) : 'ตามกฎ'}
+                        {' '}· {r.current_count}/{r.max_capacity}
                       </div>
                     </div>
                     <ToggleSwitch

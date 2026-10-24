@@ -1,7 +1,12 @@
 -- ============================================================
 -- 124_order_submit_idempotency.sql — WAVE 5A (Owner-approved)
--- อนุมัติสำหรับ ISOLATED/CI database เท่านั้น — ห้าม apply ใน Production
--- จนกว่า Owner จะตรวจ diff + isolated evidence แล้วอนุมัติแยกต่างหาก
+-- [RECONCILED 2026-10-24 — header ข้อ 3-4 เดิม (limitations "ISOLATED/CI only,
+--  ห้าม apply Production จนกว่า Owner อนุมัติ") = STALE] · ตรวจสอบ read-only
+--  จาก production: supabase_migrations.schema_migrations มี 118..144 ครบ → 124
+--  ถูก apply แล้วจริง · function create_order_with_items_i มีอยู่ (count=1) ·
+--  table order_submissions มีอยู่ · CI ที่โชว์ "skipped" คือ step ก่อนหน้าล้ม
+--  ไม่ใช่ 124 หาย · ห้าม rewrite history — แก้เฉพาะคอมเมนต์แถวนี้เท่านั้น
+--  (W5C R1-R15 policies ด้านล่างยังบันทึกตามเดิม = Owner-approved 2026-10-14)
 --
 -- ตรวจจาก source จริง: ตัวเดิมปัจจุบัน (118) = 18 parameters
 -- (…p_branch_id, p_source_channel, p_external_ref_id, p_customer_ref) ·

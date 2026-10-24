@@ -1,6 +1,80 @@
 import { create } from 'zustand'
 import type { Notification, NotificationEventType } from '@/types'
 
+// ============================================
+// Order-state sequence (handoff 2026-10-24 §6 fix 3)
+// Production probe of order 841 (read-only, 2026-10-24): the server rows are
+// timestamped OUT of order — preparing (11:29:07) is NEWER than delivered
+// (11:29:05) — so raw created_at sorting shows the stale "preparing" row as
+// latest. notification_type is canonical → rank by state, cluster rows of the
+// same order together, keep created_at only as the tiebreaker / group recency.
+// ============================================
+
+const ORDER_STATE_RANK: Record<string, number> = {
+  order_created: 10,
+  order_placed: 10,
+  payment_pending: 15,
+  order_confirmed: 20,
+  payment_confirmed: 25,
+  order_preparing: 30,
+  order_ready: 40,
+  order_ready_for_dispatch: 40,
+  order_out_for_delivery: 50,
+  order_dispatched: 50,
+  order_delivered: 60,
+}
+
+/** Fallback rank by text when notification_type is missing (Thai titles verified on 841). */
+const ORDER_STATE_KEYWORDS: Array<[RegExp, number]> = [
+  [/(จัดส่งสำเร็จ|\bdelivered\b)/i, 60],
+  [/(ออกจัดส่ง|ออกส่งแล้ว|out for delivery|dispatched)/i, 50],
+  [/(อาหารพร้อมแล้ว|พร้อมส่ง|\bready\b)/i, 40],
+  [/(กำลังเตรียม|preparing)/i, 30],
+  [/(ได้รับการยืนยัน|ยืนยันแล้ว|confirmed)/i, 20],
+  [/(รับออเดอร์แล้ว|ได้รับเรียบร้อย|order placed|order created)/i, 10],
+]
+
+/** Rank of a single notification on the order-state ladder (0 = unknown/local). */
+export function orderStateRank(n: { type?: string; title?: string; body?: string; data?: Record<string, unknown> }): number {
+  const byType = ORDER_STATE_RANK[String(n.type || '').toLowerCase()]
+  if (byType !== undefined) return byType
+  const text = `${n.title || ''} ${n.body || ''}`
+  for (const [re, rank] of ORDER_STATE_KEYWORDS) if (re.test(text)) return rank
+  return 0
+}
+
+/** Order number for clustering (deterministic ids: evt-ord-BMB-YYYYMMDD-N-<state>). */
+export function orderKeyOf(n: { id?: string; title?: string; body?: string; data?: Record<string, unknown> }): string {
+  const fromData = n.data && typeof n.data.orderNumber === 'string' ? n.data.orderNumber : ''
+  const m = `${n.id || ''} ${n.title || ''} ${n.body || ''} ${fromData}`.match(/BMB-\d{6,}-\d+/i)
+  return m ? m[0].toUpperCase() : ''
+}
+
+/**
+ * Bell ordering: rows of the SAME order are clustered and sorted by state rank
+ * (delivered always above preparing regardless of clock), groups themselves are
+ * newest-first by their latest created_at; singletons keep pure recency.
+ */
+export function sortNotificationsForBell(list: Notification[]): Notification[] {
+  const groups = new Map<string, Notification[]>()
+  for (const n of list) {
+    const key = orderKeyOf(n as Notification) || `~single:${n.id}`
+    const g = groups.get(key)
+    if (g) g.push(n)
+    else groups.set(key, [n])
+  }
+  const arranged = [...groups.values()].map((g) => ({
+    g: [...g].sort(
+      (a, b) =>
+        orderStateRank(b as Notification) - orderStateRank(a as Notification) ||
+        String(b.created_at || '').localeCompare(String(a.created_at || '')),
+    ),
+    t: g.reduce((mx, n) => (String(n.created_at || '') > mx ? String(n.created_at || '') : mx), ''),
+  }))
+  arranged.sort((a, b) => b.t.localeCompare(a.t))
+  return arranged.flatMap((x) => x.g)
+}
+
 interface SimpleNotification {
   title: string
   body: string
@@ -31,6 +105,7 @@ interface NotificationStore {
   addNotification: (notification: SimpleNotification) => void
   markAsRead: (id: string) => void
   markAllAsRead: () => void
+  markAllAsReadServer: () => Promise<boolean>
   removeNotification: (id: string) => void
   getUnreadCount: () => number
   triggerEvent: (eventType: NotificationEventType, eventData?: Record<string, any>) => void
@@ -50,23 +125,29 @@ export const useNotificationStore = create<NotificationStore>((set, get) => ({
   hydrateServerNotifications: (rows) => {
     if (!rows || rows.length === 0) return
     set((state) => {
-      const existing = new Set(state.notifications.map((n) => n.id))
-      const mapped = rows
-        .filter((r) => !existing.has(r.id))
-        .map((r) => ({
-          id: r.id,
-          user_id: '',
-          title: r.title,
-          body: r.message,
-          type: (r.notification_type || 'order_update') as unknown as Notification['type'],
-          data: {},
-          channel: 'in_app' as const,
-          is_read: r.is_read,
-          sent_at: r.created_at,
-          created_at: r.created_at,
-          read_at: r.is_read ? r.created_at : undefined,
-        })) as unknown as Notification[]
-      const merged = [...mapped, ...state.notifications].slice(0, 50)
+      const serverIds = new Set(rows.map((r) => r.id))
+      const mapped = rows.map((r) => ({
+        id: r.id,
+        user_id: '',
+        title: r.title,
+        body: r.message,
+        type: (r.notification_type || 'order_update') as unknown as Notification['type'],
+        data: {},
+        channel: 'in_app' as const,
+        is_read: r.is_read,
+        sent_at: r.created_at,
+        created_at: r.created_at,
+        read_at: r.is_read ? r.created_at : undefined,
+      })) as unknown as Notification[]
+      // Server rows are canonical (2026-10-24 reconciliation): an existing
+      // local copy is REPLACED, not skipped — otherwise a stale local
+      // is_read=false survives re-hydration and the badge never clears
+      // across reload/sessions (defect on order 841).
+      const localOnly = state.notifications.filter((n) => !serverIds.has(n.id))
+      // Order-state ordering (defect on 841): prepared/delivered timestamps are
+      // inverted on the server, so rank by state per order cluster — a stale
+      // local "preparing" can never sit above the server's "delivered".
+      const merged = sortNotificationsForBell([...mapped, ...localOnly]).slice(0, 50)
       const unread = merged.filter((n) => !n.is_read).length
       return { notifications: merged, unreadCount: unread }
     })
@@ -106,6 +187,18 @@ export const useNotificationStore = create<NotificationStore>((set, get) => ({
       notifications: state.notifications.map(n => ({ ...n, is_read: true, read_at: new Date().toISOString() })),
       unreadCount: 0
     }))
+  },
+  /**
+   * Persist "read" for ALL own unread rows server-side first (RLS own rows);
+   * the local badge follows ONLY the server result — a failed write must not
+   * fake a cleared badge (defect on order 841: markAllAsRead never reached
+   * the server, so the red badge returned after every reload).
+   */
+  markAllAsReadServer: async () => {
+    const { markAllNotificationsRead } = await import('@/lib/notificationService')
+    const ok = await markAllNotificationsRead()
+    if (ok) get().markAllAsRead()
+    return ok
   },
   removeNotification: (id) => {
     set((state) => ({

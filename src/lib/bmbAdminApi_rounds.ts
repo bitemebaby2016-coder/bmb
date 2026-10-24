@@ -17,6 +17,10 @@ export interface DeliveryRoundRow {
   round_key: string
   display_name: string
   cutoff_time: string
+  /** 145: คัทออฟเซมเดย์ของรอบ (ไม่มีค่า = ใช้ cutoff_time) */
+  same_day_cutoff?: string | null
+  /** 145: คัทออฟพรีออเดอร์ของรอบ (ไม่มีค่า = ใช้กฎ cutoff_hours ก่อนส่ง) */
+  pre_order_cutoff?: string | null
   delivery_start: string
   delivery_end: string
   max_capacity: number
@@ -48,6 +52,8 @@ export async function getDeliveryRoundsAdmin(): Promise<DeliveryRoundRow[]> {
 export function validateRoundTemplate(row: Partial<DeliveryRoundRow>): string | null {
   if (!String(row.display_name ?? '').trim()) return 'ต้องมีชื่อรอบ (display_name)'
   if (!/^\d{2}:\d{2}(:\d{2})?$/.test(String(row.cutoff_time ?? ''))) return 'เวลาปิดรับ (cutoff_time) ไม่ถูกต้อง'
+  if (String(row.same_day_cutoff ?? '') && !/^\d{2}:\d{2}(:\d{2})?$/.test(String(row.same_day_cutoff))) return 'คัทออฟเซมเดย์ไม่ถูกต้อง'
+  if (String(row.pre_order_cutoff ?? '') && !/^\d{2}:\d{2}(:\d{2})?$/.test(String(row.pre_order_cutoff))) return 'คัทออฟพรีออเดอร์ไม่ถูกต้อง'
   if (!/^\d{2}:\d{2}(:\d{2})?$/.test(String(row.delivery_start ?? ''))) return 'เวลาเริ่มส่ง (delivery_start) ไม่ถูกต้อง'
   if (!/^\d{2}:\d{2}(:\d{2})?$/.test(String(row.delivery_end ?? ''))) return 'เวลาสิ้นสุดส่ง (delivery_end) ไม่ถูกต้อง'
   const cap = Number(row.max_capacity)
@@ -246,6 +252,8 @@ export async function applyPatternToDay(date: string, rows: RoundPatternRow[]): 
     const needs =
       row.display_name !== p.display_name ||
       String(row.cutoff_time).slice(0, 5) !== p.cutoff_time ||
+      String(row.same_day_cutoff ?? '').slice(0, 5) !== (p.same_day_cutoff || p.cutoff_time) ||
+      String(row.pre_order_cutoff ?? '').slice(0, 5) !== p.pre_order_cutoff ||
       String(row.delivery_start).slice(0, 5) !== p.delivery_start ||
       String(row.delivery_end).slice(0, 5) !== p.delivery_end ||
       Number(row.max_capacity) !== Number(p.max_capacity)
@@ -255,6 +263,9 @@ export async function applyPatternToDay(date: string, rows: RoundPatternRow[]): 
       .update({
         display_name: p.display_name,
         cutoff_time: `${p.cutoff_time}:00`,
+        // 145: คัทออฟสองช่องทาง — same_day fallback = cutoff_time · pre_order '' = NULL (ใช้กฎ)
+        same_day_cutoff: `${p.same_day_cutoff || p.cutoff_time}:00`,
+        pre_order_cutoff: p.pre_order_cutoff ? `${p.pre_order_cutoff}:00` : null,
         delivery_start: `${p.delivery_start}:00`,
         delivery_end: `${p.delivery_end}:00`,
         max_capacity: Number(p.max_capacity),

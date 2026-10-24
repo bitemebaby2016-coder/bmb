@@ -25,7 +25,7 @@ ON CONFLICT (id) DO NOTHING;
 UPDATE public.profiles SET role = 'admin' WHERE id = 'eeee5555-5555-5555-5555-555555555555';
 
 SELECT public.ensure_rounds_for_date((now() AT TIME ZONE 'Asia/Bangkok')::date + 1);
-UPDATE public.delivery_rounds SET cutoff_time = '23:59', max_capacity = 50, current_count = 0
+UPDATE public.delivery_rounds SET cutoff_time = '23:59', same_day_cutoff = '23:59', max_capacity = 50, current_count = 0
  WHERE scheduled_date >= (now() AT TIME ZONE 'Asia/Bangkok')::date;
 
 DO $$ DECLARE d date := (now() AT TIME ZONE 'Asia/Bangkok')::date + 1; r jsonb;
@@ -108,6 +108,12 @@ BEGIN
   PERFORM set_config('request.jwt.claims',
     '{"sub":"ffff6666-6666-6666-6666-666666666666","role":"authenticated"}', false);
   UPDATE public.products SET is_available = false WHERE id = 'prod-5';
+  -- P8 fixture (ตั้งแต่ migration 142): ตาข่ายเมนูปฏิทิน (ERR_PRE_ORDER_REQUIRES_MENU)
+  -- ถูกตรวจก่อนความพร้อมของสินค้า — ปักแถวเมนู published ของ prod-5 ณ วันที่ d
+  -- เพื่อให้ตาข่ายผ่าน และ assertion เดิม ERR_PRODUCT_UNAVAILABLE คงสภาพเข้มเดิม
+  INSERT INTO public.menu_schedule (scheduled_date, product_id, is_published)
+  VALUES (d, 'prod-5', true)
+  ON CONFLICT (scheduled_date, product_id) DO UPDATE SET is_published = true;
   BEGIN
     r := public.create_order_with_items(
       '[{"product_id":"prod-5","quantity":1,"options":{},"special_request":null}]'::jsonb,

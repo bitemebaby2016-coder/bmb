@@ -319,3 +319,51 @@ jobs:
             exit 1
           fi
           echo "Contract 141 OK — PRE_ORDER all products + menu date binding + archived rows"
+
+      - name: Contract 142 — PRE_ORDER requires calendar menu (ROLLBACK)
+        run: |
+          set +e
+          out=$(psql -v ON_ERROR_STOP=1 -f e2e/contracts_142.sql 2>&1); rc=$?
+          printf '%s\n' "$out"
+          if [ $rc -ne 0 ]; then
+            msg=$(printf '%s\n' "$out" | grep -m1 'ERROR:' || echo "rc=$rc")
+            echo "::error file=e2e/contracts_142.sql::$msg"
+            exit 1
+          fi
+          echo "Contract 142 OK — calendar-menu gate + free-date closed + SAME_DAY unchanged"
+
+      - name: Contract 143 — pre-order cutoff = order_policy.cutoff_hours (ROLLBACK)
+        run: |
+          set +e
+          out=$(psql -v ON_ERROR_STOP=1 -f e2e/contracts_143.sql 2>&1); rc=$?
+          printf '%s\n' "$out"
+          if [ $rc -ne 0 ]; then
+            msg=$(printf '%s\n' "$out" | grep -m1 'ERROR:' || echo "rc=$rc")
+            echo "::error file=e2e/contracts_143.sql::$msg"
+            exit 1
+          fi
+          echo "Contract 143 OK — cutoff_hours gate + today-until-cutoff + corrupted order_setting safe"
+
+      - name: Contract 144 — admin round pattern + ensure_rounds_for_date (ROLLBACK)
+        run: |
+          set +e
+          out=$(psql -v ON_ERROR_STOP=1 -f e2e/contracts_144.sql 2>&1); rc=$?
+          printf '%s\n' "$out"
+          if [ $rc -ne 0 ]; then
+            msg=$(printf '%s\n' "$out" | grep -m1 'ERROR:' || echo "rc=$rc")
+            echo "::error file=e2e/contracts_144.sql::$msg"
+            exit 1
+          fi
+          echo "Contract 144 OK — pattern-driven rounds + idempotent ensure + repair + past-date guard"
+
+      - name: Contract 145 — two independent cutoffs + shared slot + >=2 rule (ROLLBACK)
+        run: |
+          set +e
+          out=$(psql -v ON_ERROR_STOP=1 -f e2e/contracts_145.sql 2>&1); rc=$?
+          printf '%s\n' "$out"
+          if [ $rc -ne 0 ]; then
+            msg=$(printf '%s\n' "$out" | grep -m1 'ERROR:' || echo "rc=$rc")
+            echo "::error file=e2e/contracts_145.sql::$msg"
+            exit 1
+          fi
+          echo "Contract 145 OK — same-day/pre-order cutoffs independent + shared capacity + >=2 publish holds"

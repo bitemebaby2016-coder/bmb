@@ -38,7 +38,7 @@ UPDATE public.profiles SET role = 'admin' WHERE id = '22222222-2222-2222-2222-22
 
 -- test knobs: guarantee same-day acceptance windows inside the suite
 SELECT public.ensure_rounds_for_date((now() AT TIME ZONE 'Asia/Bangkok')::date);
-UPDATE public.delivery_rounds SET cutoff_time = '23:59', max_capacity = 50, current_count = 0
+UPDATE public.delivery_rounds SET cutoff_time = '23:59', same_day_cutoff = '23:59', max_capacity = 50, current_count = 0
  WHERE scheduled_date = (now() AT TIME ZONE 'Asia/Bangkok')::date;
 
 -- customer context
@@ -118,7 +118,7 @@ END $$;
 -- T7 CUTOFF — after cutoff rejected (00:00 cutoff = always passed)
 -- ============================================
 RESET ROLE;
-UPDATE public.delivery_rounds SET cutoff_time = '00:00'
+UPDATE public.delivery_rounds SET cutoff_time = '00:00', same_day_cutoff = '00:00'
  WHERE id = 'round-' || to_char((now() AT TIME ZONE 'Asia/Bangkok')::date,'YYYYMMDD') || '-evening';
 SELECT set_config('role', 'authenticated', false);
 DO $$ BEGIN

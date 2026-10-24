@@ -58,6 +58,18 @@ export function Layout({ children, hideBottomNav = false, activeSection = 'home'
     return () => el.removeEventListener('scroll', handleScroll)
   }, [lastScrollY])
 
+  // HANDOFF 2026-10-24 task 3: scroll-to-top on route change. The scroll window
+  // is `main` (not window), so navigating from a deep position (e.g. admin
+  // sidebar item clicked while scrolled down) used to land the new page at the
+  // OLD offset — action clicks must always open the task at the top.
+  // (jsdom ไม่ implement Element.scrollTo — guard + fallback ให้ test render ได้)
+  useEffect(() => {
+    const el = mainRef.current
+    if (!el) return
+    if (typeof el.scrollTo === 'function') el.scrollTo({ top: 0 })
+    else el.scrollTop = 0
+  }, [location.pathname])
+
   return (
     <div className="flex flex-col min-h-screen">
       {/* Site background layer — Stage C: z-0 fixed, pointer-events none,

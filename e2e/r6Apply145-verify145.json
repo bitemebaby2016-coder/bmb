@@ -1,0 +1,62 @@
+[
+  {
+    "label": "columns-present",
+    "status": 201,
+    "body": [
+      {
+        "column_name": "pre_order_cutoff",
+        "data_type": "time without time zone"
+      },
+      {
+        "column_name": "same_day_cutoff",
+        "data_type": "time without time zone"
+      }
+    ]
+  },
+  {
+    "label": "backfill-complete",
+    "status": 201,
+    "body": [
+      {
+        "missing_same_day": 0
+      }
+    ]
+  },
+  {
+    "label": "body-has-145-gates",
+    "status": 201,
+    "body": [
+      {
+        "hits": 1
+      }
+    ]
+  },
+  {
+    "label": "trigger-has-override",
+    "status": 201,
+    "body": [
+      {
+        "hits": 1
+      }
+    ]
+  },
+  {
+    "label": "ensure-uses-pattern-cutoffs",
+    "status": 201,
+    "body": [
+      {
+        "hits": 1
+      }
+    ]
+  },
+  {
+    "label": "pattern-has-new-keys",
+    "status": 201,
+    "body": [
+      {
+        "sd": "05:00",
+        "has_pre": false
+      }
+    ]
+  }
+]

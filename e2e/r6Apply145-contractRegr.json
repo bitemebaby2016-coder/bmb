@@ -1,0 +1,16 @@
+[
+  {
+    "label": "contract-143-regression",
+    "status": 201,
+    "body": [
+      {
+        "set_config": "{\"sub\":\"00000000-0000-4000-8000-000000c14301\",\"role\":\"service_role\"}"
+      }
+    ]
+  },
+  {
+    "label": "contract-144-regression",
+    "status": 201,
+    "body": []
+  }
+]

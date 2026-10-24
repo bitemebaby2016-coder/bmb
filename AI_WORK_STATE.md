@@ -2,10 +2,56 @@
 
 > **สถานะงานปัจจุบันของโปรเจกต์ Bite Me Baby** ใช้แนบเข้าสู่ Context ตอนเริ่มแชทเสมอ
 
-**last_updated:** 2026-10-24 รอบ 11 (ปิดเซสชัน — ไม่อนุมัติโค้ด, เขียนแฮนด์ออฟ `docs/BMB_HANDOFF_NEXT_SESSION_2026-10-24.md` + บันทึกงานที่เหลือไปแชทหน้า)
-**phase:** 🟠 ปิดเซสชันแบบมีงานค้าง — CI แดง 2 ตัว (บั๊กของรอบ 10) + ซ่อมแจ้งเตือน/เมนูแอดมิน/รอบจัดส่ง/ผู้ใช้-สิทธิ์ → ทั้งหมดอยู่ในแฮนด์ออฟ
-**current_focus:** แชทหน้าเริ่มจากงานแรก = ซ่อม CI 2 จุด (`src/pages/CheckoutPage.tsx:334` + `e2e/contracts_123_menu_publish.sql` P8) แล้วไล่ตาม `docs/BMB_HANDOFF_NEXT_SESSION_2026-10-24.md` §13
-**blocked_by:** (1) Owner สั่ง "ไม่อนุมัติโค้ด" เซสชันนี้ — โค้ดทั้งหมดไปทำแชทหน้า (2) ต้องได้อนุมัติ schema รอบ 2 คัทออฟ (same-day/pre-order) ก่อนแตะตารางรอบ
+**last_updated:** 2026-10-24 รอบ 12 (ปิดเซสชัน — ทำครบทั้ง 7 งานตามแฮนด์ออฟ 2026-10-24: ซ่อม CI + แจ้งเตือน 841 + เมนู/nav + รอบจัดส่ง 2-คัทออฟ (Owner อนุมัติ → apply production แล้ว) + เอกสาร matrices/acceptance + close-out)
+**phase:** 🟢 เซสชันเสร็จครบตาม scope — เหลือ verification 2 จุดที่ต้องรอ: (1) CI บน GitHub หลัง push (2) runtime เช็คบนเบราว์เซอร์จริง (ป้ายแจ้งเตือน 841 + desktop/mobile nav) = รายการใน checklist ของ Owner
+**current_focus:** ดูผล CI 2 workflows หลัง push → Owner รัน `docs/BMB_E2E_PRODUCTION_ACCEPTANCE_PLAN_2026-10-24.md` checklist #1-#13
+**blocked_by:** ไม่มี blocker ฝั่งโค้ด · เหลือ Owner decisions ค้างจากรอบก่อน: role matrix P1-P3 (docs เสร็จ รอ sign-off) เท่านั้น
+
+---
+
+---
+
+## 🩺 REALITY CHECK (2026-10-24 รอบ 12 · งานครบตามแฮนด์ออฟ §13 ทั้ง 7 ข้อ)
+
+- **งาน 1 (CI ซ่อม 2 จุด + wire contract) — เสร็จ:**
+  - `CheckoutPage.tsx` `branch?.branch_id ?? null` · contract 123 P8 เพิ่มแถวเมนู published
+    ของ prod-5 (คง assertion `ERR_PRODUCT_UNAVAILABLE` เข้มเดิม) · workflow เพิ่มขั้น
+    Contract 142/143/144/**145**
+  - **ของแถมที่เจอจากการรันครบ**: contract **141 G1/G4 stale** (ชนตาข่าย 142 — เคส
+    regular-only/archived-menu เคยคาดว่า created) → reconcile เป็น
+    `ERR_PRE_ORDER_REQUIRES_MENU` (เข้มขึ้น ไม่ใช่การอ่อน assertions) · fixture
+    `SET cutoff_time='23:59'` 12 ไฟล์ + `concurrency_124.sh` ต้องเซ็ต `same_day_cutoff`
+    คู่กันหลัง 145 (ไม่งั้นคัทออฟเก่าค้าง → contract 124 พังเวลาหลังเที่ยง)
+- **งาน 2 (แจ้งเตือน 841) — เสร็จ (โค้ด+เทสต์):** hydrate = server canonical (แทนที่ไม่ใช่
+  skip) · `markAllAsReadServer` เขียนเซิร์ฟเวอร์ก่อนค่อยล้าง badge ( fail = ไม่ล้าง) ·
+  เรียงตาม **ลำดับสถานะออเดอร์** (probe production จริง: preparing 11:29:07 ใหม่กว่า
+  delivered 11:29:05 → created_at ล้วนไม่พอ) + จับกลุ่มตามเลขออเดอร์ · bell โชว์เสมอ +
+  footer → `/notifications` · popup ปิดเองเมื่ออ่านจบ · เทสต์ใหม่ 10 ข้อ
+- **งาน 3 (เมนู/nav แอดมิน) — เสร็จ:** audit = ไม่มี dead link (24 nav → route ครบทุกตัว,
+  legacy = redirect), ไม่มีหน้า placeholder, gate `AdminRoute` ครบทุก page route · เพิ่ม
+  **scroll-top on route change** (jsdom-safe guard) · เทสต์ใหม่ 7 ข้อ + routeNav 39/39
+- **งาน 4 (รอบจัดส่ง 2-คัทออฟ) — เสร็จ + production แล้ว:** Owner อนุมัติทั้ง schema +
+  กฎ ≥2 → migration **145** (`same_day_cutoff`/`pre_order_cutoff` บนรอบเดิม ไม่สร้างตาราง)
+  · `create_order_with_items` + `enforce_pre_order_window` + `ensure_rounds_for_date` patch
+  (builder anchor-guarded) · client mirror + `orderPolicy` pattern + AdminRounds ป้าย
+  "ปรับของเซมเดย์/ปรับของพรีออเดอร์" + API เขียนครบ · contract **145 G1-G6** (override 2 ทาง
+  + fallback กฎเดิม + shared-slot ไม่นับซ้ำ + ≥2 publish + กันบายพาส) เขียว **ทั้ง Docker และ
+  production** · 143/144 regression production PASS · **apply+verify+record production = ledger
+  145 แล้ว** (evidence: `e2e/r6Apply145-*.json`)
+- **งาน 5/6 (เอกสาร) — เสร็จ:** `docs/BMB_ROLE_PERMISSION_AI_AUDIT_2026-10-24.md`
+  (role/page/RLS matrices + gap 12 หมวด + staged proposal = DOCUMENTED รอ Owner) +
+  `docs/BMB_E2E_PRODUCTION_ACCEPTANCE_PLAN_2026-10-24.md` (journey map + gaps + checklist 13 ขั้น)
+- **R4 (header 124) — เสร็จ:** คอมเมนต์ STALE ถูก reconcile (comment-only ไม่แตะ SQL/history)
+- **Verified (หลักฐานจริง):** vitest **133 files/1375 tests exit 0** (มีเทสต์ใหม่ 3 ไฟล์ 28 ข้อ) ·
+  lint exit 0 · build exit 0 · Docker replay ALL_GREEN (migrations 001-145 + 123/124/concurrency)
+  · contracts 127-145 ทุกไฟล์ PASS exit 0 · playwright routeNav **39/39** · production
+  apply stages STAGE_OK ทุกขั้น
+- **Failed/ยังไม่ยืนยัน:** ผล CI บน GitHub ยังไม่ได้ดู (เพิ่ง push) · ป้ายแจ้งเตือน 841
+  ยัง **UNVERIFIED บนเบราว์เซอร์จริง** (ต้อง Owner รัน checklist #7) · mobile visual ตา Owner (#5)
+- **บทเรียนรอบนี้:** fixture ที่ "เปิดรอบรับเดี๋ยวนี้" ด้วยการอัปเดต `cutoff_time` อย่างเดียว
+  พังทันทีที่มีคอลัมน์คัทออฟใหม่ — พอเพิ่ม column ต้องไล่แก้ทุกจุดที่เขียน cutoff เดี่ยว ๆ
+- **Next Exact Action:** (1) เช็ค CI ทั้ง 2 workflows หลัง push (2) Owner รัน checklist
+  production acceptance (3) ถ้า CI แดง → ดู log แล้วแก้ตามกฎ 2-ครั้ง
 
 ---
 
