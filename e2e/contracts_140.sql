@@ -1,14 +1,14 @@
 -- ============================================
--- Bite Me Baby â€” SQL Contract: Migration 140 (auto-close expired rounds)
--- Date: 2026-10-23 Â· Run on ephemeral PG (apply_all_migrations.sh) or SQL Editor
--- ONE transaction, ROLLBACK at the end â€” zero persisted data.
+-- Bite Me Baby — SQL Contract: Migration 140 (auto-close expired rounds)
+-- Date: 2026-10-23 · Run on ephemeral PG (apply_all_migrations.sh) or SQL Editor
+-- ONE transaction, ROLLBACK at the end — zero persisted data.
 --
--- Proves (Owner policy 2026-10-23: auto-close à¸•à¸²à¸¡ cutoff + admin-only + audit):
+-- Proves (Owner policy 2026-10-23: auto-close ตาม cutoff + admin-only + audit):
 --   G1  auto_close_expired_rounds = SECURITY DEFINER + grants
---   G2  à¸›à¸´à¸”à¹€à¸‰à¸žà¸²à¸° round à¸—à¸µà¹ˆ cutoff à¸œà¹ˆà¸²à¸™ Â· à¸­à¸™à¸²à¸„à¸•/à¸¢à¸±à¸‡à¹„à¸¡à¹ˆà¹€à¸¥à¸¢ cutoff/à¸›à¸´à¸”à¹à¸¥à¹‰à¸§ = à¹„à¸¡à¹ˆà¸–à¸¹à¸à¹à¸•à¸°
---   G3  à¸—à¸¸à¸à¸£à¸­à¸šà¸—à¸µà¹ˆà¸–à¸¹à¸à¸›à¸´à¸”à¸¡à¸µ audit_logs (settings_change, 'auto-close%')
---   G4  idempotent: à¸£à¸±à¸™à¸‹à¹‰à¸³ = à¸›à¸´à¸” 0 + à¹„à¸¡à¹ˆà¸ªà¸£à¹‰à¸²à¸‡ audit à¹ƒà¸«à¸¡à¹ˆ
---   G5  à¹„à¸¡à¹ˆà¹à¸•à¸° current_count / à¸­à¸­à¹€à¸”à¸­à¸£à¹Œ (bookkeeping à¹€à¸—à¹ˆà¸²à¸™à¸±à¹‰à¸™)
+--   G2  ปิดเฉพาะ round ที่ cutoff ผ่าน · อนาคต/ยังไม่เลย cutoff/ปิดแล้ว = ไม่ถูกแตะ
+--   G3  ทุกรอบที่ถูกปิดมี audit_logs (settings_change, 'auto-close%')
+--   G4  idempotent: รันซ้ำ = ปิด 0 + ไม่สร้าง audit ใหม่
+--   G5  ไม่แตะ current_count / ออเดอร์ (bookkeeping เท่านั้น)
 -- ============================================
 
 BEGIN;
