@@ -2,14 +2,16 @@
 
 > **สถานะงานปัจจุบันของโปรเจกต์ Bite Me Baby** ใช้แนบเข้าสู่ Context ตอนเริ่มแชทเสมอ
 
-**last_updated:** 2026-10-24 **ปิดเซสชันรอบ 14** (P0-1 ถอด same-day cutoff + P0-2 archive รอบค้าง
-ผ่านหมด production · ledger **149,148,147,146** · vitest **135 files/1393 tests exit 0** · tsc/lint/build 0
-· Docker replay 001→149 ALL_GREEN · contracts 123/124/127-149 PASS ทั้ง ephemeral และ production
-· **commit `d306ca7` = origin/main · CI success (run 40103315924) + Contract Tests success (run 40103315919)**)
-**phase:** 🟢 ปิดเซสชันรอบ 14 — P0-1 ✅ · P0-2 ✅ · P1-A ⏳ one-pager ส่งรอ Owner (Q1–Q4) · P1-B = ของ Owner
-**current_focus:** **รอ Owner: (ก) ตอบ Q1–Q4 ใน `docs/BMB_ROUND_MODEL_ONE_PAGER_2026-10-24.md`
-+ (ข) รัน acceptance ที่เหลือ (#5 nav, #7 ป้าย 841, #14a–#14j ราย role) แล้วแจ้งผลรวม**
-**blocked_by:** ไม่มีงานฝั่งโค้ดค้าง · การเปลี่ยนโครง UI รอ one-pager อนุมัติ (ห้ามเดา product decision)
+**last_updated:** 2026-10-24 **ปิดเซสชันรอบ 14** (P0-1 + P0-2 ผ่านหมด production · ledger **149,148,147,146**
+· vitest **135 files/1393 tests exit 0** · tsc/lint/build 0 · Docker replay 001→149 ALL_GREEN ·
+contracts 123/124/127-149 PASS ทั้ง ephemeral และ production · **HEAD `7a24123` = origin/main ·
+CI success + Contract Tests success ทุก commit รอบนี้ (40103315924 / 40103315919)**)
+**phase:** 🟢 ปิดเซสชัน — P0-1 ✅ · P0-2 ✅ · P1-A ✅ **Owner ตอบ Q1–Q4 ครบ** · P1-B = Owner รันเอง (ขอรายการแล้ว)
+**current_focus:** **แชทหน้า = 1) BMB ADMIN LEGACY DUPLICATION AUDIT (READ-ONLY, คำสั่งใหม่)
+→ 2) ส่งรายงาน + รอ Owner approve → 3) implement Q1 (เอาหน้าต่างส่งออกจากเซมเดย์) + Q3 (รวม AdminRounds
+เป็นแท็บเดียว) + แผนรวมเมนูที่ audit เสนอ → 4) Owner รัน acceptance ที่เหลือ**
+**blocked_by:** ห้าม implement อะไรก่อน Owner approve รายงาน audit (STRICT STOP CONDITIONS ในคำสั่ง)
+· กฎใหม่ที่ใช้ = **`UNIVERSAL_MASTER_AI_RULES.md` (Owner เขียนเอง คัดจากไฟล์นี้ — ฉบับปัจจุบันคือ canonical)**
 
 ---
 
@@ -71,32 +73,65 @@
   → contractRegr (140/143/144) → record` = **STAGE_OK ทุกขั้น** · **ledger = 149,148,147,146**
 - **ไม่มีสาระตกค้างจาก contract ที่ fail กลางคัน** (probe: fixture 0 แถว / test orders 0 / ไม่มี txn ค้าง)
 
-### รู้ไว้ (ยังไม่ตัดสินใจ — รอ Owner)
+### คำสั่ง/คำตอบ Owner ตอนปิดเซสชัน 2026-10-24 (= requirements ของรอบหน้า)
 
-- **รอบวันนี้ (3 แถว) + รอบ 26 อีเวนนิง = status `closed` ยังอยู่** — ปิดโดยกฎเดิม/ปิดมือก่อน 148
-  (148 ไม่เปิดกลับให้เอง เพราะการปิดบางแถวเป็นการปิดมือ → เป็น product decision)
-  → **Q2 ใน one-pager** · เปิดกลับได้เองจากหน้า AdminRounds (ป้าย "เปิดรับ")
-- **`delivery_end` (หน้าต่างส่ง) ยังปิดป้าย "หมดเวลาจัดส่งแล้ว" ฝั่ง UI** — ไม่ใช่คัทออฟ
-  เป็นหน้าต่างส่งของรอบ · **Q1 ใน one-pager** (server ไม่ได้บังคับ — ไม่มี time-gate เซมเดย์แล้ว)
-- **contracts 023/028/030/036/037/038/039/125 = stale, ไม่ได้อยู่ใน CI gate** (pre-existing drift) —
-  ถ้าจะใช้ต้องซ่อม fixture radius/เมนู เป็นงานแยก (ยังไม่สั่ง)
+| หัวข้อ | คำสั่ง Owner | ผล |
+|---|---|---|
+| **P1-A · Q1** | **(ข) เอาออก = เซมเดย์สั่งได้ทุกเวลาในวันนั้น** | implement = `roundBookability` ฝั่ง SAME_DAY ไม่คืน `window_passed` อีก (คงไว้เฉพาะ PRE_ORDER) + CheckoutPage auto-select/ป้าย + อัปเดตเทสต์ → **ยังไม่ได้ทำ (คิวแชทหน้า)** |
+| **P1-A · Q2** | **เปิด/ปิดโดยแอดมินได้** (ระบบไม่เปิดกลับเอง) | **ไม่ต้องแก้โค้ด** — พฤติกรรมปัจจุบันถูกแล้ว · แถว `closed` ที่ค้าง (วันนี้ 3 + 26 อีเวนนิง) = กดเปิดเองจาก AdminRounds |
+| **P1-A · Q3** | **(ก) อนุมัติให้รวม AdminRounds เป็นแท็บเดียว** | งาน UI ล้วน → ทำ **หลัง** audit + approve |
+| **P1-A · Q4** | "มีการทำงานซ้ำซ้อนและเมนูซ้ำซ้อนกับใน setting แอดมิน ตรวจและแก้ตามคำสั่งใหม่" | → **คำสั่งใหม่: BMB ADMIN LEGACY DUPLICATION AUDIT (READ-ONLY)** = `docs/BMB_ADMIN_LEGACY_DUPLICATION_AUDIT_2026-10-24.md` · **ห้าม implement จนกว่า Owner approve รายงาน** |
+| **P1-B** | "ขอรายการจะลองให้ ส่วนใหญ่หายแล้ว" | รายการอยู่ที่ **P1-B checklist ด้านล่าง** |
+| **กฎใหม่** | `UNIVERSAL_MASTER_AI_RULES.md` = **Owner เขียนเอง** (คัดกฎจาก `AI_WORK_STATE.md` ใส่) + สั่งให้ใช้เป็นกฎแชทหน้า | ฉบับปัจจุบัน = canonical สำหรับรอบหน้า · ต้องเทียบเคียงกับไฟล์นี้ ห้ามขัดแย้ง (ดู `.clinerules` §RULE AUTHORITY) |
+
+### รู้ไว้ (มีคำตอบแล้ว แต่ยังไม่ implement / เป็นข้อเท็จจริงคงเดิม)
+
+- **หลัง implement Q1:** ฝั่งเซมเดย์เหลือแค่ `full` (ความจุ) + `closed` (สถานะรอบ) — ไม่มี time-gate เลย
+- **Q2 = คงเดิม:** ไม่มี auto-reopen ของรอบ — ระบบปิดเฉพาะวันที่ผ่านไปแล้ว (148) ที่เหลือแอดมินสั่งเอง
+- **contracts 023/028/030/036/037/038/039/125 = stale pre-existing drift** (ไม่อยู่ใน CI gate) —
+  พิสูจน์แล้วว่า fail เหมือนเดิมก่อนงานรอบนี้ (radius/เมนู gate) → เป็นงานค้างถ้า Owner สั่งซ่อม
 
 ### หมายเหตุเซสชัน (ต้องไม่หาย)
 
-- **commit `9d5fc24`** นอกจากบันทึกผล CI แล้ว ยังครอบคลุมการแก้ไข **`UNIVERSAL_MASTER_AI_RULES.md`**
-  ที่ถูกเขียนลง working tree ระหว่างรอบนี้ (LastWriteTime 21:41 — **ไม่ใช่ฝั่ง AI ที่แก้**,
-  เนื้อหา = SECTION 6 governance ใหม่: SYSTEM AUDIT BEFORE IMPLEMENTATION / EXISTING CAPABILITY FIRST)
-  → `git add -A` ดึงเข้า commit ด้วย · **ยังไม่ได้ตรวจสอบว่าฉบับนั้นครบ/จบหรือยัง** = ถ้า Owner
-  กำลังเขียนต่อ ให้ commit เพิ่มในรอบถัดไป (ห้าม revert ไฟล์นี้ทิ้ง)
-- รอบนี้ไม่ได้แก้ไฟล์อื่นใดนอกจากที่ระบุใน `docs/BMB_HANDOFF_NEXT_SESSION_2026-10-24.md` §18
+- **`UNIVERSAL_MASTER_AI_RULES.md` = Owner ยืนยันเองว่าเขียนเอง** (คัดแยกกฎจากไฟล์นี้ใส่ไป) และสั่งให้ใช้
+  เป็นกฎใหม่ของแชทหน้า → commit `9d5fc24` ที่ครอบไฟล์นี้ไว้ = **ถูกต้องแล้ว ห้าม revert**
+- รอบนี้ไม่ได้แก้ไฟล์อื่นใดนอกจากที่ระบุในแฮนด์ออฟ §18/§19
 
-### Next Exact Action
+### P1-B — รายการ acceptance ที่เหลือ (Owner ขอรายการ + จะรันเอง)
 
-1. Owner: ตอบ **Q1–Q4** ใน `docs/BMB_ROUND_MODEL_ONE_PAGER_2026-10-24.md` (ถ้าอนุมัติรวม UI ค่อยเริ่มงาน P1-A ขั้นถัดไป)
-2. Owner: รัน acceptance ที่เหลือ (#5, #7, #9–#14) แล้วแจ้งผลรวม → ถ้ามี defect จดลงไฟล์นี้
-3. **CI ของรอบนี้ — เช็คแล้ว ✅:** `d306ca7` → **CI = success (run 40103315924) +
-   Contract Tests = success (run 40103315919)** · contracts ถึง 149 รันเขียวใน CI
-   (อ้าง: https://github.com/bitemebaby2016-coder/bmb/actions/runs/40103315924 ·
+> รันบน `https://biteme-baby.com` ตาม `docs/BMB_E2E_PRODUCTION_ACCEPTANCE_PLAN_2026-10-24.md` §4 ·
+> `[R]` = อ่านอย่างเดียว `[O]` = สร้างข้อมูลทดสอบของ Owner เเอง · ✅ = ฝั่งโค้ด/หลักฐานตรวจให้แล้ว · ⏳ = ต้องรันบนเบราว์เซอร์/อุปกรณ์จริง
+
+| # | ขั้น | สถานะ |
+|---|---|---|
+| 1 | CI + Contract Tests หลัง push | ✅ `d306ca7`/`9d5fc24`/`7a24123` = success ทั้ง 2 workflows |
+| 2 | `[R]` หน้าแรก/เมนู/รอบ/โปรโมชันโหลดครบ | ⏳ |
+| 3 | `[O]` สั่งซื้อเมนูจริง (รายการแรกของร้าน) | ⏳ |
+| 4 | `[O]` PRE_ORDER ใน 2 ชม. ก่อนส่ง = ผ่าน · เกินคัทออฟ = ถูกปฏิเสธพร้อมเวลา | ⏳ |
+| 5 | `[R]` `/admin` ทุกเมนู (desktop sidebar + มือถือ drawer) + ป้ายคัทออฟพรีออเดอร์ + ป้าย "เซมเดย์ไม่มีคัทออฟ" | ⏳ |
+| 6 | ~~ทดสอบ 2 คัทออฟ~~ → **ยืนยันว่าช่องคัทออฟเซมเดย์หายไปจริง** ในหน้ารอบ | ⏳ (ฝั่งโค้ด/เทสต์ ✅ แล้ว) |
+| 7 | `[R]` ป้ายแดงค้างเคส **841** → reload 2 ครั้ง = หายไม่กลับ + bell/"อ่านทั้งหมดแล้ว" | ⏳ |
+| 8 | `[O]` push บนมือถือ = ได้ 1 notification ต่อสถานะ | ⏳ |
+| 9 | `[O]` จ่ายเงินจริง + ตรวจสลิปในแอดมิน (อนุมัติ → paid ใน DB) | ⏳ |
+| 10 | `[R]` SMS ยืนยัน (ถ้าเปิดใช้) | ⏳ |
+| 11 | `[O]` Rider POD upload บนมือถือ (รูปขึ้นจริง) | ⏳ |
+| 12 | `[R]` แผนที่ checkout (Maps key ใน Cloudflare) | ⏳ |
+| 13 | `[R]` เอกสาร/commit ตรง production build | ✅ `AI_WORK_STATE` + แฮนด์ออฟอัปเดตแล้ว · HEAD `7a24123` = origin/main |
+| 14 | `[O]` ระบบ role 13 ค่า → **14a–14j** (สูตร SQL ในแผน §5) | ⏳ |
+
+### Next Exact Action (เรียงลำดับที่ต้องทำในแชทหน้า)
+
+1. **ข้อ 1 — AUDIT (READ-ONLY):** `docs/BMB_ADMIN_LEGACY_DUPLICATION_AUDIT_2026-10-24.md` —
+   เริ่มจากรายงานสถานะ (repo/HEAD/stash/CI/untracked) → inventory ทุก nav entry + route/component/API/DB/role
+   → duplication matrix (KEEP/MERGE/REPAIR/DEPRECATE/REMOVE/NEEDS INVESTIGATION) → เสนอสถาปัตยกรรมเป้าหมาย
+   → **หยุด รอ Owner approve** (ห้ามแก้โค้ด/DB/มี migration/commit/push ระหว่างทำ)
+2. **ข้อ 2 — หลัง approve เท่านั้น:** implement **Q1** (เอา `window_passed` ออกจากฝั่งเซมเดย์) +
+   **Q3** (รวม AdminRounds เป็นแท็บเดียว) + แผนรวมเมนูที่ audit เสนอ → เกตเดิมทั้งหมด
+   (vitest/tsc/lint/build → Docker replay → contracts → production stages → push → เช็ค CI)
+3. **Owner:** รัน **P1-B checklist** ด้านบนแล้วแจ้งผลรวม → defect ใหม่ = จดลงไฟล์นี้
+4. **CI ของรอบนี้ ✅:** `d306ca7` → CI success (run 40103315924) + Contract Tests success (run 40103315919) ·
+   `9d5fc24` และ `7a24123` ก็เขียวทั้งคู่
+   (https://github.com/bitemebaby2016-coder/bmb/actions/runs/40103315924 ·
    https://github.com/bitemebaby2016-coder/bmb/actions/runs/40103315919)
 
 ---

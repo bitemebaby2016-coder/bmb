@@ -393,3 +393,56 @@ grants parity ตาราง post-006 ใน CI · canonical `create_production
 - contracts **023/028/030/036/037/038/039/125** = stale (pre-existing drift, ไม่ได้อยู่ใน CI gate) —
   พิสูจน์แล้วว่า fail เหมือนเดิมก่อนงานรอบนี้ (radius/เมนู gate) → เป็นงานค้างถ้า Owner สั่งซ่อม
 - **งานค้างทั้งหมดของรอบหน้า = P1-A (รอ Q1–Q4) + P1-B (Owner รัน acceptance)** — ไม่มีงานโค้ดค้าง
+
+---
+
+## 19. ปิดเซสชันรอบ 14 + คำสั่งใหม่ของ Owner (2026-10-24 — ฉบับใช้เปิดแชทหน้า)
+
+> **Owner (ตอนปิด):** "Q1 ข เอาออก = สั่งได้ทุกเวลาในวันนั้น · Q2 เปิด/ปิดโดยแอดมินได้ ·
+> Q3 (ก) อนุมัติให้รวมเป็นแท็บเดียว · Q4 มีการทำงานซ้ำซ้อนและเมนูซ้ำซ้อนกับใน setting แอดมิน
+> **ตรวจและแก้ตามคำสั่งใหม่** (ด้านล่าง) · P1-B ขอรายการจะลองให้ ส่วนใหญ่หายแล้ว ·
+> `UNIVERSAL_MASTER_AI_RULES.md` ผมเขียนเอง คัดแยกกฎจาก AI_WORK_STATE มาใส่ และพุชเอกสาร
+> ใช้เป็นกฎใหม่ในการทำงานแชทหน้า · **ปิดเซสชัน clear ทั้งหมด สร้างแฮนออฟงานทั้งหมดรวมคำสั่งใหม่**
+> แล้วไปงานทำต่อตามกฎแชทหน้าให้สมบูรณ์ทั้งหมด"
+
+### 19.1 คำสั่งใหม่ = **BMB ADMIN SYSTEM — LEGACY DUPLICATION AUDIT (READ-ONLY)**
+
+- **ข้อความคำสั่งต้นฉบับ (ห้ามแก้) อยู่ที่ `docs/BMB_ADMIN_LEGACY_DUPLICATION_AUDIT_2026-10-24.md`**
+- สาระ: audit เมนู/ฟีเจอร์/ชื่อ/backend ที่ซ้ำกันในระบบแอดมิน → inventory → duplication matrix →
+  เสนอสถาปัตยกรรมเป้าหมาย → แผนรวม + test criteria → **STRICT STOP: ห้ามแก้โค้ด/DB/migration/
+  rename/deprecate/env/deploy/commit/push — หยุดส่งรายงานแล้วรอ Owner approve ก่อน implement ทุกอย่าง**
+- เบาะแสที่ Owner ชี้ (ต้องพิสูจน์ ห้ามเชื่อก่อนตรวจ): **AdminRounds vs setting แอดมิน** ซ้ำทั้งคัทออฟ/
+  แพทเทิร์น/เวลา · เมนูแอดมิน 13 กลุ่ม (`navGroupsForRole`) · Q3 ที่อนุมัติแล้ว (รวมแท็บ) = อยู่ในแผนนี้ด้วย
+
+### 19.2 คำตอบ P1-A (Q1–Q4) — บันทึกเป็น requirements
+
+| Q | คำสั่ง | ผลลัพธ์ที่ต้องทำ (ยังไม่ได้ทำ — คิวหลัง approve) |
+|---|---|---|
+| Q1 | **(ข) เอาออก = เซมเดย์สั่งได้ทุกเวลาในวันนั้น** | `roundBookability` SAME_DAY ไม่คืน `window_passed` (คงเฉพาะ PRE_ORDER) + CheckoutPage auto-select/ป้าย + อัปเดตเทสต์ |
+| Q2 | **เปิด/ปิดโดยแอดมินได้** | ไม่แก้โค้ด (ระบบไม่เปิดกลับเองอยู่แล้ว) · แถว `closed` ค้าง = กดเปิดเอง |
+| Q3 | **(ก) อนุมัติรวม AdminRounds เป็นแท็บเดียว** | งาน UI — ทำหลัง audit + approve |
+| Q4 | ตรวจ/แก้เมนูซ้ำกับ setting ตามคำสั่งใหม่ | = AUDIT (ข้อ 19.1) |
+
+### 19.3 P1-B — รายการที่ Owner จะรันเอง
+
+รายการครบทุกขั้นพร้อมเครื่องหมาย ✅/⏳ อยู่ที่ **`AI_WORK_STATE.md` § P1-B checklist** (ส่วนรายละเอียด = แผน
+`docs/BMB_E2E_PRODUCTION_ACCEPTANCE_PLAN_2026-10-24.md` §4) · **ขั้น #1/#13 ตรวจให้แล้วผ่าน** ·
+ขั้นที่เหลือ = ต้องรันบนเบราว์เซอร์/อุปกรณ์จริง · แจ้งผลรวมเมื่อรันครบ (defect ใหม่ = จดลง AI_WORK_STATE)
+
+### 19.4 ลำดับงานแชทหน้า (ห้ามสลับ)
+
+1. **AUDIT (READ-ONLY)** → รายงาน 8 หัวข้อตามคำสั่ง → **หยุด รอ approve**
+2. **หลัง approve เท่านั้น:** implement Q1 + Q3 + แผนรวมเมนูที่ audit เสนอ → เกตเดิมทั้งหมด
+   (vitest/tsc/lint/build → Docker replay 001→ล่าสุด → contracts → production stages → push → เช็ค CI 2 workflows)
+3. Owner รัน P1-B แล้วแจ้งผลรวม
+4. **กฎที่ใช้:** `UNIVERSAL_MASTER_AI_RULES.md` (Owner เขียน/คัดมาจาก `AI_WORK_STATE.md` = canonical รอบหน้า)
+   + `.clinerules` bootstrap (AI_ENTRYPOINT → UNIVERSAL_MASTER_AI_RULES → AI_WORK_STATE)
+
+### 19.5 สถานะปิดเซสชันรอบ 14 (ห้ามลืม)
+
+- **HEAD `7a24123` = origin/main · tree clean** · stash@{0} PRESERVED ห้ามแตะ
+- **CI + Contract Tests = success ทุก commit รอบนี้** (`d306ca7` run 40103315924/40103315919 ·
+  `9d5fc24` · `7a24123`)
+- **Production ledger = 149,148,147,146** · evidence `e2e/r8Apply148-*.json` + `e2e/p14ProbeRounds.json`
+- รอบ `closed` ค้าง = 4 แถวเก่า (archived) + วันนี้ 3 แถว + 26 อีเวนนิง (แอดมินเปิดเอง — Q2)
+- contracts stale (023/028/030/036/037/038/039/125) = pre-existing drift, ไม่อยู่ใน CI gate — งานค้างถ้าสั่งซ่อม
