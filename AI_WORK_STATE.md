@@ -4,7 +4,8 @@
 
 **last_updated:** 2026-10-24 **ปิดเซสชันรอบ 14** (P0-1 ถอด same-day cutoff + P0-2 archive รอบค้าง
 ผ่านหมด production · ledger **149,148,147,146** · vitest **135 files/1393 tests exit 0** · tsc/lint/build 0
-· Docker replay 001→149 ALL_GREEN · contracts 123/124/127-149 PASS ทั้ง ephemeral และ production)
+· Docker replay 001→149 ALL_GREEN · contracts 123/124/127-149 PASS ทั้ง ephemeral และ production
+· **commit `d306ca7` = origin/main · CI success (run 40103315924) + Contract Tests success (run 40103315919)**)
 **phase:** 🟢 ปิดเซสชันรอบ 14 — P0-1 ✅ · P0-2 ✅ · P1-A ⏳ one-pager ส่งรอ Owner (Q1–Q4) · P1-B = ของ Owner
 **current_focus:** **รอ Owner: (ก) ตอบ Q1–Q4 ใน `docs/BMB_ROUND_MODEL_ONE_PAGER_2026-10-24.md`
 + (ข) รัน acceptance ที่เหลือ (#5 nav, #7 ป้าย 841, #14a–#14j ราย role) แล้วแจ้งผลรวม**
@@ -84,7 +85,10 @@
 
 1. Owner: ตอบ **Q1–Q4** ใน `docs/BMB_ROUND_MODEL_ONE_PAGER_2026-10-24.md` (ถ้าอนุมัติรวม UI ค่อยเริ่มงาน P1-A ขั้นถัดไป)
 2. Owner: รัน acceptance ที่เหลือ (#5, #7, #9–#14) แล้วแจ้งผลรวม → ถ้ามี defect จดลงไฟล์นี้
-3. ถ้ามี: CI result ของรอบนี้ (commit ของรอบ 14) = ต้องเช็คทั้ง `CI` + `Contract Tests` แล้วบันทึกผลที่นี่
+3. **CI ของรอบนี้ — เช็คแล้ว ✅:** `d306ca7` → **CI = success (run 40103315924) +
+   Contract Tests = success (run 40103315919)** · contracts ถึง 149 รันเขียวใน CI
+   (อ้าง: https://github.com/bitemebaby2016-coder/bmb/actions/runs/40103315924 ·
+   https://github.com/bitemebaby2016-coder/bmb/actions/runs/40103315919)
 
 ---
 

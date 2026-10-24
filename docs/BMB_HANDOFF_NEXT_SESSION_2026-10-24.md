@@ -384,10 +384,12 @@ grants parity ตาราง post-006 ใน CI · canonical `create_production
 **Verified:** vitest **135 files/1393 tests exit 0** · tsc 0 · lint 0 · build 0 · Docker replay
 **001→149 ALL_GREEN** · contracts 123/124/127-149 **PASS ทั้ง ephemeral และ production**
 · production stages `e2e/r8Apply148-*.json` **STAGE_OK ทุกขั้น** · **ledger = 149,148,147,146**
+· **CI = success (run 40103315924) + Contract Tests = success (run 40103315919) บน `d306ca7`**
 
 **ข้อควรรู้ตอนเปิดแชทหน้า:**
+- **HEAD = `d306ca7` = origin/main · tree clean** (push แล้ว + CI/Contract Tests เขียวทั้งคู่)
 - รอบวันนี้ 3 แถว + รอบ 26 อีเวนนิง ยัง `closed` (ปิดไว้ก่อน 148 — ไม่ได้เปิดให้อัตโนมัติ)
   = **Q2 ใน one-pager** · เปิดจากหน้า AdminRounds ได้เอง
 - contracts **023/028/030/036/037/038/039/125** = stale (pre-existing drift, ไม่ได้อยู่ใน CI gate) —
   พิสูจน์แล้วว่า fail เหมือนเดิมก่อนงานรอบนี้ (radius/เมนู gate) → เป็นงานค้างถ้า Owner สั่งซ่อม
-- ยังไม่มี commit/push ของรอบนี้ในบันทึกนี้ → ให้เช็ค `git log`/CI ตอนต้นแชทหน้า
+- **งานค้างทั้งหมดของรอบหน้า = P1-A (รอ Q1–Q4) + P1-B (Owner รัน acceptance)** — ไม่มีงานโค้ดค้าง

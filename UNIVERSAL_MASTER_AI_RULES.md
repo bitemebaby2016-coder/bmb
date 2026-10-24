@@ -205,6 +205,7 @@ SECTION 1: CORE BEHAVIOR & LOOP PREVENTION
     - "Smallest diff" does NOT mean "smallest effort".
     - Do not patch only the visible symptom when the root cause is elsewhere.
 
+
 ===============================================================================
 SECTION 2: SOURCE OF TRUTH & INTEGRITY
 ===============================================================================
@@ -244,6 +245,7 @@ SECTION 2: SOURCE OF TRUTH & INTEGRITY
     - Verify the actual implementation path, interfaces, dependencies, and
       runtime behavior where relevant.
 
+
 ===============================================================================
 SECTION 3: REQUIREMENT TRACEABILITY
 ===============================================================================
@@ -282,6 +284,7 @@ SECTION 3: REQUIREMENT TRACEABILITY
       - a test file exists
       - a test is skipped
       - a mock returns the expected value
+
 
 ===============================================================================
 SECTION 4: TASK & WORK-STATE MANAGEMENT
@@ -328,6 +331,7 @@ SECTION 4: TASK & WORK-STATE MANAGEMENT
       - Known failures
 
     Prefer delta analysis over full re-analysis when only a small area changed.
+
 
 ===============================================================================
 SECTION 5: CONTEXT & TOKEN ECONOMY
@@ -381,34 +385,73 @@ SECTION 5: CONTEXT & TOKEN ECONOMY
 
     Avoid long narrative unless requested.
 
+
 ===============================================================================
-SECTION 6: ENGINEERING & CODE SAFETY
+SECTION 6: ENGINEERING & CODE SAFETY (รวมระบบเดิม & การตรวจสอบระบบก่อน)
 ===============================================================================
 
-6.1 NO DESTRUCTIVE CHANGES
+6.1 SYSTEM AUDIT BEFORE IMPLEMENTATION (จากระบบ AI Governance เดิม)
+    Before changing code:
+    1. Inspect the actual repository, current Git state, architecture, routes, navigation, components, services, API contracts, database schema, migration history, permissions, scheduled jobs, integrations, tests, deployment configuration, and relevant runtime evidence.
+    2. Establish what already exists and how it is actually used.
+    3. Trace the complete affected user journey from entry point to successful completion and failure handling.
+    4. Identify duplicate, partially implemented, disconnected, broken, deprecated, and missing capabilities.
+    5. Produce an evidence-backed baseline. Do not infer missing functionality from a filename, an old document, or an incomplete search.
+    Do not start implementation until the audit is sufficient to support a safe implementation plan.
+
+6.2 EXISTING CAPABILITY FIRST
+    Before creating any new menu, page, route, API, service, component, database object, job, or migration:
+    - Search for existing equivalents and dependencies.
+    - Determine whether the existing implementation can be reused, repaired, extended, or consolidated.
+    - Explain why an existing implementation is insufficient if new infrastructure is proposed.
+    - Identify the canonical owner of each capability and the source of truth for its data and state.
+    - Keep Thai and English labels connected to the same underlying capability unless a genuinely separate business function is approved.
+    Do not create parallel functionality merely because it is faster or easier than understanding existing code.
+
+6.3 DATABASE AND MIGRATION CONTROL
+    A migration is not the default solution to every problem.
+    Before proposing one, inspect the live or target schema, migration history, existing database functions, constraints, indexes, policies, and data dependencies.
+    Prefer compatible changes to existing structures where appropriate. Every proposed migration must state:
+    - The proven problem and why application-level reuse or an existing schema change is insufficient.
+    - Exact schema changes and their dependencies.
+    - Existing-data impact, backward compatibility, security and access-policy impact.
+    - Deployment order, verification, failure recovery, and rollback or forward-repair strategy.
+    - Tests for both fresh database installation and an existing upgraded database.
+    Do not apply production migrations, alter environment configuration, or perform destructive operations without the required explicit Owner approval.
+    Never modify already-applied migration history to conceal inconsistencies.
+
+6.4 END-TO-END IMPLEMENTATION
+    For every accepted task, account for all applicable layers:
+    - User interface, navigation, localization, accessibility and validation.
+    - Authentication, authorization and role-based permissions.
+    - Business rules and authoritative server-side validation.
+    - API contracts, database operations and transaction boundaries.
+    - External integrations, events, background jobs and notifications.
+    - Loading, empty, success, error, retry, duplicate-submission and recovery states.
+    - Automated tests, integration tests, security checks and runtime verification.
+    - Documentation, operational procedures, monitoring and supportability.
+    Do not declare completion while a required layer is disconnected, untested, blocked, or merely represented by a placeholder.
+
+6.5 DUPLICATION AND COMPLEXITY CONTROL
+    Every implementation must account for architectural impact.
+    Before adding an abstraction or parallel implementation, explain why the existing one cannot serve the requirement.
+    Identify redundant menus, routes, components, APIs, services, schema objects, translations and business logic. Propose safe consolidation or deprecation plans where necessary.
+    Do not delete apparently redundant code until dependencies, usage, migration safety and backward compatibility have been verified.
+    Do not introduce new infrastructure solely to make a task appear complete.
+
+6.6 NO DESTRUCTIVE CHANGES
     - Do not delete large code blocks blindly.
     - Do not comment out working code as a shortcut.
     - Do not introduce breaking changes without authorization.
     - Do not remove functionality merely to make tests pass.
 
-6.2 DEPENDENCY DISCIPLINE
+6.7 DEPENDENCY DISCIPLINE
     - Do not install heavy packages unless strictly necessary.
     - Prefer existing project dependencies.
     - If a new dependency is required, explain why before installing when
       user approval is needed by the project's workflow.
 
-6.3 PRESERVE CONTRACTS
-    Check relevant:
-      - API contracts
-      - DB schema
-      - environment variables
-      - auth boundaries
-      - data shapes
-      - public component interfaces
-      - routing
-      - configuration
-
-6.4 SECURITY IS NOT OPTIONAL
+6.8 SECURITY IS NOT OPTIONAL
     Never bypass:
       - authentication
       - authorization
@@ -418,10 +461,9 @@ SECTION 6: ENGINEERING & CODE SAFETY
       - secret handling
       - rate limits
       - security middleware
-
     A security workaround that weakens protection is not an acceptable fix.
 
-6.5 NO MAGIC FIXES
+6.9 NO MAGIC FIXES
     Avoid unexplained:
       - hardcoded values
       - arbitrary delays
@@ -431,59 +473,38 @@ SECTION 6: ENGINEERING & CODE SAFETY
       - test-only branches
       - environment-specific hacks
 
-    If one is genuinely necessary, document the reason and verification.
 
 ===============================================================================
-SECTION 7: VERIFICATION & EVIDENCE
+SECTION 7: VERIFICATION & ACCEPTANCE GATES
 ===============================================================================
 
-7.1 VERIFY THE ACTUAL RESULT
+7.1 ACCEPTANCE GATES (ลำดับขั้นตอนที่ต้องผ่านตามลำดับ)
+    Work must pass these gates in order:
+    A. Evidence-backed audit (ตรวจสอบหลักฐานก่อน)
+    B. Owner-reviewed scope and implementation plan (แผนงานและขอบเขตที่เจ้าของอนุมัติ)
+    C. Controlled implementation (การพัฒนาภายใต้การควบคุม)
+    D. Relevant automated and integration tests (การทดสอบที่เกี่ยวข้อง)
+    E. End-to-end and failure-path verification (การตรวจสอบ E2E และเคสพัง)
+    F. Target-environment runtime verification where required (รันไทม์เช็คบนสภาพแวดล้อมเป้าหมาย)
+    G. Duplicate and regression review (ทบทวนความซ้ำซ้อนและรีเกรสชัน)
+    H. Documentation reconciliation (ปรับเอกสารให้ตรงกับความจริง)
+    I. Exact-scope Git review and authorized commit/push (ตรวจสอบขอบเขต Git และคอมมิตที่ได้รับอนุญาต)
+    J. Final evidence-backed closure report (รายงานสรุปปิดงานที่มีหลักฐานยืนยัน)
+    If a gate fails, report the blocker and stop dependent work. Do not silently skip the gate or relabel an unverified result as PASS.
+
+7.2 VERIFY THE ACTUAL RESULT
     Depending on the task, use the strongest available evidence:
-      - typecheck
-      - lint
-      - build
-      - unit tests
-      - integration tests
-      - E2E tests
-      - API request/response
-      - database verification
-      - runtime inspection
-      - browser/UI verification
+      - typecheck, lint, build
+      - unit tests, integration tests, E2E tests
+      - API request/response, database verification
+      - runtime inspection, browser/UI verification
       - security/authorization verification
 
-7.2 EVIDENCE QUALITY
-    Prefer:
-      Runtime evidence > executed tests > build/typecheck > static inspection
-      > documentation claim
+7.3 REGRESSION CHECK & STATUS VOCABULARY
+    Use explicit statuses:
+    `IMPLEMENTED`, `CONNECTED`, `TESTED`, `DEPLOYED`, `RUNTIME VERIFIED`, `DOCUMENTED`, `MISSING`, `BLOCKED`, `DEFERRED`, `CLOSED`.
+    Each PASS or CLOSED claim must reference concrete evidence. Distinguish local tests, CI results, staging verification and production verification.
 
-    Use the strongest evidence practical for the affected behavior.
-
-7.3 FAILURE RECORDING
-    When a verification fails, record:
-      - exact command/test
-      - relevant error
-      - affected area
-      - attempt number
-      - current diagnosis
-
-7.4 REGRESSION CHECK
-    After a fix, verify:
-      - original failure is fixed
-      - directly related behavior still works
-      - no new type/lint/build failures
-      - relevant tests remain valid
-      - contracts remain intact
-      - no security regression
-      - documentation does not overclaim
-
-7.5 SKIPPED / MOCKED TEST REGISTER
-    For important projects, maintain:
-      Test
-      Status
-      Reason
-      Impact
-      Temporary/Permanent
-      Follow-up
 
 ===============================================================================
 SECTION 8: ANTI-EVASION & ANTI-GAMING
@@ -493,189 +514,50 @@ SECTION 8: ANTI-EVASION & ANTI-GAMING
     AI MUST NOT reduce, redefine, rename, split, defer, or reinterpret a task
     solely to make the work appear complete.
 
-8.2 NO CHECKLIST GAMING
-    Do not change a checklist item from FAIL to PASS because:
-      - a related file was created,
-      - a test was skipped,
-      - the requirement was reworded,
-      - documentation was changed,
-      - a mock was added,
-      - validation was disabled.
+8.2 NO CHECKLIST & TEST GAMING
+    Do not change a checklist item from FAIL to PASS because of mock/skipped tests, renamed requirements, or disabled validation.
 
-8.3 NO TEST GAMING
-    Never:
-      - delete a failing test without cause
-      - skip a failing test to claim success
-      - weaken assertions
-      - reduce coverage requirements
-      - mock the exact behavior being claimed as production proof
-      - alter test expectations to match broken behavior without a valid
-        requirement change
+8.3 CHANGE AND GIT SAFETY
+    Inspect and report HEAD versus origin/main, staged changes, unstaged changes, untracked files with sizes and likely purposes, and stash state before authorizing changes.
+    Preserve unrelated work. Never use blanket staging such as `git add -A`. Stage only explicitly reviewed paths and inspect the staged diff before committing.
+    Do not overwrite environment files, secrets, existing user work, or unrelated project assets.
 
-8.4 NO STATUS GAMING
-    Do not change project status before evidence exists.
-
-8.5 NO HIDDEN WORK
-    All meaningful changes must be reportable:
-      - files changed
-      - purpose
-      - verification result
-      - remaining risk/blocker
 
 ===============================================================================
 SECTION 9: MODEL SELECTION & ESCALATION
 ===============================================================================
 
-9.1 DEFAULT ROUTING
-    Start exploration, file reading, and basic edits with the project's
-    default/budget model when appropriate.
+9.1 DEFAULT ROUTING & ESCALATION
+    Start exploration, file reading, and basic edits with the project's default/budget model. If Attempt 1 fails and the problem is deep/architectural, recommend escalation before Attempt 2.
+    Model switch does not reset attempt counts (Attempt 1 + Attempt 2 limit remains global).
 
-9.2 ESCALATION
-    If Attempt 1 fails and the problem is genuinely deep/architectural:
-      - recommend escalation before Attempt 2.
-      - The user may choose whether to switch models.
-
-9.3 MODEL PIN OVERRIDE
-    If the user explicitly pins a model, honor that choice.
-
-9.4 ESCALATION DOES NOT RESET ATTEMPTS
-    Example:
-      Qwen Attempt 1 fails
-      Claude Attempt 2 fails
-      STOP
-
-    It is NOT:
-      Qwen Attempt 1
-      Claude Attempt 1
-
-9.5 MODEL SWITCH ≠ NEW HYPOTHESIS
-    A stronger model must still reassess evidence and use a valid alternative
-    approach. Simply repeating the same failed patch with a different model
-    does not qualify as a meaningful second approach.
 
 ===============================================================================
 SECTION 10: COMPLETION & PRODUCTION GATES
 ===============================================================================
 
 10.1 UNIVERSAL DEFINITION OF DONE
-    A task may be CLOSED only when applicable:
+    A task may be CLOSED only when all requirements, audits, changes, verifications, and work-state updates are complete with evidence.
+    Production-ready is a verified state, not a declaration. Never claim production readiness without required production evidence and Owner acceptance criteria.
 
-      [ ] Requirement understood
-      [ ] Relevant source inspected
-      [ ] Root cause identified (for bug/failure work)
-      [ ] Implementation changed where required
-      [ ] Relevant verification executed
-      [ ] Actual result recorded
-      [ ] Regression checked
-      [ ] Security implications checked where relevant
-      [ ] Documentation synchronized without altering requirements
-      [ ] No known blocker remains
-      [ ] Work state updated
-
-10.2 PRODUCTION CLAIM GATE
-    A production-ready claim requires evidence appropriate to the project,
-    typically including:
-      [ ] TypeScript/typecheck clean
-      [ ] Lint clean
-      [ ] Build passes
-      [ ] Relevant automated tests pass
-      [ ] Critical E2E flows verified
-      [ ] API/Edge/runtime verified
-      [ ] Database/persistence verified
-      [ ] Security/auth/RLS/user isolation verified
-      [ ] Critical UI/mobile flows verified
-      [ ] No known critical blocker
-      [ ] Documentation matches implementation
-
-    Do not mark a gate PASS if it was not actually checked.
-
-10.3 FINAL STATUS
-    If any critical gate is unverified or failed:
-      Final status MUST NOT be `PRODUCTION READY`.
 
 ===============================================================================
-SECTION 11: SESSION START PROTOCOL
+SECTION 11 & 12: SESSION START & HANDOFF PROTOCOL
 ===============================================================================
 
-Before ANY project work:
+11.1 SESSION START: Read entrypoints (`AI_ENTRYPOINT.md`, `UNIVERSAL_MASTER_AI_RULES.md`, `AI_WORK_STATE.md`) before any work.
+12.1 SESSION HANDOFF: Update `AI_WORK_STATE.md` with Task ID, Status, Objective, Completed, Verified, Failed, Blocked, Files Changed, Tests Run, and Next Exact Action before closing session.
 
-1. Read `AI_ENTRYPOINT.md` if present.
-2. Read `UNIVERSAL_MASTER_AI_RULES.md`.
-3. Read `AI_WORK_STATE.md`.
-4. Identify the current Task ID and status.
-5. Check last known/inspected commit and relevant changes.
-6. Check known blockers, failures, and unverified items.
-7. Inspect only relevant changed/affected files.
-8. Continue existing work instead of creating duplicate work.
-9. Do not repeat verified work without new evidence.
-10. Update `AI_WORK_STATE.md` after meaningful work.
-
-If no state exists:
-    Create a minimal `AI_WORK_STATE.md` before substantial multi-step work.
-
-===============================================================================
-SECTION 12: SESSION END / HANDOFF PROTOCOL
-===============================================================================
-
-Before ending a substantial session, update `AI_WORK_STATE.md` with:
-
-    Task ID:
-    Status:
-    Objective:
-    Completed:
-    Verified:
-    Failed:
-    Blocked:
-    Files Changed:
-    Tests/Commands Run:
-    Known Risks:
-    Next Exact Action:
-
-Keep the handoff compact. It exists to prevent the next session from
-re-discovering the same context.
 
 ===============================================================================
 SECTION 13: PROJECT-SPECIFIC OVERRIDES
 ===============================================================================
+    (กำหนดค่าเฉพาะของโปรเจกต์เพิ่มเติมได้ที่นี่)
 
-Projects may define additional rules below this section.
-
-Rules must be explicit and must not contradict Sections 0–12 unless the project
-owner explicitly declares an override.
-
-13.1 Tech Stack & Environment
-    - Framework / Language:
-    - Package Manager:
-    - Deployment:
-    - Runtime:
-
-13.2 Coding Standards
-    - TypeScript strictness:
-    - Component/function conventions:
-    - Formatting:
-    - Error handling:
-    - Testing conventions:
-
-13.3 Architecture Constraints
-    - API limits:
-    - Engine/service limits:
-    - Required integrations:
-    - Forbidden architectural changes:
-
-13.4 Product Constraints
-    - Locked requirements:
-    - UX constraints:
-    - Security requirements:
-    - Compatibility requirements:
-
-13.5 Additional Rules
-    - Add project-specific rules here.
 
 ===============================================================================
 SECTION 14: STANDARD AI RESPONSE FORMAT
 ===============================================================================
-
-For substantial engineering work, prefer this compact format:
 
     TASK: <Task ID>
     STATUS: <state>
@@ -696,7 +578,6 @@ For substantial engineering work, prefer this compact format:
     REMAINING:
     <blockers or next action>
 
-Do not claim completion until the evidence supports it.
 
 ===============================================================================
 FINAL PRINCIPLE
