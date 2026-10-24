@@ -22,7 +22,7 @@ UPDATE public.profiles SET role = 'admin' WHERE id = 'cccc3333-3333-3333-3333-33
 
 SELECT public.ensure_rounds_for_date((now() AT TIME ZONE 'Asia/Bangkok')::date);
 SELECT public.ensure_rounds_for_date((now() AT TIME ZONE 'Asia/Bangkok')::date + 1);
-UPDATE public.delivery_rounds SET cutoff_time = '23:59', same_day_cutoff = '23:59', max_capacity = 50, current_count = 0
+UPDATE public.delivery_rounds SET cutoff_time = '23:59', max_capacity = 50, current_count = 0
  WHERE scheduled_date >= (now() AT TIME ZONE 'Asia/Bangkok')::date;
 UPDATE public.inventory SET current_stock = 999999;
 
@@ -53,7 +53,7 @@ BEGIN
   UPDATE public.business_settings SET value = value || '{"preorder_max_days": 3}'::jsonb
    WHERE key = 'order_policy';
   PERFORM public.ensure_rounds_for_date((now() AT TIME ZONE 'Asia/Bangkok')::date + 5);
-  UPDATE public.delivery_rounds SET cutoff_time = '23:59', same_day_cutoff = '23:59', max_capacity = 50
+  UPDATE public.delivery_rounds SET cutoff_time = '23:59', max_capacity = 50
    WHERE id = 'round-' || to_char((now() AT TIME ZONE 'Asia/Bangkok')::date + 5,'YYYYMMDD') || '-morning';
   PERFORM set_config('role', 'authenticated', false);
   PERFORM set_config('request.jwt.claims', '{"sub":"dddd4444-4444-4444-4444-444444444444","role":"authenticated"}', false);

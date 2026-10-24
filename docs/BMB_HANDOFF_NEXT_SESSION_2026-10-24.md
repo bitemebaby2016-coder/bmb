@@ -366,3 +366,28 @@ grants parity ตาราง post-006 ใน CI · canonical `create_production
 > (2) P0-2 แก้รอบค้างลบไม่ได้ (probe → archive+cleanup)
 > (3) P1-A one-pager ชนิดรอบรอ Owner อนุมัติ
 > (4) P1-B ให้ Owner รัน acceptance ที่เหลือ
+
+---
+
+## 18. ผลรอบ 14 — ทำเสร็จแล้วทั้ง P0-1 + P0-2 (2026-10-24, แชทเดียวกัน)
+
+> คำตอบ Owner ต่อ §17: P0-1 = อนุมัติ · P0-2 = แก้ · P1-A = อนุมัติ (ทำ one-pager) ·
+> P1-B = Owner จะรันทีเดียวตอนทดสอบรอบหน้า
+
+| ข้อ | สถานะ | หลักฐาน |
+|---|---|---|
+| **P0-1 ถอด same-day cutoff** | ✅ ผ่าน production | migration **148** (builder `e2e/m148Build.cjs`) · DROP COLUMN `same_day_cutoff` · SAME_DAY ไม่มี `ERR_CUTOFF_PASSED` · auto-close = date-only · client ทั้งสาย + AdminRounds เหลือช่องพรีออเดอร์ · **รื้อ**: ลบ `contracts_145.sql`/`roundsTwoCutoffs.test.ts` → `contracts_148_same_day_no_cutoff.sql` + `roundsSameDayNoCutoff.test.ts` · fixture 12 ไฟล์ + `concurrency_124.sh` strip · contract 140/143/023 ปรับตามกติกาใหม่ · workflow Contract 148 |
+| **P0-2 รอบค้างลบไม่ได้** | ✅ ผ่าน production | probe จริง `e2e/p14ProbeRounds.json` = **FK NO ACTION** (orders/products) + RLS ไม่เกี่ยว · migration **149** = `archived` + cleanup + **archive 4 แถวเก่า + audit 4** · UI: ปุ่มเก็บ/กู้คืน + ลิสต์ "รอบที่เก็บไว้" + เหตุผล FK ตรงจริง · `contracts_149_round_archive.sql` G1–G6 PASS |
+| **P1-A one-pager** | ⏳ ส่งแล้ว รอ Owner | `docs/BMB_ROUND_MODEL_ONE_PAGER_2026-10-24.md` — **ยังไม่แตะโครง UI** · มี Q1–Q4 รอคำสั่ง |
+| **P1-B acceptance** | ⏳ ของ Owner | ขั้น #6 = **ยกเลิก/แทนที่โดย 148 แล้ว** · เหลือ #5 nav, #7 ป้าย 841, #9–#14 (14a–14j) |
+
+**Verified:** vitest **135 files/1393 tests exit 0** · tsc 0 · lint 0 · build 0 · Docker replay
+**001→149 ALL_GREEN** · contracts 123/124/127-149 **PASS ทั้ง ephemeral และ production**
+· production stages `e2e/r8Apply148-*.json` **STAGE_OK ทุกขั้น** · **ledger = 149,148,147,146**
+
+**ข้อควรรู้ตอนเปิดแชทหน้า:**
+- รอบวันนี้ 3 แถว + รอบ 26 อีเวนนิง ยัง `closed` (ปิดไว้ก่อน 148 — ไม่ได้เปิดให้อัตโนมัติ)
+  = **Q2 ใน one-pager** · เปิดจากหน้า AdminRounds ได้เอง
+- contracts **023/028/030/036/037/038/039/125** = stale (pre-existing drift, ไม่ได้อยู่ใน CI gate) —
+  พิสูจน์แล้วว่า fail เหมือนเดิมก่อนงานรอบนี้ (radius/เมนู gate) → เป็นงานค้างถ้า Owner สั่งซ่อม
+- ยังไม่มี commit/push ของรอบนี้ในบันทึกนี้ → ให้เช็ค `git log`/CI ตอนต้นแชทหน้า

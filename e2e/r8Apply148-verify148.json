@@ -1,0 +1,56 @@
+[
+  {
+    "label": "same-day-col-gone",
+    "status": 201,
+    "data": [
+      {
+        "has_col": 0
+      }
+    ]
+  },
+  {
+    "label": "pattern-key-gone",
+    "status": 201,
+    "data": [
+      {
+        "keys": 0
+      }
+    ]
+  },
+  {
+    "label": "gate-rewritten",
+    "status": 201,
+    "data": [
+      {
+        "hits": 1
+      }
+    ]
+  },
+  {
+    "label": "auto-close-date-only",
+    "status": 201,
+    "data": [
+      {
+        "hits": 1
+      }
+    ]
+  },
+  {
+    "label": "fn-code-refs-to-dropped-col",
+    "status": 201,
+    "data": [
+      {
+        "refs": 0
+      }
+    ]
+  },
+  {
+    "label": "today-rounds-still-active",
+    "status": 201,
+    "data": [
+      {
+        "active_today": 0
+      }
+    ]
+  }
+]

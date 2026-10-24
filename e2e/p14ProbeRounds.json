@@ -1,0 +1,162 @@
+[
+  {
+    "label": "fk-ref-delivery_rounds",
+    "status": 201,
+    "data": [
+      {
+        "child": "orders",
+        "column_name": "delivery_round_id",
+        "constraint_name": "orders_delivery_round_id_fkey",
+        "delete_rule": "NO ACTION"
+      },
+      {
+        "child": "pre_orders",
+        "column_name": "delivery_round_id",
+        "constraint_name": "pre_orders_delivery_round_id_fkey",
+        "delete_rule": "SET NULL"
+      },
+      {
+        "child": "production_batches",
+        "column_name": "delivery_round_id",
+        "constraint_name": "production_batches_delivery_round_id_fkey",
+        "delete_rule": "SET NULL"
+      },
+      {
+        "child": "products",
+        "column_name": "delivery_round_id",
+        "constraint_name": "products_delivery_round_id_fkey",
+        "delete_rule": "NO ACTION"
+      }
+    ]
+  },
+  {
+    "label": "round-inventory",
+    "status": 201,
+    "data": [
+      {
+        "status": "closed",
+        "rows": 7,
+        "past": 4,
+        "today": 3,
+        "future": 0
+      }
+    ]
+  },
+  {
+    "label": "rounds-with-orders",
+    "status": 201,
+    "data": [
+      {
+        "status": "closed",
+        "rounds": 4,
+        "orders": 4
+      }
+    ]
+  },
+  {
+    "label": "stuck-past-rounds",
+    "status": 201,
+    "data": [
+      {
+        "past_total": 4,
+        "past_order_free": 0,
+        "past_with_orders": 4,
+        "future_empty_active": 0
+      }
+    ]
+  },
+  {
+    "label": "child-row-counts",
+    "status": 201,
+    "data": [
+      {
+        "orders_linked": 4,
+        "products_linked": 0,
+        "pre_orders_linked": 0,
+        "batches_linked": 0
+      }
+    ]
+  },
+  {
+    "label": "admin-rls-gates",
+    "status": 201,
+    "data": [
+      {
+        "proname": "is_admin",
+        "src": "\r\nBEGIN\r\n  RETURN EXISTS (\r\n    SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role IN ('admin', 'owner')\r\n  );\r\nEND;\r\n"
+      },
+      {
+        "proname": "is_branch_admin",
+        "src": "\r\nDECLARE\r\n  v_uid UUID; v_role TEXT; v_is_platform BOOLEAN;\r\n  v_user_tenant TEXT; v_user_branch TEXT; v_branch_tenant TEXT;\r\nBEGIN\r\n  v_uid := auth.uid();\r\n  IF v_uid IS NULL THEN RETURN FALSE; END IF;\r\n\r\n  SELECT role, COALESCE(tenant_id, 'tenant-bmb-001'), branch_id INTO v_role, v_user_tenant, v_user_branch\r\n    FROM public.profiles WHERE id = v_uid LIMIT 1;\r\n  IF v_role IS NULL THEN RETURN FALSE; END IF;\r\n\r\n  SELECT COALESCE(is_platform, FALSE) INTO v_is_platform FROM public.profiles WHERE id = v_uid LIMIT 1;\r\n  IF v_is_platform THEN RETURN TRUE; END IF;\r\n\r\n  SELECT tenant_id INTO v_branc"
+      },
+      {
+        "proname": "is_tenant_admin",
+        "src": "\r\nDECLARE\r\n  v_uid uuid;\r\n  v_role text;\r\n  v_caller_tenant text;\r\n  v_is_platform boolean;\r\n  v_target text;\r\nBEGIN\r\n  v_uid := auth.uid();\r\n  IF v_uid IS NULL THEN\r\n    RETURN false;\r\n  END IF;\r\n\r\n  -- 7. parameter integrity: copy caller argument; never overwrite p_tenant_id\r\n  v_target := p_tenant_id;\r\n\r\n  -- 4. NULL/empty target = explicit DENY (no fallback, no bypass)\r\n  IF v_target IS NULL OR v_target = '' THEN\r\n    RETURN false;\r\n  END IF;\r\n\r\n  SELECT role, COALESCE(tenant_id, ''), COALESCE(is_platform, false)\r\n    INTO v_role, v_caller_tenant, v_is_platform\r\n    FROM public.profiles\r\n "
+      }
+    ]
+  },
+  {
+    "label": "admin-profiles",
+    "status": 201,
+    "data": [
+      {
+        "role": "admin",
+        "has_branch": false,
+        "count": 1
+      },
+      {
+        "role": "customer",
+        "has_branch": false,
+        "count": 3
+      },
+      {
+        "role": "rider",
+        "has_branch": false,
+        "count": 1
+      }
+    ]
+  },
+  {
+    "label": "rounds-policies",
+    "status": 201,
+    "data": [
+      {
+        "policyname": "delivery_rounds_audit_read",
+        "cmd": "SELECT",
+        "roles": "{authenticated}",
+        "qual": "(is_auditor() OR is_developer())",
+        "with_check": null
+      },
+      {
+        "policyname": "delivery_rounds_branch_admin_manage",
+        "cmd": "ALL",
+        "roles": "{authenticated}",
+        "qual": "is_branch_admin(branch_id)",
+        "with_check": "is_branch_admin(branch_id)"
+      },
+      {
+        "policyname": "delivery_rounds_public_read",
+        "cmd": "SELECT",
+        "roles": "{anon,authenticated}",
+        "qual": "(status = 'active'::text)",
+        "with_check": null
+      },
+      {
+        "policyname": "delivery_rounds_staff_select",
+        "cmd": "SELECT",
+        "roles": "{public}",
+        "qual": "is_staff()",
+        "with_check": null
+      }
+    ]
+  },
+  {
+    "label": "same-day-column",
+    "status": 201,
+    "data": [
+      {
+        "same_day_col": 1
+      }
+    ]
+  }
+]

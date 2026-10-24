@@ -356,17 +356,17 @@ jobs:
           fi
           echo "Contract 144 OK — pattern-driven rounds + idempotent ensure + repair + past-date guard"
 
-      - name: Contract 145 — two independent cutoffs + shared slot + >=2 rule (ROLLBACK)
+      - name: Contract 148 — SAME_DAY no cutoff (column dropped) + pre-order cutoff intact + auto-close date-only (ROLLBACK)
         run: |
           set +e
-          out=$(psql -v ON_ERROR_STOP=1 -f e2e/contracts_145.sql 2>&1); rc=$?
+          out=$(psql -v ON_ERROR_STOP=1 -f e2e/contracts_148_same_day_no_cutoff.sql 2>&1); rc=$?
           printf '%s\n' "$out"
           if [ $rc -ne 0 ]; then
             msg=$(printf '%s\n' "$out" | grep -m1 'ERROR:' || echo "rc=$rc")
-            echo "::error file=e2e/contracts_145.sql::$msg"
+            echo "::error file=e2e/contracts_148_same_day_no_cutoff.sql::$msg"
             exit 1
           fi
-          echo "Contract 145 OK — same-day/pre-order cutoffs independent + shared capacity + >=2 publish holds"
+          echo "Contract 148 OK — no same-day cutoff + pre-order gates + shared slot + date-only auto-close"
 
       - name: Contract 146 — role foundation (predicates, set_user_role, rider trigger) (ROLLBACK)
         run: |
@@ -379,6 +379,18 @@ jobs:
             exit 1
           fi
           echo "Contract 146 OK — 13-role predicates + set_user_role gates + rider trigger"
+
+      - name: Contract 149 — round archive + FK truth + cleanup (ROLLBACK)
+        run: |
+          set +e
+          out=$(psql -v ON_ERROR_STOP=1 -f e2e/contracts_149_round_archive.sql 2>&1); rc=$?
+          printf '%s\n' "$out"
+          if [ $rc -ne 0 ]; then
+            msg=$(printf '%s\n' "$out" | grep -m1 'ERROR:' || echo "rc=$rc")
+            echo "::error file=e2e/contracts_149_round_archive.sql::$msg"
+            exit 1
+          fi
+          echo "Contract 149 OK — archived column + FK-blocked delete + archive/restore + cleanup"
 
       - name: Contract 147 — role RLS access matrix (ROLLBACK)
         run: |

@@ -2,10 +2,13 @@
 
 > **สถานะงานปัจจุบันของโปรเจกต์ Bite Me Baby** ใช้แนบเข้าสู่ Context ตอนเริ่มแชทเสมอ
 
-**last_updated:** 2026-10-24 **ปิดเซสชันรอบ 13** (role system ครบ+production+CI เขียว `33df8ce` · Owner ออกคำสั่ง/กฎใหม่ 4 ข้อ + ปัญหาค้าง → ทั้งหมดย้ายไป **ROUND-14 BACKLOG** ด้านล่าง ให้ทำในแชทหน้า)
-**phase:** 🟢 ปิดเซสชัน — งานรอบ 13 เสร็จหมด (push + CI success ทั้ง 2 workflows) · ไม่มีงานค้างในแชทนี้
-**current_focus:** **แชทหน้า = ROUND-14 BACKLOG (P0-1 ถอด same-day cutoff, P0-2 รอบค้างลบไม่ได้, P1 แนวคิดรอบ, P1 Owner รัน acceptance #1–#14)**
-**blocked_by:** ไม่มี — เจ้าของสั่งเองว่าปัญหาทั้งหมด "ไปทำแชทหน้า"
+**last_updated:** 2026-10-24 **ปิดเซสชันรอบ 14** (P0-1 ถอด same-day cutoff + P0-2 archive รอบค้าง
+ผ่านหมด production · ledger **149,148,147,146** · vitest **135 files/1393 tests exit 0** · tsc/lint/build 0
+· Docker replay 001→149 ALL_GREEN · contracts 123/124/127-149 PASS ทั้ง ephemeral และ production)
+**phase:** 🟢 ปิดเซสชันรอบ 14 — P0-1 ✅ · P0-2 ✅ · P1-A ⏳ one-pager ส่งรอ Owner (Q1–Q4) · P1-B = ของ Owner
+**current_focus:** **รอ Owner: (ก) ตอบ Q1–Q4 ใน `docs/BMB_ROUND_MODEL_ONE_PAGER_2026-10-24.md`
++ (ข) รัน acceptance ที่เหลือ (#5 nav, #7 ป้าย 841, #14a–#14j ราย role) แล้วแจ้งผลรวม**
+**blocked_by:** ไม่มีงานฝั่งโค้ดค้าง · การเปลี่ยนโครง UI รอ one-pager อนุมัติ (ห้ามเดา product decision)
 
 ---
 
@@ -43,7 +46,49 @@
 
 ---
 
-## 🔴 ROUND-14 BACKLOG (คำสั่งใหม่ Owner ตอนปิดเซสชัน 2026-10-24 — "ไปทำแชทหน้า")
+## ✅ ROUND-14 — ผลการดำเนินงาน (2026-10-24 · P0-1 + P0-2 ผ่านหมด production)
+
+> ทำตามลำดับในแฮนด์ออฟ §17 · ทุกขั้นมีหลักฐานจริง (rules: No Evidence = Not Done)
+
+| ID | สถานะ | ทำอะไรบ้าง |
+|---|---|---|
+| **P0-1** | ✅ DONE + production | **Migration `148_same_day_no_cutoff.sql`** (สร้างด้วย `e2e/m148Build.cjs` anchor-guarded): SAME_DAY ถอด time-gate `ERR_CUTOFF_PASSED` · `ensure_rounds_for_date` ไม่เขียน/ไม่ส่งคีย์คัทออฟเซมเดย์ · `auto_close_expired_rounds` = ปิดเฉพาะวันที่ผ่านไปแล้ว (ไม่ปิดด้วย cutoff) · strip คีย์ `order_pattern` · **DROP COLUMN `same_day_cutoff`** · ฝั่ง client: `deliveryRoundStatus` (SAME_DAY = null cutoff + ป้าย "ไม่มีคัทออฟ"), `orderPolicy` pattern, `bmbAdminApi_rounds`, AdminRounds (ช่องคัทออฟเซมเดย์ถูกถอด → เหลือ "ปิดรับเดิม (legacy)" + "ปรับของพรีออเดอร์"), CheckoutPage, `types/index.ts` · รื้อของที่ผูก 2-คัทออฟ: **ลบ `contracts_145.sql`** → ใหม่ `contracts_148_same_day_no_cutoff.sql` (G1–G6) · **ลบ `roundsTwoCutoffs.test.ts`** → ใหม่ `roundsSameDayNoCutoff.test.ts` (13 ข้อ) · fixture pairing 12 ไฟล์ + `concurrency_124.sh` + `contracts_147` ถูก strip · contract 140 (auto-close) / 143 (G6) / 023 (T7) ปรับตามกติกาใหม่ · workflow = Contract 148 แทน 145 |
+| **P0-2** | ✅ DONE + production | **พิสูจน์สาเหตุด้วย probe จริง** `e2e/p14ProbeRounds.cjs` → `e2e/p14ProbeRounds.json`: `orders.delivery_round_id`/`products` → `delivery_rounds` = **FK NO ACTION** (ลบไม่ได้จริง 4 รอบเก่า/4 ออเดอร์) · RLS ไม่ใช่ตัวการ (admin = is_platform) · **Migration `149_round_archive_cleanup.sql`**: คอลัมน์ `archived` + cleanup รอบเก่าไม่มีใครอ้างอิง + **archive อัตโนมัติ 4 แถวพร้อม audit** · client: `archiveRound`/`restoreRound`/`deleteRound` + `roundDeleteErrorText` (เหตุผล FK ตรงความจริง) + AdminRounds ปุ่ม "📦 เก็บ"/"↩ กู้คืน" + ลิสต์ "🗂 รอบที่เก็บไว้" · contract `contracts_149_round_archive.sql` (G1–G6) |
+| **P1-A** | ⏳ WAITING_OWNER | one-pager → **`docs/BMB_ROUND_MODEL_ONE_PAGER_2026-10-24.md`** (คำศัพท์รอบ + กติกาหลัง 148/149 + **Q1–Q4 ที่ต้องการคำสั่ง**) · **ยังไม่แตะโครง UI** ตามกฎ "ห้ามเดา product decision" |
+| **P1-B** | ⏳ ของ Owner | รัน acceptance ที่เหลือ — **ขั้น #6 ถูกยกเลิก/แทนที่โดย 148 แล้ว** · เหลือ #5 nav, #7 ป้าย 841, #9–#14 (ราย role 14a–14j) รอ Owner แจ้งผลรวม |
+
+### Verified (หลักฐานจริง — ทุกอันรันเองในเซสชันนี้)
+
+- **vitest 135 files / 1393 tests exit 0** (เทสต์ใหม่ 2 ไฟล์ 18 ข้อ) · **tsc 0 · lint 0 · build 0**
+- **Docker replay (postgres:16 ephemeral): ALL MIGRATIONS APPLIED CLEANLY 001→149** + contracts
+  123/124/127-130/131/133/135/136/137/138-139/**140/141/142/143/144/146/147/148/149 = PASS ทุกไฟล์**
+  (contracts ที่ CI ไม่รันอย่าง 023/028/030/036/037/038/039/125 = **pre-existing drift** — พิสูจน์แล้วว่า
+  fail เหมือนเดิมแม้คืนคอลัมน์ same_day_cutoff (ค่า radius/เมนู gate 142) → ไม่ใช่ของที่รอบนี้ทำพัง)
+- **Production apply (staged, evidence `e2e/r8Apply148-*.json`):**
+  `precheck → apply148 → verify148 (col gone, pattern key gone, gate rewritten, auto-close date-only)
+  → apply149 → verify149 (archived col + 4 แถว archive + 4 audit) → contract148 → contract149
+  → contractRegr (140/143/144) → record` = **STAGE_OK ทุกขั้น** · **ledger = 149,148,147,146**
+- **ไม่มีสาระตกค้างจาก contract ที่ fail กลางคัน** (probe: fixture 0 แถว / test orders 0 / ไม่มี txn ค้าง)
+
+### รู้ไว้ (ยังไม่ตัดสินใจ — รอ Owner)
+
+- **รอบวันนี้ (3 แถว) + รอบ 26 อีเวนนิง = status `closed` ยังอยู่** — ปิดโดยกฎเดิม/ปิดมือก่อน 148
+  (148 ไม่เปิดกลับให้เอง เพราะการปิดบางแถวเป็นการปิดมือ → เป็น product decision)
+  → **Q2 ใน one-pager** · เปิดกลับได้เองจากหน้า AdminRounds (ป้าย "เปิดรับ")
+- **`delivery_end` (หน้าต่างส่ง) ยังปิดป้าย "หมดเวลาจัดส่งแล้ว" ฝั่ง UI** — ไม่ใช่คัทออฟ
+  เป็นหน้าต่างส่งของรอบ · **Q1 ใน one-pager** (server ไม่ได้บังคับ — ไม่มี time-gate เซมเดย์แล้ว)
+- **contracts 023/028/030/036/037/038/039/125 = stale, ไม่ได้อยู่ใน CI gate** (pre-existing drift) —
+  ถ้าจะใช้ต้องซ่อม fixture radius/เมนู เป็นงานแยก (ยังไม่สั่ง)
+
+### Next Exact Action
+
+1. Owner: ตอบ **Q1–Q4** ใน `docs/BMB_ROUND_MODEL_ONE_PAGER_2026-10-24.md` (ถ้าอนุมัติรวม UI ค่อยเริ่มงาน P1-A ขั้นถัดไป)
+2. Owner: รัน acceptance ที่เหลือ (#5, #7, #9–#14) แล้วแจ้งผลรวม → ถ้ามี defect จดลงไฟล์นี้
+3. ถ้ามี: CI result ของรอบนี้ (commit ของรอบ 14) = ต้องเช็คทั้ง `CI` + `Contract Tests` แล้วบันทึกผลที่นี่
+
+---
+
+## 🔴 ROUND-14 BACKLOG (คำสั่งใหม่ Owner ตอนปิดเซสชัน 2026-10-24 — "ไปทำแชทหน้า") ← ทำเสร็จแล้ว ด้านบน
 
 ### กฎใหม่ของ Owner (มีผลเหนือสิ่งที่ทำไปแล้ว — ห้ามฝ่าฝืนรอบหน้า)
 

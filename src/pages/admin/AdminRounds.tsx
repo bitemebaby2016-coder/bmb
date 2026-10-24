@@ -4,14 +4,19 @@
 // WHY (Owner 2026-10-24): "รอบจัดส่งในหน้าแอดมินมั่วมากซ้ำหลายอย่างหลายวัน —
 // ทุกวันของพรีออเดอร์มีแค่ 3 รอบเหมือนเดิม ควรเป็นแพทเทิร์นเดียวกัน" → หน้านี้จัดการ
 // (1) แพทเทิร์นรอบ 3 รอบ/วัน (order_pattern · migration 144 — template ของทุกวัน)
-// (2) รอบรายวันแบบจัดกลุ่มตามวัน (ไม่ใช่การ์ดซ้ำยาวเหยียด) — เซมเดย์ยังส่งได้ตลอด
-//     เหมือนเดิม (รอบของทุกวันสร้างอัตโนมัติจากแพทเทิร์นผ่าน ensure_rounds_for_date)
+// (2) รอบรายวันแบบจัดกลุ่มตามวัน (ไม่ใช่การ์ดซ้ำยาวเหยียด)
+// 148 (Owner 2026-10-24): SAME_DAY = เปิด–ปิดไม่มีคัทออฟ → หน้านี้เหลือคัทออฟเดียวคือ
+//     ของพรีออเดอร์ (pre_order_cutoff) · ช่อง "คัทออฟเซมเดย์" ถูกถอดออกจากแบบฟอร์มแล้ว
 
 import { useState, useEffect, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 import { showToast } from '@/components/ui/ToastContainer'
 import {
   getDeliveryRoundsAdmin,
+  getArchivedRoundsAdmin,
+  archiveRound,
+  restoreRound,
+  deleteRound,
   setRoundStatus,
   resetRoundCapacity,
   getRoundPattern,
@@ -27,15 +32,22 @@ import { supabase } from '@/lib/supabase'
 
 export function AdminRounds() {
   const [rounds, setRounds] = useState<DeliveryRoundRow[]>([])
+  const [archived, setArchived] = useState<DeliveryRoundRow[]>([])
   const [pattern, setPattern] = useState<RoundPatternRow[]>([])
   const [savingPattern, setSavingPattern] = useState(false)
   const [busy, setBusy] = useState<string | null>(null)
 
   const loadRounds = useCallback(async () => {
     try {
-      // R4: auto-close รอบหมด cutoff ก่อน list (policy ที่ Owner อนุมัติ)
+      // R4: auto-close รอบของวันที่ผ่านไปแล้วก่อน list (148 — ไม่ปิดด้วย cutoff อีกแล้ว)
       await supabase.rpc('auto_close_expired_rounds').then(() => {}, () => {})
-      setRounds(await getDeliveryRoundsAdmin())
+      const [active, arch] = await Promise.all([
+        getDeliveryRoundsAdmin(),
+        // 149 (P0-2): รายการ "ค้าง ลบไม่ได้" ต้องเห็น + จัดการได้ (เก็บ/กู้คืน/ลบ)
+        getArchivedRoundsAdmin().catch(() => [] as DeliveryRoundRow[]),
+      ])
+      setRounds(active)
+      setArchived(arch)
     } catch (e) {
       console.error('[AdminRounds] load failed:', e)
       showToast(`โหลดรายการรอบส่งไม่สำเร็จ: ${String((e as Error)?.message || e)}`, 'error')
@@ -105,13 +117,25 @@ export function AdminRounds() {
     }
   }
 
+  async function handleArchive(round: DeliveryRoundRow) {
+    const err = await archiveRound(round.id)
+    if (err) { showToast(err, 'error'); return }
+    showToast(`เก็บรอบ "${round.display_name}" แล้ว — อยู่ในลิสต์ "ที่เก็บไว้" ด้านล่าง (กู้คืนได้)`, 'success')
+    void loadRounds()
+  }
+
+  async function handleRestore(round: DeliveryRoundRow) {
+    const err = await restoreRound(round.id)
+    if (err) { showToast(err, 'error'); return }
+    showToast(`กู้คืนรอบ "${round.display_name}" กลับเข้ารายการแล้ว (สถานะยังปิดรับ — กดเปิดเองได้)`, 'success')
+    void loadRounds()
+  }
+
   async function handleDelete(round: DeliveryRoundRow) {
-    const { error } = await supabase.from('delivery_rounds').delete().eq('id', round.id)
-    if (error) {
-      showToast(`ลบรอบไม่สำเร็จ: ${error.message}`, 'error')
-      return
-    }
-    showToast('ลบรอบแล้ว', 'success')
+    // 149 (P0-2): เหตุผลต้องตรงความจริง — FK (มีออเดอร์อ้างอิง) = ลบถาวรไม่ได้จริง
+    const err = await deleteRound(round.id)
+    if (err) { showToast(err, 'error'); return }
+    showToast('ลบรอบถาวรแล้ว', 'success')
     void loadRounds()
   }
 
@@ -136,7 +160,8 @@ export function AdminRounds() {
         <h2 className="text-xl font-bold text-brand-accent mb-1">📋 แพทเทิร์นรอบประจำวัน (ทุกวันใช้ชุดเดียวกัน)</h2>
         <p className="text-sm text-brand-muted mb-4">
           ค่านี้คือต้นแบบของรอบทุกวัน (ทั้งพรีออเดอร์และเซมเดย์) — แก้ที่นี่ที่เดียว แล้วกด "สร้าง/ซ่อมรอบ 30 วัน"
-          · คัทออฟแยกอิสระ: <b>ปรับของเซมเดย์</b> / <b>ปรับของพรีออเดอร์</b> (ช่องพรีออเดอร์ว่าง = ใช้กฎเดิม ก่อนส่ง X ชม.)
+          · คัทออฟมีช่องเดียวคือ <b>ปรับของพรีออเดอร์</b> (ช่องว่าง = ใช้กฎเดิม ก่อนส่ง X ชม.)
+          · <b>เซมเดย์ไม่มีคัทออฟ</b> — วิ่งปกติตั้งแต่ร้านเปิดถึงปิด (148)
         </p>
         <div className="space-y-3">
           {pattern.map((p, idx) => (
@@ -150,13 +175,13 @@ export function AdminRounds() {
                     setPattern(next)
                   }} />
               </label>
-              <label className="text-sm">ปรับของเซมเดย์
-                <input type="time" className="input mt-1" value={p.same_day_cutoff || p.cutoff_time}
-                  data-testid={`pattern-sameday-cutoff-${p.round_key}`}
-                  title="คัทออฟเซมเดย์ของรอบนี้ (เซมเดย์ส่งได้ตลอดจนถึงเวลานี้)"
+              <label className="text-sm">ปิดรับเดิม (legacy)
+                <input type="time" className="input mt-1" value={p.cutoff_time}
+                  data-testid={`pattern-cutoff-${p.round_key}`}
+                  title="ค่าเดิมของรอบ — 148: เซมเดย์ไม่มีคัทออฟแล้ว (เปิดร้านถึงปิดร้าน) · ใช้เป็น fallback พรีออเดอร์เมื่อไม่มีเวลาส่ง"
                   onChange={(e) => {
                     const next = [...pattern]
-                    next[idx] = { ...p, same_day_cutoff: e.target.value, cutoff_time: e.target.value || p.cutoff_time }
+                    next[idx] = { ...p, cutoff_time: e.target.value }
                     setPattern(next)
                   }} />
               </label>
@@ -230,7 +255,7 @@ export function AdminRounds() {
                       <div className="font-medium text-slate-800">{r.display_name || r.round_key || r.id}</div>
                       <div className="text-xs text-brand-muted">
                         ส่ง {String(r.delivery_start).slice(0, 5)}–{String(r.delivery_end).slice(0, 5)}
-                        {' '}· ปิดรับ เซมเดย์ {String(r.same_day_cutoff || r.cutoff_time).slice(0, 5)}
+                        {' '}· เซมเดย์ไม่มีคัทออฟ (เปิด–ปิดร้าน)
                         {' '}· พรีออเดอร์ {r.pre_order_cutoff ? String(r.pre_order_cutoff).slice(0, 5) : 'ตามกฎ'}
                         {' '}· {r.current_count}/{r.max_capacity}
                       </div>
@@ -242,7 +267,8 @@ export function AdminRounds() {
                       testId={`round-active-${r.id}`}
                     />
                     <button onClick={() => void handleResetCapacity(r)} className="btn btn-outline text-xs">⟳ รีเซ็ตจำนวน</button>
-                    <button onClick={() => void handleDelete(r)} className="btn btn-danger text-xs">🗑 ลบ</button>
+                    <button onClick={() => void handleArchive(r)} className="btn btn-outline text-xs" data-testid={`round-archive-${r.id}`}>📦 เก็บ</button>
+                    <button onClick={() => void handleDelete(r)} className="btn btn-danger text-xs" data-testid={`round-delete-${r.id}`}>🗑 ลบ</button>
                   </div>
                 ))}
               </div>
@@ -251,10 +277,39 @@ export function AdminRounds() {
         })}
       </div>
 
+      {/* ---- (3) รอบที่เก็บไว้ (149 / P0-2 — "ลบไม่ได้") ---- */}
+      <div className="mt-8" data-testid="round-archived-panel">
+        <h2 className="text-xl font-bold text-brand-accent mb-1">🗂 รอบที่เก็บไว้ {archived.length > 0 && `(${archived.length})`}</h2>
+        <p className="text-sm text-brand-muted mb-3">
+          รอบที่มีออเดอร์/ข้อมูลอ้างอิงอยู่จะ <b>ลบถาวรไม่ได้</b> (ฐานข้อมูลกันประวัติออเดอร์ไว้) — จัดการด้วยการ
+          "เก็บ" แทนการลบ · กู้คืนได้ตลอดเวลา
+        </p>
+        {archived.length === 0 ? (
+          <div className="card text-sm text-brand-muted" data-testid="archived-empty">ยังไม่มีรอบที่เก็บไว้</div>
+        ) : (
+          <div className="card space-y-2">
+            {archived.map((r) => (
+              <div key={r.id} className="flex flex-wrap items-center gap-3 rounded-lg border border-brand-border p-2">
+                <div className="min-w-0 flex-1">
+                  <div className="font-medium text-slate-800">{r.display_name || r.round_key || r.id}</div>
+                  <div className="text-xs text-brand-muted">
+                    {r.scheduled_date} · ส่ง {String(r.delivery_start).slice(0, 5)}–{String(r.delivery_end).slice(0, 5)}
+                    {' '}· {r.current_count}/{r.max_capacity} ที่ · เก็บแล้ว (archived)
+                  </div>
+                </div>
+                <button onClick={() => void handleRestore(r)} className="btn btn-outline text-xs" data-testid={`round-restore-${r.id}`}>↩ กู้คืน</button>
+                <button onClick={() => void handleDelete(r)} className="btn btn-danger text-xs" data-testid={`round-delete-archived-${r.id}`}>🗑 ลบถาวร</button>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
       <div className="card mt-6 bg-brand-surface text-brand-muted text-sm">
         ⚠️ Capacity is enforced atomically in <code>create_order_with_items</code> (row lock) — raising
         <code>max_capacity</code> here takes effect immediately for new orders; existing pre-orders are unaffected.
         รอบที่มีออเดอร์แล้วจะไม่ถูก "ซ่อมตามแพทเทิร์น" แตะเวลา (คงข้อมูลเดิมให้ออเดอร์ลูกค้า)
+        · <b>ลบทิ้งได้เฉพาะรอบที่ไม่มีใครอ้างอิง</b> — ถ้ามีออเดอร์ให้กด "📦 เก็บ" (149)
       </div>
     </div>
   )

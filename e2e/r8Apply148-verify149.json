@@ -1,0 +1,52 @@
+[
+  {
+    "label": "archived-col",
+    "status": 201,
+    "data": [
+      {
+        "column_name": "archived",
+        "data_type": "boolean",
+        "column_default": "false"
+      }
+    ]
+  },
+  {
+    "label": "archived-rows",
+    "status": 201,
+    "data": [
+      {
+        "id": "round-20261019-midday",
+        "scheduled_date": "2026-10-19",
+        "status": "closed",
+        "archived": true
+      },
+      {
+        "id": "round-20261020-evening",
+        "scheduled_date": "2026-10-20",
+        "status": "closed",
+        "archived": true
+      },
+      {
+        "id": "round-20261022-evening",
+        "scheduled_date": "2026-10-22",
+        "status": "closed",
+        "archived": true
+      },
+      {
+        "id": "round-20261023-morning",
+        "scheduled_date": "2026-10-23",
+        "status": "closed",
+        "archived": true
+      }
+    ]
+  },
+  {
+    "label": "audit-rows-149",
+    "status": 201,
+    "data": [
+      {
+        "n": 4
+      }
+    ]
+  }
+]

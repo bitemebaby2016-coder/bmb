@@ -78,9 +78,9 @@ export const ROUND_PATTERN_KEYS: RoundPatternKey[] = ['morning', 'midday', 'even
 export interface RoundPatternRow {
   round_key: RoundPatternKey
   display_name: string
-  cutoff_time: string // HH:mm (base/legacy — same-day fallback source)
-  /** 145: คัทออฟเซมเดย์ของรอบ (ว่าง = ใช้ cutoff_time) */
-  same_day_cutoff: string // HH:mm
+  /** ค่าเดิม/พื้นฐานของรอบ (legacy) — 148: เซมเดย์ไม่ได้ใช้ปิดรับแล้ว (ไม่มีคัทออฟ),
+   *  ยังใช้เป็น fallback ตอน pre-order ไม่มี delivery_start */
+  cutoff_time: string // HH:mm
   /** 145: คัทออฟพรีออเดอร์ของรอบ (ว่าง = ใช้กฎ delivery_start − cutoff_hours) */
   pre_order_cutoff: string // HH:mm
   delivery_start: string // HH:mm
@@ -89,17 +89,16 @@ export interface RoundPatternRow {
 }
 
 export const ROUND_PATTERN_DEFAULTS: RoundPatternRow[] = [
-  { round_key: 'morning', display_name: 'เช้า', cutoff_time: '08:00', same_day_cutoff: '08:00', pre_order_cutoff: '', delivery_start: '06:00', delivery_end: '09:00', max_capacity: 60 },
-  { round_key: 'midday', display_name: 'เที่ยง', cutoff_time: '10:30', same_day_cutoff: '10:30', pre_order_cutoff: '', delivery_start: '11:00', delivery_end: '14:00', max_capacity: 80 },
-  { round_key: 'evening', display_name: 'เย็น', cutoff_time: '16:00', same_day_cutoff: '16:00', pre_order_cutoff: '', delivery_start: '17:00', delivery_end: '20:00', max_capacity: 100 },
+  { round_key: 'morning', display_name: 'เช้า', cutoff_time: '08:00', pre_order_cutoff: '', delivery_start: '06:00', delivery_end: '09:00', max_capacity: 60 },
+  { round_key: 'midday', display_name: 'เที่ยง', cutoff_time: '10:30', pre_order_cutoff: '', delivery_start: '11:00', delivery_end: '14:00', max_capacity: 80 },
+  { round_key: 'evening', display_name: 'เย็น', cutoff_time: '16:00', pre_order_cutoff: '', delivery_start: '17:00', delivery_end: '20:00', max_capacity: 100 },
 ]
 
 const TIME_RE = /^\d{2}:\d{2}(:\d{2})?$/
 
 export function validateRoundPatternRow(row: RoundPatternRow): string | null {
   if (!String(row.display_name ?? '').trim()) return 'ต้องมีชื่อรอบ (display_name)'
-  if (!TIME_RE.test(String(row.cutoff_time ?? ''))) return 'เวลาปิดรับ (cutoff_time) ไม่ถูกต้อง'
-  if (String(row.same_day_cutoff ?? '') && !TIME_RE.test(String(row.same_day_cutoff))) return 'คัทออฟเซมเดย์ไม่ถูกต้อง'
+  if (!TIME_RE.test(String(row.cutoff_time ?? ''))) return 'เวลาปิดรับเดิม (cutoff_time) ไม่ถูกต้อง'
   if (String(row.pre_order_cutoff ?? '') && !TIME_RE.test(String(row.pre_order_cutoff))) return 'คัทออฟพรีออเดอร์ไม่ถูกต้อง'
   if (!TIME_RE.test(String(row.delivery_start ?? ''))) return 'เวลาเริ่มส่ง (delivery_start) ไม่ถูกต้อง'
   if (!TIME_RE.test(String(row.delivery_end ?? ''))) return 'เวลาสิ้นสุดส่ง (delivery_end) ไม่ถูกต้อง'
@@ -119,8 +118,7 @@ export function normalizeRoundPattern(raw: unknown): RoundPatternRow[] {
       round_key: key,
       display_name: String(found.display_name ?? base.display_name),
       cutoff_time: String(found.cutoff_time ?? base.cutoff_time),
-      // 145: same_day_cutoff ว่าง/ขาดคีย์ = ใช้ cutoff_time · pre_order_cutoff ว่าง = ใช้กฎ
-      same_day_cutoff: String(found.same_day_cutoff ?? found.cutoff_time ?? base.same_day_cutoff),
+      // 148: คีย์คัทออฟเซมเดย์ของแพทเทิร์นเดิมถูกเมิน (คอลัมน์ถูกถอดออกจาก schema — ไม่ map เข้ามาอีก)
       pre_order_cutoff: String(found.pre_order_cutoff ?? ''),
       delivery_start: String(found.delivery_start ?? base.delivery_start),
       delivery_end: String(found.delivery_end ?? base.delivery_end),

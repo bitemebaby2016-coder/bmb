@@ -46,7 +46,10 @@ const PROSRC = (fn) => `SELECT count(*) AS hits FROM pg_proc p JOIN pg_namespace
     log('ensure-uses-pattern-cutoffs', await q(`${PROSRC('ensure_rounds_for_date')} AND p.prosrc LIKE '%pre_order_cutoff%'`))
     log('pattern-has-new-keys', await q("SELECT value->'rounds'->0->>'same_day_cutoff' AS sd, value->'rounds'->0 ? 'pre_order_cutoff' AS has_pre FROM business_settings WHERE key='order_pattern'"))
   } else if (stage === 'contract145') {
-    log('contract-145', await q(fs.readFileSync('e2e/contracts_145.sql', 'utf8')))
+    // 148 (P0-1) รื้อสองคัทออฟตามคำสั่ง Owner 2026-10-24 → contracts_145.sql ถูกลบ
+    // และถูกแทนที่ด้วย e2e/contracts_148_same_day_no_cutoff.sql (รันผ่าน CI + replay)
+    console.log('SUPERSEDED: contracts_145.sql ถูกถอดออกโดย migration 148 — ใช้ contracts_148_same_day_no_cutoff.sql แทน')
+    process.exit(0)
   } else if (stage === 'contractRegr') {
     log('contract-143-regression', await q(fs.readFileSync('e2e/contracts_143.sql', 'utf8')))
     log('contract-144-regression', await q(fs.readFileSync('e2e/contracts_144.sql', 'utf8')))

@@ -28,7 +28,7 @@ VALUES
 ON CONFLICT (id) DO NOTHING;
 
 SELECT public.ensure_rounds_for_date((now() AT TIME ZONE 'Asia/Bangkok')::date);
-UPDATE public.delivery_rounds SET cutoff_time = '23:59', same_day_cutoff = '23:59', max_capacity = 50, current_count = 0
+UPDATE public.delivery_rounds SET cutoff_time = '23:59', max_capacity = 50, current_count = 0
  WHERE scheduled_date = (now() AT TIME ZONE 'Asia/Bangkok')::date;
 UPDATE public.products SET is_available = true, available_same_day = true WHERE id = 'prod-1';
 CREATE FUNCTION pg_temp.c_orders() RETURNS bigint LANGUAGE sql SECURITY DEFINER SET search_path = public AS $$ SELECT count(*) FROM public.orders $$;

@@ -10,7 +10,7 @@
 --   G3  วันที่สั่ง != วันรอบ = ERR_ROUND_DATE_MISMATCH (เดิม)
 --   G4  สินค้าทั่วไปล้วน วันนี้ = ERR_PRE_ORDER_REQUIRES_MENU (gate 142 คงเดิม)
 --   G5  เมนู + วันอนาคต = created (gate 142 regression)
---   G6  SAME_DAY หลัง cutoff_time ของรอบ = ERR_CUTOFF_PASSED (same-day คงเดิม)
+--   G6  SAME_DAY หลัง cutoff_time ของรอบ = ต้องสร้างได้ (148: SAME_DAY ไม่มีคัทออฟ)
 --   G7  SAME_DAY ก่อน cutoff_time = created (ไม่สน cutoff_hours — เซมเดย์ส่งได้ตลอด)
 --   G8  order_setting ค่าพัง = ใช้ default ไม่ crash (order_policy "มี7" ไม่พังอีก)
 -- ============================================
@@ -162,25 +162,22 @@ BEGIN
   RAISE NOTICE 'G5 PASS';
 END $$;
 
--- G6: SAME_DAY หลัง cutoff_time ของรอบ = ERR_CUTOFF_PASSED (same-day คงเดิม)
+-- G6 (148 แก้กฎ Owner 2026-10-24): SAME_DAY หลัง cutoff_time ของรอบ = ต้องสร้างได้
+--   (เดิม 143: เคย assert ว่าถูกปฏิเสธด้วย ERR_CUTOFF_PASSED — SAME_DAY ไม่มีคัทออฟแล้ว)
 DO $$
-DECLARE v_ok boolean := false; v_err text := '';
+DECLARE v_n integer;
 BEGIN
-  BEGIN
-    PERFORM 1 FROM public.create_order_with_items(
-      p_items := '[{"product_id":"c143-regular","quantity":1}]'::jsonb,
-      p_delivery_round_id := 'c143-today-cut',
-      p_order_mode := 'SAME_DAY',
-      p_customer_name := 'c143', p_customer_phone := '0900000000', p_delivery_address := 'c143-addr',
-      p_dropoff_latitude := (SELECT COALESCE(b.kitchen_latitude, (public.kitchen_location()->>'latitude')::numeric) + 0.001 FROM public.branches b WHERE b.id = 'branch-tenant-bmb-001-main'),
-      p_dropoff_longitude := (SELECT COALESCE(b.kitchen_longitude, (public.kitchen_location()->>'longitude')::numeric) + 0.001 FROM public.branches b WHERE b.id = 'branch-tenant-bmb-001-main'));
-    v_ok := true;
-  EXCEPTION WHEN OTHERS THEN v_err := SQLERRM;
-  END;
-  IF v_ok OR v_err NOT LIKE 'ERR_CUTOFF_PASSED%' THEN
-    RAISE EXCEPTION 'G6 FAIL: expected ERR_CUTOFF_PASSED, got ok=% err=%', v_ok, v_err;
+  SELECT count(*) INTO v_n FROM public.create_order_with_items(
+    p_items := '[{"product_id":"c143-regular","quantity":1}]'::jsonb,
+    p_delivery_round_id := 'c143-today-cut',
+    p_order_mode := 'SAME_DAY',
+    p_customer_name := 'c143', p_customer_phone := '0900000000', p_delivery_address := 'c143-addr',
+    p_dropoff_latitude := (SELECT COALESCE(b.kitchen_latitude, (public.kitchen_location()->>'latitude')::numeric) + 0.001 FROM public.branches b WHERE b.id = 'branch-tenant-bmb-001-main'),
+    p_dropoff_longitude := (SELECT COALESCE(b.kitchen_longitude, (public.kitchen_location()->>'longitude')::numeric) + 0.001 FROM public.branches b WHERE b.id = 'branch-tenant-bmb-001-main'));
+  IF v_n <> 1 THEN
+    RAISE EXCEPTION 'G6 FAIL: same-day past cutoff_time must be accepted (148 = no same-day cutoff), got % rows', v_n;
   END IF;
-  RAISE NOTICE 'G6 PASS';
+  RAISE NOTICE 'G6 PASS (same-day accepted past cutoff_time)';
 END $$;
 
 -- G7: SAME_DAY ก่อน cutoff_time = created (ไม่สน cutoff_hours — เซมเดย์ส่งได้ตลอดเหมือนเดิม)

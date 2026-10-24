@@ -394,8 +394,9 @@ export function CheckoutPage() {
 
     // ✅ SERVER-AUTHORITATIVE AVAILABILITY CHECK (P0 #6 + 143: cutoff enforcement)
     // Client-side gate — the RPC enforces the same rules again server-side.
-    // 143 (Owner Q1): คัทออฟพรีออเดอร์ = cutoff_hours ชม. ก่อน delivery_start ·
-    // same-day = cutoff_time ของรอบ (เดิม) — ทั้งคู่เทียบเวลากรุงเทพ strict `>`
+    // 143 (Owner Q1): คัทออฟพรีออเดอร์ = cutoff_hours ชม. ก่อน delivery_start (strict `>`) ·
+    // 148 (Owner 2026-10-24): SAME_DAY = ไม่มีคัทออฟใด ๆ → bookability 'cutoff_passed'
+    // เกิดขึ้นได้เฉพาะ PRE_ORDER เท่านั้น (บล็อกด้านล่างจึงเหลือผลเฉพาะโหมดจองล่วงหน้า)
     const selectedRound = rounds.find(r => r.id === selectedRoundId)
     if (selectedRound) {
       const bookability = roundBookability(selectedRound, {
@@ -407,7 +408,7 @@ export function CheckoutPage() {
         showToast(
           orderMode === 'PRE_ORDER'
             ? `เลยคัทออฟจองล่วงหน้าแล้ว (ปิดรับ ${roundCutoffLabel(selectedRound, 'PRE_ORDER', cutoffHours)} น.) — เลือกรอบอื่น`
-            : `รอบจัดส่งนี้ปิดรับออเดอร์แล้ว (cutoff เวลา ${roundCutoffLabel(selectedRound, 'SAME_DAY', cutoffHours)} น.)`,
+            : 'รอบจัดส่งนี้ปิดรับออเดอร์แล้ว — เลือกรอบอื่น',
           'error',
         )
         setIsProcessing(false)
@@ -829,7 +830,7 @@ export function CheckoutPage() {
                     {/* พื้นปุ่มเลือกเป็นสีครีม (bg-orange-50) → ตัวอักษรต้องเข้มเสมอ ห้ามใช้สีธีม */}
                     <div className={`font-medium ${selected ? 'text-slate-900' : ''}`}>{r.display_name || r.round_key || r.id}</div>
                     <div className={`text-xs ${selected ? 'text-slate-600' : 'text-brand-muted'}`}>
-                      ส่ง {String(r.delivery_start).slice(0, 5)}–{String(r.delivery_end).slice(0, 5)} · {orderMode === 'PRE_ORDER' ? 'ปิดรับพรีออเดอร์' : 'สั่งได้ถึง'} {roundCutoffLabel(r, orderMode, cutoffHours)} · {closed ? roundStatusLabel(status) : `เหลือ ${remaining} ที่`}
+                      ส่ง {String(r.delivery_start).slice(0, 5)}–{String(r.delivery_end).slice(0, 5)} · {orderMode === 'PRE_ORDER' ? `ปิดรับพรีออเดอร์ ${roundCutoffLabel(r, 'PRE_ORDER', cutoffHours)} น.` : `เปิดรับถึงปิดร้าน · ${roundCutoffLabel(r, 'SAME_DAY', cutoffHours)}`} · {closed ? roundStatusLabel(status) : `เหลือ ${remaining} ที่`}
                     </div>
                   </div>
                   {closed && (

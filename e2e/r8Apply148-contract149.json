@@ -1,0 +1,11 @@
+[
+  {
+    "label": "contract-149",
+    "status": 201,
+    "data": [
+      {
+        "set_config": "{\"sub\":\"00000000-0000-4000-8000-000000c14901\",\"role\":\"service_role\"}"
+      }
+    ]
+  }
+]

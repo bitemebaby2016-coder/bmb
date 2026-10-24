@@ -30,7 +30,7 @@ UPDATE public.profiles SET role = 'admin' WHERE id = '44444444-4444-4444-4444-44
 
 -- deterministic round landscape for the fixture dates (024) + wide cutoffs/capacity (028 pattern)
 SELECT public.ensure_rounds_for_date(CURRENT_DATE + 2);
-UPDATE public.delivery_rounds SET cutoff_time = '23:59', same_day_cutoff = '23:59', max_capacity = 50, current_count = 0
+UPDATE public.delivery_rounds SET cutoff_time = '23:59', max_capacity = 50, current_count = 0
  WHERE scheduled_date >= CURRENT_DATE;
 
 -- ============================================

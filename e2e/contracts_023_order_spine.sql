@@ -38,7 +38,7 @@ UPDATE public.profiles SET role = 'admin' WHERE id = '22222222-2222-2222-2222-22
 
 -- test knobs: guarantee same-day acceptance windows inside the suite
 SELECT public.ensure_rounds_for_date((now() AT TIME ZONE 'Asia/Bangkok')::date);
-UPDATE public.delivery_rounds SET cutoff_time = '23:59', same_day_cutoff = '23:59', max_capacity = 50, current_count = 0
+UPDATE public.delivery_rounds SET cutoff_time = '23:59', max_capacity = 50, current_count = 0
  WHERE scheduled_date = (now() AT TIME ZONE 'Asia/Bangkok')::date;
 
 -- customer context
@@ -115,23 +115,25 @@ DO $$ DECLARE r jsonb; BEGIN
 END $$;
 
 -- ============================================
--- T7 CUTOFF — after cutoff rejected (00:00 cutoff = always passed)
+-- T7 NO SAME-DAY CUTOFF — 148 (Owner 2026-10-24: SAME_DAY เปิด-ปิดไม่มีคัทออฟ)
+--    cutoff_time = '00:00' = "เลยคัทออฟแล้ว" ตามกฎเดิม 025/145 — ตอนนี้เซมเดย์ต้องสั่งได้
+--    (เดิม: T7 เคย assert ว่าถูกปฏิเสธด้วย ERR_CUTOFF_PASSED — ถูกแทนที่ตามคำสั่งใหม่)
 -- ============================================
 RESET ROLE;
-UPDATE public.delivery_rounds SET cutoff_time = '00:00', same_day_cutoff = '00:00'
+UPDATE public.delivery_rounds SET cutoff_time = '00:00'
  WHERE id = 'round-' || to_char((now() AT TIME ZONE 'Asia/Bangkok')::date,'YYYYMMDD') || '-evening';
 SELECT set_config('role', 'authenticated', false);
-DO $$ BEGIN
-  PERFORM public.create_order_with_items(
+DO $$ DECLARE r jsonb; BEGIN
+  r := public.create_order_with_items(
     p_items => '[{"product_id":"prod-1","quantity":1}]'::jsonb,
     p_delivery_round_id => 'round-' || to_char((now() AT TIME ZONE 'Asia/Bangkok')::date,'YYYYMMDD') || '-evening',
     p_delivery_method => 'self_delivery',
     p_dropoff_latitude => 10.7016, p_dropoff_longitude => 102.1429,
     p_order_mode => 'SAME_DAY');
-  RAISE EXCEPTION 'FAIL T7 not rejected';
-EXCEPTION WHEN OTHERS THEN
-  IF SQLERRM LIKE '%ERR_CUTOFF_PASSED%' THEN RAISE NOTICE 'PASS T7 after-cutoff rejected';
-  ELSE RAISE EXCEPTION 'FAIL T7 unexpected: %', SQLERRM; END IF;
+  IF r IS NULL OR r->>'order_number' IS NULL THEN
+    RAISE EXCEPTION 'FAIL T7: same-day must still be accepted past cutoff_time (148 = no cutoff)';
+  END IF;
+  RAISE NOTICE 'PASS T7 no same-day cutoff (order %)', r->>'order_number';
 END $$;
 
 -- ============================================

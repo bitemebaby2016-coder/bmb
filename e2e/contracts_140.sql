@@ -3,9 +3,10 @@
 -- Date: 2026-10-23 · Run on ephemeral PG (apply_all_migrations.sh) or SQL Editor
 -- ONE transaction, ROLLBACK at the end — zero persisted data.
 --
--- Proves (Owner policy 2026-10-23: auto-close ตาม cutoff + admin-only + audit):
+-- Proves (Owner policy 2026-10-23 + RULE UPDATE 148/2026-10-24: SAME_DAY ไม่มีคัทออฟ):
 --   G1  auto_close_expired_rounds = SECURITY DEFINER + grants
---   G2  ปิดเฉพาะ round ที่ cutoff ผ่าน · อนาคต/ยังไม่เลย cutoff/ปิดแล้ว = ไม่ถูกแตะ
+--   G2  ปิดเฉพาะ round ของวันที่ผ่านไปแล้ว — รอบวันนี้ "เลย cutoff" แล้วต้องอยู่ active
+--       (148 ยกเลิกการปิดด้วย cutoff_time: ปิดด้วย cutoff = same-day cutoff แฝง)
 --   G3  ทุกรอบที่ถูกปิดมี audit_logs (settings_change, 'auto-close%')
 --   G4  idempotent: รันซ้ำ = ปิด 0 + ไม่สร้าง audit ใหม่
 --   G5  ไม่แตะ current_count / ออเดอร์ (bookkeeping เท่านั้น)
@@ -59,14 +60,14 @@ DECLARE
   v_cnt integer;
 BEGIN
   SELECT public.auto_close_expired_rounds() INTO v_closed;
-  -- >= 2: replay DB มีรอบ seed จาก migration ที่หมดอายุจริงด้วย — assert ที่เข้มงวด
-  -- อยู่ที่สถานะราย fixture ด้านล่าง (exact) + audit ที่ scope แล้ว
-  ASSERT v_closed >= 2, 'G2 must close at least the 2 expired fixture rounds, got ' || v_closed;
+  -- >= 1: fixture "c140-yesterday" ต้องถูกปิดเสมอ (148 = date-based เท่านั้น —
+  -- รอบวันนี้ไม่ถูกปิดด้วย cutoff อีกแล้ว) + replay DB อาจมีรอบ seed หมดอายุด้วย
+  ASSERT v_closed >= 1, 'G2 must close at least the yesterday fixture round, got ' || v_closed;
 
   SELECT status INTO v_status FROM public.delivery_rounds WHERE id = 'c140-yesterday';
   ASSERT v_status = 'closed', 'G2 yesterday round must be closed, got ' || v_status;
   SELECT status INTO v_status FROM public.delivery_rounds WHERE id = 'c140-today-past';
-  ASSERT v_status = 'closed', 'G2 today-past-cutoff round must be closed, got ' || v_status;
+  ASSERT v_status = 'active', 'G2 today-past-cutoff round must STAY active (148: no same-day cutoff), got ' || v_status;
   SELECT status INTO v_status FROM public.delivery_rounds WHERE id = 'c140-today-open';
   ASSERT v_status = 'active', 'G2 today-before-cutoff round must stay active, got ' || v_status;
   SELECT status INTO v_status FROM public.delivery_rounds WHERE id = 'c140-tomorrow';
@@ -81,7 +82,7 @@ BEGIN
   WHERE entity_type = 'delivery_round' AND action = 'settings_change'
     AND entity_id IN ('c140-yesterday', 'c140-today-past')
     AND description LIKE 'auto-close%';
-  ASSERT v_cnt = 2, 'G3 exactly 2 auto-close audit rows expected, got ' || v_cnt;
+  ASSERT v_cnt = 1, 'G3 exactly 1 auto-close audit row expected (yesterday only), got ' || v_cnt;
 END $$;
 
 DO $$
@@ -94,7 +95,7 @@ BEGIN
   SELECT count(*) INTO v_audit FROM public.audit_logs
   WHERE entity_type = 'delivery_round' AND description LIKE 'auto-close%'
     AND entity_id IN ('c140-yesterday', 'c140-today-past', 'c140-today-open', 'c140-tomorrow', 'c140-yesterday-closed');
-  ASSERT v_audit = 2, 'G4 second run must not add audit rows, total must stay 2, got ' || v_audit;
+  ASSERT v_audit = 1, 'G4 second run must not add audit rows, total must stay 1, got ' || v_audit;
 END $$;
 
 DO $$ BEGIN RAISE NOTICE 'CONTRACT 140: PASS'; END $$;

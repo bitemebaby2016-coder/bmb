@@ -1,0 +1,70 @@
+[
+  {
+    "label": "history",
+    "status": 201,
+    "data": [
+      {
+        "version": "147",
+        "name": "147_role_rls_matrix"
+      },
+      {
+        "version": "146",
+        "name": "146_role_foundation"
+      },
+      {
+        "version": "145",
+        "name": "145_two_cutoffs"
+      },
+      {
+        "version": "144",
+        "name": "144_round_pattern"
+      }
+    ]
+  },
+  {
+    "label": "same-day-col-still-there",
+    "status": 201,
+    "data": [
+      {
+        "has_col": 1
+      }
+    ]
+  },
+  {
+    "label": "archived-col-absent-yet",
+    "status": 201,
+    "data": [
+      {
+        "has_col": 0
+      }
+    ]
+  },
+  {
+    "label": "body-not-148-yet",
+    "status": 201,
+    "data": [
+      {
+        "hits": 1
+      }
+    ]
+  },
+  {
+    "label": "backup-recency",
+    "status": 201,
+    "data": [
+      {
+        "recent_backups": 7
+      }
+    ]
+  },
+  {
+    "label": "round-inventory",
+    "status": 201,
+    "data": [
+      {
+        "rounds": 10,
+        "past": 4
+      }
+    ]
+  }
+]

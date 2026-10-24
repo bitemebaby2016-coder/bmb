@@ -11,7 +11,7 @@
 |---|---|---|---|
 | A | เปิดเว็บ/เลือกเมนู/ดูรอบ (browse) | vitest catalog/productSchedule/deliveryRoundStatus/routeRealData · playwright `routeNav.spec.ts` (ทุก route + guard + console errors) | unit + browser smoke |
 | B | ตะกร้า/คูปอง/เพิ่ม-ลด (cart) | vitest cartStore/cartPersistence/cartLineIdentity/menuCartResultGuard/cartIsolationStore/checkoutModeLock/checkoutMixedSplit | unit |
-| C | สั่งซื้อ (order create) | **SQL contracts 123,124,127-145** (gate 142/143/145, capacity, idempotency, shared-slot, cutoff 2 ช่อง) + vitest checkout flows | contract (server authority) + unit |
+| C | สั่งซื้อ (order create) | **SQL contracts 123,124,127-149** (gate 142/143/145/148, capacity, idempotency, shared-slot, คัทออฟพรีออเดอร์ 2 แบบ · เซมเดย์ไม่มีคัทออฟ) + vitest checkout flows | contract (server authority) + unit |
 | D | จ่ายเงิน (pay) | contracts 028/133 (slip) + vitest paymentStateMachine/paymentExceptions/paymentIntentsSingleRead/stripe+omise webhook signature | contract + unit |
 | E | เตรียมอาหาร (prepare) | contracts 019/029 kitchen + vitest kitchenService/orderStateMachine/adminDeliveryAdvance | contract + unit |
 | F | จัดส่ง (deliver) | contracts 036/135/140 (rider/dispatch/auto-close) + vitest routeEta/rider flows | contract + unit |
@@ -29,7 +29,7 @@
 | Rider POD upload (D-02) + กล้องมือถือ | F | เคยติด RLS/พื้นที่ (Recovery Plan D-02) | checklist #11 |
 | แผนที่ (Maps key อ่านตอน build) | A/F | ต้องมี env ใน Cloudflare | checklist #12 |
 | Desktop+mobile visual ของ admin nav | H | unit/source test แล้ว — ตาตรวจจริง = Owner | checklist #5 |
-| คัทออฟ 2 ช่อง (งาน 4) บน production | C | migration + contract เขียวใน ephemeral — production apply แล้ว/รัน checklist | checklist #6 |
+| คัทออฟ 2 ช่อง (งาน 4) บน production | C | ~~ทำแล้ว~~ → **ยกเลิก + ถอดออก (migration 148)** — เซมเดย์ไม่มีคัทออฟเหลืออยู่ในระบบ | ขั้น #6 ปรับเป็นยืนยันว่าช่องเซมเดย์หายไปจริง |
 
 ## 3. หลักการ (ห้ามละเมิด)
 
@@ -52,8 +52,8 @@
 | 2 | `[R]` หน้าแรก/เมนู/รอบ/โปรโมชันโหลดครบ (desktop + มือถือ) | ไม่มี console error, รูป/ป้ายไม่เพี้ยน |
 | 3 | `[O]` สั่ง SAME_DAY 1 ออเดอร์ (รอบยังไม่เลย cutoff) | สร้างสำเร็จ → ติดตามสถานะจริง |
 | 4 | `[O]` สั่ง PRE_ORDER บนวันที่มีเมนูปฏิทิน ภายใน 2 ชม. ก่อนส่ง | สำเร็จ · เกินคัทออฟต้องถูกปฏิเสธพร้อมเวลา HH:MM จริง |
-| 5 | `[R]` `/admin` ทุกเมนู (desktop sidebar + มือถือ drawer) | ทุกลิงก์ไปหน้าจริง · scroll ขึ้นบนสุดเมื่อเปลี่ยนหน้า · ป้ายคัทออฟ 2 ช่องแสดงในหน้ารอบจัดส่ง |
-| 6 | `[R]` หน้ารอบจัดส่ง: ตั้งคัทออฟ 2 ช่องคนละค่าบนรอบเดียว | บันทึกได้ · แถวรอบโชว์ทั้ง 2 ค่า · ล้างช่องพรีออเดอร์ = กลับไปใช้กฎ |
+| 5 | `[R]` `/admin` ทุกเมนู (desktop sidebar + มือถือ drawer) | ทุกลิงก์ไปหน้าจริง · scroll ขึ้นบนสุดเมื่อเปลี่ยนหน้า · ป้าย **คัทออฟพรีออเดอร์** (ช่องเดียว) แสดงในหน้ารอบจัดส่ง + ป้าย "เซมเดย์ไม่มีคัทออฟ" |
+| 6 | ~~`[R]` ตั้งคัทออฟ 2 ช่อง~~ | **ยกเลิกแล้ว — แทนที่ด้วยขั้นนี้ (148):** เปิดหน้ารอบจัดส่ง → ยืนยันว่า**ไม่มีช่องคัทออฟเซมเดย์**เหลืออยู่ · ช่อง "ปรับของพรีออเดอร์" ยังตั้ง/ล้างได้ · แถวรอบโชว์ "เซมเดย์ไม่มีคัทออฟ (เปิด–ปิดร้าน)" |
 | 7 | `[R]` เปิดเบราว์เซอร์ที่ค้างป้ายแดง (เคส 841) → reload 2 ครั้ง | ป้าย **หายและไม่กลับมา** · bell เห็น "จัดส่งสำเร็จ" บนสุด · "อ่านทั้งหมดแล้ว" ปิด popup เอง · ลิงก์ไป /notifications |
 | 8 | `[O]` เปิด push บนมือถือแล้วสั่งออเดอร์ทดสอบ | ได้รับ notification จริง 1 ครั้งต่อสถานะ |
 | 9 | `[O]` จ่ายเงินจริง 1 ออเดอร์ + ตรวจสลิปในแอดมิน | สลิปขึ้นหน้าตรวจ · อนุมัติผ่าน · สถานะ paid ตรง DB |
@@ -64,10 +64,10 @@
 
 **ปิดแผนเมื่อ:** #1–#14 ผ่านครบ — รายการใดติดขัด = จด defect ใหม่ใน `AI_WORK_STATE.md`
 
-> **⚠️ ยกเลิก/ปรับตามคำสั่ง Owner ตอนปิดเซสชัน 2026-10-24:**
+> **⚠️ ยกเลิก/ปรับตามคำสั่ง Owner ตอนปิดเซสชัน 2026-10-24 (ทำเสร็จแล้วในรอบ 14):**
 > - **ขั้น #6 (ทดสอบ 2-คัทออฟ) = ยกเลิก** — Owner สั่ง: SAME_DAY ห้ามมีคัทออฟ (วิ่งร้านเปิด–ปิด),
->   คัทออฟใช้เฉพาะ PRE_ORDER, `same_day_cutoff` ไม่จำเป็น → **อยู่ใน P0-1 (migration 148, แชทหน้า)**
->   ระหว่างนี้อย่าเพิ่งเทสต์ 2-ช่องว่า "ต้องผ่าน" — เป็น known-issue ที่ค้าง
+>   คัทออฟใช้เฉพาะ PRE_ORDER, `same_day_cutoff` ไม่จำเป็น → **ทำแล้ว: migration 148 + contract 148**
+>   (production ledger 149,148) · ขั้น #6 ถูกแทนที่ด้วยการยืนยันว่าช่องคัทออฟเซมเดย์ "หายไปจริง"
 > - **ขั้น #4 (pre-order cutoff)** ยังคงใช้ได้ตามเดิม (คัทออฟพรีออเดอร์ = ของจริง)
 
 ## 5. ระบบ role 13 ค่า (146/147 · Owner sign-off P1-P3 + missing/partial ทั้งหมด)

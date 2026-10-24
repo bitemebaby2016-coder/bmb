@@ -618,7 +618,7 @@ export interface OperatingHours {
 export interface OrderPolicy {
   pre_order_lead_days: number;
   max_pre_order_days: number;
-  same_day_cutoff_minutes: number;
+  // 148 (Owner 2026-10-24): same_day_cutoff_minutes ถูกลบ — SAME_DAY ไม่มีคัทออฟใด ๆ
 }
 
 // ============================================

@@ -2,6 +2,7 @@
 // deliveryRoundStatus — client DISPLAY mirror of the server round gates
 // (Owner 2026-10-17 "รอบส่งมั่ว": rounds past cutoff/window must not look
 // selectable on checkout; the server stays the authority at order time.)
+// 148 (Owner 2026-10-24): SAME_DAY = ไม่มีคัทออฟ → เงื่อนไข cutoff ใช้กับ PRE_ORDER เท่านั้น
 // ============================================
 
 import { describe, it, expect } from 'vitest'
@@ -21,8 +22,9 @@ const base = {
 }
 
 describe('roundCutoffLabel', () => {
-  it('SAME_DAY = cutoff_time เดิม', () => {
-    expect(roundCutoffLabel(base, 'SAME_DAY', 2)).toBe('10:30')
+  it('SAME_DAY = ไม่มีคัทออฟ (148 — Owner สั่งถอด)', () => {
+    expect(roundCutoffLabel(base, 'SAME_DAY', 2)).toBe('ไม่มีคัทออฟ')
+    expect(roundCutoffLabel({ cutoff_time: '23:59', delivery_start: '11:00' }, 'SAME_DAY')).toBe('ไม่มีคัทออฟ')
   })
   it('PRE_ORDER = delivery_start − cutoff_hours (11:00 − 2 = 09:00)', () => {
     expect(roundCutoffLabel(base, 'PRE_ORDER', 2)).toBe('09:00')
@@ -41,7 +43,7 @@ describe('roundBookability — PRE_ORDER (คัทออฟก่อนส่�
     expect(roundBookability(base, { isToday: true, mode: 'PRE_ORDER', preOrderCutoffHours: 2, nowUtcMs: NINE_THIRTY })).toBe('cutoff_passed')
   })
 
-  it('SAME_DAY ตอน 09:30 น. = ยัง open (cutoff_time 10:30 — เซมเดย์ส่งได้ตลอดเหมือนเดิม)', () => {
+  it('SAME_DAY ตอน 09:30 น. = ยัง open (เลย cutoff_time 10:30 หรือไม่ก็ตาม — 148 ไม่มีคัทออฟเซมเดย์)', () => {
     const NINE_THIRTY = Date.parse('2026-10-17T02:30:00Z')
     expect(roundBookability(base, { isToday: true, mode: 'SAME_DAY', nowUtcMs: NINE_THIRTY })).toBe('open')
   })
@@ -62,8 +64,15 @@ describe('roundBookability', () => {
     expect(roundBookability(base, { isToday: true, nowUtcMs: MORNING })).toBe('open')
   })
 
-  it('พ้น cutoff วันนี้ = cutoff_passed (มิเรอร์ ERR_CUTOFF_PASSED)', () => {
-    expect(roundBookability(base, { isToday: true, nowUtcMs: NIGHT })).toBe('cutoff_passed')
+  it('พ้น cutoff เดิมของวันนี้ = ยัง open (148: SAME_DAY ไม่มีคัทออฟ — mirror ของ server)', () => {
+    const AFTER_OLD_CUTOFF = Date.parse('2026-10-17T05:00:00Z') // 12:00 ICT — เลย cutoff_time 10:30 แล้ว แต่หน้าต่างส่ง (14:00) ยังไม่จบ
+    expect(roundBookability(base, { isToday: true, nowUtcMs: AFTER_OLD_CUTOFF })).toBe('open')
+    // เลยหน้าต่างส่งแล้ว = window_passed (ป้ายบอกเหตุจริง — ไม่ใช่ cutoff)
+    expect(roundBookability(base, { isToday: true, nowUtcMs: NIGHT })).toBe('window_passed')
+  })
+
+  it('PRE_ORDER พ้น cutoff วันนี้ = cutoff_passed (ยังบังคับเหมือนเดิม)', () => {
+    expect(roundBookability(base, { isToday: true, mode: 'PRE_ORDER', preOrderCutoffHours: 2, nowUtcMs: NIGHT })).toBe('cutoff_passed')
   })
 
   it('รอบถัดไป (isToday=false) = open เสมอ แม้เวลาในวันจะพ้นแล้ว', () => {

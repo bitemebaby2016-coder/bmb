@@ -19,8 +19,6 @@ export type RoundBookability = 'open' | 'cutoff_passed' | 'window_passed' | 'ful
 
 export interface RoundTimeInfo {
   cutoff_time?: string | null
-  /** 145: คัทออฟเซมเดย์ของรอบ — ไม่มีค่า = ใช้ cutoff_time เดิม */
-  same_day_cutoff?: string | null
   /** 145: คัทออฟพรีออเดอร์ตั้งตรง — ไม่มีค่า = กฎเดิม delivery_start − cutoff_hours */
   pre_order_cutoff?: string | null
   delivery_start?: string | null
@@ -53,10 +51,11 @@ function msOfDay(value: string | null | undefined): number | null {
 }
 
 /**
- * ms-of-day cutoff for the round in the given mode (145: two independent cutoffs):
+ * ms-of-day cutoff for the round in the given mode:
  *   PRE_ORDER → pre_order_cutoff ของรอบ ถ้าตั้งไว้ ไม่งั้น delivery_start − preOrderCutoffHours
  *     (อาจติดลบ = คัทออฟอยู่ "ก่อนเที่ยงคืนของวันก่อนวันส่ง" — ผ่านเฉพาะการสั่งล่วงหน้า)
- *   SAME_DAY  → same_day_cutoff ของรอบ ถ้าตั้งไว้ ไม่งั้น cutoff_time เดิม
+ *   SAME_DAY  → **ไม่มีคัทออฟ** (Owner 2026-10-24 / migration 148: เปิดร้านถึงปิดร้าน)
+ *     → คืน null เสมอ = ไม่มีทางเข้าสู่สถานะ cutoff_passed
  */
 export function roundCutoffMs(
   round: RoundTimeInfo,
@@ -71,17 +70,21 @@ export function roundCutoffMs(
     if (startMs !== null) return startMs - hours * 3_600_000
     return null
   }
-  return msOfDay(round.same_day_cutoff) ?? msOfDay(round.cutoff_time)
+  // 148: SAME_DAY = ไม่มีคัทออฟ (เดิม: same_day_cutoff ?? cutoff_time — ถูกรื้อตามคำสั่ง Owner)
+  return null
 }
 
-/** ป้ายเวลาคัทออฟสำหรับโชว์ใน UI ('HH:MM' หรือข้อความเมื่อคำนวณไม่ได้/ติดลบ) */
+/** ป้ายเวลาคัทออฟสำหรับโชว์ใน UI ('HH:MM' / "ไม่มีคัทออฟ" / ข้อความเมื่อคำนวณไม่ได้) */
 export function roundCutoffLabel(
   round: RoundTimeInfo,
   mode: 'SAME_DAY' | 'PRE_ORDER' = 'SAME_DAY',
   preOrderCutoffHours = 2,
 ): string {
   const ms = roundCutoffMs(round, mode, preOrderCutoffHours)
-  if (ms === null) return mode === 'PRE_ORDER' ? `${preOrderCutoffHours} ชม. ก่อนเวลาส่ง` : String(round.cutoff_time ?? '').slice(0, 5)
+  if (ms === null) {
+    if (mode === 'SAME_DAY') return 'ไม่มีคัทออฟ'
+    return `${preOrderCutoffHours} ชม. ก่อนเวลาส่ง`
+  }
   if (ms < 0) return `${preOrderCutoffHours} ชม. ก่อนเวลาส่ง`
   const h = Math.floor(ms / 3_600_000)
   const m = Math.floor((ms % 3_600_000) / 60_000)

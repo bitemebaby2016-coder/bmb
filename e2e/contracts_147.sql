@@ -47,10 +47,10 @@ INSERT INTO public.products (id, name, description, price, category_id, image_ur
   ('c147-regular', 'c147-regular', '', 10, 'c147-cat', '', true, false, true, false, 0);
 
 INSERT INTO public.delivery_rounds
-  (id, round_key, name, display_name, cutoff_time, same_day_cutoff, pre_order_cutoff,
+  (id, round_key, name, display_name, cutoff_time, pre_order_cutoff,
    delivery_start, delivery_end, max_capacity, current_count, date, scheduled_date, status, branch_id)
 VALUES
-  ('c147-round', 'midday', 'midday', 'c147-round', '23:59', '23:59', NULL,
+  ('c147-round', 'midday', 'midday', 'c147-round', '23:59', NULL,
    ((now() at time zone 'Asia/Bangkok')::time + interval '3 hours'),
    ((now() at time zone 'Asia/Bangkok')::time + interval '6 hours'),
    10, 0, (now() at time zone 'Asia/Bangkok')::date, (now() at time zone 'Asia/Bangkok')::date,
