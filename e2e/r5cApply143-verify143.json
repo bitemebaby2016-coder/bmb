@@ -1,0 +1,49 @@
+[
+  {
+    "label": "lead-time-gone",
+    "status": 201,
+    "body": [
+      {
+        "hits": 1
+      }
+    ]
+  },
+  {
+    "label": "cutoff-gate-present",
+    "status": 201,
+    "body": [
+      {
+        "hits": 1
+      }
+    ]
+  },
+  {
+    "label": "order-setting-hardened",
+    "status": 201,
+    "body": [
+      {
+        "lang": "plpgsql",
+        "hardened": true
+      }
+    ]
+  },
+  {
+    "label": "pre-order-window-today-ok",
+    "status": 201,
+    "body": [
+      {
+        "hits": 1
+      }
+    ]
+  },
+  {
+    "label": "order-policy-sanitized",
+    "status": 201,
+    "body": [
+      {
+        "lead_days": "7",
+        "cutoff_hours": "2"
+      }
+    ]
+  }
+]

@@ -1,41 +1,37 @@
-﻿// ============================================
-// Admin — Delivery Rounds + Capacity (D8/D9 gap, Phase D)
 // ============================================
+// Admin — Delivery Rounds: แพทเทิร์น 3 รอบ/วัน + รอบรายวัน (จัดกลุ่มตามวัน)
+// ============================================
+// WHY (Owner 2026-10-24): "รอบจัดส่งในหน้าแอดมินมั่วมากซ้ำหลายอย่างหลายวัน —
+// ทุกวันของพรีออเดอร์มีแค่ 3 รอบเหมือนเดิม ควรเป็นแพทเทิร์นเดียวกัน" → หน้านี้จัดการ
+// (1) แพทเทิร์นรอบ 3 รอบ/วัน (order_pattern · migration 144 — template ของทุกวัน)
+// (2) รอบรายวันแบบจัดกลุ่มตามวัน (ไม่ใช่การ์ดซ้ำยาวเหยียด) — เซมเดย์ยังส่งได้ตลอด
+//     เหมือนเดิม (รอบของทุกวันสร้างอัตโนมัติจากแพทเทิร์นผ่าน ensure_rounds_for_date)
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 import { showToast } from '@/components/ui/ToastContainer'
-import { getDeliveryRoundsAdmin, upsertDeliveryRound, setRoundStatus, resetRoundCapacity, type DeliveryRoundRow } from '@/lib/bmbAdminApi_rounds'
+import {
+  getDeliveryRoundsAdmin,
+  setRoundStatus,
+  resetRoundCapacity,
+  getRoundPattern,
+  saveRoundPattern,
+  ensureRoundsForDays,
+  applyPatternToDay,
+  type DeliveryRoundRow,
+} from '@/lib/bmbAdminApi_rounds'
 import { nextRoundStatus } from '@/lib/bmbMenuSchedule'
+import { normalizeRoundPattern, type RoundPatternRow } from '@/lib/orderPolicy'
 import { ToggleSwitch } from '@/components/admin/ToggleSwitch'
 import { supabase } from '@/lib/supabase'
 
 export function AdminRounds() {
   const [rounds, setRounds] = useState<DeliveryRoundRow[]>([])
-  const [editing, setEditing] = useState<DeliveryRoundRow | null>(null)
-  const [form, setForm] = useState({
-    display_name: '',
-    cutoff_time: '08:00',
-    delivery_start: '06:00',
-    delivery_end: '09:00',
-    max_capacity: 100,
-    status: 'active',
-  })
+  const [pattern, setPattern] = useState<RoundPatternRow[]>([])
+  const [savingPattern, setSavingPattern] = useState(false)
+  const [busy, setBusy] = useState<string | null>(null)
 
-  useEffect(() => {
-    loadRounds()
-    // R3 (D-07): refresh on focus/visibility (โปรเจกต์ไม่ใช้ realtime — polling เท่านั้น)
-    const onFocus = () => { void loadRounds() }
-    window.addEventListener('focus', onFocus)
-    document.addEventListener('visibilitychange', onFocus)
-    return () => {
-      window.removeEventListener('focus', onFocus)
-      document.removeEventListener('visibilitychange', onFocus)
-    }
-  }, [])
-
-  async function loadRounds() {
-    // R3 (D-05): error ต้องแสดง — ไม่ใช่เงียบจนแอดมินคิดว่าไม่มีรอบ
+  const loadRounds = useCallback(async () => {
     try {
       // R4: auto-close รอบหมด cutoff ก่อน list (policy ที่ Owner อนุมัติ)
       await supabase.rpc('auto_close_expired_rounds').then(() => {}, () => {})
@@ -44,45 +40,58 @@ export function AdminRounds() {
       console.error('[AdminRounds] load failed:', e)
       showToast(`โหลดรายการรอบส่งไม่สำเร็จ: ${String((e as Error)?.message || e)}`, 'error')
     }
-  }
+  }, [])
 
-  function openEdit(round: DeliveryRoundRow) {
-    setEditing(round)
-    setForm({
-      display_name: round.display_name,
-      cutoff_time: (round.cutoff_time || '').slice(0, 5),
-      delivery_start: (round.delivery_start || '').slice(0, 5),
-      delivery_end: (round.delivery_end || '').slice(0, 5),
-      max_capacity: Number(round.max_capacity),
-      status: round.status,
-    })
-  }
-
-  async function handleSave() {
-    if (!editing) return
-    const saved = await upsertDeliveryRound({
-      ...editing,
-      ...form,
-      max_capacity: Number(form.max_capacity),
-      cutoff_time: `${form.cutoff_time}:00`,
-      delivery_start: `${form.delivery_start}:00`,
-      delivery_end: `${form.delivery_end}:00`,
-    })
-    if (!saved) {
-      showToast('บันทึกรอบไม่สำเร็จ - ลองอีกครั้ง', 'error')
-      return
+  useEffect(() => {
+    void (async () => setPattern(await getRoundPattern()))()
+    void loadRounds()
+    // R3 (D-07): refresh on focus/visibility (โปรเจกต์ไม่ใช้ realtime — polling เท่านั้น)
+    const onFocus = () => { void loadRounds() }
+    window.addEventListener('focus', onFocus)
+    document.addEventListener('visibilitychange', onFocus)
+    return () => {
+      window.removeEventListener('focus', onFocus)
+      document.removeEventListener('visibilitychange', onFocus)
     }
-    showToast('บันทึกรอบเรียบร้อยแล้ว', 'success')
-    setEditing(null)
-    loadRounds()
+  }, [loadRounds])
+
+  async function handleSavePattern() {
+    setSavingPattern(true)
+    try {
+      const err = await saveRoundPattern(normalizeRoundPattern(pattern))
+      showToast(err ?? 'บันทึกแพทเทิร์นรอบแล้ว — รอบใหม่ของทุกวันจะใช้ค่านี้', err ? 'error' : 'success')
+    } finally {
+      setSavingPattern(false)
+    }
+  }
+
+  async function handleEnsureAll() {
+    setBusy('all')
+    try {
+      const ok = await ensureRoundsForDays(new Date().toISOString().slice(0, 10), 30)
+      showToast(`สร้าง/ซ่อมรอบ 30 วันข้างหน้าตามแพทเทิร์นแล้ว (${ok} วัน)`, 'success')
+      await loadRounds()
+    } finally {
+      setBusy(null)
+    }
+  }
+
+  async function handleApplyDay(date: string) {
+    setBusy(date)
+    try {
+      const ok = await applyPatternToDay(date, normalizeRoundPattern(pattern))
+      showToast(ok ? `ซ่อมรอบวันที่ ${date} ตามแพทเทิร์นแล้ว` : `ซ่อมรอบวันที่ ${date} ไม่สำเร็จ`, ok ? 'success' : 'error')
+      await loadRounds()
+    } finally {
+      setBusy(null)
+    }
   }
 
   async function handleStatus(round: DeliveryRoundRow, status: string) {
     if (await setRoundStatus(round.id, status)) {
       showToast(status === 'active' ? `เปิดรับ "${round.display_name}" แล้ว` : `ปิดรับ "${round.display_name}" แล้ว`, 'success')
-      loadRounds()
+      void loadRounds()
     } else {
-      // R3 (D-05): ห้ามเงียบ — toggle ที่ไม่มีผลต้องบอกผู้ใช้
       showToast(`เปลี่ยนสถานะรอบ "${round.display_name}" ไม่สำเร็จ — ลองใหม่ หรือตรวจสิทธิ์`, 'error')
     }
   }
@@ -90,80 +99,145 @@ export function AdminRounds() {
   async function handleResetCapacity(round: DeliveryRoundRow) {
     if (await resetRoundCapacity(round.id)) {
       showToast('รีเซ็ตจำนวนที่รับไว้เป็น 0 แล้ว', 'success')
-      loadRounds()
+      void loadRounds()
     } else {
-      showToast(`รีเซ็ตจำนวนรอบ "${round.display_name}" ไม่สำเร็จ — ลองใหม่`, 'error')
+      showToast('รีเซ็ตจำนวนที่รับไม่สำเร็จ — ลองใหม่', 'error')
     }
   }
 
   async function handleDelete(round: DeliveryRoundRow) {
-    if (!window.confirm(`ลบรอบ "${round.display_name}" วันที่ ${round.scheduled_date}?\n• รอบที่มีออเดอร์อ้างอิงอยู่จะลบไม่ได้ (เก็บไว้เพื่อความถูกต้องของบัญชี)`)) return
     const { error } = await supabase.from('delivery_rounds').delete().eq('id', round.id)
     if (error) {
-      if (String(error.code || '') === '23503' || String(error.message).includes('violates foreign key')) {
-        showToast('ลบไม่ได้ — รอบนี้มีออเดอร์อ้างอิงอยู่', 'error')
-      } else {
-        showToast(`ลบรอบไม่สำเร็จ: ${error.message}`, 'error')
-      }
+      showToast(`ลบรอบไม่สำเร็จ: ${error.message}`, 'error')
       return
     }
     showToast('ลบรอบแล้ว', 'success')
-    loadRounds()
+    void loadRounds()
   }
+
+  // จัดกลุ่มรอบตามวัน — แทนการ์ดซ้ำยาวเหยียด (ต้นตอ "มั่วซ้ำหลายวัน")
+  const byDate = new Map<string, DeliveryRoundRow[]>()
+  for (const r of rounds) {
+    const key = String(r.scheduled_date || 'ไม่มีวันที่')
+    if (!byDate.has(key)) byDate.set(key, [])
+    byDate.get(key)!.push(r)
+  }
+  const dates = [...byDate.keys()].sort()
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-6">
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-3xl font-bold text-brand-accent">🕐 รอบจัดส่งและความจุ</h1>
+        <h1 className="text-3xl font-bold text-brand-accent">🕐 รอบจัดส่ง — แพทเทิร์น 3 รอบ/วัน</h1>
         <Link to="/admin" className="btn btn-outline">← กลับหน้าภาพรวม</Link>
       </div>
 
-      <div className="grid gap-4">
-        {rounds.map((r) => (
-          <div key={r.id} className="card">
-            <div className="flex items-center justify-between mb-3">
-              <div>
-                <div className="font-bold text-brand-accent">{r.display_name}</div>
-                <div className="text-sm text-brand-muted">
-                  ปิดรับ {r.cutoff_time} • ส่ง {r.delivery_start}–{r.delivery_end} • {r.scheduled_date}
-                </div>
-              </div>
-              <span className="badge badge-success">⚡ {r.current_count}/{r.max_capacity}</span>
+      {/* ---- (1) แพทเทิร์นรอบของทุกวัน ---- */}
+      <div className="card mb-6" data-testid="round-pattern-panel">
+        <h2 className="text-xl font-bold text-brand-accent mb-1">📋 แพทเทิร์นรอบประจำวัน (ทุกวันใช้ชุดเดียวกัน)</h2>
+        <p className="text-sm text-brand-muted mb-4">
+          ค่านี้คือต้นแบบของรอบทุกวัน (ทั้งพรีออเดอร์และเซมเดย์) — แก้ที่นี่ที่เดียว แล้วกด "สร้าง/ซ่อมรอบ 30 วัน"
+        </p>
+        <div className="space-y-3">
+          {pattern.map((p, idx) => (
+            <div key={p.round_key} className="grid grid-cols-2 lg:grid-cols-6 gap-3 items-end">
+              <label className="text-sm">ชื่อรอบ
+                <input className="input mt-1" value={p.display_name}
+                  data-testid={`pattern-name-${p.round_key}`}
+                  onChange={(e) => {
+                    const next = [...pattern]
+                    next[idx] = { ...p, display_name: e.target.value }
+                    setPattern(next)
+                  }} />
+              </label>
+              <label className="text-sm">ปิดรับ
+                <input type="time" className="input mt-1" value={p.cutoff_time}
+                  onChange={(e) => {
+                    const next = [...pattern]
+                    next[idx] = { ...p, cutoff_time: e.target.value }
+                    setPattern(next)
+                  }} />
+              </label>
+              <label className="text-sm">เริ่มส่ง
+                <input type="time" className="input mt-1" value={p.delivery_start}
+                  onChange={(e) => {
+                    const next = [...pattern]
+                    next[idx] = { ...p, delivery_start: e.target.value }
+                    setPattern(next)
+                  }} />
+              </label>
+              <label className="text-sm">สิ้นสุด
+                <input type="time" className="input mt-1" value={p.delivery_end}
+                  onChange={(e) => {
+                    const next = [...pattern]
+                    next[idx] = { ...p, delivery_end: e.target.value }
+                    setPattern(next)
+                  }} />
+              </label>
+              <label className="text-sm">ความจุ
+                <input type="number" className="input mt-1" value={p.max_capacity} min={1}
+                  onChange={(e) => {
+                    const next = [...pattern]
+                    next[idx] = { ...p, max_capacity: Number(e.target.value) }
+                    setPattern(next)
+                  }} />
+              </label>
+              <div className="text-xs text-brand-muted pb-2">{p.round_key}</div>
             </div>
+          ))}
+        </div>
+        <div className="flex flex-wrap gap-3 mt-4">
+          <button onClick={() => void handleSavePattern()} disabled={savingPattern} className="btn btn-success" data-testid="save-round-pattern">
+            {savingPattern ? 'กำลังบันทึก…' : 'บันทึกแพทเทิร์น'}
+          </button>
+          <button onClick={() => void handleEnsureAll()} disabled={busy !== null} className="btn btn-outline" data-testid="ensure-rounds-30d">
+            {busy === 'all' ? 'กำลังสร้าง…' : 'สร้าง/ซ่อมรอบ 30 วันข้างหน้าตามแพทเทิร์น'}
+          </button>
+        </div>
+      </div>
 
-            {editing?.id === r.id ? (
-              <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
-                <input className="input" value={form.display_name} onChange={(e) => setForm({ ...form, display_name: e.target.value })} placeholder="ชื่อรอบ" />
-                <label className="text-sm">ปิดรับ <input type="time" className="input" value={form.cutoff_time} onChange={(e) => setForm({ ...form, cutoff_time: e.target.value })} /></label>
-                <label className="text-sm">เริ่มส่ง <input type="time" className="input" value={form.delivery_start} onChange={(e) => setForm({ ...form, delivery_start: e.target.value })} /></label>
-                <label className="text-sm">สิ้นสุด <input type="time" className="input" value={form.delivery_end} onChange={(e) => setForm({ ...form, delivery_end: e.target.value })} /></label>
-                <label className="text-sm">ความจุสูงสุด <input type="number" className="input" value={form.max_capacity} onChange={(e) => setForm({ ...form, max_capacity: Number(e.target.value) })} /></label>
-                <div className="flex gap-2 mt-4">
-                  <button onClick={handleSave} className="btn btn-success text-sm">บันทึก</button>
-                  <button onClick={() => setEditing(null)} className="btn btn-outline text-sm">ยกเลิก</button>
-                </div>
+      {/* ---- (2) รอบรายวัน (จัดกลุ่มตามวัน — ไม่ใช่การ์ดซ้ำยาวเหยียด) ---- */}
+      <h2 className="text-xl font-bold text-brand-accent mb-3">📅 รอบรายวัน</h2>
+      <div className="space-y-4">
+        {dates.map((date) => {
+          const dayRounds = (byDate.get(date) || []).slice()
+            .sort((a, b) => String(a.delivery_start).localeCompare(String(b.delivery_start)))
+          return (
+            <div key={date} className="card" data-testid={`round-day-${date}`}>
+              <div className="flex items-center justify-between mb-3">
+                <div className="font-bold text-brand-accent">{date}</div>
+                <button onClick={() => void handleApplyDay(date)} disabled={busy !== null} className="btn btn-outline text-sm">
+                  {busy === date ? 'กำลังซ่อม…' : 'ซ่อมตามแพทเทิร์น'}
+                </button>
               </div>
-            ) : (
-              <div className="flex flex-wrap items-center gap-3">
-                <button onClick={() => openEdit(r)} className="btn btn-outline text-sm">✏️ แก้ไข</button>
-                <ToggleSwitch
-                  checked={r.status === 'active'}
-                  onChange={() => handleStatus(r, nextRoundStatus(r.status))}
-                  label={r.status === 'active' ? 'เปิดรับ' : 'ปิดรับ'}
-                  testId={`round-active-${r.id}`}
-                />
-                <button onClick={() => handleResetCapacity(r)} className="btn btn-outline text-sm">⟳ รีเซ็ตจำนวนที่รับ</button>
-                <button onClick={() => void handleDelete(r)} className="btn btn-danger text-sm">🗑 ลบรอบนี้</button>
-                <span className={`badge ${r.status === 'active' ? 'badge-success' : 'badge-warning'}`}>{r.status === 'active' ? 'เปิดรับ' : 'ปิดรับ'}</span>
+              <div className="space-y-2">
+                {dayRounds.map((r) => (
+                  <div key={r.id} className="flex flex-wrap items-center gap-3 rounded-lg border border-brand-border p-2">
+                    <div className="min-w-0 flex-1">
+                      <div className="font-medium text-slate-800">{r.display_name || r.round_key || r.id}</div>
+                      <div className="text-xs text-brand-muted">
+                        ส่ง {String(r.delivery_start).slice(0, 5)}–{String(r.delivery_end).slice(0, 5)} · ปิดรับ {String(r.cutoff_time).slice(0, 5)} · {r.current_count}/{r.max_capacity}
+                      </div>
+                    </div>
+                    <ToggleSwitch
+                      checked={r.status === 'active'}
+                      onChange={() => void handleStatus(r, nextRoundStatus(r.status))}
+                      label={r.status === 'active' ? 'เปิดรับ' : 'ปิดรับ'}
+                      testId={`round-active-${r.id}`}
+                    />
+                    <button onClick={() => void handleResetCapacity(r)} className="btn btn-outline text-xs">⟳ รีเซ็ตจำนวน</button>
+                    <button onClick={() => void handleDelete(r)} className="btn btn-danger text-xs">🗑 ลบ</button>
+                  </div>
+                ))}
               </div>
-            )}
-          </div>
-        ))}
+            </div>
+          )
+        })}
       </div>
 
       <div className="card mt-6 bg-brand-surface text-brand-muted text-sm">
         ⚠️ Capacity is enforced atomically in <code>create_order_with_items</code> (row lock) — raising
         <code>max_capacity</code> here takes effect immediately for new orders; existing pre-orders are unaffected.
+        รอบที่มีออเดอร์แล้วจะไม่ถูก "ซ่อมตามแพทเทิร์น" แตะเวลา (คงข้อมูลเดิมให้ออเดอร์ลูกค้า)
       </div>
     </div>
   )

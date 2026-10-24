@@ -268,15 +268,28 @@ export function createSupabaseMock(opts?: { failReadTable?: string; noAdmin?: bo
         if (!p.scheduled_date) {
           return { data: null, error: { code: 'ERR_MISSING_SCHEDULED_DATE', message: 'ERR_MISSING_SCHEDULED_DATE' } }
         }
-        if (String(p.scheduled_date) <= today) {
+        if (String(p.scheduled_date) < today) {
           return { data: null, error: { code: 'ERR_SCHEDULED_DATE_INVALID', message: 'ERR_SCHEDULED_DATE_INVALID' } }
         }
         if (String(p.scheduled_date) !== String(round.scheduled_date)) {
           return { data: null, error: { code: 'ERR_ROUND_DATE_MISMATCH', message: 'ERR_ROUND_DATE_MISMATCH' } }
         }
-        const leadDays = (new Date(String(p.scheduled_date)).getTime() - new Date(today).getTime()) / 86400000
-        if (leadDays < 1) {
-          return { data: null, error: { code: 'ERR_LEAD_TIME', message: 'ERR_LEAD_TIME' } }
+        // === migration 143 (Owner 2026-10-24): พรีออเดอร์วันนี้ได้จนถึงคัทออฟ —
+        // คัทออฟ = order_policy.cutoff_hours ชม. ก่อน delivery_start (mirror
+        // enforce_pre_order_window / FC-4) · ยกเลิก ERR_LEAD_TIME เดิม
+        {
+          const startRaw = String(round.delivery_start || round.cutoff_time || '')
+          const startHM = /^\d{2}:\d{2}/.test(startRaw) ? startRaw.slice(0, 5) : ''
+          const policyRow = (tables['business_settings'] || []).find((s: any) => s.key === 'order_policy')
+          const rawHours = Number(policyRow?.value?.cutoff_hours)
+          const hours = Number.isFinite(rawHours) && rawHours >= 0 ? rawHours : 2
+          if (!startHM) {
+            return { data: null, error: { code: 'ERR_PRE_ORDER_CUTOFF_UNKNOWN', message: 'ERR_PRE_ORDER_CUTOFF_UNKNOWN' } }
+          }
+          const startMs = new Date(`${String(p.scheduled_date)}T${startHM}:00+07:00`).getTime()
+          if (Number.isFinite(startMs) && Date.now() > startMs - hours * 3_600_000) {
+            return { data: null, error: { code: 'ERR_CUTOFF_PASSED', message: 'ERR_CUTOFF_PASSED' } }
+          }
         }
         // === migration 142 (R5c Owner 2026-10-23): PRE_ORDER ต้องมี ≥1 เมนูจาก
         // ปฏิทินของวันนั้น (published) — ปิดช่อง API เลือกวันอิสระ

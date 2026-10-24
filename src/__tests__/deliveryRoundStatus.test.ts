@@ -5,7 +5,7 @@
 // ============================================
 
 import { describe, it, expect } from 'vitest'
-import { roundBookability, roundStatusLabel } from '@/lib/deliveryRoundStatus'
+import { roundBookability, roundStatusLabel, roundCutoffLabel } from '@/lib/deliveryRoundStatus'
 
 // Fixed instants (Bangkok = UTC+7):
 // 2026-10-17 21:32 ICT = 2026-10-17T14:32Z · 2026-10-17 09:00 ICT = 2026-10-17T02:00Z
@@ -19,6 +19,43 @@ const base = {
   current_count: 0,
   max_capacity: 80,
 }
+
+describe('roundCutoffLabel', () => {
+  it('SAME_DAY = cutoff_time เดิม', () => {
+    expect(roundCutoffLabel(base, 'SAME_DAY', 2)).toBe('10:30')
+  })
+  it('PRE_ORDER = delivery_start − cutoff_hours (11:00 − 2 = 09:00)', () => {
+    expect(roundCutoffLabel(base, 'PRE_ORDER', 2)).toBe('09:00')
+    expect(roundCutoffLabel(base, 'PRE_ORDER', 1)).toBe('10:00')
+  })
+})
+
+// ---- 143 (Owner Q1 2026-10-24): คัทออฟพรีออเดอร์ = cutoff_hours ชม. ก่อนส่ง ----
+describe('roundBookability — PRE_ORDER (คัทออฟก่อนส่ง 2 ชม.)', () => {
+  it('วันนี้ 09:00 น. = ยังเปิด (ตรงคัทออฟ 09:00 พอดี — strict `>`)', () => {
+    expect(roundBookability(base, { isToday: true, mode: 'PRE_ORDER', preOrderCutoffHours: 2, nowUtcMs: MORNING })).toBe('open')
+  })
+
+  it('วันนี้ 09:30 น. = cutoff_passed (เลยคัทออฟ 2 ชม. ก่อนรอบเที่ยงแล้ว — เคส Owner)', () => {
+    const NINE_THIRTY = Date.parse('2026-10-17T02:30:00Z')
+    expect(roundBookability(base, { isToday: true, mode: 'PRE_ORDER', preOrderCutoffHours: 2, nowUtcMs: NINE_THIRTY })).toBe('cutoff_passed')
+  })
+
+  it('SAME_DAY ตอน 09:30 น. = ยัง open (cutoff_time 10:30 — เซมเดย์ส่งได้ตลอดเหมือนเดิม)', () => {
+    const NINE_THIRTY = Date.parse('2026-10-17T02:30:00Z')
+    expect(roundBookability(base, { isToday: true, mode: 'SAME_DAY', nowUtcMs: NINE_THIRTY })).toBe('open')
+  })
+
+  it('cutoff_hours ตั้งได้: 1 ชม. = คัทออฟ 10:00 (09:30 ยังเปิด)', () => {
+    const NINE_THIRTY = Date.parse('2026-10-17T02:30:00Z')
+    expect(roundBookability(base, { isToday: true, mode: 'PRE_ORDER', preOrderCutoffHours: 1, nowUtcMs: NINE_THIRTY })).toBe('open')
+    expect(roundBookability(base, { isToday: true, mode: 'PRE_ORDER', preOrderCutoffHours: 1, nowUtcMs: NIGHT })).toBe('cutoff_passed')
+  })
+
+  it('วันถัดไป (isToday=false) = open เสมอ (คัทออฟอยู่บนวันส่ง)', () => {
+    expect(roundBookability(base, { isToday: false, mode: 'PRE_ORDER', preOrderCutoffHours: 2, nowUtcMs: NIGHT })).toBe('open')
+  })
+})
 
 describe('roundBookability', () => {
   it('ก่อน cutoff ของวันนี้ = open', () => {

@@ -25,6 +25,16 @@ export interface RoundTimeInfo {
   max_capacity?: number | string | null
 }
 
+export interface RoundBookabilityOpts {
+  isToday: boolean
+  nowUtcMs?: number
+  /** PRE_ORDER = คัทออฟ cutoff_hours ชม. ก่อน delivery_start (Owner Q1 / migration 143)
+   *  SAME_DAY (default) = cutoff_time ของรอบ (เดิม — เซมเดย์ส่งได้ตลอดเหมือนเดิม) */
+  mode?: 'SAME_DAY' | 'PRE_ORDER'
+  /** ค่า order_policy.cutoff_hours (default 2) */
+  preOrderCutoffHours?: number
+}
+
 /** 'HH:mm' or 'HH:mm:ss' → ms-of-day, or null when absent/invalid.
  *  NOTE: `Number('')` is 0 — empty/blank must be rejected BEFORE Number() or a
  *  missing time would read as 00:00 and wrongly close every round. */
@@ -39,6 +49,39 @@ function msOfDay(value: string | null | undefined): number | null {
 }
 
 /**
+ * ms-of-day cutoff for the round in the given mode:
+ *   PRE_ORDER → delivery_start − preOrderCutoffHours (อาจติดลบ = คัทออฟอยู่ "ก่อนเที่ยงคืน
+ *     ของวันก่อนวันส่ง" — ผ่านเฉพาะการสั่งล่วงหน้า; วันส่งจริงเกินคัทออฟทุกเวลา)
+ *   SAME_DAY  → cutoff_time ของรอบ (เดิม)
+ */
+export function roundCutoffMs(
+  round: RoundTimeInfo,
+  mode: 'SAME_DAY' | 'PRE_ORDER' = 'SAME_DAY',
+  preOrderCutoffHours = 2,
+): number | null {
+  if (mode === 'PRE_ORDER') {
+    const startMs = msOfDay(round.delivery_start)
+    const hours = Number.isFinite(preOrderCutoffHours) && preOrderCutoffHours >= 0 ? preOrderCutoffHours : 2
+    if (startMs !== null) return startMs - hours * 3_600_000
+  }
+  return msOfDay(round.cutoff_time)
+}
+
+/** ป้ายเวลาคัทออฟสำหรับโชว์ใน UI ('HH:MM' หรือข้อความเมื่อคำนวณไม่ได้/ติดลบ) */
+export function roundCutoffLabel(
+  round: RoundTimeInfo,
+  mode: 'SAME_DAY' | 'PRE_ORDER' = 'SAME_DAY',
+  preOrderCutoffHours = 2,
+): string {
+  const ms = roundCutoffMs(round, mode, preOrderCutoffHours)
+  if (ms === null) return mode === 'PRE_ORDER' ? `${preOrderCutoffHours} ชม. ก่อนเวลาส่ง` : String(round.cutoff_time ?? '').slice(0, 5)
+  if (ms < 0) return `${preOrderCutoffHours} ชม. ก่อนเวลาส่ง`
+  const h = Math.floor(ms / 3_600_000)
+  const m = Math.floor((ms % 3_600_000) / 60_000)
+  return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`
+}
+
+/**
  * Client display mirror of the server's round gates.
  * - `isToday` = the round's scheduled date is the SAME day (same-day rounds or
  *   a pre-order date of "today"); future dates are always window-open.
@@ -46,7 +89,7 @@ function msOfDay(value: string | null | undefined): number | null {
  */
 export function roundBookability(
   round: RoundTimeInfo,
-  opts: { isToday: boolean; nowUtcMs?: number },
+  opts: RoundBookabilityOpts,
 ): RoundBookability {
   const nowUtcMs = opts.nowUtcMs ?? Date.now()
 
@@ -56,9 +99,9 @@ export function roundBookability(
   if (Number.isFinite(cap) && Number.isFinite(used) && cap > 0 && used >= cap) return 'full'
 
   if (opts.isToday) {
-    // Server authority (025/118): cutoff compared with strict `>` Bangkok time
+    // Server authority (143): SAME_DAY = cutoff_time / PRE_ORDER = delivery_start − cutoff_hours
     // (identical semantics to isBangkokCutoffPassed — seconds truncated to :00).
-    const cutoffMs = msOfDay(round.cutoff_time)
+    const cutoffMs = roundCutoffMs(round, opts.mode, opts.preOrderCutoffHours ?? 2)
     const nowMs = bangkokMsOfDay(nowUtcMs)
     if (cutoffMs !== null && nowMs !== null && nowMs > cutoffMs) return 'cutoff_passed'
     // Anomaly guard (all-day template "ส่ง 08:00-20:00 · สั่งได้ถึง 23:59"):

@@ -6,6 +6,7 @@ import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { showToast } from '@/components/ui/ToastContainer'
 import { getBusinessSettings, setBusinessSetting } from '@/lib/bmbAdminApi_settings'
+import { OrderPolicyPanel } from '@/components/admin/OrderPolicyPanel'
 import { SOCIAL_LINKS_SETTING_KEY, getSocialLinks, type SocialLinks } from '@/lib/socialLinks'
 import { THEATER_DAILY_COPY_KEY, THEATER_DAILY_COPY_STARTER } from '@/lib/theaterDailyCopy'
 import { supabase } from '@/lib/supabase'
@@ -129,6 +130,9 @@ export function AdminSettings() {
         <h1 className="text-3xl font-bold text-brand-accent">⚙️ Business Settings</h1>
         <Link to="/admin" className="btn btn-outline">← Dashboard</Link>
       </div>
+
+      {/* ✅ Owner 2026-10-24: ค่า policy ตั้งจากฝั่งแอดมินได้ — ฟอร์มมีชนิดข้อมูล (order_policy) */}
+      <OrderPolicyPanel />
 
       {loading ? (
         <div className="text-center py-12">Loading…</div>

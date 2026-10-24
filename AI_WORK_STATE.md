@@ -2,12 +2,26 @@
 
 > **สถานะงานปัจจุบันของโปรเจกต์ Bite Me Baby** ใช้แนบเข้าสู่ Context ตอนเริ่มแชทเสมอ
 
-**last_updated:** 2026-10-23 รอบ 9 (R5c เสร็จฝั่งวิศวกรรม — พรีออเดอร์=เมนูปฏิทินเท่านั้น + migration 142 ขึ้น production + ซ่อม mojibake ต้นตอ "ภาษาต่างดาว" — เหลือรอ Owner เทส A–G)
-**phase:** 🟢 R5c ลงโค้ด+DB ครบแล้ว (commit `df5400e` ซ่อมภาษา + `eec55c7` R5c) — รอ Owner ทดสอบจริงตาม `docs/BMB_R5_PRE_ORDER_SEPARATION_2026-10-23.md` §7 (hard refresh ก่อน)
-**current_focus:** รอ Owner เทสโปรดักชั่น A–G (§7) — ถ้ามีเคสตก แก้ต่อในแชทนี้
+**last_updated:** 2026-10-24 รอบ 10 (R5d — คัทออฟพรีออเดอร์ cutoff_hours 2 ชม. + พรีออเดอร์วันนี้ได้ + ฟอร์มตั้งค่า/แพทเทิร์นรอบแอดมิน — migration 143+144 ขึ้น production + contract ผ่าน — เหลือรอ Owner เทส)
+**phase:** 🟢 R5d ลงโค้ด+DB ครบ (commit รอบ 10) — รอ Owner ทดสอบจริงตาม `docs/BMB_R5_PRE_ORDER_SEPARATION_2026-10-23.md` §8 (hard refresh ก่อน)
+**current_focus:** รอ Owner เทสโปรดักชั่น §8 (คัทออฟ 2 ชม. / ตะกร้ารวม / หน้าตั้งค่า + แพทเทิร์นรอบ) — ถ้ามีเคสตก แก้ต่อในแชทนี้
 **blocked_by:** (1) รอ Owner ทดสอบจริง — ยังไม่ปิดงานจนกว่าเทสผ่านทั้งหมด (2) ไม่มี blocker ทางเทคนิค
 
 ---
+
+---
+
+## 🩺 REALITY CHECK (2026-10-24 รอบ 10 · R5d — คัทออฟ 2 ชม. + ตั้งค่า/แพทเทิร์นรอบฝั่งแอดมิน)
+
+- **บั๊กที่ Owner เจอ (production 10:24 น. 2026-10-24) — ต้นตอและทางแก้:**
+  - **ต้นตอ ①:** `create_order_with_items` + trigger `enforce_pre_order_window` ปฏิเสธ `scheduled_date <= วันนี้` (ERR_SCHEDULED_DATE_INVALID / ERR_PRE_ORDER_DATE_INVALID) → เมนูปฏิทิน "วันนี้" สั่งไม่ได้ แม้ยังไม่ถึงคัทออฟ → "สร้างออเดอร์ล้มเหลว"
+  - **ต้นตอ ② (กับระเบิดซ่อน):** `order_policy.pre_order_lead_days = "มี7"` (Owner พิมพ์ใน JSON ดิบของ AdminSettings) → `order_setting()` cast 22P02 → **ทุก**พรีออเดอร์พัง (contract 142 ยังเขียวเพราะรันก่อนค่าพังถูกพิมพ์)
+  - **ต้นตอ ③:** คัทออฟรอบใช้ `cutoff_time` ที่แอดมินตั้งเอง (30-60 นาที) ไม่ใช่กฎ "ก่อนส่ง 2 ชม." (Owner Q1/FC-4 — มีใน trigger 114 อยู่แล้วแต่ UI/RPC ไม่ได้ใช้)
+- **Migration 143 (`143_pre_order_cutoff_settings.sql`):** พรีออเดอร์วันนี้ได้จนถึงคัทออฟ · คัทออฟพรีออเดอร์ = `delivery_start − order_policy.cutoff_hours` (default 2, ตั้งจากแอดมิน) · SAME_DAY คงเดิม (`cutoff_time` — เซมเดย์ส่งได้ตลอด) · ยกเลิก ERR_LEAD_TIME · `order_setting` แข็ง (cast fail → default) + ซ่อมค่า "มี7"→7 — **apply/verify/contract G1–G8 บน production แล้ว** (หลักฐาน `e2e/r5cApply143-*.json`)
+- **Migration 144 (`144_round_pattern.sql`):** แพทเทิร์น 3 รอบ/วัน (`business_settings.order_pattern` — แอดมินแก้ได้) เป็น template ของ `ensure_rounds_for_date` (fallback เทมเพลตเดิม) + ซ่อมรอบอนาคตที่ถูกปิดทิ้ง → active — **apply/verify/contract G1–G5 แล้ว** (note: fallback ต้อง clone `branch_id` จากเทมเพลตตาม 113 — แก้แล้วหลัง contract เจอ)
+- **Client/UI:** `deliveryRoundStatus` แยกคัทออฟตามโหมด (PRE_ORDER = start−cutoff_hours / SAME_DAY = cutoff_time) + ป้าย "ปิดรับพรีออเดอร์ HH:MM" · CheckoutPage ตัด lead-guard · **AdminSettings = ฟอร์มค่า policy แบบมีชนิด** (`OrderPolicyPanel` — ปิดช่องพิมพ์ JSON ดิบ) · **AdminRounds = แพทเทิร์น 3 รอบ + รอบรายวันจัดกลุ่มตามวัน** (ปุ่ม "สร้าง/ซ่อมรอบ 30 วัน" / "ซ่อมตามแพทเทิร์น")
+- **Repro probe ยืนยันบน production (`e2e/r5cReproMixedToday.*`, ROLLBACK):** S1 ตะกร้ารวม+รอบเย็น+วันนี้ = **ok** (บั๊ก Owner หาย) · S3 สินค้าธรรมดาล้วน = ERR_PRE_ORDER_REQUIRES_MENU (gate 142 คง) · **vitest 130/130 ไฟล์ 1347 ทดสอบ · tsc · eslint · secret scan 0**
+- **Next Exact Action:** Owner hard refresh → เทส `docs/BMB_R5_PRE_ORDER_SEPARATION_2026-10-23.md` §8 ข้อ 1–12 → รายงานผล → ถ้าตก แก้ในแชทนี้ต่อ
 
 ---
 

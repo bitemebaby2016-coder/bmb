@@ -1,0 +1,29 @@
+[
+  {
+    "label": "order-pattern-seeded",
+    "status": 201,
+    "body": [
+      {
+        "rounds": 3
+      }
+    ]
+  },
+  {
+    "label": "ensure-uses-pattern",
+    "status": 201,
+    "body": [
+      {
+        "hits": 1
+      }
+    ]
+  },
+  {
+    "label": "future-rounds-repaired",
+    "status": 201,
+    "body": [
+      {
+        "still_closed": 0
+      }
+    ]
+  }
+]

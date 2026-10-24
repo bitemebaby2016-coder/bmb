@@ -5,6 +5,12 @@
 
 import { supabase } from './supabase'
 import { writeAuditLog } from './auditLog'
+import { getBusinessSettings, setBusinessSetting } from './bmbAdminApi_settings'
+import {
+  normalizeRoundPattern,
+  validateRoundPatternRow,
+  type RoundPatternRow,
+} from './orderPolicy'
 
 export interface DeliveryRoundRow {
   id: string
@@ -190,4 +196,72 @@ export async function getRoundsForDateAdmin(date: string): Promise<DeliveryRound
     .order('delivery_start', { ascending: true })
   if (error) { console.error('[getRoundsForDateAdmin] Error:', error); return [] }
   return (data || []) as DeliveryRoundRow[]
+}
+
+// ============================================
+// ✅ Round PATTERN (Owner 2026-10-24 — migration 144): "ทุกวันมีแค่ 3 รอบ
+// เหมือนกัน ควรเป็นแพทเทิร์นเดียวกัน" — template = business_settings.order_pattern
+// (ensure_rounds_for_date ใช้เป็นแหล่งสร้างรอบของทุกวัน)
+// ============================================
+
+/** แพทเทิร์นปัจจุบัน (ครบ 3 คีย์เสมอ — normalize จาก order_pattern) */
+export async function getRoundPattern(): Promise<RoundPatternRow[]> {
+  const s = await getBusinessSettings()
+  return normalizeRoundPattern((s.order_pattern as any)?.rounds)
+}
+
+/** บันทึกแพทเทิร์น (validate ทุกแถวก่อน — คืน false เมื่อไม่ผ่าน) */
+export async function saveRoundPattern(rows: RoundPatternRow[]): Promise<string | null> {
+  for (const r of rows) {
+    const invalid = validateRoundPatternRow(r)
+    if (invalid) return invalid
+  }
+  const ok = await setBusinessSetting('order_pattern', { rounds: rows })
+  return ok ? null : 'บันทึกแพทเทิร์นไม่สำเร็จ — ลองใหม่'
+}
+
+/** สร้างรอบของวันตามแพทเทิร์น (idempotent — ensure_rounds_for_date) */
+export async function ensureRoundsForDays(startIso: string, days: number): Promise<number> {
+  let okCount = 0
+  const start = new Date(startIso + 'T00:00:00')
+  for (let i = 0; i < days; i++) {
+    const d = new Date(start)
+    d.setDate(d.getDate() + i)
+    const iso = d.toISOString().slice(0, 10)
+    if (await ensureRoundsForDate(iso)) okCount++
+  }
+  return okCount
+}
+
+/** ซ่อมรอบของวันให้ตรงแพทเทิร์น: สร้างที่ขาด + ปรับแถวที่ยังไม่มีออเดอร์ (current_count = 0)
+ *  แถวที่มีออเดอร์แล้วไม่แตะ (คงเวลาเดิม — ออเดอร์ลูกค้าอ้างอิงอยู่) */
+export async function applyPatternToDay(date: string, rows: RoundPatternRow[]): Promise<boolean> {
+  await ensureRoundsForDate(date)
+  const existing = await getRoundsForDateAdmin(date)
+  const now = new Date().toISOString()
+  for (const p of rows) {
+    const row = existing.find((r) => (r.round_key || r.id) === p.round_key || r.id === `round-${date.replace(/-/g, '')}-${p.round_key}`)
+    if (!row) continue
+    if (Number(row.current_count) > 0) continue
+    const needs =
+      row.display_name !== p.display_name ||
+      String(row.cutoff_time).slice(0, 5) !== p.cutoff_time ||
+      String(row.delivery_start).slice(0, 5) !== p.delivery_start ||
+      String(row.delivery_end).slice(0, 5) !== p.delivery_end ||
+      Number(row.max_capacity) !== Number(p.max_capacity)
+    if (!needs) continue
+    const { error } = await supabase
+      .from('delivery_rounds')
+      .update({
+        display_name: p.display_name,
+        cutoff_time: `${p.cutoff_time}:00`,
+        delivery_start: `${p.delivery_start}:00`,
+        delivery_end: `${p.delivery_end}:00`,
+        max_capacity: Number(p.max_capacity),
+        updated_at: now,
+      })
+      .eq('id', row.id)
+    if (error) { console.error('[applyPatternToDay] update error:', error); return false }
+  }
+  return true
 }

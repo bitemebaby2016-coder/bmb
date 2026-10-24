@@ -35,8 +35,7 @@ import { getBusinessSettings } from '@/lib/bmbAdminApi_settings'
 import { resolvePublicBranch } from '@/lib/brandResolver'
 import { getProducts } from '@/lib/bmbAdminApi_products'
 import { revalidateWithCatalog, reportToToastMessage } from '@/lib/cartPersistence'
-import { isBangkokCutoffPassed } from '@/lib/bangkokTime'
-import { roundBookability, roundStatusLabel } from '@/lib/deliveryRoundStatus'
+import { roundBookability, roundStatusLabel, roundCutoffLabel } from '@/lib/deliveryRoundStatus'
 import { normalizePromoCode } from '@/lib/promotionClient'
 import { CouponBox, revalidateCouponForSubmit } from '@/components/CouponBox'
 import { getTrustedGpsLocation } from '@/lib/locationLogin'
@@ -45,12 +44,6 @@ import type { OrderMode } from '@/config/platformConfig'
 
 function todayStr(): string {
   return new Date().toISOString().slice(0, 10)
-}
-
-function addDays(date: string, days: number): string {
-  const d = new Date(date + 'T00:00:00')
-  d.setDate(d.getDate() + days)
-  return d.toISOString().slice(0, 10)
 }
 
 // ✅ WAVE 5A (124) — B5/B10: NEVER a second payment intent for the same order.
@@ -113,7 +106,7 @@ export function CheckoutPage() {
   const [resolvedBranchId, setResolvedBranchId] = useState<string | null>(null) // TEN-07: resolve from round
   const [serverFee, setServerFee] = useState<number | null>(null)
   const [feeSource, setFeeSource] = useState<'server' | 'local-mirror' | 'error' | null>(null)
-  const [leadDays, setLeadDays] = useState(1) // DISPLAY ONLY — server policy enforces the real lead
+  const [cutoffHours, setCutoffHours] = useState(2) // order_policy.cutoff_hours — คัทออฟพรีออเดอร์ (ชม. ก่อนส่ง)
   const [paymentMethod, setPaymentMethod] = useState<'promptpay_qr' | 'cash_on_delivery' | 'credit_card'>('promptpay_qr')
   // ✅ 127 pickup fulfillment: 'delivery' (เดิม) | 'pickup' (รับที่ร้าน, ค่าส่ง 0)
   const [fulfillment, setFulfillment] = useState<'delivery' | 'pickup'>('delivery')
@@ -207,24 +200,25 @@ export function CheckoutPage() {
       setRounds(list)
       setSelectedRoundId((prev) => {
         const isToday = scheduledDate === todayStr()
+        const opts = { isToday, mode: orderMode, preOrderCutoffHours: cutoffHours }
         const prevRow = list.find((r) => r.id === prev)
-        if (prevRow && roundBookability(prevRow, { isToday }) === 'open') return prev
+        if (prevRow && roundBookability(prevRow, opts) === 'open') return prev
         // Owner 2026-10-19: same-day "จัดส่งทันที" — เลือกรอบที่เวลาปัจจุบันอยู่ใน
         // หน้าต่างจัดส่งก่อน (ส่งเลย) ถ้าไม่มีค่อยใช้รอบเปิดถัดไป (อัตโนมัติเสมอ)
         const now = new Date()
         const nowMin = now.getHours() * 60 + now.getMinutes()
         const inWindow = list.find((r) => {
-          if (roundBookability(r, { isToday }) !== 'open') return false
+          if (roundBookability(r, opts) !== 'open') return false
           const [sh, sm] = String(r.delivery_start).slice(0, 5).split(':').map(Number)
           const [eh, em] = String(r.delivery_end).slice(0, 5).split(':').map(Number)
           return nowMin >= sh * 60 + sm && nowMin <= eh * 60 + em
         })
         if (inWindow) return inWindow.id
-        return list.find((r) => roundBookability(r, { isToday }) === 'open')?.id ?? ''
+        return list.find((r) => roundBookability(r, opts) === 'open')?.id ?? ''
       })
     })()
     return () => { active = false }
-  }, [scheduledDate, customer])
+  }, [scheduledDate, customer, orderMode, cutoffHours])
 
   // ✅ CAT-02: canonical published menu schedule for the selected PRE_ORDER date.
   // DISPLAY MIRROR ONLY — server (trg_menu_gate, migration 039) re-decides at order time.
@@ -292,12 +286,13 @@ export function CheckoutPage() {
     }
   }, [deliveryAddress.latitude, deliveryAddress.longitude, itemCount, customer, feeRetry, fulfillment])
 
-  // order_policy display values (lead days for the PRE_ORDER date picker).
+  // order_policy display values (cutoff_hours = คัทออฟพรีออเดอร์ ก่อนส่ง — โชว์/mirror ฝั่ง client).
   useEffect(() => {
     void (async () => {
       const s = await getBusinessSettings()
       const policy = (s?.order_policy ?? {}) as Record<string, any>
-      if (policy.pre_order_lead_days != null) setLeadDays(Number(policy.pre_order_lead_days) || 1)
+      const raw = Number(policy.cutoff_hours)
+      if (Number.isFinite(raw) && raw >= 0) setCutoffHours(raw)
     })()
   }, [])
 
@@ -395,26 +390,30 @@ export function CheckoutPage() {
       return
     }
 
-    // ✅ SERVER-AUTHORITATIVE AVAILABILITY CHECK (P0 #6: cutoff enforcement)
+    // ✅ SERVER-AUTHORITATIVE AVAILABILITY CHECK (P0 #6 + 143: cutoff enforcement)
     // Client-side gate — the RPC enforces the same rules again server-side.
+    // 143 (Owner Q1): คัทออฟพรีออเดอร์ = cutoff_hours ชม. ก่อน delivery_start ·
+    // same-day = cutoff_time ของรอบ (เดิม) — ทั้งคู่เทียบเวลากรุงเทพ strict `>`
     const selectedRound = rounds.find(r => r.id === selectedRoundId)
-    if (selectedRound && orderMode === 'SAME_DAY') {
-      // ✅ P0-1: deterministic Asia/Bangkok cutoff gate — CLIENT pre-check only;
-      // the server remains the authority (create_order_with_items raises
-      // ERR_CUTOFF_PASSED comparing Bangkok `time` with strict `>`). The
-      // previous implementation derived "ICT now" with
-      // `(ictOffset - getTimezoneOffset())`; getTimezoneOffset() is NEGATIVE
-      // east of UTC, so on Thai browsers +7h was applied twice (+14h) and the
-      // gate was inverted (blocked BEFORE cutoff / allowed AFTER it). The
-      // helper uses UTC getters only → identical in every browser timezone.
-      if (isBangkokCutoffPassed(String(selectedRound.cutoff_time || '08:00'))) {
-        showToast(`รอบจัดส่งนี้ปิดรับออเดอร์แล้ว (cutoff เวลา ${selectedRound.cutoff_time} น.)`, 'error')
+    if (selectedRound) {
+      const bookability = roundBookability(selectedRound, {
+        isToday: scheduledDate === today,
+        mode: orderMode,
+        preOrderCutoffHours: cutoffHours,
+      })
+      if (bookability === 'cutoff_passed') {
+        showToast(
+          orderMode === 'PRE_ORDER'
+            ? `เลยคัทออฟจองล่วงหน้าแล้ว (ปิดรับ ${cutoffHours} ชม. ก่อนเวลาส่ง) — เลือกรอบอื่น`
+            : `รอบจัดส่งนี้ปิดรับออเดอร์แล้ว (cutoff เวลา ${selectedRound.cutoff_time} น.)`,
+          'error',
+        )
         setIsProcessing(false)
         return
       }
       // Quota check — prevent ordering when round is full
       if (selectedRound.current_count >= selectedRound.max_capacity) {
-        showToast('รอบจัดส่งนี้เต็มแล้ว กรุณาเลือกroundอื่น', 'error')
+        showToast('รอบจัดส่งนี้เต็มแล้ว กรุณาเลือกรอบอื่น', 'error')
         setIsProcessing(false)
         return
       }
@@ -455,11 +454,9 @@ export function CheckoutPage() {
       return
     }
 
-    // ✅ lead time (server order_setting('pre_order_lead_days') re-checks): วันเมนูต้องล่วงหน้าพอ
-    if (orderMode === 'PRE_ORDER' && scheduledDate < addDays(today, leadDays)) {
-      showToast(`จองล่วงหน้าต้องส่งวันที่อย่างน้อย ${leadDays} วันข้างหน้า (วันเมนูปัจจุบัน: ${scheduledDate})`, 'error')
-      return
-    }
+    // ✅ 143 (Owner Q1 2026-10-24): คัทออฟพรีออเดอร์ = cutoff_hours ชม. ก่อนส่ง
+    // (mirror ของ ERR_CUTOFF_PASSED — ตรวจอีกครั้งตอนกดสั่งด้านบนแล้ว · server authority)
+    // พรีออเดอร์วันนี้ได้จนถึงคัทออฟ — ไม่มีการบังคับ lead days อีกต่อไป
 
     // ✅ CAT-02: canonical menu schedule mirror (migration 039 trg_menu_gate).
     // Blocks submit BEFORE the RPC so the customer never hits a schedule reject;
@@ -734,7 +731,7 @@ export function CheckoutPage() {
           {orderMode === 'PRE_ORDER' ? '📅 สั่งซื้อแบบจองล่วงหน้า (Pre-order)' : '🔥 สั่งซื้อวันนี้ (Same-day)'}
         </h3>
         {orderMode === 'PRE_ORDER' ? (
-          <p className="text-sm text-blue-700">วันจัดส่งถูกกำหนดโดยเมนูรอบพิเศษของแอดมิน (ป้ายมุมเมนู) — เลือกเฉพาะรอบจัดส่งด้านล่าง (ไม่มีพรีออเดอร์วันอิสระ) ระบบเซิร์ฟเวอร์ตรวจ lead time ({leadDays} วัน) และความจุรอบให้อีกครั้ง</p>
+          <p className="text-sm text-blue-700">วันจัดส่งถูกกำหนดโดยเมนูรอบพิเศษของแอดมิน (ป้ายมุมเมนู) — เลือกเฉพาะรอบจัดส่งด้านล่าง (ไม่มีพรีออเดอร์วันอิสระ) ระบบเซิร์ฟเวอร์ตรวจคัทออฟก่อนส่ง ({cutoffHours} ชม.) และความจุรอบให้อีกครั้ง</p>
         ) : (
           <p className="text-sm text-orange-700">🛵 สั่งวันนี้ = จัดส่งทันที ระบบเลือกรอบเปิดรับให้อัตโนมัติ — เซิร์ฟเวอร์ตรวจ cutoff (เวลาไทย) และความจุรอบให้อีกครั้ง</p>
         )}
@@ -830,7 +827,7 @@ export function CheckoutPage() {
                     {/* พื้นปุ่มเลือกเป็นสีครีม (bg-orange-50) → ตัวอักษรต้องเข้มเสมอ ห้ามใช้สีธีม */}
                     <div className={`font-medium ${selected ? 'text-slate-900' : ''}`}>{r.display_name || r.round_key || r.id}</div>
                     <div className={`text-xs ${selected ? 'text-slate-600' : 'text-brand-muted'}`}>
-                      ส่ง {String(r.delivery_start).slice(0, 5)}–{String(r.delivery_end).slice(0, 5)} · สั่งได้ถึง {String(r.cutoff_time).slice(0, 5)} · {closed ? roundStatusLabel(status) : `เหลือ ${remaining} ที่`}
+                      ส่ง {String(r.delivery_start).slice(0, 5)}–{String(r.delivery_end).slice(0, 5)} · {orderMode === 'PRE_ORDER' ? 'ปิดรับพรีออเดอร์' : 'สั่งได้ถึง'} {roundCutoffLabel(r, orderMode, cutoffHours)} · {closed ? roundStatusLabel(status) : `เหลือ ${remaining} ที่`}
                     </div>
                   </div>
                   {closed && (
