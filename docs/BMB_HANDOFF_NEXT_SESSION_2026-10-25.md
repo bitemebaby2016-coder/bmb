@@ -44,3 +44,47 @@
 
 ## 4. เกตบังคับก่อน push ทุกครั้ง
 `npx tsc --noEmit` → `npm run lint` → `npx vitest run` → `npm run build` → (ถ้าแตะ SQL) Docker replay 001→151 + contracts → commit/push เฉพาะ path ที่ตรวจแล้ว → เช็ค CI + Contract Tests เขียว
+
+---
+
+## 5. 🔴 UPDATE (รอบ CONTINUOUS EXECUTION · 2026-10-25 ต่อจาก Wave 2)
+
+### 5.1 แก้ตามคำสั่ง Owner ระหว่างทาง
+- **ปุ่ม CTA "จองล่วงหน้า — สั่งอาหารจันทบุรี เตรียมพร้อมส่ง"** = ย้ายเข้าหมวด `home-sec-preorder`
+  และ **แสดงเฉพาะตอนเปิดแท็บ 📅 พรีออเดอร์เท่านั้น** (`homeTab === 'preorder'` gate · แท็บ/หน้าอื่นไม่แสดง)
+  — แก้ใน `src/pages/HomePage.tsx` (ไม่สร้างคอมโพเนนต์ใหม่) · สัญญาเทสต์ `preOrderEntry.test.ts`
+  realign + เพิ่ม regression ตามคำสั่งใหม่ (ลบ assertion "ก่อน Popular" เดิมที่ขัดคำสั่ง — เปิดเผยในคอมเมนต์)
+
+### 5.2 Task A — stale contracts 8 ไฟล์: **7/8 GREEN แล้ว + 039 เหลือ 1 assertion รอ Owner**
+หลักฐาน: replay 001-151 (CI preprocessor verbatim) = **MIGRATIONS_OK** · รัน `e2e/contracts_*.sql` ทั้งหมด
+- ✅ 023/028/030/036/037/038/125 = **rc=0** (สรุป `.tmp_contract_logs/SUMMARY.txt` ระหว่างรอบ — ลบไฟล์ temp หลังย้าย evidence)
+- ⛔ **039 = G1–G6 PASS · G7 FAIL `anon EXECUTE set_menu_schedule`** = **defect จริง**: ไม่มี
+  `REVOKE EXECUTE ... set_menu_schedule/publish_menu_schedule` จาก `PUBLIC/anon` ใน migration ใด ๆ
+  (probe ครบทุกไฟล์ + Select-String GRANT/REVOKE ใน 039 มีแค่ get_menu/enforce_*) — มี internal
+  `is_admin()` gate คุมอยู่ (G2 ผ่าน) = defense-in-depth ขาด · **แก้ = migration REVOKE = security
+  change → ต้อง Owner sign-off (§6/audit rule) — ห้ามแก้สัญญาเทสต์ฝ่ายเดียว**
+- ชั้นความล้มเหลวและวิธีแก้ (evidence-based ทุกข้อ): radius fixture (kitchen 10.7016/102.1429 + รัศมี 5) ·
+  menu_schedule fixture (แบบ 142) · `mark_payment_failed` ถูกถอด (`aa43dc2`) → ย้าย T14/T7 ไป
+  `record_payment_result(status='failed')` (canonical · `bmbAdminApi_orders.ts:408`) + intent seed ·
+  zone 095 ทับ 020 → deactivate 3 โซนกลางใน txn · permission `RESET ROLE` 2 จุดใน 038 ·
+  G3 038 = "TODAY" ล้าสมัยตาม **143 (Owner production test: พรีออเดอร์วันนี้ได้)** → ย้ายไป PAST ·
+  G3b/G4 039 + T4 023 realign กับ **142 R5c menu-gate authority** · `driver_login` 2-arg ถูกถอด →
+  rider fixture pattern แบบ 036 + admin claims ก่อน `guard_profile_mutation` · assignment INSERT = postgres
+- ⚠️ นอก mandate (ไม่ได้แก้ — นอกเหนือ 8 ไฟล์ที่สั่ง): contracts_017_018/019/020/021/022/029/033
+  fail ภายใต้ full-glob run (สายเก่า/ไม่อยู่ใน CI steps) — รายงานไว้ให้ Owner สั่งเพิ่ม
+
+### 5.3 งานอื่น ๆ ในรอบนี้
+- **Task B (150/151):** วิเคราะห์ครบ — impact/verify/rollback/ทางเลือก BACKFILL_UNKNOWN →
+  `docs/BMB_OWNER_PREP_R16_D6_MIGRATIONS_2026-10-25.md` §3 · **รอ authorize แยก**
+- **Task C (D6 pages.dev):** ขั้นตอน+หลักฐานเตรียมแล้ว (prep doc §2) · **รอ Owner (CF account)**
+- **Task D (R-17 drill):** รัน `scripts/dbRestoreDrill.mjs` รอบนี้ — ดู `.tmp_drill.log` (evidence ย้ายก่อนลบ temp)
+- **Task E (R-16):** เตรียม runbook + แยก automated-vs-จริงแล้ว (prep doc §1) · **พิมพ์จริง = Owner acceptance**
+- **3.1 Admin Dashboard / 3.2 Graphite / 3.3 Audio = ตรวจแล้ว DONE มีหลักฐาน** (AdminNav sidebar shell
+  single-nav + adminNavFeedback test · AdminDashboard Zone A/B/C · `theme.ts` 3 ธีม+2 เทสต์ต ·
+  `ambientMusic.ts` opt-in gesture/volume/duck/singleton+เทสต์) → ไม่สร้างซ้ำตามคำสั่ง · เหลือตา Owner บนเบราว์เซอร์
+- **Growth & Rewards = เอกสารเท่านั้น** (`docs/BMB_GROWTH_REWARDS_REQUIREMENTS_2026-10-25.md` +
+  `docs/BMB_GROWTH_REWARDS_INVENTORY_2026-10-25.md`) · **ไม่มี implementation ก่อนอนุมัติ**
+
+### 5.4 สถานะ "เหลือแค่ Owner ทดสอบจริง" ณ รอบนี้
+- ✅ ปิดเองได้: banner สั่ง · stale contracts 7/8 (+G7 เจาะ defect รอ sign-off) · เอกสาร G&R · prep docs · 3.1-3.3 พิสูจน์แล้ว
+- ⛔ รอ Owner: authorize 150 (+เลือก 151) · sign-off migration REVOKE 039-G7 · D6 CF · R-17 evidence รับทราบ · R-16 พิมพ์จริง · acceptance plan §4 ทั้งหมด

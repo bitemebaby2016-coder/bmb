@@ -28,6 +28,24 @@ ON CONFLICT (id) DO NOTHING;
 -- the auth.users INSERT trigger auto-creates profiles with role='customer'
 UPDATE public.profiles SET role = 'admin' WHERE id = '44444444-4444-4444-4444-444444444444';
 
+-- FIXTURE (stale-contract repair · Owner handoff 2026-10-25):
+-- replay ถึง 134 แล้ว kitchen_location = ครัวจริง ห่างพิกัดทดสอบ ~212 กม.
+-- → SELF_DELIVERY_EXCEEDS_5KM_LIMIT บล็อก create_order (ROLLBACK ท้ายไฟล์)
+INSERT INTO public.business_settings (key, value)
+VALUES ('kitchen_location', '{"latitude":10.7016,"longitude":102.1429}'::jsonb)
+ON CONFLICT (key) DO UPDATE SET value = business_settings.value || EXCLUDED.value;
+INSERT INTO public.business_settings (key, value)
+VALUES ('delivery_policy', '{"bite_drive_radius_km":5}'::jsonb)
+ON CONFLICT (key) DO UPDATE SET value = business_settings.value || EXCLUDED.value;
+UPDATE public.branches SET kitchen_latitude = 10.7016, kitchen_longitude = 102.1429, service_radius_km = 5;
+
+-- FIXTURE (menu-gate 142 · R5c · ตามแฮนด์ออฟ "ใส่แบบ contracts_142"):
+-- G3 (prod-5) กับ G4 (prod-6) สร้าง PRE_ORDER @+2 → เมนูเผยแพร่ของวันนั้นต้องมีสินค้าในตะกร้า
+INSERT INTO public.menu_schedule (id, scheduled_date, product_id, delivery_round_key, is_published, note) VALUES
+  ('fx-ms-030-prod5', CURRENT_DATE + 2, 'prod-5', NULL, true, ''),
+  ('fx-ms-030-prod6', CURRENT_DATE + 2, 'prod-6', NULL, true, '')
+ON CONFLICT DO NOTHING;
+
 -- deterministic round landscape for the fixture dates (024) + wide cutoffs/capacity (028 pattern)
 SELECT public.ensure_rounds_for_date(CURRENT_DATE + 2);
 UPDATE public.delivery_rounds SET cutoff_time = '23:59', max_capacity = 50, current_count = 0

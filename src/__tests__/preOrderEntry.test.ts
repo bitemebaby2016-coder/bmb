@@ -1,7 +1,8 @@
 // ============================================
 // Bite Me Baby — Pre-order entry points (Directive §8)
-// ปุ่มบน HomePage (ก่อน Popular Menu) + ปุ่ม Footer ต้องเข้าสู่ Pre-order
-// workflow เดียวกัน — ผ่าน preOrderEntryPath ตัวเดียว ไม่สร้างระบบคนละชุด
+// ปุ่ม CTA พรีออเดอร์บน HomePage = อยู่ในหมวด "📅 พรีออเดอร์"
+// และแสดง "เฉพาะตอนเปิดแท็บพรีออเดอร์" เท่านั้น (Owner 2026-10-25)
+// ทุกจุดเข้าใช้ workflow เดียวกัน — ผ่าน preOrderEntryPath ตัวเดียว ไม่สร้างระบบคนละชุด
 // ============================================
 
 import { describe, it, expect } from 'vitest'
@@ -46,17 +47,33 @@ describe('withPreOrderTab — deep-link เปิดแท็บจองล่�
   })
 })
 
-describe('source invariants — สองตำแหน่งเข้า workflow เดียวกัน', () => {
-  it('HomePage: จุดเข้า Pre-order อยู่ก่อน Popular Menu และใช้ preOrderEntryPath(categories)', () => {
+describe('source invariants — จุดเข้า workflow เดียวกัน + การแสดงผลตามคำสั่งใหม่', () => {
+  it('HomePage: จุดเข้า Pre-order อยู่ในหมวดพรีออเดอร์ + ใช้ preOrderEntryPath(categories)', () => {
     expect(homePageSrc).toContain('data-testid="home-preorder-entry"')
     expect(homePageSrc).toContain('preOrderEntryPath(categories)')
     expect(homePageSrc).toContain('home-preorder-entry-heading')
-    // ตำแหน่ง: entry ต้องมาก่อน section Popular (home-popular-heading)
-    const entryIdx = homePageSrc.indexOf('home-preorder-entry')
+    // Regression (เดิม): entry ต้อง "ไม่" ลอยเหนือหน้าก่อน Popular — Owner 2026-10-25 ย้ายเข้าหมวด
+    const entryIdx = homePageSrc.indexOf('data-testid="home-preorder-entry"')
     const popularIdx = homePageSrc.indexOf('home-popular-heading')
     expect(entryIdx).toBeGreaterThan(-1)
     expect(popularIdx).toBeGreaterThan(-1)
-    expect(entryIdx).toBeLessThan(popularIdx)
+    expect(entryIdx).toBeGreaterThan(popularIdx)
+  })
+
+  it('Owner (2026-10-25): CTA แสดงเฉพาะตอนเปิดแท็บ "📅 พรีออเดอร์" — แท็บ/หน้าอื่นไม่แสดง', () => {
+    // gate ด้วย state แท็บที่เปิดอยู่ (ค่าเริ่มต้น 'all' = ไม่แสดงตอนเปิดหน้า)
+    expect(homePageSrc).toContain("const [homeTab, setHomeTab] = useState<'all' | 'sameday' | 'preorder' | 'category'>('all')")
+    expect(homePageSrc).toContain("{homeTab === 'preorder' && (")
+    // ทุกแท็บสลับ state ของตัวเอง (หมวดหมู่ = ซ่อน CTA)
+    expect(homePageSrc).toContain("setHomeTab('all')")
+    expect(homePageSrc).toContain("setHomeTab('sameday')")
+    expect(homePageSrc).toContain("setHomeTab('preorder')")
+    expect(homePageSrc).toContain("setHomeTab('category')")
+    // ตำแหน่ง: entry อยู่ "หลัง" section พรีออเดอร์เปิด (อยู่ในหมวดนั้น ไม่ใช่บนสุดหน้า)
+    const entryIdx = homePageSrc.indexOf('data-testid="home-preorder-entry"')
+    const preSecIdx = homePageSrc.indexOf('id="home-sec-preorder"')
+    expect(preSecIdx).toBeGreaterThan(-1)
+    expect(entryIdx).toBeGreaterThan(preSecIdx)
   })
 
   it('Footer: ไม่มีปุ่ม Pre-order ค้างอยู่ (Owner 2026-10-18 สั่งนำปุ่มออกจากฟุตเตอร์ทุกหน้า)', () => {

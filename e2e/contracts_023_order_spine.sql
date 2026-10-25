@@ -36,8 +36,28 @@ ON CONFLICT (id) DO NOTHING;
 -- force the admin role AFTER the trigger has run (idempotent)
 UPDATE public.profiles SET role = 'admin' WHERE id = '22222222-2222-2222-2222-222222222222';
 
+-- FIXTURE (stale-contract repair · Owner handoff 2026-10-25):
+-- replay ถึง 134 แล้ว business_settings.kitchen_location = ครัวจริง (12.615659,102.098063)
+-- ห่างพิกัดทดสอบ (~10.7016,102.1429) ~212 กม. → SELF_DELIVERY_EXCEEDS_5KM_LIMIT บล็อก
+-- ทุก create_order ของ suite นี้ → ปักครัวใกล้พิกัดทดสอบ + รัศมี 5 กม. ตาม intent เดิม (ROLLBACK ท้ายไฟล์)
+INSERT INTO public.business_settings (key, value)
+VALUES ('kitchen_location', '{"latitude":10.7016,"longitude":102.1429}'::jsonb)
+ON CONFLICT (key) DO UPDATE SET value = business_settings.value || EXCLUDED.value;
+INSERT INTO public.business_settings (key, value)
+VALUES ('delivery_policy', '{"bite_drive_radius_km":5}'::jsonb)
+ON CONFLICT (key) DO UPDATE SET value = business_settings.value || EXCLUDED.value;
+UPDATE public.branches SET kitchen_latitude = 10.7016, kitchen_longitude = 102.1429, service_radius_km = 5;
+
+-- FIXTURE (menu-gate 142 · R5c): PRE_ORDER ต้องมีสินค้าในเมนูเผยแพร่ของวันสั่งอยู่ในตะกร้า
+-- (เมนูไม่ใช่เรื่องภายใต้การทดสอบของ suite นี้ — seed ให้ครบเพื่อกันบล็อกปฏิทินบังการทดสอบเรื่องอื่น)
+INSERT INTO public.menu_schedule (id, scheduled_date, product_id, delivery_round_key, is_published, note)
+SELECT 'fx-ms-' || p.id || '-d2', ((now() AT TIME ZONE 'Asia/Bangkok')::date + 2), p.id, NULL, true, ''
+FROM public.products p
+ON CONFLICT DO NOTHING;
+
 -- test knobs: guarantee same-day acceptance windows inside the suite
 SELECT public.ensure_rounds_for_date((now() AT TIME ZONE 'Asia/Bangkok')::date);
+SELECT public.ensure_rounds_for_date((now() AT TIME ZONE 'Asia/Bangkok')::date + 1); -- FIX T4: ใช้วัน+1 (ไร้เมนู) ทดสอบ menu-gate
 UPDATE public.delivery_rounds SET cutoff_time = '23:59', max_capacity = 50, current_count = 0
  WHERE scheduled_date = (now() AT TIME ZONE 'Asia/Bangkok')::date;
 
@@ -298,9 +318,22 @@ DO $$ DECLARE n text; c1 int; c2 int; BEGIN
     p_order_mode => 'SAME_DAY'))->>'order_number';
   SELECT current_count INTO c1 FROM public.delivery_rounds WHERE id = 'round-' || to_char((now() AT TIME ZONE 'Asia/Bangkok')::date,'YYYYMMDD') || '-morning';
   RESET ROLE;
-  PERFORM set_config('role', 'authenticated', false);
-  PERFORM set_config('request.jwt.claims', '{"sub":"22222222-2222-2222-2222-222222222222","role":"authenticated"}', false);
-  PERFORM public.mark_payment_failed(p_order_number => n, p_reason => 'test');
+  -- FIX (2026-10-25 · หลักฐาน): mark_payment_failed ถูกถอดโดย aa43dc2 (STEP 2 Commerce) +
+  -- src/lib/bmbAdminApi_orders.ts:408 "canonical failed path is webhook -> record_payment_result"
+  -- → T14 ย้ายไปทดสอบ failure path ปัจจุบัน = record_payment_result(p_status='failed')
+  -- (idempotent ด้วย payment_intent_id · amount-match กับ total · service_role → context postgres
+  --  ซึ่ง RESET ROLE ไปแล้วบรรทัดก่อนหน้า) — invariant เดิมคงเดิม: ความล้มเหลวไม่แตะ status/slot
+  -- FIX เพิ่ม (หลักฐาน: ERR_NO_PAYMENT_INTENT จาก record_payment_result เวอร์ชัน 028_phase3a
+  -- ที่ห้ามเรียกโดยไม่มี intent row) → seed intent ก่อน (fixture ใน txn — ROLLBACK ท้ายไฟล์)
+  INSERT INTO public.payment_intents (id, order_number, amount, currency, status, method, provider, metadata, created_at, updated_at)
+  SELECT 'pi_t14_seed', n, total_amount, 'thb', 'pending', 'promptpay_qr', 'promptpay', '{}', NOW(), NOW()
+  FROM public.orders WHERE order_number = n
+  ON CONFLICT DO NOTHING;
+  PERFORM public.record_payment_result(
+    p_order_number => n,
+    p_payment_intent_id => 'pi_t14_fail',
+    p_amount => (SELECT total_amount FROM public.orders WHERE order_number = n),
+    p_status => 'failed');
   SELECT current_count INTO c2 FROM public.delivery_rounds WHERE id = 'round-' || to_char((now() AT TIME ZONE 'Asia/Bangkok')::date,'YYYYMMDD') || '-morning';
   IF c1 <> c2 THEN RAISE EXCEPTION 'FAIL T14 slot released on payment failure % -> %', c1, c2; END IF;
   IF (SELECT status FROM public.orders WHERE order_number = n) <> 'pending' THEN
@@ -471,7 +504,11 @@ DO $$ DECLARE bad int; total int; BEGIN
 END $$;
 
 -- ============================================
--- T4 MODE — PRE_ORDER request for available_preorder=false → rejected
+-- T4 MODE → ปัจจุบัน = menu-gate authority (R5c 142) · FIX (2026-10-25 · หลักฐาน replay):
+-- เดิมคาด flag available_preorder=false → ERR_PRODUCT_MODE_NOT_ALLOWED แต่วัน+2 มีเมนู blanketed
+-- → 142 G2/Feature A: สินค้าในเมนูเผยแพร่ของวัน = อนุญาต แม้ flag ปิด (แอดมินปักเมนู = ประสงค์ขาย)
+-- → ย้าย T4 ไป "วัน+1 ไร้เมนู" ซึ่ง PRE_ORDER ต้องถูกบล็อกด้วย menu-gate
+-- (คุ้ม coverage เดิม: PRE_ORDER ไร้ anchors วันนั้นสั่งไม่ได้จริง)
 -- ============================================
 RESET ROLE;
 UPDATE public.products SET available_preorder = false WHERE id = 'prod-1';
@@ -480,15 +517,18 @@ SELECT set_config('request.jwt.claims', '{"sub":"11111111-1111-1111-1111-1111111
 DO $$ BEGIN
   PERFORM public.create_order_with_items(
     p_items => '[{"product_id":"prod-1","quantity":1}]'::jsonb,
-    p_delivery_round_id => 'round-' || to_char((now() AT TIME ZONE 'Asia/Bangkok')::date + 2,'YYYYMMDD') || '-morning',
+    p_delivery_round_id => 'round-' || to_char((now() AT TIME ZONE 'Asia/Bangkok')::date + 1,'YYYYMMDD') || '-morning',
     p_delivery_method => 'self_delivery',
     p_dropoff_latitude => 10.7016, p_dropoff_longitude => 102.1429,
-    p_order_mode => 'PRE_ORDER', p_scheduled_date => (now() AT TIME ZONE 'Asia/Bangkok')::date + 2,
+    p_order_mode => 'PRE_ORDER', p_scheduled_date => (now() AT TIME ZONE 'Asia/Bangkok')::date + 1,
     p_delivery_address => 'm023-pre-addr'
   );
   RAISE EXCEPTION 'FAIL T4 not rejected';
 EXCEPTION WHEN OTHERS THEN
   IF SQLERRM LIKE '%ERR_PRODUCT_MODE_NOT_ALLOWED%' THEN RAISE NOTICE 'PASS T4 wrong-mode rejected';
+  ELSIF SQLERRM LIKE '%ERR_PRE_ORDER_REQUIRES_MENU%' OR SQLERRM LIKE '%ERR_PRODUCT_NOT_ON_MENU%'
+     OR SQLERRM LIKE '%ERR_ROUND_DATE_MISMATCH%' THEN
+    RAISE NOTICE 'PASS T4 off-menu-day PRE_ORDER rejected by 142 R5c gate (%)', split_part(SQLERRM, ':', 1);
   ELSE RAISE EXCEPTION 'FAIL T4 unexpected: %', SQLERRM; END IF;
 END $$;
 

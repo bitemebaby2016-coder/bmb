@@ -32,6 +32,17 @@ VALUES
 ON CONFLICT (id) DO NOTHING;
 UPDATE public.profiles SET role = 'admin' WHERE id = '66666666-6666-6666-6666-666666666666';
 
+-- FIXTURE (stale-contract repair · Owner handoff 2026-10-25):
+-- replay ถึง 134 แล้ว kitchen_location = ครัวจริง (12.615659,102.098063) ห่างพิกัดทดสอบ ~212 กม.
+-- → SELF_DELIVERY_EXCEEDS_5KM_LIMIT บล็อก create_order SAME_DAY ทั้ง suite (ROLLBACK ท้ายไฟล์)
+INSERT INTO public.business_settings (key, value)
+VALUES ('kitchen_location', '{"latitude":10.7016,"longitude":102.1429}'::jsonb)
+ON CONFLICT (key) DO UPDATE SET value = business_settings.value || EXCLUDED.value;
+INSERT INTO public.business_settings (key, value)
+VALUES ('delivery_policy', '{"bite_drive_radius_km":5}'::jsonb)
+ON CONFLICT (key) DO UPDATE SET value = business_settings.value || EXCLUDED.value;
+UPDATE public.branches SET kitchen_latitude = 10.7016, kitchen_longitude = 102.1429, service_radius_km = 5;
+
 SELECT public.ensure_rounds_for_date((now() AT TIME ZONE 'Asia/Bangkok')::date);
 UPDATE public.delivery_rounds SET cutoff_time = '23:59', max_capacity = 50, current_count = 0
  WHERE scheduled_date >= (now() AT TIME ZONE 'Asia/Bangkok')::date;

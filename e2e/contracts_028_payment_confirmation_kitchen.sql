@@ -28,6 +28,31 @@ VALUES
 ON CONFLICT (id) DO NOTHING;
 UPDATE public.profiles SET role = 'admin' WHERE id = '22222222-2222-2222-2222-222222222222';
 
+-- FIXTURE (stale-contract repair · Owner handoff 2026-10-25):
+-- replay ถึง 134 แล้ว business_settings.kitchen_location = ครัวจริง (12.615659,102.098063)
+-- ห่างพิกัดทดสอบ (~10.7016,102.1429) ~212 กม. → SELF_DELIVERY_EXCEEDS_5KM_LIMIT บล็อก
+-- ทุก create_order ของ suite นี้ → ปักครัวใกล้พิกัดทดสอบ + รัศมี 5 กม. ตาม intent เดิม (ROLLBACK ท้ายไฟล์)
+INSERT INTO public.business_settings (key, value)
+VALUES ('kitchen_location', '{"latitude":10.7016,"longitude":102.1429}'::jsonb)
+ON CONFLICT (key) DO UPDATE SET value = business_settings.value || EXCLUDED.value;
+INSERT INTO public.business_settings (key, value)
+VALUES ('delivery_policy', '{"bite_drive_radius_km":5}'::jsonb)
+ON CONFLICT (key) DO UPDATE SET value = business_settings.value || EXCLUDED.value;
+UPDATE public.branches SET kitchen_latitude = 10.7016, kitchen_longitude = 102.1429, service_radius_km = 5;
+
+-- FIXTURE (menu-gate 142 · R5c): T2/T4 สร้าง PRE_ORDER @+2 → ต้องมีสินค้าในเมนูเผยแพร่ของวันนั้น
+INSERT INTO public.menu_schedule (id, scheduled_date, product_id, delivery_round_key, is_published, note)
+SELECT 'fx-ms-' || p.id || '-d2', ((now() AT TIME ZONE 'Asia/Bangkok')::date + 2), p.id, NULL, true, ''
+FROM public.products p
+ON CONFLICT DO NOTHING;
+
+-- FIXTURE (หลักฐาน T19c: ERR_EXTERNAL_METHOD_DISABLED: grab_rider):
+-- 112 (W-1.4) ตั้งค่าเริ่มต้น external_methods_enabled=[] (admin config authority ใหม่)
+-- สัญญา T19c ทดสอบว่า external ไม่โดน 5 กม. gate → เปิด grab_rider ใน fixture (ROLLBACK ท้ายไฟล์)
+INSERT INTO public.business_settings (key, value)
+VALUES ('delivery_policy', '{"external_methods_enabled":["grab_rider"]}'::jsonb)
+ON CONFLICT (key) DO UPDATE SET value = business_settings.value || EXCLUDED.value;
+
 -- clean deterministic round/date landscape + canonical cutoffs
 SELECT public.ensure_rounds_for_date((now() AT TIME ZONE 'Asia/Bangkok')::date);
 SELECT public.ensure_rounds_for_date((now() AT TIME ZONE 'Asia/Bangkok')::date + 2);
@@ -255,9 +280,15 @@ DO $$ DECLARE r jsonb; n text; t numeric; c1 int; c2 int; s1 numeric; s2 numeric
   PERFORM public.create_payment_intent_record(p_order_number => n, p_amount => t);
   SELECT current_count INTO c1 FROM public.delivery_rounds WHERE id = 'round-' || to_char((now() AT TIME ZONE 'Asia/Bangkok')::date,'YYYYMMDD') || '-morning';
   SELECT current_stock INTO s1 FROM public.inventory WHERE id = 'ing-4';
-  PERFORM set_config('role', 'authenticated', false);
-  PERFORM set_config('request.jwt.claims', '{"sub":"22222222-2222-2222-2222-222222222222","role":"authenticated"}', false);
-  PERFORM public.mark_payment_failed(p_order_number => n, p_reason => 'p3a test');
+  -- FIX (2026-10-25 · หลักฐาน): mark_payment_failed ถูกถอดโดย aa43dc2 + canonical failed path
+  -- = webhook -> record_payment_result (bmbAdminApi_orders.ts:408) · amount = t (order total)
+  -- → ผ่าน amount-match · idempotency key ใหม่ · UPDATE ตาม order ไม่ insert row (T8 count ยัง = 2)
+  RESET ROLE;
+  PERFORM public.record_payment_result(
+    p_order_number => n,
+    p_payment_intent_id => 'pi_p3a_fail',
+    p_amount => t,
+    p_status => 'failed');
   SELECT current_count INTO c2 FROM public.delivery_rounds WHERE id = 'round-' || to_char((now() AT TIME ZONE 'Asia/Bangkok')::date,'YYYYMMDD') || '-morning';
   SELECT current_stock INTO s2 FROM public.inventory WHERE id = 'ing-4';
   IF c1 <> c2 THEN RAISE EXCEPTION 'FAIL T7 capacity released on failure % -> %', c1, c2; END IF;

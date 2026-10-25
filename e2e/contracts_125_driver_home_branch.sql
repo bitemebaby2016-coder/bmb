@@ -94,7 +94,10 @@ BEGIN
 
   -- T5: unauthenticated guard ยังอยู่ (HTTP context — claims ถูก set โดย middleware)
   --     ทดสอบท้ายสุดเพราะ set_config ค่าว่างทำให้ claims ไม่ใช่ NULL แล้ว (ห้ามย้อนกลับ)
-  PERFORM set_config('request.jwt.claims', '', true);
+  --     FIX (Owner handoff 2026-10-25): ค่าว่างทำให้ driver_login parse claims เป็น json ล้ม
+  --     (invalid input syntax) แทนที่จะคืน guard error → ใส่ claims non-auth ที่ parse ได้จริง
+  --     (ไม่มี sub = ไม่ใช่ authenticated — เหมือน HTTP จริง) เพื่อทดสอบ ERR_NOT_AUTHENTICATED จริง
+  PERFORM set_config('request.jwt.claims', '{"role":"anon"}', true);
   BEGIN
     PERFORM public.driver_login();
     RAISE EXCEPTION 'T5 expected ERR_NOT_AUTHENTICATED';

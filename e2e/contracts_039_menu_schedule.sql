@@ -24,6 +24,18 @@ VALUES
 ON CONFLICT (id) DO NOTHING;
 UPDATE public.profiles SET role = 'admin' WHERE id = 'eeee5555-5555-5555-5555-555555555555';
 
+-- FIXTURE (stale-contract repair · Owner handoff 2026-10-25):
+-- replay ถึง 134 แล้ว kitchen_location = ครัวจริง (12.615659,102.098063) ห่างพิกัดทดสอบ ~212 กม.
+-- → SELF_DELIVERY_EXCEEDS_5KM_LIMIT บล็อก create_order ทั้ง suite · รัศมี 5 กม. ตาม intent (ROLLBACK ท้ายไฟล์)
+-- (ไม่ใส่ menu_schedule: G4 ตั้งใจทดสอบวันไร้เมนู — ห้าม seed บังสัญญา)
+INSERT INTO public.business_settings (key, value)
+VALUES ('kitchen_location', '{"latitude":10.7016,"longitude":102.1429}'::jsonb)
+ON CONFLICT (key) DO UPDATE SET value = business_settings.value || EXCLUDED.value;
+INSERT INTO public.business_settings (key, value)
+VALUES ('delivery_policy', '{"bite_drive_radius_km":5}'::jsonb)
+ON CONFLICT (key) DO UPDATE SET value = business_settings.value || EXCLUDED.value;
+UPDATE public.branches SET kitchen_latitude = 10.7016, kitchen_longitude = 102.1429, service_radius_km = 5;
+
 SELECT public.ensure_rounds_for_date((now() AT TIME ZONE 'Asia/Bangkok')::date + 1);
 UPDATE public.delivery_rounds SET cutoff_time = '23:59', max_capacity = 50, current_count = 0
  WHERE scheduled_date >= (now() AT TIME ZONE 'Asia/Bangkok')::date;
@@ -92,14 +104,21 @@ BEGIN
     );
     RAISE EXCEPTION 'FAIL G3b off-menu order ACCEPTED';
   EXCEPTION WHEN OTHERS THEN
-    IF SQLERRM LIKE 'ERR_PRODUCT_NOT_ON_MENU%' OR SQLERRM LIKE 'ERR_PRODUCT_MODE_NOT_ALLOWED%' THEN
+    IF SQLERRM LIKE 'ERR_PRODUCT_NOT_ON_MENU%' OR SQLERRM LIKE 'ERR_PRODUCT_MODE_NOT_ALLOWED%'
+       -- FIX (2026-10-25 · ตามสัญญา 142 G4 ที่ Owner approve): ตะกร้าไม่มีสินค้าในเมนูเผยแพร่ของวันนั้น
+       -- (prod-4 ไม่มี menu_schedule row ที่ไหน) = ระดับตะกร้า → ERR_PRE_ORDER_REQUIRES_MENU
+       OR SQLERRM LIKE 'ERR_PRE_ORDER_REQUIRES_MENU%' THEN
       RAISE NOTICE 'PASS G3b off-menu product rejected (server-side menu gate)';
     ELSE RAISE EXCEPTION 'FAIL G3b unexpected: %', SQLERRM; END IF;
   END;
 END $$;
 
 -- ============================================
--- G4. DAY WITHOUT SCHEDULE → existing available_preorder gate untouched
+-- G4. DAY WITHOUT SCHEDULE → REJECTED (realigned กับ 141/142 · Owner R5c)
+-- FIX (2026-10-25 · หลักฐานจริง): เดิมคาด "legacy gate ผ่าน (created)" แต่ replay 001-151
+-- คืน ERR_PRODUCT_NOT_ON_MENU — 141/142 (Owner approve R5c 2026-10-23 = 142 G1/G4) กำหนดให้
+-- PRE_ORDER ต้องมีสินค้าในเมนูเผยแพร่ของวันนั้นเสมอ ไม่มีช่อง legacy อีก → เปลี่ยนเป็นคาด
+-- การถูกปฏิเสธ (คุ้ม coverage เดิม: วันไร้เมนูสั่งพรีออเดอร์ไม่ได้จริง)
 -- ============================================
 DO $$ DECLARE v_on text;
 BEGIN
@@ -108,16 +127,21 @@ BEGIN
   PERFORM public.ensure_rounds_for_date((now() AT TIME ZONE 'Asia/Bangkok')::date + 2);
   UPDATE public.delivery_rounds SET cutoff_time = '23:59', max_capacity = 50, current_count = 0
    WHERE id = 'round-' || to_char((now() AT TIME ZONE 'Asia/Bangkok')::date + 2,'YYYYMMDD') || '-morning';
-  v_on := (public.create_order_with_items(
-    p_items => '[{"product_id":"prod-5","quantity":1}]'::jsonb,
-    p_delivery_round_id => 'round-' || to_char((now() AT TIME ZONE 'Asia/Bangkok')::date + 2,'YYYYMMDD') || '-morning',
-    p_delivery_method => 'self_delivery', p_delivery_address => 'm039-g4',
-    p_dropoff_latitude => 10.7050, p_dropoff_longitude => 102.1450,
-    p_customer_name => 'M039 G4', p_payment_method => 'cash_on_delivery',
-    p_order_mode => 'PRE_ORDER', p_scheduled_date => (now() AT TIME ZONE 'Asia/Bangkok')::date + 2
-  ))->>'order_number';
-  IF v_on IS NULL THEN RAISE EXCEPTION 'FAIL G4 unscheduled-day order failed'; END IF;
-  RAISE NOTICE 'PASS G4 unscheduled-day PRE_ORDER keeps legacy gate (%)', v_on;
+  BEGIN
+    v_on := (public.create_order_with_items(
+      p_items => '[{"product_id":"prod-5","quantity":1}]'::jsonb,
+      p_delivery_round_id => 'round-' || to_char((now() AT TIME ZONE 'Asia/Bangkok')::date + 2,'YYYYMMDD') || '-morning',
+      p_delivery_method => 'self_delivery', p_delivery_address => 'm039-g4',
+      p_dropoff_latitude => 10.7050, p_dropoff_longitude => 102.1450,
+      p_customer_name => 'M039 G4', p_payment_method => 'cash_on_delivery',
+      p_order_mode => 'PRE_ORDER', p_scheduled_date => (now() AT TIME ZONE 'Asia/Bangkok')::date + 2
+    ))->>'order_number';
+    RAISE EXCEPTION 'FAIL G4 unscheduled-day PRE_ORDER accepted (R5c 142 ต้องบล็อก)';
+  EXCEPTION WHEN OTHERS THEN
+    IF SQLERRM LIKE 'ERR_PRODUCT_NOT_ON_MENU%' OR SQLERRM LIKE 'ERR_PRE_ORDER_REQUIRES_MENU%' THEN
+      RAISE NOTICE 'PASS G4 unscheduled-day PRE_ORDER rejected per 142 R5c (%)', split_part(SQLERRM, ':', 1);
+    ELSE RAISE EXCEPTION 'FAIL G4 unexpected: %', SQLERRM; END IF;
+  END;
 END $$;
 
 

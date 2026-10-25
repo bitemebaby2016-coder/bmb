@@ -20,6 +20,27 @@ VALUES
 ON CONFLICT (id) DO NOTHING;
 UPDATE public.profiles SET role = 'admin' WHERE id = 'cccc3333-3333-3333-3333-333333333333';
 
+-- FIXTURE (stale-contract repair · Owner handoff 2026-10-25):
+-- replay ถึง 134 แล้ว kitchen_location = ครัวจริง ห่างพิกัดทดสอบ ~212 กม.
+-- → SELF_DELIVERY_EXCEEDS_5KM_LIMIT บล็อก create_order (ROLLBACK ท้ายไฟล์)
+INSERT INTO public.business_settings (key, value)
+VALUES ('kitchen_location', '{"latitude":10.7016,"longitude":102.1429}'::jsonb)
+ON CONFLICT (key) DO UPDATE SET value = business_settings.value || EXCLUDED.value;
+INSERT INTO public.business_settings (key, value)
+VALUES ('delivery_policy', '{"bite_drive_radius_km":5}'::jsonb)
+ON CONFLICT (key) DO UPDATE SET value = business_settings.value || EXCLUDED.value;
+UPDATE public.branches SET kitchen_latitude = 10.7016, kitchen_longitude = 102.1429, service_radius_km = 5;
+
+-- FIXTURE (menu-gate 142 · R5c · ตามแฮนด์ออฟ "ใส่แบบ contracts_142"):
+-- ทุก G สร้าง PRE_ORDER ด้วย prod-6 (วัน/กลม +0/+1/+5) → seed เมนูเผยแพร่ครบทุกวันที่ใช้
+-- เพื่อให้ check ที่ suite นี้ทดสอบ (window/cutoff/cancel) ได้พูดก่อน menu-gate ไม่บัง
+INSERT INTO public.menu_schedule (id, scheduled_date, product_id, delivery_round_key, is_published, note) VALUES
+  ('fx-ms-038-d0', (now() AT TIME ZONE 'Asia/Bangkok')::date,          'prod-6', NULL, true, ''),
+  ('fx-ms-038-dm1', (now() AT TIME ZONE 'Asia/Bangkok')::date - 1, 'prod-6', NULL, true, ''),
+  ('fx-ms-038-d1', (now() AT TIME ZONE 'Asia/Bangkok')::date + 1, 'prod-6', NULL, true, ''),
+  ('fx-ms-038-d5', (now() AT TIME ZONE 'Asia/Bangkok')::date + 5, 'prod-6', NULL, true, '')
+ON CONFLICT DO NOTHING;
+
 SELECT public.ensure_rounds_for_date((now() AT TIME ZONE 'Asia/Bangkok')::date);
 SELECT public.ensure_rounds_for_date((now() AT TIME ZONE 'Asia/Bangkok')::date + 1);
 UPDATE public.delivery_rounds SET cutoff_time = '23:59', max_capacity = 50, current_count = 0
@@ -72,13 +93,21 @@ BEGIN
       RAISE NOTICE 'PASS G2 beyond-window rejected (5 days > max 3)';
     ELSE RAISE EXCEPTION 'FAIL G2 unexpected: %', SQLERRM; END IF;
   END;
+  -- FIX (2026-10-25 · reproduce แล้ว "permission denied for table business_settings"):
+  -- ยังอยู่ใน context authenticated (set ตอนต้น G2) → คืนเป็น postgres ก่อนแก้ setting
+  -- (ทุกอย่างในไฟล์นี้ ROLLBACK ท้ายไฟล์ — ไม่มีข้อมูลค้าง)
+  RESET ROLE;
   UPDATE public.business_settings SET value = value || '{"preorder_max_days": 40}'::jsonb
    WHERE key = 'order_policy';
 END $$;
 
 
 -- ============================================
--- G3. TODAY/PAST DATE rejected
+-- G3. PAST DATE rejected (round วันนี้ + scheduled_date เมื่อวาน)
+-- FIX (2026-10-25 · หลักฐาน): "TODAY rejected" ล้าสมัย — 143 (Owner production test 2026-10-24,
+-- "พรีออเดอร์วันนี้ได้" · gate = p_scheduled_date < v_today เท่านั้น) → G3 ย้ายไปทดสอบ
+-- PAST ซึ่งยังต้องถูกบล็อกเสมอ · menu row วัน-1 ใน fixture กัน menu-gate บัง · ค่า error ที่รับ
+-- (ERR_ROUND_DATE_MISMATCH / ERR_SCHEDULED_DATE_INVALID) = ชุดเดิม ไม่ได้เพิ่ม
 -- ============================================
 DO $$ DECLARE v_on text;
 BEGIN
@@ -88,15 +117,15 @@ BEGIN
     v_on := (public.create_order_with_items(
       p_items => '[{"product_id":"prod-6","quantity":1}]'::jsonb,
       p_delivery_round_id => 'round-' || to_char((now() AT TIME ZONE 'Asia/Bangkok')::date,'YYYYMMDD') || '-evening',
-      p_delivery_method => 'self_delivery', p_delivery_address => 'm038-today',
+      p_delivery_method => 'self_delivery', p_delivery_address => 'm038-past',
       p_dropoff_latitude => 10.7050, p_dropoff_longitude => 102.1450,
-      p_customer_name => 'M038 TODAY', p_payment_method => 'cash_on_delivery',
-      p_order_mode => 'PRE_ORDER', p_scheduled_date => (now() AT TIME ZONE 'Asia/Bangkok')::date
+      p_customer_name => 'M038 PAST', p_payment_method => 'cash_on_delivery',
+      p_order_mode => 'PRE_ORDER', p_scheduled_date => (now() AT TIME ZONE 'Asia/Bangkok')::date - 1
     ))->>'order_number';
-    RAISE EXCEPTION 'FAIL G3 today PRE_ORDER accepted';
+    RAISE EXCEPTION 'FAIL G3 past PRE_ORDER accepted';
   EXCEPTION WHEN OTHERS THEN
     IF SQLERRM LIKE 'ERR_PRE_ORDER_DATE_INVALID%' OR SQLERRM LIKE 'ERR_SCHEDULED_DATE_INVALID%' OR SQLERRM LIKE 'ERR_ROUND_DATE_MISMATCH%' THEN
-      RAISE NOTICE 'PASS G3 today rejected (%)', split_part(SQLERRM, ':', 1);
+      RAISE NOTICE 'PASS G3 past rejected (%)', split_part(SQLERRM, ':', 1);
     ELSE RAISE EXCEPTION 'FAIL G3 unexpected: %', SQLERRM; END IF;
   END;
 END $$;
@@ -162,11 +191,14 @@ END $$;
 DO $$ DECLARE v_on text;
 BEGIN
   -- owner can lower the window; creation beyond it must reject
-  PERFORM set_config('role', 'authenticated', false);
-  PERFORM set_config('request.jwt.claims', '{"sub":"dddd4444-4444-4444-4444-444444444444","role":"authenticated"}', false);
+  -- FIX (2026-10-25 · defect ชนิดเดียวกับ G2 ที่ reproduce แล้ว): UPDATE business_settings
+  -- ใน context authenticated = permission denied → RESET ROLE แล้วตั้ง claims ใหม่ให้ถูกต้อง
+  RESET ROLE;
   UPDATE public.business_settings
      SET value = value || '{"preorder_max_days": 3}'::jsonb
    WHERE key = 'order_policy';
+  PERFORM set_config('role', 'authenticated', false);
+  PERFORM set_config('request.jwt.claims', '{"sub":"dddd4444-4444-4444-4444-444444444444","role":"authenticated"}', false);
   BEGIN
     v_on := (public.create_order_with_items(
       p_items => '[{"product_id":"prod-6","quantity":1}]'::jsonb,

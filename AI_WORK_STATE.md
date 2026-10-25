@@ -2,23 +2,45 @@
 
 > **สถานะงานปัจจุบันของโปรเจกต์ Bite Me Baby** ใช้แนบเข้าสู่ Context ตอนเริ่มแชทเสมอ
 
-**last_updated:** 2026-10-25 **WAVE 2 ปิด — Features A/B/C + rules §12 + แฮนด์ออฟปิดเซสชัน**
-(gates ครบ: tsc 0 · lint 0 · vitest **138 files/1426 tests 0 fail** · build 0 (PWA 143) ·
-คลื่นก่อน `8023268` CI+Contract success · คลื่นนี้ = commit ถัดไป · รายละเอียด = `docs/BMB_HANDOFF_NEXT_SESSION_2026-10-25.md`)
-**phase:** 🟢 งานวิศวกรรมที่สั่งเสร็จทั้งหมด (A/B/C + กฎ + บันทึก) — เหลืองานค้างที่ระบุในแฮนด์ออฟ
-**current_focus:** **✅ WAVE 2 DONE (2026-10-25):**
-- **A · Hybrid pre-order cart:** แท็บพรีออเดอร์รวมสินค้าทั่วไป (ลบ gate `!scheduleMap[p.id]`) · เรียงเมนูปฏิทินก่อน ·
-  ปุ่มในแท็บ = PRE_ORDER ร่วมรอบเดียวกัน · `checkModeEligibility` ยืนยัน general ride-along = server 142 G2 ·
-  หน้าต่าง 7 วัน = `pre_order_lead_days` (แอดมินตั้งได้แล้ว · ไม่ต้องแก้)
-- **B · Homepage:** ลำดับ sections = แนะนำ → ส่งวันนี้ → พรีออเดอร์ → หมวดหมู่ (pinned: สุขภาพ → เครื่องดื่ม →
-  ของทานเล่น/ผลไม้ → สำเร็จรูป ผ่าน `categoryDisplayRank`) · แท็บแนวนอน ทั้งหมด|ส่งวันนี้|พรีออเดอร์|หมวดหมู่
-  = ลิงก์ smooth-scroll ไป section (rule 12.3) · แอดมินจัดหมวด/เปิด-ปิด เหมือนเดิม
-- **C · Admin UX:** AdminProducts = แท็บหมวดกรอง+หัวข้อปัจจุบัน · จิ้มแก้ไข/เพิ่ม/หัวข้อ/ย้ายสินค้า →
-  smooth-scroll ไปฟอร์มอัตโนมัติ (refs + useEffect) · การ์ดเท่ากันทุกใบ (min-h-430 + auto-rows-fr + mt-auto)
-- **Rules §12:** ห้าม poll logs/watch mode · ปกป้อง terminal/process · admin auto-scroll UX + การ์ดเท่ากัน
-- **เทสต์:** `homeMenuAdminOrdering.test.ts` (9 ข้อ) คุม A/B/C ทั้งหมด
-**blocked_by:** ⛔ เฉพาะงานค้างในแฮนด์ออฟ (stale contracts 8 · production apply 150/151 · D6 pages.dev ·
-Owner runtime acceptance) — ไม่มีงานวิศวกรรมที่สั่งค้าง
+**last_updated:** 2026-10-25 **WAVE 3 (CONTINUOUS EXECUTION) — banner ตามคำสั่ง + stale contracts 7/8 + G&R docs + prep docs + R-17 PASS**
+(gates: tsc 0 · lint 0 · vitest **139 files/1427 tests 0 fail** · build 0 · replay 001-151 MIGRATIONS_OK ·
+contracts 32/40 OK = CI set ทั้งหมด + mandate 7 · หลักฐาน = `docs/BMB_STALE_CONTRACTS8_EVIDENCE_2026-10-25.md`)
+**phase:** 🟡 งานวิศวกรรมที่ทำได้ปิดครบ — เหลือรายการรอ Owner (ด้านล่าง)
+**current_focus:** **✅ รอบ CONTINUOUS EXECUTION (2026-10-25):**
+- **CTA พรีออเดอร์ (คำสั่ง Owner):** ย้ายเข้าหมวด `home-sec-preorder` + gate `homeTab==='preorder'`
+  (แท็บ/หน้าอื่นไม่แสดง) · แก้ `HomePage.tsx` ที่เดิมไม่สร้างของใหม่ · `preOrderEntry.test.ts` realign+regression (19/19)
+- **Task A stale contracts:** 7/8 GREEN (023/028/030/036/037/038/125) · **039 = G1–G6 PASS, G7 = defect จริง**
+  (ไม่มี REVOKE anon บน set_menu_schedule/publish_menu_schedule → รอ Owner sign-off migration REVOKE) ·
+  นอก mandate: 017_018/019/020/021/022/029/033 สายเก่า fail (ไม่ได้แตะ · รอสั่งเพิ่ม) · รายละเอียดทุกชั้น = evidence doc
+- **Task B/C/E:** `docs/BMB_OWNER_PREP_R16_D6_MIGRATIONS_2026-10-25.md` (150/151 analyze+choices · D6 CF steps · R-16 runbook) · **รอ Owner**
+- **Task D:** R-17 `dbRestoreDrill: PASS` ✓
+- **3.1/3.2/3.3 = DONE มีหลักฐาน** (AdminNav sidebar shell+single-nav test · Dashboard Zone A/B/C · `theme.ts` 3 ธีม+2 เทสต์ต · `ambientMusic` opt-in/volume/duck/singleton+เทสต์) → ไม่สร้างซ้ำ · ตา Owner บนเบราว์เซอร์
+- **Growth & Rewards = เอกสารเท่านั้น** (`docs/BMB_GROWTH_REWARDS_REQUIREMENTS_2026-10-25.md` + `docs/BMB_GROWTH_REWARDS_INVENTORY_2026-10-25.md`) · ไม่มี implementation ก่อนอนุมัติ
+**blocked_by:** ⛔ รอ Owner: authorize migration 150 · เลือก 151 (APPLY vs ทิ้ง) · sign-off REVOKE 039-G7 · D6 Cloudflare · R-16 พิมพ์จริง · acceptance plan §4 ทั้งหมด · (ทางเลือก: สั่งซ่อม 7 legacy contracts นอก mandate)
+
+---
+
+===============================================================================
+ATOMIC TASK LEDGER (ADDED: ENFORCED TASK CONTROL)
+===============================================================================
+
+### Task ID: BMB-AUDIT-001
+- **Title:** Admin Legacy Duplication Audit (Read-Only)
+- **Status:** IN_PROGRESS
+- **Objective:** ทำรายงาน audit ตรวจสอบโครงสร้าง Admin UI และ Route ตามเอกสาร `docs/BMB_ADMIN_LEGACY_DUPLICATION_AUDIT_2026-10-24.md`
+- **Completed:** [ ] บันทึกรายการ duplication matrix, [ ] เสนอสถาปัตยกรรมเป้าหมาย
+- **Verified:** NO
+- **Blockers:** ต้องรอ Owner อนุมัติรายงาน audit ก่อนเริ่มเขียนโค้ดแก้/มี migration
+- **Next Exact Action:** จัดทำรายงาน audit อ่านอย่างเดียว และหยุดรอ Owner อนุมัติ
+
+### Task ID: BMB-Q1-Q3-002
+- **Title:** Implement Q1 (Same-Day Window) & Q3 (AdminRounds Consolidation)
+- **Status:** NOT_STARTED
+- **Objective:** ปรับปรุง logic ฝั่ง SAME_DAY ถอด window_passed และรวมแท็บ AdminRounds หลัง Owner อนุมัติ audit
+- **Completed:** None
+- **Verified:** NO
+- **Blockers:** ขึ้นอยู่กับ BMB-AUDIT-001
+- **Next Exact Action:** รอดำเนินการหลังจาก Task BMB-AUDIT-001 ได้รับการอนุมัติ
 
 ---
 
@@ -224,7 +246,7 @@ Owner runtime acceptance) — ไม่มีงานวิศวกรรม�
 - **งาน 5/6 (เอกสาร) — เสร็จ:** `docs/BMB_ROLE_PERMISSION_AI_AUDIT_2026-10-24.md`
   (role/page/RLS matrices + gap 12 หมวด + staged proposal = DOCUMENTED รอ Owner) +
   `docs/BMB_E2E_PRODUCTION_ACCEPTANCE_PLAN_2026-10-24.md` (journey map + gaps + checklist 13 ขั้น)
-- **R4 (header 124) — เสร็จ:** คอมเมนต์ STALE ถูก reconcile (comment-only ไม่แตะ SQL/history)
+- **R4 (header 124) — เสร็จ:**คอมเมนต์ STALE ถูก reconcile (comment-only ไม่แตะ SQL/history)
 - **Verified (หลักฐานจริง):** vitest **133 files/1375 tests exit 0** (มีเทสต์ใหม่ 3 ไฟล์ 28 ข้อ) ·
   lint exit 0 · build exit 0 · Docker replay ALL_GREEN (migrations 001-145 + 123/124/concurrency)
   · contracts 127-145 ทุกไฟล์ PASS exit 0 · playwright routeNav **39/39** · production
@@ -289,7 +311,7 @@ Owner runtime acceptance) — ไม่มีงานวิศวกรรม�
 - **มรดกค้าง (ทำรอบถัดไป = R5c):** (1) ตัดช่องเลือกวันอิสระพรีออเดอร์/ปุ่มสลับโหมด/การแยก 2 ออเดอร์ ใน CheckoutPage (2) migration 142 ฝั่ง server: PRE_ORDER ต้องมี ≥1 เมนูจากปฏิทินของวันนั้น + วันต้องตรงวันเมนู ไม่งั้น `ERR_PRE_ORDER_REQUIRES_MENU` (3) แก้เทส/contract/docs ตาม (4) **สอบสวน "ภาษาต่างดาว" ใน UI แอดมิน production** (ที่อยู่ลูกค้าในตารางเพี้ยน — ภาพยืนยันจาก Owner) ต้นตอน่าจะเป็น seed/เขียนข้อมูลผ่าน shell ที่ encoding พัง ไม่ใช่ไฟล์ซอร์ส (scan แล้วไม่เจอใน tracked text) (5) กฎเดิมที่ต้องรักษา: ห้าม text ไทยในคำสั่ง shell — เขียนผ่าน editor/temp node script UTF-8 เท่านั้น
 - **การ commit วันนี้:** ใช้การระบุ path เท่านั้น (ไม่ `git add -A` ซ้ำรอยเดิม)
 
-## 🩺 REALITY CHECK (2026-10-23 รอบ 7 · Directive R5)
+## 🩺 REALITY CHECK (2026-10-23 รอบ 7 · Directive R3)
 - **คำสั่ง Owner:** "พรีออเดอร์ควรเพิ่มสินค้าที่ไม่ใช่พรีออเดอร์ได้ทั้งหมดและส่งในรอบเดียวกับพรีออเดอร์ได้ ... ต้องแยกระหว่างพรีออเดอร์ [ทั่วไป] กับเมนูที่แอดมินใส่เองทีละ 7 วัน 14 เมนู (วันถูกกำหนดโดยปฏิทินที่แอดมินใส่ — ป้ายมุมเมนู) แล้วลูกค้าเลือกแค่รอบ ... เมนูที่เลยวันไปแล้วให้เก็บ archive (ไม่โชว์วันที่ผ่านรอบจัดส่ง) ... ต้องการยุบรวมระลอก 2 ... ผ่านหมดค่อยคอมมิทพุช แอดมินจะทดสอบโปรดักชั่นจริง แจ้งรายการทดสอบละเอียดภาษาไทย"
 - **ทำรอบนี้ (ทั้งหมด verified):**
   - **C1 PRE_ORDER รับสินค้าทุกตัว:** ยกเลิก gate `PRE_ORDER × available_preorder` (client checkModeEligibility + server create_order_with_items ใน migration 141) — สินค้าทั่วไปเพิ่มในตะกร้าพรีออเดอร์ได้ทั้งหมด · SAME_DAY gate (available_same_day) คงเดิม
@@ -381,4 +403,4 @@ Owner runtime acceptance) — ไม่มีงานวิศวกรรม�
 - **Failed:** ไม่มี
 - **Blocked:** การลงมือแก้ทั้งหมดอยู่ที่แชทถัดไป (ตามคำสั่ง "แฮนออฟปิดเซสชั่นนี้แล้วไปปิดงานกันแชทหน้า")
 - **Files Changed (รอบนี้):** `docs/BMB_RECOVERY_PLAN_2026-10-23.md` (เขียนทับ — root cause matrix + plan) · `AI_WORK_STATE.md` (เขียนทับไฟล์นี้)
-- **Next Exact Action (แชทถัดไป):** ถาม Owner 1 ข้อ (D-08 ทาง A: read RPC / ทาง B: GRANT — แนะนำ A) แล้วเริ่มเขียน migration `pod_photos_driver_upload` ใหม่ + read path ของ payment_intents ตาม `docs/BMB_RECOVERY_PLAN_2026-10-23.md` §2 บรรทัด P0-1/P0-2 
+- **Next Exact Action (แชทถัดไป):** ถาม Owner 1 ข้อ (D-08 ทาง A: read RPC / ทาง B: GRANT — แนะนำ A) แล้วเริ่มเขียน migration `pod_photos_driver_upload` ใหม่ + read path ของ payment_intents ตาม `docs/BMB_RECOVERY_PLAN_2026-10-23.md` §2 บรรทัด P0-1/P0-2

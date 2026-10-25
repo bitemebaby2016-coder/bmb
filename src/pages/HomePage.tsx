@@ -69,6 +69,9 @@ export function HomePage() {
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
   const [activeCategory, setActiveCategory] = useState<string | null>(null)
+  // Owner (2026-10-25): แบนเนอร์ CTA พรีออเดอร์ (homePreOrderTitle) แสดง "เฉพาะตอนเปิดแท็บ
+  // 📅 พรีออเดอร์" เท่านั้น — แท็บ/หน้าอื่นไม่ต้องแสดง (แก้ในไฟล์เดิม ไม่สร้างชิ้นงานใหม่)
+  const [homeTab, setHomeTab] = useState<'all' | 'sameday' | 'preorder' | 'category'>('all')
   // CAT-04: verified customer reviews on homepage
   const [verifiedReviews, setVerifiedReviews] = useState<any[]>([])
   // "เมนูยอดนิยม" + ข้อความบนหน้า — แอดมินแก้ได้ที่หน้าแอดมิน (business_settings, ไม่ต้อง deploy)
@@ -319,7 +322,7 @@ export function HomePage() {
             <button
               type="button"
               data-testid="home-tab-all"
-              onClick={() => scrollToSection('home-sec-top')}
+              onClick={() => { setHomeTab('all'); scrollToSection('home-sec-top') }}
               className="category-chip whitespace-nowrap px-4 py-2 rounded-full text-sm font-medium transition-colors bg-white text-brand-accent border border-brand-border"
             >
               ทั้งหมด
@@ -327,7 +330,7 @@ export function HomePage() {
             <button
               type="button"
               data-testid="home-tab-sameday"
-              onClick={() => scrollToSection('home-sec-sameday')}
+              onClick={() => { setHomeTab('sameday'); scrollToSection('home-sec-sameday') }}
               className="category-chip whitespace-nowrap px-4 py-2 rounded-full text-sm font-medium transition-colors bg-white text-brand-accent border border-brand-border"
             >
               🛵 ส่งวันนี้
@@ -335,7 +338,7 @@ export function HomePage() {
             <button
               type="button"
               data-testid="home-tab-preorder"
-              onClick={() => scrollToSection('home-sec-preorder')}
+              onClick={() => { setHomeTab('preorder'); scrollToSection('home-sec-preorder') }}
               className="category-chip whitespace-nowrap px-4 py-2 rounded-full text-sm font-medium transition-colors bg-white text-brand-accent border border-brand-border"
             >
               📅 พรีออเดอร์
@@ -345,7 +348,7 @@ export function HomePage() {
                 key={cat.id}
                 type="button"
                 data-testid={`home-tab-cat-${cat.id}`}
-                onClick={() => scrollToSection(`home-cat-${cat.id}`)}
+                onClick={() => { setHomeTab('category'); scrollToSection(`home-cat-${cat.id}`) }}
                 className="category-chip whitespace-nowrap px-4 py-2 rounded-full text-sm font-medium transition-colors bg-white text-brand-accent border border-brand-border"
               >
                 {cat.icon} {cat.name}
@@ -358,20 +361,8 @@ export function HomePage() {
       {/* 2c. Floating ad banners — max 2 overlay cards, dismissible per promo (sessionStorage, D03) */}
       <FloatingAdBanners promos={bannerPromos} notice={siteCopy.adNotice} />
 
-      {/* 2d. Pre-order entry (Directive §8: จุดเข้าใช้งาน Pre-order บนสุดก่อน Popular Menu)
-          — ใช้ workflow เดียวกับปุ่ม Footer ผ่าน preOrderEntryPath (ไม่สร้างระบบคนละชุด)
-          — หัวข้อแก้ได้ในแอดมิน (homePreOrderTitle: business_settings) */}
-      <section className="mb-6" aria-labelledby="home-preorder-entry-heading">
-        <div className="rounded-2xl border border-brand-border bg-white p-4 flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <h2 id="home-preorder-entry-heading" className="font-bold text-brand-accent">📅 {siteCopy.homePreOrderTitle}</h2>
-            <p className="text-sm text-brand-muted">เลือกวันและรอบจัดส่งล่วงหน้าตามรอบที่ร้านเปิดรับ</p>
-          </div>
-          <Link to={withPreOrderTab(preOrderEntryPath(categories))} data-testid="home-preorder-entry" className="btn btn-primary">
-            เลือกเมนูจองล่วงหน้า →
-          </Link>
-        </div>
-      </section>
+      {/* 2d. เดิม = แบนเนอร์ CTA พรีออเดอร์ลอยเหนือหน้า — Owner (2026-10-25): ย้ายไปแสดง
+          "เฉพาะตอนเปิดแท็บ 📅 พรีออเดอร์" ในหมวดพรีออเดอร์ (ด้านล่าง) — แท็บ/หน้าอื่นไม่แสดง */}
       {/* 3. เมนูแนะนำ (แนะนำ/ยอดนิยม) — ลำดับ 1 ของเมนู (Feature B 2026-10-25) */}
       <section id="home-sec-recommended" className="mb-10 scroll-mt-20" aria-labelledby="home-popular-heading">
         <div className="flex items-center justify-between mb-2">
@@ -402,6 +393,19 @@ export function HomePage() {
       {/* 5. พรีออเดอร์ (Feature B: ลำดับ 3) — เมนูจองล่วงหน้า (ผูกปฏิทินแอดมิน) */}
       <section id="home-sec-preorder" className="mb-10 scroll-mt-20" aria-labelledby="home-preorder-heading">
         <h2 id="home-preorder-heading" className="text-xl font-display font-bold text-brand-accent mb-2">📅 พรีออเดอร์</h2>
+        {/* Owner (2026-10-25): CTA พรีออเดอร์ (Directive §8 เดิม — workflow preOrderEntryPath เดียวกัน
+            + หัวข้อแก้ได้ในแอดมิน homePreOrderTitle) — แสดงเฉพาะตอนเปิดแท็บ "📅 พรีออเดอร์" เท่านั้น */}
+        {homeTab === 'preorder' && (
+          <div className="rounded-2xl border border-brand-border bg-white p-4 flex flex-wrap items-center justify-between gap-3 mb-4">
+            <div>
+              <h3 id="home-preorder-entry-heading" className="font-bold text-brand-accent">📅 {siteCopy.homePreOrderTitle}</h3>
+              <p className="text-sm text-brand-muted">เลือกวันและรอบจัดส่งล่วงหน้าตามรอบที่ร้านเปิดรับ</p>
+            </div>
+            <Link to={withPreOrderTab(preOrderEntryPath(categories))} data-testid="home-preorder-entry" className="btn btn-primary">
+              เลือกเมนูจองล่วงหน้า →
+            </Link>
+          </div>
+        )}
         {preOrderShowcase.length > 0 ? (
           <HorizontalCarousel
             items={preOrderShowcase.map((item) => (
