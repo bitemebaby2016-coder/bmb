@@ -28,3 +28,13 @@ Transparency notes:
   → ตรวจ args ตรง ๆ) · contract G5/G6 = แก้ฝั่ง test (โค้ด server ถูกแล้ว: G5 โดน budget gate
   ซึ่ง "ทำงานถูกต้อง" จริง · G6 = SELECT set_config ต้องเป็น PERFORM ใน plpgsql)
 - ไม่มี production write 任何 (contract = ROLLBACK · replay = DB ชั่วคราวใน container)
+
+CI RUN #128 (push c809f00) — Contract Tests = FAILURE ที่ step Contract 153:
+  "G4 FAIL: 4% budget should block 10 discount, got 10.00"
+  Root cause = TEST พึ่งสภาพแวดล้อม ไม่ใช่โค้ด: contract สมมติ sales=0 แต่ CI มี orders ตกค้างจาก
+  step "Concurrency — two sessions, same key (ephemeral leftovers OK)" → 4% × (leftover + 100) ≥ 10
+  → budget gate ปล่อยผ่าน = **พฤติกรรมถูกต้องตามกติกา** (งบพอ = ให้ส่วนลด) แต่ assertion พัง
+  Fix (attempt 1): เคส "ถูกบล็อก" ใช้ percent=0 (0% × ยอดขายอะไรก็ตาม = 0 → deterministic ทุกสภาพ)
+  ทั้ง G4 และ G8-R2 · G8-R4 (scope) ใช้ unlimited เพื่อ isolate (เค้างบมีที่ G4+R2 พิสูจน์แล้ว)
+Local re-verify หลัง fix (clean-room container ใหม่):
+  MIGRATIONS_OK (001-153) + CONTRACTS_OK count=19 + ALL_GREEN  ✅

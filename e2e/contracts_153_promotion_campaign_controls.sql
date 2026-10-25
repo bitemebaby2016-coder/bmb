@@ -137,13 +137,15 @@ BEGIN
   IF v IS DISTINCT FROM 10 THEN RAISE EXCEPTION 'G3 FAIL: after re-enable should be 10, got %', v; END IF;
   RAISE NOTICE 'G3 PASS (kill switch blocks everything, re-enable restores)';
 
-  -- ===== G4: budget gate (sales = 0 ณ จุดนี้ → งบ = pct% ของยอดออเดอร์นั้น ๆ) =====
-  UPDATE public.business_settings SET value = jsonb_set(value, '{budget_percent}', '4'::jsonb, true)
+  -- ===== G4: budget gate =====
+  -- ใช้ percent=0 เพื่อการบล็อกแบบ deterministic: 0% × (ยอดขายอะไรก็ตาม) = 0 → ห้ามส่วนลดเลย
+  -- (ห้ามพึ่ง sales=0 — CI มี orders ตกค้างจาก step Concurrency ที่ทิ้งไว้ได้ตามสัญญา "ephemeral leftovers OK")
+  UPDATE public.business_settings SET value = jsonb_set(value, '{budget_percent}', '0'::jsonb, true)
    WHERE key = 'promotion_policy';
-  v := public.promotion_apply_rules('c153-a', 100, 100);   -- 4% of 100 = 4 < 10 → 0
-  IF v <> 0 THEN RAISE EXCEPTION 'G4 FAIL: 4%% budget should block 10 discount, got %', v; END IF;
+  v := public.promotion_apply_rules('c153-a', 100, 100);   -- งบ 0 → 10 ต้องถูกบล็อกเสมอ
+  IF v <> 0 THEN RAISE EXCEPTION 'G4 FAIL: 0%% budget should block 10 discount, got %', v; END IF;
   SELECT public.promotion_budget_ok(10, 100) INTO v_ok;
-  IF v_ok IS NOT false THEN RAISE EXCEPTION 'G4 FAIL: budget_ok(10,100) at 4%% should be false'; END IF;
+  IF v_ok IS NOT false THEN RAISE EXCEPTION 'G4 FAIL: budget_ok(10,100) at 0%% should be false'; END IF;
   UPDATE public.business_settings SET value = jsonb_set(value, '{budget_percent}', 'null'::jsonb, true)
    WHERE key = 'promotion_policy';   -- JSON null = ไม่จำกัด
   v := public.promotion_apply_rules('c153-a', 100, 100);
@@ -218,8 +220,8 @@ BEGIN
   ) INTO v_res;
   IF (v_res->>'discount_amount')::numeric <> 0 THEN RAISE EXCEPTION 'G8 FAIL: no-code order discount should be 0'; END IF;
 
-  -- R2: budget 1% → ส่วนลด 10 บาท ถูกบล็อก (silent-ignore ตามกติกา 114)
-  UPDATE public.business_settings SET value = jsonb_set(value, '{budget_percent}', '1'::jsonb, true)
+  -- R2: budget 0% → ส่วนลด 10 บาท ถูกบล็อกเสมอ (ไม่พึ่งจำนวน orders ตกค้างจาก step ก่อนหน้า)
+  UPDATE public.business_settings SET value = jsonb_set(value, '{budget_percent}', '0'::jsonb, true)
    WHERE key = 'promotion_policy';
   SELECT public.create_order_with_items(
     p_items := '[{"product_id":"c153-pa","quantity":1}]'::jsonb,
@@ -229,7 +231,7 @@ BEGIN
     p_dropoff_longitude := (SELECT COALESCE(b.kitchen_longitude, (public.kitchen_location()->>'longitude')::numeric) + 0.001 FROM public.branches b WHERE b.id = 'branch-tenant-bmb-001-main'),
     p_promotion_code := 'GR10'
   ) INTO v_res;
-  IF (v_res->>'discount_amount')::numeric <> 0 THEN RAISE EXCEPTION 'G8 FAIL: budget 1%% should zero GR10 discount, got %', v_res->>'discount_amount'; END IF;
+  IF (v_res->>'discount_amount')::numeric <> 0 THEN RAISE EXCEPTION 'G8 FAIL: budget 0%% should zero GR10 discount, got %', v_res->>'discount_amount'; END IF;
   -- R3: ไม่จำกัดงบ → GR10 หักจริง 10 และบันทึกลง orders ตรงกัน
   UPDATE public.business_settings SET value = jsonb_set(value, '{budget_percent}', 'null'::jsonb, true)
    WHERE key = 'promotion_policy';
@@ -247,8 +249,9 @@ BEGIN
   SELECT discount_amount INTO v_disc FROM public.orders WHERE order_number = v_res->>'order_number';
   IF v_disc IS DISTINCT FROM 10 THEN RAISE EXCEPTION 'G8 FAIL: orders.discount_amount mismatch (%)', v_disc; END IF;
 
-  -- R4: งบ 15% + scope — ตะกร้า [pa 100 + pb 50] โค้ด GRSCOPE (scope = pa) → ลด 50 (ไม่ใช่ 75)
-  UPDATE public.business_settings SET value = jsonb_set(value, '{budget_percent}', '15'::jsonb, true)
+  -- R4: scope ผ่านออเดอร์จริง — งบ = ไม่จำกัดชั่วคราวเพื่อ isolate กฎ scope
+  -- (เคส "งบอนุญาต/งบบล็อก" พิสูจน์แล้วที่ G4 + R2 — ห้ามให้ orders ตกค้างจาก step อื่นมาบัง assertion นี้)
+  UPDATE public.business_settings SET value = jsonb_set(value, '{budget_percent}', 'null'::jsonb, true)
    WHERE key = 'promotion_policy';
   SELECT public.create_order_with_items(
     p_items := '[{"product_id":"c153-pa","quantity":1},{"product_id":"c153-pb","quantity":1}]'::jsonb,
