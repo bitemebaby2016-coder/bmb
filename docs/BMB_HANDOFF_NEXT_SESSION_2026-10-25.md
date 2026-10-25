@@ -93,3 +93,34 @@
   legacy 7 เขียวเอง) · tsc 0 · lint OK · vitest 140/1424 0 fail · build ✓
 - ⛔ รอ Owner: ล้าง PWA cache แล้วตรวจ §D ของ status report · ลบทดสอบ D6 pages.dev (ท่านทำเอง) · R-16 พิมพ์จริง ·
   acceptance plan §4 · G&R 8 คำถาม (ห้าม implement ก่อนอนุมัติ) · legacy 7 = "ไม่ซ่อม" (คำสั่ง — เขียวอยู่แล้ว)
+
+---
+
+## 6. 🔴 SESSION CLOSE (2026-10-25) — ส่งต่อทั้งหมดไปเซสชั่นหน้า
+
+### 6.1 คำตอบ/อนุมัติของ Owner ที่เขียนลง `BMB_GROWTH_REWARDS_INVENTORY_2026-10-25.md` แล้ว (วัตถุประสงค์+กติกาตั้งต้นครบ)
+- **§1.1–§1.7 = อนุมัติทั้งหมด** เพิ่มเติม: 1.3 → "ลบฮาร์ดโค้ด ปิดช่องว่าง" (สร้าง server points ledger) · 1.4 → Vote "คิดเองได้จากเมนูที่มี" ·
+  Share "เชื่อมจากลิงก์จริงที่แอดมินตั้ง ปรับได้ตลอด" · Notification "แจกทาง notice + เก็บในโปรไฟล์" · streak "ทำด้วย" + "inspect เพิ่ม 4" ·
+  1.7 → "ไม่ชัดเจนให้ถามทันที ไม่ต้องเดา"
+- **§5 ทั้ง 8 ข้อ:** ① อัตราแต้ม/เพดาน/อายุ = ใช้ระบบบันทึกยอดสุทธิสะสมเชื่อถือได้ → **ตรวจสอบก่อน ยังไม่สร้างระบบใหม่ทันที**
+  ② Tiers = เช่นข้อ 1 (ตรวจสอบก่อน ยังไม่สร้าง) ③ Referral = identity ด้วยบัญชีที่ระบุตัวตน + OTP ยืนยันเบอร์ (IP/อุปกรณ์ = สัญญาณเดียวห้ามใช้ปฏิเสธรางวัล) ·
+  self-referral 3 ระดับ Hard block/Review/Soft signal · รางวัลเมื่อออเดอร์ผ่านสถานะ · cancel/refund ปรับตาม ledger ไม่หักซ้ำ ·
+  attribution ตรวจสอบย้อนหลังได้ · **inspect auth/guest checkout/OTP จริงก่อนตัดสินใจ unique key** ④ Spin&Win = **ใช่** (มีรางวัล/แต้ม)
+  ⑤ Affiliate = **ใช่** (แต้ม/คูปอง ไม่มีเงินสด) ⑥ งบ AI/เพดานส่วนลด/kill switch = **15% ของยอดขาย · แอดมินปรับเองได้**
+  ⑦ แคตตาล็อก Rewards = **ย้าย hardcode → ตาราง admin ตั้งเอง** ⑧ **Rollout: Promotions → Referral → Loyalty Tiers → Engagement & Play**
+  + เงื่อนไขเลื่อนระยะ (ไม่เลื่อนเพราะ UI เสร็จ · business rules/server validation/tests/สิทธิ์ ต้องผ่านก่อน)
+- ⛔ **ยังคงเดิม:** inventory §6 = "Implementation รอคำสั่งพัฒนาแยก" — คำตอบเหล่านี้ = วัตถุประสงค์/กติกาตั้งต้น **ยังไม่ใช่คำสั่ง start**
+
+### 6.2 งานที่ส่งต่อเซสชั่นหน้า (ทำตามลำดับนี้)
+1. **ตรวจ §D ของ `BMB_OWNER_STATUS_REPORT_2026-10-25.md`** (hard refresh ก่อน · 6 ข้อ: หัวข้อไม่ซ้ำ+alias เรียงใหม่ · การ์ดไร้กรอบ · แถบสถานะ 2 เลน · label แอดมินตรงแท็บ · deep-link `?category=` · แจ้งเมื่อ D6 เสร็จ)
+2. **D6** — ท่านลบทดสอบ `bitemebaby-5f7.pages.dev` เอง (prep doc §2) → ปิดงาน
+3. **R-16 พิมพ์จริง** — runbook prep doc §1 (automated PASS ≠ พิมพ์จริง)
+4. **acceptance plan §4 ข้อ #1–#14** — PENDING ทั้งหมด
+5. **Growth & Rewards** — คำตอบครบใน inventory (§1/§5) → งานถัดไป = **รอท่านพิมพ์คำสั่ง "เริ่มพัฒนา"** แล้วเรียงตาม Rollout ข้อ ⑧
+   (เริ่มสุด = Promotions ต่อยอดคูปองเดิม+งบ 15% · ข้ามขั้นไม่ได้ · **ห้ามลงมือเองก่อนคำสั่ง**)
+6. **ปิดแล้วรอบนี้ ไม่ต้องทำซ้ำ:** 4 บั๊กหน้าจอ ✓ · production 150/151/152 apply+verify+record ✓ · stale contracts 8/8
+   (039-G7=152) ✓ · legacy 7 เขียว(ไม่ซ่อม) ✓ · R-17 PASS ✓ · G&R docs ✓ · 3.1/3.2/3.3 DONE ✓ ·
+   gates: replay 001-152 ALL_GREEN · contracts 40/40 · vitest 140/1424 0 fail · tsc/lint/build ✓
+7. **Git:** `be1b012` (รอบแก้+migrations+evidence) · `77ed0eb` (Owner rules v1.1/v2.1) — CI+Contract เขียวทั้งคู่ ·
+   commit ปิดเซสชั่นนี้ = inventory (คำตอบท่าน) + เอกสารฉบับนี้ + AI_WORK_STATE
+8. **ลำดับอ่านของเซสชั่นหน้า:** `AI_WORK_STATE.md` → status report §A → ข้อ 1-5 ข้างบน

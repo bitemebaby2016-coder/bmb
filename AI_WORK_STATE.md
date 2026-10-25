@@ -2,34 +2,22 @@
 
 > **สถานะงานปัจจุบันของโปรเจกต์ Bite Me Baby** ใช้แนบเข้าสู่ Context ตอนเริ่มแชทเสมอ
 
-**last_updated:** 2026-10-25 **WAVE 4 — รอบที่ 2 (คำสั่ง Owner ชุดแก้ 4 บั๊ก + อนุมัติ migrations): แก้ครบทั้ง 4 + apply production 150/151/152 เสร็จ**
-(gates: tsc 0 · lint 0 · vitest **140 files/1424 tests 0 fail** · build ✓ · clean-room replay **001-152 MIGRATIONS_OK** ·
-**contracts 40/40 fail=0 ALL_GREEN** (mandate 8 ครบ · legacy 7 เขียว) · รายงาน Owner = `docs/BMB_OWNER_STATUS_REPORT_2026-10-25.md`)
-**phase:** 🟢 งานวิศวกรรมรอบนี้ปิด — เหลือรอ Owner ตรวจ §D + D6/R-16/G&R
-**current_focus:** **✅ รอบ 2 (2026-10-25) — ตามคำสั่งชุดล่าสุด:**
-- **4 บั๊กที่ Owner เห็นจากหน้าจอ = แก้ครบ (รายละเอียด §B ใน status report):**
-  ① หัวข้อซ้ำ+alias reorder → `CATEGORY_DISPLAY_ORDER` เป็นลิสต์ alias + chips/sections กรองหมวดโหมด
-  (สินค้าหมวดโหมดย้ายเข้า showcase ไม่หาย) ② กรอบการ์ดเมนูถอด (`drink/home/fmc-card` transparent border)
-  ③ `AdminProducts` label = `adminCats` แหล่งเดียวกับแท็บ ④ แถบสถานะ 2 เลน (`preOrderLine`: รอบถัดไป/คัทออฟจริง)
-- **Owner approvals ทำแล้วทั้งหมด:** 150 apply+verify ✓ · 151 (ก) apply+verify (insert 0 — history ครบจริง) ✓ ·
-  152 REVOKE สร้าง+apply+verify (รอบแรกพังเพราะหัว `//` → แก้ `--` แล้ว 201) ✓ · record 150/151/152 ✓ ·
-  legacy 7 = **ไม่ซ่อม** (คำสั่ง) — clean-room ล่าสุดเขียวเอง · D6 = Owner ลบทางาน CF (ผมเข้าไม่ได้)
-- **งานรอบก่อนยังคง:** CTA แท็บพรีออเดอร์ ✓ · stale contracts 8/8 ✓ (039-G7 ปิดด้วย 152) · R-17 PASS ✓ ·
-  G&R 2 เอกสาร (ไม่แตะโค้ด) · 3.1/3.2/3.3 = DONE มีหลักฐาน
-- ⚠️ หมายเหตุ: `AI_ENTRYPOINT.md`/`UNIVERSAL_MASTER_AI_RULES.md` = external edit (ไม่ commit) ·
-  contract039 รันบน production ตรง ๆ ติด fixture ข้อมูล (verify152 = ตัวจริงเรื่องสิทธิ์)
-**blocked_by:** ⛔ รอ Owner: ล้าง PWA cache (Ctrl+Shift+R) แล้วตรวจ §D ของ status report · ลบทดสอบ D6 pages.dev ·
-R-16 พิมพ์จริง · acceptance plan §4 · G&R 8 คำถาม (ห้าม implement ก่อนอนุมัติ)
-- **CTA พรีออเดอร์ (คำสั่ง Owner):** ย้ายเข้าหมวด `home-sec-preorder` + gate `homeTab==='preorder'`
-  (แท็บ/หน้าอื่นไม่แสดง) · แก้ `HomePage.tsx` ที่เดิมไม่สร้างของใหม่ · `preOrderEntry.test.ts` realign+regression (19/19)
-- **Task A stale contracts:** 7/8 GREEN (023/028/030/036/037/038/125) · **039 = G1–G6 PASS, G7 = defect จริง**
-  (ไม่มี REVOKE anon บน set_menu_schedule/publish_menu_schedule → รอ Owner sign-off migration REVOKE) ·
-  นอก mandate: 017_018/019/020/021/022/029/033 สายเก่า fail (ไม่ได้แตะ · รอสั่งเพิ่ม) · รายละเอียดทุกชั้น = evidence doc
-- **Task B/C/E:** `docs/BMB_OWNER_PREP_R16_D6_MIGRATIONS_2026-10-25.md` (150/151 analyze+choices · D6 CF steps · R-16 runbook) · **รอ Owner**
-- **Task D:** R-17 `dbRestoreDrill: PASS` ✓
-- **3.1/3.2/3.3 = DONE มีหลักฐาน** (AdminNav sidebar shell+single-nav test · Dashboard Zone A/B/C · `theme.ts` 3 ธีม+2 เทสต์ต · `ambientMusic` opt-in/volume/duck/singleton+เทสต์) → ไม่สร้างซ้ำ · ตา Owner บนเบราว์เซอร์
-- **Growth & Rewards = เอกสารเท่านั้น** (`docs/BMB_GROWTH_REWARDS_REQUIREMENTS_2026-10-25.md` + `docs/BMB_GROWTH_REWARDS_INVENTORY_2026-10-25.md`) · ไม่มี implementation ก่อนอนุมัติ
-**blocked_by:** ⛔ รอ Owner: ล้าง PWA cache (Ctrl+Shift+R) แล้วตรวจ §D ใน `BMB_OWNER_STATUS_REPORT_2026-10-25.md` · ลบทดสอบ D6 pages.dev (ท่านทำเอง) · R-16 พิมพ์จริง · acceptance plan §4 ทั้งหมด · G&R 8 คำถาม (ห้าม implement ก่อนอนุมัติ)
+**last_updated:** 2026-10-25 **SESSION CLOSE (WAVE 5) — Owner เขียนคำตอบ G&R ลง inventory ครบแล้ว · ปิดเซสชั่น · ส่งต่อทั้งหมด = `docs/BMB_HANDOFF_NEXT_SESSION_2026-10-25.md` §6**
+(gates ปิดเซสชัน: tsc 0 · lint 0 · vitest **140 files/1424 tests 0 fail** · build ✓ · replay **001-152 ALL_GREEN** ·
+**contracts 40/40** · production **150/151/152 apply+verify+record ✓** · git: `be1b012` + `77ed0eb` (Owner rules) CI+Contract เขียว)
+**phase:** 🟣 ปิดเซสชั่น — เซสชั่นหน้าเริ่มจาก handoff §6.2
+**current_focus:** **ส่งต่อเซสชั่นหน้า (ตามลำดับ):**
+1. ให้ Owner ตรวจ status report **§D** (hard refresh · 6 ข้อ) 2. **D6** Owner ลบ pages.dev (prep §2) ·
+3. **R-16** พิมพ์จริง (prep §1) 4. **acceptance §4 #1–#14** 5. **G&R**: คำตอบครบใน `BMB_GROWTH_REWARDS_INVENTORY_2026-10-25.md`
+   (§1 อนุมัติหมด · §5 ครบ 8: ①②ตรวจสอบก่อนยังไม่สร้าง ③Referral=บัญชี+OTP/3ระดับ/inspectก่อน ④Spin=ใช่ ⑤Affiliate=ใช่
+   ⑥งบ=15%ปรับได้ ⑦catalog=ย้ายhardcode ⑧Rollout=Promotions→Referral→Loyalty→Engagement+ gates) →
+   **รอคำสั่ง "เริ่มพัฒนา" จาก Owner เท่านั้น** (inventory §6 ยังคงห้ามลงมือเอง)
+**blocked_by:** ⛔ รอ Owner ทั้งสิ้น: ตรวจ §D · D6 ลบทดสอบ · R-16 · acceptance §4 · สั่ง start G&R
+- (บันทึกรอบก่อน — ปิดแล้วทั้งหมด): 4 บั๊กหน้าจอแก้ครบ (status report §B) · production **150/151/152 ✓** ·
+  stale contracts **8/8** (039-G7=152) ✓ · legacy 7 เขียวเอง(ไม่ซ่อม) ✓ · CTA แท็บพรีออเดอร์ ✓ · R-17 PASS ✓ ·
+  G&R = เอกสาร 2 ฉบับ + **คำตอบ Owner อยู่ใน inventory §1/§5 แล้ว** · 3.1/3.2/3.3 DONE มีหลักฐาน ✓ ·
+  contract039 รันบน production ตรง ๆ ติด fixture ข้อมูล (ตัวตรวจสิทธิ์จริง = verify152 เขียว) ·
+  `AI_ENTRYPOINT.md`/`UNIVERSAL_MASTER_AI_RULES.md` (v1.1/v2.1) = ท่านแก้เอง → commit `77ed0eb` แล้ว
 
 ---
 
