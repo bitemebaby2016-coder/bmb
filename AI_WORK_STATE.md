@@ -6,7 +6,8 @@
 (gates เขียวทั้งหมด: tsc 0 · lint+brandNameGuard OK (**432 ไฟล์**) · vitest **144 files/1517 tests 0 fail** ·
  build ✓ **PWA 142** · **Docker replay สะอาด 001–156 = ALL_GREEN** ·
  **contract 156 G1–G9 PASS (rc=0) + regression 155/154/153 PASS (rc=0 ทั้ง 4)** ·
- evidence = `e2e/g156-gates-evidence.txt` · push แล้ว — **CI ยังไม่ได้ตรวจจริง** ไม่มี `gh` ในเครื่อง)
+ evidence = `e2e/g156-gates-evidence.txt` · push `4cf837e` (main = origin/main · ก่อนหน้า `8714fa2`+`319c258`) —
+ **CI ยังไม่ได้ตรวจจริง** ไม่มี `gh` ในเครื่อง)
 **production:** migration **155 = APPLIED + RECORDED ✓** (Owner "apply 155" → `e2e/r15Apply155.cjs`
  staged 6 รุ่น: precheck 11/11 → apply+rerun 201 → verify 11/11 → contract155 PASS →
  contractRegr 154/153/148 PASS → record top=155 · evidence = `e2e/r15Apply155-*.json`) ·
