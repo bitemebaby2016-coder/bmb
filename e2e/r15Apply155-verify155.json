@@ -1,0 +1,148 @@
+[
+  {
+    "label": "points-ledger-table",
+    "status": 201,
+    "data": [
+      {
+        "relname": "points_ledger",
+        "relrowsecurity": true,
+        "rows": 0
+      }
+    ]
+  },
+  {
+    "label": "deny-policies",
+    "status": 201,
+    "data": [
+      {
+        "policies": 0
+      }
+    ]
+  },
+  {
+    "label": "policy-seed",
+    "status": 201,
+    "data": [
+      {
+        "key": "loyalty_policy",
+        "value": {
+          "tier_gold_min": 4000,
+          "tiers_enabled": true,
+          "window_months": 12,
+          "points_enabled": false,
+          "points_per_baht": 0,
+          "tier_silver_min": 1500,
+          "tier_platinum_min": 8000,
+          "earn_qualify_status": "delivered"
+        }
+      }
+    ]
+  },
+  {
+    "label": "fns-exist",
+    "status": 201,
+    "data": [
+      {
+        "fn_count": 12
+      }
+    ]
+  },
+  {
+    "label": "triggers-exist",
+    "status": 201,
+    "data": [
+      {
+        "tgname": "trg_loyalty_intent_sync",
+        "on_table": "payment_intents"
+      },
+      {
+        "tgname": "trg_loyalty_order_sync",
+        "on_table": "orders"
+      },
+      {
+        "tgname": "trg_points_ledger_append_only",
+        "on_table": "points_ledger"
+      }
+    ]
+  },
+  {
+    "label": "anon-privs",
+    "status": 201,
+    "data": [
+      {
+        "proname": "loyalty_admin_adjust",
+        "anon_exec": false
+      },
+      {
+        "proname": "loyalty_admin_stats",
+        "anon_exec": false
+      },
+      {
+        "proname": "loyalty_my_history",
+        "anon_exec": false
+      },
+      {
+        "proname": "loyalty_my_status",
+        "anon_exec": false
+      }
+    ]
+  },
+  {
+    "label": "auth-exec-rpcs",
+    "status": 201,
+    "data": [
+      {
+        "proname": "loyalty_admin_adjust",
+        "auth_exec": true
+      },
+      {
+        "proname": "loyalty_admin_stats",
+        "auth_exec": true
+      },
+      {
+        "proname": "loyalty_my_history",
+        "auth_exec": true
+      },
+      {
+        "proname": "loyalty_my_status",
+        "auth_exec": true
+      }
+    ]
+  },
+  {
+    "label": "order-fn-still-untouched",
+    "status": 201,
+    "data": [
+      {
+        "hits": 0
+      }
+    ]
+  },
+  {
+    "label": "ledger-empty-no-backfill",
+    "status": 201,
+    "data": [
+      {
+        "ledger_rows": 0
+      }
+    ]
+  },
+  {
+    "label": "promo-rows-intact",
+    "status": 201,
+    "data": [
+      {
+        "promo_rows": 2
+      }
+    ]
+  },
+  {
+    "label": "orders-untouched",
+    "status": 201,
+    "data": [
+      {
+        "orders": 4
+      }
+    ]
+  }
+]

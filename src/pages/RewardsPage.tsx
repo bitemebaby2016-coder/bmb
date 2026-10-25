@@ -12,23 +12,21 @@ import {
   type LoyaltyStatus,
   type LoyaltyHistory,
 } from '@/lib/loyaltyClient'
-
-const rewards = [
-  { id: '1', name: 'คูปองลด 10%', points: 100, description: 'ใช้กับออเดอร์ถัดไป' },
-  { id: '2', name: 'ส่งฟรี 1 ครั้ง', points: 150, description: 'ส่งฟรีภายใน 5 กม.' },
-  { id: '3', name: 'เมนูฟรี 1 จาน', points: 200, description: 'เลือกเมนูจากเมนูหลัก' },
-  { id: '4', name: 'คูปองลด 20%', points: 300, description: 'ใช้กับออเดอร์ ≥฿200' },
-]
+// [G&R 156] แคตตาล็อก = ตาราง admin (§2 ข้อ 7 "ย้าย hardcode → ตาราง admin ตั้งเอง")
+// — ไม่มี fallback ฝั่งเครื่อง: โหลดไม่ได้ = บอกตรง ๆ ไม่แสร้งว่ามีของ
+import { fetchRewardsCatalog, type RewardsCatalogItem } from '@/lib/engagementClient'
 
 export function RewardsPage() {
   const loyaltyPoints = useRewardsStore((s) => s.loyaltyPoints)
-  const redeemPoints = useRewardsStore((s) => s.redeemPoints)
   const customer = useAuthStore((s) => s.customer)
 
   // [G&R 155] ระดับสมาชิก + แต้ม + ประวัติ = ข้อมูลจริงจากเซิร์ฟเวอร์ (ZERO-FAKE)
   const [status, setStatus] = useState<LoyaltyStatus | null>(null)
   const [history, setHistory] = useState<LoyaltyHistory | null>(null)
   const [loaded, setLoaded] = useState(false)
+  // [G&R 156] รายการแลกจริงจาก rewards_catalog (แอดมินจัดการ)
+  const [catalog, setCatalog] = useState<RewardsCatalogItem[] | null>(null)
+  const [catalogLoaded, setCatalogLoaded] = useState(false)
 
   useEffect(() => {
     let active = true
@@ -38,18 +36,22 @@ export function RewardsPage() {
       setHistory(h)
       setLoaded(true)
     })
+    void fetchRewardsCatalog().then((items) => {
+      if (!active) return
+      setCatalog(items)
+      setCatalogLoaded(true)
+    })
     return () => { active = false }
   }, [customer])
 
-  function handleRedeem(rewardId: string) {
-    const reward = rewards.find(r => r.id === rewardId)
-    if (!reward) return
-    if (loyaltyPoints < reward.points) { showToast('แต้มไม่พอ', 'warning'); return }
-    // ZERO-FAKE: แคตตาล็อกนี้ยังเป็นพรีวิว — ห้ามแสร้งว่า "แลกสำเร็จ"
-    // (ระบบแลกแต้มจริง + แคตตาล็อกแอดมิน = STAGE 4)
-    if (redeemPoints(reward.points, reward.name, reward.description)) {
-      showToast(`บันทึกรายการขอแลก ${reward.name} แล้ว (พรีวิว) — ยังไม่มีการออกคูปองจริงค่ะ`, 'info')
-    }
+  function handleRedeem(reward: RewardsCatalogItem) {
+    // ZERO-FAKE: แคตตาล็อกมาจากระบบจริง แต่การแลก/ออกคูปองจริง = ยังไม่เปิด —
+    // ห้ามแสร้งว่า "แลกสำเร็จ" (ระบบแลกจริงมีเพดาน/เงื่อนไข = งานต่อที่อนุมัติ)
+    if (loyaltyPoints < reward.points_cost) { showToast('แต้มไม่พอ', 'warning'); return }
+    showToast(
+      `บันทึกการขอแลก "${reward.name}" (${reward.points_cost} แต้ม) แล้ว — ยังไม่มีการตัดแต้ม/ออกคูปองจริงค่ะ`,
+      'info',
+    )
   }
 
   const tiers = loyaltyTierCatalog(status?.thresholds)
@@ -151,24 +153,37 @@ export function RewardsPage() {
         </p>
       </div>
       <h3 className="font-bold text-brand-accent mb-4">🎁 แลกรางวัล</h3>
-      <div className="space-y-3">
-        {rewards.map((reward) => {
-          const canAfford = loyaltyPoints >= reward.points
-          return (
-            <div key={reward.id} className="card flex items-center gap-4">
-              <div className="w-16 h-16 bg-brand-bg rounded-xl flex items-center justify-center text-2xl"></div>
-              <div className="flex-1">
-                <h4 className="font-bold text-brand-accent">{reward.name}</h4>
-                <p className="text-sm text-brand-muted">{reward.description}</p>
+      {/* [G&R 156] รายการจากตาราง admin จริง — โหลดไม่ได้/ว่าง = บอกตรง ๆ ไม่แกล้งทำ */}
+      {!catalogLoaded ? (
+        <p className="text-sm text-brand-muted">⏳ กำลังโหลดรายการรางวัล…</p>
+      ) : catalog === null ? (
+        <p className="text-sm text-brand-muted" data-testid="catalog-load-error">
+          โหลดรายการรางวัลไม่สำเร็จ — กรุณาลองใหม่อีกครั้งค่ะ
+        </p>
+      ) : catalog.length === 0 ? (
+        <p className="text-sm text-brand-muted" data-testid="catalog-empty">
+          ยังไม่มีรายการรางวัลให้แลกในขณะนี้ค่ะ
+        </p>
+      ) : (
+        <div className="space-y-3">
+          {catalog.map((reward) => {
+            const canAfford = loyaltyPoints >= reward.points_cost
+            return (
+              <div key={reward.id} className="card flex items-center gap-4" data-testid={`catalog-item-${reward.id}`}>
+                <div className="w-16 h-16 bg-brand-bg rounded-xl flex items-center justify-center text-2xl">🎁</div>
+                <div className="flex-1">
+                  <h4 className="font-bold text-brand-accent">{reward.name}</h4>
+                  <p className="text-sm text-brand-muted">{reward.description}</p>
+                </div>
+                <div className="text-right">
+                  <div className="font-bold text-brand-primary">{reward.points_cost} แต้ม</div>
+                  <button onClick={() => handleRedeem(reward)} disabled={!canAfford} className={`btn text-sm mt-2 ${canAfford ? 'btn-primary' : 'btn-disabled'}`}>แลกเลย</button>
+                </div>
               </div>
-              <div className="text-right">
-                <div className="font-bold text-brand-primary">{reward.points} แต้ม</div>
-                <button onClick={() => handleRedeem(reward.id)} disabled={!canAfford} className={`btn text-sm mt-2 ${canAfford ? 'btn-primary' : 'btn-disabled'}`}>แลกเลย</button>
-              </div>
-            </div>
-          )
-        })}
-      </div>
+            )
+          })}
+        </div>
+      )}
     </div>
   )
 }

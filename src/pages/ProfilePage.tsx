@@ -7,6 +7,12 @@ import { useRiderIdentity } from '@/hooks/useRiderIdentity'
 import { fetchMyReferralStatus, type MyReferralStatus } from '@/lib/referralClient'
 import { fetchLoyaltyStatus, type LoyaltyStatus } from '@/lib/loyaltyClient'
 import {
+  fetchAffiliateStatus,
+  affiliateShareUrl,
+  describeAffiliateIssue,
+  type AffiliateStatus,
+} from '@/lib/engagementClient'
+import {
   registerPasskey,
   listPasskeys,
   removePasskey,
@@ -26,6 +32,19 @@ export function ProfilePage() {
   // [G&R 155] ระดับสมาชิก + แต้มจริงจาก ledger (server-authoritative · ZERO-FAKE)
   const [loyalty, setLoyalty] = useState<LoyaltyStatus | null>(null)
   const [loyaltyLoaded, setLoyaltyLoaded] = useState(false)
+  // [G&R 156] Creator Affiliate — โค้ด/สถิติจริงจากเซิร์ฟเวอร์ (แต้มล้วน ไม่มีเงินสด)
+  const [aff, setAff] = useState<AffiliateStatus | null>(null)
+  const [affLoaded, setAffLoaded] = useState(false)
+  useEffect(() => {
+    if (!customer) return
+    let active = true
+    void fetchAffiliateStatus().then((s) => {
+      if (!active) return
+      setAff(s)
+      setAffLoaded(true)
+    })
+    return () => { active = false }
+  }, [customer])
   useEffect(() => {
     if (!customer) return
     let active = true
@@ -94,6 +113,43 @@ export function ProfilePage() {
           </div>
           <Link to="/rewards" className="btn btn-secondary">แลกรางวัล →</Link>
         </div>
+      </div>
+
+      {/* [G&R 156] Creator Affiliate — โค้ด/ลิงก์/สถิติจริง · รางวัลเป็นแต้มล้วน (§4.1 ข้อ 5) */}
+      <div className="card mb-6 border-2 border-purple-200 bg-purple-50" data-testid="profile-affiliate">
+        <div className="flex items-center justify-between mb-2">
+          <h3 className="font-bold text-brand-accent text-lg">🔗 ลิงก์ครีเอเตอร์ (Creator Affiliate)</h3>
+          <span className="text-xs text-purple-700 bg-purple-100 rounded-lg px-2 py-1">รางวัลเป็นแต้ม · ไม่มีเงินสด</span>
+        </div>
+        {!affLoaded ? (
+          <p className="text-sm text-brand-muted">⏳ กำลังโหลดข้อมูลครีเอเตอร์…</p>
+        ) : !aff ? (
+          <p className="text-sm text-brand-muted">{describeAffiliateIssue('load_failed')}</p>
+        ) : (
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <code className="font-mono text-sm font-bold bg-white rounded-lg px-3 py-1 border border-purple-300" data-testid="affiliate-code">
+                {aff.code}
+              </code>
+              <button
+                className="btn btn-secondary text-xs"
+                onClick={() => {
+                  void navigator.clipboard?.writeText(affiliateShareUrl(aff.code))
+                    .then(() => showToast('คัดลอกลิงก์ครีเอเตอร์แล้ว', 'success'))
+                    .catch(() => showToast('คัดลอกไม่สำเร็จ — ก็อปจากแถบที่อยู่ได้เลย', 'warning'))
+                }}
+              >
+                คัดลอกลิงก์
+              </button>
+            </div>
+            <div className="text-xs text-brand-muted break-all">{affiliateShareUrl(aff.code)}</div>
+            <div className="text-sm text-brand-muted">
+              รอตรวจสอบ: <b>{aff.orders_pending}</b> ออเดอร์ · สำเร็จแล้ว: <b>{aff.orders_qualified}</b> ออเดอร์ ·
+              แต้มสะสม: <b>{aff.points_total}</b> (เดือนนี้ {aff.points_this_month})
+              {!aff.policy.enabled && ' · ยังไม่เปิดรับรางวัล — แอดมินยังไม่ได้เปิดใช้งาน'}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* [G&R 154] รางวัลแนะนำเพื่อน — บันทึกจริงจาก ledger (Owner: เก็บไว้ในโปรไฟล์) */}

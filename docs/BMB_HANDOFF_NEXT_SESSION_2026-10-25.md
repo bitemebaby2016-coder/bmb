@@ -270,3 +270,57 @@ evidence `e2e/g154-gates-evidence.txt` + `e2e/r14Apply154-*.json` → **แล�
 `AI_WORK_STATE.md` → handoff ฉบับนี้ **§10** (ข้าม §8/§9 ที่ปิดแล้ว) → inventory **§6 (Stage 4 entry)**
 → evidence `e2e/g155-gates-evidence.txt` → แล้วลงมือ **STAGE 4 (Engagement & Play)** ทันที
 (ทำเหมือน Stage 1–3 · ไม่ต้องถามซ้ำ · ห้ามเดา · ห้ามข้ามขั้น)
+
+---
+
+## 11. 🔴 SESSION CLOSE รอบ APPLY 155 + STAGE 4 (2026-10-25 · ปิดท้าย §10 · กรอบ G&R ครบทุก stage)
+
+### 11.1 ทำอะไรไปบ้าง (คำสั่ง Owner: "apply 155 และทำสเตจ 4 ต่อ ตามกฏเหมือนเดิม ปิดงานให้ครบหมดตามเป้าหมาย")
+
+**A. PRODUCTION APPLY 155 = ✅ APPLIED + RECORDED (top=155)**
+- เขียน `e2e/r15Apply155.cjs` (staged แบบ r14 เป๊ะ) + รันครบ 6 รุ่น:
+  precheck **11/11** (top=154 · object ยังไม่มีครบ · fixture ว่าง · order-fn untouched) →
+  apply+idempotent-rerun **201/201** → verify **11/11** (RLS deny · seed เป๊ะ · 12 fns ·
+  3 triggers · anon ถูกกัน · ไม่มี backfill) → contract155 PASS (ROLLBACK) →
+  contractRegr 154/153/148 **PASS ทั้งสาม** → record → history top = **155_loyalty_tiers_points**
+- evidence = `e2e/r15Apply155-{precheck,apply155,verify155,contract155,contractRegr,record}.json`
+
+**B. STAGE 4 · Engagement & Play = ✅ DELIVERED ทุกชิ้น** (inspect-first → ออกแบบ → ทำเหมือน 1–3)
+- **inspect-first:** Spin&Win เดิมมีของปลอม 2 จุด (RandomMenuPage: addPoints(3)+คูปอง
+  `RANDOM-xxx` client-side+toast "+3 แต้ม"/"คูปองลด 15%" · ViralPage: สุ่ม [5..100]+addPoints+
+  "5 ครั้ง/วัน" ไม่มี server ตรวจ) · Affiliate = ไม่มีระบบ · catalog = hardcode 4 รายการ
+- **SQL `156_engagement_play.sql`:** ④ `spin_status`/`spin_reward` (advisory lock · เพดานรายวัน
+  Bangkok · audit · `spin_policy` seed **ปิด/0/1ต่อวัน** = ZERO-GUESS §3.1) ·
+  ⑤ `affiliate_codes`/`affiliate_attributions` (RLS deny) + `affiliate_my_code`/`affiliate_claim`
+  (hard block self · unique กันซ้ำ · ออเดอร์ตายไม่รับ · ?aff= mirror ?ref=) +
+  `affiliate_sync_order`+trigger orders/payment_intents (delta-reversal mirror 155 ·
+  **monthly_cap fail-closed** · `affiliate_policy` seed ปิด/0/0 · **ไม่มีช่องเงินสด** §4.1-5) ·
+  ⑦ `rewards_catalog` (seed = 4 รายการเดิมเป๊ะ) + `rewards_catalog_list`/`rewards_admin_list/save/remove`
+  (is_admin + audit) · ขยาย `points_ledger` entry_type += `spin`(>0)/`affiliate` ·
+  **ไม่แตะ signature create_order_with_items**
+- **Contract `contracts_156_engagement_play.sql` G1–G9 PASS (rc=0)** + CI step แล้ว ·
+  replay **001–156 ALL_GREEN** · regression 155/154/153 PASS (4 contracts rc=0)
+- **Client/UI:** `engagementClient.ts` (mirror+validate+ไทยครบ) · RandomMenuPage เลิกของปลอมทั้งหมด ·
+  ViralPage ล้อของจริง+ป้ายกิจกรรมบอก "พรีวิว" · RewardsPage catalog จากตาราง (ไม่มี hardcode
+  fallback) · Layout `?aff=`→sessionStorage · Checkout เรียก `affiliate_claim` หลังออเดอร์ ·
+  ProfilePage การ์ดครีเอเตอร์ · **Admin 3 แผงใน Rules tab:** SpinSettingsPanel ·
+  AffiliateSettingsPanel (validate เปิดต้องมี rate+cap) · RewardsCatalogPanel (CRUD+เปิด/ปิด)
+- **เทสต์+gates:** `engagementPlay.test.ts` 17 ข้อ · tsc 0 · lint **432 ไฟล์** ·
+  vitest **144/1517/0 fail** · build PWA **142** — evidence = **`e2e/g156-gates-evidence.txt`**
+- บทเรียนรอบนี้: SQL fn body ของ `LANGUAGE sql` ต้องเป็น `SELECT ...` (ไม่ใช่ expression เปล่า) ·
+  G7 assertion ตัวเลขผิดเอง (30×3−30=60) · G6 ใช้เส้นทาง refund แทน cancel (state machine) ·
+  vitest ชุดใหญ่ flake ทีละไฟล์ render (empty-render+จำนวนเปลี่ยน) → พิสูจน์เดี่ยว/คู่ผ่าน +
+  isolate:true → รันเครื่องว่าง = 144/1517/0
+
+### 11.2 งานที่เหลือทั้งหมด (เรียงลำดับ — ข้ามขั้นไม่ได้)
+| # | งาน | วิธี/หมายเหตุ | ต้อง Owner? |
+|---|---|---|---|
+| 1 | **migration 156 = รอคำสั่ง "apply 156"** | staged แบบ r15 → เขียน `e2e/r16Apply156.cjs` ตอนสั่ง (precheck→apply→verify→contract→record) · production ยัง record=155 | **ใช่** |
+| 2 | งานรอท่าน (เดิม) | ตรวจ §D status report · D6 ลบ `bitemebaby-5f7.pages.dev` · R-16 พิมพ์จริง · acceptance §4 | **ใช่** |
+| 3 | (เสร็จแล้ว) | 🏁 G&R Rollout ①–⑧ **ครบทั้ง 4 stages** — เหลือ apply 156 + acceptance §4 จึงปิดกรอบได้ | — |
+
+### 11.3 ลำดับอ่านของเซสชันหน้า
+`AI_WORK_STATE.md` → handoff ฉบับนี้ **§11** (ข้าม §8–§10 ที่ปิดแล้ว) → inventory **§6** →
+evidence `e2e/g156-gates-evidence.txt` + `e2e/r15Apply155-*.json` →
+งานต่อ = **รอคำสั่ง "apply 156"** หรืองานที่ท่านสั่งใหม่ (กรอบ G&R ครบทุก stage แล้ว —
+ถ้าไม่มีคำสั่งเพิ่ม = แจ้งปิดงานพร้อม acceptance §4)

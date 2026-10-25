@@ -1,7 +1,14 @@
-import { useState } from 'react'
-import { useRewardsStore } from '@/store/rewardsStore'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { showToast } from '@/components/ui/ToastContainer'
+// [G&R 156] Spin & Win — รางวัลจริงจากเซิร์ฟเวอร์ (เพดานรายวัน · ZERO-FAKE:
+// ห้ามสัญญาแต้ม/คูปองฝั่งเครื่อง — policy ปิด = บอกตรง ๆ ว่ายังไม่เปิด)
+import {
+  fetchSpinStatus,
+  trySpinReward,
+  describeSpinIssue,
+  type SpinStatus,
+} from '@/lib/engagementClient'
 
 const menuItems = [
   { id: '1', name: 'ผัดไทยกุ้งสด', price: 65, image: 'https://images.unsplash.com/photo-1559314809-0d155014e29e?w=300' },
@@ -15,36 +22,77 @@ const menuItems = [
 export function RandomMenuPage() {
   const [selectedItem, setSelectedItem] = useState<typeof menuItems[0] | null>(null)
   const [isSpinning, setIsSpinning] = useState(false)
-  const addPoints = useRewardsStore((s) => s.addPoints)
+  const [lastAward, setLastAward] = useState<string | null>(null)
+  const [spinStatus, setSpinStatus] = useState<SpinStatus | null>(null)
+  const [spinLoaded, setSpinLoaded] = useState(false)
   const navigate = useNavigate()
 
-  function spinWheel() {
+  useEffect(() => {
+    let active = true
+    void fetchSpinStatus().then((s) => {
+      if (!active) return
+      setSpinStatus(s)
+      setSpinLoaded(true)
+    })
+    return () => { active = false }
+  }, [])
+
+  async function spinWheel() {
     if (isSpinning) return
-
     setIsSpinning(true)
-    addPoints(3, 'random_menu_draw')
-    showToast('กำลังสุ่มเมนู... +3 แต้ม', 'info')
+    setLastAward(null)
 
-    setTimeout(() => {
-      const randomIndex = Math.floor(Math.random() * menuItems.length)
-      setSelectedItem(menuItems[randomIndex])
-      setIsSpinning(false)
-      showToast(`ได้คูปองลด 15% สำหรับ ${selectedItem?.name || 'เมนู'}!`, 'success')
-    }, 2000)
+    // รางวัล = เซิร์ฟเวอร์ตัดสินใจเท่านั้น (เพดาน/อัตราจาก policy แอดมิน)
+    let award: string | null = null
+    if (spinStatus?.enabled && spinStatus.remaining_today > 0) {
+      const attempt = await trySpinReward()
+      if (attempt.ok) {
+        award = `+${attempt.result.points} แต้ม`
+        setSpinStatus((prev) => (prev ? { ...prev, ...attempt.result } : prev))
+      } else {
+        showToast(describeSpinIssue(attempt.reason), 'warning')
+      }
+    }
+
+    await new Promise((r) => setTimeout(r, 1500))
+    const picked = menuItems[Math.floor(Math.random() * menuItems.length)]
+    setSelectedItem(picked)
+    setLastAward(award)
+    setIsSpinning(false)
+    showToast(
+      award ? `สุ่มได้ ${picked.name} และได้รับ ${award} จากล้อสุ่ม!` : `สุ่มได้ ${picked.name} ค่ะ`,
+      'success',
+    )
   }
 
-  function useDiscount() {
+  function goOrder() {
     if (!selectedItem) return
-    
-    const discountCode = `RANDOM-${Date.now().toString(36).toUpperCase()}`
-    showToast(`คูปอง: ${discountCode} ลด 15%`, 'success')
     navigate('/menu')
   }
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-6 text-center">
       <h1 className="text-3xl font-bold text-brand-accent mb-2">🎲 คิดไม่ออก?</h1>
-      <p className="text-brand-muted mb-8">สุ่มเมนูให้เลย! ได้คูปองลด 15% ด้วย</p>
+      <p className="text-brand-muted mb-4">สุ่มเมนูให้เลย!</p>
+
+      {/* [G&R 156] สถานะรางวัลล้อสุ่ม — แสดงตามจริงจากเซิร์ฟเวอร์ (ZERO-FAKE) */}
+      <div className="card mb-4 border-2 border-amber-300 bg-amber-50" data-testid="spin-reward-banner">
+        {!spinLoaded ? (
+          <p className="text-sm text-amber-800">⏳ กำลังโหลดสถานะรางวัล…</p>
+        ) : spinStatus === null ? (
+          <p className="text-sm text-amber-800">โหลดสถานะรางวัลไม่สำเร็จ — ยังไม่สัญญาแต้มค่ะ</p>
+        ) : !spinStatus.enabled ? (
+          <p className="text-sm text-amber-800">ยังไม่เปิดรางวัลล้อสุ่ม — สุ่มเมนูได้ตามปกติค่ะ</p>
+        ) : (
+          <div className="text-sm text-amber-800 space-y-1">
+            <div>
+              🎰 รางวัล: <b>{spinStatus.points_per_spin} แต้ม</b>ต่อการหมุน · เหลือ{' '}
+              <b>{spinStatus.remaining_today}</b> ครั้งวันนี้
+            </div>
+            <div className="text-xs">แต้มสะสมของคุณ: {spinStatus.balance} แต้ม</div>
+          </div>
+        )}
+      </div>
 
       {/* Spin Wheel */}
       <div className="card mb-6">
@@ -67,10 +115,12 @@ export function RandomMenuPage() {
             <img src={selectedItem.image} alt={selectedItem.name} className="w-48 h-48 rounded-2xl object-cover mx-auto mb-4" />
             <h3 className="text-2xl font-bold text-brand-accent mb-2">{selectedItem.name}</h3>
             <p className="text-brand-primary text-xl font-bold mb-4">{selectedItem.price} บาท</p>
-            <div className="bg-green-50 p-4 rounded-xl mb-4">
-              <p className="text-green-800 font-medium">🎉 คุณได้รับคูปองลด 15%!</p>
-              <p className="text-sm text-green-600 mt-1">ใช้กับเมนนี้ได้เลย</p>
-            </div>
+            {lastAward && (
+              <div className="bg-green-50 p-4 rounded-xl mb-4" data-testid="spin-award-real">
+                <p className="text-green-800 font-medium">🎉 ได้รับ {lastAward} จริงจากล้อสุ่ม!</p>
+                <p className="text-sm text-green-600 mt-1">ดูประวัติแต้มได้ที่หน้า "รางวัลและแต้ม"</p>
+              </div>
+            )}
           </div>
         )}
 
@@ -83,10 +133,10 @@ export function RandomMenuPage() {
         </button>
       </div>
 
-      {/* Use Discount Button */}
+      {/* Go to menu — ไม่มีคูปองปลอม: ไปสั่งจริง ๆ เท่านั้น */}
       {selectedItem && (
-        <button onClick={useDiscount} className="btn btn-secondary w-full text-lg py-4 mb-6">
-          🛒 ใช้คูปองและไปสั่งเลย
+        <button onClick={goOrder} className="btn btn-secondary w-full text-lg py-4 mb-6">
+          🛒 ไปดูเมนูและสั่งเลย
         </button>
       )}
 
@@ -100,7 +150,9 @@ export function RandomMenuPage() {
           </div>
           <div>
             <div className="text-3xl mb-2">2️⃣</div>
-            <div className="text-sm text-brand-muted">รับคูปองลด 15%</div>
+            <div className="text-sm text-brand-muted">
+              {spinStatus?.enabled ? `ลุ้น ${spinStatus.points_per_spin} แต้ม/วัน` : 'ดูเมนูที่สุ่มได้'}
+            </div>
           </div>
           <div>
             <div className="text-3xl mb-2">3️⃣</div>

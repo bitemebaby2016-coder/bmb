@@ -2,38 +2,36 @@
 
 > **สถานะงานปัจจุบันของโปรเจกต์ Bite Me Baby** ใช้แนบเข้าสู่ Context ตอนเริ่มแชทเสมอ
 
-**last_updated:** 2026-10-25 **🟢 SESSION CLOSED — G&R STAGE 3 (LOYALTY TIERS + POINTS LEDGER) DELIVERED ✓ (migration 155 = ยังไม่ apply — รอคำสั่ง Owner)**
-(gates เขียวทั้งหมด: tsc 0 · lint+brandNameGuard OK (**430 ไฟล์**) · vitest **143 files/1500 tests 0 fail** ·
- build ✓ **PWA 142** · **Docker replay สะอาด 001–155 = ALL_GREEN** ·
- **contract 155 G1–G9 PASS (rc=0) + contractRegr 154/153 PASS** ·
- evidence = `e2e/g155-gates-evidence.txt` · push `8714fa2` แล้ว — **CI ยังไม่ได้ตรวจจริง** ไม่มี `gh` ในเครื่อง)
-**production:** ยังคง **migration top = 154 (APPLIED + RECORDED)** · **155 = DELIVERED แต่ยังไม่ apply**
- (รอคำสั่ง "apply 155" → staged แบบ `r14Apply154` = r15Apply155.cjs — เหมือน 153/154)
-**phase:** 🟢 STAGE 1 = DONE (production) · STAGE 2 = DONE (production) ·
- **STAGE 3 (Loyalty) = DELIVERED ทุกชิ้น (code+contract+CI step+client+admin+tests+gates) — รอ apply 155** ·
- STAGE 4 = ยังไม่เริ่ม (ต่อจากนี้)
+**last_updated:** 2026-10-25 **🟢 SESSION CLOSED — APPLY 155 ✓ (record=155) + G&R STAGE 4 (Engagement & Play) DELIVERED ✓ — กรอบ 4 stages ครบทุกข้อแล้ว (เหลือ apply 156 = รอคำสั่ง)**
+(gates เขียวทั้งหมด: tsc 0 · lint+brandNameGuard OK (**432 ไฟล์**) · vitest **144 files/1517 tests 0 fail** ·
+ build ✓ **PWA 142** · **Docker replay สะอาด 001–156 = ALL_GREEN** ·
+ **contract 156 G1–G9 PASS (rc=0) + regression 155/154/153 PASS (rc=0 ทั้ง 4)** ·
+ evidence = `e2e/g156-gates-evidence.txt` · push แล้ว — **CI ยังไม่ได้ตรวจจริง** ไม่มี `gh` ในเครื่อง)
+**production:** migration **155 = APPLIED + RECORDED ✓** (Owner "apply 155" → `e2e/r15Apply155.cjs`
+ staged 6 รุ่น: precheck 11/11 → apply+rerun 201 → verify 11/11 → contract155 PASS →
+ contractRegr 154/153/148 PASS → record top=155 · evidence = `e2e/r15Apply155-*.json`) ·
+ **156 = DELIVERED แต่ยังไม่ apply — รอคำสั่ง "apply 156"** (staged แบบ r15 = r16Apply156.cjs)
+**phase:** 🟢 STAGE 1 = DONE (production) · STAGE 2 = DONE (production) · STAGE 3 = DONE (production) ·
+ **STAGE 4 (Engagement & Play) = DELIVERED ทุกชิ้น (code+contract+CI step+client+admin+tests+gates) — รอ apply 156** ·
+ 🏁 **G&R Rollout ①–⑧ = ครบทั้ง 4 stages** (กรอบปิดเมื่อ apply 156 + acceptance §4)
 **current_focus:**
-1. **STAGE 3 · Loyalty = DELIVERED (เซสชัน 2026-10-25)** — `155_loyalty_tiers_points.sql`:
-   **inspect-first ก่อน** (ยืนยัน: `customers.loyalty_points` + ตาราง `loyalty_points` = ไม่มี
-   server code แตะเลย · `aiMemory.total_spent` = client · `daily_sales` = ต่อวัน → ยังไม่มีระบบ
-   สะสมยอดสุทธิลูกค้าที่เชื่อถือได้) → `points_ledger` **append-only** (UPDATE โดน trigger
-   `ERR_LEDGER_APPEND_ONLY` · revoke ทุกบทบาท) · purchase/reversal/adjustment · idempotent
-   (PK deterministic + unique partial index) · **refund = delta-reversal** (partial หักตาม
-   `refunded_total_minor` สัดส่วน · ไม่หักซ้ำ) · audit_logs ทุกแถว (แบบแผน 018/124) ·
-   **4 ระดับ Member/Silver≥1,500/Gold≥4,000/Platinum≥8,000 rolling 12 เดือน** · เกณฑ์ =
-   subtotal − ส่วนลด − คืนเงิน (ไม่รวมค่าส่ง · ยกเลิก/คืนเงินเต็ม=0) ·
-   **อัตราแต้ม seed = ปิด/0** (requirements ห้ามเดา — แอดมินเปิดใน Marketing Center แท็บ Rules) ·
-   trigger บน orders+payment_intents → `loyalty_sync_order` จุดเดียว ·
-   RPC `loyalty_my_status/my_history/admin_stats/admin_adjust` + contract 155 (G1–G9 PASS) +
-   CI step แล้ว + `loyaltyClient.ts` (mirror) + RewardsPage/ProfilePage โชว์ข้อมูลจริง +
-   แผง `LoyaltySettingsPanel` ใน Marketing Center แท็บ Rules + เทสต์ 20 ข้อ —
-   รายละเอียด = inventory §6 + evidence `e2e/g155-gates-evidence.txt`
-2. **STAGE 4 · Engagement & Play = งานถัดไป** — ④ Spin&Win (เพิ่มรางวัล/แต้ม) ·
-   ⑤ Affiliate (แต้ม/คูปอง ไม่มีเงินสด) · ⑦ Rewards catalog ย้าย hardcode → ตาราง admin
-3. **รอคำสั่ง:** "apply 155" → เขียน r15Apply155.cjs (staged เหมือน r14) แล้ว apply+record
-4. งานรอ Owner (ไม่ใช่งาน AI): ตรวจ status report §D · D6 ลบทดสอบ pages.dev · R-16 พิมพ์จริง · acceptance §4
-**blocked_by:** ⛔ ไม่มี blocker — งานที่สั่งทั้งหมดเสร็จสมบูรณ์ (Stage 3 = DELIVERED · gates เขียว) ·
- งานต่อทั้งหมด = handoff **§9.2** (Stage 4 · "apply 155" = รอคำสั่ง · งานรอท่าน = §9.2 ข้อ 4)
+1. **STAGE 4 · Engagement & Play = DELIVERED (เซสชัน 2026-10-25)** — `156_engagement_play.sql`:
+   **inspect-first ก่อน** (ยืนยัน: Spin&Win เดิม = สุ่มเมนูล้วนที่มีของปลอมทั้ง 2 จุด —
+   RandomMenuPage addPoints(3)+คูปอง RANDOM-xxx client-side · ViralPage สุ่ม [5..100]+addPoints ·
+   Affiliate = ไม่มีระบบ · catalog = hardcode) → **④ Spin&Win**: `spin_reward` (advisory lock ·
+   เพดานรายวัน Bangkok · audit · seed ปิด/0 · ERR_SPIN_DISABLED/NO_RATE/LIMIT) ·
+   **⑤ Creator Affiliate**: `affiliate_codes`/`affiliate_attributions` + `affiliate_claim`
+   (กัน self/ซ้ำ/ออเดอร์ตาย/ไม่ใช่เจ้าของ · ?aff= mirror ?ref=) + trigger delta-reversal +
+   monthly_cap fail-closed · **ไม่มีช่องเงินสด** · **⑦ Rewards catalog**: ย้าย hardcode 4 รายการ
+   → `rewards_catalog` + CRUD admin (is_admin+audit) · ขยาย ledger entry_type += spin/affiliate ·
+   **ไม่แตะ signature create_order_with_items** · contract 156 G1–G9 PASS + CI step +
+   `engagementClient.ts` + RandomMenu/Viral/Rewards/Profile/Checkout/Layout ZERO-FAKE ของปลอมออกหมด +
+   3 แผง Rules (Spin/Affiliate/Catalog) + เทสต์ 17 ข้อ — รายละเอียด = inventory §6 +
+   evidence `e2e/g156-gates-evidence.txt`
+2. **รอคำสั่ง:** "apply 156" → เขียน r16Apply156.cjs (staged เหมือน r15/r14) แล้ว apply+record
+3. งานรอ Owner (ไม่ใช่งาน AI): ตรวจ status report §D · D6 ลบทดสอบ pages.dev · R-16 พิมพ์จริง · acceptance §4
+**blocked_by:** ⛔ ไม่มี blocker — งานที่สั่งทั้งหมดเสร็จสมบูรณ์ (apply 155 ✓ · Stage 4 = DELIVERED · gates เขียว) ·
+ งานต่อทั้งหมด = handoff **§11.2** (apply 156 = รอคำสั่ง · งานรอท่าน = §11.2 ข้อ 2)
 - (รอบก่อนปิดเซสชัน — ยังคงมีผล): 4 บั๊กหน้าจอ ✓ · production 150/151/152/153 ✓ · stale contracts 8/8 ✓ ·
   legacy 7 เขียว(ไม่ซ่อม) ✓ · R-17 PASS ✓ · G&R เอกสาร+คำตอบ Owner ✓ · `AI_ENTRYPOINT`/`UNIVERSAL_MASTER_AI_RULES` v1.1/v2.1 ✓
 

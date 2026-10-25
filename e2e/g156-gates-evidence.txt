@@ -1,0 +1,108 @@
+BMB G&R STAGE 4 (Engagement & Play · migration 156) — LOCAL GATE EVIDENCE
+Date: 2026-10-25 · Start command: Owner "apply 155 และทำสเตจ 4 ต่อ ตามกฏเหมือนเดิม ปิดงานให้ครบ"
+
+================================================================================
+PART A — PRODUCTION APPLY 155 (staged แบบ r14 · เจ้าของสั่ง "apply 155"):
+  script = e2e/r15Apply155.cjs (precheck → apply155 → verify155 → contract155 →
+  contractRegr → record) · evidence ครบ 6 ไฟล์ = e2e/r15Apply155-*.json
+  * precheck ......... 11/11 PASS (top=154 · backup 8 วัน · ledger/policy/fns/triggers
+                       ยังไม่มีครบ · order-fn untouched · fixture 09915500xx ว่าง)
+  * apply155 ......... 201 + idempotent-rerun 201 → STAGE_OK
+  * verify155 ........ 11/11 PASS (points_ledger RLS=on rows=0 · deny policies=0 ·
+                       policy seed เป๊ะ 1,500/4,000/8,000/12เดือน/pointsปิด ·
+                       12 fns · 3 triggers ถูกตาราง · anon EXECUTE=false ×4 ·
+                       auth=true ×4 · order-fn ไม่แตะ · ledger ไม่มี backfill ·
+                       promos=2/orders=4 คงเดิม)
+  * contract155 ...... 201 ไม่มี ERROR → PASS (ROLLBACK)
+  * contractRegr ..... contracts_154/153/148 ทั้งสาม rc=0 ไม่มี ERROR → PASS
+  * record ........... INSERT version 155 → history top = 155_loyalty_tiers_points
+  ⇒ production: migration top = **155 APPLIED + RECORDED ✓** (orders 4 · ไม่มี backfill)
+
+================================================================================
+PART B — STAGE 4 (④ Spin&Win + ⑤ Creator Affiliate + ⑦ Rewards catalog)
+
+INSPECT-FIRST (§5.2 บังคับ — ตรวจระบบเดิมจริงก่อนสร้าง):
+  * Spin & Win เดิม = "สุ่มเมนูล้วน" ทั้ง 2 จุด: RandomMenuPage (addPoints(3) ฝั่งเครื่อง
+    + toast "+3 แต้ม" + คูปอง RANDOM-xxx สร้างใน client = ของปลอมทั้งหมด) ·
+    ViralPage "ล้อสุ่มแต้ม" (สุ่ม [5..100] + addPoints ฝั่งเครื่อง + ข้อความ "5 ครั้ง/วัน"
+    ที่ไม่มี server ตรวจ)
+  * Creator Affiliate = ไม่มีระบบเลย (มีแค่หัวข้อ "Referral & Affiliate" ใน AdminMarketing)
+  * แคตตาล็อก Rewards = hardcode 4 รายการใน RewardsPage (แอดมินแก้ไม่ได้)
+  ⇒ stage นี้สร้าง server-authoritative ทั้งสาม · ZERO-GUESS (อัตรา seed = ปิด/0) ·
+    ZERO-FAKE (ปิด = บอกตรง ๆ ว่าปิด) · ไม่แตะ signature create_order_with_items
+
+Gates (clean-room ทั้งหมด รันจากเครื่อง dev):
+- npx tsc --noEmit .................. TSC_OK (0 errors)
+- npx vitest run .................... VITEST_OK: 144 files / 1517 tests / 0 fail
+                                    (เดิม 143/1500 + ไฟล์ใหม่ engagementPlay.test.ts 17 ข้อ)
+- npm run lint (eslint + brandNameGuard 432 ไฟล์) ... LINT_OK
+- npm run build ..................... BUILD_OK (vite OK + PWA 142 entries)
+- Docker replay (postgres:16 · local_stack_replica.sh = ทำตาม CI ทุก step):
+    MIGRATIONS 001–156 apply สะอาด (inventory mode 0 fail — 156 ใหม่เข้า chain) +
+    contract 123 + apply 124 + contract 124 + concurrency = ALL_GREEN
+- ชุด contract ใน container เดียวกัน (ไฟล์ final):
+    contracts_156  rc=0 → G1–G9 PASS → "CONTRACT 156: PASS" (ROLLBACK zero data)
+    contracts_155  rc=0 → "CONTRACT 155: PASS" (regression)
+    contracts_154  rc=0 → "CONTRACT 154: PASS" (regression)
+    contracts_153  rc=0 → "CONTRACT 153: PASS" (regression)
+- CI: push แล้ว (step Contract 156 ใหม่จะรันใน Contract Tests) — เครื่องนี้ไม่มี `gh`
+  จึง **ยังไม่ได้ตรวจผล CI จริง** (ห้ามถือเป็นเขียวจนตรวจเห็นด้วยตา)
+
+G1–G9 (ผลจริงจาก NOTICE รอบ final):
+    G1  3 ตาราง RLS deny (0 policy) + ledger types += spin/affiliate + seed 2 policies
+        ปิดทั้งคู่ + catalog seed 4 รายการเป๊ะ + 16 fns + 2 triggers + anon deny .... PASS
+    G2  catalog: list 4 เรียงถูก · non-admin save/list = ERR_FORBIDDEN · validate
+        (ชื่อว่าง/แต้ม0) · save→5 · ปิด=ซ่อน · admin เห็นรายการปิดได้ · remove +
+        audit ครบ 2 แถว ............................................................ PASS
+    G3  spin: default ปิด = ERR_SPIN_DISABLED (ZERO-FAKE) · เปิด+rate0 =
+        ERR_SPIN_NO_RATE · เปิดจริง = +10 แต้ม+audit · เฉย ๆ ครั้งที่ 2 =
+        ERR_SPIN_LIMIT · ปรับเพดาน 1→2 = ปลดบล็อก ................................ PASS
+    G4  affiliate: my_code คงที่ AFF-XXXXXX · normalize · claim กัน self/ซ้ำ/
+        ไม่พบ/ออเดอร์ตาย/ไม่ใช่เจ้าของ · disabled = pending (ไม่แสร้งว่าได้) ....... PASS
+    G5  qualify: เปิด policy → walk delivered = +30 ครั้งเดียว + audit · re-fire/
+        sync ซ้ำ = idempotent · ปิด policy = ไม่จ่าย → เปิดคืน = catch-up ......... PASS
+    G6  cap: monthly_cap 40 < 60+30 = บล็อก(pending) · ปรับ 500 = ปลด ·
+        คืนเงิน → −30 ครั้งเดียว state=reversed · sync ซ้ำนิ่ง (delta-model) ...... PASS
+    G7  admin gates: stats ทุกตัว non-admin = ERR_FORBIDDEN · anon = permission
+        denied · admin ได้ spin stats (2 ปั่น/20 แต้ม) + affiliate stats
+        (2 โค้ด · qualified2/reversed1/pending1 · points 60) ครบ .................... PASS
+    G8  ledger: UPDATE = ERR_LEDGER_APPEND_ONLY · authenticated ลบ/แก้ = denied ·
+        entry_type ผิด/แต้ม0/purchaseซ้ำ = constraint บล็อก (types เดิมยังเข้ม) ..... PASS
+    G9  ZERO-FAKE: create_order_with_items ไม่มี affiliate/spin/loyalty/rewards ใน
+        prosrc · affiliate_policy ไม่มีช่องเงินสดใด ๆ (§4.1 ข้อ 5) ·
+        is_active=false ถูกซ่อนจากหน้าลูกค้า .................................... PASS
+    => CONTRACT 156: PASS
+
+Transparency notes (รอบแรกแดง/เจอปัญหา → แก้ → เขียว):
+- รอบแรก replay แดง: `affiliate_normalize_code` = SQL fn body เป็น expression เปล่า
+  (`upper(...)` ไม่มี SELECT) → "syntax error at upper" → แก้เป็นรูป `SELECT ...;`
+  แบบเดียวกับ referral_normalize_code ของ 154 → replay เขียว
+- G7 รอบแรกแดง: ตัวเลขใน assertion ผิดฝั่งคนเขียนเอง (30×3 − 30 = 60 ไม่ใช่ 90)
+  → แก้ assertion → เขียว (ผล data จริง = 60 ตรง expected ใหม่)
+- G6 เส้นทางยกเลิก: state machine ไม่ให้ delivered → cancelled (บทเรียน 155 G7) →
+  ทดสอบ reversal ผ่านเส้นทาง `payment_status='refund'` แทน (trigger เดียวกัน)
+- contract G1: นับ 15→16 fns หลังเพิ่ม `rewards_admin_list` (แอดมินต้องเห็นรายการ
+  ที่ปิดอยู่เพื่อเปิดกลับได้ · แก้ทั้ง migration + contract + NOTICE)
+- vitest: 3 รอบแรกชุดใหญ่ fail ทีละ "ไฟล์ render" คนละไฟล์/คนละจำนวนข้อ (homeSectionModeCta 1
+  → orderTimeline 4 → 3) — อาการ empty-render + จำนวนเปลี่ยน = scheduling flake ตอน load ·
+  พิสูจน์แล้ว: รันเดี่ยว 6/6 · รันคู่ engagementPlay+orderTimeline 23/23 ·
+  config isolate:true (ไม่มีทางข้าม module) → รันชุดเต็มรอบ 4 (เครื่องว่าง) =
+  **144 files/1517 tests 0 fail = VITEST_OK**
+- อัตราแต้ม Spin/Affiliate: seed = enabled=false + rate 0 + (affiliate cap 0 = ยังไม่จ่าย)
+  — requirements §3.1 ห้ามกำหนดอัตราล่วงหน้า → แอดมินเปิดเองใน AI Marketing Center
+  แท็บ Rules (แผง SpinSettingsPanel/AffiliateSettingsPanel) · fail-closed ทุกชั้น
+- ไม่มีเงินสดให้ครีเอเตอร์เด็ดขาด (§4.1 ข้อ 5) — จ่ายเป็นแต้มเท่านั้น · contract G9
+  assert ว่า policy ไม่มี key เงินสดใด ๆ
+- ไม่แตะ signature create_order_with_items/_i/pickup — attribution = `affiliate_claim`
+  แยกที่ client เรียกหลังออเดอร์สร้าง (mirror `referral_claim` ของ 154 · ?aff= deep-link)
+- RandomMenuPage เดิมสร้างคูปอง RANDOM-xxx ใน client + สัญญา "คูปองลด 15%" → รอบนี้
+  เลิกทั้งหมด (ไปสั่งอย่างเดียว + รางวัลจาก spin_reward จริงเท่านั้น) — ZERO-FAKE
+- ไม่มี production write ใน Part B (contract = ROLLBACK · replay = DB ใน container ชั่วคราว)
+
+REMAINING (ส่งต่อเซสชันหน้า):
+1. Owner สั่ง "apply 156" → staged precheck/apply/verify/contract/record แบบ r15
+   (เขียน r16Apply156.cjs ตอนสั่ง · รอเหมือน 153/154/155)
+2. งานรอท่าน: ตรวจ §D status report · D6 ลบ pages.dev · R-16 พิมพ์จริง · acceptance §4
+3. G&R Rollout ①–⑧ = ครบทั้ง 4 stages แล้ว (Stage 4 = stage สุดท้ายของกรอบ)
+
+===============================================================================

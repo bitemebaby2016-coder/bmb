@@ -10,6 +10,7 @@ import { BackgroundLayer } from './BackgroundLayer'
 import { AmbientMusicToggle } from '../audio/AmbientMusicToggle'
 import { useCartStore } from '@/store/cartStore'
 import { referralCodeFromSearch } from '@/lib/referralClient'
+import { affiliateCodeFromSearch, saveAffiliateClaimCode } from '@/lib/engagementClient'
 import { showToast } from '../ui/ToastContainer'
 
 interface LayoutProps {
@@ -42,6 +43,20 @@ export function Layout({ children, hideBottomNav = false, activeSection = 'home'
     try {
       const url = new URL(window.location.href)
       url.searchParams.delete('ref')
+      window.history.replaceState(null, '', url.pathname + url.search + url.hash)
+    } catch { /* URL แปลก ๆ = ปล่อยตามเดิม */ }
+  }, [])
+
+  // [G&R 156] Deep-link ครีเอเตอร์: `/?aff=CODE` → เก็บลง sessionStorage รอ Checkout
+  // ผูกกับออเดอร์ (affiliate_claim) — แล้ว strip พารามิเตอร์ออกจาก address bar
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const aff = affiliateCodeFromSearch(window.location.search)
+    if (!aff) return
+    saveAffiliateClaimCode(aff)
+    try {
+      const url = new URL(window.location.href)
+      url.searchParams.delete('aff')
       window.history.replaceState(null, '', url.pathname + url.search + url.hash)
     } catch { /* URL แปลก ๆ = ปล่อยตามเดิม */ }
   }, [])

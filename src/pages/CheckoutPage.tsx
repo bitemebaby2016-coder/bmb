@@ -40,6 +40,7 @@ import { normalizePromoCode } from '@/lib/promotionClient'
 import { CouponBox, revalidateCouponForSubmit } from '@/components/CouponBox'
 import { ReferralBox, revalidateReferralForSubmit } from '@/components/ReferralBox'
 import { claimReferralCode, describeReferralClaim } from '@/lib/referralClient'
+import { claimAffiliate, takeAffiliateClaimCode, describeAffiliateClaim } from '@/lib/engagementClient'
 import { getTrustedGpsLocation } from '@/lib/locationLogin'
 import { DeliveryMapPicker } from '@/components/delivery/DeliveryMapPicker'
 import type { OrderMode } from '@/config/platformConfig'
@@ -593,6 +594,19 @@ export function CheckoutPage() {
       } catch {
         showToast('บันทึกโค้ดแนะนำเพื่อนไม่สำเร็จในครั้งนี้ — ติดต่อร้านเพื่อรับสิทธิ์ได้เลย', 'warning')
       }
+    }
+
+    // [G&R 156] ผูกออเดอร์เข้าโค้ดครีเอเตอร์ (มาจากลิงก์ ?aff=) — validate ฝั่งเซิร์ฟเวอร์
+    // ใน affiliate_claim (self/ซ้ำ/ออเดอร์ตาย = ถูกบล็อก) · เงียบเมื่อไม่มีโค้ด · ไม่ขวางชำระเงิน
+    const affCode = takeAffiliateClaimCode()
+    if (affCode) {
+      try {
+        const affClaim = await claimAffiliate(order.order_number, affCode)
+        if (affClaim) {
+          const d = describeAffiliateClaim(affClaim)
+          showToast(d.message, d.tone)
+        }
+      } catch { /* ล้มเหลว = ข้าม — ไม่แสร้งว่าสำเร็จ ไม่ขวางขั้นตอนสั่งซื้อ */ }
     }
 
     // Payment intent created at checkout (server amount; validated again by 008).

@@ -439,3 +439,15 @@ jobs:
             exit 1
           fi
           echo "Contract 155 OK — 4 tiers rolling 12m + append-only points ledger + refund delta-reversal + admin gates"
+
+      - name: Contract 156 — G&R stage 4 engagement (spin rewards + creator affiliate + rewards catalog) (ROLLBACK)
+        run: |
+          set +e
+          out=$(psql -v ON_ERROR_STOP=1 -f e2e/contracts_156_engagement_play.sql 2>&1); rc=$?
+          printf '%s\n' "$out"
+          if [ $rc -ne 0 ]; then
+            msg=$(printf '%s\n' "$out" | grep -m1 'ERROR:' || echo "rc=$rc")
+            echo "::error file=e2e/contracts_156_engagement_play.sql::$msg"
+            exit 1
+          fi
+          echo "Contract 156 OK — spin daily-cap rewards + affiliate no-cash monthly cap + rewards catalog admin table"

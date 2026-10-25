@@ -322,6 +322,10 @@ export function AdminMarketing() {
           <PromotionBudgetPanel />
           <ReferralSettingsPanel />
           <LoyaltySettingsPanel />
+          {/* [G&R 156 · Rollout ④⑤⑦] Engagement & Play — ยืนบนศูนย์กลางเดิมตาม §3 */}
+          <SpinSettingsPanel />
+          <AffiliateSettingsPanel />
+          <RewardsCatalogPanel />
           <div className="card space-y-3">
             <p className="text-sm text-brand-muted">กติกาเหล่านี้เก็บในตาราง marketing_rules (แก้ได้จริง ไม่มีค่าฝังโค้ด)</p>
             <label className="text-sm">จำนวนโพสต์ต่อสัปดาห์
@@ -885,6 +889,330 @@ function LoyaltySettingsPanel() {
           )}
         </div>
       )}
+    </div>
+  )
+}
+
+/**
+ * [G&R 156 · Rollout ④] แผงควบคุม Spin & Win — เก็บใน business_settings.spin_policy
+ *  (Owner §2 ข้อ 4: "ต้องการรางวัล/แต้ม: ใช่") — อัตรา/เพดาน = แอดมินตั้งเอง (ค่าเริ่มต้น ปิด/0
+ *  + จำกัด 1 ครั้ง/วัน · requirements §3.1 ห้ามฝังอัตรา) · ยืนบนแท็บ Rules ตาม §3
+ */
+function SpinSettingsPanel() {
+  const [enabled, setEnabled] = useState(false)
+  const [dailyLimit, setDailyLimit] = useState<number | ''>(1)
+  const [pointsPerSpin, setPointsPerSpin] = useState<number | ''>(0)
+  const [stats, setStats] = useState<Record<string, any> | null>(null)
+  const [busy, setBusy] = useState(false)
+
+  useEffect(() => { void load() }, [])
+
+  async function load() {
+    const settings = await getBusinessSettings()
+    const policy = settings['spin_policy']
+    if (policy && typeof policy === 'object') {
+      if (typeof policy.enabled === 'boolean') setEnabled(policy.enabled)
+      if (Number.isFinite(Number(policy.daily_limit))) setDailyLimit(Number(policy.daily_limit))
+      if (Number.isFinite(Number(policy.points_per_spin))) setPointsPerSpin(Number(policy.points_per_spin))
+    }
+    const { data, error } = await supabase.rpc('spin_admin_stats')
+    setStats(!error && data && typeof data === 'object' ? (data as Record<string, any>) : null)
+  }
+
+  async function handleSave() {
+    const limitN = dailyLimit === '' ? NaN : Number(dailyLimit)
+    const rateN = pointsPerSpin === '' ? NaN : Number(pointsPerSpin)
+    if (!Number.isFinite(limitN) || limitN < 1) { showToast('เพดานต่อวันต้องอย่างน้อย 1 ครั้ง', 'warning'); return }
+    if (!Number.isFinite(rateN) || rateN < 0) { showToast('จำนวนแต้มต้องเป็นตัวเลขไม่น้อยกว่า 0', 'warning'); return }
+    if (enabled && rateN <= 0) { showToast('เปิดรางวัลต้องตั้งจำนวนแต้มต่อหมุนให้มากกว่า 0 ก่อน', 'warning'); return }
+
+    setBusy(true)
+    const ok = await setBusinessSetting('spin_policy', {
+      enabled,
+      daily_limit: Math.floor(limitN),
+      points_per_spin: Math.floor(rateN),
+    })
+    setBusy(false)
+    showToast(ok ? 'บันทึกกติกาล้อสุ่มแล้ว' : 'บันทึกไม่สำเร็จ — ลองใหม่อีกครั้ง', ok ? 'success' : 'error')
+    if (ok) void load()
+  }
+
+  return (
+    <div className="card space-y-3" data-testid="gr-spin-panel">
+      <h3 className="font-bold text-brand-accent">🎰 Spin &amp; Win (รางวัลล้อสุ่ม)</h3>
+      <p className="text-sm text-brand-muted">
+        ล้อสุ่มหน้า "คิดไม่ออก?" และ "กิจกรรม" จะได้แต้มจริงจากเซิร์ฟเวอร์เมื่อเปิดใช้งาน ·
+        มีเพดานรายวันต่อลูกค้า · ปิด = หน้าล้อบอกตรง ๆ ว่ายังไม่เปิด (ไม่สัญญาแต้ม)
+      </p>
+
+      <label className="flex items-center gap-2 text-sm">
+        <input type="checkbox" checked={enabled}
+          onChange={(e) => setEnabled(e.target.checked)} data-testid="gr-spin-enabled" />
+        ✅ เปิดรางวัลล้อสุ่ม (ค่าเริ่มต้น = ปิด — requirements ห้ามกำหนดอัตราล่วงหน้า)
+      </label>
+
+      <div className="grid grid-cols-2 gap-3">
+        <label className="text-sm">จำนวนแต้มต่อการหมุน
+          <input type="number" min={0} className="input w-full" value={pointsPerSpin}
+            onChange={(e) => setPointsPerSpin(e.target.value === '' ? '' : Number(e.target.value))} data-testid="gr-spin-rate" />
+        </label>
+        <label className="text-sm">เพดาน (ครั้ง/วัน/ลูกค้า)
+          <input type="number" min={1} className="input w-full" value={dailyLimit}
+            onChange={(e) => setDailyLimit(e.target.value === '' ? '' : Number(e.target.value))} data-testid="gr-spin-limit" />
+        </label>
+      </div>
+
+      <button className="btn btn-primary" onClick={() => void handleSave()} disabled={busy} data-testid="gr-spin-save">
+        {busy ? '⏳…' : '💾 บันทึกกติกาล้อสุ่ม'}
+      </button>
+
+      {stats && (
+        <div className="rounded-xl bg-brand-bg p-3 text-xs text-brand-muted space-y-1" data-testid="gr-spin-stats">
+          <div>ปั่นวันนี้ {Number(stats.spins_today ?? 0)} ครั้ง · คนปั่น {Number(stats.spinners_today ?? 0)} คน</div>
+          <div>แต้มออกเดือนนี้ {Number(stats.points_this_month ?? 0)} แต้ม</div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+/**
+ * [G&R 156 · Rollout ⑤] แผงควบคุม Creator Affiliate — business_settings.affiliate_policy
+ *  (Owner §2 ข้อ 5: "ไม่มีเงินสด → แต้ม/คูปอง อย่างเดียว") — จ่ายเป็นแต้มเท่านั้น ·
+ *  cap รายเดือน fail-closed (ไม่ตั้ง cap = ยังไม่จ่าย) · ยืนบนแท็บ Rules ตาม §3
+ */
+function AffiliateSettingsPanel() {
+  const [enabled, setEnabled] = useState(false)
+  const [pointsPerOrder, setPointsPerOrder] = useState<number | ''>(0)
+  const [monthlyCap, setMonthlyCap] = useState<number | ''>(0)
+  const [stats, setStats] = useState<Record<string, any> | null>(null)
+  const [busy, setBusy] = useState(false)
+
+  useEffect(() => { void load() }, [])
+
+  async function load() {
+    const settings = await getBusinessSettings()
+    const policy = settings['affiliate_policy']
+    if (policy && typeof policy === 'object') {
+      if (typeof policy.enabled === 'boolean') setEnabled(policy.enabled)
+      if (Number.isFinite(Number(policy.points_per_qualified_order))) setPointsPerOrder(Number(policy.points_per_qualified_order))
+      if (Number.isFinite(Number(policy.monthly_cap))) setMonthlyCap(Number(policy.monthly_cap))
+    }
+    const { data, error } = await supabase.rpc('affiliate_admin_stats')
+    setStats(!error && data && typeof data === 'object' ? (data as Record<string, any>) : null)
+  }
+
+  async function handleSave() {
+    const ptsN = pointsPerOrder === '' ? NaN : Number(pointsPerOrder)
+    const capN = monthlyCap === '' ? NaN : Number(monthlyCap)
+    if (!Number.isFinite(ptsN) || ptsN < 0) { showToast('แต้มต่อออเดอร์ต้องเป็นตัวเลขไม่น้อยกว่า 0', 'warning'); return }
+    if (!Number.isFinite(capN) || capN < 0) { showToast('เพดานต่อเดือนต้องเป็นตัวเลขไม่น้อยกว่า 0', 'warning'); return }
+    if (enabled && ptsN <= 0) { showToast('เปิดรางวัลต้องตั้งแต้มต่อออเดอร์ให้มากกว่า 0 ก่อน', 'warning'); return }
+    if (enabled && capN <= 0) { showToast('เปิดรางวัลต้องตั้งเพดานแต้มต่อเดือนก่อน (ไม่ตั้งเพดาน = ระบบไม่จ่าย — กันจ่ายเพลิน)', 'warning'); return }
+
+    setBusy(true)
+    const ok = await setBusinessSetting('affiliate_policy', {
+      enabled,
+      points_per_qualified_order: Math.floor(ptsN),
+      monthly_cap: Math.floor(capN),
+      qualify_status: 'delivered',
+    })
+    setBusy(false)
+    showToast(ok ? 'บันทึกกติกาครีเอเตอร์แล้ว' : 'บันทึกไม่สำเร็จ — ลองใหม่อีกครั้ง', ok ? 'success' : 'error')
+    if (ok) void load()
+  }
+
+  const att = (stats?.attributions ?? null) as Record<string, unknown> | null
+
+  return (
+    <div className="card space-y-3" data-testid="gr-affiliate-panel">
+      <h3 className="font-bold text-brand-accent">🤝 Creator Affiliate (ลิงก์ครีเอเตอร์)</h3>
+      <p className="text-sm text-brand-muted">
+        ครีเอเตอร์แชร์ลิงก์ <code>?aff=โค้ด</code> → ได้ <b>แต้มล้วน ไม่มีเงินสด</b> (§4.1 ข้อ 5) เมื่อออเดอร์ของผู้ซื้อ
+        ผ่านสถานะที่กำหนด · ห้าม self-affiliate · เพดานแต้มต่อเดือนต่อครีเอเตอร์ (ไม่ตั้งเพดาน = ยังไม่จ่าย)
+      </p>
+
+      <label className="flex items-center gap-2 text-sm">
+        <input type="checkbox" checked={enabled}
+          onChange={(e) => setEnabled(e.target.checked)} data-testid="gr-aff-enabled" />
+        ✅ เปิดรางวัลครีเอเตอร์ (ค่าเริ่มต้น = ปิด)
+      </label>
+
+      <div className="grid grid-cols-2 gap-3">
+        <label className="text-sm">แต้มต่อออเดอร์ที่ผ่านเงื่อนไข
+          <input type="number" min={0} className="input w-full" value={pointsPerOrder}
+            onChange={(e) => setPointsPerOrder(e.target.value === '' ? '' : Number(e.target.value))} data-testid="gr-aff-rate" />
+        </label>
+        <label className="text-sm">เพดาน (แต้ม/ครีเอเตอร์/เดือน)
+          <input type="number" min={0} className="input w-full" value={monthlyCap}
+            onChange={(e) => setMonthlyCap(e.target.value === '' ? '' : Number(e.target.value))} data-testid="gr-aff-cap" />
+        </label>
+      </div>
+
+      <button className="btn btn-primary" onClick={() => void handleSave()} disabled={busy} data-testid="gr-aff-save">
+        {busy ? '⏳…' : '💾 บันทึกกติกาครีเอเตอร์'}
+      </button>
+
+      {stats && (
+        <div className="rounded-xl bg-brand-bg p-3 text-xs text-brand-muted space-y-1" data-testid="gr-aff-stats">
+          <div>โค้ดที่ใช้งาน {Number(stats.codes_active ?? 0)} รหัส</div>
+          {att && (
+            <div>
+              attribution: รอตรวจสอบ {Number(att.pending ?? 0)} · ผ่านเงื่อนไข {Number(att.qualified ?? 0)} ·
+              {' '}ปรับกลับ {Number(att.reversed ?? 0)}
+            </div>
+          )}
+          <div>แต้มออกทั้งหมด {Number(stats.points_total ?? 0)} · เดือนนี้ {Number(stats.points_this_month ?? 0)}</div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+interface CatalogAdminRow {
+  id: string
+  name: string
+  description: string
+  points_cost: number
+  is_active: boolean
+  sort_order: number
+}
+
+/**
+ * [G&R 156 · Rollout ⑦] แคตตาล็อก Rewards — ย้าย hardcode ใน RewardsPage → ตาราง admin
+ *  (Owner §2 ข้อ 7: "ย้าย hardcode → ตาราง admin ตั้งเอง") — CRUD ผ่าน RPC (gate is_admin + audit)
+ */
+function RewardsCatalogPanel() {
+  const [items, setItems] = useState<CatalogAdminRow[] | null>(null)
+  const [editId, setEditId] = useState('')
+  const [name, setName] = useState('')
+  const [description, setDescription] = useState('')
+  const [pointsCost, setPointsCost] = useState<number | ''>(100)
+  const [isActive, setIsActive] = useState(true)
+  const [sortOrder, setSortOrder] = useState<number | ''>(0)
+  const [busy, setBusy] = useState(false)
+
+  useEffect(() => { void load() }, [])
+
+  async function load() {
+    const { data, error } = await supabase.rpc('rewards_admin_list')
+    setItems(!error && Array.isArray(data) ? (data as CatalogAdminRow[]) : null)
+  }
+
+  function resetForm() {
+    setEditId(''); setName(''); setDescription(''); setPointsCost(100); setIsActive(true); setSortOrder(0)
+  }
+
+  function editRow(row: CatalogAdminRow) {
+    setEditId(row.id); setName(row.name); setDescription(row.description)
+    setPointsCost(row.points_cost); setIsActive(row.is_active); setSortOrder(row.sort_order)
+  }
+
+  async function handleSave() {
+    const trimmed = name.trim()
+    if (!trimmed) { showToast('ต้องมีชื่อรางวัล', 'warning'); return }
+    const costN = pointsCost === '' ? NaN : Number(pointsCost)
+    if (!Number.isFinite(costN) || costN <= 0) { showToast('แต้มต้องมากกว่า 0', 'warning'); return }
+    const sortN = sortOrder === '' ? 0 : Number(sortOrder)
+    if (!Number.isFinite(sortN)) { showToast('ลำดับต้องเป็นตัวเลข', 'warning'); return }
+
+    setBusy(true)
+    const { error } = await supabase.rpc('rewards_admin_save', {
+      p_id: editId,
+      p_name: trimmed,
+      p_description: description,
+      p_points_cost: Math.floor(costN),
+      p_is_active: isActive,
+      p_sort_order: Math.floor(sortN),
+    })
+    setBusy(false)
+    if (error) {
+      showToast(error.message?.includes('ERR_INVALID') ? 'ข้อมูลไม่ถูกต้อง — ตรวจชื่อ/จำนวนแต้ม' : 'บันทึกไม่สำเร็จ — ลองใหม่อีกครั้ง', 'error')
+      return
+    }
+    showToast(editId ? 'อัปเดตรายการรางวัลแล้ว' : 'เพิ่มรายการรางวัลแล้ว', 'success')
+    resetForm()
+    void load()
+  }
+
+  async function handleRemove(rowId: string) {
+    if (!window.confirm('ลบรายการรางวัลนี้ออกจากรายการแลกหรือไม่? (บันทึก audit ทุกครั้ง)')) return
+    setBusy(true)
+    const { error } = await supabase.rpc('rewards_admin_remove', { p_id: rowId })
+    setBusy(false)
+    if (error) { showToast('ลบไม่สำเร็จ — ลองใหม่อีกครั้ง', 'error'); return }
+    showToast('ลบรายการรางวัลแล้ว', 'success')
+    if (editId === rowId) resetForm()
+    void load()
+  }
+
+  return (
+    <div className="card space-y-3" data-testid="gr-catalog-panel">
+      <h3 className="font-bold text-brand-accent">🎁 แคตตาล็อก Rewards (รายการแลกแต้ม)</h3>
+      <p className="text-sm text-brand-muted">
+        รายการนี้แทนที่ hardcode เดิมในหน้า "รางวัลและแต้ม" — แก้/เพิ่ม/ลบได้ที่นี่
+        (ทุกครั้งบันทึก audit log · ปิดการใช้งาน = ซ่อนจากหน้าลูกค้า)
+      </p>
+
+      {items === null ? (
+        <p className="text-sm text-brand-muted">โหลดรายการไม่สำเร็จ — ลองใหม่อีกครั้ง</p>
+      ) : items.length === 0 ? (
+        <p className="text-sm text-brand-muted">ยังไม่มีรายการ — เพิ่มรายการแรกด้านล่างเลย</p>
+      ) : (
+        <ul className="space-y-2" data-testid="gr-catalog-list">
+          {items.map((row) => (
+            <li key={row.id} className="flex items-center gap-2 rounded-lg border border-brand-border px-3 py-2 text-sm">
+              <div className="flex-1 min-w-0">
+                <div className="font-medium truncate">
+                  {row.name} <span className="text-brand-muted">· {row.points_cost} แต้ม</span>
+                  {!row.is_active && <span className="ml-1 text-xs text-red-500">(ปิดอยู่)</span>}
+                </div>
+                <div className="text-xs text-brand-muted truncate">{row.description}</div>
+              </div>
+              <button className="btn btn-secondary text-xs" onClick={() => editRow(row)} data-testid={`gr-catalog-edit-${row.id}`}>แก้ไข</button>
+              <button
+                className={`btn text-xs ${row.is_active ? 'btn-secondary' : 'btn-primary'}`}
+                onClick={() => { editRow({ ...row, is_active: !row.is_active }) }}
+              >
+                {row.is_active ? 'ปิด' : 'เปิด'}
+              </button>
+              <button className="btn btn-secondary text-xs text-red-600" onClick={() => void handleRemove(row.id)}>ลบ</button>
+            </li>
+          ))}
+        </ul>
+      )}
+
+      <div className="grid grid-cols-2 gap-3 border-t border-brand-border pt-3">
+        <label className="text-sm col-span-2">ชื่อรางวัล
+          <input type="text" className="input w-full" value={name} placeholder="เช่น คูปองลด 10%"
+            onChange={(e) => setName(e.target.value)} data-testid="gr-catalog-name" />
+        </label>
+        <label className="text-sm col-span-2">คำอธิบาย
+          <input type="text" className="input w-full" value={description}
+            onChange={(e) => setDescription(e.target.value)} />
+        </label>
+        <label className="text-sm">จำนวนแต้ม
+          <input type="number" min={1} className="input w-full" value={pointsCost}
+            onChange={(e) => setPointsCost(e.target.value === '' ? '' : Number(e.target.value))} data-testid="gr-catalog-points" />
+        </label>
+        <label className="text-sm">ลำดับแสดง
+          <input type="number" min={0} className="input w-full" value={sortOrder}
+            onChange={(e) => setSortOrder(e.target.value === '' ? '' : Number(e.target.value))} />
+        </label>
+        <label className="flex items-center gap-2 text-sm col-span-2">
+          <input type="checkbox" checked={isActive} onChange={(e) => setIsActive(e.target.checked)} />
+          เปิดใช้งาน (ปิด = ซ่อนจากหน้าลูกค้า)
+        </label>
+      </div>
+
+      <div className="flex gap-2">
+        <button className="btn btn-primary" onClick={() => void handleSave()} disabled={busy} data-testid="gr-catalog-save">
+          {busy ? '⏳…' : editId ? '💾 อัปเดตรายการ' : '➕ เพิ่มรายการ'}
+        </button>
+        {editId && (
+          <button className="btn btn-secondary" onClick={resetForm} disabled={busy}>ยกเลิก</button>
+        )}
+      </div>
     </div>
   )
 }

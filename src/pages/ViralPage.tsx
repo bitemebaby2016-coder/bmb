@@ -1,7 +1,15 @@
-import { useState } from 'react'
-import { useRewardsStore } from '@/store/rewardsStore'
+import { useEffect, useState } from 'react'
 import { showToast } from '@/components/ui/ToastContainer'
+// [G&R 156] Spin & Win — เดิมสุ่มแต้มฝั่งเครื่อง (ของปลอม) → หมุนรับแต้มจริงผ่าน
+// spin_reward (เพดานรายวันจาก policy แอดมิน · ZERO-FAKE: ปิด = ไม่สัญญา)
+import {
+  fetchSpinStatus,
+  trySpinReward,
+  describeSpinIssue,
+  type SpinStatus,
+} from '@/lib/engagementClient'
 
+// กิจกรรม/ badges = แผนตัวอย่าง (พรีวิวฝั่งเครื่อง — ยังไม่เปิดรับแต้มจริง · §1.3)
 const activities = [
   { id: '1', name: 'Daily Login', description: 'เข้าแอปทุกวัน', points: 2, icon: '📅', progress: 3, target: 7 },
   { id: '2', name: 'Write Review', description: 'รีวิว 5 รายการ', points: 50, icon: '⭐', progress: 2, target: 5 },
@@ -17,18 +25,34 @@ const badges = [
 ]
 
 export function ViralPage() {
-  const addPoints = useRewardsStore((s) => s.addPoints)
   const [spinning, setSpinning] = useState(false)
+  const [spinStatus, setSpinStatus] = useState<SpinStatus | null>(null)
+  const [spinLoaded, setSpinLoaded] = useState(false)
 
-  function handleSpinWheel() {
+  useEffect(() => {
+    let active = true
+    void fetchSpinStatus().then((s) => {
+      if (!active) return
+      setSpinStatus(s)
+      setSpinLoaded(true)
+    })
+    return () => { active = false }
+  }, [])
+
+  async function handleSpinWheel() {
+    if (spinning) return
     setSpinning(true)
-    setTimeout(() => {
-      const rewards = [5, 10, 15, 20, 50, 100]
-      const randomReward = rewards[Math.floor(Math.random() * rewards.length)]
-      addPoints(randomReward, 'spin_wheel')
-      showToast(`ได้ ${randomReward} แต้ม!`, 'success')
-      setSpinning(false)
-    }, 2000)
+    const attempt = await trySpinReward()
+    if (attempt.ok) {
+      setSpinStatus((prev) => (prev ? { ...prev, ...attempt.result } : prev))
+      showToast(`ได้ ${attempt.result.points} แต้ม! (คงเหลือ ${attempt.result.remaining_today} ครั้งวันนี้)`, 'success')
+    } else {
+      showToast(describeSpinIssue(attempt.reason), 'warning')
+      if (attempt.reason === 'disabled' || attempt.reason === 'signed_out') {
+        setSpinStatus((prev) => (prev ? { ...prev, enabled: false } : prev))
+      }
+    }
+    setSpinning(false)
   }
 
   return (
@@ -36,7 +60,8 @@ export function ViralPage() {
       <h1 className="text-3xl font-bold text-brand-accent mb-6">🏅 กิจกรรมและ badges</h1>
 
       <div className="card mb-6">
-        <h3 className="font-bold text-brand-accent mb-4">กิจกรรมประจำวัน</h3>
+        <h3 className="font-bold text-brand-accent mb-1">กิจกรรมประจำวัน</h3>
+        <p className="text-xs text-brand-muted mb-3">แผนกิจกรรม (พรีวิว — ยังไม่เปิดรับแต้มจริง นอกเหนือจากล้อสุ่มด้านล่าง)</p>
         <div className="space-y-3">
           {activities.map((activity) => {
             const progressPercent = (activity.progress / activity.target) * 100
@@ -64,10 +89,22 @@ export function ViralPage() {
       <div className="card mb-6 bg-gradient-to-r from-purple-50 to-pink-50 text-center">
         <h3 className="font-bold text-brand-accent mb-4">ล้อสุ่มแต้ม</h3>
         <div className="py-8">
-          {spinning ? <div className="text-6xl animate-spin mb-4"></div> : <div className="text-6xl mb-4">🎡</div>}
-          <p className="text-brand-muted mb-4">หมุนรับแต้มฟรี! 5 ครั้ง/วัน</p>
-          <button onClick={handleSpinWheel} disabled={spinning} className="btn btn-primary text-lg disabled:opacity-50">
-            {spinning ? '⏳ กำลังงหมุน...' : '🎰 หมุนเลย!'}
+          {spinning ? <div className="text-6xl animate-spin mb-4">🎡</div> : <div className="text-6xl mb-4">🎡</div>}
+          {/* [G&R 156] สถานะจากเซิร์ฟเวอร์จริง — ไม่สัญญาจำนวนครั้ง/แต้มล่วงหน้า (ZERO-FAKE) */}
+          {!spinLoaded ? (
+            <p className="text-brand-muted mb-4">⏳ กำลังโหลดสถานะรางวัล…</p>
+          ) : spinStatus === null ? (
+            <p className="text-brand-muted mb-4">โหลดสถานะรางวัลไม่สำเร็จ — ยังไม่สัญญาแต้มค่ะ</p>
+          ) : !spinStatus.enabled ? (
+            <p className="text-brand-muted mb-4">รางวัลล้อสุ่มยังไม่เปิดใช้งานค่ะ</p>
+          ) : (
+            <p className="text-brand-muted mb-4" data-testid="viral-spin-status">
+              รับ {spinStatus.points_per_spin} แต้ม/ครั้ง · เหลือ {spinStatus.remaining_today} ครั้งวันนี้ ·
+              สะสมแล้ว {spinStatus.balance} แต้ม
+            </p>
+          )}
+          <button onClick={handleSpinWheel} disabled={spinning || !spinStatus?.enabled} className="btn btn-primary text-lg disabled:opacity-50">
+            {spinning ? '⏳ กำลังหมุน...' : '🎰 หมุนเลย!'}
           </button>
         </div>
       </div>

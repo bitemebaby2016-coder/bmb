@@ -4,9 +4,12 @@
 #   ✅ STAGE 1 (Promotions) = IMPLEMENTED + GATES GREEN — ดูหลักฐาน = `e2e/g153-gates-evidence.txt`
 #      (migration 153 + contract 153 + client mirror + ฟอร์มแอดมิน + แผงงบใน Marketing Center + เทสต์ 22 ข้อ)
 #   ✅ STAGE 2 (Referral) = DELIVERED + production applied (record=154) — evidence `e2e/g154-gates-evidence.txt`
-#   ✅ STAGE 3 (Loyalty Tiers + Points Ledger) = DELIVERED — evidence `e2e/g155-gates-evidence.txt`
-#      (migration 155 + contract 155 G1–G9 + CI step + loyaltyClient + แผง Loyalty + เทสต์ 20 ข้อ · ยังไม่ apply)
-#   ⏳ STAGE 4 (Engagement & Play) = ยังไม่เริ่ม — ข้ามขั้นไม่ได้ (§5.8 ⑧)
+#   ✅ STAGE 3 (Loyalty Tiers + Points Ledger) = DELIVERED + production applied (record=155)
+#      — evidence `e2e/g155-gates-evidence.txt` + apply `e2e/r15Apply155-*.json`
+#   ✅ STAGE 4 (Engagement & Play: ④ Spin&Win + ⑤ Creator Affiliate + ⑦ Rewards catalog)
+#      = DELIVERED (ยังไม่ apply — รอคำสั่ง "apply 156") — evidence `e2e/g156-gates-evidence.txt`
+#      (migration 156 + contract 156 G1–G9 + CI step + engagementClient + 3 แผง Rules + เทสต์ 17 ข้อ)
+#   🏁 G&R Rollout ①–⑧ = ครบทั้ง 4 stages แล้ว (กรอบ Growth & Rewards ปิดได้เมื่อ apply 156 + acceptance §4)
 #   ข้อความเดิมด้านล่าง (PROPOSAL ONLY / ห้าม implement) = บันทึกก่อนคำสั่ง start — คงไว้เป็น history
 #   ส่วน §1/§5 ยังคงเป็นกติกาที่ถูกต้องทุกประการ (ไม่มีการตีความเพิ่ม)
 
@@ -248,7 +251,40 @@ Engagement & Play — ตามหลัง
     หน้าต่าง · 3 เกณฑ์ validate เรียงตรง · เปิดอัตราแต้ม + rate · สถิติ tier distribution + แต้มรวม)
   - **เทสต์:** `loyaltyTiers.test.ts` 20 ข้อ (tier boundaries/JSON mirror/net formula/progress/fetchers/ไทย) +
     evidence รอบปิดเซสชัน = `e2e/g155-gates-evidence.txt` (gates เขียวทั้งหมด · replay 001–155)
-- ⏳ **STAGE 4 (Engagement & Play)** = งานถัดไป (ยังไม่เริ่ม — ตามลำดับ Rollout ข้อ ⑧ ข้ามไม่ได้)
-- ✅ **migration 154 = APPLIED + RECORDED บน production แล้ว (2026-10-25)** — ดูหลักฐาน = หัวข้อ
-  PRODUCTION APPLY 154 ด้านบน + `e2e/r14Apply154-*.json` · migration ถัดไป (155+) = **รอคำสั่ง apply แยก**
-- ⛔ เงื่อนไขเลื่อนขั้น (§5.8) ยังคงอยู่: business rules + server validation + tests + สิทธิ์ ต้องผ่านก่อนทุกครั้ง
+- ✅ **STAGE 4 (Engagement & Play) = DELIVERED** (2026-10-25 — Owner สั่งต่อจาก apply 155:
+  "ทำสเตจ 4 ต่อ ตามกฏเหมือนเดิม" · inspect-first → ออกแบบ → ทำเหมือน Stage 1–3)
+  - **inspect-first:** Spin&Win เดิม = สุ่มเมนูล้วน 2 จุดที่มีของปลอม (`RandomMenuPage`:
+    addPoints(3) ฝั่งเครื่อง + คูปอง `RANDOM-xxx` สร้างใน client + toast "+3 แต้ม" ·
+    `ViralPage`: สุ่ม [5..100] + addPoints ฝั่งเครื่อง + "5 ครั้ง/วัน" ที่ไม่มี server ตรวจ) ·
+    **Creator Affiliate = ไม่มีระบบเลย** · แคตตาล็อก = hardcode 4 รายการใน RewardsPage
+  - **SQL: `supabase/migrations/156_engagement_play.sql`** — ④ **Spin & Win**: `spin_status`/
+    `spin_reward` (advisory lock · **เพดานรายวัน Bangkok** · audit ทุกครั้ง · ปิด = ไม่จ่าย
+    · rate 0 = ERR_SPIN_NO_RATE) + `spin_policy` seed `{enabled:false, daily_limit:1,
+    points_per_spin:0}` · ⑤ **Creator Affiliate**: `affiliate_codes` + `affiliate_attributions`
+    (RLS deny) + `affiliate_my_code`/`affiliate_claim` (**กัน self/ซ้ำ/ออเดอร์ตาย/ไม่ใช่เจ้าของ**
+    · ?aff= deep-link mirror ?ref=) + `affiliate_sync_order` (trigger orders+payment_intents ·
+    **delta-reversal** mirror 155 · **monthly_cap fail-closed** · qualified=delivered) +
+    `affiliate_policy` seed ปิด/0/0 · **ไม่มีเงินสดแม้แต่ช่องเดียว** (§4.1 ข้อ 5) ·
+    ⑦ **Rewards catalog**: `rewards_catalog` (RLS deny · seed = 4 รายการเดิมเป๊ะ ย้ายจาก
+    hardcode §2 ข้อ 7) + `rewards_catalog_list`/`rewards_admin_list/save/remove` (is_admin +
+    audit) · **ขยาย `points_ledger`** entry_type += `spin`(>0) / `affiliate`(มีเครื่องหมาย) ·
+    **ไม่แตะ signature create_order_with_items**
+  - **Contract `e2e/contracts_156_engagement_play.sql` G1–G9 PASS (ROLLBACK rc=0)** + CI step แล้ว
+    + regression 155/154/153 PASS (ทั้ง 4 contracts rc=0 · replay 001–156 ALL_GREEN)
+  - **Client:** `src/lib/engagementClient.ts` (mirror policies/fetchers/Thai strings) ·
+    **RandomMenuPage เลิกของปลอม** (คูปอง RANDOM-/+3 แต้ม/คูปอง 15% ออกหมด · รางวัลจาก
+    `spin_reward` เท่านั้น · ปิด = บอกตรง ๆ) · **ViralPage ล้อของจริง** + ป้ายกิจกรรม =
+    พรีวิวชัดเจน · **RewardsPage catalog จากตาราง** (ไม่มี hardcode fallback) ·
+    Layout `?aff=` → sessionStorage · **Checkout claim `affiliate_claim`** หลังออเดอร์สำเร็จ ·
+    ProfilePage การ์ดครีเอเตอร์ (โค้ด+ลิงก์+สถิติ)
+  - **Admin:** 3 แผงใน AI Marketing Center แท็บ Rules — `SpinSettingsPanel` (เปิด/อัตรา/เพดาน/
+    สถิติ) · `AffiliateSettingsPanel` (เปิด/แต้ม/เพดานรายเดือน fail-closed validate/
+    attribution stats) · `RewardsCatalogPanel` (CRUD ครบ · เปิด-ปิดรายการ · audit ทุกครั้ง)
+  - **เทสต์+gates:** `engagementPlay.test.ts` 17 ข้อ · tsc 0 · lint+brandNameGuard **432 ไฟล์** ·
+    vitest **144 files/1517 tests 0 fail** · build ✓ PWA **142** ·
+    Docker replay **001–156 ALL_GREEN** — evidence = **`e2e/g156-gates-evidence.txt`**
+- ✅ **migration 155 = APPLIED + RECORDED บน production แล้ว (2026-10-25)** — staged 6 รุ่น:
+  precheck 11/11 → apply+rerun 201 → verify 11/11 → contract155 PASS → contractRegr 154/153/148
+  PASS → record top=155 · evidence = **`e2e/r15Apply155-*.json`** (script `e2e/r15Apply155.cjs`)
+- ⏳ **migration 156 = ยังไม่ apply — รอคำสั่ง Owner "apply 156"** (staged แบบ r15 = r16Apply156.cjs)
+- ⛔ เงื่อนไขเลื่อนขั้น (§5.8) ยังคงอยู่: business rules + server validation + tests + สิทธิ์ ต้องผ่านก่อนทุกครั้ง (ผ่านครบแล้วสำหรับทั้ง 4 stages — เหลือ apply 156 + acceptance §4)
