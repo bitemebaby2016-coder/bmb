@@ -1,0 +1,20 @@
+[
+  {
+    "label": "contract-153-regression",
+    "status": 201,
+    "data": [
+      {
+        "set_config": "{\"sub\":\"00000000-0000-4000-8000-000000c15301\",\"role\":\"service_role\"}"
+      }
+    ]
+  },
+  {
+    "label": "contract-148-regression",
+    "status": 201,
+    "data": [
+      {
+        "set_config": "{\"sub\":\"00000000-0000-4000-8000-000000c14801\",\"role\":\"service_role\"}"
+      }
+    ]
+  }
+]

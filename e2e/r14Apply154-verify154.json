@@ -1,0 +1,155 @@
+[
+  {
+    "label": "customers-cols",
+    "status": 201,
+    "data": [
+      {
+        "column_name": "referral_code",
+        "data_type": "text"
+      },
+      {
+        "column_name": "referred_by",
+        "data_type": "text"
+      }
+    ]
+  },
+  {
+    "label": "attributions-table",
+    "status": 201,
+    "data": [
+      {
+        "relname": "referral_attributions",
+        "relrowsecurity": true,
+        "rows": 0
+      }
+    ]
+  },
+  {
+    "label": "rewards-table",
+    "status": 201,
+    "data": [
+      {
+        "relname": "referral_rewards",
+        "relrowsecurity": true,
+        "rows": 0
+      }
+    ]
+  },
+  {
+    "label": "deny-policies",
+    "status": 201,
+    "data": [
+      {
+        "policies": 0
+      }
+    ]
+  },
+  {
+    "label": "policy-seed",
+    "status": 201,
+    "data": [
+      {
+        "key": "referral_policy",
+        "value": {
+          "enabled": true,
+          "qualify_status": "delivered",
+          "share_base_url": "",
+          "min_order_amount": 0,
+          "claim_window_hours": 72,
+          "friend_reward_baht": 30,
+          "coupon_validity_days": 30,
+          "referrer_monthly_cap": 20,
+          "referrer_reward_baht": 30
+        }
+      }
+    ]
+  },
+  {
+    "label": "fns-exist",
+    "status": 201,
+    "data": [
+      {
+        "fn_count": 13
+      }
+    ]
+  },
+  {
+    "label": "trigger-exists",
+    "status": 201,
+    "data": [
+      {
+        "tgname": "trg_referral_order_status",
+        "on_table": "orders"
+      }
+    ]
+  },
+  {
+    "label": "normalizers",
+    "status": 201,
+    "data": [
+      {
+        "intl_to_local": "0812345678",
+        "local_fmt": "0812345678",
+        "code_norm": "BMB-ABC1234"
+      }
+    ]
+  },
+  {
+    "label": "anon-privs",
+    "status": 201,
+    "data": [
+      {
+        "proname": "referral_admin_stats",
+        "anon_exec": false
+      },
+      {
+        "proname": "referral_claim",
+        "anon_exec": false
+      },
+      {
+        "proname": "referral_my_code",
+        "anon_exec": false
+      },
+      {
+        "proname": "referral_preview",
+        "anon_exec": true
+      }
+    ]
+  },
+  {
+    "label": "order-fn-still-untouched",
+    "status": 201,
+    "data": [
+      {
+        "hits": 0
+      }
+    ]
+  },
+  {
+    "label": "backfill-complete",
+    "status": 201,
+    "data": [
+      {
+        "missing_codes": 0
+      }
+    ]
+  },
+  {
+    "label": "promo-rows-intact",
+    "status": 201,
+    "data": [
+      {
+        "promo_rows": 2
+      }
+    ]
+  },
+  {
+    "label": "orders-untouched",
+    "status": 201,
+    "data": [
+      {
+        "orders": 4
+      }
+    ]
+  }
+]

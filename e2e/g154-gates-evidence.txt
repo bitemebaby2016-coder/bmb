@@ -42,3 +42,25 @@ REMAINING (ส่งต่อเซสชันหน้า):
 1. Owner สั่ง "apply 154" -> staged precheck/apply/verify/contract/record แบบ r13
 2. STAGE 3 (Loyalty Tiers) — inspect ระบบบันทึกยอดสุทธิเดิมก่อน (ข้ามขั้นไม่ได้)
 3. งานรอท่านเดิม: ตรวจ §D status report - D6 ลบ pages.dev - R-16 พิมพ์จริง - acceptance §4
+
+================================================================================
+PRODUCTION APPLY 154 (Owner directive 2026-10-25: "apply 154") — DONE ทุก stage
+Script: e2e/r14Apply154.cjs (staged แบบ r13Apply153 เป๊ะ)
+Evidence: e2e/r14Apply154-{precheck,apply154,verify154,contract154,contractRegr,record}.json
+
+| Stage       | ผล |
+|-------------|-----|
+| precheck    | 12/12 — history top=153 (154 ยังไม่มี) · backup ใหม่ 8 · customers cols/2 tables/ |
+|             | policy row/fns 13/trigger = ยังไม่มีทุกตัว · order-fn ไม่มี 'referral' + shape 148 |
+|             | · fixture phones clash=0 (บทเรียน G4) · customers backfill scale = 5 แถว |
+| apply154    | 201 + **idempotent-rerun 201** -> STAGE_OK |
+| verify154   | **13/13** — คอลัมน์ referral_code/referred_by · 2 ตาราง RLS=true + policies 0 |
+|             | · policy seed ครบ 9 keys (enabled/30/30/delivered/30วัน/cap20/72ชม./min0/base) |
+|             | · fns 13 · trigger trg_referral_order_status on orders · normalizers ตรง (+66→0) |
+|             | · anon: my_code/claim/stats=denied, preview=allowed · backfill=0 (ครบทุกโค้ด) |
+|             | · promotions 2 / orders 4 = ไม่แตะ · order-fn ยังไม่มี 'referral' (ไม่ถูก rewrite) |
+| contract154 | 201 ไม่มี ERROR -> DO block ถึง 'CONTRACT 154: PASS' = **G1-G9 PASS (ROLLBACK zero data)** |
+| contractRegr| contracts_153 + contracts_148 = 201 ไม่มี ERROR (stage ก่อน + order spine ยังเขียว) |
+| record      | **history top = 154** (154_referral_program บันทึกแล้ว) |
+
+=> migration 154 = APPLIED + RECORDED บน production (ivkdfognyiwjcmrhcnwz) เรียบร้อย

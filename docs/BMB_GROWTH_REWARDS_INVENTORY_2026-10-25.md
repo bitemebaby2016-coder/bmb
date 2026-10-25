@@ -172,6 +172,13 @@ Engagement & Play — ตามหลัง
   precheck 9/9 (top=152 · backup ใหม่ 8 · 153 ยังไม่มี) → apply+idempotent-rerun 201 → verify 11/11 →
   contract153 บนโปรดักชั่น PASS (status 201 ไม่มี error · ROLLBACK = zero persisted data) → contractRegr 148 PASS →
   record: history top = **153** — evidence = `e2e/r13Apply153-{precheck,apply153,verify153,contract153,contractRegr,record}.json`
+- ✅ **PRODUCTION APPLY 154 = เสร็จ + RECORD แล้ว (Owner คำสั่ง "apply 154" 2026-10-25)** — staged
+  `e2e/r14Apply154.cjs` ผ่านครบทุก stage: **precheck 12/12** (top=153 · backup 8 · ของใหม่ยังไม่มี
+  ทุกตัว · fixture phones clash=0) → **apply+idempotent-rerun 201** → **verify 13/13** (คอลัมน์ 2 ·
+  2 ตาราง RLS=true/policies 0 · policy seed 9 keys · fns 13 · trigger ติด · normalizers ตรง ·
+  anon ถูกกัน · backfill ครบ · promo/orders ไม่แตะ) → **contract154 บนโปรดักชั่น PASS**
+  (201 ไม่มี ERROR = G1–G9 · ROLLBACK zero data) → **contractRegr 153+148 PASS** →
+  **record: history top = 154** — evidence = `e2e/r14Apply154-{precheck,apply154,verify154,contract154,contractRegr,record}.json`
 - ✅ **STAGE 2 (Referral) = IMPLEMENTED + contract 154 PASS** (2026-10-25 — Owner: "อนุมัติตามนายแนะนำ"
   + ยืนยันรายการทดสอบ OTP ผ่านแล้ว → ลงมือ inspect-first ครบแล้ว ไม่ต้องถามซ้ำ)
   - **inspect จริงก่อนเขียน (ไม่เดา):** auth = OTP `quick_login`/`guest_checkout` (mirror
@@ -204,5 +211,6 @@ Engagement & Play — ตามหลัง
   - **เทสต์:** `referralProgram.test.ts` (mirror/gate/claim payload/persistence) +
     evidence รอบปิดเซสชัน = `e2e/g154-gates-evidence.txt`
 - ⏳ **STAGE 3 (Loyalty Tiers) → STAGE 4 (Engagement & Play)** = ยังไม่เริ่ม (ตามลำดับ Rollout ข้อ ⑧ — ข้ามไม่ได้)
-- ⛔ **production apply migration 154 = ยังไม่ทำ — รอคำสั่ง apply แยก** (staged แบบ `r13Apply153`)
+- ✅ **migration 154 = APPLIED + RECORDED บน production แล้ว (2026-10-25)** — ดูหลักฐาน = หัวข้อ
+  PRODUCTION APPLY 154 ด้านบน + `e2e/r14Apply154-*.json` · migration ถัดไป (155+) = **รอคำสั่ง apply แยก**
 - ⛔ เงื่อนไขเลื่อนขั้น (§5.8) ยังคงอยู่: business rules + server validation + tests + สิทธิ์ ต้องผ่านก่อนทุกครั้ง

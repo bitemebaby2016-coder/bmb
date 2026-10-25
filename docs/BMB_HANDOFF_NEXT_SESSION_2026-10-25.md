@@ -184,7 +184,7 @@
 ### 8.2 งานที่เหลือทั้งหมด — เรียงลำดับ (ข้ามขั้นไม่ได้)
 | # | งาน | วิธี/หมายเหตุ | ต้อง Owner? |
 |---|---|---|---|
-| 0 | **production apply migration 154** | staged แบบ `e2e/r13Apply153.cjs` (precheck→apply+idempotent→verify→contract→record) — **รอคำสั่ง apply แยก** | **ใช่** |
+| 0 | ~~production apply migration 154~~ ✅ **ทำแล้ว → ดู §9.1** | staged แบบ `e2e/r13Apply153.cjs` — **ทำเสร็จแล้ว (record=154)** | **ใช่ → เสร็จ** |
 | 1 | **STAGE 3 · Loyalty Tiers** | ข้อ ② ก่อน: **inspect ระบบบันทึกยอดสุทธิเดิม** (ยังไม่สร้างใหม่ทันที) → 4 ระดับ Member/Silver(1,500)/Gold(4,000)/Platinum(8,000) rolling 12 เดือน (§5.2) → points ledger+audit → ทำเหมือน Stage 1 (migration + contract + CI + client + admin + tests + gates) | ไม่ |
 | 2 | **STAGE 4 · Engagement & Play** | ④ Spin&Win (มีรางวัล/แต้ม) · ⑤ Affiliate (แต้ม/คูปอง ไม่มีเงินสด) · ⑦ Rewards catalog = ย้าย hardcode → ตาราง admin | ไม่ |
 | 3 | งานรอท่าน (เดิมจาก §6.2 ข้อ 1–4) | ตรวจ §D ของ status report · D6 ลบทดสอบ pages.dev · R-16 พิมพ์จริง · acceptance §4 | **ใช่** |
@@ -193,3 +193,36 @@
 `AI_WORK_STATE.md` → handoff ฉบับนี้ **§8** → inventory **§6 (Stage 2 entry)** → evidence
 `e2e/g154-gates-evidence.txt` → แล้วลงมือ **Stage 3 (Loyalty)** (เริ่มจาก inspect ระบบยอดสุทธิเดิม —
 **ถ้าท่านยังไม่สั่ง apply 154 ก็ทำ Stage 3 code ต่อได้** เพราะ 154 ยังไม่กระทบ production)
+
+---
+
+## 9. 🔴 SESSION CLOSE รอบ PRODUCTION APPLY 154 (2026-10-25 · ปิดท้าย §8)
+
+### 9.1 PRODUCTION APPLY 154 = เสร็จสมบูรณ์ ✅ (ตามคำสั่งท่าน "apply 154")
+ทำแบบ **staged เหมือน r13Apply153/r8Apply148 เป๊ะ** — สคริปต์ใหม่ `e2e/r14Apply154.cjs`
+(Management API · token จาก `.env.local` · project `ivkdfognyiwjcmrhcnwz`):
+
+| Stage | ผล | หลักฐาน |
+|---|---|---|
+| **precheck** | **12/12** — history top=153 (154 ยังไม่มี) · backup ใหม่ 8 · customers cols/2 ตาราง/policy row/fns 13/trigger = ยังไม่มีทุกตัว · order-fn ไม่มี 'referral' + shape 148 · fixture phones clash=0 · customers=5 แถว | `r14Apply154-precheck.json` |
+| **apply154** | 201 + **idempotent-rerun 201** → STAGE_OK | `-apply154.json` |
+| **verify154** | **13/13** — คอลัมน์ 2 · 2 ตาราง RLS=true + policies 0 · policy seed 9 keys (฿30/฿30·delivered·30วัน·cap20·72ชม.) · fns 13 · trigger ติดบน orders · normalizers ตรง · anon ถูกกัน (my_code/claim/stats=deny · preview=allow) · backfill ครบ 0 · promotions 2/orders 4 ไม่แตะ | `-verify154.json` |
+| **contract154** | 201 ไม่มี ERROR → DO ถึง `CONTRACT 154: PASS` = **G1–G9 PASS · ROLLBACK zero persisted data** | `-contract154.json` |
+| **contractRegr** | contracts_153 + contracts_148 = 201 ไม่มี ERROR ✓ | `-contractRegr.json` |
+| **record** | **history top = 154** (`154_referral_program`) ✓ | `-record.json` |
+
+⇒ **migration 154 = APPLIED + RECORDED บน production เรียบร้อย** · ไม่มีการเขียนข้อมูลธุรกิจใด ๆ
+(contract ทั้งหมด ROLLBACK · verify อ่านอย่างเดียว) · สรุปยาว = `e2e/g154-gates-evidence.txt` ท้ายไฟล์
+
+### 9.2 งานที่เหลือทั้งหมด — เรียงลำดับให้เซสชันหน้า (ข้ามขั้นไม่ได้)
+| # | งาน | วิธี/หมายเหตุ | ต้อง Owner? |
+|---|---|---|---|
+| 1 | **STAGE 3 · Loyalty Tiers (เริ่มตรงนี้)** | **inspect-first:** ตรวจระบบบันทึกยอดสุทธิเดิมจริงก่อน (ยังไม่สร้างระบบใหม่ทันที — §5.2) → points ledger append-only + idempotency + refund reversal + audit (แบบแผน audit_logs/124) → 4 ระดับ Member/Silver(≥1,500)/Gold(≥4,000)/Platinum(≥8,000) rolling 12 เดือน · เกณฑ์ = ยอดสุทธิไม่รวมค่าส่ง · คืนเงินปรับตามต้นทาง · ทำเหมือน Stage 1/2: migration + contract + CI step + client mirror + admin + tests + gates | ไม่ |
+| 2 | **STAGE 4 · Engagement & Play** | ④ Spin&Win (ของเดิมสุ่มเมนู → เพิ่มรางวัล/แต้ม) · ⑤ Affiliate (แต้ม/คูปอง ไม่มีเงินสด) · ⑦ Rewards catalog = ย้าย hardcode `RewardsPage` → ตาราง admin ตั้งเอง · มีเพดานความถี่/ต้นทุน/กันกิจกรรมซ้ำ | ไม่ |
+| 3 | migration ใหม่ 155+ | staged แบบ `r14Apply154` (precheck→apply→verify→contract→record) — **รอคำสั่ง apply แยก** เหมือน 153/154 | **ใช่** |
+| 4 | งานรอท่าน (เดิมจาก §6.2 ข้อ 1–4) | ตรวจ §D ของ status report · D6 ลบทดสอบ `bitemebaby-5f7.pages.dev` · R-16 พิมพ์จริง · acceptance §4 | **ใช่** |
+
+### 9.3 ลำดับอ่านของเซสชันหน้า
+`AI_WORK_STATE.md` → handoff ฉบับนี้ **§9** (ข้าม §8 ที่ปิดแล้ว) → inventory **§6** →
+evidence `e2e/g154-gates-evidence.txt` + `e2e/r14Apply154-*.json` → **แล้วลงมือ STAGE 3 (Loyalty)**
+ด้วยแนวทาง inspect-first → ออกแบบ → ทำเหมือน Stage 1/2 (ไม่ต้องถามซ้ำเรื่องแนวทาง · ห้ามเดา · ห้ามข้ามขั้น)

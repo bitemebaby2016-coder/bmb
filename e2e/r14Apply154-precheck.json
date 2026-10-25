@@ -1,0 +1,127 @@
+[
+  {
+    "label": "history",
+    "status": 201,
+    "data": [
+      {
+        "version": "153",
+        "name": "153_promotion_campaign_controls"
+      },
+      {
+        "version": "152",
+        "name": "152_menu_schedule_execute_revoke"
+      },
+      {
+        "version": "151",
+        "name": "151_order_status_history_baseline"
+      },
+      {
+        "version": "150",
+        "name": "150_orders_delivery_address_parity"
+      },
+      {
+        "version": "149",
+        "name": "149_round_archive_cleanup"
+      }
+    ]
+  },
+  {
+    "label": "backup-recency",
+    "status": 201,
+    "data": [
+      {
+        "recent_backups": 8
+      }
+    ]
+  },
+  {
+    "label": "customers-referral-cols-absent-yet",
+    "status": 201,
+    "data": [
+      {
+        "new_cols": 0
+      }
+    ]
+  },
+  {
+    "label": "attributions-table-absent-yet",
+    "status": 201,
+    "data": [
+      {
+        "has_table": 0
+      }
+    ]
+  },
+  {
+    "label": "rewards-table-absent-yet",
+    "status": 201,
+    "data": [
+      {
+        "has_table": 0
+      }
+    ]
+  },
+  {
+    "label": "referral-policy-absent-yet",
+    "status": 201,
+    "data": [
+      {
+        "has_row": 0
+      }
+    ]
+  },
+  {
+    "label": "referral-fns-absent-yet",
+    "status": 201,
+    "data": [
+      {
+        "has_fns": 0
+      }
+    ]
+  },
+  {
+    "label": "trigger-absent-yet",
+    "status": 201,
+    "data": [
+      {
+        "has_trg": 0
+      }
+    ]
+  },
+  {
+    "label": "order-fn-untouched",
+    "status": 201,
+    "data": [
+      {
+        "hits": 0
+      }
+    ]
+  },
+  {
+    "label": "order-fn-is-148-shape",
+    "status": 201,
+    "data": [
+      {
+        "hits": 1
+      }
+    ]
+  },
+  {
+    "label": "fixture-phones-free",
+    "status": 201,
+    "data": [
+      {
+        "clash": 0
+      }
+    ]
+  },
+  {
+    "label": "customers-rows-backfill-scale",
+    "status": 201,
+    "data": [
+      {
+        "customers_rows": 5
+      }
+    ]
+  }
+]

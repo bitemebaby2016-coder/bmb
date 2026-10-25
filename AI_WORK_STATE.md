@@ -2,14 +2,17 @@
 
 > **สถานะงานปัจจุบันของโปรเจกต์ Bite Me Baby** ใช้แนบเข้าสู่ Context ตอนเริ่มแชทเสมอ
 
-**last_updated:** 2026-10-25 **🔴 SESSION CLOSED — G&R STAGE 2 (REFERRAL) DELIVERED ✓ (migration 154 ยังไม่ apply production)**
+**last_updated:** 2026-10-25 **🔴 SESSION CLOSED — G&R STAGE 2 (REFERRAL) DELIVERED + PRODUCTION APPLIED ✓ (record=154)**
 (gates ทั้งหมดเขียว: tsc 0 · lint+brandNameGuard OK (428 ไฟล์) · vitest **142 files/1480 tests 0 fail** ·
  build ✓ PWA 141 · **Docker replay สะอาด 001–154 = MIGRATIONS_OK** · **contracts 20/20** ·
- **contract 154 G1–G9 PASS** · evidence = `e2e/g154-gates-evidence.txt`)
-**production:** migration **153 = APPLIED ✓ (record=153)** · **154 = ยังไม่ apply — รอคำสั่งท่านแยก**
- (staged แบบ `e2e/r13Apply153.cjs` — precheck→apply→verify→contract→record เหมือนเดิม)
-**phase:** 🟢 STAGE 2 (Referral) = DONE ฝั่ง code+CI ทุกอย่าง · **งานถัดไป = STAGE 3 (Loyalty Tiers)**
- (inspect ระบบบันทึกยอดสุทธิเดิมก่อน · ข้ามขั้นไม่ได้) · STAGE 4 ยังไม่เริ่ม
+ **contract 154 G1–G9 PASS** · CI: **Contract Tests #132 ✓ · CI #558 ✓** บน `4b6528e` ·
+ evidence = `e2e/g154-gates-evidence.txt`)
+**production:** migration **154 = APPLIED + RECORDED ✓** (Owner คำสั่ง "apply 154" 2026-10-25 · staged
+ `e2e/r14Apply154.cjs`: precheck 12/12 → apply+idempotent-rerun 201 → verify 13/13 → contract154 PASS
+ (ROLLBACK) → contractRegr 153+148 PASS → record top=154 ·
+ evidence = `e2e/r14Apply154-{precheck,apply154,verify154,contract154,contractRegr,record}.json`)
+**phase:** 🟢 STAGE 1 = DONE ทุกอย่าง · **STAGE 2 (Referral) = DONE ทุกอย่าง (code+CI+production)** ·
+ **งานถัดไป = STAGE 3 (Loyalty Tiers)** (inspect ระบบบันทึกยอดสุทธิเดิมก่อน · ข้ามขั้นไม่ได้) · STAGE 4 ยังไม่เริ่ม
 **current_focus:**
 1. **STAGE 1 · Promotions = ปิดแล้ว** (production applied · record=153) — รายละเอียด = inventory §6 + handoff §7
 2. **STAGE 2 · Referral = DELIVERED (เซสชัน 2026-10-25)** — `154_referral_program.sql`:
@@ -21,12 +24,12 @@
    **ไม่แตะ signature order spine** (attribution = `referral_claim` แยก · client เรียกหลัง order สร้าง) +
    contract 154 (G1–G9 PASS · CI step แล้ว) + client (`referralClient`/`ReferralBox`/`?ref=` deep-link/
    cartStore+persist/Checkout claim) + **SharePage เลิกของปลอม** + ProfilePage โชว์รางวัลจริง +
-   AdminMarketing แผง Referral + เทสต์ 34 ข้อ — รายละเอียด = inventory §6 + evidence
+   AdminMarketing แผง Referral + เทสต์ 34 ข้อ + **production applied ✓ (record=154)** — รายละเอียด = inventory §6 + evidence
 3. **STAGE 3 · Loyalty Tiers = งานถัดไป** — ตามกติกา: ตรวจสอบระบบบันทึกยอดสุทธิเดิมก่อน
    (ยังไม่สร้างระบบใหม่ทันที) → 4 ระดับ Member/Silver/Gold/Platinum (เกณฑ์ 12 เดือน §5.2) · ห้ามข้ามขั้น
 4. งานรอ Owner (ไม่ใช่งาน AI): ตรวจ status report §D · D6 ลบทดสอบ pages.dev · R-16 พิมพ์จริง · acceptance §4
-**blocked_by:** ⛔ ไม่มี blocker — งานทั้งหมดที่สั่งรอบนี้เสร็จ · งานต่อ = handoff **§8.2**
- (apply 154 = **รอคำสั่งท่านแยก** · Stage 3 → 4 · งานรอท่าน = §6.2 ข้อ 1–4)
+**blocked_by:** ⛔ ไม่มี blocker — งานที่สั่งทั้งหมดเสร็จสมบูรณ์ (รวม **apply 154 = APPLIED+RECORDED**) ·
+ งานต่อทั้งหมด = handoff **§9.2** (Stage 3 → 4 · migration 155+ = รอคำสั่ง apply แยก · งานรอท่าน = §6.2 ข้อ 1–4)
 - (รอบก่อนปิดเซสชัน — ยังคงมีผล): 4 บั๊กหน้าจอ ✓ · production 150/151/152/153 ✓ · stale contracts 8/8 ✓ ·
   legacy 7 เขียว(ไม่ซ่อม) ✓ · R-17 PASS ✓ · G&R เอกสาร+คำตอบ Owner ✓ · `AI_ENTRYPOINT`/`UNIVERSAL_MASTER_AI_RULES` v1.1/v2.1 ✓
 
