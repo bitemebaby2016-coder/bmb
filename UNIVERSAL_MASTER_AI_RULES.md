@@ -1,5 +1,5 @@
 # UNIVERSAL MASTER AI RULES & GUIDELINES
-# Version: 2.0
+# Version: 2.1 (Enhanced with Atomic Task & No-Placeholder Execution)
 # Universal for: Cline, Kilo Code, Roo Code, Cursor, Continue and similar coding agents
 
 > PURPOSE
@@ -13,6 +13,7 @@
 > - context/token waste
 > - endless debugging loops
 > - model escalation loops
+> - macro-prompt failures & half-baked code generation (Bulk/Batch Execution Failures)
 >
 > IMPORTANT:
 > `AI_WORK_STATE.md` is the operational state ledger for the current project.
@@ -143,9 +144,15 @@ SECTION 0A: MANDATORY PROJECT BOOTSTRAP — READ BEFORE ANY WORK
     - Actual implementation remains the project's Source of Truth according
       to Section 2.
 
+
 ===============================================================================
-SECTION 1: CORE BEHAVIOR & LOOP PREVENTION
+SECTION 1: CORE BEHAVIOR, ATOMIC EXECUTION & LOOP PREVENTION
 ===============================================================================
+
+1.0 STRICT ATOMIC EXECUTION & NO MACRO-PROMPTS (กฎเหล็กการซอยงานและการห้ามสั่งรวม)
+    - **ห้ามสั่งงานรวบยอด (No Macro-Prompts / Batch Execution):** ห้ามพยายามสร้าง พัฒนา หรือแก้ไขโค้ดทั้งโปรเจคหรือหลายไฟล์พร้อมกันในคำสั่งเดียวเด็ดขาด บังคับซอยย่อยงานออกเป็น **Atomic Tasks** (ทำทีละไฟล์, ทีละฟังก์ชัน หรือทีละโมดูลย่อยที่เล็กที่สุดที่สามารถตรวจสอบได้จริง) เท่านั้น
+    - **ห้ามใช้โค้ดตัดทอน (No Placeholders / No Truncation):** ห้ามใช้คอมเมนต์ย่อหรือตัดทอน เช่น `// ... existing code ...`, `// ... rest of the code ...`, หรือ `// TODO` เด็ดขาด ทุกไฟล์ที่สั่งให้เขียนหรือแก้ไข **ต้องเขียนโค้ดเต็มทุกบรรทัด (Full Implementation)** ที่พร้อมนำไปใช้งานจริง (Production-ready)
+    - **การจัดการกรณีโค้ดยาวเกินขีดจำกัด:** หากโค้ดยาวเกินกว่า Token Limit ต่อการตอบหนึ่งครั้ง ให้หยุดที่จุดสิ้นสุดของไฟล์หรือฟังก์ชันนั้นๆ อย่างสมบูรณ์ แล้วแจ้งผู้ใช้ให้ทราบเพื่อรอคำสั่งเขียนต่อ ห้ามตัดกลางฟังก์ชัน
 
 1.1 MAXIMUM 2-TRY RULE
     For any single bug, build error, test failure, or tightly coupled failure:
@@ -287,7 +294,7 @@ SECTION 3: REQUIREMENT TRACEABILITY
 
 
 ===============================================================================
-SECTION 4: TASK & WORK-STATE MANAGEMENT
+SECTION 4: TASK & WORK-STATE MANAGEMENT (Mandatory Atomic Tracking)
 ===============================================================================
 
 4.1 AI_WORK_STATE.md IS THE OPERATIONAL LEDGER
@@ -296,10 +303,9 @@ SECTION 4: TASK & WORK-STATE MANAGEMENT
     - Keep it concise and factual.
     - Do not duplicate the entire project documentation inside it.
 
-4.2 SINGLE TASK ID
-    Every substantial task should have a stable Task ID.
-    Example:
-      P0-C-017
+4.2 SINGLE TASK ID & ATOMIC BREAKDOWN
+    - Every substantial task must have a stable Task ID (e.g. `P0-C-017`).
+    - Tasks must be broken down into atomic steps inside `AI_WORK_STATE.md` so the agent addresses them sequentially without macro-prompting overlap.
 
 4.3 NO DUPLICATE TASKS
     - Before creating a task, check whether an equivalent task already exists.
@@ -387,10 +393,10 @@ SECTION 5: CONTEXT & TOKEN ECONOMY
 
 
 ===============================================================================
-SECTION 6: ENGINEERING & CODE SAFETY (รวมระบบเดิม & การตรวจสอบระบบก่อน)
+SECTION 6: ENGINEERING & CODE SAFETY
 ===============================================================================
 
-6.1 SYSTEM AUDIT BEFORE IMPLEMENTATION (จากระบบ AI Governance เดิม)
+6.1 SYSTEM AUDIT BEFORE IMPLEMENTATION
     Before changing code:
     1. Inspect the actual repository, current Git state, architecture, routes, navigation, components, services, API contracts, database schema, migration history, permissions, scheduled jobs, integrations, tests, deployment configuration, and relevant runtime evidence.
     2. Establish what already exists and how it is actually used.
@@ -478,18 +484,18 @@ SECTION 6: ENGINEERING & CODE SAFETY (รวมระบบเดิม & กา
 SECTION 7: VERIFICATION & ACCEPTANCE GATES
 ===============================================================================
 
-7.1 ACCEPTANCE GATES (ลำดับขั้นตอนที่ต้องผ่านตามลำดับ)
+7.1 ACCEPTANCE GATES
     Work must pass these gates in order:
-    A. Evidence-backed audit (ตรวจสอบหลักฐานก่อน)
-    B. Owner-reviewed scope and implementation plan (แผนงานและขอบเขตที่เจ้าของอนุมัติ)
-    C. Controlled implementation (การพัฒนาภายใต้การควบคุม)
-    D. Relevant automated and integration tests (การทดสอบที่เกี่ยวข้อง)
-    E. End-to-end and failure-path verification (การตรวจสอบ E2E และเคสพัง)
-    F. Target-environment runtime verification where required (รันไทม์เช็คบนสภาพแวดล้อมเป้าหมาย)
-    G. Duplicate and regression review (ทบทวนความซ้ำซ้อนและรีเกรสชัน)
-    H. Documentation reconciliation (ปรับเอกสารให้ตรงกับความจริง)
-    I. Exact-scope Git review and authorized commit/push (ตรวจสอบขอบเขต Git และคอมมิตที่ได้รับอนุญาต)
-    J. Final evidence-backed closure report (รายงานสรุปปิดงานที่มีหลักฐานยืนยัน)
+    A. Evidence-backed audit
+    B. Owner-reviewed scope and implementation plan
+    C. Controlled atomic implementation (ทีละส่วน ไม่รวบยอด)
+    D. Relevant automated and integration tests
+    E. End-to-end and failure-path verification
+    F. Target-environment runtime verification where required
+    G. Duplicate and regression review
+    H. Documentation reconciliation
+    I. Exact-scope Git review and authorized commit/push
+    J. Final evidence-backed closure report
     If a gate fails, report the blocker and stop dependent work. Do not silently skip the gate or relabel an unverified result as PASS.
 
 7.2 VERIFY THE ACTUAL RESULT

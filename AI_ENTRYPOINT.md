@@ -1,5 +1,5 @@
 # AI ENTRYPOINT
-# Version: 1.0
+# Version: 1.1 (Enhanced with Atomic Task Bootstrap)
 # Universal project bootstrap for all AI coding agents
 #
 # This file is intentionally short.
@@ -13,10 +13,10 @@ STOP — MANDATORY AI BOOTSTRAP
 Before doing ANY project work:
 
 1. Read `UNIVERSAL_MASTER_AI_RULES.md`
-2. Read `AI_WORK_STATE.md`
+2. Read `AI_WORK_STATE.md` (Mandatory Operational Ledger)
 3. Follow both files as mandatory operating rules/state.
 4. Do not modify project files before completing these steps.
-5. Continue an existing Task ID when one already covers the objective.
+5. **ATOMIC EXECUTION RULE:** Do not attempt macro-prompts or whole-project generation. Pick the active Task ID from `AI_WORK_STATE.md` and execute step-by-step (one small file/function at a time).
 6. Do not repeat work that is already `PASS` + verified without new evidence.
 7. Investigate the repository before asking questions.
 8. Ask the user only when genuinely blocked or an explicit product decision
@@ -38,13 +38,13 @@ AI_ENTRYPOINT.md
       ↓
 UNIVERSAL_MASTER_AI_RULES.md
       ↓
-AI_WORK_STATE.md
+AI_WORK_STATE.md (Check Active Task ID & Atomic Scope)
       ↓
 Project Product Spec / Codex
       ↓
 Relevant Code / DB / API / Tests
       ↓
-Implement
+Implement (Surgical & Complete per Task)
       ↓
 Verify with actual evidence
       ↓
@@ -76,7 +76,8 @@ NEVER:
 - silently change requirements;
 - claim runtime behavior from static inspection when runtime verification exists;
 - repeat the same failed fix without new evidence;
-- create duplicate tasks for the same objective.
+- create duplicate tasks for the same objective;
+- use code placeholders (e.g. `// ... existing code ...`) to fake completion.
 
 ===============================================================================
 FINAL RULE
