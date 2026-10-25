@@ -124,3 +124,30 @@
 7. **Git:** `be1b012` (รอบแก้+migrations+evidence) · `77ed0eb` (Owner rules v1.1/v2.1) — CI+Contract เขียวทั้งคู่ ·
    commit ปิดเซสชั่นนี้ = inventory (คำตอบท่าน) + เอกสารฉบับนี้ + AI_WORK_STATE
 8. **ลำดับอ่านของเซสชั่นหน้า:** `AI_WORK_STATE.md` → status report §A → ข้อ 1-5 ข้างบน
+---
+
+## 7. 🔴 SESSION CLOSE รอบ G&R STAGE 1 (2026-10-25 · ต่อจาก §6)
+
+### 7.1 ปิดแล้วในรอบนี้ (หลักฐาน)
+- ✅ **G&R STAGE 1 (Promotions) = IMPLEMENTED + CI GREEN** — commits `c809f00` (feature) → `48f62f2` (contract fix percent=0)
+  → `404585e` (docs) · Contract Tests #129/#130 ✓ · CI #556 ✓ · Cloudflare deploy ✓ · local gates ทั้งหมดเขียว
+  (evidence = `e2e/g153-gates-evidence.txt` · tsc 0 · lint OK · vitest 141/1446 0 fail · build PWA 141 ·
+   replay 001–153 MIGRATIONS_OK · regression contracts 18/18 · contract 153 G1–G8)
+- ✅ **PRODUCTION APPLY 153 = เสร็จ + RECORD แล้ว** (Owner อนุมัติ "อนุมัติ migration apply 153")
+  — staged `e2e/r13Apply153.cjs` = precheck 9/9 → apply+idempotent-rerun 201 → verify 11/11 →
+  contract153 บนโปรดักชั่น PASS (ROLLBACK = zero persisted data) → contractRegr 148 PASS → record (**top = 153**)
+  — evidence = `e2e/r13Apply153-{precheck,apply153,verify153,contract153,contractRegr,record}.json`
+- ✅ **STAGE 2 (Referral) = อนุมัติแล้ว** — Owner: "อนุมัติตามนายแนะนำ" + ยืนยันรายการทดสอบ OTP ผ่านแล้ว
+  → งานแรกของแชทหน้า = ลงมือ Stage 2 ตามแนวทาง inspect-first **ไม่ต้องถามซ้ำ**
+
+### 7.2 งานที่เหลือทั้งหมด — ทำในเซสชันหน้า (เรียงลำดับ · ข้ามขั้นไม่ได้)
+| # | งาน | วิธี/หมายเหตุ | ต้อง Owner? |
+|---|---|---|---|
+| 1 | **STAGE 2 · Referral (เริ่มตรงนี้)** | inspect auth/guest/OTP จริง (Owner ยืนยัน OTP tests ผ่านแล้ว) → unique identity → 3 ระดับ self-referral (Hard block/Review/Soft signal) → รางวัลเมื่อออเดอร์ผ่านสถานะ → cancel/refund ปรับตาม ledger → attribution ย้อนหลัง · ทำเหมือน Stage 1: migration + contract + CI step + client mirror + admin UI + tests + gates ทั้งหมดเขียว | ไม่ |
+| 2 | **STAGE 3 · Loyalty Tiers** | ข้อ ①/②: ตรวจสอบระบบบันทึกยอดสุทธิเดิมก่อน (ยังไม่สร้างระบบใหม่ทันที) | ไม่ |
+| 3 | **STAGE 4 · Engagement & Play** | ④ Spin&Win (มีรางวัล/แต้ม) · ⑤ Affiliate (แต้ม/คูปอง ไม่มีเงินสด) · ⑦ Rewards catalog = ย้าย hardcode → ตาราง admin ตั้งเอง | ไม่ |
+| 4 | production apply ของ migration ใหม่ (154+) | staged แบบ `r13Apply153` (precheck→apply→verify→contract→record) — **รอคำสั่ง apply แยก** เหมือน 153 | **ใช่** |
+| 5 | งานรอท่าน (เดิมจาก §6.2 ข้อ 1–4) | ตรวจ §D ของ status report · D6 ลบทดสอบ pages.dev · R-16 พิมพ์จริง · acceptance §4 | **ใช่** |
+
+### 7.3 ลำดับอ่านของเซสชันหน้า
+`AI_WORK_STATE.md` → handoff ฉบับนี้ §7 → inventory §6 → แล้วลงมือ **Stage 2 (Referral)**

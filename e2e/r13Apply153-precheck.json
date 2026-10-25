@@ -1,0 +1,100 @@
+[
+  {
+    "label": "history",
+    "status": 201,
+    "data": [
+      {
+        "version": "152",
+        "name": "152_menu_schedule_execute_revoke"
+      },
+      {
+        "version": "151",
+        "name": "151_order_status_history_baseline"
+      },
+      {
+        "version": "150",
+        "name": "150_orders_delivery_address_parity"
+      },
+      {
+        "version": "149",
+        "name": "149_round_archive_cleanup"
+      },
+      {
+        "version": "148",
+        "name": "148_same_day_no_cutoff"
+      }
+    ]
+  },
+  {
+    "label": "backup-recency",
+    "status": 201,
+    "data": [
+      {
+        "recent_backups": 8
+      }
+    ]
+  },
+  {
+    "label": "153-new-cols-absent-yet",
+    "status": 201,
+    "data": [
+      {
+        "new_cols": 0
+      }
+    ]
+  },
+  {
+    "label": "promotion-products-absent-yet",
+    "status": 201,
+    "data": [
+      {
+        "has_table": 0
+      }
+    ]
+  },
+  {
+    "label": "promotion-policy-absent-yet",
+    "status": 201,
+    "data": [
+      {
+        "has_row": 0
+      }
+    ]
+  },
+  {
+    "label": "apply-rules-fn-absent-yet",
+    "status": 201,
+    "data": [
+      {
+        "hits": 0
+      }
+    ]
+  },
+  {
+    "label": "order-fn-not-rewritten-yet",
+    "status": 201,
+    "data": [
+      {
+        "hits": 0
+      }
+    ]
+  },
+  {
+    "label": "order-fn-is-148-shape",
+    "status": 201,
+    "data": [
+      {
+        "hits": 1
+      }
+    ]
+  },
+  {
+    "label": "current-promotions",
+    "status": 201,
+    "data": [
+      {
+        "promo_rows": 2
+      }
+    ]
+  }
+]

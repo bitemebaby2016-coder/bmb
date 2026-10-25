@@ -1,0 +1,139 @@
+[
+  {
+    "label": "new-cols",
+    "status": 201,
+    "data": [
+      {
+        "column_name": "applies_to",
+        "data_type": "text"
+      },
+      {
+        "column_name": "max_discount_amount",
+        "data_type": "numeric"
+      },
+      {
+        "column_name": "stackable",
+        "data_type": "boolean"
+      },
+      {
+        "column_name": "usage_count",
+        "data_type": "integer"
+      },
+      {
+        "column_name": "usage_limit",
+        "data_type": "integer"
+      }
+    ]
+  },
+  {
+    "label": "promotion-products-table",
+    "status": 201,
+    "data": [
+      {
+        "relname": "promotion_products",
+        "relrowsecurity": true,
+        "rows": 0
+      }
+    ]
+  },
+  {
+    "label": "promotion-products-policies",
+    "status": 201,
+    "data": [
+      {
+        "policyname": "promotion_products_admin_manage"
+      },
+      {
+        "policyname": "promotion_products_public_read"
+      }
+    ]
+  },
+  {
+    "label": "policy-seed",
+    "status": 201,
+    "data": [
+      {
+        "key": "promotion_policy",
+        "value": {
+          "budget_percent": 15,
+          "promotions_enabled": true
+        }
+      }
+    ]
+  },
+  {
+    "label": "fns-exist",
+    "status": 201,
+    "data": [
+      {
+        "proname": "promotion_apply_rules"
+      },
+      {
+        "proname": "promotion_budget_ok"
+      },
+      {
+        "proname": "promotion_budget_state"
+      },
+      {
+        "proname": "promotion_budget_status"
+      },
+      {
+        "proname": "promotions_enabled"
+      }
+    ]
+  },
+  {
+    "label": "order-fn-rewritten",
+    "status": 201,
+    "data": [
+      {
+        "hits": 1
+      }
+    ]
+  },
+  {
+    "label": "order-fn-still-148-base",
+    "status": 201,
+    "data": [
+      {
+        "hits": 1
+      }
+    ]
+  },
+  {
+    "label": "privs-after",
+    "status": 201,
+    "data": [
+      {
+        "proname": "create_order_with_items",
+        "anon_exec": false
+      },
+      {
+        "proname": "promotion_apply_rules",
+        "anon_exec": false
+      },
+      {
+        "proname": "promotion_budget_status",
+        "anon_exec": false
+      }
+    ]
+  },
+  {
+    "label": "promo-rows-intact",
+    "status": 201,
+    "data": [
+      {
+        "promo_rows": 2
+      }
+    ]
+  },
+  {
+    "label": "orders-untouched",
+    "status": 201,
+    "data": [
+      {
+        "orders": 4
+      }
+    ]
+  }
+]

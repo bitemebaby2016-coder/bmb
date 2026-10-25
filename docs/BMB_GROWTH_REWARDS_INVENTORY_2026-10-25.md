@@ -168,7 +168,13 @@ Engagement & Play — ตามหลัง
   - Admin: `AdminPromotions` (ฟอร์มแคมเปญ + scope picker + badges + auto-scroll §12.3) ·
            `AdminMarketing` แท็บ Rules = แผงงบ/kill switch (ยืนบน Marketing Center ตาม §3 GAP)
   - เทสต์: `promotionCampaignControls.test.ts` 22 ข้อ + realign couponBox (เปิดเผยใน evidence)
-- ⏳ **STAGE 2 (Referral) → STAGE 3 (Loyalty Tiers) → STAGE 4 (Engagement & Play)** = ยังไม่เริ่ม
-  - Stage 2 มีงาน inspect บังคับก่อน (Owner ข้อ ③): ตรวจ auth · guest checkout · OTP จริง
-    ก่อนตัดสินใจ unique identity → แล้วค่อยออกแบบ/ลงมือ (ห้ามเดา)
+- ✅ **PRODUCTION APPLY 153 = เสร็จ + RECORD แล้ว (Owner อนุมัติ 2026-10-25)** — staged แบบ r8/r12 ผ่านครบทุก stage:
+  precheck 9/9 (top=152 · backup ใหม่ 8 · 153 ยังไม่มี) → apply+idempotent-rerun 201 → verify 11/11 →
+  contract153 บนโปรดักชั่น PASS (status 201 ไม่มี error · ROLLBACK = zero persisted data) → contractRegr 148 PASS →
+  record: history top = **153** — evidence = `e2e/r13Apply153-{precheck,apply153,verify153,contract153,contractRegr,record}.json`
+- ✅ **STAGE 2 (Referral) = อนุมัติแล้ว** (2026-10-25 Owner: "อนุมัติตามนายแนะนำ" + ยืนยันรายการทดสอบ OTP ผ่านแล้ว)
+  → เริ่มในเซสชันถัดไปตามคำสั่งปิดเซสชัน — เดินตามแนวทาง inspect-first (Owner ข้อ ③): ตรวจ auth ·
+  guest checkout · OTP จริง → unique identity → 3 ระดับ self-referral → รางวัลตอนออเดอร์ผ่านสถานะ →
+  ledger ปรับกลับ (ห้ามเดา · ไม่ต้องถามซ้ำเรื่องแนวทาง)
+- ⏳ **STAGE 3 (Loyalty Tiers) → STAGE 4 (Engagement & Play)** = ยังไม่เริ่ม (ตามลำดับ Rollout ข้อ ⑧ — ข้ามไม่ได้)
 - ⛔ เงื่อนไขเลื่อนขั้น (§5.8) ยังคงอยู่: business rules + server validation + tests + สิทธิ์ ต้องผ่านก่อนทุกครั้ง
