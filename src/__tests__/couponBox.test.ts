@@ -171,7 +171,14 @@ describe('CouponBox — หนึ่ง UI สำหรับ Cart+Checkout (M2)
       await Promise.resolve()
       await Promise.resolve()
     })
-    expect(m.fetchCouponEvaluation).toHaveBeenCalledWith('SAVE10', 200)
+    // [G&R 153] realign: บรรทัดตะกร้าถูกส่งไปคำนวณ "ฐานสินค้าเข้า scope" ด้วย
+    // (ข้อเรียกเดิมคือ ('SAVE10', 200) 2 อาร์กิวเมนต์ — เปลี่ยนเพราะฟีเจอร์ใหม่ไม่ใช่การอ่อนกฎ)
+    // attempt 2: ตรวจ args ตรง ๆ (expect.any(Array) ของ vitest 3.2.7 ในรอบแรก
+    // โยน TypeError: Right-hand side of 'instanceof' is not callable)
+    const evalArgs = m.fetchCouponEvaluation.mock.calls[0] as unknown as [string, number, { lines: unknown[] }]
+    expect(evalArgs[0]).toBe('SAVE10')
+    expect(evalArgs[1]).toBe(200)
+    expect(Array.isArray(evalArgs[2].lines)).toBe(true)
     expect(useCartStore.getState().couponCode).toBe('SAVE10')
     expect(c.querySelector('[data-testid="applied-coupon"]')).toBeTruthy()
   })

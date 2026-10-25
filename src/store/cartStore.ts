@@ -56,6 +56,21 @@ export function lineKeyFor(
   return `${productId}::${mode ?? 'SAME_DAY'}::${sig}`
 }
 
+/**
+ * [G&R 153] ฐานส่วนลดของแคมเปญที่จำกัดสินค้า — ยอดรวมบรรทัดที่สินค้าอยู่ใน scope
+ * คืน undefined เมื่อแคมเปญลดทั้งออเดอร์ (evaluateCoupon ใช้ subtotal เอง)
+ */
+function eligibleForPromotion(
+  items: Array<{ product: { id: string }; subtotal: number }>,
+  promo: PromotionRow,
+): number | undefined {
+  if (promo.applies_to !== 'specific_products') return undefined
+  const ids = new Set(promo.scope_product_ids ?? [])
+  return items
+    .filter((i) => ids.has(i.product.id))
+    .reduce((sum, i) => sum + Math.max(0, i.subtotal), 0)
+}
+
 interface CartStore {
   items: Array<CartItemType & { __context_tenant_id?: string; line_mode?: OrderMode; __line_key?: string }>
   couponCode: string
@@ -254,14 +269,18 @@ export const useCartStore = create<CartStore>((set, get) => ({
   recalculate: () => {
     const state = get()
     const subtotal = state.items.reduce((sum, item) => sum + item.subtotal, 0)
-    // REAL promotion rule (mirror of migration 114 — see promotionClient):
+    // REAL promotion rule (mirror of migration 114 + 153 — see promotionClient):
     // discount comes only from a live `promotions` row evaluated with the same
-    // code lookup / date window / min-order / cap math the server applies.
-    // The legacy fake vocabulary (fixed_discount/percentage_discount) is gone —
-    // a real row that fails the rule yields a truthful 0 here and the server
-    // re-derives the authoritative amount at order creation anyway.
+    // code lookup / date window / min-order / scope / max-cap / usage-cap math
+    // the server applies. The legacy fake vocabulary (fixed_discount/percentage_discount)
+    // is gone — a real row that fails the rule yields a truthful 0 here and the
+    // server re-derives the authoritative amount at order creation anyway.
+    // NOTE: kill switch / budget ไม่ได้ตรวจใน sync path นี้ (ไม่ยิง network) —
+    // จุดบังคับจริง = fetchCouponEvaluation/revalidateCouponForSubmit ก่อนส่งออเดอร์ + server
     const evaluation = state.appliedPromotion
-      ? evaluateCoupon([state.appliedPromotion], state.couponCode, subtotal)
+      ? evaluateCoupon([state.appliedPromotion], state.couponCode, subtotal, new Date(), {
+          eligibleSubtotal: eligibleForPromotion(state.items, state.appliedPromotion),
+        })
       : null
     const discount = evaluation?.ok ? evaluation.discountAmount : 0
 

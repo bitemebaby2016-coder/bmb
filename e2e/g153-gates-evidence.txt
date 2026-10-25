@@ -1,0 +1,30 @@
+BMB G&R STAGE 1 (Promotions · migration 153) — LOCAL GATE EVIDENCE
+Date: 2026-10-25 · Start command: Owner "เริ่มพัฒนา G&R ตามกฏ" (Rollout ข้อ ⑧ = Promotions ก่อน)
+
+Gates (clean-room ทั้งหมด รันบนเครื่อง dev):
+- npx tsc --noEmit .................. TSC_OK (0 errors)
+- npm run lint (eslint+brandNameGuard 425 files) ... LINT_OK
+- npx vitest run ................... VITEST_OK: 141 files / 1446 tests / 0 fail
+                                    (เดิม 140/1424 + ใหม่ 22 ข้อ promotionCampaignControls.test.ts)
+- npm run build .................... BUILD_OK (vite ✓ + PWA 141 entries)
+- Docker replay (postgres:16, preprocessor+shims แบบ CI ทุกประการ):
+    MIGRATIONS_OK (001-153) ทุกไฟล์ apply สะอาด รวม 153
+    + apply 124 + contracts ชุด CI = 18/18 CONTRACT_OK
+      (123,124,127_130,131,133,135,136,137,138_139,140,141,142,143,144,146,147,148,149)
+- e2e/contracts_153_promotion_campaign_controls.sql (ONE tx + ROLLBACK):
+    G1 สคีมา+policy seed+ฟังก์ชัน server ........ PASS
+    G2 คณิต/min/max cap/inactive/expired/usage ... PASS
+    G3 kill switch (ปิด=0 ทุกโค้ด · เปิด=คืนเดิม) .. PASS
+    G4 budget percent 4% บล็อก · JSON null=ไม่จำกัด PASS
+    G5 scope base (50% ของ 100 ไม่ใช่ 150) ....... PASS
+    G6 promotion_budget_status = admin-only ...... PASS
+    G7 anon: อ่าน scope ได้ · execute budget_ok ได้ · status ถูกกัน PASS
+    G8 RPC จริง: no-code 0 · budget บล็อกจริง · GR10=10 ลง orders · scoped=50 PASS
+    => CONTRACT 153: PASS
+
+Transparency notes:
+- realign เปิดเผย: couponBox.test assertion เดิม ('SAVE10',200) → เพิ่ม arg {lines} (ฟีเจอร์ใหม่ ไม่ใช่การอ่อนกฎ)
+- attempts: couponBox matcher = attempt 2 (expect.any(Array) ของ vitest โยน instanceof error
+  → ตรวจ args ตรง ๆ) · contract G5/G6 = แก้ฝั่ง test (โค้ด server ถูกแล้ว: G5 โดน budget gate
+  ซึ่ง "ทำงานถูกต้อง" จริง · G6 = SELECT set_config ต้องเป็น PERFORM ใน plpgsql)
+- ไม่มี production write 任何 (contract = ROLLBACK · replay = DB ชั่วคราวใน container)

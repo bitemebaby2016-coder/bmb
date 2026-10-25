@@ -29,7 +29,16 @@ import {
   describeCouponResult,
   normalizePromoCode,
   type CouponEvaluation,
+  type CouponLine,
 } from '@/lib/promotionClient'
+
+/** บรรทัดตะกร้าปัจจุบันสำหรับคำนวณฐานสินค้าเข้า scope (G&R 153) */
+function currentCouponLines(): CouponLine[] {
+  return useCartStore.getState().items.map((i) => ({
+    productId: i.product.id,
+    subtotal: i.subtotal,
+  }))
+}
 
 /**
  * Apply a code to the shared cart store — the ONE write path for every surface.
@@ -40,7 +49,9 @@ import {
  */
 export async function applyCouponCode(code: string): Promise<CouponEvaluation> {
   const before = useCartStore.getState()
-  const result = await fetchCouponEvaluation(code, before.subtotal)
+  const result = await fetchCouponEvaluation(code, before.subtotal, {
+    lines: currentCouponLines(),
+  })
   const s = useCartStore.getState()
   if (result.ok) {
     s.setCouponCode(normalizePromoCode(result.promo.code))
@@ -75,7 +86,7 @@ export async function revalidateCouponForSubmit(
 ): Promise<{ ok: true; discountAmount: number } | { ok: false; message: string }> {
   const code = useCartStore.getState().couponCode.trim()
   if (!code) return { ok: true, discountAmount: 0 }
-  const check = await fetchCouponEvaluation(code, subtotal)
+  const check = await fetchCouponEvaluation(code, subtotal, { lines: currentCouponLines() })
   if (!check.ok) return { ok: false, message: describeCouponResult(check) }
   const s = useCartStore.getState()
   s.setAppliedPromotion(check.promo)

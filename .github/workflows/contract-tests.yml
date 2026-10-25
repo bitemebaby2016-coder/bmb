@@ -403,3 +403,16 @@ jobs:
             exit 1
           fi
           echo "Contract 147 OK — kitchen/inventory/finance/marketing writes + support/auditor/dev read-only + rider gate"
+
+      - name: Contract 153 — G&R stage 1 promotions (kill switch + budget + scope + usage cap) (ROLLBACK)
+        run: |
+          set +e
+          out=$(psql -v ON_ERROR_STOP=1 -f e2e/contracts_153_promotion_campaign_controls.sql 2>&1); rc=$?
+          printf '%s\n' "$out"
+          if [ $rc -ne 0 ]; then
+            msg=$(printf '%s\n' "$out" | grep -m1 'ERROR:' || echo "rc=$rc")
+            echo "::error file=e2e/contracts_153_promotion_campaign_controls.sql::$msg"
+            exit 1
+          fi
+          echo "Contract 153 OK — kill switch · budget 15% · product scope · max/usage cap · admin-only budget status"
+          echo "Contract 147 OK — kitchen/inventory/finance/marketing writes + support/auditor/dev read-only + rider gate"

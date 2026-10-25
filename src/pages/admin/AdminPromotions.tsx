@@ -2,13 +2,14 @@
 // Admin — Promotions Management (D5 gap, Phase D)
 // ============================================
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { showToast } from '@/components/ui/ToastContainer'
-import { getPromotionsAdmin, upsertPromotion, deletePromotion, togglePromotion, type PromotionRow } from '@/lib/bmbAdminApi_promotions'
+import { getPromotionsAdmin, upsertPromotion, deletePromotion, togglePromotion, attachPromotionScope, type PromotionRow } from '@/lib/bmbAdminApi_promotions'
 import { submitContentForApproval } from '@/lib/contentApproval'
 import { validatePromotionForm } from '@/lib/promotionClient'
 import { uploadMediaAsset } from '@/lib/bmbAdminApi_media'
+import { getProducts } from '@/lib/bmbAdminApi_products'
 
 const EMPTY_FORM = {
   name: '',
@@ -22,25 +23,43 @@ const EMPTY_FORM = {
   is_active: true,
   is_banner: false,
   banner_image: '',
+  // ---- [G&R 153] คอลัมน์แคมเปญ ----
+  stackable: false,
+  applies_to: 'all_products' as 'all_products' | 'specific_products',
+  max_discount_amount: null as number | null,
+  usage_limit: null as number | null,
+  scope_product_ids: [] as string[],
 }
 
 export function AdminPromotions() {
   const [promotions, setPromotions] = useState<PromotionRow[]>([])
+  const [products, setProducts] = useState<Array<{ id: string; name: string; price: number }>>([])
   const [showAddForm, setShowAddForm] = useState(false)
   const [editing, setEditing] = useState<PromotionRow | null>(null)
   const [form, setForm] = useState({ ...EMPTY_FORM })
   const [uploading, setUploading] = useState(false)
+  const formRef = useRef<HTMLDivElement>(null)
 
-  useEffect(() => { loadPromotions() }, [])
+  useEffect(() => {
+    void loadPromotions()
+    void (async () => setProducts(await getProducts()))()
+  }, [])
 
   async function loadPromotions() {
-    setPromotions(await getPromotionsAdmin())
+    // attach scope เพื่อให้ฟอร์มแก้ไขเปิดมาพร้อมสินค้าที่เคยเลือกไว้
+    setPromotions(await attachPromotionScope(await getPromotionsAdmin()))
+  }
+
+  function scrollToForm() {
+    // §12.3: จิ้มสร้าง/แก้ไข = เด้ง viewport ไปที่ฟอร์มที่ทำงานเสมอ
+    requestAnimationFrame(() => formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }))
   }
 
   function openCreate() {
     setEditing(null)
     setForm({ ...EMPTY_FORM })
     setShowAddForm(true)
+    scrollToForm()
   }
 
   function openEdit(promo: PromotionRow) {
@@ -57,8 +76,20 @@ export function AdminPromotions() {
       is_active: promo.is_active,
       is_banner: promo.is_banner || false,
       banner_image: promo.banner_image || '',
+      stackable: promo.stackable ?? false,
+      applies_to: promo.applies_to ?? 'all_products',
+      max_discount_amount:
+        promo.max_discount_amount === null || promo.max_discount_amount === undefined
+          ? null
+          : Number(promo.max_discount_amount),
+      usage_limit:
+        promo.usage_limit === null || promo.usage_limit === undefined
+          ? null
+          : Number(promo.usage_limit),
+      scope_product_ids: promo.scope_product_ids ?? [],
     })
     setShowAddForm(true)
+    scrollToForm()
   }
 
   async function handleSave() {
@@ -86,6 +117,12 @@ export function AdminPromotions() {
       is_active: v.is_active,
       is_banner: v.is_banner,
       banner_image: v.banner_image || null,
+      // ---- [G&R 153] คอลัมน์แคมเปญ + scope (upsertPromotion คุม scope ให้เอง) ----
+      stackable: v.stackable ?? false,
+      applies_to: v.applies_to ?? 'all_products',
+      max_discount_amount: v.max_discount_amount ?? null,
+      usage_limit: v.usage_limit ?? null,
+      scope_product_ids: v.scope_product_ids ?? [],
     }
     const saved = await upsertPromotion(row)
     if (!saved.ok) {
@@ -160,7 +197,7 @@ export function AdminPromotions() {
       </div>
 
       {showAddForm && (
-        <div className="card mb-6 p-4">
+        <div className="card mb-6 p-4" ref={formRef}>
           <h3 className="font-bold text-brand-accent mb-3">{editing ? 'แก้ไขโปรโมชั่น' : 'สร้างโปรโมชั่นใหม่'}</h3>
           <div className="grid grid-cols-2 gap-3">
             <input className="input" placeholder="ชื่อโปรโมชั่น *" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
@@ -172,6 +209,24 @@ export function AdminPromotions() {
             </select>
             <input type="number" className="input" placeholder="มูลค่าส่วนลด" value={form.discount_value} onChange={(e) => setForm({ ...form, discount_value: Number(e.target.value) })} />
             <input type="number" className="input" placeholder="ยอดสั่งขั้นต่ำ (บาท)" value={form.min_order_amount} onChange={(e) => setForm({ ...form, min_order_amount: Number(e.target.value) })} />
+            <input
+              type="number"
+              min={0}
+              className="input"
+              placeholder="เพดานส่วนลด/ออเดอร์ (บาท · ว่าง = ไม่จำกัด)"
+              value={form.max_discount_amount ?? ''}
+              onChange={(e) => setForm({ ...form, max_discount_amount: e.target.value === '' ? null : Number(e.target.value) })}
+              data-testid="promo-max-discount"
+            />
+            <input
+              type="number"
+              min={1}
+              className="input"
+              placeholder="จำนวนสิทธิ์ใช้โค้ด (ว่าง = ไม่จำกัด)"
+              value={form.usage_limit ?? ''}
+              onChange={(e) => setForm({ ...form, usage_limit: e.target.value === '' ? null : Number(e.target.value) })}
+              data-testid="promo-usage-limit"
+            />
             <label className="text-sm flex items-center gap-2">
               เริ่ม:
               <input type="date" className="input" value={form.start_date} onChange={(e) => setForm({ ...form, start_date: e.target.value })} />
@@ -184,10 +239,54 @@ export function AdminPromotions() {
               <input type="checkbox" checked={form.is_active} onChange={(e) => setForm({ ...form, is_active: e.target.checked })} />
               เปิดใช้งาน
             </label>
+            <label className="flex items-center gap-2" title="ปิด = เลือกข้อเสนอที่ดีที่สุดอย่างเดียว (เปิดจริงตอนระบบแต้มมาถึง)">
+              <input type="checkbox" checked={form.stackable} onChange={(e) => setForm({ ...form, stackable: e.target.checked })} data-testid="promo-stackable" />
+              🧩 ซ้อนกับสิทธิ์อื่นได้
+            </label>
             <label className="flex items-center gap-2">
               <input type="checkbox" checked={form.is_banner} onChange={(e) => setForm({ ...form, is_banner: e.target.checked })} />
               🏠 แสดงเป็นแบนเนอร์หน้าแรก (ลูกค้าปิดได้)
             </label>
+            <label className="text-sm">
+              สินค้าที่ร่วมรายการ
+              <select
+                className="input w-full"
+                value={form.applies_to}
+                onChange={(e) => setForm({ ...form, applies_to: e.target.value as 'all_products' | 'specific_products' })}
+                data-testid="promo-applies-to"
+              >
+                <option value="all_products">ทั้งออเดอร์ (ทุกสินค้า)</option>
+                <option value="specific_products">จำกัดสินค้าที่เลือก</option>
+              </select>
+            </label>
+            {form.applies_to === 'specific_products' && (
+              <div className="col-span-2 rounded-xl border border-brand-border p-3" data-testid="promo-scope-picker">
+                <p className="text-xs text-brand-muted mb-2">
+                  เลือกสินค้าที่เข้าเกณฑ์ส่วนลด (ส่วนลดคิดจากยอดของสินค้าเหล่านี้เท่านั้น — เลือกแล้วอย่างน้อย 1 รายการ)
+                </p>
+                <div className="max-h-48 overflow-y-auto space-y-1">
+                  {products.map((p) => (
+                    <label key={p.id} className="flex items-center gap-2 text-sm">
+                      <input
+                        type="checkbox"
+                        checked={form.scope_product_ids.includes(p.id)}
+                        onChange={(e) =>
+                          setForm({
+                            ...form,
+                            scope_product_ids: e.target.checked
+                              ? [...form.scope_product_ids, p.id]
+                              : form.scope_product_ids.filter((id) => id !== p.id),
+                          })
+                        }
+                      />
+                      <span>{p.name}</span>
+                      <span className="text-brand-muted">฿{p.price}</span>
+                    </label>
+                  ))}
+                  {products.length === 0 && <p className="text-xs text-brand-muted">ยังไม่มีสินค้าในระบบ</p>}
+                </div>
+              </div>
+            )}
             <input
               className="input"
               placeholder="ลิงก์รูปแบนเนอร์ (ไม่บังคับ)"
@@ -231,6 +330,20 @@ export function AdminPromotions() {
                 </div>
                 <div className="text-sm text-brand-muted">
                   {p.discount_type === 'percentage' ? `ลด ${p.discount_value}%` : `ลด ฿${p.discount_value}`} • ขั้นต่ำ ฿{p.min_order_amount} • {p.start_date ? `เริ่ม ${p.start_date}` : 'เริ่มทันที'} → {p.end_date ? `ถึง ${p.end_date}` : 'ไม่กำหนดวันสิ้นสุด'}
+                </div>
+                <div className="flex flex-wrap gap-1 mt-1">
+                  {p.applies_to === 'specific_products' && (
+                    <span className="badge badge-info text-xs" data-testid="promo-badge-scope">🎯 จำกัดสินค้า {(p.scope_product_ids ?? []).length} รายการ</span>
+                  )}
+                  {p.max_discount_amount !== null && p.max_discount_amount !== undefined && (
+                    <span className="badge badge-warning text-xs">เพดาน ฿{Number(p.max_discount_amount)}</span>
+                  )}
+                  {p.usage_limit !== null && p.usage_limit !== undefined && (
+                    <span className={`badge text-xs ${Number(p.usage_count ?? 0) >= Number(p.usage_limit) ? 'badge-danger' : 'badge-primary'}`} data-testid="promo-badge-usage">
+                      สิทธิ์ {Number(p.usage_count ?? 0)}/{Number(p.usage_limit)}
+                    </span>
+                  )}
+                  {p.stackable && <span className="badge badge-success text-xs">🧩 ซ้อนได้</span>}
                 </div>
               </div>
               <div className="text-right">

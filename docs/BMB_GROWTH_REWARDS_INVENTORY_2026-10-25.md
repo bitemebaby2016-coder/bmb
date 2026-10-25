@@ -1,6 +1,11 @@
 # BMB — Growth & Rewards: Inventory ระบบเดิม + แผนเชื่อมต่อ (เอกสารเท่านั้น · ไม่แตะโค้ด)
 # วันที่: 2026-10-25 · คู่กับ `BMB_GROWTH_REWARDS_REQUIREMENTS_2026-10-25.md`
-# สถานะ: PROPOSAL ONLY — **ยังไม่มี implementation** (ห้ามสร้าง migrations/tables/services/routes/UI ตามคำสั่ง §4.4)
+# สถานะอัปเดต 2026-10-25 (หลัง Owner สั่ง "เริ่มพัฒนา G&R ตามกฏ"):
+#   ✅ STAGE 1 (Promotions) = IMPLEMENTED + GATES GREEN — ดูหลักฐาน = `e2e/g153-gates-evidence.txt`
+#      (migration 153 + contract 153 + client mirror + ฟอร์มแอดมิน + แผงงบใน Marketing Center + เทสต์ 22 ข้อ)
+#   ⏳ STAGE 2-4 (Referral → Loyalty Tiers → Engagement) = ยังไม่เริ่ม — ข้ามขั้นไม่ได้ (§5.8 ⑧)
+#   ข้อความเดิมด้านล่าง (PROPOSAL ONLY / ห้าม implement) = บันทึกก่อนคำสั่ง start — คงไว้เป็น history
+#   ส่วน §1/§5 ยังคงเป็นกติกาที่ถูกต้องทุกประการ (ไม่มีการตีความเพิ่ม)
 
 > วิธีเก็บ: probe ไฟล์จริงใน repo (สคริปต์ค้นคำสำคัญ + อ่านไฟล์จริง) ทุกบรรทัดอ้างไฟล์จริง ·
 > ช่องที่ยังไม่ได้เปิดอ่านระบุ `ต้อง inspect` ไว้ ห้ามถือเป็นข้อเท็จจริง
@@ -152,7 +157,18 @@ Engagement & Play — ตามหลัง
 - Loyalty ต้องมี ledger ฝั่งเซิร์ฟเวอร์ที่ตรวจสอบย้อนหลังได้ ไม่เชื่อแต้มที่ client ส่งมาเอง
 - Engagement ต้องมีข้อจำกัดความถี่ เพดานต้นทุน และระบบตรวจสอบกิจกรรมซ้ำ
 
-## 6. ยืนยันขอบเขต (§4.4)
-- ✅ เอกสาร requirements + inventory ฉบับนี้ = งานที่อนุญาต
-- ✅ **ไม่มี** migrations · tables · services · routes · UI · business logic ที่เปลี่ยนเพื่อ Growth & Rewards
-- ⛔ Implementation ทั้งหมด = รอ Owner อนุมัติคำสั่งพัฒนาแยกต่างหาก
+## 6. ยืนยันขอบเขต — สถานะล่าสุด (อัปเดต 2026-10-25 หลังคำสั่ง "เริ่มพัฒนา G&R ตามกฏ")
+- ✅ คำสั่ง start ได้รับแล้ว (2026-10-25) → เริ่มตามลำดับ Rollout ข้อ ⑧ = **Promotions ก่อน** (ข้ามขั้นไม่ได้)
+- ✅ **STAGE 1 · Promotions = IMPLEMENTED + GATES GREEN** — หลักฐานครบ = `e2e/g153-gates-evidence.txt`
+  - SQL: `supabase/migrations/153_promotion_campaign_controls.sql`
+    (คอลัมน์แคมเปญ 5 ตัว + `promotion_products` + `promotion_policy` (kill switch + งบ 15%)
+     + `promotion_apply_rules` จุดตัดสินส่วนลดเดียว + re-emit `create_order_with_items` จาก 148)
+  - Contract: `e2e/contracts_153_promotion_campaign_controls.sql` (G1–G8 PASS · ROLLBACK) + CI step ใน contract-tests.yml
+  - Client: `promotionClient` (mirror ครบ + เหตุผลปฏิเสธใหม่ 4 แบบ) · `cartStore` (ฐาน scope) · `CouponBox` (ส่ง lines)
+  - Admin: `AdminPromotions` (ฟอร์มแคมเปญ + scope picker + badges + auto-scroll §12.3) ·
+           `AdminMarketing` แท็บ Rules = แผงงบ/kill switch (ยืนบน Marketing Center ตาม §3 GAP)
+  - เทสต์: `promotionCampaignControls.test.ts` 22 ข้อ + realign couponBox (เปิดเผยใน evidence)
+- ⏳ **STAGE 2 (Referral) → STAGE 3 (Loyalty Tiers) → STAGE 4 (Engagement & Play)** = ยังไม่เริ่ม
+  - Stage 2 มีงาน inspect บังคับก่อน (Owner ข้อ ③): ตรวจ auth · guest checkout · OTP จริง
+    ก่อนตัดสินใจ unique identity → แล้วค่อยออกแบบ/ลงมือ (ห้ามเดา)
+- ⛔ เงื่อนไขเลื่อนขั้น (§5.8) ยังคงอยู่: business rules + server validation + tests + สิทธิ์ ต้องผ่านก่อนทุกครั้ง

@@ -17,6 +17,7 @@ import {
   type MarketingPostRow, type MarketingRules,
 } from '@/lib/adminMarketing'
 import { listContentApprovals, reviewContent, type ContentApprovalRow } from '@/lib/contentApproval'
+import { getBusinessSettings, setBusinessSetting } from '@/lib/bmbAdminApi_settings'
 
 type Tab = 'overview' | 'planner' | 'studio' | 'approval' | 'calendar' | 'rules' | 'analytics' | 'ai'
 const TABS: Array<{ id: Tab; label: string }> = [
@@ -317,24 +318,27 @@ export function AdminMarketing() {
       )}
 
       {tab === 'rules' && (
-        <div className="card space-y-3 max-w-xl">
-          <p className="text-sm text-brand-muted">กติกาเหล่านี้เก็บในตาราง marketing_rules (แก้ได้จริง ไม่มีค่าฝังโค้ด)</p>
-          <label className="text-sm">จำนวนโพสต์ต่อสัปดาห์
-            <input type="number" min={1} max={21} className="input w-full" value={ruleFreq} onChange={(e) => setRuleFreq(Number(e.target.value))} />
-          </label>
-          <div className="grid grid-cols-2 gap-3">
-            <label className="text-sm">หน้าต่างเวลาเริ่ม
-              <input type="time" className="input w-full" value={ruleStart} onChange={(e) => setRuleStart(e.target.value)} />
+        <div className="space-y-4 max-w-xl">
+          <PromotionBudgetPanel />
+          <div className="card space-y-3">
+            <p className="text-sm text-brand-muted">กติกาเหล่านี้เก็บในตาราง marketing_rules (แก้ได้จริง ไม่มีค่าฝังโค้ด)</p>
+            <label className="text-sm">จำนวนโพสต์ต่อสัปดาห์
+              <input type="number" min={1} max={21} className="input w-full" value={ruleFreq} onChange={(e) => setRuleFreq(Number(e.target.value))} />
             </label>
-            <label className="text-sm">หน้าต่างเวลาสิ้นสุด
-              <input type="time" className="input w-full" value={ruleEnd} onChange={(e) => setRuleEnd(e.target.value)} />
+            <div className="grid grid-cols-2 gap-3">
+              <label className="text-sm">หน้าต่างเวลาเริ่ม
+                <input type="time" className="input w-full" value={ruleStart} onChange={(e) => setRuleStart(e.target.value)} />
+              </label>
+              <label className="text-sm">หน้าต่างเวลาสิ้นสุด
+                <input type="time" className="input w-full" value={ruleEnd} onChange={(e) => setRuleEnd(e.target.value)} />
+              </label>
+            </div>
+            <label className="text-sm">เว้นขั้นต่ำระหว่างโพสต์ (ชม.)
+              <input type="number" min={0} max={168} className="input w-full" value={ruleCooldown} onChange={(e) => setRuleCooldown(Number(e.target.value))} />
             </label>
+            <button className="btn btn-primary" onClick={() => void handleSaveRules()} data-testid="mk-save-rules">💾 บันทึกกติกา</button>
+            {rules && <p className="text-xs text-brand-muted">ค่าปัจจุบันในระบบ: mix {JSON.stringify(rules.content_mix)} · menu rules {JSON.stringify(rules.menu_rules)}</p>}
           </div>
-          <label className="text-sm">เว้นขั้นต่ำระหว่างโพสต์ (ชม.)
-            <input type="number" min={0} max={168} className="input w-full" value={ruleCooldown} onChange={(e) => setRuleCooldown(Number(e.target.value))} />
-          </label>
-          <button className="btn btn-primary" onClick={() => void handleSaveRules()} data-testid="mk-save-rules">💾 บันทึกกติกา</button>
-          {rules && <p className="text-xs text-brand-muted">ค่าปัจจุบันในระบบ: mix {JSON.stringify(rules.content_mix)} · menu rules {JSON.stringify(rules.menu_rules)}</p>}
         </div>
       )}
 
@@ -394,6 +398,121 @@ function PostForm(props: {
       {props.images.length > 0 && <p className="text-xs text-brand-muted">แนบรูปแล้ว {props.images.length} รูป</p>}
       <button className="btn btn-primary" disabled={props.saving} onClick={props.onSubmit} data-testid="mk-create-post">
         {props.saving ? '⏳…' : '📨 สร้างโพสต์ (รอคนอนุมัติ)'}
+      </button>
+    </div>
+  )
+}
+
+/**
+ * [G&R 153 · Rollout ①] แผงงบประมาณ & Kill Switch ของโปรโมชั่น
+ * เก็บใน business_settings.promotion_policy (Owner ⑥: เริ่ม 15% ของยอดขาย · แอดมินปรับได้เอง)
+ *  · kill switch = promotions_enabled (false → ทุกโค้ดถูกหัก 0 ทันทีที่เซิร์ฟเวอร์)
+ *  · budget_percent = เพดานส่วนลด/เดือน (0–100 · null = ไม่จำกัด)
+ *  · ตัวเลขจริงอ่านจาก RPC promotion_budget_status (gate is_admin — แอดมินเท่านั้น)
+ *  เป็นส่วนหนึ่งของ AI Marketing Center (§3 GAP: หน้าจอบริหาร Growth ยืนบนศูนย์กลางเดิม)
+ */
+function PromotionBudgetPanel() {
+  const [enabled, setEnabled] = useState(true)
+  const [percent, setPercent] = useState<number | ''>(15)
+  const [unlimited, setUnlimited] = useState(false)
+  const [status, setStatus] = useState<Record<string, unknown> | null>(null)
+  const [busy, setBusy] = useState(false)
+
+  useEffect(() => { void loadPolicy() }, [])
+
+  async function loadPolicy() {
+    const settings = await getBusinessSettings()
+    const policy = settings['promotion_policy']
+    if (policy && typeof policy === 'object') {
+      if (typeof policy.promotions_enabled === 'boolean') setEnabled(policy.promotions_enabled)
+      if (policy.budget_percent === null) {
+        setUnlimited(true)
+        setPercent('')
+      } else if (policy.budget_percent !== undefined && Number.isFinite(Number(policy.budget_percent))) {
+        setUnlimited(false)
+        setPercent(Number(policy.budget_percent))
+      }
+    }
+    const { data, error } = await supabase.rpc('promotion_budget_status')
+    if (!error && data && typeof data === 'object') setStatus(data as Record<string, unknown>)
+    else setStatus(null)
+  }
+
+  async function handleSave() {
+    if (!unlimited) {
+      const n = percent === '' ? NaN : Number(percent)
+      if (!Number.isFinite(n) || n < 0 || n > 100) {
+        showToast('เพดานงบส่วนลดต้องเป็นตัวเลข 0–100 (หรือติ๊ก "ไม่จำกัด")', 'warning')
+        return
+      }
+    }
+    setBusy(true)
+    const ok = await setBusinessSetting('promotion_policy', {
+      promotions_enabled: enabled,
+      budget_percent: unlimited ? null : Number(percent),
+    })
+    setBusy(false)
+    showToast(
+      ok ? 'บันทึกงบ/kill switch โปรโมชั่นแล้ว (มีผลกับทุกโค้ดทันที)' : 'บันทึกไม่สำเร็จ — ลองใหม่อีกครั้ง',
+      ok ? 'success' : 'error',
+    )
+    if (ok) void loadPolicy()
+  }
+
+  const money = (v: unknown) => Number(v ?? 0).toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+
+  return (
+    <div className="card space-y-3" data-testid="gr-budget-panel">
+      <h3 className="font-bold text-brand-accent">💰 งบประมาณ & Kill Switch โปรโมชั่น</h3>
+      <p className="text-sm text-brand-muted">
+        เพดานส่วนลดต่อเดือน = เปอร์เซ็นต์ของยอดขายเดือนนั้น — ระบบตัดสินใจให้เองทุกโค้ด (server) ·
+        เกินเพดาน/ปิดสวิตช์ = ส่วนลดเป็น 0 โดยไม่หักเงินลูกค้าลับ ๆ
+      </p>
+      <label className="flex items-center gap-2 text-sm">
+        <input
+          type="checkbox"
+          checked={enabled}
+          onChange={(e) => setEnabled(e.target.checked)}
+          data-testid="gr-kill-switch"
+        />
+        ✅ เปิดระบบโปรโมชั่น (ติ๊กออก = ปิดทุกโค้ดทันที — kill switch)
+      </label>
+      <label className="flex items-center gap-2 text-sm">
+        <input
+          type="checkbox"
+          checked={unlimited}
+          onChange={(e) => { setUnlimited(e.target.checked); if (e.target.checked) setPercent('') }}
+          data-testid="gr-budget-unlimited"
+        />
+        ไม่จำกัดงบ (ปิดเพดานชั่วคราว)
+      </label>
+      {!unlimited && (
+        <label className="text-sm block">
+          เพดานงบส่วนลด (% ของยอดขายเดือนนี้ · 0 = ไม่ให้ส่วนลดเลย)
+          <input
+            type="number"
+            min={0}
+            max={100}
+            step={1}
+            className="input w-full"
+            value={percent}
+            onChange={(e) => setPercent(e.target.value === '' ? '' : Number(e.target.value))}
+            data-testid="gr-budget-percent"
+          />
+        </label>
+      )}
+      {status && (
+        <div className="rounded-xl bg-brand-bg p-3 text-xs text-brand-muted space-y-1" data-testid="gr-budget-status">
+          <div>เดือนนี้: ยอดขายรวม <b>{money(status.sales)}</b> บาท · ใช้ส่วนลดไป <b>{money(status.spent)}</b> บาท</div>
+          <div>
+            {status.percent === null
+              ? 'เพดานงบ: ไม่จำกัด'
+              : `เพดานงบ: ${money(status.budget)} บาท (เหลือ ${money(status.remaining)} บาท) จาก ${Number(status.percent)}% ของยอดขาย`}
+          </div>
+        </div>
+      )}
+      <button className="btn btn-primary" onClick={() => void handleSave()} disabled={busy} data-testid="gr-budget-save">
+        {busy ? '⏳…' : '💾 บันทึกงบ/kill switch'}
       </button>
     </div>
   )

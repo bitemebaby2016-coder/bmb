@@ -2,22 +2,24 @@
 
 > **สถานะงานปัจจุบันของโปรเจกต์ Bite Me Baby** ใช้แนบเข้าสู่ Context ตอนเริ่มแชทเสมอ
 
-**last_updated:** 2026-10-25 **SESSION CLOSE (WAVE 5) — Owner เขียนคำตอบ G&R ลง inventory ครบแล้ว · ปิดเซสชั่น · ส่งต่อทั้งหมด = `docs/BMB_HANDOFF_NEXT_SESSION_2026-10-25.md` §6**
-(gates ปิดเซสชัน: tsc 0 · lint 0 · vitest **140 files/1424 tests 0 fail** · build ✓ · replay **001-152 ALL_GREEN** ·
-**contracts 40/40** · production **150/151/152 apply+verify+record ✓** · git: `be1b012` + `77ed0eb` (Owner rules) CI+Contract เขียว)
-**phase:** 🟣 ปิดเซสชั่น — เซสชั่นหน้าเริ่มจาก handoff §6.2
-**current_focus:** **ส่งต่อเซสชั่นหน้า (ตามลำดับ):**
-1. ให้ Owner ตรวจ status report **§D** (hard refresh · 6 ข้อ) 2. **D6** Owner ลบ pages.dev (prep §2) ·
-3. **R-16** พิมพ์จริง (prep §1) 4. **acceptance §4 #1–#14** 5. **G&R**: คำตอบครบใน `BMB_GROWTH_REWARDS_INVENTORY_2026-10-25.md`
-   (§1 อนุมัติหมด · §5 ครบ 8: ①②ตรวจสอบก่อนยังไม่สร้าง ③Referral=บัญชี+OTP/3ระดับ/inspectก่อน ④Spin=ใช่ ⑤Affiliate=ใช่
-   ⑥งบ=15%ปรับได้ ⑦catalog=ย้ายhardcode ⑧Rollout=Promotions→Referral→Loyalty→Engagement+ gates) →
-   **รอคำสั่ง "เริ่มพัฒนา" จาก Owner เท่านั้น** (inventory §6 ยังคงห้ามลงมือเอง)
-**blocked_by:** ⛔ รอ Owner ทั้งสิ้น: ตรวจ §D · D6 ลบทดสอบ · R-16 · acceptance §4 · สั่ง start G&R
-- (บันทึกรอบก่อน — ปิดแล้วทั้งหมด): 4 บั๊กหน้าจอแก้ครบ (status report §B) · production **150/151/152 ✓** ·
-  stale contracts **8/8** (039-G7=152) ✓ · legacy 7 เขียวเอง(ไม่ซ่อม) ✓ · CTA แท็บพรีออเดอร์ ✓ · R-17 PASS ✓ ·
-  G&R = เอกสาร 2 ฉบับ + **คำตอบ Owner อยู่ใน inventory §1/§5 แล้ว** · 3.1/3.2/3.3 DONE มีหลักฐาน ✓ ·
-  contract039 รันบน production ตรง ๆ ติด fixture ข้อมูล (ตัวตรวจสิทธิ์จริง = verify152 เขียว) ·
-  `AI_ENTRYPOINT.md`/`UNIVERSAL_MASTER_AI_RULES.md` (v1.1/v2.1) = ท่านแก้เอง → commit `77ed0eb` แล้ว
+**last_updated:** 2026-10-25 **G&R STAGE 1 (PROMOTIONS) DELIVERED — Owner สั่ง "เริ่มพัฒนา G&R ตามกฏ" → ลงมือตาม Rollout ข้อ ⑧ ทันที**
+(gates ทั้งหมดเขียว: tsc 0 · lint+brandNameGuard OK · vitest **141 files/1446 tests 0 fail** · build ✓ PWA 141 ·
+ Docker replay สะอาด **001–153 = MIGRATIONS_OK** · regression contracts **18/18 OK** · **contract 153 G1–G8 PASS** ·
+ หลักฐานรวม = `e2e/g153-gates-evidence.txt`)
+**phase:** 🟢 STAGE 1 (Promotions) = implemented + local gates green + push → รอดู CI · ขั้นถัด = STAGE 2 Referral
+**current_focus:**
+1. **STAGE 1 · Promotions = เสร็จ** — `153_promotion_campaign_controls.sql` (คอลัมน์แคมเปญ 5 · `promotion_products` ·
+   `promotion_policy` kill switch+งบ 15% · `promotion_apply_rules` จุดตัดสินเดียว · re-emit `create_order_with_items` จาก 148)
+   + `e2e/contracts_153_...sql` (G1–G8 PASS · CI step แล้ว) + client mirror (`promotionClient` เหตุผลปฏิเสธใหม่ 4 ·
+   `cartStore` ฐาน scope · `CouponBox` ส่ง lines) + `AdminPromotions` (ฟอร์ม/scope picker/badges/auto-scroll §12.3) +
+   `AdminMarketing` แท็บ Rules = แผงงบ/kill switch (ยืนบน Marketing Center ตาม §3 GAP) + เทสต์ใหม่ 22 ข้อ
+2. **STAGE 2 · Referral = ยังไม่เริ่ม** — ตาม Owner ข้อ ③ **ต้อง inspect auth · guest checkout · OTP จริงก่อน**
+   แล้วค่อยตัดสินใจ unique identity → 3 ระดับกัน self-referral → rewards ตอนออเดอร์ผ่านสถานะ → ledger กลับ
+   (rollout ข้อ 2 · ห้ามข้ามขั้น · ห้ามเดา)
+3. งานรอ Owner (ไม่ใช่งาน AI): ตรวจ status report §D · D6 ลบทดสอบ pages.dev · R-16 พิมพ์จริง · acceptance §4
+**blocked_by:** ⛔ ไม่มี blocker ฝั่ง AI — STAGE 2 ทำต่อได้ตามลำดับเมื่อเข้ารอบ (หรือ Owner สั่งเพิ่ม)
+- (รอบก่อนปิดเซสชัน — ยังคงมีผล): 4 บั๊กหน้าจอ ✓ · production 150/151/152 ✓ · stale contracts 8/8 ✓ ·
+  legacy 7 เขียว(ไม่ซ่อม) ✓ · R-17 PASS ✓ · G&R เอกสาร+คำตอบ Owner ✓ · `AI_ENTRYPOINT`/`UNIVERSAL_MASTER_AI_RULES` v1.1/v2.1 ✓
 
 ---
 
