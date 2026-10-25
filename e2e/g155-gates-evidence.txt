@@ -25,6 +25,8 @@ Gates (clean-room ทั้งหมด รันจากเครื่อง 
     contracts_155  rc=0 → G1–G9 PASS → "CONTRACT 155: PASS" (ROLLBACK zero data)
     contracts_154  rc=0 → "CONTRACT 154: PASS" (regression — trigger ใหม่ไม่กระทบ)
     contracts_153  rc=0 → "CONTRACT 153: PASS" (regression)
+- CI: push `8714fa2` แล้ว (step Contract 155 ใหม่จะรันใน Contract Tests) — เครื่องนี้ไม่มี `gh`
+  จึง **ยังไม่ได้ตรวจผล CI จริง** (ห้ามถือเป็นเขียวจนตรวจเห็นด้วยตา)
 
 G1–G9 (ผลจริงจาก NOTICE):
     G1  สคีมา + RLS deny (0 policy) + append-only trigger + seed 8 คีย์ +

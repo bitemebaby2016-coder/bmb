@@ -6,7 +6,7 @@
 (gates เขียวทั้งหมด: tsc 0 · lint+brandNameGuard OK (**430 ไฟล์**) · vitest **143 files/1500 tests 0 fail** ·
  build ✓ **PWA 142** · **Docker replay สะอาด 001–155 = ALL_GREEN** ·
  **contract 155 G1–G9 PASS (rc=0) + contractRegr 154/153 PASS** ·
- evidence = `e2e/g155-gates-evidence.txt`)
+ evidence = `e2e/g155-gates-evidence.txt` · push `8714fa2` แล้ว — **CI ยังไม่ได้ตรวจจริง** ไม่มี `gh` ในเครื่อง)
 **production:** ยังคง **migration top = 154 (APPLIED + RECORDED)** · **155 = DELIVERED แต่ยังไม่ apply**
  (รอคำสั่ง "apply 155" → staged แบบ `r14Apply154` = r15Apply155.cjs — เหมือน 153/154)
 **phase:** 🟢 STAGE 1 = DONE (production) · STAGE 2 = DONE (production) ·
