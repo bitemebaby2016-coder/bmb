@@ -25,6 +25,10 @@ export function StoreStatusStrip({ status }: { status: StoreStatus }) {
             {typeof status.capacityPct === 'number' && ` · เหลือที่นั่ง ${100 - status.capacityPct}%`}
           </p>
         )}
+        {/* สองเลน (Owner 2026-10-25): เซมเดย์ไม่มีคัทออฟ (บรรทัดบน) · พรีออเดอร์ = รอบถัดไปที่ยังสั่งได้ */}
+        {status.preOrderLine && (
+          <p className="text-xs opacity-80 truncate">📅 {status.preOrderLine}</p>
+        )}
       </div>
     </div>
   )

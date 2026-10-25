@@ -856,7 +856,8 @@ p { color: var(--color-brand-text-secondary); }
   flex-direction: column;
   height: 100%;
   background: #fff;
-  border: 1px solid rgba(255, 94, 30, 0.14);
+  /* Owner (2026-10-25 "เฟรมกรอบของเมนูยังไม่หาย"): ถอดเส้นกรอบ — คงแค่มุมโค้ง + เงา */
+  border: 1px solid transparent;
   border-radius: 20px;
   overflow: hidden;
   box-shadow: 0 10px 24px rgba(146, 64, 14, 0.12);
@@ -1122,7 +1123,8 @@ p { color: var(--color-brand-text-secondary); }
   flex-direction: column;
   height: 100%;
   background: #fff;
-  border: 1px solid rgba(var(--theater-accent2-rgb), 0.18);
+  /* Owner (2026-10-25 "เฟรมกรอบของเมนูยังไม่หาย"): ถอดเส้นกรอบ — การ์ดคงแค่มุมโค้ง + เงา */
+  border: 1px solid transparent;
   border-radius: 20px;
   overflow: hidden;
   box-shadow: 0 10px 24px rgba(146, 64, 14, 0.12);
@@ -1132,7 +1134,7 @@ p { color: var(--color-brand-text-secondary); }
 .snack-card:hover {
   transform: translateY(-4px);
   box-shadow: 0 18px 36px rgba(146, 64, 14, 0.18);
-  border-color: rgba(var(--theater-accent2-rgb), 0.4);
+  border-color: transparent;
 }
 .drink-card-media,
 .snack-card-media {

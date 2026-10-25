@@ -894,6 +894,8 @@ export interface StoreStatus {
   deliveryWindowLabel?: string
   capacityPct?: number
   message: string
+  /** สายพรีออเดอร์ (Owner 2026-10-25): รอบถัดไปที่ยังสั่งได้/คัทออฟที่ตั้งไว้ — แยกจากสายเซมเดย์ */
+  preOrderLine?: string
 }
 
 export interface QuickAction {

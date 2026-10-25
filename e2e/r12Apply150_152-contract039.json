@@ -1,0 +1,9 @@
+[
+  {
+    "label": "contract-039-g7",
+    "status": 400,
+    "data": {
+      "message": "Failed to run sql query: ERROR:  P0001: ERR_PRODUCT_INVALID: 0 valid PRE_ORDER menus for 2026-10-26 (disabled/archived/non-preorder product in schedule)\nCONTEXT:  PL/pgSQL function publish_menu_schedule(date,boolean) line 36 at RAISE\nPL/pgSQL function inline_code_block line 8 at assignment\n"
+    }
+  }
+]

@@ -6,6 +6,7 @@ import { createElement as h } from 'react'
 import { createRoot } from 'react-dom/client'
 import { MemoryRouter } from 'react-router-dom'
 import { CategorySections } from '@/components/home/CategorySections'
+import { categoryDisplayRank } from '@/lib/catalogStructure'
 import type { Product, ProductCategory } from '@/types'
 
 // jsdom ไม่มี matchMedia — HorizontalCarousel ใช้ตรวจ reduced-motion
@@ -76,6 +77,20 @@ describe('CategorySections — ระบบหัวข้อเมนูเด�
     const html = await renderHtml([prod('p1', 'cat-1'), prod('p2', 'cat-new-1')], [other, pinned])
     // ลำดับหัวข้อ = คำสั่ง Owner (สุขภาพ→เครื่องดื่ม→ของทานเล่น/ผลไม้→สำเร็จรูป) มาก่อน sort_order
     expect(html.indexOf('สินค้าสำเร็จรูป')).toBeLessThan(html.indexOf('จานเดียว'))
+  })
+
+  it('Owner (2026-10-25): ชื่อจริงใน DB = ชื่อเล่นในลิสต์ pinned (ความหมายเดียวกัน) — เรียงได้จริง', async () => {
+    // เดิมเทียบชื่อตรงตัว → ของหวานลัน/เมนู_สำเร็จ/หมวดโหมด ไม่เคยติดลำดับเลย
+    expect(categoryDisplayRank('ของหวานลัน / ผลไม้')).toBe(categoryDisplayRank('ของทานเล่น / ผลไม้'))
+    expect(categoryDisplayRank('เมนูสำเร็จ')).toBe(categoryDisplayRank('สินค้าสำเร็จรูป'))
+    expect(categoryDisplayRank('ส่งวันนี้ / Same Day')).toBe(4)
+    expect(categoryDisplayRank('จองล่วงหน้า / พรีออเดอร์')).toBe(5)
+    expect(categoryDisplayRank('สินค้าตรุษจีน')).toBe(6) // นอกลิสต์ = ท้าย (เท่าจำนวนลิสต์)
+    // render จริงผ่าน buildHeadingGroups: เมนู_สำเร็จ (pinned) มาก่อน จานเดียว (ทั่วไป)
+    const pinned = cat('cat-new-1', 'เมนูสำเร็จ', 6)
+    const other = cat('cat-1', 'จานเดียว', 1)
+    const html = await renderHtml([prod('p1', 'cat-1'), prod('p2', 'cat-new-1')], [other, pinned])
+    expect(html.indexOf('เมนูสำเร็จ')).toBeLessThan(html.indexOf('จานเดียว'))
   })
 
   it('หัวข้อที่ archived ถูกซ่อนทั้งหัวข้อ', async () => {

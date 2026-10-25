@@ -1,0 +1,34 @@
+[
+  {
+    "label": "orders-without-history-now",
+    "status": 201,
+    "data": [
+      {
+        "n": 0
+      }
+    ]
+  },
+  {
+    "label": "backfill-rows",
+    "status": 201,
+    "data": [
+      {
+        "n": 0
+      }
+    ]
+  },
+  {
+    "label": "baseline-shape-sample",
+    "status": 201,
+    "data": []
+  },
+  {
+    "label": "non-baseline-untouched",
+    "status": 201,
+    "data": [
+      {
+        "non_baseline_rows": 24
+      }
+    ]
+  }
+]

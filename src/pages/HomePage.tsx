@@ -48,7 +48,7 @@ import {
   type SiteCopy,
 } from '@/lib/homePopular'
 import type { VerifiedCustomerReview, Product, ProductCategory, SameDayOrderPayload, PreOrderPayload, HomeReview } from '@/types'
-import { preOrderEntryPath, withPreOrderTab } from '@/lib/catalogStructure'
+import { preOrderEntryPath, saleModeOfCategory, withPreOrderTab } from '@/lib/catalogStructure'
 
 // ⚡ The Food Theater stage is code-split (aiServerMemory chain); it renders
 // real catalog picks + canonical cart actions as the first section of /shop.
@@ -144,7 +144,9 @@ export function HomePage() {
   const popularAll = resolvePopularItems(products, categories, popularCfg)
     .map((p) => toPopularHomeProduct(p, popularCatMap.get(p.category_id), scheduleMap))
   // ปุ่มกรองหัวข้อเมนู — กติกาเดียวกับแถวหัวข้อด้านล่าง (หัวข้อว่าง = ซ่อน)
-  const chips = headingChips(categories, products)
+  // Owner (2026-10-25): หมวดโหมดขาย = ความหมายเดียวกับแท็บ 🛵 ส่งวันนี้ / 📅 พรีออเดอร์
+  // ("มันคืออันเดียวกัน") → ไม่โชว์ซ้ำในแถวแท็บ — เซกชันโหมดด้านล่างรับผิดชอบเอง
+  const chips = headingChips(categories, products).filter((c) => saleModeOfCategory(c) === 'auto')
 
   const filteredPopular = popularAll.filter((item) => {
     const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase())
@@ -249,12 +251,25 @@ export function HomePage() {
   // Feature B (Owner 2026-10-25): sections ส่งวันนี้ + พรีออเดอร์ (ลำดับ 2-3 ของหน้าแรก)
   const catById = new Map(categories.map((c) => [c.id, c] as const))
   const toShowcaseCard = (p: Product) => toPopularHomeProduct(p, catById.get(p.category_id), scheduleMap)
-  const sameDayShowcase = products
-    .filter((p) => p.is_available && !p.archived && (p.available_same_day ?? !p.is_preorder))
+  // Owner (2026-10-25): หมวดโหมดขาย (ส่งวันนี้/Same Day · จองล่วงหน้า/พรีออเดอร์) = ความหมาย
+  // เดียวกับเซกชัน/แท็บโหมด → หัวข้อซ้ำถูกถอด (CategorySections กรองออก) และ "สินค้าของหมวดนั้น
+  // ถูกย้ายเข้า showcase โหมด" โดยหมวดตัวเองเรียงมาก่อน slice(8) — ไม่มีเมนูหายจากหน้าแรก
+  const aliasModeOf = (p: Product) => {
+    const c = catById.get(p.category_id)
+    return c ? saleModeOfCategory(c) : 'auto'
+  }
+  const sellable = (p: Product) => p.is_available && !p.archived
+  const dedupe = (rows: Product[]) => rows.filter((p, i, arr) => arr.findIndex((q) => q.id === p.id) === i)
+  const sameDayShowcase = dedupe([
+    ...products.filter((p) => sellable(p) && aliasModeOf(p) === 'same_day'),
+    ...products.filter((p) => sellable(p) && aliasModeOf(p) === 'auto' && (p.available_same_day ?? !p.is_preorder)),
+  ])
     .slice(0, 8)
     .map(toShowcaseCard)
-  const preOrderShowcase = products
-    .filter((p) => p.is_available && !p.archived && !!scheduleMap[p.id])
+  const preOrderShowcase = dedupe([
+    ...products.filter((p) => sellable(p) && aliasModeOf(p) === 'pre_order'),
+    ...products.filter((p) => sellable(p) && aliasModeOf(p) === 'auto' && !!scheduleMap[p.id]),
+  ])
     .slice(0, 8)
     .map(toShowcaseCard)
 

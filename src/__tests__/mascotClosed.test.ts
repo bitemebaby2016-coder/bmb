@@ -149,6 +149,30 @@ describe('storeStatus — ตรรกะเปิด/ปิดร้านจ�
     expect(s.deliveryWindowLabel).toBeUndefined()
     expect(s.message).toContain('ไม่มีรอบจัดส่งที่เปิดรับ')
   })
+
+  it('สองเลน (Owner 2026-10-25): คัทออฟพรีออเดอร์วันนี้ผ่านแล้ว → preOrderLine ชี้รอบอนาคต + เซมเดย์ยังเปิด', () => {
+    publishDeliveryRounds([
+      { status: 'active', display_name: 'รอบเที่ยง', cutoff_time: '10:30', pre_order_cutoff: '09:00', delivery_start: '11:00', delivery_end: '14:00', max_capacity: 50, current_count: 1, scheduled_date: '2026-10-14' },
+      { status: 'active', display_name: 'พรุ่งนี้เที่ยง', cutoff_time: '10:30', pre_order_cutoff: '09:00', delivery_start: '11:00', delivery_end: '14:00', max_capacity: 50, current_count: 0, scheduled_date: '2026-10-15' },
+    ] as never)
+    // 14:36 ICT = 07:36Z — เลยคัทออฟ 09:00 ของวันนี้แล้ว → รอบที่สั่งได้ = พรุ่งนี้ (อนาคต)
+    const s = currentStoreStatus(new Date('2026-10-14T07:36:00Z'))
+    expect(s.isOpen).toBe(true) // เซมเดย์สั่งได้ตลอด (Q1/148)
+    expect(s.state).toBe('open')
+    expect(s.preOrderLine).toContain('พรุ่งนี้เที่ยง')
+    expect(s.preOrderLine).toContain('คัทออฟ 09:00')
+  })
+
+  it('สองเลน: ทุกรอบวันนี้เลยคัทออฟ + ไม่มีรอบอนาคต → preOrderLine = ปิดรับแล้ว (ร้านยังเปิดรับเซมเดย์)', () => {
+    publishDeliveryRounds([
+      { status: 'active', display_name: 'รอบเย็น', cutoff_time: '16:00', pre_order_cutoff: '15:00', delivery_start: '17:00', delivery_end: '20:00', max_capacity: 50, current_count: 0, scheduled_date: '2026-10-14' },
+    ] as never)
+    // 16:00 ICT = 09:00Z — เลย pre_order_cutoff 15:00 แล้ว · ไม่มีรอบอนาคต
+    const s = currentStoreStatus(new Date('2026-10-14T09:00:00Z'))
+    expect(s.preOrderLine).toContain('ปิดรับแล้ว')
+    expect(s.isOpen).toBe(true)
+    expect(s.state).toBe('open')
+  })
 })
 
 describe('MascotBadge — แสดงรูปท่าร้านปิดจริง (render test)', () => {

@@ -39,7 +39,7 @@ import type {
 } from '@/types'
 import { SOCIAL_PROOF_REVIEWS } from './socialProofReviews'
 import { sameDayEligible, preorderEligible } from './talkToBite'
-import { roundBookability } from './deliveryRoundStatus'
+import { roundBookability, roundCutoffLabel, roundCutoffMs } from './deliveryRoundStatus'
 import { bangkokMsOfDay } from './bangkokTime'
 import type { ProductScheduleMap } from './productSchedule'
 
@@ -164,6 +164,34 @@ export function getStoreStatusFromRounds(rounds: Array<{
     return d === null || d === todayBkk
   })
   // ยังรับได้จริงวันนี้ = ไม่เต็ม + ไม่เลย cutoff/window (mirror เดียวกับ deliveryRoundStatus)
+  // ── สายพรีออเดอร์ (Owner 2026-10-25): "ปิดพรีออเดอร์รอบเย็นไปแล้ว → ที่สั่งได้คือรอบถัดไป
+  // ในอนาคต" · นอกเวลาคัทออฟที่แอดมินกำหนด = สั่งไม่ได้ · คัทออฟ = pre_order_cutoff (145)
+  // หรือ delivery_start − cutoff_hours(2) — display mirror เท่านั้น server ตัดสินตอนสั่งจริง
+  const cutoffAtUtc = (r: Record<string, any>): number | null => {
+    const day = String(r.scheduled_date ?? '').slice(0, 10)
+    if (!day) return null
+    const ms = roundCutoffMs(r, 'PRE_ORDER', 2)
+    if (ms === null) return null
+    const base = Date.parse(`${day}T00:00:00+07:00`)
+    if (Number.isNaN(base)) return null
+    return base + ms // ms อาจติดลบ (คัทออฟก่อนเที่ยงคืนของวันก่อน) → base+ms ยังชี้วันถูก
+  }
+  const nextPre =
+    live
+      .filter((r) => {
+        const t = cutoffAtUtc(r)
+        return t === null || now.getTime() < t
+      })
+      .sort((a, b) => {
+        const da = String(a.scheduled_date ?? '').slice(0, 10)
+        const db = String(b.scheduled_date ?? '').slice(0, 10)
+        if (da !== db) return da.localeCompare(db)
+        return String(a.delivery_start ?? '').localeCompare(String(b.delivery_start ?? ''))
+      })[0] ?? null
+  const preOrderLine = nextPre
+    ? `พรีออเดอร์: เปิดรับรอบ ${nextPre.display_name || String(nextPre.scheduled_date ?? '').slice(0, 10)} (คัทออฟ ${roundCutoffLabel(nextPre, 'PRE_ORDER', 2)})`
+    : 'พรีออเดอร์: ปิดรับแล้ว — ยังไม่เปิดรอบถัดไป'
+
   const bookable = todayRows.filter(
     (r) => roundBookability(r, { isToday: true, nowUtcMs: now.getTime() }) === 'open',
   )
@@ -186,6 +214,7 @@ export function getStoreStatusFromRounds(rounds: Array<{
         ? Math.min(100, Math.round((Number(current.current_count || 0) / Number(current.max_capacity)) * 100))
         : undefined,
       message: `เปิดรับออเดอร์${current.display_name ? ' ' + current.display_name : ''}`,
+      preOrderLine,
     }
   }
   // วันนี้ปิดรับหมด แต่ยังมีรอบวันถัดไป = เปิดรับจองล่วงหน้าเท่านั้น (ไม่มีตัวเลขแต่งเอง)
@@ -198,12 +227,14 @@ export function getStoreStatusFromRounds(rounds: Array<{
       isOpen: true,
       state: 'preorder_only',
       message: 'เปิดรับออเดอร์จองล่วงหน้า — รอบวันนี้ปิดรับแล้ว',
+      preOrderLine,
     }
   }
   return {
     isOpen: false,
     state: 'closed',
     message: 'ยังไม่เปิดรับออเดอร์ — ไม่มีรอบจัดส่งที่เปิดรับอยู่',
+    preOrderLine,
   }
 }
 

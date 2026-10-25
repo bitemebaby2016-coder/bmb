@@ -1,0 +1,30 @@
+[
+  {
+    "label": "col+default",
+    "status": 201,
+    "data": [
+      {
+        "column_name": "delivery_address",
+        "column_default": "''::text"
+      }
+    ]
+  },
+  {
+    "label": "col-comment",
+    "status": 201,
+    "data": [
+      {
+        "col_comment": "Legacy manual-era address column (schema parity fix WAVE 5B / migration 150). Canonical written address = dropoff_detail (create_order_with_items maps p_delivery_address -> dropoff_detail). This column is displayed by admin DeliveryManagement and asserted by 035-era trigger history."
+      }
+    ]
+  },
+  {
+    "label": "row-count-untouched",
+    "status": 201,
+    "data": [
+      {
+        "orders": 4
+      }
+    ]
+  }
+]

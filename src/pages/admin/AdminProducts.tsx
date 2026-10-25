@@ -547,9 +547,12 @@ export function AdminProducts() {
             {Array.isArray(product.addons) && product.addons.length > 0 && (
               <span className="badge badge-info text-xs mb-1 inline-block">🧁 +{product.addons.length} toppings</span>
             )}
-            <div className="text-sm text-brand-muted mb-3">
-              {categories.find(c => c.id === product.category_id)?.name} • ⏱️ {product.prep_minutes} นาที
-            </div>
+              {/* FIX (Owner report 2026-10-25 "ผูกสินค้ายังมั่ว"): label หมวดต้องอ่านจาก
+                  แหล่งเดียวกับแท็บ (adminCats) — เดิมดึงจาก getCategories (customer: active-only)
+                  → หมวดปิด/ไม่ตรง scope ทำให้ชื่อหมวดใต้การ์ดว่าง/ผิด */}
+              <div className="text-sm text-brand-muted mb-3">
+                {adminCats.find(c => c.id === product.category_id)?.name ?? categories.find(c => c.id === product.category_id)?.name ?? '—'} • ⏱️ {product.prep_minutes} นาที
+              </div>
             <div className="flex gap-2 mt-auto pt-2">
               <button onClick={() => handleEditProduct(product)} className="btn btn-outline text-sm flex-1">✏️ แก้ไข</button>
               <button onClick={() => (product.archived ? handleRestoreProduct(product.id) : handleArchiveProduct(product.id))} className="btn btn-outline text-sm text-red-500 flex-1">{product.archived ? '↩ กู้คืน' : '📦 จัดเก็บ'}</button>

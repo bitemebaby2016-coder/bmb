@@ -2,11 +2,24 @@
 
 > **สถานะงานปัจจุบันของโปรเจกต์ Bite Me Baby** ใช้แนบเข้าสู่ Context ตอนเริ่มแชทเสมอ
 
-**last_updated:** 2026-10-25 **WAVE 3 (CONTINUOUS EXECUTION) — banner ตามคำสั่ง + stale contracts 7/8 + G&R docs + prep docs + R-17 PASS**
-(gates: tsc 0 · lint 0 · vitest **139 files/1427 tests 0 fail** · build 0 · replay 001-151 MIGRATIONS_OK ·
-contracts 32/40 OK = CI set ทั้งหมด + mandate 7 · หลักฐาน = `docs/BMB_STALE_CONTRACTS8_EVIDENCE_2026-10-25.md`)
-**phase:** 🟡 งานวิศวกรรมที่ทำได้ปิดครบ — เหลือรายการรอ Owner (ด้านล่าง)
-**current_focus:** **✅ รอบ CONTINUOUS EXECUTION (2026-10-25):**
+**last_updated:** 2026-10-25 **WAVE 4 — รอบที่ 2 (คำสั่ง Owner ชุดแก้ 4 บั๊ก + อนุมัติ migrations): แก้ครบทั้ง 4 + apply production 150/151/152 เสร็จ**
+(gates: tsc 0 · lint 0 · vitest **140 files/1424 tests 0 fail** · build ✓ · clean-room replay **001-152 MIGRATIONS_OK** ·
+**contracts 40/40 fail=0 ALL_GREEN** (mandate 8 ครบ · legacy 7 เขียว) · รายงาน Owner = `docs/BMB_OWNER_STATUS_REPORT_2026-10-25.md`)
+**phase:** 🟢 งานวิศวกรรมรอบนี้ปิด — เหลือรอ Owner ตรวจ §D + D6/R-16/G&R
+**current_focus:** **✅ รอบ 2 (2026-10-25) — ตามคำสั่งชุดล่าสุด:**
+- **4 บั๊กที่ Owner เห็นจากหน้าจอ = แก้ครบ (รายละเอียด §B ใน status report):**
+  ① หัวข้อซ้ำ+alias reorder → `CATEGORY_DISPLAY_ORDER` เป็นลิสต์ alias + chips/sections กรองหมวดโหมด
+  (สินค้าหมวดโหมดย้ายเข้า showcase ไม่หาย) ② กรอบการ์ดเมนูถอด (`drink/home/fmc-card` transparent border)
+  ③ `AdminProducts` label = `adminCats` แหล่งเดียวกับแท็บ ④ แถบสถานะ 2 เลน (`preOrderLine`: รอบถัดไป/คัทออฟจริง)
+- **Owner approvals ทำแล้วทั้งหมด:** 150 apply+verify ✓ · 151 (ก) apply+verify (insert 0 — history ครบจริง) ✓ ·
+  152 REVOKE สร้าง+apply+verify (รอบแรกพังเพราะหัว `//` → แก้ `--` แล้ว 201) ✓ · record 150/151/152 ✓ ·
+  legacy 7 = **ไม่ซ่อม** (คำสั่ง) — clean-room ล่าสุดเขียวเอง · D6 = Owner ลบทางาน CF (ผมเข้าไม่ได้)
+- **งานรอบก่อนยังคง:** CTA แท็บพรีออเดอร์ ✓ · stale contracts 8/8 ✓ (039-G7 ปิดด้วย 152) · R-17 PASS ✓ ·
+  G&R 2 เอกสาร (ไม่แตะโค้ด) · 3.1/3.2/3.3 = DONE มีหลักฐาน
+- ⚠️ หมายเหตุ: `AI_ENTRYPOINT.md`/`UNIVERSAL_MASTER_AI_RULES.md` = external edit (ไม่ commit) ·
+  contract039 รันบน production ตรง ๆ ติด fixture ข้อมูล (verify152 = ตัวจริงเรื่องสิทธิ์)
+**blocked_by:** ⛔ รอ Owner: ล้าง PWA cache (Ctrl+Shift+R) แล้วตรวจ §D ของ status report · ลบทดสอบ D6 pages.dev ·
+R-16 พิมพ์จริง · acceptance plan §4 · G&R 8 คำถาม (ห้าม implement ก่อนอนุมัติ)
 - **CTA พรีออเดอร์ (คำสั่ง Owner):** ย้ายเข้าหมวด `home-sec-preorder` + gate `homeTab==='preorder'`
   (แท็บ/หน้าอื่นไม่แสดง) · แก้ `HomePage.tsx` ที่เดิมไม่สร้างของใหม่ · `preOrderEntry.test.ts` realign+regression (19/19)
 - **Task A stale contracts:** 7/8 GREEN (023/028/030/036/037/038/125) · **039 = G1–G6 PASS, G7 = defect จริง**
@@ -16,7 +29,7 @@ contracts 32/40 OK = CI set ทั้งหมด + mandate 7 · หลักฐ
 - **Task D:** R-17 `dbRestoreDrill: PASS` ✓
 - **3.1/3.2/3.3 = DONE มีหลักฐาน** (AdminNav sidebar shell+single-nav test · Dashboard Zone A/B/C · `theme.ts` 3 ธีม+2 เทสต์ต · `ambientMusic` opt-in/volume/duck/singleton+เทสต์) → ไม่สร้างซ้ำ · ตา Owner บนเบราว์เซอร์
 - **Growth & Rewards = เอกสารเท่านั้น** (`docs/BMB_GROWTH_REWARDS_REQUIREMENTS_2026-10-25.md` + `docs/BMB_GROWTH_REWARDS_INVENTORY_2026-10-25.md`) · ไม่มี implementation ก่อนอนุมัติ
-**blocked_by:** ⛔ รอ Owner: authorize migration 150 · เลือก 151 (APPLY vs ทิ้ง) · sign-off REVOKE 039-G7 · D6 Cloudflare · R-16 พิมพ์จริง · acceptance plan §4 ทั้งหมด · (ทางเลือก: สั่งซ่อม 7 legacy contracts นอก mandate)
+**blocked_by:** ⛔ รอ Owner: ล้าง PWA cache (Ctrl+Shift+R) แล้วตรวจ §D ใน `BMB_OWNER_STATUS_REPORT_2026-10-25.md` · ลบทดสอบ D6 pages.dev (ท่านทำเอง) · R-16 พิมพ์จริง · acceptance plan §4 ทั้งหมด · G&R 8 คำถาม (ห้าม implement ก่อนอนุมัติ)
 
 ---
 

@@ -50,8 +50,9 @@ export function FoodMenuCard({ product, category, mode, availability, onSameDayO
     onPreOrder({ productId: product.id, quantity: 1, deliveryRoundId: '', scheduledDate: '' })
   }
 
+  // FIX (Owner 2026-10-25 "เฟรมกรอบของเมนูยังไม่หาย"): ถอด border ของการ์ด — คง shadow + rounded เดิม
   return (
-    <div className="fmc-card group flex flex-col bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 ease-out border border-orange-50">
+    <div className="fmc-card group flex flex-col bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 ease-out">
       
       {/* TOP: กรอบรูปสี่เหลี่ยม (4:3 เต็มใบ) — เหมือนหน้าหลัก */}
       <div className="fmc-img-wrap">

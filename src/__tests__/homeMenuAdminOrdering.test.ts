@@ -63,14 +63,25 @@ describe('Feature B — homepage section order + horizontal tab links', () => {
     expect(homePageSrc).toContain('scrollToSection(`home-cat-${cat.id}`)')
   })
 
-  it('ลำดับหมวด pinned = สุขภาพ → เครื่องดื่ม → ของทานเล่น/ผลไม้ → สำเร็จรูป', () => {
-    expect([...CATEGORY_DISPLAY_ORDER]).toEqual(['เมนูสุขภาพ', 'เครื่องดื่ม', 'ของทานเล่น / ผลไม้', 'สินค้าสำเร็จรูป'])
+  it('ลำดับหมวด pinned = สุขภาพ → เครื่องดื่ม → ของทานเล่น/ผลไม้ → สำเร็จรูป (+ alias ตามคำสั่ง Owner 2026-10-25)', () => {
+    expect([...CATEGORY_DISPLAY_ORDER]).toEqual([
+      ['เมนูสุขภาพ'],
+      ['เครื่องดื่ม'],
+      ['ของทานเล่น / ผลไม้', 'ของหวานลัน / ผลไม้', 'ของกินเล่น / ผลไม้'],
+      ['สินค้าสำเร็จรูป', 'เมนูสำเร็จ'],
+      ['ส่งวันนี้ / Same Day', 'ส่งวันนี้', 'same day'],
+      ['จองล่วงหน้า / พรีออเดอร์', 'พรีออเดอร์', 'จองล่วงหน้า', 'preorder'],
+    ])
     expect(categoryDisplayRank('เมนูสุขภาพ')).toBe(0)
     expect(categoryDisplayRank('เครื่องดื่ม')).toBe(1)
     expect(categoryDisplayRank('ของทานเล่น / ผลไม้')).toBe(2)
     expect(categoryDisplayRank('ของทานเล่น/ผลไม้')).toBe(2) // ทนต่อช่องว่าง/สแลช
+    expect(categoryDisplayRank('ของหวานลัน / ผลไม้')).toBe(2) // alias: ชื่อจริงใน DB = ความหมายเดียวกัน
     expect(categoryDisplayRank('สินค้าสำเร็จรูป')).toBe(3)
-    expect(categoryDisplayRank('อื่น ๆ')).toBe(4)
+    expect(categoryDisplayRank('เมนูสำเร็จ')).toBe(3) // alias: ชื่อจริงใน DB
+    expect(categoryDisplayRank('ส่งวันนี้ / Same Day')).toBe(4)
+    expect(categoryDisplayRank('จองล่วงหน้า / พรีออเดอร์')).toBe(5)
+    expect(categoryDisplayRank('อื่น ๆ')).toBe(CATEGORY_DISPLAY_ORDER.length) // นอกลิสต์ = ท้ายเสมอ
     expect(catalogSrc).toContain('categoryDisplayRank(a.name) - categoryDisplayRank(b.name)')
   })
 })

@@ -1,0 +1,15 @@
+[
+  {
+    "label": "privileges-after",
+    "status": 201,
+    "data": [
+      {
+        "anon_can_set": false,
+        "anon_can_publish": false,
+        "auth_can_set": true,
+        "auth_can_publish": true,
+        "auth_can_get_menu": true
+      }
+    ]
+  }
+]

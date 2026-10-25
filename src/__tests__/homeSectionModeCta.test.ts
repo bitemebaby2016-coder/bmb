@@ -166,20 +166,18 @@ describe('A1 · ShowcaseCard mode-aware ผ่าน CategorySections (INV-16 ·
     container.remove()
   })
 
-  it("หมวด 'ส่งวันนี้ / Same Day' (auto): สินค้า dual แสดงเฉพาะปุ่มเพิ่มลงตะกร้า — ไม่มีปุ่มจอง/ไม่มีปฏิทินซ้อน", async () => {
+  it("Owner 2026-10-25: หมวดโหมด 'ส่งวันนี้ / Same Day' ไม่สร้างหัวข้อซ้ำบนหน้าแรก (รวมเข้าแท็บ/เซกชันโหมด — สินค้าอยู่ใน showcase แทน)", async () => {
     const { html, root, container } = await renderSections([dualProd()], 'auto', 'ส่งวันนี้ / Same Day', { 'p-dual': '2026-10-20' })
-    expect(html).toContain('home-showcase-add-to-cart')
-    expect(html).not.toContain('home-showcase-preorder')
-    expect(html).not.toContain('schedule-date-badge')
+    expect(html).not.toContain('ส่งวันนี้ / Same Day')
+    expect(html).not.toContain('home-showcase-add-to-cart')
     root.unmount()
     container.remove()
   })
 
-  it("หมวด 'จองล่วงหน้า / พรีออเดอร์' (auto): สินค้า dual แสดงเฉพาะปุ่มจองล่วงหน้า + ป้ายปฏิทินวันจาก menu_schedule", async () => {
+  it("Owner 2026-10-25: หมวดโหมด 'จองล่วงหน้า / พรีออเดอร์' ไม่สร้างหัวข้อซ้ำบนหน้าแรก (รวมเข้าแท็บ/เซกชันโหมด)", async () => {
     const { html, root, container } = await renderSections([dualProd()], 'auto', 'จองล่วงหน้า / พรีออเดอร์', { 'p-dual': '2026-10-20' })
-    expect(html).toContain('home-showcase-preorder')
-    expect(html).not.toContain('home-showcase-add-to-cart')
-    expect(html).toContain('schedule-date-badge')
+    expect(html).not.toContain('จองล่วงหน้า / พรีออเดอร์')
+    expect(html).not.toContain('home-showcase-preorder')
     root.unmount()
     container.remove()
   })

@@ -7,7 +7,7 @@ import { useState, useEffect } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import type { Product, ProductCategory, SameDayOrderPayload, PreOrderPayload, AvailabilityState, OrderMode, DeliveryRound } from '@/types'
 import { getProducts, getCategories, getDeliveryRounds } from '@/lib/bmbAdminApi_products'
-import { buildHeadingGroups, headingChips } from '@/lib/catalogStructure'
+import { buildHeadingGroups, headingChips, saleModeOfCategory } from '@/lib/catalogStructure'
 import { getProductScheduleMap, type ProductScheduleMap } from '@/lib/productSchedule'
 import { useCartStore } from '@/store/cartStore'
 import { showToast } from '@/components/ui/ToastContainer'
@@ -200,7 +200,9 @@ export function MenuPage() {
   }
 
   // ปุ่มกรองหัวข้อเมนู — กติกาเดียวกับหน้าแรก (หัวข้อว่าง = ซ่อน)
-  const chips = headingChips(categories, products)
+  // Owner (2026-10-25): หมวดโหมดขาย = ความหมายเดียวกับแท็บ 🍽️ วันนี้ / 📅 จองล่วงหน้า
+  // → ไม่โชว์ซ้ำในแถว chips (หัวข้อเซกชันด้านล่างยังอยู่ครบ + deep-link ?category= ใช้ได้ตามเดิม)
+  const chips = headingChips(categories, products).filter((c) => saleModeOfCategory(c) === 'auto')
   // ✅ Phase 3B: canonical mode columns (migration 023) — alias fallback kept.
   const sameDayCount = products.filter(p => (p.available_same_day ?? !p.is_preorder) && p.is_available).length
   // R5c: จำนวนเมนู "จองล่วงหน้า" = เมนูที่อยู่ในปฏิทินแอดมิน (มีป้ายวันจัดส่ง) เท่านั้น

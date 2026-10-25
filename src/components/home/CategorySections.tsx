@@ -150,7 +150,11 @@ export function CategorySections({
 }) {
   // ระบบหัวข้อเมนูเดียว (2026-10-17): จัดกลุ่มด้วย buildHeadingGroups ตัวเดียวกับ
   // /menu — หัวข้อ (หมวดหมู่) → การ์ด · หัวข้อว่าง/ปิด = ซ่อน เหมือนกันทุกหน้า
-  const groups = buildHeadingGroups(products, categories)
+  // Owner (2026-10-25): หมวดโหมดขาย = ความหมายเดียวกับแท็บ/เซกชัน 🛵 ส่งวันนี้ · 📅 พรีออเดอร์
+  // → ไม่สร้างหัวข้อซ้ำบนหน้าแรก (สินค้าอยู่ในเซกชันโหมดแทน — ดู HomePage showcase)
+  const groups = buildHeadingGroups(products, categories).filter(
+    ({ category }) => saleModeOfCategory(category) === 'auto',
+  )
 
   let carouselIdx = 0
   const renderCategoryCarousel = (cat: ProductCategory, grouped: boolean) => {

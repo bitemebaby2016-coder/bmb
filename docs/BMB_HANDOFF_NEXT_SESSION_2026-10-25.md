@@ -85,6 +85,11 @@
 - **Growth & Rewards = เอกสารเท่านั้น** (`docs/BMB_GROWTH_REWARDS_REQUIREMENTS_2026-10-25.md` +
   `docs/BMB_GROWTH_REWARDS_INVENTORY_2026-10-25.md`) · **ไม่มี implementation ก่อนอนุมัติ**
 
-### 5.4 สถานะ "เหลือแค่ Owner ทดสอบจริง" ณ รอบนี้
-- ✅ ปิดเองได้: banner สั่ง · stale contracts 7/8 (+G7 เจาะ defect รอ sign-off) · เอกสาร G&R · prep docs · 3.1-3.3 พิสูจน์แล้ว
-- ⛔ รอ Owner: authorize 150 (+เลือก 151) · sign-off migration REVOKE 039-G7 · D6 CF · R-17 evidence รับทราบ · R-16 พิมพ์จริง · acceptance plan §4 ทั้งหมด
+### 5.4 สถานะหลังรอบ 2 (2026-10-25 ต่อเนื่อง — รายละเอียดครบ = `docs/BMB_OWNER_STATUS_REPORT_2026-10-25.md`)
+- ✅ **4 บั๊กหน้าจอ Owner แก้ครบ:** หัวข้อซ้ำ+alias reorder · กรอบการ์ดถอด · label แอดมิน = adminCats · แถบสถานะ 2 เลน (preOrderLine)
+- ✅ **Production apply เสร็จ (อนุมัติแล้ว):** 150 ✓ (col+comment · orders ไม่แตะ) · 151(ก) ✓ (insert 0 — history ครบจริง) ·
+  152 ✓ (รอบแรกพังด้วยหัว `//` → แก้ `--` · anon=false/auth=true) · record 150/151/152 ✓ — evidence = `e2e/r12Apply150_152-*.json`
+- ✅ **Gate รอบสุดท้าย:** clean-room replay 001–152 MIGRATIONS_OK · **contracts 40/40 fail=0 ALL_GREEN** (mandate 8 ครบ ·
+  legacy 7 เขียวเอง) · tsc 0 · lint OK · vitest 140/1424 0 fail · build ✓
+- ⛔ รอ Owner: ล้าง PWA cache แล้วตรวจ §D ของ status report · ลบทดสอบ D6 pages.dev (ท่านทำเอง) · R-16 พิมพ์จริง ·
+  acceptance plan §4 · G&R 8 คำถาม (ห้าม implement ก่อนอนุมัติ) · legacy 7 = "ไม่ซ่อม" (คำสั่ง — เขียวอยู่แล้ว)

@@ -1,0 +1,84 @@
+[
+  {
+    "label": "history",
+    "status": 201,
+    "data": [
+      {
+        "version": "149",
+        "name": "149_round_archive_cleanup"
+      },
+      {
+        "version": "148",
+        "name": "148_same_day_no_cutoff"
+      },
+      {
+        "version": "147",
+        "name": "147_role_rls_matrix"
+      },
+      {
+        "version": "146",
+        "name": "146_role_foundation"
+      },
+      {
+        "version": "145",
+        "name": "145_two_cutoffs"
+      }
+    ]
+  },
+  {
+    "label": "backup-recency",
+    "status": 201,
+    "data": [
+      {
+        "recent_backups": 8
+      }
+    ]
+  },
+  {
+    "label": "150-col-present-prod",
+    "status": 201,
+    "data": [
+      {
+        "has_col": 0
+      }
+    ]
+  },
+  {
+    "label": "osh-table",
+    "status": 201,
+    "data": [
+      {
+        "has_table": 1
+      }
+    ]
+  },
+  {
+    "label": "151-orders-without-history",
+    "status": 201,
+    "data": [
+      {
+        "n": 0
+      }
+    ]
+  },
+  {
+    "label": "151-backfill-existing",
+    "status": 201,
+    "data": [
+      {
+        "n": 0
+      }
+    ]
+  },
+  {
+    "label": "152-anon-before",
+    "status": 201,
+    "data": [
+      {
+        "anon_can_set": false,
+        "anon_can_publish": false,
+        "auth_can_set": true
+      }
+    ]
+  }
+]
