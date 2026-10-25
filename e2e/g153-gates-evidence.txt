@@ -38,3 +38,10 @@ CI RUN #128 (push c809f00) — Contract Tests = FAILURE ที่ step Contract 
   ทั้ง G4 และ G8-R2 · G8-R4 (scope) ใช้ unlimited เพื่อ isolate (เค้างบมีที่ G4+R2 พิสูจน์แล้ว)
 Local re-verify หลัง fix (clean-room container ใหม่):
   MIGRATIONS_OK (001-153) + CONTRACTS_OK count=19 + ALL_GREEN  ✅
+
+CI RUN #129 (push 48f62f2) — ทุกอย่างเขียว:
+  Contract Tests (isolated PostgreSQL) run #129 ......... success ✅
+  CI (tsc/lint/vitest/build) job 121163064601 .......... success ✅
+  Cloudflare Pages deploy (48f62f2) .................... success ✅
+  ⇒ STAGE 1 (Promotions) = local gates + CI + deploy ผ่านครบ · ยังไม่มี production DB apply
+    (migration 153 = รอคำสั่ง apply แยกเหมือนขั้นตอน 150/151/152 — ไม่แตะ production เอง)

@@ -6,7 +6,7 @@
 (gates ทั้งหมดเขียว: tsc 0 · lint+brandNameGuard OK · vitest **141 files/1446 tests 0 fail** · build ✓ PWA 141 ·
  Docker replay สะอาด **001–153 = MIGRATIONS_OK** · regression contracts **18/18 OK** · **contract 153 G1–G8 PASS** ·
  หลักฐานรวม = `e2e/g153-gates-evidence.txt`)
-**phase:** 🟢 STAGE 1 (Promotions) = implemented + local gates green + push → รอดู CI · ขั้นถัด = STAGE 2 Referral
+**phase:** 🟢 STAGE 1 (Promotions) = DONE ทุกเกต (local + CI #129 + Cloudflare deploy 48f62f2 เขียว) · ขั้นถัด = STAGE 2 Referral
 **current_focus:**
 1. **STAGE 1 · Promotions = เสร็จ** — `153_promotion_campaign_controls.sql` (คอลัมน์แคมเปญ 5 · `promotion_products` ·
    `promotion_policy` kill switch+งบ 15% · `promotion_apply_rules` จุดตัดสินเดียว · re-emit `create_order_with_items` จาก 148)
