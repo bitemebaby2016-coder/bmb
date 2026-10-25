@@ -1,0 +1,78 @@
+BMB G&R STAGE 3 (Loyalty Tiers + Points Ledger · migration 155) — LOCAL GATE EVIDENCE
+Date: 2026-10-25 · Start command: handoff §9.2 ข้อ 1 (inspect-first → ทำเหมือน Stage 1/2)
+
+================================================================================
+INSPECT-FIRST (§5.2 บังคับ — ตรวจ "ระบบบันทึกยอดสุทธิเดิม" จริงก่อนสร้างใหม่):
+  * customers.loyalty_points (001:130) = คอลัมน์ตัวเลขเปล่า — ไม่มีโค้ดเซิร์ฟเวอร์
+    INSERT/UPDATE ที่ไหนเลย (probe ทั้ง migrations + src = 0 จุด)
+  * loyalty_points table (001:261) + RLS (006) = มีตารางแต่ไม่มี RPC/trigger ไหนแตะ
+    → ระบบแต้มฝั่งเซิร์ฟเวอร์ "ไม่มีอยู่จริง" (มีแค่ rewardsStore ฝั่งเครื่องลูกค้า)
+  * aiMemory.total_spent = ความจำ AI ฝั่ง client · daily_sales.net_sales (130/147)
+    = ยอดรวมต่อวันทำการ ไม่ใช่ยอดสุทธิของลูกค้าแต่ละคน
+  ⇒ ยังไม่มีระบบสะสมยอดสุทธิของลูกค้าที่เชื่อถือได้ → stage นี้สร้างแบบ
+    ledger-based + server-authoritative (ไม่แตะ signature create_order_with_items)
+
+Gates (clean-room ทั้งหมด รันจากเครื่อง dev):
+- npx tsc --noEmit .................. TSC_OK (0 errors)
+- npx vitest run .................... VITEST_OK: 143 files / 1500 tests / 0 fail
+                                    (เดิม 142 files/1480 + ไฟล์ใหม่ loyaltyTiers.test.ts 20 ข้อ)
+- npm run lint (eslint + brandNameGuard 430 ไฟล์) ... LINT_OK
+- npm run build ..................... BUILD_OK (vite OK + PWA 142 entries · loyaltyClient chunk ใหม่)
+- Docker replay (postgres:16 · e2e/ci/local_stack_replica.sh = ทำตาม CI ทุก step):
+    MIGRATIONS 001–155 apply สะอาด (inventory mode 0 fail — 155 ใหม่เข้า chain) +
+    contract 123 + apply 124 + contract 124 + concurrency = ALL_GREEN
+- ชุด contract ใน container เดียวกัน:
+    contracts_155  rc=0 → G1–G9 PASS → "CONTRACT 155: PASS" (ROLLBACK zero data)
+    contracts_154  rc=0 → "CONTRACT 154: PASS" (regression — trigger ใหม่ไม่กระทบ)
+    contracts_153  rc=0 → "CONTRACT 153: PASS" (regression)
+
+G1–G9 (ผลจริงจาก NOTICE):
+    G1  สคีมา + RLS deny (0 policy) + append-only trigger + seed 8 คีย์ +
+        12 fns + 3 triggers + anon ถูกกัน (ตาราง+RPC) ........................ PASS
+    G2  tier boundaries 0/1499.99=member · 1500=silver · 3999.99=silver ·
+        4000=gold · 7999.99=gold · 8000=platinum + เปลี่ยน threshold ได้จริง +
+        threshold ไม่เรียงตรง → fallback ชุดเริ่มต้น ....................... PASS
+    G3  role gates (anon/authenticated ถูกกัน) + ไม่ล็อกอิน =
+        ERR_NOT_AUTHENTICATED + my_status/history ค่าเริ่มต้นถูก ............ PASS
+    G4  net sales = 4600−100 = 4500 (ไม่รวมค่าส่ง 77+25) = gold · progress .5625 ·
+        ยกเลิก=0 · คืนเงินเต็ม=0 · ออเดอร์ 13 เดือนก่อน = นอก window ·
+        แต้มยังปิด = ledger ว่าง 0 แถว .................................... PASS
+    G5  เปิดอัตรา 1.5 → earn 450 = floor(300×1.5) + notice + audit_logs ·
+        trigger ยิงซ้ำ (pending→paid) + เรียก sync ซ้ำ = ไม่มีแถวที่ 2 ..... PASS
+    G6  partial refund 50% → delta reversal −225 · คืนเงินเต็ม → −225
+        (รวม 450 = 0) · sync ซ้ำ = เขียน 0 (ไม่หักซ้ำ §4.2) · net กลับ 4500 . PASS
+    G7  earn ที่ confirmed (earn_qualify_status ปรับได้) → ยกเลิก →
+        reversal 900 ครั้งเดียว · sync ซ้ำนิ่ง · balance 0 .................. PASS
+    G8  append-only: UPDATE ledger = ERR_LEDGER_APPEND_ONLY · authenticated
+        DELETE/UPDATE = permission denied · purchase ซ้ำ (unique) ·
+        เครื่องหมายผิด/ศูนย์แต้ม (CHECK) ถูกบล็อก .......................... PASS
+    G9  stats/adjust = ERR_FORBIDDEN กับ non-admin · anon เรียกไม่ได้ ·
+        admin ได้ stats ครบ (tiers+points+policy) + adjust validate
+        (0 แต้ม/ไม่มีเหตุผล/ไม่พบลูกค้า) + audit + history clamp limit=5 .... PASS
+    => CONTRACT 155: PASS
+
+Transparency notes (รอบแรกแดง → แก้ → เขียว):
+- G7 รอบแรกแดง: state machine ไม่อนุญาต delivered → cancelled
+  (order_transition_allowed ให้ cancel ถึง 'arrived' เท่านั้น) → ปรับเทสต์เป็น
+  "earn ที่ confirmed" ซึ่งเป็น earn_qualify_status ที่แอดมินตั้งได้จริงใน policy
+  (ไม่ใช่การดัดแปลงระบบ — ตรงเส้นทางยกเลิกปกติของออเดอร์จริง)
+- G9 รอบแรกแดง: bug แคสต์ฝั่งเทสต์ `(v_j->>'ok') IS DISTINCT FROM 'true'::boolean`
+  (text = boolean ไม่มี operator) → แก้เป็น `(v_j->>'ok')::boolean` → เขียว
+- รอบค้นพบเอง: ท้ายไฟล์ contract มี `END;`/`$$;` ตกค้าง — `END;` = SQL COMMIT synonym
+  (warning "no transaction in progress" + parse error ที่ `$$;`) → ลบออก แล้ว rc=0 จริง
+- อัตราแต้ม: seed = points_enabled=false + points_per_baht=0 — requirements §3.1
+  "ยังไม่กำหนดอัตราแต้มจนกว่าจะมี unit economics" (ห้ามเดา) → contract เปิดอัตรา
+  ใน tx เพื่อทดสอบกลไก · production = Owner/แอดมินตั้งเองใน AI Marketing Center
+  แท็บ Rules (ไม่มี backfill ย้อนหลัง — ออเดอร์หลังเปิดเท่านั้น)
+- เกณฑ์นับยอด: ยกเลิก/failed = 0 · คืนเงินเต็ม = 0 · partial = หักตาม
+  payment_intents.metadata.refunded_total_minor · ไม่รวม delivery_fee/service_fee ·
+  mirror กับ Stage 2 (referral ให้รางวัลเฉพาะสถานะที่ผ่าน + ไม่โดนคืนเงิน)
+- ไม่แตะ signature create_order_with_items/_i/create_pickup_order_i (รับผ่าน trigger สถานะ)
+- ไม่มี production write (contract = ROLLBACK · replay = DB ใน container ชั่วคราว)
+- ยังไม่ได้ apply 155 ลง production — รอคำสั่ง Owner แยก (staged แบบ r14Apply154)
+
+REMAINING (ส่งต่อเซสชันหน้า):
+1. Owner สั่ง "apply 155" → staged precheck/apply/verify/contract/record แบบ r14 (r15Apply155.cjs)
+2. STAGE 4 (Engagement & Play): ④ Spin&Win (เพิ่มรางวัล/แต้ม) · ⑤ Affiliate
+   (แต้ม/คูปอง ไม่มีเงินสด) · ⑦ Rewards catalog ย้าย hardcode → ตาราง admin
+3. งานรอท่านเดิม: ตรวจ §D status report · D6 ลบ pages.dev · R-16 พิมพ์จริง · acceptance §4

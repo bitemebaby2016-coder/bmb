@@ -226,3 +226,47 @@
 `AI_WORK_STATE.md` → handoff ฉบับนี้ **§9** (ข้าม §8 ที่ปิดแล้ว) → inventory **§6** →
 evidence `e2e/g154-gates-evidence.txt` + `e2e/r14Apply154-*.json` → **แล้วลงมือ STAGE 3 (Loyalty)**
 ด้วยแนวทาง inspect-first → ออกแบบ → ทำเหมือน Stage 1/2 (ไม่ต้องถามซ้ำเรื่องแนวทาง · ห้ามเดา · ห้ามข้ามขั้น)
+
+---
+
+## 10. 🔴 SESSION CLOSE รอบ STAGE 3 · LOYALTY (2026-10-25 · ปิดท้าย §9)
+
+### 10.1 STAGE 3 (Loyalty Tiers + Points Ledger) = DELIVERED ทุกชิ้น ✅ (ยังไม่ apply — รอคำสั่ง)
+ทำตาม §9.2 ข้อ 1 เป๊ะ: **inspect-first → ออกแบบ → ทำเหมือน Stage 1/2**
+
+- **inspect-first (§5.2 บังคับ — ยืนยันก่อนสร้าง):** `customers.loyalty_points` (001:130) +
+  ตาราง `loyalty_points` (001:261+RLS 006) = **ไม่มีโค้ดเซิร์ฟเวอร์แตะเลย** ·
+  `aiMemory.total_spent` = client-only · `daily_sales.net_sales` = ต่อวัน ไม่ใช่ต่อลูกค้า
+  → ยังไม่มีระบบสะสมยอดสุทธิลูกค้าที่เชื่อถือได้ = ช่องว่างจริง → สร้างใหม่แบบ server-authoritative
+- **SQL `supabase/migrations/155_loyalty_tiers_points.sql`:** `points_ledger` **append-only**
+  (trigger `ERR_LEDGER_APPEND_ONLY` + revoke ทุกบทบาท · PK deterministic + unique partial index)
+  · **delta-reversal** ตอนคืนเงิน/ยกเลิก (partial หักตาม `refunded_total_minor` สัดส่วน · ไม่หักซ้ำ) ·
+  audit_logs + notice ทุกครั้ง · `loyalty_policy` (4 ระดับ **1,500/4,000/8,000** · rolling 12 เดือน ·
+  **อัตราแต้ม seed = ปิด/0** — requirements ห้ามเดา · earn ที่ `delivered`) ·
+  `loyalty_order_net` = subtotal − ส่วนลด − คืนเงิน (**ไม่รวมค่าส่ง** · ยกเลิก/คืนเงินเต็ม = 0) ·
+  trigger บน `orders` + `payment_intents` → `loyalty_sync_order` จุดเดียว (idempotent) ·
+  RPC `loyalty_my_status/my_history/admin_stats/admin_adjust` · **ไม่แตะ signature order**
+- **Contract `e2e/contracts_155_loyalty_tiers.sql` G1–G9 PASS** (ROLLBACK rc=0) + **CI step แล้ว**
+  + contractRegr 154/153 PASS · บทเรียนแก้ 3 จุด: G7 (state machine ไม่ให้ delivered→cancelled →
+  ทดสอบ earn ที่ confirmed ตาม earn_qualify_status จริง) · G9 (bug แคสต์ text/boolean) ·
+  ท้ายไฟล์มี `END;`/`$$;` ตกค้าง (`END;` = SQL COMMIT synonym)
+- **Client:** `src/lib/loyaltyClient.ts` (mirror ครบ + DEFAULT = seed เป๊ะ) ·
+  **RewardsPage ข้อมูลจริง** (tier+progress+แต้ม+ประวัติจาก ledger · catalog = ยัง preview → STAGE 4) ·
+  ProfilePage tier+แต้มจริง
+- **Admin:** `LoyaltySettingsPanel` ใน AI Marketing Center แท็บ Rules (เกณฑ์/หน้าต่าง/เปิดอัตราแต้ม/
+  สถิติ · validate Silver<Gold<Platinum)
+- **เทสต์+gates:** `loyaltyTiers.test.ts` 20 ข้อ · tsc 0 · lint+brandNameGuard **430 ไฟล์** ·
+  vitest **143 files/1500 tests 0 fail** · build ✓ PWA **142** ·
+  Docker replay **001–155 ALL_GREEN** — evidence = **`e2e/g155-gates-evidence.txt`**
+
+### 10.2 งานที่เหลือทั้งหมด (เรียงลำดับ — ข้ามขั้นไม่ได้)
+| # | งาน | วิธี/หมายเหตุ | ต้อง Owner? |
+|---|---|---|---|
+| 1 | **STAGE 4 · Engagement & Play** | ④ Spin&Win (ของเดิมสุ่มเมนู → เพิ่มรางวัล/แต้ม) · ⑤ Affiliate (แต้ม/คูปอง ไม่มีเงินสด) · ⑦ Rewards catalog = ย้าย hardcode `RewardsPage` → ตาราง admin · มีเพดานความถี่/ต้นทุน/กันกิจกรรมซ้ำ — ทำเหมือน Stage 1–3 | ไม่ |
+| 2 | **migration 155 = รอคำสั่ง "apply 155"** | staged เหมือน `r14Apply154` (precheck→apply→verify→contract→record = `r15Apply155.cjs`) เขียนตอนสั่ง · ยังไม่ apply รอเหมือน 153/154 | **ใช่** |
+| 3 | งานรอท่าน (เดิมจาก §9.2 ข้อ 4) | ตรวจ §D ของ status report · D6 ลบ `bitemebaby-5f7.pages.dev` · R-16 พิมพ์จริง · acceptance §4 | **ใช่** |
+
+### 10.3 ลำดับอ่านของเซสชันหน้า
+`AI_WORK_STATE.md` → handoff ฉบับนี้ **§10** (ข้าม §8/§9 ที่ปิดแล้ว) → inventory **§6 (Stage 4 entry)**
+→ evidence `e2e/g155-gates-evidence.txt` → แล้วลงมือ **STAGE 4 (Engagement & Play)** ทันที
+(ทำเหมือน Stage 1–3 · ไม่ต้องถามซ้ำ · ห้ามเดา · ห้ามข้ามขั้น)

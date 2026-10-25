@@ -3,7 +3,10 @@
 # สถานะอัปเดต 2026-10-25 (หลัง Owner สั่ง "เริ่มพัฒนา G&R ตามกฏ"):
 #   ✅ STAGE 1 (Promotions) = IMPLEMENTED + GATES GREEN — ดูหลักฐาน = `e2e/g153-gates-evidence.txt`
 #      (migration 153 + contract 153 + client mirror + ฟอร์มแอดมิน + แผงงบใน Marketing Center + เทสต์ 22 ข้อ)
-#   ⏳ STAGE 2-4 (Referral → Loyalty Tiers → Engagement) = ยังไม่เริ่ม — ข้ามขั้นไม่ได้ (§5.8 ⑧)
+#   ✅ STAGE 2 (Referral) = DELIVERED + production applied (record=154) — evidence `e2e/g154-gates-evidence.txt`
+#   ✅ STAGE 3 (Loyalty Tiers + Points Ledger) = DELIVERED — evidence `e2e/g155-gates-evidence.txt`
+#      (migration 155 + contract 155 G1–G9 + CI step + loyaltyClient + แผง Loyalty + เทสต์ 20 ข้อ · ยังไม่ apply)
+#   ⏳ STAGE 4 (Engagement & Play) = ยังไม่เริ่ม — ข้ามขั้นไม่ได้ (§5.8 ⑧)
 #   ข้อความเดิมด้านล่าง (PROPOSAL ONLY / ห้าม implement) = บันทึกก่อนคำสั่ง start — คงไว้เป็น history
 #   ส่วน §1/§5 ยังคงเป็นกติกาที่ถูกต้องทุกประการ (ไม่มีการตีความเพิ่ม)
 
@@ -29,12 +32,16 @@
 - `src/lib/contentApproval.ts` — `listContentApprovals/reviewContent` (อนุมัติ ≠ ตั้งเวลา ≠ เผยแพร่)
 - Server: migration 147 ครอบ `marketing_posts` + `marketing_rules` + RPC guards · role `marketing` (146)
 : ถูกต้องโอเคอนุมัติ
-### 1.3 Loyalty & Points (มีเฉพาะ client preview — ช่องว่างหลัก)
-- `src/store/rewardsStore.ts` — `loyaltyPoints/pointsHistory/redemptions/activityProgress/badges/streakDays` · actions `addPoints/redeemPoints/updateActivityProgress/completeActivity/addBadge/updateStreak`
-- `src/pages/RewardsPage.tsx` — **ZERO-FAKE**: "พรีวิว · ยังไม่มีการออกคูปอง/ตัดแต้มจริง" · แคตตาล็อก Rewards **hardcode 4 รายการในไฟล์** (แอดมินแก้ไม่ได้)
-- `src/pages/ProfilePage.tsx` — แสดง `loyaltyPoints` จาก store เดียวกัน
-- **ยังไม่มี:** points ledger server · RPC ให้/หัก/คืนแต้ม · อายุแต้ม · audit trail · tiers = GAP ต้องออกแบบเมื่ออนุมัติ (ห้ามแสร้งว่ามีอยู่)
-: ถูกต้องโอเคอนุมัติลบฮาร์ดโค้ดปิดช่องว่าง
+### 1.3 Loyalty & Points (✅ STAGE 3 = DELIVERED — ดู §6 · evidence `e2e/g155-gates-evidence.txt`)
+- `src/store/rewardsStore.ts` — `loyaltyPoints/pointsHistory/redemptions/activityProgress/badges/streakDays` · actions `addPoints/redeemPoints/updateActivityProgress/completeActivity/addBadge/updateStreak` (**ยังคงเป็น preview ฝั่งเครื่อง** สำหรับ gamification เดิม — ระบบแต้มจริงอยู่ที่ ledger ด้านล่าง)
+- `src/pages/RewardsPage.tsx` — **อัปเดตแล้ว**: ระดับสมาชิก + แต้ม + ประวัติ = ข้อมูลจริงจาก
+  `loyalty_my_status`/`loyalty_my_history` (ZERO-FAKE) · แคตตาล็อก Rewards ยัง hardcode 4 รายการ (**ย้ายเป็นตาราง admin = STAGE 4 ข้อ ⑦**)
+- **server (migration 155):** `points_ledger` append-only (ห้าม UPDATE · revoke ทุกบทบาท) +
+  delta-reversal ตอนคืนเงิน/ยกเลิก + `loyalty_policy` ใน business_settings (4 ระดับ 1,500/4,000/8,000 ·
+  rolling 12 เดือน · **อัตราแต้ม = ปิด/0 ค่าเริ่มต้น** — แอดมินเปิดเอง) + RPC
+  `loyalty_my_status/my_history/admin_stats/admin_adjust` + trigger บน orders/payment_intents
+- `src/lib/loyaltyClient.ts` = client mirror · แผง `LoyaltySettingsPanel` ใน AI Marketing Center แท็บ Rules
+- ✅ ช่องว่างเดิม (points ledger server / RPC ให้-หัก-คืน / audit trail / tiers) = **ปิดแล้ว** · ยังไม่มี = อายุแต้ม (expiry) + ระบบแลกของจริง (STAGE 4)
 ### 1.4 Engagement & Play (มีกิจกรรม standalone — ต้อง inspect ก่อนออกแบบ)
 | ไฟล์ | สิ่งที่เห็นจาก probe | ต้อง inspect เพิ่ม | :
 |---|---|---|
@@ -210,7 +217,38 @@ Engagement & Play — ตามหลัง
     ปุ่มอนุมัติ/ปฏิเสธ รายการพักรางวัล) — ยืนบนศูนย์กลางเดิมตาม §3 ไม่สร้างใหม่
   - **เทสต์:** `referralProgram.test.ts` (mirror/gate/claim payload/persistence) +
     evidence รอบปิดเซสชัน = `e2e/g154-gates-evidence.txt`
-- ⏳ **STAGE 3 (Loyalty Tiers) → STAGE 4 (Engagement & Play)** = ยังไม่เริ่ม (ตามลำดับ Rollout ข้อ ⑧ — ข้ามไม่ได้)
+- ✅ **STAGE 3 (Loyalty Tiers + Points Ledger) = DELIVERED** (2026-10-25 — ตาม handoff §9.2 ข้อ 1
+  · inspect-first → ออกแบบ → ทำเหมือน Stage 1/2 · ไม่ต้องถามซ้ำ)
+  - **inspect-first จริงก่อนเขียน (ไม่เดา):** `customers.loyalty_points` (001:130) + ตาราง
+    `loyalty_points` (001:261+RLS 006) = **ไม่มีโค้ดเซิร์ฟเวอร์แตะเลย** (probe INSERT/UPDATE = 0 จุด) ·
+    `aiMemory.total_spent` = client-only · `daily_sales.net_sales` (130/147) = ต่อวันไม่ใช่ต่อลูกค้า
+    → ยืนยัน "ยังไม่มีระบบสะสมยอดสุทธิลูกค้าที่เชื่อถือได้" → สร้าง ledger-based + server-authoritative
+  - **SQL: `supabase/migrations/155_loyalty_tiers_points.sql`**
+    · `points_ledger` (append-only: BEFORE UPDATE trigger `ERR_LEDGER_APPEND_ONLY` + REVOKE ทุกบทบาท ·
+    purchase>0 / reversal<0 / adjustment · PK deterministic + unique partial index กัน earn ซ้ำ) +
+    **delta-reversal** (ยอดที่ต้อง reverse − ที่บันทึกแล้ว > 0 จึง insert = "ไม่หักซ้ำ" §4.2 ·
+    partial หักตามสัดส่วน `payment_intents.metadata.refunded_total_minor`) ·
+    `loyalty_policy` ใน business_settings (tiers on · **1,500/4,000/8,000** · window 12 เดือน ·
+    **points_enabled=false + points_per_baht=0 = ค่าเริ่มต้น** — requirements ห้ามกำหนดอัตราเอง) ·
+    `loyalty_policy_state` (tolerant + fallback เมื่อ threshold ไม่เรียงตรง) · `loyalty_tier_of` ·
+    `loyalty_order_net` (subtotal − ส่วนลด − คืนเงิน · ไม่รวมค่าส่ง · ยกเลิก/คืนเงินเต็ม=0) ·
+    `loyalty_net_sales` (rolling window) · **`loyalty_sync_order`** (จุดเดียวของ trigger) ·
+    RPC `loyalty_my_status`/`loyalty_my_history`/`loyalty_admin_stats`/`loyalty_admin_adjust` (gate is_admin) ·
+    trigger `trg_loyalty_order_sync` (orders: status/payment/money) + `trg_loyalty_intent_sync`
+    (payment_intents: metadata — ครอบเส้นทาง stripe-refund/omise-refund EF) ·
+    audit_logs ทุกครั้ง (action `loyalty_points_earn`/`loyalty_points_reverse`/`loyalty_adjust` แบบแผน 018) +
+    notice `loyalty_points_earned` · **ไม่แตะ signature create_order_with_items/_i/pickup**
+  - **Contract: `e2e/contracts_155_loyalty_tiers.sql` G1–G9 PASS (ROLLBACK rc=0)** + CI step แล้ว
+    (fixture เบอร์ 09915500xx เฉพาะ · บทเรียน 153/154 G4) + contractRegr 154/153 PASS
+  - **Client:** `loyaltyClient.ts` (mirror `tierForNetSales`/`orderNetSales`/`progressTowardTier` +
+    DEFAULT policy = seed เป๊ะ + fetchers + ข้อความไทยครบ) · **RewardsPage โชว์ข้อมูลจริง**
+    (tier card + progress + แต้มจาก ledger + ประวัติจริง · catalog ยัง preview = STAGE 4) ·
+    ProfilePage โชว์ tier+แต้มจริง
+  - **Admin:** แผง `LoyaltySettingsPanel` ใน AI Marketing Center แท็บ Rules (เปิด/ปิดระดับ ·
+    หน้าต่าง · 3 เกณฑ์ validate เรียงตรง · เปิดอัตราแต้ม + rate · สถิติ tier distribution + แต้มรวม)
+  - **เทสต์:** `loyaltyTiers.test.ts` 20 ข้อ (tier boundaries/JSON mirror/net formula/progress/fetchers/ไทย) +
+    evidence รอบปิดเซสชัน = `e2e/g155-gates-evidence.txt` (gates เขียวทั้งหมด · replay 001–155)
+- ⏳ **STAGE 4 (Engagement & Play)** = งานถัดไป (ยังไม่เริ่ม — ตามลำดับ Rollout ข้อ ⑧ ข้ามไม่ได้)
 - ✅ **migration 154 = APPLIED + RECORDED บน production แล้ว (2026-10-25)** — ดูหลักฐาน = หัวข้อ
   PRODUCTION APPLY 154 ด้านบน + `e2e/r14Apply154-*.json` · migration ถัดไป (155+) = **รอคำสั่ง apply แยก**
 - ⛔ เงื่อนไขเลื่อนขั้น (§5.8) ยังคงอยู่: business rules + server validation + tests + สิทธิ์ ต้องผ่านก่อนทุกครั้ง

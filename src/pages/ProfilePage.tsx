@@ -1,11 +1,11 @@
 import { Link } from 'react-router-dom'
 import { useAuthStore } from '@/store/authStore'
-import { useRewardsStore } from '@/store/rewardsStore'
 // P4 — Passkey / WebAuthn (สมัคร/ลบ ต้องมี session อยู่แล้ว — หน้านี้เป็น ProtectedRoute)
 import { useState, useEffect } from 'react'
 import { showToast } from '@/components/ui/ToastContainer'
 import { useRiderIdentity } from '@/hooks/useRiderIdentity'
 import { fetchMyReferralStatus, type MyReferralStatus } from '@/lib/referralClient'
+import { fetchLoyaltyStatus, type LoyaltyStatus } from '@/lib/loyaltyClient'
 import {
   registerPasskey,
   listPasskeys,
@@ -18,12 +18,24 @@ import {
 export function ProfilePage() {
   const riderIdentity = useRiderIdentity()
   const customer = useAuthStore((s) => s.customer)
-  const loyaltyPoints = useRewardsStore((s) => s.loyaltyPoints)
 
   // P4 — รายการ passkey ที่ผูกกับบัญชีนี้ (โหลดครั้งเดียวตอนเปิดหน้า)
   const [passkeys, setPasskeys] = useState<PasskeyInfo[]>([])
   // [G&R 154] รางวัลแนะนำเพื่อนจริงจาก ledger — Owner: "แจ้งทาง notice + เก็บไว้ในโปรไฟล์"
   const [refStatus, setRefStatus] = useState<MyReferralStatus | null>(null)
+  // [G&R 155] ระดับสมาชิก + แต้มจริงจาก ledger (server-authoritative · ZERO-FAKE)
+  const [loyalty, setLoyalty] = useState<LoyaltyStatus | null>(null)
+  const [loyaltyLoaded, setLoyaltyLoaded] = useState(false)
+  useEffect(() => {
+    if (!customer) return
+    let active = true
+    void fetchLoyaltyStatus().then((s) => {
+      if (!active) return
+      setLoyalty(s)
+      setLoyaltyLoaded(true)
+    })
+    return () => { active = false }
+  }, [customer])
   useEffect(() => {
     if (!customer) return
     let active = true
@@ -66,11 +78,19 @@ export function ProfilePage() {
         </div>
       </div>
 
-      <div className="card mb-6 bg-yellow-50 border-2 border-yellow-200">
+      {/* [G&R 155] แต้ม + ระดับสมาชิก — ข้อมูลจริงจาก ledger/เซิร์ฟเวอร์ */}
+      <div className="card mb-6 bg-yellow-50 border-2 border-yellow-200" data-testid="profile-loyalty">
         <div className="flex items-center justify-between">
           <div>
             <h3 className="font-bold text-brand-accent text-lg">💎 แต้มสะสม</h3>
-            <div className="text-4xl font-bold text-brand-primary">{loyaltyPoints}</div>
+            <div className="text-4xl font-bold text-brand-primary">
+              {loyalty ? loyalty.points_balance : loyaltyLoaded ? '—' : '⏳'}
+            </div>
+            <div className="text-sm text-brand-muted">
+              {loyalty
+                ? `${loyalty.tier_label} · ยอดสุทธิ ฿${loyalty.net_sales.toLocaleString('th-TH')} รอบ ${loyalty.window_months} เดือน`
+                : loyaltyLoaded ? 'โหลดข้อมูลแต้มไม่สำเร็จ — ลองใหม่อีกครั้ง' : 'กำลังโหลดข้อมูลแต้ม…'}
+            </div>
           </div>
           <Link to="/rewards" className="btn btn-secondary">แลกรางวัล →</Link>
         </div>

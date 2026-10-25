@@ -321,6 +321,7 @@ export function AdminMarketing() {
         <div className="space-y-4 max-w-xl">
           <PromotionBudgetPanel />
           <ReferralSettingsPanel />
+          <LoyaltySettingsPanel />
           <div className="card space-y-3">
             <p className="text-sm text-brand-muted">กติกาเหล่านี้เก็บในตาราง marketing_rules (แก้ได้จริง ไม่มีค่าฝังโค้ด)</p>
             <label className="text-sm">จำนวนโพสต์ต่อสัปดาห์
@@ -732,6 +733,156 @@ function ReferralSettingsPanel() {
               )}
             </div>
           ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+/**
+ * [G&R 155 · Rollout ③] แผงควบคุม "ระดับสมาชิก + แต้มสะสม" — เก็บใน business_settings.loyalty_policy
+ *  (Owner §5.2: 4 ระดับ 1,500/4,000/8,000 rolling 12 เดือน · เกณฑ์ = ยอดสุทธิไม่รวมค่าส่ง)
+ *  + อัตราแต้ม = แอดมินตั้งเอง (ค่าเริ่มต้น = ยังไม่เปิด — requirements ห้ามฝังอัตรา)
+ *  ยืนบน AI Marketing Center (แท็บ Rules) ตาม §3 — ไม่สร้างศูนย์กลางใหม่
+ */
+function LoyaltySettingsPanel() {
+  const [tiersEnabled, setTiersEnabled] = useState(true)
+  const [windowMonths, setWindowMonths] = useState<number | ''>(12)
+  const [silverMin, setSilverMin] = useState<number | ''>(1500)
+  const [goldMin, setGoldMin] = useState<number | ''>(4000)
+  const [platinumMin, setPlatinumMin] = useState<number | ''>(8000)
+  const [pointsEnabled, setPointsEnabled] = useState(false)
+  const [pointsPerBaht, setPointsPerBaht] = useState<number | ''>(0)
+  const [stats, setStats] = useState<Record<string, any> | null>(null)
+  const [busy, setBusy] = useState(false)
+
+  useEffect(() => {
+    void load()
+  }, [])
+
+  async function load() {
+    const settings = await getBusinessSettings()
+    const policy = settings['loyalty_policy']
+    if (policy && typeof policy === 'object') {
+      if (typeof policy.tiers_enabled === 'boolean') setTiersEnabled(policy.tiers_enabled)
+      if (Number.isFinite(Number(policy.window_months))) setWindowMonths(Number(policy.window_months))
+      if (Number.isFinite(Number(policy.tier_silver_min))) setSilverMin(Number(policy.tier_silver_min))
+      if (Number.isFinite(Number(policy.tier_gold_min))) setGoldMin(Number(policy.tier_gold_min))
+      if (Number.isFinite(Number(policy.tier_platinum_min))) setPlatinumMin(Number(policy.tier_platinum_min))
+      if (typeof policy.points_enabled === 'boolean') setPointsEnabled(policy.points_enabled)
+      if (Number.isFinite(Number(policy.points_per_baht))) setPointsPerBaht(Number(policy.points_per_baht))
+    }
+    const { data, error } = await supabase.rpc('loyalty_admin_stats')
+    setStats(!error && data && typeof data === 'object' ? (data as Record<string, any>) : null)
+  }
+
+  async function handleSave() {
+    const num = (v: number | '', min: number, label: string): number | null | false => {
+      if (v === '') return null
+      const n = Number(v)
+      if (!Number.isFinite(n) || n < min) {
+        showToast(`${label} ต้องเป็นตัวเลขไม่น้อยกว่า ${min}`, 'warning')
+        return false
+      }
+      return n
+    }
+    const winN = num(windowMonths, 1, 'หน้าต่างเดือน')
+    const silN = num(silverMin, 1, 'เกณฑ์ Silver')
+    const golN = num(goldMin, 1, 'เกณฑ์ Gold')
+    const plaN = num(platinumMin, 1, 'เกณฑ์ Platinum')
+    const rateN = num(pointsPerBaht, 0, 'อัตราแต้ม')
+    if (winN === false || silN === false || golN === false || plaN === false || rateN === false) return
+    if (winN !== null && silN !== null && golN !== null && plaN !== null && !(silN < golN && golN < plaN)) {
+      showToast('เกณฑ์ต้องเรียงตรง: Silver < Gold < Platinum', 'warning')
+      return
+    }
+    if (pointsEnabled && (rateN === null || rateN <= 0)) {
+      showToast('เปิดอัตราแต้มต้องตั้งอัตรา (฿) ให้มากกว่า 0 ก่อน', 'warning')
+      return
+    }
+
+    setBusy(true)
+    const ok = await setBusinessSetting('loyalty_policy', {
+      tiers_enabled: tiersEnabled,
+      window_months: winN ?? 12,
+      tier_silver_min: silN ?? 1500,
+      tier_gold_min: golN ?? 4000,
+      tier_platinum_min: plaN ?? 8000,
+      points_enabled: pointsEnabled,
+      points_per_baht: rateN ?? 0,
+      earn_qualify_status: 'delivered',
+    })
+    setBusy(false)
+    showToast(
+      ok ? 'บันทึกกติกา loyalty แล้ว (มีผลกับการตรวจครั้งถัดไปทันที)' : 'บันทึกไม่สำเร็จ — ลองใหม่อีกครั้ง',
+      ok ? 'success' : 'error',
+    )
+    if (ok) void load()
+  }
+
+  const tiers = (stats?.tiers ?? null) as Record<string, unknown> | null
+  const points = (stats?.points ?? null) as Record<string, unknown> | null
+
+  return (
+    <div className="card space-y-3" data-testid="gr-loyalty-panel">
+      <h3 className="font-bold text-brand-accent">💎 ระดับสมาชิก &amp; แต้มสะสม (Loyalty)</h3>
+      <p className="text-sm text-brand-muted">
+        เกณฑ์ = ยอดสินค้าสุทธิ (หักส่วนลด/คืนเงิน · ไม่รวมค่าส่ง) แบบ rolling
+        {typeof windowMonths === 'number' ? ` ${windowMonths}` : ''} เดือน · แคนเซิล/คืนเงินปรับกลับอัตโนมัติ ·
+        แต้มออกเมื่อออเดอร์ผ่านสถานะที่กำหนด
+      </p>
+
+      <label className="flex items-center gap-2 text-sm">
+        <input type="checkbox" checked={tiersEnabled}
+          onChange={(e) => setTiersEnabled(e.target.checked)} data-testid="gr-loy-tiers-enabled" />
+        ✅ เปิดแสดงระดับสมาชิก 4 ระดับ (ปิด = ทุกบัญชีเป็น Member ชั่วคราว)
+      </label>
+
+      <div className="grid grid-cols-2 gap-3">
+        <label className="text-sm">หน้าต่าง rolling (เดือน)
+          <input type="number" min={1} max={36} className="input w-full" value={windowMonths}
+            onChange={(e) => setWindowMonths(e.target.value === '' ? '' : Number(e.target.value))} data-testid="gr-loy-window" />
+        </label>
+        <label className="text-sm">Silver ≥ (฿)
+          <input type="number" min={1} className="input w-full" value={silverMin}
+            onChange={(e) => setSilverMin(e.target.value === '' ? '' : Number(e.target.value))} data-testid="gr-loy-silver" />
+        </label>
+        <label className="text-sm">Gold ≥ (฿)
+          <input type="number" min={1} className="input w-full" value={goldMin}
+            onChange={(e) => setGoldMin(e.target.value === '' ? '' : Number(e.target.value))} data-testid="gr-loy-gold" />
+        </label>
+        <label className="text-sm">Platinum ≥ (฿)
+          <input type="number" min={1} className="input w-full" value={platinumMin}
+            onChange={(e) => setPlatinumMin(e.target.value === '' ? '' : Number(e.target.value))} data-testid="gr-loy-platinum" />
+        </label>
+      </div>
+
+      <label className="flex items-center gap-2 text-sm">
+        <input type="checkbox" checked={pointsEnabled}
+          onChange={(e) => setPointsEnabled(e.target.checked)} data-testid="gr-loy-points-enabled" />
+        🪙 เปิดสะสมแต้มจากการสั่งซื้อ (ปิด = ยังไม่มีการให้แต้ม — ค่าเริ่มต้น)
+      </label>
+      <label className="text-sm">อัตราแต้ม ต่อ ฿1 ของยอดสินค้า (ภาระการเงิน — ตั้งเองเมื่อ unit economics พร้อม)
+        <input type="number" min={0} step={0.1} className="input w-full" value={pointsPerBaht}
+          onChange={(e) => setPointsPerBaht(e.target.value === '' ? '' : Number(e.target.value))} data-testid="gr-loy-rate" />
+      </label>
+
+      <button className="btn btn-primary" onClick={() => void handleSave()} disabled={busy} data-testid="gr-loy-save">
+        {busy ? '⏳…' : '💾 บันทึกกติกา Loyalty'}
+      </button>
+
+      {tiers && (
+        <div className="rounded-xl bg-brand-bg p-3 text-xs text-brand-muted space-y-1" data-testid="gr-loy-tiers">
+          <div>
+            Member: <b>{Number(tiers.member ?? 0)}</b> · Silver: <b>{Number(tiers.silver ?? 0)}</b> ·
+            {' '}Gold: <b>{Number(tiers.gold ?? 0)}</b> · Platinum: <b>{Number(tiers.platinum ?? 0)}</b>
+          </div>
+          {points && (
+            <div>
+              แต้มแจกสะสมรวม {Number(points.earned ?? 0)} · ปรับกลับ {Number(points.reversed ?? 0)} ·
+              {' '}คงเหลือ {Number(points.balance ?? 0)} จาก {Number(points.entries ?? 0)} รายการในสมุดบันทึก
+            </div>
+          )}
         </div>
       )}
     </div>

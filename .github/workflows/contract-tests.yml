@@ -427,3 +427,15 @@ jobs:
             exit 1
           fi
           echo "Contract 154 OK — referral identity + hard-block/review/soft + reward on qualify + ledger reversal + kill switch + admin gates"
+
+      - name: Contract 155 — G&R stage 3 loyalty (4 tiers · append-only ledger · refund delta-reversal) (ROLLBACK)
+        run: |
+          set +e
+          out=$(psql -v ON_ERROR_STOP=1 -f e2e/contracts_155_loyalty_tiers.sql 2>&1); rc=$?
+          printf '%s\n' "$out"
+          if [ $rc -ne 0 ]; then
+            msg=$(printf '%s\n' "$out" | grep -m1 'ERROR:' || echo "rc=$rc")
+            echo "::error file=e2e/contracts_155_loyalty_tiers.sql::$msg"
+            exit 1
+          fi
+          echo "Contract 155 OK — 4 tiers rolling 12m + append-only points ledger + refund delta-reversal + admin gates"
