@@ -8,6 +8,9 @@ import { OrderBuilderModal } from '../order/OrderBuilderModal'
 import { BiteMascot } from '../ai/BiteMascot'
 import { BackgroundLayer } from './BackgroundLayer'
 import { AmbientMusicToggle } from '../audio/AmbientMusicToggle'
+import { useCartStore } from '@/store/cartStore'
+import { referralCodeFromSearch } from '@/lib/referralClient'
+import { showToast } from '../ui/ToastContainer'
 
 interface LayoutProps {
   children?: ReactNode
@@ -25,6 +28,23 @@ export function Layout({ children, hideBottomNav = false, activeSection = 'home'
   // the customer BottomNav must never render there (structural gate, not CSS).
   const isAdminArea = location.pathname.startsWith('/admin')
   const showBottomNav = !hideBottomNav && !isAdminArea
+
+  // [G&R 154] Deep-link แชร์: `/?ref=CODE` → เก็บโค้ดแนะนำเพื่อนเข้าตะกร้า (ครั้งเดียว
+  // ตอนเข้าหน้า) แล้ว strip พารามิเตอร์ออกจาก address bar — ใช้ได้ทุก path
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const code = referralCodeFromSearch(window.location.search)
+    if (!code) return
+    if (!useCartStore.getState().referralCode) {
+      useCartStore.getState().setReferralCode(code)
+      showToast('บันทึกโค้ดแนะนำเพื่อนแล้ว — ใช้ตอนสั่งซื้อเพื่อรับรางวัลคู่กัน', 'success')
+    }
+    try {
+      const url = new URL(window.location.href)
+      url.searchParams.delete('ref')
+      window.history.replaceState(null, '', url.pathname + url.search + url.hash)
+    } catch { /* URL แปลก ๆ = ปล่อยตามเดิม */ }
+  }, [])
 
   // Header hide-on-scroll — listen on the ACTUAL scroll container (`main` has
   // overflow-y-auto, so window.scrollY never moves on long pages) → this makes

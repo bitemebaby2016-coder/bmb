@@ -415,4 +415,15 @@ jobs:
             exit 1
           fi
           echo "Contract 153 OK — kill switch · budget 15% · product scope · max/usage cap · admin-only budget status"
-          echo "Contract 147 OK — kitchen/inventory/finance/marketing writes + support/auditor/dev read-only + rider gate"
+
+      - name: Contract 154 — G&R stage 2 referral (identity · 3 ระดับ · qualify/reverse ledger) (ROLLBACK)
+        run: |
+          set +e
+          out=$(psql -v ON_ERROR_STOP=1 -f e2e/contracts_154_referral_program.sql 2>&1); rc=$?
+          printf '%s\n' "$out"
+          if [ $rc -ne 0 ]; then
+            msg=$(printf '%s\n' "$out" | grep -m1 'ERROR:' || echo "rc=$rc")
+            echo "::error file=e2e/contracts_154_referral_program.sql::$msg"
+            exit 1
+          fi
+          echo "Contract 154 OK — referral identity + hard-block/review/soft + reward on qualify + ledger reversal + kill switch + admin gates"

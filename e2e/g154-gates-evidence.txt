@@ -1,0 +1,44 @@
+BMB G&R STAGE 2 (Referral · migration 154) — LOCAL GATE EVIDENCE
+Date: 2026-10-25 · Start command: Owner "อนุมัติตามนายแนะนำ" (Rollout ② = Referral ต่อจาก Promotions)
+
+Gates (clean-room ทั้งหมด รันจากเครื่อง dev):
+- npx tsc --noEmit .................. TSC_OK (0 errors)
+- npx vitest run .................... VITEST_OK: 142 files / 1480 tests / 0 fail
+                                    (เดิม 141/1446 + ไฟล์ใหม่ referralProgram.test.ts 34 ข้อ)
+- npm run lint (eslint + brandNameGuard 428 ไฟล์) ... LINT_OK
+- npm run build ..................... BUILD_OK (vite OK + PWA 141 entries)
+- Docker replay (postgres:16 · e2e/ci/local_stack_replica.sh = ทำตาม CI ทุก step):
+    MIGRATIONS_OK (001-154 — 154 ใหม่เข้า chain สะอาด) + contract 123 + apply 124
+    + contract 124 + concurrency = ALL_GREEN
+- ชุด contract ทั้งหมดใน container เดียวกัน = 20/20 CONTRACT_OK
+    (123,124 + 127_130,131,133,135,136,137,138_139,140,141,142,143,144,146,147,148,149,153,154)
+- e2e/contracts_154_referral_program.sql (ONE tx + ROLLBACK):
+    G1 สคีมา+policy seed+13 fns+trigger+normalizers+anon deny ............ PASS
+    G2 referral_my_code คงที่ (BMB-XXXXXXXX) + my_status + anon denied .. PASS
+    G3 preview แบบ anon: valid / unknown_code / bad_format .............. PASS
+    G4 claim เพื่อนใหม่ -> held + referred_by ผูก + claim ซ้ำ idempotent  PASS
+    G5 Hard block: self_referral - same_phone - not_new - window 72ชม. .. PASS
+    G6 ผ่าน delivered -> qualified + คูปอง 2x30 + notice 2 + ใช้ได้จริง
+       + issue ซ้ำ = 0 (ไม่ออกซ้ำ) ..................................... PASS
+    G7 คืนเงิน -> reversed (unused ปิด / used คงสิทธิ์) - ยกเลิกตอน held
+       -> void (ไม่มี ledger) ......................................... PASS
+    G8 kill switch ปิด = claim คืน disabled + ไม่มีแถว attribution ใหม่ . PASS
+    G9 admin-only gates + risk=review ค้างจน approve -> ออก 2 ใบ + stats ครบ PASS
+    => CONTRACT 154: PASS
+
+Transparency notes:
+- รอบแรก G4 แดง: fixture เบอร์ 0922222222 ไปชนออเดอร์ตกค้างจาก contract 124
+  (ambient data) -> เปลี่ยนเป็นช่วง 09915400xx เฉพาะ contract นี้
+  (บทเรียน 153 G4: assertion ห้ามพึ่งข้อมูลจาก step ก่อน) -> แก้แล้ว G1-G9 เขียวครบ
+- ไม่แก้ signature create_order_with_items / _i / create_pickup_order_i
+  (คง overload pin ของ 124/127 ไว้เป๊ะ) — attribution ผ่าน RPC `referral_claim` แยก
+  ที่ client เรียกทันทีหลังออเดอร์สร้างสำเร็จ (server validate ทุกกฎ · idempotent)
+- SharePage เดิมสุ่มโค้ดในเครื่อง + แกล้งให้แต้มตอนกดแชร์ -> รอบนี้เลิกทั้งหมด
+  (โค้ดจริงจากเซิร์ฟเวอร์ · รางวัลจาก ledger · ไม่มีการเพิ่มแต้มปลอม — ZERO-FAKE)
+- ไม่มี production write ใด ๆ (contract = ROLLBACK · replay = DB ใน container ชั่วคราว)
+- ยังไม่ได้ apply 154 ลง production — รอคำสั่ง Owner แยก (staged แบบ r13Apply153)
+
+REMAINING (ส่งต่อเซสชันหน้า):
+1. Owner สั่ง "apply 154" -> staged precheck/apply/verify/contract/record แบบ r13
+2. STAGE 3 (Loyalty Tiers) — inspect ระบบบันทึกยอดสุทธิเดิมก่อน (ข้ามขั้นไม่ได้)
+3. งานรอท่านเดิม: ตรวจ §D status report - D6 ลบ pages.dev - R-16 พิมพ์จริง - acceptance §4

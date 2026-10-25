@@ -2,27 +2,32 @@
 
 > **สถานะงานปัจจุบันของโปรเจกต์ Bite Me Baby** ใช้แนบเข้าสู่ Context ตอนเริ่มแชทเสมอ
 
-**last_updated:** 2026-10-25 **🔴 SESSION CLOSED — G&R STAGE 1 (PROMOTIONS) DELIVERED + PRODUCTION APPLIED ✓ (record=153)**
-(gates ทั้งหมดเขียว: tsc 0 · lint+brandNameGuard OK · vitest **141 files/1446 tests 0 fail** · build ✓ PWA 141 ·
- Docker replay สะอาด **001–153 = MIGRATIONS_OK** · regression contracts **18/18** · **contract 153 G1–G8 PASS** ·
- CI: Contract **#129/#130 ✓** · CI **#556 ✓** · Cloudflare Pages deploy ✓ · evidence = `e2e/g153-gates-evidence.txt`)
-**production:** migration **153 = APPLIED + RECORDED ✓** (Owner อนุมัติ 2026-10-25 · staged `e2e/r13Apply153.cjs`:
- precheck 9/9 → apply+idempotent-rerun 201 → verify 11/11 → contract153 PASS (ROLLBACK) → contractRegr 148 PASS →
- record top=153 · evidence = `e2e/r13Apply153-{precheck,apply153,verify153,contract153,contractRegr,record}.json`)
-**phase:** 🟢 STAGE 1 = DONE ทุกอย่าง (code+CI+production) · **STAGE 2 (Referral) = อนุมัติแล้ว → งานแรกของเซสชันหน้า**
+**last_updated:** 2026-10-25 **🔴 SESSION CLOSED — G&R STAGE 2 (REFERRAL) DELIVERED ✓ (migration 154 ยังไม่ apply production)**
+(gates ทั้งหมดเขียว: tsc 0 · lint+brandNameGuard OK (428 ไฟล์) · vitest **142 files/1480 tests 0 fail** ·
+ build ✓ PWA 141 · **Docker replay สะอาด 001–154 = MIGRATIONS_OK** · **contracts 20/20** ·
+ **contract 154 G1–G9 PASS** · evidence = `e2e/g154-gates-evidence.txt`)
+**production:** migration **153 = APPLIED ✓ (record=153)** · **154 = ยังไม่ apply — รอคำสั่งท่านแยก**
+ (staged แบบ `e2e/r13Apply153.cjs` — precheck→apply→verify→contract→record เหมือนเดิม)
+**phase:** 🟢 STAGE 2 (Referral) = DONE ฝั่ง code+CI ทุกอย่าง · **งานถัดไป = STAGE 3 (Loyalty Tiers)**
+ (inspect ระบบบันทึกยอดสุทธิเดิมก่อน · ข้ามขั้นไม่ได้) · STAGE 4 ยังไม่เริ่ม
 **current_focus:**
-1. **STAGE 1 · Promotions = ปิดแล้ว** — `153_promotion_campaign_controls.sql` (คอลัมน์แคมเปญ 5 · `promotion_products` ·
-   `promotion_policy` kill switch+งบ 15% · `promotion_apply_rules` จุดตัดสินเดียว · re-emit `create_order_with_items` จาก 148)
-   + contract 153 (CI step แล้ว) + client mirror (`promotionClient` เหตุผลปฏิเสธใหม่ 4 · `cartStore` ฐาน scope ·
-   `CouponBox` ส่ง lines) + `AdminPromotions` (ฟอร์ม/scope/badges/auto-scroll) + `AdminMarketing` แท็บ Rules = แผงงบ/kill switch
-   + เทสต์ใหม่ 22 ข้อ + **production applied ✓** — รายละเอียด = inventory §6 + handoff §7
-2. **STAGE 2 · Referral = APPROVED** (2026-10-25: "อนุมัติตามนายแนะนำ" + Owner ยืนยันรายการทดสอบ OTP ผ่านแล้ว)
-   — งานแรกของเซสชันหน้า: **inspect auth · guest checkout · OTP จริง** → unique identity → 3 ระดับ self-referral
-   → รางวัลตอนออเดอร์ผ่านสถานะ → ledger ปรับกลับ (rollout ข้อ 2 · ห้ามข้ามขั้น · ห้ามเดา · ไม่ต้องถามซ้ำเรื่องแนวทาง)
-3. งานรอ Owner (ไม่ใช่งาน AI): ตรวจ status report §D · D6 ลบทดสอบ pages.dev · R-16 พิมพ์จริง · acceptance §4
-**blocked_by:** ⛔ ไม่มี blocker — เซสชันนี้ปิดแล้วตามคำสั่ง · งานต่อทั้งหมด = handoff **§7.2** (Stage 2 → 3 → 4 ·
- migration ใหม่ = รอคำสั่ง apply แยก · งานรอท่าน = §6.2 ข้อ 1–4)
-- (รอบก่อนปิดเซสชัน — ยังคงมีผล): 4 บั๊กหน้าจอ ✓ · production 150/151/152 ✓ · stale contracts 8/8 ✓ ·
+1. **STAGE 1 · Promotions = ปิดแล้ว** (production applied · record=153) — รายละเอียด = inventory §6 + handoff §7
+2. **STAGE 2 · Referral = DELIVERED (เซสชัน 2026-10-25)** — `154_referral_program.sql`:
+   `customers.referral_code/referred_by` + `referral_attributions` + ledger `referral_rewards` (RLS deny) +
+   `referral_policy` (฿30/฿30 · qualify=delivered · cap 20/เดือน · หน้าต่าง 72ชม. — แอดมินปรับใน
+   AI Marketing Center แท็บ Rules) + RPC `referral_my_code/preview/claim/issue/reverse/my_status/admin_stats/resolve`
+   + trigger `trg_referral_order_status` (ผ่านสถานะ → ออกคูปอง 2 ใบ+notice · ยกเลิก/คืนเงิน → ปรับกลับ
+   ตาม ledger ไม่หักซ้ำ) · **3 ระดับกันโกง** (Hard block/Review พักรางวัล/Soft ไม่เก็บไม่เดา) ·
+   **ไม่แตะ signature order spine** (attribution = `referral_claim` แยก · client เรียกหลัง order สร้าง) +
+   contract 154 (G1–G9 PASS · CI step แล้ว) + client (`referralClient`/`ReferralBox`/`?ref=` deep-link/
+   cartStore+persist/Checkout claim) + **SharePage เลิกของปลอม** + ProfilePage โชว์รางวัลจริง +
+   AdminMarketing แผง Referral + เทสต์ 34 ข้อ — รายละเอียด = inventory §6 + evidence
+3. **STAGE 3 · Loyalty Tiers = งานถัดไป** — ตามกติกา: ตรวจสอบระบบบันทึกยอดสุทธิเดิมก่อน
+   (ยังไม่สร้างระบบใหม่ทันที) → 4 ระดับ Member/Silver/Gold/Platinum (เกณฑ์ 12 เดือน §5.2) · ห้ามข้ามขั้น
+4. งานรอ Owner (ไม่ใช่งาน AI): ตรวจ status report §D · D6 ลบทดสอบ pages.dev · R-16 พิมพ์จริง · acceptance §4
+**blocked_by:** ⛔ ไม่มี blocker — งานทั้งหมดที่สั่งรอบนี้เสร็จ · งานต่อ = handoff **§8.2**
+ (apply 154 = **รอคำสั่งท่านแยก** · Stage 3 → 4 · งานรอท่าน = §6.2 ข้อ 1–4)
+- (รอบก่อนปิดเซสชัน — ยังคงมีผล): 4 บั๊กหน้าจอ ✓ · production 150/151/152/153 ✓ · stale contracts 8/8 ✓ ·
   legacy 7 เขียว(ไม่ซ่อม) ✓ · R-17 PASS ✓ · G&R เอกสาร+คำตอบ Owner ✓ · `AI_ENTRYPOINT`/`UNIVERSAL_MASTER_AI_RULES` v1.1/v2.1 ✓
 
 ---

@@ -172,9 +172,37 @@ Engagement & Play — ตามหลัง
   precheck 9/9 (top=152 · backup ใหม่ 8 · 153 ยังไม่มี) → apply+idempotent-rerun 201 → verify 11/11 →
   contract153 บนโปรดักชั่น PASS (status 201 ไม่มี error · ROLLBACK = zero persisted data) → contractRegr 148 PASS →
   record: history top = **153** — evidence = `e2e/r13Apply153-{precheck,apply153,verify153,contract153,contractRegr,record}.json`
-- ✅ **STAGE 2 (Referral) = อนุมัติแล้ว** (2026-10-25 Owner: "อนุมัติตามนายแนะนำ" + ยืนยันรายการทดสอบ OTP ผ่านแล้ว)
-  → เริ่มในเซสชันถัดไปตามคำสั่งปิดเซสชัน — เดินตามแนวทาง inspect-first (Owner ข้อ ③): ตรวจ auth ·
-  guest checkout · OTP จริง → unique identity → 3 ระดับ self-referral → รางวัลตอนออเดอร์ผ่านสถานะ →
-  ledger ปรับกลับ (ห้ามเดา · ไม่ต้องถามซ้ำเรื่องแนวทาง)
+- ✅ **STAGE 2 (Referral) = IMPLEMENTED + contract 154 PASS** (2026-10-25 — Owner: "อนุมัติตามนายแนะนำ"
+  + ยืนยันรายการทดสอบ OTP ผ่านแล้ว → ลงมือ inspect-first ครบแล้ว ไม่ต้องถามซ้ำ)
+  - **inspect จริงก่อนเขียน (ไม่เดา):** auth = OTP `quick_login`/`guest_checkout` (mirror
+    `normalizeOtpPhone` ตัวเลขล้วน 14 หลัก) → `customers` (id=uid · user_id · phone) + guest =
+    phone-keyed account (`cust-<digits>` merge) → **identity = auth uid เป็นหลัก + เบอร์ OTP เป็นหลักฐาน** ✓
+  - **SQL: `supabase/migrations/154_referral_program.sql`**
+    · `customers.referral_code` (UNIQUE + backfill) + `referred_by` · ตาราง `referral_attributions`
+    (PK=order_id · status held/qualified/blocked/reversed/void) + ledger `referral_rewards`
+    (UNIQUE order+role · สถานะ issued/reversed) — RLS deny-all อ่านผ่าน definer ·
+    `referral_policy` ใน business_settings (**฿30/฿30 · qualify=delivered · อายุคูปอง 30 วัน ·
+    เพดาน 20/เดือน · หน้าต่าง claim 72 ชม. · share_base_url — แอดมินปรับได้ทั้งหมด**)
+    · RPC: `referral_my_code` (สร้าง/ดึงโค้ด BMB-XXXXXXXX) · `referral_preview` (anon) ·
+    **`referral_claim`** (จุดเดียวฝั่งลูกค้า — validate ทุกกฎ + idempotent + เจ้าของออเดอร์เท่านั้น) ·
+    `referral_issue_rewards`/`referral_reverse_rewards` (idempotent) · `referral_my_status` ·
+    `referral_admin_stats`/`referral_resolve_attribution` (gate is_admin) ·
+    **trigger `trg_referral_order_status`** (ครอบทุกเส้นทางเปลี่ยนสถานะ: ผ่าน qualify → ออก
+    คูปอง 2 ใบ = `promotions` row จริง + ledger + notice · ยกเลิก/คืนเงิน → ปรับกลับตาม ledger
+    ไม่หักซ้ำ · ยังไม่ออก = void) · **ไม่แตะ signature `create_order_with_items`/_i/pickup** (คง overload pin 124/127)
+  - **3 ระดับกันโกง (§5.3):** Hard block = บัญชีเดียวกัน/เบอร์เดียวกัน/เพื่อนไม่ใหม่/เคยถูกแนะนำแล้ว/
+    เกินหน้าต่างเวลา (บันทึก audit ไม่ทำออเดอร์ล้มเหลว) · Review = เกินเพดาน/เดือน → risk='review'
+    = พักรางวัลจนแอดมิน approve/reject · Soft signal = IP/อุปกรณ์ **ไม่เก็บ ไม่เดา ไม่ใช้เป็นเกณฑ์เดียว**
+  - **Contract: `e2e/contracts_154_referral_program.sql` G1–G9 PASS (ROLLBACK)** + CI step แล้ว
+    (fixture เบอร์ใช้ช่วง 09915400xx เฉพาะ — ห้ามชนข้อมูลตกค้าง บทเรียน 153 G4)
+  - **Client:** `referralClient.ts` (mirror+ข้อความไทยครบทุก reason) · `ReferralBox` ที่ Checkout
+    (apply/revalidate gate แบบ coupon) · `?ref=` deep-link ใน Layout · `cartStore.referralCode` +
+    cartPersistence (optional field — cart เก่าไม่พัง) · Checkout claim ทันทีหลัง order สร้าง ·
+    **SharePage เลิกของปลอม** (โค้ดจริงจากเซิร์ฟเวอร์ + ลิงก์ base แอดมิน + ledger รางวัลจริง + ไม่แกล้งให้แต้ม)
+  - **Admin:** แผง `ReferralSettingsPanel` ใน AI Marketing Center แท็บ Rules (policy + สถิติจริง +
+    ปุ่มอนุมัติ/ปฏิเสธ รายการพักรางวัล) — ยืนบนศูนย์กลางเดิมตาม §3 ไม่สร้างใหม่
+  - **เทสต์:** `referralProgram.test.ts` (mirror/gate/claim payload/persistence) +
+    evidence รอบปิดเซสชัน = `e2e/g154-gates-evidence.txt`
 - ⏳ **STAGE 3 (Loyalty Tiers) → STAGE 4 (Engagement & Play)** = ยังไม่เริ่ม (ตามลำดับ Rollout ข้อ ⑧ — ข้ามไม่ได้)
+- ⛔ **production apply migration 154 = ยังไม่ทำ — รอคำสั่ง apply แยก** (staged แบบ `r13Apply153`)
 - ⛔ เงื่อนไขเลื่อนขั้น (§5.8) ยังคงอยู่: business rules + server validation + tests + สิทธิ์ ต้องผ่านก่อนทุกครั้ง

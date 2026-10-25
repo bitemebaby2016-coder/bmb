@@ -44,6 +44,8 @@ export interface StoredCart {
   savedAt: string
   order_mode: OrderMode | null
   couponCode: string
+  /** [G&R 154] optional — legacy v1 carts ไม่มี field นี้ (fallback = '') */
+  referralCode?: string
   items: StoredCartItem[]
 }
 
@@ -62,6 +64,8 @@ interface SerializeSource {
   items: Array<{ product: Product; quantity: number; customizations?: Record<string, string | string[]>; line_mode?: OrderMode }>
   order_mode: OrderMode | null
   couponCode: string
+  /** [G&R 154] optional — เรียกจาก test/จุดที่ build partial state ได้ (ขาด = '') */
+  referralCode?: string
 }
 
 /** Keep only plain string / string[] customization values (JSON-safe, minimal). */
@@ -75,13 +79,14 @@ function plainCustomizations(cust: unknown): Record<string, string | string[]> |
   return Object.keys(out).length > 0 ? out : undefined
 }
 
-/** Minimal serialization — ids/qty/customizations/mode/coupon only. */
+/** Minimal serialization — ids/qty/customizations/mode/coupon/referral only. */
 export function serializeCart(state: SerializeSource): string {
   const payload: StoredCart = {
     v: SCHEMA_VERSION,
     savedAt: new Date().toISOString(),
     order_mode: state.order_mode ?? null,
     couponCode: typeof state.couponCode === 'string' ? state.couponCode : '',
+    referralCode: typeof state.referralCode === 'string' ? state.referralCode : '',
     items: (state.items || [])
       .map((item) => ({
         productId: String(item.product?.id ?? ''),
@@ -124,6 +129,7 @@ export function parseStoredCart(raw: string | null): StoredCart | null {
     savedAt: typeof c.savedAt === 'string' ? c.savedAt : '',
     order_mode: orderMode,
     couponCode: typeof c.couponCode === 'string' ? c.couponCode : '',
+    referralCode: typeof c.referralCode === 'string' ? c.referralCode : '',
     items,
   }
 }
@@ -156,6 +162,11 @@ export function restoreWithCatalog(stored: StoredCart, products: Product[]): Res
   if (restored > 0 && stored.couponCode) {
     useCartStore.getState().setCouponCode(stored.couponCode)
   }
+  // [G&R 154] คืนโค้ดแนะนำเพื่อนเสมอ (อยู่นอกเงื่อนไข items — เพื่อนสั่งคนแรก
+  // ต้องถือโค้ดไว้ได้แม้ตะกร้าจะเพิ่งถูก hydrate ว่าง)
+  if (stored.referralCode) {
+    useCartStore.getState().setReferralCode(stored.referralCode)
+  }
   return { restored, dropped }
 }
 
@@ -172,6 +183,7 @@ export function revalidateWithCatalog(products: Product[]): RestoreReport {
     savedAt: '',
     order_mode: state.order_mode,
     couponCode: state.couponCode,
+    referralCode: state.referralCode,
     items: state.items.map((item) => ({
       productId: item.product.id,
       quantity: item.quantity,
@@ -204,7 +216,7 @@ function writeNow(): void {
   if (skipWrites) return
   try {
     const state = useCartStore.getState()
-    if (state.items.length === 0 && !state.couponCode) {
+    if (state.items.length === 0 && !state.couponCode && !state.referralCode) {
       localStorage.removeItem(CART_STORAGE_KEY)
       return
     }
@@ -223,7 +235,7 @@ export function initCartPersistence(fetchProducts: () => Promise<Product[]>): vo
   initialized = true
 
   useCartStore.subscribe((state, prev) => {
-    if (state.items === prev.items && state.couponCode === prev.couponCode && state.order_mode === prev.order_mode) return
+    if (state.items === prev.items && state.couponCode === prev.couponCode && state.referralCode === prev.referralCode && state.order_mode === prev.order_mode) return
     if (writeTimer) clearTimeout(writeTimer)
     writeTimer = setTimeout(writeNow, 200)
   })
@@ -232,7 +244,8 @@ export function initCartPersistence(fetchProducts: () => Promise<Product[]>): vo
   void (async () => {
     try {
       const stored = parseStoredCart(localStorage.getItem(CART_STORAGE_KEY))
-      if (stored && stored.items.length > 0) {
+      // [G&R 154] เก็บ referralCode แม้ตะกร้าว่าง (?ref= มาก่อนเพิ่มสินค้า)
+      if (stored && (stored.items.length > 0 || stored.referralCode)) {
         const catalog = await fetchProducts()
         const report = restoreWithCatalog(stored, catalog)
         const msg = reportToToastMessage(report, 'hydrate')

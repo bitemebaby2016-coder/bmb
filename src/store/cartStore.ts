@@ -74,6 +74,8 @@ function eligibleForPromotion(
 interface CartStore {
   items: Array<CartItemType & { __context_tenant_id?: string; line_mode?: OrderMode; __line_key?: string }>
   couponCode: string
+  /** [G&R 154] โค้ดแนะนำเพื่อน (Deep-link ?ref= / ReferralBox) — อ้างอิงที่ checkout เท่านั้น ไม่ลดราคา */
+  referralCode: string
   appliedPromotion: PromotionRow | null
   subtotal: number
   discount: number
@@ -91,6 +93,7 @@ interface CartStore {
   updateQuantity: (productId: string, quantity: number, lineKey?: string) => void
   clearCart: () => void
   setCouponCode: (code: string) => void
+  setReferralCode: (code: string) => void
   setAppliedPromotion: (promo: PromotionRow | null) => void
   setDeliveryFee: (fee: number) => void
   setCheckoutOpen: (open: boolean) => void
@@ -111,6 +114,7 @@ interface CartStore {
 export const useCartStore = create<CartStore>((set, get) => ({
   items: [],
   couponCode: '',
+  referralCode: '',
   appliedPromotion: null,
   subtotal: 0,
   discount: 0,
@@ -207,7 +211,7 @@ export const useCartStore = create<CartStore>((set, get) => ({
     get().recalculate()
   },
 
-  clearCart: () => set({ items: [], couponCode: '', appliedPromotion: null, subtotal: 0, discount: 0, deliveryFee: 0, total: 0, order_mode: null, cartTotal: 0 }),
+  clearCart: () => set({ items: [], couponCode: '', referralCode: '', appliedPromotion: null, subtotal: 0, discount: 0, deliveryFee: 0, total: 0, order_mode: null, cartTotal: 0 }),
 
   // TEN-05: Resolve whether cart survives context change
   resolveContextChange: (newTenantId: string, newBrandId: string) => {
@@ -252,6 +256,11 @@ export const useCartStore = create<CartStore>((set, get) => ({
     // Owner fix 2026-10-19: ใส่โค้ดแล้วสรุปราคาต้องขยับทันที (เดิม discount ค้าง 0
     // จนกว่าจะมี event อื่นมาเรียก recalculate — ดูเหมือน "โปรโมชั่นใช้ไม่ได้")
     get().recalculate()
+  },
+
+  setReferralCode: (code: string) => {
+    // [G&R 154] ไม่เรียก recalculate — โค้ดแนะนำเพื่อนไม่กระทบราคา (รางวัลออกตอนออเดอร์ผ่านสถานะ)
+    set({ referralCode: code })
   },
 
   setAppliedPromotion: (promo) => {

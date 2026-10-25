@@ -38,6 +38,8 @@ import { revalidateWithCatalog, reportToToastMessage } from '@/lib/cartPersisten
 import { roundBookability, roundStatusLabel, roundCutoffLabel } from '@/lib/deliveryRoundStatus'
 import { normalizePromoCode } from '@/lib/promotionClient'
 import { CouponBox, revalidateCouponForSubmit } from '@/components/CouponBox'
+import { ReferralBox, revalidateReferralForSubmit } from '@/components/ReferralBox'
+import { claimReferralCode, describeReferralClaim } from '@/lib/referralClient'
 import { getTrustedGpsLocation } from '@/lib/locationLogin'
 import { DeliveryMapPicker } from '@/components/delivery/DeliveryMapPicker'
 import type { OrderMode } from '@/config/platformConfig'
@@ -511,6 +513,15 @@ export function CheckoutPage() {
     }
     const expectedDiscount = couponCheck.discountAmount
 
+    // [G&R 154] Referral gate (mirror coupon gate): โค้ดที่ค้างอยู่ต้องยังผ่านกฎก่อนสั่ง
+    // — ไม่ผ่าน = ถูกเอาออก + แจ้งเหตุ (server ยังตัดสินซ้ำตอน referral_claim)
+    const referralCheck = await revalidateReferralForSubmit()
+    if (!referralCheck.ok) {
+      showToast(referralCheck.message, 'error')
+      setIsProcessing(false)
+      return
+    }
+
     setIsProcessing(true)
     // ✅ ONE canonical creation RPC for BOTH modes (migration 025 v3).
     // The payload carries NO price/fee/total — the server derives everything.
@@ -566,6 +577,23 @@ export function CheckoutPage() {
       return
     }
     submitKeysRef.current.release(submitFp) // created/replayed — payload settled
+
+    // [G&R 154] ผูกโค้ดแนะนำเพื่อนทันทีหลังออเดอร์สร้างสำเร็จ — ทุกกฎ (self/เบอร์ซ้ำ/
+    // เพื่อนใหม่/หน้าต่างเวลา) validate ฝั่งเซิร์ฟเวอร์ใน referral_claim · ล้มเหลว = แจ้ง
+    // ให้ลองใหม่ ไม่แสร้งว่าได้สิทธิ์ · ไม่ขวางขั้นตอนชำระเงิน
+    if (referralCheck.code) {
+      try {
+        const claim = await claimReferralCode(order.order_number, referralCheck.code)
+        if (claim) {
+          const d = describeReferralClaim(claim)
+          showToast(d.message, d.tone)
+        } else {
+          showToast('บันทึกโค้ดแนะนำเพื่อนไม่สำเร็จในครั้งนี้ — ติดต่อร้านเพื่อรับสิทธิ์ได้เลย', 'warning')
+        }
+      } catch {
+        showToast('บันทึกโค้ดแนะนำเพื่อนไม่สำเร็จในครั้งนี้ — ติดต่อร้านเพื่อรับสิทธิ์ได้เลย', 'warning')
+      }
+    }
 
     // Payment intent created at checkout (server amount; validated again by 008).
     let cardClientSecret: string | undefined
@@ -1023,6 +1051,9 @@ export function CheckoutPage() {
 
       {/* M2: coupon UI รวมเป็น CouponBox component เดียว — ใช้ร่วมกับ CartPage */}
       <CouponBox />
+
+      {/* G&R 154: โค้ดแนะนำเพื่อน — ผูกสิทธิ์ตอนสร้างออเดอร์ (server ตัดสินใน referral_claim) */}
+      <ReferralBox />
 
       {/* Order Summary — client estimate is DISPLAY ONLY */}
       <div className="card mb-6">

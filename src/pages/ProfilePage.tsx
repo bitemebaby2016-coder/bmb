@@ -5,6 +5,7 @@ import { useRewardsStore } from '@/store/rewardsStore'
 import { useState, useEffect } from 'react'
 import { showToast } from '@/components/ui/ToastContainer'
 import { useRiderIdentity } from '@/hooks/useRiderIdentity'
+import { fetchMyReferralStatus, type MyReferralStatus } from '@/lib/referralClient'
 import {
   registerPasskey,
   listPasskeys,
@@ -21,6 +22,16 @@ export function ProfilePage() {
 
   // P4 — รายการ passkey ที่ผูกกับบัญชีนี้ (โหลดครั้งเดียวตอนเปิดหน้า)
   const [passkeys, setPasskeys] = useState<PasskeyInfo[]>([])
+  // [G&R 154] รางวัลแนะนำเพื่อนจริงจาก ledger — Owner: "แจ้งทาง notice + เก็บไว้ในโปรไฟล์"
+  const [refStatus, setRefStatus] = useState<MyReferralStatus | null>(null)
+  useEffect(() => {
+    if (!customer) return
+    let active = true
+    void fetchMyReferralStatus().then((r) => {
+      if (active) setRefStatus(r)
+    })
+    return () => { active = false }
+  }, [customer])
   useEffect(() => {
     if (!customer || !isPasskeySupported()) return
     let active = true
@@ -64,6 +75,29 @@ export function ProfilePage() {
           <Link to="/rewards" className="btn btn-secondary">แลกรางวัล →</Link>
         </div>
       </div>
+
+      {/* [G&R 154] รางวัลแนะนำเพื่อน — บันทึกจริงจาก ledger (Owner: เก็บไว้ในโปรไฟล์) */}
+      {refStatus && refStatus.rewards.length > 0 && (
+        <div className="card mb-6" data-testid="profile-referral-rewards">
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="font-bold text-brand-accent">🤝 รางวัลแนะนำเพื่อน</h3>
+            <Link to="/share" className="text-sm text-brand-primary hover:underline">ดูโค้ดชวนเพื่อน →</Link>
+          </div>
+          <ul className="space-y-2">
+            {refStatus.rewards.map((r) => (
+              <li key={`pf-${r.coupon_code}-${r.role}`} className="flex items-center justify-between gap-2 rounded-lg border border-brand-border px-3 py-2 text-sm">
+                <div className="min-w-0">
+                  <span className="font-mono font-bold">{r.coupon_code}</span>
+                  <span className="text-brand-muted"> · ฿{Number(r.amount)}</span>
+                </div>
+                <span className={`text-xs shrink-0 ${r.state === 'issued' ? 'text-green-700' : 'text-brand-muted'}`}>
+                  {r.state === 'issued' ? 'ใช้ได้' : 'ปรับกลับแล้ว'}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       <div className="space-y-3">
         <Link to="/orders" className="card block hover:scale-[1.02] transition-transform">

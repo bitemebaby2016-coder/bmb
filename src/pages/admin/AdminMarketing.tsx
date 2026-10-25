@@ -320,6 +320,7 @@ export function AdminMarketing() {
       {tab === 'rules' && (
         <div className="space-y-4 max-w-xl">
           <PromotionBudgetPanel />
+          <ReferralSettingsPanel />
           <div className="card space-y-3">
             <p className="text-sm text-brand-muted">กติกาเหล่านี้เก็บในตาราง marketing_rules (แก้ได้จริง ไม่มีค่าฝังโค้ด)</p>
             <label className="text-sm">จำนวนโพสต์ต่อสัปดาห์
@@ -514,6 +515,225 @@ function PromotionBudgetPanel() {
       <button className="btn btn-primary" onClick={() => void handleSave()} disabled={busy} data-testid="gr-budget-save">
         {busy ? '⏳…' : '💾 บันทึกงบ/kill switch'}
       </button>
+    </div>
+  )
+}
+
+/**
+ * [G&R 154 · Rollout ②] แผงควบคุม "แนะนำเพื่อน" — ตั้งใน business_settings.referral_policy
+ *  (Owner: ทำสูตรไว้ แอดมินปรับเองได้ · kill switch · เพดาน/เดือน · หน้าต่าง claim)
+ *  + สถิติ/รายการ attribution จริง + ปุ่มอนุมัติ/ปฏิเสธ รายการที่ถูก "พักรางวัล" (risk=review)
+ *  ยืนบน AI Marketing Center (แท็บ Rules) ตาม §3 — ไม่สร้างศูนย์กลางใหม่
+ */
+function ReferralSettingsPanel() {
+  const [enabled, setEnabled] = useState(true)
+  const [referrerBaht, setReferrerBaht] = useState<number | ''>(30)
+  const [friendBaht, setFriendBaht] = useState<number | ''>(30)
+  const [qualifyStatus, setQualifyStatus] = useState('delivered')
+  const [validityDays, setValidityDays] = useState<number | ''>(30)
+  const [monthlyCap, setMonthlyCap] = useState<number | ''>(20)
+  const [minOrder, setMinOrder] = useState<number | ''>(0)
+  const [claimWindow, setClaimWindow] = useState<number | ''>(72)
+  const [shareBase, setShareBase] = useState('')
+  const [stats, setStats] = useState<Record<string, any> | null>(null)
+  const [busy, setBusy] = useState(false)
+
+  useEffect(() => {
+    void load()
+  }, [])
+
+  async function load() {
+    const settings = await getBusinessSettings()
+    const policy = settings['referral_policy']
+    if (policy && typeof policy === 'object') {
+      if (typeof policy.enabled === 'boolean') setEnabled(policy.enabled)
+      if (Number.isFinite(Number(policy.referrer_reward_baht))) setReferrerBaht(Number(policy.referrer_reward_baht))
+      if (Number.isFinite(Number(policy.friend_reward_baht))) setFriendBaht(Number(policy.friend_reward_baht))
+      if (typeof policy.qualify_status === 'string') setQualifyStatus(policy.qualify_status)
+      if (Number.isFinite(Number(policy.coupon_validity_days))) setValidityDays(Number(policy.coupon_validity_days))
+      if (policy.referrer_monthly_cap === null) setMonthlyCap('')
+      else if (Number.isFinite(Number(policy.referrer_monthly_cap))) setMonthlyCap(Number(policy.referrer_monthly_cap))
+      if (Number.isFinite(Number(policy.min_order_amount))) setMinOrder(Number(policy.min_order_amount))
+      if (Number.isFinite(Number(policy.claim_window_hours))) setClaimWindow(Number(policy.claim_window_hours))
+      if (typeof policy.share_base_url === 'string') setShareBase(policy.share_base_url)
+    }
+    const { data, error } = await supabase.rpc('referral_admin_stats')
+    setStats(!error && data && typeof data === 'object' ? (data as Record<string, any>) : null)
+  }
+
+  async function handleSave() {
+    const num = (v: number | '', min: number, label: string): number | null | false => {
+      if (v === '') return null
+      const n = Number(v)
+      if (!Number.isFinite(n) || n < min) {
+        showToast(`${label} ต้องเป็นตัวเลขไม่น้อยกว่า ${min}`, 'warning')
+        return false
+      }
+      return n
+    }
+    const refN = num(referrerBaht, 0, 'รางวัลผู้แนะนำ')
+    const frN = num(friendBaht, 0, 'รางวัลเพื่อนใหม่')
+    const valN = num(validityDays, 1, 'อายุคูปอง')
+    const capN = monthlyCap === '' ? null : num(monthlyCap, 0, 'เพดานต่อเดือน')
+    const minN = num(minOrder, 0, 'ยอดขั้นต่ำ')
+    const winN = num(claimWindow, 1, 'หน้าต่างเวลา claim')
+    if (refN === false || frN === false || valN === false || capN === false || minN === false || winN === false) return
+
+    setBusy(true)
+    const ok = await setBusinessSetting('referral_policy', {
+      enabled,
+      referrer_reward_baht: refN ?? 0,
+      friend_reward_baht: frN ?? 0,
+      qualify_status: qualifyStatus,
+      coupon_validity_days: valN ?? 30,
+      referrer_monthly_cap: capN,
+      min_order_amount: minN ?? 0,
+      claim_window_hours: winN ?? 72,
+      share_base_url: shareBase.trim(),
+    })
+    setBusy(false)
+    showToast(
+      ok ? 'บันทึกกติกาแนะนำเพื่อนแล้ว (มีผลกับการ claim ครั้งถัดไปทันที)' : 'บันทึกไม่สำเร็จ — ลองใหม่อีกครั้ง',
+      ok ? 'success' : 'error',
+    )
+    if (ok) void load()
+  }
+
+  async function handleResolve(orderNumber: string, decision: 'approve' | 'reject') {
+    const { data, error } = await supabase.rpc('referral_resolve_attribution', {
+      p_order_number: orderNumber,
+      p_decision: decision,
+    })
+    if (error || !data) {
+      showToast('ดำเนินการไม่สำเร็จ — ลองใหม่อีกครั้ง', 'error')
+      return
+    }
+    showToast(decision === 'approve' ? 'อนุมัติปลดล็อกรางวัลแล้ว' : 'ปฏิเสธรายการแนะนำแล้ว', 'success')
+    void load()
+  }
+
+  const totals = (stats?.totals ?? null) as Record<string, unknown> | null
+  const recent = Array.isArray(stats?.recent) ? (stats.recent as Array<Record<string, unknown>>) : []
+  const money = (v: unknown) => Number(v ?? 0).toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+
+  return (
+    <div className="card space-y-3" data-testid="gr-referral-panel">
+      <h3 className="font-bold text-brand-accent">🤝 แนะนำเพื่อน (Referral &amp; Affiliate)</h3>
+      <p className="text-sm text-brand-muted">
+        รางวัล = คูปอง (ไม่ใช่เงินสด) · ออกเมื่อออเดอร์แรกของเพื่อนใหม่ผ่านสถานะที่กำหนด ·
+        ระบบป้องกันแนะนำตัวเอง 3 ระดับ + พักรางวัลเมื่อผิดปกติให้ท่านตรวจที่นี่
+      </p>
+
+      <label className="flex items-center gap-2 text-sm">
+        <input
+          type="checkbox"
+          checked={enabled}
+          onChange={(e) => setEnabled(e.target.checked)}
+          data-testid="gr-ref-enabled"
+        />
+        ✅ เปิดระบบแนะนำเพื่อน (ติ๊กออก = ไม่รับโค้ดใหม่ทันที — kill switch · รางวัลที่ออกแล้วยังคงอยู่)
+      </label>
+
+      <div className="grid grid-cols-2 gap-3">
+        <label className="text-sm">รางวัลผู้แนะนำ (฿)
+          <input type="number" min={0} step={1} className="input w-full" value={referrerBaht}
+            onChange={(e) => setReferrerBaht(e.target.value === '' ? '' : Number(e.target.value))} data-testid="gr-ref-referrer-baht" />
+        </label>
+        <label className="text-sm">รางวัลเพื่อนใหม่ (฿)
+          <input type="number" min={0} step={1} className="input w-full" value={friendBaht}
+            onChange={(e) => setFriendBaht(e.target.value === '' ? '' : Number(e.target.value))} data-testid="gr-ref-friend-baht" />
+        </label>
+      </div>
+
+      <label className="text-sm block">ออเดอร์ผ่านสถานะไหนจึงได้รางวัล
+        <select className="input w-full" value={qualifyStatus} onChange={(e) => setQualifyStatus(e.target.value)} data-testid="gr-ref-qualify">
+          <option value="confirmed">confirmed — ยืนยันออเดอร์</option>
+          <option value="preparing">preparing — กำลังเตรียม</option>
+          <option value="ready_for_dispatch">ready_for_dispatch — พร้อมส่ง</option>
+          <option value="dispatched">dispatched — ออกส่ง</option>
+          <option value="in_transit">in_transit — ระหว่างส่ง</option>
+          <option value="arrived">arrived — ถึงที่</option>
+          <option value="delivered">delivered — ส่งสำเร็จ (ค่าเริ่มต้น)</option>
+        </select>
+      </label>
+
+      <div className="grid grid-cols-2 gap-3">
+        <label className="text-sm">อายุคูปอง (วัน)
+          <input type="number" min={1} className="input w-full" value={validityDays}
+            onChange={(e) => setValidityDays(e.target.value === '' ? '' : Number(e.target.value))} data-testid="gr-ref-validity" />
+        </label>
+        <label className="text-sm">เพดานผู้แนะนำ/เดือน (ครั้ง · ว่าง = ไม่จำกัด)
+          <input type="number" min={0} className="input w-full" value={monthlyCap}
+            onChange={(e) => setMonthlyCap(e.target.value === '' ? '' : Number(e.target.value))} data-testid="gr-ref-cap" />
+        </label>
+        <label className="text-sm">ยอดขั้นต่ำของคูปอง (฿)
+          <input type="number" min={0} className="input w-full" value={minOrder}
+            onChange={(e) => setMinOrder(e.target.value === '' ? '' : Number(e.target.value))} data-testid="gr-ref-min-order" />
+        </label>
+        <label className="text-sm">หน้าต่างอายุสิทธิ์ (ชม. หลังสั่งซื้อ)
+          <input type="number" min={1} className="input w-full" value={claimWindow}
+            onChange={(e) => setClaimWindow(e.target.value === '' ? '' : Number(e.target.value))} data-testid="gr-ref-window" />
+        </label>
+      </div>
+
+      <label className="text-sm block">ลิงก์แชร์พื้นฐาน (ว่าง = ใช้โดเมนปัจจุบันของเว็บ)
+        <input type="text" className="input w-full" placeholder="https://biteme-baby.com"
+          value={shareBase} onChange={(e) => setShareBase(e.target.value)} data-testid="gr-ref-share-base" />
+      </label>
+
+      <button className="btn btn-primary" onClick={() => void handleSave()} disabled={busy} data-testid="gr-ref-save">
+        {busy ? '⏳…' : '💾 บันทึกกติกาแนะนำเพื่อน'}
+      </button>
+
+      {totals && (
+        <div className="rounded-xl bg-brand-bg p-3 text-xs text-brand-muted space-y-1" data-testid="gr-ref-totals">
+          <div>
+            รอตรวจพัก: <b>{Number(totals.review_pending ?? 0)}</b> · ค้างรางวัล:{' '}
+            <b>{Math.max(0, Number(totals.held ?? 0) - Number(totals.review_pending ?? 0))}</b> ·
+            สำเร็จ: <b>{Number(totals.qualified ?? 0)}</b> · ถูกกัน: <b>{Number(totals.blocked ?? 0)}</b> ·
+            ปรับกลับ: <b>{Number(totals.reversed ?? 0)}</b>
+          </div>
+          <div>รางวัลที่ยังใช้ได้รวม {money(totals.rewards_issued)} บาท</div>
+        </div>
+      )}
+
+      {recent.length > 0 && (
+        <div className="space-y-2" data-testid="gr-ref-recent">
+          <p className="text-sm font-bold">รายการแนะนำล่าสุด</p>
+          {recent.slice(0, 12).map((r) => (
+            <div
+              key={String(r.order_number)}
+              className="flex items-center justify-between gap-2 rounded-lg border border-brand-border p-2 text-xs"
+            >
+              <div className="min-w-0 text-left">
+                <span className="font-mono font-bold">{String(r.order_number)}</span>
+                <span className="text-brand-muted">
+                  {' '}· {String(r.status)}{r.risk === 'review' ? ' · ⏸ พักรางวัล' : ''}
+                </span>
+                {r.reason ? <div className="text-brand-muted">{String(r.reason)}</div> : null}
+              </div>
+              {r.status === 'held' && (
+                <div className="flex gap-1 shrink-0">
+                  <button
+                    className="btn btn-primary text-xs px-2 py-1"
+                    data-testid={`gr-ref-approve-${String(r.order_number)}`}
+                    onClick={() => void handleResolve(String(r.order_number), 'approve')}
+                  >
+                    อนุมัติ
+                  </button>
+                  <button
+                    className="btn btn-outline text-xs px-2 py-1"
+                    data-testid={`gr-ref-reject-${String(r.order_number)}`}
+                    onClick={() => void handleResolve(String(r.order_number), 'reject')}
+                  >
+                    ปฏิเสธ
+                  </button>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   )
 }

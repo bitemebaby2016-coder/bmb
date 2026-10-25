@@ -143,7 +143,7 @@
 ### 7.2 งานที่เหลือทั้งหมด — ทำในเซสชันหน้า (เรียงลำดับ · ข้ามขั้นไม่ได้)
 | # | งาน | วิธี/หมายเหตุ | ต้อง Owner? |
 |---|---|---|---|
-| 1 | **STAGE 2 · Referral (เริ่มตรงนี้)** | inspect auth/guest/OTP จริง (Owner ยืนยัน OTP tests ผ่านแล้ว) → unique identity → 3 ระดับ self-referral (Hard block/Review/Soft signal) → รางวัลเมื่อออเดอร์ผ่านสถานะ → cancel/refund ปรับตาม ledger → attribution ย้อนหลัง · ทำเหมือน Stage 1: migration + contract + CI step + client mirror + admin UI + tests + gates ทั้งหมดเขียว | ไม่ |
+| 1 | **STAGE 2 · Referral (เริ่มตรงนี้)** ✅ **ปิดแล้ว → ดู §8.1** | inspect auth/guest/OTP จริง (Owner ยืนยัน OTP tests ผ่านแล้ว) → unique identity → 3 ระดับ self-referral (Hard block/Review/Soft signal) → รางวัลเมื่อออเดอร์ผ่านสถานะ → cancel/refund ปรับตาม ledger → attribution ย้อนหลัง · ทำเหมือน Stage 1: migration + contract + CI step + client mirror + admin UI + tests + gates ทั้งหมดเขียว | ไม่ |
 | 2 | **STAGE 3 · Loyalty Tiers** | ข้อ ①/②: ตรวจสอบระบบบันทึกยอดสุทธิเดิมก่อน (ยังไม่สร้างระบบใหม่ทันที) | ไม่ |
 | 3 | **STAGE 4 · Engagement & Play** | ④ Spin&Win (มีรางวัล/แต้ม) · ⑤ Affiliate (แต้ม/คูปอง ไม่มีเงินสด) · ⑦ Rewards catalog = ย้าย hardcode → ตาราง admin ตั้งเอง | ไม่ |
 | 4 | production apply ของ migration ใหม่ (154+) | staged แบบ `r13Apply153` (precheck→apply→verify→contract→record) — **รอคำสั่ง apply แยก** เหมือน 153 | **ใช่** |
@@ -151,3 +151,45 @@
 
 ### 7.3 ลำดับอ่านของเซสชันหน้า
 `AI_WORK_STATE.md` → handoff ฉบับนี้ §7 → inventory §6 → แล้วลงมือ **Stage 2 (Referral)**
+
+---
+
+## 8. 🔴 SESSION CLOSE รอบ G&R STAGE 2 (2026-10-25 · ต่อจาก §7)
+
+### 8.1 ปิดแล้วในรอบนี้ (หลักฐาน)
+- ✅ **G&R STAGE 2 (Referral) = IMPLEMENTED + LOCAL GATES ALL GREEN**
+  - **inspect-first ก่อนเขียน** (ไม่เดา): auth = OTP quick_login/guest_checkout → `customers`
+    (id=uid · phone · guest = phone-keyed) → identity = uid เป็นหลัก + เบอร์ OTP เป็นหลักฐาน
+  - **SQL `supabase/migrations/154_referral_program.sql`**: `customers.referral_code/referred_by` ·
+    `referral_attributions` + ledger `referral_rewards` (RLS deny-all + definer) · `referral_policy`
+    (฿30/฿30 · qualify=delivered · อายุคูปอง 30 วัน · cap 20/เดือน · หน้าต่าง 72 ชม. · share_base_url —
+    แอดมินปรับเองได้ทั้งหมด) · RPC `referral_my_code/preview/claim/issue/reverse/my_status/admin_stats/resolve` ·
+    trigger `trg_referral_order_status` (ผ่านสถานะ → ออกคูปอง `promotions` 2 ใบ + ledger + notice ·
+    ยกเลิก/คืนเงิน → ปรับกลับตาม ledger ไม่หักซ้ำ · ยกเลิกก่อนออก = void) ·
+    **ไม่แตะ signature `create_order_with_items`/_i/pickup** (คง overload pin 124/127 — attribution ผ่าน
+    `referral_claim` แยก ที่ client เรียกทันทีหลัง order สร้าง)
+  - **Contract `e2e/contracts_154_referral_program.sql` G1–G9 PASS (ROLLBACK)** + **CI step แล้ว**
+  - **Client**: `referralClient.ts` (mirror + ข้อความไทยครบทุก reason) · `ReferralBox` ที่ Checkout
+    (apply/revalidate gate แบบ coupon) · `?ref=` deep-link ใน Layout · `cartStore.referralCode` +
+    cartPersistence (optional — cart เก่าไม่พัง) · Checkout claim ทันทีหลัง order ·
+    **SharePage เลิกของปลอม** (โค้ดจริง + ลิงก์ base แอดมิน + ledger จริง + ไม่แกล้งให้แต้ม) ·
+    ProfilePage โชว์รางวัลจริง (Owner: "เก็บไว้ในโปรไฟล์")
+  - **Admin**: `ReferralSettingsPanel` ใน AI Marketing Center แท็บ Rules (policy + สถิติจริง +
+    ปุ่มอนุมัติ/ปฏิเสธ รายการพักรางวัล) — ยืนบนศูนย์กลางเดิมตาม §3
+  - **เทสต์**: `referralProgram.test.ts` 34 ข้อ — **หลักฐานรวม = `e2e/g154-gates-evidence.txt`**
+    (tsc 0 · vitest **142 files/1480 tests 0 fail** · lint OK 428 ไฟล์ · build PWA 141 ·
+     Docker replay **001–154 = MIGRATIONS_OK** + ALL_GREEN · **contracts 20/20** รวม 154 G1–G9)
+- ⛔ **ยังไม่ apply 154 ลง production** — ตามกติกา = **รอคำสั่ง "apply 154" แยก** เหมือน 153 ( staged `r13` )
+
+### 8.2 งานที่เหลือทั้งหมด — เรียงลำดับ (ข้ามขั้นไม่ได้)
+| # | งาน | วิธี/หมายเหตุ | ต้อง Owner? |
+|---|---|---|---|
+| 0 | **production apply migration 154** | staged แบบ `e2e/r13Apply153.cjs` (precheck→apply+idempotent→verify→contract→record) — **รอคำสั่ง apply แยก** | **ใช่** |
+| 1 | **STAGE 3 · Loyalty Tiers** | ข้อ ② ก่อน: **inspect ระบบบันทึกยอดสุทธิเดิม** (ยังไม่สร้างใหม่ทันที) → 4 ระดับ Member/Silver(1,500)/Gold(4,000)/Platinum(8,000) rolling 12 เดือน (§5.2) → points ledger+audit → ทำเหมือน Stage 1 (migration + contract + CI + client + admin + tests + gates) | ไม่ |
+| 2 | **STAGE 4 · Engagement & Play** | ④ Spin&Win (มีรางวัล/แต้ม) · ⑤ Affiliate (แต้ม/คูปอง ไม่มีเงินสด) · ⑦ Rewards catalog = ย้าย hardcode → ตาราง admin | ไม่ |
+| 3 | งานรอท่าน (เดิมจาก §6.2 ข้อ 1–4) | ตรวจ §D ของ status report · D6 ลบทดสอบ pages.dev · R-16 พิมพ์จริง · acceptance §4 | **ใช่** |
+
+### 8.3 ลำดับอ่านของเซสชันหน้า
+`AI_WORK_STATE.md` → handoff ฉบับนี้ **§8** → inventory **§6 (Stage 2 entry)** → evidence
+`e2e/g154-gates-evidence.txt` → แล้วลงมือ **Stage 3 (Loyalty)** (เริ่มจาก inspect ระบบยอดสุทธิเดิม —
+**ถ้าท่านยังไม่สั่ง apply 154 ก็ทำ Stage 3 code ต่อได้** เพราะ 154 ยังไม่กระทบ production)
