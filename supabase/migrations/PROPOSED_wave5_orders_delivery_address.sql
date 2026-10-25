@@ -1,6 +1,7 @@
 -- ============================================================
--- PROPOSED_wave5_orders_delivery_address.sql — WAVE 5B (สถานะ: PROPOSAL — ห้าม apply
--- ในที่ถาวรใด ๆ รวม Production จนกว่า Owner จะอนุมัติ)
+-- PROPOSED_wave5_orders_delivery_address.sql — WAVE 5B (สถานะ: ✅ ยกระดับเป็น
+-- migration 150_orders_delivery_address_parity.sql แล้ว (D7 2026-10-25) — เนื้อ SQL
+-- idempotent เดิมยกไปทั้งก้อน + header เงื่อนไข/rollback → ห้ามใช้ไฟล์นี้ซ้ำ)
 --
 -- ปัญหา (fresh-DB gap ที่พิสูจน์แล้ว):
 --   ไม่มี migration 001-123 ไฟล์ใด CREATE/ALTER orders.delivery_address —

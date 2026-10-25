@@ -178,7 +178,7 @@ export function AdminMenuSchedule() {
                       {r.display_name} <span className="text-xs text-brand-muted">({r.round_key})</span>
                     </div>
                     <div className="text-xs text-brand-muted">
-                      cutoff {String(r.cutoff_time || '').slice(0, 5)} • {String(r.delivery_start || '').slice(0, 5)}–{String(r.delivery_end || '').slice(0, 5)} • ⚡ {r.current_count}/{r.max_capacity}
+                      พรีออเดอร์ {r.pre_order_cutoff ? String(r.pre_order_cutoff).slice(0, 5) : 'ตามกฎ'} • {String(r.delivery_start || '').slice(0, 5)}–{String(r.delivery_end || '').slice(0, 5)} • ⚡ {r.current_count}/{r.max_capacity}
                     </div>
                   </div>
                   {/* C4/Q2 (audit D5): เปิด/ปิดรอบ = เจ้าของเดียว AdminRounds —
@@ -189,7 +189,7 @@ export function AdminMenuSchedule() {
                   >
                     {r.status === 'active' ? 'เปิดรับ' : 'ปิดรับ'}
                   </span>
-                  <Link to="/admin/rounds" className="text-xs text-brand-primary hover:underline">จัดการรอบ →</Link>
+                  <Link to="/admin/delivery?tab=rounds" className="text-xs text-brand-primary hover:underline">จัดการรอบ →</Link>
                 </div>
               ))}
             </div>

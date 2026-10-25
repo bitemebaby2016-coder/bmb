@@ -15,6 +15,7 @@ import { normalizeRoundPattern, validateRoundPatternRow, ROUND_PATTERN_DEFAULTS,
 import roundsApiSrc from '../lib/bmbAdminApi_rounds.ts?raw'
 import orderPolicySrc from '../lib/orderPolicy.ts?raw'
 import adminRoundsSrc from '../pages/admin/AdminRounds.tsx?raw'
+import storeStatusStripSrc from '../components/home/StoreStatusStrip.tsx?raw'
 
 const H = 3_600_000
 // 2026-10-17 21:32 ICT = 2026-10-17T14:32Z
@@ -123,9 +124,29 @@ describe('source guards — ห้ามมี same_day_cutoff ในสาย�
     expect(orderPolicySrc).not.toContain('same_day_cutoff')
   })
 
-  it('AdminRounds.tsx ไม่มีช่อง input pattern-sameday-cutoff แล้ว', () => {
+  it('D5: AdminRounds ไม่มีช่องคัทออฟเดิม/เซมเดย์ใด ๆ เหลือ — มีเฉพาะคัทออฟพรีออเดอร์', () => {
     expect(adminRoundsSrc).not.toContain('pattern-sameday-cutoff')
     expect(adminRoundsSrc).not.toContain('same_day_cutoff')
-    expect(adminRoundsSrc).toContain('data-testid={`pattern-cutoff-${p.round_key}`}')
+    // D5 (Owner 2026-10-25 ไม่ผ่านเกณฑ์เดิม): ช่อง "ปิดรับเดิม (legacy)" ต้องหายไปจริง ไม่ใช่แค่เปลี่ยนป้าย
+    expect(adminRoundsSrc).not.toContain('pattern-cutoff-')
+    expect(adminRoundsSrc).not.toContain('ปิดรับเดิม')
+    expect(adminRoundsSrc).not.toContain('cutoff_time: e.target.value')
+    // คัทออฟมีทางเดียว = ช่องปรับของพรีออเดอร์
+    expect(adminRoundsSrc).toContain('data-testid={`pattern-preorder-cutoff-${p.round_key}`}')
+    expect(adminRoundsSrc).toContain('เซมเดย์ไม่มีคัทออฟ')
+  })
+
+  it('D5: StoreStatus ไม่อ้าง cutoff_time — หน้าแรกไม่โชว์ "ปิดรับ HH:MM" จากค่าเดิม', async () => {
+    const { getStoreStatusFromRounds } = await import('@/lib/homeProviders')
+    const s = getStoreStatusFromRounds([
+      { status: 'active', display_name: 'เช้า', cutoff_time: '08:00', delivery_start: '06:00', delivery_end: '09:00', max_capacity: 10, current_count: 0, scheduled_date: '2026-10-14' },
+    ] as never, new Date('2026-10-14T01:00:00Z'))
+    expect(s.cutoff).toBeUndefined()
+    expect(s.deliveryWindowLabel).toContain('ส่ง')
+  })
+
+  it('D5: StoreStatusStrip ไม่มีคำว่า "ปิดรับ {" เหลือ (แสดง "ไม่มีคัทออฟ" แทน)', () => {
+    expect(storeStatusStripSrc).not.toContain('ปิดรับ {status.cutoff}')
+    expect(storeStatusStripSrc).toContain('ไม่มีคัทออฟ')
   })
 })

@@ -21,21 +21,18 @@ export function AdminSettings() {
   const [textMode, setTextMode] = useState<Record<string, boolean>>({})
   const [newKey, setNewKey] = useState('')
   // FINAL CONFIG CLOSURE: admin แก้ canonical นอก business_settings ได้โดยไม่ต้องแก้ code
-  const [zones, setZones] = useState<any[] | null>(null)
   const [branch, setBranch] = useState<any>(null)
   const [socials, setSocials] = useState<SocialLinks | null>(null)
 
   useEffect(() => { load() }, [])
 
   async function load() {
-    const [s, z, br, sl] = await Promise.all([
+    const [s, br, sl] = await Promise.all([
       getBusinessSettings(),
-      supabase.from('delivery_zones').select('*').order('min_distance_km'),
       supabase.from('branches').select('id, display_name, name, service_radius_km, operating_hours').eq('is_default', true).maybeSingle(),
       getSocialLinks(true),
     ])
     setSettings(s)
-    setZones(z.data ?? [])
     setBranch(br.data ?? null)
     setSocials(sl)
     setLoading(false)
@@ -83,17 +80,7 @@ export function AdminSettings() {
     showToast(`เพิ่ม ${key} ในหน้านี้แล้ว — กด Save เพื่อบันทึกลง business_settings`, 'success')
   }
 
-  async function saveZone(z: any) {
-    const row = {
-      ...z,
-      min_distance_km: Number(z.min_distance_km),
-      max_distance_km: Number(z.max_distance_km),
-      fee: Number(z.fee),
-    }
-    const { error } = await supabase.from('delivery_zones').upsert(row, { onConflict: 'id' })
-    showToast(error ? `Zone failed: ${error.message}` : `Saved zone ${row.name}`, error ? 'error' : 'success')
-    if (!error) await load()
-  }
+  // D2 (2026-10-25): ค่าส่ง/โซนย้ายไปศูนย์ขนส่งเดียว — DeliveryZonesPanel ที่ /admin/delivery?tab=fees
 
   // C3/Q1: brand editor ย้ายไป OrgHub (AdminBrands) ที่เดียว — เหลือลิงก์ด้านล่าง
 
@@ -228,30 +215,12 @@ export function AdminSettings() {
           </div>
         )}
 
-        <h2 className="text-xl font-bold text-brand-accent">🚚 Delivery Zones (ค่าส่ง — delivery_zones)</h2>
-        {(zones ?? []).map((z) => (
-          <div key={z.id} className="card" data-testid={`zone-${z.id}`}>
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-2 items-end">
-              <label className="text-xs flex flex-col gap-1">ชื่อโซน
-                <input className="input" value={z.name ?? ''}
-                  onChange={(e) => setZones((zs) => (zs ?? []).map((x) => x.id === z.id ? { ...x, name: e.target.value } : x))} />
-              </label>
-              <label className="text-xs flex flex-col gap-1">จาก (กม.)
-                <input className="input" value={String(z.min_distance_km ?? '')}
-                  onChange={(e) => setZones((zs) => (zs ?? []).map((x) => x.id === z.id ? { ...x, min_distance_km: /^-?\d+(\.\d+)?$/.test(e.target.value) ? Number(e.target.value) : e.target.value } : x))} />
-              </label>
-              <label className="text-xs flex flex-col gap-1">ถึง (กม.)
-                <input className="input" value={String(z.max_distance_km ?? '')}
-                  onChange={(e) => setZones((zs) => (zs ?? []).map((x) => x.id === z.id ? { ...x, max_distance_km: /^-?\d+(\.\d+)?$/.test(e.target.value) ? Number(e.target.value) : e.target.value } : x))} />
-              </label>
-              <label className="text-xs flex flex-col gap-1">ค่าส่ง (฿)
-                <input className="input" value={String(z.fee ?? '')}
-                  onChange={(e) => setZones((zs) => (zs ?? []).map((x) => x.id === z.id ? { ...x, fee: /^-?\d+(\.\d+)?$/.test(e.target.value) ? Number(e.target.value) : e.target.value } : x))} />
-              </label>
-              <button onClick={() => void saveZone(z)} className="btn btn-success text-sm">💾 บันทึกโซน</button>
-            </div>
-          </div>
-        ))}
+        <h2 className="text-xl font-bold text-brand-accent">🚚 ค่าส่ง/โซน (อยู่ที่ศูนย์ขนส่ง)</h2>
+        <div className="card text-sm" data-testid="zones-moved">
+          จัดการค่าส่งตามระยะ (delivery_zones) ทั้งหมดที่{' '}
+          <Link to="/admin/delivery?tab=fees" className="text-brand-primary font-semibold">การขนส่ง → แท็บค่าส่ง/โซน</Link>
+          {' '}(D2 2026-10-25 — 1 เรื่อง = 1 ที่: งานขนส่งทั้งหมดอยู่ที่ศูนย์ขนส่งเดียว)
+        </div>
 
         <h2 className="text-xl font-bold text-brand-accent">🎨 Brand</h2>
         <div className="card text-sm" data-testid="brand-config">

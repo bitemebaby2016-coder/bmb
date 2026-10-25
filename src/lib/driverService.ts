@@ -248,41 +248,61 @@ export async function driverAttachPod(
 export const POD_MAX_INPUT_BYTES = 15 * 1024 * 1024 // รับเข้าไม่เกิน 15MB (ก่อนบีบ)
 export const POD_MAX_UPLOAD_BYTES = 5 * 1024 * 1024  // bucket limit = 5MB
 
-export function compressPodImage(file: File): Promise<Blob> {
+function loadImageElement(url: string): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
-    if (!file.type.startsWith('image/')) {
-      reject(new Error('ERR_POD_NOT_IMAGE'))
-      return
-    }
-    const url = URL.createObjectURL(file)
     const img = new Image()
-    img.onload = () => {
-      try {
-        const max = 1280
-        const scale = Math.min(1, max / Math.max(img.width, img.height))
-        const canvas = document.createElement('canvas')
-        canvas.width = Math.round(img.width * scale)
-        canvas.height = Math.round(img.height * scale)
-        const ctx = canvas.getContext('2d')
-        if (!ctx) { reject(new Error('ERR_POD_PROCESS_FAILED')); return }
-        ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
-        canvas.toBlob(
-          (blob) => {
-            URL.revokeObjectURL(url)
-            if (!blob) { reject(new Error('ERR_POD_PROCESS_FAILED')); return }
-            resolve(blob)
-          },
-          'image/jpeg',
-          0.8,
-        )
-      } catch (e) {
-        URL.revokeObjectURL(url)
-        reject(e instanceof Error ? e : new Error('ERR_POD_PROCESS_FAILED'))
-      }
-    }
-    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('ERR_POD_PROCESS_FAILED')) }
+    img.onload = () => resolve(img)
+    img.onerror = () => reject(new Error('ERR_POD_PROCESS_FAILED'))
     img.src = url
   })
+}
+
+export async function compressPodImage(file: File): Promise<Blob> {
+  if (!file.type.startsWith('image/')) {
+    throw new Error('ERR_POD_NOT_IMAGE')
+  }
+  const max = 1280
+  // R-08 (D8 2026-10-25): decode แบบจัดการ EXIF ถูกต้องข้ามเบราว์เซอร์ —
+  //   createImageBitmap + imageOrientation:'from-image' ก่อน (หมุนรูปตาม EXIF เสมอ
+  //   = แก้รูปหัว/กลับด้านบางเบราว์เซอร์) · เบราว์เซอร์ที่ไม่รองรับ/decode ไม่ได้
+  //   = fallback Image() เดิม · กัน canvas 0×0 (รูปว่าง) เหมือนฝั่งกล้อง
+  let width = 0
+  let height = 0
+  let draw: (ctx: CanvasRenderingContext2D, w: number, h: number) => void
+  let objectUrl: string | null = null
+  let bitmap: ImageBitmap | null = null
+  let imgEl: HTMLImageElement | null = null
+  if (typeof createImageBitmap === 'function') {
+    try {
+      bitmap = await createImageBitmap(file, { imageOrientation: 'from-image' })
+    } catch { bitmap = null }
+  }
+  if (bitmap) {
+    width = bitmap.width; height = bitmap.height
+    draw = (ctx, w, h) => { ctx.drawImage(bitmap!, 0, 0, w, h); bitmap!.close() }
+  } else {
+    objectUrl = URL.createObjectURL(file)
+    imgEl = await loadImageElement(objectUrl)
+    width = imgEl.width; height = imgEl.height
+    draw = (ctx, w, h) => { ctx.drawImage(imgEl!, 0, 0, w, h) }
+  }
+  try {
+    if (width < 2 || height < 2) throw new Error('ERR_POD_PROCESS_FAILED')
+    const scale = Math.min(1, max / Math.max(width, height))
+    const canvas = document.createElement('canvas')
+    canvas.width = Math.round(width * scale)
+    canvas.height = Math.round(height * scale)
+    const ctx = canvas.getContext('2d')
+    if (!ctx) throw new Error('ERR_POD_PROCESS_FAILED')
+    draw(ctx, canvas.width, canvas.height)
+    const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/jpeg', 0.8))
+    if (!blob) throw new Error('ERR_POD_PROCESS_FAILED')
+    return blob
+  } catch (e) {
+    throw e instanceof Error ? e : new Error('ERR_POD_PROCESS_FAILED')
+  } finally {
+    if (objectUrl) URL.revokeObjectURL(objectUrl)
+  }
 }
 
 export async function uploadPodPhoto(

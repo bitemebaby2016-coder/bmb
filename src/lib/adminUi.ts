@@ -35,7 +35,6 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
       { to: '/admin/pos', label: 'POS หน้าร้าน', icon: '🧾' },
       { to: '/admin/kitchen', label: 'ครัว/ผลิต', icon: '\uD83C\uDF73' },
       { to: '/admin/recipes', label: 'สูตรอาหาร', icon: '\uD83E\uDDEA' },
-      { to: '/admin/rounds', label: 'รอบจัดส่ง', icon: '\uD83D\uDD50' },
     ],
   },
   {
@@ -63,7 +62,7 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
     items: [
       { to: '/admin/inventory', label: 'สต็อกวัตถุดิบ', icon: '\uD83E\uDD55' },
       { to: '/admin/reports', label: 'รายงานการเงิน', icon: '📊' },
-      { to: '/admin/delivery', label: 'จัดส่ง', icon: '\uD83D\uDED5' },
+      { to: '/admin/delivery', label: 'การขนส่ง (ศูนย์ขนส่ง)', icon: '\uD83D\uDED5' },
       { to: '/admin/audit-log', label: 'บันทึกการทำงาน', icon: '\uD83D\uDCCB' },
       { to: '/admin/errors', label: 'ปัญหาระบบ', icon: '\uD83E\uDE79' },
       { to: '/admin/settings', label: 'ตั้งค่าร้าน', icon: '\u2699\uFE0F' },
@@ -104,7 +103,7 @@ export function isAdminCapableRole(role: string | null | undefined): boolean {
  */
 const ROLE_NAV_ALLOW: Record<string, string[]> = {
   pos: ['/admin', '/admin/orders', '/admin/pos', '/admin/customers', '/admin/reports'],
-  kitchen: ['/admin', '/admin/orders', '/admin/kitchen', '/admin/recipes', '/admin/rounds', '/admin/products'],
+  kitchen: ['/admin', '/admin/orders', '/admin/kitchen', '/admin/recipes', '/admin/delivery', '/admin/products'],
   inventory: ['/admin', '/admin/inventory', '/admin/products'],
   finance: ['/admin', '/admin/reports', '/admin/orders', '/admin/pos'],
   marketing: ['/admin', '/admin/marketing', '/admin/promotions', '/admin/media', '/admin/portfolio'],

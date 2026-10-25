@@ -44,7 +44,7 @@ const AdminRecipes = lazy(() => import('./pages/admin/AdminRecipes').then(m => (
 const AuditLogPage = lazy(() => import('./pages/admin/AuditLogPage').then(m => ({ default: m.AuditLogPage })))
 const AdminNotificationsPage = lazy(() => import('./pages/admin/AdminNotifications').then(m => ({ default: m.AdminNotificationsPage })))
 const DeliveryManagement = lazy(() => import('./pages/admin/DeliveryManagement').then(m => ({ default: m.DeliveryManagement })))
-const RouteOptimizationPage = lazy(() => import('./pages/admin/RouteOptimizationPage').then(m => ({ default: m.RouteOptimizationPage })))
+// D1 (Owner 2026-10-25): lazy ที่ไม่มี route ใช้ถูกถอดออก — component จริง import ตรงใน AdminHubs
 // R4 (2026-10-23): Hubs ยุบรวมหน้าจอแอดมินที่ฟีเจอร์ซ้ำ/ใกล้เคียง (logic เดิมไม่ถูกแตะ)
 const OrdersHub = lazy(() => import('./components/admin/AdminHubs').then(m => ({ default: m.OrdersHub })))
 const DeliveryHub = lazy(() => import('./components/admin/AdminHubs').then(m => ({ default: m.DeliveryHub })))
@@ -52,7 +52,7 @@ const SettingsHub = lazy(() => import('./components/admin/AdminHubs').then(m => 
 const MenuHub = lazy(() => import('./components/admin/AdminHubs').then(m => ({ default: m.MenuHub })))
 const OrgHub = lazy(() => import('./components/admin/AdminHubs').then(m => ({ default: m.OrgHub })))
 const AdminPromotions = lazy(() => import('./pages/admin/AdminPromotions').then(m => ({ default: m.AdminPromotions })))
-const AdminRounds = lazy(() => import('./pages/admin/AdminRounds').then(m => ({ default: m.AdminRounds })))
+// D2 (2026-10-25): AdminRounds เป็นแท็บใน DeliveryHub (/admin/delivery?tab=rounds) — ไม่มี route ตรงแล้ว
 const AdminCustomers = lazy(() => import('./pages/admin/AdminCustomers').then(m => ({ default: m.AdminCustomers })))
 const AdminSettings = lazy(() => import('./pages/admin/AdminSettings').then(m => ({ default: m.AdminSettings })))
 const AdminMedia = lazy(() => import('./pages/admin/AdminMedia').then(m => ({ default: m.AdminMedia })))
@@ -68,15 +68,14 @@ const VoiceDemoPage = lazy(() => import('./pages/VoiceDemoPage').then(m => ({ de
 const RiderPwaPage = lazy(() => import('./pages/RiderPwaPage').then(m => ({ default: m.RiderPwaPage })))
 const NotificationCenterPage = lazy(() => import('./pages/NotificationCenterPage').then(m => ({ default: m.NotificationCenterPage })))
 const AdminErrorsPage = lazy(() => import('./pages/admin/AdminErrorsPage').then(m => ({ default: m.AdminErrorsPage })))
-const MascotSettingsPage = lazy(() => import('./pages/admin/MascotSettingsPage').then(m => ({ default: m.MascotSettingsPage })))
-const AdminPaymentExceptions = lazy(() => import('./pages/admin/AdminPaymentExceptions').then(m => ({ default: m.AdminPaymentExceptions })))
+// D1: MascotSettingsPage/AdminPaymentExceptions/AdminPrintSettings lazy ถูกถอด (ใช้ใน AdminHubs ตรง ๆ)
 const AdminMarketing = lazy(() => import('./pages/admin/AdminMarketing').then(m => ({ default: m.AdminMarketing })))
 const AdminPortfolioPage = lazy(() => import('./pages/admin/AdminPortfolio').then(m => ({ default: m.AdminPortfolioPage })))
 // C7/Q5: AdminAiStudio ถูกรวมเป็นแท็บใน AdminMarketing (แท็บ 'ai') — ไม่มี lazy route แล้ว
 // BACKEND-CAPABILITY-CLOSURE-2026-10-19: Web POS + Finance reports + Printer settings
 const AdminPos = lazy(() => import('./pages/admin/AdminPos').then(m => ({ default: m.AdminPos })))
 const AdminReports = lazy(() => import('./pages/admin/AdminReports').then(m => ({ default: m.AdminReports })))
-const AdminPrintSettings = lazy(() => import('./pages/admin/AdminPrintSettings').then(m => ({ default: m.AdminPrintSettings })))
+// D1: AdminPrintSettings lazy ถูกถอดแล้วด้านบน (ใช้ใน AdminHubs)
 
 // Lazy loaded: Info pages (6 pages)
 const AboutPage = lazy(() => import('./pages/AboutPage').then(m => ({ default: m.AboutPage })))
@@ -260,7 +259,7 @@ export default function App() {
         <Route path="/admin/delivery" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminNav><DeliveryHub /></AdminNav></Layout></AdminRoute></Suspense>} />
         <Route path="/admin/route-optimization" element={<Navigate to="/admin/delivery?tab=routes" replace />} />
         <Route path="/admin/promotions" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminNav><AdminPromotions /></AdminNav></Layout></AdminRoute></Suspense>} />
-        <Route path="/admin/rounds" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminNav><AdminRounds /></AdminNav></Layout></AdminRoute></Suspense>} />
+        <Route path="/admin/rounds" element={<Navigate to="/admin/delivery?tab=rounds" replace />} />
         <Route path="/admin/customers" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminNav><AdminCustomers /></AdminNav></Layout></AdminRoute></Suspense>} />
         <Route path="/admin/settings" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminNav><SettingsHub /></AdminNav></Layout></AdminRoute></Suspense>} />
         <Route path="/admin/pos" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminNav><AdminPos /></AdminNav></Layout></AdminRoute></Suspense>} />

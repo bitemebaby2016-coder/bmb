@@ -18,9 +18,10 @@ export function StoreStatusStrip({ status }: { status: StoreStatus }) {
         <p className="text-sm sm:text-base font-bold truncate">
           {status.isOpen ? '🟢' : '🔴'} {status.message}
         </p>
-        {status.cutoff && (
+        {/* D5 (Owner 2026-10-25 / 148): เซมเดย์ไม่มีคัทออฟ — ห้ามโชว์ "ปิดรับ HH:MM" จากค่าเดิมอีก */}
+        {(status.deliveryWindowLabel || typeof status.capacityPct === 'number') && (
           <p className="text-xs opacity-80 truncate">
-            ปิดรับ {status.cutoff} · {status.deliveryWindowLabel}
+            ไม่มีคัทออฟ (สั่งได้ถึงปิดร้าน) · {status.deliveryWindowLabel}
             {typeof status.capacityPct === 'number' && ` · เหลือที่นั่ง ${100 - status.capacityPct}%`}
           </p>
         )}

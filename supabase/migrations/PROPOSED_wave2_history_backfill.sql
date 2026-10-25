@@ -1,6 +1,9 @@
 -- ============================================
 -- BMB — PROPOSED migration (Wave 2 / F-05) — NOT EXECUTED
--- สถานะ: PROPOSED — รอ OWNER อนุมัติกลยุทธ์ backfill ก่อน (Wave 2 rule §8)
+-- สถานะ: ✅ ยกระดับเป็น migration 151_order_status_history_baseline.sql แล้ว (D7 2026-10-25)
+--   (กลยุทธ์ HISTORICAL_BASELINE ตามที่เสนอในไฟล์นี้ · apply บน production = ขั้นแยก authorize)
+--   → ห้ามใช้ไฟล์นี้ซ้ำ — ใช้ 151 เท่านั้น
+-- (เดิม) สถานะ: PROPOSED — รอ OWNER อนุมัติกลยุทธ์ backfill ก่อน (Wave 2 rule §8)
 --
 -- ปัญหา: existing orders บน production ไม่มี lifecycle history (ตารางสร้างใหม่)
 -- กลยุทธ์ที่เสนอ (HISTORICAL_BASELINE):

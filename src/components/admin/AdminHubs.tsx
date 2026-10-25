@@ -23,6 +23,9 @@ import { RouteOptimizationPage } from '@/pages/admin/RouteOptimizationPage'
 import { AdminSettings } from '@/pages/admin/AdminSettings'
 import { AdminPrintSettings } from '@/pages/admin/AdminPrintSettings'
 import { MascotSettingsPage } from '@/pages/admin/MascotSettingsPage'
+import { AdminRounds } from '@/pages/admin/AdminRounds'
+import { DeliveryZonesPanel } from '@/components/admin/DeliveryZonesPanel'
+import { TransportAvailabilityBoard } from '@/components/admin/TransportAvailabilityBoard'
 
 interface HubTab {
   key: string
@@ -91,11 +94,15 @@ export function OrdersHub() {
 export function DeliveryHub() {
   return (
     <HubShell
-      title="จัดส่งและเส้นทาง"
+      title="การจัดการขนส่ง"
       storageKey="bmb-hub-delivery"
       tabs={[
+        // D2 (Owner 2026-10-25): ศูนย์ขนส่งเดียว — แท็บแยกตามหน้าที่จริง ใช้ logic/API เดิมทั้งหมด
+        { key: 'rounds', label: 'รอบจัดส่ง & แพทเทิร์น', icon: '🕒', render: () => <AdminRounds /> },
+        { key: 'availability', label: 'ความพร้อมรับออเดอร์', icon: '✅', render: () => <TransportAvailabilityBoard /> },
         { key: 'dispatch', label: 'จัดส่ง/มอบหมายงาน', icon: '🛵', render: () => <DeliveryManagement /> },
         { key: 'routes', label: 'วางแผนเส้นทาง', icon: '🗺️', render: () => <RouteOptimizationPage /> },
+        { key: 'fees', label: 'ค่าส่ง/โซน', icon: '💰', render: () => <DeliveryZonesPanel /> },
       ]}
     />
   )

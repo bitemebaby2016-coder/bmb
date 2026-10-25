@@ -183,14 +183,14 @@ export function AdminRounds() {
         <h2 className="text-xl font-bold text-brand-accent mb-1">📋 แพทเทิร์นรอบประจำวัน (ทุกวันใช้ชุดเดียวกัน)</h2>
       <p className="text-sm text-brand-muted mb-4">
         ค่านี้คือต้นแบบของรอบทุกวัน (ทั้งพรีออเดอร์และเซมเดย์) — แก้ที่นี่ที่เดียว แล้วกด "สร้าง/ซ่อมรอบ 30 วัน"
-        · คัทออฟมีช่องเดียวคือ <b>ปรับของพรีออเดอร์</b> (ช่องว่าง = ใช้กฎเดิม ก่อนส่ง X ชม.)
-        · <b>เซมเดย์ไม่มีคัทออฟ</b> — วิ่งปกติตั้งแต่ร้านเปิดถึงปิด (148)
+        · <b>เซมเดย์ไม่มีคัทออฟ</b> — วิ่งปกติตั้งแต่ร้านเปิดถึงปิด (148) · ไม่มีช่องคัทออฟเดิม/ช่องคัทออฟเซมเดย์ในฟอร์มนี้อีก (D5 2026-10-25)
+        · คัทออฟมีทางเดียวคือ <b>ปรับของพรีออเดอร์</b> (ช่องว่าง = ใช้กฎรวม ก่อนส่ง X ชม.)
         · <b>ลำดับกันชน (audit D2):</b> คัทออฟต่อรอบ (ช่อง "ปรับของพรีออเดอร์") ทับ{' '}
         <Link to="/admin/settings?tab=store">กฎรวม cutoff_hours (นโยบายสั่งซื้อ)</Link> — ว่าง = ใช้กฎรวมนั้น
       </p>
         <div className="space-y-3">
           {pattern.map((p, idx) => (
-            <div key={p.round_key} className="grid grid-cols-2 lg:grid-cols-7 gap-3 items-end">
+            <div key={p.round_key} className="grid grid-cols-2 lg:grid-cols-6 gap-3 items-end">
               <label className="text-sm">ชื่อรอบ
                 <input className="input mt-1" value={p.display_name}
                   data-testid={`pattern-name-${p.round_key}`}
@@ -200,16 +200,9 @@ export function AdminRounds() {
                     setPattern(next)
                   }} />
               </label>
-              <label className="text-sm">ปิดรับเดิม (legacy)
-                <input type="time" className="input mt-1" value={p.cutoff_time}
-                  data-testid={`pattern-cutoff-${p.round_key}`}
-                  title="ค่าเดิมของรอบ — 148: เซมเดย์ไม่มีคัทออฟแล้ว (เปิดร้านถึงปิดร้าน) · ใช้เป็น fallback พรีออเดอร์เมื่อไม่มีเวลาส่ง"
-                  onChange={(e) => {
-                    const next = [...pattern]
-                    next[idx] = { ...p, cutoff_time: e.target.value }
-                    setPattern(next)
-                  }} />
-              </label>
+              {/* D5 (Owner 2026-10-25 ไม่ผ่านเกณฑ์เดิม): ช่องคัทออฟเดิม (legacy cutoff field)
+                  ถูกถอดออกจากฟอร์มนี้จริง — คัทออฟมีเฉพาะพรีออเดอร์ (ช่องด้านล่าง) ·
+                  ค่า cutoff_time ใน data ยังคงเดิมไว้ (ไม่แตะ production values) */}
               <label className="text-sm">ปรับของพรีออเดอร์
                 <input type="time" className="input mt-1" value={p.pre_order_cutoff}
                   data-testid={`pattern-preorder-cutoff-${p.round_key}`}

@@ -179,7 +179,8 @@ export function getStoreStatusFromRounds(rounds: Array<{
       isOpen: true,
       state: 'open',
       currentRoundLabel: current.display_name || 'ปัจจุบัน',
-      cutoff: current.cutoff_time,
+      // D5 (Owner 2026-10-25): ห้ามโชว์ cutoff_time เดิมเป็น "ปิดรับ" — เซมเดย์ไม่มีคัทออฟ (148)
+      // คัทออฟพรีออเดอร์ที่มีจริงโชว์ที่รอบจัดส่งตอน checkout (roundCutoffLabel PRE_ORDER) แล้ว
       deliveryWindowLabel: `ส่ง ${current.delivery_start}–${current.delivery_end}`,
       capacityPct: Number(current.max_capacity) > 0
         ? Math.min(100, Math.round((Number(current.current_count || 0) / Number(current.max_capacity)) * 100))
