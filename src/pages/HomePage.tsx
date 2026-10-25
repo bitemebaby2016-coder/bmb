@@ -243,6 +243,23 @@ export function HomePage() {
     <HomeProductCard key={item.id} item={item} mode="auto" onSameDay={handleSameDay} onPreOrder={handlePreOrder} />
   ))
 
+  // Feature B (Owner 2026-10-25): sections ส่งวันนี้ + พรีออเดอร์ (ลำดับ 2-3 ของหน้าแรก)
+  const catById = new Map(categories.map((c) => [c.id, c] as const))
+  const toShowcaseCard = (p: Product) => toPopularHomeProduct(p, catById.get(p.category_id), scheduleMap)
+  const sameDayShowcase = products
+    .filter((p) => p.is_available && !p.archived && (p.available_same_day ?? !p.is_preorder))
+    .slice(0, 8)
+    .map(toShowcaseCard)
+  const preOrderShowcase = products
+    .filter((p) => p.is_available && !p.archived && !!scheduleMap[p.id])
+    .slice(0, 8)
+    .map(toShowcaseCard)
+
+  // Rule 12.3 (Owner 2026-10-25): แท็บลิงก์ = smooth-scroll ไป section ที่ทำงาน
+  const scrollToSection = (id: string) => {
+    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
+
   if (loading) {
     return (
       <div className="max-w-7xl mx-auto px-4 py-10 min-h-screen flex items-center justify-center">
@@ -263,7 +280,7 @@ export function HomePage() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-6 pb-28 bg-organic min-h-screen">
+    <div id="home-sec-top" className="max-w-7xl mx-auto px-4 py-6 pb-28 bg-organic min-h-screen">
       {/* SEO: Visually hidden H1 with primary keywords */}
       <h1 className="sr-only">Bite Me Baby — สั่งอาหารจัดส่งเมืองจันทบุรี AI แนะนำเมนู 24/7</h1>
       
@@ -297,22 +314,39 @@ export function HomePage() {
           </div>
         </div>
         {chips.length > 0 && (
-          <div className="category-chips flex gap-2 overflow-x-auto pb-2 mt-3" role="group" aria-label="กรองตามหัวข้อเมนู">
+          <div className="category-chips flex gap-2 overflow-x-auto pb-2 mt-3" role="group" aria-label="แท็บลิงก์หมวดหมู่เมนู">
+            {/* Feature B (Owner 2026-10-25): แท็บแนวนอน = ลิงก์ smooth-scroll ตามลำดับที่กำหนด */}
             <button
               type="button"
-              onClick={() => setActiveCategory(null)}
-              className={`category-chip whitespace-nowrap px-4 py-2 rounded-full text-sm font-medium transition-colors ${!activeCategory ? 'bg-brand-primary text-white' : 'bg-white text-brand-accent border border-brand-border'}`}
-              aria-pressed={!activeCategory}
+              data-testid="home-tab-all"
+              onClick={() => scrollToSection('home-sec-top')}
+              className="category-chip whitespace-nowrap px-4 py-2 rounded-full text-sm font-medium transition-colors bg-white text-brand-accent border border-brand-border"
             >
               ทั้งหมด
+            </button>
+            <button
+              type="button"
+              data-testid="home-tab-sameday"
+              onClick={() => scrollToSection('home-sec-sameday')}
+              className="category-chip whitespace-nowrap px-4 py-2 rounded-full text-sm font-medium transition-colors bg-white text-brand-accent border border-brand-border"
+            >
+              🛵 ส่งวันนี้
+            </button>
+            <button
+              type="button"
+              data-testid="home-tab-preorder"
+              onClick={() => scrollToSection('home-sec-preorder')}
+              className="category-chip whitespace-nowrap px-4 py-2 rounded-full text-sm font-medium transition-colors bg-white text-brand-accent border border-brand-border"
+            >
+              📅 พรีออเดอร์
             </button>
             {chips.map((cat) => (
               <button
                 key={cat.id}
                 type="button"
-                onClick={() => setActiveCategory(activeCategory === cat.id ? null : cat.id)}
-                className={`category-chip whitespace-nowrap px-4 py-2 rounded-full text-sm font-medium transition-colors ${activeCategory === cat.id ? 'bg-brand-primary text-white' : 'bg-white text-brand-accent border border-brand-border'}`}
-                aria-pressed={activeCategory === cat.id}
+                data-testid={`home-tab-cat-${cat.id}`}
+                onClick={() => scrollToSection(`home-cat-${cat.id}`)}
+                className="category-chip whitespace-nowrap px-4 py-2 rounded-full text-sm font-medium transition-colors bg-white text-brand-accent border border-brand-border"
               >
                 {cat.icon} {cat.name}
               </button>
@@ -338,8 +372,8 @@ export function HomePage() {
           </Link>
         </div>
       </section>
-      {/* 3. เมนูยอดนิยม — สลับโชว์จากทุกกลุ่มเมนู (รวมเมนูจองล่วงหน้า) — ช่องเดียว ไม่มี "เมนูวันนี้" ซ้ำ */}
-      <section className="mb-10 scroll-mt-20" aria-labelledby="home-popular-heading">
+      {/* 3. เมนูแนะนำ (แนะนำ/ยอดนิยม) — ลำดับ 1 ของเมนู (Feature B 2026-10-25) */}
+      <section id="home-sec-recommended" className="mb-10 scroll-mt-20" aria-labelledby="home-popular-heading">
         <div className="flex items-center justify-between mb-2">
           <h2 id="home-popular-heading" className="text-xl font-display font-bold text-brand-accent">
             🔥 {popularCfg.title}
@@ -348,6 +382,36 @@ export function HomePage() {
         </div>
         <h3 className="sr-only">{popularCfg.title}</h3>
         <HorizontalCarousel items={popularItems} aria-label={`${popularCfg.title} เลื่อนได้`} />
+      </section>
+
+      {/* 4. ส่งวันนี้ (Feature B: ลำดับ 2) — เมนูสั่งวันนี้ */}
+      <section id="home-sec-sameday" className="mb-10 scroll-mt-20" aria-labelledby="home-sameday-heading">
+        <h2 id="home-sameday-heading" className="text-xl font-display font-bold text-brand-accent mb-2">🛵 ส่งวันนี้</h2>
+        {sameDayShowcase.length > 0 ? (
+          <HorizontalCarousel
+            items={sameDayShowcase.map((item) => (
+              <HomeProductCard key={item.id} item={item} mode="auto" onSameDay={handleSameDay} onPreOrder={handlePreOrder} />
+            ))}
+            aria-label="เมนูส่งวันนี้ เลื่อนได้"
+          />
+        ) : (
+          <p className="text-sm text-brand-muted">ยังไม่มีเมนูส่งวันนี้</p>
+        )}
+      </section>
+
+      {/* 5. พรีออเดอร์ (Feature B: ลำดับ 3) — เมนูจองล่วงหน้า (ผูกปฏิทินแอดมิน) */}
+      <section id="home-sec-preorder" className="mb-10 scroll-mt-20" aria-labelledby="home-preorder-heading">
+        <h2 id="home-preorder-heading" className="text-xl font-display font-bold text-brand-accent mb-2">📅 พรีออเดอร์</h2>
+        {preOrderShowcase.length > 0 ? (
+          <HorizontalCarousel
+            items={preOrderShowcase.map((item) => (
+              <HomeProductCard key={item.id} item={item} mode="auto" onSameDay={handleSameDay} onPreOrder={handlePreOrder} />
+            ))}
+            aria-label="เมนูพรีออเดอร์ เลื่อนได้"
+          />
+        ) : (
+          <p className="text-sm text-brand-muted">ยังไม่มีเมนูพรีออเดอร์ — แอดมินเพิ่มได้จากตารางเมนูรอบพิเศษ</p>
+        )}
       </section>
 
       {/* 4. หัวข้อเมนู — ตัวจัดกลุ่มเดียวกับ /menu (buildHeadingGroups) — ครบทุกเมนู

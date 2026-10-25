@@ -160,7 +160,7 @@ export function CategorySections({
     const headingId = `home-cat-${cat.slug}`
     const pose = SECTION_POSES[idx % SECTION_POSES.length]
     return (
-      <section key={cat.id} className={`${grouped ? 'mb-8' : 'mb-10'} scroll-mt-20`} aria-labelledby={headingId}>
+      <section key={cat.id} id={`home-cat-${cat.id}`} className={`${grouped ? 'mb-8' : 'mb-10'} scroll-mt-20`} aria-labelledby={headingId}>
         <div className="flex items-center justify-between mb-2">
           <h3
             id={headingId}

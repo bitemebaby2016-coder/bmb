@@ -2,26 +2,23 @@
 
 > **สถานะงานปัจจุบันของโปรเจกต์ Bite Me Baby** ใช้แนบเข้าสู่ Context ตอนเริ่มแชทเสมอ
 
-**last_updated:** 2026-10-25 **EXECUTION SESSION (Owner mandate D1–D8) — งานวิศวกรรมคลื่นใหญ่**
-(D1 ลบ lazy ตาย ✓ · D5 ซ่อมเกณฑ์ "(legacy)" จริง ✓ · D2 ศูนย์ขนส่งเดียว 5 แท็บ ✓ · D3 config authority map ✓ ·
-D7 migration waves: 150/151 + wave1=superseded ✓ · R-08 POD ข้ามเบราว์เซอร์ ✓ · R-10 role matrix test ✓ ·
-เกต validate กำลังรันรอบสุดท้ายก่อน commit/push)
-**phase:** 🟢 คลื่น D1–D8 engineering ใกล้ปิด — เหลือ validate gates + commit/push + Owner runtime acceptance
-**current_focus:** **🔧 EXECUTION 2026-10-25 (mandate D1–D8):**
-- **D1:** ลบ lazy ตาย 4 ตัวใน App.tsx (RouteOptimizationPage/MascotSettingsPage/AdminPaymentExceptions/AdminPrintSettings)
-- **D5 (เกณฑ์เดิมไม่ผ่าน):** ถอดช่อง "ปิดรับเดิม (legacy)" ออกจากฟอร์มแพทเทิร์นจริง · หน้าแรก/แถวรอบเลิกโชว์ "ปิดรับ HH:MM" ·
-  คัทออฟมีทางเดียว = ปรับของพรีออเดอร์ · เกณฑ์ #6 ใหม่ใน acceptance plan + เทสต์คุม 3 ข้อ
-- **D2:** ศูนย์ขนส่งเดียว `/admin/delivery` = 5 แท็บ (rounds · availability · dispatch · routes · fees) ·
-  nav 20→19 · `/admin/rounds` = redirect · zones ย้ายจาก AdminSettings → DeliveryZonesPanel
-- **D3:** business_settings = authority · platformConfigBootstrap = loader · platformConfig = static fallback
-  (ownership map เดิมในโค้ด) + `configAuthorityMap.test.ts` กัน drift — ไม่เพิ่มชั้นที่ 3
-- **D7:** `150_orders_delivery_address_parity` (จาก wave5) · `151_order_status_history_baseline` (จาก wave2 · HISTORICAL_BASELINE) ·
-  wave1 profiles GRANT = **superseded** (ไม่มี consumer — ไม่สร้าง) · PROPOSED ทั้ง 3 ปักหมุดผลแล้ว
-- **R-08:** RiderPod กล้อง = waitForVideoFrame + playsInline/muted (แก้ canvas 0×0) · ไม่ปลอม GPS 0,0 ·
-  compressPodImage = createImageBitmap+imageOrientation (EXIF) + fallback · `riderPodCrossBrowser.test.ts`
-- **R-10:** `roleMatrixCoverage.test.ts` — cross-check 13 roles ทุกชั้น (146 ↔ adminUi ↔ plan §5)
-**blocked_by:** ⛔ production apply 150/151 = ขั้น authorize แยก · D6 pages.dev = ต้อง CF account access ·
-runtime acceptance #2–#5/#8/#9/#11/#12/#14 = Owner บน production
+**last_updated:** 2026-10-25 **WAVE 2 ปิด — Features A/B/C + rules §12 + แฮนด์ออฟปิดเซสชัน**
+(gates ครบ: tsc 0 · lint 0 · vitest **138 files/1426 tests 0 fail** · build 0 (PWA 143) ·
+คลื่นก่อน `8023268` CI+Contract success · คลื่นนี้ = commit ถัดไป · รายละเอียด = `docs/BMB_HANDOFF_NEXT_SESSION_2026-10-25.md`)
+**phase:** 🟢 งานวิศวกรรมที่สั่งเสร็จทั้งหมด (A/B/C + กฎ + บันทึก) — เหลืองานค้างที่ระบุในแฮนด์ออฟ
+**current_focus:** **✅ WAVE 2 DONE (2026-10-25):**
+- **A · Hybrid pre-order cart:** แท็บพรีออเดอร์รวมสินค้าทั่วไป (ลบ gate `!scheduleMap[p.id]`) · เรียงเมนูปฏิทินก่อน ·
+  ปุ่มในแท็บ = PRE_ORDER ร่วมรอบเดียวกัน · `checkModeEligibility` ยืนยัน general ride-along = server 142 G2 ·
+  หน้าต่าง 7 วัน = `pre_order_lead_days` (แอดมินตั้งได้แล้ว · ไม่ต้องแก้)
+- **B · Homepage:** ลำดับ sections = แนะนำ → ส่งวันนี้ → พรีออเดอร์ → หมวดหมู่ (pinned: สุขภาพ → เครื่องดื่ม →
+  ของทานเล่น/ผลไม้ → สำเร็จรูป ผ่าน `categoryDisplayRank`) · แท็บแนวนอน ทั้งหมด|ส่งวันนี้|พรีออเดอร์|หมวดหมู่
+  = ลิงก์ smooth-scroll ไป section (rule 12.3) · แอดมินจัดหมวด/เปิด-ปิด เหมือนเดิม
+- **C · Admin UX:** AdminProducts = แท็บหมวดกรอง+หัวข้อปัจจุบัน · จิ้มแก้ไข/เพิ่ม/หัวข้อ/ย้ายสินค้า →
+  smooth-scroll ไปฟอร์มอัตโนมัติ (refs + useEffect) · การ์ดเท่ากันทุกใบ (min-h-430 + auto-rows-fr + mt-auto)
+- **Rules §12:** ห้าม poll logs/watch mode · ปกป้อง terminal/process · admin auto-scroll UX + การ์ดเท่ากัน
+- **เทสต์:** `homeMenuAdminOrdering.test.ts` (10 ข้อ) คุม A/B/C ทั้งหมด
+**blocked_by:** ⛔ เฉพาะงานค้างในแฮนด์ออฟ (stale contracts 8 · production apply 150/151 · D6 pages.dev ·
+Owner runtime acceptance) — ไม่มีงานวิศวกรรมที่สั่งค้าง
 
 ---
 

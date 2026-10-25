@@ -30,6 +30,14 @@ Do not redefine or contradict the universal rules here.
 
 ---
 
+## OPERATIONAL RULES (Owner 2026-10-25 — see UNIVERSAL_MASTER_AI_RULES.md §12)
+
+1. **Never poll log files / no watch mode**: never loop `read_files` on `.tmp_*.log`; tests run single-run only (`npx vitest run` / `npm test`), never bare `npx vitest`.
+2. **Terminal & process protection**: no dev servers/watchers in the primary terminal; only commands that exit cleanly. Kill only your own process (by command line), never all node. Use .cmd scripts with absolute paths (no batch labels) when shell quoting is fragile.
+3. **Admin UI UX standard (auto-scroll)**: every admin action/edit/tab click MUST smooth-scroll the viewport to the active editing container/form. Product card grids must be dimensionally uniform (no oversized cards except designated featured slots).
+
+---
+
 ## SESSION START
 
 Before editing:

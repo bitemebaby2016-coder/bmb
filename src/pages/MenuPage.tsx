@@ -120,11 +120,16 @@ export function MenuPage() {
     if (!matchCat) return false
     if (selectedCategory === 'all') {
       if (menuTab === 'same-day' && !isSame) return false
-      // R5c (Owner 2026-10-23): แท็บจองล่วงหน้า = เมนูจากปฏิทินแอดมิน (มีป้ายวันจัดส่ง) เท่านั้น
-      if (menuTab === 'pre-order' && !scheduleMap[p.id]) return false
+      // Feature A (Owner 2026-10-25): แท็บจองล่วงหน้า = เมนูปฏิทิน + สินค้าทั่วไป
+      // จองร่วมรอบเดียวกันในตะกร้าเดียวกันได้ (general ride-along — server 142 G2 รองรับอยู่แล้ว)
+      // ลำดับโชว์: เมนูปฏิทิน (มีป้ายวัน) มาก่อน สินค้าทั่วตามาทีหลัง (sort ด้านล่าง)
     }
     return !p.archived && p.name.toLowerCase().includes(searchQuery.toLowerCase())
   })
+  // Feature A: ในแท็บจองล่วงหน้า จัดเมนูปฏิทินไว้ก่อน สินค้าทั่วไป (จองร่วมรอบ) ตามหลัง
+  const ordered = menuTab === 'pre-order'
+    ? [...filtered].sort((a, b) => Number(!!scheduleMap[b.id]) - Number(!!scheduleMap[a.id]))
+    : filtered
 
   const handleSameDay = (payload: SameDayOrderPayload) => {
     console.log('[Log#same-day]', payload)
@@ -258,15 +263,15 @@ export function MenuPage() {
 
       {/* ระบบหัวข้อเมนูเดียว (2026-10-17): หัวข้อ (หมวดหมู่) → การ์ด — ครบทุกเมนู
           ไม่มีชั้นซ้อน จัดกลุ่มด้วย buildHeadingGroups ตัวเดียวกับหน้าแรก */}
-      {buildHeadingGroups(filtered, categories).map(({ category, products: catProducts }, gi) => (
+      {buildHeadingGroups(ordered, categories).map(({ category, products: catProducts }, gi) => (
         <section key={category.id} className="mb-8" aria-labelledby={`catsec-${gi}`}>
           <div className="mb-6">
             <h3 id={`catsec-${gi}`} className="font-semibold text-brand-accent mb-2">{category.icon ? `${category.icon} ` : ''}{category.name}</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {catProducts.map((product) => {
-                // Phase 6 (RC-7 · INV-18): canonical fallback เหมือน L46-47 — ห้ามอ่าน alias
-                // `is_preorder` ตรง ๆ (one-way mirror ของ migration 023 อาจค้างจาก canonical)
-                const mode: OrderMode = (product.available_preorder ?? product.is_preorder) ? 'pre-order' : 'same-day'
+                // Feature A (Owner 2026-10-25): ในแท็บจองล่วงหน้า สินค้าทั่วไปก็เป็นปุ่มจองได้ —
+                // เพิ่มเข้าตะกร้าเป็น PRE_ORDER ร่วมรอบเดียวกับเมนูปฏิทิน (general ride-along)
+                const mode: OrderMode = menuTab === 'pre-order' || (product.available_preorder ?? product.is_preorder) ? 'pre-order' : 'same-day'
                 // Owner 2026-10-19: พรีออเดอร์ที่เลยวันจัดส่งไปแล้ว → แสตมป์ out of stock
                 const schedDate = scheduleMap[product.id]
                 const preorderExpired = Boolean(

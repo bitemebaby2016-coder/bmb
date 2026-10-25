@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { showToast } from '@/components/ui/ToastContainer'
 import { getProducts, createProduct, updateProduct, archiveProduct, restoreProduct, getCategories, getCategoriesAdmin, createCategory, updateCategory, archiveCategory, restoreCategory, deleteCategory, deleteProduct } from '@/lib/bmbAdminApi_products'
@@ -39,6 +39,21 @@ export function AdminProducts() {
   // (merge/move support using the existing canonical updateProduct API only).
   const [moveFrom, setMoveFrom] = useState<string | null>(null)
   const [moveTarget, setMoveTarget] = useState('')
+  // ── Feature C (Owner 2026-10-25): แท็บหมวดหมู่สินค้า + rule 12.3 auto-scroll ──
+  const [catTab, setCatTab] = useState<string>('all')
+  const formRef = useRef<HTMLDivElement>(null)
+  const catFormRef = useRef<HTMLDivElement>(null)
+  const movePanelRef = useRef<HTMLDivElement>(null)
+  // จิ้มปุ่ม "แก้ไข/เพิ่ม" → ฟอร์มเปิด = เด้งขึ้นไปรับงานทันที (ไม่ปล่อยให้เลื่อนเอง)
+  useEffect(() => {
+    if (showAddForm) formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }, [showAddForm])
+  useEffect(() => {
+    if (showCatForm) catFormRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }, [showCatForm])
+  useEffect(() => {
+    if (moveFrom) movePanelRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }, [moveFrom])
 
   useEffect(() => { loadAll() }, [])
 
@@ -270,7 +285,7 @@ export function AdminProducts() {
       </div>
 
       {showAddForm && (
-        <div className="card mb-6 bg-brand-bg">
+        <div ref={formRef} data-testid="product-form-frame" className="card mb-6 bg-brand-bg scroll-mt-20">
           <h3 className="font-bold text-brand-accent mb-4">
             {editingProduct ? '✏️ แก้ไขเมนู' : '➕ เพิ่มเมนูใหม่'}
           </h3>
@@ -403,7 +418,7 @@ export function AdminProducts() {
         </div>
 
         {showCatForm && (
-          <div className="card p-4 mb-3 bg-white">
+          <div ref={catFormRef} data-testid="category-form-frame" className="card p-4 mb-3 bg-white scroll-mt-20">
             <h4 className="font-bold text-brand-accent mb-3">{editingCat ? 'แก้ไขหัวข้อเมนู' : 'เพิ่มหัวข้อเมนูใหม่'}</h4>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
               <input type="text" className="input" placeholder="ชื่อหัวข้อเมนู (เช่น เครื่องดื่ม)" value={catForm.name} onChange={(e) => setCatForm({ ...catForm, name: e.target.value })} />
@@ -427,7 +442,7 @@ export function AdminProducts() {
 
         <div className="space-y-2">
           {moveFrom && (
-            <div className="p-3 rounded-lg border-2 border-brand-primary/40 bg-brand-bg" data-testid="admin-move-products-panel">
+            <div ref={movePanelRef} className="p-3 rounded-lg border-2 border-brand-primary/40 bg-brand-bg scroll-mt-20" data-testid="admin-move-products-panel">
               <div className="text-sm font-medium text-brand-accent mb-2">
                 ย้ายสินค้าทั้งหมดจากหมวด: {adminCats.find((c) => c.id === moveFrom)?.name} ({products.filter((p) => p.category_id === moveFrom).length} รายการ)
               </div>
@@ -478,9 +493,34 @@ export function AdminProducts() {
       {/* แผงจัดการ "เมนูยอดนิยม" (แถวพิเศษหน้าแรก) + ข้อความหน้าเว็บ */}
       <HomePopularManager products={products} categories={adminCats} />
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {products.map((product) => (
-          <div key={product.id} className="card">
+      {/* Feature C (Owner 2026-10-25): แท็บหมวดหมู่สินค้า — เลือกแท็บ = กรอง + แสดงเป็นหัวข้อ */}
+      <div className="flex flex-wrap gap-2 mb-3" role="tablist" aria-label="แท็บหมวดหมู่สินค้า">
+        <button
+          type="button" role="tab" aria-selected={catTab === 'all'} data-testid="admin-prod-tab-all"
+          onClick={() => setCatTab('all')}
+          className={`btn text-sm ${catTab === 'all' ? 'btn-primary' : 'btn-outline'}`}
+        >
+          ทั้งหมด ({products.length})
+        </button>
+        {adminCats.map((c) => (
+          <button
+            key={c.id} type="button" role="tab" aria-selected={catTab === c.id} data-testid={`admin-prod-tab-${c.id}`}
+            onClick={() => setCatTab(c.id)}
+            className={`btn text-sm ${catTab === c.id ? 'btn-primary' : 'btn-outline'}`}
+          >
+            {c.icon || '🍽️'} {c.name} ({products.filter((p) => p.category_id === c.id).length})
+          </button>
+        ))}
+      </div>
+      <h2 className="text-lg font-bold text-brand-accent mb-3" data-testid="admin-prod-list-heading">
+        {catTab === 'all'
+          ? '📋 สินค้าทั้งหมด'
+          : `📋 ${adminCats.find((c) => c.id === catTab)?.icon ?? ''} ${adminCats.find((c) => c.id === catTab)?.name ?? ''}`}
+      </h2>
+      {/* การ์ดขนาดเท่ากันทุกใบ (min-h + flex + auto-rows-fr) — ไม่มีใบที่ใหญ่/เล็กกว่าเพื่อน */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 auto-rows-fr">
+        {(catTab === 'all' ? products : products.filter((p) => p.category_id === catTab)).map((product) => (
+          <div key={product.id} className="card flex flex-col min-h-[430px]">
             <div className="aspect-video bg-brand-bg rounded-xl mb-3 overflow-hidden">
               {product.image_url ? (
                 <img src={product.image_url} alt={product.name} className="w-full h-full object-cover" />
@@ -510,7 +550,7 @@ export function AdminProducts() {
             <div className="text-sm text-brand-muted mb-3">
               {categories.find(c => c.id === product.category_id)?.name} • ⏱️ {product.prep_minutes} นาที
             </div>
-            <div className="flex gap-2">
+            <div className="flex gap-2 mt-auto pt-2">
               <button onClick={() => handleEditProduct(product)} className="btn btn-outline text-sm flex-1">✏️ แก้ไข</button>
               <button onClick={() => (product.archived ? handleRestoreProduct(product.id) : handleArchiveProduct(product.id))} className="btn btn-outline text-sm text-red-500 flex-1">{product.archived ? '↩ กู้คืน' : '📦 จัดเก็บ'}</button>
               <button onClick={() => handleDeleteProduct(product.id)} className="btn btn-outline text-sm text-red-500" data-testid={`admin-delete-product-${product.id}`}>🗑️ ลบ</button>

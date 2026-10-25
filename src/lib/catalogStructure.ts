@@ -51,6 +51,20 @@ export const CUSTOMER_VISIBILITY_LABEL: Record<CustomerVisibilityIssue, string> 
  * - หัวข้อว่าง = ซ่อน (ไม่โชว์แถวเปล่า) — กติกาเดียวกันทุกหน้า
  * - ค่า menu_section_id เก่า (ชั้นที่เกษียณแล้ว) ถูกละเลย — ไม่มีวันทำให้เมนูหายอีก
  */
+/**
+ * ลำดับหัวข้อหมวดหมู่เริ่มต้น (Owner 2026-10-25 · Feature B) —
+ * เมนูสุขภาพ → เครื่องดื่ม → ของทานเล่น / ผลไม้ → สินค้าสำเร็จรูป
+ * หมวดนอกลิสต์ = ตามด้วย sort_order ของแอดมิน (จัดการได้เหมือนเดิม)
+ */
+export const CATEGORY_DISPLAY_ORDER = ['เมนูสุขภาพ', 'เครื่องดื่ม', 'ของทานเล่น / ผลไม้', 'สินค้าสำเร็จรูป'] as const
+
+/** เลขลำดับแสดงผลของหมวดหมู่ (ไม่พบชื่อ = ท้ายรายการ) — ทนต่อช่องว่าง/สแลชต่างกัน */
+export function categoryDisplayRank(name: string | null | undefined): number {
+  const norm = (s: string) => s.replace(/\s+/g, '').toLowerCase()
+  const i = CATEGORY_DISPLAY_ORDER.findIndex((n) => norm(n) === norm(String(name ?? '')))
+  return i === -1 ? CATEGORY_DISPLAY_ORDER.length : i
+}
+
 export function buildHeadingGroups(
   products: Product[],
   categories: ProductCategory[],
@@ -58,7 +72,7 @@ export function buildHeadingGroups(
   const sellable = (products || []).filter((p) => p.is_available && !p.archived)
   return (categories || [])
     .filter((c) => c.is_active && !c.archived)
-    .sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0))
+    .sort((a, b) => categoryDisplayRank(a.name) - categoryDisplayRank(b.name) || (a.sort_order ?? 0) - (b.sort_order ?? 0))
     .map((category) => ({
       category,
       products: sellable

@@ -580,6 +580,49 @@ SECTION 14: STANDARD AI RESPONSE FORMAT
 
 
 ===============================================================================
+SECTION 12: OPERATIONAL EXECUTION RULES (Owner 2026-10-25 — permanent)
+===============================================================================
+
+12.1 NEVER POLL LOG FILES / NO WATCH MODE IN BATCH RUNS
+    - Do NOT continuously re-read temporary log files (e.g. `.tmp_test.log`)
+      to check progress — a running process may hold the file open (EBUSY) and
+      repeated polling wastes turns without evidence.
+    - Tests MUST run in non-interactive single-run mode: `npx vitest run`,
+      `npm test` (vitest run) — never bare `npx vitest` (watch mode) inside an
+      agent-driven terminal.
+    - Prefer writing command output to a file ONCE (cmd redirect `> x.log 2>&1`)
+      and reading it when the command has exited; if the file is locked, wait
+      for the process to exit instead of looping reads.
+
+12.2 TERMINAL & PROCESS PROTECTION
+    - Do NOT run long-running processes (dev servers, watchers, tsc --watch)
+      in the primary interactive terminal. Only commands that EXIT CLEANLY
+      after finishing may run there.
+    - Before starting a heavy command, check whether one is already running;
+      never kill unrelated processes (e.g. all node) — kill only the exact
+      process you own (filter by command line).
+    - When the terminal shell type is uncertain (cmd vs PowerShell), prefer
+      (a) plain cmd-compatible one-liners or (b) a generated .cmd script with
+      ABSOLUTE paths and no batch labels/goto (labels break on LF endings).
+    - Never rely on shell output capture alone: write evidence to files with
+      absolute paths so results survive terminal restarts.
+
+12.3 ADMIN UI UX STANDARD — AUTO-SCROLL TO ACTIVE WORK
+    - Every admin action button, edit click, tab switch, or "jump to work"
+      control MUST smoothly scroll the viewport to the corresponding active
+      editing container/form (the exact panel being edited). Never leave the
+      page stationary after an action that changes the working context.
+    - Group admin-editable items under category tabs/headers; when the user
+      taps edit on an item, the page must scroll the edit frame into view
+    - The product/menu card grid MUST use uniform card dimensions — no card
+      may render larger/smaller than its siblings unless explicitly designed
+      as a featured slot.
+
+12.4 RULE AUTHORITY NOTE
+    - These rules were ordered by the Owner on 2026-10-25 and are permanent
+      for every future session/agent on this project.
+
+===============================================================================
 FINAL PRINCIPLE
 ===============================================================================
 
