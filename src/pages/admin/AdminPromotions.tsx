@@ -236,7 +236,7 @@ export function AdminPromotions() {
               <div className="text-right">
                 <span className={`badge ${p.is_active ? 'badge-success' : 'badge-warning'}`}>{p.is_active ? 'เปิดใช้งาน' : 'พักชั่วคราว'}</span>
                 {p.is_banner && (
-                  <Link to="/admin/content-approvals" className="badge badge-info text-xs" title="แบนเนอร์จะส่งเข้าคิวตรวจเนื้อหาก่อนแสดงผล">🛡️ รอตรวจเนื้อหา</Link>
+                  <Link to="/admin/marketing?tab=approval" className="badge badge-info text-xs" title="แบนเนอร์จะส่งเข้าคิวตรวจเนื้อหาก่อนแสดงผล">🛡️ รอตรวจเนื้อหา</Link>
                 )}
                 <div className="flex gap-2 mt-1">
                   <button onClick={() => openEdit(p)} className="btn btn-outline text-sm">✏️ แก้ไข</button>

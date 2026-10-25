@@ -37,6 +37,11 @@ describe('Admin nav → real routes (every visible item links to a real page)', 
       '/admin/print-settings',
       '/admin/mascot',
       '/admin/brands',
+      // C5–C7 (audit Q3/Q4/Q5): เมนูที่ถูกยุบ — bookmark เก่าต้องไม่ตาย
+      '/admin/content-approvals',
+      '/admin/control',
+      '/admin/ai-studio',
+      '/admin/asset-audit',
     ]
     for (const p of legacy) {
       expect(appSrc, `redirect missing for ${p}`).toContain(`path="${p}"`)

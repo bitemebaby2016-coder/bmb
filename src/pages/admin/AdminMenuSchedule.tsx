@@ -7,7 +7,7 @@ import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { showToast } from '@/components/ui/ToastContainer'
 import { getProducts } from '@/lib/bmbAdminApi_products'
-import { getRoundsForDateAdmin, setRoundStatus, ensureRoundsForDate, type DeliveryRoundRow } from '@/lib/bmbAdminApi_rounds'
+import { getRoundsForDateAdmin, ensureRoundsForDate, type DeliveryRoundRow } from '@/lib/bmbAdminApi_rounds'
 import { getBusinessSettings } from '@/lib/bmbAdminApi_settings'
 import { setMenuSchedule, publishMenuSchedule, getScheduleForDateAdmin, getScheduleForWeek, isoWeekRange, summarizeWeek, checkPublishReady, roundKeyOptions, toggleDraftEntry, type ScheduleSetItem, type MenuScheduleRow } from '@/lib/bmbMenuSchedule'
 import { ToggleSwitch } from '@/components/admin/ToggleSwitch'
@@ -181,22 +181,21 @@ export function AdminMenuSchedule() {
                       cutoff {String(r.cutoff_time || '').slice(0, 5)} • {String(r.delivery_start || '').slice(0, 5)}–{String(r.delivery_end || '').slice(0, 5)} • ⚡ {r.current_count}/{r.max_capacity}
                     </div>
                   </div>
-                  <ToggleSwitch
-                    checked={r.status === 'active'}
-                    onChange={async (v) => {
-                      const ok = await setRoundStatus(r.id, v ? 'active' : 'closed')
-                      showToast(ok ? `รอบ ${r.display_name} ${v ? 'เปิดรับแล้ว' : 'ปิดรับแล้ว'}` : 'เปลี่ยนสถานะรอบไม่สำเร็จ', ok ? 'success' : 'error')
-                      setDateRounds(await getRoundsForDateAdmin(date))
-                    }}
-                    label={r.status === 'active' ? 'เปิดรับ' : 'ปิดรับ'}
-                    testId={`round-toggle-${r.round_key}`}
-                  />
+                  {/* C4/Q2 (audit D5): เปิด/ปิดรอบ = เจ้าของเดียว AdminRounds —
+                      ที่นี่เหลือป้ายสถานะ (อ่านจาก delivery_rounds.status เดียวกัน) + ลิงก์ */}
+                  <span
+                    className={`px-2 py-0.5 rounded-full text-xs font-semibold ${r.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-gray-200 text-gray-600'}`}
+                    data-testid={`round-toggle-${r.round_key}`}
+                  >
+                    {r.status === 'active' ? 'เปิดรับ' : 'ปิดรับ'}
+                  </span>
+                  <Link to="/admin/rounds" className="text-xs text-brand-primary hover:underline">จัดการรอบ →</Link>
                 </div>
               ))}
             </div>
           )}
           <p className="text-xs text-brand-muted mt-2">
-            สวิตช์นี้คือ <code>delivery_rounds.status</code> — รอบปิดรับ = ลูกค้าเลือกไม่ได้ใน checkout และ create RPC ปฏิเสธ (ERR_ROUND_CLOSED) · dropdown รอบของเมนูด้านล่างผูกด้วย round key ชุดเดียวกัน
+            ป้ายนี้อิง <code>delivery_rounds.status</code> — <b>เปิด/ปิดรับทำที่หน้า "รอบจัดส่ง" (ทางเดียว)</b> · รอบปิดรับ = ลูกค้าเลือกไม่ได้ใน checkout และ create RPC ปฏิเสธ (ERR_ROUND_CLOSED) · dropdown รอบของเมนูด้านล่างผูกด้วย round key ชุดเดียวกัน
           </p>
         </div>
 

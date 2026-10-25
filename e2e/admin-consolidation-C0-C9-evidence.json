@@ -1,0 +1,25 @@
+﻿{
+    "evidence":  "admin-consolidation-C0-C9",
+    "date":  "2026-10-24",
+    "scope":  "client-only (no migration/SQL change)",
+    "gates":  {
+                  "tsc":  0,
+                  "lint":  0,
+                  "vitest":  "136 files / 1396 tests / 0 failed",
+                  "build":  0
+              },
+    "docker_replay":  {
+                          "image":  "postgres:16 (ephemeral bmb-contract-c0)",
+                          "migrations":  "001-149 ALL APPLIED CLEANLY",
+                          "contracts":  "18/18 CI contract SQL files PASS (ON_ERROR_STOP)"
+                      },
+    "production_stages":  "N/A — client-only change; no prod DB stage; deploy via push (Pages auto-deploy)",
+    "deleted_files":  [
+                          "AdminContentApprovals.tsx",
+                          "AdminControlPage.tsx",
+                          "contentAutomation.ts",
+                          "inventoryPrediction.ts",
+                          "customerIntelligence.ts",
+                          "customerIntelligenceServer.ts"
+                      ]
+}

@@ -111,13 +111,23 @@ describe('storeStatus — ตรรกะเปิด/ปิดร้านจ�
     expect(s.message).toContain('ไม่มีรอบจัดส่งที่เปิดรับ')
   })
 
-  it('เลย cutoff ทุกรอบวันนี้ + มีรอบอนาคต → เปิดเฉพาะจองล่วงหน้า (preorder_only)', () => {
+  it('รอบวันนี้ window ผ่านแล้ว — SAME_DAY ไม่มีคัทออฟ (Owner Q1 2026-10-24) → ยังเปิดทั้งวัน', () => {
     publishDeliveryRounds([
       { status: 'active', display_name: 'รอบเช้า', cutoff_time: '08:00', delivery_start: '06:00', delivery_end: '09:00', max_capacity: 10, current_count: 1, scheduled_date: '2026-10-14' },
       { status: 'active', display_name: 'พรุ่งนี้เช้า', cutoff_time: '08:00', delivery_start: '06:00', delivery_end: '09:00', max_capacity: 10, current_count: 0, scheduled_date: '2026-10-15' },
     ] as never)
-    // 10:00 ICT = 2026-10-14T03:00:00Z — cutoff 08:00 ของวันนี้ผ่านแล้ว
+    // 10:00 ICT — รอบเช้าหน้าต่าง 06-09 ผ่านแล้ว แต่ Q1: เซมเดย์ไม่มีคัทออฟ/window ปิด
     const s = currentStoreStatus(new Date('2026-10-14T03:00:00Z'))
+    expect(s.isOpen).toBe(true)
+    expect(s.state).toBe('open')
+  })
+
+  it('แอดมินปิดรอบวันนี้แล้ว + มีรอบอนาคต → เปิดเฉพาะจองล่วงหน้า (preorder_only)', () => {
+    publishDeliveryRounds([
+      { status: 'closed', display_name: 'รอบเช้า', cutoff_time: '08:00', delivery_start: '06:00', delivery_end: '09:00', max_capacity: 10, current_count: 1, scheduled_date: '2026-10-14' },
+      { status: 'active', display_name: 'พรุ่งนี้เช้า', cutoff_time: '08:00', delivery_start: '06:00', delivery_end: '09:00', max_capacity: 10, current_count: 0, scheduled_date: '2026-10-15' },
+    ] as never)
+    const s = currentStoreStatus(new Date('2026-10-14T03:00:00Z')) // 10:00 ICT
     expect(s.isOpen).toBe(true)
     expect(s.state).toBe('preorder_only')
     expect(s.message).toContain('จองล่วงหน้า')

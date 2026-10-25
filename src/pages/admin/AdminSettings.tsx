@@ -11,6 +11,10 @@ import { SOCIAL_LINKS_SETTING_KEY, getSocialLinks, type SocialLinks } from '@/li
 import { THEATER_DAILY_COPY_KEY, THEATER_DAILY_COPY_STARTER } from '@/lib/theaterDailyCopy'
 import { supabase } from '@/lib/supabase'
 
+// C1/Q8 (audit D1 — "1 เรื่อง = 1 ที่"): key ที่มีฟอร์มเฉพาะทาง — generic editor
+// (JSON/JsonForm + Save All) ห้ามโชว์/ห้ามเขียน กันพิมพ์ค่าเสียแบบ 22P02 ซ้ำ
+const TYPED_FORM_KEYS = new Set<string>([SOCIAL_LINKS_SETTING_KEY, 'order_policy'])
+
 export function AdminSettings() {
   const [settings, setSettings] = useState<Record<string, any>>({})
   const [loading, setLoading] = useState(true)
@@ -18,32 +22,29 @@ export function AdminSettings() {
   const [newKey, setNewKey] = useState('')
   // FINAL CONFIG CLOSURE: admin แก้ canonical นอก business_settings ได้โดยไม่ต้องแก้ code
   const [zones, setZones] = useState<any[] | null>(null)
-  const [brand, setBrand] = useState<any>(null)
   const [branch, setBranch] = useState<any>(null)
   const [socials, setSocials] = useState<SocialLinks | null>(null)
 
   useEffect(() => { load() }, [])
 
   async function load() {
-    const [s, z, b, br, sl] = await Promise.all([
+    const [s, z, br, sl] = await Promise.all([
       getBusinessSettings(),
       supabase.from('delivery_zones').select('*').order('min_distance_km'),
-      supabase.from('brands').select('id, display_name, name, theme_tokens').eq('is_default', true).maybeSingle(),
       supabase.from('branches').select('id, display_name, name, service_radius_km, operating_hours').eq('is_default', true).maybeSingle(),
       getSocialLinks(true),
     ])
     setSettings(s)
     setZones(z.data ?? [])
-    setBrand(b.data ?? null)
     setBranch(br.data ?? null)
     setSocials(sl)
     setLoading(false)
   }
 
   async function handleSave(key: string) {
-    // D-02 (R2.1): ทางบันทึกเดียว — social_links บันทึกจากฟอร์มเฉพาะทางด้านล่างเท่านั้น
-    if (key === SOCIAL_LINKS_SETTING_KEY) {
-      showToast('social_links บันทึกจากฟอร์ม "โซเชียล & LINE" ด้านล่างเท่านั้น (ทางบันทึกเดียว)', 'error')
+    // D-02 (R2.1) + C1/Q8: ทางบันทึกเดียว — key ที่มีฟอร์มเฉพาะทางห้ามเขียนจาก generic
+    if (TYPED_FORM_KEYS.has(key)) {
+      showToast(`${key} บันทึกจากฟอร์มเฉพาะทางด้านบนเท่านั้น (ทางบันทึกเดียว)`, 'error')
       return
     }
     const ok = await setBusinessSetting(key, settings[key])
@@ -54,8 +55,8 @@ export function AdminSettings() {
   async function handleSaveAll() {
     let allOk = true
     for (const key of Object.keys(settings)) {
-      // D-02 (R2.1): key ที่มีฟอร์มเฉพาะทางห้ามเขียนจากทางนี้ (ทางบันทึกเดียว)
-      if (key === SOCIAL_LINKS_SETTING_KEY) continue
+      // D-02 (R2.1) + C1/Q8: key ที่มีฟอร์มเฉพาะทางห้ามเขียนจากทางนี้ (ทางบันทึกเดียว)
+      if (TYPED_FORM_KEYS.has(key)) continue
       if (!(await setBusinessSetting(key, settings[key]))) allOk = false
     }
     showToast(allOk ? 'All settings saved' : 'Some settings failed', allOk ? 'success' : 'error')
@@ -94,15 +95,7 @@ export function AdminSettings() {
     if (!error) await load()
   }
 
-  async function saveBrand() {
-    if (!brand) return
-    const { error } = await supabase
-      .from('brands')
-      .update({ display_name: brand.display_name, theme_tokens: brand.theme_tokens, updated_at: new Date().toISOString() })
-      .eq('id', brand.id)
-    showToast(error ? `Brand failed: ${error.message}` : 'Saved brand', error ? 'error' : 'success')
-    if (!error) await load()
-  }
+  // C3/Q1: brand editor ย้ายไป OrgHub (AdminBrands) ที่เดียว — เหลือลิงก์ด้านล่าง
 
   async function saveBranch() {
     if (!branch) return
@@ -144,9 +137,9 @@ export function AdminSettings() {
       ) : (
         <div className="space-y-4">
           {Object.keys(settings)
-            // D-02 (R2.1): key ที่มีฟอร์มเฉพาะทาง (social_links) ห้ามโผล่ใน generic
-            // editor — เหลือ "1 เรื่อง = 1 ที่ = ทางบันทึกเดียว" ตามที่ Owner สั่ง
-            .filter((key) => key !== SOCIAL_LINKS_SETTING_KEY)
+            // D-02 (R2.1) + C1/Q8 (audit): key ที่มีฟอร์มเฉพาะทาง (social_links/order_policy)
+            // ห้ามโผล่ใน generic editor — "1 เรื่อง = 1 ที่ = ทางบันทึกเดียว"
+            .filter((key) => !TYPED_FORM_KEYS.has(key))
             .map((key) => (
             <div key={key} className="card">
               <div className="flex items-center justify-between mb-2">
@@ -260,20 +253,12 @@ export function AdminSettings() {
           </div>
         ))}
 
-        <h2 className="text-xl font-bold text-brand-accent">🎨 Brand (ชื่อ + ธีม glass)</h2>
-        {brand && (
-          <div className="card" data-testid="brand-config">
-            <label className="text-xs flex flex-col gap-1 mb-2">ชื่อแบรนด์
-              <input className="input" value={brand.display_name ?? ''}
-                onChange={(e) => setBrand({ ...brand, display_name: e.target.value })} />
-            </label>
-            <div className="text-xs font-mono text-brand-muted mb-1">theme_tokens (JSON — key `glass` คุมพื้นหลัง/blur/ขอบ/ตัวอักษร/เงา)</div>
-            <textarea className="input font-mono w-full" rows={5}
-              value={JSON.stringify(brand.theme_tokens ?? {}, null, 2)}
-              onChange={(e) => { try { setBrand({ ...brand, theme_tokens: JSON.parse(e.target.value) }) } catch { /* แก้ต่อไป */ } }} />
-            <button onClick={() => void saveBrand()} className="btn btn-success text-sm mt-2">💾 บันทึกแบรนด์</button>
-          </div>
-        )}
+        <h2 className="text-xl font-bold text-brand-accent">🎨 Brand</h2>
+        <div className="card text-sm" data-testid="brand-config">
+          จัดการชื่อแบรนด์/ธีม/ค่าเริ่มต้นทั้งหมดที่{' '}
+          <Link to="/admin/tenants?tab=brands" className="text-brand-primary font-semibold">องค์กรและแบรนด์ → แท็บแบรนด์</Link>
+          {' '}(audit D3/Q1 — 1 เรื่อง = 1 ที่: แก้ที่ OrgHub ที่เดียว)
+        </div>
 
         <h2 className="text-xl font-bold text-brand-accent">🏬 Branch (รัศมี + เวลาสาขา)</h2>
         {branch && (

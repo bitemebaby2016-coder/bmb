@@ -5,6 +5,8 @@
 import { useState, useEffect, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 import { getDashboardStats } from '@/lib/bmbAdminApi_users'
+// C6 (audit D8/Q4): การ์ด quota+riders จากหน้า /admin/control ย้ายเข้าภาพรวม
+import { AdminControl } from '@/components/dashboard/AdminControl'
 
 type Stats = Awaited<ReturnType<typeof getDashboardStats>>
 
@@ -149,6 +151,10 @@ export function AdminDashboard() {
             )}
           </div>
         )}
+      </section>
+
+      <section aria-label="ควบคุมร้าน (ย้ายมาจาก /admin/control — audit D8)" data-testid="admin-control-zone">
+        <AdminControl />
       </section>
 
       <section aria-label="ทางลัดจัดการ" data-testid="admin-actions-zone" className="space-y-3">

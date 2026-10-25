@@ -56,7 +56,8 @@ describe('adminUi — admin navigation catalogue', () => {
     expect(paths).toContain('/admin')
     expect(paths).toContain('/admin/products')
     expect(paths).toContain('/admin/media')
-    expect(paths).toContain('/admin/content-approvals')
+    expect(paths).toContain('/admin/marketing') // C5/Q3: approval inbox ย้ายเข้าการตลาด (เดิม /admin/content-approvals)
+    expect(paths).not.toContain('/admin/content-approvals') // ถูกตัดจากเมนู — redirect ไป marketing?tab=approval
     expect(new Set(paths).size).toBe(paths.length)
     expect(paths.every((p) => p.startsWith('/admin'))).toBe(true)
   })

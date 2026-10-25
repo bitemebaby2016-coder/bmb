@@ -6,8 +6,12 @@
 // — ปิดช่องพิมพ์ JSON ดิบจนค่าพัง (pre_order_lead_days = "มี7" -> 22P02 ทั้งระบบ)
 
 import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { showToast } from '@/components/ui/ToastContainer'
-import { getBusinessSettings, setBusinessSetting } from '@/lib/bmbAdminApi_settings'
+import {
+  getBusinessSettings,
+  setBusinessSetting,
+} from '@/lib/bmbAdminApi_settings'
 import {
   ORDER_POLICY_FIELDS,
   normalizeOrderPolicy,
@@ -55,6 +59,9 @@ export function OrderPolicyPanel() {
       <h2 className="text-xl font-bold text-brand-accent mb-1">📋 นโยบายสั่งซื้อ & จัดส่ง (order_policy)</h2>
       <p className="text-sm text-brand-muted mb-4">
         ค่าเหล่านี้ถูกใช้โดยเซิร์ฟเวอร์จริงตอนสั่งซื้อ (คัทออฟพรีออเดอร์ = ปิดรับก่อนเวลาส่งตามจำนวน ชม. ที่ตั้ง)
+        {' · '}<b>ลำดับกันชน (audit D2):</b> คัทออฟต่อรอบ (<code>pre_order_cutoff</code> ที่หน้า{' '}
+        <Link to="/admin/rounds" className="text-brand-primary font-semibold">รอบจัดส่ง</Link>) มีสิทธิ์ทับกฎนี้
+        — ถ้ารอบไม่ได้ตั้งไว้ จึงใช้ <code>cutoff_hours</code> ตรงนี้ (fallback → ป้าย legacy)
       </p>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {ORDER_POLICY_FIELDS.map((f) => (

@@ -2,16 +2,18 @@
 
 > **สถานะงานปัจจุบันของโปรเจกต์ Bite Me Baby** ใช้แนบเข้าสู่ Context ตอนเริ่มแชทเสมอ
 
-**last_updated:** 2026-10-24 **ปิดเซสชันรอบ 14** (P0-1 + P0-2 ผ่านหมด production · ledger **149,148,147,146**
-· vitest **135 files/1393 tests exit 0** · tsc/lint/build 0 · Docker replay 001→149 ALL_GREEN ·
-contracts 123/124/127-149 PASS ทั้ง ephemeral และ production · **HEAD `7a24123` = origin/main ·
-CI success + Contract Tests success ทุก commit รอบนี้ (40103315924 / 40103315919)**)
-**phase:** 🟢 ปิดเซสชัน — P0-1 ✅ · P0-2 ✅ · P1-A ✅ **Owner ตอบ Q1–Q4 ครบ** · P1-B = Owner รันเอง (ขอรายการแล้ว)
-**current_focus:** **แชทหน้า = 1) BMB ADMIN LEGACY DUPLICATION AUDIT (READ-ONLY, คำสั่งใหม่)
-→ 2) ส่งรายงาน + รอ Owner approve → 3) implement Q1 (เอาหน้าต่างส่งออกจากเซมเดย์) + Q3 (รวม AdminRounds
-เป็นแท็บเดียว) + แผนรวมเมนูที่ audit เสนอ → 4) Owner รัน acceptance ที่เหลือ**
-**blocked_by:** ห้าม implement อะไรก่อน Owner approve รายงาน audit (STRICT STOP CONDITIONS ในคำสั่ง)
-· กฎใหม่ที่ใช้ = **`UNIVERSAL_MASTER_AI_RULES.md` (Owner เขียนเอง คัดจากไฟล์นี้ — ฉบับปัจจุบันคือ canonical)**
+**last_updated:** 2026-10-24 **ปิดเซสชันรอบ 15 — AUDIT C0–C9 IMPLEMENT เสร็จสมบูรณ์**
+(Q1–Q9 approved · C0 (Q1+D-P1B-01) + C1–C9 ครบ · gates: vitest **136 files/1396 tests exit 0** ·
+tsc/lint/build **0** · Docker replay **001→149 ALL GREEN** (postgres:16 ephemeral `bmb-contract-c0`) ·
+CI contract SQL **18/18 PASS** (123→149, ON_ERROR_STOP) · evidence `e2e/admin-consolidation-C0-C9-evidence.json`)
+**phase:** 🟢 C0–C9 ปิดแล้ว — เหลือ commit/push → ตรวจ CI + Contract Tests
+**current_focus:** **✅ AUDIT C0–C9 IMPLEMENT เสร็จ (2026-10-24): D1–D14 แก้ครบ ·
+nav 24→20 (เหลือ path เดิมครบ 24 ผ่าน redirect: control/content-approvals/ai-studio/asset-audit) ·
+หน้าซ้ำรวมแท็บ (rounds=archived · media=audit · marketing=ai+approval · dashboard=control) ·
+ลบไฟล์ legacy 6 ไฟล์ · TYPED_FORM_KEYS single-write (social_links+order_policy) ·
+Q1 SAME_DAY ไม่มี window/cutoff (window_passed = PRE_ORDER-only) · D-P1B-01 บล็อกวันที่ผ่าน**
+**blocked_by:** ⛔ ห้าม deploy โดยไม่มีคำสั่ง Owner (push = Pages auto-deploy ตามรอบปกติ)
+· กฎที่ใช้ = **`UNIVERSAL_MASTER_AI_RULES.md` (canonical)**
 
 ---
 
@@ -105,19 +107,32 @@ CI success + Contract Tests success ทุก commit รอบนี้ (4010331
 | # | ขั้น | สถานะ |
 |---|---|---|
 | 1 | CI + Contract Tests หลัง push | ✅ `d306ca7`/`9d5fc24`/`7a24123` = success ทั้ง 2 workflows |
-| 2 | `[R]` หน้าแรก/เมนู/รอบ/โปรโมชันโหลดครบ | ⏳ |
-| 3 | `[O]` สั่งซื้อเมนูจริง (รายการแรกของร้าน) | ⏳ |
+| 2 | `[R]` หน้าแรก/เมนู/รอบ/โปรโมชันโหลดครบ | ⚠️ โหลดครบ **แต่มี defect ใหม่:** ยังโชว์พรีออเดอร์ของวันที่เลยรอบส่งมาแล้วและยังสั่งได้ |
+| 3 | `[O]` สั่งซื้อเมนูจริง (รายการแรกของร้าน) | ⏳ ปุ่มกดได้ปกติ · **ยังไม่ได้ลองครบลูปจริง** |
 | 4 | `[O]` PRE_ORDER ใน 2 ชม. ก่อนส่ง = ผ่าน · เกินคัทออฟ = ถูกปฏิเสธพร้อมเวลา | ⏳ |
-| 5 | `[R]` `/admin` ทุกเมนู (desktop sidebar + มือถือ drawer) + ป้ายคัทออฟพรีออเดอร์ + ป้าย "เซมเดย์ไม่มีคัทออฟ" | ⏳ |
-| 6 | ~~ทดสอบ 2 คัทออฟ~~ → **ยืนยันว่าช่องคัทออฟเซมเดย์หายไปจริง** ในหน้ารอบ | ⏳ (ฝั่งโค้ด/เทสต์ ✅ แล้ว) |
-| 7 | `[R]` ป้ายแดงค้างเคส **841** → reload 2 ครั้ง = หายไม่กลับ + bell/"อ่านทั้งหมดแล้ว" | ⏳ |
-| 8 | `[O]` push บนมือถือ = ได้ 1 notification ต่อสถานะ | ⏳ |
-| 9 | `[O]` จ่ายเงินจริง + ตรวจสลิปในแอดมิน (อนุมัติ → paid ใน DB) | ⏳ |
-| 10 | `[R]` SMS ยืนยัน (ถ้าเปิดใช้) | ⏳ |
-| 11 | `[O]` Rider POD upload บนมือถือ (รูปขึ้นจริง) | ⏳ |
-| 12 | `[R]` แผนที่ checkout (Maps key ใน Cloudflare) | ⏳ |
+| 5 | `[R]` `/admin` ทุกเมนู (desktop sidebar + มือถือ drawer) + ป้ายคัทออฟพรีออเดอร์ + ป้าย "เซมเดย์ไม่มีคัทออฟ" | ⏳ ยังไม่เห็น |
+| 6 | ~~ทดสอบ 2 คัทออฟ~~ → **ยืนยันว่าช่องคัทออฟเซมเดย์หายไปจริง** ในหน้ารอบ | ⚠️ Owner: "ไม่ได้หายไป — เปลี่ยนเป็น (legacy)" · ข้อเท็จจริงจากโค้ด: ช่อง `same_day_cutoff` ถูกถอดจริง (148) · ที่เห็น = `cutoff_time` เดิม relabel **"ปิดรับเดิม (legacy)"** (`src/pages/admin/AdminRounds.tsx:178-187` = fallback พรีออเดอร์) → **รอ Owner ตัดสินว่าผ่านเกณฑ์ #6** |
+| 7 | `[R]` ป้ายแดงค้างเคส **841** → reload 2 ครั้ง = หายไม่กลับ + bell/"อ่านทั้งหมดแล้ว" | ✅ ป้ายหายแล้ว (reload 2 ครั้ง = หายไม่กลับ) |
+| 8 | `[O]` push บนมือถือ = ได้ 1 notification ต่อสถานะ | ⏳ ยัง |
+| 9 | `[O]` จ่ายเงินจริง + ตรวจสลิปในแอดมิน (อนุมัติ → paid ใน DB) | ⏳ ยัง |
+| 10 | `[R]` SMS ยืนยัน (ถ้าเปิดใช้) | ✅ เคยลองแล้ว — ได้ OTP จริง |
+| 11 | `[O]` Rider POD upload บนมือถือ (รูปขึ้นจริง) | ⏳ รูปขึ้นเฉพาะบางเบราว์เซอร์ = **ยังไม่ผ่าน** |
+| 12 | `[R]` แผนที่ checkout (Maps key ใน Cloudflare) | ⏳ ยัง |
 | 13 | `[R]` เอกสาร/commit ตรง production build | ✅ `AI_WORK_STATE` + แฮนด์ออฟอัปเดตแล้ว · HEAD `7a24123` = origin/main |
-| 14 | `[O]` ระบบ role 13 ค่า → **14a–14j** (สูตร SQL ในแผน §5) | ⏳ |
+| 14 | `[O]` ระบบ role 13 ค่า → **14a–14j** (สูตร SQL ในแผน §5) | ⏳ · **สูตร SQL = `docs/BMB_E2E_PRODUCTION_ACCEPTANCE_PLAN_2026-10-24.md` §5** (บรรทัด 73–110: SQL `set_user_role` = 79–95 · ตารางทดสอบ 14a–14j = 99–110) |
+
+> **ผล P1-B ที่ Owner แจ้ง 2026-10-24:** #1 ✅ · #2 ⚠️ โหลดครบ**แต่มี defect ใหม่** · #3 ⏳ กดได้ปกติ-ยังไม่ครบลูป ·
+> #4 ⏳ · #5 ⏳ ยังไม่เห็น · #6 ⚠️ "ไม่ได้หายไป — เปลี่ยนเป็น legacy" · #7 ✅ ป้าย 841 หายแล้ว · #8 ⏳ · #9 ⏳ ·
+> #10 ✅ ได้ OTP จริง · #11 ⏳ POD ขึ้นบางเบราว์เซอร์ · #12 ⏳ · #13 ✅ · #14 ⏳ (§5 ตอบแล้ว — ดูแถว 14)
+>
+> **🆕 DEFECT ใหม่ D-P1B-01 (คิวหลัง audit + approve รวมกับงาน Q1):** ยังโชว์พรีออเดอร์ของวันที่ **เลยรอบส่งมาแล้ว**
+> และยังสั่งได้ — ต้องพิสูจน์ก่อนแก้: `roundBookability` + CheckoutPage (เลือกวัน/รอบ) + `enforce_pre_order_window`
+> (รอบวันที่ผ่านไปแล้วต้องไม่ selectable/orderable) · ห้ามเดา root cause ก่อนสอบสวน
+>
+> **#6 ข้อเท็จจริง (อ่านจากโค้ด ไม่ใช่เดา):** ช่อง `same_day_cutoff` ถูกถอดจริงใน 148 (ฝั่งโค้ด/เทสต์ ✅) ·
+> "(legacy)" ที่เห็น = `cutoff_time` เดิมถูก relabel เป็น **"ปิดรับเดิม (legacy)"**
+> (`src/pages/admin/AdminRounds.tsx:178-187`, title = "ใช้เป็น fallback พรีออเดอร์เมื่อไม่มีเวลาส่ง")
+> → ผ่าน/ไม่ผ่านเกณฑ์ #6 = **การตัดสินใจของ Owner** (อย่า self-declare PASS)
 
 ### Next Exact Action (เรียงลำดับที่ต้องทำในแชทหน้า)
 
@@ -128,7 +143,9 @@ CI success + Contract Tests success ทุก commit รอบนี้ (4010331
 2. **ข้อ 2 — หลัง approve เท่านั้น:** implement **Q1** (เอา `window_passed` ออกจากฝั่งเซมเดย์) +
    **Q3** (รวม AdminRounds เป็นแท็บเดียว) + แผนรวมเมนูที่ audit เสนอ → เกตเดิมทั้งหมด
    (vitest/tsc/lint/build → Docker replay → contracts → production stages → push → เช็ค CI)
-3. **Owner:** รัน **P1-B checklist** ด้านบนแล้วแจ้งผลรวม → defect ใหม่ = จดลงไฟล์นี้
+3. **Owner P1-B:** แจ้งผลแล้วบางส่วน (2026-10-24 — ดูตาราง + บล็อกผลด้านบน) · เหลือค้าง = #3–#5,
+   #8–#9, #11–#12, #14 · defect ใหม่ D-P1B-01 (#2) จดแล้ว → คิวหลัง audit + approve รวมกับ Q1 ·
+   #6 รอ Owner ตัดสิน (ข้อเท็จจริงในบล็อกด้านบน)
 4. **CI ของรอบนี้ ✅:** `d306ca7` → CI success (run 40103315924) + Contract Tests success (run 40103315919) ·
    `9d5fc24` และ `7a24123` ก็เขียวทั้งคู่
    (https://github.com/bitemebaby2016-coder/bmb/actions/runs/40103315924 ·

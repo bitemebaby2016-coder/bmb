@@ -56,7 +56,7 @@ const AdminRounds = lazy(() => import('./pages/admin/AdminRounds').then(m => ({ 
 const AdminCustomers = lazy(() => import('./pages/admin/AdminCustomers').then(m => ({ default: m.AdminCustomers })))
 const AdminSettings = lazy(() => import('./pages/admin/AdminSettings').then(m => ({ default: m.AdminSettings })))
 const AdminMedia = lazy(() => import('./pages/admin/AdminMedia').then(m => ({ default: m.AdminMedia })))
-const AdminAssetAudit = lazy(() => import('./pages/admin/AdminAssetAudit').then(m => ({ default: m.AdminAssetAudit })))
+// C7/Q4: AdminAssetAudit ถูกรวมเป็นแท็บใน AdminMedia (?tab=audit) — ไม่มี lazy route แล้ว
 
 // Lazy loaded: Protected pages (4 pages)
 const ProfilePage = lazy(() => import('./pages/ProfilePage').then(m => ({ default: m.ProfilePage })))
@@ -69,12 +69,10 @@ const RiderPwaPage = lazy(() => import('./pages/RiderPwaPage').then(m => ({ defa
 const NotificationCenterPage = lazy(() => import('./pages/NotificationCenterPage').then(m => ({ default: m.NotificationCenterPage })))
 const AdminErrorsPage = lazy(() => import('./pages/admin/AdminErrorsPage').then(m => ({ default: m.AdminErrorsPage })))
 const MascotSettingsPage = lazy(() => import('./pages/admin/MascotSettingsPage').then(m => ({ default: m.MascotSettingsPage })))
-const AdminControlPage = lazy(() => import('./pages/AdminControlPage').then(m => ({ default: m.AdminControlPage })))
-const AdminContentApprovals = lazy(() => import('./pages/admin/AdminContentApprovals').then(m => ({ default: m.AdminContentApprovals })))
 const AdminPaymentExceptions = lazy(() => import('./pages/admin/AdminPaymentExceptions').then(m => ({ default: m.AdminPaymentExceptions })))
 const AdminMarketing = lazy(() => import('./pages/admin/AdminMarketing').then(m => ({ default: m.AdminMarketing })))
 const AdminPortfolioPage = lazy(() => import('./pages/admin/AdminPortfolio').then(m => ({ default: m.AdminPortfolioPage })))
-const AdminAiStudio = lazy(() => import('./pages/admin/AdminAiStudio').then(m => ({ default: m.AdminAiStudio })))
+// C7/Q5: AdminAiStudio ถูกรวมเป็นแท็บใน AdminMarketing (แท็บ 'ai') — ไม่มี lazy route แล้ว
 // BACKEND-CAPABILITY-CLOSURE-2026-10-19: Web POS + Finance reports + Printer settings
 const AdminPos = lazy(() => import('./pages/admin/AdminPos').then(m => ({ default: m.AdminPos })))
 const AdminReports = lazy(() => import('./pages/admin/AdminReports').then(m => ({ default: m.AdminReports })))
@@ -240,7 +238,7 @@ export default function App() {
         
         {/* Ops Routes — Rider PWA (public demo) + Admin Control (admin-only) */}
         <Route path="/rider" element={<Suspense fallback={<LoadingSpinner />}><Layout hideBottomNav><RiderPwaPage /></Layout></Suspense>} />
-        <Route path="/admin/control" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminNav><AdminControlPage /></AdminNav></Layout></AdminRoute></Suspense>} />
+        <Route path="/admin/control" element={<Navigate to="/admin" replace />} />
         
         {/* Admin Routes — Lazy Loaded (AdminNav = persistent admin sidebar across every /admin page) */}
         <Route path="/admin" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminNav><AdminDashboard /></AdminNav></Layout></AdminRoute></Suspense>} />
@@ -253,9 +251,9 @@ export default function App() {
         <Route path="/admin/kitchen" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminNav><AdminKitchen /></AdminNav></Layout></AdminRoute></Suspense>} />
         <Route path="/admin/recipes" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminNav><AdminRecipes /></AdminNav></Layout></AdminRoute></Suspense>} />
 
-        <Route path="/admin/content-approvals" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminNav><AdminContentApprovals /></AdminNav></Layout></AdminRoute></Suspense>} />
+        <Route path="/admin/content-approvals" element={<Navigate to="/admin/marketing?tab=approval" replace />} />
         <Route path="/admin/audit-log" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminNav><AuditLogPage /></AdminNav></Layout></AdminRoute></Suspense>} />
-        <Route path="/admin/asset-audit" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminNav><AdminAssetAudit /></AdminNav></Layout></AdminRoute></Suspense>} />
+        <Route path="/admin/asset-audit" element={<Navigate to="/admin/media?tab=audit" replace />} />
 <Route path="/admin/payment-exceptions" element={<Navigate to="/admin/orders?tab=payment" replace />} />
         <Route path="/admin/marketing" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminNav><AdminMarketing /></AdminNav></Layout></AdminRoute></Suspense>} />
             <Route path="/admin/notifications" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminNav><AdminNotificationsPage /></AdminNav></Layout></AdminRoute></Suspense>} />
@@ -281,7 +279,7 @@ export default function App() {
         {/* CAT-04: Admin Portfolio / Past Works */}
         <Route path="/admin/portfolio" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminNav><AdminPortfolioPage /></AdminNav></Layout></AdminRoute></Suspense>} />
         {/* AI-EXT: Admin AI Content Studio */}
-        <Route path="/admin/ai-studio" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminNav><AdminAiStudio /></AdminNav></Layout></AdminRoute></Suspense>} />
+        <Route path="/admin/ai-studio" element={<Navigate to="/admin/marketing?tab=ai" replace />} />
         {/* Catch all */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

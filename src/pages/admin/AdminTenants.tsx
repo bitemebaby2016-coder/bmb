@@ -1,8 +1,7 @@
 ﻿// ============================================
 // Bite Me Baby — Admin Tenants Management (TEN-06)
 import { useState } from 'react'
-import { supabase } from '@/lib/supabase'
-import { listTenants, createTenant, updateTenant, setTenantStatus, setDefaultBrand } from '@/lib/adminTenantApi'
+import { listTenants, createTenant, updateTenant, setTenantStatus } from '@/lib/adminTenantApi'
 import type { TenantItem } from '@/lib/adminTenantContext'
 import { useAdminTenantContextStore } from '@/lib/adminTenantContext'
 import { showToast } from '@/components/ui/ToastContainer'
@@ -19,9 +18,7 @@ export function AdminTenants() {
   const [formName,setFormName] = useState('')
   const [formSlug,setFormSlug] = useState('')
   const [formStatus,setFormStatus] = useState<'active'|'inactive'|'suspended'>('active')
-  // Default brand management
-  const [brands,setBrands] = useState<{id:string;name:string}[]>([])
-  const [defaultBrandId,setDefaultBrandId] = useState<string>('')
+  // C3/Q1 (audit D4): is_default = เจ้าของเดียว OrgHub → แท็บแบรนด์ (AdminBrands)
   const {isAdminScopePlatform,setActiveTenant,activeTenantId} = useAdminTenantContextStore()
 
   async function loadAll(): Promise<void> {
@@ -61,23 +58,8 @@ export function AdminTenants() {
   function startEdit(t: TenantRow): void { setEditingId(t.id); setFormName(t.name); setFormSlug(t.slug); setFormStatus(t.status); setShowForm(true) }
   function resetForm(): void { setShowForm(false); setEditingId(null); setFormName(''); setFormSlug(''); setFormStatus('active') }
   
-  async function selectFor(id: string): Promise<void> { setActiveTenant(id); showToast('Switched to tenant context','success'); await loadBrands(id) }
+  async function selectFor(id: string): Promise<void> { setActiveTenant(id); showToast('Switched to tenant context','success') }
   
-  async function loadBrands(tid: string): Promise<void> {
-    try {
-      const brandsRes = await supabase.from('brands').select('id,name,display_name,is_default,is_published,status').eq('tenant_id', tid).eq('is_published', true).eq('status', 'active')
-      if (!brandsRes.error && brandsRes.data) setBrands(brandsRes.data as any)
-      const tenantsRes = await supabase.from('tenants').select('default_brand_id').eq('id', tid).single()
-      if (tenantsRes.data) setDefaultBrandId((tenantsRes.data as any).default_brand_id || '')
-    } catch(e) { console.error('[loadBrands]', e) }
-  }
-
-  async function handleSetDefault(brandId: string): Promise<void> {
-    if (!activeTenantId) return
-    const r = await setDefaultBrand(activeTenantId, brandId)
-    if(r.ok){ showToast('Default brand updated','success'); await loadBrands(activeTenantId) }
-    else showToast(String(r.error||'Failed'),'error')
-  }
 
 
   return (

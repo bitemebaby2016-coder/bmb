@@ -8,35 +8,6 @@ export interface AdminNavItem {
   icon: string
 }
 
-/** Master admin navigation */
-export const ADMIN_NAV_ITEMS: AdminNavItem[] = [
-  { to: '/admin', label: 'ภาพรวม', icon: '\uD83D\uDCCA' },
-  { to: '/admin/orders', label: 'ออเดอร์', icon: '\uD83D\uDCE6' },
-  { to: '/admin/products', label: 'เมนูและตารางเมนู', icon: '\uD83C\uDF7D\uFE0F' },
-  { to: '/admin/kitchen', label: 'ครัว/ผลิต', icon: '\uD83C\uDF73' },
-  { to: '/admin/recipes', label: 'สูตรอาหาร', icon: '\uD83E\uDDEA' },
-  { to: '/admin/marketing', label: 'การตลาด', icon: '\uD83D\uDCE3' },
-  { to: '/admin/content-approvals', label: 'ตรวจเนื้อหา', icon: '\uD83D\uDED6\uFE0F' },
-  { to: '/admin/rounds', label: 'รอบจัดส่ง', icon: '\uD83D\uDD50' },
-  { to: '/admin/promotions', label: 'โปรโมชั่น', icon: '\uD83C\uDF81' },
-  { to: '/admin/customers', label: 'ลูกค้า', icon: '\uD83D\uDC65' },
-  { to: '/admin/inventory', label: 'สต็อกวัตถุดิบ', icon: '\uD83E\uDD55' },
-  { to: '/admin/delivery', label: 'จัดส่ง', icon: '\uD83D\uDED5' },
-  { to: '/admin/audit-log', label: 'บันทึกการทำงาน', icon: '\uD83D\uDCCB' },
-  { to: '/admin/asset-audit', label: 'ตรวจรูปสินค้า', icon: '\uD83D\uDD0D' },
-  { to: '/admin/pos', label: 'POS หน้าร้าน', icon: '🧾' },
-  { to: '/admin/reports', label: 'รายงานการเงิน', icon: '📊' },
-  { to: '/admin/notifications', label: 'การแจ้งเตือน', icon: '\uD83D\uDD14' },
-  { to: '/admin/errors', label: 'ปัญหาระบบ', icon: '\uD83E\uDE79' },
-  { to: '/admin/media', label: 'คลังรูปภาพ', icon: '\uD83D\uDDBC\uFE0F' },
-  { to: '/admin/portfolio', label: 'ผลงาน', icon: '\uD83D\uDDBC\uFE0F' },
-  { to: '/admin/ai-studio', label: 'สตูดิโอ AI', icon: '\uD83E\uDD16' },
-  { to: '/admin/settings', label: 'ตั้งค่าร้าน', icon: '\u2699\uFE0F' },
-  // TEN-06: White-label control plane entries
-  { to: '/admin/tenants', label: 'องค์กรและแบรนด์', icon: '\uD83C\uDFE2' },
-  { to: '/admin/control', label: 'ควบคุมร้าน', icon: '\uD83D\uDED4\uFE0F' },
-]
-
 export interface AdminNavGroup {
   id: string
   label: string
@@ -54,7 +25,6 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
     label: '\u0E2A\u0E33\u0E01\u0E2D\u0E1A',
     items: [
       { to: '/admin', label: 'ภาพรวม', icon: '\uD83D\uDCCA' },
-      { to: '/admin/control', label: 'ควบคุมร้าน', icon: '\uD83D\uDED4\uFE0F' },
     ],
   },
   {
@@ -74,7 +44,6 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
     items: [
       { to: '/admin/products', label: 'เมนูและตารางเมนู', icon: '\uD83C\uDF7D\uFE0F' },
       { to: '/admin/promotions', label: 'โปรโมชั่น', icon: '\uD83C\uDF81' },
-      { to: '/admin/content-approvals', label: 'ตรวจเนื้อหา', icon: '\uD83D\uDED6\uFE0F' },
       { to: '/admin/marketing', label: 'การตลาด', icon: '\uD83D\uDCE3' },
     ],
   },
@@ -86,7 +55,6 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
       { to: '/admin/notifications', label: 'การแจ้งเตือน', icon: '\uD83D\uDD14' },
       { to: '/admin/media', label: 'คลังรูปภาพ', icon: '\uD83D\uDDBC\uFE0F' },
       { to: '/admin/portfolio', label: 'ผลงาน', icon: '\uD83D\uDDBC\uFE0F' },
-      { to: '/admin/ai-studio', label: 'สตูดิโอ AI', icon: '\uD83E\uDD16' },
     ],
   },
   {
@@ -97,13 +65,15 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
       { to: '/admin/reports', label: 'รายงานการเงิน', icon: '📊' },
       { to: '/admin/delivery', label: 'จัดส่ง', icon: '\uD83D\uDED5' },
       { to: '/admin/audit-log', label: 'บันทึกการทำงาน', icon: '\uD83D\uDCCB' },
-      { to: '/admin/asset-audit', label: 'ตรวจรูปสินค้า', icon: '\uD83D\uDD0D' },
       { to: '/admin/errors', label: 'ปัญหาระบบ', icon: '\uD83E\uDE79' },
       { to: '/admin/settings', label: 'ตั้งค่าร้าน', icon: '\u2699\uFE0F' },
       { to: '/admin/tenants', label: 'องค์กรและแบรนด์', icon: '\uD83C\uDFE2' },
     ],
   },
 ]
+
+/** Master admin navigation — DERIVED จาก groups (audit D10: single source · flatten invariant) */
+export const ADMIN_NAV_ITEMS: AdminNavItem[] = ADMIN_NAV_GROUPS.flatMap((g) => g.items)
 
 /** Whether the header / bottom nav should show the Admin link. */
 export function shouldShowAdminLink(role: string | null | undefined, email?: string | null): boolean {
@@ -137,7 +107,7 @@ const ROLE_NAV_ALLOW: Record<string, string[]> = {
   kitchen: ['/admin', '/admin/orders', '/admin/kitchen', '/admin/recipes', '/admin/rounds', '/admin/products'],
   inventory: ['/admin', '/admin/inventory', '/admin/products'],
   finance: ['/admin', '/admin/reports', '/admin/orders', '/admin/pos'],
-  marketing: ['/admin', '/admin/marketing', '/admin/promotions', '/admin/content-approvals', '/admin/media', '/admin/portfolio', '/admin/ai-studio'],
+  marketing: ['/admin', '/admin/marketing', '/admin/promotions', '/admin/media', '/admin/portfolio'],
   support: ['/admin', '/admin/orders', '/admin/customers', '/admin/notifications'],
 }
 

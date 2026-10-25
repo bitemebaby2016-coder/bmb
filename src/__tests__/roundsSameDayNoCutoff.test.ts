@@ -54,11 +54,20 @@ describe('roundBookability — mirror ของ server 148', () => {
     expect(status).not.toBe('cutoff_passed')
   })
 
-  it('SAME_DAY หน้าต่างส่งจบแล้ว = window_passed (ไม่ใช่ cutoff — ป้ายบอกเหตุจริง)', () => {
+  it('Q1: SAME_DAY เลยหน้าต่างส่งแล้ว = ยัง open (สั่งได้ทุกเวลาในวันนั้น — เหลือแค่ full/closed)', () => {
     expect(
       roundBookability(
         { cutoff_time: '23:59', delivery_start: '17:00', delivery_end: '20:00', max_capacity: 10, current_count: 0 },
         { isToday: true, nowUtcMs: NIGHT, mode: 'SAME_DAY' },
+      ),
+    ).toBe('open')
+  })
+
+  it('Q1: PRE_ORDER ยังคง window_passed เมื่อเลยหน้าต่างส่ง (คัทออฟตั้งดึก — คงไว้เฉพาะ PRE_ORDER)', () => {
+    expect(
+      roundBookability(
+        { pre_order_cutoff: '23:59', delivery_start: '17:00', delivery_end: '20:00', max_capacity: 10, current_count: 0 },
+        { isToday: true, nowUtcMs: NIGHT, mode: 'PRE_ORDER', preOrderCutoffHours: 2 },
       ),
     ).toBe('window_passed')
   })

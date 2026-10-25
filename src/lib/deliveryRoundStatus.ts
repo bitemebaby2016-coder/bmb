@@ -8,7 +8,8 @@
 // this module only decides how the picker should DISPLAY each round:
 //   open           → selectable
 //   cutoff_passed  → disabled "ปิดรับแล้ว"   (mirrors ERR_CUTOFF_PASSED)
-//   window_passed  → disabled "หมดเวลาจัดส่งแล้ว" (same-day window already over)
+//   window_passed  → disabled "หมดเวลาจัดส่งแล้ว" (PRE_ORDER only — Owner Q1 2026-10-24
+//                    "(ข) เอาออก = สั่งได้ทุกเวลาในวันนั้น": SAME_DAY เหลือแค่ full/closed)
 //   full           → disabled "เต็มแล้ว"      (mirrors ERR_ROUND_FULL)
 // Pure (no imports except bangkokTime) — deterministic tests via nowUtcMs.
 // ============================================
@@ -114,11 +115,13 @@ export function roundBookability(
     const cutoffMs = roundCutoffMs(round, opts.mode, opts.preOrderCutoffHours ?? 2)
     const nowMs = bangkokMsOfDay(nowUtcMs)
     if (cutoffMs !== null && nowMs !== null && nowMs > cutoffMs) return 'cutoff_passed'
-    // Anomaly guard (all-day template "ส่ง 08:00-20:00 · สั่งได้ถึง 23:59"):
-    // when the delivery window itself is over, the round cannot deliver today
-    // even if its cutoff is later — show it as closed instead of selectable.
-    const endMs = msOfDay(round.delivery_end)
-    if (endMs !== null && nowMs !== null && nowMs > endMs) return 'window_passed'
+    // Q1 (Owner 2026-10-24 "(ข) เอาออก = สั่งได้ทุกเวลาในวันนั้น"): เซมเดย์ไม่มี
+    // time-gate เลย — เหลือแค่ full (ความจุ) + สถานะรอบ (closed ปิดโดยแอดมิน) ·
+    // หน้าต่างส่ง (delivery_end) ยังปิดเฉพาะ PRE_ORDER (พรีออเดอร์วันนี้)
+    if (opts.mode === 'PRE_ORDER') {
+      const endMs = msOfDay(round.delivery_end)
+      if (endMs !== null && nowMs !== null && nowMs > endMs) return 'window_passed'
+    }
   }
 
   return 'open'

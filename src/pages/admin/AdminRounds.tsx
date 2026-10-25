@@ -36,6 +36,8 @@ export function AdminRounds() {
   const [pattern, setPattern] = useState<RoundPatternRow[]>([])
   const [savingPattern, setSavingPattern] = useState(false)
   const [busy, setBusy] = useState<string | null>(null)
+  // Q3 (Owner อนุมัติ): "แพทเทิร์น + รอบรายวัน" รวมเป็นแท็บเดียว · archive = แท็บแยก
+  const [tab, setTab] = useState<'manage' | 'archived'>('manage')
 
   const loadRounds = useCallback(async () => {
     try {
@@ -151,18 +153,41 @@ export function AdminRounds() {
   return (
     <div className="max-w-7xl mx-auto px-4 py-6">
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-3xl font-bold text-brand-accent">🕐 รอบจัดส่ง — แพทเทิร์น 3 รอบ/วัน</h1>
+        <h1 className="text-3xl font-bold text-brand-accent">🕐 รอบจัดส่ง — แพทเทิร์น 3 รอบ/วัน + รอบรายวัน</h1>
         <Link to="/admin" className="btn btn-outline">← กลับหน้าภาพรวม</Link>
       </div>
 
-      {/* ---- (1) แพทเทิร์นรอบของทุกวัน ---- */}
+      {/* Q3 (Owner อนุมัติ 2026-10-24): แพทเทิร์น + รอบรายวัน = แท็บเดียว · archive แยกแท็บ */}
+      <div className="flex flex-wrap gap-2 mb-4" role="tablist" aria-label="หมวดจัดการรอบ">
+        {([
+          ['manage', '📋 แพทเทิร์น + รอบรายวัน'],
+          ['archived', `🗂 รอบที่เก็บไว้ (${archived.length})`],
+        ] as const).map(([k, label]) => (
+          <button
+            key={k}
+            role="tab"
+            aria-selected={tab === k}
+            onClick={() => setTab(k)}
+            data-testid={`rounds-tab-${k}`}
+            className={`btn text-sm ${tab === k ? 'btn-primary' : 'btn-outline'}`}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+
+      {/* ---- (1) แพทเทิร์นรอบของทุกวัน + (2) รอบรายวัน = แท็บเดียว (Q3) ---- */}
+      {tab === 'manage' && (
+        <>
       <div className="card mb-6" data-testid="round-pattern-panel">
         <h2 className="text-xl font-bold text-brand-accent mb-1">📋 แพทเทิร์นรอบประจำวัน (ทุกวันใช้ชุดเดียวกัน)</h2>
-        <p className="text-sm text-brand-muted mb-4">
-          ค่านี้คือต้นแบบของรอบทุกวัน (ทั้งพรีออเดอร์และเซมเดย์) — แก้ที่นี่ที่เดียว แล้วกด "สร้าง/ซ่อมรอบ 30 วัน"
-          · คัทออฟมีช่องเดียวคือ <b>ปรับของพรีออเดอร์</b> (ช่องว่าง = ใช้กฎเดิม ก่อนส่ง X ชม.)
-          · <b>เซมเดย์ไม่มีคัทออฟ</b> — วิ่งปกติตั้งแต่ร้านเปิดถึงปิด (148)
-        </p>
+      <p className="text-sm text-brand-muted mb-4">
+        ค่านี้คือต้นแบบของรอบทุกวัน (ทั้งพรีออเดอร์และเซมเดย์) — แก้ที่นี่ที่เดียว แล้วกด "สร้าง/ซ่อมรอบ 30 วัน"
+        · คัทออฟมีช่องเดียวคือ <b>ปรับของพรีออเดอร์</b> (ช่องว่าง = ใช้กฎเดิม ก่อนส่ง X ชม.)
+        · <b>เซมเดย์ไม่มีคัทออฟ</b> — วิ่งปกติตั้งแต่ร้านเปิดถึงปิด (148)
+        · <b>ลำดับกันชน (audit D2):</b> คัทออฟต่อรอบ (ช่อง "ปรับของพรีออเดอร์") ทับ{' '}
+        <Link to="/admin/settings?tab=store">กฎรวม cutoff_hours (นโยบายสั่งซื้อ)</Link> — ว่าง = ใช้กฎรวมนั้น
+      </p>
         <div className="space-y-3">
           {pattern.map((p, idx) => (
             <div key={p.round_key} className="grid grid-cols-2 lg:grid-cols-7 gap-3 items-end">
@@ -277,7 +302,11 @@ export function AdminRounds() {
         })}
       </div>
 
+        </>
+      )}
+
       {/* ---- (3) รอบที่เก็บไว้ (149 / P0-2 — "ลบไม่ได้") ---- */}
+      {tab === 'archived' && (
       <div className="mt-8" data-testid="round-archived-panel">
         <h2 className="text-xl font-bold text-brand-accent mb-1">🗂 รอบที่เก็บไว้ {archived.length > 0 && `(${archived.length})`}</h2>
         <p className="text-sm text-brand-muted mb-3">
@@ -304,6 +333,7 @@ export function AdminRounds() {
           </div>
         )}
       </div>
+      )}
 
       <div className="card mt-6 bg-brand-surface text-brand-muted text-sm">
         ⚠️ Capacity is enforced atomically in <code>create_order_with_items</code> (row lock) — raising

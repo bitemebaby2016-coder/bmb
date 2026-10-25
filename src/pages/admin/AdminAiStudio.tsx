@@ -7,16 +7,17 @@
 // v2 additions:
 //   • A/B Generation: 3 tone options (formal / friendly / promo) per template
 //   • Generation History + ⭐ Favorites (persisted to localStorage)
-//   • Schedule Queue: content calendar (date-based post planning, mock)
+// C7/Q5 (audit D7): mock "Schedule Queue" ถูกลบ (zero-fake) — ตั้งเวลาโพสต์จริง
+//   ใช้แท็บ "📅 ปฏิทิน" ของ AdminMarketing (marketing_schedule_post)
 // Quick templates + One-Click Copy. Optional AI polish via chatWithAI.
 // ============================================
 
-import { useState, useEffect, useCallback, useMemo } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '@/lib/supabase'
 import { chatWithAI } from '@/lib/aiService'
 import { showToast } from '@/components/ui/ToastContainer'
 
-interface GenItem { id: string; text: string; label: string; tone: string; createdAt: number; favorite: boolean; scheduledFor?: string }
+interface GenItem { id: string; text: string; label: string; tone: string; createdAt: number; favorite: boolean }
 
 const TEMPLATES = [
   { key: 'daily', label: '☀️ แคปชันเปิดร้านประจำวัน' },
@@ -56,7 +57,7 @@ export function AdminAiStudio() {
   const [reviews, setReviews] = useState<any[]>([])
   const [items, setItems] = useState<GenItem[]>([])
   const [history, setHistory] = useState<GenItem[]>(loadHistory)
-  const [tab, setTab] = useState<'generate' | 'history' | 'calendar'>('generate')
+  const [tab, setTab] = useState<'generate' | 'history'>('generate')
   const [busy, setBusy] = useState<string | null>(null)
 
   useEffect(() => { setHistory(loadHistory()) }, [])
@@ -140,37 +141,19 @@ export function AdminAiStudio() {
     showToast(updated.favorite ? '⭐ เพิ่มรายการโปรดแล้ว' : 'ยกเลิกรายการโปรดแล้ว', 'success')
   }, [history, persist])
 
-  const scheduleFor = useCallback((item: GenItem, date: string) => {
-    persist(history.map((h) => (h.id === item.id ? { ...h, scheduledFor: date } : h)))
-    setItems((prev) => prev.map((it) => (it.id === item.id ? { ...it, scheduledFor: date } : it)))
-    showToast(`📅 ตั้งเวลาโพสต์ ${date} แล้ว (จำลอง)`, 'success')
-  }, [history, persist])
-
   const clearHistory = useCallback(() => { persist([]) }, [persist])
 
   const toneBadge = useCallback((tone: string) => TONES.find((t) => t.key === tone)?.label ?? tone, [])
 
-  // v2: content calendar — group scheduled captions by date.
-  const calendar = useMemo(() => {
-    const byDate = new Map<string, GenItem[]>()
-    for (const h of history) {
-      if (!h.scheduledFor) continue
-      const list = byDate.get(h.scheduledFor) ?? []
-      list.push(h)
-      byDate.set(h.scheduledFor, list)
-    }
-    return [...byDate.entries()].sort(([a], [b]) => a.localeCompare(b))
-  }, [history])
-
   return (
     <div className="max-w-3xl mx-auto p-4 space-y-4" data-testid="ai-studio">
       <div>
-        <h1 className="text-xl font-bold text-brand-accent">🤖 AI Content Studio v2</h1>
-        <p className="text-sm text-brand-muted">สร้างแคปชันจากข้อมูลจริง: เมนูขายดี · อัลบั้มผลงาน · รีวิว verified — พร้อม A/B Style, ประวัติ และตั้งเวลาโพสต์</p>
+        <h1 className="text-xl font-bold text-brand-accent">🤖 AI Content Studio</h1>
+        <p className="text-sm text-brand-muted">สร้างแคปชันจากข้อมูลจริง: เมนูขายดี · อัลบั้มผลงาน · รีวิว verified — พร้อม A/B Style และประวัติ</p>
       </div>
 
       <div className="flex gap-2" role="tablist" aria-label="โหมดของ AI Studio">
-        {([['generate', '✨ สร้าง'], ['history', '📁 ประวัติ & โปรด'], ['calendar', '📅 ตั้งเวลาโพสต์']] as const).map(([k, label]) => (
+        {([['generate', '✨ สร้าง'], ['history', '📁 ประวัติ & โปรด']] as const).map(([k, label]) => (
           <button key={k} role="tab" aria-selected={tab === k} onClick={() => setTab(k)}
             className={`btn text-sm ${tab === k ? 'btn-primary' : 'btn-outline'}`}>{label}</button>
         ))}
@@ -214,7 +197,7 @@ export function AdminAiStudio() {
             {history.map((h) => (
               <div key={h.id} className="card" data-testid="history-item">
                 <div className="flex items-center justify-between mb-1 gap-2">
-                  <span className="text-xs text-brand-muted truncate">{new Date(h.createdAt).toLocaleString('th-TH')} · {toneBadge(h.tone)}{h.scheduledFor ? ` · 📅 ${h.scheduledFor}` : ''}</span>
+                  <span className="text-xs text-brand-muted truncate">{new Date(h.createdAt).toLocaleString('th-TH')} · {toneBadge(h.tone)}</span>
                   <div className="flex gap-1 shrink-0">
                     <button onClick={() => toggleFavorite(h)} aria-label="ติดดาว" className="btn text-xs px-2 py-1">{h.favorite ? '⭐' : '☆'}</button>
                     <button onClick={() => void copy(h.text)} className="btn text-xs px-2 py-1 btn-outline">📋</button>
@@ -228,32 +211,6 @@ export function AdminAiStudio() {
         </>
       )}
 
-      {tab === 'calendar' && (
-        <>
-          {calendar.length === 0 && <div className="card text-sm text-brand-muted">ยังไม่มีโพสต์ที่ตั้งเวลา — เลือกวันจากรายการด้านล่างเพื่อวางแผนปฏิทินคอนเทนต์ (จำลอง)</div>}
-          <div className="space-y-3">
-            {calendar.map(([date, dayItems]) => (
-              <div key={date} className="card" data-testid="calendar-day">
-                <span className="text-xs font-bold text-brand-accent">📅 {date}</span>
-                <ul className="mt-1 list-disc list-inside text-sm">
-                  {dayItems.map((it) => <li key={it.id} className="truncate">{toneBadge(it.tone)} · {it.text.split('\n')[0]}</li>)}
-                </ul>
-              </div>
-            ))}
-          </div>
-          <div className="card">
-            <span className="text-xs font-semibold text-brand-muted">ตั้งเวลาโพสต์ (จำลอง)</span>
-            <div className="mt-1 space-y-1 max-h-56 overflow-y-auto">
-              {history.filter((h) => !h.scheduledFor).map((h) => (
-                <div key={h.id} className="flex items-center gap-2 text-sm">
-                  <span className="flex-1 truncate">{h.favorite ? '⭐ ' : ''}{toneBadge(h.tone)} · {h.text.split('\n')[0]}</span>
-                  <input type="date" onChange={(e) => e.target.value && scheduleFor(h, e.target.value)} aria-label="เลือกวันโพสต์" className="text-xs" />
-                </div>
-              ))}
-            </div>
-          </div>
-        </>
-      )}
     </div>
   )
 }

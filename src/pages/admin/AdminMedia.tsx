@@ -4,6 +4,7 @@
 // ============================================
 
 import { useState, useEffect } from 'react'
+import { AdminAssetAudit } from '@/pages/admin/AdminAssetAudit'
 import { Link } from 'react-router-dom'
 import { showToast } from '@/components/ui/ToastContainer'
 import {
@@ -33,6 +34,10 @@ export function AdminMedia() {
   const [kind, setKind] = useState<MediaAssetRow['kind']>('image')
   const [alt, setAlt] = useState('')
   const [assetKey, setAssetKey] = useState('')
+  // C7 (audit D9/Q4): แท็บ "ตรวจรูปสินค้า" ย้ายมาจาก /admin/asset-audit (bookmark → ?tab=audit)
+  const [tab, setTab] = useState<'library' | 'audit'>(() =>
+    new URLSearchParams(window.location.search).get('tab') === 'audit' ? 'audit' : 'library',
+  )
 
   useEffect(() => { load() }, [])
 
@@ -80,6 +85,25 @@ export function AdminMedia() {
       <Link to="/admin" className="text-sm text-brand-muted hover:underline">← กลับแดชบอร์ด</Link>
       <h1 className="text-2xl font-bold text-brand-accent mt-2 mb-4">🖼️ Media Library (D6)</h1>
 
+      {/* C7/Q4 (audit D9): แท็บรวม "ตรวจรูปสินค้า" เดิม /admin/asset-audit */}
+      <div className="flex flex-wrap gap-2 mb-4" role="tablist" aria-label="คลังรูปภาพ">
+        {([['library', '🗂 คลังรูปภาพ'], ['audit', '🔍 ตรวจรูปสินค้า']] as const).map(([k, label]) => (
+          <button
+            key={k}
+            role="tab"
+            aria-selected={tab === k}
+            onClick={() => setTab(k)}
+            data-testid={`media-tab-${k}`}
+            className={`btn text-sm ${tab === k ? 'btn-primary' : 'btn-outline'}`}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+      {tab === 'audit' ? (
+        <AdminAssetAudit />
+      ) : (
+        <>
       <div className="card p-4 mb-6">
         <div className="flex flex-wrap gap-3 items-end">
           <div>
@@ -231,6 +255,8 @@ export function AdminMedia() {
             </div>
           ))}
         </div>
+      )}
+        </>
       )}
     </div>
   )

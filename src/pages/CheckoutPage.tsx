@@ -195,6 +195,14 @@ export function CheckoutPage() {
     if (!customer) return // guests are redirected above — skip fetch (no 401 noise)
     let active = true
     void (async () => {
+      // D-P1B-01 (สอบสวนแล้ว): รอบของ "วันที่ผ่านไปแล้ว" ห้ามดึง/เลือก —
+      // roundBookability ไม่รู้จักวันที่ (isToday=false = open เสมอ) → เกทที่นี่
+      // (server enforce_pre_order_window: ERR_PRE_ORDER_DATE_INVALID เป็นด่านจริง)
+      if (orderMode === 'PRE_ORDER' && scheduledDate && scheduledDate < todayStr()) {
+        setRounds([])
+        setSelectedRoundId('')
+        return
+      }
       const list = await listRoundsForDate(scheduledDate)
       if (!active) return
       setRounds(list)
@@ -404,11 +412,13 @@ export function CheckoutPage() {
         mode: orderMode,
         preOrderCutoffHours: cutoffHours,
       })
-      if (bookability === 'cutoff_passed') {
+      if (bookability === 'cutoff_passed' || bookability === 'window_passed') {
         showToast(
-          orderMode === 'PRE_ORDER'
-            ? `เลยคัทออฟจองล่วงหน้าแล้ว (ปิดรับ ${roundCutoffLabel(selectedRound, 'PRE_ORDER', cutoffHours)} น.) — เลือกรอบอื่น`
-            : 'รอบจัดส่งนี้ปิดรับออเดอร์แล้ว — เลือกรอบอื่น',
+          bookability === 'window_passed'
+            ? 'เลยหน้าต่างจัดส่งของรอบนี้แล้ว — เลือกรอบ/วันอื่น'
+            : orderMode === 'PRE_ORDER'
+              ? `เลยคัทออฟจองล่วงหน้าแล้ว (ปิดรับ ${roundCutoffLabel(selectedRound, 'PRE_ORDER', cutoffHours)} น.) — เลือกรอบอื่น`
+              : 'รอบจัดส่งนี้ปิดรับออเดอร์แล้ว — เลือกรอบอื่น',
           'error',
         )
         setIsProcessing(false)
@@ -445,6 +455,14 @@ export function CheckoutPage() {
     // ✅ R5: เมนูรอบพิเศษหลายวันในตะกร้าเดียว = แยกสั่งคนละรอบ (ไม่เดา/ไม่ merge)
     if (menuBound.conflict.length > 1) {
       showToast(`สินค้าเมนูรอบพิเศษถูกกำหนดวันจัดส่งต่างกันตามปฏิทินเมนู (${menuBound.conflict.join(', ')}) — แยกสั่งคนละรอบ`, 'error')
+      setIsProcessing(false)
+      return
+    }
+
+    // D-P1B-01: พรีออเดอร์ของวันที่ผ่านไปแล้วต้องสั่งไม่ได้ — mirror ของ
+    // enforce_pre_order_window (ERR_PRE_ORDER_DATE_INVALID) · server = ด่านจริง
+    if (orderMode === 'PRE_ORDER' && scheduledDate && scheduledDate < today) {
+      showToast(`วันที่เมนู ${scheduledDate} ผ่านไปแล้ว — พรีออเดอร์ใช้ได้เฉพาะวันที่ยังมาถึง (เอาสินค้าออกจากตะกร้าแล้วเลือกเมนูรอบถัดไปจากปฏิทินแอดมิน)`, 'error')
       setIsProcessing(false)
       return
     }
@@ -782,6 +800,14 @@ export function CheckoutPage() {
       {/* ✅ Round selection — Owner 2026-10-19: SAME_DAY = "จัดส่งทันที" อัตโนมัติ
           (ระบบเลือกรอบเปิดรับให้เอง ไม่ให้ลูกค้าเลือก) · PRE_ORDER = เลือกรอบตามวันที่จอง
           (server create RPC ยังตรวจ cutoff/ความจุ/วันที่ของรอบที่เลือกเหมือนเดิม) */}
+      {/* D-P1B-01: วันที่เมนูผ่านรอบส่งไปแล้ว = บล็อกพรีออเดอร์ของวันนั้นชัดเจน */}
+      {orderMode === 'PRE_ORDER' && menuBound.date && menuBound.date < today && (
+        <div className="card mb-6 border-2 border-red-300 bg-red-50 text-sm text-red-700" data-testid="menu-date-expired">
+          ⛔ วันที่เมนู {menuBound.date} ผ่านรอบจัดส่งไปแล้ว — พรีออเดอร์ของวันนี้ปิดรับแล้ว
+          นำสินค้าออกจากตะกร้า แล้วเลือกเมนูรอบถัดไปจากปฏิทินแอดมิน
+        </div>
+      )}
+
       <div className="card mb-6">
         <h3 className="font-bold text-brand-accent mb-4">{orderMode === 'PRE_ORDER' ? '🚚 รอบการจัดส่ง' : '🛵 จัดส่งทันที'}</h3>
         {orderMode !== 'PRE_ORDER' ? (
@@ -808,7 +834,7 @@ export function CheckoutPage() {
           <div className="space-y-3">
             {rounds.map((r) => {
               const remaining = Math.max(0, Number(r.max_capacity) - Number(r.current_count))
-              const status = roundBookability(r, { isToday: scheduledDate === today })
+              const status = roundBookability(r, { isToday: scheduledDate === today, mode: orderMode, preOrderCutoffHours: cutoffHours })
               const closed = status !== 'open'
               const selected = selectedRoundId === r.id
               return (

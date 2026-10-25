@@ -67,8 +67,13 @@ describe('roundBookability', () => {
   it('พ้น cutoff เดิมของวันนี้ = ยัง open (148: SAME_DAY ไม่มีคัทออฟ — mirror ของ server)', () => {
     const AFTER_OLD_CUTOFF = Date.parse('2026-10-17T05:00:00Z') // 12:00 ICT — เลย cutoff_time 10:30 แล้ว แต่หน้าต่างส่ง (14:00) ยังไม่จบ
     expect(roundBookability(base, { isToday: true, nowUtcMs: AFTER_OLD_CUTOFF })).toBe('open')
-    // เลยหน้าต่างส่งแล้ว = window_passed (ป้ายบอกเหตุจริง — ไม่ใช่ cutoff)
-    expect(roundBookability(base, { isToday: true, nowUtcMs: NIGHT })).toBe('window_passed')
+    // Q1 (Owner 2026-10-24): SAME_DAY เลยหน้าต่างส่ง = ยัง open (สั่งได้ทุกเวลาในวันนั้น)
+    expect(roundBookability(base, { isToday: true, nowUtcMs: NIGHT })).toBe('open')
+    // PRE_ORDER ยังโดน window_passed เมื่อเลยหน้าต่างส่ง — คงไว้ตาม Q1
+    // (ถึง cutoff จะตั้งดึกด้วย pre_order_cutoff — หน้าต่างส่งยังปิดพรีออเดอร์วันนี้)
+    expect(
+      roundBookability({ ...base, pre_order_cutoff: '23:59' }, { isToday: true, mode: 'PRE_ORDER', nowUtcMs: NIGHT }),
+    ).toBe('window_passed')
   })
 
   it('PRE_ORDER พ้น cutoff วันนี้ = cutoff_passed (ยังบังคับเหมือนเดิม)', () => {
@@ -79,9 +84,11 @@ describe('roundBookability', () => {
     expect(roundBookability(base, { isToday: false, nowUtcMs: NIGHT })).toBe('open')
   })
 
-  it('เคสรอบทั้งวัน "ส่ง 08:00-20:00 · สั่งได้ถึง 23:59" ตอน 21:32 = window_passed', () => {
+  it('Q1: เคสรอบทั้งวัน "ส่ง 08:00-20:00 · สั่งได้ถึง 23:59" ตอน 21:32 = ยัง open (เซมเดย์สั่งได้ทุกเวลาในวันนั้น)', () => {
     const allDay = { cutoff_time: '23:59', delivery_start: '08:00', delivery_end: '20:00', current_count: 3, max_capacity: 100 }
-    expect(roundBookability(allDay, { isToday: true, nowUtcMs: NIGHT })).toBe('window_passed')
+    expect(roundBookability(allDay, { isToday: true, nowUtcMs: NIGHT })).toBe('open')
+    // PRE_ORDER ยังปิดด้วย window_passed (คัทออฟดึก + เลยหน้าต่างส่งแล้ว)
+    expect(roundBookability({ ...allDay, pre_order_cutoff: '23:59' }, { isToday: true, mode: 'PRE_ORDER', nowUtcMs: NIGHT })).toBe('window_passed')
   })
 
   it('เต็มความจุ = full (มาก่อนเรื่องเวลา)', () => {

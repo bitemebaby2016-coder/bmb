@@ -116,14 +116,16 @@ describe('ฟุตเตอร์ — ลิงก์โซเชียล/LINE
     const withLine = socialLinkItems({ ...DEFAULT_SOCIAL_LINKS, line: 'https://line.me/R/ti/p/@demo' })
     expect(withLine.some((i) => i.network === 'line' && i.href.includes('line.me'))).toBe(true)
   })
-  it('D-02/R2.1: ห้าม key ซ้ำสองที่ — social_links เหลือทางบันทึกเดียว (ฟอร์มเฉพาะทาง)', () => {
-    // generic key editor ต้อง filter social_links ออก (ปุ่ม Save {key} ของ generic ห้ามมี)
-    expect(adminSettingsSrc).toMatch(/\.filter\(\(key\) => key !== SOCIAL_LINKS_SETTING_KEY\)/)
-    // handleSave/handleSaveAll ต้องไม่เขียน social_links ผ่านทาง generic
-    expect(adminSettingsSrc).toMatch(/if \(key === SOCIAL_LINKS_SETTING_KEY\)/)
-    // ฟอร์มเฉพาะทางยังอยู่ (ทางบันทึกเดียวของ social_links)
+  it('D-02/R2.1: ห้าม key ซ้ำสองที่ — social_links + order_policy เหลือทางบันทึกเดียว (ฟอร์มเฉพาะทาง)', () => {
+    // generic key editor ต้อง filter key ที่มีฟอร์มเฉพาะทางออก (TYPED_FORM_KEYS)
+    expect(adminSettingsSrc).toMatch(/\.filter\(\(key\) => !TYPED_FORM_KEYS\.has\(key\)\)/)
+    // handleSave/handleSaveAll ต้องไม่เขียน key เหล่านั้นผ่านทาง generic
+    expect(adminSettingsSrc).toMatch(/if \(TYPED_FORM_KEYS\.has\(key\)\)/)
+    // ฟอร์มเฉพาะทางยังอยู่ (ทางบันทึกเดียวของ social_links + order_policy)
     expect(adminSettingsSrc).toMatch(/saveSocials/)
     expect(adminSettingsSrc).toMatch(/social-links-config/)
+    expect(adminSettingsSrc).toMatch(/OrderPolicyPanel/)
+    expect(adminSettingsSrc).toMatch(/TYPED_FORM_KEYS = new Set<string>\(\[SOCIAL_LINKS_SETTING_KEY, 'order_policy'\]\)/)
   })
 })
 

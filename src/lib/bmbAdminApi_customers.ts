@@ -54,3 +54,10 @@ export async function getCustomersWithStats(): Promise<CustomerWithStats[]> {
     return { ...c, order_count: s.count, order_total: s.total, last_order_at: s.last }
   })
 }
+
+/** D13 — ลบลูกค้าผ่าน lib (ชั้นเดียวกับ query อื่น): คืน error code ให้หน้าจอแปลเหตุผลจริง */
+export async function deleteCustomer(id: string): Promise<{ ok: boolean; code?: string; message?: string }> {
+  const { error } = await supabase.from('customers').delete().eq('id', id)
+  if (error) return { ok: false, code: error.code, message: error.message }
+  return { ok: true }
+}

@@ -10,6 +10,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { showToast } from '@/components/ui/ToastContainer'
+import { AdminAiStudio } from '@/pages/admin/AdminAiStudio'
 import {
   listMarketingPosts, createMarketingPost, scheduleMarketingPost,
   getMarketingRules, saveMarketingRules, bestSellerProducts,
@@ -17,11 +18,12 @@ import {
 } from '@/lib/adminMarketing'
 import { listContentApprovals, reviewContent, type ContentApprovalRow } from '@/lib/contentApproval'
 
-type Tab = 'overview' | 'planner' | 'studio' | 'approval' | 'calendar' | 'rules' | 'analytics'
+type Tab = 'overview' | 'planner' | 'studio' | 'approval' | 'calendar' | 'rules' | 'analytics' | 'ai'
 const TABS: Array<{ id: Tab; label: string }> = [
   { id: 'overview', label: '📊 ภาพรวม' },
   { id: 'planner', label: '🗓️ Planner' },
   { id: 'studio', label: '🎨 AI Studio' },
+  { id: 'ai', label: '✍️ แคปชัน AI' },
   { id: 'approval', label: '✅ กล่องอนุมัติ' },
   { id: 'calendar', label: '📅 ปฏิทิน' },
   { id: 'rules', label: '⚙️ กติกา' },
@@ -34,7 +36,11 @@ const STATUS_CLS: Record<string, string> = {
 }
 
 export function AdminMarketing() {
-  const [tab, setTab] = useState<Tab>('overview')
+  const [tab, setTab] = useState<Tab>(() => {
+    // C5/Q3: deep-link ?tab= จาก redirect ของหน้าเดิม (bookmark ไม่ตาย)
+    const t = new URLSearchParams(window.location.search).get('tab')
+    return TABS.some((x) => x.id === t) ? (t as Tab) : 'overview'
+  })
   const [posts, setPosts] = useState<MarketingPostRow[]>([])
   const [approvals, setApprovals] = useState<ContentApprovalRow[]>([])
   const [rules, setRules] = useState<MarketingRules | null>(null)
@@ -161,6 +167,7 @@ export function AdminMarketing() {
   return (
     <div className="max-w-6xl mx-auto p-4 space-y-4">
       <h1 className="text-2xl font-bold text-brand-accent">📣 AdminMarketing — Control Center</h1>
+      {/* C5/Q3: กล่องอนุมัติ = marketing แท็บ approval (หน้า /admin/content-approvals redirect มาที่นี่) */}
       <div className="flex flex-wrap gap-2">
         {TABS.map((t) => (
           <button key={t.id} onClick={() => setTab(t.id)} className={`btn text-sm ${tab === t.id ? 'btn-primary' : 'btn-outline'}`} data-testid={`mk-tab-${t.id}`}>
@@ -183,6 +190,8 @@ export function AdminMarketing() {
           </div>
         </div>
       )}
+
+      {tab === 'ai' && <AdminAiStudio />}
 
       {tab === 'planner' && (
         <div className="space-y-3">

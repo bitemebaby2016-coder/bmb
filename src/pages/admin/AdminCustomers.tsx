@@ -7,8 +7,7 @@
 
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { getCustomersWithStats, type CustomerWithStats } from '@/lib/bmbAdminApi_customers'
-import { supabase } from '@/lib/supabase'
+import { getCustomersWithStats, deleteCustomer, type CustomerWithStats } from '@/lib/bmbAdminApi_customers'
 import { showToast } from '@/components/ui/ToastContainer'
 
 export function AdminCustomers() {
@@ -28,13 +27,14 @@ export function AdminCustomers() {
     const name = c.full_name || c.phone || c.email || 'ลูกค้าท่านนี้'
     if (!window.confirm(`ลบ "${name}" ออกจากระบบ?\n\n• ลูกค้าที่มีประวัติออเดอร์จะลบไม่ได้ (เพื่อรักษาประวัติการเงิน)\n• การลบไม่สามารถเรียกคืนได้`)) return
     setDeleting(c.id)
-    const { error } = await supabase.from('customers').delete().eq('id', c.id)
+    // D13: ลบผ่าน lib (ไม่ยิง supabase ตรง) — เหตุผลจริงมาจาก error code ของ DB
+    const res = await deleteCustomer(c.id)
     setDeleting(null)
-    if (error) {
-      if (String(error.code || '') === '23503' || String(error.message).includes('violates foreign key')) {
+    if (!res.ok) {
+      if (res.code === '23503' || String(res.message || '').includes('violates foreign key')) {
         showToast('ลบไม่ได้ — ลูกค้าท่านนี้มีประวัติออเดอร์ในระบบ (เก็บไว้เพื่อความถูกต้องของบัญชี)', 'error')
       } else {
-        showToast(`ลบไม่สำเร็จ: ${error.message}`, 'error')
+        showToast(`ลบไม่สำเร็จ: ${res.message || 'unknown error'}`, 'error')
       }
       return
     }

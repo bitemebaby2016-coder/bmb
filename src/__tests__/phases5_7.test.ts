@@ -24,18 +24,7 @@ describe('Phase 5 — AI-02 advanced guardrails', () => {
   })
 })
 
-describe('Phase 6 — CI-01 server-side customer intelligence', () => {
-  it('computes segment breakdown for the dashboard', async () => {
-    const { segmentBreakdown, SEGMENT_LABEL_TH } = await import('@/lib/customerIntelligenceServer')
-    const rows: any[] = [
-      { user_id: 'a', total_orders: 12, total_revenue: 500, average_order_value: 41.67, days_since_last_order: 1, last_order_at: null, segment: 'vip' },
-      { user_id: 'b', total_orders: 3, total_revenue: 150, average_order_value: 50, days_since_last_order: 2, last_order_at: null, segment: 'regular' },
-      { user_id: 'c', total_orders: 0, total_revenue: 0, average_order_value: 0, days_since_last_order: null, last_order_at: null, segment: 'new' },
-    ]
-    expect(segmentBreakdown(rows)).toEqual({ new: 1, regular: 1, vip: 1 })
-    expect(SEGMENT_LABEL_TH.vip).toBe('VIP')
-  })
-
+describe('Phase 6 — AI-03 server memory (customerIntelligence* ถูกลบตาม audit Q6 — 0 usage)', () => {
   it('memory merge keeps both keys after two saves (cross-cutting AI-03)', async () => {
     const { saveServerMemory, loadServerMemory } = await import('@/lib/aiServerMemory')
     await saveServerMemory({ name: 'สมชาย' })
