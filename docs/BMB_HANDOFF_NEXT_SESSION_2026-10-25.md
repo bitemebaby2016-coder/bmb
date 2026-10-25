@@ -23,7 +23,7 @@
 - **Feature C · Admin Products:** แท็บหมวดหมู่กรองสินค้า + หัวข้อปัจจุบัน · จิ้ม "แก้ไข/เพิ่มเมนู/แก้หัวข้อ/ย้ายสินค้า"
   = **smooth-scroll ขึ้นฟอร์มอัตโนมัติ** (refs + useEffect) · การ์ดสินค้า**เท่ากันทุกใบ**
   (`min-h-[430px]` + `auto-rows-fr` + ปุ่ม `mt-auto` — แก้ปัญหา 2 ใบใหญ่ไม่เท่าเพื่อน)
-- **เทสต์:** `homeMenuAdminOrdering.test.ts` 10 ข้อ (A/B/C) · **Gates:** tsc 0 · lint 0 ·
+- **เทสต์:** `homeMenuAdminOrdering.test.ts` 9 ข้อ (A/B/C) + `categorySections.test.ts` 5 ข้อ (ปรับสัญญาเรียงหัวข้อตาม pinned order) · **Gates:** tsc 0 · lint 0 ·
   vitest **138 files/1426 tests 0 fail** · build 0 (PWA 143)
 
 ## 2. งานค้างที่เหลือ (ลำดับที่แนะนำให้แชทหน้าทำ)

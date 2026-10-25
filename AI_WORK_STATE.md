@@ -16,7 +16,7 @@
 - **C · Admin UX:** AdminProducts = แท็บหมวดกรอง+หัวข้อปัจจุบัน · จิ้มแก้ไข/เพิ่ม/หัวข้อ/ย้ายสินค้า →
   smooth-scroll ไปฟอร์มอัตโนมัติ (refs + useEffect) · การ์ดเท่ากันทุกใบ (min-h-430 + auto-rows-fr + mt-auto)
 - **Rules §12:** ห้าม poll logs/watch mode · ปกป้อง terminal/process · admin auto-scroll UX + การ์ดเท่ากัน
-- **เทสต์:** `homeMenuAdminOrdering.test.ts` (10 ข้อ) คุม A/B/C ทั้งหมด
+- **เทสต์:** `homeMenuAdminOrdering.test.ts` (9 ข้อ) คุม A/B/C ทั้งหมด
 **blocked_by:** ⛔ เฉพาะงานค้างในแฮนด์ออฟ (stale contracts 8 · production apply 150/151 · D6 pages.dev ·
 Owner runtime acceptance) — ไม่มีงานวิศวกรรมที่สั่งค้าง
 

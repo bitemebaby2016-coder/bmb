@@ -59,15 +59,23 @@ describe('CategorySections — ระบบหัวข้อเมนูเด�
     expect(html).not.toContain('home-cat-empty-cat-new-1')
   })
 
-  it('หัวข้อที่มีสินค้าโชว์เป็น carousel และเรียงตาม sort_order', async () => {
+  it('หัวข้อที่มีสินค้าเรียงตาม sort_order ในกลุ่มเดียวกัน (หมวดไม่ติดลำดับ pinned)', async () => {
     const existing = cat('cat-1', 'จานเดียว', 1)
-    const adminAdded = cat('cat-new-1', 'สินค้าสำเร็จรูป', 6)
+    const adminAdded = cat('cat-new-1', 'ของหวาน', 6)
     const html = await renderHtml([prod('p1', 'cat-1'), prod('p2', 'cat-new-1')], [existing, adminAdded])
     const iExisting = html.indexOf('จานเดียว')
-    const iNew = html.indexOf('สินค้าสำเร็จรูป')
+    const iNew = html.indexOf('ของหวาน')
     expect(iExisting).toBeGreaterThanOrEqual(0)
     expect(iNew).toBeGreaterThan(iExisting)
     expect(html).toContain('home-showcase-add-to-cart')
+  })
+
+  it('Feature B (Owner 2026-10-25): หมวดติดลำดับ pinned (สินค้าสำเร็จรูป) มาก่อนหมวดทั่วไป', async () => {
+    const pinned = cat('cat-new-1', 'สินค้าสำเร็จรูป', 6)
+    const other = cat('cat-1', 'จานเดียว', 1)
+    const html = await renderHtml([prod('p1', 'cat-1'), prod('p2', 'cat-new-1')], [other, pinned])
+    // ลำดับหัวข้อ = คำสั่ง Owner (สุขภาพ→เครื่องดื่ม→ของทานเล่น/ผลไม้→สำเร็จรูป) มาก่อน sort_order
+    expect(html.indexOf('สินค้าสำเร็จรูป')).toBeLessThan(html.indexOf('จานเดียว'))
   })
 
   it('หัวข้อที่ archived ถูกซ่อนทั้งหัวข้อ', async () => {
