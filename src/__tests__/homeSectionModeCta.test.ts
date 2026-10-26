@@ -3,7 +3,7 @@
 // + dedupe invariant ระดับคารูเซล (per-surface) — UX fix 2026-10-15 (E):
 //   บังคับปุ่มเดียวต่อการ์ดทุกช่อง (A2 ปลด DEFERRED — auto ใช้โหมดขายจริงของสินค้า)
 import { beforeAll, describe, expect, it, vi } from 'vitest'
-import { createElement as h, type ReactElement } from 'react'
+import { createElement as h, act, type ReactElement } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
 import { MemoryRouter } from 'react-router-dom'
 import { HomeProductCard } from '@/components/home/HomeProductCard'
@@ -31,11 +31,16 @@ beforeAll(() => {
   }
 })
 
-function mount(el: ReactElement): { container: HTMLDivElement; root: Root; flush: () => Promise<void> } {
+// B-1 FIX (2026-10-26): เดิม root.render + setTimeout(0) — ตอนรันชุดใหญ่ React ยัง commit ไม่เสร็จ
+// ทำให้ innerHTML ว่างแล้ว assertion indexOf คืน -1 → render ข้างใน act() ให้รอ commit จริง
+//  Assertions ทุกตัวคงเดิม
+async function mount(el: ReactElement): Promise<{ container: HTMLDivElement; root: Root; flush: () => Promise<void> }> {
   const container = document.createElement('div')
   document.body.appendChild(container)
   const root = createRoot(container)
-  root.render(el)
+  await act(async () => {
+    root.render(el)
+  })
   const flush = () => new Promise<void>((resolve) => setTimeout(resolve, 0))
   return { container, root, flush }
 }
@@ -50,7 +55,7 @@ const dualItem = (over: Partial<HomeProduct> = {}): HomeProduct => ({
 async function renderCard(item: HomeProduct, mode?: 'same_day' | 'pre_order' | 'auto') {
   const onSameDay = vi.fn()
   const onPreOrder = vi.fn()
-  const { container, root, flush } = mount(h(HomeProductCard, { item, onSameDay, onPreOrder, mode }))
+  const { container, root, flush } = await mount(h(HomeProductCard, { item, onSameDay, onPreOrder, mode }))
   await flush()
   const cta = container.querySelector('[data-testid="home-card-cta"]') as HTMLButtonElement
   return { onSameDay, onPreOrder, cta, root, container }
@@ -128,7 +133,7 @@ describe('A1 · ShowcaseCard mode-aware ผ่าน CategorySections (INV-16 ·
 
   async function renderSections(products: Product[], mode?: 'same_day' | 'pre_order' | 'auto', catName = 'จานเดียว', schedule: Record<string, string> = {}) {
     const categories = [cat('c1', catName, 1)]
-    const { container, root, flush } = mount(
+    const { container, root, flush } = await mount(
       h(MemoryRouter, {},
         h(CategorySections, {
           products, categories, sections: [],

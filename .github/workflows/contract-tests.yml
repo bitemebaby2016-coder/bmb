@@ -451,3 +451,37 @@ jobs:
             exit 1
           fi
           echo "Contract 156 OK — spin daily-cap rewards + affiliate no-cash monthly cap + rewards catalog admin table"
+
+      # ------------------------------------------------------------------
+      # B-2 CLOSURE (Owner 2026-10-26 "ปิดงานค้างให้หมด"):
+      # legacy contract 7 ตัว (017_018/019/020/021/022/029/033) เคยอยู่นอก CI gate
+      # (รันใน clean-room เฉย ๆ) → รอบนี้เอามาเข้า gate ให้หมด ห้ามมี contract ที่ไม่มีใครตรวจ
+      # รันเป็นขั้นสุดท้ายเพื่อไม่ให้ไปแตะ state ของ contract ยุคใหม่ด้านบน
+      # ------------------------------------------------------------------
+      - name: Legacy contracts 017/019/020/021/022/029/033 — now gated (B-2 closure)
+        run: |
+          set +e
+          fail=0
+          for f in \
+            e2e/contracts_017_018.sql \
+            e2e/contracts_019_kitchen.sql \
+            e2e/contracts_020_bite_drive.sql \
+            e2e/contracts_021_phase4.sql \
+            e2e/contracts_022_phases_5_7.sql \
+            e2e/contracts_029_round_grant.sql \
+            e2e/contracts_033_table_acl.sql
+          do
+            echo "=== $f ==="
+            out=$(psql -v ON_ERROR_STOP=1 -f "$f" 2>&1); rc=$?
+            printf '%s\n' "$out"
+            if [ $rc -ne 0 ]; then
+              msg=$(printf '%s\n' "$out" | grep -m1 'ERROR:' || echo "rc=$rc")
+              echo "::error file=$f::$msg"
+              fail=1
+            fi
+          done
+          if [ $fail -ne 0 ]; then
+            echo "::error::legacy contract gate failed (see annotations above)"
+            exit 1
+          fi
+          echo "Legacy contracts OK — 7/7 now gated in CI (B-2 closed)"

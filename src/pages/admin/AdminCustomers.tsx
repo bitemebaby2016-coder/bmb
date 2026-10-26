@@ -1,17 +1,29 @@
 // ============================================
-// Admin — ลูกค้า (เชื่อมฐานข้อมูลจริง)
+// Admin — ลูกค้า (เชื่อมฐานข้อมูลจริง + CAP-21 เจาะกลุ่มอัตโนมัติ)
 // ============================================
 // แอดมินดูรายชื่อลูกค้าพร้อมสถิติ และลบรายการทดสอบ/รายการที่ไม่ต้องการได้เอง
 // การลบใช้สิทธิ์แอดมินผ่านระบบสิทธิ์ของฐานข้อมูล — รายการที่มีประวัติออเดอร์
 // จะลบไม่ได้เพื่อรักษาประวัติการเงิน (ระบบแจ้งเหตุผลตามจริง)
+//
+// CAP-21 (Owner 2026-10-26 + audit D11): "ต้องทำเป็นอัตโนมัติ ไม่ต้องมากำหนดโดยแอดมิน"
+//  → กลุ่มลูกค้า/คำสรุปถูก "คำนวณ" จากสถิติออเดอร์จริงทุกครั้งที่โหลดหน้า
+//  → ไม่มีช่องกรอกเกณฑ์ ไม่มีปุ่มบันทึกกลุ่ม ไม่มี localStorage (ดู src/lib/customerIntelligence.ts)
 
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { getCustomersWithStats, deleteCustomer, type CustomerWithStats } from '@/lib/bmbAdminApi_customers'
+import {
+  deriveCustomerInsight,
+  segmentTally,
+  segmentLabelTh,
+  type CustomerInsight,
+} from '@/lib/customerIntelligence'
 import { showToast } from '@/components/ui/ToastContainer'
 
 export function AdminCustomers() {
   const [customers, setCustomers] = useState<CustomerWithStats[]>([])
+  const [insights, setInsights] = useState<Record<string, CustomerInsight>>({})
+  const [tally, setTally] = useState<ReturnType<typeof segmentTally> | null>(null)
   const [loading, setLoading] = useState(true)
   const [deleting, setDeleting] = useState<string | null>(null)
 
@@ -19,7 +31,14 @@ export function AdminCustomers() {
 
   async function load() {
     setLoading(true)
-    setCustomers(await getCustomersWithStats())
+    const rows = await getCustomersWithStats()
+    // อัตโนมัติ: คำนวณกลุ่ม+คำสรุปจากสถิติที่เพิ่งดึงมา (ไม่มี input จากแอดมิน)
+    const now = Date.now()
+    const map: Record<string, CustomerInsight> = {}
+    for (const c of rows) map[c.id] = deriveCustomerInsight(c, { now })
+    setInsights(map)
+    setTally(segmentTally(Object.values(map)))
+    setCustomers(rows)
     setLoading(false)
   }
 
@@ -49,6 +68,19 @@ export function AdminCustomers() {
         <Link to="/admin" className="btn btn-outline">← กลับหน้าภาพรวม</Link>
       </div>
 
+      {/* CAP-21: แถบสรุปกลุ่มลูกค้า — คำนวณอัตโนมัติจากสถิติจริงทุกครั้งที่เปิดหน้า (ไม่มีการตั้งค่า) */}
+      {tally && !loading && (
+        <div className="mb-4 flex flex-wrap gap-2 text-xs" data-testid="customer-segment-tally">
+          {(Object.entries(tally) as Array<[keyof ReturnType<typeof segmentTally>, number]>)
+            .filter(([, n]) => n > 0)
+            .map(([k, n]) => (
+              <span key={k} className="badge">
+                {segmentLabelTh(k)} · {n}
+              </span>
+            ))}
+        </div>
+      )}
+
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
@@ -56,6 +88,7 @@ export function AdminCustomers() {
               <th className="text-left px-3 py-2">ชื่อ</th>
               <th className="text-left px-3 py-2">เบอร์โทร</th>
               <th className="text-left px-3 py-2">อีเมล</th>
+              <th className="text-left px-3 py-2">กลุ่ม/คำสรุป (อัตโนมัติ)</th>
               <th className="text-right px-3 py-2">ออเดอร์</th>
               <th className="text-right px-3 py-2">ยอดใช้จ่าย</th>
               <th className="text-right px-3 py-2">แต้มสะสม</th>
@@ -69,6 +102,15 @@ export function AdminCustomers() {
                 <td className="px-3 py-2 font-medium">{c.full_name}</td>
                 <td className="px-3 py-2">{c.phone || '—'}</td>
                 <td className="px-3 py-2 text-brand-muted">{c.email || '—'}</td>
+                <td className="px-3 py-2" data-testid={`customer-insight-${c.id}`}>
+                  <div className="flex flex-wrap gap-1">
+                    {(insights[c.id]?.segments ?? []).map((s) => (
+                      <span key={s} className="badge text-[10px]">{segmentLabelTh(s)}</span>
+                    ))}
+                    {(insights[c.id]?.segments ?? []).length === 0 && <span className="text-brand-muted">—</span>}
+                  </div>
+                  <p className="text-xs text-brand-muted mt-0.5">{insights[c.id]?.summary}</p>
+                </td>
                 <td className="px-3 py-2 text-right">{c.order_count || 0}</td>
                 <td className="px-3 py-2 text-right">฿{(c.order_total || 0).toLocaleString()}</td>
                 <td className="px-3 py-2 text-right">{c.loyalty_points || 0}</td>

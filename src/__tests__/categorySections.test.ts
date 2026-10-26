@@ -2,7 +2,7 @@
 // หัวข้อ (หมวดหมู่) ที่แอดมินเพิ่มต้องโชว์บนหน้าแรกเสมอ — เรียงตาม sort_order
 // ก่อนเซกชันรีวิว — หัวข้อว่าง = ซ่อน (empty state) · ค่า menu_section_id เก่าห้ามทำเมนูหาย
 import { describe, expect, it, beforeAll } from 'vitest'
-import { createElement as h } from 'react'
+import { createElement as h, act } from 'react'
 import { createRoot } from 'react-dom/client'
 import { MemoryRouter } from 'react-router-dom'
 import { CategorySections } from '@/components/home/CategorySections'
@@ -33,7 +33,10 @@ async function renderHtml(products: Product[], categories: ProductCategory[]): P
   const div = document.createElement('div')
   document.body.appendChild(div)
   const root = createRoot(div)
-  await new Promise<void>((resolve) => {
+  // B-1 FIX (2026-10-26): เดิม flush ด้วย setTimeout(0) — ตอนรันชุดใหญ่ React ยัง commit ไม่เสร็จ
+  // ทำให้ html ว่าง → indexOf คืน -1 (เคส categorySections fail เป็นระยะ) → render ใน act()
+  //  Assertions ทุกตัวคงเดิม
+  await act(async () => {
     root.render(
       h(MemoryRouter, {},
         h(CategorySections, {
@@ -41,8 +44,6 @@ async function renderHtml(products: Product[], categories: ProductCategory[]): P
           onSameDay: () => {}, onPreOrder: () => {},
         }) as never),
     )
-    // flush render (act-free: effects read only props)
-    setTimeout(resolve, 0)
   })
   const html = div.innerHTML
   root.unmount()

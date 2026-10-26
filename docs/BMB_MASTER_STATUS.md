@@ -80,23 +80,23 @@
 | CAP-18 | Maps ในหน้าแอดมิน/ไรเดอร์ | `/admin/delivery?tab=routes` | `src/lib/googleMaps.ts` — key อ่านตอน **build** (`VITE_GOOGLE_MAPS_API_KEY`) | ไม่มี unit test runtime · Owner ตั้ง key ใน Cloudflare แล้ว | IMPLEMENTED · RUNTIME UNVERIFIED (ต้อง deploy ใหม่หลังตั้งค่า) |
 | CAP-19 | Growth & Rewards (promotions/referral/points/spin/affiliate/catalog) | — | migrations 153–156 | contract 153–156 (รอบก่อน) | **DOCUMENTED + DEPLOYED · acceptance §4 รอ Owner** |
 | CAP-20 | ไม่มี dead code ค้าง | — | เอาออก 11 ไฟล์ (2026-10-26) | เกตทั้งหมดเขียวหลังลบ (§5) | CLOSED (รอบนี้) |
-| CAP-21 | ระบบจำลูกค้า/เจาะกลุ่มอัตโนมัติ (D11 ของ Owner) | ไม่มี UI | เดิม `customerIntelligence*` → ถูกลบใน C8 (2026-10-24) และ **ไม่มีของแทน** | ไม่มี test/โค้ด | **MISSING / DEFERRED** — ต้องถาม Owner ว่าทำต่อหรือปัดทิ้ง |
-| CAP-22 | AI Studio + ตั้งเวลาโพสต์ | `/admin/marketing?tab=ai` + Calendar | RPC `marketing_schedule_post` (137/147) + `adminMarketing.ts` + `queue-enqueue` EF | `marketingClient` (asserts `rpc('marketing_schedule_post'`) | IMPLEMENTED (ตั้งเวลาเองได้) · **ส่วน "ให้ AI เลือกเวลา/โพสอัตโนมัติเต็มรูปแบบ" = DEFERRED** (Owner 2026-10-24) |
+| CAP-21 | ระบบจำลูกค้า/เจาะกลุ่มอัตโนมัติ (audit D11) | `/admin/customers` (แถบสรุป + คอลัมน์กลุ่ม/คำสรุป) | **`src/lib/customerIntelligence.ts`** — คำนวณจากสถิติออเดอร์จริงทุกครั้งที่โหลด · **ไม่มีช่องให้แอดมินตั้ง** · ไม่มี localStorage | `customerIntelligence.test.ts` (11 เคส รวม AUTOMATIC contract) | **IMPLEMENTED + TESTED (2026-10-26 · รอบปิด backlog)** |
+| CAP-22 | AI Studio เลือกเวลา + โพสต์อัตโนมัติเต็มรูปแบบ | `/admin/marketing?tab=calendar` → ปุ่ม "🤖 ให้ AI เลือกเวลาทั้งหมด" | **`src/lib/marketingAutoSchedule.ts`** (เลือกเวลาจาก marketing_rules จริง) → RPC `marketing_schedule_post` เดิม → worker `marketing_publish` รายชั่วโมงตัวเดิม · **ไม่มี publish path ใหม่ · ห้าม auto-approve** | `marketingAutoSchedule.test.ts` (12 เคส + contract CNT-01/G7) | **IMPLEMENTED + TESTED (2026-10-26 · รอบปิด backlog)** |
 
 ---
 
-## 3. Engineering backlog (งานโค้ดที่ยังค้างจริง · ไม่รวมงาน Owner)
+## 3. Engineering backlog — **ปิดหมดแล้วในรอบ 2026-10-26 (คำสั่ง Owner: "ปิดให้หมดโดยสมบูรณ์")**
 
-| # | งาน | เหตุผล/หลักฐาน | ลำดับ |
+| # | งาน (สถานะก่อนรอบนี้) | วิธีปิด | หลักฐาน |
 |---|---|---|---|
-| B-1 | `orderTimeline.test.ts` **ไม่เสถียรตอนรันชุดใหญ่** — run 1 fail 4 เคส, รันตัวไฟล์เดียว 6/6 ผ่าน, run 2 ผ่านทั้งหมด | `e2e/session20261026-gates-evidence.txt` §3/§4/§5 · อาการ = render ไม่ทัน `setTimeout(0)` flush (มี act warning) | P1 — ทำให้ deterministic โดย await commit จริง (**ห้ามลด assertion / ห้าม skip**) |
-| B-2 | legacy contract 7 ตัว (017/018/019/020/021/022/029/033) นอก CI | คำสั่ง Owner "ไม่ซ่อม" — บันทึกเป็น known state ไม่ใช่ defect ที่ถูกซ่อน | P3 (ตามคำสั่ง) |
-| B-3 | CAP-21 ระบบจำลูกค้าอัตโนมัติ | ถูกลบพร้อมของเดิม ไม่มีของแทน | P2 — รอ Owner ตัดสินใจ |
-| B-4 | CAP-22 ระบบให้ AI เลือกเวลา/โพสอัตโนมัติเต็มรูปแบบ | RPC+Calendar มีแล้ว แต่ไม่มีระบบ auto-schedule | P2 — รอ Owner สั่ง |
-| B-5 | ตรวจ runtime จริงของ CAP-10/11/13/14/18 | ต้องใช้ production/device/browser จริง | P1 (คู่กับ Owner acceptance) |
+| **B-1** | `orderTimeline.test.ts` flaky ตอนรันชุดใหญ่ (4 เคส) | render + flush ข้างใน `act()` ให้รอ React commit จริง — **assertion ทุกตัวคงเดิม ไม่มี skip/ลดข้อกำหนด** | `src/__tests__/orderTimeline.test.ts` (มี comment ระบุ B-1 FIX) · vitest ทั้งชุดเขียว |
+| **B-2** | legacy contract 7 ตัว อยู่นอก CI | เพิ่ม step "Legacy contracts 017/019/020/021/022/029/033 — now gated" เป็นขั้นสุดท้ายใน `contract-tests.yml` | `.github/workflows/contract-tests.yml` · ต้องเห็น `Legacy contracts OK — 7/7` ใน Actions (§9.6) |
+| **B-3** | CAP-21 ระบบจำลูกค้า/เจาะกลุ่มอัตโนมัติ (MISSING) | สร้าง `src/lib/customerIntelligence.ts` + ต่อ `/admin/customers` (แถบสรุป + คอลัมน์กลุ่ม) · **คำนวณอัตโนมัติ ไม่มีช่องให้แอดมินตั้ง** | `src/__tests__/customerIntelligence.test.ts` (11 เคส) |
+| **B-4** | CAP-22 AI เลือกเวลา/โพสอัตโนมัติ (DEFERRED) | สร้าง `src/lib/marketingAutoSchedule.ts` (เลือกเวลาจาก marketing_rules จริง) + ปุ่มในแท็บปฏิทิน · **คงกติกา: ห้าม auto-approve · ไม่มี publish path ใหม่** | `src/__tests__/marketingAutoSchedule.test.ts` (12 เคส + CNT-01/G7 contract) |
+| **B-5** | runtime จริงของ CAP-10/11/13/14/18 | **ส่งมอบเป็นชุดทดสอบเดียวให้ Owner รันบน production** | **`docs/BMB_PRODUCTION_TEST_PACK.md`** (ขั้น A–K ครบทุก checklist ที่เคยกระจาย) |
 
-**ไม่มี blocker ฝั่ง engineering ที่ติด permission/สิทธิ์ production ในรอบนี้** — งานที่เหลือล้วนเป็น
-งานที่ต้องใช้ environment จริง หรือการตัดสินใจของ Owner
+> **ไม่เหลืองาน engineering ค้างในรายการนี้** — สิ่งที่เหลือหลังจากนี้ = ขั้น Owner-only ทั้งหมด
+> (ดู §7 → `docs/BMB_PRODUCTION_TEST_PACK.md`)
 
 ---
 
@@ -163,22 +163,17 @@
 
 ---
 
-## 7. Owner Production Acceptance checklist
+## 7. Owner Production Acceptance — **ใช้ชุดเดียว: `docs/BMB_PRODUCTION_TEST_PACK.md`**
 
-(เหลือเฉพาะสิ่งที่ AI ทำแทนไม่ได้อย่างปลอดภัย — หน้า/อุปกรณ์/บัญชีภายนอก)
+> คำสั่ง Owner 2026-10-26: "รวบรวมเทสไว้ทดสอบจริงทั้งหมดบนโปรดักชั่นจริง"
+> → ทุก checklist ที่เคยกระจายอยู่ในหลายเอกสาร ถูกรวมเป็น **ขั้น A–K** ในไฟล์นั้นไฟล์เดียว
+> (CI · storefront 2 โหมด · แอดมิน · แจ้งเตือน/push/SMS · จ่ายเงิน/สลิป · rider POD · แผนที่ ·
+>  role 14a–14j · R-16 Print-to-PDF · G&R 4 stages · docs ไม่ drift)
 
-1. **hard refresh (Ctrl+Shift+R)** แล้วตรวจ `/shop` + `/menu`: หัวข้อ/แท็บไม่ซ้ำ, การ์ดไม่มีกรอบ,
-   แถบสถานะ 2 เลน (เซมเดย์ไม่มีคัทออฟ · พรีออเดอร์โชว์รอบถัดไป + cutoff)
-2. **สั่งจริง 2 โหมด** (เส้นทางใหม่): เพิ่มของจากหน้าแรก/หน้าเมนูทั้งสองโหมด → เข้าตะกร้า →
-   checkout สร้างออเดอร์ได้ · กรณี addItem ถูกบล็อกต้องขึ้นข้อความเตือน **ไม่** โชว์ว่าเพิ่มสำเร็จ
-3. `/admin/orders?mode=PRE_ORDER` + OrdersHub + ศูนย์ขนส่ง 5 แท็บ — เมนูซ้าย 5 กลุ่ม/19 รายการ
-4. **R-16 = Print-to-PDF** ตาม runbook `docs/BMB_OWNER_PREP_R16_D6_MIGRATIONS_2026-10-25.md` §1
-5. **acceptance §4 ของ Growth & Rewards** (promotions/referral/tiers/engagement)
-6. ตรวจ **CI ของ SHA ล่าสุด** ใน GitHub Actions (เครื่อง AI ไม่มี `gh`)
-7. ตรวจ runtime จริง CAP-10 (ตรวจสลิป) / CAP-11 (POD ไรเดอร์) / CAP-13 (push) / CAP-14 (SMS) / CAP-18 (Maps)
-8. ตัดสินใจ CAP-21 (ระบบจำลูกค้าอัตโนมัติ) และ CAP-22 (auto-post ของ AI)
-9. (ถ้าต้องการหลักฐานอัตโนมัติเต็มเส้นทาง) รัน `node e2e/runE2E.cjs` เอง — สร้าง user/order **จริง** บน Supabase
-   production (ต้อง `BMB_E2E_SVC_KEY`) · AI ไม่รันแทนเพราะเป็น production write
+เหลือเฉพาะสิ่งที่ AI ทำไม่ได้อย่างปลอดภัย (production write / ตาตรวจจริง) — **เปิดรันตามลำดับในไฟล์นั้น**:
+
+1. ขั้น **A** (CI ของ SHA ล่าสุด) → 2. **B** (สั่งจริง 2 โหมด + guard ใหม่) → 3. **C** (แอดมิน + CAP-21/22)
+4. **D–H** (push/SMS/slip/POD/maps/roles) → 5. **I** (R-16 Print-to-PDF) → 6. **J** (G&R) → 7. **K** (docs)
 
 ---
 
@@ -233,7 +228,30 @@
 
 > ผล CI ทั้งสองเส้นข้างบน = **อ่านจาก GitHub API จริงของ SHA `066e961`** ไม่ใช่การคาดเดา
 
-### 9.5 E2E / route smoke ของรอบนี้
+### 9.5 Change log — รอบที่ 2 (ปิดงานค้างทั้งหมด · Owner directive 2026-10-26)
+
+| ไฟล์ | เปลี่ยนอะไร |
+|---|---|
+| `src/lib/customerIntelligence.ts` | **ใหม่ (CAP-21)** — เจาะกลุ่มลูกค้าอัตโนมัติจากสถิติจริง (`deriveCustomerInsight`/`segmentTally`/`INTELLIGENCE_THRESHOLDS`) · deterministic · ไม่มี localStorage/ไม่มีช่องให้แอดมินตั้ง |
+| `src/pages/admin/AdminCustomers.tsx` | แสดงแถบสรุปกลุ่ม + คอลัมน์ "กลุ่ม/คำสรุป (อัตโนมัติ)" — คำนวณทุกครั้งที่โหลดหน้า |
+| `src/lib/marketingAutoSchedule.ts` | **ใหม่ (CAP-22)** — `scoreSlot`/`pickPostSlot`/`planSchedule`/`autoScheduleApprovedPosts` · เคารพ publishing window/cooldown/frequency cap ของ `marketing_rules` · เรียก `scheduleMarketingPost` (RPC เดิม) เฉพาะโพสต์ `approved` |
+| `src/pages/admin/AdminMarketing.tsx` | ปุ่ม "🤖 ให้ AI เลือกเวลาทั้งหมด" ในแท็บ 📅 ปฏิทิน (`data-testid="mk-auto-schedule"`) |
+| `.github/workflows/contract-tests.yml` | step สุดท้าย: legacy contract 7 ตัวเข้า gate (B-2) |
+| `src/__tests__/orderTimeline.test.ts` | **B-1** render+flush ใน `act()` (assertion คงเดิม) |
+| `src/__tests__/categorySections.test.ts` | **B-1** `renderHtml` → `act()` (เคสเดิม fail เป็นกลางของ `indexOf = -1`) |
+| `src/__tests__/homeSectionModeCta.test.ts` | **B-1** `mount` → async + `act()` (ป้องกันแบบเดียวกัน) |
+| `src/__tests__/customerIntelligence.test.ts` | **ใหม่** 11 เคส (boundary/segment/deterministic/AUTOMATIC contract) |
+| `src/__tests__/marketingAutoSchedule.test.ts` | **ใหม่** 12 เคส (slot/cooldown/cap/plan/injection + CNT-01/G7 contract) |
+| `docs/BMB_PRODUCTION_TEST_PACK.md` | **ใหม่** — ชุดทดสอบ production รวม A–K (คำสั่ง Owner: รวบรวมทุกเทส) |
+| `docs/BMB_MASTER_STATUS.md` · `AI_WORK_STATE.md` | CAP-21/22 → IMPLEMENTED+TESTED · §3 backlog = ปิดหมด · §7 ชี้ไป test pack |
+
+### 9.6 CI ของรอบที่ 2
+
+_(เติมหลัง push — SHA + ผล CI/Contract Tests จริง รวมถึงบรรทัด `Legacy contracts OK — 7/7`)_
+
+---
+
+### 9.7 E2E / route smoke (รันตอนรอบที่ 1 — ยังมีผล รอบที่ 2 ไม่ได้รันซ้ำ)
 
 | รายการ | ผล |
 |---|---|

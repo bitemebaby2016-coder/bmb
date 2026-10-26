@@ -17,6 +17,7 @@ import {
   type MarketingPostRow, type MarketingRules,
 } from '@/lib/adminMarketing'
 import { listContentApprovals, reviewContent, type ContentApprovalRow } from '@/lib/contentApproval'
+import { autoScheduleApprovedPosts } from '@/lib/marketingAutoSchedule'
 import { getBusinessSettings, setBusinessSetting } from '@/lib/bmbAdminApi_settings'
 
 type Tab = 'overview' | 'planner' | 'studio' | 'approval' | 'calendar' | 'rules' | 'analytics' | 'ai'
@@ -125,6 +126,36 @@ export function AdminMarketing() {
       await load()
     } else {
       showToast('ตั้งเวลาไม่สำเร็จ: ' + (r.error || 'ERR_SCHEDULE_FAILED'), 'error')
+    }
+  }
+
+  // CAP-22 (Owner 2026-10-26): "ให้ AI เลือกเวลา/โพสอัตโนมัติเต็มรูปแบบ"
+  //  เลือกเวลาจาก marketing_rules จริง (หน้าต่างเผยแพร่/cooldown/เพดานต่อสัปดาห์)
+  //  → เรียก RPC marketing_schedule_post ตัวเดิม (server บังคับ approval='approved' ซ้ำ)
+  //  → การโพสต์จริงยังเป็น marketing_publish worker รายชั่วโมงตัวเดิม (ไม่มีทาง publish ที่สอง)
+  //  หมายเหตุ: การ "อนุมัติ" ยังเป็นหน้าที่คนเสมอ — ปุ่มนี้ตั้งเวลาได้เฉพาะโพสต์ที่อนุมัติแล้ว
+  const [autoBusy, setAutoBusy] = useState(false)
+  async function handleAutoSchedule() {
+    setAutoBusy(true)
+    try {
+      const res = await autoScheduleApprovedPosts()
+      if (res.scheduled > 0) {
+        const preview = res.plan.slice(0, 3)
+          .map((p) => `${p.title}: ${new Date(p.iso).toLocaleString('th-TH')}`)
+          .join(' · ')
+        showToast(
+          `AI เลือกเวลาให้ ${res.scheduled} โพสต์ (ข้าม ${res.skipped})${res.failed ? ` · ล้มเหลว ${res.failed}` : ''} — ${preview}`,
+          'success',
+        )
+        await load()
+      } else {
+        showToast(`ยังไม่มีโพสต์ที่ตั้งเวลาให้ได้ (ข้าม ${res.skipped}) — ต้องมีโพสต์ที่อนุมัติแล้วและยังไม่มีเวลา`, 'info')
+      }
+      if (res.failed > 0) {
+        showToast('ตั้งเวลาไม่สำเร็จบางรายการ: ' + res.errors.map((e) => e.error).join(', '), 'error')
+      }
+    } finally {
+      setAutoBusy(false)
     }
   }
 
@@ -293,6 +324,23 @@ export function AdminMarketing() {
 
       {tab === 'calendar' && (
         <div className="space-y-3">
+          {/* CAP-22 (Owner 2026-10-26): ให้ AI เลือกเวลาอัตโนมัติ — เฉพาะโพสต์ที่คนอนุมัติแล้ว
+              และยังไม่มีเวลา · กติกาจาก marketing_rules จริง · ยิง RPC เดิม · ไม่มี publish path ใหม่ */}
+          <div className="card flex items-center justify-between flex-wrap gap-2" data-testid="mk-auto-schedule-bar">
+            <div className="text-sm text-brand-muted">
+              🤖 AI เลือกเวลาจาก <b>กติกาจริงในแท็บ "⚙️ กติกา"</b> (หน้าต่างเผยแพร่ · cooldown · เพดาน/สัปดาห์)
+              — เฉพาะโพสต์ที่อนุมัติแล้ว · การโพสต์จริงเป็นระบบอัตโนมัติรายชั่วโมงตัวเดิม
+            </div>
+            <button
+              type="button"
+              className="btn btn-primary text-sm"
+              onClick={() => void handleAutoSchedule()}
+              disabled={autoBusy}
+              data-testid="mk-auto-schedule"
+            >
+              {autoBusy ? '⏳ กำลังเลือกเวลา…' : '🤖 ให้ AI เลือกเวลาทั้งหมด'}
+            </button>
+          </div>
           {posts.filter((p) => p.status !== 'published').length === 0 && <p className="text-sm text-brand-muted">ยังไม่มีโพสต์รอตั้งเวลา</p>}
           {posts.filter((p) => p.status !== 'published').map((p) => (
             <div key={p.id} className="card flex items-center justify-between flex-wrap gap-2">

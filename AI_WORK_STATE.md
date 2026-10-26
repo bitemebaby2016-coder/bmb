@@ -26,6 +26,7 @@
 
 ## 2. งานที่ปิดรอบนี้ (CLOSED — มีหลักฐาน)
 
+### รอบที่ 1 (เส้นทางสั่งซื้อ + docs + dead code)
 1. **เส้นทางสั่งซื้อเดียว** สำหรับพรีออเดอร์+เซมเดย์: สร้าง `src/lib/orderEntry.ts` (`runOrderBuilder`) แล้วให้
    `HomePage`/`MenuPage` delegate — เดิมมีสำเนา logic คู่กัน 2 ชุด (Owner: "มีหลายเส้นทางจนมั่วกันเอง")
 2. **บั๊กจริงที่แก้:** `HomePage.handleReviewCta` ไม่เคยเช็ค `AddToCartResult` ก่อน toast "เพิ่มลงตะกร้าแล้ว" + navigate
@@ -35,14 +36,20 @@
 5. **เอกสาร:** สร้าง `docs/BMB_MASTER_STATUS.md` (สถานะหลักเดียว) · ปรับไฟล์นี้ให้สั้น ·
    เพิ่มจุดชี้ใน `AI_ENTRYPOINT.md` · `docs/archive/INDEX_2026-10-26.md`
 
-## 3. งานค้าง (engineering — เอาจากตัวนี้ ไม่ต้องขุดรายงานเก่า)
+### รอบที่ 2 (ปิดงานค้างทั้งหมดตามคำสั่ง Owner)
+6. **B-1 ปิด:** `orderTimeline.test.ts` deterministic ด้วย render+flush ใน `act()` (assertion คงเดิมทุกข้อ)
+7. **B-2 ปิด:** legacy contract 7 ตัวเข้า CI gate (`contract-tests.yml` step สุดท้าย)
+8. **CAP-21 ปิด:** `src/lib/customerIntelligence.ts` + `/admin/customers` (แถบสรุป + คอลัมน์กลุ่ม) =
+   **อัตโนมัติทุกครั้งที่โหลด ไม่มีช่องให้แอดมินตั้ง** · test `customerIntelligence.test.ts`
+9. **CAP-22 ปิด:** `src/lib/marketingAutoSchedule.ts` + ปุ่ม "ให้ AI เลือกเวลาทั้งหมด" ในแท็บปฏิทิน =
+   เลือกเวลาจาก `marketing_rules` จริง → RPC เดิม → worker เดิม · **คงกติกา CNT-01 (ห้าม auto-approve)**
+   · test `marketingAutoSchedule.test.ts`
+10. **B-5 ปิด (ส่งมอบ):** ชุดทดสอบ production รวม = **`docs/BMB_PRODUCTION_TEST_PACK.md`** (ขั้น A–K)
 
-รายละเอียด/หลักฐานทั้งหมด = **`docs/BMB_MASTER_STATUS.md` §3**
+## 3. งานค้าง
 
-- **B-1** `orderTimeline.test.ts` flaky ตอนรันชุดใหญ่ — ต้องทำให้ deterministic **โดยห้ามลด assertion/ห้าม skip**
-- **B-2** legacy contract 7 ตัว นอก CI = ตามคำสั่ง Owner "ไม่ซ่อม" (known state ไม่ใช่ที่ถูกซ่อน)
-- **B-3/B-4** CAP-21 ระบบจำลูกค้าอัตโนมัติ · CAP-22 auto-post ของ AI = **รอ Owner ตัดสินใจ**
-- **B-5** runtime จริงของ CAP-10/11/13/14/18 = ต้องใช้ production/device/browser จริง
+- **ไม่มีงาน engineering ค้าง** (B-1..B-5 ปิดแล้ว — เหตุผล/หลักฐานอยู่ที่ `docs/BMB_MASTER_STATUS.md` §3)
+- งานที่เหลือ = **Owner-only ทั้งหมด** → รัน `docs/BMB_PRODUCTION_TEST_PACK.md` ขั้น A–K
 
 ## 4. งานรอ Owner (ไม่ใช่งาน AI)
 

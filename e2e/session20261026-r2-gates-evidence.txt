@@ -1,0 +1,55 @@
+===============================================================
+BMB - ROUND 2 GATE EVIDENCE (2026-10-26)
+Owner order: close ALL backlog (B-1..B-5) + CAP-21 + CAP-22 + test pack
+===============================================================
+
+[GIT] before round-2 commit
+11b71121fc4258631cb42280d134379abdcfaa38
+## main...origin/main
+ M .github/workflows/contract-tests.yml
+ M AI_WORK_STATE.md
+ M docs/BMB_MASTER_STATUS.md
+ M src/__tests__/categorySections.test.ts
+ M src/__tests__/homeSectionModeCta.test.ts
+ M src/__tests__/orderTimeline.test.ts
+ M src/pages/admin/AdminCustomers.tsx
+ M src/pages/admin/AdminMarketing.tsx
+?? docs/BMB_PRODUCTION_TEST_PACK.md
+?? src/__tests__/customerIntelligence.test.ts
+?? src/__tests__/marketingAutoSchedule.test.ts
+?? src/lib/customerIntelligence.ts
+?? src/lib/marketingAutoSchedule.ts
+stash@{0}: On main: local-edits-before-sync-2026-09-21
+
+[1] tsc --noEmit -> exit 0 (run directly before this file was written)
+
+[2] vitest FULL SUITE (round 2)
+?[2m      Tests ?[22m ?[1m?[32m1541 passed?[39m?[22m?[90m (1541)?[39m
+?[2m   Start at ?[22m 10:50:09
+?[2m   Duration ?[22m 166.55s?[2m (transform 66.55s, setup 6.72s, collect 104.41s, tests 26.84s, environment 782.14s, prepare 75.41s)?[22m
+
+VITEST_EXIT=0 
+ALL_GATES_DONE 
+
+[3] eslint
+ESLINT_EXIT=0 
+[4] brandNameGuard
+brandNameGuard: OK - scanned all files (Thai message re-encoded below)
+brandNameGuard: OK ??? ???????????? 426 ???????????? ????????????????????????????????????
+BRAND_EXIT=0 
+
+[5] npm run build (tail)
+Additional hook time came from hooks under 1s.
+See https://rolldown.rs/reference/InputOptions.checks#plugintimings for more details.
+?[39m
+BUILD_EXIT=0 
+
+NEW TEST FILES THIS ROUND: customerIntelligence.test.ts (11),
+marketingAutoSchedule.test.ts (12) -> included in the 1541 total above.
+B-1 fixes: orderTimeline.test.ts, categorySections.test.ts, homeSectionModeCta.test.ts
+all now render inside act() with assertions unchanged.
+
+Round-1 CI evidence (SHA 066e961/26e258e/fa9f54f/11b7112 = all success)
+
+NOTE: local logs live on this machine at D:\tmp\*.log (ephemeral).
+This file is the durable copy committed to the repo.

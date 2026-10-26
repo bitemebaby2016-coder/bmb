@@ -10,7 +10,7 @@
 // ============================================
 
 import { beforeAll, describe, expect, it } from 'vitest'
-import { createElement as h, type ReactElement } from 'react'
+import { createElement as h, act } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
 import { OrderTimeline } from '@/components/customer/OrderTimeline'
 import {
@@ -26,18 +26,16 @@ beforeAll(() => {
   globalThis.IS_REACT_ACT_ENVIRONMENT = true
 })
 
-function mount(el: ReactElement): { container: HTMLDivElement; root: Root; flush: () => Promise<void> } {
+// B-1 FIX (2026-10-26): เดิม mount+setTimeout(0) — ตอนรันชุดใหญ่ React ยัง commit ไม่เสร็จ ทำให้
+// 4 เคส fail เป็นระยะ (รันตัวไฟล์เดียวผ่านตลอด) → render + flush ข้างใน act() ให้รอ commit จริง
+//  Assertions ทุกตัวคงเดิมทั้งหมด (ไม่มีการลด/ข้าม แม้แต่ข้อเดียว — เปลี่ยนแค่วิธีรอผล)
+async function renderTimeline(status: string) {
   const container = document.createElement('div')
   document.body.appendChild(container)
   const root = createRoot(container)
-  root.render(el)
-  const flush = () => new Promise<void>((resolve) => setTimeout(resolve, 0))
-  return { container, root, flush }
-}
-
-async function renderTimeline(status: string) {
-  const { container, root, flush } = mount(h(OrderTimeline, { status }))
-  await flush()
+  await act(async () => {
+    root.render(h(OrderTimeline, { status }))
+  })
   return { container, root }
 }
 
