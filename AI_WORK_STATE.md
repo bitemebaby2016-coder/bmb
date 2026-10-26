@@ -21,7 +21,8 @@
   - **schema parity รันแล้ว** → `e2e/w1-parity-2026-10-26.json` + รายงาน `e2e/w1-parity-report-2026-10-26.md`
   - unit ที่เพิ่ม/รันตรง: `storeStatusWindow` 4/4 · `uiTechnicalLabels` 4/4 ·
     `mascotClosed`+`roundsSameDayNoCutoff` 34/34
-  - gates ชุดใหญ่ (tsc/eslint/brandGuard/vitest/build) = ดูก้อน §1 เดิม + evidence รอบนี้ (อัปเดตหลังรันจบ)
+  - gates ชุดใหญ่ (tsc/eslint/brandGuard/vitest/build) = **ทุกตัว exit 0 · vitest 1549 tests 0 fail**
+    → evidence = **`e2e/session20261026-r3-gates-evidence.log`**
 - **รอบที่ 2 (ปิด backlog ทั้งหมด):** tsc 0 · eslint 0 · brandNameGuard OK · vitest 146 files /
   1541 tests 0 fail · build 0 → `e2e/session20261026-r2-gates-evidence.txt`
 - **production: ไม่ได้แตะ migration/apply/deploy/write ใด ๆ ในรอบนี้** (การเขียน production รอ Owner อนุมัติ —

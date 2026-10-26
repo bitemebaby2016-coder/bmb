@@ -215,7 +215,8 @@
 | **ตรวจหลัง apply (guest จริง)** | PostgREST ทุก endpoint = **200** · Playwright เปิด `/menu` = เห็นเมนูครบ (วันนี้ 12 · จองล่วงหน้า 2) · **console ไม่มี error** | `e2e/w2_guest_menu_probe.cjs` (รอบหลัง apply) |
 | **parity รอบสุดท้าย (หลัง 157+158)** | **MATCH** = tables/columns/indexes/constraints/sequences/triggers/views/**rls 67=67**/**acl_tables 768=768**/**ledger 158=158** · DRIFT เหลือ 3 กลุ่ม (functions/acl_functions/policies — อธิบายครบ) | `e2e/w1-parity-2026-10-26.json` |
 | unit เพิ่มใหม่ | `storeStatusWindow` 4/4 · `uiTechnicalLabels` 4/4 | ไฟล์ test ใน `src/__tests__/` |
-| unit ที่ต้องยังเขียว | `mascotClosed` + `roundsSameDayNoCutoff` = **34/34** | `vitest.log` ของรอบนี้ |
+| unit ที่ต้องยังเขียว | `mascotClosed` + `roundsSameDayNoCutoff` = **34/34** | ในไฟล์ evidence gates ด้านล่าง |
+| **gates ชุดใหญ่รอบนี้ (รันจริงบนเครื่อง)** | **tsc exit 0 · eslint exit 0 · brandNameGuard exit 0 · vitest 146 files / 1549 tests / 0 fail exit 0 · build exit 0** | `e2e/session20261026-r3-gates-evidence.log` |
 
 ---
 
