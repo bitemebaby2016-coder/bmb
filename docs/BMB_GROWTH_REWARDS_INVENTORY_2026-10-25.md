@@ -286,5 +286,15 @@ Engagement & Play — ตามหลัง
 - ✅ **migration 155 = APPLIED + RECORDED บน production แล้ว (2026-10-25)** — staged 6 รุ่น:
   precheck 11/11 → apply+rerun 201 → verify 11/11 → contract155 PASS → contractRegr 154/153/148
   PASS → record top=155 · evidence = **`e2e/r15Apply155-*.json`** (script `e2e/r15Apply155.cjs`)
-- ⏳ **migration 156 = ยังไม่ apply — รอคำสั่ง Owner "apply 156"** (staged แบบ r15 = r16Apply156.cjs)
-- ⛔ เงื่อนไขเลื่อนขั้น (§5.8) ยังคงอยู่: business rules + server validation + tests + สิทธิ์ ต้องผ่านก่อนทุกครั้ง (ผ่านครบแล้วสำหรับทั้ง 4 stages — เหลือ apply 156 + acceptance §4)
+- ✅ **migration 156 = APPLIED + RECORDED บน production แล้ว (2026-10-26 — Owner คำสั่ง "apply 156")** —
+  staged `e2e/r16Apply156.cjs` ผ่านครบทุก stage: **precheck 11/11** (top=155 · backup ใหม่ 8 ·
+  ตาราง/policy/fns/triggers ของ 156 ยังไม่มีทุกตัว · ledger constraint ยังไม่ขยาย ·
+  order-fn สะอาด · fixture 099156 clash=0) → **apply+idempotent-rerun 201 ทั้งสองรอบ** →
+  **verify 13/13** (3 ตาราง RLS=true + anon ถูกกันหมด · catalog seed 4 รายการเป๊ะ ·
+  policy seeds ปิดทั้งคู่ · fns **16** · triggers **2** (orders+payment_intents) · anon EXECUTE=false
+  ทุกตัว/auth=true · ledger constraint += spin/affiliate · indexes 5 · order-fn ไม่แตะ ·
+  ledger=0 ไม่มี backfill · orders=4 อยู่ครบ) → **contract156 บนโปรดักชั่น PASS**
+  (G1–G9 · 201 ไม่มี ERROR · ROLLBACK zero data) → **contractRegr 155/154/153/148 PASS**
+  (ทั้ง 4 rc=0) → **record: history top = 156_156_engagement_play** —
+  evidence = **`e2e/r16Apply156-{precheck,apply156,verify156,contract156,contractRegr,record}.json`**
+- ⛔ เงื่อนไขเลื่อนขั้น (§5.8) ยังคงอยู่: business rules + server validation + tests + สิทธิ์ ต้องผ่านก่อนทุกครั้ง (ผ่านครบแล้วสำหรับทั้ง 4 stages + apply 156 — เหลือแค่ acceptance §4 ของ Owner)

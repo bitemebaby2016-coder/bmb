@@ -1,8 +1,8 @@
 # BMB — NEXT SESSION HANDOFF (ปิดเซสชัน 2026-10-25 · Wave 2)
 
-> ⚠️ **จุดเริ่มอ่านของแชทหน้า = §11 (ล่าสุดสุด)** — รอบปิดล่าสุด: **APPLY 155 ✓ (record=155) +
-> G&R STAGE 4 DELIVERED ✓ · กรอบ Growth & Rewards ครบทั้ง 4 stages แล้ว** (เหลือ "apply 156" =
-> รอคำสั่ง Owner + acceptance §4)
+> ⚠️ **จุดเริ่มอ่านของแชทหน้า = §11 (ล่าสุดสุด)** — รอบปิดล่าสุด: **APPLY 156 ✓ (record=156) +
+> G&R STAGE 4 = APPLIED · กรอบ Growth & Rewards ครบทั้ง 4 stages + production ครบแล้ว**
+> (เหลือล้วนเป็นงานรอ Owner: acceptance §4 · D6 · R-16 · ตรวจ §D — ดู §11.2)
 > §1–§10 = ประวัติรอบก่อนหน้า เก็บไว้อ้างอิงเท่านั้น — **ห้ามถือเป็นสถานะปัจจุบันโดยไม่อ่าน §11 ก่อน**
 > สถานะเรียลไทม์ = `AI_WORK_STATE.md` · รายละเอียด Stage = inventory `docs/BMB_GROWTH_REWARDS_INVENTORY_2026-10-25.md` §6
 
@@ -278,7 +278,7 @@ evidence `e2e/g154-gates-evidence.txt` + `e2e/r14Apply154-*.json` → **แล�
 
 ---
 
-## 11. 🔴 SESSION CLOSE รอบ APPLY 155 + STAGE 4 (2026-10-25 · ปิดท้าย §10 · กรอบ G&R ครบทุก stage)
+## 11. 🔴 SESSION CLOSE รอบ APPLY 155 + STAGE 4 + APPLY 156 (2026-10-25/26 · กรอบ G&R ปิดสมบูรณ์ — production = record 156)
 
 ### 11.1 ทำอะไรไปบ้าง (คำสั่ง Owner: "apply 155 และทำสเตจ 4 ต่อ ตามกฏเหมือนเดิม ปิดงานให้ครบหมดตามเป้าหมาย")
 
@@ -317,15 +317,27 @@ evidence `e2e/g154-gates-evidence.txt` + `e2e/r14Apply154-*.json` → **แล�
   vitest ชุดใหญ่ flake ทีละไฟล์ render (empty-render+จำนวนเปลี่ยน) → พิสูจน์เดี่ยว/คู่ผ่าน +
   isolate:true → รันเครื่องว่าง = 144/1517/0
 
+**C. PRODUCTION APPLY 156 = ✅ APPLIED + RECORDED (top=156) — (2026-10-26 · คำสั่ง Owner: "แอพพลาย 156")**
+- เขียน `e2e/r16Apply156.cjs` (staged แบบ r15 เป๊ะ) + รันครบ 6 รุ่น:
+  precheck **11/11** (top=155 · backup ใหม่ 8 · 3 ตาราง/2 policy/16 fns/2 triggers ยังไม่มี ·
+  ledger constraint ยังไม่ขยาย · order-fn สะอาด · fixture 099156 clash=0) →
+  apply+idempotent-rerun **201/201** → verify **13/13** (3 ตาราง RLS=true + anon ถูกกัน ·
+  catalog seed 4 เป๊ะ · policies ปิดทั้งคู่ · 16 fns · 2 triggers · anon EXECUTE=false ทุกตัว ·
+  constraint += spin/affiliate · indexes 5 · order-fn ไม่แตะ · ledger=0 ไม่มี backfill · orders=4) →
+  contract156 **PASS** (G1–G9 · ROLLBACK) → contractRegr 155/154/153/148 **PASS ทั้งสี่** →
+  record → history top = **156_156_engagement_play**
+- evidence = `e2e/r16Apply156-{precheck,apply156,verify156,contract156,contractRegr,record}.json`
+- ผลข้างเคียง: production = **ไม่มีอะไรเปิดเอง** (spin/affiliate = ปิด + rate 0 รอแอดมินตั้งใน Rules)
+
 ### 11.2 งานที่เหลือทั้งหมด (เรียงลำดับ — ข้ามขั้นไม่ได้)
 | # | งาน | วิธี/หมายเหตุ | ต้อง Owner? |
 |---|---|---|---|
-| 1 | **migration 156 = รอคำสั่ง "apply 156"** | staged แบบ r15 → เขียน `e2e/r16Apply156.cjs` ตอนสั่ง (precheck→apply→verify→contract→record) · production ยัง record=155 | **ใช่** |
+| 1 | ~~migration 156~~ = **✅ DONE (2026-10-26)** | staged `e2e/r16Apply156.cjs` ครบทุก stage: precheck 11/11 → apply+rerun 201 → verify 13/13 → contract156 (G1–G9) PASS → contractRegr 155/154/153/148 PASS → record top = **156** · evidence = `e2e/r16Apply156-*.json` | — |
 | 2 | งานรอท่าน (เดิม) | ตรวจ §D status report · D6 ลบ `bitemebaby-5f7.pages.dev` · R-16 พิมพ์จริง · acceptance §4 | **ใช่** |
-| 3 | (เสร็จแล้ว) | 🏁 G&R Rollout ①–⑧ **ครบทั้ง 4 stages** — เหลือ apply 156 + acceptance §4 จึงปิดกรอบได้ | — |
+| 3 | (เสร็จแล้ว) | 🏁 G&R Rollout ①–⑧ **ครบทั้ง 4 stages + production ครบ** — เหลือแค่ acceptance §4 จึงปิดกรอบได้ | — |
 
 ### 11.3 ลำดับอ่านของเซสชันหน้า
 `AI_WORK_STATE.md` → handoff ฉบับนี้ **§11** (ข้าม §8–§10 ที่ปิดแล้ว) → inventory **§6** →
-evidence `e2e/g156-gates-evidence.txt` + `e2e/r15Apply155-*.json` →
-งานต่อ = **รอคำสั่ง "apply 156"** หรืองานที่ท่านสั่งใหม่ (กรอบ G&R ครบทุก stage แล้ว —
-ถ้าไม่มีคำสั่งเพิ่ม = แจ้งปิดงานพร้อม acceptance §4)
+evidence `e2e/g156-gates-evidence.txt` + `e2e/r16Apply156-*.json` (apply 155 ดู `r15Apply155-*.json`) →
+งานต่อ = **งานรอ Owner ล้วน (§11.2 ข้อ 2)** — ถ้าท่านสั่งงานใหม่ให้ทำตามกฏเดิม ·
+ถ้าไม่มีคำสั่งเพิ่ม = แจ้งปิดงานพร้อม acceptance §4

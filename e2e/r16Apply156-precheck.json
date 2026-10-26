@@ -1,0 +1,119 @@
+[
+  {
+    "label": "history",
+    "status": 201,
+    "data": [
+      {
+        "version": "155",
+        "name": "155_loyalty_tiers_points"
+      },
+      {
+        "version": "154",
+        "name": "154_referral_program"
+      },
+      {
+        "version": "153",
+        "name": "153_promotion_campaign_controls"
+      },
+      {
+        "version": "152",
+        "name": "152_menu_schedule_execute_revoke"
+      },
+      {
+        "version": "151",
+        "name": "151_order_status_history_baseline"
+      }
+    ]
+  },
+  {
+    "label": "backup-recency",
+    "status": 201,
+    "data": [
+      {
+        "recent_backups": 8
+      }
+    ]
+  },
+  {
+    "label": "new-tables-absent-yet",
+    "status": 201,
+    "data": [
+      {
+        "has_tables": 0
+      }
+    ]
+  },
+  {
+    "label": "policy-rows-absent-yet",
+    "status": 201,
+    "data": [
+      {
+        "has_rows": 0
+      }
+    ]
+  },
+  {
+    "label": "e156-fns-absent-yet",
+    "status": 201,
+    "data": [
+      {
+        "has_fns": 0
+      }
+    ]
+  },
+  {
+    "label": "e156-triggers-absent-yet",
+    "status": 201,
+    "data": [
+      {
+        "has_trg": 0
+      }
+    ]
+  },
+  {
+    "label": "points-ledger-present-from-155",
+    "status": 201,
+    "data": [
+      {
+        "has_table": 1
+      }
+    ]
+  },
+  {
+    "label": "ledger-constraint-not-yet-extended",
+    "status": 201,
+    "data": [
+      {
+        "spin_in_check": 0
+      }
+    ]
+  },
+  {
+    "label": "order-fn-untouched",
+    "status": 201,
+    "data": [
+      {
+        "hits": 0
+      }
+    ]
+  },
+  {
+    "label": "order-fn-is-current-shape",
+    "status": 201,
+    "data": [
+      {
+        "hits": 1
+      }
+    ]
+  },
+  {
+    "label": "fixture-phones-free",
+    "status": 201,
+    "data": [
+      {
+        "order_clash": 0,
+        "user_clash": 0
+      }
+    ]
+  }
+]

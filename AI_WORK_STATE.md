@@ -2,19 +2,20 @@
 
 > **สถานะงานปัจจุบันของโปรเจกต์ Bite Me Baby** ใช้แนบเข้าสู่ Context ตอนเริ่มแชทเสมอ
 
-**last_updated:** 2026-10-25 **🟢 SESSION CLOSED — APPLY 155 ✓ (record=155) + G&R STAGE 4 (Engagement & Play) DELIVERED ✓ — กรอบ 4 stages ครบทุกข้อแล้ว (เหลือ apply 156 = รอคำสั่ง)**
-(gates เขียวทั้งหมด: tsc 0 · lint+brandNameGuard OK (**432 ไฟล์**) · vitest **144 files/1517 tests 0 fail** ·
- build ✓ **PWA 142** · **Docker replay สะอาด 001–156 = ALL_GREEN** ·
- **contract 156 G1–G9 PASS (rc=0) + regression 155/154/153 PASS (rc=0 ทั้ง 4)** ·
- evidence = `e2e/g156-gates-evidence.txt` · push `4cf837e` (main = origin/main · ก่อนหน้า `8714fa2`+`319c258`) —
+**last_updated:** 2026-10-26 **🟢 SESSION CLOSED — APPLY 156 ✓ (record=156) + G&R ทั้ง 4 stages = production ครบ** (เหลือล้วนงานรอ Owner: ตรวจ §D · D6 · R-16 · acceptance §4)
+(gates ก่อน push รอบนี้เขียวทั้งหมด: tsc 0 · lint+brandNameGuard OK (**432 ไฟล์**) ·
+ vitest **144 files/1517 tests 0 fail** · build ✓ (12.7s) ·
+ ของเดิมยังมีผล: **Docker replay 001–156 ALL_GREEN** · **contract 156 G1–G9 PASS (rc=0) + regression 155/154/153 PASS** ·
+ evidence เดิม = `e2e/g156-gates-evidence.txt` · evidence รอบนี้ = **`e2e/r16Apply156-*.json`** ·
  **CI ยังไม่ได้ตรวจจริง** ไม่มี `gh` ในเครื่อง)
-**production:** migration **155 = APPLIED + RECORDED ✓** (Owner "apply 155" → `e2e/r15Apply155.cjs`
- staged 6 รุ่น: precheck 11/11 → apply+rerun 201 → verify 11/11 → contract155 PASS →
- contractRegr 154/153/148 PASS → record top=155 · evidence = `e2e/r15Apply155-*.json`) ·
- **156 = DELIVERED แต่ยังไม่ apply — รอคำสั่ง "apply 156"** (staged แบบ r15 = r16Apply156.cjs)
+**production:** migration **156 = APPLIED + RECORDED ✓ (record top=156)** (Owner "apply 156" 2026-10-26 →
+ `e2e/r16Apply156.cjs` staged 6 รุ่น: precheck **11/11** (top=155) → apply+idempotent-rerun **201/201** →
+ verify **13/13** → contract156 **G1–G9 PASS** → contractRegr **155/154/153/148 PASS** → record →
+ history top = **156_156_engagement_play** · evidence = `e2e/r16Apply156-*.json`) ·
+ 155 = APPLIED รอบก่อน (`e2e/r15Apply155-*.json`)
 **phase:** 🟢 STAGE 1 = DONE (production) · STAGE 2 = DONE (production) · STAGE 3 = DONE (production) ·
- **STAGE 4 (Engagement & Play) = DELIVERED ทุกชิ้น (code+contract+CI step+client+admin+tests+gates) — รอ apply 156** ·
- 🏁 **G&R Rollout ①–⑧ = ครบทั้ง 4 stages** (กรอบปิดเมื่อ apply 156 + acceptance §4)
+ **STAGE 4 (Engagement & Play) = APPLIED (production 156) ครบทุกชิ้น** ·
+ 🏁 **G&R Rollout ①–⑧ = ครบทั้ง 4 stages + production ครบ** — เหลือปิดกรอบ = **acceptance §4** (ของ Owner)
 **current_focus:**
 1. **STAGE 4 · Engagement & Play = DELIVERED (เซสชัน 2026-10-25)** — `156_engagement_play.sql`:
    **inspect-first ก่อน** (ยืนยัน: Spin&Win เดิม = สุ่มเมนูล้วนที่มีของปลอมทั้ง 2 จุด —
@@ -29,10 +30,11 @@
    `engagementClient.ts` + RandomMenu/Viral/Rewards/Profile/Checkout/Layout ZERO-FAKE ของปลอมออกหมด +
    3 แผง Rules (Spin/Affiliate/Catalog) + เทสต์ 17 ข้อ — รายละเอียด = inventory §6 +
    evidence `e2e/g156-gates-evidence.txt`
-2. **รอคำสั่ง:** "apply 156" → เขียน r16Apply156.cjs (staged เหมือน r15/r14) แล้ว apply+record
+2. **(เสร็จแล้ว 2026-10-26):** "apply 156" → `e2e/r16Apply156.cjs` ครบทั้ง 6 รุ่น ·
+   record top = **156** · evidence = `e2e/r16Apply156-*.json`
 3. งานรอ Owner (ไม่ใช่งาน AI): ตรวจ status report §D · D6 ลบทดสอบ pages.dev · R-16 พิมพ์จริง · acceptance §4
-**blocked_by:** ⛔ ไม่มี blocker — งานที่สั่งทั้งหมดเสร็จสมบูรณ์ (apply 155 ✓ · Stage 4 = DELIVERED · gates เขียว) ·
- งานต่อทั้งหมด = handoff **§11.2** (apply 156 = รอคำสั่ง · งานรอท่าน = §11.2 ข้อ 2)
+**blocked_by:** ⛔ ไม่มี blocker — งานที่สั่งทั้งหมดเสร็จสมบูรณ์ (apply 155 ✓ · Stage 4 ✓ · **apply 156 ✓** · gates เขียว) ·
+ งานที่เหลือทั้งหมด = **งานรอ Owner ล้วน** (handoff §11.2 ข้อ 2: ตรวจ §D · D6 ลบ pages.dev · R-16 พิมพ์จริง · acceptance §4)
 - (รอบก่อนปิดเซสชัน — ยังคงมีผล): 4 บั๊กหน้าจอ ✓ · production 150/151/152/153 ✓ · stale contracts 8/8 ✓ ·
   legacy 7 เขียว(ไม่ซ่อม) ✓ · R-17 PASS ✓ · G&R เอกสาร+คำตอบ Owner ✓ · `AI_ENTRYPOINT`/`UNIVERSAL_MASTER_AI_RULES` v1.1/v2.1 ✓
 

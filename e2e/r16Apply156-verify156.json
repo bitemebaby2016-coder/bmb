@@ -1,0 +1,246 @@
+[
+  {
+    "label": "new-tables",
+    "status": 201,
+    "data": [
+      {
+        "relname": "affiliate_attributions",
+        "relrowsecurity": true,
+        "catalog_rows": 4,
+        "code_rows": 0,
+        "att_rows": 0
+      },
+      {
+        "relname": "affiliate_codes",
+        "relrowsecurity": true,
+        "catalog_rows": 4,
+        "code_rows": 0,
+        "att_rows": 0
+      },
+      {
+        "relname": "rewards_catalog",
+        "relrowsecurity": true,
+        "catalog_rows": 4,
+        "code_rows": 0,
+        "att_rows": 0
+      }
+    ]
+  },
+  {
+    "label": "anon-table-privs",
+    "status": 201,
+    "data": [
+      {
+        "anon_catalog": false,
+        "anon_codes": false,
+        "anon_att": false,
+        "auth_catalog": false
+      }
+    ]
+  },
+  {
+    "label": "policy-seeds",
+    "status": 201,
+    "data": [
+      {
+        "key": "affiliate_policy",
+        "value": {
+          "enabled": false,
+          "monthly_cap": 0,
+          "qualify_status": "delivered",
+          "points_per_qualified_order": 0
+        }
+      },
+      {
+        "key": "spin_policy",
+        "value": {
+          "enabled": false,
+          "daily_limit": 1,
+          "points_per_spin": 0
+        }
+      }
+    ]
+  },
+  {
+    "label": "catalog-seed",
+    "status": 201,
+    "data": [
+      {
+        "id": "rw-coupon-10",
+        "name": "คูปองลด 10%",
+        "points_cost": 100,
+        "is_active": true,
+        "sort_order": 1
+      },
+      {
+        "id": "rw-ship-free",
+        "name": "ส่งฟรี 1 ครั้ง",
+        "points_cost": 150,
+        "is_active": true,
+        "sort_order": 2
+      },
+      {
+        "id": "rw-menu-free",
+        "name": "เมนูฟรี 1 จาน",
+        "points_cost": 200,
+        "is_active": true,
+        "sort_order": 3
+      },
+      {
+        "id": "rw-coupon-20",
+        "name": "คูปองลด 20%",
+        "points_cost": 300,
+        "is_active": true,
+        "sort_order": 4
+      }
+    ]
+  },
+  {
+    "label": "e156-fns-exist",
+    "status": 201,
+    "data": [
+      {
+        "fn_count": 16
+      }
+    ]
+  },
+  {
+    "label": "e156-triggers-exist",
+    "status": 201,
+    "data": [
+      {
+        "tgname": "trg_affiliate_intent_sync",
+        "on_table": "payment_intents"
+      },
+      {
+        "tgname": "trg_affiliate_order_sync",
+        "on_table": "orders"
+      }
+    ]
+  },
+  {
+    "label": "anon-privs",
+    "status": 201,
+    "data": [
+      {
+        "proname": "affiliate_admin_stats",
+        "anon_exec": false
+      },
+      {
+        "proname": "affiliate_claim",
+        "anon_exec": false
+      },
+      {
+        "proname": "affiliate_my_code",
+        "anon_exec": false
+      },
+      {
+        "proname": "rewards_catalog_list",
+        "anon_exec": false
+      },
+      {
+        "proname": "spin_admin_stats",
+        "anon_exec": false
+      },
+      {
+        "proname": "spin_reward",
+        "anon_exec": false
+      },
+      {
+        "proname": "spin_status",
+        "anon_exec": false
+      }
+    ]
+  },
+  {
+    "label": "auth-exec-rpcs",
+    "status": 201,
+    "data": [
+      {
+        "proname": "affiliate_admin_stats",
+        "auth_exec": true
+      },
+      {
+        "proname": "affiliate_claim",
+        "auth_exec": true
+      },
+      {
+        "proname": "affiliate_my_code",
+        "auth_exec": true
+      },
+      {
+        "proname": "rewards_catalog_list",
+        "auth_exec": true
+      },
+      {
+        "proname": "spin_admin_stats",
+        "auth_exec": true
+      },
+      {
+        "proname": "spin_reward",
+        "auth_exec": true
+      },
+      {
+        "proname": "spin_status",
+        "auth_exec": true
+      }
+    ]
+  },
+  {
+    "label": "ledger-constraint-extended",
+    "status": 201,
+    "data": [
+      {
+        "def": "CHECK ((entry_type = ANY (ARRAY['purchase'::text, 'reversal'::text, 'adjustment'::text, 'spin'::text, 'affiliate'::text])))"
+      }
+    ]
+  },
+  {
+    "label": "ledger-indexes",
+    "status": 201,
+    "data": [
+      {
+        "indexname": "idx_affiliate_att_owner"
+      },
+      {
+        "indexname": "idx_points_ledger_affiliate"
+      },
+      {
+        "indexname": "idx_points_ledger_affiliate_earn"
+      },
+      {
+        "indexname": "idx_points_ledger_affiliate_order"
+      },
+      {
+        "indexname": "idx_points_ledger_spin_daily"
+      }
+    ]
+  },
+  {
+    "label": "order-fn-still-untouched",
+    "status": 201,
+    "data": [
+      {
+        "hits": 0
+      }
+    ]
+  },
+  {
+    "label": "ledger-empty-no-backfill",
+    "status": 201,
+    "data": [
+      {
+        "ledger_rows": 0
+      }
+    ]
+  },
+  {
+    "label": "orders-intact",
+    "status": 201,
+    "data": [
+      {
+        "orders": 4
+      }
+    ]
+  }
+]
