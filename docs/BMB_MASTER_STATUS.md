@@ -26,7 +26,7 @@
 |---|---|
 | Repository | `D:\A PROJECT\Bite Me Baby` · remote `git@github.com-bmb:bitemebaby2016-coder/bmb.git` |
 | Branch | `main` tracking `origin/main` |
-| HEAD ปัจจุบัน ณ เวลาเขียน (2026-10-26 · หลัง apply 159) | `6d83cba` = `origin/main` · CI **#590 success** · Contract **#164 success** · Pages success · *(ถ้ามี commit ใหม่กว่านี้ ให้ถือ `git log --oneline -1`)* |
+| HEAD ปัจจุบัน ณ เวลาเขียน (2026-10-26 · รอบ defect SW+hours+160) | `5215cf4` = `origin/main` · CI **#593 success** · Contract **#167 success** · Pages success (deploy แล้ว) · *(ถ้ามี commit ใหม่กว่านี้ ให้ถือ `git log --oneline -1`)* |
 | (ประวัติ) HEAD ก่อนเริ่มงานรอบ reconciliation เช้า 2026-10-26 | `29ed251` = `origin/main` ตอนนั้น — **ค่าเก่า ห้ามถือเป็น HEAD ปัจจุบัน** |
 | staged / unstaged | **ว่างทั้งคู่** ตอนเริ่มรอบ · working tree clean · untracked = **0 ไฟล์** |
 | stash | `stash@{0}: On main: local-edits-before-sync-2026-09-21` — **คงเดิม ไม่ถูกแตะ** |
@@ -316,6 +316,7 @@
 | 21 | `680bf78` | docs: ปิด drift รอบสุดท้าย (HEAD/§9.0 แถว 20) + แก้ stale N-4/AI_WORK_STATE §3-4 ที่ verify_docs หาเจอ (ALL_OK) | #589 **success** | #163 **success** |
 | 22 | `6d83cba` | production: **apply 159** (w7Apply159 4 stage · ledger 159) + อัปเดตสถานะทุกเอกสาร + evidence 4 ไฟล์ + ลบ schtasks 3 ตัว | #590 **success** | #164 **success** |
 | 23 | `4a62873` | docs: เติมผล CI จริง 6d83cba (#590/#164) + §9.0 แถว 22 + HEAD lines = 6d83cba ทุกเอกสาร | #591 **success** | #165 **success** |
+| 24 | `5215cf4` | รอบ defect: **SW skipWaiting/claim** (ต้นตอ UI เก่าค้าง) + **hours/operating sync client** + markup/coupon/label + **migration 160 PREPARED** + contract yml widen-hours + test shopHoursGate 17 | #593 **success** | #167 **success** |
 | 16 | (docs commit ปิดเซสชั่น — SHA ดูใน git log) | เขียนแฮนด์ออฟปิดเซสชั่น + work state + gates evidence | ตรวจรอบถัดไป | ตรวจรอบถัดไป |
 
 > อ่านจาก GitHub Actions REST API จริง (`?head_sha=<full SHA>` — เครื่องนี้ไม่มี `gh`) ·
