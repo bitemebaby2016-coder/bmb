@@ -17,7 +17,7 @@
 | 8 | Migration 150 apply production | ✅ อนุมัติแล้ว → กำลัง apply แบบ staged | precheck→apply→verify→record · JSON ทุก stage |
 | 9 | Migration 151 HISTORICAL_BASELINE | ✅ ท่านเลือก (ก) → กำลัง apply | insert-only · idempotent · rollback=DELETE backfill |
 | 10 | Migration 152 REVOKE (039-G7) | ✅ sign-off แล้ว → สร้าง+apply | ดู §C1 |
-| 11 | D6 `bitemebaby-5f7.pages.dev` ลบ | ⏳ ท่านว่า "จะลบให้" | ผมเข้า CF ไม่ได้ — เสร็จเมื่อท่านลบทักบอกได้เลย |
+| 11 | D6 `bitemebaby-5f7.pages.dev` ลบ | ✅ **ลบแล้ว (2026-10-26)** | ท่านลบจาก account selfprint (Duriankab · project `bitemebaby` = ไม่มี Git connection · deploy ค้าง 28 วัน) · ผมยืนยันจริง: DNS = Non-existent + curl HTTP 000 · production `biteme-baby.com`/`bitemebaby.pages.dev` = 200 ปกติ |
 | 12 | legacy contracts 7 ตัว (017_018/019/020/021/022/029/033) | ⛔ ตามคำสั่ง "ไม่ซ่อม" | คงค้างไว้ — นอก CI gate ไม่กระทบ build |
 | 13 | Stale contracts 8 ตัว (Task A) | ✅ 8/8 หลัง 152 (รอบนี้ปิด) | 039-G7 เดิมรอ REVOKE → รอบนี้เขียว (ดู §C1) |
 | 14 | R-17 restore drill | ✅ PASS | `dbRestoreDrill: PASS` (manifest sha256/size/dump) |
@@ -87,7 +87,7 @@
 3. **แถบสถานะ** → เลนบน = เซมเดย์ไม่มีคัทออฟ · เลนล่าง `📅 พรีออเดอร์: เปิดรับรอบ <รอบถัดไป> (คัทออฟ HH:MM)` หรือ `ปิดรับแล้ว` ตามเวลาจริง
 4. **`/admin/products`** → ชื่อหมวดใต้การ์ดตรงกับแท็บเสมอ
 5. **`/menu?category=<id>` deep-link** ปุ่มจองล่วงหน้ายังใช้ได้ (แค่ไม่โชว์ซ้ำใน chips)
-6. หลังท่านลบ `bitemebaby-5f7.pages.dev` → บอกมาได้เลย ปิด D6
+6. ~~หลังท่านลบ `bitemebaby-5f7.pages.dev` → บอกมาได้เลย ปิด D6~~ → **✅ D6 ปิดแล้ว (2026-10-26)** — ท่านลบแล้ว · probe ยืนยัน domain ตาย (DNS Non-existent) · ข้อ 1–5 ยังรอท่านตรวจตามเดิม
 
 ## E. ตรงไปตรงมา — ยังไม่เสร็จ/ข้อจำกัด
 - **legacy 7 contracts**: ตามคำสั่ง "ไม่ซ่อม" · ในการรัน clean-room ล่าสุด **เขียวทั้งหมด** (ไม่ต้องทำอะไรเพิ่ม)

@@ -33,7 +33,7 @@
 2. ตรวจ Integrations/Settings ว่า `bitemebaby-5f7.pages.dev` ไม่มี integration/DNS record ชี้มาที่ production
 3. เลือก: (ก) ลบทั้งโปรเจกต์เก่า หรือ (ข) เก็บไว้แต่ปิด auto-deploy + เพิ่ม redirect 301 → `biteme-baby.com`
 4. หลังทำ: เปิด `https://biteme-baby.com` = โหลดปกติ · เปิด `bitemebaby-5f7.pages.dev` = ตามที่เลือก (410/redirect) · CI/deploy รอบถัดไป ปกติ
-- **สถานะ: PENDING Owner (ต้องใช้ Cloudflare account)**
+- **สถานะ: ✅ DONE (2026-10-26)** — Owner ลบ project จาก account `Duriankab` (selfprint · project `bitemebaby` = ไม่มี Git connection · deploy ค้าง 28 วัน = build `84fbd75` 27 ก.ย.) · **ยืนยันจริง:** `nslookup bitemebaby-5f7.pages.dev` = Non-existent domain · curl = HTTP 000 · production `biteme-baby.com` + `bitemebaby.pages.dev` = 200 ปกติ
 
 ## 3. Task B · Production migrations 150/151 (วิเคราะห์ครบแล้ว — รอ authorize แยก)
 
