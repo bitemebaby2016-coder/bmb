@@ -29,7 +29,9 @@ export interface TheaterEditorial {
 }
 
 export const THEATER_EDITORIAL_DEFAULTS: TheaterEditorial = {
-  kicker: 'BITE · AI WAITER STAGE',
+  // N-4 ข้อ 1 (Owner 2026-10-26): ห้ามโชว์หัวข้อเชิงเทคนิค "BITE · AI WAITER STAGE"
+  // → เริ่มด้วยหัวข้อภาษาไทยธรรมชาติแทน
+  kicker: 'เมนูพร้อมขายวันนี้',
   titleTemplate: 'วันนี้ผมเลือกมาให้ {count} อย่างครับ',
   titleEmpty: 'เดี๋ยวผมไปดูเมนูให้ก่อนครับ',
   greeting: 'สวัสดีครับ ไม่บอกก็ไม่เป็นไร ผมเลือกเมนูอร่อยๆ มาให้แล้วครับ 🧡',
@@ -37,8 +39,18 @@ export const THEATER_EDITORIAL_DEFAULTS: TheaterEditorial = {
   menuCta: '🍽️ ดูเมนูทั้งหมด',
 }
 
+/** หัวข้อเชิงเทคนิคที่ Owner สั่งห้ามแสดง (N-4 ข้อ 1) — ถ้าถูกตั้งค่าไว้ใน business_settings ก็ต้องไม่แสดง */
+const BANNED_KICKERS: ReadonlySet<string> = new Set(['BITE · AI WAITER STAGE'])
+
 function pickString(value: unknown, fallback: string): string {
   return typeof value === 'string' && value.trim().length > 0 ? value : fallback
+}
+
+/** เหมือน pickString แต่ตัดหัวข้อเชิงเทคนิคที่ถูกสั่งห้ามออกด้วย (ไทยธรรมชาติ 100%) */
+function pickKicker(value: unknown, fallback: string): string {
+  const s = typeof value === 'string' ? value.trim() : ''
+  if (s.length === 0 || BANNED_KICKERS.has(s.toUpperCase())) return fallback
+  return s
 }
 
 /** Merge admin-provided copy over defaults, one field at a time (never empty). */
@@ -46,7 +58,7 @@ export function resolveTheaterEditorial(raw: unknown): TheaterEditorial {
   const d = THEATER_EDITORIAL_DEFAULTS
   const obj = (raw && typeof raw === 'object' ? raw : {}) as TheaterEditorialRaw
   return {
-    kicker: pickString(obj.kicker, d.kicker),
+    kicker: pickKicker(obj.kicker, d.kicker),
     titleTemplate: pickString(obj.title_template, d.titleTemplate),
     titleEmpty: pickString(obj.title_empty, d.titleEmpty),
     greeting: pickString(obj.greeting, d.greeting),

@@ -57,7 +57,8 @@ export function ReviewCarouselSection({ reviews, products, onReviewCta }: Review
             className="review-float-logo"
             aria-hidden="true"
           />
-          <span>⭐ เสียงชมจากผู้ชม (Marketing Testimonials)</span>
+          {/* N-4 ข้อ 2 (Owner 2026-10-26): ห้ามโชว์ป้ายอังกฤษเชิงการตลาดกำกับหัวข้อนี้ */}
+          <span>⭐ เสียงชมจากผู้ชม</span>
         </h2>
         <Link to="/reviews" className="text-sm text-brand-primary font-medium hover:underline">ดูทั้งหมด →</Link>
       </div>

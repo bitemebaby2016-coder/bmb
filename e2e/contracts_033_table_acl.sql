@@ -24,21 +24,44 @@
 BEGIN;
 RESET ROLE;
 
+-- W-2 (B-2) 2026-10-26: fixture แอดมินให้ is_admin() ของ policy ใช้ได้ภายใน txn นี้
+-- (profiles ใน DB ใหม่มีแค่ customer · production มี owner/admin จริง) · ROLLBACK ท้ายไฟล์
+INSERT INTO auth.users (id, email, encrypted_password, created_at, updated_at,
+                        raw_app_meta_data, raw_user_meta_data, aud, role)
+VALUES ('55555555-5555-5555-5555-555555555555', 'contract-033-admin@bmb.test', 'x',
+        now(), now(), '{}'::jsonb, '{}'::jsonb, 'authenticated', 'authenticated')
+ON CONFLICT (id) DO NOTHING;
+INSERT INTO public.profiles (id, role, is_platform)
+VALUES ('55555555-5555-5555-5555-555555555555', 'admin', true)
+ON CONFLICT (id) DO UPDATE SET role = 'admin', is_platform = true;
+
 -- ============================================
 -- G1. ANON: canonical read set + no write anywhere
 -- ============================================
+-- W-2: expected set ปรับตาม grants จริง (migration ที่อนุมัติหลัง 033 เพิ่ม storefront reads
+--   8 ตัว = admin_portfolio_items/branches/brands/business_settings/delivery_zones/media_assets/
+--   menu_schedule/menu_sections/promotion_products · และ 050 ปิด anon อ่าน orders)
 DO $$ DECLARE ok int := 0; BEGIN
-  -- canonical 006 set + 033 mascot storefront read
   IF NOT has_table_privilege('anon', 'public.products', 'SELECT') THEN ok := ok + 1; END IF;
   IF NOT has_table_privilege('anon', 'public.product_categories', 'SELECT') THEN ok := ok + 1; END IF;
   IF NOT has_table_privilege('anon', 'public.delivery_rounds', 'SELECT') THEN ok := ok + 1; END IF;
   IF NOT has_table_privilege('anon', 'public.reviews', 'SELECT') THEN ok := ok + 1; END IF;
   IF NOT has_table_privilege('anon', 'public.promotions', 'SELECT') THEN ok := ok + 1; END IF;
   IF NOT has_table_privilege('anon', 'public.preorder_votes', 'SELECT') THEN ok := ok + 1; END IF;
-  IF NOT has_table_privilege('anon', 'public.orders', 'SELECT') THEN ok := ok + 1; END IF;
   IF NOT has_table_privilege('anon', 'public.mascot_overrides', 'SELECT') THEN ok := ok + 1; END IF;
+  IF NOT has_table_privilege('anon', 'public.admin_portfolio_items', 'SELECT') THEN ok := ok + 1; END IF;
+  IF NOT has_table_privilege('anon', 'public.branches', 'SELECT') THEN ok := ok + 1; END IF;
+  IF NOT has_table_privilege('anon', 'public.brands', 'SELECT') THEN ok := ok + 1; END IF;
+  IF NOT has_table_privilege('anon', 'public.business_settings', 'SELECT') THEN ok := ok + 1; END IF;
+  IF NOT has_table_privilege('anon', 'public.delivery_zones', 'SELECT') THEN ok := ok + 1; END IF;
+  IF NOT has_table_privilege('anon', 'public.media_assets', 'SELECT') THEN ok := ok + 1; END IF;
+  IF NOT has_table_privilege('anon', 'public.menu_schedule', 'SELECT') THEN ok := ok + 1; END IF;
+  IF NOT has_table_privilege('anon', 'public.menu_sections', 'SELECT') THEN ok := ok + 1; END IF;
+  IF NOT has_table_privilege('anon', 'public.promotion_products', 'SELECT') THEN ok := ok + 1; END IF;
+  -- 050 (w5_h1_close_anon_orders): anon ต้อง "ไม่มี" สิทธิ์อ่าน orders อีกต่อไป
+  IF has_table_privilege('anon', 'public.orders', 'SELECT') THEN ok := ok + 1; END IF;
   IF ok <> 0 THEN RAISE EXCEPTION 'FAIL G1a anon canonical SELECT set broken (missing=%)', ok; END IF;
-  RAISE NOTICE 'PASS G1a anon canonical SELECT set intact (7 canonical + mascot_overrides)';
+  RAISE NOTICE 'PASS G1a anon canonical SELECT set intact (16 storefront rels + orders read closed)';
 END $$;
 
 DO $$
@@ -61,7 +84,10 @@ BEGIN
     END IF;
     IF has_table_privilege('anon', 'public.' || r.relname, 'SELECT')
        AND r.relname NOT IN ('products','product_categories','delivery_rounds',
-                             'reviews','promotions','preorder_votes','orders','mascot_overrides') THEN
+                             'reviews','promotions','preorder_votes','mascot_overrides',
+                             'admin_portfolio_items','branches','brands','business_settings',
+                             'delivery_zones','media_assets','menu_schedule','menu_sections',
+                             'promotion_products') THEN
       extra := extra + 1;
       RAISE NOTICE 'G1b anon unexpected SELECT on %', r.relname;
     END IF;
@@ -118,10 +144,16 @@ BEGIN
     JOIN pg_namespace n ON n.oid = c.relnamespace
     WHERE n.nspname = 'public' AND c.relkind IN ('r','p','v')
   LOOP
-    IF NOT has_table_privilege('service_role', 'public.' || r.relname, 'SELECT') THEN miss := miss + 1; END IF;
-    IF NOT has_table_privilege('service_role', 'public.' || r.relname, 'INSERT') THEN miss := miss + 1; END IF;
-    IF NOT has_table_privilege('service_role', 'public.' || r.relname, 'UPDATE') THEN miss := miss + 1; END IF;
-    IF NOT has_table_privilege('service_role', 'public.' || r.relname, 'DELETE') THEN miss := miss + 1; END IF;
+    -- W-2: `order_submissions` ไม่มี grant ให้ service_role โดยเจตนา (124: เขียนผ่าน RPC
+    -- SECURITY DEFINER เท่านั้น — idempotency table ห้ามเขียนตรง) → ยกเว้นพร้อมบันทึก
+    IF r.relname <> 'order_submissions' THEN
+      IF NOT has_table_privilege('service_role', 'public.' || r.relname, 'SELECT') THEN miss := miss + 1; END IF;
+      IF NOT has_table_privilege('service_role', 'public.' || r.relname, 'INSERT') THEN miss := miss + 1; END IF;
+      IF NOT has_table_privilege('service_role', 'public.' || r.relname, 'UPDATE') THEN miss := miss + 1; END IF;
+      IF NOT has_table_privilege('service_role', 'public.' || r.relname, 'DELETE') THEN miss := miss + 1; END IF;
+    ELSE
+      RAISE NOTICE 'G4 known exception: order_submissions has no service_role grant (124 design)';
+    END IF;
   END LOOP;
   IF miss <> 0 THEN RAISE EXCEPTION 'FAIL G4 service_role missing grants on % privileges', miss; END IF;
   RAISE NOTICE 'PASS G4 service_role full SELECT/INSERT/UPDATE/DELETE on every public rel';
@@ -148,9 +180,11 @@ SELECT set_config('role', 'authenticated', false);
 SELECT set_config('request.jwt.claims',
   '{"sub":"55555555-5555-5555-5555-555555555555","role":"authenticated"}', false);
 DO $$ DECLARE v_id text; BEGIN
-  INSERT INTO public.media_assets (id, url, alt, kind, created_by)
+  -- W-2: policy `media_assets_platform_global` ต้องการ tenant_id IS NULL + category='global'
+  -- + is_platform_admin() (profiles.is_platform ของ fixture ด้านบน)
+  INSERT INTO public.media_assets (id, url, alt, kind, category, tenant_id, created_by)
   VALUES ('media-033-contract', 'https://contract.bmb/033/probe.png', 'contract probe', 'image',
-          '55555555-5555-5555-5555-555555555555')
+          'global', NULL, '55555555-5555-5555-5555-555555555555')
   RETURNING id INTO v_id;
   IF v_id IS NULL THEN RAISE EXCEPTION 'FAIL G5a admin INSERT media_assets returned no id'; END IF;
   DELETE FROM public.media_assets WHERE id = v_id;
@@ -196,8 +230,14 @@ DO $$ DECLARE n int; BEGIN
   RAISE NOTICE 'PASS G5d anon SELECT mascot_overrides works (storefront, rows=%)', n;
   SELECT count(*) INTO n FROM public.products;
   RAISE NOTICE 'PASS G5d anon SELECT products works (canonical, rows=%)', n;
-  SELECT count(*) INTO n FROM public.orders;
-  RAISE NOTICE 'PASS G5d anon SELECT orders works (canonical, rows=%)', n;
+  -- W-2: 050 (w5_h1_close_anon_orders) ปิด anon อ่าน orders แล้ว → เปลี่ยนจาก "อ่านได้"
+  -- เป็น "ต้องถูกปฏิเสธ" (assertion เข้มขึ้น ตรงสิ่งที่อนุมัติจริง)
+  BEGIN
+    SELECT count(*) INTO n FROM public.orders;
+    RAISE EXCEPTION 'FAIL G5d anon can still SELECT orders (050 gate open)';
+  EXCEPTION WHEN insufficient_privilege THEN
+    RAISE NOTICE 'PASS G5d anon SELECT orders DENIED (050 close-anon-orders gate holds)';
+  END;
 END $$;
 
 -- G6: authenticated round read + admin inventory read unchanged (029/028 regression)

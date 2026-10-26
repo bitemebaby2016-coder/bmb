@@ -1,0 +1,68 @@
+BEGIN
+RESET
+INSERT 0 1
+INSERT 0 1
+psql:<stdin>:65: NOTICE:  PASS G1a anon canonical SELECT set intact (16 storefront rels + orders read closed)
+DO
+psql:<stdin>:99: NOTICE:  PASS G1b anon holds ZERO write privileges and exactly the canonical read set
+DO
+DO
+psql:<stdin>:117: NOTICE:  PASS G2 authenticated grants: business_settings+content_approvals SELECT, media_assets+mascot_overrides CRUD
+psql:<stdin>:133: NOTICE:  PASS G3 public_profiles read-only for authenticated + pre_orders archive (write grants revoked)
+DO
+psql:<stdin>:160: NOTICE:  G4 known exception: order_submissions has no service_role grant (124 design)
+DO
+psql:<stdin>:160: NOTICE:  PASS G4 service_role full SELECT/INSERT/UPDATE/DELETE on every public rel
+INSERT 0 1
+UPDATE 1
+  set_config   
+---------------
+ authenticated
+(1 row)
+
+                              set_config                               
+-----------------------------------------------------------------------
+ {"sub":"55555555-5555-5555-5555-555555555555","role":"authenticated"}
+(1 row)
+
+psql:<stdin>:192: NOTICE:  PASS G5a admin INSERT+DELETE media_assets works (grant + admin policy)
+DO
+                              set_config                               
+-----------------------------------------------------------------------
+ {"sub":"44444444-4444-4444-4444-444444444444","role":"authenticated"}
+(1 row)
+
+psql:<stdin>:210: NOTICE:  PASS G5b authenticated SELECT business_settings works (rows=5)
+psql:<stdin>:210: NOTICE:  PASS G5b authenticated INSERT business_settings DENIED (no grant)
+DO
+psql:<stdin>:210: NOTICE:  PASS G5b authenticated SELECT media_assets works (rows=9, policy public_read)
+DO
+psql:<stdin>:223: NOTICE:  PASS G5c authenticated UPDATE via public_profiles view DENIED (view write path closed)
+ set_config 
+------------
+ anon
+(1 row)
+
+   set_config    
+-----------------
+ {"role":"anon"}
+(1 row)
+
+psql:<stdin>:241: NOTICE:  PASS G5d anon SELECT mascot_overrides works (storefront, rows=0)
+psql:<stdin>:241: NOTICE:  PASS G5d anon SELECT products works (canonical, rows=6)
+DO
+psql:<stdin>:241: NOTICE:  PASS G5d anon SELECT orders DENIED (050 close-anon-orders gate holds)
+  set_config   
+---------------
+ authenticated
+(1 row)
+
+                              set_config                               
+-----------------------------------------------------------------------
+ {"sub":"55555555-5555-5555-5555-555555555555","role":"authenticated"}
+(1 row)
+
+psql:<stdin>:252: NOTICE:  PASS G6 authenticated (admin) SELECT delivery_rounds works (rows=6)
+psql:<stdin>:252: NOTICE:  PASS G6 authenticated (admin) SELECT inventory works (rows=4)
+DO
+ROLLBACK

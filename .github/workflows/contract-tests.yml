@@ -452,16 +452,55 @@ jobs:
           fi
           echo "Contract 156 OK — spin daily-cap rewards + affiliate no-cash monthly cap + rewards catalog admin table"
 
+      # ---------------------------------------------------------------------------
+      # W-2 (B-2) — legacy contracts 7 ตัว กลับเข้า gate (Owner สั่ง "ปิดด้วย" 2026-10-26)
+      # เงื่อนไขที่ทำก่อน push นี้ (กติกา handoff §W-2): ทั้ง 7 ไฟล์ EXIT=0 บน replay ท้องถิ่น
+      #   2 รอบ = รอบ reproduce (1/7 เขียว) + รอบ fresh replay 001–157 ALL_GREEN แล้วรันซ้ำ
+      #   (e2e/w1-replay-apply-2026-10-26-full.log + stdout ของ loop = 7/7 EXIT=0)
+      # สิ่งที่แก้ (รายละเอียดรายไฟล์ = e2e/w2-*.log + คอมเมนต์ W-2 ในไฟล์ contract):
+      #   017_018 · ลบ declaration `v_has fn%TYPE` · fixture เมนูปฏิทิน + พิกัด/ที่อยู่ ·
+      #             ยอดบิล = subtotal + delivery_fee · ยกเลิกผ่าน cancel_order (141 unified)
+      #   019     · signature create_production_batch(text,date,text) · JWT admin fixture ·
+      #             รอบวันนี้ + order_mode/scheduled_date ตรงกัน
+      #   020     · signature compute_delivery_fee(+branch) / driver_login(text) ·
+      #             fixture rider (drivers ผูก user) + สลับ claims ตามบทบาท · ค่าจัดส่งอิงโซนจริง ·
+      #             POD ก่อน delivered (132)
+      #   021     · JWT + user fixture (FK ai_customer_memory.user_id)
+      #   022     · signature submit_content_for_approval 5 args · JWT admin (FK created_by)
+      #   029     · gate ปัจจุบันของ PRE_ORDER = เมนูรายวัน (141/142) → fixture เมนูคนละวัน
+      #             แล้วรอ ERR_PRODUCT_NOT_ON_MENU
+      #   033     · expected anon set = grants จริง 16 ตาราง (050 ปิด anon อ่าน orders) ·
+      #             G4 ยกเว้น order_submissions (124 design) · fixture platform-admin ·
+      #             G5d ยืนยัน anon อ่าน orders ต้องถูกปฏิเสธ
+      # + migration 157 (anon policy role scoping) ถูก apply ใน inventory loop นี้ด้วย
+      - name: Legacy contracts 017-033 (B-2 · 7 files, ROLLBACK each)
+        run: |
+          set +e
+          fail=0
+          for f in e2e/contracts_017_018.sql e2e/contracts_019_kitchen.sql e2e/contracts_020_bite_drive.sql \
+                   e2e/contracts_021_phase4.sql e2e/contracts_022_phases_5_7.sql e2e/contracts_029_round_grant.sql \
+                   e2e/contracts_033_table_acl.sql; do
+            echo "===== $f ====="
+            out=$(psql -v ON_ERROR_STOP=1 -f "$f" 2>&1); rc=$?
+            printf '%s\n' "$out"
+            if [ $rc -ne 0 ]; then
+              fail=$((fail+1))
+              msg=$(printf '%s\n' "$out" | grep -m1 'ERROR:' || echo "rc=$rc")
+              echo "::error file=$f::$msg"
+            fi
+          done
+          if [ $fail -ne 0 ]; then
+            echo "::error::Legacy contracts failed: $fail/7"
+            exit 1
+          fi
+          echo "Legacy contracts OK — 7/7 (017_018 · 019 · 020 · 021 · 022 · 029 · 033)"
+
 # ---------------------------------------------------------------------------
-# B-2 — legacy contract 7 ตัว (017_018/019/020/021/022/029/033) ยังอยู่นอก gate
-# (Owner 2026-10-26 "ปิดให้หมด" → ลองเพิ่ม step นี้ใน commit 3a2c9f7 = ล้มเหลวทั้ง 7 ไฟล์)
-# ผลตรวจจริง (annotations ของ Contract Tests #147 + replay ท้องถิ่น 7/7):
-#   017 syntax error `%` (v_has fn%TYPE) · 019/020/022 to_regprocedure signature drift
-#   017/019/021/022 RPC ต้องการ auth.uid() (ไม่มี JWT context ใน contract)
-#   021/022 FK ต้องการ user จริง · 020 geometry 211.98km > 5km · 029 ค่า gate เปลี่ยนตาม 142
-#   033 anon read set + service_role grants ขยายตาม feature ที่อนุมัติ 이후
-# → แก้ให้เขียวต้องซ่อม fixture/context ทีละไฟล์บน DB จริง (ซ้ำ 2 ครั้งแล้ว = หยุดตามกติกา 0.9)
-# → งานค้าง B-2 = BLOCKED รอ Owner เลือก: (ก) ซ่อมทั้ง 7 บน DB session ที่ verify ได้ หรือ
-#   (ข) ปลดระเบียบอย่างเป็นทางการโดยชี้ว่า 123/124/146/147/148/149 คือ contract ของ domain เดียวกันยุคใหม่
-# ห้ามเพิ่ม step นี้กลับโดยไม่มีผลรันเขียวทั้ง 7 ไฟล์ก่อน
+# B-2 — legacy contract 7 ตัว (017_018/019/020/021/022/029/033) = CLOSED (W-2 · 2026-10-26)
+# ประวัติ: ความพยายาม 1 (commit 3a2c9f7) = ล้มเหลวทั้ง 7 (Contract Tests #147) ·
+#   ความพยายาม 2 = เขียว 1/7 แล้ว rollback หมด (กติกา 0.9) ·
+#   รอบนี้ Owner สั่ง "ปิดด้วย" → ซ่อมทีละไฟล์บน replay ท้องถิ่นจน EXIT=0 ครบทั้ง 7
+#   "ก่อน" เพิ่ม step กลับ CI แล้วพิสูจน์ซ้ำบน fresh replay 001–157 ALL_GREEN
+#   (e2e/w1-replay-apply-2026-10-26-full.log · OK=157 FAIL=0)
+# ห้ามถอด step นี้ออกโดยไม่มีผลรันพิสูจน์ — ถ้า CI ล้ม ให้ดู annotation รายไฟล์ด้านบน
 # ---------------------------------------------------------------------------

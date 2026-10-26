@@ -4,6 +4,8 @@ import { BrowserRouter } from 'react-router-dom'
 import { HelmetProvider } from 'react-helmet-async'
 import App from './App'
 import './index.css'
+// W-4 / L-9: ต้อง import "หลัง" index.css เสมอ — เฟรมเมนู/การ์ด 1:1 ทั้งเว็บทับค่าเดิม
+import './styles/frameCanonical.css'
 import { useAuthStore } from './store/authStore'
 import { installGlobalErrorReporter } from './lib/errorReporter'
 import { hydratePlatformConfigFromServer } from './lib/platformConfigBootstrap'

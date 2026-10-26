@@ -1,0 +1,11 @@
+BEGIN
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+psql:<stdin>:118: NOTICE:  near-kitchen (0 km) fee = 35.00
+psql:<stdin>:118: NOTICE:  4 km fee = 25.00
+psql:<stdin>:118: NOTICE:  QA-03 migration 020 SQL suite PASS (transaction rolled back — no writes persisted)
+DO
+ROLLBACK

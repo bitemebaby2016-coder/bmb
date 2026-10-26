@@ -1,0 +1,6 @@
+BEGIN
+INSERT 0 1
+INSERT 0 1
+psql:<stdin>:98: NOTICE:  QA-03 migration 019 SQL suite PASS (transaction rolled back — no writes persisted)
+DO
+ROLLBACK

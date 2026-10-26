@@ -5,10 +5,24 @@
 -- ============================================
 BEGIN;
 
+-- W-2 (B-2): fixture ผู้ใช้จริง — save_ai_memory/get_ai_memory ยึด auth.uid() และ
+--   ai_customer_memory.user_id มี FK (ไม่มี user = insert ไม่ได้) · ROLLBACK ท้ายไฟล์
+INSERT INTO auth.users (id, email, encrypted_password, created_at, updated_at,
+                        raw_app_meta_data, raw_user_meta_data, aud, role)
+VALUES ('88888888-8888-8888-8888-888888888888', 'contract-021@bmb.test', 'x',
+        now(), now(), '{}'::jsonb, '{}'::jsonb, 'authenticated', 'authenticated')
+ON CONFLICT (id) DO NOTHING;
+INSERT INTO public.profiles (id, role)
+VALUES ('88888888-8888-8888-8888-888888888888', 'customer')
+ON CONFLICT (id) DO UPDATE SET role = 'customer';
+
 DO $$
 DECLARE
   v_sys jsonb;
 BEGIN
+  PERFORM set_config('request.jwt.claims',
+    '{"sub":"88888888-8888-8888-8888-888888888888","role":"authenticated"}', true);
+
   -- 0) functions exist
   IF to_regprocedure('public.create_notification(text,text,text,text)') IS NULL
      OR to_regprocedure('public.set_notification_pref(text,boolean)') IS NULL

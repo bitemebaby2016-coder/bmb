@@ -125,18 +125,30 @@ END $$;
 -- ============================================
 DO $$ BEGIN
   UPDATE public.products SET available_preorder = false WHERE id = 'prod-1';
+  -- W-2 (B-2): ใส่เมนูของ "สินค้าเดียวกับตะกร้า" (prod-1) แต่คนละวัน (วันถัดไป) เพื่อให้ถึง
+  --   "รายสินค้า/รายวัน gate" ที่ G5 ตั้งใจตรวจ — นับจาก 141/142 ระบบเลือกสินค้า PRE_ORDER
+  --   จากเมนูปฏิทิน (แฟล็ก available_preorder เดิมถูกแทนที่) → prod-1 ที่มีเมนูแต่คนละวัน
+  --   ต้องถูกปฏิเสธด้วย ERR_PRODUCT_NOT_ON_MENU (ไม่ใช่ยอมรับ)
+  --   authenticated ไม่มี grant INSERT บน menu_schedule → สลับเป็น postgres ทำเฉพาะ fixture แล้วคืนสภาพ
+  PERFORM set_config('role', 'postgres', false);
+  INSERT INTO public.menu_schedule (scheduled_date, product_id, is_published, note)
+  VALUES (CURRENT_DATE + 4, 'prod-1', true, 'qa contract fixture 029 (rollback)')
+  ON CONFLICT DO NOTHING;
+  PERFORM set_config('role', 'authenticated', false);
   PERFORM public.create_order_with_items(
     p_items => '[{"product_id":"prod-1","quantity":1}]'::jsonb,
     p_delivery_round_id => 'round-' || to_char(CURRENT_DATE + 3,'YYYYMMDD') || '-morning',
     p_delivery_method => 'self_delivery',
     p_delivery_address => 'g5',
-    p_dropoff_latitude => 10.7016, p_dropoff_longitude => 102.1429,
+    -- W-2: ใช้พิกัดครัว (ระยะ ~0) กันเรื่อง 5km บังหน้า mode gate ที่ต้องการตรวจ
+    p_dropoff_latitude => 12.615659, p_dropoff_longitude => 102.098063,
     p_customer_name => 'P3B G5', p_payment_method => 'promptpay_qr',
     p_order_mode => 'PRE_ORDER', p_scheduled_date => CURRENT_DATE + 3
   );
-  RAISE EXCEPTION 'FAIL G5 wrong-mode order accepted';
+  RAISE EXCEPTION 'FAIL G5 un-gated PRE_ORDER accepted (product not on menu for that date)';
 EXCEPTION WHEN OTHERS THEN
-  IF SQLERRM LIKE '%ERR_PRODUCT_MODE_NOT_ALLOWED%' THEN RAISE NOTICE 'PASS G5 mode gate intact after GRANT';
+  -- W-2: gate ปัจจุบันของ PRE_ORDER = เมนูรายวัน (141/142) — สินค้าที่ไม่อยู่ในเมนูวันนั้นต้องถูกปฏิเสธ
+  IF SQLERRM LIKE '%ERR_PRODUCT_NOT_ON_MENU%' THEN RAISE NOTICE 'PASS G5 menu/product gate intact after GRANT';
   ELSE RAISE EXCEPTION 'FAIL G5 unexpected: %', SQLERRM; END IF;
 END $$;
 

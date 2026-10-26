@@ -52,8 +52,9 @@ export function ReviewPage() {
         : <div className='card bg-gray-50 text-center py-8'><p className='text-brand-muted'>No reviews yet. Waiting for real customer reviews.</p></div>}
       </section>
       <section className='mb-10'>
-        <h2 className='text-xl font-display font-bold text-brand-accent mb-2'>Marketing Testimonials</h2>
-        <p className='text-sm text-brand-muted'>Curated feedback from Facebook, GrabFood - marketing only.</p>
+        {/* N-4 ข้อ 2: หัวข้อภาษาไทยธรรมชาติ (เดิม "Marketing Testimonials") */}
+        <h2 className='text-xl font-display font-bold text-brand-accent mb-2'>เสียงชมจากผู้ชม</h2>
+        <p className='text-sm text-brand-muted'>เสียงตอบรับที่คัดสรรจาก Facebook และ GrabFood</p>
       </section>
       <section className='mb-10'>
         <h2 className='text-xl font-display font-bold text-brand-accent mb-3'>Admin Portfolio</h2>

@@ -41,7 +41,7 @@
 | unit/contract | `npx vitest run` | ดูก้อน §5 | `e2e/session20261026-gates-evidence.txt` §2–§5 |
 | build | `npm run build` (tsc + vite) | **exit 0** | `e2e/session20261026-gates-evidence.txt` §7 |
 | E2E route smoke | `npx playwright test routeNav` | **39/39 passed · exit 0** | `e2e/session20261026-gates-evidence.txt` §8 |
-| SQL replay / production | **อนุมัติแล้ว (Owner 2026-10-26)** — fresh replay 001→156 เทียบ production | **UNVERIFIED จนกว่าจะรัน** (ยังไม่ใช่ PASS) | ของรอบก่อน = `e2e/*.json` (§4) · รันตาม handoff แชทถัดไป |
+| SQL replay / production | **รันแล้ว (W-1 · 2026-10-26)** — fresh replay 001→157 + เทียบ production แบบ read-only | **VERIFIED** · `REPLAY_ALL_GREEN 157/157` + parity รายงาน drift ครบ (ไม่ใช่ zero-drift) | `e2e/w1-replay-apply-2026-10-26-full.log` · `e2e/w1-parity-2026-10-26.json` · `e2e/w1-parity-report-2026-10-26.md` |
 | CI ของ SHA ที่ push จริง | GitHub Actions API (ไม่มี `gh`) | ดูก้อน **§9.0 (ตาราง CI canonical ทุก SHA)** | §9.0 |
 
 ### 1.3 Production (ไม่ได้ re-verify ในรอบนี้)
@@ -85,10 +85,11 @@
 
 ---
 
-## 3. Engineering backlog — ปิด 4/5 · **B-2 = BLOCKED (กติกา 0.9: ซ้ำ 2 ครั้งแล้วหยุด)**
+## 3. Engineering backlog — **ปิด 5/5 (B-2 ปิดแล้ว W-2 2026-10-26) · blocker ใหม่ = B-6 (P0)**
 
-> คำสั่ง Owner 2026-10-26 "ปิดให้หมดโดยสมบูรณ์" → ทำครบ B-1/B-3/B-4/B-5 แล้ว ·
-> **B-2 พยายามแล้ว 2 ครั้งและล้มเหลวทั้งคู่** → หยุด + คืน main เป็นเขียว + รายงาน blocker ตามกติกา (ไม่ปิดบัง)
+> คำสั่ง Owner 2026-10-26 "ปิดให้หมดโดยสมบูรณ์" → B-1/B-3/B-4/B-5 ปิดรอบที่ 2 ·
+> **B-2 ปิดรอบที่ 3** (ซ่อมครบ 7 ไฟล์บน replay ท้องถิ่น **ก่อน** เพิ่ม step กลับ CI — ตามกติกา handoff §W-2) ·
+> **งานค้างตอนนี้ = B-6 (production guest อ่านเมนูไม่ได้) + UI 5 ข้อ + W-1 แผน 3 ข้อรอ Owner**
 
 | # | งาน (สถานะก่อนรอบนี้) | ผล | หลักฐาน |
 |---|---|---|---|
@@ -114,11 +115,11 @@
 
 | # | งาน | สถานะตอนนี้ | เงื่อนไข/เกณฑ์ |
 |---|---|---|---|
-| N-1 | **fresh replay เทียบ production** | **APPROVED** (Owner 2026-10-26) · ยังไม่รัน | รัน Docker 001→156 ใหม่ทั้งหมดเทียบ schema production แบบ read-only · ปิดช่อง UNVERIFIED ใน §4/§5 |
-| N-2 | **Legacy SQL contracts 7 ไฟล์ (B-2) "ปิดด้วย"** | สั่งใหม่ให้ปิด (ความพยายามก่อนหน้า 2 ครั้งล้มเหลว) | ต้องเขียวทั้ง 7 บน replay ท้องถิ่น **ก่อน** เพิ่มกลับ CI · ห้ามเดาสิทธิ์/fixture โดยไม่มีผลรัน |
-| N-3 | **CAP-22 ให้พร้อมก่อนทดสอบจริง** | โค้ดพร้อม · **`marketing_rules` ยังไม่ถูกกำหนด** | Owner: "AI เลือกเวลาจัดตารางการตลาดจะกำหนดให้พร้อมก่อนทดสอบระบบจริง" → ตั้งหน้าต่าง/cooldown/เพดานให้ครบก่อนขั้น C7/C8 ของ test pack |
-| N-4 | **UI ฝั่งลูกค้า (ชุดใหญ่)** | ยังไม่เริ่ม | ดูหัวข้อถัดไป — ห้ามรื้อระบบ แก้เป็นจุด ๆ |
-| N-5 | **Test pack = เกณฑ์ต้องตรงความจริง** | **แก้แล้วรอบนี้** (ดู `BMB_PRODUCTION_TEST_PACK.md` §0/L) | ห้ามสั่งตรวจสิ่งที่ยังไม่สำเร็จว่าต้องผ่าน |
+| N-1 | **fresh replay เทียบ production** | **ปิดแล้ว (W-1 · 2026-10-26)** — `REPLAY_ALL_GREEN 157/157` + parity รันแล้ว | drift 5 กลุ่มมีคำอธิบาย/แผนครบ → `e2e/w1-parity-report-2026-10-26.md` · §4/§5 = VERIFIED · **เหลือแผน 3 ข้อรอ Owner อนุมัติ (§L L-10)** |
+| N-2 | **Legacy SQL contracts 7 ไฟล์ (B-2) "ปิดด้วย"** | **ปิดแล้ว (W-2 · 2026-10-26)** — 7/7 EXIT=0 บน replay ท้องถิ่น (ทั้งรอบ reproduce และรอบ fresh 157) · step กลับเข้า CI แล้ว | ยืนยันด้วย Contract Tests success + บรรทัด `Legacy contracts OK — 7/7` (test pack A2) |
+| N-3 | **CAP-22 ให้พร้อมก่อนทดสอบจริง** | **พบว่ามีค่าจริงอยู่แล้ว** (query read-only 2026-10-26): window 10:00–19:00 · cooldown 6 ชม. · 3 โพสต์/สัปดาห์ · content_mix 40/30/20/10 | → **C7/C8 ปลดล็อกได้** · `menu_rules`/`stop_conditions` ยังว่าง = ทางเลือก (§L L-12) |
+| N-4 | **UI ฝั่งลูกค้า (ชุดใหญ่ 9 ข้อ)** | **ปิดแล้ว 4 ข้อ** = ข้อ 1 · 2 · 6 · 9 (มี test) · **ยังเหลือ 5 ข้อ** = 3 · 4 · 5 · 7 · 8 | ดูหัวข้อถัดไป — ห้ามรื้อระบบ แก้เป็นจุด ๆ · เกณฑ์ปิด = test pack §L |
+| N-5 | **Test pack = เกณฑ์ต้องตรงความจริง** | **แก้แล้ว** + ตรวจซ้ำรอบนี้ (§0/§L ตรงกับสิ่งที่ปิดจริง) | ห้ามสั่งตรวจสิ่งที่ยังไม่สำเร็จว่าต้องผ่าน |
 
 ### N-4 · รายการ UI ฝั่งลูกค้า (ถอดคำสั่ง Owner ตรง ๆ — ห้ามตกข้อ)
 
@@ -144,7 +145,13 @@
 ## 4. Migration / schema status
 
 - **Production ledger:** top = **156** (หลักฐาน `e2e/r16Apply156-*.json` + `e2e/r15Apply155-*.json` · รอบก่อน)
-- **รอบนี้ (2026-10-26): ไม่มี migration ใหม่ ไม่มี apply/deploy** — เป็นงาน client/docs เท่านั้น
+- **รอบนี้ (2026-10-26): มี migration ใหม่ 1 ไฟล์ = `157_anon_policy_role_scoping.sql` (B-6) — เขียน/เทสต์บน replay
+  แล้ว แต่ยัง NOT_APPLIED บน production** (ต้องได้คำสั่ง/อนุมัติ Owner ก่อน — production write)
+- **schema parity (W-1):** fresh replay 001→157 = `REPLAY_ALL_GREEN 157/157` · เทียบ production แบบ read-only →
+  **MATCH** = tables/columns/indexes/constraints/sequences/triggers/views/**ledger 156=156** ·
+  **DRIFT 5 กลุ่ม** (rls 2 ตาราง · policies 6 · functions 25 · acl_tables 157 · acl_functions 219) —
+  ทุกกลุ่มมีคำอธิบาย+แผนใน `e2e/w1-parity-report-2026-10-26.md` · **normalisation = ความต่างเชิงรูปแบบเท่านั้น**
+  (array/ชื่อ ledger/CRLF) — ระบุไว้ใน `e2e/w1-parity-2026-10-26.json`
 - แผนที่สำคัญ (คงเดิม): 138 = payment_intents read authority · 139 = POD storage policy ·
   141/142 = pre-order unify + menu gate · 143 = cutoff_hours · 144 = round pattern · 152 = REVOKE anon set_menu ·
   153–156 = Growth & Rewards stages 1–4
@@ -190,6 +197,18 @@
 - ขั้นตอนตรวจซ้ำด้วยตัวเอง: เปิด
   `https://github.com/bitemebaby2016-coder/bmb/actions` แล้วหาแถว commit `066e961`
 
+### 5.4 Evidence รอบที่ 3 (2026-10-26 · W-1/W-2/UI 4 ข้อ)
+
+| รายการ | ผล | evidence |
+|---|---|---|
+| fresh replay 001→157 (prelude + preprocessor/shims แบบ CI) | **`REPLAY_ALL_GREEN 157/157` · FAIL=0** | `e2e/w1-replay-apply-2026-10-26-full.log` + `.jsonl` |
+| schema parity (production read-only · Management API) | **รันแล้ว** — MATCH 8 ป้าย · DRIFT 5 กลุ่มมีคำอธิบาย/แผน | `e2e/w1-prod-snapshot-2026-10-26.json` · `e2e/w1-local-snapshot-2026-10-26.json` · `e2e/w1-parity-2026-10-26.json` · `e2e/w1-parity-report-2026-10-26.md` |
+| legacy contracts 7 ไฟล์ (B-2) บน replay ชุดเดียวกัน | **7/7 EXIT=0** | `e2e/w2-contracts_*.log` |
+| B-6 ตรวจ guest บน production จริง (read-only) | **401 `permission denied for function is_staff` ทุก endpoint + Playwright เปิด /menu = "ไม่พบเมนู"** | `e2e/w2_guest_menu_probe.cjs` · `e2e/w2prod_anon.cjs` |
+| fix B-6 บน replay (apply 157) | anon อ่าน 16 ตารางได้ · **zero write leak** | `e2e/w2_b6_verify.sql` ผลรัน |
+| unit เพิ่มใหม่ | `storeStatusWindow` 4/4 · `uiTechnicalLabels` 4/4 | ไฟล์ test ใน `src/__tests__/` |
+| unit ที่ต้องยังเขียว | `mascotClosed` + `roundsSameDayNoCutoff` = **34/34** | `vitest.log` ของรอบนี้ |
+
 ---
 
 ## 6. Production runtime gaps (ยังไม่มีหลักฐานจริง)
@@ -206,8 +225,10 @@
 
 ## 7. Owner Production Acceptance — **ใช้ชุดเดียว: `docs/BMB_PRODUCTION_TEST_PACK.md`**
 
-> ⚠️ **ก่อนรัน:** ดู **§0 (blocker + เงื่อนไข)** และ **§L (ยังแก้ไม่เสร็จ — ห้ามใช้เป็นเกณฑ์ ACCEPT)** ของไฟล์นั้นก่อน —
-> ขั้น **B2 / C7 / C8 ถูกล็อกไว้** ติด defect UI + ยังไม่ได้ตั้ง `marketing_rules` · **ห้ามตัดสินว่า "ผ่านทั้งหมด" ถ้ายังมี §L ค้าง**
+> ⚠️ **ก่อนรัน:** ดู **§0 (blocker + เงื่อนไข)** และ **§L (ยังแก้ไม่เสร็จ — ห้ามใช้เป็นเกณฑ์ ACCEPT)** ของไฟล์นั้นก่อน ·
+> **อัปเดต 2026-10-26 (รอบที่ 3):** **ปลดล็อกแล้ว** = **B2** (แถบสถานะแก้ + มี test) · **C7/C8** (`marketing_rules`
+> มีค่าจริงแล้ว) · **A2** (B-2 กลับเข้า CI) — **ยังล็อกอยู่** = ขั้นที่ผูกกับ UI 5 ข้อที่ค้าง (L-3/4/5/7/8) ·
+> **ห้ามตัดสินว่า "ผ่านทั้งหมด" ถ้ายังมี §L ค้าง**
 
 > คำสั่ง Owner 2026-10-26: "รวบรวมเทสไว้ทดสอบจริงทั้งหมดบนโปรดักชั่นจริง"
 > → ทุก checklist ที่เคยกระจายอยู่ในหลายเอกสาร ถูกรวมเป็น **ขั้น A–K** ในไฟล์นั้นไฟล์เดียว

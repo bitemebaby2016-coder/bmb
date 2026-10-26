@@ -1,0 +1,40 @@
+BEGIN
+RESET
+INSERT 0 1
+  set_config   
+---------------
+ authenticated
+(1 row)
+
+                              set_config                               
+-----------------------------------------------------------------------
+ {"sub":"33333333-3333-3333-3333-333333333333","role":"authenticated"}
+(1 row)
+
+DO
+psql:<stdin>:51: NOTICE:  PASS G1 authenticated ensure_rounds_for_date created 3 active deterministic rounds (idempotent)
+RESET
+ set_config 
+------------
+ anon
+(1 row)
+
+DO
+psql:<stdin>:71: NOTICE:  PASS G2 anon rejected (function absent for anon or privilege denied)
+  set_config   
+---------------
+ authenticated
+(1 row)
+
+                              set_config                               
+-----------------------------------------------------------------------
+ {"sub":"33333333-3333-3333-3333-333333333333","role":"authenticated"}
+(1 row)
+
+DO
+psql:<stdin>:110: NOTICE:  PASS G3 customer INSERT/UPDATE/DELETE on delivery_rounds all blocked
+psql:<stdin>:121: NOTICE:  PASS G4 customer selected round round-20261029-morning
+DO
+psql:<stdin>:153: NOTICE:  PASS G5 menu/product gate intact after GRANT
+DO
+ROLLBACK

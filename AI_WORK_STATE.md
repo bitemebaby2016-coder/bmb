@@ -12,18 +12,21 @@
 
 ## 1. HEAD / gates (ตรวจริงบนเครื่อง 2026-10-26)
 
-- repo `D:\A PROJECT\Bite Me Baby` · `main` = `origin/main` · **HEAD ก่อนเริ่มงาน = `29ed251`**
+- repo `D:\A PROJECT\Bite Me Baby` · `main` = `origin/main` · **HEAD ก่อนเริ่มงาน = `47b33e1`**
 - working tree clean · staged/unstaged ว่าง · **untracked = 0** · stash `local-edits-before-sync-2026-09-21` **คงเดิมไม่ถูกแตะ**
-- **รอบที่ 2 (ปิด backlog ทั้งหมด) — gates รันจริง:** **tsc exit 0** · **eslint exit 0** ·
-  **brandNameGuard OK** · **vitest 146 files / 1541 tests / 0 fail / exit 0** · **build exit 0**
-  → evidence = **`e2e/session20261026-r2-gates-evidence.txt`**
-- รอบที่ 1 (evidence เดิม `e2e/session20261026-gates-evidence.txt`): vitest 144/1518 ·
-  route smoke playwright 39/39 · flaky 4 เคสใน `orderTimeline.test.ts` = **ปิดแล้ว (B-1 → act())**
-- **production: ไม่ได้แตะ** (ไม่มี migration/apply/deploy/write) · ledger ของรอบก่อน top = **156** ·
-  fresh replay เทียบ production รอบนี้ = **UNVERIFIED** (ไม่ใช่ PASS)
-- **CI canonical (ตารางเดียวทุก SHA):** `docs/BMB_MASTER_STATUS.md` **§9.0** — HEAD `1aa678b` =
-  CI #575 success + Contract Tests #149 success · รอบก่อน ๆ ทั้งหมดอยู่ในตารางเดียวกัน
-  (อ่านจาก GitHub Actions API จริง · ไม่มี `gh` · ห้ามอ้างเลขรันกระจัดกระจาย)
+- **รอบที่ 3 (2026-10-26 · ปิด W-1/W-2 + UI 4 ข้อ) — สิ่งที่รัน/มีหลักฐาน:**
+  - **fresh replay 001→157 = `REPLAY_ALL_GREEN 157/157`** (`e2e/w1-replay-apply-2026-10-26-full.log` ·
+    `e2e/w1-replay-apply-2026-10-26-full.jsonl`)
+  - **legacy contracts 7/7 EXIT=0** บน replay ชุดเดียวกัน (`e2e/w2-contracts_*.log`)
+  - **schema parity รันแล้ว** → `e2e/w1-parity-2026-10-26.json` + รายงาน `e2e/w1-parity-report-2026-10-26.md`
+  - unit ที่เพิ่ม/รันตรง: `storeStatusWindow` 4/4 · `uiTechnicalLabels` 4/4 ·
+    `mascotClosed`+`roundsSameDayNoCutoff` 34/34
+  - gates ชุดใหญ่ (tsc/eslint/brandGuard/vitest/build) = ดูก้อน §1 เดิม + evidence รอบนี้ (อัปเดตหลังรันจบ)
+- **รอบที่ 2 (ปิด backlog ทั้งหมด):** tsc 0 · eslint 0 · brandNameGuard OK · vitest 146 files /
+  1541 tests 0 fail · build 0 → `e2e/session20261026-r2-gates-evidence.txt`
+- **production: ไม่ได้แตะ migration/apply/deploy/write ใด ๆ ในรอบนี้** (การเขียน production รอ Owner อนุมัติ —
+  ดู B-6 ใน §3) · ledger ของรอบก่อน top = **156**
+- **CI canonical (ตารางเดียวทุก SHA):** `docs/BMB_MASTER_STATUS.md` **§9.0** · ห้ามอ้างเลขรันกระจัดกระจาย
 
 ## 2. งานที่ปิดรอบนี้ (CLOSED — มีหลักฐาน)
 
@@ -50,26 +53,36 @@
    · test `marketingAutoSchedule.test.ts`
 10. **B-5 ปิด (ส่งมอบ):** ชุดทดสอบ production รวม = **`docs/BMB_PRODUCTION_TEST_PACK.md`** (ขั้น A–K)
 
-## 3. งานค้าง (สถานะจริง ณ 2026-10-26 รอบที่ 2 — **ยังไม่ใช่ "เหลือ Owner อย่างเดียว"**)
+## 3. งานค้าง (สถานะจริง ณ 2026-10-26 รอบที่ 3 — **ยังไม่ใช่ "เหลือ Owner อย่างเดียว"**)
 
-- **blocker (engineering):**
-  - **B-2** legacy contract 7 ตัว = **BLOCKED** (พยายาม 2 ครั้งล้มเหลว · **Owner สั่งใหม่ให้ปิดในแชทถัดไป**) —
-    รายละเอียด+หลักฐาน = `docs/BMB_MASTER_STATUS.md` §3
-  - **schema parity (fresh replay vs production)** = **UNVERIFIED** · Owner **อนุมัติให้รันแล้ว** (2026-10-26)
-    แต่ยังไม่รัน = ยังปิดช่องนี้ไม่ได้
-- **งานที่สั่งใหม่รอบ 2026-10-26 (ทั้งหมดอยู่ใน handoff):**
-  - **UI ฝั่งลูกค้า 9 ข้อ** (ป้าย BITE·AI WAITER STAGE / Testimonials / จิ้มแล้วเลื่อน / เมนูบนสุด /
-    โหวตเมนูไทย / แถบสถานะ ~11:00 / ลำดับหัวข้อ+ลิงก์จริง / พรีออเดอร์สีเทา / เฟรม 1:1) —
-    รายการเต็ม = `docs/BMB_MASTER_STATUS.md` §3.1 (N-4)
-  - **CAP-22 ต้องตั้ง `marketing_rules` ให้พร้อมก่อนทดสอบระบบจริง** (N-3)
-  - **Test pack ต้องมีเกณฑ์ตรงความจริง** (N-5 — แก้แล้วรอบนี้ ต้องตรวจซ้ำ)
+- **ปิดแล้วรอบนี้ (มีหลักฐาน):**
+  - **W-1 fresh replay + schema parity** — `REPLAY_ALL_GREEN 157/157` + parity รันแล้ว ·
+    drift 5 กลุ่มมีคำอธิบาย/แผนครบ = `e2e/w1-parity-report-2026-10-26.md` → §4/§5 = VERIFIED
+  - **W-2 legacy contracts 7 ตัว (B-2)** — ทั้ง 7 ไฟล์ EXIT=0 · step กลับเข้า `contract-tests.yml`
+  - **UI 4 ข้อ:** L-1 (ป้าย theater) · L-2 (Marketing Testimonials) · L-6 (แถบสถานะ ~11:00) ·
+    L-9 (เฟรม 1:1) — มี test กำกับครบ (`uiTechnicalLabels` · `storeStatusWindow`)
+  - **W-3 CAP-22** — `marketing_rules` **มีค่าจริงอยู่แล้ว** (window 10:00–19:00 · cooldown 6 · 3/สัปดาห์)
+    → C7/C8 ปลดล็อกได้ · เหลือแค่ `menu_rules`/`stop_conditions` ที่ยังว่าง (ทางเลือก)
+- **blocker/งานค้าง:**
+  - **B-6 (P0 · ใหม่)** — guest บน production อ่านเมนูไม่ได้: `/rest/v1/products|delivery_rounds|
+    menu_sections|business_settings` = **401 `permission denied for function is_staff`** →
+    เปิด `https://biteme-baby.com/menu` จริงด้วย Playwright = "ไม่พบเมนู" (หลักฐาน:
+    `e2e/w2_guest_menu_probe.cjs` + `w2prod_anon.cjs`) · **ต้นตอ = 129** (REVOKE anon EXECUTE is_staff
+    + policy ไม่ระบุ TO role) · **แก้แล้ว = migration `157_anon_policy_role_scoping.sql`** (เทสต์บน replay
+    แล้ว: anon อ่าน 16 ตารางได้ + zero write leak) · **ยังไม่ apply production → รอ Owner อนุมัติ**
+  - **W-1 แผน 3 ข้อ รอ Owner** (production write): เปิด RLS 092/094 · align grants/EXECUTE · legacy 6 functions
+  - **UI ฝั่งลูกค้า ยังเหลือ 5 ข้อ:** L-3 (จิ้มแล้วเลื่อนทุกหน้า) · L-4 (แท็บหัวข้อไม่ครบ/โหมดผิด) ·
+    L-5 (โหวตเมนูไทย+ครบทุกเมนู) · L-7 (ลำดับ+ลิงก์หัวข้อ/ฟุตเตอร์) · L-8 (พรีออเดอร์สีเทาทุกจุด)
+    — รายละเอียด = `docs/BMB_MASTER_STATUS.md` §3.1 (N-4) + เกณฑ์ `BMB_PRODUCTION_TEST_PACK.md` §L
 - **แฮนด์ออฟทั้งหมด:** `docs/BMB_HANDOFF_NEXT_SESSION_2026-10-26.md`
 
 ## 4. งานรอ Owner (ไม่ใช่งาน AI) — **รันได้เฉพาะที่ไม่ติด blocker**
 
-- = **`docs/BMB_PRODUCTION_TEST_PACK.md`** (เกณฑ์แก้แล้วให้ตรงความจริง) · ขั้นที่ **ถูกงดไว้ก่อน** (ติด
-  defect UI ที่ยังไม่แก้ / CAP-22 ยังไม่ได้ตั้ง rules / B-2) ระบุไว้ในไฟล์นั้น §0 และ §L
-- **ห้าม**พูดว่า "เหลือ Owner อย่างเดียว" จนกว่า B-2 + schema parity จะปิด (Owner 2026-10-26)
+- = **`docs/BMB_PRODUCTION_TEST_PACK.md`** · ตอนนี้ **ปลดได้:** A1/A2 (เมื่อ CI รอบนี้เขียว) · A3 ·
+  B (รวม **B2** — แถบสถานะแก้แล้ว) · **C7/C8** (rules มีค่าจริง) · D–K
+  · **ยังงด:** ขั้นที่ผูกกับ UI 5 ข้อที่ค้าง (L-3/4/5/7/8)
+- **ห้าม**พูดว่า "เหลือ Owner อย่างเดียว" จนกว่า: (1) B-6 ปิด (apply 157 + พิสูจน์ guest เห็นเมนู) ·
+  (2) UI 5 ข้อที่ค้างปิด · (3) W-1 แผน 3 ข้อ มีคำสั่ง (Owner 2026-10-26)
 
 ## 5. คำสั่ง/rules ที่ห้ามลืม
 

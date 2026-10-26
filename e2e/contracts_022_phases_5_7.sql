@@ -4,13 +4,28 @@
 -- ============================================
 BEGIN;
 
+-- W-2 (B-2): fixture แอดมิน — submit บันทึก created_by = auth.uid() (FK) และ review ตรวจ is_admin()
+--   · ROLLBACK ท้ายไฟล์
+INSERT INTO auth.users (id, email, encrypted_password, created_at, updated_at,
+                        raw_app_meta_data, raw_user_meta_data, aud, role)
+VALUES ('77777777-7777-7777-7777-777777777777', 'contract-022-admin@bmb.test', 'x',
+        now(), now(), '{}'::jsonb, '{}'::jsonb, 'authenticated', 'authenticated')
+ON CONFLICT (id) DO NOTHING;
+INSERT INTO public.profiles (id, role)
+VALUES ('77777777-7777-7777-7777-777777777777', 'admin')
+ON CONFLICT (id) DO UPDATE SET role = 'admin';
+
 DO $$
 DECLARE
   v_cap_id text;
 BEGIN
+  PERFORM set_config('request.jwt.claims',
+    '{"sub":"77777777-7777-7777-7777-777777777777","role":"authenticated"}', true);
+
   -- 0) functions exist
+  -- W-2: submit_content_for_approval มี 5 พารามิเตอร์ (image_url/mascot เพิ่มในยุค 022+)
   IF to_regprocedure('public.customer_intelligence(uuid)') IS NULL
-     OR to_regprocedure('public.submit_content_for_approval(text,text,text)') IS NULL
+     OR to_regprocedure('public.submit_content_for_approval(text,text,text,text,text)') IS NULL
      OR to_regprocedure('public.review_content(text,text,text)') IS NULL
      OR to_regprocedure('public.is_content_approved(text)') IS NULL THEN
     RAISE EXCEPTION 'FAIL migration 022 functions missing';

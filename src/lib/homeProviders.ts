@@ -198,22 +198,38 @@ export function getStoreStatusFromRounds(rounds: Array<{
   if (bookable.length > 0) {
     const bkkMs = bangkokMsOfDay(now.getTime())
     const hour = bkkMs == null ? now.getHours() : Math.floor(bkkMs / 3_600_000)
-    const current = bookable.find((r) => {
-      const end = Number((r.delivery_end || '00').split(':')[0])
-      const start = Number((r.delivery_start || '00').split(':')[0])
-      return hour >= start && hour < end
-    }) || bookable[0]
+    const windowOf = (r: Record<string, any>) => ({
+      start: Number((r.delivery_start || '00').split(':')[0]),
+      end: Number((r.delivery_end || '00').split(':')[0]),
+    })
+    // W-4 ข้อ 6 (Owner 2026-10-26): ~11:00 เดิมยังโชว์ "เปิดรับออเดอร์ เช้า" ทั้งที่รอบเช้าหมด window
+    // แล้ว → ต้องบอกตามเวลาจริง: เซมเดย์ยังสั่งได้ (ไม่มีคัทออฟ · 148) + รอบถัดไปส่งกี่โมง
+    const inWindow = bookable.find((r) => {
+      const w = windowOf(r)
+      return hour >= w.start && hour < w.end
+    })
+    const sorted = [...bookable].sort((a, b) =>
+      String(a.delivery_start ?? '').localeCompare(String(b.delivery_start ?? '')),
+    )
+    const upcoming = sorted.find((r) => windowOf(r).start > hour) ?? null
+    const current = inWindow ?? upcoming ?? sorted[0]
+    const hasWindowNow = Boolean(inWindow)
     return {
       isOpen: true,
       state: 'open',
-      currentRoundLabel: current.display_name || 'ปัจจุบัน',
+      currentRoundLabel: hasWindowNow ? current.display_name || 'ปัจจุบัน' : undefined,
       // D5 (Owner 2026-10-25): ห้ามโชว์ cutoff_time เดิมเป็น "ปิดรับ" — เซมเดย์ไม่มีคัทออฟ (148)
-      // คัทออฟพรีออเดอร์ที่มีจริงโชว์ที่รอบจัดส่งตอน checkout (roundCutoffLabel PRE_ORDER) แล้ว
       deliveryWindowLabel: `ส่ง ${current.delivery_start}–${current.delivery_end}`,
-      capacityPct: Number(current.max_capacity) > 0
-        ? Math.min(100, Math.round((Number(current.current_count || 0) / Number(current.max_capacity)) * 100))
-        : undefined,
-      message: `เปิดรับออเดอร์${current.display_name ? ' ' + current.display_name : ''}`,
+      // ที่นั่ง/ความจุ = ของรอบที่อยู่ในหน้าต่างตอนนี้เท่านั้น (ไม่งั้นตัวเลขปลอม)
+      capacityPct:
+        hasWindowNow && Number(current.max_capacity) > 0
+          ? Math.min(100, Math.round((Number(current.current_count || 0) / Number(current.max_capacity)) * 100))
+          : undefined,
+      message: hasWindowNow
+        ? `เปิดรับออเดอร์${current.display_name ? ' ' + current.display_name : ''}`
+        : upcoming
+          ? `เปิดรับออเดอร์ เซมเดย์ — ยังสั่งได้ ส่งรอบถัดไป ${current.delivery_start}–${current.delivery_end}`
+          : 'เปิดรับออเดอร์ เซมเดย์ — ยังสั่งได้ (รอบส่งวันนี้ผ่านแล้ว)',
       preOrderLine,
     }
   }

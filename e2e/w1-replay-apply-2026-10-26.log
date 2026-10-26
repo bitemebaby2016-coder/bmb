@@ -1,0 +1,886 @@
+===== W-1 FRESH REPLAY 2026-10-26T04:51:03Z =====
+CREATE DATABASE
+===== PRELUDE (supabase stubs แบบ CI) =====
+DO
+CREATE SCHEMA
+CREATE TABLE
+CREATE FUNCTION
+CREATE FUNCTION
+CREATE FUNCTION
+CREATE FUNCTION
+CREATE SCHEMA
+CREATE TABLE
+CREATE TABLE
+ALTER TABLE
+ALTER TABLE
+GRANT
+GRANT
+GRANT
+GRANT
+===== MIGRATIONS 001..156 (numeric order) =====
+== apply 001_initial_schema.sql
+psql:/tmp/tmp.AxHOExWMnI:438: NOTICE:  trigger "delivery_rounds_updated_at" for relation "delivery_rounds" does not exist, skipping
+psql:/tmp/tmp.AxHOExWMnI:443: NOTICE:  trigger "products_updated_at" for relation "products" does not exist, skipping
+psql:/tmp/tmp.AxHOExWMnI:448: NOTICE:  trigger "delivery_round_sync_aliases" for relation "delivery_rounds" does not exist, skipping
+psql:/tmp/tmp.AxHOExWMnI:453: NOTICE:  trigger "orders_updated_at" for relation "orders" does not exist, skipping
+psql:/tmp/tmp.AxHOExWMnI:458: NOTICE:  trigger "order_items_calculate_total" for relation "order_items" does not exist, skipping
+psql:/tmp/tmp.AxHOExWMnI:463: NOTICE:  trigger "inventory_updated_at" for relation "inventory" does not exist, skipping
+psql:/tmp/tmp.AxHOExWMnI:468: NOTICE:  trigger "inventory_calculate_status" for relation "inventory" does not exist, skipping
+psql:/tmp/tmp.AxHOExWMnI:473: NOTICE:  trigger "profiles_updated_at" for relation "profiles" does not exist, skipping
+psql:/tmp/tmp.AxHOExWMnI:478: NOTICE:  trigger "orders_increment_round" for relation "orders" does not exist, skipping
+psql:/tmp/tmp.AxHOExWMnI:523: NOTICE:  policy "p_public_all_product_categories" for relation "product_categories" does not exist, skipping
+psql:/tmp/tmp.AxHOExWMnI:523: NOTICE:  policy "p_public_all_delivery_rounds" for relation "delivery_rounds" does not exist, skipping
+psql:/tmp/tmp.AxHOExWMnI:523: NOTICE:  policy "p_public_all_products" for relation "products" does not exist, skipping
+psql:/tmp/tmp.AxHOExWMnI:523: NOTICE:  policy "p_public_all_customers" for relation "customers" does not exist, skipping
+psql:/tmp/tmp.AxHOExWMnI:523: NOTICE:  policy "p_public_all_orders" for relation "orders" does not exist, skipping
+psql:/tmp/tmp.AxHOExWMnI:523: NOTICE:  policy "p_public_all_order_items" for relation "order_items" does not exist, skipping
+psql:/tmp/tmp.AxHOExWMnI:523: NOTICE:  policy "p_public_all_inventory" for relation "inventory" does not exist, skipping
+psql:/tmp/tmp.AxHOExWMnI:523: NOTICE:  policy "p_public_all_inventory_transactions" for relation "inventory_transactions" does not exist, skipping
+psql:/tmp/tmp.AxHOExWMnI:523: NOTICE:  policy "p_public_all_preorder_votes" for relation "preorder_votes" does not exist, skipping
+psql:/tmp/tmp.AxHOExWMnI:523: NOTICE:  policy "p_public_all_reviews" for relation "reviews" does not exist, skipping
+psql:/tmp/tmp.AxHOExWMnI:523: NOTICE:  policy "p_public_all_pre_orders" for relation "pre_orders" does not exist, skipping
+psql:/tmp/tmp.AxHOExWMnI:523: NOTICE:  policy "p_public_all_loyalty_points" for relation "loyalty_points" does not exist, skipping
+psql:/tmp/tmp.AxHOExWMnI:523: NOTICE:  policy "p_public_all_promotions" for relation "promotions" does not exist, skipping
+psql:/tmp/tmp.AxHOExWMnI:523: NOTICE:  policy "p_public_all_notifications" for relation "notifications" does not exist, skipping
+psql:/tmp/tmp.AxHOExWMnI:523: NOTICE:  policy "p_public_all_ai_conversations" for relation "ai_conversations" does not exist, skipping
+psql:/tmp/tmp.AxHOExWMnI:523: NOTICE:  policy "p_public_all_ai_recommendations" for relation "ai_recommendations" does not exist, skipping
+psql:/tmp/tmp.AxHOExWMnI:523: NOTICE:  policy "p_public_all_payment_intents" for relation "payment_intents" does not exist, skipping
+psql:/tmp/tmp.AxHOExWMnI:526: NOTICE:  policy "profiles_public_read" for relation "profiles" does not exist, skipping
+psql:/tmp/tmp.AxHOExWMnI:527: NOTICE:  policy "profiles_public_read" for relation "profiles" does not exist, skipping
+psql:/tmp/tmp.AxHOExWMnI:530: NOTICE:  policy "profiles_own_write" for relation "profiles" does not exist, skipping
+psql:/tmp/tmp.AxHOExWMnI:531: NOTICE:  policy "profiles_own_write" for relation "profiles" does not exist, skipping
+== apply 002_complete_schema.sql
+psql:/tmp/tmp.3bOFWviW9e:20: NOTICE:  column "sort_order" of relation "products" already exists, skipping
+psql:/tmp/tmp.3bOFWviW9e:27: NOTICE:  column "round_key" of relation "delivery_rounds" already exists, skipping
+psql:/tmp/tmp.3bOFWviW9e:28: NOTICE:  column "date" of relation "delivery_rounds" already exists, skipping
+psql:/tmp/tmp.3bOFWviW9e:29: NOTICE:  column "name" of relation "delivery_rounds" already exists, skipping
+psql:/tmp/tmp.3bOFWviW9e:30: NOTICE:  column "scheduled_date" of relation "delivery_rounds" already exists, skipping
+psql:/tmp/tmp.3bOFWviW9e:41: NOTICE:  column "customer_name" of relation "orders" already exists, skipping
+psql:/tmp/tmp.3bOFWviW9e:42: NOTICE:  column "customer_phone" of relation "orders" already exists, skipping
+psql:/tmp/tmp.3bOFWviW9e:43: NOTICE:  column "dropoff_detail" of relation "orders" already exists, skipping
+psql:/tmp/tmp.3bOFWviW9e:44: NOTICE:  column "payment_method" of relation "orders" already exists, skipping
+psql:/tmp/tmp.3bOFWviW9e:49: NOTICE:  column "product_name" of relation "order_items" already exists, skipping
+psql:/tmp/tmp.3bOFWviW9e:73: NOTICE:  relation "idx_products_sort_order" already exists, skipping
+== apply 003_add_missing_columns.sql
+psql:/tmp/tmp.ZG2iLMHRWT:17: NOTICE:  column "sort_order" of relation "products" already exists, skipping
+psql:/tmp/tmp.ZG2iLMHRWT:40: NOTICE:  column "date" of relation "delivery_rounds" already exists, skipping
+psql:/tmp/tmp.ZG2iLMHRWT:41: NOTICE:  column "round_key" of relation "delivery_rounds" already exists, skipping
+psql:/tmp/tmp.ZG2iLMHRWT:42: NOTICE:  column "name" of relation "delivery_rounds" already exists, skipping
+psql:/tmp/tmp.ZG2iLMHRWT:43: NOTICE:  column "scheduled_date" of relation "delivery_rounds" already exists, skipping
+psql:/tmp/tmp.ZG2iLMHRWT:48: NOTICE:  relation "idx_products_sort_order" already exists, skipping
+psql:/tmp/tmp.ZG2iLMHRWT:49: NOTICE:  relation "idx_delivery_rounds_date" already exists, skipping
+psql:/tmp/tmp.ZG2iLMHRWT:50: NOTICE:  relation "idx_delivery_rounds_round_key" already exists, skipping
+psql:/tmp/tmp.ZG2iLMHRWT:82: NOTICE:  relation "pre_orders" already exists, skipping
+psql:/tmp/tmp.ZG2iLMHRWT:101: NOTICE:  relation "payment_intents" already exists, skipping
+psql:/tmp/tmp.ZG2iLMHRWT:125: NOTICE:  relation "idx_pre_orders_customer" already exists, skipping
+psql:/tmp/tmp.ZG2iLMHRWT:126: NOTICE:  relation "idx_pre_orders_status" already exists, skipping
+psql:/tmp/tmp.ZG2iLMHRWT:127: NOTICE:  relation "idx_payment_intents_order" already exists, skipping
+psql:/tmp/tmp.ZG2iLMHRWT:128: NOTICE:  relation "idx_profiles_role" already exists, skipping
+psql:/tmp/tmp.ZG2iLMHRWT:147: NOTICE:  policy "profiles_public_read" for relation "profiles" does not exist, skipping
+== apply 004_fix_uuid_to_text.sql
+psql:/tmp/tmp.jsANjGc9wE:514: NOTICE:  relation "idx_profiles_role" already exists, skipping
+psql:/tmp/tmp.jsANjGc9wE:524: NOTICE:  policy "pre_orders_policy" for relation "pre_orders" does not exist, skipping
+psql:/tmp/tmp.jsANjGc9wE:525: NOTICE:  policy "pre_orders_policy" for relation "pre_orders" does not exist, skipping
+psql:/tmp/tmp.jsANjGc9wE:530: NOTICE:  policy "payment_intents_policy" for relation "payment_intents" does not exist, skipping
+psql:/tmp/tmp.jsANjGc9wE:531: NOTICE:  policy "payment_intents_policy" for relation "payment_intents" does not exist, skipping
+psql:/tmp/tmp.jsANjGc9wE:537: NOTICE:  policy "profiles_public_read" for relation "profiles" does not exist, skipping
+psql:/tmp/tmp.jsANjGc9wE:541: NOTICE:  policy "profiles_own_write" for relation "profiles" does not exist, skipping
+== apply 005_secure_rls_policies.sql
+psql:/tmp/tmp.2AwVvZh5yr:25: NOTICE:  policy "orders_anon_read" for relation "orders" does not exist, skipping
+psql:/tmp/tmp.2AwVvZh5yr:26: NOTICE:  policy "orders_anon_read" for relation "orders" does not exist, skipping
+psql:/tmp/tmp.2AwVvZh5yr:32: NOTICE:  policy "orders_own_read" for relation "orders" does not exist, skipping
+psql:/tmp/tmp.2AwVvZh5yr:33: NOTICE:  policy "orders_own_read" for relation "orders" does not exist, skipping
+psql:/tmp/tmp.2AwVvZh5yr:39: NOTICE:  policy "orders_own_create" for relation "orders" does not exist, skipping
+psql:/tmp/tmp.2AwVvZh5yr:40: NOTICE:  policy "orders_own_create" for relation "orders" does not exist, skipping
+psql:/tmp/tmp.2AwVvZh5yr:46: NOTICE:  policy "orders_admin_manage" for relation "orders" does not exist, skipping
+psql:/tmp/tmp.2AwVvZh5yr:47: NOTICE:  policy "orders_admin_manage" for relation "orders" does not exist, skipping
+psql:/tmp/tmp.2AwVvZh5yr:59: NOTICE:  policy "order_items_anon" for relation "order_items" does not exist, skipping
+psql:/tmp/tmp.2AwVvZh5yr:60: NOTICE:  policy "order_items_anon" for relation "order_items" does not exist, skipping
+psql:/tmp/tmp.2AwVvZh5yr:65: NOTICE:  policy "order_items_own" for relation "order_items" does not exist, skipping
+psql:/tmp/tmp.2AwVvZh5yr:66: NOTICE:  policy "order_items_own" for relation "order_items" does not exist, skipping
+psql:/tmp/tmp.2AwVvZh5yr:73: NOTICE:  policy "order_items_admin" for relation "order_items" does not exist, skipping
+psql:/tmp/tmp.2AwVvZh5yr:74: NOTICE:  policy "order_items_admin" for relation "order_items" does not exist, skipping
+psql:/tmp/tmp.2AwVvZh5yr:86: NOTICE:  policy "pre_orders_anon_read" for relation "pre_orders" does not exist, skipping
+psql:/tmp/tmp.2AwVvZh5yr:87: NOTICE:  policy "pre_orders_anon_read" for relation "pre_orders" does not exist, skipping
+psql:/tmp/tmp.2AwVvZh5yr:93: NOTICE:  policy "pre_orders_own" for relation "pre_orders" does not exist, skipping
+psql:/tmp/tmp.2AwVvZh5yr:94: NOTICE:  policy "pre_orders_own" for relation "pre_orders" does not exist, skipping
+psql:/tmp/tmp.2AwVvZh5yr:101: NOTICE:  policy "pre_orders_admin" for relation "pre_orders" does not exist, skipping
+psql:/tmp/tmp.2AwVvZh5yr:102: NOTICE:  policy "pre_orders_admin" for relation "pre_orders" does not exist, skipping
+psql:/tmp/tmp.2AwVvZh5yr:114: NOTICE:  policy "payment_intents_anon" for relation "payment_intents" does not exist, skipping
+psql:/tmp/tmp.2AwVvZh5yr:115: NOTICE:  policy "payment_intents_anon" for relation "payment_intents" does not exist, skipping
+psql:/tmp/tmp.2AwVvZh5yr:120: NOTICE:  policy "payment_intents_own" for relation "payment_intents" does not exist, skipping
+psql:/tmp/tmp.2AwVvZh5yr:121: NOTICE:  policy "payment_intents_own" for relation "payment_intents" does not exist, skipping
+psql:/tmp/tmp.2AwVvZh5yr:127: NOTICE:  policy "payment_intents_own_create" for relation "payment_intents" does not exist, skipping
+psql:/tmp/tmp.2AwVvZh5yr:128: NOTICE:  policy "payment_intents_own_create" for relation "payment_intents" does not exist, skipping
+psql:/tmp/tmp.2AwVvZh5yr:134: NOTICE:  policy "payment_intents_admin" for relation "payment_intents" does not exist, skipping
+psql:/tmp/tmp.2AwVvZh5yr:135: NOTICE:  policy "payment_intents_admin" for relation "payment_intents" does not exist, skipping
+psql:/tmp/tmp.2AwVvZh5yr:148: NOTICE:  policy "profiles_public_read" for relation "profiles" does not exist, skipping
+psql:/tmp/tmp.2AwVvZh5yr:155: NOTICE:  policy "profiles_own_write" for relation "profiles" does not exist, skipping
+psql:/tmp/tmp.2AwVvZh5yr:162: NOTICE:  policy "profiles_admin_manage" for relation "profiles" does not exist, skipping
+psql:/tmp/tmp.2AwVvZh5yr:163: NOTICE:  policy "profiles_admin_manage" for relation "profiles" does not exist, skipping
+psql:/tmp/tmp.2AwVvZh5yr:177: NOTICE:  policy "products_public_read" for relation "products" does not exist, skipping
+psql:/tmp/tmp.2AwVvZh5yr:178: NOTICE:  policy "products_public_read" for relation "products" does not exist, skipping
+psql:/tmp/tmp.2AwVvZh5yr:183: NOTICE:  policy "product_categories_public_read" for relation "product_categories" does not exist, skipping
+psql:/tmp/tmp.2AwVvZh5yr:184: NOTICE:  policy "product_categories_public_read" for relation "product_categories" does not exist, skipping
+psql:/tmp/tmp.2AwVvZh5yr:189: NOTICE:  policy "inventory_public_read" for relation "inventory" does not exist, skipping
+psql:/tmp/tmp.2AwVvZh5yr:190: NOTICE:  policy "inventory_public_read" for relation "inventory" does not exist, skipping
+psql:/tmp/tmp.2AwVvZh5yr:196: NOTICE:  policy "products_admin_manage" for relation "products" does not exist, skipping
+psql:/tmp/tmp.2AwVvZh5yr:197: NOTICE:  policy "products_admin_manage" for relation "products" does not exist, skipping
+psql:/tmp/tmp.2AwVvZh5yr:203: NOTICE:  policy "product_categories_admin_manage" for relation "product_categories" does not exist, skipping
+psql:/tmp/tmp.2AwVvZh5yr:204: NOTICE:  policy "product_categories_admin_manage" for relation "product_categories" does not exist, skipping
+psql:/tmp/tmp.2AwVvZh5yr:210: NOTICE:  policy "inventory_admin_manage" for relation "inventory" does not exist, skipping
+psql:/tmp/tmp.2AwVvZh5yr:211: NOTICE:  policy "inventory_admin_manage" for relation "inventory" does not exist, skipping
+psql:/tmp/tmp.2AwVvZh5yr:223: NOTICE:  policy "customers_anon" for relation "customers" does not exist, skipping
+psql:/tmp/tmp.2AwVvZh5yr:224: NOTICE:  policy "customers_anon" for relation "customers" does not exist, skipping
+psql:/tmp/tmp.2AwVvZh5yr:229: NOTICE:  policy "customers_own_read" for relation "customers" does not exist, skipping
+psql:/tmp/tmp.2AwVvZh5yr:230: NOTICE:  policy "customers_own_read" for relation "customers" does not exist, skipping
+psql:/tmp/tmp.2AwVvZh5yr:236: NOTICE:  policy "customers_admin_manage" for relation "customers" does not exist, skipping
+psql:/tmp/tmp.2AwVvZh5yr:237: NOTICE:  policy "customers_admin_manage" for relation "customers" does not exist, skipping
+== apply 006_rls_hardening_auth.sql
+psql:/tmp/tmp.LS2cZxJPjZ:55: NOTICE:  policy "p_public_all_pre_orders" for relation "pre_orders" does not exist, skipping
+psql:/tmp/tmp.LS2cZxJPjZ:55: NOTICE:  policy "p_public_all_profiles" for relation "profiles" does not exist, skipping
+psql:/tmp/tmp.LS2cZxJPjZ:55: NOTICE:  policy "p_public_all_payment_intents" for relation "payment_intents" does not exist, skipping
+psql:/tmp/tmp.LS2cZxJPjZ:63: NOTICE:  column "user_id" of relation "customers" already exists, skipping
+psql:/tmp/tmp.LS2cZxJPjZ:64: NOTICE:  column "customer_ref" of relation "orders" already exists, skipping
+psql:/tmp/tmp.LS2cZxJPjZ:94: NOTICE:  trigger "on_auth_user_created" for relation "auth.users" does not exist, skipping
+psql:/tmp/tmp.LS2cZxJPjZ:126: NOTICE:  trigger "profiles_guard_mutation" for relation "profiles" does not exist, skipping
+psql:/tmp/tmp.LS2cZxJPjZ:144: NOTICE:  policy "delivery_rounds_public_read" for relation "delivery_rounds" does not exist, skipping
+psql:/tmp/tmp.LS2cZxJPjZ:145: NOTICE:  policy "delivery_rounds_public_read" for relation "delivery_rounds" does not exist, skipping
+psql:/tmp/tmp.LS2cZxJPjZ:150: NOTICE:  policy "delivery_rounds_admin_manage" for relation "delivery_rounds" does not exist, skipping
+psql:/tmp/tmp.LS2cZxJPjZ:151: NOTICE:  policy "delivery_rounds_admin_manage" for relation "delivery_rounds" does not exist, skipping
+psql:/tmp/tmp.LS2cZxJPjZ:161: NOTICE:  policy "customers_anon" for relation "customers" does not exist, skipping
+psql:/tmp/tmp.LS2cZxJPjZ:166: NOTICE:  policy "customers_own_read" for relation "customers" does not exist, skipping
+psql:/tmp/tmp.LS2cZxJPjZ:172: NOTICE:  policy "customers_admin_manage" for relation "customers" does not exist, skipping
+psql:/tmp/tmp.LS2cZxJPjZ:182: NOTICE:  policy "orders_anon_read" for relation "orders" does not exist, skipping
+psql:/tmp/tmp.LS2cZxJPjZ:188: NOTICE:  policy "orders_own_read" for relation "orders" does not exist, skipping
+psql:/tmp/tmp.LS2cZxJPjZ:194: NOTICE:  policy "orders_own_create" for relation "orders" does not exist, skipping
+psql:/tmp/tmp.LS2cZxJPjZ:199: NOTICE:  policy "orders_own_update" for relation "orders" does not exist, skipping
+psql:/tmp/tmp.LS2cZxJPjZ:200: NOTICE:  policy "orders_own_update" for relation "orders" does not exist, skipping
+psql:/tmp/tmp.LS2cZxJPjZ:208: NOTICE:  policy "orders_admin_manage" for relation "orders" does not exist, skipping
+psql:/tmp/tmp.LS2cZxJPjZ:218: NOTICE:  policy "order_items_anon" for relation "order_items" does not exist, skipping
+psql:/tmp/tmp.LS2cZxJPjZ:223: NOTICE:  policy "order_items_own" for relation "order_items" does not exist, skipping
+psql:/tmp/tmp.LS2cZxJPjZ:230: NOTICE:  policy "order_items_admin" for relation "order_items" does not exist, skipping
+psql:/tmp/tmp.LS2cZxJPjZ:240: NOTICE:  policy "pre_orders_anon_read" for relation "pre_orders" does not exist, skipping
+psql:/tmp/tmp.LS2cZxJPjZ:246: NOTICE:  policy "pre_orders_own" for relation "pre_orders" does not exist, skipping
+psql:/tmp/tmp.LS2cZxJPjZ:253: NOTICE:  policy "pre_orders_admin" for relation "pre_orders" does not exist, skipping
+psql:/tmp/tmp.LS2cZxJPjZ:263: NOTICE:  policy "payment_intents_anon" for relation "payment_intents" does not exist, skipping
+psql:/tmp/tmp.LS2cZxJPjZ:268: NOTICE:  policy "payment_intents_own" for relation "payment_intents" does not exist, skipping
+psql:/tmp/tmp.LS2cZxJPjZ:274: NOTICE:  policy "payment_intents_own_create" for relation "payment_intents" does not exist, skipping
+psql:/tmp/tmp.LS2cZxJPjZ:280: NOTICE:  policy "payment_intents_admin" for relation "payment_intents" does not exist, skipping
+psql:/tmp/tmp.LS2cZxJPjZ:290: NOTICE:  view "public_profiles" does not exist, skipping
+psql:/tmp/tmp.LS2cZxJPjZ:300: NOTICE:  policy "profiles_public_read" for relation "profiles" does not exist, skipping
+psql:/tmp/tmp.LS2cZxJPjZ:305: NOTICE:  policy "profiles_own_read_limited" for relation "profiles" does not exist, skipping
+psql:/tmp/tmp.LS2cZxJPjZ:306: NOTICE:  policy "profiles_own_read_limited" for relation "profiles" does not exist, skipping
+psql:/tmp/tmp.LS2cZxJPjZ:312: NOTICE:  policy "profiles_own_write" for relation "profiles" does not exist, skipping
+psql:/tmp/tmp.LS2cZxJPjZ:319: NOTICE:  policy "profiles_admin_manage" for relation "profiles" does not exist, skipping
+psql:/tmp/tmp.LS2cZxJPjZ:328: NOTICE:  policy "reviews_public_read" for relation "reviews" does not exist, skipping
+psql:/tmp/tmp.LS2cZxJPjZ:329: NOTICE:  policy "reviews_public_read" for relation "reviews" does not exist, skipping
+psql:/tmp/tmp.LS2cZxJPjZ:334: NOTICE:  policy "reviews_own_insert" for relation "reviews" does not exist, skipping
+psql:/tmp/tmp.LS2cZxJPjZ:335: NOTICE:  policy "reviews_own_insert" for relation "reviews" does not exist, skipping
+psql:/tmp/tmp.LS2cZxJPjZ:340: NOTICE:  policy "reviews_own_update" for relation "reviews" does not exist, skipping
+psql:/tmp/tmp.LS2cZxJPjZ:341: NOTICE:  policy "reviews_own_update" for relation "reviews" does not exist, skipping
+psql:/tmp/tmp.LS2cZxJPjZ:347: NOTICE:  policy "reviews_admin_manage" for relation "reviews" does not exist, skipping
+psql:/tmp/tmp.LS2cZxJPjZ:348: NOTICE:  policy "reviews_admin_manage" for relation "reviews" does not exist, skipping
+psql:/tmp/tmp.LS2cZxJPjZ:357: NOTICE:  policy "promotions_public_read" for relation "promotions" does not exist, skipping
+psql:/tmp/tmp.LS2cZxJPjZ:358: NOTICE:  policy "promotions_public_read" for relation "promotions" does not exist, skipping
+psql:/tmp/tmp.LS2cZxJPjZ:363: NOTICE:  policy "promotions_admin_manage" for relation "promotions" does not exist, skipping
+psql:/tmp/tmp.LS2cZxJPjZ:364: NOTICE:  policy "promotions_admin_manage" for relation "promotions" does not exist, skipping
+psql:/tmp/tmp.LS2cZxJPjZ:373: NOTICE:  policy "notifications_anon" for relation "notifications" does not exist, skipping
+psql:/tmp/tmp.LS2cZxJPjZ:374: NOTICE:  policy "notifications_anon" for relation "notifications" does not exist, skipping
+psql:/tmp/tmp.LS2cZxJPjZ:378: NOTICE:  policy "notifications_own_read" for relation "notifications" does not exist, skipping
+psql:/tmp/tmp.LS2cZxJPjZ:379: NOTICE:  policy "notifications_own_read" for relation "notifications" does not exist, skipping
+psql:/tmp/tmp.LS2cZxJPjZ:384: NOTICE:  policy "notifications_own_update" for relation "notifications" does not exist, skipping
+psql:/tmp/tmp.LS2cZxJPjZ:385: NOTICE:  policy "notifications_own_update" for relation "notifications" does not exist, skipping
+psql:/tmp/tmp.LS2cZxJPjZ:391: NOTICE:  policy "notifications_admin" for relation "notifications" does not exist, skipping
+psql:/tmp/tmp.LS2cZxJPjZ:392: NOTICE:  policy "notifications_admin" for relation "notifications" does not exist, skipping
+psql:/tmp/tmp.LS2cZxJPjZ:401: NOTICE:  policy "loyalty_points_anon" for relation "loyalty_points" does not exist, skipping
+psql:/tmp/tmp.LS2cZxJPjZ:402: NOTICE:  policy "loyalty_points_anon" for relation "loyalty_points" does not exist, skipping
+psql:/tmp/tmp.LS2cZxJPjZ:406: NOTICE:  policy "loyalty_points_own_read" for relation "loyalty_points" does not exist, skipping
+psql:/tmp/tmp.LS2cZxJPjZ:407: NOTICE:  policy "loyalty_points_own_read" for relation "loyalty_points" does not exist, skipping
+psql:/tmp/tmp.LS2cZxJPjZ:412: NOTICE:  policy "loyalty_points_admin" for relation "loyalty_points" does not exist, skipping
+psql:/tmp/tmp.LS2cZxJPjZ:413: NOTICE:  policy "loyalty_points_admin" for relation "loyalty_points" does not exist, skipping
+psql:/tmp/tmp.LS2cZxJPjZ:422: NOTICE:  policy "preorder_votes_anon" for relation "preorder_votes" does not exist, skipping
+psql:/tmp/tmp.LS2cZxJPjZ:423: NOTICE:  policy "preorder_votes_anon" for relation "preorder_votes" does not exist, skipping
+psql:/tmp/tmp.LS2cZxJPjZ:428: NOTICE:  policy "preorder_votes_public_read" for relation "preorder_votes" does not exist, skipping
+psql:/tmp/tmp.LS2cZxJPjZ:429: NOTICE:  policy "preorder_votes_public_read" for relation "preorder_votes" does not exist, skipping
+psql:/tmp/tmp.LS2cZxJPjZ:434: NOTICE:  policy "preorder_votes_admin" for relation "preorder_votes" does not exist, skipping
+psql:/tmp/tmp.LS2cZxJPjZ:435: NOTICE:  policy "preorder_votes_admin" for relation "preorder_votes" does not exist, skipping
+psql:/tmp/tmp.LS2cZxJPjZ:444: NOTICE:  policy "inventory_anon_read" for relation "inventory" does not exist, skipping
+psql:/tmp/tmp.LS2cZxJPjZ:445: NOTICE:  policy "inventory_anon_read" for relation "inventory" does not exist, skipping
+psql:/tmp/tmp.LS2cZxJPjZ:450: NOTICE:  policy "inventory_admin_manage" for relation "inventory" does not exist, skipping
+psql:/tmp/tmp.LS2cZxJPjZ:459: NOTICE:  policy "inventory_transactions_anon" for relation "inventory_transactions" does not exist, skipping
+psql:/tmp/tmp.LS2cZxJPjZ:460: NOTICE:  policy "inventory_transactions_anon" for relation "inventory_transactions" does not exist, skipping
+psql:/tmp/tmp.LS2cZxJPjZ:464: NOTICE:  policy "inventory_transactions_admin" for relation "inventory_transactions" does not exist, skipping
+psql:/tmp/tmp.LS2cZxJPjZ:465: NOTICE:  policy "inventory_transactions_admin" for relation "inventory_transactions" does not exist, skipping
+psql:/tmp/tmp.LS2cZxJPjZ:474: NOTICE:  policy "ai_conversations_anon" for relation "ai_conversations" does not exist, skipping
+psql:/tmp/tmp.LS2cZxJPjZ:475: NOTICE:  policy "ai_conversations_anon" for relation "ai_conversations" does not exist, skipping
+psql:/tmp/tmp.LS2cZxJPjZ:479: NOTICE:  policy "ai_conversations_own" for relation "ai_conversations" does not exist, skipping
+psql:/tmp/tmp.LS2cZxJPjZ:480: NOTICE:  policy "ai_conversations_own" for relation "ai_conversations" does not exist, skipping
+psql:/tmp/tmp.LS2cZxJPjZ:486: NOTICE:  policy "ai_conversations_admin" for relation "ai_conversations" does not exist, skipping
+psql:/tmp/tmp.LS2cZxJPjZ:487: NOTICE:  policy "ai_conversations_admin" for relation "ai_conversations" does not exist, skipping
+psql:/tmp/tmp.LS2cZxJPjZ:493: NOTICE:  policy "ai_recommendations_anon" for relation "ai_recommendations" does not exist, skipping
+psql:/tmp/tmp.LS2cZxJPjZ:494: NOTICE:  policy "ai_recommendations_anon" for relation "ai_recommendations" does not exist, skipping
+psql:/tmp/tmp.LS2cZxJPjZ:498: NOTICE:  policy "ai_recommendations_own" for relation "ai_recommendations" does not exist, skipping
+psql:/tmp/tmp.LS2cZxJPjZ:499: NOTICE:  policy "ai_recommendations_own" for relation "ai_recommendations" does not exist, skipping
+psql:/tmp/tmp.LS2cZxJPjZ:505: NOTICE:  policy "ai_recommendations_admin" for relation "ai_recommendations" does not exist, skipping
+psql:/tmp/tmp.LS2cZxJPjZ:506: NOTICE:  policy "ai_recommendations_admin" for relation "ai_recommendations" does not exist, skipping
+psql:/tmp/tmp.LS2cZxJPjZ:533: NOTICE:  trigger "orders_decrement_round" for relation "orders" does not exist, skipping
+== apply 007_server_authoritative_order.sql
+
+== apply 008_payment_state_machine_and_phase_d.sql
+psql:/tmp/tmp.kJycyQ1i3l:32: NOTICE:  constraint "orders_total_nonneg" of relation "orders" does not exist, skipping
+psql:/tmp/tmp.kJycyQ1i3l:38: NOTICE:  index "uq_payment_intents_provider_id" does not exist, skipping
+psql:/tmp/tmp.kJycyQ1i3l:358: NOTICE:  trigger "orders_guard_status_transition" for relation "orders" does not exist, skipping
+psql:/tmp/tmp.kJycyQ1i3l:474: NOTICE:  policy "business_settings_anon" for relation "business_settings" does not exist, skipping
+psql:/tmp/tmp.kJycyQ1i3l:475: NOTICE:  policy "business_settings_anon" for relation "business_settings" does not exist, skipping
+psql:/tmp/tmp.kJycyQ1i3l:478: NOTICE:  policy "business_settings_auth_read" for relation "business_settings" does not exist, skipping
+psql:/tmp/tmp.kJycyQ1i3l:479: NOTICE:  policy "business_settings_auth_read" for relation "business_settings" does not exist, skipping
+psql:/tmp/tmp.kJycyQ1i3l:483: NOTICE:  policy "business_settings_admin" for relation "business_settings" does not exist, skipping
+psql:/tmp/tmp.kJycyQ1i3l:484: NOTICE:  policy "business_settings_admin" for relation "business_settings" does not exist, skipping
+psql:/tmp/tmp.kJycyQ1i3l:489: NOTICE:  policy "media_assets_public_read" for relation "media_assets" does not exist, skipping
+psql:/tmp/tmp.kJycyQ1i3l:490: NOTICE:  policy "media_assets_public_read" for relation "media_assets" does not exist, skipping
+psql:/tmp/tmp.kJycyQ1i3l:494: NOTICE:  policy "media_assets_admin" for relation "media_assets" does not exist, skipping
+psql:/tmp/tmp.kJycyQ1i3l:495: NOTICE:  policy "media_assets_admin" for relation "media_assets" does not exist, skipping
+psql:/tmp/tmp.kJycyQ1i3l:500: NOTICE:  policy "delivery_zones_public_read" for relation "delivery_zones" does not exist, skipping
+psql:/tmp/tmp.kJycyQ1i3l:501: NOTICE:  policy "delivery_zones_public_read" for relation "delivery_zones" does not exist, skipping
+psql:/tmp/tmp.kJycyQ1i3l:505: NOTICE:  policy "delivery_zones_admin" for relation "delivery_zones" does not exist, skipping
+psql:/tmp/tmp.kJycyQ1i3l:506: NOTICE:  policy "delivery_zones_admin" for relation "delivery_zones" does not exist, skipping
+psql:/tmp/tmp.kJycyQ1i3l:511: NOTICE:  policy "provider_orders_anon" for relation "provider_orders" does not exist, skipping
+psql:/tmp/tmp.kJycyQ1i3l:512: NOTICE:  policy "provider_orders_anon" for relation "provider_orders" does not exist, skipping
+psql:/tmp/tmp.kJycyQ1i3l:515: NOTICE:  policy "provider_orders_own" for relation "provider_orders" does not exist, skipping
+psql:/tmp/tmp.kJycyQ1i3l:516: NOTICE:  policy "provider_orders_own" for relation "provider_orders" does not exist, skipping
+psql:/tmp/tmp.kJycyQ1i3l:521: NOTICE:  policy "provider_orders_admin" for relation "provider_orders" does not exist, skipping
+psql:/tmp/tmp.kJycyQ1i3l:522: NOTICE:  policy "provider_orders_admin" for relation "provider_orders" does not exist, skipping
+== apply 009_fix_007_extract_epoch.sql
+
+== apply 010_fix_record_payment_result_idempotency.sql
+
+== apply 011_storage_bmb_images_policies.sql
+psql:/tmp/tmp.Oc96N4LaeB:22: NOTICE:  policy "bmb_images_public_read" for relation "storage.objects" does not exist, skipping
+psql:/tmp/tmp.Oc96N4LaeB:23: NOTICE:  policy "bmb_images_public_read" for relation "storage.objects" does not exist, skipping
+psql:/tmp/tmp.Oc96N4LaeB:30: NOTICE:  policy "bmb_images_authenticated_upload" for relation "storage.objects" does not exist, skipping
+psql:/tmp/tmp.Oc96N4LaeB:31: NOTICE:  policy "bmb_images_authenticated_upload" for relation "storage.objects" does not exist, skipping
+psql:/tmp/tmp.Oc96N4LaeB:40: NOTICE:  policy "bmb_images_admin_update" for relation "storage.objects" does not exist, skipping
+psql:/tmp/tmp.Oc96N4LaeB:41: NOTICE:  policy "bmb_images_admin_update" for relation "storage.objects" does not exist, skipping
+psql:/tmp/tmp.Oc96N4LaeB:49: NOTICE:  policy "bmb_images_admin_delete" for relation "storage.objects" does not exist, skipping
+psql:/tmp/tmp.Oc96N4LaeB:50: NOTICE:  policy "bmb_images_admin_delete" for relation "storage.objects" does not exist, skipping
+psql:/tmp/tmp.Oc96N4LaeB:64: NOTICE:  policy "media_assets_public_read" for relation "media_assets" does not exist, skipping
+psql:/tmp/tmp.Oc96N4LaeB:69: NOTICE:  policy "media_assets_admin" for relation "media_assets" does not exist, skipping
+== apply 012_products_stock_rating_review_count.sql
+
+== apply 013_fix_submit_offline_payment_reference.sql
+
+== apply 014_owner_admin_full_access.sql
+
+== apply 015_customer_location_columns.sql
+
+== apply 016_addons_and_banner.sql
+
+== apply 017_pre_order_server_authoritative.sql
+psql:/tmp/tmp.4mtOrsnTG5:269: NOTICE:  policy "pre_orders_own_select" for relation "pre_orders" does not exist, skipping
+psql:/tmp/tmp.4mtOrsnTG5:275: NOTICE:  policy "pre_orders_anon_read" for relation "pre_orders" does not exist, skipping
+== apply 018_server_side_audit_log.sql
+psql:/tmp/tmp.YIQZgq5qPX:42: NOTICE:  policy "audit_logs_anon" for relation "public.audit_logs" does not exist, skipping
+psql:/tmp/tmp.YIQZgq5qPX:43: NOTICE:  policy "audit_logs_anon" for relation "public.audit_logs" does not exist, skipping
+psql:/tmp/tmp.YIQZgq5qPX:48: NOTICE:  policy "audit_logs_own_read" for relation "public.audit_logs" does not exist, skipping
+psql:/tmp/tmp.YIQZgq5qPX:49: NOTICE:  policy "audit_logs_own_read" for relation "public.audit_logs" does not exist, skipping
+psql:/tmp/tmp.YIQZgq5qPX:54: NOTICE:  policy "audit_logs_admin_read" for relation "public.audit_logs" does not exist, skipping
+psql:/tmp/tmp.YIQZgq5qPX:55: NOTICE:  policy "audit_logs_admin_read" for relation "public.audit_logs" does not exist, skipping
+== apply 019_kitchen_core.sql
+psql:/tmp/tmp.Uyj2d4UOzX:70: NOTICE:  policy "recipes_anon_read" for relation "public.recipes" does not exist, skipping
+psql:/tmp/tmp.Uyj2d4UOzX:71: NOTICE:  policy "recipes_anon_read" for relation "public.recipes" does not exist, skipping
+psql:/tmp/tmp.Uyj2d4UOzX:74: NOTICE:  policy "recipes_admin" for relation "public.recipes" does not exist, skipping
+psql:/tmp/tmp.Uyj2d4UOzX:75: NOTICE:  policy "recipes_admin" for relation "public.recipes" does not exist, skipping
+psql:/tmp/tmp.Uyj2d4UOzX:80: NOTICE:  policy "batches_admin" for relation "public.production_batches" does not exist, skipping
+psql:/tmp/tmp.Uyj2d4UOzX:81: NOTICE:  policy "batches_admin" for relation "public.production_batches" does not exist, skipping
+psql:/tmp/tmp.Uyj2d4UOzX:84: NOTICE:  policy "batch_items_admin" for relation "public.production_batch_items" does not exist, skipping
+psql:/tmp/tmp.Uyj2d4UOzX:85: NOTICE:  policy "batch_items_admin" for relation "public.production_batch_items" does not exist, skipping
+== apply 020_bite_drive.sql
+psql:/tmp/tmp.PnNNmMp6lp:33: NOTICE:  function public.haversine_km(pg_catalog.numeric,pg_catalog.numeric,pg_catalog.numeric,pg_catalog.numeric) does not exist, skipping
+psql:/tmp/tmp.PnNNmMp6lp:34: NOTICE:  function public.kitchen_location() does not exist, skipping
+psql:/tmp/tmp.PnNNmMp6lp:35: NOTICE:  function public.compute_delivery_fee(pg_catalog.numeric,pg_catalog.numeric,text,pg_catalog.int4,pg_catalog.numeric) does not exist, skipping
+psql:/tmp/tmp.PnNNmMp6lp:36: NOTICE:  function public.compute_delivery_fee_rpc(pg_catalog.numeric,pg_catalog.numeric,text,pg_catalog.int4,pg_catalog.numeric) does not exist, skipping
+psql:/tmp/tmp.PnNNmMp6lp:37: NOTICE:  function public.upsert_driver(text,text,text) does not exist, skipping
+psql:/tmp/tmp.PnNNmMp6lp:38: NOTICE:  function public.assign_driver(text,text) does not exist, skipping
+psql:/tmp/tmp.PnNNmMp6lp:39: NOTICE:  function public.driver_login(text) does not exist, skipping
+psql:/tmp/tmp.PnNNmMp6lp:40: NOTICE:  function public.driver_login(text,text) does not exist, skipping
+psql:/tmp/tmp.PnNNmMp6lp:41: NOTICE:  function public.driver_accept_assignment(text,text) does not exist, skipping
+psql:/tmp/tmp.PnNNmMp6lp:42: NOTICE:  function public.driver_update_delivery_status(text,text,text) does not exist, skipping
+psql:/tmp/tmp.PnNNmMp6lp:43: NOTICE:  function public.driver_update_delivery_status(text,text,text,pg_catalog.numeric,pg_catalog.numeric) does not exist, skipping
+psql:/tmp/tmp.PnNNmMp6lp:44: NOTICE:  function public.my_deliveries(text) does not exist, skipping
+psql:/tmp/tmp.PnNNmMp6lp:472: NOTICE:  column "vehicle_label" of relation "drivers" already exists, skipping
+psql:/tmp/tmp.PnNNmMp6lp:473: NOTICE:  column "current_latitude" of relation "drivers" already exists, skipping
+psql:/tmp/tmp.PnNNmMp6lp:474: NOTICE:  column "current_longitude" of relation "drivers" already exists, skipping
+psql:/tmp/tmp.PnNNmMp6lp:475: NOTICE:  column "last_seen_at" of relation "drivers" already exists, skipping
+psql:/tmp/tmp.PnNNmMp6lp:476: NOTICE:  column "assigned_at" of relation "delivery_assignments" already exists, skipping
+psql:/tmp/tmp.PnNNmMp6lp:477: NOTICE:  column "accepted_at" of relation "delivery_assignments" already exists, skipping
+psql:/tmp/tmp.PnNNmMp6lp:478: NOTICE:  column "picked_up_at" of relation "delivery_assignments" already exists, skipping
+psql:/tmp/tmp.PnNNmMp6lp:479: NOTICE:  column "in_transit_at" of relation "delivery_assignments" already exists, skipping
+psql:/tmp/tmp.PnNNmMp6lp:480: NOTICE:  column "delivered_at" of relation "delivery_assignments" already exists, skipping
+psql:/tmp/tmp.PnNNmMp6lp:481: NOTICE:  column "cancelled_at" of relation "delivery_assignments" already exists, skipping
+psql:/tmp/tmp.PnNNmMp6lp:482: NOTICE:  column "notes" of relation "delivery_assignments" already exists, skipping
+psql:/tmp/tmp.PnNNmMp6lp:483: NOTICE:  column "updated_at" of relation "delivery_assignments" already exists, skipping
+psql:/tmp/tmp.PnNNmMp6lp:519: NOTICE:  policy "drivers_deny_anon" for relation "public.drivers" does not exist, skipping
+psql:/tmp/tmp.PnNNmMp6lp:520: NOTICE:  policy "drivers_deny_anon" for relation "public.drivers" does not exist, skipping
+psql:/tmp/tmp.PnNNmMp6lp:522: NOTICE:  policy "drivers_auth_read" for relation "public.drivers" does not exist, skipping
+psql:/tmp/tmp.PnNNmMp6lp:523: NOTICE:  policy "drivers_auth_read" for relation "public.drivers" does not exist, skipping
+psql:/tmp/tmp.PnNNmMp6lp:525: NOTICE:  policy "drivers_admin_write" for relation "public.drivers" does not exist, skipping
+psql:/tmp/tmp.PnNNmMp6lp:526: NOTICE:  policy "drivers_admin_write" for relation "public.drivers" does not exist, skipping
+psql:/tmp/tmp.PnNNmMp6lp:530: NOTICE:  policy "assignments_deny_anon" for relation "public.delivery_assignments" does not exist, skipping
+psql:/tmp/tmp.PnNNmMp6lp:531: NOTICE:  policy "assignments_deny_anon" for relation "public.delivery_assignments" does not exist, skipping
+psql:/tmp/tmp.PnNNmMp6lp:533: NOTICE:  policy "assignments_auth_read" for relation "public.delivery_assignments" does not exist, skipping
+psql:/tmp/tmp.PnNNmMp6lp:534: NOTICE:  policy "assignments_auth_read" for relation "public.delivery_assignments" does not exist, skipping
+psql:/tmp/tmp.PnNNmMp6lp:539: NOTICE:  policy "assignments_admin_write" for relation "public.delivery_assignments" does not exist, skipping
+psql:/tmp/tmp.PnNNmMp6lp:540: NOTICE:  policy "assignments_admin_write" for relation "public.delivery_assignments" does not exist, skipping
+== apply 021_phase4_admin_ai.sql
+psql:/tmp/tmp.TfSNqYLYZx:73: NOTICE:  policy "system_errors_deny_anon" for relation "public.system_errors" does not exist, skipping
+psql:/tmp/tmp.TfSNqYLYZx:74: NOTICE:  policy "system_errors_deny_anon" for relation "public.system_errors" does not exist, skipping
+psql:/tmp/tmp.TfSNqYLYZx:76: NOTICE:  policy "system_errors_admin_read" for relation "public.system_errors" does not exist, skipping
+psql:/tmp/tmp.TfSNqYLYZx:77: NOTICE:  policy "system_errors_admin_read" for relation "public.system_errors" does not exist, skipping
+psql:/tmp/tmp.TfSNqYLYZx:81: NOTICE:  policy "mascot_overrides_anon_read" for relation "public.mascot_overrides" does not exist, skipping
+psql:/tmp/tmp.TfSNqYLYZx:82: NOTICE:  policy "mascot_overrides_anon_read" for relation "public.mascot_overrides" does not exist, skipping
+psql:/tmp/tmp.TfSNqYLYZx:84: NOTICE:  policy "mascot_overrides_admin" for relation "public.mascot_overrides" does not exist, skipping
+psql:/tmp/tmp.TfSNqYLYZx:85: NOTICE:  policy "mascot_overrides_admin" for relation "public.mascot_overrides" does not exist, skipping
+psql:/tmp/tmp.TfSNqYLYZx:89: NOTICE:  policy "ai_memory_deny_anon" for relation "public.ai_customer_memory" does not exist, skipping
+psql:/tmp/tmp.TfSNqYLYZx:90: NOTICE:  policy "ai_memory_deny_anon" for relation "public.ai_customer_memory" does not exist, skipping
+psql:/tmp/tmp.TfSNqYLYZx:92: NOTICE:  policy "ai_memory_own_read" for relation "public.ai_customer_memory" does not exist, skipping
+psql:/tmp/tmp.TfSNqYLYZx:93: NOTICE:  policy "ai_memory_own_read" for relation "public.ai_customer_memory" does not exist, skipping
+psql:/tmp/tmp.TfSNqYLYZx:96: NOTICE:  policy "ai_memory_admin_read" for relation "public.ai_customer_memory" does not exist, skipping
+psql:/tmp/tmp.TfSNqYLYZx:97: NOTICE:  policy "ai_memory_admin_read" for relation "public.ai_customer_memory" does not exist, skipping
+psql:/tmp/tmp.TfSNqYLYZx:101: NOTICE:  policy "notif_prefs_deny_anon" for relation "public.notification_prefs" does not exist, skipping
+psql:/tmp/tmp.TfSNqYLYZx:102: NOTICE:  policy "notif_prefs_deny_anon" for relation "public.notification_prefs" does not exist, skipping
+psql:/tmp/tmp.TfSNqYLYZx:104: NOTICE:  policy "notif_prefs_own" for relation "public.notification_prefs" does not exist, skipping
+psql:/tmp/tmp.TfSNqYLYZx:105: NOTICE:  policy "notif_prefs_own" for relation "public.notification_prefs" does not exist, skipping
+psql:/tmp/tmp.TfSNqYLYZx:108: NOTICE:  policy "notif_prefs_admin" for relation "public.notification_prefs" does not exist, skipping
+psql:/tmp/tmp.TfSNqYLYZx:109: NOTICE:  policy "notif_prefs_admin" for relation "public.notification_prefs" does not exist, skipping
+psql:/tmp/tmp.TfSNqYLYZx:113: NOTICE:  policy "notifications_deny_anon" for relation "public.notifications" does not exist, skipping
+psql:/tmp/tmp.TfSNqYLYZx:114: NOTICE:  policy "notifications_deny_anon" for relation "public.notifications" does not exist, skipping
+psql:/tmp/tmp.TfSNqYLYZx:117: NOTICE:  policy "notifications_own_read" for relation "public.notifications" does not exist, skipping
+psql:/tmp/tmp.TfSNqYLYZx:122: NOTICE:  policy "notifications_admin" for relation "public.notifications" does not exist, skipping
+== apply 022_phases_5_7.sql
+psql:/tmp/tmp.8n3gn0hQnz:181: NOTICE:  policy "content_approvals_anon" for relation "public.content_approvals" does not exist, skipping
+psql:/tmp/tmp.8n3gn0hQnz:182: NOTICE:  policy "content_approvals_anon" for relation "public.content_approvals" does not exist, skipping
+psql:/tmp/tmp.8n3gn0hQnz:184: NOTICE:  policy "content_approvals_auth_read" for relation "public.content_approvals" does not exist, skipping
+psql:/tmp/tmp.8n3gn0hQnz:185: NOTICE:  policy "content_approvals_auth_read" for relation "public.content_approvals" does not exist, skipping
+psql:/tmp/tmp.8n3gn0hQnz:188: NOTICE:  policy "content_approvals_admin" for relation "public.content_approvals" does not exist, skipping
+psql:/tmp/tmp.8n3gn0hQnz:189: NOTICE:  policy "content_approvals_admin" for relation "public.content_approvals" does not exist, skipping
+== apply 023_canonical_order_domain.sql
+psql:/tmp/tmp.WwW62Qyj7b:76: NOTICE:  trigger "products_sync_mode_alias" for relation "public.products" does not exist, skipping
+== apply 024_round_lifecycle_and_preorder_migration.sql
+psql:/tmp/tmp.Ix5dTdix9e:133: NOTICE:  column "migrated_order_id" of relation "pre_orders" already exists, skipping
+psql:/tmp/tmp.Ix5dTdix9e:237: NOTICE:  policy "pre_orders_archive_anon" for relation "public.pre_orders" does not exist, skipping
+psql:/tmp/tmp.Ix5dTdix9e:240: NOTICE:  policy "pre_orders_archive_own" for relation "public.pre_orders" does not exist, skipping
+psql:/tmp/tmp.Ix5dTdix9e:243: NOTICE:  policy "pre_orders_archive_admin" for relation "public.pre_orders" does not exist, skipping
+== apply 025_canonical_order_rpc.sql
+psql:/tmp/tmp.LdJBPzxWFS:427: NOTICE:  trigger "orders_release_round_capacity" for relation "public.orders" does not exist, skipping
+== apply 026_inventory_aggregate_fix.sql
+
+== apply 027_kitchen_canonical_batch.sql
+
+== apply 028_phase3a_operational_guarantees.sql
+psql:/tmp/tmp.axIi9026mb:49: NOTICE:  trigger "orders_ensure_deduct_on_confirm" for relation "public.orders" does not exist, skipping
+== apply 029_ensure_rounds_grant.sql
+
+== apply 030_order_transition_allowed_else.sql
+
+== apply 031_production_acl_drift_repair.sql
+
+== apply 032_public_execute_drift_repair.sql
+
+== apply 033_table_acl_alignment.sql
+
+== apply 034_production_acl_drift_remediation.sql
+
+shim OK: 035_m1_closure_p0_blockers.sql
+shim OK: 035_m1_closure_p0_blockers.sql
+== apply 035_m1_closure_p0_blockers.sql
+psql:/tmp/tmp.6jdiGYBmtX:156: NOTICE:  trigger "trg_pre_order_address_check" for relation "public.orders" does not exist, skipping
+psql:/tmp/tmp.6jdiGYBmtX:172: NOTICE:  policy "audit_logs_anon_read" for relation "public.audit_logs" does not exist, skipping
+psql:/tmp/tmp.6jdiGYBmtX:173: NOTICE:  policy "audit_logs_auth_read" for relation "public.audit_logs" does not exist, skipping
+psql:/tmp/tmp.6jdiGYBmtX:174: NOTICE:  policy "audit_logs_admin_all" for relation "public.audit_logs" does not exist, skipping
+psql:/tmp/tmp.6jdiGYBmtX:175: NOTICE:  policy "audit_logs_service_write" for relation "public.audit_logs" does not exist, skipping
+psql:/tmp/tmp.6jdiGYBmtX:178: NOTICE:  policy "audit_logs_anon_deny" for relation "public.audit_logs" does not exist, skipping
+psql:/tmp/tmp.6jdiGYBmtX:188: NOTICE:  policy "audit_logs_service_write" for relation "public.audit_logs" does not exist, skipping
+== apply 036_m1_09_driver_order_status_sync.sql
+
+shim OK: 037_m1_p0_blockers_repaired.sql
+== apply 037_m1_p0_blockers_repaired.sql
+
+== apply 038_pre_order_policy_enforcement.sql
+psql:/tmp/tmp.k633nrgihE:101: NOTICE:  trigger "trg_pre_order_window" for relation "public.orders" does not exist, skipping
+psql:/tmp/tmp.k633nrgihE:147: NOTICE:  trigger "trg_pre_order_cancel_window" for relation "public.orders" does not exist, skipping
+== apply 039_weekly_menu_and_mode_controls.sql
+psql:/tmp/tmp.V3pfbi1Pnr:50: NOTICE:  policy "menu_schedule_read" for relation "public.menu_schedule" does not exist, skipping
+psql:/tmp/tmp.V3pfbi1Pnr:51: NOTICE:  policy "menu_schedule_read" for relation "public.menu_schedule" does not exist, skipping
+psql:/tmp/tmp.V3pfbi1Pnr:54: NOTICE:  policy "menu_schedule_admin" for relation "public.menu_schedule" does not exist, skipping
+psql:/tmp/tmp.V3pfbi1Pnr:55: NOTICE:  policy "menu_schedule_admin" for relation "public.menu_schedule" does not exist, skipping
+psql:/tmp/tmp.V3pfbi1Pnr:225: NOTICE:  trigger "trg_menu_gate" for relation "public.order_items" does not exist, skipping
+psql:/tmp/tmp.V3pfbi1Pnr:272: NOTICE:  trigger "trg_operating_hours" for relation "public.orders" does not exist, skipping
+== apply 040_order_status_history.sql
+psql:/tmp/tmp.sPdwhapvkw:65: NOTICE:  policy "osh_admin_read" for relation "public.order_status_history" does not exist, skipping
+psql:/tmp/tmp.sPdwhapvkw:66: NOTICE:  policy "osh_admin_read" for relation "public.order_status_history" does not exist, skipping
+psql:/tmp/tmp.sPdwhapvkw:136: NOTICE:  trigger "trg_orders_status_history" for relation "public.orders" does not exist, skipping
+== apply 041_driver_identity_jwt_binding.sql
+psql:/tmp/tmp.STz0D2iY0P:46: NOTICE:  policy "drivers_scoped_read" for relation "public.drivers" does not exist, skipping
+psql:/tmp/tmp.STz0D2iY0P:52: NOTICE:  policy "assignments_scoped_read" for relation "public.delivery_assignments" does not exist, skipping
+psql:/tmp/tmp.STz0D2iY0P:62: NOTICE:  policy "drivers_self_update" for relation "public.drivers" does not exist, skipping
+psql:/tmp/tmp.STz0D2iY0P:63: NOTICE:  policy "drivers_self_update" for relation "public.drivers" does not exist, skipping
+== apply 042_recipes_rls_intent.sql
+psql:/tmp/tmp.vAq2Hfw7BY:30: NOTICE:  policy "recipes_auth_read" for relation "public.recipes" does not exist, skipping
+psql:/tmp/tmp.vAq2Hfw7BY:31: NOTICE:  policy "recipes_auth_read" for relation "public.recipes" does not exist, skipping
+== apply 043_f14_channel_intake.sql
+psql:/tmp/tmp.u8ACSIhAfz:50: NOTICE:  trigger "trg_orders_stamp_source_channel" for relation "public.orders" does not exist, skipping
+== apply 044_f14_single_signature.sql
+
+== apply 045_f14_stamp_fix.sql
+
+== apply 046_channel_identity_foundation.sql
+psql:/tmp/tmp.YAQicLDDyR:55: NOTICE:  policy "cci_admin_read" for relation "public.customer_channel_identities" does not exist, skipping
+psql:/tmp/tmp.YAQicLDDyR:56: NOTICE:  policy "cci_admin_read" for relation "public.customer_channel_identities" does not exist, skipping
+== apply 047_identity_concurrency_fix.sql
+
+== apply 048_f14_trusted_channel_intake.sql
+psql:/tmp/tmp.hj6feMg1fW:377: NOTICE:  function public.create_order_with_items(jsonb,text,text,text,pg_catalog.numeric,pg_catalog.numeric,text,text,text,text,text,pg_catalog.numeric,text,date) does not exist, skipping
+== apply 049_f14_signature_repair.sql
+psql:/tmp/tmp.PkEDpuwPlL:13: NOTICE:  function public.create_order_with_items(jsonb,text,text,text,pg_catalog.numeric,pg_catalog.numeric,text,text,text,text,text,pg_catalog.numeric,text,date,text,text) does not exist, skipping
+== apply 050_w5_h1_close_anon_orders.sql
+
+== apply 051_w52_track_phone_normalize.sql
+
+== apply 052_g_sec01_inventory_public_read.sql
+psql:/tmp/tmp.lLluP5rpV5:33: WARNING:  there is no transaction in progress
+== apply 053_g_sec01b_inventory_requirements_guard.sql
+psql:/tmp/tmp.BUoG8b34NC:70: WARNING:  there is no transaction in progress
+== apply 054_kitchen_ready_to_make_gate.sql
+
+== apply 055_catalog_menu_sections_archive.sql
+psql:/tmp/tmp.6fiWgkK0hd:41: NOTICE:  policy "menu_sections_public_read" for relation "public.menu_sections" does not exist, skipping
+psql:/tmp/tmp.6fiWgkK0hd:42: NOTICE:  policy "menu_sections_public_read" for relation "public.menu_sections" does not exist, skipping
+psql:/tmp/tmp.6fiWgkK0hd:46: NOTICE:  policy "menu_sections_admin_manage" for relation "public.menu_sections" does not exist, skipping
+psql:/tmp/tmp.6fiWgkK0hd:47: NOTICE:  policy "menu_sections_admin_manage" for relation "public.menu_sections" does not exist, skipping
+psql:/tmp/tmp.6fiWgkK0hd:93: NOTICE:  trigger "trg_catalog_visibility_gate" for relation "public.order_items" does not exist, skipping
+psql:/tmp/tmp.6fiWgkK0hd:105: NOTICE:  trigger "trg_menu_sections_touch" for relation "public.menu_sections" does not exist, skipping
+== apply 056_menu_schedule_anon_read.sql
+psql:/tmp/tmp.zB1boNoYUU:14: NOTICE:  policy "menu_schedule_published_anon_read" for relation "public.menu_schedule" does not exist, skipping
+psql:/tmp/tmp.zB1boNoYUU:15: NOTICE:  policy "menu_schedule_published_anon_read" for relation "public.menu_schedule" does not exist, skipping
+== apply 057_bmb_images_canonical_policies.sql
+psql:/tmp/tmp.8X9ekvGvjm:16: NOTICE:  policy "Allow Full Access uvi74e_0" for relation "storage.objects" does not exist, skipping
+psql:/tmp/tmp.8X9ekvGvjm:17: NOTICE:  policy "Allow Full Access uvi74e_1" for relation "storage.objects" does not exist, skipping
+psql:/tmp/tmp.8X9ekvGvjm:18: NOTICE:  policy "Allow Full Access uvi74e_2" for relation "storage.objects" does not exist, skipping
+psql:/tmp/tmp.8X9ekvGvjm:19: NOTICE:  policy "Allow Full Access uvi74e_3" for relation "storage.objects" does not exist, skipping
+psql:/tmp/tmp.8X9ekvGvjm:23: NOTICE:  policy "bmb_images_public_read" for relation "storage.objects" does not exist, skipping
+psql:/tmp/tmp.8X9ekvGvjm:29: NOTICE:  policy "bmb_images_authenticated_upload" for relation "storage.objects" does not exist, skipping
+psql:/tmp/tmp.8X9ekvGvjm:38: NOTICE:  policy "bmb_images_admin_update" for relation "storage.objects" does not exist, skipping
+psql:/tmp/tmp.8X9ekvGvjm:47: NOTICE:  policy "bmb_images_admin_delete" for relation "storage.objects" does not exist, skipping
+== apply 058_preorder_votes_close_anon_insert.sql
+
+== apply 059_tenant_foundation.sql
+psql:/tmp/tmp.V9xS9qgoLH:43: NOTICE:  policy "tenants_admin_manage" for relation "public.tenants" does not exist, skipping
+psql:/tmp/tmp.V9xS9qgoLH:44: NOTICE:  policy "tenants_admin_manage" for relation "public.tenants" does not exist, skipping
+psql:/tmp/tmp.V9xS9qgoLH:51: NOTICE:  policy "tenants_public_read" for relation "public.tenants" does not exist, skipping
+psql:/tmp/tmp.V9xS9qgoLH:52: NOTICE:  policy "tenants_public_read" for relation "public.tenants" does not exist, skipping
+psql:/tmp/tmp.V9xS9qgoLH:58: NOTICE:  policy "brands_admin_manage" for relation "public.brands" does not exist, skipping
+psql:/tmp/tmp.V9xS9qgoLH:59: NOTICE:  policy "brands_admin_manage" for relation "public.brands" does not exist, skipping
+psql:/tmp/tmp.V9xS9qgoLH:66: NOTICE:  policy "brands_public_read" for relation "public.brands" does not exist, skipping
+psql:/tmp/tmp.V9xS9qgoLH:67: NOTICE:  policy "brands_public_read" for relation "public.brands" does not exist, skipping
+== apply 060_ops_tenant_nullable.sql
+
+== apply 061_assignments_tenant_nullable.sql
+
+== apply 062_backfill_tenants.sql
+
+== apply 063_verify_backfill.sql
+psql:/tmp/tmp.MxLdetxLPf:31: NOTICE:  TEN-02 VERIFY: drivers = 0 total, 0 null, 0 with tenant-bmb-001
+psql:/tmp/tmp.MxLdetxLPf:43: NOTICE:  TEN-02 VERIFY: delivery_rounds = 3 total, 0 null
+psql:/tmp/tmp.MxLdetxLPf:55: NOTICE:  TEN-02 VERIFY: delivery_zones = 3 total, 0 null
+psql:/tmp/tmp.MxLdetxLPf:67: NOTICE:  TEN-02 VERIFY: delivery_assignments = 0 total, 0 null
+psql:/tmp/tmp.MxLdetxLPf:77: NOTICE:  TEN-02 VERIFY: orders=0 order_items=0 payment_intents=0 (preserved)
+== apply 064_enforce_not_null.sql
+
+shim OK: 065_rls_isolation.sql
+== apply 065_rls_isolation.sql
+psql:/tmp/tmp.RCQ8MW1rQj:68: NOTICE:  policy "drivers_tenant_admin_manage" for relation "public.drivers" does not exist, skipping
+psql:/tmp/tmp.RCQ8MW1rQj:82: NOTICE:  policy "drivers_deny_anon" for relation "public.drivers" does not exist, skipping
+psql:/tmp/tmp.RCQ8MW1rQj:91: NOTICE:  policy "delivery_rounds_tenant_admin_manage" for relation "public.delivery_rounds" does not exist, skipping
+psql:/tmp/tmp.RCQ8MW1rQj:105: NOTICE:  policy "delivery_zones_tenant_admin_manage" for relation "public.delivery_zones" does not exist, skipping
+psql:/tmp/tmp.RCQ8MW1rQj:120: NOTICE:  policy "assignments_tenant_admin_manage" for relation "public.delivery_assignments" does not exist, skipping
+shim OK: 066_profiles_tenant_authority.sql
+== apply 066_profiles_tenant_authority.sql
+psql:/tmp/tmp.IOFOOcVGgS:16: NOTICE:  column "tenant_id" of relation "profiles" already exists, skipping
+psql:/tmp/tmp.IOFOOcVGgS:17: NOTICE:  column "is_platform" of relation "profiles" already exists, skipping
+psql:/tmp/tmp.IOFOOcVGgS:33: NOTICE:  TEN-02 PROFILE BACKFILL: total=1 admin=0 customer=1
+psql:/tmp/tmp.IOFOOcVGgS:57: NOTICE:  TEN-02 VERIFY: profiles.backfill OK — tenant_id=null=0, is_platform=true=1
+== apply 067_catalog_tenant_nullable.sql
+psql:/tmp/tmp.P96KValy0Z:20: NOTICE:  policy "_mg_adm" for relation "public.addon_groups" does not exist, skipping
+psql:/tmp/tmp.P96KValy0Z:21: NOTICE:  policy "_mg_adm" for relation "public.addons" does not exist, skipping
+psql:/tmp/tmp.P96KValy0Z:22: NOTICE:  policy "_mg_adm" for relation "public.product_addon_groups" does not exist, skipping
+== apply 068_verify_catalog_pre_backfill.sql
+psql:/tmp/tmp.g8q6IL1ED8:16: NOTICE:  TEN-03 VERIFY PRE-BACKFILL: products=6 categories=5 sections=0
+== apply 069_backfill_catalog_tenants.sql
+psql:/tmp/tmp.yZi1XNbWuR:17: NOTICE:  TEN-03 BACKFILL: products=6 categories=5 sections=0 addon_groups=0 addons=0 product_addon_groups=0 menu_schedule=0
+== apply 070_enforce_catalog_not_null.sql
+
+== apply 071_catalog_rls_rewrite.sql
+psql:/tmp/tmp.5RVJUL5IhF:13: NOTICE:  policy "products_tenant_admin_manage" for relation "public.products" does not exist, skipping
+psql:/tmp/tmp.5RVJUL5IhF:18: NOTICE:  policy "product_categories_tenant_admin_manage" for relation "public.product_categories" does not exist, skipping
+psql:/tmp/tmp.5RVJUL5IhF:23: NOTICE:  policy "menu_sections_tenant_admin_manage" for relation "public.menu_sections" does not exist, skipping
+psql:/tmp/tmp.5RVJUL5IhF:27: NOTICE:  policy "addon_groups_admin_manage" for relation "public.addon_groups" does not exist, skipping
+psql:/tmp/tmp.5RVJUL5IhF:28: NOTICE:  policy "addon_groups_tenant_admin_manage" for relation "public.addon_groups" does not exist, skipping
+psql:/tmp/tmp.5RVJUL5IhF:32: NOTICE:  policy "addons_admin_manage" for relation "public.addons" does not exist, skipping
+psql:/tmp/tmp.5RVJUL5IhF:33: NOTICE:  policy "addons_tenant_admin_manage" for relation "public.addons" does not exist, skipping
+psql:/tmp/tmp.5RVJUL5IhF:37: NOTICE:  policy "product_addon_groups_admin_manage" for relation "public.product_addon_groups" does not exist, skipping
+psql:/tmp/tmp.5RVJUL5IhF:38: NOTICE:  policy "product_addon_groups_tenant_admin_manage" for relation "public.product_addon_groups" does not exist, skipping
+psql:/tmp/tmp.5RVJUL5IhF:43: NOTICE:  policy "menu_schedule_tenant_admin_manage" for relation "public.menu_schedule" does not exist, skipping
+== apply 072_brands_enforce_constraints.sql
+psql:/tmp/tmp.ijYvNS4dvG:48: NOTICE:  index "brands_slug_key" does not exist, skipping
+== apply 073_brand_seeding.sql
+
+== apply 074_tenants_add_default_brand.sql
+
+== apply 075_business_settings_extend_tenant.sql
+psql:/tmp/tmp.PQVz1lkTmz:37: WARNING:  there is no transaction in progress
+== apply 076_mascot_overrides_extend_brand.sql
+psql:/tmp/tmp.QoxmoitqwT:32: WARNING:  there is no transaction in progress
+== apply 077_brands_rls_policies.sql
+psql:/tmp/tmp.Sr1EKesFTY:22: NOTICE:  policy "brands_tenant_admin_manage" for relation "public.brands" does not exist, skipping
+psql:/tmp/tmp.Sr1EKesFTY:24: NOTICE:  policy "brands_public_read" for relation "public.brands" does not exist, skipping
+psql:/tmp/tmp.Sr1EKesFTY:26: NOTICE:  policy "brands_deny_anon" for relation "public.brands" does not exist, skipping
+psql:/tmp/tmp.Sr1EKesFTY:30: NOTICE:  policy "mascot_overrides_admin_manage" for relation "public.mascot_overrides" does not exist, skipping
+psql:/tmp/tmp.Sr1EKesFTY:31: NOTICE:  policy "mascots_tenant_admin_manage" for relation "public.mascot_overrides" does not exist, skipping
+psql:/tmp/tmp.Sr1EKesFTY:33: NOTICE:  policy "mascots_public_read" for relation "public.mascot_overrides" does not exist, skipping
+psql:/tmp/tmp.Sr1EKesFTY:35: NOTICE:  policy "mascots_deny_anon_write" for relation "public.mascot_overrides" does not exist, skipping
+psql:/tmp/tmp.Sr1EKesFTY:40: NOTICE:  policy "business_settings_tenant_admin_manage" for relation "public.business_settings" does not exist, skipping
+psql:/tmp/tmp.Sr1EKesFTY:42: NOTICE:  policy "business_settings_public_read" for relation "public.business_settings" does not exist, skipping
+psql:/tmp/tmp.Sr1EKesFTY:44: NOTICE:  policy "business_settings_deny_anon_write" for relation "public.business_settings" does not exist, skipping
+== apply 078_mascots_public_read_v2.sql
+psql:/tmp/tmp.rEBHb3s3m9:19: NOTICE:  policy "mascots_public_read_v2" for relation "public.mascot_overrides" does not exist, skipping
+== apply 079_tenant_crud_rpc_and_rls.sql
+psql:/tmp/tmp.6p0irPbWBL:88: NOTICE:  policy "tenants_platform_admin_manage" for relation "public.tenants" does not exist, skipping
+psql:/tmp/tmp.6p0irPbWBL:95: NOTICE:  policy "tenants_tenant_admin_manage" for relation "public.tenants" does not exist, skipping
+psql:/tmp/tmp.6p0irPbWBL:96: NOTICE:  policy "tenants_tenant_admin_manage" for relation "public.tenants" does not exist, skipping
+psql:/tmp/tmp.6p0irPbWBL:113: NOTICE:  policy "tenants_public_read" for relation "public.tenants" does not exist, skipping
+psql:/tmp/tmp.6p0irPbWBL:118: NOTICE:  policy "tenants_deny_anon_write" for relation "public.tenants" does not exist, skipping
+psql:/tmp/tmp.6p0irPbWBL:119: NOTICE:  policy "tenants_deny_anon_write" for relation "public.tenants" does not exist, skipping
+== apply 080_tenant_default_brand.sql
+
+shim OK: 081_branches_table.sql
+== apply 081_branches_table.sql
+psql:/tmp/tmp.JROCxfsZqo:69: NOTICE:  policy "branches_platform_admin_manage" for relation "public.branches" does not exist, skipping
+psql:/tmp/tmp.JROCxfsZqo:70: NOTICE:  policy "branches_platform_admin_manage" for relation "public.branches" does not exist, skipping
+psql:/tmp/tmp.JROCxfsZqo:77: NOTICE:  policy "branches_tenant_admin_manage" for relation "public.branches" does not exist, skipping
+psql:/tmp/tmp.JROCxfsZqo:78: NOTICE:  policy "branches_tenant_admin_manage" for relation "public.branches" does not exist, skipping
+psql:/tmp/tmp.JROCxfsZqo:95: NOTICE:  policy "branches_branch_staff_read" for relation "public.branches" does not exist, skipping
+psql:/tmp/tmp.JROCxfsZqo:96: NOTICE:  policy "branches_branch_staff_read" for relation "public.branches" does not exist, skipping
+psql:/tmp/tmp.JROCxfsZqo:106: NOTICE:  policy "branches_public_read" for relation "public.branches" does not exist, skipping
+psql:/tmp/tmp.JROCxfsZqo:107: NOTICE:  policy "branches_public_read" for relation "public.branches" does not exist, skipping
+psql:/tmp/tmp.JROCxfsZqo:113: NOTICE:  policy "branches_deny_anon_write" for relation "public.branches" does not exist, skipping
+psql:/tmp/tmp.JROCxfsZqo:114: NOTICE:  policy "branches_deny_anon_write" for relation "public.branches" does not exist, skipping
+psql:/tmp/tmp.JROCxfsZqo:125: NOTICE:  trigger "branches_updated_at" for relation "public.branches" does not exist, skipping
+== apply 082_delivery_rounds_branch_id.sql
+psql:/tmp/tmp.MmNq2nIIbK:61: NOTICE:  TEN-07 Backfill: delivery_rounds tenant=tenant-bmb-001 branch=branch-tenant-bmb-001-main updated=3
+psql:/tmp/tmp.MmNq2nIIbK:72: NOTICE:  TEN-07 Verify: delivery_rounds.branch_id backfill complete — nulls=0
+== apply 083_delivery_zones_branch_id.sql
+psql:/tmp/tmp.0IWqzGJhl0:54: NOTICE:  TEN-07 Backfill: delivery_zones tenant=tenant-bmb-001 branch=branch-tenant-bmb-001-main updated=3
+psql:/tmp/tmp.0IWqzGJhl0:65: NOTICE:  TEN-07 Verify: delivery_zones.branch_id backfill complete — nulls=0
+== apply 084_drivers_branch.sql
+psql:/tmp/tmp.ysHi2UnAiv:60: NOTICE:  TEN-07 Backfill: drivers tenant=tenant-bmb-001 branch=branch-tenant-bmb-001-main updated=0
+psql:/tmp/tmp.ysHi2UnAiv:71: NOTICE:  TEN-07 Verify: drivers.home_branch_id backfill complete — nulls=0
+== apply 085_delivery_assignments_branch_id.sql
+psql:/tmp/tmp.RIQW5uiiN2:41: NOTICE:  TEN-07 Backfill: delivery_assignments from driver.home_branch_id updated=0
+psql:/tmp/tmp.RIQW5uiiN2:41: NOTICE:  TEN-07 Backfill: delivery_assignments from tenant default branch updated=0
+psql:/tmp/tmp.RIQW5uiiN2:52: NOTICE:  TEN-07 Verify: delivery_assignments.branch_id backfill complete — nulls=0
+== apply 086_business_settings_branch_id.sql
+psql:/tmp/tmp.G2VNgZLkI7:28: NOTICE:  TEN-07 Backfill: business_settings branch-specific rows=0, tenant-default rows=5, total rows=5
+== apply 087_enforce_branch_not_null.sql
+psql:/tmp/tmp.CVCmaRZtg0:31: NOTICE:  TEN-07 VERIFY: All branch_id columns clean — rounds=0, zones=0, drivers=0, assignments=0
+psql:/tmp/tmp.CVCmaRZtg0:80: NOTICE:  TEN-07 SUCCESS: NOT NULL enforcement complete on all branch_id columns
+== apply 088_branch_rls_policies.sql
+psql:/tmp/tmp.61auxyiphf:44: NOTICE:  policy "branches_branch_staff_manage" for relation "public.branches" does not exist, skipping
+psql:/tmp/tmp.61auxyiphf:45: NOTICE:  policy "branches_branch_staff_manage" for relation "public.branches" does not exist, skipping
+psql:/tmp/tmp.61auxyiphf:51: NOTICE:  policy "delivery_rounds_branch_admin_manage" for relation "public.delivery_rounds" does not exist, skipping
+psql:/tmp/tmp.61auxyiphf:55: NOTICE:  policy "delivery_rounds_public_read" for relation "public.delivery_rounds" does not exist, skipping
+psql:/tmp/tmp.61auxyiphf:61: NOTICE:  policy "delivery_zones_branch_admin_manage" for relation "public.delivery_zones" does not exist, skipping
+psql:/tmp/tmp.61auxyiphf:65: NOTICE:  policy "delivery_zones_public_read" for relation "public.delivery_zones" does not exist, skipping
+psql:/tmp/tmp.61auxyiphf:72: NOTICE:  policy "drivers_branch_admin_manage" for relation "public.drivers" does not exist, skipping
+psql:/tmp/tmp.61auxyiphf:75: NOTICE:  policy "drivers_self_read" for relation "public.drivers" does not exist, skipping
+psql:/tmp/tmp.61auxyiphf:76: NOTICE:  policy "drivers_self_read" for relation "public.drivers" does not exist, skipping
+psql:/tmp/tmp.61auxyiphf:85: NOTICE:  policy "assignments_branch_admin_manage" for relation "public.delivery_assignments" does not exist, skipping
+psql:/tmp/tmp.61auxyiphf:88: NOTICE:  policy "assignments_driver_read" for relation "public.delivery_assignments" does not exist, skipping
+psql:/tmp/tmp.61auxyiphf:89: NOTICE:  policy "assignments_driver_read" for relation "public.delivery_assignments" does not exist, skipping
+psql:/tmp/tmp.61auxyiphf:98: NOTICE:  policy "business_settings_branch_admin_manage" for relation "public.business_settings" does not exist, skipping
+psql:/tmp/tmp.61auxyiphf:105: NOTICE:  policy "business_settings_public_read" for relation "public.business_settings" does not exist, skipping
+== apply 089_create_order_branch_id.sql
+psql:/tmp/tmp.zwaUGmhRWZ:34: NOTICE:  function public.create_order_with_items(jsonb,text,text,text,pg_catalog.numeric,pg_catalog.numeric,text,text,text,text,text,pg_catalog.numeric) does not exist, skipping
+psql:/tmp/tmp.zwaUGmhRWZ:37: NOTICE:  function public.create_order_with_items(jsonb,text,text,text,pg_catalog.numeric,pg_catalog.numeric,text,text,text,text,text,pg_catalog.numeric,text,date) does not exist, skipping
+== apply 090_profiles_branch_id.sql
+psql:/tmp/tmp.2dTkFY5m9R:12: NOTICE:  column "branch_id" of relation "profiles" already exists, skipping
+== apply 091_orders_branch_id.sql
+
+== apply 092_products_branch_overrides.sql
+
+== apply 093_reviews_verified_enhanced.sql
+
+== apply 094_admin_portfolio.sql
+
+== apply 095_seed_production_data.sql
+psql:/tmp/tmp.yqOrIuStqu:39: NOTICE:  Delivery rounds for 2026-10-27 inserted/ignored, branch=branch-tenant-bmb-001-main
+psql:/tmp/tmp.yqOrIuStqu:54: NOTICE:  Zones seeded for branch=branch-tenant-bmb-001-main
+psql:/tmp/tmp.yqOrIuStqu:71: NOTICE:  Validation passed: branches=1, rounds=6, zones=6 | main_branch=branch-tenant-bmb-001-main
+== apply 096_repair_thai_text_encoding.sql
+psql:/tmp/tmp.Q79qYxED1J:72: NOTICE:  Encoding repair done — remaining garbled: branches=0, rounds=0, zones=0
+== apply 097_public_read_grants.sql
+psql:/tmp/tmp.5YhuNoyZJ6:60: NOTICE:  Public-read grant audit — tables still missing anon SELECT: 0
+== apply 098_reviews_public_read.sql
+psql:/tmp/tmp.T8kMqxTAow:61: NOTICE:  Reviews public-read audit — missing: 0
+== apply 099_verified_reviews_rpcs.sql
+psql:/tmp/tmp.g7p1CvIUT4:101: NOTICE:  Reviews RPCs ready — get_verified_reviews_batch + submit_verified_review
+== apply 100_anon_read_grants_mascot_401_fix.sql
+
+== apply 101_menu_sections_anon_read.sql
+psql:/tmp/tmp.53vnGV8uzK:32: NOTICE:  menu_sections anon grant audit — missing: 0
+== apply 102_grants_authenticated.sql
+psql:/tmp/tmp.P7ld9SemZF:38: NOTICE:  authenticated grant audit — missing: 0
+== apply 103_tenant_id_defaults.sql
+psql:/tmp/tmp.h0i1Db2cUF:44: NOTICE:  tenant_id defaults set on 16 tables
+== apply 104_b1_order_number_uniqueness.sql
+psql:/tmp/tmp.8qUmhepbbs:441: WARNING:  there is no transaction in progress
+== apply 105_asset_registry_media_assets.sql
+
+== apply 106_rls_tenant_boundary.sql
+psql:/tmp/tmp.KeNCIvEo0o:69: NOTICE:  policy "media_assets_tenant_write" for relation "public.media_assets" does not exist, skipping
+psql:/tmp/tmp.KeNCIvEo0o:70: NOTICE:  policy "media_assets_tenant_write" for relation "public.media_assets" does not exist, skipping
+psql:/tmp/tmp.KeNCIvEo0o:77: NOTICE:  policy "media_assets_platform_global" for relation "public.media_assets" does not exist, skipping
+psql:/tmp/tmp.KeNCIvEo0o:78: NOTICE:  policy "media_assets_platform_global" for relation "public.media_assets" does not exist, skipping
+psql:/tmp/tmp.KeNCIvEo0o:86: NOTICE:  policy "media_assets_public_read" for relation "public.media_assets" does not exist, skipping
+psql:/tmp/tmp.KeNCIvEo0o:87: NOTICE:  policy "media_assets_public_read" for relation "public.media_assets" does not exist, skipping
+shim OK: 107_product_backfill_scope_constraints.sql
+== apply 107_product_backfill_scope_constraints.sql
+
+== apply 108_remediate_tenant_authority.sql
+
+== apply 109_g3_social_events_foundation.sql
+
+== apply 110_g8_automation_queue.sql
+
+== apply 111_g8_s4_enqueue_idempotency.sql
+
+== apply 112_w1_4_admin_delivery_config_no_hardcode.sql
+
+== apply 113_fix_ensure_rounds_branch_id.sql
+
+== apply 114_final_config_closure.sql
+
+== apply 115_push_subscriptions.sql
+psql:/tmp/tmp.1rySSTBjdh:76: NOTICE:  policy "push_subs_deny_anon" for relation "public.push_subscriptions" does not exist, skipping
+psql:/tmp/tmp.1rySSTBjdh:77: NOTICE:  policy "push_subs_deny_anon" for relation "public.push_subscriptions" does not exist, skipping
+psql:/tmp/tmp.1rySSTBjdh:82: NOTICE:  policy "push_subs_own_read" for relation "public.push_subscriptions" does not exist, skipping
+psql:/tmp/tmp.1rySSTBjdh:83: NOTICE:  policy "push_subs_own_read" for relation "public.push_subscriptions" does not exist, skipping
+psql:/tmp/tmp.1rySSTBjdh:90: NOTICE:  policy "push_subs_admin_read" for relation "public.push_subscriptions" does not exist, skipping
+psql:/tmp/tmp.1rySSTBjdh:91: NOTICE:  policy "push_subs_admin_read" for relation "public.push_subscriptions" does not exist, skipping
+== apply 116_admin_advance_delivery.sql
+
+== apply 117_channel_intake_repair.sql
+
+== apply 118_restore_fc_gates_after_117.sql
+
+== apply 119_fix_bmb_images_storage_policies.sql
+psql:/tmp/tmp.lJqPJBtXsj:24: NOTICE:  policy "bmb_images_public_read" for relation "storage.objects" does not exist, skipping
+psql:/tmp/tmp.lJqPJBtXsj:31: NOTICE:  policy "bmb_images_authenticated_upload" for relation "storage.objects" does not exist, skipping
+psql:/tmp/tmp.lJqPJBtXsj:38: NOTICE:  policy "bmb_images_admin_update" for relation "storage.objects" does not exist, skipping
+psql:/tmp/tmp.lJqPJBtXsj:47: NOTICE:  policy "bmb_images_admin_delete" for relation "storage.objects" does not exist, skipping
+== apply 120_customer_delivery_photo.sql
+
+== apply 121_grants_customers_select.sql
+psql:/tmp/tmp.KbWOsxPkeE:45: NOTICE:  authenticated grant audit (customers) — missing: 0
+== apply 122_otp_challenges.sql
+
+== apply 123_menu_publish_enforcement.sql
+
+== apply 124_order_submit_idempotency.sql
+
+== apply 125_driver_home_branch.sql
+
+== apply 126_admin_content_and_queue.sql
+
+== apply 127_pickup_fulfillment.sql
+psql:/tmp/tmp.LZ7IuVX9Kd:80: NOTICE:  trigger "trg_orders_pickup_stamp" for relation "public.orders" does not exist, skipping
+== apply 128_print_jobs.sql
+psql:/tmp/tmp.aer3wYZiTg:38: NOTICE:  policy "print_jobs_admin_all" for relation "public.print_jobs" does not exist, skipping
+psql:/tmp/tmp.aer3wYZiTg:39: NOTICE:  policy "print_jobs_admin_all" for relation "public.print_jobs" does not exist, skipping
+psql:/tmp/tmp.aer3wYZiTg:174: NOTICE:  trigger "trg_orders_print_enqueue_ins" for relation "public.orders" does not exist, skipping
+psql:/tmp/tmp.aer3wYZiTg:179: NOTICE:  trigger "trg_orders_print_enqueue_upd" for relation "public.orders" does not exist, skipping
+== apply 129_pos_staff_shift.sql
+psql:/tmp/tmp.CAR0dKuhHZ:63: NOTICE:  policy "orders_staff_select" for relation "public.orders" does not exist, skipping
+psql:/tmp/tmp.CAR0dKuhHZ:64: NOTICE:  policy "orders_staff_select" for relation "public.orders" does not exist, skipping
+psql:/tmp/tmp.CAR0dKuhHZ:67: NOTICE:  policy "order_items_staff_select" for relation "public.order_items" does not exist, skipping
+psql:/tmp/tmp.CAR0dKuhHZ:68: NOTICE:  policy "order_items_staff_select" for relation "public.order_items" does not exist, skipping
+psql:/tmp/tmp.CAR0dKuhHZ:71: NOTICE:  policy "products_staff_select" for relation "public.products" does not exist, skipping
+psql:/tmp/tmp.CAR0dKuhHZ:72: NOTICE:  policy "products_staff_select" for relation "public.products" does not exist, skipping
+psql:/tmp/tmp.CAR0dKuhHZ:75: NOTICE:  policy "product_categories_staff_select" for relation "public.product_categories" does not exist, skipping
+psql:/tmp/tmp.CAR0dKuhHZ:76: NOTICE:  policy "product_categories_staff_select" for relation "public.product_categories" does not exist, skipping
+psql:/tmp/tmp.CAR0dKuhHZ:79: NOTICE:  policy "menu_sections_staff_select" for relation "public.menu_sections" does not exist, skipping
+psql:/tmp/tmp.CAR0dKuhHZ:80: NOTICE:  policy "menu_sections_staff_select" for relation "public.menu_sections" does not exist, skipping
+psql:/tmp/tmp.CAR0dKuhHZ:83: NOTICE:  policy "menu_schedule_staff_select" for relation "public.menu_schedule" does not exist, skipping
+psql:/tmp/tmp.CAR0dKuhHZ:84: NOTICE:  policy "menu_schedule_staff_select" for relation "public.menu_schedule" does not exist, skipping
+psql:/tmp/tmp.CAR0dKuhHZ:87: NOTICE:  policy "delivery_rounds_staff_select" for relation "public.delivery_rounds" does not exist, skipping
+psql:/tmp/tmp.CAR0dKuhHZ:88: NOTICE:  policy "delivery_rounds_staff_select" for relation "public.delivery_rounds" does not exist, skipping
+psql:/tmp/tmp.CAR0dKuhHZ:91: NOTICE:  policy "business_settings_staff_select" for relation "public.business_settings" does not exist, skipping
+psql:/tmp/tmp.CAR0dKuhHZ:92: NOTICE:  policy "business_settings_staff_select" for relation "public.business_settings" does not exist, skipping
+psql:/tmp/tmp.CAR0dKuhHZ:95: NOTICE:  policy "inventory_staff_select" for relation "public.inventory" does not exist, skipping
+psql:/tmp/tmp.CAR0dKuhHZ:96: NOTICE:  policy "inventory_staff_select" for relation "public.inventory" does not exist, skipping
+psql:/tmp/tmp.CAR0dKuhHZ:99: NOTICE:  policy "recipes_staff_select" for relation "public.recipes" does not exist, skipping
+psql:/tmp/tmp.CAR0dKuhHZ:100: NOTICE:  policy "recipes_staff_select" for relation "public.recipes" does not exist, skipping
+psql:/tmp/tmp.CAR0dKuhHZ:103: NOTICE:  policy "print_jobs_staff_all" for relation "public.print_jobs" does not exist, skipping
+psql:/tmp/tmp.CAR0dKuhHZ:104: NOTICE:  policy "print_jobs_staff_all" for relation "public.print_jobs" does not exist, skipping
+psql:/tmp/tmp.CAR0dKuhHZ:108: NOTICE:  policy "payment_intents_staff_select" for relation "public.payment_intents" does not exist, skipping
+psql:/tmp/tmp.CAR0dKuhHZ:109: NOTICE:  policy "payment_intents_staff_select" for relation "public.payment_intents" does not exist, skipping
+psql:/tmp/tmp.CAR0dKuhHZ:262: NOTICE:  policy "shifts_staff_select" for relation "public.shifts" does not exist, skipping
+psql:/tmp/tmp.CAR0dKuhHZ:263: NOTICE:  policy "shifts_staff_select" for relation "public.shifts" does not exist, skipping
+== apply 130_finance_reports.sql
+psql:/tmp/tmp.gAH4yIDgL0:73: NOTICE:  policy "daily_closings_staff_select" for relation "public.daily_closings" does not exist, skipping
+psql:/tmp/tmp.gAH4yIDgL0:74: NOTICE:  policy "daily_closings_staff_select" for relation "public.daily_closings" does not exist, skipping
+== apply 131_register_user_to_customers.sql
+
+== apply 132_rider_pod_push_decline.sql
+psql:/tmp/tmp.Gf2HQgHOzl:93: NOTICE:  policy "pod_photos_driver_upload" for relation "storage.objects" does not exist, skipping
+psql:/tmp/tmp.Gf2HQgHOzl:94: NOTICE:  policy "pod_photos_driver_upload" for relation "storage.objects" does not exist, skipping
+psql:/tmp/tmp.Gf2HQgHOzl:105: NOTICE:  policy "pod_photos_admin_or_owner_read" for relation "storage.objects" does not exist, skipping
+psql:/tmp/tmp.Gf2HQgHOzl:106: NOTICE:  policy "pod_photos_admin_or_owner_read" for relation "storage.objects" does not exist, skipping
+psql:/tmp/tmp.Gf2HQgHOzl:120: NOTICE:  policy "pod_photos_admin_update" for relation "storage.objects" does not exist, skipping
+psql:/tmp/tmp.Gf2HQgHOzl:121: NOTICE:  policy "pod_photos_admin_update" for relation "storage.objects" does not exist, skipping
+psql:/tmp/tmp.Gf2HQgHOzl:129: NOTICE:  policy "pod_photos_admin_delete" for relation "storage.objects" does not exist, skipping
+psql:/tmp/tmp.Gf2HQgHOzl:130: NOTICE:  policy "pod_photos_admin_delete" for relation "storage.objects" does not exist, skipping
+psql:/tmp/tmp.Gf2HQgHOzl:487: NOTICE:  trigger "trg_close_assignments_on_order_terminal" for relation "public.orders" does not exist, skipping
+psql:/tmp/tmp.Gf2HQgHOzl:848: NOTICE:  policy "push_subscriptions_customer_read" for relation "public.push_subscriptions" does not exist, skipping
+psql:/tmp/tmp.Gf2HQgHOzl:849: NOTICE:  policy "mypushsubscriptionspolicy" for relation "public.push_subscriptions" does not exist, skipping
+psql:/tmp/tmp.Gf2HQgHOzl:850: NOTICE:  policy "push_subscriptions_customer_read" for relation "public.push_subscriptions" does not exist, skipping
+== apply 133_payment_slip_upload.sql
+psql:/tmp/tmp.UoMIZ3A73l:57: NOTICE:  policy "payment_slips_customer_upload" for relation "storage.objects" does not exist, skipping
+psql:/tmp/tmp.UoMIZ3A73l:58: NOTICE:  policy "payment_slips_customer_upload" for relation "storage.objects" does not exist, skipping
+psql:/tmp/tmp.UoMIZ3A73l:69: NOTICE:  policy "payment_slips_admin_or_owner_read" for relation "storage.objects" does not exist, skipping
+psql:/tmp/tmp.UoMIZ3A73l:70: NOTICE:  policy "payment_slips_admin_or_owner_read" for relation "storage.objects" does not exist, skipping
+== apply 134_kitchen_fee_sync.sql
+
+== apply 135_dispatch_offers.sql
+psql:/tmp/tmp.qHRJQvS5co:51: NOTICE:  policy "dispatch_offers_deny_anon" for relation "public.dispatch_offers" does not exist, skipping
+psql:/tmp/tmp.qHRJQvS5co:52: NOTICE:  policy "dispatch_offers_deny_anon" for relation "public.dispatch_offers" does not exist, skipping
+psql:/tmp/tmp.qHRJQvS5co:54: NOTICE:  policy "dispatch_offers_auth_read" for relation "public.dispatch_offers" does not exist, skipping
+psql:/tmp/tmp.qHRJQvS5co:55: NOTICE:  policy "dispatch_offers_auth_read" for relation "public.dispatch_offers" does not exist, skipping
+psql:/tmp/tmp.qHRJQvS5co:57: NOTICE:  policy "dispatch_offers_admin_write" for relation "public.dispatch_offers" does not exist, skipping
+psql:/tmp/tmp.qHRJQvS5co:58: NOTICE:  policy "dispatch_offers_admin_write" for relation "public.dispatch_offers" does not exist, skipping
+psql:/tmp/tmp.qHRJQvS5co:62: NOTICE:  policy "offer_declines_deny_anon" for relation "public.dispatch_offer_declines" does not exist, skipping
+psql:/tmp/tmp.qHRJQvS5co:63: NOTICE:  policy "offer_declines_deny_anon" for relation "public.dispatch_offer_declines" does not exist, skipping
+psql:/tmp/tmp.qHRJQvS5co:65: NOTICE:  policy "offer_declines_auth_read" for relation "public.dispatch_offer_declines" does not exist, skipping
+psql:/tmp/tmp.qHRJQvS5co:66: NOTICE:  policy "offer_declines_auth_read" for relation "public.dispatch_offer_declines" does not exist, skipping
+psql:/tmp/tmp.qHRJQvS5co:68: NOTICE:  policy "offer_declines_admin_write" for relation "public.dispatch_offer_declines" does not exist, skipping
+psql:/tmp/tmp.qHRJQvS5co:69: NOTICE:  policy "offer_declines_admin_write" for relation "public.dispatch_offer_declines" does not exist, skipping
+== apply 136_driver_location_history.sql
+psql:/tmp/tmp.m9f960D0KH:25: NOTICE:  policy "loc_history_deny_anon" for relation "public.driver_location_history" does not exist, skipping
+psql:/tmp/tmp.m9f960D0KH:26: NOTICE:  policy "loc_history_deny_anon" for relation "public.driver_location_history" does not exist, skipping
+psql:/tmp/tmp.m9f960D0KH:28: NOTICE:  policy "loc_history_auth_read" for relation "public.driver_location_history" does not exist, skipping
+psql:/tmp/tmp.m9f960D0KH:29: NOTICE:  policy "loc_history_auth_read" for relation "public.driver_location_history" does not exist, skipping
+== apply 137_marketing_posts_rules.sql
+psql:/tmp/tmp.onfno1dtmv:57: NOTICE:  policy "marketing_posts_deny_anon" for relation "public.marketing_posts" does not exist, skipping
+psql:/tmp/tmp.onfno1dtmv:58: NOTICE:  policy "marketing_posts_deny_anon" for relation "public.marketing_posts" does not exist, skipping
+psql:/tmp/tmp.onfno1dtmv:60: NOTICE:  policy "marketing_posts_auth_read" for relation "public.marketing_posts" does not exist, skipping
+psql:/tmp/tmp.onfno1dtmv:61: NOTICE:  policy "marketing_posts_auth_read" for relation "public.marketing_posts" does not exist, skipping
+psql:/tmp/tmp.onfno1dtmv:63: NOTICE:  policy "marketing_posts_admin_write" for relation "public.marketing_posts" does not exist, skipping
+psql:/tmp/tmp.onfno1dtmv:64: NOTICE:  policy "marketing_posts_admin_write" for relation "public.marketing_posts" does not exist, skipping
+psql:/tmp/tmp.onfno1dtmv:68: NOTICE:  policy "marketing_rules_deny_anon" for relation "public.marketing_rules" does not exist, skipping
+psql:/tmp/tmp.onfno1dtmv:69: NOTICE:  policy "marketing_rules_deny_anon" for relation "public.marketing_rules" does not exist, skipping
+psql:/tmp/tmp.onfno1dtmv:71: NOTICE:  policy "marketing_rules_auth_read" for relation "public.marketing_rules" does not exist, skipping
+psql:/tmp/tmp.onfno1dtmv:72: NOTICE:  policy "marketing_rules_auth_read" for relation "public.marketing_rules" does not exist, skipping
+psql:/tmp/tmp.onfno1dtmv:74: NOTICE:  policy "marketing_rules_admin_write" for relation "public.marketing_rules" does not exist, skipping
+psql:/tmp/tmp.onfno1dtmv:75: NOTICE:  policy "marketing_rules_admin_write" for relation "public.marketing_rules" does not exist, skipping
+== apply 138_payment_intents_read_authority.sql
+
+== apply 139_pod_policies_trusted_helper.sql
+psql:/tmp/tmp.6LoQ11YneJ:71: NOTICE:  policy "pod_photos_driver_upload" for relation "storage.objects" does not exist, skipping
+psql:/tmp/tmp.6LoQ11YneJ:80: NOTICE:  policy "pod_photos_admin_or_owner_read" for relation "storage.objects" does not exist, skipping
+psql:/tmp/tmp.6LoQ11YneJ:89: NOTICE:  policy "pod_photos_admin_update" for relation "storage.objects" does not exist, skipping
+psql:/tmp/tmp.6LoQ11YneJ:98: NOTICE:  policy "pod_photos_admin_delete" for relation "storage.objects" does not exist, skipping
+== apply 140_auto_close_expired_rounds.sql
+
+== apply 141_pre_order_unify_menu_calendar.sql
+
+== apply 142_pre_order_requires_menu.sql
+
+== apply 143_pre_order_cutoff_settings.sql
+
+== apply 144_round_pattern.sql
+
+== apply 145_two_cutoffs.sql
+
+== apply 146_role_foundation.sql
+psql:/tmp/tmp.JwTUUygvvc:178: NOTICE:  trigger "drivers_promote_rider" for relation "public.drivers" does not exist, skipping
+== apply 147_role_rls_matrix.sql
+psql:/tmp/tmp.FEp90e8qhA:25: NOTICE:  policy "recipes_role_manage" for relation "public.recipes" does not exist, skipping
+psql:/tmp/tmp.FEp90e8qhA:26: NOTICE:  policy "recipes_role_manage" for relation "public.recipes" does not exist, skipping
+psql:/tmp/tmp.FEp90e8qhA:32: NOTICE:  policy "batches_role_manage" for relation "public.production_batches" does not exist, skipping
+psql:/tmp/tmp.FEp90e8qhA:33: NOTICE:  policy "batches_role_manage" for relation "public.production_batches" does not exist, skipping
+psql:/tmp/tmp.FEp90e8qhA:39: NOTICE:  policy "batch_items_role_manage" for relation "public.production_batch_items" does not exist, skipping
+psql:/tmp/tmp.FEp90e8qhA:40: NOTICE:  policy "batch_items_role_manage" for relation "public.production_batch_items" does not exist, skipping
+psql:/tmp/tmp.FEp90e8qhA:165: NOTICE:  policy "inventory_role_write" for relation "public.inventory" does not exist, skipping
+psql:/tmp/tmp.FEp90e8qhA:166: NOTICE:  policy "inventory_role_write" for relation "public.inventory" does not exist, skipping
+psql:/tmp/tmp.FEp90e8qhA:172: NOTICE:  policy "inventory_transactions_role_write" for relation "public.inventory_transactions" does not exist, skipping
+psql:/tmp/tmp.FEp90e8qhA:173: NOTICE:  policy "inventory_transactions_role_write" for relation "public.inventory_transactions" does not exist, skipping
+psql:/tmp/tmp.FEp90e8qhA:182: NOTICE:  policy "daily_closings_finance_write" for relation "public.daily_closings" does not exist, skipping
+psql:/tmp/tmp.FEp90e8qhA:183: NOTICE:  policy "daily_closings_finance_write" for relation "public.daily_closings" does not exist, skipping
+psql:/tmp/tmp.FEp90e8qhA:236: NOTICE:  policy "marketing_posts_role_write" for relation "public.marketing_posts" does not exist, skipping
+psql:/tmp/tmp.FEp90e8qhA:237: NOTICE:  policy "marketing_posts_role_write" for relation "public.marketing_posts" does not exist, skipping
+psql:/tmp/tmp.FEp90e8qhA:243: NOTICE:  policy "marketing_rules_role_write" for relation "public.marketing_rules" does not exist, skipping
+psql:/tmp/tmp.FEp90e8qhA:244: NOTICE:  policy "marketing_rules_role_write" for relation "public.marketing_rules" does not exist, skipping
+psql:/tmp/tmp.FEp90e8qhA:384: NOTICE:  policy "orders_support_read" for relation "public.orders" does not exist, skipping
+psql:/tmp/tmp.FEp90e8qhA:385: NOTICE:  policy "orders_support_read" for relation "public.orders" does not exist, skipping
+psql:/tmp/tmp.FEp90e8qhA:387: NOTICE:  policy "order_items_support_read" for relation "public.order_items" does not exist, skipping
+psql:/tmp/tmp.FEp90e8qhA:388: NOTICE:  policy "order_items_support_read" for relation "public.order_items" does not exist, skipping
+psql:/tmp/tmp.FEp90e8qhA:390: NOTICE:  policy "customers_support_read" for relation "public.customers" does not exist, skipping
+psql:/tmp/tmp.FEp90e8qhA:391: NOTICE:  policy "customers_support_read" for relation "public.customers" does not exist, skipping
+psql:/tmp/tmp.FEp90e8qhA:393: NOTICE:  policy "notifications_support_read" for relation "public.notifications" does not exist, skipping
+psql:/tmp/tmp.FEp90e8qhA:394: NOTICE:  policy "notifications_support_read" for relation "public.notifications" does not exist, skipping
+psql:/tmp/tmp.FEp90e8qhA:416: NOTICE:  policy "orders_audit_read" for relation "public.orders" does not exist, skipping
+psql:/tmp/tmp.FEp90e8qhA:416: NOTICE:  policy "order_items_audit_read" for relation "public.order_items" does not exist, skipping
+psql:/tmp/tmp.FEp90e8qhA:416: NOTICE:  policy "products_audit_read" for relation "public.products" does not exist, skipping
+psql:/tmp/tmp.FEp90e8qhA:416: NOTICE:  policy "product_categories_audit_read" for relation "public.product_categories" does not exist, skipping
+psql:/tmp/tmp.FEp90e8qhA:416: NOTICE:  policy "delivery_rounds_audit_read" for relation "public.delivery_rounds" does not exist, skipping
+psql:/tmp/tmp.FEp90e8qhA:416: NOTICE:  policy "menu_schedule_audit_read" for relation "public.menu_schedule" does not exist, skipping
+psql:/tmp/tmp.FEp90e8qhA:416: NOTICE:  policy "promotions_audit_read" for relation "public.promotions" does not exist, skipping
+psql:/tmp/tmp.FEp90e8qhA:416: NOTICE:  policy "inventory_audit_read" for relation "public.inventory" does not exist, skipping
+psql:/tmp/tmp.FEp90e8qhA:416: NOTICE:  policy "recipes_audit_read" for relation "public.recipes" does not exist, skipping
+psql:/tmp/tmp.FEp90e8qhA:416: NOTICE:  policy "system_errors_audit_read" for relation "public.system_errors" does not exist, skipping
+psql:/tmp/tmp.FEp90e8qhA:416: NOTICE:  policy "audit_logs_audit_read" for relation "public.audit_logs" does not exist, skipping
+psql:/tmp/tmp.FEp90e8qhA:416: NOTICE:  policy "daily_closings_audit_read" for relation "public.daily_closings" does not exist, skipping
+psql:/tmp/tmp.FEp90e8qhA:416: NOTICE:  policy "production_batches_audit_read" for relation "public.production_batches" does not exist, skipping
+psql:/tmp/tmp.FEp90e8qhA:416: NOTICE:  policy "production_batch_items_audit_read" for relation "public.production_batch_items" does not exist, skipping
+psql:/tmp/tmp.FEp90e8qhA:416: NOTICE:  policy "marketing_posts_audit_read" for relation "public.marketing_posts" does not exist, skipping
+psql:/tmp/tmp.FEp90e8qhA:416: NOTICE:  policy "business_settings_audit_read" for relation "public.business_settings" does not exist, skipping
+psql:/tmp/tmp.FEp90e8qhA:422: NOTICE:  policy "drivers_scoped_read" for relation "public.drivers" does not exist, skipping
+psql:/tmp/tmp.FEp90e8qhA:428: NOTICE:  policy "assignments_scoped_read" for relation "public.delivery_assignments" does not exist, skipping
+psql:/tmp/tmp.FEp90e8qhA:435: NOTICE:  policy "drivers_self_update" for relation "public.drivers" does not exist, skipping
+== apply 148_same_day_no_cutoff.sql
+
+== apply 149_round_archive_cleanup.sql
+psql:/tmp/tmp.vcr9zndE9D:75: NOTICE:  149: archived 0 past round(s) with references
+== apply 150_orders_delivery_address_parity.sql
+psql:/tmp/tmp.kpllKpAJLx:26: NOTICE:  column "delivery_address" of relation "orders" already exists, skipping
+== apply 151_order_status_history_baseline.sql
+
+== apply 152_menu_schedule_execute_revoke.sql
+
+== apply 153_promotion_campaign_controls.sql
+psql:/tmp/tmp.crHFMudiu3:78: NOTICE:  policy "promotion_products_public_read" for relation "public.promotion_products" does not exist, skipping
+psql:/tmp/tmp.crHFMudiu3:79: NOTICE:  policy "promotion_products_public_read" for relation "public.promotion_products" does not exist, skipping
+psql:/tmp/tmp.crHFMudiu3:82: NOTICE:  policy "promotion_products_admin_manage" for relation "public.promotion_products" does not exist, skipping
+psql:/tmp/tmp.crHFMudiu3:83: NOTICE:  policy "promotion_products_admin_manage" for relation "public.promotion_products" does not exist, skipping
+== apply 154_referral_program.sql
+psql:/tmp/tmp.28Lwl5UZtD:498: NOTICE:  trigger "trg_referral_order_status" for relation "public.orders" does not exist, skipping
+== apply 155_loyalty_tiers_points.sql
+psql:/tmp/tmp.EqNwbRccsd:87: NOTICE:  trigger "trg_points_ledger_append_only" for relation "public.points_ledger" does not exist, skipping
+psql:/tmp/tmp.EqNwbRccsd:385: NOTICE:  trigger "trg_loyalty_order_sync" for relation "public.orders" does not exist, skipping
+psql:/tmp/tmp.EqNwbRccsd:414: NOTICE:  trigger "trg_loyalty_intent_sync" for relation "public.payment_intents" does not exist, skipping
+== apply 156_engagement_play.sql
+psql:/tmp/tmp.firMKuXtmE:566: NOTICE:  trigger "trg_affiliate_order_sync" for relation "public.orders" does not exist, skipping
+psql:/tmp/tmp.firMKuXtmE:595: NOTICE:  trigger "trg_affiliate_intent_sync" for relation "public.payment_intents" does not exist, skipping
+===== SUMMARY =====
+OK=156 FAIL=0
+REPLAY_ALL_GREEN 156/156

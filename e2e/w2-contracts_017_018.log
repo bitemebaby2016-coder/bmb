@@ -1,0 +1,4 @@
+BEGIN
+DO
+psql:<stdin>:98: NOTICE:  QA-03 017/018 SQL suite PASS (transaction rolled back — no writes persisted)
+ROLLBACK
