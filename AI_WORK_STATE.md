@@ -19,7 +19,9 @@
 - หมายเหตุตรง ๆ: run 1 ของ vitest เจอ **flaky 4 เคสใน `orderTimeline.test.ts`** (รันตัวเดียว 6/6 ผ่าน) = งานค้าง B-1
 - **production: ไม่ได้แตะในรอบนี้** (ไม่มี migration/apply/deploy/write) · ledger ของรอบก่อน top = **156**
   (evidence `e2e/r16Apply156-*.json`) — ยังไม่ re-verify รอบนี้ = UNVERIFIED
-- **CI: เครื่องนี้ไม่มี `gh`** → ต้องตรวจ Actions จริง (ขั้นตอนใน `docs/BMB_MASTER_STATUS.md` §5.3/§9.4)
+- **CI ของ SHA ที่ push จริง = ตรวจแล้วผ่านทั้งสองเส้น**: `066e961` → CI #569 **success** +
+  Contract Tests #143 **success** (อ่านจาก GitHub Actions API จริง · เครื่องนี้ไม่มี `gh`) —
+  รายละเอียด/URL/วิธีตรวจซ้ำ = `docs/BMB_MASTER_STATUS.md` §5.3/§9.4
 
 ## 2. งานที่ปิดรอบนี้ (CLOSED — มีหลักฐาน)
 
