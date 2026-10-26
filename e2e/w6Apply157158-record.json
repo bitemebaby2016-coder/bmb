@@ -1,0 +1,30 @@
+[
+  {
+    "label": "record-157",
+    "status": 201,
+    "data": []
+  },
+  {
+    "label": "record-158",
+    "status": 201,
+    "data": []
+  },
+  {
+    "label": "history-after",
+    "status": 201,
+    "data": [
+      {
+        "version": "158"
+      },
+      {
+        "version": "157"
+      },
+      {
+        "version": "156"
+      },
+      {
+        "version": "155"
+      }
+    ]
+  }
+]

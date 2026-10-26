@@ -1,7 +1,7 @@
 {
   "mode": "prod",
   "stamp": "2026-10-26",
-  "capturedAt": "2026-10-26T04:56:29.002Z",
+  "capturedAt": "2026-10-26T06:15:50.265Z",
   "rows": {
     "meta": [
       {
@@ -10001,7 +10001,7 @@
         "tablename": "admin_portfolio_items",
         "policyname": "admins_full_access",
         "permissive": "PERMISSIVE",
-        "roles": "{public}",
+        "roles": "{authenticated,service_role}",
         "cmd": "ALL",
         "qual": "is_admin()",
         "with_check": ""
@@ -10262,7 +10262,7 @@
         "tablename": "business_settings",
         "policyname": "business_settings_staff_select",
         "permissive": "PERMISSIVE",
-        "roles": "{public}",
+        "roles": "{authenticated,service_role}",
         "cmd": "SELECT",
         "qual": "is_staff()",
         "with_check": ""
@@ -10370,7 +10370,7 @@
         "tablename": "daily_closings",
         "policyname": "daily_closings_staff_select",
         "permissive": "PERMISSIVE",
-        "roles": "{public}",
+        "roles": "{authenticated,service_role}",
         "cmd": "SELECT",
         "qual": "is_staff()",
         "with_check": ""
@@ -10442,7 +10442,7 @@
         "tablename": "delivery_rounds",
         "policyname": "delivery_rounds_staff_select",
         "permissive": "PERMISSIVE",
-        "roles": "{public}",
+        "roles": "{authenticated,service_role}",
         "cmd": "SELECT",
         "qual": "is_staff()",
         "with_check": ""
@@ -10622,7 +10622,7 @@
         "tablename": "inventory",
         "policyname": "inventory_staff_select",
         "permissive": "PERMISSIVE",
-        "roles": "{public}",
+        "roles": "{authenticated,service_role}",
         "cmd": "SELECT",
         "qual": "is_staff()",
         "with_check": ""
@@ -10856,7 +10856,7 @@
         "tablename": "menu_schedule",
         "policyname": "menu_schedule_staff_select",
         "permissive": "PERMISSIVE",
-        "roles": "{public}",
+        "roles": "{authenticated,service_role}",
         "cmd": "SELECT",
         "qual": "is_staff()",
         "with_check": ""
@@ -10883,7 +10883,7 @@
         "tablename": "menu_sections",
         "policyname": "menu_sections_staff_select",
         "permissive": "PERMISSIVE",
-        "roles": "{public}",
+        "roles": "{authenticated,service_role}",
         "cmd": "SELECT",
         "qual": "is_staff()",
         "with_check": ""
@@ -11018,7 +11018,7 @@
         "tablename": "order_items",
         "policyname": "order_items_staff_select",
         "permissive": "PERMISSIVE",
-        "roles": "{public}",
+        "roles": "{authenticated,service_role}",
         "cmd": "SELECT",
         "qual": "is_staff()",
         "with_check": ""
@@ -11090,7 +11090,7 @@
         "tablename": "orders",
         "policyname": "orders_staff_select",
         "permissive": "PERMISSIVE",
-        "roles": "{public}",
+        "roles": "{authenticated,service_role}",
         "cmd": "SELECT",
         "qual": "is_staff()",
         "with_check": ""
@@ -11153,7 +11153,7 @@
         "tablename": "payment_intents",
         "policyname": "payment_intents_staff_select",
         "permissive": "PERMISSIVE",
-        "roles": "{public}",
+        "roles": "{authenticated,service_role}",
         "cmd": "SELECT",
         "qual": "is_staff()",
         "with_check": ""
@@ -11207,7 +11207,7 @@
         "tablename": "print_jobs",
         "policyname": "print_jobs_admin_all",
         "permissive": "PERMISSIVE",
-        "roles": "{public}",
+        "roles": "{authenticated,service_role}",
         "cmd": "ALL",
         "qual": "is_admin()",
         "with_check": "is_admin()"
@@ -11216,7 +11216,7 @@
         "tablename": "print_jobs",
         "policyname": "print_jobs_staff_all",
         "permissive": "PERMISSIVE",
-        "roles": "{public}",
+        "roles": "{authenticated,service_role}",
         "cmd": "ALL",
         "qual": "is_staff()",
         "with_check": "is_staff()"
@@ -11252,7 +11252,7 @@
         "tablename": "product_categories",
         "policyname": "product_categories_staff_select",
         "permissive": "PERMISSIVE",
-        "roles": "{public}",
+        "roles": "{authenticated,service_role}",
         "cmd": "SELECT",
         "qual": "is_staff()",
         "with_check": ""
@@ -11342,7 +11342,7 @@
         "tablename": "products",
         "policyname": "products_staff_select",
         "permissive": "PERMISSIVE",
-        "roles": "{public}",
+        "roles": "{authenticated,service_role}",
         "cmd": "SELECT",
         "qual": "is_staff()",
         "with_check": ""
@@ -11549,7 +11549,7 @@
         "tablename": "recipes",
         "policyname": "recipes_staff_select",
         "permissive": "PERMISSIVE",
-        "roles": "{public}",
+        "roles": "{authenticated,service_role}",
         "cmd": "SELECT",
         "qual": "is_staff()",
         "with_check": ""
@@ -11558,7 +11558,7 @@
         "tablename": "reviews",
         "policyname": "admins_all_reviews",
         "permissive": "PERMISSIVE",
-        "roles": "{public}",
+        "roles": "{authenticated,service_role}",
         "cmd": "ALL",
         "qual": "is_admin()",
         "with_check": ""
@@ -11601,6 +11601,15 @@
       },
       {
         "tablename": "reviews",
+        "policyname": "reviews_anon_read",
+        "permissive": "PERMISSIVE",
+        "roles": "{anon}",
+        "cmd": "SELECT",
+        "qual": "(is_verified = true)",
+        "with_check": ""
+      },
+      {
+        "tablename": "reviews",
         "policyname": "reviews_own_insert",
         "permissive": "PERMISSIVE",
         "roles": "{authenticated}",
@@ -11621,7 +11630,7 @@
         "tablename": "reviews",
         "policyname": "reviews_public_read",
         "permissive": "PERMISSIVE",
-        "roles": "{anon,authenticated}",
+        "roles": "{authenticated,service_role}",
         "cmd": "SELECT",
         "qual": "((is_verified = true) OR is_admin())",
         "with_check": ""
@@ -11630,7 +11639,7 @@
         "tablename": "reviews",
         "policyname": "users_read_own_reviews",
         "permissive": "PERMISSIVE",
-        "roles": "{public}",
+        "roles": "{authenticated,service_role}",
         "cmd": "SELECT",
         "qual": "((customer_id = (auth.uid())::text) OR is_admin())",
         "with_check": ""
@@ -11639,7 +11648,7 @@
         "tablename": "shifts",
         "policyname": "shifts_staff_select",
         "permissive": "PERMISSIVE",
-        "roles": "{public}",
+        "roles": "{authenticated,service_role}",
         "cmd": "SELECT",
         "qual": "is_staff()",
         "with_check": ""
@@ -22154,6 +22163,14 @@
       {
         "version": "156",
         "name": "156_engagement_play"
+      },
+      {
+        "version": "157",
+        "name": "157_anon_policy_role_scoping"
+      },
+      {
+        "version": "158",
+        "name": "158_align_grants_and_rls"
       }
     ]
   },

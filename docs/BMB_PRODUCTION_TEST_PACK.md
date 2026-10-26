@@ -22,8 +22,10 @@
 - [x] **B-2** legacy contract 7 ตัว = **ปิดแล้ว (W-2)** — ทั้ง 7 ไฟล์ EXIT=0 บน replay ท้องถิ่น 2 รอบ
       (รอบ fresh replay 001–157 `OK=157 FAIL=0`) · step กลับเข้า `contract-tests.yml` แล้ว
       → **A2 ให้ตรวจว่า Contract Tests success และมีบรรทัด `Legacy contracts OK — 7/7`**
-- [x] **schema parity** fresh replay vs production = **รันแล้ว (W-1)** — ไม่มี drift ที่ไร้คำอธิบาย
-      · ผล+คำอธิบาย+แผนทุกจุด = `e2e/w1-parity-report-2026-10-26.md` (ยังเหลือแผนรอ Owner อนุมัติ 3 ข้อ ดู §L)
+- [x] **schema parity** fresh replay vs production = **รันแล้ว (W-1) + apply 157/158 แล้ว** — รอบสุดท้าย
+      **MATCH** = tables/columns/indexes/constraints/sequences/triggers/views/**rls/acl_tables/ledger 158** ·
+      drift ที่เหลือ 3 กลุ่มอธิบายครบใน `e2e/w1-parity-report-2026-10-26.md`
+      (เหลือรอ Owner เลือก = legacy functions 6 ตัว · §L L-10)
 - [x] **CAP-22 `marketing_rules`** = **มีค่าจริงอยู่แล้ว** (พิสูจน์ด้วย query read-only 2026-10-26:
       window 10:00–19:00 · cooldown 6 ชม. · 3 โพสต์/สัปดาห์ · content_mix ครบ) → **C7/C8 ปลดล็อกได้**
       (ค่า `menu_rules`/`stop_conditions` ยังว่าง = ทางเลือก ไม่ blocker)
@@ -146,8 +148,8 @@
 | L-5 | หน้าโหวตเมนู ภาษาไทยผิด + เมนูไม่ครบ | ไทยถูก + แสดง **ครบทุกเมนูจริง** | รอบแก้ UI |
 | L-7 | หัวข้อแท็บแนวนอน/ด้านบน/ปุ่มล่าง ไม่ตรงลิงก์+ชื่อ+ลำดับ | ลิงก์ไปหมวดจริง · ชื่อ = ที่แอดมินตั้ง · ลำดับ: ส่งวันนี้/Same day → จองล่วงหน้า/Pre order → เมนูสุขภาพ → เครื่องดื่ม → ของทานเล่น/ผลไม้ → สินค้าสำเร็จรูป · แนวตั้ง section 1–2 = theater + เมนูแนะนำ แล้วตามลำดับเดียวกัน · ฟุตเตอร์ = ลำดับเดียวกัน + ลิงก์จริงทุกอัน | รอบแก้ UI |
 | L-8 | พรีออเดอร์ที่ยังไม่ถึง/เลยรอบสั่ง ยังกดได้ (บางหน้า/บางการ์ด) | **สีเทา + กดไม่ได้** จนกว่าจะถึงรอบสั่ง/ขึ้นปฏิทินรอบถัดไป ครบทุกจุดที่โชว์ปุ่มจอง | รอบแก้ UI |
-| L-10 | **แผน W-1 รอ Owner อนุมัติ 3 ข้อ** (production write) | (1) migration เปิด RLS 2 ตาราง 092/094 · (2) align grants 31 ตาราง + EXECUTE (pg_default_acl) · (3) legacy functions 6 ตัว = ปลด/คง — ดู `e2e/w1-parity-report-2026-10-26.md` | Owner สั่ง |
-| L-11 | **B-6 (P0) — guest อ่านเมนู production ไม่ได้** | ตอนนี้: guest เปิด `/menu` บน production = **401 `permission denied for function is_staff`** → เมนูว่าง · **fix = migration 157 (เขียนแล้ว · ยังไม่ apply production)** | Owner อนุมัติ apply 157 |
+| L-10 | **แผน W-1 เหลือ 1 ข้อ** — legacy functions 6 ตัวใน production (ไม่มี src caller) | RLS 2 ตาราง + align grants = **ปิดแล้ว (migration 158 apply แล้ว)** · เหลือเลือก: ปลด legacy 6 ตัว หรือ คงไว้และบันทึก (ดู `e2e/w1-parity-report-2026-10-26.md` D3) | Owner เลือก |
+| L-11 | ~~B-6 (P0) guest อ่านเมนูไม่ได้~~ | **ปิดแล้ว ✅** — apply 157+158 (Owner อนุมัติ) · PostgREST ทุก endpoint = 200 · เปิด `/menu` จริง = เห็นเมนูครบ + ไม่มี console error | ปิด 2026-10-26 |
 | L-12 | **CAP-22 `menu_rules`/`stop_conditions` ยังว่าง** | ค่าหลัก (window/cooldown/frequency) มีครบแล้ว → C7/C8 รันได้ · 2 ค่าที่ว่าง = ทางเลือก | Owner เติม/ปล่อยว่าง |
 
 > **ปิดแล้วรอบนี้ (ย้ายออกจาก §L → กลายเป็นขั้นตรวจจริง):**

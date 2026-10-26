@@ -1,0 +1,53 @@
+[
+  {
+    "label": "anon-visible-helper-policies-after",
+    "status": 201,
+    "data": [
+      {
+        "n": 0
+      }
+    ]
+  },
+  {
+    "label": "reviews-anon-read",
+    "status": 201,
+    "data": [
+      {
+        "policyname": "reviews_anon_read",
+        "roles": "{anon}"
+      }
+    ]
+  },
+  {
+    "label": "rls-two-tables-after",
+    "status": 201,
+    "data": [
+      {
+        "relname": "admin_portfolio_items",
+        "relrowsecurity": true
+      },
+      {
+        "relname": "products_branch_overrides",
+        "relrowsecurity": true
+      }
+    ]
+  },
+  {
+    "label": "anon-still-cannot-write",
+    "status": 201,
+    "data": [
+      {
+        "leak": 0
+      }
+    ]
+  },
+  {
+    "label": "authenticated-select-count",
+    "status": 201,
+    "data": [
+      {
+        "n": 57
+      }
+    ]
+  }
+]

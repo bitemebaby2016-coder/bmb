@@ -64,13 +64,11 @@
   - **W-3 CAP-22** — `marketing_rules` **มีค่าจริงอยู่แล้ว** (window 10:00–19:00 · cooldown 6 · 3/สัปดาห์)
     → C7/C8 ปลดล็อกได้ · เหลือแค่ `menu_rules`/`stop_conditions` ที่ยังว่าง (ทางเลือก)
 - **blocker/งานค้าง:**
-  - **B-6 (P0 · ใหม่)** — guest บน production อ่านเมนูไม่ได้: `/rest/v1/products|delivery_rounds|
-    menu_sections|business_settings` = **401 `permission denied for function is_staff`** →
-    เปิด `https://biteme-baby.com/menu` จริงด้วย Playwright = "ไม่พบเมนู" (หลักฐาน:
-    `e2e/w2_guest_menu_probe.cjs` + `w2prod_anon.cjs`) · **ต้นตอ = 129** (REVOKE anon EXECUTE is_staff
-    + policy ไม่ระบุ TO role) · **แก้แล้ว = migration `157_anon_policy_role_scoping.sql`** (เทสต์บน replay
-    แล้ว: anon อ่าน 16 ตารางได้ + zero write leak) · **ยังไม่ apply production → รอ Owner อนุมัติ**
-  - **W-1 แผน 3 ข้อ รอ Owner** (production write): เปิด RLS 092/094 · align grants/EXECUTE · legacy 6 functions
+  - **B-6 (P0) = ปิดแล้ว ✅** — guest อ่านเมนู production ไม่ได้ (401 is_staff) → **apply 157 + 158 แล้ว
+    (Owner อนุมัติ 2026-10-26)** → ตรวจซ้ำ: PostgREST ทุก endpoint = 200 · Playwright เปิด `/menu` จริง =
+    เห็นเมนูครบ + **console ไม่มี error** → `e2e/w2_guest_menu_probe.cjs` (รอบหลัง apply)
+  - **W-1 แผน: ปิดแล้ว 2 ใน 3** (RLS 2 ตาราง + align grants = migration 158 apply แล้ว) ·
+    เหลือ **legacy functions 6 ตัว** (ไม่มี src caller) = รอ Owner เลือกปลด/คง
   - **UI ฝั่งลูกค้า ยังเหลือ 5 ข้อ:** L-3 (จิ้มแล้วเลื่อนทุกหน้า) · L-4 (แท็บหัวข้อไม่ครบ/โหมดผิด) ·
     L-5 (โหวตเมนูไทย+ครบทุกเมนู) · L-7 (ลำดับ+ลิงก์หัวข้อ/ฟุตเตอร์) · L-8 (พรีออเดอร์สีเทาทุกจุด)
     — รายละเอียด = `docs/BMB_MASTER_STATUS.md` §3.1 (N-4) + เกณฑ์ `BMB_PRODUCTION_TEST_PACK.md` §L

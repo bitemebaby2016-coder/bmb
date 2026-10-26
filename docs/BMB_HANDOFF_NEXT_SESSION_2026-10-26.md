@@ -9,10 +9,11 @@
 ## กติกาของรอบนี้ (ห้ามละเมิด)
 
 > **สรุปสถานะเมื่อจบรอบ 2026-10-26 (อัปเดตโดยรอบที่ทำงานจริง):**
-> **W-1 ปิด** (replay 157/157 + parity มีรายงาน) · **W-2 ปิด** (7/7 + step กลับ CI) ·
+> **W-1 ปิด** (replay 157/157 · parity รอบสุดท้าย MATCH rls/acl_tables/ledger 158) · **W-2 ปิด** (7/7 + CI #577/#151 success) ·
 > **W-3 เสร็จในทางข้อมูล** (`marketing_rules` มีค่าจริง → C7/C8 ปลดล็อก) ·
 > **W-4 ปิด 4/9 ข้อ** (1·2·6·9) · **ยังเหลือ 5 ข้อ** (3·4·5·7·8) · **W-5 ทำแล้วรอบนี้** ·
-> ** blocker ใหม่ P0 = B-6 (guest อ่านเมนู production ไม่ได้ · fix = migration 157 ยังไม่ apply)**
+> **B-6 (P0) ปิดแล้ว** — apply 157+158 บน production (Owner อนุมัติ) + guest เปิด `/menu` จริงเห็นเมนูครบ ·
+> **งานค้างที่เหลือ = UI 5 ข้อ + legacy functions 6 ตัว (รอ Owner เลือก)**
 
 1. **ห้ามรื้อระบบ** — แก้เป็นจุด ๆ ตามที่ Owner สั่งเท่านั้น (โดยเฉพาะ UI: ปรับเฉพาะส่วนที่ระบุ)
 2. **เอกสารชุดเดียว:** `BMB_MASTER_STATUS.md` = canonical · `AI_WORK_STATE.md` = บันทึกสั้น · ถ้าขัดกันให้ถือ master + โค้ดจริง
@@ -86,7 +87,7 @@ step **`Legacy contracts 017-033` กลับเข้า `.github/workflows/co
 **วิธีทำงาน:** แก้ทีละข้อตามไฟล์จริง (home/menu/footer/nav/vote) · ห้ามรื้อระบบ · ทุกข้อต้องมี test
 (unit/source-contract ตามแบบ repo) · gates เขียว + push + CI ก่อนปิดข้อ · แล้วย้ายข้อออกจาก §L
 
-## ⛔ B-6 (P0 ใหม่) · guest อ่านเมนูบน production ไม่ได้ — **แก้แล้ว ยังไม่ apply**
+## ⛔ B-6 (P0) · guest อ่านเมนูบน production ไม่ได้ — **ปิดแล้ว ✅ (apply 157+158 · Owner อนุมัติ 2026-10-26)**
 
 **หลักฐาน (ตรวจจริง 2026-10-26 · read-only ทั้งหมด):**
 - PostgREST ตรง ๆ ด้วย anon key = **401 `{"code":"42501","message":"permission denied for function is_staff"}`**
@@ -102,7 +103,10 @@ step **`Legacy contracts 017-033` กลับเข้า `.github/workflows/co
 helper `is_*()` (20 policy · fail-closed self-check ในไฟล์) + แยก `reviews_anon_read` (anon อ่านเฉพาะแถว verified)
 **ผลบน replay:** anon อ่านครบ 16 ตาราง · **zero write leak** (`e2e/w2_b6_verify.sql`)
 
-**ยังค้าง = ต้อง Owner อนุมัติ (production write):** apply 157 บน production แล้วเปิด guest เห็นเมนูจริง
+**ผลหลัง apply (ตรวจจริง):** `anon-visible helper policies 19→0` · `reviews_anon_read` อยู่ · RLS 2 ตาราง = true ·
+anon write leak = 0 · ledger top = **158** (`e2e/w6Apply157158-*.json`) → **PostgREST ทุก endpoint = 200** ·
+**Playwright เปิด `/menu` จริง = เห็นเมนูครบ + ไม่มี console error** (`e2e/w2_guest_menu_probe.cjs` รอบหลัง apply)
+→ **ยังค้างหลังปิด B-6 = UI 5 ข้อ + legacy functions 6 ตัว (รอ Owner เลือก)**
 
 ## W-5 · ตรวจเอกสารชุดนี้ซ้ำ — **ทำแล้วรอบนี้ (ต้องทำซ้ำทุกครั้งที่ปิดงาน)**
 
@@ -113,9 +117,9 @@ helper `is_*()` (20 policy · fail-closed self-check ในไฟล์) + แ�
 
 ## Definition of Done ของแชทถัดไป
 
-1. **B-6 ปิด** = apply 157 บน production (ได้รับอนุมัติ) + พิสูจน์ guest เปิด `/menu` เห็นเมนูจริง
-2. W-1 แผน 3 ข้อ มีคำสั่ง Owner (ทำหรือปัดตกอย่างเป็นทางการ)
-3. W-4 ปิดครบ 9 ข้อ (ตอนนี้ 4/9) → §L เหลือเฉพาะ L-10..L-12 ที่ปิดตาม W-1..W-3
+1. ~~**B-6 ปิด**~~ **ทำแล้ว ✅** = apply 157+158 + พิสูจน์ guest เปิด `/menu` เห็นเมนูจริง (มี evidence)
+2. W-1 แผน เหลือ 1 ข้อ: legacy functions 6 ตัว มีคำสั่ง Owner (ปลด/คง) — ข้ออื่นปิดแล้ว (158)
+3. W-4 ปิดครบ 9 ข้อ (ตอนนี้ 4/9) → §L เหลือเฉพาะ L-10/L-12
 4. Test pack ถูกรันโดย Owner ตามขั้นที่ปลด lock แล้ว (B/E/I ต้องผ่านด้วยตา Owner)
 5. ทุกรอบ push มี CI + Contract Tests success จาก GitHub Actions API (ไม่ใช่ความจำ)
    · Contract Tests ต้องมีบรรทัด `Legacy contracts OK — 7/7`

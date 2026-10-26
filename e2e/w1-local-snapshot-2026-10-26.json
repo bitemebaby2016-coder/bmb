@@ -1,7 +1,7 @@
 {
   "mode": "local",
   "stamp": "2026-10-26",
-  "capturedAt": "2026-10-26T04:56:42.362Z",
+  "capturedAt": "2026-10-26T06:16:35.960Z",
   "rows": {
     "meta": [
       {
@@ -9654,7 +9654,7 @@
       },
       {
         "relname": "admin_portfolio_items",
-        "relrowsecurity": false,
+        "relrowsecurity": true,
         "relforcerowsecurity": false
       },
       {
@@ -9899,7 +9899,7 @@
       },
       {
         "relname": "products_branch_overrides",
-        "relrowsecurity": false,
+        "relrowsecurity": true,
         "relforcerowsecurity": false
       },
       {
@@ -10028,7 +10028,8 @@
         "policyname": "admins_full_access",
         "permissive": "PERMISSIVE",
         "roles": [
-          "public"
+          "authenticated",
+          "service_role"
         ],
         "cmd": "ALL",
         "qual": "is_admin()",
@@ -10372,7 +10373,8 @@
         "policyname": "business_settings_staff_select",
         "permissive": "PERMISSIVE",
         "roles": [
-          "public"
+          "authenticated",
+          "service_role"
         ],
         "cmd": "SELECT",
         "qual": "is_staff()",
@@ -10504,7 +10506,8 @@
         "policyname": "daily_closings_staff_select",
         "permissive": "PERMISSIVE",
         "roles": [
-          "public"
+          "authenticated",
+          "service_role"
         ],
         "cmd": "SELECT",
         "qual": "is_staff()",
@@ -10593,7 +10596,8 @@
         "policyname": "delivery_rounds_staff_select",
         "permissive": "PERMISSIVE",
         "roles": [
-          "public"
+          "authenticated",
+          "service_role"
         ],
         "cmd": "SELECT",
         "qual": "is_staff()",
@@ -10814,7 +10818,8 @@
         "policyname": "inventory_staff_select",
         "permissive": "PERMISSIVE",
         "roles": [
-          "public"
+          "authenticated",
+          "service_role"
         ],
         "cmd": "SELECT",
         "qual": "is_staff()",
@@ -11102,7 +11107,8 @@
         "policyname": "menu_schedule_staff_select",
         "permissive": "PERMISSIVE",
         "roles": [
-          "public"
+          "authenticated",
+          "service_role"
         ],
         "cmd": "SELECT",
         "qual": "is_staff()",
@@ -11136,7 +11142,8 @@
         "policyname": "menu_sections_staff_select",
         "permissive": "PERMISSIVE",
         "roles": [
-          "public"
+          "authenticated",
+          "service_role"
         ],
         "cmd": "SELECT",
         "qual": "is_staff()",
@@ -11301,7 +11308,8 @@
         "policyname": "order_items_staff_select",
         "permissive": "PERMISSIVE",
         "roles": [
-          "public"
+          "authenticated",
+          "service_role"
         ],
         "cmd": "SELECT",
         "qual": "is_staff()",
@@ -11389,7 +11397,8 @@
         "policyname": "orders_staff_select",
         "permissive": "PERMISSIVE",
         "roles": [
-          "public"
+          "authenticated",
+          "service_role"
         ],
         "cmd": "SELECT",
         "qual": "is_staff()",
@@ -11467,7 +11476,8 @@
         "policyname": "payment_intents_staff_select",
         "permissive": "PERMISSIVE",
         "roles": [
-          "public"
+          "authenticated",
+          "service_role"
         ],
         "cmd": "SELECT",
         "qual": "is_staff()",
@@ -11534,7 +11544,8 @@
         "policyname": "print_jobs_admin_all",
         "permissive": "PERMISSIVE",
         "roles": [
-          "public"
+          "authenticated",
+          "service_role"
         ],
         "cmd": "ALL",
         "qual": "is_admin()",
@@ -11545,7 +11556,8 @@
         "policyname": "print_jobs_staff_all",
         "permissive": "PERMISSIVE",
         "roles": [
-          "public"
+          "authenticated",
+          "service_role"
         ],
         "cmd": "ALL",
         "qual": "is_staff()",
@@ -11601,7 +11613,8 @@
         "policyname": "product_categories_staff_select",
         "permissive": "PERMISSIVE",
         "roles": [
-          "public"
+          "authenticated",
+          "service_role"
         ],
         "cmd": "SELECT",
         "qual": "is_staff()",
@@ -11712,7 +11725,8 @@
         "policyname": "products_staff_select",
         "permissive": "PERMISSIVE",
         "roles": [
-          "public"
+          "authenticated",
+          "service_role"
         ],
         "cmd": "SELECT",
         "qual": "is_staff()",
@@ -11957,7 +11971,8 @@
         "policyname": "recipes_staff_select",
         "permissive": "PERMISSIVE",
         "roles": [
-          "public"
+          "authenticated",
+          "service_role"
         ],
         "cmd": "SELECT",
         "qual": "is_staff()",
@@ -11968,7 +11983,8 @@
         "policyname": "admins_all_reviews",
         "permissive": "PERMISSIVE",
         "roles": [
-          "public"
+          "authenticated",
+          "service_role"
         ],
         "cmd": "ALL",
         "qual": "is_admin()",
@@ -12020,6 +12036,17 @@
       },
       {
         "tablename": "reviews",
+        "policyname": "reviews_anon_read",
+        "permissive": "PERMISSIVE",
+        "roles": [
+          "anon"
+        ],
+        "cmd": "SELECT",
+        "qual": "(is_verified = true)",
+        "with_check": ""
+      },
+      {
+        "tablename": "reviews",
         "policyname": "reviews_own_insert",
         "permissive": "PERMISSIVE",
         "roles": [
@@ -12045,8 +12072,8 @@
         "policyname": "reviews_public_read",
         "permissive": "PERMISSIVE",
         "roles": [
-          "anon",
-          "authenticated"
+          "authenticated",
+          "service_role"
         ],
         "cmd": "SELECT",
         "qual": "((is_verified = true) OR is_admin())",
@@ -12057,7 +12084,8 @@
         "policyname": "users_read_own_reviews",
         "permissive": "PERMISSIVE",
         "roles": [
-          "public"
+          "authenticated",
+          "service_role"
         ],
         "cmd": "SELECT",
         "qual": "((customer_id = (auth.uid())::text) OR is_admin())",
@@ -12068,7 +12096,8 @@
         "policyname": "shifts_staff_select",
         "permissive": "PERMISSIVE",
         "roles": [
-          "public"
+          "authenticated",
+          "service_role"
         ],
         "cmd": "SELECT",
         "qual": "is_staff()",
@@ -12178,6 +12207,48 @@
     "acl_tables": [
       {
         "table_name": "addon_groups",
+        "grantee": "authenticated",
+        "privilege_type": "DELETE",
+        "is_grantable": "NO"
+      },
+      {
+        "table_name": "addon_groups",
+        "grantee": "authenticated",
+        "privilege_type": "INSERT",
+        "is_grantable": "NO"
+      },
+      {
+        "table_name": "addon_groups",
+        "grantee": "authenticated",
+        "privilege_type": "REFERENCES",
+        "is_grantable": "NO"
+      },
+      {
+        "table_name": "addon_groups",
+        "grantee": "authenticated",
+        "privilege_type": "SELECT",
+        "is_grantable": "NO"
+      },
+      {
+        "table_name": "addon_groups",
+        "grantee": "authenticated",
+        "privilege_type": "TRIGGER",
+        "is_grantable": "NO"
+      },
+      {
+        "table_name": "addon_groups",
+        "grantee": "authenticated",
+        "privilege_type": "TRUNCATE",
+        "is_grantable": "NO"
+      },
+      {
+        "table_name": "addon_groups",
+        "grantee": "authenticated",
+        "privilege_type": "UPDATE",
+        "is_grantable": "NO"
+      },
+      {
+        "table_name": "addon_groups",
         "grantee": "service_role",
         "privilege_type": "DELETE",
         "is_grantable": "NO"
@@ -12220,6 +12291,48 @@
       },
       {
         "table_name": "addons",
+        "grantee": "authenticated",
+        "privilege_type": "DELETE",
+        "is_grantable": "NO"
+      },
+      {
+        "table_name": "addons",
+        "grantee": "authenticated",
+        "privilege_type": "INSERT",
+        "is_grantable": "NO"
+      },
+      {
+        "table_name": "addons",
+        "grantee": "authenticated",
+        "privilege_type": "REFERENCES",
+        "is_grantable": "NO"
+      },
+      {
+        "table_name": "addons",
+        "grantee": "authenticated",
+        "privilege_type": "SELECT",
+        "is_grantable": "NO"
+      },
+      {
+        "table_name": "addons",
+        "grantee": "authenticated",
+        "privilege_type": "TRIGGER",
+        "is_grantable": "NO"
+      },
+      {
+        "table_name": "addons",
+        "grantee": "authenticated",
+        "privilege_type": "TRUNCATE",
+        "is_grantable": "NO"
+      },
+      {
+        "table_name": "addons",
+        "grantee": "authenticated",
+        "privilege_type": "UPDATE",
+        "is_grantable": "NO"
+      },
+      {
+        "table_name": "addons",
         "grantee": "service_role",
         "privilege_type": "DELETE",
         "is_grantable": "NO"
@@ -12269,7 +12382,43 @@
       {
         "table_name": "admin_portfolio_items",
         "grantee": "authenticated",
+        "privilege_type": "DELETE",
+        "is_grantable": "NO"
+      },
+      {
+        "table_name": "admin_portfolio_items",
+        "grantee": "authenticated",
+        "privilege_type": "INSERT",
+        "is_grantable": "NO"
+      },
+      {
+        "table_name": "admin_portfolio_items",
+        "grantee": "authenticated",
+        "privilege_type": "REFERENCES",
+        "is_grantable": "NO"
+      },
+      {
+        "table_name": "admin_portfolio_items",
+        "grantee": "authenticated",
         "privilege_type": "SELECT",
+        "is_grantable": "NO"
+      },
+      {
+        "table_name": "admin_portfolio_items",
+        "grantee": "authenticated",
+        "privilege_type": "TRIGGER",
+        "is_grantable": "NO"
+      },
+      {
+        "table_name": "admin_portfolio_items",
+        "grantee": "authenticated",
+        "privilege_type": "TRUNCATE",
+        "is_grantable": "NO"
+      },
+      {
+        "table_name": "admin_portfolio_items",
+        "grantee": "authenticated",
+        "privilege_type": "UPDATE",
         "is_grantable": "NO"
       },
       {
@@ -12461,6 +12610,30 @@
       {
         "table_name": "ai_conversations",
         "grantee": "service_role",
+        "privilege_type": "UPDATE",
+        "is_grantable": "NO"
+      },
+      {
+        "table_name": "ai_customer_memory",
+        "grantee": "authenticated",
+        "privilege_type": "DELETE",
+        "is_grantable": "NO"
+      },
+      {
+        "table_name": "ai_customer_memory",
+        "grantee": "authenticated",
+        "privilege_type": "INSERT",
+        "is_grantable": "NO"
+      },
+      {
+        "table_name": "ai_customer_memory",
+        "grantee": "authenticated",
+        "privilege_type": "SELECT",
+        "is_grantable": "NO"
+      },
+      {
+        "table_name": "ai_customer_memory",
+        "grantee": "authenticated",
         "privilege_type": "UPDATE",
         "is_grantable": "NO"
       },
@@ -12575,7 +12748,25 @@
       {
         "table_name": "audit_logs",
         "grantee": "authenticated",
+        "privilege_type": "DELETE",
+        "is_grantable": "NO"
+      },
+      {
+        "table_name": "audit_logs",
+        "grantee": "authenticated",
+        "privilege_type": "INSERT",
+        "is_grantable": "NO"
+      },
+      {
+        "table_name": "audit_logs",
+        "grantee": "authenticated",
         "privilege_type": "SELECT",
+        "is_grantable": "NO"
+      },
+      {
+        "table_name": "audit_logs",
+        "grantee": "authenticated",
+        "privilege_type": "UPDATE",
         "is_grantable": "NO"
       },
       {
@@ -12671,7 +12862,43 @@
       {
         "table_name": "branches",
         "grantee": "authenticated",
+        "privilege_type": "DELETE",
+        "is_grantable": "NO"
+      },
+      {
+        "table_name": "branches",
+        "grantee": "authenticated",
+        "privilege_type": "INSERT",
+        "is_grantable": "NO"
+      },
+      {
+        "table_name": "branches",
+        "grantee": "authenticated",
+        "privilege_type": "REFERENCES",
+        "is_grantable": "NO"
+      },
+      {
+        "table_name": "branches",
+        "grantee": "authenticated",
         "privilege_type": "SELECT",
+        "is_grantable": "NO"
+      },
+      {
+        "table_name": "branches",
+        "grantee": "authenticated",
+        "privilege_type": "TRIGGER",
+        "is_grantable": "NO"
+      },
+      {
+        "table_name": "branches",
+        "grantee": "authenticated",
+        "privilege_type": "TRUNCATE",
+        "is_grantable": "NO"
+      },
+      {
+        "table_name": "branches",
+        "grantee": "authenticated",
+        "privilege_type": "UPDATE",
         "is_grantable": "NO"
       },
       {
@@ -12724,6 +12951,48 @@
       },
       {
         "table_name": "brands",
+        "grantee": "authenticated",
+        "privilege_type": "DELETE",
+        "is_grantable": "NO"
+      },
+      {
+        "table_name": "brands",
+        "grantee": "authenticated",
+        "privilege_type": "INSERT",
+        "is_grantable": "NO"
+      },
+      {
+        "table_name": "brands",
+        "grantee": "authenticated",
+        "privilege_type": "REFERENCES",
+        "is_grantable": "NO"
+      },
+      {
+        "table_name": "brands",
+        "grantee": "authenticated",
+        "privilege_type": "SELECT",
+        "is_grantable": "NO"
+      },
+      {
+        "table_name": "brands",
+        "grantee": "authenticated",
+        "privilege_type": "TRIGGER",
+        "is_grantable": "NO"
+      },
+      {
+        "table_name": "brands",
+        "grantee": "authenticated",
+        "privilege_type": "TRUNCATE",
+        "is_grantable": "NO"
+      },
+      {
+        "table_name": "brands",
+        "grantee": "authenticated",
+        "privilege_type": "UPDATE",
+        "is_grantable": "NO"
+      },
+      {
+        "table_name": "brands",
         "grantee": "service_role",
         "privilege_type": "DELETE",
         "is_grantable": "NO"
@@ -12773,7 +13042,25 @@
       {
         "table_name": "business_settings",
         "grantee": "authenticated",
+        "privilege_type": "DELETE",
+        "is_grantable": "NO"
+      },
+      {
+        "table_name": "business_settings",
+        "grantee": "authenticated",
+        "privilege_type": "INSERT",
+        "is_grantable": "NO"
+      },
+      {
+        "table_name": "business_settings",
+        "grantee": "authenticated",
         "privilege_type": "SELECT",
+        "is_grantable": "NO"
+      },
+      {
+        "table_name": "business_settings",
+        "grantee": "authenticated",
+        "privilege_type": "UPDATE",
         "is_grantable": "NO"
       },
       {
@@ -12863,7 +13150,25 @@
       {
         "table_name": "content_approvals",
         "grantee": "authenticated",
+        "privilege_type": "DELETE",
+        "is_grantable": "NO"
+      },
+      {
+        "table_name": "content_approvals",
+        "grantee": "authenticated",
+        "privilege_type": "INSERT",
+        "is_grantable": "NO"
+      },
+      {
+        "table_name": "content_approvals",
+        "grantee": "authenticated",
         "privilege_type": "SELECT",
+        "is_grantable": "NO"
+      },
+      {
+        "table_name": "content_approvals",
+        "grantee": "authenticated",
+        "privilege_type": "UPDATE",
         "is_grantable": "NO"
       },
       {
@@ -12906,6 +13211,30 @@
         "table_name": "content_approvals",
         "grantee": "service_role",
         "privilege_type": "UPDATE",
+        "is_grantable": "NO"
+      },
+      {
+        "table_name": "customer_channel_identities",
+        "grantee": "authenticated",
+        "privilege_type": "REFERENCES",
+        "is_grantable": "NO"
+      },
+      {
+        "table_name": "customer_channel_identities",
+        "grantee": "authenticated",
+        "privilege_type": "SELECT",
+        "is_grantable": "NO"
+      },
+      {
+        "table_name": "customer_channel_identities",
+        "grantee": "authenticated",
+        "privilege_type": "TRIGGER",
+        "is_grantable": "NO"
+      },
+      {
+        "table_name": "customer_channel_identities",
+        "grantee": "authenticated",
+        "privilege_type": "TRUNCATE",
         "is_grantable": "NO"
       },
       {
@@ -12953,7 +13282,25 @@
       {
         "table_name": "customer_intelligence",
         "grantee": "authenticated",
+        "privilege_type": "DELETE",
+        "is_grantable": "NO"
+      },
+      {
+        "table_name": "customer_intelligence",
+        "grantee": "authenticated",
+        "privilege_type": "INSERT",
+        "is_grantable": "NO"
+      },
+      {
+        "table_name": "customer_intelligence",
+        "grantee": "authenticated",
         "privilege_type": "SELECT",
+        "is_grantable": "NO"
+      },
+      {
+        "table_name": "customer_intelligence",
+        "grantee": "authenticated",
+        "privilege_type": "UPDATE",
         "is_grantable": "NO"
       },
       {
@@ -13079,7 +13426,25 @@
       {
         "table_name": "daily_closings",
         "grantee": "authenticated",
+        "privilege_type": "REFERENCES",
+        "is_grantable": "NO"
+      },
+      {
+        "table_name": "daily_closings",
+        "grantee": "authenticated",
         "privilege_type": "SELECT",
+        "is_grantable": "NO"
+      },
+      {
+        "table_name": "daily_closings",
+        "grantee": "authenticated",
+        "privilege_type": "TRIGGER",
+        "is_grantable": "NO"
+      },
+      {
+        "table_name": "daily_closings",
+        "grantee": "authenticated",
+        "privilege_type": "TRUNCATE",
         "is_grantable": "NO"
       },
       {
@@ -13277,7 +13642,25 @@
       {
         "table_name": "delivery_zones",
         "grantee": "authenticated",
+        "privilege_type": "DELETE",
+        "is_grantable": "NO"
+      },
+      {
+        "table_name": "delivery_zones",
+        "grantee": "authenticated",
+        "privilege_type": "INSERT",
+        "is_grantable": "NO"
+      },
+      {
+        "table_name": "delivery_zones",
+        "grantee": "authenticated",
         "privilege_type": "SELECT",
+        "is_grantable": "NO"
+      },
+      {
+        "table_name": "delivery_zones",
+        "grantee": "authenticated",
+        "privilege_type": "UPDATE",
         "is_grantable": "NO"
       },
       {
@@ -13319,6 +13702,48 @@
       {
         "table_name": "delivery_zones",
         "grantee": "service_role",
+        "privilege_type": "UPDATE",
+        "is_grantable": "NO"
+      },
+      {
+        "table_name": "dispatch_offer_declines",
+        "grantee": "authenticated",
+        "privilege_type": "DELETE",
+        "is_grantable": "NO"
+      },
+      {
+        "table_name": "dispatch_offer_declines",
+        "grantee": "authenticated",
+        "privilege_type": "INSERT",
+        "is_grantable": "NO"
+      },
+      {
+        "table_name": "dispatch_offer_declines",
+        "grantee": "authenticated",
+        "privilege_type": "REFERENCES",
+        "is_grantable": "NO"
+      },
+      {
+        "table_name": "dispatch_offer_declines",
+        "grantee": "authenticated",
+        "privilege_type": "SELECT",
+        "is_grantable": "NO"
+      },
+      {
+        "table_name": "dispatch_offer_declines",
+        "grantee": "authenticated",
+        "privilege_type": "TRIGGER",
+        "is_grantable": "NO"
+      },
+      {
+        "table_name": "dispatch_offer_declines",
+        "grantee": "authenticated",
+        "privilege_type": "TRUNCATE",
+        "is_grantable": "NO"
+      },
+      {
+        "table_name": "dispatch_offer_declines",
+        "grantee": "authenticated",
         "privilege_type": "UPDATE",
         "is_grantable": "NO"
       },
@@ -13366,6 +13791,48 @@
       },
       {
         "table_name": "dispatch_offers",
+        "grantee": "authenticated",
+        "privilege_type": "DELETE",
+        "is_grantable": "NO"
+      },
+      {
+        "table_name": "dispatch_offers",
+        "grantee": "authenticated",
+        "privilege_type": "INSERT",
+        "is_grantable": "NO"
+      },
+      {
+        "table_name": "dispatch_offers",
+        "grantee": "authenticated",
+        "privilege_type": "REFERENCES",
+        "is_grantable": "NO"
+      },
+      {
+        "table_name": "dispatch_offers",
+        "grantee": "authenticated",
+        "privilege_type": "SELECT",
+        "is_grantable": "NO"
+      },
+      {
+        "table_name": "dispatch_offers",
+        "grantee": "authenticated",
+        "privilege_type": "TRIGGER",
+        "is_grantable": "NO"
+      },
+      {
+        "table_name": "dispatch_offers",
+        "grantee": "authenticated",
+        "privilege_type": "TRUNCATE",
+        "is_grantable": "NO"
+      },
+      {
+        "table_name": "dispatch_offers",
+        "grantee": "authenticated",
+        "privilege_type": "UPDATE",
+        "is_grantable": "NO"
+      },
+      {
+        "table_name": "dispatch_offers",
         "grantee": "service_role",
         "privilege_type": "DELETE",
         "is_grantable": "NO"
@@ -13403,6 +13870,48 @@
       {
         "table_name": "dispatch_offers",
         "grantee": "service_role",
+        "privilege_type": "UPDATE",
+        "is_grantable": "NO"
+      },
+      {
+        "table_name": "driver_location_history",
+        "grantee": "authenticated",
+        "privilege_type": "DELETE",
+        "is_grantable": "NO"
+      },
+      {
+        "table_name": "driver_location_history",
+        "grantee": "authenticated",
+        "privilege_type": "INSERT",
+        "is_grantable": "NO"
+      },
+      {
+        "table_name": "driver_location_history",
+        "grantee": "authenticated",
+        "privilege_type": "REFERENCES",
+        "is_grantable": "NO"
+      },
+      {
+        "table_name": "driver_location_history",
+        "grantee": "authenticated",
+        "privilege_type": "SELECT",
+        "is_grantable": "NO"
+      },
+      {
+        "table_name": "driver_location_history",
+        "grantee": "authenticated",
+        "privilege_type": "TRIGGER",
+        "is_grantable": "NO"
+      },
+      {
+        "table_name": "driver_location_history",
+        "grantee": "authenticated",
+        "privilege_type": "TRUNCATE",
+        "is_grantable": "NO"
+      },
+      {
+        "table_name": "driver_location_history",
+        "grantee": "authenticated",
         "privilege_type": "UPDATE",
         "is_grantable": "NO"
       },
@@ -13727,7 +14236,25 @@
       {
         "table_name": "marketing_posts",
         "grantee": "authenticated",
+        "privilege_type": "REFERENCES",
+        "is_grantable": "NO"
+      },
+      {
+        "table_name": "marketing_posts",
+        "grantee": "authenticated",
         "privilege_type": "SELECT",
+        "is_grantable": "NO"
+      },
+      {
+        "table_name": "marketing_posts",
+        "grantee": "authenticated",
+        "privilege_type": "TRIGGER",
+        "is_grantable": "NO"
+      },
+      {
+        "table_name": "marketing_posts",
+        "grantee": "authenticated",
+        "privilege_type": "TRUNCATE",
         "is_grantable": "NO"
       },
       {
@@ -13793,7 +14320,25 @@
       {
         "table_name": "marketing_rules",
         "grantee": "authenticated",
+        "privilege_type": "REFERENCES",
+        "is_grantable": "NO"
+      },
+      {
+        "table_name": "marketing_rules",
+        "grantee": "authenticated",
         "privilege_type": "SELECT",
+        "is_grantable": "NO"
+      },
+      {
+        "table_name": "marketing_rules",
+        "grantee": "authenticated",
+        "privilege_type": "TRIGGER",
+        "is_grantable": "NO"
+      },
+      {
+        "table_name": "marketing_rules",
+        "grantee": "authenticated",
+        "privilege_type": "TRUNCATE",
         "is_grantable": "NO"
       },
       {
@@ -13997,7 +14542,43 @@
       {
         "table_name": "menu_schedule",
         "grantee": "authenticated",
+        "privilege_type": "DELETE",
+        "is_grantable": "NO"
+      },
+      {
+        "table_name": "menu_schedule",
+        "grantee": "authenticated",
+        "privilege_type": "INSERT",
+        "is_grantable": "NO"
+      },
+      {
+        "table_name": "menu_schedule",
+        "grantee": "authenticated",
+        "privilege_type": "REFERENCES",
+        "is_grantable": "NO"
+      },
+      {
+        "table_name": "menu_schedule",
+        "grantee": "authenticated",
         "privilege_type": "SELECT",
+        "is_grantable": "NO"
+      },
+      {
+        "table_name": "menu_schedule",
+        "grantee": "authenticated",
+        "privilege_type": "TRIGGER",
+        "is_grantable": "NO"
+      },
+      {
+        "table_name": "menu_schedule",
+        "grantee": "authenticated",
+        "privilege_type": "TRUNCATE",
+        "is_grantable": "NO"
+      },
+      {
+        "table_name": "menu_schedule",
+        "grantee": "authenticated",
+        "privilege_type": "UPDATE",
         "is_grantable": "NO"
       },
       {
@@ -14051,7 +14632,43 @@
       {
         "table_name": "menu_sections",
         "grantee": "authenticated",
+        "privilege_type": "DELETE",
+        "is_grantable": "NO"
+      },
+      {
+        "table_name": "menu_sections",
+        "grantee": "authenticated",
+        "privilege_type": "INSERT",
+        "is_grantable": "NO"
+      },
+      {
+        "table_name": "menu_sections",
+        "grantee": "authenticated",
+        "privilege_type": "REFERENCES",
+        "is_grantable": "NO"
+      },
+      {
+        "table_name": "menu_sections",
+        "grantee": "authenticated",
         "privilege_type": "SELECT",
+        "is_grantable": "NO"
+      },
+      {
+        "table_name": "menu_sections",
+        "grantee": "authenticated",
+        "privilege_type": "TRIGGER",
+        "is_grantable": "NO"
+      },
+      {
+        "table_name": "menu_sections",
+        "grantee": "authenticated",
+        "privilege_type": "TRUNCATE",
+        "is_grantable": "NO"
+      },
+      {
+        "table_name": "menu_sections",
+        "grantee": "authenticated",
+        "privilege_type": "UPDATE",
         "is_grantable": "NO"
       },
       {
@@ -14098,6 +14715,30 @@
       },
       {
         "table_name": "notification_prefs",
+        "grantee": "authenticated",
+        "privilege_type": "DELETE",
+        "is_grantable": "NO"
+      },
+      {
+        "table_name": "notification_prefs",
+        "grantee": "authenticated",
+        "privilege_type": "INSERT",
+        "is_grantable": "NO"
+      },
+      {
+        "table_name": "notification_prefs",
+        "grantee": "authenticated",
+        "privilege_type": "SELECT",
+        "is_grantable": "NO"
+      },
+      {
+        "table_name": "notification_prefs",
+        "grantee": "authenticated",
+        "privilege_type": "UPDATE",
+        "is_grantable": "NO"
+      },
+      {
+        "table_name": "notification_prefs",
         "grantee": "service_role",
         "privilege_type": "DELETE",
         "is_grantable": "NO"
@@ -14268,6 +14909,30 @@
         "table_name": "order_items",
         "grantee": "service_role",
         "privilege_type": "UPDATE",
+        "is_grantable": "NO"
+      },
+      {
+        "table_name": "order_status_history",
+        "grantee": "authenticated",
+        "privilege_type": "REFERENCES",
+        "is_grantable": "NO"
+      },
+      {
+        "table_name": "order_status_history",
+        "grantee": "authenticated",
+        "privilege_type": "SELECT",
+        "is_grantable": "NO"
+      },
+      {
+        "table_name": "order_status_history",
+        "grantee": "authenticated",
+        "privilege_type": "TRIGGER",
+        "is_grantable": "NO"
+      },
+      {
+        "table_name": "order_status_history",
+        "grantee": "authenticated",
+        "privilege_type": "TRUNCATE",
         "is_grantable": "NO"
       },
       {
@@ -14626,6 +15291,48 @@
       },
       {
         "table_name": "print_jobs",
+        "grantee": "authenticated",
+        "privilege_type": "DELETE",
+        "is_grantable": "NO"
+      },
+      {
+        "table_name": "print_jobs",
+        "grantee": "authenticated",
+        "privilege_type": "INSERT",
+        "is_grantable": "NO"
+      },
+      {
+        "table_name": "print_jobs",
+        "grantee": "authenticated",
+        "privilege_type": "REFERENCES",
+        "is_grantable": "NO"
+      },
+      {
+        "table_name": "print_jobs",
+        "grantee": "authenticated",
+        "privilege_type": "SELECT",
+        "is_grantable": "NO"
+      },
+      {
+        "table_name": "print_jobs",
+        "grantee": "authenticated",
+        "privilege_type": "TRIGGER",
+        "is_grantable": "NO"
+      },
+      {
+        "table_name": "print_jobs",
+        "grantee": "authenticated",
+        "privilege_type": "TRUNCATE",
+        "is_grantable": "NO"
+      },
+      {
+        "table_name": "print_jobs",
+        "grantee": "authenticated",
+        "privilege_type": "UPDATE",
+        "is_grantable": "NO"
+      },
+      {
+        "table_name": "print_jobs",
         "grantee": "service_role",
         "privilege_type": "DELETE",
         "is_grantable": "NO"
@@ -14663,6 +15370,48 @@
       {
         "table_name": "print_jobs",
         "grantee": "service_role",
+        "privilege_type": "UPDATE",
+        "is_grantable": "NO"
+      },
+      {
+        "table_name": "product_addon_groups",
+        "grantee": "authenticated",
+        "privilege_type": "DELETE",
+        "is_grantable": "NO"
+      },
+      {
+        "table_name": "product_addon_groups",
+        "grantee": "authenticated",
+        "privilege_type": "INSERT",
+        "is_grantable": "NO"
+      },
+      {
+        "table_name": "product_addon_groups",
+        "grantee": "authenticated",
+        "privilege_type": "REFERENCES",
+        "is_grantable": "NO"
+      },
+      {
+        "table_name": "product_addon_groups",
+        "grantee": "authenticated",
+        "privilege_type": "SELECT",
+        "is_grantable": "NO"
+      },
+      {
+        "table_name": "product_addon_groups",
+        "grantee": "authenticated",
+        "privilege_type": "TRIGGER",
+        "is_grantable": "NO"
+      },
+      {
+        "table_name": "product_addon_groups",
+        "grantee": "authenticated",
+        "privilege_type": "TRUNCATE",
+        "is_grantable": "NO"
+      },
+      {
+        "table_name": "product_addon_groups",
+        "grantee": "authenticated",
         "privilege_type": "UPDATE",
         "is_grantable": "NO"
       },
@@ -14986,6 +15735,48 @@
       },
       {
         "table_name": "products_branch_overrides",
+        "grantee": "authenticated",
+        "privilege_type": "DELETE",
+        "is_grantable": "NO"
+      },
+      {
+        "table_name": "products_branch_overrides",
+        "grantee": "authenticated",
+        "privilege_type": "INSERT",
+        "is_grantable": "NO"
+      },
+      {
+        "table_name": "products_branch_overrides",
+        "grantee": "authenticated",
+        "privilege_type": "REFERENCES",
+        "is_grantable": "NO"
+      },
+      {
+        "table_name": "products_branch_overrides",
+        "grantee": "authenticated",
+        "privilege_type": "SELECT",
+        "is_grantable": "NO"
+      },
+      {
+        "table_name": "products_branch_overrides",
+        "grantee": "authenticated",
+        "privilege_type": "TRIGGER",
+        "is_grantable": "NO"
+      },
+      {
+        "table_name": "products_branch_overrides",
+        "grantee": "authenticated",
+        "privilege_type": "TRUNCATE",
+        "is_grantable": "NO"
+      },
+      {
+        "table_name": "products_branch_overrides",
+        "grantee": "authenticated",
+        "privilege_type": "UPDATE",
+        "is_grantable": "NO"
+      },
+      {
+        "table_name": "products_branch_overrides",
         "grantee": "service_role",
         "privilege_type": "DELETE",
         "is_grantable": "NO"
@@ -15095,7 +15886,25 @@
       {
         "table_name": "promotion_products",
         "grantee": "authenticated",
+        "privilege_type": "REFERENCES",
+        "is_grantable": "NO"
+      },
+      {
+        "table_name": "promotion_products",
+        "grantee": "authenticated",
         "privilege_type": "SELECT",
+        "is_grantable": "NO"
+      },
+      {
+        "table_name": "promotion_products",
+        "grantee": "authenticated",
+        "privilege_type": "TRIGGER",
+        "is_grantable": "NO"
+      },
+      {
+        "table_name": "promotion_products",
+        "grantee": "authenticated",
+        "privilege_type": "TRUNCATE",
         "is_grantable": "NO"
       },
       {
@@ -15220,6 +16029,30 @@
       },
       {
         "table_name": "provider_orders",
+        "grantee": "authenticated",
+        "privilege_type": "DELETE",
+        "is_grantable": "NO"
+      },
+      {
+        "table_name": "provider_orders",
+        "grantee": "authenticated",
+        "privilege_type": "INSERT",
+        "is_grantable": "NO"
+      },
+      {
+        "table_name": "provider_orders",
+        "grantee": "authenticated",
+        "privilege_type": "SELECT",
+        "is_grantable": "NO"
+      },
+      {
+        "table_name": "provider_orders",
+        "grantee": "authenticated",
+        "privilege_type": "UPDATE",
+        "is_grantable": "NO"
+      },
+      {
+        "table_name": "provider_orders",
         "grantee": "service_role",
         "privilege_type": "DELETE",
         "is_grantable": "NO"
@@ -15311,7 +16144,43 @@
       {
         "table_name": "push_subscriptions",
         "grantee": "authenticated",
+        "privilege_type": "DELETE",
+        "is_grantable": "NO"
+      },
+      {
+        "table_name": "push_subscriptions",
+        "grantee": "authenticated",
+        "privilege_type": "INSERT",
+        "is_grantable": "NO"
+      },
+      {
+        "table_name": "push_subscriptions",
+        "grantee": "authenticated",
+        "privilege_type": "REFERENCES",
+        "is_grantable": "NO"
+      },
+      {
+        "table_name": "push_subscriptions",
+        "grantee": "authenticated",
         "privilege_type": "SELECT",
+        "is_grantable": "NO"
+      },
+      {
+        "table_name": "push_subscriptions",
+        "grantee": "authenticated",
+        "privilege_type": "TRIGGER",
+        "is_grantable": "NO"
+      },
+      {
+        "table_name": "push_subscriptions",
+        "grantee": "authenticated",
+        "privilege_type": "TRUNCATE",
+        "is_grantable": "NO"
+      },
+      {
+        "table_name": "push_subscriptions",
+        "grantee": "authenticated",
+        "privilege_type": "UPDATE",
         "is_grantable": "NO"
       },
       {
@@ -15622,6 +16491,48 @@
       },
       {
         "table_name": "shifts",
+        "grantee": "authenticated",
+        "privilege_type": "DELETE",
+        "is_grantable": "NO"
+      },
+      {
+        "table_name": "shifts",
+        "grantee": "authenticated",
+        "privilege_type": "INSERT",
+        "is_grantable": "NO"
+      },
+      {
+        "table_name": "shifts",
+        "grantee": "authenticated",
+        "privilege_type": "REFERENCES",
+        "is_grantable": "NO"
+      },
+      {
+        "table_name": "shifts",
+        "grantee": "authenticated",
+        "privilege_type": "SELECT",
+        "is_grantable": "NO"
+      },
+      {
+        "table_name": "shifts",
+        "grantee": "authenticated",
+        "privilege_type": "TRIGGER",
+        "is_grantable": "NO"
+      },
+      {
+        "table_name": "shifts",
+        "grantee": "authenticated",
+        "privilege_type": "TRUNCATE",
+        "is_grantable": "NO"
+      },
+      {
+        "table_name": "shifts",
+        "grantee": "authenticated",
+        "privilege_type": "UPDATE",
+        "is_grantable": "NO"
+      },
+      {
+        "table_name": "shifts",
         "grantee": "service_role",
         "privilege_type": "DELETE",
         "is_grantable": "NO"
@@ -15713,7 +16624,25 @@
       {
         "table_name": "system_errors",
         "grantee": "authenticated",
+        "privilege_type": "DELETE",
+        "is_grantable": "NO"
+      },
+      {
+        "table_name": "system_errors",
+        "grantee": "authenticated",
+        "privilege_type": "INSERT",
+        "is_grantable": "NO"
+      },
+      {
+        "table_name": "system_errors",
+        "grantee": "authenticated",
         "privilege_type": "SELECT",
+        "is_grantable": "NO"
+      },
+      {
+        "table_name": "system_errors",
+        "grantee": "authenticated",
+        "privilege_type": "UPDATE",
         "is_grantable": "NO"
       },
       {
@@ -15755,6 +16684,48 @@
       {
         "table_name": "system_errors",
         "grantee": "service_role",
+        "privilege_type": "UPDATE",
+        "is_grantable": "NO"
+      },
+      {
+        "table_name": "tenants",
+        "grantee": "authenticated",
+        "privilege_type": "DELETE",
+        "is_grantable": "NO"
+      },
+      {
+        "table_name": "tenants",
+        "grantee": "authenticated",
+        "privilege_type": "INSERT",
+        "is_grantable": "NO"
+      },
+      {
+        "table_name": "tenants",
+        "grantee": "authenticated",
+        "privilege_type": "REFERENCES",
+        "is_grantable": "NO"
+      },
+      {
+        "table_name": "tenants",
+        "grantee": "authenticated",
+        "privilege_type": "SELECT",
+        "is_grantable": "NO"
+      },
+      {
+        "table_name": "tenants",
+        "grantee": "authenticated",
+        "privilege_type": "TRIGGER",
+        "is_grantable": "NO"
+      },
+      {
+        "table_name": "tenants",
+        "grantee": "authenticated",
+        "privilege_type": "TRUNCATE",
+        "is_grantable": "NO"
+      },
+      {
+        "table_name": "tenants",
+        "grantee": "authenticated",
         "privilege_type": "UPDATE",
         "is_grantable": "NO"
       },
@@ -15856,21 +16827,21 @@
         "args": "p_order_number text, p_reason text",
         "anon_exec": false,
         "auth_exec": true,
-        "svc_exec": false
+        "svc_exec": true
       },
       {
         "proname": "admin_delete_job",
         "args": "p_id text",
         "anon_exec": false,
         "auth_exec": true,
-        "svc_exec": false
+        "svc_exec": true
       },
       {
         "proname": "admin_list_jobs",
         "args": "p_status text",
         "anon_exec": false,
         "auth_exec": true,
-        "svc_exec": false
+        "svc_exec": true
       },
       {
         "proname": "admin_sync_legacy_pre_order",
@@ -15897,8 +16868,8 @@
         "proname": "affiliate_intent_hook",
         "args": "",
         "anon_exec": false,
-        "auth_exec": false,
-        "svc_exec": false
+        "auth_exec": true,
+        "svc_exec": true
       },
       {
         "proname": "affiliate_my_code",
@@ -15918,8 +16889,8 @@
         "proname": "affiliate_order_hook",
         "args": "",
         "anon_exec": false,
-        "auth_exec": false,
-        "svc_exec": false
+        "auth_exec": true,
+        "svc_exec": true
       },
       {
         "proname": "affiliate_policy_state",
@@ -15940,14 +16911,14 @@
         "args": "p_action text, p_entity_type text, p_entity_id text, p_description text, p_metadata jsonb, p_user_email text",
         "anon_exec": false,
         "auth_exec": true,
-        "svc_exec": false
+        "svc_exec": true
       },
       {
         "proname": "assign_driver",
         "args": "p_order_number text, p_driver_id text",
         "anon_exec": false,
         "auth_exec": true,
-        "svc_exec": false
+        "svc_exec": true
       },
       {
         "proname": "auto_close_expired_rounds",
@@ -15968,21 +16939,21 @@
         "args": "p_order_number text, p_reason text",
         "anon_exec": false,
         "auth_exec": true,
-        "svc_exec": false
+        "svc_exec": true
       },
       {
         "proname": "cancel_order",
         "args": "p_order_number text, p_reason text",
         "anon_exec": false,
         "auth_exec": true,
-        "svc_exec": false
+        "svc_exec": true
       },
       {
         "proname": "cancel_pre_order",
         "args": "p_order_number text",
         "anon_exec": false,
         "auth_exec": true,
-        "svc_exec": false
+        "svc_exec": true
       },
       {
         "proname": "claim_automation_jobs",
@@ -15996,7 +16967,7 @@
         "args": "p_order_number text",
         "anon_exec": false,
         "auth_exec": true,
-        "svc_exec": false
+        "svc_exec": true
       },
       {
         "proname": "claim_push_driver_targets",
@@ -16024,14 +16995,14 @@
         "args": "p_date date",
         "anon_exec": false,
         "auth_exec": true,
-        "svc_exec": false
+        "svc_exec": true
       },
       {
         "proname": "close_shift",
         "args": "p_shift_id text, p_counted_cash numeric, p_notes text",
         "anon_exec": false,
         "auth_exec": true,
-        "svc_exec": false
+        "svc_exec": true
       },
       {
         "proname": "complete_automation_job",
@@ -16066,21 +17037,21 @@
         "args": "p_order_number text",
         "anon_exec": false,
         "auth_exec": true,
-        "svc_exec": false
+        "svc_exec": true
       },
       {
         "proname": "create_notification",
         "args": "p_title text, p_message text, p_category text, p_customer_id text",
         "anon_exec": false,
         "auth_exec": true,
-        "svc_exec": false
+        "svc_exec": true
       },
       {
         "proname": "create_order_with_items",
         "args": "p_items jsonb, p_delivery_round_id text, p_delivery_method text, p_delivery_address text, p_dropoff_latitude numeric, p_dropoff_longitude numeric, p_customer_name text, p_customer_phone text, p_payment_method text, p_special_instructions text, p_promotion_code text, p_distance_km numeric, p_order_mode text, p_scheduled_date date, p_branch_id text, p_source_channel text, p_external_ref_id text, p_customer_ref uuid",
         "anon_exec": false,
         "auth_exec": true,
-        "svc_exec": false
+        "svc_exec": true
       },
       {
         "proname": "create_order_with_items_core",
@@ -16094,14 +17065,14 @@
         "args": "p_items jsonb, p_delivery_round_id text, p_delivery_method text, p_delivery_address text, p_dropoff_latitude numeric, p_dropoff_longitude numeric, p_customer_name text, p_customer_phone text, p_payment_method text, p_special_instructions text, p_promotion_code text, p_distance_km numeric, p_order_mode text, p_scheduled_date date, p_branch_id text, p_source_channel text, p_external_ref_id text, p_customer_ref uuid, p_client_submit_key text",
         "anon_exec": false,
         "auth_exec": true,
-        "svc_exec": false
+        "svc_exec": true
       },
       {
         "proname": "create_payment_intent_record",
         "args": "p_order_number text, p_amount numeric, p_method payment_method, p_provider text, p_metadata jsonb",
         "anon_exec": false,
         "auth_exec": true,
-        "svc_exec": false
+        "svc_exec": true
       },
       {
         "proname": "create_pickup_order_i",
@@ -16115,14 +17086,14 @@
         "args": "p_product_id text, p_quantity integer, p_delivery_round_id text, p_scheduled_date date, p_customer_name text, p_customer_phone text, p_delivery_latitude numeric, p_delivery_longitude numeric, p_delivery_address text, p_special_instructions text",
         "anon_exec": false,
         "auth_exec": true,
-        "svc_exec": false
+        "svc_exec": true
       },
       {
         "proname": "create_production_batch",
         "args": "p_delivery_round_id text, p_scheduled_date date, p_order_mode text",
         "anon_exec": false,
         "auth_exec": true,
-        "svc_exec": false
+        "svc_exec": true
       },
       {
         "proname": "current_driver_id",
@@ -16150,7 +17121,7 @@
         "args": "p_order_number text",
         "anon_exec": false,
         "auth_exec": true,
-        "svc_exec": false
+        "svc_exec": true
       },
       {
         "proname": "default_tenant_id",
@@ -16164,63 +17135,63 @@
         "args": "p_order_number text",
         "anon_exec": false,
         "auth_exec": true,
-        "svc_exec": false
+        "svc_exec": true
       },
       {
         "proname": "driver_accept_assignment",
         "args": "p_order_number text, p_driver_phone text",
         "anon_exec": false,
         "auth_exec": true,
-        "svc_exec": false
+        "svc_exec": true
       },
       {
         "proname": "driver_attach_pod",
         "args": "p_order_number text, p_object_path text, p_latitude numeric, p_longitude numeric",
         "anon_exec": false,
         "auth_exec": true,
-        "svc_exec": false
+        "svc_exec": true
       },
       {
         "proname": "driver_decline_assignment",
         "args": "p_order_number text, p_reason text",
         "anon_exec": false,
         "auth_exec": true,
-        "svc_exec": false
+        "svc_exec": true
       },
       {
         "proname": "driver_decline_offer",
         "args": "p_order_number text",
         "anon_exec": false,
         "auth_exec": true,
-        "svc_exec": false
+        "svc_exec": true
       },
       {
         "proname": "driver_login",
         "args": "p_display_name text",
         "anon_exec": false,
         "auth_exec": true,
-        "svc_exec": false
+        "svc_exec": true
       },
       {
         "proname": "driver_update_delivery_status",
         "args": "p_order_number text, p_driver_phone text, p_status text, p_latitude numeric, p_longitude numeric",
         "anon_exec": false,
         "auth_exec": true,
-        "svc_exec": false
+        "svc_exec": true
       },
       {
         "proname": "driver_update_location",
         "args": "p_latitude numeric, p_longitude numeric, p_order_number text",
         "anon_exec": false,
         "auth_exec": true,
-        "svc_exec": false
+        "svc_exec": true
       },
       {
         "proname": "drivers_promote_rider",
         "args": "",
         "anon_exec": false,
-        "auth_exec": false,
-        "svc_exec": false
+        "auth_exec": true,
+        "svc_exec": true
       },
       {
         "proname": "enforce_catalog_visibility_gate",
@@ -16234,28 +17205,28 @@
         "args": "",
         "anon_exec": false,
         "auth_exec": false,
-        "svc_exec": false
+        "svc_exec": true
       },
       {
         "proname": "enforce_operating_hours",
         "args": "",
         "anon_exec": false,
         "auth_exec": false,
-        "svc_exec": false
+        "svc_exec": true
       },
       {
         "proname": "enforce_pre_order_cancel_window",
         "args": "",
         "anon_exec": false,
         "auth_exec": false,
-        "svc_exec": false
+        "svc_exec": true
       },
       {
         "proname": "enforce_pre_order_window",
         "args": "",
         "anon_exec": false,
         "auth_exec": false,
-        "svc_exec": false
+        "svc_exec": true
       },
       {
         "proname": "enqueue_automation_job",
@@ -16283,7 +17254,7 @@
         "args": "p_date date",
         "anon_exec": false,
         "auth_exec": true,
-        "svc_exec": false
+        "svc_exec": true
       },
       {
         "proname": "fail_automation_job",
@@ -16297,14 +17268,14 @@
         "args": "",
         "anon_exec": false,
         "auth_exec": false,
-        "svc_exec": false
+        "svc_exec": true
       },
       {
         "proname": "get_ai_memory",
         "args": "",
         "anon_exec": false,
         "auth_exec": true,
-        "svc_exec": false
+        "svc_exec": true
       },
       {
         "proname": "get_all_orders_for_admin",
@@ -16318,28 +17289,28 @@
         "args": "p_date date",
         "anon_exec": false,
         "auth_exec": true,
-        "svc_exec": false
+        "svc_exec": true
       },
       {
         "proname": "get_inventory_requirements",
         "args": "p_product_id text, p_quantity integer",
         "anon_exec": false,
         "auth_exec": true,
-        "svc_exec": false
+        "svc_exec": true
       },
       {
         "proname": "get_kitchen_summary",
         "args": "p_date date",
         "anon_exec": false,
         "auth_exec": true,
-        "svc_exec": false
+        "svc_exec": true
       },
       {
         "proname": "get_menu_for_date",
         "args": "p_scheduled_date date",
         "anon_exec": false,
         "auth_exec": true,
-        "svc_exec": false
+        "svc_exec": true
       },
       {
         "proname": "get_payment_intents_for_orders",
@@ -16528,21 +17499,21 @@
         "args": "",
         "anon_exec": false,
         "auth_exec": true,
-        "svc_exec": false
+        "svc_exec": true
       },
       {
         "proname": "is_auditor",
         "args": "",
         "anon_exec": false,
         "auth_exec": true,
-        "svc_exec": false
+        "svc_exec": true
       },
       {
         "proname": "is_branch_admin",
         "args": "p_branch_id text",
         "anon_exec": false,
         "auth_exec": true,
-        "svc_exec": false
+        "svc_exec": true
       },
       {
         "proname": "is_content_approved",
@@ -16556,63 +17527,63 @@
         "args": "",
         "anon_exec": false,
         "auth_exec": true,
-        "svc_exec": false
+        "svc_exec": true
       },
       {
         "proname": "is_finance",
         "args": "",
         "anon_exec": false,
         "auth_exec": true,
-        "svc_exec": false
+        "svc_exec": true
       },
       {
         "proname": "is_inventory",
         "args": "",
         "anon_exec": false,
         "auth_exec": true,
-        "svc_exec": false
+        "svc_exec": true
       },
       {
         "proname": "is_kitchen",
         "args": "",
         "anon_exec": false,
         "auth_exec": true,
-        "svc_exec": false
+        "svc_exec": true
       },
       {
         "proname": "is_marketing",
         "args": "",
         "anon_exec": false,
         "auth_exec": true,
-        "svc_exec": false
+        "svc_exec": true
       },
       {
         "proname": "is_owner",
         "args": "",
         "anon_exec": false,
         "auth_exec": true,
-        "svc_exec": false
+        "svc_exec": true
       },
       {
         "proname": "is_platform_admin",
         "args": "",
         "anon_exec": false,
         "auth_exec": true,
-        "svc_exec": false
+        "svc_exec": true
       },
       {
         "proname": "is_pos",
         "args": "",
         "anon_exec": false,
         "auth_exec": true,
-        "svc_exec": false
+        "svc_exec": true
       },
       {
         "proname": "is_rider",
         "args": "",
         "anon_exec": false,
         "auth_exec": true,
-        "svc_exec": false
+        "svc_exec": true
       },
       {
         "proname": "is_staff",
@@ -16626,7 +17597,7 @@
         "args": "",
         "anon_exec": false,
         "auth_exec": true,
-        "svc_exec": false
+        "svc_exec": true
       },
       {
         "proname": "is_tenant_admin",
@@ -16654,7 +17625,7 @@
         "args": "p_delivery_round_id text, p_scheduled_date date",
         "anon_exec": false,
         "auth_exec": true,
-        "svc_exec": false
+        "svc_exec": true
       },
       {
         "proname": "link_channel_identity",
@@ -16668,14 +17639,14 @@
         "args": "p_driver_id text, p_user_id uuid",
         "anon_exec": false,
         "auth_exec": true,
-        "svc_exec": false
+        "svc_exec": true
       },
       {
         "proname": "list_drivers",
         "args": "",
         "anon_exec": false,
         "auth_exec": true,
-        "svc_exec": false
+        "svc_exec": true
       },
       {
         "proname": "list_my_push_subscriptions",
@@ -16689,14 +17660,14 @@
         "args": "p_product_id text",
         "anon_exec": false,
         "auth_exec": true,
-        "svc_exec": false
+        "svc_exec": true
       },
       {
         "proname": "list_system_errors",
         "args": "p_limit integer",
         "anon_exec": false,
         "auth_exec": true,
-        "svc_exec": false
+        "svc_exec": true
       },
       {
         "proname": "loyalty_admin_adjust",
@@ -16717,14 +17688,14 @@
         "args": "p_limit integer",
         "anon_exec": false,
         "auth_exec": true,
-        "svc_exec": false
+        "svc_exec": true
       },
       {
         "proname": "loyalty_my_status",
         "args": "",
         "anon_exec": false,
         "auth_exec": true,
-        "svc_exec": false
+        "svc_exec": true
       },
       {
         "proname": "loyalty_net_sales",
@@ -16737,8 +17708,8 @@
         "proname": "loyalty_order_hook",
         "args": "",
         "anon_exec": false,
-        "auth_exec": false,
-        "svc_exec": false
+        "auth_exec": true,
+        "svc_exec": true
       },
       {
         "proname": "loyalty_order_net",
@@ -16751,8 +17722,8 @@
         "proname": "loyalty_payment_intent_hook",
         "args": "",
         "anon_exec": false,
-        "auth_exec": false,
-        "svc_exec": false
+        "auth_exec": true,
+        "svc_exec": true
       },
       {
         "proname": "loyalty_policy_state",
@@ -16794,35 +17765,35 @@
         "args": "p_rules jsonb",
         "anon_exec": false,
         "auth_exec": true,
-        "svc_exec": false
+        "svc_exec": true
       },
       {
         "proname": "marketing_schedule_post",
         "args": "p_post_id text, p_when timestamp with time zone",
         "anon_exec": false,
         "auth_exec": true,
-        "svc_exec": false
+        "svc_exec": true
       },
       {
         "proname": "my_deliveries",
         "args": "p_driver_phone text",
         "anon_exec": false,
         "auth_exec": true,
-        "svc_exec": false
+        "svc_exec": true
       },
       {
         "proname": "open_shift",
         "args": "p_opening_cash numeric, p_branch_id text",
         "anon_exec": false,
         "auth_exec": true,
-        "svc_exec": false
+        "svc_exec": true
       },
       {
         "proname": "order_ready_to_make",
         "args": "p_order_number text",
         "anon_exec": false,
         "auth_exec": true,
-        "svc_exec": false
+        "svc_exec": true
       },
       {
         "proname": "order_setting",
@@ -16863,22 +17834,22 @@
         "proname": "points_ledger_guard",
         "args": "",
         "anon_exec": false,
-        "auth_exec": false,
-        "svc_exec": false
+        "auth_exec": true,
+        "svc_exec": true
       },
       {
         "proname": "pos_closeout_order",
         "args": "p_order_number text, p_mark_paid boolean",
         "anon_exec": false,
         "auth_exec": true,
-        "svc_exec": false
+        "svc_exec": true
       },
       {
         "proname": "promote_to_full_admin",
         "args": "p_email text",
         "anon_exec": false,
         "auth_exec": false,
-        "svc_exec": false
+        "svc_exec": true
       },
       {
         "proname": "promotion_apply_rules",
@@ -16920,14 +17891,14 @@
         "args": "p_scheduled_date date, p_publish boolean",
         "anon_exec": false,
         "auth_exec": true,
-        "svc_exec": false
+        "svc_exec": true
       },
       {
         "proname": "quote_pre_order",
         "args": "p_product_id text, p_quantity integer",
         "anon_exec": false,
         "auth_exec": true,
-        "svc_exec": false
+        "svc_exec": true
       },
       {
         "proname": "record_payment_result",
@@ -16941,7 +17912,7 @@
         "args": "p_message text, p_source text, p_level text, p_details jsonb",
         "anon_exec": false,
         "auth_exec": true,
-        "svc_exec": false
+        "svc_exec": true
       },
       {
         "proname": "referral_admin_stats",
@@ -16976,14 +17947,14 @@
         "args": "",
         "anon_exec": false,
         "auth_exec": true,
-        "svc_exec": false
+        "svc_exec": true
       },
       {
         "proname": "referral_my_status",
         "args": "",
         "anon_exec": false,
         "auth_exec": true,
-        "svc_exec": false
+        "svc_exec": true
       },
       {
         "proname": "referral_normalize_code",
@@ -17004,7 +17975,7 @@
         "args": "",
         "anon_exec": false,
         "auth_exec": false,
-        "svc_exec": false
+        "svc_exec": true
       },
       {
         "proname": "referral_policy_state",
@@ -17018,7 +17989,7 @@
         "args": "p_code text",
         "anon_exec": true,
         "auth_exec": true,
-        "svc_exec": false
+        "svc_exec": true
       },
       {
         "proname": "referral_resolve_attribution",
@@ -17039,7 +18010,7 @@
         "args": "p_endpoint text, p_p256dh text, p_auth_secret text, p_user_agent text, p_audience text",
         "anon_exec": false,
         "auth_exec": true,
-        "svc_exec": false
+        "svc_exec": true
       },
       {
         "proname": "release_round_capacity_on_terminal",
@@ -17066,29 +18037,29 @@
         "proname": "resolve_channel_identity",
         "args": "p_channel text, p_external_user_id text",
         "anon_exec": false,
-        "auth_exec": false,
+        "auth_exec": true,
         "svc_exec": true
       },
       {
         "proname": "resolve_home_branch_id",
         "args": "",
         "anon_exec": false,
-        "auth_exec": false,
-        "svc_exec": false
+        "auth_exec": true,
+        "svc_exec": true
       },
       {
         "proname": "restore_inventory_for_order",
         "args": "p_order_number text",
         "anon_exec": false,
         "auth_exec": true,
-        "svc_exec": false
+        "svc_exec": true
       },
       {
         "proname": "review_content",
         "args": "p_approval_id text, p_decision text, p_note text",
         "anon_exec": false,
         "auth_exec": true,
-        "svc_exec": false
+        "svc_exec": true
       },
       {
         "proname": "rewards_admin_list",
@@ -17123,7 +18094,7 @@
         "args": "p_memory jsonb",
         "anon_exec": false,
         "auth_exec": true,
-        "svc_exec": false
+        "svc_exec": true
       },
       {
         "proname": "set_limit",
@@ -17137,14 +18108,14 @@
         "args": "p_scheduled_date date, p_items jsonb",
         "anon_exec": false,
         "auth_exec": true,
-        "svc_exec": false
+        "svc_exec": true
       },
       {
         "proname": "set_notification_pref",
         "args": "p_channel text, p_enabled boolean",
         "anon_exec": false,
         "auth_exec": true,
-        "svc_exec": false
+        "svc_exec": true
       },
       {
         "proname": "set_push_transport_pref",
@@ -17158,7 +18129,7 @@
         "args": "p_user_id uuid, p_role text",
         "anon_exec": false,
         "auth_exec": true,
-        "svc_exec": false
+        "svc_exec": true
       },
       {
         "proname": "show_limit",
@@ -17263,21 +18234,21 @@
         "args": "p_content_type text, p_title text, p_body text, p_image_url text, p_mascot text",
         "anon_exec": false,
         "auth_exec": true,
-        "svc_exec": false
+        "svc_exec": true
       },
       {
         "proname": "submit_offline_payment_reference",
         "args": "p_order_number text, p_reference text",
         "anon_exec": false,
         "auth_exec": true,
-        "svc_exec": false
+        "svc_exec": true
       },
       {
         "proname": "submit_payment_slip",
         "args": "p_order_number text, p_slip_path text",
         "anon_exec": false,
         "auth_exec": true,
-        "svc_exec": false
+        "svc_exec": true
       },
       {
         "proname": "submit_verified_review",
@@ -17305,42 +18276,42 @@
         "args": "p_name text, p_slug text",
         "anon_exec": false,
         "auth_exec": true,
-        "svc_exec": false
+        "svc_exec": true
       },
       {
         "proname": "tenant_get_admin",
         "args": "p_tenant_id text",
         "anon_exec": false,
         "auth_exec": true,
-        "svc_exec": false
+        "svc_exec": true
       },
       {
         "proname": "tenant_list_admin",
         "args": "",
         "anon_exec": false,
         "auth_exec": true,
-        "svc_exec": false
+        "svc_exec": true
       },
       {
         "proname": "tenant_set_default_brand",
         "args": "p_tenant_id text, p_brand_id text",
         "anon_exec": false,
         "auth_exec": true,
-        "svc_exec": false
+        "svc_exec": true
       },
       {
         "proname": "tenant_set_status",
         "args": "p_tenant_id text, p_status text",
         "anon_exec": false,
         "auth_exec": true,
-        "svc_exec": false
+        "svc_exec": true
       },
       {
         "proname": "tenant_update_admin",
         "args": "p_tenant_id text, p_name text, p_slug text, p_status text",
         "anon_exec": false,
         "auth_exec": true,
-        "svc_exec": false
+        "svc_exec": true
       },
       {
         "proname": "touch_menu_sections_updated_at",
@@ -17354,14 +18325,14 @@
         "args": "p_order_number text, p_phone text",
         "anon_exec": true,
         "auth_exec": true,
-        "svc_exec": false
+        "svc_exec": true
       },
       {
         "proname": "transition_order_status",
         "args": "p_order_number text, p_new_status order_status",
         "anon_exec": false,
         "auth_exec": true,
-        "svc_exec": false
+        "svc_exec": true
       },
       {
         "proname": "trg_orders_pickup_stamp",
@@ -17389,7 +18360,7 @@
         "args": "p_subscription_id text, p_endpoint text",
         "anon_exec": false,
         "auth_exec": true,
-        "svc_exec": false
+        "svc_exec": true
       },
       {
         "proname": "update_inventory_status",
@@ -17410,14 +18381,14 @@
         "args": "p_name text, p_phone text, p_vehicle_label text",
         "anon_exec": false,
         "auth_exec": true,
-        "svc_exec": false
+        "svc_exec": true
       },
       {
         "proname": "upsert_mascot_override",
         "args": "p_role_name text, p_media_url text, p_alt text",
         "anon_exec": false,
         "auth_exec": true,
-        "svc_exec": false
+        "svc_exec": true
       },
       {
         "proname": "uuid_generate_v1",
@@ -21741,6 +22712,14 @@
       {
         "version": "156",
         "name": "156_engagement_play"
+      },
+      {
+        "version": "157",
+        "name": "157_anon_policy_role_scoping"
+      },
+      {
+        "version": "158",
+        "name": "158_align_grants_and_rls"
       }
     ]
   },

@@ -85,11 +85,12 @@
 
 ---
 
-## 3. Engineering backlog — **ปิด 5/5 (B-2 ปิดแล้ว W-2 2026-10-26) · blocker ใหม่ = B-6 (P0)**
+## 3. Engineering backlog — ปิด 5/5 + **B-6 ปิดแล้ว** · งานค้าง = UI 5 ข้อ + legacy 6 functions
 
 > คำสั่ง Owner 2026-10-26 "ปิดให้หมดโดยสมบูรณ์" → B-1/B-3/B-4/B-5 ปิดรอบที่ 2 ·
-> **B-2 ปิดรอบที่ 3** (ซ่อมครบ 7 ไฟล์บน replay ท้องถิ่น **ก่อน** เพิ่ม step กลับ CI — ตามกติกา handoff §W-2) ·
-> **งานค้างตอนนี้ = B-6 (production guest อ่านเมนูไม่ได้) + UI 5 ข้อ + W-1 แผน 3 ข้อรอ Owner**
+> **B-2 ปิดรอบที่ 3** (ซ่อมครบ 7 ไฟล์บน replay ท้องถิ่น **ก่อน** เพิ่ม step กลับ CI · CI #577/#151 = success) ·
+> **B-6 (P0) ปิดรอบที่ 3** (apply 157+158 แล้ว + guest เห็นเมนูจริง) ·
+> **งานค้างตอนนี้ = UI 5 ข้อ + legacy functions 6 ตัว (รอ Owner เลือก)**
 
 | # | งาน (สถานะก่อนรอบนี้) | ผล | หลักฐาน |
 |---|---|---|---|
@@ -144,14 +145,18 @@
 
 ## 4. Migration / schema status
 
-- **Production ledger:** top = **156** (หลักฐาน `e2e/r16Apply156-*.json` + `e2e/r15Apply155-*.json` · รอบก่อน)
-- **รอบนี้ (2026-10-26): มี migration ใหม่ 1 ไฟล์ = `157_anon_policy_role_scoping.sql` (B-6) — เขียน/เทสต์บน replay
-  แล้ว แต่ยัง NOT_APPLIED บน production** (ต้องได้คำสั่ง/อนุมัติ Owner ก่อน — production write)
-- **schema parity (W-1):** fresh replay 001→157 = `REPLAY_ALL_GREEN 157/157` · เทียบ production แบบ read-only →
-  **MATCH** = tables/columns/indexes/constraints/sequences/triggers/views/**ledger 156=156** ·
-  **DRIFT 5 กลุ่ม** (rls 2 ตาราง · policies 6 · functions 25 · acl_tables 157 · acl_functions 219) —
-  ทุกกลุ่มมีคำอธิบาย+แผนใน `e2e/w1-parity-report-2026-10-26.md` · **normalisation = ความต่างเชิงรูปแบบเท่านั้น**
-  (array/ชื่อ ledger/CRLF) — ระบุไว้ใน `e2e/w1-parity-2026-10-26.json`
+- **Production ledger:** top = **158** — **157 + 158 ถูก apply บน production แล้ว (Owner อนุมัติ 2026-10-26)**
+  · evidence = `e2e/w6Apply157158-{precheck,apply157,apply158,verify,record}.json` ·
+  ผล verify: anon-visible helper policies **19 → 0** · `reviews_anon_read` อยู่ · RLS 2 ตาราง = true ·
+  anon write leak = 0 · หลัง apply = **guest เปิด `/menu` จริงเห็นเมนูครบ + console ไม่มี error**
+  (`e2e/w2_guest_menu_probe.cjs` รันซ้ำ = ทุก endpoint 200)
+- **migration 157** = anon policy role scoping (B-6 P0) · **migration 158** = enable RLS 2 ตาราง + align grants
+  (31 ตาราง + 108 functions + default privileges) — **สร้างจากผล parity จริง ไม่ได้เดา**
+- **schema parity (W-1) รอบสุดท้ายหลัง apply:** fresh replay 001→157 = `REPLAY_ALL_GREEN 157/157` ·
+  **MATCH** = tables/columns/indexes/constraints/sequences/triggers/views/**rls 67=67** ·
+  **acl_tables 768=768** · **ledger 158=158** ·
+  **คงเหลือ DRIFT 3 กลุ่ม (อธิบายครบในรายงาน):** functions 25 (ชุด 11/6 + body คู่ comment) ·
+  acl_functions 17 (ตามชุด function เดิัน) · policies 6 (5 replay-only + 1 production-only)
 - แผนที่สำคัญ (คงเดิม): 138 = payment_intents read authority · 139 = POD storage policy ·
   141/142 = pre-order unify + menu gate · 143 = cutoff_hours · 144 = round pattern · 152 = REVOKE anon set_menu ·
   153–156 = Growth & Rewards stages 1–4
@@ -206,6 +211,9 @@
 | legacy contracts 7 ไฟล์ (B-2) บน replay ชุดเดียวกัน | **7/7 EXIT=0** | `e2e/w2-contracts_*.log` |
 | B-6 ตรวจ guest บน production จริง (read-only) | **401 `permission denied for function is_staff` ทุก endpoint + Playwright เปิด /menu = "ไม่พบเมนู"** | `e2e/w2_guest_menu_probe.cjs` · `e2e/w2prod_anon.cjs` |
 | fix B-6 บน replay (apply 157) | anon อ่าน 16 ตารางได้ · **zero write leak** | `e2e/w2_b6_verify.sql` ผลรัน |
+| **apply 157 + 158 บน production (Owner อนุมัติ)** | **STAGE_OK ทุก stage** · anon-visible helper policies **19→0** · RLS 2 ตาราง true · anon write leak 0 · ledger top = **158** | `e2e/w6Apply157158-{precheck,apply157,apply158,verify,record}.json` |
+| **ตรวจหลัง apply (guest จริง)** | PostgREST ทุก endpoint = **200** · Playwright เปิด `/menu` = เห็นเมนูครบ (วันนี้ 12 · จองล่วงหน้า 2) · **console ไม่มี error** | `e2e/w2_guest_menu_probe.cjs` (รอบหลัง apply) |
+| **parity รอบสุดท้าย (หลัง 157+158)** | **MATCH** = tables/columns/indexes/constraints/sequences/triggers/views/**rls 67=67**/**acl_tables 768=768**/**ledger 158=158** · DRIFT เหลือ 3 กลุ่ม (functions/acl_functions/policies — อธิบายครบ) | `e2e/w1-parity-2026-10-26.json` |
 | unit เพิ่มใหม่ | `storeStatusWindow` 4/4 · `uiTechnicalLabels` 4/4 | ไฟล์ test ใน `src/__tests__/` |
 | unit ที่ต้องยังเขียว | `mascotClosed` + `roundsSameDayNoCutoff` = **34/34** | `vitest.log` ของรอบนี้ |
 
@@ -263,7 +271,9 @@
 | 4 | `11b7112` | docs: gate evidence | #572 **success** | #146 **success** |
 | 5 | `3a2c9f7` | CAP-21/22 + B-1 + test pack + **B-2 CI step** | #573 **success** | #147 **failure** (legacy 7 ไฟล์) |
 | 6 | `6a28bcf` | rollback B-2 → B-2 = BLOCKED | #574 **success** | #148 **success** |
-| 7 | **`1aa678b`** (HEAD) | บันทึกผล CI รอบ 2 | #575 **success** | #149 **success** |
+| 7 | `1aa678b` | บันทึกผล CI รอบ 2 | #575 **success** | #149 **success** |
+| 8 | `47b33e1` | docs: จัดเอกสารเป็นสถานะชุดเดียว + แฮนด์ออฟ | #576 **success** | #150 **success** |
+| 9 | **`927689a`** (HEAD) | W-1/W-2 ปิด + UI 4 ข้อ + **migration 157** + step legacy contract กลับ CI | #577 **success** | #151 **success** (มี `Legacy contracts OK — 7/7`) |
 
 > อ่านจาก GitHub Actions REST API จริง (`?head_sha=<full SHA>` — เครื่องนี้ไม่มี `gh`) ·
 > **ห้ามอ้างเลข run จาก §9.4/§9.6 โดยไม่เทียบกับตารางนี้** (§9.4 = รายละเอียดรอบ 1 · §9.6 = รายละเอียดรอบ 2)
