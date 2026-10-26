@@ -7,7 +7,7 @@ import { useState, useEffect } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import type { Product, ProductCategory, SameDayOrderPayload, PreOrderPayload, AvailabilityState, OrderMode, DeliveryRound } from '@/types'
 import { getProducts, getCategories, getDeliveryRounds } from '@/lib/bmbAdminApi_products'
-import { buildHeadingGroups, headingChips, saleModeOfCategory } from '@/lib/catalogStructure'
+import { buildHeadingGroups, headingChips, menuTabItems } from '@/lib/catalogStructure'
 import { getProductScheduleMap, type ProductScheduleMap } from '@/lib/productSchedule'
 import { useCartStore } from '@/store/cartStore'
 import { showToast } from '@/components/ui/ToastContainer'
@@ -16,6 +16,8 @@ import { describeCouponResult } from '@/lib/promotionClient'
 import { FoodMenuCard } from '@/components/FoodMenuCard'
 import { MascotBadge } from '@/components/MascotBadge'
 import { runOrderBuilder } from '@/lib/orderEntry'
+import { deriveOrderMode } from '@/lib/talkToBite'
+import { scrollMainToTop } from '@/lib/scrollTo'
 
 const CATEGORY_ICONS = { all: '\uD83D\uDF3D', dish: '\uD83C\uDF5C', rice: '\uD83C\uDF5A', curry: '\uD83C\uDF5B', drink: '\uD83E\uDD64', dessert: '\uD83C\uDF70' }
 
@@ -40,6 +42,8 @@ export function MenuPage() {
       else p.set('category', catId)
       return p
     }, { replace: true })
+    // L-3: เลือกหัวข้อแล้วเลื่อนขึ้นบนเห็นหัวข้อ/รายการใหม่ (ไม่งั้นค้างมุมเก่า = นิ่ง)
+    scrollMainToTop()
   }
 
   // ✓ Owner 2026-10-18: แท็บโหมด = มุมมองของ "ทั้งหมด" — กดแท็บแล้วออกจากหัวข้อที่เลือก
@@ -53,6 +57,8 @@ export function MenuPage() {
       p.set('tab', t)
       return p
     }, { replace: true })
+    // L-3: สลับแท็บแล้วเลื่อนขึ้นบนเห็นรายการโหมดใหม่ทันที
+    scrollMainToTop()
   }
 
   useEffect(() => {
@@ -165,6 +171,12 @@ export function MenuPage() {
   // (ไม่มีการ insert ตาราง pre_orders จากหน้าเมนูเอง)
   const handlePreOrder = (payload: PreOrderPayload) => {
     console.log('[Log#pre-order]', payload)
+    // L-8 (N-4 #8 · Owner 2026-10-26): pre-order-only ที่ยังไม่ลงปฏิทิน/เลยรอบ → ห้ามเข้า builder
+    const preProduct = products.find((p) => p.id === payload.productId)
+    if (preProduct && deriveOrderMode(preProduct) === 'PRE_ORDER' && !scheduleMap[preProduct.id]) {
+      showToast('เมนูนี้ยังไม่ลงปฏิทินรอบถัดไป — ยังจองไม่ได้', 'warning')
+      return
+    }
     runOrderBuilder({
       productId: payload.productId,
       products,
@@ -188,14 +200,17 @@ export function MenuPage() {
     })
   }
 
-  // ปุ่มกรองหัวข้อเมนู — กติกาเดียวกับหน้าแรก (หัวข้อว่าง = ซ่อน)
-  // Owner (2026-10-25): หมวดโหมดขาย = ความหมายเดียวกับแท็บ 🍽️ วันนี้ / 📅 จองล่วงหน้า
-  // → ไม่โชว์ซ้ำในแถว chips (หัวข้อเซกชันด้านล่างยังอยู่ครบ + deep-link ?category= ใช้ได้ตามเดิม)
-  const chips = headingChips(categories, products).filter((c) => saleModeOfCategory(c) === 'auto')
+  // ปุ่มกรองหัวข้อเมนู — L-4 (N-4 #4 · Owner 2026-10-26): "แสดงครบทุกหัวข้อ"
+  // → chips โชว์ทุกหัวข้อที่มีสินค้า รวมหมวดโหมดขาย (ที่ render เป็น section ด้านล่างด้วย)
+  // ให้แถวบนกระโดดได้ครบทุก section — เดิมกรองเฉพาะ auto ทำให้หัวข้อหมวดโหมดหายจากแถบบน
+  // (L-7: ลำดับ = displayRank → ส่งวันนี้ → จองล่วงหน้า → สุขภาพ → ...)
+  const chips = headingChips(categories, products)
   // ✅ Phase 3B: canonical mode columns (migration 023) — alias fallback kept.
-  const sameDayCount = products.filter(p => (p.available_same_day ?? !p.is_preorder) && p.is_available).length
-  // R5c: จำนวนเมนู "จองล่วงหน้า" = เมนูที่อยู่ในปฏิทินแอดมิน (มีป้ายวันจัดส่ง) เท่านั้น
-  const preOrderCount = products.filter(p => !!scheduleMap[p.id]).length
+  // L-4: ป้ายตัวเลขบนแท็บ = จำนวนที่แท็บนั้น "แสดงจริง" (สูตรเดียวกับ list —
+  // เดิมนับคนละสูตร: same-day นับเฉพาะ is_available แต่ list โชว์หมด · pre-order
+  // นับเฉพาะเมนูปฏิทิน ทั้งที่ Feature A โชว์ทั้งแท็บ → ตัวเลขเพี้ยน)
+  const sameDayCount = menuTabItems(products, 'same-day', searchQuery).length
+  const preOrderCount = menuTabItems(products, 'pre-order', searchQuery).length
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-6 bg-brand-bg min-h-screen">
@@ -275,6 +290,7 @@ export function MenuPage() {
                     product={product}
                     category={category}
                     mode={mode}
+                    tab={menuTab}
                     availability={product.is_available ? 'available' : 'sold_out'}
                     scheduledDate={schedDate}
                     preorderExpired={preorderExpired}

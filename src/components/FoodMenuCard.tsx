@@ -14,6 +14,9 @@ interface FoodMenuCardProps {
   product: Product
   category?: ProductCategory
   mode: OrderMode
+  /** L-4: แท็บโหมดที่การ์ดอยู่จริงบน /menu — pre-order tab ต้องโชว์ปุ่มจอง
+   *  (ทั้งเมนูปฏิทิน + สินค้าทั่วไป ride-along) ไม่ใช่ปุ่ม "สั่งเลยวันนี้" */
+  tab?: 'same-day' | 'pre-order'
   availability: AvailabilityState
   onSameDayOrder: (p: SameDayOrderPayload) => void
   onPreOrder: (p: PreOrderPayload) => void
@@ -32,7 +35,7 @@ const AVAIL = {
   delivery_unavailable: 'ส่งไม่ถึงตอนนี้'
 } as const
 
-export function FoodMenuCard({ product, category, mode, availability, onSameDayOrder, onPreOrder, scheduledDate, preorderExpired = false }: FoodMenuCardProps) {
+export function FoodMenuCard({ product, category, mode, tab, availability, onSameDayOrder, onPreOrder, scheduledDate, preorderExpired = false }: FoodMenuCardProps) {
   const imageUrl = product.image_url ?? ''
   const avail = availability as keyof typeof AVAIL
   const isAvail = availability === 'available' || availability === 'limited'
@@ -40,6 +43,11 @@ export function FoodMenuCard({ product, category, mode, availability, onSameDayO
   const desc = product.description ?? ''
   const price = Number(product.price) ?? 0
   const prep = Number(product.prep_minutes) ?? 15
+  // L-4 (N-4 #4): ในแท็บจองล่วงหน้า การ์ดทุกใบต้องแสดงปุ่มจอง (เมนูปฏิทิน = เปิดจอง ·
+  // สินค้าทั่วไป = ride-along เข้ารอบเดียวกัน per Feature A) — ห้ามโชว์ปุ่ม "สั่งเลยวันนี้"
+  // ปนอยู่ (โหมดผิด) · แท็บวันนี้ = คงพฤติกรรมเดิมทุกประการ
+  const preOrderTab = (tab ?? (mode === 'pre-order' ? 'pre-order' : 'same-day')) === 'pre-order'
+  const preorderCapable = product.available_preorder ?? product.is_preorder
 
   const handleSameDay = () => {
     if (!isAvail) return
@@ -126,8 +134,9 @@ export function FoodMenuCard({ product, category, mode, availability, onSameDayO
       {/* ============================================ */}
       <div className="w-full px-5 pb-5 flex flex-col gap-2">
         
-        {/* Same-day Order Button — canonical availability (migration 023) */}
-        {(product.available_same_day ?? !product.is_preorder) && isAvail && (
+        {/* Same-day Order Button — canonical availability (migration 023)
+            L-4: ซ่อนในแท็บจองล่วงหน้า (แท็บนั้นต้องโชว์เฉพาะปุ่มจอง) */}
+        {(product.available_same_day ?? !product.is_preorder) && isAvail && !preOrderTab && (
           <button 
             onClick={handleSameDay} data-testid="same-day-order" 
             disabled={!isAvail}
@@ -137,20 +146,48 @@ export function FoodMenuCard({ product, category, mode, availability, onSameDayO
           </button>
         )}
 
-        {/* Pre-order Button — R5c (Owner 2026-10-23): เฉพาะการ์ดที่มี "ป้ายปฏิทิน"
-            (เมนูจากปฏิทินแอดมิน) เท่านั้น — ไม่มีพรีออเดอร์วันอิสระ */}
-        {scheduledDate ? (
+        {/* Pre-order area — R5c (Owner 2026-10-23): เฉพาะการ์ดที่มี "ป้ายปฏิทิน" (เมนูจาก
+            ปฏิทินแอดมิน) เท่านั้น — ไม่มีพรีออเดอร์วันอิสระ
+            L-4 ในแท็บจองล่วงหน้า: สินค้าทั่วไป (ไม่มีป้ายปฏิทิน) = ride-along → ปุ่มจองกดได้
+            L-8 (N-4 #8): เมนูปฏิทินที่ยังไม่ลง/เลยรอบ = btn-locked (สีเทา + กดไม่ได้) */}
+        {preOrderTab ? (
+          preorderCapable ? (
+            scheduledDate ? (
+              <button
+                onClick={handlePreOrder} data-testid="pre-order-btn"
+                disabled={preorderExpired}
+                className={`w-full border-2 text-brand-primary rounded-xl py-3 font-semibold text-sm transition-all duration-200 ${preorderExpired ? 'btn-locked' : 'border-brand-primary/40 hover:bg-brand-primary/10 active:bg-brand-primary/20'}`}
+              >
+                {preorderExpired ? '📅 หมดเวลาจอง (Out of stock)' : '📅 จองล่วงหน้า'}
+              </button>
+            ) : (
+              <button
+                type="button" disabled data-testid="pre-order-btn-unavailable"
+                className="w-full border-2 rounded-xl py-3 font-semibold text-sm btn-locked"
+              >
+                📅 ยังไม่ลงปฏิทินรอบถัดไป (ยังจองไม่ได้)
+              </button>
+            )
+          ) : isAvail ? (
+            <button
+              onClick={handlePreOrder} data-testid="pre-order-btn"
+              className="w-full border-2 border-brand-primary/40 text-brand-primary rounded-xl py-3 font-semibold text-sm hover:bg-brand-primary/10 active:bg-brand-primary/20 transition-all duration-200"
+            >
+              📅 จองล่วงหน้า (ร่วมรอบ)
+            </button>
+          ) : null
+        ) : scheduledDate ? (
           <button 
             onClick={handlePreOrder} data-testid="pre-order-btn" 
             disabled={preorderExpired}
-            className="w-full border-2 border-brand-primary/40 text-brand-primary rounded-xl py-3 font-semibold text-sm hover:bg-brand-primary/10 active:bg-brand-primary/20 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+            className={`w-full border-2 text-brand-primary rounded-xl py-3 font-semibold text-sm transition-all duration-200 ${preorderExpired ? 'btn-locked' : 'border-brand-primary/40 hover:bg-brand-primary/10 active:bg-brand-primary/20'}`}
           >
             {preorderExpired ? '📅 หมดเวลาจอง (Out of stock)' : '📅 จองล่วงหน้า'}
           </button>
-        ) : (product.available_preorder ?? product.is_preorder) ? (
+        ) : preorderCapable ? (
           <button 
             type="button" disabled data-testid="pre-order-btn-unavailable"
-            className="w-full border-2 border-brand-border text-brand-muted rounded-xl py-3 font-semibold text-sm cursor-not-allowed opacity-60"
+            className="w-full border-2 rounded-xl py-3 font-semibold text-sm btn-locked"
           >
             📅 ยังไม่ลงปฏิทินรอบถัดไป (ยังจองไม่ได้)
           </button>

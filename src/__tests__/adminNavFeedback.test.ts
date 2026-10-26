@@ -69,7 +69,7 @@ describe('Navigation feedback — scroll-top on route change (Layout)', () => {
     // guard: Element.scrollTo บางสภาพแวดล้อม (jsdom) ไม่มี — fallback = scrollTop
     expect(layoutSrc).toContain("if (typeof el.scrollTo === 'function') el.scrollTo({ top: 0 })")
     expect(layoutSrc).toContain('else el.scrollTop = 0')
-    expect(layoutSrc).toContain('}, [location.pathname])')
+    expect(layoutSrc).toContain('}, [location.pathname, location.search])')
   })
 
   it('the scroll window is the Layout <main> container (admin pages render inside it)', () => {

@@ -36,13 +36,15 @@ const PICK_COUNT = 7
 interface FoodTheaterProps {
   /** Real catalog rows already loaded by the page (single source of truth). */
   products: Product[]
+  /** L-8: ProductScheduleMap ของหน้าแรก — ใช้บล็อก pre-order-only ที่ยังไม่ลงปฏิทิน */
+  schedule?: Record<string, string>
   /** Open the existing OrderBuilder (detail + toppings + companions). */
   onCustomize: (payload: SameDayOrderPayload) => void
   /** Pre-order variant → existing OrderBuilder pre-order path. */
   onPreOrder: (payload: PreOrderPayload) => void
 }
 
-export function FoodTheater({ products, onCustomize, onPreOrder }: FoodTheaterProps) {
+export function FoodTheater({ products, schedule = {}, onCustomize, onPreOrder }: FoodTheaterProps) {
   const navigate = useNavigate()
   const customer = useAuthStore((s) => s.customer)
   const cartItems = useCartStore((s) => s.items)
@@ -187,6 +189,11 @@ export function FoodTheater({ products, onCustomize, onPreOrder }: FoodTheaterPr
       showToast('สินค้านี้ยังไม่เปิดให้สั่งในขณะนี้ค่ะ', 'warning')
       return
     }
+    // L-8 (N-4 #8 · Owner 2026-10-26): pre-order-only ที่ยังไม่ลงปฏิทิน → ห้ามกดเพิ่ม
+    if (mode === 'PRE_ORDER' && !schedule[p.id]) {
+      showToast('เมนูนี้ยังไม่ลงปฏิทินรอบถัดไป — ยังจองไม่ได้', 'warning')
+      return
+    }
     const res = useCartStore.getState().addItem(p, quantity, {}, mode)
     if (res === 'added') {
       showToast(`เพิ่ม ${p.name} ลงตะกร้าแล้ว 🛒`)
@@ -205,6 +212,11 @@ export function FoodTheater({ products, onCustomize, onPreOrder }: FoodTheaterPr
       return
     }
     if (mode === 'PRE_ORDER') {
+      // L-8: pre-order-only ที่ยังไม่ลงปฏิทิน → ห้ามเปิด builder จอง
+      if (!schedule[p.id]) {
+        showToast('เมนูนี้ยังไม่ลงปฏิทินรอบถัดไป — ยังจองไม่ได้', 'warning')
+        return
+      }
       onPreOrder({ productId: p.id, quantity: 1, deliveryRoundId: '', scheduledDate: '' })
       return
     }

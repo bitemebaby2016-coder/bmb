@@ -97,13 +97,16 @@ export function Layout({ children, hideBottomNav = false, activeSection = 'home'
   // is `main` (not window), so navigating from a deep position (e.g. admin
   // sidebar item clicked while scrolled down) used to land the new page at the
   // OLD offset — action clicks must always open the task at the top.
+  // L-3 (N-4 #3 · Owner 2026-10-26): เพิ่ม `location.search` — ลิงก์/แท็บที่เปลี่ยน query
+  // บนหน้าเดิม (เช่น footer ?category= ตอนอยู่ /menu แล้ว) ต้องเลื่อนขึ้นบนด้วย
+  // ไม่งั้นจิ้มแล้วนิ่ง ( pathname ไม่เปลี่ยน → effect เดิมไม่ fire )
   // (jsdom ไม่ implement Element.scrollTo — guard + fallback ให้ test render ได้)
   useEffect(() => {
     const el = mainRef.current
     if (!el) return
     if (typeof el.scrollTo === 'function') el.scrollTo({ top: 0 })
     else el.scrollTop = 0
-  }, [location.pathname])
+  }, [location.pathname, location.search])
 
   return (
     <div className="flex flex-col min-h-screen">

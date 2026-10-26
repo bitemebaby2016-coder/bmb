@@ -6,6 +6,7 @@ import { shouldShowAdminLink } from '@/lib/adminUi'
 import { useRiderIdentity } from '@/hooks/useRiderIdentity'
 import { NotificationDropdown } from '@/components/notification/NotificationDropdown'
 import { applyTheme, cycleTheme, getTheme, THEME_LABELS, type ThemeName } from '@/lib/theme'
+import { scrollMainToTop } from '@/lib/scrollTo'
 
 const MOBILE_NAV_LINKS = [
   { path: '/menu', label: 'เมนู' },
@@ -46,6 +47,12 @@ const riderIdentity = useRiderIdentity()
     setMobileMenuOpen(false)
   }
 
+  // L-3 (N-4 #3): จิ้มลิงก์顶部ที่เป็นหน้าปัจจุบันอยู่แล้ว → ไม่มี navigate → Layout ไม่ scroll
+  // → ต้องเลื่อนขึ้นบนเองไม่งั้น "จิ้มแล้วนิ่ง" (ต่างหน้า = pathname เปลี่ยน → Layout จัดการเอง)
+  const scrollIfSamePath = (path: string) => {
+    if (location.pathname === path) scrollMainToTop()
+  }
+
   return (
     <Fragment>
       <header className="relative z-50 bg-brand-surface border-b border-brand-border glass-surface">
@@ -57,10 +64,10 @@ const riderIdentity = useRiderIdentity()
 
         {!isAdminArea && (
           <nav className="hidden md:flex items-center gap-6">
-            <Link to="/menu" className="text-brand-accent hover:text-brand-primary transition-colors font-medium">เมนู</Link>
-            <Link to="/promotions" className="text-brand-accent hover:text-brand-primary transition-colors font-medium">โปรโมชั่น</Link>
-            <Link to="/vote" className="text-brand-accent hover:text-brand-primary transition-colors font-medium">โหวตเมนู</Link>
-            <Link to="/random-menu" className="text-brand-accent hover:text-brand-primary transition-colors font-medium">สุ่มเมนู</Link>
+            <Link to="/menu" onClick={() => scrollIfSamePath('/menu')} className="text-brand-accent hover:text-brand-primary transition-colors font-medium">เมนู</Link>
+            <Link to="/promotions" onClick={() => scrollIfSamePath('/promotions')} className="text-brand-accent hover:text-brand-primary transition-colors font-medium">โปรโมชั่น</Link>
+            <Link to="/vote" onClick={() => scrollIfSamePath('/vote')} className="text-brand-accent hover:text-brand-primary transition-colors font-medium">โหวตเมนู</Link>
+            <Link to="/random-menu" onClick={() => scrollIfSamePath('/random-menu')} className="text-brand-accent hover:text-brand-primary transition-colors font-medium">สุ่มเมนู</Link>
           </nav>
         )}
 
@@ -152,7 +159,7 @@ const riderIdentity = useRiderIdentity()
                   <li key={link.path}>
                     <Link
                       to={link.path}
-                      onClick={closeMobileMenu}
+                      onClick={() => { closeMobileMenu(); scrollIfSamePath(link.path) }}
                       className={`flex items-center px-3 py-3 rounded-xl font-medium transition-colors ${
                         location.pathname === link.path
                           ? 'bg-brand-primary text-white'

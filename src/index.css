@@ -161,6 +161,19 @@ p { color: var(--color-brand-text-secondary); }
 }
 
 .btn-disabled { opacity: 0.5; cursor: not-allowed; pointer-events: none; }
+/* L-8 (N-4 #8 · Owner 2026-10-26): ปุ่มจองที่กดไม่ได้ (ยังไม่ลงปฏิทิน/เลยรอบสั่ง)
+   = สีเทาชัดเจน + ชี้แล้วไม่ใช้มือ — ใช้เฉพาะจุดพรีออเดอร์ที่ถูกล็อก */
+.btn-locked {
+  background: var(--color-brand-border);
+  color: var(--color-brand-muted);
+  border-color: var(--color-brand-border) !important;
+  box-shadow: none !important;
+  opacity: 0.85;
+  cursor: not-allowed;
+  pointer-events: none;
+  filter: grayscale(0.4);
+}
+.btn-locked:hover { transform: none; }
 .badge {
   display: inline-flex;
   align-items: center;

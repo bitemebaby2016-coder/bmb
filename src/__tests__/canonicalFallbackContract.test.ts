@@ -25,8 +25,8 @@ describe('INV-18 — canonical fallback ใน customer ordering surfaces', () =
     }
   })
 
-  it('VotePage.tsx: poll options กรองด้วย canonical fallback — ไม่ใช่ filter raw alias', () => {
-    expect(votePageSrc).toContain('p.available_preorder ?? p.is_preorder')
+  it('VotePage.tsx: poll options กรองเฉพาะ archived — ครบทุกเมนู (Owner L-5 2026-10-26 แทน fallback)', () => {
+    expect(votePageSrc).toContain('!p.archived')
     expect(votePageSrc).not.toContain('products.filter((p: Product) => p.is_preorder)')
   })
 

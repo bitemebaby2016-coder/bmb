@@ -405,6 +405,26 @@ export function TalkToBite({ mode = 'overlay', initialPhase = 'landing', landing
 
   function addToCart(product: Product) {
     const mode: OrderMode = product.available_preorder && !product.available_same_day ? 'PRE_ORDER' : 'SAME_DAY'
+    // L-8 (N-4 #8): pre-order-only ที่ยังไม่ลงปฏิทิน/เลยรอบ → ห้ามกดเพิ่มจากแชตด้วย
+    if (mode === 'PRE_ORDER') {
+      void (async () => {
+        const { getProductScheduleMap } = await import('@/lib/productSchedule')
+        const scheduleMap = await getProductScheduleMap()
+        if (!scheduleMap[product.id]) {
+          showToast('เมนูนี้ยังไม่ลงปฏิทินรอบถัดไป — ยังจองไม่ได้', 'warning')
+          return
+        }
+        const gated = useCartStore.getState().addItem(product, 1, {}, mode)
+        if (gated === 'added') {
+          showToast(`เพิ่ม ${product.name} ลงตะกร้าแล้ว 🛒`)
+          setBiteState('SUCCESS')
+          window.setTimeout(() => setBiteState('IDLE'), 800)
+        } else {
+          showToast('เพิ่มไม่ได้ในตอนนี้ กรุณาลองใหม่ครับ', 'warning')
+        }
+      })()
+      return
+    }
     const res = useCartStore.getState().addItem(product, 1, {}, mode)
     if (res === 'added') {
       showToast(`เพิ่ม ${product.name} ลงตะกร้าแล้ว 🛒`)

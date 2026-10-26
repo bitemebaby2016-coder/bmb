@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { useAuthStore } from '@/store/authStore'
 import { shouldShowAdminLink } from '@/lib/adminUi'
+import { scrollMainToTop } from '@/lib/scrollTo'
 
 const navItems = [
   { path: '/', label: 'หน้าแรก', icon: '🏠' },
@@ -49,6 +50,9 @@ const role = useAuthStore((s) => s.role)
             <Link
               key={item.path}
               to={item.path}
+              // L-3 (N-4 #3): จิ้มแท็บ nav ล่างที่เป็นหน้าปัจจุบัน → ไม่มี navigate
+              // → Layout ไม่ fire → ต้องเลื่อนขึ้นบนเอง (ไม่งั้นจิ้มแล้วนิ่ง)
+              onClick={() => { if (location.pathname === item.path) scrollMainToTop() }}
               className={`flex flex-col items-center gap-1 py-2 px-4 rounded-lg transition-all ${
                 isActive ? 'text-brand-primary bg-brand-bg' : 'text-brand-muted hover:text-brand-primary'
               }`}

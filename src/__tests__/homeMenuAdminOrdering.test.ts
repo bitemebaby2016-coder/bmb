@@ -63,28 +63,28 @@ describe('Feature B — homepage section order + horizontal tab links', () => {
     expect(iAll).toBeGreaterThan(0)
     expect(iSame).toBeGreaterThan(iAll)
     expect(iPre).toBeGreaterThan(iSame)
-    expect(homePageSrc).toContain("scrollIntoView({ behavior: 'smooth', block: 'start' })")
+    expect(homePageSrc).toContain('scrollToSectionOrTop(')
     expect(homePageSrc).toContain('scrollToSection(`home-cat-${cat.id}`)')
   })
 
-  it('ลำดับหมวด pinned = สุขภาพ → เครื่องดื่ม → ของทานเล่น/ผลไม้ → สำเร็จรูป (+ alias ตามคำสั่ง Owner 2026-10-25)', () => {
+  it('ลำดับหมวด = N-4 #7 (Owner 2026-10-26): ส่งวันนี้ → จองล่วงหน้า → สุขภาพ → เครื่องดื่ม → ของทานเล่น/ผลไม้ → สำเร็จรูป (+ alias)', () => {
     expect([...CATEGORY_DISPLAY_ORDER]).toEqual([
+      ['ส่งวันนี้ / Same Day', 'ส่งวันนี้', 'same day'],
+      ['จองล่วงหน้า / พรีออเดอร์', 'พรีออเดอร์', 'จองล่วงหน้า', 'preorder'],
       ['เมนูสุขภาพ'],
       ['เครื่องดื่ม'],
       ['ของทานเล่น / ผลไม้', 'ของหวานลัน / ผลไม้', 'ของกินเล่น / ผลไม้'],
       ['สินค้าสำเร็จรูป', 'เมนูสำเร็จ'],
-      ['ส่งวันนี้ / Same Day', 'ส่งวันนี้', 'same day'],
-      ['จองล่วงหน้า / พรีออเดอร์', 'พรีออเดอร์', 'จองล่วงหน้า', 'preorder'],
     ])
-    expect(categoryDisplayRank('เมนูสุขภาพ')).toBe(0)
-    expect(categoryDisplayRank('เครื่องดื่ม')).toBe(1)
-    expect(categoryDisplayRank('ของทานเล่น / ผลไม้')).toBe(2)
-    expect(categoryDisplayRank('ของทานเล่น/ผลไม้')).toBe(2) // ทนต่อช่องว่าง/สแลช
-    expect(categoryDisplayRank('ของหวานลัน / ผลไม้')).toBe(2) // alias: ชื่อจริงใน DB = ความหมายเดียวกัน
-    expect(categoryDisplayRank('สินค้าสำเร็จรูป')).toBe(3)
-    expect(categoryDisplayRank('เมนูสำเร็จ')).toBe(3) // alias: ชื่อจริงใน DB
-    expect(categoryDisplayRank('ส่งวันนี้ / Same Day')).toBe(4)
-    expect(categoryDisplayRank('จองล่วงหน้า / พรีออเดอร์')).toBe(5)
+    expect(categoryDisplayRank('เมนูสุขภาพ')).toBe(2)
+    expect(categoryDisplayRank('เครื่องดื่ม')).toBe(3)
+    expect(categoryDisplayRank('ของทานเล่น / ผลไม้')).toBe(4)
+    expect(categoryDisplayRank('ของทานเล่น/ผลไม้')).toBe(4) // ทนต่อช่องว่าง/สแลช
+    expect(categoryDisplayRank('ของหวานลัน / ผลไม้')).toBe(4) // alias: ชื่อจริงใน DB = ความหมายเดียวกัน
+    expect(categoryDisplayRank('สินค้าสำเร็จรูป')).toBe(5)
+    expect(categoryDisplayRank('เมนูสำเร็จ')).toBe(5) // alias: ชื่อจริงใน DB
+    expect(categoryDisplayRank('ส่งวันนี้ / Same Day')).toBe(0)
+    expect(categoryDisplayRank('จองล่วงหน้า / พรีออเดอร์')).toBe(1)
     expect(categoryDisplayRank('อื่น ๆ')).toBe(CATEGORY_DISPLAY_ORDER.length) // นอกลิสต์ = ท้ายเสมอ
     expect(catalogSrc).toContain('categoryDisplayRank(a.name) - categoryDisplayRank(b.name)')
   })

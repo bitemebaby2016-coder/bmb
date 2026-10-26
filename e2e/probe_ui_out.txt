@@ -1,0 +1,215 @@
+
+===== L-3 scrollIntoView/scrollTo (18) =====
+src\components\ai\TalkToBite.tsx:191: endRef.current?.scrollIntoView({ behavior: 'smooth' })
+src\components\home\HorizontalCarousel.tsx:61: trackRef.current.scrollTo({ left: 0, behavior: reduced ? 'auto' : 'smooth' })
+src\components\home\HorizontalCarousel.tsx:109: onClick={() => trackRef.current?.scrollTo({ left: i * (trackRef.current?.querySelector('[data-slide]')?.clientWidth ?? 260) + 16 * i, behavi
+src\components\layout\Layout.tsx:104: if (typeof el.scrollTo === 'function') el.scrollTo({ top: 0 })
+src\components\theater\FoodTheater.tsx:142: function scrollTo(i: number) {
+src\components\theater\FoodTheater.tsx:145: el.scrollTo({ left: stepWidth(el) * i, behavior: 'smooth' })
+src\components\theater\FoodTheater.tsx:151: scrollTo(next)
+src\components\VoiceInterface.tsx:24: messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+src\pages\admin\AdminProducts.tsx:49: if (showAddForm) formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+src\pages\admin\AdminProducts.tsx:52: if (showCatForm) catFormRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+src\pages\admin\AdminProducts.tsx:55: if (moveFrom) movePanelRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+src\pages\admin\AdminPromotions.tsx:55: requestAnimationFrame(() => formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }))
+src\pages\HomePage.tsx:285: document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+src\__tests__\adminNavFeedback.test.ts:70: expect(layoutSrc).toContain("if (typeof el.scrollTo === 'function') el.scrollTo({ top: 0 })")
+src\__tests__\homeMenuAdminOrdering.test.ts:66: expect(homePageSrc).toContain("scrollIntoView({ behavior: 'smooth', block: 'start' })")
+src\__tests__\homeMenuAdminOrdering.test.ts:95: expect(adminProductsSrc).toContain('if (showAddForm) formRef.current?.scrollIntoView')
+src\__tests__\homeMenuAdminOrdering.test.ts:96: expect(adminProductsSrc).toContain('if (showCatForm) catFormRef.current?.scrollIntoView')
+src\__tests__\homeMenuAdminOrdering.test.ts:97: expect(adminProductsSrc).toContain('if (moveFrom) movePanelRef.current?.scrollIntoView')
+
+===== L-3 anchor href=# (0) =====
+NONE
+
+===== L-4 top tabs (ส่งวันนี้/จองล่วงหน้า label defs) (25) =====
+src\components\admin\HomePopularManager.tsx:233: {p && productModeOf(p) === 'pre-order' ? 'จองล่วงหน้า' : 'สั่งวันนี้'}
+src\components\home\CategorySections.tsx:42: // (เช่น หมวด "ส่งวันนี้" → ปุ่มตะกร้าอย่างเดียว ไม่มีปุ่มจอง/ปฏิทินซ้อน)
+src\components\layout\Footer.tsx:61: // (Owner 2026-10-18: ปุ่ม "จองล่วงหน้า" ถูกนำออกจากฟุตเตอร์ทุกหน้าตามคำสั่ง —
+src\lib\catalogStructure.ts:69: ['ส่งวันนี้ / Same Day', 'ส่งวันนี้', 'same day'],
+src\lib\catalogStructure.ts:70: ['จองล่วงหน้า / พรีออเดอร์', 'พรีออเดอร์', 'จองล่วงหน้า', 'preorder'],
+src\lib\catalogStructure.ts:136: *   "จองล่วงหน้า" ทุกใบ → handlePreOrder → /checkout?mode=pre-order (เลือกวัน/รอบ
+src\lib\faqContent.ts:38: a: 'ได้! คุณสามารถเลือกเมนูที่ต้องการและกด "จองล่วงหน้า" เพื่อเลือกรอบจัดส่งที่ต้องการ ระบบจะบันทึกการจองไว้และแจ้งเตือนเมื่อถึงเวลาจัดส่ง'
+src\pages\CheckoutPage.tsx:90: // - มีเมนูจากปฏิทินแอดมิน (เพิ่มแบบ "จองล่วงหน้า") ≥ 1 ชิ้น → ทั้งตะกร้า = PRE_ORDER
+src\pages\MenuPage.tsx:197: // R5c: จำนวนเมนู "จองล่วงหน้า" = เมนูที่อยู่ในปฏิทินแอดมิน (มีป้ายวันจัดส่ง) เท่านั้น
+src\store\cartStore.ts:34: * - มีบรรทัดที่เพิ่มแบบ "จองล่วงหน้า" (เมนูจากปฏิทินแอดมิน) ≥ 1 → ทั้งตะกร้า = PRE_ORDER
+src\__tests__\cartIsolationStore.test.ts:5: // - มีบรรทัด "จองล่วงหน้า" (เมนูจากปฏิทินแอดมิน) ≥ 1 → ทั้งตะกร้า = PRE_ORDER
+src\__tests__\checkoutModeLock.test.ts:3: *  - โหมดออเดอร์ = ผลจากเนื้อตะกร้า (มีบรรทัด "จองล่วงหน้า" = PRE_ORDER ทั้งตะกร้า)
+src\__tests__\homeMenuAdminOrdering.test.ts:76: ['ส่งวันนี้ / Same Day', 'ส่งวันนี้', 'same day'],
+src\__tests__\homeMenuAdminOrdering.test.ts:77: ['จองล่วงหน้า / พรีออเดอร์', 'พรีออเดอร์', 'จองล่วงหน้า', 'preorder'],
+src\__tests__\homePreOrderModeGuard.test.ts:80: // R5c: ปุ่ม "จองล่วงหน้า" บนการ์ดต้องมีป้ายปฏิทิน — mock วันเมนูให้สินค้า pre-1
+src\__tests__\homeSectionModeCta.test.ts:70: expect(cta.textContent).not.toContain('จองล่วงหน้า')
+src\__tests__\homeSectionModeCta.test.ts:78: it("section pre_order: การ์ดมีป้ายปฏิทิน → 'จองล่วงหน้า' เท่านั้น + click เรียก onPreOrder เท่านั้น", async () => {
+src\__tests__\homeSectionModeCta.test.ts:80: expect(cta.textContent).toContain('จองล่วงหน้า')
+src\__tests__\homeSectionModeCta.test.ts:104: expect(a.cta.textContent).toContain('จองล่วงหน้า')
+src\__tests__\homeSectionModeCta.test.ts:150: it("mode=same_day: สินค้า dual ไม่มีปุ่ม 'จองล่วงหน้า'", async () => {
+src\__tests__\homeSectionModeCta.test.ts:229: it("maps ชื่อหมวด → SaleMode: 'ส่งวันนี้' → same_day · 'จองล่วงหน้า/พรีออเดอร์' → pre_order · อื่น ๆ → auto", () => {
+src\__tests__\mascotClosed.test.ts:133: expect(s.message).toContain('จองล่วงหน้า')
+src\__tests__\preOrderEntry.test.ts:17: { id: 'cat-1', name: 'ส่งวันนี้', slug: 'same-day' },
+src\__tests__\preOrderEntry.test.ts:24: expect(preOrderEntryPath([{ id: 'cat-1', name: 'ส่งวันนี้', slug: 'same-day' }])).toBe('/menu')
+src\__tests__\storeStatusWindow.test.ts:56: expect(s.message).toContain('จองล่วงหน้า')
+
+===== L-7 section ids / cat anchors (24) =====
+src\components\home\CategorySections.tsx:167: <section key={cat.id} id={`home-cat-${cat.id}`} className={`${grouped ? 'mb-8' : 'mb-10'} scroll-mt-20`} aria-labelledby={headingId}>
+src\components\home\CategorySections.tsx:177: className="section-float-mascot"
+src\components\order\OrderBuilderModal.tsx:154: <h4 className="ob-section-title">➕ Toppings / Add-ons</h4>
+src\components\order\OrderBuilderModal.tsx:211: <h4 className="ob-section-title">✨ You might also like</h4>
+src\pages\admin\AdminMarketing.tsx:1198: <div className="card space-y-3" data-testid="gr-catalog-panel">
+src\pages\admin\AdminMarketing.tsx:1210: <ul className="space-y-2" data-testid="gr-catalog-list">
+src\pages\admin\AdminMarketing.tsx:1220: <button className="btn btn-secondary text-xs" onClick={() => editRow(row)} data-testid={`gr-catalog-edit-${row.id}`}>แก้ไข</button>
+src\pages\admin\AdminMarketing.tsx:1236: onChange={(e) => setName(e.target.value)} data-testid="gr-catalog-name" />
+src\pages\admin\AdminMarketing.tsx:1244: onChange={(e) => setPointsCost(e.target.value === '' ? '' : Number(e.target.value))} data-testid="gr-catalog-points" />
+src\pages\admin\AdminMarketing.tsx:1257: <button className="btn btn-primary" onClick={() => void handleSave()} disabled={busy} data-testid="gr-catalog-save">
+src\pages\admin\AdminProducts.tsx:421: <div ref={catFormRef} data-testid="category-form-frame" className="card p-4 mb-3 bg-white scroll-mt-20">
+src\pages\admin\AdminProducts.tsx:473: data-testid={`cat-customer-visibility-${cat.id}`}
+src\pages\admin\AdminProducts.tsx:482: <button onClick={() => handleDeleteCategory(cat)} className="btn btn-outline text-xs text-red-500" data-testid={`admin-delete-category-${cat
+src\pages\CheckoutPage.tsx:961: <span className="text-xs text-brand-muted" data-testid="location-status">
+src\pages\CheckoutPage.tsx:980: data-testid="confirm-location"
+src\pages\HomePage.tsx:372: data-testid={`home-tab-cat-${cat.id}`}
+src\pages\MenuPage.tsx:260: <h3 id={`catsec-${gi}`} className="font-semibold text-brand-accent mb-2">{category.icon ? `${category.icon} ` : ''}{category.name}</h3>
+src\pages\NotificationCenterPage.tsx:203: <section key={c} data-testid={`notif-section-${c}`}>
+src\pages\RewardsPage.tsx:160: <p className="text-sm text-brand-muted" data-testid="catalog-load-error">
+src\pages\RewardsPage.tsx:164: <p className="text-sm text-brand-muted" data-testid="catalog-empty">
+src\pages\RewardsPage.tsx:172: <div key={reward.id} className="card flex items-center gap-4" data-testid={`catalog-item-${reward.id}`}>
+src\__tests__\adminCategoryLifecycle.test.ts:35: expect(adminProductsSrc).toContain('data-testid={`cat-customer-visibility-${cat.id}`}')
+src\__tests__\homeMenuAdminOrdering.test.ts:99: expect(adminProductsSrc).toContain('data-testid="category-form-frame"')
+src\__tests__\homeSectionModeCta.test.ts:48: /** สินค้า dual-mode (มีสิทธิ์ทั้งสองโหมด) — ใช้ตรวจ section-wins ทุกกรณี */
+
+===== L-8 pre-order disable (565) =====
+src\components\admin\HomePopularManager.tsx:154: <button onClick={() => void save()} disabled={saving || loading} className="btn btn-success text-sm">
+src\components\admin\HomePopularManager.tsx:212: <button onClick={addPicked} className="btn btn-primary text-sm" disabled={!pickId}>+ เพิ่ม</button>
+src\components\admin\HomePopularManager.tsx:239: <button onClick={() => pickImage(id)} className="btn btn-outline text-xs" disabled={uploading} data-testid="popular-change-image">เปลี่ยนรูป
+src\components\admin\OrderPolicyPanel.tsx:61: ค่าเหล่านี้ถูกใช้โดยเซิร์ฟเวอร์จริงตอนสั่งซื้อ (คัทออฟพรีออเดอร์ = ปิดรับก่อนเวลาส่งตามจำนวน ชม. ที่ตั้ง)
+src\components\admin\OrderPolicyPanel.tsx:62: {' · '}<b>ลำดับกันชน (audit D2):</b> คัทออฟต่อรอบ (<code>pre_order_cutoff</code> ที่หน้า{' '}
+src\components\admin\OrderPolicyPanel.tsx:64: — ถ้ารอบไม่ได้ตั้งไว้ จึงใช้ <code>cutoff_hours</code> ตรงนี้ (fallback → ป้าย legacy)
+src\components\admin\OrderPolicyPanel.tsx:84: <button onClick={() => void handleSave()} disabled={saving} className="btn btn-success mt-4" data-testid="order-policy-save">
+src\components\admin\SlipReviewPanel.tsx:68: disabled={!check.confirmable}
+src\components\admin\ToggleSwitch.tsx:26: disabled={disabled}
+src\components\admin\TransportAvailabilityBoard.tsx:54: {r.status === 'active' ? 'เปิดรับ' : 'ปิดรับ'}
+src\components\ai\ProductCard.tsx:48: {!product.available_same_day && !!product.available_preorder && (
+src\components\ai\ProductCard.tsx:54: disabled={denied}
+src\components\ai\TalkToBite.tsx:407: const mode: OrderMode = product.available_preorder && !product.available_same_day ? 'PRE_ORDER' : 'SAME_DAY'
+src\components\ai\TalkToBite.tsx:426: const mode: OrderMode = p.available_preorder && !p.available_same_day ? 'PRE_ORDER' : 'SAME_DAY'
+src\components\ai\TalkToBite.tsx:856: disabled={m.applied}
+src\components\ai\TalkToBite.tsx:891: disabled={typing}
+src\components\ai\TalkToBite.tsx:912: disabled={typing}
+src\components\ai\TalkToBite.tsx:919: disabled={!input.trim() || typing}
+src\components\dashboard\AdminControl.tsx:42: const { dailyQuota, cutoffHours } = config.delivery
+src\components\dashboard\AdminControl.tsx:73: cutoffHours,
+src\components\dashboard\AdminControl.tsx:104: <>สถานะรับออเดอร์ (ปิดรับล่วงหน้า {cutoffHours} ชม.):{' '}
+src\components\delivery\DistanceChecker.tsx:88: ร้านปิดรับงาน Bite Drive ชั่วคราว — ติดต่อร้านเพื่อสอบถามวิธีจัดส่งที่เปิดรับ
+src\components\FoodMenuCard.tsx:133: disabled={!isAvail}
+src\components\FoodMenuCard.tsx:145: disabled={preorderExpired}
+src\components\FoodMenuCard.tsx:150: ) : (product.available_preorder ?? product.is_preorder) ? (
+src\components\home\HomeProductCard.tsx:91: disabled={soldOut || (isPreOrderCta && !preOrderReady)}
+src\components\home\ReviewCarouselSection.tsx:23: const mode: OrderMode = (product?.available_preorder ?? product?.is_preorder) ? 'pre-order' : 'same-day'
+src\components\home\StoreStatusStrip.tsx:21: {/* D5 (Owner 2026-10-25 / 148): เซมเดย์ไม่มีคัทออฟ — ห้ามโชว์ "ปิดรับ HH:MM" จากค่าเดิมอีก */}
+src\components\payment\CardPaymentForm.tsx:97: <button onClick={() => void handlePay()} disabled={busy || !stripe} data-testid="pay-card" className="btn btn-success w-full text-lg py-3 di
+src\components\payment\CardPaymentForm.tsx:193: <input type="text" data-testid="omise-card-name" autoComplete="cc-name" placeholder="ชื่อบนบัตร" value={fields.name} onChange={upd('name')} 
+src\components\payment\CardPaymentForm.tsx:194: <input type="text" data-testid="omise-card-number" autoComplete="cc-number" inputMode="numeric" placeholder="เลขบัตร" value={fields.number} 
+src\components\payment\CardPaymentForm.tsx:196: <input type="text" data-testid="omise-card-exp" autoComplete="cc-exp-month" inputMode="numeric" placeholder="MM" maxLength={2} value={fields
+src\components\payment\CardPaymentForm.tsx:197: <input type="text" data-testid="omise-card-year" autoComplete="cc-exp-year" inputMode="numeric" placeholder="YYYY" maxLength={4} value={fiel
+src\components\payment\CardPaymentForm.tsx:198: <input type="text" data-testid="omise-card-cvc" autoComplete="cc-csc" inputMode="numeric" placeholder="CVC" maxLength={4} value={fields.cvc}
+src\components\payment\CardPaymentForm.tsx:200: <input type="text" data-testid="omise-card-postal" autoComplete="postal-code" placeholder="รหัสไปรษณีย์ (ถ้ามี)" value={fields.postal} onCha
+src\components\payment\CardPaymentForm.tsx:203: <button onClick={() => void handlePay()} disabled={busy} data-testid="pay-card" className="btn btn-success w-full text-lg py-3 disabled:opac
+src\components\ReferralBox.tsx:145: disabled={busy}
+src\components\rider\RiderPod.tsx:124: <button type="button" onClick={handleCameraCapture} disabled={capturing} className="btn btn-primary px-3 py-2 rounded-xl text-sm disabled:op
+src\components\rider\RiderPod.tsx:151: }} disabled={gpsLoading} className="btn bg-slate-100 text-slate-700 px-3 py-2 rounded-xl text-sm disabled:opacity-50">
+src\components\rider\RiderPod.tsx:164: <button type="button" disabled={!photoUrl || !gps} onClick={handleConfirm} className="btn btn-primary flex-1 rounded-xl disabled:opacity-50"
+src\components\theater\FoodTheater.tsx:338: disabled={index === 0}
+src\components\theater\FoodTheater.tsx:362: disabled={index >= picks.length - 1}
+src\components\theater\TheaterCards.tsx:56: disabled={denied}
+src\components\theater\TheaterCards.tsx:83: const preorderOnly = !!(product.available_preorder && !product.available_same_day)
+src\components\theater\TheaterCards.tsx:125: disabled={denied || qty <= 1}
+src\components\theater\TheaterCards.tsx:141: disabled={denied || qty >= 20}
+src\components\theater\TheaterCards.tsx:150: disabled={denied}
+src\components\theater\TheaterCards.tsx:159: disabled={denied}
+src\components\VoiceInterface.tsx:122: disabled={isListening}
+src\components\VoiceInterface.tsx:127: disabled={isSpeaking}
+src\config\platformConfig.ts:4: // Every layout value, distance, quota, cutoff, and theme is driven by this
+src\config\platformConfig.ts:34: /** Canonical: order_policy.cutoff_hours — enforce_pre_order_window/cancel อ่านอันเดียวกัน (FC-4) */
+src\config\platformConfig.ts:35: cutoffHours: number
+src\config\platformConfig.ts:80: cutoffHours: ORDER_POLICY_DEFAULTS.cutoff_hours,
+src\lib\availabilityEngine.ts:6: //                 && (TargetDeliveryTime - CurrentTime >= cutoff_hours)
+src\lib\availabilityEngine.ts:7: // daily_quota and cutoff_hours derive from the active platform config, so this
+src\lib\availabilityEngine.ts:10: export type AvailabilityReason = 'available' | 'quota_full' | 'cutoff_passed' | 'unknown'
+src\lib\availabilityEngine.ts:20: cutoffHours: number
+src\lib\availabilityEngine.ts:26: /** Hours remaining until the cutoff (negative = passed). */
+src\lib\availabilityEngine.ts:39: *   cutoff check  — target delivery must be at least `cutoffHours` ahead of now.
+
+===== VotePage thai candidates (582) =====
+src\App.tsx:136: // 146: sync เข้า store ด้วย — AdminNav ใช้ role นี้ซ่อนเมนูตามสิทธิ์ (per-role nav)
+src\components\admin\AdminHubs.tsx:8: // ฯลฯ) ยังเปิดได้จาก URL ตรง (bookmark ไม่ตาย) แต่ถูกถอดออกจากเมนู
+src\components\admin\AdminHubs.tsx:126: //   MenuHub = เมนู/สินค้า + ตารางเมนูรอบพิเศษ (menu_schedule 7 วัน/14 เมนู — ชุดเดียวกัน)
+src\components\admin\AdminHubs.tsx:132: title="เมนูและตารางเมนู"
+src\components\admin\AdminHubs.tsx:135: { key: 'products', label: 'เมนู/สินค้า', icon: '🍽️', render: () => <AdminProducts /> },
+src\components\admin\AdminHubs.tsx:136: { key: 'schedule', label: 'ตารางเมนูรอบพิเศษ', icon: '📅', render: () => <AdminMenuSchedule /> },
+src\components\admin\AdminNav.tsx:157: aria-label={collapsed ? 'ขยายเมนูด้านข้าง' : 'ย่อเมนูด้านข้าง'}
+src\components\admin\AdminNav.tsx:175: aria-label="เปิดเมนูแอดมิน"
+src\components\admin\AdminNav.tsx:180: <span>เมนู</span>
+src\components\admin\AdminNav.tsx:196: aria-label="ปิดเมนูแอดมิน"
+src\components\admin\AdminNav.tsx:205: aria-label="เมนูแอดมิน"
+src\components\admin\AdminNav.tsx:213: aria-label="ปิดเมนูแอดมิน"
+src\components\admin\HomePopularManager.tsx:2: // Bite Me Baby — แผงแอดมิน "เมนูยอดนิยม" + ข้อความหน้าเว็บ
+src\components\admin\HomePopularManager.tsx:4: // - เลือกเมนูจาก "ทุกกลุ่มเมนู/ทุกหมวด" (รวมเมนูจองล่วงหน้า) มาโชว์ใน section
+src\components\admin\HomePopularManager.tsx:5: //   "เมนูยอดนิยม" หน้าแรก — ใช้ dropdown เลือก + ปุ่มเปิด-ปิดแต่ละเมนู
+src\components\admin\HomePopularManager.tsx:42: // A3 (UX fix 2026-10-15): รูปเมนูต่อรายการ — thumbnail + ปุ่มเปลี่ยนรูป (อัปเดต products.image_url)
+src\components\admin\HomePopularManager.tsx:64: // dropdown จัดกลุ่มตาม "หัวข้อเมนู" (หมวดหมู่) → เมนู (รวมเมนูจองล่วงหน้า)
+src\components\admin\HomePopularManager.tsx:79: showToast('เมนูนี้อยู่ในรายการแล้ว', 'info')
+src\components\admin\HomePopularManager.tsx:110: // A3: เปลี่ยนรูปเมนูในรายการยอดนิยม — Storage → media_assets → products.image_url
+src\components\admin\HomePopularManager.tsx:135: showToast('บันทึกรูปลงเมนูไม่สำเร็จ — ลองใหม่อีกครั้ง', 'error')
+src\components\admin\HomePopularManager.tsx:139: showToast('เปลี่ยนรูปเมนูแล้ว — ลูกค้าเห็นผลทันที', 'success')
+src\components\admin\HomePopularManager.tsx:147: showToast(okA && okB ? 'บันทึกเมนูยอดนิยม + ข้อความแล้ว — ลูกค้าเห็นผลทันที' : 'บันทึกไม่สำเร็จ ลองอีกครั้ง', okA && okB ? 'success' : 'erro
+src\components\admin\HomePopularManager.tsx:153: <h3 className="text-lg font-bold text-brand-accent">🔥 เมนูยอดนิยม (หน้าแรก)</h3>
+src\components\admin\HomePopularManager.tsx:159: เลือกเมนูจากทุกกลุ่ม (รวมเมนูจองล่วงหน้า) มาโชว์ในช่องแรกของหน้าแรก — ระบบสลับสับเปลี่ยนรายการให้อัตโนมัติ · เปลี่ยนรูปเมนูได้จากปุ่ม "เปลี่
+src\components\admin\HomePopularManager.tsx:170: หัวข้อช่อง (ค่าเริ่มต้น: เมนูยอดนิยม)
+src\components\admin\HomePopularManager.tsx:175: placeholder="เมนูยอดนิยม"
+src\components\admin\HomePopularManager.tsx:185: {SHOW_COUNT_CHOICES.map((n) => <option key={n} value={n}>{n} เมนู</option>)}
+src\components\admin\HomePopularManager.tsx:192: label="สลับสับเปลี่ยนเมนูอัตโนมัติ"
+src\components\admin\HomePopularManager.tsx:198: {/* เลือกเมนูจาก dropdown (ทุกกลุ่ม รวมเมนูจองล่วงหน้า) */}
+src\components\admin\HomePopularManager.tsx:201: <option value="">— เลือกเมนูเพื่อเพิ่ม (จากทุกกลุ่ม) —</option>
+src\components\admin\HomePopularManager.tsx:215: {/* รายการเมนูยอดนิยม — ปุ่มเปิด-ปิดต่อเมนู */}
+src\components\admin\HomePopularManager.tsx:248: ยังไม่ได้เลือกเมนู — ถ้าไม่เลือก ระบบจะสลับเมนูแนะนำจากทุกกลุ่มมาโชว์ให้อัตโนมัติ
+src\components\ai\TalkToBite.tsx:222: // เข้าแชทครั้งแรก → ยกเมนูวันนี้ขึ้นมาให้เลือก/เพิ่มลงตะกร้าได้ทันที
+src\components\ai\TalkToBite.tsx:240: pushAssistant('เดี๋ยวครับ Bite เลือกจากเมนูจริงของวันนี้ให้เลย 🍊')
+src\components\ai\TalkToBite.tsx:246: pushAssistant('วันนี้ยังไม่มีเมนูที่สั่งได้ครับ แนะนำลองแวะมาอีกที หรือดูที่หน้าเมนูแทนครับ 🙏')
+src\components\ai\TalkToBite.tsx:248: push({ kind: 'products', id: nextId(), intro: 'เมนูที่ Bite แนะนำจากของจริงวันนี้ครับ:', products })
+src\components\ai\TalkToBite.tsx:252: pushAssistant('ขอโทษครับ ดึงเมนูไม่สำเร็จ กรุณาลองใหม่นะครับ 🙏')
+src\components\ai\TalkToBite.tsx:259: // 🔥 เมนูขายดีวันนี้ — real featured/available picks (proxy for best sellers)
+src\components\ai\TalkToBite.tsx:268: pushAssistant('วันนี้ยังไม่มีเมนูขายได้ครับ เดี๋ยวแวะมาอีกทีนะครับ 🙏')
+src\components\ai\TalkToBite.tsx:270: push({ kind: 'products', id: nextId(), intro: 'เมนูขายดีวันนี้ รีบจองกันก่อนหมด:', products })
+src\components\ai\TalkToBite.tsx:274: pushAssistant('ขอโทษครับ ดึงเมนูไม่สำเร็จ ลองใหม่นะครับ 🙏')
+src\components\ai\TalkToBite.tsx:284: pushAssistant('เดี๋ยวครับ Bite หยิบเมนูที่คุณชอบมาให้เลย ❤️')
+src\components\ai\TalkToBite.tsx:291: pushAssistant('ยังไม่เจอหมวดของโปรดเลยครับ ขอแนะนำเมนูขายดีแทนนะครับ 🙏')
+src\components\ai\TalkToBite.tsx:293: push({ kind: 'products', id: nextId(), intro: 'เมนูในแนวที่คุณชอบครับ:', products })
+src\components\ai\TalkToBite.tsx:297: pushAssistant('ขอโทษครับ ดึงเมนูไม่สำเร็จ ลองใหม่นะครับ 🙏')
+src\components\ai\TalkToBite.tsx:304: // 🍽️ เมนูทั้งหมดในแชท — real catalog presented as add-to-cart cards
+src\components\ai\TalkToBite.tsx:312: say('นี่คือเมนูทั้งหมดที่สั่งได้วันนี้ครับ กดปุ่ม 🛒 บนเมนูเพื่อเพิ่มลงตะกร้าได้เลย:')
+src\components\ai\TalkToBite.tsx:318: say('วันนี้ยังไม่มีเมนูที่สั่งได้ครับ แนะนำลองแวะมาอีกที หรือดูที่หน้าเมนูแทนครับ 🙏')
+src\components\ai\TalkToBite.tsx:320: push({ kind: 'products', id: nextId(), intro: 'เมนูวันนี้ — กดเพิ่มลงตะกร้าได้เลย:', products })
+src\components\ai\TalkToBite.tsx:324: say('ขอโทษครับ ดึงเมนูไม่สำเร็จ กรุณาลองใหม่นะครับ 🙏')
+src\components\ai\TalkToBite.tsx:346: pushAssistant('ยังไม่มีประวัติออเดอร์ที่ร้านนี้เลยครับ อยากให้ Bite แนะนำเมนูแทนไหมครับ? 🍊')
+src\components\ai\TalkToBite.tsx:352: pushAssistant('ออเดอร์เดิมส่วนใหญ่หมดแล้วครับ เลยยังสั่งซ้ำไม่ได้ ขอแนะนำเมนูอื่นที่ยังมีนะครับ 🙏')
+src\components\ai\TalkToBite.tsx:371: pushAssistant('ขอโทษครับ อ่านออเดอร์ไม่สำเร็จ กรุณาลองใหม่นะครับ 🙏')
+src\components\ai\TalkToBite.tsx:386: pushAssistant('ยังไม่มีออเดอร์ที่ร้านนี้เลยครับ อยากให้ Bite แนะนำเมนูแทนไหมครับ? 🍊')
+src\components\ai\TalkToBite.tsx:414: showToast('เพิ่มไม่ได้ในตอนนี้ กรุณาลองใหม่ครับ', 'warning')
+src\components\ai\TalkToBite.tsx:435: : `เพิ่มลงตะกร้าไม่ได้ (${failedNames.join(', ')}) — กรุณาลองใหม่อีกครั้ง`,
+src\components\ai\TalkToBite.tsx:502: pushAssistant('ขอโทษครับ เกิดข้อผิดพลาดในการเชื่อมต่อ กรุณาลองใหม่อีกครั้งนะ 🙏')
+src\components\ai\TalkToBite.tsx:520: pushAssistant('ยังไม่มีออเดอร์เก่าเลยครับ อยากให้แนะนำเมนูแทนไหมครับ? 🍊')
+src\components\ai\TalkToBite.tsx:541: pushAssistant('ออเดอร์เดิมส่วนใหญ่หมดแล้วครับ ขอแนะนำเมนูอื่นที่ยังมีแทนนะครับ 🙏')
+src\components\ai\TalkToBite.tsx:683: 🍽️ เมนูทั้งหมด
+
+===== structure: components/layout =====
+src\components\layout\BackgroundLayer.tsx
+src\components\layout\BottomNav.tsx
+src\components\layout\Footer.tsx
+src\components\layout\Header.tsx
+src\components\layout\Layout.tsx
+
+===== structure: components (top) =====
+admin, ai, audio, BrandProvider.tsx, cart, CouponBox.tsx, customer, CustomerReviewCard.tsx, dashboard, delivery, ErrorBoundary.tsx, FoodMenuCard.tsx, home, inventory, layout, LazyVideo.tsx, MascotBadge.tsx, menu, notification, order, payment, promotion, random, ReferralBox.tsx, review, rewards, rider, SeoHelmet.tsx, share, TenantSelector.tsx, theater, ui, viral, VoiceInterface.css, VoiceInterface.tsx, vote
+
+===== tests =====
+accountRecovery.test.ts, addonDisplay.test.ts, adminCategoryLifecycle.test.ts, adminCustomerVisibility.test.ts, adminDeliveryAdvance.test.ts, adminNavFeedback.test.ts, adminOrdersModeFilter.test.ts, adminOrdersOp.test.ts, adminPreOrdersConsolidation.test.ts, adminSettingsTypedKeys.test.ts, adminShell.test.ts, adminUi.test.ts, aiChatTimeout.test.ts, aiDbContext.test.ts, aiGuardrails.test.ts, aiRouting.test.ts, aiServerMemory.test.ts, aiVoice.test.ts, aiVoiceServer.test.ts, ambientMusic.test.ts, api.test.ts, assetRegistry.test.ts, availabilityEngine.test.ts, bangkokTime.test.ts, biteAIStore.test.ts, bitePageContext.test.ts, brandName.test.ts, canonicalFallbackContract.test.ts, canonicalOrderFlow.test.ts, cartContextIsolation.test.ts, cartEntryPoints.test.ts, cartIsolationStore.test.ts, cartLineIdentity.test.ts, cartPersistence.test.ts, catalogControl.test.ts, catalogGate.test.ts, categorySections.test.ts, checkoutMixedSplit.test.ts, checkoutModeLock.test.ts, configAuthorityMap.test.ts, couponBox.test.ts, couponHydrationRace.test.ts, customerIntelligence.test.ts, customerOwnership.test.ts, dbBackupHelpers.test.ts, dbRestoreDrill.test.ts, deliveryFeeApi.test.ts, deliveryMapPicker.test.ts, deliveryRoundStatus.test.ts, deliveryRouter.test.ts, deliveryRouterStore.test.ts, dispatchContract.test.ts, dispatchOffersClient.test.ts, driverActionResults.test.ts, driverProvisioning.test.ts, engagementPlay.test.ts, floatingAdBanners.test.ts, g6g7OrderBoundary.test.ts, g6Security.test.ts, g7Security.test.ts, helpers, homeMenuAdminOrdering.test.ts, homePopular.test.ts, homePreOrderModeGuard.test.ts, homeSectionModeCta.test.ts, homeShowcase.test.ts, inventoryAdmin.test.ts, kitchenControl.test.ts, kitchenService.test.ts, liveTrackingClient.test.ts, locationStore.test.ts, loginContextRestoration.test.ts, loginUx.test.ts, loyaltyTiers.test.ts, marketingAutoSchedule.test.ts, marketingClient.test.ts, mascotClosed.test.ts, mediaFlow.test.ts, menuCartResultGuard.test.ts, menuSchedule.test.ts, menuScheduleGate.test.ts, menuScheduleRoundLink.test.ts, notificationReconciliation.test.ts, offlineUtils.test.ts, omise.test.ts, omiseCheckoutLogic.test.ts, omiseCutover.test.ts, omiseRefundLogic.test.ts, omiseWebhookSignature.test.ts, orderAddressFallback.test.ts, orderNumberUniqueness.test.ts, orderPolicy.test.ts, ordersPaged.test.ts, orderStateMachine.test.ts, orderSubmitKey.test.ts, orderTimeline.test.ts, orderVocabulary.test.ts, otpPolicy.test.ts, passkeyLogin.test.ts, paymentExceptions.test.ts, paymentIntentsSingleRead.test.ts, paymentReadAuthority.test.ts, paymentSlipUpload.test.ts, paymentStateMachine.test.ts, phases5_7.test.ts, pickupRouting.test.ts, platformConfigBootstrap.test.ts, preOrderEntry.test.ts, preOrderQueue.test.ts, preOrderUnification.test.ts, printTemplates.test.ts, productSchedule.test.ts, promotionCampaignControls.test.ts, promotionClient.test.ts, providers.test.ts, pushTransport.test.ts, quickLoginCoords.test.ts, referralProgram.test.ts, riderFullCycle.test.ts, riderPodCrossBrowser.test.ts, roleMatrixCoverage.test.ts, roleSystem.test.ts, roundArchiveAdmin.test.ts, roundsAuditGuards.test.ts, roundsSameDayNoCutoff.test.ts, routeEta.test.ts, routeRealData.test.ts, seo.test.ts, shopRoute.test.ts, slipReviewPanel.test.ts, slipThumbStates.test.ts, smsTransport.test.ts, socialAiContinuity.test.ts, socialLogin.test.ts, socialOrderIntake.test.ts, statusTruthMatrix.test.ts, storefrontEligibility.test.ts, storeStatusWindow.test.ts, stripeRefundLogic.test.ts, stripeWebhookSignature.test.ts, talkToBite.test.ts, theaterDailyCopy.test.ts, theaterReasons.test.ts, theaterStage.test.ts, theaterUnity.test.ts, theme.test.ts, themeCss.test.ts, uiTechnicalLabels.test.ts, w5h1Tracking.test.ts
+
+TOTAL_SRC_FILES=395

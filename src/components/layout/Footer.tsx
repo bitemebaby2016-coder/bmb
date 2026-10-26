@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import type { ProductCategory } from '@/types'
+import { categoryDisplayRank } from '@/lib/catalogStructure'
 import { DEFAULT_SOCIAL_LINKS, getSocialLinks, socialLinkItems, type SocialLinkItem } from '@/lib/socialLinks'
 import { usePlatformConfig } from '@/config/platformConfig'
+import { scrollMainToTop } from '@/lib/scrollTo'
 
 // ── ข้อมูลร้านจริง (Owner ยืนยัน 2026-10-17) — ใช้ตรงกันทั้ง footer/หน้าติดต่อ ──
 export const SHOP_CONTACT = {
@@ -55,11 +57,22 @@ export function Footer() {
   // ZERO-FAKE: ข้อความ "ส่งฟรี" แสดงเมื่อ server บังคับใช้กฎจริงเท่านั้น
   const { delivery } = usePlatformConfig()
   const freeShippingActive = delivery.freeShippingEnforced
+  const location = useLocation()
+  // L-3 (N-4 #3): จิ้มลิงก์ฟุตเตอร์ที่เป็นหน้าปัจจุบันอยู่แล้ว (URL เดิมเป๊ะ) → ไม่มี
+  // การ navigate → Layout ไม่ scroll → ต้องเลื่อนขึ้นบนเองไม่งั้น "จิ้มแล้วนิ่ง"
+  const scrollIfSameUrl = (to: string) => {
+    const [path, search] = to.split('?')
+    const target = path + (search ? `?${search}` : '')
+    if (target === location.pathname + location.search) scrollMainToTop()
+  }
   // ลิงก์ "เมนูอาหาร" ดึงจากหัวข้อเมนูจริงในฐานข้อมูล (active + ไม่ archived เรียงตามลำดับ)
   // — แอดมินเพิ่ม/แก้/เรียงหัวข้อเมื่อไร ฟุตเตอร์ตามทันที ไม่ต้องแก้โค้ด
   const [menuLinks, setMenuLinks] = useState<FooterLink[]>([{ label: 'ดูเมนูทั้งหมด', path: '/menu' }])
   // (Owner 2026-10-18: ปุ่ม "จองล่วงหน้า" ถูกนำออกจากฟุตเตอร์ทุกหน้าตามคำสั่ง —
   //  การจองล่วงหน้ายังเข้าได้จากเมนู/หน้าแรกตามปกติ)
+  // ปุ่มกรองหมวด (chips) — กติกาการมองเห็นเดียวกับ buildHeadingGroups
+  // L-7 (N-4 #7 · Owner 2026-10-26): ฟุตเตอร์เรียงลำดับเดียวกับหัวข้อเมนูทุกหน้า
+  // (displayRank ก่อน sort_order — เดิมเรียง sort_order อย่างเดียวทำให้ลำดับเพี้ยน)
   useEffect(() => {
     let alive = true
     import('@/lib/bmbAdminApi_products')
@@ -68,7 +81,7 @@ export function Footer() {
         if (!alive) return
         const links: FooterLink[] = cats
           .filter((c) => c.is_active && !c.archived)
-          .sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0))
+          .sort((a, b) => categoryDisplayRank(a.name) - categoryDisplayRank(b.name) || (a.sort_order || 0) - (b.sort_order || 0))
           .map((c) => ({
             label: `${c.icon ? c.icon + ' ' : ''}${c.name}`,
             path: `/menu?category=${encodeURIComponent(c.slug || c.id)}`,
@@ -125,7 +138,7 @@ export function Footer() {
                         {link.label}
                       </a>
                     ) : (
-                      <Link to={link.path || '/'} className="block break-all text-sm text-brand-muted hover:text-brand-primary transition-colors">
+                      <Link to={link.path || '/'} onClick={() => scrollIfSameUrl(link.path || '/')} className="block break-all text-sm text-brand-muted hover:text-brand-primary transition-colors">
                         {link.label}
                       </Link>
                     )}

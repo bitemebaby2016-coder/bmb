@@ -14,9 +14,10 @@ export function VotePage() {
     async function loadData() {
       try {
         const [products, rounds] = await Promise.all([getProducts(), getActiveDeliveryRounds()])
-        // Phase 6 (RC-7 · INV-18): canonical fallback — เมนูที่เปิดให้จองจริง = available_preorder
-        // (alias is_preorder อาจค้างจาก canonical migration 023)
-        setPollOptions(products.filter((p: Product) => p.available_preorder ?? p.is_preorder))
+        // L-5 (N-4 #5 · Owner 2026-10-26): หน้าโหวตต้องแสดง "ครบทุกเมนูจริง"
+        // (เดิมกรองเฉพาะ available_preorder → เมนูส่งวันนี้หายเกือบทั้งหมด)
+        // archived = ถูกเก็บออกจากแคตตาล็อกแล้ว = ไม่ใช่เมนู → ตัดออก ส่วนที่เหลือโชว์ครบ
+        setPollOptions(products.filter((p: Product) => !p.archived))
         setDeliveryRounds(rounds)
       } catch (err) {
         console.error('[VotePage] Load error:', err)
@@ -27,7 +28,7 @@ export function VotePage() {
 
   function handleVote(optionId: string) {
     if (selectedVote) {
-      showToast('คุณโหวตแล้ว กรุารอสักครู่', 'warning')
+      showToast('คุณโหวตแล้ว กรุณารอสักครู่', 'warning')
       return
     }
 
@@ -65,8 +66,8 @@ export function VotePage() {
 
       {/* Poll Card */}
       <div className="card mb-6 bg-gradient-to-r from-blue-50 to-indigo-50">
-        <h3 className="font-bold text-brand-accent mb-4 text-xl">🎯 เมนไหนที่อย่ากลอง?</h3>
-        <p className="text-sm text-brand-muted mb-4">หวตได้ครั้งละ 1 เมน</p>
+        <h3 className="font-bold text-brand-accent mb-4 text-xl">🎯 เมนูไหนที่น่าลอง?</h3>
+        <p className="text-sm text-brand-muted mb-4">โหวตได้ครั้งละ 1 เมนู</p>
         
         <div className="space-y-3">
           {pollOptions.map((option) => {

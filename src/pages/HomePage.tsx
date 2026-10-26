@@ -49,6 +49,7 @@ import {
 } from '@/lib/homePopular'
 import type { VerifiedCustomerReview, Product, ProductCategory, SameDayOrderPayload, PreOrderPayload, HomeReview } from '@/types'
 import { preOrderEntryPath, saleModeOfCategory, withPreOrderTab } from '@/lib/catalogStructure'
+import { scrollToSectionOrTop } from '@/lib/scrollTo'
 
 // ⚡ The Food Theater stage is code-split (aiServerMemory chain); it renders
 // real catalog picks + canonical cart actions as the first section of /shop.
@@ -197,6 +198,12 @@ export function HomePage() {
     // Date + round + address + payment are chosen there; the SERVER (RPC
     // create_order_with_items, migration 025) is the only creation authority.
     // R5c: ไม่มีป๊อปอัปล้างตะกร้า/สลับโหมดแล้ว — สินค้าทั่วไปติดรอบพรีออเดอร์ในออเดอร์เดียว
+    // L-8 (N-4 #8 · Owner 2026-10-26): pre-order-only ที่ยังไม่ลงปฏิทิน/เลยรอบ → ห้ามเข้า builder
+    const preProduct = products.find((p) => p.id === payload.productId)
+    if (preProduct && deriveOrderMode(preProduct) === 'PRE_ORDER' && !scheduleMap[preProduct.id]) {
+      showToast('เมนูนี้ยังไม่ลงปฏิทินรอบถัดไป — ยังจองไม่ได้', 'warning')
+      return
+    }
     runOrderBuilder({
       productId: payload.productId,
       products,
@@ -235,6 +242,11 @@ export function HomePage() {
       return
     }
     const isPre = mode === 'PRE_ORDER'
+    // L-8 (N-4 #8): pre-order-only ที่ยังไม่ลงปฏิทิน → ห้ามกดจากปุ่มรีวิวด้วย (ทุกจุดเท่ากัน)
+    if (isPre && !scheduleMap[product.id]) {
+      showToast('เมนูนี้ยังไม่ลงปฏิทินรอบถัดไป — ยังจองไม่ได้', 'warning')
+      return
+    }
     // OD-4 / RC-3 contract เดียวกับปุ่มสั่งซื้อปุ่มอื่น: ต้องเช็ค AddToCartResult
     // ก่อนบอกผู้ใช้ว่า "เพิ่มแล้ว" และก่อน navigate (เดิมบรรทัดนี้ไม่เช็คผลเลย)
     const res = addItem(product, 1, {}, isPre ? 'PRE_ORDER' : 'SAME_DAY')
@@ -281,9 +293,9 @@ export function HomePage() {
     .map(toShowcaseCard)
 
   // Rule 12.3 (Owner 2026-10-25): แท็บลิงก์ = smooth-scroll ไป section ที่ทำงาน
-  const scrollToSection = (id: string) => {
-    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-  }
+  // L-3 (N-4 #3 · Owner 2026-10-26): ถ้า section เป้าหมายไม่มีจริง → fallback
+  // เลื่อนขึ้นด้านบนของหน้า — "ห้ามจิ้มแล้วนิ่ง"
+  const scrollToSection = (id: string) => scrollToSectionOrTop(id)
 
   if (loading) {
     return (
@@ -312,7 +324,7 @@ export function HomePage() {
       {/* 1. BITE FOOD THEATER — food-first stage (replaces the duplicated Bite landing; the
           full-screen landing lives at "/", the conversation engine stays in TalkToBite) */}
       <Suspense fallback={null}>
-        <FoodTheater products={products} onCustomize={handleSameDay} onPreOrder={handlePreOrder} />
+        <FoodTheater products={products} schedule={scheduleMap} onCustomize={handleSameDay} onPreOrder={handlePreOrder} />
       </Suspense>
 
       {/* 2. Store / Delivery Status — compact strip (replaces the 3-round grid) */}
@@ -338,8 +350,7 @@ export function HomePage() {
             />
           </div>
         </div>
-        {chips.length > 0 && (
-          <div className="category-chips flex gap-2 overflow-x-auto pb-2 mt-3" role="group" aria-label="แท็บลิงก์หมวดหมู่เมนู">
+        <div className="category-chips flex gap-2 overflow-x-auto pb-2 mt-3" role="group" aria-label="แท็บลิงก์หมวดหมู่เมนู">
             {/* Feature B (Owner 2026-10-25): แท็บแนวนอน = ลิงก์ smooth-scroll ตามลำดับที่กำหนด */}
             <button
               type="button"
@@ -377,7 +388,6 @@ export function HomePage() {
               </button>
             ))}
           </div>
-        )}
       </section>
 
       {/* 2c. Floating ad banners — max 2 overlay cards, dismissible per promo (sessionStorage, D03) */}

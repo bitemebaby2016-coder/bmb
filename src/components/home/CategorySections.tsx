@@ -117,7 +117,7 @@ function ShowcaseCard({
               type="button"
               disabled
               data-testid="home-showcase-preorder-unavailable"
-              className="btn btn-outline btn-sm w-full opacity-60 cursor-not-allowed"
+              className="btn btn-outline btn-sm w-full btn-locked"
             >
               📅 ยังไม่ลงปฏิทินรอบถัดไป
             </button>

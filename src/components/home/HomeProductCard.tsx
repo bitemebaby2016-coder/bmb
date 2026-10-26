@@ -25,6 +25,7 @@ export function HomeProductCard({ item, onSameDay, onPreOrder, mode = 'auto' }: 
   const isPreOrderCta = mode === 'pre_order' ? true : mode === 'same_day' ? false : item.mode === 'pre-order'
   // R5c (Owner 2026-10-23): ปุ่มจองล่วงหน้ากดได้เฉพาะการ์ดที่มีป้ายปฏิทิน (เมนูปฏิทินแอดมิน)
   const preOrderReady = isPreOrderCta && !!item.scheduledDate
+  const disabledCta = soldOut || (isPreOrderCta && !preOrderReady)
   const ctaLabel = soldOut
     ? 'หมดแล้ว'
     : isPreOrderCta
@@ -87,8 +88,9 @@ export function HomeProductCard({ item, onSameDay, onPreOrder, mode = 'auto' }: 
         <button
           type="button"
           onClick={handleCta}
-          className="btn btn-primary btn-sm w-full mt-auto home-card-cta"
-          disabled={soldOut || (isPreOrderCta && !preOrderReady)}
+          // L-8 (N-4 #8): พรีออเดอร์ยังไม่ลงปฏิทิน/หมดแล้ว = btn-locked (สีเทา + กดไม่ได้)
+          className={`btn btn-sm w-full mt-auto home-card-cta${disabledCta ? ' btn-locked' : ' btn-primary'}`}
+          disabled={disabledCta}
           data-testid="home-card-cta"
         >
           {ctaLabel}

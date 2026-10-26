@@ -1,11 +1,33 @@
 import { Link } from 'react-router-dom'
+import { useEffect, useState } from 'react'
 import { useCartStore } from '@/store/cartStore'
 import { MascotBadge } from '@/components/MascotBadge'
 import { resolveAddOnLines, addOnTotalFor } from '@/lib/addonDisplay'
 import { CouponBox } from '@/components/CouponBox'
+import { getProductScheduleMap, type ProductScheduleMap } from '@/lib/productSchedule'
 
 export function CartPage() {
   const { items, subtotal, discount, deliveryFee, total, updateQuantity, removeItem, clearCart } = useCartStore()
+  // L-8 (N-4 #8 · Owner 2026-10-26): บรรทัดจองล่วงหน้าที่ "ยังไม่ลงปฏิทิน/เลยรอบ" →
+  // การ์ดบรรทัด = สีเทา + ปุ่ม +/- ปิด · ปุ่ม "ยืนยันสั่งซื้อ" กดไม่ได้จนกว่าจะลบออก
+  // (server 142 reject เหมือนเดิม — ที่นี่บล็อกที่ UI ก่อนถึง checkout)
+  const [scheduleMap, setScheduleMap] = useState<ProductScheduleMap>({})
+  const [scheduleLoaded, setScheduleLoaded] = useState(false)
+  useEffect(() => {
+    let alive = true
+    void getProductScheduleMap()
+      .then((m) => { if (alive) { setScheduleMap(m); setScheduleLoaded(true) } })
+      .catch(() => { if (alive) setScheduleLoaded(true) })
+    return () => { alive = false }
+  }, [])
+  // pre-order-only (preorder-eligible + ไม่ same-day) = ต้องมีป้ายปฏิทินเอง — ไม่มีใน map = ตายแล้ว
+  // สินค้าทั่วไป/dual ที่เข้ารอบ = ride-along (ไม่ผูกป้ายตัวเอง) → ไม่นับเป็นบรรทัดค้าง
+  const isStalePreOrderLine = (item: { line_mode?: string; product: { id: string; available_preorder?: boolean; available_same_day?: boolean; is_preorder: boolean } }) => {
+    if ((item.line_mode ?? 'SAME_DAY') !== 'PRE_ORDER') return false
+    const preorderOnly = (item.product.available_preorder ?? item.product.is_preorder) && !(item.product.available_same_day ?? !item.product.is_preorder)
+    return preorderOnly && !scheduleMap[item.product.id]
+  }
+  const hasStalePreOrder = scheduleLoaded && items.some(isStalePreOrderLine)
 
   if (items.length === 0) {
     return (
@@ -38,8 +60,10 @@ export function CartPage() {
 
       {/* Cart Items */}
       <div className="space-y-4 mb-6">
-        {items.map((item) => (
-          <div key={item.__line_key ?? item.product.id} className="card flex gap-4">
+        {items.map((item) => {
+          const stale = scheduleLoaded && isStalePreOrderLine(item)
+          return (
+          <div key={item.__line_key ?? item.product.id} className={`card flex gap-4${stale ? ' btn-locked opacity-70' : ''}`} data-testid={stale ? 'cart-line-stale' : undefined}>
             <img src={item.product.image_url || '/placeholder.png'} alt={item.product.name} className="w-24 h-24 rounded-xl object-cover" />
             <div className="flex-1">
               <h3 className="font-bold text-brand-accent">{item.product.name}</h3>
@@ -62,14 +86,16 @@ export function CartPage() {
               <div className="flex items-center gap-3 mt-2">
                 <button
                   onClick={() => updateQuantity(item.product.id, item.quantity - 1, item.__line_key)}
-                  className="w-8 h-8 rounded-full bg-brand-bg text-brand-accent font-bold hover:bg-brand-primary hover:text-white transition-colors"
+                  disabled={stale}
+                  className="w-8 h-8 rounded-full bg-brand-bg text-brand-accent font-bold hover:bg-brand-primary hover:text-white transition-colors disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-brand-bg disabled:hover:text-brand-accent"
                 >
                   -
                 </button>
                 <span className="font-bold text-brand-accent w-8 text-center">{item.quantity}</span>
                 <button
                   onClick={() => updateQuantity(item.product.id, item.quantity + 1, item.__line_key)}
-                  className="w-8 h-8 rounded-full bg-brand-bg text-brand-accent font-bold hover:bg-brand-primary hover:text-white transition-colors"
+                  disabled={stale}
+                  className="w-8 h-8 rounded-full bg-brand-bg text-brand-accent font-bold hover:bg-brand-primary hover:text-white transition-colors disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-brand-bg disabled:hover:text-brand-accent"
                 >
                   +
                 </button>
@@ -82,8 +108,15 @@ export function CartPage() {
               </div>
             </div>
           </div>
-        ))}
+          )
+        })}
       </div>
+      {hasStalePreOrder && (
+        <div className="mb-6 p-4 rounded-xl border-2 border-brand-border bg-brand-bg text-sm text-brand-muted" role="alert" data-testid="cart-stale-warning">
+          ⚠️ มีเมนูจองล่วงหน้าที่ยังไม่ลงปฏิทินรอบถัดไป/เลยรอบแล้ว (รายการสีเทา) —
+          <strong className="text-brand-accent"> ลบรายการนั้นออก</strong> จึงจะสั่งซื้อต่อได้
+        </div>
+      )}
 
       {/* M2: coupon UI รวมเป็น CouponBox component เดียว — ใช้ร่วมกับ CheckoutPage */}
       <CouponBox />
@@ -112,7 +145,7 @@ export function CartPage() {
           </div>
         </div>
         
-        <Link to="/checkout" data-testid="go-checkout" className="btn btn-primary w-full text-lg">
+        <Link to="/checkout" data-testid="go-checkout" aria-disabled={hasStalePreOrder} onClick={(e) => { if (hasStalePreOrder) e.preventDefault() }} className={`btn btn-primary w-full text-lg${hasStalePreOrder ? ' btn-locked' : ''}`}>
           ยืนยันสั่งซื้อ →
         </Link>
       </div>
