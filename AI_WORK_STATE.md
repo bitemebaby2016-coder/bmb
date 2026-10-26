@@ -21,10 +21,9 @@
   route smoke playwright 39/39 · flaky 4 เคสใน `orderTimeline.test.ts` = **ปิดแล้ว (B-1 → act())**
 - **production: ไม่ได้แตะ** (ไม่มี migration/apply/deploy/write) · ledger ของรอบก่อน top = **156** ·
   fresh replay เทียบ production รอบนี้ = **UNVERIFIED** (ไม่ใช่ PASS)
-- **CI ของ SHA ที่ push = ตรวจแล้ว:** `066e961`/`26e258e`/`fa9f54f`/`11b7112` ทุกเส้นเขียว ·
-  รอบที่ 2: `3a2c9f7` = CI success **แต่ Contract Tests failure** (B-2 legacy step) → rollback →
-  **`6a28bcf` = CI #574 success + Contract Tests #148 success** (อ่านจาก GitHub Actions API จริง · ไม่มี `gh`) —
-  รายละเอียด/URL = `docs/BMB_MASTER_STATUS.md` §9.6
+- **CI canonical (ตารางเดียวทุก SHA):** `docs/BMB_MASTER_STATUS.md` **§9.0** — HEAD `1aa678b` =
+  CI #575 success + Contract Tests #149 success · รอบก่อน ๆ ทั้งหมดอยู่ในตารางเดียวกัน
+  (อ่านจาก GitHub Actions API จริง · ไม่มี `gh` · ห้ามอ้างเลขรันกระจัดกระจาย)
 
 ## 2. งานที่ปิดรอบนี้ (CLOSED — มีหลักฐาน)
 
@@ -51,15 +50,26 @@
    · test `marketingAutoSchedule.test.ts`
 10. **B-5 ปิด (ส่งมอบ):** ชุดทดสอบ production รวม = **`docs/BMB_PRODUCTION_TEST_PACK.md`** (ขั้น A–K)
 
-## 3. งานค้าง
+## 3. งานค้าง (สถานะจริง ณ 2026-10-26 รอบที่ 2 — **ยังไม่ใช่ "เหลือ Owner อย่างเดียว"**)
 
-- **B-2 (legacy contract 7 ตัว) = BLOCKED** — รายละเอียด + หลักฐาน 2 ครั้ง = `docs/BMB_MASTER_STATUS.md` §3
-- งานที่เหลือ = **Owner-only ทั้งหมด** → รัน `docs/BMB_PRODUCTION_TEST_PACK.md` ขั้น A–K
+- **blocker (engineering):**
+  - **B-2** legacy contract 7 ตัว = **BLOCKED** (พยายาม 2 ครั้งล้มเหลว · **Owner สั่งใหม่ให้ปิดในแชทถัดไป**) —
+    รายละเอียด+หลักฐาน = `docs/BMB_MASTER_STATUS.md` §3
+  - **schema parity (fresh replay vs production)** = **UNVERIFIED** · Owner **อนุมัติให้รันแล้ว** (2026-10-26)
+    แต่ยังไม่รัน = ยังปิดช่องนี้ไม่ได้
+- **งานที่สั่งใหม่รอบ 2026-10-26 (ทั้งหมดอยู่ใน handoff):**
+  - **UI ฝั่งลูกค้า 9 ข้อ** (ป้าย BITE·AI WAITER STAGE / Testimonials / จิ้มแล้วเลื่อน / เมนูบนสุด /
+    โหวตเมนูไทย / แถบสถานะ ~11:00 / ลำดับหัวข้อ+ลิงก์จริง / พรีออเดอร์สีเทา / เฟรม 1:1) —
+    รายการเต็ม = `docs/BMB_MASTER_STATUS.md` §3.1 (N-4)
+  - **CAP-22 ต้องตั้ง `marketing_rules` ให้พร้อมก่อนทดสอบระบบจริง** (N-3)
+  - **Test pack ต้องมีเกณฑ์ตรงความจริง** (N-5 — แก้แล้วรอบนี้ ต้องตรวจซ้ำ)
+- **แฮนด์ออฟทั้งหมด:** `docs/BMB_HANDOFF_NEXT_SESSION_2026-10-26.md`
 
-## 4. งานรอ Owner (ไม่ใช่งาน AI)
+## 4. งานรอ Owner (ไม่ใช่งาน AI) — **รันได้เฉพาะที่ไม่ติด blocker**
 
-= **`docs/BMB_MASTER_STATUS.md` §7** — hard refresh แล้วตรวจหน้า · สั่งจริง 2 โหมด ·
-R-16 Print-to-PDF · acceptance §4 Growth & Rewards · ตรวจ CI ของ SHA ล่าสุด · ตัดสินใจ CAP-21/22
+- = **`docs/BMB_PRODUCTION_TEST_PACK.md`** (เกณฑ์แก้แล้วให้ตรงความจริง) · ขั้นที่ **ถูกงดไว้ก่อน** (ติด
+  defect UI ที่ยังไม่แก้ / CAP-22 ยังไม่ได้ตั้ง rules / B-2) ระบุไว้ในไฟล์นั้น §0 และ §L
+- **ห้าม**พูดว่า "เหลือ Owner อย่างเดียว" จนกว่า B-2 + schema parity จะปิด (Owner 2026-10-26)
 
 ## 5. คำสั่ง/rules ที่ห้ามลืม
 

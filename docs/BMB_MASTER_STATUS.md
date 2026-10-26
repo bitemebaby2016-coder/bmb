@@ -41,8 +41,8 @@
 | unit/contract | `npx vitest run` | ดูก้อน §5 | `e2e/session20261026-gates-evidence.txt` §2–§5 |
 | build | `npm run build` (tsc + vite) | **exit 0** | `e2e/session20261026-gates-evidence.txt` §7 |
 | E2E route smoke | `npx playwright test routeNav` | **39/39 passed · exit 0** | `e2e/session20261026-gates-evidence.txt` §8 |
-| SQL replay / production | ไม่ได้รันรอบนี้ | **UNVERIFIED รอบนี้** | ของรอบก่อน = `e2e/*.json` (§4) |
-| CI ของ SHA ที่ push จริง | GitHub Actions API (ไม่มี `gh`) | **CI #569 = success · Contract Tests #143 = success** | §9.4 |
+| SQL replay / production | **อนุมัติแล้ว (Owner 2026-10-26)** — fresh replay 001→156 เทียบ production | **UNVERIFIED จนกว่าจะรัน** (ยังไม่ใช่ PASS) | ของรอบก่อน = `e2e/*.json` (§4) · รันตาม handoff แชทถัดไป |
+| CI ของ SHA ที่ push จริง | GitHub Actions API (ไม่มี `gh`) | ดูก้อน **§9.0 (ตาราง CI canonical ทุก SHA)** | §9.0 |
 
 ### 1.3 Production (ไม่ได้ re-verify ในรอบนี้)
 
@@ -81,7 +81,7 @@
 | CAP-19 | Growth & Rewards (promotions/referral/points/spin/affiliate/catalog) | — | migrations 153–156 | contract 153–156 (รอบก่อน) | **DOCUMENTED + DEPLOYED · acceptance §4 รอ Owner** |
 | CAP-20 | ไม่มี dead code ค้าง | — | เอาออก 11 ไฟล์ (2026-10-26) | เกตทั้งหมดเขียวหลังลบ (§5) | CLOSED (รอบนี้) |
 | CAP-21 | ระบบจำลูกค้า/เจาะกลุ่มอัตโนมัติ (audit D11) | `/admin/customers` (แถบสรุป + คอลัมน์กลุ่ม/คำสรุป) | **`src/lib/customerIntelligence.ts`** — คำนวณจากสถิติออเดอร์จริงทุกครั้งที่โหลด · **ไม่มีช่องให้แอดมินตั้ง** · ไม่มี localStorage | `customerIntelligence.test.ts` (11 เคส รวม AUTOMATIC contract) | **IMPLEMENTED + TESTED (2026-10-26 · รอบปิด backlog)** |
-| CAP-22 | AI Studio เลือกเวลา + โพสต์อัตโนมัติเต็มรูปแบบ | `/admin/marketing?tab=calendar` → ปุ่ม "🤖 ให้ AI เลือกเวลาทั้งหมด" | **`src/lib/marketingAutoSchedule.ts`** (เลือกเวลาจาก marketing_rules จริง) → RPC `marketing_schedule_post` เดิม → worker `marketing_publish` รายชั่วโมงตัวเดิม · **ไม่มี publish path ใหม่ · ห้าม auto-approve** | `marketingAutoSchedule.test.ts` (12 เคส + contract CNT-01/G7) | **IMPLEMENTED + TESTED (2026-10-26 · รอบปิด backlog)** |
+| CAP-22 | AI Studio เลือกเวลา + โพสต์อัตโนมัติเต็มรูปแบบ | `/admin/marketing?tab=calendar` → ปุ่ม "🤖 ให้ AI เลือกเวลาทั้งหมด" | **`src/lib/marketingAutoSchedule.ts`** (เลือกเวลาจาก marketing_rules จริง) → RPC `marketing_schedule_post` เดิม → worker `marketing_publish` รายชั่วโมงตัวเดิม · **ไม่มี publish path ใหม่ · ห้าม auto-approve** | `marketingAutoSchedule.test.ts` (12 เคส + contract CNT-01/G7) | IMPLEMENTED + TESTED · **ยังไม่พร้อมทดสอบจริงจนกว่า Owner จะตั้ง `marketing_rules` ให้ครบก่อน** (คำสั่ง 2026-10-26: "กำหนดให้พร้อมก่อนทดสอบระบบจริง") |
 
 ---
 
@@ -98,8 +98,46 @@
 | **B-4** | CAP-22 AI เลือกเวลา/โพสอัตโนมัติ (DEFERRED) | สร้าง `src/lib/marketingAutoSchedule.ts` (เลือกเวลาจาก marketing_rules จริง) + ปุ่มในแท็บปฏิทิน · **คงกติกา: ห้าม auto-approve · ไม่มี publish path ใหม่** | `src/__tests__/marketingAutoSchedule.test.ts` (12 เคส + CNT-01/G7 contract) |
 | **B-5** | runtime จริงของ CAP-10/11/13/14/18 | **ส่งมอบเป็นชุดทดสอบเดียวให้ Owner รันบน production** | **`docs/BMB_PRODUCTION_TEST_PACK.md`** (ขั้น A–K ครบทุก checklist ที่เคยกระจาย) |
 
-> ยังเหลืองาน engineering **1 รายการ = B-2 (BLOCKED — รอ Owner เลือก (ก) ซ่อม หรือ (ข) ปลดระเบียบ)**
-> ส่วนที่เหลือหลังจากนี้ = Owner-only ทั้งหมด → §7 → `docs/BMB_PRODUCTION_TEST_PACK.md`
+> **ยังเหลือ engineering blocker 2 ตัว — "เหลือ Owner อย่างเดียว" ยังไม่เป็นจริง (Owner 2026-10-26):**
+> **(1) B-2 = BLOCKED** (legacy contract 7 ตัว · สั่งใหม่ให้ปิดในแชทถัดไป) ·
+> **(2) schema parity fresh-replay vs production = UNVERIFIED** (อนุมัติแล้วแต่ยังไม่รัน) —
+> ปิด/พิสูจน์ทั้งสองข้อนี้ก่อน จึงค่อยพูดได้ว่าเหลือแต่งาน Owner ·
+> Owner acceptance ที่รันได้แล้ว = §7 → `docs/BMB_PRODUCTION_TEST_PACK.md`
+
+---
+
+## 3.1 งานที่สั่งใหม่รอบ 2026-10-26 (รอบที่ 2) — **แฮนด์ออฟทั้งหมดไปแชทถัดไป**
+
+> คำสั่งปิดท้าย: "ไม่ต้องรื้อระบบ · อัปเดตเอกสารให้มีสถานะปัจจุบันชุดเดียวก่อน (รวมงานที่ตอบและสั่งใหม่)
+> แล้วค่อยแฮนด์ออฟงานทั้งหมดไปทำแชทหน้า" → รายการนี้ = scope ของแชทถัดไป (มี handoff ฉบับเต็มที่
+> `docs/BMB_HANDOFF_NEXT_SESSION_2026-10-26.md`)
+
+| # | งาน | สถานะตอนนี้ | เงื่อนไข/เกณฑ์ |
+|---|---|---|---|
+| N-1 | **fresh replay เทียบ production** | **APPROVED** (Owner 2026-10-26) · ยังไม่รัน | รัน Docker 001→156 ใหม่ทั้งหมดเทียบ schema production แบบ read-only · ปิดช่อง UNVERIFIED ใน §4/§5 |
+| N-2 | **Legacy SQL contracts 7 ไฟล์ (B-2) "ปิดด้วย"** | สั่งใหม่ให้ปิด (ความพยายามก่อนหน้า 2 ครั้งล้มเหลว) | ต้องเขียวทั้ง 7 บน replay ท้องถิ่น **ก่อน** เพิ่มกลับ CI · ห้ามเดาสิทธิ์/fixture โดยไม่มีผลรัน |
+| N-3 | **CAP-22 ให้พร้อมก่อนทดสอบจริง** | โค้ดพร้อม · **`marketing_rules` ยังไม่ถูกกำหนด** | Owner: "AI เลือกเวลาจัดตารางการตลาดจะกำหนดให้พร้อมก่อนทดสอบระบบจริง" → ตั้งหน้าต่าง/cooldown/เพดานให้ครบก่อนขั้น C7/C8 ของ test pack |
+| N-4 | **UI ฝั่งลูกค้า (ชุดใหญ่)** | ยังไม่เริ่ม | ดูหัวข้อถัดไป — ห้ามรื้อระบบ แก้เป็นจุด ๆ |
+| N-5 | **Test pack = เกณฑ์ต้องตรงความจริง** | **แก้แล้วรอบนี้** (ดู `BMB_PRODUCTION_TEST_PACK.md` §0/L) | ห้ามสั่งตรวจสิ่งที่ยังไม่สำเร็จว่าต้องผ่าน |
+
+### N-4 · รายการ UI ฝั่งลูกค้า (ถอดคำสั่ง Owner ตรง ๆ — ห้ามตกข้อ)
+
+1. **หัวข้อ "BITE · AI WAITER STAGE" ห้ามแสดง** — เริ่มจาก "เมนูพร้อมขายวันนี้" เลย · ห้ามข้อความเชิงสั่งงาน/
+   เชิงเทคนิค/ที่ผู้ใช้ไม่จำเป็นต้องเห็น · **ไทยธรรมชาติ 100%** ยกเว้นคำอังกฤษที่คนเข้าใจง่ายจริง
+2. **ป้าย "(Marketing Testimonials)" ห้ามแสดง** (หัวข้อเสียงชมจากผู้ชม = ใช้ข้อความธรรมชาติ)
+3. **จิ้มแล้วต้องเลื่อน/กระโดดไปที่ทำงานจริง** (ส่วนใหญ่ = ด้านบนของหน้า) — ห้ามจิ้มแล้วนิ่ง · **ทำให้เหมือนกันทุกหน้า**
+4. **เมนูจากแท็บ/ปุ่มด้านบน:** หัวข้อแสดงไม่ครบ และเมนู "วันนี้/จองล่วงหน้า" แสดงไม่ถูก
+5. **หน้าโหวตเมนู:** ภาษาไทยผิด + ต้องแสดงเมนู **ครบทุกเมนูจริง**
+6. **แถบสถานะ (ตอน ~11:00)** — ห้ามโชว์ "🟢 เปิดรับออเดอร์ เช้า" ทั้งที่รอบเช้าเลยคัทออฟไปแล้ว ·
+   เกณฑ์ใหม่: **เซมเดย์ยังสั่งได้** (ร้านยังเปิด) + **พรีออเดอร์ = รอบถัดไป (วันที่ 27)** (รอบเย็นแอดมินกดปิดเอง)
+   → **แต่งคำสถานะให้ตรงตามเวลา/รอบจริง**
+7. **หัวข้อแท็บแนวนอนต้องลิงก์ไปหมวดจริง** (รวมจากเมนูบนสุดและ nav bar ล่าง) · **ชื่อหัวข้อต้องตรงที่แอดมินตั้ง**
+   (ห้ามเปลี่ยนชื่อหมวดเก่าทับใหม่จนมั่ว) · **ลำดับทั้งแนวนอน/แนวตั้ง:**
+   `ส่งวันนี้/Same day` → `จองล่วงหน้า/Pre order` → `เมนูสุขภาพ` → `เครื่องดื่ม` → `ของทานเล่น/ผลไม้` → `สินค้าสำเร็จรูป`
+   · **แนวตั้ง: section 1–2 คงเดิม = theater + เมนูแนะนำ** แล้วค่อยตามลำดับข้างต้น · **ฟุตเตอร์เรียงลำดับเดียวกัน
+   และทุกลิงก์ต้องลิงก์จริง**
+8. **พรีออเดอร์ที่ยังไม่ถึงรอบสั่ง / เลยรอบสั่งไปแล้ว (ยังไม่ลงปฏิทินรอบถัดไป) = แสดงสีเทา กดไม่ได้**
+9. **เฟรมเมนู/การ์ด = อัตราส่วน 1:1 ทั้งเว็บ** (ของที่มี + ของที่จะเพิ่มใหม่) · **เฟรมโปรโมชั่นขนาดเท่ากัน**
 
 ---
 
@@ -110,8 +148,8 @@
 - แผนที่สำคัญ (คงเดิม): 138 = payment_intents read authority · 139 = POD storage policy ·
   141/142 = pre-order unify + menu gate · 143 = cutoff_hours · 144 = round pattern · 152 = REVOKE anon set_menu ·
   153–156 = Growth & Rewards stages 1–4
-- **schema drift:** ไม่ได้ตรวจ fresh-replay เทียบ production ในรอบนี้ = `UNVERIFIED`
-  (ของรอบก่อน: Docker replay 001–156 ALL_GREEN — ยังเป็นของรอบก่อน ไม่ใช่ของรอบนี้)
+- **schema drift:** ยัง **UNVERIFIED** — Owner **อนุมัติให้รัน fresh replay เทียบ production แล้ว (2026-10-26)**
+  แต่ยังไม่ได้รัน → งานของแชทถัดไป (handoff) · ของรอบก่อน = Docker replay 001–156 ALL_GREEN (ยังเป็นของรอบก่อน ไม่ใช่ของรอบนี้)
 - proposed migrations ที่เคยค้าง (`PROPOSED_wave5_orders_delivery_address` / `wave1_profiles_grant` /
   `wave2_history_backfill`) → ถูกแทนด้วย **150 / 151 / 152** ที่ apply แล้ว (2026-10-25) → **CLOSED**
 
@@ -168,6 +206,9 @@
 
 ## 7. Owner Production Acceptance — **ใช้ชุดเดียว: `docs/BMB_PRODUCTION_TEST_PACK.md`**
 
+> ⚠️ **ก่อนรัน:** ดู **§0 (blocker + เงื่อนไข)** และ **§L (ยังแก้ไม่เสร็จ — ห้ามใช้เป็นเกณฑ์ ACCEPT)** ของไฟล์นั้นก่อน —
+> ขั้น **B2 / C7 / C8 ถูกล็อกไว้** ติด defect UI + ยังไม่ได้ตั้ง `marketing_rules` · **ห้ามตัดสินว่า "ผ่านทั้งหมด" ถ้ายังมี §L ค้าง**
+
 > คำสั่ง Owner 2026-10-26: "รวบรวมเทสไว้ทดสอบจริงทั้งหมดบนโปรดักชั่นจริง"
 > → ทุก checklist ที่เคยกระจายอยู่ในหลายเอกสาร ถูกรวมเป็น **ขั้น A–K** ในไฟล์นั้นไฟล์เดียว
 > (CI · storefront 2 โหมด · แอดมิน · แจ้งเตือน/push/SMS · จ่ายเงิน/สลิป · rider POD · แผนที่ ·
@@ -190,6 +231,21 @@
 ---
 
 ## 9. Change log (รอบ 2026-10-26)
+
+### 9.0 CI history — **ตาราง canonical เดียว (รวมทุกรอบ · ที่อื่นอ้างที่นี่เท่านั้น)**
+
+| # | SHA | ทำอะไร | CI (`.github/workflows/ci.yml`) | Contract Tests (isolated PG) |
+|---|---|---|---|---|
+| 1 | `066e961` | เส้นทางสั่งซื้อเดียว + dead-code + master status | #569 **success** | #143 **success** |
+| 2 | `26e258e` | docs: บันทึก CI จริง + route-smoke evidence | #570 **success** | #144 **success** |
+| 3 | `fa9f54f` | docs: work-state | #571 **success** | #145 **success** |
+| 4 | `11b7112` | docs: gate evidence | #572 **success** | #146 **success** |
+| 5 | `3a2c9f7` | CAP-21/22 + B-1 + test pack + **B-2 CI step** | #573 **success** | #147 **failure** (legacy 7 ไฟล์) |
+| 6 | `6a28bcf` | rollback B-2 → B-2 = BLOCKED | #574 **success** | #148 **success** |
+| 7 | **`1aa678b`** (HEAD) | บันทึกผล CI รอบ 2 | #575 **success** | #149 **success** |
+
+> อ่านจาก GitHub Actions REST API จริง (`?head_sha=<full SHA>` — เครื่องนี้ไม่มี `gh`) ·
+> **ห้ามอ้างเลข run จาก §9.4/§9.6 โดยไม่เทียบกับตารางนี้** (§9.4 = รายละเอียดรอบ 1 · §9.6 = รายละเอียดรอบ 2)
 
 ### 9.1 โค้ด
 
