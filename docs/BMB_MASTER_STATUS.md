@@ -26,7 +26,7 @@
 |---|---|
 | Repository | `D:\A PROJECT\Bite Me Baby` · remote `git@github.com-bmb:bitemebaby2016-coder/bmb.git` |
 | Branch | `main` tracking `origin/main` |
-| HEAD ปัจจุบัน (2026-10-26 · รอบ UI L-3/4/5/7/8 + docs reconcile) | `5f891de` = `origin/main` · CI **#586 success** · Contract **#160 success** |
+| HEAD ปัจจุบัน ณ เวลาเขียน (2026-10-26 · รอบ UI + docs reconcile จบ) | `7df33fd` = `origin/main` · CI **#587/#588 success** · Contract **#161/#162 success** · *(ถ้ามี commit ใหม่กว่านี้ ให้ถือ `git log --oneline -1`)* |
 | (ประวัติ) HEAD ก่อนเริ่มงานรอบ reconciliation เช้า 2026-10-26 | `29ed251` = `origin/main` ตอนนั้น — **ค่าเก่า ห้ามถือเป็น HEAD ปัจจุบัน** |
 | staged / unstaged | **ว่างทั้งคู่** ตอนเริ่มรอบ · working tree clean · untracked = **0 ไฟล์** |
 | stash | `stash@{0}: On main: local-edits-before-sync-2026-09-21` — **คงเดิม ไม่ถูกแตะ** |
@@ -133,7 +133,7 @@
 | N-1 | **fresh replay เทียบ production** | **ปิดแล้ว (W-1 · 2026-10-26)** — `REPLAY_ALL_GREEN 157/157` + parity รันแล้ว | drift 5 กลุ่มมีคำอธิบาย/แผนครบ → `e2e/w1-parity-report-2026-10-26.md` · §4/§5 = VERIFIED · **เหลือแผน 3 ข้อรอ Owner อนุมัติ (§L L-10)** |
 | N-2 | **Legacy SQL contracts 7 ไฟล์ (B-2) "ปิดด้วย"** | **ปิดแล้ว (W-2 · 2026-10-26)** — 7/7 EXIT=0 บน replay ท้องถิ่น (ทั้งรอบ reproduce และรอบ fresh 157) · step กลับเข้า CI แล้ว | ยืนยันด้วย Contract Tests success + บรรทัด `Legacy contracts OK — 7/7` (test pack A2) |
 | N-3 | **CAP-22 ให้พร้อมก่อนทดสอบจริง** | **พบว่ามีค่าจริงอยู่แล้ว** (query read-only 2026-10-26): window 10:00–19:00 · cooldown 6 ชม. · 3 โพสต์/สัปดาห์ · content_mix 40/30/20/10 | → **C7/C8 ปลดล็อกได้** · `menu_rules`/`stop_conditions` ยังว่าง = ทางเลือก (§L L-12) |
-| N-4 | **UI ฝั่งลูกค้า (ชุดใหญ่ 9 ข้อ)** | **ปิดแล้ว 4 ข้อ** = ข้อ 1 · 2 · 6 · 9 (มี test) · **ยังเหลือ 5 ข้อ** = 3 · 4 · 5 · 7 · 8 | ดูหัวข้อถัดไป — ห้ามรื้อระบบ แก้เป็นจุด ๆ · เกณฑ์ปิด = test pack §L |
+| N-4 | **UI ฝั่งลูกค้า (ชุดใหญ่ 9 ข้อ)** | **ปิดครบ 9/9 ฝั่งโค้ด** = ข้อ 1 · 2 · 6 · 9 (รอบก่อน) + 3 · 4 · 5 · 7 · 8 (2026-10-26 · test รายข้อ · gates ALL ZERO · CI `67f10b8` #585/#159) | เหลือแค่ **runtime verify = test pack §L-RT** (ไม่ใช่งานค้าง) · ห้ามรื้อระบบ แก้เป็นจุด ๆ |
 | N-5 | **Test pack = เกณฑ์ต้องตรงความจริง** | **แก้แล้ว** + ตรวจซ้ำรอบนี้ (§0/§L ตรงกับสิ่งที่ปิดจริง) | ห้ามสั่งตรวจสิ่งที่ยังไม่สำเร็จว่าต้องผ่าน |
 
 ### N-4 · รายการ UI ฝั่งลูกค้า (ถอดคำสั่ง Owner ตรง ๆ — ห้ามตกข้อ)
@@ -298,6 +298,7 @@
 | 17 | `67f10b8` | ปิด UI L-3/4/5/7/8 (test ใหม่ 5 ไฟล์ + อัปเดต 4) + migration 159 DROP legacy 6 fn | #585 **success** | #159 **success** |
 | 18 | `3ffafac` | (รอบก่อนหน้า — legacy contracts 017-033 กลับเข้า CI) | #584 **success** | #158 **success** |
 | 19 | `5f891de` | docs: reconcile 4 เอกสาร (HEAD/ledger/159=**prepared NOT applied** · Test Pack §L→**L-RT** · B2/C7C8=**UNVERIFIED** · probe 42501 · Pages serving=**VERIFIED marker btn-locked**) + ล้าง probe | #586 **success** | #160 **success** |
+| 20 | `7df33fd` | docs: commit ตัว reconcile เอง + บันทึก HEAD/CI จริงรอบสุดท้าย (HEAD line = 7df33fd + git-log authority · §9.0 แถวนี้) | #587/#588 **success** | #161/#162 **success** |
 | 16 | (docs commit ปิดเซสชั่น — SHA ดูใน git log) | เขียนแฮนด์ออฟปิดเซสชั่น + work state + gates evidence | ตรวจรอบถัดไป | ตรวจรอบถัดไป |
 
 > อ่านจาก GitHub Actions REST API จริง (`?head_sha=<full SHA>` — เครื่องนี้ไม่มี `gh`) ·

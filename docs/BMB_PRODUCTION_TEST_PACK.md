@@ -6,7 +6,7 @@
 > `BMB_OWNER_PREP_R16_D6_MIGRATIONS_2026-10-25.md` §1 (R-16) · Growth & Rewards acceptance ·
 > และของใหม่รอบนี้ (CAP-01 เส้นทางสั่งซื้อเดียว · CAP-21 เจาะกลุ่มอัตโนมัติ · CAP-22 AI เลือกเวลา)
 >
-> **SHA ล่าสุดที่ reconcile = `5f891de`** (CI **#586 success** · Contract **#160 success**) · โค้ดปิด UI = `67f10b8` (CI **#585** · Contract **#159**) ·
+> **HEAD ล่าสุด = `7df33fd`** (CI **#587/#588** · Contract **#161/#162** = success · รวมการ reconcile นี้ · ตรวจจริง = `git log --oneline -1`) · reconcile ก่อน push = `5f891de` (#586/#160) · โค้ดปิด UI = `67f10b8` (CI **#585** · Contract **#159**) ·
 > **แก้ตาม D-1/2/3 (2026-10-26):** §0/UI/L-10/B2/C7C8 อัปเดตสถานะจริง · L-3/4/5/7/8 ย้ายออกจากรายการค้าง → เป็นขั้น **L-RT (runtime verification)** · 159 = **prepared NOT applied**
 
 > **สถานะเอกสารนี้:** runbook สำหรับ **Owner/ผู้ได้รับมอบหมาย** รันเอง · AI ไม่รันแทน (เป็น production write)

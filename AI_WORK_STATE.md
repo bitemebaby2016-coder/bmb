@@ -1,7 +1,7 @@
 > ## 🟢 สถานะล่าสุด — ปิดเซสชั่น 2026-10-26 (ยึดบล็อกนี้ + `docs/BMB_HANDOFF_NEXT_SESSION_2026-10-26.md` ถ้าข้อความด้านล่างขัดกัน)
 > - **ปิดแล้ว (มี evidence ทุกข้อ):** **W-1** (`REPLAY_ALL_GREEN 157/157` · parity MATCH = rls 67=67 · acl_tables 768=768 · ledger 158=158 · `e2e/w1-parity-report-2026-10-26.md`) · **W-2** (legacy contract **7/7** → Contract Tests **#151/#153/#155 success**) · **W-3** (`marketing_rules` มีค่ารอบก่อน → C7/C8 — *probe ซ้ำวันนี้ = 42501 → คง **UNVERIFIED***) · **W-5** (เอกสารชุดเดียว) · **UI 9 ข้อครบ** = L-1/2/6/9 (รอบก่อน) + **L-3/4/5/7/8 (Owner 2026-10-26 · test รายข้อ: uiTapScroll/menuTopTabs/votePageUi/headingOrderFooter/preOrderLockUi · gates ALL ZERO · CI `67f10b8` #585/#159)** · **B-6 (P0)** apply 157+158 แล้ว (Owner อนุมัติ · ledger top 158 · evidence `e2e/w6Apply157158-{precheck,apply157,apply158,verify,record}.json`) · **legacy 6 functions = Owner สั่ง DROP · migration 159 = PREPARED — NOT APPLIED TO PRODUCTION** (ยังยืนยันไม่ได้ว่าลบออกจาก production แล้ว) → `supabase/migrations/159_drop_legacy_manual_functions.sql` (IF EXISTS · parity signatures · **CI auto-apply เฉพาะ ephemeral — ห้าม apply production จนกว่า Owner ยืนยัน + precheck**)
 > - **เหลือ (หลัง reconcile 2026-10-26):** **(ก)** production runtime = **บางส่วน verify**: Pages serving ✓ (marker `btn-locked` ใน CSS/JS จริง) แต่ **`marketing_rules` re-read 42501 → C7/C8 = UNVERIFIED** · **B2 = UNVERIFIED** (code-fix โดย L-6 มี test · ยังไม่เห็นของจริง) · **(ข)** **apply 159 production = PREPARED ยังไม่ทำ** (รอ Owner ยืนยันรอบสุดท้าย + precheck) · **(ค)** **test pack ฉบับ reconcile (§L → L-RT) ให้ Owner รัน** — รายการปิดมี evidence ไม่ต้องซ้ำ → **ยังห้ามสรุปว่าปิดครบทุกลูป**
-> - **git:** HEAD = `5f891de` = origin/main (docs reconcile · CI **#586 success** · Contract **#160 success**) · โค้ดปิด UI = `67f10b8` (CI **#585 success** · Contract **#159 success** · Pages job success) · ผล CI ทุก SHA = `BMB_MASTER_STATUS.md` §9.0 (failure #152 = §9.8) · stash `local-edits-before-sync-2026-09-21` = เดิมของเซสชั่นอื่น **ห้ามแตะ**
+> - **git:** HEAD ณ เขียนบรรทัดนี้ = `7df33fd` = origin/main (docs reconcile รอบ D-1/2/3 · CI **#587/#588 success** · Contract **#161/#162 success**) · **ค่า HEAD ให้ตรวจจริงด้วย `git log --oneline -1` เสมอ** (เอกสารนี้ = ค่า ณ เวลานั้น) · ก่อนหน้า: `5f891de` (#586/#160) · โค้ดปิด UI = `67f10b8` (CI **#585** · Contract **#159**) · ผล CI ทุก SHA = `BMB_MASTER_STATUS.md` §9.0 (failure #152 = §9.8) · stash `local-edits-before-sync-2026-09-21` = เดิมของเซสชั่นอื่น **ห้ามแตะ**
 > - **gates รอบปิด (2026-10-26):** tsc 0 · eslint 0 · brandGuard 0 (434 ไฟล์) · **vitest ทั้งชุด 0 fail** · build 0 → evidence **`e2e/gates_ui2026-10-26.log` = ALL 5 EXIT=0** (เดิม: `session20261026-r3-gates-evidence.log` · `gates_final.log`)
 > - ⚠️ **กติกาปิดงาน:** UI 9 ข้อ (โค้ด+test+CI เขียว) + legacy = **เตรียมเสร็จ (159 ยัง NOT applied production)** · Pages serving = **verify แล้ว (marker btn-locked)** — **ยังห้ามพูด "ปิดครบทุกลูป / เหลือ Owner อย่างเดียว"** จนกว่าจะครบ: **marketing_rules/B2 มีหลักฐานใหม่** (C7/C8/B2 ตอนนี้ = UNVERIFIED) · **159 apply+verify production จริง** (เมื่อ Owner สั่ง) · **test pack ฉบับ reconcile รันผ่าน**
 >
@@ -70,26 +70,28 @@
   - **W-2 legacy contracts 7 ตัว (B-2)** — ทั้ง 7 ไฟล์ EXIT=0 · step กลับเข้า `contract-tests.yml`
   - **UI 4 ข้อ:** L-1 (ป้าย theater) · L-2 (Marketing Testimonials) · L-6 (แถบสถานะ ~11:00) ·
     L-9 (เฟรม 1:1) — มี test กำกับครบ (`uiTechnicalLabels` · `storeStatusWindow`)
-  - **W-3 CAP-22** — `marketing_rules` **มีค่าจริงอยู่แล้ว** (window 10:00–19:00 · cooldown 6 · 3/สัปดาห์)
-    → C7/C8 ปลดล็อกได้ · เหลือแค่ `menu_rules`/`stop_conditions` ที่ยังว่าง (ทางเลือก)
+  - **W-3 CAP-22** — `marketing_rules` มีค่ารอบก่อน (window 10:00–19:00 · cooldown 6 · 3/สัปดาห์) แต่
+    **probe ซ้ำ 2026-10-26 = 42501 อ่านไม่ได้ → C7/C8 = UNVERIFIED** (ต้อง verify จริงก่อน) ·
+    `menu_rules`/`stop_conditions` ยังว่าง (ทางเลือก)
 - **blocker/งานค้าง:**
   - **B-6 (P0) = ปิดแล้ว ✅** — guest อ่านเมนู production ไม่ได้ (401 is_staff) → **apply 157 + 158 แล้ว
     (Owner อนุมัติ 2026-10-26)** → ตรวจซ้ำ: PostgREST ทุก endpoint = 200 · Playwright เปิด `/menu` จริง =
     เห็นเมนูครบ + **console ไม่มี error** → `e2e/w2_guest_menu_probe.cjs` (รอบหลัง apply)
-  - **W-1 แผน: ปิดแล้ว 2 ใน 3** (RLS 2 ตาราง + align grants = migration 158 apply แล้ว) ·
-    เหลือ **legacy functions 6 ตัว** (ไม่มี src caller) = รอ Owner เลือกปลด/คง
-  - **UI ฝั่งลูกค้า ยังเหลือ 5 ข้อ:** L-3 (จิ้มแล้วเลื่อนทุกหน้า) · L-4 (แท็บหัวข้อไม่ครบ/โหมดผิด) ·
-    L-5 (โหวตเมนูไทย+ครบทุกเมนู) · L-7 (ลำดับ+ลิงก์หัวข้อ/ฟุตเตอร์) · L-8 (พรีออเดอร์สีเทาทุกจุด)
-    — รายละเอียด = `docs/BMB_MASTER_STATUS.md` §3.1 (N-4) + เกณฑ์ `BMB_PRODUCTION_TEST_PACK.md` §L
+  - **W-1 แผน: มีคำสั่งครบทุกข้อแล้ว** (RLS 2 ตาราง + align grants = 158 apply · Owner เลือก DROP
+    legacy 6 ตัว → **migration 159 = PREPARED · NOT APPLIED to production** — รอ Owner ยืนยันรอบสุดท้าย + precheck)
+  - **UI ฝั่งลูกค้า ปิดครบ 9/9 (ฝั่งโค้ด)** — L-3/L-4/L-5/L-7/L-8 ปิด 2026-10-26 (มี test รายข้อ ·
+    gates ALL ZERO · CI `67f10b8` #585/#159) → เหลือแค่ **runtime verify = `BMB_PRODUCTION_TEST_PACK.md` §L-RT**
+    (ไม่ใช่งานค้าง) · รายละเอียด = `BMB_MASTER_STATUS.md` §3.1 (N-4)
 - **แฮนด์ออฟทั้งหมด:** `docs/BMB_HANDOFF_NEXT_SESSION_2026-10-26.md`
 
 ## 4. งานรอ Owner (ไม่ใช่งาน AI) — **รันได้เฉพาะที่ไม่ติด blocker**
 
-- = **`docs/BMB_PRODUCTION_TEST_PACK.md`** · ตอนนี้ **ปลดได้:** A1/A2 (เมื่อ CI รอบนี้เขียว) · A3 ·
-  B (รวม **B2** — แถบสถานะแก้แล้ว) · **C7/C8** (rules มีค่าจริง) · D–K
-  · **ยังงด:** ขั้นที่ผูกกับ UI 5 ข้อที่ค้าง (L-3/4/5/7/8)
-- **ห้าม**พูดว่า "เหลือ Owner อย่างเดียว" จนกว่า: (1) B-6 ปิด (apply 157 + พิสูจน์ guest เห็นเมนู) ·
-  (2) UI 5 ข้อที่ค้างปิด · (3) W-1 แผน 3 ข้อ มีคำสั่ง (Owner 2026-10-26)
+- = **`docs/BMB_PRODUCTION_TEST_PACK.md` (ฉบับ reconcile · HEAD `7df33fd`)** · รันได้: A1/A2/A3 ·
+  B (รวม **B2 = verify ครั้งแรก** — UNVERIFIED) · **C7/C8 = UNVERIFIED** (marketing_rules re-read 42501) ·
+  D–K · **L-RT** (runtime 5 ข้อ · ไม่ใช่งานค้าง) · **L-10 = รอ Owner ยืนยัน apply 159**
+- **ห้าม**พูดว่า "เหลือ Owner อย่างเดียว / ปิดครบทุกลูป" จนกว่า: (1) **marketing_rules/B2 มีหลักฐานใหม่**
+  (2) **159 apply+verify production จริง** (เมื่อ Owner สั่ง) (3) **test pack ฉบับ reconcile รันผ่าน**
+  (4) Pages serving ตรง build (ทำเครื่องหมาย verify แล้ว 2026-10-26 · marker `btn-locked`)
 
 ## 5. คำสั่ง/rules ที่ห้ามลืม
 
