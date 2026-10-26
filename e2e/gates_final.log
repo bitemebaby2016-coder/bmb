@@ -1,0 +1,808 @@
+==== FINAL GATES (session close 2026-10-26) ==== 
+npm error Missing script: "typecheck"
+npm error
+npm error To see a list of scripts, run:
+npm error   npm run
+npm error A complete log of this run can be found in: C:\Users\HP EliteBook\AppData\Local\npm-cache\_logs\2026-10-26T07_02_00_460Z-debug-0.log
+TSC_EXIT=1 
+
+> da-projectbite-me-baby@0.0.0 lint
+> eslint . && node scripts/brandNameGuard.cjs
+
+brandNameGuard: OK — สแกน 428 ไฟล์ ไม่พบชื่อผิด
+LINT_EXIT=0 
+brandNameGuard: OK — สแกน 428 ไฟล์ ไม่พบชื่อผิด
+BRAND_EXIT=0 
+
+> da-projectbite-me-baby@0.0.0 test
+> vitest run --run
+
+
+[1m[46m RUN [49m[22m [36mv3.2.7 [39m[90mD:/A PROJECT/Bite Me Baby[39m
+
+ [32m✓[39m src/__tests__/slipThumbStates.test.ts [2m([22m[2m8 tests[22m[2m)[22m[33m 442[2mms[22m[39m
+[90mstderr[2m | src/__tests__/mascotClosed.test.ts[2m > [22m[2mMascotBadge — แสดงรูปท่าร้านปิดจริง (render test)[2m > [22m[2mร้านปิด → ทุกท่าแสดงรูปในชุด closed/empty/sad เท่านั้น
+[22m[39mThe current testing environment is not configured to support act(...)
+
+[90mstderr[2m | src/__tests__/mascotClosed.test.ts[2m > [22m[2mMascotBadge — แสดงรูปท่าร้านปิดจริง (render test)[2m > [22m[2mร้านปิด → ทุกท่าแสดงรูปในชุด closed/empty/sad เท่านั้น
+[22m[39mThe current testing environment is not configured to support act(...)
+
+[90mstderr[2m | src/__tests__/mascotClosed.test.ts[2m > [22m[2mMascotBadge — แสดงรูปท่าร้านปิดจริง (render test)[2m > [22m[2mร้านปิด → ทุกท่าแสดงรูปในชุด closed/empty/sad เท่านั้น
+[22m[39mThe current testing environment is not configured to support act(...)
+
+[90mstderr[2m | src/__tests__/mascotClosed.test.ts[2m > [22m[2mMascotBadge — แสดงรูปท่าร้านปิดจริง (render test)[2m > [22m[2mร้านปิด → ทุกท่าแสดงรูปในชุด closed/empty/sad เท่านั้น
+[22m[39mThe current testing environment is not configured to support act(...)
+
+[90mstderr[2m | src/__tests__/mascotClosed.test.ts[2m > [22m[2mMascotBadge — แสดงรูปท่าร้านปิดจริง (render test)[2m > [22m[2mร้านปิด → ทุกท่าแสดงรูปในชุด closed/empty/sad เท่านั้น
+[22m[39mThe current testing environment is not configured to support act(...)
+
+[90mstderr[2m | src/__tests__/mascotClosed.test.ts[2m > [22m[2mMascotBadge — แสดงรูปท่าร้านปิดจริง (render test)[2m > [22m[2mร้านปิด → ทุกท่าแสดงรูปในชุด closed/empty/sad เท่านั้น
+[22m[39mThe current testing environment is not configured to support act(...)
+
+[90mstderr[2m | src/__tests__/mascotClosed.test.ts[2m > [22m[2mMascotBadge — แสดงรูปท่าร้านปิดจริง (render test)[2m > [22m[2mร้านปิด → ทุกท่าแสดงรูปในชุด closed/empty/sad เท่านั้น
+[22m[39mThe current testing environment is not configured to support act(...)
+
+[90mstderr[2m | src/__tests__/mascotClosed.test.ts[2m > [22m[2mMascotBadge — แสดงรูปท่าร้านปิดจริง (render test)[2m > [22m[2mร้านปิด → ทุกท่าแสดงรูปในชุด closed/empty/sad เท่านั้น
+[22m[39mThe current testing environment is not configured to support act(...)
+
+[90mstderr[2m | src/__tests__/mascotClosed.test.ts[2m > [22m[2mMascotBadge — แสดงรูปท่าร้านปิดจริง (render test)[2m > [22m[2mร้านปิด → ทุกท่าแสดงรูปในชุด closed/empty/sad เท่านั้น
+[22m[39mThe current testing environment is not configured to support act(...)
+
+[90mstderr[2m | src/__tests__/mascotClosed.test.ts[2m > [22m[2mMascotBadge — แสดงรูปท่าร้านปิดจริง (render test)[2m > [22m[2mร้านปิด → ทุกท่าแสดงรูปในชุด closed/empty/sad เท่านั้น
+[22m[39mThe current testing environment is not configured to support act(...)
+
+[90mstderr[2m | src/__tests__/mascotClosed.test.ts[2m > [22m[2mMascotBadge — แสดงรูปท่าร้านปิดจริง (render test)[2m > [22m[2mร้านปิด → ทุกท่าแสดงรูปในชุด closed/empty/sad เท่านั้น
+[22m[39mThe current testing environment is not configured to support act(...)
+
+[90mstderr[2m | src/__tests__/mascotClosed.test.ts[2m > [22m[2mMascotBadge — แสดงรูปท่าร้านปิดจริง (render test)[2m > [22m[2mร้านปิด → ทุกท่าแสดงรูปในชุด closed/empty/sad เท่านั้น
+[22m[39mThe current testing environment is not configured to support act(...)
+
+ [32m✓[39m src/__tests__/slipReviewPanel.test.ts [2m([22m[2m4 tests[22m[2m)[22m[33m 671[2mms[22m[39m
+   [33m[2m✓[22m[39m R1.2 · SlipReviewPanel — บอกเหตุผลชัดเมื่อยืนยันไม่ได้ (D-04)[2m > [22mไม่มีหลักฐาน (intent pending) → ปุ่มยืนยันปิด + บอกเหตุผล "ยังไม่มีหลักฐานการโอน" [33m 304[2mms[22m[39m
+[90mstderr[2m | src/__tests__/mascotClosed.test.ts[2m > [22m[2mMascotBadge — แสดงรูปท่าร้านปิดจริง (render test)[2m > [22m[2mร้านปิด → ทุกท่าแสดงรูปในชุด closed/empty/sad เท่านั้น
+[22m[39mThe current testing environment is not configured to support act(...)
+
+[90mstderr[2m | src/__tests__/mascotClosed.test.ts[2m > [22m[2mMascotBadge — แสดงรูปท่าร้านปิดจริง (render test)[2m > [22m[2mร้านปิด → ทุกท่าแสดงรูปในชุด closed/empty/sad เท่านั้น
+[22m[39mThe current testing environment is not configured to support act(...)
+
+[90mstderr[2m | src/__tests__/mascotClosed.test.ts[2m > [22m[2mMascotBadge — แสดงรูปท่าร้านปิดจริง (render test)[2m > [22m[2mร้านปิด → ทุกท่าแสดงรูปในชุด closed/empty/sad เท่านั้น
+[22m[39mThe current testing environment is not configured to support act(...)
+
+[90mstderr[2m | src/__tests__/mascotClosed.test.ts[2m > [22m[2mMascotBadge — แสดงรูปท่าร้านปิดจริง (render test)[2m > [22m[2mร้านปิด → ทุกท่าแสดงรูปในชุด closed/empty/sad เท่านั้น
+[22m[39mThe current testing environment is not configured to support act(...)
+
+[90mstderr[2m | src/__tests__/mascotClosed.test.ts[2m > [22m[2mMascotBadge — แสดงรูปท่าร้านปิดจริง (render test)[2m > [22m[2mร้านปิด → ทุกท่าแสดงรูปในชุด closed/empty/sad เท่านั้น
+[22m[39mThe current testing environment is not configured to support act(...)
+
+[90mstderr[2m | src/__tests__/mascotClosed.test.ts[2m > [22m[2mMascotBadge — แสดงรูปท่าร้านปิดจริง (render test)[2m > [22m[2mร้านปิด → ทุกท่าแสดงรูปในชุด closed/empty/sad เท่านั้น
+[22m[39mThe current testing environment is not configured to support act(...)
+
+[90mstderr[2m | src/__tests__/mascotClosed.test.ts[2m > [22m[2mMascotBadge — แสดงรูปท่าร้านปิดจริง (render test)[2m > [22m[2mร้านปิด → ทุกท่าแสดงรูปในชุด closed/empty/sad เท่านั้น
+[22m[39mThe current testing environment is not configured to support act(...)
+
+[90mstderr[2m | src/__tests__/mascotClosed.test.ts[2m > [22m[2mMascotBadge — แสดงรูปท่าร้านปิดจริง (render test)[2m > [22m[2mร้านปิด → ทุกท่าแสดงรูปในชุด closed/empty/sad เท่านั้น
+[22m[39mThe current testing environment is not configured to support act(...)
+
+[90mstderr[2m | src/__tests__/mascotClosed.test.ts[2m > [22m[2mMascotBadge — แสดงรูปท่าร้านปิดจริง (render test)[2m > [22m[2mร้านปิด → ทุกท่าแสดงรูปในชุด closed/empty/sad เท่านั้น
+[22m[39mThe current testing environment is not configured to support act(...)
+
+[90mstderr[2m | src/__tests__/mascotClosed.test.ts[2m > [22m[2mMascotBadge — แสดงรูปท่าร้านปิดจริง (render test)[2m > [22m[2mร้านปิด → ทุกท่าแสดงรูปในชุด closed/empty/sad เท่านั้น
+[22m[39mThe current testing environment is not configured to support act(...)
+
+[90mstderr[2m | src/__tests__/mascotClosed.test.ts[2m > [22m[2mMascotBadge — แสดงรูปท่าร้านปิดจริง (render test)[2m > [22m[2mร้านปิด → ทุกท่าแสดงรูปในชุด closed/empty/sad เท่านั้น
+[22m[39mThe current testing environment is not configured to support act(...)
+
+[90mstderr[2m | src/__tests__/mascotClosed.test.ts[2m > [22m[2mMascotBadge — แสดงรูปท่าร้านปิดจริง (render test)[2m > [22m[2mร้านเปิด → แสดงรูปท่าเดิมตามปกติ
+[22m[39mThe current testing environment is not configured to support act(...)
+
+[90mstderr[2m | src/__tests__/mascotClosed.test.ts[2m > [22m[2mMascotBadge — แสดงรูปท่าร้านปิดจริง (render test)[2m > [22m[2mร้านเปิด → แสดงรูปท่าเดิมตามปกติ
+[22m[39mThe current testing environment is not configured to support act(...)
+
+ [32m✓[39m src/__tests__/mascotClosed.test.ts [2m([22m[2m18 tests[22m[2m)[22m[33m 2453[2mms[22m[39m
+   [33m[2m✓[22m[39m MascotBadge — แสดงรูปท่าร้านปิดจริง (render test)[2m > [22mร้านปิด → ทุกท่าแสดงรูปในชุด closed/empty/sad เท่านั้น [33m 2263[2mms[22m[39m
+[90mstderr[2m | src/__tests__/api.test.ts[2m > [22m[2mAI Model A Configuration[2m > [22m[2mchatWithAI should fall back to Z-AI GLM 5.3 Flash when Qwen 3.7 Flash fails (via ai-proxy EF)
+[22m[39m[Bite Me Baby] Model A (qwen/qwen3.7-flash) failed, falling back to xiaomi/mimo-v2.6-flash: Error: proxy error: upstream 429
+    at requestCompletion [90m(D:\A PROJECT\Bite Me Baby\[39msrc\lib\aiService.ts:192:20[90m)[39m
+[90m    at processTicksAndRejections (node:internal/process/task_queues:104:5)[39m
+    at chatWithAI [90m(D:\A PROJECT\Bite Me Baby\[39msrc\lib\aiService.ts:374:20[90m)[39m
+    at [90mD:\A PROJECT\Bite Me Baby\[39msrc\__tests__\api.test.ts:454:20
+    at [90mfile:///D:/A%20PROJECT/Bite%20Me%20Baby/[39mnode_modules/[4m@vitest/runner[24m/dist/chunk-hooks.js:752:20
+
+ [32m✓[39m src/__tests__/api.test.ts [2m([22m[2m36 tests[22m[2m)[22m[33m 1179[2mms[22m[39m
+   [33m[2m✓[22m[39m AI Model A Configuration[2m > [22mchatWithAI should fall back to Z-AI GLM 5.3 Flash when Qwen 3.7 Flash fails (via ai-proxy EF) [33m 447[2mms[22m[39m
+ [32m✓[39m src/__tests__/checkoutMixedSplit.test.ts [2m([22m[2m3 tests[22m[2m)[22m[33m 2079[2mms[22m[39m
+   [33m[2m✓[22m[39m R5c — mixed cart (menu + general) = ONE order, never split[2m > [22mcreateOrder called ONCE with ALL items + PRE_ORDER + menu date (COD) [33m 895[2mms[22m[39m
+   [33m[2m✓[22m[39m R5c — mixed cart (menu + general) = ONE order, never split[2m > [22mpromptpay works for mixed carts too (mixed is no longer COD-only — no split) [33m 432[2mms[22m[39m
+   [33m[2m✓[22m[39m R5c — mixed cart (menu + general) = ONE order, never split[2m > [22mnever creates a second (same-day) order for the general items [33m 706[2mms[22m[39m
+ [31m❯[39m src/__tests__/homePreOrderModeGuard.test.ts [2m([22m[2m2 tests[22m[2m | [22m[31m1 failed[39m[2m)[22m[33m 10262[2mms[22m[39m
+   [33m[2m✓[22m[39m HomePage.handlePreOrder — R5c: ตะกร้าเดียว ไม่สลับโหมด ไม่ล้างตะกร้า[2m > [22mR5c: mode-mismatch add → mixed line KEPT (no clear-cart popup) → navigate /checkout?mode=pre-order [33m 4262[2mms[22m[39m
+[31m   [31m×[31m HomePage.handlePreOrder — R5c: ตะกร้าเดียว ไม่สลับโหมด ไม่ล้างตะกร้า[2m > [22madded (ไม่มี conflict) → navigate /checkout?mode=pre-order ตามเดิม[39m[33m 5989[2mms[22m[39m
+[31m     → Test timed out in 5000ms.
+If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".[39m
+[90mstderr[2m | src/__tests__/shopRoute.test.ts[2m > [22m[2m/shop runtime render (jsdom)[2m > [22m[2mmounts FoodTheater at /shop and logs no "No routes matched location"
+[22m[39m[getCategories] Error: { message: [32m'network disabled in unit test'[39m }
+
+[90mstderr[2m | src/__tests__/shopRoute.test.ts[2m > [22m[2m/shop runtime render (jsdom)[2m > [22m[2mmounts FoodTheater at /shop and logs no "No routes matched location"
+[22m[39m[getDeliveryRoundsAdmin] Error: { message: [32m'network disabled in unit test'[39m }
+
+[90mstderr[2m | src/__tests__/shopRoute.test.ts[2m > [22m[2m/shop runtime render (jsdom)[2m > [22m[2mmounts FoodTheater at /shop and logs no "No routes matched location"
+[22m[39m[getProducts] Error: { message: [32m'network disabled in unit test'[39m }
+[getCategories] Error: { message: [32m'network disabled in unit test'[39m }
+[getDeliveryRoundsAdmin] Error: { message: [32m'network disabled in unit test'[39m }
+[getPromotionsAdmin] Error: { message: [32m'network disabled in unit test'[39m }
+
+[90mstderr[2m | src/__tests__/shopRoute.test.ts[2m > [22m[2m/shop runtime render (jsdom)[2m > [22m[2mmounts FoodTheater at /shop and logs no "No routes matched location"
+[22m[39m[HomePage] Load error: Error: ERR_ROUNDS_READ: network disabled in unit test
+    at getDeliveryRoundsAdmin [90m(D:\A PROJECT\Bite Me Baby\[39msrc\lib\bmbAdminApi_rounds.ts:44:11[90m)[39m
+[90m    at processTicksAndRejections (node:internal/process/task_queues:104:5)[39m
+    at async Promise.all (index 2)
+    at loadData [90m(D:\A PROJECT\Bite Me Baby\[39msrc\pages\HomePage.tsx:90:46[90m)[39m
+
+[90mstderr[2m | src/__tests__/shopRoute.test.ts[2m > [22m[2m/shop runtime render (jsdom)[2m > [22m[2mmounts FoodTheater at /shop and logs no "No routes matched location"
+[22m[39m[getDeliveryRoundsAdmin] Error: { message: [32m'network disabled in unit test'[39m }
+
+ [32m✓[39m src/__tests__/checkoutModeLock.test.ts [2m([22m[2m4 tests[22m[2m)[22m[33m 2970[2mms[22m[39m
+   [33m[2m✓[22m[39m R5c — order mode derives from the cart (no mode switch)[2m > [22mmenu-calendar line (PRE_ORDER) -> PRE_ORDER UI + date locked from menu badge + NO date input [33m 1477[2mms[22m[39m
+   [33m[2m✓[22m[39m R5c — order mode derives from the cart (no mode switch)[2m > [22mgeneral-only cart -> SAME_DAY even with ?mode=pre-order (no free-date pre-order) [33m 387[2mms[22m[39m
+   [33m[2m✓[22m[39m R5c — PRE_ORDER requires a calendar menu (mirror ERR_PRE_ORDER_REQUIRES_MENU)[2m > [22mPRE_ORDER cart whose menu is off the calendar -> warning + submit blocked (createOrder never called) [33m 925[2mms[22m[39m
+ [32m✓[39m src/__tests__/adminOrdersModeFilter.test.ts [2m([22m[2m6 tests[22m[2m)[22m[33m 5471[2mms[22m[39m
+   [33m[2m✓[22m[39m AdminOrders — mode filter wiring (Phase 3 / RC-1 / INV-11)[2m > [22minitial load: all modes → orderMode = undefined (ไม่กรองฝั่ง server) [33m 498[2mms[22m[39m
+   [33m[2m✓[22m[39m AdminOrders — mode filter wiring (Phase 3 / RC-1 / INV-11)[2m > [22mคลิก ⚡ SAME_DAY → getOrdersPaged ได้ orderMode=SAME_DAY และโชว์เฉพาะ SAME_DAY [33m 1099[2mms[22m[39m
+   [33m[2m✓[22m[39m AdminOrders — mode filter wiring (Phase 3 / RC-1 / INV-11)[2m > [22mคลิก All modes กลับ → orderMode กลับเป็น undefined และโชว์ทั้งสองโหมด [33m 674[2mms[22m[39m
+   [33m[2m✓[22m[39m AdminOrders — mode filter wiring (Phase 3 / RC-1 / INV-11)[2m > [22mpagination คง mode filter ไว้ (ถัดไป ขณะกรอง PRE_ORDER → page=1 + orderMode=PRE_ORDER) [33m 902[2mms[22m[39m
+   [33m[2m✓[22m[39m AdminOrders — mode filter wiring (Phase 3 / RC-1 / INV-11)[2m > [22mจำนวนผลลัพธ์ต่างกันจริงตาม acceptance (PRE_ORDER 1 รายการ vs All modes 2 รายการ) [33m 2014[2mms[22m[39m
+[90mstderr[2m | src/__tests__/shopRoute.test.ts[2m > [22m[2m/shop runtime render (jsdom)[2m > [22m[2mmounts FoodTheater at /shop and logs no "No routes matched location"
+[22m[39m[getDeliveryRoundsAdmin] Error: { message: [32m'network disabled in unit test'[39m }
+[getBusinessSettings] Error: { message: [32m'network disabled in unit test'[39m }
+
+[90mstderr[2m | src/__tests__/aiRouting.test.ts[2m > [22m[2mT-G5-18: chatWithToolSupport remains dormant / fail-safe (D5-03)[2m > [22m[2mchatWithToolSupport returns a friendly failure when the gateway errors
+[22m[39m[Bite Me Baby] Model A (qwen/qwen3.7-flash) failed, falling back to xiaomi/mimo-v2.6-flash: Error: proxy error: upstream 429
+    at sendRequest [90m(D:\A PROJECT\Bite Me Baby\[39msrc\lib\aiToolCalling.ts:174:22[90m)[39m
+[90m    at processTicksAndRejections (node:internal/process/task_queues:104:5)[39m
+    at chatWithToolSupport [90m(D:\A PROJECT\Bite Me Baby\[39msrc\lib\aiToolCalling.ts:180:18[90m)[39m
+    at [90mD:\A PROJECT\Bite Me Baby\[39msrc\__tests__\aiRouting.test.ts:315:17
+    at [90mfile:///D:/A%20PROJECT/Bite%20Me%20Baby/[39mnode_modules/[4m@vitest/runner[24m/dist/chunk-hooks.js:752:20
+
+[90mstderr[2m | src/__tests__/aiRouting.test.ts[2m > [22m[2mT-G5-18: chatWithToolSupport remains dormant / fail-safe (D5-03)[2m > [22m[2mchatWithToolSupport returns a friendly failure when the gateway errors
+[22m[39mTool call error: Error: proxy error: upstream 429
+    at sendRequest [90m(D:\A PROJECT\Bite Me Baby\[39msrc\lib\aiToolCalling.ts:174:22[90m)[39m
+[90m    at processTicksAndRejections (node:internal/process/task_queues:104:5)[39m
+    at chatWithToolSupport [90m(D:\A PROJECT\Bite Me Baby\[39msrc\lib\aiToolCalling.ts:183:14[90m)[39m
+    at [90mD:\A PROJECT\Bite Me Baby\[39msrc\__tests__\aiRouting.test.ts:315:17
+    at [90mfile:///D:/A%20PROJECT/Bite%20Me%20Baby/[39mnode_modules/[4m@vitest/runner[24m/dist/chunk-hooks.js:752:20
+
+ [32m✓[39m src/__tests__/aiRouting.test.ts [2m([22m[2m32 tests[22m[2m)[22m[33m 3166[2mms[22m[39m
+   [33m[2m✓[22m[39m T-G5-16: AI output is never business authority[2m > [22mno mutation tool is reachable via executeToolCall [33m 2799[2mms[22m[39m
+ [32m✓[39m src/__tests__/shopRoute.test.ts [2m([22m[2m4 tests[22m[2m)[22m[33m 25975[2mms[22m[39m
+   [33m[2m✓[22m[39m /shop runtime render (jsdom)[2m > [22mmounts FoodTheater at /shop and logs no "No routes matched location" [33m 25960[2mms[22m[39m
+[90mstderr[2m | src/__tests__/homeSectionModeCta.test.ts[2m > [22m[2mA1 · HomeProductCard CTA ตาม section mode (INV-16)[2m > [22m[2msection same_day: การ์ดมีเฉพาะ 'เพิ่มลงตะกร้า' แม้ข้อมูล item เป็น pre-order + click เรียก onSameDay เท่านั้น
+[22m[39mAn update to Root inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+
+[90mstderr[2m | src/__tests__/homeSectionModeCta.test.ts[2m > [22m[2mA1 · HomeProductCard CTA ตาม section mode (INV-16)[2m > [22m[2msection pre_order: การ์ดมีป้ายปฏิทิน → 'จองล่วงหน้า' เท่านั้น + click เรียก onPreOrder เท่านั้น
+[22m[39mAn update to Root inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+
+[90mstderr[2m | src/__tests__/homeSectionModeCta.test.ts[2m > [22m[2mA1 · HomeProductCard CTA ตาม section mode (INV-16)[2m > [22m[2mR5c: section pre_order แต่การ์ดไม่มีป้ายปฏิทิน → ปุ่ม disabled "ยังไม่ลงปฏิทิน" (ไม่มีพรีออเดอร์วันอิสระ)
+[22m[39mAn update to Root inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+
+[90mstderr[2m | src/__tests__/homeSectionModeCta.test.ts[2m > [22m[2mA1 · HomeProductCard CTA ตาม section mode (INV-16)[2m > [22m[2mmode auto (default): พฤติกรรมเดิม — item.mode กำหนด CTA ทั้งสองทิศ
+[22m[39mAn update to Root inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+
+[90mstderr[2m | src/__tests__/homeSectionModeCta.test.ts[2m > [22m[2mA1 · HomeProductCard CTA ตาม section mode (INV-16)[2m > [22m[2mmode auto (default): พฤติกรรมเดิม — item.mode กำหนด CTA ทั้งสองทิศ
+[22m[39mAn update to Root inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+
+[90mstderr[2m | src/__tests__/homeSectionModeCta.test.ts[2m > [22m[2mA1 · HomeProductCard CTA ตาม section mode (INV-16)[2m > [22m[2msold_out: disabled + ป้าย "หมดแล้ว" ทุก mode
+[22m[39mAn update to Root inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+
+[90mstderr[2m | src/__tests__/homeSectionModeCta.test.ts[2m > [22m[2mA1 · ShowcaseCard mode-aware ผ่าน CategorySections (INV-16 · OD-3)[2m > [22m[2mmode=same_day: สินค้า dual ไม่มีปุ่ม 'จองล่วงหน้า'
+[22m[39mAn update to Root inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+
+[90mstderr[2m | src/__tests__/homeSectionModeCta.test.ts[2m > [22m[2mA1 · ShowcaseCard mode-aware ผ่าน CategorySections (INV-16 · OD-3)[2m > [22m[2mmode=pre_order: สินค้า dual ไม่มีปุ่ม 'เพิ่มลงตะกร้า'
+[22m[39mAn update to Root inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+
+[90mstderr[2m | src/__tests__/homeSectionModeCta.test.ts[2m > [22m[2mA1 · ShowcaseCard mode-aware ผ่าน CategorySections (INV-16 · OD-3)[2m > [22m[2mdefault (auto): สินค้า dual แสดงปุ่มเดียวตามโหมดขายจริง (ปุ่มจองล่วงหน้า) — บังคับปุ่มเดียวต่อการ์ด (A2)
+[22m[39mAn update to Root inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+
+[90mstderr[2m | src/__tests__/homeSectionModeCta.test.ts[2m > [22m[2mA1 · ShowcaseCard mode-aware ผ่าน CategorySections (INV-16 · OD-3)[2m > [22m[2mOwner 2026-10-25: หมวดโหมด 'ส่งวันนี้ / Same Day' ไม่สร้างหัวข้อซ้ำบนหน้าแรก (รวมเข้าแท็บ/เซกชันโหมด — สินค้าอยู่ใน showcase แทน)
+[22m[39mAn update to Root inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+
+[90mstderr[2m | src/__tests__/homeSectionModeCta.test.ts[2m > [22m[2mA1 · ShowcaseCard mode-aware ผ่าน CategorySections (INV-16 · OD-3)[2m > [22m[2mOwner 2026-10-25: หมวดโหมด 'จองล่วงหน้า / พรีออเดอร์' ไม่สร้างหัวข้อซ้ำบนหน้าแรก (รวมเข้าแท็บ/เซกชันโหมด)
+[22m[39mAn update to Root inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+
+[90mstderr[2m | src/__tests__/homeSectionModeCta.test.ts[2m > [22m[2mA1 · ShowcaseCard mode-aware ผ่าน CategorySections (INV-16 · OD-3)[2m > [22m[2mOD-3: สินค้าไร้สิทธิ์ทั้งสองโหมด (available_same_day=false & available_preorder=false) ไม่มีปุ่มสั่งใด ๆ
+[22m[39mAn update to Root inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+
+ [32m✓[39m src/__tests__/homeSectionModeCta.test.ts [2m([22m[2m14 tests[22m[2m)[22m[33m 3251[2mms[22m[39m
+   [33m[2m✓[22m[39m A1 · HomeProductCard CTA ตาม section mode (INV-16)[2m > [22mmode auto (default): พฤติกรรมเดิม — item.mode กำหนด CTA ทั้งสองทิศ [33m 397[2mms[22m[39m
+   [33m[2m✓[22m[39m A1 · ShowcaseCard mode-aware ผ่าน CategorySections (INV-16 · OD-3)[2m > [22mmode=same_day: สินค้า dual ไม่มีปุ่ม 'จองล่วงหน้า' [33m 1574[2mms[22m[39m
+[90mstderr[2m | src/__tests__/categorySections.test.ts[2m > [22m[2mCategorySections — ระบบหัวข้อเมนูเดียว (buildHeadingGroups + หัวข้อว่างซ่อน)[2m > [22m[2mหัวข้อว่างถูกซ่อน (owner ยืนยัน default — ไม่โชว์การ์ดเปล่า "เร็ว ๆ นี้")
+[22m[39mThe current testing environment is not configured to support act(...)
+
+[90mstderr[2m | src/__tests__/categorySections.test.ts[2m > [22m[2mCategorySections — ระบบหัวข้อเมนูเดียว (buildHeadingGroups + หัวข้อว่างซ่อน)[2m > [22m[2mหัวข้อที่มีสินค้าเรียงตาม sort_order ในกลุ่มเดียวกัน (หมวดไม่ติดลำดับ pinned)
+[22m[39mThe current testing environment is not configured to support act(...)
+
+[90mstderr[2m | src/__tests__/categorySections.test.ts[2m > [22m[2mCategorySections — ระบบหัวข้อเมนูเดียว (buildHeadingGroups + หัวข้อว่างซ่อน)[2m > [22m[2mFeature B (Owner 2026-10-25): หมวดติดลำดับ pinned (สินค้าสำเร็จรูป) มาก่อนหมวดทั่วไป
+[22m[39mThe current testing environment is not configured to support act(...)
+
+[90mstderr[2m | src/__tests__/categorySections.test.ts[2m > [22m[2mCategorySections — ระบบหัวข้อเมนูเดียว (buildHeadingGroups + หัวข้อว่างซ่อน)[2m > [22m[2mOwner (2026-10-25): ชื่อจริงใน DB = ชื่อเล่นในลิสต์ pinned (ความหมายเดียวกัน) — เรียงได้จริง
+[22m[39mThe current testing environment is not configured to support act(...)
+
+[90mstderr[2m | src/__tests__/categorySections.test.ts[2m > [22m[2mCategorySections — ระบบหัวข้อเมนูเดียว (buildHeadingGroups + หัวข้อว่างซ่อน)[2m > [22m[2mหัวข้อที่ archived ถูกซ่อนทั้งหัวข้อ
+[22m[39mThe current testing environment is not configured to support act(...)
+
+[90mstderr[2m | src/__tests__/categorySections.test.ts[2m > [22m[2mCategorySections — ระบบหัวข้อเมนูเดียว (buildHeadingGroups + หัวข้อว่างซ่อน)[2m > [22m[2mREGRESSION (บั๊กจริง 17 ต.ค.): หัวข้อที่เคยผูก Section ที่ปิด/ถูกลบ = โชว์ปกติ ไม่หาย
+[22m[39mThe current testing environment is not configured to support act(...)
+
+ [32m✓[39m src/__tests__/categorySections.test.ts [2m([22m[2m6 tests[22m[2m)[22m[33m 478[2mms[22m[39m
+   [33m[2m✓[22m[39m CategorySections — ระบบหัวข้อเมนูเดียว (buildHeadingGroups + หัวข้อว่างซ่อน)[2m > [22mหัวข้อว่างถูกซ่อน (owner ยืนยัน default — ไม่โชว์การ์ดเปล่า "เร็ว ๆ นี้") [33m 314[2mms[22m[39m
+[90mstderr[2m | src/__tests__/aiChatTimeout.test.ts[2m > [22m[2mChat-hang guard — chat must always settle[2m > [22m[2mblocking chatWithAI with a hung ai-proxy resolves to the Thai fallback in-budget
+[22m[39mOpenRouter API Error: Error: ai-proxy_timeout
+    at Timeout._onTimeout [90m(D:\A PROJECT\Bite Me Baby\[39msrc\lib\aiService.ts:34:43[90m)[39m
+[90m    at listOnTimeout (node:internal/timers:605:17)[39m
+[90m    at processTimers (node:internal/timers:541:7)[39m
+
+[90mstderr[2m | src/__tests__/aiChatTimeout.test.ts[2m > [22m[2mChat-hang guard — chat must always settle[2m > [22m[2mchatWithAIStream aborts a stalled SSE fetch (AbortSignal fires) and still settles
+[22m[39m[Bite Me Baby] Stream with qwen/qwen3.7-flash failed, falling back to xiaomi/mimo-v2.6-flash: DOMException {}
+
+[90mstderr[2m | src/__tests__/aiChatTimeout.test.ts[2m > [22m[2mChat-hang guard — chat must always settle[2m > [22m[2mchatWithAIStream aborts a stalled SSE fetch (AbortSignal fires) and still settles
+[22m[39mOpenRouter streaming failed — falling back to blocking call: DOMException {}
+
+[90mstderr[2m | src/__tests__/aiChatTimeout.test.ts[2m > [22m[2mChat-hang guard — chat must always settle[2m > [22m[2mchatWithAIStream aborts a stalled SSE fetch (AbortSignal fires) and still settles
+[22m[39mOpenRouter API Error: Error: ai-proxy_timeout
+    at Timeout._onTimeout [90m(D:\A PROJECT\Bite Me Baby\[39msrc\lib\aiService.ts:34:43[90m)[39m
+[90m    at listOnTimeout (node:internal/timers:605:17)[39m
+[90m    at processTimers (node:internal/timers:541:7)[39m
+
+[90mstderr[2m | src/__tests__/aiChatTimeout.test.ts[2m > [22m[2mChat-hang guard — chat must always settle[2m > [22m[2mdoes not slow down or break the healthy path (model A fails once → model B answers)
+[22m[39m[Bite Me Baby] Model A (qwen/qwen3.7-flash) failed, falling back to xiaomi/mimo-v2.6-flash: Error: proxy error: upstream 429
+    at requestCompletion [90m(D:\A PROJECT\Bite Me Baby\[39msrc\lib\aiService.ts:192:20[90m)[39m
+    at Module.chatWithAI [90m(D:\A PROJECT\Bite Me Baby\[39msrc\lib\aiService.ts:374:20[90m)[39m
+    at [90mD:\A PROJECT\Bite Me Baby\[39msrc\__tests__\aiChatTimeout.test.ts:89:19
+    at [90mfile:///D:/A%20PROJECT/Bite%20Me%20Baby/[39mnode_modules/[4m@vitest/runner[24m/dist/chunk-hooks.js:752:20
+
+ [32m✓[39m src/__tests__/aiChatTimeout.test.ts [2m([22m[2m4 tests[22m[2m)[22m[33m 1406[2mms[22m[39m
+   [33m[2m✓[22m[39m Chat-hang guard — chat must always settle[2m > [22mblocking chatWithAI with a hung ai-proxy resolves to the Thai fallback in-budget [33m 879[2mms[22m[39m
+ [32m✓[39m src/__tests__/homeMenuAdminOrdering.test.ts [2m([22m[2m9 tests[22m[2m)[22m[33m 489[2mms[22m[39m
+   [33m[2m✓[22m[39m Feature A — general items join the pre-order cart (one round, same cart)[2m > [22mclient gate รับ general ride-along ใน PRE_ORDER (เท่า server 142 G2) [33m 457[2mms[22m[39m
+ [32m✓[39m src/__tests__/couponBox.test.ts [2m([22m[2m11 tests[22m[2m)[22m[33m 712[2mms[22m[39m
+ [32m✓[39m src/__tests__/orderTimeline.test.ts [2m([22m[2m6 tests[22m[2m)[22m[33m 346[2mms[22m[39m
+ [32m✓[39m src/__tests__/phases5_7.test.ts [2m([22m[2m4 tests[22m[2m)[22m[33m 560[2mms[22m[39m
+ [32m✓[39m src/__tests__/theme.test.ts [2m([22m[2m16 tests[22m[2m)[22m[32m 92[2mms[22m[39m
+ [32m✓[39m src/__tests__/socialLogin.test.ts [2m([22m[2m12 tests[22m[2m)[22m[32m 119[2mms[22m[39m
+[90mstderr[2m | src/__tests__/dispatchContract.test.ts[2m > [22m[2m3B-2D · assign_driver contract (admin authority, 020)[2m > [22m[2munauthorized (non-admin) assignment → denied
+[22m[39m[Driver] list_drivers failed: { code: [32m'ERR_FORBIDDEN'[39m, message: [32m'ERR_FORBIDDEN'[39m }
+
+[90mstderr[2m | src/__tests__/dispatchContract.test.ts[2m > [22m[2m3B-2D · driver identity + assignment ownership (041)[2m > [22m[2mJWT-linked driver logs in; unlinked caller does NOT become a driver (ERR_NOT_A_DRIVER)
+[22m[39m[Driver] driver_login failed: ERR_NOT_A_DRIVER
+
+[90mstderr[2m | src/__tests__/dispatchContract.test.ts[2m > [22m[2m3B-2D · driver identity + assignment ownership (041)[2m > [22m[2mJWT-linked driver logs in; unlinked caller does NOT become a driver (ERR_NOT_A_DRIVER)
+[22m[39m[Driver] my_deliveries failed: ERR_NOT_A_DRIVER
+
+[90mstderr[2m | src/__tests__/dispatchContract.test.ts[2m > [22m[2m3B-2D · dispatch state transitions (canonical spine only)[2m > [22m[2mready_for_dispatch → dispatched (admin hop) succeeds; pending→dispatched denied
+[22m[39m[updateOrderStatus] transition error: {
+  code: [32m'ERR_INVALID_TRANSITION'[39m,
+  message: [32m'ERR_INVALID_TRANSITION: pending -> dispatched'[39m
+}
+
+ [32m✓[39m src/__tests__/dispatchContract.test.ts [2m([22m[2m16 tests[22m[2m)[22m[32m 122[2mms[22m[39m
+ [32m✓[39m src/__tests__/canonicalOrderFlow.test.ts [2m([22m[2m22 tests[22m[2m)[22m[32m 184[2mms[22m[39m
+ [32m✓[39m src/__tests__/locationStore.test.ts [2m([22m[2m15 tests[22m[2m)[22m[33m 414[2mms[22m[39m
+ [32m✓[39m src/__tests__/dbBackupHelpers.test.ts [2m([22m[2m11 tests[22m[2m)[22m[32m 93[2mms[22m[39m
+ [32m✓[39m src/__tests__/printTemplates.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 118[2mms[22m[39m
+[90mstderr[2m | src/__tests__/kitchenControl.test.ts[2m > [22m[2m3B-2C · order_ready_to_make — Owner §7 gate matrix (server-side via RPC)[2m > [22m[2mnon-admin caller denied (ERR_FORBIDDEN)
+[22m[39m[Kitchen] order_ready_to_make failed: { code: [32m'ERR_FORBIDDEN'[39m, message: [32m'ERR_FORBIDDEN'[39m }
+
+ [32m✓[39m src/__tests__/kitchenControl.test.ts [2m([22m[2m30 tests[22m[2m)[22m[32m 169[2mms[22m[39m
+[90mstderr[2m | src/__tests__/paymentStateMachine.test.ts[2m > [22m[2mP0-5 Payment — server-authoritative intents[2m > [22m[2mrefuses a client-supplied amount that does not match the order total
+[22m[39m[paymentGateway] create_payment_intent_record error: { code: [32m'ERR_AMOUNT_MISMATCH'[39m, message: [32m'ERR_AMOUNT_MISMATCH'[39m }
+
+ [32m✓[39m src/__tests__/loyaltyTiers.test.ts [2m([22m[2m20 tests[22m[2m)[22m[32m 198[2mms[22m[39m
+[90mstderr[2m | src/__tests__/paymentStateMachine.test.ts[2m > [22m[2mP0-6 Order state machine — allow-list enforcement[2m > [22m[2mdenies skip-state jumps (pending → delivered)
+[22m[39m[updateOrderStatus] transition error: {
+  code: [32m'ERR_INVALID_TRANSITION'[39m,
+  message: [32m'ERR_INVALID_TRANSITION: pending -> delivered'[39m
+}
+
+[90mstderr[2m | src/__tests__/paymentStateMachine.test.ts[2m > [22m[2mP0-6 Order state machine — allow-list enforcement[2m > [22m[2mdenies backward transitions (confirmed → pending)
+[22m[39m[updateOrderStatus] transition error: {
+  code: [32m'ERR_INVALID_TRANSITION'[39m,
+  message: [32m'ERR_INVALID_TRANSITION: confirmed -> pending'[39m
+}
+
+ [32m✓[39m src/__tests__/paymentStateMachine.test.ts [2m([22m[2m16 tests[22m[2m)[22m[32m 109[2mms[22m[39m
+ [32m✓[39m src/__tests__/aiVoiceServer.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 116[2mms[22m[39m
+ [32m✓[39m src/__tests__/couponHydrationRace.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 154[2mms[22m[39m
+ [32m✓[39m src/__tests__/customerIntelligence.test.ts [2m([22m[2m11 tests[22m[2m)[22m[32m 172[2mms[22m[39m
+ [32m✓[39m src/__tests__/adminUi.test.ts [2m([22m[2m14 tests[22m[2m)[22m[32m 186[2mms[22m[39m
+[90mstderr[2m | src/__tests__/adminOrdersOp.test.ts[2m > [22m[2m3B-2A · client actions stay on canonical authority (mock RPC contract)[2m > [22m[2minvalid transition is blocked (RPC error → null, no client mutation)
+[22m[39m[updateOrderStatus] transition error: {
+  code: [32m'ERR_INVALID_TRANSITION'[39m,
+  message: [32m'ERR_INVALID_TRANSITION: pending -> delivered'[39m
+}
+
+[90mstderr[2m | src/__tests__/adminOrdersOp.test.ts[2m > [22m[2m3B-2A · read-model helpers degrade gracefully (RLS-scoped reads)[2m > [22m[2mforced transport error degrades to [] (no crash on Admin Orders)
+[22m[39m[getOrderStatusHistory] Error: { code: [32m'PGRST'[39m, message: [32m'forced'[39m }
+
+[90mstderr[2m | src/__tests__/adminOrdersOp.test.ts[2m > [22m[2m3B-2A · read-model helpers degrade gracefully (RLS-scoped reads)[2m > [22m[2mforced transport error degrades to [] (no crash on Admin Orders)
+[22m[39m[getDeliveryAssignmentsFor] Error: { code: [32m'PGRST'[39m, message: [32m'forced'[39m }
+
+[90mstderr[2m | src/__tests__/adminOrdersOp.test.ts[2m > [22m[2m3B-2A · read-model helpers degrade gracefully (RLS-scoped reads)[2m > [22m[2mforced transport error degrades to [] (no crash on Admin Orders)
+[22m[39m[getOrderAuditTrail] Error: { code: [32m'PGRST'[39m, message: [32m'forced'[39m }
+
+ [32m✓[39m src/__tests__/adminOrdersOp.test.ts [2m([22m[2m20 tests[22m[2m)[22m[32m 73[2mms[22m[39m
+[90mstderr[2m | src/__tests__/menuSchedule.test.ts[2m > [22m[2mCAT-02 · Admin schedule RPC flow (migration 039 contract)[2m > [22m[2mnon-admin caller → ERR_FORBIDDEN (server authority, not UI hiding)
+[22m[39m[setMenuSchedule] Error: { code: [32m'ERR_FORBIDDEN'[39m, message: [32m'ERR_FORBIDDEN'[39m }
+
+[90mstderr[2m | src/__tests__/menuSchedule.test.ts[2m > [22m[2mCAT-02 · Admin schedule RPC flow (migration 039 contract)[2m > [22m[2minvalid date (past) → ERR_INVALID_MENU_DATE; unknown product → ERR_PRODUCT_NOT_FOUND
+[22m[39m[setMenuSchedule] Error: { code: [32m'ERR_INVALID_MENU_DATE'[39m, message: [32m'ERR_INVALID_MENU_DATE'[39m }
+
+[90mstderr[2m | src/__tests__/menuSchedule.test.ts[2m > [22m[2mCAT-02 · Admin schedule RPC flow (migration 039 contract)[2m > [22m[2minvalid date (past) → ERR_INVALID_MENU_DATE; unknown product → ERR_PRODUCT_NOT_FOUND
+[22m[39m[setMenuSchedule] Error: { code: [32m'ERR_PRODUCT_NOT_FOUND'[39m, message: [32m'ERR_PRODUCT_NOT_FOUND'[39m }
+
+[90mstderr[2m | src/__tests__/menuSchedule.test.ts[2m > [22m[2mPHASE 1 · publish validation exactly 2 valid PRE_ORDER menus (migration 123)[2m > [22m[2mpublish with 1 entry → ERR_MENU_COUNT_INVALID; with 3 → ERR_MENU_COUNT_INVALID; draft of 1 stays allowed
+[22m[39m[publishMenuSchedule] Error: {
+  code: [32m'ERR_MENU_COUNT_INVALID'[39m,
+  message: [32m'ERR_MENU_COUNT_INVALID: 1 entries (exactly 2 required)'[39m
+}
+
+[90mstderr[2m | src/__tests__/menuSchedule.test.ts[2m > [22m[2mPHASE 1 · publish validation exactly 2 valid PRE_ORDER menus (migration 123)[2m > [22m[2mpublish with 1 entry → ERR_MENU_COUNT_INVALID; with 3 → ERR_MENU_COUNT_INVALID; draft of 1 stays allowed
+[22m[39m[publishMenuSchedule] Error: {
+  code: [32m'ERR_MENU_COUNT_INVALID'[39m,
+  message: [32m'ERR_MENU_COUNT_INVALID: 3 entries (exactly 2 required)'[39m
+}
+
+[90mstderr[2m | src/__tests__/menuSchedule.test.ts[2m > [22m[2mPHASE 1 · publish validation exactly 2 valid PRE_ORDER menus (migration 123)[2m > [22m[2mproduct disabled AFTER scheduling → publish rejected (ERR_PRODUCT_INVALID)
+[22m[39m[publishMenuSchedule] Error: {
+  code: [32m'ERR_PRODUCT_INVALID'[39m,
+  message: [32m'ERR_PRODUCT_INVALID: 1 valid PRE_ORDER menus (disabled/archived/non-preorder product in schedule)'[39m
+}
+
+[90mstderr[2m | src/__tests__/menuSchedule.test.ts[2m > [22m[2mPHASE 1 · publish validation exactly 2 valid PRE_ORDER menus (migration 123)[2m > [22m[2mnon-PRE_ORDER product among the 2 → ERR_PRODUCT_INVALID (canonical available_preorder)
+[22m[39m[publishMenuSchedule] Error: {
+  code: [32m'ERR_PRODUCT_INVALID'[39m,
+  message: [32m'ERR_PRODUCT_INVALID: 1 valid PRE_ORDER menus (disabled/archived/non-preorder product in schedule)'[39m
+}
+
+[90mstderr[2m | src/__tests__/menuSchedule.test.ts[2m > [22m[2mPHASE 1 · publish validation exactly 2 valid PRE_ORDER menus (migration 123)[2m > [22m[2mpublish with no schedule → ERR_MENU_NOT_FOUND; non-admin publish → ERR_FORBIDDEN
+[22m[39m[publishMenuSchedule] Error: {
+  code: [32m'ERR_MENU_NOT_FOUND'[39m,
+  message: [32m'ERR_MENU_NOT_FOUND: no schedule for 2026-10-29'[39m
+}
+
+[90mstderr[2m | src/__tests__/menuSchedule.test.ts[2m > [22m[2mPHASE 1 · publish validation exactly 2 valid PRE_ORDER menus (migration 123)[2m > [22m[2mpublish with no schedule → ERR_MENU_NOT_FOUND; non-admin publish → ERR_FORBIDDEN
+[22m[39m[publishMenuSchedule] Error: { code: [32m'ERR_FORBIDDEN'[39m, message: [32m'ERR_FORBIDDEN'[39m }
+
+ [32m✓[39m src/__tests__/menuSchedule.test.ts [2m([22m[2m21 tests[22m[2m)[22m[32m 170[2mms[22m[39m
+ [32m✓[39m src/__tests__/notificationReconciliation.test.ts [2m([22m[2m10 tests[22m[2m)[22m[32m 139[2mms[22m[39m
+ [32m✓[39m src/__tests__/theaterUnity.test.ts [2m([22m[2m10 tests[22m[2m)[22m[32m 21[2mms[22m[39m
+ [32m✓[39m src/__tests__/marketingAutoSchedule.test.ts [2m([22m[2m12 tests[22m[2m)[22m[32m 82[2mms[22m[39m
+ [32m✓[39m src/__tests__/talkToBite.test.ts [2m([22m[2m30 tests[22m[2m)[22m[32m 97[2mms[22m[39m
+ [32m✓[39m src/__tests__/preOrderQueue.test.ts [2m([22m[2m13 tests[22m[2m)[22m[32m 102[2mms[22m[39m
+ [32m✓[39m src/__tests__/storeStatusWindow.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 68[2mms[22m[39m
+ [32m✓[39m src/__tests__/storefrontEligibility.test.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 108[2mms[22m[39m
+ [32m✓[39m src/__tests__/socialAiContinuity.test.ts [2m([22m[2m18 tests[22m[2m)[22m[32m 55[2mms[22m[39m
+ [32m✓[39m src/__tests__/g7Security.test.ts [2m([22m[2m63 tests[22m[2m)[22m[32m 62[2mms[22m[39m
+ [32m✓[39m src/__tests__/orderNumberUniqueness.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 76[2mms[22m[39m
+ [32m✓[39m src/__tests__/theaterDailyCopy.test.ts [2m([22m[2m15 tests[22m[2m)[22m[32m 33[2mms[22m[39m
+ [32m✓[39m src/__tests__/aiServerMemory.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 82[2mms[22m[39m
+[90mstderr[2m | src/__tests__/aiVoice.test.ts[2m > [22m[2mVoice support helpers (WS-2b/c — graceful fallback)[2m > [22m[2mreports no support when the browser lacks the API (Firefox/iOS)
+[22m[39mGoTrueClient@sb-ivkdfognyiwjcmrhcnwz-auth-token:1 (2.116.0) 2026-10-26T07:04:10.955Z Multiple GoTrueClient instances detected in the same browser context. It is not an error, but this should be avoided as it may produce undefined behavior when used concurrently under the same storage key.
+
+ [32m✓[39m src/__tests__/aiVoice.test.ts [2m([22m[2m12 tests[22m[2m)[22m[32m 85[2mms[22m[39m
+ [32m✓[39m src/__tests__/otpPolicy.test.ts [2m([22m[2m15 tests[22m[2m)[22m[32m 94[2mms[22m[39m
+ [32m✓[39m src/__tests__/paymentExceptions.test.ts [2m([22m[2m25 tests[22m[2m)[22m[32m 74[2mms[22m[39m
+[90mstderr[2m | src/__tests__/mediaFlow.test.ts[2m > [22m[2mCAT-03 · security mirrors (migration 057 policies)[2m > [22m[2manon (non-admin) upload rejected — storage INSERT policy mirror
+[22m[39m[uploadMediaAsset] storage error: { message: [32m'ERR_FORBIDDEN (storage: anon write denied)'[39m }
+
+ [32m✓[39m src/__tests__/mediaFlow.test.ts [2m([22m[2m17 tests[22m[2m)[22m[32m 64[2mms[22m[39m
+ [32m✓[39m src/__tests__/bangkokTime.test.ts [2m([22m[2m15 tests[22m[2m)[22m[32m 16[2mms[22m[39m
+ [32m✓[39m src/__tests__/referralProgram.test.ts [2m([22m[2m34 tests[22m[2m)[22m[32m 61[2mms[22m[39m
+ [32m✓[39m src/__tests__/roleMatrixCoverage.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 28[2mms[22m[39m
+ [32m✓[39m src/__tests__/orderAddressFallback.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 76[2mms[22m[39m
+ [32m✓[39m src/__tests__/adminPreOrdersConsolidation.test.ts [2m([22m[2m7 tests[22m[2m)[22m[33m 686[2mms[22m[39m
+   [33m[2m✓[22m[39m Phase 4 — AdminOrders preset จาก URL (bookmark /admin/pre-orders ไม่ตาย)[2m > [22m?mode=PRE_ORDER → query แรก = orderMode PRE_ORDER + grouping header เปิด [33m 405[2mms[22m[39m
+ [32m✓[39m src/__tests__/pushTransport.test.ts [2m([22m[2m20 tests[22m[2m)[22m[32m 63[2mms[22m[39m
+ [32m✓[39m src/__tests__/engagementPlay.test.ts [2m([22m[2m17 tests[22m[2m)[22m[32m 54[2mms[22m[39m
+ [32m✓[39m src/__tests__/floatingAdBanners.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 91[2mms[22m[39m
+ [32m✓[39m src/__tests__/riderFullCycle.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 82[2mms[22m[39m
+[90mstderr[2m | src/__tests__/paymentReadAuthority.test.ts[2m > [22m[2mD-08 · read failure ต้องไม่เงียบ (ห้ามคืน [])[2m > [22m[2mgetPaymentIntents throw ERR_PAYMENT_INTENTS_READ เมื่อ RPC ล้ม
+[22m[39m[paymentGateway] get_payment_intents_for_orders failed: permission denied for table payment_intents
+
+[90mstderr[2m | src/__tests__/paymentReadAuthority.test.ts[2m > [22m[2mD-08 · read failure ต้องไม่เงียบ (ห้ามคืน [])[2m > [22m[2mgetPaymentIntentsFor propagate error ออกไป (ไม่คืน [] ให้ UI เข้าใจผิด)
+[22m[39m[paymentGateway] get_payment_intents_for_orders failed: permission denied for table payment_intents
+
+[90mstderr[2m | src/__tests__/paymentReadAuthority.test.ts[2m > [22m[2mD-08 · read failure ต้องไม่เงียบ (ห้ามคืน [])[2m > [22m[2mconfirmPayment รายงาน ERR_PAYMENT_INTENTS_READ ไม่ใช่ "not found" ปลอม
+[22m[39m[paymentGateway] intent read failed: permission denied for table payment_intents
+
+ [32m✓[39m src/__tests__/paymentReadAuthority.test.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 162[2mms[22m[39m
+ [32m✓[39m src/__tests__/omiseWebhookSignature.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 108[2mms[22m[39m
+ [32m✓[39m src/__tests__/accountRecovery.test.ts [2m([22m[2m19 tests[22m[2m)[22m[32m 36[2mms[22m[39m
+ [32m✓[39m src/__tests__/customerOwnership.test.ts [2m([22m[2m14 tests[22m[2m)[22m[32m 31[2mms[22m[39m
+ [32m✓[39m src/__tests__/stripeWebhookSignature.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 96[2mms[22m[39m
+ [32m✓[39m src/__tests__/socialOrderIntake.test.ts [2m([22m[2m20 tests[22m[2m)[22m[32m 35[2mms[22m[39m
+ [32m✓[39m src/__tests__/roundsSameDayNoCutoff.test.ts [2m([22m[2m16 tests[22m[2m)[22m[32m 52[2mms[22m[39m
+ [32m✓[39m src/__tests__/configAuthorityMap.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 44[2mms[22m[39m
+ [32m✓[39m src/__tests__/adminDeliveryAdvance.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 31[2mms[22m[39m
+ [32m✓[39m src/__tests__/paymentIntentsSingleRead.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 40[2mms[22m[39m
+ [32m✓[39m src/__tests__/promotionClient.test.ts [2m([22m[2m26 tests[22m[2m)[22m[32m 43[2mms[22m[39m
+ [32m✓[39m src/__tests__/ambientMusic.test.ts [2m([22m[2m11 tests[22m[2m)[22m[32m 35[2mms[22m[39m
+ [32m✓[39m src/__tests__/seo.test.ts [2m([22m[2m26 tests[22m[2m)[22m[32m 54[2mms[22m[39m
+ [32m✓[39m src/__tests__/menuScheduleGate.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 77[2mms[22m[39m
+[90mstderr[2m | src/__tests__/ordersPaged.test.ts[2m > [22m[2mgetOrdersPaged contract (W4-E-1 D9)[2m > [22m[2merrors degrade gracefully to empty result (contract)
+[22m[39m[getOrdersPaged] Error: { code: [32m'PGRST'[39m, message: [32m'forced'[39m }
+
+[90mstderr[2m | src/__tests__/ordersPaged.test.ts[2m > [22m[2mgetOrdersPaged contract (W4-E-1 D9)[2m > [22m[2merrors degrade gracefully to empty result (contract)
+[22m[39m[getOrdersAggregated] count error: { code: [32m'PGRST'[39m, message: [32m'forced'[39m }
+
+ [32m✓[39m src/__tests__/ordersPaged.test.ts [2m([22m[2m12 tests[22m[2m)[22m[32m 39[2mms[22m[39m
+ [32m✓[39m src/__tests__/roleSystem.test.ts [2m([22m[2m10 tests[22m[2m)[22m[32m 70[2mms[22m[39m
+ [32m✓[39m src/__tests__/g6Security.test.ts [2m([22m[2m28 tests[22m[2m)[22m[32m 32[2mms[22m[39m
+ [32m✓[39m src/__tests__/promotionCampaignControls.test.ts [2m([22m[2m22 tests[22m[2m)[22m[32m 35[2mms[22m[39m
+ [32m✓[39m src/__tests__/adminCategoryLifecycle.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 17[2mms[22m[39m
+ [32m✓[39m src/__tests__/homePopular.test.ts [2m([22m[2m11 tests[22m[2m)[22m[32m 66[2mms[22m[39m
+ [32m✓[39m src/__tests__/providers.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 32[2mms[22m[39m
+ [32m✓[39m src/__tests__/cartPersistence.test.ts [2m([22m[2m11 tests[22m[2m)[22m[32m 34[2mms[22m[39m
+[90mstderr[2m | src/__tests__/cartIsolationStore.test.ts[2m > [22m[2mcartStore.addItem — gate ฝั่ง client ยังอยู่ (server 025/142 = authority)[2m > [22m[2mcontext ต่างกัน → context_blocked (TEN-05)
+[22m[39m[CartStore] Context mismatch: cannot add item from different tenant.
+
+ [32m✓[39m src/__tests__/cartIsolationStore.test.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 28[2mms[22m[39m
+[90mstderr[2m | src/__tests__/roundsAuditGuards.test.ts[2m > [22m[2mR3 (D-05) — open/close audit + whitelist[2m > [22m[2mstatus นอก whitelist → ไม่แตะ DB และไม่เขียน audit
+[22m[39m[setRoundStatus] invalid status: weird
+
+ [32m✓[39m src/__tests__/roundsAuditGuards.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 56[2mms[22m[39m
+ [32m✓[39m src/__tests__/cartLineIdentity.test.ts [2m([22m[2m9 tests[22m[2m)[22m[32m 30[2mms[22m[39m
+ [32m✓[39m src/__tests__/w5h1Tracking.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 31[2mms[22m[39m
+ [32m✓[39m src/__tests__/homeShowcase.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 24[2mms[22m[39m
+ [32m✓[39m src/__tests__/offlineUtils.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 61[2mms[22m[39m
+[90mstderr[2m | src/__tests__/driverProvisioning.test.ts[2m > [22m[2mgetDriverAccounts (READ-ONLY provisioning lookup)[2m > [22m[2mreturns [] on read failure (never invents rows)
+[22m[39m[Driver] drivers read failed: { message: [32m'ERR_RLS'[39m }
+
+ [32m✓[39m src/__tests__/driverProvisioning.test.ts [2m([22m[2m10 tests[22m[2m)[22m[32m 30[2mms[22m[39m
+ [32m✓[39m src/__tests__/omise.test.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 72[2mms[22m[39m
+ [32m✓[39m src/__tests__/catalogGate.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 24[2mms[22m[39m
+ [32m✓[39m src/__tests__/paymentSlipUpload.test.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 26[2mms[22m[39m
+ [32m✓[39m src/__tests__/omiseCutover.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 23[2mms[22m[39m
+ [32m✓[39m src/__tests__/g6g7OrderBoundary.test.ts [2m([22m[2m12 tests[22m[2m)[22m[32m 23[2mms[22m[39m
+[90mstderr[2m | src/__tests__/inventoryAdmin.test.ts[2m > [22m[2mG-SEC-01 — Admin inventory READ path stays functional[2m > [22m[2mgetInventoryByName returns the matching row
+[22m[39m[getInventoryByName] Error: {
+  code: [32m'PGRST116'[39m,
+  message: [32m'JSON object requested, multiple (or no) rows returned'[39m
+}
+
+ [32m✓[39m src/__tests__/inventoryAdmin.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 17[2mms[22m[39m
+ [32m✓[39m src/__tests__/theaterStage.test.ts [2m([22m[2m14 tests[22m[2m)[22m[32m 87[2mms[22m[39m
+ [32m✓[39m src/__tests__/driverActionResults.test.ts [2m([22m[2m9 tests[22m[2m)[22m[32m 109[2mms[22m[39m
+ [32m✓[39m src/__tests__/preOrderUnification.test.ts [2m([22m[2m10 tests[22m[2m)[22m[32m 19[2mms[22m[39m
+ [32m✓[39m src/__tests__/routeRealData.test.ts [2m([22m[2m9 tests[22m[2m)[22m[32m 25[2mms[22m[39m
+ [32m✓[39m src/__tests__/menuScheduleRoundLink.test.ts [2m([22m[2m9 tests[22m[2m)[22m[32m 19[2mms[22m[39m
+ [32m✓[39m src/__tests__/cartEntryPoints.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 16[2mms[22m[39m
+ [32m✓[39m src/__tests__/orderVocabulary.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 31[2mms[22m[39m
+ [32m✓[39m src/__tests__/statusTruthMatrix.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 15[2mms[22m[39m
+ [32m✓[39m src/__tests__/loginUx.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 23[2mms[22m[39m
+ [32m✓[39m src/__tests__/orderSubmitKey.test.ts [2m([22m[2m13 tests[22m[2m)[22m[32m 21[2mms[22m[39m
+ [32m✓[39m src/__tests__/themeCss.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 27[2mms[22m[39m
+ [32m✓[39m src/__tests__/platformConfigBootstrap.test.ts [2m([22m[2m9 tests[22m[2m)[22m[32m 19[2mms[22m[39m
+ [32m✓[39m src/__tests__/aiGuardrails.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 15[2mms[22m[39m
+[90mstderr[2m | src/__tests__/cartContextIsolation.test.ts[2m > [22m[2msetContextAndClearIfIncompatible — คงตะกร้าเมื่อ resolve ซ้ำด้วยค่าเดิม[2m > [22m[2mเปลี่ยน brand: ล้างตะกร้าจริงตาม RD-03
+[22m[39m[CartStore] Context changed (t=t1, b=b2) — clearing 1 incompatible items.
+
+ [32m✓[39m src/__tests__/cartContextIsolation.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 43[2mms[22m[39m
+ [32m✓[39m src/__tests__/brandName.test.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 27[2mms[22m[39m
+ [32m✓[39m src/__tests__/aiDbContext.test.ts [2m([22m[2m10 tests[22m[2m)[22m[32m 36[2mms[22m[39m
+ [32m✓[39m src/__tests__/orderStateMachine.test.ts [2m([22m[2m10 tests[22m[2m)[22m[32m 17[2mms[22m[39m
+ [32m✓[39m src/__tests__/omiseCheckoutLogic.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 13[2mms[22m[39m
+ [32m✓[39m src/__tests__/dispatchOffersClient.test.ts [2m([22m[2m11 tests[22m[2m)[22m[32m 20[2mms[22m[39m
+ [32m✓[39m src/__tests__/deliveryFeeApi.test.ts [2m([22m[2m16 tests[22m[2m)[22m[32m 27[2mms[22m[39m
+ [32m✓[39m src/__tests__/quickLoginCoords.test.ts [2m([22m[2m14 tests[22m[2m)[22m[32m 26[2mms[22m[39m
+ [32m✓[39m src/__tests__/catalogControl.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 26[2mms[22m[39m
+ [32m✓[39m src/__tests__/marketingClient.test.ts [2m([22m[2m9 tests[22m[2m)[22m[32m 21[2mms[22m[39m
+ [32m✓[39m src/__tests__/pickupRouting.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 50[2mms[22m[39m
+ [32m✓[39m src/__tests__/addonDisplay.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 23[2mms[22m[39m
+ [32m✓[39m src/__tests__/passkeyLogin.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 17[2mms[22m[39m
+ [32m✓[39m src/__tests__/adminShell.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 17[2mms[22m[39m
+ [32m✓[39m src/__tests__/adminNavFeedback.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 18[2mms[22m[39m
+ [32m✓[39m src/__tests__/deliveryRoundStatus.test.ts [2m([22m[2m17 tests[22m[2m)[22m[32m 19[2mms[22m[39m
+ [32m✓[39m src/__tests__/preOrderEntry.test.ts [2m([22m[2m10 tests[22m[2m)[22m[32m 22[2mms[22m[39m
+ [32m✓[39m src/__tests__/orderPolicy.test.ts [2m([22m[2m9 tests[22m[2m)[22m[32m 17[2mms[22m[39m
+ [32m✓[39m src/__tests__/deliveryRouterStore.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 13[2mms[22m[39m
+ [32m✓[39m src/__tests__/stripeRefundLogic.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 85[2mms[22m[39m
+ [32m✓[39m src/__tests__/biteAIStore.test.ts [2m([22m[2m8 tests[22m[2m)[22m[33m 1448[2mms[22m[39m
+ [32m✓[39m src/__tests__/kitchenService.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 17[2mms[22m[39m
+ [32m✓[39m src/__tests__/omiseRefundLogic.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 133[2mms[22m[39m
+ [32m✓[39m src/__tests__/theaterReasons.test.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 16[2mms[22m[39m
+ [32m✓[39m src/__tests__/routeEta.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 13[2mms[22m[39m
+ [32m✓[39m src/__tests__/productSchedule.test.ts [2m([22m[2m9 tests[22m[2m)[22m[32m 20[2mms[22m[39m
+ [32m✓[39m src/__tests__/loginContextRestoration.test.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 15[2mms[22m[39m
+ [32m✓[39m src/__tests__/assetRegistry.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 29[2mms[22m[39m
+ [32m✓[39m src/__tests__/deliveryMapPicker.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 11[2mms[22m[39m
+ [32m✓[39m src/__tests__/adminCustomerVisibility.test.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 25[2mms[22m[39m
+ [32m✓[39m src/__tests__/deliveryRouter.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 12[2mms[22m[39m
+ [32m✓[39m src/__tests__/menuCartResultGuard.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 25[2mms[22m[39m
+ [32m✓[39m src/__tests__/riderPodCrossBrowser.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 17[2mms[22m[39m
+ [32m✓[39m src/__tests__/smsTransport.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 12[2mms[22m[39m
+ [32m✓[39m src/__tests__/canonicalFallbackContract.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 13[2mms[22m[39m
+ [32m✓[39m src/__tests__/roundArchiveAdmin.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 20[2mms[22m[39m
+ [32m✓[39m src/__tests__/liveTrackingClient.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 15[2mms[22m[39m
+ [32m✓[39m src/__tests__/dbRestoreDrill.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 10[2mms[22m[39m
+ [32m✓[39m src/__tests__/bitePageContext.test.ts [2m([22m[2m10 tests[22m[2m)[22m[32m 14[2mms[22m[39m
+ [32m✓[39m src/__tests__/availabilityEngine.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 22[2mms[22m[39m
+ [32m✓[39m src/__tests__/adminSettingsTypedKeys.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 5[2mms[22m[39m
+ [32m✓[39m src/__tests__/uiTechnicalLabels.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 7[2mms[22m[39m
+
+[31m⎯⎯⎯⎯⎯⎯⎯[39m[1m[41m Failed Tests 1 [49m[22m[31m⎯⎯⎯⎯⎯⎯⎯[39m
+
+[41m[1m FAIL [22m[49m src/__tests__/homePreOrderModeGuard.test.ts[2m > [22mHomePage.handlePreOrder — R5c: ตะกร้าเดียว ไม่สลับโหมด ไม่ล้างตะกร้า[2m > [22madded (ไม่มี conflict) → navigate /checkout?mode=pre-order ตามเดิม
+[31m[1mError[22m: Test timed out in 5000ms.
+If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".[39m
+[36m [2m❯[22m src/__tests__/homePreOrderModeGuard.test.ts:[2m224:3[22m[39m
+    [90m222| [39m  })
+    [90m223| [39m
+    [90m224| [39m  it('added (ไม่มี conflict) → navigate /checkout?mode=pre-order ตามเด…
+    [90m   | [39m  [31m^[39m
+    [90m225| [39m    [35mawait[39m [34mmount[39m()
+    [90m226| [39m    [35mawait[39m [34mclickPreOrderCta[39m()
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯[22m[39m
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m147 passed[39m[22m[90m (148)[39m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m1548 passed[39m[22m[90m (1549)[39m
+[2m   Start at [22m 14:02:23
+[2m   Duration [22m 243.04s[2m (transform 160.49s, setup 8.33s, collect 182.96s, tests 71.27s, environment 1059.67s, prepare 113.02s)[22m
+
+
+> da-projectbite-me-baby@0.0.0 build
+> tsc && vite build
+
+[36mvite v8.2.2 [32mbuilding client environment for production...[36m[39m
+transforming...
+Found 1 warning while optimizing generated CSS:
+
+[2m│   }[22m
+[2m│   .text-\[var\(--theater-\*\)\] {[22m
+[2m│[22m     color: var(--theater-*);
+[2m┆[22m                          [33m[2m^--[22m Unexpected token Delim('*')[39m
+[2m┆[22m
+[2m│   }[22m
+[2m│   .text-\[var\(--theater-fg\)\] {[22m
+
+✓ 291 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/registerSW.js                                 0.13 kB
+dist/manifest.webmanifest                          0.66 kB
+dist/index.html                                    3.79 kB │ gzip:  1.52 kB
+dist/assets/VoiceDemoPage-EybBzksB.css             5.74 kB │ gzip:  1.63 kB
+dist/assets/index-DDznqyB8.css                   145.72 kB │ gzip: 26.88 kB
+dist/assets/TalkToBitePage-C54CR8yA.js             0.17 kB │ gzip:  0.15 kB
+dist/assets/bmbStorage-CuSoL-ax.js                 0.24 kB │ gzip:  0.18 kB
+dist/assets/supabase-CWWARhxK.js                   0.29 kB │ gzip:  0.25 kB
+dist/assets/TalkToBiteHomePage-tg2ofgpq.js         0.43 kB │ gzip:  0.34 kB
+dist/assets/contentApproval-DUcnUFP3.js            0.63 kB │ gzip:  0.37 kB
+dist/assets/orderVocabulary-BsWx-Zaw.js            0.69 kB │ gzip:  0.39 kB
+dist/assets/state-vendor-Brj8_dxs.js               0.70 kB │ gzip:  0.43 kB
+dist/assets/rolldown-runtime-hePW80VL.js           0.71 kB │ gzip:  0.42 kB
+dist/assets/addonDisplay-5L4ToLUz.js               0.81 kB │ gzip:  0.45 kB
+dist/assets/authRecovery-BYzGChTM.js               0.86 kB │ gzip:  0.50 kB
+dist/assets/reviewApi-DxMx24Gl.js                  0.99 kB │ gzip:  0.52 kB
+dist/assets/bmbAdminApi_users-BDjNCj2A.js          1.06 kB │ gzip:  0.62 kB
+dist/assets/bmbAdminApi_inventory-CCFDwbGv.js      1.21 kB │ gzip:  0.51 kB
+dist/assets/ToastContainer-W4BcSkaP.js             1.27 kB │ gzip:  0.68 kB
+dist/assets/deliveryRouter-D-HSwTmz.js             1.36 kB │ gzip:  0.76 kB
+dist/assets/auditLog-DRs28Sco.js                   1.64 kB │ gzip:  0.74 kB
+dist/assets/googleMaps-BehIPVpo.js                 1.74 kB │ gzip:  1.01 kB
+dist/assets/FaqPage-XbWKs7ci.js                    1.80 kB │ gzip:  0.86 kB
+dist/assets/adminOrderDisplay-CAtoVFiV.js          1.82 kB │ gzip:  0.70 kB
+dist/assets/rewardsStore-BfERkr6y.js               2.06 kB │ gzip:  0.80 kB
+dist/assets/loyaltyClient-BC2lAEWA.js              2.63 kB │ gzip:  1.10 kB
+dist/assets/socialLogin-CDyKpHiT.js                2.83 kB │ gzip:  1.18 kB
+dist/assets/bmbAdminApi_promotions-CA-Z-PNe.js     2.98 kB │ gzip:  1.10 kB
+dist/assets/pushService-BhUnY4t4.js                3.15 kB │ gzip:  1.28 kB
+dist/assets/passkeyLogin-DcGpBjx4.js               3.19 kB │ gzip:  1.25 kB
+dist/assets/ReviewPage-BKfsIynN.js                 3.25 kB │ gzip:  1.32 kB
+dist/assets/bmbMenuSchedule-DimBXIsE.js            3.59 kB │ gzip:  1.50 kB
+dist/assets/AdminNotifications-B-zVZlzr.js         3.75 kB │ gzip:  1.40 kB
+dist/assets/AdminPortfolio-BOodCh5O.js             3.78 kB │ gzip:  1.49 kB
+dist/assets/AboutPage-CjyFv3nb.js                  3.80 kB │ gzip:  1.20 kB
+dist/assets/orderPolicy-CEqtjE_s.js                3.85 kB │ gzip:  1.45 kB
+dist/assets/AuditLogPage-CDoaeHoB.js               3.93 kB │ gzip:  1.59 kB
+dist/assets/ResetPasswordPage-DrvxWm1k.js          4.00 kB │ gzip:  1.51 kB
+dist/assets/posApi-BuQz30pW.js                     4.18 kB │ gzip:  1.63 kB
+dist/assets/OrdersPage-tEikZ3To.js                 4.32 kB │ gzip:  1.81 kB
+dist/assets/CartPage-Bl8HlkUL.js                   4.50 kB │ gzip:  1.50 kB
+dist/assets/VotePage-CimNYfa1.js                   4.67 kB │ gzip:  1.88 kB
+dist/assets/RegisterPage-Cu4Y7HpH.js               4.67 kB │ gzip:  1.72 kB
+dist/assets/BlogPage-gsDfjJ0I.js                   4.75 kB │ gzip:  1.63 kB
+dist/assets/theaterDailyCopy-BrLBOp6z.js           4.87 kB │ gzip:  1.81 kB
+dist/assets/CouponBox-IfGqBs6E.js                  4.89 kB │ gzip:  1.74 kB
+dist/assets/paymentGateway-CFD5JNY2.js             5.28 kB │ gzip:  1.98 kB
+dist/assets/ViralPage-BYO8mtt7.js                  5.38 kB │ gzip:  1.97 kB
+dist/assets/NotificationCenterPage-CmNDwvw-.js     5.41 kB │ gzip:  2.19 kB
+dist/assets/PromotionsPage-BuO7Syof.js             5.52 kB │ gzip:  2.14 kB
+dist/assets/AdminRecipes-BEch4ZVW.js               5.77 kB │ gzip:  2.05 kB
+dist/assets/RandomMenuPage-Cm6s3QOF.js             5.85 kB │ gzip:  2.10 kB
+dist/assets/aiServerMemory-DCrc0rIC.js             5.86 kB │ gzip:  2.08 kB
+dist/assets/PrivacyPage-ClsAJ6p7.js                5.91 kB │ gzip:  1.55 kB
+dist/assets/TermsPage-s060tUBU.js                  6.40 kB │ gzip:  1.71 kB
+dist/assets/ContactPage-BnG9k2Kf.js                6.50 kB │ gzip:  2.32 kB
+dist/assets/bmbAdminApi_rounds-D-KG4i0R.js         6.88 kB │ gzip:  2.27 kB
+dist/assets/AdminReports-BYGtXh6v.js               6.89 kB │ gzip:  2.06 kB
+dist/assets/AdminErrorsPage-B312qA_f.js            6.92 kB │ gzip:  2.38 kB
+dist/assets/paymentExceptions-BZhI4k5z.js          7.53 kB │ gzip:  2.40 kB
+dist/assets/RewardsPage-BnvPoVdY.js                7.67 kB │ gzip:  2.67 kB
+dist/assets/SharePage-1KviIPIJ.js                  7.78 kB │ gzip:  2.38 kB
+dist/assets/printService-BpU9bZLK.js               7.80 kB │ gzip:  3.14 kB
+dist/assets/promotionClient-Dn5bQWTF.js            8.09 kB │ gzip:  2.80 kB
+dist/assets/bmbAdminApi_products-b_C4JP4C.js       8.09 kB │ gzip:  1.89 kB
+dist/assets/VoiceDemoPage-CSFWclL1.js              8.25 kB │ gzip:  2.93 kB
+dist/assets/AdminCustomers-EGXdsGxH.js             8.26 kB │ gzip:  3.06 kB
+dist/assets/FoodTheater-Bs1xGGV6.js                9.75 kB │ gzip:  3.54 kB
+dist/assets/aiVoice-CwQXPRIC.js                    9.75 kB │ gzip:  3.55 kB
+dist/assets/InventoryPage-CG_NYVzB.js             10.11 kB │ gzip:  2.87 kB
+dist/assets/ProfilePage-fpJ228SV.js               10.85 kB │ gzip:  2.86 kB
+dist/assets/AdminSettings-Cfkl5PT0.js             11.93 kB │ gzip:  4.02 kB
+dist/assets/MenuPage-BCAnZ0XM.js                  11.94 kB │ gzip:  4.21 kB
+dist/assets/bmbAdminApi_orders-C-X4qigw.js        11.96 kB │ gzip:  4.02 kB
+dist/assets/AdminDashboard-Bp7x2iol.js            13.32 kB │ gzip:  3.95 kB
+dist/assets/OrderTrackPage-CbxvU36C.js            13.35 kB │ gzip:  3.92 kB
+dist/assets/aiService-3QfDbu0n.js                 13.85 kB │ gzip:  5.21 kB
+dist/assets/AdminPos-CNwliI5V.js                  13.94 kB │ gzip:  4.29 kB
+dist/assets/AdminKitchen-3DQWI75Z.js              13.96 kB │ gzip:  4.54 kB
+dist/assets/AdminPromotions-BZa7VYXe.js           15.00 kB │ gzip:  4.17 kB
+dist/assets/AdminMedia-Spx7PRwN.js                15.98 kB │ gzip:  4.57 kB
+dist/assets/LoginPage-DgjA3Zbk.js                 18.38 kB │ gzip:  5.20 kB
+dist/assets/AdminOrders-BDlMKSXe.js               19.48 kB │ gzip:  6.10 kB
+dist/assets/RiderPwaPage-BkSUY6LD.js              26.39 kB │ gzip:  7.28 kB
+dist/assets/DeliveryManagement-BR0jpaII.js        28.76 kB │ gzip:  7.28 kB
+dist/assets/TalkToBite-Dd8TOUXf.js                29.02 kB │ gzip:  7.73 kB
+dist/assets/PaymentConfirmationPage-Pj3dLor6.js   37.27 kB │ gzip: 11.48 kB
+dist/assets/CheckoutPage-CnrPaCDw.js              52.37 kB │ gzip: 13.50 kB
+dist/assets/AdminMarketing-vxE5Da5E.js            66.11 kB │ gzip: 15.58 kB
+dist/assets/AdminHubs-SIU_Qs8D.js                104.21 kB │ gzip: 24.53 kB
+dist/assets/supabase-vendor-OACgMRo1.js          164.08 kB │ gzip: 40.12 kB
+dist/assets/index-ChWvMYFQ.js                    231.06 kB │ gzip: 63.48 kB
+dist/assets/react-vendor-DK_VtTwx.js             247.82 kB │ gzip: 79.44 kB
+
+[33m[33m[INEFFECTIVE_DYNAMIC_IMPORT] [0msrc/lib/notificationService.ts is dynamically imported by src/store/notificationStore.ts but also statically imported by src/components/notification/NotificationDropdown.tsx, src/pages/NotificationCenterPage.tsx, dynamic import will not move module into another chunk.
+[39m
+[33m[33m[INEFFECTIVE_DYNAMIC_IMPORT] [0msrc/lib/bmbAdminApi_settings.ts is dynamically imported by src/components/theater/FoodTheater.tsx, src/lib/printService.ts, src/pages/HomePage.tsx but also statically imported by src/components/admin/HomePopularManager.tsx, src/components/admin/OrderPolicyPanel.tsx, src/lib/bmbAdminApi_rounds.ts, src/lib/platformConfigBootstrap.ts, src/pages/CheckoutPage.tsx, ..., dynamic import will not move module into another chunk.
+[39m
+[32m✓ built in 7.82s[39m
+
+PWA v1.3.0
+Building src/sw.ts service worker ("es" format)...
+[36mvite v8.2.2 [32mbuilding client environment for production...[36m[39m
+
+[43m[30m WARN [39m[49m [36minlineDynamicImports[39m option is deprecated, please use [36mcodeSplitting: false[39m instead.
+
+transforming...
+✓ 59 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/sw.mjs  17.77 kB │ gzip: 5.95 kB
+
+[32m✓ built in 75ms[39m
+
+PWA v1.3.0
+mode      injectManifest
+format:   es
+precache  142 entries (2337.35 KiB)
+files generated
+  dist/sw.js
+[33m[33m[PLUGIN_TIMINGS] [0mPlugin hooks ran for 7.1s of this 7.8s build (91%).
+The slowest hooks, timed inside each callback (the wait before a callback starts is excluded, the time it awaits is included):
+  - vite-plugin-pwa:build closeBundle (56%, 4.4s, 1 call)
+Additional hook time came from the hooks below and from hooks under 1s.
+1 hook is listed without a time. Its calls overlapped, so the time inside one call includes work from other calls. To find its cost, profile the build with `node --cpu-prof`:
+  - @tailwindcss/vite:generate:build transform (4 calls)
+See https://rolldown.rs/reference/InputOptions.checks#plugintimings for more details.
+[39m
+BUILD_EXIT=0 
+==== DONE ==== 

@@ -279,7 +279,9 @@
 | 11 | `ba2fec2` | 158 v3: ทนลำดับ CI — ข้าม object ที่ยังไม่ถูกสร้าง + ตรวจด้วย pg_proc | #579 **success** | #153 **success** ✓ |
 | 12 | `33785ae` | docs: บันทึก §9.0 + บทเรียนรอบ #152 | #580 **success** | #154 **success** |
 | 13 | `a294c52` | docs: เติมผล CI #579 จริง | #581 **success** | #155 **success** |
-| 14 | **`fff2112`** (HEAD) | docs(evidence): เก็บ logs gates รอบ 3 เข้า repo | ตรวจรอบถัดไป | ตรวจรอบถัดไป |
+| 14 | `fff2112` | docs(evidence): เก็บ logs gates รอบ 3 เข้า repo | #582 **success** | #156 **success** |
+| 15 | `5ab2906` | docs: เติมผล CI จริง 33785ae/a294c52 + แถว HEAD | #583 **success** | #157 **success** |
+| 16 | (docs commit ปิดเซสชั่น — SHA ดูใน git log) | เขียนแฮนด์ออฟปิดเซสชั่น + work state + gates evidence | ตรวจรอบถัดไป | ตรวจรอบถัดไป |
 
 > อ่านจาก GitHub Actions REST API จริง (`?head_sha=<full SHA>` — เครื่องนี้ไม่มี `gh`) ·
 > **ห้ามอ้างเลข run จาก §9.4/§9.6 โดยไม่เทียบกับตารางนี้** (§9.4 = รายละเอียดรอบ 1 · §9.6 = รายละเอียดรอบ 2)

@@ -1,3 +1,11 @@
+> ## 🟢 สถานะล่าสุด — ปิดเซสชั่น 2026-10-26 (ยึดบล็อกนี้ + `docs/BMB_HANDOFF_NEXT_SESSION_2026-10-26.md` ถ้าข้อความด้านล่างขัดกัน)
+> - **ปิดแล้ว (มี evidence ทุกข้อ):** **W-1** (`REPLAY_ALL_GREEN 157/157` · parity รอบสุดท้าย MATCH = rls 67=67 · acl_tables 768=768 · ledger 158=158 · `e2e/w1-parity-report-2026-10-26.md`) · **W-2** (legacy contract **7/7** → step กลับ CI → Contract Tests **#151/#153/#155 success**) · **W-3** (`marketing_rules` มีค่าจริง → **C7/C8 ปลดล็อก**) · **W-5** (เอกสารชุดเดียว ไม่มี claim เกินหลักฐาน) · **UI 4 ข้อ** (L-1, L-2, L-6, L-9 · มี test ทุกข้อ) · **B-6 (P0) ปิด** = apply **157+158** แล้ว (Owner อนุมัติ · ledger top **158** · PostgREST 200 ทุก endpoint · Playwright `/menu` จริงเห็นเมนูครบ + console สะอาด)
+> - **เหลือ (งานจริงถัดไป):** UI 5 ข้อ **L-3, L-4, L-5, L-7, L-8** (เกณฑ์ §L · ต้องมี test ทุกข้อ) · **legacy 6 functions** (L-10) รอคำสั่ง Owner ปลด/คง · **test pack** ขั้นปลดล็อกแล้ว (A1/A2/A3 · B รวม B2 · C7/C8 · D–K · L-12 = optional)
+> - **git:** HEAD = `5ab2906` = origin/main · ผล CI ทุก SHA = `BMB_MASTER_STATUS.md` §9.0 (มี failure #152 บันทึกตรง ๆ ที่ §9.8) · stash `local-edits-before-sync-2026-09-21` = เดิมของเซสชั่นอื่น **ห้ามแตะ**
+> - **gates:** tsc 0 · eslint 0 · brandGuard 0 · **vitest 1549 tests 0 fail** · build 0 → evidence `e2e/session20261026-r3-gates-evidence.log` (+ `e2e/gates_final.log` รอบปิดเซสชั่น)
+> - ⚠️ **กติกาปิดงาน:** ห้ามพูด "เหลือ Owner อย่างเดียว" จนกว่าจะปิดครบ 4 อย่าง — UI 5 ข้อ · legacy 6 functions มีคำสั่ง · CI ทุกรอบเขียว · test pack §L ผ่าน
+>
+## 1. งานที่ทำอยู่ (สำคัญสุด — นี่คือ "Current Work State")
 # Bite Me Baby — AI Work State (บันทึกสถานะสำหรับแชทถัดไป)
 
 > **ไฟล์นี้ = บันทึกสั้นของเซสชันล่าสุดเท่านั้น**

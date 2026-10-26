@@ -1,0 +1,4 @@
+==== TSC (npx tsc --noEmit) ==== 
+TSC_EXIT=0 
+==== LINT (eslint อย่างเดียว · brandNameGuard ในนั้นแล้ว) ==== 
+ESLINT_EXIT=0 

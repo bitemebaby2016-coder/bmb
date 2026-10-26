@@ -1,0 +1,18 @@
+==== recheck single file (ลำพัง ไม่มีงานอื่นชน) ==== 
+
+[1m[46m RUN [49m[22m [36mv3.2.7 [39m[90mD:/A PROJECT/Bite Me Baby[39m
+
+ [32m✓[39m src/__tests__/homePreOrderModeGuard.test.ts [2m([22m[2m2 tests[22m[2m)[22m[33m 774[2mms[22m[39m
+   [33m[2m✓[22m[39m HomePage.handlePreOrder — R5c: ตะกร้าเดียว ไม่สลับโหมด ไม่ล้างตะกร้า[2m > [22mR5c: mode-mismatch add → mixed line KEPT (no clear-cart popup) → navigate /checkout?mode=pre-order [33m 544[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m1 passed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[32m2 passed[39m[22m[90m (2)[39m
+[2m   Start at [22m 14:08:31
+[2m   Duration [22m 5.28s[2m (transform 588ms, setup 47ms, collect 993ms, tests 774ms, environment 2.20s, prepare 301ms)[22m
+
+VITEST_RECHECK_EXIT=0 
+==== recheck tsc อย่างเดียว ==== 
+TSC_RECHECK_EXIT=0 
+==== recheck eslint ==== 
+ESLINT_RECHECK_EXIT=0 
+==== DONE ==== 
