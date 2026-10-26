@@ -274,9 +274,21 @@
 | 7 | `1aa678b` | บันทึกผล CI รอบ 2 | #575 **success** | #149 **success** |
 | 8 | `47b33e1` | docs: จัดเอกสารเป็นสถานะชุดเดียว + แฮนด์ออฟ | #576 **success** | #150 **success** |
 | 9 | **`927689a`** (HEAD) | W-1/W-2 ปิด + UI 4 ข้อ + **migration 157** + step legacy contract กลับ CI | #577 **success** | #151 **success** (มี `Legacy contracts OK — 7/7`) |
+| 10 | `3b5c2d8` | apply 157+158 บน production + parity รอบสุดท้าย + **B-6 ปิด** | #578 **success** | #152 **failure** (158 v1: `to_regprocedure` ไม่รับชื่อ parameter → ล้มใน step inventory migrations) |
+| 11 | `ba2fec2` | 158 v3: ทนลำดับ CI — ข้าม object ที่ยังไม่ถูกสร้าง + ตรวจด้วย pg_proc | #579 กำลังรัน ณ เวลาเขียน (ตรวจรอบถัดไป) | #153 **success** ✓ |
+| 12 | (docs commit ถัดไป) | บันทึก §9.0 รอบนี้ | ตรวจในรอบถัดไป | ตรวจในรอบถัดไป |
 
 > อ่านจาก GitHub Actions REST API จริง (`?head_sha=<full SHA>` — เครื่องนี้ไม่มี `gh`) ·
 > **ห้ามอ้างเลข run จาก §9.4/§9.6 โดยไม่เทียบกับตารางนี้** (§9.4 = รายละเอียดรอบ 1 · §9.6 = รายละเอียดรอบ 2)
+
+### 9.8 บทเรียนรอบ Contract Tests #152 (ห้ามลืม)
+
+- **`to_regprocedure('public.fn(p_arg type, ...)')` = syntax error** — regprocedure input ไม่รับ "ชื่อ parameter"
+  (รายการ grant มาจาก `pg_get_function_identity_arguments` ซึ่งมีชื่อ) → ตรวจการมีอยู่จริงด้วย
+  `pg_proc` + `pg_get_function_identity_arguments(p.oid) = <args>` เท่านั้น (ส่วน `GRANT ... (ชื่อ param)` ใช้ได้จริง ✓)
+- **CI inventory ข้าม `124_*` ไป apply ทีหลัง** → migration ที่รันใน loop ต้องทนต่อ object ที่ยังไม่ถูกสร้าง
+  (skip + ให้ `ALTER DEFAULT PRIVILEGES` คอยรองรับของที่สร้างทีหลัง) — ไม่งั้นจะล้มแบบไม่คาดคิด
+- จำนวนครั้งที่ลอง: #152 = attempt 1 (ล้ม) → แก้ตามหลักฐาน → #153 = attempt 2 (ผ่าน) = **ครบ 2 ครั้งพอดี (กติกา 0.9)**
 
 ### 9.1 โค้ด
 
