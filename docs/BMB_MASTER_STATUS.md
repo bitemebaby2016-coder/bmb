@@ -85,18 +85,21 @@
 
 ---
 
-## 3. Engineering backlog — **ปิดหมดแล้วในรอบ 2026-10-26 (คำสั่ง Owner: "ปิดให้หมดโดยสมบูรณ์")**
+## 3. Engineering backlog — ปิด 4/5 · **B-2 = BLOCKED (กติกา 0.9: ซ้ำ 2 ครั้งแล้วหยุด)**
 
-| # | งาน (สถานะก่อนรอบนี้) | วิธีปิด | หลักฐาน |
+> คำสั่ง Owner 2026-10-26 "ปิดให้หมดโดยสมบูรณ์" → ทำครบ B-1/B-3/B-4/B-5 แล้ว ·
+> **B-2 พยายามแล้ว 2 ครั้งและล้มเหลวทั้งคู่** → หยุด + คืน main เป็นเขียว + รายงาน blocker ตามกติกา (ไม่ปิดบัง)
+
+| # | งาน (สถานะก่อนรอบนี้) | ผล | หลักฐาน |
 |---|---|---|---|
 | **B-1** | `orderTimeline.test.ts` flaky ตอนรันชุดใหญ่ (4 เคส) | render + flush ข้างใน `act()` ให้รอ React commit จริง — **assertion ทุกตัวคงเดิม ไม่มี skip/ลดข้อกำหนด** | `src/__tests__/orderTimeline.test.ts` (มี comment ระบุ B-1 FIX) · vitest ทั้งชุดเขียว |
-| **B-2** | legacy contract 7 ตัว อยู่นอก CI | เพิ่ม step "Legacy contracts 017/019/020/021/022/029/033 — now gated" เป็นขั้นสุดท้ายใน `contract-tests.yml` | `.github/workflows/contract-tests.yml` · ต้องเห็น `Legacy contracts OK — 7/7` ใน Actions (§9.6) |
+| **B-2** | legacy contract 7 ตัว อยู่นอก CI | **BLOCKED — ลองแล้ว 2 ครั้ง (กติกา 0.9: หยุด)** · ครั้งที่ 1 เพิ่ม step ใน CI = **ล้มเหลวทั้ง 7 ไฟล์** (Contract Tests #147 failure) · ครั้งที่ 2 ซ่อมตามหลักฐาน + ตรวจด้วย replay ท้องถิ่น = **ยังเขียวแค่ 1/7 (029)** → rollback ทั้งหมดเพื่อคืน main เป็นเขียว | **หลักฐาน:** annotations ของ run `40266375919` (7 error บรรทัด) + `D:\tmp\legacy_local.log` / `legacy_local2.log` (ผลรัน 7 ไฟล์ 2 รอบ) · ** blocker:** fixture ต้องมี auth user/role จริง · signature/geometry/ACL drift ตาม migration ยุคใหม่ → ต้องซ่อมบน DB session ที่ verify ได้ หรือ **ปลดระเบียบอย่างเป็นทางการ**โดยชี้ว่า 123/124/146/147/148/149 คือ contract ยุคใหม่ของ domain เดียวกัน (**รอ Owner เลือก (ก) หรือ (ข)**) |
 | **B-3** | CAP-21 ระบบจำลูกค้า/เจาะกลุ่มอัตโนมัติ (MISSING) | สร้าง `src/lib/customerIntelligence.ts` + ต่อ `/admin/customers` (แถบสรุป + คอลัมน์กลุ่ม) · **คำนวณอัตโนมัติ ไม่มีช่องให้แอดมินตั้ง** | `src/__tests__/customerIntelligence.test.ts` (11 เคส) |
 | **B-4** | CAP-22 AI เลือกเวลา/โพสอัตโนมัติ (DEFERRED) | สร้าง `src/lib/marketingAutoSchedule.ts` (เลือกเวลาจาก marketing_rules จริง) + ปุ่มในแท็บปฏิทิน · **คงกติกา: ห้าม auto-approve · ไม่มี publish path ใหม่** | `src/__tests__/marketingAutoSchedule.test.ts` (12 เคส + CNT-01/G7 contract) |
 | **B-5** | runtime จริงของ CAP-10/11/13/14/18 | **ส่งมอบเป็นชุดทดสอบเดียวให้ Owner รันบน production** | **`docs/BMB_PRODUCTION_TEST_PACK.md`** (ขั้น A–K ครบทุก checklist ที่เคยกระจาย) |
 
-> **ไม่เหลืองาน engineering ค้างในรายการนี้** — สิ่งที่เหลือหลังจากนี้ = ขั้น Owner-only ทั้งหมด
-> (ดู §7 → `docs/BMB_PRODUCTION_TEST_PACK.md`)
+> ยังเหลืองาน engineering **1 รายการ = B-2 (BLOCKED — รอ Owner เลือก (ก) ซ่อม หรือ (ข) ปลดระเบียบ)**
+> ส่วนที่เหลือหลังจากนี้ = Owner-only ทั้งหมด → §7 → `docs/BMB_PRODUCTION_TEST_PACK.md`
 
 ---
 
@@ -236,7 +239,7 @@
 | `src/pages/admin/AdminCustomers.tsx` | แสดงแถบสรุปกลุ่ม + คอลัมน์ "กลุ่ม/คำสรุป (อัตโนมัติ)" — คำนวณทุกครั้งที่โหลดหน้า |
 | `src/lib/marketingAutoSchedule.ts` | **ใหม่ (CAP-22)** — `scoreSlot`/`pickPostSlot`/`planSchedule`/`autoScheduleApprovedPosts` · เคารพ publishing window/cooldown/frequency cap ของ `marketing_rules` · เรียก `scheduleMarketingPost` (RPC เดิม) เฉพาะโพสต์ `approved` |
 | `src/pages/admin/AdminMarketing.tsx` | ปุ่ม "🤖 ให้ AI เลือกเวลาทั้งหมด" ในแท็บ 📅 ปฏิทิน (`data-testid="mk-auto-schedule"`) |
-| `.github/workflows/contract-tests.yml` | step สุดท้าย: legacy contract 7 ตัวเข้า gate (B-2) |
+| `.github/workflows/contract-tests.yml` | เพิ่ม step legacy contract 7 ตัว (B-2) → **CI ล้มเหลวทั้ง 7** → ถอดออกแล้ว เหลือ comment อธิบาย blocker ไว้ในไฟล์ (B-2 = BLOCKED) |
 | `src/__tests__/orderTimeline.test.ts` | **B-1** render+flush ใน `act()` (assertion คงเดิม) |
 | `src/__tests__/categorySections.test.ts` | **B-1** `renderHtml` → `act()` (เคสเดิม fail เป็นกลางของ `indexOf = -1`) |
 | `src/__tests__/homeSectionModeCta.test.ts` | **B-1** `mount` → async + `act()` (ป้องกันแบบเดียวกัน) |
