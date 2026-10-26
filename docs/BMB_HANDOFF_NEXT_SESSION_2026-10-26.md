@@ -4,7 +4,7 @@
 
 ## 0. บรรทัดเดียว
 **ปิดแล้ว:** W-1 · W-2 · W-3 · W-5 · **UI 9/9 ข้อ (รวม L-3/4/5/7/8 · Owner 2026-10-26 · มี test+gates+CI)** · **B-6 (P0)** · migration **157+158 ใช้งานบน production แล้ว (ledger top 158 มี evidence)** · **legacy 6 functions = DROP แล้วบน production (159 APPLIED 2026-10-26 · Owner อนุมัติ · precheck→apply→verify→record ผ่าน · ledger top 159 · evidence `e2e/w7Apply159-*.json`)
-**เหลือ:** **production runtime ยัง verify ไม่ครบ** (`marketing_rules` re-read 42501 → **C7/C8 = UNVERIFIED** · **B2 = UNVERIFIED**) · แล้วจึง **รัน test pack ฉบับ reconcile (§L → L-RT) + ring-system ของ Owner** · ~~apply 159~~ **ทำแล้ว ✓ (w7Apply159 4 stage · ledger 159)** · Pages serving = **verify แล้ว** (marker `btn-locked` ใน CSS/JS จริง) · CI: `67f10b8` = #585/#159 · `5f891de` = #586/#160 · **HEAD `7df33fd` = #587/#588 + #161/#162 (ทั้งหมด success · ตรวจจริง = `git log`)**
+**เหลือ:** **production runtime ยัง verify ไม่ครบ** (`marketing_rules` re-read 42501 → **C7/C8 = UNVERIFIED** · **B2 = UNVERIFIED**) · แล้วจึง **รัน test pack ฉบับ reconcile (§L → L-RT) + ring-system ของ Owner** · ~~apply 159~~ **ทำแล้ว ✓ (w7Apply159 4 stage · ledger 159)** · Pages serving = **verify แล้ว** (marker `btn-locked` ใน CSS/JS จริง) · CI: `67f10b8` = #585/#159 · `5f891de` = #586/#160 · `7df33fd` = #587/#588+#161/#162 · `680bf78` = #589/#163 · **HEAD `6d83cba` = CI #590 + Contract #164 + Pages = success** (ตรวจจริง = `git log`)
 
 ## 1. ปิดแล้ว — ห้ามทำซ้ำ (มี evidence)
 
@@ -64,7 +64,7 @@
 5. จำนวนครั้งแก้ = **2 attempt ต่อปัญหา** (ครบแล้วให้สรุป ไล่คนละทาง = เลิกแล้วรายงาน)
 
 ## 7. DoD ก่อนบอก "จบ" รอบหน้า
-- [x] CI ทุก SHA ใน §9.0 มีผลจริง (`67f10b8` = #585/#159 · `5ab2906` = #583/#157 · `3ffafac` = #584/#158 · `5f891de` = #586/#160 · HEAD `7df33fd` = #587/#588 + #161/#162 — ยืนยัน 2026-10-26)
+- [x] CI ทุก SHA ใน §9.0 มีผลจริง (`67f10b8` = #585/#159 · `5ab2906` = #583/#157 · `3ffafac` = #584/#158 · `5f891de` = #586/#160 · `7df33fd` = #587/#588+#161/#162 · `680bf78` = #589/#163 · `6d83cba` = #590/#164 — ยืนยัน 2026-10-26 ทุกแถว)
 - [x] UI 5 ข้อ (L-3/4/5/7/8) ปิด + มี test + ย้ายออกจาก §L (ย้ายไป **§L → L-RT** = runtime verify แล้ว)
 - [x] legacy 6 functions = **DROP แล้วบน production** — 159 APPLIED 2026-10-26 (Owner อนุมัติ · precheck→apply→verify→record ผ่าน · ledger 159 · evidence `e2e/w7Apply159-*.json`)
 - [ ] test pack ขั้นปลดล็อกแล้วรันจริง/ผ่าน §0

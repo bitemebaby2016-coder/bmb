@@ -26,7 +26,7 @@
 |---|---|
 | Repository | `D:\A PROJECT\Bite Me Baby` · remote `git@github.com-bmb:bitemebaby2016-coder/bmb.git` |
 | Branch | `main` tracking `origin/main` |
-| HEAD ปัจจุบัน ณ เวลาเขียน (2026-10-26 · รอบ UI + docs reconcile จบ) | `7df33fd` = `origin/main` · CI **#587/#588 success** · Contract **#161/#162 success** · *(ถ้ามี commit ใหม่กว่านี้ ให้ถือ `git log --oneline -1`)* |
+| HEAD ปัจจุบัน ณ เวลาเขียน (2026-10-26 · หลัง apply 159) | `6d83cba` = `origin/main` · CI **#590 success** · Contract **#164 success** · Pages success · *(ถ้ามี commit ใหม่กว่านี้ ให้ถือ `git log --oneline -1`)* |
 | (ประวัติ) HEAD ก่อนเริ่มงานรอบ reconciliation เช้า 2026-10-26 | `29ed251` = `origin/main` ตอนนั้น — **ค่าเก่า ห้ามถือเป็น HEAD ปัจจุบัน** |
 | staged / unstaged | **ว่างทั้งคู่** ตอนเริ่มรอบ · working tree clean · untracked = **0 ไฟล์** |
 | stash | `stash@{0}: On main: local-edits-before-sync-2026-09-21` — **คงเดิม ไม่ถูกแตะ** |
@@ -301,6 +301,8 @@
 | 18 | `3ffafac` | (รอบก่อนหน้า — legacy contracts 017-033 กลับเข้า CI) | #584 **success** | #158 **success** |
 | 19 | `5f891de` | docs: reconcile 4 เอกสาร (HEAD/ledger · เวลานั้น 159=prepared — **ปัจจุบัน APPLIED แล้ว ดู §1.3** · Test Pack §L→**L-RT** · B2/C7C8=**UNVERIFIED** · probe 42501 · Pages serving=**VERIFIED marker btn-locked**) + ล้าง probe | #586 **success** | #160 **success** |
 | 20 | `7df33fd` | docs: commit ตัว reconcile เอง + บันทึก HEAD/CI จริงรอบสุดท้าย (HEAD line = 7df33fd + git-log authority · §9.0 แถวนี้) | #587/#588 **success** | #161/#162 **success** |
+| 21 | `680bf78` | docs: ปิด drift รอบสุดท้าย (HEAD/§9.0 แถว 20) + แก้ stale N-4/AI_WORK_STATE §3-4 ที่ verify_docs หาเจอ (ALL_OK) | #589 **success** | #163 **success** |
+| 22 | `6d83cba` | production: **apply 159** (w7Apply159 4 stage · ledger 159) + อัปเดตสถานะทุกเอกสาร + evidence 4 ไฟล์ + ลบ schtasks 3 ตัว | #590 **success** | #164 **success** |
 | 16 | (docs commit ปิดเซสชั่น — SHA ดูใน git log) | เขียนแฮนด์ออฟปิดเซสชั่น + work state + gates evidence | ตรวจรอบถัดไป | ตรวจรอบถัดไป |
 
 > อ่านจาก GitHub Actions REST API จริง (`?head_sha=<full SHA>` — เครื่องนี้ไม่มี `gh`) ·
