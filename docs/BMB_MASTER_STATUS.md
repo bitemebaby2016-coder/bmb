@@ -281,6 +281,8 @@
 | 13 | `a294c52` | docs: เติมผล CI #579 จริง | #581 **success** | #155 **success** |
 | 14 | `fff2112` | docs(evidence): เก็บ logs gates รอบ 3 เข้า repo | #582 **success** | #156 **success** |
 | 15 | `5ab2906` | docs: เติมผล CI จริง 33785ae/a294c52 + แถว HEAD | #583 **success** | #157 **success** |
+| 17 | `67f10b8` | ปิด UI L-3/4/5/7/8 (test ใหม่ 5 ไฟล์ + อัปเดต 4) + migration 159 DROP legacy 6 fn | #585 **success** | #159 **success** |
+| 18 | `3ffafac` | (รอบก่อนหน้า — legacy contracts 017-033 กลับเข้า CI) | #584 **success** | #158 **success** |
 | 16 | (docs commit ปิดเซสชั่น — SHA ดูใน git log) | เขียนแฮนด์ออฟปิดเซสชั่น + work state + gates evidence | ตรวจรอบถัดไป | ตรวจรอบถัดไป |
 
 > อ่านจาก GitHub Actions REST API จริง (`?head_sha=<full SHA>` — เครื่องนี้ไม่มี `gh`) ·

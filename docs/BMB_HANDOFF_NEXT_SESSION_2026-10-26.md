@@ -3,8 +3,8 @@
 > **บังคับอ่านตามลำดับก่อนเริ่มงาน:** `AI_ENTRYPOINT.md` → `UNIVERSAL_MASTER_AI_RULES.md` → `AI_WORK_STATE.md` → ไฟล์นี้ (จบในไฟล์เดียว = มีฉบับนี้ฉบับเดียว · ฉบับ 10-25 ถูกย้ายเข้า `docs/archive/legacy_reports/` แล้ว)
 
 ## 0. บรรทัดเดียว
-**ปิดแล้ว:** W-1 · W-2 · W-3 · W-5 · UI 4/9 ข้อ · **B-6 (P0)** · migration **157+158 ใช้งานบน production แล้ว**
-**เหลือ:** UI อีก 5 ข้อ (L-3/4/5/7/8) · legacy 6 functions รอคำสั่ง Owner · test pack รันจริง (ขั้นปลดล็อกแล้ว)
+**ปิดแล้ว:** W-1 · W-2 · W-3 · W-5 · **UI 9/9 ข้อ (รวม L-3/4/5/7/8 · Owner 2026-10-26)** · **B-6 (P0)** · migration **157+158 ใช้งานบน production แล้ว** · **legacy 6 functions = Owner สั่ง DROP → migration 159 (CI auto-apply เฉพาะ ephemeral — ห้าม apply production)**
+**เหลือ:** test pack §L ให้ Owner รัน (ขั้นปลดล็อกแล้ว) — หลังจากนั้นเหลือเฉพาะ **ring-system testing ของ Owner** · CI รอบปิด `67f10b8` = **success** (CI #585 · Contract #159 · Pages)
 
 ## 1. ปิดแล้ว — ห้ามทำซ้ำ (มี evidence)
 
@@ -17,17 +17,16 @@
 | **W-5** เอกสารชุดเดียว | master / work state / test pack / แฮนด์ออฟ = สถานะเดียวกัน · ไม่มี claim "เหลือ Owner อย่างเดียว" · ไม่มีอักขระจีน | `C:\Users\Public\bmb_doccheck`/cjkcheck ผ่าน |
 | **B-6 (P0) ปิด** | ก่อนแก้: guest `/menu` production = **401 `permission denied for function is_staff` ทุก endpoint** (ต้นตอ = migration 129) → แก้ = **157 + 158** (apply แล้ว · ท่านอนุมัติ) · หลัง apply: PostgREST ทุก endpoint = **200** · Playwright เปิด `/menu` จริง = **เห็นเมนูครบ 14 รายการ + ไม่มี console error** | `e2e/w6Apply157158-staged.json` / `-verify.json` / `-apply158.log` · `e2e/w2_b6_final_*.json` |
 | **Gates รอบนี้** | tsc 0 · eslint 0 · brandGuard 0 · **vitest 1549 tests 0 fail** · build 0 | **`e2e/session20261026-r3-gates-evidence.log`** (+ `e2e/gates_final.log` รอบปิดเซสชั่น) |
+| **UI 5 ข้อปิด (L-3/4/5/7/8 · Owner 2026-10-26)** | L-3 scrollTo helpers (fallback-top) ทุกหน้า · L-4 chips ครบ + menuTabItems + prop tab · L-5 ไทย 3 จุด + กรอง archived (INV-18 VotePage อัปเดตตามคำสั่งใหม่) · L-7 N-4 #7 order + Footer displayRank · L-8 btn-locked + gate ทุกจุดเข้า + Cart stale | ใหม่: `uiTapScroll · menuTopTabs · votePageUi · headingOrderFooter · preOrderLockUi` · อัปเดต: `categorySections · homeMenuAdminOrdering · adminNavFeedback · canonicalFallbackContract` |
+| **legacy 6 = DROP (Owner สั่ง)** | `159_drop_legacy_manual_functions.sql` (IF EXISTS · parity signatures) — **CI auto-apply เฉพาะ ephemeral · ห้าม apply production** | Contract **#159 success** |
+| **CI รอบปิด `67f10b8`** | CI **#585 success** · Contract **#159 success** · Test+Lint+Build success · Pages success | `bmb_ci.bat 67f10b8` · master §9.0 |
+| **Gates รอบปิด UI** | tsc 0 · eslint 0 · brand 0 (434 ไฟล์) · **vitest ทั้งชุด 0 fail** · build 0 | **`e2e/gates_ui2026-10-26.log` = ALL 5 EXIT=0** |
 
 ## 2. งานที่ต้องทำต่อ (ลำดับนี้เลย)
 
-1. **ตรวจ CI รอบปิด** — `C:\Users\Public\bmb_ci.bat 5ab2906` (และ SHA ใหม่) → ต้อง **CI success + Contract Tests success + มี `Legacy contracts OK — 7/7`** · ถ้ามี failure จริง → `node e2e\w5_ci.cjs <sha>` แล้ว `node e2e\w7_jobs.cjs <run_id>` สืบ · เติมผลลง `BMB_MASTER_STATUS.md` §9.0 (แถว HEAD = `5ab2906` ยังเขียนว่า "ตรวจรอบถัดไป")
-2. **UI อีก 5 ข้อ (W-4 เหลือ)** — เกณฑ์รายข้อใน `docs/BMB_PRODUCTION_TEST_PACK.md` §L · **ทุกข้อต้องมี test ของตัวเอง** · gates เขียว + push + CI ก่อนย้ายออกจาก §L:
-   - **L-3** จิ้มแท็บ/หัวข้อแล้วเลื่อนไปเป้าหมาย — ต้องเลื่อนเหมือนกันทุกหน้า
-   - **L-4** เมนูแท็บบนสุด: หัวข้อครบ + โหมดวันนี้/จองล่วงหน้า ถูกต้อง
-   - **L-5** หน้าโหวตเมนู: ภาษาไทยถูก + ครบทุกเมนู
-   - **L-7** ลำดับหัวข้อแนวนอน/ปุ่มล่าง = **ส่งวันนี้ → จองล่วงหน้า → สุขภาพ → เครื่องดื่ม → ทานเล่น → สำเร็จรูป** + ลิงก์ใช้ได้จริง + ฟุตเตอร์ลำดับเดียวกัน
-   - **L-8** พรีออเดอร์ยังไม่ถึง/เลยรอบ = **สีเทา + กดไม่ได้ทุกจุด** (หน้า list/detail/cart)
-3. **Legacy 6 functions (L-10)** — production มี · repo ไม่มี · ไม่มี src caller: `auto_approve_order` · `calculate_loyalty_points` · `check_product_availability` · `mark_payment_failed` · `update_order_status` · `validate_order_before_submit` → **ถาม Owner: ปลดออก หรือ คงไว้ + บันทึก** (ห้ามปลด/ลบเอง)
+1. ~~ตรวจ CI รอบปิด~~ **เสร็จแล้ว** — `67f10b8` → **CI #585 success · Contract #159 success · Pages success** (ตรวจด้วย `C:\Users\Public\bmb_ci.bat <sha>`) · ผลลง `BMB_MASTER_STATUS.md` §9.0 แล้ว (รวมยืนยัน `5ab2906` = #583/#157 success)
+2. **test pack §L รันจริง** — UI ปิดครบ + CI `67f10b8` เขียวแล้ว → **ขั้นปลดล็อกทั้งหมด** → ให้ Owner รันที่ `docs/BMB_PRODUCTION_TEST_PACK.md` (§L + §0) · L-3/4/5/7/8 ย้ายไป §1 แล้ว (มี test รายข้อ + gates ALL ZERO + CI success)
+3. ~~Legacy 6 functions (L-10)~~ **ปิด = Owner สั่ง DROP** — `159_drop_legacy_manual_functions.sql` (IF EXISTS · parity signatures จาก `e2e/w1-parity-2026-10-26.json`) · **CI auto-apply เฉพาะ ephemeral — ห้าม apply production** (production ยังมีฟังก์ชันครบตามเดิม · ไม่มี src caller) · Contract **#159 success**
 4. **รัน test pack จริง** — ขั้นปลดล็อกแล้ว: **A1/A2/A3 · B (รวม B2) · C7/C8 · D–K** · ยังงด = ขั้นผูกกับ L-3/4/5/7/8 · **L-12 = `menu_rules`/`stop_conditions` (optional)** · **production acceptance = ท่านรันเอง** (AI รันแทนไม่ได้ตามกติกา 10)
 
 ## 3. กติกาที่ห้ามละเมิด (สรุปจากแถวนี้เอง)
@@ -38,7 +37,7 @@
 - `stash@{0} local-edits-before-sync-2026-09-21` = เดิมของเซสชั่นอื่น — **ห้ามแตะ**
 
 ## 4. หลักฐาน/ผลจริงที่อ้างได้ (CI อย่าตอบจากความจำ)
-- ตาราง SHA ทั้งหมด = **`docs/BMB_MASTER_STATUS.md` §9.0** (บันทึกเท่า `5ab2906`) · §9.8 = บทเรียนรอบ #152
+- ตาราง SHA ทั้งหมด = **`docs/BMB_MASTER_STATUS.md` §9.0** (บันทึกเท่า `67f10b8`) · §9.8 = บทเรียนรอบ #152
 - ตรวจ CI ปัจจุบัน: `C:\Users\Public\bmb_ci.bat <sha>` (= `node e2e\w5_ci.cjs <sha>`)
 - **domain จริง**: `biteme-baby.com` (auto-deploy ปัจจุบัน) · **`bitemebaby-5f7.pages.dev` = build เก่า — ห้ามใช้ตรวจ UI**
 - logs gates: `e2e/session20261026-r3-gates-evidence.log` (1549 tests) · `e2e/gates_final.log` (รอบปิดเซสชั่น)
@@ -50,7 +49,7 @@
 | `bmb_status.bat` / `bmb_hlist.bat` | git status+log+origin+stash / ไล่ไฟล์ handoff+md |
 | `bmb_gatesfinal.bat` + `bmb_schedfinal.bat` | **รัน gates 5 ตัวแบบ detached ผ่าน Task Scheduler** → log `e2e\gates_final.log` (ห้ามรันตรง ๆ — process โดน kill) |
 | `bmb_tail.bat` | อ่าน 8 บรรทัดท้าย gates_final.log |
-| `bmb_push*.bat` + `bmb_msg*.txt` | commit/push (msg4..6 = ของรอบนี้) |
+| `bmb_push*.bat` + `bmb_msg*.txt` | commit/push (msg8 = โค้ดรอบนี้ · msg9 = docs+ล้าง probe) · `bmb_gatesui`/`bmb_schedui` = gates 5 ตัวผ่าน Task Scheduler (ห้ามรันตรง — process โดน kill) |
 | `bmb_clean*.bat` | ล้างไฟล์ชั่วคราวในแชท workspace (ทำแล้วรอบปิดเซสชั่น) |
 - Replay DB รอบนี้รันบน container **`bmb_replay_w1`** — ถ้าถูก stop แล้ว: สร้างใหม่ด้วย `e2e/ci/w1_run_setup.bat` + `e2e/ci/w1_fresh_replay.sh` (นับแบบ dynamic รองรับ 158 แล้ว)
 - helper ในแชท workspace (bmb_*.bat/cjs) = **ถูกล้างหมดแล้ว** — ห้ามสร้างใหม่ค้างไว้ข้ามเซสชั่น
@@ -63,9 +62,9 @@
 5. จำนวนครั้งแก้ = **2 attempt ต่อปัญหา** (ครบแล้วให้สรุป ไล่คนละทาง = เลิกแล้วรายงาน)
 
 ## 7. DoD ก่อนบอก "จบ" รอบหน้า
-- [ ] CI ทุก SHA ใน §9.0 มีผลจริง (ไม่ใช่ "กำลังรัน")
-- [ ] UI 5 ข้อ (L-3/4/5/7/8) ปิด + มี test + ย้ายออกจาก §L
-- [ ] legacy 6 functions มีคำสั่ง Owner (ปลด/คง) + บันทึกใน §L-10
+- [x] CI ทุก SHA ใน §9.0 มีผลจริง (`67f10b8` = #585/#159 · `5ab2906` = #583/#157 — ยืนยัน 2026-10-26)
+- [x] UI 5 ข้อ (L-3/4/5/7/8) ปิด + มี test + ย้ายออกจาก §L (ย้ายเข้า §1 แล้ว)
+- [x] legacy 6 functions มีคำสั่ง Owner = **DROP** → migration 159 (CI-only · บันทึกแล้ว)
 - [ ] test pack ขั้นปลดล็อกแล้วรันจริง/ผ่าน §0
 - [ ] เอกสาร 4 ฉบับตรงกัน + ไม่มี claim เกินหลักฐาน
 
@@ -78,5 +77,6 @@
 | `npm run build` (= `tsc && vite build`) | **exit 0** | `e2e/gates_final.log` |
 | `npm run test -- --run` (vitest ทั้งชุด) | **1548/1549 ผ่าน** · 1 รายการ = `homePreOrderModeGuard.test.ts` ล้มด้วย **`Test timed out in 5000ms`** (ไม่ใช่ assertion ล้ม) | `e2e/gates_final.log` |
 | **รันซ้ำไฟล์ที่ล้ม (ลำพัง)** | **1 passed (1) · exit 0** → ยืนยัน = timeout จาก CPU ชนกันตอนรัน tsc/vitest พร้อมกัน **ไม่ใช่โค้ดพัง** | `e2e/gates_recheck.log` |
+| **Gates รอบปิด UI (L-3/4/5/7/8 · 2026-10-26)** | **ทั้ง 5 EXIT=0** · vitest ทั้งชุด 0 fail (หลังแก้ 2 test ตามคำสั่ง Owner ล่าสุด: adminNav deps+search · INV-18 VotePage=archived) | **`e2e/gates_ui2026-10-26.log`** |
 - ⚠️ **บทเรียนชื่อ script:** ใน `package.json` **ไม่มี `npm run typecheck`** (มีแค่ `dev · build (=tsc && vite build) · preview · test · test:watch · lint`) → typecheck ต้องใช้ **`npx tsc --noEmit`** (บัต `bmb_gatesfinal.bat` แก้ให้แล้ว)
 - ⚠️ **อย่ารัน tsc/eslint พร้อม vitest** — จะชน CPU จน test timeout (เกิดแล้วรอบนี้)
