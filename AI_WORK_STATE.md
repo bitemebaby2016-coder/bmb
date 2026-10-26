@@ -7,7 +7,7 @@
  vitest **144 files/1517 tests 0 fail** · build ✓ (12.7s) ·
  ของเดิมยังมีผล: **Docker replay 001–156 ALL_GREEN** · **contract 156 G1–G9 PASS (rc=0) + regression 155/154/153 PASS** ·
  evidence เดิม = `e2e/g156-gates-evidence.txt` · evidence รอบนี้ = **`e2e/r16Apply156-*.json`** ·
- **CI ยังไม่ได้ตรวจจริง** ไม่มี `gh` ในเครื่อง)
+ push **`b19cd03`** (main = origin/main · ก่อนหน้า `b6bb54c`) — **CI ยังไม่ได้ตรวจจริง** ไม่มี `gh` ในเครื่อง)
 **production:** migration **156 = APPLIED + RECORDED ✓ (record top=156)** (Owner "apply 156" 2026-10-26 →
  `e2e/r16Apply156.cjs` staged 6 รุ่น: precheck **11/11** (top=155) → apply+idempotent-rerun **201/201** →
  verify **13/13** → contract156 **G1–G9 PASS** → contractRegr **155/154/153/148 PASS** → record →
