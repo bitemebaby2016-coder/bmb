@@ -26,7 +26,8 @@
 |---|---|
 | Repository | `D:\A PROJECT\Bite Me Baby` · remote `git@github.com-bmb:bitemebaby2016-coder/bmb.git` |
 | Branch | `main` tracking `origin/main` |
-| HEAD ก่อนเริ่มงาน | `29ed251` = `origin/main` (หลัง `git fetch --prune` ไม่มี ahead/behind) |
+| HEAD ปัจจุบัน (2026-10-26 · รอบ UI L-3/4/5/7/8 + docs reconcile) | `5f891de` = `origin/main` · CI **#586 success** · Contract **#160 success** |
+| (ประวัติ) HEAD ก่อนเริ่มงานรอบ reconciliation เช้า 2026-10-26 | `29ed251` = `origin/main` ตอนนั้น — **ค่าเก่า ห้ามถือเป็น HEAD ปัจจุบัน** |
 | staged / unstaged | **ว่างทั้งคู่** ตอนเริ่มรอบ · working tree clean · untracked = **0 ไฟล์** |
 | stash | `stash@{0}: On main: local-edits-before-sync-2026-09-21` — **คงเดิม ไม่ถูกแตะ** |
 | งานที่ทำรอบนี้ | ดู §9 (เปลี่ยนเฉพาะไฟล์ที่ระบุ ไม่มี `git add -A`) |
@@ -44,10 +45,23 @@
 | SQL replay / production | **รันแล้ว (W-1 · 2026-10-26)** — fresh replay 001→157 + เทียบ production แบบ read-only | **VERIFIED** · `REPLAY_ALL_GREEN 157/157` + parity รายงาน drift ครบ (ไม่ใช่ zero-drift) | `e2e/w1-replay-apply-2026-10-26-full.log` · `e2e/w1-parity-2026-10-26.json` · `e2e/w1-parity-report-2026-10-26.md` |
 | CI ของ SHA ที่ push จริง | GitHub Actions API (ไม่มี `gh`) | ดูก้อน **§9.0 (ตาราง CI canonical ทุก SHA)** | §9.0 |
 
-### 1.3 Production (ไม่ได้ re-verify ในรอบนี้)
+### 1.3 Production (reconcile 2026-10-26 รอบปิดงาน)
 
-- migration ledger ล่าสุดที่มีหลักฐาน apply = **156** (`e2e/r16Apply156-*.json` · session 2026-10-26)
-- **รอบนี้ไม่ได้แตะ production** (ไม่มี migration/apply/deploy/write ใด ๆ)
+- migration ledger ล่าสุดที่มีหลักฐาน apply = **158** — **157 + 158 apply บน production แล้ว (Owner อนุมัติ 2026-10-26)**
+  · evidence `e2e/w6Apply157158-{precheck,apply157,apply158,verify,record}.json` + parity **ledger 158=158**
+  (`e2e/w1-parity-2026-10-26.json`) — *(บรรทัดเดิมเขียนว่า 156 = DOC DRIFT แก้รอบนี้)*
+- **migration 159 (DROP legacy 6 fn) = PREPARED · NOT APPLIED TO PRODUCTION** — มีเฉพาะใน repo +
+  CI auto-apply บน ephemeral เท่านั้น · **production ยังมีฟังก์ชันครบ 6 ตัว** · ยังยืนยันไม่ได้ว่าถูกลบแล้ว ·
+  รอ **Owner ยืนยันรอบสุดท้าย** + precheck ก่อน apply เสมอ
+- **probe re-read 2026-10-26 (read-only, anon): ไม่สำเร็จ** — REST root = 401 · `marketing_rules` =
+  **42501 `permission denied ... TO anon`** → **ยัง re-verify production runtime ใหม่ไม่ได้รอบนี้ = UNVERIFIED**
+  (ค่าเดิมจาก evidence ไฟล์ข้างบนยังใช้อ้างอิงได้ แต่ไม่ใช่การยืนยันใหม่)
+- **Cloudflare Pages / deploy (ทำตาม task 5):** CI Pages job = **success** (67f10b8 + 5f891de) ·
+  **serving marker ตรวจ 2026-10-26: `btn-locked` (โค้ดใหม่เฉพาะ 67f10b8) พบใน CSS จริง
+  (`index-DZpLzxJE.css` · 146KB · 200) + ใน index JS จริง (`index-KR2tYugD.js` · 200) = SERVING ≥ 67f10b8 ✓ VERIFIED**
+  · `bitemebaby-5f7.pages.dev` = fetch ไม่ได้ (ตรงเอกสาร "ลบแล้ว") · *ชื่อ asset ≠ local dist
+  เพราะ env inlining/คนละ build machine — ไม่ใช่หลักฐาน stale* · *build id/timestamp อ่านไม่ได้จาก SPA shell*
+- **รอบนี้ไม่ได้แตะ production write** (ไม่มี apply/deploy/manual write ใด ๆ จาก AI)
 - คำสั่งตรวจ ledger รอบถัดไป (read-only): รัน precheck ของ `e2e/` แล้วดู `schema_migrations` top
 
 ---
@@ -283,6 +297,7 @@
 | 15 | `5ab2906` | docs: เติมผล CI จริง 33785ae/a294c52 + แถว HEAD | #583 **success** | #157 **success** |
 | 17 | `67f10b8` | ปิด UI L-3/4/5/7/8 (test ใหม่ 5 ไฟล์ + อัปเดต 4) + migration 159 DROP legacy 6 fn | #585 **success** | #159 **success** |
 | 18 | `3ffafac` | (รอบก่อนหน้า — legacy contracts 017-033 กลับเข้า CI) | #584 **success** | #158 **success** |
+| 19 | `5f891de` | docs: reconcile 4 เอกสาร (HEAD/ledger/159=**prepared NOT applied** · Test Pack §L→**L-RT** · B2/C7C8=**UNVERIFIED** · probe 42501 · Pages serving=**VERIFIED marker btn-locked**) + ล้าง probe | #586 **success** | #160 **success** |
 | 16 | (docs commit ปิดเซสชั่น — SHA ดูใน git log) | เขียนแฮนด์ออฟปิดเซสชั่น + work state + gates evidence | ตรวจรอบถัดไป | ตรวจรอบถัดไป |
 
 > อ่านจาก GitHub Actions REST API จริง (`?head_sha=<full SHA>` — เครื่องนี้ไม่มี `gh`) ·

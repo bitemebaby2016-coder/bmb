@@ -3,8 +3,8 @@
 > **บังคับอ่านตามลำดับก่อนเริ่มงาน:** `AI_ENTRYPOINT.md` → `UNIVERSAL_MASTER_AI_RULES.md` → `AI_WORK_STATE.md` → ไฟล์นี้ (จบในไฟล์เดียว = มีฉบับนี้ฉบับเดียว · ฉบับ 10-25 ถูกย้ายเข้า `docs/archive/legacy_reports/` แล้ว)
 
 ## 0. บรรทัดเดียว
-**ปิดแล้ว:** W-1 · W-2 · W-3 · W-5 · **UI 9/9 ข้อ (รวม L-3/4/5/7/8 · Owner 2026-10-26)** · **B-6 (P0)** · migration **157+158 ใช้งานบน production แล้ว** · **legacy 6 functions = Owner สั่ง DROP → migration 159 (CI auto-apply เฉพาะ ephemeral — ห้าม apply production)**
-**เหลือ:** test pack §L ให้ Owner รัน (ขั้นปลดล็อกแล้ว) — หลังจากนั้นเหลือเฉพาะ **ring-system testing ของ Owner** · CI รอบปิด `67f10b8` = **success** (CI #585 · Contract #159 · Pages)
+**ปิดแล้ว:** W-1 · W-2 · W-3 · W-5 · **UI 9/9 ข้อ (รวม L-3/4/5/7/8 · Owner 2026-10-26 · มี test+gates+CI)** · **B-6 (P0)** · migration **157+158 ใช้งานบน production แล้ว (ledger top 158 มี evidence)** · **legacy 6 functions = Owner สั่ง DROP → migration 159 = PREPARED · NOT APPLIED to Production** (CI auto-apply เฉพาะ ephemeral — ห้าม apply production จนกว่า Owner ยืนยันรอบสุดท้าย + precheck)
+**เหลือ:** **production runtime ยัง verify ไม่ครบ** (`marketing_rules` re-read 42501 → **C7/C8 = UNVERIFIED** · **B2 = UNVERIFIED**) · **apply 159 production = PREPARED ยังไม่ทำ** (รอ Owner ยืนยัน + precheck) · แล้วจึง **รัน test pack ฉบับ reconcile (§L → L-RT) + ring-system ของ Owner** · Pages serving = **verify แล้ว** (marker `btn-locked` ใน CSS/JS จริง) · CI: `67f10b8` = #585/#159 · HEAD `5f891de` = #586/#160 (ทั้งคู่ success)
 
 ## 1. ปิดแล้ว — ห้ามทำซ้ำ (มี evidence)
 
@@ -21,11 +21,12 @@
 | **legacy 6 = DROP (Owner สั่ง)** | `159_drop_legacy_manual_functions.sql` (IF EXISTS · parity signatures) — **CI auto-apply เฉพาะ ephemeral · ห้าม apply production** | Contract **#159 success** |
 | **CI รอบปิด `67f10b8`** | CI **#585 success** · Contract **#159 success** · Test+Lint+Build success · Pages success | `bmb_ci.bat 67f10b8` · master §9.0 |
 | **Gates รอบปิด UI** | tsc 0 · eslint 0 · brand 0 (434 ไฟล์) · **vitest ทั้งชุด 0 fail** · build 0 | **`e2e/gates_ui2026-10-26.log` = ALL 5 EXIT=0** |
+| **docs reconcile (D-1/2/3 · task 1–5)** | 4 เอกสารใช้ **SHA `5f891de` + สถานะเดียวกัน** · 159 = **prepared NOT applied** · Test Pack §L-3/4/5/7/8 → **L-RT** · B2/C7C8 = **UNVERIFIED** (probe 42501) · Pages serving = **VERIFIED** (marker `btn-locked` ใน CSS/JS จริง) · ledger แก้ 156→**158** | CI **#586 success** · Contract **#160 success** · probe ผลอยู่ master §1.3 + §9.0 แถว 19 |
 
 ## 2. งานที่ต้องทำต่อ (ลำดับนี้เลย)
 
 1. ~~ตรวจ CI รอบปิด~~ **เสร็จแล้ว** — `67f10b8` → **CI #585 success · Contract #159 success · Pages success** (ตรวจด้วย `C:\Users\Public\bmb_ci.bat <sha>`) · ผลลง `BMB_MASTER_STATUS.md` §9.0 แล้ว (รวมยืนยัน `5ab2906` = #583/#157 success)
-2. **test pack §L รันจริง** — UI ปิดครบ + CI `67f10b8` เขียวแล้ว → **ขั้นปลดล็อกทั้งหมด** → ให้ Owner รันที่ `docs/BMB_PRODUCTION_TEST_PACK.md` (§L + §0) · L-3/4/5/7/8 ย้ายไป §1 แล้ว (มี test รายข้อ + gates ALL ZERO + CI success)
+2. **ส่ง test pack ฉบับ reconcile ให้ Owner รัน** (L-3/4/5/7/8 = **L-RT runtime verify ไม่ใช่งานค้าง** · B2/C7/C8 = **UNVERIFIED** ต้อง verify จริง · L-10 = รอคำสั่ง apply 159) + **งานค้างจริงที่เหลือ**: **(ก)** re-read `marketing_rules` ให้ได้ (สิทธิ์ anon 42501 — แก้ GRANT/ใช้ key ที่ถูก) + verify B2 ตอน ~11:00 · **(ข)** **apply 159 production เมื่อ Owner ยืนยัน** (precheck + verify ให้มี evidence แบบ `w6Apply*`) · Pages serving = verify แล้วผ่าน (marker) แล้วจึงรัน L-RT + §B/E/I ด้วยตา Owner
 3. ~~Legacy 6 functions (L-10)~~ **ปิด = Owner สั่ง DROP** — `159_drop_legacy_manual_functions.sql` (IF EXISTS · parity signatures จาก `e2e/w1-parity-2026-10-26.json`) · **CI auto-apply เฉพาะ ephemeral — ห้าม apply production** (production ยังมีฟังก์ชันครบตามเดิม · ไม่มี src caller) · Contract **#159 success**
 4. **รัน test pack จริง** — ขั้นปลดล็อกแล้ว: **A1/A2/A3 · B (รวม B2) · C7/C8 · D–K** · ยังงด = ขั้นผูกกับ L-3/4/5/7/8 · **L-12 = `menu_rules`/`stop_conditions` (optional)** · **production acceptance = ท่านรันเอง** (AI รันแทนไม่ได้ตามกติกา 10)
 
@@ -37,7 +38,7 @@
 - `stash@{0} local-edits-before-sync-2026-09-21` = เดิมของเซสชั่นอื่น — **ห้ามแตะ**
 
 ## 4. หลักฐาน/ผลจริงที่อ้างได้ (CI อย่าตอบจากความจำ)
-- ตาราง SHA ทั้งหมด = **`docs/BMB_MASTER_STATUS.md` §9.0** (บันทึกเท่า `67f10b8`) · §9.8 = บทเรียนรอบ #152
+- ตาราง SHA ทั้งหมด = **`docs/BMB_MASTER_STATUS.md` §9.0** (บันทึกเท่า `5f891de` แถว 19) · §9.8 = บทเรียนรอบ #152
 - ตรวจ CI ปัจจุบัน: `C:\Users\Public\bmb_ci.bat <sha>` (= `node e2e\w5_ci.cjs <sha>`)
 - **domain จริง**: `biteme-baby.com` (auto-deploy ปัจจุบัน) · **`bitemebaby-5f7.pages.dev` = build เก่า — ห้ามใช้ตรวจ UI**
 - logs gates: `e2e/session20261026-r3-gates-evidence.log` (1549 tests) · `e2e/gates_final.log` (รอบปิดเซสชั่น)
@@ -62,9 +63,9 @@
 5. จำนวนครั้งแก้ = **2 attempt ต่อปัญหา** (ครบแล้วให้สรุป ไล่คนละทาง = เลิกแล้วรายงาน)
 
 ## 7. DoD ก่อนบอก "จบ" รอบหน้า
-- [x] CI ทุก SHA ใน §9.0 มีผลจริง (`67f10b8` = #585/#159 · `5ab2906` = #583/#157 — ยืนยัน 2026-10-26)
-- [x] UI 5 ข้อ (L-3/4/5/7/8) ปิด + มี test + ย้ายออกจาก §L (ย้ายเข้า §1 แล้ว)
-- [x] legacy 6 functions มีคำสั่ง Owner = **DROP** → migration 159 (CI-only · บันทึกแล้ว)
+- [x] CI ทุก SHA ใน §9.0 มีผลจริง (`67f10b8` = #585/#159 · `5ab2906` = #583/#157 · `3ffafac` = #584/#158 · HEAD `5f891de` = #586/#160 — ยืนยัน 2026-10-26)
+- [x] UI 5 ข้อ (L-3/4/5/7/8) ปิด + มี test + ย้ายออกจาก §L (ย้ายไป **§L → L-RT** = runtime verify แล้ว)
+- [x] legacy 6 functions มีคำสั่ง Owner = **DROP** → migration 159 = **PREPARED · NOT APPLIED to Production** (รอ Owner ยืนยันรอบสุดท้าย + precheck · บันทึกแล้ว)
 - [ ] test pack ขั้นปลดล็อกแล้วรันจริง/ผ่าน §0
 - [ ] เอกสาร 4 ฉบับตรงกัน + ไม่มี claim เกินหลักฐาน
 
