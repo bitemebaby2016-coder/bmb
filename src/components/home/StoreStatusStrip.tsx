@@ -18,10 +18,11 @@ export function StoreStatusStrip({ status }: { status: StoreStatus }) {
         <p className="text-sm sm:text-base font-bold truncate">
           {status.isOpen ? '🟢' : '🔴'} {status.message}
         </p>
-        {/* D5 (Owner 2026-10-25 / 148): เซมเดย์ไม่มีคัทออฟ — ห้ามโชว์ "ปิดรับ HH:MM" จากค่าเดิมอีก */}
+        {/* D5 (Owner 2026-10-25 / 148): เซมเดย์ไม่มีคัทออฟ — ห้ามโชว์ "ปิดรับ HH:MM" จากค่าเดิมอีก
+            SYNC (Owner 2026-10-26): โชว์เวลาปิดจริงจาก business_settings.hours เมื่อรู้ค่า */}
         {(status.deliveryWindowLabel || typeof status.capacityPct === 'number') && (
           <p className="text-xs opacity-80 truncate">
-            ไม่มีคัทออฟ (สั่งได้ถึงปิดร้าน) · {status.deliveryWindowLabel}
+            ไม่มีคัทออฟ (สั่งได้{status.hoursClose ? ` ถึง ${status.hoursClose}` : 'ถึงปิดร้าน'}) · {status.deliveryWindowLabel}
             {typeof status.capacityPct === 'number' && ` · เหลือที่นั่ง ${100 - status.capacityPct}%`}
           </p>
         )}

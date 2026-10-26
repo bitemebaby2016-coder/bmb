@@ -13,6 +13,7 @@
 
 import { useEffect, useState } from 'react'
 import { getStoreStatusFromRounds } from './homeProviders'
+import { ensureShopConfigLoaded, getShopConfig, getShopHours, subscribeShopConfig } from './shopHours'
 import type { StoreStatus } from '@/types'
 
 type RoundsInput = Parameters<typeof getStoreStatusFromRounds>[0]
@@ -48,9 +49,14 @@ async function ensureRoundsLoaded(): Promise<void> {
   }
 }
 
-/** สถานะร้านล่าสุด (ตรรกะเดียวกับ StoreStatusStrip) */
+/** สถานะร้านล่าสุด (ตรรกะเดียวกับ StoreStatusStrip) — sync กับ business_settings.hours/operating_hours */
 export function currentStoreStatus(now: Date = new Date()): StoreStatus {
-  return publishedRounds ? getStoreStatusFromRounds(publishedRounds, now) : UNKNOWN_STORE_STATUS
+  if (!publishedRounds) return UNKNOWN_STORE_STATUS
+  const cfg = getShopConfig()
+  return getStoreStatusFromRounds(publishedRounds, now, {
+    ...cfg,
+    hoursClose: getShopHours()?.close,
+  })
 }
 
 /** ร้านปิดอยู่ไหม — เช็คได้ทุกที่ในระบบ */
@@ -72,11 +78,13 @@ export function useStoreClosed(): boolean {
   const [closed, setClosed] = useState<boolean>(() => isStoreClosedNow())
   useEffect(() => {
     void ensureRoundsLoaded() // ยังไม่มีข้อมูล = โหลดรอบส่งจริงจาก DB (ครั้งเดียว)
+    void ensureShopConfigLoaded() // SYNC: โหลด business_settings.hours + operating_hours
     const sync = () => setClosed(isStoreClosedNow())
     sync()
     const timer = setInterval(sync, 60_000)
     const unsub = subscribe(sync)
-    return () => { clearInterval(timer); unsub() }
+    const unsubCfg = subscribeShopConfig(sync)
+    return () => { clearInterval(timer); unsub(); unsubCfg() }
   }, [])
   return closed
 }

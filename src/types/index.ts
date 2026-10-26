@@ -896,6 +896,8 @@ export interface StoreStatus {
   message: string
   /** สายพรีออเดอร์ (Owner 2026-10-25): รอบถัดไปที่ยังสั่งได้/คัทออฟที่ตั้งไว้ — แยกจากสายเซมเดย์ */
   preOrderLine?: string
+  /** SYNC (Owner 2026-10-26): เวลาปิดร้านจาก business_settings.hours (เช่น '20:00') — โชว์แทนคำว่า "ปิดร้าน" เฉย ๆ */
+  hoursClose?: string
 }
 
 export interface QuickAction {

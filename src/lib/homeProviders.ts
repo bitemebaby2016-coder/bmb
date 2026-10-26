@@ -145,7 +145,15 @@ export function getStoreStatusFromRounds(rounds: Array<{
   max_capacity?: number
   current_count?: number
   scheduled_date?: string | null
-}>, now: Date = new Date()): StoreStatus {
+  round_key?: string | null
+}>, now: Date = new Date(), opts?: {
+  /** SYNC (Owner 2026-10-26): business_settings.hours เป็น ms-of-day — null/ไม่ส่ง = ห้ามเดาปิด */
+  shopHoursMs?: { openMs: number; closeMs: number } | null
+  /** SYNC: business_settings.operating_hours (same_day_open/morning_open/…) */
+  operatingHours?: Record<string, boolean | undefined> | null
+  /** ป้ายเวลาปิดจริงสำหรับ UI (เช่น '20:00') */
+  hoursClose?: string
+}): StoreStatus {
   const live = (rounds || []).filter((r) => {
     const s = String(r.status || '').toLowerCase()
     return s === 'active' || s === 'open'
@@ -193,7 +201,13 @@ export function getStoreStatusFromRounds(rounds: Array<{
     : 'พรีออเดอร์: ปิดรับแล้ว — ยังไม่เปิดรอบถัดไป'
 
   const bookable = todayRows.filter(
-    (r) => roundBookability(r, { isToday: true, nowUtcMs: now.getTime() }) === 'open',
+    (r) =>
+      roundBookability(r, {
+        isToday: true,
+        nowUtcMs: now.getTime(),
+        shopHoursMs: opts?.shopHoursMs ?? null,
+        operatingHours: opts?.operatingHours ?? null,
+      }) === 'open',
   )
   if (bookable.length > 0) {
     const bkkMs = bangkokMsOfDay(now.getTime())
@@ -219,7 +233,9 @@ export function getStoreStatusFromRounds(rounds: Array<{
       state: 'open',
       currentRoundLabel: hasWindowNow ? current.display_name || 'ปัจจุบัน' : undefined,
       // D5 (Owner 2026-10-25): ห้ามโชว์ cutoff_time เดิมเป็น "ปิดรับ" — เซมเดย์ไม่มีคัทออฟ (148)
-      deliveryWindowLabel: `ส่ง ${current.delivery_start}–${current.delivery_end}`,
+      // SYNC (2026-10-26): ตัด :ss ออก (ค่า DB เป็น HH:MM:SS — เคยรั่ว "07:00:00-09:00:00" ขึ้น UI)
+      deliveryWindowLabel: `ส่ง ${String(current.delivery_start ?? '').slice(0, 5)}–${String(current.delivery_end ?? '').slice(0, 5)}`,
+      hoursClose: opts?.hoursClose,
       // ที่นั่ง/ความจุ = ของรอบที่อยู่ในหน้าต่างตอนนี้เท่านั้น (ไม่งั้นตัวเลขปลอม)
       capacityPct:
         hasWindowNow && Number(current.max_capacity) > 0
@@ -228,7 +244,7 @@ export function getStoreStatusFromRounds(rounds: Array<{
       message: hasWindowNow
         ? `เปิดรับออเดอร์${current.display_name ? ' ' + current.display_name : ''}`
         : upcoming
-          ? `เปิดรับออเดอร์ เซมเดย์ — ยังสั่งได้ ส่งรอบถัดไป ${current.delivery_start}–${current.delivery_end}`
+          ? `เปิดรับออเดอร์ เซมเดย์ — ยังสั่งได้ ส่งรอบถัดไป ${String(current.delivery_start ?? '').slice(0, 5)}–${String(current.delivery_end ?? '').slice(0, 5)}`
           : 'เปิดรับออเดอร์ เซมเดย์ — ยังสั่งได้ (รอบส่งวันนี้ผ่านแล้ว)',
       preOrderLine,
     }

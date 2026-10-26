@@ -50,6 +50,7 @@ import {
 import type { VerifiedCustomerReview, Product, ProductCategory, SameDayOrderPayload, PreOrderPayload, HomeReview } from '@/types'
 import { preOrderEntryPath, saleModeOfCategory, withPreOrderTab } from '@/lib/catalogStructure'
 import { scrollToSectionOrTop } from '@/lib/scrollTo'
+import { hoursToMs } from '@/lib/shopHoursLogic'
 
 // ⚡ The Food Theater stage is code-split (aiServerMemory chain); it renders
 // real catalog picks + canonical cart actions as the first section of /shop.
@@ -80,6 +81,10 @@ export function HomePage() {
   const [siteCopy, setSiteCopy] = useState<SiteCopy>(DEFAULT_SITE_COPY)
   // วันจัดส่งจริงจาก menu_schedule (UX fix 2026-10-15 — ไม่ใช้ products.scheduled_date)
   const [scheduleMap, setScheduleMap] = useState<ProductScheduleMap>({})
+  // SYNC (Owner 2026-10-26 "ต้องซิงค์ค่าที่แอดมินตั้งจริง"): เวลาเปิด/ปิด + ปุ่มเปิด/ปิด
+  // อ่านจาก business_settings (แอดมินแก้ได้ที่หน้าแอดมิน ไม่ต้อง deploy)
+  const [shopHours, setShopHours] = useState<{ open: string; close: string } | null>(null)
+  const [operatingHours, setOperatingHours] = useState<Record<string, boolean> | null>(null)
 
   useEffect(() => {
     async function loadData() {
@@ -107,6 +112,12 @@ export function HomePage() {
             const settings = await getBusinessSettings()
             setPopularCfg(parseHomePopularConfig(settings?.[HOME_POPULAR_KEY]))
             setSiteCopy(parseSiteCopy(settings?.[SITE_COPY_KEY]))
+            // SYNC: เวลาเปิด/ปิด (hours) + ปุ่มเปิด/ปิด (operating_hours) — แอดมินคนเดียวกับที่ตั้งค่าจริง
+            const sh = settings?.hours as { open?: string; close?: string } | undefined
+            if (sh && typeof sh.open === 'string' && typeof sh.close === 'string') {
+              setShopHours({ open: sh.open, close: sh.close })
+            }
+            setOperatingHours((settings?.operating_hours ?? null) as Record<string, boolean> | null)
           } catch { /* ใช้ค่า default ต่อไป */ }
         })()
         // ปฏิทินมุมการ์ด: วันจัดส่งจริงจาก menu_schedule (fire-and-forget — ไม่ขวางหน้า)
@@ -164,7 +175,11 @@ export function HomePage() {
       coupon: r.code,
       image: r.banner_image,
     }))
-  const storeStatus = getStoreStatusFromRounds(rounds)
+  const storeStatus = getStoreStatusFromRounds(rounds, new Date(), {
+    shopHoursMs: hoursToMs(shopHours),
+    operatingHours,
+    hoursClose: shopHours?.close,
+  })
 
   const handleSameDay = (payload: SameDayOrderPayload) => {
     // Owner 2026-10-26: ทุกปุ่มสั่งซื้อของร้านผ่านเส้นทางเดียว runOrderBuilder (@/lib/orderEntry)

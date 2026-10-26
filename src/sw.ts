@@ -16,6 +16,15 @@ import { NavigationRoute, registerRoute } from 'workbox-routing'
 
 declare const self: ServiceWorkerGlobalScope
 
+// --- autoUpdate parity (OWNER FIX 2026-10-26: เห็น UI เก่าค้างถาวร) ---
+// injectManifest mode ไม่ฉีด skipWaiting/clientsClaim ให้เหมือน generateSW
+// (vite.config registerType:'autoUpdate' มีผลกับ generateSW เท่านั้น) → SW ใหม่
+// ติดตั้งแล้วไม่เคยเข้าควบคุม tabs → precache เก่าเสิร์ฟต่อไป = ลูกค้าค้าง build เก่า
+self.addEventListener('install', () => { void self.skipWaiting() })
+self.addEventListener('activate', (event) => {
+  event.waitUntil(self.clients.claim())
+})
+
 // --- offline precache (same behaviour as the previous generateSW worker) ---
 precacheAndRoute(self.__WB_MANIFEST)
 cleanupOutdatedCaches()

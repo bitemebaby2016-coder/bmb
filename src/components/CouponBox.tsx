@@ -105,6 +105,9 @@ export function CouponBox() {
   // async (initCartPersistence โหลด catalog ก่อน restore) → ถ้า mount เสร็จก่อน
   // restore โค้ดจะถูก set แล้วไม่มีใคร re-validate อีกเลย (คูปองหาย/ค้าง pending)
   useEffect(() => {
+    // re-evaluate เมื่อ subtotal เปลี่ยนด้วย ( deps เดิมมีแค่ [couponCode] ): ครอบคลุมจังหวะ
+    // hydrate ที่subtotal ยัง 0 → below_min ค้าง pending ถาวร = บั๊ก "ต้องกดลองอีกครั้ง"
+    // ของ Owner 2026-10-26 — apply แล้ว (มี appliedPromotion) = ออกก่อนไม่ยิงซ้ำ
     let cancelled = false
     const code = useCartStore.getState().couponCode
     if (!code.trim() || useCartStore.getState().appliedPromotion) return
@@ -119,7 +122,7 @@ export function CouponBox() {
       }
     })
     return () => { cancelled = true }
-  }, [couponCode])
+  }, [couponCode, subtotal])
 
   async function handleApply(raw: string) {
     const code = raw.trim()

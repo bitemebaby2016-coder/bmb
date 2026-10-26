@@ -15,8 +15,9 @@
 // ============================================
 
 import { bangkokMsOfDay } from './bangkokTime'
+import { withinShopHours } from './shopHoursLogic'
 
-export type RoundBookability = 'open' | 'cutoff_passed' | 'window_passed' | 'full'
+export type RoundBookability = 'open' | 'cutoff_passed' | 'window_passed' | 'full' | 'shop_closed'
 
 export interface RoundTimeInfo {
   cutoff_time?: string | null
@@ -26,6 +27,8 @@ export interface RoundTimeInfo {
   delivery_end?: string | null
   current_count?: number | string | null
   max_capacity?: number | string | null
+  /** SYNC (Owner 2026-10-26): round_key ของแถว = คีย์เปิด/ปิดใน operating_hours (morning/midday/evening) */
+  round_key?: string | null
 }
 
 export interface RoundBookabilityOpts {
@@ -36,6 +39,11 @@ export interface RoundBookabilityOpts {
   mode?: 'SAME_DAY' | 'PRE_ORDER'
   /** ค่า order_policy.cutoff_hours (default 2) */
   preOrderCutoffHours?: number
+  /** SYNC (Owner 2026-10-26 "ปิด 20:00 แต่ยังสั่งได้"): business_settings.hours เป็น ms-of-day
+   *  null/ไม่ส่ง = ไม่มีข้อมูล → ห้ามเดาปิด (ZERO-FAKE · server ยังตัดสินซ้ำตอนสั่งจริง) */
+  shopHoursMs?: { openMs: number; closeMs: number } | null
+  /** SYNC: business_settings.operating_hours (same_day_open/pre_order_open/morning_open/…) */
+  operatingHours?: Record<string, boolean | undefined> | null
 }
 
 /** 'HH:mm' or 'HH:mm:ss' → ms-of-day, or null when absent/invalid.
@@ -109,6 +117,21 @@ export function roundBookability(
   const used = Number(round.current_count)
   if (Number.isFinite(cap) && Number.isFinite(used) && cap > 0 && used >= cap) return 'full'
 
+  // ---- SYNC กับค่าแอดมิน (Owner 2026-10-26 "ทุกฟีเจอร์ที่แอดมินตั้งได้ต้องซิงค์จริง") ----
+  const mode = opts.mode ?? 'SAME_DAY'
+  const oh = opts.operatingHours
+  if (oh) {
+    if (mode !== 'PRE_ORDER' && oh.same_day_open === false) return 'shop_closed'
+    if (mode === 'PRE_ORDER' && oh.pre_order_open === false) return 'shop_closed'
+    const rk = String(round.round_key ?? '').trim()
+    if (rk && oh[`${rk}_open`] === false) return 'shop_closed'
+  }
+  // business_settings.hours (open..close) — เซมเดย์นอกเวลาเปิดร้าน = ปิด (mirror server ที่จะเพิ่ม)
+  if (mode !== 'PRE_ORDER' && opts.isToday && opts.shopHoursMs) {
+    const nowMs0 = bangkokMsOfDay(opts.nowUtcMs ?? Date.now())
+    if (!withinShopHours(nowMs0, opts.shopHoursMs)) return 'shop_closed'
+  }
+
   if (opts.isToday) {
     // Server authority (143): SAME_DAY = cutoff_time / PRE_ORDER = delivery_start − cutoff_hours
     // (identical semantics to isBangkokCutoffPassed — seconds truncated to :00).
@@ -133,6 +156,7 @@ export function roundStatusLabel(status: RoundBookability): string {
     case 'cutoff_passed': return 'ปิดรับแล้ว'
     case 'window_passed': return 'หมดเวลาจัดส่งแล้ว'
     case 'full': return 'เต็มแล้ว'
+    case 'shop_closed': return 'ปิดในการตั้งค่าร้าน'
     default: return 'เปิดรับ'
   }
 }

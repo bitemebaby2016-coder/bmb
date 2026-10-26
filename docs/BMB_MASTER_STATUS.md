@@ -47,6 +47,10 @@
 
 ### 1.3 Production (reconcile 2026-10-26 รอบปิดงาน)
 
+- **migration 160 (enforce `hours` บน SAME_DAY → `ERR_STORE_CLOSED`) = PREPARED · NOT APPLIED to production** —
+  มีใน repo + CI (apply ephemeral + step widen hours ก่อน contract) · client sync deploy ผ่าน Pages อัตโนมัติ ·
+  **server gate รอ Owner สั่ง apply (precheck+verify แบบ w7Apply เท่านั้น)**
+
 - migration ledger ล่าสุดที่มีหลักฐาน apply = **159** — 157 + 158 (Owner อนุมัติ 2026-10-26 ·
   `e2e/w6Apply157158-{precheck,apply157,apply158,verify,record}.json` · parity **ledger 158=158**) +
   **159 (Owner อนุมัติรอบสุดท้าย 2026-10-26 · "อนุมัติ apply production 159")**

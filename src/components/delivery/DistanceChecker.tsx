@@ -104,13 +104,13 @@ export function DistanceChecker({ origin = null, destination = null, label = '�
           {quote.markup > 0 && (
             <div className="flex items-baseline justify-between text-xs text-slate-500">
               <span>ค่าบริการภายนอก</span>
-              <span>฿{quote.executorFee} + markup ฿{quote.markup}</span>
+              <span>฿{Number(quote.executorFee).toFixed(2)} + markup ฿{Number(quote.markup).toFixed(2)}</span>
             </div>
           )}
           <div className="flex items-baseline justify-between text-sm border-t border-white/30 pt-2">
             <span className="text-slate-500">ค่าจัดส่งรวม</span>
             <span className="font-bold text-lg text-slate-800">
-              ฿{serverFee && serverFee.delivery_fee != null ? serverFee.delivery_fee : quote.finalFee}
+              ฿{(serverFee && serverFee.delivery_fee != null ? serverFee.delivery_fee : quote.finalFee).toFixed(2)}
               {serverFee?.source === 'server' && serverFee.delivery_fee != null && (
                 <span className="ml-1 text-[10px] font-normal text-emerald-600">(จากโซนร้าน)</span>
               )}

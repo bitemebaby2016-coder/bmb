@@ -151,6 +151,11 @@ jobs:
           fi
           echo "All migrations 001-123 applied cleanly on isolated DB"
 
+      # 160 (Owner 2026-10-26): enforce hours บน SAME_DAY → กัน contract insert order
+      # ติด trigger ตามเวลาที่ runner รัน (seed 008 = 10:00-22:00) → ตั้งหน้าต่างกว้าง CI-only
+      - name: Widen business_settings.hours for CI (160 shop-hours gate)
+        run: psql -v ON_ERROR_STOP=1 -c "UPDATE public.business_settings SET value = '{\"open\":\"00:00\",\"close\":\"23:59\"}'::jsonb WHERE key = 'hours'"
+
       - name: Contract 123 — menu publish enforcement (transaction ROLLBACK)
         run: |
           set +e

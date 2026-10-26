@@ -31,6 +31,8 @@ import { KITCHEN_POINT } from '@/config/kitchenLocation'
 import { getPublishedScheduleForDate, mirrorPreOrderScheduleGate, checkModeEligibility, type MenuScheduleRow } from '@/lib/bmbMenuSchedule'
 import { getProductScheduleMap, resolveMenuBoundDate, type ProductScheduleMap } from '@/lib/productSchedule'
 import { fetchServerDeliveryFee, feeUiState, summaryFeeState } from '@/lib/deliveryFeeApi'
+import { bangkokMsOfDay } from '@/lib/bangkokTime'
+import { hoursToMs, withinShopHours } from '@/lib/shopHoursLogic'
 import { getBusinessSettings } from '@/lib/bmbAdminApi_settings'
 import { resolvePublicBranch } from '@/lib/brandResolver'
 import { getProducts } from '@/lib/bmbAdminApi_products'
@@ -110,6 +112,9 @@ export function CheckoutPage() {
   const [serverFee, setServerFee] = useState<number | null>(null)
   const [feeSource, setFeeSource] = useState<'server' | 'local-mirror' | 'error' | null>(null)
   const [cutoffHours, setCutoffHours] = useState(2) // order_policy.cutoff_hours — คัทออฟพรีออเดอร์ (ชม. ก่อนส่ง)
+  // SYNC (Owner 2026-10-26): business_settings.hours + operating_hours — เซมเดย์นอกเวลา/ปิดโหมด = สั่งไม่ได้
+  const [shopHours, setShopHours] = useState<{ open: string; close: string } | null>(null)
+  const [operatingHours, setOperatingHours] = useState<Record<string, boolean> | null>(null)
   const [paymentMethod, setPaymentMethod] = useState<'promptpay_qr' | 'cash_on_delivery' | 'credit_card'>('promptpay_qr')
   // ✅ 127 pickup fulfillment: 'delivery' (เดิม) | 'pickup' (รับที่ร้าน, ค่าส่ง 0)
   const [fulfillment, setFulfillment] = useState<'delivery' | 'pickup'>('delivery')
@@ -211,7 +216,7 @@ export function CheckoutPage() {
       setRounds(list)
       setSelectedRoundId((prev) => {
         const isToday = scheduledDate === todayStr()
-        const opts = { isToday, mode: orderMode, preOrderCutoffHours: cutoffHours }
+        const opts = { isToday, mode: orderMode, preOrderCutoffHours: cutoffHours, shopHoursMs: hoursToMs(shopHours), operatingHours }
         const prevRow = list.find((r) => r.id === prev)
         if (prevRow && roundBookability(prevRow, opts) === 'open') return prev
         // Owner 2026-10-19: same-day "จัดส่งทันที" — เลือกรอบที่เวลาปัจจุบันอยู่ใน
@@ -229,7 +234,7 @@ export function CheckoutPage() {
       })
     })()
     return () => { active = false }
-  }, [scheduledDate, customer, orderMode, cutoffHours])
+  }, [scheduledDate, customer, orderMode, cutoffHours, shopHours, operatingHours])
 
   // ✅ CAT-02: canonical published menu schedule for the selected PRE_ORDER date.
   // DISPLAY MIRROR ONLY — server (trg_menu_gate, migration 039) re-decides at order time.
@@ -304,6 +309,10 @@ export function CheckoutPage() {
       const policy = (s?.order_policy ?? {}) as Record<string, any>
       const raw = Number(policy.cutoff_hours)
       if (Number.isFinite(raw) && raw >= 0) setCutoffHours(raw)
+      // SYNC (Owner 2026-10-26): ดึงเวลาเปิด/ปิด + ปุ่มเปิด/ปิด จาก business_settings ชุดเดียวกัน
+      const sh = (s?.hours ?? null) as { open?: string; close?: string } | null
+      if (sh && typeof sh.open === 'string' && typeof sh.close === 'string') setShopHours({ open: sh.open, close: sh.close })
+      setOperatingHours((s?.operating_hours ?? null) as Record<string, boolean> | null)
     })()
   }, [])
 
@@ -403,6 +412,24 @@ export function CheckoutPage() {
       return
     }
 
+    // SYNC (Owner 2026-10-26 "ปิด 20:00 แต่ 22:55 ยังสั่งเซมเดย์ได้"): เซมเดย์นอก
+    // เวลาเปิดร้าน (business_settings.hours) หรือปิดโหมดใน operating_hours = สั่งไม่ได้
+    // (mirror ของ server trg_shop_hours ใหม่ — server ยังตัดสินซ้ำตอน INSERT)
+    if (orderMode === 'SAME_DAY') {
+      const hm = hoursToMs(shopHours)
+      const nowMs = bangkokMsOfDay(Date.now())
+      if (hm && !withinShopHours(nowMs, hm)) {
+        showToast(`ร้านปิดแล้วตามเวลาที่แอดมินตั้ง (เปิด ${shopHours?.open}–${shopHours?.close}) — เปิดใหม่ตามเวลา หรือสั่งจองล่วงหน้า`, 'error')
+        setIsProcessing(false)
+        return
+      }
+      if (operatingHours && operatingHours.same_day_open === false) {
+        showToast('ร้านปิดรับการสั่ง "ส่งวันนี้" ชั่วคราวในการตั้งค่าแอดมิน', 'error')
+        setIsProcessing(false)
+        return
+      }
+    }
+
     // ✅ SERVER-AUTHORITATIVE AVAILABILITY CHECK (P0 #6 + 143: cutoff enforcement)
     // Client-side gate — the RPC enforces the same rules again server-side.
     // 143 (Owner Q1): คัทออฟพรีออเดอร์ = cutoff_hours ชม. ก่อน delivery_start (strict `>`) ·
@@ -414,6 +441,8 @@ export function CheckoutPage() {
         isToday: scheduledDate === today,
         mode: orderMode,
         preOrderCutoffHours: cutoffHours,
+        shopHoursMs: hoursToMs(shopHours),
+        operatingHours,
       })
       if (bookability === 'cutoff_passed' || bookability === 'window_passed') {
         showToast(
@@ -567,6 +596,11 @@ export function CheckoutPage() {
       const code = (e as { code?: string })?.code
       // CONFLICT/KEY_INVALID can never succeed with THIS key → drop it so the
       // next attempt of the same payload starts clean (BAD_RESULT keeps it).
+      if (code === 'ERR_STORE_CLOSED') {
+        showToast('ร้านปิดตามเวลาที่แอดมินตั้งแล้ว — เปิดใหม่ตามเวลาเปิดร้าน หรือสั่งจองล่วงหน้า', 'error')
+        setIsProcessing(false)
+        return
+      }
       if (code === 'ERR_IDEMPOTENCY_CONFLICT' || code === 'ERR_IDEMPOTENCY_KEY_INVALID') submitKeysRef.current.release(submitFp)
       showToast(describeIdempotencyError(code), 'error')
       setIsProcessing(false)
@@ -876,7 +910,7 @@ export function CheckoutPage() {
           <div className="space-y-3">
             {rounds.map((r) => {
               const remaining = Math.max(0, Number(r.max_capacity) - Number(r.current_count))
-              const status = roundBookability(r, { isToday: scheduledDate === today, mode: orderMode, preOrderCutoffHours: cutoffHours })
+              const status = roundBookability(r, { isToday: scheduledDate === today, mode: orderMode, preOrderCutoffHours: cutoffHours, shopHoursMs: hoursToMs(shopHours), operatingHours })
               const closed = status !== 'open'
               const selected = selectedRoundId === r.id
               return (
@@ -1096,7 +1130,7 @@ export function CheckoutPage() {
         </div>
         <div className="border-t border-brand-border pt-4 space-y-2">
           <div className="flex justify-between"><span>สินค้า</span><span>{subtotal.toFixed(2)} บาท</span></div>
-          {discount > 0 && (<div className="flex justify-between text-green-600"><span>ส่วนลด (ประมาณการ)</span><span>-{discount.toFixed(2)} บาท</span></div>)}
+          {discount > 0 && (<div className="flex justify-between text-green-600"><span>ส่วนลด (ประมาณการ{couponCode.trim() ? ` · โค้ด ${normalizePromoCode(couponCode)}` : ''})</span><span>-{discount.toFixed(2)} บาท</span></div>)}
           {/* A3 (2026-10-22): ค่าส่งโซน = ค่าที่แอดมินตั้ง (ไม่ต้องเบลอเป็น "ประมาณการ");
               ถ้า quote พัง/ยังไม่มี ต้องไม่โชว์ค่าเก่าเหมือนคำนวณแล้ว — ระบุ "รอระบบคำนวณ"
               + ติดป้ายยอดโดยประมาณ (server re-derive ตอนสร้างออเดอร์เสมอ) */}
