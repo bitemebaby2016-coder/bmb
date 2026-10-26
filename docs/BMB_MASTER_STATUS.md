@@ -36,12 +36,13 @@
 | Gate | คำสั่ง | ผล | Evidence |
 |---|---|---|---|
 | typecheck | `npx tsc --noEmit` | **exit 0** | รันตรง ๆ 2026-10-26 |
-| lint | `npx eslint .` | **exit 0** | `D:\tmp\lint.log` |
-| brand guard | `node scripts/brandNameGuard.cjs` | **OK — ตรวจ 422 ไฟล์** | `D:\tmp\brand.log` |
-| unit/contract | `npx vitest run` | ดูก้อน §5 | `D:\tmp\vitest.log`, `D:\tmp\vitest2.log` |
-| build | `npm run build` (tsc + vite) | **exit 0** | `D:\tmp\build.log` |
+| lint | `npx eslint .` | **exit 0** | `e2e/session20261026-gates-evidence.txt` §6 |
+| brand guard | `node scripts/brandNameGuard.cjs` | **OK — ตรวจ 422 ไฟล์** | `e2e/session20261026-gates-evidence.txt` §6b |
+| unit/contract | `npx vitest run` | ดูก้อน §5 | `e2e/session20261026-gates-evidence.txt` §2–§5 |
+| build | `npm run build` (tsc + vite) | **exit 0** | `e2e/session20261026-gates-evidence.txt` §7 |
+| E2E route smoke | `npx playwright test routeNav` | **39/39 passed · exit 0** | `e2e/session20261026-gates-evidence.txt` §8 |
 | SQL replay / production | ไม่ได้รันรอบนี้ | **UNVERIFIED รอบนี้** | ของรอบก่อน = `e2e/*.json` (§4) |
-| CI ของ SHA ที่ push | ไม่มี `gh` ในเครื่อง | ดู §5.3/§9.4 | — |
+| CI ของ SHA ที่ push จริง | GitHub Actions API (ไม่มี `gh`) | **CI #569 = success · Contract Tests #143 = success** | §9.4 |
 
 ### 1.3 Production (ไม่ได้ re-verify ในรอบนี้)
 
@@ -88,7 +89,7 @@
 
 | # | งาน | เหตุผล/หลักฐาน | ลำดับ |
 |---|---|---|---|
-| B-1 | `orderTimeline.test.ts` **ไม่เสถียรตอนรันชุดใหญ่** — run 1 fail 4 เคส, รันตัวไฟล์เดียว 6/6 ผ่าน, run 2 ผ่านทั้งหมด | `D:\tmp\vitest.log` (fail) · `D:\tmp\ot.log` (pass) · `D:\tmp\vitest2.log` (exit 0) · อาการ = render ไม่ทัน `setTimeout(0)` flush (มี act warning) | P1 — ทำให้ deterministic โดย await commit จริง (**ห้ามลด assertion / ห้าม skip**) |
+| B-1 | `orderTimeline.test.ts` **ไม่เสถียรตอนรันชุดใหญ่** — run 1 fail 4 เคส, รันตัวไฟล์เดียว 6/6 ผ่าน, run 2 ผ่านทั้งหมด | `e2e/session20261026-gates-evidence.txt` §3/§4/§5 · อาการ = render ไม่ทัน `setTimeout(0)` flush (มี act warning) | P1 — ทำให้ deterministic โดย await commit จริง (**ห้ามลด assertion / ห้าม skip**) |
 | B-2 | legacy contract 7 ตัว (017/018/019/020/021/022/029/033) นอก CI | คำสั่ง Owner "ไม่ซ่อม" — บันทึกเป็น known state ไม่ใช่ defect ที่ถูกซ่อน | P3 (ตามคำสั่ง) |
 | B-3 | CAP-21 ระบบจำลูกค้าอัตโนมัติ | ถูกลบพร้อมของเดิม ไม่มีของแทน | P2 — รอ Owner ตัดสินใจ |
 | B-4 | CAP-22 ระบบให้ AI เลือกเวลา/โพสอัตโนมัติเต็มรูปแบบ | RPC+Calendar มีแล้ว แต่ไม่มีระบบ auto-schedule | P2 — รอ Owner สั่ง |
@@ -117,16 +118,17 @@
 
 ### 5.1 ผลรันจริงรอบนี้ (2026-10-26 · ทุกบรรทัดมี exit code)
 
-| รัน | ผล |
-|---|---|
-| baseline `npx vitest run` (ก่อนแก้) | **144 files / 1517 tests / 0 fail / exit 0** (`D:\tmp\vitest.log` เวอร์ชันแรก) |
-| `npx tsc --noEmit` | **exit 0** |
-| `npx vitest run` (หลังแก้ · run 1) | 144 files · 1518 tests · **4 fail = ทั้งหมดใน `orderTimeline.test.ts`** · exit 1 |
-| `npx vitest run src/__tests__/orderTimeline.test.ts` | **6/6 pass** (`D:\tmp\ot.log`) |
-| `npx vitest run` (หลังแก้ · run 2) | **144 files / 1518 tests / 0 fail / exit 0** (`D:\tmp\vitest2.log`) |
-| `npx eslint .` | **exit 0** |
-| `node scripts/brandNameGuard.cjs` | **OK — 422 ไฟล์** |
-| `npm run build` | **exit 0** |
+| รัน | ผล | evidence |
+|---|---|---|
+| baseline `npx vitest run` (ก่อนแก้) | **144 files / 1517 tests / 0 fail / exit 0** | `e2e/session20261026-gates-evidence.txt` §2 |
+| `npx tsc --noEmit` | **exit 0** | §1 ของไฟล์ evidence |
+| `npx vitest run` (หลังแก้ · run 1) | 144 files · 1518 tests · **4 fail = ทั้งหมดใน `orderTimeline.test.ts`** · exit 1 | §3 |
+| `npx vitest run src/__tests__/orderTimeline.test.ts` | **6/6 pass** | §4 |
+| `npx vitest run` (หลังแก้ · run 2) | **144 files / 1518 tests / 0 fail / exit 0** | §5 |
+| `npx eslint .` | **exit 0** | §6 |
+| `node scripts/brandNameGuard.cjs` | **OK — 422 ไฟล์** | §6b |
+| `npm run build` | **exit 0** | §7 |
+| `npx playwright test routeNav` | **39/39 passed · exit 0** | §8 |
 
 > สรุปอย่างตรงไปตรงมา: รอบ run 1 เจอ flaky จริง 4 เคสใน `orderTimeline.test.ts` (บันทึกเป็น B-1)
 > และรันซ้ำได้เขียวทั้งหมด — **ไม่ได้แก้ test เพื่อให้ผ่าน** และไม่ได้ skip/ลด assertion ใด ๆ
@@ -236,7 +238,7 @@
 | รายการ | ผล |
 |---|---|
 | คำสั่ง | `npx playwright test routeNav` บน build จริง (`vite preview --port 5199` จาก `dist/` ที่ build ในรอบนี้) |
-| ผล | **39 passed / 0 failed (46.3s) · `PW_EXIT=0`** · log = `D:\tmp\pw.log` |
+| ผล | **39 passed / 0 failed (46.3s) · `PW_EXIT=0`** · evidence = `e2e/session20261026-gates-evidence.txt` §8 |
 | ครอบคลุม | public routes ทั้งหมด · protected (guest → `/login`) · redirect (`/ai-chat` → `/talk-to-bite`, `/profile/orders` → `/orders`, `/admin/pre-orders`, `/admin/dashboard`) · catch-all `/no-such-page-xyz` · ตรวจ console error "No routes matched location" |
 | **ไม่ได้รัน** | `e2e/runE2E.cjs` (full order journey) — **จงใจไม่รัน**: สคริปต์นี้สร้าง user/order จริงบน Supabase production (ต้อง `BMB_E2E_SVC_KEY`) = **production write** ซึ่ง Owner directive ไม่อนุมัติให้ AI ทำเอง → อยู่ใน Owner acceptance §7 |
 | ไม่ได้รัน | `e2e/g2rv.spec.ts` — ต้องการฐานข้อมูล/เซสชันทดสอบที่ไม่ได้เตรียมในรอบนี้ (= NOT RUN, ไม่ใช่ PASS) |

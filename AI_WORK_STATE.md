@@ -15,7 +15,8 @@
 - repo `D:\A PROJECT\Bite Me Baby` · `main` = `origin/main` · **HEAD ก่อนเริ่มงาน = `29ed251`**
 - working tree clean · staged/unstaged ว่าง · **untracked = 0** · stash `local-edits-before-sync-2026-09-21` **คงเดิมไม่ถูกแตะ**
 - **tsc exit 0** · **eslint exit 0** · **brandNameGuard OK (422 ไฟล์)** ·
-  **vitest 144 files / 1518 tests / 0 fail / exit 0** (run 2 · `D:\tmp\vitest2.log`) · **build exit 0**
+  **vitest 144 files / 1518 tests / 0 fail / exit 0** (run 2) · **build exit 0** ·
+  **route smoke playwright 39/39 passed** — ผลรันรวม = **`e2e/session20261026-gates-evidence.txt`**
 - หมายเหตุตรง ๆ: run 1 ของ vitest เจอ **flaky 4 เคสใน `orderTimeline.test.ts`** (รันตัวเดียว 6/6 ผ่าน) = งานค้าง B-1
 - **production: ไม่ได้แตะในรอบนี้** (ไม่มี migration/apply/deploy/write) · ledger ของรอบก่อน top = **156**
   (evidence `e2e/r16Apply156-*.json`) — ยังไม่ re-verify รอบนี้ = UNVERIFIED

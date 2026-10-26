@@ -1,0 +1,77 @@
+===============================================================
+BMB ??? SESSION GATE EVIDENCE (2026-10-26)
+Owner directive: whole-repo reconciliation + code closure
+Code commit: 066e961  (docs follow-ups: 26e258e, fa9f54f)
+===============================================================
+
+[GIT] HEAD / origin
+fa9f54f2cf5468e3fd9a701a7163c5455ebb31d1
+## main...origin/main
+?? e2e/session20261026-gates-evidence.txt
+stash@{0}: On main: local-edits-before-sync-2026-09-21
+
+[1] tsc --noEmit -> exit 0 (ran directly 2026-10-26, no output on success)
+
+[2] vitest BASELINE (before any change) ??? observed live in this session:
+    Test Files  144 passed (144)
+    Tests  1517 passed (1517)   VITEST_EXIT=0
+    (that log file was overwritten by the later runs below; numbers above are from the live output)
+
+[3] vitest AFTER changes - run 1 (flaky failures recorded honestly)
+
+?[2m Test Files ?[22m ?[1m?[31m1 failed?[39m?[22m?[2m | ?[22m?[1m?[32m143 passed?[39m?[22m?[90m (144)?[39m
+?[2m      Tests ?[22m ?[1m?[31m4 failed?[39m?[22m?[2m | ?[22m?[1m?[32m1514 passed?[39m?[22m?[90m (1518)?[39m
+?[2m   Start at ?[22m 09:26:24
+?[2m   Duration ?[22m 133.83s?[2m (transform 38.06s, setup 5.76s, collect 65.35s, tests 22.34s, environment 644.63s, prepare 63.86s)?[22m
+
+VITEST_EXIT=1 
+ALL_GATES_DONE 
+
+[4] isolated re-run of the failing file (attempt 2 evidence)
+?[2m Test Files ?[22m ?[1m?[32m1 passed?[39m?[22m?[90m (1)?[39m
+?[2m      Tests ?[22m ?[1m?[32m6 passed?[39m?[22m?[90m (6)?[39m
+?[2m   Start at ?[22m 09:29:21
+?[2m   Duration ?[22m 3.35s?[2m (transform 98ms, setup 27ms, collect 130ms, tests 136ms, environment 1.66s, prepare 295ms)?[22m
+
+done
+
+[5] vitest AFTER changes - run 2 (full suite)
+ ?[32m????[39m src/__tests__/assetRegistry.test.ts ?[2m(?[22m?[2m6 tests?[22m?[2m)?[22m?[32m 5?[2mms?[22m?[39m
+
+?[2m Test Files ?[22m ?[1m?[32m144 passed?[39m?[22m?[90m (144)?[39m
+?[2m      Tests ?[22m ?[1m?[32m1518 passed?[39m?[22m?[90m (1518)?[39m
+?[2m   Start at ?[22m 09:29:56
+?[2m   Duration ?[22m 146.81s?[2m (transform 50.52s, setup 5.80s, collect 82.92s, tests 24.27s, environment 689.21s, prepare 69.08s)?[22m
+
+VITEST_EXIT=0 
+
+[6] eslint
+ESLINT_EXIT=0 
+[6b] brandNameGuard
+brandNameGuard: OK - 422 files scanned (Thai message re-encoded to ASCII below)
+brandNameGuard: OK ??? ???????????? 422 ???????????? ????????????????????????????????????
+BRAND_EXIT=0 
+
+[7] npm run build (tail)
+  - vite-plugin-pwa:build closeBundle (100%, 9.0s, 1 call)
+  - @tailwindcss/vite:generate:build transform (31%, 1.8s, 3 calls)
+Additional hook time came from hooks under 1s.
+See https://rolldown.rs/reference/InputOptions.checks#plugintimings for more details.
+?[39m
+BUILD_EXIT=0 
+
+[8] playwright route smoke (tail)
+  ok 38 e2e\routeNav.spec.ts:70:3 ??? route reachable: /admin/dashboard (683ms)
+  ok 39 e2e\routeNav.spec.ts:70:3 ??? route reachable: /no-such-page-xyz (838ms)
+
+  39 passed (46.3s)
+PW_EXIT=0 
+PW_DONE 
+
+[9] GitHub Actions for code commit 066e961 (read from GitHub REST API)
+checked_at=2026-10-26T02:40:39.5280196Z
+Contract Tests (isolated PostgreSQL) #143 status=completed conclusion=success https://github.com/bitemebaby2016-coder/bmb/actions/runs/40260114655
+CI #569 status=completed conclusion=success https://github.com/bitemebaby2016-coder/bmb/actions/runs/40260114649
+
+NOTE: local logs live on this machine at D:\tmp\*.log (ephemeral).
+This file is the durable copy committed to the repo.
