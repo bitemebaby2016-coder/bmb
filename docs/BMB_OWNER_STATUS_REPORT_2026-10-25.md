@@ -21,7 +21,7 @@
 | 12 | legacy contracts 7 ตัว (017_018/019/020/021/022/029/033) | ⛔ ตามคำสั่ง "ไม่ซ่อม" | คงค้างไว้ — นอก CI gate ไม่กระทบ build |
 | 13 | Stale contracts 8 ตัว (Task A) | ✅ 8/8 หลัง 152 (รอบนี้ปิด) | 039-G7 เดิมรอ REVOKE → รอบนี้เขียว (ดู §C1) |
 | 14 | R-17 restore drill | ✅ PASS | `dbRestoreDrill: PASS` (manifest sha256/size/dump) |
-| 15 | R-16 พิมพ์จริง | ⏳ รอท่านรัน runbook | prep doc §1 · automated ผ่านแล้ว ≠ พิมพ์จริง |
+| 15 | R-16 (รอบแรก = Print-to-PDF) | ⏳ รอท่านรัน runbook แบบ PDF | Owner directive 2026-10-26: ใช้ print pdf ไปก่อน · ข้อมูล = local supabase · เครื่องพิมพ์จริง = แอดมินเพิ่มทีหลัง · prep doc §1 |
 | 16 | Growth & Rewards | ✅ เอกสารเท่านั้น 2 ฉบับ | ห้าม implement ก่อนอนุมัติ — ไม่มีโค้ด/ตารางเพิ่ม |
 | 17 | 3.1 Admin / 3.2 Graphite / 3.3 เสียง | ✅ DONE มีหลักฐาน | ตรวจโค้ด+เทสต์แล้วไม่สร้างซ้ำ · เหลือตาท่านบนเบราว์เซอร์ |
 
@@ -92,7 +92,7 @@
 ## E. ตรงไปตรงมา — ยังไม่เสร็จ/ข้อจำกัด
 - **legacy 7 contracts**: ตามคำสั่ง "ไม่ซ่อม" · ในการรัน clean-room ล่าสุด **เขียวทั้งหมด** (ไม่ต้องทำอะไรเพิ่ม)
 - **contract039 รันบน production ตรง ๆ**: ติด fixture/ข้อมูลสินค้าจริง (ด้านบน) = ไม่ใช่ regression ฟังก์ชัน · สิทธิ์ที่ G7 ตรวจจริง = verify152 เขียว
-- **R-16**: เครื่องพิมพ์จริงของท่าน — runbook ที่ `BMB_OWNER_PREP_R16_D6_MIGRATIONS_2026-10-25.md` §1 · automated ผ่าน ≠ พิมพ์จริง
+- **R-16**: รอบแรก = **Print-to-PDF** (Owner directive 2026-10-26) — runbook ที่ `BMB_OWNER_PREP_R16_D6_MIGRATIONS_2026-10-25.md` §1 · ข้อมูลทดสอบ = local Supabase · เครื่องพิมพ์จริง = แอดมินจะตามเพิ่มทีหลัง · automated ผ่าน ≠ ตรวจ PDF จริง
 - **Growth & Rewards**: เอกสารเท่านั้น ห้าม implement ก่อนอนุมัติคำสั่งแยก
 - **PWA cache**: ถ้ายังเห็นของเก่าหลัง deploy รอบนี้ = แท็บค้าง (hard refresh) อย่าเพิ่งสรุปว่าไม่หาย
 - `AI_ENTRYPOINT.md`/`UNIVERSAL_MASTER_AI_RULES.md` (v1.1/v2.1) = **การแก้จากภายนอก ไม่ใช่รอบนี้** — ไม่ได้ commit ไปด้วย

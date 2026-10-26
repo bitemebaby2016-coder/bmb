@@ -2,7 +2,7 @@
 
 > ⚠️ **จุดเริ่มอ่านของแชทหน้า = §11 (ล่าสุดสุด)** — รอบปิดล่าสุด: **APPLY 156 ✓ (record=156) +
 > G&R STAGE 4 = APPLIED · กรอบ Growth & Rewards ครบทั้ง 4 stages + production ครบแล้ว**
-> (เหลือล้วนเป็นงานรอ Owner: acceptance §4 · R-16 · ตรวจ §D — **D6 ลบแล้ว 2026-10-26** — ดู §11.2)
+> (เหลือล้วนเป็นงานรอ Owner: acceptance §4 · R-16 รอบแรก = Print-to-PDF · ตรวจ §D — **D6 ลบแล้ว 2026-10-26** — ดู §11.2)
 > §1–§10 = ประวัติรอบก่อนหน้า เก็บไว้อ้างอิงเท่านั้น — **ห้ามถือเป็นสถานะปัจจุบันโดยไม่อ่าน §11 ก่อน**
 > สถานะเรียลไทม์ = `AI_WORK_STATE.md` · รายละเอียด Stage = inventory `docs/BMB_GROWTH_REWARDS_INVENTORY_2026-10-25.md` §6
 
@@ -333,7 +333,7 @@ evidence `e2e/g154-gates-evidence.txt` + `e2e/r14Apply154-*.json` → **แล�
 | # | งาน | วิธี/หมายเหตุ | ต้อง Owner? |
 |---|---|---|---|
 | 1 | ~~migration 156~~ = **✅ DONE (2026-10-26)** | staged `e2e/r16Apply156.cjs` ครบทุก stage: precheck 11/11 → apply+rerun 201 → verify 13/13 → contract156 (G1–G9) PASS → contractRegr 155/154/153/148 PASS → record top = **156** · evidence = `e2e/r16Apply156-*.json` | — |
-| 2 | งานรอท่าน (เดิม) | ตรวจ §D status report · ~~D6~~ ✅ ลบแล้ว (2026-10-26 · account selfprint · DNS ตายแล้ว) · R-16 พิมพ์จริง · acceptance §4 | **ใช่** |
+| 2 | งานรอท่าน (เดิม) | ตรวจ §D status report · ~~D6~~ ✅ ลบแล้ว (2026-10-26 · account selfprint · DNS ตายแล้ว) · R-16 = รอบแรก Print-to-PDF (คำสั่ง 2026-10-26 · ข้อมูล local supabase · เครื่องจริง = แอดมินเพิ่มทีหลัง) · acceptance §4 | **ใช่** |
 | 3 | (เสร็จแล้ว) | 🏁 G&R Rollout ①–⑧ **ครบทั้ง 4 stages + production ครบ** — เหลือแค่ acceptance §4 จึงปิดกรอบได้ | — |
 
 ### 11.3 ลำดับอ่านของเซสชันหน้า

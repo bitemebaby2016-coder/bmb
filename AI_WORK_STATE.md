@@ -2,7 +2,7 @@
 
 > **สถานะงานปัจจุบันของโปรเจกต์ Bite Me Baby** ใช้แนบเข้าสู่ Context ตอนเริ่มแชทเสมอ
 
-**last_updated:** 2026-10-26 **🟢 SESSION CLOSED — APPLY 156 ✓ (record=156) + G&R ทั้ง 4 stages = production ครบ + D6 ลบแล้ว ✓** (เหลือล้วนงานรอ Owner: ตรวจ §D · R-16 · acceptance §4)
+**last_updated:** 2026-10-26 **🟢 SESSION CLOSED — APPLY 156 ✓ (record=156) + G&R ทั้ง 4 stages = production ครบ + D6 ลบแล้ว ✓** (เหลือล้วนงานรอ Owner: ตรวจ §D · R-16 รอบแรก Print-to-PDF · acceptance §4)
 (gates ก่อน push รอบนี้เขียวทั้งหมด: tsc 0 · lint+brandNameGuard OK (**432 ไฟล์**) ·
  vitest **144 files/1517 tests 0 fail** · build ✓ (12.7s) ·
  ของเดิมยังมีผล: **Docker replay 001–156 ALL_GREEN** · **contract 156 G1–G9 PASS (rc=0) + regression 155/154/153 PASS** ·
@@ -32,9 +32,9 @@
    evidence `e2e/g156-gates-evidence.txt`
 2. **(เสร็จแล้ว 2026-10-26):** "apply 156" → `e2e/r16Apply156.cjs` ครบทั้ง 6 รุ่น ·
    record top = **156** · evidence = `e2e/r16Apply156-*.json`
-3. งานรอ Owner (ไม่ใช่งาน AI): ตรวจ status report §D · ~~D6~~ ✅ ลบแล้ว 2026-10-26 (account selfprint · DNS ตาย) · R-16 พิมพ์จริง · acceptance §4
+3. งานรอ Owner (ไม่ใช่งาน AI): ตรวจ status report §D · ~~D6~~ ✅ ลบแล้ว 2026-10-26 (account selfprint · DNS ตาย) · R-16 = รอบแรก **Print-to-PDF** (คำสั่ง 2026-10-26 · ข้อมูล local supabase · เครื่องจริง = แอดมินเพิ่มทีหลัง) · acceptance §4
 **blocked_by:** ⛔ ไม่มี blocker — งานที่สั่งทั้งหมดเสร็จสมบูรณ์ (apply 155 ✓ · Stage 4 ✓ · **apply 156 ✓** · gates เขียว) ·
- งานที่เหลือทั้งหมด = **งานรอ Owner ล้วน** (handoff §11.2 ข้อ 2: ตรวจ §D · R-16 พิมพ์จริง · acceptance §4) · D6 = ✅ ลบแล้ว (2026-10-26)
+ งานที่เหลือทั้งหมด = **งานรอ Owner ล้วน** (handoff §11.2 ข้อ 2: ตรวจ §D · R-16 รอบ Print-to-PDF · acceptance §4) · D6 = ✅ ลบแล้ว (2026-10-26)
 - (รอบก่อนปิดเซสชัน — ยังคงมีผล): 4 บั๊กหน้าจอ ✓ · production 150/151/152/153 ✓ · stale contracts 8/8 ✓ ·
   legacy 7 เขียว(ไม่ซ่อม) ✓ · R-17 PASS ✓ · G&R เอกสาร+คำตอบ Owner ✓ · `AI_ENTRYPOINT`/`UNIVERSAL_MASTER_AI_RULES` v1.1/v2.1 ✓
 
