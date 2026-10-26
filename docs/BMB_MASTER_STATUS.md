@@ -141,8 +141,11 @@
 
 ### 5.3 CI
 
-- เครื่องนี้ **ไม่มี `gh`** (`where gh` = ไม่พบ) → ตรวจ Actions ผ่าน GitHub API/browser เท่านั้น
-- สถานะของ SHA ล่าสุด: ดู §9.4 (ถ้าเขียน `CI UNVERIFIED` แปลว่ายังไม่มีหลักฐานจริง ห้ามตีความว่าผ่าน)
+- เครื่องนี้ **ไม่มี `gh`** (`where gh` = ไม่พบ) → ตรวจ Actions ผ่าน **GitHub Actions REST API สาธารณะ**
+  (`GET /repos/bitemebaby2016-coder/bmb/actions/runs?head_sha=<full SHA>`) + หน้า `/actions`
+- **ผลของ SHA ที่ push จริง (`066e961`): CI #569 = success · Contract Tests #143 = success** — รายละเอียด/URL = §9.4
+- ขั้นตอนตรวจซ้ำด้วยตัวเอง: เปิด
+  `https://github.com/bitemebaby2016-coder/bmb/actions` แล้วหาแถว commit `066e961`
 
 ---
 
@@ -172,6 +175,8 @@
 6. ตรวจ **CI ของ SHA ล่าสุด** ใน GitHub Actions (เครื่อง AI ไม่มี `gh`)
 7. ตรวจ runtime จริง CAP-10 (ตรวจสลิป) / CAP-11 (POD ไรเดอร์) / CAP-13 (push) / CAP-14 (SMS) / CAP-18 (Maps)
 8. ตัดสินใจ CAP-21 (ระบบจำลูกค้าอัตโนมัติ) และ CAP-22 (auto-post ของ AI)
+9. (ถ้าต้องการหลักฐานอัตโนมัติเต็มเส้นทาง) รัน `node e2e/runE2E.cjs` เอง — สร้าง user/order **จริง** บน Supabase
+   production (ต้อง `BMB_E2E_SVC_KEY`) · AI ไม่รันแทนเพราะเป็น production write
 
 ---
 
@@ -212,4 +217,26 @@
 
 ### 9.4 Git / CI ของรอบนี้
 
-_(เติมหลัง commit/push — SHA, `git status`, ผล Actions จริง หรือ `CI UNVERIFIED` + ขั้นตอนตรวจ)_
+| รายการ | ผล (ตรวจจริง) |
+|---|---|
+| commit | **`066e961`** `refactor(order-entry+admin): one canonical order path, dead-code closure, master status doc` (30 files · +561 / −1624) |
+| push | `git push origin main` → `29ed251..066e961 main -> main` |
+| HEAD vs origin | `git status -sb` = `## main...origin/main` (ไม่มี ahead/behind) · working tree **clean** · untracked **0** |
+| stash | `stash@{0}: On main: local-edits-before-sync-2026-09-21` **ยังอยู่ครบ** |
+| secret scan | `git diff --cached` 2,487 บรรทัด · **SECRET_HITS = 0** (สแกน key/JWT/PEM/password patterns) |
+| **CI #569** (`.github/workflows/ci.yml`) | **completed = success** · https://github.com/bitemebaby2016-coder/bmb/actions/runs/40260114649 |
+| **Contract Tests #143** (isolated PostgreSQL) | **completed = success** · https://github.com/bitemebaby2016-coder/bmb/actions/runs/40260114655 |
+| Cloudflare Pages deploy | กำลัง build ตอนตรวจ (check-run `in_progress`) — deploy ทำอัตโนมัติจาก main |
+| วิธีตรวจ (เครื่องนี้ไม่มี `gh`) | GitHub Actions REST API สาธารณะ `.../actions/runs?head_sha=<full SHA>` + หน้า `/actions` |
+
+> ผล CI ทั้งสองเส้นข้างบน = **อ่านจาก GitHub API จริงของ SHA `066e961`** ไม่ใช่การคาดเดา
+
+### 9.5 E2E / route smoke ของรอบนี้
+
+| รายการ | ผล |
+|---|---|
+| คำสั่ง | `npx playwright test routeNav` บน build จริง (`vite preview --port 5199` จาก `dist/` ที่ build ในรอบนี้) |
+| ผล | **39 passed / 0 failed (46.3s) · `PW_EXIT=0`** · log = `D:\tmp\pw.log` |
+| ครอบคลุม | public routes ทั้งหมด · protected (guest → `/login`) · redirect (`/ai-chat` → `/talk-to-bite`, `/profile/orders` → `/orders`, `/admin/pre-orders`, `/admin/dashboard`) · catch-all `/no-such-page-xyz` · ตรวจ console error "No routes matched location" |
+| **ไม่ได้รัน** | `e2e/runE2E.cjs` (full order journey) — **จงใจไม่รัน**: สคริปต์นี้สร้าง user/order จริงบน Supabase production (ต้อง `BMB_E2E_SVC_KEY`) = **production write** ซึ่ง Owner directive ไม่อนุมัติให้ AI ทำเอง → อยู่ใน Owner acceptance §7 |
+| ไม่ได้รัน | `e2e/g2rv.spec.ts` — ต้องการฐานข้อมูล/เซสชันทดสอบที่ไม่ได้เตรียมในรอบนี้ (= NOT RUN, ไม่ใช่ PASS) |
