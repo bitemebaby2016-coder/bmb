@@ -277,7 +277,9 @@
 | 9 | **`927689a`** (HEAD) | W-1/W-2 ปิด + UI 4 ข้อ + **migration 157** + step legacy contract กลับ CI | #577 **success** | #151 **success** (มี `Legacy contracts OK — 7/7`) |
 | 10 | `3b5c2d8` | apply 157+158 บน production + parity รอบสุดท้าย + **B-6 ปิด** | #578 **success** | #152 **failure** (158 v1: `to_regprocedure` ไม่รับชื่อ parameter → ล้มใน step inventory migrations) |
 | 11 | `ba2fec2` | 158 v3: ทนลำดับ CI — ข้าม object ที่ยังไม่ถูกสร้าง + ตรวจด้วย pg_proc | #579 **success** | #153 **success** ✓ |
-| 12 | **`33785ae`** (HEAD) | docs: บันทึก §9.0 + บทเรียนรอบ #152 | #580 กำลังรัน ณ เวลาเขียน | #154 กำลังรัน ณ เวลาเขียน |
+| 12 | `33785ae` | docs: บันทึก §9.0 + บทเรียนรอบ #152 | #580 **success** | #154 **success** |
+| 13 | `a294c52` | docs: เติมผล CI #579 จริง | #581 **success** | #155 **success** |
+| 14 | **`fff2112`** (HEAD) | docs(evidence): เก็บ logs gates รอบ 3 เข้า repo | ตรวจรอบถัดไป | ตรวจรอบถัดไป |
 
 > อ่านจาก GitHub Actions REST API จริง (`?head_sha=<full SHA>` — เครื่องนี้ไม่มี `gh`) ·
 > **ห้ามอ้างเลข run จาก §9.4/§9.6 โดยไม่เทียบกับตารางนี้** (§9.4 = รายละเอียดรอบ 1 · §9.6 = รายละเอียดรอบ 2)
