@@ -1,0 +1,38 @@
+[
+  {
+    "label": "functions-gone-verify",
+    "status": 201,
+    "data": []
+  },
+  {
+    "label": "ledger-top-before-record",
+    "status": 201,
+    "data": [
+      {
+        "version": "158"
+      },
+      {
+        "version": "157"
+      }
+    ]
+  },
+  {
+    "label": "rest-products-anon",
+    "status": 200,
+    "data": [
+      {
+        "id": "prod-5"
+      }
+    ]
+  },
+  {
+    "label": "rest-rpc-update_order_status-gone",
+    "status": 404,
+    "data": {
+      "code": "PGRST202",
+      "details": "Searched for the function public.update_order_status without parameters or with a single unnamed json/jsonb parameter, but no matches were found in the schema cache.",
+      "hint": "Perhaps you meant to call the function public.transition_order_status",
+      "message": "Could not find the function public.update_order_status without parameters in the schema cache"
+    }
+  }
+]

@@ -3,6 +3,9 @@
 -- ============================================
 -- คำสั่ง Owner 2026-10-26 (ผ่าน ask ในแชทนี้): "ปลดออกทั้ง 6 — เตรียม migration DROP
 -- ให้เรียบร้อย (ยังไม่ apply จนกว่าท่านจะยืนยันรอบสุดท้าย)"
+-- → **APPLIED บน production แล้ว 2026-10-26** (Owner: "อนุมัติ apply production 159")
+--   precheck → apply159 → verify → record ผ่านทั้ง 4 stage · ledger top 159
+--   evidence: e2e/w7Apply159-{precheck,apply159,verify,record}.json
 --
 -- หลักฐานที่ทำให้ปลดได้ (e2e/w1-parity-2026-10-26.json · D3):
 --   - ทั้ง 6 ตัวมีใน production อย่างเดียว (manual-era) · ไม่มีใน repo migrations
@@ -14,7 +17,7 @@
 -- หมายเหตุ:
 --   - CI (contract-tests.yml ใช้ for f in supabase/migrations/*.sql) จะ apply ไฟล์นี้
 --     บน ephemeral DB — DROP IF EXISTS = no-op บน fresh DB (ฟังก์ชันไม่มีอยู่แล้ว) → ปลอดภัย
---   - production apply = รอ Owner ยืนยันรอบสุดท้ายเท่านั้น (ห้าม apply โดย AI)
+--   - production apply = **ทำแล้ว 2026-10-26** (Owner อนุมัติรอบสุดท้าย · staged w7Apply159 · evidence ด้านบน)
 --   - ถ้า production มี dependency ที่ไม่คาดคิด → DROP จะ error ให้เห็นตอน apply (fail-safe ไม่เงียบ)
 -- ============================================
 
