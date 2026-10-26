@@ -55,9 +55,17 @@
   → **apply OK** (pg_proc เหลือ 0) → **verify OK** (products anon 200 · rpc `update_order_status` = 404 PGRST202)
   → **record OK** (**ledger top = 159**) · evidence **`e2e/w7Apply159-{precheck,apply159,verify,record}.json`**
   · ฟังก์ชันทั้ง 6 ไม่ถูก expose บน production อีกแล้ว (ไม่มี src caller อยู่ก่อน = ไม่มีผลข้างเคียง)
+- **parity ย่อยหลัง 159 (อ่าน fresh ~22:30 · read-only)** — เทียบ functions/acl_functions กับ local snapshot:
+  **onlyProd = 0** (ไม่มีฝั่ง prod ที่ local ไม่มี = **legacy จบจริง**) · onlyLocal = **11** = D3 ชุดเดิม
+  (uuid_* ×10 = extension ลง `public`[replay] vs `extensions`[prod] · `get_all_orders_for_admin`[035] src caller
+  **NONE** ยืนยันวันนี้) · scope = ชุด fn+3 flags ไม่เทียบ body (ไม่แทนที่รายงาน D เต็ม) →
+  `e2e/w1-parityfn-after159-2026-10-26.json`
+- **marketing_rules อ่านสำเร็จ (~22:29 · Management API read-only)** `e2e/mrRead-2026-10-26.json` =
+  window **10:00–19:00** · cooldown **6** · **3**/สัปดาห์ · content_mix ครบ · menu_rules/stop_conditions = `{}`
+  → **ค่า = VERIFIED ใหม่** (anon ยัง 42501 = เรื่องสิทธิ์คนละเรื่อง) · **C7/C8 ขั้นรัน = NOT RUN**
 - **probe re-read 2026-10-26 (read-only, anon): ไม่สำเร็จ** — REST root = 401 · `marketing_rules` =
-  **42501 `permission denied ... TO anon`** → **ยัง re-verify production runtime ใหม่ไม่ได้รอบนี้ = UNVERIFIED**
-  (ค่าเดิมจาก evidence ไฟล์ข้างบนยังใช้อ้างอิงได้ แต่ไม่ใช่การยืนยันใหม่)
+  **42501 (anon ไม่มี SELECT)** → **update: ต่อมา ~22:29 อ่านสำเร็จผ่าน Management API แล้ว — ดู bullet
+  "marketing_rules อ่านสำเร็จ" ข้างล่าง** (42501 ยังเป็นเรื่องสิทธิ์ anon = คนละเรื่องกับตัวค่า)
 - **Cloudflare Pages / deploy (ทำตาม task 5):** CI Pages job = **success** (67f10b8 + 5f891de) ·
   **serving marker ตรวจ 2026-10-26: `btn-locked` (โค้ดใหม่เฉพาะ 67f10b8) พบใน CSS จริง
   (`index-DZpLzxJE.css` · 146KB · 200) + ใน index JS จริง (`index-KR2tYugD.js` · 200) = SERVING ≥ 67f10b8 ✓ VERIFIED**
@@ -132,7 +140,7 @@
 
 | # | งาน | สถานะตอนนี้ | เงื่อนไข/เกณฑ์ |
 |---|---|---|---|
-| N-1 | **fresh replay เทียบ production** | **ปิดแล้ว (W-1 · 2026-10-26)** — `REPLAY_ALL_GREEN 157/157` + parity รันแล้ว | drift 5 กลุ่มมีคำอธิบาย/แผนครบ → `e2e/w1-parity-report-2026-10-26.md` · §4/§5 = VERIFIED · ~~เหลือแผน 3 ข้อรอ Owner อนุมัติ (§L L-10)~~ **ปิดครบ — 159 APPLIED 2026-10-26** (drift กลุ่ม legacy functions ควรหาย — ยังไม่ได้ re-run parity รอบใหม่) |
+| N-1 | **fresh replay เทียบ production** | **ปิดแล้ว (W-1 · 2026-10-26)** — `REPLAY_ALL_GREEN 157/157` + parity รันแล้ว | drift 5 กลุ่มมีคำอธิบาย/แผนครบ → `e2e/w1-parity-report-2026-10-26.md` · §4/§5 = VERIFIED · ~~เหลือแผน 3 ข้อรอ Owner อนุมัติ (§L L-10)~~ **ปิดครบ — 159 APPLIED 2026-10-26** (parity ย่อยหลัง 159 รันแล้ว: functions/acl **onlyProd = 0** · เหลือ local-only 11 = D3 เดิม · evidence `e2e/w1-parityfn-after159-2026-10-26.json`) |
 | N-2 | **Legacy SQL contracts 7 ไฟล์ (B-2) "ปิดด้วย"** | **ปิดแล้ว (W-2 · 2026-10-26)** — 7/7 EXIT=0 บน replay ท้องถิ่น (ทั้งรอบ reproduce และรอบ fresh 157) · step กลับเข้า CI แล้ว | ยืนยันด้วย Contract Tests success + บรรทัด `Legacy contracts OK — 7/7` (test pack A2) |
 | N-3 | **CAP-22 ให้พร้อมก่อนทดสอบจริง** | **พบว่ามีค่าจริงอยู่แล้ว** (query read-only 2026-10-26): window 10:00–19:00 · cooldown 6 ชม. · 3 โพสต์/สัปดาห์ · content_mix 40/30/20/10 | → **C7/C8 ปลดล็อกได้** · `menu_rules`/`stop_conditions` ยังว่าง = ทางเลือก (§L L-12) |
 | N-4 | **UI ฝั่งลูกค้า (ชุดใหญ่ 9 ข้อ)** | **ปิดครบ 9/9 ฝั่งโค้ด** = ข้อ 1 · 2 · 6 · 9 (รอบก่อน) + 3 · 4 · 5 · 7 · 8 (2026-10-26 · test รายข้อ · gates ALL ZERO · CI `67f10b8` #585/#159) | เหลือแค่ **runtime verify = test pack §L-RT** (ไม่ใช่งานค้าง) · ห้ามรื้อระบบ แก้เป็นจุด ๆ |
@@ -303,6 +311,7 @@
 | 20 | `7df33fd` | docs: commit ตัว reconcile เอง + บันทึก HEAD/CI จริงรอบสุดท้าย (HEAD line = 7df33fd + git-log authority · §9.0 แถวนี้) | #587/#588 **success** | #161/#162 **success** |
 | 21 | `680bf78` | docs: ปิด drift รอบสุดท้าย (HEAD/§9.0 แถว 20) + แก้ stale N-4/AI_WORK_STATE §3-4 ที่ verify_docs หาเจอ (ALL_OK) | #589 **success** | #163 **success** |
 | 22 | `6d83cba` | production: **apply 159** (w7Apply159 4 stage · ledger 159) + อัปเดตสถานะทุกเอกสาร + evidence 4 ไฟล์ + ลบ schtasks 3 ตัว | #590 **success** | #164 **success** |
+| 23 | `4a62873` | docs: เติมผล CI จริง 6d83cba (#590/#164) + §9.0 แถว 22 + HEAD lines = 6d83cba ทุกเอกสาร | #591 **success** | #165 **success** |
 | 16 | (docs commit ปิดเซสชั่น — SHA ดูใน git log) | เขียนแฮนด์ออฟปิดเซสชั่น + work state + gates evidence | ตรวจรอบถัดไป | ตรวจรอบถัดไป |
 
 > อ่านจาก GitHub Actions REST API จริง (`?head_sha=<full SHA>` — เครื่องนี้ไม่มี `gh`) ·

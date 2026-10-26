@@ -1,0 +1,111 @@
+{
+  "generatedAt": "2026-10-26T15:30:25.652Z",
+  "scope": "schema public — functions (proname+identity args) + acl_functions (anon/auth/svc EXECUTE) เท่านั้น · ไม่เทียบ body/ผลลัพธ์",
+  "localSource": "w1-local-snapshot-2026-10-26.json (replay ผ่าน 158 · 159 = DROP only จึง local set = repo set)",
+  "prodSource": "fresh Management API read หลัง apply 159",
+  "functions": {
+    "status": "DRIFT",
+    "local": 242,
+    "prod": 231,
+    "onlyLocal": [
+      {
+        "sig": "get_all_orders_for_admin§p_status_filter text, p_mode_filter text, p_limit integer, p_offset integer",
+        "count": 1
+      },
+      {
+        "sig": "uuid_generate_v1§",
+        "count": 1
+      },
+      {
+        "sig": "uuid_generate_v1mc§",
+        "count": 1
+      },
+      {
+        "sig": "uuid_generate_v3§namespace uuid, name text",
+        "count": 1
+      },
+      {
+        "sig": "uuid_generate_v4§",
+        "count": 1
+      },
+      {
+        "sig": "uuid_generate_v5§namespace uuid, name text",
+        "count": 1
+      },
+      {
+        "sig": "uuid_nil§",
+        "count": 1
+      },
+      {
+        "sig": "uuid_ns_dns§",
+        "count": 1
+      },
+      {
+        "sig": "uuid_ns_oid§",
+        "count": 1
+      },
+      {
+        "sig": "uuid_ns_url§",
+        "count": 1
+      },
+      {
+        "sig": "uuid_ns_x500§",
+        "count": 1
+      }
+    ],
+    "onlyProd": []
+  },
+  "acl_functions": {
+    "status": "DRIFT",
+    "local": 242,
+    "prod": 231,
+    "onlyLocal": [
+      {
+        "sig": "get_all_orders_for_admin§p_status_filter text, p_mode_filter text, p_limit integer, p_offset integer§false§true§false",
+        "count": 1
+      },
+      {
+        "sig": "uuid_generate_v1§§true§true§true",
+        "count": 1
+      },
+      {
+        "sig": "uuid_generate_v1mc§§true§true§true",
+        "count": 1
+      },
+      {
+        "sig": "uuid_generate_v3§namespace uuid, name text§true§true§true",
+        "count": 1
+      },
+      {
+        "sig": "uuid_generate_v4§§true§true§true",
+        "count": 1
+      },
+      {
+        "sig": "uuid_generate_v5§namespace uuid, name text§true§true§true",
+        "count": 1
+      },
+      {
+        "sig": "uuid_nil§§true§true§true",
+        "count": 1
+      },
+      {
+        "sig": "uuid_ns_dns§§true§true§true",
+        "count": 1
+      },
+      {
+        "sig": "uuid_ns_oid§§true§true§true",
+        "count": 1
+      },
+      {
+        "sig": "uuid_ns_url§§true§true§true",
+        "count": 1
+      },
+      {
+        "sig": "uuid_ns_x500§§true§true§true",
+        "count": 1
+      }
+    ],
+    "onlyProd": []
+  },
+  "verdict": "DRIFT"
+}

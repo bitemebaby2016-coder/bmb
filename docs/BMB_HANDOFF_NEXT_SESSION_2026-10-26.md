@@ -4,7 +4,7 @@
 
 ## 0. บรรทัดเดียว
 **ปิดแล้ว:** W-1 · W-2 · W-3 · W-5 · **UI 9/9 ข้อ (รวม L-3/4/5/7/8 · Owner 2026-10-26 · มี test+gates+CI)** · **B-6 (P0)** · migration **157+158 ใช้งานบน production แล้ว (ledger top 158 มี evidence)** · **legacy 6 functions = DROP แล้วบน production (159 APPLIED 2026-10-26 · Owner อนุมัติ · precheck→apply→verify→record ผ่าน · ledger top 159 · evidence `e2e/w7Apply159-*.json`)
-**เหลือ:** **production runtime ยัง verify ไม่ครบ** (`marketing_rules` re-read 42501 → **C7/C8 = UNVERIFIED** · **B2 = UNVERIFIED**) · แล้วจึง **รัน test pack ฉบับ reconcile (§L → L-RT) + ring-system ของ Owner** · ~~apply 159~~ **ทำแล้ว ✓ (w7Apply159 4 stage · ledger 159)** · Pages serving = **verify แล้ว** (marker `btn-locked` ใน CSS/JS จริง) · CI: `67f10b8` = #585/#159 · `5f891de` = #586/#160 · `7df33fd` = #587/#588+#161/#162 · `680bf78` = #589/#163 · **HEAD `6d83cba` = CI #590 + Contract #164 + Pages = success** (ตรวจจริง = `git log`)
+**เหลือ:** **B2 = UNVERIFIED** (เกณฑ์ ~11:00 · เช็คช่วง 22:29 = เวลาไม่ตรง → รอรอบเช้า/ตา Owner) · **C7/C8 = precondition VERIFIED (mrRead 2026-10-26) — ขั้นรัน NOT RUN** · แล้วจึง **รัน test pack ฉบับ reconcile (§L → L-RT) + ring-system ของ Owner** · ~~apply 159~~ **ทำแล้ว ✓** · ~~marketing read~~ **ทำแล้ว ✓ (mrRead)** · parity ย่อยหลัง 159 = **onlyProd 0 ✓** · Pages = ✓ · CI: `67f10b8` = #585/#159 · `5f891de` = #586/#160 · `7df33fd` = #587/#588+#161/#162 · `680bf78` = #589/#163 · `6d83cba` = #590/#164 · `4a62873` = #591/#165 (success · ตรวจจริง = `git log`)
 
 ## 1. ปิดแล้ว — ห้ามทำซ้ำ (มี evidence)
 
@@ -23,11 +23,13 @@
 | **Gates รอบปิด UI** | tsc 0 · eslint 0 · brand 0 (434 ไฟล์) · **vitest ทั้งชุด 0 fail** · build 0 | **`e2e/gates_ui2026-10-26.log` = ALL 5 EXIT=0** |
 | **docs reconcile (D-1/2/3 · task 1–5)** | 4 เอกสารใช้ **SHA `5f891de` + สถานะเดียวกัน** · 159 (เวลานั้น) = prepared — **ปัจจุบัน APPLIED แล้ว (ดูแถวถัดไป)** · Test Pack §L-3/4/5/7/8 → **L-RT** · B2/C7C8 = **UNVERIFIED** (probe 42501) · Pages serving = **VERIFIED** (marker `btn-locked` ใน CSS/JS จริง) · ledger แก้ 156→**158** | CI **#586 success** · Contract **#160 success** · probe ผลอยู่ master §1.3 + §9.0 แถว 19 |
 | **apply 159 production (Owner อนุมัติ · 2026-10-26)** | precheck OK (6 fn · args ตรง · trigger 0 · caller 0 · backup 9) → apply OK (pg_proc 0) → verify OK (products 200 · rpc 404) → record OK (**ledger 159**) | **`e2e/w7Apply159-{precheck,apply159,verify,record}.json`** · master §1.3 |
+| **mrRead — marketing_rules อ่านใหม่** | Management API read-only: window **10:00–19:00** · cooldown **6** · **3**/สัปดาห์ · content_mix ครบ · menu/stop = `{}` → **precondition C7/C8 VERIFIED** (ขั้นรัน = NOT RUN) | `e2e/mrRead-2026-10-26.json` |
+| **parity ย่อยหลัง 159** | functions/acl เทียบ local snapshot: **onlyProd = 0** (legacy จบจริง) · onlyLocal **11** = D3 เดิม (uuid×10 + get_all_orders · src caller NONE) · scope = ชุด fn+flags ไม่เทียบ body | `e2e/w1-parityfn-after159-2026-10-26.json` |
 
 ## 2. งานที่ต้องทำต่อ (ลำดับนี้เลย)
 
 1. ~~ตรวจ CI รอบปิด~~ **เสร็จแล้ว** — `67f10b8` → **CI #585 success · Contract #159 success · Pages success** (ตรวจด้วย `C:\Users\Public\bmb_ci.bat <sha>`) · ผลลง `BMB_MASTER_STATUS.md` §9.0 แล้ว (รวมยืนยัน `5ab2906` = #583/#157 success)
-2. **ส่ง test pack ฉบับ reconcile ให้ Owner รัน** (L-3/4/5/7/8 = **L-RT runtime verify ไม่ใช่งานค้าง** · B2/C7/C8 = **UNVERIFIED** ต้อง verify จริง · **L-10 = ปิด ✓ 159 APPLIED+VERIFIED 2026-10-26**) + **งานค้างจริงที่เหลือ**: re-read `marketing_rules` ให้ได้ (สิทธิ์ anon 42501 — แก้ GRANT/ใช้ key ที่ถูก) + verify B2 ตอน ~11:00 · Pages serving = verify แล้วผ่าน (marker) แล้วจึงรัน L-RT + §B/E/I ด้วยตา Owner
+2. **ส่ง test pack ฉบับ reconcile ให้ Owner รัน** (L-3/4/5/7/8 = **L-RT** · C7/C8 = **precondition VERIFIED — ขั้นรัน = verify สุดท้ายของ Owner** · L-10 ปิด ✓) + **งานค้างจริงที่เหลือ**: **verify B2 ตอน ~11:00** (เช็คช่วง 22:29 = เวลาไม่ตรง) · ~~re-read marketing~~ **ทำแล้ว ✓ (mrRead · Management API)** · ~~parity หลัง 159~~ **ทำแล้ว ✓ (onlyProd 0)** · แล้วจึงรัน L-RT + §B/E/I ด้วยตา Owner
 3. ~~Legacy 6 functions (L-10)~~ **ปิดจริง = 159 APPLIED บน production 2026-10-26** — precheck→apply→verify→record ผ่าน (identity args ตรง · trigger 0 · caller 0 · backup 9 · pg_proc 0 · products 200 · rpc 404 · ledger 159) · evidence `e2e/w7Apply159-{precheck,apply159,verify,record}.json`
 4. **รัน test pack จริง** — ขั้นปลดล็อกแล้ว: **A1/A2/A3 · B (รวม B2) · C7/C8 · D–K** · ยังงด = ขั้นผูกกับ L-3/4/5/7/8 · **L-12 = `menu_rules`/`stop_conditions` (optional)** · **production acceptance = ท่านรันเอง** (AI รันแทนไม่ได้ตามกติกา 10)
 

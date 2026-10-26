@@ -28,11 +28,12 @@
 - [x] **schema parity** fresh replay vs production = **รันแล้ว (W-1) + apply 157/158 แล้ว** — รอบสุดท้าย
       **MATCH** = tables/columns/indexes/constraints/sequences/triggers/views/**rls/acl_tables/ledger 158** ·
       drift ที่เหลือ 3 กลุ่มอธิบายครบใน `e2e/w1-parity-report-2026-10-26.md`
-      (legacy 6 ตัว = เลือก DROP → **159 APPLIED 2026-10-26** · §L L-10 ปิด · drift กลุ่ม functions ควรหาย — ยังไม่ได้ re-run parity รอบใหม่)
-- [ ] **CAP-22 `marketing_rules` = UNVERIFIED (probe ซ้ำไม่ผ่าน 2026-10-26)** — หลักฐานรอบก่อน (query read-only:
-      window 10:00–19:00 · cooldown 6 ชม. · 3 โพสต์/สัปดาห์ · content_mix ครบ) **ยัง re-read ใหม่ไม่ได้**: probe anon
-      → **42501 `permission denied for table marketing_rules`** → คงสถานะ **UNVERIFIED** จนกว่าจะอ่านค่าได้จริงอีกครั้ง
-      (ค่า `menu_rules`/`stop_conditions` ยังว่าง = ทางเลือก ไม่ blocker) → C7/C8 อยู่ในเกณฑ์ UNVERIFIED
+      (legacy 6 ตัว = เลือก DROP → **159 APPLIED 2026-10-26** · §L L-10 ปิด · **parity ย่อยหลัง 159 = รันแล้ว**: onlyProd = **0** (legacy จบจริง) · เหลือ local-only **11** = D3 ชุดเดิม (uuid×10 extension placement + get_all_orders_for_admin — src caller **NONE** ยืนยันวันนี้) → evidence `e2e/w1-parityfn-after159-2026-10-26.json` · scope = ชุด fn+flags ไม่เทียบ body)
+- [x] **CAP-22 `marketing_rules` = VALUES VERIFIED ใหม่ 2026-10-26 (Management API · read-only)** — อ่านได้จริง:
+      window **10:00–19:00** · cooldown **6 ชม.** · **3** โพสต์/สัปดาห์ · content_mix {menu40/brand10/festival20/promotion30} ·
+      `menu_rules`/`stop_conditions` = `{}` (คอลัมน์ในตารางเดียวกัน · ว่าง = ทางเลือก ไม่ blocker) → **precondition C7/C8 ผ่าน**
+      · evidence `e2e/mrRead-2026-10-26.json` · *(probe anon รอบก่อน = 42501 → ใช้เส้น Management API แทน · ไม่มี write)*
+      · **ขั้นทดสอบจริง C7/C8 = ยัง NOT RUN — รอ Owner**
 - [x] **UI ฝั่งลูกค้า 9 ข้อ = ปิดครบ 9/9 ฝั่งโค้ด (2026-10-26)** — L-1/L-2/L-6/L-9 (รอบก่อน) +
       **L-3/L-4/L-5/L-7/L-8 ปิดรอบนี้** (มี test รายข้อ · gates ALL ZERO · CI `67f10b8` = #585/#159) →
       **ไม่ใช่งานค้างแล้ว** — เหลือแค่ **runtime verification ที่ §L → L-RT** (ห้ามสั่งแก้ · ห้ามนับเป็น defect เดิม)
@@ -57,7 +58,7 @@
 | # | ขั้น | PASS = |
 |---|---|---|
 | B1 `[R]` | เปิดหน้าแรก + `/menu` (desktop + มือถือ) | ไม่มี console error · รูป/ป้ายไม่เพี้ยน · หัวข้อ/แท็บ "ส่งวันนี้/จองล่วงหน้า" ไม่โชว์ซ้ำ · การ์ดไม่มีเส้นกรอบ |
-| B2 `[R]` | แถบสถานะหน้าแรก | **UNVERIFIED (2026-10-26)** — code-fix มาจาก **L-6 ที่ปิดแล้ว** (มี test) แต่ **ยังไม่มีหลักฐาน runtime ใหม่** → ขั้นนี้ = **verify ครั้งแรกของ Owner**: ตอน ~11:00 เปิดหน้าแรก → ต้องบอก **เซมเดย์ยังสั่งได้ (ร้านยังเปิด)** + **พรีออเดอร์ = รอบถัดไป (วันที่ 27)** ตามเวลา/รอบจริง · ถ้ายังโชว์ "🟢 เปิดรับออเดอร์ เช้า" ทั้งเลยคัทออฟ = defect เดิมยังอยู่ (จดลง `AI_WORK_STATE.md`) |
+| B2 `[R]` | แถบสถานะหน้าแรก | **UNVERIFIED (2026-10-26)** — code-fix มาจาก **L-6 ที่ปิดแล้ว** (มี test) แต่ **ยังไม่มีหลักฐาน runtime ใหม่** → ขั้นนี้ = **verify ครั้งแรกของ Owner**: ตอน ~11:00 เปิดหน้าแรก → ต้องบอก **เซมเดย์ยังสั่งได้ (ร้านยังเปิด)** + **พรีออเดอร์ = รอบถัดไป (วันที่ 27)** ตามเวลา/รอบจริง · ถ้ายังโชว์ "🟢 เปิดรับออเดอร์ เช้า" ทั้งเลยคัทออฟ = defect เดิมยังอยู่ (จดลง `AI_WORK_STATE.md`) · *(เช็คช่วง 22:29 = เกิน ~11:00 → verify เต็มรูปแบบต้องรอรอบเช้า/Owner)* |
 | B3 `[O]` | **สั่ง SAME_DAY** 1 ออเดอร์จากหน้าแรก หรือ `/menu` (รอบยังไม่เลย cutoff) | เข้าตะกร้า → checkout สำเร็จ → ติดตามสถานะจริง · **ไม่มีการเลือกรอบให้เองผิด** |
 | B4 `[O]` | **สั่ง PRE_ORDER** บนวันที่มีเมนูปฏิทิน ภายใน cutoff ก่อนส่ง | สำเร็จ · ถึง/เกินคัทออฟต้องถูกปฏิเสธพร้อมเวลา HH:MM จริง |
 | B5 `[R]` **(ของใหม่)** | กรณี addItem ถูกบล็อก (ปิดขาย/สินค้าถูกถ่ายโอน) | ขึ้นข้อความเตือน **ไม่** โชว์ว่า "เพิ่มแล้ว" และ **ไม่** เด้งไป checkout |
@@ -74,8 +75,8 @@
 | C4 | `/menu?category=<id>` deep-link | เปิดถูกหมวด · ปุ่มจองล่วงหน้ายังใช้ได้ |
 | C5 | `/admin/orders?mode=PRE_ORDER` | query ถูก preset + grouping header แสดง |
 | C6 **(ของใหม่ CAP-21)** | `/admin/customers` | มีแถบสรุปกลุ่มลูกค้า + คอลัมน์ "กลุ่ม/คำสรุป (อัตโนมัติ)" · **ไม่มีช่องให้กรอกเกณฑ์/ปุ่มบันทึกกลุ่ม** · โหลดใหม่แล้วยังคำนวณเอง |
-| C7 **(ของใหม่ CAP-22)** `[UNVERIFIED — re-read 42501 · รันขั้นนี้ = verify จริงครั้งแรก]` | `/admin/marketing` → แท็บ "📅 ปฏิทิน" | **สถานะ:** หลักฐานรอบก่อนมีค่า แต่ probe ซ้ำ 2026-10-26 อ่านไม่ได้ (42501) = **UNVERIFIED** · ขั้นแรกเปิดตั้งค่า ยืนยัน window/cooldown/frequency **มีค่า** (ถ้าเจอว่าง = จด + ตั้งตาม Owner: "กำหนดให้พร้อมก่อนทดสอบระบบจริง") · แล้วกดปุ่ม "🤖 ให้ AI เลือกเวลาทั้งหมด" → โพสต์ **อนุมัติแล้ว** ถูกตั้งเวลา (toast สรุปจำนวน) · โพสต์ยังไม่อนุมัติ**ไม่ถูกตั้งเวลา** |
-| C8 **(ของใหม่ CAP-22)** `[UNVERIFIED ตาม C7 · รันหลัง C7]` | ทิ้งเวลาให้ถึงชั่วโมงถัดไป (หรือตั้งเวลาในอดีตเล็กน้อย) | worker รายชั่วโมงเผยแพร่โพสต์อัตโนมัติ → สถานะ `published` โดย **ไม่มีใครกด publish มือ** |
+| C7 **(ของใหม่ CAP-22)** `[precondition VERIFIED 2026-10-26 (mrRead) · ขั้น = NOT RUN — รอ Owner]` | `/admin/marketing` → แท็บ "📅 ปฏิทิน" | **สถานะ:** ค่า = **อ่านยืนยันใหม่ 2026-10-26 ผ่าน Management API** (`e2e/mrRead-2026-10-26.json`: window 10:00–19:00 · cooldown 6 · 3/สัปดาห์ · content_mix ครบ) = precondition **ผ่าน** · ขั้นนี้ยังไม่มีใครรัน → **verify ขั้นสุดท้าย = Owner กด "🤖 ให้ AI เลือกเวลาทั้งหมด"** → โพสต์ **อนุมัติแล้ว** ถูกตั้งเวลา (toast สรุปจำนวน) · โพสต์ยังไม่อนุมัติ**ไม่ถูกตั้งเวลา** |
+| C8 **(ของใหม่ CAP-22)** `[precondition VERIFIED ตาม C7 · ขั้น = NOT RUN — รันหลัง C7]` | ทิ้งเวลาให้ถึงชั่วโมงถัดไป (หรือตั้งเวลาในอดีตเล็กน้อย) | worker รายชั่วโมงเผยแพร่โพสต์อัตโนมัติ → สถานะ `published` โดย **ไม่มีใครกด publish มือ** |
 
 ## E. การจ่ายเงิน + ตรวจสลิป `[O]`
 
@@ -178,8 +179,8 @@
 
 ## สรุปเกณฑ์ปิดงาน (ฉบับตรงความจริง)
 
-- **รันได้เลย:** A1 · A2 · A3 (ผ่าน = verify) · B (รวม B2 เป็น verify) · C7/C8 (ถ้า `marketing_rules` มีค่า — เจอว่าง/อ่านไม่ได้ = จด) · D · E · F · G · H · I · J · K · **L-RT**
-- **สถานะพิเศษ (2026-10-26):** **B2 = UNVERIFIED** (code-fix โดย L-6 มี test · ไม่มีหลักฐาน runtime ใหม่ → B2 = verify ครั้งแรก) · **C7/C8 = UNVERIFIED** (probe 42501 อ่านไม่ได้) · ~~L-10~~ = **APPLIED+VERIFIED** (w7Apply159 · ledger 159) · L-12 = ทางเลือก · **Pages serving = VERIFIED** (marker `btn-locked` ใน CSS/JS จริง ≥ 67f10b8 · ดู A3)
+- **รันได้เลย:** A1 · A2 · A3 (ผ่าน = verify) · B (รวม B2 เป็น verify · รอช่วง ~11:00) · **C7/C8 (ค่า = VERIFIED แล้ว · รันได้เลย)** · D · E · F · G · H · I · J · K · **L-RT**
+- **สถานะพิเศษ (2026-10-26):** **B2 = UNVERIFIED** (code-fix โดย L-6 มี test · ไม่มีหลักฐาน runtime ใหม่ → B2 = verify ครั้งแรก · เงื่อนไข ~11:00 — เช็คช่วง 22:29 แล้วเวลาไม่ตรง) · **C7/C8 = precondition VERIFIED (mrRead) · ขั้นรัน NOT RUN** · ~~L-10~~ = **APPLIED+VERIFIED** (w7Apply159 · ledger 159) · L-12 = ทางเลือก · **Pages serving = VERIFIED** (marker `btn-locked` ใน CSS/JS จริง ≥ 67f10b8 · ดู A3) · **parity ย่อยหลัง 159 = onlyProd 0** (เหลือ D3 11 ตัว · `w1-parityfn-after159-*.json`)
 - **ไม่ต้องรันซ้ำ (ปิดแล้วมี evidence):** L-1/L-2/L-6/L-9 · **L-3/L-4/L-5/L-7/L-8** (test+gates+CI `67f10b8`) · B-2 legacy contract (7/7) · schema parity (มีรายงาน) — อยากตรวจซ้ำหลัง deploy = ดู **L-RT**
 - **ห้ามสรุปว่า "พร้อม Production 100%" / "ปิดครบทุกลูป"** จนกว่า: (1) L-RT + ขั้น B/E/I ผ่านตา Owner หลัง deploy ใหม่ (2) B-2 + schema parity บันทึก แล้วตามเดิม (3) **marketing_rules/B2 มีหลักฐานใหม่** — *(ทำแล้ว ✓ Pages marker · ✓ **159 apply+verify 4 stage** 2026-10-26 · ledger 159)*
 - รายการที่ AI รันให้แล้ว (ไม่ต้องรันซ้ำ): tsc/eslint/vitest/build/route-smoke/CI — ดู `docs/BMB_MASTER_STATUS.md` §5 + **§9.0** · HEAD = `5f891de` (#586/#160)

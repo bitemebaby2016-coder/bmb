@@ -1,9 +1,9 @@
 > ## 🟢 สถานะล่าสุด — ปิดเซสชั่น 2026-10-26 (ยึดบล็อกนี้ + `docs/BMB_HANDOFF_NEXT_SESSION_2026-10-26.md` ถ้าข้อความด้านล่างขัดกัน)
 > - **ปิดแล้ว (มี evidence ทุกข้อ):** **W-1** (`REPLAY_ALL_GREEN 157/157` · parity MATCH = rls 67=67 · acl_tables 768=768 · ledger 158=158 · `e2e/w1-parity-report-2026-10-26.md`) · **W-2** (legacy contract **7/7** → Contract Tests **#151/#153/#155 success**) · **W-3** (`marketing_rules` มีค่ารอบก่อน → C7/C8 — *probe ซ้ำวันนี้ = 42501 → คง **UNVERIFIED***) · **W-5** (เอกสารชุดเดียว) · **UI 9 ข้อครบ** = L-1/2/6/9 (รอบก่อน) + **L-3/4/5/7/8 (Owner 2026-10-26 · test รายข้อ: uiTapScroll/menuTopTabs/votePageUi/headingOrderFooter/preOrderLockUi · gates ALL ZERO · CI `67f10b8` #585/#159)** · **B-6 (P0)** apply 157+158 แล้ว (Owner อนุมัติ · ledger top 158 · evidence `e2e/w6Apply157158-{precheck,apply157,apply158,verify,record}.json`) · **legacy 6 functions = DROP แล้วบน production (2026-10-26 · Owner อนุมัติรอบสุดท้าย)** → precheck→apply→verify→record **ผ่านทั้ง 4 stage** · ledger top **159** · pg_proc เหลือ 0 · PostgREST rpc = 404 PGRST202 · products 200 → evidence `e2e/w7Apply159-{precheck,apply159,verify,record}.json` (ไฟล์ `supabase/migrations/159_drop_legacy_manual_functions.sql`)
-> - **เหลือ (อัปเดตหลัง apply 159 · 2026-10-26):** **(ก)** production runtime = **บางส่วน verify**: Pages serving ✓ (marker `btn-locked`) · **159 APPLIED+VERIFIED ✓** (w7Apply159 · ledger 159) — ยังเหลือ **`marketing_rules` re-read 42501 → C7/C8 = UNVERIFIED** · **B2 = UNVERIFIED** (code-fix โดย L-6 มี test · ยังไม่เห็นของจริง) · **(ข)** **test pack ฉบับ reconcile (§L → L-RT) ให้ Owner รัน** — รายการปิดมี evidence ไม่ต้องซ้ำ → **ยังห้ามสรุปว่าปิดครบทุกลูป**
+> - **เหลือ (อัปเดตหลัง mrRead + parityFn · 2026-10-26 ~22:30):** **(ก)** production runtime = **บางส่วน verify**: Pages ✓ (marker) · **159 APPLIED+VERIFIED ✓** · **marketing_rules VALUES VERIFIED ✓ (mrRead)** → C7/C8 = **precondition ผ่าน · ขั้นรัน NOT RUN** · parity ย่อยหลัง 159 ✓ (onlyProd=0) — ยังเหลือ **B2 = UNVERIFIED** (เกณฑ์ ~11:00 · ตอนนี้ 22:29 = เวลาไม่ตรง → รอรอบเช้า/ตา Owner) · **(ข)** **test pack ฉบับ reconcile ให้ Owner รัน** (รวมขั้น C7/C8/L-RT) → **ยังห้ามสรุปว่าปิดครบทุกลูป**
 > - **git:** HEAD ณ เขียนบรรทัดนี้ = `6d83cba` = origin/main (apply 159 + docs · CI **#590 success** · Contract **#164 success** · Pages success) · **ค่า HEAD ให้ตรวจจริงด้วย `git log --oneline -1` เสมอ** (เอกสารนี้ = ค่า ณ เวลานั้น) · ก่อนหน้า: `680bf78` (#589/#163 success) · `7df33fd` (#587/#588 + #161/#162) · `5f891de` (#586/#160) · โค้ดปิด UI = `67f10b8` (CI **#585** · Contract **#159**) · ผล CI ทุก SHA = `BMB_MASTER_STATUS.md` §9.0 (failure #152 = §9.8) · stash `local-edits-before-sync-2026-09-21` = เดิมของเซสชั่นอื่น **ห้ามแตะ**
 > - **gates รอบปิด (2026-10-26):** tsc 0 · eslint 0 · brandGuard 0 (434 ไฟล์) · **vitest ทั้งชุด 0 fail** · build 0 → evidence **`e2e/gates_ui2026-10-26.log` = ALL 5 EXIT=0** (เดิม: `session20261026-r3-gates-evidence.log` · `gates_final.log`)
-> - ⚠️ **กติกาปิดงาน:** UI 9 ข้อ (โค้ด+test+CI เขียว) · **159 = APPLIED+VERIFIED บน production แล้ว** (2026-10-26 · w7Apply159 4 stage · ledger 159) · Pages serving = **verify แล้ว (marker btn-locked)** — **ยังห้ามพูด "ปิดครบทุกลูป / เหลือ Owner อย่างเดียว"** จนกว่าจะครบ: **marketing_rules/B2 มีหลักฐานใหม่** (C7/C8/B2 ตอนนี้ = UNVERIFIED) · **test pack ฉบับ reconcile รันผ่าน**
+> - ⚠️ **กติกาปิดงาน:** UI 9 ข้อ (โค้ด+test+CI เขียว) · **159 = APPLIED+VERIFIED บน production แล้ว** (w7Apply159 4 stage · ledger 159) · Pages ✓ (marker) · **marketing_rules VALUES VERIFIED ✓ (mrRead 2026-10-26)** — **ยังห้ามพูด "ปิดครบทุกลูป / เหลือ Owner อย่างเดียว"** จนกว่าจะครบ: **B2 มีหลักฐานจริง** (ตอนนี้ UNVERIFIED · เงื่อนไข ~11:00) + **C7/C8 ขั้นรันจริงผ่าน** (values มีแล้ว · ยัง NOT RUN) · **test pack ฉบับ reconcile รันผ่าน**
 >
 ## 1. งานที่ทำอยู่ (สำคัญสุด — นี่คือ "Current Work State")
 # Bite Me Baby — AI Work State (บันทึกสถานะสำหรับแชทถัดไป)
@@ -70,9 +70,9 @@
   - **W-2 legacy contracts 7 ตัว (B-2)** — ทั้ง 7 ไฟล์ EXIT=0 · step กลับเข้า `contract-tests.yml`
   - **UI 4 ข้อ:** L-1 (ป้าย theater) · L-2 (Marketing Testimonials) · L-6 (แถบสถานะ ~11:00) ·
     L-9 (เฟรม 1:1) — มี test กำกับครบ (`uiTechnicalLabels` · `storeStatusWindow`)
-  - **W-3 CAP-22** — `marketing_rules` มีค่ารอบก่อน (window 10:00–19:00 · cooldown 6 · 3/สัปดาห์) แต่
-    **probe ซ้ำ 2026-10-26 = 42501 อ่านไม่ได้ → C7/C8 = UNVERIFIED** (ต้อง verify จริงก่อน) ·
-    `menu_rules`/`stop_conditions` ยังว่าง (ทางเลือก)
+  - **W-3 CAP-22** — `marketing_rules` = **VALUES VERIFIED ใหม่ 2026-10-26** (Management API อ่านอย่างเดียว · `e2e/mrRead-2026-10-26.json`:
+    window 10:00–19:00 · cooldown 6 · 3/สัปดาห์ · content_mix ครบ · menu_rules/stop_conditions = {}) → **precondition C7/C8 ผ่าน** ·
+    **ขั้นทดสอบจริง = NOT RUN (รอ Owner กด 🤖/worker)** · (probe anon รอบก่อน = 42501 · ไม่มี write ทุกกรณี)
 - **blocker/งานค้าง:**
   - **B-6 (P0) = ปิดแล้ว ✅** — guest อ่านเมนู production ไม่ได้ (401 is_staff) → **apply 157 + 158 แล้ว
     (Owner อนุมัติ 2026-10-26)** → ตรวจซ้ำ: PostgREST ทุก endpoint = 200 · Playwright เปิด `/menu` จริง =
@@ -87,10 +87,10 @@
 ## 4. งานรอ Owner (ไม่ใช่งาน AI) — **รันได้เฉพาะที่ไม่ติด blocker**
 
 - = **`docs/BMB_PRODUCTION_TEST_PACK.md` (ฉบับ reconcile)** · รันได้: A1/A2/A3 ·
-  B (รวม **B2 = verify ครั้งแรก** — UNVERIFIED) · **C7/C8 = UNVERIFIED** (marketing_rules re-read 42501) ·
+  B (รวม **B2 = verify ครั้งแรก** — UNVERIFIED · ต้องรอช่วง ~11:00) · **C7/C8 = precondition VERIFIED (mrRead) · ขั้นรัน NOT RUN** ·
   D–K · **L-RT** (runtime 5 ข้อ · ไม่ใช่งานค้าง) · ~~L-10~~ **ปิด = 159 APPLIED+VERIFIED 2026-10-26**
-- **ห้าม**พูดว่า "เหลือ Owner อย่างเดียว / ปิดครบทุกลูป" จนกว่า: (1) **marketing_rules/B2 มีหลักฐานใหม่**
-  (2) **test pack ฉบับ reconcile รันผ่าน** — *(ทำแล้ว ✓ Pages marker · ✓ 159 apply+verify 4 stage · ledger 159)*
+- **ห้าม**พูดว่า "เหลือ Owner อย่างเดียว / ปิดครบทุกลูป" จนกว่า: (1) **B2 มีหลักฐานจริง** + **C7/C8 ขั้นรันผ่าน**
+  (2) **test pack ฉบับ reconcile รันผ่าน** — *(ทำแล้ว ✓ Pages marker · ✓ 159 apply+verify · ✓ mrRead values · ✓ parityFn onlyProd=0)*
 
 ## 5. คำสั่ง/rules ที่ห้ามลืม
 

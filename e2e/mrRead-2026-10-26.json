@@ -1,0 +1,41 @@
+[
+  {
+    "label": "marketing_rules",
+    "status": 201,
+    "data": [
+      {
+        "id": "default",
+        "frequency_per_week": 3,
+        "publishing_window": {
+          "end": "19:00",
+          "start": "10:00"
+        },
+        "content_mix": {
+          "menu": 40,
+          "brand": 10,
+          "festival": 20,
+          "promotion": 30
+        },
+        "menu_rules": {},
+        "cooldown_hours": 6,
+        "stop_conditions": {},
+        "updated_by": null,
+        "updated_at": "2026-10-22 15:46:23.221422+00"
+      }
+    ]
+  },
+  {
+    "label": "menu_rules",
+    "status": 400,
+    "data": {
+      "message": "Failed to run sql query: ERROR:  42P01: relation \"public.menu_rules\" does not exist\nLINE 1: SELECT * FROM public.menu_rules ORDER BY 1 LIMIT 20\n                      ^\n"
+    }
+  },
+  {
+    "label": "stop_conditions",
+    "status": 400,
+    "data": {
+      "message": "Failed to run sql query: ERROR:  42P01: relation \"public.stop_conditions\" does not exist\nLINE 1: SELECT * FROM public.stop_conditions ORDER BY 1 LIMIT 20\n                      ^\n"
+    }
+  }
+]
