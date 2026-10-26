@@ -2,12 +2,12 @@
 
 > **สถานะงานปัจจุบันของโปรเจกต์ Bite Me Baby** ใช้แนบเข้าสู่ Context ตอนเริ่มแชทเสมอ
 
-**last_updated:** 2026-10-26 **🟢 SESSION CLOSED — APPLY 156 ✓ (record=156) + G&R ทั้ง 4 stages = production ครบ + D6 ลบแล้ว ✓** (เหลือล้วนงานรอ Owner: ตรวจ §D · R-16 รอบแรก Print-to-PDF · acceptance §4)
+**last_updated:** 2026-10-26 **🟢 SESSION CLOSED — เคลียร์งานปิดเซสชั่น 2026-10-26 ✓** (APPLY 156 ✓ record=156 · D6 ลบแล้ว ✓ · เอกสาร R-16 = Print-to-PDF ✓ `ce3f54f` · rules PRE_ORDER/SAME_DAY = ตอบแล้ว read-only) — (เหลือล้วนงานรอ Owner: ตรวจ §D · R-16 รอบแรก Print-to-PDF · acceptance §4 · ตรวจ CI)
 (gates ก่อน push รอบนี้เขียวทั้งหมด: tsc 0 · lint+brandNameGuard OK (**432 ไฟล์**) ·
  vitest **144 files/1517 tests 0 fail** · build ✓ (12.7s) ·
  ของเดิมยังมีผล: **Docker replay 001–156 ALL_GREEN** · **contract 156 G1–G9 PASS (rc=0) + regression 155/154/153 PASS** ·
  evidence เดิม = `e2e/g156-gates-evidence.txt` · evidence รอบนี้ = **`e2e/r16Apply156-*.json`** ·
- push **`b19cd03`** (main = origin/main · ก่อนหน้า `b6bb54c`) — **CI ยังไม่ได้ตรวจจริง** ไม่มี `gh` ในเครื่อง)
+ push ล่าสุด **`ce3f54f`** (main = origin/main · ลำดับวันนี้: `b19cd03` → `55aed05` → `a1f2e02` → `ce3f54f`) — **CI ยังไม่ได้ตรวจจริง** ไม่มี `gh` ในเครื่อง)
 **production:** migration **156 = APPLIED + RECORDED ✓ (record top=156)** (Owner "apply 156" 2026-10-26 →
  `e2e/r16Apply156.cjs` staged 6 รุ่น: precheck **11/11** (top=155) → apply+idempotent-rerun **201/201** →
  verify **13/13** → contract156 **G1–G9 PASS** → contractRegr **155/154/153/148 PASS** → record →
@@ -33,8 +33,9 @@
 2. **(เสร็จแล้ว 2026-10-26):** "apply 156" → `e2e/r16Apply156.cjs` ครบทั้ง 6 รุ่น ·
    record top = **156** · evidence = `e2e/r16Apply156-*.json`
 3. งานรอ Owner (ไม่ใช่งาน AI): ตรวจ status report §D · ~~D6~~ ✅ ลบแล้ว 2026-10-26 (account selfprint · DNS ตาย) · R-16 = รอบแรก **Print-to-PDF** (คำสั่ง 2026-10-26 · ข้อมูล local supabase · เครื่องจริง = แอดมินเพิ่มทีหลัง) · acceptance §4
-**blocked_by:** ⛔ ไม่มี blocker — งานที่สั่งทั้งหมดเสร็จสมบูรณ์ (apply 155 ✓ · Stage 4 ✓ · **apply 156 ✓** · gates เขียว) ·
- งานที่เหลือทั้งหมด = **งานรอ Owner ล้วน** (handoff §11.2 ข้อ 2: ตรวจ §D · R-16 รอบ Print-to-PDF · acceptance §4) · D6 = ✅ ลบแล้ว (2026-10-26)
+4. (เซสนี้ 2026-10-26 · read-only · ไม่มีไฟล์แก้) สรุป **rules PRE_ORDER vs SAME_DAY** (ผูกการสั่ง+การส่ง) ให้ Owner — อ้าง `create_order_with_items` (153:307 · สายล่าสุด 148→153) · triggers `trg_operating_hours`/`trg_menu_gate` (039) · policy `orderPolicy.ts` · cart `deriveCartMode` (R5c) · kitchen `splitSameDayPreOrder` — ข้อสังเกตที่แถม: `ERR_PRE_ORDER_REQUIRES_ADDRESS` มีแค่สายเก่า 035/037 (**บอดี้ 153 ไม่มี** — ที่อยู่ guard ชั้น UI) · เผื่อท่านสั่งงานต่อ
+**blocked_by:** ⛔ ไม่มี blocker — งานที่สั่งทั้งหมดเสร็จสมบูรณ์ (apply 155 ✓ · Stage 4 ✓ · **apply 156 ✓** · gates เขียว · D6 ✓ · docs R-16 PDF ✓ `ce3f54f` · rules briefing ✓) ·
+ งานที่เหลือทั้งหมด = **งานรอ Owner ล้วน** (handoff §11.2 ข้อ 2: ตรวจ §D · R-16 รอบ Print-to-PDF · acceptance §4 · ตรวจ CI) · D6 = ✅ ลบแล้ว (2026-10-26) · **พร้อมรับคำสั่งแชทหน้า**
 - (รอบก่อนปิดเซสชัน — ยังคงมีผล): 4 บั๊กหน้าจอ ✓ · production 150/151/152/153 ✓ · stale contracts 8/8 ✓ ·
   legacy 7 เขียว(ไม่ซ่อม) ✓ · R-17 PASS ✓ · G&R เอกสาร+คำตอบ Owner ✓ · `AI_ENTRYPOINT`/`UNIVERSAL_MASTER_AI_RULES` v1.1/v2.1 ✓
 
