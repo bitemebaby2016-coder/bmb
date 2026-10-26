@@ -15,7 +15,7 @@ import { applyCouponCode } from '@/components/CouponBox'
 import { describeCouponResult } from '@/lib/promotionClient'
 import { FoodMenuCard } from '@/components/FoodMenuCard'
 import { MascotBadge } from '@/components/MascotBadge'
-import { useOrderBuilderStore } from '@/store/orderBuilderStore'
+import { runOrderBuilder } from '@/lib/orderEntry'
 
 const CATEGORY_ICONS = { all: '\uD83D\uDF3D', dish: '\uD83C\uDF5C', rice: '\uD83C\uDF5A', curry: '\uD83C\uDF5B', drink: '\uD83E\uDD64', dessert: '\uD83C\uDF70' }
 
@@ -131,71 +131,60 @@ export function MenuPage() {
     ? [...filtered].sort((a, b) => Number(!!scheduleMap[b.id]) - Number(!!scheduleMap[a.id]))
     : filtered
 
+  const navigate = useNavigate()
+
+  // Owner 2026-10-26: ปุ่ม "สั่งเลย / จองล่วงหน้า" ทุกปุ่มผ่านเส้นทางเดียว `runOrderBuilder`
+  // (@/lib/orderEntry) — เดิมหน้านี้เก็บสำเนา logic เดียวกับ HomePage คนละชุด แก้ทีละที่แล้วพลาดบ่อย
   const handleSameDay = (payload: SameDayOrderPayload) => {
     console.log('[Log#same-day]', payload)
-    const product = products.find(p => p.id === payload.productId)
-    if (!product) {
-      showToast('ไม่พบเมนูที่ต้องการค่ะ', 'error')
-      return
-    }
-    // Grab / 7-Eleven style upsell: toppings + recommended companions.
-    useOrderBuilderStore.getState().openBuilder(product, products, (result) => {
-      const customizations: Record<string, any> = {}
-      if (result.addOns.length > 0) {
-        customizations['addOns'] = result.addOns.map((a) => ({ addonId: a.addonId, selections: a.selections, note: a.note ?? '' }))
-      }
+    runOrderBuilder({
+      productId: payload.productId,
+      products,
+      mode: 'SAME_DAY',
+      addItem,
+      toast: showToast,
+      navigate,
+      notFound: 'ไม่พบเมนูที่ต้องการค่ะ',
       // P0 2026-10-14: เช็ค AddToCartResult ก่อน (แบบ HomePage RC-3/OD-4) —
       // ห้าม toast "Added" ทั้งที่ addItem ไม่ได้เพิ่มอะไร (blocked/context_blocked)
-      const res = addItem(result.product, result.quantity, customizations)
-      if (res !== 'added') {
-        showToast(
+      blockedToast: (res) => ({
+        message:
           res === 'context_blocked'
             ? 'เพิ่มไม่ได้ในตอนนี้ กรุณาลองใหม่อีกครั้ง'
             : 'เพิ่มสินค้านี้ไม่ได้ในตอนนี้ — สินค้าอาจปิดขายอยู่',
-          'info',
-        )
-        return
-      }
-      for (const rec of result.recommended) addItem(rec, 1)
-      showToast('Added: ' + result.product.name + (result.addOns.length > 0 ? ' (+toppings)' : '') + (result.recommended.length > 0 ? ' +' + result.recommended.length + ' recommended' : ''), 'success')
+        type: 'info',
+      }),
+      onAdded: (result) => {
+        // Grab / 7-Eleven style upsell: toppings + recommended companions.
+        showToast('Added: ' + result.product.name + (result.addOns.length > 0 ? ' (+toppings)' : '') + (result.recommended.length > 0 ? ' +' + result.recommended.length + ' recommended' : ''), 'success')
+      },
     })
   }
 
-  const navigate = useNavigate()
-
-  // ✓ Closure 2026-09-17: Pre-order creates a REAL order (pre_orders table via
-  // createPreOrder — Supabase + localStorage fallback), NOT just a toast.
+  // ✓ Closure 2026-09-17: Pre-order flows through the canonical cart → /checkout?mode=pre-order
+  // (ไม่มีการ insert ตาราง pre_orders จากหน้าเมนูเอง)
   const handlePreOrder = (payload: PreOrderPayload) => {
     console.log('[Log#pre-order]', payload)
-    const product = products.find(p => p.id === payload.productId)
-    if (!product) {
-      showToast('ไม่พบเมนูนี้', 'error')
-      return
-    }
-    // ✅ Phase 3B: PRE_ORDER no longer creates rows directly from product cards.
-    // It flows through the canonical cart → /checkout?mode=pre-order, where the
-    // customer picks date + round + address + payment and the SERVER (RPC
-    // create_order_with_items, migration 025) remains the only authority.
-    useOrderBuilderStore.getState().openBuilder(product, products, (result) => {
-      const customizations: Record<string, any> = {}
-      if (result.addOns.length > 0) {
-        customizations['addOns'] = result.addOns.map((a) => ({ addonId: a.addonId, selections: a.selections, note: a.note ?? '' }))
-      }
+    runOrderBuilder({
+      productId: payload.productId,
+      products,
+      mode: 'PRE_ORDER',
+      addItem,
+      toast: showToast,
+      navigate,
+      notFound: 'ไม่พบเมนูนี้',
       // P0 2026-10-14: เช็คผลก่อน navigate — ถ้าไม่ได้เพิ่มจริงห้ามส่งไป checkout
       // ทั้งที่ตะกร้าไม่มีสินค้า (ปุ่มกดแล้วไม่มีอะไรเข้าตะกร้า = อาการที่ Owner เจอ)
-      const res = addItem(result.product, result.quantity, customizations, 'PRE_ORDER')
-      if (res !== 'added') {
-        showToast(
+      blockedToast: (res) => ({
+        message:
           res === 'context_blocked'
             ? 'เพิ่มไม่ได้ในตอนนี้ กรุณาลองใหม่อีกครั้ง'
             : 'เพิ่มสินค้านี้ไม่ได้ในตอนนี้ — สินค้าอาจปิดขายอยู่',
-          'info',
-        )
-        return
-      }
-      for (const rec of result.recommended) addItem(rec, 1, {}, 'PRE_ORDER')
-      showToast('วันจัดส่งถูกกำหนดโดยเมนูรอบพิเศษของแอดมิน — เลือกรอบ/ที่อยู่ แล้วชำระเงินเพื่อยืนยันการจอง', 'info')
-      navigate('/checkout?mode=pre-order')
+        type: 'info',
+      }),
+      onAdded: () => {
+        showToast('วันจัดส่งถูกกำหนดโดยเมนูรอบพิเศษของแอดมิน — เลือกรอบ/ที่อยู่ แล้วชำระเงินเพื่อยืนยันการจอง', 'info')
+      },
     })
   }
 

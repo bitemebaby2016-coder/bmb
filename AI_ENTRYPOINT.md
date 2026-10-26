@@ -13,8 +13,9 @@ STOP — MANDATORY AI BOOTSTRAP
 Before doing ANY project work:
 
 1. Read `UNIVERSAL_MASTER_AI_RULES.md`
-2. Read `AI_WORK_STATE.md` (Mandatory Operational Ledger)
-3. Follow both files as mandatory operating rules/state.
+2. Read `AI_WORK_STATE.md` (short current-session ledger) **and** `docs/BMB_MASTER_STATUS.md`
+   (CANONICAL current state · capability matrix · engineering backlog · evidence)
+3. Follow these files as mandatory operating rules/state.
 4. Do not modify project files before completing these steps.
 5. **ATOMIC EXECUTION RULE:** Do not attempt macro-prompts or whole-project generation. Pick the active Task ID from `AI_WORK_STATE.md` and execute step-by-step (one small file/function at a time).
 6. Do not repeat work that is already `PASS` + verified without new evidence.
@@ -28,7 +29,11 @@ Before doing ANY project work:
 13. Maximum 2 attempts for a single bug/build/test failure.
 14. Model switching does NOT reset the attempt counter.
 15. After Attempt 2 fails: STOP and produce the Mandatory Halt Report.
-16. After meaningful work, update `AI_WORK_STATE.md`.
+16. After meaningful work, update `AI_WORK_STATE.md` (+ `docs/BMB_MASTER_STATUS.md` if state changed).
+17. **DO NOT RE-ISSUE OLD REPORTS AS NEW WORK.** Any `docs/*.md` with a date in the name is a
+    point-in-time report/handoff. Before planning, check `docs/BMB_MASTER_STATUS.md` (canonical) —
+    if a report disagrees with it or with the code, flag `DOC DRIFT` and follow the Source of Truth
+    hierarchy instead of restarting an audit from zero.
 
 ===============================================================================
 OPERATING FLOW

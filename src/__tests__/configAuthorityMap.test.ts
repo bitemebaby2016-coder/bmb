@@ -12,6 +12,7 @@ import { describe, it, expect } from 'vitest'
 import bootstrapSrc from '../lib/platformConfigBootstrap.ts?raw'
 import settingsApiSrc from '../lib/bmbAdminApi_settings.ts?raw'
 import adminSettingsSrc from '../pages/admin/AdminSettings.tsx?raw'
+import platformConfigSrc from '../config/platformConfig.ts?raw'
 
 describe('D3 — config authority map (1 ค่า = 1 เจ้าของ)', () => {
   it('platformConfigBootstrap = loader เท่านั้น — ไม่เขียน business_settings กลับ', () => {
@@ -42,6 +43,16 @@ describe('D3 — config authority map (1 ค่า = 1 เจ้าของ)', 
     expect(bootstrapSrc).toContain('dp.currency')
     // dailyQuota ← order_policy.daily_quota
     expect(bootstrapSrc).toContain('op.daily_quota')
+  })
+
+  it('D14: static fallback ของ quota/cutoff อ้าง canonical order_policy — ไม่มีตัวเลข default ที่สอง', async () => {
+    const { DEFAULT_PLATFORM_CONFIG } = await import('@/config/platformConfig')
+    const { ORDER_POLICY_DEFAULTS } = await import('@/lib/orderPolicy')
+    expect(DEFAULT_PLATFORM_CONFIG.delivery.dailyQuota).toBe(ORDER_POLICY_DEFAULTS.daily_quota)
+    expect(DEFAULT_PLATFORM_CONFIG.delivery.cutoffHours).toBe(ORDER_POLICY_DEFAULTS.cutoff_hours)
+    // กันไม่ให้ใครกลับมา hardcode ค่า default แยกอีก (เดิม 120 vs 100 = DOC DRIFT จริง)
+    expect(platformConfigSrc).not.toMatch(/dailyQuota:\s*\d/)
+    expect(platformConfigSrc).not.toMatch(/cutoffHours:\s*\d/)
   })
 
   it('หน้าตั้งค่า = ประสบการณ์เดียว: ค่าที่ไม่ได้อยู่ business_settings ชี้ลิงก์ไปที่เจ้าของจริง', () => {

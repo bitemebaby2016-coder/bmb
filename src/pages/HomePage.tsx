@@ -31,7 +31,7 @@ import { VerifiedReviewsSection } from '@/components/home/VerifiedReviewsSection
 import { ReviewCarouselSection } from '@/components/home/ReviewCarouselSection'
 import { CategorySections } from '@/components/home/CategorySections'
 import { FloatingCart, StickyCartBar } from '@/components/home/FloatingCart'
-import { useOrderBuilderStore } from '@/store/orderBuilderStore'
+import { runOrderBuilder } from '@/lib/orderEntry'
 import { deriveOrderMode } from '@/lib/talkToBite'
 import { getProductScheduleMap, type ProductScheduleMap } from '@/lib/productSchedule'
 import { headingChips } from '@/lib/catalogStructure'
@@ -166,62 +166,58 @@ export function HomePage() {
   const storeStatus = getStoreStatusFromRounds(rounds)
 
   const handleSameDay = (payload: SameDayOrderPayload) => {
-    const product = products.find((p) => p.id === payload.productId)
-    if (!product) {
-      showToast('ไม่พบเมนูที่ต้องการค่ะ', 'error')
-      return
-    }
-    // Grab / 7-Eleven style upsell: toppings + recommended companions.
-    useOrderBuilderStore.getState().openBuilder(product, products, (result) => {
-      const customizations: Record<string, any> = {}
-      if (result.addOns.length > 0) {
-        customizations['addOns'] = result.addOns.map((a) => ({ addonId: a.addonId, selections: a.selections, note: a.note ?? '' }))
-      }
+    // Owner 2026-10-26: ทุกปุ่มสั่งซื้อของร้านผ่านเส้นทางเดียว runOrderBuilder (@/lib/orderEntry)
+    // หน้าหนึ่ง ๆ เหลือแค่เลือกข้อความ toast (presentation) — ไม่มีสำเนา logic ก๊อปปี้อีกต่อไป
+    runOrderBuilder({
+      productId: payload.productId,
+      products,
+      mode: 'SAME_DAY',
+      addItem,
+      toast: showToast,
+      navigate,
+      notFound: 'ไม่พบเมนูที่ต้องการค่ะ',
       // Phase 2 (RC-3): แจ้งผลตามจริง — ห้ามบอก "Added" เมื่อ addItem ไม่ได้เพิ่มจริง
-      const res = addItem(result.product, result.quantity, customizations)
-      if (res !== 'added') {
-        showToast('เพิ่มไม่ได้ในตอนนี้ — สินค้าอาจปิดขายอยู่ กรุณาลองใหม่ครับ', 'info')
-        return
-      }
-      for (const rec of result.recommended) {
-        addItem(rec, 1)
-      }
-      const extras = [
-        result.addOns.length > 0 ? 'เพิ่มท็อปปิ้งแล้ว' : '',
-        result.recommended.length > 0 ? `แนะนำเพิ่มอีก ${result.recommended.length} อย่าง` : '',
-      ].filter(Boolean).join(' · ')
-      showToast(`เพิ่ม ${result.product.name} ลงตะกร้าแล้ว${extras ? ' — ' + extras : ''}`, 'success')
+      blockedToast: () => ({
+        message: 'เพิ่มไม่ได้ในตอนนี้ — สินค้าอาจปิดขายอยู่ กรุณาลองใหม่ครับ',
+        type: 'info',
+      }),
+      onAdded: (result) => {
+        // Grab / 7-Eleven style upsell: toppings + recommended companions.
+        const extras = [
+          result.addOns.length > 0 ? 'เพิ่มท็อปปิ้งแล้ว' : '',
+          result.recommended.length > 0 ? `แนะนำเพิ่มอีก ${result.recommended.length} อย่าง` : '',
+        ].filter(Boolean).join(' · ')
+        showToast(`เพิ่ม ${result.product.name} ลงตะกร้าแล้ว${extras ? ' — ' + extras : ''}`, 'success')
+      },
     })
   }
 
   const handlePreOrder = (payload: PreOrderPayload) => {
-    const product = products.find((p) => p.id === payload.productId)
-    if (!product) {
-      showToast('ไม่พบเมนูที่ต้องการค่ะ', 'error')
-      return
-    }
     // ✅ Phase 3B: PRE_ORDER flows through the canonical cart → /checkout?mode=pre-order.
     // Date + round + address + payment are chosen there; the SERVER (RPC
     // create_order_with_items, migration 025) is the only creation authority.
-    useOrderBuilderStore.getState().openBuilder(product, products, (result) => {
-      const customizations: Record<string, any> = {}
-      if (result.addOns.length > 0) {
-        customizations['addOns'] = result.addOns.map((a) => ({ addonId: a.addonId, selections: a.selections, note: a.note ?? '' }))
-      }
-      // Phase 2 (RC-3 · OD-4): ต้องเช็ค AddToCartResult ก่อน navigate —
-      // R5c: ไม่มีป๊อปอัปล้างตะกร้า/สลับโหมดแล้ว — สินค้าทั่วไปติดรอบพรีออเดอร์ในออเดอร์เดียว
-      const res = addItem(result.product, result.quantity, customizations, 'PRE_ORDER')
-      if (res === 'context_blocked') {
-        showToast('เพิ่มไม่ได้ในตอนนี้ กรุณาลองใหม่ครับ', 'warning')
-        return
-      }
-      if (res !== 'added') {
-        showToast('เพิ่มไม่ได้ในตอนนี้ — สินค้าอาจปิดขายอยู่ กรุณาลองใหม่ครับ', 'warning')
-        return
-      }
-      for (const rec of result.recommended) addItem(rec, 1, {}, 'PRE_ORDER')
-      showToast('วันจัดส่งถูกกำหนดโดยเมนูรอบพิเศษของแอดมิน — เลือกรอบ/ที่อยู่ แล้วชำระเงินเพื่อยืนยันการจอง', 'info')
-      navigate('/checkout?mode=pre-order')
+    // R5c: ไม่มีป๊อปอัปล้างตะกร้า/สลับโหมดแล้ว — สินค้าทั่วไปติดรอบพรีออเดอร์ในออเดอร์เดียว
+    runOrderBuilder({
+      productId: payload.productId,
+      products,
+      mode: 'PRE_ORDER',
+      addItem,
+      toast: showToast,
+      navigate,
+      notFound: 'ไม่พบเมนูที่ต้องการค่ะ',
+      blockedToast: (res) => ({
+        message:
+          res === 'context_blocked'
+            ? 'เพิ่มไม่ได้ในตอนนี้ กรุณาลองใหม่ครับ'
+            : 'เพิ่มไม่ได้ในตอนนี้ — สินค้าอาจปิดขายอยู่ กรุณาลองใหม่ครับ',
+        type: 'warning',
+      }),
+      onAdded: () => {
+        showToast(
+          'วันจัดส่งถูกกำหนดโดยเมนูรอบพิเศษของแอดมิน — เลือกรอบ/ที่อยู่ แล้วชำระเงินเพื่อยืนยันการจอง',
+          'info',
+        )
+      },
     })
   }
 
@@ -239,7 +235,18 @@ export function HomePage() {
       return
     }
     const isPre = mode === 'PRE_ORDER'
-    addItem(product, 1, {}, isPre ? 'PRE_ORDER' : 'SAME_DAY')
+    // OD-4 / RC-3 contract เดียวกับปุ่มสั่งซื้อปุ่มอื่น: ต้องเช็ค AddToCartResult
+    // ก่อนบอกผู้ใช้ว่า "เพิ่มแล้ว" และก่อน navigate (เดิมบรรทัดนี้ไม่เช็คผลเลย)
+    const res = addItem(product, 1, {}, isPre ? 'PRE_ORDER' : 'SAME_DAY')
+    if (res !== 'added') {
+      showToast(
+        res === 'context_blocked'
+          ? 'เพิ่มไม่ได้ในตอนนี้ กรุณาลองใหม่ครับ'
+          : 'สินค้านี้ยังไม่เปิดให้สั่งในขณะนี้ค่ะ',
+        'warning',
+      )
+      return
+    }
     showToast('เพิ่มลงตะกร้าแล้ว!', 'success')
     navigate(isPre ? '/checkout?mode=pre-order' : '/cart')
   }

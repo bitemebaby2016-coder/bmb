@@ -8,6 +8,7 @@
 // as arguments (never import this file into pure logic).
 
 import { create } from 'zustand'
+import { ORDER_POLICY_DEFAULTS } from '@/lib/orderPolicy'
 
 // ---------------------------------------------------------------------------
 // Config shape (strictly typed)
@@ -72,8 +73,12 @@ export const DEFAULT_PLATFORM_CONFIG: PlatformConfig = {
     tier2MarkupPct: 12,
     freeShippingThreshold: 300,
     freeShippingEnforced: false,
-    cutoffHours: 2,
-    dailyQuota: 120,
+    // D14 FIX (2026-10-26): default คัดลอกมาจาก canonical order_policy โดยตรง —
+    // เดิมไฟล์นี้ hardcode 120 ขณะ server/OrderPolicyPanel ใช้ 100 ทำให้หน้าที่ยังไม่ hydrate
+    // โชว์คนละค่ากับที่ server บังคับ (ค่าจริง runtime ยังคงมาจาก business_settings.order_policy
+    // ผ่าน platformConfigBootstrap — บรรทัดนี้เป็นแค่ fallback ก่อน boot)
+    cutoffHours: ORDER_POLICY_DEFAULTS.cutoff_hours,
+    dailyQuota: ORDER_POLICY_DEFAULTS.daily_quota,
     debounceMs: 500,
   },
   theme: {

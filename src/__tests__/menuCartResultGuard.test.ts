@@ -1,42 +1,53 @@
 // ============================================
-// Bite Me Baby — P0 2026-10-14: MenuPage add-to-cart result contract
+// Bite Me Baby — P0 2026-10-14: Add-to-cart result contract
+// (2026-10-26: ตรวจที่เส้นทางเดียว `orderEntry.ts` แทนสำเนาในหน้า)
 // ============================================
-// Owner symptom: "กดปุ่มสั่ง/เพิ่มลงตะกร้าแล้วของไม่เข้าตะกร้า" — MenuPage เดิม
+// Owner symptom: "กดปุ่มสั่ง/เพิ่มลงตะกร้าแล้วของไม่เข้าตะกร้า" — เดิม MenuPage
 // เรียก addItem แล้ว toast "Added" + navigate ทุกกรณี ทั้งที่ AddToCartResult
-// อาจเป็น 'blocked' / 'needs_confirmation' / 'context_blocked' (ไม่ได้เพิ่มอะไร)
-// HomePage/TalkToBite เช็คแล้ว — MenuPage ต้องเช็คด้วย (RC-3/OD-4 contract)
+// อาจเป็น 'blocked' / 'context_blocked' (ไม่ได้เพิ่มอะไร) และ flow นี้เคยซ้ำกัน
+// 2 ที่ (MenuPage + HomePage) จนแก้ไม่ครบ → 2026-10-26 ยุบเป็น implementation
+// เดียวที่ `src/lib/orderEntry.ts` แล้วให้ทุกหน้า delegate
+//
+// ระดับความเข้มของ assertion คงเดิมทุกข้อ (gate ต้องอยู่ก่อน toast/navigate +
+// ทุก branch ที่ไม่ใช่ added ต้อง return) แต่เปลี่ยน "เป้าตรวจ" จากสำเนาในหน้า
+// เป็นเส้นทางเดียว + เพิ่มกันไม่ให้เอาสำเนากลับมา
 // ============================================
 
 import { describe, expect, it } from 'vitest'
+import entrySrc from '../lib/orderEntry.ts?raw'
 import menuPageSrc from '../pages/MenuPage.tsx?raw'
+import homePageSrc from '../pages/HomePage.tsx?raw'
 
-const sameDayBlock = menuPageSrc.slice(
-  menuPageSrc.indexOf('const handleSameDay'),
-  menuPageSrc.indexOf('const handlePreOrder'),
-)
-const preOrderBlock = menuPageSrc.slice(menuPageSrc.indexOf('const handlePreOrder'))
+const addAt = entrySrc.indexOf('const res = addItem(result.product, result.quantity, customizations, mode)')
+const gateAt = entrySrc.indexOf("if (res !== 'added')")
+const recAt = entrySrc.indexOf('for (const rec of result.recommended)')
+const addedAt = entrySrc.indexOf('onAdded?.(result)')
+const navigateAt = entrySrc.indexOf("navigate('/checkout?mode=pre-order')")
 
-describe('MenuPage.tsx — AddToCartResult ต้องถูกเช็คก่อน toast/navigate', () => {
-  it('handleSameDay: เก็บผล addItem แล้ว gate ด้วย res !== added', () => {
-    expect(sameDayBlock).toContain('const res = addItem(result.product, result.quantity, customizations)')
-    expect(sameDayBlock).toContain("if (res !== 'added')")
-    // gate ต้องมาก่อน toast "Added"
-    expect(sameDayBlock.indexOf("if (res !== 'added')")).toBeLessThan(sameDayBlock.indexOf("'Added: '"))
+describe('orderEntry.ts — AddToCartResult ต้องถูกเช็คก่อน toast/navigate', () => {
+  it('เก็บผล addItem ไว้ในตัวแปรแล้ว gate ด้วย res !== added', () => {
+    expect(addAt).toBeGreaterThan(-1)
+    expect(gateAt).toBeGreaterThan(addAt)
+    // branch ที่ไม่ใช่ added ต้อง return ทันที (ไม่เดินหน้าต่อ)
+    const gateSlice = entrySrc.slice(gateAt, recAt)
+    expect(gateSlice).toContain('return')
+    // ทุกการแจ้งเตือน/ผลลัพธ์ที่ "สำเร็จ" ต้องอยู่หลัง gate เสมอ
+    expect(addedAt).toBeGreaterThan(gateAt)
+    expect(recAt).toBeGreaterThan(gateAt)
   })
 
-  it('handlePreOrder: เก็บผล addItem (PRE_ORDER) แล้ว gate ก่อน navigate ไป checkout', () => {
-    expect(preOrderBlock).toContain("const res = addItem(result.product, result.quantity, customizations, 'PRE_ORDER')")
-    expect(preOrderBlock).toContain("if (res !== 'added')")
-    // ห้าม navigate ทั้งที่ไม่ได้เพิ่ม — gate ต้องมาก่อน navigate
-    expect(preOrderBlock.indexOf("if (res !== 'added')")).toBeLessThan(preOrderBlock.indexOf("navigate('/checkout?mode=pre-order')"))
+  it('handlePreOrder: gate ต้องมาก่อน navigate ไป checkout', () => {
+    expect(navigateAt).toBeGreaterThan(-1)
+    expect(gateAt).toBeLessThan(navigateAt)
+    // navigate เฉพาะ PRE_ORDER เท่านั้น (SAME_DAY อยู่หน้าเดิมตาม UX เดิม)
+    expect(entrySrc).toContain("if (mode === 'PRE_ORDER') navigate('/checkout?mode=pre-order')")
   })
 
-  it('ทุก branch ที่ไม่ใช่ added ต้อง return (ไม่เดินหน้าต่อ)', () => {
-    for (const block of [sameDayBlock, preOrderBlock]) {
-      const gateAt = block.indexOf("if (res !== 'added')")
-      expect(gateAt).toBeGreaterThan(-1)
-      const gateSlice = block.slice(gateAt, block.indexOf('for (const rec of result.recommended)'))
-      expect(gateSlice).toContain('return')
+  it('ทุกหน้าสั่งซื้อ delegate เส้นทางเดียว — ไม่มีสำเนา flow ซ้ำในหน้า', () => {
+    for (const src of [menuPageSrc, homePageSrc]) {
+      expect(src).toContain('runOrderBuilder({')
+      expect(src).not.toContain('openBuilder(product, products')
+      expect(src).not.toContain('addItem(result.product, result.quantity, customizations')
     }
   })
 })
