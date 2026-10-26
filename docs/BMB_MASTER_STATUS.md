@@ -248,9 +248,15 @@
 | `docs/BMB_PRODUCTION_TEST_PACK.md` | **ใหม่** — ชุดทดสอบ production รวม A–K (คำสั่ง Owner: รวบรวมทุกเทส) |
 | `docs/BMB_MASTER_STATUS.md` · `AI_WORK_STATE.md` | CAP-21/22 → IMPLEMENTED+TESTED · §3 backlog = ปิดหมด · §7 ชี้ไป test pack |
 
-### 9.6 CI ของรอบที่ 2
+### 9.6 CI ของรอบที่ 2 (ตรวจจริงผ่าน GitHub Actions API)
 
-_(เติมหลัง push — SHA + ผล CI/Contract Tests จริง รวมถึงบรรทัด `Legacy contracts OK — 7/7`)_
+| SHA | CI | Contract Tests | หมายเหตุ |
+|---|---|---|---|
+| `3a2c9f7` (CAP-21/22 + B-1 + test pack + B-2 step) | #573 **success** | #147 **failure** | step legacy contract 7 ตัวล้มเหลวทั้ง 7 ไฟล์ (annotations ระบุรายไฟล์) |
+| `6a28bcf` (rollback B-2 + รายงาน BLOCKED) | **#574 success** · https://github.com/bitemebaby2016-coder/bmb/actions/runs/40267721376 | **#148 success** · https://github.com/bitemebaby2016-coder/bmb/actions/runs/40267721481 | main กลับเขียว · ไม่มี step ที่ยังไม่ผ่านการ verify |
+
+> สรุปตรง ๆ: **B-2 ไม่ถูกปิด** — ถูกถอดออกเพื่อคืนสภาพเขียวตามกติกา 0.9 (ซ้ำ 2 ครั้งแล้ว) ·
+> หลักฐานทั้งสองรอบเก็บไว้ใน §3 + comment ใน `.github/workflows/contract-tests.yml`
 
 ---
 

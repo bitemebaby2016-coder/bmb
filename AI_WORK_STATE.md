@@ -21,9 +21,10 @@
   route smoke playwright 39/39 · flaky 4 เคสใน `orderTimeline.test.ts` = **ปิดแล้ว (B-1 → act())**
 - **production: ไม่ได้แตะ** (ไม่มี migration/apply/deploy/write) · ledger ของรอบก่อน top = **156** ·
   fresh replay เทียบ production รอบนี้ = **UNVERIFIED** (ไม่ใช่ PASS)
-- **CI ของ SHA ที่ push จริง = ตรวจแล้วผ่านทั้งสองเส้น**: `066e961` → CI #569 **success** +
-  Contract Tests #143 **success** (อ่านจาก GitHub Actions API จริง · เครื่องนี้ไม่มี `gh`) —
-  รายละเอียด/URL/วิธีตรวจซ้ำ = `docs/BMB_MASTER_STATUS.md` §5.3/§9.4
+- **CI ของ SHA ที่ push = ตรวจแล้ว:** `066e961`/`26e258e`/`fa9f54f`/`11b7112` ทุกเส้นเขียว ·
+  รอบที่ 2: `3a2c9f7` = CI success **แต่ Contract Tests failure** (B-2 legacy step) → rollback →
+  **`6a28bcf` = CI #574 success + Contract Tests #148 success** (อ่านจาก GitHub Actions API จริง · ไม่มี `gh`) —
+  รายละเอียด/URL = `docs/BMB_MASTER_STATUS.md` §9.6
 
 ## 2. งานที่ปิดรอบนี้ (CLOSED — มีหลักฐาน)
 
