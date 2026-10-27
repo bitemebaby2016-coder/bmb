@@ -76,10 +76,10 @@
   (`index-DZpLzxJE.css` · 146KB · 200) + ใน index JS จริง (`index-KR2tYugD.js` · 200) = SERVING ≥ 67f10b8 ✓ VERIFIED**
   · `bitemebaby-5f7.pages.dev` = fetch ไม่ได้ (ตรงเอกสาร "ลบแล้ว") · *ชื่อ asset ≠ local dist
   เพราะ env inlining/คนละ build machine — ไม่ใช่หลักฐาน stale* · *build id/timestamp อ่านไม่ได้จาก SPA shell*
-- **production write ที่ทำ = apply 159 เท่านั้น** (Owner อนุมัติ 2026-10-26 · staged `w7Apply159.cjs`) — ไม่มี write อื่น
+- **production write ที่ทำ = apply 159 เท่านั้น** (Owner อนุมัติ 2026-10-26 · staged `w7Apply159.cjs`) — ไม่มี write อื่น *(ณ รอบ reconcile 2026-10-26 · หลังจากนั้น = apply 160/161/162/163 — ดู bullet ท้าย §1.3)*
 - **Backlog settings-sync audit (2026-10-27):** ปิดฝั่งโค้ดครบ **13 key** (write/read path จริงทุกตัว — hours · operating_hours · delivery_policy · kitchen_location · order_pattern · order_policy · promotion · loyalty · referral · spin · push_config · social_links · theater_daily_copy · **missing = 0**) · evidence **`e2e/backlogAudit-settings-sync-2026-10-27.json`** · runtime spot-check ด้วยมือ = `docs/BMB_OWNER_ROLE_TEST_GUIDE_2026-10-27.md` §15 · คู่มือสอนทดสอบทุก role = ไฟล์เดียวกัน (§3–§13)
 - **migration 161 (R10) · 162 (R10) · 163 (R11) = APPLIED บน production 2026-10-27 รอบดึก (Owner สั่ง apply 163)** — 163 = `e2e/r11Apply163.cjs` 4 stage ผ่าน (precheck → apply → verify `pg_proc` 4 ฟังก์ชัน + `arrived_at`/`checkin_*` col → record ledger **161/162/163** ครบ · backfill 161/162 ที่ R10 apply แต่ไม่ได้ record) · evidence `e2e/r11Apply163-result.json` (+ `r10Apply161/162-result.json`) · **ledger top = 163** (อัปเดตแทนค่า "159/160" ด้านบน) · ยืนยันซ้ำด้วย `e2e/migHistory.cjs` (read-only) · **รอ Owner retest flow ไรเดอร์ทีละสเตป** = `docs/BMB_HANDOFF_NEXT_SESSION_2026-10-27B.md` §2 (ก)
-- คำสั่งตรวจ ledger รอบถัดไป (read-only): `SELECT version FROM supabase_migrations.schema_migrations ORDER BY version DESC LIMIT 3` → top = **160** ณ 2026-10-26 (160 APPLIED ดู §1.3 บน)
+- คำสั่งตรวจ ledger รอบถัดไป (read-only): `SELECT version FROM supabase_migrations.schema_migrations ORDER BY version DESC LIMIT 3` → top = **160** ณ 2026-10-26 (160 APPLIED ดู §1.3 บน) *(อัปเดต 2026-10-27: top = **163** แล้ว — ดู bullet "migration 161/162/163")*
 
 ---
 
