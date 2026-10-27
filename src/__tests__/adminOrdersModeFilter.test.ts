@@ -66,6 +66,8 @@ vi.mock('react-router-dom', () => ({
   Link: (props: { to: string; className?: string; children?: React.ReactNode }) =>
     React.createElement('a', { href: props.to, className: props.className }, props.children),
   useSearchParams: () => [new URLSearchParams('')],
+  // R10 (2026-10-27): AdminOrders ใช้ useNavigate (ยืนยันชำระ → เด้งไป /admin/kitchen)
+  useNavigate: () => () => {},
 }))
 
 import { AdminOrders } from '@/pages/admin/AdminOrders'

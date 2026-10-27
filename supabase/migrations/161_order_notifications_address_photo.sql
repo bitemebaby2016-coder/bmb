@@ -126,6 +126,22 @@ $$;
 GRANT EXECUTE ON FUNCTION public.attach_address_photo(text, text) TO authenticated, service_role;
 
 -- ---------- 3) storage bucket for address photos ----------
+-- storage.foldername: ของจริง (Supabase) มีอยู่แล้ว · CI ephemeral stub ไม่มี →
+-- สร้างเฉพาะเมื่อไม่มี (ไม่แตะของจริง) — policy ด้านล่างใช้หาโฟลเดอร์เจ้าของรูป
+DO $do$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_proc p JOIN pg_namespace n ON n.oid = p.pronamespace
+     WHERE n.nspname = 'storage' AND p.proname = 'foldername'
+  ) THEN
+    CREATE FUNCTION storage.foldername(name text) RETURNS text[]
+    LANGUAGE sql IMMUTABLE AS $fn$
+      SELECT (string_to_array(name, '/'))[1 : GREATEST(array_length(string_to_array(name, '/'), 1) - 1, 0)]
+    $fn$;
+  END IF;
+END
+$do$;
+
 INSERT INTO storage.buckets (id, name, public)
 VALUES ('address-photos', 'address-photos', false)
 ON CONFLICT (id) DO NOTHING;
