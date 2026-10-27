@@ -1,0 +1,33 @@
+{
+  "label": "backlog-audit-settings-sync",
+  "date": "2026-10-27",
+  "method": "read-only code audit (Select-String + file reads) over src/ — ยืนยันว่าทุก settings key มีทั้ง write path (admin) และ read path (client/server) จริง ไม่ใช่ค่าที่ตั้งแล้วไม่มีใครอ่าน",
+  "head_at_audit": "d5b29d4",
+  "scope": "HANDOFF 2026-10-26 §2 ข้อ 7 (Backlog 'ทุกฟีเจอร์แอดมินต้องซิงค์จริง')",
+  "verdict_legend": {
+    "SYNC_VERIFIED_CODE": "มีทั้ง write/read path จริงในโค้ด + มี test กำกับ — เหลือ runtime spot-check ด้วยมือ (guide §15)",
+    "SYNC_CLOSED_PREV": "ปิดรอบก่อน (hours/operating_hours/round toggles) — หลักฐานรอบ 2026-10-26"
+  },
+  "keys": [
+    { "key": "delivery_policy", "storage": "business_settings", "write": ["src/pages/admin/AdminSettings.tsx (generic key editor)", "src/lib/bmbAdminApi_settings.ts:4 (seeded migration 008)"], "read": ["src/lib/platformConfigBootstrap.ts:47 (hydrate dp.*)", "src/config/platformConfig.ts:20-31 (radius/enabled/markup/free_shipping/currency)", "src/components/home/FloatingCart.tsx:28 (free_shipping_enforced)", "server gate FC-5 ERR_BITE_DRIVE_DISABLED"], "tests": ["src/__tests__/platformConfigBootstrap.test.ts", "src/__tests__/configAuthorityMap.test.ts"], "verdict": "SYNC_VERIFIED_CODE" },
+    { "key": "kitchen_location", "storage": "business_settings", "write": ["src/pages/admin/AdminSettings.tsx:121 (migration 008 seed)"], "read": ["src/config/kitchenLocation.ts:6-11 (SINGLE SOURCE OF TRUTH + env override)"], "tests": ["configAuthorityMap.test.ts"], "verdict": "SYNC_VERIFIED_CODE" },
+    { "key": "order_pattern", "storage": "business_settings (template)", "write": ["src/pages/admin/AdminRounds.tsx:6", "src/lib/bmbAdminApi_rounds.ts:286"], "read": ["src/lib/orderPolicy.ts:73-111 (normalizeRoundPattern)", "src/lib/deliveryRoundStatus.ts:30 (round_key sync)", "server migration 144/145 (round + pre_order_cutoff)"], "tests": ["src/__tests__/orderPolicy.test.ts", "src/__tests__/roundsSameDayNoCutoff.test.ts", "contract 144"], "verdict": "SYNC_VERIFIED_CODE" },
+    { "key": "order_policy", "storage": "business_settings", "write": ["src/pages/admin/AdminSettings.tsx:16 (TYPED_FORM_KEYS)"], "read": ["src/lib/orderPolicy.ts (cutoff_hours etc.)", "src/lib/platformConfigBootstrap.ts"], "tests": ["src/__tests__/adminSettingsTypedKeys.test.ts"], "verdict": "SYNC_VERIFIED_CODE" },
+    { "key": "hours", "storage": "business_settings", "write": ["src/pages/admin/AdminSettings.tsx"], "read": ["src/lib/shopHours.ts:2", "src/lib/storeStatus.ts:52", "src/pages/CheckoutPage.tsx:115", "src/pages/HomePage.tsx:115", "server 160 enforce_shop_hours (ERR_STORE_CLOSED) + 039"], "tests": ["src/__tests__/shopHoursGate.test.ts (17 cases)"], "verdict": "SYNC_CLOSED_PREV" },
+    { "key": "operating_hours", "storage": "branches (is_default)", "write": ["src/pages/admin/AdminSettings.tsx:32"], "read": ["src/lib/homeProviders.ts:152", "src/lib/deliveryRoundStatus.ts:30", "src/lib/shopHours.ts:2", "server trg_operating_hours (039)"], "tests": ["src/__tests__/shopHoursGate.test.ts", "src/__tests__/menuScheduleGate.test.ts"], "verdict": "SYNC_CLOSED_PREV" },
+    { "key": "promotion (budget)", "storage": "marketing_rules", "write": ["src/pages/admin/AdminMarketing.tsx:370 PromotionBudgetPanel"], "read": ["src/lib/bmbAdminApi_promotions.ts:22", "server promotions engine (migration 153)"], "tests": ["contract 153"], "verdict": "SYNC_VERIFIED_CODE" },
+    { "key": "loyalty", "storage": "marketing_rules", "write": ["src/pages/admin/AdminMarketing.tsx:372 LoyaltySettingsPanel"], "read": ["src/lib/loyaltyClient.ts (mirror 155)", "src/pages/ProfilePage.tsx:8", "src/pages/RewardsPage.tsx:6", "src/pages/admin/AdminCustomers.tsx:116"], "tests": ["src/__tests__/loyaltyTiers.test.ts", "contract 155"], "verdict": "SYNC_VERIFIED_CODE" },
+    { "key": "referral", "storage": "marketing_rules", "write": ["src/pages/admin/AdminMarketing.tsx:371 ReferralSettingsPanel"], "read": ["src/lib/referralClient.ts (mirror 154)", "src/components/ReferralBox.tsx", "src/pages/CheckoutPage.tsx:43", "src/pages/SharePage.tsx", "src/components/layout/Layout.tsx:12 (?ref= deep-link)"], "tests": ["src/__tests__/referralProgram.test.ts", "contract 154"], "verdict": "SYNC_VERIFIED_CODE" },
+    { "key": "spin", "storage": "marketing_rules", "write": ["src/pages/admin/AdminMarketing.tsx:374 (def :949) SpinSettingsPanel"], "read": ["src/lib/engagementClient.ts:5 (spin_status/spin_reward RPC · server-authoritative · daily cap)", "src/pages/RandomMenuPage.tsx", "src/pages/ViralPage.tsx"], "tests": ["src/__tests__/engagementPlay.test.ts", "contract 156"], "verdict": "SYNC_VERIFIED_CODE" },
+    { "key": "push_config", "storage": "business_settings (admin-managed VAPID)", "write": ["src/pages/admin/AdminSettings.tsx"], "read": ["src/lib/pushService.ts:10 (ผ่าน RPC get_push_config เท่านั้น — ไม่มี key ฝังโค้ด)"], "tests": ["src/__tests__/pushTransport.test.ts"], "verdict": "SYNC_VERIFIED_CODE" },
+    { "key": "social_links", "storage": "business_settings (SOCIAL_LINKS_SETTING_KEY)", "write": ["src/pages/admin/AdminSettings.tsx:10,16 (typed form)"], "read": ["src/lib/socialLinks.ts (getSocialLinks)", "src/components/layout/Footer.tsx:5", "src/pages/ContactPage.tsx:7"], "tests": ["src/__tests__/adminSettingsTypedKeys.test.ts", "src/__tests__/socialAiContinuity.test.ts"], "verdict": "SYNC_VERIFIED_CODE" },
+    { "key": "theater_daily_copy", "storage": "business_settings (THEATER_DAILY_COPY_KEY)", "write": ["src/pages/admin/AdminSettings.tsx:11"], "read": ["src/lib/theaterDailyCopy.ts:6 (7-day rotation)", "src/components/theater/FoodTheater.tsx:65"], "tests": ["src/__tests__/theaterDailyCopy.test.ts"], "verdict": "SYNC_VERIFIED_CODE" }
+  ],
+  "summary": {
+    "total_keys": 13,
+    "sync_verified_code": 11,
+    "sync_closed_prev": 2,
+    "missing_read_or_write": 0,
+    "next": "runtime spot-check ด้วยมือ = docs/BMB_OWNER_ROLE_TEST_GUIDE_2026-10-27.md §15 (แก้ค่าแล้วต้องเห็นผลจริง · คืนค่าเดิมหลังตรวจ)"
+  }
+}
