@@ -16,8 +16,9 @@ import { useCartStore, deriveCartMode } from '@/store/cartStore'
 import { useAuthStore } from '@/store/authStore'
 import { useNotificationStore } from '@/store/notificationStore'
 import { showToast } from '@/components/ui/ToastContainer'
-import { createOrder, orderInputFingerprint, type OrderInput, type OrderResult } from '@/lib/bmbAdminApi_orders'
-import { SubmitKeyRing, describeIdempotencyError } from '@/lib/orderSubmitKey'
+import { createOrderDetailed, orderInputFingerprint, type OrderInput, type OrderResult } from '@/lib/bmbAdminApi_orders'
+import { SubmitKeyRing, describeOrderSubmitError } from '@/lib/orderSubmitKey'
+import { reverseGeocode } from '@/lib/googleMaps'
 import { createPaymentIntent, getPaymentIntents } from '@/lib/paymentGateway'
 import { writeAuditLog } from '@/lib/auditLog'
 import { useLocationStore, isTrustedSource, deliveryPointStatus } from '@/store/locationStore'
@@ -344,6 +345,19 @@ export function CheckoutPage() {
     if (!deliveryPointStatus(deliveryAddress).confirmable) return
     setDeliveryAddress((a) => ({ ...a, confirmed: true }))
     showToast('✅ ยืนยันตำแหน่งจัดส่งแล้ว', 'success')
+    // Owner 2026-10-27: พรีออเดอร์ต้องมีที่อยู่ไม่ว่าง (server trigger
+    // validate_pre_order_delivery = ERR_PRE_ORDER_REQUIRES_ADDRESS) — ถ้าลูกค้า
+    // ยังไม่พิมพ์รายละเอียดที่อยู่ ให้เติมจากที่อยู่ของหมุดแผนที่ให้อัตโนมัติ
+    if (!deliveryAddress.detail.trim() && deliveryAddress.latitude != null && deliveryAddress.longitude != null) {
+      const lat = deliveryAddress.latitude
+      const lng = deliveryAddress.longitude
+      void (async () => {
+        const geo = await reverseGeocode(lat, lng)
+        if (geo?.formattedAddress) {
+          setDeliveryAddress((a) => (a.detail.trim() ? a : { ...a, detail: geo.formattedAddress }))
+        }
+      })()
+    }
   }
 
   // TEN-07: Resolve branch_id from selected delivery_round for multi-branch routing
@@ -407,6 +421,9 @@ export function CheckoutPage() {
       showToast('กรุณาระบุและยืนยันตำแหน่งจัดส่งบนแผนที่ก่อนสั่งซื้อ', 'error')
       return
     }
+    // Owner 2026-10-27: server trigger validate_pre_order_delivery ปฏิเสธพรีออเดอร์ที่
+    // dropoff_detail ว่าง (ERR_PRE_ORDER_REQUIRES_ADDRESS — อาการ "สั่งพรีออเดอร์ล้มเหลว")
+    // → ไม่บล็อก แต่เติมที่อยู่จากหมุดที่ลูกค้ายืนยันแล้วอัตโนมัติ (ดู orderInput ด้านล่าง)
     if (!selectedRoundId) {
       showToast(fulfillment === 'pickup' ? 'กรุณาเลือกช่วงเวลารับอาหาร' : 'กรุณาเลือกรอบการจัดส่ง', 'error')
       return
@@ -564,7 +581,14 @@ export function CheckoutPage() {
       delivery_round_id: selectedRoundId,
       // ✅ 127: pickup => dedicated canonical path (create_pickup_order_i, fee=0)
       delivery_method: fulfillment === 'pickup' ? 'pickup' : 'self_delivery',
-      delivery_address: fulfillment === 'pickup' ? 'รับที่ร้าน (Pickup)' : deliveryAddress.detail,
+      // Owner 2026-10-27: พรีออเดอร์ต้องมีที่อยู่ไม่ว่าง (server
+      // validate_pre_order_delivery) — ถ้ายังไม่พิมพ์รายละเอียด ใช้ "หมุดปัก" ที่
+      // ลูกค้ายืนยันบนแผนที่แล้ว (ไม่บล็อกการสั่ง — อาการเดิมคือ "สร้างออเดอร์ล้มเหลว")
+      delivery_address:
+        fulfillment === 'pickup'
+          ? 'รับที่ร้าน (Pickup)'
+          : deliveryAddress.detail.trim() ||
+            `หมุดปัก (${deliveryAddress.latitude}, ${deliveryAddress.longitude})`,
       // guarded above: confirmed + trusted coords are non-null at this point
       // (pickup path ignores coords — server derives the pickup point)
       dropoff_latitude: deliveryAddress.latitude as number,
@@ -591,7 +615,19 @@ export function CheckoutPage() {
     const submitFp = orderInputFingerprint(orderInput)
     let order: OrderResult | null = null
     try {
-      order = await createOrder({ ...orderInput, client_submit_key: submitKeysRef.current.keyFor(submitFp) })
+      const outcome = await createOrderDetailed({ ...orderInput, client_submit_key: submitKeysRef.current.keyFor(submitFp) })
+      order = outcome.result
+      if (!order) {
+        // Owner 2026-10-27: บอก "สาเหตุจริง" จาก server (ERR_*) แทน "ล้มเหลว กรุณาลองใหม่"
+        // (ทุกเคสเดิมกลายเป็นข้อความเดียว — ลูกค้าไม่รู้ว่าต้องแก้อะไร)
+        if (outcome.errorCode === 'ERR_STORE_CLOSED') {
+          showToast('ร้านปิดตามเวลาที่แอดมินตั้งแล้ว — เปิดใหม่ตามเวลาเปิดร้าน หรือสั่งจองล่วงหน้า', 'error')
+        } else {
+          showToast(describeOrderSubmitError(outcome.errorCode ?? undefined), 'error')
+        }
+        setIsProcessing(false)
+        return
+      }
     } catch (e) {
       const code = (e as { code?: string })?.code
       // CONFLICT/KEY_INVALID can never succeed with THIS key → drop it so the
@@ -602,12 +638,7 @@ export function CheckoutPage() {
         return
       }
       if (code === 'ERR_IDEMPOTENCY_CONFLICT' || code === 'ERR_IDEMPOTENCY_KEY_INVALID') submitKeysRef.current.release(submitFp)
-      showToast(describeIdempotencyError(code), 'error')
-      setIsProcessing(false)
-      return
-    }
-    if (!order) {
-      showToast('สร้างออเดอร์ล้มเหลว กรุณาลองใหม่', 'error')
+      showToast(describeOrderSubmitError(code), 'error')
       setIsProcessing(false)
       return
     }

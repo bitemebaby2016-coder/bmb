@@ -41,6 +41,24 @@ function currentCouponLines(): CouponLine[] {
 }
 
 /**
+ * ยิงตรวจคูปอง + retry อัตโนมัติ 1 ครั้งเมื่อโหลดข้อมูลไม่สำเร็จ (เครือข่ายชั่วคราว) —
+ * Owner 2026-10-27 "คูปองหน้าเช็คเอาท์ยังเออเร่อ ต้องโหลดซ้ำ/กดลองอีกครั้งถึงจะใช้ได้":
+ * ครั้งแรกที่พลาดจาก network ให้ระบบลองซ้ำเอง ไม่ต้องให้ลูกค้ากด/รีเฟรชเอง
+ */
+async function fetchEvaluationResilient(
+  code: string | null | undefined,
+  subtotal: number,
+  opts?: { lines?: CouponLine[] },
+): Promise<CouponEvaluation> {
+  let result = await fetchCouponEvaluation(code, subtotal, opts)
+  if (!result.ok && result.reason === 'load_failed') {
+    await new Promise((resolve) => setTimeout(resolve, 500))
+    result = await fetchCouponEvaluation(code, subtotal, opts)
+  }
+  return result
+}
+
+/**
  * Apply a code to the shared cart store — the ONE write path for every surface.
  * - rule ok        → code + applied promotion land in the cart immediately
  * - below_min      → code kept as PENDING (re-checks as the cart grows) but no
@@ -49,7 +67,7 @@ function currentCouponLines(): CouponLine[] {
  */
 export async function applyCouponCode(code: string): Promise<CouponEvaluation> {
   const before = useCartStore.getState()
-  const result = await fetchCouponEvaluation(code, before.subtotal, {
+  const result = await fetchEvaluationResilient(code, before.subtotal, {
     lines: currentCouponLines(),
   })
   const s = useCartStore.getState()
@@ -86,8 +104,15 @@ export async function revalidateCouponForSubmit(
 ): Promise<{ ok: true; discountAmount: number } | { ok: false; message: string }> {
   const code = useCartStore.getState().couponCode.trim()
   if (!code) return { ok: true, discountAmount: 0 }
-  const check = await fetchCouponEvaluation(code, subtotal, { lines: currentCouponLines() })
-  if (!check.ok) return { ok: false, message: describeCouponResult(check) }
+  const check = await fetchEvaluationResilient(code, subtotal, { lines: currentCouponLines() })
+  if (!check.ok) {
+    // Owner 2026-10-27: เครือข่ายขัดข้อง ≠ โค้ดใช้ไม่ได้ — บอกให้กด "ใช้โค้ด" อีกครั้ง
+    // (เดิมปนเป็น "ใช้โค้ดส่วนลดไม่ได้" ทุกเคสจนดูเหมือนคูปองพัง)
+    if (check.reason === 'load_failed') {
+      return { ok: false, message: 'ยังตรวจโค้ดส่วนลดไม่ได้ (เครือข่ายขัดข้อง) — กรุณากด "ใช้โค้ด" อีกครั้ง' }
+    }
+    return { ok: false, message: describeCouponResult(check) }
+  }
   const s = useCartStore.getState()
   s.setAppliedPromotion(check.promo)
   return { ok: true, discountAmount: check.discountAmount }
@@ -111,11 +136,14 @@ export function CouponBox() {
     let cancelled = false
     const code = useCartStore.getState().couponCode
     if (!code.trim() || useCartStore.getState().appliedPromotion) return
-    void fetchCouponEvaluation(code, useCartStore.getState().subtotal).then((result) => {
+    void fetchEvaluationResilient(code, useCartStore.getState().subtotal).then((result) => {
       if (cancelled) return
       const s = useCartStore.getState()
       if (result.ok) {
         s.setAppliedPromotion(result.promo)
+      } else if (result.reason === 'load_failed') {
+        // Owner 2026-10-27: โหลดไม่สำเร็จ (เครือข่าย) = เก็บโค้ดไว้ ไม่ล้าง/ไม่เด้ง error —
+        // retry ไปแล้ว 1 ครั้ง รอบหน้า subtotal เปลี่ยน/กดใช้โค้ดอีกครั้งจะตรวจใหม่เอง
       } else if (result.reason !== 'below_min') {
         s.setCouponCode('')
         showToast(describeCouponResult(result), 'info')

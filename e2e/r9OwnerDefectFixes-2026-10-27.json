@@ -1,0 +1,52 @@
+{
+  "session": "R9 — Owner defect fixes from self-testing (2026-10-27)",
+  "head_before": "2107ac6",
+  "repro_tool": "e2e/r9OrderRepro.cjs + e2e/r9OrderRepro.sql (BEGIN..ROLLBACK — zero persisted)",
+  "repro_results_before_fix": {
+    "S1_pure_preorder": "ok=true",
+    "S2_mixed_preorder": "ok=true",
+    "S3_sameday_general": "ok=true",
+    "S4_sameday_food_available_same_day_false": "ERR_PRODUCT_MODE_NOT_ALLOWED",
+    "S5_sameday_mixed": "ERR_PRODUCT_MODE_NOT_ALLOWED",
+    "S6_preorder_empty_address": "ERR_PRE_ORDER_REQUIRES_ADDRESS: Pre-order requires a delivery address"
+  },
+  "root_causes_proven": {
+    "create_order_fails_preorder_and_mixed": "validate_pre_order_delivery trigger rejects PRE_ORDER when orders.dropoff_detail='' — client sent deliveryAddress.detail which is empty when the customer only confirms the map pin. UI showed only 'สร้างออเดอร์ล้มเหลว กรุณาลองใหม่' (S6).",
+    "create_order_fails_same_day": "product mode gate (ERR_PRODUCT_MODE_NOT_ALLOWED) for products with available_same_day=false + UI forced those products into the pre-order path (button hidden) = 'สั่งแซมเดย์กลายเป็นจองล่วงหน้า'.",
+    "preorder_display_2_vs_20": "menuTabItems pre-order tab counted the WHOLE catalog (20 sellable) while the admin menu_schedule has 2 items/day — two different sources.",
+    "coupon_error_needs_reload": "load_failed (network) was treated as 'code invalid' — cleared the code + error toast; retry required.",
+    "status_missing_preorder_vocabulary": "getServerStatusLabel accepted mode but ignored it; OrderTimeline used one label set."
+  },
+  "fixes": {
+    "order_entry_no_auto_checkout": "src/lib/orderEntry.ts — removed navigate('/checkout?mode=pre-order'); stay on menu so customer can add more items (Owner: 'อย่าเพิ่งส่งไปเช็คเอาท์').",
+    "address_never_empty": "src/pages/CheckoutPage.tsx — submit fills delivery_address from the confirmed pin ('หมุดปัก (lat, lng)') when detail empty; handleConfirmLocation pre-fills detail via reverseGeocode.",
+    "error_transparency": "src/lib/bmbAdminApi_orders.ts createOrderDetailed (errorCode) + src/lib/orderSubmitKey.ts describeOrderSubmitError (Thai message per ERR_* code) — no more generic 'ล้มเหลว' for known causes.",
+    "product_identity_schedule_based": "src/components/FoodMenuCard.tsx (calendar badge = 'จองล่วงหน้า', else '⚡ สั่งทันที' in both tabs + ride-along hint) + src/lib/catalogStructure.ts menuTabItems(+scheduleMap) + src/pages/MenuPage.tsx tab split/counts — pre-order == menu_schedule (kills 2 vs 20).",
+    "coupon_retry": "src/components/CouponBox.tsx fetchEvaluationResilient (1 auto retry on load_failed) + load_failed no longer clears the code + honest message.",
+    "status_labels_per_mode": "src/lib/orderVocabulary.ts SERVER_STATUS_LABEL_TH_PRE_ORDER + getServerStatusLabel(mode) now switches + src/components/customer/OrderTimeline.tsx mode prop + OrderTrackPage passes mode."
+  },
+  "data_change_production": {
+    "what": "UPDATE products SET available_same_day=true WHERE is_available AND NOT archived AND NOT on a published upcoming menu_schedule row",
+    "rows_affected": 14,
+    "why": "Owner 2026-10-27: 'สินค้าต้องพร้อมส่งทันทีถ้าอยู่ในเวลาเปิดร้าน' — non-calendar products must be same-day orderable; server mode gate rejected them (S4)",
+    "rollback": "UPDATE products SET available_same_day=false WHERE id IN ('prod-5','prod-4','prod-1791769591910-vy5ad7','prod-1791769642687-89fvpq','prod-1792810253606-0x3ycg','prod-1789952342087-ian4a1','prod-1791986253967-dwyh09','prod-1791957617066-d06wwe','prod-1791769408686-9p0qp6','prod-1789610117076-2p5e8u','prod-1789607383214-t8rm95','prod-1','prod-2','prod-1791940362962-on44by')",
+    "calendar_products_unchanged": "products on published upcoming menu_schedule keep available_same_day=false (pre-order identity = menu_schedule)"
+  },
+  "repro_results_after_fix": {
+    "S3_sameday_general_now_flipped_food": "ok=true (ลุยสวนหมูสับเห็ดหอม — was available_same_day=false)",
+    "S6_preorder_empty_address": "still ERR_PRE_ORDER_REQUIRES_ADDRESS server-side (by design) — client now auto-fills the address so this path is unreachable from the UI",
+    "S4_note": "S4/S5 still reject SAME_DAY on calendar products — correct per model (calendar = pre-order only; UI never offers same-day there)"
+  },
+  "validation": {
+    "targeted_vitest": "~180 tests green across all files referencing changed modules (checkout/menu/cart/coupon/labels/entry)",
+    "tsc": "clean",
+    "vite_build": "success (4.78s + PWA)",
+    "eslint_changed_files": "clean",
+    "full_suite": "runs in CI (Test + Lint + Build) on push"
+  },
+  "assumptions_for_owner": [
+    "ตัวตนสินค้าใหม่: มีใน menu_schedule (เมนูตาราง) = พรีออเดอร์ ('จองล่วงหน้า') · ไม่มี = 'สั่งทันที' (ส่งวันนี้ในเวลาเปิดร้าน · เข้ารอบพรีอัตโนมัติถ้าตะกร้ามีพรีอยู่แล้ว)",
+    "เมนูตาราง (วันนี้) = สั่งได้แบบจองล่วงหน้าในรอบของวันนั้น (ไม่มีปุ่มสั่งทันทีบนเมนูตาราง — ถ้าต้องการให้เพิ่ม แจ้งได้)",
+    "เลขข้อ CAP-07/08/13/16/17/19 + L-11 LED ยังรอท่านยืนยัน (คู่มือ §16)"
+  ]
+}

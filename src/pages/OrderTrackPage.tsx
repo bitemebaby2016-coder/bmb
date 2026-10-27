@@ -222,8 +222,9 @@ export function OrderTrackPage() {
           <span className="badge">ชำระเงิน: {order.payment_status}</span>
         </div>
 
-        {/* M1+A5: canonical progress steps — one component, one vocabulary */}
-        <OrderTimeline status={status} />
+        {/* M1+A5: canonical progress steps — one component, one vocabulary
+            (Owner 2026-10-27: ป้ายสถานะบอกทั้ง sameday/preorder — ส่ง mode เข้าไปด้วย) */}
+        <OrderTimeline status={status} mode={mode} />
 
         {/* Current status — strictly what the server says */}
         <div className="bg-brand-bg p-4 rounded-xl mb-4" data-testid="track-status">

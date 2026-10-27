@@ -37,10 +37,11 @@ describe('orderEntry.ts — AddToCartResult ต้องถูกเช็คก
   })
 
   it('handlePreOrder: gate ต้องมาก่อน navigate ไป checkout', () => {
-    expect(navigateAt).toBeGreaterThan(-1)
-    expect(gateAt).toBeLessThan(navigateAt)
+    // Owner 2026-10-27 "อย่าเพิ่งส่งไปเช็คเอาท์" — ยกเลิก navigate อัตโนมัติไป /checkout
+    expect(navigateAt).toBe(-1)
+    expect(gateAt).toBeGreaterThan(-1)
     // navigate เฉพาะ PRE_ORDER เท่านั้น (SAME_DAY อยู่หน้าเดิมตาม UX เดิม)
-    expect(entrySrc).toContain("if (mode === 'PRE_ORDER') navigate('/checkout?mode=pre-order')")
+    expect(entrySrc).not.toContain("navigate('/checkout?mode=pre-order')")
   })
 
   it('ทุกหน้าสั่งซื้อ delegate เส้นทางเดียว — ไม่มีสำเนา flow ซ้ำในหน้า', () => {

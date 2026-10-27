@@ -179,7 +179,26 @@ export const SERVER_STATUS_LABEL_TH: Record<ServerOrderStatus, string> = {
 
 export function getServerStatusLabel(server: string, mode: OrderMode = 'SAME_DAY'): string {
   if (!isServerOrderStatus(server)) return server
-  return SERVER_STATUS_LABEL_TH[server]
+  return mode === 'PRE_ORDER' ? SERVER_STATUS_LABEL_TH_PRE_ORDER[server] : SERVER_STATUS_LABEL_TH[server]
+}
+
+/**
+ * Owner 2026-10-27 ("การแสดงสถานะออเดอร์ ต้องบอกทั้งของ sameday และ preorder"):
+ * ป้ายสถานะของพรีออเดอร์แยกชุดจากแซมเดย์ (BOOKED→ALLOCATED→BATCH ฝั่ง PRE_ORDER ใน
+ * SERVER_TO_CLIENT ที่เดิมไม่มีใครใช้) — ยังคงอยู่ใน orderVocabulary ที่เดียว
+ * (A5: ทุก step ห้ามป้ายซ้ำกัน) · ปลายทาง terminal ใช้ป้ายเดียวกันทั้งสองโหมด
+ */
+export const SERVER_STATUS_LABEL_TH_PRE_ORDER: Record<ServerOrderStatus, string> = {
+  pending: 'จองแล้ว (รอยืนยัน)',
+  confirmed: 'ยืนยันรอบจัดส่งแล้ว',
+  preparing: 'จัดทำรอบพรีออเดอร์',
+  ready_for_dispatch: 'พร้อมส่ง',
+  dispatched: 'เริ่มจัดส่ง',
+  in_transit: 'กำลังเดินทาง',
+  arrived: 'ถึงปลายทาง',
+  delivered: 'ส่งสำเร็จ',
+  cancelled: 'ยกเลิก',
+  failed: 'ส่งไม่สำเร็จ',
 }
 
 export const PROVIDER_TO_SERVER: Record<ProviderOrderStatus, ServerOrderStatus> = {

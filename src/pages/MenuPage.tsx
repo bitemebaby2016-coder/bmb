@@ -121,18 +121,18 @@ export function MenuPage() {
   // "ทั้งหมด" เท่านั้น (เดิมกรองซ้อนสองชั้น ทำให้กดหัวข้อ "จองล่วงหน้า / พรีออเดอร์"
   // แล้วเจอของไม่ครบ = งานซ้ำสองระบบแย่งกันกรอง)
   const filtered = products.filter((p) => {
-    const isSame = p.available_same_day ?? !p.is_preorder
+    const isCalendar = !!scheduleMap[p.id] // Owner 2026-10-27: พรีออเดอร์ = เมนูตาราง (menu_schedule)
     const matchCat = selectedCategory === 'all' || String(p.category_id) === selectedCategory
     if (!matchCat) return false
     if (selectedCategory === 'all') {
-      if (menuTab === 'same-day' && !isSame) return false
-      // Feature A (Owner 2026-10-25): แท็บจองล่วงหน้า = เมนูปฏิทิน + สินค้าทั่วไป
-      // จองร่วมรอบเดียวกันในตะกร้าเดียวกันได้ (general ride-along — server 142 G2 รองรับอยู่แล้ว)
-      // ลำดับโชว์: เมนูปฏิทิน (มีป้ายวัน) มาก่อน สินค้าทั่วตามาทีหลัง (sort ด้านล่าง)
+      // แท็บโหมด = มุมมอง "ทั้งหมด" เท่านั้น (Owner 2026-10-18) — พรีออเดอร์ = เฉพาะ
+      // เมนูปฏิทิน (ตรงกับหน้าเมนูตารางแอดมิน) · แท็บวันนี้ = เมนูสั่งทันทีที่เหลือ
+      if (menuTab === 'same-day' && isCalendar) return false
+      if (menuTab === 'pre-order' && !isCalendar) return false
     }
     return !p.archived && p.name.toLowerCase().includes(searchQuery.toLowerCase())
   })
-  // Feature A: ในแท็บจองล่วงหน้า จัดเมนูปฏิทินไว้ก่อน สินค้าทั่วไป (จองร่วมรอบ) ตามหลัง
+  // แท็บจองล่วงหน้า: เรียงเมนูปฏิทินตามวันจัดส่ง (ใกล้ก่อน) — คงไว้ให้เสถียร
   const ordered = menuTab === 'pre-order'
     ? [...filtered].sort((a, b) => Number(!!scheduleMap[b.id]) - Number(!!scheduleMap[a.id]))
     : filtered
@@ -195,7 +195,8 @@ export function MenuPage() {
         type: 'info',
       }),
       onAdded: () => {
-        showToast('วันจัดส่งถูกกำหนดโดยเมนูรอบพิเศษของแอดมิน — เลือกรอบ/ที่อยู่ แล้วชำระเงินเพื่อยืนยันการจอง', 'info')
+        // Owner 2026-10-27: อย่าเพิ่งส่งไปเช็คเอาท์ — เพิ่มเมนูอื่น/สั่งทันทีเข้ารอบเดียวกันต่อได้
+        showToast('เพิ่มลงตะกร้าแล้ว — เพิ่มเมนูอื่น/สั่งทันทีเข้ารอบเดียวกันได้อีก แล้วไปที่ตะกร้าเพื่อเช็คเอาท์ (วันจัดส่งถูกกำหนดโดยเมนูรอบพิเศษของแอดมิน)', 'info')
       },
     })
   }
@@ -206,11 +207,11 @@ export function MenuPage() {
   // (L-7: ลำดับ = displayRank → ส่งวันนี้ → จองล่วงหน้า → สุขภาพ → ...)
   const chips = headingChips(categories, products)
   // ✅ Phase 3B: canonical mode columns (migration 023) — alias fallback kept.
-  // L-4: ป้ายตัวเลขบนแท็บ = จำนวนที่แท็บนั้น "แสดงจริง" (สูตรเดียวกับ list —
-  // เดิมนับคนละสูตร: same-day นับเฉพาะ is_available แต่ list โชว์หมด · pre-order
-  // นับเฉพาะเมนูปฏิทิน ทั้งที่ Feature A โชว์ทั้งแท็บ → ตัวเลขเพี้ยน)
-  const sameDayCount = menuTabItems(products, 'same-day', searchQuery).length
-  const preOrderCount = menuTabItems(products, 'pre-order', searchQuery).length
+  // L-4: ป้ายตัวเลขบนแท็บ = จำนวนที่แท็บนั้น "แสดงจริง" (สูตรเดียวกับ list)
+  // Owner 2026-10-27: นับด้วย menu_schedule เดียวกับ list — พรีออเดอร์ = เมนูตาราง
+  // (ปิดจุด "บางหน้าบอก 2 บางหน้าบอก 20")
+  const sameDayCount = menuTabItems(products, 'same-day', searchQuery, scheduleMap).length
+  const preOrderCount = menuTabItems(products, 'pre-order', searchQuery, scheduleMap).length
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-6 bg-brand-bg min-h-screen">
@@ -275,11 +276,10 @@ export function MenuPage() {
             <h3 id={`catsec-${gi}`} className="font-semibold text-brand-accent mb-2">{category.icon ? `${category.icon} ` : ''}{category.name}</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {catProducts.map((product) => {
-                // Feature A (Owner 2026-10-25): ในแท็บจองล่วงหน้า สินค้าทั่วไปก็เป็นปุ่มจองได้ —
-                // เพิ่มเข้าตะกร้าเป็น PRE_ORDER ร่วมรอบเดียวกับเมนูปฏิทิน (general ride-along)
-                const mode: OrderMode = menuTab === 'pre-order' || (product.available_preorder ?? product.is_preorder) ? 'pre-order' : 'same-day'
-                // Owner 2026-10-19: พรีออเดอร์ที่เลยวันจัดส่งไปแล้ว → แสตมป์ out of stock
+                // Owner 2026-10-27: ปุ่มของการ์ดตัดสินจาก "ป้ายปฏิทิน" (scheduledDate)
+                // — ไม่มีป้าย = เมนูสั่งทันที (เข้ารอบพรีออเดอร์อัตโนมัติเมื่อตะกร้ามีพรี)
                 const schedDate = scheduleMap[product.id]
+                const mode: OrderMode = schedDate ? 'pre-order' : 'same-day'
                 const preorderExpired = Boolean(
                   (product.available_preorder ?? product.is_preorder) &&
                   schedDate && schedDate < new Date().toLocaleDateString('en-CA'),

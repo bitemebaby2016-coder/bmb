@@ -14,10 +14,11 @@
 
 import {
   SERVER_ORDER_STATUSES,
-  SERVER_STATUS_LABEL_TH,
+  getServerStatusLabel,
   isServerOrderStatus,
   type ServerOrderStatus,
 } from '@/lib/orderVocabulary'
+import type { OrderMode } from '@/config/platformConfig'
 
 /** Customer-visible forward chain = server enum minus terminal aborts. */
 const FORWARD_CHAIN: readonly ServerOrderStatus[] = SERVER_ORDER_STATUSES.filter(
@@ -40,9 +41,11 @@ const STEP_ICONS: Record<ServerOrderStatus, string> = {
 export interface OrderTimelineProps {
   /** Canonical server status (`orders.status`) — the only input. */
   status: string
+  /** Owner 2026-10-27: ป้ายสถานะแยกชุด sameday/preorder (default = SAME_DAY) */
+  mode?: OrderMode
 }
 
-export function OrderTimeline({ status }: OrderTimelineProps) {
+export function OrderTimeline({ status, mode = 'SAME_DAY' }: OrderTimelineProps) {
   if (!isServerOrderStatus(status)) {
     // Unknown enum value — show what the server sent, never invent a step.
     return (
@@ -52,7 +55,7 @@ export function OrderTimeline({ status }: OrderTimelineProps) {
     )
   }
 
-  const label = SERVER_STATUS_LABEL_TH[status]
+  const label = getServerStatusLabel(status, mode)
 
   // Terminal aborts render as an end card — no fabricated progress bar.
   if (status === 'cancelled' || status === 'failed') {
@@ -79,7 +82,7 @@ export function OrderTimeline({ status }: OrderTimelineProps) {
               {STEP_ICONS[step]}
             </div>
             <span data-testid="order-timeline-step" className={`text-xs mt-2 text-center ${index <= activeIdx ? 'text-brand-primary font-bold' : 'text-brand-muted'}`}>
-              {SERVER_STATUS_LABEL_TH[step]}
+              {getServerStatusLabel(step, mode)}
             </span>
           </div>
         ))}

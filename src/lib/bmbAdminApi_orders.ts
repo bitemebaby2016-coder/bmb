@@ -324,7 +324,20 @@ function buildCreatePayload(input: OrderInput) {
   }
 }
 
-export async function createOrder(input: OrderInput): Promise<OrderResult | null> {
+/** ผลลัพธ์แบบมีสาเหตุ — CheckoutPage ใช้ (Owner 2026-10-27: "ล้มเหลว" ต้องบอกเหตุจริง) */
+export interface CreateOrderOutcome {
+  result: OrderResult | null
+  /** โค้ด ERR_* จาก server เมื่อ RPC ปฏิเสธ (null = ปัญหาเชื่อมต่อ/ไม่ทราบสาเหตุ) */
+  errorCode: string | null
+}
+
+/** ดึงโค้ด ERR_* ออกจากข้อความ error ของ server (เช่น "ERR_CUTOFF_PASSED: ...") */
+function extractServerErrorCode(message: unknown): string | null {
+  const m = /ERR_[A-Z0-9_]+/.exec(String(message ?? ''))
+  return m ? m[0] : null
+}
+
+export async function createOrderDetailed(input: OrderInput): Promise<CreateOrderOutcome> {
   // 127 pickup: dedicated canonical path (fee=0 + pickup_code server-side).
   if (input.delivery_method === 'pickup') {
     const { data, error } = await supabase.rpc('create_pickup_order_i', {
@@ -335,9 +348,9 @@ export async function createOrder(input: OrderInput): Promise<OrderResult | null
       const idem = extractIdempotencyErrorCode(error)
       if (idem) throw new OrderSubmitError(idem)
       console.error('[createOrder:pickup] RPC error:', error)
-      return null
+      return { result: null, errorCode: extractServerErrorCode(error.message) }
     }
-    return data as OrderResult
+    return { result: data as OrderResult, errorCode: null }
   }
 
   const payload = {
@@ -355,9 +368,14 @@ export async function createOrder(input: OrderInput): Promise<OrderResult | null
     const idem = extractIdempotencyErrorCode(error)
     if (idem) throw new OrderSubmitError(idem)
     console.error('[createOrder] RPC error:', error)
-    return null
+    return { result: null, errorCode: extractServerErrorCode(error.message) }
   }
-  return data as OrderResult
+  return { result: data as OrderResult, errorCode: null }
+}
+
+/** สัญญาเดิม (POS/legacy caller): คืน result หรือ null — ไม่เปิดเผยสาเหตุ */
+export async function createOrder(input: OrderInput): Promise<OrderResult | null> {
+  return (await createOrderDetailed(input)).result
 }
 // P0-6 (2026-09-18): order status changes go through the state machine RPC
 // `transition_order_status` (allow-list validated server-side + trigger guard).

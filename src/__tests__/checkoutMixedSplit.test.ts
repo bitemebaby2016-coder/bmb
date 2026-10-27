@@ -41,6 +41,12 @@ const m = vi.hoisted(() => ({
 vi.mock('@/components/ui/ToastContainer', () => ({ showToast: m.showToast }))
 vi.mock('@/lib/bmbAdminApi_orders', () => ({
   createOrder: m.createOrder,
+  // Owner 2026-10-27: CheckoutPage ย้ายไปใช้ createOrderDetailed (คืน errorCode) —
+  // mock นี้ delegate กลับ m.createOrder เพื่อคง assertion เดิมทุกตัว
+  createOrderDetailed: async (input: unknown) => {
+    const result = await m.createOrder(input)
+    return { result: result ?? null, errorCode: null }
+  },
   orderInputFingerprint: (input: unknown) => JSON.stringify(input),
   OrderSubmitError: class extends Error {
     code: string

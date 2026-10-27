@@ -65,11 +65,12 @@ export interface OrderEntryOptions {
  *
  * Flow: หาสินค้า -> order builder (topping/upsell) -> addItem(mode)
  *       -> gate 'added' (คืนทันทีถ้าไม่สำเร็จ) -> เพิ่ม recommended -> toast สำเร็จ
- *       -> PRE_ORDER ค่อย navigate ไป /checkout?mode=pre-order
- *       (SAME_DAY คงอยู่หน้าเดิม ลูกค้าค่อยไป /cart เองตาม UX เดิม)
+ *       -> คงอยู่หน้าเดิมทั้งสองโหมด (Owner 2026-10-27: "อย่าเพิ่งส่งไปเช็คเอาท์ ให้มีปุ่ม
+ *          เพิ่มรายการอาหารอื่น ๆ ใส่ตะกร้าด้วยได้") — ลูกค้าเพิ่มเมนูอื่น/สั่งทันทีเข้ารอบ
+ *          เดียวกันต่อได้ แล้วค่อยไป /cart -> /checkout เองเมื่อพร้อม
  */
 export function runOrderBuilder(opts: OrderEntryOptions): void {
-  const { productId, products, mode, addItem, toast, navigate, notFound, blockedToast, onAdded } = opts
+  const { productId, products, mode, addItem, toast, notFound, blockedToast, onAdded } = opts
   const product = products.find((p) => p.id === productId)
   if (!product) {
     toast(notFound, 'error')
@@ -92,6 +93,8 @@ export function runOrderBuilder(opts: OrderEntryOptions): void {
     }
     for (const rec of result.recommended) addItem(rec, 1, {}, mode)
     onAdded?.(result)
-    if (mode === 'PRE_ORDER') navigate('/checkout?mode=pre-order')
+    // Owner 2026-10-27: ไม่ navigate อัตโนมัติ — อยู่หน้าเมนูต่อเพื่อเพิ่มรายการอื่น
+    // (ตะกร้า/ปุ่ม FloatingCart พาไป /cart -> /checkout ได้ตลอด)
+    void opts.navigate // คงสัญญา interface ไว้ (หน้ายังส่ง navigate มาให้)
   })
 }

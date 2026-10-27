@@ -49,13 +49,20 @@ describe('menuTabItems — ป้ายตัวเลขบนแท็บ = �
     expect(menuTabItems(catalog, 'same-day', 'dual').map((p) => p.id)).toEqual(['dual'])
     expect(menuTabItems(catalog, 'pre-order', 'zzz')).toEqual([])
   })
+
+  it('Owner 2026-10-27: มี scheduleMap = พรีออเดอร์กับเมนูตารางอันเดียวกัน — pre-order tab = เมนูปฏิทินเท่านั้น', () => {
+    // สองเมนูบนตาราง (ป้ายปฏิทิน) — ปิดจุด "บางหน้าบอก 2 บางหน้าบอก 20"
+    const map = { 'pre-only': '2026-10-28', 'same-only': '2026-10-28' }
+    expect(menuTabItems(catalog, 'pre-order', '', map).map((p) => p.id)).toEqual(['same-only', 'pre-only'])
+    expect(menuTabItems(catalog, 'same-day', '', map).map((p) => p.id)).toEqual(['dual', 'sold-out'])
+  })
 })
 
 describe('L-4 source — /menu: chips ครบทุกหัวข้อ + ป้ายแท็บถูกทั้งสองโหมด', () => {
 
   it('MenuPage ใช้ menuTabItems นับทั้งสองแท็บ (ไม่ใช่สูตรคนละชนิดกับ list อีกต่อไป)', () => {
-    expect(menuPageSrc).toContain("menuTabItems(products, 'same-day', searchQuery).length")
-    expect(menuPageSrc).toContain("menuTabItems(products, 'pre-order', searchQuery).length")
+    expect(menuPageSrc).toContain("menuTabItems(products, 'same-day', searchQuery, scheduleMap).length")
+    expect(menuPageSrc).toContain("menuTabItems(products, 'pre-order', searchQuery, scheduleMap).length")
     // สูตรเดิมที่เพี้ยนต้องหายไป
     expect(menuPageSrc).not.toContain('products.filter(p => (p.available_same_day ?? !p.is_preorder) && p.is_available).length')
     expect(menuPageSrc).not.toContain('products.filter(p => !!scheduleMap[p.id]).length')
@@ -69,8 +76,10 @@ describe('L-4 source — /menu: chips ครบทุกหัวข้อ + ป
   it('FoodMenuCard รับ prop tab — ในแท็บจองล่วงหน้าซ่อนปุ่ม "สั่งเลยวันนี้" (โหมดถูกทั้งสองแท็บ)', () => {
     expect(menuPageSrc).toContain('tab={menuTab}')
     expect(foodMenuCardSrc).toContain("tab?: 'same-day' | 'pre-order'")
-    expect(foodMenuCardSrc).toContain('&& !preOrderTab && (')
-    expect(foodMenuCardSrc).toContain('const preOrderTab =')
+    // Owner 2026-10-27: ปุ่มไม่ผูกกับแท็บแล้ว — มีป้ายปฏิทิน (เมนูตาราง) = "จองล่วงหน้า",
+    // ไม่มีป้าย = "สั่งทันที" ทุกแท็บ (preOrderTab ถูกถอดออกตามคำสั่งใหม่)
+    expect(foodMenuCardSrc).toContain('scheduledDate ? (')
+    expect(foodMenuCardSrc).toContain('⚡ สั่งทันที')
   })
 
   it('หน้าแรก: แท็บลอย (ทั้งหมด/ส่งวันนี้/พรีออเดอร์) อยู่นอก guard chips.length — ห้ามหายเมื่อไม่มี chips', () => {

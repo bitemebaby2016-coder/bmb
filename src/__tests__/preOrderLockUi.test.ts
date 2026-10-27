@@ -32,9 +32,11 @@ describe('L-8 — ปุ่มจองสีเทากดไม่ได้ +
     expect(categorySectionsSrc).toContain('btn btn-outline btn-sm w-full btn-locked')
   })
 
-  it('FoodMenuCard: ทุก branch ที่กดไม่ได้ = disabled + btn-locked', () => {
+  it('FoodMenuCard: ปุ่มกดไม่ได้ = disabled + btn-locked (เลยรอบ = แสตมป์ out of stock)', () => {
     expect(foodMenuCardSrc).toContain('btn-locked')
-    expect(foodMenuCardSrc).toContain('type="button" disabled data-testid="pre-order-btn-unavailable"')
+    // Owner 2026-10-27 (ตัวตนสินค้า = เมนูตาราง): สินค้านอกตารางไม่ใช่พรีออเดอร์ —
+    // ไม่มีปุ่ม "ยังไม่ลงปฏิทิน" แล้ว เปลี่ยนเป็นปุ่ม "สั่งทันที" ทุกแท็บแทน
+    expect(foodMenuCardSrc).toContain('⚡ สั่งทันที')
     expect(foodMenuCardSrc).toContain('preorderExpired ? \'btn-locked\'')
   })
 

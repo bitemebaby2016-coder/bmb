@@ -35,7 +35,7 @@ const AVAIL = {
   delivery_unavailable: 'ส่งไม่ถึงตอนนี้'
 } as const
 
-export function FoodMenuCard({ product, category, mode, tab, availability, onSameDayOrder, onPreOrder, scheduledDate, preorderExpired = false }: FoodMenuCardProps) {
+export function FoodMenuCard({ product, category, availability, onSameDayOrder, onPreOrder, scheduledDate, preorderExpired = false }: FoodMenuCardProps) {
   const imageUrl = product.image_url ?? ''
   const avail = availability as keyof typeof AVAIL
   const isAvail = availability === 'available' || availability === 'limited'
@@ -43,11 +43,12 @@ export function FoodMenuCard({ product, category, mode, tab, availability, onSam
   const desc = product.description ?? ''
   const price = Number(product.price) ?? 0
   const prep = Number(product.prep_minutes) ?? 15
-  // L-4 (N-4 #4): ในแท็บจองล่วงหน้า การ์ดทุกใบต้องแสดงปุ่มจอง (เมนูปฏิทิน = เปิดจอง ·
-  // สินค้าทั่วไป = ride-along เข้ารอบเดียวกัน per Feature A) — ห้ามโชว์ปุ่ม "สั่งเลยวันนี้"
-  // ปนอยู่ (โหมดผิด) · แท็บวันนี้ = คงพฤติกรรมเดิมทุกประการ
-  const preOrderTab = (tab ?? (mode === 'pre-order' ? 'pre-order' : 'same-day')) === 'pre-order'
-  const preorderCapable = product.available_preorder ?? product.is_preorder
+  // Owner 2026-10-27 (ตัวตนสินค้า = "เมนูตาราง"): พรีออเดอร์กับเมนูตาราง = อันเดียวกัน —
+  // การ์ดมี "ป้ายปฏิทิน" (scheduledDate จาก menu_schedule) = เมนูพรีออเดอร์ → ปุ่มจอง
+  // ไม่มีป้าย = เมนู "สั่งทันที" ทุกแท็บ (ส่งวันนี้ทันทีในเวลาเปิดร้าน · ถ้าในตะกร้ามี
+  // พรีออเดอร์อยู่แล้วจะเข้ารอบเดียวกันอัตโนมัติ — deriveCartMode ใน cartStore)
+  // (ยกเลิก L-4 เดิมที่ซ่อนปุ่มสั่งวันนี้ในแท็บจองล่วงหน้า — Owner สั่งให้มีปุ่ม
+  //  "สั่งทันที" สำหรับเมนูที่ไม่ใช่พรีออเดอร์เสมอ)
 
   const handleSameDay = () => {
     if (!isAvail) return
@@ -129,68 +130,31 @@ export function FoodMenuCard({ product, category, mode, tab, availability, onSam
       </div>
 
       {/* ============================================ */}
-      {/* BOTTOM SECTION: Action Buttons */}
-      {/* Clear margin-top, no overlap */}
+      {/* BOTTOM SECTION: Action Buttons — Owner 2026-10-27
+          มีป้ายปฏิทิน (เมนูตาราง) = "📅 จองล่วงหน้า" · ไม่มีป้าย = "⚡ สั่งทันที"
+          Clear margin-top, no overlap */}
       {/* ============================================ */}
       <div className="w-full px-5 pb-5 flex flex-col gap-2">
-        
-        {/* Same-day Order Button — canonical availability (migration 023)
-            L-4: ซ่อนในแท็บจองล่วงหน้า (แท็บนั้นต้องโชว์เฉพาะปุ่มจอง) */}
-        {(product.available_same_day ?? !product.is_preorder) && isAvail && !preOrderTab && (
-          <button 
-            onClick={handleSameDay} data-testid="same-day-order" 
-            disabled={!isAvail}
-            className="w-full rounded-xl py-3 font-semibold text-sm bg-brand-primary hover:bg-brand-primary-dark active:bg-brand-primary-dark text-white disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-md"
-          >
-            🛒 สั่งเลยวันนี้
-          </button>
-        )}
-
-        {/* Pre-order area — R5c (Owner 2026-10-23): เฉพาะการ์ดที่มี "ป้ายปฏิทิน" (เมนูจาก
-            ปฏิทินแอดมิน) เท่านั้น — ไม่มีพรีออเดอร์วันอิสระ
-            L-4 ในแท็บจองล่วงหน้า: สินค้าทั่วไป (ไม่มีป้ายปฏิทิน) = ride-along → ปุ่มจองกดได้
-            L-8 (N-4 #8): เมนูปฏิทินที่ยังไม่ลง/เลยรอบ = btn-locked (สีเทา + กดไม่ได้) */}
-        {preOrderTab ? (
-          preorderCapable ? (
-            scheduledDate ? (
-              <button
-                onClick={handlePreOrder} data-testid="pre-order-btn"
-                disabled={preorderExpired}
-                className={`w-full border-2 text-brand-primary rounded-xl py-3 font-semibold text-sm transition-all duration-200 ${preorderExpired ? 'btn-locked' : 'border-brand-primary/40 hover:bg-brand-primary/10 active:bg-brand-primary/20'}`}
-              >
-                {preorderExpired ? '📅 หมดเวลาจอง (Out of stock)' : '📅 จองล่วงหน้า'}
-              </button>
-            ) : (
-              <button
-                type="button" disabled data-testid="pre-order-btn-unavailable"
-                className="w-full border-2 rounded-xl py-3 font-semibold text-sm btn-locked"
-              >
-                📅 ยังไม่ลงปฏิทินรอบถัดไป (ยังจองไม่ได้)
-              </button>
-            )
-          ) : isAvail ? (
-            <button
-              onClick={handlePreOrder} data-testid="pre-order-btn"
-              className="w-full border-2 border-brand-primary/40 text-brand-primary rounded-xl py-3 font-semibold text-sm hover:bg-brand-primary/10 active:bg-brand-primary/20 transition-all duration-200"
-            >
-              📅 จองล่วงหน้า (ร่วมรอบ)
-            </button>
-          ) : null
-        ) : scheduledDate ? (
-          <button 
-            onClick={handlePreOrder} data-testid="pre-order-btn" 
+        {scheduledDate ? (
+          <button
+            onClick={handlePreOrder} data-testid="pre-order-btn"
             disabled={preorderExpired}
             className={`w-full border-2 text-brand-primary rounded-xl py-3 font-semibold text-sm transition-all duration-200 ${preorderExpired ? 'btn-locked' : 'border-brand-primary/40 hover:bg-brand-primary/10 active:bg-brand-primary/20'}`}
           >
             {preorderExpired ? '📅 หมดเวลาจอง (Out of stock)' : '📅 จองล่วงหน้า'}
           </button>
-        ) : preorderCapable ? (
-          <button 
-            type="button" disabled data-testid="pre-order-btn-unavailable"
-            className="w-full border-2 rounded-xl py-3 font-semibold text-sm btn-locked"
-          >
-            📅 ยังไม่ลงปฏิทินรอบถัดไป (ยังจองไม่ได้)
-          </button>
+        ) : isAvail ? (
+          <>
+            <button
+              onClick={handleSameDay} data-testid="same-day-order"
+              className="w-full rounded-xl py-3 font-semibold text-sm bg-brand-primary hover:bg-brand-primary-dark active:bg-brand-primary-dark text-white transition-all duration-200 shadow-md"
+            >
+              ⚡ สั่งทันที
+            </button>
+            <p className="text-xs text-brand-muted text-center" data-testid="ride-along-hint">
+              ส่งวันนี้ทันทีในเวลาเปิดร้าน · ถ้ามีพรีออเดอร์ในตะกร้าจะเข้ารอบเดียวกันอัตโนมัติ
+            </p>
+          </>
         ) : null}
       </div>
     </div>

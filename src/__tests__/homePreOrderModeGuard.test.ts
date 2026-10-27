@@ -197,7 +197,7 @@ afterEach(async () => {
 })
 
 describe('HomePage.handlePreOrder — R5c: ตะกร้าเดียว ไม่สลับโหมด ไม่ล้างตะกร้า', () => {
-  it('R5c: mode-mismatch add → mixed line KEPT (no clear-cart popup) → navigate /checkout?mode=pre-order', async () => {
+  it('R5c: mode-mismatch add → mixed line KEPT (no clear-cart popup) → อยู่หน้าเดิม ไม่ navigate (Owner 2026-10-27)', async () => {
     // ตะกร้ามีสินค้า SAME_DAY อยู่ก่อน
     const lockRes = useCartStore.getState().addItem(SD_PRODUCT, 1, {}, 'SAME_DAY')
     expect(lockRes).toBe('added')
@@ -218,10 +218,11 @@ describe('HomePage.handlePreOrder — R5c: ตะกร้าเดียว ไ
     expect((st.items[1] as { line_mode?: string }).line_mode).toBe('PRE_ORDER')
     // โหมดรวมของตะกร้า = PRE_ORDER (มีเมนูปฏิทินในตะกร้า)
     expect(st.order_mode).toBe('PRE_ORDER')
-    expect(lastPath).toBe('/checkout')
+    // Owner 2026-10-27: "อย่าเพิ่งส่งไปเช็คเอาท์" — คงอยู่หน้าเดิมเพื่อเพิ่มเมนูอื่นต่อ
+    expect(lastPath).not.toContain('checkout')
   })
 
-  it('added (ไม่มี conflict) → navigate /checkout?mode=pre-order ตามเดิม', async () => {
+  it('added (ไม่มี conflict) → อยู่หน้าเดิม เพิ่มเมนูอื่น/สั่งทันทีต่อได้ (ไม่ navigate อัตโนมัติ)', async () => {
     await mount()
     await clickPreOrderCta()
     expect(capturedCb).toBeTruthy()
@@ -234,8 +235,9 @@ describe('HomePage.handlePreOrder — R5c: ตะกร้าเดียว ไ
     const st = useCartStore.getState()
     expect(st.order_mode).toBe('PRE_ORDER')
     expect(st.items.some((i) => i.product.id === PRE_PRODUCT.id)).toBe(true)
-    expect(lastPath).toBe('/checkout')
-    expect(lastSearch).toContain('mode=pre-order')
+    // Owner 2026-10-27: ไม่ navigate อัตโนมัติ — ลูกค้าเพิ่มเมนูอื่นเข้ารอบเดียวกันต่อได้
+    expect(lastPath).not.toContain('checkout')
+    expect(lastSearch ?? '').not.toContain('mode=pre-order')
   })
 })
 

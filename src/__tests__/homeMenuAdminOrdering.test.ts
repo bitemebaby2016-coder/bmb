@@ -22,7 +22,8 @@ describe('Feature A — general items join the pre-order cart (one round, same c
   })
 
   it('ในแท็บพรีออเดอร์ สินค้าทั่วไปถูกเพิ่มเป็น PRE_ORDER ร่วมตะกร้าเดียวกัน', () => {
-    expect(menuPageSrc).toContain("menuTab === 'pre-order' || (product.available_preorder ?? product.is_preorder)")
+    // Owner 2026-10-27: ปุ่มของการ์ดตัดสินจาก "ป้ายปฏิทิน" (เมนูตาราง = พรีออเดอร์)
+    expect(menuPageSrc).toContain("const mode: OrderMode = schedDate ? 'pre-order' : 'same-day'")
     // 2026-10-26: เส้นทางสั่งซื้อยุบเป็น implementation เดียว (@/lib/orderEntry) —
     // หน้าต้อง delegate พร้อม mode PRE_ORDER (ไม่เก็บสำเนา addItem ซ้ำในหน้าแล้ว)
     expect(menuPageSrc).toContain('runOrderBuilder({')

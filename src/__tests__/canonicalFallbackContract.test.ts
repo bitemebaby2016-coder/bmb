@@ -30,10 +30,12 @@ describe('INV-18 — canonical fallback ใน customer ordering surfaces', () =
     expect(votePageSrc).not.toContain('products.filter((p: Product) => p.is_preorder)')
   })
 
-  it('FoodMenuCard.tsx: ปุ่ม 2 โหมดใช้ canonical fallback ทั้งคู่ (คงอยู่ต่อไป)', () => {
+  it('FoodMenuCard.tsx: ปุ่มตัดสินจาก "ป้ายปฏิทิน" = เมนูตาราง (Owner 2026-10-27 — ตัวตนสินค้าใหม่)', () => {
     const src = stripComments(foodMenuCardSrc)
-    expect(src).toContain('product.available_same_day ?? !product.is_preorder')
-    expect(src).toContain('product.available_preorder ?? product.is_preorder')
+    // ปุ่ม 2 โหมดยังอยู่ครบ ("จองล่วงหน้า" ของเมนูตาราง + "สั่งทันที" ของเมนูนอกตาราง)
+    // แต่ตัดสินด้วย scheduledDate (ป้ายปฏิทิน) แทน flag — พรีออเดอร์กับเมนูตารางอันเดียวกัน
+    expect(src).toContain('scheduledDate ? (')
+    expect(src).toContain('⚡ สั่งทันที')
   })
 
   it('homeShowcase.ts: mirror ใช้ canonical fallback ทั้งคู่ (คงอยู่ต่อไป)', () => {
