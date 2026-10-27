@@ -79,8 +79,16 @@ BEGIN
 
   v_id := 'notif-' || to_char(EXTRACT(EPOCH FROM clock_timestamp()) * 1000, '99999999999')
           || '-' || substr(md5(random()::text), 1, 5);
-  INSERT INTO public.notifications (id, customer_id, user_id, title, message, is_read, notification_type, category, created_at)
-  VALUES (v_id, v_cust, v_user, v_title, v_msg, false, v_type, 'Transactional', NOW());
+  -- BEST-EFFORT insert (Contract #177 · 019/020): notifications.customer_id FK ->
+  -- customers(id) / user_id FK -> auth.users(id) — fixture/test orders ที่ไม่มีแถว
+  -- จริงต้อง "ข้ามเงียบ" ไม่ใช่ทำให้ INSERT ออเดอร์ทั้งแถวพัง
+  -- (การแจ้งเตือน = derived data ห้ามบล็อกการเขียนออเดอร์เด็ดขาด)
+  BEGIN
+    INSERT INTO public.notifications (id, customer_id, user_id, title, message, is_read, notification_type, category, created_at)
+    VALUES (v_id, v_cust, v_user, v_title, v_msg, false, v_type, 'Transactional', NOW());
+  EXCEPTION WHEN foreign_key_violation THEN
+    NULL;
+  END;
   RETURN NULL;
 END;
 $$;
