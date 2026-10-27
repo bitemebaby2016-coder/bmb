@@ -6,7 +6,7 @@
 > `BMB_OWNER_PREP_R16_D6_MIGRATIONS_2026-10-25.md` §1 (R-16) · Growth & Rewards acceptance ·
 > และของใหม่รอบนี้ (CAP-01 เส้นทางสั่งซื้อเดียว · CAP-21 เจาะกลุ่มอัตโนมัติ · CAP-22 AI เลือกเวลา)
 >
-> **HEAD ล่าสุด = `5215cf4`** (รอบ defect SW+hours sync+160 · CI **#593** = success · Contract **#167** = success · Pages success แล้ว · ตรวจจริง = `git log --oneline -1`) · ก่อนหน้า `6d83cba` (#590/#164) · `67f10b8` = โค้ดปิด UI (#585/#159) ·
+> **HEAD ล่าสุด = `02b834c`** (apply 160 4 stage + ปิดเซส docs + แผนทดสอบ §2 · CI **#595** · Contract **#169** · ตรวจจริง = `git log --oneline -1`) · ก่อนหน้า `5215cf4` (#593/#167) · `67f10b8` = โค้ดปิด UI (#585/#159) ·
 > **แก้ตาม D-1/2/3 (2026-10-26):** §0/UI/L-10/B2/C7C8 อัปเดตสถานะจริง · L-3/4/5/7/8 → **L-RT** · **159 = APPLIED+VERIFIED** (`e2e/w7Apply159-*.json`) ·
 > **รอบ defect Owner 2026-10-26 (4+1):** **client hours+operating_hours sync = FIXED** (แถบสถานะ/เลือกกรอบ/กดสั่ง) · SW `skipWaiting`+`claim` (ค้าง build เก่า) · markup/coupon/label แก้ · **server 160 = APPLIED+VERIFIED** (Owner สั่ง `__apply 160__` · **w8Apply160 4 stage ALL_PASS** · behavior proof: SAMEDAY 23:3x → `ERR_STORE_CLOSED (8:00–20:00)` · PRE_ORDER ผ่าน) · **Owner retest หลัง deploy = hard reload 1 ครั้ง** · gates `e2e/gates_sync2026-10-26.log` ALL ZERO · **แผนทดสอบทั้งหมด = HANDOFF §2**
 

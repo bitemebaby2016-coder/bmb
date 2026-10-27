@@ -4,7 +4,7 @@
 
 ## 0. บรรทัดเดียว
 **ปิดแล้ว:** W-1 · W-2 · W-3 · W-5 · **UI 9/9 ข้อ (รวม L-3/4/5/7/8 · Owner 2026-10-26 · มี test+gates+CI)** · **B-6 (P0)** · migration **157+158 ใช้งานบน production แล้ว (ledger top 158 มี evidence)** · **legacy 6 = DROP แล้วบน production (159 APPLIED · w7Apply159 4 stage · ledger 159 · evidence `e2e/w7Apply159-*.json`)** · **migration 160 = APPLIED+VERIFIED (Owner สั่ง `__apply 160__` · w8Apply160 4 stage ALL_PASS · ledger top 160 · behavior proof 23:3x: SAMEDAY → `ERR_STORE_CLOSED ร้านปิดแล้วตามเวลาที่แอดมินตั้ง (8:00–20:00)` · PRE_ORDER ผ่าน gate · evidence `e2e/w8Apply160-*.json`)** · **รอบ defect Owner 2026-10-26 แก้แล้ว:** SW `skipWaiting`+`claim` (ต้นตอ UI เก่าค้าง) · **hours+operating_hours sync client ครบ** (test `shopHoursGate` 17 เคส) · markup/coupon/label · evidence **`e2e/gates_sync2026-10-26.log` ALL ZERO**
-**เหลือ:** **แผนทดสอบทั้งหมด = §2 ข้อ 2 ข้างล่าง (รันครบตามลำดับที่แชทหน้า)** · **B2 = UNVERIFIED** (~11:00) · **C7/C8 ขั้นรัน = NOT RUN (precondition VERIFIED แล้ว)** · **Owner retest 4+1 ข้อ (hard reload 1 ครั้ง — SW เก่าค้างเพราะไม่มี skipWaiting)** · ring-system §F · audit "ทุกฟีเจอร์แอดมินต้องซิงค์" (Backlog) · CI: HEAD `f001a6d` = **#594/#168 success** (ตรวจจริง = `git log`)
+**เหลือ:** **แผนทดสอบทั้งหมด = §2 ข้อ 2 ข้างล่าง (รันครบตามลำดับที่แชทหน้า)** · **B2 = UNVERIFIED** (~11:00) · **C7/C8 ขั้นรัน = NOT RUN (precondition VERIFIED แล้ว)** · **Owner retest 4+1 ข้อ (hard reload 1 ครั้ง — SW เก่าค้างเพราะไม่มี skipWaiting)** · ring-system §F · audit "ทุกฟีเจอร์แอดมินต้องซิงค์" (Backlog) · CI: HEAD `02b834c` = **#595/#169** (ตรวจจริง = `git log`)
 
 ## 1. ปิดแล้ว — ห้ามทำซ้ำ (มี evidence)
 
@@ -76,7 +76,7 @@
 5. จำนวนครั้งแก้ = **2 attempt ต่อปัญหา** (ครบแล้วให้สรุป ไล่คนละทาง = เลิกแล้วรายงาน)
 
 ## 7. DoD ก่อนบอก "จบ" รอบหน้า
-- [x] CI ทุก SHA ใน §9.0 มีผลจริง (`67f10b8` = #585/#159 · `5ab2906` = #583/#157 · `3ffafac` = #584/#158 · `5f891de` = #586/#160 · `7df33fd` = #587/#588+#161/#162 · `680bf78` = #589/#163 · `6d83cba` = #590/#164 · `4a62873` = #591/#165 · HEAD `5215cf4` = #593/#167 — ยืนยัน 2026-10-26 ทุกแถว)
+- [x] CI ทุก SHA ใน §9.0 มีผลจริง (`67f10b8` = #585/#159 · `5ab2906` = #583/#157 · `3ffafac` = #584/#158 · `5f891de` = #586/#160 · `7df33fd` = #587/#588+#161/#162 · `680bf78` = #589/#163 · `6d83cba` = #590/#164 · `4a62873` = #591/#165 · `5215cf4` = #593/#167 · `f001a6d` = #594/#168 · HEAD `02b834c` = #595/#169 — ยืนยัน 2026-10-26 ทุกแถว)
 - [x] UI 5 ข้อ (L-3/4/5/7/8) ปิด + มี test + ย้ายออกจาก §L (ย้ายไป **§L → L-RT** = runtime verify แล้ว)
 - [x] legacy 6 functions = **DROP แล้วบน production** — 159 APPLIED 2026-10-26 (Owner อนุมัติ · precheck→apply→verify→record ผ่าน · ledger 159 · evidence `e2e/w7Apply159-*.json`)
 - [ ] test pack ขั้นปลดล็อกแล้วรันจริง/ผ่าน §0
