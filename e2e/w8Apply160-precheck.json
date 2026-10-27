@@ -1,0 +1,54 @@
+[
+  {
+    "label": "ledger-top",
+    "status": 201,
+    "data": [
+      {
+        "version": "159"
+      },
+      {
+        "version": "158"
+      },
+      {
+        "version": "157"
+      }
+    ]
+  },
+  {
+    "label": "already-160",
+    "status": 201,
+    "data": []
+  },
+  {
+    "label": "fn-absent",
+    "status": 201,
+    "data": []
+  },
+  {
+    "label": "trigger-absent",
+    "status": 201,
+    "data": []
+  },
+  {
+    "label": "row-159-shape",
+    "status": 201,
+    "data": [
+      {
+        "version": "159",
+        "statements": [],
+        "name": "159_drop_legacy_manual_functions"
+      }
+    ]
+  },
+  {
+    "label": "backup-recency",
+    "status": 200,
+    "data": {
+      "recent": null,
+      "count": 0,
+      "walg_enabled": true,
+      "pitr_enabled": false,
+      "note": "list empty in metadata → gate on walg_enabled (w7 รอบเช้าได้ recent=9 จากแหล่งเดียวกัน ณ เวลานั้น)"
+    }
+  }
+]

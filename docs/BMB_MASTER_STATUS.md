@@ -47,9 +47,10 @@
 
 ### 1.3 Production (reconcile 2026-10-26 รอบปิดงาน)
 
-- **migration 160 (enforce `hours` บน SAME_DAY → `ERR_STORE_CLOSED`) = PREPARED · NOT APPLIED to production** —
-  มีใน repo + CI (apply ephemeral + step widen hours ก่อน contract) · client sync deploy ผ่าน Pages อัตโนมัติ ·
-  **server gate รอ Owner สั่ง apply (precheck+verify แบบ w7Apply เท่านั้น)**
+- **migration 160 (enforce `hours` บน SAME_DAY → `ERR_STORE_CLOSED`) = APPLIED + VERIFIED บน production 2026-10-26 ~23:30 (Owner สั่ง `__apply 160__`)**
+  - 4 stage = **ALL_PASS**: precheck (ledger top 159 · ไม่มีของซ้ำ · walg on) → apply 201 → **verify behavior จริง**: `SAMEDAY → ERR_STORE_CLOSED: ร้านปิดแล้วตามเวลาที่แอดมินตั้ง (8:00–20:00)` · `PRE_ORDER → ผ่าน 160` (ไปติด `ERR_PRE_ORDER_REQUIRES_ADDRESS` ของ gate เดิม) · ROLLBACK = ไม่มีมลพิษ → record (ledger top **160**)
+  - evidence = `e2e/w8Apply160-{precheck,apply,verify,record}.json` · CI = apply ephemeral ผ่าน (Contract #167/#168)
+  - **ROLLBACK (เผื่อเปลี่ยนใจ):** `DROP TRIGGER IF EXISTS trg_shop_hours ON public.orders; DROP FUNCTION IF EXISTS public.enforce_shop_hours();`
 
 - migration ledger ล่าสุดที่มีหลักฐาน apply = **159** — 157 + 158 (Owner อนุมัติ 2026-10-26 ·
   `e2e/w6Apply157158-{precheck,apply157,apply158,verify,record}.json` · parity **ledger 158=158**) +

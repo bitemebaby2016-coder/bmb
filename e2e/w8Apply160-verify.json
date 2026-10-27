@@ -1,0 +1,52 @@
+[
+  {
+    "label": "fn-body",
+    "status": 201,
+    "data": [
+      {
+        "has_marker": true,
+        "has_tz": true
+      }
+    ]
+  },
+  {
+    "label": "trigger",
+    "status": 201,
+    "data": [
+      {
+        "tgname": "trg_shop_hours",
+        "tgenabled": "O",
+        "is_before_insert": true
+      }
+    ]
+  },
+  {
+    "label": "history-top",
+    "status": 201,
+    "data": [
+      {
+        "version": "160"
+      },
+      {
+        "version": "159"
+      }
+    ]
+  },
+  {
+    "label": "legacy-six-still-gone",
+    "status": 201,
+    "data": []
+  },
+  {
+    "label": "behavior-rollback",
+    "status": 201,
+    "data": [
+      {
+        "r": "PREORDER_NOTE:P0001:ERR_PRE_ORDER_REQUIRES_ADDRESS: Pre-order requires a delivery address"
+      },
+      {
+        "r": "SAMEDAY:P0001:ERR_STORE_CLOSED: ร้านปิดแล้วตามเวลาที่แอดมินตั้ง (8:00–20:00) น."
+      }
+    ]
+  }
+]

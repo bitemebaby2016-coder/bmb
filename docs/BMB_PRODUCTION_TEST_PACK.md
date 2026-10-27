@@ -8,7 +8,7 @@
 >
 > **HEAD ล่าสุด = `5215cf4`** (รอบ defect SW+hours sync+160 · CI **#593** = success · Contract **#167** = success · Pages success แล้ว · ตรวจจริง = `git log --oneline -1`) · ก่อนหน้า `6d83cba` (#590/#164) · `67f10b8` = โค้ดปิด UI (#585/#159) ·
 > **แก้ตาม D-1/2/3 (2026-10-26):** §0/UI/L-10/B2/C7C8 อัปเดตสถานะจริง · L-3/4/5/7/8 → **L-RT** · **159 = APPLIED+VERIFIED** (`e2e/w7Apply159-*.json`) ·
-> **รอบ defect Owner 2026-10-26 (4+1):** **client hours+operating_hours sync = FIXED** (แถบสถานะ/เลือกกรอบ/กดสั่ง) · SW `skipWaiting`+`claim` (ค้าง build เก่า) · markup/coupon/label แก้ · **server 160 = PREPARED ยังไม่ apply (รอ Owner)** · **Owner retest หลัง deploy = hard reload 1 ครั้ง** · gates `e2e/gates_sync2026-10-26.log` ALL ZERO
+> **รอบ defect Owner 2026-10-26 (4+1):** **client hours+operating_hours sync = FIXED** (แถบสถานะ/เลือกกรอบ/กดสั่ง) · SW `skipWaiting`+`claim` (ค้าง build เก่า) · markup/coupon/label แก้ · **server 160 = APPLIED+VERIFIED** (Owner สั่ง `__apply 160__` · **w8Apply160 4 stage ALL_PASS** · behavior proof: SAMEDAY 23:3x → `ERR_STORE_CLOSED (8:00–20:00)` · PRE_ORDER ผ่าน) · **Owner retest หลัง deploy = hard reload 1 ครั้ง** · gates `e2e/gates_sync2026-10-26.log` ALL ZERO · **แผนทดสอบทั้งหมด = HANDOFF §2**
 
 > **สถานะเอกสารนี้:** runbook สำหรับ **Owner/ผู้ได้รับมอบหมาย** รันเอง · AI ไม่รันแทน (เป็น production write)
 > อ้างอิงสถานะปัจจุบัน = `docs/BMB_MASTER_STATUS.md` · **ผลรันทุกขั้นต้องมีหลักฐานจริง (ภาพ/log/query)**
@@ -182,7 +182,7 @@
 ## สรุปเกณฑ์ปิดงาน (ฉบับตรงความจริง)
 
 - **รันได้เลย:** A1 · A2 · A3 (ผ่าน = verify) · B (รวม B2 เป็น verify · รอช่วง ~11:00) · **C7/C8 (ค่า = VERIFIED แล้ว · รันได้เลย)** · D · E · F · G · H · I · J · K · **L-RT**
-- **สถานะพิเศษ (2026-10-26):** **B2 = UNVERIFIED** (เกณฑ์ ~11:00 — เช็ค 22:29 ไม่ตรงเวลา) · **C7/C8 = precondition VERIFIED (mrRead) · ขั้นรัน NOT RUN** · ~~L-10~~ = **APPLIED+VERIFIED** (w7Apply159 · ledger 159) · L-12 = ทางเลือก · **Pages serving = VERIFIED** (marker `btn-locked`) · **parity ย่อย = onlyProd 0** · **server 160 = PREPARED ยังไม่ apply (รอ Owner)** · **client hours sync = FIXED (deploy แล้วมีผล · test 17 เคส + gates_sync ALL ZERO)** · **Owner retest 4 ข้อ = hard reload 1 ครั้ง (SW เก่าค้างจริง — ไม่มี skipWaiting)**
+- **สถานะพิเศษ (2026-10-26):** **B2 = UNVERIFIED** (เกณฑ์ ~11:00 — เช็ค 22:29 ไม่ตรงเวลา) · **C7/C8 = precondition VERIFIED (mrRead) · ขั้นรัน NOT RUN** · ~~L-10~~ = **APPLIED+VERIFIED** (w7Apply159 · ledger 159) · L-12 = ทางเลือก · **Pages serving = VERIFIED** (marker `btn-locked`) · **parity ย่อย = onlyProd 0** · **server 160 = APPLIED+VERIFIED** (w8Apply160 4 stage · rollback cmd ใน record JSON) · **client hours sync = FIXED (deploy แล้วมีผล · test 17 เคส + gates_sync ALL ZERO)** · **Owner retest 4+1 = hard reload 1 ครั้ง (SW เก่าค้างจริง — ไม่มี skipWaiting)**
 - **ไม่ต้องรันซ้ำ (ปิดแล้วมี evidence):** L-1/L-2/L-6/L-9 · **L-3/L-4/L-5/L-7/L-8** (test+gates+CI `67f10b8`) · B-2 legacy contract (7/7) · schema parity (มีรายงาน) — อยากตรวจซ้ำหลัง deploy = ดู **L-RT**
 - **ห้ามสรุปว่า "พร้อม Production 100%" / "ปิดครบทุกลูป"** จนกว่า: (1) L-RT + ขั้น B/E/I ผ่านตา Owner หลัง deploy ใหม่ (2) B-2 + schema parity บันทึก แล้วตามเดิม (3) **marketing_rules/B2 มีหลักฐานใหม่** — *(ทำแล้ว ✓ Pages marker · ✓ **159 apply+verify 4 stage** 2026-10-26 · ledger 159)*
 - รายการที่ AI รันให้แล้ว (ไม่ต้องรันซ้ำ): tsc/eslint/vitest/build/route-smoke/CI — ดู `docs/BMB_MASTER_STATUS.md` §5 + **§9.0** · HEAD = `5f891de` (#586/#160)

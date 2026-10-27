@@ -1,0 +1,30 @@
+[
+  {
+    "label": "history-160-row",
+    "status": 201,
+    "data": [
+      {
+        "version": "160",
+        "name": "160_enforce_shop_hours"
+      }
+    ]
+  },
+  {
+    "label": "objects-final",
+    "status": 201,
+    "data": [
+      {
+        "what": "fn",
+        "n": 1
+      },
+      {
+        "what": "trigger",
+        "n": 1
+      },
+      {
+        "what": "ledger160",
+        "n": 1
+      }
+    ]
+  }
+]
