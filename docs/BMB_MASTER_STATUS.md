@@ -323,6 +323,7 @@
 | 16 | (docs commit ปิดเซสชั่น — SHA ดูใน git log) | เขียนแฮนด์ออฟปิดเซสชั่น + work state + gates evidence | ตรวจรอบถัดไป | ตรวจรอบถัดไป |
 | 26 | `b66b880` | **Backlog settings-sync audit 13 key** (evidence `e2e/backlogAudit-settings-sync-2026-10-27.json`) + **คู่มือสอนทดสอบทุก role** (`docs/BMB_OWNER_ROLE_TEST_GUIDE_2026-10-27.md`) + อัปเดต 4 เอกสาร (commit เติมผล CI นี้ = SHA/ผลดู `git log` + `bmb_ci.bat`) | **#597 success** | **#171 success** |
 | 27 | `70ad11c` | **R9 แก้ defect ที่ Owner เทสต์เจอ 8 จุด** (repro `e2e/r9OrderRepro.*` · evidence `e2e/r9OwnerDefectFixes-2026-10-27.json` · data flip 14 สินค้า) + **สร้าง `docs/BMB_BACKEND_AI_PART_1.md` ใหม่** (commit เติมผล CI นี้ = ดู `git log` + `bmb_ci.bat`) | **#599 success** | **#173 success** |
+| 28 | `d246359` (+ fix `ecc3988`/`1a9307a`/`168cee4`) | **R10 แก้ defect ที่ Owner เทสต์จริง 16 จุด** — แจ้งเตือนออเดอร์ใหม่+เสียง+ปุ่มเปิด/ปิด (migration 161 notify trigger) · คูปอง popup ที่เช็คเอาท์อย่างเดียว · ปุ่มถ่าย/แนบรูปที่อยู่ (161/162) · ปุ่มปฏิเสธสลิป (162 `admin_reject_payment`) · แบนเนอร์ไม่โชว์เวลาส่ง/เคารพรอบปิด · redirect ครัว/จัดส่ง · rider catch + ลบออเดอร์ทดสอบ 405/205/337 (evidence `e2e/r10OwnerDefectFixes-2026-10-27.json` + `r10Verify*`) · รอบแก้ CI 3 รอบ (enum payment_status / storage.foldername / FK best-effort) จนเขียว | **#604 success** | **#178 success** |
 
 > อ่านจาก GitHub Actions REST API จริง (`?head_sha=<full SHA>` — เครื่องนี้ไม่มี `gh`) ·
 > **ห้ามอ้างเลข run จาก §9.4/§9.6 โดยไม่เทียบกับตารางนี้** (§9.4 = รายละเอียดรอบ 1 · §9.6 = รายละเอียดรอบ 2)
