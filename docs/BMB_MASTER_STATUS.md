@@ -4,7 +4,7 @@
 > (WHOLE-REPO RECONCILIATION · CODE CLOSURE · LEAN PRODUCTION ACCEPTANCE)
 > ไฟล์อื่นที่มีวันที่ในชื่อ = **รายงาน ณ วันนั้น** ห้ามใช้แทนไฟล์นี้ ถ้าขัดกันให้ถือโค้ด/หลักฐาน (DOC DRIFT)
 
-**last_updated:** 2026-10-26 · **branch:** `main` · อ่าน §0 ก่อนเริ่มงานทุกครั้ง
+**last_updated:** 2026-10-27 (R11 · apply 163 สู่ production) · **branch:** `main` · อ่าน §0 ก่อนเริ่มงานทุกครั้ง
 
 ---
 
@@ -78,6 +78,7 @@
   เพราะ env inlining/คนละ build machine — ไม่ใช่หลักฐาน stale* · *build id/timestamp อ่านไม่ได้จาก SPA shell*
 - **production write ที่ทำ = apply 159 เท่านั้น** (Owner อนุมัติ 2026-10-26 · staged `w7Apply159.cjs`) — ไม่มี write อื่น
 - **Backlog settings-sync audit (2026-10-27):** ปิดฝั่งโค้ดครบ **13 key** (write/read path จริงทุกตัว — hours · operating_hours · delivery_policy · kitchen_location · order_pattern · order_policy · promotion · loyalty · referral · spin · push_config · social_links · theater_daily_copy · **missing = 0**) · evidence **`e2e/backlogAudit-settings-sync-2026-10-27.json`** · runtime spot-check ด้วยมือ = `docs/BMB_OWNER_ROLE_TEST_GUIDE_2026-10-27.md` §15 · คู่มือสอนทดสอบทุก role = ไฟล์เดียวกัน (§3–§13)
+- **migration 161 (R10) · 162 (R10) · 163 (R11) = APPLIED บน production 2026-10-27 รอบดึก (Owner สั่ง apply 163)** — 163 = `e2e/r11Apply163.cjs` 4 stage ผ่าน (precheck → apply → verify `pg_proc` 4 ฟังก์ชัน + `arrived_at`/`checkin_*` col → record ledger **161/162/163** ครบ · backfill 161/162 ที่ R10 apply แต่ไม่ได้ record) · evidence `e2e/r11Apply163-result.json` (+ `r10Apply161/162-result.json`) · **ledger top = 163** (อัปเดตแทนค่า "159/160" ด้านบน) · ยืนยันซ้ำด้วย `e2e/migHistory.cjs` (read-only) · **รอ Owner retest flow ไรเดอร์ทีละสเตป** = `docs/BMB_HANDOFF_NEXT_SESSION_2026-10-27B.md` §2 (ก)
 - คำสั่งตรวจ ledger รอบถัดไป (read-only): `SELECT version FROM supabase_migrations.schema_migrations ORDER BY version DESC LIMIT 3` → top = **160** ณ 2026-10-26 (160 APPLIED ดู §1.3 บน)
 
 ---
@@ -325,6 +326,8 @@
 | 27 | `70ad11c` | **R9 แก้ defect ที่ Owner เทสต์เจอ 8 จุด** (repro `e2e/r9OrderRepro.*` · evidence `e2e/r9OwnerDefectFixes-2026-10-27.json` · data flip 14 สินค้า) + **สร้าง `docs/BMB_BACKEND_AI_PART_1.md` ใหม่** (commit เติมผล CI นี้ = ดู `git log` + `bmb_ci.bat`) | **#599 success** | **#173 success** |
 | 28 | `d246359` (+ fix `ecc3988`/`1a9307a`/`168cee4`) | **R10 แก้ defect ที่ Owner เทสต์จริง 16 จุด** — แจ้งเตือนออเดอร์ใหม่+เสียง+ปุ่มเปิด/ปิด (migration 161 notify trigger) · คูปอง popup ที่เช็คเอาท์อย่างเดียว · ปุ่มถ่าย/แนบรูปที่อยู่ (161/162) · ปุ่มปฏิเสธสลิป (162 `admin_reject_payment`) · แบนเนอร์ไม่โชว์เวลาส่ง/เคารพรอบปิด · redirect ครัว/จัดส่ง · rider catch + ลบออเดอร์ทดสอบ 405/205/337 (evidence `e2e/r10OwnerDefectFixes-2026-10-27.json` + `r10Verify*`) · รอบแก้ CI 3 รอบ (enum payment_status / storage.foldername / FK best-effort) จนเขียว | **#604 success** | **#178 success** |
 | 29 | session-close docs (R9+R10) | **ปิดเซสชั่น 2026-10-27 + handoff แชทถัดไป** (`docs/BMB_HANDOFF_NEXT_SESSION_2026-10-27.md`) + อัปเดต `AI_WORK_STATE.md` — docs-only (commit นี้ = SHA/ผลดู `git log` + `bmb_ci.bat`) | ตรวจรอบถัดไป | ตรวจรอบถัดไป |
+| 30 | `9bc7a30` | **R11: rider step-sync ทีละสเตปตาม action จริง** (migration 163: accept/claim→`dispatched` ทันที · `driver_checkin_arrival` geofence 300 ม.→`arrived` · geofence ที่ delivered) + แจ้งเตือนเด้งไปหน้างานตาม role (`notificationLinks`) + ปิดวงจรอัตโนมัติ + contracts 163 G1-G5 ลงทะเบียน CI | ตรวจรอบถัดไป | ตรวจรอบถัดไป |
+| 31 | (commit นี้ — SHA/ผลดู `git log`) | **apply 163 สู่ production** (`e2e/r11Apply163.cjs` 4 stage · ledger 161/162/163 record ครบ · evidence `e2e/r11Apply163-result.json`) + อัปเดต 3 เอกสาร (`AI_WORK_STATE.md` · `BMB_MASTER_STATUS.md` · handoff 27B) | ตรวจรอบถัดไป | ตรวจรอบถัดไป |
 
 > อ่านจาก GitHub Actions REST API จริง (`?head_sha=<full SHA>` — เครื่องนี้ไม่มี `gh`) ·
 > **ห้ามอ้างเลข run จาก §9.4/§9.6 โดยไม่เทียบกับตารางนี้** (§9.4 = รายละเอียดรอบ 1 · §9.6 = รายละเอียดรอบ 2)

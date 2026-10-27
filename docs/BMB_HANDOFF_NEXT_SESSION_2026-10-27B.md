@@ -48,7 +48,7 @@
 ## 2. งานที่เหลือ — ให้แชทหน้า "ทำและทดสอบ" ทั้งหมด
 
 ### (ก) P0 — deploy + ทดสอบจริง
-1. **Apply migration 163 สู่ production** (Management API เหมือน `e2e/r10Apply161.cjs` — คัดลอกเป็น `r11Apply163.cjs` แล้วรัน · ตรวจ `pg_proc` 4 ฟังก์ชัน + `arrived_at` col)
+1. ~~**Apply migration 163 สู่ production**~~ ✅ **ทำแล้ว 2026-10-27 รอบดึก (Owner สั่ง)** — `e2e/r11Apply163.cjs` (Management API · 4 stage: precheck → apply → verify `pg_proc` 4 ฟังก์ชัน + `arrived_at`/`checkin_*` col → record ledger **161/162/163** ครบ · backfill 161/162 ที่ R10 ไม่ได้ record · **ledger top = 163**) · evidence `e2e/r11Apply163-result.json`
 2. **Owner retest flow ไรเดอร์ทีละสเตป** (hard reload ก่อน!):
    - กดรับงาน → สถานะลูกค้า/แอดมิน = **'เริ่มจัดส่ง'** ทันที + มีแจ้งเตือน
    - กดกำลังเดินทาง → **'กำลังเดินทาง'**

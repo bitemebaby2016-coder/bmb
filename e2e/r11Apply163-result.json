@@ -1,0 +1,19 @@
+{
+  "at": "2026-10-27T16:04:44.968Z",
+  "precheck": {
+    "ledgerTop": "[{\"version\":\"160\",\"name\":\"160_enforce_shop_hours\"},{\"version\":\"159\",\"name\":\"159_drop_legacy_manual_functions\"},{\"version\":\"158\",\"name\":\"158_align_grants_and_rls\"},{\"version\":\"157\",\"name\":\"157_anon_policy_role_scoping\"},{\"version\":\"156\",\"name\":\"156_engagement_play\"}]",
+    "rows161to163": "[]",
+    "fnsBefore": "[{\"proname\":\"claim_dispatch_offer\",\"args\":\"p_order_number text\"},{\"proname\":\"driver_accept_assignment\",\"args\":\"p_order_number text, p_driver_phone text\"},{\"proname\":\"driver_update_delivery_status\",\"args\":\"p_order_number text, p_driver_phone text, p_status text, p_latitude numeric, p_longitude numeric\"}]"
+  },
+  "apply": "[]",
+  "verify": {
+    "counts": "[{\"step_fns\":4,\"arrived_at_col\":1,\"checkin_lat_col\":1,\"checkin_lng_col\":1}]",
+    "fnsAfter": "[{\"proname\":\"claim_dispatch_offer\",\"args\":\"p_order_number text\"},{\"proname\":\"driver_accept_assignment\",\"args\":\"p_order_number text, p_driver_phone text\"},{\"proname\":\"driver_checkin_arrival\",\"args\":\"p_order_number text, p_latitude numeric, p_longitude numeric\"},{\"proname\":\"driver_update_delivery_status\",\"args\":\"p_order_number text, p_driver_phone text, p_status text, p_latitude numeric, p_longitude numeric\"}]"
+  },
+  "record": {
+    "ins161": "[]",
+    "ins162": "[]",
+    "ins163": "[]",
+    "ledgerTopAfter": "[{\"version\":\"163\",\"name\":\"163_rider_step_sync_checkin\"},{\"version\":\"162\",\"name\":\"162_admin_reject_payment\"},{\"version\":\"161\",\"name\":\"161_order_notifications_address_photo\"},{\"version\":\"160\",\"name\":\"160_enforce_shop_hours\"},{\"version\":\"159\",\"name\":\"159_drop_legacy_manual_functions\"}]"
+  }
+}
