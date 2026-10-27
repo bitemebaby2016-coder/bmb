@@ -321,7 +321,7 @@
 | 24 | `5215cf4` | รอบ defect: **SW skipWaiting/claim** (ต้นตอ UI เก่าค้าง) + **hours/operating sync client** + markup/coupon/label + **migration 160 PREPARED** + contract yml widen-hours + test shopHoursGate 17 | #593 **success** | #167 **success** |
 | 25 | `02b834c` | **apply 160 production (Owner สั่ง)** = 4 stage ALL_PASS + evidence `w8Apply160-*` + เอกสาร 4 ฉบับ + **★แผนทดสอบทั้งหมด (HANDOFF §2)** ปิดเซส | #595 **success** | #169 **success** |
 | 16 | (docs commit ปิดเซสชั่น — SHA ดูใน git log) | เขียนแฮนด์ออฟปิดเซสชั่น + work state + gates evidence | ตรวจรอบถัดไป | ตรวจรอบถัดไป |
-| 26 | (docs commit รอบ 2026-10-27 — SHA ดูใน git log) | **Backlog settings-sync audit 13 key** (evidence `e2e/backlogAudit-settings-sync-2026-10-27.json`) + **คู่มือสอนทดสอบทุก role** (`docs/BMB_OWNER_ROLE_TEST_GUIDE_2026-10-27.md`) + อัปเดต 4 เอกสาร | ตรวจรอบถัดไป | ตรวจรอบถัดไป |
+| 26 | `b66b880` | **Backlog settings-sync audit 13 key** (evidence `e2e/backlogAudit-settings-sync-2026-10-27.json`) + **คู่มือสอนทดสอบทุก role** (`docs/BMB_OWNER_ROLE_TEST_GUIDE_2026-10-27.md`) + อัปเดต 4 เอกสาร (commit เติมผล CI นี้ = SHA/ผลดู `git log` + `bmb_ci.bat`) | **#597 success** | **#171 success** |
 
 > อ่านจาก GitHub Actions REST API จริง (`?head_sha=<full SHA>` — เครื่องนี้ไม่มี `gh`) ·
 > **ห้ามอ้างเลข run จาก §9.4/§9.6 โดยไม่เทียบกับตารางนี้** (§9.4 = รายละเอียดรอบ 1 · §9.6 = รายละเอียดรอบ 2)
