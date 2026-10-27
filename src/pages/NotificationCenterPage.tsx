@@ -4,7 +4,10 @@
 // ============================================
 
 import { useEffect, useMemo, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { GlassCard } from '@/components/ui/GlassCard'
+import { useAuthStore } from '@/store/authStore'
+import { resolveNotificationRoute } from '@/lib/notificationLinks'
 import {
   getMyNotifications,
   setNotificationPref,
@@ -42,6 +45,8 @@ export function NotificationCenterPage() {
   const [rows, setRows] = useState<NotificationRow[]>([])
   const [prefs, setPrefs] = useState<Record<NotificationChannel, boolean>>(DEFAULT_CHANNEL_STATE)
   const [loading, setLoading] = useState(true)
+  const navigate = useNavigate()
+  const role = useAuthStore((s) => s.role)
 
   useEffect(() => {
     let active = true
@@ -208,13 +213,25 @@ export function NotificationCenterPage() {
             <div className="space-y-2">
               {grouped.get(c)!.map((n) => (
                 <GlassCard key={n.id} className="p-3">
-                  <div className="flex items-start justify-between gap-2">
+                  {/* R11: กดอ่าน = เด้งไปหน้าทำงานที่เกี่ยวข้องอัตโนมัติ (เช่นเดียวกับกระดิ่ง) */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const target = resolveNotificationRoute(
+                        { notification_type: n.notification_type, title: n.title, message: n.message },
+                        role,
+                      )
+                      if (target) navigate(target)
+                    }}
+                    className="w-full text-left flex items-start justify-between gap-2 cursor-pointer"
+                    data-testid="notif-center-item"
+                  >
                     <div>
                       <p className="font-semibold text-slate-800 text-sm">{n.title}</p>
                       <p className="text-xs text-slate-500">{n.message}</p>
                     </div>
                     <span className="text-[10px] text-slate-400 shrink-0">{new Date(n.created_at).toLocaleString('th-TH')}</span>
-                  </div>
+                  </button>
                 </GlassCard>
               ))}
             </div>

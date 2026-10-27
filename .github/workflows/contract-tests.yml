@@ -457,6 +457,18 @@ jobs:
           fi
           echo "Contract 156 OK — spin daily-cap rewards + affiliate no-cash monthly cap + rewards catalog admin table"
 
+      - name: Contract 163 — rider step-sync + check-in geofence + auto-close (ROLLBACK)
+        run: |
+          set +e
+          out=$(psql -v ON_ERROR_STOP=1 -f e2e/contracts_163_rider_step_sync.sql 2>&1); rc=$?
+          printf '%s\n' "$out"
+          if [ $rc -ne 0 ]; then
+            msg=$(printf '%s\n' "$out" | grep -m1 'ERROR:' || echo "rc=$rc")
+            echo "::error file=e2e/contracts_163_rider_step_sync.sql::$msg"
+            exit 1
+          fi
+          echo "Contract 163 OK — accept->dispatched · check-in->arrived (geofence) · POD+geo auto-close"
+
       # ---------------------------------------------------------------------------
       # W-2 (B-2) — legacy contracts 7 ตัว กลับเข้า gate (Owner สั่ง "ปิดด้วย" 2026-10-26)
       # เงื่อนไขที่ทำก่อน push นี้ (กติกา handoff §W-2): ทั้ง 7 ไฟล์ EXIT=0 บน replay ท้องถิ่น

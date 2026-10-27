@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNotificationStore } from '@/store/notificationStore'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useAuthStore } from '@/store/authStore'
 import { getMyNotifications } from '@/lib/notificationService'
+import { resolveNotificationRoute } from '@/lib/notificationLinks'
 
 const icons: Record<string, string> = {
   order_update: '📦',
@@ -44,6 +45,8 @@ export function NotificationDropdown() {
   const hydrateServerNotifications = useNotificationStore((s) => s.hydrateServerNotifications)
   const markServerAsRead = useNotificationStore((s) => s.markServerAsRead)
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
+  const role = useAuthStore((s) => s.role)
+  const navigate = useNavigate()
   const [open, setOpen] = useState(false)
   const [hydrated, setHydrated] = useState(false)
   // R10 (Owner 2026-10-27): เสียงแจ้งเตือน + ปุ่มเปิด/ปิด (จำค่าไว้ให้แอดมิน)
@@ -152,13 +155,17 @@ export function NotificationDropdown() {
                 <button
                   key={n.id}
                   onClick={() => {
+                    // R11 (Owner 2026-10-27): กดอ่าน = เด้งไปหน้าทำงานที่เกี่ยวข้องอัตโนมัติ
+                    const target = resolveNotificationRoute(
+                      { type: n.type, title: n.title, body: n.body, data: n.data },
+                      role,
+                    )
+                    setOpen(false)
+                    if (target) navigate(target)
                     if (n.is_read) return
                     // Server-durable rows (evt-*/auto-*) persist "read" via RLS; local-only rows stay local.
-                    const wasLastUnread = unreadCount <= 1
                     if (n.id.startsWith('evt-') || n.id.startsWith('auto-')) void markServerAsRead(n.id)
                     else useNotificationStore.getState().markAsRead(n.id)
-                    // popup auto-dismisses once the last unread item has been read
-                    if (wasLastUnread) setOpen(false)
                   }}
                   className={`w-full text-left p-3 transition-colors ${
                     n.is_read ? 'bg-white hover:bg-gray-50' : 'bg-orange-50 hover:bg-orange-100'

@@ -30,6 +30,7 @@ import {
   driverDeclineOffer,
   driverUpdateLocation,
   driverAttachPod,
+  driverCheckinArrival,
   uploadPodPhoto,
   classifyDriverError,
   type DriverRecord,
@@ -362,6 +363,14 @@ export function RiderPwaPage() {
     void completeDelivery(last.order, last.file, last.coords) // พิกัดจริงจากรอบก่อน ไม่ใช่ค่าปลอม
   }
 
+  async function checkinArrival(orderNumber: string, coords: { latitude: number; longitude: number }) {
+    if (!driver) return
+    const r = await driverCheckinArrival(orderNumber, coords)
+    if (!r.ok) { showActionError(orderNumber, r); return }
+    setNotice(`🏁 เช็คตำแหน่งในพื้นที่สำเร็จ — สถานะเป็น "ถึงปลายทาง" แล้ว`)
+    void refresh({ silent: true })
+  }
+
   // ---------- PHASE 2: GPS ของไรเดอร์สำหรับปักหมุดแผนที่ (มาจาก onCoordsChange จริง) ----------
   const [riderGps, setRiderGps] = useState<{ latitude: number; longitude: number } | null>(null)
 
@@ -588,6 +597,7 @@ export function RiderPwaPage() {
                     busy={deliverBusy}
                     busyLabel={deliverStep === 'upload' ? '📤 กำลังอัปโหลดรูป POD…' : deliverStep === 'attach' ? '🔗 กำลังบันทึกหลักฐาน…' : deliverStep === 'finalize' ? '✅ กำลังปิดงาน…' : '⏳ กำลังบันทึก…'}
                     onCoordsChange={setRiderGps}
+                    onArrived={(coords) => void checkinArrival(activeOrder.order_number, coords)}
                     onDelivered={(photo, coords) => void completeDelivery(activeOrder.order_number, photo, coords)}
                   />
                 </>
@@ -740,10 +750,12 @@ export function RiderPwaPage() {
 // จำลองใน component นี้ (สถานะจริงอยู่ที่ assignment_status ที่แสดงด้านบน)
 // (ใช้ import React/hooks จากหัวไฟล์เดียวกัน — ไม่มี import ซ้ำ)
 
-export function PodDeliveryPanel({ dropOff, radiusMeters = 300, onDelivered, busy = false, busyLabel, onCoordsChange }: {
+export function PodDeliveryPanel({ dropOff, radiusMeters = 300, onDelivered, onArrived, busy = false, busyLabel, onCoordsChange }: {
   dropOff: { latitude: number; longitude: number }
   radiusMeters?: number
   onDelivered?: (photo: File, coords: { latitude: number; longitude: number }) => void | Promise<void>
+  /** R11: เช็คพิกัดในรัศมี → แจ้ง parent ยิง driver_checkin_arrival (สถานะ 'ถึงปลายทาง') */
+  onArrived?: (coords: { latitude: number; longitude: number }) => void | Promise<void>
   busy?: boolean
   /** R3 (D-02): ป้าย progress รายขั้นตอน (upload → attach → ปิดงาน) */
   busyLabel?: string
@@ -767,6 +779,10 @@ export function PodDeliveryPanel({ dropOff, radiusMeters = 300, onDelivered, bus
         setCoords(c)
         setGeoError(null)
         onCoordsChange?.(c)
+        // R11: อยู่ในรัศมี = เช็คอินสำเร็จ → แจ้ง parent ให้เดินสถานะถึง 'ถึงปลายทาง'
+        // (server ตรวจ geofence ซ้ำอีกชั้น — ฝั่งเครื่องเป็นแค่ gate ช่วยถ่ายทัน)
+        const dKm = haversineDistanceKm(c.latitude, c.longitude, dropOff.latitude, dropOff.longitude)
+        if (dKm * 1000 <= radiusMeters) void onArrived?.(c)
       },
       (err) => setGeoError(`อ่านพิกัดไม่สำเร็จ: ${err.message}`),
       { enableHighAccuracy: true, timeout: 10000 },

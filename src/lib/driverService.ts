@@ -68,7 +68,7 @@ export function classifyDriverError(raw: unknown): { error: string; kind: Driver
   if (/ERR_NOT_AUTHENTICATED|ERR_FORBIDDEN|ERR_NOT_A_DRIVER|JWT|401|403/i.test(s)) {
     return { error: msg, kind: 'permission' }
   }
-  if (/ERR_ASSIGNMENT|ERR_ALREADY_DELIVERED|ERR_POD|ERR_DELIVERY_SYNC_BLOCKED|ERR_INVALID|ERR_ORDER_|ERR_OFFER/i.test(s)) {
+  if (/ERR_ASSIGNMENT|ERR_ALREADY_DELIVERED|ERR_POD|ERR_DELIVERY_SYNC_BLOCKED|ERR_GEOFENCE|ERR_INVALID|ERR_ORDER_|ERR_OFFER/i.test(s)) {
     return { error: msg, kind: 'state' }
   }
   return { error: msg, kind: 'unknown' }
@@ -201,6 +201,28 @@ export interface RoutePoint {
   latitude: number
   longitude: number
   recorded_at: string
+}
+
+/**
+ * R11 (Owner 2026-10-27): "กดเช็คตำแหน่งในพื้นที่" → สถานะ 'ถึงปลายทาง' (arrived)
+ * Server ตรวจ geofence 300 ม. เอง (haversine) — ห่างเกินได้ ERR_GEOFENCE
+ * + บันทึกหลักฐาน check-in (arrived_at / checkin_*) ที่ delivery_assignments
+ */
+export async function driverCheckinArrival(
+  orderNumber: string,
+  coords: { latitude: number; longitude: number },
+): Promise<DriverActionResult> {
+  try {
+    const { data, error } = await supabase.rpc('driver_checkin_arrival', {
+      p_order_number: orderNumber,
+      p_latitude: coords.latitude,
+      p_longitude: coords.longitude,
+    })
+    if (error) return { ok: false, ...classifyDriverError(error) }
+    return { ok: true, value: data }
+  } catch (e) {
+    return { ok: false, ...classifyDriverError(e) }
+  }
 }
 
 /** ประวัติเส้นทางของงาน (สำหรับแอดมิน — ดูย้อนหลังตอนจบงาน) */
@@ -484,6 +506,8 @@ const DRIVER_ERROR_TH: Record<string, string> = {
   ERR_POD_REQUIRED: 'ต้องแนบรูปส่งมอบ (POD) ก่อนยืนยันส่งสำเร็จ',
   ERR_POD_MISSING: 'ยังไม่มีรูปส่งมอบ — ถ่ายรูปก่อนยืนยัน',
   ERR_POD_PATH_FORBIDDEN: 'ไฟล์รูปไม่ได้อยู่ในโฟลเดอร์ของไรเดอร์คนนี้',
+  ERR_GEOFENCE: 'อยู่นอกระยะพื้นที่ส่งมอบ — เข้าใกล้จุดส่งก่อนเช็คอิน/ยืนยันส่ง',
+  ERR_GEOFENCE_UNVERIFIABLE: 'ยืนยันพื้นที่ส่งไม่ได้ — ออเดอร์นี้ไม่มีพิกัดปลายทาง',
   ERR_ASSIGNMENT_NOT_FOUND: 'ไม่พบงานนี้ของคุณ — อาจถูกยกเลิกหรือส่งต่อแล้ว รีเฟรชรายการงาน',
   ERR_ASSIGNMENT_NOT_ACCEPTABLE: 'งานนี้เปลี่ยนสถานะแล้ว รับ/ปฏิเสธไม่ได้ — รีเฟรชรายการงาน',
   ERR_ASSIGNMENT_CLOSED: 'งานนี้ปิดแล้ว (ส่งมอบ/ปฏิเสธ/ยกเลิก) แก้ไขไม่ได้',
