@@ -19,10 +19,12 @@ import type { OrderForm } from '@/lib/bmbAdminApi_orders'
 import { paymentConfirmability, type PaymentIntentLite } from '@/lib/paymentExceptions'
 import { SlipThumb } from './SlipThumb'
 
-export function SlipReviewPanel({ orders, intentsByOrder, onConfirmPayment }: {
+export function SlipReviewPanel({ orders, intentsByOrder, onConfirmPayment, onRejectPayment }: {
   orders: OrderForm[]
   intentsByOrder: Record<string, PaymentIntentLite[]>
   onConfirmPayment: (orderNumber: string) => void
+  /** R10 (Owner 2026-10-27): ปุ่มปฏิเสธโดยมือแอดมิน — เผื่อสลิปไม่ถูก/เงินไม่เข้า */
+  onRejectPayment: (orderNumber: string) => void
 }) {
   const [open, setOpen] = useState(false)
   const pending = orders.filter((o) => o.payment_status === 'pending')
@@ -70,6 +72,15 @@ export function SlipReviewPanel({ orders, intentsByOrder, onConfirmPayment }: {
                       data-testid={`slip-confirm-${o.order_number}`}
                     >
                       ✅ ยืนยันการชำระเงิน
+                    </button>
+                    {/* R10 (Owner 2026-10-27): ปุ่มปฏิเสธโดยมือแอดมิน — เผื่อสลิปไม่ถูก/เงินไม่เข้า */}
+                    <button
+                      type="button"
+                      onClick={() => onRejectPayment(o.order_number)}
+                      className="btn btn-outline text-sm text-red-600 border-red-300 hover:bg-red-50"
+                      data-testid={`slip-reject-${o.order_number}`}
+                    >
+                      ❌ ปฏิเสธสลิป
                     </button>
                   </div>
                 </div>

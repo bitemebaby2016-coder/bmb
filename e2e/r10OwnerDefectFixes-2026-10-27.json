@@ -1,0 +1,33 @@
+{
+  "session": "R10 — Owner real-testing defects (2026-10-27, list of 16)",
+  "head_before": "340c28d",
+  "fixes": {
+    "1_sameday_banner": "homeProviders.getStoreStatusFromRounds + StoreStatusStrip — ตัด 'ส่งรอบถัดไป X–Y'/'ส่ง 11:00–15:00' ออกตามคำสั่ง 'ไม่ต้องแสดง' · เซมเดย์สั่งได้ตลอดเวลาเปิดร้าน ไม่ผูกพรีรอบ",
+    "2_preorder_banner_respects_closed_round": "nextPre filter เพิ่ม operating_hours (pre_order_open + morning/midday/evening_open) — รอบที่แอดมินปิดไม่โผล่ในป้ายพรีออเดอร์ (note: ตอน repro DB ยัง active/evening_open=true — ต้องปิดผ่านสวิตช์แอดมินแล้วป้ายจะไม่โชว์)",
+    "3_address_photo_button": "CheckoutPage ปุ่ม 📷 ถ่ายรูป/🖼️ แนบรูป ระหว่างใช้พิกัด↔ยืนยันตำแหน่ง + lib/addressPhoto.ts (upload → address-photos bucket) + attach_address_photo (161) + ไรเดอร์เห็นรูปบนหน้างาน (get_address_photo · 162)",
+    "4_coupon_checkout_only_popup": "CouponBox = popup เลือกโค้ดที่ใช้ได้ตอนนี้ (จิ้ม = เติม+ใช้อัตโนมัติ) ที่ Checkout เท่านั้น · ยกเลิก apply จาก /menu?code= และ PromotionsPage (เปลี่ยนเป็นพาไปหน้าชำระเงิน) · ลบ CouponBox ออกจาก CartPage",
+    "6_admin_new_order_notif_sound": "migration 161 orders_notify_hook (INSERT/UPDATE status/payment_status → notifications ทุกเหตุการณ์ · trigger พิสูจน์แล้วด้วย tx+ROLLBACK: ORDER_DISPATCHED โผล่จริง) + NotificationDropdown poll ทุก 20 วิ + เสียง WebAudio + ปุ่ม 🔊/🔇 (localStorage bmb:notif-sound)",
+    "7_slip_reject_button": "SlipReviewPanel ปุ่ม ❌ ปฏิเสธสลิป + migration 162 admin_reject_payment (payment_status=failed + audit) + AdminOrders.handleRejectPayment (prompt เหตุผล)",
+    "8_auto_redirect_kitchen": "AdminOrders ยืนยันชำระสำเร็จ → navigate('/admin/kitchen')",
+    "10_auto_redirect_dispatch": "AdminKitchen กดพร้อมส่งสำเร็จ → navigate('/admin/delivery')",
+    "12_rider_silent_failure": "RiderPwaPage.completeDelivery เพิ่ม catch (เดิม error หายเงียบ = กดยืนยันแล้วนิ่ง) — server sync ของ driver_update_delivery_status พิสูจน์แล้วว่าทำงาน (delivery-sync path ผ่าน guard + notification โผล่)",
+    "11_16_delete_stale_orders": "e2e/r10Cleanup — ลบ BMB-20261019-405 / BMB-20261022-205 / BMB-20261020-337 + ลูกครบ 9 ตาราง (result: orders_deleted=3 · after=0)"
+  },
+  "db_migrations_applied": {
+    "161_order_notifications_address_photo": "triggers×3 ✓ photo_col ✓ attach_fn ✓ bucket ✓ (e2e/r10Apply161-result.json)",
+    "162_admin_reject_payment": "admin_reject_payment ✓ get_address_photo ✓ (e2e/r10Apply162-result.json)"
+  },
+  "validation": {
+    "tsc": "clean",
+    "vite_build": "success (3.97s + PWA)",
+    "eslint_changed_files": "clean",
+    "vitest_targeted": "140+ tests green across all affected files (couponBox incl. new popup flow, slipReviewPanel, storeStatusWindow, checkout×2, homePreOrderModeGuard, riderFullCycle, dispatchContract, adminOrdersOp, statusTruthMatrix, orderTimeline, notificationReconciliation, menu/source invariants)",
+    "full_suite": "runs in CI (Test + Lint + Build) on push"
+  },
+  "open_items_for_owner": [
+    "#2 'ตั้งปิดรอบเย็นไว้': ตอนตรวจ DB รอบเย็นยัง status=active + evening_open=true — ถ้าท่านปิดผ่านสวิตช์ไหนแล้วไม่ติด บอกชื่อสวิตช์มา (ป้ายเช็คแล้วว่าเคารพทั้ง round status + operating_hours)",
+    "#9/#13 status ค้างพร้อมส่ง: server พร้อมแล้ว (delivery-sync พิสูจน์ว่า hop ผ่าน + เด้ง notification) — รอบหน้าให้ไรเดอร์กดจนจบ flow (เช็คอินในรัศมี 300 ม. + แนบ POD ก่อนยืนยัน) แล้วสถานะลูกค้า/แอดมินจะวิ่งถึง delivered พร้อมแจ้งเตือน",
+    "#14 แผนที่ไรเดอร์: driver table มีของจริงแค่ 'พอล ไบท์ไดรฟ์' 1 คน (ไม่มีแถวทดสอบค้าง) — ถ้ายังเห็น marker เก่าบนแผนที่ คือ location cache ฝั่ง UI (reload แล้วหาย) · เคลียร์ 'ยังไม่มอบหมาย' แล้วผ่านการลบ 205/337",
+    "#16 แอดมินเห็นการจบงานไรเดอร์: ตอนนี้มี notification ORDER_DELIVERED + assignment สิ้นสุดในตารางจัดส่ง — ถ้าต้องการเพิ่ม banner/รายงานเฉพาะ แจ้งเพิ่ม"
+  ]
+}

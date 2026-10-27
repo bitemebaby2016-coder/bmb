@@ -11,8 +11,6 @@ import { buildHeadingGroups, headingChips, menuTabItems } from '@/lib/catalogStr
 import { getProductScheduleMap, type ProductScheduleMap } from '@/lib/productSchedule'
 import { useCartStore } from '@/store/cartStore'
 import { showToast } from '@/components/ui/ToastContainer'
-import { applyCouponCode } from '@/components/CouponBox'
-import { describeCouponResult } from '@/lib/promotionClient'
 import { FoodMenuCard } from '@/components/FoodMenuCard'
 import { MascotBadge } from '@/components/MascotBadge'
 import { runOrderBuilder } from '@/lib/orderEntry'
@@ -75,20 +73,18 @@ export function MenuPage() {
     if (wantTab === 'pre-order' || wantTab === 'same-day') setMenuTab(wantTab)
   }, [searchParams])
 
-  // ✓ A1 (2026-10-22): deep-link /menu?code=X — apply คูปองเข้าตะกร้าอัตโนมัติ
-  // (ทางเดียวกับปุ่ม "ใช้เลย" ที่หน้าโปรโมชัน — ใช้ applyCouponCode ตัวเดียว)
+  // ✓ R10 (Owner 2026-10-27): คูปองใช้ที่หน้าเช็คเอาท์อย่างเดียว — deep-link ?code=X
+  // ไม่ apply จากนอกหน้าชำระเงินอีก (เดิม apply แล้วค้าง "ยังไม่เข้าเงื่อนไข") —
+  // บอกทางไปเลือกโค้ดที่หน้าชำระเงินแทน
   useEffect(() => {
     const code = (searchParams.get('code') || '').trim()
     if (!code) return
-    void (async () => {
-      const result = await applyCouponCode(code)
-      showToast(describeCouponResult(result), result.ok ? 'success' : result.reason === 'below_min' ? 'info' : 'error')
-      setSearchParams((prev) => {
-        const p = new URLSearchParams(prev)
-        p.delete('code')
-        return p
-      }, { replace: true })
-    })()
+    showToast(`โค้ด ${code} — เลือกใช้ได้ที่หน้าชำระเงิน (แตะกล่องคูปองแล้วเลือกจากรายการ)`, 'info')
+    setSearchParams((prev) => {
+      const p = new URLSearchParams(prev)
+      p.delete('code')
+      return p
+    }, { replace: true })
   }, [searchParams, setSearchParams])
 
   useEffect(() => {

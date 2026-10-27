@@ -423,6 +423,17 @@ export async function confirmOfflinePayment(orderNumber: string): Promise<{ succ
   return { success: true }
 }
 
+// R10 (Owner 2026-10-27): แอดมินปฏิเสธสลิป/การชำระเงินด้วยมือ (สลิปไม่ถูก/เงินไม่เข้า) —
+// server RPC admin_reject_payment (162): payment_status -> failed + audit log
+export async function rejectOfflinePayment(orderNumber: string, reason: string): Promise<{ success: boolean; error?: string }> {
+  const r = await supabase.rpc('admin_reject_payment', { p_order_number: orderNumber, p_reason: reason })
+  if (r.error) {
+    console.error('[rejectOfflinePayment] RPC error:', r.error)
+    return { success: false, error: r.error.message }
+  }
+  return { success: true }
+}
+
 // REMOVED: markPaymentFailed (dead code - canonical failed path is webhook -> record_payment_result)
 
 // ============================================

@@ -19,6 +19,7 @@ import { showToast } from '@/components/ui/ToastContainer'
 import { createOrderDetailed, orderInputFingerprint, type OrderInput, type OrderResult } from '@/lib/bmbAdminApi_orders'
 import { SubmitKeyRing, describeOrderSubmitError } from '@/lib/orderSubmitKey'
 import { reverseGeocode } from '@/lib/googleMaps'
+import { uploadAddressPhoto, attachAddressPhoto } from '@/lib/addressPhoto'
 import { createPaymentIntent, getPaymentIntents } from '@/lib/paymentGateway'
 import { writeAuditLog } from '@/lib/auditLog'
 import { useLocationStore, isTrustedSource, deliveryPointStatus } from '@/store/locationStore'
@@ -338,6 +339,36 @@ export function CheckoutPage() {
     setDeliveryAddress((a) => ({ ...a, latitude: lat, longitude: lng, source: 'manual', provenance: 'manual', confirmed: false }))
   }
 
+  // R10 (Owner 2026-10-27): ปุ่มถ่าย/แนบรูป "ที่อยู่ลูกค้า" — ถ่ายรูปหน้าบ้าน/จุดส่งให้
+  // ไรเดอร์เห็น · upload ทันทีที่เลือก (path ใต้โฟลเดอร์ตัวเอง) · ผูกเข้าออเดอร์ตอนสั่งสำเร็จ
+  const photoCamRef = useRef<HTMLInputElement>(null)
+  const photoGalRef = useRef<HTMLInputElement>(null)
+  const [addressPhoto, setAddressPhoto] = useState<{ path: string; preview: string } | null>(null)
+  const [photoBusy, setPhotoBusy] = useState(false)
+
+  async function handlePickAddressPhoto(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    e.target.value = '' // เลือกไฟล์เดิมซ้ำได้
+    if (!file) return
+    if (!file.type.startsWith('image/')) { showToast('ไฟล์ต้องเป็นรูปภาพ', 'error'); return }
+    setPhotoBusy(true)
+    try {
+      const { supabase } = await import('@/lib/supabase')
+      const uid = (await supabase.auth.getSession()).data.session?.user?.id ?? 'guest'
+      const up = await uploadAddressPhoto(file, uid)
+      if (!up.ok || !up.path) {
+        showToast(`อัปโหลดรูปที่อยู่ไม่สำเร็จ: ${up.error || 'ไม่ทราบสาเหตุ'} — ลองใหม่ได้`, 'error')
+        return
+      }
+      setAddressPhoto({ path: up.path, preview: URL.createObjectURL(file) })
+      showToast('📷 แนบรูปที่อยู่แล้ว — รูปนี้จะส่งไปกับออเดอร์ให้ไรเดอร์เห็น', 'success')
+    } catch (err) {
+      showToast(`อัปโหลดรูปที่อยู่ไม่สำเร็จ (${String((err as Error)?.message || err).slice(0, 60)})`, 'error')
+    } finally {
+      setPhotoBusy(false)
+    }
+  }
+
   function handleConfirmLocation() {
     // CR-2 correction: trust/confirmation is decided by deliveryPointStatus —
     // a saved point keeps its provenance ('saved' + gps/manual origin) and is
@@ -643,6 +674,8 @@ export function CheckoutPage() {
       return
     }
     submitKeysRef.current.release(submitFp) // created/replayed — payload settled
+    // R10: แนบรูปที่อยู่เข้าออเดอร์ (best-effort — ห้ามบล็อกการสั่งซื้อ)
+    if (addressPhoto) void attachAddressPhoto(order.order_number, addressPhoto.path)
 
     // [G&R 154] ผูกโค้ดแนะนำเพื่อนทันทีหลังออเดอร์สร้างสำเร็จ — ทุกกฎ (self/เบอร์ซ้ำ/
     // เพื่อนใหม่/หน้าต่างเวลา) validate ฝั่งเซิร์ฟเวอร์ใน referral_claim · ล้มเหลว = แจ้ง
@@ -1038,7 +1071,48 @@ export function CheckoutPage() {
           longitude={deliveryAddress.longitude}
           onPick={handleMapPick}
         />
-        <div className="flex items-center gap-3 flex-wrap">
+        {/* R10 (Owner 2026-10-27): ปุ่มถ่ายรูป/แนบรูป "ที่อยู่ลูกค้า" — อยู่หลังปุ่มใช้พิกัด
+            ก่อนปุ่มยืนยันตำแหน่งจัดส่ง · รูปนี้จะติดไปกับออเดอร์ให้ไรเดอร์เห็นหน้าบ้าน */}
+        <div className="mt-3 rounded-xl border border-dashed border-brand-primary/30 p-3">
+          <p className="text-sm font-semibold text-brand-accent mb-2">📸 รูปที่อยู่/หน้าบ้าน (ช่วยให้ไรเดอร์หาเจอ — ไม่บังคับ)</p>
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              onClick={() => photoCamRef.current?.click()}
+              disabled={photoBusy}
+              className="btn btn-outline text-sm"
+              data-testid="address-photo-camera"
+            >
+              📷 ถ่ายรูป
+            </button>
+            <button
+              type="button"
+              onClick={() => photoGalRef.current?.click()}
+              disabled={photoBusy}
+              className="btn btn-outline text-sm"
+              data-testid="address-photo-gallery"
+            >
+              🖼️ แนบรูปจากเครื่อง
+            </button>
+            {photoBusy && <span className="text-xs text-brand-muted">กำลังอัปโหลดรูป…</span>}
+            {addressPhoto && (
+              <div className="flex items-center gap-2">
+                <img src={addressPhoto.preview} alt="รูปที่อยู่จัดส่ง" className="w-14 h-14 rounded-lg object-cover border" data-testid="address-photo-preview" />
+                <button
+                  type="button"
+                  onClick={() => setAddressPhoto(null)}
+                  className="text-xs text-brand-danger hover:underline"
+                  data-testid="address-photo-remove"
+                >
+                  ลบรูป
+                </button>
+              </div>
+            )}
+          </div>
+          <input ref={photoCamRef} type="file" accept="image/*" capture="environment" onChange={(e) => void handlePickAddressPhoto(e)} className="hidden" data-testid="address-photo-cam-input" />
+          <input ref={photoGalRef} type="file" accept="image/*" onChange={(e) => void handlePickAddressPhoto(e)} className="hidden" data-testid="address-photo-gal-input" />
+        </div>
+        <div className="flex items-center gap-3 flex-wrap mt-3">
           <button
             type="button"
             className="btn btn-primary btn-sm"

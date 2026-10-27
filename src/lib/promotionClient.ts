@@ -157,6 +157,28 @@ export function evaluateCoupon(
   return { ok: true, promo, discountAmount }
 }
 
+/**
+ * R10 (Owner 2026-10-27): รายการโค้ดที่ "ใช้ได้ตอนนี้" สำหรับ popup เลือกคูปอง
+ * ที่หน้าเช็คเอาท์ (จิ้มแล้วโชว์โค้ดปัจจุบันให้เลือก เติมอัตโนมัติ) — คัดเฉพาะ
+ * แถวที่มีโค้ด + เปิดใช้ + อยู่ในช่วงวันที่ (กติกาเดียวกับ evaluateCoupon)
+ */
+export async function listAvailableCoupons(today: Date = new Date()): Promise<PromotionRow[]> {
+  const { data, error } = await supabase
+    .from('promotions')
+    .select('*')
+    .order('created_at', { ascending: false })
+  if (error) return []
+  const todayKey = utcDateKey(today)
+  return (data || []).filter((r) => {
+    const code = normalizePromoCode(r.code)
+    if (!code) return false
+    if (r.is_active === false) return false
+    if (r.start_date && r.start_date > todayKey) return false
+    if (r.end_date && r.end_date < todayKey) return false
+    return true
+  })
+}
+
 /** บรรทัดตะกร้าที่ใช้คำนวณฐานสินค้าเข้า scope (เมื่อแคมเปญจำกัดสินค้า) */
 export interface CouponLine {
   productId: string

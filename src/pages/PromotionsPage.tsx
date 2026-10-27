@@ -2,8 +2,6 @@ import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { showToast } from '@/components/ui/ToastContainer'
 import { getPromotionsWithStatus, type PromotionRow } from '@/lib/bmbAdminApi_promotions'
-import { applyCouponCode } from '@/components/CouponBox'
-import { describeCouponResult } from '@/lib/promotionClient'
 
 // ============================================
 // Bite Me Baby — Promotions page (ZERO-FAKE closure 2026-10-18)
@@ -90,19 +88,17 @@ export function PromotionsPage() {
       navigate('/menu')
       return
     }
-    // A1 (2026-10-22): "ใช้เลย" ต้อง apply เข้าตะกร้าทันทีผ่าน applyCouponCode
-    // (ทางเดียวกับหน้าตะกร้า/ชำระเงิน) — โค้ดเข้า store ทันที ไม่ต้องพิมพ์เองตอนจ่าย
-    // clipboard = bonus เงียบเท่านั้น (ห้าม toast "คัดลอกแล้ว" ถ้าไม่ได้ก้อบจริง —
-    // โค้ดโชว์บนจออยู่แล้ว)
-    const result = await applyCouponCode(code)
+    // R10 (Owner 2026-10-27): คูปองใช้ที่หน้าเช็คเอาท์อย่างเดียว — "ใช้เลย" ไม่ apply
+    // จากหน้านี้แล้ว (เดิม apply นอกหน้าชำระเงิน → ค้าง "ยังไม่เข้าเงื่อนไข") — พาไป
+    // หน้าชำระเงินให้เลือกโค้ดจาก popup (เติมอัตโนมัติ) · clipboard = bonus เงียบ
     setUsedId(promo.id)
     try {
       await navigator.clipboard?.writeText(code)
     } catch {
       /* clipboard ใช้ไม่ได้ (WebView/มือถือ/ไม่ใช่ https) — ไม่แสร้งว่าก้อบ */
     }
-    showToast(describeCouponResult(result), result.ok ? 'success' : result.reason === 'below_min' ? 'info' : 'error')
-    navigate('/menu')
+    showToast(`โค้ด ${code} — เลือกใช้ที่หน้าชำระเงิน (แตะกล่องคูปองแล้วเลือกจากรายการ)`, 'info')
+    navigate('/checkout')
   }
 
   return (
@@ -112,7 +108,7 @@ export function PromotionsPage() {
       <div className="card mb-6 bg-gradient-to-r from-purple-50 to-pink-50">
         <h3 className="font-bold text-brand-accent mb-2">💡 วิธีใช้โค้ดส่วนลด</h3>
         <p className="text-sm text-brand-muted">
-          กดปุ่ม &quot;ใช้เลย&quot; — โค้ดจะเข้าตะกร้าของคุณทันที (ดูได้ในหน้าตะกร้า/ชำระเงิน)
+          กดปุ่ม &quot;ใช้เลย&quot; — ระบบพาไปหน้าชำระเงินให้เลือกโค้ดจากรายการ (เติมอัตโนมัติ)
           ระบบตรวจส่วนลดจากโปรโมชั่นจริงตามเงื่อนไข (วันที่/ยอดขั้นต่ำ) และยืนยันยอดจริงอีกครั้งบนเซิร์ฟเวอร์ตอนสั่งซื้อ
         </p>
       </div>

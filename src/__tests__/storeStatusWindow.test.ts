@@ -26,23 +26,24 @@ const tomorrowRound = {
 }
 
 describe('L-6 — แถบสถานะตามเวลา/รอบจริง', () => {
-  it('~10:00 (ช่วงว่างหลังรอบเช้าหมด window) ห้ามโชว์ "เช้า" → บอกเซมเดย์ยังสั่งได้ + รอบถัดไป', () => {
+  it('~10:00 (ช่วงว่างหลังรอบเช้าหมด window) ห้ามโชว์ "เช้า" → บอกเซมเดย์ยังสั่งได้ (ไม่โชว์เวลาส่ง — R10 2026-10-27)', () => {
     const s = getStoreStatusFromRounds(todayRounds, atIctl('10:00'))
     expect(s.isOpen).toBe(true)
     expect(s.state).toBe('open')
     expect(s.message).not.toContain('เช้า')
     expect(s.message).toContain('เซมเดย์')
-    expect(s.message).toContain('11:00–14:00')
+    // R10 (Owner 2026-10-27 "ส่ง 11:00–15:00 ไม่ต้องแสดง"): ห้ามผูกเซมเดย์กับเวลาส่งของรอบ
+    expect(s.message).not.toContain('11:00')
     // ไม่มีรอบ nàoอยู่ในหน้าต่าง → ห้ามโชว์ชื่อรอบ/ตัวเลขความจุของรอบอื่น
     expect(s.currentRoundLabel).toBeUndefined()
     expect(s.capacityPct).toBeUndefined()
   })
 
-  it('11:00 พอดี = อยู่ในหน้าต่างรอบเที่ยง → โชว์รอบเที่ยง (ไม่ใช่รอบเช้า)', () => {
+  it('11:00 พอดี = อยู่ในหน้าต่างรอบเที่ยง → currentRoundLabel = เที่ยง (ข้อความยังคงสไตล์เซมเดย์)', () => {
     const s = getStoreStatusFromRounds(todayRounds, atIctl('11:00'))
     expect(s.isOpen).toBe(true)
     expect(s.message).toContain('เปิดรับออเดอร์')
-    expect(s.message).toContain('เที่ยง')
+    expect(s.message).toContain('เซมเดย์')
     expect(s.message).not.toContain('เช้า')
     expect(s.currentRoundLabel).toBe('เที่ยง')
     expect(typeof s.capacityPct).toBe('number')

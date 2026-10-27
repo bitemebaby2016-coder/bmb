@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useNotificationStore } from '@/store/notificationStore'
 import { Link } from 'react-router-dom'
 import { useAuthStore } from '@/store/authStore'
@@ -12,6 +12,31 @@ const icons: Record<string, string> = {
   referral: '👥',
 }
 
+const SOUND_KEY = 'bmb:notif-sound'
+
+/** R10 (Owner 2026-10-27): เสียงแจ้งเตือนสั้น 2 โน้ต (WebAudio — ไม่ต้องโหลดไฟล์) */
+function playNotifBeep() {
+  try {
+    const Ctx = (window as unknown as { AudioContext?: typeof AudioContext; webkitAudioContext?: typeof AudioContext }).AudioContext
+      ?? (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext
+    if (!Ctx) return
+    const ctx = new Ctx()
+    const osc = ctx.createOscillator()
+    const gain = ctx.createGain()
+    osc.type = 'sine'
+    osc.frequency.value = 880
+    gain.gain.value = 0.07
+    osc.connect(gain)
+    gain.connect(ctx.destination)
+    osc.start()
+    osc.frequency.setValueAtTime(1174, ctx.currentTime + 0.12)
+    osc.stop(ctx.currentTime + 0.28)
+    osc.onended = () => void ctx.close()
+  } catch {
+    /* audio ไม่พร้อม (เบราว์เซอร์/policy) — เงียบไว้ */
+  }
+}
+
 export function NotificationDropdown() {
   const notifications = useNotificationStore((s) => s.notifications)
   const unreadCount = useNotificationStore((s) => s.unreadCount)
@@ -21,6 +46,21 @@ export function NotificationDropdown() {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
   const [open, setOpen] = useState(false)
   const [hydrated, setHydrated] = useState(false)
+  // R10 (Owner 2026-10-27): เสียงแจ้งเตือน + ปุ่มเปิด/ปิด (จำค่าไว้ให้แอดมิน)
+  const [soundOn, setSoundOn] = useState(() => {
+    try { return localStorage.getItem(SOUND_KEY) !== 'off' } catch { return true }
+  })
+  const soundRef = useRef(soundOn)
+  soundRef.current = soundOn
+  const seenRef = useRef<Set<string> | null>(null)
+
+  function toggleSound() {
+    setSoundOn((v) => {
+      const next = !v
+      try { localStorage.setItem(SOUND_KEY, next ? 'on' : 'off') } catch { /* private mode */ }
+      return next
+    })
+  }
 
   useEffect(() => {
     // ✅ GAP CLOSURE: Request browser notification permission on mount
@@ -29,9 +69,32 @@ export function NotificationDropdown() {
     // W3-D: hydrate durable server notifications once (RLS own rows only).
     if (isAuthenticated && !hydrated) {
       setHydrated(true)
-      getMyNotifications().then((rows) => hydrateServerNotifications(rows))
+      getMyNotifications().then((rows) => {
+        seenRef.current = new Set(rows.map((r) => r.id))
+        hydrateServerNotifications(rows)
+      })
     }
   }, [isAuthenticated, hydrated, hydrateServerNotifications])
+
+  // R10 (Owner "ออเดอร์เข้าไม่มีในแจ้งเตือน ต้องมีแจ้งเตือนและมีเสียง"): poll ฟีดจริงทุก 20 วิ
+  // — ออเดอร์ใหม่/สถานะเปลี่ยน (จาก trigger 161) เข้ากระดิ่งทั้งฝั่งลูกค้าและแอดมิน
+  // (แอดมินเห็นทุกแถวผ่าน RLS is_admin) + มีเสียงเมื่อมีรายการใหม่ (ปิดได้จากปุ่มในกล่องนี้)
+  useEffect(() => {
+    if (!isAuthenticated) return
+    let cancelled = false
+    const tick = async () => {
+      const rows = await getMyNotifications()
+      if (cancelled) return
+      const seen = seenRef.current ?? (seenRef.current = new Set())
+      const fresh = rows.filter((r) => !r.is_read && !seen.has(r.id))
+      rows.forEach((r) => seen.add(r.id))
+      if (fresh.length > 0 && soundRef.current) playNotifBeep()
+      hydrateServerNotifications(rows)
+    }
+    void tick()
+    const t = setInterval(() => void tick(), 20_000)
+    return () => { cancelled = true; clearInterval(t) }
+  }, [isAuthenticated, hydrateServerNotifications])
 
   // Bell stays visible even at 0 unread (2026-10-24 acceptance): the badge may
   // clear, but notification HISTORY must remain reachable from the header.
@@ -64,11 +127,23 @@ export function NotificationDropdown() {
           <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
           <div className="absolute right-0 top-12 w-80 max-h-96 overflow-y-auto bg-white rounded-xl shadow-2xl border z-50">
             {/* Header */}
-            <div className="sticky top-0 bg-white border-b p-4 flex items-center justify-between rounded-t-xl">
+            <div className="sticky top-0 bg-white border-b p-4 flex items-center justify-between gap-2 rounded-t-xl">
               <h3 className="font-bold text-brand-accent">การแจ้งเตือน ({unreadCount} อันอ่าน)</h3>
-              <button onClick={() => void handleMarkAllRead()} className="text-xs text-brand-primary hover:underline">
-                อ่านทั้งหมดแล้ว ✓
-              </button>
+              <div className="flex items-center gap-2">
+                {/* R10 (Owner 2026-10-27): ปุ่มเปิด/ปิดเสียงแจ้งเตือน (จำค่าให้แอดมิน) */}
+                <button
+                  onClick={toggleSound}
+                  title={soundOn ? 'ปิดเสียงแจ้งเตือน' : 'เปิดเสียงแจ้งเตือน'}
+                  aria-pressed={soundOn}
+                  data-testid="notif-sound-toggle"
+                  className={`text-xs px-2 py-1 rounded-full border transition-colors ${soundOn ? 'border-brand-primary text-brand-primary bg-brand-primary/10' : 'border-gray-300 text-brand-muted'}`}
+                >
+                  {soundOn ? '🔊 เสียง' : '🔇 เงียบ'}
+                </button>
+                <button onClick={() => void handleMarkAllRead()} className="text-xs text-brand-primary hover:underline">
+                  อ่านทั้งหมดแล้ว ✓
+                </button>
+              </div>
             </div>
 
             {/* Notifications List */}

@@ -3,7 +3,6 @@ import { useEffect, useState } from 'react'
 import { useCartStore } from '@/store/cartStore'
 import { MascotBadge } from '@/components/MascotBadge'
 import { resolveAddOnLines, addOnTotalFor } from '@/lib/addonDisplay'
-import { CouponBox } from '@/components/CouponBox'
 import { getProductScheduleMap, type ProductScheduleMap } from '@/lib/productSchedule'
 
 export function CartPage() {
@@ -119,7 +118,12 @@ export function CartPage() {
       )}
 
       {/* M2: coupon UI รวมเป็น CouponBox component เดียว — ใช้ร่วมกับ CheckoutPage */}
-      <CouponBox />
+      {/* R10 (Owner 2026-10-27): คูปองใช้ที่หน้าเช็คเอาท์อย่างเดียว — กล่องเลือกโค้ด (popup)
+          อยู่ที่ CheckoutPage เท่านั้น ที่นี่โชว์ทางไปต่อ */}
+      <div className="card mb-6">
+        <h3 className="font-bold text-brand-accent mb-2">🎟️ คูปอง/โปรโมชั่น</h3>
+        <p className="text-sm text-brand-muted">เลือกใช้โค้ดส่วนลดได้ที่หน้าชำระเงิน — แตะกล่องคูปองแล้วเลือกโค้ดที่ใช้ได้ตอนนี้ (เติมอัตโนมัติ)</p>
+      </div>
 
       {/* Summary */}
       <div className="card">

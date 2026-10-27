@@ -31,10 +31,12 @@ import {
   driverUpdateLocation,
   driverAttachPod,
   uploadPodPhoto,
+  classifyDriverError,
   type DriverRecord,
   type MyDeliveryAssignment,
   type DriverActionKind,
 } from '@/lib/driverService'
+import { fetchAddressPhotoPath, getAddressPhotoUrl } from '@/lib/addressPhoto'
 import {
   enablePush,
   disablePush,
@@ -344,6 +346,10 @@ export function RiderPwaPage() {
       setActiveOrder(null)
       lastPhotoRef.current = null
       void refresh({ silent: true })
+    } catch (e) {
+      // R10 (Owner 2026-10-27): เดิมไม่มี catch — error ระหว่าง upload/attach/ปิดงาน
+      // หายเงียบ (unhandled rejection) = อาการ "กดยืนยันแล้วไม่มีอะไรเกิดขึ้น สถานะค้าง"
+      showActionError(orderNumber, { ok: false, ...classifyDriverError(e) })
     } finally {
       setDeliverBusy(false)
       setDeliverStep(null)
@@ -358,6 +364,20 @@ export function RiderPwaPage() {
 
   // ---------- PHASE 2: GPS ของไรเดอร์สำหรับปักหมุดแผนที่ (มาจาก onCoordsChange จริง) ----------
   const [riderGps, setRiderGps] = useState<{ latitude: number; longitude: number } | null>(null)
+
+  // ---------- R10 (Owner 2026-10-27): รูปที่อยู่ที่ลูกค้าแนบไว้ — โชว์บนหน้างาน ----------
+  const [addrPhotoUrl, setAddrPhotoUrl] = useState<string | null>(null)
+  const addrPhotoOrder = activeOrder?.order_number ?? null
+  useEffect(() => {
+    if (!addrPhotoOrder) { setAddrPhotoUrl(null); return }
+    let cancelled = false
+    void (async () => {
+      const p = await fetchAddressPhotoPath(addrPhotoOrder)
+      if (cancelled) return
+      setAddrPhotoUrl(p ? await getAddressPhotoUrl(p) : null)
+    })()
+    return () => { cancelled = true }
+  }, [addrPhotoOrder])
 
   // ---------- A2: เปิด/ปิด push ฝั่งไรเดอร์ (audience='driver') ----------
   async function togglePush() {
@@ -556,6 +576,13 @@ export function RiderPwaPage() {
                     dropOff={{ latitude: Number(activeOrder.dropoff_latitude), longitude: Number(activeOrder.dropoff_longitude) }}
                     rider={riderGps}
                   />
+                  {/* R10: รูปหน้าบ้าน/ที่อยู่ที่ลูกค้าแนบไว้ — ช่วยไรเดอร์หาจุดส่ง */}
+                  {addrPhotoUrl && (
+                    <div className="mb-3" data-testid="rider-address-photo">
+                      <p className="text-xs font-semibold text-slate-600 mb-1">📸 รูปที่อยู่จากลูกค้า</p>
+                      <img src={addrPhotoUrl} alt="รูปที่อยู่ลูกค้า" className="rounded-xl border max-h-48 object-cover" />
+                    </div>
+                  )}
                   <PodDeliveryPanel
                     dropOff={{ latitude: Number(activeOrder.dropoff_latitude), longitude: Number(activeOrder.dropoff_longitude) }}
                     busy={deliverBusy}

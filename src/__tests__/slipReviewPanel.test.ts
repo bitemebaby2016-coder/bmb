@@ -52,7 +52,7 @@ async function renderPanel(orders: OrderForm[], intentsByOrder: Record<string, P
   document.body.appendChild(container)
   root = createRoot(container)
   await act(async () => {
-    root.render(React.createElement(SlipReviewPanel, { orders, intentsByOrder, onConfirmPayment }))
+    root.render(React.createElement(SlipReviewPanel, { orders, intentsByOrder, onConfirmPayment, onRejectPayment: vi.fn() }))
   })
   await flush()
   const toggle = container.querySelector('[data-testid="slip-review-toggle"]') as HTMLButtonElement

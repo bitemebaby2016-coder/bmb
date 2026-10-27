@@ -28,9 +28,11 @@ import {
   evaluateCoupon,
   describeCouponResult,
   normalizePromoCode,
+  listAvailableCoupons,
   type CouponEvaluation,
   type CouponLine,
 } from '@/lib/promotionClient'
+import type { PromotionRow } from '@/lib/bmbAdminApi_promotions'
 
 /** บรรทัดตะกร้าปัจจุบันสำหรับคำนวณฐานสินค้าเข้า scope (G&R 153) */
 function currentCouponLines(): CouponLine[] {
@@ -122,6 +124,10 @@ export function CouponBox() {
   const { subtotal, couponCode, appliedPromotion } = useCartStore()
   const [codeInput, setCodeInput] = useState('')
   const [busy, setBusy] = useState(false)
+  // R10 (Owner 2026-10-27): popup เลือกโค้ด — จิ้มกล่องคูปองแล้วโชว์โค้ดที่ใช้ได้ตอนนี้
+  const [pickerOpen, setPickerOpen] = useState(false)
+  const [pickerLoading, setPickerLoading] = useState(false)
+  const [available, setAvailable] = useState<PromotionRow[]>([])
 
   // Coupon rehydration (moved from CheckoutPage by M2): cartPersistence stores
   // the code only (D01 minimal persistence) — rebuild the applied promotion
@@ -169,6 +175,15 @@ export function CouponBox() {
     setBusy(false)
   }
 
+  // R10 (Owner 2026-10-27): คูปองใช้ที่หน้าเช็คเอาท์อย่างเดียว — จิ้มกล่องนี้แล้วเปิด
+  // popup โชว์ "โค้ดที่มีปัจจุบัน" ให้ลูกค้าเลือก เติม+ใช้ให้อัตโนมัติ (ไม่ต้องพิมพ์เอง)
+  async function openPicker() {
+    setPickerOpen(true)
+    setPickerLoading(true)
+    setAvailable(await listAvailableCoupons())
+    setPickerLoading(false)
+  }
+
   const pendingCode = couponCode.trim() && !appliedPromotion ? couponCode.trim() : ''
 
   return (
@@ -207,19 +222,77 @@ export function CouponBox() {
         </div>
       ) : (
         <>
-          <div className="flex gap-2">
-            <input
-              type="text"
-              data-testid="coupon-input"
-              placeholder="ใส่รหัสคูปอง"
-              aria-label="รหัสคูปอง"
-              value={codeInput}
-              onChange={(e) => setCodeInput(e.target.value)}
-              className="input flex-1"
-            />
-            <button type="button" onClick={() => void handleApply(codeInput)} className="btn btn-outline" data-testid="coupon-apply">ใช้โค้ด</button>
+          <button
+            type="button"
+            onClick={() => void openPicker()}
+            className="w-full rounded-xl border-2 border-dashed border-brand-primary/40 py-3 font-semibold text-sm text-brand-primary hover:bg-brand-primary/10 transition-all"
+            data-testid="coupon-open"
+          >
+            🎟️ แตะเพื่อเลือกคูปองจากรายการ
+          </button>
+          <p className="text-xs text-brand-muted mt-2">โค้ดที่ใช้ได้ตอนนี้จะแสดงเป็นป๊อปอัพให้เลือก — จิ้มแล้วเติมให้อัตโนมัติ</p>
+        </>
+      )}
+
+      {/* Popup เลือกโค้ด (R10) — จิ้มโค้ด = เติม+ใช้ทันที */}
+      {pickerOpen && (
+        <>
+          <div className="fixed inset-0 z-40 bg-black/40" onClick={() => setPickerOpen(false)} />
+          <div className="fixed inset-x-4 top-24 z-50 max-w-md mx-auto bg-white rounded-2xl shadow-2xl border p-4" data-testid="coupon-picker">
+            <div className="flex items-center justify-between mb-3">
+              <h4 className="font-bold text-brand-accent">เลือกคูปอง</h4>
+              <button type="button" onClick={() => setPickerOpen(false)} className="text-sm text-brand-muted hover:underline" data-testid="coupon-picker-close">ปิด</button>
+            </div>
+            {pickerLoading ? (
+              <p className="text-sm text-brand-muted p-3">กำลังโหลดโค้ด…</p>
+            ) : available.length === 0 ? (
+              <p className="text-sm text-brand-muted p-3">ยังไม่มีโค้ดที่ใช้ได้ในขณะนี้</p>
+            ) : (
+              <div className="space-y-2 max-h-64 overflow-y-auto">
+                {available.map((p) => {
+                  const benefit = p.discount_type === 'percentage'
+                    ? `ลด ${Number(p.discount_value) || 0}%${p.max_discount_amount ? ` (สูงสุด ${Number(p.max_discount_amount)} บาท)` : ''}`
+                    : `ลด ${Number(p.discount_value) || 0} บาท`
+                  return (
+                    <button
+                      key={p.id}
+                      type="button"
+                      disabled={busy}
+                      onClick={() => {
+                        void handleApply(String(p.code)).then(() => setPickerOpen(false))
+                      }}
+                      data-testid={`coupon-pick-${String(p.code)}`}
+                      className="w-full text-left rounded-xl border border-brand-primary/30 p-3 hover:bg-brand-primary/10 transition-all"
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="min-w-0">
+                          <div className="font-mono font-bold text-brand-accent">{String(p.code)}</div>
+                          <div className="text-xs text-brand-muted truncate">{p.name} · {benefit}</div>
+                          {Number(p.min_order_amount) > 0 && (
+                            <div className="text-xs text-amber-700">ยอดขั้นต่ำ {Number(p.min_order_amount)} บาท</div>
+                          )}
+                        </div>
+                        <span className="text-brand-primary font-semibold text-sm shrink-0">ใช้โค้ดนี้</span>
+                      </div>
+                    </button>
+                  )
+                })}
+              </div>
+            )}
+            {/* เผื่อโค้ดที่ไม่ได้อยู่ในรายการ (ป้าย/แชท) — พิมพ์เองได้ */}
+            <div className="flex gap-2 mt-3 pt-3 border-t">
+              <input
+                type="text"
+                data-testid="coupon-input"
+                placeholder="พิมพ์รหัสเอง"
+                aria-label="รหัสคูปอง"
+                value={codeInput}
+                onChange={(e) => setCodeInput(e.target.value)}
+                className="input flex-1"
+              />
+              <button type="button" onClick={() => void handleApply(codeInput).then(() => setPickerOpen(false))} className="btn btn-outline" data-testid="coupon-apply">ใช้โค้ด</button>
+            </div>
           </div>
-          <p className="text-xs text-brand-muted mt-2">ระบบตรวจรหัสจากโปรโมชั่นจริงของร้านตามเงื่อนไข (วันที่/ยอดขั้นต่ำ) — ส่วนลดยืนยันอีกครั้งบนเซิร์ฟเวอร์ตอนสร้างออเดอร์</p>
         </>
       )}
     </div>

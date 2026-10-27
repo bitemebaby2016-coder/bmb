@@ -1,9 +1,9 @@
 import { useState, useEffect, useCallback } from 'react'
-import { Link, useSearchParams } from 'react-router-dom'
+import { Link, useSearchParams, useNavigate } from 'react-router-dom'
 import { useNotificationStore } from '@/store/notificationStore'
 import { showToast } from '@/components/ui/ToastContainer'
 import {
-  getOrdersPaged, updateOrderStatus, confirmOfflinePayment, stripeRefundOrder, cancelOrder,
+  getOrdersPaged, updateOrderStatus, confirmOfflinePayment, rejectOfflinePayment, stripeRefundOrder, cancelOrder,
   getDeliveryAssignmentsFor, getOrderStatusHistory, getOrderAuditTrail, getRoundsByIds,
 } from '@/lib/bmbAdminApi_orders'
 import type { DeliveryAssignmentLiteRow } from '@/lib/bmbAdminApi_orders'
@@ -53,6 +53,7 @@ export function AdminOrders() {
   // Phase 4 (RC-6): preset จาก URL (?mode=PRE_ORDER|SAME_DAY) — redirect ของหน้าแยก
   // bookmark เก่า (/admin/pre-orders) ชี้มานี่ → ยังเห็นเฉพาะ PRE_ORDER โดยไม่ต้องมีหน้าแยก
   const [searchParams] = useSearchParams()
+  const navigate = useNavigate()
   const [filterMode, setFilterMode] = useState<'all' | 'SAME_DAY' | 'PRE_ORDER'>(() => {
     const p = searchParams.get('mode')
     return p === 'SAME_DAY' || p === 'PRE_ORDER' ? p : 'all'
@@ -200,6 +201,8 @@ export function AdminOrders() {
     if (r.success) {
       useNotificationStore.getState().triggerEvent('payment_confirmed', { orderNumber })
       showToast('Payment confirmed', 'success')
+      // R10 (Owner 2026-10-27): ยืนยันชำระแล้วเด้งไปหน้าทำงานต่ออัตโนมัติ = เข้าครัว/ผลิต
+      navigate('/admin/kitchen')
     } else {
       // D-04 (R1.2): บอกเหตุผลชัดเจนเป็นภาษาไทย (ERR_NO_PAYMENT_INTENT /
       // ERR_INTENT_NOT_PROCESSING / ERR_COD_NOT_DELIVERED ฯลฯ) แทน ERR code ลอย ๆ
@@ -207,7 +210,23 @@ export function AdminOrders() {
     }
   }
 
-async function handleStripeRefund(orderNumber: string) {
+  // R10 (Owner 2026-10-27): "ต้องมีปุ่มที่ปฏิเสธโดยมือแอดมิน เผื่อสลิปไม่ถูกหรือเงินไม่เข้า"
+  async function handleRejectPayment(orderNumber: string) {
+    const reason = window.prompt(
+      `ปฏิเสธการชำระเงินของ ${orderNumber}\nเหตุผล (เช่น สลิปไม่ถูกต้อง / เงินยังไม่เข้า):`,
+      'สลิปไม่ถูกต้อง / เงินยังไม่เข้า',
+    )
+    if (reason === null) return // แอดมินกดยกเลิก
+    const r = await rejectOfflinePayment(orderNumber, reason)
+    loadOrders()
+    if (r.success) {
+      showToast(`ปฏิเสธการชำระเงิน ${orderNumber} แล้ว (payment = failed)`, 'success')
+    } else {
+      showToast(`ปฏิเสธไม่สำเร็จ: ${r.error || 'ไม่ทราบสาเหตุ'}`, 'error')
+    }
+  }
+
+  async function handleStripeRefund(orderNumber: string) {
     // C-6: server-side Stripe refund (admin-only EF). Full refund by default.
     const r = await stripeRefundOrder(orderNumber)
     loadOrders()
@@ -317,6 +336,7 @@ async function handleStripeRefund(orderNumber: string) {
         orders={reviewOrders}
         intentsByOrder={intentsByOrder}
         onConfirmPayment={handleConfirmPayment}
+        onRejectPayment={handleRejectPayment}
       />
 
 <div className="space-y-4">

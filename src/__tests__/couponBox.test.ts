@@ -19,10 +19,10 @@ import type { Product } from '@/types'
 
 ;(globalThis as Record<string, unknown>).IS_REACT_ACT_ENVIRONMENT = true
 
-const m = vi.hoisted(() => ({ fetchCouponEvaluation: vi.fn() }))
+const m = vi.hoisted(() => ({ fetchCouponEvaluation: vi.fn(), listAvailableCoupons: vi.fn() }))
 vi.mock('@/lib/promotionClient', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/lib/promotionClient')>()
-  return { ...actual, fetchCouponEvaluation: m.fetchCouponEvaluation }
+  return { ...actual, fetchCouponEvaluation: m.fetchCouponEvaluation, listAvailableCoupons: m.listAvailableCoupons }
 })
 vi.mock('@/components/ui/ToastContainer', () => ({ showToast: vi.fn() }))
 
@@ -150,15 +150,50 @@ describe('revalidateCouponForSubmit — submit gate (ย้ายจาก Check
 describe('CouponBox — หนึ่ง UI สำหรับ Cart+Checkout (M2)', () => {
   beforeEach(() => seedCart())
 
-  it('ยังไม่มีโค้ด → โชว์ช่องกรอก + ปุ่มใช้โค้ด (testids เดิมของทั้งสองหน้า)', async () => {
+  it('ยังไม่มีโค้ด → โชว์ปุ่มแตะเลือกคูปอง (R10 popup) — เปิดแล้วเจอช่องกรอก/ปุ่มใช้โค้ด', async () => {
+    m.listAvailableCoupons.mockResolvedValue([])
     const c = await renderBox()
+    expect(c.querySelector('[data-testid="coupon-open"]')).toBeTruthy()
+    await act(async () => {
+      ;(c.querySelector('[data-testid="coupon-open"]') as HTMLButtonElement).click()
+      await Promise.resolve()
+      await Promise.resolve()
+    })
+    expect(c.querySelector('[data-testid="coupon-picker"]')).toBeTruthy()
     expect(c.querySelector('[data-testid="coupon-input"]')).toBeTruthy()
     expect(c.querySelector('[data-testid="coupon-apply"]')).toBeTruthy()
   })
 
-  it('พิมพ์โค้ด+กดใช้ → apply เข้า store ทันที + โชว์การ์ด applied-coupon', async () => {
+  it('popup โชว์โค้ดที่ใช้ได้ตอนนี้ + จิ้มโค้ด = เติม+ใช้อัตโนมัติ (R10)', async () => {
+    m.listAvailableCoupons.mockResolvedValue([row()])
     m.fetchCouponEvaluation.mockResolvedValue({ ok: true, promo: row(), discountAmount: 20 })
     const c = await renderBox()
+    await act(async () => {
+      ;(c.querySelector('[data-testid="coupon-open"]') as HTMLButtonElement).click()
+      await Promise.resolve()
+      await Promise.resolve()
+    })
+    const pick = c.querySelector('[data-testid="coupon-pick-SAVE10"]') as HTMLButtonElement
+    expect(pick).toBeTruthy()
+    await act(async () => {
+      pick.click()
+      await Promise.resolve()
+      await Promise.resolve()
+      await Promise.resolve()
+    })
+    expect(useCartStore.getState().couponCode).toBe('SAVE10')
+    expect(c.querySelector('[data-testid="applied-coupon"]')).toBeTruthy()
+  })
+
+  it('พิมพ์โค้ด+กดใช้ → apply เข้า store ทันที + โชว์การ์ด applied-coupon', async () => {
+    m.listAvailableCoupons.mockResolvedValue([])
+    m.fetchCouponEvaluation.mockResolvedValue({ ok: true, promo: row(), discountAmount: 20 })
+    const c = await renderBox()
+    await act(async () => {
+      ;(c.querySelector('[data-testid="coupon-open"]') as HTMLButtonElement).click()
+      await Promise.resolve()
+      await Promise.resolve()
+    })
     const input = c.querySelector('[data-testid="coupon-input"]') as HTMLInputElement
     const setter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value')!.set!
     await act(async () => {

@@ -187,6 +187,16 @@ export function getStoreStatusFromRounds(rounds: Array<{
   const nextPre =
     live
       .filter((r) => {
+        // R10 (Owner 2026-10-27 "ปัจจุบันตั้งปิดรอบเย็นไว้ ไปเอาจากไหนมาแสดงวะ"):
+        // รอบที่แอดมินปิด (operating_hours รายรอบ + pre_order_open) = ห้ามโผล่ในป้ายพรีออเดอร์
+        const op = opts?.operatingHours
+        if (op) {
+          if (op.pre_order_open === false) return false
+          const key = String(r.round_key || '')
+          if (key === 'morning' && op.morning_open === false) return false
+          if (key === 'midday' && op.midday_open === false) return false
+          if (key === 'evening' && op.evening_open === false) return false
+        }
         const t = cutoffAtUtc(r)
         return t === null || now.getTime() < t
       })
@@ -232,20 +242,17 @@ export function getStoreStatusFromRounds(rounds: Array<{
       isOpen: true,
       state: 'open',
       currentRoundLabel: hasWindowNow ? current.display_name || 'ปัจจุบัน' : undefined,
-      // D5 (Owner 2026-10-25): ห้ามโชว์ cutoff_time เดิมเป็น "ปิดรับ" — เซมเดย์ไม่มีคัทออฟ (148)
-      // SYNC (2026-10-26): ตัด :ss ออก (ค่า DB เป็น HH:MM:SS — เคยรั่ว "07:00:00-09:00:00" ขึ้น UI)
-      deliveryWindowLabel: `ส่ง ${String(current.delivery_start ?? '').slice(0, 5)}–${String(current.delivery_end ?? '').slice(0, 5)}`,
+      // R10 (Owner 2026-10-27): "ส่ง 11:00–15:00 ไม่ต้องแสดง" — เซมเดย์สั่งได้ตลอดเวลาเปิดร้าน
+      // ไม่ต้องรอรอบพรีออเดอร์/ไม่ผูกเวลาส่งของรอบ → ไม่ส่ง deliveryWindowLabel
+      deliveryWindowLabel: undefined,
       hoursClose: opts?.hoursClose,
       // ที่นั่ง/ความจุ = ของรอบที่อยู่ในหน้าต่างตอนนี้เท่านั้น (ไม่งั้นตัวเลขปลอม)
       capacityPct:
         hasWindowNow && Number(current.max_capacity) > 0
           ? Math.min(100, Math.round((Number(current.current_count || 0) / Number(current.max_capacity)) * 100))
           : undefined,
-      message: hasWindowNow
-        ? `เปิดรับออเดอร์${current.display_name ? ' ' + current.display_name : ''}`
-        : upcoming
-          ? `เปิดรับออเดอร์ เซมเดย์ — ยังสั่งได้ ส่งรอบถัดไป ${String(current.delivery_start ?? '').slice(0, 5)}–${String(current.delivery_end ?? '').slice(0, 5)}`
-          : 'เปิดรับออเดอร์ เซมเดย์ — ยังสั่งได้ (รอบส่งวันนี้ผ่านแล้ว)',
+      // R10: ไม่ต่อ "ส่งรอบถัดไป X–Y" ท้ายข้อความ (Owner: ไม่ต้องแสดง)
+      message: 'เปิดรับออเดอร์ เซมเดย์ — ยังสั่งได้',
       preOrderLine,
     }
   }

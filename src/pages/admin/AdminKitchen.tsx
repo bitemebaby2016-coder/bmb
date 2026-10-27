@@ -5,6 +5,7 @@
 // ============================================
 
 import { useState, useEffect, useCallback } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { getKitchenSummary, createBatch, getKitchenPipelineOrders, getOrderReadyToMake } from '@/lib/bmbAdminApi_kitchen'
 import { updateOrderStatus } from '@/lib/bmbAdminApi_orders'
 import { listRoundsForDate } from '@/lib/bmbAdminApi_rounds'
@@ -17,6 +18,7 @@ import type { DeliveryRoundRow } from '@/lib/bmbAdminApi_rounds'
 import type { OrderForm } from '@/lib/bmbAdminApi_orders'
 
 export function AdminKitchen() {
+  const navigate = useNavigate()
   const [batches, setBatches] = useState<any[]>([])
   const [summary, setSummary] = useState<any>({ pending_orders: 0, ready_orders: 0 })
   const [rounds, setRounds] = useState<DeliveryRoundRow[]>([])
@@ -94,6 +96,12 @@ export function AdminKitchen() {
           { orderNumber: o.order_number },
         )
         await load()
+        // R10 (Owner 2026-10-27): "หลังกดพร้อมส่งจากครัว … ให้เด้งขึ้นมาต่ออัตโนมัติ" —
+        // พร้อมส่งแล้วพาไปหน้าจัดส่ง (เรียกขนส่ง/มอบหมายไรเดอร์) ทันที
+        if (to === 'ready_for_dispatch') {
+          showToast('📦 พร้อมส่งแล้ว — พาไปหน้าจัดส่งเพื่อเรียกขนส่ง/มอบหมายไรเดอร์', 'info')
+          navigate('/admin/delivery')
+        }
       } else {
         showToast('เปลี่ยนสถานะไม่สำเร็จ (server ปฏิเสธ)', 'error')
       }
