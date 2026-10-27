@@ -102,8 +102,8 @@ describe('getStoreStatusFromRounds — แถบสถานะซิงค์ h
     })
     expect(s.isOpen).toBe(true)
     expect(s.hoursClose).toBe('20:00')
-    expect(s.deliveryWindowLabel).toContain('07:00–09:00')
-    expect(s.deliveryWindowLabel).not.toContain(':00:')
+    // R10 (Owner 2026-10-27 "ส่ง 11:00–15:00 ไม่ต้องแสดง"): หน้าต่างส่ง (ที่เคยตัด :ss) ถูกถอดออกแล้ว
+    expect(s.deliveryWindowLabel).toBeUndefined()
   })
   it('ไม่ส่ง opts = พฤติกรรมเดิม (test อื่นที่ไม่เกี่ยวเวลาคงเขียว)', () => {
     const s = getStoreStatusFromRounds(todayRound, new Date('2026-10-26T22:55:00+07:00'))

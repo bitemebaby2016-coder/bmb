@@ -29,8 +29,10 @@ BEGIN
     v_msg := 'มีออเดอร์เข้ามา — เลขที่ #' || NEW.order_number || ' · ขอบคุณที่สั่ง Bite Me Baby';
   ELSE
     IF TG_ARGV[0] = 'payment' THEN
-      IF COALESCE(NEW.payment_status, '') IS NOT DISTINCT FROM COALESCE(OLD.payment_status, '')
-         OR COALESCE(NEW.payment_status, '') <> 'paid' THEN
+      -- enum payment_status: ห้ามเทียบกับ '' ตรง ๆ (จะโดน cast '' -> enum = ERROR) —
+      -- cast เป็น text ก่อน (CI #602: invalid input value for enum payment_status: "")
+      IF COALESCE(NEW.payment_status::text, '') IS NOT DISTINCT FROM COALESCE(OLD.payment_status::text, '')
+         OR COALESCE(NEW.payment_status::text, '') <> 'paid' THEN
         RETURN NULL;
       END IF;
       v_type := 'PAYMENT_CONFIRMED';

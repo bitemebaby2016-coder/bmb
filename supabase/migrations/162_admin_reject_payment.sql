@@ -25,14 +25,16 @@ BEGIN
     RAISE EXCEPTION 'ERR_ORDER_CLOSED: cannot reject payment on a closed order';
   END IF;
 
-  UPDATE public.orders SET payment_status = 'failed', updated_at = NOW()
+  -- enum payment_status = pending|paid|refund|partially_refunded (ไม่มี 'failed'):
+  -- "ปฏิเสธสลิป/เงินไม่เข้า" = ยังไม่ถือว่าชำระ → กลับเป็น pending + audit บันทึกเหตุผล
+  UPDATE public.orders SET payment_status = 'pending', updated_at = NOW()
    WHERE order_number = p_order_number;
 
   PERFORM public.append_audit_log('payment_rejected', 'order', p_order_number,
     'admin rejected payment: ' || COALESCE(NULLIF(trim(COALESCE(p_reason, '')), ''), 'no reason given'),
-    jsonb_build_object('payment_status', 'failed', 'admin', v_uid));
+    jsonb_build_object('payment_status', 'pending', 'admin', v_uid));
 
-  RETURN jsonb_build_object('ok', true, 'order_number', p_order_number, 'payment_status', 'failed');
+  RETURN jsonb_build_object('ok', true, 'order_number', p_order_number, 'payment_status', 'pending');
 END;
 $$;
 GRANT EXECUTE ON FUNCTION public.admin_reject_payment(text, text) TO authenticated, service_role;

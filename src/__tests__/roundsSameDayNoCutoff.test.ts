@@ -142,7 +142,8 @@ describe('source guards — ห้ามมี same_day_cutoff ในสาย�
       { status: 'active', display_name: 'เช้า', cutoff_time: '08:00', delivery_start: '06:00', delivery_end: '09:00', max_capacity: 10, current_count: 0, scheduled_date: '2026-10-14' },
     ] as never, new Date('2026-10-14T01:00:00Z'))
     expect(s.cutoff).toBeUndefined()
-    expect(s.deliveryWindowLabel).toContain('ส่ง')
+    // R10 (Owner 2026-10-27 "ส่ง 11:00–15:00 ไม่ต้องแสดง"): หน้าต่างส่งถูกถอดออกจากป้ายแล้ว
+    expect(s.deliveryWindowLabel).toBeUndefined()
   })
 
   it('D5: StoreStatusStrip ไม่มีคำว่า "ปิดรับ {" เหลือ (แสดง "ไม่มีคัทออฟ" แทน)', () => {
