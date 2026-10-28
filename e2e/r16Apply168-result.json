@@ -1,0 +1,23 @@
+{
+  "at": "2026-10-28T14:12:55.430Z",
+  "precheck": {
+    "ledgerTop": "[{\"version\":\"168\",\"name\":\"168_multi_job_rider_route\"},{\"version\":\"167\",\"name\":\"167_kitchen_batch_loop_fix\"},{\"version\":\"166\",\"name\":\"166_r13_rider_pod_path_and_checkin\"}]",
+    "fnBefore": "[{\"has_not_exists\":false,\"has_arrived_check\":true,\"keeps_pod_gate\":true,\"keeps_geofence\":true}]",
+    "driverNow": "[{\"id\":\"drv- ###########-60bc\",\"name\":\"พอล ไบท์ไดรฟ์\",\"status\":\"available\"}]",
+    "activeByDriver": "[]"
+  },
+  "apply": "[]",
+  "verify": {
+    "fnAfter": "[{\"has_not_exists\":true,\"has_arrived_check\":true,\"keeps_pod_gate\":true,\"keeps_geofence\":true}]",
+    "ledgerTopAfter": "[{\"version\":\"168\",\"name\":\"168_multi_job_rider_route\"},{\"version\":\"167\",\"name\":\"167_kitchen_batch_loop_fix\"},{\"version\":\"166\",\"name\":\"166_r13_rider_pod_path_and_checkin\"},{\"version\":\"165\",\"name\":\"165_seed_business_settings_seo_copy\"},{\"version\":\"164\",\"name\":\"164_anon_read_business_settings_all\"}]"
+  },
+  "record": "[]",
+  "assertions": {
+    "hasNotExists": true,
+    "hasArrivedCheck": true,
+    "keepsPodGate": true,
+    "keepsGeofence": true,
+    "precheckHadNoNotExists": true
+  },
+  "ledgerHas168": true
+}

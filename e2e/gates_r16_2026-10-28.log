@@ -1,0 +1,10 @@
+GATES R16 — 2026-10-28 (strip เท่า+สีจริง · ปิดรอบ · แผนที่+route ไรเดอร์ · multi-job 168)
+round files: StoreStatusStrip/homeProviders (flags) · word-swap 17 files · deliveryPlan · RiderPwaPage/RiderMiniMap (route) · mig 168 (PROD applied)
+
+1) tsc --noEmit: START_TSC  DONE_TSC_OK
+2) npm run lint:
+START_LINT 
+DONE_LINT_OK
+3) vitest full suite (json): {"total":1671,"passed":1671,"failed":0,"files":162,"success":true}
+4) vite build: START_BUILD  DONE_BUILD_OK
+has_not_exists=true (after) / precheck false ✓ ledger=168 ✓

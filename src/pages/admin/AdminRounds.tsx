@@ -5,8 +5,8 @@
 // ทุกวันของพรีออเดอร์มีแค่ 3 รอบเหมือนเดิม ควรเป็นแพทเทิร์นเดียวกัน" → หน้านี้จัดการ
 // (1) แพทเทิร์นรอบ 3 รอบ/วัน (order_pattern · migration 144 — template ของทุกวัน)
 // (2) รอบรายวันแบบจัดกลุ่มตามวัน (ไม่ใช่การ์ดซ้ำยาวเหยียด)
-// 148 (Owner 2026-10-24): SAME_DAY = เปิด–ปิดไม่มีคัทออฟ → หน้านี้เหลือคัทออฟเดียวคือ
-//     ของพรีออเดอร์ (pre_order_cutoff) · ช่อง "คัทออฟเซมเดย์" ถูกถอดออกจากแบบฟอร์มแล้ว
+// 148 (Owner 2026-10-24): SAME_DAY = เปิด–ปิดไม่มีปิดรอบ → หน้านี้เหลือปิดรอบเดียวคือ
+//     ของพรีออเดอร์ (pre_order_cutoff) · ช่อง "ปิดรอบเซมเดย์" ถูกถอดออกจากแบบฟอร์มแล้ว
 
 import { useState, useEffect, useCallback } from 'react'
 import { Link } from 'react-router-dom'
@@ -183,9 +183,9 @@ export function AdminRounds() {
         <h2 className="text-xl font-bold text-brand-accent mb-1">📋 แพทเทิร์นรอบประจำวัน (ทุกวันใช้ชุดเดียวกัน)</h2>
       <p className="text-sm text-brand-muted mb-4">
         ค่านี้คือต้นแบบของรอบทุกวัน (ทั้งพรีออเดอร์และเซมเดย์) — แก้ที่นี่ที่เดียว แล้วกด "สร้าง/ซ่อมรอบ 30 วัน"
-        · <b>เซมเดย์ไม่มีคัทออฟ</b> — วิ่งปกติตั้งแต่ร้านเปิดถึงปิด (148) · ไม่มีช่องคัทออฟเดิม/ช่องคัทออฟเซมเดย์ในฟอร์มนี้อีก (D5 2026-10-25)
-        · คัทออฟมีทางเดียวคือ <b>ปรับของพรีออเดอร์</b> (ช่องว่าง = ใช้กฎรวม ก่อนส่ง X ชม.)
-        · <b>ลำดับกันชน (audit D2):</b> คัทออฟต่อรอบ (ช่อง "ปรับของพรีออเดอร์") ทับ{' '}
+        · <b>เซมเดย์ไม่มีปิดรอบ</b> — วิ่งปกติตั้งแต่ร้านเปิดถึงปิด (148) · ไม่มีช่องปิดรอบเดิม/ช่องปิดรอบเซมเดย์ในฟอร์มนี้อีก (D5 2026-10-25)
+        · ปิดรอบมีทางเดียวคือ <b>ปรับของพรีออเดอร์</b> (ช่องว่าง = ใช้กฎรวม ก่อนส่ง X ชม.)
+        · <b>ลำดับกันชน (audit D2):</b> ปิดรอบต่อรอบ (ช่อง "ปรับของพรีออเดอร์") ทับ{' '}
         <Link to="/admin/settings?tab=store">กฎรวม cutoff_hours (นโยบายสั่งซื้อ)</Link> — ว่าง = ใช้กฎรวมนั้น
       </p>
         <div className="space-y-3">
@@ -200,13 +200,13 @@ export function AdminRounds() {
                     setPattern(next)
                   }} />
               </label>
-              {/* D5 (Owner 2026-10-25 ไม่ผ่านเกณฑ์เดิม): ช่องคัทออฟเดิม (legacy cutoff field)
-                  ถูกถอดออกจากฟอร์มนี้จริง — คัทออฟมีเฉพาะพรีออเดอร์ (ช่องด้านล่าง) ·
+              {/* D5 (Owner 2026-10-25 ไม่ผ่านเกณฑ์เดิม): ช่องปิดรอบเดิม (legacy cutoff field)
+                  ถูกถอดออกจากฟอร์มนี้จริง — ปิดรอบมีเฉพาะพรีออเดอร์ (ช่องด้านล่าง) ·
                   ค่า cutoff_time ใน data ยังคงเดิมไว้ (ไม่แตะ production values) */}
               <label className="text-sm">ปรับของพรีออเดอร์
                 <input type="time" className="input mt-1" value={p.pre_order_cutoff}
                   data-testid={`pattern-preorder-cutoff-${p.round_key}`}
-                  title="ว่าง = ใช้กฎเดิม (คัทออฟ X ชม. ก่อนเวลาส่ง)"
+                  title="ว่าง = ใช้กฎเดิม (ปิดรอบ X ชม. ก่อนเวลาส่ง)"
                   placeholder="ตามกฎ"
                   onChange={(e) => {
                     const next = [...pattern]
@@ -273,7 +273,7 @@ export function AdminRounds() {
                       <div className="font-medium text-slate-800">{r.display_name || r.round_key || r.id}</div>
                       <div className="text-xs text-brand-muted">
                         ส่ง {String(r.delivery_start).slice(0, 5)}–{String(r.delivery_end).slice(0, 5)}
-                        {' '}· เซมเดย์ไม่มีคัทออฟ (เปิด–ปิดร้าน)
+                        {' '}· เซมเดย์ไม่มีปิดรอบ (เปิด–ปิดร้าน)
                         {' '}· พรีออเดอร์ {r.pre_order_cutoff ? String(r.pre_order_cutoff).slice(0, 5) : 'ตามกฎ'}
                         {' '}· {r.current_count}/{r.max_capacity}
                       </div>

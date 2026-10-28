@@ -1,9 +1,9 @@
 // ============================================
-// ROUND-14 / P0-1 — SAME_DAY = เปิด–ปิดไม่มีคัทออฟ (Owner 2026-10-24)
-// แทน roundsTwoCutoffs.test.ts (ถูกรื้อตามคำสั่ง: "คัทออฟมีเฉพาะ PRE_ORDER เท่านั้น")
+// ROUND-14 / P0-1 — SAME_DAY = เปิด–ปิดไม่มีปิดรอบ (Owner 2026-10-24)
+// แทน roundsTwoCutoffs.test.ts (ถูกรื้อตามคำสั่ง: "ปิดรอบมีเฉพาะ PRE_ORDER เท่านั้น")
 //
 // สิ่งที่ชุดนี้ป้องกันการย้อนกลับ:
-//   1. client mirror ห้ามมีคัทออฟเซมเดย์ (roundCutoffMs = null เสมอ)
+//   1. client mirror ห้ามมีปิดรอบเซมเดย์ (roundCutoffMs = null เสมอ)
 //   2. แบบฟอร์ม/การซ่อมรอบห้ามเขียน/อ่านคีย์ same_day_cutoff
 //   3. PRE_ORDER ต้องยังมีทั้ง override + fallback (ของจริง ห้ามโดนถอดไปด้วย)
 //   4. บรรทัด source ใน bmbAdminApi_rounds / AdminRounds ต้องไม่มีคำว่า same_day_cutoff
@@ -21,7 +21,7 @@ const H = 3_600_000
 // 2026-10-17 21:32 ICT = 2026-10-17T14:32Z
 const NIGHT = Date.parse('2026-10-17T14:32:00Z')
 
-describe('roundCutoffMs — SAME_DAY ไม่มีคัทออฟ (148)', () => {
+describe('roundCutoffMs — SAME_DAY ไม่มีปิดรอบ (148)', () => {
   it('SAME_DAY คืน null เสมอ ไม่ว่า cutoff_time จะเป็นอะไร', () => {
     expect(roundCutoffMs({ cutoff_time: '10:30' }, 'SAME_DAY')).toBeNull()
     expect(roundCutoffMs({ cutoff_time: '23:59', delivery_start: '11:00' }, 'SAME_DAY')).toBeNull()
@@ -35,8 +35,8 @@ describe('roundCutoffMs — SAME_DAY ไม่มีคัทออฟ (148)', (
     expect(roundCutoffMs({ pre_order_cutoff: '', delivery_start: '11:00' }, 'PRE_ORDER', 2)).toBe(9 * H)
   })
 
-  it('roundCutoffLabel: SAME_DAY = ข้อความ "ไม่มีคัทออฟ" · PRE_ORDER = เวลาจริง', () => {
-    expect(roundCutoffLabel({ cutoff_time: '10:30' }, 'SAME_DAY')).toBe('ไม่มีคัทออฟ')
+  it('roundCutoffLabel: SAME_DAY = ข้อความ "ไม่มีปิดรอบ" · PRE_ORDER = เวลาจริง', () => {
+    expect(roundCutoffLabel({ cutoff_time: '10:30' }, 'SAME_DAY')).toBe('ไม่มีปิดรอบ')
     expect(roundCutoffLabel({ pre_order_cutoff: '09:30', delivery_start: '11:00' }, 'PRE_ORDER', 2)).toBe('09:30')
     expect(roundCutoffLabel({ delivery_start: '11:00' }, 'PRE_ORDER', 2)).toBe('09:00')
   })
@@ -64,7 +64,7 @@ describe('roundBookability — mirror ของ server 148', () => {
     ).toBe('open')
   })
 
-  it('Q1: PRE_ORDER ยังคง window_passed เมื่อเลยหน้าต่างส่ง (คัทออฟตั้งดึก — คงไว้เฉพาะ PRE_ORDER)', () => {
+  it('Q1: PRE_ORDER ยังคง window_passed เมื่อเลยหน้าต่างส่ง (ปิดรอบตั้งดึก — คงไว้เฉพาะ PRE_ORDER)', () => {
     expect(
       roundBookability(
         { pre_order_cutoff: '23:59', delivery_start: '17:00', delivery_end: '20:00', max_capacity: 10, current_count: 0 },
@@ -73,7 +73,7 @@ describe('roundBookability — mirror ของ server 148', () => {
     ).toBe('window_passed')
   })
 
-  it('PRE_ORDER ยังได้ cutoff_passed เมื่อเลยคัทออฟ (ของจริงห้ามอ่อน)', () => {
+  it('PRE_ORDER ยังได้ cutoff_passed เมื่อเลยปิดรอบ (ของจริงห้ามอ่อน)', () => {
     const status = roundBookability(
       { delivery_start: '18:00', delivery_end: '20:00', max_capacity: 10, current_count: 0 },
       { isToday: true, nowUtcMs: NIGHT, mode: 'PRE_ORDER', preOrderCutoffHours: 2 },
@@ -107,7 +107,7 @@ describe('round pattern — คีย์ same_day_cutoff ถูกถอด (148
   it('validateRoundPatternRow: ยังเช็ค cutoff_time/pre_order_cutoff แต่ไม่มีการเช็คเซมเดย์', () => {
     const good: RoundPatternRow = { round_key: 'evening', display_name: 'เย็น', cutoff_time: '16:00', pre_order_cutoff: '14:00', delivery_start: '17:00', delivery_end: '20:00', max_capacity: 100 }
     expect(validateRoundPatternRow(good)).toBeNull()
-    expect(validateRoundPatternRow({ ...good, pre_order_cutoff: '9:00' })).toBe('คัทออฟพรีออเดอร์ไม่ถูกต้อง')
+    expect(validateRoundPatternRow({ ...good, pre_order_cutoff: '9:00' })).toBe('ปิดรอบพรีออเดอร์ไม่ถูกต้อง')
     expect(validateRoundPatternRow({ ...good, cutoff_time: '9x:00' })).toBe('เวลาปิดรับเดิม (cutoff_time) ไม่ถูกต้อง')
     // คีย์เอ็กซ์ตรา/เน่าจาก DB ไม่ทำให้ validation พัง
     expect(validateRoundPatternRow({ ...good, same_day_cutoff: '9x:00' } as RoundPatternRow)).toBeNull()
@@ -124,16 +124,16 @@ describe('source guards — ห้ามมี same_day_cutoff ในสาย�
     expect(orderPolicySrc).not.toContain('same_day_cutoff')
   })
 
-  it('D5: AdminRounds ไม่มีช่องคัทออฟเดิม/เซมเดย์ใด ๆ เหลือ — มีเฉพาะคัทออฟพรีออเดอร์', () => {
+  it('D5: AdminRounds ไม่มีช่องปิดรอบเดิม/เซมเดย์ใด ๆ เหลือ — มีเฉพาะปิดรอบพรีออเดอร์', () => {
     expect(adminRoundsSrc).not.toContain('pattern-sameday-cutoff')
     expect(adminRoundsSrc).not.toContain('same_day_cutoff')
     // D5 (Owner 2026-10-25 ไม่ผ่านเกณฑ์เดิม): ช่อง "ปิดรับเดิม (legacy)" ต้องหายไปจริง ไม่ใช่แค่เปลี่ยนป้าย
     expect(adminRoundsSrc).not.toContain('pattern-cutoff-')
     expect(adminRoundsSrc).not.toContain('ปิดรับเดิม')
     expect(adminRoundsSrc).not.toContain('cutoff_time: e.target.value')
-    // คัทออฟมีทางเดียว = ช่องปรับของพรีออเดอร์
+    // ปิดรอบมีทางเดียว = ช่องปรับของพรีออเดอร์
     expect(adminRoundsSrc).toContain('data-testid={`pattern-preorder-cutoff-${p.round_key}`}')
-    expect(adminRoundsSrc).toContain('เซมเดย์ไม่มีคัทออฟ')
+    expect(adminRoundsSrc).toContain('เซมเดย์ไม่มีปิดรอบ')
   })
 
   it('D5: StoreStatus ไม่อ้าง cutoff_time — หน้าแรกไม่โชว์ "ปิดรับ HH:MM" จากค่าเดิม', async () => {
@@ -146,7 +146,7 @@ describe('source guards — ห้ามมี same_day_cutoff ในสาย�
     expect(s.deliveryWindowLabel).toBeUndefined()
   })
 
-  it('D5: StoreStatusStrip ไม่มีคำว่า "ปิดรับ {" เหลือ (แสดง "ไม่มีคัทออฟ" แทน)', () => {
+  it('D5: StoreStatusStrip ไม่มีคำว่า "ปิดรับ {" เหลือ (แสดง "ไม่มีปิดรอบ" แทน)', () => {
     expect(storeStatusStripSrc).not.toContain('ปิดรับ {status.cutoff}')
     expect(storeStatusStripSrc).not.toContain('capacityPct')
     expect(storeStatusStripSrc).not.toContain('hoursClose')

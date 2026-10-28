@@ -618,7 +618,7 @@ export interface OperatingHours {
 export interface OrderPolicy {
   pre_order_lead_days: number;
   max_pre_order_days: number;
-  // 148 (Owner 2026-10-24): same_day_cutoff_minutes ถูกลบ — SAME_DAY ไม่มีคัทออฟใด ๆ
+  // 148 (Owner 2026-10-24): same_day_cutoff_minutes ถูกลบ — SAME_DAY ไม่มีปิดรอบใด ๆ
 }
 
 // ============================================
@@ -894,8 +894,11 @@ export interface StoreStatus {
   deliveryWindowLabel?: string
   capacityPct?: number
   message: string
-  /** สายพรีออเดอร์ (Owner 2026-10-25): รอบถัดไปที่ยังสั่งได้/คัทออฟที่ตั้งไว้ — แยกจากสายเซมเดย์ */
+  /** สายพรีออเดอร์ (Owner 2026-10-25): รอบถัดไปที่ยังสั่งได้/ปิดรอบที่ตั้งไว้ — แยกจากสายเซมเดย์ */
   preOrderLine?: string
+  /** R16 (Owner 2026-10-28): สีสถานะรายสาย — เปิด-ปิดแยกกันจริงเซมเดย์/พรีออเดอร์ (ห้ามเดาจาก isOpen) */
+  sameDayOpen?: boolean
+  preOrderOpen?: boolean
   /** SYNC (Owner 2026-10-26): เวลาปิดร้านจาก business_settings.hours (เช่น '20:00') — โชว์แทนคำว่า "ปิดร้าน" เฉย ๆ */
   hoursClose?: string
 }

@@ -16,9 +16,9 @@ export interface DeliveryRoundRow {
   id: string
   round_key: string
   display_name: string
-  /** ค่าเดิม/พื้นฐาน (legacy) — 148: เซมเดย์ไม่มีคัทออฟแล้ว คอลัมน์คัทออฟเซมเดย์ถูกถอดออกจาก schema */
+  /** ค่าเดิม/พื้นฐาน (legacy) — 148: เซมเดย์ไม่มีปิดรอบแล้ว คอลัมน์ปิดรอบเซมเดย์ถูกถอดออกจาก schema */
   cutoff_time: string
-  /** 145: คัทออฟพรีออเดอร์ของรอบ (ไม่มีค่า = ใช้กฎ cutoff_hours ก่อนส่ง) */
+  /** 145: ปิดรอบพรีออเดอร์ของรอบ (ไม่มีค่า = ใช้กฎ cutoff_hours ก่อนส่ง) */
   pre_order_cutoff?: string | null
   delivery_start: string
   delivery_end: string
@@ -128,7 +128,7 @@ export async function deleteRound(id: string): Promise<string | null> {
 export function validateRoundTemplate(row: Partial<DeliveryRoundRow>): string | null {
   if (!String(row.display_name ?? '').trim()) return 'ต้องมีชื่อรอบ (display_name)'
   if (!/^\d{2}:\d{2}(:\d{2})?$/.test(String(row.cutoff_time ?? ''))) return 'เวลาปิดรับเดิม (cutoff_time) ไม่ถูกต้อง'
-  if (String(row.pre_order_cutoff ?? '') && !/^\d{2}:\d{2}(:\d{2})?$/.test(String(row.pre_order_cutoff))) return 'คัทออฟพรีออเดอร์ไม่ถูกต้อง'
+  if (String(row.pre_order_cutoff ?? '') && !/^\d{2}:\d{2}(:\d{2})?$/.test(String(row.pre_order_cutoff))) return 'ปิดรอบพรีออเดอร์ไม่ถูกต้อง'
   if (!/^\d{2}:\d{2}(:\d{2})?$/.test(String(row.delivery_start ?? ''))) return 'เวลาเริ่มส่ง (delivery_start) ไม่ถูกต้อง'
   if (!/^\d{2}:\d{2}(:\d{2})?$/.test(String(row.delivery_end ?? ''))) return 'เวลาสิ้นสุดส่ง (delivery_end) ไม่ถูกต้อง'
   const cap = Number(row.max_capacity)
@@ -339,7 +339,7 @@ export async function applyPatternToDay(date: string, rows: RoundPatternRow[]): 
       .update({
         display_name: p.display_name,
         cutoff_time: `${p.cutoff_time}:00`,
-        // 148: คัทออฟเซมเดย์ถูกถอด — คงเฉพาะคัทออฟพรีออเดอร์ ('' = NULL = ใช้กฎ)
+        // 148: ปิดรอบเซมเดย์ถูกถอด — คงเฉพาะปิดรอบพรีออเดอร์ ('' = NULL = ใช้กฎ)
         pre_order_cutoff: p.pre_order_cutoff ? `${p.pre_order_cutoff}:00` : null,
         delivery_start: `${p.delivery_start}:00`,
         delivery_end: `${p.delivery_end}:00`,

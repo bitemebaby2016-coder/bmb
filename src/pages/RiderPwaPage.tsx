@@ -38,6 +38,7 @@ import {
   type DriverActionKind,
 } from '@/lib/driverService'
 import { fetchAddressPhotoPath, getAddressPhotoUrl } from '@/lib/addressPhoto'
+import { planMultiStopRoute, googleMapsDirUrl, toPlanStops } from '@/lib/deliveryPlan'
 import {
   enablePush,
   disablePush,
@@ -562,6 +563,51 @@ export function RiderPwaPage() {
               <button className="btn btn-outline text-xs ml-2" onClick={() => void refresh()}>🔄 ลองใหม่</button>
             </div>
           )}
+
+          {/* R16 (Owner 2026-10-28): งานหลายใบ — เส้นทาง+จุดส่งคำนวณให้ (nearest-neighbour) + แผนที่รวมจุดส่ง */}
+          {(() => {
+            const activeJobs = assignments.filter((a) => ['assigned', 'accepted', 'picked_up', 'in_transit', 'arrived'].includes(String(a.assignment_status)))
+            const stops = toPlanStops(activeJobs)
+            if (stops.length === 0) return null
+            const origin = riderGps
+              ?? (driver?.current_latitude != null && driver?.current_longitude != null
+                ? { latitude: Number(driver.current_latitude), longitude: Number(driver.current_longitude) }
+                : null)
+            const plan = planMultiStopRoute(origin, stops)
+            const dirUrl = googleMapsDirUrl(origin, plan.stops)
+            return (
+              <GlassCard className="p-4" data-testid="rider-route-plan">
+                <div className="flex items-center justify-between flex-wrap gap-2 mb-2">
+                  <h3 className="font-bold text-slate-800">
+                    🗺️ เส้นทางส่งของวันนี้ ({plan.stops.length} จุด{activeJobs.length > stops.length ? ` + ${activeJobs.length - stops.length} งานไม่มีพิกัด` : ''})
+                  </h3>
+                  {dirUrl ? (
+                    <a className="btn btn-primary text-xs" href={dirUrl} target="_blank" rel="noreferrer" data-testid="rider-open-gmaps">
+                      🧭 เปิดนำทาง Google Maps
+                    </a>
+                  ) : null}
+                </div>
+                <ol className="text-sm text-slate-700 mb-2 space-y-1">
+                  {plan.stops.map((s, i) => (
+                    <li key={s.order_number} data-testid={`rider-route-stop-${s.order_number}`}>
+                      <b>จุด {i + 1}</b> · #{s.order_number}
+                      {s.detail ? ` — ${s.detail}` : ''}
+                      <span className="text-xs text-brand-muted"> · {plan.legKm[i]?.toFixed(2)} กม.</span>
+                    </li>
+                  ))}
+                </ol>
+                <p className="text-xs text-slate-500 mb-1">
+                  รวม ≈ <b>{plan.totalKm.toFixed(2)} กม.</b>
+                  {plan.noOrigin ? ' · ยังไม่มีตำแหน่งคุณ — คงลำดับเดิม (ไม่เดา)' : ' · เรียงจากจุดใกล้ที่สุด (คำนวณในเครื่อง)'}
+                </p>
+                <RiderMiniMap
+                  dropOff={{ latitude: plan.stops[0].latitude, longitude: plan.stops[0].longitude }}
+                  rider={riderGps}
+                  stops={plan.stops}
+                />
+              </GlassCard>
+            )
+          })()}
 
           {/* ===== งานที่กำลังส่ง: แผนที่จุดปัก + ยืนยันส่ง (geo + POD) ===== */}
           {activeOrder ? (

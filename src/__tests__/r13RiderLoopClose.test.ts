@@ -1,7 +1,7 @@
 // ============================================
 // R13 (Owner 2026-10-28) — 3 คำสั่งหลัง retest:
 //   1) แถบสถานะรูปแบบใหม่: "🟢 เปิดรับออเดอร์ เซมเดย์ : ส่งทันที" +
-//      "🟢พรีออเดอร์: เปิดรับออเดอร์ รอบส่งถัดไป <ชื่อรอบ> <วันที่> (คัทออฟ HH:MM)"
+//      "🟢พรีออเดอร์: เปิดรับออเดอร์ รอบส่งถัดไป <ชื่อรอบ> <วันที่> (ปิดรอบ HH:MM)"
 //      (บอกลูกค้าด้วยว่าเป็นรอบไหนของวันไหน)
 //   2) ไรเดอร์ปิดงาน → จบลูป + ออกหน้าจอหลักอัตโนมัติ · ห้ามค้าง "กำลังเดินทาง"
 //      (ต้นตอจริง = POD path ของ drivers.id สกปรก → รูปไม่เคยเข้า bucket ·
@@ -30,7 +30,7 @@ describe('R13 — แถบสถานะ: รูปแบบใหม่ + บ
     expect(s.message).toBe('เปิดรับออเดอร์ เซมเดย์ : ส่งทันที')
   })
 
-  it('พรีออเดอร์ = รอบส่งถัดไป + วันที่ DD/MM/YYYY + (คัทออฟ HH:MM)', () => {
+  it('พรีออเดอร์ = รอบส่งถัดไป + วันที่ DD/MM/YYYY + (ปิดรอบ HH:MM)', () => {
     const closedToday = [
       { status: 'closed', display_name: 'เช้า', delivery_start: '06:00', delivery_end: '09:00', scheduled_date: TODAY },
     ]
@@ -42,11 +42,11 @@ describe('R13 — แถบสถานะ: รูปแบบใหม่ + บ
     expect(s.preOrderLine).toContain('เปิดรับออเดอร์ รอบส่งถัดไป')
     expect(s.preOrderLine).toContain('เช้า')
     expect(s.preOrderLine).toContain('29/10/2026')
-    expect(s.preOrderLine).toMatch(/\(คัทออฟ \d{2}:\d{2}\)/)
+    expect(s.preOrderLine).toMatch(/\(ปิดรอบ \d{2}:\d{2}\)/)
   })
 
-  it('strip: บรรทัดพรีออเดอร์ขึ้นต้นด้วย 🟢 (ไม่ใช่ 📅) + ไม่ truncate (วันที่ต้องไม่โดนตัด)', () => {
-    expect(storeStatusStripSrc).toContain('🟢{status.preOrderLine}')
+  it('strip: บรรทัดพรีออเดอร์ขึ้นต้นด้วย 🟢/🔴 ตาม preOrderOpen (R16) + ไม่ truncate (วันที่ต้องไม่โดนตัด)', () => {
+    expect(storeStatusStripSrc).toContain("preOrderOpen ? '🟢' : '🔴'")
     expect(storeStatusStripSrc).not.toContain('📅 {status.preOrderLine}')
     expect(storeStatusStripSrc).not.toMatch(/opacity-80 truncate/)
   })

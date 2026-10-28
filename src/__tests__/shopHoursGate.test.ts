@@ -47,7 +47,7 @@ describe('roundBookability — sync กับค่าแอดมิน', () =>
   it('เซมเดย์ 22:55 (ปิด 20:00) → shop_closed (เคสจริงของ Owner)', () => {
     expect(roundBookability(base, { isToday: true, mode: 'SAME_DAY', nowUtcMs: NIGHT, shopHoursMs: H8_20 })).toBe('shop_closed')
   })
-  it('ในเวลาเปิดร้าน → open (148: SAME_DAY ไม่มีคัทออฟ)', () => {
+  it('ในเวลาเปิดร้าน → open (148: SAME_DAY ไม่มีปิดรอบ)', () => {
     expect(roundBookability(base, { isToday: true, mode: 'SAME_DAY', nowUtcMs: NOON, shopHoursMs: H8_20 })).toBe('open')
   })
   it('ไม่ส่ง hours = ไม่เปลี่ยนพฤติกรรมเดิม (zero-fake)', () => {

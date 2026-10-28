@@ -7,6 +7,10 @@
 import type { StoreStatus } from '@/types'
 
 export function StoreStatusStrip({ status }: { status: StoreStatus }) {
+  // R16 (Owner 2026-10-28): สีตามจริงรายสาย — เซมเดย์/พรีออเดอร์เปิด-ปิดแยกกันได้
+  // (fallback: แถวเก่าไม่มี flag → เดาจากข้อความพรีออเดอร์เหมือนเดิม)
+  const sameDayOpen = status.sameDayOpen ?? status.isOpen
+  const preOrderOpen = status.preOrderOpen ?? !/ปิดรับแล้ว|ยังไม่เปิดรอบ/.test(status.preOrderLine || '')
   return (
     <div
       className={`store-strip ${status.isOpen ? 'is-open' : 'is-closed'}`}
@@ -15,18 +19,21 @@ export function StoreStatusStrip({ status }: { status: StoreStatus }) {
     >
       <span className="store-strip-dot" aria-hidden="true" />
       <div className="min-w-0">
-        <p className="text-sm sm:text-base font-bold truncate">
-          {status.isOpen ? '🟢' : '🔴'} {status.message}
+        {/* R16: สองบรรทัด "ขนาดเท่ากัน" (font เท่ากัน · ไม่ truncate) */}
+        <p className="text-sm sm:text-base font-bold" data-testid="strip-sameday">
+          {sameDayOpen ? '🟢' : '🔴'} {status.message}
         </p>
-        {/* D5 (Owner 2026-10-25 / 148): เซมเดย์ไม่มีคัทออฟ — ห้ามโชว์ "ปิดรับ HH:MM" จากค่าเดิมอีก
+        {/* D5 (Owner 2026-10-25 / 148): เซมเดย์ไม่มีปิดรอบ — ห้ามโชว์ "ปิดรับ HH:MM" จากค่าเดิมอีก
             SYNC (Owner 2026-10-26): โชว์เวลาปิดจริงจาก business_settings.hours เมื่อรู้ค่า */}
-        {/* R12 (Owner 2026-10-28): คำในวงเล็บไม่ต้องแสดง — บรรทัด (ไม่มีคัทออฟ · สั่งได้ถึง · เหลือที่นั่ง) ถอดออกแล้ว
-            (ข้อมูลเดิมเคยอยู่บรรทัดนี้: ไม่มีคัทออฟ (สั่งได้ถึง HH:MM) · เหลือที่นั่ง N% — ระบุว่าไม่แสดง) */}
-        {/* สองเลน (Owner 2026-10-25): เซมเดย์ไม่มีคัทออฟ (บรรทัดบน) · พรีออเดอร์ = รอบถัดไปที่ยังสั่งได้ */}
+        {/* R12 (Owner 2026-10-28): คำในวงเล็บไม่ต้องแสดง — บรรทัด (ไม่มีปิดรอบ · สั่งได้ถึง · เหลือที่นั่ง) ถอดออกแล้ว
+            (ข้อมูลเดิมเคยอยู่บรรทัดนี้: ไม่มีปิดรอบ (สั่งได้ถึง HH:MM) · เหลือที่นั่ง N% — ระบุว่าไม่แสดง) */}
+        {/* สองเลน (Owner 2026-10-25): เซมเดย์ไม่มีปิดรอบ (บรรทัดบน) · พรีออเดอร์ = รอบถัดไปที่ยังสั่งได้ */}
         {/* R13 (Owner 2026-10-28): รูปแบบใหม่ — "🟢พรีออเดอร์: …" (ไม่ใช่ 📅) · ไม่ truncate
-            ให้เห็นวันที่+คัทออฟครบ ("รอบส่งถัดไป เช้า 29/10/2026 (คัทออฟ 05:00)") */}
+            ให้เห็นวันที่+ปิดรอบครบ ("รอบส่งถัดไป เช้า 29/10/2026 (ปิดรอบ 05:00)") */}
         {status.preOrderLine && (
-          <p className="text-xs opacity-80">🟢{status.preOrderLine}</p>
+          <p className="text-sm sm:text-base font-bold" data-testid="strip-preorder">
+            {preOrderOpen ? '🟢' : '🔴'} {status.preOrderLine}
+          </p>
         )}
       </div>
     </div>

@@ -6,24 +6,32 @@
 //   🍳 ครัว     = config/kitchenLocation (จุดอ้างอิงเท่านั้น ไม่ใช่ปลายทาง)
 // ถ้า Google Maps SDK โหลดไม่ได้ → แสดงข้อความสาเหตุ + พิกัดตัวเลข
 // (haversine ระยะทางยังคำนวณได้) — ไม่ hardcode หลอกว่าแผนที่ทำงานแล้ว
+//
+// R16 (Owner 2026-10-28): `stops` — งานหลายใบ = ปักจุดส่ง 1..N ตามลำดับแนะนำ
+//   + polyline เส้นทาง (คำนวณฝั่ง deliveryPlan.ts · null/[] = โหมดเดิมจุดเดียว)
 // ============================================
 
 import { useEffect, useRef, useState } from 'react'
 import { loadGoogleMapsJS, isGoogleMapsConfigured, getGoogleMapId, getGoogleMapsLoadError, haversineDistanceSimple } from '@/lib/googleMaps'
 import { KITCHEN_LAT, KITCHEN_LNG } from '@/config/kitchenLocation'
+import type { PlanStop } from '@/lib/deliveryPlan'
 
 export interface RiderMiniMapProps {
   dropOff: { latitude: number; longitude: number }
   rider?: { latitude: number; longitude: number } | null
+  /** R16: งานหลายใบ (null/[] = โหมดเดิม จุดเดียว 🏠) */
+  stops?: PlanStop[] | null
 }
 
 type MapStatus = 'loading' | 'ready' | 'unavailable'
 
-export function RiderMiniMap({ dropOff, rider }: RiderMiniMapProps) {
+export function RiderMiniMap({ dropOff, rider, stops }: RiderMiniMapProps) {
   const mapRef = useRef<HTMLDivElement | null>(null)
   const mapInstanceRef = useRef<unknown>(null)
   const markerRefs = useRef<Record<string, unknown>>({})
+  const polylineRef = useRef<{ setMap: (m: unknown) => void } | null>(null)
   const [status, setStatus] = useState<MapStatus>('loading')
+  const stopList = stops && stops.length > 0 ? stops : null
 
   useEffect(() => {
     let cancelled = false
@@ -54,27 +62,57 @@ export function RiderMiniMap({ dropOff, rider }: RiderMiniMapProps) {
     // สร้างแผนที่ครั้งเดียวต่อ mount — marker sync ใน effect ถัดไป
   }, [])
 
+  // marker sync — ล้างทุกครั้งแล้วปักใหม่ (กัน marker ค้างข้ามโหมดเดี่ยว/หลายจุด)
   useEffect(() => {
     if (status !== 'ready') return
     const g = (window as { google?: { maps?: Record<string, unknown> } }).google
     const map = mapInstanceRef.current as { setCenter: (c: { lat: number; lng: number }) => void } | null
     if (!g?.maps || !map) return
-    type GMarker = { setPosition?: (p: { lat: number; lng: number }) => void }
+    type GMarker = { setPosition?: (p: { lat: number; lng: number }) => void; setMap?: (m: unknown) => void }
     const MarkerCtor = g.maps.Marker as new (opts: Record<string, unknown>) => GMarker
     try {
-      const points: Array<{ key: string; title: string; label: string; pos: { lat: number; lng: number } }> = [
-        { key: 'dropoff', title: 'ปลายทาง (จากออเดอร์)', label: '🏠', pos: { lat: dropOff.latitude, lng: dropOff.longitude } },
-        { key: 'kitchen', title: 'ครัว (จุดอ้างอิง)', label: '🍳', pos: { lat: KITCHEN_LAT, lng: KITCHEN_LNG } },
-      ]
-      if (rider) points.unshift({ key: 'rider', title: 'ตำแหน่งคุณ (GPS)', label: '🛵', pos: { lat: rider.latitude, lng: rider.longitude } })
-      for (const p of points) {
-        const existing = markerRefs.current[p.key] as GMarker | undefined
-        if (existing?.setPosition) existing.setPosition(p.pos)
-        else markerRefs.current[p.key] = new MarkerCtor({ position: p.pos, map, title: p.title, label: p.label })
+      for (const key of Object.keys(markerRefs.current)) {
+        const old = markerRefs.current[key] as GMarker | undefined
+        old?.setMap?.(null)
       }
-      map.setCenter(rider ? { lat: rider.latitude, lng: rider.longitude } : { lat: dropOff.latitude, lng: dropOff.longitude })
+      markerRefs.current = {}
+      const points: Array<{ key: string; title: string; label: string; pos: { lat: number; lng: number } }> = []
+      if (rider) points.push({ key: 'rider', title: 'ตำแหน่งคุณ (GPS)', label: '🛵', pos: { lat: rider.latitude, lng: rider.longitude } })
+      if (stopList) {
+        // R16: จุดส่งหลายใบ เรียงตามลำดับแนะนำ (เลข 1..N บนแผนที่)
+        stopList.forEach((s, i) => {
+          points.push({ key: `stop-${s.order_number}`, title: `จุด ${i + 1} · ${s.order_number}`, label: String(i + 1), pos: { lat: s.latitude, lng: s.longitude } })
+        })
+      } else {
+        points.push({ key: 'dropoff', title: 'ปลายทาง (จากออเดอร์)', label: '🏠', pos: { lat: dropOff.latitude, lng: dropOff.longitude } })
+      }
+      points.push({ key: 'kitchen', title: 'ครัว (จุดอ้างอิง)', label: '🍳', pos: { lat: KITCHEN_LAT, lng: KITCHEN_LNG } })
+      for (const p of points) {
+        markerRefs.current[p.key] = new MarkerCtor({ position: p.pos, map, title: p.title, label: p.label })
+      }
+      const focus = rider ?? (stopList ? { latitude: stopList[0].latitude, longitude: stopList[0].longitude } : { latitude: dropOff.latitude, longitude: dropOff.longitude })
+      map.setCenter({ lat: focus.latitude, lng: focus.longitude })
     } catch { /* marker พัง — แผนที่ยังใช้ดูได้ */ }
-  }, [status, dropOff.latitude, dropOff.longitude, rider?.latitude, rider?.longitude])
+  }, [status, dropOff.latitude, dropOff.longitude, rider?.latitude, rider?.longitude, stopList])
+
+  // R16: polyline เส้นทางแนะนำ — ไรเดอร์(ถ้ามี) → จุดส่งตามลำดับ
+  useEffect(() => {
+    if (status !== 'ready') return
+    const g = (window as { google?: { maps?: Record<string, unknown> } }).google
+    const map = mapInstanceRef.current as Record<string, unknown> | null
+    if (!g?.maps || !map) return
+    try {
+      if (polylineRef.current) { polylineRef.current.setMap(null); polylineRef.current = null }
+      if (stopList && stopList.length > 1) {
+        const path = [
+          ...(rider ? [{ lat: rider.latitude, lng: rider.longitude }] : []),
+          ...stopList.map((s) => ({ lat: s.latitude, lng: s.longitude })),
+        ]
+        const PolyCtor = g.maps.Polyline as new (opts: Record<string, unknown>) => { setMap: (m: unknown) => void }
+        polylineRef.current = new PolyCtor({ path, map, strokeColor: '#2563eb', strokeOpacity: 0.9, strokeWeight: 4 })
+      }
+    } catch { /* polyline พัง — ปักจุดยังใช้ดูได้ */ }
+  }, [status, rider?.latitude, rider?.longitude, stopList])
 
   const distanceM = rider
     ? Math.round(haversineDistanceSimple(rider.latitude, rider.longitude, dropOff.latitude, dropOff.longitude) * 1000)
@@ -96,6 +134,7 @@ export function RiderMiniMap({ dropOff, rider }: RiderMiniMapProps) {
       )}
       <p className="text-xs text-slate-600 mt-1">
         🏠 ปลายทาง (จากออเดอร์): {dropOff.latitude.toFixed(5)}, {dropOff.longitude.toFixed(5)}
+        {stopList ? ` · ${stopList.length} จุดส่ง (ตามลำดับแนะนำ)` : ''}
       </p>
       {rider ? (
         <p className="text-xs text-slate-600">

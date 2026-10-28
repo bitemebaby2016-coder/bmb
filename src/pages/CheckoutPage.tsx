@@ -113,7 +113,7 @@ export function CheckoutPage() {
   const [resolvedBranchId, setResolvedBranchId] = useState<string | null>(null) // TEN-07: resolve from round
   const [serverFee, setServerFee] = useState<number | null>(null)
   const [feeSource, setFeeSource] = useState<'server' | 'local-mirror' | 'error' | null>(null)
-  const [cutoffHours, setCutoffHours] = useState(2) // order_policy.cutoff_hours — คัทออฟพรีออเดอร์ (ชม. ก่อนส่ง)
+  const [cutoffHours, setCutoffHours] = useState(2) // order_policy.cutoff_hours — ปิดรอบพรีออเดอร์ (ชม. ก่อนส่ง)
   // SYNC (Owner 2026-10-26): business_settings.hours + operating_hours — เซมเดย์นอกเวลา/ปิดโหมด = สั่งไม่ได้
   const [shopHours, setShopHours] = useState<{ open: string; close: string } | null>(null)
   const [operatingHours, setOperatingHours] = useState<Record<string, boolean> | null>(null)
@@ -304,7 +304,7 @@ export function CheckoutPage() {
     }
   }, [deliveryAddress.latitude, deliveryAddress.longitude, itemCount, customer, feeRetry, fulfillment])
 
-  // order_policy display values (cutoff_hours = คัทออฟพรีออเดอร์ ก่อนส่ง — โชว์/mirror ฝั่ง client).
+  // order_policy display values (cutoff_hours = ปิดรอบพรีออเดอร์ ก่อนส่ง — โชว์/mirror ฝั่ง client).
   useEffect(() => {
     void (async () => {
       const s = await getBusinessSettings()
@@ -480,8 +480,8 @@ export function CheckoutPage() {
 
     // ✅ SERVER-AUTHORITATIVE AVAILABILITY CHECK (P0 #6 + 143: cutoff enforcement)
     // Client-side gate — the RPC enforces the same rules again server-side.
-    // 143 (Owner Q1): คัทออฟพรีออเดอร์ = cutoff_hours ชม. ก่อน delivery_start (strict `>`) ·
-    // 148 (Owner 2026-10-24): SAME_DAY = ไม่มีคัทออฟใด ๆ → bookability 'cutoff_passed'
+    // 143 (Owner Q1): ปิดรอบพรีออเดอร์ = cutoff_hours ชม. ก่อน delivery_start (strict `>`) ·
+    // 148 (Owner 2026-10-24): SAME_DAY = ไม่มีปิดรอบใด ๆ → bookability 'cutoff_passed'
     // เกิดขึ้นได้เฉพาะ PRE_ORDER เท่านั้น (บล็อกด้านล่างจึงเหลือผลเฉพาะโหมดจองล่วงหน้า)
     const selectedRound = rounds.find(r => r.id === selectedRoundId)
     if (selectedRound) {
@@ -497,7 +497,7 @@ export function CheckoutPage() {
           bookability === 'window_passed'
             ? 'เลยหน้าต่างจัดส่งของรอบนี้แล้ว — เลือกรอบ/วันอื่น'
             : orderMode === 'PRE_ORDER'
-              ? `เลยคัทออฟจองล่วงหน้าแล้ว (ปิดรับ ${roundCutoffLabel(selectedRound, 'PRE_ORDER', cutoffHours)} น.) — เลือกรอบอื่น`
+              ? `เลยปิดรอบจองล่วงหน้าแล้ว (ปิดรับ ${roundCutoffLabel(selectedRound, 'PRE_ORDER', cutoffHours)} น.) — เลือกรอบอื่น`
               : 'รอบจัดส่งนี้ปิดรับออเดอร์แล้ว — เลือกรอบอื่น',
           'error',
         )
@@ -555,9 +555,9 @@ export function CheckoutPage() {
       return
     }
 
-    // ✅ 143 (Owner Q1 2026-10-24): คัทออฟพรีออเดอร์ = cutoff_hours ชม. ก่อนส่ง
+    // ✅ 143 (Owner Q1 2026-10-24): ปิดรอบพรีออเดอร์ = cutoff_hours ชม. ก่อนส่ง
     // (mirror ของ ERR_CUTOFF_PASSED — ตรวจอีกครั้งตอนกดสั่งด้านบนแล้ว · server authority)
-    // พรีออเดอร์วันนี้ได้จนถึงคัทออฟ — ไม่มีการบังคับ lead days อีกต่อไป
+    // พรีออเดอร์วันนี้ได้จนถึงปิดรอบ — ไม่มีการบังคับ lead days อีกต่อไป
 
     // ✅ CAT-02: canonical menu schedule mirror (migration 039 trg_menu_gate).
     // Blocks submit BEFORE the RPC so the customer never hits a schedule reject;
@@ -892,7 +892,7 @@ export function CheckoutPage() {
           {orderMode === 'PRE_ORDER' ? '📅 สั่งซื้อแบบจองล่วงหน้า (Pre-order)' : '🔥 สั่งซื้อวันนี้ (Same-day)'}
         </h3>
         {orderMode === 'PRE_ORDER' ? (
-          <p className="text-sm text-blue-700">วันจัดส่งถูกกำหนดโดยเมนูรอบพิเศษของแอดมิน (ป้ายมุมเมนู) — เลือกเฉพาะรอบจัดส่งด้านล่าง (ไม่มีพรีออเดอร์วันอิสระ) ระบบเซิร์ฟเวอร์ตรวจคัทออฟก่อนส่ง ({cutoffHours} ชม.) และความจุรอบให้อีกครั้ง</p>
+          <p className="text-sm text-blue-700">วันจัดส่งถูกกำหนดโดยเมนูรอบพิเศษของแอดมิน (ป้ายมุมเมนู) — เลือกเฉพาะรอบจัดส่งด้านล่าง (ไม่มีพรีออเดอร์วันอิสระ) ระบบเซิร์ฟเวอร์ตรวจปิดรอบก่อนส่ง ({cutoffHours} ชม.) และความจุรอบให้อีกครั้ง</p>
         ) : (
           <p className="text-sm text-orange-700">🛵 สั่งวันนี้ = จัดส่งทันที ระบบเลือกรอบเปิดรับให้อัตโนมัติ — เซิร์ฟเวอร์ตรวจ cutoff (เวลาไทย) และความจุรอบให้อีกครั้ง</p>
         )}

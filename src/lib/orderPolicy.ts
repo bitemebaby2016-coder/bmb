@@ -8,9 +8,9 @@
 // ============================================
 
 export interface OrderPolicy {
-  /** คัทออฟพรีออเดอร์: ปิดรับก่อน delivery_start กี่ชั่วโมง (Owner Q1 / migration 143 = 2) */
+  /** ปิดรอบพรีออเดอร์: ปิดรับก่อน delivery_start กี่ชั่วโมง (Owner Q1 / migration 143 = 2) */
   cutoff_hours: number
-  /** legacy — ไม่บังคับแล้ว (143 ใช้คัทออฟแทน) เก็บไว้แสดง/ถอยหลัง */
+  /** legacy — ไม่บังคับแล้ว (143 ใช้ปิดรอบแทน) เก็บไว้แสดง/ถอยหลัง */
   pre_order_lead_days: number
   /** จองล่วงหน้าได้สูงสุดกี่วัน (enforce_pre_order_window) */
   preorder_max_days: number
@@ -41,12 +41,12 @@ export interface OrderPolicyField {
 }
 
 export const ORDER_POLICY_FIELDS: OrderPolicyField[] = [
-  { key: 'cutoff_hours', label: 'คัทออฟก่อนส่ง (ชม.)', hint: 'ปิดรับพรีออเดอร์ก่อนเวลาส่งกี่ ชม. (Q1 = 2 — เซมเดย์ไม่ใช้ค่านี้)', min: 0, max: 48, step: 0.5 },
+  { key: 'cutoff_hours', label: 'ปิดรอบก่อนส่ง (ชม.)', hint: 'ปิดรับพรีออเดอร์ก่อนเวลาส่งกี่ ชม. (Q1 = 2 — เซมเดย์ไม่ใช้ค่านี้)', min: 0, max: 48, step: 0.5 },
   { key: 'preorder_max_days', label: 'จองล่วงหน้าได้สูงสุด (วัน)', hint: 'เมนูปฏิทินไกลสุดกี่วัน', min: 1, max: 365, step: 1 },
   { key: 'daily_quota', label: 'โควตาออเดอร์ต่อวัน', hint: 'เพดานออเดอร์รวมต่อวัน', min: 1, max: 10000, step: 1 },
   { key: 'max_items_per_order', label: 'จำนวนสูงสุดต่อออเดอร์ (ชิ้น)', hint: 'รวมทุกบรรทัดในตะกร้า', min: 1, max: 500, step: 1 },
   { key: 'cancel_window_minutes', label: 'ยกเลิกได้ภายใน (นาที)', hint: 'หน้าต่างยกเลิกออเดอร์', min: 0, max: 1440, step: 1 },
-  { key: 'pre_order_lead_days', label: 'lead days (ค่าเดิม — ไม่บังคับ)', hint: 'ยกเลิกการบังคับแล้ว (143 ใช้คัทออฟแทน) — เก็บไว้เฉย ๆ', min: 0, max: 60, step: 1 },
+  { key: 'pre_order_lead_days', label: 'lead days (ค่าเดิม — ไม่บังคับ)', hint: 'ยกเลิกการบังคับแล้ว (143 ใช้ปิดรอบแทน) — เก็บไว้เฉย ๆ', min: 0, max: 60, step: 1 },
 ]
 
 /** ค่าเดิม/พัง (ข้อความ) -> ตัวเลขตาม default — ใช้ก่อนโชว์/บันทึกเสมอ */
@@ -78,10 +78,10 @@ export const ROUND_PATTERN_KEYS: RoundPatternKey[] = ['morning', 'midday', 'even
 export interface RoundPatternRow {
   round_key: RoundPatternKey
   display_name: string
-  /** ค่าเดิม/พื้นฐานของรอบ (legacy) — 148: เซมเดย์ไม่ได้ใช้ปิดรับแล้ว (ไม่มีคัทออฟ),
+  /** ค่าเดิม/พื้นฐานของรอบ (legacy) — 148: เซมเดย์ไม่ได้ใช้ปิดรับแล้ว (ไม่มีปิดรอบ),
    *  ยังใช้เป็น fallback ตอน pre-order ไม่มี delivery_start */
   cutoff_time: string // HH:mm
-  /** 145: คัทออฟพรีออเดอร์ของรอบ (ว่าง = ใช้กฎ delivery_start − cutoff_hours) */
+  /** 145: ปิดรอบพรีออเดอร์ของรอบ (ว่าง = ใช้กฎ delivery_start − cutoff_hours) */
   pre_order_cutoff: string // HH:mm
   delivery_start: string // HH:mm
   delivery_end: string // HH:mm
@@ -99,7 +99,7 @@ const TIME_RE = /^\d{2}:\d{2}(:\d{2})?$/
 export function validateRoundPatternRow(row: RoundPatternRow): string | null {
   if (!String(row.display_name ?? '').trim()) return 'ต้องมีชื่อรอบ (display_name)'
   if (!TIME_RE.test(String(row.cutoff_time ?? ''))) return 'เวลาปิดรับเดิม (cutoff_time) ไม่ถูกต้อง'
-  if (String(row.pre_order_cutoff ?? '') && !TIME_RE.test(String(row.pre_order_cutoff))) return 'คัทออฟพรีออเดอร์ไม่ถูกต้อง'
+  if (String(row.pre_order_cutoff ?? '') && !TIME_RE.test(String(row.pre_order_cutoff))) return 'ปิดรอบพรีออเดอร์ไม่ถูกต้อง'
   if (!TIME_RE.test(String(row.delivery_start ?? ''))) return 'เวลาเริ่มส่ง (delivery_start) ไม่ถูกต้อง'
   if (!TIME_RE.test(String(row.delivery_end ?? ''))) return 'เวลาสิ้นสุดส่ง (delivery_end) ไม่ถูกต้อง'
   const cap = Number(row.max_capacity)
@@ -118,7 +118,7 @@ export function normalizeRoundPattern(raw: unknown): RoundPatternRow[] {
       round_key: key,
       display_name: String(found.display_name ?? base.display_name),
       cutoff_time: String(found.cutoff_time ?? base.cutoff_time),
-      // 148: คีย์คัทออฟเซมเดย์ของแพทเทิร์นเดิมถูกเมิน (คอลัมน์ถูกถอดออกจาก schema — ไม่ map เข้ามาอีก)
+      // 148: คีย์ปิดรอบเซมเดย์ของแพทเทิร์นเดิมถูกเมิน (คอลัมน์ถูกถอดออกจาก schema — ไม่ map เข้ามาอีก)
       pre_order_cutoff: String(found.pre_order_cutoff ?? ''),
       delivery_start: String(found.delivery_start ?? base.delivery_start),
       delivery_end: String(found.delivery_end ?? base.delivery_end),

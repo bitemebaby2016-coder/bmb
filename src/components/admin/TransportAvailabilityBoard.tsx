@@ -33,8 +33,8 @@ export function TransportAvailabilityBoard() {
       <h2 className="text-xl font-bold text-brand-accent">✅ ความพร้อมรับออเดอร์ของรอบวันนี้</h2>
       <p className="text-sm text-brand-muted mt-1 mb-3">
         ตารางนี้เป็น<b>มุมมองอ่านอย่างเดียว</b>ของการตัดสินใจจากโค้ดชุดเดียวกับหน้าสั่งซื้อ
-        (deliveryRoundStatus) — เซมเดย์ไม่มีคัทออฟ (เหลือแค่เต็ม/ปิดโดยแอดมิน) ·
-        คัทออฟมีเฉพาะพรีออเดอร์ · เซิร์ฟเวอร์ตรวจซ้ำอีกครั้งตอนสร้างออเดอร์เสมอ
+        (deliveryRoundStatus) — เซมเดย์ไม่มีปิดรอบ (เหลือแค่เต็ม/ปิดโดยแอดมิน) ·
+        ปิดรอบมีเฉพาะพรีออเดอร์ · เซิร์ฟเวอร์ตรวจซ้ำอีกครั้งตอนสร้างออเดอร์เสมอ
       </p>
       {error && <p className="text-sm text-red-600" data-testid="availability-error">{error}</p>}
       {!rows && !error && <p className="text-sm text-brand-muted">กำลังโหลดรอบ…</p>}
@@ -56,7 +56,7 @@ export function TransportAvailabilityBoard() {
                 </div>
                 <div className="text-xs text-brand-muted">
                   ส่ง {String(r.delivery_start ?? '').slice(0, 5)}–{String(r.delivery_end ?? '').slice(0, 5)} · ความจุ {r.current_count}/{r.max_capacity}
-                  {' · คัทออฟพรีออเดอร์ '}{roundCutoffLabel(r, 'PRE_ORDER')}
+                  {' · ปิดรอบพรีออเดอร์ '}{roundCutoffLabel(r, 'PRE_ORDER')}
                 </div>
               </div>
               <div className="flex gap-2 text-xs">

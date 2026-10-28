@@ -274,8 +274,8 @@ export function createSupabaseMock(opts?: { failReadTable?: string; noAdmin?: bo
         if (String(p.scheduled_date) !== String(round.scheduled_date)) {
           return { data: null, error: { code: 'ERR_ROUND_DATE_MISMATCH', message: 'ERR_ROUND_DATE_MISMATCH' } }
         }
-        // === migration 143 (Owner 2026-10-24): พรีออเดอร์วันนี้ได้จนถึงคัทออฟ —
-        // คัทออฟ = order_policy.cutoff_hours ชม. ก่อน delivery_start (mirror
+        // === migration 143 (Owner 2026-10-24): พรีออเดอร์วันนี้ได้จนถึงปิดรอบ —
+        // ปิดรอบ = order_policy.cutoff_hours ชม. ก่อน delivery_start (mirror
         // enforce_pre_order_window / FC-4) · ยกเลิก ERR_LEAD_TIME เดิม
         {
           const startRaw = String(round.delivery_start || round.cutoff_time || '')

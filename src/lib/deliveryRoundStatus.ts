@@ -21,7 +21,7 @@ export type RoundBookability = 'open' | 'cutoff_passed' | 'window_passed' | 'ful
 
 export interface RoundTimeInfo {
   cutoff_time?: string | null
-  /** 145: คัทออฟพรีออเดอร์ตั้งตรง — ไม่มีค่า = กฎเดิม delivery_start − cutoff_hours */
+  /** 145: ปิดรอบพรีออเดอร์ตั้งตรง — ไม่มีค่า = กฎเดิม delivery_start − cutoff_hours */
   pre_order_cutoff?: string | null
   delivery_start?: string | null
   delivery_end?: string | null
@@ -34,7 +34,7 @@ export interface RoundTimeInfo {
 export interface RoundBookabilityOpts {
   isToday: boolean
   nowUtcMs?: number
-  /** PRE_ORDER = คัทออฟ cutoff_hours ชม. ก่อน delivery_start (Owner Q1 / migration 143)
+  /** PRE_ORDER = ปิดรอบ cutoff_hours ชม. ก่อน delivery_start (Owner Q1 / migration 143)
    *  SAME_DAY (default) = cutoff_time ของรอบ (เดิม — เซมเดย์ส่งได้ตลอดเหมือนเดิม) */
   mode?: 'SAME_DAY' | 'PRE_ORDER'
   /** ค่า order_policy.cutoff_hours (default 2) */
@@ -62,8 +62,8 @@ function msOfDay(value: string | null | undefined): number | null {
 /**
  * ms-of-day cutoff for the round in the given mode:
  *   PRE_ORDER → pre_order_cutoff ของรอบ ถ้าตั้งไว้ ไม่งั้น delivery_start − preOrderCutoffHours
- *     (อาจติดลบ = คัทออฟอยู่ "ก่อนเที่ยงคืนของวันก่อนวันส่ง" — ผ่านเฉพาะการสั่งล่วงหน้า)
- *   SAME_DAY  → **ไม่มีคัทออฟ** (Owner 2026-10-24 / migration 148: เปิดร้านถึงปิดร้าน)
+ *     (อาจติดลบ = ปิดรอบอยู่ "ก่อนเที่ยงคืนของวันก่อนวันส่ง" — ผ่านเฉพาะการสั่งล่วงหน้า)
+ *   SAME_DAY  → **ไม่มีปิดรอบ** (Owner 2026-10-24 / migration 148: เปิดร้านถึงปิดร้าน)
  *     → คืน null เสมอ = ไม่มีทางเข้าสู่สถานะ cutoff_passed
  */
 export function roundCutoffMs(
@@ -79,11 +79,11 @@ export function roundCutoffMs(
     if (startMs !== null) return startMs - hours * 3_600_000
     return null
   }
-  // 148: SAME_DAY = ไม่มีคัทออฟ (เดิม: same_day_cutoff ?? cutoff_time — ถูกรื้อตามคำสั่ง Owner)
+  // 148: SAME_DAY = ไม่มีปิดรอบ (เดิม: same_day_cutoff ?? cutoff_time — ถูกรื้อตามคำสั่ง Owner)
   return null
 }
 
-/** ป้ายเวลาคัทออฟสำหรับโชว์ใน UI ('HH:MM' / "ไม่มีคัทออฟ" / ข้อความเมื่อคำนวณไม่ได้) */
+/** ป้ายเวลาปิดรอบสำหรับโชว์ใน UI ('HH:MM' / "ไม่มีปิดรอบ" / ข้อความเมื่อคำนวณไม่ได้) */
 export function roundCutoffLabel(
   round: RoundTimeInfo,
   mode: 'SAME_DAY' | 'PRE_ORDER' = 'SAME_DAY',
@@ -91,7 +91,7 @@ export function roundCutoffLabel(
 ): string {
   const ms = roundCutoffMs(round, mode, preOrderCutoffHours)
   if (ms === null) {
-    if (mode === 'SAME_DAY') return 'ไม่มีคัทออฟ'
+    if (mode === 'SAME_DAY') return 'ไม่มีปิดรอบ'
     return `${preOrderCutoffHours} ชม. ก่อนเวลาส่ง`
   }
   if (ms < 0) return `${preOrderCutoffHours} ชม. ก่อนเวลาส่ง`

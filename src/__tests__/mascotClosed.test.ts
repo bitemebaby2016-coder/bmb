@@ -111,12 +111,12 @@ describe('storeStatus — ตรรกะเปิด/ปิดร้านจ�
     expect(s.message).toContain('ไม่มีรอบจัดส่งที่เปิดรับ')
   })
 
-  it('รอบวันนี้ window ผ่านแล้ว — SAME_DAY ไม่มีคัทออฟ (Owner Q1 2026-10-24) → ยังเปิดทั้งวัน', () => {
+  it('รอบวันนี้ window ผ่านแล้ว — SAME_DAY ไม่มีปิดรอบ (Owner Q1 2026-10-24) → ยังเปิดทั้งวัน', () => {
     publishDeliveryRounds([
       { status: 'active', display_name: 'รอบเช้า', cutoff_time: '08:00', delivery_start: '06:00', delivery_end: '09:00', max_capacity: 10, current_count: 1, scheduled_date: '2026-10-14' },
       { status: 'active', display_name: 'พรุ่งนี้เช้า', cutoff_time: '08:00', delivery_start: '06:00', delivery_end: '09:00', max_capacity: 10, current_count: 0, scheduled_date: '2026-10-15' },
     ] as never)
-    // 10:00 ICT — รอบเช้าหน้าต่าง 06-09 ผ่านแล้ว แต่ Q1: เซมเดย์ไม่มีคัทออฟ/window ปิด
+    // 10:00 ICT — รอบเช้าหน้าต่าง 06-09 ผ่านแล้ว แต่ Q1: เซมเดย์ไม่มีปิดรอบ/window ปิด
     const s = currentStoreStatus(new Date('2026-10-14T03:00:00Z'))
     expect(s.isOpen).toBe(true)
     expect(s.state).toBe('open')
@@ -150,20 +150,20 @@ describe('storeStatus — ตรรกะเปิด/ปิดร้านจ�
     expect(s.message).toContain('ไม่มีรอบจัดส่งที่เปิดรับ')
   })
 
-  it('สองเลน (Owner 2026-10-25): คัทออฟพรีออเดอร์วันนี้ผ่านแล้ว → preOrderLine ชี้รอบอนาคต + เซมเดย์ยังเปิด', () => {
+  it('สองเลน (Owner 2026-10-25): ปิดรอบพรีออเดอร์วันนี้ผ่านแล้ว → preOrderLine ชี้รอบอนาคต + เซมเดย์ยังเปิด', () => {
     publishDeliveryRounds([
       { status: 'active', display_name: 'รอบเที่ยง', cutoff_time: '10:30', pre_order_cutoff: '09:00', delivery_start: '11:00', delivery_end: '14:00', max_capacity: 50, current_count: 1, scheduled_date: '2026-10-14' },
       { status: 'active', display_name: 'พรุ่งนี้เที่ยง', cutoff_time: '10:30', pre_order_cutoff: '09:00', delivery_start: '11:00', delivery_end: '14:00', max_capacity: 50, current_count: 0, scheduled_date: '2026-10-15' },
     ] as never)
-    // 14:36 ICT = 07:36Z — เลยคัทออฟ 09:00 ของวันนี้แล้ว → รอบที่สั่งได้ = พรุ่งนี้ (อนาคต)
+    // 14:36 ICT = 07:36Z — เลยปิดรอบ 09:00 ของวันนี้แล้ว → รอบที่สั่งได้ = พรุ่งนี้ (อนาคต)
     const s = currentStoreStatus(new Date('2026-10-14T07:36:00Z'))
     expect(s.isOpen).toBe(true) // เซมเดย์สั่งได้ตลอด (Q1/148)
     expect(s.state).toBe('open')
     expect(s.preOrderLine).toContain('พรุ่งนี้เที่ยง')
-    expect(s.preOrderLine).toContain('คัทออฟ 09:00')
+    expect(s.preOrderLine).toContain('ปิดรอบ 09:00')
   })
 
-  it('สองเลน: ทุกรอบวันนี้เลยคัทออฟ + ไม่มีรอบอนาคต → preOrderLine = ปิดรับแล้ว (ร้านยังเปิดรับเซมเดย์)', () => {
+  it('สองเลน: ทุกรอบวันนี้เลยปิดรอบ + ไม่มีรอบอนาคต → preOrderLine = ปิดรับแล้ว (ร้านยังเปิดรับเซมเดย์)', () => {
     publishDeliveryRounds([
       { status: 'active', display_name: 'รอบเย็น', cutoff_time: '16:00', pre_order_cutoff: '15:00', delivery_start: '17:00', delivery_end: '20:00', max_capacity: 50, current_count: 0, scheduled_date: '2026-10-14' },
     ] as never)

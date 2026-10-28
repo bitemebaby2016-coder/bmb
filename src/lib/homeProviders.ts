@@ -162,6 +162,8 @@ export function getStoreStatusFromRounds(rounds: Array<{
     return {
       isOpen: false,
       state: 'closed',
+      sameDayOpen: false,
+      preOrderOpen: false,
       message: 'ยังไม่เปิดรับออเดอร์ — ไม่มีรอบจัดส่งที่เปิดรับอยู่',
     }
   }
@@ -173,7 +175,7 @@ export function getStoreStatusFromRounds(rounds: Array<{
   })
   // ยังรับได้จริงวันนี้ = ไม่เต็ม + ไม่เลย cutoff/window (mirror เดียวกับ deliveryRoundStatus)
   // ── สายพรีออเดอร์ (Owner 2026-10-25): "ปิดพรีออเดอร์รอบเย็นไปแล้ว → ที่สั่งได้คือรอบถัดไป
-  // ในอนาคต" · นอกเวลาคัทออฟที่แอดมินกำหนด = สั่งไม่ได้ · คัทออฟ = pre_order_cutoff (145)
+  // ในอนาคต" · นอกเวลาปิดรอบที่แอดมินกำหนด = สั่งไม่ได้ · ปิดรอบ = pre_order_cutoff (145)
   // หรือ delivery_start − cutoff_hours(2) — display mirror เท่านั้น server ตัดสินตอนสั่งจริง
   const cutoffAtUtc = (r: Record<string, any>): number | null => {
     const day = String(r.scheduled_date ?? '').slice(0, 10)
@@ -182,7 +184,7 @@ export function getStoreStatusFromRounds(rounds: Array<{
     if (ms === null) return null
     const base = Date.parse(`${day}T00:00:00+07:00`)
     if (Number.isNaN(base)) return null
-    return base + ms // ms อาจติดลบ (คัทออฟก่อนเที่ยงคืนของวันก่อน) → base+ms ยังชี้วันถูก
+    return base + ms // ms อาจติดลบ (ปิดรอบก่อนเที่ยงคืนของวันก่อน) → base+ms ยังชี้วันถูก
   }
   const nextPre =
     live
@@ -207,13 +209,13 @@ export function getStoreStatusFromRounds(rounds: Array<{
         return String(a.delivery_start ?? '').localeCompare(String(b.delivery_start ?? ''))
       })[0] ?? null
   const preOrderLine = (() => {
-    // R13 (Owner 2026-10-28): บอกลูกค้า "รอบไหนของวันไหน" — ชื่อรอบ + วันที่ DD/MM/YYYY + คัทออฟ
+    // R13 (Owner 2026-10-28): บอกลูกค้า "รอบไหนของวันไหน" — ชื่อรอบ + วันที่ DD/MM/YYYY + ปิดรอบ
     const day = nextPre ? String(nextPre.scheduled_date ?? '').slice(0, 10) : ''
     const dateLabel = /^\d{4}-\d{2}-\d{2}$/.test(day)
       ? `${day.slice(8, 10)}/${day.slice(5, 7)}/${day.slice(0, 4)}`
       : ''
     return nextPre
-      ? `พรีออเดอร์: เปิดรับออเดอร์ รอบส่งถัดไป ${nextPre.display_name || 'รอบถัดไป'}${dateLabel ? ` ${dateLabel}` : ''} (คัทออฟ ${roundCutoffLabel(nextPre, 'PRE_ORDER', 2)})`
+      ? `พรีออเดอร์: เปิดรับออเดอร์ รอบส่งถัดไป ${nextPre.display_name || 'รอบถัดไป'}${dateLabel ? ` ${dateLabel}` : ''} (ปิดรอบ ${roundCutoffLabel(nextPre, 'PRE_ORDER', 2)})`
       : 'พรีออเดอร์: ปิดรับแล้ว — ยังไม่เปิดรอบถัดไป'
   })()
 
@@ -234,7 +236,7 @@ export function getStoreStatusFromRounds(rounds: Array<{
       end: Number((r.delivery_end || '00').split(':')[0]),
     })
     // W-4 ข้อ 6 (Owner 2026-10-26): ~11:00 เดิมยังโชว์ "เปิดรับออเดอร์ เช้า" ทั้งที่รอบเช้าหมด window
-    // แล้ว → ต้องบอกตามเวลาจริง: เซมเดย์ยังสั่งได้ (ไม่มีคัทออฟ · 148) + รอบถัดไปส่งกี่โมง
+    // แล้ว → ต้องบอกตามเวลาจริง: เซมเดย์ยังสั่งได้ (ไม่มีปิดรอบ · 148) + รอบถัดไปส่งกี่โมง
     const inWindow = bookable.find((r) => {
       const w = windowOf(r)
       return hour >= w.start && hour < w.end
@@ -248,6 +250,8 @@ export function getStoreStatusFromRounds(rounds: Array<{
     return {
       isOpen: true,
       state: 'open',
+      sameDayOpen: true,
+      preOrderOpen: nextPre !== null,
       currentRoundLabel: hasWindowNow ? current.display_name || 'ปัจจุบัน' : undefined,
       // R10 (Owner 2026-10-27): "ส่ง 11:00–15:00 ไม่ต้องแสดง" — เซมเดย์สั่งได้ตลอดเวลาเปิดร้าน
       // ไม่ต้องรอรอบพรีออเดอร์/ไม่ผูกเวลาส่งของรอบ → ไม่ส่ง deliveryWindowLabel
@@ -272,6 +276,8 @@ export function getStoreStatusFromRounds(rounds: Array<{
     return {
       isOpen: true,
       state: 'preorder_only',
+      sameDayOpen: false,
+      preOrderOpen: nextPre !== null,
       message: 'เปิดรับออเดอร์จองล่วงหน้า — รอบวันนี้ปิดรับแล้ว',
       preOrderLine,
     }
@@ -279,6 +285,8 @@ export function getStoreStatusFromRounds(rounds: Array<{
   return {
     isOpen: false,
     state: 'closed',
+    sameDayOpen: false,
+    preOrderOpen: nextPre !== null,
     message: 'ยังไม่เปิดรับออเดอร์ — ไม่มีรอบจัดส่งที่เปิดรับอยู่',
     preOrderLine,
   }
