@@ -51,7 +51,11 @@ export function resolveNotificationRoute(
   if (role && role !== 'customer') {
     // admin-capable + specialist roles (146) — หน้าทำงานตามประเภทงาน
     if (ADMIN_KITCHEN_TYPES.includes(type)) return '/admin/kitchen'
-    if (ADMIN_DELIVERY_TYPES.includes(type)) return '/admin/delivery'
+    if (ADMIN_DELIVERY_TYPES.includes(type)) {
+      // R13 (Owner 2026-10-28): เด้งไปหน้าจัดส่งพร้อมไฮไลต์แถวออเดอร์นั้น
+      // — เปิดเจอ "คิว/กำลังเดินทาง" ที่มีปุ่ม "แอดมินปิดวงจร" ทันที
+      return orderNo ? `/admin/delivery?focus=${orderNo}` : '/admin/delivery'
+    }
     return '/admin/orders'
   }
 

@@ -23,8 +23,10 @@ export function StoreStatusStrip({ status }: { status: StoreStatus }) {
         {/* R12 (Owner 2026-10-28): คำในวงเล็บไม่ต้องแสดง — บรรทัด (ไม่มีคัทออฟ · สั่งได้ถึง · เหลือที่นั่ง) ถอดออกแล้ว
             (ข้อมูลเดิมเคยอยู่บรรทัดนี้: ไม่มีคัทออฟ (สั่งได้ถึง HH:MM) · เหลือที่นั่ง N% — ระบุว่าไม่แสดง) */}
         {/* สองเลน (Owner 2026-10-25): เซมเดย์ไม่มีคัทออฟ (บรรทัดบน) · พรีออเดอร์ = รอบถัดไปที่ยังสั่งได้ */}
+        {/* R13 (Owner 2026-10-28): รูปแบบใหม่ — "🟢พรีออเดอร์: …" (ไม่ใช่ 📅) · ไม่ truncate
+            ให้เห็นวันที่+คัทออฟครบ ("รอบส่งถัดไป เช้า 29/10/2026 (คัทออฟ 05:00)") */}
         {status.preOrderLine && (
-          <p className="text-xs opacity-80 truncate">📅 {status.preOrderLine}</p>
+          <p className="text-xs opacity-80">🟢{status.preOrderLine}</p>
         )}
       </div>
     </div>

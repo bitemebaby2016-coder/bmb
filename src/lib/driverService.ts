@@ -344,7 +344,9 @@ export async function uploadPodPhoto(
   // R3 (D-02): normalize path — โฟลเดอร์ต้องเป็น drivers.id ดิบ (ห้ามมี '/' กัน
   // หลุดโฟลเดอร์) + ชื่อไฟล์ sanitize · policy 139 เทียบโฟลเดอร์แบบทน %20 encoding
   // (storage-js encodeURIComponent) แล้ว — ห้าม rename drivers.id ใน production
-  const folder = String(driverId).trim()
+  // R13 (2026-10-28): sanitize folder ให้ตรง server (driver_path_folder) —
+  // drivers.id จริงมี space/# → '#' ตัด path ใน URL = รูปไม่เคยเข้า bucket (POD ล้ม)
+  const folder = String(driverId).trim().replace(/[^A-Za-z0-9_-]/g, '')
   if (!folder || folder.includes('/') || folder.includes('\\')) {
     return { ok: false, error: 'ข้อมูลงานไม่ครบ — รีเฟรชหน้าแล้วลองใหม่', kind: 'state' }
   }

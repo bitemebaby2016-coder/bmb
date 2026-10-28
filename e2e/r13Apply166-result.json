@@ -1,0 +1,21 @@
+{
+  "at": "2026-10-28T03:48:33.771Z",
+  "precheck": {
+    "ledgerTop": "[{\"version\":\"166\",\"name\":\"166_r13_rider_pod_path_and_checkin\"},{\"version\":\"165\",\"name\":\"165_seed_business_settings_seo_copy\"},{\"version\":\"164\",\"name\":\"164_anon_read_business_settings_all\"}]",
+    "driverIdBefore": "{\"message\":\"Failed to run sql query: ERROR:  42883: function public.driver_path_folder(text) does not exist\\nLINE 1: SELECT id, encode(id::bytea, 'hex') AS id_hex, public.driver_path_folder(id) AS folder FROM public.drivers\\n                                                       ^\\nHINT:  No function matches the given name and argument types. You might need to add explicit type casts.\\n\"}",
+    "asgBefore": "[{\"order_number\":\"PO-20261028-942\",\"status\":\"in_transit\",\"arrived_at\":\"2026-10-28 03:16:59.966025+00\",\"proof_of_delivery_path\":null},{\"order_number\":\"PO-20261027-379\",\"status\":\"delivered\",\"arrived_at\":null,\"proof_of_delivery_path\":null},{\"order_number\":\"BMB-20261027-543\",\"status\":\"delivered\",\"arrived_at\":null,\"proof_of_delivery_path\":null},{\"order_number\":\"BMB-20261023-841\",\"status\":\"delivered\",\"arrived_at\":null,\"proof_of_delivery_path\":null}]",
+    "checkinHasStatusCase": "[{\"n\":0}]"
+  },
+  "apply": "[]",
+  "verify": {
+    "folderAfter": "[{\"id\":\"drv- ###########-60bc\",\"folder\":\"drv--60bc\",\"folder_pathsafe\":true}]",
+    "selfHealAfter": "[{\"order_number\":\"PO-20261028-942\",\"status\":\"arrived\",\"arrived_at\":\"2026-10-28 03:16:59.966025+00\"},{\"order_number\":\"PO-20261027-379\",\"status\":\"delivered\",\"arrived_at\":null},{\"order_number\":\"BMB-20261027-543\",\"status\":\"delivered\",\"arrived_at\":null},{\"order_number\":\"BMB-20261023-841\",\"status\":\"delivered\",\"arrived_at\":null}]",
+    "policyUsesSanitize": "[{\"sanitized\":true}]",
+    "checkinSetsArrived": "[{\"sets_arrived\":true}]",
+    "statusCheck": "[{\"def\":\"CHECK ((status = ANY (ARRAY['assigned'::text, 'accepted'::text, 'picked_up'::text, 'in_transit'::text, 'arrived'::text, 'delivered'::text, 'declined'::text, 'cancelled'::text])))\"}]"
+  },
+  "record": {
+    "ins166": "[]",
+    "ledgerTopAfter": "[{\"version\":\"166\",\"name\":\"166_r13_rider_pod_path_and_checkin\"},{\"version\":\"165\",\"name\":\"165_seed_business_settings_seo_copy\"},{\"version\":\"164\",\"name\":\"164_anon_read_business_settings_all\"},{\"version\":\"163\",\"name\":\"163_rider_step_sync_checkin\"},{\"version\":\"162\",\"name\":\"162_admin_reject_payment\"}]"
+  }
+}

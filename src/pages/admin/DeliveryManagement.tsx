@@ -608,14 +608,14 @@ export function DeliveryManagement() {
         {enroute.length === 0 ? <p className="text-brand-muted text-sm">ยังไม่มีออเดอร์บนถนน</p> : (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
-              <thead className="bg-brand-bg"><tr><th className="p-2">ออเดอร์</th><th className="p-2">สถานะ</th><th className="p-2">ไรเดอร์</th><th className="p-2">assignment</th><th className="p-2">รูปส่งมอบ</th></tr></thead>
+              <thead className="bg-brand-bg"><tr><th className="p-2">ออเดอร์</th><th className="p-2">สถานะ</th><th className="p-2">ไรเดอร์</th><th className="p-2">assignment</th><th className="p-2">รูปส่งมอบ</th><th className="p-2">ปิดวงจร</th></tr></thead>
               <tbody>
                 {enroute.map((o) => {
                   const a = asgFor(o.order_number)
                   const ab = assignmentBadge(a?.status)
                   const podUrl = a?.proof_of_delivery_path ? podUrlOf(a.proof_of_delivery_path) : null
                   return (
-                    <tr key={o.order_number} className="border-b border-brand-border">
+                    <tr key={o.order_number} className={`border-b border-brand-border ${focusOrder === o.order_number ? 'bg-brand-primary/10' : ''}`}>
                       <td className="p-2 font-mono">{o.order_number}</td>
                       <td className="p-2">{o.status}</td>
                       <td className="p-2">{a?.driver_id ? driverName(a.driver_id) : '—'}</td>
@@ -629,6 +629,23 @@ export function DeliveryManagement() {
                           ) : (
                             <span className="text-xs text-brand-muted">⏳</span>
                           )
+                        ) : (
+                          <span className="text-xs text-brand-muted">—</span>
+                        )}
+                      </td>
+                      {/* R13 (Owner 2026-10-28): แจ้งเตือน "ถึงปลายทาง" เด้งมาหน้านี้
+                          → แอดมินปิดวงจรได้จากแถวกำลังเดินทาง/ถึงปลายทางโดยตรง */}
+                      <td className="p-2">
+                        {a?.status && ['assigned', 'accepted', 'picked_up', 'in_transit', 'arrived'].includes(a.status) ? (
+                          <button
+                            onClick={() => { void handleAdminAdvance(o.order_number) }}
+                            disabled={acting === o.order_number}
+                            className="btn btn-outline text-xs disabled:opacity-50"
+                            data-testid={`admin-advance-enroute-${o.order_number}`}
+                            title="ปิดวงจรแทนไรเดอร์ (geolocation/POD ของไรเดอร์ถูกข้าม — บันทึก audit ว่าเป็นฝีมือแอดมิน)"
+                          >
+                            🏁 แอดมินปิดวงจร
+                          </button>
                         ) : (
                           <span className="text-xs text-brand-muted">—</span>
                         )}

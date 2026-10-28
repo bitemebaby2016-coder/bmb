@@ -16,7 +16,7 @@ describe('R12 — แถบสถานะหน้าแรก: คำในว
     const s = getStoreStatusFromRounds([
       { status: 'active', display_name: 'SameDay', delivery_start: '06:00', delivery_end: '23:00', max_capacity: 10, current_count: 1, scheduled_date: '2026-10-14' },
     ] as never, new Date('2026-10-14T02:00:00Z'))
-    expect(s.message).toBe('เปิดรับออเดอร์ เซมเดย์')
+    expect(s.message).toBe('เปิดรับออเดอร์ เซมเดย์ : ส่งทันที')
     expect(s.message.includes('ยังสั่งได้')).toBe(false)
     expect(s.message.includes('(')).toBe(false)
   })

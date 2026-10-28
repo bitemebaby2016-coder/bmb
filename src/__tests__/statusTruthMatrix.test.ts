@@ -34,6 +34,9 @@ describe('A6 · ปุ่มต้องบอกสถานะจริง (ma
   it('ปุ่มแอดมิน "ปิดวงจร" บอกชัดว่าไปถึงไหน + ไม่มีปุ่มสำเร็จปลอมบน arrived', () => {
     expect(deliveryMgmtSrc).toContain('adminAdvanceDelivery(orderNumber, \'delivered\')')
     expect(deliveryMgmtSrc).toContain('แอดมินปิดวงจร')
+    // R13 (Owner 2026-10-28): ปุ่มปิดวงจรต้องอยู่ที่ตาราง "กำลังเดินทาง/ส่งแล้ว" ด้วย
+    // (แจ้งเตือน "ถึงปลายทาง" เด้งมานี่ → ปิดได้โดยไม่ต้องไล่หาในคิว dispatch)
+    expect(deliveryMgmtSrc).toContain('admin-advance-enroute-')
     // ปุ่มเดิมที่บอก "สำเร็จ" ตอน arrived ถูกถอดออกพร้อม forward chain (M4) แล้ว
     expect(deliveryMgmtSrc).not.toContain('nextForwardAction')
     expect(deliveryMgmtSrc).not.toContain('handleStatusUpdate')

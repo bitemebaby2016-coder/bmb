@@ -44,6 +44,18 @@ describe('resolveNotificationRoute — เส้นทางตาม role (ท�
     expect(resolveNotificationRoute({ type: 'ORDER_DELIVERED' }, 'support')).toBe('/admin/delivery')
   })
 
+  it('R13: งานจัดส่งที่มีเลขออเดอร์ → /admin/delivery?focus=<เลข> (ไฮไลต์แถว = เจอปุ่มปิดวงจร)', () => {
+    expect(
+      resolveNotificationRoute(
+        { notification_type: 'ORDER_ARRIVED', message: '#PO-20261028-942 — ส่งปลายทางแล้ว' },
+        'admin',
+      ),
+    ).toBe('/admin/delivery?focus=PO-20261028-942')
+    expect(
+      resolveNotificationRoute({ notification_type: 'ORDER_DELIVERED', data: { orderNumber: 'BMB-20261023-841' } }, 'owner'),
+    ).toBe('/admin/delivery?focus=BMB-20261023-841')
+  })
+
   it('admin: ออเดอร์/ชำระเงิน/อื่น ๆ → /admin/orders', () => {
     expect(resolveNotificationRoute({ notification_type: 'ORDER_CREATED' }, 'admin')).toBe('/admin/orders')
     expect(resolveNotificationRoute({ notification_type: 'PAYMENT_CONFIRMED' }, 'finance')).toBe('/admin/orders')

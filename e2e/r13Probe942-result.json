@@ -1,0 +1,8 @@
+{
+  "at": "2026-10-28T03:32:34.210Z",
+  "assignment": "[{\"order_number\":\"PO-20261028-942\",\"status\":\"in_transit\",\"driver_id\":\"drv- ###########-60bc\",\"proof_of_delivery_path\":null,\"assigned_at\":\"2026-10-28 03:06:21.153922+00\",\"accepted_at\":\"2026-10-28 03:06:52.218731+00\",\"picked_up_at\":\"2026-10-28 03:07:02.098728+00\",\"in_transit_at\":\"2026-10-28 03:07:33.018738+00\",\"arrived_at\":\"2026-10-28 03:16:59.966025+00\",\"delivered_at\":null,\"checkin_latitude\":\"12.6158333\",\"checkin_longitude\":\"102.0980033\"}]",
+  "order": "[{\"order_number\":\"PO-20261028-942\",\"status\":\"arrived\",\"order_mode\":\"PRE_ORDER\",\"payment_status\":\"paid\",\"dropoff_latitude\":\"12.6154675\",\"dropoff_longitude\":\"102.0980870\"}]",
+  "drivers": "{\"message\":\"Failed to run sql query: ERROR:  42703: column \\\"driver_name\\\" does not exist\\nLINE 1: SELECT id, driver_name, status, current_latitude, current_longitude, last_seen_at FROM public.drivers ORDER BY driver_name\\n                   ^\\n\"}",
+  "audit": "{\"message\":\"Failed to run sql query: ERROR:  42P01: relation \\\"public.audit_log\\\" does not exist\\nLINE 1: SELECT action, description, metadata, created_at FROM public.audit_log WHERE entity_id = 'PO-20261028-942' ORDER BY created_at DESC LIMIT 12\\n                                                              ^\\n\"}",
+  "history": "{\"message\":\"Failed to run sql query: ERROR:  42703: column \\\"created_at\\\" does not exist\\nLINE 1: SELECT to_status, created_at FROM public.order_status_history WHERE order_number = 'PO-20261028-942' ORDER BY created_at DESC LIMIT 8\\n                          ^\\n\"}"
+}

@@ -57,6 +57,10 @@ describe('L-6 — แถบสถานะตามเวลา/รอบจร�
     expect(s.message).toContain('จองล่วงหน้า')
     expect(s.preOrderLine).toContain('รอบวันที่ 27')
     expect(s.preOrderLine).not.toContain('ปิดรับแล้ว')
+    // R13 (Owner 2026-10-28): บอก "รอบไหนของวันไหน" — วันที่ DD/MM/YYYY + คัทออฟ
+    expect(s.preOrderLine).toContain('27/10/2026')
+    expect(s.preOrderLine).toMatch(/รอบส่งถัดไป/)
+    expect(s.preOrderLine).toMatch(/\(คัทออฟ \d{2}:\d{2}\)/)
   })
 
   it('ทุกรอบวันนี้ผ่านหน้าต่างส่งแล้ว (21:00) → ยังบอกว่าเซมเดย์สั่งได้ ไม่ใช่ปิดร้าน', () => {

@@ -206,9 +206,16 @@ export function getStoreStatusFromRounds(rounds: Array<{
         if (da !== db) return da.localeCompare(db)
         return String(a.delivery_start ?? '').localeCompare(String(b.delivery_start ?? ''))
       })[0] ?? null
-  const preOrderLine = nextPre
-    ? `พรีออเดอร์: เปิดรับรอบ ${nextPre.display_name || String(nextPre.scheduled_date ?? '').slice(0, 10)} (คัทออฟ ${roundCutoffLabel(nextPre, 'PRE_ORDER', 2)})`
-    : 'พรีออเดอร์: ปิดรับแล้ว — ยังไม่เปิดรอบถัดไป'
+  const preOrderLine = (() => {
+    // R13 (Owner 2026-10-28): บอกลูกค้า "รอบไหนของวันไหน" — ชื่อรอบ + วันที่ DD/MM/YYYY + คัทออฟ
+    const day = nextPre ? String(nextPre.scheduled_date ?? '').slice(0, 10) : ''
+    const dateLabel = /^\d{4}-\d{2}-\d{2}$/.test(day)
+      ? `${day.slice(8, 10)}/${day.slice(5, 7)}/${day.slice(0, 4)}`
+      : ''
+    return nextPre
+      ? `พรีออเดอร์: เปิดรับออเดอร์ รอบส่งถัดไป ${nextPre.display_name || 'รอบถัดไป'}${dateLabel ? ` ${dateLabel}` : ''} (คัทออฟ ${roundCutoffLabel(nextPre, 'PRE_ORDER', 2)})`
+      : 'พรีออเดอร์: ปิดรับแล้ว — ยังไม่เปิดรอบถัดไป'
+  })()
 
   const bookable = todayRows.filter(
     (r) =>
@@ -252,7 +259,7 @@ export function getStoreStatusFromRounds(rounds: Array<{
           ? Math.min(100, Math.round((Number(current.current_count || 0) / Number(current.max_capacity)) * 100))
           : undefined,
       // R10: ไม่ต่อ "ส่งรอบถัดไป X–Y" ท้ายข้อความ (Owner: ไม่ต้องแสดง)
-      message: 'เปิดรับออเดอร์ เซมเดย์',
+      message: 'เปิดรับออเดอร์ เซมเดย์ : ส่งทันที',
       preOrderLine,
     }
   }

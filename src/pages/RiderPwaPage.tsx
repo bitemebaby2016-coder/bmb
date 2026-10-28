@@ -52,6 +52,7 @@ const STATUS_LABEL: Record<string, string> = {
   accepted: '✅ รับงานแล้ว',
   picked_up: '🛵 รับอาหารแล้ว',
   in_transit: '🚗 กำลังเดินทาง',
+  arrived: '🏁 ถึงปลายทาง', // R13: assignment เป็น arrived แล้ว — ห้ามโชว์ค้าง "กำลังเดินทาง"
   delivered: '🏠 ส่งสำเร็จ',
   declined: '🚫 ปฏิเสธแล้ว',
   cancelled: '⛔ ยกเลิกแล้ว',
@@ -343,9 +344,11 @@ export function RiderPwaPage() {
       setDeliverStep('finalize')
       const del = await driverUpdateDeliveryStatus(orderNumber, 'delivered', coords)
       if (!del.ok) { showActionError(orderNumber, del); return }
-      setNotice(`🏠 ส่งมอบ ${orderNumber} สำเร็จ (บันทึกรูป POD แล้ว)`)
+      setNotice(`🏠 ส่งมอบ ${orderNumber} สำเร็จ (บันทึกรูป POD แล้ว) — จบงานแล้ว กลับหน้าหลัก`)
       setActiveOrder(null)
       lastPhotoRef.current = null
+      // R13 (Owner 2026-10-28): จบลูป = ออกไปหน้าจอหลักอัตโนมัติ (เลื่อนกลับบนสุด)
+      window.scrollTo({ top: 0, behavior: 'smooth' })
       void refresh({ silent: true })
     } catch (e) {
       // R10 (Owner 2026-10-27): เดิมไม่มี catch — error ระหว่าง upload/attach/ปิดงาน
