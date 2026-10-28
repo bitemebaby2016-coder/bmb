@@ -13,7 +13,7 @@
 ## 0. กฏของ Owner (ห้ามฝ่าฝืน)
 
 1. **typecheck แบบ fresh เท่านั้น** — `npx tsc --noEmit --incremental false` · ห้ามเช็คจาก cache
-2. **闸门 100%** ก่อนส่งงานเสมอ: tsc 0 · `npm run lint` 0 · `npm test` 0 · `npm run build` 0
+2. **gate 100%** ก่อนส่งงานเสมอ: tsc 0 · `npm run lint` 0 · `npm test` 0 · `npm run build` 0
 3. **เอกสาร overwrite ห้าม append** — ทวนไฟล์เดิมทั้งหมด ไม่ใช่ต่อท้าย
 4. **ไม่มี secret ในเอกสารหรือในแชท** (token/password/URL ภายใน)
 5. **stage ด้วย path เฉพาะเท่านั้น** — ห้าม `git add -A` · และ **ห้ามปล่อยไฟล์ค้างใน staged**
@@ -78,7 +78,7 @@
 
 ### 2.2 แอดมิน — ซ้ำจริง 1 คู่
 
-| หน้า | บรรทัด | หน้าที่ (probe จริง) | 判定 |
+| หน้า | บรรทัด | หน้าที่ (probe จริง) | ผล |
 |---|---|---|---|
 | `src/pages/admin/AdminOrders.tsx` | 420 | ออเดอร์ทั้งหมด · `filterMode: 'all'\|'SAME_DAY'\|'PRE_ORDER'` (L55) · grouping เมื่อ `filterMode==='PRE_ORDER'` (L195) · cancel | **canonical** |
 | `src/pages/admin/AdminPreOrders.tsx` | 160 | `.from('orders').eq('order_mode','PRE_ORDER')` (L25-27) · status filter (L68) · `cancelOrder` | 🔴 **ซ้ำ 100%** |
@@ -143,7 +143,7 @@
 ## 4. คำสั่งที่ใช้บ่อย
 
 ```powershell
-# 闸门แบบ fresh (ห้ามใช้แบบไม่มี --incremental false)
+# gateแบบ fresh (ห้ามใช้แบบไม่มี --incremental false)
 Set-Location 'D:\A PROJECT\Bite Me Baby'
 npx tsc --noEmit --incremental false
 npm run lint        # eslint + scripts/brandNameGuard.cjs

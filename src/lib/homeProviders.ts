@@ -1,4 +1,4 @@
-﻿
+
 
 // CAT-04: Filter products by activeBranchId for multi-branch availability
 export function filterProductsByBranch(
@@ -252,7 +252,7 @@ export function getStoreStatusFromRounds(rounds: Array<{
           ? Math.min(100, Math.round((Number(current.current_count || 0) / Number(current.max_capacity)) * 100))
           : undefined,
       // R10: ไม่ต่อ "ส่งรอบถัดไป X–Y" ท้ายข้อความ (Owner: ไม่ต้องแสดง)
-      message: 'เปิดรับออเดอร์ เซมเดย์ — ยังสั่งได้',
+      message: 'เปิดรับออเดอร์ เซมเดย์',
       preOrderLine,
     }
   }

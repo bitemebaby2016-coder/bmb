@@ -26,8 +26,8 @@ export function PromotionStrip({ promotions }: { promotions: HomePromotion[] }) 
             <div className="flex items-center gap-3">
               <span className="text-3xl" aria-hidden="true">🎉</span>
               <div className="min-w-0">
-                <h3 className="font-bold text-brand-accent">{promo.title}</h3>
-                <p className="text-sm text-brand-muted">{promo.description}</p>
+                <h3 className="font-bold text-brand-accent line-clamp-1">{promo.title}</h3>
+                <p className="text-sm text-brand-muted line-clamp-2">{promo.description}</p>
                 {promo.coupon && (
                   <p className="text-xs mt-1 font-mono text-brand-primary">โค้ด: {promo.coupon}</p>
                 )}

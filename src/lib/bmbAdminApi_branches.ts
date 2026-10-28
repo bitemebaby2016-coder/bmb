@@ -1,4 +1,4 @@
-﻿// ============================================
+// ============================================
 // Bite Me Baby Admin API — Branches (TEN-06 + TEN-07)
 // Multi-branch management for tenant admins and platform admins
 // ============================================

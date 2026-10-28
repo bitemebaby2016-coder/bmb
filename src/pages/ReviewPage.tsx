@@ -1,4 +1,4 @@
-﻿// Bite Me Baby -- Review Page (CAT-04 Enhanced)
+// Bite Me Baby -- Review Page (CAT-04 Enhanced)
 import { useParams, Link } from 'react-router-dom'
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'

@@ -1,4 +1,4 @@
-﻿// ============================================
+// ============================================
 // Bite Me Baby — Admin Portfolio Management (CAT-04, migration 094)
 // CRUD management of admin-curated past works / promotional images
 // ============================================

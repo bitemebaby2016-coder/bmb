@@ -1,4 +1,4 @@
-﻿// ============================================
+// ============================================
 // Bite Me Baby — Admin Kitchen Page (P1 — DB-backed)
 // Shows production batches, kitchen queue, allows batch creation
 // Data source: production_batches + order_items via RPCs

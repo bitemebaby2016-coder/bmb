@@ -1,4 +1,4 @@
-﻿-- REPLAY ALIGNMENT PATCH (ISOLATED LOCAL ONLY)
+-- REPLAY ALIGNMENT PATCH (ISOLATED LOCAL ONLY)
 -- Aligns replay schema with verified production state for objects that exist
 -- in production but are not produced by the repo migration files (manual
 -- production-side actions, EXPLAINED HISTORICAL), and removes replay-only

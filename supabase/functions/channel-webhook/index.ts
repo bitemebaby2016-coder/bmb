@@ -1,4 +1,4 @@
-﻿// ============================================
+// ============================================
 // Bite Me Baby — Edge Function: channel-webhook (W3-C-EXTERNAL)
 // Facebook / Facebook Group / Messenger inbound adapter (foundation).
 //

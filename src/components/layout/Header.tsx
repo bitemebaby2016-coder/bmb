@@ -47,7 +47,7 @@ const riderIdentity = useRiderIdentity()
     setMobileMenuOpen(false)
   }
 
-  // L-3 (N-4 #3): จิ้มลิงก์顶部ที่เป็นหน้าปัจจุบันอยู่แล้ว → ไม่มี navigate → Layout ไม่ scroll
+  // L-3 (N-4 #3): จิ้มลิงก์บนหน้าที่เป็นหน้าปัจจุบันอยู่แล้ว → ไม่มี navigate → Layout ไม่ scroll
   // → ต้องเลื่อนขึ้นบนเองไม่งั้น "จิ้มแล้วนิ่ง" (ต่างหน้า = pathname เปลี่ยน → Layout จัดการเอง)
   const scrollIfSamePath = (path: string) => {
     if (location.pathname === path) scrollMainToTop()

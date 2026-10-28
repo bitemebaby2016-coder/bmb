@@ -1,4 +1,4 @@
-﻿// ============================================
+// ============================================
 // Bite Me Baby — G5 AI Routing tests (T-G5-01..T-G5-18)
 // Owner decisions D5-01..D5-05. Offline suite — no live AI traffic,
 // no production mutations, no secrets.

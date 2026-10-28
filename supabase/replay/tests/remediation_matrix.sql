@@ -1,4 +1,4 @@
-﻿-- ============================================
+-- ============================================
 -- POST-G2 SECURITY REMEDIATION MATRIX (ISOLATED LOCAL ONLY)
 -- Runs AFTER migration 108. Any failure RAISEs EXCEPTION (nonzero exit).
 -- Reuses fixtures seeded by tests/rls_matrix.sql:

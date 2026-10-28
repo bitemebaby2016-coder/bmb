@@ -21,7 +21,7 @@
 --     กติกาเดิมเป๊ะ → เก็บ result jsonb ฉบับเต็ม
 --   * key เดิม → owner+fingerprint ตรง → คืน identity เดิม + สถานะปัจจุบัน
 --     จาก orders + replay:true [W5C R3] (ไม่มี order/intent ใหม่ ไม่ mutate
---     อะไรเลย) · ไม่ตรง → ERR_IDEMPOTENCY_CONFLICT (ไม่ leak 任何)
+--     อะไรเลย) · ไม่ตรง → ERR_IDEMPOTENCY_CONFLICT (ไม่ leak อะไร)
 --   * unique_violation ที่ PK → แข่งจริง → ตรวจแล้วคืนของเดิม / RAISE
 --   * RLS ENABLE (ไม่มี policy, ไม่ FORCE) + REVOKE ALL → ภายนอกอ่านตรง ๆ
 --     ไม่ได้ · SECURITY DEFINER (owner=postgres) เท่านั้น

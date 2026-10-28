@@ -1,4 +1,4 @@
-﻿-- ============================================
+-- ============================================
 -- REPLAY PATCH for migration 070 (ISOLATED LOCAL ONLY)
 -- Reason: repo 070 contains a PL/pgSQL compile error (RAISE with 3 placeholders,
 -- 0 params) - it cannot have run as-is in production (content drift).

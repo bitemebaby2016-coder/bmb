@@ -101,7 +101,7 @@
 | **P0-interim — SF-01** | `supabase/functions/phone-auto-login/rateLimit.ts` (ใหม่) | pure module: sliding window · `QUICK_LOGIN_PHONE_RULE` 5/15นาที · `QUICK_LOGIN_IP_RULE` 20/ชม. · `clientIpOf` · `sweep` กันหน่วยความจำรั่ว |
 | | `supabase/functions/phone-auto-login/index.ts` | wire rate limit → 429 + `Retry-After` |
 | | `e2e/launchVerify.cjs` | L2 expectation: `/orders` เป็น auth-gated แล้ว → canonical `/login` |
-| **tests** | `src/__tests__/accountRecovery.test.ts` (ใหม่, 16 tests) | enumeration กัน · redirectTo · password length · rate limit boundary/滑动/แยกคีย์/IP สูงกว่าเบอร์/sweep |
+| **tests** | `src/__tests__/accountRecovery.test.ts` (ใหม่, 16 tests) | enumeration กัน · redirectTo · password length · rate limit boundary/สไลด์/แยกคีย์/IP สูงกว่าเบอร์/sweep |
 
 **gates (ก่อน commit):** `lint = 0` · `vitest 74 ไฟล์ / 802 tests ผ่าน` · `build = 0`
 

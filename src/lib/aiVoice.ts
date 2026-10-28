@@ -542,7 +542,7 @@ export class AIVoiceService {
         this.playAudioBlob(blob)
           .then(() => { this.currentAudio = null; next() })
           .catch((e) => {
-            if (token !== this.speakToken) { resolve(); return } // เสียงใหม่接管แล้ว → เงียบ
+            if (token !== this.speakToken) { resolve(); return } // เสียงใหม่เข้ามาแทนแล้ว → เงียบ
             this.queueActive = false; this.audioQueue = []; this.setSpeaking(false); this.currentAudio = null; reject(e)
           })
       }

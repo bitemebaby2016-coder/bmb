@@ -1,4 +1,4 @@
-﻿// ============================================
+// ============================================
 // Bite Me Baby — Admin Recipes / BOM Management (P1 — DB-backed)
 // Shows product-to-ingredient mapping, allows CRUD of recipes
 // Data source: recipes table + inventory via RPC

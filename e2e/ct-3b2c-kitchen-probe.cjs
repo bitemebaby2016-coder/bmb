@@ -1,4 +1,4 @@
-﻿'use strict'
+'use strict'
 // STEP 3B-2C — deploy migration 054 (DDL only) + READ-ONLY gate verification.
 // The gate SQL replicated here runs as pure SELECTs — zero data mutation.
 const TOKEN = process.env.SUPABASE_ACCESS_TOKEN || ''

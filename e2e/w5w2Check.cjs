@@ -1,4 +1,4 @@
-﻿const fs=require('fs');const env=fs.readFileSync('.env','utf8');
+const fs=require('fs');const env=fs.readFileSync('.env','utf8');
 const tk=((env.match(/^SUPABASE_ACCESS_TOKEN=(.*)$/m)||[])[1]||process.env.SUPABASE_ACCESS_TOKEN||'').trim();
 (async()=>{
  const q=(sql)=>fetch('https://api.supabase.com/v1/projects/ivkdfognyiwjcmrhcnwz/database/query',{method:'POST',headers:{Authorization:'Bearer '+tk,'Content-Type':'application/json'},body:JSON.stringify({query:sql})}).then(async r=>[r.status,await r.text()]);

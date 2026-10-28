@@ -1,4 +1,4 @@
-﻿// G7-S4-C v5 — multipart deploy: field "file" + repo-relative filenames + matching entrypoint (step2 pattern)
+// G7-S4-C v5 — multipart deploy: field "file" + repo-relative filenames + matching entrypoint (step2 pattern)
 const fs = require('fs')
 const path = require('path')
 const crypto = require('crypto')

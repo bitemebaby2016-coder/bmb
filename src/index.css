@@ -947,6 +947,11 @@ p { color: var(--color-brand-text-secondary); }
   display: flex;
   flex-direction: column;
   gap: 10px;
+  /* R12 (Owner 2026-10-28): ทุกกรอบโปรโมชั่นขนาดเท่ากัน (รวมกรอบใหม่ในอนาคต) */
+  height: 148px;
+  min-height: 148px;
+  justify-content: space-between;
+  overflow: hidden;
   transition: transform 0.18s ease;
 }
 .promo-card:hover { transform: translateY(-3px); box-shadow: 0 12px 24px rgba(146, 64, 14, 0.16); }

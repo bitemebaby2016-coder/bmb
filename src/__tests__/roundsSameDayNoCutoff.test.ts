@@ -148,6 +148,8 @@ describe('source guards — ห้ามมี same_day_cutoff ในสาย�
 
   it('D5: StoreStatusStrip ไม่มีคำว่า "ปิดรับ {" เหลือ (แสดง "ไม่มีคัทออฟ" แทน)', () => {
     expect(storeStatusStripSrc).not.toContain('ปิดรับ {status.cutoff}')
-    expect(storeStatusStripSrc).toContain('ไม่มีคัทออฟ')
+    expect(storeStatusStripSrc).not.toContain('capacityPct')
+    expect(storeStatusStripSrc).not.toContain('hoursClose')
+    expect(storeStatusStripSrc).toContain('status.preOrderLine')
   })
 })

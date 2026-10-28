@@ -241,7 +241,7 @@ function matchThaiWord(text: string, prefix: string): string | null {
 /**
  * Scan free-text Thai for "customize my dish" flags. Returns deduplicated
  * customizers (``note`` map key) in the order they appear. Each phrase is a
- * REAL request from the user (e.g. "เพิ่มไข่", "ไม่เผ็ด", "ไม่ใส่หوم") — kept
+ * REAL request from the user (e.g. "เพิ่มไข่", "ไม่เผ็ด", "ไม่ใส่หอม") — kept
  * verbatim, never invented. Falls back to an empty list when none are present.
  */
 export function extractCustomizers(text: string): Customizer[] {
@@ -292,7 +292,7 @@ export interface OrderIntent {
   modifyFrom?: string
   /** Raw " ... TO ..." token (fuzzy). */
   modifyTo?: string
-  /** "Customize my dish" flags ("неเผ็ด", "เพิ่มไข่"…). */
+  /** "Customize my dish" flags ("ไม่เผ็ด", "เพิ่มไข่"…). */
   customizers: Customizer[]
 }
 

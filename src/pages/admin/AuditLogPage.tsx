@@ -1,4 +1,4 @@
-﻿// ============================================
+// ============================================
 // Bite Me Baby — Admin Audit Log Page (P1 — DB-backed)
 // Reads from audit_logs table directly (authoritative source)
 // ============================================

@@ -1,4 +1,4 @@
-﻿const fs=require('fs');const env=fs.readFileSync('.env','utf8');
+const fs=require('fs');const env=fs.readFileSync('.env','utf8');
 const tk=((env.match(/^SUPABASE_ACCESS_TOKEN=(.*)$/m)||[])[1]||process.env.SUPABASE_ACCESS_TOKEN||'').trim();
 (async()=>{
  const r=await fetch('https://api.supabase.com/v1/projects/ivkdfognyiwjcmrhcnwz/functions/phone-auto-login',{headers:{Authorization:'Bearer '+tk}});

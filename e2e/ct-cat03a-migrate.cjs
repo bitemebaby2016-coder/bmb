@@ -1,4 +1,4 @@
-﻿'use strict'
+'use strict'
 // CAT-03A media migration — Base64 → bmb-images → media_assets → products.image_url
 // Usage: node e2e/ct-cat03a-migrate.cjs 1   (batch 1 = prod-1..prod-6)
 //        node e2e/ct-cat03a-migrate.cjs 2   (batch 2 = admin-created products)

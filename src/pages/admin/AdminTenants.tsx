@@ -1,4 +1,4 @@
-﻿// ============================================
+// ============================================
 // Bite Me Baby — Admin Tenants Management (TEN-06)
 import { useState } from 'react'
 import { listTenants, createTenant, updateTenant, setTenantStatus } from '@/lib/adminTenantApi'

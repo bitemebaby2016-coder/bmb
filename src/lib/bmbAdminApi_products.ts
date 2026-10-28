@@ -1,4 +1,4 @@
-﻿// ============================================
+// ============================================
 // Bite Me Baby Admin API - Products & Categories (TEN-06: Tenant-scoped via adminTenantContext)
 // TEN-05: Catalog queries are tenant-scoped via brandContextStore
 // TEN-06: Now uses adminTenantContext for active tenant boundary enforcement

@@ -1,4 +1,4 @@
-﻿// ============================================
+// ============================================
 // Bite Me Baby - AI Model A Configuration
 // ============================================
 // G5 (STEP 2): this file is the CLIENT-FACING re-export of the canonical

@@ -1,4 +1,4 @@
-﻿// G7-S4-E/F — valid synthetic production invocation (internal token never printed)
+// G7-S4-E/F — valid synthetic production invocation (internal token never printed)
 const fs = require('fs')
 const path = require('path')
 const ref = process.argv[2] || ''

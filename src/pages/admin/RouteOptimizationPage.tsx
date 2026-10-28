@@ -1,4 +1,4 @@
-﻿// ============================================
+// ============================================
 // Bite Me Baby — Route Optimization Admin Page
 // GAP CLOSURE P1-2: Create UI for routeOptimization.ts algorithms
 // ============================================

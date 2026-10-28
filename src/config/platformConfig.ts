@@ -1,4 +1,4 @@
-﻿// ============================================
+// ============================================
 // Bite Me Baby — Multi-Tenant Global Configuration Engine
 // ============================================
 // Every layout value, distance, quota, cutoff, and theme is driven by this

@@ -1,4 +1,4 @@
-﻿// ============================================
+// ============================================
 // G4/D4-2 signature boundary tests (executable, test-only).
 // Runs the REAL channel-webhook source via Node type-stripping. Proves the
 // constant-time comparison code path behaviorally: valid/invalid/malformed

@@ -1,4 +1,4 @@
-﻿// G7-S4-B/H pre/post-mutation probe (READ-ONLY) — synthetic ids absent/present + baseline counts
+// G7-S4-B/H pre/post-mutation probe (READ-ONLY) — synthetic ids absent/present + baseline counts
 const fs = require('node:fs')
 const T = fs.readFileSync('.env.local', 'utf8').match(/^SUPABASE_ACCESS_TOKEN=(.*)$/m)[1].trim()
 const ref = process.argv[2] || ''

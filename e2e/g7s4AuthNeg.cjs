@@ -1,4 +1,4 @@
-﻿// G7-S4-D — production auth negative tests (NO real credentials printed)
+// G7-S4-D — production auth negative tests (NO real credentials printed)
 const URL = 'https://ivkdfognyiwjcmrhcnwz.supabase.co/functions/v1/social-post-worker'
 const PUBLISHABLE = 'sb_publishable_Q7AHrjSYOrysDjxS9_ZB-g_NMmytLOH'
 const BODY = JSON.stringify({ task: 'social_post_draft', brief: 'g7-s4 negative probe' })

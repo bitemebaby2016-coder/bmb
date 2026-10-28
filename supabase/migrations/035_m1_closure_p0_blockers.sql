@@ -1,5 +1,5 @@
 -- ============================================
--- Bite Me Baby � Migration 035: TRUE M1 Closure P0 Blockers
+-- Bite Me Baby — Migration 035: TRUE M1 Closure P0 Blockers
 -- Date: 2026-09-23
 -- Fixes:
 --   1) DELIVERY RULE SERVER ENFORCEMENT: Add 5km self-delivery gate
@@ -117,7 +117,7 @@ COMMIT;
 BEGIN;
 
 -- Check if payment_status column exists on orders (should exist from 025)
--- If not, add it (defensive � idempotent via DO block)
+-- If not, add it (defensive — idempotent via DO block)
 DO } BEGIN
   IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='orders' AND column_name='payment_status') THEN
     ALTER TABLE public.orders ADD COLUMN payment_status TEXT DEFAULT 'pending'::text CHECK (payment_status IN ('pending', 'paid', 'refund'));

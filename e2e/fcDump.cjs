@@ -1,4 +1,4 @@
-// fcDump — เขียน def ของ function ที่ต้องแก้ลงไฟล์อ่านทีละไฟล์ (避免 output truncation)
+// fcDump — เขียน def ของ function ที่ต้องแก้ลงไฟล์อ่านทีละไฟล์ (เลี่ยง output truncation)
 const fs = require('fs')
 const path = require('path')
 const ROOT = path.resolve(__dirname, '..')

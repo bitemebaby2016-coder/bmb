@@ -4,7 +4,7 @@
 ## สถานะ ณ สร้างแฮนออฟ
 - HEAD == origin/main == `362842a` (docs) ก่อนหน้านี้ = `cd20917`/`460e647` (e2e fixes) — tracked 0 · untracked **13 ไฟล์** · stash `local-edits-before-sync-2026-09-21` — **ห้ามแตะทั้งหมด**
 - Local gates ล่าสุดที่วัด: **934/934 tests · tsc 0 · eslint 0 · build 0 · brand OK 349** (ไม่มีการแตะ src/ ใน wave นี้เลย — แก้แค่ `.github/workflows/contract-tests.yml`, `e2e/*`, `supabase/migrations/124_*.sql`, docs)
-- CI หลัก: #426/#430 = success ยืนยันแล้ว · commit หลัง ๆ ยังไม่ได้逐一ยืนยัน — **ก่อนรายงานรอบสุดท้าย ให้เช็ค CI ของ SHA สุดท้ายด้วย**
+- CI หลัก: #426/#430 = success ยืนยันแล้ว · commit หลัง ๆ ยังไม่ได้ยืนยันทีละตัว — **ก่อนรายงานรอบสุดท้าย ให้เช็ค CI ของ SHA สุดท้ายด้วย**
 
 ## สิ่งที่ Wave 5A สร้างไว้
 1. **`.github/workflows/contract-tests.yml`** — workflow แยกจาก ci.yml: postgres:16 service (ephemeral, ไม่มี production creds) → prelude stubs (`e2e/ci/00_prelude_supabase_stubs.sql`: roles anon/authenticated/service_role, auth schema+uid/jwt/role/email, auth.users (+phone), storage.objects/buckets) → apply migrations 001-123 แบบ **inventory mode** (collect ทุก failure แล้ว exit ท้าย) → contract 123 → apply 124 → contract 124 → cleanup check → `e2e/ci/concurrency_124.sh`

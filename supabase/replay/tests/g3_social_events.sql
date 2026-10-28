@@ -1,4 +1,4 @@
-﻿-- ============================================
+-- ============================================
 -- G3 SOCIAL EVENTS FOUNDATION — contract test matrix (ISOLATED LOCAL ONLY)
 -- Runs AFTER migrations 106,108,109 + patches/g3_align.sql.
 -- Reuses rls_matrix/remediation_matrix fixtures (tenant-a/b, brand a1/a2/b1,

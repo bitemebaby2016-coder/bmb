@@ -50,6 +50,73 @@ function walk(dir, out = []) {
   }
   return out
 }
+// ============================================
+// R12 (Owner 2026-10-28): ภาษาห้ามมี "ต่างดาว/จาก UTF-8 BOM"
+// ติดตามการสแกนภาษาแบบเดียวกับแบรนด์ — ไฟล์ active เท่านั้น
+// (docs/archive = เอกสารยุคเก่า/หลาย encoding จงใจไม่สแกน)
+// Allowlist: HANDOFF_002_SCHEMA.md = เอกสาร legacy เก็บ encoding เดิมไว้ตั้งใจ
+// ============================================
+const ALIEN_LANG_EXT = /\.(ts|tsx|js|cjs|mjs|md|sql|json)$/
+const LANGUAGE_SKIP_DIRS = new Set(['node_modules', 'dist', '.git', 'coverage', 'screenshots', 'archive'])
+const LANGUAGE_ALLOW_NON_UTF8 = new Set(['supabase/migrations/HANDOFF_002_SCHEMA.md'])
+
+// ชนชุดอื่นที่หลุดมา (ไม่นับไทย 0E00-0E7F / ละติน / กรีกที่ใช้คณิต เช่น Σ)
+const ALIEN_RANGES = [
+  [0x3400, 0x4dbf], [0x4e00, 0x9fff], // CJK
+  [0x0400, 0x04ff], // Cyrillic
+  [0x0590, 0x05ff], // Hebrew
+  [0x0600, 0x06ff], // Arabic
+  [0x0900, 0x097f], // Devanagari
+  [0x0530, 0x058f], // Armenian
+]
+function alienSet(s) {
+  const set = new Set()
+  for (const ch of String(s)) {
+    const c = ch.codePointAt(0)
+    for (const [a, b] of ALIEN_RANGES) {
+      if (c >= a && c <= b) { set.add(ch); break }
+    }
+  }
+  return [...set]
+}
+
+function walkAll(dir, out = []) {
+  let entries
+  try { entries = fs.readdirSync(dir, { withFileTypes: true }) } catch { return out }
+  for (const e of entries) {
+    const p = path.join(dir, e.name)
+    if (e.isDirectory()) { if (!LANGUAGE_SKIP_DIRS.has(e.name)) walkAll(p, out); continue }
+    if (!ALIEN_LANG_EXT.test(e.name)) continue
+    out.push(p)
+  }
+  return out
+}
+
+function languageCheck() {
+  const files = [
+    ...walkAll(path.join(ROOT, 'src')),
+    ...walkAll(path.join(ROOT, 'supabase')),
+    ...walkAll(path.join(ROOT, 'e2e')),
+    ...walkAll(path.join(ROOT, 'scripts')),
+    ...walkAll(path.join(ROOT, 'docs')),
+  ]
+  const bad = []
+  for (const f of files) {
+    const rel = path.relative(ROOT, f).split(path.sep).join('/')
+    const buf = fs.readFileSync(f)
+    const hasBom = buf.length >= 3 && buf[0] === 0xef && buf[1] === 0xbb && buf[2] === 0xbf
+    if (hasBom) { bad.push(rel + ' (UTF-8 BOM)'); continue }
+    if (LANGUAGE_ALLOW_NON_UTF8.has(rel)) continue
+    const txt = buf.toString('utf8')
+    if (!buf.equals(Buffer.from(txt, 'utf8'))) { bad.push(rel + ' (non-UTF8)'); continue }
+    if (txt.includes('\uFFFD')) { bad.push(rel + ' (U+FFFD)'); continue }
+    txt.split(/\r?\n/).forEach((l, i) => {
+      const s = alienSet(l)
+      if (s.length) bad.push(`${rel}:${i + 1} (${s.join('')}) ${l.trim().slice(0, 80)}`)
+    })
+  }
+  return { files, bad }
+}
 
 function main() {
   const files = [
@@ -83,6 +150,15 @@ function main() {
     process.exit(1)
   }
   console.log('brandNameGuard: OK — สแกน ' + files.length + ' ไฟล์ ไม่พบชื่อผิด')
+
+  // ---- R12 (Owner 2026-10-28): ภาษาไทย/อังกฤษห้ามมี BOM / U+FFFD / ต่างดาว ----
+  const lang = languageCheck()
+  if (lang.bad.length) {
+    console.error('languageSanity: FAIL — พบ BOM / U+FFFD / ตัวอักษรชุดอื่น (' + lang.bad.length + ' จุด)')
+    lang.bad.forEach((o) => console.error('  ' + o))
+    process.exit(1)
+  }
+  console.log('languageSanity: OK — สแกน ' + lang.files.length + ' ไฟล์ ไม่พบ BOM / ต่างดาว')
 }
 
 main()

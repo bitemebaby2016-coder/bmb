@@ -1,4 +1,4 @@
-﻿-- ============================================
+-- ============================================
 -- S1-prime-A REPLAY SEED (ISOLATED LOCAL ONLY - NEVER DEPLOYED TO PRODUCTION)
 -- Minimal deterministic auth seed required by migration 066 assertion
 -- (ERR_PLATFORM_ADMIN expects exactly 1 profile with is_platform=true,

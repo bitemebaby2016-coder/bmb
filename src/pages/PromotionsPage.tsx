@@ -136,17 +136,17 @@ export function PromotionsPage() {
       {!loading && !loadFailed && promos.length > 0 && (
         <div className="space-y-4 mb-6">
           {promos.map((promo) => (
-            <div key={promo.id} className="card flex items-center gap-4">
+            <div key={promo.id} className="card flex items-center gap-4 min-h-[120px]">
               <div className="w-16 h-16 bg-brand-bg rounded-xl flex items-center justify-center text-2xl">
                 {promo.discount_type === 'percentage' ? '🎉' : '🎁'}
               </div>
               <div className="flex-1">
                 <div className="flex items-center gap-2 mb-1">
-                  <h3 className="font-bold text-brand-accent">{promo.name}</h3>
+                  <h3 className="font-bold text-brand-accent line-clamp-1">{promo.name}</h3>
                   <span className="badge badge-primary">โปรโมชั่น</span>
                 </div>
                 <p className="text-brand-primary font-bold text-lg">{promoDiscountLabel(promo)}</p>
-                {promo.description && <p className="text-sm text-brand-muted">{promo.description}</p>}
+                {promo.description && <p className="text-sm text-brand-muted line-clamp-2">{promo.description}</p>}
                 {promoExpiryLabel(promo) && (
                   <p className="text-xs text-brand-muted">{promoExpiryLabel(promo)}</p>
                 )}

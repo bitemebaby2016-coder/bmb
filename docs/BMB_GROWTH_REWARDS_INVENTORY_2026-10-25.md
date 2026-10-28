@@ -21,7 +21,7 @@
 ### 1.1 Promotions & Coupon (server-authoritative — ใช้ได้เลย)
 | ของ | ที่อยู่ | หลักฐาน/หมายเหตุ |
 |---|---|---|
-| ตาราง `promotions` + กติกาส่วนลด | migrations 114 (`create_order_with_items` block) · 124 (idempotency) | server คำนวณส่วนลดเองเสมอ — client 仅 preview |
+| ตาราง `promotions` + กติกาส่วนลด | migrations 114 (`create_order_with_items` block) · 124 (idempotency) | server คำนวณส่วนลดเองเสมอ — client -only preview |
 | Client mirror | `src/lib/promotionClient.ts` | `normalizePromoCode` · `computeServerDiscount` (percentage/fixed, cap ที่ subtotal) · `CouponRejectReason` |
 | UI คูปอง จุดเดียว | `src/components/CouponBox.tsx` | ONE component = Cart + Checkout (A1) · `src/lib/cartPersistence.ts` เก็บโค้ด |
 | แอดมิน | `/admin/promotions` → `src/pages/admin/AdminPromotions.tsx` | ตาราง `promotions` จริง |

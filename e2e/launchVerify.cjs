@@ -11,7 +11,7 @@
 //   L3  param-page canonical (/reviews/:id -> /reviews, /payment/:n -> /checkout)
 //   L4  GPS granted -> badge ต้องขึ้น "ตำแหน่งจาก GPS" (matrix#2 re-run — เคย FAIL)
 //   L5  GPS denied  -> badge ห้ามอ้าง GPS (matrix#1 re-run — เคย PASS)
-//   L6  chat 一轮 จบภายใน deadline จริง (ไม่ค้าง)
+//   L6  chat หนึ่งรอบ จบภายใน deadline จริง (ไม่ค้าง)
 //   L7  deploy marker — bundle production มีโค้ด 5cc693a จริง
 //
 // รัน: node e2e/launchVerify.cjs   -> e2e/launch-verify.json + e2e/screenshots/launch-*.png
