@@ -65,11 +65,15 @@ describe('Permission-aware routing (AdminRoute gate)', () => {
 })
 
 describe('Navigation feedback — scroll-top on route change (Layout)', () => {
-  it('resets the scroll window to top whenever the pathname changes (jsdom-safe guard)', () => {
+  it('resets the scroll window to top whenever the route changes (jsdom-safe guard)', () => {
     // guard: Element.scrollTo บางสภาพแวดล้อม (jsdom) ไม่มี — fallback = scrollTop
     expect(layoutSrc).toContain("if (typeof el.scrollTo === 'function') el.scrollTo({ top: 0 })")
     expect(layoutSrc).toContain('else el.scrollTop = 0')
-    expect(layoutSrc).toContain('}, [location.pathname, location.search])')
+    expect(layoutSrc).toContain('[location.pathname, location.search, location.hash]')
+  })
+
+  it('deep-link #hash ที่มี element จริง = scroll ไป section (ไม่ใช่ขึ้นบน)', () => {
+    expect(layoutSrc).toContain("target.scrollIntoView({ behavior: 'smooth', block: 'start' })")
   })
 
   it('the scroll window is the Layout <main> container (admin pages render inside it)', () => {

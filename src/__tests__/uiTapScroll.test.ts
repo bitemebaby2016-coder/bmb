@@ -48,8 +48,9 @@ describe('scrollTo helpers — ไม่ให้จิ้มแล้วนิ�
 })
 
 describe('L-3 source invariants — ทุกผิวหน้า scroll ตรงกัน', () => {
-  it('Layout: scroll-to-top ทั้ง pathname + search (footer ?category= บนหน้าเดิมต้องเลื่อนด้วย)', () => {
-    expect(layoutSrc).toContain('}, [location.pathname, location.search])')
+  it('Layout: ทุกนำเกชัน = ขึ้นบน เว้นแต่ #hash มี element จริง (deep-link) เช็ค pathname+search+hash', () => {
+    expect(layoutSrc).toContain('[location.pathname, location.search, location.hash]')
+    expect(layoutSrc).toContain("target.scrollIntoView({ behavior: 'smooth', block: 'start' })")
     expect(layoutSrc).toContain('el.scrollTo({ top: 0 })')
   })
 

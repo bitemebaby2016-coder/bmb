@@ -4,7 +4,7 @@
 > (WHOLE-REPO RECONCILIATION · CODE CLOSURE · LEAN PRODUCTION ACCEPTANCE)
 > ไฟล์อื่นที่มีวันที่ในชื่อ = **รายงาน ณ วันนั้น** ห้ามใช้แทนไฟล์นี้ ถ้าขัดกันให้ถือโค้ด/หลักฐาน (DOC DRIFT)
 
-**last_updated:** 2026-10-27 (R11 · apply 163 สู่ production) · **branch:** `main` · อ่าน §0 ก่อนเริ่มงานทุกครั้ง
+**last_updated:** 2026-10-28 (R12 · ทุกหน้าขึ้นบน + LINE กลับมา + footer ครบ) · **branch:** `main` · อ่าน §0 ก่อนเริ่มงานทุกครั้ง
 
 ---
 
@@ -79,6 +79,7 @@
 - **production write ที่ทำ = apply 159 เท่านั้น** (Owner อนุมัติ 2026-10-26 · staged `w7Apply159.cjs`) — ไม่มี write อื่น *(ณ รอบ reconcile 2026-10-26 · หลังจากนั้น = apply 160/161/162/163 — ดู bullet ท้าย §1.3)*
 - **Backlog settings-sync audit (2026-10-27):** ปิดฝั่งโค้ดครบ **13 key** (write/read path จริงทุกตัว — hours · operating_hours · delivery_policy · kitchen_location · order_pattern · order_policy · promotion · loyalty · referral · spin · push_config · social_links · theater_daily_copy · **missing = 0**) · evidence **`e2e/backlogAudit-settings-sync-2026-10-27.json`** · runtime spot-check ด้วยมือ = `docs/BMB_OWNER_ROLE_TEST_GUIDE_2026-10-27.md` §15 · คู่มือสอนทดสอบทุก role = ไฟล์เดียวกัน (§3–§13)
 - **migration 161 (R10) · 162 (R10) · 163 (R11) = APPLIED บน production 2026-10-27 รอบดึก (Owner สั่ง apply 163)** — 163 = `e2e/r11Apply163.cjs` 4 stage ผ่าน (precheck → apply → verify `pg_proc` 4 ฟังก์ชัน + `arrived_at`/`checkin_*` col → record ledger **161/162/163** ครบ · backfill 161/162 ที่ R10 apply แต่ไม่ได้ record) · evidence `e2e/r11Apply163-result.json` (+ `r10Apply161/162-result.json`) · **ledger top = 163** (อัปเดตแทนค่า "159/160" ด้านบน) · ยืนยันซ้ำด้วย `e2e/migHistory.cjs` (read-only) · **รอ Owner retest flow ไรเดอร์ทีละสเตป** = `docs/BMB_HANDOFF_NEXT_SESSION_2026-10-27B.md` §2 (ก)
+- **R12 (2026-10-28 · Owner สั่งหลัง retest R11):** **ทุกหน้าขึ้นจากด้านบนเสมอ เว้นแต่ติดเงื่อนไข deep-link** — Layout scroll rule ใหม่ใน `Layout.tsx` (fire ที่ pathname/search/hash · `#hash` ที่มี element จริง = scroll ไป section · ไม่มี = ขึ้นบน <main>+window) · **LINE กลับมา** — restore ค่าจริงที่แ админตั้งใน `business_settings.social_links` (`line=https://line.me/ti/p/QFD3bSMFN9` · `line_id=bitemebaby2016`) + DEFAULT `socialLinks.ts` ตรงกัน (แก้ได้ที่ AdminSettings · evidence `e2e/r12RestoreLine-result.json`) · **ฟุตเตอร์ลิงก์ครบจริง** — guard `src/__tests__/footerLinksReal.test.ts` (ทุก path มี Route) · **deep-link B (กระดิ่ง + notification center) wiring guard** — รอ Owner retest
 - คำสั่งตรวจ ledger รอบถัดไป (read-only): `SELECT version FROM supabase_migrations.schema_migrations ORDER BY version DESC LIMIT 3` → top = **160** ณ 2026-10-26 (160 APPLIED ดู §1.3 บน) *(อัปเดต 2026-10-27: top = **163** แล้ว — ดู bullet "migration 161/162/163")*
 
 ---
@@ -328,6 +329,7 @@
 | 29 | session-close docs (R9+R10) | **ปิดเซสชั่น 2026-10-27 + handoff แชทถัดไป** (`docs/BMB_HANDOFF_NEXT_SESSION_2026-10-27.md`) + อัปเดต `AI_WORK_STATE.md` — docs-only (commit นี้ = SHA/ผลดู `git log` + `bmb_ci.bat`) | ตรวจรอบถัดไป | ตรวจรอบถัดไป |
 | 30 | `9bc7a30` | **R11: rider step-sync ทีละสเตปตาม action จริง** (migration 163: accept/claim→`dispatched` ทันที · `driver_checkin_arrival` geofence 300 ม.→`arrived` · geofence ที่ delivered) + แจ้งเตือนเด้งไปหน้างานตาม role (`notificationLinks`) + ปิดวงจรอัตโนมัติ + contracts 163 G1-G5 ลงทะเบียน CI | ตรวจรอบถัดไป | ตรวจรอบถัดไป |
 | 31 | (commit นี้ — SHA/ผลดู `git log`) | **apply 163 สู่ production** (`e2e/r11Apply163.cjs` 4 stage · ledger 161/162/163 record ครบ · evidence `e2e/r11Apply163-result.json`) + อัปเดต 3 เอกสาร (`AI_WORK_STATE.md` · `BMB_MASTER_STATUS.md` · handoff 27B) | ตรวจรอบถัดไป | ตรวจรอบถัดไป |
+| 32 | (commit นี้ — SHA/ผลดู `git log`) | **R12: ทุกหน้าขึ้นจากด้านบน + deep-link ใช้ได้จริง** (Layout scroll rule: pathname+search+hash · `#hash` = scroll ไป section) · **LINE กลับมา** (restore ค่าจริงที่แ админตั้งใน `business_settings.social_links` = `https://line.me/ti/p/QFD3bSMFN9`/`bitemebaby2016` + DEFAULT ตรงกัน · evidence `e2e/r12RestoreLine-result.json`) · footer links ครบจริง guard (`footerLinksReal.test.ts`) · deep-link B (dropdown + center) wiring guard | ตรวจรอบถัดไป | ตรวจรอบถัดไป |
 
 > อ่านจาก GitHub Actions REST API จริง (`?head_sha=<full SHA>` — เครื่องนี้ไม่มี `gh`) ·
 > **ห้ามอ้างเลข run จาก §9.4/§9.6 โดยไม่เทียบกับตารางนี้** (§9.4 = รายละเอียดรอบ 1 · §9.6 = รายละเอียดรอบ 2)

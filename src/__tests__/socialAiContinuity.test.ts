@@ -112,9 +112,9 @@ describe('ฟุตเตอร์ — ลิงก์โซเชียล/LINE
   it('ช่องว่าง = ไม่แสดงปุ่ม (ยังไม่มี LINE ก็ซ่อนได้)', () => {
     const items = socialLinkItems(DEFAULT_SOCIAL_LINKS)
     expect(items.some((i) => i.network === 'facebook')).toBe(true)
-    expect(items.some((i) => i.network === 'line')).toBe(false)
-    const withLine = socialLinkItems({ ...DEFAULT_SOCIAL_LINKS, line: 'https://line.me/R/ti/p/@demo' })
-    expect(withLine.some((i) => i.network === 'line' && i.href.includes('line.me'))).toBe(true)
+    expect(items.some((i) => i.network === 'line' && i.href.includes('line.me'))).toBe(true)
+    const cleared = socialLinkItems({ ...DEFAULT_SOCIAL_LINKS, line: '', line_id: '' })
+    expect(cleared.some((i) => i.network === 'line')).toBe(false)
   })
   it('D-02/R2.1: ห้าม key ซ้ำสองที่ — social_links + order_policy เหลือทางบันทึกเดียว (ฟอร์มเฉพาะทาง)', () => {
     // generic key editor ต้อง filter key ที่มีฟอร์มเฉพาะทางออก (TYPED_FORM_KEYS)

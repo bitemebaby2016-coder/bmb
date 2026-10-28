@@ -25,8 +25,9 @@ export const SOCIAL_LINKS_SETTING_KEY = 'social_links'
 export const DEFAULT_SOCIAL_LINKS: SocialLinks = {
   facebook: 'https://web.facebook.com/profile.php?id=61586146030943',
   messenger: 'https://m.me/61586146030943',
-  line: '',
-  line_id: '',
+  // R12: LINE restored — real values that were in production (admin-config via AdminSettings).
+  line: 'https://line.me/ti/p/QFD3bSMFN9',
+  line_id: 'bitemebaby2016',
   instagram: '',
   tiktok: '',
   youtube: '',
