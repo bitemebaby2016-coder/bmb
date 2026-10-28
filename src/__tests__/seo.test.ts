@@ -16,11 +16,13 @@ import {
   getPaymentMeta,
 } from '@/lib/seo'
 import { faqs } from '@/lib/faqContent'
+import { getSeoSettingsSync, setSeoSettingsLive, DEFAULT_SEO_SETTINGS, resetSeoSettingsCache } from '@/lib/seoSettings'
 // Vite `?raw` imports — no node types in this project; these resolve at test build time.
 import sitemap from '../../public/sitemap.xml?raw'
 import robots from '../../public/robots.txt?raw'
 import indexHtml from '../../index.html?raw'
 import appSource from '../App.tsx?raw'
+import seoSrc from '../lib/seo.ts?raw'
 
 describe('SEO meta — stable, correct canonical, no rotation leakage', () => {
   it('site config points at the production origin', () => {
@@ -60,6 +62,36 @@ describe('SEO meta — stable, correct canonical, no rotation leakage', () => {
     expect(restaurant).toBeDefined()
     expect(restaurant!.name).toBe(SITE_CONFIG.name)
     expect(restaurant!.url).toBe('https://biteme-baby.com/')
+  })
+
+  it('R12: sameAs ใช้โซเชียลจริงจาก business_settings (LINE #@bitemebaby เก่าไม่เหลือ)', () => {
+    const schema = getHomeMeta().schema as { '@graph': Array<Record<string, unknown>> }
+    const restaurant = schema['@graph'].find((n) => n['@type'] === 'Restaurant')
+    const sameAs = restaurant!.sameAs as string[]
+    // ค่าจริง (DEFAULT_SOCIAL_LINKS) — LINE ตัวจริงที่ admin ตั้ง (bitemebaby2016 / QFD3bSMFN9)
+    expect(sameAs).toContain('https://line.me/ti/p/QFD3bSMFN9')
+    expect(sameAs).toContain('https://web.facebook.com/profile.php?id=61586146030943')
+    expect(sameAs.some((u) => u.includes('@bitemebaby'))).toBe(false)
+    expect(seoSrc).not.toContain('@bitemebaby')
+  })
+
+  it('R12: SEO copy แก้ได้และหน้าแรกใช้ค่าจริงทันที (admin แก้ → getSeoSettingsSync)', () => {
+    expect(getSeoSettingsSync().description).toBe(DEFAULT_SEO_SETTINGS.description)
+    expect(getHomeMeta().description).toBe(DEFAULT_SEO_SETTINGS.description)
+    try {
+      setSeoSettingsLive({ description: 'คำโปรยที่ admin แก้เอง', tagline: 'tagline ใหม่' })
+      const m = getHomeMeta()
+      expect(m.description).toBe('คำโปรยที่ admin แก้เอง')
+      expect(m.title).toBe(`${SITE_CONFIG.name} - tagline ใหม่`)
+      const schema = m.schema as { '@graph': Array<Record<string, unknown>> }
+      const web = schema['@graph'].find((n) => n['@type'] === 'WebSite')
+      expect(web!.description).toBe('tagline ใหม่')
+    } finally {
+      resetSeoSettingsCache()
+    }
+    // กลับค่า default จริงแล้ว — meta เสถียร (determinism ไม่แตก)
+    expect(getHomeMeta().description).toBe(DEFAULT_SEO_SETTINGS.description)
+    expect(getHomeMeta().title).toBe(`${SITE_CONFIG.name} - ${DEFAULT_SEO_SETTINGS.tagline}`)
   })
 })
 

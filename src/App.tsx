@@ -1,6 +1,6 @@
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { HelmetProvider } from 'react-helmet-async'
-import { lazy, Suspense, useEffect, useState } from 'react'
+import { lazy, Suspense, useEffect, useState, useSyncExternalStore } from 'react'
 import { useAuthStore, fetchProfileRole } from './store/authStore'
 import { isAdminCapableRole } from './lib/adminUi'
 import { Layout } from './components/layout/Layout'
@@ -11,6 +11,8 @@ import { SeoHelmet, TrackOrderSeo, ReviewDetailSeo, PaymentSeo } from './compone
 import { MascotBadge } from './components/MascotBadge'
 import { getHomeMeta, getShopMeta, getMenuMeta, getCartMeta, getCheckoutMeta, getOrdersMeta, getNotificationsMeta, getReviewsMeta, getAboutMeta, getFaqMeta, getBlogMeta, getContactMeta, getPrivacyMeta, getTermsMeta, getPromotionsMeta, getRewardsMeta, getVoteMeta, getRandomMenuMeta, getShareMeta, getViralMeta, getProfileMeta, getAdminMeta, getLoginMeta } from './lib/seo'
 import { BrandProvider } from './components/BrandProvider'
+import { subscribeSeoSettings, getSeoSettingsVersion } from './lib/seoSettings'
+import { subscribeSocialLinks, getSocialVersion } from './lib/socialLinks'
 import { useAdminTenantContextStore } from './lib/adminTenantContext'
 import { listTenants } from './lib/adminTenantApi'
 
@@ -150,6 +152,16 @@ function AdminRoute({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
+  // R12 (Owner 2026-10-28): SEO copy/social ใช้ค่าจริงจาก business_settings —
+  // subscribe → re-render meta/JSON-LD ทันทีเมื่อค่าจริง (ก admin แก้) เปลี่ยน
+  useSyncExternalStore(
+    (cb) => {
+      const u1 = subscribeSeoSettings(cb)
+      const u2 = subscribeSocialLinks(cb)
+      return () => { u1(); u2() }
+    },
+    () => `seo:${getSeoSettingsVersion()}:social:${getSocialVersion()}`,
+  )
   return (
     <BrandProvider>
     <HelmetProvider>

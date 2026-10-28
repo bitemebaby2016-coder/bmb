@@ -56,6 +56,26 @@ const NETWORK_META: Array<{ network: SocialNetwork; label: string; icon: string 
 const CACHE_MS = 7 * 60 * 1000
 let cache: { at: number; value: SocialLinks } | null = null
 
+// R12 (2026-10-28): live store — App subscribe เพื่อ re-render (footer/JSON-LD)
+// ทันทีเมื่อค่าจริงจาก business_settings เปลี่ยน
+let socialVersion = 0
+const socialListeners = new Set<() => void>()
+function notifySocialLinks(): void {
+  socialVersion++
+  for (const fn of socialListeners) fn()
+}
+export function getSocialVersion(): number {
+  return socialVersion
+}
+export function subscribeSocialLinks(fn: () => void): () => void {
+  socialListeners.add(fn)
+  return () => socialListeners.delete(fn)
+}
+/** Sync อ่านค่าล่าสุดที่โหลดแล้ว (cache) — fallback = ค่าจริงเริ่มต้น */
+export function getCachedSocialLinks(): SocialLinks {
+  return cache?.value ?? DEFAULT_SOCIAL_LINKS
+}
+
 function merge(partial: Partial<SocialLinks> | null): SocialLinks {
   const out: SocialLinks = { ...DEFAULT_SOCIAL_LINKS }
   if (partial && typeof partial === 'object') {
@@ -79,6 +99,7 @@ export async function getSocialLinks(force = false): Promise<SocialLinks> {
     if (error) throw error
     const value = merge((data?.value ?? null) as Partial<SocialLinks> | null)
     cache = { at: Date.now(), value }
+    notifySocialLinks()
     return value
   } catch {
     // โหลดไม่ได้ = ใช้ค่าจริงของร้านต่อ (ฟุตเตอร์ห้ามพัง)

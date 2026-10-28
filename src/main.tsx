@@ -9,6 +9,8 @@ import './styles/frameCanonical.css'
 import { useAuthStore } from './store/authStore'
 import { installGlobalErrorReporter } from './lib/errorReporter'
 import { hydratePlatformConfigFromServer } from './lib/platformConfigBootstrap'
+import { getSeoSettings } from './lib/seoSettings'
+import { getSocialLinks } from './lib/socialLinks'
 import { initCartPersistence } from './lib/cartPersistence'
 
 // ⚡ PERF (2026-09-17): admin seeding hashes a bcrypt password at boot, which is
@@ -31,6 +33,10 @@ afterFirstPaint(() => {
 // W-1.4b: ดึงค่าปกครอง (delivery_policy/brand) จาก server ทับ bootstrap fallback
 // (fire-and-forget — ถ้า fail คงค่า default ไว้ ดู platformConfigBootstrap.ts)
 void hydratePlatformConfigFromServer()
+
+// R12 (Owner 2026-10-28): SEO copy + social ใช้ค่าจริงจาก business_settings —
+// fire-and-forget (default = ค่าจริงที่ยืนยันแล้ว · โหลดเสร็จ → App re-render → meta จริง)
+void Promise.all([getSeoSettings(true), getSocialLinks(true)])
 
 // F-02 FIX (Wave 1): restore the Supabase Auth session BEFORE first render.
 // ก่อนหน้า: checkAuth ถูก defer 1.5s → บน reload ของ /admin/* ทุก route guard

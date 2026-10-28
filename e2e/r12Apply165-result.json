@@ -1,0 +1,17 @@
+{
+  "at": "2026-10-28T02:15:25.207Z",
+  "precheck": {
+    "ledgerTop": "[{\"version\":\"164\",\"name\":\"164_anon_read_business_settings_all\"},{\"version\":\"163\",\"name\":\"163_rider_step_sync_checkin\"},{\"version\":\"162\",\"name\":\"162_admin_reject_payment\"},{\"version\":\"161\",\"name\":\"161_order_notifications_address_photo\"},{\"version\":\"160\",\"name\":\"160_enforce_shop_hours\"}]",
+    "seoBefore": "[{\"key\":\"social_links\",\"value\":{\"line\":\"https://line.me/ti/p/QFD3bSMFN9\",\"tiktok\":\"\",\"line_id\":\"bitemebaby2016\",\"youtube\":\"\",\"facebook\":\"https://web.facebook.com/profile.php?id=61586146030943\",\"instagram\":\"\",\"messenger\":\"https://m.me/61586146030943\"},\"vt\":\"object\"}]",
+    "publicReadPolicy": "[{\"cmd\":\"SELECT\",\"roles\":\"{anon,authenticated}\",\"qual\":\"true\"}]"
+  },
+  "apply": "[]",
+  "verify": {
+    "seoAfter": "[{\"key\":\"seo\",\"copy\":{\"tagline\":\"สั่งอาหารจัดส่งเมืองจันทบุรี รัศมี 5 กม.\",\"description\":\"ร้านอาหารไทยจัดส่งถึงบ้านในรัศมี 5 กม. จากตัวเมืองจันทบุรี ให้บริการรอบเช้า กลางวัน เย็น ส่งด้วยรถไฟฟ้าอัจฉริยะ\"}}]",
+    "publicReadPolicyAfter": "[{\"cmd\":\"SELECT\",\"roles\":\"{anon,authenticated}\",\"qual\":\"true\"}]"
+  },
+  "record": {
+    "ins165": "[]",
+    "ledgerTopAfter": "[{\"version\":\"165\",\"name\":\"165_seed_business_settings_seo_copy\"},{\"version\":\"164\",\"name\":\"164_anon_read_business_settings_all\"},{\"version\":\"163\",\"name\":\"163_rider_step_sync_checkin\"},{\"version\":\"162\",\"name\":\"162_admin_reject_payment\"},{\"version\":\"161\",\"name\":\"161_order_notifications_address_photo\"}]"
+  }
+}

@@ -9,11 +9,12 @@ import { getBusinessSettings, setBusinessSetting } from '@/lib/bmbAdminApi_setti
 import { OrderPolicyPanel } from '@/components/admin/OrderPolicyPanel'
 import { SOCIAL_LINKS_SETTING_KEY, getSocialLinks, type SocialLinks } from '@/lib/socialLinks'
 import { THEATER_DAILY_COPY_KEY, THEATER_DAILY_COPY_STARTER } from '@/lib/theaterDailyCopy'
+import { SEO_SETTINGS_KEY, getSeoSettings, type SeoSettings } from '@/lib/seoSettings'
 import { supabase } from '@/lib/supabase'
 
 // C1/Q8 (audit D1 — "1 เรื่อง = 1 ที่"): key ที่มีฟอร์มเฉพาะทาง — generic editor
 // (JSON/JsonForm + Save All) ห้ามโชว์/ห้ามเขียน กันพิมพ์ค่าเสียแบบ 22P02 ซ้ำ
-const TYPED_FORM_KEYS = new Set<string>([SOCIAL_LINKS_SETTING_KEY, 'order_policy'])
+const TYPED_FORM_KEYS = new Set<string>([SOCIAL_LINKS_SETTING_KEY, SEO_SETTINGS_KEY, 'order_policy'])
 
 export function AdminSettings() {
   const [settings, setSettings] = useState<Record<string, any>>({})
@@ -23,18 +24,21 @@ export function AdminSettings() {
   // FINAL CONFIG CLOSURE: admin แก้ canonical นอก business_settings ได้โดยไม่ต้องแก้ code
   const [branch, setBranch] = useState<any>(null)
   const [socials, setSocials] = useState<SocialLinks | null>(null)
+  const [seoCopy, setSeoCopy] = useState<SeoSettings | null>(null)
 
   useEffect(() => { load() }, [])
 
   async function load() {
-    const [s, br, sl] = await Promise.all([
+    const [s, br, sl, seo] = await Promise.all([
       getBusinessSettings(),
       supabase.from('branches').select('id, display_name, name, service_radius_km, operating_hours').eq('is_default', true).maybeSingle(),
       getSocialLinks(true),
+      getSeoSettings(true),
     ])
     setSettings(s)
     setBranch(br.data ?? null)
     setSocials(sl)
+    setSeoCopy(seo)
     setLoading(false)
   }
 
@@ -101,6 +105,15 @@ export function AdminSettings() {
     if (!socials) return
     const ok = await setBusinessSetting(SOCIAL_LINKS_SETTING_KEY, socials)
     showToast(ok ? 'บันทึก social_links แล้ว — ฟุตเตอร์อัปเดตทันที' : 'Failed to save social_links', ok ? 'success' : 'error')
+    if (ok) await load()
+  }
+
+  // R12 (Owner 2026-10-28): SEO copy แก้ได้ที่นี่ (คีย์ business_settings: seo)
+  // — หน้าแรก/meta/JSON-LD อ่านค่าจริงนี้ (fallback = ค่าจริงที่ Owner ยืนยันแล้ว)
+  async function saveSeoCopy() {
+    if (!seoCopy) return
+    const ok = await setBusinessSetting(SEO_SETTINGS_KEY, seoCopy)
+    showToast(ok ? 'บันทึก SEO copy แล้ว — หน้าแรก/meta อัปเดต (≤7 นาที/reload)' : 'Failed to save seo', ok ? 'success' : 'error')
     if (ok) await load()
   }
 
@@ -212,6 +225,34 @@ export function AdminSettings() {
               ))}
             </div>
             <button onClick={() => void saveSocials()} className="btn btn-success text-sm mt-2">💾 บันทึกลิงก์โซเชียล</button>
+          </div>
+        )}
+
+        <h2 className="text-xl font-bold text-brand-accent">🔎 SEO / คำโปรยเว็บ</h2>
+        {seoCopy && (
+          <div className="card" data-testid="seo-copy-config">
+            <p className="text-xs text-brand-muted mb-2">
+              แก้คำโปรย SEO ของหน้าแรก (title tagline + meta description) — ค่าเดียวกับที่ Search/Crawler
+              เห็นจากค่าจริงของร้าน (คีย์ <code>seo</code> · ผู้เยี่ยมชมเห็นอัตโนมัติ ≤7 นาที หรือ reload)
+            </p>
+            <label className="text-xs flex flex-col gap-1">
+              tagline (ต่อท้ายชื่อหน้าแรก · ใช้ใน JSON-LD WebSite)
+              <input
+                className="input"
+                value={seoCopy.tagline}
+                onChange={(e) => setSeoCopy({ ...seoCopy, tagline: e.target.value })}
+              />
+            </label>
+            <label className="text-xs flex flex-col gap-1 mt-2">
+              description (meta description ของหน้าแรก)
+              <textarea
+                className="input w-full"
+                rows={3}
+                value={seoCopy.description}
+                onChange={(e) => setSeoCopy({ ...seoCopy, description: e.target.value })}
+              />
+            </label>
+            <button onClick={() => void saveSeoCopy()} className="btn btn-success text-sm mt-2">💾 บันทึก SEO copy</button>
           </div>
         )}
 

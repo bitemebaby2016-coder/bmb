@@ -1,6 +1,8 @@
 import type { SEOMeta } from '@/types'
 import { faqs } from './faqContent'
 import { KITCHEN_LAT, KITCHEN_LNG } from '@/config/kitchenLocation'
+import { getCachedSocialLinks } from './socialLinks'
+import { getSeoSettingsSync, DEFAULT_SEO_SETTINGS } from './seoSettings'
 
 export function generateJsonLd(schema: Record<string, any>): string {
   return JSON.stringify(schema).replace(/<\/script>/g, '<\\/script>')
@@ -10,7 +12,7 @@ export const SITE_CONFIG = {
   name: 'Bite Me Baby',
   nameShort: 'BMB',
   url: 'https://biteme-baby.com',
-  description: 'ร้านอาหารไทยจัดส่งถึงบ้านในรัศมี 5 กม. จากตัวเมืองจันทบุรี ให้บริการรอบเช้า กลางวัน เย็น ส่งด้วยรถไฟฟ้าอัจฉริยะ',
+  description: DEFAULT_SEO_SETTINGS.description,
   ogImage: '/og-image.png',
   keywords: ['สั่งอาหารจันทบุรี', 'อาหารจัดส่ง', 'ร้านอาหารเมืองจันทบุรี', 'Bite Me Baby', 'ส่งอาหารจันทบุรี', 'cloud kitchen จันทบุรี'],
 }
@@ -20,7 +22,21 @@ export function seoUrl(path: string = '/'): string {
   return path && path !== '/' ? SITE_CONFIG.url + path : SITE_CONFIG.url + '/'
 }
 
-const HOME_SCHEMA = {
+/** sameAs (schema.org) — ใช้ลิงก์โซเชียลจริง (values ที่แอดมินตั้งใน
+ * business_settings.social_links) ไม่ใช้ handle เก่าที่เคยค้างในโค้ด */
+function socialSameAs(): string[] {
+  const s = getCachedSocialLinks()
+  const out: string[] = []
+  for (const u of [s.facebook, s.messenger, s.line]) {
+    const t = (u || '').trim()
+    if (/^https?:\/\//i.test(t) && !out.includes(t)) out.push(t)
+  }
+  return out
+}
+
+/** R12: schema สร้างจากค่าจริง (copy = business_settings 'seo' · social = 'social_links') */
+function buildHomeSchema(): Record<string, any> {
+  return {
   "@context": "https://schema.org",
   "@graph": [
     {
@@ -50,32 +66,29 @@ const HOME_SCHEMA = {
       }],
       "areaServed": { "@type": "AdministrativeArea", "name": "Chanthaburi" },
       "hasMenu": { "@type": "Menu", "name": "Bite Me Baby Menu", "url": "https://biteme-baby.com/menu" },
-      "sameAs": [
-        "https://facebook.com/bitemebaby",
-        "https://instagram.com/bitemebaby",
-        "https://line.me/R/ti/p/@bitemebaby"
-      ]
+      "sameAs": socialSameAs()
     },
     {
       "@type": "WebSite",
       "@id": "https://biteme-baby.com/#website",
       "url": "https://biteme-baby.com/",
       "name": SITE_CONFIG.name,
-      "description": "สั่งอาหารจัดส่งเมืองจันทบุรี รัศมี 5 กม.",
+      "description": getSeoSettingsSync().tagline,
       "inLanguage": ["th", "en"],
       "publisher": { "@id": "https://biteme-baby.com/#restaurant" }
     }
   ]
 }
+}
 
 export function getHomeMeta(): SEOMeta {
   return {
-    title: `${SITE_CONFIG.name} - สั่งอาหารจัดส่งเมืองจันทบุรี รัศมี 5 กม.`,
-    description: SITE_CONFIG.description,
+    title: `${SITE_CONFIG.name} - ${getSeoSettingsSync().tagline}`,
+    description: getSeoSettingsSync().description,
     keywords: SITE_CONFIG.keywords,
     ogImage: SITE_CONFIG.ogImage,
     url: seoUrl('/'),
-    schema: HOME_SCHEMA,
+    schema: buildHomeSchema(),
   }
 }
 
@@ -83,11 +96,11 @@ export function getHomeMeta(): SEOMeta {
 export function getShopMeta(): SEOMeta {
   return {
     title: `${SITE_CONFIG.name} - ร้านอาหารออนไลน์ สั่งอาหารจัดส่งเมืองจันทบุรี`,
-    description: SITE_CONFIG.description,
+    description: getSeoSettingsSync().description,
     keywords: SITE_CONFIG.keywords,
     ogImage: SITE_CONFIG.ogImage,
     url: seoUrl('/shop'),
-    schema: HOME_SCHEMA,
+    schema: buildHomeSchema(),
   }
 }
 

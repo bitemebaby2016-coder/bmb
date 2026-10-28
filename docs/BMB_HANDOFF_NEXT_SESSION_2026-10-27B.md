@@ -99,3 +99,11 @@
 - footer ลิงก์ครบ 11 จุดจริง (ทุก path มี Route)
 - deep-link B: กดแจ้งเตือน (กระดิ่ง/ศูนย์แจ้งเตือน) = เด้งหน้างานตาม role (rider→/rider · admin→ครัว/จัดส่ง/ออเดอร์ · ลูกค้า→/track/<เลข>)
 - ยังต้อง retest ของเดิม R11: flow ไรเดอร์ 4 สเตป + ปิดวงจรอัตโนมัติ (§2 (ก)) — **hard reload (Ctrl+Shift+R) ก่อนทดสอบทุกครั้ง** · URL ต้องเป็น `biteme-baby.com`
+
+### (ฉ) SEO meta / copy — admin แก้เองได้ (R12c 2026-10-28)
+- **ยืนยันใช้ค่า LINE จริง**: `seo.ts`/JSON-LD ใช้ social จริงจาก settings แล้ว (LINE `https://line.me/ti/p/QFD3bSMFN9` / `bitemebaby2016` · FB `61586146030943` · handle เก่าในโค้ดถอดแล้ว)
+- **ทดสอบ admin แก้ SEO copy เองได้**: Admin → Business Settings → แผง "🔎 SEO / คำโปรยเว็บ" (คีย์ `seo`)
+  - เปลี่ยน tagline และ description → บันทึก → เปิดหน้าแรก/หน้า shop (hard reload หรือ ≤7 นาที) title/meta เปลี่ยนตามทันที
+  - สลับไป? ไม่มีปุ่มปิด — แก้กลับเป็นค่าเดิมได้จากช่องเดียวกัน (ค่า fallback/ค่าเริ่มต้น = ค่าเดิมที่ยืนยัน)
+- **ทดสอบค่าจริง sync**: เปลี่ยน LINE URL ที่แผง "โซเชียล & LINE" → บันทึก → inspect หน้าแรก: JSON-LD `sameAs` มีลิงก์ LINE URL ใหม่ที่เพิ่งตั้ง (ไม่ใช่ค่าเก่า)
+- crawler/view-source (หลัง hard reload): `<title>` + `meta description` + JSON-LD หน้าแรก = ค่าจริงที่ admin ตั้ง (ไม่อยู่ในโค้ด)
