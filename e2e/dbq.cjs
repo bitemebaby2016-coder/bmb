@@ -9,7 +9,14 @@ for (const l of fs.readFileSync(path.join(ROOT, '.env.local'), 'utf8').split(/\r
   if (m && !l.trim().startsWith('#') && m[2] && m[1] === 'SUPABASE_ACCESS_TOKEN') tokens.push(m[2])
 }
 const REF = 'ivkdfognyiwjcmrhcnwz'
-const SQL = process.argv[2]
+// argv[2] = SQL text (legacy) OR a path to a .sql file (new — avoids cmd.exe
+// quote-mangling: `node e2e\dbq.cjs e2e\_tmp.sql` runs without any quotes)
+const ARG2 = process.argv[2]
+let SQL = ARG2
+try {
+  const fp = path.resolve(ROOT, String(ARG2 || ''))
+  if (ARG2 && fs.existsSync(fp) && fs.statSync(fp).isFile()) SQL = fs.readFileSync(fp, 'utf8')
+} catch { /* keep raw argv */ }
 async function run() {
   let last = ''
   for (const tok of [...tokens].reverse()) {

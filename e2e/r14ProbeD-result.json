@@ -1,0 +1,237 @@
+[
+ {
+  "probe": {
+   "intents": [
+    {
+     "id": "pi- ###########-c4a510",
+     "amount": 116,
+     "method": "promptpay_qr",
+     "status": "completed",
+     "currency": "thb",
+     "metadata": {
+      "providerId": "self_delivery",
+      "providerName": "Bite Me Baby (self delivery)"
+     },
+     "provider": "promptpay",
+     "slip_path": "3cf44a5b-af0c-4ecd-976d-1d87efde9b29/PO-20261028-135-1793171156669.jpg",
+     "created_at": "2026-10-28T07:06:47.73317+00:00",
+     "updated_at": "2026-10-28T07:08:12.655576+00:00",
+     "receipt_url": null,
+     "completed_at": "2026-10-28T07:08:12.655576+00:00",
+     "order_number": "PO-20261028-135",
+     "client_secret": null,
+     "failure_reason": null,
+     "slip_uploaded_at": "2026-10-28T07:07:29.140271+00:00",
+     "payment_intent_id": null
+    }
+   ],
+   "history": [
+    {
+     "id": "osh-  1793171207042-f0ca2d5d",
+     "reason": null,
+     "actor_id": "3cf44a5b-af0c-4ecd-976d-1d87efde9b29",
+     "metadata": {
+      "source": "order_status_trigger",
+      "order_id": "ord- ###########-3c16c7",
+      "operation": "INSERT"
+     },
+     "to_status": "pending",
+     "actor_type": "CUSTOMER",
+     "changed_at": "2026-10-28T07:06:46.853195+00:00",
+     "from_status": null,
+     "order_number": "PO-20261028-135"
+    }
+   ],
+   "audit_135": [
+    {
+     "id": "alog- ###########-99582c",
+     "action": "payment_processed",
+     "user_id": "dddf4b57-405f-4852-a985-76d8d52b1b72",
+     "metadata": {
+      "payment_method": "promptpay_qr",
+      "payment_status": "paid"
+     },
+     "entity_id": "PO-20261028-135",
+     "created_at": "2026-10-28T07:08:12.655576+00:00",
+     "ip_address": null,
+     "user_agent": null,
+     "user_email": null,
+     "description": "payment confirmed (promptpay_qr)",
+     "entity_type": "order"
+    },
+    {
+     "id": "alog- ###########-5c607f",
+     "action": "payment_processed",
+     "user_id": "3cf44a5b-af0c-4ecd-976d-1d87efde9b29",
+     "metadata": {
+      "slipPath": "3cf44a5b-af0c-4ecd-976d-1d87efde9b29/PO-20261028-135-1793171156669.jpg"
+     },
+     "entity_id": "PO-20261028-135",
+     "created_at": "2026-10-28T07:07:31.329982+00:00",
+     "ip_address": null,
+     "user_agent": null,
+     "user_email": null,
+     "description": "PromptPay slip attached #PO-20261028-135",
+     "entity_type": "order"
+    },
+    {
+     "id": "alog- ###########-b557ed",
+     "action": "order_create",
+     "user_id": "3cf44a5b-af0c-4ecd-976d-1d87efde9b29",
+     "metadata": {
+      "replay": false,
+      "itemCount": 2,
+      "orderMode": "PRE_ORDER",
+      "totalAmount": 116,
+      "paymentMethod": "promptpay_qr",
+      "scheduledDate": "2026-10-28",
+      "deliveryRoundId": "round-20261028-evening"
+     },
+     "entity_id": "PO-20261028-135",
+     "created_at": "2026-10-28T07:06:48.070319+00:00",
+     "ip_address": null,
+     "user_agent": null,
+     "user_email": null,
+     "description": "ออเดอร์ใหม่ #PO-20261028-135 โดย Customer รวม 116.00 บาท (PRE_ORDER)",
+     "entity_type": "order"
+    },
+    {
+     "id": "alog- ###########-457647",
+     "action": "order_created",
+     "user_id": "3cf44a5b-af0c-4ecd-976d-1d87efde9b29",
+     "metadata": {
+      "total": 116,
+      "branch_id": "branch-tenant-bmb-001-main",
+      "order_mode": "PRE_ORDER",
+      "scheduled_date": "2026-10-28",
+      "source_channel": null,
+      "external_ref_id": null
+     },
+     "entity_id": "PO-20261028-135",
+     "created_at": "2026-10-28T07:06:46.853195+00:00",
+     "ip_address": null,
+     "user_agent": null,
+     "user_email": null,
+     "description": "canonical order created (PRE_ORDER) [branch: branch-tenant-bmb-001-main]",
+     "entity_type": "order"
+    },
+    {
+     "id": "alog- ###########-4c059c",
+     "action": "identity_link_rejected",
+     "user_id": null,
+     "metadata": {
+      "channel": "LINE",
+      "external_user_id": "f14-conc-id-1790515956282",
+      "existing_customer": "5c609eb9-0943-4e40-b1ee-c450dca9c594",
+      "requested_customer": "dc7eece0-70ed-4024-a0f8-79b2be07db20"
+     },
+     "entity_id": "74fc3c2c-3ddc-4227-bfa1-41358c38d2c7",
+     "created_at": "2026-09-27T13:32:40.792144+00:00",
+     "ip_address": null,
+     "user_agent": null,
+     "user_email": null,
+     "description": "identity collision (concurrent) — resolved by DB unique constraint",
+     "entity_type": "customer_channel_identity"
+    },
+    {
+     "id": "alog- ###########-e04caa",
+     "action": "identity_linked",
+     "user_id": null,
+     "metadata": {
+      "channel": "LINE",
+      "customer_ref": "5c609eb9-0943-4e40-b1ee-c450dca9c594",
+      "external_user_id": "f14-conc-id-1790515956282"
+     },
+     "entity_id": "74fc3c2c-3ddc-4227-bfa1-41358c38d2c7",
+     "created_at": "2026-09-27T13:32:40.761269+00:00",
+     "ip_address": null,
+     "user_agent": null,
+     "user_email": null,
+     "description": "external channel identity linked to canonical customer",
+     "entity_type": "customer_channel_identity"
+    },
+    {
+     "id": "alog- ###########-c7b570",
+     "action": "identity_link_rejected",
+     "user_id": null,
+     "metadata": {
+      "channel": "LINE",
+      "external_user_id": "f14-conc-id-1790512620621",
+      "existing_customer": "dc7eece0-70ed-4024-a0f8-79b2be07db20",
+      "requested_customer": "5c609eb9-0943-4e40-b1ee-c450dca9c594"
+     },
+     "entity_id": "bd04d688-2509-42a3-a135-23a27f0bbd02",
+     "created_at": "2026-09-27T12:37:04.817872+00:00",
+     "ip_address": null,
+     "user_agent": null,
+     "user_email": null,
+     "description": "identity collision (concurrent) — resolved by DB unique constraint",
+     "entity_type": "customer_channel_identity"
+    },
+    {
+     "id": "alog- ###########-3a6c0d",
+     "action": "identity_linked",
+     "user_id": null,
+     "metadata": {
+      "channel": "LINE",
+      "customer_ref": "dc7eece0-70ed-4024-a0f8-79b2be07db20",
+      "external_user_id": "f14-conc-id-1790512620621"
+     },
+     "entity_id": "bd04d688-2509-42a3-a135-23a27f0bbd02",
+     "created_at": "2026-09-27T12:37:04.804162+00:00",
+     "ip_address": null,
+     "user_agent": null,
+     "user_email": null,
+     "description": "external channel identity linked to canonical customer",
+     "entity_type": "customer_channel_identity"
+    }
+   ],
+   "intents_today": [
+    {
+     "id": "pi- ###########-c4a510",
+     "amount": 116,
+     "method": "promptpay_qr",
+     "status": "completed",
+     "currency": "thb",
+     "metadata": {
+      "providerId": "self_delivery",
+      "providerName": "Bite Me Baby (self delivery)"
+     },
+     "provider": "promptpay",
+     "slip_path": "3cf44a5b-af0c-4ecd-976d-1d87efde9b29/PO-20261028-135-1793171156669.jpg",
+     "created_at": "2026-10-28T07:06:47.73317+00:00",
+     "updated_at": "2026-10-28T07:08:12.655576+00:00",
+     "receipt_url": null,
+     "completed_at": "2026-10-28T07:08:12.655576+00:00",
+     "order_number": "PO-20261028-135",
+     "client_secret": null,
+     "failure_reason": null,
+     "slip_uploaded_at": "2026-10-28T07:07:29.140271+00:00",
+     "payment_intent_id": null
+    },
+    {
+     "id": "pi- ###########-3f07a0",
+     "amount": 114.2,
+     "method": "promptpay_qr",
+     "status": "completed",
+     "currency": "thb",
+     "metadata": {
+      "providerId": "self_delivery",
+      "providerName": "Bite Me Baby (self delivery)"
+     },
+     "provider": "promptpay",
+     "slip_path": "23cbe150-e5f4-4a37-a969-02e2db8df395/PO-20261028-942-1793155874944.jpg",
+     "created_at": "2026-10-28T02:50:16.01584+00:00",
+     "updated_at": "2026-10-28T02:51:37.83398+00:00",
+     "receipt_url": null,
+     "completed_at": "2026-10-28T02:51:37.83398+00:00",
+     "order_number": "PO-20261028-942",
+     "client_secret": null,
+     "failure_reason": null,
+     "slip_uploaded_at": "2026-10-28T02:51:21.905975+00:00",
+     "payment_intent_id": null
+    }
+   ]
+  }
+ }
+]

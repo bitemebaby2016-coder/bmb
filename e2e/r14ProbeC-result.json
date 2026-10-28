@@ -1,0 +1,60 @@
+[
+ {
+  "probe": {
+   "orders": [
+    {
+     "order_number": "BMB-20261027-543",
+     "status": "delivered",
+     "payment_status": "paid",
+     "payment_method": "promptpay_qr",
+     "order_mode": "SAME_DAY",
+     "scheduled_date": "2026-10-27",
+     "delivery_round_id": "round-20261027-morning",
+     "created_at": "2026-10-27T03:15:38.076709+00:00"
+    },
+    {
+     "order_number": "PO-20261027-379",
+     "status": "delivered",
+     "payment_status": "paid",
+     "payment_method": "promptpay_qr",
+     "order_mode": "PRE_ORDER",
+     "scheduled_date": "2026-10-27",
+     "delivery_round_id": "round-20261027-evening",
+     "created_at": "2026-10-27T06:17:59.156441+00:00"
+    },
+    {
+     "order_number": "PO-20261028-942",
+     "status": "arrived",
+     "payment_status": "paid",
+     "payment_method": "promptpay_qr",
+     "order_mode": "PRE_ORDER",
+     "scheduled_date": "2026-10-28",
+     "delivery_round_id": "round-20261028-evening",
+     "created_at": "2026-10-28T02:50:15.371297+00:00"
+    },
+    {
+     "order_number": "PO-20261028-135",
+     "status": "pending",
+     "payment_status": "paid",
+     "payment_method": "promptpay_qr",
+     "order_mode": "PRE_ORDER",
+     "scheduled_date": "2026-10-28",
+     "delivery_round_id": "round-20261028-evening",
+     "created_at": "2026-10-28T07:06:46.853195+00:00"
+    }
+   ],
+   "batch_items": 2,
+   "items_today": [],
+   "status_counts_today": [
+    {
+     "status": "arrived",
+     "n": 1
+    },
+    {
+     "status": "pending",
+     "n": 1
+    }
+   ]
+  }
+ }
+]

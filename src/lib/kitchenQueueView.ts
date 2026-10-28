@@ -154,3 +154,22 @@ export function kitchenItemLines(o: OrderForm): KitchenItemLine[] {
     specialRequest: it.special_request || '',
   }))
 }
+
+// ---------------------------------------------------------------------------
+// 5. R14 (Owner 2026-10-28): display helpers ตาราง Batch ในหน้าครัว
+//    - batchIdLabel: โชว์ id เต็ม (id ใหม่ = batch-<epoch_ms>-<md5> อ่านได้จริง /
+//      id รุ่นเก่ามี '#' จาก to_char overflow — โชว์ตามจริงให้เห็นว่าเป็นรุ่นเก่า)
+//    - formatBatchCreatedAt: กัน "Invalid Date" (RPC เดิมไม่ส่ง created_at / ค่าเสีย) = คืน '—'
+// ---------------------------------------------------------------------------
+export function batchIdLabel(id?: string | null): string {
+  if (!id) return '—'
+  const s = String(id).trim()
+  return s.length ? s : '—'
+}
+
+export function formatBatchCreatedAt(iso?: string | null): string {
+  if (!iso) return '—'
+  const d = new Date(iso)
+  if (Number.isNaN(d.getTime())) return '—'
+  return d.toLocaleString('th-TH')
+}

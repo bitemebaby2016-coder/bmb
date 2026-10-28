@@ -1,0 +1,44 @@
+{
+  "at": "2026-10-28T07:39:52.029Z",
+  "precheck": {
+    "ledgerTop": "[{\"version\":\"166\",\"name\":\"166_r13_rider_pod_path_and_checkin\"},{\"version\":\"165\",\"name\":\"165_seed_business_settings_seo_copy\"},{\"version\":\"164\",\"name\":\"164_anon_read_business_settings_all\"}]",
+    "order135Before": "[{\"order_number\":\"PO-20261028-135\",\"status\":\"pending\",\"payment_status\":\"paid\"}]",
+    "batchFn": "[{\"overflow\":true,\"has_created_at\":true,\"has_hop\":false,\"uses_bigint\":false}]",
+    "summaryFn": "[{\"overflow\":false,\"has_created_at\":true,\"has_hop\":false,\"uses_bigint\":false}]",
+    "confirmFn": "[{\"overflow\":false,\"has_created_at\":true,\"has_hop\":false,\"uses_bigint\":false}]"
+  },
+  "apply": "[]",
+  "heal": "[{\"healed\":{\"ok\":true,\"to\":\"confirmed\",\"from\":\"pending\",\"inventory\":{\"ok\":true,\"idempotent\":false,\"order_number\":\"PO-20261028-135\"},\"order_number\":\"PO-20261028-135\"}}]",
+  "probeCreate": "[{\"create_production_batch\":{\"ok\":true,\"batch_id\":\"batch-1793173199630-47a00b\",\"items_count\":2,\"delivery_round_id\":\"round-20261028-evening\"}}]",
+  "probeSummary": "[{\"get_kitchen_summary\":{\"ok\":true,\"date\":\"2026-10-28\",\"batches\":[{\"status\":\"open\",\"batch_id\":\"batch- ###########-7fdb04\",\"created_at\":\"2026-10-28T07:08:27.716222+00:00\",\"ready_items\":0,\"total_items\":0,\"pending_items\":0,\"scheduled_date\":\"2026-10-28\",\"delivery_round_id\":\"round-20261028-evening\"},{\"status\":\"open\",\"batch_id\":\"batch- ###########-b2532b\",\"created_at\":\"2026-10-28T07:08:56.798686+00:00\",\"ready_items\":0,\"total_items\":0,\"pending_items\":0,\"scheduled_date\":\"2026-10-28\",\"delivery_round_id\":\"round-20261028-evening\"},{\"status\":\"open\",\"batch_id\":\"batch- ###########-a71448\",\"created_at\":\"2026-10-28T07:09:46.893504+00:00\",\"ready_items\":0,\"total_items\":0,\"pending_items\":0,\"scheduled_date\":\"2026-10-28\",\"delivery_round_id\":\"round-20261028-evening\"}],\"summary\":{\"ready_orders\":0,\"pending_orders\":0},\"total_batches\":3}}]",
+  "verify": {
+    "order135After": "[{\"order_number\":\"PO-20261028-135\",\"status\":\"confirmed\",\"payment_status\":\"paid\"}]",
+    "batchFnAfter": "[{\"overflow\":false,\"has_created_at\":true,\"has_hop\":false,\"uses_bigint\":true}]",
+    "confirmFnAfter": "[{\"overflow\":false,\"has_created_at\":true,\"has_hop\":true,\"uses_bigint\":false}]",
+    "pipelineAfterHeal": "[{\"json_agg\":[{\"order_number\":\"PO-20261028-135\",\"status\":\"confirmed\"}]}]"
+  },
+  "record": {
+    "ins167": "[]",
+    "ledgerTopAfter": "[{\"version\":\"167\",\"name\":\"167_kitchen_batch_loop_fix\"},{\"version\":\"166\",\"name\":\"166_r13_rider_pod_path_and_checkin\"},{\"version\":\"165\",\"name\":\"165_seed_business_settings_seo_copy\"},{\"version\":\"164\",\"name\":\"164_anon_read_business_settings_all\"},{\"version\":\"163\",\"name\":\"163_rider_step_sync_checkin\"}]"
+  },
+  "createAssertions": {
+    "batchId": "batch-1793173199630-47a00b",
+    "digitsOk": true,
+    "noHash": true,
+    "noSpace": true
+  },
+  "summaryAssertions": {
+    "batchCount": 3,
+    "created_atPresent": true,
+    "sample": {
+      "status": "open",
+      "batch_id": "batch- ###########-7fdb04",
+      "created_at": "2026-10-28T07:08:27.716222+00:00",
+      "ready_items": 0,
+      "total_items": 0,
+      "pending_items": 0,
+      "scheduled_date": "2026-10-28",
+      "delivery_round_id": "round-20261028-evening"
+    }
+  }
+}

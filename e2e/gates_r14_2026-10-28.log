@@ -1,0 +1,14 @@
+GATES R14 — 2026-10-28 (ครัว batch loop fix + migration 167)
+HEAD candidate = working tree of this round · production ledger top = 167
+
+1) tsc --noEmit: START_TSC  DONE_TSC_OK
+2) npm run lint (eslint + brandNameGuard + languageSanity):
+> da-projectbite-me-baby@0.0.0 lint
+> eslint . && node scripts/brandNameGuard.cjs
+
+brandNameGuard: OK — สแกน 446 ไฟล์ ไม่พบชื่อผิด
+languageSanity: OK — สแกน 1249 ไฟล์ ไม่พบ BOM / ต่างดาว
+3) vitest full suite (json reporter): {"total":1650,"passed":1650,"failed":0,"files":160,"success":true}
+4) vite build: START_BUILD  DONE_BUILD_OK
+
+note: vitest raw stdio ถูกกลืนโดย shell chain จึงใช้ --outputFile json แทน — success/exit 0 ผ่านทั้ง dot+json รอบ

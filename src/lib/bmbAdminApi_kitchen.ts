@@ -9,6 +9,8 @@ export interface KitchenSummaryItem {
   delivery_round_id: string | null
   scheduled_date: string
   status: string
+  /** R14 (167): summary RPC ส่ง created_at แล้ว — หน้าครัวใช้โชว์ "สร้างเมื่อ" */
+  created_at?: string | null
   total_items: number
   ready_items: number
   pending_items: number
@@ -39,15 +41,26 @@ export async function listBatches(date?: string, roundId?: string): Promise<any[
   return (data as any)?.batches ?? []
 }
 
-/** Create a production batch via RPC */
-export async function createBatch(roundId: string, scheduledDate?: string, orderMode?: string): Promise<{ batch_id: string; items_count: number } | null> {
+/** Create a production batch via RPC — R14: คืนเหตุผลจริงเมื่อล้มเหลว (ห้ามเงียบ) */
+export interface CreateBatchResult {
+  ok: boolean
+  batch_id?: string
+  items_count?: number
+  error?: string
+}
+export async function createBatch(roundId: string, scheduledDate?: string, orderMode?: string): Promise<CreateBatchResult> {
   const { data, error } = await supabase.rpc('create_production_batch', {
     p_delivery_round_id: roundId,
     p_scheduled_date: scheduledDate ?? null,
-    p_order_mode: orderMode ?? null
+    p_order_mode: orderMode ?? null,
   })
-  if (error) { console.error('[Kitchen] createBatch failed:', error); return null }
-  return data as unknown as { batch_id: string; items_count: number }
+  if (error) {
+    console.error('[Kitchen] createBatch failed:', error)
+    return { ok: false, error: error.message }
+  }
+  const row = data as { batch_id?: string; items_count?: number } | null
+  if (!row || !row.batch_id) return { ok: false, error: 'SERVER ไม่คืน batch_id' }
+  return { ok: true, batch_id: row.batch_id, items_count: Number(row.items_count) || 0 }
 }
 
 // ============================================

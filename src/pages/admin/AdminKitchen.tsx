@@ -10,7 +10,7 @@ import { getKitchenSummary, createBatch, getKitchenPipelineOrders, getOrderReady
 import { updateOrderStatus } from '@/lib/bmbAdminApi_orders'
 import { listRoundsForDate } from '@/lib/bmbAdminApi_rounds'
 import { orderModeBadge, paymentStateBadge } from '@/lib/adminOrderDisplay'
-import { kitchenGatePreview, groupKitchenOrders, splitSameDayPreOrder, readyReasonLabel, kitchenItemLines } from '@/lib/kitchenQueueView'
+import { kitchenGatePreview, groupKitchenOrders, splitSameDayPreOrder, readyReasonLabel, kitchenItemLines, batchIdLabel, formatBatchCreatedAt } from '@/lib/kitchenQueueView'
 import { writeAuditLog } from '@/lib/auditLog'
 import { showToast } from '@/components/ui/ToastContainer'
 import { useNotificationStore } from '@/store/notificationStore'
@@ -52,22 +52,22 @@ export function AdminKitchen() {
 
   async function handleCreateBatch() {
     if (!selectedRoundId) {
-      showToast('กรุาเลือกรอบจัดส่ง', 'error')
+      showToast('กรุณาเลือกรอบจัดส่ง', 'error')
       return
     }
     setCreating(true)
     try {
-      const result: any = await createBatch(selectedRoundId, date, undefined)
-      if (result && result.batch_id) {
-        showToast('สร้าง Batch สำเรจ (#' + result.batch_id.slice(5, 12) + ')', 'success')
+      const result = await createBatch(selectedRoundId, date, undefined)
+      if (result.ok && result.batch_id) {
+        showToast('สร้าง Batch สำเร็จ: ' + result.batch_id, 'success')
         writeAuditLog({ action: 'order_create', entity_type: 'production_batch', description: 'Created batch ' + result.batch_id + ' for round ' + selectedRoundId })
         await load()
       } else {
-        showToast('ไม่สามารถสร้าง Batch ได้ กรุาลองใหม่', 'error')
+        showToast('ไม่สามารถสร้าง Batch ได้: ' + (result.error || 'ลองใหม่อีกครั้ง'), 'error')
       }
     } catch (e) {
       console.error('[AdminKitchen] Create batch failed:', e)
-      showToast('เกิดข้อผิดพลาด', 'error')
+      showToast('เกิดข้อผิดพลาด: ' + String((e as Error)?.message || e).slice(0, 80), 'error')
     } finally {
       setCreating(false)
     }
@@ -228,7 +228,7 @@ export function AdminKitchen() {
 
       {/* Batches Table */}
       {loading ? (
-        <div className="card text-center py-8"><p className="text-brand-muted">กำลังหลด...</p></div>
+        <div className="card text-center py-8"><p className="text-brand-muted">กำลังโหลด...</p></div>
       ) : batches.length === 0 ? (
         <div className="card text-center py-12">
           <div className="text-5xl mb-3">🍽️</div>
@@ -250,14 +250,14 @@ export function AdminKitchen() {
             <tbody>
               {batches.map((b) => (
                 <tr key={b.batch_id} className="border-b border-brand-border hover:bg-brand-bg">
-                  <td className="p-3 font-mono text-sm">{String(b.batch_id).slice(5, 15)}</td>
+                  <td className="p-3 font-mono text-xs">{batchIdLabel(b.batch_id)}</td>
                   <td className="p-3">
                     <span className={'badge ' + (b.status === 'ready' ? 'badge-success' : b.status === 'in_progress' ? 'badge-warning' : 'badge-info')}>{b.status}</span>
                   </td>
                   <td className="p-3 font-bold">{b.total_items}</td>
                   <td className="p-3 text-green-600 font-bold">{b.ready_items}</td>
                   <td className="p-3 text-orange-600 font-bold">{b.pending_items}</td>
-                  <td className="p-3 text-xs text-brand-muted">{new Date(b.created_at).toLocaleString('th-TH')}</td>
+                  <td className="p-3 text-xs text-brand-muted">{formatBatchCreatedAt(b.created_at)}</td>
                 </tr>
               ))}
             </tbody>
