@@ -1,0 +1,65 @@
+[
+ {
+  "probe": {
+   "drivers_status": [
+    {
+     "id": "drv- ###########-60bc",
+     "name": "พอล ไบท์ไดรฟ์",
+     "phone": "0817847992",
+     "status": "available",
+     "user_id": "091c3306-ef59-43f3-a754-2f0b1e490326",
+     "can_float": true,
+     "tenant_id": "tenant-bmb-001",
+     "created_at": "2026-10-19T09:16:38.574725+00:00",
+     "updated_at": "2026-10-28T09:40:49.012294+00:00",
+     "last_seen_at": "2026-10-28T09:40:49.012294+00:00",
+     "vehicle_label": "มอเตอร์ไซค์",
+     "home_branch_id": "branch-tenant-bmb-001-main",
+     "current_latitude": 12.6155392,
+     "current_longitude": 102.0980774
+    }
+   ],
+   "asg135": [
+    {
+     "id": "das- ###########-c4e5",
+     "notes": "claimed by rider",
+     "status": "delivered",
+     "branch_id": "branch-tenant-bmb-001-main",
+     "driver_id": "drv- ###########-60bc",
+     "tenant_id": "tenant-bmb-001",
+     "arrived_at": "2026-10-28T09:40:03.381135+00:00",
+     "created_at": "2026-10-28T09:31:06.506488+00:00",
+     "updated_at": "2026-10-28T09:40:16.443277+00:00",
+     "accepted_at": "2026-10-28T09:31:06.506488+00:00",
+     "assigned_at": "2026-10-28T09:31:06.506488+00:00",
+     "declined_at": null,
+     "cancelled_at": null,
+     "delivered_at": "2026-10-28T09:40:16.443277+00:00",
+     "order_number": "PO-20261028-135",
+     "picked_up_at": "2026-10-28T09:31:25.620831+00:00",
+     "pod_latitude": 12.6156648,
+     "cancel_reason": null,
+     "in_transit_at": "2026-10-28T09:31:34.948525+00:00",
+     "pod_longitude": 102.0980179,
+     "decline_reason": null,
+     "pod_captured_at": "2026-10-28T09:40:16.141432+00:00",
+     "rider_pushed_at": null,
+     "checkin_latitude": 12.6156648,
+     "checkin_longitude": 102.0980179,
+     "proof_of_delivery_url": "drv--60bc/PO-20261028-135-1793180414404.jpg",
+     "proof_of_delivery_path": "drv--60bc/PO-20261028-135-1793180414404.jpg"
+    }
+   ],
+   "orders_ui": [
+    {
+     "order_number": "PO-20261028-942",
+     "status": "delivered"
+    },
+    {
+     "order_number": "PO-20261028-135",
+     "status": "delivered"
+    }
+   ]
+  }
+ }
+]

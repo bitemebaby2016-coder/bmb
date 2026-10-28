@@ -1,0 +1,289 @@
+[
+ {
+  "probe": {
+   "orders": [
+    {
+     "id": "ord- ###########-5fb9d9",
+     "status": "delivered",
+     "subtotal": 118,
+     "branch_id": "branch-tenant-bmb-001-main",
+     "handed_by": null,
+     "created_at": "2026-10-28T02:50:15.371297+00:00",
+     "order_mode": "PRE_ORDER",
+     "tax_amount": 0,
+     "updated_at": "2026-10-28T09:30:19.318258+00:00",
+     "customer_id": "23cbe150-e5f4-4a37-a969-02e2db8df395",
+     "pickup_code": null,
+     "service_fee": 0,
+     "customer_ref": "23cbe150-e5f4-4a37-a969-02e2db8df395",
+     "delivery_fee": 8,
+     "order_number": "PO-20261028-942",
+     "picked_up_at": null,
+     "total_amount": 114.2,
+     "customer_name": "Siam Portal Customer",
+     "customer_phone": "0858101984",
+     "dropoff_detail": "20",
+     "payment_method": "promptpay_qr",
+     "payment_status": "paid",
+     "scheduled_date": "2026-10-28",
+     "source_channel": "PWA",
+     "delivery_method": "self_delivery",
+     "discount_amount": 11.8,
+     "external_ref_id": null,
+     "pickup_latitude": null,
+     "delivery_address": "",
+     "dropoff_latitude": 12.6154675,
+     "pickup_longitude": null,
+     "address_photo_url": null,
+     "delivery_round_id": "round-20261028-evening",
+     "dropoff_longitude": 102.098087,
+     "is_outside_self_zone": false,
+     "special_instructions": ""
+    },
+    {
+     "id": "ord- ###########-3c16c7",
+     "status": "delivered",
+     "subtotal": 118,
+     "branch_id": "branch-tenant-bmb-001-main",
+     "handed_by": null,
+     "created_at": "2026-10-28T07:06:46.853195+00:00",
+     "order_mode": "PRE_ORDER",
+     "tax_amount": 0,
+     "updated_at": "2026-10-28T09:40:16.443277+00:00",
+     "customer_id": "3cf44a5b-af0c-4ecd-976d-1d87efde9b29",
+     "pickup_code": null,
+     "service_fee": 0,
+     "customer_ref": "3cf44a5b-af0c-4ecd-976d-1d87efde9b29",
+     "delivery_fee": 8,
+     "order_number": "PO-20261028-135",
+     "picked_up_at": null,
+     "total_amount": 116,
+     "customer_name": "Customer",
+     "customer_phone": "0858101984",
+     "dropoff_detail": "หมุดปัก (12.6156771, 102.0981665)",
+     "payment_method": "promptpay_qr",
+     "payment_status": "paid",
+     "scheduled_date": "2026-10-28",
+     "source_channel": "PWA",
+     "delivery_method": "self_delivery",
+     "discount_amount": 10,
+     "external_ref_id": null,
+     "pickup_latitude": null,
+     "delivery_address": "",
+     "dropoff_latitude": 12.6156771,
+     "pickup_longitude": null,
+     "address_photo_url": "3cf44a5b-af0c-4ecd-976d-1d87efde9b29/1793171057677-17931710485964132812790464462541.jpg",
+     "delivery_round_id": "round-20261028-evening",
+     "dropoff_longitude": 102.0981665,
+     "is_outside_self_zone": false,
+     "special_instructions": ""
+    }
+   ],
+   "assignments": [
+    {
+     "id": "das- ###########-b8eb",
+     "notes": "assigned by admin",
+     "status": "delivered",
+     "branch_id": "branch-tenant-bmb-001-main",
+     "driver_id": "drv- ###########-60bc",
+     "tenant_id": "tenant-bmb-001",
+     "arrived_at": "2026-10-28T03:16:59.966025+00:00",
+     "created_at": "2026-10-28T03:06:21.153922+00:00",
+     "updated_at": "2026-10-28T09:30:19.318258+00:00",
+     "accepted_at": "2026-10-28T03:06:52.218731+00:00",
+     "assigned_at": "2026-10-28T03:06:21.153922+00:00",
+     "declined_at": null,
+     "cancelled_at": null,
+     "delivered_at": "2026-10-28T09:30:19.318258+00:00",
+     "order_number": "PO-20261028-942",
+     "picked_up_at": "2026-10-28T03:07:02.098728+00:00",
+     "pod_latitude": null,
+     "cancel_reason": null,
+     "in_transit_at": "2026-10-28T03:07:33.018738+00:00",
+     "pod_longitude": null,
+     "decline_reason": null,
+     "pod_captured_at": null,
+     "rider_pushed_at": null,
+     "checkin_latitude": 12.6158333,
+     "checkin_longitude": 102.0980033,
+     "proof_of_delivery_url": null,
+     "proof_of_delivery_path": null
+    },
+    {
+     "id": "das- ###########-c4e5",
+     "notes": "claimed by rider",
+     "status": "delivered",
+     "branch_id": "branch-tenant-bmb-001-main",
+     "driver_id": "drv- ###########-60bc",
+     "tenant_id": "tenant-bmb-001",
+     "arrived_at": "2026-10-28T09:40:03.381135+00:00",
+     "created_at": "2026-10-28T09:31:06.506488+00:00",
+     "updated_at": "2026-10-28T09:40:16.443277+00:00",
+     "accepted_at": "2026-10-28T09:31:06.506488+00:00",
+     "assigned_at": "2026-10-28T09:31:06.506488+00:00",
+     "declined_at": null,
+     "cancelled_at": null,
+     "delivered_at": "2026-10-28T09:40:16.443277+00:00",
+     "order_number": "PO-20261028-135",
+     "picked_up_at": "2026-10-28T09:31:25.620831+00:00",
+     "pod_latitude": 12.6156648,
+     "cancel_reason": null,
+     "in_transit_at": "2026-10-28T09:31:34.948525+00:00",
+     "pod_longitude": 102.0980179,
+     "decline_reason": null,
+     "pod_captured_at": "2026-10-28T09:40:16.141432+00:00",
+     "rider_pushed_at": null,
+     "checkin_latitude": 12.6156648,
+     "checkin_longitude": 102.0980179,
+     "proof_of_delivery_url": "drv--60bc/PO-20261028-135-1793180414404.jpg",
+     "proof_of_delivery_path": "drv--60bc/PO-20261028-135-1793180414404.jpg"
+    }
+   ],
+   "drivers": [
+    {
+     "id": "drv- ###########-60bc",
+     "name": "พอล ไบท์ไดรฟ์",
+     "phone": "0817847992",
+     "status": "available",
+     "user_id": "091c3306-ef59-43f3-a754-2f0b1e490326",
+     "can_float": true,
+     "tenant_id": "tenant-bmb-001",
+     "created_at": "2026-10-19T09:16:38.574725+00:00",
+     "updated_at": "2026-10-28T09:40:49.012294+00:00",
+     "last_seen_at": "2026-10-28T09:40:49.012294+00:00",
+     "vehicle_label": "มอเตอร์ไซค์",
+     "home_branch_id": "branch-tenant-bmb-001-main",
+     "current_latitude": 12.6155392,
+     "current_longitude": 102.0980774
+    }
+   ],
+   "status_history_135": [
+    {
+     "id": "osh-  1793171207042-f0ca2d5d",
+     "reason": null,
+     "actor_id": "3cf44a5b-af0c-4ecd-976d-1d87efde9b29",
+     "metadata": {
+      "source": "order_status_trigger",
+      "order_id": "ord- ###########-3c16c7",
+      "operation": "INSERT"
+     },
+     "to_status": "pending",
+     "actor_type": "CUSTOMER",
+     "changed_at": "2026-10-28T07:06:46.853195+00:00",
+     "from_status": null,
+     "order_number": "PO-20261028-135"
+    },
+    {
+     "id": "osh-  1793173198870-69e8199c",
+     "reason": null,
+     "actor_id": "dddf4b57-405f-4852-a985-76d8d52b1b72",
+     "metadata": {
+      "source": "order_status_trigger",
+      "order_id": "ord- ###########-3c16c7",
+      "operation": "UPDATE"
+     },
+     "to_status": "confirmed",
+     "actor_type": "ADMIN",
+     "changed_at": "2026-10-28T07:39:58.721533+00:00",
+     "from_status": "pending",
+     "order_number": "PO-20261028-135"
+    },
+    {
+     "id": "osh-  1793179697869-244cf4a4",
+     "reason": null,
+     "actor_id": "dddf4b57-405f-4852-a985-76d8d52b1b72",
+     "metadata": {
+      "source": "order_status_trigger",
+      "order_id": "ord- ###########-3c16c7",
+      "operation": "UPDATE"
+     },
+     "to_status": "preparing",
+     "actor_type": "ADMIN",
+     "changed_at": "2026-10-28T09:28:17.759971+00:00",
+     "from_status": "confirmed",
+     "order_number": "PO-20261028-135"
+    },
+    {
+     "id": "osh-  1793179711630-c1def68c",
+     "reason": null,
+     "actor_id": "dddf4b57-405f-4852-a985-76d8d52b1b72",
+     "metadata": {
+      "source": "order_status_trigger",
+      "order_id": "ord- ###########-3c16c7",
+      "operation": "UPDATE"
+     },
+     "to_status": "ready_for_dispatch",
+     "actor_type": "ADMIN",
+     "changed_at": "2026-10-28T09:28:31.606889+00:00",
+     "from_status": "preparing",
+     "order_number": "PO-20261028-135"
+    },
+    {
+     "id": "osh-  1793179866817-dd1bda2a",
+     "reason": null,
+     "actor_id": "drv- ###########-60bc",
+     "metadata": {
+      "source": "order_status_trigger",
+      "order_id": "ord- ###########-3c16c7",
+      "operation": "UPDATE"
+     },
+     "to_status": "dispatched",
+     "actor_type": "DRIVER",
+     "changed_at": "2026-10-28T09:31:06.506488+00:00",
+     "from_status": "ready_for_dispatch",
+     "order_number": "PO-20261028-135"
+    },
+    {
+     "id": "osh-  1793179895107-d04c791b",
+     "reason": null,
+     "actor_id": "drv- ###########-60bc",
+     "metadata": {
+      "source": "order_status_trigger",
+      "order_id": "ord- ###########-3c16c7",
+      "operation": "UPDATE"
+     },
+     "to_status": "in_transit",
+     "actor_type": "DRIVER",
+     "changed_at": "2026-10-28T09:31:34.948525+00:00",
+     "from_status": "dispatched",
+     "order_number": "PO-20261028-135"
+    },
+    {
+     "id": "osh-  1793180403534-13e27558",
+     "reason": null,
+     "actor_id": "drv- ###########-60bc",
+     "metadata": {
+      "source": "order_status_trigger",
+      "order_id": "ord- ###########-3c16c7",
+      "operation": "UPDATE"
+     },
+     "to_status": "arrived",
+     "actor_type": "DRIVER",
+     "changed_at": "2026-10-28T09:40:03.381135+00:00",
+     "from_status": "in_transit",
+     "order_number": "PO-20261028-135"
+    },
+    {
+     "id": "osh-  1793180416559-74261744",
+     "reason": null,
+     "actor_id": "drv- ###########-60bc",
+     "metadata": {
+      "source": "order_status_trigger",
+      "order_id": "ord- ###########-3c16c7",
+      "operation": "UPDATE"
+     },
+     "to_status": "delivered",
+     "actor_type": "DRIVER",
+     "changed_at": "2026-10-28T09:40:16.443277+00:00",
+     "from_status": "arrived",
+     "order_number": "PO-20261028-135"
+    }
+   ],
+   "pod_check": [
+    {
+     "pod_objects": 1
+    }
+   ]
+  }
+ }
+]

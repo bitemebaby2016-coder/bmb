@@ -70,8 +70,8 @@ export function DeliveryManagement() {
   const [provPick, setProvPick] = useState('')
   const [provVehicleOther, setProvVehicleOther] = useState('')
 
-  const load = useCallback(async () => {
-    setLoading(true)
+  const load = useCallback(async (silent = false) => {
+    if (!silent) setLoading(true)
     try {
       // Owner 2026-10-20: คิวมอบหมายต้องเห็นออเดอร์ที่ "จ่ายแล้ว" ทันที (confirmed/
       // preparing) — assign_driver รองรับอยู่แล้ว (020/125) ไม่ต้องรอ ready_for_dispatch
@@ -100,7 +100,7 @@ export function DeliveryManagement() {
     } catch (e) {
       console.error('[DeliveryManagement] load failed:', e)
     } finally {
-      setLoading(false)
+      if (!silent) setLoading(false)
     }
   }, [])
 
@@ -130,6 +130,35 @@ export function DeliveryManagement() {
   }, [])
 
   useEffect(() => { void load() }, [load])
+
+  // R15 (Owner 2026-10-28: "ปิดงานแล้วแต่หน้าจอไม่ปิดอัตโนมัติ"): auto-close ฝั่ง server
+  // ทำงานจริงแล้ว (probe = order+assignment delivered · driver available · POD มีรูป) —
+  // ที่ค้าง = หน้าโหลดข้อมูลครั้งเดียว → เพิ่ม (a) poll เงียบทุก 20 วิ (b) refetch เมื่อกลับมาที่แท็บ
+  useEffect(() => {
+    const t = window.setInterval(() => { void load(true) }, 20000)
+    const onVis = () => { if (document.visibilityState === 'visible') void load(true) }
+    document.addEventListener('visibilitychange', onVis)
+    return () => {
+      window.clearInterval(t)
+      document.removeEventListener('visibilitychange', onVis)
+    }
+  }, [load])
+
+  // R15: แจ้งเตือน ?focus= → โหลดข้อมูลใหม่เสมอ + เลื่อนแถวมารับสายกลางจอ (ครั้งเดียวต่อ focus)
+  const scrolledFocusRef = useRef<string | null>(null)
+  useEffect(() => {
+    if (!focusOrder) return
+    void load(true)
+    const t = window.setTimeout(() => {
+      const el = document.querySelector(`[data-focus-row="${focusOrder}"]`)
+      if (el) {
+        el.scrollIntoView({ block: 'center', behavior: 'smooth' })
+        scrolledFocusRef.current = focusOrder
+      }
+      // แถวยังไม่มา (โหลดไม่เสร็จ) = ไม่ทำเครื่องหมาย → orders เปลี่ยนเมื่อไหร่ retry เอง
+    }, 250)
+    return () => window.clearTimeout(t)
+  }, [focusOrder, load, orders])
 
   // โหลดรูปสถานที่จัดส่งของลูกค้าในคิว (READ-ONLY) — customers RLS เปิดให้ is_admin
   useEffect(() => {
@@ -475,7 +504,7 @@ export function DeliveryManagement() {
               const ab = assignmentBadge(a?.status)
               const offer = offerByOrder[o.order_number]
               return (
-                <div key={o.order_number} className={`border border-brand-border rounded-lg p-3 bg-brand-bg/50 ${focusOrder === o.order_number ? 'ring-2 ring-brand-primary' : ''}`}>
+                <div key={o.order_number} data-focus-row={o.order_number} className={`border border-brand-border rounded-lg p-3 bg-brand-bg/50 ${focusOrder === o.order_number ? 'ring-2 ring-brand-primary' : ''}`}>
                   <div className="flex items-center justify-between gap-2 flex-wrap">
                     <div className="flex items-center gap-2 flex-wrap">
                       <span className="font-mono text-sm font-bold">{o.order_number}</span>
@@ -615,7 +644,7 @@ export function DeliveryManagement() {
                   const ab = assignmentBadge(a?.status)
                   const podUrl = a?.proof_of_delivery_path ? podUrlOf(a.proof_of_delivery_path) : null
                   return (
-                    <tr key={o.order_number} className={`border-b border-brand-border ${focusOrder === o.order_number ? 'bg-brand-primary/10' : ''}`}>
+                    <tr key={o.order_number} data-focus-row={o.order_number} className={`border-b border-brand-border ${focusOrder === o.order_number ? 'bg-brand-primary/10' : ''}`}>
                       <td className="p-2 font-mono">{o.order_number}</td>
                       <td className="p-2">{o.status}</td>
                       <td className="p-2">{a?.driver_id ? driverName(a.driver_id) : '—'}</td>

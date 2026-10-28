@@ -1,0 +1,9 @@
+GATES R15 — 2026-10-28 (ปิดวงจรให้เห็นจริง + focus scroll + เริ่มผลิตเด้งมอบหมาย · client-only)
+round files: DeliveryManagement (poll/focus/scroll) · AdminKitchen (create→navigate) · tests r15
+
+1) tsc --noEmit: START_TSC  DONE_TSC_OK
+2) npm run lint:
+START_LINT 
+DONE_LINT_OK
+3) vitest full suite (json): {"total":1656,"passed":1656,"failed":0,"files":161,"success":true}
+4) vite build: START_BUILD  DONE_BUILD_OK

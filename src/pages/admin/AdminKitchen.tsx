@@ -61,7 +61,8 @@ export function AdminKitchen() {
       if (result.ok && result.batch_id) {
         showToast('สร้าง Batch สำเร็จ: ' + result.batch_id, 'success')
         writeAuditLog({ action: 'order_create', entity_type: 'production_batch', description: 'Created batch ' + result.batch_id + ' for round ' + selectedRoundId })
-        await load()
+        // R15 (Owner 2026-10-28): กดเริ่มผลิต (สร้าง Batch) → เด้งไปหน้าจัดส่ง/มอบหมายงานทันที
+        navigate('/admin/delivery')
       } else {
         showToast('ไม่สามารถสร้าง Batch ได้: ' + (result.error || 'ลองใหม่อีกครั้ง'), 'error')
       }
