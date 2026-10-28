@@ -63,7 +63,7 @@ export function CartPage() {
           const stale = scheduleLoaded && isStalePreOrderLine(item)
           return (
           <div key={item.__line_key ?? item.product.id} className={`card flex gap-4${stale ? ' btn-locked opacity-70' : ''}`} data-testid={stale ? 'cart-line-stale' : undefined}>
-            <img src={item.product.image_url || '/placeholder.png'} alt={item.product.name} className="w-24 h-24 rounded-xl object-cover" />
+            <img src={item.product.image_url || '/placeholder.svg'} alt={item.product.name} className="w-24 h-24 rounded-xl object-cover" />
             <div className="flex-1">
               <h3 className="font-bold text-brand-accent">{item.product.name}</h3>
               <p className="text-brand-primary font-bold">฿{Number(item.product.price)} x {item.quantity} = ฿{item.subtotal.toFixed(2)}</p>

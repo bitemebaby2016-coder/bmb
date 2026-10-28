@@ -86,7 +86,7 @@ export function VotePage() {
                 }`}
               >
                 <div className="flex items-center gap-4">
-                  <img src={option.image_url || '/placeholder.webp'} alt={option.name} className="w-16 h-16 rounded-lg object-cover" />
+                  <img src={option.image_url || '/placeholder.svg'} alt={option.name} className="w-16 h-16 rounded-lg object-cover" />
                   <div className="flex-1">
                     <div className="font-bold mb-1">{option.name}</div>
                     <div className={`text-sm ${isSelected ? 'text-white opacity-80' : 'text-brand-muted'}`}>

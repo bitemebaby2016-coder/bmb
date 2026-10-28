@@ -1,0 +1,10 @@
+GATES R17 — 2026-10-28 (ปิดเซสชัน: checklist ผล Owner 47 แถว · bug scan แก้ 3 จุด · handoff doc)
+changed: docs/checklist+handoff+AI_WORK_STATE+MASTER · public/placeholder.svg (ใหม่) · CartPage/VotePage refs · MenuPage (ลบ console.log 2)
+
+1) tsc --noEmit: START_TSC  DONE_TSC_OK
+2) npm run lint:
+START_LINT 
+DONE_LINT_OK
+3) vitest full suite (json): {"total":1671,"passed":1671,"failed":0,"files":162,"success":true}
+4) vite build: START_BUILD  DONE_BUILD_OK
+5) guards: brandNameGuard 449 OK + languageSanity 1256 OK (ผ่านก่อน commit)

@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400" viewBox="0 0 400 400" role="img" aria-label="Bite Me Baby — ยังไม่มีรูป">
+  <rect width="400" height="400" rx="32" fill="#f4f1ea"/>
+  <rect x="8" y="8" width="384" height="384" rx="26" fill="none" stroke="#e3ddd1" stroke-width="4"/>
+  <g transform="translate(200 178)">
+    <circle r="78" fill="#ffffff" stroke="#e3ddd1" stroke-width="4"/>
+    <text x="0" y="22" text-anchor="middle" font-size="72">🍔</text>
+  </g>
+  <text x="200" y="316" text-anchor="middle" font-family="system-ui, sans-serif" font-size="26" fill="#9a917f">Bite Me Baby</text>
+  <text x="200" y="348" text-anchor="middle" font-family="system-ui, sans-serif" font-size="20" fill="#b8b0a0">ยังไม่มีรูปสินค้า</text>
+</svg>

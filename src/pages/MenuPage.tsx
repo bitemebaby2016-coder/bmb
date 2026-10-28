@@ -138,7 +138,6 @@ export function MenuPage() {
   // Owner 2026-10-26: ปุ่ม "สั่งเลย / จองล่วงหน้า" ทุกปุ่มผ่านเส้นทางเดียว `runOrderBuilder`
   // (@/lib/orderEntry) — เดิมหน้านี้เก็บสำเนา logic เดียวกับ HomePage คนละชุด แก้ทีละที่แล้วพลาดบ่อย
   const handleSameDay = (payload: SameDayOrderPayload) => {
-    console.log('[Log#same-day]', payload)
     runOrderBuilder({
       productId: payload.productId,
       products,
@@ -166,7 +165,6 @@ export function MenuPage() {
   // ✓ Closure 2026-09-17: Pre-order flows through the canonical cart → /checkout?mode=pre-order
   // (ไม่มีการ insert ตาราง pre_orders จากหน้าเมนูเอง)
   const handlePreOrder = (payload: PreOrderPayload) => {
-    console.log('[Log#pre-order]', payload)
     // L-8 (N-4 #8 · Owner 2026-10-26): pre-order-only ที่ยังไม่ลงปฏิทิน/เลยรอบ → ห้ามเข้า builder
     const preProduct = products.find((p) => p.id === payload.productId)
     if (preProduct && deriveOrderMode(preProduct) === 'PRE_ORDER' && !scheduleMap[preProduct.id]) {
