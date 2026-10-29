@@ -894,7 +894,7 @@ export function CheckoutPage() {
         {orderMode === 'PRE_ORDER' ? (
           <p className="text-sm text-blue-700">วันจัดส่งถูกกำหนดโดยเมนูรอบพิเศษของแอดมิน (ป้ายมุมเมนู) — เลือกเฉพาะรอบจัดส่งด้านล่าง (ไม่มีพรีออเดอร์วันอิสระ) ระบบเซิร์ฟเวอร์ตรวจปิดรอบก่อนส่ง ({cutoffHours} ชม.) และความจุรอบให้อีกครั้ง</p>
         ) : (
-          <p className="text-sm text-orange-700">🛵 สั่งวันนี้ = จัดส่งทันที ระบบเลือกรอบเปิดรับให้อัตโนมัติ — เซิร์ฟเวอร์ตรวจ cutoff (เวลาไทย) และความจุรอบให้อีกครั้ง</p>
+          <p className="text-sm text-orange-700">🛵 สั่งวันนี้ = จัดส่งทันที ระบบเลือกไรเดอร์ให้อัตโนมัติ</p>
         )}
       </div>
 
@@ -927,7 +927,7 @@ export function CheckoutPage() {
           )}
           {daySchedule.length > 0 ? (
             <div data-testid="schedule-banner" className="mt-2 p-2 rounded-lg bg-blue-50 border border-blue-200 text-xs text-blue-700">
-              📅 วันที่ {scheduledDate} มีเมนูรอบพิเศษ ({daySchedule.length} รายการ) — เมนูเหล่านี้ถูกผูกวัน/รอบตามปฏิทินแอดมิน สินค้าทั่วไปสั่งร่วมรอบเดียวกันได้ (server: ERR_PRODUCT_NOT_ON_MENU เฉพาะเมนูที่ผิดวัน/รอบ)
+              📅 วันที่ {scheduledDate} มีเมนูรอบพิเศษ ({daySchedule.length} รายการ)
             </div>
           ) : (
             <div data-testid="schedule-banner" className="mt-2 p-2 rounded-lg bg-gray-50 border border-gray-200 text-xs text-slate-600">
@@ -953,12 +953,9 @@ export function CheckoutPage() {
         {orderMode !== 'PRE_ORDER' ? (
           selectedRound ? (
             <div data-testid="same-day-auto-round" className="p-3 rounded-lg border-2 border-brand-primary bg-orange-50">
-              <div className="font-medium text-slate-900">จัดส่งทันที — ระบบเลือกรอบเปิดรับให้อัตโนมัติ</div>
+              <div className="font-medium text-slate-900">จัดส่งทันที — ระบบเลือกรอบจัดส่งให้อัตโนมัติ</div>
               <div className="text-xs text-slate-600 mt-1">
-                รอบที่ระบบเลือก: {selectedRound.display_name || selectedRound.round_key || selectedRound.id} · ส่ง {String(selectedRound.delivery_start).slice(0, 5)}–{String(selectedRound.delivery_end).slice(0, 5)} · เหลือ {Math.max(0, Number(selectedRound.max_capacity) - Number(selectedRound.current_count))} ที่
-              </div>
-              <div className="text-xs text-slate-500 mt-1">
-                ออเดอร์วันนี้ส่งทันทีตามรอบที่เปิดรับอยู่ ไม่ต้องเลือกรอบเอง (การจองล่วงหน้าจะเลือกวัน/รอบแยกต่างหาก)
+                รอบที่ระบบเลือก: จัดส่งทันที
               </div>
             </div>
           ) : (
@@ -1147,7 +1144,7 @@ export function CheckoutPage() {
             {/* พื้นครีม → ตัวอักษรเข้มเสมอ (เดิมใช้สีธีม ทำให้ขาวบนขาวใน dark mode) */}
             <div className="font-medium text-slate-900">Bite Me Baby Delivery (ระบบเลือกช่องทางให้)</div>
             <div className="text-xs text-slate-600">
-              เซิร์ฟเวอร์คำนวณระยะทาง ช่องทาง และค่าส่งจริงตอนสร้างออเดอร์ (ลูกค้าไม่ส่งค่าส่งเอง)
+              เซิร์ฟเวอร์คำนวณระยะทาง ช่องทาง และค่าส่งจริงตอนสร้างออเดอร์
             </div>
           </div>
           <div className="text-right">
@@ -1181,21 +1178,21 @@ export function CheckoutPage() {
           <label className="flex items-center gap-3 p-3 rounded-lg border-2 border-brand-border cursor-pointer hover:border-brand-primary transition-colors">
             <input type="radio" name="payment" value="promptpay_qr" checked={paymentMethod === 'promptpay_qr'} onChange={(e) => setPaymentMethod(e.target.value as any)} className="w-5 h-5" />
             <div>
-              <div className="font-medium">PromptPay (สแกน QR ของร้าน → โอนเอง)</div>
-              <div className="text-sm text-brand-muted">โอนแล้วใส่เลขธุรกรรม — แอดมินตรวจสอบและยืนยันการชำระเงินให้</div>
+              <div className="font-medium">PromptPay (สแกน QR ของร้าน)</div>
+              <div className="text-sm text-brand-muted">โอนแล้วใส่เลขธุรกรรม — แอดมินตรวจสอบและยืนยันการชำระเงิน</div>
             </div>
           </label>
           <label className="flex items-center gap-3 p-3 rounded-lg border-2 border-brand-border cursor-pointer hover:border-brand-primary transition-colors">
             <input type="radio" name="payment" value="credit_card" checked={paymentMethod === 'credit_card'} onChange={(e) => setPaymentMethod(e.target.value as any)} className="w-5 h-5" />
             <div>
-              <div className="font-medium">บัตรเครดิต/เดบิต (Stripe)</div>
-              <div className="text-sm text-brand-muted">ปลอดภัยผ่าน Stripe — ตัดเงินจริงทันทีที่ยืนยัน</div>
+              <div className="font-medium">บัตรเครดิต/เดบิต</div>
+              <div className="text-sm text-brand-muted">ปลอดภัยผ่าน 3D Secure — ตัดเงินหลังจากยืนยันสั่งซื้อ</div>
             </div>
           </label>
           <label className="flex items-center gap-3 p-3 rounded-lg border-2 border-brand-border cursor-pointer hover:border-brand-primary transition-colors">
             <input type="radio" name="payment" value="cash_on_delivery" checked={paymentMethod === 'cash_on_delivery'} onChange={(e) => setPaymentMethod(e.target.value as any)} className="w-5 h-5" />
             <div>
-              <div className="font-medium">เงินสดตอนรับของ</div>
+              <div className="font-medium">เงินสดปลายทางตอนรับของ</div>
               <div className="text-sm text-brand-muted">จ่ายตอนรับของ</div>
             </div>
           </label>
