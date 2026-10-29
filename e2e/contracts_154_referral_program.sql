@@ -13,7 +13,7 @@
 --   G5  Hard block: self_referral (à¸šà¸±à¸à¸Šà¸µà¹€à¸”à¸µà¸¢à¸§à¸à¸±à¸™) Â· same_phone (à¹€à¸šà¸­à¸£à¹Œà¹€à¸”à¸µà¸¢à¸§à¸à¸±à¸™) Â·
 --       not_new (à¹€à¸žà¸·à¹ˆà¸­à¸™à¹„à¸¡à¹ˆà¹ƒà¸«à¸¡à¹ˆ) Â· claim_window_expired (à¹€à¸à¸´à¸™à¸«à¸™à¹‰à¸²à¸•à¹ˆà¸²à¸‡ 72 à¸Šà¸¡.)
 --   G6  qualify: à¹€à¸”à¸´à¸™à¸ªà¸–à¸²à¸™à¸°à¸–à¸¶à¸‡ delivered â†’ qualified + à¸„à¸¹à¸›à¸­à¸‡ 2 à¹ƒà¸š + ledger 2 + notice 2 +
---       à¸„à¸¹à¸›à¸­à¸‡à¹ƒà¸Šà¹‰à¸ˆà¸£à¸´à¸‡ (promotion_apply_rules = 30) + issue à¸‹à¹‰à¸³ = 0 (à¹„à¸¡à¹ˆà¸­à¸­à¸à¸‹à¹‰à¸³)
+--       à¸„à¸¹à¸›à¸­à¸‡à¹ƒà¸Šà¹‰à¸ˆà¸£à¸´à¸‡ (promotion_apply_rules = 15 หลัง R21e/172 cap — คูปอง 30 บนยอด 100 ถูกตัด) + issue à¸‹à¹‰à¸³ = 0 (à¹„à¸¡à¹ˆà¸­à¸­à¸à¸‹à¹‰à¸³)
 --   G7  à¸„à¸·à¸™à¹€à¸‡à¸´à¸™ â†’ reversed (ledger 2 + à¸„à¸¹à¸›à¸­à¸‡à¸–à¸¹à¸à¸›à¸´à¸”) Â· à¸¢à¸à¹€à¸¥à¸´à¸à¸•à¸­à¸™ held â†’ void (à¸¢à¸±à¸‡à¹„à¸¡à¹ˆà¸­à¸­à¸)
 --   G8  kill switch: à¸›à¸´à¸” = claim à¸„à¸·à¸™ 'disabled' + à¹„à¸¡à¹ˆà¸¡à¸µà¹à¸–à¸§ attribution à¹ƒà¸«à¸¡à¹ˆ
 --   G9  Admin: stats/resolve = ERR_FORBIDDEN à¸à¸±à¸š non-admin Â· à¹€à¸žà¸”à¸²à¸™à¹€à¸à¸´à¸™ â†’ risk=review
@@ -293,11 +293,14 @@ BEGIN
      AND customer_id IN (v_uid_frn::text, v_uid_ref::text);
   IF v_n <> 2 THEN RAISE EXCEPTION 'G6 FAIL: expected 2 notifications, got %', v_n; END IF;
   -- à¸„à¸¹à¸›à¸­à¸‡à¸—à¸µà¹ˆà¸­à¸­à¸à¹ƒà¸Šà¹‰à¹„à¸”à¹‰à¸ˆà¸£à¸´à¸‡ (promotion_apply_rules = fixed 30 Â· à¸™à¸±à¸šà¹€à¸›à¹‡à¸™à¸à¸²à¸£à¹ƒà¸Šà¹‰ 1 à¸„à¸£à¸±à¹‰à¸‡)
+  -- R21e/172 (Owner cap): เพดานส่วนลดรวม 15% ของยอดรวมสินค้า — mirror discountGuardrail.ts
+  -- (Owner อนุมัติ: referral = 1 ใน 3 แหล่งที่นับรวม: คูปอง+แต้ม+referral) → คูปอง 30 บนยอด 100
+  -- ถูกตัดเหลือ 15 · มูลค่า 30 ที่ ledger ยังเท่าเดิม (ใช้เต็ม 30 ตอนยอด 200+)
   SELECT r.coupon_promotion_id INTO v_promo_pid
     FROM public.referral_rewards r JOIN public.orders o ON o.id = r.order_id
    WHERE o.order_number = v_on_friend AND r.beneficiary_role = 'referrer';
-  IF public.promotion_apply_rules(v_promo_pid, 100, 100) <> 30 THEN
-    RAISE EXCEPTION 'G6 FAIL: issued coupon should discount 30';
+  IF public.promotion_apply_rules(v_promo_pid, 100, 100) <> 15 THEN
+    RAISE EXCEPTION 'G6 FAIL: issued coupon on 100 should discount 15 (172 cap)';
   END IF;
   -- issue à¸‹à¹‰à¸³ = 0 (à¹„à¸¡à¹ˆà¸­à¸­à¸à¸‹à¹‰à¸³à¹à¸¡à¹‰à¹€à¸£à¸µà¸¢à¸à¸•à¸£à¸‡ à¹†)
   IF public.referral_issue_rewards((SELECT o.id FROM public.orders o WHERE o.order_number = v_on_friend), false) <> 0 THEN
