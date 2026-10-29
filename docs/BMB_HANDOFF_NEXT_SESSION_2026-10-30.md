@@ -28,12 +28,13 @@
 3. **เทสต์ที่ assert "ข้อความ/โค้ดดิบ" (`?raw`) จะพังเมื่อแก้สเปก** — รอบนี้ข้อดี = จับให้เห็นทันที 3 ไฟล์ตอนเพิ่ม key เข้า `TYPED_FORM_KEYS`: `adminSettingsTypedKeys.test.ts` · `socialAiContinuity.test.ts` · `r12SeoAdminCopy.test.ts` → **ถ้าแก้ชุดค่า/ข้อความใน `AdminSettings`/strip ต้องไล่ 3 ไฟล์นี้ด้วย** (อัปเดตแล้ว — เหตุผล = spec เปลี่ยนโดย Owner = N1)
 4. **guards สองตัว (`brandNameGuard`/`languageSanity`) อยู่ใน `npm run lint` และ CI step "Lint"** — กวาด **`src/` + `e2e/` + `docs/` ทั้งหมด (1,269 ไฟล์)** → **ห้ามมีอักขระชุดอื่น (จีน/ญี่ปุ่น/BOM/U+FFFD) ในไฟล์ใดก็ตาม** สองจุดที่โดนเองรอบนี้: `e2e/r19Verify169.cjs:2` + `docs/BMB_HANDOFF_NEXT_SESSION_2026-10-30.md:28` (ตัวหลังทำ **CI #628 แดง** — ทั้งที่ local เคยเขียวรอบก่อน เพราะเขียนไฟล์เพิ่มหลังรัน lint) → **กติกา: รัน `npm run lint` อีกครั้งเสมอหลังเขียน/แก้ไฟล์ใด ๆ ก่อน commit**
 5. **Pattern apply production ยังใช้เดิม:** `e2e/r*Apply*.cjs` → Management API `/database/query` + insert ledger ด้วย `ON CONFLICT DO NOTHING` + evidence JSON ชื่อ `r*Apply*-result.json` — ห้าม apply โดยไม่มี precheck/verify
+6. **cmd.exe ตีความ `>` เป็น redirect** → `node -e "…=>console.log(…)"` พังและ**สร้างไฟล์ขยะชื่อ `console.log('ERR`** (โดนเอง 1 ไฟล์ หลุดเข้า commit → ลบด้วย chore commit) → **กติกา: คำสั่ง inline ที่มี `=>`/`>` ให้เขียนเป็น script ไฟล์ใน `e2e/` แล้วรัน `node e2e/...`** · เครื่องนี้ไม่มี `gh` + log endpoint ต้องสิทธิ์ admin → ใช้ `e2e/r19bCi.cjs` (Actions API = ไม่ต้องใช้ token เพราะ repo เป็น public)
 
 ---
 
 ## §3. งานที่ต้องทำต่อ (เรียงลำดับความสำคัญ)
 
-1. **✅ CI ทั้ง 3 ช่องทางเขียวบน `05d5e64` แล้ว (ตรวจจริงผ่าน GitHub Actions API + production probe):** **Contract Tests #203 success** · **CI #629 success** · **Pages = เสิร์ฟ build รอบนี้แล้ว** (`index-DxSKTZ39.js`/`index-D0SHhvmB.css` HTTP 200 ที่ `biteme-baby.com`) — จดลง **§9.0 แถว 45-46** แล้ว · **ที่เหลือ = ตรวจ CI ของ docs commit ปิดเซสชัน (แถว 47) รอบถัดไป** ด้วย `node e2e/r19bCi.cjs <full-sha>` (ไม่มี `gh` · log endpoint ต้องสิทธิ์ admin) · HEAD เช็คจริงด้วย `git log --oneline -1`
+1. **✅ CI ทั้ง 3 ช่องทางเขียวบน HEAD `d52ab30` (ก่อน docs commit ปิดเซสตัวสุดท้าย):** **Contract Tests #205 success** · **CI #631 success** · **Pages = เสิร์ฟ build รอบนี้แล้ว** (`index-DxSKTZ39.js`/`index-D0SHhvmB.css` = HTTP 200 ที่ `biteme-baby.com`) — จดลง **§9.0 แถว 45-48** ครบแล้ว (ทุก SHA ของรอบนี้มีผลจริงทั้งหมด) · **ที่เหลือ = ตรวจ CI ของ docs commit สุดท้าย (แถว 49) รอบถัดไป** ด้วย `node e2e/r19bCi.cjs <full-sha>` (ไม่มี `gh` · log endpoint ต้องสิทธิ์ admin) · HEAD เช็คจริงด้วย `git log --oneline -1`
 2. **🆕 retest สิ่งที่ทำรอบนี้ (ส่ง Owner):** **N1** = หน้า `/admin/settings` การ์ด "📣 แถบสถานะหน้าแรก (ข้อความ)" → แก้+บันทึก → หน้าแรกเปลี่ยน (เครื่องอื่น ≤7 นาที/reload) · **ไฟ 🟢/🔴 ต้องยังเปลี่ยนตามรอบจริง** (ลองปิด/เปิดรอบดู) · **N3** = ล็อกอินค้างไว้ แล้ว logout จากเครื่องอื่น/รอ session หมดอายุ → หน้าต้องเด้ง `/login` ทันที + ล็อกอินใหม่กลับหน้าเดิม (from) · **N2** = อ่าน `docs/BMB_BACKEND_AI_PART_1.md` แล้วยืนยัน/ส่งต้นฉบับเดิมเทียบ
 3. **P1 (Owner ทำใน Google Cloud):** จำกัด **HTTP referrer** ของคีย์ Google Maps (`src/lib/googleMaps.ts` ยิงจาก client 5 จุด) — ทำในคอนโซล ไม่ใช่โค้ด
 4. cosmetic (ค้างเดิม): รวม `to_char` id ~40 จุด · รวม haversine 2 ฉบับ · รวม `confirmOfflinePayment` wrappers
@@ -57,7 +58,7 @@
 - **N1:** `/admin/settings` → การ์ด **"📣 แถบสถานะหน้าแรก (ข้อความ)"** → เห็นช่อง 4 บรรทัด · แก้ → บันทึก → toast สำเร็จ · หน้าแรกแถบสถานะเปลี่ยนตาม · **กลับค่า default ได้โดยล้างช่อง (ไม่บันทึกค่าว่างลง DB)** · **ไฟ 🟢/🔴 สองบรรทัดต้องยังเปิด/ปิดจากรอบจริง** (ปิดรอบ → 🔴 ทันที ไม่ต้องรอ reload) · ป้าย `เปิดรับ พรีออเดอร์ : … (ปิดรอบ …)` **ไม่เปลี่ยน** ตามช่องเหล่านี้ (ข้อมูลสด)
 - **N3:** (ก) ล็อกอินค้างไว้ แล้ว signOut จากเครื่องอื่น → เครื่องนี้เด้ง `/login` ทันที (ไม่ค้างหน้าเก่า) · (ข) อยู่หน้า `/orders` แล้ว session หมด → เด้ง `/login` และล็อกอินใหม่ต้องกลับ `/orders` · (ค) เปิดแท็บใหม่ตอนไม่มี session → **ห้ามถูกเด้งวน** (เข้าหน้าแรกได้ปกติ)
 - **N2:** อ่าน `docs/BMB_BACKEND_AI_PART_1.md` แล้วยืนยัน §F/§G/§H/§I/L-10 (หรือส่งต้นฉบับเดิมมาเทียบ)
-- **CI:** ✅ เขียวบน `05d5e64` แล้ว (Contract Tests **#203** · CI **#629** · Pages asset 200) — เหลือตรวจซ้ำของ docs commit ปิดเซส (§9.0 แถว 47)
+- **CI:** ✅ เขียวบน HEAD `d52ab30` (Contract Tests **#205** · CI **#631** · Pages asset 200) — ดู §9.0 แถว 45-48 (เหลือตรวจซ้ำของ docs commit สุดท้าย = แถว 49)
 
 ### C. งานที่สั่งค้าง (ทำก่อนส่ง test รอบหน้า)
 - P1 คีย์ Google Maps = จำกัด referrer ใน Google Cloud (Owner) · cosmetic 3 ชุด · external providers = รอ Owner
