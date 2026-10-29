@@ -16,6 +16,13 @@ import { trackOrderByPhone, getSavedTrackPhone } from '@/lib/trackingApi'
 import { showToast } from '@/components/ui/ToastContainer'
 import { MascotBadge } from '@/components/MascotBadge'
 import { OrderTimeline } from '@/components/customer/OrderTimeline'
+// R21f (Owner): หน้าลูกค้าเห็นตำแหน่งไรเดอร์ระหว่างส่ง — RPC m174 + แผนที่เดิมของไรเดอร์
+import { getOrderRiderPosition, type RiderPosition } from '@/lib/riderPositionApi'
+import { RiderMiniMap } from '@/components/rider/RiderMiniMap'
+
+// R21f: ระหว่างสถานะเหล่านี้ = คนส่งกำลังออกมา → ดึงพิกัดทุก 12 วิ (READ-ONLY)
+const RIDER_VISIBLE_STATUSES = new Set(['dispatched', 'in_transit', 'arrived'])
+const RIDER_POLL_MS = 12000
 
 // M1 (2026-10-22): progress steps ย้ายไป components/customer/OrderTimeline.tsx
 // — timeline ตัวเดียวขับจาก lib/orderVocabulary (A5: label ไม่ซ้ำอีกแล้ว)
@@ -36,6 +43,21 @@ export function OrderTrackPage() {
   const [phoneGate, setPhoneGate] = useState(false)
   const [phoneInput, setPhoneInput] = useState('')
   const [viaRpc, setViaRpc] = useState(false)
+  // R21f: ตำแหน่งไรเดอร์ (null = ยังไม่มี/ไม่ใช่ของฉัน — หน้าไม่พัง)
+  const [riderPos, setRiderPos] = useState<RiderPosition | null>(null)
+
+  const statusNow = order ? String(order.status) : ''
+  const riderVisible = Boolean(orderNumber) && RIDER_VISIBLE_STATUSES.has(statusNow)
+  useEffect(() => {
+    if (!orderNumber || !riderVisible) { setRiderPos(null); return }
+    let alive = true
+    const tick = () => {
+      void getOrderRiderPosition(orderNumber).then((p) => { if (alive) setRiderPos(p) })
+    }
+    tick()
+    const t = setInterval(tick, RIDER_POLL_MS)
+    return () => { alive = false; clearInterval(t) }
+  }, [orderNumber, riderVisible])
 
   // GET/READ → server state → render. Polling refetches; it never writes.
   const load = useCallback(async () => {
@@ -242,6 +264,32 @@ export function OrderTrackPage() {
         {paidCancelled && (
           <div className="bg-yellow-50 border border-yellow-200 p-3 rounded-xl mb-4 text-sm text-yellow-800">
             ออเดอร์นี้ชำระเงินแล้วและถูกยกเลิก — <b>รอดำเนินการคืนเงินโดยร้าน</b> (ยังไม่ได้คืนเงิน)
+          </div>
+        )}
+
+        {/* R21f (Owner): แผนที่ตำแหน่งไรเดอร์ระหว่างส่ง (m174 RPC · poll 12 วิ) */}
+        {riderVisible && (
+          <div className="mb-4" data-testid="track-rider-map">
+            <div className="flex items-center justify-between mb-2">
+              <h4 className="font-bold text-brand-accent">🛵 ตำแหน่งไรเดอร์</h4>
+              {riderPos?.updated_at ? (
+                <span className="text-xs text-brand-muted">อัปเดตล่าสุด {new Date(riderPos.updated_at).toLocaleString('th-TH')}</span>
+              ) : null}
+            </div>
+            {riderPos ? (
+              <RiderMiniMap
+                dropOff={
+                  order.dropoff_latitude != null && order.dropoff_longitude != null
+                    ? { latitude: Number(order.dropoff_latitude), longitude: Number(order.dropoff_longitude) }
+                    : { latitude: riderPos.latitude, longitude: riderPos.longitude }
+                }
+                rider={{ latitude: riderPos.latitude, longitude: riderPos.longitude }}
+              />
+            ) : (
+              <p className="text-sm text-brand-muted">
+                ยังไม่มีพิกัดไรเดอร์ — จะแสดงทันทีที่คนส่งรับงานและส่งตำแหน่งเข้ามา
+              </p>
+            )}
           </div>
         )}
         {order.payment_status === 'refund' && (

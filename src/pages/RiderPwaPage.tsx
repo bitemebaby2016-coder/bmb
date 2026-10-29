@@ -589,10 +589,21 @@ export function RiderPwaPage() {
                 </div>
                 <ol className="text-sm text-slate-700 mb-2 space-y-1">
                   {plan.stops.map((s, i) => (
-                    <li key={s.order_number} data-testid={`rider-route-stop-${s.order_number}`}>
-                      <b>จุด {i + 1}</b> · #{s.order_number}
-                      {s.detail ? ` — ${s.detail}` : ''}
-                      <span className="text-xs text-brand-muted"> · {plan.legKm[i]?.toFixed(2)} กม.</span>
+                    <li key={s.order_number} data-testid={`rider-route-stop-${s.order_number}`} className="flex items-center justify-between gap-2">
+                      <span>
+                        <b>จุด {i + 1}</b> · #{s.order_number}
+                        {s.detail ? ` — ${s.detail}` : ''}
+                        <span className="text-xs text-brand-muted"> · {plan.legKm[i]?.toFixed(2)} กม.</span>
+                      </span>
+                      {/* R21f (Owner): ปุ่มนำทางรายจุด — เปิด Google Maps ไปจุดส่งแต่ละจุด */}
+                      {(() => {
+                        const u = googleMapsDirUrl(origin, [s])
+                        return u ? (
+                          <a className="btn btn-outline text-xs whitespace-nowrap" href={u} target="_blank" rel="noreferrer" data-testid={`rider-nav-stop-${s.order_number}`}>
+                            🧭 นำทาง
+                          </a>
+                        ) : null
+                      })()}
                     </li>
                   ))}
                 </ol>
@@ -626,6 +637,21 @@ export function RiderPwaPage() {
                 ))}
               </ul>
               <p className="text-xs text-slate-500 mb-1">📍 {activeOrder.dropoff_detail || 'ไม่มีรายละเอียดที่อยู่'}</p>
+
+              {/* R21f (Owner): ปุ่มนำทางเฉพาะจุดส่งของงานนี้ (gps คุณ → จุดส่ง) */}
+              {activeOrder.dropoff_latitude != null && activeOrder.dropoff_longitude != null && (() => {
+                const u = googleMapsDirUrl(riderGps, [{
+                  order_number: activeOrder.order_number,
+                  latitude: Number(activeOrder.dropoff_latitude),
+                  longitude: Number(activeOrder.dropoff_longitude),
+                  detail: activeOrder.dropoff_detail || undefined,
+                }])
+                return u ? (
+                  <a className="btn btn-primary text-xs mb-2" href={u} target="_blank" rel="noreferrer" data-testid="rider-nav-active">
+                    🧭 เปิดนำทางไปจุดส่งนี้
+                  </a>
+                ) : null
+              })()}
 
               {/* PHASE 2: แผนที่จุดปัก — ปลายทาง/คุณ(GPS)/ครัว แยกชนิดชัดเจน */}
               {activeOrder.dropoff_latitude != null && activeOrder.dropoff_longitude != null ? (

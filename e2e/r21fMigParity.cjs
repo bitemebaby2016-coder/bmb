@@ -1,0 +1,10 @@
+// R21f — parity: migrations ในไฟล์ (เลข) vs production ledger
+const fs = require('fs')
+const path = require('path')
+const ROOT = path.resolve(__dirname, '..')
+const local = fs.readdirSync(path.join(ROOT, 'supabase', 'migrations')).filter((f) => /^[0-9]/.test(f)).map((f) => f.split('_')[0])
+const j = JSON.parse(fs.readFileSync(path.join(ROOT, 'e2e', 'r21fSchemaProbe.json'), 'utf8'))
+const led = JSON.parse(j.ledger).map((r) => r.version)
+console.log('local numbered = ' + local.length + ' · ledger = ' + led.length)
+console.log('inLedgerNotLocal = ' + JSON.stringify(led.filter((v) => !local.includes(v))))
+console.log('localNotInLedger = ' + JSON.stringify(local.filter((v) => !led.includes(v))))

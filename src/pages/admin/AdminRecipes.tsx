@@ -7,6 +7,10 @@
 import { useState, useEffect, useCallback } from 'react'
 import { listRecipes, upsertRecipe, deleteRecipe } from '@/lib/bmbAdminApi_recipes'
 import { getProducts } from '@/lib/bmbAdminApi_products'
+// R21f (Owner): dropdown วัตถุดิบต้องมาจากคลังจริงทั้งหมด (เดิม derive จาก recipes ที่มีอยู่ →
+// ถ้าสินค้ายังไม่มีสูตร จะเลือกวัตถุดิบไม่ได้เลย = เพิ่มสูตรใหม่ไม่ได้จริง)
+import { getInventory } from '@/lib/bmbAdminApi_inventory'
+import type { Ingredient } from '@/types'
 import { writeAuditLog } from '@/lib/auditLog'
 import { showToast } from '@/components/ui/ToastContainer'
 // R21d backlog: โหลด recipes/BOM ไม่สำเร็จต้องฟ้อง (ห้ามโชว์ "ยังไม่มี Recipe ในระบบ" ปลอม)
@@ -15,6 +19,8 @@ import { LoadErrorBanner } from '@/components/ui/LoadErrorBanner'
 export function AdminRecipes() {
   const [recipes, setRecipes] = useState<any[]>([])
   const [products, setProducts] = useState<any[]>([])
+  // R21f: คลังวัตถุดิบทั้งหมด (master data สำหรับ dropdown — ไม่ใช่ derived จาก recipes)
+  const [inventory, setInventory] = useState<Ingredient[]>([])
   const [loading, setLoading] = useState(true)
   // R21d: โหลดล้มเหลว ≠ ไม่มีสูตร
   const [loadError, setLoadError] = useState('')
@@ -31,6 +37,13 @@ export function AdminRecipes() {
       setRecipes(data || [])
       const productsData = await getProducts()
       setProducts(productsData || [])
+      // R21f: คลังทั้งหมดสำหรับ dropdown — ล้มเหลวไม่ block หน้า (fallback = derived จาก recipes)
+      try {
+        const ing = await getInventory()
+        setInventory((ing || []) as Ingredient[])
+      } catch (e) {
+        console.warn('[AdminRecipes] inventory load failed (fallback to recipe-derived):', String(e).slice(0, 100))
+      }
     } catch (e) {
       console.error('[AdminRecipes] Load failed:', e)
       setLoadError('โหลดสูตรอาหารไม่สำเร็จ — ตรวจสอบการเชื่อมต่อแล้วกด "ลองใหม่"')
@@ -88,7 +101,9 @@ export function AdminRecipes() {
       ingMap.set(r.ingredient_id, { id: r.ingredient_id, name: r.ingredient_name, status: r.inventory_status })
     }
   })
-  const allIngredients = Array.from(ingMap.values())
+  const allIngredients = inventory.length > 0
+    ? inventory.map(function(i) { return { id: i.id, name: i.name, status: i.current_stock <= i.min_stock ? 'low' : 'ok' } })
+    : Array.from(ingMap.values())
 
   const filtered = searchProduct
     ? recipes.filter(function(r) { return (r.product_name || '').toLowerCase().includes(searchProduct.toLowerCase()) })
@@ -96,7 +111,7 @@ export function AdminRecipes() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-6">
-      <h1 className="text-3xl font-bold text-brand-accent mb-6">🧪 สตรอาหาร / BOM</h1>
+      <h1 className="text-3xl font-bold text-brand-accent mb-6">🧪 สูตรอาหาร / BOM</h1>
 
       {/* Add Recipe Form */}
       <div className="card mb-6">
@@ -110,7 +125,7 @@ export function AdminRecipes() {
             <option value="">— เลือก วัตถุดิบ —</option>
             {allIngredients.map(function(i) { return <option key={i.id} value={i.id}>{i.name}</option> })}
           </select>
-          <input type="number" placeholder="ปริมาต่อหน่วย" value={qty} onChange={(e) => setQty(parseFloat(e.target.value) || 0)} className="input" step="0.01" min="0" />
+          <input type="number" placeholder="ปริมาณต่อหน่วย" value={qty} onChange={(e) => setQty(parseFloat(e.target.value) || 0)} className="input" step="0.01" min="0" />
           <button onClick={handleAddRecipe} className="btn btn-primary">บันทึก</button>
         </div>
       </div>
@@ -119,6 +134,37 @@ export function AdminRecipes() {
       <div className="flex gap-2 mb-4">
         <input type="text" placeholder="ค้นหาตามชื่อสินค้า..." value={searchProduct} onChange={(e) => setSearchProduct(e.target.value)} className="input flex-1" />
       </div>
+
+      {/* R21f (Owner): "สูตรอาหารยังลิ้งไม่หมดทุกเมนู" — รายการเมนูที่ยังไม่มีสูตร
+          (products โหลดสดทุกครั้ง → สินค้าใหม่ที่แอดมินเพิ่มโผล่ที่นี่อัตโนมัติ) */}
+      {(() => {
+        const withRecipe = new Set(recipes.map(function(r) { return r.product_id }))
+        const q = searchProduct.toLowerCase()
+        const missing = products.filter(function(p) {
+          return !withRecipe.has(p.id) && (!q || String(p.name || '').toLowerCase().includes(q))
+        })
+        if (missing.length === 0) return null
+        return (
+          <div className="card mb-4" data-testid="recipes-missing">
+            <h3 className="font-bold text-brand-accent mb-1">📋 เมนูที่ยังไม่มีสูตร ({missing.length} เมนู)</h3>
+            <p className="text-sm text-brand-muted mb-3">
+              กดเลือกเมนูเพื่อเติมชื่อในฟอร์มด้านบน แล้วเลือกวัตถุดิบ + ปริมาณ → บันทึก
+              (สินค้าใหม่ที่เพิ่มในระบบจะขึ้นในรายการนี้เอง)
+            </p>
+            <ul className="flex flex-wrap gap-2">
+              {missing.map(function(p) {
+                return (
+                  <li key={p.id}>
+                    <button className="btn btn-outline text-xs" onClick={() => { setSelectedProduct(p.id); setSelectedIngredient(''); setQty(0) }} data-testid={'recipe-pick-' + p.id}>
+                      + {p.name}
+                    </button>
+                  </li>
+                )
+              })}
+            </ul>
+          </div>
+        )
+      })()}
 
       {/* Recipes Table */}
       {loading ? (

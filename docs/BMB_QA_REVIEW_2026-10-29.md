@@ -267,3 +267,15 @@
 
 - **ข้อจำกัดโดยเจตนา (ตามกฏ repo):** ห้ามแก้ migration ที่ apply แล้ว → แก้ด้วย CREATE OR REPLACE ในไฟล์ใหม่ (172/173) เท่านั้น · แถว id เก่าใน DB ปล่อยเป็นประวัติ (id ใหม่เท่านั้นที่ clean)
 - เอกสาร: **TEST_PACK §M** (ขั้นตรวจ M1-M12 ของทุกสิ่งที่ทำรอบ R21) · MASTER_STATUS §1.3 · AI_WORK_STATE · แฮนออฟ
+
+---
+
+# รอบ R21f — 5 คำสั่ง Owner (2026-10-29)
+
+| คำสั่ง | ผล | หลักฐาน/รายละเอียด |
+|---|---|---|
+| **มิเกรชั่นที่ยังไม่ได้ apply** | ✅ **ไม่มีค้าง** — parity สมบูรณ์ **local 173 = ledger 173** (ขาด/เกิน 0 ทั้งสองทาง) · `PROPOSED_*` 3 ไฟล์ = **ถูกแทนที่โดย design** (wave1 = SUPERSEDED ไม่จำเป็น · wave2 → m151 · wave5 → m150 — ทั้งคู่ apply แล้ว) → probe = `e2e/r21fSchemaProbe.json` + `e2e/r21fMigParity.cjs` | CI ก็ apply ครบทุกไฟล์ทุกรอบ (contract green) |
+| **หน้าลูกค้า: แผนที่ตำแหน่งไรเดอร์** | ✅ **m174 `order_rider_position`** (SECURITY DEFINER · เฉพาะเจ้าของออเดอร์/admin · anon = null) + `riderPositionApi.ts` + การ์ด **🛵 ตำแหน่งไรเดอร์ ใน `/track/:orderNumber`** ระหว่าง `dispatched/in_transit/arrived` (poll 12 วิ · reuse `RiderMiniMap`) | คอลัมน์จริง probe ก่อนเขียน RPC (`r21fSchemaProbe.json`) · privacy: ไม่ enumerate |
+| **ไรเดอร์: แผนที่นำทางทุกจุด** | ✅ ปุ่ม **🧭 นำทางรายจุด** ในรายการเส้นทาง (googleMapsDirUrl origin→จุดเดียว · ฟรีไม่ใช้ key) + ปุ่ม **🧭 เปิดนำทางไปจุดส่งนี้** ในการ์ดงานกำลังส่ง | การ์ดเส้นทางเดิมมีลิงก์รวม+แผนที่+polyline อยู่แล้ว (R16) — เพิ่มรายจุดครบทุกจุด |
+| **สูตรอาหารครบทุกเมนู + เพิ่มใหม่ได้** | ✅ dropdown วัตถุดิบ = **`getInventory()` ทั้งคลัง** (เดิม derive จาก recipes = เลือกไม่ได้ถ้าไม่มีสูตรเดิม) · การ์ด **📋 เมนูที่ยังไม่มีสูตร** (products สดทุกโหลด → สินค้าใหม่โผล่เอง) กด + เติมฟอร์มได้ · แก้ typo "สตรอาหาร/ปริมา" | |
+| **เวลาเปิด/ปิดหน้าแรกไม่ตรงที่แอดมินตั้ง** | ✅ **root cause = dead UI**: การ์ด "🏬 Branch (รัศมี + เวลาสาขา)" เขียนแค่ `branches.operating_hours` — **ไม่มีที่ไหนอ่าน** (หน้าแรก/เช็คเอาท์/mascot อ่าน `business_settings.hours`) → `saveBranch()` **mirror ไป `business_settings.hours`** + validate HH:MM + toast ยืนยัน + label อธิบาย | mirror = "1 เรื่อง = 1 ที่ = ทางบันทึกเดียว" (กติกา audit D-02) · parse = `parseHHMM` ตัวเดียวกับที่ logic ใช้ |

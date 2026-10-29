@@ -32,14 +32,15 @@
 
 ---
 
-## §3. งานที่ต้องทำต่อ (เรียงลำดับความสำคัญ)
+## §3. งานที่ต้องทำต่อ (เรียงลำดับความสำคัญ · ทบทวนครบ ณ 2026-10-29 รอบ R21f)
 
-1. **✅ ปิดรอบ R21e แล้ว (2026-10-29):** CI = Contract **#214 ✓** + CI **#640 ✓** (m172/173 พิสูจน์บน PG จริง) · **apply production แล้ว**: `r21eApply172-result.json` + `r21eApply173-result.json` = **ALL_PASS · ledger top=173** · probe หลังแก้ = `has_cap=true` · งานที่เหลือของแชทใหม่ = **ข้อ 2 (ส่ง Owner retest)** + ข้อ 3-6 ด้านล่าง
-2. **🆕 retest ส่ง Owner = `docs/BMB_PRODUCTION_TEST_PACK.md` §M (M1-M12)** — ครอบคลุมทุกอย่างที่ทำ/apply รอบ R21: ต้นทุน/กำไร (170) · พิมพ์ครัว · **cap 15% (172)** · **ประตูตรวจสลิป** · แจ้งเตือนครัว→หน้าครัว · พร้อมส่ง→delivery focus · preparing=หักสต็อกรวม · my_role (171) · Auth A1-A6 · **id ออเดอร์ใหม่ (173 — สั่งออเดอร์จริง 1 ออเดอร์แล้วดู id)** · LoadErrorBanner · EF CORS · (เดิม: N1 แถบสถานะ · N3 auth listener · N2 Backend doc)
+1. **🆕 ขั้นแรกของแชทใหม่ — ปิดรอบ R21f:** (ก) เช็ค CI ของ commit รอบ R21f = `node e2e/r19bCi.cjs <full-sha>` ครั้งเดียว (ไม่ poll) · (ข) **ถ้าเขียว = apply m174**: `node e2e/r21fApply174.cjs` (script พร้อม — assert fn/jsonb/ACL/ledger top=174 · smoke ต้อง null ไม่ error) · (ค) evidence `e2e/r21fApply174-result.json` + จด ledger 174 ลง MASTER §1.3 + commit ปิดรอบ · **หมายเหตุ: m174 ยังไม่ apply — หน้าลูกค้าจะยังไม่เห็นพิกัดจนกว่าจะ apply**
+2. **🆕 retest ส่ง Owner = `docs/BMB_PRODUCTION_TEST_PACK.md` §M (M1-M16)** — ของใหม่ R21f: **M13 แผนที่ไรเดอร์หน้า `/track`** · **M14 ปุ่ม 🧭 นำทางรายจุด** · **M15 สูตรครบทุกเมนู + สินค้าใหม่โผล่เอง** · **M16 เวลาเปิด/ปิดหน้าแรกตรงกับที่ตั้ง** (ตั้งในการ์ด Branch → บันทึก → หน้าแรกต้องเปลี่ยน) · ของเดิม R21: M1-M12 (ต้นทุน/กำไร · พิมพ์ครัว · cap 15% · ประตูสลิป · แจ้งเตือนครัว · delivery focus · สต็อก · my_role · Auth · id ใหม่ · LoadErrorBanner · EF CORS)
 3. **P1 (Owner ทำใน Google Cloud):** จำกัด **HTTP referrer** ของคีย์ Google Maps (`src/lib/googleMaps.ts` ยิงจาก client 5 จุด) — ทำในคอนโซล ไม่ใช่โค้ด
-4. ~~cosmetic (ค้างเดิม)~~ → **ปิดแล้ว (R21e)**: to_char ids = m173 · haversine 3→1 · confirmOfflinePayment 2→1
-5. external providers (Grab/Lineman/Foodpanda) = รอ Owner ตัดสินใจ credentials หรือปิด module
-6. ของค้างเดิม: **B2** (~11:00) · **C7/C8 ขั้นรัน** · **RL-DEFECT 4+1** · **Part 5/6/7** · L-11 (LED) รอนิยาม · Backend+AI รอเทียบต้นฉบับ · ดู §5
+4. **external providers (Grab/Lineman/Foodpanda)** = รอ Owner ตัดสินใจ credentials หรือปิด module (QA 2.9)
+5. **ของค้างเดิม — retest runtime ทั้งหมด (Owner):** **B2** (~11:00 แถบสถานะ) · **C7/C8** (CAP-22 ขั้นรัน — precondition ผ่านแล้ว) · **RL-DEFECT 4+1** · **Part 5/6/7** · Owner checklists: empty state รายหน้า (3.5) · responsive มือถือ (4.4) — วิธีการ = §L + ไฟล์ต้นทางเดิม
+6. **งานคุณภาพเล็ก (ทำได้รอบหน้า):** `as any` ~222 จุด (QA 3.8) · `location.reload` ใน `PromotionsPage:124` แทนด้วย refetch (3.9) · raw fetch Google key 5 จุด (รอข้อ 3) · **N2** = เทียบ `docs/BMB_BACKEND_AI_PART_1.md` กับต้นฉบับ (Owner) · L-11 (LED) รอนิยาม
+7. **ข้อจำกัดที่จดไว้ (ไม่ใช่งานค้าง — อย่าลืม):** แถว id เก่า (`ord- ####…`) = ประวัติ ปล่อยไว้ (m173 แก้เฉพาะ id ใหม่) · guest path ของหน้า track (ยืนยันด้วยเบอร์) **ไม่เห็น** พิกัดไรเดอร์ (RPC คืน null — ถ้า Owner อยากให้เห็น = enhancement ต้องผูกกับ phone-verify อย่างปลอดภัย) · `PROPOSED_*` 3 ไฟล์ = superseded ห้าม apply (ใช้ 150/151)
 
 ---
 

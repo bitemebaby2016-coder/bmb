@@ -12,6 +12,8 @@ import { THEATER_DAILY_COPY_KEY, THEATER_DAILY_COPY_STARTER } from '@/lib/theate
 import { SEO_SETTINGS_KEY, getSeoSettings, type SeoSettings } from '@/lib/seoSettings'
 import { STORE_STATUS_COPY_KEY, getStoreStatusCopy, setStoreStatusCopyLive, type StoreStatusCopy } from '@/lib/storeStatusCopy'
 import { supabase } from '@/lib/supabase'
+// R21f: validate เวลาเปิด/ปิดของ "เวลาสาขา" ก่อน mirror ไป business_settings.hours
+import { parseHHMM } from '@/lib/shopHoursLogic'
 
 // C1/Q8 (audit D1 — "1 เรื่อง = 1 ที่"): key ที่มีฟอร์มเฉพาะทาง — generic editor
 // (JSON/JsonForm + Save All) ห้ามโชว์/ห้ามเขียน กันพิมพ์ค่าเสียแบบ 22P02 ซ้ำ
@@ -99,8 +101,30 @@ export function AdminSettings() {
       .from('branches')
       .update({ service_radius_km: Number(branch.service_radius_km), operating_hours: branch.operating_hours, updated_at: new Date().toISOString() })
       .eq('id', branch.id)
-    showToast(error ? `Branch failed: ${error.message}` : 'Saved branch', error ? 'error' : 'success')
-    if (!error) await load()
+    if (error) {
+      showToast(`Branch failed: ${error.message}`, 'error')
+      return
+    }
+    // R21f (Owner 2026-10-29): "เวลาปิดเปิดที่แสดงหน้าแรกไม่ตรงกับที่แอดมินตั้ง"
+    // = เดิมการ์ด "เวลาสาขา" นี้เขียนแค่ branches.operating_hours แต่หน้าแรก/เช็คเอาท์/mascot
+    // อ่าน business_settings.hours (ไม่มีที่ไหนอ่าน branch field → dead UI) → บันทึกที่นี่
+    // ต้อง mirror ไป business_settings.hours ด้วย (1 เรื่อง = 1 ที่ = ทางบันทึกเดียว = hours)
+    const oh = branch.operating_hours as { open?: string; close?: string } | null
+    if (oh && (typeof oh.open === 'string' || typeof oh.close === 'string')) {
+      const openOk = parseHHMM(oh.open) !== null
+      const closeOk = parseHHMM(oh.close) !== null
+      if (openOk && closeOk) {
+        const ok = await setBusinessSetting('hours', { open: String(oh.open).trim(), close: String(oh.close).trim() })
+        showToast(ok ? 'Saved branch + เวลาเปิด/ปิดซิงค์ไปหน้าแรกแล้ว (business_settings.hours)' : 'Saved branch แต่ซิงค์เวลาไม่สำเร็จ — ลองใหม่', ok ? 'success' : 'error')
+        if (ok) await load()
+      } else {
+        showToast('รูปแบบเวลาไม่ถูกต้อง (ต้องเป็น HH:MM เช่น 08:00 / 20:00) — ยังไม่ได้ซิงค์เวลาไปหน้าแรก', 'warning')
+        await load()
+      }
+    } else {
+      showToast('Saved branch', 'success')
+      await load()
+    }
   }
 
   // ลิงก์โซเชียล/LINE — แอดมินใส่เองได้ทีหลัง (คีย์ business_settings: social_links)
@@ -346,7 +370,7 @@ export function AdminSettings() {
               </label>
               <button onClick={() => void saveBranch()} className="btn btn-success text-sm">💾 บันทึกสาขา</button>
             </div>
-            <div className="text-xs font-mono text-brand-muted mt-2 mb-1">operating_hours (JSON)</div>
+            <div className="text-xs font-mono text-brand-muted mt-2 mb-1">operating_hours (JSON) — เวลาเปิด/ปิดนี้ถูกบันทึกลง business_settings.hours ด้วย (หน้าแรก/เช็คเอาท์/มาสคอตอ่านค่านี้)</div>
             <textarea className="input font-mono w-full" rows={3}
               value={JSON.stringify(branch.operating_hours ?? {}, null, 2)}
               onChange={(e) => { try { setBranch({ ...branch, operating_hours: JSON.parse(e.target.value) }) } catch { /* แก้ต่อไป */ } }} />
