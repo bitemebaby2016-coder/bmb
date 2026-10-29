@@ -1,0 +1,26 @@
+{
+  "at": "2026-10-29T10:03:53.649Z",
+  "precheck": {
+    "ledgerTop": "[{\"version\":\"171\",\"name\":\"171_my_role_rpc\"},{\"version\":\"170\",\"name\":\"170_product_cost_margin_fields\"},{\"version\":\"169\",\"name\":\"169_pod_path_percent_encoding\"}]",
+    "fnBefore": "[{\"has_cap\":false,\"has_marker\":false}]"
+  },
+  "apply": "[]",
+  "verify": {
+    "fnAfter": "[{\"has_cap\":true,\"has_marker\":true}]",
+    "acl": "[{\"grantee\":\"authenticated\",\"privilege_type\":\"EXECUTE\"},{\"grantee\":\"postgres\",\"privilege_type\":\"EXECUTE\"},{\"grantee\":\"service_role\",\"privilege_type\":\"EXECUTE\"}]"
+  },
+  "record": {
+    "ins172": "[]",
+    "ledgerTopAfter": "[{\"version\":\"172\",\"name\":\"172_discount_cap_15pct\"},{\"version\":\"171\",\"name\":\"171_my_role_rpc\"},{\"version\":\"170\",\"name\":\"170_product_cost_margin_fields\"},{\"version\":\"169\",\"name\":\"169_pod_path_percent_encoding\"},{\"version\":\"168\",\"name\":\"168_multi_job_rider_route\"}]"
+  },
+  "assertions": {
+    "hadNoCapBefore": true,
+    "hasCapAfter": true,
+    "markerAfter": true,
+    "authenticatedGrant": true,
+    "noPublicGrant": true,
+    "ledgerTopIs172": true,
+    "has172": true
+  },
+  "allPass": true
+}

@@ -1,0 +1,8 @@
+docs+evidence: R21e APPLIED production (m172+m173 ledger top=173 ALL_PASS · probe has_cap=true · Contract 214 + CI 640 green) + TEST_PACK M1-M12 + ลบ msg/junk files
+
+- e2e/r21eApply172-result.json + e2e/r21eApply173-result.json = ALL_PASS
+  (ledger top=173 · 3 fn = bigint · mask เก่าหมด · cap มีจริง)
+- e2e/r21eProdIdProbe.json = หลักฐานก่อน/หลัง (ก่อน: ord- ###########-xxxxxx)
+- docs: MASTER_STATUS (R21e = APPLIED) · QA review (2.8/B9 ปิด · §R21e) ·
+  AI_WORK_STATE · แฮนออฟ §3 (งานค้างทั้งหมดของ AI ปิดแล้ว — เหลือ Owner retest §M)
+- ลบไฟล์ขยะ: e2e/commitmsg21efix.txt · e2e/discountScan.txt

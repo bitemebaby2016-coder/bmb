@@ -1,0 +1,26 @@
+{
+  "at": "2026-10-29T10:04:10.298Z",
+  "precheck": {
+    "ledgerTop": "[{\"version\":\"172\",\"name\":\"172_discount_cap_15pct\"},{\"version\":\"171\",\"name\":\"171_my_role_rpc\"},{\"version\":\"170\",\"name\":\"170_product_cost_margin_fields\"}]",
+    "fnBefore": "[{\"proname\":\"create_order_with_items\",\"has_bigint\":false,\"has_old_mask\":true},{\"proname\":\"orders_notify_hook\",\"has_bigint\":false,\"has_old_mask\":true},{\"proname\":\"write_order_status_history\",\"has_bigint\":false,\"has_old_mask\":true}]"
+  },
+  "apply": "[]",
+  "verify": {
+    "fnAfter": "[{\"proname\":\"create_order_with_items\",\"has_bigint\":true,\"has_old_mask\":false},{\"proname\":\"orders_notify_hook\",\"has_bigint\":true,\"has_old_mask\":false},{\"proname\":\"write_order_status_history\",\"has_bigint\":true,\"has_old_mask\":false}]"
+  },
+  "record": {
+    "ins173": "[]",
+    "ledgerTopAfter": "[{\"version\":\"173\",\"name\":\"173_order_id_bigint_fix\"},{\"version\":\"172\",\"name\":\"172_discount_cap_15pct\"},{\"version\":\"171\",\"name\":\"171_my_role_rpc\"},{\"version\":\"170\",\"name\":\"170_product_cost_margin_fields\"},{\"version\":\"169\",\"name\":\"169_pod_path_percent_encoding\"}]"
+  },
+  "assertions": {
+    "threeFnsExist": true,
+    "orderFnBigint": true,
+    "notifyFnBigint": true,
+    "oshFnBigint": true,
+    "noOldMaskLeft": true,
+    "orderFnChanged": true,
+    "ledgerTopIs173": true,
+    "has173": true
+  },
+  "allPass": true
+}

@@ -34,8 +34,8 @@
 
 ## §3. งานที่ต้องทำต่อ (เรียงลำดับความสำคัญ)
 
-1. **🆕 ขั้นแรกของแชทใหม่ — ปิดรอบ R21e:** (ก) เช็ค CI ของ commit รอบ R21e = `node e2e/r19bCi.cjs <full-sha>` (1 ครั้ง ไม่ต้อง poll) · (ข) **ถ้าเขียว = apply ขึ้น production ทีละไฟล์**: `node e2e/r21eApply172.cjs` (cap 15%) → `node e2e/r21eApply173.cjs` (id fix) — evidence อยู่ `e2e/r21eApply17*-result.json` · ledger ต้องจบ **top=173** · (ค) probe ซ้ำ `node e2e/r21eProdIdProbe.cjs` — ออเดอร์ใหม่ id ต้องไม่มี `#`/space · (ง) จด ledger 172/173 + evidence ลง MASTER_STATUS §1.3 + commit ปิดรอบ
-2. **🆕 retest ส่ง Owner = `docs/BMB_PRODUCTION_TEST_PACK.md` §M (M1-M12)** — ครอบคลุมทุกอย่างที่ทำ/apply รอบ R21: ต้นทุน/กำไร (170) · พิมพ์ครัว · **cap 15% (172)** · **ประตูตรวจสลิป** · แจ้งเตือนครัว→หน้าครัว · พร้อมส่ง→delivery focus · preparing=หักสต็อกรวม · my_role (171) · Auth A1-A6 · **id ออเดอร์ใหม่ (173)** · LoadErrorBanner · EF CORS · (เดิม: N1 แถบสถานะ · N3 auth listener · N2 Backend doc)
+1. **✅ ปิดรอบ R21e แล้ว (2026-10-29):** CI = Contract **#214 ✓** + CI **#640 ✓** (m172/173 พิสูจน์บน PG จริง) · **apply production แล้ว**: `r21eApply172-result.json` + `r21eApply173-result.json` = **ALL_PASS · ledger top=173** · probe หลังแก้ = `has_cap=true` · งานที่เหลือของแชทใหม่ = **ข้อ 2 (ส่ง Owner retest)** + ข้อ 3-6 ด้านล่าง
+2. **🆕 retest ส่ง Owner = `docs/BMB_PRODUCTION_TEST_PACK.md` §M (M1-M12)** — ครอบคลุมทุกอย่างที่ทำ/apply รอบ R21: ต้นทุน/กำไร (170) · พิมพ์ครัว · **cap 15% (172)** · **ประตูตรวจสลิป** · แจ้งเตือนครัว→หน้าครัว · พร้อมส่ง→delivery focus · preparing=หักสต็อกรวม · my_role (171) · Auth A1-A6 · **id ออเดอร์ใหม่ (173 — สั่งออเดอร์จริง 1 ออเดอร์แล้วดู id)** · LoadErrorBanner · EF CORS · (เดิม: N1 แถบสถานะ · N3 auth listener · N2 Backend doc)
 3. **P1 (Owner ทำใน Google Cloud):** จำกัด **HTTP referrer** ของคีย์ Google Maps (`src/lib/googleMaps.ts` ยิงจาก client 5 จุด) — ทำในคอนโซล ไม่ใช่โค้ด
 4. ~~cosmetic (ค้างเดิม)~~ → **ปิดแล้ว (R21e)**: to_char ids = m173 · haversine 3→1 · confirmOfflinePayment 2→1
 5. external providers (Grab/Lineman/Foodpanda) = รอ Owner ตัดสินใจ credentials หรือปิด module
