@@ -15,7 +15,7 @@ export interface LatLng {
   longitude: number
 }
 
-export type ProviderId = 'bite_drive' | 'grab' | 'lineman' | 'foodpanda'
+export type ProviderId = 'bite_drive' | 'grab' | 'lineman' | 'foodpanda' | 'lalamove'
 
 export type ProviderStatusKind = 'live' | 'sandbox' | 'mockup_pending'
 

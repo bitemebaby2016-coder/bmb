@@ -1,0 +1,35 @@
+
+[1m[46m RUN [49m[22m [36mv3.2.7 [39m[90mD:/A PROJECT/Bite Me Baby[39m
+
+[90mstderr[2m | src/__tests__/ordersPaged.test.ts[2m > [22m[2mgetOrdersPaged contract (W4-E-1 D9)[2m > [22m[2merrors degrade gracefully to empty result (contract)
+[22m[39m[getOrdersPaged] Error: { code: [32m'PGRST'[39m, message: [32m'forced'[39m }
+
+[90mstderr[2m | src/__tests__/ordersPaged.test.ts[2m > [22m[2mgetOrdersPaged contract (W4-E-1 D9)[2m > [22m[2merrors degrade gracefully to empty result (contract)
+[22m[39m[getOrdersAggregated] count error: { code: [32m'PGRST'[39m, message: [32m'forced'[39m }
+
+ [32m✓[39m src/__tests__/ordersPaged.test.ts [2m([22m[2m12 tests[22m[2m)[22m[32m 37[2mms[22m[39m
+[90mstderr[2m | src/__tests__/adminOrdersOp.test.ts[2m > [22m[2m3B-2A · client actions stay on canonical authority (mock RPC contract)[2m > [22m[2minvalid transition is blocked (RPC error → null, no client mutation)
+[22m[39m[updateOrderStatus] transition error: {
+  code: [32m'ERR_INVALID_TRANSITION'[39m,
+  message: [32m'ERR_INVALID_TRANSITION: pending -> delivered'[39m
+}
+
+[90mstderr[2m | src/__tests__/adminOrdersOp.test.ts[2m > [22m[2m3B-2A · read-model helpers degrade gracefully (RLS-scoped reads)[2m > [22m[2mforced transport error degrades to [] (no crash on Admin Orders)
+[22m[39m[getOrderStatusHistory] Error: { code: [32m'PGRST'[39m, message: [32m'forced'[39m }
+
+[90mstderr[2m | src/__tests__/adminOrdersOp.test.ts[2m > [22m[2m3B-2A · read-model helpers degrade gracefully (RLS-scoped reads)[2m > [22m[2mforced transport error degrades to [] (no crash on Admin Orders)
+[22m[39m[getDeliveryAssignmentsFor] Error: { code: [32m'PGRST'[39m, message: [32m'forced'[39m }
+
+[90mstderr[2m | src/__tests__/adminOrdersOp.test.ts[2m > [22m[2m3B-2A · read-model helpers degrade gracefully (RLS-scoped reads)[2m > [22m[2mforced transport error degrades to [] (no crash on Admin Orders)
+[22m[39m[getOrderAuditTrail] Error: { code: [32m'PGRST'[39m, message: [32m'forced'[39m }
+
+ [32m✓[39m src/__tests__/adminOrdersOp.test.ts [2m([22m[2m20 tests[22m[2m)[22m[32m 218[2mms[22m[39m
+ [32m✓[39m src/__tests__/cartPersistence.test.ts [2m([22m[2m11 tests[22m[2m)[22m[32m 43[2mms[22m[39m
+ [32m✓[39m src/__tests__/adminOrdersModeFilter.test.ts [2m([22m[2m6 tests[22m[2m)[22m[33m 971[2mms[22m[39m
+   [33m[2m✓[22m[39m AdminOrders — mode filter wiring (Phase 3 / RC-1 / INV-11)[2m > [22minitial load: all modes → orderMode = undefined (ไม่กรองฝั่ง server) [33m 316[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m4 passed[39m[22m[90m (4)[39m
+[2m      Tests [22m [1m[32m49 passed[39m[22m[90m (49)[39m
+[2m   Start at [22m 20:50:18
+[2m   Duration [22m 11.90s[2m (transform 3.83s, setup 439ms, collect 6.30s, tests 1.27s, environment 25.91s, prepare 3.48s)[22m
+

@@ -83,6 +83,10 @@ export interface OrderForm {
   status: string
   total_amount: number
   delivery_fee: number
+  // [Task 1 · T1-c] optional เพราะมาจาก select('*') — คอลัมน์มีบน orders ณ ตอน hydrate
+  // จึงอ่านได้ (ไม่มี = undefined → ฝั่ง display ใช้ 0 และป้าย "ประมาณการ" กำกับเสมอ)
+  subtotal?: number
+  discount_amount?: number
   payment_method: string
   payment_status: string
   delivery_address: string

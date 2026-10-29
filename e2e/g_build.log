@@ -1,0 +1,146 @@
+[36mvite v8.2.2 [32mbuilding client environment for production...[36m[39m
+transforming...
+Found 1 warning while optimizing generated CSS:
+
+[2m│   }[22m
+[2m│   .text-\[var\(--theater-\*\)\] {[22m
+[2m│[22m     color: var(--theater-*);
+[2m┆[22m                          [33m[2m^--[22m Unexpected token Delim('*')[39m
+[2m┆[22m
+[2m│   }[22m
+[2m│   .text-\[var\(--theater-fg\)\] {[22m
+
+✓ 310 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/registerSW.js                                 0.13 kB
+dist/manifest.webmanifest                          0.66 kB
+dist/index.html                                    3.79 kB │ gzip:  1.52 kB
+dist/assets/VoiceDemoPage-EybBzksB.css             5.74 kB │ gzip:  1.63 kB
+dist/assets/index-CbLmrLdT.css                   147.22 kB │ gzip: 27.11 kB
+dist/assets/TalkToBitePage-CWDEHWWd.js             0.17 kB │ gzip:  0.15 kB
+dist/assets/bmbStorage-CuSoL-ax.js                 0.24 kB │ gzip:  0.18 kB
+dist/assets/supabase-CEubkZSk.js                   0.38 kB │ gzip:  0.30 kB
+dist/assets/TalkToBiteHomePage-CU1ZeZDA.js         0.43 kB │ gzip:  0.34 kB
+dist/assets/contentApproval-DgjVGDsX.js            0.63 kB │ gzip:  0.36 kB
+dist/assets/state-vendor-Brj8_dxs.js               0.70 kB │ gzip:  0.43 kB
+dist/assets/rolldown-runtime-hePW80VL.js           0.71 kB │ gzip:  0.42 kB
+dist/assets/addonDisplay-5L4ToLUz.js               0.81 kB │ gzip:  0.45 kB
+dist/assets/authRecovery-CsAUcrQ_.js               0.86 kB │ gzip:  0.50 kB
+dist/assets/reviewApi-B5Gr-Ups.js                  0.99 kB │ gzip:  0.52 kB
+dist/assets/bmbAdminApi_users-DJ6Z9oMC.js          1.06 kB │ gzip:  0.62 kB
+dist/assets/adminTenantApi-E9ipe5m3.js             1.15 kB │ gzip:  0.40 kB
+dist/assets/addressPhoto-CiS3y0EL.js               1.18 kB │ gzip:  0.68 kB
+dist/assets/bmbAdminApi_inventory-CTcAhlHt.js      1.21 kB │ gzip:  0.51 kB
+dist/assets/orderVocabulary-9O4i6JM-.js            1.22 kB │ gzip:  0.47 kB
+dist/assets/ToastContainer-W4BcSkaP.js             1.27 kB │ gzip:  0.68 kB
+dist/assets/auditLog-DlFKhTLc.js                   1.64 kB │ gzip:  0.74 kB
+dist/assets/FaqPage-CMgaMxor.js                    1.80 kB │ gzip:  0.86 kB
+dist/assets/adminOrderDisplay-CAtoVFiV.js          1.82 kB │ gzip:  0.70 kB
+dist/assets/rewardsStore-BfERkr6y.js               2.06 kB │ gzip:  0.80 kB
+dist/assets/loyaltyClient-BT1DDsR8.js              2.63 kB │ gzip:  1.10 kB
+dist/assets/socialLogin-CruK5M50.js                2.83 kB │ gzip:  1.18 kB
+dist/assets/bmbAdminApi_promotions-CTcnG9ZK.js     2.98 kB │ gzip:  1.10 kB
+dist/assets/pushService-SjAu8e2M.js                3.15 kB │ gzip:  1.28 kB
+dist/assets/passkeyLogin-x3XzOY2t.js               3.19 kB │ gzip:  1.25 kB
+dist/assets/googleMaps-BahH_a9T.js                 3.37 kB │ gzip:  1.76 kB
+dist/assets/bmbMenuSchedule-BNZoVlqV.js            3.59 kB │ gzip:  1.50 kB
+dist/assets/ReviewPage-CjBmpPmO.js                 3.65 kB │ gzip:  1.52 kB
+dist/assets/AdminNotifications-DHp2eLao.js         3.75 kB │ gzip:  1.40 kB
+dist/assets/AboutPage-C4fUjDVU.js                  3.80 kB │ gzip:  1.20 kB
+dist/assets/orderPolicy-DSALs-zr.js                3.85 kB │ gzip:  1.45 kB
+dist/assets/AdminBilling-B3FvMPgS.js               3.97 kB │ gzip:  1.66 kB
+dist/assets/ResetPasswordPage-B-tRRfDA.js          4.00 kB │ gzip:  1.50 kB
+dist/assets/AdminPortfolio-eRMxGNWc.js             4.14 kB │ gzip:  1.72 kB
+dist/assets/posApi-Ch85P8wI.js                     4.18 kB │ gzip:  1.63 kB
+dist/assets/RiderMiniMap-InZFch55.js               4.41 kB │ gzip:  1.90 kB
+dist/assets/AuditLogPage-DXJ5mpPv.js               4.48 kB │ gzip:  1.74 kB
+dist/assets/RegisterPage-gqhx2oAl.js               4.67 kB │ gzip:  1.72 kB
+dist/assets/OrdersPage-Dlb-ZZCf.js                 4.69 kB │ gzip:  1.94 kB
+dist/assets/BlogPage-CsWdIrqS.js                   4.75 kB │ gzip:  1.63 kB
+dist/assets/theaterDailyCopy-BrLBOp6z.js           4.87 kB │ gzip:  1.81 kB
+dist/assets/VotePage-fl5dsVJ9.js                   5.01 kB │ gzip:  2.01 kB
+dist/assets/ViralPage-DvyZU5zO.js                  5.38 kB │ gzip:  1.97 kB
+dist/assets/PromotionsPage-CDdjgPJb.js             5.62 kB │ gzip:  2.13 kB
+dist/assets/RandomMenuPage-B-xFmHsv.js             5.85 kB │ gzip:  2.10 kB
+dist/assets/aiServerMemory-DbvpLdyH.js             5.86 kB │ gzip:  2.08 kB
+dist/assets/PrivacyPage-BM5i-90N.js                5.91 kB │ gzip:  1.55 kB
+dist/assets/NotificationCenterPage-BwBdT1Uf.js     6.10 kB │ gzip:  2.50 kB
+dist/assets/CartPage-BQ4LHMIG.js                   6.39 kB │ gzip:  2.19 kB
+dist/assets/TermsPage-DFfpxdPM.js                  6.40 kB │ gzip:  1.71 kB
+dist/assets/ContactPage-WQDqQenF.js                6.50 kB │ gzip:  2.32 kB
+dist/assets/bmbAdminApi_rounds-C0bDZjoQ.js         6.88 kB │ gzip:  2.27 kB
+dist/assets/AdminReports-DiFJd90h.js               6.89 kB │ gzip:  2.06 kB
+dist/assets/AdminErrorsPage-9xZATrcj.js            6.92 kB │ gzip:  2.38 kB
+dist/assets/paymentExceptions-B2XwxlPD.js          7.54 kB │ gzip:  2.41 kB
+dist/assets/AdminRecipes-C6q1G_Kl.js               7.62 kB │ gzip:  2.62 kB
+dist/assets/RewardsPage-BSzze2-t.js                7.67 kB │ gzip:  2.67 kB
+dist/assets/SharePage-B6tmNRtx.js                  7.78 kB │ gzip:  2.38 kB
+dist/assets/bmbAdminApi_products-DjR5-GFO.js       8.22 kB │ gzip:  1.94 kB
+dist/assets/VoiceDemoPage-COBUhL51.js              8.25 kB │ gzip:  2.93 kB
+dist/assets/AdminCustomers-UvSyvA7f.js             8.26 kB │ gzip:  3.06 kB
+dist/assets/promotionClient-D2yrYjZu.js            8.69 kB │ gzip:  2.97 kB
+dist/assets/AdminOnboarding-BfWGzjJu.js            9.25 kB │ gzip:  3.11 kB
+dist/assets/aiVoice-DY3K_Ye3.js                    9.75 kB │ gzip:  3.55 kB
+dist/assets/FoodTheater-Bu39NJGH.js               10.11 kB │ gzip:  3.60 kB
+dist/assets/InventoryPage-B0Hu-m1Y.js             10.50 kB │ gzip:  3.01 kB
+dist/assets/ProfilePage-BYQThdpe.js               10.85 kB │ gzip:  2.86 kB
+dist/assets/printService-Cdt20sMq.js              11.05 kB │ gzip:  4.20 kB
+dist/assets/MenuPage-BBNGAhyE.js                  12.30 kB │ gzip:  4.38 kB
+dist/assets/AdminDashboard-DcuV7A_u.js            13.32 kB │ gzip:  3.95 kB
+dist/assets/aiService-VecaY2dp.js                 13.85 kB │ gzip:  5.21 kB
+dist/assets/AdminPos-9SUsz-Nd.js                  13.94 kB │ gzip:  4.30 kB
+dist/assets/AdminPromotions-CDBkkhqS.js           15.00 kB │ gzip:  4.18 kB
+dist/assets/OrderTrackPage-BgygqBbp.js            15.18 kB │ gzip:  4.47 kB
+dist/assets/AdminKitchen-BMPquzl9.js              15.41 kB │ gzip:  4.97 kB
+dist/assets/AdminMedia-DD4FJfZQ.js                16.36 kB │ gzip:  4.70 kB
+dist/assets/AdminSettings-tcBI38E1.js             17.43 kB │ gzip:  5.17 kB
+dist/assets/LoginPage-B66Rg_2e.js                 18.38 kB │ gzip:  5.20 kB
+dist/assets/bmbAdminApi_orders-Bnc1dFX6.js        22.45 kB │ gzip:  7.02 kB
+dist/assets/AdminOrders-Co7AvJi8.js               27.94 kB │ gzip:  8.67 kB
+dist/assets/RiderPwaPage-TF08jxRU.js              28.15 kB │ gzip:  7.82 kB
+dist/assets/TalkToBite-CqOfdCQV.js                29.73 kB │ gzip:  7.85 kB
+dist/assets/DeliveryManagement-CimgEvX8.js        30.50 kB │ gzip:  7.64 kB
+dist/assets/PaymentConfirmationPage-Div5SLK4.js   37.23 kB │ gzip: 11.46 kB
+dist/assets/AdminMarketing-CjvU7C0O.js            66.11 kB │ gzip: 15.58 kB
+dist/assets/CheckoutPage-BoRiuP3z.js              67.23 kB │ gzip: 16.98 kB
+dist/assets/AdminHubs-CA7Bqz5i.js                114.71 kB │ gzip: 26.28 kB
+dist/assets/supabase-vendor-OACgMRo1.js          164.08 kB │ gzip: 40.12 kB
+dist/assets/index-DLevOS4H.js                    246.10 kB │ gzip: 68.32 kB
+dist/assets/react-vendor-DK_VtTwx.js             247.82 kB │ gzip: 79.44 kB
+
+[33m[33m[INEFFECTIVE_DYNAMIC_IMPORT] [0msrc/lib/notificationService.ts is dynamically imported by src/store/notificationStore.ts but also statically imported by src/components/notification/NotificationDropdown.tsx, src/pages/NotificationCenterPage.tsx, dynamic import will not move module into another chunk.
+[39m
+[33m[33m[INEFFECTIVE_DYNAMIC_IMPORT] [0msrc/lib/bmbAdminApi_settings.ts is dynamically imported by src/components/theater/FoodTheater.tsx, src/lib/printService.ts, src/pages/HomePage.tsx but also statically imported by src/components/admin/HomePopularManager.tsx, src/components/admin/OrderPolicyPanel.tsx, src/lib/bmbAdminApi_rounds.ts, src/lib/platformConfigBootstrap.ts, src/pages/CheckoutPage.tsx, ..., dynamic import will not move module into another chunk.
+[39m
+[32m✓ built in 12.06s[39m
+
+PWA v1.3.0
+Building src/sw.ts service worker ("es" format)...
+[36mvite v8.2.2 [32mbuilding client environment for production...[36m[39m
+
+[43m[30m WARN [39m[49m [36minlineDynamicImports[39m option is deprecated, please use [36mcodeSplitting: false[39m instead.
+
+transforming...
+✓ 59 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/sw.mjs  17.90 kB │ gzip: 5.98 kB
+
+[32m✓ built in 62ms[39m
+
+PWA v1.3.0
+mode      injectManifest
+format:   es
+precache  145 entries (2432.42 KiB)
+files generated
+  dist/sw.js
+[33m[33m[PLUGIN_TIMINGS] [0mPlugin hooks ran for 7.7s of this 12.0s build (64%).
+The slowest hooks, timed inside each callback (the wait before a callback starts is excluded, the time it awaits is included):
+  - vite-plugin-pwa:build closeBundle (21%, 2.5s, 1 call)
+Additional hook time came from the hooks below and from hooks under 1s.
+1 hook is listed without a time. Its calls overlapped, so the time inside one call includes work from other calls. To find its cost, profile the build with `node --cpu-prof`:
+  - @tailwindcss/vite:generate:build transform (4 calls)
+See https://rolldown.rs/reference/InputOptions.checks#plugintimings for more details.
+[39m
+BUILD_EXIT=0  

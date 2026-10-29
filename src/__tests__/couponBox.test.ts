@@ -233,3 +233,63 @@ describe('CouponBox — หนึ่ง UI สำหรับ Cart+Checkout (M2)
     expect(useCartStore.getState().couponCode).toBe('')
   })
 })
+
+describe('กฎห้ามซ้อน คูปอง✗แต้ม — ผ่าน store จริง (Task 1 · Owner)', () => {
+  beforeEach(() => seedCart())
+
+  it('applyCouponCode ถูกปฏิเสธทันทีเมื่อบิลใช้แต้มเป็นเงิน (ไม่ยิง network · โค้ดไม่เข้า store)', async () => {
+    useCartStore.getState().setPointsRedemption(30)
+    const callsBefore = m.fetchCouponEvaluation.mock.calls.length
+    const result = await applyCouponCode('SAVE10')
+    expect(result.ok).toBe(false)
+    if (!result.ok) expect(result.reason).toBe('stack_conflict')
+    expect(m.fetchCouponEvaluation.mock.calls.length).toBe(callsBefore)
+    expect(useCartStore.getState().couponCode).toBe('')
+    expect(useCartStore.getState().appliedPromotion).toBeNull()
+  })
+
+  it('revalidateCouponForSubmit ปฏิเสธก่อนยิง network เมื่อคูปองลดจริง + มีแต้มในบิลเดียวกัน', async () => {
+    const s = useCartStore.getState()
+    s.setCouponCode('SAVE10')
+    s.setAppliedPromotion(row())
+    s.recalculate()
+    // precondition: คูปองลดจริงในบิล — ต้องอ่าน state ใหม่ (zustand แทนที่ object · snapshot เก่าค้างค่าเดิม)
+    expect(useCartStore.getState().discount).toBeGreaterThan(0)
+    s.setPointsRedemption(30)
+    const callsBefore = m.fetchCouponEvaluation.mock.calls.length
+    const result = await revalidateCouponForSubmit(200)
+    expect(result.ok).toBe(false)
+    if (!result.ok) expect(result.message).toContain('ร่วมกับการแลกแต้ม')
+    expect(m.fetchCouponEvaluation.mock.calls.length).toBe(callsBefore)
+  })
+
+  it('setPointsRedemption sanitize (ลบ/NaN → 0) และ clearCart รีเซ็ตเป็น 0', () => {
+    const s = useCartStore.getState()
+    s.setPointsRedemption(-5)
+    expect(useCartStore.getState().pointsRedemption).toBe(0)
+    s.setPointsRedemption(Number.NaN)
+    expect(useCartStore.getState().pointsRedemption).toBe(0)
+    s.setPointsRedemption(45)
+    expect(useCartStore.getState().pointsRedemption).toBe(45)
+    s.clearCart()
+    expect(useCartStore.getState().pointsRedemption).toBe(0)
+  })
+
+  it('render CouponBox ขณะคูปองลดจริง+มีแต้ม → โชว์ banner coupon-stack-conflict (ไม่มีแต้ม = ไม่โชว์)', async () => {
+    m.listAvailableCoupons.mockResolvedValue([])
+    const c = await renderBox()
+    await act(async () => { await Promise.resolve() })
+    expect(c.querySelector('[data-testid="coupon-stack-conflict"]')).toBeNull()
+
+    await act(async () => {
+      // wrap ทั้งชุดใน act — ห้ามให้ store update ยิงเข้า component นอก act (กัน warning)
+      const s = useCartStore.getState()
+      s.setCouponCode('SAVE10')
+      s.setAppliedPromotion(row())
+      s.recalculate()
+      s.setPointsRedemption(30)
+      await Promise.resolve()
+    })
+    expect(c.querySelector('[data-testid="coupon-stack-conflict"]')).toBeTruthy()
+  })
+})

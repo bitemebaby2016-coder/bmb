@@ -5,7 +5,9 @@
 import { describe, it, expect } from 'vitest'
 import {
   evaluateDiscountGuardrail,
+  evaluateDiscountStacking,
   describeGuardrail,
+  describeStacking,
   MAX_DISCOUNT_PCT,
 } from '@/lib/discountGuardrail'
 
@@ -84,5 +86,70 @@ describe('evaluateDiscountGuardrail — เพดาน 15%', () => {
   it('ค่า maxPct เพี้ยน (0/ลบ/ไม่ใช่ตัวเลข) ใช้ 15% ตามกติกาเดิม', () => {
     expect(evaluateDiscountGuardrail(1000, { coupon: 151 }, 0).maxPct).toBe(15)
     expect(evaluateDiscountGuardrail(1000, { coupon: 151 }, -5 as number).maxPct).toBe(15)
+  })
+})
+
+describe('evaluateDiscountStacking — ห้ามซ้อน คูปอง x แต้ม (Owner Task 1)', () => {
+  it('คูปองส่วนลดหลัก + แลกแต้มลดเงินสด ในบิลเดียวกัน = STACK_CONFLICT ห้ามผ่าน', () => {
+    const r = evaluateDiscountStacking({ coupon: 50, points: 30 })
+    expect(r.allowed).toBe(false)
+    expect(r.code).toBe('STACK_CONFLICT')
+    expect(r.coupon).toBe(50)
+    expect(r.points).toBe(30)
+    expect(r.message).toContain('ร่วมกับการแลกแต้ม')
+    expect(r.message).toContain('ไม่ได้')
+    expect(describeStacking(r)).toBe(r.message)
+  })
+
+  it('มีแค่คูปอง หรือ มีแค่แต้ม (หรือไม่มีเลย) = OK', () => {
+    expect(evaluateDiscountStacking({ coupon: 100 }).allowed).toBe(true)
+    expect(evaluateDiscountStacking({ points: 100 }).allowed).toBe(true)
+    expect(evaluateDiscountStacking({}).allowed).toBe(true)
+    expect(evaluateDiscountStacking().code).toBe('OK')
+    expect(describeStacking(evaluateDiscountStacking({ coupon: 100 }))).toBe('')
+  })
+
+  it('Wallet Credit = payment-side: มากับคูปอง หรือ มากับแต้ม ก็ไม่ขัดกฎ', () => {
+    const walletWithCoupon = evaluateDiscountStacking({ coupon: 50, walletCredit: 200 })
+    expect(walletWithCoupon.allowed).toBe(true)
+    expect(walletWithCoupon.walletCredit).toBe(200)
+
+    const walletWithPoints = evaluateDiscountStacking({ points: 50, walletCredit: 200 })
+    expect(walletWithPoints.allowed).toBe(true)
+    expect(walletWithPoints.walletCredit).toBe(200)
+  })
+
+  it('Wallet ไม่ได้ช่วยให้ คูปอง+แต้ม ที่ผิดกฎผ่าน (กฎคูปอง✗แต้มยังห้ามแม้มี wallet)', () => {
+    const r = evaluateDiscountStacking({ coupon: 50, points: 50, walletCredit: 100 })
+    expect(r.allowed).toBe(false)
+    expect(r.code).toBe('STACK_CONFLICT')
+    expect(r.walletCredit).toBe(100)
+  })
+
+  it('Wallet Credit ไม่ถูกนับเป็นส่วนลด — ไม่แตะเพดาน 15% เดิม', () => {
+    // ยอด 1000 · wallet 900 = ไม่ใช่ส่วนลด → cap guard เดิมมองไม่เห็น wallet อยู่แล้ว
+    const cap = evaluateDiscountGuardrail(1000, { coupon: 150 })
+    const stack = evaluateDiscountStacking({ coupon: 150, walletCredit: 900 })
+    expect(cap.allowed).toBe(true) // เพดานเดิมคิดเฉพาะ coupon → ผ่าน
+    expect(stack.allowed).toBe(true) // wallet ไม่ทำให้ขัดกฎ
+    expect(cap.totalDiscount).toBe(150) // ยอดส่วนลดไม่รวม wallet
+  })
+
+  it('ค่าเพี้ยน (ลบ/NaN/Infinity) ถูก neutralize ก่อนตัดสิน', () => {
+    const r = evaluateDiscountStacking({
+      coupon: Number.NaN,
+      points: -40,
+      walletCredit: Number.POSITIVE_INFINITY,
+    })
+    expect(r.allowed).toBe(true)
+    expect(r.coupon).toBe(0)
+    expect(r.points).toBe(0)
+    expect(r.walletCredit).toBe(0)
+  })
+
+  it('0 + 0 = ไม่ขัดกฎ (บิลไม่มีส่วนลดใด ๆ)', () => {
+    const r = evaluateDiscountStacking({ coupon: 0, points: 0, walletCredit: 0 })
+    expect(r.allowed).toBe(true)
+    expect(r.code).toBe('OK')
   })
 })

@@ -1,0 +1,14 @@
+
+[1m[46m RUN [49m[22m [36mv3.2.7 [39m[90mD:/A PROJECT/Bite Me Baby[39m
+
+ [32m✓[39m src/__tests__/roleMatrixCoverage.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 15[2mms[22m[39m
+ [32m✓[39m src/__tests__/adminNavFeedback.test.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 20[2mms[22m[39m
+ [32m✓[39m src/__tests__/roleSystem.test.ts [2m([22m[2m10 tests[22m[2m)[22m[32m 28[2mms[22m[39m
+ [32m✓[39m src/__tests__/adminUi.test.ts [2m([22m[2m14 tests[22m[2m)[22m[33m 321[2mms[22m[39m
+ [32m✓[39m src/__tests__/adminPreOrdersConsolidation.test.ts [2m([22m[2m7 tests[22m[2m)[22m[33m 362[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m5 passed[39m[22m[90m (5)[39m
+[2m      Tests [22m [1m[32m44 passed[39m[22m[90m (44)[39m
+[2m   Start at [22m 20:50:57
+[2m   Duration [22m 13.59s[2m (transform 5.79s, setup 258ms, collect 10.98s, tests 745ms, environment 17.15s, prepare 1.75s)[22m
+

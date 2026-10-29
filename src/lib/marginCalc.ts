@@ -160,3 +160,66 @@ export function marginTierLabel(tier: MarginTier): string {
       return 'กำไรสูง'
   }
 }
+
+// ---------- กำไรระดับออเดอร์สำหรับระบบหลังบ้าน (Master Prompt Task 1 · T1-c) ----------
+// ต่อยอดจาก computeOrderProfit ตัวเดิม — ไฟล์นี้เพิ่มเฉพาะ "ประตูความซื่อ" ก่อนโชว์:
+// ข้อมูลต้นทุนไม่พอ = บอกตรง ๆ ว่าไม่พอ ห้ามโชว์ตัวเลขกำไรปลอม (No evidence = not done)
+
+export interface OrderLineInput {
+  productId: string
+  unitPrice: number
+  quantity: number
+}
+
+export type OrderProfitSummary =
+  | { status: 'empty' }
+  | { status: 'no_cost_data'; message: string }
+  | { status: 'ready'; profit: OrderProfitResult }
+
+/**
+ * สรุปกำไร/ออเดอร์ (display-only) — เรียก computeOrderProfit ที่มีอยู่แล้ว
+ *
+ * กติกาประตูก่อนโชว์:
+ * - ไม่มีบรรทัดสินค้า → 'empty' (ไม่ render อะไร)
+ * - สินค้าหายจากรายการ (ลบออกจาก catalog) → 'no_cost_data'
+ * - price > 0 แต่ต้นทุนรวมหน่วย = 0 (แอดมินยังไม่กรอก cogs/แพ็กเกจจิ้ง/ค่าแรงแฝง)
+ *   → 'no_cost_data' — ห้ามเดา ห้ามสมมติต้นทุน
+ * - อย่างอื่น → 'ready' (profit คำนวณจาก computeOrderProfit เดิมทุกประการ)
+ */
+export function summarizeOrderProfit(
+  lines: OrderLineInput[],
+  productCostById: Record<string, CostInput | undefined>,
+  opts: OrderProfitOptions = {},
+): OrderProfitSummary {
+  const list = Array.isArray(lines) ? lines : []
+  if (list.length === 0) return { status: 'empty' }
+
+  for (const l of list) {
+    const cost = productCostById[l.productId]
+    if (!cost) {
+      return {
+        status: 'no_cost_data',
+        message: 'ข้อมูลต้นทุนไม่ครบ (สินค้าบางรายการไม่อยู่ในแคตตาล็อกแล้ว)',
+      }
+    }
+    const price = toCostNumber(l.unitPrice)
+    if (price > 0 && computeUnitCost(cost) <= 0) {
+      return {
+        status: 'no_cost_data',
+        message: 'ยังไม่มีต้นทุนสินค้าบางรายการ — กรอกต้นทุนที่หน้าสินค้าก่อนดูกำไร',
+      }
+    }
+  }
+
+  return {
+    status: 'ready',
+    profit: computeOrderProfit(
+      list.map((l) => ({
+        price: l.unitPrice,
+        quantity: l.quantity,
+        cost: productCostById[l.productId],
+      })),
+      opts,
+    ),
+  }
+}

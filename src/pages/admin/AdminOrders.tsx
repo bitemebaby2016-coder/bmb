@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { Link, useSearchParams, useNavigate } from 'react-router-dom'
 import { useNotificationStore } from '@/store/notificationStore'
 import { showToast } from '@/components/ui/ToastContainer'
@@ -13,6 +13,8 @@ import {
 } from '@/lib/printService'
 import type { DeliveryAssignmentLiteRow } from '@/lib/bmbAdminApi_orders'
 import { getProductsAdmin } from '@/lib/bmbAdminApi_products'
+import { summarizeOrderProfit, formatBaht, formatPct, type CostInput } from '@/lib/marginCalc'
+import { detectNewPendingOrders, playKitchenChime } from '@/lib/kitchenAlert'
 import { addOnLinesFromChoices } from '@/lib/addonDisplay'
 import {
   orderModeBadge, paymentStateBadge, deliveryStateBadge,
@@ -91,6 +93,10 @@ export function AdminOrders() {
   // Phase C inspection: lazily-loaded lifecycle trace + audit trail per expanded order.
   const [expandedOrder, setExpandedOrder] = useState<string | null>(null)
   const [inspect, setInspect] = useState<{ history: any[]; audit: any[]; loading: boolean }>({ history: [], audit: [], loading: false })
+  // [Task 3 · T3-a] สำเนา orders ล่าสุดไว้ใน ref — ใช้เทียบหา "ออเดอร์เข้าใหม่"
+  // (loadOrders เป็น useCallback ที่ไม่ depend `orders` — closure จะค้างค่าเก่าถ้าไม่มี ref)
+  const ordersRef = useRef<OrderForm[]>([])
+  const chimeBaselineRef = useRef(false)
 
   const loadOrders = useCallback(async (p: number = page, status: string = filterStatus, mode: 'all' | 'SAME_DAY' | 'PRE_ORDER' = filterMode) => {
     setLoadError('')
@@ -104,6 +110,13 @@ export function AdminOrders() {
       
       // TEN-07: filter by active admin branch context\n      branchId: useAdminTenantContextStore.getState().activeBranchId || undefined,
     })
+    // [Task 3 · T3-a] เสียงเตือนออเดอร์เข้า — เทียบกับหน้าก่อนหน้าจริงผ่าน ref
+    // (โหลดแรกของหน้า = baseline เงียบ ไม่ตีกระดิ่งกับของค้างเก่าทั้งหน้า)
+    const prevOrders = ordersRef.current
+    const freshPending = chimeBaselineRef.current ? detectNewPendingOrders(prevOrders, res.orders) : []
+    chimeBaselineRef.current = true
+    ordersRef.current = res.orders
+    if (freshPending.length > 0) playKitchenChime()
     setOrders(res.orders)
     setTotal(res.total)
     const numbers = res.orders.map((o) => o.order_number)
@@ -213,6 +226,9 @@ export function AdminOrders() {
     // R21: รับออเดอร์แล้ว → พิมพ์ใบสั่งอาหารเข้าครัวอัตโนมัติจากเทมเพลตเดิม
     // (fire-and-forget: การพิมพ์พังไม่มีผลกับออเดอร์ — ออเดอร์ยืนยันแล้ว)
     void autoPrintKitchenTicket(orderNumber)
+    // [Task 3 · T3-a] เสียงเตือนพร้อมใบสั่งครัว — อยู่ในจังหวะ click (user gesture)
+    // จึงไม่ติดนโยบาย autoplay ของเบราว์เซอร์
+    playKitchenChime()
   }
 
   // R21 (Owner ask #3): กด "ยืนยันสลิป & รับออเดอร์" ในประตู — ยืนยันเงินด้วย
@@ -504,6 +520,45 @@ export function AdminOrders() {
               </div>
               <div className="text-right">
                 <div className="font-bold text-brand-primary">฿{order.total_amount}</div>
+                {(() => {
+                  // [Task 1 · T1-c] กำไร/ออเดอร์ real-time ในระบบหลังบ้าน — เรียก
+                  // summarizeOrderProfit → computeOrderProfit ที่มีอยู่แล้ว (ไม่มีสูตรใหม่ ·
+                  // ข้อมูลต้นทุนไม่พอ = บอกตรง ๆ ห้ามโชว์ตัวเลขกำไรปลอม)
+                  const costById: Record<string, CostInput> = {}
+                  for (const i of order.items) {
+                    if (costById[i.product_id]) continue
+                    const p = productById[i.product_id]
+                    if (p) {
+                      costById[i.product_id] = {
+                        cogs: p.cogs,
+                        packagingCost: p.packaging_cost,
+                        otherCost: p.other_unit_cost,
+                      }
+                    }
+                  }
+                  const sum = summarizeOrderProfit(
+                    order.items.map((i) => ({
+                      productId: i.product_id,
+                      unitPrice: Number(i.unit_price) || 0,
+                      quantity: Number(i.quantity) || 0,
+                    })),
+                    costById,
+                    { discountTotal: Number(order.discount_amount) || 0 },
+                  )
+                  if (sum.status === 'empty') return null
+                  if (sum.status === 'no_cost_data') {
+                    return (
+                      <div className="text-xs text-brand-muted" data-testid="admin-order-profit-pending">
+                        📊 กำไร: {sum.message}
+                      </div>
+                    )
+                  }
+                  return (
+                    <div className="text-xs font-semibold text-emerald-700" data-testid="admin-order-profit">
+                      📊 กำไรสุทธิ ~{formatBaht(sum.profit.netProfit)} ({formatPct(sum.profit.netMarginPct)})
+                    </div>
+                  )
+                })()}
                 <span className={`badge ${
                   order.status === 'delivered' ? 'badge-success' :
                   order.status === 'preparing' ? 'badge-info' :

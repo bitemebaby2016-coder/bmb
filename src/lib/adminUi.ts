@@ -67,6 +67,8 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
       { to: '/admin/errors', label: 'ปัญหาระบบ', icon: '\uD83E\uDE79' },
       { to: '/admin/settings', label: 'ตั้งค่าร้าน', icon: '\u2699\uFE0F' },
       { to: '/admin/tenants', label: 'องค์กรและแบรนด์', icon: '\uD83C\uDFE2' },
+      { to: '/admin/onboarding', label: 'เปิดร้านใหม่ (Wizard)', icon: '✨' },
+      { to: '/admin/billing', label: 'งวดบริการ (Billing)', icon: '💳' },
     ],
   },
 ]

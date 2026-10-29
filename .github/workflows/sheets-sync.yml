@@ -1,0 +1,59 @@
+# ============================================
+# BMB — sheets-sync (Master Prompt Task 4 · T4-a)
+# สรุปยอดขายรายวัน/รายเดือน → Google Sheets ของร้าน (ผ่าน Apps Script Web App)
+#   daily  00:15 ICT (17:15 UTC) = ปิดวันปฏิทินล่าสุดในกรุงเทพฯ
+#   monthly 00:25 ICT วันที่ 1 (ปิดเดือนล่าสุด)
+# Auth = ชุดเดียวกับ automation-scheduler (platform apikey + x-automation-token
+#   ตัวเดิอ AUTOMATION_TOKEN — ไม่มี secret ใหม่) · EF ตรวจซ้ำเองอีกชั้น
+# Failure: HTTP != 200 หรือ result ไม่ใช่ synced/skipped = step แดงใน Actions history
+# (skipped/not_configured = ยังไม่ได้ตั้ง GOOGLE_SHEETS_WEBHOOK_URL — เงียบ ห้ามแดง)
+# ============================================
+
+name: sheets-sync
+
+on:
+  schedule:
+    - cron: '15 17 * * *'   # 00:15 ICT ทุกวัน
+    - cron: '25 17 1 * *'   # 00:25 ICT วันที่ 1 (รายเดือน)
+  workflow_dispatch:
+    inputs:
+      period:
+        description: 'Which period to sync'
+        required: false
+        default: 'daily'
+        options:
+          - daily
+          - monthly
+
+concurrency:
+  group: bmb-sheets-sync
+  cancel-in-progress: false
+
+permissions: {}
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: sheets_sync_push
+        env:
+          SYNC_URL: https://ivkdfognyiwjcmrhcnwz.supabase.co/functions/v1/sheets-sync
+          TOKEN: ${{ secrets.AUTOMATION_TOKEN }}
+          PERIOD: ${{ github.event.schedule == '25 17 1 * *' && 'monthly' || github.event.inputs.period || 'daily' }}
+        run: |
+          RESP=$(curl -sS -f -X POST "$SYNC_URL" \
+            -H "Content-Type: application/json" \
+            -H "apikey: sb_publishable_Q7AHrjSYOrysDjxS9_ZB-g_NMmytLOH" \
+            -H "x-automation-token: $TOKEN" \
+            -d "{\"period\":\"$PERIOD\"}") || {
+            echo "::error::sheets-sync HTTP failed"; exit 1; }
+          echo "$RESP" | node -e '
+            let s=""; process.stdin.on("data",d=>s+=d).on("end",()=>{
+              try { const j=JSON.parse(s);
+                if (j.result !== "synced" && j.result !== "skipped") {
+                  console.error("::error::sheets-sync result=" + (j.result || j.error)); process.exit(1);
+                }
+                console.log("sheets-sync " + j.result + (j.key ? " key=" + j.key : "") + (j.reason ? " reason=" + j.reason : ""));
+              } catch(e) { console.error("::error::invalid sheets-sync response"); process.exit(1); }
+            })'

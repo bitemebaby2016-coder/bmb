@@ -85,3 +85,11 @@ verify_jwt = true
 [functions.image-gen]
 enabled = true
 verify_jwt = true
+
+# sheets-sync: daily/monthly sales summary → Google Sheets (Task 4 · T4-a).
+#   Called by .github/workflows/sheets-sync.yml with the EXISTING AUTOMATION_TOKEN
+#   (same platform layer as queue-enqueue — handler re-checks x-automation-token).
+#   GOOGLE_SHEETS_WEBHOOK_URL secret optional: unset = skipped/not_configured (quiet).
+[functions.sheets-sync]
+enabled = true
+verify_jwt = true

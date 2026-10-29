@@ -42,7 +42,7 @@ import { revalidateWithCatalog, reportToToastMessage } from '@/lib/cartPersisten
 import { roundBookability, roundStatusLabel, roundCutoffLabel } from '@/lib/deliveryRoundStatus'
 import { normalizePromoCode } from '@/lib/promotionClient'
 // R21 Phase 2 (Owner 2026-10-29): เพดานส่วนลดรวม คูปอง+แต้ม+referral ≤ 15% ของยอดสินค้า
-import { evaluateDiscountGuardrail } from '@/lib/discountGuardrail'
+import { evaluateDiscountGuardrail, evaluateDiscountStacking } from '@/lib/discountGuardrail'
 import { CouponBox, revalidateCouponForSubmit } from '@/components/CouponBox'
 import { ReferralBox, revalidateReferralForSubmit } from '@/components/ReferralBox'
 import { claimReferralCode, describeReferralClaim } from '@/lib/referralClient'
@@ -88,10 +88,14 @@ async function ensureReplaySafeIntent(
 
 export function CheckoutPage() {
   const navigate = useNavigate()
-  const { items, subtotal, discount, total, clearCart, isHydrated, couponCode } = useCartStore()
+  const { items, subtotal, discount, total, clearCart, isHydrated, couponCode, pointsRedemption } = useCartStore()
   // R21 Phase 2 — cart guardrail: คูปอง (ปัจจุบัน) + แต้ม + referral (เมื่อมีในรอบถัดไป)
   // ห้ามรวมกันเกิน 15% ของ "ยอดรวมสินค้า" — pure check ต่อ render (ตัวเลขจิ๋ว ไม่ต้อง memo)
   const discountGuard = evaluateDiscountGuardrail(subtotal, { coupon: discount })
+  // [Task 1 · Owner 2026-10-29] กฎห้ามซ้อน: โค้ดคูปองส่วนลดหลัก ✗ การแลกแต้มลดเงินสด
+  // ในบิลเดียวกัน (Wallet Credit = payment-side ไม่เข้ากฎนี้) — pointsRedemption ยังเป็น 0
+  // จนกว่าจะมีฟีเจอร์แลกเป็นเงิน กฎนี้ให้ผลทันทีที่ค่า > 0 โดยไม่ต้องแก้ไฟล์นี้อีก
+  const stackGuard = evaluateDiscountStacking({ coupon: discount, points: pointsRedemption })
   const customer = useAuthStore((s) => s.customer)
   const justPlaced = useRef(false)
 
@@ -1253,6 +1257,16 @@ export function CheckoutPage() {
               ใช้ส่วนลดแล้ว {discountGuard.totalDiscount.toFixed(2)} บาท ({discountGuard.discountPct.toFixed(1)}%) — อยู่ในเพดาน {discountGuard.maxPct}%
             </div>
           )}
+          {/* [Task 1 · Owner] กฎห้ามซ้อน — คูปอง+แต้มในบิลเดียวกัน = เตือน + บล็อกปุ่มสั่ง */}
+          {!stackGuard.allowed && (
+            <div
+              className="rounded-lg border border-red-300 bg-red-50 p-2 text-xs font-medium text-red-700"
+              role="alert"
+              data-testid="discount-stack-guard"
+            >
+              ⚠️ {stackGuard.message}
+            </div>
+          )}
           {/* A3 (2026-10-22): ค่าส่งโซน = ค่าที่แอดมินตั้ง (ไม่ต้องเบลอเป็น "ประมาณการ");
               ถ้า quote พัง/ยังไม่มี ต้องไม่โชว์ค่าเก่าเหมือนคำนวณแล้ว — ระบุ "รอระบบคำนวณ"
               + ติดป้ายยอดโดยประมาณ (server re-derive ตอนสร้างออเดอร์เสมอ) */}
@@ -1272,10 +1286,10 @@ export function CheckoutPage() {
       <button
         onClick={handlePlaceOrder}
         data-testid="place-order"
-        disabled={isProcessing || !selectedRoundId || !discountGuard.allowed}
+        disabled={isProcessing || !selectedRoundId || !discountGuard.allowed || !stackGuard.allowed}
         className="btn btn-primary w-full text-lg py-4 disabled:opacity-50 disabled:cursor-not-allowed"
       >
-        {isProcessing ? '⏳ กำลังยืนยัน...' : !discountGuard.allowed ? '⚠️ ส่วนลดเกินเพดาน 15% — ลดส่วนลดก่อน' : !selectedRoundId ? (rounds.length > 0 ? '⚠️ ยังไม่มีรอบที่เปิดรับสำหรับวันนี้' : '⚠️ เลือกรอบจัดส่งก่อน') : `✅ ยืนยันสั่งซื้อ${orderMode === 'PRE_ORDER' ? ' (จองล่วงหน้า)' : ''}`}
+        {isProcessing ? '⏳ กำลังยืนยัน...' : !stackGuard.allowed ? '⚠️ ใช้คูปองร่วมกับแต้มไม่ได้ — เลือกอย่างใดอย่างหนึ่ง' : !discountGuard.allowed ? '⚠️ ส่วนลดเกินเพดาน 15% — ลดส่วนลดก่อน' : !selectedRoundId ? (rounds.length > 0 ? '⚠️ ยังไม่มีรอบที่เปิดรับสำหรับวันนี้' : '⚠️ เลือกรอบจัดส่งก่อน') : `✅ ยืนยันสั่งซื้อ${orderMode === 'PRE_ORDER' ? ' (จองล่วงหน้า)' : ''}`}
       </button>
     </div>
   )

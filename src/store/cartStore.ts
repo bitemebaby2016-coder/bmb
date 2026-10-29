@@ -79,6 +79,11 @@ interface CartStore {
   appliedPromotion: PromotionRow | null
   subtotal: number
   discount: number
+  /** [Task 1 · Owner 2026-10-29] จำนวนเงินที่แลกจากแต้มสะสมในบิลเดียวกัน —
+      ฟีเจอร์แลกแต้มเป็นเงินยังไม่มีในระบบ (RewardsPage = request-only) จึงยัง
+      ไม่มีใครเขียนค่า → ค้างที่ 0 เสมอ · กฎห้ามซ้อน (evaluateDiscountStacking)
+      อ่านค่าจากตรงนี้ และให้ผลทันทีที่มีค่า > 0 (บล็อกคูปองทันที) */
+  pointsRedemption: number
   deliveryFee: number
   total: number
   isCheckoutOpen: boolean
@@ -96,6 +101,7 @@ interface CartStore {
   setReferralCode: (code: string) => void
   setAppliedPromotion: (promo: PromotionRow | null) => void
   setDeliveryFee: (fee: number) => void
+  setPointsRedemption: (amount: number) => void
   setCheckoutOpen: (open: boolean) => void
   /** TEN-05: Resolve whether cart survives context change */
   resolveContextChange: (newTenantId: string, newBrandId: string) => 'cleared' | 'kept' | 'error'
@@ -118,6 +124,7 @@ export const useCartStore = create<CartStore>((set, get) => ({
   appliedPromotion: null,
   subtotal: 0,
   discount: 0,
+  pointsRedemption: 0,
   deliveryFee: 0,
   total: 0,
   isCheckoutOpen: false,
@@ -211,7 +218,7 @@ export const useCartStore = create<CartStore>((set, get) => ({
     get().recalculate()
   },
 
-  clearCart: () => set({ items: [], couponCode: '', referralCode: '', appliedPromotion: null, subtotal: 0, discount: 0, deliveryFee: 0, total: 0, order_mode: null, cartTotal: 0 }),
+  clearCart: () => set({ items: [], couponCode: '', referralCode: '', appliedPromotion: null, subtotal: 0, discount: 0, pointsRedemption: 0, deliveryFee: 0, total: 0, order_mode: null, cartTotal: 0 }),
 
   // TEN-05: Resolve whether cart survives context change
   resolveContextChange: (newTenantId: string, newBrandId: string) => {
@@ -261,6 +268,14 @@ export const useCartStore = create<CartStore>((set, get) => ({
   setReferralCode: (code: string) => {
     // [G&R 154] ไม่เรียก recalculate — โค้ดแนะนำเพื่อนไม่กระทบราคา (รางวัลออกตอนออเดอร์ผ่านสถานะ)
     set({ referralCode: code })
+  },
+
+  setPointsRedemption: (amount: number) => {
+    // [Task 1 · Owner 2026-10-29] sanitize เฉย ๆ — ไม่แตะ total math เดิม
+    // (server = authority เรื่องเงิน · ยังไม่มีฟีเจอร์แลกแต้มเป็นเงินใน production
+    //  จึงยังไม่มีใครเรียก setter นี้ — มีไว้เป็นจุดต่อของกฎห้ามซ้อนให้ถูกที่เดียว)
+    const v = Number(amount)
+    set({ pointsRedemption: Number.isFinite(v) && v > 0 ? v : 0 })
   },
 
   setAppliedPromotion: (promo) => {

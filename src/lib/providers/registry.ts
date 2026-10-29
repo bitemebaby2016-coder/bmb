@@ -9,6 +9,7 @@ import { BiteDriveAdapter, type BiteDriveAdapterDeps } from './biteDrive'
 import { GrabAdapter, type GrabAdapterDeps } from './grab'
 import { LinemanAdapter, type LinemanAdapterDeps } from './lineman'
 import { FoodpandaAdapter, type FoodpandaAdapterDeps } from './foodpanda'
+import { LalamoveAdapter, type LalamoveAdapterDeps } from './lalamove'
 import type { ProviderAdapter, ProviderId } from './types'
 
 export interface ProviderRegistry {
@@ -16,18 +17,19 @@ export interface ProviderRegistry {
   all(): ProviderAdapter[]
   statusMap(): Record<string, { status: ProviderAdapter['status']; label: string; note: string }>
   /** Rebuild adapters (e.g. tests, or after runtime key updates). */
-  reset(overrides?: Partial<Record<ProviderId, Partial<BiteDriveAdapterDeps & GrabAdapterDeps & LinemanAdapterDeps>>>): void
+  reset(overrides?: Partial<Record<ProviderId, Partial<BiteDriveAdapterDeps & GrabAdapterDeps & LinemanAdapterDeps & LalamoveAdapterDeps>>>): void
 }
 
 function createRegistry(): ProviderRegistry {
   let adapters: Record<ProviderId, ProviderAdapter> = makeAdapters({})
 
-  function makeAdapters(o: Partial<Record<ProviderId, Partial<BiteDriveAdapterDeps & GrabAdapterDeps & LinemanAdapterDeps>>>): Record<ProviderId, ProviderAdapter> {
+  function makeAdapters(o: Partial<Record<ProviderId, Partial<BiteDriveAdapterDeps & GrabAdapterDeps & LinemanAdapterDeps & LalamoveAdapterDeps>>>): Record<ProviderId, ProviderAdapter> {
     return {
       bite_drive: new BiteDriveAdapter(o.bite_drive),
       grab: new GrabAdapter(o.grab),
       lineman: new LinemanAdapter(o.lineman),
       foodpanda: new FoodpandaAdapter(o.foodpanda),
+      lalamove: new LalamoveAdapter(o.lalamove),
     }
   }
 

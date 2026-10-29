@@ -4,7 +4,7 @@
 > (WHOLE-REPO RECONCILIATION · CODE CLOSURE · LEAN PRODUCTION ACCEPTANCE)
 > ไฟล์อื่นที่มีวันที่ในชื่อ = **รายงาน ณ วันนั้น** ห้ามใช้แทนไฟล์นี้ ถ้าขัดกันให้ถือโค้ด/หลักฐาน (DOC DRIFT)
 
-**last_updated:** 2026-10-29 (R21 · เฟส 1-4 + R21d + R21e + **R21f 5 คำสั่ง Owner ครบ — m174 APPLIED (ledger top=174)**: parity ✓ · แผนที่ไรเดอร์หน้าลูกค้า · นำทางรายจุด · สูตรครบทุกเมนู · fix เวลาหน้าแรก) · **branch:** `main` · อ่าน §0 ก่อนเริ่มงานทุกครั้ง
+**last_updated:** 2026-10-30 (R22 · Master Prompt 4 tasks — anti-stacking 3 gates + chip กำไร AdminOrders · **m175 PREPARED ยังไม่ apply** (custom_domain/billing/ai_prompt) · Wizard `/admin/onboarding` + Billing `/admin/billing` · kitchenAlert + dispatchFallback/lalamove (wire ค้าง) · sheets-sync EF+workflow (deploy ค้าง) · gates: **vite build 0 · vitest targeted ALL PASS · eslint 0** · **tsc ท้องถิ่น = NOT RUN (30s timeout) → CI ตัดสิน**) · (เดิม 2026-10-29 R21 · เฟส 1-4 + R21d + R21e + R21f — m174 APPLIED ledger top=174) · **branch:** `main` · อ่าน §0 ก่อนเริ่มงานทุกครั้ง
 
 ---
 

@@ -33,6 +33,7 @@ import {
   type CouponLine,
 } from '@/lib/promotionClient'
 import type { PromotionRow } from '@/lib/bmbAdminApi_promotions'
+import { evaluateDiscountStacking } from '@/lib/discountGuardrail'
 
 /** บรรทัดตะกร้าปัจจุบันสำหรับคำนวณฐานสินค้าเข้า scope (G&R 153) */
 function currentCouponLines(): CouponLine[] {
@@ -69,6 +70,11 @@ async function fetchEvaluationResilient(
  */
 export async function applyCouponCode(code: string): Promise<CouponEvaluation> {
   const before = useCartStore.getState()
+  // [Task 1 · Owner 2026-10-29] ปฏิเสธตั้งแต่ต้นทาง: บิลกำลังใช้แต้มเป็นเงิน → ห้ามเพิ่มคูปอง
+  // (ข้อความแจ้ง = caller ผ่าน describeCouponResult('stack_conflict') · ไม่ยิง network ไม่แตะ store)
+  if (!evaluateDiscountStacking({ coupon: 1, points: before.pointsRedemption }).allowed) {
+    return { ok: false, reason: 'stack_conflict' }
+  }
   const result = await fetchEvaluationResilient(code, before.subtotal, {
     lines: currentCouponLines(),
   })
@@ -106,6 +112,13 @@ export async function revalidateCouponForSubmit(
 ): Promise<{ ok: true; discountAmount: number } | { ok: false; message: string }> {
   const code = useCartStore.getState().couponCode.trim()
   if (!code) return { ok: true, discountAmount: 0 }
+  // [Task 1 · Owner 2026-10-29] submit gate: คูปองที่ลดจริงซ้อนกับแต้มเป็นเงินในบิลเดียวกัน
+  // = ปฏิเสธก่อนยิง network (CheckoutPage เอาข้อความนี้ไปโชว์แล้วยกเลิกการสั่งซื้อ)
+  const stack = evaluateDiscountStacking({
+    coupon: useCartStore.getState().discount,
+    points: useCartStore.getState().pointsRedemption,
+  })
+  if (!stack.allowed) return { ok: false, message: stack.message }
   const check = await fetchEvaluationResilient(code, subtotal, { lines: currentCouponLines() })
   if (!check.ok) {
     // Owner 2026-10-27: เครือข่ายขัดข้อง ≠ โค้ดใช้ไม่ได้ — บอกให้กด "ใช้โค้ด" อีกครั้ง
@@ -121,7 +134,7 @@ export async function revalidateCouponForSubmit(
 }
 
 export function CouponBox() {
-  const { subtotal, couponCode, appliedPromotion } = useCartStore()
+  const { subtotal, couponCode, appliedPromotion, discount, pointsRedemption } = useCartStore()
   const [codeInput, setCodeInput] = useState('')
   const [busy, setBusy] = useState(false)
   // R10 (Owner 2026-10-27): popup เลือกโค้ด — จิ้มกล่องคูปองแล้วโชว์โค้ดที่ใช้ได้ตอนนี้
@@ -184,11 +197,24 @@ export function CouponBox() {
     setPickerLoading(false)
   }
 
+  // [Task 1 · Owner] กฎห้ามซ้อน — คูปองที่ลดจริง + แต้มในบิลเดียวกัน = banner เตือนในกล่องนี้
+  const stackGuard = evaluateDiscountStacking({ coupon: discount, points: pointsRedemption })
+
   const pendingCode = couponCode.trim() && !appliedPromotion ? couponCode.trim() : ''
 
   return (
     <div className="card mb-6">
       <h3 className="font-bold text-brand-accent mb-3">🎟️ คูปอง/โปรโมชั่น</h3>
+      {/* [Task 1 · Owner] กฎห้ามซ้อน: คูปอง ✗ แต้มในบิลเดียวกัน — เตือนชัดในจุดที่ผู้ใช้กดคูปอง */}
+      {!stackGuard.allowed && (
+        <div
+          className="rounded-xl border border-red-300 bg-red-50 p-3 text-sm font-medium text-red-700 mb-3"
+          role="alert"
+          data-testid="coupon-stack-conflict"
+        >
+          ⚠️ {stackGuard.message}
+        </div>
+      )}
       {appliedPromotion ? (() => {
         const status = evaluateCoupon([appliedPromotion], couponCode, subtotal)
         return (

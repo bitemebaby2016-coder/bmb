@@ -1,0 +1,17 @@
+name = "bmb-tenant-proxy"
+main = "src/index.ts"
+compatibility_date = "2026-10-01"
+
+# ============================================
+# Task 2 · Custom Domain Routing (Cloudflare Worker = Reverse Proxy)
+# หน้าที่: รับ request จากโดเมนลูกค้า (order.bakerybrand.com) → lookup tenant
+# จาก tenants.custom_domain (Supabase REST) → ส่งต่อไป PWA เดิม (Pages origin)
+# พร้อม header X-BMB-Tenant-* ให้ฝั่งแอป resolve ธีม/ร้าน (src/lib/hostnameTenant.ts)
+# deploy = Owner: wrangler deploy (ยังไม่ deploy ในรอบนี้ — บันทึกใน changelog)
+# ============================================
+
+[vars]
+# Pages origin หลักของ BMB (ทุกร้านวิ่ง PWA เดียวกัน · ต่างกันที่ tenant context)
+ORIGIN = "https://biteme-baby.com"
+# ค่าเริ่มต้นเมื่อ lookup ไม่เจอ = ร้านหลัก (ไม่เดาเป็นร้านอื่น)
+DEFAULT_TENANT_ID = "tenant-bmb-001"

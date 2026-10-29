@@ -1,0 +1,12 @@
+
+[1m[46m RUN [49m[22m [36mv3.2.7 [39m[90mD:/A PROJECT/Bite Me Baby[39m
+
+ [32m✓[39m src/__tests__/discountGuardrail.test.ts [2m([22m[2m16 tests[22m[2m)[22m[32m 24[2mms[22m[39m
+ [32m✓[39m src/__tests__/marginCalc.test.ts [2m([22m[2m18 tests[22m[2m)[22m[32m 146[2mms[22m[39m
+ [32m✓[39m src/__tests__/couponBox.test.ts [2m([22m[2m16 tests[22m[2m)[22m[33m 385[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m3 passed[39m[22m[90m (3)[39m
+[2m      Tests [22m [1m[32m50 passed[39m[22m[90m (50)[39m
+[2m   Start at [22m 20:49:22
+[2m   Duration [22m 13.08s[2m (transform 1.83s, setup 472ms, collect 2.32s, tests 555ms, environment 22.79s, prepare 3.57s)[22m
+

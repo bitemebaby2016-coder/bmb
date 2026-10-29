@@ -11,6 +11,7 @@ import {
   formatPct,
   formatBaht,
   toCostNumber,
+  summarizeOrderProfit,
   MARGIN_THRESHOLDS,
 } from '@/lib/marginCalc'
 
@@ -117,5 +118,63 @@ describe('formatters', () => {
     expect(formatPct(null)).toBe('0%')
     expect(formatPct(Number.NaN)).toBe('0%')
     expect(formatBaht(1234.5)).toContain('1,234.50')
+  })
+})
+
+describe('summarizeOrderProfit — ประตูก่อนโชว์กำไร/ออเดอร์ (T1-c)', () => {
+  const costById = {
+    p1: { cogs: 40, packagingCost: 5, otherCost: 5 },
+    p2: { cogs: 20, packagingCost: 3, otherCost: 2 },
+  }
+
+  it('ไม่มีบรรทัดสินค้า → empty (ไม่ render อะไร ไม่โชว์กำไรปลอม)', () => {
+    expect(summarizeOrderProfit([], costById).status).toBe('empty')
+  })
+
+  it('สินค้าหายจากรายการ (ไม่มีใน map ต้นทุน) → no_cost_data พร้อมข้อความจริง', () => {
+    const r = summarizeOrderProfit(
+      [{ productId: 'p1', unitPrice: 100, quantity: 1 }, { productId: 'ghost', unitPrice: 50, quantity: 1 }],
+      costById,
+    )
+    expect(r.status).toBe('no_cost_data')
+    if (r.status === 'no_cost_data') expect(r.message).toContain('ไม่อยู่ในแคตตาล็อก')
+  })
+
+  it('price > 0 แต่ต้นทุนรวม = 0 (ยังไม่กรอก) → no_cost_data ไม่เดาต้นทุน', () => {
+    const r = summarizeOrderProfit(
+      [{ productId: 'p_new', unitPrice: 80, quantity: 2 }],
+      { p_new: { cogs: 0, packagingCost: 0, otherCost: 0 } },
+    )
+    expect(r.status).toBe('no_cost_data')
+    if (r.status === 'no_cost_data') expect(r.message).toContain('กรอกต้นทุน')
+  })
+
+  it('ข้อมูลครบ → ready + ตัวเลขตรงกับ computeOrderProfit เดิมทุกประการ', () => {
+    const lines = [
+      { productId: 'p1', unitPrice: 100, quantity: 2 },
+      { productId: 'p2', unitPrice: 50, quantity: 1 },
+    ]
+    const r = summarizeOrderProfit(lines, costById, { discountTotal: 30 })
+    expect(r.status).toBe('ready')
+    if (r.status === 'ready') {
+      const expected = computeOrderProfit(
+        [
+          { price: 100, quantity: 2, cost: costById.p1 },
+          { price: 50, quantity: 1, cost: costById.p2 },
+        ],
+        { discountTotal: 30 },
+      )
+      expect(r.profit).toEqual(expected)
+      expect(r.profit.netProfit).toBe(expected.netProfit)
+    }
+  })
+
+  it('สินค้าราคา 0 (แถม/แจกละออง) ต้นทุน 0 = ไม่ขัดประตู (ready ได้)', () => {
+    const r = summarizeOrderProfit(
+      [{ productId: 'free', unitPrice: 0, quantity: 1 }],
+      { free: {} },
+    )
+    expect(r.status).toBe('ready')
+    if (r.status === 'ready') expect(r.profit.grossRevenue).toBe(0)
   })
 })

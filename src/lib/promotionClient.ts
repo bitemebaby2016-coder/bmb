@@ -74,6 +74,8 @@ export type CouponRejectReason =
   | 'budget_exhausted' // งบส่วนลดเดือนนี้เต็มแล้ว (server promotion_budget_ok)
   | 'out_of_scope' // แคมเปญจำกัดสินค้า แต่ไม่มีสินค้าในตะกร้าเข้าเกณฑ์
   | 'usage_exhausted' // ใช้ครบ usage_limit ของแคมเปญแล้ว
+  // ---- [Task 1 · Owner 2026-10-29] กฎห้ามซ้อน (client bill gate · ที่มา: src/lib/discountGuardrail) ----
+  | 'stack_conflict' // โค้ดคูปองส่วนลดหลัก ซ้อนกับการแลกแต้มลดเงินสดในบิลเดียวกัน
 
 export type CouponEvaluation =
   | { ok: true; promo: PromotionRow; discountAmount: number }
@@ -274,6 +276,8 @@ export function describeCouponResult(result: CouponEvaluation): string {
       return 'โค้ดนี้ใช้ได้เฉพาะสินค้าที่ร่วมรายการเท่านั้น — ยังไม่มีสินค้าที่เข้าเกณฑ์ในตะกร้า'
     case 'usage_exhausted':
       return 'โค้ดนี้ใช้ครบจำนวนสิทธิ์ที่ร้านกำหนดไว้แล้ว — ใช้โค้ดอื่นแทนได้เลย'
+    case 'stack_conflict':
+      return 'ใช้โค้ดคูปองร่วมกับการแลกแต้มเป็นเงินในบิลเดียวกันไม่ได้ — เลือกอย่างใดอย่างหนึ่ง (Wallet Credit ใช้ร่วมได้ตามปกติ)'
     case 'load_failed':
       return 'โหลดข้อมูลโปรโมชั่นไม่สำเร็จ — ลองใหม่อีกครั้ง (ยังไม่ได้หักส่วนลด)'
   }

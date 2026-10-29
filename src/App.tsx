@@ -57,6 +57,10 @@ const DeliveryHub = lazy(() => import('./components/admin/AdminHubs').then(m => 
 const SettingsHub = lazy(() => import('./components/admin/AdminHubs').then(m => ({ default: m.SettingsHub })))
 const MenuHub = lazy(() => import('./components/admin/AdminHubs').then(m => ({ default: m.MenuHub })))
 const OrgHub = lazy(() => import('./components/admin/AdminHubs').then(m => ({ default: m.OrgHub })))
+// [Task 2 · T2-b] Onboarding Wizard — เปิดร้านใหม่ (tenant+brand) ที่เดียวจบ
+const AdminOnboarding = lazy(() => import('./pages/admin/AdminOnboarding').then(m => ({ default: m.AdminOnboarding })))
+// [Task 2] Billing — หน้าดูงวดบริการร้านพาร์ทเนอร์ (billing_subscriptions · m175)
+const AdminBilling = lazy(() => import('./pages/admin/AdminBilling').then(m => ({ default: m.AdminBilling })))
 const AdminPromotions = lazy(() => import('./pages/admin/AdminPromotions').then(m => ({ default: m.AdminPromotions })))
 // D2 (2026-10-25): AdminRounds เป็นแท็บใน DeliveryHub (/admin/delivery?tab=rounds) — ไม่มี route ตรงแล้ว
 const AdminCustomers = lazy(() => import('./pages/admin/AdminCustomers').then(m => ({ default: m.AdminCustomers })))
@@ -328,6 +332,8 @@ export default function App() {
         
         {/* TEN-06: Tenant Management */}
         <Route path="/admin/tenants" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminNav><OrgHub /></AdminNav></Layout></AdminRoute></Suspense>} />
+        <Route path="/admin/onboarding" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminNav><AdminOnboarding /></AdminNav></Layout></AdminRoute></Suspense>} />
+        <Route path="/admin/billing" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminNav><AdminBilling /></AdminNav></Layout></AdminRoute></Suspense>} />
         
         {/* CAT-04: Admin Portfolio / Past Works */}
         <Route path="/admin/portfolio" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminNav><AdminPortfolioPage /></AdminNav></Layout></AdminRoute></Suspense>} />
