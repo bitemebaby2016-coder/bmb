@@ -5,6 +5,10 @@
 import { supabase } from './supabase'
 import { resolveOrderDeliveryAddress } from './orderAddress'
 import { extractIdempotencyErrorCode, payloadFingerprint } from './orderSubmitKey'
+// R21e cosmetic (Owner "รวม confirmOfflinePayment wrappers"): canonical = paymentGateway
+// (มี PaymentConfirmResult + ถูกใช้โดย paymentStateMachine test ตรง ๆ) — ไม่มี cycle
+// (paymentGateway ไม่ import ไฟล์นี้ · ทั้งคู่เรียก RPC เดียวกัน confirm_offline_payment)
+import { confirmOfflinePayment as confirmOfflinePaymentCanonical } from './paymentGateway'
 
 // P0-4 SPLIT (2026-09-18):
 //   OrderInput  — client payload (INPUT ONLY, no financial authority)
@@ -414,13 +418,14 @@ export async function updateOrderStatus(orderNumber: string, status: string): Pr
 // P0-5 (2026-09-18): payment confirmations are server-authoritative.
 // `confirmOfflinePayment` marks an order paid ONLY when the business rules are
 // met (COD -> order delivered; PromptPay -> TXN submitted). No direct write.
+// R21e cosmetic: delegate ไป canonical (paymentGateway) — เดิมมี wrapper ซ้ำ 2 ฉบับ
+// เรียก RPC เดียวกัน → คง signature { success, error? } ไว้ให้ผู้เรียกเดิม (AdminOrders)
 export async function confirmOfflinePayment(orderNumber: string): Promise<{ success: boolean; error?: string }> {
-  const r = await supabase.rpc('confirm_offline_payment', { p_order_number: orderNumber })
-  if (r.error) {
+  const r = await confirmOfflinePaymentCanonical(orderNumber)
+  if (!r.success) {
     console.error('[confirmOfflinePayment] RPC error:', r.error)
-    return { success: false, error: r.error.message }
   }
-  return { success: true }
+  return { success: r.success, error: r.error }
 }
 
 // R10 (Owner 2026-10-27): แอดมินปฏิเสธสลิป/การชำระเงินด้วยมือ (สลิปไม่ถูก/เงินไม่เข้า) —

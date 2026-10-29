@@ -1,0 +1,184 @@
+supabase\migrations\001_initial_schema.sql:155:  discount_amount NUMERIC(10, 2) NOT NULL DEFAULT 0,
+supabase\migrations\001_initial_schema.sql:277:  discount_type TEXT CHECK (discount_type IN ('percentage', 'fixed_amount')),
+supabase\migrations\001_initial_schema.sql:278:  discount_value NUMERIC(10, 2) NOT NULL DEFAULT 0,
+supabase\migrations\007_server_authoritative_order.sql:12:--     → calculate subtotal / discount / delivery / total from DB rules
+supabase\migrations\007_server_authoritative_order.sql:40:--    NOT ACCEPTED (ignored if provided): price, subtotal, discount_amount,
+supabase\migrations\007_server_authoritative_order.sql:72:  v_discount       numeric := 0;
+supabase\migrations\007_server_authoritative_order.sql:177:        IF v_promo.discount_type = 'percentage' THEN
+supabase\migrations\007_server_authoritative_order.sql:178:          v_discount := LEAST(v_subtotal * COALESCE(v_promo.discount_value,0) / 100, v_subtotal);
+supabase\migrations\007_server_authoritative_order.sql:179:        ELSIF v_promo.discount_type = 'fixed_amount' THEN
+supabase\migrations\007_server_authoritative_order.sql:180:          v_discount := LEAST(COALESCE(v_promo.discount_value,0), v_subtotal);
+supabase\migrations\007_server_authoritative_order.sql:200:  v_total := GREATEST(0, v_subtotal - v_discount + v_delivery_fee + v_service_fee + v_tax);
+supabase\migrations\007_server_authoritative_order.sql:224:    subtotal, delivery_fee, service_fee, discount_amount, tax_amount, total_amount,
+supabase\migrations\007_server_authoritative_order.sql:230:    v_subtotal, v_delivery_fee, v_service_fee, v_discount, v_tax, v_total,
+supabase\migrations\007_server_authoritative_order.sql:275:    'discount_amount', v_discount,
+supabase\migrations\009_fix_007_extract_epoch.sql:51:  v_discount       numeric := 0;
+supabase\migrations\009_fix_007_extract_epoch.sql:157:        IF v_promo.discount_type = 'percentage' THEN
+supabase\migrations\009_fix_007_extract_epoch.sql:158:          v_discount := LEAST(v_subtotal * COALESCE(v_promo.discount_value,0) / 100, v_subtotal);
+supabase\migrations\009_fix_007_extract_epoch.sql:159:        ELSIF v_promo.discount_type = 'fixed_amount' THEN
+supabase\migrations\009_fix_007_extract_epoch.sql:160:          v_discount := LEAST(COALESCE(v_promo.discount_value,0), v_subtotal);
+supabase\migrations\009_fix_007_extract_epoch.sql:180:  v_total := GREATEST(0, v_subtotal - v_discount + v_delivery_fee + v_service_fee + v_tax);
+supabase\migrations\009_fix_007_extract_epoch.sql:206:    subtotal, delivery_fee, service_fee, discount_amount, tax_amount, total_amount,
+supabase\migrations\009_fix_007_extract_epoch.sql:212:    v_subtotal, v_delivery_fee, v_service_fee, v_discount, v_tax, v_total,
+supabase\migrations\009_fix_007_extract_epoch.sql:257:    'discount_amount', v_discount,
+supabase\migrations\016_addons_and_banner.sql:57:INSERT INTO public.promotions (id, name, description, code, discount_type, discount_value, min_order_amount, is_active, is_banner)
+supabase\migrations\016_addons_and_banner.sql:139:  v_discount       numeric := 0;
+supabase\migrations\016_addons_and_banner.sql:246:        IF v_promo.discount_type = 'percentage' THEN
+supabase\migrations\016_addons_and_banner.sql:247:          v_discount := LEAST(v_subtotal * COALESCE(v_promo.discount_value,0) / 100, v_subtotal);
+supabase\migrations\016_addons_and_banner.sql:248:        ELSIF v_promo.discount_type = 'fixed_amount' THEN
+supabase\migrations\016_addons_and_banner.sql:249:          v_discount := LEAST(COALESCE(v_promo.discount_value,0), v_subtotal);
+supabase\migrations\016_addons_and_banner.sql:268:  v_total := GREATEST(0, v_subtotal - v_discount + v_delivery_fee + v_service_fee + v_tax);
+supabase\migrations\016_addons_and_banner.sql:292:    subtotal, delivery_fee, service_fee, discount_amount, tax_amount, total_amount,
+supabase\migrations\016_addons_and_banner.sql:298:    v_subtotal, v_delivery_fee, v_service_fee, v_discount, v_tax, v_total,
+supabase\migrations\016_addons_and_banner.sql:349:    'discount_amount', v_discount,
+supabase\migrations\020_bite_drive.sql:211:  v_discount        numeric := 0;
+supabase\migrations\020_bite_drive.sql:319:        IF v_promo.discount_type = 'percentage' THEN
+supabase\migrations\020_bite_drive.sql:320:          v_discount := LEAST(v_subtotal * COALESCE(v_promo.discount_value,0) / 100, v_subtotal);
+supabase\migrations\020_bite_drive.sql:321:        ELSIF v_promo.discount_type = 'fixed_amount' THEN
+supabase\migrations\020_bite_drive.sql:322:          v_discount := LEAST(COALESCE(v_promo.discount_value,0), v_subtotal);
+supabase\migrations\020_bite_drive.sql:337:  v_total := GREATEST(0, v_subtotal - v_discount + v_delivery_fee + v_service_fee + v_tax);
+supabase\migrations\020_bite_drive.sql:363:    subtotal, delivery_fee, service_fee, discount_amount, tax_amount, total_amount,
+supabase\migrations\020_bite_drive.sql:369:    v_subtotal, v_delivery_fee, v_service_fee, v_discount, v_tax, v_total,
+supabase\migrations\020_bite_drive.sql:421:    'discount_amount', v_discount,
+supabase\migrations\024_round_lifecycle_and_preorder_migration.sql:180:        subtotal, delivery_fee, service_fee, discount_amount, tax_amount, total_amount,
+supabase\migrations\025_canonical_order_rpc.sql:66:  v_discount       numeric := 0;
+supabase\migrations\025_canonical_order_rpc.sql:238:        IF v_promo.discount_type = 'percentage' THEN
+supabase\migrations\025_canonical_order_rpc.sql:239:          v_discount := LEAST(v_subtotal * COALESCE(v_promo.discount_value, 0) / 100, v_subtotal);
+supabase\migrations\025_canonical_order_rpc.sql:240:        ELSIF v_promo.discount_type = 'fixed_amount' THEN
+supabase\migrations\025_canonical_order_rpc.sql:241:          v_discount := LEAST(COALESCE(v_promo.discount_value, 0), v_subtotal);
+supabase\migrations\025_canonical_order_rpc.sql:278:  v_total := GREATEST(0, v_subtotal - v_discount + v_delivery_fee + v_service_fee + v_tax);
+supabase\migrations\025_canonical_order_rpc.sql:304:    subtotal, delivery_fee, service_fee, discount_amount, tax_amount, total_amount,
+supabase\migrations\025_canonical_order_rpc.sql:310:    v_subtotal, v_delivery_fee, v_service_fee, v_discount, v_tax, v_total,
+supabase\migrations\025_canonical_order_rpc.sql:369:    'discount_amount', v_discount,
+supabase\migrations\044_f14_single_signature.sql:49:  v_discount       numeric := 0;
+supabase\migrations\044_f14_single_signature.sql:221:        IF v_promo.discount_type = 'percentage' THEN
+supabase\migrations\044_f14_single_signature.sql:222:          v_discount := LEAST(v_subtotal * COALESCE(v_promo.discount_value, 0) / 100, v_subtotal);
+supabase\migrations\044_f14_single_signature.sql:223:        ELSIF v_promo.discount_type = 'fixed_amount' THEN
+supabase\migrations\044_f14_single_signature.sql:224:          v_discount := LEAST(COALESCE(v_promo.discount_value, 0), v_subtotal);
+supabase\migrations\044_f14_single_signature.sql:261:  v_total := GREATEST(0, v_subtotal - v_discount + v_delivery_fee + v_service_fee + v_tax);
+supabase\migrations\044_f14_single_signature.sql:287:    subtotal, delivery_fee, service_fee, discount_amount, tax_amount, total_amount,
+supabase\migrations\044_f14_single_signature.sql:293:    v_subtotal, v_delivery_fee, v_service_fee, v_discount, v_tax, v_total,
+supabase\migrations\044_f14_single_signature.sql:352:    'discount_amount', v_discount,
+supabase\migrations\048_f14_trusted_channel_intake.sql:60:  v_discount       numeric := 0;
+supabase\migrations\048_f14_trusted_channel_intake.sql:233:        IF v_promo.discount_type = 'percentage' THEN
+supabase\migrations\048_f14_trusted_channel_intake.sql:234:          v_discount := LEAST(v_subtotal * COALESCE(v_promo.discount_value, 0) / 100, v_subtotal);
+supabase\migrations\048_f14_trusted_channel_intake.sql:235:        ELSIF v_promo.discount_type = 'fixed_amount' THEN
+supabase\migrations\048_f14_trusted_channel_intake.sql:236:          v_discount := LEAST(COALESCE(v_promo.discount_value, 0), v_subtotal);
+supabase\migrations\048_f14_trusted_channel_intake.sql:273:  v_total := GREATEST(0, v_subtotal - v_discount + v_delivery_fee + v_service_fee + v_tax);
+supabase\migrations\048_f14_trusted_channel_intake.sql:299:    subtotal, delivery_fee, service_fee, discount_amount, tax_amount, total_amount,
+supabase\migrations\048_f14_trusted_channel_intake.sql:305:    v_subtotal, v_delivery_fee, v_service_fee, v_discount, v_tax, v_total,
+supabase\migrations\048_f14_trusted_channel_intake.sql:364:    'discount_amount', v_discount,
+supabase\migrations\089_create_order_branch_id.sql:62:  v_subtotal numeric := 0; v_discount numeric := 0; v_delivery_fee numeric := 0;
+supabase\migrations\089_create_order_branch_id.sql:141:        IF v_promo.discount_type = 'percentage' THEN v_discount := LEAST(v_subtotal * COALESCE(v_promo.discount_value, 0) / 100, v_subtotal);
+supabase\migrations\089_create_order_branch_id.sql:142:        ELSIF v_promo.discount_type = 'fixed_amount' THEN v_discount := LEAST(COALESCE(v_promo.discount_value, 0), v_subtotal); END IF;
+supabase\migrations\089_create_order_branch_id.sql:169:  v_total := GREATEST(0, v_subtotal - v_discount + v_delivery_fee + v_service_fee + v_tax);
+supabase\migrations\089_create_order_branch_id.sql:184:  INSERT INTO public.orders (id, order_number, customer_id, customer_name, customer_phone, customer_ref, delivery_round_id, status, delivery_method, dropoff_detail, dropoff_latitude, dropoff_longitude, subtotal, delivery_fee, service_fee, discount_amount, tax_amount, total_amount, payment_status, payment_method, special_instructions, order_mode, scheduled_date, branch_id)
+supabase\migrations\089_create_order_branch_id.sql:185:  VALUES (v_order_id, v_order_number, v_uid::text, p_customer_name, p_customer_phone, v_uid, p_delivery_round_id, 'pending', v_delivery_method::delivery_method, COALESCE(p_delivery_address, ''), p_dropoff_latitude, p_dropoff_longitude, v_subtotal, v_delivery_fee, v_service_fee, v_discount, v_tax, v_total, 'pending', p_payment_method::payment_method, COALESCE(p_special_instructions, ''), v_mode::order_mode, v_round_date, v_resolved_branch_id);
+supabase\migrations\089_create_order_branch_id.sql:205:    'scheduled_date', v_round_date, 'subtotal', v_subtotal, 'discount_amount', v_discount,
+supabase\migrations\104_b1_order_number_uniqueness.sql:96:  v_discount       numeric := 0;
+supabase\migrations\104_b1_order_number_uniqueness.sql:268:        IF v_promo.discount_type = 'percentage' THEN
+supabase\migrations\104_b1_order_number_uniqueness.sql:269:          v_discount := LEAST(v_subtotal * COALESCE(v_promo.discount_value, 0) / 100, v_subtotal);
+supabase\migrations\104_b1_order_number_uniqueness.sql:270:        ELSIF v_promo.discount_type = 'fixed_amount' THEN
+supabase\migrations\104_b1_order_number_uniqueness.sql:271:          v_discount := LEAST(COALESCE(v_promo.discount_value, 0), v_subtotal);
+supabase\migrations\104_b1_order_number_uniqueness.sql:308:  v_total := GREATEST(0, v_subtotal - v_discount + v_delivery_fee + v_service_fee + v_tax);
+supabase\migrations\104_b1_order_number_uniqueness.sql:333:        subtotal, delivery_fee, service_fee, discount_amount, tax_amount, total_amount,
+supabase\migrations\104_b1_order_number_uniqueness.sql:339:        v_subtotal, v_delivery_fee, v_service_fee, v_discount, v_tax, v_total,
+supabase\migrations\104_b1_order_number_uniqueness.sql:411:    'discount_amount', v_discount,
+supabase\migrations\112_w1_4_admin_delivery_config_no_hardcode.sql:104:  v_subtotal numeric := 0; v_discount numeric := 0; v_delivery_fee numeric := 0;
+supabase\migrations\112_w1_4_admin_delivery_config_no_hardcode.sql:191:        IF v_promo.discount_type = 'percentage' THEN v_discount := LEAST(v_subtotal * COALESCE(v_promo.discount_value, 0) / 100, v_subtotal);
+supabase\migrations\112_w1_4_admin_delivery_config_no_hardcode.sql:192:        ELSIF v_promo.discount_type = 'fixed_amount' THEN v_discount := LEAST(COALESCE(v_promo.discount_value, 0), v_subtotal); END IF;
+supabase\migrations\112_w1_4_admin_delivery_config_no_hardcode.sql:223:  v_total := GREATEST(0, v_subtotal - v_discount + v_delivery_fee + v_service_fee + v_tax);
+supabase\migrations\112_w1_4_admin_delivery_config_no_hardcode.sql:238:  INSERT INTO public.orders (id, order_number, customer_id, customer_name, customer_phone, customer_ref, delivery_round_id, status, delivery_method, dropoff_detail, dropoff_latitude, dropoff_longitude, subtotal, delivery_fee, service_fee, discount_amount, tax_amount, total_amount, payment_status, payment_method, special_instructions, order_mode, scheduled_date)
+supabase\migrations\112_w1_4_admin_delivery_config_no_hardcode.sql:239:  VALUES (v_order_id, v_order_number, v_uid::text, p_customer_name, p_customer_phone, v_uid, p_delivery_round_id, 'pending', v_delivery_method::delivery_method, COALESCE(p_delivery_address, ''), p_dropoff_latitude, p_dropoff_longitude, v_subtotal, v_delivery_fee, v_service_fee, v_discount, v_tax, v_total, 'pending', p_payment_method::payment_method, COALESCE(p_special_instructions, ''), v_mode::order_mode, v_round_date);
+supabase\migrations\112_w1_4_admin_delivery_config_no_hardcode.sql:259:    'scheduled_date', v_round_date, 'subtotal', v_subtotal, 'discount_amount', v_discount,
+supabase\migrations\114_final_config_closure.sql:26:  v_subtotal numeric := 0; v_discount numeric := 0; v_delivery_fee numeric := 0;
+supabase\migrations\114_final_config_closure.sql:124:        IF v_promo.discount_type = 'percentage' THEN v_discount := LEAST(v_subtotal * COALESCE(v_promo.discount_value, 0) / 100, v_subtotal);
+supabase\migrations\114_final_config_closure.sql:125:        ELSIF v_promo.discount_type = 'fixed_amount' THEN v_discount := LEAST(COALESCE(v_promo.discount_value, 0), v_subtotal); END IF;
+supabase\migrations\114_final_config_closure.sql:160:  v_total := GREATEST(0, v_subtotal - v_discount + v_delivery_fee + v_service_fee + v_tax);
+supabase\migrations\114_final_config_closure.sql:175:  INSERT INTO public.orders (id, order_number, customer_id, customer_name, customer_phone, customer_ref, delivery_round_id, status, delivery_method, dropoff_detail, dropoff_latitude, dropoff_longitude, subtotal, delivery_fee, service_fee, discount_amount, tax_amount, total_amount, payment_status, payment_method, special_instructions, order_mode, scheduled_date)
+supabase\migrations\114_final_config_closure.sql:176:  VALUES (v_order_id, v_order_number, v_uid::text, p_customer_name, p_customer_phone, v_uid, p_delivery_round_id, 'pending', v_delivery_method::delivery_method, COALESCE(p_delivery_address, ''), p_dropoff_latitude, p_dropoff_longitude, v_subtotal, v_delivery_fee, v_service_fee, v_discount, v_tax, v_total, 'pending', p_payment_method::payment_method, COALESCE(p_special_instructions, ''), v_mode::order_mode, v_round_date);
+supabase\migrations\114_final_config_closure.sql:196:    'scheduled_date', v_round_date, 'subtotal', v_subtotal, 'discount_amount', v_discount,
+supabase\migrations\117_channel_intake_repair.sql:78:  v_subtotal numeric := 0; v_discount numeric := 0; v_delivery_fee numeric := 0;
+supabase\migrations\117_channel_intake_repair.sql:199:        IF v_promo.discount_type = 'percentage' THEN v_discount := LEAST(v_subtotal * COALESCE(v_promo.discount_value, 0) / 100, v_subtotal);
+supabase\migrations\117_channel_intake_repair.sql:200:        ELSIF v_promo.discount_type = 'fixed_amount' THEN v_discount := LEAST(COALESCE(v_promo.discount_value, 0), v_subtotal); END IF;
+supabase\migrations\117_channel_intake_repair.sql:225:  v_total := GREATEST(0, v_subtotal - v_discount + v_delivery_fee + v_service_fee + v_tax);
+supabase\migrations\117_channel_intake_repair.sql:240:  INSERT INTO public.orders (id, order_number, customer_id, customer_name, customer_phone, customer_ref, delivery_round_id, status, delivery_method, dropoff_detail, dropoff_latitude, dropoff_longitude, subtotal, delivery_fee, service_fee, discount_amount, tax_amount, total_amount, payment_status, payment_method, special_instructions, order_mode, scheduled_date, branch_id)
+supabase\migrations\117_channel_intake_repair.sql:241:  VALUES (v_order_id, v_order_number, v_uid::text, p_customer_name, p_customer_phone, v_uid, p_delivery_round_id, 'pending', v_delivery_method::delivery_method, COALESCE(p_delivery_address, ''), p_dropoff_latitude, p_dropoff_longitude, v_subtotal, v_delivery_fee, v_service_fee, v_discount, v_tax, v_total, 'pending', p_payment_method::payment_method, COALESCE(p_special_instructions, ''), v_mode::order_mode, v_round_date, v_resolved_branch_id);
+supabase\migrations\117_channel_intake_repair.sql:292:    'scheduled_date', v_round_date, 'subtotal', v_subtotal, 'discount_amount', v_discount,
+supabase\migrations\118_restore_fc_gates_after_117.sql:32:  v_subtotal numeric := 0; v_discount numeric := 0; v_delivery_fee numeric := 0;
+supabase\migrations\118_restore_fc_gates_after_117.sql:171:        IF v_promo.discount_type = 'percentage' THEN v_discount := LEAST(v_subtotal * COALESCE(v_promo.discount_value, 0) / 100, v_subtotal);
+supabase\migrations\118_restore_fc_gates_after_117.sql:172:        ELSIF v_promo.discount_type = 'fixed_amount' THEN v_discount := LEAST(COALESCE(v_promo.discount_value, 0), v_subtotal); END IF;
+supabase\migrations\118_restore_fc_gates_after_117.sql:204:  v_total := GREATEST(0, v_subtotal - v_discount + v_delivery_fee + v_service_fee + v_tax);
+supabase\migrations\118_restore_fc_gates_after_117.sql:219:  INSERT INTO public.orders (id, order_number, customer_id, customer_name, customer_phone, customer_ref, delivery_round_id, status, delivery_method, dropoff_detail, dropoff_latitude, dropoff_longitude, subtotal, delivery_fee, service_fee, discount_amount, tax_amount, total_amount, payment_status, payment_method, special_instructions, order_mode, scheduled_date, branch_id)
+supabase\migrations\118_restore_fc_gates_after_117.sql:220:  VALUES (v_order_id, v_order_number, v_uid::text, p_customer_name, p_customer_phone, v_uid, p_delivery_round_id, 'pending', v_delivery_method::delivery_method, COALESCE(p_delivery_address, ''), p_dropoff_latitude, p_dropoff_longitude, v_subtotal, v_delivery_fee, v_service_fee, v_discount, v_tax, v_total, 'pending', p_payment_method::payment_method, COALESCE(p_special_instructions, ''), v_mode::order_mode, v_round_date, v_resolved_branch_id);
+supabase\migrations\118_restore_fc_gates_after_117.sql:271:    'scheduled_date', v_round_date, 'subtotal', v_subtotal, 'discount_amount', v_discount,
+supabase\migrations\127_pickup_fulfillment.sql:273:         total_amount = GREATEST(0, subtotal - discount_amount + service_fee + tax_amount),
+supabase\migrations\130_finance_reports.sql:8:--   * gross_sales = sum(subtotal) non-cancelled (before discount)
+supabase\migrations\130_finance_reports.sql:9:--   * net_sales   = sum(total_amount) non-cancelled (after discount+fee)
+supabase\migrations\130_finance_reports.sql:35:    'discount_total',     COALESCE(SUM(o.discount_amount) FILTER (WHERE o.status NOT IN ('cancelled','failed')), 0),
+supabase\migrations\141_pre_order_unify_menu_calendar.sql:32:  v_subtotal numeric := 0; v_discount numeric := 0; v_delivery_fee numeric := 0;
+supabase\migrations\141_pre_order_unify_menu_calendar.sql:171:        IF v_promo.discount_type = 'percentage' THEN v_discount := LEAST(v_subtotal * COALESCE(v_promo.discount_value, 0) / 100, v_subtotal);
+supabase\migrations\141_pre_order_unify_menu_calendar.sql:172:        ELSIF v_promo.discount_type = 'fixed_amount' THEN v_discount := LEAST(COALESCE(v_promo.discount_value, 0), v_subtotal); END IF;
+supabase\migrations\141_pre_order_unify_menu_calendar.sql:204:  v_total := GREATEST(0, v_subtotal - v_discount + v_delivery_fee + v_service_fee + v_tax);
+supabase\migrations\141_pre_order_unify_menu_calendar.sql:219:  INSERT INTO public.orders (id, order_number, customer_id, customer_name, customer_phone, customer_ref, delivery_round_id, status, delivery_method, dropoff_detail, dropoff_latitude, dropoff_longitude, subtotal, delivery_fee, service_fee, discount_amount, tax_amount, total_amount, payment_status, payment_method, special_instructions, order_mode, scheduled_date, branch_id)
+supabase\migrations\141_pre_order_unify_menu_calendar.sql:220:  VALUES (v_order_id, v_order_number, v_uid::text, p_customer_name, p_customer_phone, v_uid, p_delivery_round_id, 'pending', v_delivery_method::delivery_method, COALESCE(p_delivery_address, ''), p_dropoff_latitude, p_dropoff_longitude, v_subtotal, v_delivery_fee, v_service_fee, v_discount, v_tax, v_total, 'pending', p_payment_method::payment_method, COALESCE(p_special_instructions, ''), v_mode::order_mode, v_round_date, v_resolved_branch_id);
+supabase\migrations\141_pre_order_unify_menu_calendar.sql:271:    'scheduled_date', v_round_date, 'subtotal', v_subtotal, 'discount_amount', v_discount,
+supabase\migrations\142_pre_order_requires_menu.sql:28:  v_subtotal numeric := 0; v_discount numeric := 0; v_delivery_fee numeric := 0;
+supabase\migrations\142_pre_order_requires_menu.sql:189:        IF v_promo.discount_type = 'percentage' THEN v_discount := LEAST(v_subtotal * COALESCE(v_promo.discount_value, 0) / 100, v_subtotal);
+supabase\migrations\142_pre_order_requires_menu.sql:190:        ELSIF v_promo.discount_type = 'fixed_amount' THEN v_discount := LEAST(COALESCE(v_promo.discount_value, 0), v_subtotal); END IF;
+supabase\migrations\142_pre_order_requires_menu.sql:222:  v_total := GREATEST(0, v_subtotal - v_discount + v_delivery_fee + v_service_fee + v_tax);
+supabase\migrations\142_pre_order_requires_menu.sql:237:  INSERT INTO public.orders (id, order_number, customer_id, customer_name, customer_phone, customer_ref, delivery_round_id, status, delivery_method, dropoff_detail, dropoff_latitude, dropoff_longitude, subtotal, delivery_fee, service_fee, discount_amount, tax_amount, total_amount, payment_status, payment_method, special_instructions, order_mode, scheduled_date, branch_id)
+supabase\migrations\142_pre_order_requires_menu.sql:238:  VALUES (v_order_id, v_order_number, v_uid::text, p_customer_name, p_customer_phone, v_uid, p_delivery_round_id, 'pending', v_delivery_method::delivery_method, COALESCE(p_delivery_address, ''), p_dropoff_latitude, p_dropoff_longitude, v_subtotal, v_delivery_fee, v_service_fee, v_discount, v_tax, v_total, 'pending', p_payment_method::payment_method, COALESCE(p_special_instructions, ''), v_mode::order_mode, v_round_date, v_resolved_branch_id);
+supabase\migrations\142_pre_order_requires_menu.sql:289:    'scheduled_date', v_round_date, 'subtotal', v_subtotal, 'discount_amount', v_discount,
+supabase\migrations\143_pre_order_cutoff_settings.sql:32:  v_subtotal numeric := 0; v_discount numeric := 0; v_delivery_fee numeric := 0;
+supabase\migrations\143_pre_order_cutoff_settings.sql:204:        IF v_promo.discount_type = 'percentage' THEN v_discount := LEAST(v_subtotal * COALESCE(v_promo.discount_value, 0) / 100, v_subtotal);
+supabase\migrations\143_pre_order_cutoff_settings.sql:205:        ELSIF v_promo.discount_type = 'fixed_amount' THEN v_discount := LEAST(COALESCE(v_promo.discount_value, 0), v_subtotal); END IF;
+supabase\migrations\143_pre_order_cutoff_settings.sql:237:  v_total := GREATEST(0, v_subtotal - v_discount + v_delivery_fee + v_service_fee + v_tax);
+supabase\migrations\143_pre_order_cutoff_settings.sql:252:  INSERT INTO public.orders (id, order_number, customer_id, customer_name, customer_phone, customer_ref, delivery_round_id, status, delivery_method, dropoff_detail, dropoff_latitude, dropoff_longitude, subtotal, delivery_fee, service_fee, discount_amount, tax_amount, total_amount, payment_status, payment_method, special_instructions, order_mode, scheduled_date, branch_id)
+supabase\migrations\143_pre_order_cutoff_settings.sql:253:  VALUES (v_order_id, v_order_number, v_uid::text, p_customer_name, p_customer_phone, v_uid, p_delivery_round_id, 'pending', v_delivery_method::delivery_method, COALESCE(p_delivery_address, ''), p_dropoff_latitude, p_dropoff_longitude, v_subtotal, v_delivery_fee, v_service_fee, v_discount, v_tax, v_total, 'pending', p_payment_method::payment_method, COALESCE(p_special_instructions, ''), v_mode::order_mode, v_round_date, v_resolved_branch_id);
+supabase\migrations\143_pre_order_cutoff_settings.sql:304:    'scheduled_date', v_round_date, 'subtotal', v_subtotal, 'discount_amount', v_discount,
+supabase\migrations\145_two_cutoffs.sql:34:  v_subtotal numeric := 0; v_discount numeric := 0; v_delivery_fee numeric := 0;
+supabase\migrations\145_two_cutoffs.sql:217:        IF v_promo.discount_type = 'percentage' THEN v_discount := LEAST(v_subtotal * COALESCE(v_promo.discount_value, 0) / 100, v_subtotal);
+supabase\migrations\145_two_cutoffs.sql:218:        ELSIF v_promo.discount_type = 'fixed_amount' THEN v_discount := LEAST(COALESCE(v_promo.discount_value, 0), v_subtotal); END IF;
+supabase\migrations\145_two_cutoffs.sql:250:  v_total := GREATEST(0, v_subtotal - v_discount + v_delivery_fee + v_service_fee + v_tax);
+supabase\migrations\145_two_cutoffs.sql:265:  INSERT INTO public.orders (id, order_number, customer_id, customer_name, customer_phone, customer_ref, delivery_round_id, status, delivery_method, dropoff_detail, dropoff_latitude, dropoff_longitude, subtotal, delivery_fee, service_fee, discount_amount, tax_amount, total_amount, payment_status, payment_method, special_instructions, order_mode, scheduled_date, branch_id)
+supabase\migrations\145_two_cutoffs.sql:266:  VALUES (v_order_id, v_order_number, v_uid::text, p_customer_name, p_customer_phone, v_uid, p_delivery_round_id, 'pending', v_delivery_method::delivery_method, COALESCE(p_delivery_address, ''), p_dropoff_latitude, p_dropoff_longitude, v_subtotal, v_delivery_fee, v_service_fee, v_discount, v_tax, v_total, 'pending', p_payment_method::payment_method, COALESCE(p_special_instructions, ''), v_mode::order_mode, v_round_date, v_resolved_branch_id);
+supabase\migrations\145_two_cutoffs.sql:317:    'scheduled_date', v_round_date, 'subtotal', v_subtotal, 'discount_amount', v_discount,
+supabase\migrations\147_role_rls_matrix.sql:351:    'discount_total',     COALESCE(SUM(o.discount_amount) FILTER (WHERE o.status NOT IN ('cancelled','failed')), 0),
+supabase\migrations\148_same_day_no_cutoff.sql:36:  v_subtotal numeric := 0; v_discount numeric := 0; v_delivery_fee numeric := 0;
+supabase\migrations\148_same_day_no_cutoff.sql:219:        IF v_promo.discount_type = 'percentage' THEN v_discount := LEAST(v_subtotal * COALESCE(v_promo.discount_value, 0) / 100, v_subtotal);
+supabase\migrations\148_same_day_no_cutoff.sql:220:        ELSIF v_promo.discount_type = 'fixed_amount' THEN v_discount := LEAST(COALESCE(v_promo.discount_value, 0), v_subtotal); END IF;
+supabase\migrations\148_same_day_no_cutoff.sql:252:  v_total := GREATEST(0, v_subtotal - v_discount + v_delivery_fee + v_service_fee + v_tax);
+supabase\migrations\148_same_day_no_cutoff.sql:267:  INSERT INTO public.orders (id, order_number, customer_id, customer_name, customer_phone, customer_ref, delivery_round_id, status, delivery_method, dropoff_detail, dropoff_latitude, dropoff_longitude, subtotal, delivery_fee, service_fee, discount_amount, tax_amount, total_amount, payment_status, payment_method, special_instructions, order_mode, scheduled_date, branch_id)
+supabase\migrations\148_same_day_no_cutoff.sql:268:  VALUES (v_order_id, v_order_number, v_uid::text, p_customer_name, p_customer_phone, v_uid, p_delivery_round_id, 'pending', v_delivery_method::delivery_method, COALESCE(p_delivery_address, ''), p_dropoff_latitude, p_dropoff_longitude, v_subtotal, v_delivery_fee, v_service_fee, v_discount, v_tax, v_total, 'pending', p_payment_method::payment_method, COALESCE(p_special_instructions, ''), v_mode::order_mode, v_round_date, v_resolved_branch_id);
+supabase\migrations\148_same_day_no_cutoff.sql:319:    'scheduled_date', v_round_date, 'subtotal', v_subtotal, 'discount_amount', v_discount,
+supabase\migrations\153_promotion_campaign_controls.sql:23:--   คิดจากฐานส่วนลด · ทั้งคู่ LEAST กับฐาน · โค้ดไม่ผ่านกฎ = discount 0 (silent-ignore
+supabase\migrations\153_promotion_campaign_controls.sql:43:ALTER TABLE public.promotions ADD COLUMN IF NOT EXISTS max_discount_amount numeric(10, 2);
+supabase\migrations\153_promotion_campaign_controls.sql:53:  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'promotions_max_discount_check') THEN
+supabase\migrations\153_promotion_campaign_controls.sql:54:    ALTER TABLE public.promotions ADD CONSTRAINT promotions_max_discount_check
+supabase\migrations\153_promotion_campaign_controls.sql:55:      CHECK (max_discount_amount IS NULL OR max_discount_amount >= 0);
+supabase\migrations\153_promotion_campaign_controls.sql:130:           COALESCE(SUM(o.discount_amount), 0)::numeric AS spent
+supabase\migrations\153_promotion_campaign_controls.sql:161:CREATE OR REPLACE FUNCTION public.promotion_budget_ok(p_discount numeric, p_order_subtotal numeric)
+supabase\migrations\153_promotion_campaign_controls.sql:169:    WHEN COALESCE(p_discount, 0) <= 0 THEN true
+supabase\migrations\153_promotion_campaign_controls.sql:174:        ELSE (COALESCE((st ->> 'spent')::numeric, 0) + p_discount)
+supabase\migrations\153_promotion_campaign_controls.sql:219:--   คืนค่าส่วนลดที่จะบันทึกลง orders.discount_amount (0 = ไม่ผ่านกฎข้อใดข้อหนึ่ง —
+supabase\migrations\153_promotion_campaign_controls.sql:263:  IF v_promo.discount_type = 'percentage' THEN
+supabase\migrations\153_promotion_campaign_controls.sql:264:    v_disc := LEAST(v_elig * COALESCE(v_promo.discount_value, 0) / 100, v_elig);
+supabase\migrations\153_promotion_campaign_controls.sql:265:  ELSIF v_promo.discount_type = 'fixed_amount' THEN
+supabase\migrations\153_promotion_campaign_controls.sql:266:    v_disc := LEAST(COALESCE(v_promo.discount_value, 0), v_elig);
+supabase\migrations\153_promotion_campaign_controls.sql:269:  -- (4b) เพดานส่วนลดต่อออเดอร์ของแคมเปญ (max_discount_amount)
+supabase\migrations\153_promotion_campaign_controls.sql:270:  IF v_promo.max_discount_amount IS NOT NULL THEN
+supabase\migrations\153_promotion_campaign_controls.sql:271:    v_disc := LEAST(v_disc, GREATEST(v_promo.max_discount_amount, 0));
+supabase\migrations\153_promotion_campaign_controls.sql:317:  v_subtotal numeric := 0; v_discount numeric := 0; v_delivery_fee numeric := 0;
+supabase\migrations\153_promotion_campaign_controls.sql:525:    v_discount := public.promotion_apply_rules(v_promo_id, v_subtotal, v_eligible_subtotal);
+supabase\migrations\153_promotion_campaign_controls.sql:554:  v_total := GREATEST(0, v_subtotal - v_discount + v_delivery_fee + v_service_fee + v_tax);
+supabase\migrations\153_promotion_campaign_controls.sql:569:  INSERT INTO public.orders (id, order_number, customer_id, customer_name, customer_phone, customer_ref, delivery_round_id, status, delivery_method, dropoff_detail, dropoff_latitude, dropoff_longitude, subtotal, delivery_fee, service_fee, discount_amount, tax_amount, total_amount, payment_status, payment_method, special_instructions, order_mode, scheduled_date, branch_id)
+supabase\migrations\153_promotion_campaign_controls.sql:570:  VALUES (v_order_id, v_order_number, v_uid::text, p_customer_name, p_customer_phone, v_uid, p_delivery_round_id, 'pending', v_delivery_method::delivery_method, COALESCE(p_delivery_address, ''), p_dropoff_latitude, p_dropoff_longitude, v_subtotal, v_delivery_fee, v_service_fee, v_discount, v_tax, v_total, 'pending', p_payment_method::payment_method, COALESCE(p_special_instructions, ''), v_mode::order_mode, v_round_date, v_resolved_branch_id);
+supabase\migrations\153_promotion_campaign_controls.sql:620:    'scheduled_date', v_round_date, 'subtotal', v_subtotal, 'discount_amount', v_discount,
+supabase\migrations\154_referral_program.sql:373:      (id, name, description, code, discount_type, discount_value,
+supabase\migrations\155_loyalty_tiers_points.sql:209:    ELSE GREATEST(0::numeric, o.subtotal - o.discount_amount)
+supabase\migrations\155_loyalty_tiers_points.sql:211:             GREATEST(0::numeric, o.subtotal - o.discount_amount),
+supabase\migrations\155_loyalty_tiers_points.sql:286:  v_goods := GREATEST(0::numeric, o.subtotal - o.discount_amount);
+supabase\migrations\155_loyalty_tiers_points.sql:392:        OR OLD.discount_amount IS DISTINCT FROM NEW.discount_amount)
+supabase\migrations\156_engagement_play.sql:462:  v_goods := GREATEST(0::numeric, o.subtotal - o.discount_amount);
+supabase\migrations\156_engagement_play.sql:573:        OR OLD.discount_amount IS DISTINCT FROM NEW.discount_amount)

@@ -8,6 +8,9 @@
 // ============================================
 
 const MAPS_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY ?? ''
+// R21e cosmetic (Owner "รวม haversine"): canonical = deliveryRouter.haversineDistanceKm
+// (สูตรเดียวกันทุกตัวอักษร — เดิม copy ซ้ำ 3 ฉบับ) — deliveryRouter ไม่ import ไฟล์นี้ → ไม่มี cycle
+import { haversineDistanceKm } from './deliveryRouter'
 const ROUTES_KEY = import.meta.env.VITE_GOOGLE_ROUTES_API_KEY ?? MAPS_KEY
 const MAP_ID = import.meta.env.VITE_GOOGLE_MAPS_MAP_ID ?? ''
 
@@ -241,9 +244,7 @@ export function getGoogleMapId(): string {
 
 export function isGoogleMapsJSReady(): boolean { return googleMapsLoaded && !!(window as any).google?.maps }
 
+// R21e cosmetic: delegate ไป canonical haversine (deliveryRouter) — เดิมเป็นสูตร copy ซ้ำกัน
 export function haversineDistanceSimple(lat1: number, lon1: number, lat2: number, lon2: number): number {
-  const R = 6371, toRad = (d: number) => (d * Math.PI) / 180
-  const dLat = toRad(lat2 - lat1), dLon = toRad(lon2 - lon1)
-  const a = Math.sin(dLat/2)**2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon/2)**2
-  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+  return haversineDistanceKm(lat1, lon1, lat2, lon2)
 }

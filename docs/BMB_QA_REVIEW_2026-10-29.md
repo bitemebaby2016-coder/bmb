@@ -33,7 +33,7 @@
 | 2.5 | ร้านปิด = สั่งไม่ได้ทั้ง client+server? | ✅ | mirror `shopHoursGate` + `trg_shop_hours`/160 `ERR_STORE_CLOSED` |
 | 2.6 | ลูปไรเดอร์ปิดเองได้? | ✅ | R13=166 (path sanitize+arrived+self-heal) · R14=167 (batch id/hop) · R16=168 (multi-job) — evidence `e2e/r1*-result.json` ทุกตัว |
 | 2.7 | **Regression policy/storage path** | 🔧 แก้แล้ว | **CI แดง 10 รัน (#188–#197)** เพราะ 166 ไม่ decode `%XX` → `driver_path_folder('drv-%20…') ≠ ('drv- …')` → RLS บล็อก INSERT = contract 138-139 G7 · **แก้ = `migrations/169_pod_path_percent_encoding.sql`** |
-| 2.8 | งานซ้ำเชิงโครงสร้าง (known) | ⚠️ | haversine 2 ฉบับ · `confirmOfflinePayment` wrapper 2 · id จาก `to_char` ~40 จุด = cosmetic ค้างเดิม |
+| 2.8 | งานซ้ำเชิงโครงสร้าง (known) | ✅ ปิดแล้ว (R21e) | haversine 3 ฉบับ → **delegate ตัวเดียว** `deliveryRouter.haversineDistanceKm` · `confirmOfflinePayment` wrapper 2 → **delegate ตัวเดียว** `paymentGateway` · id จาก `to_char` → **migration 173 แก้ 3 function ที่ live จริง** (bigint::text pattern R14/167 · หลักฐาน production `e2e/r21eProdIdProbe.json`) |
 | 2.9 | External providers (Grab/Lineman/Foodpanda) | ⚠️ | mock ทั้งหมด — รอ Owner ตัดสินใจ credentials หรือปิด module |
 
 ---
@@ -82,7 +82,7 @@
 1. **🔧 แก้แล้วรอบนี้:** migration **169** (CI contract 138-139 %XX regression จาก 166) + copy หน้าเช็คเอาท์ 7 จุด (ตามคำสั่ง Owner)
 2. **N3 (P1):** เพิ่ม `onAuthStateChange` global sync (1.6) — ปิดอาการ "session หมดอายุแล้วหน้าค้างสถานะเก่า"
 3. **P1:** จำกัด Google Maps API key ด้วย referrer (5.4)
-4. **P2 (cosmetic เดิม):** รวม haversine · confirmOfflinePayment wrappers · to_char ids
+4. ~~**P2 (cosmetic เดิม):** รวม haversine · confirmOfflinePayment wrappers · to_char ids~~ → **ทำแล้วทั้งหมด (รอบ R21e — ดู §ท้ายสุด)**
 5. **Owner checklist:** empty state รายหน้า (3.5) · responsive มือถือ (4.4)
 
 *จัดทำ 2026-10-29 (R19) · probe รันจริงบน src ทั้งหมด · ไม่มีข้อความไหนเขียนโดยไม่ได้ตรวจโค้ด*
@@ -121,7 +121,7 @@
 | B6 | **พิมพ์อัตโนมัติจากเทมเพลตเดิม** | 🔧 | `AdminOrders.handleAcceptOrder` → `autoPrintKitchenTicket()` (ใช้ `buildKitchenTicketHtml` เดิม · เคารพ `autoPrintKitchen` · พังไม่กระทบออเดอร์) |
 | B7 | **แอดมินสั่งพิมพ์เองต่อออเดอร์** | 🔧 | ปุ่ม `🧾 พิมพ์ใบเสร็จ` / `🍜 พิมพ์ใบสั่งครัว` → `printOrderTicket()` = enqueue idempotent → render → mark `sent`/`failed` |
 | B8 | ความซื่อสัตย์เรื่อง "พิมพ์สำเร็จ" | ⚠️ ข้อจำกัด | เบราว์เซอร์ยังเป็นคนเลือกเครื่องจริง (`window.print`) → ต้องตั้ง Nimbot เป็น default printer ของ Windows หรือเลือกในไดอะล็อก · ระบบ**ไม่เคย**อ้างว่าพิมพ์สำเร็จจนกว่าจะได้ยืนยัน (ตรรกะเดิมคงไว้) |
-| B9 | งานเดิมที่ทราบอยู่แล้ว (known) | ⚠️ | haversine 2 ฉบับ · `confirmOfflinePayment` wrapper 2 · id จาก `to_char` ~40 จุด = cosmetic |
+| B9 | งานเดิมที่ทราบอยู่แล้ว (known) | ✅ ปิดแล้ว (R21e) | haversine รวมเหลือตัวเดียว (canonical `deliveryRouter`) · `confirmOfflinePayment` เหลือตัวเดียว (canonical `paymentGateway`) · to_char ids = **m173** แก้ ord-/osh-/notif- (หลักฐานก่อนแก้ = id `ord- ###########-xxxxxx` จริงใน production) |
 
 ## เฟส 3 / 4 — ยังไม่ได้ทำรอบนี้
 
@@ -253,3 +253,17 @@
 
 - ทุกหน้า: `import LoadErrorBanner` + `loadError` state + `setLoadError('')` ตอนเริ่มโหลด + ข้อความไทยใน catch/query-error + banner ปุ่ม 🔄 (หน้าที่โหลดผ่าน effect ใช้ `retryKey`, หน้าที่มี `load/loadAll/loadInventory` เรียกตรง ๆ)
 - ตรวจแล้ว: source-contract tests ของ 4 หน้าหลัก (DeliveryManagement/VotePage/ReviewPage/AdminRounds) ผ่านครบ · probe script = `e2e/r21dProbe.cjs`
+
+---
+
+# รอบ R21e — P2 server cap + cosmetic ปิดหมด (2026-10-29 · Owner "ทำงานที่ค้างให้หมด")
+
+| รายการ | ผล | หลักฐาน |
+|---|---|---|
+| **server cap ส่วนลด 15% (P2)** | ✅ **migration 172** — `promotion_apply_rules` (จุดตัดสินส่วนลดที่เดียวของ `create_order_with_items`) เพิ่ม (4c) `LEAST(v_disc, ROUND(v_sub*0.15,2))` · contract `contracts_153` อัปเดตตามกติกาใหม่ (G2 GRUSE 20→15 · G5/G8 50→22.5) | contract CI รันไฟล์นี้จริงบน PG ทุก push · client guardrail เดิม = `discountGuardrail.ts` (บล็อกปุ่ม) |
+| **to_char ids ~40 จุด** | ✅ **migration 173** — แก้ **3 function ที่ live จริง** (ที่เหลือ ~37 จุด = body ประวัติที่ถูก CREATE OR REPLACE ทับแล้ว ไม่มีตัวตนใน DB) · fix = `((extract(epoch…)*1000)::bigint)::text` (pattern R14/167 พิสูจน์แล้ว) | **หลักฐาน production ก่อนแก้** (`e2e/r21eProdIdProbe.json`): `orders.id = 'ord- ###########-a04759'` (mask 11 หลักล้น → `#` + space นำ) · `order_status_history.id = 'osh-  1793…'` (mask 14 หลัก → space นำ) · generator = `e2e/r21eGen173.cjs` (extract VERBATIM กันพิมพ์เพี้ยน) |
+| **haversine หลายฉบับ** | ✅ canonical เดียว = `deliveryRouter.haversineDistanceKm` · `googleMaps.haversineDistanceSimple` + `routeOptimization.calculateDistance` = delegate (ชื่อ/พารามิเตอร์เดิมคงไว้ — ไม่แตะผู้เรียก ~15 จุด) | targeted tests deliveryRouter/routeRealData ผ่าน |
+| **confirmOfflinePayment wrapper 2** | ✅ canonical = `paymentGateway.confirmOfflinePayment` (คืน `PaymentConfirmResult`) · `bmbAdminApi_orders.confirmOfflinePayment` = delegate (คง `{success,error?}` ให้ AdminOrders) | paymentStateMachine/adminOrdersModeFilter/adminPreOrdersConsolidation ผ่าน |
+
+- **ข้อจำกัดโดยเจตนา (ตามกฏ repo):** ห้ามแก้ migration ที่ apply แล้ว → แก้ด้วย CREATE OR REPLACE ในไฟล์ใหม่ (172/173) เท่านั้น · แถว id เก่าใน DB ปล่อยเป็นประวัติ (id ใหม่เท่านั้นที่ clean)
+- เอกสาร: **TEST_PACK §M** (ขั้นตรวจ M1-M12 ของทุกสิ่งที่ทำรอบ R21) · MASTER_STATUS §1.3 · AI_WORK_STATE · แฮนออฟ

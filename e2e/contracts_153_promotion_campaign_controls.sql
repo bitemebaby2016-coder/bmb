@@ -116,8 +116,8 @@ BEGIN
   v := public.promotion_apply_rules('no-such-promo', 100, 100);
   IF v <> 0 THEN RAISE EXCEPTION 'G2 FAIL: unknown promo should be 0, got %', v; END IF;
 
-  v := public.promotion_apply_rules('c153-u', 100, 100);   -- fixed 20, limit 1 → ได้ 20 (usage 1)
-  IF v IS DISTINCT FROM 20 THEN RAISE EXCEPTION 'G2 FAIL: first use of GRUSE should be 20, got %', v; END IF;
+  v := public.promotion_apply_rules('c153-u', 100, 100);   -- fixed 20, limit 1 → global cap 172 ตัดเหลือ 15 (usage 1)
+  IF v IS DISTINCT FROM 15 THEN RAISE EXCEPTION 'G2 FAIL: first use of GRUSE should be 15 (capped by 172), got %', v; END IF;
   v := public.promotion_apply_rules('c153-u', 100, 100);   -- ใช้ครบแล้ว → 0 (usage ไม่เพิ่ม)
   IF v <> 0 THEN RAISE EXCEPTION 'G2 FAIL: usage limit should block 2nd use, got %', v; END IF;
   IF (SELECT usage_count FROM public.promotions WHERE id = 'c153-u') <> 1 THEN
@@ -161,8 +161,8 @@ BEGIN
   --  จะบล็อกส่วนลด 50 ซะก่อน ซึ่ง "ถูกต้องแล้ว" แต่ทำให้ทดสอบ scope ไม่ได้)
   UPDATE public.business_settings SET value = jsonb_set(value, '{budget_percent}', 'null'::jsonb, true)
    WHERE key = 'promotion_policy';
-  v := public.promotion_apply_rules('c153-b', 150, 100);   -- 50% ของ base 100 (ไม่ใช่ 150)
-  IF v IS DISTINCT FROM 50 THEN RAISE EXCEPTION 'G5 FAIL: scoped base 100 → 50, got %', v; END IF;
+  v := public.promotion_apply_rules('c153-b', 150, 100);   -- 50% ของ base 100 (ไม่ใช่ 150) → 50 แต่โดน global cap 172 = 15% ของ 150
+  IF v IS DISTINCT FROM 22.5 THEN RAISE EXCEPTION 'G5 FAIL: scoped 50 capped to 15%% of 150 = 22.5, got %', v; END IF;
   v := public.promotion_apply_rules('c153-b', 150, 0);     -- ไม่มีสินค้าเข้าเกณฑ์ → 0
   IF v <> 0 THEN RAISE EXCEPTION 'G5 FAIL: empty scope base should be 0, got %', v; END IF;
   UPDATE public.business_settings SET value = jsonb_set(value, '{budget_percent}', '15'::jsonb, true)
@@ -261,10 +261,15 @@ BEGIN
     p_dropoff_longitude := (SELECT COALESCE(b.kitchen_longitude, (public.kitchen_location()->>'longitude')::numeric) + 0.001 FROM public.branches b WHERE b.id = 'branch-tenant-bmb-001-main'),
     p_promotion_code := 'GRSCOPE'
   ) INTO v_res;
-  IF (v_res->>'discount_amount')::numeric IS DISTINCT FROM 50 THEN
-    RAISE EXCEPTION 'G8 FAIL: GRSCOPE on [100+50] should discount 50 (scope base), got %', v_res->>'discount_amount';
+  -- (ดู G5: scope base 100 → 50 — แต่ global cap 172 = 15% ของ subtotal 150 = 22.50)
+  IF (v_res->>'discount_amount')::numeric IS DISTINCT FROM 22.5 THEN
+    RAISE EXCEPTION 'G8 FAIL: GRSCOPE on [100+50] should discount 22.5 (172 cap = 15%% of 150), got %', v_res->>'discount_amount';
   END IF;
-  RAISE NOTICE 'G8 PASS (RPC: no-code 0 · budget block · GR10=10 on orders · scoped=50)';
+  -- 173: id ใหม่ต้องไม่มี '#' (to_char overflow) หรือ space (to_char padding) อีกต่อไป
+  IF (SELECT id FROM public.orders WHERE order_number = v_res->>'order_number') ~ '[# ]' THEN
+    RAISE EXCEPTION 'G8 FAIL: order id still contains to_char artifacts (# or space)';
+  END IF;
+  RAISE NOTICE 'G8 PASS (RPC: no-code 0 · budget block · GR10=10 on orders · scoped=22.5 capped · id clean)';
 
   RAISE NOTICE 'CONTRACT 153: PASS';
 END $$;
