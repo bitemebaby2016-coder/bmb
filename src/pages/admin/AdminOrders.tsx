@@ -25,8 +25,9 @@ import type { RoundLite } from '@/lib/preOrderQueue'
 import type { OrderForm } from '@/lib/bmbAdminApi_orders'
 import type { Product } from '@/types'
 import { useAdminTenantContextStore } from '@/lib/adminTenantContext'
-import { getPaymentIntentsFor, getPaymentExceptionOrders, describePaymentConfirmError, type PaymentIntentLite } from '@/lib/paymentExceptions'
+import { getPaymentIntentsFor, getPaymentExceptionOrders, describePaymentConfirmError, paymentConfirmability, type PaymentIntentLite } from '@/lib/paymentExceptions'
 import { SlipReviewPanel } from '@/components/admin/SlipReviewPanel'
+import { SlipThumb } from '@/components/admin/SlipThumb'
 
 const PAGE_SIZE = 25
 
@@ -74,6 +75,9 @@ export function AdminOrders() {
   // หน้า (getPaymentIntentsFor = เส้นอ่านเดียวผ่าน paymentGateway) แล้วส่งเป็น props
   // เข้า SlipThumb/SlipReviewPanel (เลิก self-fetch ซ้ำทีละออเดอร์)
   const [intentsByOrder, setIntentsByOrder] = useState<Record<string, PaymentIntentLite[]>>({})
+  // R21 (Owner ask #3): ประตูตรวจสลิปก่อนรับออเดอร์ — เงินโอนค้างตรวจ → ต้องดูรูป
+  // + ยืนยัน (confirm_offline_payment ตัวเดิม) ก่อน/พร้อมกด "รับออเดอร์"
+  const [slipGate, setSlipGate] = useState<string | null>(null)
   // R3 (D-08): ถ้าอ่าน payment_intents ไม่ได้ ต้องแสดง banner ชัด — ห้ามเงียบจน
   // แอดมินคิดว่า "ไม่มีสลิป" (ต้นเหตุ D-08 เดิมคือ read โดน REVOKE แล้วคืน [])
   const [paymentReadError, setPaymentReadError] = useState('')
@@ -185,6 +189,19 @@ export function AdminOrders() {
   // ของหน้านี้ (การจัดการออเดอร์) — สายครัวอยู่ที่ AdminKitchen · สายส่งอยู่ที่
   // Dispatch Center (DeliveryManagement) · ปุ่มเดียวกันห้ามมีสองที่
   async function handleAcceptOrder(orderNumber: string) {
+    // R21 (Owner ask #3): เงินโอนค้างตรวจสลิป → บังคับผ่าน "ประตูตรวจสลิป" ก่อน
+    // (reuse ระบบเดิมทั้งหมด: SlipThumb โชว์รูปจริง + confirm_offline_payment ตัวเดิม)
+    const row = orders.find((o) => o.order_number === orderNumber)
+    const evidence = intentsByOrder[orderNumber] || []
+    if (row?.payment_status === 'pending' && evidence.some((i) => i.slip_path)) {
+      setSlipGate(orderNumber)
+      return
+    }
+    await acceptOrderCore(orderNumber)
+  }
+
+  // ขั้นตอน "รับออเดอร์จริง" (ต่อจากประตูตรวจสลิป หรือออเดอร์ที่ไม่มีสลิปค้างตรวจ)
+  async function acceptOrderCore(orderNumber: string) {
     const updated = await updateOrderStatus(orderNumber, 'confirmed')
     loadOrders()
     if (!updated) {
@@ -196,6 +213,14 @@ export function AdminOrders() {
     // R21: รับออเดอร์แล้ว → พิมพ์ใบสั่งอาหารเข้าครัวอัตโนมัติจากเทมเพลตเดิม
     // (fire-and-forget: การพิมพ์พังไม่มีผลกับออเดอร์ — ออเดอร์ยืนยันแล้ว)
     void autoPrintKitchenTicket(orderNumber)
+  }
+
+  // R21 (Owner ask #3): กด "ยืนยันสลิป & รับออเดอร์" ในประตู — ยืนยันเงินด้วย
+  // canonical RPC ตัวเดิม (confirm_offline_payment) ก่อน แล้วค่อยรับออเดอร์
+  async function handleSlipGateConfirm(orderNumber: string) {
+    setSlipGate(null)
+    await handleConfirmPayment(orderNumber)
+    await acceptOrderCore(orderNumber)
   }
 
   // R21 (Owner 2026-10-29) — พิมพ์อัตโนมัติหลัง "รับออเดอร์": ใช้ buildKitchenTicketHtml
@@ -385,6 +410,48 @@ export function AdminOrders() {
         onConfirmPayment={handleConfirmPayment}
         onRejectPayment={handleRejectPayment}
       />
+
+      {/* R21 (Owner ask #3): ประตูตรวจสลิปก่อนรับออเดอร์ — โชว์รูปสลิปจริง (SlipThumb)
+          + ยืนยันด้วย canonical RPC ตัวเดิม ไม่มีการ UPDATE เงินจาก client */}
+      {slipGate && (() => {
+        const o = orders.find((x) => x.order_number === slipGate) || reviewOrders.find((x) => x.order_number === slipGate)
+        const ev = intentsByOrder[slipGate] || []
+        const check = o ? paymentConfirmability(o, ev) : null
+        return (
+          <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4" data-testid="slip-gate-modal">
+            <div className="card max-w-md w-full p-4 bg-white max-h-[90vh] overflow-y-auto">
+              <h3 className="font-bold text-brand-accent mb-2">🧾 ตรวจสลิปก่อนรับออเดอร์ {slipGate}</h3>
+              <p className="text-xs text-brand-muted mb-3">
+                ออเดอร์นี้มีหลักฐานการโอนค้างตรวจ — ดูรูปสลิปด้านล่าง แล้วยืนยันการชำระเงิน
+                (ระบบเดิม = confirm_offline_payment) ก่อน/พร้อมกดรับออเดอร์
+              </p>
+              <SlipThumb
+                orderNumber={slipGate}
+                paymentStatus={o?.payment_status || 'pending'}
+                paymentMethod={o?.payment_method || ''}
+                intents={ev}
+              />
+              {check && !check.confirmable && (
+                <p className="mt-2 text-xs text-amber-700" data-testid={`slip-gate-reason-${slipGate}`}>⚠ {check.reason}</p>
+              )}
+              <div className="flex gap-2 mt-4 justify-end">
+                <button type="button" className="btn btn-outline text-sm" onClick={() => setSlipGate(null)} data-testid="slip-gate-later">
+                  ⏳ ไว้ก่อน
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-success text-sm disabled:opacity-50"
+                  disabled={!check?.confirmable}
+                  onClick={() => { void handleSlipGateConfirm(slipGate) }}
+                  data-testid={`slip-gate-confirm-accept-${slipGate}`}
+                >
+                  ✅ ยืนยันสลิป &amp; รับออเดอร์
+                </button>
+              </div>
+            </div>
+          </div>
+        )
+      })()}
 
 <div className="space-y-4">
         {filteredOrders.map((order) => {

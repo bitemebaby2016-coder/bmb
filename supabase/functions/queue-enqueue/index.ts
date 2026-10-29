@@ -101,7 +101,18 @@ function json(body: unknown, status = 200): Response {
 }
 
 Deno.serve(async (req: Request): Promise<Response> => {
-  if (req.method === 'OPTIONS') return new Response('ok', { status: 200 })
+  // R21 Phase 4 EF audit: OPTIONS ต้องพก CORS headers เสมอ (เหมือน create-checkout)
+// — ตอนนี้ตอบ 200 เปล่า ๆ preflight ของ browser จึงล้ม (server-to-server ไม่กระทบ)
+if (req.method === 'OPTIONS') {
+  return new Response('ok', {
+    status: 200,
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-automation-token',
+      'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    },
+  })
+}
   if (req.method !== 'POST') return json({ error: 'method not allowed' }, 405)
 
   // --- authentication: shared automation token (same pattern as automation-worker) ---

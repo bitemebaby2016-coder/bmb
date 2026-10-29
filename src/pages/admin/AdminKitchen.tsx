@@ -16,6 +16,9 @@ import { showToast } from '@/components/ui/ToastContainer'
 // R21 Phase 3: โหลดคิวครัวไม่สำเร็จต้องฟ้อง (ห้ามโชว์ summary = 0 เหมือนไม่มีงาน)
 import { LoadErrorBanner } from '@/components/ui/LoadErrorBanner'
 import { useNotificationStore } from '@/store/notificationStore'
+// R21 (Owner ask #2): ตัดสต็อกวัตถุดิบ "ครั้งเดียวต่อออเดอร์" ที่จุดเริ่มทำครัว —
+// SAME_DAY (ส่งทันที) + PRE_ORDER ทุก round ผ่าน RPC เดียวกัน = unified stock
+import { deductInventoryForOrder } from '@/lib/kitchenService'
 import type { DeliveryRoundRow } from '@/lib/bmbAdminApi_rounds'
 import type { OrderForm } from '@/lib/bmbAdminApi_orders'
 
@@ -97,6 +100,15 @@ export function AdminKitchen() {
       if (res && res.status === to) {
         showToast('✅ ' + o.order_number + ' → ' + to, 'success')
         writeAuditLog({ action: 'order_status_change', entity_type: 'order', entity_id: o.order_number, description: 'kitchen: ' + o.order_number + ' → ' + to })
+        // R21 (Owner ask #2 · unified stock): เริ่มทำครัว = ตัดสต็อกวัตถุดิบผ่าน RPC
+        // เดียว `deduct_inventory_for_order` — SAME_DAY + PRE_ORDER ทุก round ใช้กอง
+        // วัตถุดิบเดียวกัน · ยกเลิกออเดอร์ = `cancel_order` คืนสต็อกอัตโนมัติอยู่แล้ว
+        if (to === 'preparing') {
+          const deducted = await deductInventoryForOrder(o.order_number)
+          if (!deducted) {
+            showToast('⚠ ตัดสต็อกวัตถุดิบไม่สำเร็จ — ตรวจหน้าคลังวัตถุดิบ (สถานะออเดอร์เปลี่ยนแล้ว)', 'error')
+          }
+        }
         // M4 (2026-10-22): notification event ของสายครัวถูกยิงจากเจ้าของปุ่ม (ที่นี่)
         useNotificationStore.getState().triggerEvent(
           to === 'preparing' ? 'order_preparing' : 'order_ready_for_dispatch',
@@ -107,7 +119,8 @@ export function AdminKitchen() {
         // พร้อมส่งแล้วพาไปหน้าจัดส่ง (เรียกขนส่ง/มอบหมายไรเดอร์) ทันที
         if (to === 'ready_for_dispatch') {
           showToast('📦 พร้อมส่งแล้ว — พาไปหน้าจัดส่งเพื่อเรียกขนส่ง/มอบหมายไรเดอร์', 'info')
-          navigate('/admin/delivery')
+          // R21 (Owner ask #4): เด้งไปหน้าจัดส่งพร้อมไฮไลต์ออเดอร์นั้น (?focus=)
+          navigate('/admin/delivery?focus=' + o.order_number)
         }
       } else {
         showToast('เปลี่ยนสถานะไม่สำเร็จ (server ปฏิเสธ)', 'error')

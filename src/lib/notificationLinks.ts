@@ -27,6 +27,9 @@ export function extractOrderNumber(n: NotificationLinkInput): string | null {
 }
 
 const ADMIN_KITCHEN_TYPES = ['ORDER_PREPARING', 'ORDER_READY', 'ORDER_READY_FOR_DISPATCH']
+// R21 (Owner ask #1): ทีมครัวกดแจ้งเตือน "ออเดอร์ใหม่/เพิ่งยืนยัน" → ไปคิวครัวทันที
+// (role อื่น ๆ ยังคงไป /admin/orders — หน้ารับออเดอร์ ไม่เปลี่ยนพฤติกรรมเดิม)
+const KITCHEN_NEW_ORDER_TYPES = ['ORDER_CREATED', 'ORDER_PLACED', 'ORDER_CONFIRMED', 'PAYMENT_CONFIRMED']
 const ADMIN_DELIVERY_TYPES = [
   'ORDER_DISPATCHED',
   'ORDER_OUT_FOR_DELIVERY',
@@ -51,6 +54,8 @@ export function resolveNotificationRoute(
   if (role && role !== 'customer') {
     // admin-capable + specialist roles (146) — หน้าทำงานตามประเภทงาน
     if (ADMIN_KITCHEN_TYPES.includes(type)) return '/admin/kitchen'
+    // R21 (Owner ask #1): ทีมครัวกดแจ้งเตือนออเดอร์ใหม่/ยืนยันแล้ว → คิวครัวทันที
+    if (role === 'kitchen' && KITCHEN_NEW_ORDER_TYPES.includes(type)) return '/admin/kitchen'
     if (ADMIN_DELIVERY_TYPES.includes(type)) {
       // R13 (Owner 2026-10-28): เด้งไปหน้าจัดส่งพร้อมไฮไลต์แถวออเดอร์นั้น
       // — เปิดเจอ "คิว/กำลังเดินทาง" ที่มีปุ่ม "แอดมินปิดวงจร" ทันที

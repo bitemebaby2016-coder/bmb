@@ -1,7 +1,7 @@
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { HelmetProvider } from 'react-helmet-async'
 import { lazy, Suspense, useEffect, useState, useSyncExternalStore } from 'react'
-import { useAuthStore, fetchProfileRole } from './store/authStore'
+import { useAuthStore, probeProfileRole } from './store/authStore'
 import { isAdminCapableRole } from './lib/adminUi'
 import { Layout } from './components/layout/Layout'
 import { ErrorBoundary } from './components/ErrorBoundary'
@@ -16,6 +16,8 @@ import { subscribeSocialLinks, getSocialVersion } from './lib/socialLinks'
 import { useAdminTenantContextStore } from './lib/adminTenantContext'
 // N3 (R19 · QA 1.6): listener auth กลาง — SIGNED_OUT → clear + /login · TOKEN_REFRESHED → refreshRole
 import { AuthSessionSync } from './components/AuthSessionSync'
+// R21 · เฟส 1 A1: AdminRoute ต้องฟ้องเมื่อ probe สิทธิ์ล้มเหลว (ห้ามเตะ admin ออก)
+import { LoadErrorBanner } from './components/ui/LoadErrorBanner'
 import { listTenants } from './lib/adminTenantApi'
 
 // Core page (must load immediately — it is the LCP page)
@@ -123,30 +125,66 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 // P0-3 FIX: AdminRoute ตรวจ role จาก DB (profiles) ผ่าน RLS
 // F-02 FIX (Wave 1): รอ isInitializing ก่อน — reload/deep-link /admin/* ต้องคง
 // session จาก Supabase Auth (persistSession) ไม่ redirect ไป /login ระหว่าง restore
+// R21 · เฟส 1 A1/A2/A6:
+//   A1 = probeProfileRole() คืน 3 สถานะ — เน็ตขัดข้องห้ามเตะ admin ออก (โชว์ banner ลองใหม่)
+//   A2 = ส่ง state.from เหมือน ProtectedRoute — deep-link /admin/orders?tab=x กลับหลัง login
+//   A6 = store มี role อยู่แล้ว → เข้าหน้าทันที + verify background (ไม่กระพริบ spinner)
 function AdminRoute({ children }: { children: React.ReactNode }) {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
   const isInitializing = useAuthStore((s) => s.isInitializing)
+  const storeRole = useAuthStore((s) => s.role)
   const setStoreRole = useAuthStore((s) => s.setRole)
-  const [role, setRole] = useState<string | null>(null)
-  const [checking, setChecking] = useState(true)
+  const location = useLocation()
+  const [probeDone, setProbeDone] = useState(false)
+  const [probeError, setProbeError] = useState(false)
+  const [retryKey, setRetryKey] = useState(0)
 
   useEffect(() => {
     let cancelled = false
     if (isInitializing) return
-    if (!isAuthenticated) { setChecking(false); return }
-    fetchProfileRole().then((r) => {
+    if (!isAuthenticated) { setProbeDone(true); setProbeError(false); return }
+    probeProfileRole().then((probe) => {
       if (cancelled) return
-      setRole(r)
-      // 146: sync เข้า store ด้วย — AdminNav ใช้ role นี้ซ่อนเมนูตามสิทธิ์ (per-role nav)
-      setStoreRole(r)
-      setChecking(false)
+      if (probe.status === 'ok') {
+        const r = probe.role
+        setStoreRole(r) // 146: sync เข้า store ด้วย — AdminNav ใช้ role นี้ซ่อนเมนูตามสิทธิ์ (per-role nav)
+        setProbeError(false)
+      } else {
+        // A1: "โหลดไม่ได้" ต่างจาก "ไม่มีสิทธิ์" — เก็บ role เดิมไว้ ห้าม Navigate เตะออก
+        console.error('[AdminRoute] role probe failed:', probe.message)
+        setProbeError(true)
+      }
+      setProbeDone(true)
     })
     return () => { cancelled = true }
-  }, [isAuthenticated, isInitializing, setStoreRole])
+  }, [isAuthenticated, isInitializing, setStoreRole, retryKey])
 
   if (isInitializing) return <LoadingSpinner />
-  if (!isAuthenticated) return <Navigate to="/login" replace />
-  if (checking) return <LoadingSpinner />
+  if (!isAuthenticated) {
+    // A2 (R21): เก็บเส้นทางที่ตั้งใจไว้ — หลัง login กลับหน้าเดิม (รวม query string)
+    return (
+      <Navigate
+        to="/login"
+        replace
+        state={{ from: location.pathname + location.search }}
+      />
+    )
+  }
+  // A6 (R21): store มี role แล้ว → ผ่านเลย (probe background ยังวิ่ง — ไม่กระพริบ spinner)
+  const role = storeRole
+  if (!probeDone && !role) return <LoadingSpinner />
+  // A1: โหลด role ไม่สำเร็จ + ไม่มี role เก่า → ฟ้อง + ลองใหม่ได้ (ห้ามเงียบ/เตะออก)
+  if (probeError && !role) {
+    return (
+      <div className="p-4">
+        <LoadErrorBanner
+          message='ตรวจสอบสิทธิ์แอดมินไม่สำเร็จ — ตรวจสอบการเชื่อมต่อแล้วกด "ลองใหม่"'
+          onRetry={() => { setProbeDone(false); setProbeError(false); setRetryKey((n) => n + 1) }}
+          testId="admin-route-role-error"
+        />
+      </div>
+    )
+  }
   // 146 (Owner signed P1): 11 admin-capable roles (rider/customer ไม่ผ่าน)
   if (!isAdminCapableRole(role)) return <Navigate to="/" replace />
 

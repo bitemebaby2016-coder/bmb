@@ -171,3 +171,61 @@
 `DeliveryManagement` · `AdminRounds` · `InventoryPage` · `AuditLogPage` · `AdminPaymentExceptions` · `AdminRecipes` · `AdminBrands` · `AdminAssetAudit` · `AdminPortfolio` · `AdminTenants` · `VotePage` · `ReviewPage` — ใช้แพตเทิร์น `LoadErrorBanner` เดิมได้ทันที (หน้าละ ~4 จุด)
 
 **gates เฟส 3:** tsc 0 · lint 0 (`e2e/gates_r21b_lint.log`) · **vitest 168 files / 1,729 tests / 0 fail** (`e2e/gates_r21b_vitest.log` · รันเดี่ยว) · build 0 (`e2e/gates_r21b_build.log`)
+
+---
+
+# รอบ R21 · เฟส 1 แก้ครบ + เฟส 4 (PWA/EF/responsive) + 4 คำสั่ง Owner (2026-10-29 · เฟสเดียวกันรอบสอง)
+
+## เฟส 1 — A1-A8 แก้ในโค้ดแล้วทั้งหมด (ตารางด้านบน = ผลตรวจก่อนแก้)
+
+| # | สถานะ | สิ่งที่ทำ | หลักฐาน |
+|---|---|---|---|
+| A1 | 🔧 แก้แล้ว | `probeProfileRole()` คืน **3 สถานะ** (`ok+role` / `ok+null` / `error`) · AdminRoute: probe error + ไม่มี role เก่า → **banner ลองใหม่** ไม่ใช่ `<Navigate to="/">` | `authStore.ts` · `App.tsx` `admin-route-role-error` · `authProbeRoles.test.ts` |
+| A2 | 🔧 แก้แล้ว | AdminRoute ส่ง `state={{ from: pathname+search }}` เหมือน ProtectedRoute | `App.tsx` · test |
+| A3 | 🔧 แก้แล้ว | `navigate(returnTo \|\| (role === 'admin' ? '/admin' : '/'))` — returnTo มาก่อนเสมอ | `LoginPage.tsx:114` · test |
+| A4 | 🔧 แก้แล้ว | `logout()` = try/**finally** ล้าง store เสมอแม้ `signOut()` reject | `authStore.ts` · test (signOut throw → store ล้าง) |
+| A5 | 🔧 แก้แล้ว | `login`/`loginByPhone`/`loginByLocation` try/catch คืน false/error สงบ · `refreshRole` error → **คง role เดิม** + ห้าม reject | `authStore.ts` · test |
+| A6 | 🔧 แก้แล้ว | AdminRoute: store มี role → **เข้าหน้าทันที** + probe background (ไม่กระพริบ spinner) | `App.tsx` `if (!probeDone && !role)` |
+| A7 | 🔧 แก้แล้ว | **migration 171 `my_role()`** (SECURITY DEFINER · search_path pinned · ปิด anon) คืนชื่อบทบาทจริง · `is_admin` boolean เหลือแค่ fallback สุดท้าย | `171_my_role_rpc.sql` · **APPLIED production แล้ว** (`e2e/r21cApply171-result.json` ALL_PASS · ledger top=171) |
+| A8 | 🔧 แก้แล้ว | ลบ `isAdmin()` dead code ออกจาก `supabase.ts` (มีแค่ mock ใน tests) | `supabase.ts` |
+
+**test ใหม่:** `src/__tests__/authProbeRoles.test.ts` (10 ข้อ — 3 สถานะ probe · logout finally · refreshRole คง role · source contracts A2/A3/A6)
+
+## เฟส 4 — PWA / Edge Functions / responsive (audit + แก้จริง)
+
+### PWA ✓ ทำงานครบอยู่แล้ว (audit ยืนยันจาก dist จริง)
+- `vite-plugin-pwa` strategies=**injectManifest** + **`src/sw.ts` เขียนเอง** (W3-D-7): precache + NavigationRoute (deep-link offline) + `push`/`notificationclick`/`pushsubscriptionchange` + skipWaiting/clientsClaim (OWNER FIX 2026-10-26)
+- `dist/` build วันนี้มี `sw.js` + `registerSW.js` + `manifest.webmanifest` + `<link rel=manifest>` + register script ✓
+- **แก้:** ลบ `public/manifest.json` เก่าซ้ำ (dist เคย ship **2 manifests** — อันเก่าใน public/ มี icon แค่ favicon.svg ไม่อ้าง pwa-192/512)
+
+### Edge Functions — CORS/OPTIONS matrix (source + **live probe production**)
+| EF | OPTIONS+CORS | หมายเหตุ |
+|---|---|---|
+| ai-proxy · otp-send · guest-checkout-session · phone-auto-login · create-checkout · omise-checkout · voice-tts | ✓ ครบ | ตอบ CORS headers ทุกเมธอด |
+| **image-gen** | ❌→🔧 **deploy แล้ว** | เดิมตอบ `200 "ok"` **เปล่า ๆ ไม่มีหัว CORS** (probe ก่อนแก้ = ไม่มี Access-Control-* เลย) → browser preflight จาก biteme-baby.com ล้ม (AdminMarketing invoke) · แก้ + **deploy production** · **probe หลังแก้: ACAO * + allow-headers + allow-methods ✓** |
+| **queue-enqueue** · **push-send** | ❌→🔧 **deploy แล้ว** | เหมือนกัน (server-to-server ไม่กระทบตอนนี้ — กันหลุดเมื่อเปิดให้ browser เรียก) |
+| workers/webhooks/sms/stripe/omise (server-only) | n/a | ไม่ต้อง CORS |
+
+- evidence: `e2e/efOptions-image-gen.txt` (ก่อน) · `e2e/efOptions-image-gen-after.txt` (หลัง) · deploy ผ่าน `e2e/r21cDeployImageGen.cjs <fn>`
+
+### Responsive (source-level audit)
+- viewport meta ✓ `width=device-width, initial-scale=1.0` (`index.html:6`)
+- safe-area มือถือ = BottomNav (`--bmb-bottom-nav-h` + `env(safe-area-inset)` ใน `index.css`) ✓ · ไม่พบ fixed-width ที่ทำให้แนวนอนล้นในหน้าหลัก
+- **ข้อจำกัด:** ตรวจนี้เป็น static audit — ยังไม่มีการเปิดจริงบนมือถือ (Owner retest ด้วย iPhone/Android จริง)
+
+## 4 คำสั่ง Owner — ทำแล้ว (รอบนี้)
+
+| # | คำสั่ง | สิ่งที่ทำ | หลักฐาน |
+|---|---|---|---|
+| 1 | แจ้งเตือน → หน้าครัว | ทีมครัว (`role=kitchen`) กดแจ้งเตือน **ออเดอร์ใหม่/ยืนยันแล้ว** (`ORDER_CREATED/PLACED/CONFIRMED/PAYMENT_CONFIRMED`) → **`/admin/kitchen` ทันที** (งาน preparing/ready เดิมก็ไปครัวอยู่แล้ว) · role อื่นยังเป็น `/admin/orders` ตามเดิม | `notificationLinks.ts` · `notificationLinks.test.ts` (13 ข้อ) |
+| 2 | สต็อกรวมทุก round | เริ่มทำครัว (`preparing`) = **`deduct_inventory_for_order` RPC เดียว** — SAME_DAY (ส่งทันที) + PRE_ORDER ทุก round ตัดจากกองวัตถุดิบเดียวกัน · ยกเลิกออเดอร์ = `cancel_order` คืนสต็อกอัตโนมัติ (มีอยู่แล้ว atomic) · ตัดไม่สำเร็จ = toast แดงชัด | `AdminKitchen.tsx` `deductInventoryForOrder` |
+| 3 | ตรวจสลิปก่อนรับออเดอร์ | กด "รับออเดอร์" ที่ออเดอร์เงินโอนค้างตรวจ (`payment_status=pending` + มี `slip_path`) → **เปิดประตูตรวจสลิป** (modal): โชว์ **รูปสลิปจริง (SlipThumb)** + เหตุผลที่ server จะปฏิเสธ (`paymentConfirmability`) → ปุ่ม **"✅ ยืนยันสลิป & รับออเดอร์"** = `confirm_offline_payment` ตัวเดิม → แล้วค่อย accept · ปุ่ม disabled ถ้า confirmable=false · ไม่มีการ UPDATE เงินจาก client | `AdminOrders.tsx` `slipGate` / `slip-gate-modal` / `handleSlipGateConfirm` |
+| 4 | เด้งไปหน้าจัดส่งหลังส่งครัว | ครัวกด "พร้อมส่ง" → **`navigate('/admin/delivery?focus=<เลข>')`** (ไฮไลต์แถวออเดอร์นั้นทันที) · แจ้งเตือนสถานะจัดส่ง → `/admin/delivery?focus=` (R13 เดิม) · AdminOrders มีปุ่ม `🛵 ไป Dispatch` | `AdminKitchen.tsx` |
+
+**gates รอบนี้:** tsc 0 · lint 0 (462 ไฟล์ / languageSanity 1,284) · **vitest 169 files / 1,740 tests / 0 fail** (`gates_r21b_vitest.log`) · build = `gates_r21b_build.log`
+
+## ยังคงค้างรอบถัดไป (บันทึก — ไม่ประกาศว่าปิด loop)
+
+1. backlog 12 หน้า LoadErrorBanner (เฟส 3 · ใช้แพตเทิร์นเดิม)
+2. server-side cap ส่วนลด 15% (P2) · cosmetic (to_char ids · haversine dup · confirmOfflinePayment wrappers)
+3. retests B2 / C7 / C8 / RL-DEFECT / Part 5-7 (ต้อง E2E/Owner จริง) · responsive มือถือจริง · retest Auth/RLS A1-A8 บน production

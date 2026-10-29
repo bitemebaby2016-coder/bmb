@@ -1,0 +1,29 @@
+{
+  "at": "2026-10-29T07:56:52.864Z",
+  "precheck": {
+    "ledgerTop": "[{\"version\":\"170\",\"name\":\"170_product_cost_margin_fields\"},{\"version\":\"169\",\"name\":\"169_pod_path_percent_encoding\"},{\"version\":\"168\",\"name\":\"168_multi_job_rider_route\"}]",
+    "fnBefore": "[]"
+  },
+  "apply": "[]",
+  "verify": {
+    "fnAfter": "[{\"proname\":\"my_role\",\"result\":\"text\",\"security_definer\":true,\"proconfig\":[\"search_path=public\"],\"lanname\":\"sql\"}]",
+    "acl": "[{\"grantee\":\"authenticated\",\"privilege_type\":\"EXECUTE\"},{\"grantee\":\"postgres\",\"privilege_type\":\"EXECUTE\"},{\"grantee\":\"service_role\",\"privilege_type\":\"EXECUTE\"}]",
+    "callAsService": "[{\"r\":null}]"
+  },
+  "record": {
+    "ins171": "[]",
+    "ledgerTopAfter": "[{\"version\":\"171\",\"name\":\"171_my_role_rpc\"},{\"version\":\"170\",\"name\":\"170_product_cost_margin_fields\"},{\"version\":\"169\",\"name\":\"169_pod_path_percent_encoding\"},{\"version\":\"168\",\"name\":\"168_multi_job_rider_route\"},{\"version\":\"167\",\"name\":\"167_kitchen_batch_loop_fix\"}]"
+  },
+  "assertions": {
+    "fnExists": true,
+    "returnsText": true,
+    "securityDefiner": true,
+    "searchPathPinned": true,
+    "anonNoGrant": true,
+    "authenticatedGrant": true,
+    "callIsNullNotError": true,
+    "ledgerTopIs171": true,
+    "has171": true
+  },
+  "allPass": true
+}

@@ -87,25 +87,47 @@ function mapUserToCustomer(user: {
 // Get current profile role (RLS จะคัดเฉพาะของตัวเอง/ที่อนุญาต)
 // F-02 FIX (Wave 1): production บางตารางไม่มี table-level GRANT SELECT ให้
 // authenticated (เช่น profiles) → direct select ตอบ 42501 แม้จะมี RLS policy
-// fallback ที่ 1: RPC `is_admin()` (SECURITY DEFINER อ่าน profiles.role —
-// ใช้งานได้จริงบน production, DB ยังเป็น authority) แล้ว map true → 'admin'
-export async function fetchProfileRole(): Promise<string | null> {
-  const { data: { session } } = await supabase.auth.getSession()
-  const uid = session?.user?.id
-  if (!uid) return null
-  const { data, error } = await supabase
-    .from('profiles')
-    .select('role')
-    .eq('id', uid)
-    .maybeSingle()
-  if (!error) return (data?.role as string | null) ?? null
+// fallback ที่ 1: RPC `my_role()` (R21 A7 — คืน "ชื่อบทบาทจริง" owner/manager/...)
+// fallback ที่ 2 (deployment เก่า): RPC `is_admin()` boolean → 'admin' (แบบ best-effort)
+//
+// R21 · เฟส 1 A1: คืน "3 สถานะ" — ok (มีบทบาทจริง / ไม่มีบทบาท = null)
+// หรือ error (query/เน็ตล้มเหลว) เดิมรวมเป็น null เดียว → AdminRoute เตะ
+// admin จริงออกกลางคันตอนเน็ตขัดข้อง
+export type RoleProbe =
+  | { status: 'ok'; role: string | null }
+  | { status: 'error'; message: string }
+
+export async function probeProfileRole(): Promise<RoleProbe> {
   try {
-    const { data: isAdmin, error: rpcError } = await supabase.rpc('is_admin')
-    if (!rpcError && isAdmin === true) return 'admin'
-  } catch {
-    /* fallthrough */
+    const { data: { session } } = await supabase.auth.getSession()
+    const uid = session?.user?.id
+    if (!uid) return { status: 'ok', role: null }
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', uid)
+      .maybeSingle()
+    if (!error) return { status: 'ok', role: (data?.role as string | null) ?? null }
+    // A7 (R21): my_role() คืนชื่อบทบาทจริง — ไม่ map true → 'admin' อีกต่อไป
+    try {
+      const { data: myRole, error: roleErr } = await supabase.rpc('my_role')
+      if (!roleErr && typeof myRole === 'string' && myRole) return { status: 'ok', role: myRole }
+    } catch { /* fallthrough */ }
+    // fallback สุดท้าย (ยังไม่ deploy 171): is_admin() — รู้แค่ว่า "admin-capable"
+    try {
+      const { data: isAdmin, error: rpcError } = await supabase.rpc('is_admin')
+      if (!rpcError && isAdmin === true) return { status: 'ok', role: 'admin' }
+    } catch { /* fallthrough */ }
+    return { status: 'error', message: 'ROLE_QUERY_FAILED' }
+  } catch (e) {
+    return { status: 'error', message: e instanceof Error ? e.message : 'ROLE_PROBE_THREW' }
   }
-  return null
+}
+
+/** Back-compat wrapper: ต้องการแค่ชื่อบทบาท (error → null) — จุดที่แยก 3 สถานะใช้ probeProfileRole */
+export async function fetchProfileRole(): Promise<string | null> {
+  const probe = await probeProfileRole()
+  return probe.status === 'ok' ? probe.role : null
 }
 
 /**
@@ -151,9 +173,15 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
   setReferralCode: (code) => set({ referralCode: code }),
   setRole: (role) => set({ role }),
   refreshRole: async () => {
-    const role = await fetchProfileRole()
-    set({ role })
-    return role
+    const probe = await probeProfileRole()
+    // A5 (R21): จุดเรียกเป็น void ทั้งหมด → rejection ลอยตอนเน็ตหลุด
+    // error ต้อง "คง role เดิม" ไม่ใช่ล้าง/null
+    if (probe.status === 'error') {
+      console.warn('[authStore] refreshRole failed (kept previous role):', probe.message)
+      return get().role
+    }
+    set({ role: probe.role })
+    return probe.role
   },
   clearSession: () =>
     set({
@@ -178,71 +206,99 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
   },
 
   login: async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({ email, password })
-    if (error) {
-      // Keep the REAL reason (email_not_confirmed / invalid credentials / rate limit…)
-      // so /login can guide the user instead of a blanket "Invalid email or password".
-      set({ lastLoginError: error.message })
+    // A5 (R21): ห้าม reject — ทุกจุดเรียกไม่มี catch → unhandled rejection ตอนเน็ตหลุด
+    try {
+      const { error } = await supabase.auth.signInWithPassword({ email, password })
+      if (error) {
+        // Keep the REAL reason (email_not_confirmed / invalid credentials / rate limit…)
+        // so /login can guide the user instead of a blanket "Invalid email or password".
+        set({ lastLoginError: error.message })
+        return false
+      }
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) {
+        set({ lastLoginError: 'NO_SESSION_USER' })
+        return false
+      }
+      set({
+        customer: mapUserToCustomer(user),
+        isAuthenticated: true,
+        isLoading: false,
+        lastLoginError: null,
+      })
+      void get().refreshRole?.()
+      return true
+    } catch (e) {
+      console.error('[authStore] login threw:', e)
+      set({ isLoading: false, lastLoginError: e instanceof Error ? e.message : 'LOGIN_THREW' })
       return false
     }
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) {
-      set({ lastLoginError: 'NO_SESSION_USER' })
-      return false
-    }
-    set({
-      customer: mapUserToCustomer(user),
-      isAuthenticated: true,
-      isLoading: false,
-      lastLoginError: null,
-    })
-    void get().refreshRole?.()
-    return true
   },
 
   loginByPhone: async (phone: string, password: string) => {
     // Supabase Auth ใช้ email/OTP ตาม default — สำหรับตอนนี้ phone login
     // ใช้ email field ถ้า email == phone pattern ให้ผ่าน (Enterprise config ภายหลัง)
-    const { error } = await supabase.auth.signInWithPassword({
-      email: phone.includes('@') ? phone : `${phone}@phone.bmb.local`,
-      password
-    })
-    if (error) return false
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return false
-    set({
-      customer: mapUserToCustomer(user),
-      isAuthenticated: true,
-      isLoading: false
-    })
-    void get().refreshRole?.()
-    return true
+    // A5 (R21): ห้าม reject — คืน false สงบเมื่อเครือข่าย/SDK throw
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email: phone.includes('@') ? phone : `${phone}@phone.bmb.local`,
+        password
+      })
+      if (error) return false
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return false
+      set({
+        customer: mapUserToCustomer(user),
+        isAuthenticated: true,
+        isLoading: false
+      })
+      void get().refreshRole?.()
+      return true
+    } catch (e) {
+      console.error('[authStore] loginByPhone threw:', e)
+      set({ isLoading: false })
+      return false
+    }
   },
 
   loginByLocation: async (input: QuickLoginInput) => {
-    const res = await quickLoginByPhone(input)
-    if (!res.ok || !res.session) {
-      return { ok: false, error: res.error || 'ERR_QUICK_LOGIN' }
+    // A5 (R21): ห้าม reject — quickLoginByPhone/SDK throw ตอนเน็ตหลุดต้องคืน error สงบ
+    try {
+      const res = await quickLoginByPhone(input)
+      if (!res.ok || !res.session) {
+        return { ok: false, error: res.error || 'ERR_QUICK_LOGIN' }
+      }
+      const { data, error } = await supabase.auth.setSession({
+        access_token: res.session.access_token,
+        refresh_token: res.session.refresh_token,
+      })
+      if (error || !data.user) {
+        return { ok: false, error: error?.message || 'ERR_SESSION_SET' }
+      }
+      set({
+        customer: mapUserToCustomer(data.user),
+        isAuthenticated: true,
+        isLoading: false,
+      })
+      void get().refreshRole?.()
+      return { ok: true }
+    } catch (e) {
+      console.error('[authStore] loginByLocation threw:', e)
+      set({ isLoading: false })
+      return { ok: false, error: e instanceof Error ? e.message : 'ERR_QUICK_LOGIN_THREW' }
     }
-    const { data, error } = await supabase.auth.setSession({
-      access_token: res.session.access_token,
-      refresh_token: res.session.refresh_token,
-    })
-    if (error || !data.user) {
-      return { ok: false, error: error?.message || 'ERR_SESSION_SET' }
-    }
-    set({
-      customer: mapUserToCustomer(data.user),
-      isAuthenticated: true,
-      isLoading: false,
-    })
-    void get().refreshRole?.()
-    return { ok: true }
   },
 
   logout: async () => {
-    await supabase.auth.signOut()
-    set({ customer: null, isAuthenticated: false, loyaltyPoints: 0, referralCode: '', role: null })
+    // A4 (R21): signOut() reject (เน็ตหลุด/refresh token ตาย) ห้าม "ค้างสถานะล็อกอิน"
+    // — ล้าง store เสมอใน finally ให้ผู้ใช้ออกจากระบบได้แม้เครือข่ายขัดข้อง
+    try {
+      await supabase.auth.signOut()
+    } catch (e) {
+      console.error('[authStore] signOut failed (clearing local session anyway):', e)
+    } finally {
+      set({ customer: null, isAuthenticated: false, loyaltyPoints: 0, referralCode: '', role: null })
+    }
   },
 
   checkAuth: async () => {

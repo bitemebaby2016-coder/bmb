@@ -109,7 +109,9 @@ export function LoginPage() {
       description: userLabel + ' - login success',
     })
     showToast('เข้าสู่ระบบสำเร็จ!', 'success')
-    navigate(role === 'admin' ? '/admin' : (returnTo || '/'), { replace: true })
+    // A3 (R21): returnTo (case B/D — deep-link ที่ถูกเด้งมา login) มาก่อนเสมอ
+    // เดิมบังคับ admin ไป /admin เสมอจน deep-link ของแอดมินเช่น /admin/orders?tab=x หาย
+    navigate(returnTo || (role === 'admin' ? '/admin' : '/'), { replace: true })
   }
 
   // P1 / SF-04 — ส่งลิงก์ตั้งรหัสผ่านใหม่ (กัน enumeration: ตอบสำเร็จเสมอถ้าอีเมลไม่มีในระบบ)

@@ -52,21 +52,11 @@ export async function getCurrentUser() {
 }
 
 // ============================================
-// Helper: Check if user is admin
+// (A8 · R21) ลบ `isAdmin()` ที่เป็น dead code — ไม่มี caller ฝั่ง production
+// (มีแค่ mock ใน tests) + ใช้ `.single()` ไม่เช็ค error → คืน false เงียบ
+// จุดตรวจสิทธิ์ตัวจริงอยู่ที่ `probeProfileRole` (src/store/authStore.ts)
+// + AdminRoute + RLS — ห้ามเพิ่มตัวตรวจสิทธิ์ client ใหม่โดยไม่มี DB authority
 // ============================================
-export async function isAdmin(): Promise<boolean> {
-  const user = await getCurrentUser()
-  if (!user) return false
-
-  // Check profiles table
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('role')
-    .eq('id', user.id)
-    .single()
-
-  return profile?.role === 'admin'
-}
 
 // ============================================
 // Realtime: intentionally absent from the app.

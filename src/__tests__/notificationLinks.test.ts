@@ -56,6 +56,14 @@ describe('resolveNotificationRoute — เส้นทางตาม role (ท�
     ).toBe('/admin/delivery?focus=BMB-20261023-841')
   })
 
+  it('R21 (Owner ask #1): ทีมครัวกดแจ้งเตือนออเดอร์ใหม่/ยืนยันแล้ว → /admin/kitchen (role อื่นยังเป็น /admin/orders)', () => {
+    for (const t of ['ORDER_CREATED', 'ORDER_PLACED', 'ORDER_CONFIRMED', 'PAYMENT_CONFIRMED']) {
+      expect(resolveNotificationRoute({ notification_type: t }, 'kitchen')).toBe('/admin/kitchen')
+    }
+    expect(resolveNotificationRoute({ notification_type: 'ORDER_CREATED' }, 'admin')).toBe('/admin/orders')
+    expect(resolveNotificationRoute({ notification_type: 'ORDER_CONFIRMED' }, 'owner')).toBe('/admin/orders')
+  })
+
   it('admin: ออเดอร์/ชำระเงิน/อื่น ๆ → /admin/orders', () => {
     expect(resolveNotificationRoute({ notification_type: 'ORDER_CREATED' }, 'admin')).toBe('/admin/orders')
     expect(resolveNotificationRoute({ notification_type: 'PAYMENT_CONFIRMED' }, 'finance')).toBe('/admin/orders')

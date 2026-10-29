@@ -92,7 +92,18 @@ function tokenMatches(provided: string): boolean {
 }
 
 Deno.serve(async (req: Request): Promise<Response> => {
-  if (req.method === 'OPTIONS') return new Response('ok', { status: 200 })
+  // R21 Phase 4 EF audit: OPTIONS ต้องพก CORS headers เสมอ (ปัจจุบันเรียก
+  // server-to-server ไม่กระทบ แต่กันหลุดเมื่อเปิดให้ browser เรียกภายหลัง)
+  if (req.method === 'OPTIONS') {
+    return new Response('ok', {
+      status: 200,
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-automation-token',
+        'Access-Control-Allow-Methods': 'POST, OPTIONS',
+      },
+    })
+  }
 
   // Diagnostics: reports which dependency/config piece is missing without ever
   // echoing a secret value. Required to distinguish "bad import" from

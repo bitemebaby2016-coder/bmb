@@ -18,15 +18,18 @@ const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions'
 // โมเดลสร้างภาพ — ตั้งค่าผ่าน env (ห้าม hardcode ในโค้ด logic)
 const IMAGE_MODEL = Deno.env.get('IMAGE_GEN_MODEL') || 'google/gemini-2.5-flash-image-preview'
 
+function corsHeaders(): Record<string, string> {
+  return {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  }
+}
+
 function json(body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body), {
     status,
-    headers: {
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-      'Access-Control-Allow-Methods': 'POST, OPTIONS',
-      'Content-Type': 'application/json',
-    },
+    headers: { ...corsHeaders(), 'Content-Type': 'application/json' },
   })
 }
 
@@ -61,7 +64,10 @@ async function isAdmin(jwt: string): Promise<boolean> {
 }
 
 Deno.serve(async (req: Request): Promise<Response> => {
-  if (req.method === 'OPTIONS') return new Response('ok', { status: 200 })
+  // R21 Phase 4 EF audit (live probe 2026-10-29): OPTIONS เดิมตอบ 200 "ok"
+// โดยไม่มีหัว CORS → browser preflight จาก biteme-baby.com ถูกบล็อก
+// (AdminMarketing → image-gen invoke ไม่ผ่าน) — ตอบ CORS ทุกเมธอดเสมอ
+if (req.method === 'OPTIONS') return new Response('ok', { status: 200, headers: corsHeaders() })
   if (req.method !== 'POST') return json({ error: 'method not allowed' }, 405)
 
   const jwt = (req.headers.get('authorization') || '').replace(/^Bearer\s+/i, '')
