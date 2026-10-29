@@ -200,6 +200,24 @@ BEGIN
     IF SQLERRM NOT LIKE '%ERR_POD_REQUIRED%' THEN RAISE; END IF;
   END;
 
+  -- [R16/168 — fixture แก้ 2026-10-29 หลัง Contract Tests #198 แดง]
+  -- G1/G2/G3 จงใจจบที่ dispatched/arrived (ไม่ปิดวงจร) แต่ทุกใบใช้ไรเดอร์ "คนเดียวกัน" —
+  -- ใต้ rule ใหม่ของ 168 ("delivered คืน available เฉพาะไม่มีงานค้าง") ถ้าปล่อยค้างไว้
+  -- G4 จะได้ driver='busy' = "ถูกต้องตาม spec ใหม่" แต่ไม่ได้พิสูจน์ว่า "งานสุดท้ายถูกปล่อย"
+  -- (arm busy ของ 168 มีหลักฐาน production แล้ว = e2e/r16Apply168-result.json NOT EXISTS ✓)
+  -- → ปิดงานค้างของ G1-G3 เป็น fixture state ก่อนขั้น delivered (superuser direct UPDATE)
+  RESET ROLE;
+  UPDATE public.delivery_assignments
+     SET status = 'delivered', delivered_at = COALESCE(delivered_at, NOW()), updated_at = NOW()
+   WHERE driver_id = 'drv-163-1' AND order_number <> v_on
+     AND status IN ('assigned','accepted','picked_up','in_transit','arrived');
+  UPDATE public.orders
+     SET status = 'delivered', updated_at = NOW()
+   WHERE order_number <> v_on AND customer_name = 'C163'
+     AND status IN ('dispatched','in_transit','arrived');
+  PERFORM set_config('role', 'authenticated', false);
+  PERFORM set_config('request.jwt.claims', '{"sub":"8c8c8c8c-8c8c-8c8c-8c8c-8c8c8c8c8c8c","role":"authenticated"}', false);
+
   PERFORM public.driver_attach_pod(v_on, 'drv-163-1/' || v_on || '-pod.jpg', v_lat, v_lon);
   PERFORM public.driver_update_delivery_status(v_on, '', 'delivered', v_lat, v_lon);
 
