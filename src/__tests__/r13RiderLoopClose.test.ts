@@ -1,8 +1,8 @@
 // ============================================
 // R13 (Owner 2026-10-28) — 3 คำสั่งหลัง retest:
 //   1) แถบสถานะรูปแบบใหม่: "🟢 เปิดรับออเดอร์ เซมเดย์ : ส่งทันที" +
-//      "🟢พรีออเดอร์: เปิดรับออเดอร์ รอบส่งถัดไป <ชื่อรอบ> <วันที่> (ปิดรอบ HH:MM)"
-//      (บอกลูกค้าด้วยว่าเป็นรอบไหนของวันไหน)
+//      "🟢 เปิดรับ พรีออเดอร์ : จองล่วงหน้า รอบ <ชื่อรอบ> <วันที่> (ปิดรอบ HH:MM)"
+//      (บอกลูกค้าด้วยว่าเป็นรอบไหนของวันไหน · R18 2026-10-29 เปลี่ยน copy ฝั่งพรีออเดอร์)
 //   2) ไรเดอร์ปิดงาน → จบลูป + ออกหน้าจอหลักอัตโนมัติ · ห้ามค้าง "กำลังเดินทาง"
 //      (ต้นตอจริง = POD path ของ drivers.id สกปรก → รูปไม่เคยเข้า bucket ·
 //       checkin ไม่ตั้ง assignment.status → 166 แก้ทั้งคู่)
@@ -30,7 +30,7 @@ describe('R13 — แถบสถานะ: รูปแบบใหม่ + บ
     expect(s.message).toBe('เปิดรับออเดอร์ เซมเดย์ : ส่งทันที')
   })
 
-  it('พรีออเดอร์ = รอบส่งถัดไป + วันที่ DD/MM/YYYY + (ปิดรอบ HH:MM)', () => {
+  it('พรีออเดอร์ = "เปิดรับ พรีออเดอร์ : จองล่วงหน้า รอบ" + รอบถัดไป + วันที่ DD/MM/YYYY + (ปิดรอบ HH:MM)', () => {
     const closedToday = [
       { status: 'closed', display_name: 'เช้า', delivery_start: '06:00', delivery_end: '09:00', scheduled_date: TODAY },
     ]
@@ -39,7 +39,9 @@ describe('R13 — แถบสถานะ: รูปแบบใหม่ + บ
     ]
     const s = getStoreStatusFromRounds([...closedToday, ...tomorrow] as never, atBkk('2026-10-28T10:00:00+07:00'))
     expect(s.state).toBe('preorder_only')
-    expect(s.preOrderLine).toContain('เปิดรับออเดอร์ รอบส่งถัดไป')
+    // R18 (Owner 2026-10-29): copy ใหม่ — ห้ามขึ้นต้นแบบเดิม "พรีออเดอร์: เปิดรับออเดอร์ …"
+    expect(s.preOrderLine).toContain('เปิดรับ พรีออเดอร์ : จองล่วงหน้า รอบ')
+    expect(s.preOrderLine).not.toContain('พรีออเดอร์: เปิดรับออเดอร์')
     expect(s.preOrderLine).toContain('เช้า')
     expect(s.preOrderLine).toContain('29/10/2026')
     expect(s.preOrderLine).toMatch(/\(ปิดรอบ \d{2}:\d{2}\)/)

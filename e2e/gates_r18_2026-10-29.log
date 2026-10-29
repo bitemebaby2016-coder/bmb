@@ -1,0 +1,11 @@
+GATES R18 — 2026-10-29 (แก้ copy แถบสถานะ stripe 2 พรีออเดอร์ ตามคำสั่ง Owner)
+changed: src/lib/homeProviders.ts (preOrderLine copy) · StoreStatusStrip.tsx (comment) · 2 tests · AI_WORK_STATE · MASTER row 41 · handoff §5B
+
+1) tsc --noEmit: START_TSC  DONE_TSC_OK
+2) npm run lint:
+START_LINT 
+DONE_LINT_OK
+3) vitest full suite (json): {"total":1671,"passed":1671,"failed":0,"files":162,"success":true}
+4) vite build: START_BUILD  DONE_BUILD_OK
+5) guards: brandNameGuard 449 OK + languageSanity 1257 OK (ผ่านก่อน commit)
+targeted pre-check: r13RiderLoopClose + storeStatusWindow + mascotClosed + r12LandingUi + r16MultiJobRiderStrip + roundsSameDayNoCutoff = 6 files / 69 tests ✓

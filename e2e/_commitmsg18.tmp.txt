@@ -1,0 +1,7 @@
+R18 (2026-10-29: แก้ copy แถบสถานะ stripe 2 พรีออเดอร์ ตามคำสั่ง Owner)
+- คำสั่ง: "🟢 พรีออเดอร์: เปิดรับออเดอร์ รอบส่งถัดไป เช้า 30/10/2026 (ปิดรอบ 05:00)" → ต้องแสดง "🟢 เปิดรับ พรีออเดอร์ : จองล่วงหน้า รอบ เช้า 30/10/2026 (ปิดรอบ 05:00)" (รอบส่ง = รอบถัดไปเหมือนเดิม)
+- แก้ที่ builder เดียว src/lib/homeProviders.ts preOrderLine: `เปิดรับ พรีออเดอร์ : จองล่วงหน้า รอบ <ชื่อรอบ> <วันที่ DD/MM/YYYY> (ปิดรอบ HH:MM)` — nextPre filter (รอบถัดไปที่สั่งได้ + รอบที่แอดมินปิดไม่โผล่) ไม่แตะ · บรรทัดปิดรับ ("พรีออเดอร์: ปิดรับแล้ว") คงเดิม (fallback regex ของ strip อิงคำนี้)
+- src/components/home/StoreStatusStrip.tsx: อัปเดต comment ตัวอย่าง copy ใหม่ (emoji 🟢/🔴 คงเดิม)
+- tests: r13RiderLoopClose (assert ขึ้นต้น copy ใหม่ + ห้ามแบบเดิม) · storeStatusWindow (regex จองล่วงหน้า รอบ) — targeted 6 files/69 tests ✓
+- docs: AI_WORK_STATE R18 · MASTER row 41 · handoff §5B เพิ่มจุดทดสอบ copy ใหม่
+- Gates: brandNameGuard 449 OK + languageSanity 1257 OK · tsc/lint/vitest full/build ดู e2e/gates_r18_2026-10-29.log

@@ -59,7 +59,8 @@ describe('L-6 — แถบสถานะตามเวลา/รอบจร�
     expect(s.preOrderLine).not.toContain('ปิดรับแล้ว')
     // R13 (Owner 2026-10-28): บอก "รอบไหนของวันไหน" — วันที่ DD/MM/YYYY + ปิดรอบ
     expect(s.preOrderLine).toContain('27/10/2026')
-    expect(s.preOrderLine).toMatch(/รอบส่งถัดไป/)
+    // R18 (Owner 2026-10-29): copy ใหม่ "เปิดรับ พรีออเดอร์ : จองล่วงหน้า รอบ …" — ยังชี้รอบถัดไป
+    expect(s.preOrderLine).toMatch(/จองล่วงหน้า รอบ/)
     expect(s.preOrderLine).toMatch(/\(ปิดรอบ \d{2}:\d{2}\)/)
   })
 

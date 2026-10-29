@@ -210,12 +210,14 @@ export function getStoreStatusFromRounds(rounds: Array<{
       })[0] ?? null
   const preOrderLine = (() => {
     // R13 (Owner 2026-10-28): บอกลูกค้า "รอบไหนของวันไหน" — ชื่อรอบ + วันที่ DD/MM/YYYY + ปิดรอบ
+    // R18 (Owner 2026-10-29): เปลี่ยน copy เป็น "เปิดรับ พรีออเดอร์ : จองล่วงหน้า รอบ <ชื่อรอบ> <วันที่>
+    // (ปิดรอบ HH:MM)" — รอบยังต้องเป็นรอบถัดไปที่สั่งได้เท่าเดิม (nextPre filter ไม่แตะ)
     const day = nextPre ? String(nextPre.scheduled_date ?? '').slice(0, 10) : ''
     const dateLabel = /^\d{4}-\d{2}-\d{2}$/.test(day)
       ? `${day.slice(8, 10)}/${day.slice(5, 7)}/${day.slice(0, 4)}`
       : ''
     return nextPre
-      ? `พรีออเดอร์: เปิดรับออเดอร์ รอบส่งถัดไป ${nextPre.display_name || 'รอบถัดไป'}${dateLabel ? ` ${dateLabel}` : ''} (ปิดรอบ ${roundCutoffLabel(nextPre, 'PRE_ORDER', 2)})`
+      ? `เปิดรับ พรีออเดอร์ : จองล่วงหน้า รอบ ${nextPre.display_name || 'รอบถัดไป'}${dateLabel ? ` ${dateLabel}` : ''} (ปิดรอบ ${roundCutoffLabel(nextPre, 'PRE_ORDER', 2)})`
       : 'พรีออเดอร์: ปิดรับแล้ว — ยังไม่เปิดรอบถัดไป'
   })()
 
