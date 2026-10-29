@@ -2,6 +2,12 @@ name = "bmb-tenant-proxy"
 main = "src/index.ts"
 compatibility_date = "2026-10-01"
 
+# บังคับ target account = บัญชีที่ "มี zone biteme-baby.com" + "token เข้าถึง Workers ได้" (พิสูจน์แล้วใน e2e/r22_cf_probe2.cjs:
+#   V4_ZONE→account=b89501b69eef20998a9d3dae480c52af · V4_B895_WORKERS=200 · V4_0341_WORKERS=403)
+# ถ้า deploy ยัง error 10000 อีก = wrangler ยังถูก oauth เก่า (บัญชี 0341... ค้างใน %USERPROFILE%\.wrangler\config\default.toml)
+#   → แก้: `npx wrangler logout` (หรือ rename default.toml → .bak) แล้วรัน e2e\r22_deploy_worker.cmd ใหม่
+account_id = "b89501b69eef20998a9d3dae480c52af"
+
 # ============================================
 # Task 2 · Custom Domain Routing (Cloudflare Worker = Reverse Proxy)
 # หน้าที่: รับ request จากโดเมนลูกค้า (order.bakerybrand.com) → lookup tenant
