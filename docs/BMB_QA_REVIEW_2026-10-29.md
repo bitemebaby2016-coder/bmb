@@ -226,6 +226,6 @@
 
 ## ยังคงค้างรอบถัดไป (บันทึก — ไม่ประกาศว่าปิด loop)
 
-1. backlog 12 หน้า LoadErrorBanner (เฟส 3 · ใช้แพตเทิร์นเดิม)
+1. backlog 12 หน้า LoadErrorBanner (เฟส 3 · ใช้แพตเทิร์นเดิม — `DeliveryManagement`/`AdminRounds`/`InventoryPage`/`AuditLogPage`/`AdminPaymentExceptions`/`AdminRecipes`/`AdminBrands`/`AdminAssetAudit`/`AdminPortfolio`/`AdminTenants`/`VotePage`/`ReviewPage`)
 2. server-side cap ส่วนลด 15% (P2) · cosmetic (to_char ids · haversine dup · confirmOfflinePayment wrappers)
-3. retests B2 / C7 / C8 / RL-DEFECT / Part 5-7 (ต้อง E2E/Owner จริง) · responsive มือถือจริง · retest Auth/RLS A1-A8 บน production
+3. retests B2 / C7 / C8 / RL-DEFECT / Part 5-7 (ต้อง E2E/Owner จริง) · responsive มือถือจริง · retest Auth/RLS A1-A8 บน production (login จริง · เน็ตหลุดจริง · my_role ของ owner/manager)
