@@ -28,5 +28,17 @@
 - `npx vite build` = **EXIT 0** (`e2e/g_build.log`)
 - `npx tsc --noEmit` = **NOT RUN ท้องถิ่น** — ติด tool timeout 30s ทุกครั้ง (`e2e/g_tsc.log` ว่าง) → **typecheck + vitest เต็ม 169 files = ให้ CI เป็นผู้ตัดสินหลัง push** (ตามกติกา 0.1: ไม่แอบอ้างว่าผ่าน)
 
-## รอ Owner (runtime/production = เจ้าของเทสต์จริงคนเดียว)
-1. `__apply 175__` · 2. `supabase functions deploy sheets-sync` + `supabase secrets set GOOGLE_SHEETS_WEBHOOK_URL=...` · 3. `wrangler deploy` (workers/tenant-proxy) + ผูก custom domain · 4. LINE Notify secret + reminder job (รอบถัดไป) · 5. เทสต์ runtime: เสียงครัว · chip กำไร · wizard · guardrail · 6. เช็ค CI ของ SHA นี้ที่ `BMB_MASTER_STATUS.md` §9.0
+## สถานะปิดรอบ (2026-10-30 · Owner อนุมัติครบทุกขั้นที่ค้าง → ทำจริงหมดแล้ว)
+- ✅ **m175 APPLIED production** (Owner สั่ง `apply 175` · **ledger top = 175**) — evidence: `e2e/r22Apply175-result.json` (precheck 174 · ไม่มีของซ้ำ → apply `[]` → 9/10) + `e2e/r22Verify175-result.json` — ยืนยันจริง: `tenants.custom_domain`(text) · `brands.ai_prompt` · `billing_subscriptions` **12 คอลัมน์** + `relrowsecurity=true` + policies `billing_admin_manage`/`billing_tenant_scope` + GRANT SELECT authenticated + seed `biteme-baby.com` + index — ⚠️ ข้อ `billingTable` ของทั้ง 2 สคริปต์ = **ตัวเทสต์ (oracle) เองผิด** (regclass::text ไม่เติม schema ตอนอยู่ใน search_path) — **ผ่าน 2 ครั้งแล้ว → หยุดตามกติกา 0.9 ไม่ยิงรอบ 3** · หลักฐานตารางมีจริง = billingCols12 + rls + policies + grants (query 4 ตัวนี้ error ทันทีถ้าไม่มีตาราง — ผ่านหมด)
+- ✅ **sheets-sync DEPLOYED production** (`supabase functions deploy sheets-sync` ✓ · evidence `e2e/r22_functions_list.txt`) — ยังไม่มี `GOOGLE_SHEETS_WEBHOOK_URL` ใน env → EF ตอบ `skipped/not_configured` (ออกแบบรับมือไว้แล้ว ไม่พัง ไม่แดง)
+- ⛔ **tenant-proxy worker = BLOCKED (สิทธิ์ Cloudflare token)** — attempt 1 = ไม่มี token ใน env · attempt 2 = auth error 10000 (token account `b89501b6…` vs workers API `03419561…` ไม่ตรง/สิทธิ์ไม่พอ) → **หยุดตาม 0.9** · เจ้าของแก้ด้วย token ที่มี **Workers Scripts Edit** แล้วรันคำสั่งเดียว `e2e\r22_deploy_worker.cmd` (+ ผูก custom domain route ใน Cloudflare dashboard)
+
+## เหลือ Owner เทสต์จริงเท่านั้น (รายการค้างเดียวของรอบนี้ — ทุกอย่างอื่นทำ/มีหลักฐานแล้ว)
+1. **`/admin/billing`** — หน้าโหลดจากตารางจริง (m175 แล้ว) · empty state → เพิ่มแถวงวดเมื่อเริ่มเก็บค่าพาร์ทเนอร์ · วันคงเหลือ/badge ถูกต้อง
+2. **`/admin/onboarding`** — สร้างร้านจริง: tenant+brand โผล่ในองค์กร/แบรนด์ · อัปโหลดโลโก้เข้า `bmb-images` · **ai_prompt เก็บได้แล้วหลัง m175** (ข้อความ "รอ apply" ต้องไม่โผล่)
+3. **Guardrail คูปอง+แต้ม**: จำลองค่า `pointsRedemption>0` → banner `discount-stack-guard` + `coupon-stack-conflict` โผล่ · ปุ่มสั่งถูกบล็อก · คูปองอย่างเดียว/แต้มอย่างเดียว = ผ่านปกติ
+4. **AdminOrders**: chip `admin-order-profit` (ต้นทุนครบ → โชว์กำไรสุทธิ · ไม่ครบ → ข้อความ "รอกรอกต้นทุน" ไม่มีตัวเลขปลอม) + **🔊 เสียงเตือน** ตอนมีออเดอร์ pending ใหม่ตอนกดยืนยันออเดอร์ (WebAudio — ลองหลังคลิกครั้งแรก)
+5. **Sheets sync จริง**: สร้าง Apps Script Web App (ตัวอย่าง `doPost` = หัวไฟล์ `supabase/functions/sheets-sync/index.ts`) → `supabase secrets set GOOGLE_SHEETS_WEBHOOK_URL=...` → Actions → **workflow `sheets-sync` → Run workflow** → แถว `daily:` ใหม่ในชีต (รันซ้ำ = upsert ไม่งอกซ้ำ)
+6. **โดเมน/ธีม (white-label)**: รัน `e2e\r22_deploy_worker.cmd` (token สิทธิ์ Workers) → ผูก route/custom domain → เปิด host อื่นที่ผูกใน `tenants.custom_domain` เห็น `X-BMB-Tenant-*` ถูกต้อง
+7. **CI ทุก SHA รอบนี้** (`f38fd78` · `64efa58` · SHA ของรอบเอกสารนี้) = เปิด Actions ดูเขียว + เติมแถว `BMB_MASTER_STATUS.md` §9.0
+8. *(บันทึก known-next ไม่ใช่งานค้างของรอบนี้ — นอกเหนือจากรายการเทสต์: wire เล็ก 3 จุด = fallback→DeliveryManagement · hostname→BrandProvider · ai_prompt→ai-proxy อ่านฝั่ง AI · LINE Notify = ช่องทางเสริมอนาคต — requirement "หรือหน้าหลังบ้าน" ปิดด้วยหน้า Billing แล้ว)*

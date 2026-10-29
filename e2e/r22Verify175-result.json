@@ -1,0 +1,28 @@
+{
+  "at": "2026-10-29T14:24:54.082Z",
+  "state": {
+    "ledgerTop": "[{\"version\":\"175\",\"name\":\"175_tenant_custom_domain_billing\"},{\"version\":\"174\",\"name\":\"174_customer_rider_position\"},{\"version\":\"173\",\"name\":\"173_order_id_bigint_fix\"}]",
+    "domain": "[{\"column_name\":\"custom_domain\",\"data_type\":\"text\"}]",
+    "prompt": "[{\"column_name\":\"ai_prompt\"}]",
+    "billing": "[{\"t\":\"billing_subscriptions\"}]",
+    "billingCols": "[{\"n\":12}]",
+    "rls": "[{\"relrowsecurity\":true}]",
+    "policies": "[{\"policyname\":\"billing_admin_manage\"},{\"policyname\":\"billing_tenant_scope\"}]",
+    "grants": "[{\"grantee\":\"authenticated\",\"privilege_type\":\"SELECT\"},{\"grantee\":\"postgres\",\"privilege_type\":\"SELECT\"},{\"grantee\":\"service_role\",\"privilege_type\":\"SELECT\"}]",
+    "bmb": "[{\"id\":\"tenant-bmb-001\",\"custom_domain\":\"biteme-baby.com\"}]",
+    "idx": "[{\"indexname\":\"idx_tenants_custom_domain\"}]"
+  },
+  "assertions": {
+    "ledgerTopIs175": true,
+    "domainColText": true,
+    "promptCol": true,
+    "billingTable": false,
+    "billingCols12": true,
+    "rlsEnabled": true,
+    "policies2": true,
+    "grantSelectAuthenticated": true,
+    "bmbDomainSeeded": true,
+    "idxExists": true
+  },
+  "allPass": false
+}

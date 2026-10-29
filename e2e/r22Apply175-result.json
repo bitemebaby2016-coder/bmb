@@ -1,0 +1,40 @@
+{
+  "at": "2026-10-29T14:24:14.530Z",
+  "precheck": {
+    "ledgerTop": "[{\"version\":\"174\",\"name\":\"174_customer_rider_position\"},{\"version\":\"173\",\"name\":\"173_order_id_bigint_fix\"},{\"version\":\"172\",\"name\":\"172_discount_cap_15pct\"}]",
+    "domainBefore": "[]",
+    "promptBefore": "[]",
+    "billingBefore": "[{\"t\":null}]"
+  },
+  "apply": "[]",
+  "verify": {
+    "domainAfter": "[{\"column_name\":\"custom_domain\"}]",
+    "promptAfter": "[{\"column_name\":\"ai_prompt\"}]",
+    "billingAfter": "[{\"t\":\"billing_subscriptions\"}]",
+    "rls": "[{\"relrowsecurity\":true}]",
+    "policies": "[{\"policyname\":\"billing_admin_manage\"},{\"policyname\":\"billing_tenant_scope\"}]",
+    "bmbDomain": "[{\"id\":\"tenant-bmb-001\",\"custom_domain\":\"biteme-baby.com\"}]",
+    "idx": "[{\"indexname\":\"idx_tenants_custom_domain\"}]"
+  },
+  "record": {
+    "ins175": "[]",
+    "ledgerTopAfter": "[{\"version\":\"175\",\"name\":\"175_tenant_custom_domain_billing\"},{\"version\":\"174\",\"name\":\"174_customer_rider_position\"},{\"version\":\"173\",\"name\":\"173_order_id_bigint_fix\"},{\"version\":\"172\",\"name\":\"172_discount_cap_15pct\"},{\"version\":\"171\",\"name\":\"171_my_role_rpc\"}]"
+  },
+  "precheckAssertions": {
+    "ledgerTopWas174": true,
+    "noDomainBefore": true,
+    "noBillingBefore": true
+  },
+  "assertions": {
+    "domainCol": true,
+    "promptCol": true,
+    "billingTable": false,
+    "rlsEnabled": true,
+    "policies2": true,
+    "bmbDomainSeeded": true,
+    "idxExists": true,
+    "ledgerTopIs175": true,
+    "has175": true
+  },
+  "allPass": false
+}

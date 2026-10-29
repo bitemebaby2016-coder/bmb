@@ -1,0 +1,30 @@
+[?25l[90m|[39m
+[?25h
+  
+   ID                                   | NAME                   | SLUG                   | STATUS | VERSION | UPDATED_AT (UTC)    
+  --------------------------------------|------------------------|------------------------|--------|---------|---------------------
+   3262231f-2900-47ab-a221-6bc2002d8000 | create-checkout        | create-checkout        | ACTIVE | 95      | 2026-10-05 16:44:08 
+   b90a350d-77b8-4421-8d3e-76cf67e906af | stripe-webhook         | stripe-webhook         | ACTIVE | 102     | 2026-10-05 16:44:14 
+   06296fa2-ea15-4fe8-af36-ac120c01134c | stripe-refund          | stripe-refund          | ACTIVE | 65      | 2026-10-05 16:44:25 
+   1f53d37b-1226-4893-8840-96eead56355d | phone-auto-login       | phone-auto-login       | ACTIVE | 66      | 2026-10-12 11:45:14 
+   a83c8b84-f018-4785-bc4f-74bdb7c5ca78 | ai-proxy               | ai-proxy               | ACTIVE | 74      | 2026-10-17 07:52:40 
+   986dc897-43cd-4283-bab0-190ccc3bb88a | automation-worker      | automation-worker      | ACTIVE | 64      | 2026-10-22 15:48:24 
+   b4462bdd-19b2-4a11-b371-89558ca59db0 | channel-webhook        | channel-webhook        | ACTIVE | 64      | 2026-10-18 15:58:33 
+   a25368c2-589a-4fa2-bf8c-9de1c5de3e68 | voice-tts              | voice-tts              | ACTIVE | 56      | 2026-10-01 05:31:05 
+   7b33bd83-f5e2-4e88-a975-7ba69935b457 | social-ai-worker       | social-ai-worker       | ACTIVE | 56      | 2026-10-17 14:02:54 
+   e9c3cda2-dd75-4c1d-868b-731348f1f732 | social-post-worker     | social-post-worker     | ACTIVE | 54      | 2026-10-17 07:52:28 
+   7930e70b-a1b8-4b74-85d9-36ba3bb8b9f2 | queue-enqueue          | queue-enqueue          | ACTIVE | 50      | 2026-10-22 15:48:31 
+   8b9f199b-655c-41c0-a773-d091bc864929 | queue-dispatcher       | queue-dispatcher       | ACTIVE | 50      | 2026-10-22 15:48:38 
+   e3b2b561-7489-4cb2-b8ed-86f44cff951e | push-send              | push-send              | ACTIVE | 28      | 2026-10-29 08:09:14 
+   8c120862-6d97-4b3f-9afa-30cd5d3aeaf7 | social-publish-worker  | social-publish-worker  | ACTIVE | 24      | 2026-10-16 14:09:36 
+   5a9553d7-bab6-4a9f-bdd0-cda5306d6b2b | sms-send               | sms-send               | ACTIVE | 24      | 2026-10-16 13:26:44 
+   0b3c2c36-e132-4040-aad3-4daa2d4085db | omise-checkout         | omise-checkout         | ACTIVE | 10      | 2026-10-07 12:41:13 
+   2d64765c-20c5-460a-93cf-0f54452a3873 | omise-webhook          | omise-webhook          | ACTIVE | 11      | 2026-10-07 13:43:10 
+   2c0c2ddd-e0a4-482b-a653-d02c526d9ed2 | omise-refund           | omise-refund           | ACTIVE | 10      | 2026-10-07 12:41:27 
+   c5e80ade-ac72-4722-a30a-1c0ea1363d78 | otp-send               | otp-send               | ACTIVE | 4       | 2026-10-12 11:45:03 
+   b90fb237-d213-460d-be82-0a0cad5a9bd1 | guest-checkout-session | guest-checkout-session | ACTIVE | 4       | 2026-10-12 12:29:14 
+   a074d1fd-ddf9-41d1-a73e-a403c2bf44b9 | image-gen              | image-gen              | ACTIVE | 2       | 2026-10-29 08:08:33 
+   c4ccda6d-1b83-4702-a828-c737f49ff473 | sheets-sync            | sheets-sync            | ACTIVE | 1       | 2026-10-29 14:25:00 
+
+A new version of Supabase CLI is available: v2.122.0 (currently installed v2.115.0)
+We recommend updating regularly for new features and bug fixes: https://supabase.com/docs/guides/cli/getting-started#updating-the-supabase-cli

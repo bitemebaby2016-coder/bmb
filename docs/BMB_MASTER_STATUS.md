@@ -4,7 +4,7 @@
 > (WHOLE-REPO RECONCILIATION · CODE CLOSURE · LEAN PRODUCTION ACCEPTANCE)
 > ไฟล์อื่นที่มีวันที่ในชื่อ = **รายงาน ณ วันนั้น** ห้ามใช้แทนไฟล์นี้ ถ้าขัดกันให้ถือโค้ด/หลักฐาน (DOC DRIFT)
 
-**last_updated:** 2026-10-30 (R22 · Master Prompt 4 tasks — anti-stacking 3 gates + chip กำไร AdminOrders · **m175 PREPARED ยังไม่ apply** (custom_domain/billing/ai_prompt) · Wizard `/admin/onboarding` + Billing `/admin/billing` · kitchenAlert + dispatchFallback/lalamove (wire ค้าง) · sheets-sync EF+workflow (deploy ค้าง) · gates: **vite build 0 · vitest targeted ALL PASS · eslint 0** · **tsc ท้องถิ่น = NOT RUN (30s timeout) → CI ตัดสิน**) · (เดิม 2026-10-29 R21 · เฟส 1-4 + R21d + R21e + R21f — m174 APPLIED ledger top=174) · **branch:** `main` · อ่าน §0 ก่อนเริ่มงานทุกครั้ง
+**last_updated:** 2026-10-30 (R22b · Owner อนุมัติครบทุกขั้นรอ → **m175 APPLIED production (ledger top=175 · evidence r22Apply175/r22Verify175-result.json · ข้อ billingTable = oracle ผิด 2 ครั้ง → หยุด 0.9 · หลักฐานจริง = 12 คอลัมน์+RLS+policies+grant+seed+idx)** · **sheets-sync DEPLOYED** (evidence r22_functions_list.txt · webhook secret ยังไม่มี → skipped ตามดีไซน์) · **tenant-proxy worker = BLOCKED สิทธิ์ CF token (auth 10000 · เจ้าของรัน e2e\r22_deploy_worker.cmd)** · เหลือค้าง = **Owner เทสต์จริง 8 ข้อเท่านั้น** (ดูท้าย `docs/BMB_UPGRADE_LOG_2026-10-29.md`) · gates R22: vite build 0 + vitest targeted ALL PASS + eslint 0 · tsc local NOT RUN → CI · **branch:** `main` · อ่าน §0 ก่อนเริ่มงานทุกครั้ง
 
 ---
 
