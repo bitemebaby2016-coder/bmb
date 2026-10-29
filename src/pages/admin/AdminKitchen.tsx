@@ -13,6 +13,8 @@ import { orderModeBadge, paymentStateBadge } from '@/lib/adminOrderDisplay'
 import { kitchenGatePreview, groupKitchenOrders, splitSameDayPreOrder, readyReasonLabel, kitchenItemLines, batchIdLabel, formatBatchCreatedAt } from '@/lib/kitchenQueueView'
 import { writeAuditLog } from '@/lib/auditLog'
 import { showToast } from '@/components/ui/ToastContainer'
+// R21 Phase 3: โหลดคิวครัวไม่สำเร็จต้องฟ้อง (ห้ามโชว์ summary = 0 เหมือนไม่มีงาน)
+import { LoadErrorBanner } from '@/components/ui/LoadErrorBanner'
 import { useNotificationStore } from '@/store/notificationStore'
 import type { DeliveryRoundRow } from '@/lib/bmbAdminApi_rounds'
 import type { OrderForm } from '@/lib/bmbAdminApi_orders'
@@ -28,9 +30,12 @@ export function AdminKitchen() {
   const [date, setDate] = useState(new Date().toISOString().split('T')[0])
   const [pipeline, setPipeline] = useState<OrderForm[]>([])
   const [acting, setActing] = useState<string | null>(null)
+  // R21 Phase 3: โหลดล้มเหลว ≠ คิวว่าง
+  const [loadError, setLoadError] = useState('')
 
   const load = useCallback(async () => {
     setLoading(true)
+    setLoadError('')
     try {
       const res: any = await getKitchenSummary(date)
       if (res?.ok) {
@@ -43,6 +48,7 @@ export function AdminKitchen() {
       setPipeline(pipe.filter((o) => (o.scheduled_date || date) === date || o.order_mode !== 'PRE_ORDER'))
     } catch (e) {
       console.error('[AdminKitchen] Load failed:', e)
+      setLoadError('โหลดคิวครัวไม่สำเร็จ — ตรวจสอบการเชื่อมต่อแล้วกด "ลองใหม่" (ข้อมูลด้านล่างอาจล้าสมัย)')
     } finally {
       setLoading(false)
     }
@@ -122,6 +128,12 @@ export function AdminKitchen() {
           <button onClick={() => { void load() }} className="btn btn-outline text-sm" disabled={loading}>รีเฟรช</button>
         </div>
       </div>
+
+      {loadError && (
+        <div className="mb-4">
+          <LoadErrorBanner message={loadError} onRetry={() => { void load() }} testId="kitchen-load-error" />
+        </div>
+      )}
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">

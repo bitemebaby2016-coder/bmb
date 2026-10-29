@@ -11,6 +11,8 @@ import { buildHeadingGroups, headingChips, menuTabItems } from '@/lib/catalogStr
 import { getProductScheduleMap, type ProductScheduleMap } from '@/lib/productSchedule'
 import { useCartStore } from '@/store/cartStore'
 import { showToast } from '@/components/ui/ToastContainer'
+// R21 Phase 3: เน็ตหลุดต้องฟ้องว่า "โหลดเมนูไม่สำเร็จ" (ห้ามปล่อยหน้าเปล่าเหมือนไม่มีเมนู)
+import { LoadErrorBanner } from '@/components/ui/LoadErrorBanner'
 import { FoodMenuCard } from '@/components/FoodMenuCard'
 import { MascotBadge } from '@/components/MascotBadge'
 import { runOrderBuilder } from '@/lib/orderEntry'
@@ -28,6 +30,9 @@ export function MenuPage() {
   const [deliveryRounds, setDeliveryRounds] = useState<DeliveryRound[]>([]) // ✓ v3.1: Delivery rounds
   // วันจัดส่งจริงจาก menu_schedule (UX fix 2026-10-15 — ไม่ใช้ products.scheduled_date)
   const [scheduleMap, setScheduleMap] = useState<ProductScheduleMap>({})
+  // R21 Phase 3: โหลดล้มเหลว ≠ ไม่มีเมนู + key สำหรับกด "ลองใหม่"
+  const [loadError, setLoadError] = useState('')
+  const [reloadKey, setReloadKey] = useState(0)
   const addItem = useCartStore((s) => s.addItem)
   // ลิงก์ตรงจากฟุตเตอร์/ปุ่มแชร์: /menu?category=<slug หรือ id> → กรองหัวข้อเมนูให้ทันที
   const [searchParams, setSearchParams] = useSearchParams()
@@ -89,6 +94,7 @@ export function MenuPage() {
 
   useEffect(() => {
     async function loadData() {
+      setLoadError('')
       try {
         const [products, cats, rounds] = await Promise.all([getProducts(), getCategories(), getDeliveryRounds()])
         setProducts(products)
@@ -98,6 +104,7 @@ export function MenuPage() {
         void getProductScheduleMap().then(setScheduleMap).catch(() => setScheduleMap({}))
       } catch (err) {
         console.error('[MenuPage] Load error:', err)
+        setLoadError('โหลดเมนูไม่สำเร็จ — ตรวจสอบการเชื่อมต่ออินเทอร์เน็ตแล้วกด "ลองใหม่"')
       }
     }
     loadData()
@@ -109,7 +116,7 @@ export function MenuPage() {
     }
     document.addEventListener('visibilitychange', onVisible)
     return () => document.removeEventListener('visibilitychange', onVisible)
-  }, [])
+  }, [reloadKey])
 
   // ✓ v3.1: Filter by tab — canonical mode columns (migration 023), alias fallback
   // หัวข้อเมนู: เทียบด้วย category id ตรง ๆ (ค่าเดิมเทียบ slug slice ทำให้กดกรองแล้วเมนูหาย)
@@ -211,6 +218,12 @@ export function MenuPage() {
     <div className="max-w-7xl mx-auto px-4 py-6 bg-brand-bg min-h-screen">
       <div className="mb-6">
         <h1 className="text-3xl font-display font-bold text-brand-accent mb-4">เมนูอาหาร</h1>
+
+        {loadError && (
+          <div className="mb-4">
+            <LoadErrorBanner message={loadError} onRetry={() => setReloadKey((n) => n + 1)} testId="menu-load-error" />
+          </div>
+        )}
 
         {/* ✓ v3.1: Tab switch (Same-day / Pre-order) */}
         <div className="flex gap-2 mb-4 bg-white p-1 rounded-xl">

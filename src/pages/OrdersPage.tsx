@@ -14,6 +14,8 @@ import { useAuthStore } from '@/store/authStore'
 import { getOrdersByCustomer, hydrateOrderItems, cancelOrder, type OrderForm } from '@/lib/bmbAdminApi_orders'
 import { getServerStatusLabel } from '@/lib/orderVocabulary'
 import { showToast } from '@/components/ui/ToastContainer'
+// R21 Phase 3: โหลดล้มเหลวห้ามโชว์เป็น "ข้อมูลว่าง" — ต้องมี banner + ปุ่มลองใหม่
+import { LoadErrorBanner } from '@/components/ui/LoadErrorBanner'
 
 const PAYMENT_LABEL: Record<string, string> = {
   pending: 'รอชำระ',
@@ -29,9 +31,12 @@ export function OrdersPage() {
   const [orders, setOrders] = useState<OrderForm[]>([])
   const [loading, setLoading] = useState(true)
   const [cancelling, setCancelling] = useState<string | null>(null)
+  // R21 Phase 3: แยก "โหลดไม่สำเร็จ" ออกจาก "ไม่มีออเดอร์" (เดิมเน็ตหลุด = เงียบ)
+  const [loadError, setLoadError] = useState('')
 
   const load = useCallback(async () => {
     if (!customer?.id) { setOrders([]); setLoading(false); return }
+    setLoadError('')
     try {
       // W4-E-1 (D1): server-side own-orders filter — same RLS-own semantics as
       // the previous unfiltered read, but bounded at the query level.
@@ -39,6 +44,7 @@ export function OrdersPage() {
       setOrders(await hydrateOrderItems(list || []))
     } catch (e) {
       console.error('[OrdersPage] load error:', e)
+      setLoadError('โหลดออเดอร์ไม่สำเร็จ — ตรวจสอบการเชื่อมต่ออินเทอร์เน็ตแล้วกด "ลองใหม่"')
     } finally {
       setLoading(false)
     }
@@ -89,7 +95,17 @@ export function OrdersPage() {
     <div className="max-w-3xl mx-auto px-4 py-6 min-h-screen">
       <h1 className="text-2xl font-display font-bold text-brand-accent mb-5">📦 ออเดอร์ของฉัน</h1>
 
-      {orders.length === 0 && (
+      {loadError && (
+        <div className="mb-4">
+          <LoadErrorBanner
+            message={loadError}
+            onRetry={() => { setLoading(true); void load() }}
+            testId="orders-load-error"
+          />
+        </div>
+      )}
+
+      {orders.length === 0 && !loadError && (
         <p className="text-brand-muted text-center py-10">ยังไม่มีออเดอร์ — ไปสั่งเมนูได้เลยจ้า</p>
       )}
 

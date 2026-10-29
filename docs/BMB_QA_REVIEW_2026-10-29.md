@@ -132,3 +132,42 @@
 | C3 | 4 คำสั่งเดิมของ Owner (หน้าครัวจากแจ้งเตือน · เซมเดย์ส่งทันที+ตัดสต็อกรวม · ตรวจสลิปก่อน/พร้อมรับ · เด้ง `/admin/delivery` แท็บจัดส่ง) | ⏳ ค้างอยู่ในแฮนด์ออฟ (ยังไม่ได้ทำ) |
 
 *gates รอบ R21: tsc 0 · lint 0 · vitest 167 files / 1,724 tests / 0 fail · build 0 · migration 170 APPLIED*
+
+---
+
+# รอบ R21 · เฟส 3 — UI/UX edge cases (loading / empty / error / double-submit)
+
+> หลักการเดียวกับ Owner: **"ระบบล้มเหลวต้องบอกผู้ใช้"** — ห้ามปล่อยหน้าเงียบจนผู้ใช้เข้าใจผิดว่า "ไม่มีข้อมูล"
+
+## แก้แล้ว (6 หน้า · มี banner + ปุ่มลองใหม่ refetch จริง)
+
+| หน้า | ปัญหาเดิม (probe จริง) | สิ่งที่แก้ |
+|---|---|---|
+| `HomePage` | `loadData()` catch มีแค่ `console.error` → เน็ตหลุด = โชว์เหมือน "ไม่มีสินค้าเลย" | `loadError` + banner `data-testid=home-load-error` + ลองใหม่ด้วย `reloadKey` (ไม่ใช่ `location.reload`) |
+| `MenuPage` | เหมือนกัน — หน้าเมนูเปล่าเงียบ ๆ | banner `menu-load-error` + `reloadKey` |
+| `OrdersPage` | catch มีแค่ `console.error` → **"ยังไม่มีออเดอร์" ปลอม** | banner `orders-load-error` · **ซ่อนข้อความ empty ระหว่าง error** (`!loadError`) |
+| `NotificationCenterPage` | **ไม่มี try/catch เลย** → ถ้า `getMyNotifications()` throw = ค้าง "กำลังโหลด…" ไม่จบสักที | try/catch/**finally** + banner `notif-load-error` + `reloadKey` |
+| `AdminKitchen` | catch เฉย ๆ → summary = 0 เหมือนไม่มีงาน | banner `kitchen-load-error` + ลองใหม่ |
+| `AdminProducts` | catch เฉย ๆ → หน้าเมนูเปล่าเหมือนไม่มีเมนู | banner `products-load-error` + `loadAll()` ซ้ำ |
+
+- ตัวประกอบกลางตัวเดียว: **`src/components/ui/LoadErrorBanner.tsx`** (`role="alert"` + ปุ่ม 🔄 + optional action) — ใช้ร่วมกับหน้าอื่นในรอบถัดไป
+- test **`src/__tests__/loadErrorBanner.test.ts` (5 ข้อ)** — render/click/testId/secondary/empty message
+
+## ตรวจแล้วผ่าน (มี loading + empty + error ครบอยู่แล้ว)
+
+| หน้า | หลักฐาน |
+|---|---|
+| `AdminOrders` | `loadError` + banner ตั้งแต่รอบก่อน (`AdminOrders.tsx:70`) · cancel กดซ้ำ = `if (cancelling) return` + `disabled` |
+| `PaymentConfirmationPage` | `loadError` + `retrying` guard + `retry-payment` button |
+| `RouteOptimizationPage` | `loadError` + banner |
+| `RiderPwaPage` | `loadError` + `rider-retry-*` ทุก action |
+| `RewardsPage` | `catalog-empty` + toast "แต้มไม่พอ" |
+| `PromotionsPage` | ปุ่มลองใหม่ = refetch (R20 เปลี่ยนจาก `location.reload` แล้ว) |
+| `NotificationCenterPage` (push) | toggle `disabled={pushBusy || !pushSupported || !pushServerEnabled}` + ข้อความไทย 4 กรณี |
+| `CheckoutPage` | submit key ring 124 (กัน double-submit) + `disabled={isProcessing || ...}` |
+
+## ยังไม่ได้แก้ — backlog เฟสถัดไป (probe เจอ `console.error` เฉย ๆ ไม่มี UI ฟ้อง)
+
+`DeliveryManagement` · `AdminRounds` · `InventoryPage` · `AuditLogPage` · `AdminPaymentExceptions` · `AdminRecipes` · `AdminBrands` · `AdminAssetAudit` · `AdminPortfolio` · `AdminTenants` · `VotePage` · `ReviewPage` — ใช้แพตเทิร์น `LoadErrorBanner` เดิมได้ทันที (หน้าละ ~4 จุด)
+
+**gates เฟส 3:** tsc 0 · lint 0 (`e2e/gates_r21b_lint.log`) · **vitest 168 files / 1,729 tests / 0 fail** (`e2e/gates_r21b_vitest.log` · รันเดี่ยว) · build 0 (`e2e/gates_r21b_build.log`)

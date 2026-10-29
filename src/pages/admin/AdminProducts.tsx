@@ -7,6 +7,8 @@ import { HomePopularManager } from '@/components/admin/HomePopularManager'
 import { uploadProductImage, validateImageFile } from '@/lib/bmbAdminApi_media'
 import { slugifyCategory, blankCategoryForm } from '@/lib/adminUi'
 import { customerVisibilityIssue, CUSTOMER_VISIBILITY_LABEL } from '@/lib/catalogStructure'
+// R21 Phase 3: โหลดเมนูไม่สำเร็จต้องฟ้อง (ห้ามโชว์หน้าเปล่าเหมือนไม่มีเมนู)
+import { LoadErrorBanner } from '@/components/ui/LoadErrorBanner'
 import { AddonsEditor, toAddonDrafts, addonDraftsToJson, type AddonDraft } from '@/components/admin/AddonsEditor'
 import type { Product, ProductCategory } from '@/types'
 // R21 Phase 2 (Owner 2026-10-29): Gross Margin / Net Profit real-time จากต้นทุนที่แอดมินกรอก
@@ -34,6 +36,8 @@ export function AdminProducts() {
     prep_minutes: 10
   })
   const [addons, setAddons] = useState<AddonDraft[]>([])
+  // R21 Phase 3: โหลดล้มเหลว ≠ ไม่มีเมนู
+  const [loadError, setLoadError] = useState('')
 
   // ── ระบบ "หัวข้อเมนู" เดียว (2026-10-17): หัวข้อ = หมวดหมู่ (category) —
   //    เพิ่ม/แก้/เรียง/ซ่อน/ลบ + ย้ายเมนูระหว่างหัวข้อ · ไม่มีชั้น Section ซ้ำซ้อน ──
@@ -64,6 +68,7 @@ export function AdminProducts() {
   useEffect(() => { loadAll() }, [])
 
   async function loadAll() {
+    setLoadError('')
     try {
       const [products, cats, allCats] = await Promise.all([getProducts(), getCategories(), getCategoriesAdmin()])
       setProducts(products)
@@ -71,6 +76,7 @@ export function AdminProducts() {
       setAdminCats(allCats)
     } catch (err) {
       console.error('[AdminProducts] Load error:', err)
+      setLoadError('โหลดรายการเมนูไม่สำเร็จ — ตรวจสอบการเชื่อมต่อแล้วกด "ลองใหม่"')
     }
   }
 
@@ -302,6 +308,12 @@ export function AdminProducts() {
         <h1 className="text-3xl font-bold text-brand-accent">🍽️ จัดการเมนู</h1>
         <button onClick={() => { resetForm(); setShowAddForm(true) }} className="btn btn-primary">+ เพิ่มเมนู</button>
       </div>
+
+      {loadError && (
+        <div className="mb-4">
+          <LoadErrorBanner message={loadError} onRetry={() => void loadAll()} testId="products-load-error" />
+        </div>
+      )}
 
       {showAddForm && (
         <div ref={formRef} data-testid="product-form-frame" className="card mb-6 bg-brand-bg scroll-mt-20">

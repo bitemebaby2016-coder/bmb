@@ -25,6 +25,8 @@ import {
   type PushSubscriptionLike,
 } from '@/lib/pushService'
 import { MascotBadge } from '@/components/MascotBadge'
+// R21 Phase 3: โหลดล้มเหลวต้องฟ้อง + ลองใหม่ได้ (เดิมถ้า throw = ค้าง "กำลังโหลด…" ตลอดกาล)
+import { LoadErrorBanner } from '@/components/ui/LoadErrorBanner'
 
 const CHANNEL_ICON: Record<NotificationChannel, string> = {
   Transactional: '🧾',
@@ -45,21 +47,33 @@ export function NotificationCenterPage() {
   const [rows, setRows] = useState<NotificationRow[]>([])
   const [prefs, setPrefs] = useState<Record<NotificationChannel, boolean>>(DEFAULT_CHANNEL_STATE)
   const [loading, setLoading] = useState(true)
+  // R21 Phase 3: แยก "โหลดไม่สำเร็จ" ออกจาก "ยังไม่มีข้อความ" + key สำหรับกดลองใหม่
+  const [loadError, setLoadError] = useState('')
+  const [reloadKey, setReloadKey] = useState(0)
   const navigate = useNavigate()
   const role = useAuthStore((s) => s.role)
 
   useEffect(() => {
     let active = true
+    setLoading(true)
+    setLoadError('')
     void (async () => {
-      const list = await getMyNotifications()
-      if (!active) return
-      setRows(list)
-      setLoading(false)
+      try {
+        const list = await getMyNotifications()
+        if (!active) return
+        setRows(list)
+      } catch (e) {
+        // R21 Phase 3: เดิมไม่มี try/catch → ถ้าฟังก์ชัน throw = ค้าง "กำลังโหลด…" ไม่จบสักที
+        console.error('[NotificationCenter] load failed:', e)
+        if (active) setLoadError('โหลดการแจ้งเตือนไม่สำเร็จ — ตรวจสอบการเชื่อมต่ออินเทอร์เน็ตแล้วกด "ลองใหม่"')
+      } finally {
+        if (active) setLoading(false)
+      }
     })()
     return () => {
       active = false
     }
-  }, [])
+  }, [reloadKey])
 
   const grouped = useMemo(() => {
     const map = new Map<NotificationChannel, NotificationRow[]>()
@@ -203,6 +217,9 @@ export function NotificationCenterPage() {
       </section>
 
       {loading && <p className="text-sm text-slate-400">กำลังโหลด…</p>}
+      {!loading && loadError && (
+        <LoadErrorBanner message={loadError} onRetry={() => setReloadKey((n) => n + 1)} testId="notif-load-error" />
+      )}
 
       {NOTIFICATION_CHANNELS.map((c) => (
         <section key={c} data-testid={`notif-section-${c}`}>

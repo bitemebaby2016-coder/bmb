@@ -16,6 +16,8 @@ import { useCartStore } from '@/store/cartStore'
 import { useAuthStore } from '@/store/authStore'
 import { useEffect, useState, lazy, Suspense } from 'react'
 import { showToast } from '@/components/ui/ToastContainer'
+// R21 Phase 3: โหลดหน้าแรกไม่สำเร็จต้องฟ้อง (ห้ามโชว์เหมือน "ไม่มีสินค้าเลย")
+import { LoadErrorBanner } from '@/components/ui/LoadErrorBanner'
 import {
   getHomeReviews,
   getStoreStatusFromRounds,
@@ -85,9 +87,13 @@ export function HomePage() {
   // อ่านจาก business_settings (แอดมินแก้ได้ที่หน้าแอดมิน ไม่ต้อง deploy)
   const [shopHours, setShopHours] = useState<{ open: string; close: string } | null>(null)
   const [operatingHours, setOperatingHours] = useState<Record<string, boolean> | null>(null)
+  // R21 Phase 3: โหลดล้มเหลว ≠ ร้านไม่มีเมนู + key สำหรับกด "ลองใหม่"
+  const [loadError, setLoadError] = useState('')
+  const [reloadKey, setReloadKey] = useState(0)
 
   useEffect(() => {
     async function loadData() {
+      setLoadError('')
       try {
         // PERF: supabase chunks load only after first paint (kept off critical path).
         const { getProducts, getCategories } = await import('@/lib/bmbAdminApi_products')
@@ -133,6 +139,7 @@ export function HomePage() {
         }
       } catch (err) {
         console.error('[HomePage] Load error:', err)
+        setLoadError('โหลดหน้าแรกไม่สำเร็จ — ตรวจสอบการเชื่อมต่ออินเทอร์เน็ตแล้วกด "ลองใหม่"')
       } finally {
         setLoading(false)
       }
@@ -146,7 +153,7 @@ export function HomePage() {
     }
     document.addEventListener('visibilitychange', onVisible)
     return () => document.removeEventListener('visibilitychange', onVisible)
-  }, [])
+  }, [reloadKey])
 
   const reviews = getHomeReviews(products)
   const promotions = getHomePromotionsFromRows(promoRows)
@@ -336,7 +343,13 @@ export function HomePage() {
     <div id="home-sec-top" className="max-w-7xl mx-auto px-4 py-6 pb-28 bg-organic min-h-screen">
       {/* SEO: Visually hidden H1 with primary keywords */}
       <h1 className="sr-only">Bite Me Baby — สั่งอาหารจัดส่งเมืองจันทบุรี AI แนะนำเมนู 24/7</h1>
-      
+
+      {loadError && (
+        <div className="mb-4">
+          <LoadErrorBanner message={loadError} onRetry={() => setReloadKey((n) => n + 1)} testId="home-load-error" />
+        </div>
+      )}
+
       {/* 1. BITE FOOD THEATER — food-first stage (replaces the duplicated Bite landing; the
           full-screen landing lives at "/", the conversation engine stays in TalkToBite) */}
       <Suspense fallback={null}>
