@@ -10,11 +10,12 @@ import { OrderPolicyPanel } from '@/components/admin/OrderPolicyPanel'
 import { SOCIAL_LINKS_SETTING_KEY, getSocialLinks, type SocialLinks } from '@/lib/socialLinks'
 import { THEATER_DAILY_COPY_KEY, THEATER_DAILY_COPY_STARTER } from '@/lib/theaterDailyCopy'
 import { SEO_SETTINGS_KEY, getSeoSettings, type SeoSettings } from '@/lib/seoSettings'
+import { STORE_STATUS_COPY_KEY, getStoreStatusCopy, setStoreStatusCopyLive, type StoreStatusCopy } from '@/lib/storeStatusCopy'
 import { supabase } from '@/lib/supabase'
 
 // C1/Q8 (audit D1 — "1 เรื่อง = 1 ที่"): key ที่มีฟอร์มเฉพาะทาง — generic editor
 // (JSON/JsonForm + Save All) ห้ามโชว์/ห้ามเขียน กันพิมพ์ค่าเสียแบบ 22P02 ซ้ำ
-const TYPED_FORM_KEYS = new Set<string>([SOCIAL_LINKS_SETTING_KEY, SEO_SETTINGS_KEY, 'order_policy'])
+const TYPED_FORM_KEYS = new Set<string>([SOCIAL_LINKS_SETTING_KEY, SEO_SETTINGS_KEY, STORE_STATUS_COPY_KEY, 'order_policy'])
 
 export function AdminSettings() {
   const [settings, setSettings] = useState<Record<string, any>>({})
@@ -25,20 +26,24 @@ export function AdminSettings() {
   const [branch, setBranch] = useState<any>(null)
   const [socials, setSocials] = useState<SocialLinks | null>(null)
   const [seoCopy, setSeoCopy] = useState<SeoSettings | null>(null)
+  // N1 (Owner 4-2 · R19): copy แถบสถานะหน้าแรกแก้เองได้ (คีย์ business_settings)
+  const [statusCopy, setStatusCopy] = useState<StoreStatusCopy | null>(null)
 
   useEffect(() => { load() }, [])
 
   async function load() {
-    const [s, br, sl, seo] = await Promise.all([
+    const [s, br, sl, seo, sc] = await Promise.all([
       getBusinessSettings(),
       supabase.from('branches').select('id, display_name, name, service_radius_km, operating_hours').eq('is_default', true).maybeSingle(),
       getSocialLinks(true),
       getSeoSettings(true),
+      getStoreStatusCopy(true),
     ])
     setSettings(s)
     setBranch(br.data ?? null)
     setSocials(sl)
     setSeoCopy(seo)
+    setStatusCopy(sc)
     setLoading(false)
   }
 
@@ -115,6 +120,18 @@ export function AdminSettings() {
     const ok = await setBusinessSetting(SEO_SETTINGS_KEY, seoCopy)
     showToast(ok ? 'บันทึก SEO copy แล้ว — หน้าแรก/meta อัปเดต (≤7 นาที/reload)' : 'Failed to save seo', ok ? 'success' : 'error')
     if (ok) await load()
+  }
+
+  // N1 (Owner 4-2 · R19): copy แถบสถานะ — เขียนเฉพาะ "ข้อความ" 4 บรรทัด
+  // ไฟ 🟢/🔴 (sameDayOpen/preOrderOpen) ยังคำนวจากรอบจริงเสมอ = ห้าม override ผ่านคีย์นี้
+  async function saveStatusCopy() {
+    if (!statusCopy) return
+    const ok = await setBusinessSetting(STORE_STATUS_COPY_KEY, statusCopy)
+    showToast(ok ? 'บันทึก copy แถบสถานะแล้ว — หน้าแรกอัปเดตทันทีในเครื่องนี้ (ผู้ชมท่านอื่น ≤7 นาที/reload)' : 'Failed to save store_status_copy', ok ? 'success' : 'error')
+    if (ok) {
+      setStoreStatusCopyLive(statusCopy) // เห็นผลทันที (live store ของ strip)
+      await load()
+    }
   }
 
   return (
@@ -253,6 +270,55 @@ export function AdminSettings() {
               />
             </label>
             <button onClick={() => void saveSeoCopy()} className="btn btn-success text-sm mt-2">💾 บันทึก SEO copy</button>
+          </div>
+        )}
+
+        {/* N1 (Owner 4-2 · R19): แถบสถานะหน้าแรก — แอดมินแก้ข้อความเองได้ · ไฟอัตโนมัติคงเดิม */}
+        <h2 className="text-xl font-bold text-brand-accent">📣 แถบสถานะหน้าแรก (ข้อความ)</h2>
+        {statusCopy && (
+          <div className="card" data-testid="store-status-copy-config">
+            <p className="text-xs text-brand-muted mb-2">
+              แก้ข้อความแถบสถานะร้านได้เอง 4 บรรทัด — <strong>ไฟ 🟢/🔴 สองบรรทัดยังเปิด/ปิดอัตโนมัติจากรอบจริงเสมอ</strong>{' '}
+              (เปลี่ยนจากที่นี่ไม่ได้) · ป้ายพรีออเดอร์ &quot;เปิดรับ … รอบ … (ปิดรอบ …)&quot; เป็นข้อมูลสดก็แก้ตรงนี้ไม่ได้{' '}
+              (คีย์ <code>store_status_copy</code> · ผู้ชมเห็น ≤7 นาที หรือ reload)
+            </p>
+            <label className="text-xs flex flex-col gap-1">
+              บรรทัดบน — เซมเดย์เปิด (🟢)
+              <input
+                className="input"
+                data-testid="status-copy-sameday"
+                value={statusCopy.sameDayOpen}
+                onChange={(e) => setStatusCopy({ ...statusCopy, sameDayOpen: e.target.value })}
+              />
+            </label>
+            <label className="text-xs flex flex-col gap-1 mt-2">
+              บรรทัดบน — วันนี้ปิดรับ แต่ยังรับจองล่วงหน้าได้
+              <input
+                className="input"
+                data-testid="status-copy-preorder-only"
+                value={statusCopy.preOrderOnly}
+                onChange={(e) => setStatusCopy({ ...statusCopy, preOrderOnly: e.target.value })}
+              />
+            </label>
+            <label className="text-xs flex flex-col gap-1 mt-2">
+              บรรทัดบน — ไม่มีรอบเปิดรับเลย (🔴)
+              <input
+                className="input"
+                data-testid="status-copy-closed"
+                value={statusCopy.closed}
+                onChange={(e) => setStatusCopy({ ...statusCopy, closed: e.target.value })}
+              />
+            </label>
+            <label className="text-xs flex flex-col gap-1 mt-2">
+              บรรทัดล่าง — พรีออเดอร์ปิดรับแล้ว (🔴)
+              <input
+                className="input"
+                data-testid="status-copy-preorder-closed"
+                value={statusCopy.preOrderClosed}
+                onChange={(e) => setStatusCopy({ ...statusCopy, preOrderClosed: e.target.value })}
+              />
+            </label>
+            <button onClick={() => void saveStatusCopy()} className="btn btn-success text-sm mt-2">💾 บันทึกข้อความแถบสถานะ</button>
           </div>
         )}
 

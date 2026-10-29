@@ -60,10 +60,14 @@ export function PromotionsPage() {
   const [loading, setLoading] = useState(true)
   const [loadFailed, setLoadFailed] = useState(false)
   const [usedId, setUsedId] = useState<string | null>(null)
+  // QA 3.9 (R19): ปุ่ม "ลองใหม่" = refetch รอบนี้แทน location.reload (ไม่ต้องรีโหลดทั้งหน้า)
+  const [reloadKey, setReloadKey] = useState(0)
   const navigate = useNavigate()
 
   useEffect(() => {
     let alive = true
+    setLoading(true)
+    setLoadFailed(false)
     void (async () => {
       try {
         const { rows: data, ok } = await getPromotionsWithStatus()
@@ -77,7 +81,7 @@ export function PromotionsPage() {
       }
     })()
     return () => { alive = false }
-  }, [])
+  }, [reloadKey])
 
   const promos = rows.filter((p) => isPromoLiveNow(p))
 
@@ -121,7 +125,7 @@ export function PromotionsPage() {
         <div className="card text-center">
           <p className="text-brand-accent font-bold mb-2">โหลดโปรโมชันไม่สำเร็จค่ะ</p>
           <p className="text-sm text-brand-muted mb-4">การเชื่อมต่อข้อมูลร้านขัดข้อง — กรุณาลองใหม่อีกครั้ง</p>
-          <button onClick={() => window.location.reload()} className="btn btn-primary">ลองใหม่</button>
+          <button onClick={() => setReloadKey((k) => k + 1)} className="btn btn-primary">ลองใหม่</button>
         </div>
       )}
 

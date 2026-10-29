@@ -43,7 +43,7 @@ describe('R12 — seoSettings live store (admin แก้ SEO copy เองไ�
   it('AdminSettings: มีฟอร์มเฉพาะทาง SEO (seo-copy-config) + คีย์กัน generic editor', () => {
     expect(adminSettingsSrc).toContain('data-testid="seo-copy-config"')
     expect(adminSettingsSrc).toContain('saveSeoCopy')
-    expect(adminSettingsSrc).toContain("const TYPED_FORM_KEYS = new Set<string>([SOCIAL_LINKS_SETTING_KEY, SEO_SETTINGS_KEY, 'order_policy'])")
+    expect(adminSettingsSrc).toContain("const TYPED_FORM_KEYS = new Set<string>([SOCIAL_LINKS_SETTING_KEY, SEO_SETTINGS_KEY, STORE_STATUS_COPY_KEY, 'order_policy'])")
     expect(adminSettingsSrc).toContain('setBusinessSetting(SEO_SETTINGS_KEY, seoCopy)')
   })
 

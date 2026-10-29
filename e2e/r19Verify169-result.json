@@ -1,0 +1,29 @@
+{
+  "at": "2026-10-29T04:24:56.246Z",
+  "defs": "[{\"proname\":\"driver_path_folder\",\"args\":\"p_id text\",\"security_definer\":false,\"volatility\":\"i\",\"def\":\"CREATE OR REPLACE FUNCTION public.driver_path_folder(p_id text)\\n RETURNS text\\n LANGUAGE sql\\n IMMUTABLE\\nAS $function$\\r\\n  SELECT regexp_replace(\\r\\n           regexp_replace(coalesce(p_id, ''), '(%[0-9A-Fa-f]{2})+', '', 'g'),\\r\\n           '[^A-Za-z0-9_-]', '', 'g')\\r\\n$function$\\n\"},{\"proname\":\"pod_path_is_driver\",\"args\":\"p_name text\",\"security_definer\":true,\"volatility\":\"s\",\"def\":\"CREATE OR REPLACE FUNCTION public.pod_path_is_driver(p_name text)\\n RETURNS boolean\\n LANGUAGE sql\\n STABLE SECURITY DEFINER\\n SET search_path TO 'public'\\nAS $function$\\r\\n  SELECT public.current_driver_id() IS NOT NULL\\r\\n     AND public.driver_path_folder(split_part(coalesce(p_name, ''), '/', 1))\\r\\n         = public.driver_path_folder(public.current_driver_id());\\r\\n$function$\\n\"}]",
+  "probe": "[{\"space_eq\":true,\"hash_eq\":true,\"mixed_eq\":true,\"plain_stripped\":\"drv-plain\",\"enc_sanitized\":\"drv-c139-60bc\"}]",
+  "ledger": "[{\"version\":\"169\",\"name\":\"169_pod_path_percent_encoding\"},{\"version\":\"168\",\"name\":\"168_multi_job_rider_route\"},{\"version\":\"167\",\"name\":\"167_kitchen_batch_loop_fix\"},{\"version\":\"166\",\"name\":\"166_r13_rider_pod_path_and_checkin\"},{\"version\":\"165\",\"name\":\"165_seed_business_settings_seo_copy\"}]",
+  "assertions": {
+    "rowCount": 2,
+    "folderDropsPercentRun": true,
+    "folderStripsOutsideSet": true,
+    "folderImmutable": true,
+    "podSecurityDefiner": false,
+    "podStable": true,
+    "podCallsFolder": true
+  },
+  "probeAssertions": {
+    "space_eq": true,
+    "hash_eq": true,
+    "mixed_eq": true,
+    "plain_stripped": "drv-plain",
+    "enc_sanitized": "drv-c139-60bc"
+  },
+  "ledgerAssertions": {
+    "top": {
+      "version": "169",
+      "name": "169_pod_path_percent_encoding"
+    },
+    "has169": true
+  }
+}

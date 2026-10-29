@@ -14,6 +14,8 @@ import { BrandProvider } from './components/BrandProvider'
 import { subscribeSeoSettings, getSeoSettingsVersion } from './lib/seoSettings'
 import { subscribeSocialLinks, getSocialVersion } from './lib/socialLinks'
 import { useAdminTenantContextStore } from './lib/adminTenantContext'
+// N3 (R19 · QA 1.6): listener auth กลาง — SIGNED_OUT → clear + /login · TOKEN_REFRESHED → refreshRole
+import { AuthSessionSync } from './components/AuthSessionSync'
 import { listTenants } from './lib/adminTenantApi'
 
 // Core page (must load immediately — it is the LCP page)
@@ -166,6 +168,8 @@ export default function App() {
     <BrandProvider>
     <HelmetProvider>
       <ErrorBoundary>
+        {/* N3: auth session sync กลาง (mount ครั้งเดียว · ไม่ render อะไร) */}
+        <AuthSessionSync />
         {/* SEO Helmet — per-page meta tags */}
         <Routes>
         <Route path="/" element={<SeoHelmet seo={getHomeMeta()} />} />

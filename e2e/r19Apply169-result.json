@@ -1,0 +1,44 @@
+{
+  "at": "2026-10-29T04:24:25.155Z",
+  "precheck": {
+    "ledgerTop": "[{\"version\":\"168\",\"name\":\"168_multi_job_rider_route\"},{\"version\":\"167\",\"name\":\"167_kitchen_batch_loop_fix\"},{\"version\":\"166\",\"name\":\"166_r13_rider_pod_path_and_checkin\"}]",
+    "folderDefBefore": "[]",
+    "podDefBefore": "[]",
+    "probeBefore": "[{\"space_eq\":false,\"hash_eq\":false,\"double_enc_eq\":false,\"plain\":\"drv-plain-60bc\",\"enc_sanitized\":\"drv-20c139-60bc\"}]"
+  },
+  "apply": "[]",
+  "verify": {
+    "folderDefAfter": "[]",
+    "podDefAfter": "[]",
+    "probeAfter": "[{\"space_eq\":true,\"hash_eq\":true,\"double_enc_eq\":false,\"plain\":\"drv-plain-60bc\",\"enc_sanitized\":\"drv-c139-60bc\"}]",
+    "podDefStillSecurityDefiner": "[]"
+  },
+  "record": {
+    "ins169": "[]",
+    "ledgerTopAfter": "[{\"version\":\"169\",\"name\":\"169_pod_path_percent_encoding\"},{\"version\":\"168\",\"name\":\"168_multi_job_rider_route\"},{\"version\":\"167\",\"name\":\"167_kitchen_batch_loop_fix\"},{\"version\":\"166\",\"name\":\"166_r13_rider_pod_path_and_checkin\"},{\"version\":\"165\",\"name\":\"165_seed_business_settings_seo_copy\"}]"
+  },
+  "assertions": {
+    "decodesPercent": false,
+    "stripsOutsideSet": false,
+    "precheckHadNoDecode": true
+  },
+  "probeAssertions": {
+    "space_eq": true,
+    "hash_eq": true,
+    "double_enc_eq": false,
+    "plain": "drv-plain-60bc",
+    "enc_sanitized": "drv-c139-60bc",
+    "before_space_eq": false
+  },
+  "podAssertions": {
+    "security_definer": false
+  },
+  "ledgerAssertions": {
+    "top": {
+      "version": "169",
+      "name": "169_pod_path_percent_encoding"
+    },
+    "has169": true,
+    "count": 5
+  }
+}

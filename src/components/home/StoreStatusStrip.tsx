@@ -4,13 +4,29 @@
 // Data from StoreStatus contract → future real delivery_rounds/system.
 // ============================================
 
+import { useEffect, useSyncExternalStore } from 'react'
 import type { StoreStatus } from '@/types'
+import {
+  getStoreStatusCopy,
+  getStoreStatusCopySync,
+  preOrderLineWithCopy,
+  statusMessageWithCopy,
+  subscribeStoreStatusCopy,
+} from '@/lib/storeStatusCopy'
 
 export function StoreStatusStrip({ status }: { status: StoreStatus }) {
   // R16 (Owner 2026-10-28): สีตามจริงรายสาย — เซมเดย์/พรีออเดอร์เปิด-ปิดแยกกันได้
   // (fallback: แถวเก่าไม่มี flag → เดาจากข้อความพรีออเดอร์เหมือนเดิม)
   const sameDayOpen = status.sameDayOpen ?? status.isOpen
   const preOrderOpen = status.preOrderOpen ?? !/ปิดรับแล้ว|ยังไม่เปิดรอบ/.test(status.preOrderLine || '')
+  // N1 (Owner 4-2 · R19): แอดมินแก้ "ข้อความ" เองได้ (business_settings.store_status_copy)
+  // — ไฟ 🟢/🔴 สองบรรทัดยังคำนวจากรอบจริงเสมอ ห้าม override (กติกา Owner)
+  useSyncExternalStore(subscribeStoreStatusCopy, getStoreStatusCopySync, getStoreStatusCopySync)
+  useEffect(() => {
+    void getStoreStatusCopy()
+  }, [])
+  const message = statusMessageWithCopy(status.message)
+  const preOrderLine = preOrderLineWithCopy(status.preOrderLine)
   return (
     <div
       className={`store-strip ${status.isOpen ? 'is-open' : 'is-closed'}`}
@@ -21,7 +37,7 @@ export function StoreStatusStrip({ status }: { status: StoreStatus }) {
       <div className="min-w-0">
         {/* R16: สองบรรทัด "ขนาดเท่ากัน" (font เท่ากัน · ไม่ truncate) */}
         <p className="text-sm sm:text-base font-bold" data-testid="strip-sameday">
-          {sameDayOpen ? '🟢' : '🔴'} {status.message}
+          {sameDayOpen ? '🟢' : '🔴'} {message}
         </p>
         {/* D5 (Owner 2026-10-25 / 148): เซมเดย์ไม่มีปิดรอบ — ห้ามโชว์ "ปิดรับ HH:MM" จากค่าเดิมอีก
             SYNC (Owner 2026-10-26): โชว์เวลาปิดจริงจาก business_settings.hours เมื่อรู้ค่า */}
@@ -32,7 +48,8 @@ export function StoreStatusStrip({ status }: { status: StoreStatus }) {
             ให้เห็นวันที่+ปิดรอบครบ (R18 copy: "🟢 เปิดรับ พรีออเดอร์ : จองล่วงหน้า รอบ เช้า 30/10/2026 (ปิดรอบ 05:00)") */}
         {status.preOrderLine && (
           <p className="text-sm sm:text-base font-bold" data-testid="strip-preorder">
-            {preOrderOpen ? '🟢' : '🔴'} {status.preOrderLine}
+            {/* N1: บรรทัดเปิดรับ = ข้อมูลสด (R18) คงเดิม · บรรทัดปิดรับแล้ว = แก้ได้ในคีย์ */}
+            {preOrderOpen ? '🟢' : '🔴'} {preOrderLine}
           </p>
         )}
       </div>

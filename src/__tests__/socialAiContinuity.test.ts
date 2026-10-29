@@ -116,7 +116,7 @@ describe('ฟุตเตอร์ — ลิงก์โซเชียล/LINE
     const cleared = socialLinkItems({ ...DEFAULT_SOCIAL_LINKS, line: '', line_id: '' })
     expect(cleared.some((i) => i.network === 'line')).toBe(false)
   })
-  it('D-02/R2.1: ห้าม key ซ้ำสองที่ — social_links + seo + order_policy เหลือทางบันทึกเดียว (ฟอร์มเฉพาะทาง)', () => {
+  it('D-02/R2.1: ห้าม key ซ้ำสองที่ — social_links + seo + store_status_copy + order_policy เหลือทางบันทึกเดียว (ฟอร์มเฉพาะทาง)', () => {
     // generic key editor ต้อง filter key ที่มีฟอร์มเฉพาะทางออก (TYPED_FORM_KEYS)
     expect(adminSettingsSrc).toMatch(/\.filter\(\(key\) => !TYPED_FORM_KEYS\.has\(key\)\)/)
     // handleSave/handleSaveAll ต้องไม่เขียน key เหล่านั้นผ่านทาง generic
@@ -125,7 +125,7 @@ describe('ฟุตเตอร์ — ลิงก์โซเชียล/LINE
     expect(adminSettingsSrc).toMatch(/saveSocials/)
     expect(adminSettingsSrc).toMatch(/social-links-config/)
     expect(adminSettingsSrc).toMatch(/OrderPolicyPanel/)
-    expect(adminSettingsSrc).toMatch(/TYPED_FORM_KEYS = new Set<string>\(\[SOCIAL_LINKS_SETTING_KEY, SEO_SETTINGS_KEY, 'order_policy'\]\)/)
+    expect(adminSettingsSrc).toMatch(/TYPED_FORM_KEYS = new Set<string>\(\[SOCIAL_LINKS_SETTING_KEY, SEO_SETTINGS_KEY, STORE_STATUS_COPY_KEY, 'order_policy'\]\)/)
   })
 })
 

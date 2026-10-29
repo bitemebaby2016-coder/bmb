@@ -38,6 +38,17 @@ interface AuthStore {
   redeemPoints: (points: number) => boolean
   setRole: (role: string | null) => void
   refreshRole: () => Promise<string | null>
+  /**
+   * N3 (R19 · QA 1.6): clear ทุก field ของ store เมื่อ Supabase Auth แจ้ง SIGNED_OUT
+   * (session หมดอายุ / โดน signOut จากเครื่องอื่น mid-use) — กันหน้าค้าง
+   * `isAuthenticated=true` แล้ว query โดน RLS ปฏิเสธแบบ empty เงียบ
+   */
+  clearSession: () => void
+  /**
+   * N3 (R19 · QA 1.6): USER_UPDATED/SIGNED_IN → re-map customer จาก auth user ล่าสุด
+   * (คง role/points ไว้ — ไม่ใช่การ logout)
+   */
+  syncFromAuthUser: (user: Parameters<typeof mapUserToCustomer>[0]) => void
 
   login: (email: string, password: string) => Promise<boolean>
   loginByPhone: (phone: string, password: string) => Promise<boolean>
@@ -144,6 +155,19 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
     set({ role })
     return role
   },
+  clearSession: () =>
+    set({
+      customer: null,
+      isAuthenticated: false,
+      isLoading: false,
+      isInitializing: false,
+      loyaltyPoints: 0,
+      referralCode: '',
+      role: null,
+      lastLoginError: null,
+    }),
+  syncFromAuthUser: (user) =>
+    set({ customer: mapUserToCustomer(user), isAuthenticated: true, isLoading: false, isInitializing: false }),
   addPoints: (points) => set((state) => ({ loyaltyPoints: state.loyaltyPoints + points })),
 
   redeemPoints: (points) => {
