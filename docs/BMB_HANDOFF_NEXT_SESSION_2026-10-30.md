@@ -34,7 +34,8 @@
 
 ## §3. งานที่ต้องทำต่อ (เรียงลำดับความสำคัญ · ทบทวนครบ ณ 2026-10-29 รอบ R21f)
 
-1. **🆕 ขั้นแรกของแชทใหม่ — ปิดรอบ R21f:** (ก) เช็ค CI ของ commit รอบ R21f = `node e2e/r19bCi.cjs <full-sha>` ครั้งเดียว (ไม่ poll) · (ข) **ถ้าเขียว = apply m174**: `node e2e/r21fApply174.cjs` (script พร้อม — assert fn/jsonb/ACL/ledger top=174 · smoke ต้อง null ไม่ error) · (ค) evidence `e2e/r21fApply174-result.json` + จด ledger 174 ลง MASTER §1.3 + commit ปิดรอบ · **หมายเหตุ: m174 ยังไม่ apply — หน้าลูกค้าจะยังไม่เห็นพิกัดจนกว่าจะ apply**
+1. **✅ รอบ R21f ปิดครบแล้ว (2026-10-29):** CI = Contract **#217 ✓** + CI **#643 ✓** · **m174 APPLIED production** — `e2e/r21fApply174-result.json` **ALL_PASS 10/10 · ledger top=174** · งานแรกของแชทใหม่ = **ข้อ 2 (ส่ง Owner retest §M)** + ข้อ 3-7 · (เช็ค CI docs commit ปิดท้าย = `node e2e/r19bCi.cjs <full-sha>` ครั้งเดียว)
+   - ~~มิเกรชั่นค้าง apply~~ = **ไม่มีค้าง** (parity local = ledger ทุกเลข · PROPOSED_* = superseded ห้าม apply)
 2. **🆕 retest ส่ง Owner = `docs/BMB_PRODUCTION_TEST_PACK.md` §M (M1-M16)** — ของใหม่ R21f: **M13 แผนที่ไรเดอร์หน้า `/track`** · **M14 ปุ่ม 🧭 นำทางรายจุด** · **M15 สูตรครบทุกเมนู + สินค้าใหม่โผล่เอง** · **M16 เวลาเปิด/ปิดหน้าแรกตรงกับที่ตั้ง** (ตั้งในการ์ด Branch → บันทึก → หน้าแรกต้องเปลี่ยน) · ของเดิม R21: M1-M12 (ต้นทุน/กำไร · พิมพ์ครัว · cap 15% · ประตูสลิป · แจ้งเตือนครัว · delivery focus · สต็อก · my_role · Auth · id ใหม่ · LoadErrorBanner · EF CORS)
 3. **P1 (Owner ทำใน Google Cloud):** จำกัด **HTTP referrer** ของคีย์ Google Maps (`src/lib/googleMaps.ts` ยิงจาก client 5 จุด) — ทำในคอนโซล ไม่ใช่โค้ด
 4. **external providers (Grab/Lineman/Foodpanda)** = รอ Owner ตัดสินใจ credentials หรือปิด module (QA 2.9)

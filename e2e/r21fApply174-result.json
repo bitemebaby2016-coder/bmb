@@ -1,0 +1,32 @@
+{
+  "at": "2026-10-29T12:25:32.151Z",
+  "precheck": {
+    "ledgerTop": "[{\"version\":\"173\",\"name\":\"173_order_id_bigint_fix\"},{\"version\":\"172\",\"name\":\"172_discount_cap_15pct\"},{\"version\":\"171\",\"name\":\"171_my_role_rpc\"}]",
+    "fnBefore": "[]"
+  },
+  "apply": "[]",
+  "verify": {
+    "fnAfter": "[{\"proname\":\"order_rider_position\",\"result\":\"jsonb\",\"security_definer\":true,\"proconfig\":[\"search_path=public, pg_temp\"],\"lanname\":\"plpgsql\"}]",
+    "acl": "[{\"grantee\":\"authenticated\",\"privilege_type\":\"EXECUTE\"},{\"grantee\":\"postgres\",\"privilege_type\":\"EXECUTE\"},{\"grantee\":\"service_role\",\"privilege_type\":\"EXECUTE\"}]"
+  },
+  "record": {
+    "ins174": "[]",
+    "ledgerTopAfter": "[{\"version\":\"174\",\"name\":\"174_customer_rider_position\"},{\"version\":\"173\",\"name\":\"173_order_id_bigint_fix\"},{\"version\":\"172\",\"name\":\"172_discount_cap_15pct\"},{\"version\":\"171\",\"name\":\"171_my_role_rpc\"},{\"version\":\"170\",\"name\":\"170_product_cost_margin_fields\"}]"
+  },
+  "smoke": {
+    "anonView": "[{\"r\":null}]"
+  },
+  "assertions": {
+    "fnExists": true,
+    "returnsJsonb": true,
+    "securityDefiner": true,
+    "searchPathPinned": true,
+    "noPublicGrant": true,
+    "noAnonGrant": true,
+    "authenticatedGrant": true,
+    "callIsNullNotError": true,
+    "ledgerTopIs174": true,
+    "has174": true
+  },
+  "allPass": true
+}

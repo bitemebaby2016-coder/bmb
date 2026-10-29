@@ -4,7 +4,7 @@
 > (WHOLE-REPO RECONCILIATION · CODE CLOSURE · LEAN PRODUCTION ACCEPTANCE)
 > ไฟล์อื่นที่มีวันที่ในชื่อ = **รายงาน ณ วันนั้น** ห้ามใช้แทนไฟล์นี้ ถ้าขัดกันให้ถือโค้ด/หลักฐาน (DOC DRIFT)
 
-**last_updated:** 2026-10-29 (R21 · เฟส 1-4 + R21d 12 หน้า + R21e P2 cap+cosmetic + **R21f 5 คำสั่ง Owner**: parity m173=ledger ✓ · แผนที่ไรเดอร์หน้าลูกค้า m174 · ปุ่มนำทางรายจุด · สูตรครบทุกเมนู · fix เวลาเป้าแรก = mirror hours) · **branch:** `main` · อ่าน §0 ก่อนเริ่มงานทุกครั้ง
+**last_updated:** 2026-10-29 (R21 · เฟส 1-4 + R21d + R21e + **R21f 5 คำสั่ง Owner ครบ — m174 APPLIED (ledger top=174)**: parity ✓ · แผนที่ไรเดอร์หน้าลูกค้า · นำทางรายจุด · สูตรครบทุกเมนู · fix เวลาหน้าแรก) · **branch:** `main` · อ่าน §0 ก่อนเริ่มงานทุกครั้ง
 
 ---
 
