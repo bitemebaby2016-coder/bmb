@@ -200,21 +200,21 @@ BEGIN
     IF SQLERRM NOT LIKE '%ERR_POD_REQUIRED%' THEN RAISE; END IF;
   END;
 
-  -- [R16/168 — fixture แก้ 2026-10-29 หลัง Contract Tests #198 แดง]
+  -- [R16/168 — fixture แก้ 2026-10-29 หลัง Contract Tests #198/#199 แดง]
   -- G1/G2/G3 จงใจจบที่ dispatched/arrived (ไม่ปิดวงจร) แต่ทุกใบใช้ไรเดอร์ "คนเดียวกัน" —
-  -- ใต้ rule ใหม่ของ 168 ("delivered คืน available เฉพาะไม่มีงานค้าง") ถ้าปล่อยค้างไว้
-  -- G4 จะได้ driver='busy' = "ถูกต้องตาม spec ใหม่" แต่ไม่ได้พิสูจน์ว่า "งานสุดท้ายถูกปล่อย"
-  -- (arm busy ของ 168 มีหลักฐาน production แล้ว = e2e/r16Apply168-result.json NOT EXISTS ✓)
-  -- → ปิดงานค้างของ G1-G3 เป็น fixture state ก่อนขั้น delivered (superuser direct UPDATE)
+  -- ใต้ rule ใหม่ของ 168 ("delivered คืน available เฉพาะไม่มีงานค้าง" — guard เช็คเฉพาะ
+  -- delivery_assignments) ถ้าปล่อยค้างไว้ G4 จะได้ driver='busy' = "ถูกต้องตาม spec ใหม่"
+  -- แต่ไม่ได้พิสูจน์ว่า "งานสุดท้ายถูกปล่อย" (arm busy ของ 168 มีหลักฐาน production แล้ว
+  -- = e2e/r16Apply168-result.json NOT EXISTS ✓)
+  -- → ปิด assignment ค้างของ G1-G3 เป็น fixture state ก่อนขั้น delivered (superuser)
+  -- (อัปเดต "เฉพาะ assignments" — orders ของ G1-G3 ปล่อยค้างได้: 168 ไม่ได้เช็ค orders ·
+  --  และ UPDATE orders ตรง ๆ จะชน trigger state-spine "dispatched -> delivered" ข้ามขั้น —
+  --    พิสูจน์แล้วใน #199 · transaction นี้ ROLLBACK ทิ้งอยู่ดี ไม่มี state เพี้ยนหลุดออกไป)
   RESET ROLE;
   UPDATE public.delivery_assignments
      SET status = 'delivered', delivered_at = COALESCE(delivered_at, NOW()), updated_at = NOW()
    WHERE driver_id = 'drv-163-1' AND order_number <> v_on
      AND status IN ('assigned','accepted','picked_up','in_transit','arrived');
-  UPDATE public.orders
-     SET status = 'delivered', updated_at = NOW()
-   WHERE order_number <> v_on AND customer_name = 'C163'
-     AND status IN ('dispatched','in_transit','arrived');
   PERFORM set_config('role', 'authenticated', false);
   PERFORM set_config('request.jwt.claims', '{"sub":"8c8c8c8c-8c8c-8c8c-8c8c-8c8c8c8c8c8c","role":"authenticated"}', false);
 
