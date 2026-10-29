@@ -15,7 +15,7 @@
 | 🔎 **Senior QA / Code Review ทั้งโปรเจกต์** | 3 เฟส (Auth/RLS · Core logic · UI/UX) + 4 หมวด (User flows · Error handling · React perf · PWA) + Edge Functions/CORS — จุดแดง probe จริง: `alert 0 · console.log 0 · dangerouslySetInnerHTML 0 · setInterval/clearInterval ผูกคู่ครบ · EF CORS 19/19 (ที่ไม่มี = 2 webhook server-side)` · **ข้อค้นพบสำคัญ = ไม่มี `onAuthStateChange` listener ใน src (0 จุด) → งาน N3** | **`docs/BMB_QA_REVIEW_2026-10-29.md`** |
 | 🧪 Gates ท้องถิ่น | tsc exit 0 · eslint + brandNameGuard (449 ไฟล์) + languageSanity (1257) OK · **vitest ทั้งชุด = 162 files / 1,671 tests / 0 fail (exit 0)** · **vite build exit 0** | `e2e/gates_r19_vitest.log` (VITEST_EXIT=0) · `e2e/gates_r19_build.log` (BUILD_EXIT=0) |
 
-**Production state:** ledger top = **168** (migrations 163–168 APPLIED) · **169 = มีใน repo แล้วแต่ยัง NOT APPLIED บน production** (ดู §3) · Pages = auto-deploy จาก main · git HEAD ให้ตรวจจริงด้วย `git log --oneline -1` เสมอ · **CI รอบ R19: CI #624 = success ✓ · Contract #198 = failure (ผ่าน 138-139 แล้ว — แดงที่ 163 fixture → แก้แล้ว push รอบถัดไป)**
+**Production state:** ledger top = **168** (migrations 163–168 APPLIED) · **169 = มีใน repo แล้วแต่ยัง NOT APPLIED บน production** (ดู §3) · Pages = auto-deploy จาก main · git HEAD ให้ตรวจจริงด้วย `git log --oneline -1` เสมอ · ✅ **CI รอบ R19 = ทั้ง 3 workflows เขียวบน `e8831c2`: Contract Tests #200 success (ทุก step รวม legacy 7) · CI #626 success · Cloudflare Pages = Deployed successfully** (ประวัติ: #198 = ผ่าน 138-139 / แดงที่ 163 · #199 = แดงที่ trigger state-spine · ดู §9.0 แถว 42-44)
 
 ---
 
@@ -30,7 +30,7 @@
 
 ## §3. งานที่ต้องทำต่อ (เรียงลำดับความสำคัญ)
 
-1. **✅ ดู CI รอบ commit นี้ให้เขียวทั้ง 3 workflows** (CI · Contract Tests · Cloudflare Pages) — Contract Tests ต้องผ่านตั้งแต่ step "Contract 138-139" ที่เคยล้ม + รันจนจบทุก step (legacy 7 ไฟล์ด้วย) · **กรอก §9.0 แถว 42 ใน `docs/BMB_MASTER_STATUS.md` ด้วยเลข run จริง**
+1. **✅ CI ทั้ง 3 workflows เขียวบน `e8831c2` แล้ว (Contract #200 · CI #626 · Pages deploy ✓) — §9.0 แถว 42-44 กรอกครบ** · งานที่เหลือของข้อนี้ = แค่รัน push docs รอบปิดเซสชันแล้วดูเลขรันใหม่ (ถ้ามี)
 2. **🆕 ตัดสินใจ apply migration 169 บน production** ( Owner pattern: สั่ง `__apply 169__`) — ตอนนี้ ledger = 168 · ผลกระทบถ้าไม่ apply = production ยังใช้ `driver_path_folder` เวอร์ชันไม่ decode `%XX` (ลูกค้าปัจจุบันไม่กระทบเพราะ client สร้างโฟลเดอร์ sanitized แล้ว — แต่ path แบบ legacy %20 จะยังถูกบล็อก) · ถ้า apply = ใช้สคริปต์แบบ `e2e/r*Apply*.cjs` เดิม + evidence JSON
 3. **N1 (ค้างเดิม สั่งจาก 4-2):** แถบสถานะ — ให้แอดมินแก้ copy เองได้ (key ใน `business_settings`) แต่คง 🔥/🟢🔴 ไฟสถานะอัตโนมัติ (sameDayOpen/preOrderOpen ห้าม override)
 4. **N2 (ค้างเดิม ต่อ 2-8):** `docs/BMB_BACKEND_AI_PART_1.md` ปรับปรุงตามที่ Owner รอ
