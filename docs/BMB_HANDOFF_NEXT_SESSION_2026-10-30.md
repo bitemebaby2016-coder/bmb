@@ -25,7 +25,7 @@
 
 1. **`pg_get_function_identity_arguments()` คืน "ชื่อ parameter" ด้วย** (`p_id text` ไม่ใช่ `text`) — query กรอง `= 'text'` เงียบ ๆ คืน `[]` แล้ว assertion ของ script **ไม่มี error แค่ค่า false** → รู้ได้จาก behavior probe เท่านั้น (บทเรียนเดียวกับ §9.8 เรื่อง `to_regprocedure`) · script ที่แก้แล้ว = `e2e/r19Verify169.cjs` (กรองด้วย `proname IN (...)` + แสดง args จริง)
 2. **`supabase.auth.onAuthStateChange` callback ถือ lock ของ supabase-js** → ห้าม `await` คำสั่ง supabase อื่นในนั้น (deadlock) — ทุกอย่างต้อง `setTimeout(..., 0)` ออกมาก่อน (`AuthSessionSync.tsx` ทำไว้แล้ว)
-3. **เทสต์ที่ assert "ข้อความ/โค้ดดิบ" (`?raw`) จะพังเมื่อแก้สเปก** — รอบนี้ข้อดี = จับให้เห็นทันที 3 ไฟล์ตอนเพิ่ม key เข้า `TYPED_FORM_KEYS`: `adminSettingsTypedKeys.test.ts` · `socialAiContinuity.test.ts` · `r12SeoAdminCopy.test.ts` → **ถ้าแก้集合/ข้อความใน `AdminSettings`/strip ต้องไล่ 3 ไฟล์นี้ด้วย** (อัปเดตแล้ว — เหตุผล = spec เปลี่ยนโดย Owner = N1)
+3. **เทสต์ที่ assert "ข้อความ/โค้ดดิบ" (`?raw`) จะพังเมื่อแก้สเปก** — รอบนี้ข้อดี = จับให้เห็นทันที 3 ไฟล์ตอนเพิ่ม key เข้า `TYPED_FORM_KEYS`: `adminSettingsTypedKeys.test.ts` · `socialAiContinuity.test.ts` · `r12SeoAdminCopy.test.ts` → **ถ้าแก้ชุดค่า/ข้อความใน `AdminSettings`/strip ต้องไล่ 3 ไฟล์นี้ด้วย** (อัปเดตแล้ว — เหตุผล = spec เปลี่ยนโดย Owner = N1)
 4. **guards สองตัว (`brandNameGuard`/`languageSanity`) อยู่ใน `npm run lint`** และกวาดทั้ง `src/` + `e2e/` (454 / 1,267 ไฟล์) — **ห้ามมีอักขระชุดอื่น (จีน/ญี่ปุ่น/BOM/U+FFFD) ใน comment** (รอบนี้โดนเอง 1 จุดที่ `e2e/r19Verify169.cjs:2` → แก้แล้ว)
 5. **Pattern apply production ยังใช้เดิม:** `e2e/r*Apply*.cjs` → Management API `/database/query` + insert ledger ด้วย `ON CONFLICT DO NOTHING` + evidence JSON ชื่อ `r*Apply*-result.json` — ห้าม apply โดยไม่มี precheck/verify
 
