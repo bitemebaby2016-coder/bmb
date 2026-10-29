@@ -9,6 +9,8 @@
 
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+// R21d backlog: โหลดแคตตาล็อกไม่สำเร็จต้องฟ้อง (ห้ามโชว์ "สินค้าทุกตัวมีรูปครบ" ปลอม)
+import { LoadErrorBanner } from '@/components/ui/LoadErrorBanner'
 import type { Product } from '@/types'
 
 // The mascot asset files Bite uses (mirror of public/assets/mascot/). Read-only
@@ -47,9 +49,13 @@ function hasImage(product: Product): boolean {
 export function AdminAssetAudit() {
   const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
+  // R21d: โหลดล้มเหลว ≠ รูปครบทุกตัว + key สำหรับกดลองใหม่
+  const [loadError, setLoadError] = useState('')
+  const [retryKey, setRetryKey] = useState(0)
 
   useEffect(() => {
     let active = true
+    setLoadError('')
     void (async () => {
       try {
         const { getProducts } = await import('@/lib/bmbAdminApi_products')
@@ -58,6 +64,7 @@ export function AdminAssetAudit() {
         setProducts(rows || [])
       } catch (e) {
         console.error('[AssetAudit] load failed', e)
+        if (active) setLoadError('โหลดแคตตาล็อกไม่สำเร็จ — ตรวจสอบการเชื่อมต่อแล้วกด "ลองใหม่"')
       } finally {
         if (active) setLoading(false)
       }
@@ -65,7 +72,7 @@ export function AdminAssetAudit() {
     return () => {
       active = false
     }
-  }, [])
+  }, [retryKey])
   const missing = products.filter((p) => !hasImage(p))
   const available = products.filter((p) => p.is_available && !p.archived)
   const missingAvailable = missing.filter((p) => p.is_available && !p.archived)
@@ -101,6 +108,10 @@ export function AdminAssetAudit() {
 
       {loading ? (
         <p className="text-brand-muted py-8 text-center">กำลังโหลดแคตตาล็อก…</p>
+      ) : loadError ? (
+        <div className="card py-6 text-center">
+          <LoadErrorBanner message={loadError} onRetry={() => setRetryKey((n) => n + 1)} testId="asset-load-error" />
+        </div>
       ) : missing.length === 0 ? (
         <div className="card p-6 text-center text-green-700">✅ สินค้าทุกตัวมีรูปครบแล้ว — ไม่มีอะไรต้องเติม</div>
       ) : (

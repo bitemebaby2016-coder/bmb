@@ -3,6 +3,8 @@ import { useParams, Link } from 'react-router-dom'
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { getVerifiedReviewsByProduct } from '@/lib/reviewApi'
+// R21d backlog: โหลดรีวิวไม่สำเร็จต้องฟ้อง (ห้ามโชว์ "No reviews yet." ปลอม)
+import { LoadErrorBanner } from '@/components/ui/LoadErrorBanner'
 import type { VerifiedCustomerReview } from '@/types'
 
 export function ReviewPage() {
@@ -10,16 +12,23 @@ export function ReviewPage() {
   const [verifiedReviews, setVerifiedReviews] = useState<VerifiedCustomerReview[]>([])
   const [portfolio, setPortfolio] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
+  // R21d: โหลดล้มเหลว ≠ ยังไม่มีรีวิว + key สำหรับกดลองใหม่
+  const [loadError, setLoadError] = useState('')
+  const [retryKey, setRetryKey] = useState(0)
 
   useEffect(() => {
     async function loadReviews() {
       if (!productId) return
+      setLoadError('')
       try { setVerifiedReviews(await getVerifiedReviewsByProduct(productId)) }
-      catch (e) { console.error('ReviewPage error:', e) }
+      catch (e) {
+        console.error('ReviewPage error:', e)
+        setLoadError('โหลดรีวิวไม่สำเร็จ — ตรวจสอบการเชื่อมต่อแล้วกด "ลองใหม่"')
+      }
       finally { setLoading(false) }
     }
     loadReviews()
-  }, [productId])
+  }, [productId, retryKey])
 
   // AI-CLEANUP: portfolio images come from the real Admin Portfolio (M094)
   // admin_portfolio_items — the hardcoded mock [1,2,3] list was removed.
@@ -42,7 +51,11 @@ export function ReviewPage() {
       <h1 className='text-3xl font-bold text-brand-accent mb-6'>Reviews</h1>
       <section className='mb-10'>
         <h2 className='text-xl font-display font-bold text-emerald-700 mb-4 flex items-center gap-2'><span className='w-8 h-8 rounded-full bg-emerald-100 text-emerald-700 font-bold inline-flex items-center justify-center'>{'\u2713'}</span>Verified Customer Reviews</h2>
-        {loading ? <p>Loading reviews...</p> : verifiedReviews.length > 0 ? verifiedReviews.map((review: any) => (
+        {loading ? <p>Loading reviews...</p> : loadError ? (
+          <div className='card py-4 text-center'>
+            <LoadErrorBanner message={loadError} onRetry={() => setRetryKey((n) => n + 1)} testId="review-load-error" />
+          </div>
+        ) : verifiedReviews.length > 0 ? verifiedReviews.map((review: any) => (
           <div key={review.id} className='card p-4 mb-3 border-l-4 border-emerald-500'>
             <div className='flex justify-between'><span className='font-medium'>{review.customer_name}</span><span>{'\\u2B50'.repeat(Math.round(review.rating))}</span></div>
             <p className='mt-2 text-sm'>{review.comment}</p>

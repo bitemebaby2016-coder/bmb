@@ -5,6 +5,8 @@ import { listTenants, createTenant, updateTenant, setTenantStatus } from '@/lib/
 import type { TenantItem } from '@/lib/adminTenantContext'
 import { useAdminTenantContextStore } from '@/lib/adminTenantContext'
 import { showToast } from '@/components/ui/ToastContainer'
+// R21d backlog: โหลด tenants ไม่สำเร็จต้องฟ้อง (ห้ามโชว์ "No tenants found." ปลอม)
+import { LoadErrorBanner } from '@/components/ui/LoadErrorBanner'
 
 interface TenantRow {
   id: string; name: string; slug: string; status: 'active'|'inactive'|'suspended'
@@ -13,6 +15,8 @@ interface TenantRow {
 export function AdminTenants() {
   const [tenants,setTenants] = useState<TenantRow[]>([])
   const [loading,setLoading] = useState(true)
+  // R21d: โหลดล้มเหลว ≠ ไม่มี tenant
+  const [loadError,setLoadError] = useState('')
   const [showForm,setShowForm] = useState(false)
   const [editingId,setEditingId] = useState<string|null>(null)
   const [formName,setFormName] = useState('')
@@ -22,8 +26,12 @@ export function AdminTenants() {
   const {isAdminScopePlatform,setActiveTenant,activeTenantId} = useAdminTenantContextStore()
 
   async function loadAll(): Promise<void> {
-    try { setLoading(true); setTenants(await listTenants()) }
-    catch(e){ console.error('[AdminTenants]',e) } finally{ setLoading(false) }
+    try { setLoading(true); setLoadError(''); setTenants(await listTenants()) }
+    catch(e){
+      console.error('[AdminTenants]',e)
+      // R21d: เดิม catch เฉย ๆ → หน้าโชว์ "No tenants found." ทั้งที่โหลดพัง
+      setLoadError('โหลดรายการ tenants ไม่สำเร็จ — ตรวจสอบการเชื่อมต่อแล้วกด "ลองใหม่"')
+    } finally{ setLoading(false) }
   }
 
    
@@ -79,7 +87,12 @@ export function AdminTenants() {
             </div>
           </div>
         ))}
-        {tenants.length===0&&!loading&&<div className="col-span-full text-center py-16 text-brand-muted">No tenants found.</div>}
+        {loadError&&!loading&&(
+          <div className="col-span-full mb-3">
+            <LoadErrorBanner message={loadError} onRetry={() => { void loadAll() }} testId="tenants-load-error" />
+          </div>
+        )}
+        {tenants.length===0&&!loading&&!loadError&&<div className="col-span-full text-center py-16 text-brand-muted">No tenants found.</div>}
       </div>
       {showForm && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={resetForm}>

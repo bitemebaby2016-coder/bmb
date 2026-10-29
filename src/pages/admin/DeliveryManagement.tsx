@@ -26,6 +26,8 @@ import { AdminLiveMap } from '@/components/admin/AdminLiveMap'
 import { getUsers, type User } from '@/lib/bmbAdminApi_users'
 import { showToast } from '@/components/ui/ToastContainer'
 import { useNotificationStore } from '@/store/notificationStore'
+// R21d backlog: โหลดคิว dispatch ไม่สำเร็จต้องฟ้อง (ห้ามโชว์ "ไม่มีออเดอร์รอ dispatch" ปลอม)
+import { LoadErrorBanner } from '@/components/ui/LoadErrorBanner'
 
 const ASSIGN_LABEL: Record<string, { label: string; cls: string }> = {
   assigned: { label: '📌 มอบหมายแล้ว', cls: 'badge-warning' },
@@ -52,6 +54,8 @@ export function DeliveryManagement() {
   // E1: สถานะประกาศ (dispatch_offers) ต่อออเดอร์ — 'offered' = รอไรเดอร์รับ / 'claimed' = มีคนจองแล้ว
   const [offerByOrder, setOfferByOrder] = useState<Record<string, { status: string; claimed_by_driver_id: string | null }>>({})
   const [loading, setLoading] = useState(true)
+  // R21d: โหลดล้มเหลว ≠ คิวว่าง (เฉพาะโหลดแรก — refresh เงียบล้มเหลวไม่ต้องปล่อย banner ทับข้อมูลเดิม)
+  const [loadError, setLoadError] = useState('')
   const [acting, setActing] = useState<string | null>(null)
   const [pending, setPending] = useState<Record<string, string>>({}) // order_number -> driver_id
   // รูปสถานที่จัดส่งของลูกค้า (Owner feature 2026-10-08) — user_id -> photo URL
@@ -71,7 +75,7 @@ export function DeliveryManagement() {
   const [provVehicleOther, setProvVehicleOther] = useState('')
 
   const load = useCallback(async (silent = false) => {
-    if (!silent) setLoading(true)
+    if (!silent) { setLoading(true); setLoadError('') }
     try {
       // Owner 2026-10-20: คิวมอบหมายต้องเห็นออเดอร์ที่ "จ่ายแล้ว" ทันที (confirmed/
       // preparing) — assign_driver รองรับอยู่แล้ว (020/125) ไม่ต้องรอ ready_for_dispatch
@@ -99,6 +103,8 @@ export function DeliveryManagement() {
       setOfferByOrder(omap)
     } catch (e) {
       console.error('[DeliveryManagement] load failed:', e)
+      // R21d: โหลดแรกพัง = หน้าคิวเปล่าต้องฟ้อง ไม่ใช่โชว์ "ไม่มีออเดอร์รอ dispatch"
+      if (!silent) setLoadError('โหลดคิว dispatch ไม่สำเร็จ — ตรวจสอบการเชื่อมต่อแล้วกด "ลองใหม่"')
     } finally {
       if (!silent) setLoading(false)
     }
@@ -497,7 +503,11 @@ export function DeliveryManagement() {
       {/* Dispatch queue */}
       <div className="card mb-6">
         <h3 className="font-bold text-brand-accent mb-4">📦 คิว Dispatch — มอบหมาย/ส่งออก ({readyQ.length})</h3>
-        {loading ? <p className="text-brand-muted text-sm">กำลังโหลด…</p> : readyQ.length === 0 ? <p className="text-brand-muted text-sm py-4 text-center">ไม่มีออเดอร์รอ dispatch</p> : (
+        {loading ? <p className="text-brand-muted text-sm">กำลังโหลด…</p> : loadError ? (
+          <div data-testid="dispatch-load-error" className="py-3">
+            <LoadErrorBanner message={loadError} onRetry={() => { void load() }} />
+          </div>
+        ) : readyQ.length === 0 ? <p className="text-brand-muted text-sm py-4 text-center">ไม่มีออเดอร์รอ dispatch</p> : (
           <div className="space-y-3">
             {readyQ.map((o) => {
               const a = asgFor(o.order_number)

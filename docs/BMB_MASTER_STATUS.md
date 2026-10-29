@@ -4,7 +4,7 @@
 > (WHOLE-REPO RECONCILIATION · CODE CLOSURE · LEAN PRODUCTION ACCEPTANCE)
 > ไฟล์อื่นที่มีวันที่ในชื่อ = **รายงาน ณ วันนั้น** ห้ามใช้แทนไฟล์นี้ ถ้าขัดกันให้ถือโค้ด/หลักฐาน (DOC DRIFT)
 
-**last_updated:** 2026-10-29 (R21 · เฟส 1-4 ครบ: Auth/RLS A1-A8 แก้ + m171 · Core logic + พิมพ์ครัว · UI/UX โหลดล้มเหลว · **PWA/EF audit + image-gen CORS deploy** · **4 คำสั่ง Owner ทำแล้ว**) · **branch:** `main` · อ่าน §0 ก่อนเริ่มงานทุกครั้ง
+**last_updated:** 2026-10-29 (R21 · เฟส 1-4 + **R21d backlog 12 หน้า LoadErrorBanner** ครบ: Auth/RLS A1-A8 แก้ + m171 · Core logic + พิมพ์ครัว · UI/UX โหลดล้มเหลว 6+12 หน้า · **PWA/EF audit + image-gen CORS deploy** · **4 คำสั่ง Owner ทำแล้ว**) · **branch:** `main` · อ่าน §0 ก่อนเริ่มงานทุกครั้ง
 
 ---
 
@@ -97,6 +97,7 @@
   - **เฟส 4 (PWA/EF/responsive):** PWA ทำงานครบแล้ว (vite-plugin-pwa injectManifest + `src/sw.ts` เขียนเอง · dist มี sw.js/registerSW.js/manifest.webmanifest) — **ลบ `public/manifest.json` ซ้ำ** (dist เคย ship 2 manifests) · **EF CORS: image-gen/queue-enqueue/push-send OPTIONS ตอบ 200 เปล่าไม่มีหัว CORS (live probe production ก่อนแก้) → แก้ + `supabase functions deploy` production แล้ว · probe หลังแก้ ACAO ✓** (`e2e/efOptions-image-gen*.txt`) · responsive = static audit ผ่าน (viewport + safe-area BottomNav)
   - **4 คำสั่ง Owner (ทำแล้ว):** ①ทีมครัวกดแจ้งเตือนออเดอร์ใหม่/ยืนยันแล้ว → `/admin/kitchen` (`notificationLinks.ts` role=kitchen) ②สต็อกรวมทุก round: เริ่ม `preparing` = **`deduct_inventory_for_order` RPC เดียว** (SAME_DAY+PRE_ORDER) + `cancel_order` คืนสต็อก (atomic เดิม) ③**ประตูตรวจสลิปก่อนรับออเดอร์**: modal โชว์รูปจริง (SlipThumb) + `paymentConfirmability` → "ยืนยันสลิป & รับออเดอร์" = `confirm_offline_payment` ตัวเดิม → accept ④ครัว "พร้อมส่ง" → **`/admin/delivery?focus=<เลข>`** ไฮไลต์แถว
   - **gates รวมเฟส 1-4:** tsc 0 · lint 0 (462 ไฟล์ · languageSanity 1,284) · **vitest 169 files / 1,740 tests / 0 fail** · build 0 (`e2e/gates_r21b_*.log`)
+  - **R21d (backlog 12 หน้า · ปิดรายการเฟส 3):** `LoadErrorBanner` + ปิดข้อความ empty ปลอม (`!loadError`) ครบ 12 หน้า — DeliveryManagement(โหลดแรกเท่านั้น · silent refresh ไม่ปล่อย banner) · AdminRounds · InventoryPage · AuditLogPage(query error แยกดัก) · AdminPaymentExceptions · AdminRecipes · AdminBrands(bRes.error แยกดัก) · AdminAssetAudit · AdminPortfolio · AdminTenants · VotePage · ReviewPage — source-contract 4 หน้าหลักผ่าน · probe = `e2e/r21dProbe.cjs` · รายละเอียด = QA review §รอบ R21d
 - **R20 (Owner สั่ง `__apply 169__` 2026-10-29) = migration 169 APPLIED + VERIFIED บน production**
   - คำสั่ง = Owner พิมพ์ `__apply 169__` (สิทธิ์ apply production ของ Owner เท่านั้น) · script = `e2e/r19Apply169.cjs` (แบบ `r*Apply*.cjs` เดิม · Management API `/database/query`)
   - 4 stage = precheck (ledger top **168** · def เดิมของ 166 ยังไม่ decode `%XX` · probe `space_eq=false`) → apply `supabase/migrations/169_pod_path_percent_encoding.sql` → **verify พฤติกรรมจริง**: `driver_path_folder('drv-%20c139-60bc') = driver_path_folder('drv- c139-60bc')` = **true** (ก่อน apply = false) · `%23`↔`#` = true · mixed = true · def ใหม่มี `(%[0-9A-Fa-f]{2})+` + `[^A-Za-z0-9_-]` · `pod_path_is_driver` = SECURITY DEFINER + STABLE + เรียก `driver_path_folder` ✓ → record (**ledger top = 169**)

@@ -166,7 +166,7 @@
 | `NotificationCenterPage` (push) | toggle `disabled={pushBusy || !pushSupported || !pushServerEnabled}` + ข้อความไทย 4 กรณี |
 | `CheckoutPage` | submit key ring 124 (กัน double-submit) + `disabled={isProcessing || ...}` |
 
-## ยังไม่ได้แก้ — backlog เฟสถัดไป (probe เจอ `console.error` เฉย ๆ ไม่มี UI ฟ้อง)
+## ยังไม่ได้แก้ — backlog เฟสถัดไป (probe เจอ `console.error` เฉย ๆ ไม่มี UI ฟ้อง) → **ทำแล้วทั้ง 12 หน้าในรอบ R21d (ดู §ล่างสุด)**
 
 `DeliveryManagement` · `AdminRounds` · `InventoryPage` · `AuditLogPage` · `AdminPaymentExceptions` · `AdminRecipes` · `AdminBrands` · `AdminAssetAudit` · `AdminPortfolio` · `AdminTenants` · `VotePage` · `ReviewPage` — ใช้แพตเทิร์น `LoadErrorBanner` เดิมได้ทันที (หน้าละ ~4 จุด)
 
@@ -226,6 +226,30 @@
 
 ## ยังคงค้างรอบถัดไป (บันทึก — ไม่ประกาศว่าปิด loop)
 
-1. backlog 12 หน้า LoadErrorBanner (เฟส 3 · ใช้แพตเทิร์นเดิม — `DeliveryManagement`/`AdminRounds`/`InventoryPage`/`AuditLogPage`/`AdminPaymentExceptions`/`AdminRecipes`/`AdminBrands`/`AdminAssetAudit`/`AdminPortfolio`/`AdminTenants`/`VotePage`/`ReviewPage`)
+1. ~~backlog 12 หน้า LoadErrorBanner~~ → **ทำแล้วทั้งหมด (รอบ R21d — ดู §ท้ายสุด)**
 2. server-side cap ส่วนลด 15% (P2) · cosmetic (to_char ids · haversine dup · confirmOfflinePayment wrappers)
 3. retests B2 / C7 / C8 / RL-DEFECT / Part 5-7 (ต้อง E2E/Owner จริง) · responsive มือถือจริง · retest Auth/RLS A1-A8 บน production (login จริง · เน็ตหลุดจริง · my_role ของ owner/manager)
+
+---
+
+# รอบ R21d — backlog 12 หน้า LoadErrorBanner ทำหมดแล้ว (2026-10-29)
+
+หลักการเดิม: **โหลดล้มเหลวต้องฟ้อง + ปุ่มลองใหม่ refetch จริง + ห้ามโชว์ข้อความ empty ปลอม**
+
+| หน้า | testId | ข้อความปลอมที่ถูกปิด (`!loadError`) |
+|---|---|---|
+| `DeliveryManagement` | `dispatch-load-error` | "ไม่มีออเดอร์รอ dispatch" (เฉพาะโหลดแรก — silent refresh ล้มเหลวไม่ปล่อย banner ทับข้อมูลเดิม) |
+| `AdminRounds` | `rounds-load-error` | "ยังไม่มีรอบที่เก็บไว้" (เดิมมีแค่ toast) |
+| `InventoryPage` | `inventory-load-error` | "ยังไม่มีวัตถุดิบ" |
+| `AuditLogPage` | `audit-load-error` | "ยังไม่มีบันทึก" (query error → return เงียบ) |
+| `AdminPaymentExceptions` | `payexc-load-error` | "ไม่มี payment ที่ต้องเฝ้าดู" |
+| `AdminRecipes` | `recipes-load-error` | "ยังไม่มี Recipe ในระบบ" |
+| `AdminBrands` | `brands-load-error` | "No brands found." (bRes.error → return เงียบ) |
+| `AdminAssetAudit` | `asset-load-error` | "สินค้าทุกตัวมีรูปครบแล้ว" |
+| `AdminPortfolio` | `portfolio-load-error` | หน้าเปล่า (catch เฉย ๆ) |
+| `AdminTenants` | `tenants-load-error` | "No tenants found." |
+| `VotePage` | `vote-load-error` | หน้าโหวตว่างเปล่า |
+| `ReviewPage` | `review-load-error` | "No reviews yet." |
+
+- ทุกหน้า: `import LoadErrorBanner` + `loadError` state + `setLoadError('')` ตอนเริ่มโหลด + ข้อความไทยใน catch/query-error + banner ปุ่ม 🔄 (หน้าที่โหลดผ่าน effect ใช้ `retryKey`, หน้าที่มี `load/loadAll/loadInventory` เรียกตรง ๆ)
+- ตรวจแล้ว: source-contract tests ของ 4 หน้าหลัก (DeliveryManagement/VotePage/ReviewPage/AdminRounds) ผ่านครบ · probe script = `e2e/r21dProbe.cjs`

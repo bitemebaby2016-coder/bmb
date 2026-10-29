@@ -9,11 +9,15 @@ import { listRecipes, upsertRecipe, deleteRecipe } from '@/lib/bmbAdminApi_recip
 import { getProducts } from '@/lib/bmbAdminApi_products'
 import { writeAuditLog } from '@/lib/auditLog'
 import { showToast } from '@/components/ui/ToastContainer'
+// R21d backlog: โหลด recipes/BOM ไม่สำเร็จต้องฟ้อง (ห้ามโชว์ "ยังไม่มี Recipe ในระบบ" ปลอม)
+import { LoadErrorBanner } from '@/components/ui/LoadErrorBanner'
 
 export function AdminRecipes() {
   const [recipes, setRecipes] = useState<any[]>([])
   const [products, setProducts] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
+  // R21d: โหลดล้มเหลว ≠ ไม่มีสูตร
+  const [loadError, setLoadError] = useState('')
   const [searchProduct, setSearchProduct] = useState('')
   const [selectedProduct, setSelectedProduct] = useState('')
   const [selectedIngredient, setSelectedIngredient] = useState('')
@@ -21,6 +25,7 @@ export function AdminRecipes() {
 
   const load = useCallback(async () => {
     setLoading(true)
+    setLoadError('')
     try {
       const data = await listRecipes()
       setRecipes(data || [])
@@ -28,6 +33,7 @@ export function AdminRecipes() {
       setProducts(productsData || [])
     } catch (e) {
       console.error('[AdminRecipes] Load failed:', e)
+      setLoadError('โหลดสูตรอาหารไม่สำเร็จ — ตรวจสอบการเชื่อมต่อแล้วกด "ลองใหม่"')
     } finally {
       setLoading(false)
     }
@@ -117,6 +123,10 @@ export function AdminRecipes() {
       {/* Recipes Table */}
       {loading ? (
         <div className="card text-center py-8"><p className="text-brand-muted">กำลังหลด...</p></div>
+      ) : loadError ? (
+        <div className="card text-center py-8">
+          <LoadErrorBanner message={loadError} onRetry={() => { void load() }} testId="recipes-load-error" />
+        </div>
       ) : filtered.length === 0 ? (
         <div className="card text-center py-12">
           <div className="text-5xl mb-3">📖</div>

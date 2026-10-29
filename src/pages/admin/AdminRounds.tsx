@@ -11,6 +11,8 @@
 import { useState, useEffect, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 import { showToast } from '@/components/ui/ToastContainer'
+// R21d backlog: โหลดรอบส่งไม่สำเร็จต้องฟ้อง (toast อย่างเดียวหายไปเมื่อปิด)
+import { LoadErrorBanner } from '@/components/ui/LoadErrorBanner'
 import {
   getDeliveryRoundsAdmin,
   getArchivedRoundsAdmin,
@@ -36,10 +38,13 @@ export function AdminRounds() {
   const [pattern, setPattern] = useState<RoundPatternRow[]>([])
   const [savingPattern, setSavingPattern] = useState(false)
   const [busy, setBusy] = useState<string | null>(null)
+  // R21d: โหลดล้มเหลว ≠ ไม่มีรอบ + รายการค้าง (banner ลองใหม่)
+  const [loadError, setLoadError] = useState('')
   // Q3 (Owner อนุมัติ): "แพทเทิร์น + รอบรายวัน" รวมเป็นแท็บเดียว · archive = แท็บแยก
   const [tab, setTab] = useState<'manage' | 'archived'>('manage')
 
   const loadRounds = useCallback(async () => {
+    setLoadError('')
     try {
       // R4: auto-close รอบของวันที่ผ่านไปแล้วก่อน list (148 — ไม่ปิดด้วย cutoff อีกแล้ว)
       await supabase.rpc('auto_close_expired_rounds').then(() => {}, () => {})
@@ -52,6 +57,7 @@ export function AdminRounds() {
       setArchived(arch)
     } catch (e) {
       console.error('[AdminRounds] load failed:', e)
+      setLoadError('โหลดรายการรอบส่งไม่สำเร็จ — ตรวจสอบการเชื่อมต่อแล้วกด "ลองใหม่"')
       showToast(`โหลดรายการรอบส่งไม่สำเร็จ: ${String((e as Error)?.message || e)}`, 'error')
     }
   }, [])
@@ -298,6 +304,13 @@ export function AdminRounds() {
         </>
       )}
 
+      {/* R21d: โหลดล้มเหลวต้องฟ้อง + ลองใหม่ได้ (toast อย่างเดียวพอ/หายไปเร็ว) */}
+      {loadError && (
+        <div className="mb-4">
+          <LoadErrorBanner message={loadError} onRetry={() => { void loadRounds() }} testId="rounds-load-error" />
+        </div>
+      )}
+
       {/* ---- (3) รอบที่เก็บไว้ (149 / P0-2 — "ลบไม่ได้") ---- */}
       {tab === 'archived' && (
       <div className="mt-8" data-testid="round-archived-panel">
@@ -306,9 +319,9 @@ export function AdminRounds() {
           รอบที่มีออเดอร์/ข้อมูลอ้างอิงอยู่จะ <b>ลบถาวรไม่ได้</b> (ฐานข้อมูลกันประวัติออเดอร์ไว้) — จัดการด้วยการ
           "เก็บ" แทนการลบ · กู้คืนได้ตลอดเวลา
         </p>
-        {archived.length === 0 ? (
+        {!loadError && archived.length === 0 ? (
           <div className="card text-sm text-brand-muted" data-testid="archived-empty">ยังไม่มีรอบที่เก็บไว้</div>
-        ) : (
+        ) : archived.length === 0 ? null : (
           <div className="card space-y-2">
             {archived.map((r) => (
               <div key={r.id} className="flex flex-wrap items-center gap-3 rounded-lg border border-brand-border p-2">

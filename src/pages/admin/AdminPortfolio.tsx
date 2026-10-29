@@ -8,11 +8,15 @@ import { Link } from 'react-router-dom'
 import { getAllPortfolioItems, createPortfolioItem, updatePortfolioItem, togglePortfolioItem, deletePortfolioItem } from '@/lib/bmbAdminApi_portfolio'
 import { uploadMediaAsset, validateImageFile } from '@/lib/bmbAdminApi_media'
 import { showToast } from '@/components/ui/ToastContainer'
+// R21d backlog: โหลด portfolio ไม่สำเร็จต้องฟ้อง + ลองใหม่ (เดิม catch เฉย ๆ = หน้าเปล่าเงียบ)
+import { LoadErrorBanner } from '@/components/ui/LoadErrorBanner'
 import type { AdminPortfolioItem } from '@/types'
 
 export function AdminPortfolioPage() {
   const [items, setItems] = useState<AdminPortfolioItem[]>([])
   const [loading, setLoading] = useState(true)
+  // R21d: โหลดล้มเหลว ≠ ไม่มีชิ้นงาน
+  const [loadError, setLoadError] = useState('')
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
   const [imageUrl, setImageUrl] = useState('')
@@ -20,7 +24,13 @@ export function AdminPortfolioPage() {
   useEffect(() => { loadData() }, [])
 
   async function loadData() {
-    try { setItems(await getAllPortfolioItems()) } catch(e) { console.error(e) } finally { setLoading(false) }
+    setLoadError('')
+    try { setItems(await getAllPortfolioItems()) }
+    catch(e) {
+      console.error(e)
+      setLoadError('โหลดผลงานไม่สำเร็จ — ตรวจสอบการเชื่อมต่อแล้วกด "ลองใหม่"')
+    }
+    finally { setLoading(false) }
   }
 
   async function handleCreate() {
@@ -56,6 +66,13 @@ export function AdminPortfolioPage() {
         </div>
         <button className="btn btn-primary mt-4" onClick={handleCreate}>Add Item</button>
       </div>
+
+      {/* R21d: โหลดไม่สำเร็จต้องฟ้อง (หน้าเปล่าเงียบ = ผู้ใช้เข้าใจผิดว่าไม่มีชิ้นงาน) */}
+      {loadError && !loading && (
+        <div className="mb-4">
+          <LoadErrorBanner message={loadError} onRetry={() => { void loadData() }} testId="portfolio-load-error" />
+        </div>
+      )}
 
       {/* Items list */}
       <div className="space-y-3">

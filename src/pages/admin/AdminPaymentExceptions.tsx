@@ -11,6 +11,8 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { Link } from 'react-router-dom'
+// R21d backlog: โหลดรายการ payment exception ไม่สำเร็จต้องฟ้อง (ห้ามโชว์ "ไม่มี payment ที่ต้องเฝ้าดู" ปลอม)
+import { LoadErrorBanner } from '@/components/ui/LoadErrorBanner'
 import { getPaymentExceptionOrders, getPaymentIntentsFor, classifyPaymentException, groupPaymentExceptions, PAYMENT_EXCEPTION_META, type PaymentExceptionKind, type PaymentIntentLite } from '@/lib/paymentExceptions'
 import type { OrderForm } from '@/lib/bmbAdminApi_orders'
 import { orderModeBadge } from '@/lib/adminOrderDisplay'
@@ -37,9 +39,12 @@ const SECTION_TITLE: Record<PaymentExceptionKind, string> = {
 export function AdminPaymentExceptions() {
   const [rows, setRows] = useState<Array<{ order: OrderForm; kind: PaymentExceptionKind; intents: PaymentIntentLite[] }>>([])
   const [loading, setLoading] = useState(true)
+  // R21d: โหลดล้มเหลว ≠ ไม่มี exception
+  const [loadError, setLoadError] = useState('')
 
   const load = useCallback(async () => {
     setLoading(true)
+    setLoadError('')
     try {
       const orders = await getPaymentExceptionOrders()
       const intents = await getPaymentIntentsFor(orders.map((o) => o.order_number))
@@ -56,6 +61,7 @@ export function AdminPaymentExceptions() {
       }))
     } catch (e) {
       console.error('[AdminPaymentExceptions] load failed:', e)
+      setLoadError('โหลดรายการ payment ไม่สำเร็จ — ตรวจสอบการเชื่อมต่อแล้วกด "ลองใหม่" (ข้อมูลอาจล้าสมัย)')
       showToast('โหลดข้อมูลไม่สำเร็จ', 'error')
     } finally {
       setLoading(false)
@@ -85,6 +91,10 @@ export function AdminPaymentExceptions() {
 
       {loading ? (
         <div className="card text-center py-8"><p className="text-brand-muted">กำลังโหลด…</p></div>
+      ) : loadError ? (
+        <div className="card text-center py-8">
+          <LoadErrorBanner message={loadError} onRetry={() => { void load() }} testId="payexc-load-error" />
+        </div>
       ) : rows.length === 0 ? (
         <div className="card text-center py-12"><div className="text-5xl mb-3">🎉</div><p className="text-brand-muted">ไม่มี payment ที่ต้องเฝ้าดู</p></div>
       ) : (

@@ -5,10 +5,14 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '@/lib/supabase'
+// R21d backlog: โหลด audit ไม่สำเร็จต้องฟ้อง + ลองใหม่ (เดิม return เงียบ ๆ = "ยังไม่มีบันทึก" ปลอม)
+import { LoadErrorBanner } from '@/components/ui/LoadErrorBanner'
 
 export function AuditLogPage() {
   const [entries, setEntries] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
+  // R21d: โหลดล้มเหลว ≠ ไม่มีบันทึก
+  const [loadError, setLoadError] = useState('')
   const [filterAction, setFilterAction] = useState('all')
   const [searchTerm, setSearchTerm] = useState('')
   const [page, setPage] = useState(0)
@@ -16,16 +20,23 @@ export function AuditLogPage() {
 
   const load = useCallback(async () => {
     setLoading(true)
+    setLoadError('')
     try {
       let query = supabase.from('audit_logs').select('*').order('created_at', { ascending: false }).limit(PAGE_SIZE).range(page * PAGE_SIZE, page * PAGE_SIZE + PAGE_SIZE - 1)
       if (filterAction !== 'all') {
         query = query.eq('action', filterAction)
       }
       const { data, error } = await query
-      if (error) { console.error('[AuditLog] Load failed:', error); return }
+      // R21d: เดิม return เงียบ ๆ → หน้าโชว์ "ยังไม่มีบันทึก" ทั้งที่ query พัง
+      if (error) {
+        console.error('[AuditLog] Load failed:', error)
+        setLoadError('โหลดบันทึก audit ไม่สำเร็จ — ตรวจสอบการเชื่อมต่อแล้วกด "ลองใหม่"')
+        return
+      }
       setEntries(data || [])
     } catch (e) {
       console.error('[AuditLog] Load error:', e)
+      setLoadError('โหลดบันทึก audit ไม่สำเร็จ — ตรวจสอบการเชื่อมต่อแล้วกด "ลองใหม่"')
     } finally {
       setLoading(false)
     }
@@ -69,6 +80,10 @@ export function AuditLogPage() {
 
       {loading ? (
         <div className="card text-center py-8"><p className="text-brand-muted">กำลังหลด...</p></div>
+      ) : loadError ? (
+        <div className="card text-center py-8">
+          <LoadErrorBanner message={loadError} onRetry={() => { void load() }} testId="audit-load-error" />
+        </div>
       ) : filtered.length === 0 ? (
         <div className="card text-center py-12">
           <div className="text-5xl mb-3">📭</div>

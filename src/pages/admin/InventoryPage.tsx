@@ -1,23 +1,29 @@
 import { useState, useEffect, useCallback } from 'react'
 import { getInventory, createInventory, updateInventoryStock, deleteInventory, getLowStockAlerts, type InventoryForm } from '@/lib/bmbAdminApi_inventory'
 import { showToast } from '@/components/ui/ToastContainer'
+// R21d backlog: โหลดคลังวัตถุดิบไม่สำเร็จต้องฟ้อง (ห้ามโชว์ "ยังไม่มีวัตถุดิบ" ปลอม)
+import { LoadErrorBanner } from '@/components/ui/LoadErrorBanner'
 import type { Ingredient, IngredientUnit, ReorderAlert } from '@/types'
 
 export function InventoryPage() {
   const [ingredients, setIngredients] = useState<Ingredient[]>([])
   const [alerts, setAlerts] = useState<ReorderAlert[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  // R21d: โหลดล้มเหลว ≠ คลังว่าง
+  const [loadError, setLoadError] = useState('')
   const [showAddForm, setShowAddForm] = useState(false)
   const [newIngredient, setNewIngredient] = useState<Partial<InventoryForm>>({ name: '', category: 'protein', unit: 'kg' as IngredientUnit, current_stock: 0, min_stock: 1, max_stock: 10, unit_price: 0, supplier_name: '', supplier_phone: '' })
 
   // Load ingredients from DB on mount
   const loadInventory = useCallback(async () => {
     setIsLoading(true)
+    setLoadError('')
     try {
       const data = await getInventory()
       setIngredients(data || [])
     } catch (e) {
       console.error('[InventoryPage] Failed to load inventory:', e)
+      setLoadError('โหลดคลังวัตถุดิบไม่สำเร็จ — ตรวจสอบการเชื่อมต่อแล้วกด "ลองใหม่"')
     } finally {
       setIsLoading(false)
     }
@@ -227,7 +233,14 @@ export function InventoryPage() {
         </table>
       </div>
 
-      {ingredients.length === 0 && (
+      {/* R21d: โหลดคลังล้มเหลวต้องฟ้อง (ก่อนข้อความ "ยังไม่มีวัตถุดิบ" ปลอม) */}
+      {loadError && (
+        <div className="mb-4">
+          <LoadErrorBanner message={loadError} onRetry={() => { void loadInventory() }} testId="inventory-load-error" />
+        </div>
+      )}
+
+      {ingredients.length === 0 && !loadError && (
         <div className="text-center py-12">
           <div className="text-6xl mb-4">📦</div>
           <h3 className="text-xl font-bold text-brand-accent mb-2">ยังไม่มีวัตถุดิบ</h3>

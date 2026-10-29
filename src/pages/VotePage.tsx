@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react'
 import { useRewardsStore } from '@/store/rewardsStore'
 import { showToast } from '@/components/ui/ToastContainer'
+// R21d backlog: โหลดเมนูโหวตไม่สำเร็จต้องฟ้อง + ลองใหม่ (เดิม catch เฉย ๆ = หน้าเปล่าเงียบ)
+import { LoadErrorBanner } from '@/components/ui/LoadErrorBanner'
 import { getProducts, createProduct, getActiveDeliveryRounds } from '@/lib/bmbAdminApi_products'
 import type { Product, DeliveryRound } from '@/types'
 
@@ -8,10 +10,14 @@ export function VotePage() {
   const [selectedVote, setSelectedVote] = useState<string | null>(null)
   const [pollOptions, setPollOptions] = useState<Product[]>([])
   const [deliveryRounds, setDeliveryRounds] = useState<DeliveryRound[]>([])
+  // R21d: โหลดล้มเหลว ≠ ไม่มีเมนูโหวต + key สำหรับกดลองใหม่
+  const [loadError, setLoadError] = useState('')
+  const [retryKey, setRetryKey] = useState(0)
   const addPoints = useRewardsStore((s) => s.addPoints)
 
   useEffect(() => {
     async function loadData() {
+      setLoadError('')
       try {
         const [products, rounds] = await Promise.all([getProducts(), getActiveDeliveryRounds()])
         // L-5 (N-4 #5 · Owner 2026-10-26): หน้าโหวตต้องแสดง "ครบทุกเมนูจริง"
@@ -21,10 +27,11 @@ export function VotePage() {
         setDeliveryRounds(rounds)
       } catch (err) {
         console.error('[VotePage] Load error:', err)
+        setLoadError('โหลดเมนูโหวตไม่สำเร็จ — ตรวจสอบการเชื่อมต่อแล้วกด "ลองใหม่"')
       }
     }
     loadData()
-  }, [])
+  }, [retryKey])
 
   function handleVote(optionId: string) {
     if (selectedVote) {
@@ -106,6 +113,13 @@ export function VotePage() {
           })}
         </div>
       </div>
+
+      {/* R21d: โหลดเมนูล้มเหลวต้องฟ้อง (หน้าเปล่า = ผู้ใช้เข้าใจผิดว่าไม่มีเมนูให้โหวต) */}
+      {loadError && (
+        <div className="mb-4">
+          <LoadErrorBanner message={loadError} onRetry={() => setRetryKey((n) => n + 1)} testId="vote-load-error" />
+        </div>
+      )}
 
       {/* Results Summary */}
       <div className="card">

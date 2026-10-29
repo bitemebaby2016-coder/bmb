@@ -9,6 +9,8 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
 import { showToast } from '@/components/ui/ToastContainer'
+// R21d backlog: โหลดแบรนด์ไม่สำเร็จต้องฟ้อง (ห้ามโชว์ "No brands found." ปลอม)
+import { LoadErrorBanner } from '@/components/ui/LoadErrorBanner'
 
 interface BrandRow {
   id: string
@@ -31,6 +33,8 @@ export function AdminBrands() {
   const [brands, setBrands] = useState<BrandRow[]>([])
   const [tenants, setTenants] = useState<{ id: string; name: string }[]>([])
   const [loading, setLoading] = useState(true)
+  // R21d: โหลดล้มเหลว ≠ ไม่มีแบรนด์
+  const [loadError, setLoadError] = useState('')
   const [showForm, setShowForm] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [formName, setFormName] = useState('')
@@ -46,12 +50,21 @@ export function AdminBrands() {
   async function loadAll() {
     try {
       setLoading(true)
+      setLoadError('')
       const tRes = await supabase.from('tenants').select('id, name').order('name')
       if (tRes.data) setTenants(tRes.data as any)
       const bRes = await supabase.from('brands').select('*').order('is_default', { ascending: false })
-      if (bRes.error) { console.error('[AdminBrands] Error:', bRes.error); return }
+      if (bRes.error) {
+        console.error('[AdminBrands] Error:', bRes.error)
+        // R21d: เดิม return เงียบ ๆ → หน้าโชว์ "No brands found." ทั้งที่ query พัง
+        setLoadError('โหลดแบรนด์ไม่สำเร็จ — ตรวจสอบการเชื่อมต่อแล้วกด "ลองใหม่"')
+        return
+      }
       setBrands(bRes.data as BrandRow[])
-    } catch (err) { console.error('[AdminBrands] Load error:', err) }
+    } catch (err) {
+      console.error('[AdminBrands] Load error:', err)
+      setLoadError('โหลดแบรนด์ไม่สำเร็จ — ตรวจสอบการเชื่อมต่อแล้วกด "ลองใหม่"')
+    }
     finally { setLoading(false) }
   }
 
@@ -150,7 +163,12 @@ export function AdminBrands() {
             </div>
           </div></div>
         ))}
-        {brands.length === 0 && <div className="text-center py-16 text-brand-muted">No brands found.</div>}
+        {loadError && (
+          <div className="mb-4">
+            <LoadErrorBanner message={loadError} onRetry={() => { void loadAll() }} testId="brands-load-error" />
+          </div>
+        )}
+        {!loadError && brands.length === 0 && <div className="text-center py-16 text-brand-muted">No brands found.</div>}
       </div>
 
       {showForm && (
