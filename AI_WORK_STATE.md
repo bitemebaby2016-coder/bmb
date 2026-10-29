@@ -6,6 +6,7 @@
 >   - 🔧 **Task 4:** EF `sheets-sync` + workflow `sheets-sync.yml` (cron ICT · AUTOMATION_TOKEN ตัวเดิม) + config.toml — **ยังไม่ deploy** · ไม่มี `GOOGLE_SHEETS_WEBHOOK_URL` → `skipped/not_configured` (ไม่แดง)
 >   - ✅ **gates รันจริง:** vitest targeted ทุก batch ALL PASS (`e2e/g_batch1..4` + `t1a/t1c/t3a`) · eslint ไฟล์ที่แตะ = 0 (`g_lint_changed.log`) · **`vite build` EXIT 0** (`g_build.log`) · ⚠️ **`tsc --noEmit` ท้องถิ่น = NOT RUN** (tool timeout 30s ทุกครั้ง · `g_tsc.log` ว่าง) → typecheck+full vitest = **ให้ CI หลัง push ตัดสิน ห้ามอ้างว่าผ่าน**
 >   - 📄 รายงานสรุปจุดแก้ = **`docs/BMB_UPGRADE_LOG_2026-10-29.md`** · รอ Owner: `__apply 175__` · deploy sheets-sync/worker · LINE secret · เทสต์ runtime (เสียงครัว/chip กำไร/wizard/guardrail) · เช็ค CI §9.0
+>   - 📦 **HEAD = `f38fd78` = origin/main (push แล้ว 2026-10-30 · 44 files +2164/−11 · evidence logs ครบใน e2e/)** · **CI ของ SHA นี้ = NOT RUN** (ไม่ poll ตามกติกา — ผู้ตรวจคนถัดไปเปิด Actions แล้วเติมแถว §9.0) · `tsc --noEmit`/vitest เต็ม = รอ CI ด้วยเหตุผลเดียวกัน (tool timeout 30s ท้องถิ่น)
 > 
 
 > ## 🟢 สถานะล่าสุด — ปิดเซสชัน 2026-10-29 (R21 · **ยึดบล็อก R21 นี้ก่อนบล็อก R20 ด้านล่างถ้าข้อความขัดกัน**)
