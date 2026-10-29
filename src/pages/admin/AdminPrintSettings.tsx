@@ -3,12 +3,17 @@
 // เครื่องพิมพ์ทุกตัวที่ OS มองเห็น; ESC/POS raw adapter = แผนระยะถัดไป (ดู docs).
 import { useState, useEffect } from 'react'
 import { showToast } from '@/components/ui/ToastContainer'
-import { loadPrinterSettings, savePrinterSettings, PrinterSettings, DEFAULT_PRINTER_SETTINGS } from '@/lib/printService'
+import { loadPrinterSettings, savePrinterSettings, PrinterSettings, DEFAULT_PRINTER_SETTINGS, createPrinterDef, upsertPrinter, removePrinter, assignPrinter, describePrinterTarget, PRINTER_MODEL_LABELS, PRINTER_MODEL_DEFAULT_WIDTH, type PrinterModel } from '@/lib/printService'
 
 export function AdminPrintSettings() {
   const [settings, setSettings] = useState<PrinterSettings>(DEFAULT_PRINTER_SETTINGS)
   const [saving, setSaving] = useState(false)
   const [loaded, setLoaded] = useState(false)
+  // R21 (Owner 2026-10-29): ฟอร์มเพิ่มเครื่องพิมพ์เอง — ค่าเริ่มต้น = Nimbot B1Pro ที่ร้านใช้อยู่
+  const [draftLabel, setDraftLabel] = useState('Nimbot B1Pro')
+  const [draftModel, setDraftModel] = useState<PrinterModel>('nimbot_b1pro')
+  const [draftWidth, setDraftWidth] = useState<number>(PRINTER_MODEL_DEFAULT_WIDTH.nimbot_b1pro)
+  const [draftLocation, setDraftLocation] = useState('')
 
   useEffect(() => {
     void (async () => {
@@ -42,6 +47,40 @@ export function AdminPrintSettings() {
     showToast('เปิดคำสั่งพิมพ์ทดสอบแล้ว — สถานะ "sent" ไม่ได้หมายถึงพิมพ์สำเร็จ', 'info')
   }
 
+  function handleAddPrinter() {
+    if (!draftLabel.trim()) { showToast('ตั้งชื่อเครื่องพิมพ์ก่อน', 'warning'); return }
+    const def = createPrinterDef({ label: draftLabel, model: draftModel, paperWidthMm: draftWidth, location: draftLocation })
+    setSettings((s) => upsertPrinter(s, def))
+    setDraftLocation('')
+    showToast(`เพิ่ม "${def.label}" แล้ว — กด "บันทึก" เพื่อให้มีผลกับทุกหน้า`, 'info')
+  }
+
+  function handleRemovePrinter(id: string) {
+    const p = (settings.printers ?? []).find((x) => x.id === id)
+    if (!window.confirm(`ลบเครื่องพิมพ์ "${p?.label ?? ''}"?`)) return
+    setSettings((s) => removePrinter(s, id))
+    showToast('ลบออกจากรายชื่อแล้ว (กดบันทึกเพื่อบันทึกลงระบบ)', 'info')
+  }
+
+  /** ทดสอบพิมพ์จาก "เครื่องที่ผูกกับบทบาท" — ใช้เทมเพลตใบเสร็จจริงของระบบ */
+  function testPrintRole(role: 'receipt' | 'kitchen') {
+    const win = window.open('', '_blank', 'width=380,height=520')
+    if (!win) { showToast('เบราว์เซอร์บล็อกหน้าต่างทดสอบพิมพ์', 'warning'); return }
+    const target = describePrinterTarget(settings, role)
+    win.document.write(`<!doctype html><html lang="th"><head><meta charset="utf-8"><title>Test Print</title>
+      <style>body{font-family:'Sarabun','Tahoma',sans-serif;font-size:12px;width:${role === 'receipt' ? settings.paperWidthMm : 58}mm;margin:4mm}
+      h1{font-size:15px;text-align:center}hr{border:none;border-top:1px dashed #000;margin:6px 0}</style></head><body>
+      <h1>Bite Me Baby</h1><div style="text-align:center">ทดสอบเครื่องพิมพ์ (${role === 'receipt' ? 'ใบเสร็จ' : 'คิวครัว'})</div><hr>
+      <div>เครื่องที่ระบบผูกไว้: ${target}</div>
+      <div>ความกว้างกระดาษ: ${settings.paperWidthMm} มม.</div>
+      <div style="text-align:center">ไทย: ทดสอบตัวอักษรไทย — ฿123.45</div>
+      </body></html>`)
+    win.document.close()
+    win.focus()
+    win.print()
+    showToast(`ส่งคำสั่งพิมพ์ไปที่ "${target}" — สถานะ "sent" ไม่ได้หมายถึงพิมพ์สำเร็จ`, 'info')
+  }
+
   if (!loaded) return <p className="text-brand-muted">กำลังโหลดตั้งค่า...</p>
 
   return (
@@ -71,6 +110,74 @@ export function AdminPrintSettings() {
           <input type="checkbox" checked={settings.autoPrintKitchen} onChange={(e) => setSettings({ ...settings, autoPrintKitchen: e.target.checked })} />
           <span>Auto-Print คิวครัวเมื่อยืนยันออเดอร์</span>
         </label>
+        {/* R21 (Owner 2026-10-29): ทะเบียนเครื่องพิมพ์ — แอดมินเพิ่ม/ลบ/ผูกบทบาทเองได้ */}
+        <div className="border-t border-brand-border pt-4 space-y-3" data-testid="printer-registry">
+          <h2 className="font-bold text-brand-accent">🖨️ เครื่องพิมพ์ที่ตั้งไว้</h2>
+          {(settings.printers ?? []).length === 0 && (
+            <p className="text-sm text-brand-muted">ยังไม่มีเครื่องพิมพ์ในระบบ — เพิ่มด้านล่าง (ค่าเริ่มต้นของร้าน = Nimbot B1Pro)</p>
+          )}
+          {(settings.printers ?? []).map((p) => (
+            <div key={p.id} className="flex flex-wrap items-center gap-3 rounded-lg border border-brand-border p-3" data-testid={`printer-row-${p.id}`}>
+              <div className="min-w-0 flex-1">
+                <div className="font-medium">{p.label}{!p.active && <span className="text-xs text-brand-muted"> (ปิดใช้งาน)</span>}</div>
+                <div className="text-xs text-brand-muted">{PRINTER_MODEL_LABELS[p.model]} · {p.paperWidthMm} มม.{p.location ? ` · ${p.location}` : ''}</div>
+              </div>
+              <button className="btn btn-outline btn-sm" onClick={() => testPrintRole(settings.receiptPrinterId === p.id ? 'receipt' : 'kitchen')}>ทดสอบ</button>
+              <button className="btn btn-outline btn-sm text-red-500" onClick={() => handleRemovePrinter(p.id)}>ลบ</button>
+            </div>
+          ))}
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div>
+              <label className="block text-sm font-medium mb-1">เพิ่มเครื่องใหม่ — ชื่อ</label>
+              <input className="input" value={draftLabel} onChange={(e) => setDraftLabel(e.target.value)} placeholder="เช่น Nimbot B1Pro — ครัว" data-testid="printer-draft-label" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">โมเดล</label>
+              <select
+                className="input"
+                value={draftModel}
+                onChange={(e) => { const m = e.target.value as PrinterModel; setDraftModel(m); setDraftWidth(PRINTER_MODEL_DEFAULT_WIDTH[m]) }}
+              >
+                {(Object.keys(PRINTER_MODEL_LABELS) as PrinterModel[]).map((m) => (
+                  <option key={m} value={m}>{PRINTER_MODEL_LABELS[m]}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">ความกว้างกระดาษ (มม.)</label>
+              <input type="number" min={20} max={120} className="input" value={draftWidth} onChange={(e) => setDraftWidth(Number(e.target.value) || 80)} />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">จุดตั้งเครื่อง (ไม่บังคับ)</label>
+              <input className="input" value={draftLocation} onChange={(e) => setDraftLocation(e.target.value)} placeholder="เช่น ครัว / เคาน์เตอร์" />
+            </div>
+          </div>
+          <button className="btn btn-outline" onClick={handleAddPrinter} data-testid="add-printer">➕ เพิ่มเครื่องพิมพ์</button>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-2">
+            <div>
+              <label className="block text-sm font-medium mb-1">ใช้เครื่องไหนพิมพ์ "ใบเสร็จ"</label>
+              <select className="input" value={settings.receiptPrinterId ?? ''} onChange={(e) => setSettings((s) => assignPrinter(s, 'receipt', e.target.value || null))}>
+                <option value="">(ค่าเริ่มต้นของระบบ)</option>
+                {(settings.printers ?? []).map((p) => <option key={p.id} value={p.id}>{p.label}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">ใช้เครื่องไหนพิมพ์ "ใบสั่งอาหารเข้าครัว"</label>
+              <select className="input" value={settings.kitchenPrinterId ?? ''} onChange={(e) => setSettings((s) => assignPrinter(s, 'kitchen', e.target.value || null))}>
+                <option value="">(ค่าเริ่มต้นของระบบ)</option>
+                {(settings.printers ?? []).map((p) => <option key={p.id} value={p.id}>{p.label}</option>)}
+              </select>
+            </div>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <button className="btn btn-outline" onClick={() => testPrintRole('receipt')}>ทดสอบใบเสร็จ</button>
+            <button className="btn btn-outline" onClick={() => testPrintRole('kitchen')}>ทดสอบใบสั่งครัว</button>
+          </div>
+          <p className="text-xs text-brand-muted">เครื่องที่ระบบผูกไว้ตอนนี้: ใบเสร็จ = <b>{describePrinterTarget(settings, 'receipt')}</b> · คิวครัว = <b>{describePrinterTarget(settings, 'kitchen')}</b></p>
+        </div>
+
         <div className="flex gap-2">
           <button className="btn btn-primary" disabled={saving} onClick={() => void handleSave()}>{saving ? '⏳ ...' : 'บันทึก'}</button>
           <button className="btn btn-outline" onClick={testPrint}>ทดสอบพิมพ์</button>

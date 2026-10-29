@@ -52,6 +52,40 @@ export interface PrinterSettings {
   autoPrintReceipt: boolean
   autoPrintKitchen: boolean
   paperWidthMm: number
+  // R21 (Owner 2026-10-29): ทะเบียนเครื่องพิมพ์ที่แอดมินเพิ่ม/เลือกเอง
+  // (ชื่อเดิม 2 ฟิลด์ข้างบนยังคงอยู่ = back-compat กับค่าที่บันทึกไว้แล้ว)
+  printers?: PrinterDef[]
+  receiptPrinterId?: string | null
+  kitchenPrinterId?: string | null
+}
+
+/** โมเดลที่ระบบมี preset ให้ (Nimbot B1Pro = เครื่องที่ร้านใช้อยู่ตอนนี้) */
+export type PrinterModel = 'nimbot_b1pro' | 'thermal_80' | 'thermal_58' | 'other'
+
+export interface PrinterDef {
+  id: string
+  /** ชื่อที่แอดมินตั้ง (เช่น "Nimbot B1Pro — ครัว") */
+  label: string
+  model: PrinterModel
+  paperWidthMm: number
+  /** จุดตั้งเครื่อง (ครัว/เคาน์เตอร์) — ใช้แสดงเฉย ๆ */
+  location?: string
+  active: boolean
+}
+
+export const PRINTER_MODEL_LABELS: Record<PrinterModel, string> = {
+  nimbot_b1pro: 'Nimbot B1Pro (เทอร์มอล/ป้าย)',
+  thermal_80: 'เครื่องพิมพ์ความร้อน 80 มม.',
+  thermal_58: 'เครื่องพิมพ์ความร้อน 58 มม.',
+  other: 'อื่น ๆ (ตั้งชื่อเอง)',
+}
+
+/** ความกว้างกระดาษเริ่มต้นของแต่ละโมเดล (แอดมินแก้ได้ทีหลัง) */
+export const PRINTER_MODEL_DEFAULT_WIDTH: Record<PrinterModel, number> = {
+  nimbot_b1pro: 50,
+  thermal_80: 80,
+  thermal_58: 58,
+  other: 80,
 }
 
 export const DEFAULT_PRINTER_SETTINGS: PrinterSettings = {
@@ -60,6 +94,9 @@ export const DEFAULT_PRINTER_SETTINGS: PrinterSettings = {
   autoPrintReceipt: true,
   autoPrintKitchen: true,
   paperWidthMm: 80,
+  printers: [],
+  receiptPrinterId: null,
+  kitchenPrinterId: null,
 }
 
 export function escapeHtml(s: unknown): string {
@@ -294,4 +331,179 @@ export async function loadPrinterSettings(): Promise<PrinterSettings> {
 export async function savePrinterSettings(settings: PrinterSettings): Promise<boolean> {
   const { setBusinessSetting } = await import('./bmbAdminApi_settings')
   return await setBusinessSetting('print_settings', settings as unknown as Record<string, unknown>)
+}
+
+// ============================================================
+// R21 (Owner 2026-10-29) — ทะเบียนเครื่องพิมพ์ (แอดมินเพิ่ม/เลือกเองได้)
+// ============================================================
+// ทุกฟังก์ชันเป็น pure ต่อ input (ไม่ยิง network) — test ได้โดยตรง
+// หมายเหตุความซื่อสัตย์: คำสั่งพิมพ์ยังเป็น window.print ผ่าน iframe เดิม
+// → เบราว์เซอร์/OS เป็นคนเลือกเครื่องจริง ระบบจึง "แสดงชื่อเครื่องที่ผูกไว้"
+// ใน toast เสมอ และไม่เคยอ้างว่าพิมพ์สำเร็จจนกว่าจะได้รับยืนยัน (ตรรกะเดิม)
+// ============================================================
+
+export function createPrinterDef(input: {
+  label: string
+  model: PrinterModel
+  paperWidthMm?: number
+  location?: string
+}): PrinterDef {
+  const model = PRINTER_MODEL_LABELS[input.model] ? input.model : 'other'
+  return {
+    id: `prn-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+    label: (input.label || '').trim() || PRINTER_MODEL_LABELS[model],
+    model,
+    paperWidthMm: Number(input.paperWidthMm) > 0 ? Number(input.paperWidthMm) : PRINTER_MODEL_DEFAULT_WIDTH[model],
+    location: (input.location || '').trim() || undefined,
+    active: true,
+  }
+}
+
+/** เพิ่ม/แก้ไขเครื่องพิมพ์ (id เดิม = แทนที่แถวเดิม) */
+export function upsertPrinter(settings: PrinterSettings, def: PrinterDef): PrinterSettings {
+  const list = [...(settings.printers ?? [])]
+  const idx = list.findIndex((p) => p.id === def.id)
+  if (idx >= 0) list[idx] = def
+  else list.push(def)
+  return { ...settings, printers: list }
+}
+
+/** ลบเครื่องพิมพ์ — ถ้าเป็นค่าที่ผูกกับใบเสร็จ/คิวครัว ให้ปลดผูกด้วย (ไม่ให้ค้าง id ตาย) */
+export function removePrinter(settings: PrinterSettings, printerId: string): PrinterSettings {
+  return {
+    ...settings,
+    printers: (settings.printers ?? []).filter((p) => p.id !== printerId),
+    receiptPrinterId: settings.receiptPrinterId === printerId ? null : settings.receiptPrinterId,
+    kitchenPrinterId: settings.kitchenPrinterId === printerId ? null : settings.kitchenPrinterId,
+  }
+}
+
+export type PrinterRole = 'receipt' | 'kitchen'
+
+/** ผูกเครื่องพิมพ์กับบทบาท (null = ใช้ค่าเริ่มต้นของระบบ/ค่าชื่อเดิม) */
+export function assignPrinter(settings: PrinterSettings, role: PrinterRole, printerId: string | null): PrinterSettings {
+  return role === 'receipt'
+    ? { ...settings, receiptPrinterId: printerId }
+    : { ...settings, kitchenPrinterId: printerId }
+}
+
+/** หาเครื่องพิมพ์ของบทบาท — fallback: แถวเดียวที่ active (ถ้ายังไม่ได้ผูก) */
+export function resolvePrinter(settings: PrinterSettings, role: PrinterRole): PrinterDef | null {
+  const list = (settings.printers ?? []).filter((p) => p.active)
+  const wanted = role === 'receipt' ? settings.receiptPrinterId : settings.kitchenPrinterId
+  const byId = wanted ? list.find((p) => p.id === wanted) : undefined
+  if (byId) return byId
+  if (list.length === 1) return list[0]
+  return null
+}
+
+/** ชื่อเครื่องสำหรับโชว์ใน toast/ข้อความ (ไม่เคยโม้ว่า "พิมพ์สำเร็จ") */
+export function describePrinterTarget(settings: PrinterSettings, role: PrinterRole): string {
+  const p = resolvePrinter(settings, role)
+  if (p) return `${p.label}${p.location ? ` (${p.location})` : ''}`
+  const legacy = role === 'receipt' ? settings.receiptPrinterName : settings.kitchenPrinterName
+  return legacy || 'เครื่องพิมพ์ค่าเริ่มต้นของระบบ'
+}
+
+// ============================================================
+// R21 — แปลงแถวออเดอร์จริง → payload ของเทมเพลต (ใช้ร่วมกัน auto/manual)
+// ============================================================
+
+/** โครงสร้างขั้นต่ำที่เทมเพลตต้องการ — รับได้ทั้งแถว orders (select '*') และแถว POS */
+export interface PrintableOrder {
+  order_number: string
+  created_at?: string
+  customer_name?: string
+  customer_phone?: string
+  items: Array<{
+    product_name: string
+    quantity: number
+    unit_price: number
+    customizations?: Record<string, any> | null
+    special_request?: string | null
+  }>
+  subtotal?: number | null
+  discount_amount?: number | null
+  delivery_fee?: number | null
+  service_fee?: number | null
+  tax_amount?: number | null
+  total_amount?: number | null
+  payment_method?: string | null
+  payment_status?: string | null
+  delivery_method?: string | null
+  pickup_code?: string | null
+  order_mode?: string | null
+  scheduled_date?: string | null
+  special_instructions?: string | null
+}
+
+/**
+ * สร้าง payload ของเทมเพลตจากแถวออเดอร์ — ใช้ "ค่าที่ server เก็บไว้" เสมอ
+ * และบวกจากบรรทัดสินค้าเฉพาะตอนที่ DB ไม่ได้ส่งยอด subtotal มา (ไม่เดาส่วนลด)
+ */
+export function buildPrintOrderData(order: PrintableOrder): PrintOrderData {
+  const items = (order.items ?? []).map((it) => ({
+    product_name: it.product_name,
+    quantity: Number(it.quantity),
+    unit_price: Number(it.unit_price || 0),
+    customizations: it.customizations ?? null,
+    special_request: it.special_request ?? null,
+  }))
+  const lineSum = items.reduce((s, it) => s + it.unit_price * it.quantity, 0)
+  return {
+    order_number: order.order_number,
+    created_at: order.created_at,
+    customer_name: order.customer_name,
+    customer_phone: order.customer_phone,
+    items,
+    subtotal: Number(order.subtotal ?? lineSum),
+    discount_amount: Number(order.discount_amount ?? 0),
+    delivery_fee: Number(order.delivery_fee ?? 0),
+    service_fee: Number(order.service_fee ?? 0),
+    tax_amount: Number(order.tax_amount ?? 0),
+    total_amount: Number(order.total_amount ?? lineSum),
+    payment_method: order.payment_method ?? undefined,
+    payment_status: order.payment_status ?? undefined,
+    delivery_method: order.delivery_method ?? undefined,
+    pickup_code: order.pickup_code ?? null,
+    order_mode: order.order_mode ?? undefined,
+    scheduled_date: order.scheduled_date ?? null,
+    special_instructions: order.special_instructions ?? null,
+  }
+}
+
+/**
+ * พิมพ์งานเดียวแบบ manual (แอดมินกด "เลือกพิมพ์") — ใช้เทมเพลตเดิมของระบบ:
+ *   1) ผูกงานกับ print_jobs (enqueue แบบ idempotent — job เดิมไม่ถูกสร้างซ้ำ)
+ *   2) render HTML แล้วส่งเข้า frame พิมพ์ (คำสั่งเบราว์เซอร์/OS เดิม)
+ *   3) อัปเดตสถานะเป็น sent | failed ตามผลจริง — ห้ามโม้ว่า "พิมพ์สำเร็จ"
+ */
+export async function printOrderTicket(
+  order: PrintableOrder,
+  type: PrintJobType,
+  settings: PrinterSettings,
+): Promise<'sent' | 'failed'> {
+  const printer = resolvePrinter(settings, type === 'receipt' ? 'receipt' : 'kitchen')
+  let jobId: string | null = null
+  try {
+    const { data, error } = await supabase.rpc('enqueue_print_job', {
+      p_order_number: order.order_number,
+      p_job_type: type,
+      p_printer_id: printer?.id ?? null,
+    })
+    if (!error) jobId = ((data as { id?: string } | null)?.id ?? null)
+  } catch (e) {
+    // job ledger เป็น secondary — การพิมพ์ยังทำงานต่อได้
+    console.warn('[printOrderTicket] enqueue failed (printing continues):', e)
+  }
+
+  const payload = buildPrintOrderData(order)
+  const html = type === 'receipt' ? buildReceiptHtml(payload) : buildKitchenTicketHtml(payload)
+  const outcome = printHtmlInHiddenFrame(html)
+
+  if (jobId) {
+    if (outcome === 'sent') await markPrintJob(jobId, 'sent')
+    else await markPrintJob(jobId, 'failed', 'browser print dialog failed')
+  }
+  return outcome
 }

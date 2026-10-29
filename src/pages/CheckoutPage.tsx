@@ -41,6 +41,8 @@ import { getProducts } from '@/lib/bmbAdminApi_products'
 import { revalidateWithCatalog, reportToToastMessage } from '@/lib/cartPersistence'
 import { roundBookability, roundStatusLabel, roundCutoffLabel } from '@/lib/deliveryRoundStatus'
 import { normalizePromoCode } from '@/lib/promotionClient'
+// R21 Phase 2 (Owner 2026-10-29): เพดานส่วนลดรวม คูปอง+แต้ม+referral ≤ 15% ของยอดสินค้า
+import { evaluateDiscountGuardrail } from '@/lib/discountGuardrail'
 import { CouponBox, revalidateCouponForSubmit } from '@/components/CouponBox'
 import { ReferralBox, revalidateReferralForSubmit } from '@/components/ReferralBox'
 import { claimReferralCode, describeReferralClaim } from '@/lib/referralClient'
@@ -87,6 +89,9 @@ async function ensureReplaySafeIntent(
 export function CheckoutPage() {
   const navigate = useNavigate()
   const { items, subtotal, discount, total, clearCart, isHydrated, couponCode } = useCartStore()
+  // R21 Phase 2 — cart guardrail: คูปอง (ปัจจุบัน) + แต้ม + referral (เมื่อมีในรอบถัดไป)
+  // ห้ามรวมกันเกิน 15% ของ "ยอดรวมสินค้า" — pure check ต่อ render (ตัวเลขจิ๋ว ไม่ต้อง memo)
+  const discountGuard = evaluateDiscountGuardrail(subtotal, { coupon: discount })
   const customer = useAuthStore((s) => s.customer)
   const justPlaced = useRef(false)
 
@@ -1233,6 +1238,21 @@ export function CheckoutPage() {
         <div className="border-t border-brand-border pt-4 space-y-2">
           <div className="flex justify-between"><span>สินค้า</span><span>{subtotal.toFixed(2)} บาท</span></div>
           {discount > 0 && (<div className="flex justify-between text-green-600"><span>ส่วนลด (ประมาณการ{couponCode.trim() ? ` · โค้ด ${normalizePromoCode(couponCode)}` : ''})</span><span>-{discount.toFixed(2)} บาท</span></div>)}
+          {/* R21 Phase 2 — guardrail: เตือน/บล็อกเมื่อส่วนลดรวมเกินเพดาน 15% ของยอดสินค้า */}
+          {!discountGuard.allowed && (
+            <div
+              className="rounded-lg border border-red-300 bg-red-50 p-2 text-xs font-medium text-red-700"
+              role="alert"
+              data-testid="discount-guardrail"
+            >
+              ⚠️ {discountGuard.message}
+            </div>
+          )}
+          {discountGuard.allowed && discountGuard.totalDiscount > 0 && (
+            <div className="text-xs text-brand-muted" data-testid="discount-guardrail-ok">
+              ใช้ส่วนลดแล้ว {discountGuard.totalDiscount.toFixed(2)} บาท ({discountGuard.discountPct.toFixed(1)}%) — อยู่ในเพดาน {discountGuard.maxPct}%
+            </div>
+          )}
           {/* A3 (2026-10-22): ค่าส่งโซน = ค่าที่แอดมินตั้ง (ไม่ต้องเบลอเป็น "ประมาณการ");
               ถ้า quote พัง/ยังไม่มี ต้องไม่โชว์ค่าเก่าเหมือนคำนวณแล้ว — ระบุ "รอระบบคำนวณ"
               + ติดป้ายยอดโดยประมาณ (server re-derive ตอนสร้างออเดอร์เสมอ) */}
@@ -1252,10 +1272,10 @@ export function CheckoutPage() {
       <button
         onClick={handlePlaceOrder}
         data-testid="place-order"
-        disabled={isProcessing || !selectedRoundId}
+        disabled={isProcessing || !selectedRoundId || !discountGuard.allowed}
         className="btn btn-primary w-full text-lg py-4 disabled:opacity-50 disabled:cursor-not-allowed"
       >
-        {isProcessing ? '⏳ กำลังยืนยัน...' : !selectedRoundId ? (rounds.length > 0 ? '⚠️ ยังไม่มีรอบที่เปิดรับสำหรับวันนี้' : '⚠️ เลือกรอบจัดส่งก่อน') : `✅ ยืนยันสั่งซื้อ${orderMode === 'PRE_ORDER' ? ' (จองล่วงหน้า)' : ''}`}
+        {isProcessing ? '⏳ กำลังยืนยัน...' : !discountGuard.allowed ? '⚠️ ส่วนลดเกินเพดาน 15% — ลดส่วนลดก่อน' : !selectedRoundId ? (rounds.length > 0 ? '⚠️ ยังไม่มีรอบที่เปิดรับสำหรับวันนี้' : '⚠️ เลือกรอบจัดส่งก่อน') : `✅ ยืนยันสั่งซื้อ${orderMode === 'PRE_ORDER' ? ' (จองล่วงหน้า)' : ''}`}
       </button>
     </div>
   )

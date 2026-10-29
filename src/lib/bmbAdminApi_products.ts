@@ -41,6 +41,10 @@ export interface ProductForm {
   available_preorder?: boolean
   prep_minutes: number
   sort_order?: number
+  // ✅ migration 170: ต้นทุนต่อหน่วย (แอดมินกรอก — ใช้คำนวณกำไร real-time)
+  cogs?: number
+  packaging_cost?: number
+  other_unit_cost?: number
   delivery_round_id?: string
   scheduled_date?: string
   addons?: AddonJson[]
@@ -130,6 +134,10 @@ export async function createProduct(data: ProductForm): Promise<Product | null> 
     prep_minutes: data.prep_minutes,
     sort_order: data.sort_order || 0, delivery_round_id: data.delivery_round_id,
     scheduled_date: data.scheduled_date,
+    // migration 170: ต้นทุนต่อหน่วย (ค่าเริ่มต้น 0 — แอดมินแก้ภายหลังได้)
+    cogs: data.cogs ?? 0,
+    packaging_cost: data.packaging_cost ?? 0,
+    other_unit_cost: data.other_unit_cost ?? 0,
     addons: Array.isArray(data.addons) ? data.addons : [],
     tenant_id: resolveAdminTenantId(),
   }

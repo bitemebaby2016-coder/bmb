@@ -9,6 +9,8 @@ import { slugifyCategory, blankCategoryForm } from '@/lib/adminUi'
 import { customerVisibilityIssue, CUSTOMER_VISIBILITY_LABEL } from '@/lib/catalogStructure'
 import { AddonsEditor, toAddonDrafts, addonDraftsToJson, type AddonDraft } from '@/components/admin/AddonsEditor'
 import type { Product, ProductCategory } from '@/types'
+// R21 Phase 2 (Owner 2026-10-29): Gross Margin / Net Profit real-time จากต้นทุนที่แอดมินกรอก
+import { computeMargin, formatBaht, formatPct, marginTierLabel } from '@/lib/marginCalc'
 
 
 export function AdminProducts() {
@@ -20,6 +22,10 @@ export function AdminProducts() {
     name: '',
     description: '',
     price: 0,
+    // migration 170: ต้นทุนต่อหน่วย (แอดมินกรอก → margin คำนวณ real-time)
+    cogs: 0,
+    packaging_cost: 0,
+    other_unit_cost: 0,
     category_id: '',
     image_url: '',
     is_available: true,
@@ -117,6 +123,9 @@ export function AdminProducts() {
       name: product.name,
       description: product.description,
       price: product.price,
+      cogs: product.cogs ?? 0,
+      packaging_cost: product.packaging_cost ?? 0,
+      other_unit_cost: product.other_unit_cost ?? 0,
       category_id: product.category_id,
       image_url: product.image_url,
       is_available: product.is_available,
@@ -263,6 +272,9 @@ export function AdminProducts() {
       name: '',
       description: '',
       price: 0,
+      cogs: 0,
+      packaging_cost: 0,
+      other_unit_cost: 0,
       category_id: '',
       image_url: '',
       is_available: true,
@@ -273,6 +285,13 @@ export function AdminProducts() {
     setEditingProduct(null)
     setAddons([])
   }
+
+  // R21 Phase 2 — คำนวณกำไรสดทุกครั้งที่พิมพ์ราคา/ต้นทุน (pure helper — ไม่ยิง network)
+  const liveMargin = computeMargin(formData.price, {
+    cogs: formData.cogs,
+    packagingCost: formData.packaging_cost,
+    otherCost: formData.other_unit_cost,
+  })
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-6">
@@ -315,7 +334,36 @@ export function AdminProducts() {
               <label className="block text-sm font-medium text-brand-accent mb-2">เวลาเตรียม (นาที)</label>
               <input type="number" value={formData.prep_minutes || ''} onChange={(e) => setFormData({ ...formData, prep_minutes: parseInt(e.target.value) })} className="input" placeholder="15" />
             </div>
-            
+
+            {/* R21 Phase 2 (Owner 2026-10-29): ต้นทุนต่อหน่วย (migration 170) — แอดมินกรอกเอง */}
+            <div>
+              <label className="block text-sm font-medium text-brand-accent mb-2">ต้นทุนวัตถุดิบ (บาท/หน่วย)</label>
+              <input type="number" min="0" step="0.01" value={formData.cogs || ''} onChange={(e) => setFormData({ ...formData, cogs: Math.max(0, parseFloat(e.target.value) || 0) })} className="input" placeholder="35" data-testid="product-cogs" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-brand-accent mb-2">ค่าแพ็กเกจจิ้ง (บาท/หน่วย)</label>
+              <input type="number" min="0" step="0.01" value={formData.packaging_cost || ''} onChange={(e) => setFormData({ ...formData, packaging_cost: Math.max(0, parseFloat(e.target.value) || 0) })} className="input" placeholder="4.5" data-testid="product-packaging-cost" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-brand-accent mb-2">ต้นทุนอื่น (บาท/หน่วย) — ค่าแรง/ค่าไฟ</label>
+              <input type="number" min="0" step="0.01" value={formData.other_unit_cost || ''} onChange={(e) => setFormData({ ...formData, other_unit_cost: Math.max(0, parseFloat(e.target.value) || 0) })} className="input" placeholder="2" data-testid="product-other-cost" />
+            </div>
+
+            {/* Gross Margin สด — เห็นทันทีขณะพิมพ์ (DISPLAY ONLY ไม่แตะราคาขาย) */}
+            <div className="md:col-span-2 flex flex-wrap items-center gap-x-5 gap-y-2 rounded-xl border border-brand-border bg-brand-surface p-3" data-testid="product-margin-panel">
+              <span className="text-sm font-semibold text-brand-accent">📊 กำไร (คำนวณสด)</span>
+              <span className="text-sm">ต้นทุน/หน่วย <b>{formatBaht(liveMargin.unitCost)}</b></span>
+              <span className="text-sm">
+                กำไรขั้นต้น/หน่วย{' '}
+                <b className={liveMargin.grossProfit >= 0 ? 'text-green-600' : 'text-red-600'}>{formatBaht(liveMargin.grossProfit)}</b>
+              </span>
+              <span className="text-sm">Gross Margin <b>{formatPct(liveMargin.grossMarginPct)}</b></span>
+              <span className={`text-xs px-2 py-0.5 rounded-full ${liveMargin.tier === 'loss' ? 'bg-red-100 text-red-700' : liveMargin.tier === 'thin' ? 'bg-amber-100 text-amber-700' : 'bg-green-100 text-green-700'}`}>
+                {marginTierLabel(liveMargin.tier)}
+              </span>
+              <span className="w-full text-xs text-brand-muted">ต้นทุนรวม/หน่วย = วัตถุดิบ + แพ็กเกจจิ้ง + อื่น (บันทึกเป็นคอลัมน์ unit_cost ในตาราง products)</span>
+            </div>
+
             <div className="md:col-span-2">
               <label className="block text-sm font-medium text-brand-accent mb-2">รายละเอียด</label>
               <textarea value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} className="input" rows={3} placeholder="รายละเอียดเมนู..." />

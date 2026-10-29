@@ -1,0 +1,48 @@
+{
+  "at": "2026-10-29T06:59:28.323Z",
+  "precheck": {
+    "ledgerTop": "[{\"version\":\"170\",\"name\":\"170_product_cost_margin_fields\"},{\"version\":\"169\",\"name\":\"169_pod_path_percent_encoding\"},{\"version\":\"168\",\"name\":\"168_multi_job_rider_route\"}]",
+    "colsBefore": "[{\"column_name\":\"cogs\",\"data_type\":\"numeric\",\"is_nullable\":\"NO\",\"column_default\":\"0\",\"is_generated\":\"NEVER\",\"generation_expression\":null},{\"column_name\":\"other_unit_cost\",\"data_type\":\"numeric\",\"is_nullable\":\"NO\",\"column_default\":\"0\",\"is_generated\":\"NEVER\",\"generation_expression\":null},{\"column_name\":\"packaging_cost\",\"data_type\":\"numeric\",\"is_nullable\":\"NO\",\"column_default\":\"0\",\"is_generated\":\"NEVER\",\"generation_expression\":null},{\"column_name\":\"unit_cost\",\"data_type\":\"numeric\",\"is_nullable\":\"YES\",\"column_default\":null,\"is_generated\":\"ALWAYS\",\"generation_expression\":\"((COALESCE(cogs, (0)::numeric) + COALESCE(packaging_cost, (0)::numeric)) + COALESCE(other_unit_cost, (0)::numeric))\"}]",
+    "constraintBefore": "[{\"conname\":\"products_cost_fields_nonneg\",\"def\":\"CHECK (((cogs >= (0)::numeric) AND (packaging_cost >= (0)::numeric) AND (other_unit_cost >= (0)::numeric)))\"}]",
+    "updateGrantsBefore": "[{\"grantee\":\"authenticated\",\"privilege_type\":\"UPDATE\"},{\"grantee\":\"postgres\",\"privilege_type\":\"UPDATE\"},{\"grantee\":\"service_role\",\"privilege_type\":\"UPDATE\"}]"
+  },
+  "apply": "[]",
+  "verify": {
+    "colsAfter": "[{\"column_name\":\"cogs\",\"data_type\":\"numeric\",\"is_nullable\":\"NO\",\"column_default\":\"0\",\"is_generated\":\"NEVER\",\"generation_expression\":null},{\"column_name\":\"other_unit_cost\",\"data_type\":\"numeric\",\"is_nullable\":\"NO\",\"column_default\":\"0\",\"is_generated\":\"NEVER\",\"generation_expression\":null},{\"column_name\":\"packaging_cost\",\"data_type\":\"numeric\",\"is_nullable\":\"NO\",\"column_default\":\"0\",\"is_generated\":\"NEVER\",\"generation_expression\":null},{\"column_name\":\"unit_cost\",\"data_type\":\"numeric\",\"is_nullable\":\"YES\",\"column_default\":null,\"is_generated\":\"ALWAYS\",\"generation_expression\":\"((COALESCE(cogs, (0)::numeric) + COALESCE(packaging_cost, (0)::numeric)) + COALESCE(other_unit_cost, (0)::numeric))\"}]",
+    "constraintAfter": "[{\"conname\":\"products_cost_fields_nonneg\",\"def\":\"CHECK (((cogs >= (0)::numeric) AND (packaging_cost >= (0)::numeric) AND (other_unit_cost >= (0)::numeric)))\"}]",
+    "updateGrantsAfter": "[{\"grantee\":\"authenticated\",\"privilege_type\":\"UPDATE\"},{\"grantee\":\"postgres\",\"privilege_type\":\"UPDATE\"},{\"grantee\":\"service_role\",\"privilege_type\":\"UPDATE\"}]",
+    "negativeRows": "[{\"n\":0}]",
+    "unitCostMismatch": "[{\"n\":0}]",
+    "sampleRead": "[{\"id\":\"prod-1\",\"name\":\"ข้าวกุ้งผัดพริกเกลือ\",\"price\":\"79.00\",\"cogs\":\"0.00\",\"packaging_cost\":\"0.00\",\"other_unit_cost\":\"0.00\",\"unit_cost\":\"0.00\"},{\"id\":\"prod-1793068894506-07k8af\",\"name\":\"Fish & Ships\",\"price\":\"79.00\",\"cogs\":\"0.00\",\"packaging_cost\":\"0.00\",\"other_unit_cost\":\"0.00\",\"unit_cost\":\"0.00\"},{\"id\":\"prod-1793068854300-bnhpli\",\"name\":\"ปลาแจ่ว\",\"price\":\"79.00\",\"cogs\":\"0.00\",\"packaging_cost\":\"0.00\",\"other_unit_cost\":\"0.00\",\"unit_cost\":\"0.00\"}]"
+  },
+  "record": {
+    "ins170": "[]",
+    "ledgerTopAfter": "[{\"version\":\"170\",\"name\":\"170_product_cost_margin_fields\"},{\"version\":\"169\",\"name\":\"169_pod_path_percent_encoding\"},{\"version\":\"168\",\"name\":\"168_multi_job_rider_route\"},{\"version\":\"167\",\"name\":\"167_kitchen_batch_loop_fix\"},{\"version\":\"166\",\"name\":\"166_r13_rider_pod_path_and_checkin\"}]"
+  },
+  "assertions": {
+    "allFourColumns": true,
+    "unitCostGenerated": true,
+    "nonnegConstraintPresent": true,
+    "updateGrantsUnchanged": true,
+    "noNegativeRows": true,
+    "unitCostMatchesSum": true,
+    "ledgerTopIs170": true,
+    "has170": true
+  },
+  "ledgerTopAfterParsed": [
+    {
+      "version": "170",
+      "name": "170_product_cost_margin_fields"
+    },
+    {
+      "version": "169",
+      "name": "169_pod_path_percent_encoding"
+    },
+    {
+      "version": "168",
+      "name": "168_multi_job_rider_route"
+    }
+  ],
+  "precheckHadNoCostCols": false,
+  "allPass": true
+}

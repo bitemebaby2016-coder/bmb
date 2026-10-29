@@ -37,6 +37,11 @@ export interface Product {
   review_count?: number;          // migration 012 — display review count
   addons?: ProductAddon[];        // migration 016 — add-ons / toppings (server-priced)
   archived?: boolean;             // migration 055 — soft archive (CAT-D04=B); archived → server rejects orders
+  // ✅ migration 170 (Owner 2026-10-29): ต้นทุนต่อหน่วยสำหรับ Gross Margin / Net Profit
+  cogs?: number;                  // ต้นทุนวัตถุดิบ/หน่วย (แอดมินกรอกเอง)
+  packaging_cost?: number;        // ค่าแพ็กเกจจิ้ง/หน่วย
+  other_unit_cost?: number;       // ต้นทุนอื่น/หน่วย (ค่าแรง/ค่าไฟ)
+  unit_cost?: number;             // generated = cogs + packaging_cost + other_unit_cost
   branch_id?: string;             // TEN-07: which branch this product belongs to (global = null)
   created_at: string;
 }

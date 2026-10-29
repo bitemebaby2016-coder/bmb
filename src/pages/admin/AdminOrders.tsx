@@ -4,8 +4,13 @@ import { useNotificationStore } from '@/store/notificationStore'
 import { showToast } from '@/components/ui/ToastContainer'
 import {
   getOrdersPaged, updateOrderStatus, confirmOfflinePayment, rejectOfflinePayment, stripeRefundOrder, cancelOrder,
-  getDeliveryAssignmentsFor, getOrderStatusHistory, getOrderAuditTrail, getRoundsByIds,
+  getDeliveryAssignmentsFor, getOrderStatusHistory, getOrderAuditTrail, getRoundsByIds, getOrder,
 } from '@/lib/bmbAdminApi_orders'
+// R21 (Owner 2026-10-29): พิมพ์ใบสั่งอาหารเข้าครัว/ใบเสร็จจากเทมเพลตเดิมของระบบ
+import {
+  loadPrinterSettings, runAutoPrint, printOrderTicket, describePrinterTarget, buildPrintOrderData,
+  type PrintJobType,
+} from '@/lib/printService'
 import type { DeliveryAssignmentLiteRow } from '@/lib/bmbAdminApi_orders'
 import { getProductsAdmin } from '@/lib/bmbAdminApi_products'
 import { addOnLinesFromChoices } from '@/lib/addonDisplay'
@@ -188,6 +193,48 @@ export function AdminOrders() {
     }
     useNotificationStore.getState().triggerEvent('order_confirmed', { orderNumber })
     showToast('ยืนยันออเดอร์แล้ว (pending → confirmed)', 'success')
+    // R21: รับออเดอร์แล้ว → พิมพ์ใบสั่งอาหารเข้าครัวอัตโนมัติจากเทมเพลตเดิม
+    // (fire-and-forget: การพิมพ์พังไม่มีผลกับออเดอร์ — ออเดอร์ยืนยันแล้ว)
+    void autoPrintKitchenTicket(orderNumber)
+  }
+
+  // R21 (Owner 2026-10-29) — พิมพ์อัตโนมัติหลัง "รับออเดอร์": ใช้ buildKitchenTicketHtml
+  // (เทมเพลตที่มีอยู่แล้ว) + สถานะ autoPrintKitchen + เครื่องพิมพ์ที่ผูกไว้ในตั้งค่า
+  async function autoPrintKitchenTicket(orderNumber: string) {
+    try {
+      const settings = await loadPrinterSettings()
+      if (!settings.autoPrintKitchen) return
+      const full = await getOrder(orderNumber)
+      if (!full) return
+      const target = describePrinterTarget(settings, 'kitchen')
+      const results = await runAutoPrint(buildPrintOrderData(full), 'kitchen_ticket', settings)
+      if (results.length > 0) {
+        showToast(`ส่งใบสั่งครัวไปที่ "${target}" แล้ว (สถานะ sent ยังไม่ยืนยันว่ากระดาษออกจริง)`, 'info')
+      }
+    } catch (e) {
+      console.warn('[AdminOrders] auto-print failed (order unaffected):', e)
+    }
+  }
+
+  // R21 — แอดมิน "เลือกพิมพ์เอง" ทีละออเดอร์ (enqueue job แบบ idempotent + พิมพ์ทันที)
+  async function printOrderManually(orderNumber: string, type: PrintJobType) {
+    try {
+      const [full, settings] = await Promise.all([getOrder(orderNumber), loadPrinterSettings()])
+      if (!full) {
+        showToast('โหลดข้อมูลออเดอร์ไม่สำเร็จ — ลองใหม่', 'error')
+        return
+      }
+      const target = describePrinterTarget(settings, type === 'receipt' ? 'receipt' : 'kitchen')
+      const outcome = await printOrderTicket(full, type, settings)
+      if (outcome === 'sent') {
+        showToast(`ส่งงาน${type === 'receipt' ? 'ใบเสร็จ' : 'ใบสั่งครัว'}ไปที่ "${target}" แล้ว (รอเครื่องพิมพ์ยืนยัน)`, 'success')
+      } else {
+        showToast(`เปิดคำสั่งพิมพ์ไม่สำเร็จ — ตรวจเครื่องพิมพ์ "${target}" ในระบบ`, 'error')
+      }
+    } catch (e) {
+      console.warn('[AdminOrders] manual print failed:', e)
+      showToast('พิมพ์ไม่สำเร็จ — ลองใหม่', 'error')
+    }
   }
 
   async function handleConfirmPayment(orderNumber: string) {
@@ -445,6 +492,22 @@ export function AdminOrders() {
               )}
               <Link to="/admin/kitchen" className="btn btn-outline text-sm">🍳 ไป Kitchen</Link>
               <Link to={`/admin/delivery?focus=${order.order_number}`} className="btn btn-outline text-sm">🛵 ไป Dispatch</Link>
+
+              {/* R21 (Owner 2026-10-29): เลือกพิมพ์เองต่อออเดอร์ — ใช้เทมเพลตเดิมของระบบ */}
+              <button
+                className="btn btn-outline text-sm"
+                data-testid={`print-receipt-${order.order_number}`}
+                onClick={() => { void printOrderManually(order.order_number, 'receipt') }}
+              >
+                🧾 พิมพ์ใบเสร็จ
+              </button>
+              <button
+                className="btn btn-outline text-sm"
+                data-testid={`print-kitchen-${order.order_number}`}
+                onClick={() => { void printOrderManually(order.order_number, 'kitchen_ticket') }}
+              >
+                🍜 พิมพ์ใบสั่งครัว
+              </button>
 
               {/* GAP-A2: canonical atomic cancel via cancel_order RPC (any non-terminal state) */}
               {isCancellable(order.status) && (

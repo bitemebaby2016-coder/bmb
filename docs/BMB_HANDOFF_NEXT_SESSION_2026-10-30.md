@@ -71,4 +71,31 @@
 
 ---
 
-*จัดทำ 2026-10-29 (R20) · Owner สั่ง `__apply 169__` → production ledger = 169 · N1/N2/N3 = ปิดงานค้างจากแฮนออฟ 2026-10-29 · CI ของรอบนี้ดู `BMB_MASTER_STATUS.md` §9.0 แถว 45*
+---
+
+## §6. รอบ R21 (2026-10-29 · เฟส 2 "Core Business Logic" + ระบบพิมพ์เข้าครัว) — เพิ่มหลัง R20
+
+### ทำแล้ว (มีหลักฐาน)
+- ✅ **migration 170 APPLIED + VERIFIED บน production** (ledger top **170** · evidence `e2e/r21Apply170-result.json` = ALL_PASS) = `products.cogs` / `packaging_cost` / `other_unit_cost` (NUMERIC >=0 + CHECK) + `unit_cost` **GENERATED** · UPDATE grant ไม่เปลี่ยน
+- 🔧 **margin helper** `src/lib/marginCalc.ts` (`computeMargin` ต่อหน่วย · `computeOrderProfit` ทั้งออเดอร์) + **แผงกำไรสดในฟอร์ม AdminProducts** (`data-testid=product-margin-panel`) + test `marginCalc.test.ts` 13 ข้อ
+- 🔧 **guardrail ส่วนลด 15%** `src/lib/discountGuardrail.ts` (คูปอง+แต้ม+referral) + `CheckoutPage` (`data-testid=discount-guardrail`) **บล็อกปุ่มยืนยันสั่งซื้อ** ตอนเกินเพดาน + test 10 ข้อ · **server-side cap = งานต่อ (P2)**
+- 🔧 **ระบบพิมพ์ใบสั่งอาหารเข้าครัว (พัฒนาจากของเดิม ไม่สร้างเทมเพลตใหม่):** ทะเบียนเครื่องพิมพ์ใน `business_settings.print_settings` (แอดมินเพิ่ม/ลบ/ผูก "ใบเสร็จ"/"ใบสั่งครัว" เอง · preset **Nimbot B1Pro**) · **รับออเดอร์ → auto-print ใบสั่งครัว** ด้วย `buildKitchenTicketHtml` เดิม (พังไม่กระทบออเดอร์) · ปุ่ม `🧾 พิมพ์ใบเสร็จ` / `🍜 พิมพ์ใบสั่งครัว` ต่อแถวออเดอร์ · `printOrderTicket` = enqueue idempotent → render → mark `sent`/`failed` · test `printerRegistry.test.ts` 11 ข้อ
+- 🔎 **เฟส 1 (Auth/RLS) re-check = เจอ A1-A8 (ยังไม่ได้แก้โค้ด)** — รายละเอียด + แนวทางแก้ = `docs/BMB_QA_REVIEW_2026-10-29.md` หัวข้อ "รอบ R21"
+- **gates R21:** tsc 0 · lint 0 (`e2e/gates_r21_lint.log`) · **vitest 167 files / 1,724 tests / 0 fail** (`e2e/gates_r21_vitest.log`) · build 0 (`e2e/gates_r21_build.log`)
+
+### ทดสอบสิ่งที่ทำรอบ R21
+- `/admin/products` → เพิ่ม/แก้เมนู → กรอกต้นทุน 3 ช่อง → แผง "📊 กำไร (คำนวณสด)" เปลี่ยนทันทีที่พิมพ์ · บันทึกสำเร็จ (คอลัมน์มีจริงบน production แล้ว)
+- หน้าตั้งค่าเครื่องพิมพ์ → เพิ่ม "Nimbot B1Pro — ครัว" → ผูกเป็นเครื่องของ "ใบสั่งครัว" → บันทึก → กด "ทดสอบใบสั่งครัว" (toast ต้องบอกชื่อเครื่องที่ผูกไว้)
+- `/admin/orders` → กด "ยืนยันออเดอร์" → ไดอะล็อกพิมพ์ของเบราว์เซอร์โผล่ (ใบสั่งครัว) · ปุ่ม `🧾 พิมพ์ใบเสร็จ` / `🍜 พิมพ์ใบสั่งครัว` กดได้ทุกออเดอร์
+- ตะกร้า/เช็คเอาท์: ใช้คูปองเกิน 15% ของยอดสินค้า → ข้อความแดง `data-testid=discount-guardrail` + ปุ่มสั่งซื้อถูกบล็อก → ลดเหลือ 15% → ปลดบล็อก
+- **ตั้งค่า Nimbot ครั้งเดียว:** ติดตั้งไดรเวอร์ของ Nimbot → ตั้งเป็นเครื่องพิมพ์ค่าเริ่มต้นของ Windows (หรือเลือกเครื่องในไดอะล็อกพิมพ์ของ Chrome) — ระบบส่งคำสั่งผ่าน `window.print` จึงต้องพึ่งค่าตรงนี้
+
+### ค้างต่อ (เรียงลำดับทำรอบถัดไป)
+1. **เฟส 3** = UI/UX edge cases (loading/empty/ข้อความแจ้งเตือน) · **เฟส 4** = PWA cache/service worker + responsive มือถือ
+2. **แก้ A1-A8 (เฟส 1)** — เริ่ม 4 จุด P1: `AdminRoute` error/denied แยกกัน · ส่ง `state.from` · `returnTo` ของ admin · `logout` แบบ try/finally
+3. **4 คำสั่งเดิมของ Owner (ยังไม่ได้ทำ):** เด้งจากแจ้งเตือนเข้าหน้าครัว · เซมเดย์ "ส่งทันที" + ตัดสต็อกรวมเดียวกันทุกรอบ · ตรวจสลิปมาก่อน/พร้อมกับตอนรับออเดอร์ (เห็นรูปแนบ) · เด้ง `https://biteme-baby.com/admin/delivery` แท็บจัดส่งอัตโนมัติ
+4. server-side cap 15% (P2) · cosmetic 3 ชุด · B2/C7/C8/RL-DEFECT/Part 5-6/7 → §5 ยังใช้ได้ทั้งหมด
+
+---
+
+*จัดทำ 2026-10-29 (R20) · Owner สั่ง `__apply 169__` → production ledger = 169 · N1/N2/N3 = ปิดงานค้างจากแฮนออฟ 2026-10-29 · CI ของรอบนี้ดู `BMB_MASTER_STATUS.md` §9.0 แถว 45 · **อัปเดต R21:** เพิ่ม §6 (ledger 170 · margin · guardrail 15% · ระบบพิมพ์เข้าครัว) · gates R21 = tsc/lint/vitest/build ทุกตัว 0*

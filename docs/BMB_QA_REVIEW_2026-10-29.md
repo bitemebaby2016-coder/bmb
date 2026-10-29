@@ -86,3 +86,49 @@
 5. **Owner checklist:** empty state รายหน้า (3.5) · responsive มือถือ (4.4)
 
 *จัดทำ 2026-10-29 (R19) · probe รันจริงบน src ทั้งหมด · ไม่มีข้อความไหนเขียนโดยไม่ได้ตรวจโค้ด*
+
+---
+
+# รอบ R21 (2026-10-29) — re-check ตามคำสั่ง Owner รอบ 2 (ไล่ทีละเฟส) + สิ่งที่แก้แล้ว
+
+> ระดับเดิม: ✅ = ผ่านมีหลักฐาน · ⚠️ = จุดเสี่ยงต้อง follow-up · 🔧 = แก้แล้วรอบนี้
+
+## เฟส 1 — Auth / Database Connection (ตรวจซ้ำหลัง N3)
+
+| # | จุดตรวจ | ผล | หลักฐาน/หมายเหตุ |
+|---|---|---|---|
+| A1 | **`AdminRoute` เตะออกเมื่อเน็ตขัดข้อง** | ⚠️ P1 | `fetchProfileRole()` คืน `null` ทั้งตอน "ไม่มีบทบาท" และตอน query fail (`authStore.ts:92-109` กลืน error) → `App.tsx:151` `<Navigate to="/" />` = admin จริงหลุดกลางคัน · **แก้ = คืน 3 สถานะ ok/error/denied** |
+| A2 | `AdminRoute` ไม่ส่ง `state.from` | ⚠️ P1 | `App.tsx:148` — ต่างจาก `ProtectedRoute` → deep-link `/admin/orders?tab=x` ถูกเด้ง login แล้วหาย · **แก้ = ส่ง `state.from` เหมือน ProtectedRoute** |
+| A3 | LoginPage บังคับ admin ไป `/admin` เสมอ | ⚠️ P1 | `LoginPage.tsx:112` เพิกเฉย `returnTo` (ขัด case B/D) · **แก้ = `returnTo` มาก่อนเสมอ** |
+| A4 | `logout()` ไม่มี try/catch | ⚠️ P1 | `authStore.ts:243-246` + `Header.tsx:41-42` fire-and-forget → `signOut()` reject = ค้างสถานะล็อกอิน + unhandled rejection · **แก้ = `try/finally` ล้าง store เสมอ** |
+| A5 | `login/loginByPhone/loginByLocation/refreshRole` ไม่มี try/catch | ⚠️ P2 | `refreshRole()` ถูก `void` ทุกจุด → rejection ลอยตอนเน็ตหลุด |
+| A6 | `AdminRoute` ยิง query ทุกเปลี่ยนหน้า admin | ⚠️ P2 | mount ต่อ route = 1-2 roundtrip + spinner กระพริบ · **แก้ = ใช้ role จาก store ก่อน แล้ว refresh background** |
+| A7 | fallback `is_admin()` map `true → 'admin'` | ⚠️ P2 | `authStore.ts:103-104` บทจริง owner/manager ถูกแปลงเป็น `'admin'` · **แก้ = rpc คืนชื่อบทบาทจริง** |
+| A8 | `isAdmin()` ใน `supabase.ts` = dead code | ⚠️ P3 | ไม่มี caller + `.single()` ไม่เช็ค error → ลบหรือแก้ `maybeSingle()` |
+| A9 | listener กลาง `onAuthStateChange` (N3) | 🔧 แล้ว | R20 ติดแล้ว — เหลือ Owner retest |
+| A10 | RLS/`SET search_path`/EF verify_jwt | ✅ | RLS เปิดครบ (`001:490-507` + `005`) · `SECURITY DEFINER` ของ 007/025/027 มี `SET search_path = public` ทุกตัว · `phone-auto-login` = `verify_jwt=false` แต่บังคับ OTP · `queue-enqueue` = `verify_jwt=true` |
+| A11 | double-submit หน้า login | ✅ | `disabled={isLoading/isSendingOtp/isSendingReset}` ทุกปุ่ม (`LoginPage:366,418,466,505,513,556,615`) |
+
+## เฟส 2 — Core Business Logic (ทำตามคำสั่ง Owner ทั้ง 3 ข้อ + ระบบพิมพ์)
+
+| # | งาน | ผล | หลักฐาน/หมายเหตุ |
+|---|---|---|---|
+| B1 | **ตารางต้นทุนสินค้า** | 🔧 | migration **170 APPLIED** (ledger 170 · evidence `e2e/r21Apply170-result.json` ALL_PASS): `cogs`/`packaging_cost`/`other_unit_cost` (NUMERIC >=0 + CHECK) + `unit_cost` GENERATED · grant ไม่เปลี่ยน |
+| B2 | **Helper Gross Margin / Net Profit** | 🔧 | `src/lib/marginCalc.ts` = `computeMargin` (ต่อหน่วย) + `computeOrderProfit` (ทั้งออเดอร์ · gross/net/extraCost) + tier 4 ระดับ + formatters · แผงกำไร **real-time** ในฟอร์ม `AdminProducts` (`data-testid=product-margin-panel`) · test `marginCalc.test.ts` 13 ข้อ |
+| B3 | **Guardrail ส่วนลด 15% ในตะกร้า** | 🔧 | `src/lib/discountGuardrail.ts` = คูปอง+แต้ม+referral ≤15% ของยอดสินค้า (sanitize NaN/ลบ · `ZERO_SUBTOTAL` case) · `CheckoutPage` โชว์ `data-testid=discount-guardrail` + **บล็อกปุ่มสั่งซื้อ** · test `discountGuardrail.test.ts` 10 ข้อ |
+| B4 | **server-side cap 15%** | ⚠️ งานต่อ (P2) | ตอนนี้ client guard อย่างเดียว — RPC `create_order_with_items_i` ยัง re-price ตาม promo เดิม (ไม่แตะเพื่อไม่เสี่ยง contract) |
+| B5 | **ระบบพิมพ์ใบสั่งเข้าครัว — เลือก/เพิ่มเครื่องเอง** | 🔧 | registry ใน `business_settings.print_settings` (แอดมินเพิ่ม/ลบ/ผูกใบเสร็จ+ใบสั่งครัว · preset Nimbot B1Pro 50 มม.) — pure helpers ทั้งหมดใน `printService.ts` · `AdminPrintSettings` มีตาราง + ทดสอบรายเครื่อง · test `printerRegistry.test.ts` 11 ข้อ |
+| B6 | **พิมพ์อัตโนมัติจากเทมเพลตเดิม** | 🔧 | `AdminOrders.handleAcceptOrder` → `autoPrintKitchenTicket()` (ใช้ `buildKitchenTicketHtml` เดิม · เคารพ `autoPrintKitchen` · พังไม่กระทบออเดอร์) |
+| B7 | **แอดมินสั่งพิมพ์เองต่อออเดอร์** | 🔧 | ปุ่ม `🧾 พิมพ์ใบเสร็จ` / `🍜 พิมพ์ใบสั่งครัว` → `printOrderTicket()` = enqueue idempotent → render → mark `sent`/`failed` |
+| B8 | ความซื่อสัตย์เรื่อง "พิมพ์สำเร็จ" | ⚠️ ข้อจำกัด | เบราว์เซอร์ยังเป็นคนเลือกเครื่องจริง (`window.print`) → ต้องตั้ง Nimbot เป็น default printer ของ Windows หรือเลือกในไดอะล็อก · ระบบ**ไม่เคย**อ้างว่าพิมพ์สำเร็จจนกว่าจะได้ยืนยัน (ตรรกะเดิมคงไว้) |
+| B9 | งานเดิมที่ทราบอยู่แล้ว (known) | ⚠️ | haversine 2 ฉบับ · `confirmOfflinePayment` wrapper 2 · id จาก `to_char` ~40 จุด = cosmetic |
+
+## เฟส 3 / 4 — ยังไม่ได้ทำรอบนี้
+
+| # | หัวข้อ | สถานะ |
+|---|---|---|
+| C1 | UI/UX edge cases (loading/empty/ข้อความแจ้งเตือน) รอบใหม่ | ⏳ เฟสถัดไป |
+| C2 | PWA cache/service worker + responsive มือถือ รอบใหม่ | ⏳ เฟสถัดไป |
+| C3 | 4 คำสั่งเดิมของ Owner (หน้าครัวจากแจ้งเตือน · เซมเดย์ส่งทันที+ตัดสต็อกรวม · ตรวจสลิปก่อน/พร้อมรับ · เด้ง `/admin/delivery` แท็บจัดส่ง) | ⏳ ค้างอยู่ในแฮนด์ออฟ (ยังไม่ได้ทำ) |
+
+*gates รอบ R21: tsc 0 · lint 0 · vitest 167 files / 1,724 tests / 0 fail · build 0 · migration 170 APPLIED*
