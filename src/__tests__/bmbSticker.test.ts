@@ -10,6 +10,7 @@ import {
 } from '@/lib/printService'
 import printSrc from '@/lib/printService?raw'
 import adminSrc from '@/pages/admin/AdminPrintSettings?raw'
+import { B1_PRO_MODEL, STICKER_40x60_300DPI, describeNiimbotError } from '@/lib/niimbotBt'
 
 const baseOrder: PrintOrderData = {
   order_number: 'BMB-20261030-0007',
@@ -96,5 +97,34 @@ describe('สติกเกอร์ BMB 40×60 — แบบฟอร์มต
     // R29: auto-connect ตอนเปิดหน้า + วิธีใช้พับเป็น details (กระชับ)
     expect(adminSrc).toMatch(/void handleConnectQz\(true\)/)
     expect(adminSrc).toContain('<details')
+  })
+})
+
+describe('R30 — Niimbot Bluetooth path (driver ภาษาจีน reverse แล้ว)', () => {
+  it('preset B1 Pro + ขนาดสติกเกอร์ 40×60@300dpi = 472×709 (สูตร sizeFromMm)', () => {
+    expect(B1_PRO_MODEL.task).toBe('v4')
+    expect(B1_PRO_MODEL.name_prefixes).toContain('B1')
+    expect(STICKER_40x60_300DPI.w_px).toBe(Math.round((40 * 300) / 25.4))
+    expect(STICKER_40x60_300DPI.h_px).toBe(Math.round((60 * 300) / 25.4))
+    expect(STICKER_40x60_300DPI.w_px).toBe(472)
+    expect(STICKER_40x60_300DPI.h_px).toBe(709)
+  })
+
+  it('describeNiimbotError แปลสถานะหลักเป็นคำไทย', () => {
+    expect(describeNiimbotError(new Error('User cancelled the requestDevice() chooser'))).toContain('เลือกเครื่อง')
+    expect(describeNiimbotError(new Error('print not confirmed: PageEnd missing'))).toContain('เช็คกระดาษ')
+    expect(describeNiimbotError(new Error('GATT operation failed'))).toContain('Bluetooth')
+    expect(describeNiimbotError(new Error('x'.repeat(300))).length).toBeLessThanOrEqual(160)
+  })
+
+  it('โมดูล + หน้าตั้งค่าผูกกันครบ (source contract)', async () => {
+    const btSrc = (await import('@/lib/niimbotBt?raw')).default as string
+    const admin = (await import('@/pages/admin/AdminPrintSettings?raw')).default as string
+    expect(btSrc).toContain("import('niimbot-web-bluetooth')")
+    expect(btSrc).toContain('printImage')
+    expect(btSrc).toContain('identify')
+    expect(admin).toContain('bt-panel')
+    expect(admin).toContain('handleBtTest')
+    expect(admin).toContain('renderStickerPng(sampleSticker())')
   })
 })

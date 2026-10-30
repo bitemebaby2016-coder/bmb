@@ -33,6 +33,7 @@
     "@supabase/supabase-js": "^2.116.0",
     "@tailwindcss/vite": "^4.3.3",
     "@types/qrcode": "^1.5.6",
+    "niimbot-web-bluetooth": "^2.6.0",
     "qrcode": "^1.5.4",
     "qz-tray": "^2.3.0",
     "react-helmet-async": "^3.0.0",

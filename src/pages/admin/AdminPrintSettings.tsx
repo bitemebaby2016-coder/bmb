@@ -5,6 +5,8 @@ import { useState, useEffect } from 'react'
 import { showToast } from '@/components/ui/ToastContainer'
 import { loadPrinterSettings, savePrinterSettings, PrinterSettings, DEFAULT_PRINTER_SETTINGS, createPrinterDef, upsertPrinter, removePrinter, assignPrinter, describePrinterTarget, PRINTER_MODEL_LABELS, PRINTER_MODEL_DEFAULT_WIDTH, type PrinterModel, printHtmlInHiddenFrame, buildBmbStickerHtml, type PrintOrderData } from '@/lib/printService'
 import { describeQzError, qzConnect, qzPrintHtml } from '@/lib/qzTray'
+import { niimbotSupported, niimbotPrintSticker, describeNiimbotError } from '@/lib/niimbotBt'
+import { renderStickerPng } from '@/lib/stickerPng'
 // R25: ไม่มี local flag — ทุกปุ่มทดสอบยิงผ่าน printHtmlInHiddenFrame (guard กลาง + afterprint cleanup ใน printService)
 // (เดิม: popup window.open + win.print() = popup ค้างหลัง Cancel + testPrintRole ไม่มี guard → ซ้อนได้)
 // R27: เพิ่ม QZ Tray transport + เทมเพลตสติกเกอร์ BMB 40×60 (ใบเสร็จ+ครัว = ใบเดียวกัน)
@@ -134,6 +136,37 @@ export function AdminPrintSettings() {
     const r = printHtmlInHiddenFrame(html)
     if (r === 'failed') { showToast('มี dialog พิมพ์เปิดอยู่ (หรือเปิดไม่สำเร็จ) — ปิดก่อนแล้วลองใหม่', 'warning'); return }
     showToast(`ส่งสติกเกอร์ทดสอบไปที่ "${target}" — กด Cancel = หยุดจริง (ไม่มีงานซ้อน) · สถานะ "sent" ไม่ได้หมายถึงพิมพ์สำเร็จ`, 'info')
+  }
+
+  // R30: สถานะพิมพ์ผ่าน Bluetooth (Nimbot โดยตรง — ทางหลักของ B1 Pro)
+  const [btBusy, setBtBusy] = useState(false)
+  const [btState, setBtState] = useState<'unknown' | 'printing' | 'done' | 'down'>('unknown')
+  const [btErr, setBtErr] = useState('')
+  const [btProgress, setBtProgress] = useState('')
+
+  async function handleBtTest() {
+    setBtBusy(true)
+    setBtState('printing')
+    setBtErr('')
+    setBtProgress('')
+    try {
+      if (!niimbotSupported()) {
+        setBtState('down')
+        setBtErr('เบราว์เซอร์นี้ไม่รองรับ Web Bluetooth — เปิดด้วย Chrome/Edge (https) เท่านั้น')
+        return
+      }
+      const png = await renderStickerPng(sampleSticker())
+      await niimbotPrintSticker(png, (s) => setBtProgress(s))
+      setBtState('done')
+      showToast('✅ Nimbot ยืนยันงานพิมพ์แล้ว — ตรวจกระดาษได้เลย', 'success')
+    } catch (e) {
+      const msg = describeNiimbotError(e)
+      setBtState('down')
+      setBtErr(msg)
+      showToast(msg, 'error')
+    } finally {
+      setBtBusy(false)
+    }
   }
 
   if (!loaded) return <p className="text-brand-muted">กำลังโหลดตั้งค่า...</p>
@@ -275,6 +308,20 @@ export function AdminPrintSettings() {
                 <button className="btn btn-outline" disabled={qzBusy} onClick={() => void handleConnectQz()} data-testid="qz-connect">{qzBusy ? '⏳ ...' : 'เชื่อมต่อ & ดึงรายชื่อเครื่อง'}</button>
                 <button className="btn btn-outline" disabled={qzBusy} onClick={() => void handleTestStickerQz()} data-testid="qz-test-sticker">ทดสอบสติกเกอร์ (QZ)</button>
               </div>
+            </div>
+          </div>
+          {/* R30 (Owner): พิมพ์ตรงผ่าน Web Bluetooth — จบปัญหา ไดรเวอร์/คิว/spooler/COM (Nimbot พูดภาษาจีน → driver ภาษาจีน reverse แล้ว validated บน B1 Pro) */}
+          <div className="border-t border-brand-border pt-3 space-y-2" data-testid="bt-panel">
+            <h2 className="font-bold text-brand-accent">📡 พิมพ์ผ่าน Bluetooth — Nimbot B1 Pro โดยตรง (ไม่ง้อ QZ/ไดรเวอร์/คิว)</h2>
+            <p className="text-xs text-brand-muted">เบราว์เซอร์คุยกับเครื่องผ่าน BLE ตรง ๆ (protocol จีนของ Nimbot ในตัว) · Chrome/Edge + HTTPS · ใช้ปุ่มเดียว = เลือกเครื่อง + พิมพ์ · ~5-10 วิ/ใบ</p>
+            <div className="flex items-center gap-2 text-sm">
+              <span className={!niimbotSupported() ? 'text-red-500 font-semibold' : btState === 'done' ? 'text-green-600 font-semibold' : btState === 'down' ? 'text-red-500 font-semibold' : 'text-brand-muted'}>
+                ● {!niimbotSupported() ? 'เบราว์เซอร์นี้ไม่รองรับ (ใช้ Chrome/Edge)' : btState === 'printing' ? `กำลังส่งเข้าเครื่อง… ${btProgress}` : btState === 'done' ? 'พิมพ์ยืนยันแล้ว ✓' : btState === 'down' ? 'ยังพิมพ์ไม่สำเร็จ' : 'พร้อม — กดปุ่มแล้วเลือก B1 Pro ในกล่อง Windows'}
+              </span>
+            </div>
+            {btState === 'down' && btErr && <p className="text-xs text-red-400">{btErr}</p>}
+            <div className="flex items-end gap-2 flex-wrap">
+              <button className="btn btn-outline" disabled={btBusy} onClick={() => void handleBtTest()} data-testid="bt-test-print">{btBusy ? '⏳ ...' : '🔗 เชื่อม & พิมพ์สติกเกอร์ทดสอบ (Bluetooth)'}</button>
             </div>
           </div>
           <p className="text-xs text-brand-muted">ผูกไว้: ใบเสร็จ = <b>{describePrinterTarget(settings, 'receipt')}</b> · ครัว = <b>{describePrinterTarget(settings, 'kitchen')}</b> — ทดสอบแล้วขึ้น "ไม่พบเครื่องพิมพ์" = เพิ่มเครื่องด้านบนก่อนแล้วกดบันทึก</p>
