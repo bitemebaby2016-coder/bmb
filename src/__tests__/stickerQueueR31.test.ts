@@ -56,7 +56,8 @@ describe('R31/R32 — wiring (source contracts)', () => {
     const src = (await import('@/pages/admin/AdminOrders?raw')).default as string
     expect(src).toMatch(/void autoPrintStickerRoll\(orderNumber\)/)
     expect(src).toContain('stickerRollForOrder(buildPrintOrderData(full))')
-    expect(src).toContain('printStickerRoll(roll)')
+    // R33: offset จาก settings ถูกส่งเข้า printStickerRoll (ทุกใบเลื่อนเท่ากัน)
+    expect(src).toContain('printStickerRoll(roll, { offsetY: settings.stickerOffsetYPx ?? 0 })')
     expect(src).toContain('describeStickerRollError')
   })
   it('AdminPrintSettings: checkbox คิว + preview รูป + คำแนะนำ Incognito/Allow', async () => {
@@ -67,6 +68,13 @@ describe('R31/R32 — wiring (source contracts)', () => {
     expect(src).toContain('setBtPreview(png)')
     expect(src).toContain('Remember this decision')
     expect(src).toContain('Incognito')
+    // R33: ช่องชดเชยฟีด + ปุ่มใบวัดฟีด + default 0
+    expect(src).toContain('sticker-offset-ypx')
+    expect(src).toContain('stickerOffsetYPx: clampFeedOffset(')
+    expect(src).toContain('bt-calibration-print')
+    expect(src).toContain('renderCalibrationPng()')
+    expect(src).toContain('clampFeedOffset(settings.stickerOffsetYPx ?? 0)')
+    expect(DEFAULT_PRINTER_SETTINGS.stickerOffsetYPx).toBe(0)
   })
   it('AdminMarketing: picker เมนูทั้งหมด + error detail image-gen · AdminAiStudio guard ถูกเรียก', async () => {
     const mk = (await import('@/pages/admin/AdminMarketing?raw')).default as string

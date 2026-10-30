@@ -6,7 +6,7 @@ import { showToast } from '@/components/ui/ToastContainer'
 import { loadPrinterSettings, savePrinterSettings, PrinterSettings, DEFAULT_PRINTER_SETTINGS, createPrinterDef, upsertPrinter, removePrinter, assignPrinter, describePrinterTarget, PRINTER_MODEL_LABELS, PRINTER_MODEL_DEFAULT_WIDTH, type PrinterModel, printHtmlInHiddenFrame, buildBmbStickerHtml, type PrintOrderData } from '@/lib/printService'
 import { describeQzError, qzConnect, qzPrintHtml } from '@/lib/qzTray'
 import { niimbotSupported, niimbotPrintSticker, describeNiimbotError } from '@/lib/niimbotBt'
-import { renderStickerPng } from '@/lib/stickerPng'
+import { renderStickerPng, renderCalibrationPng, clampFeedOffset } from '@/lib/stickerPng'
 // R25: ไม่มี local flag — ทุกปุ่มทดสอบยิงผ่าน printHtmlInHiddenFrame (guard กลาง + afterprint cleanup ใน printService)
 // (เดิม: popup window.open + win.print() = popup ค้างหลัง Cancel + testPrintRole ไม่มี guard → ซ้อนได้)
 // R27: เพิ่ม QZ Tray transport + เทมเพลตสติกเกอร์ BMB 40×60 (ใบเสร็จ+ครัว = ใบเดียวกัน)
@@ -158,11 +158,44 @@ export function AdminPrintSettings() {
         setBtErr('เบราว์เซอร์นี้ไม่รองรับ Web Bluetooth — เปิดด้วย Chrome/Edge (https) เท่านั้น')
         return
       }
-      const png = await renderStickerPng(sampleSticker())
-      setBtPreview(png) // เห็นรูปทันที — ตรวจ "มีตัวอักษร?" ก่อนเครื่องเริ่มวิ่ง
-      await niimbotPrintSticker(png, (s) => setBtProgress(s))
+      // R33: offset จากหน้าตั้งค่า — preview = รูปจริงที่จะยิง (รวมความสูงหน้าที่เติบโต) · size ผูกค่าเดียวกัน
+      const off = clampFeedOffset(settings.stickerOffsetYPx ?? 0)
+      const png = await renderStickerPng(sampleSticker(), off)
+      setBtPreview(png) // เห็นรูปทันที — ตรวจ "มีตัวอักษร?" + ตำแหน่งเนื้อหาก่อนเครื่องเริ่มวิ่ง
+      await niimbotPrintSticker(png, { onProgress: (s) => setBtProgress(s), offsetY: off })
       setBtState('done')
-      showToast('✅ Nimbot ยืนยันงานพิมพ์แล้ว — ตรวจกระดาษได้เลย', 'success')
+      showToast(off === 0
+        ? '✅ Nimbot ยืนยันงานพิมพ์แล้ว — ตรวจกระดาษ: เนื้อหาตรงขอบดวงไหม? ไม่ตรง = พิมพ์ใบวัดฟีดแล้วใส่ค่าชดเชย'
+        : `✅ Nimbot ยืนยันงานพิมพ์แล้ว (ชดเชยฟีด ${off > 0 ? '+' : ''}${off}px) — ตรวจกระดาษว่าตรงขอบดวง`, 'success')
+    } catch (e) {
+      const msg = describeNiimbotError(e)
+      setBtState('down')
+      setBtErr(msg)
+      showToast(msg, 'error')
+    } finally {
+      setBtBusy(false)
+    }
+  }
+
+  /** R33: พิมพ์ "ใบวัดฟีด" — เส้นขีด px/mm บนดวงจริง (offset คงที่ 0 = ค่า raw ของเครื่อง)
+   *  อ่านว่าเส้น 0px ตรงขอบบนดวงพอดีไหม → ได้ค่าชดเชยเป็นตัวเลข ไม่ต้องเดา · ตรวจด้วยว่าการข้ามดวงสะสมไหม */
+  async function handleBtCalibration() {
+    setBtBusy(true)
+    setBtState('printing')
+    setBtErr('')
+    setBtProgress('')
+    setBtPreview('')
+    try {
+      if (!niimbotSupported()) {
+        setBtState('down')
+        setBtErr('เบราว์เซอร์นี้ไม่รองรับ Web Bluetooth — เปิดด้วย Chrome/Edge (https) เท่านั้น')
+        return
+      }
+      const png = await renderCalibrationPng()
+      setBtPreview(png)
+      await niimbotPrintSticker(png, { onProgress: (s) => setBtProgress(s), offsetY: 0 })
+      setBtState('done')
+      showToast('✅ ใบวัดฟีดออกแล้ว — อ่าน 2 กรณี: เส้น 0px หายเหนือขอบบน (หัวหายข้ามใบก่อน) → เส้นไหนตรงขอบใส่ +เลขนั้น · มีแถบขาวเหนือเส้น 0px → ใส่ −ขนาดแถบ', 'success')
     } catch (e) {
       const msg = describeNiimbotError(e)
       setBtState('down')
@@ -332,13 +365,31 @@ export function AdminPrintSettings() {
             {btPreview && (
               <div className="flex items-center gap-3" data-testid="bt-preview">
                 <img src={btPreview} alt="sticker preview" className="w-28 border border-brand-border rounded" />
-                <p className="text-xs text-brand-muted">รูปจริงที่ส่งเข้าเครื่อง (472×709px = 40×60 มม. @300dpi) — ถ้ารูปนี้ขาวสนิท = แจ้งทีมว่า "preview ว่าง" · ถ้ามีตัวอักษรแต่กระดาษออกขาว = ม้วนกระดาษ/การลงทะเบียน (ม้วนตอนนี้ขนาดเท่าไหร่? 40×60 ใช่ไหม)</p>
+                <p className="text-xs text-brand-muted">รูปจริงที่ส่งเข้าเครื่อง (472×{709 + Math.max(0, clampFeedOffset(settings.stickerOffsetYPx ?? 0))}px รวมชดเชยฟีด — 40×60 มม. @300dpi) — ขาวสนิท = แจ้งทีมว่า "preview ว่าง" · มีตัวอักษรแต่พิมพ์ไม่ตรงขอบ/ข้ามดวง = ใช้ใบวัดฟีดด้านล่างแล้วใส่ค่าชดเชย</p>
               </div>
             )}
             {btState === 'down' && btErr && <p className="text-xs text-red-400">{btErr}</p>}
+            {/* R33 (Owner: "พิมไม่ตรง/ข้ามดวง"): ชดเชยฟีดแนวตั้ง — ค่าเดียวใช้ทุกทาง (ทดสอบ/อัตโนมัติ) · วัดจากใบวัดฟีด */}
+            <div className="flex items-center gap-2 text-sm flex-wrap" data-testid="bt-feed-offset-row">
+              <label htmlFor="sticker-offset-ypx" className="whitespace-nowrap font-medium">ชดเชยฟีดแนวตั้ง (px)</label>
+              <input
+                id="sticker-offset-ypx"
+                type="number"
+                min={-40}
+                max={300}
+                step={1}
+                className="input w-24"
+                value={settings.stickerOffsetYPx ?? 0}
+                onChange={(e) => setSettings({ ...settings, stickerOffsetYPx: clampFeedOffset(Number(e.target.value)) })}
+                data-testid="sticker-offset-ypx"
+              />
+              <span className="text-xs text-brand-muted">+ = เนื้อหาเลื่อนลง (แก้ภาพข้ามขอบบน) · − = เลื่อนขึ้น (จำกัด −40 กันหัวเรื่องโดนตัด) · พิมพ์ใบวัดฟีด → อ่านค่า → ใส่ → กดบันทึก = มีผลทุกทาง (ทดสอบ + ออโต้พิมพ์)</span>
+            </div>
             <div className="flex items-end gap-2 flex-wrap">
               <button className="btn btn-outline" disabled={btBusy} onClick={() => void handleBtTest()} data-testid="bt-test-print">{btBusy ? '⏳ ...' : '🔗 เชื่อม & พิมพ์สติกเกอร์ทดสอบ (Bluetooth)'}</button>
+              <button className="btn btn-outline" disabled={btBusy} onClick={() => void handleBtCalibration()} data-testid="bt-calibration-print">{btBusy ? '⏳ ...' : '📏 พิมพ์ใบวัดฟีด (วัด offset จริง)'}</button>
             </div>
+            <p className="text-xs text-brand-muted">🛟 <b>ใบวัดฟีด:</b> พิมพ์ออกมาเป็นเส้นขีด px/mm บนดวงจริง → อ่านตาม 2 กรณี: <b>(ก)</b> เส้น <b>0px หายเหนือขอบบน</b> (หัว BITE ME BABY หลุดข้ามใบก่อน = เครื่องเริ่มพิมพ์ "ก่อน" ขอบ) → ดูว่าเส้นตัวเลขไหนตรงขอบบนพอดี มีค่า <b>N → ใส่ +N</b> · <b>(ข)</b> มี<b>แถบขาว N px เหนือเส้น 0px</b> (เครื่องเริ่มช้า) → <b>ใส่ −N</b> · เส้น 0px ตรงขอบพอดีอยู่แล้ว = 0 · ยังไม่ตรง/ข้ามดวงเรื่อย ๆ ทั้งที่ใส่ค่าแล้ว = ลอง calibrate ม้วนที่ตัวเครื่อง (ปุ่ม feed ค้างตอนปิดฝาตามคู่มือ B1 Pro) แล้วแจ้งทีม</p>
             <p className="text-xs text-brand-muted">🔒 Allow QZ ขึ้นทุกครั้ง? = เพราะเปิดหน้าใน <b>Incognito</b> (ไม่จดจำสิทธิ์) → ใช้หน้าต่างปกติ + ติ๊ก <b>Remember this decision</b> ในกล่อง QZ = ถามครั้งเดียว · Bluetooth ก็เหมือนกัน — จับคู่ครั้งแรกในหน้าปกติจะไม่ถามอีก</p>
           </div>
           <p className="text-xs text-brand-muted">ผูกไว้: ใบเสร็จ = <b>{describePrinterTarget(settings, 'receipt')}</b> · ครัว = <b>{describePrinterTarget(settings, 'kitchen')}</b> — ทดสอบแล้วขึ้น "ไม่พบเครื่องพิมพ์" = เพิ่มเครื่องด้านบนก่อนแล้วกดบันทึก</p>
@@ -348,6 +399,7 @@ export function AdminPrintSettings() {
               <p>• <b>เทมเพลตสติกเกอร์ BMB 40×60 (ใบเสร็จ+ครัวใช้ใบเดียวกัน)</b> — <code>buildBmbStickerHtml</code> ใน <code>src/lib/printService.ts</code> แบบมาจาก Templates-BmB ของ Owner: ป้ายซ้ายฝังตาย ค่าอ่านจากแบบฟอร์มออเดอร์เท่านั้น (หลัง : ) · QR = biteme-baby.com · unit test: <code>bmbSticker.test.ts</code> / <code>printTemplates.test.ts</code></p>
               <p>• <b>Nimbot ไม่มีไดรเวอร์ Win10?</b> → เปิดใช้ <b>QZ Tray</b> ด้านบน: ลงโปรแกรม QZ Tray → เปิดโปรแกรมค้างไว้ → กด "เชื่อมต่อ & ดึงรายชื่อ" (ครั้งแรกติ๊ก <b>Remember this decision</b> + Allow ใน QZ) → เลือกเครื่อง → บันทึก → "ทดสอบสติกเกอร์ (QZ)" · ทาง dialog เดิมยังใช้ได้เสมอเมื่อปิดสวิตช์ QZ</p>
               <p>• <b>คิวพิมพ์ขึ้น Error / พิมพ์ไม่ออก / รีสตารทแล้วยังค้าง?</b> = เช็คไดรเวอร์ของคิวใน "อุปกรณ์และเครื่องพิมพ์": ถ้าคิวเป็น <b>Generic / Text Only</b> → เปลี่ยนมาเลือกคิวที่มีไดรเวอร์จริง (เช่น <code>B1 Pro-I…</code> ที่ติดตั้งมาจาก Nimbot) ใน dropdown ด้านบน · ล้างงานค้าง = คลิกขวาคิว → Cancel All Documents หรือรัน <code>e2e/print_clear_queue.cmd</code> <b>ในฐานะ Administrator</b></p>
+              <p>• <b>พิมพ์ไม่ตรงขอบ / ข้ามดวง (R33)?</b> = วัดด้วย <b>📏 พิมพ์ใบวัดฟีด</b> (offset 0 = ค่า raw ของเครื่อง) → อ่านเส้นที่ตรงขอบบนดวง → ใส่เป็น "ชดเชยฟีดแนวตั้ง" → บันทึก → ทดสอบซ้ำ · ต้นเหตุฝั่งฮาร์ดแวร์ที่พบบ่อย = ม้วนไม่ถูก calibrate ที่เครื่อง (ปุ่ม feed ค้างตอนใส่ม้วนใหม่) · registry ของไลบรารีเองยอมรับว่า size T40x60 ยังไม่เคยถูกวัดบนกระดาษจริง → ค่าที่ได้จากใบวัด = ค่าจริงของเครื่องร้านเรา</p>
               <p>• <b>ลำดับตั้งค่า</b>: เพิ่มเครื่อง → ผูกบทบาท (ใบเสร็จ/ใบสั่งครัว) → สวิตช์ Auto-Print → กดบันทึก → ทดสอบ "ทดสอบใบเสร็จ"/"ทดสอบใบสั่งครัว" → ใบสั่งครัวออโต้ = 1 dialog (ใบเสร็จ+ใบรวมหน้า) ต่อ 1 ออเดอร์</p>
               <p>• ทางพิมพ์ R27: <b>QZ Tray</b> (เปิดสวิตช์ด้านบน) = ส่งงานเงียบ ๆ ผ่านตัวกลาง ไม่พึ่งไดรเวอร์ Windows · ปิดสวิตช์ = คำสั่งพิมพ์ของเบราว์เซอร์/OS เดิม (รองรับเครื่องพิมพ์ทุกตัวที่ Windows/macOS มองเห็น)</p>
               <p>• สถานะงานพิมพ์แยกเป็น requested → sent → acknowledged → printed — ระบบจะไม่อ้างว่า "พิมพ์สำเร็จ" จนกว่าจะกดยืนยันเอง · เครื่องพิมพ์ออฟไลน์: ออเดอร์อยู่ครบ งานพิมพ์ค้างเป็น failed ให้กดพิมพ์ซ้ำ</p>

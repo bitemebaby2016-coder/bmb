@@ -7,19 +7,43 @@ export const STICKER_PX_W = 472 // 40mm @300dpi
 export const STICKER_PX_H = 709 // 60mm @300dpi
 const M = 16 // margin ~1.35mm
 
+/**
+ * R33 (Owner: "พิมไม่ตรง/ข้ามดวง"): clamp ชดเชยฟีดแนวตั้ง (px @300dpi)
+ * + = เนื้อหาเลื่อนลง (ภาพเริ่ม "ก่อน" ขอบดวงจริง — ตรงกับกรณีที่หัว BITE ME BABY หายเหนือขอบ)
+ * − = เนื้อหาเลื่อนขึ้น — จำกัด −40 เพราะขอบบนมีแค่ M=16 + หัวเรื่อง baseline 46 (เกินนี้ตัวอักษรโดนตัด)
+ * ค่าเริ่มต้น 0 = พิมพ์แบบเดิมเป๊ะ ไม่ตั้งเองไม่เปลี่ยนพฤติกรรม
+ */
+export function clampFeedOffset(v: number): number {
+  const n = Math.round(Number(v) || 0)
+  return Math.max(-40, Math.min(300, n))
+}
+
+/**
+ * ความสูงหน้า (SetPageSize) — "เติบโต" เฉพาะตอน offset บวก:
+ * เครื่องเริ่มพิมพ์ก่อนขอบ N px → หน้า = 709+N (ส่วนที่เกิน = ขาว ไม่ให้ความร้อน → ลงร่อง/ใบก่อนหน้า harmlessly)
+ * → เนื้อหา (เลื่อนลง N) ลงพอดีในดวง · จบ Exactly ที่ขอบล่าง
+ * offset ติดลบ = หน้าเท่าเดิม 709 (ย้ายเนื้อหาขึ้นในหน้าเดิม — เติบโตช่วยอะไรไม่ได้)
+ * ⚠️ png height ต้องเท่ากับค่านี้เสมอ (imageToPacked ยืดรูปไป fit size — ไม่งั้นภาพบี้)
+ */
+export function stickerPageHeight(offsetY: number): number {
+  return STICKER_PX_H + Math.max(0, clampFeedOffset(offsetY))
+}
+
 export type StickerOp =
   | { kind: 'text'; x: number; y: number; text: string; size: number; weight?: number | string; align?: 'left' | 'center' | 'right'; family?: string; italic?: boolean }
   | { kind: 'line'; x1: number; y1: number; x2: number; y2: number; w?: number }
   | { kind: 'rect'; x: number; y: number; w: number; h: number; fill?: string }
   | { kind: 'qr'; x: number; y: number; size: number }
 
-/** layout ล้วน = สะท้อน buildBmbStickerHtml (ป้ายซ้ายฝังตาย · ค่าจากแบบฟอร์ม) · คุมขอบ 472×709 */
-export function stickerDrawList(o: PrintOrderData): StickerOp[] {
+/** layout ล้วน = สะท้อน buildBmbStickerHtml (ป้ายซ้ายฝังตาย · ค่าจากแบบฟอร์ม) · คุมขอบ 472×pageH
+ *  R33: offsetY ≠ 0 = เลื่อนทุก op แนวตั้ง (บวก=ลง) · พื้นหลังขาว = เต็มหน้าเสมอ (รวมแถบขาวส่วนที่ offset เติบโต/ว่าง) */
+export function stickerDrawList(o: PrintOrderData, offsetY = 0): StickerOp[] {
+  const off = clampFeedOffset(offsetY)
+  const pageH = STICKER_PX_H + Math.max(0, off)
   const ops: StickerOp[] = []
   const cx = STICKER_PX_W / 2
   const W = STICKER_PX_W
 
-  ops.push({ kind: 'rect', x: 0, y: 0, w: STICKER_PX_W, h: STICKER_PX_H, fill: '#ffffff' })
   ops.push({ kind: 'text', x: cx, y: M + 30, text: 'BITE ME BABY', size: 34, weight: 800, align: 'center' })
   ops.push({ kind: 'text', x: cx, y: M + 58, text: '" MORE THAN DELLICIOUS "', size: 16, align: 'center', family: 'Georgia', italic: true })
   ops.push({ kind: 'line', x1: M, y1: M + 72, x2: W - M, y2: M + 72, w: 2 })
@@ -68,36 +92,70 @@ export function stickerDrawList(o: PrintOrderData): StickerOp[] {
     ty += 26
   }
   ops.push({ kind: 'text', x: mid, y: ty + 26, text: 'Thank You for love !', size: 22, align: 'center', family: 'Georgia', italic: true })
+
+  if (off !== 0) {
+    for (const op of ops) {
+      if (op.kind === 'line') { op.y1 += off; op.y2 += off }
+      else { op.y += off }
+    }
+  }
+  // พื้นหลัง = ปิดท้าย (วาดใต้ทุกอย่างตามลำดับ array → ต้องอยู่หน้าสุด) เต็มหน้ารวมแถบ offset
+  return [{ kind: 'rect', x: 0, y: 0, w: STICKER_PX_W, h: pageH, fill: '#ffffff' }, ...ops]
+}
+
+/**
+ * R33 — ใบวัดฟีด (calibration ruler): เส้นขีดทุก 20px + ป้าย px/mm ทุก 100px
+ * พิมพ์ด้วย offset = เสมอ 0 (วัดค่า raw ของเครื่อง) → "เส้นไหนตรงขอบบนดวงจริง = ค่าชดเชยฟีดที่ต้องใส่"
+ * ระยะห่างเส้น 0→708 บนกระดาษ ≠ สูงดวงจริง = h_px เพี้ยน (คนละปัญหากับ offset)
+ * pure = test ได้โดยไม่ต้องมี canvas
+ */
+export function calibrationDrawList(): StickerOp[] {
+  const ops: StickerOp[] = []
+  const W = STICKER_PX_W
+  const H = STICKER_PX_H
+  for (let y = 0; y <= H - 1; y += 20) {
+    const major = y % 100 === 0
+    const edge = y === 0 || y >= H - 20
+    ops.push({ kind: 'line', x1: 16, y1: y, x2: W - 16, y2: y, w: edge ? 5 : major ? 3 : 1 })
+    if (major && y <= 620) {
+      ops.push({ kind: 'text', x: 20, y: y + 18, text: `${y}px ≈ ${(y * 25.4 / 300).toFixed(1)}mm`, size: 16, weight: 700 })
+    }
+  }
+  ops.push({ kind: 'line', x1: 0, y1: H - 1, x2: W, y2: H - 1, w: 6 })
+  ops.push({ kind: 'text', x: W / 2, y: 354, text: '— ใบวัดฟีด (offset 0) —', size: 18, weight: 700, align: 'center' })
+  ops.push({ kind: 'text', x: W / 2, y: H - 54, text: 'เส้นไหนตรงขอบบนดวง = ใส่เลขนั้นเป็นชดเชยฟีด', size: 16, align: 'center' })
+  ops.push({ kind: 'text', x: W / 2, y: H - 30, text: '(บวก = เนื้อหาเลื่อนลง)', size: 15, align: 'center' })
   return ops
 }
 
 
-/** render เป็น dataURL PNG — เบราว์เซอร์จริงเท่านั้น (jsdom ไม่มี 2d ctx → throw ชัดเจน) */
-export async function renderStickerPng(o: PrintOrderData): Promise<string> {
+/** rasterize ops ลง canvas สูง pageH — เบราว์เซอร์จริงเท่านั้น (jsdom ไม่มี 2d ctx → throw ชัดเจน) */
+async function rasterizeOps(ops: StickerOp[], pageH: number): Promise<string> {
   const canvas = document.createElement('canvas')
   canvas.width = STICKER_PX_W
-  canvas.height = STICKER_PX_H
+  canvas.height = pageH
   const ctx = canvas.getContext('2d')
   if (!ctx) throw new Error('canvas 2d ไม่พร้อมใช้งานใน environment นี้')
 
-  let qrPng = ''
-  try {
-    const QR = await import('qrcode')
-    qrPng = await QR.toDataURL('https://biteme-baby.com', { margin: 0, width: 197, errorCorrectionLevel: 'M' })
-  } catch { qrPng = '' }
-
   let qrImg: HTMLImageElement | null = null
-  if (qrPng) {
-    qrImg = new Image()
-    await new Promise<void>((resolve) => {
-      if (!qrImg) return resolve()
-      qrImg.onload = () => resolve()
-      qrImg.onerror = () => resolve()
-      qrImg.src = qrPng
-    })
+  if (ops.some((op) => op.kind === 'qr')) {
+    let qrPng = ''
+    try {
+      const QR = await import('qrcode')
+      qrPng = await QR.toDataURL('https://biteme-baby.com', { margin: 0, width: 197, errorCorrectionLevel: 'M' })
+    } catch { qrPng = '' }
+    if (qrPng) {
+      qrImg = new Image()
+      await new Promise<void>((resolve) => {
+        if (!qrImg) return resolve()
+        qrImg.onload = () => resolve()
+        qrImg.onerror = () => resolve()
+        qrImg.src = qrPng
+      })
+    }
   }
 
-  for (const op of stickerDrawList(o)) {
+  for (const op of ops) {
     if (op.kind === 'rect') {
       ctx.fillStyle = op.fill || '#fff'
       ctx.fillRect(op.x, op.y, op.w, op.h)
@@ -131,4 +189,15 @@ export async function renderStickerPng(o: PrintOrderData): Promise<string> {
     }
   }
   return canvas.toDataURL('image/png')
+}
+
+/** render สติกเกอร์เป็น dataURL PNG — R33: offsetY สะท้อน preview = รูปจริงที่จะยิงเข้าเครื่อง (รวมความสูงหน้า) */
+export async function renderStickerPng(o: PrintOrderData, offsetY = 0): Promise<string> {
+  const off = clampFeedOffset(offsetY)
+  return await rasterizeOps(stickerDrawList(o, off), stickerPageHeight(off))
+}
+
+/** R33: render ใบวัดฟีด (offset คงที่ 0 = raw) — dataURL PNG 472×709 */
+export async function renderCalibrationPng(): Promise<string> {
+  return await rasterizeOps(calibrationDrawList(), STICKER_PX_H)
 }

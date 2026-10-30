@@ -7,7 +7,10 @@
 // โดยตรง · task=v4 · 300dpi) — เบราว์เซอร์คุยกับเครื่องผ่าน BLE โดยตรง ไม่ผ่าน
 // spooler/คิว/ไดรเวอร์/COM/QZ เลย · ข้อกำหนด: Chrome/Edge + HTTPS (biteme-baby.com ✓)
 // เรียกจาก user gesture เท่านั้น (Bluetooth chooser ของ Windows จะเด้งตอนกดปุ่ม)
+// R33: +ชดเชยฟีด/ใบวัดฟีด — registry T40x60 ของ lib เองยังไม่เคยวัด offset บนกระดาษจริง
+// ("nobody has yet measured … with a rule") → เราวัดเองจากใบวัดแล้วใส่ stickerOffsetYPx
 // ============================================
+import { stickerPageHeight } from './stickerPng'
 
 export interface NiimbotModel {
   name_prefixes?: string[]
@@ -58,6 +61,14 @@ export const B1_PRO_MODEL: NiimbotModel = { name_prefixes: ['B1'], task: 'v4', d
 /** 40×60 มม. ที่ 300dpi — round(40*300/25.4)=472 · round(60*300/25.4)=709 (สูตร sizeFromMm ของไลบรารี) */
 export const STICKER_40x60_300DPI: NiimbotSize = { w_px: 472, h_px: 709, offset_y_px: 0 }
 
+/**
+ * R33: size สำหรับงานที่มีชดเชยฟีด — h_px ต้องเท่ากับความสูง PNG ที่ render ไป (stickerPageHeight)
+ * ไม่งั้น imageToPacked ยืดรูปไป fit size = ภาพบี้/เพี้ยน · offset ในรูปทำไปแล้วที่ render → lib offsetY = 0
+ */
+export function stickerSize(offsetY = 0): NiimbotSize {
+  return { w_px: STICKER_40x60_300DPI.w_px, h_px: stickerPageHeight(offsetY), offset_y_px: 0 }
+}
+
 let lib: NiimbotLib | null = null
 
 async function loadNiimbot(): Promise<NiimbotLib> {
@@ -83,29 +94,36 @@ export async function niimbotIdentify(): Promise<NiimbotPrinterInfo> {
   return await N.identify(B1_PRO_MODEL)
 }
 
+export interface NiimbotPrintOpts {
+  onProgress?: (s: string) => void
+  /** R33: ชดเชยฟีด (px) — ต้องเป็นค่าเดียวกับที่ใช้ตอน renderStickerPng (size.h_px ผูกกับค่านี้) */
+  offsetY?: number
+}
+
 /**
  * พิมพ์สติกเกอร์ 1 ใบจาก PNG (dataURL) — resolve เมื่อเครื่อง "ยืนยัน" งานแล้ว
  * (ทุกหน้ายืนยัน + เคาน์เตอร์ครบ) · reject = ตรวจกระดาษ (งานอาจออกบางส่วนแล้ว)
  */
-export async function niimbotPrintSticker(pngDataUrl: string, onProgress?: (s: string) => void): Promise<void> {
+export async function niimbotPrintSticker(pngDataUrl: string, opts?: NiimbotPrintOpts): Promise<void> {
   const N = await loadNiimbot()
   await N.printImage(pngDataUrl, {
     model: B1_PRO_MODEL,
-    size: STICKER_40x60_300DPI,
+    size: stickerSize(opts?.offsetY ?? 0),
     density: 3,
-    onProgress,
+    onProgress: opts?.onProgress,
   })
 }
 
 /** R31: หลายใบต่อคิวใน job เดียว (printBatch = pipelined pages — วิ่งยาวจนครบ แล้ว PrintEnd ทีเดียว) */
-export async function niimbotPrintStickers(pngDataUrls: string[], onProgress?: (s: string) => void): Promise<void> {
+export async function niimbotPrintStickers(pngDataUrls: string[], opts?: NiimbotPrintOpts): Promise<void> {
   if (pngDataUrls.length === 0) return
   const N = await loadNiimbot()
+  const size = stickerSize(opts?.offsetY ?? 0)
   if (pngDataUrls.length === 1) {
-    await N.printImage(pngDataUrls[0], { model: B1_PRO_MODEL, size: STICKER_40x60_300DPI, density: 3, onProgress })
+    await N.printImage(pngDataUrls[0], { model: B1_PRO_MODEL, size, density: 3, onProgress: opts?.onProgress })
     return
   }
-  await N.printBatch(pngDataUrls, { model: B1_PRO_MODEL, size: STICKER_40x60_300DPI, density: 3, onProgress })
+  await N.printBatch(pngDataUrls, { model: B1_PRO_MODEL, size, density: 3, onProgress: opts?.onProgress })
 }
 
 /** แปล error เป็นคำไทยสั้น ๆ (pure — test ได้) */

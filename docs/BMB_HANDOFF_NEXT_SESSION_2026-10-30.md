@@ -1,6 +1,7 @@
-# Bite Me Baby — HANDOFF + SESSION CLOSURE (ปิดเซสชัน 2026-10-29 · R20)
+# Bite Me Baby — HANDOFF + SESSION CLOSURE (ปิดเซสชัน 2026-10-29 · R20 · **อัปเดต R33 2026-10-30 ดึก**)
 
 > ฉบับนี้ = **รายงานปิดงานเซสชัน 2026-10-29 (รอบ R20) + แฮนด์ออฟส่งต่อแชทหน้า** (ต่อจาก `docs/BMB_HANDOFF_NEXT_SESSION_2026-10-29.md`)
+> **➕ R33 (2026-10-30 ดึก):** เพิ่ม §3 ข้อ 0 = ชดเชยฟีด + ใบวัดฟีด (พิมพ์ไม่ตรง/ข้ามดวง) · งานค้าง ①–⑤ ปิดแล้ว 2 (ใบว่าง+image-gen deploy) — ดู `docs/BMB_MASTER_STATUS.md` (canonical) + `AI_WORK_STATE.md` บล็อก R33
 > canonical state = `AI_WORK_STATE.md` + `docs/BMB_MASTER_STATUS.md` (ขัดกันให้ถือ 2 ไฟล์นั้น + โค้ดจริง)
 > รอบนี้เริ่มจากคำสั่ง Owner **`__apply 169__`** + "ทำงานที่เหลือต่อตามแฮนออฟทั้งหมดตามกฏ"
 
@@ -32,9 +33,13 @@
 
 ---
 
-## §3. งานที่ต้องทำต่อ (เรียงลำดับความสำคัญ · ทบทวนครบ ณ 2026-10-29 รอบ R21f)
+## §3. งานที่ต้องทำต่อ (เรียงลำดับความสำคัญ · **ทบทวน/ปิดครบใหม่ ณ 2026-10-30 ดึก รอบ R33**)
 
-1. **✅ รอบ R21f ปิดครบแล้ว (2026-10-29):** CI = Contract **#217 ✓** + CI **#643 ✓** · **m174 APPLIED production** — `e2e/r21fApply174-result.json` **ALL_PASS 10/10 · ledger top=174** · งานแรกของแชทใหม่ = **ข้อ 2 (ส่ง Owner retest §M)** + ข้อ 3-7 · (เช็ค CI docs commit ปิดท้าย = `node e2e/r19bCi.cjs <full-sha>` ครั้งเดียว)
+0. **🆕 R33 (2026-10-30 ดึก · "พิมไม่ตรง/ข้ามดวง" = registration ไม่ใช่ geometry):** Owner ยืนยัน preview มีรูป + ขนาดตรง (40×60 ใช่) → ภาพเริ่มพิมพ์ก่อนขอบบนดวง · **แก้แล้วฝั่งโค้ด** = `stickerOffsetYPx` (default 0) + `stickerPageHeight` (หน้าเติบโตด้านบวก) + `stickerSize` ผูก h_px + **ปุ่ม 📏 ใบวัดฟีด** (เส้น px/mm offset คงที่ 0) — evidence `e2e/r33_*.log` (target 32/32 · eslint 0 · esbuild 0 · guard 0) · **งาน Owner (hardware — ปิด loop):**
+   - กด **📏 พิมพ์ใบวัดฟีด** → อ่านเส้นเทียบขอบบนดวง: **เส้น 0px หายเหนือขอบ** (หัว BITE ME BABY หลุดข้ามใบก่อน = บั๊กปัจจุบัน) → เส้นที่ตรงขอบพอดีมีเลข N → ใส่ "ชดเชยฟีดแนวตั้ง" **= +N** (บวก = เนื้อหาเลื่อนลง) · มีแถบขาว N px เหนือเส้น 0px → ใส่ **−N** → บันทึก → กด **🔗 เชื่อม & พิมพ์ทดสอบ** ซ้ำ
+   - ยังเพี้ยน/ข้ามดวงเรื่อย ๆ ทั้งที่ใส่ค่าแล้ว = **calibrate ม้วนที่ตัวเครื่อง** (ปุ่ม feed ค้างตอนใส่ม้วนใหม่ — คู่มือ B1 Pro) แล้วแจ้งทีม
+   - **e2e auto-print ออเดอร์จริง** (R31 โค้ด+wiring test พร้อม): กดรับออเดอร์ ≥2 ชิ้น ใน Chrome/Edge บนหน้า `/admin/orders` → ต้องเห็น toast "กำลังพิมพ์ N ใบ" → "ยืนยันครบ" + กระดาษออก N ดวง (1 ดวง/ชิ้น)
+1. **✅ รอบ R21f ปิดครบแล้ว (2026-10-29):** CI = Contract **#217 ✓** + CI **#643 ✓** · **m174 APPLIED production** — `e2e/r21fApply174-result.json` **ALL_PASS 10/10 · ledger top=174** · (เช็ค CI docs commit ปิดท้าย = `node e2e/r19bCi.cjs <full-sha>` ครั้งเดียว)
    - ~~มิเกรชั่นค้าง apply~~ = **ไม่มีค้าง** (parity local = ledger ทุกเลข · PROPOSED_* = superseded ห้าม apply)
 2. **🆕 retest ส่ง Owner = `docs/BMB_PRODUCTION_TEST_PACK.md` §M (M1-M16)** — ของใหม่ R21f: **M13 แผนที่ไรเดอร์หน้า `/track`** · **M14 ปุ่ม 🧭 นำทางรายจุด** · **M15 สูตรครบทุกเมนู + สินค้าใหม่โผล่เอง** · **M16 เวลาเปิด/ปิดหน้าแรกตรงกับที่ตั้ง** (ตั้งในการ์ด Branch → บันทึก → หน้าแรกต้องเปลี่ยน) · ของเดิม R21: M1-M12 (ต้นทุน/กำไร · พิมพ์ครัว · cap 15% · ประตูสลิป · แจ้งเตือนครัว · delivery focus · สต็อก · my_role · Auth · id ใหม่ · LoadErrorBanner · EF CORS)
 3. **P1 (Owner ทำใน Google Cloud):** จำกัด **HTTP referrer** ของคีย์ Google Maps (`src/lib/googleMaps.ts` ยิงจาก client 5 จุด) — ทำในคอนโซล ไม่ใช่โค้ด

@@ -65,6 +65,9 @@ export interface PrinterSettings {
   autoPrintKitchen: boolean
   // R31 (Owner 2026-10-30): พิมพ์สติกเกอร์ Bluetooth อัตโนมัติหลังรับออเดอร์ — 1 ดวง ต่อ 1 ชิ้น
   autoPrintStickers?: boolean
+  // R33 (Owner 2026-10-30 — "พิมไม่ตรง/ข้ามดวง"): ชดเชยฟีดแนวตั้ง (px @300dpi) — + = เนื้อหาเลื่อนลง · − = ขึ้น
+  // ค่าเริ่มต้น 0 = พิมพ์แบบเดิมทุกประการ · วัดจริงจาก "ใบวัดฟีด" ในแผง Bluetooth แล้วใส่ (ไม่เดา)
+  stickerOffsetYPx?: number
   paperWidthMm: number
   // R21 (Owner 2026-10-29): ทะเบียนเครื่องพิมพ์ที่แอดมินเพิ่ม/เลือกเอง
   // (ชื่อเดิม 2 ฟิลด์ข้างบนยังคงอยู่ = back-compat กับค่าที่บันทึกไว้แล้ว)
@@ -113,6 +116,7 @@ export const DEFAULT_PRINTER_SETTINGS: PrinterSettings = {
   autoPrintReceipt: true,
   autoPrintKitchen: true,
   autoPrintStickers: true,
+  stickerOffsetYPx: 0,
   paperWidthMm: 80,
   printers: [],
   receiptPrinterId: null,

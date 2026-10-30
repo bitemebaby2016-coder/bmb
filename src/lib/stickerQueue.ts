@@ -22,16 +22,23 @@ export function stickerRollForOrder(data: PrintOrderData): PrintOrderData[] {
   return roll
 }
 
+export interface StickerPrintOpts {
+  onProgress?: (s: string) => void
+  /** R33: ชดเชยฟีดแนวตั้ง (px) — ทุกใบใน roll ใช้ค่าเดียวกัน (บวก = เนื้อหาเลื่อนลง) */
+  offsetY?: number
+}
+
 /** render ทุกใบเป็น PNG แล้วยิงต่อคิวด้วย printBatch (job เดียว หลายหน้า) — resolve = เครื่องยืนยันครบ */
-export async function printStickerRoll(roll: PrintOrderData[], onProgress?: (s: string) => void): Promise<void> {
+export async function printStickerRoll(roll: PrintOrderData[], opts?: StickerPrintOpts): Promise<void> {
   if (!niimbotSupported()) {
     throw new Error('อุปกรณ์/เบราว์เซอร์นี้ไม่รองรับ Web Bluetooth — เปิดหน้าแอดมินด้วย Chrome/Edge (https) เท่านั้น')
   }
+  const off = opts?.offsetY ?? 0
   const pngs: string[] = []
   for (const piece of roll) {
-    pngs.push(await renderStickerPng(piece))
+    pngs.push(await renderStickerPng(piece, off))
   }
-  await niimbotPrintStickers(pngs, onProgress)
+  await niimbotPrintStickers(pngs, { onProgress: opts?.onProgress, offsetY: off })
 }
 
 /** แปล error คิวเป็นคำไทย (reuse ตัวเดิมจาก niimbotBt) */

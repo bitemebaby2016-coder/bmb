@@ -279,7 +279,8 @@ export function AdminOrders() {
       if (!full) return
       const roll = stickerRollForOrder(buildPrintOrderData(full))
       showToast(`กำลังพิมพ์สติกเกอร์ ${roll.length} ใบ (Bluetooth ต่อคิว)…`, 'info')
-      await printStickerRoll(roll)
+      // R33: ชดเชยฟีดจากหน้าตั้งค่า (default 0) — ทุกใบเลื่อนเท่ากัน
+      await printStickerRoll(roll, { offsetY: settings.stickerOffsetYPx ?? 0 })
       showToast(`✅ สติกเกอร์ ${roll.length} ใบ — เครื่องยืนยันครบแล้ว`, 'success')
     } catch (e) {
       console.warn('[AdminOrders] auto sticker roll failed (order unaffected):', e)

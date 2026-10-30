@@ -10,7 +10,7 @@ import {
 } from '@/lib/printService'
 import printSrc from '@/lib/printService?raw'
 import adminSrc from '@/pages/admin/AdminPrintSettings?raw'
-import { B1_PRO_MODEL, STICKER_40x60_300DPI, describeNiimbotError } from '@/lib/niimbotBt'
+import { B1_PRO_MODEL, STICKER_40x60_300DPI, stickerSize, describeNiimbotError } from '@/lib/niimbotBt'
 
 const baseOrder: PrintOrderData = {
   order_number: 'BMB-20261030-0007',
@@ -110,6 +110,18 @@ describe('R30 — Niimbot Bluetooth path (driver ภาษาจีน reverse �
     expect(STICKER_40x60_300DPI.h_px).toBe(709)
   })
 
+  it('R33 — stickerSize(offset): h_px ผูก stickerPageHeight เสมอ (png ↔ SetPageSize ห้ามเพี้ยน)', () => {
+    expect(stickerSize()).toEqual({ w_px: 472, h_px: 709, offset_y_px: 0 })
+    expect(stickerSize(0)).toEqual(STICKER_40x60_300DPI)
+    expect(stickerSize(120).h_px).toBe(829)
+    expect(stickerSize(-40).h_px).toBe(709) // ติดลบ = หน้าเท่าเดิม
+    expect(stickerSize(99999).h_px).toBe(1009) // clamp 300
+    for (const off of [0, 50, -20, 300]) {
+      expect(stickerSize(off).w_px).toBe(472)
+      expect(stickerSize(off).offset_y_px).toBe(0) // offset ทำที่ render — lib ห้ามซ้ำ
+    }
+  })
+
   it('describeNiimbotError แปลสถานะหลักเป็นคำไทย', () => {
     expect(describeNiimbotError(new Error('User cancelled the requestDevice() chooser'))).toContain('เลือกเครื่อง')
     expect(describeNiimbotError(new Error('print not confirmed: PageEnd missing'))).toContain('เช็คกระดาษ')
@@ -125,6 +137,9 @@ describe('R30 — Niimbot Bluetooth path (driver ภาษาจีน reverse �
     expect(btSrc).toContain('identify')
     expect(admin).toContain('bt-panel')
     expect(admin).toContain('handleBtTest')
-    expect(admin).toContain('renderStickerPng(sampleSticker())')
+    expect(admin).toContain('renderStickerPng(sampleSticker(), off)')
+    // R33: size ผูกกับ stickerPageHeight (png ↔ SetPageSize ตรงกันเสมอ)
+    expect(btSrc).toContain('stickerSize(opts?.offsetY ?? 0)')
+    expect(btSrc).toContain('stickerPageHeight')
   })
 })
