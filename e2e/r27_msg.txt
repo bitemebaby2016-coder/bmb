@@ -1,0 +1,20 @@
+feat(R27): QZ Tray print transport + BMB 40x60 sticker (receipt=kitchen) · social AI cart-summary link ?cart= · persona sync from web · r22 no-hang deploy
+
+PRINT (Owner: Nimbot มีไดรเวอร์แค่ Win7 → QZ Tray ตัวกลาง + เทมเพลตสติกเกอร์จาก Templates-BmB):
+- buildBmbStickerHtml — 40x60 ป้ายซ้ายฝังตาย (Order id/Date/Menu/Notice/CUSTOMER/Tel) ค่าอ่านจากแบบฟอร์มออเดอร์ ไม่มีบรรทัดราคา QR=biteme-baby.com (qrcode, fallback URL) · SCAN FOR MORE + ข้อความไทย + Thank You for love ! ตรงแบบ Owner
+- printOrderTicket / runAutoPrint / runAutoPrintPair = สติกเกอร์ BMB ใบเดียวกันทั้งใบเสร็จ+ครัว (Owner: สติกเกอร์รวมเดียวกัน)
+- qzTray.ts: npm qz-tray → qz.websocket.connect (พอร์ต secure 8181+) + unsigned stubs (cert/signature) + printers.find + qz.print {type:pixel, format:html, flavor:plain} config mm 40x60 · describeQzError ไทย
+- printViaTransport: qzEnabled+qzPrinterName → QZ (silent) else fallback dialog เดิม · PrinterSettings.qzEnabled/qzPrinterName
+- AdminPrintSettings: QZ panel (เชื่อมต่อ/เลือกเครื่อง/ทดสอบสติกเกอร์) + ปุ่มทดสอบ 3 ตัวยิงเทมเพลตจริง
+
+SOCIAL AI (Owner: บริบทเดียวกับ bite บริกร · ตอบโพสชวนสั่ง+สรุปออเดอร์แนบลิงก์ตะกร้า):
+- shopContext BITE_PERSONA_SEGMENT sync เต็มชุดเท่า src/lib/bitePersona.ts (canonical = web, continuity test บังคับ) + rule ปิดท้ายทุกคำตอบด้วยคำชวนสั่งต่อ biteme-baby.com/shop
+- socialOrderIntake: buildCartLink/encodeCartParam/buildCartSummaryFooter — b64url {v:1,items:[{id,q}]} ระบบเขียนเอง (ไม่ใช่คำแต่ง AI)
+- worker runOrderIntake(mode message|comment): match catalog ก่อน → footer ลิงก์ตะกร้าทั้ง comment / ยังไม่ยืนยัน / submit fail · comment = extract+match ไม่สร้างออเดอร์เอง (§5.1) · message สำเร็จ = ลิงก์ชำระเงินเดิมเหมือนเคย
+- web cartDeepLink.ts + Layout ?cart= (รอ isHydrated → addItem → เปิดแผงตะกร้า → strip param) เช็คเอาท์/เพิ่มเมนูต่อได้เลย
+
+OTHER:
+- e2e/r22_deploy_worker.cmd: token guard + CI=true + npx fallback + exit code (เดิมค้างที่ wrangler login prompt — Owner: ทำ deploy ให้เสร็จห้ามค้าง)
+- ลบท่อน "ทดสอบ " นำหน้า AdminOrders.tsx (ของตกทำ eslint . แดง)
+- deps: qrcode + @types/qrcode + qz-tray
+- tests: bmbSticker 4 + cartDeepLink 6 + qzTray 7 + continuity +3 + intake contract R27 (comment=path สรุป+ลิงก์) · eslint . clean · esbuild ok · guards 1370 files OK

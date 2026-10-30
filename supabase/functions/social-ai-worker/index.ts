@@ -55,6 +55,7 @@ import {
   bangkokDate,
   submitNewOrder,
   buildIntakeLine,
+  buildCartSummaryFooter,
 } from '../_shared/socialOrderIntake.ts'
 
 const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions'
@@ -359,7 +360,7 @@ async function fetchRecentThread(ev: SocialEventRow): Promise<string> {
  *  (046 spine) → resolve real round → submitNewOrder (canonical RPC, idempotent
  *  by event id). ไม่ชัดเจน/ไม่ครบ = ไม่สั่ง ให้ถามใน reply (ถามก่อน ห้ามเดา).
  *  ผลสำเร็จ/ล้มเหลวรายงานโดย buildIntakeLine (ระบบเขียน) — ห้ามเคลมก่อนระบบยืนยัน. */
-async function runOrderIntake(ev: SocialEventRow, userMsg: string): Promise<{ footer: string; note: string }> {
+async function runOrderIntake(ev: SocialEventRow, userMsg: string, mode: 'message' | 'comment'): Promise<{ footer: string; note: string }> {
   const none = { footer: '', note: '' }
   try {
     const ex = await aiCall('social_reply_draft', ORDER_EXTRACT_SYSTEM, userMsg)
@@ -370,13 +371,9 @@ async function runOrderIntake(ev: SocialEventRow, userMsg: string): Promise<{ fo
     if (!sem.ok) return none
     const x = sem.value
     if (!x.wants_order) return none
-    if (!x.confirmed) {
-      return {
-        footer: '',
-        note: 'รายการยังไม่ได้รับการยืนยัน (' + (x.unclear || 'ข้อมูลไม่ครบ') + ') — ให้ถามยืนยันเมนู/จำนวน/รายละเอียดกับลูกค้า ห้ามสั่งแทนลูกค้า ห้ามพูดว่ารับออเดอร์แล้ว',
-      }
-    }
-    // Real catalog match — ห้ามเดาสินค้าแทนลูกค้า (§4: จับคู่กับ Catalog จริง)
+    // Real catalog match — ห้ามเดาสินค้าแทนลูกค้า (§4) — R27: ย้ายขึ้นมาก่อนการยืนยัน
+    // เพื่อให้ "สรุปรายการ + ลิงก์ตะกร้าพร้อมเช็คเอาท์" ได้ทั้งยืนยัน/ยังไม่ยืนยัน
+    // และทั้งคอมเมนต์สาธารณะ/ข้อความส่วนตัว
     const prods = await rest('GET', '/rest/v1/products?select=id,name,is_available&archived=eq.false&limit=300')
     const catalog = (prods.status === 200 && Array.isArray(prods.j)) ? prods.j : []
     const m = matchOrderItems(catalog, x.items)
@@ -387,6 +384,26 @@ async function runOrderIntake(ev: SocialEventRow, userMsg: string): Promise<{ fo
       return {
         footer: '',
         note: 'มีเมนูที่จับคู่ไม่ได้: ' + m.unmatched.join(', ') + ' — ให้ถามชื่อเมนูที่ถูกต้องก่อน ห้ามเดา/ห้ามสั่งแทน',
+      }
+    }
+    // R27: ลิงก์ตะกร้าสรุป (ระบบเป็นคนเขียน) — กดเปิดบนเว็บ เช็คเอาท์/เพิ่มเมนูต่อได้เอง
+    const cartFooter = buildCartSummaryFooter(m.matched)
+    const summaryNames = m.matched.map((i) => i.name + ' x' + i.quantity).join(', ')
+
+    // คอมเมนต์สาธารณะ: ไม่สร้างออเดอร์เอง/ไม่เปิดเผยข้อมูลส่วนตัว (§5.1 คงเดิม) — สรุป + ลิงก์เท่านั้น
+    if (mode === 'comment') {
+      return {
+        footer: cartFooter,
+        note: 'ลูกค้าสั่งในคอมเมนต์สาธารณะ — สรุปรายการให้ดูสั้น ๆ (รายการจากลูกค้า: ' + summaryNames + ') ' +
+          'แล้วอ้างถึงลิงก์ตะกร้าในท้ายข้อความจากระบบ เพื่อให้กดเปิดบนเว็บ เช็คเอาท์หรือเพิ่มเมนูต่อได้เอง ' +
+          'ห้ามเปิดเผยข้อมูลส่วนตัวในคอมเมนต์',
+      }
+    }
+    if (!x.confirmed) {
+      return {
+        footer: cartFooter,
+        note: 'รายการยังไม่ได้รับการยืนยัน (' + (x.unclear || 'ข้อมูลไม่ครบ') + ') — ให้ถามยืนยันเมนู/จำนวน/รายละเอียดกับลูกค้า ห้ามสั่งแทนลูกค้า ห้ามพูดว่ารับออเดอร์แล้ว' +
+          ' · ลิงก์ตะกร้าสรุปท้ายข้อความจากระบบ = เปิดดูรายการ เช็คเอาท์ หรือเพิ่มเมนูต่อได้เองบนเว็บ — ให้กล่าวถึงด้วย',
       }
     }
     // Identity (046 customer_channel_identities — ใช้ร่วมกับ channel-webhook; ไม่เดาว่าเป็นลูกค้าคนเดียวกัน §5)
@@ -418,10 +435,11 @@ async function runOrderIntake(ev: SocialEventRow, userMsg: string): Promise<{ fo
     const line = buildIntakeLine(res)
     usage(ev.event_id, 'social_reply_draft', '-', res.ok ? 'intake_created' : 'intake_failed', { duplicate: !!res.duplicate })
     return {
-      footer: line.text,
+      // R27: บันทึกไม่สำเร็จ → ต่อท้ายลิงก์ตะกร้าสรุปด้วย (เปิดดู/เช็คเอาท์/เพิ่มเมนูต่อบนเว็บได้เอง)
+      footer: res.ok ? line.text : line.text + '\n' + cartFooter,
       note: res.ok
         ? 'ระบบบันทึกรายการแล้ว (ดูเลขที่ในบรรทัดท้ายข้อความจากระบบ) — รอบ: ' + round.label + ' วันที่ ' + targetDate + ' — ให้ลูกค้าตรวจรายการและชำระเงินผ่านลิงก์ ห้ามพูดว่าชำระเงินสำเร็จ ห้ามแต่งเลขที่ออเดอร์เอง'
-        : 'ระบบยังไม่ได้บันทึกรายการ — ห้ามพูดว่ารับออเดอร์สำเร็จ ให้ชวนลูกค้าสั่งต่อผ่านหน้าร้าน biteme-baby.com/checkout',
+        : 'ระบบยังไม่ได้บันทึกรายการ — ห้ามพูดว่ารับออเดอร์สำเร็จ ให้ชวนลูกค้าสั่งต่อผ่านหน้าร้าน biteme-baby.com/checkout · ลิงก์ตะกร้าท้ายข้อความจากระบบใช้เปิดดู/เช็คเอาท์/เพิ่มเมนูต่อได้เอง — ให้กล่าวถึงด้วย',
     }
   } catch {
     return { footer: '', note: 'intake error — ห้ามพูดว่ารับออเดอร์สำเร็จ ให้ชวนสั่งต่อผ่านหน้าร้าน biteme-baby.com/checkout' }
@@ -500,13 +518,11 @@ async function processEvent(ev: SocialEventRow): Promise<{ id: string; result: s
   let intakeFooter = ''
   let intakeNote = ''
   if (classification.intent === 'order_request') {
-    if (ev.event_type === 'message') {
-      const intake = await runOrderIntake(ev, userMsg)
-      intakeFooter = intake.footer
-      intakeNote = intake.note
-    } else {
-      intakeNote = 'ลูกค้าสนใจสั่งอาหารในคอมเมนต์สาธารณะ — ให้ตอบเชิญทักข้อความ (Inbox) หรือเปิดหน้าร้าน biteme-baby.com/shop เพื่อยืนยันรายการ ห้ามเปิดเผยรายละเอียดรายการ/ราคา/ข้อมูลส่วนตัวในคอมเมนต์สาธารณะ'
-    }
+    // R27: ทั้งคอมเมนต์และข้อความ — สรุปรายการได้ + แนบลิงก์ตะกร้าพร้อมเช็คเอาท์
+    // (คอมเมนต์สาธารณะ = extract+match เฉย ๆ ไม่สร้างออเดอร์เอง — §5.1 คงเดิม)
+    const intake = await runOrderIntake(ev, userMsg, ev.event_type === 'message' ? 'message' : 'comment')
+    intakeFooter = intake.footer
+    intakeNote = intake.note
   }
 
   // --- Task 2: social_reply_draft (persona by surface: Messenger = น้อง Bite

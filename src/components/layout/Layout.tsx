@@ -11,6 +11,7 @@ import { AmbientMusicToggle } from '../audio/AmbientMusicToggle'
 import { useCartStore } from '@/store/cartStore'
 import { referralCodeFromSearch } from '@/lib/referralClient'
 import { affiliateCodeFromSearch, saveAffiliateClaimCode } from '@/lib/engagementClient'
+import { readCartParam } from '@/lib/cartDeepLink'
 import { showToast } from '../ui/ToastContainer'
 
 interface LayoutProps {
@@ -59,6 +60,52 @@ export function Layout({ children, hideBottomNav = false, activeSection = 'home'
       url.searchParams.delete('aff')
       window.history.replaceState(null, '', url.pathname + url.search + url.hash)
     } catch { /* URL แปลก ๆ = ปล่อยตามเดิม */ }
+  }, [])
+
+  // [R27 · Owner 2026-10-30] Deep-link ตะกร้าจากโซเชียล: /shop?cart=<b64url>
+  // → รอ persistence hydration ให้เสร็จ (กัน restore ทับ) → เติมรายการลงตะกร้า
+  // → เปิดแผงตะกร้าให้เช็คเอาท์ต่อหรือเพิ่มเมนูเอง · strip พารามิเตอร์ทันที (กัน reload ซ้ำ)
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const raw = new URLSearchParams(window.location.search).get('cart')
+    if (!raw) return
+    try {
+      const url = new URL(window.location.href)
+      url.searchParams.delete('cart')
+      window.history.replaceState(null, '', url.pathname + url.search + url.hash)
+    } catch { /* URL แปลก ๆ = ปล่อยตามเดิม */ }
+    const items = readCartParam(raw)
+    if (!items || items.length === 0) return
+    let cancelled = false
+    void (async () => {
+      try {
+        const t0 = Date.now()
+        while (!useCartStore.getState().isHydrated && Date.now() - t0 < 4000) {
+          await new Promise((r) => setTimeout(r, 100))
+        }
+        const { getProducts } = await import('@/lib/bmbAdminApi_products')
+        const catalog = await getProducts()
+        const byId = new Map(catalog.map((p) => [p.id, p]))
+        let added = 0
+        let missing = 0
+        for (const it of items) {
+          const p = byId.get(it.id)
+          if (!p || (p as { is_available?: boolean }).is_available === false) { missing++; continue }
+          const res = useCartStore.getState().addItem(p, it.q, {}, 'SAME_DAY')
+          if (res === 'added') added++
+        }
+        if (cancelled) return
+        if (added > 0) {
+          showToast('เปิดรายการที่สรุปไว้ให้แล้ว 🛒 ' + added + ' รายการ — เช็คเอาท์หรือเพิ่มเมนูต่อได้เลย', 'success')
+          useCartStore.getState().setCheckoutOpen(true)
+        } else if (missing > 0) {
+          showToast('รายการจากลิงก์หาไม่เจอในเมนูปัจจุบัน — เลือกเมนูใหม่ได้ที่หน้าร้าน', 'warning')
+        }
+      } catch {
+        if (!cancelled) showToast('เปิดรายการจากลิงก์ไม่สำเร็จ — สั่งใหม่ได้ที่หน้าร้าน', 'warning')
+      }
+    })()
+    return () => { cancelled = true }
   }, [])
 
   // Header hide-on-scroll — listen on the ACTUAL scroll container (`main` has

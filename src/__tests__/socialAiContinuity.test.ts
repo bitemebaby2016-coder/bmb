@@ -18,6 +18,7 @@ import webhookSrc from '../../supabase/functions/channel-webhook/index.ts?raw'
 import postWorkerSrc from '../../supabase/functions/social-post-worker/index.ts?raw'
 import proxySrc from '../../supabase/functions/ai-proxy/index.ts?raw'
 import shopCtxSrc from '../../supabase/functions/_shared/shopContext.ts?raw'
+import intakeSharedSrc from '../../supabase/functions/_shared/socialOrderIntake.ts?raw'
 import talkToBiteSrc from '../components/ai/TalkToBite.tsx?raw'
 import footerSrc from '../components/layout/Footer.tsx?raw'
 import adminSettingsSrc from '../pages/admin/AdminSettings.tsx?raw'
@@ -138,5 +139,27 @@ describe('FAQ — typo ไทยชุดเดิมต้องหมดไป
         expect(item.a, `a มี "${bad}"`).not.toContain(bad)
       }
     }
+  })
+})
+
+describe('R27 — บริบท+ลิงก์ตะกร้า (Owner: ปรับจาก bite ฝั่งเดียว · สรุปออเดอร์แนบลิงก์)', () => {
+  it('persona EF mirror เต็มชุดเท่า web bitePersona (ต่างจังหวัด/มุก) + กติกาชวนสั่งต่อท้ายทุกคำตอบ', () => {
+    expect(shopCtxSrc).toMatch(/ต่างจังหวัด/)
+    expect(shopCtxSrc).toMatch(/เล่นมุก/)
+    expect(shopCtxSrc).toMatch(/ปิดท้ายทุกคำตอบด้วยคำชวน/)
+    expect(shopCtxSrc).toMatch(/biteme-baby\.com\/shop/)
+    expect(shopCtxSrc).toMatch(/ห้ามใช้ "ค่ะ"/)
+    expect(personaSrc).toMatch(/ต่างจังหวัด/)
+  })
+  it('worker: ลิงก์ตะกร้าจากระบบ + แยก mode message/comment (คอมเมนต์ไม่สร้างออเดอร์เอง)', () => {
+    expect(workerSrc).toMatch(/buildCartSummaryFooter/)
+    expect(workerSrc).toMatch(/'message' \| 'comment'/)
+    expect(workerSrc).toMatch(/mode === 'comment'/)
+    expect(workerSrc).toMatch(/runOrderIntake\(ev, userMsg, ev\.event_type/)
+  })
+  it('shared intake: buildCartLink → /shop?cart= (payload v1 b64url — web ถอดได้)', () => {
+    expect(intakeSharedSrc).toMatch(/shop\?cart=/)
+    expect(intakeSharedSrc).toMatch(/buildCartSummaryFooter/)
+    expect(intakeSharedSrc).toMatch(/JSON\.stringify\(\{ v: 1, items: clean \}\)/)
   })
 })

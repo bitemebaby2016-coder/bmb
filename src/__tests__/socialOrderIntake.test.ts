@@ -141,9 +141,11 @@ describe('shared intake = CREATE-ONLY + idempotent (source contract)', () => {
 })
 
 describe('worker wiring — intake เฉพาะช่องทางส่วนตัว + ไม่เงียบ (§4/§5)', () => {
-  it('สร้างออเดอร์เฉพาะ event_type === message (comment สาธารณะ = ชวนเข้าช่องทางส่วนตัว)', () => {
+  it('สร้างออเดอร์เฉพาะ event_type === message — comment = สรุป+ลิงก์ตะกร้า ไม่สร้างเอง ไม่เปิดเผยส่วนตัว (R27 ปรับตาม Owner)', () => {
     expect(workerSrc).toMatch(/ev\.event_type === 'message'/)
-    expect(workerSrc).toMatch(/ห้ามเปิดเผยรายละเอียดรายการ/)
+    expect(workerSrc).toMatch(/mode === 'comment'/)
+    expect(workerSrc).toMatch(/ห้ามเปิดเผยข้อมูลส่วนตัวในคอมเมนต์/)
+    expect(workerSrc).toMatch(/buildCartSummaryFooter/)
   })
   it('มี fallback เมื่อ draft พังแต่ระบบมีผลจริงแล้ว — ไม่เงียบหาย', () => {
     expect(workerSrc).toMatch(/fallbackIntakeReply/)

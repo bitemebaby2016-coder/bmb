@@ -3,9 +3,11 @@
 // เครื่องพิมพ์ทุกตัวที่ OS มองเห็น; ESC/POS raw adapter = แผนระยะถัดไป (ดู docs).
 import { useState, useEffect } from 'react'
 import { showToast } from '@/components/ui/ToastContainer'
-import { loadPrinterSettings, savePrinterSettings, PrinterSettings, DEFAULT_PRINTER_SETTINGS, createPrinterDef, upsertPrinter, removePrinter, assignPrinter, describePrinterTarget, PRINTER_MODEL_LABELS, PRINTER_MODEL_DEFAULT_WIDTH, type PrinterModel, printHtmlInHiddenFrame } from '@/lib/printService'
+import { loadPrinterSettings, savePrinterSettings, PrinterSettings, DEFAULT_PRINTER_SETTINGS, createPrinterDef, upsertPrinter, removePrinter, assignPrinter, describePrinterTarget, PRINTER_MODEL_LABELS, PRINTER_MODEL_DEFAULT_WIDTH, type PrinterModel, printHtmlInHiddenFrame, buildBmbStickerHtml, type PrintOrderData } from '@/lib/printService'
+import { describeQzError, qzConnect, qzPrintHtml } from '@/lib/qzTray'
 // R25: ไม่มี local flag — ทุกปุ่มทดสอบยิงผ่าน printHtmlInHiddenFrame (guard กลาง + afterprint cleanup ใน printService)
 // (เดิม: popup window.open + win.print() = popup ค้างหลัง Cancel + testPrintRole ไม่มี guard → ซ้อนได้)
+// R27: เพิ่ม QZ Tray transport + เทมเพลตสติกเกอร์ BMB 40×60 (ใบเสร็จ+ครัว = ใบเดียวกัน)
 
 export function AdminPrintSettings() {
   const [settings, setSettings] = useState<PrinterSettings>(DEFAULT_PRINTER_SETTINGS)
@@ -16,6 +18,9 @@ export function AdminPrintSettings() {
   const [draftModel, setDraftModel] = useState<PrinterModel>('nimbot_b1pro')
   const [draftWidth, setDraftWidth] = useState<number>(PRINTER_MODEL_DEFAULT_WIDTH.nimbot_b1pro)
   const [draftLocation, setDraftLocation] = useState('')
+  // R27: QZ Tray — สถานะเชื่อมต่อ/รายชื่อเครื่องจาก QZ (ไม่พึ่งไดรเวอร์ Windows)
+  const [qzPrinters, setQzPrinters] = useState<string[] | null>(null)
+  const [qzBusy, setQzBusy] = useState(false)
 
   useEffect(() => {
     void (async () => {
@@ -31,30 +36,62 @@ export function AdminPrintSettings() {
     showToast(ok ? 'บันทึกตั้งค่าเครื่องพิมพ์แล้ว' : 'บันทึกไม่สำเร็จ', ok ? 'success' : 'error')
   }
 
-  /** R23: เพิ่มเติม — ปุ่มทดสอบจาก dropdown (เลือกเครื่องพิมพ์จาก OS ก่อนกด) */
-  function testPrintFromDropdown() {
-    const html = `<!doctype html><html lang="th"><head><meta charset="utf-8"><title>Test</title>
-      <style>body{font-family:'Sarabun',sans-serif;font-size:12px;width:72mm;margin:4mm}</style></head>
-      <body><h1 style="text-align:center">ทดสอบเครื่องพิมพ์</h1>
-      <p>เครื่องที่ระบบผูก: ${describePrinterTarget(settings, 'receipt')}</p></body></html>`
+  /** R23: เพิ่มเติม — ปุ่มทดสอบจาก dropdown (R27: ยิงเทมเพลตสติกเกอร์ BMB ผ่าน frame กลาง) */
+  async function testPrintFromDropdown() {
+    const html = await buildBmbStickerHtml(sampleSticker())
     const r = printHtmlInHiddenFrame(html)
     if (r === 'failed') { showToast('มี dialog พิมพ์เปิดอยู่ (หรือเปิดไม่สำเร็จ) — ปิดก่อนแล้วลองใหม่', 'warning'); return }
-    showToast('เปิด dialog แล้ว — เลือกได้เฉพาะเครื่องที่ Windows รู้จัก (Nimbot ต้องลงไดรเวอร์ก่อน ดูกล่องวิธีใช้ด้านล่าง)', 'info')
+    showToast('เปิด dialog แล้ว — เลือกได้เฉพาะเครื่องที่ Windows รู้จัก หรือเปิดใช้ QZ Tray ด้านล่างถ้า Nimbot ไม่มีไดรเวอร์ (ดูกล่องวิธีใช้)', 'info')
   }
 
-  function testPrint() {
-    const html = `<!doctype html><html lang="th"><head><meta charset="utf-8"><title>Test Print</title>
-      <style>body{font-family:'Sarabun','Tahoma',sans-serif;font-size:12px;width:${settings.paperWidthMm}mm;margin:4mm}
-      h1{font-size:15px;text-align:center}hr{border:none;border-top:1px dashed #000;margin:6px 0}</style></head><body>
-      <h1>Bite Me Baby</h1><div style="text-align:center">ทดสอบเครื่องพิมพ์ / Test Print</div><hr>
-      <div>ความกว้างกระดาษ: ${settings.paperWidthMm} มม.</div>
-      <div>เครื่องพิมพ์ใบเสร็จ: ${settings.receiptPrinterName || '(ค่าเริ่มต้นของระบบ)'}</div>
-      <div>เครื่องพิมพ์คิวครัว: ${settings.kitchenPrinterName || '(ค่าเริ่มต้นของระบบ)'}</div><hr>
-      <div style="text-align:center">ไทย: ทดสอบตัวอักษรไทย — ฿123.45</div>
-      </body></html>`
+  /** ตัวอย่างสติกเกอร์ทดสอบ — อ่านค่าจากแบบฟอร์มเดียวกับตอนพิมพ์จริง (buildPrintOrderData) */
+  function sampleSticker(): PrintOrderData {
+    return {
+      order_number: 'TEST-STICKER',
+      created_at: new Date().toISOString(),
+      customer_name: 'ทดสอบเครื่องพิมพ์',
+      customer_phone: '08x-xxx-xxxx',
+      items: [{ product_name: 'เมนูตัวอย่าง', quantity: 1, unit_price: 0, special_request: 'ไม่เผ็ด' }],
+      total_amount: 0,
+      special_instructions: 'ทดสอบพิมพ์สติกเกอร์ 40x60',
+    }
+  }
+
+  /** R27: เชื่อมต่อ QZ Tray (qz.websocket.connect → พอร์ตในเครื่อง) แล้วดึงรายชื่อเครื่องพิมพ์ */
+  async function handleConnectQz() {
+    setQzBusy(true)
+    try {
+      const names = await qzConnect()
+      setQzPrinters(names)
+      if (names.length > 0) showToast(`เชื่อมต่อ QZ แล้ว — เจอ ${names.length} เครื่องพิมพ์`, 'success')
+      else showToast('เชื่อมต่อ QZ แล้วแต่ไม่เจอเครื่องพิมพ์ — เพิ่มเครื่องใน Windows/QZ ให้ขึ้นในรายการก่อน', 'warning')
+    } catch (e) {
+      showToast(describeQzError(e), 'error')
+    } finally {
+      setQzBusy(false)
+    }
+  }
+
+  /** R27: พิมพ์สติกเกอร์ตัวอย่างเงียบ ๆ ผ่าน QZ (resolve = ส่งงานแล้ว ไม่ใช่คำว่าปริ้นสำเร็จ) */
+  async function handleTestStickerQz() {
+    if (!settings.qzPrinterName) { showToast('เลือกเครื่องพิมพ์จาก QZ ก่อน แล้วกดบันทึก', 'warning'); return }
+    setQzBusy(true)
+    try {
+      const html = await buildBmbStickerHtml(sampleSticker())
+      await qzPrintHtml(settings.qzPrinterName, html, { widthMm: 40, heightMm: 60, jobName: 'test-sticker' })
+      showToast(`ส่งสติกเกอร์ทดสอบเข้า QZ → "${settings.qzPrinterName}" แล้ว (sent = ส่งงานเข้าคิว ยังไม่ใช่ยืนยันปริ้นสำเร็จ)`, 'success')
+    } catch (e) {
+      showToast(describeQzError(e), 'error')
+    } finally {
+      setQzBusy(false)
+    }
+  }
+
+  async function testPrint() {
+    const html = await buildBmbStickerHtml(sampleSticker())
     const r = printHtmlInHiddenFrame(html)
     if (r === 'failed') { showToast('มี dialog พิมพ์เปิดอยู่ (หรือเปิดไม่สำเร็จ) — ปิดก่อนแล้วลองใหม่', 'warning'); return }
-    showToast('เปิดคำสั่งพิมพ์ทดสอบแล้ว — กด Cancel ใน dialog = หยุดจริง (ไม่มีงานซ้อน) · สถานะ "sent" ไม่ได้หมายถึงพิมพ์สำเร็จ', 'info')
+    showToast('เปิดคำสั่งพิมพ์ทดสอบ (เทมเพลตสติกเกอร์ BMB) — กด Cancel = หยุดจริง (ไม่มีงานซ้อน) · สถานะ "sent" ไม่ได้หมายถึงพิมพ์สำเร็จ', 'info')
   }
 
   function handleAddPrinter() {
@@ -72,20 +109,13 @@ export function AdminPrintSettings() {
     showToast('ลบออกจากรายชื่อแล้ว (กดบันทึกเพื่อบันทึกลงระบบ)', 'info')
   }
 
-  /** ทดสอบพิมพ์จาก "เครื่องที่ผูกกับบทบาท" — ใช้เทมเพลตใบเสร็จจริงของระบบ (R25: ผ่าน frame กลาง = มี guard + Cancel หยุดจริง) */
-  function testPrintRole(role: 'receipt' | 'kitchen') {
+  async function testPrintRole(role: 'receipt' | 'kitchen') {
     const target = describePrinterTarget(settings, role)
-    const html = `<!doctype html><html lang="th"><head><meta charset="utf-8"><title>Test Print</title>
-      <style>body{font-family:'Sarabun','Tahoma',sans-serif;font-size:12px;width:${role === 'receipt' ? settings.paperWidthMm : 58}mm;margin:4mm}
-      h1{font-size:15px;text-align:center}hr{border:none;border-top:1px dashed #000;margin:6px 0}</style></head><body>
-      <h1>Bite Me Baby</h1><div style="text-align:center">ทดสอบเครื่องพิมพ์ (${role === 'receipt' ? 'ใบเสร็จ' : 'คิวครัว'})</div><hr>
-      <div>เครื่องที่ระบบผูกไว้: ${target}</div>
-      <div>ความกว้างกระดาษ: ${settings.paperWidthMm} มม.</div>
-      <div style="text-align:center">ไทย: ทดสอบตัวอักษรไทย — ฿123.45</div>
-      </body></html>`
+    // R27: ทดสอบ = เทมเพลตสติกเกอร์ BMB จริง (ใบเสร็จ/ครัว = ใบเดียวกัน)
+    const html = await buildBmbStickerHtml(sampleSticker())
     const r = printHtmlInHiddenFrame(html)
     if (r === 'failed') { showToast('มี dialog พิมพ์เปิดอยู่ (หรือเปิดไม่สำเร็จ) — ปิดก่อนแล้วลองใหม่', 'warning'); return }
-    showToast(`ส่งคำสั่งพิมพ์ไปที่ "${target}" — กด Cancel = หยุดจริง (ไม่มีงานซ้อน) · สถานะ "sent" ไม่ได้หมายถึงพิมพ์สำเร็จ`, 'info')
+    showToast(`ส่งสติกเกอร์ทดสอบไปที่ "${target}" — กด Cancel = หยุดจริง (ไม่มีงานซ้อน) · สถานะ "sent" ไม่ได้หมายถึงพิมพ์สำเร็จ`, 'info')
   }
 
   if (!loaded) return <p className="text-brand-muted">กำลังโหลดตั้งค่า...</p>
@@ -129,7 +159,7 @@ export function AdminPrintSettings() {
                 <div className="font-medium">{p.label}{!p.active && <span className="text-xs text-brand-muted"> (ปิดใช้งาน)</span>}</div>
                 <div className="text-xs text-brand-muted">{PRINTER_MODEL_LABELS[p.model]} · {p.paperWidthMm} มม.{p.location ? ` · ${p.location}` : ''}</div>
               </div>
-              <button className="btn btn-outline btn-sm" onClick={() => testPrintRole(settings.receiptPrinterId === p.id ? 'receipt' : 'kitchen')}>ทดสอบ</button>
+              <button className="btn btn-outline btn-sm" onClick={() => void testPrintRole(settings.receiptPrinterId === p.id ? 'receipt' : 'kitchen')}>ทดสอบ</button>
               <button className="btn btn-outline btn-sm text-red-500" onClick={() => handleRemovePrinter(p.id)}>ลบ</button>
             </div>
           ))}
@@ -179,25 +209,54 @@ export function AdminPrintSettings() {
             </div>
           </div>
           <div className="flex flex-wrap gap-2">
-            <button className="btn btn-outline" onClick={() => testPrintRole('receipt')}>ทดสอบใบเสร็จ</button>
-            <button className="btn btn-outline" onClick={() => testPrintRole('kitchen')}>ทดสอบใบสั่งครัว</button>
+            <button className="btn btn-outline" onClick={() => void testPrintRole('receipt')}>ทดสอบใบเสร็จ</button>
+            <button className="btn btn-outline" onClick={() => void testPrintRole('kitchen')}>ทดสอบใบสั่งครัว</button>
+          </div>
+          {/* R27 (Owner): QZ Tray — ทางพิมพ์สติกเกอร์ไม่พึ่งไดรเวอร์ Windows (Nimbot B1Pro มีไดรเวอร์แค่ Win7) */}
+          <div className="border-t border-brand-border pt-3 space-y-2" data-testid="qz-tray-panel">
+            <h2 className="font-bold text-brand-accent">🔗 QZ Tray (ตัวกลางพิมพ์สติกเกอร์ 40×60)</h2>
+            <p className="text-xs text-brand-muted">ใบเสร็จ + ใบสั่งครัว = <b>สติกเกอร์แบบฟอร์มเดียวกัน</b> (เทมเพลต BMB 40×60) · QZ Tray เชื่อมผ่านพอร์ตในเครื่อง ไม่ต้องง้อไดรเวอร์ของ Windows — ต้องเปิดโปรแกรม QZ Tray บนเครื่องที่ต่อเครื่องพิมพ์ไว้ก่อน แล้วกด "เชื่อมต่อ" (ครั้งแรกกด Allow ใน QZ)</p>
+            <label className="flex items-center gap-2 text-sm">
+              <input type="checkbox" checked={settings.qzEnabled ?? false} onChange={(e) => setSettings({ ...settings, qzEnabled: e.target.checked })} />
+              <span>เปิดใช้ QZ Tray เป็นทางพิมพ์หลัก (ปิด = ใช้ dialog เดิมของเบราว์เซอร์/OS เหมือนเคย)</span>
+            </label>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div>
+                <label className="block text-sm font-medium mb-1">เครื่องพิมพ์จาก QZ</label>
+                <select
+                  className="input"
+                  value={settings.qzPrinterName ?? ''}
+                  onChange={(e) => setSettings({ ...settings, qzPrinterName: e.target.value })}
+                  data-testid="qz-printer-select"
+                >
+                  <option value="">(ยังไม่ได้เลือก)</option>
+                  {(qzPrinters ?? (settings.qzPrinterName ? [settings.qzPrinterName] : [])).map((n) => (
+                    <option key={n} value={n}>{n}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="flex items-end gap-2 flex-wrap">
+                <button className="btn btn-outline" disabled={qzBusy} onClick={() => void handleConnectQz()} data-testid="qz-connect">{qzBusy ? '⏳ ...' : 'เชื่อมต่อ & ดึงรายชื่อเครื่อง'}</button>
+                <button className="btn btn-outline" disabled={qzBusy} onClick={() => void handleTestStickerQz()} data-testid="qz-test-sticker">ทดสอบสติกเกอร์ (QZ)</button>
+              </div>
+            </div>
           </div>
           <p className="text-xs text-brand-muted">เครื่องที่ระบบผูกไว้ตอนนี้: ใบเสร็จ = <b>{describePrinterTarget(settings, 'receipt')}</b> · คิวครัว = <b>{describePrinterTarget(settings, 'kitchen')}</b></p>
           <p className="text-xs text-amber-600">💡 ถ้ากดทดสอบแล้วขึ้น <b>"ไม่พบเครื่องพิมพ์"</b> = ต้องเพิ่มเครื่องพิมพ์ด้านบนก่อน แล้วกด "บันทึก"</p>
           <div className="rounded-lg border border-brand-border p-3 text-xs space-y-1" data-testid="print-howto">
             <p className="font-semibold text-brand-accent">📖 วิธีใช้ & เทมเพลต</p>
-            <p>• <b>เทมเพลตใบเสร็จ/ใบสั่งครัวอยู่ที่ <code>src/lib/printService.ts</code></b> — <code>buildReceiptHtml</code> / <code>buildKitchenTicketHtml</code> (+ <code>printCss()</code> กำหนดความกว้างจากค่า <b>{settings.paperWidthMm} มม.</b> ด้านบน) · มี unit test คุมที่ <code>printTemplates.test.ts</code> · ของที่ออกแบบในแอป Nimbot = สำหรับป้ายในแอป Nimbot โดยตรง (คนละระบบกับการพิมพ์จากหน้านี้)</p>
-            <p>• <b>dialog ไม่มีเครื่องให้เลือก?</b> = Windows ยังไม่รู้จักเครื่องพิมพ์ตัวนั้น — ต้องลงไดรเวอร์ Nimbot (USB/Bluetooth) ให้ขึ้นใน "เครื่องพิมพ์และเครื่องสแกน" ของ Windows ก่อน Chrome จะแสดง (Adobe PDF / Save as PDF = ตัวเสมือนล้วน ไม่ใช่เครื่องจริง)</p>
+            <p>• <b>เทมเพลตสติกเกอร์ BMB 40×60 (ใบเสร็จ+ครัวใช้ใบเดียวกัน)</b> — <code>buildBmbStickerHtml</code> ใน <code>src/lib/printService.ts</code> แบบมาจาก Templates-BmB ของ Owner: ป้ายซ้ายฝังตาย ค่าอ่านจากแบบฟอร์มออเดอร์เท่านั้น (หลัง : ) · QR = biteme-baby.com · unit test: <code>bmbSticker.test.ts</code> / <code>printTemplates.test.ts</code></p>
+            <p>• <b>Nimbot ไม่มีไดรเวอร์ Win10?</b> → เปิดใช้ <b>QZ Tray</b> ด้านบน: ลงโปรแกรม QZ Tray → เปิดโปรแกรมค้างไว้ → กด "เชื่อมต่อ & ดึงรายชื่อ" (ครั้งแรกกด Allow ใน QZ) → เลือกเครื่อง → บันทึก → "ทดสอบสติกเกอร์ (QZ)" · ทาง dialog เดิมยังใช้ได้เสมอเมื่อปิดสวิตช์ QZ</p>
             <p>• <b>ลำดับตั้งค่า</b>: เพิ่มเครื่อง → ผูกบทบาท (ใบเสร็จ/ใบสั่งครัว) → สวิตช์ Auto-Print → กดบันทึก → ทดสอบ "ทดสอบใบเสร็จ"/"ทดสอบใบสั่งครัว" → ใบสั่งครัวออโต้ = 1 dialog (ใบเสร็จ+ใบรวมหน้า) ต่อ 1 ออเดอร์</p>
           </div>
         </div>
 
         <div className="flex gap-2">
           <button className="btn btn-primary" disabled={saving} onClick={() => void handleSave()}>{saving ? '⏳ ...' : 'บันทึก'}</button>
-          <button className="btn btn-outline" onClick={testPrint}>ทดสอบพิมพ์</button>
+          <button className="btn btn-outline" onClick={() => void testPrint()}>ทดสอบพิมพ์</button>
         </div>
         <div className="text-xs text-brand-muted space-y-1">
-          <p>• ระบบใช้คำสั่งพิมพ์ของเบราว์เซอร์/OS — รองรับเครื่องพิมพ์ทุกตัวที่ Windows/macOS มองเห็น (USB/LAN/Bluetooth ผ่านไดรเวอร์เครื่องพิมพ์)</p>
+          <p>• ทางพิมพ์ R27: <b>QZ Tray</b> (เปิดสวิตช์ด้านบน) = ส่งงานเงียบ ๆ ผ่านตัวกลาง ไม่พึ่งไดรเวอร์ Windows · ปิดสวิตช์ = คำสั่งพิมพ์ของเบราว์เซอร์/OS เดิม (รองรับเครื่องทุกตัวที่ Windows/macOS มองเห็น)</p>
           <p>• สถานะงานพิมพ์แยกเป็น requested → sent → acknowledged → printed — ระบบจะไม่อ้างว่า "พิมพ์สำเร็จ" จนกว่าจะกดยืนยันเอง</p>
           <p>• ถ้าเครื่องพิมพ์ออฟไลน์: ออเดอร์ยังอยู่ครบ — งานพิมพ์ค้างเป็นสถานะ failed ให้กดพิมพ์ซ้ำภายหลัง</p>
         </div>

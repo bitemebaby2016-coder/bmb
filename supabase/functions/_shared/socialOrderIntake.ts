@@ -345,3 +345,49 @@ export function buildIntakeLine(res: SubmitOrderResult, site = 'https://biteme-b
       `รบกวนสั่งผ่านหน้าร้าน ${site}/checkout เพื่อให้แน่ใจว่าได้รับออเดอร์นะครับ`,
   }
 }
+
+
+// ---------- R27 (Owner 2026-10-30): ลิงก์ตะกร้าสรุป — เปิดบนเว็บ เช็คเอาท์/เพิ่มเมนูต่อ ----------
+// ฝั่งเว็บถอดด้วย src/lib/cartDeepLink.ts (mirror กันเป๊ะ — round-trip test คุมทั้งคู่)
+// payload = b64url(JSON {v:1, items:[{id,q}]}) — ไม่มีราคา/ข้อมูลส่วนตัวในลิงก์
+
+export interface CartSummaryItem {
+  product_id: string
+  quantity: number
+  /** ชื่อเมนูไว้โชว์ในประโยคสรุป (footer) — ไม่ได้ฝังลงลิงก์ */
+  name?: string
+}
+
+export function encodeCartParam(items: Array<{ id: string; q: number }>): string {
+  const clean = items
+    .filter((i) => i && typeof i.id === 'string' && i.id.length > 0)
+    .slice(0, 30)
+    .map((i) => ({ id: i.id, q: Math.max(1, Math.min(50, Math.trunc(Number(i.q)) || 1)) }))
+  if (clean.length === 0) return ''
+  const json = JSON.stringify({ v: 1, items: clean })
+  const bytes = new TextEncoder().encode(json)
+  let bin = ''
+  for (const b of bytes) bin += String.fromCharCode(b)
+  return btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
+}
+
+/** ลิงก์เปิดตะกร้าบนเว็บ — site ลงท้ายด้วย /shop?cart=<b64url> */
+export function buildCartLink(items: CartSummaryItem[], site = 'https://biteme-baby.com'): string {
+  const enc = encodeCartParam(items.map((i) => ({ id: i.product_id, q: i.quantity })))
+  if (!enc) return site + '/shop'
+  return `${site}/shop?cart=${enc}`
+}
+
+/** ประโยคท้ายข้อความที่ "ระบบเป็นคนเขียน" (ไม่ใช่คำแต่งของ AI) — แนบลิงก์ตะกร้าสรุป */
+export function buildCartSummaryFooter(items: CartSummaryItem[], site = 'https://biteme-baby.com'): string {
+  const link = buildCartLink(items, site)
+  const names = items
+    .filter((i) => i.name)
+    .slice(0, 8)
+    .map((i) => `${i.name} x${i.quantity}`)
+    .join(', ')
+  const head = names
+    ? `🛒 สรุปรายการของคุณ (${names}) เปิดดูบนเว็บได้เลยครับ — `
+    : '🛒 สรุปรายการของคุณเปิดดูบนเว็บได้เลยครับ — '
+  return `${head}กดลิงก์นี้เพื่อดูตะกร้า เช็คเอาท์ หรือเพิ่มเมนูต่อได้เลย: ${link}`
+}

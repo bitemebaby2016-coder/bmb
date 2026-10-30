@@ -69,6 +69,11 @@ export interface PrinterSettings {
   printers?: PrinterDef[]
   receiptPrinterId?: string | null
   kitchenPrinterId?: string | null
+  // R27 (Owner 2026-10-30): QZ Tray = ตัวกลางพิมพ์สติกเกอร์ 40×60 ไม่พึ่งไดรเวอร์ Windows
+  // (Nimbot B1Pro มีไดรเวอร์แค่ Win7 → Owner ลง QZ Tray แล้ว เชื่อมผ่านพอร์ตในเครื่อง)
+  qzEnabled?: boolean
+  /** ชื่อเครื่องพิมพ์ตามที่ QZ/OS รายงาน (สติกเกอร์ใบเสร็จ+ครัวใช้เครื่องเดียวกัน) */
+  qzPrinterName?: string
 }
 
 /** โมเดลที่ระบบมี preset ให้ (Nimbot B1Pro = เครื่องที่ร้านใช้อยู่ตอนนี้) */
@@ -109,6 +114,8 @@ export const DEFAULT_PRINTER_SETTINGS: PrinterSettings = {
   printers: [],
   receiptPrinterId: null,
   kitchenPrinterId: null,
+  qzEnabled: false,
+  qzPrinterName: '',
 }
 
 export function escapeHtml(s: unknown): string {
@@ -239,6 +246,87 @@ ${o.special_instructions ? `<hr><div class="item">หมายเหตุรว
 </body></html>`
 }
 
+// ============================================================
+// R27 (Owner 2026-10-30) — เทมเพลตสติกเกอร์ BMB 40×60 (ใบเสร็จ + ครัว = ใบเดียวกัน)
+// ============================================================
+// แบบจากที่ Owner วาดในแอป Nimbot (Templates-BmB · กระดาษ TT40*60-125transparent):
+//   BITE ME BABY · " MORE THAN DELLICIOUS " · เส้นคั่น · Order id / Date / Menu / Notice
+//   · CUSTOMER / Tel. ☎ · QR + SCAN FOR MORE + ข้อความไทย + Thank You for love !
+// "เวลาใช้พิมรายละเอียดเฉพาะหลัง : เท่านั้น" = ป้ายซ้ายฝังตายในเทมเพลต ค่าทางขวา
+// อ่านจากแบบฟอร์มออเดอร์จริง (buildPrintOrderData) — ไม่มีบรรทัดราคาในใบ (รายละเอียด
+// การซื้ออยู่หลัง QR = biteme-baby.com) · QR สร้างฝั่ง client ด้วย qrcode (fallback = URL ตรง)
+export const BMB_STICKER_W_MM = 40
+export const BMB_STICKER_H_MM = 60
+const STICKER_QR_URL = 'https://biteme-baby.com'
+
+export async function buildBmbStickerHtml(o: PrintOrderData): Promise<string> {
+  let qrImg = ''
+  try {
+    const QR = await import('qrcode')
+    qrImg = await QR.toDataURL(STICKER_QR_URL, {
+      margin: 0,
+      width: 240,
+      errorCorrectionLevel: 'M',
+      color: { dark: '#000000', light: '#ffffff' },
+    })
+  } catch { /* offline/พัง = โชว์ URL ตรงในช่อง QR ยังพิมพ์ได้ */ }
+
+  const menuParts = o.items.slice(0, 6).map((it) => {
+    const note = it.special_request ? ` (${escapeHtml(it.special_request)})` : ''
+    return `${escapeHtml(it.product_name)} x${Number(it.quantity)}${note}`
+  })
+  if (o.items.length > 6) menuParts.push('…')
+  const menu = menuParts.length > 0 ? menuParts.join('<br>') : '-'
+  const notice = (o.special_instructions || '').trim() || '-'
+  const date = formatThaiDateTime(o.created_at) || '-'
+  const qrBlock = qrImg
+    ? `<img src="${qrImg}" alt="QR">`
+    : `<div class="ph">${STICKER_QR_URL.replace('https://', '')}</div>`
+
+  return `<!doctype html><html lang="th"><head><meta charset="utf-8"><title>สติกเกอร์ ${escapeHtml(o.order_number)}</title><style>
+  @page { size: ${BMB_STICKER_W_MM}mm ${BMB_STICKER_H_MM}mm; margin: 1.2mm; }
+  * { box-sizing: border-box; }
+  body { margin: 0; width: ${BMB_STICKER_W_MM - 2.4}mm; font-family: 'Tahoma', 'Leelawadee UI', sans-serif; font-size: 8.5px; color: #000; line-height: 1.28; }
+  .brand { text-align: center; font-size: 14px; font-weight: 800; letter-spacing: .4px; margin: 0; }
+  .tag { text-align: center; font-family: Georgia, 'Times New Roman', serif; font-style: italic; font-size: 7.5px; letter-spacing: 1.3px; margin: 1px 0 2px; }
+  hr.rule { border: 0; border-top: 1.3px solid #000; margin: 2.5px 0; }
+  .f { display: block; margin: .7px 0; font-size: 9px; }
+  .menu { font-size: 8.5px; margin: 1px 0 1px 1px; }
+  .cust { margin-top: 2px; font-size: 9.5px; font-weight: 700; }
+  .telrow { margin: 1px 0 0 6mm; font-size: 9.5px; font-weight: 700; }
+  .qrwrap { display: flex; gap: 1.6mm; align-items: center; margin-top: 2px; }
+  .qrwrap img { width: 16.5mm; height: 16.5mm; display: block; }
+  .qrwrap .ph { width: 16.5mm; height: 16.5mm; border: 1px dashed #000; display: flex; align-items: center; justify-content: center; font-size: 6px; text-align: center; word-break: break-all; }
+  .qrtext { flex: 1; text-align: center; }
+  .scan { font-weight: 800; font-size: 10.5px; letter-spacing: .2px; }
+  .qrtext .t { font-size: 7.2px; margin-top: 1px; }
+  .ty { font-family: 'Brush Script MT', Georgia, cursive; font-style: italic; font-size: 9.5px; margin-top: 2px; }
+  </style></head><body>
+  <p class="brand">BITE ME BABY</p>
+  <p class="tag">" MORE THAN DELLICIOUS "</p>
+  <hr class="rule">
+  <span class="f"><b>Order id  :</b> ${escapeHtml(o.order_number)}</span>
+  <span class="f"><b>Date      :</b> ${escapeHtml(date)}</span>
+  <span class="f"><b>Menu      :</b></span>
+  <div class="menu">${menu}</div>
+  <span class="f"><b>Notice    :</b> ${escapeHtml(notice)}</span>
+  <hr class="rule">
+  <div class="cust">CUSTOMER : ${escapeHtml(o.customer_name ?? '-')}</div>
+  <div class="telrow">Tel. ☎ : ${escapeHtml(o.customer_phone ?? '-')}</div>
+  <hr class="rule">
+  <div class="qrwrap">
+    ${qrBlock}
+    <div class="qrtext">
+      <div class="scan">SCAN FOR MORE</div>
+      <div class="t">รายละเอียดการซื้อ</div>
+      <div class="t">สแกนสมาชิกเพื่อสะสมแต้ม</div>
+      <div class="t">รับรางวัลจำนวนมาก</div>
+      <div class="ty">Thank You for love !</div>
+    </div>
+  </div>
+  </body></html>`
+}
+
 // ---------- print execution (browser fallback) ----------
 
 /** Opens a hidden iframe and triggers the browser print dialog. Returns the
@@ -272,6 +360,31 @@ export function printHtmlInHiddenFrame(html: string): 'sent' | 'failed' {
     _printDialogOpen = false
     return 'failed'
   }
+}
+
+// ---------- R27: transport เลือกเอง — QZ Tray (เงียบ ไม่พึ่งไดรเวอร์ Windows) → fallback dialog ----------
+// QZ สำเร็จ = promise resolve (ส่งงานเข้าสปูเลอร์แล้ว = 'sent' ตามเกณฑ์เดิม ไม่โม้ว่าปริ้นจริง)
+// QZ ล้ม = console.warn แล้วตกมาใช้ dialog เดิมของเบราว์เซอร์/OS ต่อ (ของเดิมไม่หาย)
+async function printViaTransport(
+  html: string,
+  settings: PrinterSettings,
+  role: PrinterRole,
+  jobName: string,
+): Promise<'sent' | 'failed'> {
+  if (settings.qzEnabled && settings.qzPrinterName) {
+    try {
+      const qz = await import('./qzTray')
+      await qz.qzPrintHtml(settings.qzPrinterName, html, {
+        widthMm: BMB_STICKER_W_MM,
+        heightMm: BMB_STICKER_H_MM,
+        jobName: jobName || role,
+      })
+      return 'sent'
+    } catch (e) {
+      console.warn('[printViaTransport] QZ failed — fallback to browser dialog:', e)
+    }
+  }
+  return printHtmlInHiddenFrame(html)
 }
 
 // ---------- print_jobs RPC surface ----------
@@ -324,10 +437,11 @@ export async function runAutoPrint(order: PrintOrderData, type: PrintJobType, se
   const jobs = (await fetchPrintJobs(order.order_number)).filter(
     (j) => j.job_type === type && (j.status === 'requested' || j.status === 'failed'),
   )
-  const html = type === 'receipt' ? buildReceiptHtml(order, settings.paperWidthMm) : buildKitchenTicketHtml(order, settings.paperWidthMm)
+  // R27 (Owner): ใบเสร็จ + ใบสั่งครัว = สติกเกอร์ BMB 40×60 แบบฟอร์มเดียวกันทั้งคู่
+  const html = await buildBmbStickerHtml(order)
   const results: Array<{ jobId: string; status: PrintJobStatus }> = []
   for (const job of jobs) {
-    const outcome = printHtmlInHiddenFrame(html)
+    const outcome = await printViaTransport(html, settings, type === 'receipt' ? 'receipt' : 'kitchen', `${type}-${order.order_number}`)
     if (outcome === 'sent') {
       await markPrintJob(job.id, 'sent')
       results.push({ jobId: job.id, status: 'sent' })
@@ -355,8 +469,10 @@ export async function runAutoPrintPair(
     .filter((j) => (j.job_type === 'receipt' && wantReceipt) || (j.job_type === 'kitchen_ticket' && wantKitchen))
     .filter((j) => j.status === 'requested' || j.status === 'failed')
   if (jobs.length === 0) return results
-  const rHtml = wantReceipt ? buildReceiptHtml(order, settings.paperWidthMm) : ''
-  const kHtml = wantKitchen ? buildKitchenTicketHtml(order, settings.paperWidthMm) : ''
+  // R27: ทั้งสองใบ = สติกเกอร์ BMB แบบเดียวกัน (Owner: ใช้สติกเกอร์รวมเดียวกันทั้งใบเสร็จและครัว)
+  const sticker = await buildBmbStickerHtml(order)
+  const rHtml = wantReceipt ? sticker : ''
+  const kHtml = wantKitchen ? sticker : ''
   const bodyInner = (h: string) => {
     const m = /<body[^>]*>([\s\S]*)<\/body>/i.exec(h)
     return m ? m[1] : h
@@ -365,7 +481,7 @@ export async function runAutoPrintPair(
     rHtml && kHtml
       ? rHtml.replace('</body>', `<div style="page-break-after:always"></div>${bodyInner(kHtml)}</body>`)
       : rHtml || kHtml
-  const outcome = printHtmlInHiddenFrame(combined)
+  const outcome = await printViaTransport(combined, settings, 'receipt', 'pair-' + order.order_number)
   for (const job of jobs) {
     if (outcome === 'sent') {
       await markPrintJob(job.id, 'sent')
@@ -558,8 +674,9 @@ export async function printOrderTicket(
   }
 
   const payload = buildPrintOrderData(order)
-  const html = type === 'receipt' ? buildReceiptHtml(payload) : buildKitchenTicketHtml(payload)
-  const outcome = printHtmlInHiddenFrame(html)
+  // R27 (Owner): ใบเสร็จ + ใบสั่งครัว = สติกเกอร์ BMB 40×60 ใบเดียวกัน (แบบฟอร์มเดียวทั้งสองบทบาท)
+  const html = await buildBmbStickerHtml(payload)
+  const outcome = await printViaTransport(html, settings, type === 'receipt' ? 'receipt' : 'kitchen', `sticker-${order.order_number}`)
 
   if (jobId) {
     if (outcome === 'sent') await markPrintJob(jobId, 'sent')
