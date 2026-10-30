@@ -9,7 +9,7 @@
 >   - ✅ **VERIFIED**: **vitest 80/80 (8 ไฟล์)** (`e2e/r34_vitest_final2.log`) · **eslint 0 error** (`r34_eslint.log`) · build = ดู `r34_build.log`
 >   - 🧪 **test ใหม่/อัปเดต**: stickerPng +4 R34 · bmbSticker stickerSize(faceH)+contract · stickerQueueR31 +faceH · homePopular schedule param · **`r34Contracts.test.ts` ใหม่ 7 ข้อ**
 >   - ⏳ **งาน Owner/รอบถัดไป**: ① พิมพ์ใบวัดฟีด → ใส่ `stickerFaceHPx` → ทดสอบจริง ② e2e auto-print จริง ③ image-gen EF deploy ยังไม่ confirm ④ full vitest = ให้ CI หลัง push
->   - 📦 **HEAD (ยังไม่ commit/push รอบนี้)** — gates = vitest 80/80 + eslint 0 · **Owner: สั่ง commit/push เมื่อพร้อม**
+>   - 📦 **HEAD = `4b2ffda` (push แล้ว · feat R34)** — gates ก่อน push = vitest 80/80 (`e2e/r34_vitest_final2.log`) + eslint 0 + build tsc+vite+PWA OK · **CI = Owner เช็ค Actions ครั้งเดียว** (gh CLI ไม่มีในเครื่อง — ไม่ poll) · HEAD ก่อนรอบนี้ = `5b66e00` (R33)
 >
 > ## 🟢 สถานะก่อนหน้า — ปิดเซสชัน 2026-10-30 (R33 · **ยึดบล็อก R33 นี้ก่อนบล็อก R22 ด้านล่างถ้าข้อความขัดกัน**)
 > - **R33 (Owner: "พรีวิวขึ้นจริงขนาดตรงจริง แต่พิมไม่ตรง และยังพิมข้ามดวง(ฟีดสติกเกอร์ไม่ตรง) รูป2" + "ทบทวนงานค้างทั้งหมด ปิดงานค้างทั้งหมด อัพเดทเอกสารทั้งหมด"):**
