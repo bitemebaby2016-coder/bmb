@@ -271,11 +271,11 @@ export async function buildBmbStickerHtml(o: PrintOrderData): Promise<string> {
     })
   } catch { /* offline/พัง = โชว์ URL ตรงในช่อง QR ยังพิมพ์ได้ */ }
 
-  const menuParts = o.items.slice(0, 6).map((it) => {
+  const menuParts = o.items.slice(0, 3).map((it) => {
     const note = it.special_request ? ` (${escapeHtml(it.special_request)})` : ''
     return `${escapeHtml(it.product_name)} x${Number(it.quantity)}${note}`
   })
-  if (o.items.length > 6) menuParts.push('…')
+  if (o.items.length > 3) menuParts.push('…')
   const menu = menuParts.length > 0 ? menuParts.join('<br>') : '-'
   const notice = (o.special_instructions || '').trim() || '-'
   const date = formatThaiDateTime(o.created_at) || '-'
@@ -284,24 +284,27 @@ export async function buildBmbStickerHtml(o: PrintOrderData): Promise<string> {
     : `<div class="ph">${STICKER_QR_URL.replace('https://', '')}</div>`
 
   return `<!doctype html><html lang="th"><head><meta charset="utf-8"><title>สติกเกอร์ ${escapeHtml(o.order_number)}</title><style>
-  @page { size: ${BMB_STICKER_W_MM}mm ${BMB_STICKER_H_MM}mm; margin: 1.2mm; }
+  @page { size: ${BMB_STICKER_W_MM}mm ${BMB_STICKER_H_MM}mm; margin: 0.8mm; }
   * { box-sizing: border-box; }
-  body { margin: 0; width: ${BMB_STICKER_W_MM - 2.4}mm; font-family: 'Tahoma', 'Leelawadee UI', sans-serif; font-size: 8.5px; color: #000; line-height: 1.28; }
-  .brand { text-align: center; font-size: 14px; font-weight: 800; letter-spacing: .4px; margin: 0; }
-  .tag { text-align: center; font-family: Georgia, 'Times New Roman', serif; font-style: italic; font-size: 7.5px; letter-spacing: 1.3px; margin: 1px 0 2px; }
-  hr.rule { border: 0; border-top: 1.3px solid #000; margin: 2.5px 0; }
-  .f { display: block; margin: .7px 0; font-size: 9px; }
-  .menu { font-size: 8.5px; margin: 1px 0 1px 1px; }
-  .cust { margin-top: 2px; font-size: 9.5px; font-weight: 700; }
-  .telrow { margin: 1px 0 0 6mm; font-size: 9.5px; font-weight: 700; }
-  .qrwrap { display: flex; gap: 1.6mm; align-items: center; margin-top: 2px; }
-  .qrwrap img { width: 16.5mm; height: 16.5mm; display: block; }
-  .qrwrap .ph { width: 16.5mm; height: 16.5mm; border: 1px dashed #000; display: flex; align-items: center; justify-content: center; font-size: 6px; text-align: center; word-break: break-all; }
-  .qrtext { flex: 1; text-align: center; }
-  .scan { font-weight: 800; font-size: 10.5px; letter-spacing: .2px; }
-  .qrtext .t { font-size: 7.2px; margin-top: 1px; }
-  .ty { font-family: 'Brush Script MT', Georgia, cursive; font-style: italic; font-size: 9.5px; margin-top: 2px; }
+  body { margin: 0; font-family: 'Tahoma', 'Leelawadee UI', sans-serif; font-size: 8.2px; color: #000; line-height: 1.22; }
+  /* R28: clamp ต่อสติกเกอร์ 1 ใบ — ของล้น = ตัดทิ้ง ไม่ดันไปหน้า 2 (Owner: ปริ้นออกมาเป็น 2 หน้า) */
+  .sheet { width: 38.4mm; height: 58.4mm; overflow: hidden; }
+  .brand { text-align: center; font-size: 12px; font-weight: 800; letter-spacing: .3px; margin: 0; }
+  .tag { text-align: center; font-family: Georgia, 'Times New Roman', serif; font-style: italic; font-size: 6.5px; letter-spacing: 1px; margin: 1px 0 1.5px; }
+  hr.rule { border: 0; border-top: 1.2px solid #000; margin: 1.5px 0; }
+  .f { display: block; margin: .5px 0; font-size: 8.2px; }
+  .menu { font-size: 7.8px; margin: .5px 0 0 1px; }
+  .cust { margin-top: 1.5px; font-size: 8.6px; font-weight: 700; }
+  .telrow { margin: .5px 0 0 5mm; font-size: 8.6px; font-weight: 700; }
+  .qrwrap { display: flex; gap: 1.2mm; align-items: center; margin-top: 1.5px; }
+  .qrwrap img { width: 12.5mm; height: 12.5mm; display: block; }
+  .qrwrap .ph { width: 12.5mm; height: 12.5mm; border: 1px dashed #000; display: flex; align-items: center; justify-content: center; font-size: 5.5px; text-align: center; word-break: break-all; }
+  .qrtext { flex: 1; text-align: center; min-width: 0; }
+  .scan { font-weight: 800; font-size: 8.5px; letter-spacing: .1px; white-space: nowrap; }
+  .qrtext .t { font-size: 6.2px; line-height: 1.15; margin-top: .5px; }
+  .ty { font-family: 'Brush Script MT', Georgia, cursive; font-style: italic; font-size: 7.5px; margin-top: 1px; }
   </style></head><body>
+  <div class="sheet">
   <p class="brand">BITE ME BABY</p>
   <p class="tag">" MORE THAN DELLICIOUS "</p>
   <hr class="rule">
@@ -323,6 +326,7 @@ export async function buildBmbStickerHtml(o: PrintOrderData): Promise<string> {
       <div class="t">รับรางวัลจำนวนมาก</div>
       <div class="ty">Thank You for love !</div>
     </div>
+  </div>
   </div>
   </body></html>`
 }

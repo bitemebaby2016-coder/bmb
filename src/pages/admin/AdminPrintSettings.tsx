@@ -246,7 +246,8 @@ export function AdminPrintSettings() {
           <div className="rounded-lg border border-brand-border p-3 text-xs space-y-1" data-testid="print-howto">
             <p className="font-semibold text-brand-accent">📖 วิธีใช้ & เทมเพลต</p>
             <p>• <b>เทมเพลตสติกเกอร์ BMB 40×60 (ใบเสร็จ+ครัวใช้ใบเดียวกัน)</b> — <code>buildBmbStickerHtml</code> ใน <code>src/lib/printService.ts</code> แบบมาจาก Templates-BmB ของ Owner: ป้ายซ้ายฝังตาย ค่าอ่านจากแบบฟอร์มออเดอร์เท่านั้น (หลัง : ) · QR = biteme-baby.com · unit test: <code>bmbSticker.test.ts</code> / <code>printTemplates.test.ts</code></p>
-            <p>• <b>Nimbot ไม่มีไดรเวอร์ Win10?</b> → เปิดใช้ <b>QZ Tray</b> ด้านบน: ลงโปรแกรม QZ Tray → เปิดโปรแกรมค้างไว้ → กด "เชื่อมต่อ & ดึงรายชื่อ" (ครั้งแรกกด Allow ใน QZ) → เลือกเครื่อง → บันทึก → "ทดสอบสติกเกอร์ (QZ)" · ทาง dialog เดิมยังใช้ได้เสมอเมื่อปิดสวิตช์ QZ</p>
+            <p>• <b>Nimbot ไม่มีไดรเวอร์ Win10?</b> → เปิดใช้ <b>QZ Tray</b> ด้านบน: ลงโปรแกรม QZ Tray → เปิดโปรแกรมค้างไว้ → กด "เชื่อมต่อ & ดึงรายชื่อ" (ครั้งแรกติ๊ก <b>Remember this decision</b> + Allow ใน QZ) → เลือกเครื่อง → บันทึก → "ทดสอบสติกเกอร์ (QZ)" · ทาง dialog เดิมยังใช้ได้เสมอเมื่อปิดสวิตช์ QZ</p>
+            <p>• <b>คิวพิมพ์ขึ้น Error / พิมพ์ไม่ออก / รีสตารทแล้วยังค้าง?</b> = เช็คไดรเวอร์ของคิวใน "อุปกรณ์และเครื่องพิมพ์": ถ้าคิวเป็น <b>Generic / Text Only</b> → เปลี่ยนมาเลือกคิวที่มีไดรเวอร์จริง (เช่น <code>B1 Pro-I…</code> ที่ติดตั้งมาจาก Nimbot) ใน dropdown ด้านบน · ล้างงานค้าง = คลิกขวาคิว → Cancel All Documents หรือรัน <code>e2e/print_clear_queue.cmd</code> <b>ในฐานะ Administrator</b></p>
             <p>• <b>ลำดับตั้งค่า</b>: เพิ่มเครื่อง → ผูกบทบาท (ใบเสร็จ/ใบสั่งครัว) → สวิตช์ Auto-Print → กดบันทึก → ทดสอบ "ทดสอบใบเสร็จ"/"ทดสอบใบสั่งครัว" → ใบสั่งครัวออโต้ = 1 dialog (ใบเสร็จ+ใบรวมหน้า) ต่อ 1 ออเดอร์</p>
           </div>
         </div>

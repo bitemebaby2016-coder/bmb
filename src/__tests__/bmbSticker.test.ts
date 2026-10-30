@@ -60,6 +60,24 @@ describe('สติกเกอร์ BMB 40×60 — แบบฟอร์มต
     expect(html).toMatch(/data:image\/|biteme-baby\.com/)
   })
 
+  it('R28: ล้น = ตัดในใบ .sheet ไม่ดันหน้า 2 · SCAN FOR MORE ไม่ wrap · เมนูเกิน 3 รายการ = …', async () => {
+    const html = await buildBmbStickerHtml(baseOrder)
+    // clamp ต่อใบ (สูง 58.4mm ใน @page 60mm) — ของล้นถูกตัด ไม่ใช่หน้า 2
+    expect(html).toContain('.sheet')
+    expect(html).toContain('height: 58.4mm')
+    expect(html).toContain('overflow: hidden')
+    expect(html).toContain('white-space: nowrap') // "SCAN FOR MORE" บรรทัดเดียว
+    // เมนู > 3 รายการ → ตัด + …
+    const many = await buildBmbStickerHtml({
+      ...baseOrder,
+      items: Array.from({ length: 8 }, (_, i) => ({ product_name: `เมนู${i + 1}`, quantity: 1, unit_price: 0 })),
+    })
+    expect(many).toContain('เมนู1')
+    expect(many).toContain('เมนู3')
+    expect(many).not.toContain('เมนู4')
+    expect(many).toContain('…')
+  })
+
   it('ทั้งใบเสร็จและใบสั่งครัว = buildBmbStickerHtml ผ่าน printViaTransport (source contract)', () => {
     expect(printSrc).toMatch(/await buildBmbStickerHtml\(payload\)/)
     expect(printSrc).toMatch(/const sticker = await buildBmbStickerHtml\(order\)/)
