@@ -6,7 +6,7 @@
 --   (b) billing_subscriptions — ติดตามงวดบริการรายเดือน/รายปีของร้านพาร์ทเนอร์
 --       (แจ้งเตือนตัดงวด = automation job ถัดไปเมื่อ Owner เปิดใช้ LINE Notify secret)
 -- ADDITIVE ONLY · re-run ปลอดภัย (IF NOT EXISTS ทุกจุด) · ไม่แตะข้อมูลเดิมของ BMB
--- 证据基线: 059 tenants = single tenant 'tenant-bmb-001' · is_tenant_admin_of (106) = authority
+-- หลักฐานอ้างอิง: 059 tenants = single tenant 'tenant-bmb-001' · is_tenant_admin_of (106) = authority
 -- ============================================
 
 BEGIN;

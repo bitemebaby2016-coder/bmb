@@ -58,7 +58,7 @@ describe('requestExternalDispatchFallback — ใช้ registry เดิม ·
     totalWeightKg: 1.5,
   }
 
-  it('ลำดับ优先 = grab → lalamove (ตาม requirement Grab/Lalamove ก่อน)', () => {
+  it('ลำดับความสำคัญ = grab → lalamove (ตาม requirement Grab/Lalamove ก่อน)', () => {
     expect(EXTERNAL_PROVIDER_PRIORITY.slice(0, 2)).toEqual(['grab', 'lalamove'])
   })
 

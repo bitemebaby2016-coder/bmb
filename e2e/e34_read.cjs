@@ -1,4 +1,4 @@
-// e34: 证幂等 dedupe + ดูค่า field ของแถว marketing queue (ใช้เตรียมรีเซ็ตเป็น pending)
+// e34: ยืนยัน idempotency (dedupe) + ดูค่า field ของแถว marketing queue (ใช้เตรียมรีเซ็ตเป็น pending)
 const fs = require('fs')
 const path = require('path')
 const ROOT = path.resolve(__dirname, '..')
