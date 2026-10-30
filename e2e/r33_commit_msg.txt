@@ -1,0 +1,19 @@
+feat(R33): ชดเชยฟีด Bluetooth + ใบวัดฟีด (แก้พิมพ์ไม่ตรง/ข้ามดวง) · ทบทวนงานค้าง + อัปเดตเอกสาร 4 ฉบับ
+
+- FINDING: preview/geometry ถูกแล้ว (Owner ยืนยัน) — ภาพเริ่มพิมพ์ก่อนขอบบนดวง
+  (หัว BITE ME BABY หลุดข้ามใบก่อน · ท้ายใบขาวก่อนร่อง) = registration/ฟีด
+  + registry T40x60 ของไลบรารีเองยังไม่เคยวัด offset บนกระดาษจริง
+- stickerOffsetYPx ใน PrinterSettings (default 0 · clamp -40..300)
+- stickerPageHeight: offset บวก = หน้าเติบโต 709+N (png ↔ SetPageSize ผูกกัน
+  ผ่าน stickerSize() — imageToPacked ห้ามยืดรูปบี้)
+- stickerDrawList(o, offsetY): เลื่อนทุก op + bg เต็มหน้าใหม่ · rasterizeOps ใช้ร่วม
+- calibrationDrawList/renderCalibrationPng: ใบวัดฟีดเส้น 20px + ป้าย px/mm
+  offset คงที่ 0 (ค่า raw) — อ่านเส้นตรงขอบบน = ค่าชดเชย ไม่เดา
+- UI: ช่อง sticker-offset-ypx + ปุ่ม bt-calibration-print + handleBtCalibration
+  + คำอ่านค่า 2 กรณี (เส้น0หายเหนือขอบ=+N · แถบขาวเหนือเส้น0=−N)
+- auto-print (AdminOrders) + test print + batch = ใช้ offset เดียวกันทุกทาง
+- test: stickerPng +7 · bmbSticker += stickerSize · stickerQueueR31 สัญญาใหม่
+  · อัปเดตสัญญาเดิม 2 จุด · target 32/32 · eslint 0 · esbuild 0 · guard 0
+  · vite build 0 · full vitest local = NOT COMPLETED (2 ครั้ง · ให้ CI ตัดสิน)
+- เอกสาร: AI_WORK_STATE (R33 block) · BMB_MASTER_STATUS (R30→R33 + งานค้าง
+  ปิด ①② คง ③④⑤) · HANDOFF_2026-10-30 (§3 ข้อ 0) · PRODUCTION_TEST_PACK (I2)
