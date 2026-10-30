@@ -143,12 +143,15 @@ export function AdminPrintSettings() {
   const [btState, setBtState] = useState<'unknown' | 'printing' | 'done' | 'down'>('unknown')
   const [btErr, setBtErr] = useState('')
   const [btProgress, setBtProgress] = useState('')
+  // R31 (Owner: "ใบว่าง"): โชว์ PNG ที่จะยิงจริงก่อนสั่งพิมพ์ — เห็นขาว = ปัญหาอยู่ที่ render, เห็นตัวอักษร = ปัญหาอยู่ที่เครื่อง/การลงทะเบียน
+  const [btPreview, setBtPreview] = useState('')
 
   async function handleBtTest() {
     setBtBusy(true)
     setBtState('printing')
     setBtErr('')
     setBtProgress('')
+    setBtPreview('')
     try {
       if (!niimbotSupported()) {
         setBtState('down')
@@ -156,6 +159,7 @@ export function AdminPrintSettings() {
         return
       }
       const png = await renderStickerPng(sampleSticker())
+      setBtPreview(png) // เห็นรูปทันที — ตรวจ "มีตัวอักษร?" ก่อนเครื่องเริ่มวิ่ง
       await niimbotPrintSticker(png, (s) => setBtProgress(s))
       setBtState('done')
       showToast('✅ Nimbot ยืนยันงานพิมพ์แล้ว — ตรวจกระดาษได้เลย', 'success')
@@ -200,6 +204,11 @@ export function AdminPrintSettings() {
           <label className="flex items-center gap-2 text-sm">
             <input type="checkbox" checked={settings.autoPrintKitchen} onChange={(e) => setSettings({ ...settings, autoPrintKitchen: e.target.checked })} />
             <span>Auto-Print ใบสั่งครัว</span>
+          </label>
+          {/* R31 (Owner): คิวสติกเกอร์ Bluetooth อัตโนมัติ — 1 ดวง ต่อ 1 ชิ้น ต่อกันหลายใบหลังกดรับออเดอร์ */}
+          <label className="flex items-center gap-2 text-sm">
+            <input type="checkbox" checked={settings.autoPrintStickers ?? true} onChange={(e) => setSettings({ ...settings, autoPrintStickers: e.target.checked })} data-testid="auto-print-stickers" />
+            <span>Auto-Print สติกเกอร์ Bluetooth (1 ดวง/ชิ้น · ทุกช่องทาง)</span>
           </label>
           <span className="text-xs text-brand-muted">(ปิดได้ = พิมพ์เองจากปุ่มในหน้าออเดอร์)</span>
         </div>
@@ -284,7 +293,7 @@ export function AdminPrintSettings() {
                 {qzLastError.includes('Allow') ? ' · ครั้งแรกให้ติ๊ก Remember this decision + Allow ในกล่องของ QZ' : ''}
               </p>
             )}
-            <p className="text-xs text-brand-muted">ใบเสร็จ + ใบสั่งครัว = <b>สติกเกอร์แบบฟอร์มเดียวกัน</b> (เทมเพลต BMB 40×60) · QZ Tray เชื่อมผ่านพอร์ตในเครื่อง ไม่ต้องง้อไดรเวอร์ของ Windows — ต้องเปิดโปรแกรม QZ Tray บนเครื่องที่ต่อเครื่องพิมพ์ไว้ก่อน แล้วกด "เชื่อมต่อ" (ครั้งแรกกด Allow ใน QZ)</p>
+            <p className="text-xs text-brand-muted">ใบเสร็จ + ใบสั่งครัว = <b>สติกเกอร์แบบฟอร์มเดียวกัน</b> (เทมเพลต BMB 40×60) · QZ Tray เชื่อมผ่านพอร์ตในเครื่อง ไม่ต้องง้อไดรเวอร์ของ Windows — ต้องเปิดโปรแกรม QZ Tray บนเครื่องที่ต่อเครื่องพิมพ์ไว้ก่อน แล้วกด "เชื่อมต่อ" (ครั้งแรกกด Allow + ติ๊ก Remember this decision · ใช้หน้าต่างปกติ ไม่ใช่ Incognito = ไม่ถามใหม่ทุกครั้ง)</p>
             <label className="flex items-center gap-2 text-sm">
               <input type="checkbox" checked={settings.qzEnabled ?? false} onChange={(e) => setSettings({ ...settings, qzEnabled: e.target.checked })} />
               <span>เปิดใช้ QZ Tray เป็นทางพิมพ์หลัก (ปิด = ใช้ dialog เดิมของเบราว์เซอร์/OS เหมือนเคย)</span>
@@ -319,10 +328,18 @@ export function AdminPrintSettings() {
                 ● {!niimbotSupported() ? 'เบราว์เซอร์นี้ไม่รองรับ (ใช้ Chrome/Edge)' : btState === 'printing' ? `กำลังส่งเข้าเครื่อง… ${btProgress}` : btState === 'done' ? 'พิมพ์ยืนยันแล้ว ✓' : btState === 'down' ? 'ยังพิมพ์ไม่สำเร็จ' : 'พร้อม — กดปุ่มแล้วเลือก B1 Pro ในกล่อง Windows'}
               </span>
             </div>
+            {/* R31: preview รูปจริงที่จะพิมพ์ — ขาว = render มีปัญหา (แจ้งเรา) · มีตัวอักษร = ดูที่เครื่อง/ม้วนกระดาษ */}
+            {btPreview && (
+              <div className="flex items-center gap-3" data-testid="bt-preview">
+                <img src={btPreview} alt="sticker preview" className="w-28 border border-brand-border rounded" />
+                <p className="text-xs text-brand-muted">รูปจริงที่ส่งเข้าเครื่อง (472×709px = 40×60 มม. @300dpi) — ถ้ารูปนี้ขาวสนิท = แจ้งทีมว่า "preview ว่าง" · ถ้ามีตัวอักษรแต่กระดาษออกขาว = ม้วนกระดาษ/การลงทะเบียน (ม้วนตอนนี้ขนาดเท่าไหร่? 40×60 ใช่ไหม)</p>
+              </div>
+            )}
             {btState === 'down' && btErr && <p className="text-xs text-red-400">{btErr}</p>}
             <div className="flex items-end gap-2 flex-wrap">
               <button className="btn btn-outline" disabled={btBusy} onClick={() => void handleBtTest()} data-testid="bt-test-print">{btBusy ? '⏳ ...' : '🔗 เชื่อม & พิมพ์สติกเกอร์ทดสอบ (Bluetooth)'}</button>
             </div>
+            <p className="text-xs text-brand-muted">🔒 Allow QZ ขึ้นทุกครั้ง? = เพราะเปิดหน้าใน <b>Incognito</b> (ไม่จดจำสิทธิ์) → ใช้หน้าต่างปกติ + ติ๊ก <b>Remember this decision</b> ในกล่อง QZ = ถามครั้งเดียว · Bluetooth ก็เหมือนกัน — จับคู่ครั้งแรกในหน้าปกติจะไม่ถามอีก</p>
           </div>
           <p className="text-xs text-brand-muted">ผูกไว้: ใบเสร็จ = <b>{describePrinterTarget(settings, 'receipt')}</b> · ครัว = <b>{describePrinterTarget(settings, 'kitchen')}</b> — ทดสอบแล้วขึ้น "ไม่พบเครื่องพิมพ์" = เพิ่มเครื่องด้านบนก่อนแล้วกดบันทึก</p>
           <details className="rounded-lg border border-brand-border text-xs" data-testid="print-howto">

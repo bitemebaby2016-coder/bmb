@@ -11,6 +11,9 @@ import {
   loadPrinterSettings, runAutoPrint, printOrderTicket, describePrinterTarget, buildPrintOrderData,
   type PrintJobType,
 } from '@/lib/printService'
+// R31: คิวสติกเกอร์ Bluetooth อัตโนมัติ (1 ดวง/ชิ้น ต่อคิว) + แปล error ไทย
+import { stickerRollForOrder, printStickerRoll, describeStickerRollError } from '@/lib/stickerQueue'
+import { niimbotSupported } from '@/lib/niimbotBt'
 import type { DeliveryAssignmentLiteRow } from '@/lib/bmbAdminApi_orders'
 import { getProductsAdmin } from '@/lib/bmbAdminApi_products'
 import { summarizeOrderProfit, formatBaht, formatPct, type CostInput } from '@/lib/marginCalc'
@@ -226,6 +229,8 @@ export function AdminOrders() {
     // R21: รับออเดอร์แล้ว → พิมพ์ใบสั่งอาหารเข้าครัวอัตโนมัติจากเทมเพลตเดิม
     // (fire-and-forget: การพิมพ์พังไม่มีผลกับออเดอร์ — ออเดอร์ยืนยันแล้ว)
     void autoPrintKitchenTicket(orderNumber)
+    // R31 (Owner): คิวสติกเกอร์ Bluetooth ต่อทันที — 1 ดวง/ชิ้น หลายใบต่อกัน (ทุกช่องทาง = orders กลาง)
+    void autoPrintStickerRoll(orderNumber)
     // [Task 3 · T3-a] เสียงเตือนพร้อมใบสั่งครัว — อยู่ในจังหวะ click (user gesture)
     // จึงไม่ติดนโยบาย autoplay ของเบราว์เซอร์
     playKitchenChime()
@@ -260,6 +265,25 @@ export function AdminOrders() {
       }
     } catch (e) {
       console.warn('[AdminOrders] auto-print failed (order unaffected):', e)
+    }
+  }
+
+  // R31 (Owner 2026-10-30): คิวสติกเกอร์ Bluetooth อัตโนมัติหลังรับออเดอร์ — 1 ดวง/ชิ้น ต่อกันหลายใบ
+  // (เว็บ/โซเชียล/ข้อความ = orders กลางอยู่แล้ว → getOrder ตัวเดิม cover ทุกช่องทาง · fire-and-forget)
+  async function autoPrintStickerRoll(orderNumber: string) {
+    try {
+      const settings = await loadPrinterSettings()
+      if (!settings.autoPrintStickers) return
+      if (!niimbotSupported()) return // ไม่ใช่ Chrome/Edge = ข้ามเงียบ (frame/QZ ยังเป็นทางเดิม)
+      const full = await getOrder(orderNumber)
+      if (!full) return
+      const roll = stickerRollForOrder(buildPrintOrderData(full))
+      showToast(`กำลังพิมพ์สติกเกอร์ ${roll.length} ใบ (Bluetooth ต่อคิว)…`, 'info')
+      await printStickerRoll(roll)
+      showToast(`✅ สติกเกอร์ ${roll.length} ใบ — เครื่องยืนยันครบแล้ว`, 'success')
+    } catch (e) {
+      console.warn('[AdminOrders] auto sticker roll failed (order unaffected):', e)
+      showToast('พิมพ์สติกเกอร์อัตโนมัติไม่สำเร็จ: ' + describeStickerRollError(e), 'warning')
     }
   }
 

@@ -63,6 +63,8 @@ export interface PrinterSettings {
   kitchenPrinterName: string
   autoPrintReceipt: boolean
   autoPrintKitchen: boolean
+  // R31 (Owner 2026-10-30): พิมพ์สติกเกอร์ Bluetooth อัตโนมัติหลังรับออเดอร์ — 1 ดวง ต่อ 1 ชิ้น
+  autoPrintStickers?: boolean
   paperWidthMm: number
   // R21 (Owner 2026-10-29): ทะเบียนเครื่องพิมพ์ที่แอดมินเพิ่ม/เลือกเอง
   // (ชื่อเดิม 2 ฟิลด์ข้างบนยังคงอยู่ = back-compat กับค่าที่บันทึกไว้แล้ว)
@@ -110,6 +112,7 @@ export const DEFAULT_PRINTER_SETTINGS: PrinterSettings = {
   kitchenPrinterName: '',
   autoPrintReceipt: true,
   autoPrintKitchen: true,
+  autoPrintStickers: true,
   paperWidthMm: 80,
   printers: [],
   receiptPrinterId: null,

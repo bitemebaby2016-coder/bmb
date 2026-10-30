@@ -51,6 +51,22 @@ function appendToneInstruction(text: string, tone: string): string {
   }
 }
 
+/** R32 (Owner): แคปชันที่ AI ขัดให้ ห้ามมี "ราคา" ที่ไม่มีในสินค้าจริง — ถ้ามี = ไม่เอา polished ใช้ต้นฉบับแทน
+ *  (pure — test ได้ · จับทั้ง ฿79 / ฿ 79 / 79 บาท ที่ AI อาจแต่งขึ้น) */
+export function pricesAreReal(polished: string, realPrices: Set<number>): boolean {
+  // ไม่มีราคาจริงอ้างอิง = ห้ามมีราคาใด ๆ ใน polished (กัน AI แต่งลอย)
+  if (realPrices.size === 0) return !/฿\s?\d+|\d+\s*บาท/.test(polished)
+  const baht = polished.match(/฿\s?(\d+)/g) || []
+  for (const m of baht) {
+    if (!realPrices.has(Number(m.replace(/[^\d]/g, '')))) return false
+  }
+  const bare = polished.match(/(\d+)\s*บาท/g) || []
+  for (const m of bare) {
+    if (!realPrices.has(Number(m.replace(/[^\d]/g, '')))) return false
+  }
+  return true
+}
+
 export function AdminAiStudio() {
   const [bestSellers, setBestSellers] = useState<any[]>([])
   const [portfolio, setPortfolio] = useState<any[]>([])
@@ -70,7 +86,9 @@ export function AdminAiStudio() {
   useEffect(() => {
     void (async () => {
       const [p, pf, rv] = await Promise.all([
-        supabase.from('products').select('name,price,description').eq('is_featured', true).eq('is_available', true).order('sort_order').limit(5),
+        // R32 (Owner): ใช้ "ข้อมูลจริงจากสินค้าที่แอดมินตั้ง" เสมอ — ไม่ใช่แค่ is_featured
+        // (featured ขึ้นก่อน · ไม่ครบ = เติมสินค้าที่เปิดขายปกติ → แคปชันไม่มีทางว่าง/มั่วเมนูที่ไม่มีจริง)
+        supabase.from('products').select('name,price,description,is_featured').eq('is_available', true).order('is_featured', { ascending: false }).order('sort_order').limit(12),
         supabase.from('admin_portfolio_items').select('title,description,image_url').eq('is_active', true).order('display_order').limit(5),
         supabase.from('reviews').select('rating,comment,product_id,order_number').gte('rating', 4).order('created_at', { ascending: false }).limit(5),
       ])
@@ -114,13 +132,15 @@ export function AdminAiStudio() {
     const local = compose(label)
     const runLabel = TEMPLATES.find((t) => t.key === label)?.label ?? label
     const results: GenItem[] = []
+    // R32: ชุดราคาจริงจากสินค้าที่แอดมินตั้ง — ราคาใหม่ใน polished = ฟันทิ้ง (ใช้ต้นฉบับ)
+    const realPrices = new Set(bestSellers.map((p) => Number(p.price)).filter((n) => Number.isFinite(n)))
     for (const tone of TONES) {
       let text = appendToneInstruction(local, tone.key)
       try {
         const polished = await chatWithAI(
-          `ช่วยเรียบเรียงแคปชันโซเชียลมีเดียนี้ให้น่าสนใจ สั้นกระชับ ไม่เกิน 4 บรรทัด ใช้อีโมจิเล็กน้อย ภาษาไทย และปรับโทนตามคำสั่งสุดท้ายในวงเล็บ ห้ามแต่งข้อมูลราคาหรือเมนูใหม่ที่ไม่มีในต้นฉบับ:\n\n${local}`
+          `ช่วยเรียบเรียงแคปชันโซเชียลมีเดียนี้ให้น่าสนใจ สั้นกระชับ ไม่เกิน 4 บรรทัด ใช้อีโมจิเล็กน้อย ภาษาไทย และปรับโทนตามคำสั่งสุดท้ายในวงเล็บ ห้ามแต่งข้อมูลราคาหรือเมนูใหม่ที่ไม่มีในต้นฉบับ ห้ามเพิ่มราคาที่ไม่ปรากฏในต้นฉบับเด็ดขาด:\n\n${local}`
         )
-        if (polished && polished.length > 10) text = polished
+        if (polished && polished.length > 10 && pricesAreReal(polished, realPrices)) text = polished
       } catch { /* fall back to local template */ }
       results.push({ id: `${Date.now()}-${tone.key}`, text, label: runLabel, tone: tone.key, createdAt: Date.now(), favorite: false })
     }

@@ -15,8 +15,11 @@ const SB_URL = Deno.env.get('SUPABASE_URL') || ''
 const SERVICE = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || ''
 const OPENROUTER_KEY = Deno.env.get('OPENROUTER_API_KEY') || Deno.env.get('BMB_OPENROUTER_API_KEY') || ''
 const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions'
-// โมเดลสร้างภาพ — ตั้งค่าผ่าน env (ห้าม hardcode ในโค้ด logic)
-const IMAGE_MODEL = Deno.env.get('IMAGE_GEN_MODEL') || 'google/gemini-2.5-flash-image-preview'
+// โมเดลสร้างภาพ — env `IMAGE_GEN_MODELS` (comma-separated) · fallback หลายชื่อ
+// R32: โมเดลเดิมชื่อเดียวโดน retiring ของ OpenRouter = ตายทั้งฟีเจอร์ → วนลองทีละชื่อจนมีรูป
+const IMAGE_MODEL_CANDIDATES = (Deno.env.get('IMAGE_GEN_MODELS') || Deno.env.get('IMAGE_GEN_MODEL') ||
+  'google/gemini-2.5-flash-image-preview,google/gemini-2.5-flash-image,google/gemini-2.0-flash-preview-image-generation')
+  .split(',').map((s) => s.trim()).filter(Boolean)
 
 function corsHeaders(): Record<string, string> {
   return {
@@ -90,31 +93,36 @@ if (req.method === 'OPTIONS') return new Response('ok', { status: 200, headers: 
 
   const prompt = KIND_PRESETS[kind](subject, String(body.note || '')) + ' — ' + STYLE_MODIFIERS[style]
 
-  // 1) สร้างภาพผ่าน OpenRouter (modalities image)
+  // 1) สร้างภาพผ่าน OpenRouter (modalities image) — R32: วน candidates จนรูปมา (โมเดลเดี่ยวโดน retire = ฟีเจอร์ดับ)
   let dataUrl = ''
+  let lastErr = ''
   try {
-    const res = await fetch(OPENROUTER_URL, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${OPENROUTER_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: IMAGE_MODEL,
-        modalities: ['image', 'text'],
-        messages: [{ role: 'user', content: prompt }],
-      }),
-    })
-    const j = await res.json().catch(() => null)
-    if (!res.ok || !j) return json({ error: 'ERR_IMAGE_GEN_FAILED', detail: `HTTP ${res.status}` }, 502)
-    const msg = (j as { choices?: Array<{ message?: { images?: Array<{ image?: { url?: string } }>; content?: unknown } }> }).choices?.[0]?.message
-    dataUrl = msg?.images?.[0]?.image?.url || ''
-    if (!dataUrl && Array.isArray(msg?.content)) {
-      for (const part of msg.content as Array<{ type?: string; image_url?: { url?: string } }>) {
-        if (part.type === 'image_url' && part.image_url?.url) { dataUrl = part.image_url.url; break }
+    for (const model of IMAGE_MODEL_CANDIDATES) {
+      const res = await fetch(OPENROUTER_URL, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${OPENROUTER_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model,
+          modalities: ['image', 'text'],
+          messages: [{ role: 'user', content: prompt }],
+        }),
+      })
+      const j = await res.json().catch(() => null)
+      if (!res.ok || !j) { lastErr = `${model} HTTP ${res.status}`; continue }
+      const msg = (j as { choices?: Array<{ message?: { images?: Array<{ image?: { url?: string } }>; content?: unknown } }> }).choices?.[0]?.message
+      let url = msg?.images?.[0]?.image?.url || ''
+      if (!url && Array.isArray(msg?.content)) {
+        for (const part of msg.content as Array<{ type?: string; image_url?: { url?: string } }>) {
+          if (part.type === 'image_url' && part.image_url?.url) { url = part.image_url.url; break }
+        }
       }
+      if (url) { dataUrl = url; break }
+      lastErr = `${model} returned no image`
     }
-    if (!dataUrl) return json({ error: 'ERR_IMAGE_EMPTY', detail: 'model returned no image' }, 502)
+    if (!dataUrl) return json({ error: 'ERR_IMAGE_GEN_FAILED', detail: lastErr || 'no model succeeded' }, 502)
   } catch (e) {
     return json({ error: 'ERR_IMAGE_GEN_FAILED', detail: String(e instanceof Error ? e.message : e).slice(0, 200) }, 502)
   }

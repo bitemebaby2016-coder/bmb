@@ -47,6 +47,8 @@ export function AdminMarketing() {
   const [approvals, setApprovals] = useState<ContentApprovalRow[]>([])
   const [rules, setRules] = useState<MarketingRules | null>(null)
   const [sellers, setSellers] = useState<Array<{ product_id: string; product_name: string; units: number }>>([])
+  // R32 (Owner): Picker เมนู "ทั้งหมด" ใน Planner — แอดมินจิ้มเลือกได้ทั้งพรีออเดอร์และเซมเดย์
+  const [catalog, setCatalog] = useState<Array<{ id: string; name: string; price: number | null; is_preorder?: boolean; available_preorder?: boolean; available_same_day?: boolean }>>([])
   const [loading, setLoading] = useState(true)
 
   const [title, setTitle] = useState('')
@@ -69,10 +71,13 @@ export function AdminMarketing() {
 
   const load = useCallback(async () => {
     setLoading(true)
-    const [p, a, r, s] = await Promise.all([
+    const [p, a, r, s, cat] = await Promise.all([
       listMarketingPosts(), listContentApprovals(), getMarketingRules(), bestSellerProducts(),
+      // R32: เมนูทั้งหมดของร้าน (สินค้าที่แอดมินตั้งจริง — พรีออเดอร์ + เซมเดย์) ใช้ใน picker
+      supabase.from('products').select('id,name,price,is_preorder,available_preorder,available_same_day,is_available').eq('is_available', true).order('sort_order'),
     ])
     setPosts(p); setApprovals(a); setSellers(s)
+    setCatalog((cat.data ?? []) as Array<{ id: string; name: string; price: number | null; is_preorder?: boolean; available_preorder?: boolean; available_same_day?: boolean }>)
     if (r) {
       setRules(r)
       setRuleFreq(r.frequency_per_week)
@@ -167,7 +172,16 @@ export function AdminMarketing() {
         body: { kind: genKind, style: genStyle, subject: genSubject.trim(), note: genNote },
       })
       if (error || !data?.ok) {
-        showToast('สร้างภาพไม่สำเร็จ: ' + (data?.error || error?.message || 'ERR_IMAGE_GEN_FAILED'), 'error')
+        // R32: ดึงรายละเอียดจริงจาก body ของ EF (400/502 detail) — เดิมเห็นแค่ "non-2xx" มองไม่เห็นสาเหตุ
+        let detail = data?.error || error?.message || 'ERR_IMAGE_GEN_FAILED'
+        const ctx = (error as unknown as { context?: Response } | null)?.context
+        if (ctx && typeof ctx.json === 'function') {
+          try {
+            const body = await ctx.json() as { error?: string; detail?: string }
+            if (body?.error || body?.detail) detail = `${body.error ?? ''} ${body.detail ?? ''}`.trim()
+          } catch { /* คง message เดิม */ }
+        }
+        showToast('สร้างภาพไม่สำเร็จ: ' + detail, 'error')
       } else {
         setImages((prev) => [...prev, data.url])
         showToast('สร้างภาพสำเร็จ — แนบกับโพสต์แล้ว (เลือก/ใช้เลย/สร้างใหม่ได้)', 'success')
@@ -248,6 +262,34 @@ export function AdminMarketing() {
                   </li>
                 ))}
               </ul>
+            )}
+          </div>
+          {/* R32 (Owner): จิ้มเลือกจากเมนูทั้งหมด (พรีออเดอร์ + เซมเดย์) — ไม่ใช่แค่สินค้าขายดี */}
+          <div className="card" data-testid="mk-product-picker">
+            <h2 className="font-bold text-brand-accent mb-2">🍽️ เลือกจากเมนูทั้งหมด (พรีออเดอร์ + เซมเดย์)</h2>
+            {catalog.length === 0 ? (
+              <p className="text-sm text-brand-muted">ยังไม่มีสินค้าที่เปิดขาย — เพิ่มในหน้าสินค้าก่อน</p>
+            ) : (
+              <div className="flex flex-wrap gap-2">
+                {catalog.map((p) => {
+                  const preorder = p.is_preorder && !(p.available_same_day ?? false)
+                  return (
+                    <button
+                      key={p.id}
+                      className="btn btn-outline text-xs"
+                      data-testid={`mk-pick-${p.id}`}
+                      onClick={() => {
+                        setTitle(`แนะนำ ${p.name}`)
+                        setBodyText(`วันนี้ขอแนะนำ ${p.name}${p.price != null ? ` ฿${Number(p.price).toFixed(0)}` : ''}`)
+                        setGenSubject(p.name)
+                        setTab('studio')
+                      }}
+                    >
+                      {preorder ? '⏳ ' : '⚡ '}{p.name}{p.price != null ? ` ฿${Number(p.price).toFixed(0)}` : ''} <span className="text-brand-muted">{preorder ? '(พรีออเดอร์)' : '(เซมเดย์)'}</span>
+                    </button>
+                  )
+                })}
+              </div>
             )}
           </div>
           <PostForm title={title} setTitle={setTitle} bodyText={bodyText} setBodyText={setBodyText} contentType={contentType} setContentType={setContentType} images={images} setImages={setImages} saving={saving} onSubmit={() => void handleCreatePost()} />

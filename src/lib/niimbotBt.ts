@@ -45,6 +45,8 @@ interface NiimbotLib {
       onProgress?: (s: string) => void
     },
   ): Promise<void>
+  /** หลาย URL = หลายหน้าใน job เดียว (pipelined — กระดาษวิ่งต่อเนื่อง ไม่หดกลับระหว่างใบ) */
+  printBatch(urls: string[], opts: { model?: NiimbotModel; size?: NiimbotSize; density?: number; onProgress?: (s: string) => void }): Promise<void>
   disconnect(): Promise<void>
   printer?: NiimbotPrinterInfo
   DEBUG?: boolean
@@ -93,6 +95,17 @@ export async function niimbotPrintSticker(pngDataUrl: string, onProgress?: (s: s
     density: 3,
     onProgress,
   })
+}
+
+/** R31: หลายใบต่อคิวใน job เดียว (printBatch = pipelined pages — วิ่งยาวจนครบ แล้ว PrintEnd ทีเดียว) */
+export async function niimbotPrintStickers(pngDataUrls: string[], onProgress?: (s: string) => void): Promise<void> {
+  if (pngDataUrls.length === 0) return
+  const N = await loadNiimbot()
+  if (pngDataUrls.length === 1) {
+    await N.printImage(pngDataUrls[0], { model: B1_PRO_MODEL, size: STICKER_40x60_300DPI, density: 3, onProgress })
+    return
+  }
+  await N.printBatch(pngDataUrls, { model: B1_PRO_MODEL, size: STICKER_40x60_300DPI, density: 3, onProgress })
 }
 
 /** แปล error เป็นคำไทยสั้น ๆ (pure — test ได้) */
