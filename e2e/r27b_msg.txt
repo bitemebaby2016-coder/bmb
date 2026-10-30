@@ -1,1 +1,0 @@
-docs+ops(R27b): master status R27 block · r22 worker deploy จริงแล้ว WRANGLER_EXIT=0 (bmb-tenant-proxy v20bf99d5, 6.42s) — thin .cmd → r22_deploy_worker.cjs (token self-read, CI=true, timeout กันค้าง) + r22_runner detached log · e70 EF social-ai-worker deploy OK · evidence e2e/r22_out.log
