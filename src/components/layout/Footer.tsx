@@ -45,7 +45,7 @@ const staticSections: Array<{ title: string; links: FooterLink[] }> = [
       { label: 'ติดตามออเดอร์', path: '/track' },
       { label: 'โปรโมชั่น', path: '/promotions' },
       { label: 'โปรแกรมความภักดี', path: '/rewards' },
-      { label: 'แชร์เพื่อน รับแต้ม', path: '/viral' },
+      { label: 'ชวนเพื่อน รับคูปอง', path: '/share' },
     ],
   },
 ]
@@ -160,7 +160,12 @@ export function Footer() {
               className="w-10 h-10 rounded-full bg-brand-bg flex items-center justify-center text-xl hover:bg-brand-primary hover:text-white transition-all"
               aria-label={social.label}
             >
-              {social.icon}
+              {/* R34 (Owner): โลโก้จริงจาก public/ (Facebook/LINE) — ไม่มีรูป = ใช้ emoji เดิม */}
+              {social.img ? (
+                <img src={social.img} alt="" loading="lazy" decoding="async" className="w-6 h-6 object-contain" />
+              ) : (
+                social.icon
+              )}
             </a>
           ))}
         </div>

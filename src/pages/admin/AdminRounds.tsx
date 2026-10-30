@@ -42,6 +42,10 @@ export function AdminRounds() {
   const [loadError, setLoadError] = useState('')
   // Q3 (Owner อนุมัติ): "แพทเทิร์น + รอบรายวัน" รวมเป็นแท็บเดียว · archive = แท็บแยก
   const [tab, setTab] = useState<'manage' | 'archived'>('manage')
+  // R34 (Owner): หน้าต่าง 7–14 วัน · วันผ่านไปแล้ว/นอกหน้าต่าง = ซ่อน (กดดูย้อนหลังได้ ไม่ลบข้อมูล — FK ออเดอร์กันอยู่)
+  const [dayWindow, setDayWindow] = useState<7 | 14>(7)
+  const [showPast, setShowPast] = useState(false)
+  const [showBeyond, setShowBeyond] = useState(false)
 
   const loadRounds = useCallback(async () => {
     setLoadError('')
@@ -156,6 +160,21 @@ export function AdminRounds() {
   }
   const dates = [...byDate.keys()].sort()
 
+  // R34 (Owner): หน้าต่าง 7–14 วัน · วันผ่านไปแล้ว/นอกหน้าต่าง = ซ่อน (กดดูย้อนหลังได้ ไม่ลบข้อมูล — FK ออเดอร์กันอยู่)
+  const todayStr = new Date().toISOString().slice(0, 10)
+  const windowEndDate = new Date()
+  windowEndDate.setDate(windowEndDate.getDate() + dayWindow - 1)
+  const windowEnd = windowEndDate.toISOString().slice(0, 10)
+  const isDateKey = (d: string) => /^\d{4}-\d{2}-\d{2}$/.test(d)
+  const pastDates = dates.filter((d) => isDateKey(d) && d < todayStr)
+  const beyondDates = dates.filter((d) => isDateKey(d) && d > windowEnd)
+  const inWindowDates = dates.filter((d) => !isDateKey(d) || (d >= todayStr && d <= windowEnd))
+  const visibleDates = [
+    ...inWindowDates,
+    ...(showPast ? pastDates : []),
+    ...(showBeyond ? beyondDates : []),
+  ]
+
   return (
     <div className="max-w-7xl mx-auto px-4 py-6">
       <div className="flex items-center justify-between mb-6">
@@ -259,9 +278,26 @@ export function AdminRounds() {
       </div>
 
       {/* ---- (2) รอบรายวัน (จัดกลุ่มตามวัน — ไม่ใช่การ์ดซ้ำยาวเหยียด) ---- */}
-      <h2 className="text-xl font-bold text-brand-accent mb-3">📅 รอบรายวัน</h2>
+      <h2 className="text-xl font-bold text-brand-accent mb-3">📅 รอบรายวัน (หน้าต่าง {dayWindow} วัน)</h2>
+      {/* R34: เลือกหน้าต่าง 7/14 วัน + toggle ดูวันผ่าน/นอกหน้าต่าง (ค่าเริ่มต้น = ซ่อน = กระชับ) */}
+      <div className="flex flex-wrap items-center gap-2 mb-3 text-sm" data-testid="rounds-window-bar">
+        <span className="text-brand-muted">แสดง:</span>
+        <button type="button" onClick={() => setDayWindow(7)} className={`btn text-xs ${dayWindow === 7 ? 'btn-primary' : 'btn-outline'}`} data-testid="rounds-window-7">7 วัน</button>
+        <button type="button" onClick={() => setDayWindow(14)} className={`btn text-xs ${dayWindow === 14 ? 'btn-primary' : 'btn-outline'}`} data-testid="rounds-window-14">14 วัน</button>
+        <button type="button" onClick={() => setShowPast((v) => !v)} className="btn btn-outline text-xs" data-testid="rounds-show-past">
+          {showPast ? 'ซ่อน' : 'ดู'} วันที่ผ่านมา ({pastDates.length})
+        </button>
+        {beyondDates.length > 0 && (
+          <button type="button" onClick={() => setShowBeyond((v) => !v)} className="btn btn-outline text-xs" data-testid="rounds-show-beyond">
+            {showBeyond ? 'ซ่อน' : 'ดู'} นอกหน้าต่าง ({beyondDates.length})
+          </button>
+        )}
+      </div>
+      {inWindowDates.length === 0 && !loadError && (
+        <p className="text-sm text-brand-muted mb-3" data-testid="rounds-window-empty">ไม่มีรอบในหน้าต่างนี้ — กด "สร้าง/ซ่อมรอบ 30 วัน" ด้านบนเพื่อสร้างตามแพทเทิร์น</p>
+      )}
       <div className="space-y-4">
-        {dates.map((date) => {
+        {visibleDates.map((date) => {
           const dayRounds = (byDate.get(date) || []).slice()
             .sort((a, b) => String(a.delivery_start).localeCompare(String(b.delivery_start)))
           return (

@@ -65,8 +65,8 @@ export const STICKER_40x60_300DPI: NiimbotSize = { w_px: 472, h_px: 709, offset_
  * R33: size สำหรับงานที่มีชดเชยฟีด — h_px ต้องเท่ากับความสูง PNG ที่ render ไป (stickerPageHeight)
  * ไม่งั้น imageToPacked ยืดรูปไป fit size = ภาพบี้/เพี้ยน · offset ในรูปทำไปแล้วที่ render → lib offsetY = 0
  */
-export function stickerSize(offsetY = 0): NiimbotSize {
-  return { w_px: STICKER_40x60_300DPI.w_px, h_px: stickerPageHeight(offsetY), offset_y_px: 0 }
+export function stickerSize(offsetY = 0, faceH?: number): NiimbotSize {
+  return { w_px: STICKER_40x60_300DPI.w_px, h_px: stickerPageHeight(offsetY, faceH), offset_y_px: 0 }
 }
 
 let lib: NiimbotLib | null = null
@@ -98,6 +98,8 @@ export interface NiimbotPrintOpts {
   onProgress?: (s: string) => void
   /** R33: ชดเชยฟีด (px) — ต้องเป็นค่าเดียวกับที่ใช้ตอน renderStickerPng (size.h_px ผูกกับค่านี้) */
   offsetY?: number
+  /** R34: ความสูงหน้าดวงจริง (px) — ผูก png ↔ SetPageSize เหมือน offset (default 709) */
+  faceH?: number
 }
 
 /**
@@ -108,7 +110,7 @@ export async function niimbotPrintSticker(pngDataUrl: string, opts?: NiimbotPrin
   const N = await loadNiimbot()
   await N.printImage(pngDataUrl, {
     model: B1_PRO_MODEL,
-    size: stickerSize(opts?.offsetY ?? 0),
+    size: stickerSize(opts?.offsetY ?? 0, opts?.faceH),
     density: 3,
     onProgress: opts?.onProgress,
   })
@@ -118,7 +120,7 @@ export async function niimbotPrintSticker(pngDataUrl: string, opts?: NiimbotPrin
 export async function niimbotPrintStickers(pngDataUrls: string[], opts?: NiimbotPrintOpts): Promise<void> {
   if (pngDataUrls.length === 0) return
   const N = await loadNiimbot()
-  const size = stickerSize(opts?.offsetY ?? 0)
+  const size = stickerSize(opts?.offsetY ?? 0, opts?.faceH)
   if (pngDataUrls.length === 1) {
     await N.printImage(pngDataUrls[0], { model: B1_PRO_MODEL, size, density: 3, onProgress: opts?.onProgress })
     return

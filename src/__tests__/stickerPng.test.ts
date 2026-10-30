@@ -2,7 +2,7 @@
 // Bite Me Baby — R30 tests: stickerDrawList (layout pure) + ขอบ 472×709
 // ============================================
 import { describe, it, expect } from 'vitest'
-import { stickerDrawList, calibrationDrawList, clampFeedOffset, stickerPageHeight, STICKER_PX_W, STICKER_PX_H, type StickerOp } from '@/lib/stickerPng'
+import { stickerDrawList, calibrationDrawList, clampFeedOffset, clampFaceHeight, stickerPageHeight, STICKER_PX_W, STICKER_PX_H, type StickerOp } from '@/lib/stickerPng'
 import type { PrintOrderData } from '@/lib/printService'
 
 const order: PrintOrderData = {
@@ -87,6 +87,50 @@ describe('R33 — clampFeedOffset / stickerPageHeight (ชดเชยฟีด)
     expect(stickerPageHeight(100)).toBe(809)
     expect(stickerPageHeight(-40)).toBe(709)
     expect(stickerPageHeight(9999)).toBe(709 + 300)
+  })
+})
+
+describe('R34 — clampFaceHeight / หน้า = ความสูงหน้าดวงจริง (แก้ภาพข้ามดวง)', () => {
+  it('clamp: ปัดจำนวนเต็ม · ขอบ 640..760 · NaN/undefined → 709 (มาตรฐาน 40×60)', () => {
+    expect(clampFaceHeight(709)).toBe(709)
+    expect(clampFaceHeight(660.4)).toBe(660)
+    expect(clampFaceHeight(640)).toBe(640)
+    expect(clampFaceHeight(760)).toBe(760)
+    expect(clampFaceHeight(-999)).toBe(640)
+    expect(clampFaceHeight(9999)).toBe(760)
+    expect(clampFaceHeight(NaN)).toBe(STICKER_PX_H)
+    expect(clampFaceHeight(undefined as unknown as number)).toBe(STICKER_PX_H)
+  })
+
+  it('stickerPageHeight(offset, faceH): หน้า = faceH + max(0, offset) — png ↔ SetPageSize ผูกกัน', () => {
+    expect(stickerPageHeight(0, 660)).toBe(660)
+    expect(stickerPageHeight(80, 660)).toBe(740)
+    expect(stickerPageHeight(-40, 660)).toBe(660) // offset ติดลบ = หน้าเท่าเดิม
+    expect(stickerPageHeight(0, 500)).toBe(640) // clamp ขอบล่าง
+  })
+
+  it('stickerDrawList faceH=660: QR ผูกขอบล่างจริง (660−16−197=447) · ทุก op ≤ หน้า · bg = 660', () => {
+    const ops = stickerDrawList(order, 0, 660)
+    const qr = ops.find((o) => o.kind === 'qr')
+    expect(qr && qr.kind === 'qr' ? qr.y : -1).toBe(447)
+    const bg = ops[0]
+    expect(bg.kind === 'rect' && bg.h).toBe(660)
+    for (const op of ops) {
+      const yEnd = op.kind === 'line' ? Math.max(op.y1, op.y2)
+        : op.kind === 'rect' ? op.y + op.h
+          : op.kind === 'qr' ? op.y + op.size
+            : op.y
+      expect(yEnd).toBeLessThanOrEqual(660)
+    }
+  })
+
+  it('calibrationDrawList(faceH=660): เส้นขอบล่าง = 659 · ป้าย px หยุดก่อนขอบล่าง (ไม่มีป้าย 600)', () => {
+    const ops = calibrationDrawList(660)
+    const lines = ops.filter((o) => o.kind === 'line')
+    const ts = texts(ops)
+    expect(lines.some((l) => l.kind === 'line' && l.y1 === 659 && l.w === 6)).toBe(true)
+    expect(ts.some((t) => t.startsWith('500px'))).toBe(true)
+    expect(ts.some((t) => t.startsWith('600px'))).toBe(false) // 600 > 659−80 → ไม่ทับขอบ
   })
 })
 

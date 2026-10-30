@@ -105,6 +105,7 @@ export function resolvePopularItems(
   categories: ProductCategory[],
   config: HomePopularConfig,
   nowMs: number = Date.now(),
+  schedule: import('./productSchedule').ProductScheduleMap = {},
 ): Product[] {
   const cats = categories || []
   const activeCatIds = new Set(cats.filter((c) => c.is_active && !c.archived).map((c) => c.id))
@@ -134,7 +135,13 @@ export function resolvePopularItems(
     }
   }
 
-  const visible = pool.filter((p) => !hidden.has(p.id))
+  const visible = pool.filter((p) => {
+    if (hidden.has(p.id)) return false
+    // R34 (Owner): พรีออเดอร์ที่ "ยังไม่ลงปฏิทินรอบถัดไป" = ไม่โชว์ในช่องเมนูยอดนิยม
+    // (การ์ดจะมีปุ่มล็อก 'ยังไม่ลงปฏิทินรอบถัดไป' — เอาออกแทนการโชว์ปุ่มตาย)
+    if (productModeOf(p) === 'pre-order' && !schedule[p.id]) return false
+    return true
+  })
   if (visible.length === 0) return []
   const offset = popularRotationOffset(visible.length, nowMs, config.autoRotate)
   const rotated = visible.slice(offset).concat(visible.slice(0, offset))

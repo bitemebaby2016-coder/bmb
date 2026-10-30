@@ -48,7 +48,7 @@ export function AdminMarketing() {
   const [rules, setRules] = useState<MarketingRules | null>(null)
   const [sellers, setSellers] = useState<Array<{ product_id: string; product_name: string; units: number }>>([])
   // R32 (Owner): Picker เมนู "ทั้งหมด" ใน Planner — แอดมินจิ้มเลือกได้ทั้งพรีออเดอร์และเซมเดย์
-  const [catalog, setCatalog] = useState<Array<{ id: string; name: string; price: number | null; is_preorder?: boolean; available_preorder?: boolean; available_same_day?: boolean }>>([])
+  const [catalog, setCatalog] = useState<Array<{ id: string; name: string; price: number | null; is_preorder?: boolean; available_preorder?: boolean; available_same_day?: boolean; image_url?: string | null }>>([])
   const [loading, setLoading] = useState(true)
 
   const [title, setTitle] = useState('')
@@ -57,7 +57,7 @@ export function AdminMarketing() {
   const [images, setImages] = useState<string[]>([])
   const [saving, setSaving] = useState(false)
 
-  const [genKind, setGenKind] = useState<'menu' | 'promo' | 'festival'>('menu')
+  const [genKind, setGenKind] = useState<'menu' | 'promo' | 'festival'>('promo')
   const [genStyle, setGenStyle] = useState<'realistic' | 'illustration' | 'poster'>('realistic')
   const [genSubject, setGenSubject] = useState('')
   const [genNote, setGenNote] = useState('')
@@ -74,10 +74,10 @@ export function AdminMarketing() {
     const [p, a, r, s, cat] = await Promise.all([
       listMarketingPosts(), listContentApprovals(), getMarketingRules(), bestSellerProducts(),
       // R32: เมนูทั้งหมดของร้าน (สินค้าที่แอดมินตั้งจริง — พรีออเดอร์ + เซมเดย์) ใช้ใน picker
-      supabase.from('products').select('id,name,price,is_preorder,available_preorder,available_same_day,is_available').eq('is_available', true).order('sort_order'),
+      supabase.from('products').select('id,name,price,is_preorder,available_preorder,available_same_day,is_available,image_url').eq('is_available', true).order('sort_order'),
     ])
     setPosts(p); setApprovals(a); setSellers(s)
-    setCatalog((cat.data ?? []) as Array<{ id: string; name: string; price: number | null; is_preorder?: boolean; available_preorder?: boolean; available_same_day?: boolean }>)
+    setCatalog((cat.data ?? []) as Array<{ id: string; name: string; price: number | null; is_preorder?: boolean; available_preorder?: boolean; available_same_day?: boolean; image_url?: string | null }>)
     if (r) {
       setRules(r)
       setRuleFreq(r.frequency_per_week)
@@ -166,6 +166,11 @@ export function AdminMarketing() {
 
   async function handleGenerateImage() {
     if (!genSubject.trim()) { showToast('ใส่ชื่อสินค้า/หัวข้อก่อนสร้างภาพ', 'error'); return }
+    // R34 (Owner): รูปอาหารห้ามเจน — ใช้ภาพจริงจากแคตตาลอก (Picker แนบ image_url ให้แล้ว)
+    if (genKind === 'menu') {
+      showToast('รูปเมนูใช้ภาพจริงจากแคตตาลอก — จิ้มเมนูใน Planner เพื่อแนบรูปจริง (สร้างภาพ AI ได้เฉพาะป้ายโปรโมต/เทศกาล)', 'warning')
+      return
+    }
     setGenBusy(true)
     try {
       const { data, error } = await supabase.functions.invoke('image-gen', {
@@ -282,6 +287,9 @@ export function AdminMarketing() {
                         setTitle(`แนะนำ ${p.name}`)
                         setBodyText(`วันนี้ขอแนะนำ ${p.name}${p.price != null ? ` ฿${Number(p.price).toFixed(0)}` : ''}`)
                         setGenSubject(p.name)
+                        // R34 (Owner): รูปอาหารไม่ต้องเจน — ใช้ภาพจริงจากเมนู (image_url ของสินค้า)
+                        setImages(p.image_url ? [p.image_url] : [])
+                        if (p.image_url) showToast('แนบรูปเมนูจริงจากแคตตาลอกให้แล้ว (ไม่ต้องเจนรูปอาหาร)', 'success')
                         setTab('studio')
                       }}
                     >
@@ -303,7 +311,6 @@ export function AdminMarketing() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <label className="text-sm">ประเภทภาพ (E5)
                 <select className="input w-full" value={genKind} onChange={(e) => setGenKind(e.target.value as typeof genKind)}>
-                  <option value="menu">ภาพเมนูอาหาร</option>
                   <option value="promo">ป้ายโปรโมต</option>
                   <option value="festival">ภาพเทศกาล</option>
                 </select>
@@ -325,6 +332,7 @@ export function AdminMarketing() {
             <button className="btn btn-primary mt-3" disabled={genBusy} onClick={() => void handleGenerateImage()} data-testid="mk-generate-image">
               {genBusy ? '⏳ กำลังสร้าง…' : '✨ สร้างภาพ'}
             </button>
+            <p className="text-xs text-brand-muted mt-2">รูปเมนู = ภาพจริงจากแคตตาลอก (จิ้มเมนูใน Planner → แนบภาพจริงให้อัตโนมัติ) · สร้างภาพ AI เฉพาะป้ายโปรโมต/เทศกาลเท่านั้น</p>
             {images.length > 0 && (
               <div className="flex flex-wrap gap-2 mt-3">
                 {images.map((u) => <img key={u} src={u} alt="generated" className="w-24 h-24 object-cover rounded-lg border border-brand-border" />)}

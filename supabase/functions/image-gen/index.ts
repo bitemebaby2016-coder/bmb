@@ -17,8 +17,11 @@ const OPENROUTER_KEY = Deno.env.get('OPENROUTER_API_KEY') || Deno.env.get('BMB_O
 const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions'
 // โมเดลสร้างภาพ — env `IMAGE_GEN_MODELS` (comma-separated) · fallback หลายชื่อ
 // R32: โมเดลเดิมชื่อเดียวโดน retiring ของ OpenRouter = ตายทั้งฟีเจอร์ → วนลองทีละชื่อจนมีรูป
+// R34: catalog probe 2026-10-30 (e2e/r34_or_models.txt) — ชื่อที่ Owner สั่ง (seedream 5.0 flash / qwen image 3)
+//   ไม่มีใน OpenRouter วันนี้ → default = โมเดล image-output ที่มีจริง (เรียง fast/ถูกก่อน) ·
+//   ใส่ id จริงที่ยืนยันแล้วใน env IMAGE_GEN_MODELS ได้ทันทีโดยไม่ต้องแก้โค้ด
 const IMAGE_MODEL_CANDIDATES = (Deno.env.get('IMAGE_GEN_MODELS') || Deno.env.get('IMAGE_GEN_MODEL') ||
-  'google/gemini-2.5-flash-image-preview,google/gemini-2.5-flash-image,google/gemini-2.0-flash-preview-image-generation')
+  'google/gemini-3.1-flash-image,google/gemini-3.1-flash-lite-image,google/gemini-2.5-flash-image,openai/gpt-5-image-mini,google/gemini-nano-banana-2.1')
   .split(',').map((s) => s.trim()).filter(Boolean)
 
 function corsHeaders(): Record<string, string> {
@@ -37,6 +40,8 @@ function json(body: unknown, status = 200): Response {
 }
 
 // E5: prompt สำเร็จรูปตามประเภทงาน (แอดมินแค่เลือก+ใส่ชื่อสินค้า/หัวข้อ)
+// R34 (Owner): รูปอาหาร = ใช้ภาพจริงจากแคตตาลอก (Picker แนบ image_url ให้) — ไม่ต้องเจน
+//   → เมนู preset เก็บไว้เฉพาะ back-compat (UI ไม่เสนอ 'menu' แล้ว · เจนได้เฉพาะ promo/festival)
 const KIND_PRESETS: Record<string, (subject: string, note: string) => string> = {
   menu: (subject, note) =>
     `ภาพอาหารจานเด็ด "${subject}" สำหรับเมนูร้านของหวาน Bite Me Baby — ภาพถ่ายเมนู มุม 45 องศา แสงธรรมชาตินุ่ม ดูน่ากิน พื้นหลังสะอาด ไม่มีตัวอักษร${note ? ' · ' + note : ''}`,

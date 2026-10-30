@@ -102,7 +102,7 @@ describe('homePopular — resolvePopularItems', () => {
       prod('p2', { category_id: 'cat-b', available_preorder: true, is_preorder: true, scheduled_date: '2026-10-20' }),
       prod('p3', { category_id: 'cat-a' }),
     ]
-    const out = resolvePopularItems(products, cats, cfg({ productIds: ['p2', 'p1'], autoRotate: false }))
+    const out = resolvePopularItems(products, cats, cfg({ productIds: ['p2', 'p1'], autoRotate: false }), Date.now(), { p2: '2026-10-20' })
     expect(out.map((p) => p.id)).toEqual(['p2', 'p1'])
     expect(productModeOf(out[0])).toBe('pre-order')
   })
@@ -131,7 +131,8 @@ describe('homePopular — resolvePopularItems', () => {
       prod('pr1', { available_preorder: true, is_preorder: true }),
       prod('pr2', { available_preorder: true, is_preorder: true }),
     ]
-    const out = resolvePopularItems(products, cats, cfg({ autoRotate: false, showCount: 10 }))
+    // R34: pre-order ต้องมีปฏิทินรอบถัดไป (schedule map) ถึงจะโชว์ในช่องยอดนิยม — ส่ง schedule ครบทั้ง pr1/pr2
+    const out = resolvePopularItems(products, cats, cfg({ autoRotate: false, showCount: 10 }), Date.now(), { pr1: '2026-11-01', pr2: '2026-11-02' })
     expect(out.length).toBe(5)
     const modes = out.map((p) => productModeOf(p))
     expect(modes).toContain('same-day')

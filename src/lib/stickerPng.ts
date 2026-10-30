@@ -19,14 +19,26 @@ export function clampFeedOffset(v: number): number {
 }
 
 /**
+ * R34 (Owner: "ยังข้ามดวง") — clamp ความสูงหน้าดวงจริง (px @300dpi)
+ * 709 = 40×60 มาตรฐาน (ค่าเริ่มต้น = พิมพ์แบบเดิมเป๊ะ) · 640–760 = ช่วงที่ layout ยังวาง QR ไม่ทับข้อมูล
+ * วัดจากใบวัดฟีด: เส้นขอบล่าง (เส้นหนาสุดท้าย) ตรงขอบล่างดวงจริง = ค่านี้ถูก → เนื้อหาส่วนล่าง (QR) เลื่อนขึ้นตาม ไม่ล้นดวง
+ */
+export function clampFaceHeight(v: number): number {
+  const n = Math.round(Number(v))
+  if (!Number.isFinite(n)) return STICKER_PX_H
+  return Math.max(640, Math.min(760, n))
+}
+
+/**
  * ความสูงหน้า (SetPageSize) — "เติบโต" เฉพาะตอน offset บวก:
  * เครื่องเริ่มพิมพ์ก่อนขอบ N px → หน้า = 709+N (ส่วนที่เกิน = ขาว ไม่ให้ความร้อน → ลงร่อง/ใบก่อนหน้า harmlessly)
  * → เนื้อหา (เลื่อนลง N) ลงพอดีในดวง · จบ Exactly ที่ขอบล่าง
  * offset ติดลบ = หน้าเท่าเดิม 709 (ย้ายเนื้อหาขึ้นในหน้าเดิม — เติบโตช่วยอะไรไม่ได้)
  * ⚠️ png height ต้องเท่ากับค่านี้เสมอ (imageToPacked ยืดรูปไป fit size — ไม่งั้นภาพบี้)
  */
-export function stickerPageHeight(offsetY: number): number {
-  return STICKER_PX_H + Math.max(0, clampFeedOffset(offsetY))
+export function stickerPageHeight(offsetY: number, faceH = STICKER_PX_H): number {
+  // R34: หน้า = ความสูงหน้าดวงจริง (faceH) — png ↔ SetPageSize ผูกกันเหมือน offset (ห้ามเพี้ยน)
+  return clampFaceHeight(faceH) + Math.max(0, clampFeedOffset(offsetY))
 }
 
 export type StickerOp =
@@ -37,9 +49,10 @@ export type StickerOp =
 
 /** layout ล้วน = สะท้อน buildBmbStickerHtml (ป้ายซ้ายฝังตาย · ค่าจากแบบฟอร์ม) · คุมขอบ 472×pageH
  *  R33: offsetY ≠ 0 = เลื่อนทุก op แนวตั้ง (บวก=ลง) · พื้นหลังขาว = เต็มหน้าเสมอ (รวมแถบขาวส่วนที่ offset เติบโต/ว่าง) */
-export function stickerDrawList(o: PrintOrderData, offsetY = 0): StickerOp[] {
+export function stickerDrawList(o: PrintOrderData, offsetY = 0, faceH = STICKER_PX_H): StickerOp[] {
   const off = clampFeedOffset(offsetY)
-  const pageH = STICKER_PX_H + Math.max(0, off)
+  const face = clampFaceHeight(faceH)
+  const pageH = face + Math.max(0, off)
   const ops: StickerOp[] = []
   const cx = STICKER_PX_W / 2
   const W = STICKER_PX_W
@@ -81,7 +94,7 @@ export function stickerDrawList(o: PrintOrderData, offsetY = 0): StickerOp[] {
 
   // บล็อก QR + ข้อความ (bottom)
   const qrSize = 197
-  const qrY = STICKER_PX_H - M - qrSize
+  const qrY = face - M - qrSize // R34: ผูกขอบล่างของหน้าจริง — face < 709 → QR เลื่อนขึ้นตาม ไม่ล้นดวง
   ops.push({ kind: 'qr', x: M, y: qrY, size: qrSize })
   const tx = M + qrSize + 12
   const mid = tx + (W - tx - M) / 2
@@ -109,15 +122,15 @@ export function stickerDrawList(o: PrintOrderData, offsetY = 0): StickerOp[] {
  * ระยะห่างเส้น 0→708 บนกระดาษ ≠ สูงดวงจริง = h_px เพี้ยน (คนละปัญหากับ offset)
  * pure = test ได้โดยไม่ต้องมี canvas
  */
-export function calibrationDrawList(): StickerOp[] {
+export function calibrationDrawList(faceH = STICKER_PX_H): StickerOp[] {
   const ops: StickerOp[] = []
   const W = STICKER_PX_W
-  const H = STICKER_PX_H
+  const H = clampFaceHeight(faceH) // R34: ใบวัดวาดที่ความสูงหน้าปัจจุบัน → เส้นขอบล่าง = ขอบดวงที่ตั้งไว้ เทียบของจริงได้เลย
   for (let y = 0; y <= H - 1; y += 20) {
     const major = y % 100 === 0
     const edge = y === 0 || y >= H - 20
     ops.push({ kind: 'line', x1: 16, y1: y, x2: W - 16, y2: y, w: edge ? 5 : major ? 3 : 1 })
-    if (major && y <= 620) {
+    if (major && y <= H - 80) {
       ops.push({ kind: 'text', x: 20, y: y + 18, text: `${y}px ≈ ${(y * 25.4 / 300).toFixed(1)}mm`, size: 16, weight: 700 })
     }
   }
@@ -192,12 +205,13 @@ async function rasterizeOps(ops: StickerOp[], pageH: number): Promise<string> {
 }
 
 /** render สติกเกอร์เป็น dataURL PNG — R33: offsetY สะท้อน preview = รูปจริงที่จะยิงเข้าเครื่อง (รวมความสูงหน้า) */
-export async function renderStickerPng(o: PrintOrderData, offsetY = 0): Promise<string> {
+export async function renderStickerPng(o: PrintOrderData, offsetY = 0, faceH = STICKER_PX_H): Promise<string> {
   const off = clampFeedOffset(offsetY)
-  return await rasterizeOps(stickerDrawList(o, off), stickerPageHeight(off))
+  return await rasterizeOps(stickerDrawList(o, off, faceH), stickerPageHeight(off, faceH))
 }
 
 /** R33: render ใบวัดฟีด (offset คงที่ 0 = raw) — dataURL PNG 472×709 */
-export async function renderCalibrationPng(): Promise<string> {
-  return await rasterizeOps(calibrationDrawList(), STICKER_PX_H)
+export async function renderCalibrationPng(faceH = STICKER_PX_H): Promise<string> {
+  const face = clampFaceHeight(faceH)
+  return await rasterizeOps(calibrationDrawList(face), face)
 }

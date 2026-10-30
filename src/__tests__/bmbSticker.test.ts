@@ -120,6 +120,12 @@ describe('R30 — Niimbot Bluetooth path (driver ภาษาจีน reverse �
       expect(stickerSize(off).w_px).toBe(472)
       expect(stickerSize(off).offset_y_px).toBe(0) // offset ทำที่ render — lib ห้ามซ้ำ
     }
+    // R34: faceH ความสูงหน้าดวงจริง — h_px ผูก stickerPageHeight(offset, faceH)
+    expect(stickerSize(0, 660).h_px).toBe(660)
+    expect(stickerSize(50, 660).h_px).toBe(710) // faceH + offset บวก = 660+50
+    expect(stickerSize(-40, 660).h_px).toBe(660) // offset ติดลบ = หน้าเท่าเดิม
+    expect(stickerSize(0, 660).w_px).toBe(472)
+    expect(stickerSize(0, 660).offset_y_px).toBe(0)
   })
 
   it('describeNiimbotError แปลสถานะหลักเป็นคำไทย', () => {
@@ -137,9 +143,9 @@ describe('R30 — Niimbot Bluetooth path (driver ภาษาจีน reverse �
     expect(btSrc).toContain('identify')
     expect(admin).toContain('bt-panel')
     expect(admin).toContain('handleBtTest')
-    expect(admin).toContain('renderStickerPng(sampleSticker(), off)')
+    expect(admin).toContain('renderStickerPng(sampleSticker(), off, faceH)')
     // R33: size ผูกกับ stickerPageHeight (png ↔ SetPageSize ตรงกันเสมอ)
-    expect(btSrc).toContain('stickerSize(opts?.offsetY ?? 0)')
+    expect(btSrc).toContain('stickerSize(opts?.offsetY ?? 0, opts?.faceH)')
     expect(btSrc).toContain('stickerPageHeight')
   })
 })

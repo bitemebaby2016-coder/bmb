@@ -1,0 +1,63 @@
+== image output ==
+google/gemini-nano-banana-2.1
+openrouter/auto-beta
+google/gemini-3.1-flash-lite-image
+google/gemini-3.1-flash-image
+google/gemini-3-pro-image
+openai/gpt-5.4-image-2
+google/gemini-3.1-flash-image-preview
+google/gemini-3-pro-image-preview
+openai/gpt-5-image-mini
+openai/gpt-5-image
+google/gemini-2.5-flash-image
+openrouter/auto
+== named ==
+google/gemini-nano-banana-2.1 [image+text]
+qwen/qwen3.8-max-prime [text]
+qwen/qwen3.8-omni-flash [text]
+qwen/qwen3.8-max-0902 [text]
+qwen/qwen3.8-flash [text]
+qwen/qwen3.8-27b [text]
+bytedance-seed/seed-2-1-turbo [text]
+qwen/qwen3.8-2.4t-a95b [text]
+bytedance-seed/seed-2.0-code [text]
+qwen/qwen3.7-flash [text]
+qwen/qwen3.7-plus [text]
+qwen/qwen3.7-plus:batch [text]
+qwen/qwen3.7-max [text]
+qwen/qwen3.5-plus-20260420 [text]
+qwen/qwen3.6-flash [text]
+qwen/qwen3.6-35b-a3b [text]
+qwen/qwen3.6-27b [text]
+qwen/qwen3.6-plus [text]
+bytedance-seed/seed-2.0-lite [text]
+qwen/qwen3.5-9b [text]
+bytedance-seed/seed-2.0-mini [text]
+qwen/qwen3.5-35b-a3b [text]
+qwen/qwen3.5-27b [text]
+qwen/qwen3.5-122b-a10b [text]
+qwen/qwen3.5-flash-02-23 [text]
+qwen/qwen3.5-plus-02-15 [text]
+qwen/qwen3.5-397b-a17b [text]
+qwen/qwen3-coder-next [text]
+bytedance-seed/seed-1.6-flash [text]
+bytedance-seed/seed-1.6 [text]
+qwen/qwen3-vl-8b-instruct [text]
+qwen/qwen3-vl-30b-a3b-thinking [text]
+qwen/qwen3-vl-30b-a3b-instruct [text]
+qwen/qwen3-vl-235b-a22b-instruct [text]
+qwen/qwen3-coder-flash [text]
+qwen/qwen3-next-80b-a3b-instruct [text]
+qwen/qwen3-coder-30b-a3b-instruct [text]
+qwen/qwen3-30b-a3b-instruct-2507 [text]
+qwen/qwen3-235b-a22b-thinking-2507 [text]
+qwen/qwen3-coder [text]
+qwen/qwen3-235b-a22b-2507 [text]
+qwen/qwen3-30b-a3b [text]
+qwen/qwen3-14b [text]
+qwen/qwen3-32b [text]
+qwen/qwen2.5-vl-72b-instruct [text]
+qwen/qwen-plus [text]
+qwen/qwen-2.5-coder-32b-instruct [text]
+qwen/qwen-2.5-7b-instruct [text]
+qwen/qwen-2.5-72b-instruct [text]

@@ -26,6 +26,8 @@ export interface StickerPrintOpts {
   onProgress?: (s: string) => void
   /** R33: ชดเชยฟีดแนวตั้ง (px) — ทุกใบใน roll ใช้ค่าเดียวกัน (บวก = เนื้อหาเลื่อนลง) */
   offsetY?: number
+  /** R34: ความสูงหน้าดวงจริง (px) — ทุกใบใช้ค่าเดียวกัน (default 709) */
+  faceH?: number
 }
 
 /** render ทุกใบเป็น PNG แล้วยิงต่อคิวด้วย printBatch (job เดียว หลายหน้า) — resolve = เครื่องยืนยันครบ */
@@ -34,11 +36,12 @@ export async function printStickerRoll(roll: PrintOrderData[], opts?: StickerPri
     throw new Error('อุปกรณ์/เบราว์เซอร์นี้ไม่รองรับ Web Bluetooth — เปิดหน้าแอดมินด้วย Chrome/Edge (https) เท่านั้น')
   }
   const off = opts?.offsetY ?? 0
+  const faceH = opts?.faceH
   const pngs: string[] = []
   for (const piece of roll) {
-    pngs.push(await renderStickerPng(piece, off))
+    pngs.push(await renderStickerPng(piece, off, faceH))
   }
-  await niimbotPrintStickers(pngs, { onProgress: opts?.onProgress, offsetY: off })
+  await niimbotPrintStickers(pngs, { onProgress: opts?.onProgress, offsetY: off, faceH })
 }
 
 /** แปล error คิวเป็นคำไทย (reuse ตัวเดิมจาก niimbotBt) */

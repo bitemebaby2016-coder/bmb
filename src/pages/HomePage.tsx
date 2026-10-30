@@ -31,6 +31,7 @@ import { HomeProductCard } from '@/components/home/HomeProductCard'
 import { PromotionStrip } from '@/components/home/PromotionStrip'
 import { VerifiedReviewsSection } from '@/components/home/VerifiedReviewsSection'
 import { ReviewCarouselSection } from '@/components/home/ReviewCarouselSection'
+import { ReviewGallerySection } from '@/components/home/ReviewGallerySection'
 import { CategorySections } from '@/components/home/CategorySections'
 import { FloatingCart, StickyCartBar } from '@/components/home/FloatingCart'
 import { runOrderBuilder } from '@/lib/orderEntry'
@@ -81,6 +82,8 @@ export function HomePage() {
   // "เมนูยอดนิยม" + ข้อความบนหน้า — แอดมินแก้ได้ที่หน้าแอดมิน (business_settings, ไม่ต้อง deploy)
   const [popularCfg, setPopularCfg] = useState<HomePopularConfig>(DEFAULT_HOME_POPULAR)
   const [siteCopy, setSiteCopy] = useState<SiteCopy>(DEFAULT_SITE_COPY)
+  // R34: กติกาชวนเพื่อนจริงจากแอดมิน (referral_policy) — null = ยังไม่โหลด/อ่านไม่ได้ → ไม่โชว์จำนวนเงินปลอม
+  const [referral, setReferral] = useState<{ enabled: boolean; referrer: number; friend: number } | null>(null)
   // วันจัดส่งจริงจาก menu_schedule (UX fix 2026-10-15 — ไม่ใช้ products.scheduled_date)
   const [scheduleMap, setScheduleMap] = useState<ProductScheduleMap>({})
   // SYNC (Owner 2026-10-26 "ต้องซิงค์ค่าที่แอดมินตั้งจริง"): เวลาเปิด/ปิด + ปุ่มเปิด/ปิด
@@ -116,7 +119,12 @@ export function HomePage() {
           try {
             const { getBusinessSettings } = await import('@/lib/bmbAdminApi_settings')
             const settings = await getBusinessSettings()
-            setPopularCfg(parseHomePopularConfig(settings?.[HOME_POPULAR_KEY]))
+            const rp = settings?.['referral_policy'] as { enabled?: boolean; referrer_reward_baht?: number; friend_reward_baht?: number } | undefined
+      if (rp && typeof rp === 'object') {
+        // R34: การ์ดชวนเพื่อนใช้กติกาจริงจากแอดมิน (business_settings.referral_policy — anon อ่านได้)
+        setReferral({ enabled: rp.enabled !== false, referrer: Number(rp.referrer_reward_baht) || 0, friend: Number(rp.friend_reward_baht) || 0 })
+      }
+      setPopularCfg(parseHomePopularConfig(settings?.[HOME_POPULAR_KEY]))
             setSiteCopy(parseSiteCopy(settings?.[SITE_COPY_KEY]))
             // SYNC: เวลาเปิด/ปิด (hours) + ปุ่มเปิด/ปิด (operating_hours) — แอดมินคนเดียวกับที่ตั้งค่าจริง
             const sh = settings?.hours as { open?: string; close?: string } | undefined
@@ -159,8 +167,9 @@ export function HomePage() {
   const promotions = getHomePromotionsFromRows(promoRows)
 
   // "เมนูยอดนิยม" — คัดจากทุกหมวด (รวมเมนูจองล่วงหน้า) แล้วสลับโชว์ตามรอบเวลา
+  // R34: ส่ง scheduleMap ด้วย — เมนูพรีออเดอร์ที่ยังไม่ลงปฏิทินรอบถัดไป = ไม่โชว์ในช่องนี้
   const popularCatMap = new Map(categories.map((c) => [c.id, c]))
-  const popularAll = resolvePopularItems(products, categories, popularCfg)
+  const popularAll = resolvePopularItems(products, categories, popularCfg, undefined, scheduleMap)
     .map((p) => toPopularHomeProduct(p, popularCatMap.get(p.category_id), scheduleMap))
   // ปุ่มกรองหัวข้อเมนู — กติกาเดียวกับแถวหัวข้อด้านล่าง (หัวข้อว่าง = ซ่อน)
   // Owner (2026-10-25): หมวดโหมดขาย = ความหมายเดียวกับแท็บ 🛵 ส่งวันนี้ / 📅 พรีออเดอร์
@@ -320,6 +329,14 @@ export function HomePage() {
   // เลื่อนขึ้นด้านบนของหน้า — "ห้ามจิ้มแล้วนิ่ง"
   const scrollToSection = (id: string) => scrollToSectionOrTop(id)
 
+  // R34 (Owner): หัวข้อเซกชันโหมดหน้าแรก = ชื่อ+ไอคอนหมวดจากแอดมิน (ที่เดียวกับ /menu) — แอดมินแก้ชื่อหมวด = สองหน้าเปลี่ยนพร้อมกัน
+  const modeSectionTitle = (mode: ReturnType<typeof saleModeOfCategory>, fallback: string): string => {
+    const c = categories.find((x) => saleModeOfCategory(x) === mode)
+    return c ? `${c.icon ? c.icon + ' ' : ''}${c.name}` : fallback
+  }
+  const sameDaySectionTitle = modeSectionTitle('same_day', '电动车 ส่งวันนี้')
+  const preOrderSectionTitle = modeSectionTitle('pre_order', '📅 พรีออเดอร์')
+
   if (loading) {
     return (
       <div className="max-w-7xl mx-auto px-4 py-10 min-h-screen flex items-center justify-center">
@@ -395,7 +412,7 @@ export function HomePage() {
               onClick={() => { setHomeTab('sameday'); scrollToSection('home-sec-sameday') }}
               className="category-chip whitespace-nowrap px-4 py-2 rounded-full text-sm font-medium transition-colors bg-white text-brand-accent border border-brand-border"
             >
-              🛵 ส่งวันนี้
+              {sameDaySectionTitle}
             </button>
             <button
               type="button"
@@ -403,7 +420,7 @@ export function HomePage() {
               onClick={() => { setHomeTab('preorder'); scrollToSection('home-sec-preorder') }}
               className="category-chip whitespace-nowrap px-4 py-2 rounded-full text-sm font-medium transition-colors bg-white text-brand-accent border border-brand-border"
             >
-              📅 พรีออเดอร์
+              {preOrderSectionTitle}
             </button>
             {chips.map((cat) => (
               <button
@@ -438,7 +455,7 @@ export function HomePage() {
 
       {/* 4. ส่งวันนี้ (Feature B: ลำดับ 2) — เมนูสั่งวันนี้ */}
       <section id="home-sec-sameday" className="mb-10 scroll-mt-20" aria-labelledby="home-sameday-heading">
-        <h2 id="home-sameday-heading" className="text-xl font-display font-bold text-brand-accent mb-2">🛵 ส่งวันนี้</h2>
+        <h2 id="home-sameday-heading" className="text-xl font-display font-bold text-brand-accent mb-2">{sameDaySectionTitle}</h2>
         {sameDayShowcase.length > 0 ? (
           <HorizontalCarousel
             items={sameDayShowcase.map((item) => (
@@ -453,7 +470,7 @@ export function HomePage() {
 
       {/* 5. พรีออเดอร์ (Feature B: ลำดับ 3) — เมนูจองล่วงหน้า (ผูกปฏิทินแอดมิน) */}
       <section id="home-sec-preorder" className="mb-10 scroll-mt-20" aria-labelledby="home-preorder-heading">
-        <h2 id="home-preorder-heading" className="text-xl font-display font-bold text-brand-accent mb-2">📅 พรีออเดอร์</h2>
+        <h2 id="home-preorder-heading" className="text-xl font-display font-bold text-brand-accent mb-2">{preOrderSectionTitle}</h2>
         {/* Owner (2026-10-25): CTA พรีออเดอร์ (Directive §8 เดิม — workflow preOrderEntryPath เดียวกัน
             + หัวข้อแก้ได้ในแอดมิน homePreOrderTitle) — แสดงเฉพาะตอนเปิดแท็บ "📅 พรีออเดอร์" เท่านั้น */}
         {homeTab === 'preorder' && (
@@ -487,25 +504,35 @@ export function HomePage() {
       {/* 6. Social Proof Review Carousel */}
       <ReviewCarouselSection reviews={reviews} products={products} onReviewCta={handleReviewCta} />
 
-      {/* 6b. Real customer review photo gallery (lazy) */}
+      {/* 6b. Real customer review photo gallery (lazy) — R34: mount ของจริง 32 ใบ (เดิมมี comment แต่ไม่ได้ render) */}
+      <ReviewGallerySection />
       {/* CAT-04: Verified Customer Reviews Section */}
         <VerifiedReviewsSection reviews={verifiedReviews} products={products} />
 
       {/* 7. Promotions + Shared social action */}
       <PromotionStrip promotions={promotions} />
-      <Link
-        to="/share"
-        className="share-card card flex items-center justify-between gap-3 px-4 py-3"
-      >
-        <div className="flex items-center gap-3 min-w-0">
-          <span className="text-2xl" aria-hidden="true">👥</span>
-          <div className="min-w-0">
-            <p className="font-bold text-brand-accent">ชวนเพื่อน รับคูปองคนละ ฿30</p>
-            <p className="text-sm text-brand-muted truncate">แชร์ให้เพื่อนสั่ง — เพื่อนและคุณได้คูปอง</p>
+      {/* R34 (Owner): การ์ดชวนเพื่อน = กติกาจริงจากแอดมิน — ปิดนโยบาย = ไม่โชว์ · ยังโหลดไม่ถึง = ไม่โชว์เงินปลอม */}
+      {referral?.enabled && (
+        <Link
+          to="/share"
+          className="share-card card flex items-center justify-between gap-3 px-4 py-3"
+        >
+          <div className="flex items-center gap-3 min-w-0">
+            <span className="text-2xl" aria-hidden="true">👥</span>
+            <div className="min-w-0">
+              <p className="font-bold text-brand-accent">
+                {referral && referral.referrer > 0 && referral.referrer === referral.friend
+                  ? `ชวนเพื่อน รับคูปองคนละ ฿${referral.friend}`
+                  : referral && referral.referrer > 0 && referral.friend > 0
+                    ? `ชวนเพื่อน คุณได้ ฿${referral.referrer} · เพื่อนได้ ฿${referral.friend}`
+                    : 'ชวนเพื่อน รับคูปอง'}
+              </p>
+              <p className="text-sm text-brand-muted truncate">แชร์ให้เพื่อนสั่ง — เงื่อนไขตามที่ร้านกำหนด</p>
+            </div>
           </div>
-        </div>
-        <span className="text-brand-primary font-medium whitespace-nowrap">ไปที่หน้าแชร์ →</span>
-      </Link>
+          <span className="text-brand-primary font-medium whitespace-nowrap">ไปที่หน้าแชร์ →</span>
+        </Link>
+      )}
 
       <FloatingCart />
       <StickyCartBar />

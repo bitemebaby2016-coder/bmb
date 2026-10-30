@@ -56,8 +56,8 @@ describe('R31/R32 — wiring (source contracts)', () => {
     const src = (await import('@/pages/admin/AdminOrders?raw')).default as string
     expect(src).toMatch(/void autoPrintStickerRoll\(orderNumber\)/)
     expect(src).toContain('stickerRollForOrder(buildPrintOrderData(full))')
-    // R33: offset จาก settings ถูกส่งเข้า printStickerRoll (ทุกใบเลื่อนเท่ากัน)
-    expect(src).toContain('printStickerRoll(roll, { offsetY: settings.stickerOffsetYPx ?? 0 })')
+    // R33: offset จาก settings ถูกส่งเข้า printStickerRoll (ทุกใบเลื่อนเท่ากัน) · R34: faceH ด้วย
+    expect(src).toContain('printStickerRoll(roll, { offsetY: settings.stickerOffsetYPx ?? 0, faceH: settings.stickerFaceHPx ?? 709 })')
     expect(src).toContain('describeStickerRollError')
   })
   it('AdminPrintSettings: checkbox คิว + preview รูป + คำแนะนำ Incognito/Allow', async () => {
@@ -72,9 +72,14 @@ describe('R31/R32 — wiring (source contracts)', () => {
     expect(src).toContain('sticker-offset-ypx')
     expect(src).toContain('stickerOffsetYPx: clampFeedOffset(')
     expect(src).toContain('bt-calibration-print')
-    expect(src).toContain('renderCalibrationPng()')
+    expect(src).toContain('renderCalibrationPng(faceH)')
     expect(src).toContain('clampFeedOffset(settings.stickerOffsetYPx ?? 0)')
     expect(DEFAULT_PRINTER_SETTINGS.stickerOffsetYPx).toBe(0)
+    // R34: ช่องความสูงหน้าดวงจริง + default 709 + ใบวัด/เทสต์ใช้ค่า
+    expect(src).toContain('sticker-face-hpx')
+    expect(src).toContain('stickerFaceHPx: clampFaceHeight(')
+    expect(src).toContain('renderStickerPng(sampleSticker(), off, faceH)')
+    expect(DEFAULT_PRINTER_SETTINGS.stickerFaceHPx).toBe(709)
   })
   it('AdminMarketing: picker เมนูทั้งหมด + error detail image-gen · AdminAiStudio guard ถูกเรียก', async () => {
     const mk = (await import('@/pages/admin/AdminMarketing?raw')).default as string

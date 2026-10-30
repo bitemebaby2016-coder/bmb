@@ -6,7 +6,7 @@ import { showToast } from '@/components/ui/ToastContainer'
 import { loadPrinterSettings, savePrinterSettings, PrinterSettings, DEFAULT_PRINTER_SETTINGS, createPrinterDef, upsertPrinter, removePrinter, assignPrinter, describePrinterTarget, PRINTER_MODEL_LABELS, PRINTER_MODEL_DEFAULT_WIDTH, type PrinterModel, printHtmlInHiddenFrame, buildBmbStickerHtml, type PrintOrderData } from '@/lib/printService'
 import { describeQzError, qzConnect, qzPrintHtml } from '@/lib/qzTray'
 import { niimbotSupported, niimbotPrintSticker, describeNiimbotError } from '@/lib/niimbotBt'
-import { renderStickerPng, renderCalibrationPng, clampFeedOffset } from '@/lib/stickerPng'
+import { renderStickerPng, renderCalibrationPng, clampFeedOffset, clampFaceHeight } from '@/lib/stickerPng'
 // R25: ไม่มี local flag — ทุกปุ่มทดสอบยิงผ่าน printHtmlInHiddenFrame (guard กลาง + afterprint cleanup ใน printService)
 // (เดิม: popup window.open + win.print() = popup ค้างหลัง Cancel + testPrintRole ไม่มี guard → ซ้อนได้)
 // R27: เพิ่ม QZ Tray transport + เทมเพลตสติกเกอร์ BMB 40×60 (ใบเสร็จ+ครัว = ใบเดียวกัน)
@@ -160,9 +160,10 @@ export function AdminPrintSettings() {
       }
       // R33: offset จากหน้าตั้งค่า — preview = รูปจริงที่จะยิง (รวมความสูงหน้าที่เติบโต) · size ผูกค่าเดียวกัน
       const off = clampFeedOffset(settings.stickerOffsetYPx ?? 0)
-      const png = await renderStickerPng(sampleSticker(), off)
+      const faceH = clampFaceHeight(settings.stickerFaceHPx ?? 709)
+      const png = await renderStickerPng(sampleSticker(), off, faceH)
       setBtPreview(png) // เห็นรูปทันที — ตรวจ "มีตัวอักษร?" + ตำแหน่งเนื้อหาก่อนเครื่องเริ่มวิ่ง
-      await niimbotPrintSticker(png, { onProgress: (s) => setBtProgress(s), offsetY: off })
+      await niimbotPrintSticker(png, { onProgress: (s) => setBtProgress(s), offsetY: off, faceH })
       setBtState('done')
       showToast(off === 0
         ? '✅ Nimbot ยืนยันงานพิมพ์แล้ว — ตรวจกระดาษ: เนื้อหาตรงขอบดวงไหม? ไม่ตรง = พิมพ์ใบวัดฟีดแล้วใส่ค่าชดเชย'
@@ -191,11 +192,13 @@ export function AdminPrintSettings() {
         setBtErr('เบราว์เซอร์นี้ไม่รองรับ Web Bluetooth — เปิดด้วย Chrome/Edge (https) เท่านั้น')
         return
       }
-      const png = await renderCalibrationPng()
+      // R34: ใบวัดวาดที่ความสูงหน้าปัจจุบัน — เส้นขอบล่าง = ขอบดวงจริง เทียบแล้วใส่ค่าได้ทันที
+      const faceH = clampFaceHeight(settings.stickerFaceHPx ?? 709)
+      const png = await renderCalibrationPng(faceH)
       setBtPreview(png)
-      await niimbotPrintSticker(png, { onProgress: (s) => setBtProgress(s), offsetY: 0 })
+      await niimbotPrintSticker(png, { onProgress: (s) => setBtProgress(s), offsetY: 0, faceH })
       setBtState('done')
-      showToast('✅ ใบวัดฟีดออกแล้ว — อ่าน 2 กรณี: เส้น 0px หายเหนือขอบบน (หัวหายข้ามใบก่อน) → เส้นไหนตรงขอบใส่ +เลขนั้น · มีแถบขาวเหนือเส้น 0px → ใส่ −ขนาดแถบ', 'success')
+      showToast('✅ ใบวัดฟีดออกแล้ว — อ่าน 3 จุด: (ก) เส้น 0px หายเหนือขอบบน → ใส่ +N · (ข) แถบขาวเหนือเส้น 0px → ใส่ −N · (ค) เส้นขอบล่างเลยขอบล่างดวง → ใส่ "ความสูงหน้าดวง" = เลขเส้นที่ตรงขอบล่างจริง', 'success')
     } catch (e) {
       const msg = describeNiimbotError(e)
       setBtState('down')
@@ -384,6 +387,21 @@ export function AdminPrintSettings() {
                 data-testid="sticker-offset-ypx"
               />
               <span className="text-xs text-brand-muted">+ = เนื้อหาเลื่อนลง (แก้ภาพข้ามขอบบน) · − = เลื่อนขึ้น (จำกัด −40 กันหัวเรื่องโดนตัด) · พิมพ์ใบวัดฟีด → อ่านค่า → ใส่ → กดบันทึก = มีผลทุกทาง (ทดสอบ + ออโต้พิมพ์)</span>
+            </div>
+            {/* R34 (Owner: "ยังข้ามดวง"): ความสูงหน้าดวงจริง — ถ้าใบวัดฟีดเส้นขอบล่างเลยขอบล่างดวง = หน้าสั้นกว่า 709 → ใส่ค่าที่วัดได้ (QR เลื่อนขึ้นเอง ไม่ล้นดวง) */}
+            <div className="flex items-center gap-2 text-sm flex-wrap" data-testid="bt-face-height-row">
+              <label htmlFor="sticker-face-hpx" className="whitespace-nowrap font-medium">ความสูงหน้าดวง (px)</label>
+              <input
+                id="sticker-face-hpx"
+                type="number"
+                min={640}
+                max={760}
+                className="input w-28"
+                value={settings.stickerFaceHPx ?? 709}
+                onChange={(e) => setSettings({ ...settings, stickerFaceHPx: clampFaceHeight(Number(e.target.value)) })}
+                data-testid="sticker-face-hpx"
+              />
+              <span className="text-xs text-brand-muted">709 = 40×60 มาตรฐาน (ค่าเริ่มต้น) · วัดจากใบวัดฟีด: เส้นขอบล่างตรงขอบล่างดวงจริง = ค่านี้ถูก · ไม่ตรง = ใส่เลขเส้นที่ตรงพอดี → PNG/SetPageSize/ตำแหน่ง QR ปรับตามอัตโนมัติ</span>
             </div>
             <div className="flex items-end gap-2 flex-wrap">
               <button className="btn btn-outline" disabled={btBusy} onClick={() => void handleBtTest()} data-testid="bt-test-print">{btBusy ? '⏳ ...' : '🔗 เชื่อม & พิมพ์สติกเกอร์ทดสอบ (Bluetooth)'}</button>

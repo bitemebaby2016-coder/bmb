@@ -11,10 +11,17 @@ export interface RealReviewPhoto {
   alt: string
 }
 
-export const REAL_REVIEW_PHOTOS: RealReviewPhoto[] = Array.from({ length: 37 }, (_, i) => {
-  const n = String(i + 1).padStart(2, '0')
+// R34: รายชื่อ = ไฟล์จริงบนดิสก์ 32 ใบ (review-01..24 + review-30..37 — 25–29 ไม่มี)
+// ห้าม rig จำนวนเอง → รูปผี 404 (กัน regression ด้วย test เทียบ readdir)
+const REVIEW_NUMBERS: number[] = [
+  ...Array.from({ length: 24 }, (_, i) => i + 1),
+  ...Array.from({ length: 8 }, (_, i) => i + 30),
+]
+
+export const REAL_REVIEW_PHOTOS: RealReviewPhoto[] = REVIEW_NUMBERS.map((n) => {
+  const s = String(n).padStart(2, '0')
   return {
-    src: `/assets/reviews/small/review-${n}.jpg`,
-    alt: `รีวิวจริงจากลูกค้า ภาพที่ ${i + 1}`,
+    src: `/assets/reviews/small/review-${s}.jpg`,
+    alt: `รีวิวจริงจากลูกค้า ภาพที่ ${n}`,
   }
 })

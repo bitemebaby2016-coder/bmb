@@ -39,14 +39,16 @@ export interface SocialLinkItem {
   network: SocialNetwork
   label: string
   icon: string
+  /** R34: โลโก้รูปจริงจาก public/ (มี = ใช้ <img> แทน emoji) */
+  img?: string
   href: string
 }
 
 /** ลำดับแสดงผล + ไอคอนของปุ่มโซเชียล (ใช้ทั้ง Footer/หน้าติดต่อ) */
-const NETWORK_META: Array<{ network: SocialNetwork; label: string; icon: string }> = [
-  { network: 'facebook', label: 'Facebook', icon: '📘' },
+const NETWORK_META: Array<{ network: SocialNetwork; label: string; icon: string; img?: string }> = [
+  { network: 'facebook', label: 'Facebook', icon: '📘', img: '/Facebook Logo.webp' },
   { network: 'messenger', label: 'Messenger', icon: '💬' },
-  { network: 'line', label: 'LINE', icon: '💚' },
+  { network: 'line', label: 'LINE', icon: '💚', img: '/line logo.webp' },
   { network: 'instagram', label: 'Instagram', icon: '📸' },
   { network: 'tiktok', label: 'TikTok', icon: '🎵' },
   { network: 'youtube', label: 'YouTube', icon: '▶️' },
@@ -110,7 +112,7 @@ export async function getSocialLinks(force = false): Promise<SocialLinks> {
 /** รายการปุ่มโซเชียลพร้อมใช้ render — ตัดช่องว่างออก (ไม่มี = ไม่แสดงปุ่ม) */
 export function socialLinkItems(links: SocialLinks): SocialLinkItem[] {
   return NETWORK_META
-    .map(({ network, label, icon }) => ({ network, label, icon, href: links[network] }))
+    .map(({ network, label, icon, img }) => ({ network, label, icon, img, href: links[network] }))
     .filter((item) => item.href.length > 0)
 }
 
