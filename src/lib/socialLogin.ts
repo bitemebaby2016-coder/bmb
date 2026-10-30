@@ -15,7 +15,7 @@
 
 import { supabase } from './supabase'
 
-export type SocialProvider = 'facebook'
+export type SocialProvider = 'facebook' | 'google' | 'line'
 
 export interface SocialCallbackResult {
   ok: boolean
@@ -49,23 +49,38 @@ export function readSocialNext(fallback = '/'): string {
 }
 
 /**
- * เริ่ม Facebook Login — ย้ายหน้าทั้งหน้าไปที่ Supabase `/authorize`
- * (ไม่ใช่ popup: มือถือ/WebView บล็อก popup บ่อย และ flow นี้ผ่าน redirect จึงเชื่อถือได้)
+ * เริ่ม OAuth (redirect ทั้งหน้า — ไม่ใช่ popup: มือถือ/WebView บล็อก popup บ่อย)
+ * R25 (Owner): ขยายเป็น facebook | google | line
+ *   - google = built-in ของ Supabase (ต้องใส่ Client ID/Secret ใน Dashboard)
+ *   - line   = ยังไม่ใช่ built-in → ต้องลงทะเบียนเป็น Custom OIDC Provider
+ *              (issuer/channel ของ LINE) ใน Supabase Dashboard ก่อนใช้ได้จริง
  */
-export async function signInWithFacebook(returnTo?: string): Promise<SocialCallbackResult> {
+export async function signInWithSocial(provider: SocialProvider, returnTo?: string): Promise<SocialCallbackResult> {
   try {
     const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'facebook' as SocialProvider,
+      // 'line' ยังไม่อยู่ใน union ของ supabase-js (custom OIDC) → cast ผ่าน type ที่รองรับ
+      provider: provider as 'facebook',
       options: {
         redirectTo: socialRedirectTo(returnTo),
-        scopes: 'email,public_profile',
+        ...(provider === 'facebook' ? { scopes: 'email,public_profile' } : {}),
+        ...(provider === 'google' ? { scopes: 'email' } : {}),
+        ...(provider === 'line' ? { scopes: 'openid profile email' } : {}),
       },
     })
-    if (error) return { ok: false, code: 'ERR_SOCIAL_START_FAILED' }
+    if (error) {
+      if (provider === 'google') return { ok: false, code: 'ERR_GOOGLE_NOT_CONFIGURED' }
+      if (provider === 'line') return { ok: false, code: 'ERR_LINE_NOT_CONFIGURED' }
+      return { ok: false, code: 'ERR_SOCIAL_START_FAILED' }
+    }
     return { ok: true }
   } catch {
     return { ok: false, code: 'ERR_NETWORK' }
   }
+}
+
+/** back-compat: ที่เดิมของ Facebook (test + LoginPage เดิมเรียกตัวนี้) */
+export async function signInWithFacebook(returnTo?: string): Promise<SocialCallbackResult> {
+  return signInWithSocial('facebook', returnTo)
 }
 
 /**
@@ -97,8 +112,12 @@ export function consumeSocialCallbackError(): string | undefined {
 }
 
 /** แปลรหัส OAuth error เป็นข้อความภาษาไทย (ไม่ leak raw code ให้ลูกค้า) */
-export function describeSocialError(code?: string): string {
+export function describeSocialError(code?: string, providerLabel = 'Facebook'): string {
   switch (code) {
+    case 'ERR_GOOGLE_NOT_CONFIGURED':
+      return 'เข้าสู่ระบบด้วย Google ไม่สำเร็จ — ถ้าเพิ่งเพิ่มปุ่ม ให้เปิดใช้ provider Google (Client ID/Secret) ใน Supabase Dashboard ก่อน แล้วลองใหม่'
+    case 'ERR_LINE_NOT_CONFIGURED':
+      return 'LINE ยังไม่พร้อมใช้งาน — ต้องลงทะเบียน LINE เป็น Custom OIDC Provider ใน Supabase Dashboard (มี Channel ID/Secret) ก่อน แล้วลองใหม่'
     case 'access_denied':
     case 'ERR_ACCESS_DENIED':
       return 'คุณยกเลิกการอนุญาต Facebook — ยังไม่ได้เข้าสู่ระบบ'
@@ -113,10 +132,10 @@ export function describeSocialError(code?: string): string {
     case 'validation_failed':
       return 'Facebook ไม่ส่งข้อมูลที่จำเป็นกลับมา — กรุณาลองใหม่'
     case 'ERR_SOCIAL_START_FAILED':
-      return 'เริ่มการเข้าสู่ระบบด้วย Facebook ไม่สำเร็จ — กรุณาลองใหม่อีกครั้ง'
+      return `เริ่มการเข้าสู่ระบบด้วย ${providerLabel} ไม่สำเร็จ — กรุณาลองใหม่อีกครั้ง`
     case 'ERR_NETWORK':
       return 'การเชื่อมต่อขัดข้อง — ตรวจสอบเน็ตเวิร์กแล้วลองใหม่'
     default:
-      return 'เข้าสู่ระบบด้วย Facebook ไม่สำเร็จ — กรุณาลองใหม่ หรือใช้วิธีอื่นแทน'
+      return `เข้าสู่ระบบด้วย ${providerLabel} ไม่สำเร็จ — กรุณาลองใหม่ หรือใช้วิธีอื่นแทน`
   }
 }

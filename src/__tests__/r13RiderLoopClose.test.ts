@@ -1,7 +1,7 @@
 // ============================================
 // R13 (Owner 2026-10-28) — 3 คำสั่งหลัง retest:
-//   1) แถบสถานะรูปแบบใหม่: "🟢 เปิดรับออเดอร์ เซมเดย์ : ส่งทันที" +
-//      "🟢 เปิดรับ พรีออเดอร์ : จองล่วงหน้า รอบ <ชื่อรอบ> <วันที่> (ปิดรอบ HH:MM)"
+//   1) แถบสถานะรูปแบบใหม่ (R25 Owner 2026-10-30): "🟢 เปิดรับออเดอร์ Same-Day / ส่งวันนี้ : รอบส่ง ทันทีหลังครัวปรุงเสร็จ" +
+//      "🟢 เปิดรับออเดอร์ Pre-Order / จองล่วงหน้า : รอบส่ง <ชื่อรอบ> <วันที่> (ปิดรับ HH:MM AM/PM)"
 //      (บอกลูกค้าด้วยว่าเป็นรอบไหนของวันไหน · R18 2026-10-29 เปลี่ยน copy ฝั่งพรีออเดอร์)
 //   2) ไรเดอร์ปิดงาน → จบลูป + ออกหน้าจอหลักอัตโนมัติ · ห้ามค้าง "กำลังเดินทาง"
 //      (ต้นตอจริง = POD path ของ drivers.id สกปรก → รูปไม่เคยเข้า bucket ·
@@ -22,15 +22,15 @@ const TODAY = '2026-10-28'
 const TOMORROW = '2026-10-29'
 
 describe('R13 — แถบสถานะ: รูปแบบใหม่ + บอก "รอบไหนของวันไหน"', () => {
-  it('เซมเดย์ = "เปิดรับออเดอร์ เซมเดย์ : ส่งทันที"', () => {
+  it('Same-Day = "เปิดรับออเดอร์ Same-Day / ส่งวันนี้ : รอบส่ง ทันทีหลังครัวปรุงเสร็จ"', () => {
     const s = getStoreStatusFromRounds(
       [{ status: 'active', display_name: 'SameDay', delivery_start: '06:00', delivery_end: '23:00', max_capacity: 10, current_count: 1, scheduled_date: TODAY }] as never,
       atBkk('2026-10-28T04:00:00+07:00'),
     )
-    expect(s.message).toBe('เปิดรับออเดอร์ เซมเดย์ : ส่งทันที')
+    expect(s.message).toBe('เปิดรับออเดอร์ Same-Day / ส่งวันนี้ : รอบส่ง ทันทีหลังครัวปรุงเสร็จ')
   })
 
-  it('พรีออเดอร์ = "เปิดรับ พรีออเดอร์ : จองล่วงหน้า รอบ" + รอบถัดไป + วันที่ DD/MM/YYYY + (ปิดรอบ HH:MM)', () => {
+  it('Pre-Order = "เปิดรับออเดอร์ Pre-Order / จองล่วงหน้า : รอบส่ง" + รอบถัดไป + วันที่ DD/MM/YYYY + (ปิดรับ HH:MM AM/PM)', () => {
     const closedToday = [
       { status: 'closed', display_name: 'เช้า', delivery_start: '06:00', delivery_end: '09:00', scheduled_date: TODAY },
     ]
@@ -40,11 +40,11 @@ describe('R13 — แถบสถานะ: รูปแบบใหม่ + บ
     const s = getStoreStatusFromRounds([...closedToday, ...tomorrow] as never, atBkk('2026-10-28T10:00:00+07:00'))
     expect(s.state).toBe('preorder_only')
     // R18 (Owner 2026-10-29): copy ใหม่ — ห้ามขึ้นต้นแบบเดิม "พรีออเดอร์: เปิดรับออเดอร์ …"
-    expect(s.preOrderLine).toContain('เปิดรับ พรีออเดอร์ : จองล่วงหน้า รอบ')
+    expect(s.preOrderLine).toContain('เปิดรับออเดอร์ Pre-Order / จองล่วงหน้า : รอบส่ง')
     expect(s.preOrderLine).not.toContain('พรีออเดอร์: เปิดรับออเดอร์')
     expect(s.preOrderLine).toContain('เช้า')
     expect(s.preOrderLine).toContain('29/10/2026')
-    expect(s.preOrderLine).toMatch(/\(ปิดรอบ \d{2}:\d{2}\)/)
+    expect(s.preOrderLine).toMatch(/\(ปิดรับ \d{2}:\d{2} (AM|PM)\)/)
   })
 
   it('strip: บรรทัดพรีออเดอร์ขึ้นต้นด้วย 🟢/🔴 ตาม preOrderOpen (R16) + ไม่ truncate (วันที่ต้องไม่โดนตัด)', () => {

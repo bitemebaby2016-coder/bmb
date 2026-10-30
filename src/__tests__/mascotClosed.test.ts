@@ -160,7 +160,7 @@ describe('storeStatus — ตรรกะเปิด/ปิดร้านจ�
     expect(s.isOpen).toBe(true) // เซมเดย์สั่งได้ตลอด (Q1/148)
     expect(s.state).toBe('open')
     expect(s.preOrderLine).toContain('พรุ่งนี้เที่ยง')
-    expect(s.preOrderLine).toContain('ปิดรอบ 09:00')
+    expect(s.preOrderLine).toContain('ปิดรับ 09:00 AM')
   })
 
   it('สองเลน: ทุกรอบวันนี้เลยปิดรอบ + ไม่มีรอบอนาคต → preOrderLine = ปิดรับแล้ว (ร้านยังเปิดรับเซมเดย์)', () => {

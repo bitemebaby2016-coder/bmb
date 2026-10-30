@@ -79,7 +79,7 @@ describe('N1 — default copy ต้องตรงกับข้อควา�
       at(`${TODAY}T04:00:00+07:00`),
     )
     expect(live.preOrderLine).not.toBe(DEFAULT_STORE_STATUS_COPY.preOrderClosed)
-    expect(live.preOrderLine).toMatch(/เปิดรับ พรีออเดอร์/)
+    expect(live.preOrderLine).toMatch(/เปิดรับออเดอร์ Pre-Order/)
   })
 })
 

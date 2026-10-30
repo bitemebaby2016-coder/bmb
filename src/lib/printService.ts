@@ -261,12 +261,12 @@ export function printHtmlInHiddenFrame(html: string): 'sent' | 'failed' {
     const cleanup = () => {
       frame.remove()
       window.removeEventListener('afterprint', cleanup)
+      _printDialogOpen = false // R25: ปล่อย guard เมื่อ dialog "ปิดจริง" (afterprint) — เดิมปล่อยทันทีหลัง print() คืนค่า (Chrome คืนก่อน dialog ปิด) → คำสั่งถัดไปเข้าคิวหลัง dialog เดิม → Cancel แล้วตัวที่ค้างเปิดเอง = "แคนเซิ่ลแล้วยังปริ้น"
     }
     window.addEventListener('afterprint', cleanup) // ลบเมื่อ dialog ปิดจริง
     setTimeout(cleanup, 60_000) // กันค้างถ้า browser ไม่ยิง afterprint
     frame.contentWindow?.focus()
     frame.contentWindow?.print()
-    _printDialogOpen = false // print() คืน = อนุญาต action ถัดไป
     return 'sent'
   } catch {
     _printDialogOpen = false

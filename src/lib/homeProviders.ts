@@ -217,7 +217,7 @@ export function getStoreStatusFromRounds(rounds: Array<{
       ? `${day.slice(8, 10)}/${day.slice(5, 7)}/${day.slice(0, 4)}`
       : ''
     return nextPre
-      ? `เปิดรับ พรีออเดอร์ : จองล่วงหน้า รอบ ${nextPre.display_name || 'รอบถัดไป'}${dateLabel ? ` ${dateLabel}` : ''} (ปิดรอบ ${roundCutoffLabel(nextPre, 'PRE_ORDER', 2)})`
+      ? `เปิดรับออเดอร์ Pre-Order / จองล่วงหน้า : รอบส่ง ${nextPre.display_name || 'รอบถัดไป'}${dateLabel ? ` ${dateLabel}` : ''} (ปิดรับ ${(() => { const c = roundCutoffLabel(nextPre, 'PRE_ORDER', 2); const m = /^(\d{1,2}):(\d{2})/.exec(c); return m ? `${String(Number(m[1]) % 12 === 0 ? 12 : Number(m[1]) % 12).padStart(2, '0')}:${m[2]} ${Number(m[1]) < 12 ? 'AM' : 'PM'}` : c })()})`
       : 'พรีออเดอร์: ปิดรับแล้ว — ยังไม่เปิดรอบถัดไป'
   })()
 
@@ -265,7 +265,7 @@ export function getStoreStatusFromRounds(rounds: Array<{
           ? Math.min(100, Math.round((Number(current.current_count || 0) / Number(current.max_capacity)) * 100))
           : undefined,
       // R10: ไม่ต่อ "ส่งรอบถัดไป X–Y" ท้ายข้อความ (Owner: ไม่ต้องแสดง)
-      message: 'เปิดรับออเดอร์ เซมเดย์ : ส่งทันที',
+      message: 'เปิดรับออเดอร์ Same-Day / ส่งวันนี้ : รอบส่ง ทันทีหลังครัวปรุงเสร็จ',
       preOrderLine,
     }
   }

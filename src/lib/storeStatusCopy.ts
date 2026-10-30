@@ -27,7 +27,7 @@ export interface StoreStatusCopy {
 
 /** ค่าจริงที่โค้ดใช้อยู่ตอนนี้ — ทั้ง fallback ของ client และตัวเทียบแมตช์ */
 export const DEFAULT_STORE_STATUS_COPY: StoreStatusCopy = {
-  sameDayOpen: 'เปิดรับออเดอร์ เซมเดย์ : ส่งทันที',
+  sameDayOpen: 'เปิดรับออเดอร์ Same-Day / ส่งวันนี้ : รอบส่ง ทันทีหลังครัวปรุงเสร็จ',
   preOrderOnly: 'เปิดรับออเดอร์จองล่วงหน้า — รอบวันนี้ปิดรับแล้ว',
   closed: 'ยังไม่เปิดรับออเดอร์ — ไม่มีรอบจัดส่งที่เปิดรับอยู่',
   preOrderClosed: 'พรีออเดอร์: ปิดรับแล้ว — ยังไม่เปิดรอบถัดไป',

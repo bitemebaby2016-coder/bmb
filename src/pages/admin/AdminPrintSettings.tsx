@@ -4,8 +4,8 @@
 import { useState, useEffect } from 'react'
 import { showToast } from '@/components/ui/ToastContainer'
 import { loadPrinterSettings, savePrinterSettings, PrinterSettings, DEFAULT_PRINTER_SETTINGS, createPrinterDef, upsertPrinter, removePrinter, assignPrinter, describePrinterTarget, PRINTER_MODEL_LABELS, PRINTER_MODEL_DEFAULT_WIDTH, type PrinterModel, printHtmlInHiddenFrame } from '@/lib/printService'
-// R23: _printDialogOpen ถูก export เพื่อกัน testPrint ซ้ำ (ไม่ export = ใช้ local flag แทน)
-let _printDialogOpen = false
+// R25: ไม่มี local flag — ทุกปุ่มทดสอบยิงผ่าน printHtmlInHiddenFrame (guard กลาง + afterprint cleanup ใน printService)
+// (เดิม: popup window.open + win.print() = popup ค้างหลัง Cancel + testPrintRole ไม่มี guard → ซ้อนได้)
 
 export function AdminPrintSettings() {
   const [settings, setSettings] = useState<PrinterSettings>(DEFAULT_PRINTER_SETTINGS)
@@ -33,43 +33,28 @@ export function AdminPrintSettings() {
 
   /** R23: เพิ่มเติม — ปุ่มทดสอบจาก dropdown (เลือกเครื่องพิมพ์จาก OS ก่อนกด) */
   function testPrintFromDropdown() {
-    if (_printDialogOpen) { showToast('มี dialog พิมพ์เปิดอยู่ — ปิดก่อนแล้วลองใหม่', 'warning'); return }
     const html = `<!doctype html><html lang="th"><head><meta charset="utf-8"><title>Test</title>
       <style>body{font-family:'Sarabun',sans-serif;font-size:12px;width:72mm;margin:4mm}</style></head>
       <body><h1 style="text-align:center">ทดสอบเครื่องพิมพ์</h1>
       <p>เครื่องที่ระบบผูก: ${describePrinterTarget(settings, 'receipt')}</p></body></html>`
-    _printDialogOpen = true
-    const cleanup = () => { _printDialogOpen = false; window.removeEventListener('afterprint', cleanup) }
-    window.addEventListener('afterprint', cleanup)
-    setTimeout(cleanup, 30000)
-    printHtmlInHiddenFrame(html)
-    showToast('เปิด dialog พิมพ์ — เลือกเครื่องพิมพ์จาก dropdown แล้วกดพิมพ์', 'info')
+    const r = printHtmlInHiddenFrame(html)
+    if (r === 'failed') { showToast('มี dialog พิมพ์เปิดอยู่ (หรือเปิดไม่สำเร็จ) — ปิดก่อนแล้วลองใหม่', 'warning'); return }
+    showToast('เปิด dialog แล้ว — เลือกได้เฉพาะเครื่องที่ Windows รู้จัก (Nimbot ต้องลงไดรเวอร์ก่อน ดูกล่องวิธีใช้ด้านล่าง)', 'info')
   }
 
   function testPrint() {
-    if (_printDialogOpen) {
-      showToast('มี dialog พิมพ์เปิดอยู่ — ปิดก่อนแล้วลองใหม่', 'warning')
-      return
-    }
-    const win = window.open('', '_blank', 'width=380,height=520')
-    if (!win) { showToast('เบราว์เซอร์บล็อกหน้าต่างทดสอบพิมพ์', 'warning'); return }
-    win.document.write(`<!doctype html><html lang="th"><head><meta charset="utf-8"><title>Test Print</title>
-      <style>body{font-family:'Sarabun','Tahoma',sans-serif;font-size:12px;width:72mm;margin:4mm}
+    const html = `<!doctype html><html lang="th"><head><meta charset="utf-8"><title>Test Print</title>
+      <style>body{font-family:'Sarabun','Tahoma',sans-serif;font-size:12px;width:${settings.paperWidthMm}mm;margin:4mm}
       h1{font-size:15px;text-align:center}hr{border:none;border-top:1px dashed #000;margin:6px 0}</style></head><body>
       <h1>Bite Me Baby</h1><div style="text-align:center">ทดสอบเครื่องพิมพ์ / Test Print</div><hr>
       <div>ความกว้างกระดาษ: ${settings.paperWidthMm} มม.</div>
       <div>เครื่องพิมพ์ใบเสร็จ: ${settings.receiptPrinterName || '(ค่าเริ่มต้นของระบบ)'}</div>
       <div>เครื่องพิมพ์คิวครัว: ${settings.kitchenPrinterName || '(ค่าเริ่มต้นของระบบ)'}</div><hr>
       <div style="text-align:center">ไทย: ทดสอบตัวอักษรไทย — ฿123.45</div>
-      </body></html>`)
-    win.document.close()
-    _printDialogOpen = true
-    const cleanup = () => { _printDialogOpen = false; window.removeEventListener('afterprint', cleanup) }
-    window.addEventListener('afterprint', cleanup)
-    setTimeout(cleanup, 30000)
-    win.focus()
-    win.print()
-    showToast('เปิดคำสั่งพิมพ์ทดสอบแล้ว — สถานะ "sent" ไม่ได้หมายถึงพิมพ์สำเร็จ', 'info')
+      </body></html>`
+    const r = printHtmlInHiddenFrame(html)
+    if (r === 'failed') { showToast('มี dialog พิมพ์เปิดอยู่ (หรือเปิดไม่สำเร็จ) — ปิดก่อนแล้วลองใหม่', 'warning'); return }
+    showToast('เปิดคำสั่งพิมพ์ทดสอบแล้ว — กด Cancel ใน dialog = หยุดจริง (ไม่มีงานซ้อน) · สถานะ "sent" ไม่ได้หมายถึงพิมพ์สำเร็จ', 'info')
   }
 
   function handleAddPrinter() {
@@ -87,23 +72,20 @@ export function AdminPrintSettings() {
     showToast('ลบออกจากรายชื่อแล้ว (กดบันทึกเพื่อบันทึกลงระบบ)', 'info')
   }
 
-  /** ทดสอบพิมพ์จาก "เครื่องที่ผูกกับบทบาท" — ใช้เทมเพลตใบเสร็จจริงของระบบ */
+  /** ทดสอบพิมพ์จาก "เครื่องที่ผูกกับบทบาท" — ใช้เทมเพลตใบเสร็จจริงของระบบ (R25: ผ่าน frame กลาง = มี guard + Cancel หยุดจริง) */
   function testPrintRole(role: 'receipt' | 'kitchen') {
-    const win = window.open('', '_blank', 'width=380,height=520')
-    if (!win) { showToast('เบราว์เซอร์บล็อกหน้าต่างทดสอบพิมพ์', 'warning'); return }
     const target = describePrinterTarget(settings, role)
-    win.document.write(`<!doctype html><html lang="th"><head><meta charset="utf-8"><title>Test Print</title>
+    const html = `<!doctype html><html lang="th"><head><meta charset="utf-8"><title>Test Print</title>
       <style>body{font-family:'Sarabun','Tahoma',sans-serif;font-size:12px;width:${role === 'receipt' ? settings.paperWidthMm : 58}mm;margin:4mm}
       h1{font-size:15px;text-align:center}hr{border:none;border-top:1px dashed #000;margin:6px 0}</style></head><body>
       <h1>Bite Me Baby</h1><div style="text-align:center">ทดสอบเครื่องพิมพ์ (${role === 'receipt' ? 'ใบเสร็จ' : 'คิวครัว'})</div><hr>
       <div>เครื่องที่ระบบผูกไว้: ${target}</div>
       <div>ความกว้างกระดาษ: ${settings.paperWidthMm} มม.</div>
       <div style="text-align:center">ไทย: ทดสอบตัวอักษรไทย — ฿123.45</div>
-      </body></html>`)
-    win.document.close()
-    win.focus()
-    win.print()
-    showToast(`ส่งคำสั่งพิมพ์ไปที่ "${target}" — สถานะ "sent" ไม่ได้หมายถึงพิมพ์สำเร็จ`, 'info')
+      </body></html>`
+    const r = printHtmlInHiddenFrame(html)
+    if (r === 'failed') { showToast('มี dialog พิมพ์เปิดอยู่ (หรือเปิดไม่สำเร็จ) — ปิดก่อนแล้วลองใหม่', 'warning'); return }
+    showToast(`ส่งคำสั่งพิมพ์ไปที่ "${target}" — กด Cancel = หยุดจริง (ไม่มีงานซ้อน) · สถานะ "sent" ไม่ได้หมายถึงพิมพ์สำเร็จ`, 'info')
   }
 
   if (!loaded) return <p className="text-brand-muted">กำลังโหลดตั้งค่า...</p>

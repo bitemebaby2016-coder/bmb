@@ -11,12 +11,12 @@ import cssSrc from '../index.css?raw'
 import mig164Src from '../../supabase/migrations/164_anon_read_business_settings_all.sql?raw'
 
 describe('R12 — แถบสถานะหน้าแรก: คำในวงเล็บไม่ต้องแสดง', () => {
-  it('homeProviders: ข้อความเปิดรับ = "เปิดรับออเดอร์ เซมเดย์" (ไม่มีท้าย "— ยังสั่งได้")', async () => {
+  it('homeProviders: ข้อความเปิดรับ = "เปิดรับออเดอร์ Same-Day / ส่งวันนี้" (ไม่มีท้าย "— ยังสั่งได้")', async () => {
     const { getStoreStatusFromRounds } = await import('@/lib/homeProviders')
     const s = getStoreStatusFromRounds([
       { status: 'active', display_name: 'SameDay', delivery_start: '06:00', delivery_end: '23:00', max_capacity: 10, current_count: 1, scheduled_date: '2026-10-14' },
     ] as never, new Date('2026-10-14T02:00:00Z'))
-    expect(s.message).toBe('เปิดรับออเดอร์ เซมเดย์ : ส่งทันที')
+    expect(s.message).toBe('เปิดรับออเดอร์ Same-Day / ส่งวันนี้ : รอบส่ง ทันทีหลังครัวปรุงเสร็จ')
     expect(s.message.includes('ยังสั่งได้')).toBe(false)
     expect(s.message.includes('(')).toBe(false)
   })

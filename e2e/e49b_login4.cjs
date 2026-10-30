@@ -1,0 +1,10 @@
+// e49b: dump LoginPage 551-641 + App.tsx customer routes (split ธรรมดา — เลี่ยง regex typo)
+const fs = require('fs')
+const path = require('path')
+const ROOT = 'D:\\A PROJECT\\Bite Me Baby'
+const linesOf = (rel) => fs.readFileSync(path.join(ROOT, rel), 'utf8').split('\n').map((s) => s.replace(/\r$/, ''))
+const real = linesOf('src/pages/login/LoginPage.tsx')
+for (let i = 550; i < real.length; i++) console.log(String(i + 1).padStart(4) + ' | ' + real[i])
+console.log('===== App.tsx customer routes =====')
+const app = linesOf('src/App.tsx')
+app.forEach((ln, i) => { if (/path="(\/|\/shop|\/login|\/checkout)"/.test(ln)) console.log(String(i + 1).padStart(4) + ' | ' + ln.trim().slice(0, 170)) })

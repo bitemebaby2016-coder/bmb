@@ -6,7 +6,7 @@ import { getGpsLocation, uploadDeliveryPhoto, saveDeliveryProfile, sendQuickLogi
 import { showToast } from '@/components/ui/ToastContainer'
 import { sendPasswordReset } from '@/lib/authRecovery'
 // P3 — Facebook Login
-import { signInWithFacebook, consumeSocialCallbackError, describeSocialError, readSocialNext } from '@/lib/socialLogin'
+import { signInWithFacebook, signInWithSocial, consumeSocialCallbackError, describeSocialError, readSocialNext } from '@/lib/socialLogin'
 // P4 — Passkey / WebAuthn
 import { signInWithPasskey, describePasskeyError, isPasskeySupported } from '@/lib/passkeyLogin'
 import { writeAuditLog } from '@/lib/auditLog'
@@ -86,7 +86,8 @@ export function LoginPage() {
   // (รอ isInitializing เสร็จก่อนกัน redirect ผิดจังหวะตอน restore session)
   useEffect(() => {
     if (!isInitializing && isAuthenticated) {
-      navigate(returnTo || '/', { replace: true })
+      // R25 (Owner): เคยล็อกอินแล้ว → เข้า /shop เลย (เดิมไป '/' = หน้า TalkToBite)
+      navigate(returnTo || '/shop', { replace: true })
     }
   }, [isInitializing, isAuthenticated, returnTo, navigate])
 
@@ -111,7 +112,7 @@ export function LoginPage() {
     showToast('เข้าสู่ระบบสำเร็จ!', 'success')
     // A3 (R21): returnTo (case B/D — deep-link ที่ถูกเด้งมา login) มาก่อนเสมอ
     // เดิมบังคับ admin ไป /admin เสมอจน deep-link ของแอดมินเช่น /admin/orders?tab=x หาย
-    navigate(returnTo || (role === 'admin' ? '/admin' : '/'), { replace: true })
+    navigate(returnTo || (role === 'admin' ? '/admin' : '/shop'), { replace: true })
   }
 
   // P1 / SF-04 — ส่งลิงก์ตั้งรหัสผ่านใหม่ (กัน enumeration: ตอบสำเร็จเสมอถ้าอีเมลไม่มีในระบบ)
@@ -584,6 +585,25 @@ return (
               `<phone>@phone.bmb.local` ซึ่ง Facebook ไม่มีทางคืนมา
               และระบบ "ไม่รวมบัญชีอัตโนมัติ" ระหว่าง Facebook กับบัญชีอีเมล/รหัสผ่านเดิม */}
           <div className="mt-5 pt-5 border-t border-brand-border">
+            {/* R25 (Owner): Google — built-in Supabase (ต้องใส่ Client ID/Secret ใน Dashboard ก่อนใช้จริง) */}
+            <button
+              type="button"
+              onClick={() => { setError(''); void signInWithSocial('google', returnTo || readSocialNext()).then((r) => { if (!r.ok) setError(describeSocialError(r.code, 'Google')) }) }}
+              className="w-full flex items-center justify-center gap-2 border border-brand-border rounded-lg bg-white text-[#4285F4] font-medium py-2.5 hover:bg-gray-50 transition-colors mb-2"
+            >
+              <span className="w-5 h-5 rounded-full bg-white text-[13px] font-bold flex items-center justify-center" style={{ color: '#4285F4' }} aria-hidden="true">G</span>
+              เข้าสู่ระบบด้วย Google
+            </button>
+            {/* R25 (Owner): LINE — Supabase ยังไม่มี built-in → ต้องลงทะเบียน Custom OIDC (LINE) ใน Dashboard
+                ถ้ายังไม่ได้ตั้งค่า ปุ่มจะแจ้งสถานะกลับมาเป็นข้อความไทย (ไม่เงียบ/ไม่พัง) */}
+            <button
+              type="button"
+              onClick={() => { setError(''); void signInWithSocial('line', returnTo || readSocialNext()).then((r) => { if (!r.ok) setError(describeSocialError(r.code, 'LINE')) }) }}
+              className="w-full flex items-center justify-center gap-2 border border-brand-border rounded-lg bg-[#06C755] text-white font-medium py-2.5 hover:opacity-90 transition-colors mb-2"
+            >
+              <span className="w-5 h-5 rounded-full bg-white text-[#06C755] text-[11px] font-bold flex items-center justify-center" aria-hidden="true">L</span>
+              เข้าสู่ระบบด้วย LINE
+            </button>
             <button
               type="button"
               onClick={() => void signInWithFacebook(returnTo || readSocialNext())}

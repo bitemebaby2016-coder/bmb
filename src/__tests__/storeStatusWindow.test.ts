@@ -31,7 +31,7 @@ describe('L-6 — แถบสถานะตามเวลา/รอบจร�
     expect(s.isOpen).toBe(true)
     expect(s.state).toBe('open')
     expect(s.message).not.toContain('เช้า')
-    expect(s.message).toContain('เซมเดย์')
+    expect(s.message).toContain('Same-Day')
     // R10 (Owner 2026-10-27 "ส่ง 11:00–15:00 ไม่ต้องแสดง"): ห้ามผูกเซมเดย์กับเวลาส่งของรอบ
     expect(s.message).not.toContain('11:00')
     // ไม่มีรอบ nàoอยู่ในหน้าต่าง → ห้ามโชว์ชื่อรอบ/ตัวเลขความจุของรอบอื่น
@@ -43,7 +43,7 @@ describe('L-6 — แถบสถานะตามเวลา/รอบจร�
     const s = getStoreStatusFromRounds(todayRounds, atIctl('11:00'))
     expect(s.isOpen).toBe(true)
     expect(s.message).toContain('เปิดรับออเดอร์')
-    expect(s.message).toContain('เซมเดย์')
+    expect(s.message).toContain('Same-Day')
     expect(s.message).not.toContain('เช้า')
     expect(s.currentRoundLabel).toBe('เที่ยง')
     expect(typeof s.capacityPct).toBe('number')
@@ -59,15 +59,15 @@ describe('L-6 — แถบสถานะตามเวลา/รอบจร�
     expect(s.preOrderLine).not.toContain('ปิดรับแล้ว')
     // R13 (Owner 2026-10-28): บอก "รอบไหนของวันไหน" — วันที่ DD/MM/YYYY + ปิดรอบ
     expect(s.preOrderLine).toContain('27/10/2026')
-    // R18 (Owner 2026-10-29): copy ใหม่ "เปิดรับ พรีออเดอร์ : จองล่วงหน้า รอบ …" — ยังชี้รอบถัดไป
-    expect(s.preOrderLine).toMatch(/จองล่วงหน้า รอบ/)
-    expect(s.preOrderLine).toMatch(/\(ปิดรอบ \d{2}:\d{2}\)/)
+    // R25 (Owner 2026-10-30): copy ใหม่ "เปิดรับออเดอร์ Pre-Order / จองล่วงหน้า : รอบส่ง … (ปิดรับ HH:MM AM/PM)" — ยังชี้รอบถัดไป
+    expect(s.preOrderLine).toMatch(/จองล่วงหน้า : รอบส่ง/)
+    expect(s.preOrderLine).toMatch(/\(ปิดรับ \d{2}:\d{2} (AM|PM)\)/)
   })
 
   it('ทุกรอบวันนี้ผ่านหน้าต่างส่งแล้ว (21:00) → ยังบอกว่าเซมเดย์สั่งได้ ไม่ใช่ปิดร้าน', () => {
     const s = getStoreStatusFromRounds(todayRounds, atIctl('21:00'))
     expect(s.isOpen).toBe(true)
-    expect(s.message).toContain('เซมเดย์')
+    expect(s.message).toContain('Same-Day')
     expect(s.message).not.toContain('ยังไม่เปิดรับออเดอร์')
   })
 })
