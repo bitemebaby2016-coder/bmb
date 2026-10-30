@@ -79,7 +79,7 @@ export default {
       })
       res.headers.set('X-BMB-Tenant-Id', tenantId)
       return res
-    } catch (e) {
+    } catch {
       return new Response('ต้นทางไม่ตอบสนอง (origin unreachable) — ลองใหม่', {
         status: 502,
         headers: { 'Content-Type': 'text/plain; charset=utf-8' },

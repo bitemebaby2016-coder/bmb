@@ -7,7 +7,7 @@
 //
 // Purpose: PUBLISH an APPROVED draft to the Facebook Page feed.
 //   internal invocation (x-automation-token, same as the other workers)
-//   → content_approvals row (content_type='post', status='approved')
+//   → content_approvals row (content_type ∈ post|promotion|banner|announcement, status='approved' — R24 marketing types)
 //   → Graph API POST /{page_id}/feed with message=body
 //     (META_PAGE_ACCESS_TOKEN — Edge Function secret only)
 //   → idempotent by draft id: replay returns the same result, never posts twice
@@ -107,7 +107,10 @@ async function publishDraft(approvalId: string, imageUrls: string[] = []) {
     return { ok: false, error: 'ERR_APPROVAL_NOT_FOUND', http: 404 }
   }
   const row = rowRes.j[0]
-  if (row.content_type !== 'post') {
+  // R24: marketing pipeline (AdminMarketing dropdown + m137 Part C) สร้าง approval ได้ 4 ประเภท
+  // (post/promotion/banner/announcement — CNT-01 ContentType) → ทุก type ที่ human approve แล้ว
+  // ถูก schedule ขึ้น FB feed ได้ · คืน ERR_NOT_A_POST เฉพาะ type นอกชุดนี้เท่านั้น
+  if (!['post', 'promotion', 'banner', 'announcement'].includes(row.content_type)) {
     return { ok: false, error: 'ERR_NOT_A_POST', http: 400 }
   }
   if (row.status !== 'approved') {
