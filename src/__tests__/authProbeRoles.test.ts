@@ -121,7 +121,7 @@ describe('A2/A3/A6 — source contracts (AdminRoute + LoginPage + authStore)', (
   })
 
   it('LoginPage: returnTo มาก่อนเสมอ (A3) — ห้ามบังคับ admin ไป /admin แล้วทิ้ง deep-link', () => {
-    expect(loginSrc).toContain("navigate(returnTo || (role === 'admin' ? '/admin' : '/'), { replace: true })")
+    expect(loginSrc).toContain("navigate(returnTo || (role === 'admin' ? '/admin' : '/shop'), { replace: true })")
   })
 
   it('authStore: logout มี finally + login/loginByLocation ห้าม reject (A4/A5) + probe 3 สถานะ (A1/A7)', () => {

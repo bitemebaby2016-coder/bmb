@@ -30,7 +30,7 @@ describe('R16 — strip: สองบรรทัดขนาดเท่าก�
     )
     expect(s.sameDayOpen).toBe(true)
     expect(s.preOrderOpen).toBe(true)
-    expect(s.preOrderLine).toMatch(/\(ปิดรอบ \d{2}:\d{2}\)/) // ปิดรอบจริงจาก delivery_start − cutoff_hours (06:00 − 2 = 04:00)
+    expect(s.preOrderLine).toMatch(/\(ปิดรับ \d{2}:\d{2} (AM|PM)\)/) // ปิดรับจริงจาก delivery_start − cutoff_hours (06:00 − 2 = 04:00 AM) — R25 copy AM/PM
   })
 
   it('รอบวันนี้เต็ม (เซมเดย์ปิด) + มีรอบพรุ่งนี้ → sameDayOpen=false แต่ preOrderOpen=true (คนละสีได้)', () => {
