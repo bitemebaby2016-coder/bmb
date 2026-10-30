@@ -89,8 +89,12 @@ describe('สติกเกอร์ BMB 40×60 — แบบฟอร์มต
 
   it('AdminPrintSettings: QZ panel + ปุ่มทดสอบยิงเทมเพลตสติกเกอร์', () => {
     expect(adminSrc).toContain('qz-tray-panel')
+    expect(adminSrc).toContain('qz-status')
     expect(adminSrc).toContain('handleConnectQz')
     expect(adminSrc).toContain('qz-test-sticker')
     expect(adminSrc).toMatch(/buildBmbStickerHtml\(sampleSticker\(\)\)/)
+    // R29: auto-connect ตอนเปิดหน้า + วิธีใช้พับเป็น details (กระชับ)
+    expect(adminSrc).toMatch(/void handleConnectQz\(true\)/)
+    expect(adminSrc).toContain('<details')
   })
 })

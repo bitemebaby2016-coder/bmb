@@ -21,6 +21,9 @@ export function AdminPrintSettings() {
   // R27: QZ Tray — สถานะเชื่อมต่อ/รายชื่อเครื่องจาก QZ (ไม่พึ่งไดรเวอร์ Windows)
   const [qzPrinters, setQzPrinters] = useState<string[] | null>(null)
   const [qzBusy, setQzBusy] = useState(false)
+  // R29b: ตัวแสดงสถานะ QZ ชัดเจน — connected = พอร์ตในเครื่องตอบแล้ว (เขียว) · down = เห็นเหตุผลใต้ชิป
+  const [qzState, setQzState] = useState<'unknown' | 'connected' | 'down'>('unknown')
+  const [qzLastError, setQzLastError] = useState('')
 
   useEffect(() => {
     void (async () => {
@@ -28,6 +31,13 @@ export function AdminPrintSettings() {
       setLoaded(true)
     })()
   }, [])
+
+  // R29: เปิดหน้า = เชื่อม QZ ให้เอง (ถ้าเปิดใช้ไว้) — ไม่ต้องกดเชื่อมใหม่ทุกครั้ง
+  // (websocket ตายตอนเปลี่ยนหน้า/รีเฟรช — รีเชื่อมอัตโนมัติ · เงียบ ไม่ toast ทุกรอบ)
+  useEffect(() => {
+    if (!loaded || !settings.qzEnabled) return
+    void handleConnectQz(true)
+  }, [loaded])
 
   async function handleSave() {
     setSaving(true)
@@ -57,16 +67,24 @@ export function AdminPrintSettings() {
     }
   }
 
-  /** R27: เชื่อมต่อ QZ Tray (qz.websocket.connect → พอร์ตในเครื่อง) แล้วดึงรายชื่อเครื่องพิมพ์ */
-  async function handleConnectQz() {
+  /** R27: เชื่อมต่อ QZ Tray (qz.websocket.connect → พอร์ตในเครื่อง) แล้วดึงรายชื่อเครื่องพิมพ์
+   *  R29: silent=true ใช้ตอนเปิดหน้าอัตโนมัติ — ไม่ toast สำเร็จ/เตือน (แสดงเฉพาะตอนกดเอง) */
+  async function handleConnectQz(silent = false) {
     setQzBusy(true)
     try {
       const names = await qzConnect()
       setQzPrinters(names)
+      setQzState('connected')
+      setQzLastError('')
+      if (silent) return
       if (names.length > 0) showToast(`เชื่อมต่อ QZ แล้ว — เจอ ${names.length} เครื่องพิมพ์`, 'success')
       else showToast('เชื่อมต่อ QZ แล้วแต่ไม่เจอเครื่องพิมพ์ — เพิ่มเครื่องใน Windows/QZ ให้ขึ้นในรายการก่อน', 'warning')
     } catch (e) {
-      showToast(describeQzError(e), 'error')
+      const msg = describeQzError(e)
+      setQzState('down')
+      setQzLastError(msg)
+      if (!silent) showToast(msg, 'error')
+      else console.warn('[QZ] auto-connect failed:', e)
     } finally {
       setQzBusy(false)
     }
@@ -124,29 +142,34 @@ export function AdminPrintSettings() {
     <div className="space-y-6">
       <h1 className="text-2xl font-bold text-brand-accent">🖨️ ตั้งค่าเครื่องพิมพ์</h1>
       <div className="card space-y-4">
-        <div>
-          <label className="block text-sm font-medium mb-1">ชื่อเครื่องพิมพ์ใบเสร็จ (สำหรับอ้างอิงในระบบ)</label>
-          <input className="input" value={settings.receiptPrinterName} onChange={(e) => setSettings({ ...settings, receiptPrinterName: e.target.value })} placeholder="เช่น EPSON TM-T20III (Counter)" />
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          <div>
+            <label className="block text-sm font-medium mb-1">ชื่ออ้างอิง "ใบเสร็จ"</label>
+            <input className="input" value={settings.receiptPrinterName} onChange={(e) => setSettings({ ...settings, receiptPrinterName: e.target.value })} placeholder="เช่น EPSON TM-T20III (Counter)" />
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1">ชื่ออ้างอิง "คิวครัว"</label>
+            <input className="input" value={settings.kitchenPrinterName} onChange={(e) => setSettings({ ...settings, kitchenPrinterName: e.target.value })} placeholder="เช่น RONGTA RP80 (Kitchen)" />
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1">ความกว้างกระดาษ (มม.)</label>
+            <select className="input w-full" value={settings.paperWidthMm} onChange={(e) => setSettings({ ...settings, paperWidthMm: Number(e.target.value) })}>
+              <option value={58}>58 มม.</option>
+              <option value={80}>80 มม.</option>
+            </select>
+          </div>
         </div>
-        <div>
-          <label className="block text-sm font-medium mb-1">ชื่อเครื่องพิมพ์คิวครัว</label>
-          <input className="input" value={settings.kitchenPrinterName} onChange={(e) => setSettings({ ...settings, kitchenPrinterName: e.target.value })} placeholder="เช่น RONGTA RP80 (Kitchen)" />
+        <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
+          <label className="flex items-center gap-2 text-sm">
+            <input type="checkbox" checked={settings.autoPrintReceipt} onChange={(e) => setSettings({ ...settings, autoPrintReceipt: e.target.checked })} />
+            <span>Auto-Print ใบเสร็จ</span>
+          </label>
+          <label className="flex items-center gap-2 text-sm">
+            <input type="checkbox" checked={settings.autoPrintKitchen} onChange={(e) => setSettings({ ...settings, autoPrintKitchen: e.target.checked })} />
+            <span>Auto-Print ใบสั่งครัว</span>
+          </label>
+          <span className="text-xs text-brand-muted">(ปิดได้ = พิมพ์เองจากปุ่มในหน้าออเดอร์)</span>
         </div>
-        <div>
-          <label className="block text-sm font-medium mb-1">ความกว้างกระดาษ (มม.)</label>
-          <select className="input w-40" value={settings.paperWidthMm} onChange={(e) => setSettings({ ...settings, paperWidthMm: Number(e.target.value) })}>
-            <option value={58}>58 มม.</option>
-            <option value={80}>80 มม.</option>
-          </select>
-        </div>
-        <label className="flex items-center gap-2">
-          <input type="checkbox" checked={settings.autoPrintReceipt} onChange={(e) => setSettings({ ...settings, autoPrintReceipt: e.target.checked })} />
-          <span>Auto-Print ใบเสร็จเมื่อมีออเดอร์ใหม่</span>
-        </label>
-        <label className="flex items-center gap-2">
-          <input type="checkbox" checked={settings.autoPrintKitchen} onChange={(e) => setSettings({ ...settings, autoPrintKitchen: e.target.checked })} />
-          <span>Auto-Print คิวครัวเมื่อยืนยันออเดอร์</span>
-        </label>
         {/* R21 (Owner 2026-10-29): ทะเบียนเครื่องพิมพ์ — แอดมินเพิ่ม/ลบ/ผูกบทบาทเองได้ */}
         <div className="border-t border-brand-border pt-4 space-y-3" data-testid="printer-registry">
           <h2 className="font-bold text-brand-accent">🖨️ เครื่องพิมพ์ที่ตั้งไว้</h2>
@@ -215,6 +238,19 @@ export function AdminPrintSettings() {
           {/* R27 (Owner): QZ Tray — ทางพิมพ์สติกเกอร์ไม่พึ่งไดรเวอร์ Windows (Nimbot B1Pro มีไดรเวอร์แค่ Win7) */}
           <div className="border-t border-brand-border pt-3 space-y-2" data-testid="qz-tray-panel">
             <h2 className="font-bold text-brand-accent">🔗 QZ Tray (ตัวกลางพิมพ์สติกเกอร์ 40×60)</h2>
+            {/* R29b: สถานะแบบเห็นชัด — เขียว = เชื่อมต่อพอร์ตในเครื่องแล้ว · แดง = บอกเหตุผล + วิธีต่อ */}
+            <div className="flex items-center gap-2 text-sm" data-testid="qz-status">
+              <span className={qzState === 'connected' ? 'text-green-600 font-semibold' : qzState === 'down' ? 'text-red-500 font-semibold' : 'text-brand-muted'}>
+                ● {qzState === 'connected' ? 'QZ เชื่อมต่อแล้ว (พอร์ตในเครื่อง)' : qzState === 'down' ? 'QZ ยังเชื่อมต่อไม่ได้' : 'ยังไม่ได้เชื่อมต่อ QZ'}
+              </span>
+              {qzState === 'connected' && <span className="text-xs text-brand-muted">เปิดหน้านี้ไว้ = เชื่อมตลอด · รีเฟรชก็ต่อให้เอง</span>}
+            </div>
+            {qzState === 'down' && (
+              <p className="text-xs text-red-400">
+                {qzLastError} → เปิดโปรแกรม <b>QZ Tray</b> บนเครื่องนี้ค้างไว้ แล้วกด "เชื่อมต่อ &amp; ดึงรายชื่อ"
+                {qzLastError.includes('Allow') ? ' · ครั้งแรกให้ติ๊ก Remember this decision + Allow ในกล่องของ QZ' : ''}
+              </p>
+            )}
             <p className="text-xs text-brand-muted">ใบเสร็จ + ใบสั่งครัว = <b>สติกเกอร์แบบฟอร์มเดียวกัน</b> (เทมเพลต BMB 40×60) · QZ Tray เชื่อมผ่านพอร์ตในเครื่อง ไม่ต้องง้อไดรเวอร์ของ Windows — ต้องเปิดโปรแกรม QZ Tray บนเครื่องที่ต่อเครื่องพิมพ์ไว้ก่อน แล้วกด "เชื่อมต่อ" (ครั้งแรกกด Allow ใน QZ)</p>
             <label className="flex items-center gap-2 text-sm">
               <input type="checkbox" checked={settings.qzEnabled ?? false} onChange={(e) => setSettings({ ...settings, qzEnabled: e.target.checked })} />
@@ -241,25 +277,23 @@ export function AdminPrintSettings() {
               </div>
             </div>
           </div>
-          <p className="text-xs text-brand-muted">เครื่องที่ระบบผูกไว้ตอนนี้: ใบเสร็จ = <b>{describePrinterTarget(settings, 'receipt')}</b> · คิวครัว = <b>{describePrinterTarget(settings, 'kitchen')}</b></p>
-          <p className="text-xs text-amber-600">💡 ถ้ากดทดสอบแล้วขึ้น <b>"ไม่พบเครื่องพิมพ์"</b> = ต้องเพิ่มเครื่องพิมพ์ด้านบนก่อน แล้วกด "บันทึก"</p>
-          <div className="rounded-lg border border-brand-border p-3 text-xs space-y-1" data-testid="print-howto">
-            <p className="font-semibold text-brand-accent">📖 วิธีใช้ & เทมเพลต</p>
-            <p>• <b>เทมเพลตสติกเกอร์ BMB 40×60 (ใบเสร็จ+ครัวใช้ใบเดียวกัน)</b> — <code>buildBmbStickerHtml</code> ใน <code>src/lib/printService.ts</code> แบบมาจาก Templates-BmB ของ Owner: ป้ายซ้ายฝังตาย ค่าอ่านจากแบบฟอร์มออเดอร์เท่านั้น (หลัง : ) · QR = biteme-baby.com · unit test: <code>bmbSticker.test.ts</code> / <code>printTemplates.test.ts</code></p>
-            <p>• <b>Nimbot ไม่มีไดรเวอร์ Win10?</b> → เปิดใช้ <b>QZ Tray</b> ด้านบน: ลงโปรแกรม QZ Tray → เปิดโปรแกรมค้างไว้ → กด "เชื่อมต่อ & ดึงรายชื่อ" (ครั้งแรกติ๊ก <b>Remember this decision</b> + Allow ใน QZ) → เลือกเครื่อง → บันทึก → "ทดสอบสติกเกอร์ (QZ)" · ทาง dialog เดิมยังใช้ได้เสมอเมื่อปิดสวิตช์ QZ</p>
-            <p>• <b>คิวพิมพ์ขึ้น Error / พิมพ์ไม่ออก / รีสตารทแล้วยังค้าง?</b> = เช็คไดรเวอร์ของคิวใน "อุปกรณ์และเครื่องพิมพ์": ถ้าคิวเป็น <b>Generic / Text Only</b> → เปลี่ยนมาเลือกคิวที่มีไดรเวอร์จริง (เช่น <code>B1 Pro-I…</code> ที่ติดตั้งมาจาก Nimbot) ใน dropdown ด้านบน · ล้างงานค้าง = คลิกขวาคิว → Cancel All Documents หรือรัน <code>e2e/print_clear_queue.cmd</code> <b>ในฐานะ Administrator</b></p>
-            <p>• <b>ลำดับตั้งค่า</b>: เพิ่มเครื่อง → ผูกบทบาท (ใบเสร็จ/ใบสั่งครัว) → สวิตช์ Auto-Print → กดบันทึก → ทดสอบ "ทดสอบใบเสร็จ"/"ทดสอบใบสั่งครัว" → ใบสั่งครัวออโต้ = 1 dialog (ใบเสร็จ+ใบรวมหน้า) ต่อ 1 ออเดอร์</p>
-          </div>
+          <p className="text-xs text-brand-muted">ผูกไว้: ใบเสร็จ = <b>{describePrinterTarget(settings, 'receipt')}</b> · ครัว = <b>{describePrinterTarget(settings, 'kitchen')}</b> — ทดสอบแล้วขึ้น "ไม่พบเครื่องพิมพ์" = เพิ่มเครื่องด้านบนก่อนแล้วกดบันทึก</p>
+          <details className="rounded-lg border border-brand-border text-xs" data-testid="print-howto">
+            <summary className="cursor-pointer select-none px-3 py-2 font-semibold text-brand-accent">📖 วิธีใช้ & เทมเพลต — แตะเพื่อกาง</summary>
+            <div className="px-3 pb-3 space-y-1">
+              <p>• <b>เทมเพลตสติกเกอร์ BMB 40×60 (ใบเสร็จ+ครัวใช้ใบเดียวกัน)</b> — <code>buildBmbStickerHtml</code> ใน <code>src/lib/printService.ts</code> แบบมาจาก Templates-BmB ของ Owner: ป้ายซ้ายฝังตาย ค่าอ่านจากแบบฟอร์มออเดอร์เท่านั้น (หลัง : ) · QR = biteme-baby.com · unit test: <code>bmbSticker.test.ts</code> / <code>printTemplates.test.ts</code></p>
+              <p>• <b>Nimbot ไม่มีไดรเวอร์ Win10?</b> → เปิดใช้ <b>QZ Tray</b> ด้านบน: ลงโปรแกรม QZ Tray → เปิดโปรแกรมค้างไว้ → กด "เชื่อมต่อ & ดึงรายชื่อ" (ครั้งแรกติ๊ก <b>Remember this decision</b> + Allow ใน QZ) → เลือกเครื่อง → บันทึก → "ทดสอบสติกเกอร์ (QZ)" · ทาง dialog เดิมยังใช้ได้เสมอเมื่อปิดสวิตช์ QZ</p>
+              <p>• <b>คิวพิมพ์ขึ้น Error / พิมพ์ไม่ออก / รีสตารทแล้วยังค้าง?</b> = เช็คไดรเวอร์ของคิวใน "อุปกรณ์และเครื่องพิมพ์": ถ้าคิวเป็น <b>Generic / Text Only</b> → เปลี่ยนมาเลือกคิวที่มีไดรเวอร์จริง (เช่น <code>B1 Pro-I…</code> ที่ติดตั้งมาจาก Nimbot) ใน dropdown ด้านบน · ล้างงานค้าง = คลิกขวาคิว → Cancel All Documents หรือรัน <code>e2e/print_clear_queue.cmd</code> <b>ในฐานะ Administrator</b></p>
+              <p>• <b>ลำดับตั้งค่า</b>: เพิ่มเครื่อง → ผูกบทบาท (ใบเสร็จ/ใบสั่งครัว) → สวิตช์ Auto-Print → กดบันทึก → ทดสอบ "ทดสอบใบเสร็จ"/"ทดสอบใบสั่งครัว" → ใบสั่งครัวออโต้ = 1 dialog (ใบเสร็จ+ใบรวมหน้า) ต่อ 1 ออเดอร์</p>
+              <p>• ทางพิมพ์ R27: <b>QZ Tray</b> (เปิดสวิตช์ด้านบน) = ส่งงานเงียบ ๆ ผ่านตัวกลาง ไม่พึ่งไดรเวอร์ Windows · ปิดสวิตช์ = คำสั่งพิมพ์ของเบราว์เซอร์/OS เดิม (รองรับเครื่องพิมพ์ทุกตัวที่ Windows/macOS มองเห็น)</p>
+              <p>• สถานะงานพิมพ์แยกเป็น requested → sent → acknowledged → printed — ระบบจะไม่อ้างว่า "พิมพ์สำเร็จ" จนกว่าจะกดยืนยันเอง · เครื่องพิมพ์ออฟไลน์: ออเดอร์อยู่ครบ งานพิมพ์ค้างเป็น failed ให้กดพิมพ์ซ้ำ</p>
+            </div>
+          </details>
         </div>
 
         <div className="flex gap-2">
           <button className="btn btn-primary" disabled={saving} onClick={() => void handleSave()}>{saving ? '⏳ ...' : 'บันทึก'}</button>
           <button className="btn btn-outline" onClick={() => void testPrint()}>ทดสอบพิมพ์</button>
-        </div>
-        <div className="text-xs text-brand-muted space-y-1">
-          <p>• ทางพิมพ์ R27: <b>QZ Tray</b> (เปิดสวิตช์ด้านบน) = ส่งงานเงียบ ๆ ผ่านตัวกลาง ไม่พึ่งไดรเวอร์ Windows · ปิดสวิตช์ = คำสั่งพิมพ์ของเบราว์เซอร์/OS เดิม (รองรับเครื่องทุกตัวที่ Windows/macOS มองเห็น)</p>
-          <p>• สถานะงานพิมพ์แยกเป็น requested → sent → acknowledged → printed — ระบบจะไม่อ้างว่า "พิมพ์สำเร็จ" จนกว่าจะกดยืนยันเอง</p>
-          <p>• ถ้าเครื่องพิมพ์ออฟไลน์: ออเดอร์ยังอยู่ครบ — งานพิมพ์ค้างเป็นสถานะ failed ให้กดพิมพ์ซ้ำภายหลัง</p>
         </div>
       </div>
     </div>
