@@ -73,7 +73,7 @@ describe('P3 social login — Thai error messages', () => {
       'access_denied', 'provider_email_needs_verification', 'both_email_and_id_must_be_present',
       'user_already_exists', 'validation_failed', 'ERR_SOCIAL_START_FAILED', 'ERR_NETWORK',
     ]
-    const seen = new Set(codes.map(describeSocialError))
+    const seen = new Set(codes.map((c) => describeSocialError(c)))
     expect(seen.size).toBe(codes.length)
   })
 
