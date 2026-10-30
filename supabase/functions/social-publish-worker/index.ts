@@ -182,6 +182,76 @@ async function auditFailure(approvalId: string, reason: string) {
   }).catch(() => null)
 }
 
+// ===== R26 — poll comments on our published posts (Owner: "ให้ AI ตอบคอมเม้น") =====
+// อ่านคอมเม้นเท่านั้น — การ "ตอบ" ยังเป็นหน้าที่ social-ai-worker (classify → draft →
+// validate → safety-gate → send) เท่านั้น ไม่มีเส้นทางคู่ขนาน/ไม่เขียนเพจตรง ๆ
+// Dedupe = RPC ingest_social_event (UNIQUE platform+event_id · event_id = comment_id
+// ชุดเดียวกับ webhook → ถ้า webhook ของ Meta มาด้วยก็ชนกันเป็น DUPLICATE ไม่ตอบซ้ำ)
+async function pollComments() {
+  if (!PAGE_TOKEN) return { ok: false, error: 'ERR_NO_PAGE_TOKEN', http: 503 } as const
+  const pageRes = await fetch(`${GRAPH}/me?fields=id`, { headers: { Authorization: 'Bearer ' + PAGE_TOKEN } })
+  const pageJ = await pageRes.json().catch(() => null)
+  const pageId = String(PAGE_ID || (pageJ && pageJ.id) || '')
+  if (!pageId) return { ok: false, error: 'ERR_META_PAGE_RESOLVE', http: 502 } as const
+  // โพสที่ publish แล้วใน 14 วันล่าสุด (จำกัด 10)
+  const since = new Date(Date.now() - 14 * 24 * 3600 * 1000).toISOString()
+  const postsRes = await rest('GET', `/rest/v1/marketing_posts?select=provider_post_id&status=eq.published&provider_post_id=not.is.null&published_at=gte.${encodeURIComponent(since)}&order=published_at.desc&limit=10`)
+  const postIds = (Array.isArray(postsRes.j) ? postsRes.j : [])
+    .map((r: { provider_post_id?: string }) => String(r.provider_post_id || ''))
+    .filter((id: string) => id.includes('_'))
+  let seen = 0
+  let inserted = 0
+  let duplicate = 0
+  let unbound = 0
+  let kicked = 0
+  for (const postId of postIds) {
+    const cRes = await fetch(`${GRAPH}/${postId}/comments?fields=id,message,from,created_time&limit=50`, {
+      headers: { Authorization: 'Bearer ' + PAGE_TOKEN },
+    })
+    const cJ = await cRes.json().catch(() => null)
+    const comments: Array<{ id?: string; message?: string; from?: { id?: string; name?: string }; created_time?: string }> =
+      Array.isArray(cJ?.data) ? cJ.data : []
+    for (const c of comments) {
+      if (!c.id || typeof c.message !== 'string' || !c.message.trim()) continue
+      // self-echo: เพจตอบตัวเอง (webhook กรองแบบเดียวกัน — ป้องกัน "ตอบเบิ้ล")
+      if (c.from?.id && c.from.id === pageId) continue
+      seen++
+      const ingest = await rest('POST', '/rest/v1/rpc/ingest_social_event', {
+        p_platform: 'FACEBOOK',
+        p_event_id: c.id,
+        p_page_id: pageId,
+        p_event_type: 'comment',
+        p_sender_id: c.from?.id ?? null,
+        p_sender_name: c.from?.name ?? null,
+        p_content: c.message.slice(0, 2000),
+        p_payload: { id: c.id, message: c.message, from: c.from ?? null, created_time: c.created_time ?? null, post_id: postId, source: 'poll' },
+      })
+      const out = typeof ingest.j === 'string' ? ingest.j : Array.isArray(ingest.j) ? String(ingest.j[0] || '') : ''
+      if (out === 'INSERTED') {
+        inserted++
+        // kick social-ai-worker (pattern เดียวกับ channel-webhook.triggerAi — errors swallowed;
+        // kick ล้ม event ยังอยู่ RECEIVED → poll รอบถัดไป retry เอง)
+        try {
+          await fetch(SB_URL + '/functions/v1/social-ai-worker', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              apikey: SERVICE,
+              Authorization: 'Bearer ' + SERVICE,
+              'x-automation-token': TOKEN,
+            },
+            body: JSON.stringify({ event_id: c.id, limit: 1 }),
+            signal: AbortSignal.timeout(40000),
+          })
+          kicked++
+        } catch { /* swallow — ห้ามให้ kick ล้ม fail poll ทั้งรอบ */ }
+      } else if (out === 'DUPLICATE') duplicate++
+      else if (out === 'UNBOUND_PAGE') unbound++
+    }
+  }
+  return { ok: true, page_id: pageId, posts: postIds.length, seen, inserted, duplicate, unbound, kicked }
+}
+
 Deno.serve(async (req: Request): Promise<Response> => {
   if (req.method === 'OPTIONS') return new Response('ok', { status: 200 })
   if (req.method !== 'POST') return json({ error: 'method not allowed' }, 405)
@@ -192,11 +262,17 @@ Deno.serve(async (req: Request): Promise<Response> => {
 
   if (!PAGE_TOKEN) return json({ error: 'ERR_NO_PAGE_TOKEN', hint: 'set META_PAGE_ACCESS_TOKEN secret' }, 503)
 
-  let body: { approvalId?: string; imageUrls?: unknown }
+  let body: { action?: string; approvalId?: string; imageUrls?: unknown }
   try {
     body = await req.json()
   } catch {
     return json({ error: 'invalid json' }, 400)
+  }
+  // R26 (Owner: "ให้ AI ตอบคอมเม้น"): poll คอมเม้นบนโพสที่ publish แล้ว → ingest RPC → kick social-ai-worker
+  if (body.action === 'poll_comments') {
+    const poll = await pollComments()
+    const pollHttp = 'http' in poll ? (poll as { http: number }).http : 200
+    return json(poll, pollHttp)
   }
   const approvalId = (body.approvalId || '').trim()
   if (!approvalId) return json({ error: 'ERR_INVALID_APPROVAL' }, 400)

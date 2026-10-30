@@ -604,6 +604,35 @@ async function runMarketingPublish(ctx: Ctx, p: { limit?: number }) {
     }
   }
   ctx.results.marketing_publish = { scanned: rows.length, published, failed, skipped }
+
+  // R26 (Owner: "ให้ AI ตอบคอมเม้นบนโพส") — หลังรอบ publish: poll คอมเม้นบนโพสที่ขึ้นแล้ว
+  // → social-publish-worker (ingest ผ่าน RPC dedupe + kick social-ai-worker เท่านั้น —
+  // การร่าง/ส่งคำตอบยังเป็นหน้าที่ social-ai-worker safety-gated เดิม ไม่มีเส้นทางคู่ขนาน)
+  try {
+    const pr = await fetch(`${SB_URL}/functions/v1/social-publish-worker`, {
+      method: 'POST',
+      headers: { apikey: SERVICE, Authorization: 'Bearer ' + SERVICE, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'poll_comments' }),
+      signal: AbortSignal.timeout(90000),
+    })
+    const pj = await pr.json().catch(() => ({} as Record<string, unknown>))
+    ctx.results.comment_poll = pj
+    if (!pr.ok) ctx.errors.push('comment_poll http ' + pr.status)
+    // trace รายชั่วโมง → audit_logs (idempotent ด้วย id ต่อชั่วโมง) — dispatcher ไม่ log response body,
+    // จึงต้องบันทึกผล poll ลง DB เพื่อ verify ได้จริง (g26-poll-YYYY-MM-DDTHH)
+    try {
+      await rest(SERVICE, 'POST', '/rest/v1/audit_logs', {
+        id: 'g26-poll-' + new Date().toISOString().slice(0, 13),
+        action: 'social.comment_poll',
+        entity_type: 'marketing_post',
+        entity_id: 'poll',
+        description: 'comment poll: ' + JSON.stringify(pj).slice(0, 400),
+        metadata: pj,
+      })
+    } catch { /* trace ห้าม fail งาน */ }
+  } catch (err: unknown) {
+    ctx.errors.push('comment_poll: ' + String(err instanceof Error ? err.message : err).slice(0, 150))
+  }
 }
 
 Deno.serve(async (req: Request): Promise<Response> => {
