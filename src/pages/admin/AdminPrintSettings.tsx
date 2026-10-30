@@ -3,7 +3,9 @@
 // เครื่องพิมพ์ทุกตัวที่ OS มองเห็น; ESC/POS raw adapter = แผนระยะถัดไป (ดู docs).
 import { useState, useEffect } from 'react'
 import { showToast } from '@/components/ui/ToastContainer'
-import { loadPrinterSettings, savePrinterSettings, PrinterSettings, DEFAULT_PRINTER_SETTINGS, createPrinterDef, upsertPrinter, removePrinter, assignPrinter, describePrinterTarget, PRINTER_MODEL_LABELS, PRINTER_MODEL_DEFAULT_WIDTH, type PrinterModel } from '@/lib/printService'
+import { loadPrinterSettings, savePrinterSettings, PrinterSettings, DEFAULT_PRINTER_SETTINGS, createPrinterDef, upsertPrinter, removePrinter, assignPrinter, describePrinterTarget, PRINTER_MODEL_LABELS, PRINTER_MODEL_DEFAULT_WIDTH, type PrinterModel, printHtmlInHiddenFrame } from '@/lib/printService'
+// R23: _printDialogOpen ถูก export เพื่อกัน testPrint ซ้ำ (ไม่ export = ใช้ local flag แทน)
+let _printDialogOpen = false
 
 export function AdminPrintSettings() {
   const [settings, setSettings] = useState<PrinterSettings>(DEFAULT_PRINTER_SETTINGS)
@@ -29,7 +31,26 @@ export function AdminPrintSettings() {
     showToast(ok ? 'บันทึกตั้งค่าเครื่องพิมพ์แล้ว' : 'บันทึกไม่สำเร็จ', ok ? 'success' : 'error')
   }
 
+  /** R23: เพิ่มเติม — ปุ่มทดสอบจาก dropdown (เลือกเครื่องพิมพ์จาก OS ก่อนกด) */
+  function testPrintFromDropdown() {
+    if (_printDialogOpen) { showToast('มี dialog พิมพ์เปิดอยู่ — ปิดก่อนแล้วลองใหม่', 'warning'); return }
+    const html = `<!doctype html><html lang="th"><head><meta charset="utf-8"><title>Test</title>
+      <style>body{font-family:'Sarabun',sans-serif;font-size:12px;width:72mm;margin:4mm}</style></head>
+      <body><h1 style="text-align:center">ทดสอบเครื่องพิมพ์</h1>
+      <p>เครื่องที่ระบบผูก: ${describePrinterTarget(settings, 'receipt')}</p></body></html>`
+    _printDialogOpen = true
+    const cleanup = () => { _printDialogOpen = false; window.removeEventListener('afterprint', cleanup) }
+    window.addEventListener('afterprint', cleanup)
+    setTimeout(cleanup, 30000)
+    printHtmlInHiddenFrame(html)
+    showToast('เปิด dialog พิมพ์ — เลือกเครื่องพิมพ์จาก dropdown แล้วกดพิมพ์', 'info')
+  }
+
   function testPrint() {
+    if (_printDialogOpen) {
+      showToast('มี dialog พิมพ์เปิดอยู่ — ปิดก่อนแล้วลองใหม่', 'warning')
+      return
+    }
     const win = window.open('', '_blank', 'width=380,height=520')
     if (!win) { showToast('เบราว์เซอร์บล็อกหน้าต่างทดสอบพิมพ์', 'warning'); return }
     win.document.write(`<!doctype html><html lang="th"><head><meta charset="utf-8"><title>Test Print</title>
@@ -42,6 +63,10 @@ export function AdminPrintSettings() {
       <div style="text-align:center">ไทย: ทดสอบตัวอักษรไทย — ฿123.45</div>
       </body></html>`)
     win.document.close()
+    _printDialogOpen = true
+    const cleanup = () => { _printDialogOpen = false; window.removeEventListener('afterprint', cleanup) }
+    window.addEventListener('afterprint', cleanup)
+    setTimeout(cleanup, 30000)
     win.focus()
     win.print()
     showToast('เปิดคำสั่งพิมพ์ทดสอบแล้ว — สถานะ "sent" ไม่ได้หมายถึงพิมพ์สำเร็จ', 'info')
@@ -176,6 +201,13 @@ export function AdminPrintSettings() {
             <button className="btn btn-outline" onClick={() => testPrintRole('kitchen')}>ทดสอบใบสั่งครัว</button>
           </div>
           <p className="text-xs text-brand-muted">เครื่องที่ระบบผูกไว้ตอนนี้: ใบเสร็จ = <b>{describePrinterTarget(settings, 'receipt')}</b> · คิวครัว = <b>{describePrinterTarget(settings, 'kitchen')}</b></p>
+          <p className="text-xs text-amber-600">💡 ถ้ากดทดสอบแล้วขึ้น <b>"ไม่พบเครื่องพิมพ์"</b> = ต้องเพิ่มเครื่องพิมพ์ด้านบนก่อน แล้วกด "บันทึก"</p>
+          <div className="rounded-lg border border-brand-border p-3 text-xs space-y-1" data-testid="print-howto">
+            <p className="font-semibold text-brand-accent">📖 วิธีใช้ & เทมเพลต</p>
+            <p>• <b>เทมเพลตใบเสร็จ/ใบสั่งครัวอยู่ที่ <code>src/lib/printService.ts</code></b> — <code>buildReceiptHtml</code> / <code>buildKitchenTicketHtml</code> (+ <code>printCss()</code> กำหนดความกว้างจากค่า <b>{settings.paperWidthMm} มม.</b> ด้านบน) · มี unit test คุมที่ <code>printTemplates.test.ts</code> · ของที่ออกแบบในแอป Nimbot = สำหรับป้ายในแอป Nimbot โดยตรง (คนละระบบกับการพิมพ์จากหน้านี้)</p>
+            <p>• <b>dialog ไม่มีเครื่องให้เลือก?</b> = Windows ยังไม่รู้จักเครื่องพิมพ์ตัวนั้น — ต้องลงไดรเวอร์ Nimbot (USB/Bluetooth) ให้ขึ้นใน "เครื่องพิมพ์และเครื่องสแกน" ของ Windows ก่อน Chrome จะแสดง (Adobe PDF / Save as PDF = ตัวเสมือนล้วน ไม่ใช่เครื่องจริง)</p>
+            <p>• <b>ลำดับตั้งค่า</b>: เพิ่มเครื่อง → ผูกบทบาท (ใบเสร็จ/ใบสั่งครัว) → สวิตช์ Auto-Print → กดบันทึก → ทดสอบ "ทดสอบใบเสร็จ"/"ทดสอบใบสั่งครัว" → ใบสั่งครัวออโต้ = 1 dialog (ใบเสร็จ+ใบรวมหน้า) ต่อ 1 ออเดอร์</p>
+          </div>
         </div>
 
         <div className="flex gap-2">

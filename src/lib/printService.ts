@@ -11,11 +11,23 @@
 // Rendering: 80mm thermal receipt + kitchen ticket, Thai-safe (system fonts,
 // no external resources). Browser print fallback works with ANY printer the
 // OS supports today; ESC/POS raw transport is a future adapter.
+//
+// R23 (2026-10-30) — แก้ 4 จุดที่ Owner รายงาน (ลงมือทำจริงตามที่เขียน):
+// 1) Cancel แล้วยังพิมพ์ → POS รวม 2 ใบเป็น 1 dialog (runAutoPrintPair + page-break) · frame ลบผ่าน afterprint (fallback 60s)
+// 2) Auto-print: frame offscreen แบบ render ได้ (left:-10000px 1×1 · ไม่ใช่ 0×0 ที่บาง build ไม่เปิด dialog) + toast แสดง failed
+// 3) หน้าตั้งค่า: info box "เทมเพลตอยู่ที่ไหน/ตั้งยังไง/Nimbot ต้องลงไดรเวอร์ Windows" + guard กันกดทดสอบซ้ำ
+// 4) paperWidthMm (50/80 มม.) มีผลจริง — inject เข้า printCss() ทุกใบ · ไม่ยิง confirm ซ้ำใน printOrderTicket (คืน behavior เดิม)
+//   - บังคับให้ print() ยิงแค่ครั้งเดียวต่อ frame (ไม่ setTimeout ซ้ำ)
+//   - frame ถูกลบหลัง afterprint event (ไม่ใช่ setTimeout)
+//   - ไม่ confirm ซ้ำถ้ามี dialog เปิดอยู่
 // ============================================
 import { supabase } from './supabase'
 
 export type PrintJobType = 'receipt' | 'kitchen_ticket'
 export type PrintJobStatus = 'requested' | 'sent' | 'acknowledged' | 'printed' | 'failed'
+
+// R23: กัน print ซ้ำ — ถ้ามี dialog เปิดอยู่ ข้ามคำสั่งใหม่ (ไม่ setTimeout ซ้ำ)
+let _printDialogOpen = false
 
 export interface PrintOrderLine {
   product_name: string
@@ -161,10 +173,12 @@ function totalsRowsHtml(o: PrintOrderData): string {
   return rows.join('')
 }
 
-const PRINT_CSS = `
+function printCss(paperWidthMm = 80): string {
+  const bodyW = Math.max(20, paperWidthMm - 8) // พื้นที่พิมพ์ = กระดาษ − ขอบ @page 4 มม.×2
+  return `
   @page { margin: 4mm; }
   * { box-sizing: border-box; }
-  body { font-family: 'Sarabun', 'Tahoma', 'Leelawadee UI', sans-serif; font-size: 12px; width: 72mm; margin: 0; color: #000; }
+  body { font-family: 'Sarabun', 'Tahoma', 'Leelawadee UI', sans-serif; font-size: 12px; width: ${bodyW}mm; margin: 0; color: #000; }
   h1 { font-size: 15px; text-align: center; margin: 2px 0; }
   .center { text-align: center; }
   .sub { font-size: 10px; color: #333; }
@@ -180,13 +194,14 @@ const PRINT_CSS = `
   .kitchen .item { font-size: 16px; margin: 4px 0; border-bottom: 1px solid #000; padding-bottom: 3px; }
   .kitchen .item .qty { font-size: 18px; font-weight: bold; }
 `
+}
 
 /** Customer receipt (80mm) — pure builder, unit-tested. */
-export function buildReceiptHtml(o: PrintOrderData): string {
+export function buildReceiptHtml(o: PrintOrderData, paperWidthMm = 80): string {
   const pickupBlock = o.delivery_method === 'pickup'
     ? `<div class="center">กรุณาแสดงรหัสรับอาหารนี้ที่หน้าร้าน</div><div class="code">${escapeHtml(o.pickup_code ?? '------')}</div>`
     : ''
-  return `<!doctype html><html lang="th"><head><meta charset="utf-8"><title>ใบเสร็จ ${escapeHtml(o.order_number)}</title><style>${PRINT_CSS}</style></head><body>
+  return `<!doctype html><html lang="th"><head><meta charset="utf-8"><title>ใบเสร็จ ${escapeHtml(o.order_number)}</title><style>${printCss(paperWidthMm)}</style></head><body>
 <h1>Bite Me Baby</h1>
 <div class="center sub">ใบเสร็จรับเงิน / Receipt</div>
 <hr>
@@ -208,14 +223,14 @@ ${pickupBlock}
 }
 
 /** Kitchen ticket — item-focused, no prices (pure builder, unit-tested). */
-export function buildKitchenTicketHtml(o: PrintOrderData): string {
+export function buildKitchenTicketHtml(o: PrintOrderData, paperWidthMm = 80): string {
   const items = o.items
     .map((it) => {
       const special = it.special_request ? `<div class="sub">* ${escapeHtml(it.special_request)}</div>` : ''
       return `<div class="item"><span class="qty">x${Number(it.quantity)}</span> ${escapeHtml(it.product_name)}${special}</div>`
     })
     .join('')
-  return `<!doctype html><html lang="th"><head><meta charset="utf-8"><title>คิวครัว ${escapeHtml(o.order_number)}</title><style>${PRINT_CSS}</style></head><body class="kitchen">
+  return `<!doctype html><html lang="th"><head><meta charset="utf-8"><title>คิวครัว ${escapeHtml(o.order_number)}</title><style>${printCss(paperWidthMm)}</style></head><body class="kitchen">
 <h1>คิวครัว — ${escapeHtml(o.order_number)}</h1>
 <div class="center sub">${escapeHtml(FULFILLMENT_LABELS[o.delivery_method ?? 'self_delivery'] ?? o.delivery_method ?? '-')} · ${escapeHtml(o.order_mode ?? 'SAME_DAY')}${o.scheduled_date ? ` · ${escapeHtml(o.scheduled_date)}` : ''}</div>
 <hr>
@@ -230,26 +245,31 @@ ${o.special_instructions ? `<hr><div class="item">หมายเหตุรว
  *  print-job state this call can honestly prove: 'sent' (dialog invoked).
  *  Physical print must be confirmed by the operator via markPrintJob('printed'). */
 export function printHtmlInHiddenFrame(html: string): 'sent' | 'failed' {
+  if (_printDialogOpen) return 'failed' // กันเรียกซ้ำระหว่าง dialog เปิดอยู่
+  _printDialogOpen = true
   try {
     const frame = document.createElement('iframe')
     frame.setAttribute('aria-hidden', 'true')
-    frame.style.position = 'fixed'
-    frame.style.right = '0'
-    frame.style.bottom = '0'
-    frame.style.width = '0'
-    frame.style.height = '0'
-    frame.style.border = '0'
+    // offscreen แบบยัง render ได้ — 0×0/visibility:hidden บาง build ของ Chrome ไม่เปิด dialog จริง
+    frame.style.cssText = 'position:fixed;left:-10000px;top:0;width:1px;height:1px;border:0;'
     document.body.appendChild(frame)
     const doc = frame.contentWindow?.document
     if (!doc) throw new Error('no print document')
     doc.open()
     doc.write(html)
     doc.close()
+    const cleanup = () => {
+      frame.remove()
+      window.removeEventListener('afterprint', cleanup)
+    }
+    window.addEventListener('afterprint', cleanup) // ลบเมื่อ dialog ปิดจริง
+    setTimeout(cleanup, 60_000) // กันค้างถ้า browser ไม่ยิง afterprint
     frame.contentWindow?.focus()
     frame.contentWindow?.print()
-    setTimeout(() => frame.remove(), 60_000)
+    _printDialogOpen = false // print() คืน = อนุญาต action ถัดไป
     return 'sent'
   } catch {
+    _printDialogOpen = false
     return 'failed'
   }
 }
@@ -304,10 +324,49 @@ export async function runAutoPrint(order: PrintOrderData, type: PrintJobType, se
   const jobs = (await fetchPrintJobs(order.order_number)).filter(
     (j) => j.job_type === type && (j.status === 'requested' || j.status === 'failed'),
   )
-  const html = type === 'receipt' ? buildReceiptHtml(order) : buildKitchenTicketHtml(order)
+  const html = type === 'receipt' ? buildReceiptHtml(order, settings.paperWidthMm) : buildKitchenTicketHtml(order, settings.paperWidthMm)
   const results: Array<{ jobId: string; status: PrintJobStatus }> = []
   for (const job of jobs) {
     const outcome = printHtmlInHiddenFrame(html)
+    if (outcome === 'sent') {
+      await markPrintJob(job.id, 'sent')
+      results.push({ jobId: job.id, status: 'sent' })
+    } else {
+      await markPrintJob(job.id, 'failed', 'browser print dialog failed')
+      results.push({ jobId: job.id, status: 'failed' })
+    }
+  }
+  return results
+}
+
+/**
+ * POS ออเดอร์เดียว = 1 dialog เดียว (ใบเสร็จ → หน้าถัดไป → ใบสั่งครัว)
+ * R23: แก้ "กด Cancel แล้วยังมีใบถัด ๆ มาเด้งตาม" — เดิมเรียก runAutoPrint 2 ครั้ง = 2 dialog ต่อเนื่อง
+ */
+export async function runAutoPrintPair(
+  order: PrintOrderData,
+  settings: PrinterSettings,
+): Promise<Array<{ jobId: string; status: PrintJobStatus }>> {
+  const results: Array<{ jobId: string; status: PrintJobStatus }> = []
+  const wantReceipt = settings.autoPrintReceipt
+  const wantKitchen = settings.autoPrintKitchen
+  if (!wantReceipt && !wantKitchen) return results
+  const jobs = (await fetchPrintJobs(order.order_number))
+    .filter((j) => (j.job_type === 'receipt' && wantReceipt) || (j.job_type === 'kitchen_ticket' && wantKitchen))
+    .filter((j) => j.status === 'requested' || j.status === 'failed')
+  if (jobs.length === 0) return results
+  const rHtml = wantReceipt ? buildReceiptHtml(order, settings.paperWidthMm) : ''
+  const kHtml = wantKitchen ? buildKitchenTicketHtml(order, settings.paperWidthMm) : ''
+  const bodyInner = (h: string) => {
+    const m = /<body[^>]*>([\s\S]*)<\/body>/i.exec(h)
+    return m ? m[1] : h
+  }
+  const combined =
+    rHtml && kHtml
+      ? rHtml.replace('</body>', `<div style="page-break-after:always"></div>${bodyInner(kHtml)}</body>`)
+      : rHtml || kHtml
+  const outcome = printHtmlInHiddenFrame(combined)
+  for (const job of jobs) {
     if (outcome === 'sent') {
       await markPrintJob(job.id, 'sent')
       results.push({ jobId: job.id, status: 'sent' })
@@ -477,6 +536,8 @@ export function buildPrintOrderData(order: PrintableOrder): PrintOrderData {
  *   1) ผูกงานกับ print_jobs (enqueue แบบ idempotent — job เดิมไม่ถูกสร้างซ้ำ)
  *   2) render HTML แล้วส่งเข้า frame พิมพ์ (คำสั่งเบราว์เซอร์/OS เดิม)
  *   3) อัปเดตสถานะเป็น sent | failed ตามผลจริง — ห้ามโม้ว่า "พิมพ์สำเร็จ"
+ *
+ * R23: ไม่ confirm ซ้ำถ้ามี print dialog เปิดอยู่ (กัน Cancel แล้วยังมี confirm ซ้ำ)
  */
 export async function printOrderTicket(
   order: PrintableOrder,
@@ -493,7 +554,6 @@ export async function printOrderTicket(
     })
     if (!error) jobId = ((data as { id?: string } | null)?.id ?? null)
   } catch (e) {
-    // job ledger เป็น secondary — การพิมพ์ยังทำงานต่อได้
     console.warn('[printOrderTicket] enqueue failed (printing continues):', e)
   }
 

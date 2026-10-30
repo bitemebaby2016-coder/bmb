@@ -20,7 +20,7 @@ import {
 import type { OrderForm } from '@/lib/bmbAdminApi_orders'
 import {
   buildReceiptHtml, buildKitchenTicketHtml, printHtmlInHiddenFrame,
-  fetchPrintJobs, markPrintJob, loadPrinterSettings, runAutoPrint,
+  fetchPrintJobs, markPrintJob, loadPrinterSettings, runAutoPrintPair,
   PrintOrderData, PrintJobRow,
 } from '@/lib/printService'
 import { SubmitKeyRing } from '@/lib/orderSubmitKey'
@@ -146,8 +146,7 @@ export function AdminPos() {
         order_mode: 'SAME_DAY',
         special_instructions: input.special_instructions ?? null,
       }
-      await runAutoPrint(printData, 'receipt', settings)
-      await runAutoPrint(printData, 'kitchen_ticket', settings)
+      await runAutoPrintPair(printData, settings)
       setPrintJobs(await fetchPrintJobs(result.order_number))
     } catch (e) {
       console.warn('[POS] auto-print failed (order unaffected):', e)
@@ -215,7 +214,8 @@ export function AdminPos() {
       order_mode: o.order_mode ?? 'SAME_DAY',
       special_instructions: o.special_instructions ?? null,
     }
-    const html = type === 'receipt' ? buildReceiptHtml(data) : buildKitchenTicketHtml(data)
+    const st = await loadPrinterSettings()
+    const html = type === 'receipt' ? buildReceiptHtml(data, st.paperWidthMm) : buildKitchenTicketHtml(data, st.paperWidthMm)
     const outcome = printHtmlInHiddenFrame(html)
     showToast(outcome === 'sent'
       ? 'ส่งงานพิมพ์แล้ว (sent) — กรุณากด "ยืนยันพิมพ์จริง" เมื่อกระดาษออก'

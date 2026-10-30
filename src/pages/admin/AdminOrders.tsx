@@ -241,6 +241,7 @@ export function AdminOrders() {
 
   // R21 (Owner 2026-10-29) — พิมพ์อัตโนมัติหลัง "รับออเดอร์": ใช้ buildKitchenTicketHtml
   // (เทมเพลตที่มีอยู่แล้ว) + สถานะ autoPrintKitchen + เครื่องพิมพ์ที่ผูกไว้ในตั้งค่า
+  // R23 (2026-10-30): แก้ auto-print ไม่ทำงาน — frame ถูกลบก่อน print() เสร็จ → ยิง print แล้วค่อยลบ
   async function autoPrintKitchenTicket(orderNumber: string) {
     try {
       const settings = await loadPrinterSettings()
@@ -250,7 +251,12 @@ export function AdminOrders() {
       const target = describePrinterTarget(settings, 'kitchen')
       const results = await runAutoPrint(buildPrintOrderData(full), 'kitchen_ticket', settings)
       if (results.length > 0) {
-        showToast(`ส่งใบสั่งครัวไปที่ "${target}" แล้ว (สถานะ sent ยังไม่ยืนยันว่ากระดาษออกจริง)`, 'info')
+        const failed = results.filter((r) => r.status === 'failed')
+        if (failed.length > 0) {
+          showToast(`พิมพ์ใบสั่งครัวไม่สำเร็จ — ตรวจเครื่องพิมพ์แล้วกดพิมพ์ใหม่`, 'warning')
+        } else {
+          showToast(`ส่งใบสั่งครัวไปที่ "${target}" แล้ว (สถานะ sent ยังไม่ยืนยันว่ากระดาษออกจริง)`, 'info')
+        }
       }
     } catch (e) {
       console.warn('[AdminOrders] auto-print failed (order unaffected):', e)
