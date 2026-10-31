@@ -18,6 +18,7 @@ import {
 } from '@/lib/adminMarketing'
 import { listContentApprovals, reviewContent, type ContentApprovalRow } from '@/lib/contentApproval'
 import { autoScheduleApprovedPosts } from '@/lib/marketingAutoSchedule'
+import { flashTo } from '@/lib/uiFlash'
 import { getBusinessSettings, setBusinessSetting } from '@/lib/bmbAdminApi_settings'
 
 type Tab = 'overview' | 'planner' | 'studio' | 'approval' | 'calendar' | 'rules' | 'analytics' | 'ai'
@@ -102,6 +103,8 @@ export function AdminMarketing() {
       showToast('สร้างโพสต์แล้ว — ส่งเข้ากล่องอนุมัติ (คนอนุมัติเท่านั้น)', 'success')
       setTitle(''); setBodyText(''); setImages([])
       await load()
+      setTab('approval') // R39: เด้งไปจุดที่เพิ่งทำงาน (คิวอนุมัติ)
+      flashTo('mk-approval-list')
     } else {
       showToast('สร้างโพสต์ไม่สำเร็จ: ' + (r.error || 'ERR_SUBMIT_FAILED'), 'error')
     }
@@ -113,6 +116,7 @@ export function AdminMarketing() {
       await supabase.from('marketing_posts').update({ status: 'approved' }).eq('approval_id', id)
       showToast('อนุมัติแล้ว — พร้อมตั้งเวลาเผยแพร่', 'success')
       await load()
+      flashTo(`mk-aprow-${id}`)
     } else showToast('อนุมัติไม่สำเร็จ', 'error')
   }
 
@@ -123,6 +127,7 @@ export function AdminMarketing() {
       await supabase.from('marketing_posts').update({ status: 'draft' }).eq('approval_id', id)
       showToast('ปฏิเสธแล้ว — โพสต์กลับเป็นฉบับร่าง', 'success')
       await load()
+      flashTo(`mk-aprow-${id}`)
     } else showToast('บันทึกการตัดสินใจไม่สำเร็จ', 'error')
   }
 
@@ -133,6 +138,7 @@ export function AdminMarketing() {
     if (r.ok) {
       showToast('ตั้งเวลาเผยแพร่แล้ว (ระบบจะโพสต์อัตโนมัติเมื่อถึงเวลา)', 'success')
       await load()
+      flashTo(`mk-row-${id}`)
     } else {
       showToast('ตั้งเวลาไม่สำเร็จ: ' + (r.error || 'ERR_SCHEDULE_FAILED'), 'error')
     }
@@ -157,6 +163,7 @@ export function AdminMarketing() {
           'success',
         )
         await load()
+        if (res.plan.length > 0) flashTo(`mk-row-${res.plan[0].id}`)
       } else {
         showToast(`ยังไม่มีโพสต์ที่ตั้งเวลาให้ได้ (ข้าม ${res.skipped}) — ต้องมีโพสต์ที่อนุมัติแล้วและยังไม่มีเวลา`, 'info')
       }
@@ -187,6 +194,7 @@ export function AdminMarketing() {
       if (!url) throw new Error('no public url')
       setImages((prev) => [...prev, url])
       showToast('แนบรูปจากไฟล์เข้าชุดภาพของโพสต์แล้ว — ใช้ร่วมกับภาพ AI/แคตตาลอกได้เลย', 'success')
+      flashTo('mk-images-strip')
     } catch (err) {
       showToast('อัปโหลดรูปไม่สำเร็จ: ' + String((err as Error)?.message || err).slice(0, 120), 'error')
     } finally {
@@ -195,7 +203,13 @@ export function AdminMarketing() {
   }
 
   async function handleGenerateImage() {
-    if (!genSubject.trim()) { showToast('ใส่ชื่อสินค้า/หัวข้อก่อนสร้างภาพ', 'error'); return }
+    // R39 (Owner: "ใช้พร้อมอัตโนมัติคิดคอนเท้นเองตามโจทย์ที่ตั้งในรายละเอียดเนื้อหาและรูป"):
+    // subject = ช่องโจทย์ภาพ → fallback หัวข้อโพสต์ · note = โน้ต + เนื้อหาโพสต์ (160 ตัว)
+    // reference = ภาพที่ชี้ล่าสุดในชุด images → ส่งให้โมเดล "ทำร่วม" การเจน (pass 1) · ไม่รับภาพ = retry text-only (pass 2)
+    const subject = genSubject.trim() || title.trim()
+    if (!subject) { showToast('ใส่โจทย์/หัวข้อ (ช่องภาพ หรือหัวข้อโพสต์) ก่อนสร้างภาพ', 'error'); return }
+    const note = [genNote.trim(), bodyText.trim().slice(0, 160)].filter(Boolean).join(' · ')
+    const reference = images.length > 0 ? images[images.length - 1] : undefined
     // R34 (Owner): รูปอาหารห้ามเจน — ใช้ภาพจริงจากแคตตาลอก (Picker แนบ image_url ให้แล้ว)
     if (genKind === 'menu') {
       showToast('รูปเมนูใช้ภาพจริงจากแคตตาลอก — จิ้มเมนูใน Planner เพื่อแนบรูปจริง (สร้างภาพ AI ได้เฉพาะป้ายโปรโมต/เทศกาล)', 'warning')
@@ -204,7 +218,7 @@ export function AdminMarketing() {
     setGenBusy(true)
     try {
       const { data, error } = await supabase.functions.invoke('image-gen', {
-        body: { kind: genKind, style: genStyle, subject: genSubject.trim(), note: genNote },
+        body: { kind: genKind, style: genStyle, subject, note, reference_image_url: reference },
       })
       if (error || !data?.ok) {
         // R32: ดึงรายละเอียดจริงจาก body ของ EF (400/502 detail) — เดิมเห็นแค่ "non-2xx" มองไม่เห็นสาเหตุ
@@ -220,6 +234,7 @@ export function AdminMarketing() {
       } else {
         setImages((prev) => [...prev, data.url])
         showToast('สร้างภาพสำเร็จ — แนบกับโพสต์แล้ว (เลือก/ใช้เลย/สร้างใหม่ได้)', 'success')
+        flashTo('mk-images-strip')
       }
     } catch (e) {
       showToast('สร้างภาพไม่สำเร็จ: ' + String(e).slice(0, 120), 'error')
@@ -377,7 +392,7 @@ export function AdminMarketing() {
             </div>
             <p className="text-xs text-brand-muted mt-2">รูปเมนู = ภาพจริงจากแคตตาลอก (จิ้มเมนูใน Planner) หรือ <b>ไฟล์จากเครื่อง (browse)</b> · ภาพทั้งหมดอยู่ชุดเดียวกัน — ใช้กับโพสต์/ภาพ AI โปรโมต/เทศกาลได้พร้อมกัน · สร้างภาพ AI เฉพาะป้ายโปรโมต/เทศกาลเท่านั้น</p>
             {images.length > 0 && (
-              <div className="flex flex-wrap gap-2 mt-3">
+              <div className="flex flex-wrap gap-2 mt-3" data-testid="mk-images-strip">
                 {images.map((u) => <img key={u} src={u} alt="generated" className="w-24 h-24 object-cover rounded-lg border border-brand-border" />)}
               </div>
             )}
@@ -387,12 +402,12 @@ export function AdminMarketing() {
       )}
 
       {tab === 'approval' && (
-        <div className="space-y-3">
+        <div className="space-y-3" data-testid="mk-approval-list">
           {approvals.length === 0 && <p className="text-sm text-brand-muted">ยังไม่มีเนื้อหาในคิว — สร้างโพสต์จาก Planner/Studio</p>}
           {approvals.map((a) => {
             const linked = posts.find((p) => p.approval_id === a.id)
             return (
-              <div key={a.id} className="card">
+              <div key={a.id} className="card" data-testid={`mk-aprow-${a.id}`}>
                 <div className="flex items-center justify-between flex-wrap gap-2">
                   <div>
                     <p className="font-bold">{a.title}</p>
@@ -436,7 +451,7 @@ export function AdminMarketing() {
           </div>
           {posts.filter((p) => p.status !== 'published').length === 0 && <p className="text-sm text-brand-muted">ยังไม่มีโพสต์รอตั้งเวลา</p>}
           {posts.filter((p) => p.status !== 'published').map((p) => (
-            <div key={p.id} className="card flex items-center justify-between flex-wrap gap-2">
+            <div key={p.id} className="card flex items-center justify-between flex-wrap gap-2" data-testid={`mk-row-${p.id}`}>
               <div>
                 <p className="font-bold">{p.title}</p>
                 <p className="text-xs text-brand-muted">

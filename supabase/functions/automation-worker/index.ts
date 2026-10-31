@@ -528,36 +528,43 @@ async function runNotificationDispatch(ctx: Ctx, p: { lookbackMinutes?: number; 
 async function runMarketingPublish(ctx: Ctx, p: { limit?: number }) {
   const limit = Math.min(Math.max(Number(p.limit) || 10, 1), 50)
   const nowIso = new Date().toISOString()
+  // R39: รับทั้ง scheduled ที่ถึงเวลา และ published ที่ DB promote แล้วแต่ยังไม่ได้ยิง FB
+  // (m177 marketing_publish_due .flip ก่อน = feed ขึ้นก่อน · worker เดิม status=eq.scheduled จะมองไม่เห็น → FB ค้าง)
   const due = await rest(
     SERVICE,
     'GET',
-    `/rest/v1/marketing_posts?select=id,approval_id,image_urls,publish_attempts&status=eq.scheduled&scheduled_for=lte.${encodeURIComponent(nowIso)}&order=scheduled_for.asc&limit=${limit}`,
+    `/rest/v1/marketing_posts?select=id,status,approval_id,image_urls,publish_attempts&or=(status.eq.scheduled,and(status.eq.published,provider_post_id.is.null))&scheduled_for=lte.${encodeURIComponent(nowIso)}&order=scheduled_for.asc&limit=${limit}`,
   )
   if (due.status !== 200) {
     ctx.errors.push('marketing_posts read failed: ' + due.status)
     return
   }
-  const rows = ((due.j || []) as Array<{ id: string; approval_id: string | null; image_urls: string[] | null; publish_attempts: number }>)
+  const rows = ((due.j || []) as Array<{ id: string; status: string; approval_id: string | null; image_urls: string[] | null; publish_attempts: number }>)
   let published = 0
   let failed = 0
   let skipped = 0
 
   for (const row of rows) {
     // โพสต์ต้องมี approval ที่คนอนุมัติแล้ว — ไม่มี = ห้ามยิง (กันโพสต์ผี)
+    // R39: demote → failed เฉพาะแถว "scheduled" เท่านั้น — แถว published (feed ขึ้นแล้ว) ห้ามถูกปลงสถานะ
     if (!row.approval_id) {
       skipped++
-      await rest(SERVICE, 'PATCH', `/rest/v1/marketing_posts?id=eq.${encodeURIComponent(row.id)}`, {
-        status: 'failed', error: 'ERR_APPROVAL_REQUIRED', publish_attempts: row.publish_attempts + 1, updated_at: nowIso,
-      })
+      if (row.status === 'scheduled') {
+        await rest(SERVICE, 'PATCH', `/rest/v1/marketing_posts?id=eq.${encodeURIComponent(row.id)}`, {
+          status: 'failed', error: 'ERR_APPROVAL_REQUIRED', publish_attempts: row.publish_attempts + 1, updated_at: nowIso,
+        })
+      }
       continue
     }
     const ap = await rest(SERVICE, 'GET', `/rest/v1/content_approvals?select=status&id=eq.${encodeURIComponent(row.approval_id)}`)
     const apStatus = ap.status === 200 && Array.isArray(ap.j) && ap.j.length > 0 ? (ap.j[0] as { status: string }).status : null
     if (apStatus !== 'approved') {
       skipped++
-      await rest(SERVICE, 'PATCH', `/rest/v1/marketing_posts?id=eq.${encodeURIComponent(row.id)}`, {
-        status: 'failed', error: 'ERR_APPROVAL_REQUIRED:' + (apStatus || 'missing'), publish_attempts: row.publish_attempts + 1, updated_at: nowIso,
-      })
+      if (row.status === 'scheduled') {
+        await rest(SERVICE, 'PATCH', `/rest/v1/marketing_posts?id=eq.${encodeURIComponent(row.id)}`, {
+          status: 'failed', error: 'ERR_APPROVAL_REQUIRED:' + (apStatus || 'missing'), publish_attempts: row.publish_attempts + 1, updated_at: nowIso,
+        })
+      }
       continue
     }
 

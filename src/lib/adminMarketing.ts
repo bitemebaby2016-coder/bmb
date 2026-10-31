@@ -43,6 +43,10 @@ export interface MarketingRules {
 const POST_FIELDS = 'id,approval_id,title,body,content_type,image_urls,objective,status,scheduled_for,provider_post_id,error,publish_attempts,created_at,published_at'
 
 export async function listMarketingPosts(): Promise<MarketingPostRow[]> {
+  // R39 (Owner: "ตั้งเวลาโพสแล้วไม่ขึ้น"): promote scheduled ที่ถึงเวลา "ก่อน" ดึงรายการ —
+  // เปิดหน้าแอดมิน = เห็น published ทันที ไม่รอ GH cron รายชั่วโมง (หลักฐานพังจริง: cron ข้ามรอบ)
+  // m177 ยังไม่ apply = error เงียบ รายการยังทำงานตามเดิม ( degrade ไม่พัง )
+  await supabase.rpc('marketing_publish_due')
   const { data, error } = await supabase
     .from('marketing_posts')
     .select(POST_FIELDS)

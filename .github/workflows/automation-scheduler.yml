@@ -180,8 +180,10 @@ jobs:
 
   # Part C (2026-10-22): marketing_publish — เผยแพร่โพสต์การตลาดที่ถึงเวลา
   # (สถานะ scheduled ที่คนอนุมัติแล้วเท่านั้น — บังคับที่ marketing_schedule_post)
+  # R39 (2026-10-31): เดิมยิงเฉพาะ cron '7 * * * *' → GH ข้ามรอบจริง (หลักฐาน: ไม่มี run 02:07/03:07Z
+  #   · publish_attempts=0) → ยิงทุกครั้งที่ scheduler fire (รวม */5) — enqueue idempotent ต่อนาทีอยู่แล้ว
   hourly-marketing:
-    if: github.event_name == 'schedule' && github.event.schedule == '7 * * * *' || github.event_name == 'workflow_dispatch' && (github.event.inputs.job == 'marketing' || github.event.inputs.job == 'all')
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' && (github.event.inputs.job == 'marketing' || github.event.inputs.job == 'all')
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:

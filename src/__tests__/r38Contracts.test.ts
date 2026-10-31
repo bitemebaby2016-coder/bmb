@@ -75,11 +75,13 @@ describe('R38 · AI Studio: browse ไฟล์รูปเมนู → ชุ�
 })
 
 describe('R38 · ดึงเข้าเว็บ: feed โพสต์เผยแพร่แล้วบนหน้าแรก + m176', () => {
-  it('feed อ่าน status=published เท่านั้น · ซ่อนตัวเงียบเมื่อว่าง/อ่านไม่ได้', () => {
-    expect(feedSrc).toContain(".eq('status', 'published')")
-    expect(feedSrc).toContain("order('published_at'")
+  it('feed = marketing_feed_posts RPC (m177: promote due + คืนแถว published) · ซ่อนตัวเงียบเมื่อว่าง/อ่านไม่ได้', () => {
+    expect(feedSrc).toContain("supabase.rpc('marketing_feed_posts'")
+    expect(feedSrc).toContain('p_limit')
     expect(feedSrc).toContain('if (!ready || posts.length === 0) return null')
     expect(feedSrc).toContain('marketing-feed')
+    // ไม่เหลือ query เก่าที่พึ่ง status=published ตรง ๆ ( scheduled ที่ถึงเวลาต้อง promote ก่อน )
+    expect(feedSrc).not.toContain(".eq('status', 'published')")
   })
 
   it('HomePage mount <MarketingFeedSection /> ข้างรีวิวอัลบั้ม', () => {

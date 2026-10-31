@@ -86,7 +86,7 @@ if (req.method === 'OPTIONS') return new Response('ok', { status: 200, headers: 
   if (!(await isAdmin(jwt))) return json({ error: 'ERR_FORBIDDEN' }, 403)
   if (!OPENROUTER_KEY) return json({ error: 'ERR_IMAGE_GEN_UNCONFIGURED', hint: 'set OPENROUTER_API_KEY secret' }, 503)
 
-  let body: { kind?: string; style?: string; subject?: string; note?: string }
+  let body: { kind?: string; style?: string; subject?: string; note?: string; reference_image_url?: string }
   try {
     body = await req.json()
   } catch {
@@ -100,39 +100,54 @@ if (req.method === 'OPTIONS') return new Response('ok', { status: 200, headers: 
   if (!subject) return json({ error: 'ERR_MISSING_SUBJECT' }, 400)
 
   const prompt = KIND_PRESETS[kind](subject, String(body.note || '')) + ' — ' + STYLE_MODIFIERS[style]
+  // R39 (Owner): "เอาภาพที่ชี้มาทำร่วมเจนด้วย" — ส่งภาพอ้างอิงเป็น part ที่ 2 ของ message
+  // (โมเดลที่รับ image input จะใช้เป็นต้นแบบ · ตัวที่ไม่รับ = HTTP error → วน pass ถัดไปแบบไม่แนบภาพ)
+  const refUrl = String(body.reference_image_url || '').trim()
 
   // 1) สร้างภาพผ่าน OpenRouter (modalities image) — R32: วน candidates จนรูปมา (โมเดลเดี่ยวโดน retire = ฟีเจอร์ดับ)
+  // R39: เก็บ "attempts ทุกตัว" ลง detail — เดิมเห็นแค่ตัวสุดท้าย (Owner เห็นแต่ชื่อ gemini ไม่รู้ว่า qwen/seedream fail ด้วย)
   let dataUrl = ''
-  let lastErr = ''
+  let usedModel = ''
+  const attempts: string[] = []
+  const passes: Array<'with-ref' | 'text-only'> = refUrl ? ['with-ref', 'text-only'] : ['text-only']
   try {
-    for (const model of IMAGE_MODEL_CANDIDATES) {
-      const res = await fetch(OPENROUTER_URL, {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${OPENROUTER_KEY}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          model,
-          modalities: ['image', 'text'],
-          messages: [{ role: 'user', content: prompt }],
-        }),
-      })
-      const j = await res.json().catch(() => null)
-      if (!res.ok || !j) { lastErr = `${model} HTTP ${res.status}`; continue }
-      const msg = (j as { choices?: Array<{ message?: { images?: Array<{ image?: { url?: string } }>; content?: unknown } }> }).choices?.[0]?.message
-      let url = msg?.images?.[0]?.image?.url || ''
-      if (!url && Array.isArray(msg?.content)) {
-        for (const part of msg.content as Array<{ type?: string; image_url?: { url?: string } }>) {
-          if (part.type === 'image_url' && part.image_url?.url) { url = part.image_url.url; break }
+    outer: for (const pass of passes) {
+      for (const model of IMAGE_MODEL_CANDIDATES) {
+        const content = pass === 'with-ref'
+          ? [{ type: 'text', text: prompt }, { type: 'image_url', image_url: { url: refUrl } }]
+          : prompt
+        const res = await fetch(OPENROUTER_URL, {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${OPENROUTER_KEY}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            model,
+            modalities: ['image', 'text'],
+            messages: [{ role: 'user', content }],
+          }),
+        })
+        const j = await res.json().catch(() => null)
+        if (!res.ok || !j) {
+          const msg = (j as { error?: { message?: string } } | null)?.error?.message || ''
+          attempts.push(`${model}:HTTP${res.status}${msg ? ` ${String(msg).slice(0, 80)}` : ''}`)
+          continue
         }
+        const msg = (j as { choices?: Array<{ message?: { images?: Array<{ image?: { url?: string } }>; content?: unknown } }> }).choices?.[0]?.message
+        let url = msg?.images?.[0]?.image?.url || ''
+        if (!url && Array.isArray(msg?.content)) {
+          for (const part of msg.content as Array<{ type?: string; image_url?: { url?: string } }>) {
+            if (part.type === 'image_url' && part.image_url?.url) { url = part.image_url.url; break }
+          }
+        }
+        if (url) { dataUrl = url; usedModel = model; break outer }
+        attempts.push(`${model}:no_image`)
       }
-      if (url) { dataUrl = url; break }
-      lastErr = `${model} returned no image`
     }
-    if (!dataUrl) return json({ error: 'ERR_IMAGE_GEN_FAILED', detail: lastErr || 'no model succeeded' }, 502)
+    if (!dataUrl) return json({ error: 'ERR_IMAGE_GEN_FAILED', detail: attempts.join(' · ') || 'no model succeeded', attempts }, 502)
   } catch (e) {
-    return json({ error: 'ERR_IMAGE_GEN_FAILED', detail: String(e instanceof Error ? e.message : e).slice(0, 200) }, 502)
+    return json({ error: 'ERR_IMAGE_GEN_FAILED', detail: String(e instanceof Error ? e.message : e).slice(0, 200), attempts }, 502)
   }
 
   // 2) อัปโหลดเข้า site_assets (public) — ได้ URL จริงไปใช้ต่อทันที
@@ -163,5 +178,5 @@ if (req.method === 'OPTIONS') return new Response('ok', { status: 200, headers: 
   }
 
   const publicUrl = `${SB_URL}/storage/v1/object/public/site-assets/${objectPath}`
-  return json({ ok: true, url: publicUrl, kind, style, prompt })
+  return json({ ok: true, url: publicUrl, kind, style, prompt, model: usedModel, attempts })
 })

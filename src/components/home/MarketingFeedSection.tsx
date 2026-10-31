@@ -24,16 +24,13 @@ export function MarketingFeedSection() {
     let alive = true
     void (async () => {
       try {
-        const { data, error } = await supabase
-          .from('marketing_posts')
-          .select('id,title,body,image_urls,published_at')
-          .eq('status', 'published')
-          .order('published_at', { ascending: false })
-          .limit(6)
+        // R39: RPC = promote scheduled ที่ถึงเวลาในตัว (m177) → โพสต์ขึ้นเองทันทีที่มีคนเปิดหน้า
+        // ไม่พึ่ง GH cron (พิสูจน์แล้วว่าข้ามรอบ) · m177 ยังไม่ apply = error → เงียบ = ซ่อนตัวเหมือนเดิม
+        const { data, error } = await supabase.rpc('marketing_feed_posts', { p_limit: 6 })
         if (!alive) return
         if (!error && data && data.length > 0) setPosts(data as FeedPost[])
       } catch {
-        /* เงียบ — ยังไม่มีสิทธิ์ anon (รอ apply m176) = ซ่อนตัว */
+        /* เงียบ — ยังไม่มี RPC (รอ apply m177) = ซ่อนตัว */
       } finally {
         if (alive) setReady(true)
       }

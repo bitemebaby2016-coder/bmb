@@ -1,0 +1,17 @@
+R39: 4 ของใหม่ Owner — m177 promote (scheduled ค้าง = GH cron ข้ามรอบ · evidence att=0/run 01:55Z)
+· worker published-unpushed + scheduler ทุก fire · image-gen attempts+reference+auto brief
+· flashTo เด้ง+กระพริบจุดที่ทำงาน · สติกเกอร์ DB 709 live → O-D วัด pitch ห้ามเดา
+
+- m177 PREPARED (177_marketing_publish_due.sql): marketing_publish_due (SECURITY DEFINER ·
+  promote scheduled ที่ถึงเวลา) + marketing_feed_posts (SETOF · promote ก่อนคืน · GRANT anon
+  · REVOKE PUBLIC) + pg_cron guarded ทุกนาที — หลัง CI เขียว = apply + verify promote rows จริง
+- feed หน้าแรก → rpc marketing_feed_posts · listMarketingPosts promote ก่อน list
+- automation-worker: or=(scheduled OR published&unpushed) + demote gate row.status=scheduled ×2
+- automation-scheduler.yml: marketing if = ทุก schedule fire (รวม */5 — เดิมผูก 7* ที่ GH ข้ามรอบ)
+- image-gen EF: reference_image_url (with-ref pass → text-only fallback) · attempts ทุกโมเดล
+  ใน detail + model ที่สำเร็จ · AdminMarketing: auto subject/note จากฟอร์ม + reference ภาพล่าสุด
+- flashTo (uiFlash.ts) + .bmb-flash keyframes: สร้างโพสต์/อนุมัติ/ปฏิเสธ/ตั้งเวลา/AI เลือกเวลา/
+  เจนรูป/browse = เด้ง+กระพริบจุดที่ทำงาน + data-testid mk-row/mk-aprow/mk-approval-list/mk-images-strip
+- docs: TEST_PACK §O (O.0 ต้นตอ · O.1 ปิด · O.2 ขั้น O-A..O-E) · N-A อัปเดตวัด pitch ×11.81
+  · work-state R39 block · master R39 head · แฮนออฟ R39 bullet
+- gates: vitest 9 ไฟล์ 100/100 (r39Contracts ใหม่ 10) · lint = chain gate ก่อน commit · CI = probe หลัง push
