@@ -1,0 +1,9 @@
+docs(evidence): R39 — m177 APPLIED ALL_PASS 6/6 (promoted=2 · feed rpc 200 ROWS=3) · EF deploy OK · §O อัปเดต APPLIED
+
+- e2e/r39Apply177.cjs (+ result json): apply → verify 2 fns + grants + ledger 177
+  → promote แถวค้างจริง 2 แถว (09:50 ICT + 10:17) = published แล้ว · ALL_PASS 6/6
+- e2e/r39_feed_rpc_probe.cjs: anon POST rpc marketing_feed_posts = HTTP 200 · ROWS=3 ทุก published
+- e2e/r39_deploy_imagegen.cjs (+ .log): supabase functions deploy image-gen --project-ref = DEPLOY_OK
+- TEST_PACK: O.1 #1 PREPARED→APPLIED+VERIFIED · O-A แจ้งว่า 2 แถวขึ้นเว็บแล้ว
+- work-state: m177 APPLIED block + EF deployed + CI 0985a62 (Contract #256 success · CI #682 pending ณ apply)
+- หมายเหตุ: ไม่มีการ claim CI Test เขียวก่อน probe — รอบถัดไป = เช็ค #682 ครั้งเดียว

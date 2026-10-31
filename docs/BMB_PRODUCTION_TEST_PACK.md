@@ -275,7 +275,7 @@
 
 ### O.1 ปิดแล้ว (โค้ด + gates)
 
-1. ✅ **`177_marketing_publish_due.sql`**: `marketing_publish_due()` (promote scheduled→published เมื่อถึงเวลา · SECURITY DEFINER) + `marketing_feed_posts()` (promote ก่อนคืนแถว · SETOF) + GRANT anon/authenticated + REVOKE PUBLIC + **pg_cron guarded ทุกนาที** (ไม่มี extension = ข้ามเงียบ) → *PREPARED — หลัง CI เขียว = apply*
+1. ✅ **`177_marketing_publish_due.sql` = APPLIED+VERIFIED production (2026-10-31)**: `marketing_publish_due()` (promote scheduled→published เมื่อถึงเวลา · SECURITY DEFINER) + `marketing_feed_posts()` (promote ก่อนคืนแถว · SETOF) + GRANT anon/authenticated + REVOKE PUBLIC + **pg_cron guarded ทุกนาที** — **`e2e/r39Apply177.cjs` ALL_PASS 6/6 · ledger top=177 · `PROMOTED=2`** (แถวค้าง `mk-mvvspkna-n6uf` 09:50 ICT + `mk-mvvtvqwv-3zjr` → **published แล้ว**) · **feed RPC = anon HTTP 200 · ROWS=3 ทุก published** (`e2e/r39_feed_rpc_probe.cjs`)
 2. ✅ **ไม่พึ่ง GH cron อย่างเดียว**: feed หน้าแรก = RPC (คนเปิดหน้า = ปล่อยโพสต์เอง) · `listMarketingPosts` promote ก่อนดึง · **scheduler yml**: marketing ยิงทุกครั้งที่ fire (รวม */5 — เดิมผูกชั่วโมงเดียวที่พัง) · **worker**: รับ `published-but-unpushed` ต่อด้วย FB + ห้าม demote แถว published เป็น failed
 3. ✅ **image-gen**: `reference_image_url` (ภาพที่ชี้ → pass with-ref → fail หมด = retry text-only) + **detail = attempts ทุกโมเดล** (เห็น HTTP จริงทุกชื่อ) + คืน `model` ที่สำเร็จ · client = **auto subject/note จากฟอร์ม** (หัวข้อ+เนื้อหาโพสต์) + reference ภาพล่าสุดในชุด → *รอ deploy EF รอบนี้*
 4. ✅ **flashTo ครบทุก action**: สร้างโพสต์→แท็บคิว · อนุมัติ/ปฏิเสธ→การ์ดตัวเอง · ตั้งเวลา/AI เลือกเวลา→แถวปฏิทิน · เจนรูป/browse→สตรีมภาพ · CSS `bmb-flash` + `.bmb-flash` keyframes
@@ -285,7 +285,7 @@
 
 | # | ขั้น | PASS = |
 |---|---|---|
-| **O-A** | ตั้งเวลาโพสต์ (อนุมัติแล้ว) ~5 นาทีข้างหน้า → รอถึงเวลา → **เปิดหน้าแรก (incognito) หรือแท็บ /admin/marketing** | โพสต์ขึ้นเป็น `published` บนหน้าแรกทันทีที่เปิด · สถานะในตาราง = published ( **ไม่ต้องรอถึงชั่วโมงถัดไป** ) |
+| **O-A** | ตั้งเวลาโพสต์ (อนุมัติแล้ว) ~5 นาทีข้างหน้า → รอถึงเวลา → **เปิดหน้าแรก (incognito) หรือแท็บ /admin/marketing** | โพสต์ขึ้นเป็น `published` บนหน้าแรกทันทีที่เปิด · สถานะในตาราง = published ( **ไม่ต้องรอถึงชั่วโมงถัดไป** ) · *ตอนนี้ 2 แถวค้างถูก promote แล้ว = ขึ้นเว็บจริงแล้ว (feed rpc 200 ROWS=3) — ทดสอบเพิ่มด้วยตั้งเวลาใหม่* |
 | **O-B** | AI Studio: ไม่กรอกโจทย์ภาพ (ปล่อยว่าง) แต่**กรอกหัวข้อ/เนื้อหาก่อน** + มีภาพในชุดแล้วกด "✨ สร้างภาพ" | เจนได้ = ภาพใหม่ในสตรีม (กระพริบ+เด้ง) · **ล้มเหลว = toast โชว์ attempts ทุกโมเดล** (เช่น `qwen...:HTTP404 · ...`) → ส่งข้อความนั้นมา = ทีมปรับ list ตามหลักฐาน |
 | **O-C** | จิ้มปุ่มใดก็ได้ (ตั้งเวลา/อนุมัติ/สร้างโพสต์/รูป) | หน้า **เลื่อนนุ่มไปที่ผลลัพธ์** + **กระพริบวงส้ม**รอบ element ที่เปลี่ยน |
 | **O-D** | **สติกเกอร์ — วัดก่อนเปลี่ยนค่า**: ① พิมพ์ต่อเนื่อง ≥4 ใบ แล้ว **วัดด้วยไม้บรรทัด: ระยะขอบล่าง→ขอบล่าง ของดวงติดกัน (มม.)** × 11.81 = ใส่ `stickerFaceHPx` (ช่วง 640–760) → บันทึก → พิมพ์ซ้ำ · ② ถ้ายังเพี้ยน = ปุ่ม 📏 ใบวัดฟีด + **calibrate ม้วนที่ตัวเครื่อง** (feed ค้างตอนใส่ม้วน · คู่มือ B1 Pro) | ขอบบนไม่หาย + ไม่ข้ามดวง ≥4 ใบติด · **ถ่ายรูปพร้อมไม้บรรทัดส่งมา** ถ้าค่ายังไม่ตรง (ทีมไม่เดาค่าเอง) |
