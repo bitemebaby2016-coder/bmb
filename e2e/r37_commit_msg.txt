@@ -1,0 +1,10 @@
+fix(CI): languageSanity จับอักขระจีน 2 จุดในเอกสาร — 7048283 พัง Lint (#5)
+
+- docs/BMB_HANDOFF_NEXT_SESSION_2026-10-31.md:7 — เขียนอ้าง fallback จีนตรง ๆ เป็นหลักฐาน -> "ข้อความจีน"
+- docs/BMB_MASTER_STATUS.md:7 — แก้ fallback จีนตรง ๆ -> "ข้อความจีน"
+- ต้นตอ: guard languageSanity สแกน docs/ ด้วย — รอบ R36 แก้ในโค้ดแต่หลุดเข้าเอกสารตอนบรรยาย fix
+
+verify:
+- npm run lint เต็ม = OK (brandNameGuard 491 + languageSanity) — evidence e2e/r37_lint_after.log
+- npx tsc --noEmit = 0 — evidence e2e/r37_tsc.log
+- ก่อนแก้ reproduce = FAIL 2 จุดตรงกับ CI — evidence e2e/r37_ci_fix_lint.log

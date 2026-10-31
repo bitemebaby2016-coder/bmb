@@ -4,7 +4,7 @@
 
 ## 0. HEAD + CI (สำคัญสุด — เช็คก่อนงานอื่น)
 
-- **HEAD = `e4c3ad7` (push แล้ว · fix CI)** — R36: languageSanity อักขระจีน 4 จุด (R34 fallback `电动车`→`🚗` · r34Contracts assertion · comment e2e)
+- **HEAD = `e4c3ad7` (push แล้ว · fix CI)** — R36: languageSanity อักขระจีน 4 จุด (R34 fallback ข้อความจีน→`🚗` · r34Contracts assertion · comment e2e)
 - ก่อนหน้า: `aa1b295` (R35) · `a6b3b34`/`4b2ffda` (R34)
 - **CI `aa1b295` พังที่ Lint (#5)** (พิสูจน์ GitHub API · log = `node e2e/r36_ci_probe.cjs` ไม่ต้องใช้ token) — **Test/vitest ผ่านใน CI รอบนั้นแล้ว** · Contract + Cloudflare = success/deployed ✓
 - **CI `e4c3ad7`** = เขียนตอน push = in_progress · Contract Tests = **success ✓** → **งานแรกของแชทหน้า = เช็ค CI `e4c3ad7` ครั้งเดียวให้เขียว** (ถ้าแดง = ดู log ด้วย r36_ci_probe แล้วแก้ต่อ)
