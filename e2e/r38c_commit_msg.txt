@@ -1,0 +1,12 @@
+fix(CI): contract 033 = allowlist + scope-assert สำหรับ m176 (anon อ่าน marketing_posts เฉพาะ published)
+
+- Contract Tests ของ 4a7321f = failure ที่ Legacy contracts 017-033:
+  e2e/contracts_033_table_acl.sql:99 ERROR FAIL G1b anon ACL drift (unexpected-SELECT=1)
+  = marketing_posts ที่ m176 เพิ่ง grant (Owner สั่ง "ดึงเข้าเว็บ") — allowlist เดิมไม่รู้จัก
+  (evidence: log หน้า run 41162776088)
+- แก้ให้ตรงนโยบายใหม่โดย "ไม่ให้ security อ่อนกว่าเดิม":
+  G1a += marketing_posts ต้องมี grant (revoke = feed หน้าแรกตาย)
+  G1b allowlist += marketing_posts
+  G1c (ใหม่): บังคับ policy marketing_posts_anon_published มีจริง + qual ชี้ published
+  (ถ้าถอด policy/ ขยายกว้าง = contract แดง)
+- docs: work-state บันทึกวงจร CI แดง-แก้-รอ re-green

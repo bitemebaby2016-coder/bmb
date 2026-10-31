@@ -248,7 +248,7 @@
 4. ✅ **ส่งสำเร็จโชว์ 3 ล่าสุด + อัลบั้มประวัติ**: `RiderPwaPage` กรอง `delivered` · เรียง `pod_captured_at` ใหม่ก่อน · `slice(0,3)` ในรายการหลัก · overflow เป็นอัลบั้มพับเปิด/ปิด + test
 5. ✅ **AI Studio ปุ่ม browse ไฟล์รูปเมนู**: `mk-browse-image` → upload `bmb-images/marketing/…` → public URL ต่อเข้าชุด `images` เดียวกับภาพ AI/แคตตาลอก (ใช้ร่วมการเจนภาพ/โพสต์) + test
 6. ✅ **ดึงเข้าเว็บ = m176 APPLIED+VERIFIED production (Owner สั่ง "apply 176")**: `MarketingFeedSection` mount หน้าแรก + apply ผ่าน `e2e/r38Apply176.cjs` → **ALL_PASS 8/8** (grant anon · policy `marketing_posts_anon_published` · ลบ `deny_anon` · **ledger top=176** · m175 recheck `billing175Live=true`) · PostgREST cache ค้างหลัง GRANT → สั่ง **`NOTIFY pgrst, 'reload schema'`** (`e2e/r38PgrstReload.cjs`) → **anon probe = HTTP 200** (1 published เห็น · 1 non-published ถูก RLS กรอง = พิสูจน์ filter) + test
-7. ✅ **gates R38**: vitest **8 ไฟล์ = OK** (รวม `r38Contracts.test.ts` ใหม่) · **tsc 0** · lint = รันก่อน commit (chain gate)
+7. ✅ **gates R38**: vitest **8 ไฟล์ = OK** (รวม `r38Contracts.test.ts` ใหม่) · **tsc 0** · lint = รันก่อน commit (chain gate) · **วงจร CI แดง→แก้**: Contract `4a7321f` = failure ที่ `contracts_033` G1b `unexpected-SELECT=1` (= marketing_posts ที่ m176 grant) → **แก้ allowlist + G1a บังคับ grant + G1c scope-assert published ใหม่** (security ไม่ได้อ่อนลง — เสริม assertion) · **CI Test `4a7321f` = success ✓**
 
 ### N.2 ขั้นทดสอบของ Owner (7 คำสั่ง) `[O]`
 

@@ -6,8 +6,10 @@
 -- the suite runs in ONE transaction and ROLLBACKs at the end.
 --
 -- Proves (execution-gate §2):
---   G1  anon canonical read set intact (8 rels) + ZERO anon write privileges on
+--   G1  anon canonical read set intact + ZERO anon write privileges on
 --       every public table/view + no anon SELECT beyond the canonical set
+--       (m176 · Owner 2026-10-31 "ดึงเข้าเว็บ": marketing_posts เพิ่มเข้าชุดด้วย —
+--        และ G1c บังคับว่า policy ของ anon ต้องจำกัดเฉพาะ status='published' เท่านั้น)
 --   G2  authenticated policy-backed grants present (business_settings +
 --       content_approvals SELECT; media_assets + mascot_overrides CRUD)
 --   G3  SECURITY: public_profiles VIEW write DENIED for authenticated (SELECT
@@ -58,10 +60,12 @@ DO $$ DECLARE ok int := 0; BEGIN
   IF NOT has_table_privilege('anon', 'public.menu_schedule', 'SELECT') THEN ok := ok + 1; END IF;
   IF NOT has_table_privilege('anon', 'public.menu_sections', 'SELECT') THEN ok := ok + 1; END IF;
   IF NOT has_table_privilege('anon', 'public.promotion_products', 'SELECT') THEN ok := ok + 1; END IF;
+  -- m176 (Owner 2026-10-31): feed หน้าแรกอ่านโพสต์ published — grant นี้ต้องอยู่ (revoke = feed ตาย)
+  IF NOT has_table_privilege('anon', 'public.marketing_posts', 'SELECT') THEN ok := ok + 1; END IF;
   -- 050 (w5_h1_close_anon_orders): anon ต้อง "ไม่มี" สิทธิ์อ่าน orders อีกต่อไป
   IF has_table_privilege('anon', 'public.orders', 'SELECT') THEN ok := ok + 1; END IF;
   IF ok <> 0 THEN RAISE EXCEPTION 'FAIL G1a anon canonical SELECT set broken (missing=%)', ok; END IF;
-  RAISE NOTICE 'PASS G1a anon canonical SELECT set intact (16 storefront rels + orders read closed)';
+  RAISE NOTICE 'PASS G1a anon canonical SELECT set intact (16 storefront rels + marketing_posts feed + orders read closed)';
 END $$;
 
 DO $$
@@ -96,6 +100,25 @@ BEGIN
     RAISE EXCEPTION 'FAIL G1b anon ACL drift (write-residue=%, unexpected-SELECT=%)', leaks, extra;
   END IF;
   RAISE NOTICE 'PASS G1b anon holds ZERO write privileges and exactly the canonical read set';
+END $$;
+
+-- m176 G1c (ใหม่ · เสริมไม่ให้อ่อนกว่าเดิม): anon อ่าน marketing_posts ได้ "เฉพาะ published" —
+-- policy ต้องมีจริง + qual ชี้ published (กัน grant ถูกใช้กว้าง / policy ถูกถอด →
+-- draft/pending หลุดออกเว็บโดยไม่ตั้งใจ)
+DO $$
+DECLARE q text;
+BEGIN
+  SELECT qual INTO q FROM pg_policies
+   WHERE schemaname = 'public' AND tablename = 'marketing_posts'
+     AND policyname = 'marketing_posts_anon_published'
+     AND roles @> ARRAY['anon']::name[];
+  IF q IS NULL THEN
+    RAISE EXCEPTION 'FAIL G1c marketing_posts_anon_published policy missing';
+  END IF;
+  IF q NOT LIKE '%published%' THEN
+    RAISE EXCEPTION 'FAIL G1c anon marketing_posts policy not scoped to published (qual=%)', q;
+  END IF;
+  RAISE NOTICE 'PASS G1c anon marketing_posts read is scoped to status=published only';
 END $$;
 
 -- ============================================
