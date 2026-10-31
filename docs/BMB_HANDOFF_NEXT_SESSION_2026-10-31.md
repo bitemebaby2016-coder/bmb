@@ -1,6 +1,13 @@
-# Handoff → แชทหน้า (2026-10-31 · ปิดเซสชัน R35)
+# Handoff → แชทหน้า (2026-10-31 · ปิดเซสชัน R35+R36)
 
-> ยึด `AI_WORK_STATE.md` บล็อก R35 (ล่าสุด) + `docs/BMB_MASTER_STATUS.md` (canonical) · ถ้าขัดกัน = โค้ดจริง > เอกสาร
+> ยึด `AI_WORK_STATE.md` บล็อก R35+R36 (ล่าสุด) + `docs/BMB_MASTER_STATUS.md` (canonical) · ถ้าขัดกัน = โค้ดจริง > เอกสาร
+
+## 0. HEAD + CI (สำคัญสุด — เช็คก่อนงานอื่น)
+
+- **HEAD = `e4c3ad7` (push แล้ว · fix CI)** — R36: languageSanity อักขระจีน 4 จุด (R34 fallback `电动车`→`🚗` · r34Contracts assertion · comment e2e)
+- ก่อนหน้า: `aa1b295` (R35) · `a6b3b34`/`4b2ffda` (R34)
+- **CI `aa1b295` พังที่ Lint (#5)** (พิสูจน์ GitHub API · log = `node e2e/r36_ci_probe.cjs` ไม่ต้องใช้ token) — **Test/vitest ผ่านใน CI รอบนั้นแล้ว** · Contract + Cloudflare = success/deployed ✓
+- **CI `e4c3ad7`** = เขียนตอน push = in_progress · Contract Tests = **success ✓** → **งานแรกของแชทหน้า = เช็ค CI `e4c3ad7` ครั้งเดียวให้เขียว** (ถ้าแดง = ดู log ด้วย r36_ci_probe แล้วแก้ต่อ)
 
 ## 1. งานค้างที่ต้องทำต่อ (เรียงลำดับความสำคัญ)
 
@@ -15,16 +22,16 @@
 - **โมเดล (ยืนยันจากภาพหน้าโมเดลจริง Owner):** `qwen/qwen-image-3` + `bytedance-seed/seedream-5-0-flash` = **มีจริง** (probe `/api/v1/models` สาธารณะไม่เจอ = index คนละชุด) — ใส่เป็น 2 candidate แรกใน `IMAGE_MODEL_CANDIDATES` แล้ว · env `IMAGE_GEN_MODELS` override ได้
 - **ทำ:** deploy `supabase functions deploy image-gen` → ลองเจนรูปโปรโมต 1 ใบจริงจาก AdminMarketing → ถ้า fallback ข้าม 2 ตัวแรกไป gemini = บันทึกว่าโมเดลคู่แรกใช้ไม่ได้จริง (แล้วถอดออก/สลับลำดับ)
 
-### 1.3 gates + CI รอบ R35
-- **ผ่านแล้ว (ท้องถิ่น):** vitest **91/91** (8 ไฟล์: stickerPng/bmbSticker/stickerQueueR31/homePopular/r34Contracts/**r35Contracts ใหม่**/socialAiContinuity/homeSectionModeCta) · eslint 0 · tsc 0 · build ดู `e2e/r35_build.log`
-- **ยังไม่รัน:** full vitest ทั้งชุด (~1,670 tests) + `npm run lint` (brandNameGuard+languageSanity) — **รอบหน้ารันแล้ว commit+push** (อย่าอ้างว่าผ่านจนกว่าจะมีหลักฐาน)
+### 1.3 gates + CI รอบ R35/R36
+- **ผ่านแล้ว (ท้องถิ่น):** vitest **91/91** (8 ไฟล์) · **`npm run lint` เต็ม = OK** (eslint + brandNameGuard 491 + languageSanity 1391 — หลัง fix R36) · tsc 0 · build `e2e/r35_build.log` ✓ · r34+r35 re-run = 12/12
+- **CI:** `aa1b295` = Lint พัง (แก้แล้วใน `e4c3ad7`) · **`e4c3ad7` = รอเช็คครั้งเดียว** (Contract ของเขา success แล้ว) · full vitest ท้องถิ่น ~1,670 = ยังไม่รัน — **CI Test step พิสูจน์ผ่านแล้ว ไม่ซ้ำโดยไม่จำเป็น**
 
 ### 1.4 งานค้างสะสม (ยังเปิดอยู่)
 1. e2e auto-print ออเดอร์จริง (R31 โค้ดพร้อม · Owner ยืนยัน "รับออเดอร์แล้วสติกเกอร์ปริ้นอัตโนมัติจากใบสั่งซื้อจริง ตรงรายละเอียดกับ notice" แล้ว)
 2. QZ Tray = ทุกครั้ง incognito + Remember this decision (Owner ยืนยัน 2026-10-30)
-3. CI รอบ R34 (`4b2ffda`/`a6b3b34`) — ยังไม่ได้กลับมาเช็ค (gh CLI ไม่มีในเครื่อง)
+3. ~~CI รอบ R34/R35~~ = แทนที่ด้วยสถานะ `e4c3ad7` (หัวข้อ 0)
 
-## 2. ไฟล์ที่แก้รอบ R35 (ทั้งหมดยังไม่ commit)
+## 2. ไฟล์ที่แก้รอบ R35+R36 (push แล้วทั้งหมด — HEAD `e4c3ad7`)
 
 | ไฟล์ | แก้ |
 |---|---|
@@ -40,8 +47,8 @@
 
 ## 3. ทดสอบทั้งหมดที่ต้องทำ (แชทหน้า)
 
-- [ ] full `npx vitest run` + `npm run lint` → ผ่าน = commit+push รอบ R35
-- [ ] Owner: พิมพ์สติกเกอร์จริง 1 ออเดอร์ → ถ่ายรูปส่งมา ( Menu/Notice/QR/ขอบดวง )
+- [ ] **เช็ค CI `e4c3ad7` ครั้งเดียว** → เขียว = ปิด loop CI (ใช้ `node e2e/r36_ci_probe.cjs` ดูผล/log)
+- [ ] Owner: พิมพ์สติกเกอร์จริง 1 ออเดอร์ → ถ่ายรูปส่งมา (Menu/Notice บรรทัดเดียวกัน · QR ชิด · ขอบดวง)
 - [ ] EF image-gen deploy + secret `BMB_OPENROUTER_API_KEY` + เจนรูปจริง 1 ใบ
 - [ ] e2e auto-print จริง (ถ้ายังไม่ทำ)
-- [ ] เช็ค CI R34 (`4b2ffda`/`a6b3b34`) บน Actions (ค้างตั้งแต่รอบก่อน)
+- [ ] (ถ้าต้องการ) full vitest ทั้งชุด local — CI Test ผ่านแล้ว ไม่บังคับ
