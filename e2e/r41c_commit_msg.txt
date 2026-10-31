@@ -1,0 +1,5 @@
+fix(R41): socialAiContinuity candidates assert = ทะเบียนใหม่ (คู่เก่า = ID ผิดจริง ถอดแล้ว)
+
+- reproduce: CI 365d2c9 Unit tests แดง = จุดเดียว socialAiContinuity:101 (e2e/r41_ci_repro.log)
+- แก้ assert = gemini-3.1-flash-lite-image + gpt-5-image-mini · not.toContain คู่เก่า
+- verify: 5 ไฟล์ 51/51 ผ่าน (e2e/r41_ci_repro2.log)

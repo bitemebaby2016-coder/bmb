@@ -97,9 +97,11 @@ describe('คีย์ OpenRouter ใหม่ — BMB_OPENROUTER_API_KEY + fall
     })
   }
 
-  it('image-gen candidates มีโมเดล Owner ยืนยันจากหน้าจริง (qwen-image-3 + seedream-5-0-flash)', () => {
-    expect(imgGenSrc).toContain('qwen/qwen-image-3')
-    expect(imgGenSrc).toContain('bytedance-seed/seedream-5-0-flash')
+  it('image-gen candidates = ทะเบียนจริง output=image (R41: คู่เก่า qwen/seedream = ID ผิดจริง → ถอดแล้ว)', () => {
+    expect(imgGenSrc).toContain('google/gemini-3.1-flash-lite-image')
+    expect(imgGenSrc).toContain('openai/gpt-5-image-mini')
+    expect(imgGenSrc).not.toContain('qwen/qwen-image-3')
+    expect(imgGenSrc).not.toContain('bytedance-seed/seedream-5-0-flash')
   })
 })
 
