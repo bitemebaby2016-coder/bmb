@@ -1,0 +1,6 @@
+fix(CI): contract 033 G1b allowlist += marketing_posts (ส่วนที่หายจาก b6f6ec8 — allowlist edit รอบแรก match ไม่เข้า)
+
+- verify ไฟล์ก่อน commit: G1a มี marketing_posts (ต้องมี grant) · G1b NOT in list มี marketing_posts
+  (จบ unexpected-SELECT=1 จาก run 41162776088) · G1c scope-assert published ครบ
+- b6f6ec8 = แก้ G1a+G1c แล้วแต่ allowlist ยังไม่เข้า (editor matchพลาด) → commit นี้ปิดรูรั่ว
+- lint chain = gate ก่อน commit เหมือนเดิม

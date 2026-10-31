@@ -91,7 +91,7 @@ BEGIN
                              'reviews','promotions','preorder_votes','mascot_overrides',
                              'admin_portfolio_items','branches','brands','business_settings',
                              'delivery_zones','media_assets','menu_schedule','menu_sections',
-                             'promotion_products') THEN
+                             'promotion_products','marketing_posts') THEN
       extra := extra + 1;
       RAISE NOTICE 'G1b anon unexpected SELECT on %', r.relname;
     END IF;
