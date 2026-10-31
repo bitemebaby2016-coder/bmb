@@ -75,7 +75,12 @@ export function Layout({ children, hideBottomNav = false, activeSection = 'home'
       window.history.replaceState(null, '', url.pathname + url.search + url.hash)
     } catch { /* URL แปลก ๆ = ปล่อยตามเดิม */ }
     const items = readCartParam(raw)
-    if (!items || items.length === 0) return
+    if (!items || items.length === 0) {
+      // R43 B6 (Owner 2026-10-31): decode-fail เคย return เงียบ → ลูกค้าเห็นตะกร้าว่าง
+      // ไม่ทราบสาเหตุ (ภาพ 7-8) → ห้ามเงียบ ต้องบอกสาเหตุ + ทางออกเสมอ
+      showToast('ลิงก์รายการในแชทไม่สมบูรณ์หรือเสียหาย — เปิดรายการให้ไม่ได้ เลือกเมนูใหม่ที่หน้าร้านได้เลย', 'warning')
+      return
+    }
     let cancelled = false
     void (async () => {
       try {

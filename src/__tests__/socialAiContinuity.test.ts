@@ -59,6 +59,13 @@ describe('บริบทเอไอสมบูรณ์ — shared shop conte
     expect(shopCtxSrc).toMatch(/07:00-20:00/)
     expect(shopCtxSrc).toMatch(/READ-ONLY/)
   })
+  it('R43 B4: ฉีดสถานะสด (delivery_rounds + business_settings) + กติกา same-day ปิด + บังคับอ้าง catalog', () => {
+    expect(shopCtxSrc).toMatch(/\/rest\/v1\/delivery_rounds/)
+    expect(shopCtxSrc).toMatch(/STORE STATUS \(สด/)
+    expect(shopCtxSrc).toMatch(/sameDayOpen/)
+    expect(shopCtxSrc).toMatch(/ห้ามบอกว่า "สั่งวันนี้ได้/)
+    expect(shopCtxSrc).toMatch(/ห้ามแต่งชื่อสินค้าใหม่/)
+  })
   it('social-ai-worker + social-post-worker ใช้ shopContext ชุดเดียวกัน', () => {
     expect(workerSrc).toMatch(/getShopContext/)
     expect(workerSrc).toMatch(/REPLY_CONTINUITY_RULES/)

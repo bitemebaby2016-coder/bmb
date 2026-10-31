@@ -1,14 +1,14 @@
 {
   "probe": "r43_publish_probe",
-  "ran_at": "2026-10-31T14:14:22.766Z",
+  "ran_at": "2026-10-31T15:06:11.411Z",
   "window": "48h",
   "read_only": true,
   "now": {
     "ok": true,
     "rows": [
       {
-        "utc": "2026-10-31 14:14:23.703657+00",
-        "ict": "2026-10-31 21:14:23.703657"
+        "utc": "2026-10-31 15:06:12.164228+00",
+        "ict": "2026-10-31 22:06:12.164228"
       }
     ]
   },
@@ -34,12 +34,12 @@
         "has_approval": true,
         "content_type": "post",
         "scheduled_for": "2026-10-31 13:00:00+00",
-        "published_at": "2026-10-31 13:00:00+00",
-        "provider_post_id": null,
+        "published_at": "2026-10-31 14:55:22.298+00",
+        "provider_post_id": "862940416913026_122145892131204867",
         "error": null,
-        "publish_attempts": 1,
+        "publish_attempts": 2,
         "created_at": "2026-10-31 12:51:20.495668+00",
-        "updated_at": "2026-10-31 13:00:00.062616+00"
+        "updated_at": "2026-10-31 14:55:22.298+00"
       },
       {
         "id": "mk-mvvz4n44-c60w",
@@ -60,12 +60,12 @@
         "has_approval": true,
         "content_type": "announcement",
         "scheduled_for": "2026-10-31 03:17:00+00",
-        "published_at": "2026-10-31 03:17:00+00",
-        "provider_post_id": null,
+        "published_at": "2026-10-31 14:55:16.737+00",
+        "provider_post_id": "862940416913026_122145892059204867",
         "error": null,
-        "publish_attempts": 1,
+        "publish_attempts": 2,
         "created_at": "2026-10-31 03:15:04.329951+00",
-        "updated_at": "2026-10-31 03:43:46.808374+00"
+        "updated_at": "2026-10-31 14:55:16.737+00"
       },
       {
         "id": "mk-mvvspkna-n6uf",
@@ -73,12 +73,12 @@
         "has_approval": true,
         "content_type": "announcement",
         "scheduled_for": "2026-10-31 02:50:00+00",
-        "published_at": "2026-10-31 02:50:00+00",
-        "provider_post_id": null,
+        "published_at": "2026-10-31 14:55:12.066+00",
+        "provider_post_id": "862940416913026_122145891993204867",
         "error": null,
-        "publish_attempts": 1,
+        "publish_attempts": 2,
         "created_at": "2026-10-31 02:42:16.64081+00",
-        "updated_at": "2026-10-31 03:43:46.808374+00"
+        "updated_at": "2026-10-31 14:55:12.066+00"
       },
       {
         "id": "mk-mvub0nrs-fapj",
@@ -97,45 +97,78 @@
   },
   "approved_not_on_fb": {
     "ok": true,
-    "rows": [
-      {
-        "id": "mk-mvwegu4b-o482",
-        "status": "published",
-        "has_approval": true,
-        "scheduled_for": "2026-10-31 13:00:00+00",
-        "published_at": "2026-10-31 13:00:00+00",
-        "provider_post_id": null,
-        "error": null,
-        "publish_attempts": 1,
-        "updated_at": "2026-10-31 13:00:00.062616+00"
-      },
-      {
-        "id": "mk-mvvspkna-n6uf",
-        "status": "published",
-        "has_approval": true,
-        "scheduled_for": "2026-10-31 02:50:00+00",
-        "published_at": "2026-10-31 02:50:00+00",
-        "provider_post_id": null,
-        "error": null,
-        "publish_attempts": 1,
-        "updated_at": "2026-10-31 03:43:46.808374+00"
-      },
-      {
-        "id": "mk-mvvtvqwv-3zjr",
-        "status": "published",
-        "has_approval": true,
-        "scheduled_for": "2026-10-31 03:17:00+00",
-        "published_at": "2026-10-31 03:17:00+00",
-        "provider_post_id": null,
-        "error": null,
-        "publish_attempts": 1,
-        "updated_at": "2026-10-31 03:43:46.808374+00"
-      }
-    ]
+    "rows": []
   },
   "automation_queue_48h": {
     "ok": true,
     "rows": [
+      {
+        "id": "sched-orders_stale_pending-gh-stale-20261031t1435",
+        "job_type": "orders_stale_pending",
+        "worker": "automation-worker",
+        "payload": {
+          "maxAgeMinutes": 120
+        },
+        "status": "succeeded",
+        "attempt_count": 1,
+        "max_attempts": 3,
+        "available_at": "2026-10-31 14:35:07.139629+00",
+        "next_retry_at": null,
+        "claimed_at": "2026-10-31 14:35:07.961019+00",
+        "lease_until": "2026-10-31 14:40:07.961019+00",
+        "started_at": "2026-10-31 14:35:07.961019+00",
+        "completed_at": "2026-10-31 14:35:10.104727+00",
+        "failed_at": null,
+        "last_error": null,
+        "failure_reason": null,
+        "created_at": "2026-10-31 14:35:07.139629+00",
+        "updated_at": "2026-10-31 14:35:10.104727+00"
+      },
+      {
+        "id": "sched-notification_dispatch-gh-dispatch-20261031t1435",
+        "job_type": "notification_dispatch",
+        "worker": "automation-worker",
+        "payload": {
+          "limit": 200,
+          "lookbackMinutes": 360
+        },
+        "status": "succeeded",
+        "attempt_count": 1,
+        "max_attempts": 3,
+        "available_at": "2026-10-31 14:35:01.827636+00",
+        "next_retry_at": null,
+        "claimed_at": "2026-10-31 14:35:02.921593+00",
+        "lease_until": "2026-10-31 14:40:02.921593+00",
+        "started_at": "2026-10-31 14:35:02.921593+00",
+        "completed_at": "2026-10-31 14:35:05.787641+00",
+        "failed_at": null,
+        "last_error": null,
+        "failure_reason": null,
+        "created_at": "2026-10-31 14:35:01.827636+00",
+        "updated_at": "2026-10-31 14:35:05.787641+00"
+      },
+      {
+        "id": "sched-marketing_publish-gh-mk-20261031t14",
+        "job_type": "marketing_publish",
+        "worker": "automation-worker",
+        "payload": {
+          "limit": 10
+        },
+        "status": "succeeded",
+        "attempt_count": 1,
+        "max_attempts": 3,
+        "available_at": "2026-10-31 14:35:01.825669+00",
+        "next_retry_at": null,
+        "claimed_at": "2026-10-31 14:35:03.083559+00",
+        "lease_until": "2026-10-31 14:40:03.083559+00",
+        "started_at": "2026-10-31 14:35:03.083559+00",
+        "completed_at": "2026-10-31 14:35:10.426124+00",
+        "failed_at": null,
+        "last_error": null,
+        "failure_reason": null,
+        "created_at": "2026-10-31 14:35:01.825669+00",
+        "updated_at": "2026-10-31 14:35:10.426124+00"
+      },
       {
         "id": "sched-inventory_low_stock-gh-stock-20261031t12",
         "job_type": "inventory_low_stock",
@@ -1052,6 +1085,28 @@
   },
   "automation_queue_marketing": [
     {
+      "id": "sched-marketing_publish-gh-mk-20261031t14",
+      "job_type": "marketing_publish",
+      "worker": "automation-worker",
+      "payload": {
+        "limit": 10
+      },
+      "status": "succeeded",
+      "attempt_count": 1,
+      "max_attempts": 3,
+      "available_at": "2026-10-31 14:35:01.825669+00",
+      "next_retry_at": null,
+      "claimed_at": "2026-10-31 14:35:03.083559+00",
+      "lease_until": "2026-10-31 14:40:03.083559+00",
+      "started_at": "2026-10-31 14:35:03.083559+00",
+      "completed_at": "2026-10-31 14:35:10.426124+00",
+      "failed_at": null,
+      "last_error": null,
+      "failure_reason": null,
+      "created_at": "2026-10-31 14:35:01.825669+00",
+      "updated_at": "2026-10-31 14:35:10.426124+00"
+    },
+    {
       "id": "sched-marketing_publish-gh-mk-20261031t12",
       "job_type": "marketing_publish",
       "worker": "automation-worker",
@@ -1358,25 +1413,29 @@
     "rows": [
       {
         "jobname": "bmb-promote",
-        "runs": 461,
+        "runs": 513,
         "first_run": "2026-10-31 06:34:00.248667+00",
-        "last_run": "2026-10-31 14:14:00.082881+00",
+        "last_run": "2026-10-31 15:06:00.047334+00",
         "expected_48h": 2880,
-        "coverage_pct": 16
+        "coverage_pct": 18
       },
       {
         "jobname": "bmb-tick",
-        "runs": 91,
+        "runs": 102,
         "first_run": "2026-10-31 06:40:00.094837+00",
-        "last_run": "2026-10-31 14:10:00.056793+00",
+        "last_run": "2026-10-31 15:05:00.034676+00",
         "expected_48h": 576,
-        "coverage_pct": 16
+        "coverage_pct": 18
       }
     ]
   },
   "g26_poll": {
     "ok": true,
     "rows": [
+      {
+        "id": "g26-poll-2026-10-31T15",
+        "created_at": "2026-10-31 15:00:13.44762+00"
+      },
       {
         "id": "g26-poll-2026-10-31T14",
         "created_at": "2026-10-31 14:00:06.513754+00"
@@ -1412,10 +1471,6 @@
       {
         "id": "g26-poll-2026-10-31T06",
         "created_at": "2026-10-31 06:33:40.041967+00"
-      },
-      {
-        "id": "g26-poll-2026-10-31T05",
-        "created_at": "2026-10-31 05:29:38.187247+00"
       }
     ]
   },
@@ -1497,6 +1552,90 @@
   "automation_executions": {
     "ok": true,
     "rows": [
+      {
+        "id": "auto-exec-tick-mk-20261031t1505",
+        "entity_id": "marketing_publish",
+        "description": "automation marketing_publish succeeded",
+        "created_at": "2026-10-31 15:05:08.781564+00"
+      },
+      {
+        "id": "auto-exec-tick-mk-20261031t1500",
+        "entity_id": "marketing_publish",
+        "description": "automation marketing_publish succeeded",
+        "created_at": "2026-10-31 15:00:13.489716+00"
+      },
+      {
+        "id": "auto-exec-tick-mk-20261031t1455",
+        "entity_id": "marketing_publish",
+        "description": "automation marketing_publish succeeded",
+        "created_at": "2026-10-31 14:55:24.753776+00"
+      },
+      {
+        "id": "auto-exec-tick-mk-20261031t1450",
+        "entity_id": "marketing_publish",
+        "description": "automation marketing_publish succeeded",
+        "created_at": "2026-10-31 14:50:05.939719+00"
+      },
+      {
+        "id": "auto-exec-tick-mk-20261031t1445",
+        "entity_id": "marketing_publish",
+        "description": "automation marketing_publish succeeded",
+        "created_at": "2026-10-31 14:45:07.032849+00"
+      },
+      {
+        "id": "auto-exec-tick-mk-20261031t1440",
+        "entity_id": "marketing_publish",
+        "description": "automation marketing_publish succeeded",
+        "created_at": "2026-10-31 14:40:06.080111+00"
+      },
+      {
+        "id": "auto-exec-sched-marketing_publish-gh-mk-20261031t14",
+        "entity_id": "marketing_publish",
+        "description": "automation marketing_publish succeeded",
+        "created_at": "2026-10-31 14:35:09.764176+00"
+      },
+      {
+        "id": "auto-exec-sched-orders_stale_pending-gh-stale-20261031t1435",
+        "entity_id": "orders_stale_pending",
+        "description": "automation orders_stale_pending succeeded",
+        "created_at": "2026-10-31 14:35:09.516566+00"
+      },
+      {
+        "id": "auto-exec-tick-mk-20261031t1435",
+        "entity_id": "marketing_publish",
+        "description": "automation marketing_publish succeeded",
+        "created_at": "2026-10-31 14:35:06.430527+00"
+      },
+      {
+        "id": "auto-exec-sched-notification_dispatch-gh-dispatch-20261031t1435",
+        "entity_id": "notification_dispatch",
+        "description": "automation notification_dispatch succeeded",
+        "created_at": "2026-10-31 14:35:05.162054+00"
+      },
+      {
+        "id": "auto-exec-tick-mk-20261031t1430",
+        "entity_id": "marketing_publish",
+        "description": "automation marketing_publish succeeded",
+        "created_at": "2026-10-31 14:30:07.892603+00"
+      },
+      {
+        "id": "auto-exec-tick-mk-20261031t1425",
+        "entity_id": "marketing_publish",
+        "description": "automation marketing_publish succeeded",
+        "created_at": "2026-10-31 14:25:05.503369+00"
+      },
+      {
+        "id": "auto-exec-tick-mk-20261031t1420",
+        "entity_id": "marketing_publish",
+        "description": "automation marketing_publish succeeded",
+        "created_at": "2026-10-31 14:20:05.83876+00"
+      },
+      {
+        "id": "auto-exec-tick-mk-20261031t1415",
+        "entity_id": "marketing_publish",
+        "description": "automation marketing_publish succeeded",
+        "created_at": "2026-10-31 14:15:06.801611+00"
+      },
       {
         "id": "auto-exec-tick-mk-20261031t1410",
         "entity_id": "marketing_publish",
@@ -1772,90 +1911,6 @@
         "entity_id": "marketing_publish",
         "description": "automation marketing_publish succeeded",
         "created_at": "2026-10-31 10:35:06.354736+00"
-      },
-      {
-        "id": "auto-exec-tick-mk-20261031t1030",
-        "entity_id": "marketing_publish",
-        "description": "automation marketing_publish succeeded",
-        "created_at": "2026-10-31 10:30:07.721662+00"
-      },
-      {
-        "id": "auto-exec-tick-mk-20261031t1025",
-        "entity_id": "marketing_publish",
-        "description": "automation marketing_publish succeeded",
-        "created_at": "2026-10-31 10:25:05.485205+00"
-      },
-      {
-        "id": "auto-exec-tick-mk-20261031t1020",
-        "entity_id": "marketing_publish",
-        "description": "automation marketing_publish succeeded",
-        "created_at": "2026-10-31 10:20:07.932977+00"
-      },
-      {
-        "id": "auto-exec-tick-mk-20261031t1015",
-        "entity_id": "marketing_publish",
-        "description": "automation marketing_publish succeeded",
-        "created_at": "2026-10-31 10:15:06.656891+00"
-      },
-      {
-        "id": "auto-exec-tick-mk-20261031t1010",
-        "entity_id": "marketing_publish",
-        "description": "automation marketing_publish succeeded",
-        "created_at": "2026-10-31 10:10:05.259454+00"
-      },
-      {
-        "id": "auto-exec-tick-mk-20261031t1005",
-        "entity_id": "marketing_publish",
-        "description": "automation marketing_publish succeeded",
-        "created_at": "2026-10-31 10:05:05.117617+00"
-      },
-      {
-        "id": "auto-exec-tick-mk-20261031t1000",
-        "entity_id": "marketing_publish",
-        "description": "automation marketing_publish succeeded",
-        "created_at": "2026-10-31 10:00:11.833661+00"
-      },
-      {
-        "id": "auto-exec-tick-mk-20261031t0955",
-        "entity_id": "marketing_publish",
-        "description": "automation marketing_publish succeeded",
-        "created_at": "2026-10-31 09:55:06.061914+00"
-      },
-      {
-        "id": "auto-exec-tick-mk-20261031t0950",
-        "entity_id": "marketing_publish",
-        "description": "automation marketing_publish succeeded",
-        "created_at": "2026-10-31 09:50:04.599445+00"
-      },
-      {
-        "id": "auto-exec-tick-mk-20261031t0945",
-        "entity_id": "marketing_publish",
-        "description": "automation marketing_publish succeeded",
-        "created_at": "2026-10-31 09:45:06.512817+00"
-      },
-      {
-        "id": "auto-exec-tick-mk-20261031t0940",
-        "entity_id": "marketing_publish",
-        "description": "automation marketing_publish succeeded",
-        "created_at": "2026-10-31 09:40:04.698441+00"
-      },
-      {
-        "id": "auto-exec-tick-mk-20261031t0935",
-        "entity_id": "marketing_publish",
-        "description": "automation marketing_publish succeeded",
-        "created_at": "2026-10-31 09:35:05.324246+00"
-      },
-      {
-        "id": "auto-exec-tick-mk-20261031t0930",
-        "entity_id": "marketing_publish",
-        "description": "automation marketing_publish succeeded",
-        "created_at": "2026-10-31 09:30:07.114999+00"
-      },
-      {
-        "id": "auto-exec-tick-mk-20261031t0925",
-        "entity_id": "marketing_publish",
-        "description": "automation marketing_publish succeeded",
-        "created_at": "2026-10-31 09:25:05.717627+00"
       }
     ]
   },
@@ -1864,6 +1919,21 @@
     "http": 200,
     "error": null,
     "posts": [
+      {
+        "id": "862940416913026_122145892131204867",
+        "created_time": "2026-10-31T14:55:19+0000",
+        "msg_head": "แนะนำ 🥢 ข้าวหมูผัดกิมจิ\n\nวันนี้ขอแนะนำ 🥢 ข้าวหมูผัดกิมจิ ฿79"
+      },
+      {
+        "id": "862940416913026_122145892059204867",
+        "created_time": "2026-10-31T14:55:14+0000",
+        "msg_head": "เมนูใหม่ไวรัล\n\nประกาศๆๆ"
+      },
+      {
+        "id": "862940416913026_122145891993204867",
+        "created_time": "2026-10-31T14:55:09+0000",
+        "msg_head": "แนะนำ ปลาต้มผักกาดดองเสฉวน (ซวนช่ายหยุย)\n\nวันนี้ขอแนะนำ ปลาต้มผักกาดดองเสฉวน (ซว"
+      },
       {
         "id": "862940416913026_122145808257204867",
         "created_time": "2026-10-31T06:33:31+0000",
@@ -1941,15 +2011,15 @@
       "id": "mk-mvwegu4b-o482",
       "status": "published",
       "scheduled_for": "2026-10-31 13:00:00+00",
-      "published_at": "2026-10-31 13:00:00+00",
-      "provider_post_id": null,
-      "publish_attempts": 1,
+      "published_at": "2026-10-31 14:55:22.298+00",
+      "provider_post_id": "862940416913026_122145892131204867",
+      "publish_attempts": 2,
       "error": null,
-      "fb_id": null,
-      "fb_created_time": null,
-      "matched_via": null,
-      "delta_vs_scheduled_ms": null,
-      "delta_vs_published_ms": null
+      "fb_id": "862940416913026_122145892131204867",
+      "fb_created_time": "2026-10-31T14:55:19+0000",
+      "matched_via": "provider_post_id",
+      "delta_vs_scheduled_ms": 6919000,
+      "delta_vs_published_ms": -3298
     },
     {
       "id": "mk-mvvz4n44-c60w",
@@ -1969,29 +2039,29 @@
       "id": "mk-mvvtvqwv-3zjr",
       "status": "published",
       "scheduled_for": "2026-10-31 03:17:00+00",
-      "published_at": "2026-10-31 03:17:00+00",
-      "provider_post_id": null,
-      "publish_attempts": 1,
+      "published_at": "2026-10-31 14:55:16.737+00",
+      "provider_post_id": "862940416913026_122145892059204867",
+      "publish_attempts": 2,
       "error": null,
-      "fb_id": null,
-      "fb_created_time": null,
-      "matched_via": null,
-      "delta_vs_scheduled_ms": null,
-      "delta_vs_published_ms": null
+      "fb_id": "862940416913026_122145892059204867",
+      "fb_created_time": "2026-10-31T14:55:14+0000",
+      "matched_via": "provider_post_id",
+      "delta_vs_scheduled_ms": 41894000,
+      "delta_vs_published_ms": -2737
     },
     {
       "id": "mk-mvvspkna-n6uf",
       "status": "published",
       "scheduled_for": "2026-10-31 02:50:00+00",
-      "published_at": "2026-10-31 02:50:00+00",
-      "provider_post_id": null,
-      "publish_attempts": 1,
+      "published_at": "2026-10-31 14:55:12.066+00",
+      "provider_post_id": "862940416913026_122145891993204867",
+      "publish_attempts": 2,
       "error": null,
-      "fb_id": null,
-      "fb_created_time": null,
-      "matched_via": null,
-      "delta_vs_scheduled_ms": null,
-      "delta_vs_published_ms": null
+      "fb_id": "862940416913026_122145891993204867",
+      "fb_created_time": "2026-10-31T14:55:09+0000",
+      "matched_via": "provider_post_id",
+      "delta_vs_scheduled_ms": 43509000,
+      "delta_vs_published_ms": -3066
     },
     {
       "id": "mk-mvub0nrs-fapj",
@@ -2014,34 +2084,30 @@
       "pending_approval": 1,
       "published": 5
     },
-    "published_without_provider_id": 3,
+    "published_without_provider_id": 0,
     "approved_or_scheduled_without_provider_id": 0,
-    "b3_rows": 3,
+    "b3_rows": 0,
     "cron_runs": [
       {
         "jobname": "bmb-promote",
-        "runs": 461,
+        "runs": 513,
         "first_run": "2026-10-31 06:34:00.248667+00",
-        "last_run": "2026-10-31 14:14:00.082881+00",
+        "last_run": "2026-10-31 15:06:00.047334+00",
         "expected_48h": 2880,
-        "coverage_pct": 16
+        "coverage_pct": 18
       },
       {
         "jobname": "bmb-tick",
-        "runs": 91,
+        "runs": 102,
         "first_run": "2026-10-31 06:40:00.094837+00",
-        "last_run": "2026-10-31 14:10:00.056793+00",
+        "last_run": "2026-10-31 15:05:00.034676+00",
         "expected_48h": 576,
-        "coverage_pct": 16
+        "coverage_pct": 18
       }
     ],
     "fb_feed_ok": true,
-    "fb_matched": 2,
-    "fb_published_unmatched": [
-      "mk-mvwegu4b-o482",
-      "mk-mvvtvqwv-3zjr",
-      "mk-mvvspkna-n6uf"
-    ],
+    "fb_matched": 5,
+    "fb_published_unmatched": [],
     "errors": {}
   }
 }

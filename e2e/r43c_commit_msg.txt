@@ -1,0 +1,29 @@
+R43 fixes ② B1+B4+B6 (ban lifted by Owner — code changes allowed now)
+
+ยืนยัน B2/B3 ปิดแล้วด้วย runtime evidence (deploy รอบนี้แยก):
+- automation-worker DEPLOYED 14:51Z (v72) → tick 14:55Z scanned=3 published=3
+  → approved_not_on_fb.rows=[] (e2e/r43_ef_versions_probe.json + r43_publish_probe.json)
+- ก่อนหน้า: scanned=0 ทุก tick + 3 แถว prov=null (stale deploy R26 vs โค้ด R39)
+
+B1 — ปุ่มตั้งเวลา gate approval (AdminMarketing.tsx):
+- schedulable() = approved/scheduled/failed เท่านั้น → disabled + title + คำใบ้ "รออนุมัติ"
+  (เดิม: ปุ่มโชว์ทุกแถวกดจาก pending_approval = RPC RAISE ERR_APPROVAL_REQUIRED → toast รหัสดิบ)
+- handleSchedule: guard สถานะก่อนยิง RPC + map ERR_APPROVAL_REQUIRED → ข้อความไทย
+
+B4 — สถานะร้าน "สด" ใน prompt (_shared/shopContext.ts):
+- buildStoreStatusLines(rounds, settings, now) = pure fn mirror เว็บ
+  (homeProviders.getStoreStatusFromRounds + roundBookability SAME_DAY + shopHoursLogic)
+- getShopContext ดึง delivery_rounds เพิ่ม → ฉีด STORE STATUS (สด) + กติกา
+  same-day ปิด = ห้ามบอก "สั่งวันนี้ได้/เปิดถึง 20:00" ให้ชวนพรีออเดอร์+รอบถัดไป
+- ZERO-FAKE: ดึงไม่ได้ = บอกดึงไม่ได้ · [] = ปิด · MAX_CHARS 2400→4000 (กันตัด MENU)
+
+B6 — cart deep-link + catalog:
+- Layout.tsx decode-fail: return เงียบ → showToast บอกสาเหตุ+ทางออก (ภาพ 7-8)
+- REPLY_CONTINUITY_RULES: บังคับชื่อเมนูจาก MENU เท่านั้น ห้ามแต่งชื่อใหม่ (ภาพ 6)
+
+Tests: src/__tests__/r43Contracts.test.ts ใหม่ 8 ข้อ (B1 contract ×2 · B6 contract ·
+B4 unit 4 เคส · source contract) + socialAiContinuity เพิ่มเคส B4
+gates: npx vitest run 5 ไฟล์ = 59/59 · npx tsc --noEmit = 0 · npm run lint = OK
+  (eslint + brandNameGuard 499 + languageSanity 1442)
+
+deploy หลัง commit: social-ai-worker + social-post-worker (ฝัง shopContext ใหม่)

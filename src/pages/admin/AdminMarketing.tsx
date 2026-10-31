@@ -144,7 +144,18 @@ export function AdminMarketing() {
     } else showToast('บันทึกการตัดสินใจไม่สำเร็จ', 'error')
   }
 
+  // R43 B1 (Owner 2026-10-31): ปุ่มตั้งเวลา = เฉพาะแถวที่คนอนุมัติแล้ว — RPC
+  // marketing_schedule_post (m137/147) RAISE 'ERR_APPROVAL_REQUIRED' กับ draft/pending_approval
+  // → กดจากรอตรวจ = toast รหัสดิบ (ภาพ 1) · gate ที่ UI ก่อนกด + ข้อความไทยไม่โชว์รหัส
+  const schedulable = (status: string) =>
+    status === 'approved' || status === 'scheduled' || status === 'failed'
+
   async function handleSchedule(id: string) {
+    const post = posts.find((p) => p.id === id)
+    if (!post || !schedulable(post.status)) {
+      showToast('โพสต์นี้ยังไม่ผ่านการอนุมัติ — อนุมัติก่อนตั้งเวลา', 'error')
+      return
+    }
     const when = whenByPost[id]
     if (!when) { showToast('เลือกเวลาเผยแพร่ก่อน', 'error'); return }
     const r = await scheduleMarketingPost(id, new Date(when).toISOString())
@@ -153,7 +164,13 @@ export function AdminMarketing() {
       await load()
       flashTo(`mk-row-${id}`)
     } else {
-      showToast('ตั้งเวลาไม่สำเร็จ: ' + (r.error || 'ERR_SCHEDULE_FAILED'), 'error')
+      const err = r.error || 'ERR_SCHEDULE_FAILED'
+      showToast(
+        err.includes('ERR_APPROVAL_REQUIRED')
+          ? 'ตั้งเวลาไม่สำเร็จ: โพสต์นี้ยังไม่ผ่านการอนุมัติ — อนุมัติก่อนตั้งเวลา'
+          : 'ตั้งเวลาไม่สำเร็จ: ' + err,
+        'error',
+      )
     }
   }
 
@@ -542,7 +559,16 @@ export function AdminMarketing() {
                   onChange={(e) => setWhenByPost((m) => ({ ...m, [p.id]: e.target.value }))}
                   data-testid={`mk-when-${p.id}`}
                 />
-                <button className="btn btn-primary text-xs" onClick={() => void handleSchedule(p.id)} data-testid={`mk-schedule-${p.id}`}>⏰ ตั้งเวลา</button>
+                <button
+                  className="btn btn-primary text-xs"
+                  onClick={() => void handleSchedule(p.id)}
+                  disabled={!schedulable(p.status)}
+                  title={schedulable(p.status) ? undefined : 'ยังไม่ผ่านการอนุมัติ — อนุมัติก่อนตั้งเวลา'}
+                  data-testid={`mk-schedule-${p.id}`}
+                >⏰ ตั้งเวลา</button>
+                {!schedulable(p.status) && (
+                  <span className="text-xs text-brand-muted" data-testid={`mk-schedule-hint-${p.id}`}>รออนุมัติ</span>
+                )}
               </div>
             </div>
           ))}
