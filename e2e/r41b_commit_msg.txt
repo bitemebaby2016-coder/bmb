@@ -1,0 +1,11 @@
+R41b: m178 APPLIED+VERIFIED — config.toml ซ้ำ(จาก insert) ซ่อม + r41g schedule bmb-tick สำเร็จ
+(รอบแรกพลาด: dollar-quote ซ้อน SQL · RAISE %% / ลืม %) · secrets ใหม่ตั้งแล้ว · gate 401
+
+- config.toml: ลบ [functions.sheets-sync] ซ้ำที่ insert_line สร้าง (TOML parse error = deploy fail 1 รอบ → แก้แล้ว deploy OK)
+- e2e/r41g_schedule_tick.cjs: token ใหม่ → secrets set BMB_TICK_TOKEN → cron.schedule format(%L)
+  → CRON = bmb-promote(* * * * *) + bmb-tick(*/5 * * * *) active + EF gate 401 (deployed)
+- e2e/r41f_state.cjs (read-only): ext pg_cron+pg_net ✓ · fns ✓ · โพสต์ 05:46 = published+prov=true
+  (FB ขึ้นแล้วผ่าน tick E2E 06:33) + g26-poll-T06 รัน ✓
+- e2e/r41_deploy_fns.cjs (+.log) deploy image-gen+cron-tick = ทั้งคู่ DEPLOY_OK
+- docs: TEST_PACK Q.1#3 → APPLIED+VERIFIED + บันทึกพลาด 3 จุดเล็ก · work-state/master/แฮนออฟ = APPLIED
+- งานแรกแชทหน้า: ดู cron firing รอบถัดไป (cron.job_run_details/queue ใหม่/poll ใหม่) + รัน CI probe 365d2c9
