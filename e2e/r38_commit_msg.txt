@@ -1,0 +1,15 @@
+R38: 7 คำสั่ง Owner — สติกเกอร์ faceH 670→709 (production) · image-gen IMAGE_GEN_MODELS secret · ลิงก์แผนที่ intent:// · delivered 3+อัลบั้ม · browse รูปเมนู · feed หน้าแรก+m176
+
+1) สติกเกอร์ "ตั้งค่าไม่ถูก พิมแล้วด้านบนหาย": probe production เจอ stickerFaceHPx=670 != ดวงจริง 709
+   -> UPDATE business_settings -> 709 read-back ผ่าน (e2e/r38_print_fix.cjs BEFORE/UPDATE/AFTER) · offset คง 0
+2) image-gen เจนไม่ได้/โมเดล gemini flash 404: secret เก่า IMAGE_GEN_MODEL override default
+   -> supabase secrets set IMAGE_GEN_MODELS (คู่แรก qwen-image-3 + seedream-5-0-flash) — list ยืนยันแล้ว
+3) ลิงก์แผนที่ไรเดอร์ = หน้าติดตั้งแอป -> deliveryPlan.openMapsUrl = intent:// + package com.google.android.apps.maps
+   + S.browser_fallback_url (Android) / URL เดิม (iOS/desktop) — ใช้ 3 ปุ่ม RiderPwaPage
+4) ส่งสำเร็จโชว์ 3 ล่าสุด + อัลบั้มประวัติ: RiderPwaPage sort pod_captured_at + slice(0,3) + rider-history-toggle
+5) AI Studio ปุ่ม browse ไฟล์รูปเมนู: AdminMarketing mk-browse-image -> upload bmb-images/marketing -> ชุด images ร่วม
+6) ดึงเข้าเว็บ: MarketingFeedSection mount HomePage (status=published · ซ่อนเงียบ) + m176 PREPARED
+   (anon 42501 พิสูจน์แล้ว e2e/r38_anon_posts_probe.cjs) — รอ Owner สั่ง __apply 176__
+7) เอกสาร: TEST_PACK เพิ่ม §N (N.0 บล็อก · N.1 ปิดแล้ว · N.2 ขั้นตรวจ 7 คำสั่ง) + work-state R38 + master + แฮนออฟ
+
+gates: vitest 8 ไฟล์ OK (r38Contracts ใหม่) · npx tsc --noEmit = 0 · npm run lint = chain ก่อน commit

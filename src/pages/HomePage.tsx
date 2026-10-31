@@ -32,6 +32,7 @@ import { PromotionStrip } from '@/components/home/PromotionStrip'
 import { VerifiedReviewsSection } from '@/components/home/VerifiedReviewsSection'
 import { ReviewCarouselSection } from '@/components/home/ReviewCarouselSection'
 import { ReviewGallerySection } from '@/components/home/ReviewGallerySection'
+import { MarketingFeedSection } from '@/components/home/MarketingFeedSection'
 import { CategorySections } from '@/components/home/CategorySections'
 import { FloatingCart, StickyCartBar } from '@/components/home/FloatingCart'
 import { runOrderBuilder } from '@/lib/orderEntry'
@@ -515,6 +516,8 @@ export function HomePage() {
 
       {/* 6b. Real customer review photo gallery (lazy) — R34: mount ของจริง 32 ใบ (เดิมมี comment แต่ไม่ได้ render) */}
       <ReviewGallerySection />
+      {/* R38 (Owner): โพสต์การตลาดที่เผยแพร่แล้ว "ดึงเข้าเว็บ" — ซ่อนตัวเงียบถ้ายังไม่ apply m176/ไม่มีโพสต์ */}
+      <MarketingFeedSection />
       {/* CAT-04: Verified Customer Reviews Section */}
         <VerifiedReviewsSection reviews={verifiedReviews} products={products} />
 

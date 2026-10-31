@@ -38,7 +38,7 @@ import {
   type DriverActionKind,
 } from '@/lib/driverService'
 import { fetchAddressPhotoPath, getAddressPhotoUrl } from '@/lib/addressPhoto'
-import { planMultiStopRoute, googleMapsDirUrl, toPlanStops } from '@/lib/deliveryPlan'
+import { planMultiStopRoute, googleMapsDirUrl, openMapsUrl, toPlanStops } from '@/lib/deliveryPlan'
 import {
   enablePush,
   disablePush,
@@ -111,6 +111,8 @@ export function RiderPwaPage() {
   const [activeOrder, setActiveOrder] = useState<MyDeliveryAssignment | null>(null)
   const [deliverBusy, setDeliverBusy] = useState(false)
   const [notice, setNotice] = useState<string | null>(null)
+  // R38 (Owner 2026-10-31): "ส่งสำเร็จแล้วให้โชว์แค่ 3 ออเดอร์ล่าสุด — นอกนั้นไว้ในอัลบั้มประวัติ"
+  const [showHistory, setShowHistory] = useState(false)
 
   const [pushState, setPushState] = useState<{
     supported: boolean
@@ -582,7 +584,7 @@ export function RiderPwaPage() {
                     🗺️ เส้นทางส่งของวันนี้ ({plan.stops.length} จุด{activeJobs.length > stops.length ? ` + ${activeJobs.length - stops.length} งานไม่มีพิกัด` : ''})
                   </h3>
                   {dirUrl ? (
-                    <a className="btn btn-primary text-xs" href={dirUrl} target="_blank" rel="noreferrer" data-testid="rider-open-gmaps">
+                    <a className="btn btn-primary text-xs" href={openMapsUrl(dirUrl) ?? undefined} target="_blank" rel="noreferrer" data-testid="rider-open-gmaps">
                       🧭 เปิดนำทาง Google Maps
                     </a>
                   ) : null}
@@ -599,7 +601,7 @@ export function RiderPwaPage() {
                       {(() => {
                         const u = googleMapsDirUrl(origin, [s])
                         return u ? (
-                          <a className="btn btn-outline text-xs whitespace-nowrap" href={u} target="_blank" rel="noreferrer" data-testid={`rider-nav-stop-${s.order_number}`}>
+                          <a className="btn btn-outline text-xs whitespace-nowrap" href={openMapsUrl(u) ?? undefined} target="_blank" rel="noreferrer" data-testid={`rider-nav-stop-${s.order_number}`}>
                             🧭 นำทาง
                           </a>
                         ) : null
@@ -647,7 +649,7 @@ export function RiderPwaPage() {
                   detail: activeOrder.dropoff_detail || undefined,
                 }])
                 return u ? (
-                  <a className="btn btn-primary text-xs mb-2" href={u} target="_blank" rel="noreferrer" data-testid="rider-nav-active">
+                  <a className="btn btn-primary text-xs mb-2" href={openMapsUrl(u) ?? undefined} target="_blank" rel="noreferrer" data-testid="rider-nav-active">
                     🧭 เปิดนำทางไปจุดส่งนี้
                   </a>
                 ) : null
@@ -744,7 +746,18 @@ export function RiderPwaPage() {
                   ยังไม่มีงานที่ได้รับมอบหมาย — งานใหม่จะโหลดอัตโนมัติทุก ~25 วินาที
                 </GlassCard>
               )}
-              {assignments.map((a) => (
+              {/* R38 (Owner): delivered เรียงใหม่สุดก่อน (pod_captured_at) — โชว์ 3 ล่าสุดในรายการหลัก
+                  ที่เหลือเก็บไว้ในอัลบั้มประวัติด้านล่าง (กดเปิด/ปิด) */}
+              {(() => {
+                const deliveredAll = assignments
+                  .filter((x) => x.assignment_status === 'delivered')
+                  .sort((x, y) => String(y.pod_captured_at || y.assigned_at).localeCompare(String(x.pod_captured_at || x.assigned_at)))
+                const recentSet = new Set(deliveredAll.slice(0, 3).map((x) => x.order_number))
+                const visible = assignments.filter((x) => x.assignment_status !== 'delivered' || recentSet.has(x.order_number))
+                const overflow = deliveredAll.slice(3)
+                return (
+                <>
+              {visible.map((a) => (
                 <GlassCard key={a.order_number} className="p-4" data-testid={`rider-job-${a.order_number}`}>
                   <div className="flex items-center justify-between mb-1">
                     <h3 className="font-bold text-slate-800">📦 {a.order_number}</h3>
@@ -808,6 +821,36 @@ export function RiderPwaPage() {
                   </div>
                 </GlassCard>
               ))}
+                  {/* R38: อัลบั้มประวัติ — งานส่งสำเร็จที่เกิน 3 ล่าสุด (พับไว้ เปิดดูได้) */}
+                  {deliveredAll.length > 3 && (
+                    <div className="pt-1" data-testid="rider-history-album">
+                      <button className="btn btn-outline text-xs w-full" onClick={() => setShowHistory((v) => !v)} data-testid="rider-history-toggle">
+                        {showHistory
+                          ? `▲ ซ่อนอัลบั้มประวัติ (${deliveredAll.length} งาน)`
+                          : `📚 อัลบั้มประวัติ ส่งสำเร็จ (${deliveredAll.length - 3} งานเกิน 3 ล่าสุด)`}
+                      </button>
+                      {showHistory && (
+                        <div className="mt-2 space-y-2" data-testid="rider-history-list">
+                          {overflow.map((h) => (
+                            <GlassCard key={`hist-${h.order_number}`} className="p-3 opacity-80" data-testid={`rider-history-${h.order_number}`}>
+                              <div className="flex items-center justify-between gap-2">
+                                <span className="text-sm font-semibold">📦 {h.order_number}</span>
+                                <span className="text-xs text-slate-500">
+                                  🏠 ส่งสำเร็จ · {h.pod_captured_at
+                                    ? new Date(h.pod_captured_at).toLocaleString('th-TH', { dateStyle: 'short', timeStyle: 'short' })
+                                    : '—'}
+                                </span>
+                              </div>
+                              <p className="text-xs text-slate-500 mt-1">📍 {h.dropoff_detail || '—'} · 💰 {h.total_amount} บาท</p>
+                            </GlassCard>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </>
+                )
+              })()}
             </div>
           )}
         </>

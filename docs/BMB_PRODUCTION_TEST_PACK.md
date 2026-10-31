@@ -223,3 +223,41 @@
 - **ไม่ต้องรันซ้ำ (ปิดแล้วมี evidence):** L-1/L-2/L-6/L-9 · **L-3/L-4/L-5/L-7/L-8** (test+gates+CI `67f10b8`) · B-2 legacy contract (7/7) · schema parity (มีรายงาน) — อยากตรวจซ้ำหลัง deploy = ดู **L-RT**
 - **ห้ามสรุปว่า "พร้อม Production 100%" / "ปิดครบทุกลูป"** จนกว่า: (1) L-RT + ขั้น B/E/I ผ่านตา Owner หลัง deploy ใหม่ (2) B-2 + schema parity บันทึก แล้วตามเดิม (3) **marketing_rules/B2 มีหลักฐานใหม่** — *(ทำแล้ว ✓ Pages marker · ✓ **159 apply+verify 4 stage** 2026-10-26 · ledger 159)*
 - รายการที่ AI รันให้แล้ว (ไม่ต้องรันซ้ำ): tsc/eslint/vitest/build/route-smoke/CI — ดู `docs/BMB_MASTER_STATUS.md` §5 + **§9.0** · HEAD = `5f891de` (#586/#160)
+---
+
+## N. รอบ Owner 2026-10-31 (7 คำสั่ง · R38) — บล็อก / งานค้าง / ขั้นตรวจ `[R]`/`[O]`
+
+> ฝั่ง AI ปิดแล้วมีหลักฐาน = ห้ามจดซ้ำเป็นงานค้าง · ยังไม่ verify ด้วยตา/ฮาร์ดแวร์ = ระบุ "รอ Owner ทดสอบ"
+
+### N.0 รายการที่บล็อก/ค้างอยู่ ณ 2026-10-31 (สถานะความจริง)
+
+| # | รายการ | สถานะ | ปิดเมื่อ |
+|---|---|---|---|
+| BLK-1 | **m176 (anon อ่าน `marketing_posts` เฉพาะ `published`) = PREPARED ยังไม่ apply** — feed "ดึงเข้าเว็บ" จะขึ้นได้หลัง apply ( widget ซ่อนตัวเงียบ ไม่พังหน้าแรก ) · ก่อนหน้า anon = 42501 พิสูจน์แล้ว (`e2e/r38_anon_posts_probe.cjs`) | BLOCKED รอ Owner | Owner พิมพ์ `__apply 176__` → probe ซ้ำ = HTTP 200 |
+| BLK-2 | **m175 (tenants.custom_domain + billing) = PREPARED เดิม ยังไม่ apply** (ค้างมาตั้งแต่รอบก่อน) | BLOCKED รอ Owner | `__apply 175__` |
+| BLK-3 | full vitest ~1,670 ท้องถิ่น = ยังไม่รัน (รอบ R38 = vitest 8 ไฟล์ targeted + tsc 0) | UNVERIFIED local · ให้ **CI ของ HEAD รอบ R38** ตัดสิน | CI Test+Lint+Build = success |
+| BLK-4 | **พิมพ์สติกเกอร์จริงหลังแก้ faceH 670→709 = ยังไม่ verify** (ฮาร์ดแวร์) | WAITING Owner | ถ่ายรูป ≥2 ใบต่อกัน = ขอบบนไม่หายทุกใบ (ขั้น N-A) |
+| BLK-5 | **เจนรูปจริง 1 ใบหลังตั้ง `IMAGE_GEN_MODELS` = ยังไม่ verify** (ต้อง admin JWT) | WAITING Owner | สำเร็จ + จดโมเดลที่ใช้จริง (ขั้น N-D) |
+| BLK-6 | **"โต้ตอบ" บนเว็บ (ไลก์/คอมเม้นใน feed)** = ยังไม่มีสเปก/ไม่มีฟีเจอร์ — ตอนนี้คอมเม้นอยู่ที่ FB → social-ai ตอบ (R26/G6) | OPEN QUESTION | Owner ยืนยันขอบเขต (ต้องการในเว็บด้วยไหม) |
+
+### N.1 ปิดแล้วรอบ R38 (มีหลักฐาน — ห้ามจดซ้ำเป็นงานค้าง)
+
+1. ✅ **สติกเกอร์ตัดขอบบน ("ตั้งค่าไม่ถูก")**: production `print_settings.stickerFaceHPx` **670 → 709** — read-back จริง `e2e/r38_print_fix.cjs` (BEFORE 670 · UPDATE 709 · AFTER 709 · offset คง 0) — ต้นตอ: หน้า 670px < ดวงจริง 709px (40×60 ที่ Owner ยืนยัน) → หน้าถัดไปเริ่มก่อนขอบบน (ขอบหายสะสมทุกใบ) + ช่วงขาวแปลกตามรูป
+2. ✅ **image-gen เจนไม่ได้ / โมเดล gemini flash HTTP 404**: ต้นตอ = secret เก่า `IMAGE_GEN_MODEL` (โมเดลร้าง) override default → **ตั้ง secret `IMAGE_GEN_MODELS` แล้ว** ( list ใหม่ขึ้นใน `supabase secrets list` — คู่แรก `qwen/qwen-image-3` + `bytedance-seed/seedream-5-0-flash` )
+3. ✅ **ลิงก์แผนที่ไรเดอร์ไปหน้าติดตั้งแอป**: `openMapsUrl()` ใน `deliveryPlan.ts` = intent URL + `package=com.google.android.apps.maps` + `S.browser_fallback_url` ( iOS/desktop คง URL เดิม ) — ใช้ครบทั้ง 3 ปุ่มใน `RiderPwaPage` + test
+4. ✅ **ส่งสำเร็จโชว์ 3 ล่าสุด + อัลบั้มประวัติ**: `RiderPwaPage` กรอง `delivered` · เรียง `pod_captured_at` ใหม่ก่อน · `slice(0,3)` ในรายการหลัก · overflow เป็นอัลบั้มพับเปิด/ปิด + test
+5. ✅ **AI Studio ปุ่ม browse ไฟล์รูปเมนู**: `mk-browse-image` → upload `bmb-images/marketing/…` → public URL ต่อเข้าชุด `images` เดียวกับภาพ AI/แคตตาลอก (ใช้ร่วมการเจนภาพ/โพสต์) + test
+6. 🔶 **ดึงเข้าเว็บ**: `MarketingFeedSection` mount หน้าแรก (อ่าน `status=published` · ซ่อนเงียบเมื่อยังไม่ apply/ว่าง) + **m176 PREPARED** → รอ BLK-1 + test
+7. ✅ **gates R38**: vitest **8 ไฟล์ = OK** (รวม `r38Contracts.test.ts` ใหม่) · **tsc 0** · lint = รันก่อน commit (chain gate)
+
+### N.2 ขั้นทดสอบของ Owner (7 คำสั่ง) `[O]`
+
+| # | ขั้น | PASS = |
+|---|---|---|
+| N-A | **สติกเกอร์**: `/admin/settings` → การพิมพ์ → ค่า `stickerFaceHPx` ต้องโชว์ **709** (แก้ให้แล้วฝั่ง production) → พิมออเดอร์จริง ≥2 ใบต่อกัน | ขอบบนไม่หายทุกใบ · หัว BITE ME BABY ครบ · ช่วงขาวระหว่างดวงปกติ — **ถ้ายังตัด = ถ่ายรูป+วัดหน้าใหม่ แจ้งทีม ห้ามเดาค่าเอง** |
+| N-B | **ปุ่มนำทางไรเดอร์**: มือถือ Android เปิด `/rider` ที่มีงาน → กด 🧭 ทั้ง 3 ปุ่ม (เส้นทางรวม / รายจุด / งานนี้) | **เปิดแอป Google Maps ตรง ๆ** (ไม่ใช่หน้าติดตั้งแอป) · เครื่องไม่มีแอป = fallback เปิดเว็บ |
+| N-C | **ส่งสำเร็จ 3 ล่าสุด**: ไรเดอร์มีงาน `delivered` ≥4 | รายการหลักเห็นแค่ 3 ใหม่สุด · ปุ่ม `📚 อัลบั้มประวัติ ส่งสำเร็จ` เปิดดูที่เหลือครบ |
+| N-D | **เจนภาพ**: AdminMarketing → AI Studio → ใส่หัวข้อ → ✨ สร้างภาพ | สำเร็จ · โมเดลคู่แรก (qwen/seedream) ใช้ได้ — ถ้า fallback ข้ามไป gemini จดชื่อโมเดลจริงที่โชว์ใน error มาแจ้ง |
+| N-E | **Browse ไฟล์**: ปุ่ม `📁 เลือกไฟล์รูปเมนูจากเครื่อง` | รูปจากเครื่องเข้าชุดภาพ → ใช้กับโพสต์ + ภาพโปรโมต/เทศกาล ร่วมกับภาพ AI ได้ |
+| N-F | **โพสต์ + ดึงเข้าเว็บ** (ทำหลัง apply 176): สร้างโพสต์ → กล่องอนุมัติ → อนุมัติ → ตั้งเวลา/รอ publish → เปิดหน้าแรก incognito | โพสต์โผล่ในหัวข้อ **"ประกาศล่าสุดจาก BITE ME BABY"** · ( ก่อน apply = ไม่เห็น ซ่อนเงียบ = ปกติ ) |
+| N-G | **โต้ตอบ**: คอมเม้นใต้โพสต์ FB ที่ publish แล้ว | social-ai classify → draft → ตอบ (R26/G6) · **โต้ตอบในเว็บ = BLK-6 รอ Owner ตัดสินใจ** |

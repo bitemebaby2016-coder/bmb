@@ -90,3 +90,23 @@ export function googleMapsDirUrl(
   if (mid.length > 0) params.set('waypoints', mid.join('|'))
   return `https://www.google.com/maps/dir/?${params.toString()}`
 }
+
+/**
+ * R38 (Owner 2026-10-31: "การนำทางของไรเดอร์ ลิงก์แผนที่ออกไป แต่ไปเข้าหน้าติดตั้งแอพ
+ * เรียกใช้แอพแผนที่ไม่ได้"): ใน PWA/Custom Tab ลิงก์ https://www.google.com/maps ถูกกัน
+ * ไม่ให้เปิดแอปข้ามโหมด → Google เสิร์ฟหน้า "ติดตั้งแอป Google Maps" แทนการนำทาง
+ * ทางแก้ (Android = ที่ไรเดอร์ใช้จริง): intent URL ระบุ package com.google.android.apps.maps
+ *   → Chrome resolve แอปโดยตรง · ไม่มีแอป = S.browser_fallback_url กลับ URL เดิมในเบราว์เซอร์
+ * iOS/desktop (Safari ไม่รองรับ intent: scheme) → คืน URL เดิมตามเดิม
+ * pure (รับ ua เป็น param — test ได้ไม่ต้องพึ่ง navigator)
+ */
+export function openMapsUrl(
+  url: string | null,
+  ua: string = typeof navigator !== 'undefined' ? navigator.userAgent : '',
+): string | null {
+  if (!url) return null
+  if (!/Android/i.test(ua)) return url
+  const withoutScheme = url.replace(/^https:\/\//, '')
+  const fallback = encodeURIComponent(url)
+  return `intent://${withoutScheme}#Intent;scheme=https;package=com.google.android.apps.maps;S.browser_fallback_url=${fallback};end`
+}

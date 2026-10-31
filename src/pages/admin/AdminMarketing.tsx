@@ -7,7 +7,7 @@
 //   Calendar — marketing_schedule_post (server บังคับ approval) · Rules — marketing_rules
 //   Analytics — ผลเผยแพร่จริง (provider post id, error, attempts)
 // อนุมัติ != ตั้งเวลา != เผยแพร่ — แยกกันชัดเจนทุกชั้น
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { showToast } from '@/components/ui/ToastContainer'
 import { AdminAiStudio } from '@/pages/admin/AdminAiStudio'
@@ -56,6 +56,10 @@ export function AdminMarketing() {
   const [contentType, setContentType] = useState<'post' | 'promotion' | 'banner' | 'announcement'>('post')
   const [images, setImages] = useState<string[]>([])
   const [saving, setSaving] = useState(false)
+  // R38 (Owner 2026-10-31): "AI Studio ให้มีปุ่ม browse ไฟล์รูปเมนู ที่จะใช้สร้างโพสได้ด้วย
+  // — เอาเมนูที่ browse มาทำร่วมกับการเจนภาพมาร์เกตติ้งต่างๆ" (แนบเข้าชุด images เดียวกัน)
+  const [browseBusy, setBrowseBusy] = useState(false)
+  const browseRef = useRef<HTMLInputElement | null>(null)
 
   const [genKind, setGenKind] = useState<'menu' | 'promo' | 'festival'>('promo')
   const [genStyle, setGenStyle] = useState<'realistic' | 'illustration' | 'poster'>('realistic')
@@ -161,6 +165,32 @@ export function AdminMarketing() {
       }
     } finally {
       setAutoBusy(false)
+    }
+  }
+
+  /** R38: browse ไฟล์รูปจากเครื่อง (เช่น รูปเมนู) → อัปโหลดขึ้น bmb-images → ได้ public URL
+   *  แนบเข้าชุด images เดียวกับภาพ AI (image-gen) และภาพแคตตาลอก (Planner) — ใช้ร่วมทุกผิวหน้าการตลาด */
+  async function handleBrowseImage(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    e.target.value = '' // เปลี่ยนไฟล์เดิมซ้ำได้
+    if (!file) return
+    if (!file.type.startsWith('image/')) { showToast('เลือกไฟล์รูปภาพเท่านั้น (jpg/png/webp)', 'error'); return }
+    if (file.size > 10 * 1024 * 1024) { showToast('ไฟล์ต้องไม่เกิน 10MB', 'error'); return }
+    setBrowseBusy(true)
+    try {
+      const safe = (file.name || 'image.png').replace(/[^\w.-]+/g, '_').slice(-60)
+      const path = `marketing/browse-${Date.now()}-${safe}`
+      const { error } = await supabase.storage.from('bmb-images').upload(path, file, { contentType: file.type, upsert: false })
+      if (error) throw error
+      const { data } = supabase.storage.from('bmb-images').getPublicUrl(path)
+      const url = data?.publicUrl
+      if (!url) throw new Error('no public url')
+      setImages((prev) => [...prev, url])
+      showToast('แนบรูปจากไฟล์เข้าชุดภาพของโพสต์แล้ว — ใช้ร่วมกับภาพ AI/แคตตาลอกได้เลย', 'success')
+    } catch (err) {
+      showToast('อัปโหลดรูปไม่สำเร็จ: ' + String((err as Error)?.message || err).slice(0, 120), 'error')
+    } finally {
+      setBrowseBusy(false)
     }
   }
 
@@ -329,10 +359,23 @@ export function AdminMarketing() {
                 <input className="input w-full" value={genNote} onChange={(e) => setGenNote(e.target.value)} placeholder="เช่น โทนเหลืองทอง" />
               </label>
             </div>
-            <button className="btn btn-primary mt-3" disabled={genBusy} onClick={() => void handleGenerateImage()} data-testid="mk-generate-image">
-              {genBusy ? '⏳ กำลังสร้าง…' : '✨ สร้างภาพ'}
-            </button>
-            <p className="text-xs text-brand-muted mt-2">รูปเมนู = ภาพจริงจากแคตตาลอก (จิ้มเมนูใน Planner → แนบภาพจริงให้อัตโนมัติ) · สร้างภาพ AI เฉพาะป้ายโปรโมต/เทศกาลเท่านั้น</p>
+            <div className="flex flex-wrap gap-2 mt-3">
+              <button className="btn btn-primary" disabled={genBusy} onClick={() => void handleGenerateImage()} data-testid="mk-generate-image">
+                {genBusy ? '⏳ กำลังสร้าง…' : '✨ สร้างภาพ'}
+              </button>
+              <button className="btn btn-outline" disabled={browseBusy} onClick={() => browseRef.current?.click()} data-testid="mk-browse-image">
+                {browseBusy ? '⏳ กำลังอัปโหลด…' : '📁 เลือกไฟล์รูปเมนูจากเครื่อง'}
+              </button>
+              <input
+                ref={browseRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                data-testid="mk-browse-input"
+                onChange={(e) => void handleBrowseImage(e)}
+              />
+            </div>
+            <p className="text-xs text-brand-muted mt-2">รูปเมนู = ภาพจริงจากแคตตาลอก (จิ้มเมนูใน Planner) หรือ <b>ไฟล์จากเครื่อง (browse)</b> · ภาพทั้งหมดอยู่ชุดเดียวกัน — ใช้กับโพสต์/ภาพ AI โปรโมต/เทศกาลได้พร้อมกัน · สร้างภาพ AI เฉพาะป้ายโปรโมต/เทศกาลเท่านั้น</p>
             {images.length > 0 && (
               <div className="flex flex-wrap gap-2 mt-3">
                 {images.map((u) => <img key={u} src={u} alt="generated" className="w-24 h-24 object-cover rounded-lg border border-brand-border" />)}
