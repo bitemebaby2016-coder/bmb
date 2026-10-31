@@ -80,7 +80,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
 // (AdminMarketing → image-gen invoke ไม่ผ่าน) — ตอบ CORS ทุกเมธอดเสมอ
 if (req.method === 'OPTIONS') return new Response('ok', { status: 200, headers: corsHeaders() })
   if (req.method !== 'POST') return json({ error: 'method not allowed' }, 405)
-
+  try {
   const jwt = (req.headers.get('authorization') || '').replace(/^Bearer\s+/i, '')
   if (!jwt) return json({ error: 'unauthorized' }, 401)
   if (!(await isAdmin(jwt))) return json({ error: 'ERR_FORBIDDEN' }, 403)
@@ -154,7 +154,9 @@ if (req.method === 'OPTIONS') return new Response('ok', { status: 200, headers: 
   const isDataUrl = dataUrl.startsWith('data:')
   const mime = isDataUrl ? (dataUrl.match(/^data:([^;]+);/)?.[1] || 'image/png') : 'image/png'
   const ext = mime.includes('jpeg') ? 'jpg' : 'png'
-  const objectPath = `marketing/gen-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}.${ext}`
+  // R40 (Owner: "ให้ไปอยู่ในอัลบั้มเดียวกันแยกโฟลเดอร์") — เดิม site-assets/marketing = เห็นที่อื่นยาก
+  // → bmb-images/ai-generated/ = อัลบั้มเดียวกับภาพแคตตาลอก/browse แยกโฟลเดอร์ชัดเจน (list ได้จาก UI)
+  const objectPath = `ai-generated/gen-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}.${ext}`
   try {
     let bytes: Uint8Array
     if (isDataUrl) {
@@ -162,7 +164,7 @@ if (req.method === 'OPTIONS') return new Response('ok', { status: 200, headers: 
     } else {
       bytes = new Uint8Array(await (await fetch(dataUrl)).arrayBuffer())
     }
-    const up = await fetch(`${SB_URL}/storage/v1/object/site-assets/${objectPath}`, {
+    const up = await fetch(`${SB_URL}/storage/v1/object/bmb-images/${objectPath}`, {
       method: 'POST',
       headers: {
         apikey: SERVICE,
@@ -177,6 +179,10 @@ if (req.method === 'OPTIONS') return new Response('ok', { status: 200, headers: 
     return json({ error: 'ERR_IMAGE_UPLOAD_FAILED', detail: String(e instanceof Error ? e.message : e).slice(0, 200) }, 502)
   }
 
-  const publicUrl = `${SB_URL}/storage/v1/object/public/site-assets/${objectPath}`
-  return json({ ok: true, url: publicUrl, kind, style, prompt, model: usedModel, attempts })
+  const publicUrl = `${SB_URL}/storage/v1/object/public/bmb-images/${objectPath}`
+  return json({ ok: true, url: publicUrl, kind, style, prompt, model: usedModel, attempts, folder: 'ai-generated' })
+  } catch (e) {
+    // R40: error ทุกกรณีต้องเป็น JSON ที่ client อ่านได้ — เดิม crash = body ว่าง → Owner เห็นแค่ "non-2xx" ไม่รู้เหตุ
+    return json({ error: 'ERR_UNCAUGHT', detail: String(e instanceof Error ? e.message : e).slice(0, 300) }, 500)
+  }
 })

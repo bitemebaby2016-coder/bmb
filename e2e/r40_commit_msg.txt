@@ -1,0 +1,17 @@
+R40: 3 ของใหม่ Owner สาย 2 — เจนภาพสถานะ+พรีวิว+อัลบั้ม ai-generated + error อ่านได้ · วิซาร์ด
+ตั้งค่าสติกเกอร์ (บันทึกอัตโนมัติ→พิมด้วยค่าจอ) + วิธีใช้ 2 ค่า + ปุ่ม HTML ⚠ไม่ใช้ชดเชย
+
+- AdminMarketing: genStatus 3 phase (running/ok/fail) + การ์ด mk-gen-status + พรีวิว mk-gen-result
+  + อัลบั้ม bmb-images/ai-generated (mk-ai-album · list ตอน mount+หลังเจน · pickAiImage เลือกใช้)
+  + error อ่าน ctx.text() ก่อน (json พัง = raw โชว์เหตุจริง)
+- EF image-gen: อัปโหลด bmb-images/ai-generated/ (อัลบั้มเดียวกัน โฟลเดอร์แยกตาม Owner)
+  + wrap try/catch → ทุกกรณีคืน ERR_UNCAUGHT+detail (ไม่มี body ว่าง/non-2xx ปริศนา)
+  + response += folder · evidence logs API = 404 ทุก endpoint (e2e/r40_imggen_logs2.cjs)
+- AdminPrintSettings: btPrintWith = จุดเดียวทุกปุ่ม BT (จอ=เครื่อง) · วิซาร์ด sticker-wizard
+  (ใส่ค่า→savePrinterSettings อัตโนมัติ→พิมด้วยค่านั้นทันที · ล้มบันทึก=ไม่พิมพ์ · x4=printStickerRoll ตรวจน้ำข้ามดวง)
+  + sticker-live-values โชว์ 472×Npx · การ์ดวิธีใช้ "ชดเชยฟีด (±px)" + "ความสูงหน้าดวง (มม.×11.81/วัด pitch)"
+  + ปุ่ม QZ/ใบเสร็จ/ครัว/ไดอะล็อก ติด ⚠ ไม่ใช้ชดเชย (4 จุด) + bt-test ระบุ "ใช้ค่าชดเชย/หน้าดวง"
+- stickerPng: mmToStickerPx (pure · 60มม.=709px)
+- docs: TEST_PACK §P (P.0 ต้นตอ · P.1 ปิด · P.2 ขั้น P-A..P-C) · work-state R40 · master R40 head · แฮนออฟ R40
+- gates: vitest 8 ไฟล์ 72/72 (r40Contracts ใหม่ 7) · lint/tsc = chain ก่อน commit · CI = probe หลัง push
+- หมายเหตุ: ภาพเจนเก่าอยู่ site-assets/marketing/ (อัลบั้มใหม่โชว์เฉพาะ ai-generated/ — แจ้งใน UI ตรง ๆ)

@@ -67,6 +67,19 @@ export function AdminMarketing() {
   const [genSubject, setGenSubject] = useState('')
   const [genNote, setGenNote] = useState('')
   const [genBusy, setGenBusy] = useState(false)
+  // R40 (Owner: "ให้มีตัวแสดงสถานะ + พรีวิวรูปที่สร้าง + รู้ว่าสร้างเสร็จหรือยัง ไปอยู่อัลบั้มเดียวกันแยกโฟลเดอร์")
+  const [genStatus, setGenStatus] = useState<{ phase: 'idle' | 'running' | 'ok' | 'fail'; detail?: string; url?: string; model?: string }>({ phase: 'idle' })
+  const [aiAlbum, setAiAlbum] = useState<Array<{ name: string; url: string }>>([])
+  const loadAiAlbum = useCallback(async () => {
+    try {
+      const { data, error } = await supabase.storage.from('bmb-images').list('ai-generated', { limit: 60, sortBy: { column: 'created_at', order: 'desc' } })
+      if (error || !data) return
+      setAiAlbum(data
+        .filter((f) => f.name && !f.name.startsWith('.'))
+        .map((f) => ({ name: f.name, url: supabase.storage.from('bmb-images').getPublicUrl(`ai-generated/${f.name}`).data.publicUrl })))
+    } catch { /* เงียบ — list ไม่ได้ = โชว์ข้อความว่ายังไม่มีภาพย */ }
+  }, [])
+  useEffect(() => { void loadAiAlbum() }, [loadAiAlbum])
 
   const [ruleFreq, setRuleFreq] = useState(3)
   const [ruleStart, setRuleStart] = useState('10:00')
@@ -216,31 +229,53 @@ export function AdminMarketing() {
       return
     }
     setGenBusy(true)
+    setGenStatus({ phase: 'running' })
+    flashTo('mk-gen-status')
     try {
       const { data, error } = await supabase.functions.invoke('image-gen', {
         body: { kind: genKind, style: genStyle, subject, note, reference_image_url: reference },
       })
       if (error || !data?.ok) {
-        // R32: ดึงรายละเอียดจริงจาก body ของ EF (400/502 detail) — เดิมเห็นแค่ "non-2xx" มองไม่เห็นสาเหตุ
+        // R32+R40: ดึงรายละเอียดจริงจาก body ของ EF — json ไม่ได้ = อ่านเป็น text เลย (เดิมเห็นแค่ "non-2xx")
         let detail = data?.error || error?.message || 'ERR_IMAGE_GEN_FAILED'
         const ctx = (error as unknown as { context?: Response } | null)?.context
-        if (ctx && typeof ctx.json === 'function') {
+        if (ctx && typeof ctx.text === 'function') {
           try {
-            const body = await ctx.json() as { error?: string; detail?: string }
-            if (body?.error || body?.detail) detail = `${body.error ?? ''} ${body.detail ?? ''}`.trim()
+            const raw = await ctx.text()
+            if (raw) {
+              try {
+                const b = JSON.parse(raw) as { error?: string; detail?: string }
+                const d = `${b?.error ?? ''} ${b?.detail ?? ''}`.trim()
+                if (d) detail = d
+              } catch { detail = `${detail} | ${raw.slice(0, 180)}` }
+            }
           } catch { /* คง message เดิม */ }
         }
+        setGenStatus({ phase: 'fail', detail })
+        flashTo('mk-gen-status')
         showToast('สร้างภาพไม่สำเร็จ: ' + detail, 'error')
       } else {
-        setImages((prev) => [...prev, data.url])
-        showToast('สร้างภาพสำเร็จ — แนบกับโพสต์แล้ว (เลือก/ใช้เลย/สร้างใหม่ได้)', 'success')
-        flashTo('mk-images-strip')
+        setImages((prev) => (prev.includes(data.url) ? prev : [...prev, data.url]))
+        setGenStatus({ phase: 'ok', url: data.url, model: data.model })
+        await loadAiAlbum() // ภาพใหม่เข้าอัลบั้ม bmb-images/ai-generated ทันที
+        flashTo('mk-gen-result')
+        showToast('✅ สร้างภาพสำเร็จ — ดูพรีวิวด้านล่าง · บันทึกอัลบั้ม ai-generated + แนบเข้าชุดภาพแล้ว', 'success')
       }
     } catch (e) {
-      showToast('สร้างภาพไม่สำเร็จ: ' + String(e).slice(0, 120), 'error')
+      const msg = String(e).slice(0, 160)
+      setGenStatus({ phase: 'fail', detail: msg })
+      flashTo('mk-gen-status')
+      showToast('สร้างภาพไม่สำเร็จ: ' + msg, 'error')
     } finally {
       setGenBusy(false)
     }
+  }
+
+  /** R40: จิ้มภาพในอัลบั้ม ai-generated = ดึงเข้าชุดภาพของโพสต์ทันที (เลือกมาใช้ได้จริง) */
+  function pickAiImage(url: string) {
+    setImages((prev) => (prev.includes(url) ? prev : [...prev, url]))
+    flashTo('mk-images-strip')
+    showToast('แนบภาพจากอัลบั้มเข้าชุดภาพของโพสต์แล้ว', 'success')
   }
 
   async function handleSaveRules() {
@@ -391,11 +426,52 @@ export function AdminMarketing() {
               />
             </div>
             <p className="text-xs text-brand-muted mt-2">รูปเมนู = ภาพจริงจากแคตตาลอก (จิ้มเมนูใน Planner) หรือ <b>ไฟล์จากเครื่อง (browse)</b> · ภาพทั้งหมดอยู่ชุดเดียวกัน — ใช้กับโพสต์/ภาพ AI โปรโมต/เทศกาลได้พร้อมกัน · สร้างภาพ AI เฉพาะป้ายโปรโมต/เทศกาลเท่านั้น</p>
+            {/* R40: ตัวแสดงสถานะการเจน + พรีวิวผลลัพธ์ (Owner: "สร้างแล้วภาพไปไหน สร้างเสร็จหรือเปล่า") */}
+            {genStatus.phase !== 'idle' && (
+              <div
+                className={`mt-3 rounded-xl border p-3 text-sm ${genStatus.phase === 'fail' ? 'border-red-400 bg-red-50 text-red-700' : genStatus.phase === 'ok' ? 'border-green-400 bg-green-50 text-green-700' : 'border-brand-border bg-brand-surface'}`}
+                data-testid="mk-gen-status"
+                role="status"
+              >
+                {genStatus.phase === 'running' && (
+                  <span>⏳ <b>กำลังสร้างภาพ…</b> (วนโมเดลตามลำดับ — อาจใช้ 10–40 วินาที) · โจทย์: {genSubject.trim() || title.trim() || '—'} · ภาพอ้างอิง: {images.length ? 'มี (ภาพล่าสุดในชุด)' : 'ไม่มี'}</span>
+                )}
+                {genStatus.phase === 'ok' && (
+                  <span>✅ <b>สร้างสำเร็จ</b>{genStatus.model ? ` · โมเดล ${genStatus.model}` : ''} — บันทึกอัลบั้ม <code>bmb-images/ai-generated/</code> + แนบเข้าชุดภาพแล้ว (ดูพรีวิวด้านล่าง)</span>
+                )}
+                {genStatus.phase === 'fail' && (<span>❌ <b>สร้างไม่สำเร็จ:</b> {genStatus.detail}</span>)}
+              </div>
+            )}
+            {genStatus.phase === 'ok' && genStatus.url && (
+              <div className="mt-3 flex items-start gap-3" data-testid="mk-gen-result">
+                <img src={genStatus.url} alt="ภาพที่เพิ่งสร้าง" className="w-40 h-40 object-cover rounded-xl border border-brand-border" />
+                <div className="text-xs text-brand-muted">
+                  <b>พรีวิวผลลัพธ์ล่าสุด</b> — อยู่ในชุดภาพ (ด้านล่าง) + อัลบั้ม ai-generated แล้ว ใช้กับโพสต์ได้เลย<br />
+                  <a href={genStatus.url} target="_blank" rel="noreferrer" className="underline">เปิดไฟล์เต็ม</a>
+                </div>
+              </div>
+            )}
             {images.length > 0 && (
               <div className="flex flex-wrap gap-2 mt-3" data-testid="mk-images-strip">
                 {images.map((u) => <img key={u} src={u} alt="generated" className="w-24 h-24 object-cover rounded-lg border border-brand-border" />)}
               </div>
             )}
+            {/* R40: อัลบั้มภาพ AI (โฟลเดอร์แยกในอัลบั้มเดิม) — ข้ามหน้า/รีเฟรชก็ยังอยู่ · จิ้ม = เลือกใช้ */}
+            <div className="mt-3" data-testid="mk-ai-album">
+              <p className="text-xs font-semibold text-brand-accent mb-1">🗂️ อัลบั้มภาพที่ AI สร้าง (<code>bmb-images/ai-generated/</code>) — จิ้มรูปเพื่อเลือกใช้</p>
+              {aiAlbum.length === 0 ? (
+                <p className="text-xs text-brand-muted">ยังไม่มีภาพในอัลบั้ม — สร้างภาพสำเร็จครั้งแรกจะขึ้นที่นี่ทันที (ภาพที่เจนก่อนหน้ายังอยู่โฟลเดอร์เดิม <code>site-assets/marketing/</code> ไม่ขึ้นในอัลบั้มนี้)</p>
+              ) : (
+                <div className="flex flex-wrap gap-2">
+                  {aiAlbum.map((a) => (
+                    <button key={a.name} type="button" className="relative" title={a.name} onClick={() => pickAiImage(a.url)} data-testid={`mk-ai-pick-${a.name}`}>
+                      <img src={a.url} alt={a.name} className="w-20 h-20 object-cover rounded-lg border border-brand-border hover:ring-2 hover:ring-brand-primary" />
+                      <span className="absolute bottom-0 inset-x-0 text-[9px] bg-black/50 text-white rounded-b-lg">เลือกใช้</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
           <PostForm title={title} setTitle={setTitle} bodyText={bodyText} setBodyText={setBodyText} contentType={contentType} setContentType={setContentType} images={images} setImages={setImages} saving={saving} onSubmit={() => void handleCreatePost()} />
         </div>

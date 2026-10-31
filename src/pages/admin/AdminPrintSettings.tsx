@@ -6,7 +6,8 @@ import { showToast } from '@/components/ui/ToastContainer'
 import { loadPrinterSettings, savePrinterSettings, PrinterSettings, DEFAULT_PRINTER_SETTINGS, createPrinterDef, upsertPrinter, removePrinter, assignPrinter, describePrinterTarget, PRINTER_MODEL_LABELS, PRINTER_MODEL_DEFAULT_WIDTH, type PrinterModel, printHtmlInHiddenFrame, buildBmbStickerHtml, type PrintOrderData } from '@/lib/printService'
 import { describeQzError, qzConnect, qzPrintHtml } from '@/lib/qzTray'
 import { niimbotSupported, niimbotPrintSticker, describeNiimbotError } from '@/lib/niimbotBt'
-import { renderStickerPng, renderCalibrationPng, clampFeedOffset, clampFaceHeight } from '@/lib/stickerPng'
+import { renderStickerPng, renderCalibrationPng, clampFeedOffset, clampFaceHeight, stickerPageHeight, mmToStickerPx } from '@/lib/stickerPng'
+import { printStickerRoll } from '@/lib/stickerQueue'
 // R25: ไม่มี local flag — ทุกปุ่มทดสอบยิงผ่าน printHtmlInHiddenFrame (guard กลาง + afterprint cleanup ใน printService)
 // (เดิม: popup window.open + win.print() = popup ค้างหลัง Cancel + testPrintRole ไม่มี guard → ซ้อนได้)
 // R27: เพิ่ม QZ Tray transport + เทมเพลตสติกเกอร์ BMB 40×60 (ใบเสร็จ+ครัว = ใบเดียวกัน)
@@ -146,7 +147,8 @@ export function AdminPrintSettings() {
   // R31 (Owner: "ใบว่าง"): โชว์ PNG ที่จะยิงจริงก่อนสั่งพิมพ์ — เห็นขาว = ปัญหาอยู่ที่ render, เห็นตัวอักษร = ปัญหาอยู่ที่เครื่อง/การลงทะเบียน
   const [btPreview, setBtPreview] = useState('')
 
-  async function handleBtTest() {
+  /** R40 — จุดเดียวที่ทุกปุ่ม Bluetooth ใช้ร่วมกัน: ค่าที่โชว์บนจอ = ค่าที่ยิงเข้าเครื่องเสมอ (off · faceH · หน้า px) */
+  async function btPrintWith(off: number, faceH: number, kind: 'sticker' | 'calibration' = 'sticker', copies = 1): Promise<void> {
     setBtBusy(true)
     setBtState('printing')
     setBtErr('')
@@ -158,16 +160,20 @@ export function AdminPrintSettings() {
         setBtErr('เบราว์เซอร์นี้ไม่รองรับ Web Bluetooth — เปิดด้วย Chrome/Edge (https) เท่านั้น')
         return
       }
-      // R33: offset จากหน้าตั้งค่า — preview = รูปจริงที่จะยิง (รวมความสูงหน้าที่เติบโต) · size ผูกค่าเดียวกัน
-      const off = clampFeedOffset(settings.stickerOffsetYPx ?? 0)
-      const faceH = clampFaceHeight(settings.stickerFaceHPx ?? 709)
-      const png = await renderStickerPng(sampleSticker(), off, faceH)
-      setBtPreview(png) // เห็นรูปทันที — ตรวจ "มีตัวอักษร?" + ตำแหน่งเนื้อหาก่อนเครื่องเริ่มวิ่ง
-      await niimbotPrintSticker(png, { onProgress: (s) => setBtProgress(s), offsetY: off, faceH })
+      const png = kind === 'sticker'
+        ? await renderStickerPng(sampleSticker(), off, faceH)
+        : await renderCalibrationPng(faceH)
+      setBtPreview(png) // เห็นรูปทันที — ตรวจ "มีตัวอักษร?" + ตำแหน่งเนื้อก่อนเครื่องวิ่ง
+      if (kind === 'sticker' && copies > 1) {
+        // หลายใบ = job เดียวผ่านคิวเดียวกับงานออเดอร์จริง (ตรวจ "ข้ามดวงสะสม" ได้ตรงจริง)
+        await printStickerRoll(Array.from({ length: copies }, () => sampleSticker()), { onProgress: (s) => setBtProgress(s), offsetY: off, faceH })
+      } else {
+        await niimbotPrintSticker(png, { onProgress: (s) => setBtProgress(s), offsetY: off, faceH })
+      }
       setBtState('done')
-      showToast(off === 0
-        ? '✅ Nimbot ยืนยันงานพิมพ์แล้ว — ตรวจกระดาษ: เนื้อหาตรงขอบดวงไหม? ไม่ตรง = พิมพ์ใบวัดฟีดแล้วใส่ค่าชดเชย'
-        : `✅ Nimbot ยืนยันงานพิมพ์แล้ว (ชดเชยฟีด ${off > 0 ? '+' : ''}${off}px) — ตรวจกระดาษว่าตรงขอบดวง`, 'success')
+      showToast(kind === 'calibration'
+        ? '✅ ใบวัดฟีดออกแล้ว — อ่าน 3 จุด: (ก) เส้น 0px หายเหนือขอบบน → ใส่ +N · (ข) แถบขาวเหนือเส้น 0px → ใส่ −N · (ค) เส้นขอบล่างเลยขอบล่างดวง → ใส่ "ความสูงหน้าดวง" = เลขนั้น'
+        : `✅ พิมพ์×${copies} · ชดเชยฟีด ${off > 0 ? '+' : ''}${off}px · หน้าดวง ${faceH}px · PNG/SetPageSize 472×${stickerPageHeight(off, faceH)}px — ตรวจกระดาษ`, 'success')
     } catch (e) {
       const msg = describeNiimbotError(e)
       setBtState('down')
@@ -178,35 +184,51 @@ export function AdminPrintSettings() {
     }
   }
 
+  async function handleBtTest() {
+    await btPrintWith(clampFeedOffset(settings.stickerOffsetYPx ?? 0), clampFaceHeight(settings.stickerFaceHPx ?? 709), 'sticker', 1)
+  }
+
   /** R33: พิมพ์ "ใบวัดฟีด" — เส้นขีด px/mm บนดวงจริง (offset คงที่ 0 = ค่า raw ของเครื่อง)
    *  อ่านว่าเส้น 0px ตรงขอบบนดวงพอดีไหม → ได้ค่าชดเชยเป็นตัวเลข ไม่ต้องเดา · ตรวจด้วยว่าการข้ามดวงสะสมไหม */
   async function handleBtCalibration() {
-    setBtBusy(true)
-    setBtState('printing')
-    setBtErr('')
-    setBtProgress('')
-    setBtPreview('')
-    try {
-      if (!niimbotSupported()) {
-        setBtState('down')
-        setBtErr('เบราว์เซอร์นี้ไม่รองรับ Web Bluetooth — เปิดด้วย Chrome/Edge (https) เท่านั้น')
-        return
-      }
-      // R34: ใบวัดวาดที่ความสูงหน้าปัจจุบัน — เส้นขอบล่าง = ขอบดวงจริง เทียบแล้วใส่ค่าได้ทันที
-      const faceH = clampFaceHeight(settings.stickerFaceHPx ?? 709)
-      const png = await renderCalibrationPng(faceH)
-      setBtPreview(png)
-      await niimbotPrintSticker(png, { onProgress: (s) => setBtProgress(s), offsetY: 0, faceH })
-      setBtState('done')
-      showToast('✅ ใบวัดฟีดออกแล้ว — อ่าน 3 จุด: (ก) เส้น 0px หายเหนือขอบบน → ใส่ +N · (ข) แถบขาวเหนือเส้น 0px → ใส่ −N · (ค) เส้นขอบล่างเลยขอบล่างดวง → ใส่ "ความสูงหน้าดวง" = เลขเส้นที่ตรงขอบล่างจริง', 'success')
-    } catch (e) {
-      const msg = describeNiimbotError(e)
-      setBtState('down')
-      setBtErr(msg)
-      showToast(msg, 'error')
-    } finally {
-      setBtBusy(false)
+    await btPrintWith(0, clampFaceHeight(settings.stickerFaceHPx ?? 709), 'calibration', 1)
+  }
+
+  // ─── R40 วิซาร์ดตั้งค่า (Owner: "ตั้งหลักเริ่มใหม่ ทดสอบเองได้เลย + บอกวิธีใช้ ชดเชยฟีด กับ ความสูงหน้าดวง") ───
+  // วงปิด: ใส่ค่า → บันทึกอัตโนมัติ (ถ้าบันทึกไม่สำเร็จ = ไม่ยิงพิมพ์) → พิมพ์ด้วยค่าที่โชว์บนจอทันที → ดูกระดาษ → ขยับใหม่
+  const [wizValue, setWizValue] = useState('')
+  async function handleWizard(kind: 'offset' | 'face' | 'x4') {
+    if (btBusy) return
+    if (kind === 'x4') {
+      await btPrintWith(clampFeedOffset(settings.stickerOffsetYPx ?? 0), clampFaceHeight(settings.stickerFaceHPx ?? 709), 'sticker', 4)
+      return
     }
+    const raw = Number(wizValue)
+    if (!wizValue.trim() || !Number.isFinite(raw)) {
+      showToast('ใส่ค่าก่อน — "ชดเชยฟีด" = px (เช่น 20) · "หน้าดวง" = มม. (เช่น 62)', 'error')
+      return
+    }
+    let next: PrinterSettings
+    let label: string
+    if (kind === 'offset') {
+      const v = clampFeedOffset(raw)
+      next = { ...settings, stickerOffsetYPx: v }
+      label = `ชดเชยฟีด ${v >= 0 ? '+' : ''}${v}px`
+    } else {
+      const px = clampFaceHeight(mmToStickerPx(raw))
+      next = { ...settings, stickerFaceHPx: px }
+      label = `หน้าดวง ${raw} มม. → ${px}px`
+    }
+    setSettings(next)
+    const saved = await savePrinterSettings(next)
+    if (!saved) {
+      showToast('บันทึกค่าไม่สำเร็จ — ยังไม่สั่งพิมพ์ (ค่าใหม่ยังไม่ลงฐานข้อมูล)', 'error')
+      return
+    }
+    const off = clampFeedOffset(next.stickerOffsetYPx ?? 0)
+    const face = clampFaceHeight(next.stickerFaceHPx ?? 709)
+    await btPrintWith(off, face, 'sticker', 1)
+    showToast(`🧪 ${label} = บันทึกแล้ว · พิมพ์ด้วย 472×${stickerPageHeight(off, face)}px — ดูผลบนกระดาษแล้วขยับใหม่ได้เลย`, 'success')
   }
 
   if (!loaded) return <p className="text-brand-muted">กำลังโหลดตั้งค่า...</p>
@@ -310,8 +332,8 @@ export function AdminPrintSettings() {
             </div>
           </div>
           <div className="flex flex-wrap gap-2">
-            <button className="btn btn-outline" onClick={() => void testPrintRole('receipt')}>ทดสอบใบเสร็จ</button>
-            <button className="btn btn-outline" onClick={() => void testPrintRole('kitchen')}>ทดสอบใบสั่งครัว</button>
+            <button className="btn btn-outline" onClick={() => void testPrintRole('receipt')}>ทดสอบใบเสร็จ ⚠ ไม่ใช้ชดเชย</button>
+            <button className="btn btn-outline" onClick={() => void testPrintRole('kitchen')}>ทดสอบใบสั่งครัว ⚠ ไม่ใช้ชดเชย</button>
           </div>
           {/* R27 (Owner): QZ Tray — ทางพิมพ์สติกเกอร์ไม่พึ่งไดรเวอร์ Windows (Nimbot B1Pro มีไดรเวอร์แค่ Win7) */}
           <div className="border-t border-brand-border pt-3 space-y-2" data-testid="qz-tray-panel">
@@ -351,7 +373,7 @@ export function AdminPrintSettings() {
               </div>
               <div className="flex items-end gap-2 flex-wrap">
                 <button className="btn btn-outline" disabled={qzBusy} onClick={() => void handleConnectQz()} data-testid="qz-connect">{qzBusy ? '⏳ ...' : 'เชื่อมต่อ & ดึงรายชื่อเครื่อง'}</button>
-                <button className="btn btn-outline" disabled={qzBusy} onClick={() => void handleTestStickerQz()} data-testid="qz-test-sticker">ทดสอบสติกเกอร์ (QZ)</button>
+                <button className="btn btn-outline" disabled={qzBusy} onClick={() => void handleTestStickerQz()} data-testid="qz-test-sticker">ทดสอบสติกเกอร์ (QZ) ⚠ ไม่ใช้ชดเชย</button>
               </div>
             </div>
           </div>
@@ -404,13 +426,35 @@ export function AdminPrintSettings() {
               <span className="text-xs text-brand-muted">709 = 40×60 มาตรฐาน (ค่าเริ่มต้น) · วัดจากใบวัดฟีด: เส้นขอบล่างตรงขอบล่างดวงจริง = ค่านี้ถูก · ไม่ตรง = ใส่เลขเส้นที่ตรงพอดี → PNG/SetPageSize/ตำแหน่ง QR ปรับตามอัตโนมัติ</span>
             </div>
             <div className="flex items-end gap-2 flex-wrap">
-              <button className="btn btn-outline" disabled={btBusy} onClick={() => void handleBtTest()} data-testid="bt-test-print">{btBusy ? '⏳ ...' : '🔗 เชื่อม & พิมพ์สติกเกอร์ทดสอบ (Bluetooth)'}</button>
+              <button className="btn btn-outline" disabled={btBusy} onClick={() => void handleBtTest()} data-testid="bt-test-print">{btBusy ? '⏳ ...' : '🔗 เชื่อม & พิมพ์สติกเกอร์ทดสอบ (Bluetooth — ใช้ค่าชดเชย/หน้าดวง)'}</button>
               <button className="btn btn-outline" disabled={btBusy} onClick={() => void handleBtCalibration()} data-testid="bt-calibration-print">{btBusy ? '⏳ ...' : '📏 พิมพ์ใบวัดฟีด (วัด offset จริง)'}</button>
             </div>
             <p className="text-xs text-brand-muted">🛟 <b>ใบวัดฟีด:</b> พิมพ์ออกมาเป็นเส้นขีด px/mm บนดวงจริง → อ่านตาม 2 กรณี: <b>(ก)</b> เส้น <b>0px หายเหนือขอบบน</b> (หัว BITE ME BABY หลุดข้ามใบก่อน = เครื่องเริ่มพิมพ์ "ก่อน" ขอบ) → ดูว่าเส้นตัวเลขไหนตรงขอบบนพอดี มีค่า <b>N → ใส่ +N</b> · <b>(ข)</b> มี<b>แถบขาว N px เหนือเส้น 0px</b> (เครื่องเริ่มช้า) → <b>ใส่ −N</b> · เส้น 0px ตรงขอบพอดีอยู่แล้ว = 0 · ยังไม่ตรง/ข้ามดวงเรื่อย ๆ ทั้งที่ใส่ค่าแล้ว = ลอง calibrate ม้วนที่ตัวเครื่อง (ปุ่ม feed ค้างตอนปิดฝาตามคู่มือ B1 Pro) แล้วแจ้งทีม</p>
             <p className="text-xs text-brand-muted">🔒 Allow QZ ขึ้นทุกครั้ง? = เพราะเปิดหน้าใน <b>Incognito</b> (ไม่จดจำสิทธิ์) → ใช้หน้าต่างปกติ + ติ๊ก <b>Remember this decision</b> ในกล่อง QZ = ถามครั้งเดียว · Bluetooth ก็เหมือนกัน — จับคู่ครั้งแรกในหน้าปกติจะไม่ถามอีก</p>
           </div>
           <p className="text-xs text-brand-muted">ผูกไว้: ใบเสร็จ = <b>{describePrinterTarget(settings, 'receipt')}</b> · ครัว = <b>{describePrinterTarget(settings, 'kitchen')}</b> — ทดสอบแล้วขึ้น "ไม่พบเครื่องพิมพ์" = เพิ่มเครื่องด้านบนก่อนแล้วกดบันทึก</p>
+          {/* R40 — วิซาร์ดตั้งค่า 2 ตัว + วิธีใช้ (Owner: ตั้งหลักใหม่ · ทดสอบเอง · บอกวิธีใช้ชดเชยฟีด/หน้าดวง) */}
+          <div className="rounded-xl border border-brand-accent/40 bg-brand-surface p-3 space-y-2" data-testid="sticker-wizard">
+            <p className="text-sm font-bold text-brand-accent">🧭 ตั้งค่าเองทีละขั้น — วัดจากกระดาษจริง ไม่ต้องเดา</p>
+            <p className="text-xs text-brand-muted">
+              ทุกปุ่มด้านล่าง = <b>บันทึกค่าให้อัตโนมัติ แล้วพิมพ์ทดสอบด้วยค่านั้นทันที</b> · ค่าที่ใช้ตอนนี้:{' '}
+              <b data-testid="sticker-live-values">ชดเชยฟีด {settings.stickerOffsetYPx ?? 0}px · หน้าดวง {settings.stickerFaceHPx ?? 709}px · PNG/SetPageSize 472×{stickerPageHeight(settings.stickerOffsetYPx ?? 0, settings.stickerFaceHPx ?? 709)}px</b>{' '}
+              — ถ้าพิมแล้วผล "ไม่เปลี่ยนเลย" ทั้งที่เลขจอเปลี่ยน = ค่าเข้าเครื่องแล้วแต่ฮาร์ด/ไลบรารีไม่เชื่อ → เก็บหลักฐานรูปพร้อมเลขนี้แจ้งทีม
+            </p>
+            <div className="flex flex-wrap items-end gap-2">
+              <label className="text-xs">ค่าทดลอง
+                <input className="input w-28" inputMode="decimal" value={wizValue} onChange={(e) => setWizValue(e.target.value)} placeholder="20 หรือ 62" data-testid="sticker-wiz-value" />
+              </label>
+              <button className="btn btn-primary text-xs" disabled={btBusy} onClick={() => void handleWizard('offset')} data-testid="sticker-wiz-offset">⬇️ ใช้เป็น "ชดเชยฟีด" (px) + พิมพ์ทดสอบ</button>
+              <button className="btn btn-outline text-xs" disabled={btBusy} onClick={() => void handleWizard('face')} data-testid="sticker-wiz-face">↕️ ใช้เป็น "หน้าดวง" (มม. ×11.81) + พิมพ์ทดสอบ</button>
+              <button className="btn btn-outline text-xs" disabled={btBusy} onClick={() => void handleWizard('x4')} data-testid="sticker-wiz-x4">🖨️ พิมพ์ต่อเนื่อง 4 ใบ (ตรวจน้ำข้ามดวง)</button>
+            </div>
+            <div className="text-xs text-brand-muted space-y-1">
+              <p><b>📖 "ชดเชยฟีด (px)" ใช้ยังไง</b> — ขยับเนื้อหา "ทั้งใบ" ลง/ขึ้นทีละช่อง: หัว BITE ME BABY โดนตัด/หายขอบบน → ใส่ <b>+N</b> (เนื้อหาเลื่อนลง · หน้ายาวขึ้น N px) · มีแถบขาวมากเหนือเส้น 0 ของใบวัด → ใส่ <b>−N</b> · เริ่มที่ 0 แล้วขยับทีละ 10–20 จนตรง</p>
+              <p><b>📖 "ความสูงหน้าดวง" ใช้ยังไง</b> — ความสูง 1 ดวงที่เครื่องฟีดต่อใบ (px @300dpi · มม. ×11.81): <b>709 = 60 มม. มาตรฐาน</b> · พิมแล้ว "ข้ามดวงสะสม/หัวข้ามร่อง" → วัดระยะ <b>ขอบล่าง→ขอบล่าง ของดวงติดกัน (มม.)</b> × 11.81 ใส่เป็นค่านี้ (ใส่เป็น มม. ในช่องวิซาร์ดก็ได้) · QR ผูกขอบล่างอัตโนมัติเสมอ</p>
+              <p>⚠️ <b>ปุ่ม "ทดสอบสติกเกอร์ (QZ)" / "ทดสอบใบเสร็จ-ใบสั่งครัว" / "ทดสอบพิมพ์" = ทาง HTML ของ Windows ไม่ใช้ 2 ค่านี้</b> — ปรับให้เห็นผลต้องใช้ปุ่ม <b>Bluetooth</b> ในแผงนี้ · ออเดอร์จริง (auto-print) ใช้ Bluetooth = ค่าเดียวกับแผงนี้เสมอ</p>
+            </div>
+          </div>
           <details className="rounded-lg border border-brand-border text-xs" data-testid="print-howto">
             <summary className="cursor-pointer select-none px-3 py-2 font-semibold text-brand-accent">📖 วิธีใช้ & เทมเพลต — แตะเพื่อกาง</summary>
             <div className="px-3 pb-3 space-y-1">
@@ -427,7 +471,7 @@ export function AdminPrintSettings() {
 
         <div className="flex gap-2">
           <button className="btn btn-primary" disabled={saving} onClick={() => void handleSave()}>{saving ? '⏳ ...' : 'บันทึก'}</button>
-          <button className="btn btn-outline" onClick={() => void testPrint()}>ทดสอบพิมพ์</button>
+          <button className="btn btn-outline" onClick={() => void testPrint()}>ทดสอบพิมพ์ ⚠ ไม่ใช้ชดเชย (ไดอะล็อกเบราว์เซอร์)</button>
         </div>
       </div>
     </div>

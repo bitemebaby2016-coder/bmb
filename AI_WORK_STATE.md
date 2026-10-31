@@ -1,3 +1,11 @@
+> ## 🟢 สถานะล่าสุด — 2026-10-31 (R40 · **ยึดบล็อกนี้ก่อนบล็อก R39 ด้านล่างถ้าข้อความขัดกัน**)
+> - **R40 (3 ของใหม่ Owner สาย 2: เจนไม่มีสถานะ/อัลบั้ม+失败 · ตั้งค่าพิมพ์หลายที่ไม่เห็นเปลี่ยน · วิซาร์ด+วิธีใช้ 2 ค่า):**
+>   - 🔍 **ต้นตอ P-A**: UI มีแค่ toast · EF อัป `site-assets/marketing/` (คนละอัลบั้ม) · **logs platform = 404 ทุก endpoint** (`e2e/r40_imggen_logs2.cjs`) · error body อ่านไม่ได้ → เห็นแค่ non-2xx · **ต้นตอ P-B**: ปุ่ม QZ/ไดอะล็อก/ใบเสร็จ-ครัว = **HTML path ไม่ใช้ค่าชดเชย/หน้าดวงเลย** (มีแค่ BT) + จอไม่เคยโชว์ค่าที่ยิงจริง → Owner วัดผลผิดทาง · `label_type:1` = ค่า validated ทุกโมเดล (registry ✓ ไม่ผิด) · cache ถูกตัดโดย Owner (incognito+hard refresh ✓)
+>   - 🔧 **สถานะ+อัลบั้ม**: `genStatus` 3 phase + การ์ด `mk-gen-status` + พรีวิว `mk-gen-result` + **`bmb-images/ai-generated/`** (EF เปลี่ยนโฟลเดอร์ · gallery `mk-ai-album` จิ้ม=`pickAiImage` · list ตอน mount+หลังเจน) · client อ่าน error เป็น **text ก่อน** · EF wrap `try/catch` → `ERR_UNCAUGHT`+detail เสมอ
+>   - 🔧 **วิซาร์ด (`sticker-wizard`)**: ใส่ค่า → **บันทึกอัตโนมัติ** (ล้ม = ไม่พิมพ์) → พิมด้วยค่านั้นทันที + toast โชว์ `472×Npx` · `sticker-wiz-offset/face/x4` · **พิม×4 job เดียว** ตรวจน้ำข้ามดวง · `btPrintWith` = จุดเดียวทุกปุ่ม BT · **วิธีใช้ 2 ค่า** การ์ดในแผง + **ปุ่ม HTML 4 จุดติด ⚠ ไม่ใช้ชดเชย** · `mmToStickerPx` pure
+>   - ✅ **VERIFIED**: vitest เป้า **8 ไฟล์ 72/72** (`e2e/r40_vitest_target.log` — r40Contracts ใหม่ 7) · lint/tsc = chain ก่อน commit · *CI ก่อนรอบนี้: `0b70519`/`0985a62` = เขียวทั้งคู่ ✓ NO_FAILED_RUN*
+> - ⏳ **รอ Owner (TEST_PACK §P)**: P-A เจนรูปดูสถานะ/อัลบั้ม+ส่งเหตุ ❌ ถ้าแดง · P-B วิซาร์ดตั้งค่าดู "จอเปลี่ยน→กระดาษเปลี่ยน" · P-C พิม×4 · (§N/§O/§N.3 เดิมยังเปิด)
+> 
 > ## 🟢 สถานะล่าสุด — 2026-10-31 (R39 · **ยึดบล็อกนี้ก่อนบล็อก R38 ด้านล่างถ้าข้อความขัดกัน**)
 > - **R39 (4 ของใหม่ Owner สาย 2026-10-31: scheduled ค้าง · image-gen gemini · เด้งไปจุดทำงาน · สติกเกอร์ 709 ยังหัวหาย):**
 >   - 🔍 **ต้นตอ O-A = GH cron ข้ามรอบ (evidence)**: automation-scheduler run ล่าสุด `#1860 01:55Z (08:55 ICT)` — ไม่มีรอบ 02:07/03:07Z · แถว `mk-mvvspkna-n6uf` (09:50 ICT) `att=0/error=null` = worker ไม่เคยแตะ (`e2e/r39_sched_probe.cjs`) · **ฝั่ง print = DB ถูกแล้ว**: `stickerFaceHPx=709 · offset=0` live → O-D ค้างที่วัด pitch จริงบนม้วน (ห้ามเดา)

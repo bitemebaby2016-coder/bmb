@@ -23,6 +23,13 @@ export function clampFeedOffset(v: number): number {
  * 709 = 40×60 มาตรฐาน (ค่าเริ่มต้น = พิมพ์แบบเดิมเป๊ะ) · 640–760 = ช่วงที่ layout ยังวาง QR ไม่ทับข้อมูล
  * วัดจากใบวัดฟีด: เส้นขอบล่าง (เส้นหนาสุดท้าย) ตรงขอบล่างดวงจริง = ค่านี้ถูก → เนื้อหาส่วนล่าง (QR) เลื่อนขึ้นตาม ไม่ล้นดวง
  */
+/** R40: มม. → px @300dpi (wizard รับค่าเป็นมม. — 60 มม. = 709px · สูตรเดียวกับ registry sizeFromMm) */
+export function mmToStickerPx(mm: number): number {
+  const n = Number(mm)
+  if (!Number.isFinite(n) || n <= 0) return STICKER_PX_H
+  return Math.round((n * 300) / 25.4)
+}
+
 export function clampFaceHeight(v: number): number {
   const n = Math.round(Number(v))
   if (!Number.isFinite(n)) return STICKER_PX_H
