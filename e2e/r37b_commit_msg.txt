@@ -1,0 +1,6 @@
+docs: R37 — อัปเดต work-state/แฮนออฟ/master-status ปิด loop CI (HEAD ff9132f · CI รอเช็คครั้งเดียว)
+
+- AI_WORK_STATE: บล็อก R37 — CI e4c3ad7 = success ทุก workflow (พิสูจน์ r36_ci_probe) · 7048283 พัง Lint docs 2 จุด -> แก้ -> push ff9132f
+- BMB_HANDOFF §0: HEAD = ff9132f · งานแรกแชทหน้า = เช็ค CI ff9132f ครั้งเดียว
+- BMB_MASTER_STATUS: last_updated (R37)
+- verify: npm run lint = OK ทั้งก่อน/หลังแก้ (evidence e2e/r37_lint_docs2.log)

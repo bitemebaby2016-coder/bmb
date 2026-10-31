@@ -4,10 +4,10 @@
 
 ## 0. HEAD + CI (สำคัญสุด — เช็คก่อนงานอื่น)
 
-- **HEAD = `e4c3ad7` (push แล้ว · fix CI)** — R36: languageSanity อักขระจีน 4 จุด (R34 fallback ข้อความจีน→`🚗` · r34Contracts assertion · comment e2e)
-- ก่อนหน้า: `aa1b295` (R35) · `a6b3b34`/`4b2ffda` (R34)
-- **CI `aa1b295` พังที่ Lint (#5)** (พิสูจน์ GitHub API · log = `node e2e/r36_ci_probe.cjs` ไม่ต้องใช้ token) — **Test/vitest ผ่านใน CI รอบนั้นแล้ว** · Contract + Cloudflare = success/deployed ✓
-- **CI `e4c3ad7`** = เขียนตอน push = in_progress · Contract Tests = **success ✓** → **งานแรกของแชทหน้า = เช็ค CI `e4c3ad7` ครั้งเดียวให้เขียว** (ถ้าแดง = ดู log ด้วย r36_ci_probe แล้วแก้ต่อ)
+- **HEAD = `ff9132f` (push แล้ว · fix CI รอบ 2)** — R37: languageSanity จับอักขระจีน **2 จุดในเอกสาร** ของ `7048283` (`BMB_HANDOFF...md:7` + `BMB_MASTER_STATUS.md:7` — อ้าง fallback เดิมตรง ๆ เป็นหลักฐาน) → แก้เป็นคำไทย · verify = `npm run lint` เต็ม OK + `npx tsc --noEmit` 0
+- **CI `e4c3ad7` = success ทุก workflow ✅** (งานแรกตามแฮนออฟ — ปิดแล้ว · พิสูจน์ด้วย `node e2e/r36_ci_probe.cjs`)
+- **CI `7048283` = failure ที่ Lint (#5)** (Test/Contract/Cloudflare = ผ่าน) → สาเหตุซ้ำแบบ = อักขระจีนใน docs → **แก้ใน `ff9132f`** → **งานแรกของแชทหน้า = เช็ค CI `ff9132f` ครั้งเดียวให้เขียว** (probe ตัวเดิม ไม่ต้อง token)
+- ก่อนหน้า: `e4c3ad7` (fix CI รอบ 1) · `aa1b295` (R35) · `a6b3b34`/`4b2ffda` (R34)
 
 ## 1. งานค้างที่ต้องทำต่อ (เรียงลำดับความสำคัญ)
 
