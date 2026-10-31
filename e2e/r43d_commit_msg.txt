@@ -1,0 +1,10 @@
+R43 fix wave docs: work-state/master/handoff/TEST_PACK §R.3 อัปเดตผลแก้
+
+- AI_WORK_STATE.md: บล็อก R43 = Owner ปลดห้าม → FIXES ①+② DEPLOYED+VERIFIED
+  (B2/B3 deploy+v72 tick scanned=3/published=3 approved_not_on_fb=[] ·
+   B1+B4+B6 โค้ด+เทสต์+deploy social-ai/social-post) · เหลือ ③ B7 รอวัด pitch ④ B5 รอ D-4
+- docs/BMB_MASTER_STATUS.md: last_updated (R43 · FIXES ①+② deployed+verified)
+- docs/BMB_HANDOFF_NEXT_SESSION_2026-10-31.md: แผนแก้ B2/B3 = ทำแล้ว + evidence
+- docs/BMB_PRODUCTION_TEST_PACK.md: §R.3 ผลแก้ F1-F6 + gates 59/59 · tsc 0 · lint OK
+
+gates: npm run lint = eslint OK + brandNameGuard 499 + languageSanity 1442

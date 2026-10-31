@@ -391,3 +391,16 @@
 2. **D-1..D-4** (§N.3 เดิม + D-4 ช่องทาง/ผู้รับแจ้งเตือนเมื่อบอต AI โพส/ตอบ)
 3. **B7: วัด pitch ×4** (ระยะใบ 1→4 มม. ÷ 3 × 11.81 = px) + ถ่ายรูปม้วนหลังพิมพ์
 4. **§Q เดิม:** Q-A เจนรูป · Q-C ตั้งเวลา (หลังแก้ B1/B2) · Q-D คอมเม้น ≤3 นาที (หลังแก้ B4) · Q-B ×4 (หลังได้ตัวเลข pitch)
+
+### R.3 ผลแก้ (Owner ปลดห้าม → fix wave 2026-10-31 ~22:00 ICT)
+
+| # | ข้อ | สถานะ | evidence |
+|---|---|---|---|
+| F1 | **B2/B3** | ✅ **CLOSED (production runtime)** — deploy `automation-worker` v72 @14:51Z → tick 14:55Z `scanned=3/published=3` → **`approved_not_on_fb=[]`** (3 แถวค้างขึ้น FB) · tick ถัดมา scanned=0 = ปกติ | `e2e/r43_ef_versions_probe.json` · `e2e/r43_publish_probe.json` · `e2e/r43_deploy_automation_worker.log` |
+| F2 | **B1** | ✅ **FIXED+tested** — gate `schedulable(approved/scheduled/failed)` disabled+คำใบ้ "รออนุมัติ" + guard ใน handleSchedule + map `ERR_APPROVAL_REQUIRED`→ข้อความไทย | `AdminMarketing.tsx` · `src/__tests__/r43Contracts.test.ts` (2 ข้อ) |
+| F3 | **B4** | ✅ **FIXED+tested+deployed** — `buildStoreStatusLines` (mirror เว็บ: rounds+hours/operating → sameDayOpen/รอบถัดไป · ZERO-FAKE) ฉีด `STORE STATUS (สด)` + กติกาบังคับ + MAX_CHARS 4000 · `DEPLOY_social-ai-worker/social-post-worker_OK` | `shopContext.ts` · `r43Contracts.test.ts` (4 unit) + `socialAiContinuity.test.ts` |
+| F4 | **B6** | ✅ **FIXED+tested** — Layout decode-fail → toast บอกสาเหตุ (ห้ามเงียบ) + rule บังคับชื่อเมนูจาก MENU เท่านั้น | `Layout.tsx` · `r43Contracts.test.ts` |
+| F5 | **B7** | ⬜ **BLOCKED — รอ Owner วัด pitch ×4 (มม. ÷3 ×11.81 = px) + รูปม้วน** (ห้ามเดา) | — |
+| F6 | **B5** | ⬜ **BLOCKED — รอ D-4 (ช่องทาง + ผู้รับแจ้งเตือน)** · hook จุด reply `sent` / post `published` พร้อม | — |
+
+gates (F2-F4): `npx vitest run` 5 ไฟล์ = **59/59** · `npx tsc --noEmit` = **0** · `npm run lint` = **OK** (eslint + brandNameGuard 499 + languageSanity 1442)
