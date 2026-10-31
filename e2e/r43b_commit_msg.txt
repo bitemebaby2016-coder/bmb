@@ -1,4 +1,22 @@
-R42 leftover + R43 handoff row-1 update (doc only)
+R43 probe wave — correct commit note (73960d5 subject reused stale file by mistake)
 
-- supabase/migrations/HANDOFF_002_SCHEMA.md: FFFD x12 replaced with '-' (from r42_lang_fix, missed in R42 batch)
-- docs/BMB_HANDOFF_NEXT_SESSION: งานค้าง #1 CI b8c8c15 = ปิดแล้ว (probe CI+Contract+scheduler success, NO_FAILED_RUN)
+หมายเหตุ: commit `73960d5` (ก่อนหน้า) หัวข้อผิดเพราะ `-F` ชี้ไฟล์ msg เก่าที่ยังไม่ถูกแทนที่
+— เนื้อหา 73960d5 ถูกต้องครบ = ผล probe R43 (read-only ทั้งหมด · ไม่แตะ src/supabase):
+
+- e2e/r43_publish_probe.cjs/.json: B2/B3 SQL 48ชม. + FB feed read-only
+  · key approved_not_on_fb = 3 แถว published prov=null (o482/3zjr/n6uf)
+  · fb_compare: c60w สาย 47.5 นาที (delta_vs_scheduled_ms=2851000)
+- e2e/r43_approval_probe.cjs/.json: approval ทั้ง 4 = approved (ตัด guard branch)
+- e2e/r43_due_query_probe.cjs: query due ตัวเดียวกับ worker คืน 3 แถว HTTP 200
+- e2e/r43_tick_probe.cjs/.json: bmb-promote ~100%/นาที · bmb-tick ทุก 5 นาที
+  · g26-poll รายชม. ไม่ขาด → งานค้างข้อ 2 (cron verify) ปิด
+- e2e/r43_ef_versions_probe.cjs/.json: ROOT CAUSE = audit scanned=0 ทุก tick +
+  automation-worker deploy 30 ต.ค. vs โค้ด R39 31 ต.ค. ไม่เคยขึ้น production
+- e2e/r43_probe_view.cjs: ดูสรุป evidence (read-only helper)
+- docs/BMB_HANDOFF_NEXT_SESSION_2026-10-31.md: บล็อก "ผล probe" B1-B7 · งานค้าง
+  ข้อ 1+2 ปิด · runbook ข้อ 0-6 ✅ / 7-8 ⬜
+- docs/BMB_PRODUCTION_TEST_PACK.md: §R ใหม่ (ผล probe + รอ Owner 4 ข้อ)
+- AI_WORK_STATE.md: R43 = PROBES DONE · รอปลดห้าม + D-1..D-4 + pitch ×4
+- docs/BMB_MASTER_STATUS.md: last_updated (R43 · probes เสร็จ)
+
+gates: npm run lint = eslint ✓ + brandNameGuard 498 ✓ + languageSanity 1441 ✓
