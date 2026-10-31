@@ -1,0 +1,12 @@
+docs: R38 — apply 176 (ALL_PASS + anon 200) · BLK-1/2 ปิด · เพิ่ม §N.3 รายการรอตัดสินใจ Owner
+
+- m176 APPLIED+VERIFIED production (Owner สั่ง "apply 176"):
+  e2e/r38Apply176.cjs = ALL_PASS 8/8 (grant anon + policy marketing_posts_anon_published
+  + ลบ deny_anon + ledger top=176 · m175 recheck billing175Live=true)
+  PostgREST cache ค้างหลัง GRANT -> NOTIFY pgrst reload (e2e/r38PgrstReload.cjs)
+  -> anon probe HTTP 200 (1 published เห็น · 1 non-published ถูก RLS กรอง = พิสูจน์ filter)
+- TEST_PACK §N: BLK-1 ปิด (APPLIED) · BLK-2 ปิด (m175 apply จริงแล้ว — แถวเดิม stale แก้ตามหลักฐาน)
+  · N.1 #6 เป็น ✅ · N-F ปรับคำ · เพิ่ม N.3 = รายการรอตัดสินใจ D-1 (โต้ตอบในเว็บ/BLK-6)
+  D-2 (โมเดล image-gen fallback) D-3 (L-12 กติกาช่องว่าง)
+- work-state/master/แฮนออฟ: sync m176 = APPLIED + ชี้ §N.3
+- evidence: e2e/r38Apply176-result.json (git) · .log/.txt = gitignored

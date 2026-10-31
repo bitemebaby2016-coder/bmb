@@ -1,0 +1,33 @@
+{
+  "at": "2026-10-31T03:12:03.162Z",
+  "precheck": {
+    "ledgerTop": "[{\"version\":\"175\",\"name\":\"175_tenant_custom_domain_billing\"},{\"version\":\"174\",\"name\":\"174_customer_rider_position\"},{\"version\":\"173\",\"name\":\"173_order_id_bigint_fix\"}]",
+    "anonPoliciesBefore": "[{\"policyname\":\"marketing_posts_deny_anon\",\"qual\":\"false\"}]",
+    "anonGrantBefore": "[{\"sel\":false}]",
+    "billing175": "[{\"t\":\"billing_subscriptions\"}]",
+    "domain175": "[{\"n\":1}]"
+  },
+  "apply": "[]",
+  "verify": {
+    "anonPoliciesAfter": "[{\"policyname\":\"marketing_posts_anon_published\",\"qual\":\"(status = 'published'::text)\"}]",
+    "anonGrantAfter": "[{\"sel\":true}]",
+    "denyAnonGone": "[{\"n\":0}]",
+    "publishedRows": "[{\"n\":1}]",
+    "otherRows": "[{\"n\":1}]"
+  },
+  "record": {
+    "ins176": "[]",
+    "ledgerTopAfter": "[{\"version\":\"176\",\"name\":\"176_marketing_posts_anon_read\"},{\"version\":\"175\",\"name\":\"175_tenant_custom_domain_billing\"},{\"version\":\"174\",\"name\":\"174_customer_rider_position\"},{\"version\":\"173\",\"name\":\"173_order_id_bigint_fix\"},{\"version\":\"172\",\"name\":\"172_discount_cap_15pct\"}]"
+  },
+  "assertions": {
+    "anonHadNoGrantBefore": true,
+    "anonSelectGranted": true,
+    "publishedPolicyExists": true,
+    "denyAnonRemoved": true,
+    "anonPoliciesWereOnlyDeny": true,
+    "ledgerTopIs176": true,
+    "has176": true,
+    "billing175Live": true
+  },
+  "allPass": true
+}

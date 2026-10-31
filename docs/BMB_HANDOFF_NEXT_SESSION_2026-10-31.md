@@ -4,7 +4,7 @@
 
 ## 0. HEAD + CI (สำคัญสุด — เช็คก่อนงานอื่น)
 
-- **R38 ปิดแล้ว (2026-10-31 · 7 คำสั่ง Owner):** สติกเกอร์ faceH 670→709 (production read-back) · image-gen `IMAGE_GEN_MODELS` secret ตั้งแล้ว · ลิงก์แผนที่ intent:// เปิดแอป · delivered 3 ล่าสุด+อัลบั้ม · ปุ่ม browse รูปเมนู · feed หน้าแรก + **m176 PREPARED รอ `__apply 176__`** · **รายการบล็อก/งานค้าง/ขั้นทดสอบ = `docs/BMB_PRODUCTION_TEST_PACK.md` §N** (ยึด §N ก่อนหัวข้ออื่นถ้าขัดกัน)
+- **R38 ปิดแล้ว (2026-10-31 · 7 คำสั่ง Owner):** สติกเกอร์ faceH 670→709 (production read-back) · image-gen `IMAGE_GEN_MODELS` secret ตั้งแล้ว · ลิงก์แผนที่ intent:// เปิดแอป · delivered 3 ล่าสุด+อัลบั้ม · ปุ่ม browse รูปเมนู · feed หน้าแรก + **m176 APPLIED+VERIFIED** (ALL_PASS 8/8 · ledger top=176 · anon probe 200 · `e2e/r38Apply176-result.json` · PostgREST reload ผ่าน `r38PgrstReload.cjs`) · **รายการบล็อก/งานค้าง/ขั้นทดสอบ = `docs/BMB_PRODUCTION_TEST_PACK.md` §N** · **รายการรอ Owner ตัดสินใจ = §N.3 (D-1 โต้ตอบในเว็บ · D-2 โมเดล image-gen · D-3 กติกาช่องว่าง)** (ยึด §N ก่อนหัวข้ออื่นถ้าขัดกัน)
 
 - **HEAD = `3dc3342` (push แล้ว = `ff9132f` fix CI รอบ 2 + `c22e869`/`3dc3342` docs)** — R37: languageSanity จับอักขระจีน **2 จุดในเอกสาร** ของ `7048283` (`BMB_HANDOFF...md:7` + `BMB_MASTER_STATUS.md:7` — อ้าง fallback เดิมตรง ๆ เป็นหลักฐาน) → แก้เป็นคำไทย · verify = `npm run lint` เต็ม OK + `npx tsc --noEmit` 0
 - **CI = เขียวหมด (พิสูจน์แล้ว):** `e4c3ad7` ✅ · **`ff9132f` CI+Contract ✅** · **`c22e869` CI+Contract ✅** · **NO_FAILED_RUN** ทุก workflow (probe `node e2e/r36_ci_probe.cjs` ไม่ต้อง token)

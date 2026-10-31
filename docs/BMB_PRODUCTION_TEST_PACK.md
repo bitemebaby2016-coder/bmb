@@ -233,8 +233,8 @@
 
 | # | รายการ | สถานะ | ปิดเมื่อ |
 |---|---|---|---|
-| BLK-1 | **m176 (anon อ่าน `marketing_posts` เฉพาะ `published`) = PREPARED ยังไม่ apply** — feed "ดึงเข้าเว็บ" จะขึ้นได้หลัง apply ( widget ซ่อนตัวเงียบ ไม่พังหน้าแรก ) · ก่อนหน้า anon = 42501 พิสูจน์แล้ว (`e2e/r38_anon_posts_probe.cjs`) | BLOCKED รอ Owner | Owner พิมพ์ `__apply 176__` → probe ซ้ำ = HTTP 200 |
-| BLK-2 | **m175 (tenants.custom_domain + billing) = PREPARED เดิม ยังไม่ apply** (ค้างมาตั้งแต่รอบก่อน) | BLOCKED รอ Owner | `__apply 175__` |
+| ~~BLK-1~~ | **m176 = APPLIED+VERIFIED production (Owner สั่ง "apply 176")** — `e2e/r38Apply176-result.json` **ALL_PASS 8/8** (grant anon + policy เฉพาะ `published` + ลบ `deny_anon` + **ledger top=176**) · `NOTIFY pgrst, 'reload schema'` แล้ว **anon probe = HTTP 200** (เห็น 1 published · อีก 1 non-published ถูก RLS กรอง = พิสูจน์ filter) | **ปิด ✅ 2026-10-31** | — (เหลือแค่ CF deploy ใหม่ + มีโพสต์ published → feed ขึ้นจริง = ขั้น N-F) |
+| ~~BLK-2~~ | **m175 = APPLIED จริงแล้ว (แถวเอกสารเดิมเขียนผิด/stale — แก้ตามหลักฐาน)** — `e2e/r22Apply175-result.json` (2026-10-30): ledger top 175 + objects ครบ · **recheck live รอบ apply 176 = `billing175Live: true`** (`billing_subscriptions` + `tenants.custom_domain` อยู่จริง — ใน `e2e/r38Apply176-result.json`) | **ปิด ✅** | — |
 | BLK-3 | full vitest ~1,670 ท้องถิ่น = ยังไม่รัน (รอบ R38 = vitest 8 ไฟล์ targeted + tsc 0) | UNVERIFIED local · ให้ **CI ของ HEAD รอบ R38** ตัดสิน | CI Test+Lint+Build = success |
 | BLK-4 | **พิมพ์สติกเกอร์จริงหลังแก้ faceH 670→709 = ยังไม่ verify** (ฮาร์ดแวร์) | WAITING Owner | ถ่ายรูป ≥2 ใบต่อกัน = ขอบบนไม่หายทุกใบ (ขั้น N-A) |
 | BLK-5 | **เจนรูปจริง 1 ใบหลังตั้ง `IMAGE_GEN_MODELS` = ยังไม่ verify** (ต้อง admin JWT) | WAITING Owner | สำเร็จ + จดโมเดลที่ใช้จริง (ขั้น N-D) |
@@ -247,7 +247,7 @@
 3. ✅ **ลิงก์แผนที่ไรเดอร์ไปหน้าติดตั้งแอป**: `openMapsUrl()` ใน `deliveryPlan.ts` = intent URL + `package=com.google.android.apps.maps` + `S.browser_fallback_url` ( iOS/desktop คง URL เดิม ) — ใช้ครบทั้ง 3 ปุ่มใน `RiderPwaPage` + test
 4. ✅ **ส่งสำเร็จโชว์ 3 ล่าสุด + อัลบั้มประวัติ**: `RiderPwaPage` กรอง `delivered` · เรียง `pod_captured_at` ใหม่ก่อน · `slice(0,3)` ในรายการหลัก · overflow เป็นอัลบั้มพับเปิด/ปิด + test
 5. ✅ **AI Studio ปุ่ม browse ไฟล์รูปเมนู**: `mk-browse-image` → upload `bmb-images/marketing/…` → public URL ต่อเข้าชุด `images` เดียวกับภาพ AI/แคตตาลอก (ใช้ร่วมการเจนภาพ/โพสต์) + test
-6. 🔶 **ดึงเข้าเว็บ**: `MarketingFeedSection` mount หน้าแรก (อ่าน `status=published` · ซ่อนเงียบเมื่อยังไม่ apply/ว่าง) + **m176 PREPARED** → รอ BLK-1 + test
+6. ✅ **ดึงเข้าเว็บ = m176 APPLIED+VERIFIED production (Owner สั่ง "apply 176")**: `MarketingFeedSection` mount หน้าแรก + apply ผ่าน `e2e/r38Apply176.cjs` → **ALL_PASS 8/8** (grant anon · policy `marketing_posts_anon_published` · ลบ `deny_anon` · **ledger top=176** · m175 recheck `billing175Live=true`) · PostgREST cache ค้างหลัง GRANT → สั่ง **`NOTIFY pgrst, 'reload schema'`** (`e2e/r38PgrstReload.cjs`) → **anon probe = HTTP 200** (1 published เห็น · 1 non-published ถูก RLS กรอง = พิสูจน์ filter) + test
 7. ✅ **gates R38**: vitest **8 ไฟล์ = OK** (รวม `r38Contracts.test.ts` ใหม่) · **tsc 0** · lint = รันก่อน commit (chain gate)
 
 ### N.2 ขั้นทดสอบของ Owner (7 คำสั่ง) `[O]`
@@ -259,5 +259,15 @@
 | N-C | **ส่งสำเร็จ 3 ล่าสุด**: ไรเดอร์มีงาน `delivered` ≥4 | รายการหลักเห็นแค่ 3 ใหม่สุด · ปุ่ม `📚 อัลบั้มประวัติ ส่งสำเร็จ` เปิดดูที่เหลือครบ |
 | N-D | **เจนภาพ**: AdminMarketing → AI Studio → ใส่หัวข้อ → ✨ สร้างภาพ | สำเร็จ · โมเดลคู่แรก (qwen/seedream) ใช้ได้ — ถ้า fallback ข้ามไป gemini จดชื่อโมเดลจริงที่โชว์ใน error มาแจ้ง |
 | N-E | **Browse ไฟล์**: ปุ่ม `📁 เลือกไฟล์รูปเมนูจากเครื่อง` | รูปจากเครื่องเข้าชุดภาพ → ใช้กับโพสต์ + ภาพโปรโมต/เทศกาล ร่วมกับภาพ AI ได้ |
-| N-F | **โพสต์ + ดึงเข้าเว็บ** (ทำหลัง apply 176): สร้างโพสต์ → กล่องอนุมัติ → อนุมัติ → ตั้งเวลา/รอ publish → เปิดหน้าแรก incognito | โพสต์โผล่ในหัวข้อ **"ประกาศล่าสุดจาก BITE ME BABY"** · ( ก่อน apply = ไม่เห็น ซ่อนเงียบ = ปกติ ) |
-| N-G | **โต้ตอบ**: คอมเม้นใต้โพสต์ FB ที่ publish แล้ว | social-ai classify → draft → ตอบ (R26/G6) · **โต้ตอบในเว็บ = BLK-6 รอ Owner ตัดสินใจ** |
+| N-F | **โพสต์ + ดึงเข้าเว็บ** (**m176 apply แล้ว ✓** — เหลือขั้นนี้อย่างเดียว): สร้างโพสต์ → กล่องอนุมัติ → อนุมัติ → ตั้งเวลา/รอ publish → เปิดหน้าแรก incognito | โพสต์โผล่ในหัวข้อ **"ประกาศล่าสุดจาก BITE ME BABY"** (ตอนนี้ยังไม่มี build feed ขึ้น/ยังไม่มีโพสต์ published ใหม่ = ปกติ) |
+| N-G | **โต้ตอบ**: คอมเม้นใต้โพสต์ FB ที่ publish แล้ว | social-ai classify → draft → ตอบ (R26/G6) · **โต้ตอบในเว็บ = ดู D-1 ใน N.3** |
+
+### N.3 รายการที่เหลือ "ต้องตัดสินใจ" จาก Owner (ตอบข้อใดข้อหนึ่งก็ปิดข้อนั้นได้)
+
+| # | เรื่อง | ตัดสินใจเรื่องอะไร | ถ้าเลือก "ใช่/สั่งทำ" | ถ้าเลือก "ไม่ใช่/ปล่อย" |
+|---|---|---|---|---|
+| **D-1** | **BLK-6 — โต้ตอบบนเว็บ** | จะให้มี **ไลก์/คอมเม้นใต้โพสต์ใน feed หน้าแรก (บนเว็บ)** ด้วยไหม? ตอนนี้ "โต้ตอบ" ทั้งหมดอยู่บน **Facebook** (คอมเม้น → social-ai classify → draft → ตอบ · R26/G6) — feed ในเว็บตอนนี้ = อ่านอย่างเดียว | สั่งทำ = AI ออกสเปกก่อนเลย: ตาราง+RPC ให้คนทั่วไปคอมเม้นได้ · กลั่นกรอง/กันสแปม (moderation + ซ่อน/ลบของ admin) · แสดงผลใต้การ์ดโพสต์ | ปิดถาวร = **"โต้ตอบ = FB ฝั่งเดียว"** (feed เว็บ = read-only ตามเดิม) |
+| **D-2** | **โมเดล image-gen** | หลังทดสอบ N-D: ถ้าคู่แรก `qwen/qwen-image-3` / `seedream-5-0-flash` ใช้ไม่ได้จริง (404/อื่น) หรือข้าม fallback — จะเอาโมเดลไหนขึ้นคู่แรก/ถอดตัวไหน? (`IMAGE_GEN_MODELS` = env แก้ได้ทันที ไม่ต้อง deploy) | ส่งชื่อโมเดลที่ต้องการมา | ปล่อยตาม list ปัจจุบัน 7 ชื่อ |
+| **D-3** | **L-12 `menu_rules`/`stop_conditions` ว่าง** | ในแท็บ "⚙️ กติกา" สองช่องนี้จะเติมค่าเองหรือปล่อยว่าง? (ค่าหลัก window/cooldown/frequency มีครบ → C7/C8 รันได้แล้ว) | Owner เติมในหน้ากติกา | ปล่อยว่าง = ใช้ค่าหลักตามเดิม · ปิด L-12 เป็น "ตั้งใจว่าง" |
+
+> ที่เหลือเป็น **"รอผลทดสอบ"** (ไม่ใช่การตัดสินใจ) — N-A สติกเกอร์จริง · N-B ปุ่มนำทาง · N-C 3+อัลบั้ม · N-D เจนรูป · N-E browse · N-F feed ขึ้นเว็บ · N-G คอมเม้น FB → AI ตอบ · BLK-3 รอ CI HEAD · BLK-4/5 = ฮาร์ดแวร์/admin JWT ตา Owner — ผลเป็นอย่างไรส่งมาได้เลย ทีมปรับตามหลักฐานทีละรายการ (two-try rule)
