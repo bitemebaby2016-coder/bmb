@@ -4,8 +4,9 @@
 // E5: สร้างภาพโปรโมตอัตโนมัติจาก prompt สำเร็จรูป (menu / promo / festival)
 // E6: สร้างได้ 3 แนว (realistic / illustration / poster) จากโจทย์เดียวกัน
 //     แล้วแอดมินเลือก/ใช้เลย/แก้ prompt ใหม่ได้
-//   · คีย์ OpenRouter อยู่ฝั่ง server เท่านั้น (OPENROUTER_API_KEY — ชุดเดียว
-//     กับ ai-proxy; ห้ามลง client)
+//   · คีย์ OpenRouter อยู่ฝั่ง server เท่านั้น — **`BMB_OPENROUTER_API_KEY` = คีย์แยกของงาน
+//     คอนเทนต์/เจนรูป/marketing/talk-to-bite** (Owner 2026-10-31) fallback
+//     `OPENROUTER_API_KEY` (dev) กันดับ · ห้ามลง client)
 //   · รูปที่ได้ = อัปโหลดเข้า site_assets (public-read ตาม m120/122) แล้วคืน
 //     URL จริง — ใช้กับ social-publish-worker ได้ทันที (ไม่มี placeholder)
 //   · verify_jwt = true (platform กัน anon) + เช็ค role=admin จากโปรไฟล์ผู้เรียก
@@ -13,15 +14,17 @@
 
 const SB_URL = Deno.env.get('SUPABASE_URL') || ''
 const SERVICE = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || ''
-const OPENROUTER_KEY = Deno.env.get('OPENROUTER_API_KEY') || Deno.env.get('BMB_OPENROUTER_API_KEY') || ''
+// Owner 2026-10-31: คีย์งานคอนเทนต์/เจนรูป/marketing/talk-to-bite = `BMB_openrouter_api_key`
+// (Supabase secret: BMB_OPENROUTER_API_KEY) "แยกจาก dev" — BMB ก่อน · fallback dev กันดับ
+const OPENROUTER_KEY = Deno.env.get('BMB_OPENROUTER_API_KEY') || Deno.env.get('OPENROUTER_API_KEY') || ''
 const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions'
 // โมเดลสร้างภาพ — env `IMAGE_GEN_MODELS` (comma-separated) · fallback หลายชื่อ
 // R32: โมเดลเดิมชื่อเดียวโดน retiring ของ OpenRouter = ตายทั้งฟีเจอร์ → วนลองทีละชื่อจนมีรูป
-// R34: catalog probe 2026-10-30 (e2e/r34_or_models.txt) — ชื่อที่ Owner สั่ง (seedream 5.0 flash / qwen image 3)
-//   ไม่มีใน OpenRouter วันนี้ → default = โมเดล image-output ที่มีจริง (เรียง fast/ถูกก่อน) ·
-//   ใส่ id จริงที่ยืนยันแล้วใน env IMAGE_GEN_MODELS ได้ทันทีโดยไม่ต้องแก้โค้ด
+// R35 (Owner 2026-10-31 · ยืนยันจากหน้าโมเดลจริง openrouter.ai): `qwen/qwen-image-3` +
+//   `bytedance-seed/seedream-5-0-flash` มีจริง → ใส่เป็น candidate คู่กับชุด gemini/gpt เดิม
+//   (probe ผ่าน /api/v1/models สาธารณะไม่เจอ = คนละ index — หน้า URL ตรงมีจริงตามภาพ)
 const IMAGE_MODEL_CANDIDATES = (Deno.env.get('IMAGE_GEN_MODELS') || Deno.env.get('IMAGE_GEN_MODEL') ||
-  'google/gemini-3.1-flash-image,google/gemini-3.1-flash-lite-image,google/gemini-2.5-flash-image,openai/gpt-5-image-mini,google/gemini-nano-banana-2.1')
+  'qwen/qwen-image-3,bytedance-seed/seedream-5-0-flash,google/gemini-3.1-flash-image,google/gemini-3.1-flash-lite-image,google/gemini-2.5-flash-image,openai/gpt-5-image-mini,google/gemini-nano-banana-2.1')
   .split(',').map((s) => s.trim()).filter(Boolean)
 
 function corsHeaders(): Record<string, string> {

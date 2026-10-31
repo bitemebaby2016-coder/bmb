@@ -17,6 +17,7 @@ import workerSrc from '../../supabase/functions/social-ai-worker/index.ts?raw'
 import webhookSrc from '../../supabase/functions/channel-webhook/index.ts?raw'
 import postWorkerSrc from '../../supabase/functions/social-post-worker/index.ts?raw'
 import proxySrc from '../../supabase/functions/ai-proxy/index.ts?raw'
+import imgGenSrc from '../../supabase/functions/image-gen/index.ts?raw'
 import shopCtxSrc from '../../supabase/functions/_shared/shopContext.ts?raw'
 import intakeSharedSrc from '../../supabase/functions/_shared/socialOrderIntake.ts?raw'
 import talkToBiteSrc from '../components/ai/TalkToBite.tsx?raw'
@@ -76,17 +77,30 @@ describe('บริบทเอไอสมบูรณ์ — shared shop conte
 })
 
 describe('คีย์ OpenRouter ใหม่ — BMB_OPENROUTER_API_KEY + fallback ห้ามดับ', () => {
+  // Owner 2026-10-31: งานคอนเทนต์/เจนรูป/marketing/talk-to-bite = คีย์แยก `BMB_openrouter_api_key`
   const surfaces: Array<[string, string]> = [
     ['social-ai-worker', workerSrc],
     ['social-post-worker', postWorkerSrc],
     ['ai-proxy', proxySrc],
+    ['image-gen', imgGenSrc],
   ]
   for (const [name, src] of surfaces) {
     it(`${name} อ่านคีย์ใหม่ก่อน แล้ว fallback OPENROUTER_API_KEY`, () => {
       expect(src).toMatch(/BMB_OPENROUTER_API_KEY/)
       expect(src).toMatch(/Deno\.env\.get\('OPENROUTER_API_KEY'\)/)
+      // "แยกจาก dev" = BMB ต้องมาก่อน dev ในนิพจน์ (ไม่ใช่แค่มีทั้งคู่)
+      const bmbIdx = src.indexOf("Deno.env.get('BMB_OPENROUTER_API_KEY')")
+      const devIdx = src.indexOf("Deno.env.get('OPENROUTER_API_KEY')")
+      expect(bmbIdx).toBeGreaterThan(-1)
+      expect(devIdx).toBeGreaterThan(-1)
+      expect(bmbIdx).toBeLessThan(devIdx)
     })
   }
+
+  it('image-gen candidates มีโมเดล Owner ยืนยันจากหน้าจริง (qwen-image-3 + seedream-5-0-flash)', () => {
+    expect(imgGenSrc).toContain('qwen/qwen-image-3')
+    expect(imgGenSrc).toContain('bytedance-seed/seedream-5-0-flash')
+  })
 })
 
 describe('web chat ห้าม "หายไปเลย" — handleSend fail-safe', () => {

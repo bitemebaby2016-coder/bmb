@@ -5,8 +5,8 @@
 
 import { useState, useEffect } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
-import type { Product, ProductCategory, SameDayOrderPayload, PreOrderPayload, AvailabilityState, OrderMode, DeliveryRound } from '@/types'
-import { getProducts, getCategories, getDeliveryRounds } from '@/lib/bmbAdminApi_products'
+import type { Product, ProductCategory, SameDayOrderPayload, PreOrderPayload, AvailabilityState, OrderMode } from '@/types'
+import { getProducts, getCategories } from '@/lib/bmbAdminApi_products'
 import { buildHeadingGroups, headingChips, menuTabItems } from '@/lib/catalogStructure'
 import { getProductScheduleMap, type ProductScheduleMap } from '@/lib/productSchedule'
 import { useCartStore } from '@/store/cartStore'
@@ -27,7 +27,6 @@ export function MenuPage() {
   const [menuTab, setMenuTab] = useState<'same-day' | 'pre-order'>('same-day') // ✓ v3.1: Tab switch
   const [products, setProducts] = useState<Product[]>([])
   const [categories, setCategories] = useState<ProductCategory[]>([])
-  const [deliveryRounds, setDeliveryRounds] = useState<DeliveryRound[]>([]) // ✓ v3.1: Delivery rounds
   // วันจัดส่งจริงจาก menu_schedule (UX fix 2026-10-15 — ไม่ใช้ products.scheduled_date)
   const [scheduleMap, setScheduleMap] = useState<ProductScheduleMap>({})
   // R21 Phase 3: โหลดล้มเหลว ≠ ไม่มีเมนู + key สำหรับกด "ลองใหม่"
@@ -96,10 +95,9 @@ export function MenuPage() {
     async function loadData() {
       setLoadError('')
       try {
-        const [products, cats, rounds] = await Promise.all([getProducts(), getCategories(), getDeliveryRounds()])
+        const [products, cats] = await Promise.all([getProducts(), getCategories()])
         setProducts(products)
         setCategories(cats)
-        setDeliveryRounds(rounds)
         // ปฏิทินมุมการ์ด: วันจัดส่งจริงจาก menu_schedule (fire-and-forget — ไม่ขวางหน้า)
         void getProductScheduleMap().then(setScheduleMap).catch(() => setScheduleMap({}))
       } catch (err) {
@@ -135,9 +133,16 @@ export function MenuPage() {
     }
     return !p.archived && p.name.toLowerCase().includes(searchQuery.toLowerCase())
   })
-  // แท็บจองล่วงหน้า: เรียงเมนูปฏิทินตามวันจัดส่ง (ใกล้ก่อน) — คงไว้ให้เสถียร
+  // แท็บจองล่วงหน้า: เรียง "วันจัดส่งใกล้วันปัจจุบันก่อน" (Owner R35) · ยังไม่มีป้ายวัน = ท้ายแถว · วันเท่ากันคงลำดับเดิม
   const ordered = menuTab === 'pre-order'
-    ? [...filtered].sort((a, b) => Number(!!scheduleMap[b.id]) - Number(!!scheduleMap[a.id]))
+    ? [...filtered].sort((a, b) => {
+        const da = scheduleMap[a.id] ?? ''
+        const db = scheduleMap[b.id] ?? ''
+        if (!da && !db) return 0
+        if (!da) return 1
+        if (!db) return -1
+        return da.localeCompare(db)
+      })
     : filtered
 
   const navigate = useNavigate()
@@ -263,13 +268,7 @@ export function MenuPage() {
             <div>
               <h3 className="font-bold text-blue-900 mb-1">จองล่วงหน้า (เมนูรอบพิเศษ)</h3>
               <p className="text-sm text-blue-700">เมนูจากปฏิทินรอบพิเศษของแอดมิน — วันจัดส่งถูกกำหนดตามป้ายมุมเมนู (เลือกเฉพาะรอบจัดส่ง) ไม่มีพรีออเดอร์วันอิสระ</p>
-              {deliveryRounds.length > 0 && (
-                <div className="flex gap-2 mt-2 flex-wrap">
-                  {deliveryRounds.map((round) => (
-                    <span key={round.id} className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">{round.display_name}</span>
-                  ))}
-                </div>
-              )}
+              {/* R35 (Owner: "ในวงเล็บไม่ต้องแสดง") — ชิปรอบ (เที่ยง/เช้า/เย็น ซ้ำ ๆ ทุกวัน) ถูกถอดออกจาก banner */}
             </div>
           </div>
         </div>

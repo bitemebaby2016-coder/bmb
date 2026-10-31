@@ -321,6 +321,15 @@ export function HomePage() {
     ...products.filter((p) => sellable(p) && aliasModeOf(p) === 'pre_order'),
     ...products.filter((p) => sellable(p) && aliasModeOf(p) === 'auto' && !!scheduleMap[p.id]),
   ])
+    // R35 (Owner): เมนูพรีออเดอร์ "วันใกล้วันปัจจุบัน" ขึ้นโชว์ก่อน — เรียงวันจัดส่ง (ใกล้ก่อน) · ยังไม่มีป้ายวัน = ท้ายแถว
+    .sort((a, b) => {
+      const da = scheduleMap[a.id] ?? ''
+      const db = scheduleMap[b.id] ?? ''
+      if (!da && !db) return 0
+      if (!da) return 1
+      if (!db) return -1
+      return da.localeCompare(db)
+    })
     .slice(0, 8)
     .map(toShowcaseCard)
 

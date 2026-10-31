@@ -1,0 +1,9 @@
+R35: 4 คำสั่ง Owner 2026-10-31 — สติกเกอร์ Menu/Notice ค่าหลัง ':' บรรทัดเดียวกับป้าย (<=2/<=2) + ช่วง Tel->QR เหลือ 40px · /menu พรีออเดอร์ถอดชิปรอบ (ในวงเล็บไม่ต้องแสดง) + เรียงวันใกล้ปัจจุบันก่อน (เมนู + showcase หน้าแรก) · image-gen: คีย์ BMB_OPENROUTER_API_KEY ก่อน dev (แยกงานคอนเทนต์/เจนรูป/marketing/talk-to-bite) + candidates qwen/qwen-image-3 + bytedance-seed/seedream-5-0-flash (ยืนยันจากหน้าโมเดลจริง)
+
+- stickerPng: valX=164 ค่า Menu/Notice บรรทัดเดียวกับป้าย · wrap <=24 อักขระ <=2 บรรทัด + '…' · qrY=min(face-16-197, telLine+40)
+- MenuPage: ถอด deliveryRounds chips + ลบ state/import · ordered sort scheduleMap ใกล้ก่อน
+- HomePage: preOrderShowcase sort วันใกล้ก่อน slice(8)
+- image-gen: key order BMB ก่อน dev · IMAGE_MODEL_CANDIDATES += qwen-image-3, seedream-5-0-flash
+- test: r35Contracts ใหม่ 5 · stickerPng +R35 2 + แก้ faceH/… expectations · socialAiContinuity +image-gen +key-order
+- gates: vitest 91/91 (8 files) · eslint 0 · tsc 0 · build OK
+- handoff: docs/BMB_HANDOFF_NEXT_SESSION_2026-10-31.md

@@ -71,18 +71,46 @@ export function stickerDrawList(o: PrintOrderData, offsetY = 0, faceH = STICKER_
     ops.push({ kind: 'text', x: M + 148, y, text: value, size: 22 })
     y += 30
   }
-  ops.push({ kind: 'text', x: M, y, text: 'Menu :', size: 22, weight: 700 })
-  y += 28
-  const menu = o.items.slice(0, 3).map((it) => `${it.product_name} x${it.quantity}${it.special_request ? ' (' + it.special_request + ')' : ''}`)
-  if (o.items.length > 3) menu.push('…')
-  for (const line of menu.length ? menu : ['-']) {
-    ops.push({ kind: 'text', x: M, y, text: line, size: 20 })
-    y += 26
+  // R35 (Owner 2026-10-31): ค่าของ Menu/Notice เริ่มหลัง ':' บน "บรรทัดเดียวกับป้าย"
+  // — Menu ≤ 2 บรรทัด · Notice ≤ 2 บรรทัด (ตัดที่ 24 อักขระ/บรรทัด · เกินบรรทัดสุดท้าย = เติม '…')
+  const valX = M + 148
+  const segs = o.items.slice(0, 3).map((it) => `${it.product_name} x${it.quantity}${it.special_request ? ' (' + it.special_request + ')' : ''}`)
+  if (o.items.length > 3) segs.push('…')
+  const menuLines: string[] = []
+  let cur = ''
+  let si = 0
+  for (; si < segs.length; si++) {
+    const cand = cur ? `${cur} · ${segs[si]}` : segs[si]
+    if (!cur || cand.length <= 24) { cur = cand; continue }
+    menuLines.push(cur)
+    if (menuLines.length === 2) break
+    cur = segs[si]
   }
-  y += 4
+  if (menuLines.length < 2) {
+    if (cur) menuLines.push(cur)
+    if (si < segs.length && menuLines.length) menuLines[menuLines.length - 1] += ' …'
+  } else if (si < segs.length) {
+    menuLines[1] = `${menuLines[1]} …`
+  }
+  if (!menuLines.length) menuLines.push('-')
+  ops.push({ kind: 'text', x: M, y, text: 'Menu :', size: 22, weight: 700 })
+  ops.push({ kind: 'text', x: valX, y, text: menuLines[0], size: 20 })
+  if (menuLines[1]) ops.push({ kind: 'text', x: valX, y: y + 26, text: menuLines[1], size: 20 })
+  y += 26 * (menuLines[1] ? 2 : 1) + 4
+  const noticeRaw = (o.special_instructions || '').trim() || '-'
+  const noticeLines: string[] = []
+  if (noticeRaw.length <= 24) noticeLines.push(noticeRaw)
+  else {
+    const sp = noticeRaw.slice(0, 24).lastIndexOf(' ')
+    const cut = sp > 8 ? sp : 24
+    noticeLines.push(noticeRaw.slice(0, cut))
+    const rest = noticeRaw.slice(cut).trim()
+    noticeLines.push(rest.length > 24 ? rest.slice(0, 23) + '…' : rest)
+  }
   ops.push({ kind: 'text', x: M, y, text: 'Notice :', size: 22, weight: 700 })
-  ops.push({ kind: 'text', x: M + 148, y, text: (o.special_instructions || '').trim() || '-', size: 20 })
-  y += 22
+  ops.push({ kind: 'text', x: valX, y, text: noticeLines[0], size: 20 })
+  if (noticeLines[1]) ops.push({ kind: 'text', x: valX, y: y + 26, text: noticeLines[1], size: 20 })
+  y += 26 * (noticeLines[1] ? 2 : 1) + 4
 
   ops.push({ kind: 'line', x1: M, y1: y, x2: W - M, y2: y, w: 2 })
   y += 30
@@ -94,7 +122,9 @@ export function stickerDrawList(o: PrintOrderData, offsetY = 0, faceH = STICKER_
 
   // บล็อก QR + ข้อความ (bottom)
   const qrSize = 197
-  const qrY = face - M - qrSize // R34: ผูกขอบล่างของหน้าจริง — face < 709 → QR เลื่อนขึ้นตาม ไม่ล้นดวง
+  // R35 (Owner): ลดช่วงเส้น Tel → QR (เดิมผูกขอบล่างหน้า = ช่องว่าง ~160px กว้างเกิน)
+  // — วางห่างจากเส้นใต้ Tel 40px แต่ยังกันไม่ให้ล้นขอบล่างหน้าจริง (R34 faceH) ด้วย min()
+  const qrY = Math.min(face - M - qrSize, y + 40)
   ops.push({ kind: 'qr', x: M, y: qrY, size: qrSize })
   const tx = M + qrSize + 12
   const mid = tx + (W - tx - M) / 2

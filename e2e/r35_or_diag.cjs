@@ -1,0 +1,21 @@
+// e2e/r35_or_diag.cjs — why did r35_or_probe return NONE/0? (อย่าเพิ่งสรุปว่าโมเดลไม่มี)
+fetch('https://openrouter.ai/api/v1/models')
+  .then((r) => { console.log('status', r.status); return r.json() })
+  .then((d) => {
+    console.log('keys', Object.keys(d).join(','))
+    const a = Array.isArray(d.data) ? d.data : []
+    console.log('len', a.length, 'total_count', d.total_count)
+    const g = a.find((x) => x.id === 'google/gemini-3.1-flash-image')
+    console.log('geminiKeys', g ? Object.keys(g).join(',') : 'NOT_FOUND')
+    if (g) console.log('geminiSample', JSON.stringify(g).slice(0, 500))
+    // หา image จากหลาย field เป้าหมาย (字段可能改名)
+    const imgAny = a.filter((x) => /image/i.test(JSON.stringify(x.output_modalities || x.architecture?.output_modalities || '')))
+    console.log('imgByAnyField', imgAny.length)
+    const nameHit = a.filter((x) => /seedream|qwen.*image|image.*qwen|seed.*image/i.test(`${x.id} ${x.name || ''}`))
+    console.log('nameHit', nameHit.map((x) => `${x.id}|${x.name}`).join(' ; ') || 'NONE')
+    // bytedance ทุกตัว + qwen ทุกตัวที่ไม่ใช่ text-only ชื่อมี image/seed
+    const bd = a.filter((x) => /byte/i.test(x.id)).map((x) => x.id)
+    console.log('bytedanceIds', bd.join(' ; ') || 'NONE')
+    if (!a.length) console.log('rawHead', JSON.stringify(d).slice(0, 300))
+  })
+  .catch((e) => console.log('ERR', e.message))

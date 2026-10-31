@@ -51,7 +51,8 @@ describe('stickerDrawList — layout บนผืน 472×709 (40×60 @300dpi)',
     expect(t.some((x) => x.startsWith('เมนู1'))).toBe(true)
     expect(t.some((x) => x.startsWith('เมนู3'))).toBe(true)
     expect(t.some((x) => x.startsWith('เมนู4'))).toBe(false)
-    expect(t).toContain('…')
+    // R35: เมนู ≤2 บรรทัดหลัง ':' → '…' ถูกต่อท้ายบรรทัดที่ 2 (ไม่ใช่บรรทัดเดี่ยวเหมือนเดิม)
+    expect(t.some((x) => x.includes('…'))).toBe(true)
 
     for (const op of ops) {
       if (op.kind === 'text') {
@@ -109,10 +110,12 @@ describe('R34 — clampFaceHeight / หน้า = ความสูงหน�
     expect(stickerPageHeight(0, 500)).toBe(640) // clamp ขอบล่าง
   })
 
-  it('stickerDrawList faceH=660: QR ผูกขอบล่างจริง (660−16−197=447) · ทุก op ≤ หน้า · bg = 660', () => {
+  it('stickerDrawList faceH=660: QR = min(ขอบล่างหน้า 447, เส้น Tel+40) — R35 ลดช่วง Tel→QR · ทุก op ≤ หน้า · bg = 660', () => {
     const ops = stickerDrawList(order, 0, 660)
     const qr = ops.find((o) => o.kind === 'qr')
-    expect(qr && qr.kind === 'qr' ? qr.y : -1).toBe(447)
+    const tel = ops.find((o): o is Extract<StickerOp, { kind: 'text' }> => o.kind === 'text' && o.text.startsWith('Tel.'))
+    const expected = Math.min(660 - 16 - 197, (tel?.y ?? 0) + 14 + 40)
+    expect(qr && qr.kind === 'qr' ? qr.y : -1).toBe(expected)
     const bg = ops[0]
     expect(bg.kind === 'rect' && bg.h).toBe(660)
     for (const op of ops) {
@@ -216,5 +219,39 @@ describe('R33 — calibrationDrawList (ใบวัดฟีด)', () => {
 
   it('ไม่มี op ชนิด qr (ไม่โหลด qrcode เปล่า ๆ)', () => {
     expect(calibrationDrawList().some((o) => o.kind === 'qr')).toBe(false)
+  })
+})
+
+describe('R35 — Menu/Notice หลัง ":" บรรทัดเดียวกัน (≤2/≤2) · ช่วง Tel→QR เหลือ 40px', () => {
+  it('ค่า Menu/Notice เริ่ม x=164 บน y เดียวกับป้าย · แต่ละช่อง ≤ 2 บรรทัด', () => {
+    const ops = stickerDrawList(order)
+    const lab = (s: string) => ops.find((o): o is Extract<StickerOp, { kind: 'text' }> => o.kind === 'text' && o.text === s)
+    const menuLab = lab('Menu :')
+    const noticeLab = lab('Notice :')
+    expect(menuLab && noticeLab).toBeTruthy()
+    const menuY = menuLab!.y
+    const noticeY = noticeLab!.y
+    const menuVals = ops.filter((o): o is Extract<StickerOp, { kind: 'text' }> => o.kind === 'text' && o.x === 164 && o.y >= menuY && o.y < noticeY)
+    expect(menuVals.length).toBeGreaterThanOrEqual(1)
+    expect(menuVals.length).toBeLessThanOrEqual(2)
+    expect(menuVals.some((v) => v.y === menuY)).toBe(true) // ค่าบรรทัดแรก = บรรทัดเดียวกับป้าย
+    const noticeVals = ops.filter((o): o is Extract<StickerOp, { kind: 'text' }> => o.kind === 'text' && o.x === 164 && o.y >= noticeY && o.y < noticeY + 60)
+    expect(noticeVals.length).toBeGreaterThanOrEqual(1)
+    expect(noticeVals.length).toBeLessThanOrEqual(2)
+    expect(noticeVals.some((v) => v.y === noticeY)).toBe(true)
+  })
+
+  it('notice ยาว = 2 บรรทัดหลัง ":" · ช่วงเส้น Tel → QR ≤ 40px และไม่ล้นขอบล่างหน้า', () => {
+    const long: PrintOrderData = { ...order, special_instructions: 'ไม่ใส่ถุง ขอซอสเพิ่ม แยกห่อ ขอบคุณครับ ไม่เอาช้อนส้อม' }
+    const ops = stickerDrawList(long)
+    const noticeLab = ops.find((o) => o.kind === 'text' && o.text === 'Notice :')
+    const ny = noticeLab && noticeLab.kind === 'text' ? noticeLab.y : -1
+    const noticeVals = ops.filter((o): o is Extract<StickerOp, { kind: 'text' }> => o.kind === 'text' && o.x === 164 && o.y >= ny && o.y < ny + 60)
+    expect(noticeVals.length).toBe(2)
+    const tel = ops.find((o): o is Extract<StickerOp, { kind: 'text' }> => o.kind === 'text' && o.text.startsWith('Tel.'))
+    const qr = ops.find((o) => o.kind === 'qr')
+    const telLineY = (tel?.y ?? 0) + 14
+    expect(qr && qr.kind === 'qr' ? qr.y - telLineY : 999).toBeLessThanOrEqual(40)
+    expect(qr && qr.kind === 'qr' ? qr.y + qr.size : 999).toBeLessThanOrEqual(STICKER_PX_H)
   })
 })
