@@ -4,9 +4,9 @@
 
 ## 0. HEAD + CI (สำคัญสุด — เช็คก่อนงานอื่น)
 
-- **HEAD = `c22e869` (push แล้ว = `ff9132f` fix CI รอบ 2 + `c22e869` docs)** — R37: languageSanity จับอักขระจีน **2 จุดในเอกสาร** ของ `7048283` (`BMB_HANDOFF...md:7` + `BMB_MASTER_STATUS.md:7` — อ้าง fallback เดิมตรง ๆ เป็นหลักฐาน) → แก้เป็นคำไทย · verify = `npm run lint` เต็ม OK + `npx tsc --noEmit` 0
-- **CI `e4c3ad7` = success ทุก workflow ✅** (งานแรกตามแฮนออฟ — ปิดแล้ว · พิสูจน์ด้วย `node e2e/r36_ci_probe.cjs`) · `ff9132f` Contract = success ✓ (CI = ยัง in_progress ตอนเขียน)
-- **CI `7048283` = failure ที่ Lint (#5)** (Test/Contract/Cloudflare = ผ่าน) → สาเหตุซ้ำแบบ = อักขระจีนใน docs → **แก้ใน `ff9132f`** → **งานแรกของแชทหน้า = เช็ค CI HEAD `c22e869` ครั้งเดียวให้เขียว** (probe ตัวเดิม ไม่ต้อง token)
+- **HEAD = `3dc3342` (push แล้ว = `ff9132f` fix CI รอบ 2 + `c22e869`/`3dc3342` docs)** — R37: languageSanity จับอักขระจีน **2 จุดในเอกสาร** ของ `7048283` (`BMB_HANDOFF...md:7` + `BMB_MASTER_STATUS.md:7` — อ้าง fallback เดิมตรง ๆ เป็นหลักฐาน) → แก้เป็นคำไทย · verify = `npm run lint` เต็ม OK + `npx tsc --noEmit` 0
+- **CI = เขียวหมด (พิสูจน์แล้ว):** `e4c3ad7` ✅ · **`ff9132f` CI+Contract ✅** · **`c22e869` CI+Contract ✅** · **NO_FAILED_RUN** ทุก workflow (probe `node e2e/r36_ci_probe.cjs` ไม่ต้อง token)
+- **CI `7048283` (แดงรอบเดียว) = failure ที่ Lint (#5)** → สาเหตุซ้ำแบบ = อักขระจีนในเอกสาร → **แก้ใน `ff9132f`** → **งานแรกของแชทหน้า = เช็ค CI HEAD `3dc3342` ครั้งเดียวให้เขียว** (ทุก push = run ใหม่ · probe ตัวเดิม)
 - ก่อนหน้า: `e4c3ad7` (fix CI รอบ 1) · `aa1b295` (R35) · `a6b3b34`/`4b2ffda` (R34)
 
 ## 1. งานค้างที่ต้องทำต่อ (เรียงลำดับความสำคัญ)
@@ -24,7 +24,7 @@
 
 ### 1.3 gates + CI รอบ R35/R36
 - **ผ่านแล้ว (ท้องถิ่น):** vitest **91/91** (8 ไฟล์) · **`npm run lint` เต็ม = OK** (eslint + brandNameGuard 491 + languageSanity 1391 — หลัง fix R36) · tsc 0 · build `e2e/r35_build.log` ✓ · r34+r35 re-run = 12/12
-- **CI:** `aa1b295`/`7048283` = Lint พัง (แก้ใน `e4c3ad7`/`ff9132f`) · **`e4c3ad7` = success ✅ ทุก workflow** · `ff9132f` Contract = success (CI = in_progress ตอนปิด) · full vitest ท้องถิ่น ~1,670 = ยังไม่รัน — **CI Test step พิสูจน์ผ่านแล้ว ไม่ซ้ำโดยไม่จำเป็น**
+- **CI:** `aa1b295`/`7048283` = Lint พัง (แก้ใน `e4c3ad7`/`ff9132f`) · **`e4c3ad7` · `ff9132f` · `c22e869` = success ✅ ทุก workflow (CI+Contract) · NO_FAILED_RUN** · full vitest ท้องถิ่น ~1,670 = ยังไม่รัน — **CI Test step พิสูจน์ผ่านแล้ว ไม่ซ้ำโดยไม่จำเป็น**
 
 ### 1.4 งานค้างสะสม (ยังเปิดอยู่)
 1. e2e auto-print ออเดอร์จริง (R31 โค้ดพร้อม · Owner ยืนยัน "รับออเดอร์แล้วสติกเกอร์ปริ้นอัตโนมัติจากใบสั่งซื้อจริง ตรงรายละเอียดกับ notice" แล้ว)
@@ -47,9 +47,9 @@
 
 ## 3. ทดสอบทั้งหมดที่ต้องทำ (แชทหน้า)
 
-- [x] **เช็ค CI `e4c3ad7`** → **success ทุก workflow ✅** (R37 · `node e2e/r36_ci_probe.cjs`)
+- [x] **เช็ค CI `e4c3ad7` / `ff9132f` / `c22e869`** → **success ทุก workflow ✅ · NO_FAILED_RUN** (R37 · `node e2e/r36_ci_probe.cjs`)
 - [x] ~~CI `7048283` แดงที่ Lint~~ → แก้ 2 จุดในเอกสาร = `ff9132f` (verify `npm run lint` + `tsc` ผ่าน)
-- [ ] **เช็ค CI HEAD `c22e869` ครั้งเดียว** → ให้เขียว (probe ตัวเดิม · ณ ปิดเซสชัน = in_progress · NO_FAILED_RUN)
+- [ ] **เช็ค CI HEAD `3dc3342` ครั้งเดียว** → ให้เขียว (probe ตัวเดิม · ทุก push = run ใหม่)
 - [ ] Owner: พิมพ์สติกเกอร์จริง 1 ออเดอร์ → ถ่ายรูปส่งมา (Menu/Notice บรรทัดเดียวกัน · QR ชิด · ขอบดวง)
 - [x] ~~secret `BMB_OPENROUTER_API_KEY` + EF image-gen deploy~~ = **ทำแล้ว ✓** (ดู 1.2 — เหลือ liveness ก็ผ่านแล้ว)
 - [ ] Owner: เจนรูปจริง 1 ใบจาก AdminMarketing (admin JWT · คู่แรก qwen-image-3 / seedream-5-0-flash)

@@ -1,0 +1,6 @@
+docs: R37 ปิดเซสชัน — CI เขียวหมด (e4c3ad7/ff9132f/c22e869 = success · NO_FAILED_RUN) · image-gen ปิด
+
+- บันทึกหลักฐาน CI จริงทั้ง 3 commits (probe ไม่ต้อง token) · HEAD อ้าง = 3dc3342 (fix+docs ก่อนหน้า)
+- เฟส B ปิด: secret BMB_OPENROUTER_API_KEY มีแล้ว · EF image-gen deploy แล้ว · liveness OPTIONS 200/POST 401
+- เหลือรอ Owner บนโปรดักชั่น: พิมพ์สติกเกอร์จริง · เจนรูป 1 ใบ · e2e auto-print
+- verify: npm run lint = OK (chain ก่อน commit) · npx tsc --noEmit = 0
