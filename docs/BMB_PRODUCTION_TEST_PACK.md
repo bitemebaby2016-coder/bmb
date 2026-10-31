@@ -367,3 +367,27 @@
 | **D-3** | **L-12 `menu_rules`/`stop_conditions` ว่าง** | ในแท็บ "⚙️ กติกา" สองช่องนี้จะเติมค่าเองหรือปล่อยว่าง? (ค่าหลัก window/cooldown/frequency มีครบ → C7/C8 รันได้แล้ว) | Owner เติมในหน้ากติกา | ปล่อยว่าง = ใช้ค่าหลักตามเดิม · ปิด L-12 เป็น "ตั้งใจว่าง" |
 
 > ที่เหลือเป็น **"รอผลทดสอบ"** (ไม่ใช่การตัดสินใจ) — N-A สติกเกอร์จริง · N-B ปุ่มนำทาง · N-C 3+อัลบั้ม · N-D เจนรูป · N-E browse · N-F feed ขึ้นเว็บ · N-G คอมเม้น FB → AI ตอบ · BLK-3 รอ CI HEAD · BLK-4/5 = ฮาร์ดแวร์/admin JWT ตา Owner — ผลเป็นอย่างไรส่งมาได้เลย ทีมปรับตามหลักฐานทีละรายการ (two-try rule)
+---
+
+## R. R43 — บั๊ก 7 ข้อ (Owner 2026-10-31 20:40) · ผล probe + สรุปรอ Owner `[R]`
+
+> รอบนี้ = **read-only probe เท่านั้น** (คำสั่ง "ห้ามโค้ดแก้" ยังอยู่) · ผังเต็ม + evidence = `docs/BMB_HANDOFF_NEXT_SESSION_2026-10-31.md` หัวข้อ R43
+
+### R.1 ผล probe (production evidence จริง — ยังไม่ได้แก้โค้ด)
+
+| # | ข้อ | ต้นตอที่พิสูจน์แล้ว | evidence |
+|---|---|---|---|
+| R1 | **B2/B3 โพส FB ไม่ตรงเวลา/ไม่ครบ/approve แล้วไม่ขึ้น** | EF `automation-worker` production = **deploy 30 ต.ค. (รอบ R26)** · โค้ด query ใหม่ `or=(scheduled OR published&unpushed)` เพิ่งอยู่ในคอมมิต R39 (31 ต.ค. 10:40) **ไม่เคย deploy** → ตัวจริง query `status=eq.scheduled` อย่างเดียว → m177/m178 promote flip เป็น `published` ≤1 นาที → worker มองไม่เห็น → **`scanned=0` ทุก tick** → **3 แถว published `prov=null` ไม่ขึ้น FB** (`mk-mvwegu4b-o482` 20:00 · `mk-mvvtvqwv-3zjr` 10:17 · `mk-mvvspkna-n6uf` 09:50) + `c60w` **สาย 47.5 นาที** · cron chain เอง = ทำงานจริง (~100%/นาที + ทุก 5 นาที) | `e2e/r43_publish_probe.json` (key `approved_not_on_fb`) · `r43_approval_probe.json` · `r43_due_query_probe.cjs` · `r43_tick_probe.json` · `r43_ef_versions_probe.json` |
+| R2 | **B1 ตั้งเวลาได้เดียว + `ERR_APPROVAL_REQUIRED`** | ปุ่ม ⏰ `mk-schedule-*` แสดงกับทุกแถวรวม `pending_approval` ไม่ gate → RPC `marketing_schedule_post` `RAISE ERR_APPROVAL_REQUIRED` (สมมติฐาน ① ยืนยัน · state ค้าง ② ไม่พบในโค้ด) | อ่าน `AdminMarketing.tsx:147/545` + `adminMarketing.ts:90` + m137/m147 |
+| R3 | **B4 AI บอก "เปิดถึง 20:00" ทั้งที่ปิด same-day** | prompt ใช้ `SHOP_FACTS_TH` static `"07:00-20:00"` · `getShopContext` ไม่ดึงสถานะสด — reply/inbox/generator ชุดเดียวกัน · state จริงฝั่งเว็บ = `homeProviders.getStoreStatusFromRounds` (EF ไม่ได้ใช้) | อ่าน `social-ai-worker:535` + `_shared/shopContext.ts` |
+| R4 | **B6 `?cart=` ว่าง + เคลมผิด catalog** | เว็บรองรับ `cart=` จริง (Layout) แต่ **decode-fail = return เงียบไม่มี toast** · draft validation ไม่บังคับคำตอบอ้าง catalog | อ่าน `Layout.tsx:68-109` + `cartDeepLink.ts` + `shopContext.ts` |
+| R5 | **B7 ×4 = 2-เว้น-1** | lib niimbot (`niimbot.js`/`label-size.js`/`label-memory.js`) **ไม่มี logic gap/continuous เลย** = firmware/เซนเซอร์เครื่องจัดการ · `stickerSize` = faceH คงที่ (R41) → หน้าสั้นกว่า pitch จริง | อ่าน `node_modules/niimbot-web-bluetooth/src/*` + `niimbotBt.ts` |
+| R6 | **B5 แจ้งเตือนเมื่อบอต AI โพส/ตอบ** | โครง notification ครบ (ตาราง/prefs/RPC/job 5 นาที/push-send/routing) · ยังไม่มี event นี้ → รอ **D-4** | อ่าน migrations 021 + `notificationLinks.ts` + `automation-scheduler.yml` |
+| R7 | CI + cron verify (งานค้าง 1-2) | CI `79cd6eb` **NO_FAILED_RUN** · `bmb-promote` ~100%/นาที · `bmb-tick` ทุก 5 นาที · `g26-poll` รายชม. ไม่ขาด | `node e2e\r36_ci_probe.cjs` · `r43_tick_probe.json` |
+
+### R.2 รอ Owner (ตอบรอบเดียวจบ)
+
+1. **ปลดคำสั่งห้ามแก้โค้ด** — เรียงทำ: **① deploy `automation-worker` จาก HEAD (B2/B3 — โค้ดมีแล้ว)** → ② B1 gate + B4 live context + B6 catalog/toast → ③ B7 → ④ B5
+2. **D-1..D-4** (§N.3 เดิม + D-4 ช่องทาง/ผู้รับแจ้งเตือนเมื่อบอต AI โพส/ตอบ)
+3. **B7: วัด pitch ×4** (ระยะใบ 1→4 มม. ÷ 3 × 11.81 = px) + ถ่ายรูปม้วนหลังพิมพ์
+4. **§Q เดิม:** Q-A เจนรูป · Q-C ตั้งเวลา (หลังแก้ B1/B2) · Q-D คอมเม้น ≤3 นาที (หลังแก้ B4) · Q-B ×4 (หลังได้ตัวเลข pitch)

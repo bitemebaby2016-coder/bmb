@@ -1,0 +1,158 @@
+{
+  "ran_at": "2026-10-31T14:19:47.255Z",
+  "tick_runs": [
+    {
+      "jobname": "bmb-tick",
+      "status": "succeeded",
+      "return_message": "1 row",
+      "start_time": "2026-10-31 14:15:00.068436+00"
+    },
+    {
+      "jobname": "bmb-tick",
+      "status": "succeeded",
+      "return_message": "1 row",
+      "start_time": "2026-10-31 14:10:00.056793+00"
+    },
+    {
+      "jobname": "bmb-tick",
+      "status": "succeeded",
+      "return_message": "1 row",
+      "start_time": "2026-10-31 14:05:00.03118+00"
+    },
+    {
+      "jobname": "bmb-tick",
+      "status": "succeeded",
+      "return_message": "1 row",
+      "start_time": "2026-10-31 14:00:00.036206+00"
+    },
+    {
+      "jobname": "bmb-tick",
+      "status": "succeeded",
+      "return_message": "1 row",
+      "start_time": "2026-10-31 13:55:00.082566+00"
+    },
+    {
+      "jobname": "bmb-tick",
+      "status": "succeeded",
+      "return_message": "1 row",
+      "start_time": "2026-10-31 13:50:00.06343+00"
+    }
+  ],
+  "promote_runs": [
+    {
+      "status": "succeeded",
+      "return_message": "1 row",
+      "start_time": "2026-10-31 14:19:00.020473+00"
+    },
+    {
+      "status": "succeeded",
+      "return_message": "1 row",
+      "start_time": "2026-10-31 14:18:00.053317+00"
+    },
+    {
+      "status": "succeeded",
+      "return_message": "1 row",
+      "start_time": "2026-10-31 14:17:00.055976+00"
+    }
+  ],
+  "g26_poll": [
+    {
+      "id": "g26-poll-2026-10-31T14",
+      "created_at": "2026-10-31 14:00:06.513754+00"
+    },
+    {
+      "id": "g26-poll-2026-10-31T13",
+      "created_at": "2026-10-31 13:00:09.291557+00"
+    },
+    {
+      "id": "g26-poll-2026-10-31T12",
+      "created_at": "2026-10-31 12:00:12.951041+00"
+    },
+    {
+      "id": "g26-poll-2026-10-31T11",
+      "created_at": "2026-10-31 11:00:09.054713+00"
+    },
+    {
+      "id": "g26-poll-2026-10-31T10",
+      "created_at": "2026-10-31 10:00:11.767583+00"
+    },
+    {
+      "id": "g26-poll-2026-10-31T09",
+      "created_at": "2026-10-31 09:00:08.036183+00"
+    }
+  ],
+  "auto_exec": [
+    {
+      "id": "auto-exec-tick-mk-20261031t1415",
+      "entity_id": "marketing_publish",
+      "descr": "automation marketing_publish succeeded",
+      "created_at": "2026-10-31 14:15:06.801611+00"
+    },
+    {
+      "id": "auto-exec-tick-mk-20261031t1410",
+      "entity_id": "marketing_publish",
+      "descr": "automation marketing_publish succeeded",
+      "created_at": "2026-10-31 14:10:07.141782+00"
+    },
+    {
+      "id": "auto-exec-tick-mk-20261031t1405",
+      "entity_id": "marketing_publish",
+      "descr": "automation marketing_publish succeeded",
+      "created_at": "2026-10-31 14:05:05.073548+00"
+    },
+    {
+      "id": "auto-exec-tick-mk-20261031t1400",
+      "entity_id": "marketing_publish",
+      "descr": "automation marketing_publish succeeded",
+      "created_at": "2026-10-31 14:00:06.592258+00"
+    },
+    {
+      "id": "auto-exec-tick-mk-20261031t1355",
+      "entity_id": "marketing_publish",
+      "descr": "automation marketing_publish succeeded",
+      "created_at": "2026-10-31 13:55:05.321128+00"
+    },
+    {
+      "id": "auto-exec-tick-mk-20261031t1350",
+      "entity_id": "marketing_publish",
+      "descr": "automation marketing_publish succeeded",
+      "created_at": "2026-10-31 13:50:05.973979+00"
+    },
+    {
+      "id": "auto-exec-tick-mk-20261031t1345",
+      "entity_id": "marketing_publish",
+      "descr": "automation marketing_publish succeeded",
+      "created_at": "2026-10-31 13:45:08.549422+00"
+    },
+    {
+      "id": "auto-exec-tick-mk-20261031t1340",
+      "entity_id": "marketing_publish",
+      "descr": "automation marketing_publish succeeded",
+      "created_at": "2026-10-31 13:40:05.977794+00"
+    },
+    {
+      "id": "auto-exec-tick-mk-20261031t1335",
+      "entity_id": "marketing_publish",
+      "descr": "automation marketing_publish succeeded",
+      "created_at": "2026-10-31 13:35:05.759152+00"
+    },
+    {
+      "id": "auto-exec-tick-mk-20261031t1330",
+      "entity_id": "marketing_publish",
+      "descr": "automation marketing_publish succeeded",
+      "created_at": "2026-10-31 13:30:07.529552+00"
+    },
+    {
+      "id": "auto-exec-tick-mk-20261031t1325",
+      "entity_id": "marketing_publish",
+      "descr": "automation marketing_publish succeeded",
+      "created_at": "2026-10-31 13:25:05.135+00"
+    },
+    {
+      "id": "auto-exec-tick-mk-20261031t1320",
+      "entity_id": "marketing_publish",
+      "descr": "automation marketing_publish succeeded",
+      "created_at": "2026-10-31 13:20:06.910324+00"
+    }
+  ]
+}

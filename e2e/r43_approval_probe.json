@@ -1,0 +1,45 @@
+{
+  "ran_at": "2026-10-31T14:19:05.234Z",
+  "rows": [
+    {
+      "id": "mk-mvvspkna-n6uf",
+      "post_status": "published",
+      "provider_post_id": null,
+      "att": 1,
+      "error": null,
+      "approval_id": "cap- ###########-8b8fc",
+      "approval_status": "approved",
+      "content_type": "announcement"
+    },
+    {
+      "id": "mk-mvvtvqwv-3zjr",
+      "post_status": "published",
+      "provider_post_id": null,
+      "att": 1,
+      "error": null,
+      "approval_id": "cap- ###########-fa2a4",
+      "approval_status": "approved",
+      "content_type": "announcement"
+    },
+    {
+      "id": "mk-mvvz4n44-c60w",
+      "post_status": "published",
+      "provider_post_id": "862940416913026_122145808257204867",
+      "att": 1,
+      "error": null,
+      "approval_id": "cap- ###########-7470e",
+      "approval_status": "approved",
+      "content_type": "post"
+    },
+    {
+      "id": "mk-mvwegu4b-o482",
+      "post_status": "published",
+      "provider_post_id": null,
+      "att": 1,
+      "error": null,
+      "approval_id": "cap- ###########-c1730",
+      "approval_status": "approved",
+      "content_type": "post"
+    }
+  ]
+}

@@ -2,11 +2,47 @@
 
 > ยึด `AI_WORK_STATE.md` บล็อก **R43 (ด้านบนสุด = สถานะปัจจุบัน: PLANNED ONLY · ห้ามแก้โค้ด)** + `docs/BMB_MASTER_STATUS.md` (canonical) · ถ้าขัดกัน = โค้ดจริง > เอกสาร
 
-> **🔴 คำสั่ง Owner 2026-10-31 ~20:40 ICT (R43): "ห้ามโค้ดแก้" — รอบนี้รับงาน+วางแผนเท่านั้น → แชทหน้าลงมือทำทั้งหมดตามผังด้านล่าง (รวมงานค้างทุกชิ้น)**
+> **🔴 คำสั่ง Owner 2026-10-31 ~20:40 ICT (R43): "ห้ามโค้ดแก้" — ยังไม่ได้ยก → เซสชัน probe ทำตาม runbook ข้อ 0-6 เสร็จแล้ว (ผล + evidence ด้านล่าง) · เหลือข้อ 7 (ลงมือแก้) รอคำสั่งปลด + ข้อ 8 (docs + gates + CI probe ปิดงาน)**
 
 ## ⬜ R43 — บั๊กใหม่ 7 ข้อจากรายงาน Owner (ยังไม่แตะโค้ด · probe = อ่านอย่างเดียวเท่านั้นจนกว่าจะยกคำสั่งห้าม)
 
 > อ้างอิงภาพที่ Owner ส่ง (ภาพ 1-9) · ทุกข้อ: **อาการ → ยืนยันจากภาพ → ต้นตอที่ต้องพิสูจน์ → probe อ่านอย่างเดียว → แผนแก้ (เมื่ออนุญาต) → วิธี verify**
+
+### ✅ ผล probe รอบ 2026-10-31 (read-only ทั้งหมด · ยังไม่แตะโค้ดแม้แต่ไฟล์เดียว)
+
+**Runbook ข้อ 1 — CI:** HEAD `79cd6eb` = CI ✅ + Contract ✅ ×2 + automation-scheduler ✅ = **NO_FAILED_RUN** (`node e2e\r36_ci_probe.cjs`)
+
+**B1 — ต้นตอพิสูจน์จากโค้ดแล้ว:**
+- `AdminMarketing.handleSchedule` (บรรทัด 147-156) เรียก `scheduleMarketingPost` ตรง ๆ → RPC `marketing_schedule_post` (m137/m147) `RAISE 'ERR_APPROVAL_REQUIRED'` เมื่อ approval ≠ `approved` — **ปุ่ม ⏰ `mk-schedule-*` (บรรทัด 545) แสดงกับทุกแถวรวม `pending_approval` ไม่มี gate** → กดจากแถวรอตรวจ = toast `ส่งงานไม่สำเร็จ: ERR_APPROVAL_REQUIRED` (r.error = error.message ดิบ) = **สมมติฐาน ① ยืนยันแล้ว**
+- "ทำได้แค่อันเดียว": แถวที่อนุมัติแล้วตั้งเวลาได้ปกติ (สำเร็จ → `load()` รีเฟรช ✓) · แถวถัดที่ยังรอตรวจ = โดน ERR เหมือนเดิม → **สมมติฐาน ② (state ค้าง) ไม่พบในโค้ด**
+- toast/dialog จริงในไฟล์ (เทียบภาพ 1): `'ส่งงานไม่สำเร็จ: ' + r.error` · `'เลือกเวลาเผยแพร่ก่อน'` · `'ตั้งเวลาเผยแพร่แล้ว (ระบบจะโพสต์อัตโนมัติเมื่อถึงเวลา)'` · `'อนุมัติแล้ว — พร้อมตั้งเวลาเผยแพร่'`
+- **แผนแก้ (รอปลดล็อก):** gate ปุ่มตั้งเวลาตาม approval (หรือทำ approve+schedule เป็น transaction เดียว) + ข้อความไทยไม่โชว์รหัส error + verify ตั้งเวลา 3 แถวรวด
+
+**B2/B3 — root cause พิสูจน์ครบด้วย production evidence (สำคัญที่สุด):**
+- `node e2e\r43_publish_probe.cjs` → **`e2e/r43_publish_probe.json`**: 48 ชม. = 6 แถว (pending 1 · published 5) · **`approved_not_on_fb` = 3 แถว published แต่ `provider_post_id IS NULL`**: `mk-mvwegu4b-o482` (ตั้ง 20:00 ICT) · `mk-mvvtvqwv-3zjr` (10:17) · `mk-mvvspkna-n6uf` (09:50) — att=1/error=null ทุกแถว · **FB feed จริงไม่มีโพสต์ 3 ตัวนี้** (fb_matched=2 เฉพาะแถวมี prov) → **B3 ยืนยันจาก production จริงแล้ว**
+- **B2 ตัวเลขจริง:** `mk-mvvz4n44-c60w` sched 05:46Z → FB ขึ้น 06:33Z = **สาย 47.5 นาที** (`delta_vs_scheduled_ms=2851000`)
+- **cron chain = ทำงานจริง** (`e2e/r43_tick_probe.json`): `bmb-promote` 461 runs/7.7 ชม. (~100%/นาที) · `bmb-tick` 91 runs (~ทุก 5 นาที) · `auto-exec-tick-mk-*` = marketing_publish **succeeded ทุก 5 นาที** · `g26-poll-2026-10-31T09..T14` ต่อเนื่อง → **งานค้างข้อ 2 (cron verify) ปิดด้วยหลักฐานนี้**
+- **แต่ทุก tick = `results.marketing_publish.scanned=0`** (audit metadata — `e2e/r43_ef_versions_probe.json`) ทั้งที่: query due ตัวเดียวกับ worker ยิงตรงคืน **3 แถว** (`e2e/r43_due_query_probe.cjs` = HTTP 200) · approval ทั้ง 4 = **`approved`** (`e2e/r43_approval_probe.json`) → guard ทุก branch ผ่านหมด → เหลือ branch เดียว = **worker ตัวจริง query ไม่ match**
+- **ROOT CAUSE = EF production เก่า (โค้ดใน git ไม่เคย deploy):** `automation-worker` deploy ล่าสุด = **2026-10-30 06:36Z (13:36 ICT · รอบ R26)** แต่โค้ด query ใหม่ `or=(status.eq.scheduled,and(status.eq.published,provider_post_id.is.null))` อยู่ในคอมมิต **R39 `0985a62` = 2026-10-31 10:40 ICT** → **ยังไม่เคยขึ้น production** → ตัวจริงยัง query `status=eq.scheduled` อย่างเดียว → m177/m178 promote flip เป็น `published` ใน ≤1 นาที → worker มองไม่เห็น → **ไม่ push FB → prov ค้าง null ถาวร = ต้นตอ B2+B3 ตัวเดียว** (แถว c60w รอดเพราะถูก push ตอนยัง `scheduled` · E2E 06:33Z ก่อน bmb-promote เริ่ม 06:34Z)
+- **แผนแก้ (รอปลดล็อก):** `supabase functions deploy automation-worker` จาก HEAD (โค้ดมีแล้ว ไม่ต้องเขียนใหม่) → verify tick ถัดไป `scanned≥3` + prov ขึ้น 3 แถวค้าง + ตั้งเวลาใหม่ 3 ใบ ±2 นาที · ถ้าต้องการเข้มกว่า 5 นาที = พิจารณา `bmb-tick */2` (ตัดสินใจตอนปลดล็อก)
+
+**B4 — ต้นตอพิสูจน์จากโค้ด:**
+- prompt assembly = `social-ai-worker/index.ts:535-538`: `baseSystem + BITE_PERSONA_SEGMENT + REPLY_CONTINUITY_RULES + getShopContext(...)` — `getShopContext` (`_shared/shopContext.ts`) ดึง products/categories/promotions/business_settings + **`SHOP_FACTS_TH` static `"เวลาเปิดร้าน: ทุกวัน 07:00-20:00 น."`** → **ไม่มีบรรทัดสถานะสด** (same-day เปิด/ปิด · รอบ pre-order ถัดไป) ทั้ง 3 ช่องทาง (reply comment + inbox + `social-post-worker:341` generator = ชุดเดียวกัน)
+- แหล่ง state จริงฝั่งเว็บ = `src/lib/homeProviders.getStoreStatusFromRounds` (flag `sameDayOpen`/`preOrderOpen` จาก rounds จริง) + `storeStatusCopy.ts` (เฉพาะข้อความแถบ) — **EF ไม่ได้ใช้เลย** → AI ตอบ "เปิดถึง 20:00" จาก static facts แม้วันนั้น same-day ปิด = ตรงอาการเป๊ะ
+- **แผนแก้ (รอปลดล็อก):** ฉีดสถานะสด (รอบวันนี้ + menu_schedule + รอบถัดไป) เข้า `getShopContext` + rule บังคับ "same-day ปิด = บอกพรีออเดอร์+รอบถัดไป HH:MM · ห้ามบอกสั่งวันนี้ได้" + เคสใหม่ใน `socialAiContinuity.test.ts`
+
+**B5 — เตรียมพร้อมแล้ว รอ D-4 เท่านั้น:** โครง notification ครบ (ตาราง `notifications` + `category` + `notification_prefs` per-channel + RPC `create_notification` + job `notification_dispatch` ทุก 5 นาที + EF `push-send` + `notificationLinks.ts` routing ตาม role) — **ยังไม่มี event "บอต AI โพส/ตอบ"** → hook จุด reply `sent` / post `published` ได้ทันที **หลัง Owner ตอบ D-4 (ช่องทาง + ผู้รับ)**
+
+**B6 — ต้นตอจากโค้ด:**
+- `/shop?cart=` = **เว็บรองรับจริง**: `Layout.tsx:68-109` อ่าน `cart` จาก query ทุก path · decode v1 b64url ↔ EF `buildCartLink` round-trip มี test คุม (`cartDeepLink.test.ts`)
+- **จุดพัง = decode-fail เงียบ**: ถ้า payload ถูก FB ตัด/เพี้ยน → `decodeCartParam` null → `Layout:78 return` **ไม่มี toast ใด ๆ** → เปิดมาตะกร้าว่างเปล่าไม่ทราบสาเหตุ = ตรงภาพ 7-8 · ถ้า id ไม่ตรง catalog จะเห็น toast `รายการจากลิงก์หาไม่อยู่ในเมนูปัจจุบัน` (Owner ไม่เล่า = น่าจะเป็น branch เงียบ)
+- คำตอบผิด catalog: `getShopContext` ส่ง MENU จริงแต่ **draft validation ไม่บังคับว่าคำตอบต้องอ้างจากรายการนั้น** → AI แต่งชื่อสินค้าเองได้ (ภาพ 6)
+- **แผนแก้ (รอปลดล็อก):** ลิงก์ = เขียนจากระบบเท่านั้น (มีแล้ว) + บังคับคำตอบอ้าง catalog เท่านั้น + decode-fail/missing ต้องมี toast บอกสาเหตุ (ห้ามเงียบ) + ตัด URL ให้ครบเสมอ
+
+**B7 — อ่านไลบรารีครบแล้ว:**
+- `node_modules/niimbot-web-bluetooth/src/` มี 3 ไฟล์: `niimbot.js` (ไดรเวอร์ — **ไม่มีคำว่า gap/continuous/sensor เลย** = ฝั่ง JS ไม่มี logic ช่องม้วน ส่ง size ต่อหน้าเท่านั้น · firmware/เซนเซอร์เครื่องจัดการเอง) · `label-size.js` (`sizeFromMm` mm→px ล้วน) · `label-memory.js` (จำ size ตาม barcode ม้วน — ไม่เกี่ยวกับ gap) · README/protocol-v4 = ไม่มีคำว่า gap/pitch ด้วย
+- `src/lib/niimbotBt.ts` = `stickerSize()` → `h_px = stickerPageHeight(offset, faceH)` (R41: หน้า = **faceH เท่านั้น ไม่ grow**) · `printBatch` = pipelined pages วิ่งยาว
+- → **โมเดลหน้าปัจจุบันสั้นกว่า pitch จริง (face + ช่องว่างม้วน) = ตรงสมมติฐาน** · **ยังต้องการตัวเลขจาก Owner: วัด pitch ×4 (ระยะใบ 1→4 หาร 3 เป็น มม. × 11.81 = px)** จึงเทสต์ page = pitch vs faceH ได้ — **ห้ามเดา**
 
 ### B1 — ตั้งเวลาโพสได้แค่อันเดียว + `ERR_APPROVAL_REQUIRED` (+ dialog ข้อความเพี้ยน)
 - **อาการ/ภาพ:** กดตั้งเวลา/เผยแพร่จากแถว `pending_approval` → toast **`ส่งงานไม่สำเร็จ: ERR_APPROVAL_REQUIRED`** (ภาพ 1) · ทำได้รอบเดียวรอบถัดพัง · dialog ภาษาในภาพ 1 อ่านเพี้ยน
@@ -59,8 +95,8 @@
 
 | # | งาน | สถานะ/หลักฐาน | ทำเมื่อไหร่ |
 |---|---|---|---|
-| 1 | ~~**CI HEAD `b8c8c15`**~~ | **ปิดแล้ว ✓ 2026-10-31:** probe = CI ✅ + Contract ✅ + automation-scheduler ✅ ×2 = **NO_FAILED_RUN** · HEAD ล่าสุด `ea2e422` (R43 plan) + followup HANDOFF_002 — รอ probe รอบเดียวตอนปิดงาน | เสร็จ (probe ครั้งเดียวตอนจบ wave) |
-| 2 | **m178 cron ยิงซ้ำจริงไหม** | `cron.job_run_details` + `automation_queue` marketing รอบใหม่ + `g26-poll-*` + โพสต์ใหม่ (probe เดิม `r41f_state.cjs` → ต่อยอด `r43_*`) | คู่ B2/B3 |
+| 1 | ~~**CI HEAD `b8c8c15`**~~ | **ปิดแล้ว ✓:** probe `b8c8c15` = NO_FAILED_RUN · **รอบ probe เพิ่ม: HEAD `79cd6eb` = CI ✅ + Contract ✅ ×2 + automation-scheduler ✅ = NO_FAILED_RUN อีกครั้ง** | เสร็จ (probe ครั้งเดียวตอนจบ wave = รันแล้วรอบ `79cd6eb`) |
+| 2 | ~~**m178 cron ยิงซ้ำจริงไหม**~~ | **ปิดแล้ว ✓ (`e2e/r43_tick_probe.json` + `r43_publish_probe.json`):** `bmb-promote` ~100%/นาที · `bmb-tick` ทุก 5 นาที · `auto-exec-tick-mk-*` succeeded ต่อเนื่อง T09→T14 · `g26-poll-*` รายชม. ไม่ขาด · **พบ+พิสูจน์ root cause B2/B3 แล้ว = EF `automation-worker` production เก่า (deploy 30 ต.ค. vs โค้ด R39 31 ต.ค. ไม่เคยขึ้น) → `scanned=0` ทุก tick** | เสร็จ — คู่ B2/B3 (แก้ = deploy เมื่อยกห้าม) |
 | 3 | **Web bundle Cloudflare** = R40/R41/R42 UI ขึ้นจริงไหม (`sticker-wizard`, `ai-album`, `mk-gen-status`) | `node e2e\r41_web_bundle_probe.cjs` (รอบก่อน = ยังไม่ live) | หลังข้อ 1 |
 | 4 | **Q-A..Q-D (§Q)** — Q-B ย่อย "ดวงเดี่ยว" **ผ่าน ✓** (ตำแหน่ง/ขนาด OK) · เหลือ: Q-A เจนรูป · Q-B ×4 (→B7) · Q-C ตั้งเวลา (→B1/B2) · Q-D คอมเม้น ≤3นาที (→B4) | รอ Owner/ผูก B1-B7 | ระหว่าง wave |
 | 5 | **D-1/D-2/D-3 (§N.3) + D-4 ใหม่ (ช่องทางแจ้งเตือน B5)** | ถาม Owner รอบเดียว | ก่อนลงมือ B5 |
@@ -71,15 +107,15 @@
 
 ## 🎬 Runbook แชทหน้า (ลำดับรันจริง — bootstrap ก่อนเสมอ)
 
-0. **Bootstrap ตามกติกา:** อ่าน `AI_ENTRYPOINT.md` → `UNIVERSAL_MASTER_AI_RULES.md` → `AI_WORK_STATE.md` (บล็อก R43 บนสุด) · ยืนยัน **คำสั่งห้ามแก้โค้ดถูกปลดหรือยัง** — ถ้ายัง = ทำเฉพาะ read/probe/docs เท่านั้น
-1. `node e2e\r36_ci_probe.cjs` → ยืนยัน `b8c8c15` เขียว (ถ้าแดง = อ่าน log ก่อน ห้ามแก้โค้ดถ้ายังถูกห้าม)
-2. **B2/B3 probe (read-only):** เขียน `e2e/r43_publish_probe.cjs` → SQL marketing_posts/automation_queue/cron.job_run_details 24-48ชม + FB feed read-only → `r43_publish_probe.json` (keys: `posts`, `queue`, `cron_runs`, `approved_not_on_fb`) → **สรุปต้นตอก่อนเสนอแผนแก้**
-3. **B1 read:** `findstr ERR_APPROVAL_REQUIRED` + อ่าน AdminMarketing/adminMarketing → ระบุ path ที่พัง + string dialog เพี้ยน → สรุป
-4. **B4/B6 read:** อ่าน social-ai-worker prompt assembly + หาแหล่ง state same-day/pre-order ใน `src/lib` + อ่านหน้า shop รับ `cart=` ไหม → ออกแบบ payload บริการสด + นโยบายลิงก์ (แผนเท่านั้น)
-5. **B5:** probe ระบบ notification ที่มี → ถาม Owner **D-4** (ช่องทาง/ผู้รับ) + **D-1..D-3 เดิม** รอบเดียว
-6. **B7:** อ่าน lib niimbot continuous/gap + stickerPng → **ขอ Owner วัด pitch ×4 (มม.) ×11.81** + รูปม้วน → เทียบ page=faceH
-7. **เมื่อ Owner ยกห้ามแก้ → wave R43 เรียง:** B1 → B4+B6 (ชุดเดียวกัน) → B2/B3 (ตาม evidence) → B7 (ตามตัวเลขวัด) → B5 (ตาม D-4) · **ทุก commit = lint chain ก่อน · test single-run · evidence json · ห้ามมีอักขระจีน · secrets ไม่ลง git · two-try rule**
-8. เอกสารปิด: TEST_PACK **§R (R43)** + work-state + master + แฮนออฟอัปเดต · push แล้ว **probe CI ครั้งเดียว**
+0. ✅ **Bootstrap (ทำแล้ว):** อ่าน `AI_ENTRYPOINT.md` → `UNIVERSAL_MASTER_AI_RULES.md` → `AI_WORK_STATE.md` (บล็อก R43 บนสุด) · **คำสั่งห้ามแก้โค้ด = ยังไม่ปลด** → รอบนี้ทำเฉพาะ read/probe/docs เท่านั้น
+1. ✅ **CI probe (ทำแล้ว):** `node e2e\r36_ci_probe.cjs` → **`79cd6eb` เขียวทั้ง CI + Contract ×2 + automation-scheduler = NO_FAILED_RUN**
+2. ✅ **B2/B3 probe (ทำแล้ว — evidence ครบ):** `e2e/r43_publish_probe.cjs` → `r43_publish_probe.json` (keys: `marketing_posts_48h` · `automation_queue_48h` · `cron_runs_48h` · **`approved_not_on_fb`** · `fb_compare`) + ต่อยอด `r43_approval_probe.cjs` · `r43_due_query_probe.cjs` · `r43_tick_probe.cjs` · `r43_ef_versions_probe.cjs` → **root cause = EF `automation-worker` production เก่า (ดูบล็อกผล probe ด้านบน)**
+3. ✅ **B1 read (ทำแล้ว):** `ERR_APPROVAL_REQUIRED` = RPC + worker guard (m137/147 · automation-worker 554/565) · path พัง = ปุ่มตั้งเวลาไม่ gate approval (`AdminMarketing:147/545`) · string จริงเทียบภาพ 1 = ดูบล็อกผล probe
+4. ✅ **B4/B6 read (ทำแล้ว):** prompt = static `SHOP_FACTS_TH` ไม่มีสถานะสด · แหล่ง state จริง = `homeProviders.getStoreStatusFromRounds` · `/shop?cart=` Layout รับจริงแต่ **decode-fail = เงียบ** → ออกแบบ payload/นโยบาย = ดูบล็อกผล probe (แผนเท่านั้น ยังไม่ลงมือ)
+5. ✅ **B5 probe (ทำแล้ว):** โครง notification ครบ → **ยังรอถาม Owner D-4 (ช่องทาง/ผู้รับ) + D-1..D-3 เดิม รอบเดียว** (ถามพร้อมกันเมื่อส่งสรุป)
+6. ✅ **B7 read (ทำแล้ว):** lib ไม่มี logic gap/continuous (firmware จัดการ) · `stickerSize` = faceH คงที่ → **ยังขอ Owner วัด pitch ×4 (มม.) ×11.81 + รูปม้วน** (ถามพร้อม D-4)
+7. ⬜ **เมื่อ Owner ยกห้ามแก้ → wave R43 เรียง:** **① deploy `automation-worker` จาก HEAD (B2/B3 — โค้ดมีแล้ว ไม่ต้องเขียน)** → ② B1 gate + B4 live context + B6 catalog/toast → ③ B7 (ตามตัวเลขวัด) → ④ B5 (ตาม D-4) · **ทุก commit = lint chain ก่อน · test single-run · evidence json · ห้ามมีอักขระจีน · secrets ไม่ลง git · two-try rule**
+8. ⬜ **เอกสารปิด wave (ทำรอบนี้แล้วบางส่วน):** TEST_PACK **§R (R43)** + work-state + master + แฮนออฟอัปเดต = **เขียนแล้วรอบ probe นี้** · push แล้ว **probe CI ครั้งเดียว** = รันตอนจบcommit
 ## 0. HEAD + CI (สำคัญสุด — เช็คก่อนงานอื่น)
 
 - **R43 — ⚠️ PLANNED ONLY (คำสั่ง Owner "ห้ามโค้ดแก้" · 2026-10-31 20:40):** บั๊กใหม่ 7 ข้อ = B1 ตั้งเวลาเดียว+ERR_APPROVAL_REQUIRED+dialog เพี้ยน · B2/B3 โพส FB ไม่ตรงเวลา/มาไม่ครบ/ approve แล้วไม่ขึ้น · B4 AI ผิดบริบท (ปิด same-day → ได้แต่ pre-order) · B5 แจ้งเตือนลูกค้าเมื่อบอตโพส/ตอบ (**D-4**) · B6 ลิงก์ cart=ไม่มีของจริง · B7 ×4 ต่อเนื่อง=2-เว้น-1 (เดี่ยวผ่าน ✓) → **ผังละเอียด (อาการ/probe อ่านอย่างเดียว/แผนแก้/verify) + งานค้างรวม 9 ข้อ + Runbook ข้อ 0-8 = ในไฟล์นี้หัวข้อ R43 ด้านบน** · **แชทหน้า: bootstrap → CI probe `b8c8c15` → read-only probes B2/B1/B4/B6 → ถาม D-1..D-4 → รอปลดห้ามแล้วลงมือเรียง B1→B4/B6→B2/B3→B7→B5**

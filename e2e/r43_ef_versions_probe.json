@@ -1,0 +1,121 @@
+{
+  "ran_at": "2026-10-31T14:20:16.274Z",
+  "tick_exec_meta": [
+    {
+      "id": "auto-exec-tick-mk-20261031t1420",
+      "metadata": {
+        "job": "marketing_publish",
+        "errors": [],
+        "status": "succeeded",
+        "results": {
+          "comment_poll": {
+            "ok": true,
+            "seen": 4,
+            "posts": 2,
+            "kicked": 0,
+            "page_id": "862940416913026",
+            "unbound": 0,
+            "inserted": 0,
+            "duplicate": 4
+          },
+          "marketing_publish": {
+            "failed": 0,
+            "scanned": 0,
+            "skipped": 0,
+            "published": 0
+          }
+        },
+        "event_id": "tick-mk-20261031t1420",
+        "finished_at": "2026-10-31T14:20:05.821Z",
+        "execution_id": "47ad7de5-8443-4fb3-9869-6005bf05fe71"
+      },
+      "created_at": "2026-10-31 14:20:05.83876+00"
+    },
+    {
+      "id": "auto-exec-tick-mk-20261031t1415",
+      "metadata": {
+        "job": "marketing_publish",
+        "errors": [],
+        "status": "succeeded",
+        "results": {
+          "comment_poll": {
+            "ok": true,
+            "seen": 4,
+            "posts": 2,
+            "kicked": 0,
+            "page_id": "862940416913026",
+            "unbound": 0,
+            "inserted": 0,
+            "duplicate": 4
+          },
+          "marketing_publish": {
+            "failed": 0,
+            "scanned": 0,
+            "skipped": 0,
+            "published": 0
+          }
+        },
+        "event_id": "tick-mk-20261031t1415",
+        "finished_at": "2026-10-31T14:15:06.795Z",
+        "execution_id": "af062139-b854-49bb-be58-5ef5871f79cd"
+      },
+      "created_at": "2026-10-31 14:15:06.801611+00"
+    },
+    {
+      "id": "auto-exec-tick-mk-20261031t1410",
+      "metadata": {
+        "job": "marketing_publish",
+        "errors": [],
+        "status": "succeeded",
+        "results": {
+          "comment_poll": {
+            "ok": true,
+            "seen": 4,
+            "posts": 2,
+            "kicked": 0,
+            "page_id": "862940416913026",
+            "unbound": 0,
+            "inserted": 0,
+            "duplicate": 4
+          },
+          "marketing_publish": {
+            "failed": 0,
+            "scanned": 0,
+            "skipped": 0,
+            "published": 0
+          }
+        },
+        "event_id": "tick-mk-20261031t1410",
+        "finished_at": "2026-10-31T14:10:07.107Z",
+        "execution_id": "9ec59429-8b9d-4bbc-a40e-d2f8af51dfc5"
+      },
+      "created_at": "2026-10-31 14:10:07.141782+00"
+    }
+  ],
+  "functions": [
+    {
+      "name": "automation-worker",
+      "version": 71,
+      "updated_at": 1793342178590,
+      "status": "ACTIVE"
+    },
+    {
+      "name": "social-ai-worker",
+      "version": 62,
+      "updated_at": 1793355409365,
+      "status": "ACTIVE"
+    },
+    {
+      "name": "social-publish-worker",
+      "version": 32,
+      "updated_at": 1793342172626,
+      "status": "ACTIVE"
+    },
+    {
+      "name": "cron-tick",
+      "version": 5,
+      "updated_at": 1793428324392,
+      "status": "ACTIVE"
+    }
+  ]
+}

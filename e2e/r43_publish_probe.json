@@ -1,0 +1,2047 @@
+{
+  "probe": "r43_publish_probe",
+  "ran_at": "2026-10-31T14:14:22.766Z",
+  "window": "48h",
+  "read_only": true,
+  "now": {
+    "ok": true,
+    "rows": [
+      {
+        "utc": "2026-10-31 14:14:23.703657+00",
+        "ict": "2026-10-31 21:14:23.703657"
+      }
+    ]
+  },
+  "marketing_posts_48h": {
+    "ok": true,
+    "rows": [
+      {
+        "id": "mk-mvweinnv-n5w0",
+        "status": "pending_approval",
+        "has_approval": true,
+        "content_type": "post",
+        "scheduled_for": null,
+        "published_at": null,
+        "provider_post_id": null,
+        "error": null,
+        "publish_attempts": 0,
+        "created_at": "2026-10-31 12:52:45.432678+00",
+        "updated_at": "2026-10-31 12:52:45.432678+00"
+      },
+      {
+        "id": "mk-mvwegu4b-o482",
+        "status": "published",
+        "has_approval": true,
+        "content_type": "post",
+        "scheduled_for": "2026-10-31 13:00:00+00",
+        "published_at": "2026-10-31 13:00:00+00",
+        "provider_post_id": null,
+        "error": null,
+        "publish_attempts": 1,
+        "created_at": "2026-10-31 12:51:20.495668+00",
+        "updated_at": "2026-10-31 13:00:00.062616+00"
+      },
+      {
+        "id": "mk-mvvz4n44-c60w",
+        "status": "published",
+        "has_approval": true,
+        "content_type": "post",
+        "scheduled_for": "2026-10-31 05:46:00+00",
+        "published_at": "2026-10-31 06:33:37.096+00",
+        "provider_post_id": "862940416913026_122145808257204867",
+        "error": null,
+        "publish_attempts": 1,
+        "created_at": "2026-10-31 05:41:57.303289+00",
+        "updated_at": "2026-10-31 06:33:37.096+00"
+      },
+      {
+        "id": "mk-mvvtvqwv-3zjr",
+        "status": "published",
+        "has_approval": true,
+        "content_type": "announcement",
+        "scheduled_for": "2026-10-31 03:17:00+00",
+        "published_at": "2026-10-31 03:17:00+00",
+        "provider_post_id": null,
+        "error": null,
+        "publish_attempts": 1,
+        "created_at": "2026-10-31 03:15:04.329951+00",
+        "updated_at": "2026-10-31 03:43:46.808374+00"
+      },
+      {
+        "id": "mk-mvvspkna-n6uf",
+        "status": "published",
+        "has_approval": true,
+        "content_type": "announcement",
+        "scheduled_for": "2026-10-31 02:50:00+00",
+        "published_at": "2026-10-31 02:50:00+00",
+        "provider_post_id": null,
+        "error": null,
+        "publish_attempts": 1,
+        "created_at": "2026-10-31 02:42:16.64081+00",
+        "updated_at": "2026-10-31 03:43:46.808374+00"
+      },
+      {
+        "id": "mk-mvub0nrs-fapj",
+        "status": "published",
+        "has_approval": true,
+        "content_type": "announcement",
+        "scheduled_for": "2026-10-30 02:00:00+00",
+        "published_at": "2026-10-30 04:27:44.059+00",
+        "provider_post_id": "862940416913026_122145661545204867",
+        "error": null,
+        "publish_attempts": 2,
+        "created_at": "2026-10-30 01:39:15.455308+00",
+        "updated_at": "2026-10-30 04:27:44.059+00"
+      }
+    ]
+  },
+  "approved_not_on_fb": {
+    "ok": true,
+    "rows": [
+      {
+        "id": "mk-mvwegu4b-o482",
+        "status": "published",
+        "has_approval": true,
+        "scheduled_for": "2026-10-31 13:00:00+00",
+        "published_at": "2026-10-31 13:00:00+00",
+        "provider_post_id": null,
+        "error": null,
+        "publish_attempts": 1,
+        "updated_at": "2026-10-31 13:00:00.062616+00"
+      },
+      {
+        "id": "mk-mvvspkna-n6uf",
+        "status": "published",
+        "has_approval": true,
+        "scheduled_for": "2026-10-31 02:50:00+00",
+        "published_at": "2026-10-31 02:50:00+00",
+        "provider_post_id": null,
+        "error": null,
+        "publish_attempts": 1,
+        "updated_at": "2026-10-31 03:43:46.808374+00"
+      },
+      {
+        "id": "mk-mvvtvqwv-3zjr",
+        "status": "published",
+        "has_approval": true,
+        "scheduled_for": "2026-10-31 03:17:00+00",
+        "published_at": "2026-10-31 03:17:00+00",
+        "provider_post_id": null,
+        "error": null,
+        "publish_attempts": 1,
+        "updated_at": "2026-10-31 03:43:46.808374+00"
+      }
+    ]
+  },
+  "automation_queue_48h": {
+    "ok": true,
+    "rows": [
+      {
+        "id": "sched-inventory_low_stock-gh-stock-20261031t12",
+        "job_type": "inventory_low_stock",
+        "worker": "automation-worker",
+        "payload": {
+          "stockThreshold": 3
+        },
+        "status": "succeeded",
+        "attempt_count": 1,
+        "max_attempts": 3,
+        "available_at": "2026-10-31 12:16:24.243348+00",
+        "next_retry_at": null,
+        "claimed_at": "2026-10-31 12:16:25.337589+00",
+        "lease_until": "2026-10-31 12:21:25.337589+00",
+        "started_at": "2026-10-31 12:16:25.337589+00",
+        "completed_at": "2026-10-31 12:16:27.509252+00",
+        "failed_at": null,
+        "last_error": null,
+        "failure_reason": null,
+        "created_at": "2026-10-31 12:16:24.243348+00",
+        "updated_at": "2026-10-31 12:16:27.509252+00"
+      },
+      {
+        "id": "sched-marketing_publish-gh-mk-20261031t12",
+        "job_type": "marketing_publish",
+        "worker": "automation-worker",
+        "payload": {
+          "limit": 10
+        },
+        "status": "succeeded",
+        "attempt_count": 1,
+        "max_attempts": 3,
+        "available_at": "2026-10-31 12:16:24.229277+00",
+        "next_retry_at": null,
+        "claimed_at": "2026-10-31 12:16:27.192309+00",
+        "lease_until": "2026-10-31 12:21:27.192309+00",
+        "started_at": "2026-10-31 12:16:27.192309+00",
+        "completed_at": "2026-10-31 12:16:33.404501+00",
+        "failed_at": null,
+        "last_error": null,
+        "failure_reason": null,
+        "created_at": "2026-10-31 12:16:24.229277+00",
+        "updated_at": "2026-10-31 12:16:33.404501+00"
+      },
+      {
+        "id": "sched-orders_stale_pending-gh-stale-20261031t0812",
+        "job_type": "orders_stale_pending",
+        "worker": "automation-worker",
+        "payload": {
+          "maxAgeMinutes": 120
+        },
+        "status": "succeeded",
+        "attempt_count": 1,
+        "max_attempts": 3,
+        "available_at": "2026-10-31 08:12:59.806656+00",
+        "next_retry_at": null,
+        "claimed_at": "2026-10-31 08:13:00.619079+00",
+        "lease_until": "2026-10-31 08:18:00.619079+00",
+        "started_at": "2026-10-31 08:13:00.619079+00",
+        "completed_at": "2026-10-31 08:13:02.011261+00",
+        "failed_at": null,
+        "last_error": null,
+        "failure_reason": null,
+        "created_at": "2026-10-31 08:12:59.806656+00",
+        "updated_at": "2026-10-31 08:13:02.011261+00"
+      },
+      {
+        "id": "sched-marketing_publish-gh-mk-20261031t08",
+        "job_type": "marketing_publish",
+        "worker": "automation-worker",
+        "payload": {
+          "limit": 10
+        },
+        "status": "succeeded",
+        "attempt_count": 1,
+        "max_attempts": 3,
+        "available_at": "2026-10-31 08:12:43.889813+00",
+        "next_retry_at": null,
+        "claimed_at": "2026-10-31 08:12:45.053389+00",
+        "lease_until": "2026-10-31 08:17:45.053389+00",
+        "started_at": "2026-10-31 08:12:45.053389+00",
+        "completed_at": "2026-10-31 08:12:53.176407+00",
+        "failed_at": null,
+        "last_error": null,
+        "failure_reason": null,
+        "created_at": "2026-10-31 08:12:43.889813+00",
+        "updated_at": "2026-10-31 08:12:53.176407+00"
+      },
+      {
+        "id": "sched-notification_dispatch-gh-dispatch-20261031t0812",
+        "job_type": "notification_dispatch",
+        "worker": "automation-worker",
+        "payload": {
+          "limit": 200,
+          "lookbackMinutes": 360
+        },
+        "status": "succeeded",
+        "attempt_count": 1,
+        "max_attempts": 3,
+        "available_at": "2026-10-31 08:12:43.889761+00",
+        "next_retry_at": null,
+        "claimed_at": "2026-10-31 08:12:45.069315+00",
+        "lease_until": "2026-10-31 08:17:45.069315+00",
+        "started_at": "2026-10-31 08:12:45.069315+00",
+        "completed_at": "2026-10-31 08:12:58.482745+00",
+        "failed_at": null,
+        "last_error": null,
+        "failure_reason": null,
+        "created_at": "2026-10-31 08:12:43.889761+00",
+        "updated_at": "2026-10-31 08:12:58.482745+00"
+      },
+      {
+        "id": "sched-inventory_low_stock-gh-stock-20261031t05",
+        "job_type": "inventory_low_stock",
+        "worker": "automation-worker",
+        "payload": {
+          "stockThreshold": 3
+        },
+        "status": "succeeded",
+        "attempt_count": 1,
+        "max_attempts": 3,
+        "available_at": "2026-10-31 05:29:33.644658+00",
+        "next_retry_at": null,
+        "claimed_at": "2026-10-31 05:29:34.609324+00",
+        "lease_until": "2026-10-31 05:34:34.609324+00",
+        "started_at": "2026-10-31 05:29:34.609324+00",
+        "completed_at": "2026-10-31 05:29:36.711947+00",
+        "failed_at": null,
+        "last_error": null,
+        "failure_reason": null,
+        "created_at": "2026-10-31 05:29:33.644658+00",
+        "updated_at": "2026-10-31 05:29:36.711947+00"
+      },
+      {
+        "id": "sched-marketing_publish-gh-mk-20261031t05",
+        "job_type": "marketing_publish",
+        "worker": "automation-worker",
+        "payload": {
+          "limit": 10
+        },
+        "status": "succeeded",
+        "attempt_count": 1,
+        "max_attempts": 3,
+        "available_at": "2026-10-31 05:29:32.958111+00",
+        "next_retry_at": null,
+        "claimed_at": "2026-10-31 05:29:34.012829+00",
+        "lease_until": "2026-10-31 05:34:34.012829+00",
+        "started_at": "2026-10-31 05:29:34.012829+00",
+        "completed_at": "2026-10-31 05:29:38.952755+00",
+        "failed_at": null,
+        "last_error": null,
+        "failure_reason": null,
+        "created_at": "2026-10-31 05:29:32.958111+00",
+        "updated_at": "2026-10-31 05:29:38.952755+00"
+      },
+      {
+        "id": "sched-orders_stale_pending-gh-stale-20261031t0155",
+        "job_type": "orders_stale_pending",
+        "worker": "automation-worker",
+        "payload": {
+          "maxAgeMinutes": 120
+        },
+        "status": "succeeded",
+        "attempt_count": 1,
+        "max_attempts": 3,
+        "available_at": "2026-10-31 01:55:31.755551+00",
+        "next_retry_at": null,
+        "claimed_at": "2026-10-31 01:55:32.247082+00",
+        "lease_until": "2026-10-31 02:00:32.247082+00",
+        "started_at": "2026-10-31 01:55:32.247082+00",
+        "completed_at": "2026-10-31 01:55:33.971807+00",
+        "failed_at": null,
+        "last_error": null,
+        "failure_reason": null,
+        "created_at": "2026-10-31 01:55:31.755551+00",
+        "updated_at": "2026-10-31 01:55:33.971807+00"
+      },
+      {
+        "id": "sched-notification_dispatch-gh-dispatch-20261031t0155",
+        "job_type": "notification_dispatch",
+        "worker": "automation-worker",
+        "payload": {
+          "limit": 200,
+          "lookbackMinutes": 360
+        },
+        "status": "succeeded",
+        "attempt_count": 1,
+        "max_attempts": 3,
+        "available_at": "2026-10-31 01:55:18.166661+00",
+        "next_retry_at": null,
+        "claimed_at": "2026-10-31 01:55:19.376817+00",
+        "lease_until": "2026-10-31 02:00:19.376817+00",
+        "started_at": "2026-10-31 01:55:19.376817+00",
+        "completed_at": "2026-10-31 01:55:30.278264+00",
+        "failed_at": null,
+        "last_error": null,
+        "failure_reason": null,
+        "created_at": "2026-10-31 01:55:18.166661+00",
+        "updated_at": "2026-10-31 01:55:30.278264+00"
+      },
+      {
+        "id": "sched-inventory_low_stock-gh-stock-20261030t23",
+        "job_type": "inventory_low_stock",
+        "worker": "automation-worker",
+        "payload": {
+          "stockThreshold": 3
+        },
+        "status": "succeeded",
+        "attempt_count": 1,
+        "max_attempts": 3,
+        "available_at": "2026-10-30 23:41:23.788962+00",
+        "next_retry_at": null,
+        "claimed_at": "2026-10-30 23:41:24.251095+00",
+        "lease_until": "2026-10-30 23:46:24.251095+00",
+        "started_at": "2026-10-30 23:41:24.251095+00",
+        "completed_at": "2026-10-30 23:41:25.670404+00",
+        "failed_at": null,
+        "last_error": null,
+        "failure_reason": null,
+        "created_at": "2026-10-30 23:41:23.788962+00",
+        "updated_at": "2026-10-30 23:41:25.670404+00"
+      },
+      {
+        "id": "sched-marketing_publish-gh-mk-20261030t23",
+        "job_type": "marketing_publish",
+        "worker": "automation-worker",
+        "payload": {
+          "limit": 10
+        },
+        "status": "succeeded",
+        "attempt_count": 1,
+        "max_attempts": 3,
+        "available_at": "2026-10-30 23:41:14.425125+00",
+        "next_retry_at": null,
+        "claimed_at": "2026-10-30 23:41:15.464091+00",
+        "lease_until": "2026-10-30 23:46:15.464091+00",
+        "started_at": "2026-10-30 23:41:15.464091+00",
+        "completed_at": "2026-10-30 23:41:19.607691+00",
+        "failed_at": null,
+        "last_error": null,
+        "failure_reason": null,
+        "created_at": "2026-10-30 23:41:14.425125+00",
+        "updated_at": "2026-10-30 23:41:19.607691+00"
+      },
+      {
+        "id": "sched-orders_stale_pending-gh-stale-20261030t2249",
+        "job_type": "orders_stale_pending",
+        "worker": "automation-worker",
+        "payload": {
+          "maxAgeMinutes": 120
+        },
+        "status": "succeeded",
+        "attempt_count": 1,
+        "max_attempts": 3,
+        "available_at": "2026-10-30 22:49:45.77826+00",
+        "next_retry_at": null,
+        "claimed_at": "2026-10-30 22:49:46.625005+00",
+        "lease_until": "2026-10-30 22:54:46.625005+00",
+        "started_at": "2026-10-30 22:49:46.625005+00",
+        "completed_at": "2026-10-30 22:49:48.744099+00",
+        "failed_at": null,
+        "last_error": null,
+        "failure_reason": null,
+        "created_at": "2026-10-30 22:49:45.77826+00",
+        "updated_at": "2026-10-30 22:49:48.744099+00"
+      },
+      {
+        "id": "sched-notification_dispatch-gh-dispatch-20261030t2249",
+        "job_type": "notification_dispatch",
+        "worker": "automation-worker",
+        "payload": {
+          "limit": 200,
+          "lookbackMinutes": 360
+        },
+        "status": "succeeded",
+        "attempt_count": 1,
+        "max_attempts": 3,
+        "available_at": "2026-10-30 22:49:39.86118+00",
+        "next_retry_at": null,
+        "claimed_at": "2026-10-30 22:49:41.004227+00",
+        "lease_until": "2026-10-30 22:54:41.004227+00",
+        "started_at": "2026-10-30 22:49:41.004227+00",
+        "completed_at": "2026-10-30 22:49:44.369526+00",
+        "failed_at": null,
+        "last_error": null,
+        "failure_reason": null,
+        "created_at": "2026-10-30 22:49:39.86118+00",
+        "updated_at": "2026-10-30 22:49:44.369526+00"
+      },
+      {
+        "id": "sched-marketing_publish-gh-mk-20261030t19",
+        "job_type": "marketing_publish",
+        "worker": "automation-worker",
+        "payload": {
+          "limit": 10
+        },
+        "status": "succeeded",
+        "attempt_count": 1,
+        "max_attempts": 3,
+        "available_at": "2026-10-30 19:18:31.660553+00",
+        "next_retry_at": null,
+        "claimed_at": "2026-10-30 19:18:32.654204+00",
+        "lease_until": "2026-10-30 19:23:32.654204+00",
+        "started_at": "2026-10-30 19:18:32.654204+00",
+        "completed_at": "2026-10-30 19:18:37.716923+00",
+        "failed_at": null,
+        "last_error": null,
+        "failure_reason": null,
+        "created_at": "2026-10-30 19:18:31.660553+00",
+        "updated_at": "2026-10-30 19:18:37.716923+00"
+      },
+      {
+        "id": "sched-inventory_low_stock-gh-stock-20261030t19",
+        "job_type": "inventory_low_stock",
+        "worker": "automation-worker",
+        "payload": {
+          "stockThreshold": 3
+        },
+        "status": "succeeded",
+        "attempt_count": 1,
+        "max_attempts": 3,
+        "available_at": "2026-10-30 19:18:31.65649+00",
+        "next_retry_at": null,
+        "claimed_at": "2026-10-30 19:18:32.834652+00",
+        "lease_until": "2026-10-30 19:23:32.834652+00",
+        "started_at": "2026-10-30 19:18:32.834652+00",
+        "completed_at": "2026-10-30 19:18:35.510563+00",
+        "failed_at": null,
+        "last_error": null,
+        "failure_reason": null,
+        "created_at": "2026-10-30 19:18:31.65649+00",
+        "updated_at": "2026-10-30 19:18:35.510563+00"
+      },
+      {
+        "id": "sched-orders_stale_pending-gh-stale-20261030t1854",
+        "job_type": "orders_stale_pending",
+        "worker": "automation-worker",
+        "payload": {
+          "maxAgeMinutes": 120
+        },
+        "status": "succeeded",
+        "attempt_count": 1,
+        "max_attempts": 3,
+        "available_at": "2026-10-30 18:54:07.130128+00",
+        "next_retry_at": null,
+        "claimed_at": "2026-10-30 18:54:07.971799+00",
+        "lease_until": "2026-10-30 18:59:07.971799+00",
+        "started_at": "2026-10-30 18:54:07.971799+00",
+        "completed_at": "2026-10-30 18:54:10.073663+00",
+        "failed_at": null,
+        "last_error": null,
+        "failure_reason": null,
+        "created_at": "2026-10-30 18:54:07.130128+00",
+        "updated_at": "2026-10-30 18:54:10.073663+00"
+      },
+      {
+        "id": "sched-notification_dispatch-gh-dispatch-20261030t1854",
+        "job_type": "notification_dispatch",
+        "worker": "automation-worker",
+        "payload": {
+          "limit": 200,
+          "lookbackMinutes": 360
+        },
+        "status": "succeeded",
+        "attempt_count": 1,
+        "max_attempts": 3,
+        "available_at": "2026-10-30 18:54:01.475223+00",
+        "next_retry_at": null,
+        "claimed_at": "2026-10-30 18:54:02.605389+00",
+        "lease_until": "2026-10-30 18:59:02.605389+00",
+        "started_at": "2026-10-30 18:54:02.605389+00",
+        "completed_at": "2026-10-30 18:54:05.666439+00",
+        "failed_at": null,
+        "last_error": null,
+        "failure_reason": null,
+        "created_at": "2026-10-30 18:54:01.475223+00",
+        "updated_at": "2026-10-30 18:54:05.666439+00"
+      },
+      {
+        "id": "sched-inventory_low_stock-gh-stock-20261030t14",
+        "job_type": "inventory_low_stock",
+        "worker": "automation-worker",
+        "payload": {
+          "stockThreshold": 3
+        },
+        "status": "succeeded",
+        "attempt_count": 1,
+        "max_attempts": 3,
+        "available_at": "2026-10-30 14:03:56.671149+00",
+        "next_retry_at": null,
+        "claimed_at": "2026-10-30 14:03:57.715697+00",
+        "lease_until": "2026-10-30 14:08:57.715697+00",
+        "started_at": "2026-10-30 14:03:57.715697+00",
+        "completed_at": "2026-10-30 14:04:00.440547+00",
+        "failed_at": null,
+        "last_error": null,
+        "failure_reason": null,
+        "created_at": "2026-10-30 14:03:56.671149+00",
+        "updated_at": "2026-10-30 14:04:00.440547+00"
+      },
+      {
+        "id": "sched-marketing_publish-gh-mk-20261030t14",
+        "job_type": "marketing_publish",
+        "worker": "automation-worker",
+        "payload": {
+          "limit": 10
+        },
+        "status": "succeeded",
+        "attempt_count": 1,
+        "max_attempts": 3,
+        "available_at": "2026-10-30 14:03:56.671119+00",
+        "next_retry_at": null,
+        "claimed_at": "2026-10-30 14:04:01.654686+00",
+        "lease_until": "2026-10-30 14:09:01.654686+00",
+        "started_at": "2026-10-30 14:04:01.654686+00",
+        "completed_at": "2026-10-30 14:04:06.536275+00",
+        "failed_at": null,
+        "last_error": null,
+        "failure_reason": null,
+        "created_at": "2026-10-30 14:03:56.671119+00",
+        "updated_at": "2026-10-30 14:04:06.536275+00"
+      },
+      {
+        "id": "sched-orders_stale_pending-gh-stale-20261030t1344",
+        "job_type": "orders_stale_pending",
+        "worker": "automation-worker",
+        "payload": {
+          "maxAgeMinutes": 120
+        },
+        "status": "succeeded",
+        "attempt_count": 1,
+        "max_attempts": 3,
+        "available_at": "2026-10-30 13:44:50.243943+00",
+        "next_retry_at": null,
+        "claimed_at": "2026-10-30 13:44:50.857033+00",
+        "lease_until": "2026-10-30 13:49:50.857033+00",
+        "started_at": "2026-10-30 13:44:50.857033+00",
+        "completed_at": "2026-10-30 13:44:52.224492+00",
+        "failed_at": null,
+        "last_error": null,
+        "failure_reason": null,
+        "created_at": "2026-10-30 13:44:50.243943+00",
+        "updated_at": "2026-10-30 13:44:52.224492+00"
+      },
+      {
+        "id": "sched-notification_dispatch-gh-dispatch-20261030t1344",
+        "job_type": "notification_dispatch",
+        "worker": "automation-worker",
+        "payload": {
+          "limit": 200,
+          "lookbackMinutes": 360
+        },
+        "status": "succeeded",
+        "attempt_count": 1,
+        "max_attempts": 3,
+        "available_at": "2026-10-30 13:44:46.012331+00",
+        "next_retry_at": null,
+        "claimed_at": "2026-10-30 13:44:47.134652+00",
+        "lease_until": "2026-10-30 13:49:47.134652+00",
+        "started_at": "2026-10-30 13:44:47.134652+00",
+        "completed_at": "2026-10-30 13:44:49.203611+00",
+        "failed_at": null,
+        "last_error": null,
+        "failure_reason": null,
+        "created_at": "2026-10-30 13:44:46.012331+00",
+        "updated_at": "2026-10-30 13:44:49.203611+00"
+      },
+      {
+        "id": "sched-inventory_low_stock-gh-stock-20261030t07",
+        "job_type": "inventory_low_stock",
+        "worker": "automation-worker",
+        "payload": {
+          "stockThreshold": 3
+        },
+        "status": "succeeded",
+        "attempt_count": 1,
+        "max_attempts": 3,
+        "available_at": "2026-10-30 07:02:51.742246+00",
+        "next_retry_at": null,
+        "claimed_at": "2026-10-30 07:02:52.729564+00",
+        "lease_until": "2026-10-30 07:07:52.729564+00",
+        "started_at": "2026-10-30 07:02:52.729564+00",
+        "completed_at": "2026-10-30 07:02:54.640636+00",
+        "failed_at": null,
+        "last_error": null,
+        "failure_reason": null,
+        "created_at": "2026-10-30 07:02:51.742246+00",
+        "updated_at": "2026-10-30 07:02:54.640636+00"
+      },
+      {
+        "id": "sched-marketing_publish-gh-mk-20261030t07",
+        "job_type": "marketing_publish",
+        "worker": "automation-worker",
+        "payload": {
+          "limit": 10
+        },
+        "status": "succeeded",
+        "attempt_count": 1,
+        "max_attempts": 3,
+        "available_at": "2026-10-30 07:02:51.703906+00",
+        "next_retry_at": null,
+        "claimed_at": "2026-10-30 07:02:52.781714+00",
+        "lease_until": "2026-10-30 07:07:52.781714+00",
+        "started_at": "2026-10-30 07:02:52.781714+00",
+        "completed_at": "2026-10-30 07:02:56.752488+00",
+        "failed_at": null,
+        "last_error": null,
+        "failure_reason": null,
+        "created_at": "2026-10-30 07:02:51.703906+00",
+        "updated_at": "2026-10-30 07:02:56.752488+00"
+      },
+      {
+        "id": "sched-orders_stale_pending-gh-stale-20261030t0650",
+        "job_type": "orders_stale_pending",
+        "worker": "automation-worker",
+        "payload": {
+          "maxAgeMinutes": 120
+        },
+        "status": "succeeded",
+        "attempt_count": 1,
+        "max_attempts": 3,
+        "available_at": "2026-10-30 06:50:56.629126+00",
+        "next_retry_at": null,
+        "claimed_at": "2026-10-30 06:50:57.419802+00",
+        "lease_until": "2026-10-30 06:55:57.419802+00",
+        "started_at": "2026-10-30 06:50:57.419802+00",
+        "completed_at": "2026-10-30 06:50:59.586834+00",
+        "failed_at": null,
+        "last_error": null,
+        "failure_reason": null,
+        "created_at": "2026-10-30 06:50:56.629126+00",
+        "updated_at": "2026-10-30 06:50:59.586834+00"
+      },
+      {
+        "id": "sched-notification_dispatch-gh-dispatch-20261030t0650",
+        "job_type": "notification_dispatch",
+        "worker": "automation-worker",
+        "payload": {
+          "limit": 200,
+          "lookbackMinutes": 360
+        },
+        "status": "succeeded",
+        "attempt_count": 1,
+        "max_attempts": 3,
+        "available_at": "2026-10-30 06:50:48.904339+00",
+        "next_retry_at": null,
+        "claimed_at": "2026-10-30 06:50:51.811342+00",
+        "lease_until": "2026-10-30 06:55:51.811342+00",
+        "started_at": "2026-10-30 06:50:51.811342+00",
+        "completed_at": "2026-10-30 06:50:55.115994+00",
+        "failed_at": null,
+        "last_error": null,
+        "failure_reason": null,
+        "created_at": "2026-10-30 06:50:48.904339+00",
+        "updated_at": "2026-10-30 06:50:55.115994+00"
+      },
+      {
+        "id": "sched-marketing_publish-gh-mk-poll-v1",
+        "job_type": "marketing_publish",
+        "worker": "automation-worker",
+        "payload": {
+          "limit": 10
+        },
+        "status": "succeeded",
+        "attempt_count": 1,
+        "max_attempts": 3,
+        "available_at": "2026-10-30 06:36:46.908196+00",
+        "next_retry_at": null,
+        "claimed_at": "2026-10-30 06:36:55.481663+00",
+        "lease_until": "2026-10-30 06:41:55.481663+00",
+        "started_at": "2026-10-30 06:36:55.481663+00",
+        "completed_at": "2026-10-30 06:37:01.23454+00",
+        "failed_at": null,
+        "last_error": null,
+        "failure_reason": null,
+        "created_at": "2026-10-30 06:36:46.908196+00",
+        "updated_at": "2026-10-30 06:37:01.23454+00"
+      },
+      {
+        "id": "sched-marketing_publish-gh-mk-20261030t06",
+        "job_type": "marketing_publish",
+        "worker": "automation-worker",
+        "payload": {
+          "limit": 10
+        },
+        "status": "succeeded",
+        "attempt_count": 1,
+        "max_attempts": 3,
+        "available_at": "2026-10-30 06:35:11.17387+00",
+        "next_retry_at": null,
+        "claimed_at": "2026-10-30 06:35:12.400425+00",
+        "lease_until": "2026-10-30 06:40:12.400425+00",
+        "started_at": "2026-10-30 06:35:12.400425+00",
+        "completed_at": "2026-10-30 06:35:16.798423+00",
+        "failed_at": null,
+        "last_error": null,
+        "failure_reason": null,
+        "created_at": "2026-10-30 06:35:11.17387+00",
+        "updated_at": "2026-10-30 06:35:16.798423+00"
+      },
+      {
+        "id": "sched-marketing_publish-gh-mk-fix-20261030t0426",
+        "job_type": "marketing_publish",
+        "worker": "automation-worker",
+        "payload": {
+          "limit": 10
+        },
+        "status": "succeeded",
+        "attempt_count": 1,
+        "max_attempts": 3,
+        "available_at": "2026-10-30 04:27:27.856113+00",
+        "next_retry_at": null,
+        "claimed_at": "2026-10-30 04:27:35.166071+00",
+        "lease_until": "2026-10-30 04:32:35.166071+00",
+        "started_at": "2026-10-30 04:27:35.166071+00",
+        "completed_at": "2026-10-30 04:27:45.360348+00",
+        "failed_at": null,
+        "last_error": null,
+        "failure_reason": null,
+        "created_at": "2026-10-30 04:27:27.856113+00",
+        "updated_at": "2026-10-30 04:27:45.360348+00"
+      },
+      {
+        "id": "sched-marketing_publish-gh-mk-20261030t04",
+        "job_type": "marketing_publish",
+        "worker": "automation-worker",
+        "payload": {
+          "limit": 10
+        },
+        "status": "succeeded",
+        "attempt_count": 1,
+        "max_attempts": 3,
+        "available_at": "2026-10-30 04:00:23.797206+00",
+        "next_retry_at": null,
+        "claimed_at": "2026-10-30 04:00:27.577673+00",
+        "lease_until": "2026-10-30 04:05:27.577673+00",
+        "started_at": "2026-10-30 04:00:27.577673+00",
+        "completed_at": "2026-10-30 04:00:32.038798+00",
+        "failed_at": null,
+        "last_error": null,
+        "failure_reason": null,
+        "created_at": "2026-10-30 04:00:23.797206+00",
+        "updated_at": "2026-10-30 04:00:32.038798+00"
+      },
+      {
+        "id": "sched-orders_stale_pending-gh-stale-20261030t0348",
+        "job_type": "orders_stale_pending",
+        "worker": "automation-worker",
+        "payload": {
+          "maxAgeMinutes": 120
+        },
+        "status": "succeeded",
+        "attempt_count": 1,
+        "max_attempts": 3,
+        "available_at": "2026-10-30 03:48:20.384425+00",
+        "next_retry_at": null,
+        "claimed_at": "2026-10-30 03:48:21.208802+00",
+        "lease_until": "2026-10-30 03:53:21.208802+00",
+        "started_at": "2026-10-30 03:48:21.208802+00",
+        "completed_at": "2026-10-30 03:48:24.507349+00",
+        "failed_at": null,
+        "last_error": null,
+        "failure_reason": null,
+        "created_at": "2026-10-30 03:48:20.384425+00",
+        "updated_at": "2026-10-30 03:48:24.507349+00"
+      },
+      {
+        "id": "sched-notification_dispatch-gh-dispatch-20261030t0348",
+        "job_type": "notification_dispatch",
+        "worker": "automation-worker",
+        "payload": {
+          "limit": 200,
+          "lookbackMinutes": 360
+        },
+        "status": "succeeded",
+        "attempt_count": 1,
+        "max_attempts": 3,
+        "available_at": "2026-10-30 03:48:14.524133+00",
+        "next_retry_at": null,
+        "claimed_at": "2026-10-30 03:48:15.742943+00",
+        "lease_until": "2026-10-30 03:53:15.742943+00",
+        "started_at": "2026-10-30 03:48:15.742943+00",
+        "completed_at": "2026-10-30 03:48:18.694964+00",
+        "failed_at": null,
+        "last_error": null,
+        "failure_reason": null,
+        "created_at": "2026-10-30 03:48:14.524133+00",
+        "updated_at": "2026-10-30 03:48:18.694964+00"
+      },
+      {
+        "id": "sched-orders_stale_pending-gh-stale-20261030t0053",
+        "job_type": "orders_stale_pending",
+        "worker": "automation-worker",
+        "payload": {
+          "maxAgeMinutes": 120
+        },
+        "status": "succeeded",
+        "attempt_count": 1,
+        "max_attempts": 3,
+        "available_at": "2026-10-30 00:53:42.733927+00",
+        "next_retry_at": null,
+        "claimed_at": "2026-10-30 00:53:43.593664+00",
+        "lease_until": "2026-10-30 00:58:43.593664+00",
+        "started_at": "2026-10-30 00:53:43.593664+00",
+        "completed_at": "2026-10-30 00:53:45.681747+00",
+        "failed_at": null,
+        "last_error": null,
+        "failure_reason": null,
+        "created_at": "2026-10-30 00:53:42.733927+00",
+        "updated_at": "2026-10-30 00:53:45.681747+00"
+      },
+      {
+        "id": "sched-notification_dispatch-gh-dispatch-20261030t0053",
+        "job_type": "notification_dispatch",
+        "worker": "automation-worker",
+        "payload": {
+          "limit": 200,
+          "lookbackMinutes": 360
+        },
+        "status": "succeeded",
+        "attempt_count": 1,
+        "max_attempts": 3,
+        "available_at": "2026-10-30 00:53:37.427786+00",
+        "next_retry_at": null,
+        "claimed_at": "2026-10-30 00:53:38.483076+00",
+        "lease_until": "2026-10-30 00:58:38.483076+00",
+        "started_at": "2026-10-30 00:53:38.483076+00",
+        "completed_at": "2026-10-30 00:53:41.300972+00",
+        "failed_at": null,
+        "last_error": null,
+        "failure_reason": null,
+        "created_at": "2026-10-30 00:53:37.427786+00",
+        "updated_at": "2026-10-30 00:53:41.300972+00"
+      },
+      {
+        "id": "sched-marketing_publish-gh-mk-20261030t00",
+        "job_type": "marketing_publish",
+        "worker": "automation-worker",
+        "payload": {
+          "limit": 10
+        },
+        "status": "succeeded",
+        "attempt_count": 1,
+        "max_attempts": 3,
+        "available_at": "2026-10-30 00:53:27.830933+00",
+        "next_retry_at": null,
+        "claimed_at": "2026-10-30 00:53:28.95454+00",
+        "lease_until": "2026-10-30 00:58:28.95454+00",
+        "started_at": "2026-10-30 00:53:28.95454+00",
+        "completed_at": "2026-10-30 00:53:30.273101+00",
+        "failed_at": null,
+        "last_error": null,
+        "failure_reason": null,
+        "created_at": "2026-10-30 00:53:27.830933+00",
+        "updated_at": "2026-10-30 00:53:30.273101+00"
+      },
+      {
+        "id": "sched-inventory_low_stock-gh-stock-20261030t00",
+        "job_type": "inventory_low_stock",
+        "worker": "automation-worker",
+        "payload": {
+          "stockThreshold": 3
+        },
+        "status": "succeeded",
+        "attempt_count": 1,
+        "max_attempts": 3,
+        "available_at": "2026-10-30 00:53:27.8308+00",
+        "next_retry_at": null,
+        "claimed_at": "2026-10-30 00:53:28.954402+00",
+        "lease_until": "2026-10-30 00:58:28.954402+00",
+        "started_at": "2026-10-30 00:53:28.954402+00",
+        "completed_at": "2026-10-30 00:53:30.529383+00",
+        "failed_at": null,
+        "last_error": null,
+        "failure_reason": null,
+        "created_at": "2026-10-30 00:53:27.8308+00",
+        "updated_at": "2026-10-30 00:53:30.529383+00"
+      },
+      {
+        "id": "sched-orders_stale_pending-gh-stale-20261029t2103",
+        "job_type": "orders_stale_pending",
+        "worker": "automation-worker",
+        "payload": {
+          "maxAgeMinutes": 120
+        },
+        "status": "succeeded",
+        "attempt_count": 1,
+        "max_attempts": 3,
+        "available_at": "2026-10-29 21:03:06.205402+00",
+        "next_retry_at": null,
+        "claimed_at": "2026-10-29 21:03:06.808232+00",
+        "lease_until": "2026-10-29 21:08:06.808232+00",
+        "started_at": "2026-10-29 21:03:06.808232+00",
+        "completed_at": "2026-10-29 21:03:08.451349+00",
+        "failed_at": null,
+        "last_error": null,
+        "failure_reason": null,
+        "created_at": "2026-10-29 21:03:06.205402+00",
+        "updated_at": "2026-10-29 21:03:08.451349+00"
+      },
+      {
+        "id": "sched-notification_dispatch-gh-dispatch-20261029t2102",
+        "job_type": "notification_dispatch",
+        "worker": "automation-worker",
+        "payload": {
+          "limit": 200,
+          "lookbackMinutes": 360
+        },
+        "status": "succeeded",
+        "attempt_count": 1,
+        "max_attempts": 3,
+        "available_at": "2026-10-29 21:02:59.555033+00",
+        "next_retry_at": null,
+        "claimed_at": "2026-10-29 21:03:02.726784+00",
+        "lease_until": "2026-10-29 21:08:02.726784+00",
+        "started_at": "2026-10-29 21:03:02.726784+00",
+        "completed_at": "2026-10-29 21:03:05.192118+00",
+        "failed_at": null,
+        "last_error": null,
+        "failure_reason": null,
+        "created_at": "2026-10-29 21:02:59.555033+00",
+        "updated_at": "2026-10-29 21:03:05.192118+00"
+      },
+      {
+        "id": "sched-marketing_publish-gh-mk-20261029t20",
+        "job_type": "marketing_publish",
+        "worker": "automation-worker",
+        "payload": {
+          "limit": 10
+        },
+        "status": "succeeded",
+        "attempt_count": 1,
+        "max_attempts": 3,
+        "available_at": "2026-10-29 20:14:59.115213+00",
+        "next_retry_at": null,
+        "claimed_at": "2026-10-29 20:15:00.400915+00",
+        "lease_until": "2026-10-29 20:20:00.400915+00",
+        "started_at": "2026-10-29 20:15:00.400915+00",
+        "completed_at": "2026-10-29 20:15:02.952244+00",
+        "failed_at": null,
+        "last_error": null,
+        "failure_reason": null,
+        "created_at": "2026-10-29 20:14:59.115213+00",
+        "updated_at": "2026-10-29 20:15:02.952244+00"
+      },
+      {
+        "id": "sched-inventory_low_stock-gh-stock-20261029t20",
+        "job_type": "inventory_low_stock",
+        "worker": "automation-worker",
+        "payload": {
+          "stockThreshold": 3
+        },
+        "status": "succeeded",
+        "attempt_count": 1,
+        "max_attempts": 3,
+        "available_at": "2026-10-29 20:14:59.115213+00",
+        "next_retry_at": null,
+        "claimed_at": "2026-10-29 20:15:00.175455+00",
+        "lease_until": "2026-10-29 20:20:00.175455+00",
+        "started_at": "2026-10-29 20:15:00.175455+00",
+        "completed_at": "2026-10-29 20:15:02.611571+00",
+        "failed_at": null,
+        "last_error": null,
+        "failure_reason": null,
+        "created_at": "2026-10-29 20:14:59.115213+00",
+        "updated_at": "2026-10-29 20:15:02.611571+00"
+      },
+      {
+        "id": "sched-orders_stale_pending-gh-stale-20261029t1601",
+        "job_type": "orders_stale_pending",
+        "worker": "automation-worker",
+        "payload": {
+          "maxAgeMinutes": 120
+        },
+        "status": "succeeded",
+        "attempt_count": 1,
+        "max_attempts": 3,
+        "available_at": "2026-10-29 16:01:47.361772+00",
+        "next_retry_at": null,
+        "claimed_at": "2026-10-29 16:01:47.953891+00",
+        "lease_until": "2026-10-29 16:06:47.953891+00",
+        "started_at": "2026-10-29 16:01:47.953891+00",
+        "completed_at": "2026-10-29 16:01:49.666402+00",
+        "failed_at": null,
+        "last_error": null,
+        "failure_reason": null,
+        "created_at": "2026-10-29 16:01:47.361772+00",
+        "updated_at": "2026-10-29 16:01:49.666402+00"
+      },
+      {
+        "id": "sched-notification_dispatch-gh-dispatch-20261029t1601",
+        "job_type": "notification_dispatch",
+        "worker": "automation-worker",
+        "payload": {
+          "limit": 200,
+          "lookbackMinutes": 360
+        },
+        "status": "succeeded",
+        "attempt_count": 1,
+        "max_attempts": 3,
+        "available_at": "2026-10-29 16:01:36.366886+00",
+        "next_retry_at": null,
+        "claimed_at": "2026-10-29 16:01:37.366889+00",
+        "lease_until": "2026-10-29 16:06:37.366889+00",
+        "started_at": "2026-10-29 16:01:37.366889+00",
+        "completed_at": "2026-10-29 16:01:46.363725+00",
+        "failed_at": null,
+        "last_error": null,
+        "failure_reason": null,
+        "created_at": "2026-10-29 16:01:36.366886+00",
+        "updated_at": "2026-10-29 16:01:46.363725+00"
+      }
+    ]
+  },
+  "automation_queue_marketing": [
+    {
+      "id": "sched-marketing_publish-gh-mk-20261031t12",
+      "job_type": "marketing_publish",
+      "worker": "automation-worker",
+      "payload": {
+        "limit": 10
+      },
+      "status": "succeeded",
+      "attempt_count": 1,
+      "max_attempts": 3,
+      "available_at": "2026-10-31 12:16:24.229277+00",
+      "next_retry_at": null,
+      "claimed_at": "2026-10-31 12:16:27.192309+00",
+      "lease_until": "2026-10-31 12:21:27.192309+00",
+      "started_at": "2026-10-31 12:16:27.192309+00",
+      "completed_at": "2026-10-31 12:16:33.404501+00",
+      "failed_at": null,
+      "last_error": null,
+      "failure_reason": null,
+      "created_at": "2026-10-31 12:16:24.229277+00",
+      "updated_at": "2026-10-31 12:16:33.404501+00"
+    },
+    {
+      "id": "sched-marketing_publish-gh-mk-20261031t08",
+      "job_type": "marketing_publish",
+      "worker": "automation-worker",
+      "payload": {
+        "limit": 10
+      },
+      "status": "succeeded",
+      "attempt_count": 1,
+      "max_attempts": 3,
+      "available_at": "2026-10-31 08:12:43.889813+00",
+      "next_retry_at": null,
+      "claimed_at": "2026-10-31 08:12:45.053389+00",
+      "lease_until": "2026-10-31 08:17:45.053389+00",
+      "started_at": "2026-10-31 08:12:45.053389+00",
+      "completed_at": "2026-10-31 08:12:53.176407+00",
+      "failed_at": null,
+      "last_error": null,
+      "failure_reason": null,
+      "created_at": "2026-10-31 08:12:43.889813+00",
+      "updated_at": "2026-10-31 08:12:53.176407+00"
+    },
+    {
+      "id": "sched-marketing_publish-gh-mk-20261031t05",
+      "job_type": "marketing_publish",
+      "worker": "automation-worker",
+      "payload": {
+        "limit": 10
+      },
+      "status": "succeeded",
+      "attempt_count": 1,
+      "max_attempts": 3,
+      "available_at": "2026-10-31 05:29:32.958111+00",
+      "next_retry_at": null,
+      "claimed_at": "2026-10-31 05:29:34.012829+00",
+      "lease_until": "2026-10-31 05:34:34.012829+00",
+      "started_at": "2026-10-31 05:29:34.012829+00",
+      "completed_at": "2026-10-31 05:29:38.952755+00",
+      "failed_at": null,
+      "last_error": null,
+      "failure_reason": null,
+      "created_at": "2026-10-31 05:29:32.958111+00",
+      "updated_at": "2026-10-31 05:29:38.952755+00"
+    },
+    {
+      "id": "sched-marketing_publish-gh-mk-20261030t23",
+      "job_type": "marketing_publish",
+      "worker": "automation-worker",
+      "payload": {
+        "limit": 10
+      },
+      "status": "succeeded",
+      "attempt_count": 1,
+      "max_attempts": 3,
+      "available_at": "2026-10-30 23:41:14.425125+00",
+      "next_retry_at": null,
+      "claimed_at": "2026-10-30 23:41:15.464091+00",
+      "lease_until": "2026-10-30 23:46:15.464091+00",
+      "started_at": "2026-10-30 23:41:15.464091+00",
+      "completed_at": "2026-10-30 23:41:19.607691+00",
+      "failed_at": null,
+      "last_error": null,
+      "failure_reason": null,
+      "created_at": "2026-10-30 23:41:14.425125+00",
+      "updated_at": "2026-10-30 23:41:19.607691+00"
+    },
+    {
+      "id": "sched-marketing_publish-gh-mk-20261030t19",
+      "job_type": "marketing_publish",
+      "worker": "automation-worker",
+      "payload": {
+        "limit": 10
+      },
+      "status": "succeeded",
+      "attempt_count": 1,
+      "max_attempts": 3,
+      "available_at": "2026-10-30 19:18:31.660553+00",
+      "next_retry_at": null,
+      "claimed_at": "2026-10-30 19:18:32.654204+00",
+      "lease_until": "2026-10-30 19:23:32.654204+00",
+      "started_at": "2026-10-30 19:18:32.654204+00",
+      "completed_at": "2026-10-30 19:18:37.716923+00",
+      "failed_at": null,
+      "last_error": null,
+      "failure_reason": null,
+      "created_at": "2026-10-30 19:18:31.660553+00",
+      "updated_at": "2026-10-30 19:18:37.716923+00"
+    },
+    {
+      "id": "sched-marketing_publish-gh-mk-20261030t14",
+      "job_type": "marketing_publish",
+      "worker": "automation-worker",
+      "payload": {
+        "limit": 10
+      },
+      "status": "succeeded",
+      "attempt_count": 1,
+      "max_attempts": 3,
+      "available_at": "2026-10-30 14:03:56.671119+00",
+      "next_retry_at": null,
+      "claimed_at": "2026-10-30 14:04:01.654686+00",
+      "lease_until": "2026-10-30 14:09:01.654686+00",
+      "started_at": "2026-10-30 14:04:01.654686+00",
+      "completed_at": "2026-10-30 14:04:06.536275+00",
+      "failed_at": null,
+      "last_error": null,
+      "failure_reason": null,
+      "created_at": "2026-10-30 14:03:56.671119+00",
+      "updated_at": "2026-10-30 14:04:06.536275+00"
+    },
+    {
+      "id": "sched-marketing_publish-gh-mk-20261030t07",
+      "job_type": "marketing_publish",
+      "worker": "automation-worker",
+      "payload": {
+        "limit": 10
+      },
+      "status": "succeeded",
+      "attempt_count": 1,
+      "max_attempts": 3,
+      "available_at": "2026-10-30 07:02:51.703906+00",
+      "next_retry_at": null,
+      "claimed_at": "2026-10-30 07:02:52.781714+00",
+      "lease_until": "2026-10-30 07:07:52.781714+00",
+      "started_at": "2026-10-30 07:02:52.781714+00",
+      "completed_at": "2026-10-30 07:02:56.752488+00",
+      "failed_at": null,
+      "last_error": null,
+      "failure_reason": null,
+      "created_at": "2026-10-30 07:02:51.703906+00",
+      "updated_at": "2026-10-30 07:02:56.752488+00"
+    },
+    {
+      "id": "sched-marketing_publish-gh-mk-poll-v1",
+      "job_type": "marketing_publish",
+      "worker": "automation-worker",
+      "payload": {
+        "limit": 10
+      },
+      "status": "succeeded",
+      "attempt_count": 1,
+      "max_attempts": 3,
+      "available_at": "2026-10-30 06:36:46.908196+00",
+      "next_retry_at": null,
+      "claimed_at": "2026-10-30 06:36:55.481663+00",
+      "lease_until": "2026-10-30 06:41:55.481663+00",
+      "started_at": "2026-10-30 06:36:55.481663+00",
+      "completed_at": "2026-10-30 06:37:01.23454+00",
+      "failed_at": null,
+      "last_error": null,
+      "failure_reason": null,
+      "created_at": "2026-10-30 06:36:46.908196+00",
+      "updated_at": "2026-10-30 06:37:01.23454+00"
+    },
+    {
+      "id": "sched-marketing_publish-gh-mk-20261030t06",
+      "job_type": "marketing_publish",
+      "worker": "automation-worker",
+      "payload": {
+        "limit": 10
+      },
+      "status": "succeeded",
+      "attempt_count": 1,
+      "max_attempts": 3,
+      "available_at": "2026-10-30 06:35:11.17387+00",
+      "next_retry_at": null,
+      "claimed_at": "2026-10-30 06:35:12.400425+00",
+      "lease_until": "2026-10-30 06:40:12.400425+00",
+      "started_at": "2026-10-30 06:35:12.400425+00",
+      "completed_at": "2026-10-30 06:35:16.798423+00",
+      "failed_at": null,
+      "last_error": null,
+      "failure_reason": null,
+      "created_at": "2026-10-30 06:35:11.17387+00",
+      "updated_at": "2026-10-30 06:35:16.798423+00"
+    },
+    {
+      "id": "sched-marketing_publish-gh-mk-fix-20261030t0426",
+      "job_type": "marketing_publish",
+      "worker": "automation-worker",
+      "payload": {
+        "limit": 10
+      },
+      "status": "succeeded",
+      "attempt_count": 1,
+      "max_attempts": 3,
+      "available_at": "2026-10-30 04:27:27.856113+00",
+      "next_retry_at": null,
+      "claimed_at": "2026-10-30 04:27:35.166071+00",
+      "lease_until": "2026-10-30 04:32:35.166071+00",
+      "started_at": "2026-10-30 04:27:35.166071+00",
+      "completed_at": "2026-10-30 04:27:45.360348+00",
+      "failed_at": null,
+      "last_error": null,
+      "failure_reason": null,
+      "created_at": "2026-10-30 04:27:27.856113+00",
+      "updated_at": "2026-10-30 04:27:45.360348+00"
+    },
+    {
+      "id": "sched-marketing_publish-gh-mk-20261030t04",
+      "job_type": "marketing_publish",
+      "worker": "automation-worker",
+      "payload": {
+        "limit": 10
+      },
+      "status": "succeeded",
+      "attempt_count": 1,
+      "max_attempts": 3,
+      "available_at": "2026-10-30 04:00:23.797206+00",
+      "next_retry_at": null,
+      "claimed_at": "2026-10-30 04:00:27.577673+00",
+      "lease_until": "2026-10-30 04:05:27.577673+00",
+      "started_at": "2026-10-30 04:00:27.577673+00",
+      "completed_at": "2026-10-30 04:00:32.038798+00",
+      "failed_at": null,
+      "last_error": null,
+      "failure_reason": null,
+      "created_at": "2026-10-30 04:00:23.797206+00",
+      "updated_at": "2026-10-30 04:00:32.038798+00"
+    },
+    {
+      "id": "sched-marketing_publish-gh-mk-20261030t00",
+      "job_type": "marketing_publish",
+      "worker": "automation-worker",
+      "payload": {
+        "limit": 10
+      },
+      "status": "succeeded",
+      "attempt_count": 1,
+      "max_attempts": 3,
+      "available_at": "2026-10-30 00:53:27.830933+00",
+      "next_retry_at": null,
+      "claimed_at": "2026-10-30 00:53:28.95454+00",
+      "lease_until": "2026-10-30 00:58:28.95454+00",
+      "started_at": "2026-10-30 00:53:28.95454+00",
+      "completed_at": "2026-10-30 00:53:30.273101+00",
+      "failed_at": null,
+      "last_error": null,
+      "failure_reason": null,
+      "created_at": "2026-10-30 00:53:27.830933+00",
+      "updated_at": "2026-10-30 00:53:30.273101+00"
+    },
+    {
+      "id": "sched-marketing_publish-gh-mk-20261029t20",
+      "job_type": "marketing_publish",
+      "worker": "automation-worker",
+      "payload": {
+        "limit": 10
+      },
+      "status": "succeeded",
+      "attempt_count": 1,
+      "max_attempts": 3,
+      "available_at": "2026-10-29 20:14:59.115213+00",
+      "next_retry_at": null,
+      "claimed_at": "2026-10-29 20:15:00.400915+00",
+      "lease_until": "2026-10-29 20:20:00.400915+00",
+      "started_at": "2026-10-29 20:15:00.400915+00",
+      "completed_at": "2026-10-29 20:15:02.952244+00",
+      "failed_at": null,
+      "last_error": null,
+      "failure_reason": null,
+      "created_at": "2026-10-29 20:14:59.115213+00",
+      "updated_at": "2026-10-29 20:15:02.952244+00"
+    }
+  ],
+  "cron_jobs": {
+    "ok": true,
+    "rows": [
+      {
+        "jobname": "bmb-promote",
+        "schedule": "* * * * *",
+        "active": true
+      },
+      {
+        "jobname": "bmb-tick",
+        "schedule": "*/5 * * * *",
+        "active": true
+      }
+    ]
+  },
+  "cron_runs_48h": {
+    "ok": true,
+    "rows": [
+      {
+        "jobname": "bmb-promote",
+        "runs": 461,
+        "first_run": "2026-10-31 06:34:00.248667+00",
+        "last_run": "2026-10-31 14:14:00.082881+00",
+        "expected_48h": 2880,
+        "coverage_pct": 16
+      },
+      {
+        "jobname": "bmb-tick",
+        "runs": 91,
+        "first_run": "2026-10-31 06:40:00.094837+00",
+        "last_run": "2026-10-31 14:10:00.056793+00",
+        "expected_48h": 576,
+        "coverage_pct": 16
+      }
+    ]
+  },
+  "g26_poll": {
+    "ok": true,
+    "rows": [
+      {
+        "id": "g26-poll-2026-10-31T14",
+        "created_at": "2026-10-31 14:00:06.513754+00"
+      },
+      {
+        "id": "g26-poll-2026-10-31T13",
+        "created_at": "2026-10-31 13:00:09.291557+00"
+      },
+      {
+        "id": "g26-poll-2026-10-31T12",
+        "created_at": "2026-10-31 12:00:12.951041+00"
+      },
+      {
+        "id": "g26-poll-2026-10-31T11",
+        "created_at": "2026-10-31 11:00:09.054713+00"
+      },
+      {
+        "id": "g26-poll-2026-10-31T10",
+        "created_at": "2026-10-31 10:00:11.767583+00"
+      },
+      {
+        "id": "g26-poll-2026-10-31T09",
+        "created_at": "2026-10-31 09:00:08.036183+00"
+      },
+      {
+        "id": "g26-poll-2026-10-31T08",
+        "created_at": "2026-10-31 08:00:07.629518+00"
+      },
+      {
+        "id": "g26-poll-2026-10-31T07",
+        "created_at": "2026-10-31 07:00:07.83083+00"
+      },
+      {
+        "id": "g26-poll-2026-10-31T06",
+        "created_at": "2026-10-31 06:33:40.041967+00"
+      },
+      {
+        "id": "g26-poll-2026-10-31T05",
+        "created_at": "2026-10-31 05:29:38.187247+00"
+      }
+    ]
+  },
+  "audit_marketing": {
+    "ok": true,
+    "rows": [
+      {
+        "id": "alog- ###########-2f437e",
+        "action": "marketing_scheduled",
+        "entity_id": "mk-mvwegu4b-o482",
+        "description": "marketing post scheduled",
+        "created_at": "2026-10-31 12:51:44.668559+00"
+      },
+      {
+        "id": "alog- ###########-7d3ad1",
+        "action": "marketing_scheduled",
+        "entity_id": "mk-mvvz4n44-c60w",
+        "description": "marketing post scheduled",
+        "created_at": "2026-10-31 05:45:09.071307+00"
+      },
+      {
+        "id": "alog- ###########-6586e7",
+        "action": "marketing_scheduled",
+        "entity_id": "mk-mvvz4n44-c60w",
+        "description": "marketing post scheduled",
+        "created_at": "2026-10-31 05:42:25.823132+00"
+      },
+      {
+        "id": "alog- ###########-348e55",
+        "action": "marketing_scheduled",
+        "entity_id": "mk-mvvz4n44-c60w",
+        "description": "marketing post scheduled",
+        "created_at": "2026-10-31 05:42:11.74898+00"
+      },
+      {
+        "id": "alog- ###########-3ff342",
+        "action": "marketing_scheduled",
+        "entity_id": "mk-mvvtvqwv-3zjr",
+        "description": "marketing post scheduled",
+        "created_at": "2026-10-31 03:16:06.937608+00"
+      },
+      {
+        "id": "alog- ###########-5d16c9",
+        "action": "marketing_scheduled",
+        "entity_id": "mk-mvvtvqwv-3zjr",
+        "description": "marketing post scheduled",
+        "created_at": "2026-10-31 03:15:52.317866+00"
+      },
+      {
+        "id": "alog- ###########-16c918",
+        "action": "marketing_scheduled",
+        "entity_id": "mk-mvvtvqwv-3zjr",
+        "description": "marketing post scheduled",
+        "created_at": "2026-10-31 03:15:37.441955+00"
+      },
+      {
+        "id": "alog- ###########-a6f803",
+        "action": "marketing_scheduled",
+        "entity_id": "mk-mvvspkna-n6uf",
+        "description": "marketing post scheduled",
+        "created_at": "2026-10-31 02:43:06.538459+00"
+      },
+      {
+        "id": "alog- ###########-7fc48b",
+        "action": "marketing_scheduled",
+        "entity_id": "mk-mvub0nrs-fapj",
+        "description": "marketing post scheduled",
+        "created_at": "2026-10-30 01:40:30.657205+00"
+      },
+      {
+        "id": "alog- ###########-d6d8d6",
+        "action": "marketing_rules_saved",
+        "entity_id": "default",
+        "description": "marketing rules updated",
+        "created_at": "2026-10-30 01:37:40.755501+00"
+      }
+    ]
+  },
+  "automation_executions": {
+    "ok": true,
+    "rows": [
+      {
+        "id": "auto-exec-tick-mk-20261031t1410",
+        "entity_id": "marketing_publish",
+        "description": "automation marketing_publish succeeded",
+        "created_at": "2026-10-31 14:10:07.141782+00"
+      },
+      {
+        "id": "auto-exec-tick-mk-20261031t1405",
+        "entity_id": "marketing_publish",
+        "description": "automation marketing_publish succeeded",
+        "created_at": "2026-10-31 14:05:05.073548+00"
+      },
+      {
+        "id": "auto-exec-tick-mk-20261031t1400",
+        "entity_id": "marketing_publish",
+        "description": "automation marketing_publish succeeded",
+        "created_at": "2026-10-31 14:00:06.592258+00"
+      },
+      {
+        "id": "auto-exec-tick-mk-20261031t1355",
+        "entity_id": "marketing_publish",
+        "description": "automation marketing_publish succeeded",
+        "created_at": "2026-10-31 13:55:05.321128+00"
+      },
+      {
+        "id": "auto-exec-tick-mk-20261031t1350",
+        "entity_id": "marketing_publish",
+        "description": "automation marketing_publish succeeded",
+        "created_at": "2026-10-31 13:50:05.973979+00"
+      },
+      {
+        "id": "auto-exec-tick-mk-20261031t1345",
+        "entity_id": "marketing_publish",
+        "description": "automation marketing_publish succeeded",
+        "created_at": "2026-10-31 13:45:08.549422+00"
+      },
+      {
+        "id": "auto-exec-tick-mk-20261031t1340",
+        "entity_id": "marketing_publish",
+        "description": "automation marketing_publish succeeded",
+        "created_at": "2026-10-31 13:40:05.977794+00"
+      },
+      {
+        "id": "auto-exec-tick-mk-20261031t1335",
+        "entity_id": "marketing_publish",
+        "description": "automation marketing_publish succeeded",
+        "created_at": "2026-10-31 13:35:05.759152+00"
+      },
+      {
+        "id": "auto-exec-tick-mk-20261031t1330",
+        "entity_id": "marketing_publish",
+        "description": "automation marketing_publish succeeded",
+        "created_at": "2026-10-31 13:30:07.529552+00"
+      },
+      {
+        "id": "auto-exec-tick-mk-20261031t1325",
+        "entity_id": "marketing_publish",
+        "description": "automation marketing_publish succeeded",
+        "created_at": "2026-10-31 13:25:05.135+00"
+      },
+      {
+        "id": "auto-exec-tick-mk-20261031t1320",
+        "entity_id": "marketing_publish",
+        "description": "automation marketing_publish succeeded",
+        "created_at": "2026-10-31 13:20:06.910324+00"
+      },
+      {
+        "id": "auto-exec-tick-mk-20261031t1315",
+        "entity_id": "marketing_publish",
+        "description": "automation marketing_publish succeeded",
+        "created_at": "2026-10-31 13:15:07.533447+00"
+      },
+      {
+        "id": "auto-exec-tick-mk-20261031t1310",
+        "entity_id": "marketing_publish",
+        "description": "automation marketing_publish succeeded",
+        "created_at": "2026-10-31 13:10:05.212561+00"
+      },
+      {
+        "id": "auto-exec-tick-mk-20261031t1305",
+        "entity_id": "marketing_publish",
+        "description": "automation marketing_publish succeeded",
+        "created_at": "2026-10-31 13:05:05.985492+00"
+      },
+      {
+        "id": "auto-exec-tick-mk-20261031t1300",
+        "entity_id": "marketing_publish",
+        "description": "automation marketing_publish succeeded",
+        "created_at": "2026-10-31 13:00:09.344285+00"
+      },
+      {
+        "id": "auto-exec-tick-mk-20261031t1255",
+        "entity_id": "marketing_publish",
+        "description": "automation marketing_publish succeeded",
+        "created_at": "2026-10-31 12:55:06.794458+00"
+      },
+      {
+        "id": "auto-exec-tick-mk-20261031t1250",
+        "entity_id": "marketing_publish",
+        "description": "automation marketing_publish succeeded",
+        "created_at": "2026-10-31 12:50:07.171633+00"
+      },
+      {
+        "id": "auto-exec-tick-mk-20261031t1245",
+        "entity_id": "marketing_publish",
+        "description": "automation marketing_publish succeeded",
+        "created_at": "2026-10-31 12:45:07.282262+00"
+      },
+      {
+        "id": "auto-exec-tick-mk-20261031t1240",
+        "entity_id": "marketing_publish",
+        "description": "automation marketing_publish succeeded",
+        "created_at": "2026-10-31 12:40:06.935157+00"
+      },
+      {
+        "id": "auto-exec-tick-mk-20261031t1235",
+        "entity_id": "marketing_publish",
+        "description": "automation marketing_publish succeeded",
+        "created_at": "2026-10-31 12:35:07.119564+00"
+      },
+      {
+        "id": "auto-exec-tick-mk-20261031t1230",
+        "entity_id": "marketing_publish",
+        "description": "automation marketing_publish succeeded",
+        "created_at": "2026-10-31 12:30:06.194376+00"
+      },
+      {
+        "id": "auto-exec-tick-mk-20261031t1225",
+        "entity_id": "marketing_publish",
+        "description": "automation marketing_publish succeeded",
+        "created_at": "2026-10-31 12:25:06.715182+00"
+      },
+      {
+        "id": "auto-exec-tick-mk-20261031t1220",
+        "entity_id": "marketing_publish",
+        "description": "automation marketing_publish succeeded",
+        "created_at": "2026-10-31 12:20:07.104856+00"
+      },
+      {
+        "id": "auto-exec-sched-marketing_publish-gh-mk-20261031t12",
+        "entity_id": "marketing_publish",
+        "description": "automation marketing_publish succeeded",
+        "created_at": "2026-10-31 12:16:32.802099+00"
+      },
+      {
+        "id": "auto-exec-sched-inventory_low_stock-gh-stock-20261031t12",
+        "entity_id": "inventory_low_stock",
+        "description": "automation inventory_low_stock succeeded",
+        "created_at": "2026-10-31 12:16:27.063246+00"
+      },
+      {
+        "id": "auto-exec-tick-mk-20261031t1215",
+        "entity_id": "marketing_publish",
+        "description": "automation marketing_publish succeeded",
+        "created_at": "2026-10-31 12:15:06.789294+00"
+      },
+      {
+        "id": "auto-exec-tick-mk-20261031t1210",
+        "entity_id": "marketing_publish",
+        "description": "automation marketing_publish succeeded",
+        "created_at": "2026-10-31 12:10:06.281147+00"
+      },
+      {
+        "id": "auto-exec-tick-mk-20261031t1205",
+        "entity_id": "marketing_publish",
+        "description": "automation marketing_publish succeeded",
+        "created_at": "2026-10-31 12:05:07.590909+00"
+      },
+      {
+        "id": "auto-exec-tick-mk-20261031t1200",
+        "entity_id": "marketing_publish",
+        "description": "automation marketing_publish succeeded",
+        "created_at": "2026-10-31 12:00:13.036175+00"
+      },
+      {
+        "id": "auto-exec-tick-mk-20261031t1155",
+        "entity_id": "marketing_publish",
+        "description": "automation marketing_publish succeeded",
+        "created_at": "2026-10-31 11:55:04.50921+00"
+      },
+      {
+        "id": "auto-exec-tick-mk-20261031t1150",
+        "entity_id": "marketing_publish",
+        "description": "automation marketing_publish succeeded",
+        "created_at": "2026-10-31 11:50:05.666722+00"
+      },
+      {
+        "id": "auto-exec-tick-mk-20261031t1145",
+        "entity_id": "marketing_publish",
+        "description": "automation marketing_publish succeeded",
+        "created_at": "2026-10-31 11:45:05.902211+00"
+      },
+      {
+        "id": "auto-exec-tick-mk-20261031t1140",
+        "entity_id": "marketing_publish",
+        "description": "automation marketing_publish succeeded",
+        "created_at": "2026-10-31 11:40:05.568151+00"
+      },
+      {
+        "id": "auto-exec-tick-mk-20261031t1135",
+        "entity_id": "marketing_publish",
+        "description": "automation marketing_publish succeeded",
+        "created_at": "2026-10-31 11:35:05.057898+00"
+      },
+      {
+        "id": "auto-exec-tick-mk-20261031t1130",
+        "entity_id": "marketing_publish",
+        "description": "automation marketing_publish succeeded",
+        "created_at": "2026-10-31 11:30:09.580395+00"
+      },
+      {
+        "id": "auto-exec-tick-mk-20261031t1125",
+        "entity_id": "marketing_publish",
+        "description": "automation marketing_publish succeeded",
+        "created_at": "2026-10-31 11:25:04.8896+00"
+      },
+      {
+        "id": "auto-exec-tick-mk-20261031t1120",
+        "entity_id": "marketing_publish",
+        "description": "automation marketing_publish succeeded",
+        "created_at": "2026-10-31 11:20:04.882133+00"
+      },
+      {
+        "id": "auto-exec-tick-mk-20261031t1115",
+        "entity_id": "marketing_publish",
+        "description": "automation marketing_publish succeeded",
+        "created_at": "2026-10-31 11:15:06.336895+00"
+      },
+      {
+        "id": "auto-exec-tick-mk-20261031t1110",
+        "entity_id": "marketing_publish",
+        "description": "automation marketing_publish succeeded",
+        "created_at": "2026-10-31 11:10:05.421679+00"
+      },
+      {
+        "id": "auto-exec-tick-mk-20261031t1105",
+        "entity_id": "marketing_publish",
+        "description": "automation marketing_publish succeeded",
+        "created_at": "2026-10-31 11:05:07.055039+00"
+      },
+      {
+        "id": "auto-exec-tick-mk-20261031t1100",
+        "entity_id": "marketing_publish",
+        "description": "automation marketing_publish succeeded",
+        "created_at": "2026-10-31 11:00:09.098029+00"
+      },
+      {
+        "id": "auto-exec-tick-mk-20261031t1055",
+        "entity_id": "marketing_publish",
+        "description": "automation marketing_publish succeeded",
+        "created_at": "2026-10-31 10:55:05.936786+00"
+      },
+      {
+        "id": "auto-exec-tick-mk-20261031t1050",
+        "entity_id": "marketing_publish",
+        "description": "automation marketing_publish succeeded",
+        "created_at": "2026-10-31 10:50:04.464019+00"
+      },
+      {
+        "id": "auto-exec-tick-mk-20261031t1045",
+        "entity_id": "marketing_publish",
+        "description": "automation marketing_publish succeeded",
+        "created_at": "2026-10-31 10:45:06.727273+00"
+      },
+      {
+        "id": "auto-exec-tick-mk-20261031t1040",
+        "entity_id": "marketing_publish",
+        "description": "automation marketing_publish succeeded",
+        "created_at": "2026-10-31 10:40:05.468455+00"
+      },
+      {
+        "id": "auto-exec-tick-mk-20261031t1035",
+        "entity_id": "marketing_publish",
+        "description": "automation marketing_publish succeeded",
+        "created_at": "2026-10-31 10:35:06.354736+00"
+      },
+      {
+        "id": "auto-exec-tick-mk-20261031t1030",
+        "entity_id": "marketing_publish",
+        "description": "automation marketing_publish succeeded",
+        "created_at": "2026-10-31 10:30:07.721662+00"
+      },
+      {
+        "id": "auto-exec-tick-mk-20261031t1025",
+        "entity_id": "marketing_publish",
+        "description": "automation marketing_publish succeeded",
+        "created_at": "2026-10-31 10:25:05.485205+00"
+      },
+      {
+        "id": "auto-exec-tick-mk-20261031t1020",
+        "entity_id": "marketing_publish",
+        "description": "automation marketing_publish succeeded",
+        "created_at": "2026-10-31 10:20:07.932977+00"
+      },
+      {
+        "id": "auto-exec-tick-mk-20261031t1015",
+        "entity_id": "marketing_publish",
+        "description": "automation marketing_publish succeeded",
+        "created_at": "2026-10-31 10:15:06.656891+00"
+      },
+      {
+        "id": "auto-exec-tick-mk-20261031t1010",
+        "entity_id": "marketing_publish",
+        "description": "automation marketing_publish succeeded",
+        "created_at": "2026-10-31 10:10:05.259454+00"
+      },
+      {
+        "id": "auto-exec-tick-mk-20261031t1005",
+        "entity_id": "marketing_publish",
+        "description": "automation marketing_publish succeeded",
+        "created_at": "2026-10-31 10:05:05.117617+00"
+      },
+      {
+        "id": "auto-exec-tick-mk-20261031t1000",
+        "entity_id": "marketing_publish",
+        "description": "automation marketing_publish succeeded",
+        "created_at": "2026-10-31 10:00:11.833661+00"
+      },
+      {
+        "id": "auto-exec-tick-mk-20261031t0955",
+        "entity_id": "marketing_publish",
+        "description": "automation marketing_publish succeeded",
+        "created_at": "2026-10-31 09:55:06.061914+00"
+      },
+      {
+        "id": "auto-exec-tick-mk-20261031t0950",
+        "entity_id": "marketing_publish",
+        "description": "automation marketing_publish succeeded",
+        "created_at": "2026-10-31 09:50:04.599445+00"
+      },
+      {
+        "id": "auto-exec-tick-mk-20261031t0945",
+        "entity_id": "marketing_publish",
+        "description": "automation marketing_publish succeeded",
+        "created_at": "2026-10-31 09:45:06.512817+00"
+      },
+      {
+        "id": "auto-exec-tick-mk-20261031t0940",
+        "entity_id": "marketing_publish",
+        "description": "automation marketing_publish succeeded",
+        "created_at": "2026-10-31 09:40:04.698441+00"
+      },
+      {
+        "id": "auto-exec-tick-mk-20261031t0935",
+        "entity_id": "marketing_publish",
+        "description": "automation marketing_publish succeeded",
+        "created_at": "2026-10-31 09:35:05.324246+00"
+      },
+      {
+        "id": "auto-exec-tick-mk-20261031t0930",
+        "entity_id": "marketing_publish",
+        "description": "automation marketing_publish succeeded",
+        "created_at": "2026-10-31 09:30:07.114999+00"
+      },
+      {
+        "id": "auto-exec-tick-mk-20261031t0925",
+        "entity_id": "marketing_publish",
+        "description": "automation marketing_publish succeeded",
+        "created_at": "2026-10-31 09:25:05.717627+00"
+      }
+    ]
+  },
+  "fb_feed": {
+    "ok": true,
+    "http": 200,
+    "error": null,
+    "posts": [
+      {
+        "id": "862940416913026_122145808257204867",
+        "created_time": "2026-10-31T06:33:31+0000",
+        "msg_head": "แนะนำ เมี่ยงหมู+กุ้ง\n\nวันนี้ขอแนะนำ เมี่ยงหมู+กุ้ง  ฿99"
+      },
+      {
+        "id": "862940416913026_122145661545204867",
+        "created_time": "2026-10-30T04:27:39+0000",
+        "msg_head": "แนะนำ เมี่ยงแซลม่อน\n\nวันนี้ขอแนะนำ เมี่ยงแซลม่อน เมนูขายดีของเรา"
+      },
+      {
+        "id": "862940416913026_122144132217204867",
+        "created_time": "2026-10-16T14:09:50+0000",
+        "msg_head": "เปิดรับ Pre-Order คืนนี้! ส่งพรุ่งนี้ เสาร์ 17 ต.ค. — Bite Me Baby\n\nBite Me Baby"
+      },
+      {
+        "id": "862940416913026_122142432909204867",
+        "created_time": "2026-10-02T16:25:56+0000",
+        "msg_head": ""
+      },
+      {
+        "id": "862940416913026_122113508907204867",
+        "created_time": "2026-02-24T11:02:53+0000",
+        "msg_head": "🙏Update🙏 รอบส่งไม่เกินเที่ยงคืน..\n 24/02/68\nเมนูเมี่ยงอื่นๆ หมดๆๆ!!!🥬🫜🍄‍🟫\n"
+      },
+      {
+        "id": "862940416913026_122111043867204867",
+        "created_time": "2026-02-11T05:21:17+0000",
+        "msg_head": "👀ใครมองหามื้อเบาๆแต่รสชาติไม่เบาต้องกล่องนี้🌶️!!!\n🔥ก๋วยเตี๋ยวพับ🔥 ไส้หมูสับเ"
+      },
+      {
+        "id": "862940416913026_725661183711231",
+        "created_time": "2026-01-25T10:52:55+0000",
+        "msg_head": ""
+      },
+      {
+        "id": "862940416913026_122105491539204867",
+        "created_time": "2026-01-15T14:28:39+0000",
+        "msg_head": ""
+      },
+      {
+        "id": "862940416913026_122104937361204867",
+        "created_time": "2026-01-14T12:32:29+0000",
+        "msg_head": "สปาเก็ตตี้ คาโบนาร่า เบค่อนไข่กุ้ง เพิ่มไข่กุ้งพิเศษ จุกๆๆ ไปเลยจ้า😋😋😋"
+      },
+      {
+        "id": "862940416913026_122102959857204867",
+        "created_time": "2026-01-12T15:03:23+0000",
+        "msg_head": ""
+      },
+      {
+        "id": "862940416913026_804033175985994",
+        "created_time": "2026-01-12T15:02:44+0000",
+        "msg_head": ""
+      },
+      {
+        "id": "862940416913026_122102956371204867",
+        "created_time": "2026-01-12T14:58:01+0000",
+        "msg_head": "🔥สปาเก็ตตี้คาโบนาร่าเบคอนไข่กุ้ง\nครีมมี่จัด เบคอนแน่น ไข่กุ้งกรุบๆ\n💥 ราคาแค่ 7"
+      },
+      {
+        "id": "862940416913026_1817529795617681",
+        "created_time": "2026-01-11T13:54:04+0000",
+        "msg_head": ""
+      },
+      {
+        "id": "862940416913026_122101850697204867",
+        "created_time": "2026-01-11T12:57:32+0000",
+        "msg_head": ""
+      }
+    ]
+  },
+  "fb_compare": [
+    {
+      "id": "mk-mvwegu4b-o482",
+      "status": "published",
+      "scheduled_for": "2026-10-31 13:00:00+00",
+      "published_at": "2026-10-31 13:00:00+00",
+      "provider_post_id": null,
+      "publish_attempts": 1,
+      "error": null,
+      "fb_id": null,
+      "fb_created_time": null,
+      "matched_via": null,
+      "delta_vs_scheduled_ms": null,
+      "delta_vs_published_ms": null
+    },
+    {
+      "id": "mk-mvvz4n44-c60w",
+      "status": "published",
+      "scheduled_for": "2026-10-31 05:46:00+00",
+      "published_at": "2026-10-31 06:33:37.096+00",
+      "provider_post_id": "862940416913026_122145808257204867",
+      "publish_attempts": 1,
+      "error": null,
+      "fb_id": "862940416913026_122145808257204867",
+      "fb_created_time": "2026-10-31T06:33:31+0000",
+      "matched_via": "provider_post_id",
+      "delta_vs_scheduled_ms": 2851000,
+      "delta_vs_published_ms": -6096
+    },
+    {
+      "id": "mk-mvvtvqwv-3zjr",
+      "status": "published",
+      "scheduled_for": "2026-10-31 03:17:00+00",
+      "published_at": "2026-10-31 03:17:00+00",
+      "provider_post_id": null,
+      "publish_attempts": 1,
+      "error": null,
+      "fb_id": null,
+      "fb_created_time": null,
+      "matched_via": null,
+      "delta_vs_scheduled_ms": null,
+      "delta_vs_published_ms": null
+    },
+    {
+      "id": "mk-mvvspkna-n6uf",
+      "status": "published",
+      "scheduled_for": "2026-10-31 02:50:00+00",
+      "published_at": "2026-10-31 02:50:00+00",
+      "provider_post_id": null,
+      "publish_attempts": 1,
+      "error": null,
+      "fb_id": null,
+      "fb_created_time": null,
+      "matched_via": null,
+      "delta_vs_scheduled_ms": null,
+      "delta_vs_published_ms": null
+    },
+    {
+      "id": "mk-mvub0nrs-fapj",
+      "status": "published",
+      "scheduled_for": "2026-10-30 02:00:00+00",
+      "published_at": "2026-10-30 04:27:44.059+00",
+      "provider_post_id": "862940416913026_122145661545204867",
+      "publish_attempts": 2,
+      "error": null,
+      "fb_id": "862940416913026_122145661545204867",
+      "fb_created_time": "2026-10-30T04:27:39+0000",
+      "matched_via": "provider_post_id",
+      "delta_vs_scheduled_ms": 8859000,
+      "delta_vs_published_ms": -5059
+    }
+  ],
+  "summary": {
+    "posts_48h": 6,
+    "by_status": {
+      "pending_approval": 1,
+      "published": 5
+    },
+    "published_without_provider_id": 3,
+    "approved_or_scheduled_without_provider_id": 0,
+    "b3_rows": 3,
+    "cron_runs": [
+      {
+        "jobname": "bmb-promote",
+        "runs": 461,
+        "first_run": "2026-10-31 06:34:00.248667+00",
+        "last_run": "2026-10-31 14:14:00.082881+00",
+        "expected_48h": 2880,
+        "coverage_pct": 16
+      },
+      {
+        "jobname": "bmb-tick",
+        "runs": 91,
+        "first_run": "2026-10-31 06:40:00.094837+00",
+        "last_run": "2026-10-31 14:10:00.056793+00",
+        "expected_48h": 576,
+        "coverage_pct": 16
+      }
+    ],
+    "fb_feed_ok": true,
+    "fb_matched": 2,
+    "fb_published_unmatched": [
+      "mk-mvwegu4b-o482",
+      "mk-mvvtvqwv-3zjr",
+      "mk-mvvspkna-n6uf"
+    ],
+    "errors": {}
+  }
+}
