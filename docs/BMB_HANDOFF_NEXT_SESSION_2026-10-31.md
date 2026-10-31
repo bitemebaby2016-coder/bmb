@@ -59,7 +59,7 @@
 
 | # | งาน | สถานะ/หลักฐาน | ทำเมื่อไหร่ |
 |---|---|---|---|
-| 1 | **CI HEAD `b8c8c15`** (push R42 ยังไม่ probe) | `node e2e\r36_ci_probe.cjs` | ขั้นแรก (read ไม่ผิดคำสั่ง) |
+| 1 | ~~**CI HEAD `b8c8c15`**~~ | **ปิดแล้ว ✓ 2026-10-31:** probe = CI ✅ + Contract ✅ + automation-scheduler ✅ ×2 = **NO_FAILED_RUN** · HEAD ล่าสุด `ea2e422` (R43 plan) + followup HANDOFF_002 — รอ probe รอบเดียวตอนปิดงาน | เสร็จ (probe ครั้งเดียวตอนจบ wave) |
 | 2 | **m178 cron ยิงซ้ำจริงไหม** | `cron.job_run_details` + `automation_queue` marketing รอบใหม่ + `g26-poll-*` + โพสต์ใหม่ (probe เดิม `r41f_state.cjs` → ต่อยอด `r43_*`) | คู่ B2/B3 |
 | 3 | **Web bundle Cloudflare** = R40/R41/R42 UI ขึ้นจริงไหม (`sticker-wizard`, `ai-album`, `mk-gen-status`) | `node e2e\r41_web_bundle_probe.cjs` (รอบก่อน = ยังไม่ live) | หลังข้อ 1 |
 | 4 | **Q-A..Q-D (§Q)** — Q-B ย่อย "ดวงเดี่ยว" **ผ่าน ✓** (ตำแหน่ง/ขนาด OK) · เหลือ: Q-A เจนรูป · Q-B ×4 (→B7) · Q-C ตั้งเวลา (→B1/B2) · Q-D คอมเม้น ≤3นาที (→B4) | รอ Owner/ผูก B1-B7 | ระหว่าง wave |

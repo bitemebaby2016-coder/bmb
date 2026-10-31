@@ -1,0 +1,4 @@
+R42 leftover + R43 handoff row-1 update (doc only)
+
+- supabase/migrations/HANDOFF_002_SCHEMA.md: FFFD x12 replaced with '-' (from r42_lang_fix, missed in R42 batch)
+- docs/BMB_HANDOFF_NEXT_SESSION: งานค้าง #1 CI b8c8c15 = ปิดแล้ว (probe CI+Contract+scheduler success, NO_FAILED_RUN)
