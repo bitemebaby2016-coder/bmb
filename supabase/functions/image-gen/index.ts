@@ -20,11 +20,12 @@ const OPENROUTER_KEY = Deno.env.get('BMB_OPENROUTER_API_KEY') || Deno.env.get('O
 const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions'
 // โมเดลสร้างภาพ — env `IMAGE_GEN_MODELS` (comma-separated) · fallback หลายชื่อ
 // R32: โมเดลเดิมชื่อเดียวโดน retiring ของ OpenRouter = ตายทั้งฟีเจอร์ → วนลองทีละชื่อจนมีรูป
-// R35 (Owner 2026-10-31 · ยืนยันจากหน้าโมเดลจริง openrouter.ai): `qwen/qwen-image-3` +
-//   `bytedance-seed/seedream-5-0-flash` มีจริง → ใส่เป็น candidate คู่กับชุด gemini/gpt เดิม
-//   (probe ผ่าน /api/v1/models สาธารณะไม่เจอ = คนละ index — หน้า URL ตรงมีจริงตามภาพ)
+// R41 (Owner 2026-10-31 "ยังติด gemini"): attempts จริงจาก production พิสูจน์ว่า
+//   ID คู่แรก (qwen image / bytedance seedream) = "not a valid model ID" / 404 no endpoint → ถอดทั้งคู่
+//   (ชื่อที่ Owner เคยเห็น = ไม่ตรงทะเบียน) · list ใหม่ = "เฉพาะโมเดลที่ /api/v1/models ยืนยัน
+//   output_modalities=image จริง 12 ตัว" (e2e/r41_models_probe.cjs) เรียงถูก→แพง
 const IMAGE_MODEL_CANDIDATES = (Deno.env.get('IMAGE_GEN_MODELS') || Deno.env.get('IMAGE_GEN_MODEL') ||
-  'qwen/qwen-image-3,bytedance-seed/seedream-5-0-flash,google/gemini-3.1-flash-image,google/gemini-3.1-flash-lite-image,google/gemini-2.5-flash-image,openai/gpt-5-image-mini,google/gemini-nano-banana-2.1')
+  'google/gemini-3.1-flash-lite-image,google/gemini-3.1-flash-image,google/gemini-2.5-flash-image,openai/gpt-5-image-mini,openai/gpt-5.4-image-2,google/gemini-3-pro-image')
   .split(',').map((s) => s.trim()).filter(Boolean)
 
 function corsHeaders(): Record<string, string> {
@@ -104,15 +105,68 @@ if (req.method === 'OPTIONS') return new Response('ok', { status: 200, headers: 
   // (โมเดลที่รับ image input จะใช้เป็นต้นแบบ · ตัวที่ไม่รับ = HTTP error → วน pass ถัดไปแบบไม่แนบภาพ)
   const refUrl = String(body.reference_image_url || '').trim()
 
-  // 1) สร้างภาพผ่าน OpenRouter (modalities image) — R32: วน candidates จนรูปมา (โมเดลเดี่ยวโดน retire = ฟีเจอร์ดับ)
-  // R39: เก็บ "attempts ทุกตัว" ลง detail — เดิมเห็นแค่ตัวสุดท้าย (Owner เห็นแต่ชื่อ gemini ไม่รู้ว่า qwen/seedream fail ด้วย)
+  // 1) สร้างภาพผ่าน OpenRouter — R41: 2 ทางต่อโมเดล
+  //   (A) /api/v1/images/generations (ทุกโมเดล image ในทะเบียนมี endpoint นี้) — text-only pass
+  //   (B) chat/completions (fallback + ทางเดียวตอนแนบภาพอ้างอิง)
+  //   parse รวมทุกรูปทรง response ที่พบ (data[].b64_json/url · message.images[] · content parts · source base64)
   let dataUrl = ''
   let usedModel = ''
   const attempts: string[] = []
   const passes: Array<'with-ref' | 'text-only'> = refUrl ? ['with-ref', 'text-only'] : ['text-only']
+  const pickImage = (j: unknown): string => {
+    const o = j as Record<string, unknown> | null
+    const d0 = Array.isArray(o?.data) ? ((o.data as Array<Record<string, string>>)[0] || null) : null
+    if (d0) {
+      if (d0.b64_json) return `data:image/png;base64,${d0.b64_json}`
+      if (d0.url) return d0.url
+      if (d0.image_url) return d0.image_url
+    }
+    const msg = (o?.choices as Array<Record<string, unknown>> | undefined)?.[0]?.message as Record<string, unknown> | undefined
+    if (msg) {
+      const imgs = Array.isArray(msg.images) ? (msg.images as Array<Record<string, string>>) : []
+      for (const im of imgs) {
+        const u = im?.image?.url || im?.image_url?.url || (typeof im?.image_url === 'string' ? im.image_url : '') || im?.url
+        if (u) return u
+      }
+      const parts = Array.isArray(msg.content) ? (msg.content as Array<Record<string, unknown>>) : []
+      for (const part of parts) {
+        if (part?.type === 'image_url' && (part.image_url as { url?: string })?.url) return (part.image_url as { url: string }).url
+        if (part?.type === 'image') {
+          const src = part.source as { data?: string; media_type?: string } | undefined
+          if (src?.data) return `data:${src.media_type || 'image/png'};base64,${src.data}`
+          if (typeof part.image_url === 'string') return part.image_url
+        }
+        if (typeof part?.text === 'string') {
+          const m = /data:image\/[^;]+;base64,[A-Za-z0-9+/=]+/.exec(part.text)
+          if (m) return m[0]
+        }
+      }
+      if (typeof msg.content === 'string') {
+        const m = /data:image\/[^;]+;base64,[A-Za-z0-9+/=]+/.exec(msg.content)
+        if (m) return m[0]
+      }
+    }
+    return ''
+  }
   try {
     outer: for (const pass of passes) {
       for (const model of IMAGE_MODEL_CANDIDATES) {
+        // (A) images API — text-only เท่านั้น (ภาพอ้างอิง = chat path ที่ model รับ input image)
+        if (pass === 'text-only') {
+          try {
+            const ir = await fetch('https://openrouter.ai/api/v1/images/generations', {
+              method: 'POST',
+              headers: { Authorization: `Bearer ${OPENROUTER_KEY}`, 'Content-Type': 'application/json' },
+              body: JSON.stringify({ model, prompt, n: 1 }),
+            })
+            const ij = await ir.json().catch(() => null)
+            const iu = ir.ok ? pickImage(ij) : ''
+            if (iu) { dataUrl = iu; usedModel = `${model} [images-api]`; break outer }
+            const imsg = ((ij as { error?: { message?: string } } | null)?.error?.message) || ''
+            attempts.push(`${model}:images${ir.status}${imsg ? ' ' + String(imsg).slice(0, 70) : ''}`)
+          } catch { attempts.push(`${model}:images_exception`) }
+        }
+        // (B) chat completions
         const content = pass === 'with-ref'
           ? [{ type: 'text', text: prompt }, { type: 'image_url', image_url: { url: refUrl } }]
           : prompt
@@ -129,20 +183,10 @@ if (req.method === 'OPTIONS') return new Response('ok', { status: 200, headers: 
           }),
         })
         const j = await res.json().catch(() => null)
-        if (!res.ok || !j) {
-          const msg = (j as { error?: { message?: string } } | null)?.error?.message || ''
-          attempts.push(`${model}:HTTP${res.status}${msg ? ` ${String(msg).slice(0, 80)}` : ''}`)
-          continue
-        }
-        const msg = (j as { choices?: Array<{ message?: { images?: Array<{ image?: { url?: string } }>; content?: unknown } }> }).choices?.[0]?.message
-        let url = msg?.images?.[0]?.image?.url || ''
-        if (!url && Array.isArray(msg?.content)) {
-          for (const part of msg.content as Array<{ type?: string; image_url?: { url?: string } }>) {
-            if (part.type === 'image_url' && part.image_url?.url) { url = part.image_url.url; break }
-          }
-        }
-        if (url) { dataUrl = url; usedModel = model; break outer }
-        attempts.push(`${model}:no_image`)
+        const u = res.ok ? pickImage(j) : ''
+        if (u) { dataUrl = u; usedModel = model; break outer }
+        const msgErr = ((j as { error?: { message?: string } } | null)?.error?.message) || ''
+        attempts.push(`${model}:chat${res.status}${msgErr ? ' ' + String(msgErr).slice(0, 70) : ''}${res.ok ? ' no_image' : ''}`)
       }
     }
     if (!dataUrl) return json({ error: 'ERR_IMAGE_GEN_FAILED', detail: attempts.join(' · ') || 'no model succeeded', attempts }, 502)

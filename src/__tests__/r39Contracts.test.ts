@@ -67,7 +67,9 @@ describe('R39-2 · image-gen — ภาพอ้างอิงทำร่ว�
 
   it('EF: detail = attempts รวมทุกโมเดล (ไม่ใช่แค่ตัวสุดท้าย — Owner เห็นเหตุจริงทุกชื่อ) + คืน model ที่สำเร็จ', () => {
     expect(imgSrc).toContain('const attempts: string[] = []')
-    expect(imgSrc).toContain('attempts.push(`${model}:HTTP${res.status}')
+    // R41: attempts แยก 2 ทาง (images API + chat) ทุกโมเดล
+    expect(imgSrc).toContain('attempts.push(`${model}:images${ir.status}')
+    expect(imgSrc).toContain('attempts.push(`${model}:chat${res.status}')
     expect(imgSrc).toContain("attempts.join(' · ')")
     expect(imgSrc).toContain('model: usedModel')
   })

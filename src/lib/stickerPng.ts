@@ -44,8 +44,11 @@ export function clampFaceHeight(v: number): number {
  * ⚠️ png height ต้องเท่ากับค่านี้เสมอ (imageToPacked ยืดรูปไป fit size — ไม่งั้นภาพบี้)
  */
 export function stickerPageHeight(offsetY: number, faceH = STICKER_PX_H): number {
-  // R34: หน้า = ความสูงหน้าดวงจริง (faceH) — png ↔ SetPageSize ผูกกันเหมือน offset (ห้ามเพี้ยน)
-  return clampFaceHeight(faceH) + Math.max(0, clampFeedOffset(offsetY))
+  // R41: หน้า = ความสูงหน้าดวง (faceH) "เท่านั้น" — offset ไม่ยืดหน้าอีก
+  // หลักฐาน Owner (2026-10-31): offset 62 พิมตรงแล้ว แต่หน้า 709+62=771/ใบ ≠ ระยะฟีดจริง → ข้ามดวงสะสมทุกใบ
+  // png ↔ SetPageSize ผูกกันเหมือนเดิม (ห้ามเพี้ยน) · offset อยู่ในหน้า (layout เลื่อน + QR ผูกขอบล่าง)
+  void offsetY
+  return clampFaceHeight(faceH)
 }
 
 export type StickerOp =
@@ -59,7 +62,8 @@ export type StickerOp =
 export function stickerDrawList(o: PrintOrderData, offsetY = 0, faceH = STICKER_PX_H): StickerOp[] {
   const off = clampFeedOffset(offsetY)
   const face = clampFaceHeight(faceH)
-  const pageH = face + Math.max(0, off)
+  // R41: หน้า = หน้าดวงเท่านั้น (faceH = ความสูงหน้า/ระยะฟีดต่อใบ) — offset ไม่ต่อบนหน้า/ไม่ยืดหน้าอีก
+  const pageH = face
   const ops: StickerOp[] = []
   const cx = STICKER_PX_W / 2
   const W = STICKER_PX_W
@@ -127,11 +131,19 @@ export function stickerDrawList(o: PrintOrderData, offsetY = 0, faceH = STICKER_
   y += 14
   ops.push({ kind: 'line', x1: M, y1: y, x2: W - M, y2: y, w: 2 })
 
-  // บล็อก QR + ข้อความ (bottom)
+  // R41: เลื่อนเฉพาะ "เนื้อหาส่วนบน" (header → เส้นใต้ Tel) ลงตาม offset — หน้าคงที่ (pageH = face)
+  // บล็อก QR (ด้านล่างนี้) ผูกขอบล่างหน้าเอง = ไม่ถูกเลื่อน → ไม่ล้น/ไม่ข้ามดวงจาก offset
+  if (off !== 0) {
+    for (const op of ops) {
+      if (op.kind === 'line') { op.y1 += off; op.y2 += off }
+      else { op.y += off }
+    }
+  }
+
+  // บล็อก QR + ข้อความ (bottom) — ผูกขอบล่างหน้าจริง: min(ขอบล่างหน้า, เส้น Tel ที่เลื่อนแล้ว + 40)
   const qrSize = 197
-  // R35 (Owner): ลดช่วงเส้น Tel → QR (เดิมผูกขอบล่างหน้า = ช่องว่าง ~160px กว้างเกิน)
-  // — วางห่างจากเส้นใต้ Tel 40px แต่ยังกันไม่ให้ล้นขอบล่างหน้าจริง (R34 faceH) ด้วย min()
-  const qrY = Math.min(face - M - qrSize, y + 40)
+  // R35 (Owner): ลดช่วงเส้น Tel → QR · R41: ฝั่ง fluid บวก offset (เนื้อบนเลื่อนลง) แต่ขอบล่าง "ห้ามเกิน face"
+  const qrY = Math.min(face - M - qrSize, y + 40 + off)
   ops.push({ kind: 'qr', x: M, y: qrY, size: qrSize })
   const tx = M + qrSize + 12
   const mid = tx + (W - tx - M) / 2
@@ -143,13 +155,7 @@ export function stickerDrawList(o: PrintOrderData, offsetY = 0, faceH = STICKER_
   }
   ops.push({ kind: 'text', x: mid, y: ty + 26, text: 'Thank You for love !', size: 22, align: 'center', family: 'Georgia', italic: true })
 
-  if (off !== 0) {
-    for (const op of ops) {
-      if (op.kind === 'line') { op.y1 += off; op.y2 += off }
-      else { op.y += off }
-    }
-  }
-  // พื้นหลัง = ปิดท้าย (วาดใต้ทุกอย่างตามลำดับ array → ต้องอยู่หน้าสุด) เต็มหน้ารวมแถบ offset
+  // พื้นหลัง = ปิดท้าย (วาดใต้ทุกอย่างตามลำดับ array → ต้องอยู่หน้าสุด) เต็มหน้า (R41: pageH = face คงที่)
   return [{ kind: 'rect', x: 0, y: 0, w: STICKER_PX_W, h: pageH, fill: '#ffffff' }, ...ops]
 }
 

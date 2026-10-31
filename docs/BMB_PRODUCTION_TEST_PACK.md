@@ -293,6 +293,35 @@
 
 > รายการ **รอการตัดสินใจ = §N.3 (D-1/D-2/D-3) ยังคงเดิม** · BLK-4/5/6 เดิมยังเปิด
 
+## Q. รอบ R41 — 4 ของใหม่จาก Owner (2026-10-31 บ่าย) `[T]`
+
+### Q.0 ต้นตอ (evidence)
+
+| ของ | ต้นตอจริง |
+|---|---|
+| **Q-A เจน 12:33 = error ตามภาพ** | attempts ใหม่ทำงาน → เห็นจริง: `qwen/qwen-image-3` = **not a valid model ID** · `bytedance-seed/seedream-5-0-flash` = 404 no endpoint · gemini/gpt = chat ตอบ 200 แต่รูปทรง response ที่ parse ไม่ตรง (`no_image`) · ทะเบียนจริง `/api/v1/models` = **12 ตัว output=image ไม่มี qwen/seedream เลย** (`e2e/r41_models_probe.cjs`) |
+| **Q-B ชดเชย 62 พิมตรง แต่ faceH 640/709 ยังข้ามดวง (เดี่ยว+ต่อเนื่อง)** | **โมเดลหน้าเติบโตผิด**: `page = faceH + offset` → ทุกใบ +62px (709+62=771 ≠ ระยะฟีดจริง) → เพี้ยนสะสมข้ามดวง · QR ถูกเลื่อนตาม offset จนเลยขอบล่างหน้า · offset ทำงาน = ค่าถึงเครื่องจริง (やは settings ไม่โดน) |
+| **Q-C โพสยังไม่มาตามเวลา** | **GH automation-scheduler ง่อยข้ามชั่วโมง** (run ล่าสุด 05:29Z ไม่มีหลังนั้น · ทั้งวัน ~10/288) → queue marketing_publish ไม่รันหลังครบกำหนด · **pg_cron ไม่มีในโปรเจกต์** (`cron.job` = does not exist) → site promote พึ่ง "มีคนเปิดหน้า" อย่างเดียว |
+| **Q-D เอไอไม่ตอบโพส** | **inbound ยังทำงาน**: คอมเม้น 05:48Z ตอบ `reply_status=sent` ใน 10 วิ ✓ (webhook→social-ai ปกติ · canAutoSend = full-auto) — ที่พังคือ **outbound/poll**: `g26-poll` ล่าสุด 05:29Z = poll หยุดเมื่อ GH หยุด (worker ตัวเดียว run marketing_publish → FB push + comment poll) |
+
+### Q.1 ปิดแล้ว (โค้ด + gates)
+
+1. ✅ **image-gen**: list ใหม่ = ทะเบียนจริง 6 ตัว (ถอด qwen/seedream · เรียงถูก→แพง) · **images API ก่อน** (`/api/v1/images/generations` — ทุกโมเดล image มี endpoint นี้) + chat fallback + `pickImage` รวมทุกรูปทรง (`b64_json/url/images[]/content parts/source base64`) · **secret `IMAGE_GEN_MODELS` ตั้งค่าใหม่ตอน apply** (ค่าเก่า = ID ผิด!)
+2. ✅ **สติกเกอร์ (โมเดลใหม่ R41)**: `stickerPageHeight = faceH เท่านั้น` (offset ไม่ยืดหน้า — ฆ่า +62/ใบ) · เนื้อบนเลื่อนตาม offset ภายในหน้า · **QR = min(ขอบล่างหน้า, tel+40+off) ไม่เลย face** · การ์ดวิธีใช้ปรับเป็น semantics ใหม่ · test อัปเดตตามโมเดลใหม่ (ไม่ weaken — แก้ตามหลักฐาน Owner)
+3. ✅ **m178 `178_cron_publish_tick.sql`**: pg_cron+pg_net (guarded) · **`bmb-promote` ทุกนาที** (m177 fn = site ขึ้นตรงเวลาไม่รอใคร) · **`bmb_tick_http` → EF `cron-tick` (ใหม่ · verify_jwt=false · x-tick-token secret)** → automation-worker `marketing_publish` **ทุก 5 นาที** = FB push + comment poll ไม่พึ่ง GH อีก · GH เดิม = backup
+4. ✅ **gates**: vitest เป้า 8+1 ไฟล์ (sticker 68 + r41) · lint/tsc = chain ก่อน commit · *CI HEAD ก่อนหน้า = `af5f685` in_progress ณ เขียน · `0b70519`/`0985a62` เขียว ✓*
+
+### Q.2 ขั้นทดสอบ Owner `[Q]`
+
+| # | ขั้น | PASS = |
+|---|---|---|
+| **Q-A** | AI Studio กด "✨ สร้างภาพ" อีกครั้ง | ✅ สำเร็จ = ภาพเข้าพรีวิว+อัลบั้ม (โมเดล gemini/gpt ตัวใหม่ · ทะเบียนจริง) · ❌ = ส่ง attempts ในการ์ดมา (รูปทรง/endpoint ใหม่ที่ยังไม่ตรง) |
+| **Q-B** | ตั้งค่าเดิม (ชดเชย 62 · หน้าดวง 709) → **รีเฟรชหน้า** → วิซาร์ด "พิมพ์ต่อเนื่อง 4 ใบ" | ใบ 1–4 **ตรง + ไม่ข้ามดวง** (หน้า = 709 คงที่ทุกใบ — ไม่มี +62 แล้ว) · ถ้ายังข้าม = วัด pitch (ขอบล่าง→ขอบล่าง มม.×11.81) ใส่ "หน้าดวง" ในวิซาร์ด |
+| **Q-C** | ตั้งเวลาโพสต์ใหม่ ~10 นาทีข้างหน้า → รอถึงเวลา **ไม่ต้องเปิดหน้าอะไรเลย** | ≤1 นาที: แถว = `published` (cron promote) · หน้าแรกขึ้นเมื่อเปิด · **≤5 นาที**: FB มีโพสต์ (`provider_post_id` ไม่ว่าง — tick→worker) |
+| **Q-D** | คอมเม้น/ทัก inbox เพจ → รอ ≤3 นาที (webhook เดิม + poll tick ใหม่) | ตอบอัตโนมัติ (`reply_status=sent`) ทั้งโพสต์และข้อความ |
+
+> **หมายเหตุ**: `BMB_TICK_TOKEN` + `IMAGE_GEN_MODELS(ใหม่)` ตั้งตอน apply m178 (ไม่อยู่ใน git) · ถ้า pg_cron/pg_net ถูก platform ปฏิเสธ = apply ข้ามเงียบ (visit-path + GH ยังเป็น backup — แจ้งใน result json)
+
 ## P. รอบ R40 — 3 ของใหม่จาก Owner (2026-10-31 สาย 2) `[T]`
 
 ### P.0 ต้นตอ

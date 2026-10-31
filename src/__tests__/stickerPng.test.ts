@@ -83,11 +83,11 @@ describe('R33 — clampFeedOffset / stickerPageHeight (ชดเชยฟีด)
     expect(clampFeedOffset(undefined as unknown as number)).toBe(0)
   })
 
-  it('stickerPageHeight: บวก = หน้าเติบโตตาม offset · 0/ติดลบ = 709 เดิม (ไม่หด)', () => {
+  it('stickerPageHeight (R41): หน้า = 709 เท่านั้น — offset ไม่ยืดหน้า (บวก/ติดลบ เหมือนกันหมด · หลักฐาน: +62/ใบ = ข้ามดวงสะสม)', () => {
     expect(stickerPageHeight(0)).toBe(709)
-    expect(stickerPageHeight(100)).toBe(809)
+    expect(stickerPageHeight(100)).toBe(709)
     expect(stickerPageHeight(-40)).toBe(709)
-    expect(stickerPageHeight(9999)).toBe(709 + 300)
+    expect(stickerPageHeight(9999)).toBe(709)
   })
 })
 
@@ -103,11 +103,32 @@ describe('R34 — clampFaceHeight / หน้า = ความสูงหน�
     expect(clampFaceHeight(undefined as unknown as number)).toBe(STICKER_PX_H)
   })
 
-  it('stickerPageHeight(offset, faceH): หน้า = faceH + max(0, offset) — png ↔ SetPageSize ผูกกัน', () => {
+  it('stickerPageHeight(offset, faceH): R41 หน้า = faceH เท่านั้น (offset ไม่ยืดหน้า — หลักฐาน: +62/ใบทำเพี้ยนฟีด) · png ↔ SetPageSize ผูกกัน', () => {
     expect(stickerPageHeight(0, 660)).toBe(660)
-    expect(stickerPageHeight(80, 660)).toBe(740)
-    expect(stickerPageHeight(-40, 660)).toBe(660) // offset ติดลบ = หน้าเท่าเดิม
+    expect(stickerPageHeight(80, 660)).toBe(660) // R41: ไม่ grow — offset อยู่ในหน้าเดิม
+    expect(stickerPageHeight(30, 709)).toBe(709)
+    expect(stickerPageHeight(-40, 660)).toBe(660)
     expect(stickerPageHeight(0, 500)).toBe(640) // clamp ขอบล่าง
+  })
+
+  it('R41 stickerDrawList offset=60: เนื้อบนเลื่อนลง · QR = min(ขอบล่างหน้า, tel ที่เลื่อนแล้ว+40) ไม่เลย face · bg = face', () => {
+    const ops = stickerDrawList(order, 60, 709)
+    const qr = ops.find((o) => o.kind === 'qr')
+    const head = ops.find((o): o is Extract<StickerOp, { kind: 'text' }> => o.kind === 'text' && o.text === 'BITE ME BABY')
+    const tel = ops.find((o): o is Extract<StickerOp, { kind: 'text' }> => o.kind === 'text' && o.text.startsWith('Tel.'))
+    // หัวเลื่อนลง 60 (y = 16+30+60)
+    expect(head?.y).toBe(16 + 30 + 60)
+    // QR = min(ขอบล่าง, fluid = tel(เลื่อนแล้ว)+14+40) — ไม่มีทางเกินหน้า
+    expect(qr && qr.kind === 'qr' ? qr.y : -1).toBe(Math.min(709 - 16 - 197, (tel?.y ?? 0) + 14 + 40))
+    const bg = ops[0]
+    expect(bg.kind === 'rect' && bg.h).toBe(709)
+    for (const op of ops) {
+      const yEnd = op.kind === 'line' ? Math.max(op.y1, op.y2)
+        : op.kind === 'rect' ? op.y + op.h
+          : op.kind === 'qr' ? op.y + op.size
+            : op.y
+      expect(yEnd).toBeLessThanOrEqual(709)
+    }
   })
 
   it('stickerDrawList faceH=660: QR = min(ขอบล่างหน้า 447, เส้น Tel+40) — R35 ลดช่วง Tel→QR · ทุก op ≤ หน้า · bg = 660', () => {
@@ -138,30 +159,42 @@ describe('R34 — clampFaceHeight / หน้า = ความสูงหน�
 })
 
 describe('R33 — stickerDrawList(offset) ทุก op เลื่อนเท่ากัน · bg = เต็มหน้าใหม่', () => {
-  it('offset +80 = ทุก op ลง 80px (lines ใช้ y1/y2) · bg สูงเท่า pageH', () => {
+  it('R41 offset +80 = เนื้อบนลง 80px (text/lines) · บล็อก QR ขยับตามสูตร min(ขอบล่าง, tel+40+off) เท่านั้น · bg = 709 คงที่', () => {
     const base = stickerDrawList(order)
     const moved = stickerDrawList(order, 80)
     expect(moved).toHaveLength(base.length)
-    // bg = element แรก — สูง 709+80
+    // bg = element แรก — R41: เท่า face เดิม 709 (ไม่ grow 789)
     const bg = moved[0]
     expect(bg.kind).toBe('rect')
-    expect(bg.kind === 'rect' && bg.h).toBe(789)
+    expect(bg.kind === 'rect' && bg.h).toBe(709)
+    const qrIdx = base.findIndex((o) => o.kind === 'qr')
+    const baseQr = base[qrIdx]
+    const movedQr = moved[qrIdx]
+    const baseQrY = baseQr.kind === 'qr' ? baseQr.y : 0
+    const qrDelta = (movedQr.kind === 'qr' ? movedQr.y : 0) - baseQrY
+    // qrY ใหม่ = min(ขอบล่าง, fluid เดิม+80)
+    expect(movedQr.kind === 'qr' ? movedQr.y : -1).toBe(Math.min(709 - 16 - 197, baseQrY + 80))
     for (let i = 1; i < base.length; i++) {
       const a = base[i]
       const b = moved[i]
       expect(b.kind).toBe(a.kind)
-      if (a.kind === 'line' && b.kind === 'line') {
-        expect(b.y1).toBe(a.y1 + 80)
-        expect(b.y2).toBe(a.y2 + 80)
-      } else if (a.kind !== 'line' && b.kind !== 'line') {
-        expect(b.kind === 'text' || b.kind === 'qr' || b.kind === 'rect' ? b.y : NaN).toBe(a.kind === 'text' || a.kind === 'qr' || a.kind === 'rect' ? a.y + 80 : NaN)
+      if (i < qrIdx) {
+        // เนื้อหาส่วนบน = เลื่อน +80 ทุกตัว
+        if (a.kind === 'line' && b.kind === 'line') {
+          expect(b.y1).toBe(a.y1 + 80)
+          expect(b.y2).toBe(a.y2 + 80)
+        } else if (a.kind === 'text' && b.kind === 'text') {
+          expect(b.y).toBe(a.y + 80)
+        }
+      } else if (i > qrIdx && a.kind === 'text' && b.kind === 'text') {
+        // ข้อความในบล็อก QR = ผูกกับ qrY (เลื่อนตาม delta ของ QR เท่านั้น — ไม่ใช่ +80 ตรง ๆ)
+        expect(b.y - a.y).toBe(qrDelta)
       }
-      // ทุก op ต้องไม่เกินหน้าใหม่
       const yEnd = b.kind === 'line' ? Math.max(b.y1, b.y2)
         : b.kind === 'rect' ? b.y + b.h
           : b.kind === 'qr' ? b.y + b.size
             : b.y
-      expect(yEnd).toBeLessThanOrEqual(789)
+      expect(yEnd).toBeLessThanOrEqual(709)
     }
     // หัวเรื่อง baseline เดิม 46 → 126 (ไม่ติดเพดาน)
     const head = moved.find((o) => o.kind === 'text' && o.text === 'BITE ME BABY')

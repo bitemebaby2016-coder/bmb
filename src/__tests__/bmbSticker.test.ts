@@ -113,17 +113,18 @@ describe('R30 — Niimbot Bluetooth path (driver ภาษาจีน reverse �
   it('R33 — stickerSize(offset): h_px ผูก stickerPageHeight เสมอ (png ↔ SetPageSize ห้ามเพี้ยน)', () => {
     expect(stickerSize()).toEqual({ w_px: 472, h_px: 709, offset_y_px: 0 })
     expect(stickerSize(0)).toEqual(STICKER_40x60_300DPI)
-    expect(stickerSize(120).h_px).toBe(829)
+    expect(stickerSize(120).h_px).toBe(709) // R41: offset ไม่ยืดหน้าแล้ว (หน้า = faceH)
     expect(stickerSize(-40).h_px).toBe(709) // ติดลบ = หน้าเท่าเดิม
-    expect(stickerSize(99999).h_px).toBe(1009) // clamp 300
+    expect(stickerSize(99999).h_px).toBe(709) // R41: clamp หน้า = faceH (เดิมบวก offset เติบโต)
     for (const off of [0, 50, -20, 300]) {
       expect(stickerSize(off).w_px).toBe(472)
+      expect(stickerSize(off).h_px).toBe(709) // R41: ทุก offset = หน้าเท่ากัน (png ↔ SetPageSize คงที่)
       expect(stickerSize(off).offset_y_px).toBe(0) // offset ทำที่ render — lib ห้ามซ้ำ
     }
     // R34: faceH ความสูงหน้าดวงจริง — h_px ผูก stickerPageHeight(offset, faceH)
     expect(stickerSize(0, 660).h_px).toBe(660)
-    expect(stickerSize(50, 660).h_px).toBe(710) // faceH + offset บวก = 660+50
-    expect(stickerSize(-40, 660).h_px).toBe(660) // offset ติดลบ = หน้าเท่าเดิม
+    expect(stickerSize(50, 660).h_px).toBe(660) // R41: faceH + ไม่บวก offset
+    expect(stickerSize(-40, 660).h_px).toBe(660)
     expect(stickerSize(0, 660).w_px).toBe(472)
     expect(stickerSize(0, 660).offset_y_px).toBe(0)
   })

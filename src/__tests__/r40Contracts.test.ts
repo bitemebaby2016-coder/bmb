@@ -9,12 +9,12 @@ const mkSrc = read('src/pages/admin/AdminMarketing.tsx')
 const imgSrc = read('supabase/functions/image-gen/index.ts')
 
 describe('R40-1 · สติกเกอร์ — วิซาร์ดตั้งค่า (ตั้งหลักใหม่) + วิธีใช้ 2 ค่า + ปุ่มที่ไม่ใช้ค่าต้องเตือน', () => {
-  it('pure: mm→px @300dpi + หน้า px = faceH+offset บวก (คณิตที่วิซาร์ด/จอโชว์ = ค่าพิมพ์จริง)', () => {
+  it('pure: mm→px @300dpi + R41 หน้า px = faceH เท่านั้น (offset ไม่ยืดหน้า — กันเพี้ยนฟีด)', () => {
     expect(mmToStickerPx(60)).toBe(709) // มาตรฐาน 40×60
     expect(mmToStickerPx(25.4)).toBe(300)
     expect(clampFaceHeight(mmToStickerPx(62))).toBe(732)
-    expect(stickerPageHeight(30, 709)).toBe(739) // offset บวก = หน้ายาวขึ้นตาม
-    expect(stickerPageHeight(-30, 709)).toBe(709) // ติดลบ = หน้าเท่าเดิม
+    expect(stickerPageHeight(30, 709)).toBe(709) // R41: ไม่ใช่ 739 (เดิม grow = ต้นตอข้ามดวงตอน offset ≠ 0)
+    expect(stickerPageHeight(-30, 709)).toBe(709)
   })
 
   it('source: btPrintWith = จุดเดียวของทุกปุ่ม BT (handleBtTest/ใบวัด/วิซาร์ดเรียกทางนี้) — จอ=เครื่อง', () => {

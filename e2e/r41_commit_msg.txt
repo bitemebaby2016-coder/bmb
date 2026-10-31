@@ -1,0 +1,20 @@
+R41: 4 ของใหม่ Owner บ่าย — image-gen ทะเบินจริง 6 ตัว+images API · สติกเกอร์หน้าคงที่ (ไม่ grow) ·
+m178 cron (promote ทุกนาที + cron-tick EF → worker 5 นาที) · AI inbound ปกติ/poll รอ m178
+
+- image-gen EF: list ใหม่ = เฉพาะโมเดล output=image ที่ /api/v1/models ยืนยัน (ถอด qwen-image-3=invalid ID
+  + seedream=404 ตาม attempts จริงจาก production) · images API ก่อน (text-only) + chat fallback
+  + pickImage รวมทุกรูปทรง (data[].b64_json/url · message.images[] · content parts · source base64)
+- stickerPng: R41 โมเดลหน้าคงที่ — stickerPageHeight = clampFaceHeight(faceH) เท่านั้น (offset ไม่ยืดหน้า
+  = ฆ่า +62/ใบ ที่ทำเพี้ยนฟีดข้ามดวง) · เนื้อบนเลื่อนในหน้า (shift ก่อนบล็อก QR) · QR =
+  min(face-M-qrSize, y+40+off) ไม่เลย face · bg = face · การ์ดวิธีใช้ AdminPrintSettings = semantics ใหม่
+- m178_cron_publish_tick.sql (PREPARED): pg_cron+pg_net guarded + bmb-promote ทุกนาที (m177 fn)
+  + bmb_tick_http(token) → pg_net → EF cron-tick (token ไม่อยู่ในไฟล์)
+- EF cron-tick ใหม่: verify_jwt=false (config) + x-tick-token=BMB_TICK_TOKEN secret → automation-worker
+  marketing_publish eventId=นาที (FB push + g26 comment poll) ทุก 5 นาที · GH = backup
+- e2e/r41Apply178.cjs: apply+set secrets (BMB_TICK_TOKEN+IMAGE_GEN_MODELS ใหม่)+schedule bmb-tick
+  +E2E เรียก tick ตรงๆ+promote+verify → r41Apply178-result.json
+- evidence probes: r41_models_probe (ทะเบิน 12 ตัว) · r41_probe/c/d (queue ง่อย 05:29Z · cron.job ไม่มี ·
+  reply_status=sent 05:48 = inbound ปกติ) · r41_web_bundle (เว็บมี feed rpc แล้ว · ยังไม่มี R40)
+- tests: sticker 8 ไฟล์ 68/68 (แก้ expectation ตามโมเดลใหม่ — ไม่ weaken) + r41Contracts ใหม่ 5
+- docs: TEST_PACK §Q (Q.0 ต้นตอ · Q.1 ปิด · Q.2 ขั้น Q-A..Q-D) · work-state R41 · master R41 · แฮนออฟ R41
+- gates: lint/tsc = chain ก่อน commit · CI = probe หลัง push

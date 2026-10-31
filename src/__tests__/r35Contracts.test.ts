@@ -27,7 +27,8 @@ describe('R35 · สติกเกอร์ — Menu/Notice หลัง ":" �
     expect(stickerSrc).toContain("text: 'Menu :', size: 22, weight: 700")
     expect(stickerSrc).toContain('x: valX, y, text: menuLines[0]')
     expect(stickerSrc).toContain('x: valX, y, text: noticeLines[0]')
-    expect(stickerSrc).toContain('const qrY = Math.min(face - M - qrSize, y + 40)')
+    // R41: + off (fluid บวกชดเชย) — ขอบล่างหน้าคงที่ min() ตัวแรกเท่าเดิม
+    expect(stickerSrc).toContain('const qrY = Math.min(face - M - qrSize, y + 40 + off)')
     expect(stickerSrc).not.toMatch(/qrY = face - M - qrSize\b/)
   })
 

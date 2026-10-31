@@ -93,3 +93,12 @@ verify_jwt = true
 [functions.sheets-sync]
 enabled = true
 verify_jwt = true
+[functions.sheets-sync]
+enabled = true
+verify_jwt = true
+
+# cron-tick: R41 — สะพาน pg_cron/pg_net (ใน DB) → automation-worker (FB push + comment poll) ทุก 5 นาที
+#   verify_jwt = false เพราะ pg_net ยิงตรงไม่มี JWT · คุ้มด้วย x-tick-token = secret BMB_TICK_TOKEN (ตั้งตอน apply m178)
+[functions.cron-tick]
+enabled = true
+verify_jwt = false
