@@ -1,0 +1,6 @@
+fix(CI): languageSanity จับอักขระจีน 4 จุด (R34 fallback 电动车 + comment e2e) — ขั้น Lint พัง CI aa1b295
+
+- HomePage: fallback sameDaySectionTitle '电动车 ส่งวันนี้' -> '🚗 ส่งวันนี้'
+- r34Contracts: assertion not.toContain 2 บรรทัดปรับตาม fallback ใหม่
+- e2e/r35_or_diag.cjs: comment 字段可能改名 -> ไทย
+- npm run lint = brandNameGuard OK 491 + languageSanity OK 1391 · tsc 0 · r34+r35 tests 12/12

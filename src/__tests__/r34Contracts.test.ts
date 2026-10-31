@@ -22,9 +22,9 @@ describe('R34 · หน้าแรก = หัวข้อแอดมิน + 
     expect(homeSrc).toContain("modeSectionTitle('pre_order'")
     expect(homeSrc).toContain('sameDaySectionTitle')
     expect(homeSrc).toContain('preOrderSectionTitle')
-    // h2/แท็บต้อง render ตัวแปร (ไม่ใช่สตริงตายตัวเดิม)
-    expect(homeSrc).not.toContain('>电动车 ส่งวันนี้</h2>')
-    expect(homeSrc).not.toContain('>{电动车 ส่งวันนี้}<')
+    // h2/แท็บต้อง render ตัวแปร (ไม่ใช่สตริงตายตัวเดิม — fallback ห้ามฝังใน JSX)
+    expect(homeSrc).not.toContain('>🚗 ส่งวันนี้</h2>')
+    expect(homeSrc).not.toContain('>{🚗 ส่งวันนี้}<')
   })
 
   it('เมนูยอดนิยม: resolvePopularItems ส่ง schedule — pre-order ไม่มีปฏิทินถูกกรองออก', () => {

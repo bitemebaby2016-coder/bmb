@@ -343,7 +343,7 @@ export function HomePage() {
     const c = categories.find((x) => saleModeOfCategory(x) === mode)
     return c ? `${c.icon ? c.icon + ' ' : ''}${c.name}` : fallback
   }
-  const sameDaySectionTitle = modeSectionTitle('same_day', '电动车 ส่งวันนี้')
+  const sameDaySectionTitle = modeSectionTitle('same_day', '🚗 ส่งวันนี้')
   const preOrderSectionTitle = modeSectionTitle('pre_order', '📅 พรีออเดอร์')
 
   if (loading) {
