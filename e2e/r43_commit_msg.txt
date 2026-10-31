@@ -1,0 +1,16 @@
+R43: ตามคำสั่ง Owner "ห้ามโค้ดแก้" — รับงาน 7 บั๊กใหม่ + วางแผนละเอียดลงแฮนออฟ
+(เอกสารล้วน · ไม่มีไฟล์โค้ด/เทสต์/SQL ถูกแก้)
+
+- docs/BMB_HANDOFF_NEXT_SESSION_2026-10-31.md: หัวข้อ R43 ใหม่ = B1 ตั้งเวลาเดียว+ERR_APPROVAL_REQUIRED
+  + dialog เพี้ยน · B2/B3 โพส FB ไม่ตรงเวลา/มาไม่ครบ/approve แล้วไม่ขึ้น · B4 AI ผิดบริบทปิด same-day
+  · B5 แจ้งเตือนลูกค้าเมื่อบอตโพส/ตอบ (เปิด D-4) · B6 ลิงก์ cart=ไม่มีของจริง · B7 ×4 ต่อเนื่อง=2-เว้น-1
+  (เดี่ยว/ตำแหน่ง/ขนาด ผ่าน ✓) — ทุกข้อ: อาการ+ภาพยืนยัน → ต้นตอที่ต้องพิสูจน์ → probe อ่านอย่างเดียว
+  → แผนแก้ (รอปลดล็อก) → วิธี verify
+- งานค้างรวม 9 ข้อ (ตาราง consolidated): CI b8c8c15 probe · m178 cron verify · web bundle · Q-A..Q-D
+  (Q-B เดี่ยวปิดแล้ว) · D-1..D-4 · image-gen tuning · EF logs 404 known · GH backup · full local vitest=policy
+- Runbook แชทหน้า ข้อ 0-8: bootstrap+ยืนยันคำสั่งห้าม → CI probe → read-only probes B2/B1/B4/B6 → ถาม D-1..D-4
+  → วัด pitch B7 → รอปลดห้ามแล้วลงมือเรียง B1→B4/B6→B2/B3→B7→B5 → docs §R + gates + CI probe ครั้งเดียว
+- AI_WORK_STATE: บล็อกบนสุด = R43 PLANNED ONLY (สรุป 7 บั๊ก + ผูกงานค้างใน runbook)
+- docs/BMB_MASTER_STATUS: last_updated (R43) + แฮนออฟบรรทัดยึดชี้ R43
+- gates: npm run lint = OK (eslint+brandNameGuard+languageSanity) · lang scan 2 hits = คำอธิบาย pattern ในเอกสาร
+  (ไม่ใช่เพี้ยนจริง) · ไม่มีไฟล์ src/supabase/e2e-logic ถูกแก้ (นับจากไฟล์ที่ add)
