@@ -4,9 +4,9 @@
 
 ## 0. HEAD + CI (สำคัญสุด — เช็คก่อนงานอื่น)
 
-- **HEAD = `ff9132f` (push แล้ว · fix CI รอบ 2)** — R37: languageSanity จับอักขระจีน **2 จุดในเอกสาร** ของ `7048283` (`BMB_HANDOFF...md:7` + `BMB_MASTER_STATUS.md:7` — อ้าง fallback เดิมตรง ๆ เป็นหลักฐาน) → แก้เป็นคำไทย · verify = `npm run lint` เต็ม OK + `npx tsc --noEmit` 0
-- **CI `e4c3ad7` = success ทุก workflow ✅** (งานแรกตามแฮนออฟ — ปิดแล้ว · พิสูจน์ด้วย `node e2e/r36_ci_probe.cjs`)
-- **CI `7048283` = failure ที่ Lint (#5)** (Test/Contract/Cloudflare = ผ่าน) → สาเหตุซ้ำแบบ = อักขระจีนใน docs → **แก้ใน `ff9132f`** → **งานแรกของแชทหน้า = เช็ค CI `ff9132f` ครั้งเดียวให้เขียว** (probe ตัวเดิม ไม่ต้อง token)
+- **HEAD = `c22e869` (push แล้ว = `ff9132f` fix CI รอบ 2 + `c22e869` docs)** — R37: languageSanity จับอักขระจีน **2 จุดในเอกสาร** ของ `7048283` (`BMB_HANDOFF...md:7` + `BMB_MASTER_STATUS.md:7` — อ้าง fallback เดิมตรง ๆ เป็นหลักฐาน) → แก้เป็นคำไทย · verify = `npm run lint` เต็ม OK + `npx tsc --noEmit` 0
+- **CI `e4c3ad7` = success ทุก workflow ✅** (งานแรกตามแฮนออฟ — ปิดแล้ว · พิสูจน์ด้วย `node e2e/r36_ci_probe.cjs`) · `ff9132f` Contract = success ✓ (CI = ยัง in_progress ตอนเขียน)
+- **CI `7048283` = failure ที่ Lint (#5)** (Test/Contract/Cloudflare = ผ่าน) → สาเหตุซ้ำแบบ = อักขระจีนใน docs → **แก้ใน `ff9132f`** → **งานแรกของแชทหน้า = เช็ค CI HEAD `c22e869` ครั้งเดียวให้เขียว** (probe ตัวเดิม ไม่ต้อง token)
 - ก่อนหน้า: `e4c3ad7` (fix CI รอบ 1) · `aa1b295` (R35) · `a6b3b34`/`4b2ffda` (R34)
 
 ## 1. งานค้างที่ต้องทำต่อ (เรียงลำดับความสำคัญ)
@@ -16,15 +16,15 @@
 - **ยังไม่ verify:** การพิมพ์จริง — Owner กดยืนยันออเดอร์ → ดูว่า (1) Menu/Notice อ่านตรงบรรทัดเดียวกับป้าย (2) QR ชิดขึ้นจริง (3) **ยังข้ามดวงไหม**
 - **ถ้ายังข้ามดวง:** พิมพ์ใบวัดฟีด → วัดเส้นขอบล่าง → ใส่ `stickerFaceHPx` ในหน้าตั้งค่าพิมพ์ (min 640 max 760 · ค่าเริ่ม 709) → ทดสอบซ้ำ
 
-### 1.2 image-gen EF deploy + คีย์ + โมเดล (R35)
-- **คีย์:** โค้ดอ่าน `BMB_OPENROUTER_API_KEY` ก่อน · fallback `OPENROUTER_API_KEY` (dev) — ** Owner ยืนยันคีย์ `BMB_openrouter_api_key` = แยกสำหรับงานคอนเทนต์/เจนรูป/marketing/talk-to-bite**
-  - **เช็ค:** `supabase secrets get BMB_OPENROUTER_API_KEY` (production ตั้งยัง? ถ้ายัง = โค้ดยัง fallback คีย์ dev อยู่)
-- **โมเดล (ยืนยันจากภาพหน้าโมเดลจริง Owner):** `qwen/qwen-image-3` + `bytedance-seed/seedream-5-0-flash` = **มีจริง** (probe `/api/v1/models` สาธารณะไม่เจอ = index คนละชุด) — ใส่เป็น 2 candidate แรกใน `IMAGE_MODEL_CANDIDATES` แล้ว · env `IMAGE_GEN_MODELS` override ได้
-- **ทำ:** deploy `supabase functions deploy image-gen` → ลองเจนรูปโปรโมต 1 ใบจริงจาก AdminMarketing → ถ้า fallback ข้าม 2 ตัวแรกไป gemini = บันทึกว่าโมเดลคู่แรกใช้ไม่ได้จริง (แล้วถอดออก/สลับลำดับ)
+### 1.2 image-gen EF deploy + คีย์ + โมเดล (R35) — **AI ปิดแล้ว (R37) เหลือ Owner กดเจน**
+- ✅ **secret `BMB_OPENROUTER_API_KEY` = ตั้งบน production แล้ว** (พิสูจน์: `supabase secrets list` มีชื่อนี้ · digest ตรง `OPENROUTER_API_KEY`) → โค้ดที่อ่าน BMB ก่อน = ใช้คีย์จริง ไม่ fallback dev
+- ✅ **EF `image-gen` deploy แล้ว** (`supabase functions deploy image-gen` = `DEPLOY_OK` บน project `ivkdfognyiwjcmrhcnwz` · evidence `e2e/r37_deploy_imagegen.log`)
+- ✅ **liveness probe:** OPTIONS = **HTTP 200 `ok`** (CORS preflight ไม่ถูกบล็อก) · POST ไม่มี JWT = **HTTP 401 `UNAUTHORIZED_NO_AUTH_HEADER`** (verify_jwt กัน anon) — evidence `e2e/r37_imggen_options.txt` / `r37_imggen_noauth.txt`
+- ⏳ **เหลือ Owner:** เปิด AdminMarketing → เจนรูปโปรโมต **1 ใบจริง** (admin JWT) — ถ้า fallback ข้าม 2 ตัวแรก (`qwen/qwen-image-3`, `bytedance-seed/seedream-5-0-flash`) ไป gemini = บันทึกว่าโมเดลคู่แรกใช้ไม่ได้จริง (แล้วถอด/สลับลำดับ · env `IMAGE_GEN_MODELS` override ได้)
 
 ### 1.3 gates + CI รอบ R35/R36
 - **ผ่านแล้ว (ท้องถิ่น):** vitest **91/91** (8 ไฟล์) · **`npm run lint` เต็ม = OK** (eslint + brandNameGuard 491 + languageSanity 1391 — หลัง fix R36) · tsc 0 · build `e2e/r35_build.log` ✓ · r34+r35 re-run = 12/12
-- **CI:** `aa1b295` = Lint พัง (แก้แล้วใน `e4c3ad7`) · **`e4c3ad7` = รอเช็คครั้งเดียว** (Contract ของเขา success แล้ว) · full vitest ท้องถิ่น ~1,670 = ยังไม่รัน — **CI Test step พิสูจน์ผ่านแล้ว ไม่ซ้ำโดยไม่จำเป็น**
+- **CI:** `aa1b295`/`7048283` = Lint พัง (แก้ใน `e4c3ad7`/`ff9132f`) · **`e4c3ad7` = success ✅ ทุก workflow** · `ff9132f` Contract = success (CI = in_progress ตอนปิด) · full vitest ท้องถิ่น ~1,670 = ยังไม่รัน — **CI Test step พิสูจน์ผ่านแล้ว ไม่ซ้ำโดยไม่จำเป็น**
 
 ### 1.4 งานค้างสะสม (ยังเปิดอยู่)
 1. e2e auto-print ออเดอร์จริง (R31 โค้ดพร้อม · Owner ยืนยัน "รับออเดอร์แล้วสติกเกอร์ปริ้นอัตโนมัติจากใบสั่งซื้อจริง ตรงรายละเอียดกับ notice" แล้ว)
@@ -47,8 +47,11 @@
 
 ## 3. ทดสอบทั้งหมดที่ต้องทำ (แชทหน้า)
 
-- [ ] **เช็ค CI `e4c3ad7` ครั้งเดียว** → เขียว = ปิด loop CI (ใช้ `node e2e/r36_ci_probe.cjs` ดูผล/log)
+- [x] **เช็ค CI `e4c3ad7`** → **success ทุก workflow ✅** (R37 · `node e2e/r36_ci_probe.cjs`)
+- [x] ~~CI `7048283` แดงที่ Lint~~ → แก้ 2 จุดในเอกสาร = `ff9132f` (verify `npm run lint` + `tsc` ผ่าน)
+- [ ] **เช็ค CI HEAD `c22e869` ครั้งเดียว** → ให้เขียว (probe ตัวเดิม · ณ ปิดเซสชัน = in_progress · NO_FAILED_RUN)
 - [ ] Owner: พิมพ์สติกเกอร์จริง 1 ออเดอร์ → ถ่ายรูปส่งมา (Menu/Notice บรรทัดเดียวกัน · QR ชิด · ขอบดวง)
-- [ ] EF image-gen deploy + secret `BMB_OPENROUTER_API_KEY` + เจนรูปจริง 1 ใบ
+- [x] ~~secret `BMB_OPENROUTER_API_KEY` + EF image-gen deploy~~ = **ทำแล้ว ✓** (ดู 1.2 — เหลือ liveness ก็ผ่านแล้ว)
+- [ ] Owner: เจนรูปจริง 1 ใบจาก AdminMarketing (admin JWT · คู่แรก qwen-image-3 / seedream-5-0-flash)
 - [ ] e2e auto-print จริง (ถ้ายังไม่ทำ)
 - [ ] (ถ้าต้องการ) full vitest ทั้งชุด local — CI Test ผ่านแล้ว ไม่บังคับ
