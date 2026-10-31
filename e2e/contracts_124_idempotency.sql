@@ -80,7 +80,7 @@ BEGIN
   ASSERT pg_temp.c_orders() = v_base_orders + 1, 'T2 must not create a second order';
   ASSERT pg_temp.c_subs(NULL) = 1, 'T2 submission count unchanged';
 
-  -- T13: ?????????????? order_submissions ??? ? (REVOKE ALL + RLS ????? policy)
+  -- T13: authenticated อ่าน order_submissions ไม่ได้ (REVOKE ALL + RLS ปิด policy — ต้องชน insufficient_privilege)
   BEGIN
     PERFORM set_config('role','authenticated',false);
     PERFORM (SELECT count(*) FROM public.order_submissions);

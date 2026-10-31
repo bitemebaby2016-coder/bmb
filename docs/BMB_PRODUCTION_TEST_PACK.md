@@ -322,6 +322,14 @@
 
 > **หมายเหตุ**: `BMB_TICK_TOKEN` + `IMAGE_GEN_MODELS(ใหม่)` ตั้งตอน apply m178 (ไม่อยู่ใน git) · ถ้า pg_cron/pg_net ถูก platform ปฏิเสธ = apply ข้ามเงียบ (visit-path + GH ยังเป็น backup — แจ้งใน result json)
 
+### Q.3 ปิดตามคำสั่ง Owner "อนุมัติแอพพลาย 177 178 + ตรวจบั๊ก/ภาษาเพี้ยน" (R42)
+
+| รายการ | ผล (evidence) |
+|---|---|
+| **m177+m178 re-verify** | `e2e/r42_verify177178.cjs` = **ALL_PASS true** — ledger 176/177/178 ครบ (เติม 178) · fns+acl anon · cron promote/tick active · gate 401 · due=[] (`r42_verify177178.json`) |
+| **ตรวจบั๊ก** | CI `1c3b429` **เขียว CI+Contract** · vitest เป้า 86/86 · tsc 0 · lint 0 · (บั๊กที่เจอระหว่างทางแก้แล้ว: verify false-negative · scanner raw-FFFD ตัวเอง) |
+| **ภาษาเพี้ยนทั้งหมด** | สแกนใหม่ `e2e/r42_lang_scan.cjs` (U+FFFD · ???? · คำผิด · ข้าม archive/UTF-16): 29 → **0 หลังแก้** (README · config ×2 · contracts_124 · 035 note → "ส่งเองในรัศมี 5 กม." fact-based · HANDOFF_002 ×12 · work-state ×2) · guard ภาษา = **lint OK** |
+
 ## P. รอบ R40 — 3 ของใหม่จาก Owner (2026-10-31 สาย 2) `[T]`
 
 ### P.0 ต้นตอ

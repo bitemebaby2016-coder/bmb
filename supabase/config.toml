@@ -47,11 +47,11 @@ verify_jwt = false
 [functions.ai-proxy]
 enabled = true
 verify_jwt = false
-# automation-worker: native back-office worker (W3-B) � called by pg_cron/owner with shared token.
+# automation-worker: native back-office worker (W3-B) - called by pg_cron/owner with shared token.
 [functions.automation-worker]
 verify_jwt = true
 
-# channel-webhook: FB/Messenger inbound adapter (W3-C-EXTERNAL) � Meta verify + HMAC signature.
+# channel-webhook: FB/Messenger inbound adapter (W3-C-EXTERNAL) - Meta verify + HMAC signature.
 [functions.channel-webhook]
 verify_jwt = false
 # social-ai-worker: G6 classify + reply DRAFT for social comment events.

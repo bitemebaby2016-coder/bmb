@@ -1,0 +1,18 @@
+{
+  "at": "2026-10-31T06:59:58.434Z",
+  "ledgerBefore": "[{\"version\":\"176\",\"name\":\"176_marketing_posts_anon_read\"},{\"version\":\"177\",\"name\":\"177_marketing_publish_due\"},{\"version\":\"178\",\"name\":\"178_cron_publish_tick\"}]",
+  "ledger178": "[]",
+  "ledgerAfter": "[{\"version\":\"176\",\"name\":\"176_marketing_posts_anon_read\"},{\"version\":\"177\",\"name\":\"177_marketing_publish_due\"},{\"version\":\"178\",\"name\":\"178_cron_publish_tick\"}]",
+  "m177": {
+    "fns": "[{\"proname\":\"marketing_feed_posts\",\"prosecdef\":true,\"proacl\":\"{postgres=X/postgres,authenticated=X/postgres,service_role=X/postgres,anon=X/postgres}\"},{\"proname\":\"marketing_publish_due\",\"prosecdef\":true,\"proacl\":\"{postgres=X/postgres,authenticated=X/postgres,service_role=X/postgres,anon=X/postgres}\"}]",
+    "promoteNow": "[{\"promoted\":0}]",
+    "dueLeft": "[]"
+  },
+  "m178": {
+    "ext": "[{\"extname\":\"pg_cron\"},{\"extname\":\"pg_net\"}]",
+    "cron": "[{\"jobname\":\"bmb-promote\",\"schedule\":\"* * * * *\",\"active\":true},{\"jobname\":\"bmb-tick\",\"schedule\":\"*/5 * * * *\",\"active\":true}]",
+    "fnTick": "[{\"proname\":\"bmb_tick_http\"}]",
+    "gate": "HTTP 401 {\"error\":\"unauthorized\"}"
+  },
+  "allPass": true
+}

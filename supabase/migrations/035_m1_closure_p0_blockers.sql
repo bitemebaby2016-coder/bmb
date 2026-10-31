@@ -100,7 +100,7 @@ BEGIN
     'method', v_method,
     'distance_km', round(v_dist, 2),
     'zone_id', COALESCE(v_zone.id, NULL),
-    'delivery_method_note', CASE WHEN v_method = 'self_delivery' THEN 'Bite Me Baby (??????? =5 ??.)' ELSE 'External provider' END
+    'delivery_method_note', CASE WHEN v_method = 'self_delivery' THEN 'Bite Me Baby (ส่งเองในรัศมี 5 กม.)' ELSE 'External provider' END
   );
 END;
 $$;

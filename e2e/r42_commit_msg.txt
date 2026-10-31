@@ -1,0 +1,14 @@
+R42: ตามคำสั่ง Owner — อนุมัติ apply 177+178 → re-verify ALL_PASS true (ledger เติม 178) +
+ตรวจบั๊ก (CI เขียว · vitest 86/86 · tsc 0) + สแกนภาษาเพี้ยนทั้งโปรเจกต์ 29→0
+
+- e2e/r42_verify177178.cjs (+json): ledger 176/177/178 · m177 fns SECDEF+anon acl · promoted 0/due []
+  · pg_cron+pg_net · bmb-promote * * * * * + bmb-tick */5 active · cron-tick gate 401 = ALL_PASS true
+  (บั๊กเอง = s(string) ครอบ quotes → false negative → แก้เป็น has()/String)
+- e2e/r42_lang_scan.cjs: สแกน U+FFFD/mojibake/คำผิด ทั้ง repo (ข้าม archive+UTF-16+ตัวเอง+g9 จงใจ)
+  · รอบแรก 29 → แก้หมด → hits=0 · raw FFFD ในตัวสแกนเอง = languageSanity จับ → r42c_clean_fffd ล้าง
+- แก้ภาษา: AI_WORK_STATE เอAI→AI + ทะเบิน→ทะเบียน · README FFFD · config.toml FFFD×2 ·
+  contracts_124 comment ????→ไทย · 035 delivery_method_note ???? → "ส่งเองในรัศมี 5 กม."
+  (fact จาก 5KM SELF-DELIVERY GATE ในไฟล์เดียวกัน — ไม่เดา) · HANDOFF_002 FFFD×12 → '-'
+- e2e/r42_lang_fix.cjs + r42c_clean_fffd.cjs = fixer (ASCII-ล้วนสแกนเนอร์)
+- gates: lint (eslint+brandNameGuard+languageSanity) OK · tsc 0 · vitest 8 ไฟล์ 86/86 · CI 1c3b429 เขียว
+- docs: work-state R42 block · TEST_PACK §Q.3 · master head R42 · แฮนออฟ R42
