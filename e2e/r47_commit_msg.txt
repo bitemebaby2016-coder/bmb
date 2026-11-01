@@ -1,0 +1,31 @@
+R47 — AI Studio 5 ข้อตามคำสั่ง Owner (2026-11-01 รอบ 2) + ตอบ Console
+
+Feedback 6 ข้อรอบ R46 (บันทึก work-state): 1=รอตรวจ · 2=Console ดูแล้ว (เหลือแก้
+localhost entry เพี้ยน + ลบตัวซ้ำ + กด Save + รอ 5 นาที) · 3,4,6=ok · 5=รอตรวจ
+
+R47 ① ยกเลิกกฎห้ามเจนภาพอาหาร:
+- AdminMarketing: <option value="menu"> กลับมา · บล็อก return ถอด → info เมื่อไม่มีรูปต้นแบบ
+- picker toast = "รูปเมนูเป็นต้นแบบไดคัท เจนเมนู/โปรโมตด้วยรูปนี้ประกอบได้เลย"
+- EF image-gen KIND_PRESETS.menu = "ถ้ามีภาพเมนูตัวอย่างแนบมาให้ใช้เป็นต้นแบบไดคัท"
+R47 ② อักษรโปรโมต = ตรงรายละเอียดเนื้อหาโพสต์:
+- promo/festival prompts = "ข้อความโปรโมตบนภาพต้องตรงกับรายละเอียดนี้เป๊ะ: {note}"
+- ตัด "ไม่มีตัวอักษร/พื้นที่ว่างสำหรับข้อความ" ออกทั้งหมด (subject/note มาจากฟอร์มโพสต์ R39)
+R47 ③ ยุบสองเซคชั่นสตูดิโอ: PostForm ยุบเข้าใบเดียวกับเครื่องมือภาพ (mk-studio-merged)
+R47 ④ เจนซ้อนหลายภาพ + ลบจริง:
+- setImages(prev=>[...prev, wmUrl]) (submit ยังใช้เจนล่าสุดรูปเดียวตาม R44)
+- ปุ่ม ✕ ทุกรูปใน mk-images-strip → handleRemoveImage = เอาออกจากชุด + storage.remove
+  ไฟล์จริงจาก bmb-images + refresh อัลบั้ม ai-generated
+R47 ⑤ ลายน้ำทุกภาพเจน:
+- applyBrandWatermark (client canvas): pill มุมล่างขวา = โลโก้จริง /Logo_Sticker_Circle.webp
+  + "Bite Me Baby" + มาสคอต /assets/mascot/… ยืนบน pill
+- autoMascotForKind (module-level pure): menu→bite_menu · festival→bite_award · promo→bite_recommend
+- dropdown mk-wm-mascot เลือกเอง → จำ localStorage bmb:wm-mascot ใช้ทุกครั้ง
+- อัป ai-generated/wm-*.png แล้วลบไฟล์ต้นฉบับ (อัลบั้มเหลือรูปลายน้ำ) · ลายน้ำพัง = fallback รูปเดิม
+- DEPLOY_image-gen_OK (prompt ใหม่ขึ้น production)
+
+Tests: r47AiStudio ใหม่ 4 · r34 = ปรับ requirement (option menu กลับมา + ไม่บล็อก) ·
+  r44 = ปรับเป็น append + ปุ่มลบจริง · อื่น ๆ ไม่แตะ
+
+VERIFY (รันจริง): vitest เป้า 10 ไฟล์ = 62/62 รวม r47 4/4 + r47 รันซ้ำหลังแก้ assert = 4/4 ·
+  npx tsc --noEmit = 0 · npm run lint = OK (506+1457→1458) · DEPLOY_image-gen_OK EXIT=0
+Docs: AI_WORK_STATE (R47 block + Console รอบ 2 + รายการรอ Owner) · BMB_MASTER_STATUS last_updated

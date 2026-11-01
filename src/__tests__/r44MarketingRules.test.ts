@@ -15,8 +15,12 @@ describe('R44 — ภาพเจนใช้รูปเดียวตอน�
     expect(marketingSrc).toContain('const postImages = genOnes.length > 0 ? [genOnes[genOnes.length - 1]] : images')
     expect(marketingSrc).toContain('image_urls: postImages')
   })
-  it('เจนสำเร็จ/เลือกจากอัลบั้ม = แทนรูปเดิม (setImages รูปเดียว) + คำใบ้ใน strip', () => {
-    expect(marketingSrc).toContain('setImages([data.url])')
+  it('R47 เจนซ้อนหลายภาพ = ต่อท้ายชุดภาพ (append) + ปุ่มลบจริง · pick ยังแทนรูปเดิม + คำใบ้ใน strip', () => {
+    // R47 (Owner): "เจนซ้อนหลายภาพได้แต่ต้องมีปุ่มให้ลบภาพที่เจนแล้วลบจริงด้วย"
+    expect(marketingSrc).toContain('setImages((prev) => [...prev, wmUrl])')
+    expect(marketingSrc).toContain('data-testid={`mk-img-del-${images.indexOf(u)}`}')
+    expect(marketingSrc).toContain('handleRemoveImage')
+    expect(marketingSrc).toContain(".from('bmb-images').remove([path])")
     expect(marketingSrc).toContain('function pickAiImage(url: string)')
     expect(marketingSrc).toContain('setImages([url])')
     expect(marketingSrc).toContain('data-testid="mk-images-gen-only"')

@@ -85,12 +85,14 @@ describe('R34 · Footer — ลิงก์ชวนเพื่อนจริ�
   })
 })
 
-describe('R34 · Marketing — รูปเมนูใช้ภาพจริง · ห้ามเจนรูปอาหาร · โมเดล image ที่มีจริง', () => {
-  it('Picker select image_url + แนบรูปจริง + UI ไม่เสนอเมนูอาหาร + EF ไม่ตายเพราะโมเดลร้าง', () => {
+describe('R34 → R47 — รูปเมนูใช้ภาพจริงเป็นต้นแบบ · ยกเลิกกฎห้ามเจนอาหาร (Owner 2026-11-01) · โมเดล image ที่มีจริง', () => {
+  it('Picker select image_url + แนบรูปจริง + UI เสนอเมนูอาหารคืน (R47 ปลดห้าม) + EF ไม่ตายเพราะโมเดลร้าง', () => {
     expect(marketingSrc).toContain("select('id,name,price,is_preorder,available_preorder,available_same_day,is_available,image_url')")
     expect(marketingSrc).toContain('setImages(p.image_url ? [p.image_url] : [])')
-    expect(marketingSrc).not.toContain('<option value="menu">')
-    expect(marketingSrc).toContain("genKind === 'menu'")
+    // R47: ยกเลิกกฎห้าม — เมนู/อาหารกลับเป็นตัวเลือก + genKind menu ไม่ return อีก (แค่ info เมื่อไม่มีรูปต้นแบบ)
+    expect(marketingSrc).toContain('<option value="menu">')
+    expect(marketingSrc).toContain("genKind === 'menu' && !reference")
+    expect(marketingSrc).not.toContain('สร้างภาพ AI เฉพาะป้ายโปรโมต/เทศกาลเท่านั้น')
     expect(imageGenSrc).toContain('IMAGE_MODEL_CANDIDATES')
     expect(imageGenSrc).toContain('google/gemini-3.1-flash-image')
     // โมเดลร้างที่เคยทำ image-gen พัง (R32 error) ต้องออกจาก default

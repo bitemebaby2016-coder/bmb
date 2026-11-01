@@ -42,6 +42,13 @@ const STATUS_CLS: Record<string, string> = {
 // กติกา "มีภาพเจน = ใช้ภาพเจนรูปเดียว ห้ามแนบรูปต้นแบบ+ภาพเจนคู่กันตอนสร้างโพสต์"
 const isGenImage = (u: string) => u.includes('/ai-generated/')
 
+// R47 (Owner): เลือกมาสคอตลายน้ำอัตโนมัติตามประเภทภาพที่เจน (pure — test เรียกตรง)
+export function autoMascotForKind(kind: string): string {
+  if (kind === 'menu') return 'bite_menu'
+  if (kind === 'festival') return 'bite_award'
+  return 'bite_recommend'
+}
+
 export function AdminMarketing() {
   const [tab, setTab] = useState<Tab>(() => {
     // C5/Q3: deep-link ?tab= จาก redirect ของหน้าเดิม (bookmark ไม่ตาย)
@@ -70,6 +77,16 @@ export function AdminMarketing() {
   const [genStyle, setGenStyle] = useState<'realistic' | 'illustration' | 'poster'>('realistic')
   const [genSubject, setGenSubject] = useState('')
   const [genNote, setGenNote] = useState('')
+  // R47 (Owner): มาสคอตสำหรับลายน้ำทุกภาพเจน — เลือกอัตโนมัติตามประเภทภาพ (auto)
+  // หรือเลือกเองแล้ว "จำไว้ใช้ทุกครั้ง" (localStorage bmb:wm-mascot)
+  const [wmMascot, setWmMascot] = useState<string>(() => {
+    try { return localStorage.getItem('bmb:wm-mascot') || 'auto' } catch { return 'auto' }
+  })
+  function changeWmMascot(v: string) {
+    setWmMascot(v)
+    try { localStorage.setItem('bmb:wm-mascot', v) } catch { /* quota */ }
+    showToast('จำมาสคอตลายน้ำไว้ใช้กับทุกรูปที่เจนจากนี้แล้ว', 'success')
+  }
   const [genBusy, setGenBusy] = useState(false)
   // R40 (Owner: "ให้มีตัวแสดงสถานะ + พรีวิวรูปที่สร้าง + รู้ว่าสร้างเสร็จหรือยัง ไปอยู่อัลบั้มเดียวกันแยกโฟลเดอร์")
   const [genStatus, setGenStatus] = useState<{ phase: 'idle' | 'running' | 'ok' | 'fail'; detail?: string; url?: string; model?: string }>({ phase: 'idle' })
@@ -248,10 +265,10 @@ export function AdminMarketing() {
     if (!subject) { showToast('ใส่โจทย์/หัวข้อ (ช่องภาพ หรือหัวข้อโพสต์) ก่อนสร้างภาพ', 'error'); return }
     const note = [genNote.trim(), bodyText.trim().slice(0, 160)].filter(Boolean).join(' · ')
     const reference = images.length > 0 ? images[images.length - 1] : undefined
-    // R34 (Owner): รูปอาหารห้ามเจน — ใช้ภาพจริงจากแคตตาลอก (Picker แนบ image_url ให้แล้ว)
-    if (genKind === 'menu') {
-      showToast('รูปเมนูใช้ภาพจริงจากแคตตาลอก — จิ้มเมนูใน Planner เพื่อแนบรูปจริง (สร้างภาพ AI ได้เฉพาะป้ายโปรโมต/เทศกาล)', 'warning')
-      return
+    // R47 (Owner 2026-11-01): "ยกเลิกกฏเจนภาพอาหาร" — เจนเมนู/อาหารได้เลย ·
+    // รูปเมนูตัวอย่างที่แนบไว้ (Planner จิ้มเมนู / browse) = ต้นแบบไดคัทผ่าน reference_image_url อัตโนมัติ
+    if (genKind === 'menu' && !reference) {
+      showToast('ยังไม่มีรูปเมนูตัวอย่างในชุดภาพ — จิ้มเมนูใน Planner หรือ browse ไฟล์เพื่อใช้เป็นต้นแบบไดคัท (ไม่แนบก็เจนจากโจทย์ข้อความได้)', 'info')
     }
     setGenBusy(true)
     setGenStatus({ phase: 'running' })
@@ -280,12 +297,24 @@ export function AdminMarketing() {
         flashTo('mk-gen-status')
         showToast('สร้างภาพไม่สำเร็จ: ' + detail, 'error')
       } else {
-        // R44: เจนสำเร็จ = ใช้ภาพเจนรูปเดียว (แทนรูปต้นแบบ — ห้ามแนบคู่กันตอนสร้างโพสต์)
-        setImages([data.url])
-        setGenStatus({ phase: 'ok', url: data.url, model: data.model })
+        // R47 (Owner): "เจนซ้อนหลายภาพได้" — เจนสำเร็จ = ต่อท้ายชุดภาพ (ไม่แทนที่) ·
+        // ประกบลายน้ำแบรนด์ (โลโก้จริง + มาสคอต) ทุกรูป → อัปไฟล์ wm แล้วลบไฟล์ต้นฉบับออก (เหลือแค่รูปลายน้ำ)
+        // (R44 คงเดิม: ตอน "สร้างโพสต์" ยังใช้ภาพเจนรูปสุดท้ายรูปเดียว — submit กรอง genOnes)
+        const wmUrl = await applyBrandWatermark(data.url, genKind, wmMascot)
+        if (wmUrl !== data.url) {
+          try {
+            const marker = '/object/public/bmb-images/'
+            if (data.url.includes(marker)) {
+              const p = data.url.slice(data.url.indexOf(marker) + marker.length).split('?')[0]
+              await supabase.storage.from('bmb-images').remove([decodeURIComponent(p)])
+            }
+          } catch { /* ลบต้นฉบับไม่ได้ = ไม่เป็นไร (มีปุ่มลบใน strip อยู่แล้ว) */ }
+        }
+        setImages((prev) => [...prev, wmUrl])
+        setGenStatus({ phase: 'ok', url: wmUrl, model: data.model })
         await loadAiAlbum() // ภาพใหม่เข้าอัลบั้ม bmb-images/ai-generated ทันที
-        flashTo('mk-gen-result')
-        showToast('✅ สร้างภาพสำเร็จ — ดูพรีวิวด้านล่าง · บันทึกอัลบั้ม ai-generated + แนบเข้าชุดภาพแล้ว', 'success')
+        flashTo('mk-images-strip')
+        showToast('✅ สร้างภาพสำเร็จ + ประกบลายน้ำแบรนด์แล้ว — ต่อท้ายชุดภาพ (เจนซ้อนเพิ่มได้เรื่อย ๆ · กด ✕ ลบรูปได้ทั้งรายการและไฟล์จริง)', 'success')
       }
     } catch (e) {
       const msg = String(e).slice(0, 160)
@@ -302,6 +331,101 @@ export function AdminMarketing() {
     setImages([url])
     flashTo('mk-images-strip')
     showToast('เลือกภาพนี้เป็นรูปโพสต์แล้ว (แทนรูปเดิม — โพสต์ใช้ทีละรูป)', 'success')
+  }
+
+  /** R47 (Owner: "มีปุ่มให้ลบภาพที่เจนแล้วลบจริงด้วย") — เอาออกจากชุดภาพ + ลบไฟล์จริงบนคลัง bmb-images
+   *  (ไฟล์นอกคลังเรา = แค่เอาออกจากชุด · ไฟล์ ai-generated ที่ลบ = refresh อัลบั้มให้ด้วย) */
+  async function handleRemoveImage(url: string) {
+    setImages((prev) => prev.filter((x) => x !== url))
+    const marker = '/object/public/bmb-images/'
+    if (!url.includes(marker)) {
+      showToast('ลบรูปออกจากชุดภาพแล้ว (ไฟล์นี้ไม่ได้อยู่บนคลังภาพของเรา — ไม่มีไฟล์ต้องลบ)', 'info')
+      return
+    }
+    try {
+      const path = decodeURIComponent(url.slice(url.indexOf(marker) + marker.length).split('?')[0])
+      const { error } = await supabase.storage.from('bmb-images').remove([path])
+      if (error) throw error
+      if (path.startsWith('ai-generated/')) await loadAiAlbum()
+      showToast('ลบรูปออกจากชุดภาพ + ลบไฟล์จริงจากคลังภาพแล้ว', 'success')
+    } catch (err) {
+      showToast('เอาออกจากชุดภาพแล้ว แต่ลบไฟล์ไม่สำเร็จ: ' + String((err as Error)?.message || err).slice(0, 100), 'warning')
+    }
+  }
+
+  // ================= R47 ลายน้ำแบรนด์บนทุกภาพเจน =================
+  // Owner: "เจนภาพ ต้องประกบลายน้ำของ brand เอง ใช้โลโก้แบรนด์จริง + มาสคอตโพสที่เหมาะสม
+  //          อัตโนมัติ · ให้จำพร้อมสำหรับเจนทุกภาพ"
+  // ทำฝั่ง client ด้วย canvas (บันทึกจริงลง bmb-images/ai-generated/ · ไม่พึ่ง EF ฝั่งเดียว)
+  const WM_MASCOTS: Array<{ key: string; label: string }> = [
+    { key: 'auto', label: '🤖 อัตโนมัติ (เลือกตามประเภทภาพ — จำไว้ใช้ทุกครั้ง)' },
+    { key: 'bite_recommend', label: '👉 น้อง Bite แนะนำ' },
+    { key: 'bite_menu', label: '🍽️ น้อง Bite นำเสนอเมนู' },
+    { key: 'bite_eating', label: '😋 น้อง Bite ทานของอร่อย' },
+    { key: 'bite_cooking', label: '👨‍🍳 น้อง Bite ทีมครัว' },
+    { key: 'bite_award', label: '🏆 น้อง Bite ฉลองรางวัล' },
+  ]
+  async function fetchBitmap(url: string): Promise<ImageBitmap | null> {
+    try {
+      const res = await fetch(url)
+      if (!res.ok) return null
+      return await createImageBitmap(await res.blob())
+    } catch { return null }
+  }
+  async function applyBrandWatermark(srcUrl: string, kind: string, mascotChoice: string): Promise<string> {
+    try {
+      const mascotKey = mascotChoice === 'auto' ? autoMascotForKind(kind) : mascotChoice
+      const [img, logo, mascot] = await Promise.all([
+        fetchBitmap(srcUrl),
+        fetchBitmap('/Logo_Sticker_Circle.webp'),
+        fetchBitmap(`/assets/mascot/${mascotKey}.webp`),
+      ])
+      if (!img) return srcUrl
+      const w = img.width, h = img.height
+      const canvas = document.createElement('canvas')
+      canvas.width = w; canvas.height = h
+      const ctx = canvas.getContext('2d')
+      if (!ctx) return srcUrl
+      ctx.drawImage(img, 0, 0)
+      // แถบลายน้ำมุมล่างขวา: pill ขาวโปร่ง + โลโก้จริง + ชื่อร้าน + มาสคอตยืนบน pill
+      const minSide = Math.min(w, h)
+      const pad = Math.round(minSide * 0.03)
+      const pillH = Math.round(minSide * 0.13)
+      const pillW = Math.round(pillH * 4.6)
+      const px = w - pad - pillW
+      const py = h - pad - pillH
+      ctx.save()
+      ctx.globalAlpha = 0.88
+      ctx.fillStyle = '#FFFFFF'
+      if (typeof (ctx as CanvasRenderingContext2D & { roundRect?: unknown }).roundRect === 'function') {
+        ctx.beginPath()
+        ;(ctx as CanvasRenderingContext2D & { roundRect: (x: number, y: number, w: number, h: number, r: number) => void }).roundRect(px, py, pillW, pillH, pillH / 2)
+        ctx.fill()
+      } else {
+        ctx.fillRect(px, py, pillW, pillH)
+      }
+      ctx.globalAlpha = 1
+      const logoSize = Math.round(pillH * 0.78)
+      if (logo) ctx.drawImage(logo, px + pillH * 0.11, py + (pillH - logoSize) / 2, logoSize, logoSize)
+      ctx.fillStyle = '#92400E'
+      ctx.font = `bold ${Math.round(pillH * 0.42)}px Quicksand, sans-serif`
+      ctx.textBaseline = 'middle'
+      ctx.fillText('Bite Me Baby', px + logoSize + pillH * 0.3, py + pillH * 0.54)
+      if (mascot) {
+        const mH = Math.round(pillH * 1.7)
+        const mW = Math.round(mascot.width * (mH / mascot.height))
+        ctx.drawImage(mascot, px + pillW - mW - pillH * 0.15, py - mH + pillH * 0.35, mW, mH)
+      }
+      ctx.restore()
+      const blob = await new Promise<Blob | null>((r) => canvas.toBlob(r, 'image/png'))
+      if (!blob) return srcUrl
+      const path = `ai-generated/wm-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}.png`
+      const { error } = await supabase.storage.from('bmb-images').upload(path, blob, { contentType: 'image/png', upsert: false })
+      if (error) return srcUrl
+      return supabase.storage.from('bmb-images').getPublicUrl(path).data.publicUrl
+    } catch {
+      return srcUrl // ลายน้ำพัง = ยังไงรูปก็ออก — ใช้ภาพต้นฉบับ (ไม่ขัดจังหวะการเจน)
+    }
   }
 
   async function handleSaveRules() {
@@ -393,9 +517,9 @@ export function AdminMarketing() {
                         setTitle(`แนะนำ ${p.name}`)
                         setBodyText(`วันนี้ขอแนะนำ ${p.name}${p.price != null ? ` ฿${Number(p.price).toFixed(0)}` : ''}`)
                         setGenSubject(p.name)
-                        // R34 (Owner): รูปอาหารไม่ต้องเจน — ใช้ภาพจริงจากเมนู (image_url ของสินค้า)
+                        // R47: รูปเมนูจริง = ต้นแบบไดคัทสำหรับเจนภาพเมนู/โปรโมต (ยังเจนต่อได้ ไม่ใช่ห้าม)
                         setImages(p.image_url ? [p.image_url] : [])
-                        if (p.image_url) showToast('แนบรูปเมนูจริงจากแคตตาลอกให้แล้ว (ไม่ต้องเจนรูปอาหาร)', 'success')
+                        if (p.image_url) showToast('แนบรูปเมนูจริงเป็นต้นแบบให้แล้ว — เจนภาพเมนู/โปรโมตด้วยรูปนี้ประกอบได้เลย', 'success')
                         setTab('studio')
                       }}
                     >
@@ -415,10 +539,11 @@ export function AdminMarketing() {
           <div className="card">
             <h2 className="font-bold text-brand-accent mb-2">🎨 สร้างภาพโปรโมต (AI — E5/E6)</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              <label className="text-sm">ประเภทภาพ (E5)
+              <label className="text-sm">ประเภทภาพ
                 <select className="input w-full" value={genKind} onChange={(e) => setGenKind(e.target.value as typeof genKind)}>
                   <option value="promo">ป้ายโปรโมต</option>
                   <option value="festival">ภาพเทศกาล</option>
+                  <option value="menu">ภาพเมนู/อาหาร (ใช้รูปต้นแบบเป็นต้นแบบไดคัท)</option>
                 </select>
               </label>
               <label className="text-sm">สไตล์ (E6 — 3 แนวจากโจทย์เดียวกัน)
@@ -433,6 +558,11 @@ export function AdminMarketing() {
               </label>
               <label className="text-sm">เพิ่มเติม (ไม่บังคับ)
                 <input className="input w-full" value={genNote} onChange={(e) => setGenNote(e.target.value)} placeholder="เช่น โทนเหลืองทอง" />
+              </label>
+              <label className="text-sm">มาสคอตลายน้ำ (R47 — ทุกภาพเจน)
+                <select className="input w-full" value={wmMascot} onChange={(e) => changeWmMascot(e.target.value)} data-testid="mk-wm-mascot">
+                  {WM_MASCOTS.map((m) => <option key={m.key} value={m.key}>{m.label}</option>)}
+                </select>
               </label>
             </div>
             <div className="flex flex-wrap gap-2 mt-3">
@@ -451,7 +581,7 @@ export function AdminMarketing() {
                 onChange={(e) => void handleBrowseImage(e)}
               />
             </div>
-            <p className="text-xs text-brand-muted mt-2">รูปเมนู = ภาพจริงจากแคตตาลอก (จิ้มเมนูใน Planner) หรือ <b>ไฟล์จากเครื่อง (browse)</b> · ภาพทั้งหมดอยู่ชุดเดียวกัน — ใช้กับโพสต์/ภาพ AI โปรโมต/เทศกาลได้พร้อมกัน · สร้างภาพ AI เฉพาะป้ายโปรโมต/เทศกาลเท่านั้น</p>
+            <p className="text-xs text-brand-muted mt-2">รูปเมนู = ภาพจริงจากแคตตาลอก (จิ้มเมนูใน Planner) หรือ <b>ไฟล์จากเครื่อง (browse)</b> — แนบไว้แล้วใช้เป็น<b>ต้นแบบไดคัท</b>ตอนเจนภาพเมนูได้ · เจนซ้อนหลายภาพได้เรื่อย ๆ (กด ✕ ลบรูป = ลบจริงทั้งรายการและไฟล์) · ทุกภาพเจนถูก<b>ประกบลายน้ำแบรนด์</b> (โลโก้จริง + มาสคอต) อัตโนมัติ · ข้อความโปรโมตบนภาพเขียนตามรายละเอียดหัวข้อ/เนื้อหาโพสต์</p>
             {/* R40: ตัวแสดงสถานะการเจน + พรีวิวผลลัพธ์ (Owner: "สร้างแล้วภาพไปไหน สร้างเสร็จหรือเปล่า") */}
             {genStatus.phase !== 'idle' && (
               <div
@@ -479,7 +609,19 @@ export function AdminMarketing() {
             )}
             {images.length > 0 && (
               <div className="flex flex-wrap gap-2 mt-3" data-testid="mk-images-strip">
-                {images.map((u) => <img key={u} src={u} alt="generated" className="w-24 h-24 object-cover rounded-lg border border-brand-border" />)}
+                {images.map((u) => (
+                  <span key={u} className="relative inline-block">
+                    <img src={u} alt="generated" className="w-24 h-24 object-cover rounded-lg border border-brand-border" />
+                    <button
+                      type="button"
+                      aria-label="ลบรูปนี้"
+                      title="ลบรูปนี้ — ออกจากชุดภาพ + ลบไฟล์จริงจากคลัง (ถ้าเป็นไฟล์ของเรา)"
+                      data-testid={`mk-img-del-${images.indexOf(u)}`}
+                      onClick={() => void handleRemoveImage(u)}
+                      className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-brand-primary text-white text-xs leading-none btn p-0"
+                    >✕</button>
+                  </span>
+                ))}
                 {images.some(isGenImage) && images.length > 1 && (
                   <p className="w-full text-xs text-brand-accent" data-testid="mk-images-gen-only">
                     มีภาพเจนในชุด — ตอนสร้างโพสต์จะใช้ภาพเจน 1 รูปเท่านั้น (รูปต้นแบบ/รูปอื่นจะไม่ถูกแนบคู่กัน)
@@ -503,8 +645,12 @@ export function AdminMarketing() {
                 </div>
               )}
             </div>
+            {/* R47 (Owner: "สองเซคชั่นของหน้าเอไอสตูดิโอ ยุบรวมกัน") — PostForm ยุบเข้ามาในใบเดียวกับเครื่องมือภาพ
+                ไม่แยกการ์ดฟอร์มออกอีกใบ: สร้างภาพ → เห็นในชุด → เขียนโพสต์ → ส่ง จบในที่เดียว */}
+            <div className="mt-4 pt-3 border-t border-brand-border" data-testid="mk-studio-merged">
+              <PostForm title={title} setTitle={setTitle} bodyText={bodyText} setBodyText={setBodyText} contentType={contentType} setContentType={setContentType} images={images} setImages={setImages} saving={saving} onSubmit={() => void handleCreatePost()} />
+            </div>
           </div>
-          <PostForm title={title} setTitle={setTitle} bodyText={bodyText} setBodyText={setBodyText} contentType={contentType} setContentType={setContentType} images={images} setImages={setImages} saving={saving} onSubmit={() => void handleCreatePost()} />
         </div>
       )}
 
