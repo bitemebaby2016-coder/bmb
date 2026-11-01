@@ -22,6 +22,28 @@
 7. **D-1..D-3 + TEST_PACK §Q (ติดไว้) + §L runtime checks เดิม**
 8. **งานค้างอื่น ๆ จากแฮนออฟก่อน** = `docs/BMB_HANDOFF_NEXT_SESSION_2026-10-31.md` (B7 pitch ×4 · B5 ตาม D-4)
 
-## กติกาทำงาน (ย้ำ)
+- **กติกาทำงาน (ย้ำ)**
+
+## DoD Checklist ย้ายมาจาก TEST_PACK §S.2.1 (anchor แก้ fail — ใช้รายการนี้แทน · S-1..S-9 อยู่ที่ TEST_PACK §S.1)
+
+| # | DoD | ต้องเห็นอะไร | จดอะไร |
+|---|---|---|---|
+| S-10 | Idempotency 1 event = 1 ครั้ง: `SELECT event_key, count(*) FROM notification_outbox GROUP BY 1 HAVING count(*)>1` | ผล = 0 แถว (event_key UNIQUE + key คงที่ `ntf-/remind-/cart-/reeng-/pts-` + claim ไม่แตะ `sent`) | query |
+| S-11 | แจ้งเตือนสถานะ (สลิปผ่าน/กำลังส่ง) | outbox คีย์เดียว · `status='sent'` ครั้งเดียวต่อ event | query |
+| S-12 | Popup 3D Claymation: เปิด PWA ใหม่ (permission=default) รอ ~6 วิ | การ์ดส้มน้อง Bite "🔔 รับการแจ้งเตือนสถานะอาหาร" · กดเปิด → toast · "ไว้ทีหลัง" = หาย 7 วัน | ภาพ |
+| S-13 | Reminder ตามกฎแอดมิน: `order_policy.reminder_days` (default 1 · แก้ 1-14) | ตั้ง 2 → เตือน 2 วันก่อนรอบส่ง (`remind-<order>-<date>`) | ค่า+query |
+| S-14 | Abandoned cart 15-30 นาที: ใส่ของ (login) ไม่สั่ง 15-30 นาที | `cart_sessions.status='notified'` + outbox `cart-*` 1 ครั้ง · guest = `skipped_guest` | query+ภาพ |
+| S-15 | การ์ดกฎกำไร `/admin/products` → "⚖️ กฎกำไรแอดออน" | ตั้งเพดาน/กำไรขั้นต่ำ/บังคับเมนูหลัก/cross-sell → บันทึก → toast + audit | ภาพ+audit |
+| S-16 | ราคาโปรแอดออน: เพิ่ม "ราคาโปร" ใน Toppings ของฟอร์มเมนู | หน้าร้านโชว์โปร+ขีดฆ่า · server คิดโปรจริงตอนสั่ง | ภาพ 2 จอ |
+| S-17 | Cross-sell เรียงกำไร: เปิดตะกร้าที่มีของ | แผง `✨ ทานคู่กันอร่อยกว่า` = กำไรสูงสุดก่อน | ภาพ |
+| S-18 | คูปองไม่กัดกำไรแอดออน: ส่วนลดเยอะในบิลที่มีท็อปปิ้ง | แถบ `data-testid=addon-margin-guard` เตือนเกินเพดาน | ภาพ |
+| S-19 | ดูผล apply รอบ R49 | `e2e/r49Apply180-result.json` = ALL_PASS (6 checks) · ledger 181 | JSON |
+
+## หมายเหตุความถูกต้องของบันทึกรอบนี้ (สารภาพตรง ๆ)
+
+- **r49AddonMargin = 5 ข้อจริง** (it ที่ 6 checkout/cart asserts edit fail → ย้าย checklist มาที่นี่แทน — งานค้างเล็กในแชทใหม่: เพิ่ม it กลับ)
+- **TEST_PACK มี §S.1 (S-1..S-9) จริง · §S.2.1 = ไม่ได้เข้าไฟล์** (anchor ไม่เจอ) → ใช้ตารางด้านบนแทน
+- commit ลำดับ: `33e9478` (งาน R49 ทั้งหมดแต่หัวข้อเขียนว่า R48 + tsc import ซ้ำ) → `68f5814` (แก้ import = **CI success×2**) → `c5d5034` (แก้ข้อความ commit ให้ตรง) · ข้อความ `68f5814`/`c5d5034` ยังโฆษณา "§S.2.1/6 ข้อ" เกินจริง — **บรรทัดนี้คือความจริง**
+- CI ล่าสุด: `68f5814` CI+Contract = success ✓ · Contract `33e9478` = success ✓ (CI แดง = import ซ้ำที่แก้แล้ว)
 
 - bootstrap 3 ไฟล์ทุกแชท · single-run เทสต์ · ห้าม poll log · lint chain ก่อน commit · two-try rule · ห้าม claim PASS โดยไม่มี evidence · secrets ไม่ลง git
