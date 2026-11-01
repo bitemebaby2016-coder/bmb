@@ -1,0 +1,21 @@
+R44 batch 2 — T7 Theater ลิงก์จริง+ปุ่มตามโหมด + T8 มุมขวาปุ่มทับกัน (ยุบแก้ overlap)
+
+T7 — TheaterCards (FoodTheater stage บน /shop):
+- การ์ด LEVEL 2 (RecommendationCard) + LEVEL 3 (TheaterHeroCard): รูป+ชื่อเมนู = Link จริง
+  ไป /menu (data-testid theater-rec-link/rec-title-link/hero-link/hero-title-link) — ไม่ใช่รูป/ชื่อตาย
+- ปุ่มตามโหมดขายจริง: พรีออเดอร์ (available_preorder && !available_same_day) = "📅 จองล่วงหน้า"
+  · เซมเดย์ = "🛒 เพิ่ม … ลงตะกร้า" เดิม — isPreOrderOnly helper ตัวเดียวทั้งสองการ์ด
+
+T8 — ต้นตอพิสูจน์จากภาพ Owner (ข้อความตั้งคอลัมน์มุมขวา + ♪ ชนกัน):
+- ① BiteMascot bubble/upsell: เดิมอยู่ใน flow ของ wrapper ที่กว้างเท่า bubble (220px) แต่
+  positioned ด้วย left ของปุ่ม (snap ขอบขวา) → ล้นขวาจอโดนตัดเหลือคำตั้ง + ทับ cluster
+  → แก้: container = w-16 (กว้างเท่าปุ่ม) + bubble/upsell = absolute bottom-full right-0
+  w-max max-w-[min(220px,calc(100vw-56px))] → เบนเข้าจอกลาง ไม่มีทางล้นขวา
+  + showBubble/showUpsell คำนวณรอบเดียว (กัน TS2367 narrowing จากเช็ค stage ซ้ำ)
+- ② AmbientMusicToggle: offset ตายตัว 168px = ทับ mascot cluster (84/152 + ปุ่ม 64 + bubble ~48)
+  เมื่อตะกร้ามีของ → แก้: clusterClear = cartCount>0 ? 288 : 216 (อ่านจาก useCartStore)
+
+tests: src/__tests__/r44UiTheater.test.ts ใหม่ 4 ข้อ (ลิงก์×4 testid · ปุ่ม 2 โหมด ·
+  bubble anchor · music offset) + theaterUnity/homeSectionModeCta/preOrderLockUi เดิมผ่าน
+gates: vitest 4 ไฟล์ 35/35 (+r44UiTheater 4/4) · npx tsc --noEmit = 0 ·
+  npm run lint = OK (brandNameGuard 502 + languageSanity 1445)

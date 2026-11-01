@@ -11,10 +11,16 @@ import {
   MUSIC_EVENT,
   type MusicState,
 } from '@/lib/ambientMusic'
+import { useCartStore } from '@/store/cartStore'
 
 export function AmbientMusicToggle() {
   const manager = getAmbientMusic()
   const [state, setState] = useState<MusicState>(() => manager.getState())
+  // R44 (Owner 2026-11-01):  łazienk pill ให้พ้น "cluster" ของ Floating Bite ทั้งระบบ —
+  // mascot ลอยที่ bottom 84 (ว่าง) / 152 (มีของในตะกร้า) + ปุ่ม 64px + bubble ลอยด้านบน (~48px)
+  // → เดิม offset 168 = ทับ bubble/mascot เสมอเมื่อตะกร้ามีของ (ภาพ Owner: ♪ ชนข้อความตั้ง)
+  const cartCount = useCartStore((s) => s.items.length)
+  const clusterClear = cartCount > 0 ? 288 : 216
 
   useEffect(() => {
     const onMusic = () => setState(manager.getState())
@@ -31,8 +37,8 @@ export function AmbientMusicToggle() {
   return (
     <div
       className="fixed right-3 z-40 flex items-center gap-2 rounded-2xl glass-surface border border-brand-border px-3 py-2 shadow-lg no-print"
-      // เหนือ Floating Bite (bottom ~84-152px) — ปุ่มยุบแล้วเคยมุดใต้มาสคอตจนกดไม่ได้
-      style={{ bottom: 'calc(var(--bmb-bottom-nav-h, 0px) + var(--bmb-sticky-h, 0px) + 168px)' }}
+      // เหนือ Floating Bite cluster ทั้งหมด (ปุ่ม+bubble · R44: ปรับ offset ตามตะกร้า — ห้ามทับกันอีก)
+      style={{ bottom: `calc(var(--bmb-bottom-nav-h, 0px) + var(--bmb-sticky-h, 0px) + ${clusterClear}px)` }}
       data-testid="ambient-music"
     >
       <button

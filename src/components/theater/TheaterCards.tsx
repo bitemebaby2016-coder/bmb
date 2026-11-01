@@ -11,8 +11,13 @@
 // ============================================
 
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import type { Product } from '@/types'
 import type { TheaterReason } from '@/lib/theaterReasons'
+
+// R44 (Owner 2026-11-01): เมนูที่เอามาแสดงต้อง "ลิงก์จริง" ไปหน้าเมนู +
+// ปุ่มตามโหมดขายจริง — พรีออเดอร์ = "จองล่วงหน้า" · เซมเดย์ = "เพิ่มลงตะกร้า"
+const isPreOrderOnly = (p: Product) => !!(p.available_preorder && !p.available_same_day)
 
 function ReasonChip({ reason }: { reason?: TheaterReason | null }) {
   if (!reason) return null
@@ -35,19 +40,25 @@ interface RecommendationCardProps {
 
 export function RecommendationCard({ product, reason, onAdd }: RecommendationCardProps) {
   const denied = !product.is_available || !!product.archived
+  const preorderOnly = isPreOrderOnly(product)
   return (
     <article data-testid="theater-rec-card" className="theater-rec-card">
       <div className="theater-rec-media">
-        {product.image_url ? (
-          <img src={product.image_url} alt={product.name} loading="lazy" decoding="async" />
-        ) : (
-          <span role="img" aria-label={product.name} className="theater-img-fallback" />
-        )}
+        {/* R44: รูปเมนู = ลิงก์จริงไปหน้าเมนู (ไม่ใช่รูปตาย) */}
+        <Link to="/menu" aria-label={`ดู ${product.name} ในหน้าเมนูจริง`} data-testid="theater-rec-link">
+          {product.image_url ? (
+            <img src={product.image_url} alt={product.name} loading="lazy" decoding="async" />
+          ) : (
+            <span role="img" aria-label={product.name} className="theater-img-fallback" />
+          )}
+        </Link>
         <div className="theater-rec-media-glow" aria-hidden="true" />
       </div>
       <div className="theater-rec-body">
         <div className="flex items-start justify-between gap-2">
-          <h4 className="font-display font-bold text-[var(--theater-fg)] text-sm leading-snug line-clamp-2">{product.name}</h4>
+          <h4 className="font-display font-bold text-[var(--theater-fg)] text-sm leading-snug line-clamp-2">
+            <Link to="/menu" className="text-inherit hover:underline" data-testid="theater-rec-title-link">{product.name}</Link>
+          </h4>
           <span className="theater-price-sm">฿{Number(product.price) || 0}</span>
         </div>
         <ReasonChip reason={reason} />
@@ -58,7 +69,7 @@ export function RecommendationCard({ product, reason, onAdd }: RecommendationCar
           className="btn btn-primary btn-sm w-full disabled:opacity-50"
           data-testid="theater-rec-add"
         >
-          {denied ? 'หมดแล้ว' : '🛒 เพิ่ม'}
+          {denied ? 'หมดแล้ว' : preorderOnly ? '📅 จองล่วงหน้า' : '🛒 เพิ่ม'}
         </button>
       </div>
     </article>
@@ -85,11 +96,14 @@ export function TheaterHeroCard({ product, reason, onAdd, onCustomize }: Theater
   return (
     <article className="theater-hero" data-testid="theater-hero">
       <div className="theater-hero-media">
-        {product.image_url ? (
-          <img src={product.image_url} alt={product.name} loading="eager" decoding="async" />
-        ) : (
-          <span role="img" aria-label={product.name} className="theater-img-fallback theater-img-fallback--lg" />
-        )}
+        {/* R44: รูปเมนู = ลิงก์จริงไปหน้าเมนู */}
+        <Link to="/menu" aria-label={`ดู ${product.name} ในหน้าเมนูจริง`} data-testid="theater-hero-link">
+          {product.image_url ? (
+            <img src={product.image_url} alt={product.name} loading="eager" decoding="async" />
+          ) : (
+            <span role="img" aria-label={product.name} className="theater-img-fallback theater-img-fallback--lg" />
+          )}
+        </Link>
         <div className="theater-hero-shade" aria-hidden="true" />
         <div className="theater-hero-badges">
           <ReasonChip reason={reason} />
@@ -109,7 +123,9 @@ export function TheaterHeroCard({ product, reason, onAdd, onCustomize }: Theater
       <div className="theater-hero-body">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
-            <h3 className="font-display font-bold text-[var(--theater-fg)] text-lg leading-tight line-clamp-2">{product.name}</h3>
+            <h3 className="font-display font-bold text-[var(--theater-fg)] text-lg leading-tight line-clamp-2">
+              <Link to="/menu" className="text-inherit hover:underline" data-testid="theater-hero-title-link">{product.name}</Link>
+            </h3>
             {product.description && (
               <p className="text-xs text-[var(--theater-fg-muted)] mt-1 line-clamp-2">{product.description}</p>
             )}
@@ -152,7 +168,12 @@ export function TheaterHeroCard({ product, reason, onAdd, onCustomize }: Theater
             className="btn btn-primary disabled:opacity-50"
             data-testid="theater-hero-add"
           >
-            {denied ? 'หมดแล้ว' : `🛒 เพิ่ม ${qty > 1 ? `${qty} ` : ''}ลงตะกร้า`}
+            {/* R44: ปุ่มตามโหมด — พรีออเดอร์ = "จองล่วงหน้า" · เซมเดย์ = "เพิ่มลงตะกร้า" */}
+            {denied
+              ? 'หมดแล้ว'
+              : preorderOnly
+                ? `📅 จองล่วงหน้า${qty > 1 ? ` ${qty}` : ''}`
+                : `🛒 เพิ่ม ${qty > 1 ? `${qty} ` : ''}ลงตะกร้า`}
           </button>
           <button
             type="button"

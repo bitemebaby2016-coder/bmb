@@ -267,6 +267,9 @@ export function BiteMascot({ userName, activeSection = 'home' }: BiteMascotProps
 
   const currentPose = posePool[Math.min(currentPoseIndex, posePool.length - 1)] as (typeof MASCOT_POSES)[number]
   const mascotUrl = overrideUrl || getMascotUrl(currentPose)
+  // R44: คำนวณเงื่อนไขรอบเดียว (กัน TS narrowing error จากการเช็ค stage ซ้ำใน JSX)
+  const showBubble = Boolean(bubble) && stage !== 'fullchat' && section !== 'checkout'
+  const showUpsell = Boolean(delivery.freeShippingEnforced && upsell && upsell.remaining > 0 && stage === 'personalization')
 
   return (
     <>
@@ -280,23 +283,34 @@ export function BiteMascot({ userName, activeSection = 'home' }: BiteMascotProps
           ? { left: pos.x, top: pos.y }
           : { bottom: cartCount > 0 ? 152 : 84 }}
       >
-        <div className="relative flex flex-col items-end">
+        <div className="relative w-16">
           {/* Owner 2026-10-17: bubble ต้องไม่ทับฟอร์มหน้า checkout และปิดได้ด้วยการแตะ
-              (เดิมลอยค้าง animate-bounce บัง input/ปุ่มบนมือถือ) */}
-          {bubble && stage !== 'fullchat' && section !== 'checkout' && (
-            <GlassCard
-              className="px-3 py-1.5 text-xs animate-bounce mb-1 mr-4 max-w-[220px] cursor-pointer"
-              role="button"
-              title="แตะเพื่อซ่อนข้อความ"
-              aria-label="ซ่อนข้อความจากน้อง Bite"
-              onClick={() => setBubble(null)}
+              (เดิมลอยค้าง animate-bounce บัง input/ปุ่มบนมือถือ)
+              R44 (Owner 2026-11-01): bubble/upsell = anchor absolute ด้านบน "เบนเข้าหาจอกลาง"
+              (right-0 + ความกว้างคอนเทนเนอร์ = ปุ่ม 64px เท่านั้น) — เดิม wrapper กว้างเท่า bubble
+              แล้ว positioned ด้วย left ของปุ่ม → ล้นขอบขวาจอ โดนตัดเหลือคอลัมน์ตั้ง + ทับ ♪ music
+              (พิสูจน์จากภาพ Owner) */}
+          {showBubble || showUpsell ? (
+            <div
+              className="absolute bottom-full right-0 mb-1 flex flex-col items-end gap-1 w-max max-w-[min(220px,calc(100vw-56px))]"
+              data-testid="bite-bubble-stack"
             >
-              {bubble}
-            </GlassCard>
-          )}
-          {delivery.freeShippingEnforced && upsell && upsell.remaining > 0 && stage === 'personalization' && (
-            <p className="text-[10px] text-amber-700 mr-4 mb-0.5">ส่งฟรีเมื่อครบ ฿{upsell.remaining}</p>
-          )}
+              {showBubble && (
+                <GlassCard
+                  className="px-3 py-1.5 text-xs animate-bounce cursor-pointer"
+                  role="button"
+                  title="แตะเพื่อซ่อนข้อความ"
+                  aria-label="ซ่อนข้อความจากน้อง Bite"
+                  onClick={() => setBubble(null)}
+                >
+                  {bubble}
+                </GlassCard>
+              )}
+              {showUpsell && upsell && (
+                <p className="text-[10px] text-amber-700">ส่งฟรีเมื่อครบ ฿{upsell.remaining}</p>
+              )}
+            </div>
+          ) : null}
           <button
             type="button"
             onPointerDown={onBtnPointerDown}
