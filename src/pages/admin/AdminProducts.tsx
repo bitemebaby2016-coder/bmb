@@ -10,6 +10,8 @@ import { customerVisibilityIssue, CUSTOMER_VISIBILITY_LABEL } from '@/lib/catalo
 // R21 Phase 3: โหลดเมนูไม่สำเร็จต้องฟ้อง (ห้ามโชว์หน้าเปล่าเหมือนไม่มีเมนู)
 import { LoadErrorBanner } from '@/components/ui/LoadErrorBanner'
 import { AddonsEditor, toAddonDrafts, addonDraftsToJson, type AddonDraft } from '@/components/admin/AddonsEditor'
+import { AddonMarginPolicyCard } from '@/components/admin/AddonMarginPolicyCard'
+import { writeAuditLog } from '@/lib/auditLog'
 import type { Product, ProductCategory } from '@/types'
 // R21 Phase 2 (Owner 2026-10-29): Gross Margin / Net Profit real-time จากต้นทุนที่แอดมินกรอก
 import { computeMargin, formatBaht, formatPct, marginTierLabel } from '@/lib/marginCalc'
@@ -121,6 +123,8 @@ export function AdminProducts() {
     resetForm()
     setShowAddForm(false)
     showToast('เพิ่มเมนูสำเร็จ!', 'success')
+    // R49: ทุกการเปลี่ยนราคา/ส่วนลดแอดออน (ผ่าน save เมนู) = audit trail ของแอดมิน
+    writeAuditLog({ action: 'product_create', entity_type: 'product', entity_id: created.id, description: `เพิ่มเมนูพร้อมตั้ง add-on: ${formData.name}`, metadata: { addons: addonDraftsToJson(addons) } })
   }
 
   function handleEditProduct(product: Product) {
@@ -157,6 +161,8 @@ export function AdminProducts() {
     resetForm()
     setShowAddForm(false)
     showToast('อัปเดตเมนูสำเร็จ!', 'success')
+    // R49: แก้ราคา/โปรโมชัน/ต้นทุนแอดออน = บันทึก Admin Audit Trail ทุกครั้ง (ไฟล์เดิม auditLog)
+    writeAuditLog({ action: 'product_update', entity_type: 'product', entity_id: editingProduct.id, description: `อัปเดตเมนู/แอดออน: ${formData.name}`, metadata: { addons: addonDraftsToJson(addons), price: formData.price } })
   }
 
   // ── Archive / Restore (CAT-01, migration 055 — CAT-D04=B: hard delete is NOT the normal mechanism) ──
@@ -469,6 +475,9 @@ export function AdminProducts() {
           </div>
         </div>
       )}
+
+      {/* R49: กฎกำไรแอดออน (Admin Control Panel) — เพดานส่วนลด/กำไรขั้นต่ำ/บังคับเมนูหลัก/cross-sell */}
+      <AddonMarginPolicyCard />
 
       {/* ── ระบบ "หัวข้อเมนู" เดียว (2026-10-17) — เพิ่ม/แก้/เรียง/ซ่อน/ลบ + ย้ายเมนู ── */}
       <div className="card mb-6 bg-brand-bg">

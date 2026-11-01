@@ -76,7 +76,7 @@ describe('R48-2 · m179 RPC idempotent + backoff/dead + SKIP LOCKED + flags LINE
     expect(applySrc).toContain('r48Apply179-result.json')
   })
 })
-// MARKER_TESTS_2
+// MARKER_TESTS_2 — (cleaned: marker ไม่จำเป็นแล้ว คงไว้เป็น comment ธรรมดา)
 describe('R48-3 · dispatcher = builders 3 กลุ่ม + drain ไม่ loop + ไม่แตะ core business', () => {
   it('builders: transactional/reminder/reengagement/points จริง + abandoned cart/peak = skip ซื่อสัตย์ (ZERO-FAKE)', () => {
     expect(dispatcherSrc).toContain('buildFromNotifications')
@@ -84,7 +84,6 @@ describe('R48-3 · dispatcher = builders 3 กลุ่ม + drain ไม่ loo
     expect(dispatcherSrc).toContain('buildReengagement')
     expect(dispatcherSrc).toContain('buildPointsEarn')
     expect(dispatcherSrc).toContain('buildAbandonedCart')
-    expect(dispatcherSrc).toContain('no_server_cart_source')
     expect(dispatcherSrc).toContain('buildPeakHourPrompt')
     expect(dispatcherSrc).toContain('flag_off')
   })

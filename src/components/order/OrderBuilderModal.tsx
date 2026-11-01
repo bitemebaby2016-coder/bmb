@@ -7,6 +7,7 @@ import { useEffect, useState } from 'react'
 import type { Product, ProductAddon } from '@/types'
 import { useOrderBuilderStore, pickRecommendations, type AddOnChoice, type OrderBuilderResult } from '@/store/orderBuilderStore'
 import { showToast } from '@/components/ui/ToastContainer'
+import { sortAddonsByMargin, effectiveAddonPrice } from '@/lib/addonMarginGuard'
 
 interface AddOnSelectionState {
   selected: string[]
@@ -44,6 +45,8 @@ export function OrderBuilderModal() {
   if (!open || !product) return null
 
   const addonsList: ProductAddon[] = Array.isArray(product.addons) ? product.addons : []
+  // R49: Cross-sell = เรียงตามกำไรสูงสุดก่อน (Profit Weight — cost/margin_weight ที่แอดมินตั้ง)
+  const addonsForSale = sortAddonsByMargin(addonsList as unknown as Array<Record<string, unknown>>) as unknown as ProductAddon[]
 
   function selectedCount(addonId: string): number {
     return (addOns[addonId]?.selected ?? []).length
@@ -71,17 +74,18 @@ export function OrderBuilderModal() {
     setAddOns({ ...addOns, [addonId]: { ...base, note } })
   }
 
-  // Server mirrors this math (migration 016 compute_addons_price).
+  // Server mirrors this math (migration 016 → compute_addons_price = promo_price ถ้าแอดมินตั้ง — R49 เดียวกัน)
   function addOnTotal(): number {
     let total = 0
-    for (const addon of addonsList) {
+    for (const addon of addonsForSale) {
       const state = addOns[addon.id]
       if (!state) continue
       const count = state.selected.length
+      const unit = effectiveAddonPrice(addon as unknown as Record<string, unknown>)
       if (addon.type === 'text') {
-        if (count > 0 || state.note.trim() !== '') total += Number(addon.price) || 0
+        if (count > 0 || state.note.trim() !== '') total += unit
       } else {
-        total += (Number(addon.price) || 0) * count
+        total += unit * count
       }
     }
     return total
@@ -149,14 +153,20 @@ return (
 
         <div className="ob-body">
           {/* Add-ons / toppings */}
-          {addonsList.length > 0 && (
+          {addonsForSale.length > 0 && (
             <section className="ob-section">
               <h4 className="ob-section-title">➕ Toppings / Add-ons</h4>
-              {addonsList.map((addon) => (
+              <p className="text-[11px] text-brand-muted -mt-1 mb-1">เรียงตามกำไรสูงสุดจากที่ร้านตั้งค่าไว้</p>
+              {addonsForSale.map((addon) => (
                 <div key={addon.id} className="ob-addon" data-testid="ob-addon">
                   <div className="flex items-center justify-between gap-2">
                     <span className="font-medium">{addon.name}</span>
-                    <span className="text-xs text-brand-muted">+฿{Number(addon.price) || 0}</span>
+                    <span className="text-xs text-brand-muted">
+                      +฿{effectiveAddonPrice(addon as unknown as Record<string, unknown>)}
+                      {Number((addon as unknown as Record<string, unknown>).promo_price) > 0 && (
+                        <s className="ml-1 opacity-60">฿{Number(addon.price) || 0}</s>
+                      )}
+                    </span>
                   </div>
 
                   {addon.type === 'radio' && (

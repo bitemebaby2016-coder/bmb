@@ -1,0 +1,31 @@
+{
+  "at": "2026-11-01T07:05:31.154Z",
+  "precheck": {
+    "ledgerTop": "[{\"version\":\"181\",\"name\":\"181_addon_margin_rules\"},{\"version\":\"180\",\"name\":\"180_cart_sessions_reminder\"},{\"version\":\"179\",\"name\":\"179_notification_hub\"}]"
+  },
+  "apply180": "[]",
+  "apply181": "[]",
+  "reload": "[]",
+  "verify": {
+    "tables": "[{\"table_name\":\"cart_sessions\"}]",
+    "settingFn": "[{\"proname\":\"addon_margin_setting\"}]",
+    "promoFnHasAdminCap": "[{\"admin_cap\":true,\"still_hardcoded\":false}]",
+    "addonFnHasPromo": "[{\"reads_promo\":true}]",
+    "policy": "[{\"value\":{\"enabled\":true,\"max_discount_pct\":15,\"cross_sell_enabled\":true,\"main_dish_required\":false,\"min_addon_margin_pct\":0}}]",
+    "reminderDays": "[{\"rd\":\"1\"}]"
+  },
+  "record": {
+    "ins180": "[]",
+    "ins181": "[]",
+    "ledgerTopAfter": "[{\"version\":\"181\",\"name\":\"181_addon_margin_rules\"},{\"version\":\"180\",\"name\":\"180_cart_sessions_reminder\"},{\"version\":\"179\",\"name\":\"179_notification_hub\"},{\"version\":\"178\",\"name\":\"178_cron_publish_tick\"},{\"version\":\"177\",\"name\":\"177_marketing_publish_due\"}]"
+  },
+  "ALL_PASS": true,
+  "checks": {
+    "cart_sessions": true,
+    "addon_margin_setting": true,
+    "cap_admin_driven": true,
+    "promo_price_server": true,
+    "ledger180": true,
+    "ledger181": true
+  }
+}

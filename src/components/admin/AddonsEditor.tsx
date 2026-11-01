@@ -14,6 +14,12 @@ export interface AddonDraft {
   type: 'radio' | 'checkbox' | 'text'
   options: string[]
   max_selections: number
+  /** R49: ราคาโปรโมชัน (0 = ไม่ใช้โปร) */
+  promo_price: number
+  /** R49: ต้นทุน/หน่วย — ใช้คำนวณกำไรจริง */
+  cost: number
+  /** R49: น้ำหนักกำไร (0-100) — เรียง cross-sell เมื่อไม่กรอกต้นทุน */
+  margin_weight: number
 }
 
 export function emptyAddonGroup(): AddonDraft {
@@ -24,6 +30,9 @@ export function emptyAddonGroup(): AddonDraft {
     type: 'checkbox',
     options: [''],
     max_selections: 1,
+    promo_price: 0,
+    cost: 0,
+    margin_weight: 0,
   }
 }
 
@@ -36,11 +45,14 @@ export function toAddonDrafts(value: unknown): AddonDraft[] {
     type: a?.type === 'text' ? 'text' : (a?.type === 'radio' ? 'radio' : 'checkbox'),
     options: Array.isArray(a?.options) ? a?.options.map(String) : [],
     max_selections: Number(a?.max_selections) || 1,
+    promo_price: Number(a?.promo_price) || 0,
+    cost: Number(a?.cost) || 0,
+    margin_weight: Number(a?.margin_weight) || 0,
   }))
 }
 
 /** Filter empty rows and map back to the products.addons JSON shape. */
-export function addonDraftsToJson(drafts: AddonDraft[]): AddonDraft[] {
+export function addonDraftsToJson(drafts: AddonDraft[]): Array<Omit<AddonDraft, 'promo_price' | 'cost' | 'margin_weight'> & { promo_price?: number; cost?: number; margin_weight?: number }> {
   return drafts
     .filter((d) => d.name.trim() !== '')
     .map((d) => ({
@@ -50,6 +62,10 @@ export function addonDraftsToJson(drafts: AddonDraft[]): AddonDraft[] {
       type: d.type,
       options: d.options.map((o) => o.trim()).filter((o) => o !== ''),
       max_selections: Math.max(1, Number(d.max_selections) || 1),
+      // R49: คงเฉพาะฟิลด์ที่แอดมินกรอก (>0) — JSON สะอาด ไม่รั่วค่า 0 เกินจำเป็น
+      ...(Number(d.promo_price) > 0 ? { promo_price: Number(d.promo_price) || 0 } : {}),
+      ...(Number(d.cost) > 0 ? { cost: Number(d.cost) || 0 } : {}),
+      ...(Number(d.margin_weight) > 0 ? { margin_weight: Number(d.margin_weight) || 0 } : {}),
     }))
 }
 
@@ -121,6 +137,43 @@ export function AddonsEditor({ value, onChange }: Props) {
                   onChange={(e) => setGroup(gi, { price: parseFloat(e.target.value) || 0 })}
                   className="input py-1.5 text-sm"
                   placeholder="15"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-brand-accent mb-1">ราคาโปร (฿ · 0 = ไม่ใช้)</label>
+                <input
+                  type="number"
+                  min={0}
+                  value={group.promo_price || ''}
+                  data-testid="addon-group-promo-price"
+                  onChange={(e) => setGroup(gi, { promo_price: parseFloat(e.target.value) || 0 })}
+                  className="input py-1.5 text-sm"
+                  placeholder="0"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-brand-accent mb-1">ต้นทุน/หน่วย (฿ · คำนวณกำไร)</label>
+                <input
+                  type="number"
+                  min={0}
+                  value={group.cost || ''}
+                  data-testid="addon-group-cost"
+                  onChange={(e) => setGroup(gi, { cost: parseFloat(e.target.value) || 0 })}
+                  className="input py-1.5 text-sm"
+                  placeholder="0"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-brand-accent mb-1">น้ำหนักกำไร (0-100 · เรียง cross-sell)</label>
+                <input
+                  type="number"
+                  min={0}
+                  max={100}
+                  value={group.margin_weight || ''}
+                  data-testid="addon-group-margin-weight"
+                  onChange={(e) => setGroup(gi, { margin_weight: parseFloat(e.target.value) || 0 })}
+                  className="input py-1.5 text-sm"
+                  placeholder="0"
                 />
               </div>
               <div>

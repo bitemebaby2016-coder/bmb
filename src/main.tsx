@@ -12,6 +12,7 @@ import { hydratePlatformConfigFromServer } from './lib/platformConfigBootstrap'
 import { getSeoSettings } from './lib/seoSettings'
 import { getSocialLinks } from './lib/socialLinks'
 import { initCartPersistence } from './lib/cartPersistence'
+import { initCartSessionSync } from './lib/cartSessionSync'
 
 // ⚡ PERF (2026-09-17): admin seeding hashes a bcrypt password at boot, which is
 // heavy on the main thread. Defer it until after first paint / idle so LCP and
@@ -49,6 +50,8 @@ void useAuthStore.getState().checkAuth()
 // canonical addItem path) — fire-and-forget async; never blocks first paint
 // and never mutates orders / payments / stock.
 void initCartPersistence(() => import('./lib/bmbAdminApi_products').then((m) => m.getProducts()))
+// R49: sync ตะกร้าเบา ๆ ลง cart_sessions (telemetry → abandoned-cart แจ้งเตือน 15-30 นาที)
+initCartSessionSync()
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>

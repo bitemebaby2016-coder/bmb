@@ -9,6 +9,7 @@ import { BiteMascot } from '../ai/BiteMascot'
 import { BackgroundLayer } from './BackgroundLayer'
 import { AmbientMusicToggle } from '../audio/AmbientMusicToggle'
 import { InAppBrowserNotice } from './InAppBrowserNotice'
+import { PushPermissionPrompt } from '../notification/PushPermissionPrompt'
 import { useCartStore } from '@/store/cartStore'
 import { referralCodeFromSearch } from '@/lib/referralClient'
 import { affiliateCodeFromSearch, saveAffiliateClaimCode } from '@/lib/engagementClient'
@@ -194,6 +195,7 @@ export function Layout({ children, hideBottomNav = false, activeSection = 'home'
         <InAppBrowserNotice />
         {/* Ambient music player — session-persistent singleton state */}
         <AmbientMusicToggle />
+        <PushPermissionPrompt />
         <OrderBuilderModal />
         {/* Decorative + floating AI mascot (pointer-events guarded) */}
         <BiteMascot activeSection={activeSection} />

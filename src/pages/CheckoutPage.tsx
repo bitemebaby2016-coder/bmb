@@ -43,6 +43,10 @@ import { roundBookability, roundStatusLabel, roundCutoffLabel } from '@/lib/deli
 import { normalizePromoCode } from '@/lib/promotionClient'
 // R21 Phase 2 (Owner 2026-10-29): เพดานส่วนลดรวม คูปอง+แต้ม+referral ≤ 15% ของยอดสินค้า
 import { evaluateDiscountGuardrail, evaluateDiscountStacking } from '@/lib/discountGuardrail'
+// R49 — Add-on Margin Rules: policy (แอดมินตั้ง) + Margin Protection Guard + ที่อยู่แอดออนจากของเดิม
+import { resolveAddOnLines } from '@/lib/addonDisplay'
+import { normalizeAddonMarginPolicy, evaluateAddonDiscountGuard, DEFAULT_ADDON_MARGIN_POLICY } from '@/lib/addonMarginGuard'
+import { getBusinessSettings } from '@/lib/bmbAdminApi_settings'
 import { CouponBox, revalidateCouponForSubmit } from '@/components/CouponBox'
 import { ReferralBox, revalidateReferralForSubmit } from '@/components/ReferralBox'
 import { claimReferralCode, describeReferralClaim } from '@/lib/referralClient'
@@ -89,9 +93,23 @@ async function ensureReplaySafeIntent(
 export function CheckoutPage() {
   const navigate = useNavigate()
   const { items, subtotal, discount, total, clearCart, isHydrated, couponCode, pointsRedemption } = useCartStore()
+  // R49 — เพดานส่วนลด/กฎแอดออน = business_settings.addon_margin_policy (แอดมินตั้ง · default 15 = ไม่ hardcode)
+  const [ampPolicy, setAmpPolicy] = useState(DEFAULT_ADDON_MARGIN_POLICY)
+  useEffect(() => {
+    void getBusinessSettings()
+      .then((s) => setAmpPolicy(normalizeAddonMarginPolicy(s?.addon_margin_policy)))
+      .catch(() => undefined)
+  }, [])
   // R21 Phase 2 — cart guardrail: คูปอง (ปัจจุบัน) + แต้ม + referral (เมื่อมีในรอบถัดไป)
-  // ห้ามรวมกันเกิน 15% ของ "ยอดรวมสินค้า" — pure check ต่อ render (ตัวเลขจิ๋ว ไม่ต้อง memo)
-  const discountGuard = evaluateDiscountGuardrail(subtotal, { coupon: discount })
+  // ห้ามรวมกันเกิน ampPolicy.maxDiscountPct% ของ "ยอดรวมสินค้า" — pure check ต่อ render (ตัวเลขจิ๋ว ไม่ต้อง memo)
+  const discountGuard = evaluateDiscountGuardrail(subtotal, { coupon: discount }, ampPolicy.maxDiscountPct)
+  // R49 — Margin Protection Guard: ส่วนลด pro-rata ที่แตะยอดแอดออน ห้ามเกินเพดานที่แอดมินตั้ง
+  // (กันคูปองท้ายบิลกัดกำไรท็อปปิ้งจนติดลบ — cost=0 ใช้เพดาน % · กรอก cost ที่ AddonsEditor = floor คุมซ้ำ)
+  const addonSubtotal = items.reduce(
+    (sum, i) => sum + resolveAddOnLines(i.product, i.customizations).reduce((a, l) => a + l.linePrice, 0),
+    0,
+  )
+  const addonGuard = evaluateAddonDiscountGuard(addonSubtotal, 0, subtotal, discountGuard.totalDiscount, ampPolicy)
   // [Task 1 · Owner 2026-10-29] กฎห้ามซ้อน: โค้ดคูปองส่วนลดหลัก ✗ การแลกแต้มลดเงินสด
   // ในบิลเดียวกัน (Wallet Credit = payment-side ไม่เข้ากฎนี้) — pointsRedemption ยังเป็น 0
   // จนกว่าจะมีฟีเจอร์แลกเป็นเงิน กฎนี้ให้ผลทันทีที่ค่า > 0 โดยไม่ต้องแก้ไฟล์นี้อีก
@@ -1295,6 +1313,21 @@ export function CheckoutPage() {
               data-testid="discount-stack-guard"
             >
               ⚠️ {stackGuard.message}
+            </div>
+          )}
+          {/* R49 — Margin Protection Guard: เตือนเมื่อส่วนลดที่จัดสรรเข้าแอดออนเกินเพดานกำไรที่แอดมินตั้ง */}
+          {!addonGuard.allowed && (
+            <div
+              className="rounded-lg border border-amber-300 bg-amber-50 p-2 text-xs font-medium text-amber-800"
+              role="alert"
+              data-testid="addon-margin-guard"
+            >
+              ⚖️ {addonGuard.message}
+            </div>
+          )}
+          {addonGuard.allowed && addonSubtotal > 0 && discountGuard.totalDiscount > 0 && (
+            <div className="text-xs text-brand-muted" data-testid="addon-margin-guard-ok">
+              กำไรแอดออนปลอดภัย — ส่วนลดแตะท็อปปิ้ง {addonGuard.allocated.toFixed(2)} บาท (เพดาน {addonGuard.allowance.toFixed(2)} บาท)
             </div>
           )}
           {/* A3 (2026-10-22): ค่าส่งโซน = ค่าที่แอดมินตั้ง (ไม่ต้องเบลอเป็น "ประมาณการ");

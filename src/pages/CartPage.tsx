@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import { useCartStore } from '@/store/cartStore'
 import { MascotBadge } from '@/components/MascotBadge'
 import { resolveAddOnLines, addOnTotalFor } from '@/lib/addonDisplay'
+import { AddonCrossSellStrip } from '@/components/cart/AddonCrossSellStrip'
 import { getProductScheduleMap, type ProductScheduleMap } from '@/lib/productSchedule'
 
 export function CartPage() {
@@ -28,9 +29,13 @@ export function CartPage() {
   }
   const hasStalePreOrder = scheduleLoaded && items.some(isStalePreOrderLine)
 
+  // R49: แผง cross-sell แอดออน (เรียงกำไรสูงสุด · gate ตาม addon_margin_policy ที่แอดมินตั้ง)
+  const showCrossSell = <AddonCrossSellStrip />
+
   if (items.length === 0) {
     return (
       <div className="max-w-7xl mx-auto px-4 py-12 text-center">
+        {showCrossSell}
         {/* Mascot pose=`empty` — empty cart state (Mascot Pose Map §18) */}
         <MascotBadge
           pose="empty"
@@ -110,6 +115,8 @@ export function CartPage() {
           )
         })}
       </div>
+      {/* R49: cross-sell แอดออน (เรียงกำไรสูงสุด · gate addon_margin_policy) — มีเมนูหลักในตะกร้าแล้ว */}
+      {showCrossSell}
       {hasStalePreOrder && (
         <div className="mb-6 p-4 rounded-xl border-2 border-brand-border bg-brand-bg text-sm text-brand-muted" role="alert" data-testid="cart-stale-warning">
           ⚠️ มีเมนูจองล่วงหน้าที่ยังไม่ลงปฏิทินรอบถัดไป/เลยรอบแล้ว (รายการสีเทา) —

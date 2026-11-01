@@ -77,6 +77,12 @@ export interface ProductAddon {
   type: 'radio' | 'checkbox' | 'text';
   options: string[];
   max_selections: number;
+  /** R49 (Admin ตั้ง): ราคาโปรโมชันแอดออน — >0 = ใช้โปรนี้แทน price (server compute_addons_price อ่านเอง) */
+  promo_price?: number;
+  /** R49 (Admin ตั้ง): ต้นทุนแอดออนต่อหน่วย — ใช้คำนวณ margin จริง (Profit Weight) */
+  cost?: number;
+  /** R49 (Admin ตั้ง): น้ำหนักกำไร (คะแนน 0-100) สำหรับเรียง cross-sell เมื่อไม่กรอกต้นทุน */
+  margin_weight?: number;
 }
 
 // ============================================

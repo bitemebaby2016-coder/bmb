@@ -111,24 +111,34 @@ async function buildFromNotifications(sb: Sb): Promise<BuildResult> {
   }
 }
 
-/** T-Transactional: เตือนพรีออเดอร์ล่วงหน้า 1 วัน (scheduled_date = พรุ่งนี้) */
+/** T-Transactional: เตือนพรีออเดอร์ — ตามกฎแอดมิน (order_policy.reminder_days = กี่วันก่อนรอบส่ง · default 1 แก้ได้) */
 async function buildPreOrderReminders(sb: Sb): Promise<BuildResult> {
   try {
     for (const c of ['order_mode', 'scheduled_date', 'customer_id', 'status']) {
       if (!(await hasCol(sb, 'orders', c))) return { builder: 'preorder_reminder', count: 0, skipped: `orders missing column ${c}` }
     }
-    const tomorrow = new Date(Date.now() + 24 * 3600 * 1000).toISOString().slice(0, 10)
+    // R49 DoD: จำนวนวันก่อนรอบส่ง = แอดมินตั้ง (order_policy.reminder_days · 1..14 · default 1)
+    let leadDays = 1
+    try {
+      const { data } = await sb.from('business_settings').select('value').eq('key', 'order_policy').maybeSingle()
+      const v = Number((data as { value?: Record<string, unknown> } | null)?.value?.reminder_days)
+      if (Number.isFinite(v) && v >= 1 && v <= 14) leadDays = Math.floor(v)
+    } catch { leadDays = 1 }
+    // วันที่อิงเวลาไทย (ICT = UTC+7)
+    const bkk = (offsetDays: number) => new Date(Date.now() + 7 * 3600 * 1000 + offsetDays * 24 * 3600 * 1000).toISOString().slice(0, 10)
+    const target = bkk(leadDays)
     const { data, error } = await sb.from('orders')
       .select('id, order_number, customer_id, scheduled_date, status, order_mode')
-      .eq('order_mode', 'PRE_ORDER').eq('scheduled_date', tomorrow)
+      .eq('order_mode', 'PRE_ORDER').eq('scheduled_date', target)
       .in('status', ['confirmed', 'preparing', 'ready_for_dispatch', 'dispatched'])
       .not('customer_id', 'is', null).limit(100)
     if (error) return { builder: 'preorder_reminder', count: 0, skipped: error.message.slice(0, 120) }
     let n = 0
     for (const r of (data || []) as Array<Record<string, unknown>>) {
-      if (await enqueueOnce(sb, `remind-${String(r.id)}-${tomorrow}`, String(r.customer_id), 'Transactional',
+      // idempotent: event_key ผูก (order, วันเป้าหมาย) — รันซ้ำ/แก้ lead กลางคัน = ไม่ยิงซ้ำต่อวันนั้น
+      if (await enqueueOnce(sb, `remind-${String(r.id)}-${target}`, String(r.customer_id), 'Transactional',
         '⏰ พรุ่งนี้ได้ทานแล้ว!',
-        `ออเดอร์ ${String(r.order_number ?? r.id)} รอบส่งวันพรุ่งนี้ (${tomorrow}) — เตรียมที่อยู่ให้เรียบร้อย ขอบคุณที่รอค่ะ`,
+        `ออเดอร์ ${String(r.order_number ?? r.id)} รอบส่งวันที่ ${target} — เตรียมที่อยู่ให้เรียบร้อย ขอบคุณที่รอค่ะ`,
         '/track')) n++
     }
     return { builder: 'preorder_reminder', count: n }
@@ -191,10 +201,38 @@ async function buildPointsEarn(sb: Sb): Promise<BuildResult> {
   }
 }
 
-/** B-Behavioral: Abandoned cart 15-30 นาที — ยังไม่ทำ (ZERO-FAKE): ตะกร้าอยู่ localStorage
- *  client เท่านั้น ไม่มี server cart ให้สแกน → ต้องมี cart_sessions ก่อน (บันทึก TEST_PACK §S) */
-function buildAbandonedCart(): BuildResult {
-  return { builder: 'abandoned_cart_15_30m', count: 0, skipped: 'no_server_cart_source (bmb-cart-v1 = localStorage · ต้องมี cart_sessions ก่อน — ไม่ปลอมข้อมูล)' }
+/** B-Behavioral: Abandoned cart 15-30 นาที — แหล่งข้อมูลจริง = cart_sessions (m180 · client sync
+ *  60s throttle) — enqueue ครั้งเดียว (event_key) + ทำเครื่องหมาย notified ห้ามยิงซ้ำ */
+async function buildAbandonedCart(sb: Sb): Promise<BuildResult> {
+  try {
+    const { data, error } = await sb.from('cart_sessions')
+      .select('id, customer_id, items_count, updated_at, status')
+      .eq('status', 'active')
+      .gt('items_count', 0)
+      .gte('updated_at', new Date(Date.now() - 30 * 60 * 1000).toISOString())
+      .lte('updated_at', new Date(Date.now() - 15 * 60 * 1000).toISOString())
+      .limit(50)
+    if (error) return { builder: 'abandoned_cart_15_30m', count: 0, skipped: error.message.slice(0, 120) }
+    let n = 0
+    for (const r of (data || []) as Array<{ id: string; customer_id: string | null; items_count: number }>) {
+      if (!r.customer_id) {
+        // guest = ไม่มีช่องทางส่ง (ไม่มี customer) — ทำเครื่องหมายกันสแกนซ้ำ ไม่แกล้ง enqueue
+        await sb.from('cart_sessions').update({ status: 'skipped_guest' }).eq('id', r.id)
+        continue
+      }
+      const key = `cart-${r.id}-b15`
+      const inserted = await enqueueOnce(sb, key, r.customer_id, 'Marketing',
+        '🛒 ตะกร้ายังรออยู่นะ',
+        `เมนูที่เลือกไว้ (${r.items_count} รายการ) ยังไม่ได้สั่ง — กลับมาปิดตะกร้าได้ที่ biteme-baby.com/cart ค่ะ`,
+        '/cart')
+      // mark notified ทันทีที่ enqueue (รวมกรณีแถวเคยถูกสร้างแล้ว) — กันยิงซ้ำรอบถัดไป
+      await sb.from('cart_sessions').update({ status: 'notified', notified_at: new Date().toISOString() }).eq('id', r.id)
+      if (inserted) n++
+    }
+    return { builder: 'abandoned_cart_15_30m', count: n }
+  } catch (e) {
+    return { builder: 'abandoned_cart_15_30m', count: 0, skipped: String(e).slice(0, 120) }
+  }
 }
 
 /** B-Behavioral: Peak hour prompt — flag-off รอ Owner อนุมัติข้อความ/เวลา (ไม่ยิงมั่ว) */
@@ -337,7 +375,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
       await buildPreOrderReminders(sb),
       await buildReengagement(sb),
       await buildPointsEarn(sb),
-      buildAbandonedCart(),
+      buildAbandonedCart(sb),
       buildPeakHourPrompt(),
     ]
     const drain = await drainOutbox(sb)
