@@ -1,0 +1,27 @@
+R45 — Feedback ชุดทดสอบ Owner: T6/T9/T10/T13 (T9 สรุปจาก probe, T10 บั๊กหน้าเช็คเอาท์, T13 หน้าปริ้นเตอร์)
+
+T9 (Owner: "key มีอยู่ตลอดอยู่แล้ว" = ถูกต้อง): probe production พิสูจน์ bundle มี key จริง —
+  e2e/r44_maps_bundle_probe.cjs crawl 94 chunks → googleMaps-*.js มี AIzaSyD0… (masked) +
+  missing-key msg = const โค้ด (ไม่ได้ถูกยิง) · Maps JS loader = HTTP 200 · geocoding legacy = 404
+  → ปัญหา = runtime ในเบราว์เซอร์ ไม่ใช่ build · two-try ครบ ไม่ยิงซ้ำ
+  → Owner: (1) เปิด /checkout ใน Chrome ตรง ๆ ไม่ผ่าน FB = ขึ้น → FB in-app block/แคช (จบ)
+     (2) ยังไม่ขึ้น = Google Console: billing + Maps JavaScript API + Referrer biteme-baby.com/*
+T10 (Owner: "ใช้พิกัดกดแล้วเงียบ · ยืนยันตำแหน่งไปคิดค่าบริการไม่ได้") — แก้ 3 จุด:
+  - DeliveryMapPicker: "ใช้พิกัดนี้" parse ไม่ผ่าน (ว่าง/ผิด) = แดงบอกวิธีแก้ (manual-pin-msg) ·
+    ถูก = เขียวบอกขั้นถัดไป (เดิม if(p) เงียบสนิท — ภาพ Owner = ช่องว่างเปล่าก่อนกด)
+  - CheckoutPage: handleConfirmLocation guard = toast เหตุผล (ไม่ใช่ return เงียบ) +
+    ป้ายครบทุกกรณีใต้ปุ่ม (ยังไม่มีพิกัด hint / รอยืนยัน / พร้อมจัดส่ง ✓)
+  - DistanceChecker: quote ไม่ออก = แถว amber "ยังคำนวณค่าจัดส่งไม่สำเร็จ (routeError)"
+    ไม่ใช่แผงว่าง · GPS fail toast เดิมมีเหตุผลอยู่แล้ว
+T6 (Owner: ลิงก์จาก FB อาจโดนแคชบราวเซอร์มือถือ): public/_headers +=
+  Cache-Control: no-cache ทุกหน้า HTML (SPA) — กัน FB in-app เสิร์ฟบันเดิลเก่า
+  ที่ไม่รองรับ ?cart= / ค่า key เก่า · /assets/* ยัง immutable
+T13 (Owner: เริ่มกระชับหน้าปริ้นเตอร์): แถบ print-flow-steps ลำดับ ①-⑥ + หัวข้อเลขขั้นตอน
+  บนทุกบล็อก + ตัดคำอธิบาย Allow/Incognito ซ้ำ + ค่า known-good 80px/690px โชว์บนวิซาร์ด
+  (print-known-good) · contract เดิมครบ (ไม่ใช้ชดเชย×4/Incognito/testids ทุกตัว)
+D-4 = ปิดลูปแล้ว (Owner: ช่องทางผู้รับแจ้งเตือนสมบูรณ์) · TEST_PACK §Q = ติดไว้ก่อน
+probes: r44_maps_bundle_probe.* + r44_gmaps_key_probe.* + r44_slice.cjs (tool อ่านไฟล์ UTF-8)
+
+VERIFY (รันจริง): vitest เป้า 10 ไฟล์ = 66/66 ผ่าน (r45CheckoutLoc ใหม่ 6 +
+  deliveryMapPicker/locationStore/checkout×2/r40/stickerQueueR31/bmbSticker/r41/cartDeepLink) ·
+  npx tsc --noEmit = 0 · npm run lint = OK (brandNameGuard + languageSanity)

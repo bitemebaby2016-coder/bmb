@@ -22,7 +22,7 @@ export interface DistanceCheckerProps {
 
 export function DistanceChecker({ origin = null, destination = null, label = 'ตรวจสอบจุดจัดส่ง' }: DistanceCheckerProps) {
   const config = usePlatformConfig()
-  const { quote, setOrigin, setDestination, evaluate } = useDeliveryRouter()
+  const { quote, error: routeError, setOrigin, setDestination, evaluate } = useDeliveryRouter()
 
   // Debounce 500ms before evaluating — throttles coordinate-change API calls.
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -90,6 +90,13 @@ export function DistanceChecker({ origin = null, destination = null, label = '�
       )}
 
       {!destination && <p className="text-sm text-slate-500 mt-2">กรุณาเลือกที่อยู่หรือปักหมุดแผนที่เพื่อตรวจสอบค่าจัดส่ง</p>}
+
+      {/* R44 T10 (Owner: "คิดค่าบริการไม่ได้" = แผงว่างเงียบ) — quote คำนวณไม่ออกต้องบอกเหตุผล ไม่ใช่หายไป */}
+      {destination && !evaluating && !quote && routeError && (
+        <p className="mt-2 text-xs text-amber-600" data-testid="distance-checker-error">
+          ยังคำนวณค่าจัดส่งไม่สำเร็จ ({routeError}) — ระบบจะตรวจอีกครั้งตอนสร้างออเดอร์
+        </p>
+      )}
 
       {destination && !evaluating && quote && (
         <div className="mt-3 space-y-2" data-testid="distance-checker-result">

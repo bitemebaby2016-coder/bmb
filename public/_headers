@@ -5,6 +5,9 @@
   X-Robots-Tag: index, follow
   X-Content-Type-Options: nosniff
   Referrer-Policy: strict-origin-when-cross-origin
+  # R44 T6 (Owner: FB in-app อาจเสิร์ฟ HTML/บันเดิลเก่า → ?cart=เงียบ/แผนที่ key เก่า):
+  # บังคับ no-cache เฉพาะหน้า HTML (ทุก route ของ SPA = index.html) — /assets/* ด้านล่างยัง immutable
+  Cache-Control: no-cache
 
 /assets/*
   Cache-Control: public, max-age=31536000, immutable

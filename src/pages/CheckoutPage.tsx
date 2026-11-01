@@ -382,9 +382,19 @@ export function CheckoutPage() {
     // CR-2 correction: trust/confirmation is decided by deliveryPointStatus —
     // a saved point keeps its provenance ('saved' + gps/manual origin) and is
     // confirmed as-is; nothing is ever relabeled as 'gps' here.
-    if (!deliveryPointStatus(deliveryAddress).confirmable) return
+    const st = deliveryPointStatus(deliveryAddress)
+    if (!st.confirmable) {
+      // R44 T10 (Owner: "ยืนยันตำแหน่งกดแล้วเงียบ") — ห้าม return เงียบ: บอกเหตุผลจริง
+      showToast(
+        !st.hasPoint
+          ? 'ยังไม่มีพิกัดจัดส่ง — กรอกช่องละติจูด/ลองจิจูดแล้วกด "ใช้พิกัดนี้" หรือกดปุ่ม GPS ก่อน'
+          : 'พิกัดนี้ยังยืนยันไม่ได้ — รอระบบตรวจสอบสักครู่แล้วกดยืนยันใหม่',
+        'error',
+      )
+      return
+    }
     setDeliveryAddress((a) => ({ ...a, confirmed: true }))
-    showToast('✅ ยืนยันตำแหน่งจัดส่งแล้ว', 'success')
+    showToast('✅ ยืนยันตำแหน่งจัดส่งแล้ว — ค่าจัดส่งคำนวณด้านล่าง', 'success')
     // Owner 2026-10-27: พรีออเดอร์ต้องมีที่อยู่ไม่ว่าง (server trigger
     // validate_pre_order_delivery = ERR_PRE_ORDER_REQUIRES_ADDRESS) — ถ้าลูกค้า
     // ยังไม่พิมพ์รายละเอียดที่อยู่ ให้เติมจากที่อยู่ของหมุดแผนที่ให้อัตโนมัติ
@@ -1128,8 +1138,17 @@ export function CheckoutPage() {
           >
             ✅ ยืนยันตำแหน่งจัดส่งนี้
           </button>
-          {!deliveryAddress.confirmed && deliveryAddress.latitude != null && (
+          {/* R44 T10: บอกสถานะเสมอ (ปุ่ม disabled = กดไม่เข้า → ต้องเห็นเหตุผลครบทุกกรณี) */}
+          {deliveryPointStatus(deliveryAddress).confirmable && !deliveryAddress.confirmed && (
             <span className="text-xs text-amber-600">กรุณายืนยันตำแหน่งก่อนสั่งซื้อ</span>
+          )}
+          {!deliveryPointStatus(deliveryAddress).hasPoint && (
+            <span className="text-xs text-amber-600" data-testid="confirm-location-hint">
+              ยังไม่มีพิกัด — กรอกช่องพิกัดด้านบนแล้วกด “ใช้พิกัดนี้” หรือกด 📍 GPS
+            </span>
+          )}
+          {deliveryAddress.confirmed && deliveryPointStatus(deliveryAddress).orderable && (
+            <span className="text-xs text-emerald-600" data-testid="confirm-location-done">ตำแหน่งพร้อมจัดส่ง ✓</span>
           )}
         </div>
       </div>

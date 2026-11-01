@@ -236,6 +236,10 @@ export function AdminPrintSettings() {
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-bold text-brand-accent">🖨️ ตั้งค่าเครื่องพิมพ์</h1>
+      {/* R44 T13 (Owner: หน้าซ้ำ/รก → จัดเป็นขั้นตอนเลขเดียว อ่านจากบนลงล่าง) */}
+      <p className="text-xs text-brand-muted" data-testid="print-flow-steps">
+        ลำดับตั้งค่า: ① Auto-Print/ชื่อคิว → ② เพิ่มเครื่อง & ผูกบทบาท → ③ ทดสอบทาง HTML → ④ QZ (ทางเลือก) → ⑤ Bluetooth (ใช้ค่าชดเชยจริง) → ⑥ วิซาร์ดชดเชยฟีด/หน้าดวง → กด “บันทึก”
+      </p>
       <div className="card space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           <div>
@@ -272,7 +276,7 @@ export function AdminPrintSettings() {
         </div>
         {/* R21 (Owner 2026-10-29): ทะเบียนเครื่องพิมพ์ — แอดมินเพิ่ม/ลบ/ผูกบทบาทเองได้ */}
         <div className="border-t border-brand-border pt-4 space-y-3" data-testid="printer-registry">
-          <h2 className="font-bold text-brand-accent">🖨️ เครื่องพิมพ์ที่ตั้งไว้</h2>
+          <h2 className="font-bold text-brand-accent">② 🖨️ เครื่องพิมพ์ที่ตั้งไว้ (เพิ่ม/ลบ/ผูกบทบาท)</h2>
           {(settings.printers ?? []).length === 0 && (
             <p className="text-sm text-brand-muted">ยังไม่มีเครื่องพิมพ์ในระบบ — เพิ่มด้านล่าง (ค่าเริ่มต้นของร้าน = Nimbot B1Pro)</p>
           )}
@@ -331,13 +335,14 @@ export function AdminPrintSettings() {
               </select>
             </div>
           </div>
+          <p className="text-xs text-brand-muted">ช่อง “ชื่ออ้างอิง” ด้านบน = fallback เมื่อไม่ได้ผูกเครื่องจริงที่ ② — ผูกแล้วให้ดูบรรทัด “ผูกไว้” ด้านล่าง</p>
           <div className="flex flex-wrap gap-2">
-            <button className="btn btn-outline" onClick={() => void testPrintRole('receipt')}>ทดสอบใบเสร็จ ⚠ ไม่ใช้ชดเชย</button>
-            <button className="btn btn-outline" onClick={() => void testPrintRole('kitchen')}>ทดสอบใบสั่งครัว ⚠ ไม่ใช้ชดเชย</button>
+            <button className="btn btn-outline" onClick={() => void testPrintRole('receipt')}>③ ทดสอบใบเสร็จ ⚠ ไม่ใช้ชดเชย</button>
+            <button className="btn btn-outline" onClick={() => void testPrintRole('kitchen')}>③ ทดสอบใบสั่งครัว ⚠ ไม่ใช้ชดเชย</button>
           </div>
           {/* R27 (Owner): QZ Tray — ทางพิมพ์สติกเกอร์ไม่พึ่งไดรเวอร์ Windows (Nimbot B1Pro มีไดรเวอร์แค่ Win7) */}
           <div className="border-t border-brand-border pt-3 space-y-2" data-testid="qz-tray-panel">
-            <h2 className="font-bold text-brand-accent">🔗 QZ Tray (ตัวกลางพิมพ์สติกเกอร์ 40×60)</h2>
+            <h2 className="font-bold text-brand-accent">④ 🔗 QZ Tray (ตัวกลางพิมพ์สติกเกอร์ 40×60 — ทางเลือก)</h2>
             {/* R29b: สถานะแบบเห็นชัด — เขียว = เชื่อมต่อพอร์ตในเครื่องแล้ว · แดง = บอกเหตุผล + วิธีต่อ */}
             <div className="flex items-center gap-2 text-sm" data-testid="qz-status">
               <span className={qzState === 'connected' ? 'text-green-600 font-semibold' : qzState === 'down' ? 'text-red-500 font-semibold' : 'text-brand-muted'}>
@@ -379,7 +384,7 @@ export function AdminPrintSettings() {
           </div>
           {/* R30 (Owner): พิมพ์ตรงผ่าน Web Bluetooth — จบปัญหา ไดรเวอร์/คิว/spooler/COM (Nimbot พูดภาษาจีน → driver ภาษาจีน reverse แล้ว validated บน B1 Pro) */}
           <div className="border-t border-brand-border pt-3 space-y-2" data-testid="bt-panel">
-            <h2 className="font-bold text-brand-accent">📡 พิมพ์ผ่าน Bluetooth — Nimbot B1 Pro โดยตรง (ไม่ง้อ QZ/ไดรเวอร์/คิว)</h2>
+            <h2 className="font-bold text-brand-accent">⑤ 📡 พิมพ์ผ่าน Bluetooth — Nimbot B1 Pro โดยตรง (ไม่ง้อ QZ/ไดรเวอร์/คิว)</h2>
             <p className="text-xs text-brand-muted">เบราว์เซอร์คุยกับเครื่องผ่าน BLE ตรง ๆ (protocol จีนของ Nimbot ในตัว) · Chrome/Edge + HTTPS · ใช้ปุ่มเดียว = เลือกเครื่อง + พิมพ์ · ~5-10 วิ/ใบ</p>
             <div className="flex items-center gap-2 text-sm">
               <span className={!niimbotSupported() ? 'text-red-500 font-semibold' : btState === 'done' ? 'text-green-600 font-semibold' : btState === 'down' ? 'text-red-500 font-semibold' : 'text-brand-muted'}>
@@ -430,12 +435,15 @@ export function AdminPrintSettings() {
               <button className="btn btn-outline" disabled={btBusy} onClick={() => void handleBtCalibration()} data-testid="bt-calibration-print">{btBusy ? '⏳ ...' : '📏 พิมพ์ใบวัดฟีด (วัด offset จริง)'}</button>
             </div>
             <p className="text-xs text-brand-muted">🛟 <b>ใบวัดฟีด:</b> พิมพ์ออกมาเป็นเส้นขีด px/mm บนดวงจริง → อ่านตาม 2 กรณี: <b>(ก)</b> เส้น <b>0px หายเหนือขอบบน</b> (หัว BITE ME BABY หลุดข้ามใบก่อน = เครื่องเริ่มพิมพ์ "ก่อน" ขอบ) → ดูว่าเส้นตัวเลขไหนตรงขอบบนพอดี มีค่า <b>N → ใส่ +N</b> · <b>(ข)</b> มี<b>แถบขาว N px เหนือเส้น 0px</b> (เครื่องเริ่มช้า) → <b>ใส่ −N</b> · เส้น 0px ตรงขอบพอดีอยู่แล้ว = 0 · ยังไม่ตรง/ข้ามดวงเรื่อย ๆ ทั้งที่ใส่ค่าแล้ว = ลอง calibrate ม้วนที่ตัวเครื่อง (ปุ่ม feed ค้างตอนปิดฝาตามคู่มือ B1 Pro) แล้วแจ้งทีม</p>
-            <p className="text-xs text-brand-muted">🔒 Allow QZ ขึ้นทุกครั้ง? = เพราะเปิดหน้าใน <b>Incognito</b> (ไม่จดจำสิทธิ์) → ใช้หน้าต่างปกติ + ติ๊ก <b>Remember this decision</b> ในกล่อง QZ = ถามครั้งเดียว · Bluetooth ก็เหมือนกัน — จับคู่ครั้งแรกในหน้าปกติจะไม่ถามอีก</p>
+            {/* R44 T13: ตัดคำอธิบาย Allow/Incognito ซ้ำ (มีครบในกล่อง QZ ④ + วิธีใช้ด้านล่างแล้ว) */}
           </div>
           <p className="text-xs text-brand-muted">ผูกไว้: ใบเสร็จ = <b>{describePrinterTarget(settings, 'receipt')}</b> · ครัว = <b>{describePrinterTarget(settings, 'kitchen')}</b> — ทดสอบแล้วขึ้น "ไม่พบเครื่องพิมพ์" = เพิ่มเครื่องด้านบนก่อนแล้วกดบันทึก</p>
-          {/* R40 — วิซาร์ดตั้งค่า 2 ตัว + วิธีใช้ (Owner: ตั้งหลักใหม่ · ทดสอบเอง · บอกวิธีใช้ชดเชยฟีด/หน้าดวง) */}
+          {/* R40 — วิซาร์ดตั้งค่า 2 ตัว + วิธีใช้ (Owner: ตั้งหลักใหม่ · ทดสอบเอง · บอกวิธีใช้ชดเชยฟีด/หน้าดวง) · R44 T13 = ขั้น ⑥ ปิดท้าย */}
           <div className="rounded-xl border border-brand-accent/40 bg-brand-surface p-3 space-y-2" data-testid="sticker-wizard">
-            <p className="text-sm font-bold text-brand-accent">🧭 ตั้งค่าเองทีละขั้น — วัดจากกระดาษจริง ไม่ต้องเดา</p>
+            <p className="text-sm font-bold text-brand-accent">⑥ 🧭 ตั้งค่าเองทีละขั้น — วัดจากกระดาษจริง ไม่ต้องเดา</p>
+            <p className="text-xs text-brand-muted" data-testid="print-known-good">
+              💾 ค่า known-good ของเครื่องร้าน (Owner ตรวจต่อเนื่อง 4 ดวงผ่าน 2026-11-01): <b>ชดเชยฟีด 80px · หน้าดวง 690px</b> — ค่าใหม่เพี้ยน = กลับสองเลขนี้
+            </p>
             <p className="text-xs text-brand-muted">
               ทุกปุ่มด้านล่าง = <b>บันทึกค่าให้อัตโนมัติ แล้วพิมพ์ทดสอบด้วยค่านั้นทันที</b> · ค่าที่ใช้ตอนนี้:{' '}
               <b data-testid="sticker-live-values">ชดเชยฟีด {settings.stickerOffsetYPx ?? 0}px · หน้าดวง {settings.stickerFaceHPx ?? 709}px · PNG/SetPageSize 472×{stickerPageHeight(settings.stickerOffsetYPx ?? 0, settings.stickerFaceHPx ?? 709)}px</b>{' '}

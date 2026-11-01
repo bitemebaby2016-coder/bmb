@@ -40,6 +40,9 @@ export function DeliveryMapPicker({ latitude, longitude, onPick }: DeliveryMapPi
   const [status, setStatus] = useState<MapStatus>('loading')
   const [manualLat, setManualLat] = useState('')
   const [manualLng, setManualLng] = useState('')
+  // R44 T10 (Owner: "ใช้พิกัดกดแล้วเงียบ") — ฟีดแบ็กใต้ช่องพิกัด:
+  // ว่าง/ผิด = แดงบอกวิธีแก้ · ถูก = เขียวบอกว่ารับพิกัดแล้ว (รอขั้นถัดไปกดยืนยันด้านล่าง)
+  const [manualMsg, setManualMsg] = useState<{ ok: boolean; text: string } | null>(null)
 
   // Load SDK once + create the map (kitchen = MAP REFERENCE center only).
   useEffect(() => {
@@ -138,14 +141,30 @@ export function DeliveryMapPicker({ latitude, longitude, onPick }: DeliveryMapPi
             />
             <button
               type="button" className="btn btn-outline btn-sm"
+              data-testid="manual-pin-use"
               onClick={() => {
+                // R44 T10: ห้ามเงียบ — parse ไม่ผ่าน (ว่าง/ไม่ใช่ตัวเลข/เกินพิกัด) ต้องบอกทันที
                 const p = parseManualPin(manualLat, manualLng)
-                if (p) onPick(p.lat, p.lng)
+                if (!p) {
+                  setManualMsg({ ok: false, text: 'พิกัดยังไม่ถูกต้อง — กรอกตัวเลข เช่น ละติจูด 12.6096 · ลองจิจูด 102.1039 แล้วกดใหม่' })
+                  return
+                }
+                onPick(p.lat, p.lng)
+                setManualMsg({ ok: true, text: `✓ ใช้พิกัด ${p.lat}, ${p.lng} แล้ว — กด "✅ ยืนยันตำแหน่งจัดส่งนี้" ด้านล่างต่อ` })
               }}
             >
               ใช้พิกัดนี้
             </button>
           </div>
+          {manualMsg && (
+            <p
+              className={`mt-2 text-xs font-medium ${manualMsg.ok ? 'text-emerald-600' : 'text-red-600'}`}
+              role={manualMsg.ok ? 'status' : 'alert'}
+              data-testid="manual-pin-msg"
+            >
+              {manualMsg.text}
+            </p>
+          )}
         </div>
       )}
       {status === 'ready' && (

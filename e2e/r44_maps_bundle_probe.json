@@ -1,0 +1,16 @@
+{
+  "ran_at": "2026-11-01T03:25:15.573Z",
+  "hits": [],
+  "checked": 94,
+  "aiza_files": [
+    {
+      "asset": "/assets/googleMaps-BahH_a9T.js",
+      "sample": "AIzaSyD0…(masked)"
+    }
+  ],
+  "missing_msg_files": [
+    "/assets/googleMaps-BahH_a9T.js"
+  ],
+  "total_seen": 94,
+  "queue_left": 0
+}
