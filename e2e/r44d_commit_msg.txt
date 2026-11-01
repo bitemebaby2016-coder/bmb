@@ -1,0 +1,12 @@
+CI-fix + R44 batch 3 (T10+T11+T6 probe) — แก้ Unit tests แดง + งานค้าง + บันทึกค่าปริ้นเตอร์
+
+CI root cause (รันซ้ำพิสูจน์ = fail เดียว): r12LandingUi ขาดคอมเมนต์ 'R12 (Owner 2026-10-28)'
+  ที่หายตอนเขียน StoreStatusStrip 3 บรรทัดใหม่ → คืนคอมเมนต์ = fix · (5d704e4+8d24601 แดงจุดเดียว)
+T10: AdminOrders — toast ทุกจุดที่ข้าม auto-print (สวิตช์ปิด/BT ไม่รองรับ/โหลดไม่ได้) ทั้งสติกเกอร์+ใบสั่งครัว
+T11: RiderPwaPage — ถอดปุ่มนำทางรายจุดซ้ำ เหลือ ปุ่มรวม + จุดส่งงานปัจจุบัน (r38 test ปรับตามคำสั่งยุบรวม)
+T6: e2e/r44_cartlink_probe — ลิงก์ตะกร้าในคำตอบ FB = เต็ม/ถูกต้อง (reply_status=sent) → เหลือ retest ฝั่งผู้ใช้
+T12: AI_WORK_STATE = ค่าปริ้นเตอร์ known-good: ชดเชยฟีด 80px · หน้าดวง 690px (Owner พิมพ์ต่อเนื่อง 4 ดวงผ่าน)
+tooling: r44_vitest_chunk.cjs (full suite เป็น chunk) + r44_testfiles.txt + r44_run_full_vitest.cjs
+
+verify รันจริง: FULL vitest 189/189 ไฟล์ = 1,903 tests ผ่านทุก chunk · tsc 0 ·
+  lint OK (brandNameGuard 502 + languageSanity 1449) · Contract = success ทุก push ล่าสุด
