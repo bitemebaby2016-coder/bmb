@@ -404,3 +404,31 @@
 | F6 | **B5** | ⬜ **BLOCKED — รอ D-4 (ช่องทาง + ผู้รับแจ้งเตือน)** · hook จุด reply `sent` / post `published` พร้อม | — |
 
 gates (F2-F4): `npx vitest run` 5 ไฟล์ = **59/59** · `npx tsc --noEmit` = **0** · `npm run lint` = **OK** (eslint + brandNameGuard 499 + languageSanity 1442)
+---
+
+## §S — R48 (2026-11-01 รอบ 3) — Notification Hub + GPS ที่อยู่อัตโนมัติ + Theater ปฏิทิน + Maps retest
+
+> คำสั่ง Owner: ระบบแจ้งเตือน E2E (Unified Layer · ไม่ซ้ำ · ไม่แตะ core) + GPS เติมที่อยู่ + ปฏิทิน Theater + ตรวจ Console รอบ 3
+> กติกาเดิม §0 บังคับทุกข้อ (hard refresh · บันทึกหลักฐาน · ห้ามใช้ pages.dev)
+
+### S.0 ความจริงเชิงสถาปัตยกรรม (อ่านก่อน — กันเข้าใจผิด)
+
+- **ของเดิมที่ใช้ต่อ (ไม่สร้างใหม่):** `push_subscriptions`+`push-send` EF (VAPID/web-push, m115) · `notifications`+`notification_prefs` (m021) · `automation_queue`+queue-enqueue/dispatcher (m110) · automation-worker `notification_dispatch` (in-app) · pg_cron/pg_net (m178)
+- **ของใหม่ R48:** `channel_identities` (PSID/LINE) · `notification_outbox` (transport queue) · RPC 4 ตัว · flags `notification_channels` · EF `notification-dispatcher` · client `notificationManager` · cron `bmb-notify`
+- **Queue/Cron "Cloudflare Workers"** ในคำสั่ง Owner = ระบบนี้รันบน stack จริง **GH Actions + pg_cron + Supabase EF** (แบบ m178) — ไม่เปิด Cloudflare Worker ใหม่ (ซ้ำซ้อนของเดิม)
+- **LINE = `lineMode:"mock"` (DISABLED)** · เมื่ออนุมัติ: ตั้ง `notification_channels.lineMode='live'` + เขียนผู้ส่งใน dispatcher — **ไม่ต้องแก้ business logic**
+- **Abandoned cart 15-30 นาที = ยังไม่เปิด (ซื่อสัตย์):** ตะกร้าอยู่ localStorage `bmb-cart-v1` ไม่มี server cart → ต้องสร้าง `cart_sessions` ก่อน (รอ Owner — ไม่เดา) · **Peak-hour = flag-off** รอ copy+เวลา
+
+### S.1 ขั้นตรวจจริง (Owner รัน · [R] อ่านอย่างเดียว · [O] สร้างข้อมูลเอง)
+
+| # | ขั้น | ต้องเห็นอะไร | จดอะไร |
+|---|---|---|---|
+| S-1 | Google Console → key → Website restrictions = กด **Save** (รายการถูกแล้ว 4 ตัวตามภาพรอบ 3) | บันทึกสำเร็จ + note "up to 5 minutes" | เวลาที่กด Save |
+| S-2 | รอ **5 นาที** เต็ม → เปิด `https://biteme-baby.com/checkout` Chrome ตรง hard refresh | แผนที่+หมุดขึ้น (ไม่ขึ้น "โหลด Google Maps ไม่สำเร็จ") | ภาพ+เวลา |
+| S-3 | แท็บเล็ตลูกค้า (ล้างแคชแล้ว) `/checkout` → กด **📍 Use my location (GPS)** | ช่องที่อยู่ **เติมอัตโนมัติ** (ถ้ายังว่าง) + toast เติมแล้ว | ภาพ GPS+ช่องที่อยู่ |
+| S-4 | ไรเดอร์ hard refresh (Ctrl+Shift+R) | PWA ใหม่ · แผนที่/ลิงก์ทำงาน (แคชเดิม = เหตุยังไม่ขึ้น) | ภาพ |
+| S-5 | `/shop` การ์ดพรีออเดอร์ Theater (hero+การ์ดข้าง) | **ป้ายปฏิทินมุมบนขวา** hover/แตะ = ปฏิทินเดือน วันจัดส่งไฮไลต์ตรงตารางเมนู | ภาพ 2 การ์ด |
+| S-6 | สั่งซื้อ 1 ออเดอร์ → รอ ≤5 นาที (`bmb-notify` */5) | outbox มีแถว `ntf-*` → `sent`/`mock`/`failed` (มี last_error บอกช่องทาง) · in-app เหมือนเดิม | `SELECT event_key,status,channel,attempts,last_error FROM notification_outbox ORDER BY created_at DESC LIMIT 5` |
+| S-7 | เปิด push (Notification Center) แล้วสั่งอีกออเดอร์ | Web push ถึงเครื่อง (ต้องกด Allow ก่อนถ้ายังไม่เคยเปิด) | ภาพ |
+| S-8 | `SELECT value FROM business_settings WHERE key='notification_channels'` | `{push:true, messenger:true, line:false, lineMode:"mock"}` | ค่าที่อ่านได้ |
+| S-9 | ดูผล apply | `e2e/r48Apply179-result.json` = `ALL_PASS:true` · ledger top = 179 · `cron.job` มี `bmb-notify` | JSON |

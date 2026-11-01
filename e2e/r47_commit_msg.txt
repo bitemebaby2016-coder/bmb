@@ -1,4 +1,55 @@
-R47 — AI Studio 5 ข้อตามคำสั่ง Owner (2026-11-01 รอบ 2) + ตอบ Console
+R48 — Console ตรวจตามภาพ + GPS เติมที่อยู่ + Theater ปฏิทิน + Notification Hub E2E
+
+ผล feedback/ภาพรอบนี้ (บันทึก work-state):
+- Console restrictions = ถูกต้อง 4 รายการ (localhost แก้เพี้ยนแล้ว · wildcard https ×2 · apex) +
+  ตัวซ้ำไม่มี scheme ลบแล้ว → เหลือกด Save + รอ 5 นาที แล้วเปิด /checkout Chrome ตรง
+- แผนที่เดสก์ท็อป/ลูกค้า(แท็บเล็ต ล้างแคชแล้ว) ยังไม่ขึ้น = อาจยังไม่ได้ Save/ยังไม่พ้น
+  5 นาที propagate · ไรเดอร์ = ยังไม่ได้ล้างแคช (รอ retest — two-try probe ครบ ไม่ยิงซ้ำ)
+
+FIX (โค้ด):
+1) GPS → เติมที่อยู่จัดส่งอัตโนมัติ (Owner **):
+   - CheckoutPage.handleUseGps: เสร็จ GPS = reverseGeocode เติม detail ถ้ายังว่าง
+     (ที่อยู่ลูกค้าพิมพ์เองไม่ถูกเขียนทับ · toast บอกผล)
+   - googleMaps.reverseGeocode: Google first (ของเดิม) → Nominatim OSM fallback
+     (ไม่ใช้คีย์ · ใช้ได้ตอนคีย์ Google ยังไม่ผ่าน restriction) — handleConfirmLocation
+     path เดิมได้ fallback นี้ด้วย (ที่อยู่อัตโนมัติทั้ง 2 จุด · ฝั่งไรเดอร์ไม่มีช่องที่อยู่กรอก
+     = ที่อยู่มาจากออเดอร์ — รอแค่ล้างแคชให้แผนที่ขึ้น)
+2) Theater pre-order = ปฏิทินมุมบนขวาตามแบบฟอร์มหน้าเมนู (Owner **):
+   - TheaterCards: RecommendationCard + TheaterHeroCard += prop scheduledDate →
+     <ScheduleDateBadge> ที่ absolute top-right (theater-rec-cal / theater-hero-cal)
+   - FoodTheater ส่ง scheduledDate={schedule[p.id]} (menu_schedule จริง = วันถูกต้อง ·
+     ไม่มีแถว = ไม่แสดง ไม่เดา)
+3) Notification Hub E2E (คำสั่ง Owner 4 deliverables):
+   - Architecture: _shared/notificationPlan.ts = PURE unified planner
+     (web_push → messenger fallback → line ตาม flag · normalize flags fail-open ฝั่ง feature)
+   - Schema: m179 = channel_identities (PSID/LINE · RLS deny anon · RPC-only writes)
+     + notification_outbox (event_key UNIQUE = idempotent · status machine · due index)
+     + register_channel_identity (JWT→customer แบบ m115) · enqueue_notification (client/server)
+     + claim_notification_outbox (FOR UPDATE SKIP LOCKED + stale 10m) · complete_notification
+     (sent / failed backoff 2^n cap 30 นาที / dead ≥5 / mock)
+   - Flags: business_settings.notification_channels = {push:true, messenger:true,
+     line:false, lineMode:"mock"} — LINE DISABLED/MOCK จนกว่า API อนุมัติ → สลับ lineMode='live'
+     ไม่ต้องแก้ business logic
+   - EF notification-dispatcher (verify_jwt=false + x-automation-token):
+     builders = transactional_notifications (notifications 24h) · preorder_reminder (D-1)
+     · reengagement_14_30 · points_earn(24h) · abandoned_cart = SKIP ซื่อสัตย์
+     (ไม่มี server cart — ไม่ปลอม) · peak_hour = flag-off
+     drain = claim 25 → bindings+prefs → buildChannelPlan → push-send (reuse EF เดิม! ไม่เขียน
+     web-push ใหม่) → Graph me/messages (PSID จาก channel_identities) → complete · ไม่มี while
+     loop · ไม่แตะ core business (สร้าง order ไม่ได้)
+   - Queue/Cron = stack จริงของโปรเจกต์ (m178 pattern): pg_cron `bmb-notify` */5 → pg_net →
+     bmb_notify_http(token) → EF — "Cloudflare Workers" ในคำสั่ง = mapping ไปที่
+     GH Actions + pg_cron + Supabase EF ที่ใช้อยู่จริง (ไม่เปิด stack ใหม่ซ้ำซ้อน)
+   - Client: src/lib/notifications/notificationManager.ts = emitNotification /
+     registerChannelIdentity / getChannelFlags + re-export pushService (ไม่ duplicate transport)
+   - apply: e2e/r48Apply179.cjs (strip BEGIN/COMMIT · schedule bmb-notify · ledger 179 ·
+     evidence e2e/r48Apply179-result.json)
+   - PSID linkage: RPC พร้อม — จุดผูกอัตโนมัติต่อ = channel-webhook/order_link (source column
+     รองรับแล้ว) · บันทึกใน TEST_PACK §S
+
+Tests: r48NotifyGeo ใหม่ 9/9 (plan behavior จริง + m179 + dispatcher + manager + geo + theater)
+VERIFY: npx vitest run r48 = 9/9 · npx tsc --noEmit = 0 (ก่อน lint chain)
+Docs: TEST_PACK §S (ใหม่) · work-state R48 · master last_updated R48
 
 Feedback 6 ข้อรอบ R46 (บันทึก work-state): 1=รอตรวจ · 2=Console ดูแล้ว (เหลือแก้
 localhost entry เพี้ยน + ลบตัวซ้ำ + กด Save + รอ 5 นาที) · 3,4,6=ok · 5=รอตรวจ

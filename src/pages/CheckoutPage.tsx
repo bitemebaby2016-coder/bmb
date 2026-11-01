@@ -337,6 +337,17 @@ export function CheckoutPage() {
         return
       }
       setDeliveryAddress((a) => ({ ...a, latitude: loc.latitude, longitude: loc.longitude, source: 'gps', provenance: 'gps', confirmed: true }))
+      // R48 (Owner: "ลูกค้ากด use location แล้ว ให้เติมที่อยู่จัดส่งอัตโนมัติด้วย"):
+      // ดึงที่อยู่จากพิกัดทันที (Google fail → Nominatim fallback ภายใน reverseGeocode)
+      // เติมเฉพาะช่อง detail ยังว่าง — ที่อยู่ที่ลูกค้าพิมพ์เองไม่ถูกเขียนทับ
+      const hadDetail = deliveryAddress.detail.trim().length > 0
+      void (async () => {
+        const geo = await reverseGeocode(loc.latitude, loc.longitude)
+        if (!hadDetail && geo?.formattedAddress) {
+          setDeliveryAddress((a) => (a.detail.trim() ? a : { ...a, detail: geo.formattedAddress }))
+          showToast('📍 ตำแหน่งจาก GPS + เติมที่อยู่อัตโนมัติให้แล้ว — ตรวจ/แก้ไขกดสั่งซื้อได้เลย', 'success')
+        }
+      })()
       showToast('📍 ตำแหน่งจาก GPS — ปรับหมุดบนแผนที่ได้ หรือกดสั่งซื้อได้เลย', 'success')
     } finally {
       setLocating(false)

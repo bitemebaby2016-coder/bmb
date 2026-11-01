@@ -14,6 +14,7 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import type { Product } from '@/types'
 import type { TheaterReason } from '@/lib/theaterReasons'
+import { ScheduleDateBadge } from '@/components/home/ScheduleDateBadge'
 
 // R44 (Owner 2026-11-01): เมนูที่เอามาแสดงต้อง "ลิงก์จริง" ไปหน้าเมนู +
 // ปุ่มตามโหมดขายจริง — พรีออเดอร์ = "จองล่วงหน้า" · เซมเดย์ = "เพิ่มลงตะกร้า"
@@ -34,16 +35,18 @@ function ReasonChip({ reason }: { reason?: TheaterReason | null }) {
 interface RecommendationCardProps {
   product: Product
   reason?: TheaterReason | null
+  /** R48 (Owner): ป้ายปฏิทินมุมบนขวา = วันจัดส่งจริงจาก menu_schedule (แบบฟอร์มเดียวกับการ์ดเมนูหน้า /menu) */
+  scheduledDate?: string
   /** Quick add → canonical cart (mode derived from real canonical columns). */
   onAdd: (product: Product) => void
 }
 
-export function RecommendationCard({ product, reason, onAdd }: RecommendationCardProps) {
+export function RecommendationCard({ product, reason, scheduledDate, onAdd }: RecommendationCardProps) {
   const denied = !product.is_available || !!product.archived
   const preorderOnly = isPreOrderOnly(product)
   return (
     <article data-testid="theater-rec-card" className="theater-rec-card">
-      <div className="theater-rec-media">
+      <div className="theater-rec-media" style={{ position: 'relative' }}>
         {/* R44: รูปเมนู = ลิงก์จริงไปหน้าเมนู (ไม่ใช่รูปตาย) */}
         <Link to="/menu" aria-label={`ดู ${product.name} ในหน้าเมนูจริง`} data-testid="theater-rec-link">
           {product.image_url ? (
@@ -52,6 +55,12 @@ export function RecommendationCard({ product, reason, onAdd }: RecommendationCar
             <span role="img" aria-label={product.name} className="theater-img-fallback" />
           )}
         </Link>
+        {/* R48: ปฏิทินมุมบนขวา — วันที่มาจากตารางเมนูจริง (schedule[p.id]) แสดงวันถูกต้องเสมอ */}
+        {scheduledDate && (
+          <div className="absolute top-1 right-1 z-10" data-testid="theater-rec-cal">
+            <ScheduleDateBadge date={scheduledDate} />
+          </div>
+        )}
         <div className="theater-rec-media-glow" aria-hidden="true" />
       </div>
       <div className="theater-rec-body">
@@ -82,13 +91,15 @@ export function RecommendationCard({ product, reason, onAdd }: RecommendationCar
 interface TheaterHeroCardProps {
   product: Product
   reason?: TheaterReason | null
+  /** R48: ป้ายปฏิทินมุมบนขวา — วันจัดส่งจริงจาก menu_schedule (แบบฟอร์มเดียวกับ /menu) */
+  scheduledDate?: string
   /** Quick add with the selected quantity → canonical cart. */
   onAdd: (product: Product, quantity: number) => void
   /** Open the existing detail/customization surface (OrderBuilder). */
   onCustomize: (product: Product) => void
 }
 
-export function TheaterHeroCard({ product, reason, onAdd, onCustomize }: TheaterHeroCardProps) {
+export function TheaterHeroCard({ product, reason, scheduledDate, onAdd, onCustomize }: TheaterHeroCardProps) {
   const [qty, setQty] = useState(1)
   const denied = !product.is_available || !!product.archived
   const preorderOnly = !!(product.available_preorder && !product.available_same_day)
@@ -104,6 +115,12 @@ export function TheaterHeroCard({ product, reason, onAdd, onCustomize }: Theater
             <span role="img" aria-label={product.name} className="theater-img-fallback theater-img-fallback--lg" />
           )}
         </Link>
+        {/* R48: ปฏิทินมุมบนขวาของ hero — วันที่จริงจากตารางเมนู (ไม่เดา · ไม่มีแถว = ไม่แสดง) */}
+        {scheduledDate && (
+          <div className="absolute top-2 right-2 z-20" data-testid="theater-hero-cal">
+            <ScheduleDateBadge date={scheduledDate} />
+          </div>
+        )}
         <div className="theater-hero-shade" aria-hidden="true" />
         <div className="theater-hero-badges">
           <ReasonChip reason={reason} />

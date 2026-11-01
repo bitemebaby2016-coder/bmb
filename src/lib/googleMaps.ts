@@ -122,15 +122,35 @@ export interface GeocodeResult {
 }
 
 export async function reverseGeocode(lat: number, lng: number, apiKey: string = MAPS_KEY): Promise<GeocodeResult | null> {
-  if (!apiKey || apiKey.length < 10) return null
-  const url = 'https://maps.googleapis.com/maps/api/geocode/json'
+  // Google first (R9 เดิม) — คีย์ปกติ = ผลจาก Google
+  if (apiKey || apiKey.length >= 10) {
+    const url = 'https://maps.googleapis.com/maps/api/geocode/json'
+    try {
+      const res = await fetch(`${url}?latlng=${lat},${lng}&key=${apiKey}&language=th`)
+      if (res.ok) {
+        const json = await res.json()
+        if (json.status === 'OK' && json.results?.[0]) {
+          const r = json.results[0]
+          return { lat: r.geometry.location.lat, lng: r.geometry.location.lng, formattedAddress: r.formatted_address, placeId: r.place_id }
+        }
+      }
+    } catch { /* ตกไป fallback ด้านล่าง */ }
+  }
+  // R48 (Owner: "กด use location แล้วให้เติมที่อยู่อัตโนมัติ") — Google ติด
+  // restriction/โควตา/คีย์ยังไม่นิ่ง = fallback Nominatim (OSM · ไม่ใช้คีย์ · CORS เปิด)
+  // ใช้ทั้งลูกค้า (handleConfirmLocation/handleUseGps) และจุดอื่นที่เรียก reverseGeocode
   try {
-    const res = await fetch(`${url}?latlng=${lat},${lng}&key=${apiKey}&language=th`)
+    const res = await fetch(
+      `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${encodeURIComponent(String(lat))}&lon=${encodeURIComponent(String(lng))}&accept-language=th&zoom=18`,
+    )
     if (!res.ok) return null
-    const json = await res.json()
-    if (json.status !== 'OK' || !json.results?.[0]) return null
-    const r = json.results[0]
-    return { lat: r.geometry.location.lat, lng: r.geometry.location.lng, formattedAddress: r.formatted_address, placeId: r.place_id }
+    const j = await res.json()
+    if (!j?.display_name) return null
+    return {
+      lat: Number(j.lat) || lat,
+      lng: Number(j.lon) || lng,
+      formattedAddress: String(j.display_name),
+    }
   } catch { return null }
 }
 

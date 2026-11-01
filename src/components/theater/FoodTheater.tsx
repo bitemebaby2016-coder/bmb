@@ -331,11 +331,12 @@ export function FoodTheater({ products, schedule = {}, onCustomize, onPreOrder }
                   <TheaterHeroCard
                     product={p}
                     reason={reasonFor(p)}
+                    scheduledDate={schedule[p.id]}
                     onAdd={add}
                     onCustomize={customize}
                   />
                 ) : (
-                  <RecommendationCard product={p} reason={reasonFor(p)} onAdd={(prod) => add(prod, 1)} />
+                  <RecommendationCard product={p} reason={reasonFor(p)} scheduledDate={schedule[p.id]} onAdd={(prod) => add(prod, 1)} />
                 )}
               </div>
             ))}

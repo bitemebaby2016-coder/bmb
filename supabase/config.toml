@@ -99,3 +99,9 @@ verify_jwt = true
 [functions.cron-tick]
 enabled = true
 verify_jwt = false
+
+# notification-dispatcher: R48 — Unified Notification Hub (outbox drain + builders) ทุก 5 นาทีผ่าน pg_cron
+#   verify_jwt = false เพราะ pg_net ยิงตรงไม่มี JWT · คุ้มด้วย x-automation-token = AUTOMATION_TOKEN (secret เดิม)
+[functions.notification-dispatcher]
+enabled = true
+verify_jwt = false

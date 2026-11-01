@@ -1,0 +1,82 @@
+R48 — Console ตรวจตามภาพ + GPS เติมที่อยู่ + Theater ปฏิทิน + Notification Hub E2E
+
+ผล feedback/ภาพรอบนี้ (บันทึก work-state):
+- Console restrictions = ถูกต้อง 4 รายการ (localhost แก้เพี้ยนแล้ว · wildcard https ×2 · apex) +
+  ตัวซ้ำไม่มี scheme ลบแล้ว → เหลือกด Save + รอ 5 นาที แล้วเปิด /checkout Chrome ตรง
+- แผนที่เดสก์ท็อป/ลูกค้า(แท็บเล็ต ล้างแคชแล้ว) ยังไม่ขึ้น = อาจยังไม่ได้ Save/ยังไม่พ้น
+  5 นาที propagate · ไรเดอร์ = ยังไม่ได้ล้างแคช (รอ retest — two-try probe ครบ ไม่ยิงซ้ำ)
+
+FIX (โค้ด):
+1) GPS → เติมที่อยู่จัดส่งอัตโนมัติ (Owner **):
+   - CheckoutPage.handleUseGps: เสร็จ GPS = reverseGeocode เติม detail ถ้ายังว่าง
+     (ที่อยู่ลูกค้าพิมพ์เองไม่ถูกเขียนทับ · toast บอกผล)
+   - googleMaps.reverseGeocode: Google first (ของเดิม) → Nominatim OSM fallback
+     (ไม่ใช้คีย์ · ใช้ได้ตอนคีย์ Google ยังไม่ผ่าน restriction) — handleConfirmLocation
+     path เดิมได้ fallback นี้ด้วย (ที่อยู่อัตโนมัติทั้ง 2 จุด · ฝั่งไรเดอร์ไม่มีช่องที่อยู่กรอก
+     = ที่อยู่มาจากออเดอร์ — รอแค่ล้างแคชให้แผนที่ขึ้น)
+2) Theater pre-order = ปฏิทินมุมบนขวาตามแบบฟอร์มหน้าเมนู (Owner **):
+   - TheaterCards: RecommendationCard + TheaterHeroCard += prop scheduledDate →
+     <ScheduleDateBadge> ที่ absolute top-right (theater-rec-cal / theater-hero-cal)
+   - FoodTheater ส่ง scheduledDate={schedule[p.id]} (menu_schedule จริง = วันถูกต้อง ·
+     ไม่มีแถว = ไม่แสดง ไม่เดา)
+3) Notification Hub E2E (คำสั่ง Owner 4 deliverables):
+   - Architecture: _shared/notificationPlan.ts = PURE unified planner
+     (web_push → messenger fallback → line ตาม flag · normalize flags fail-open ฝั่ง feature)
+   - Schema: m179 = channel_identities (PSID/LINE · RLS deny anon · RPC-only writes)
+     + notification_outbox (event_key UNIQUE = idempotent · status machine · due index)
+     + register_channel_identity (JWT→customer แบบ m115) · enqueue_notification (client/server)
+     + claim_notification_outbox (FOR UPDATE SKIP LOCKED + stale 10m) · complete_notification
+     (sent / failed backoff 2^n cap 30 นาที / dead ≥5 / mock)
+   - Flags: business_settings.notification_channels = {push:true, messenger:true,
+     line:false, lineMode:"mock"} — LINE DISABLED/MOCK จนกว่า API อนุมัติ → สลับ lineMode='live'
+     ไม่ต้องแก้ business logic
+   - EF notification-dispatcher (verify_jwt=false + x-automation-token):
+     builders = transactional_notifications (notifications 24h) · preorder_reminder (D-1)
+     · reengagement_14_30 · points_earn(24h) · abandoned_cart = SKIP ซื่อสัตย์
+     (ไม่มี server cart — ไม่ปลอม) · peak_hour = flag-off
+     drain = claim 25 → bindings+prefs → buildChannelPlan → push-send (reuse EF เดิม! ไม่เขียน
+     web-push ใหม่) → Graph me/messages (PSID จาก channel_identities) → complete · ไม่มี while
+     loop · ไม่แตะ core business (สร้าง order ไม่ได้)
+   - Queue/Cron = stack จริงของโปรเจกต์ (m178 pattern): pg_cron `bmb-notify` */5 → pg_net →
+     bmb_notify_http(token) → EF — "Cloudflare Workers" ในคำสั่ง = mapping ไปที่
+     GH Actions + pg_cron + Supabase EF ที่ใช้อยู่จริง (ไม่เปิด stack ใหม่ซ้ำซ้อน)
+   - Client: src/lib/notifications/notificationManager.ts = emitNotification /
+     registerChannelIdentity / getChannelFlags + re-export pushService (ไม่ duplicate transport)
+   - apply: e2e/r48Apply179.cjs (strip BEGIN/COMMIT · schedule bmb-notify · ledger 179 ·
+     evidence e2e/r48Apply179-result.json)
+   - PSID linkage: RPC พร้อม — จุดผูกอัตโนมัติต่อ = channel-webhook/order_link (source column
+     รองรับแล้ว) · บันทึกใน TEST_PACK §S
+
+Tests: r48NotifyGeo ใหม่ 9/9 (plan behavior จริง + m179 + dispatcher + manager + geo + theater)
+VERIFY: npx vitest run r48 = 9/9 · npx tsc --noEmit = 0 (ก่อน lint chain)
+Docs: TEST_PACK §S (ใหม่) · work-state R48 · master last_updated R48
+
+Feedback 6 ข้อรอบ R46 (บันทึก work-state): 1=รอตรวจ · 2=Console ดูแล้ว (เหลือแก้
+localhost entry เพี้ยน + ลบตัวซ้ำ + กด Save + รอ 5 นาที) · 3,4,6=ok · 5=รอตรวจ
+
+R47 ① ยกเลิกกฎห้ามเจนภาพอาหาร:
+- AdminMarketing: <option value="menu"> กลับมา · บล็อก return ถอด → info เมื่อไม่มีรูปต้นแบบ
+- picker toast = "รูปเมนูเป็นต้นแบบไดคัท เจนเมนู/โปรโมตด้วยรูปนี้ประกอบได้เลย"
+- EF image-gen KIND_PRESETS.menu = "ถ้ามีภาพเมนูตัวอย่างแนบมาให้ใช้เป็นต้นแบบไดคัท"
+R47 ② อักษรโปรโมต = ตรงรายละเอียดเนื้อหาโพสต์:
+- promo/festival prompts = "ข้อความโปรโมตบนภาพต้องตรงกับรายละเอียดนี้เป๊ะ: {note}"
+- ตัด "ไม่มีตัวอักษร/พื้นที่ว่างสำหรับข้อความ" ออกทั้งหมด (subject/note มาจากฟอร์มโพสต์ R39)
+R47 ③ ยุบสองเซคชั่นสตูดิโอ: PostForm ยุบเข้าใบเดียวกับเครื่องมือภาพ (mk-studio-merged)
+R47 ④ เจนซ้อนหลายภาพ + ลบจริง:
+- setImages(prev=>[...prev, wmUrl]) (submit ยังใช้เจนล่าสุดรูปเดียวตาม R44)
+- ปุ่ม ✕ ทุกรูปใน mk-images-strip → handleRemoveImage = เอาออกจากชุด + storage.remove
+  ไฟล์จริงจาก bmb-images + refresh อัลบั้ม ai-generated
+R47 ⑤ ลายน้ำทุกภาพเจน:
+- applyBrandWatermark (client canvas): pill มุมล่างขวา = โลโก้จริง /Logo_Sticker_Circle.webp
+  + "Bite Me Baby" + มาสคอต /assets/mascot/… ยืนบน pill
+- autoMascotForKind (module-level pure): menu→bite_menu · festival→bite_award · promo→bite_recommend
+- dropdown mk-wm-mascot เลือกเอง → จำ localStorage bmb:wm-mascot ใช้ทุกครั้ง
+- อัป ai-generated/wm-*.png แล้วลบไฟล์ต้นฉบับ (อัลบั้มเหลือรูปลายน้ำ) · ลายน้ำพัง = fallback รูปเดิม
+- DEPLOY_image-gen_OK (prompt ใหม่ขึ้น production)
+
+Tests: r47AiStudio ใหม่ 4 · r34 = ปรับ requirement (option menu กลับมา + ไม่บล็อก) ·
+  r44 = ปรับเป็น append + ปุ่มลบจริง · อื่น ๆ ไม่แตะ
+
+VERIFY (รันจริง): vitest เป้า 10 ไฟล์ = 62/62 รวม r47 4/4 + r47 รันซ้ำหลังแก้ assert = 4/4 ·
+  npx tsc --noEmit = 0 · npm run lint = OK (506+1457→1458) · DEPLOY_image-gen_OK EXIT=0
+Docs: AI_WORK_STATE (R47 block + Console รอบ 2 + รายการรอ Owner) · BMB_MASTER_STATUS last_updated
