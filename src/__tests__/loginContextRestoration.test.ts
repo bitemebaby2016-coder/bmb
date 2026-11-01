@@ -29,17 +29,18 @@ describe('returnTo plumbing — ปลายทางก่อนเข้าส
     expect(registerSrc).toContain('readSocialNext()')
   })
 
-  it('RegisterPage สมัครสำเร็จ → /login พร้อม state.from (ไม่ navigate เปล่า)', () => {
+  it('RegisterPage สำเร็จ → /shop พร้อม state.from (R50 Owner: ไม่ต้องผ่าน /login · ไม่ navigate เปล่า)', () => {
+    // R50 (Owner directive): สมัครผ่านแล้ว → ไป /shop (หน้าร้าน) ไม่ใช่หน้าแลนดิ้ง —
+    // returnTo ยังถูกส่งต่อผ่าน state key "from" เดิม (ไม่ใช่ navigate เปล่า)
     expect(registerSrc).toContain(
-      "navigate('/login', returnTo ? { state: { from: returnTo } } : undefined)",
+      "navigate(returnTo || '/shop', returnTo ? { state: { from: returnTo } } : undefined)",
     )
   })
 
   it('RegisterPage ลิงก์กลับ /login ก็พก state.from ด้วย (คนเปลี่ยนใจกลางคัน)', () => {
     expect(registerSrc).toContain('to="/login"')
-    // Link ใช้ state={...} · navigate ใช้ { state: { from } } — ต้องมีทั้งสองจุด
+    // Link ใช้ state={...} — จุด navigate ปลายทางสำเร็จเช็คใน it ด้านบนแล้ว
     expect(registerSrc).toContain('state={returnTo ? { from: returnTo } : undefined}')
-    expect(registerSrc).toContain("navigate('/login', returnTo ? { state: { from: returnTo } } : undefined)")
   })
 
   it('ทุกจุดส่งต่อใช้ key "from" เดียวกัน — ไม่มี key คู่ขนาน (context เดียว)', () => {

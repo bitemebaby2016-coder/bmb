@@ -64,7 +64,9 @@ describe('R44 — บรรทัด ② รูปแบบพรีออเด
 describe('R44 — StoreStatusStrip source (3 บรรทัด)', () => {
   it('บรรทัด ① ไฟรวมสองสายในบรรทัดเดียว (preOrderOpen/sameDayOpen แยกสีได้จริง)', () => {
     expect(stripSrc).toContain('data-testid="strip-status-lights"')
-    expect(stripSrc).toContain('เปิดรับออเดอร์จองล่วงหน้า/Pre-Order')
+    // R50 (Owner 2026-11-01 Strip copy): ① มีช่องว่าง + ไอคอน 📅/⚡ ประจำสาย
+    expect(stripSrc).toContain('เปิดรับออเดอร์ จองล่วงหน้า/Pre-Order 📅')
+    expect(stripSrc).toContain('เปิดรับออเดอร์ รอบวันนี้/Same-Day ⚡')
     expect(stripSrc).toContain('รอบวันนี้/Same-Day')
     expect(stripSrc).toContain("preOrderOpen ? '🟢' : '🔴'")
     expect(stripSrc).toContain("sameDayOpen ? '🟢' : '🔴'")
@@ -74,7 +76,9 @@ describe('R44 — StoreStatusStrip source (3 บรรทัด)', () => {
     expect(stripSrc).toContain('data-testid="strip-preorder"')
     expect(stripSrc).toContain('data-testid="strip-sameday"')
     expect(stripSrc).toContain('DEFAULT_STORE_STATUS_COPY.preOrderClosed')
-    expect(stripSrc).toContain('🛵 รอบวันนี้/Same-Day :')
+    // R50 copy: ② คู่ไอคอนปฏิทิน · ③ คู่ไอคอนสายฟ้า (กัน regression กลับเป็นข้อความเก่า)
+    expect(stripSrc).toContain('🛵 📅 จองล่วงหน้า :')
+    expect(stripSrc).toContain('🛵 ⚡ รอบวันนี้/Same-Day :')
     expect(stripSrc).not.toMatch(/opacity-80/)
     expect((stripSrc.match(/text-sm sm:text-base font-bold/g) || []).length).toBeGreaterThanOrEqual(3)
   })

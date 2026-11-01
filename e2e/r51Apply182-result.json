@@ -1,0 +1,32 @@
+{
+  "at": "2026-11-01T12:05:59.127Z",
+  "steps": [
+    {
+      "v": "182",
+      "action": "applied+recorded",
+      "apply": "[]",
+      "rec": "[]"
+    }
+  ],
+  "precheck": "[{\"version\":\"181\",\"name\":\"181_addon_margin_rules\"},{\"version\":\"180\",\"name\":\"180_cart_sessions_reminder\"},{\"version\":\"179\",\"name\":\"179_notification_hub\"}]",
+  "reload": "[]",
+  "verify": {
+    "ledgerTop": "[{\"version\":\"182\",\"name\":\"182_order_messages.sql\"},{\"version\":\"181\",\"name\":\"181_addon_margin_rules\"},{\"version\":\"180\",\"name\":\"180_cart_sessions_reminder\"},{\"version\":\"179\",\"name\":\"179_notification_hub\"},{\"version\":\"178\",\"name\":\"178_cron_publish_tick\"}]",
+    "table": "[{\"t\":\"order_messages\"}]",
+    "rpc": "[{\"proname\":\"send_order_message\"}]",
+    "helpers": "[{\"proname\":\"drives_order_msg\"},{\"proname\":\"owns_order_msg\"}]",
+    "rls": "[{\"relrowsecurity\":true}]",
+    "rlsPolicies": "[{\"polname\":\"order_messages_select\"}]",
+    "insertPolicy": "[]"
+  },
+  "checks": {
+    "ledger_182": true,
+    "table": true,
+    "rpc": true,
+    "helpers": true,
+    "rls_enabled": true,
+    "select_policies": true,
+    "no_insert_policy": true
+  },
+  "ALL_PASS": true
+}
