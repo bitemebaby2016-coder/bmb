@@ -39,8 +39,9 @@ describe('R13 — แถบสถานะ: รูปแบบใหม่ + บ
     ]
     const s = getStoreStatusFromRounds([...closedToday, ...tomorrow] as never, atBkk('2026-10-28T10:00:00+07:00'))
     expect(s.state).toBe('preorder_only')
-    // R18 (Owner 2026-10-29): copy ใหม่ — ห้ามขึ้นต้นแบบเดิม "พรีออเดอร์: เปิดรับออเดอร์ …"
-    expect(s.preOrderLine).toContain('เปิดรับออเดอร์ Pre-Order / จองล่วงหน้า : รอบส่ง')
+    // R44 (Owner 2026-11-01): รูปแบบใหม่ "🛵 จองล่วงหน้า : รอบส่งถัดไป …" (แทน R18/R25 "เปิดรับออเดอร์ Pre-Order / …")
+    expect(s.preOrderLine).toContain('🛵 จองล่วงหน้า : รอบส่งถัดไป')
+    expect(s.preOrderLine).not.toContain('พรีออเดอร์: เปิดรับออเดอร์')
     expect(s.preOrderLine).not.toContain('พรีออเดอร์: เปิดรับออเดอร์')
     expect(s.preOrderLine).toContain('เช้า')
     expect(s.preOrderLine).toContain('29/10/2026')

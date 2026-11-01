@@ -99,6 +99,22 @@ async function publishToFeed(pageId: string, message: string, imageUrls: string[
   return { ok: true as const, id: pubJ.id as string, photos }
 }
 
+// R44 (Owner 2026-11-01): รายละเอียดบังคับคู่โพสทุกครั้ง — สั่งใต้โพส · แมสเสจ · เว็บ ·
+// ปิดการขายได้ทุกช่องทางแล้วทีมใส่ตะกร้าเตรียมให้ลูกค้า (ห้ามโพสต์เปล่าไร้ CTA)
+const POST_CTA_FOOTER = [
+  '🛒 สั่งใต้โพสนี้ได้เลย — คอมเมนต์ใต้โพสได้',
+  '💬 หรือทักไปสั่งใน Messenger',
+  '🌐 สั่งต่อที่เว็บ biteme-baby.com/shop',
+  '✅ ปิดการขายผ่านช่องทางไหนก็ได้ — ทีมจัดรายการใส่ตะกร้าเตรียมไว้ให้พร้อม',
+].join('\n')
+
+/** ต่อท้าย footer บังคับ (idempotent — ซ้ำถ้าเนื้อหามีอยู่แล้ว) */
+function withPostCta(text: string): string {
+  const base = String(text ?? '').trimEnd()
+  if (base.includes('ปิดการขายผ่านช่องทางไหนก็ได้')) return base
+  return base ? `${base}\n\n—\n${POST_CTA_FOOTER}` : POST_CTA_FOOTER
+}
+
 /** Publish an APPROVED post draft to the Page feed — idempotent by draft id. */
 async function publishDraft(approvalId: string, imageUrls: string[] = []) {
   // 1) the approval row must be an APPROVED post (never pending/rejected)
@@ -139,9 +155,9 @@ async function publishDraft(approvalId: string, imageUrls: string[] = []) {
     return { ok: false, error: 'ERR_META_PAGE_RESOLVE', detail: reason, http: 502 }
   }
 
-  // 4) publish the feed post (message = the approved body; real menu images
-  //    when provided — multi-photo via unpublished /photos + attached_media)
-  const published = await publishToFeed(pageJ.id, `${row.title}\n\n${row.body}`.trim(), imageUrls)
+  // 4) publish the feed post (message = the approved body + footer CTA บังคับ R44;
+  //    real menu images when provided — multi-photo via unpublished /photos + attached_media)
+  const published = await publishToFeed(pageJ.id, withPostCta(`${row.title}\n\n${row.body}`.trim()), imageUrls)
   if (!published.ok) {
     await auditFailure(approvalId, published.reason)
     return { ok: false, error: 'ERR_META_PUBLISH', detail: published.reason, http: 502 }

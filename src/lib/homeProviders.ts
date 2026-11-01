@@ -128,6 +128,16 @@ export function getHomeReviews(products: Product[]): HomeReview[] {
       visible: true,
     }))
 }
+/** 'HH:MM' → 'HH:MM AM/PM' (R44 copy แถบสถานะ 3 บรรทัด — ตรงรูปแบบ 09:00 AM ของ Owner) */
+function fmtAmPm(hhmm: string): string {
+  const m = /^(\d{1,2}):(\d{2})/.exec(String(hhmm ?? '').trim())
+  if (!m) return String(hhmm ?? '')
+  const h = Number(m[1])
+  if (!Number.isFinite(h) || h < 0 || h > 23) return String(hhmm)
+  const h12 = h % 12 === 0 ? 12 : h % 12
+  return `${String(h12).padStart(2, '0')}:${m[2]} ${h < 12 ? 'AM' : 'PM'}`
+}
+
 /** Store / delivery status — derive ONLY from real `delivery_rounds` rows.
  * ZERO-FAKE (closure 2026-10-18): the old hour-based MOCK status is gone —
  * it fabricated open/closed + capacity when rounds were missing or failed to
@@ -164,6 +174,7 @@ export function getStoreStatusFromRounds(rounds: Array<{
       state: 'closed',
       sameDayOpen: false,
       preOrderOpen: false,
+      sameDayLine: 'ปิดรับแล้ว',
       message: 'ยังไม่เปิดรับออเดอร์ — ไม่มีรอบจัดส่งที่เปิดรับอยู่',
     }
   }
@@ -217,8 +228,8 @@ export function getStoreStatusFromRounds(rounds: Array<{
       ? `${day.slice(8, 10)}/${day.slice(5, 7)}/${day.slice(0, 4)}`
       : ''
     return nextPre
-      ? `เปิดรับออเดอร์ Pre-Order / จองล่วงหน้า : รอบส่ง ${nextPre.display_name || 'รอบถัดไป'}${dateLabel ? ` ${dateLabel}` : ''} (ปิดรับ ${(() => { const c = roundCutoffLabel(nextPre, 'PRE_ORDER', 2); const m = /^(\d{1,2}):(\d{2})/.exec(c); return m ? `${String(Number(m[1]) % 12 === 0 ? 12 : Number(m[1]) % 12).padStart(2, '0')}:${m[2]} ${Number(m[1]) < 12 ? 'AM' : 'PM'}` : c })()})`
-      : 'พรีออเดอร์: ปิดรับแล้ว — ยังไม่เปิดรอบถัดไป'
+      ? `🛵 จองล่วงหน้า : รอบส่งถัดไป ${nextPre.display_name || 'รอบถัดไป'}${dateLabel ? ` ${dateLabel}` : ''} (ปิดรับ ${fmtAmPm(roundCutoffLabel(nextPre, 'PRE_ORDER', 2))})`
+      : '🛵 จองล่วงหน้า : ปิดรับแล้ว — ยังไม่เปิดรอบถัดไป'
   })()
 
   const bookable = todayRows.filter(
@@ -249,6 +260,13 @@ export function getStoreStatusFromRounds(rounds: Array<{
     const upcoming = sorted.find((r) => windowOf(r).start > hour) ?? null
     const current = inWindow ?? upcoming ?? sorted[0]
     const hasWindowNow = Boolean(inWindow)
+    // R44 (Owner 2026-11-01) บรรทัดที่ 3: ในหน้าต่างส่ง = "จัดส่งทันที" ·
+    // ยังไม่ถึงรอบ = "เริ่มส่ง HH:MM AM" · นอกหน้าต่างทั้งหมดแต่ยังเปิดรับ = "จัดส่งทันที" (ครัวปรุงเสร็จส่งเลย)
+    const sameDayLine = hasWindowNow
+      ? 'จัดส่งทันที'
+      : upcoming && upcoming.delivery_start
+        ? `เริ่มส่ง ${fmtAmPm(String(upcoming.delivery_start))}`
+        : 'จัดส่งทันที'
     return {
       isOpen: true,
       state: 'open',
@@ -267,6 +285,7 @@ export function getStoreStatusFromRounds(rounds: Array<{
       // R10: ไม่ต่อ "ส่งรอบถัดไป X–Y" ท้ายข้อความ (Owner: ไม่ต้องแสดง)
       message: 'เปิดรับออเดอร์ Same-Day / ส่งวันนี้ : รอบส่ง ทันทีหลังครัวปรุงเสร็จ',
       preOrderLine,
+      sameDayLine,
     }
   }
   // วันนี้ปิดรับหมด แต่ยังมีรอบวันถัดไป = เปิดรับจองล่วงหน้าเท่านั้น (ไม่มีตัวเลขแต่งเอง)
@@ -280,6 +299,7 @@ export function getStoreStatusFromRounds(rounds: Array<{
       state: 'preorder_only',
       sameDayOpen: false,
       preOrderOpen: nextPre !== null,
+      sameDayLine: 'ปิดรับแล้ว',
       message: 'เปิดรับออเดอร์จองล่วงหน้า — รอบวันนี้ปิดรับแล้ว',
       preOrderLine,
     }
@@ -289,6 +309,7 @@ export function getStoreStatusFromRounds(rounds: Array<{
     state: 'closed',
     sameDayOpen: false,
     preOrderOpen: nextPre !== null,
+    sameDayLine: 'ปิดรับแล้ว',
     message: 'ยังไม่เปิดรับออเดอร์ — ไม่มีรอบจัดส่งที่เปิดรับอยู่',
     preOrderLine,
   }

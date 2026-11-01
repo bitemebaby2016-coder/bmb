@@ -1,0 +1,26 @@
+R44 batch 1 — T1 ล้างดั๊มสเตจ + T2 แถบสถานะ 3 บรรทัด + T3 ภาพเจนรูปเดียว + T4 footer โพส
+
+T1: ลบไฟล์ดั๊ม untracked ใน e2e/ (r33_out, r34_dump×2, r34_commit_msg, r36_out, r37_out, r40_out, r43_fns_after) — git status ว่าง
+
+T2 — แถบสถานะหน้าแรก 3 บรรทัด (Owner copy ใหม่):
+- ① ไฟสถานะรวมสองสายบรรทัดเดียว:
+  `🟢เปิดรับออเดอร์จองล่วงหน้า/Pre-Order — 🔴รอบวันนี้/Same-Day ปิดรับแล้ว` (แยกสีรายสาย)
+- ② `🛵 จองล่วงหน้า : รอบส่งถัดไป <รอบ> <วัน> (ปิดรับ HH:MM AM/PM)` (แทน R25 หัวข้อเดิม)
+  + default ปิดรับ = `🛵 จองล่วงหน้า : ปิดรับแล้ว — ยังไม่เปิดรอบถัดไป` (คีย์ copy แก้ได้คงเดิม)
+- ③ `🛵 รอบวันนี้/Same-Day : จัดส่งทันที` (ในหน้าต่างส่ง/เวลาทำการ) · `เริ่มส่ง HH:MM AM` · `ปิดรับแล้ว`
+- StoreStatus.sameDayLine (types) + homeProviders คำนวณทุก branch + fmtAmPm helper
+- แก้เทสต์เดิม 2 จุดตาม copy ใหม่ (r13 · storeStatusCopy) + r44StatusStrip.test.ts ใหม่ 8 ข้อ
+
+T3 — ภาพเจนใช้รูปเดียวตอนสร้างโพสต์ (ไม่ขึ้นต้นแบบ+เจนคู่กัน):
+- isGenImage() · submit กรอง `postImages = มีเจน ? [เจนล่าสุด] : images`
+- เจนสำเร็จ/จิ้มอัลบั้ม = setImages([...]) รูปเดียวแทนรูปเดิม + คำใบ้ mk-images-gen-only
+
+T4 — footer บังคับคู่โพสทุกครั้ง (publish path เดียว social-publish-worker):
+- POST_CTA_FOOTER 4 บรรทัด: สั่งใต้โพส · ทัก Messenger · สั่งต่อเว็บ biteme-baby.com/shop ·
+  ปิดการขายทุกช่องทางแล้วทีมใส่ตะกร้าเตรียมให้ — withPostCta idempotent ใช้ที่ publishToFeed
+- DEPLOY_social-publish-worker_OK (ขึ้นโพสถัดไปเห็น footer จริง)
+
+gates: vitest เป้า T2 = 8 ไฟล์ 88/88 · T3+T4 = 6 ไฟล์ 41/41 · npx tsc --noEmit = 0 ·
+  npm run lint = OK (brandNameGuard 501 + languageSanity 1444)
+หมายเหตุ: N1 override คีย์ store_status_copy 3 บรรทัดแรก (sameDayOpen/preOrderOnly/closed)
+  ไม่มีผลกับ strip แล้ว (บรรทัด ① คำนวณจากไฟตามกติกา Owner) — คีย์ preOrderClosed ยังใช้ได้เดิม

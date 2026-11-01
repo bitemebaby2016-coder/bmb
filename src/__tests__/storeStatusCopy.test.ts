@@ -79,7 +79,8 @@ describe('N1 — default copy ต้องตรงกับข้อควา�
       at(`${TODAY}T04:00:00+07:00`),
     )
     expect(live.preOrderLine).not.toBe(DEFAULT_STORE_STATUS_COPY.preOrderClosed)
-    expect(live.preOrderLine).toMatch(/เปิดรับออเดอร์ Pre-Order/)
+    // R44 (Owner 2026-11-01): รูปแบบใหม่ "🛵 จองล่วงหน้า : รอบส่งถัดไป …" (แทน R25 "เปิดรับออเดอร์ Pre-Order / …")
+    expect(live.preOrderLine).toMatch(/🛵 จองล่วงหน้า : รอบส่งถัดไป/)
   })
 })
 

@@ -30,7 +30,7 @@ export const DEFAULT_STORE_STATUS_COPY: StoreStatusCopy = {
   sameDayOpen: 'เปิดรับออเดอร์ Same-Day / ส่งวันนี้ : รอบส่ง ทันทีหลังครัวปรุงเสร็จ',
   preOrderOnly: 'เปิดรับออเดอร์จองล่วงหน้า — รอบวันนี้ปิดรับแล้ว',
   closed: 'ยังไม่เปิดรับออเดอร์ — ไม่มีรอบจัดส่งที่เปิดรับอยู่',
-  preOrderClosed: 'พรีออเดอร์: ปิดรับแล้ว — ยังไม่เปิดรอบถัดไป',
+  preOrderClosed: '🛵 จองล่วงหน้า : ปิดรับแล้ว — ยังไม่เปิดรอบถัดไป',
 }
 
 // ---- reactive live store (strip สมัครสมาชิก → re-render ทันทีเมื่อค่าเปลี่ยน) ----

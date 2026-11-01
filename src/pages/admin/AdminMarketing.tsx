@@ -38,6 +38,10 @@ const STATUS_CLS: Record<string, string> = {
   scheduled: 'badge badge-primary', published: 'badge badge-success', failed: 'badge badge-danger',
 }
 
+// R44 (Owner 2026-11-01): URL ภาพที่ AI สร้าง (bmb-images/ai-generated/) —
+// กติกา "มีภาพเจน = ใช้ภาพเจนรูปเดียว ห้ามแนบรูปต้นแบบ+ภาพเจนคู่กันตอนสร้างโพสต์"
+const isGenImage = (u: string) => u.includes('/ai-generated/')
+
 export function AdminMarketing() {
   const [tab, setTab] = useState<Tab>(() => {
     // C5/Q3: deep-link ?tab= จาก redirect ของหน้าเดิม (bookmark ไม่ตาย)
@@ -110,7 +114,11 @@ export function AdminMarketing() {
   async function handleCreatePost() {
     if (!title.trim()) { showToast('ใส่หัวข้อโพสต์ก่อน', 'error'); return }
     setSaving(true)
-    const r = await createMarketingPost({ title: title.trim(), body: bodyText, content_type: contentType, image_urls: images })
+    // R44 (Owner 2026-11-01): มีภาพเจนในชุด → ใช้ภาพเจนรูปเดียว (รูปสุดท้ายที่เจน/เลือก)
+    // ห้ามขึ้นทั้งต้นแบบและภาพเจนคู่กันบนโพสต์ · ไม่มีภาพเจน = ใช้ตามที่เลือกไว้ (รูปเมนู/browse)
+    const genOnes = images.filter(isGenImage)
+    const postImages = genOnes.length > 0 ? [genOnes[genOnes.length - 1]] : images
+    const r = await createMarketingPost({ title: title.trim(), body: bodyText, content_type: contentType, image_urls: postImages })
     setSaving(false)
     if (r.ok) {
       showToast('สร้างโพสต์แล้ว — ส่งเข้ากล่องอนุมัติ (คนอนุมัติเท่านั้น)', 'success')
@@ -272,7 +280,8 @@ export function AdminMarketing() {
         flashTo('mk-gen-status')
         showToast('สร้างภาพไม่สำเร็จ: ' + detail, 'error')
       } else {
-        setImages((prev) => (prev.includes(data.url) ? prev : [...prev, data.url]))
+        // R44: เจนสำเร็จ = ใช้ภาพเจนรูปเดียว (แทนรูปต้นแบบ — ห้ามแนบคู่กันตอนสร้างโพสต์)
+        setImages([data.url])
         setGenStatus({ phase: 'ok', url: data.url, model: data.model })
         await loadAiAlbum() // ภาพใหม่เข้าอัลบั้ม bmb-images/ai-generated ทันที
         flashTo('mk-gen-result')
@@ -288,11 +297,11 @@ export function AdminMarketing() {
     }
   }
 
-  /** R40: จิ้มภาพในอัลบั้ม ai-generated = ดึงเข้าชุดภาพของโพสต์ทันที (เลือกมาใช้ได้จริง) */
+  /** R40: จิ้มภาพในอัลบั้ม ai-generated = เลือกใช้ทันที · R44: "เลือกใช้" = เลือกรูปนี้เป็นรูปโพสต์ (รูปเดียว — แทนรูปเดิม) */
   function pickAiImage(url: string) {
-    setImages((prev) => (prev.includes(url) ? prev : [...prev, url]))
+    setImages([url])
     flashTo('mk-images-strip')
-    showToast('แนบภาพจากอัลบั้มเข้าชุดภาพของโพสต์แล้ว', 'success')
+    showToast('เลือกภาพนี้เป็นรูปโพสต์แล้ว (แทนรูปเดิม — โพสต์ใช้ทีละรูป)', 'success')
   }
 
   async function handleSaveRules() {
@@ -471,6 +480,11 @@ export function AdminMarketing() {
             {images.length > 0 && (
               <div className="flex flex-wrap gap-2 mt-3" data-testid="mk-images-strip">
                 {images.map((u) => <img key={u} src={u} alt="generated" className="w-24 h-24 object-cover rounded-lg border border-brand-border" />)}
+                {images.some(isGenImage) && images.length > 1 && (
+                  <p className="w-full text-xs text-brand-accent" data-testid="mk-images-gen-only">
+                    มีภาพเจนในชุด — ตอนสร้างโพสต์จะใช้ภาพเจน 1 รูปเท่านั้น (รูปต้นแบบ/รูปอื่นจะไม่ถูกแนบคู่กัน)
+                  </p>
+                )}
               </div>
             )}
             {/* R40: อัลบั้มภาพ AI (โฟลเดอร์แยกในอัลบั้มเดิม) — ข้ามหน้า/รีเฟรชก็ยังอยู่ · จิ้ม = เลือกใช้ */}
