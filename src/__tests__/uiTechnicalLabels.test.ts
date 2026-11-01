@@ -26,13 +26,16 @@ describe('L-1 — หัวข้อ theater ไม่ใช่ป้ายเ�
 })
 
 describe('L-2 — ป้าย (Marketing Testimonials) ห้ามแสดง', () => {
-  it('ReviewCarouselSection ไม่มีสตริง (Marketing Testimonials) แล้ว', () => {
+  it('ReviewCarouselSection ไม่มีสตริง (Marketing Testimonials) แล้ว + R50 หัวข้อใหม่', () => {
     expect(reviewCarouselSrc).not.toContain('(Marketing Testimonials)')
-    expect(reviewCarouselSrc).toContain('เสียงชมจากผู้ชม')
+    expect(reviewCarouselSrc).toContain('📸 รีวิวจริงจากลูกค้า')
+    expect(reviewCarouselSrc).not.toContain('⭐ เสียงชมจากผู้ชม')
   })
 
-  it('ReviewPage หัวข้อ = ภาษาไทยธรรมชาติ ไม่ใช่ Marketing Testimonials', () => {
+  it('ReviewPage หัวข้อ = รีวิวจริงจากลูกค้า (R50 ยุบเซ็กชั่น) ไม่ใช่ Marketing Testimonials', () => {
     expect(reviewPageSrc).not.toContain('>Marketing Testimonials<')
-    expect(reviewPageSrc).toContain('เสียงชมจากผู้ชม')
+    expect(reviewPageSrc).toContain('📸 รีวิวจริงจากลูกค้า')
+    expect(reviewPageSrc).toContain('review-photo-album')
+    expect(reviewPageSrc).not.toContain('>เสียงชมจากผู้ชม<')
   })
 })

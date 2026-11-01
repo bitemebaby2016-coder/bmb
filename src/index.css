@@ -1025,6 +1025,8 @@ p { color: var(--color-brand-text-secondary); }
 .flad-stack > .flad-card { pointer-events: auto; }
 .flad-card {
   position: relative;
+  /* R50 (Owner): การ์ดโฟลตติ้ง = 70-80% ของหน้าจอทุกอัน */
+  width: min(78vw, 640px);
   border-radius: 18px;
   overflow: hidden;
   background: #fff;

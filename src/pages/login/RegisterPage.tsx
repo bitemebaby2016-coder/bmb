@@ -71,7 +71,8 @@ export function RegisterPage() {
 
       // ส่งต่อ returnTo ผ่านหน้า login — ถ้า Supabase ออก session ให้ทันที
       // (ปิด email confirm) LoginPage จะพาไปหน้าเป้าหมายต่อเอง (case A)
-      navigate('/login', returnTo ? { state: { from: returnTo } } : undefined)
+      // R50 (Owner): สมัครผ่านแล้ว → ไป /shop (หน้าร้าน) ไม่ใช่หน้าแลนดิ้ง
+      navigate(returnTo || '/shop', returnTo ? { state: { from: returnTo } } : undefined)
     } catch (err) {
       console.error('Register error:', err)
       setError('เกิดข้อผิดพลาด กรุณาลองใหม่')

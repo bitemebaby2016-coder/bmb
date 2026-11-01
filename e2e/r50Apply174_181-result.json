@@ -1,0 +1,73 @@
+{
+  "at": "2026-11-01T08:03:32.576Z",
+  "steps": [
+    {
+      "v": "174",
+      "action": "applied+recorded",
+      "apply": "[]",
+      "rec": "[]"
+    },
+    {
+      "v": "175",
+      "action": "applied+recorded",
+      "apply": "[]",
+      "rec": "[]"
+    },
+    {
+      "v": "176",
+      "action": "applied+recorded",
+      "apply": "[]",
+      "rec": "[]"
+    },
+    {
+      "v": "177",
+      "action": "applied+recorded",
+      "apply": "[]",
+      "rec": "[]"
+    },
+    {
+      "v": "178",
+      "action": "applied+recorded",
+      "apply": "[]",
+      "rec": "[]"
+    },
+    {
+      "v": "179",
+      "action": "applied+recorded",
+      "apply": "[]",
+      "rec": "[]"
+    },
+    {
+      "v": "180",
+      "action": "applied+recorded",
+      "apply": "[]",
+      "rec": "[]"
+    },
+    {
+      "v": "181",
+      "action": "applied+recorded",
+      "apply": "[]",
+      "rec": "[]"
+    }
+  ],
+  "precheck": "[{\"version\":\"181\",\"name\":\"181_addon_margin_rules\"},{\"version\":\"180\",\"name\":\"180_cart_sessions_reminder\"},{\"version\":\"179\",\"name\":\"179_notification_hub\"}]",
+  "reload": "[]",
+  "verify": {
+    "ledgerTop": "[{\"version\":\"181\",\"name\":\"181_addon_margin_rules\"},{\"version\":\"180\",\"name\":\"180_cart_sessions_reminder\"},{\"version\":\"179\",\"name\":\"179_notification_hub\"},{\"version\":\"178\",\"name\":\"178_cron_publish_tick\"},{\"version\":\"177\",\"name\":\"177_marketing_publish_due\"},{\"version\":\"176\",\"name\":\"176_marketing_posts_anon_read\"},{\"version\":\"175\",\"name\":\"175_tenant_custom_domain_billing\"},{\"version\":\"174\",\"name\":\"174_customer_rider_position\"},{\"version\":\"173\",\"name\":\"173_order_id_bigint_fix\"},{\"version\":\"172\",\"name\":\"172_discount_cap_15pct\"}]",
+    "riderPosFn": "[{\"proname\":\"order_rider_position\"}]",
+    "notifOutbox": "[{\"t\":\"notification_outbox\"}]",
+    "cartSessions": "[{\"t\":\"cart_sessions\"}]",
+    "addonSetting": "[{\"proname\":\"addon_margin_setting\"}]",
+    "publishDue": "[]",
+    "cronNotify": "[{\"jobname\":\"bmb-notify\"}]"
+  },
+  "checks": {
+    "ledger_181": true,
+    "rider_position": true,
+    "outbox": true,
+    "cart_sessions": true,
+    "addon_setting": true,
+    "cron_bmb_notify": true
+  },
+  "ALL_PASS": true
+}

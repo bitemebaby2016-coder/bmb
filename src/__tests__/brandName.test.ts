@@ -16,10 +16,10 @@ import {
   mascotNameRule,
 } from '@/lib/brandName'
 
-describe('brand name — canonical spelling (Owner rule 2026-10-12)', () => {
-  it('mascot is ไบ๊ and brand is ไบ๊มีเบบี้ — ทับศัพท์ตรง ๆ เท่านั้น', () => {
-    expect(MASCOT_TH).toBe('ไบ๊')
-    expect(BRAND_TH).toBe('ไบ๊มีเบบี้')
+describe('brand name — canonical spelling (Owner rule อัปเดต 2026-11-01 R50: ทับศัพท์ Bite)', () => {
+  it('mascot is Bite and brand is Bite Me Baby — ทับศัพท์อังกฤษเท่านั้น (ไบ๊ ถูกแทนที่หมด)', () => {
+    expect(MASCOT_TH).toBe('Bite')
+    expect(BRAND_TH).toBe('Bite Me Baby')
   })
 
   it('banned list never contains a word that collides with normal Thai', () => {
@@ -33,25 +33,26 @@ describe('brand name — canonical spelling (Owner rule 2026-10-12)', () => {
 })
 
 describe('brand name — normalizeBrandNames fixes every wrong spelling', () => {
-  it('rewrites every banned variant to ไบ๊', () => {
+  it('rewrites every banned variant to Bite', () => {
     for (const bad of BANNED_MASCOT_NAMES) {
       const out = normalizeBrandNames('สวัสดีครับ ' + bad + ' ครับ')
-      expect(out, `ยังคงมีชื่อผิด "${bad}" หลัง normalize`).toBe('สวัสดีครับ ไบ๊ ครับ')
+      expect(out, `ยังคงมีชื่อผิด "${bad}" หลัง normalize`).toBe('สวัสดีครับ Bite ครับ')
       expect(containsWrongMascotName(out)).toBe(false)
     }
   })
 
-  it('rewrites the English brand name to the Thai spelling', () => {
-    const out = normalizeBrandNames('ที่ร้าน Bite Me Baby อร่อย')
-    expect(out).toContain('ไบ๊มีเบบี้')
-    expect(out).not.toContain('Bite Me Baby')
-    expect(containsWrongMascotName(out)).toBe(false)
+  it('rewrites every Thai spelling of the brand/mascot (รวม "ไบ๊") to the English transliteration', () => {
+    expect(normalizeBrandNames('ที่ร้าน ไบ๊มีเบบี้ อร่อย')).toContain('Bite Me Baby')
+    expect(normalizeBrandNames('ที่ร้าน ไบ๊มีเบบี้ อร่อย')).not.toContain('ไบ๊')
+    expect(normalizeBrandNames('น้อง ไบ๊ ช่วยแนะนำ')).toBe('น้อง Bite ช่วยแนะนำ')
+    expect(normalizeBrandNames('ที่ร้าน Bite Me Baby อร่อย')).toBe('ที่ร้าน Bite Me Baby อร่อย')
+    expect(containsWrongMascotName(normalizeBrandNames('ที่ร้าน ไบ๊มีเบบี้ อร่อย'))).toBe(false)
   })
 
   it('never produces a doubled mascot name from layered replacements', () => {
     const out = normalizeBrandNames('ไบ๊ท์ ไบท์ ไบท บั๊บ')
-    expect(out).not.toContain('ไบ๊ไบ๊')
-    expect(out.split('ไบ๊').length - 1).toBe(4)
+    expect(out).not.toContain('BiteBite')
+    expect(out.split('Bite').length - 1).toBe(4)
   })
 
   it('leaves ordinary Thai text completely untouched', () => {
@@ -66,10 +67,10 @@ describe('brand name — normalizeBrandNames fixes every wrong spelling', () => 
 })
 
 describe('brand name — mascotNameRule prompt', () => {
-  it('states the correct names and bans the known wrong ones', () => {
+  it('states the correct names (Bite / Bite Me Baby) and bans the known wrong ones', () => {
     const rule = mascotNameRule()
-    expect(rule).toContain('ไบ๊')
-    expect(rule).toContain('ไบ๊มีเบบี้')
+    expect(rule).toContain('Bite')
+    expect(rule).toContain('Bite Me Baby')
     expect(rule).toContain('บั๊บ')
     expect(rule).toContain('บิท')
   })

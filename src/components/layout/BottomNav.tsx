@@ -35,9 +35,13 @@ const role = useAuthStore((s) => s.role)
 
   // PHASE 6 UI/admin: admins get a Dashboard entry instead of the customer
   // account tab, so they can always jump back to /admin without browser Back.
-  const items = shouldShowAdminLink(role, customer?.email)
+  const baseItems = shouldShowAdminLink(role, customer?.email)
     ? navItems.map((item) => item.path === '/profile' ? { path: '/admin', label: 'Dashboard', icon: '🛠️' } : item)
     : navItems
+  // R50 (Owner): ยูซที่ล็อกอินแล้ว กด Home → ไป /shop (หน้าร้าน) แทนหน้าแลนดิ้ง
+  const items = (customer || role === 'customer')
+    ? baseItems.map((item) => item.path === '/' ? { ...item, path: '/shop' } : item)
+    : baseItems
 
   return (
     <nav ref={navRef} className="fixed bottom-0 left-0 right-0 bg-brand-surface border-t border-brand-border z-50 no-print glass-surface pb-[env(safe-area-inset-bottom)]">

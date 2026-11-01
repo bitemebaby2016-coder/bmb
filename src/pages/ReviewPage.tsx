@@ -65,9 +65,20 @@ export function ReviewPage() {
         : <div className='card bg-gray-50 text-center py-8'><p className='text-brand-muted'>No reviews yet. Waiting for real customer reviews.</p></div>}
       </section>
       <section className='mb-10'>
-        {/* N-4 ข้อ 2: หัวข้อภาษาไทยธรรมชาติ (เดิม "Marketing Testimonials") */}
-        <h2 className='text-xl font-display font-bold text-brand-accent mb-2'>เสียงชมจากผู้ชม</h2>
-        <p className='text-sm text-brand-muted'>เสียงตอบรับที่คัดสรรจาก Facebook และ GrabFood</p>
+        {/* R50: ยุบเซ็กชั่นรีวิวของหน้าแรก + หน้านี้เป็นหัวข้อเดียวตามคำสั่ง Owner + อัลบั้มรูปจริง */}
+        <h2 className='text-xl font-display font-bold text-brand-accent mb-2'>📸 รีวิวจริงจากลูกค้า</h2>
+        <p className='text-sm text-brand-muted mb-3'>รีวิวและรูปจริงจากลูกค้าที่สั่งผ่านระบบ</p>
+        {/* อัลบั้มรูปรีวิวจริง (verified reviews ที่มีรูป) — ของเดิมเก็บผ่าน reviews.photo_url */}
+        {verifiedReviews.filter((rv: any) => rv.photo_url).length > 0 && (
+          <div className='grid grid-cols-3 gap-3 mb-4' data-testid='review-photo-album'>
+            {verifiedReviews.filter((rv: any) => rv.photo_url).map((rv: any) => (
+              <a key={rv.id} href={rv.photo_url} target='_blank' rel='noreferrer' className='aspect-square rounded-lg overflow-hidden bg-gray-100'>
+                <img src={rv.photo_url} alt={`รีวิวของ ${rv.customer_name}`} loading='lazy' className='w-full h-full object-cover' />
+              </a>
+            ))}
+          </div>
+        )}
+        <p className='text-sm text-brand-muted'>ข้อความรีวิวจริงแสดงที่หน้าแรกหัวข้อ 📸 รีวิวจริงจากลูกค้า และรายการverified ด้านบน</p>
       </section>
       <section className='mb-10'>
         <h2 className='text-xl font-display font-bold text-brand-accent mb-3'>Admin Portfolio</h2>

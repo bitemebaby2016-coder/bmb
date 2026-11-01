@@ -41,15 +41,15 @@ export function StoreStatusStrip({ status }: { status: StoreStatus }) {
       <div className="min-w-0">
         {/* R12 (Owner 2026-10-28): คำในวงเล็บไม่ต้องแสดง — บรรทัด (ไม่มีปิดรอบ · สั่งได้ถึง · เหลือที่นั่ง) ถอดออกแล้ว
             (ข้อมูลเดิมเคยอยู่บรรทัด status: ไม่มีปิดรอบ (สั่งได้ถึง HH:MM) · เหลือที่นั่ง N% — ระบุว่าไม่แสดง) */}
-        {/* R44 บรรทัด ①: ไฟสองสายรวมบรรทัดเดียว — เปิด = ชื่อสาย · ปิด = ต่อท้าย "ปิดรับแล้ว" */}
+        {/* R50 (Owner 2026-11-01 Strip copy): ① ไฟสองสาย + ไอคอนประจำสาย (📅 ปฏิทิน = พรีออเดอร์ · ⚡ สายฟ้า = เซมเดย์) */}
         <p className="text-sm sm:text-base font-bold" data-testid="strip-status-lights">
-          {preOrderOpen ? '🟢' : '🔴'}เปิดรับออเดอร์จองล่วงหน้า/Pre-Order{preOrderOpen ? '' : ' ปิดรับแล้ว'} — {sameDayOpen ? '🟢' : '🔴'}รอบวันนี้/Same-Day{sameDayOpen ? '' : ' ปิดรับแล้ว'}
+          {preOrderOpen ? '🟢' : '🔴'} เปิดรับออเดอร์ จองล่วงหน้า/Pre-Order 📅{preOrderOpen ? '' : ' ปิดรับแล้ว'} — {sameDayOpen ? '🟢' : '🔴'} เปิดรับออเดอร์ รอบวันนี้/Same-Day ⚡{sameDayOpen ? '' : ' ปิดรับแล้ว'}
         </p>
-        {/* R44 บรรทัด ②: สถานะขนส่งพรีออเดอร์ (ข้อมูลสด R18/R25 → รูปแบบ R44) · ไม่ truncate */}
-        <p className="text-sm sm:text-base font-bold" data-testid="strip-preorder">{preOrderLine}</p>
-        {/* R44 บรรทัด ③: สถานะขนส่งเซมเดย์ — ในหน้าต่างส่ง/เวลาทำการ = จัดส่งทันที */}
+        {/* R50 บรรทัด ②: พรีออเดอร์ + ไอคอนปฏิทิน (ข้อมูลสด R18/R25 เดิม) · ไม่ truncate */}
+        <p className="text-sm sm:text-base font-bold" data-testid="strip-preorder">🛵 📅 จองล่วงหน้า : {preOrderLine}</p>
+        {/* R50 บรรทัด ③: เซมเดย์ + ไอคอนสายฟ้า — ในหน้าต่างส่ง/เวลาทำการ = จัดส่งทันที */}
         <p className="text-sm sm:text-base font-bold" data-testid="strip-sameday">
-          🛵 รอบวันนี้/Same-Day : {sameDayLine}
+          🛵 ⚡ รอบวันนี้/Same-Day : {sameDayLine}
         </p>
       </div>
     </div>

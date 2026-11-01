@@ -516,8 +516,9 @@ export function HomePage() {
 
       {/* 6b. Real customer review photo gallery (lazy) — R34: mount ของจริง 32 ใบ (เดิมมี comment แต่ไม่ได้ render) */}
       <ReviewGallerySection />
-      {/* R38 (Owner): โพสต์การตลาดที่เผยแพร่แล้ว "ดึงเข้าเว็บ" — ซ่อนตัวเงียบถ้ายังไม่ apply m176/ไม่มีโพสต์ */}
-      <MarketingFeedSection />
+      {/* R50 (Owner 2026-11-01): ไม่แสดงเซ็กชั่นประกาศล่าสุดด้านล่าง — ย้ายขึ้น FloatingAdBanners
+          รวมกับโปรโมชั่น (สูงสุด 2 · กดปิดได้) และเก็บรวมที่หน้า 🎟️ โปรโมชั่น ข่าวสาร และ กิจกรรม */}
+      {false && <MarketingFeedSection />}
       {/* CAT-04: Verified Customer Reviews Section */}
         <VerifiedReviewsSection reviews={verifiedReviews} products={products} />
 

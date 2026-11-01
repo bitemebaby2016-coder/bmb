@@ -1,7 +1,24 @@
-# BMB — HANDOFF สำหรับแชทใหม่ (ปิดเซสชัน 2026-11-01 · หลัง R49)
+# BMB — HANDOFF สำหรับแชทใหม่ (ปิดเซสชัน 2026-11-01 · หลัง R49+R50)
 
-> **อ่านไฟล์นี้เป็นไฟล์แรกในแชทใหม่** ต่อจากนั้นอ่านตามลำดับ: `AI_ENTRYPOINT.md` → `UNIVERSAL_MASTER_AI_RULES.md` → `AI_WORK_STATE.md` (บล็อก R49) → `docs/BMB_PRODUCTION_TEST_PACK.md` (§R/§S = checklist ปิดงาน)
-> HEAD = ดู `git log --oneline -1` · production ledger = **181** (`e2e/r49Apply180-result.json` ALL_PASS) · EF `notification-dispatcher` deployed
+> **อ่านไฟล์นี้เป็นไฟล์แรกในแชทใหม่** ต่อจากนั้น: `AI_ENTRYPOINT.md` → `UNIVERSAL_MASTER_AI_RULES.md` → `AI_WORK_STATE.md` (บล็อก R50) → `docs/BMB_PRODUCTION_TEST_PACK.md` (§S = checklist)
+> HEAD = `git log --oneline -1` · production ledger = **181** (`r50Apply174_181-result.json` ALL_PASS 6/6 · `r49Apply180-result.json` ALL_PASS 6/6) · EF `notification-dispatcher` deployed
+
+## ทำแล้ว R47-R50 (มีหลักฐาน)
+1. AI Studio 5 ข้อ (R47) + Notification Hub E2E m179 (R48) + GPS/Theater (R48)
+2. **R49:** DoD แจ้งเตือน 3 ข้อ (idempotency/popup claymation/reminder+abandoned cart จริง m180) + **Add-on Profit Margin** m181 (cap admin-driven แทน hardcode · promo_price server · cross-sell เรียงกำไร · Checkout margin guard · การ์ดกฎ /admin/products · audit ทุก save)
+3. **R50:** apply 174-181 ครบ (ALL_PASS 6/6) · Strip copy ใหม่ 3 บรรทัด · ยุบเซ็กชั้นรีวิว → `📸 รีวิวจริงจากลูกค้า` + อัลบั้มรูปจริง · ประกาศล่าสุด → Floating (≤2+ปิด+ลิงก์จริง) + ซ้ายล่างหน้าแรกซ่อน + `/promotions` หัวข้อใหม่ · **Bite ทับศัพท์ทุกจุด** (web+EF) · Home→/shop (ล็อกอิน) + Register→/shop · การ์ด floating 70-80% จอ · **รูป AI = `bmb-images/ai-generated/`**
+
+## งานค้างที่ต้องทำในแชทใหม่ (เรียงลำดับ)
+1. **TEST_PACK §S ทั้งหมด (S-1..S-19) บน production** + §R เดิม · ถ้าแดงเก็บภาพ+query
+2. **Maps T9 retest** (Owner กด Save Console + 5 นาที → 3 ฝั่ง)
+3. **Social AI ตอบเมนู/ออเดอร์เก่า** → เพิ่ม rule ลง `_shared/shopContext.ts`/system prompt "ใช้เฉพาะ MENUS ของโพสต์/บริบทนี้ ห้ามอ้างออเดอร์-เมนูเก่า" + ทำ draft validation strict (รายการต้องอยู่ใน catalog ของโพสต์นั้น) · **ยังไม่ได้แตะรอบนี้**
+4. **`/shop?cart=` เคสตะกร้าว่าง** (Owner ยังเจอ) → Layout: re-add ครั้งที่ 2 หลัง 700ms กัน persistence restore ล้าง + ตรวีด FB ตัด/ย่อ query (R43 toast มีแล้ว)
+5. **SEO ทุก route ครบ** → ตรวจนับ `path=` vs `SeoHelmet` ใน App.tsx (รอบนี้ findstr Access denied) + เติม entry ที่ขาดด้วย meta จริงจาก seo_settings (ห้ามจำลอง)
+6. **รีวิว submit** (m099 verified_reviews RPC) — UI ปัจจุบัน list+อัลบั้มเท่านั้น
+7. **ประกาศ list ใน `/promotions`** (นอกเหนือจาก floating) · theater_daily_copy seed ใน DB (ไบ๊) = กด save ใหม่ทับ
+8. เดิมค้างต่อ: PSID auto-link · LINE live flag · abandoned-cart copy · Add-on P2 server per-line · D-1..D-3 · §Q · retest T6/T10/ถึงปลายทาง
+
+## DoD Checklist แจ้งเตือน (ย้ายมาจาก TEST_PACK §S.2.1 · S-1..S-9 อยู่ที่ TEST_PACK §S.1)
 
 ## สิ่งที่ปิดแล้วรอบ R47-R49 (2026-11-01 · มีหลักฐาน)
 

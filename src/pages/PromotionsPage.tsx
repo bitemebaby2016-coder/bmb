@@ -107,7 +107,7 @@ export function PromotionsPage() {
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-6">
-      <h1 className="text-3xl font-bold text-brand-accent mb-6">🎟️ โปรโมชั่น</h1>
+      <h1 className="text-3xl font-bold text-brand-accent mb-6">🎟️ โปรโมชั่น ข่าวสาร และ กิจกรรม</h1>
 
       <div className="card mb-6 bg-gradient-to-r from-purple-50 to-pink-50">
         <h3 className="font-bold text-brand-accent mb-2">💡 วิธีใช้โค้ดส่วนลด</h3>

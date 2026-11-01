@@ -9,8 +9,8 @@
 //   ไม่ต้องหวังว่า client ทุกจุดจะไม่ลืมเรียก
 // ============================================
 
-export const MASCOT_TH = 'ไบ๊'
-export const BRAND_TH = 'ไบ๊มีเบบี้'
+export const MASCOT_TH = 'Bite'
+export const BRAND_TH = 'Bite Me Baby'
 
 export const BANNED_MASCOT_NAMES: readonly string[] = [
   // ⚠️ คัดเฉพาะชื่อที่ "ไม่ชน" กับคำไทยปกติเท่านั้น
