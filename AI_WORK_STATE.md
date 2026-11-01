@@ -1,7 +1,7 @@
 > ## 🟢 สถานะล่าสุด — 2026-11-01 (R51 รอบ 2 · **Owner สั่ง: แก้ CI + apply ค้างทั้งหมด + ปิดงานทั้งหมด → รอทดสอบ production**)
 > - 🔎 **CI พัง (run #708 · 096c18a) = สาเหตุเดียว: `Unit tests` 5 errors — ทั้งหมดเป็น test เก่าค้างจาก R50 ไม่ใช่โค้ด R51:** พิสูจน์ด้วย `git diff 367185e..HEAD` (ไม่มี `r44StatusStrip`/`StoreStatusStrip`/`loginContext`/`RegisterPage` ใน diff · 2 checks ที่เขียว = Contract Tests 43s + Cloudflare ≠ CI) · **CI แดงมาตั้งแต่ push R50 แล้วแต่เพิ่งเห็น**
 > - ✅ **แก้ test 2 ไฟล์ตาม directive เดิมของ R50 (ไม่ใช่การอ่อน assertions — ทำให้เข้มขึ้น):** ① `r44StatusStrip` = expect copy เก่าไม่มีช่องว่าง/ไม่มี ⚡ → ปรับเป็น **exact Strip copy R50** ทั้ง ① `เปิดรับออเดอร์ จองล่วงหน้า/Pre-Order 📅` + `เปิดรับออเดอร์ รอบวันนี้/Same-Day ⚡` · ② `电动车 📅 จองล่วงหน้า :` · ③ `电动车 ⚡ รอบวันนี้/Same-Day :` (**เพิ่ม assertion ใหม่ 2 จุด**) ② `loginContextRestoration` = ยัง expect `navigate('/login')` แต่ R50 Owner สั่ง Register→`/shop` → ปรับเป็น `navigate(returnTo || '/shop', returnTo ? { state: { from: returnTo } } : undefined)` **+ คงเช็ค key "from" ครบทุกจุด** · รันยืนยัน 2 files = **16/16** (`e2e/r51_fix2.log`)
-> - ✅ **Gates รอบนี้ (รันจริงทั้งชุด): full suite = 196/196 test files ผ่าน** (chunk 17 ชุด ชุดละ ≤12 ไฟล์ single-run — background/schtasks โดน kill ในเครื่องนี้ จึงต้อง chunk · logs `e2e/r51_c01..c17.log`) · **แก้ 2 test รันยืนยัน 16/16** (`r51_fix2.log`) · **`tsc --noEmit` = 0** (`r51_tsc5.log` ว่าง) · **`npm run lint` = OK** (eslint + brandNameGuard 520 + languageSanity 1485 · `r51_lint_full2.log`) · **m182 = `r51Apply182-result.json` ALL_PASS 7/7**
+> - ✅ **Gates รอบนี้ (รันจริงทั้งชุด): full suite = 196/196 test files ผ่าน** (chunk 17 ชุด ชุดละ ≤12 ไฟล์ single-run — background/schtasks โดน kill ในเครื่องนี้ จึงต้อง chunk · logs `e2e/r51_c01..c17.log`) · **แก้ 2 test รันยืนยัน 16/16** (`r51_fix2.log`) · **`tsc --noEmit` = 0** (`r51_tsc5.log` ว่าง) · **`npm run lint` = OK** (eslint + brandNameGuard 520 + languageSanity 1485 · `r51_lint_full2.log`) · **m182 = `r51Apply182-result.json` ALL_PASS 7/7** · **CI run #709 (462cb57) = SUCCESS** (Lint ✓ Unit tests ✓ Typecheck+Build ✓ · Contract Tests + Cloudflare แยกเขียวตามเดิม)
 
 
 > ## 🟢 สถานะล่าสุด — 2026-11-01 (R51 · **รับแฮนด์ออฟ BMB_HANDOFF_NEXT_SESSION_2026-11-01 + คำสั่ง Owner ชุดใหญ่ 6 งาน · gates = vitest เป้า 165/165 + chat 38/38 · tsc 0 · lint full OK**)
@@ -299,5 +299,38 @@
 
 - **Owner directive 2026-10-26** (whole-repo reconciliation · code closure · lean production acceptance)
 - **PRE_ORDER vs SAME_DAY:** SAME_DAY **ไม่มี cutoff** · PRE_ORDER มี cutoff ตาม policy (server 143/148) —
+## SESSION 2026-11-01 (R52 UI codemod — anti-loop protocol)
+
+- **Task ID:** R52-UI (handoff `docs/BMB_HANDOFF_NEXT_SESSION_2026-11-01.md`)
+- **Status:** UI codemod phase = DONE (verified)
+- **Completed:**
+  - `src/components/admin/AdminHubs.tsx` — HubShell rule 12.3: `contentRef` + `scrollIntoView({ behavior:'smooth', block:'start' })` ใน onClick แท็บ + `data-testid="hub-content"` (วิธี: rename เดิมเป็น .bak → editor create ไฟล์ใหม่ทั้งไฟล์ → verify → ลบ .bak — เพราะ full-file old_text = 6,121 chars เกิน editor limit 6,000)
+  - `src/pages/admin/MascotSettingsPage.tsx` — full-file replace เพิ่ม testid: `mascot-refresh`, `mascot-alt-${role}`, `mascot-save-${role}` (คง `invalidateMascotOverrides()`)
+  - **NEW test lock** `src/__tests__/r52MascotAdminUiLock.test.ts` = 12 tests: (1) Login/Register/Reset = `pose="greeting"` + หัวใจเดิมถูกถอด (2) MascotSettings testids (3) HubShell scroll + hub-content + 5 Hubs
+- **Verified:**
+  - `npx tsc --noEmit` = CLEAN
+  - dependency test set (`node e2e/r52_grep_tests.cjs` → 30 files) = **30/30 files · 257/257 tests GREEN** (ชุดละ 15 files / 124+133 tests, single-run, ≤15s ต่อชุด)
+  - test lock ใหม่ = 12/12 PASS
+- **Failed:** —
+- **Blocked:** —
+- **Files Changed:** `src/components/admin/AdminHubs.tsx`, `src/pages/admin/MascotSettingsPage.tsx`, `src/__tests__/r52MascotAdminUiLock.test.ts` (ใหม่)
+- **Tests / Commands Run:** `npx tsc --noEmit` · `npx vitest run <15 files>` ×2 · `node e2e/r52_grep_tests.cjs`
+- **Known Risks:** (1) `npx vitest run` ทั้ง suite (~200 files) เกิน 30s command timeout → ต้องรันเป็นชุดเสมอ (2) emitter loop bug: ต้อง emit **1 tool call ต่อ response เท่านั้น** ห้าม batch editor ซ้ำ (3) editor full-file replace ใช้ได้เฉพาะเมื่อ old_text+new_text ≤ 6,000 chars
+- **Next Exact Action:** งานใหญ่ถัดไป = ช่อง Notice/หมายเหตุในตะกร้า + cutlery toggle (default ไม่รับ) + placeholder dialog "ระบุรายละเอียดคำขอ(ขึ้นอยู่กับดุลพินิจของทางร้าน)" → สำรวจ `cartContext`/`CartPage` ก่อน (อ่านไฟล์เต็ม 100% ก่อนแก้ — full-file overwrite เท่านั้น)
+## 🛑 ปิดเซสชัน 2026-11-01 (รอบ 2) — งานใหม่ทั้งหมดย้ายไปแฮนด์ออฟแล้ว
+
+- **คำสั่ง Owner:** ปิดเซสชัน · รับงานเพิ่มใส่แฮนด์ออฟ · อัปเดตเอกสารตามสถานะจริง · คอมมิท+พุช · **รอบนี้ห้ามโค้ด** — วางแผนในแชทนี้ แชทหน้าทำงานต่อทันที
+- **เอกสารที่อัปเดต:**
+  - `docs/BMB_HANDOFF_NEXT_SESSION_2026-11-01.md` += **ADDENDUM ปิดเซสชัน R51+R52** (สถานะจริง + งานใหม่ N1-N5 + กติกาแชทหน้า)
+  - `AI_WORK_STATE.md` = บล็อก session R52 (บรรทัด 302) + บล็อกนี้
+- **สถานะจริงปิดเซสชัน:** R51 ปิด (CI #709 SUCCESS · m182 APPLIED) · R52 UI codemod ปิด (tsc CLEAN · eslint OK · dependency 30/30 files 257/257 tests · r52MascotAdminUiLock 12/12 · r51 tests 22/22) · T1-T5 งานใหญ่เสร็จรอบก่อน (รอ Owner เทสต์ production)
+- **งานใหม่ 5 ข้อ (ทำในแชทหน้า — spec เต็มอยู่ในแฮนด์ออฟ ADDENDUM):**
+  - **N1 Strip copy ใหม่** (ไอคอนหลังคำไทย · `ส่งวันนี้/⚡Same-Day` · pre-order โชว์ `รอบส่ง … เช้า วันที่ (ปิดรับ HH:MM)` · sameday = `จัดส่งทันทีหลังครัวปรุงเสร็จ` ไม่มีวงเล็บ) ⚠️ conflict กับ r13 test ที่เพิ่งแก้ → แก้ strip + tests ตาม spec ใหม่ทั้งชุด
+  - **N2 "ไบ๊" → Bite ทุกจุด** (กวาด source copy src/EF + DB seed theater_daily_copy)
+  - **N3 Footer** = FB `scale-90` ใน socialLinks.ts:51 คือตัวการเล็กกว่า → ลบ/ปรับเท่าข้าง ๆ · Messenger ใช้ไฟล์ public แล้ว (verify อย่างเดียว)
+  - **N4 ยุบรีวิว 2 เซกชั่น** = อ่าน HomePage render order → ย้ายรูปสกรีนช็อตล่างเข้าอัลบั้มบน + ข้อความจากสกรีนช็อตแทนรีวิวจำลอง
+  - **N5 Gates** = tsc + eslint + vitest chunks (≤15 files/ชุด single-run) + CI
+- **Blocked:** — · **Known Risks:** loop bug protocol (1 call/turn · full-file ≤6,000 · rename+create เมื่อเกิน) ยังมีผลทุก turn
+- **Next Exact Action (แชทหน้า):** เปิดแฮนด์ออฟ ADDENDUM → เริ่ม **N1 Strip** ทันที (อ่าน `StoreStatusStrip` เต็ม → overwrite → ปรับ 5 test files → gates)
   ห้ามเอา requirement ที่ถูกยกเลิกจากเอกสารเก่ากลับมา
 - เอกสารย้อนหลังทั้งหมด = `docs/archive/` (มี index) — **ห้ามใช้รายงานเก่าสั่งงานซ้ำ**

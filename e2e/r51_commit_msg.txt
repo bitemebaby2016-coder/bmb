@@ -1,1 +1,1 @@
-R51 round 2 — fix CI (5 stale R50 tests aligned to owner directives: strip copy with icons, register to /shop) + apply m182 order_messages (ledger 182, ALL_PASS 7/7) + full suite 196/196 files + tsc 0 + lint OK; ready for production tests
+R51 round 2 — fix CI (5 stale R50 tests aligned to owner directives) + apply m182 (ALL_PASS, ledger 182) + full suite 196/196 + tsc 0 + lint OK; CI run 709 SUCCESS; ready for production tests

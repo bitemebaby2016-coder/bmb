@@ -64,3 +64,40 @@
 - CI ล่าสุด: `68f5814` CI+Contract = success ✓ · Contract `33e9478` = success ✓ (CI แดง = import ซ้ำที่แก้แล้ว)
 
 - bootstrap 3 ไฟล์ทุกแชท · single-run เทสต์ · ห้าม poll log · lint chain ก่อน commit · two-try rule · ห้าม claim PASS โดยไม่มี evidence · secrets ไม่ลง git
+## ➕ ADDENDUM ปิดเซสชัน R51+R52 (2026-11-01 รอบ 2 · Owner สั่ง: งานค้าง/งานใหม่ = ทำในแชทหน้า ทันที)
+
+### สถานะจริง ณ ปิดเซสชัน (มีหลักฐาน — อัปเดตตามจริง)
+- **R51 = ปิดแล้ว:** CI SUCCESS (run #709) · full suite 196/196 files · tsc 0 · lint OK · **m182 แชต 3 ฝั่ง APPLIED** (`r51Apply182-result.json` ALL_PASS 7/7 · `order_messages` + RPC `send_order_message` + `OrderChatPanel` ฝัง OrdersPage/RiderPwa/AdminOrders)
+- **R52 UI codemod = ปิดแล้ว:** heart→`<MascotBadge pose="greeting">` (Login/Register/Reset) · section mascots ครบ (home 4 ไฟล์ + review/menu) · footer social (`imgClass` + Messenger `/Messenger logo.webp`) · dedup `e2e/r52_dedup.cjs` · **AdminHubs rule 12.3 scroll** (`contentRef`+`scrollIntoView smooth`+`hub-content`) · **MascotSettings testid** (`mascot-refresh`/`mascot-alt-`/`mascot-save-`) · **test lock ใหม่ `r52MascotAdminUiLock` 12/12** · gates: `tsc --noEmit` CLEAN · `eslint` 3 ไฟล์ OK · dependency set 30/30 files = **257/257 tests GREEN** · r51 2 files = 22/22
+- **งานใหญ่ T1-T5 (Notice/cutlery · pickup→POS · POS ชนิด+หมวด · stroke ตัวหนา · แชต) = ทำเสร็จรอบก่อน** (ดู `AI_WORK_STATE.md` บล็อก R51) — รอ Owner เทสต์ production ①-⑤ เท่านั้น
+
+### 🔴 งานใหม่ 5 ข้อ (Owner 2026-11-01 · เรียงลำดับทำในแชทหน้า)
+
+**N1. Strip copy ใหม่ (ทับ R50/R52 เดิมทั้งหมด)**
+```
+บรรทัด 1: 🟢 เปิดรับออเดอร์ จองล่วงหน้า/📅Pre-Order  — 🟢 เปิดรับออเดอร์ ส่งวันนี้/⚡Same-Day
+บรรทัด 2: 🛵 จองล่วงหน้า/📅Pre-Order : รอบส่ง 7.00 AM เช้า 03/11/2026 (ปิดรับ 05:00 AM)
+บรรทัด 3: 🛵 ส่งวันนี้/⚡Same-Day : จัดส่งทันทีหลังครัวปรุงเสร็จ
+           (เซมเดย์ไม่ผูกรอบส่งใด ๆ — ห้ามมีคำในวงเล็บ/วงเล็บเดิม)
+```
+- ⚠️ **Conflict ต้องทับ:** `r13RiderLoopClose` บรรทัด 43-47 เพิ่งแก้เป็น `toMatch(/^รอบส่งถัดไป /)` + `not.toContain('เช้า')` ↔ spec ใหม่ต้องการ `รอบส่ง … เช้า` → แก้ strip source (`StoreStatusStrip` หาด้วย `strip-status-lights`) **+ ปรับ tests ตาม spec ใหม่** (`r44StatusStrip` 69-71, `storeStatusCopy`, `storeStatusWindow`, `r12LandingUi`, `r13RiderLoopClose`)
+- หมายเหตุ: วันที่ `03/11/2026` = รอบถัดไปจริง (dynamic จาก delivery_rounds — ห้าม hardcode), cutoff `ปิดรับ 05:00 AM` = `cutoff_time` ของรอบจริง
+
+**N2. "ไบ๊" → "Bite" ทุกตัว (ทับศัพท์)**
+- `normalizeBrandNames` (brandName.ts web+EF) มีอยู่แล้ว — งานนี้ = กวาด **source copy จริง** ที่ยังเป็นไทย: `findstr/s` ใน `src/`+`supabase/` (ไม่รวม backups/docs/tests ที่ assert ค่าเก่า) · DB seed `theater_daily_copy` (แอดมิน save ใหม่ทับได้ = แจ้ง Owner) · ถ้าเจอใน test = แก้ assertion ตามกติกาใหม่
+
+**N3. Footer โลโก้**
+- FB = `socialLinks.ts:51` มี `imgClass: 'scale-90'` → **ตัวการที่เล็กกว่า** → ลบ/ปรับให้เท่า `w-6 h-6` เดียวกับข้าง ๆ
+- Messenger = ใช้ `/Messenger logo.webp` (ไฟล์จริงใน `public/` ✓) อยู่แล้วรอบ R52 → แค่ verify ขนาดเท่ากันทุกปุ่ม
+- gate: `footerLinksReal` + `headingOrderFooter` ต้องยังเขียว
+
+**N4. ยุบรีวิว 2 เซกชั่น (Owner: "รีวิวจริงลูกค้าซ้ำ สองเซกชั่น")**
+- HomePage มีหลายเซกชั่นรีวิว (cm_f แตะ `home-reviews-heading`/`verified-reviews-heading`/`ReviewGallerySection`/`ReviewCarouselSection`) → **แชทหน้าอ่าน HomePage render order ก่อน** แล้วทำ ① ย้ายรูปสกรีนช็อตของเซกชั่นล่างเข้า **อัลบั้มของเซกชั่นบน** ② คัด **ข้อความจากสกรีนช็อต** มาแทนรีวิวจำลอง (mock) ที่แสดงอยู่ · ถ้าไม่เห็นภาพสกรีนช็อตใน repo = ขอ Owner ส่ง
+- คง testids เดิม (`review-photo-album` ฯลฯ) · `uiTechnicalLabels`/`categorySections` อาจต้องปรับ
+
+**N5. Gates ก่อนปิดงาน** = `npx tsc --noEmit` + `npx eslint` ไฟล์ที่แตะ + vitest chunks (single-run ≤15 ไฟล์/ชุด · เกิน 30s = timeout) + push ดู CI
+
+### กติกาทำงานแชทหน้า (ห้ามละเมิด)
+1. **อ่านไฟล์เต็ม 100% ก่อนแก้เสมอ** → แก้แบบ **overwrite ทั้งไฟล์** (old_text/new_text ≤ 6,000 chars · เกิน = rename เป็น `.bak` แล้วสร้างไฟล์ใหม่)
+2. **1 tool call ต่อ response เท่านั้น** (กัน loop emit ซ้ำ) · findstr = pattern คำเดียวล้วน
+3. single-run เทสต์ · ห้าม poll log · lint chain ก่อน commit · two-try แล้ว HALT · ห้าม claim PASS ไม่มี evidence
