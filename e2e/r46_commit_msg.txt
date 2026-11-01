@@ -1,0 +1,27 @@
+R46 — Feedback Owner ชุด 2026-11-01: ลิงก์นอก FB + Console + ค่าปริ้นเตอร์ + สถานะจัดส่ง + ปิดงาน
+
+R46 แจ้ง "ลิงก์เปิดเว็บภายนอก Facebook" ทั้งฝั่งข้อความ + ผู้ใช้ยืนยันเอง:
+- buildCartSummaryFooter (socialOrderIntake) += บรรทัดแจ้งภายนอก FB — แตะแล้วยืนยันเพื่อเปิดในเบราว์เซอร์
+- POST_CTA_FOOTER = 5 ข้อ (ข้อ 5 แจ้งลิงก์นอก) — withPostCta idempotent marker เดิมคงไว้
+- InAppBrowserNotice (ใหม่) ใน Layout: จับ UA FB in-app (FBAN/FBAV/FB_IAB/FBIANV/IG/LINE)
+  → แถบแจ้งเว็บภายนอก + ปุ่ม 🌐 เปิดในเบราว์เซอร์ภายนอก (ผู้ใช้ยืนยันเอง) + อยู่ที่นี่ต่อ
+  (dismiss = localStorage) + คำแนะนำ ⋮ → เปิดในเบราว์เซอร์ · isInAppBrowser = pure (test เรียกตรง)
+- DEPLOY_social-publish-worker_OK + DEPLOY_social-ai-worker_OK (e71 — ข้อความใหม่ขึ้นโพสถัดไป/คำตอบถัดไป)
+
+known-good ปริ้นเตอร์ = 80 / 680 (Owner: "จดจำค่าชดเชยอัตโนมัติ 80,680 · ปริ้น 4 ดวงต่อเนื่องได้แล้ว"):
+- AdminPrintSettings print-known-good + คำอธิบายวิธีใช้ = 680/80 (แก้จาก 690/62 ที่ค้าง)
+- r45 test = assert 680 · B7 ×4 = ปิด (ไม่ต้องวัด pitch ×4) · T10 auto-print retest = PASS ปิด
+  ("ยืนยันออเดอร์ปริ้นได้แล้ว · ปริ้นต่อเนื่องทีละคิวไม่น่ามีปัญหา")
+
+สถานะตอนจัดส่ง "ถึงปลายทาง" (ไรเดอร์ยืนยันตำแหน่ง) = มีครบ + E2E ผ่านแล้ว — พิสูจน์ด้วย test:
+- m163 driver_checkin_arrival (geofence 300ม.) + m166 CHECK arrived · rider 🏁 · OrderTimeline 📍
+- ORDER_ARRIVED = "ถึงปลายทางแล้ว" → /admin/delivery · checklist 1B2 ผ่าน 28/10
+
+r46LinkOut.test.ts ใหม่ 5 ข้อ: footer notice · POST_CTA 5 · isInAppBrowser UA · banner testids +
+Layout wiring · timeline arrived canonical
+
+VERIFY (รันจริง): vitest เป้า 9 ไฟล์ = 88/88 รวม r46 5/5 + r45/r44/social*/statusTruth/r13/
+  stickerQueue/r40 · r46 รันซ้ำหลังแก้ regex FB_IAB = 5/5 · npx tsc --noEmit = 0 ·
+  npm run lint = OK (505+1457) · EF deploy 2 ตัว EXIT=0
+Docs: AI_WORK_STATE อัปเดต (T10*/T12/B7 ปิด · R46 · arrived · ตรวจภาพ Console T9 · รายการรอ Owner)
+  + BMB_MASTER_STATUS last_updated

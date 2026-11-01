@@ -378,7 +378,8 @@ export function buildCartLink(items: CartSummaryItem[], site = 'https://biteme-b
   return `${site}/shop?cart=${enc}`
 }
 
-/** ประโยคท้ายข้อความที่ "ระบบเป็นคนเขียน" (ไม่ใช่คำแต่งของ AI) — แนบลิงก์ตะกร้าสรุป */
+/** ประโยคท้ายข้อความที่ "ระบบเป็นคนเขียน" (ไม่ใช่คำแต่งของ AI) — แนบลิงก์ตะกร้าสรุป
+ *  R46 (Owner 2026-11-01): แจ้งว่าลิงก์เปิดเว็บภายนอก Facebook — ผู้ใช้ยืนยันเปิดเอง */
 export function buildCartSummaryFooter(items: CartSummaryItem[], site = 'https://biteme-baby.com'): string {
   const link = buildCartLink(items, site)
   const names = items
@@ -389,5 +390,5 @@ export function buildCartSummaryFooter(items: CartSummaryItem[], site = 'https:/
   const head = names
     ? `🛒 สรุปรายการของคุณ (${names}) เปิดดูบนเว็บได้เลยครับ — `
     : '🛒 สรุปรายการของคุณเปิดดูบนเว็บได้เลยครับ — '
-  return `${head}กดลิงก์นี้เพื่อดูตะกร้า เช็คเอาท์ หรือเพิ่มเมนูต่อได้เลย: ${link}`
+  return `${head}กดลิงก์นี้เพื่อดูตะกร้า เช็คเอาท์ หรือเพิ่มเมนูต่อได้เลย: ${link}\n🔗 ลิงก์เปิดเว็บ biteme-baby.com ภายนอก Facebook — แตะแล้วยืนยันเพื่อเปิดในเบราว์เซอร์ของคุณได้เลย`
 }

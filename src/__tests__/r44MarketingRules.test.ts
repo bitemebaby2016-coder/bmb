@@ -25,12 +25,13 @@ describe('R44 — ภาพเจนใช้รูปเดียวตอน�
 })
 
 describe('R44 — footer บังคับคู่โพสทุกครั้ง (publish path เดียว = social-publish-worker)', () => {
-  it('มี POST_CTA_FOOTER ครบ 4 ข้อ + withPostCta idempotent', () => {
+  it('มี POST_CTA_FOOTER ครบ 5 ข้อ (R46 += แจ้งลิงก์นอก FB) + withPostCta idempotent', () => {
     expect(publishSrc).toContain('POST_CTA_FOOTER')
     expect(publishSrc).toContain('🛒 สั่งใต้โพสนี้ได้เลย')
     expect(publishSrc).toContain('💬 หรือทักไปสั่งใน Messenger')
     expect(publishSrc).toContain('🌐 สั่งต่อที่เว็บ biteme-baby.com/shop')
     expect(publishSrc).toContain('✅ ปิดการขายผ่านช่องทางไหนก็ได้')
+    expect(publishSrc).toContain('🔗 ลิงก์เปิดเว็บภายนอก Facebook — แตะเพื่อยืนยันเปิดในเบราว์เซอร์ของคุณ')
     expect(publishSrc).toContain('function withPostCta(text: string): string')
     expect(publishSrc).toContain("base.includes('ปิดการขายผ่านช่องทางไหนก็ได้')")
   })

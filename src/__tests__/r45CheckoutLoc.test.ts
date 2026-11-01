@@ -52,7 +52,7 @@ describe('R44 T13 — หน้าปริ้นเตอร์: ขั้น�
   it('เลขขั้นตอน + ค่า known-good บนวิซาร์ด + contract เดิม (ไม่ใช้ชดเชย ×4) ไม่พัง', () => {
     expect(printSrc).toContain('data-testid="print-flow-steps"')
     expect(printSrc).toContain('data-testid="print-known-good"')
-    expect(printSrc).toContain('ชดเชยฟีด 80px · หน้าดวง 690px')
+    expect(printSrc).toContain('ชดเชยฟีด 80px · หน้าดวง 680px')
     expect(printSrc).toContain('② 🖨️')
     expect(printSrc).toContain('⑤ 📡')
     expect(printSrc).toContain('⑥ 🧭')

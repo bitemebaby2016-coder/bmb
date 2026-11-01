@@ -8,6 +8,7 @@ import { OrderBuilderModal } from '../order/OrderBuilderModal'
 import { BiteMascot } from '../ai/BiteMascot'
 import { BackgroundLayer } from './BackgroundLayer'
 import { AmbientMusicToggle } from '../audio/AmbientMusicToggle'
+import { InAppBrowserNotice } from './InAppBrowserNotice'
 import { useCartStore } from '@/store/cartStore'
 import { referralCodeFromSearch } from '@/lib/referralClient'
 import { affiliateCodeFromSearch, saveAffiliateClaimCode } from '@/lib/engagementClient'
@@ -189,6 +190,8 @@ export function Layout({ children, hideBottomNav = false, activeSection = 'home'
 
         {showBottomNav && <BottomNav />}
         <ToastContainer />
+        {/* R46 (Owner 2026-11-01): แจ้งลิงก์ออกจาก FB + ให้ผู้ใช้ยืนยันเปิดเอง (FB in-app = แคช/บล็อก) */}
+        <InAppBrowserNotice />
         {/* Ambient music player — session-persistent singleton state */}
         <AmbientMusicToggle />
         <OrderBuilderModal />
