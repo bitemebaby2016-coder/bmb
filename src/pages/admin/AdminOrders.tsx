@@ -250,9 +250,16 @@ export function AdminOrders() {
   async function autoPrintKitchenTicket(orderNumber: string) {
     try {
       const settings = await loadPrinterSettings()
-      if (!settings.autoPrintKitchen) return
+      // R44: ห้ามข้ามเงียบ — บอกทุกครั้งที่ใบสั่งครัวไม่ถูกยิงอัตโนมัติ
+      if (!settings.autoPrintKitchen) {
+        showToast('ข้ามพิมพ์ใบสั่งครัวอัตโนมัติ: สวิตช์ Auto-Print ใบสั่งครัวปิดอยู่ — เปิดได้ที่ ตั้งค่า → เครื่องพิมพ์', 'warning')
+        return
+      }
       const full = await getOrder(orderNumber)
-      if (!full) return
+      if (!full) {
+        showToast('ข้ามพิมพ์ใบสั่งครัว: โหลดออเดอร์ไม่สำเร็จ — กดพิมพ์เองจากแถบออเดอร์ได้', 'warning')
+        return
+      }
       const target = describePrinterTarget(settings, 'kitchen')
       const results = await runAutoPrint(buildPrintOrderData(full), 'kitchen_ticket', settings)
       if (results.length > 0) {
@@ -273,10 +280,20 @@ export function AdminOrders() {
   async function autoPrintStickerRoll(orderNumber: string) {
     try {
       const settings = await loadPrinterSettings()
-      if (!settings.autoPrintStickers) return
-      if (!niimbotSupported()) return // ไม่ใช่ Chrome/Edge = ข้ามเงียบ (frame/QZ ยังเป็นทางเดิม)
+      // R44 (Owner 2026-11-01: "ปริ้นอัตโนมัติหายไป"): ห้ามข้ามเงียบ — ทุกจุดที่ไม่พิมพ์ต้องบอกสาเหตุ
+      if (!settings.autoPrintStickers) {
+        showToast('ข้ามพิมพ์สติกเกอร์อัตโนมัติ: สวิตช์ Auto-Print ปิดอยู่ — เปิดได้ที่ ตั้งค่า → เครื่องพิมพ์', 'warning')
+        return
+      }
+      if (!niimbotSupported()) {
+        showToast('ข้ามพิมพ์สติกเกอร์อัตโนมัติ: เบราว์เซอร์นี้ไม่รองรับ Web Bluetooth — เปิดหน้าแอดมินด้วย Chrome/Edge (https)', 'warning')
+        return
+      }
       const full = await getOrder(orderNumber)
-      if (!full) return
+      if (!full) {
+        showToast('ข้ามพิมพ์สติกเกอร์อัตโนมัติ: โหลดออเดอร์ไม่สำเร็จ — กดพิมพ์เองจากแถบออเดอร์ได้', 'warning')
+        return
+      }
       const roll = stickerRollForOrder(buildPrintOrderData(full))
       showToast(`กำลังพิมพ์สติกเกอร์ ${roll.length} ใบ (Bluetooth ต่อคิว)…`, 'info')
       // R33: ชดเชยฟีด + R34: ความสูงหน้าจริง จากหน้าตั้งค่า (default 0 / 709) — ทุกใบเลื่อนเท่ากัน

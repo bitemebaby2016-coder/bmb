@@ -597,15 +597,9 @@ export function RiderPwaPage() {
                         {s.detail ? ` — ${s.detail}` : ''}
                         <span className="text-xs text-brand-muted"> · {plan.legKm[i]?.toFixed(2)} กม.</span>
                       </span>
-                      {/* R21f (Owner): ปุ่มนำทางรายจุด — เปิด Google Maps ไปจุดส่งแต่ละจุด */}
-                      {(() => {
-                        const u = googleMapsDirUrl(origin, [s])
-                        return u ? (
-                          <a className="btn btn-outline text-xs whitespace-nowrap" href={openMapsUrl(u) ?? undefined} target="_blank" rel="noreferrer" data-testid={`rider-nav-stop-${s.order_number}`}>
-                            🧭 นำทาง
-                          </a>
-                        ) : null
-                      })()}
+                      {/* R44 (Owner 2026-11-01 "ปุ่มเปิดการนำทาง ทำงานซ้ำซ้อนกัน ให้ยุบรวม"): ถอดปุ่ม 🧭 นำทางรายจุด
+                          ออก — ใช้ปุ่มเดียว "🧭 เปิดนำทาง Google Maps" (เส้นทางรวมจุดเรียงตามระยะ) ที่หัวการ์ด +
+                          "🧭 เปิดนำทางไปจุดส่งนี้" ในบัตรงาน (ไม่มี 3 ปุ่มซ้อนกันอีก) */}
                     </li>
                   ))}
                 </ol>

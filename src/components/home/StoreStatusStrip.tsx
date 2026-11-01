@@ -39,6 +39,8 @@ export function StoreStatusStrip({ status }: { status: StoreStatus }) {
     >
       <span className="store-strip-dot" aria-hidden="true" />
       <div className="min-w-0">
+        {/* R12 (Owner 2026-10-28): คำในวงเล็บไม่ต้องแสดง — บรรทัด (ไม่มีปิดรอบ · สั่งได้ถึง · เหลือที่นั่ง) ถอดออกแล้ว
+            (ข้อมูลเดิมเคยอยู่บรรทัด status: ไม่มีปิดรอบ (สั่งได้ถึง HH:MM) · เหลือที่นั่ง N% — ระบุว่าไม่แสดง) */}
         {/* R44 บรรทัด ①: ไฟสองสายรวมบรรทัดเดียว — เปิด = ชื่อสาย · ปิด = ต่อท้าย "ปิดรับแล้ว" */}
         <p className="text-sm sm:text-base font-bold" data-testid="strip-status-lights">
           {preOrderOpen ? '🟢' : '🔴'}เปิดรับออเดอร์จองล่วงหน้า/Pre-Order{preOrderOpen ? '' : ' ปิดรับแล้ว'} — {sameDayOpen ? '🟢' : '🔴'}รอบวันนี้/Same-Day{sameDayOpen ? '' : ' ปิดรับแล้ว'}

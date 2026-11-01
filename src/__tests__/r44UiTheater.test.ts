@@ -8,6 +8,8 @@ import { describe, it, expect } from 'vitest'
 import theaterCardsSrc from '../components/theater/TheaterCards.tsx?raw'
 import mascotSrc from '../components/ai/BiteMascot.tsx?raw'
 import musicSrc from '../components/audio/AmbientMusicToggle.tsx?raw'
+import adminOrdersSrc from '../pages/admin/AdminOrders.tsx?raw'
+import riderSrc from '../pages/RiderPwaPage.tsx?raw'
 
 describe('R44 — Theater: ลิงก์จริง + ปุ่มตามโหมด', () => {
   it('การ์ด LEVEL 2/3: รูป+ชื่อเมนู = Link ไป /menu จริงทั้งสองการ์ด', () => {
@@ -39,5 +41,21 @@ describe('R44 — มุมขวา: ไม่มีปุ่มทับซ้
     expect(musicSrc).toContain('clusterClear')
     expect(musicSrc).toContain('cartCount > 0 ? 288 : 216')
     expect(musicSrc).not.toContain('+ 168px)')
+  })
+})
+
+describe('R44 — auto-print ห้ามข้ามเงียบ (Owner: ปริ้นอัตโนมัติหายไป) + ปุ่มน้ำทางยุบรวม', () => {
+  it('AdminOrders: จุดข้าม auto-print ทุกจุดมี toast บอกสาเหตุ (สวิตช์ปิด/เบราว์เซอร์/โหลดไม่ได้)', () => {
+    expect(adminOrdersSrc).toContain('ข้ามพิมพ์สติกเกอร์อัตโนมัติ: สวิตช์ Auto-Print ปิดอยู่')
+    expect(adminOrdersSrc).toContain('ข้ามพิมพ์สติกเกอร์อัตโนมัติ: เบราว์เซอร์นี้ไม่รองรับ Web Bluetooth')
+    expect(adminOrdersSrc).toContain('ข้ามพิมพ์ใบสั่งครัวอัตโนมัติ: สวิตช์ Auto-Print ใบสั่งครัวปิดอยู่')
+    // wiring เดิมคงอยู่: รับออเดอร์ = ยิงทั้งคิว (ใบสั่งครัว + สติกเกอร์ต่อคิว)
+    expect(adminOrdersSrc).toMatch(/void autoPrintKitchenTicket\(orderNumber\)/)
+    expect(adminOrdersSrc).toMatch(/void autoPrintStickerRoll\(orderNumber\)/)
+  })
+  it('RiderPwaPage: เหลือปุ่มนำทาง 2 จุด (เส้นทางรวม + จุดส่งงานนี้) — รายจุดซ้ำถูกถอด', () => {
+    expect(riderSrc).toContain('data-testid="rider-open-gmaps"')
+    expect(riderSrc).toContain('data-testid="rider-nav-active"')
+    expect(riderSrc).not.toContain('rider-nav-stop-')
   })
 })

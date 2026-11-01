@@ -1,0 +1,316 @@
+{
+  "ran_at": "2026-11-01T02:37:56.489Z",
+  "recent_events": [
+    {
+      "id": "sev-a8b2ecee-7a9a-4295-a065-eee656df43f0",
+      "event_id": "122145973461204867_2527609944401887",
+      "platform": "FACEBOOK",
+      "page_id": "862940416913026",
+      "event_type": "comment",
+      "sender_id": "28680684258210089",
+      "sender_name": null,
+      "content": "สั่งในนี้ได้ไหม ขอชาไทยพีช1 กับ ข้าวผัดปลาแดดเดียวตาแดง",
+      "payload": {
+        "id": "862940416913026",
+        "time": 1793495318,
+        "changes": [
+          {
+            "field": "feed",
+            "value": {
+              "from": {
+                "id": "28680684258210089",
+                "name": "Siam Portal"
+              },
+              "item": "comment",
+              "post": {
+                "id": "862940416913026_122145973461204867",
+                "status_type": "added_photos",
+                "is_published": true,
+                "updated_time": "2026-11-01T01:08:35+0000",
+                "permalink_url": "https://www.facebook.com/122144135169204867/posts/pfbid02rVFNFQnwjd1c5FroeqxAibsxFuJJAMCBNJkUoWMP9r3tpy9Y2CZr9NuyihvutqQbl",
+                "promotion_status": "inactive"
+              },
+              "verb": "add",
+              "message": "สั่งในนี้ได้ไหม ขอชาไทยพีช1 กับ ข้าวผัดปลาแดดเดียวตาแดง",
+              "post_id": "862940416913026_122145973461204867",
+              "parent_id": "862940416913026_122145973461204867",
+              "comment_id": "122145973461204867_2527609944401887",
+              "created_time": 1793495315
+            }
+          }
+        ]
+      },
+      "received_at": "2026-11-01 01:08:40.111657+00",
+      "tenant_id": "tenant-bmb-001",
+      "brand_id": "brand-bmb-main",
+      "status": "SUCCEEDED",
+      "attempts": 0,
+      "last_error": null,
+      "last_attempt_at": "2026-11-01 01:08:52.204+00",
+      "processed_at": "2026-11-01 01:08:52.204+00",
+      "claimed_at": "2026-11-01 01:08:42.6+00",
+      "ai_model": "deepseek/deepseek-v4-flash",
+      "ai_reply_text": "รับทราบครับ ขออภัยที่สั่งในคอมเมนต์ไม่ได้นะครับ ระบบร้านต้องสั่งผ่านเว็บเท่านั้น รายการที่ลูกค้าต้องการคือ ชาไทยพีช 1 กับ ข้าวผัดปลาแดดเดียวตาแดง 1 ใช่ไหมครับ? กดเปิดตะกร้าตามลิงก์ท้ายข้อความนี้เลยครับ แล้วเพิ่มเมนูหรือเช็คเอาท์ได้ตามสะดวกเลย Bite รอเสิร์ฟอยู่นะครับ 😋\n\n🛒 สรุปรายการของคุณ (ชาไทยพีช x1, ข้าวผัดปลาแดดเดียวตาแดง x1) เปิดดูบนเว็บได้เลยครับ — กดลิงก์นี้เพื่อดูตะกร้า เช็คเอาท์ หรือเพิ่มเมนูต่อได้เลย: https://biteme-baby.com/shop?cart=eyJ2IjoxLCJpdGVtcyI6W3siaWQiOiJwcm9kLTE3OTE5ODYyNTM5NjctZHd5aDA5IiwicSI6MX0seyJpZCI6InByb2QtMTc5MjgxMDIwOTMwMi16dDQ0ejQiLCJxIjoxfV19",
+      "ai_validated": true,
+      "ai_guardrail_flags": {
+        "reply": {
+          "tone": "friendly",
+          "language": "th",
+          "draft_text": "รับทราบครับ ขออภัยที่สั่งในคอมเมนต์ไม่ได้นะครับ ระบบร้านต้องสั่งผ่านเว็บเท่านั้น รายการที่ลูกค้าต้องการคือ ชาไทยพีช 1 กับ ข้าวผัดปลาแดดเดียวตาแดง 1 ใช่ไหมครับ? กดเปิดตะกร้าตามลิงก์ท้ายข้อความนี้เลยครับ แล้วเพิ่มเมนูหรือเช็คเอาท์ได้ตามสะดวกเลย Bite รอเสิร์ฟอยู่นะครับ 😋",
+          "safety_flags": [
+            "none"
+          ],
+          "source_event_id": "122145973461204867_2527609944401887",
+          "requires_human_review": false
+        },
+        "review_status": "auto_published",
+        "classification": {
+          "intent": "order_request",
+          "reason": "ลูกค้าต้องการสั่งเมนูเพิ่มเติมในคอมเมนต์ แม้ร้านจะแนะนำให้สั่งผ่านเว็บแล้วก็ตาม",
+          "urgency": "normal",
+          "sentiment": "neutral",
+          "confidence": 0.95,
+          "safety_flags": [
+            "none"
+          ],
+          "requires_human_review": true
+        },
+        "requires_human_review": true
+      },
+      "action_type": "none",
+      "order_number": null,
+      "reply_status": "sent",
+      "reply_provider_id": "122145973461204867_3757399101105740",
+      "reply_attempted_at": "2026-11-01 01:09:00.248+00",
+      "created_at": "2026-11-01 01:08:40.111657+00",
+      "updated_at": "2026-11-01 01:08:40.111657+00"
+    },
+    {
+      "id": "sev-53a3a7e9-1557-4cd6-9635-845d8929d93f",
+      "event_id": "122145808257204867_1428311725947359",
+      "platform": "FACEBOOK",
+      "page_id": "862940416913026",
+      "event_type": "comment",
+      "sender_id": "28680684258210089",
+      "sender_name": null,
+      "content": "โอเค เอา order ใส่ตะกร้าไว้หน่อยเดี๋ยวกดตามไปสั่งต่อในเว็บ",
+      "payload": {
+        "id": "862940416913026",
+        "time": 1793453887,
+        "changes": [
+          {
+            "field": "feed",
+            "value": {
+              "from": {
+                "id": "28680684258210089",
+                "name": "Siam Portal"
+              },
+              "item": "comment",
+              "post": {
+                "id": "862940416913026_122145808257204867",
+                "status_type": "added_photos",
+                "is_published": true,
+                "updated_time": "2026-10-31T13:38:05+0000",
+                "permalink_url": "https://www.facebook.com/122144135169204867/posts/pfbid0JwYUD8s1GK7XHmj3jPMxnRcpFgqeCKoYiU9KnWhQ2tfWY8kEdNwJgCn6j7WymQDil",
+                "promotion_status": "inactive"
+              },
+              "verb": "add",
+              "message": "โอเค เอา order ใส่ตะกร้าไว้หน่อยเดี๋ยวกดตามไปสั่งต่อในเว็บ",
+              "post_id": "862940416913026_122145808257204867",
+              "parent_id": "862940416913026_122145808257204867",
+              "comment_id": "122145808257204867_1428311725947359",
+              "created_time": 1793453885
+            }
+          }
+        ]
+      },
+      "received_at": "2026-10-31 13:38:08.937012+00",
+      "tenant_id": "tenant-bmb-001",
+      "brand_id": "brand-bmb-main",
+      "status": "SUCCEEDED",
+      "attempts": 0,
+      "last_error": null,
+      "last_attempt_at": "2026-10-31 13:38:19.777+00",
+      "processed_at": "2026-10-31 13:38:19.777+00",
+      "claimed_at": "2026-10-31 13:38:10.454+00",
+      "ai_model": "deepseek/deepseek-v4-flash",
+      "ai_reply_text": "รับทราบครับ จัดให้เลย เมี่ยงแซลม่อน 1 ชุด + เมี่ยงหมู+กุ้ง 2 ที่ ใส่ตะกร้าไว้ให้แล้วครับ 🛒 กดเปิดตะกร้าตามลิงก์ท้ายข้อความนี้ได้เลย แล้วเช็คเอาท์หรือเพิ่มเมนูต่อได้ตามสะดวกครับ Bite รอเสิร์ฟอยู่นะครับ 😋\n\n🛒 สรุปรายการของคุณ (เมี่ยงแซลม่อน x1, เมี่ยงหมู+กุ้ง  x2) เปิดดูบนเว็บได้เลยครับ — กดลิงก์นี้เพื่อดูตะกร้า เช็คเอาท์ หรือเพิ่มเมนูต่อได้เลย: https://biteme-baby.com/shop?cart=eyJ2IjoxLCJpdGVtcyI6W3siaWQiOiJwcm9kLTIiLCJxIjoxfSx7ImlkIjoicHJvZC00IiwicSI6Mn1dfQ",
+      "ai_validated": true,
+      "ai_guardrail_flags": {
+        "reply": {
+          "tone": "friendly",
+          "language": "th",
+          "draft_text": "รับทราบครับ จัดให้เลย เมี่ยงแซลม่อน 1 ชุด + เมี่ยงหมู+กุ้ง 2 ที่ ใส่ตะกร้าไว้ให้แล้วครับ 🛒 กดเปิดตะกร้าตามลิงก์ท้ายข้อความนี้ได้เลย แล้วเช็คเอาท์หรือเพิ่มเมนูต่อได้ตามสะดวกครับ Bite รอเสิร์ฟอยู่นะครับ 😋",
+          "safety_flags": [
+            "none"
+          ],
+          "source_event_id": "122145808257204867_1428311725947359",
+          "requires_human_review": true
+        },
+        "review_status": "auto_published",
+        "classification": {
+          "intent": "order_request",
+          "reason": "ลูกค้าต้องการให้ใส่ order ลงตะกร้าในเว็บเพื่อไปสั่งต่อเอง",
+          "urgency": "normal",
+          "sentiment": "neutral",
+          "confidence": 0.85,
+          "safety_flags": [
+            "none"
+          ],
+          "requires_human_review": true
+        },
+        "requires_human_review": true
+      },
+      "action_type": "none",
+      "order_number": null,
+      "reply_status": "sent",
+      "reply_provider_id": "122145808257204867_981533385007008",
+      "reply_attempted_at": "2026-10-31 13:38:25.918+00",
+      "created_at": "2026-10-31 13:38:08.937012+00",
+      "updated_at": "2026-10-31 13:38:08.937012+00"
+    },
+    {
+      "id": "sev-236561b1-c933-40e3-9793-b893f492461e",
+      "event_id": "122145808257204867_1811721610158330",
+      "platform": "FACEBOOK",
+      "page_id": "862940416913026",
+      "event_type": "comment",
+      "sender_id": "28680684258210089",
+      "sender_name": null,
+      "content": "BITE ME BABY - Main Page TH เพราะว่าร้านบอกว่าปิด 20:00 น หรือเปล่า แต่เห็นว่ามี pre order ยังสั่งได้ไม่ใช่หรอ",
+      "payload": {
+        "id": "862940416913026",
+        "time": 1793453759,
+        "changes": [
+          {
+            "field": "feed",
+            "value": {
+              "from": {
+                "id": "28680684258210089",
+                "name": "Siam Portal"
+              },
+              "item": "comment",
+              "post": {
+                "id": "862940416913026_122145808257204867",
+                "status_type": "added_photos",
+                "is_published": true,
+                "updated_time": "2026-10-31T13:35:56+0000",
+                "permalink_url": "https://www.facebook.com/122144135169204867/posts/pfbid0JwYUD8s1GK7XHmj3jPMxnRcpFgqeCKoYiU9KnWhQ2tfWY8kEdNwJgCn6j7WymQDil",
+                "promotion_status": "inactive"
+              },
+              "verb": "add",
+              "message": "BITE ME BABY - Main Page TH เพราะว่าร้านบอกว่าปิด 20:00 น หรือเปล่า แต่เห็นว่ามี pre order ยังสั่งได้ไม่ใช่หรอ",
+              "post_id": "862940416913026_122145808257204867",
+              "parent_id": "122145808257204867_1562343545918148",
+              "comment_id": "122145808257204867_1811721610158330",
+              "created_time": 1793453756
+            }
+          }
+        ]
+      },
+      "received_at": "2026-10-31 13:36:01.197422+00",
+      "tenant_id": "tenant-bmb-001",
+      "brand_id": "brand-bmb-main",
+      "status": "SUCCEEDED",
+      "attempts": 0,
+      "last_error": null,
+      "last_attempt_at": "2026-10-31 13:36:08.455+00",
+      "processed_at": "2026-10-31 13:36:08.455+00",
+      "claimed_at": "2026-10-31 13:36:02.834+00",
+      "ai_model": "deepseek/deepseek-v4-flash",
+      "ai_reply_text": "เข้าใจถูกต้องเลยครับ ร้านปิดรับออเดอร์ส่งวันนี้ 20:00 น. แต่ Pre-order สั่งล่วงหน้าได้ตลอดครับ สะดวกสั่งที่เว็บ biteme-baby.com/shop ได้เลยนะครับ Bite จัดให้ทันที 😋",
+      "ai_validated": true,
+      "ai_guardrail_flags": {
+        "reply": {
+          "tone": "friendly",
+          "language": "th",
+          "draft_text": "เข้าใจถูกต้องเลยครับ ร้านปิดรับออเดอร์ส่งวันนี้ 20:00 น. แต่ Pre-order สั่งล่วงหน้าได้ตลอดครับ สะดวกสั่งที่เว็บ biteme-baby.com/shop ได้เลยนะครับ Bite จัดให้ทันที 😋",
+          "safety_flags": [
+            "none"
+          ],
+          "source_event_id": "122145808257204867_1811721610158330",
+          "requires_human_review": false
+        },
+        "review_status": "auto_published",
+        "classification": {
+          "intent": "question",
+          "reason": "ลูกค้าสงสัยเรื่องเวลาปิดร้านกับระบบ pre order ว่ายังสั่งได้หรือไม่",
+          "urgency": "normal",
+          "sentiment": "neutral",
+          "confidence": 0.85,
+          "safety_flags": [
+            "none"
+          ],
+          "requires_human_review": false
+        },
+        "requires_human_review": false
+      },
+      "action_type": "none",
+      "order_number": null,
+      "reply_status": "sent",
+      "reply_provider_id": "122145808257204867_2381382979265910",
+      "reply_attempted_at": "2026-10-31 13:36:19.78+00",
+      "created_at": "2026-10-31 13:36:01.197422+00",
+      "updated_at": "2026-10-31 13:36:01.197422+00"
+    }
+  ],
+  "reply_probe": [
+    {
+      "id": "sev-a8b2ecee-7a9a-4295-a065-eee656df43f0",
+      "event_type": "comment",
+      "platform": "FACEBOOK",
+      "created_at": "2026-11-01 01:08:40.111657+00",
+      "content": "สั่งในนี้ได้ไหม ขอชาไทยพีช1 กับ ข้าวผัดปลาแดดเดียวตาแดง",
+      "reply_status": "sent"
+    },
+    {
+      "id": "sev-53a3a7e9-1557-4cd6-9635-845d8929d93f",
+      "event_type": "comment",
+      "platform": "FACEBOOK",
+      "created_at": "2026-10-31 13:38:08.937012+00",
+      "content": "โอเค เอา order ใส่ตะกร้าไว้หน่อยเดี๋ยวกดตามไปสั่งต่อในเว็บ",
+      "reply_status": "sent"
+    },
+    {
+      "id": "sev-236561b1-c933-40e3-9793-b893f492461e",
+      "event_type": "comment",
+      "platform": "FACEBOOK",
+      "created_at": "2026-10-31 13:36:01.197422+00",
+      "content": "BITE ME BABY - Main Page TH เพราะว่าร้านบอกว่าปิด 20:00 น หรือเปล่า แต่เห็นว่ามี pre order ยังสั่งได้ไม่ใช่หรอ",
+      "reply_status": "sent"
+    },
+    {
+      "id": "sev-15c1987c-82bf-4401-8ff8-8b8b759a0451",
+      "event_type": "comment",
+      "platform": "FACEBOOK",
+      "created_at": "2026-10-31 13:33:32.293776+00",
+      "content": "BITE ME BABY - Main Page TH ใช่ๆเมนูเดียวกัน เอา 2ที่",
+      "reply_status": "sent"
+    },
+    {
+      "id": "sev-e24e6897-9177-4591-b1dd-054e8fd29dac",
+      "event_type": "comment",
+      "platform": "FACEBOOK",
+      "created_at": "2026-10-31 13:31:09.391582+00",
+      "content": "BITE ME BABY - Main Page TH เอาเมี่ยงหมูกุ้ง2ที่",
+      "reply_status": "sent"
+    }
+  ],
+  "latest_publish": [
+    {
+      "id": "g9-publish-cap- ###########-75013",
+      "created_at": "2026-11-01 00:55:19.536571+00",
+      "descr": "Published post แนะนำ ชาไทยพีช to Page 862940416913026"
+    },
+    {
+      "id": "g9-publish-cap- ###########-ec48c",
+      "created_at": "2026-11-01 00:55:08.519132+00",
+      "descr": "Published post แนะนำ ข้าวผัดปลาแดดเดียวตาแดง to Page 862940416913026"
+    },
+    {
+      "id": "g9-publish-cap- ###########-c1730",
+      "created_at": "2026-10-31 14:55:22.261672+00",
+      "descr": "Published post แนะนำ 🥢 ข้าวหมูผัดกิมจิ to Page 862940416913026"
+    }
+  ]
+}

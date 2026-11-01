@@ -1,0 +1,22 @@
+R44 CI FIX — ต้นตอ Unit tests แดง (5d704e4 + 8d24601) = r12LandingUi อ้างคอมเมนต์ R12 ที่ถูกแทนตอนเขียน strip ใหม่
+
+ROOT CAUSE (พิสูจน์รันจริง): src/__tests__/r12LandingUi.test.ts:28
+  expect(StoreStatusStrip).toContain('R12 (Owner 2026-10-28)') — คอมเมนต์ R12 หายตอน R44 เขียน strip 3 บรรทัดใหม่
+  → FAIL ข้อเดียว = Unit tests step แดงทั้ง 2 push (Contract/Cloudflare เขียว — ตรงกับ Actions)
+FIX: คืนคอมเมนต์ R12 (บันทึก "คำในวงเล็บถอดแล้ว") ลง Strip · r12LandingUi = 6/6 ผ่าน
+
+รวมในคอมมิตนี้ (งานค้างจาก batch ที่ยังไม่ได้ commit):
+- T10 auto-print ห้ามข้ามเงียบ (AdminOrders): toast บอกสาเหตุทุกจุด — สวิตช์ปิด/BT ไม่รองรับ/โหลดไม่ได้
+  (ทั้งสติกเกอร์ + ใบสั่งครัว) — Owner: "ปริ้นอัตโนมัติหายไป" ห้ามหายไปเงียบอีก
+- T11 ยุบปุ่มน้ำทางซ้ำ (RiderPwaPage): ถอดปุ่มรายจุด (rider-nav-stop) — เหลือ
+  "เปิดนำทาง Google Maps" (เส้นทางรวม) + "เปิดนำทางไปจุดส่งนี้" (งานปัจจุบัน) · r38 test ปรับตาม
+- T6 probe (read-only): e2e/r44_cartlink_probe.cjs/.json — คำตอบ FB ล่าสุดมีลิงก์เต็ม
+  https://biteme-baby.com/shop?cart=eyJ2Ijox... (reply_status=sent) → ฝั่งระบบส่งลิงก์ถูกต้องครบ
+  (เหลือสมมติฐานฝั่งผู้ใช้: กดการ์ดพรีวิวโดดเปล่า/FB in-app — รอ Owner retest กดที่ตัวอักษร URL)
+- tooling: r44_vitest_chunk.cjs (full suite 189 ไฟล์ รันเป็น chunk กัน tool timeout) + r44_testfiles.txt
+  + r44_run_full_vitest.cjs
+
+VERIFY (รันจริงทั้งหมด):
+- FULL vitest 189/189 ไฟล์ = 1,903 tests ผ่านทุก chunk (0..188 · CHUNK_EXIT=0 ทุกก้อน)
+- npx tsc --noEmit = 0 · npm run lint = OK (brandNameGuard + languageSanity)
+- Contract Tests ทั้ง 3 push ล่าสุด = success อยู่แล้ว (CI แดงเฉพาะ Unit tests = จุดนี้)
