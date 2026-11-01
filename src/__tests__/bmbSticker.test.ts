@@ -49,6 +49,14 @@ describe('สติกเกอร์ BMB 40×60 — แบบฟอร์มต
     expect(html).toContain('40mm 60mm')
   })
 
+  it('R51: stroke ทุกตัวอักษรใน HTML template (กันตัวหนา) — text-stroke ระดับ .sheet * ทั้งใบ', async () => {
+    const html = await buildBmbStickerHtml(baseOrder)
+    expect(html).toContain('-webkit-text-stroke: 0.35px #000')
+    expect(html).toContain('.sheet, .sheet *')
+    // source contract: อยู่ใน buildBmbStickerHtml (ใช้ทั้ง QZ + dialog)
+    expect(printSrc).toContain('-webkit-text-stroke: 0.35px #000')
+  })
+
   it('escapes HTML ของลูกค้า + ไม่มีบรรทัดราคาบนสติกเกอร์', async () => {
     const html = await buildBmbStickerHtml(baseOrder)
     expect(html).not.toContain('<script>')

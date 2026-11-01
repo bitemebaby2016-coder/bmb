@@ -4,6 +4,7 @@
 import { describe, it, expect } from 'vitest'
 import { stickerDrawList, calibrationDrawList, clampFeedOffset, clampFaceHeight, stickerPageHeight, STICKER_PX_W, STICKER_PX_H, type StickerOp } from '@/lib/stickerPng'
 import type { PrintOrderData } from '@/lib/printService'
+import stickerSrc from '@/lib/stickerPng.ts?raw'
 
 const order: PrintOrderData = {
   order_number: 'BMB-20261030-0042',
@@ -39,6 +40,16 @@ describe('stickerDrawList — layout บนผืน 472×709 (40×60 @300dpi)',
     expect(t).toContain('ข้าวมันไก่ x1')
     expect(t).toContain('น้ำชา x2 (ไม่หวาน)')
     expect(t).toContain('BMB-20261030-0042')
+  })
+
+  it('R51: rasterize stroke ทุกตัวอักษร (กันตัวหนา) — strokeText+fillText ทุก op พร้อม lineJoin/lineCap มน', () => {
+    const src = stickerSrc
+    expect(src).toContain('ctx.strokeText(op.text, op.x, op.y)')
+    expect(src).toContain('ctx.fillText(op.text, op.x, op.y)')
+    expect(src).toContain("ctx.lineJoin = 'round'")
+    expect(src).toContain('ctx.lineWidth = Math.max(1, Math.round(op.size / 14))')
+    // stroke ต้องครอบคลุมทุก text op (รวม CUSTOMER/ตัวเล็ก) — ไม่มี guard ตัดทิ้งเฉพาะบางช่อง
+    expect(src).not.toMatch(/if \(op\.size[^)]*\)\s*ctx\.strokeText/)
   })
 
   it('เมนูเกิน 3 รายการ = ตัด … · ทุกพิกัดอยู่ในขอบ (ไม่ล้นใบ)', () => {

@@ -23,6 +23,9 @@ export interface OrderBuilderResult {
   addOns: AddOnChoice[]
   addOnTotal: number
   recommended: Product[]
+  /** R51: Notice/หมายเหตุถึงร้านต่อเมนู (ไม่บังคับ) — ไหลลง special_request บรรทัด
+   *  (ปริ้นช่อง Menu "(...)" ของสติกเกอร์ + 📝 ในคิวครัว) */
+  notice: string
 }
 
 interface OrderBuilderState {

@@ -229,6 +229,14 @@ async function rasterizeOps(ops: StickerOp[], pageH: number): Promise<string> {
       const style = op.italic ? 'italic ' : ''
       const weight = op.weight != null ? String(op.weight) : 'normal'
       ctx.font = `${style}${weight} ${op.size}px ${op.family || 'Tahoma'}, sans-serif`
+      // R51 (Owner: "ข้อความตัวเล็กที่ไม่ได้ stroke … ทุกตัวอักษรเป็นตัวหนาหมด"):
+      // stroke ทุก op (รวมตัวเล็ก + บรรทัด CUSTOMER/รายละเอียดลูกค้า) ก่อนทับด้วย fill —
+      // เส้นหนาขึ้น ~size/14 px คมชัดบนหัวฉีดความร้อน ไม่จาง/เป็นฝ้า
+      ctx.lineJoin = 'round'
+      ctx.lineCap = 'round'
+      ctx.strokeStyle = '#000'
+      ctx.lineWidth = Math.max(1, Math.round(op.size / 14))
+      ctx.strokeText(op.text, op.x, op.y)
       ctx.fillText(op.text, op.x, op.y)
     } else if (op.kind === 'qr') {
       if (qrImg && qrImg.naturalWidth > 0) {

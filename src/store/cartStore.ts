@@ -89,6 +89,10 @@ interface CartStore {
   isCheckoutOpen: boolean
   order_mode: OrderMode | null
   cartTotal: number
+  /** R51: ลูกค้ารับช้อนส้อมไหม — ดีฟault false (ไม่รับ) · ติ๊กในกล่องโต้ตอบใส่ตะกร้า
+   *  checkout ส่งเป็น special_instructions → ปริ้นลงช่อง Notice ของสติกเกอร์ */
+  cutlery: boolean
+  setCutlery: (v: boolean) => void
   // ✅ TEN-05: Current active context (set/replaced by BrandProvider)
   active_context_tenant_id: string | null
   active_context_brand_id: string | null
@@ -130,6 +134,8 @@ export const useCartStore = create<CartStore>((set, get) => ({
   isCheckoutOpen: false,
   order_mode: null,
   cartTotal: 0,
+  cutlery: false,
+  setCutlery: (v) => set({ cutlery: !!v }),
   active_context_tenant_id: null,
   active_context_brand_id: null,
   isHydrated: false,
@@ -218,7 +224,7 @@ export const useCartStore = create<CartStore>((set, get) => ({
     get().recalculate()
   },
 
-  clearCart: () => set({ items: [], couponCode: '', referralCode: '', appliedPromotion: null, subtotal: 0, discount: 0, pointsRedemption: 0, deliveryFee: 0, total: 0, order_mode: null, cartTotal: 0 }),
+  clearCart: () => set({ items: [], couponCode: '', referralCode: '', appliedPromotion: null, subtotal: 0, discount: 0, pointsRedemption: 0, deliveryFee: 0, total: 0, order_mode: null, cartTotal: 0, cutlery: false }),
 
   // TEN-05: Resolve whether cart survives context change
   resolveContextChange: (newTenantId: string, newBrandId: string) => {

@@ -57,7 +57,7 @@ describe('R31/R32 — wiring (source contracts)', () => {
     expect(src).toMatch(/void autoPrintStickerRoll\(orderNumber\)/)
     expect(src).toContain('stickerRollForOrder(buildPrintOrderData(full))')
     // R33: offset จาก settings ถูกส่งเข้า printStickerRoll (ทุกใบเลื่อนเท่ากัน) · R34: faceH ด้วย
-    expect(src).toContain('printStickerRoll(roll, { offsetY: settings.stickerOffsetYPx ?? 0, faceH: settings.stickerFaceHPx ?? 709 })')
+    expect(src).toContain('printStickerRoll(roll, { offsetY: settings.stickerOffsetYPx ?? 0, faceH: settings.stickerFaceHPx ?? 709, density: settings.stickerDensity ?? 3 })')
     expect(src).toContain('describeStickerRollError')
   })
   it('AdminPrintSettings: checkbox คิว + preview รูป + คำแนะนำ Incognito/Allow', async () => {

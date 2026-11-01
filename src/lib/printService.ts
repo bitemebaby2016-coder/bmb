@@ -71,6 +71,9 @@ export interface PrinterSettings {
   // R34 (Owner 2026-10-30 — "ยังข้ามดวง"): ความสูงหน้าดวงจริง (px @300dpi) — 709 = 40×60 มาตรฐาน
   // ถ้าใบวัดฟีดโชว์เส้นขอบล่างเลยขอบดวงจริง = หน้าสั้นกว่า 709 → ใส่ค่าที่วัดได้ (QR ผูกขอบล่างอัตโนมัติ)
   stickerFaceHPx?: number
+  // R51 (Owner: "สั่งพิม เครื่องส่งเสียงยืนยัน แต่ปริ้นไม่ออก"): ความเข้มหัวฉีด Bluetooth 1-5
+  // (default 3 = ค่าเดิมไม่เปลี่ยนพฤติกรรม) — กระดาษจาง/ไม่ยอมออก = ลองเพิ่มเป็น 4-5 ที่แผง Bluetooth
+  stickerDensity?: number
   paperWidthMm: number
   // R21 (Owner 2026-10-29): ทะเบียนเครื่องพิมพ์ที่แอดมินเพิ่ม/เลือกเอง
   // (ชื่อเดิม 2 ฟิลด์ข้างบนยังคงอยู่ = back-compat กับค่าที่บันทึกไว้แล้ว)
@@ -121,6 +124,7 @@ export const DEFAULT_PRINTER_SETTINGS: PrinterSettings = {
   autoPrintStickers: true,
   stickerOffsetYPx: 0,
   stickerFaceHPx: 709,
+  stickerDensity: 3,
   paperWidthMm: 80,
   printers: [],
   receiptPrinterId: null,
@@ -314,6 +318,9 @@ export async function buildBmbStickerHtml(o: PrintOrderData): Promise<string> {
   .scan { font-weight: 800; font-size: 8.5px; letter-spacing: .1px; white-space: nowrap; }
   .qrtext .t { font-size: 6.2px; line-height: 1.15; margin-top: .5px; }
   .ty { font-family: 'Brush Script MT', Georgia, cursive; font-style: italic; font-size: 7.5px; margin-top: 1px; }
+  /* R51 (Owner: ตัวอักษรเป็นตัวหนา/จางทั้งใบ — โดยเฉพาะตัวเล็ก + รายละเอียดลูกค้า):
+     stroke ทุกตัวอักษร (สีเดียวกับ fill = หนาขึ้น ไม่เปลี่ยนสี) ผ่านทั้ง dialog และ QZ */
+  .sheet, .sheet * { -webkit-text-stroke: 0.35px #000; paint-order: stroke fill; }
   </style></head><body>
   <div class="sheet">
   <p class="brand">BITE ME BABY</p>

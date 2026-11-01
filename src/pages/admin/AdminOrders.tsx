@@ -1,6 +1,8 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { Link, useSearchParams, useNavigate } from 'react-router-dom'
 import { useNotificationStore } from '@/store/notificationStore'
+// R51: แชตออเดอร์ (component เดียวกับลูกค้า/แอดมิน — เขียนผ่าน RPC m182 เท่านั้น)
+import { OrderChatPanel } from '@/components/messages/OrderChatPanel'
 import { showToast } from '@/components/ui/ToastContainer'
 import {
   getOrdersPaged, updateOrderStatus, confirmOfflinePayment, rejectOfflinePayment, stripeRefundOrder, cancelOrder,
@@ -20,7 +22,7 @@ import { summarizeOrderProfit, formatBaht, formatPct, type CostInput } from '@/l
 import { detectNewPendingOrders, playKitchenChime } from '@/lib/kitchenAlert'
 import { addOnLinesFromChoices } from '@/lib/addonDisplay'
 import {
-  orderModeBadge, paymentStateBadge, deliveryStateBadge,
+  orderModeBadge, paymentStateBadge, deliveryStateBadge, fulfillmentBadge,
   isCancellable,
 } from '@/lib/adminOrderDisplay'
 import {
@@ -297,7 +299,8 @@ export function AdminOrders() {
       const roll = stickerRollForOrder(buildPrintOrderData(full))
       showToast(`กำลังพิมพ์สติกเกอร์ ${roll.length} ใบ (Bluetooth ต่อคิว)…`, 'info')
       // R33: ชดเชยฟีด + R34: ความสูงหน้าจริง จากหน้าตั้งค่า (default 0 / 709) — ทุกใบเลื่อนเท่ากัน
-      await printStickerRoll(roll, { offsetY: settings.stickerOffsetYPx ?? 0, faceH: settings.stickerFaceHPx ?? 709 })
+      // R51: density (1-5 · default 3) จากหน้าตั้งค่าเดียวกัน — "ดังแต่ไม่ออก" = แอดมินเพิ่มได้เอง
+      await printStickerRoll(roll, { offsetY: settings.stickerOffsetYPx ?? 0, faceH: settings.stickerFaceHPx ?? 709, density: settings.stickerDensity ?? 3 })
       showToast(`✅ สติกเกอร์ ${roll.length} ใบ — เครื่องยืนยันครบแล้ว`, 'success')
     } catch (e) {
       console.warn('[AdminOrders] auto sticker roll failed (order unaffected):', e)
@@ -522,6 +525,8 @@ export function AdminOrders() {
           const modeBadge = orderModeBadge(order.order_mode, order.scheduled_date)
           const payBadge = paymentStateBadge(order.payment_status)
           const dlvBadge = deliveryStateBadge(assignmentByOrder[order.order_number])
+          // R51: ป้าย "รับที่ร้าน" — pickup ไม่พึ่งไรเดอร์ (ส่งมอบหน้าเคาน์เตอร์ด้วยรหัส)
+          const ffbBadge = fulfillmentBadge(order.delivery_method)
           // 3B-2B queue context: group header before the first order of each (date|round) group
           const grp = filterMode === 'PRE_ORDER' ? preGroupsByKey[`${order.scheduled_date || '—'}|${order.delivery_round_id || '—'}`] : null
           const cap = grp ? roundCapacityState(roundsById[grp.roundId] ?? null, grp.orders.length) : null
@@ -556,6 +561,7 @@ export function AdminOrders() {
                   </div>
                   {/* STEP 3B-2A GAP-A3: mode / scheduled date / round / payment / delivery badges */}
                   <div className="flex flex-wrap gap-1 mt-1 text-xs" data-testid="admin-order-badges">
+                    {ffbBadge ? <span className={`badge ${ffbBadge.cls}`}>{ffbBadge.label}</span> : null}
                     <span className={`badge ${modeBadge.mode === 'PRE_ORDER' ? 'badge-warning' : modeBadge.mode === 'SAME_DAY' ? 'badge-info' : 'badge-danger'}`}>
                       {modeBadge.label}
                     </span>
@@ -647,6 +653,11 @@ export function AdminOrders() {
             </div>
 
             <div className="flex flex-wrap gap-2">
+              {/* R51: แชตออเดอร์ — ลูกค้า/ไรเดอร์/ร้าน คุยในเธรดเดียวกัน (poll 10 วิ · m182) */}
+              <details className="mt-2" data-testid={`admin-order-chat-${order.order_number}`}>
+                <summary className="cursor-pointer text-sm text-brand-accent select-none">💬 แชตออเดอร์ (ลูกค้า/ไรเดอร์/ร้าน)</summary>
+                <OrderChatPanel orderNumber={order.order_number} role="admin" />
+              </details>
               {/* M4 (2026-10-22): ปุ่มสั่งงานรวมศูนย์ที่หน้าเจ้าของ — รับออเดอร์
                   (pending→confirmed) อยู่ที่นี่ · สายครัว (confirmed→ready) ที่
                   AdminKitchen · สายส่ง (assign/ส่งออกงาน/POD) ที่ Dispatch Center

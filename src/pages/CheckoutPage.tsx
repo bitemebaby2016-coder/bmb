@@ -651,12 +651,22 @@ export function CheckoutPage() {
     // ✅ ONE canonical creation RPC for BOTH modes (migration 025 v3).
     // The payload carries NO price/fee/total — the server derives everything.
     const orderInput: OrderInput = {
-      items: items.map((item) => ({
-        product_id: item.product.id,
-        quantity: item.quantity,
-        options: item.customizations,
-      })),
+      items: items.map((item) => {
+        // R51: Notice รายเมนู (ช่องในกล่องโต้ตอบใส่ตะกร้า) → special_request ของบรรทัดนั้น
+        // = ปริ้นลงช่อง Menu "(...)" บนสติกเกอร์ + 📝 ในคิวครัว · ดึงออกจาก options กันซ้ำแสดง
+        const { notice: lineNotice, ...restOptions } = (item.customizations ?? {}) as Record<string, unknown>
+        const trimmedNotice = typeof lineNotice === 'string' ? lineNotice.trim() : ''
+        return {
+          product_id: item.product.id,
+          quantity: item.quantity,
+          options: restOptions,
+          ...(trimmedNotice ? { special_request: trimmedNotice } : {}),
+        }
+      }),
       delivery_round_id: selectedRoundId,
+      // R51: ช้อนส้อม — ดีฟault ไม่รับ · ลูกค้าติ๊กในกล่องโต้ตอบใส่ตะกร้า
+      // → แจ้งลงช่อง Notice ของสติกเกอร์ (special_instructions ช่องเดิมของระบบ)
+      special_instructions: useCartStore.getState().cutlery ? 'รับช้อนส้อม' : '',
       // ✅ 127: pickup => dedicated canonical path (create_pickup_order_i, fee=0)
       delivery_method: fulfillment === 'pickup' ? 'pickup' : 'self_delivery',
       // Owner 2026-10-27: พรีออเดอร์ต้องมีที่อยู่ไม่ว่าง (server

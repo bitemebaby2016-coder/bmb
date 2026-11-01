@@ -1,0 +1,1 @@
+R51 — sticker stroke all text + Notice/cutlery in add-to-cart dialog + pickup orders no-rider (kitchen/dispatch/track) + POS service categories (dine-in/takeaway/pickup, per-category on-off) + printer density 1-5 + m182 order chat PREPARED (apply pending Owner)

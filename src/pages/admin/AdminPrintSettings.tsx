@@ -166,9 +166,9 @@ export function AdminPrintSettings() {
       setBtPreview(png) // เห็นรูปทันที — ตรวจ "มีตัวอักษร?" + ตำแหน่งเนื้อก่อนเครื่องวิ่ง
       if (kind === 'sticker' && copies > 1) {
         // หลายใบ = job เดียวผ่านคิวเดียวกับงานออเดอร์จริง (ตรวจ "ข้ามดวงสะสม" ได้ตรงจริง)
-        await printStickerRoll(Array.from({ length: copies }, () => sampleSticker()), { onProgress: (s) => setBtProgress(s), offsetY: off, faceH })
+        await printStickerRoll(Array.from({ length: copies }, () => sampleSticker()), { onProgress: (s) => setBtProgress(s), offsetY: off, faceH, density: settings.stickerDensity ?? 3 })
       } else {
-        await niimbotPrintSticker(png, { onProgress: (s) => setBtProgress(s), offsetY: off, faceH })
+        await niimbotPrintSticker(png, { onProgress: (s) => setBtProgress(s), offsetY: off, faceH, density: settings.stickerDensity ?? 3 })
       }
       setBtState('done')
       showToast(kind === 'calibration'
@@ -430,6 +430,22 @@ export function AdminPrintSettings() {
               />
               <span className="text-xs text-brand-muted">709 = 40×60 มาตรฐาน (ค่าเริ่มต้น) · วัดจากใบวัดฟีด: เส้นขอบล่างตรงขอบล่างดวงจริง = ค่านี้ถูก · ไม่ตรง = ใส่เลขเส้นที่ตรงพอดี → PNG/SetPageSize/ตำแหน่ง QR ปรับตามอัตโนมัติ</span>
             </div>
+            {/* R51 (Owner: "เครื่องปริ้นส่งเสียงยืนยัน แต่ปริ้นไม่ออก"): ความเข้มหัวฉีดตั้งได้เอง */}
+            <div className="flex items-center gap-2 text-sm flex-wrap" data-testid="bt-density-row">
+              <label htmlFor="sticker-density" className="whitespace-nowrap font-medium">ความเข้มหัวฉีด (1-5)</label>
+              <input
+                id="sticker-density"
+                type="number"
+                min={1}
+                max={5}
+                step={1}
+                className="input w-20"
+                value={settings.stickerDensity ?? 3}
+                onChange={(e) => setSettings({ ...settings, stickerDensity: Math.max(1, Math.min(5, Math.round(Number(e.target.value) || 3))) })}
+                data-testid="sticker-density"
+              />
+              <span className="text-xs text-brand-muted">3 = ค่าเดิม · เครื่องตอบเสียง/ส่งเสียงยืนยันแต่กระดาษไม่ออกหรือจาง = ลองเพิ่มเป็น 4-5 แล้วกดทดสอบ · บันทึกก่อนออโต้พิมพ์จะใช้ค่านี้</span>
+            </div>
             <div className="flex items-end gap-2 flex-wrap">
               <button className="btn btn-outline" disabled={btBusy} onClick={() => void handleBtTest()} data-testid="bt-test-print">{btBusy ? '⏳ ...' : '🔗 เชื่อม & พิมพ์สติกเกอร์ทดสอบ (Bluetooth — ใช้ค่าชดเชย/หน้าดวง)'}</button>
               <button className="btn btn-outline" disabled={btBusy} onClick={() => void handleBtCalibration()} data-testid="bt-calibration-print">{btBusy ? '⏳ ...' : '📏 พิมพ์ใบวัดฟีด (วัด offset จริง)'}</button>
@@ -469,8 +485,10 @@ export function AdminPrintSettings() {
               <p>• <b>เทมเพลตสติกเกอร์ BMB 40×60 (ใบเสร็จ+ครัวใช้ใบเดียวกัน)</b> — <code>buildBmbStickerHtml</code> ใน <code>src/lib/printService.ts</code> แบบมาจาก Templates-BmB ของ Owner: ป้ายซ้ายฝังตาย ค่าอ่านจากแบบฟอร์มออเดอร์เท่านั้น (หลัง : ) · QR = biteme-baby.com · unit test: <code>bmbSticker.test.ts</code> / <code>printTemplates.test.ts</code></p>
               <p>• <b>Nimbot ไม่มีไดรเวอร์ Win10?</b> → เปิดใช้ <b>QZ Tray</b> ด้านบน: ลงโปรแกรม QZ Tray → เปิดโปรแกรมค้างไว้ → กด "เชื่อมต่อ & ดึงรายชื่อ" (ครั้งแรกติ๊ก <b>Remember this decision</b> + Allow ใน QZ) → เลือกเครื่อง → บันทึก → "ทดสอบสติกเกอร์ (QZ)" · ทาง dialog เดิมยังใช้ได้เสมอเมื่อปิดสวิตช์ QZ</p>
               <p>• <b>คิวพิมพ์ขึ้น Error / พิมพ์ไม่ออก / รีสตารทแล้วยังค้าง?</b> = เช็คไดรเวอร์ของคิวใน "อุปกรณ์และเครื่องพิมพ์": ถ้าคิวเป็น <b>Generic / Text Only</b> → เปลี่ยนมาเลือกคิวที่มีไดรเวอร์จริง (เช่น <code>B1 Pro-I…</code> ที่ติดตั้งมาจาก Nimbot) ใน dropdown ด้านบน · ล้างงานค้าง = คลิกขวาคิว → Cancel All Documents หรือรัน <code>e2e/print_clear_queue.cmd</code> <b>ในฐานะ Administrator</b></p>
+              <p>• <b>กดพิมแล้วเครื่องส่งเสียงยืนยัน แต่กระดาษไม่ออก (Bluetooth)?</b> = ① เพิ่ม <b>ความเข้มหัวฉีด</b> เป็น 4-5 แล้วกดทดสอบ · ② เช็คม้วน/calibrate ที่เครื่อง (ปุ่ม feed ค้างตอนปิดฝา) — เครื่องตอบรับคำสั่งแล้วแต่ไม่เห็นขอบม้วน = ไม่ยิงหัวฉีด · ③ ดูภาพ <b>ตัวอย่าง PNG</b>: ขาวสนิท = ปัญหาอยู่ที่ render (แจ้งทีม) · มีตัวอักษร = ปัญหาอยู่ที่เครื่อง/ความเข้ม/กระดาษ · ถ้าพิมผ่านทาง <b>Windows/คิว</b> (ไม่ใช่ Bluetooth) เสียงดังแล้วคิวหาย = ไดรเวอร์ Text Only บดภาพ → ใช้ปุ่ม Bluetooth แทน</p>
               <p>• <b>พิมพ์ไม่ตรงขอบ / ข้ามดวง (R33)?</b> = วัดด้วย <b>📏 พิมพ์ใบวัดฟีด</b> (offset 0 = ค่า raw ของเครื่อง) → อ่านเส้นที่ตรงขอบบนดวง → ใส่เป็น "ชดเชยฟีดแนวตั้ง" → บันทึก → ทดสอบซ้ำ · ต้นเหตุฝั่งฮาร์ดแวร์ที่พบบ่อย = ม้วนไม่ถูก calibrate ที่เครื่อง (ปุ่ม feed ค้างตอนใส่ม้วนใหม่) · registry ของไลบรารีเองยอมรับว่า size T40x60 ยังไม่เคยถูกวัดบนกระดาษจริง → ค่าที่ได้จากใบวัด = ค่าจริงของเครื่องร้านเรา</p>
               <p>• <b>ลำดับตั้งค่า</b>: เพิ่มเครื่อง → ผูกบทบาท (ใบเสร็จ/ใบสั่งครัว) → สวิตช์ Auto-Print → กดบันทึก → ทดสอบ "ทดสอบใบเสร็จ"/"ทดสอบใบสั่งครัว" → ใบสั่งครัวออโต้ = 1 dialog (ใบเสร็จ+ใบรวมหน้า) ต่อ 1 ออเดอร์</p>
+              <p>• <b>ตัวหนา/จาง?</b> ทุกตัวอักษรบนสติกเกอร์ถูก stroke ให้หนาขึ้นอัตโนมัติแล้ว (R51) — ยังจางอีก = เพิ่มความเข้มหัวฉีด 4-5</p>
               <p>• ทางพิมพ์ R27: <b>QZ Tray</b> (เปิดสวิตช์ด้านบน) = ส่งงานเงียบ ๆ ผ่านตัวกลาง ไม่พึ่งไดรเวอร์ Windows · ปิดสวิตช์ = คำสั่งพิมพ์ของเบราว์เซอร์/OS เดิม (รองรับเครื่องพิมพ์ทุกตัวที่ Windows/macOS มองเห็น)</p>
               <p>• สถานะงานพิมพ์แยกเป็น requested → sent → acknowledged → printed — ระบบจะไม่อ้างว่า "พิมพ์สำเร็จ" จนกว่าจะกดยืนยันเอง · เครื่องพิมพ์ออฟไลน์: ออเดอร์อยู่ครบ งานพิมพ์ค้างเป็น failed ให้กดพิมพ์ซ้ำ</p>
             </div>

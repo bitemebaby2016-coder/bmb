@@ -9,7 +9,7 @@ import { useNavigate } from 'react-router-dom'
 import { getKitchenSummary, createBatch, getKitchenPipelineOrders, getOrderReadyToMake } from '@/lib/bmbAdminApi_kitchen'
 import { updateOrderStatus } from '@/lib/bmbAdminApi_orders'
 import { listRoundsForDate } from '@/lib/bmbAdminApi_rounds'
-import { orderModeBadge, paymentStateBadge } from '@/lib/adminOrderDisplay'
+import { orderModeBadge, paymentStateBadge, fulfillmentBadge } from '@/lib/adminOrderDisplay'
 import { kitchenGatePreview, groupKitchenOrders, splitSameDayPreOrder, readyReasonLabel, kitchenItemLines, batchIdLabel, formatBatchCreatedAt } from '@/lib/kitchenQueueView'
 import { writeAuditLog } from '@/lib/auditLog'
 import { showToast } from '@/components/ui/ToastContainer'
@@ -204,6 +204,9 @@ export function AdminKitchen() {
                       const gate = kitchenGatePreview(o)
                       const pm = paymentStateBadge(o.payment_status)
                       const mode = orderModeBadge(o.order_mode, o.scheduled_date)
+                      // R51: รับที่ร้าน = ไม่เรียกไรเดอร์ — ป้าย + คำว่า "พร้อมรับ" แทน "พร้อมส่ง/รอ dispatch"
+                      const isPickup = o.delivery_method === 'pickup'
+                      const ffb = fulfillmentBadge(o.delivery_method)
                       const roundName = rounds.find((r) => r.id === o.delivery_round_id)?.display_name || (o.delivery_round_id ? String(o.delivery_round_id).slice(0, 12) : '—')
                       return (
                         <div key={o.order_number} className="border border-brand-border rounded-lg p-3 bg-brand-bg/50">
@@ -212,6 +215,7 @@ export function AdminKitchen() {
                               <span className="font-mono text-sm font-bold">{o.order_number}</span>
                               <span className={'badge ' + pm.cls}>{pm.label}</span>
                               <span className="badge badge-primary">{mode.label}</span>
+                              {ffb ? <span className={'badge ' + ffb.cls}>{ffb.label}</span> : null}
                               <span className="badge badge-info">{o.status}</span>
                             </div>
                             <span className="text-xs text-brand-muted">🚌 {roundName}</span>
@@ -225,6 +229,11 @@ export function AdminKitchen() {
                               </li>
                             ))}
                           </ul>
+                          {o.special_instructions ? (
+                            <p className="mt-2 text-xs text-slate-700 bg-orange-50 border border-orange-200 rounded px-2 py-1" data-testid="kitchen-order-notice">
+                              📝 {o.special_instructions}
+                            </p>
+                          ) : null}
                           {gate.reasonCode ? (
                             <p className="mt-2 text-xs text-red-500">⛔ {readyReasonLabel(gate.reasonCode)}</p>
                           ) : null}
@@ -236,10 +245,14 @@ export function AdminKitchen() {
                             ) : null}
                             {o.status === 'preparing' && gate.canReady ? (
                               <button onClick={() => { void kitchenAct(o, 'ready_for_dispatch') }} disabled={acting === o.order_number} className="btn btn-primary text-sm disabled:opacity-50">
-                                {acting === o.order_number ? '⏳...' : '✅ พร้อมส่ง'}
+                                {acting === o.order_number ? '⏳...' : isPickup ? '✅ พร้อมรับที่ร้าน' : '✅ พร้อมส่ง'}
                               </button>
                             ) : null}
-                            {o.status === 'ready_for_dispatch' ? <span className="badge badge-success self-center">✅ พร้อมส่งแล้ว — รอ dispatch</span> : null}
+                            {o.status === 'ready_for_dispatch' ? (
+                              <span className="badge badge-success self-center">
+                                {isPickup ? '✅ พร้อมรับที่ร้าน — ส่งมอบหน้าเคาน์เตอร์ (ไม่เรียกไรเดอร์)' : '✅ พร้อมส่งแล้ว — รอ dispatch'}
+                              </span>
+                            ) : null}
                           </div>
                         </div>
                       )

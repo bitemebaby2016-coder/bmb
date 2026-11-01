@@ -127,3 +127,12 @@ export function deliveryStateBadge(assignment?: DeliveryAssignmentLite | null): 
   else state = 'exception'
   return DELIVERY_STATE_BADGES[state]
 }
+
+// ---------------------------------------------------------------------------
+// 5. R51 — fulfillment display: "รับที่ร้าน" = ไม่เรียกไรเดอร์ ส่งมอบหน้าเคาน์เตอร์
+//    (คืน null เมื่อไม่ใช่ pickup = ไม่เพิ่ม badge เปล่า ๆ ให้การ์ดจัดส่งปกติ)
+// ---------------------------------------------------------------------------
+export function fulfillmentBadge(method?: string | null): { label: string; cls: string } | null {
+  if (method === 'pickup') return { label: '🛍️ รับที่ร้าน', cls: 'badge-warning' }
+  return null
+}

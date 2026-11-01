@@ -100,6 +100,8 @@ export interface NiimbotPrintOpts {
   offsetY?: number
   /** R34: ความสูงหน้าดวงจริง (px) — ผูก png ↔ SetPageSize เหมือน offset (default 709) */
   faceH?: number
+  /** R51: ความเข้มหัวฉีด 1-5 (default 3 = ค่าเดิม) — "ดังแต่ไม่ออก" = ลอง 4-5 */
+  density?: number
 }
 
 /**
@@ -111,7 +113,7 @@ export async function niimbotPrintSticker(pngDataUrl: string, opts?: NiimbotPrin
   await N.printImage(pngDataUrl, {
     model: B1_PRO_MODEL,
     size: stickerSize(opts?.offsetY ?? 0, opts?.faceH),
-    density: 3,
+    density: opts?.density ?? 3,
     onProgress: opts?.onProgress,
   })
 }
@@ -121,11 +123,12 @@ export async function niimbotPrintStickers(pngDataUrls: string[], opts?: Niimbot
   if (pngDataUrls.length === 0) return
   const N = await loadNiimbot()
   const size = stickerSize(opts?.offsetY ?? 0, opts?.faceH)
+  const density = opts?.density ?? 3
   if (pngDataUrls.length === 1) {
-    await N.printImage(pngDataUrls[0], { model: B1_PRO_MODEL, size, density: 3, onProgress: opts?.onProgress })
+    await N.printImage(pngDataUrls[0], { model: B1_PRO_MODEL, size, density, onProgress: opts?.onProgress })
     return
   }
-  await N.printBatch(pngDataUrls, { model: B1_PRO_MODEL, size, density: 3, onProgress: opts?.onProgress })
+  await N.printBatch(pngDataUrls, { model: B1_PRO_MODEL, size, density, onProgress: opts?.onProgress })
 }
 
 /** แปล error เป็นคำไทยสั้น ๆ (pure — test ได้) */

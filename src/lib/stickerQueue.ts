@@ -28,6 +28,8 @@ export interface StickerPrintOpts {
   offsetY?: number
   /** R34: ความสูงหน้าดวงจริง (px) — ทุกใบใช้ค่าเดียวกัน (default 709) */
   faceH?: number
+  /** R51: ความเข้มหัวฉีด 1-5 (default 3) — "เครื่องดังแต่ไม่ออก" = ลอง 4-5 */
+  density?: number
 }
 
 /** render ทุกใบเป็น PNG แล้วยิงต่อคิวด้วย printBatch (job เดียว หลายหน้า) — resolve = เครื่องยืนยันครบ */
@@ -41,7 +43,7 @@ export async function printStickerRoll(roll: PrintOrderData[], opts?: StickerPri
   for (const piece of roll) {
     pngs.push(await renderStickerPng(piece, off, faceH))
   }
-  await niimbotPrintStickers(pngs, { onProgress: opts?.onProgress, offsetY: off, faceH })
+  await niimbotPrintStickers(pngs, { onProgress: opts?.onProgress, offsetY: off, faceH, density: opts?.density })
 }
 
 /** แปล error คิวเป็นคำไทย (reuse ตัวเดิมจาก niimbotBt) */

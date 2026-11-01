@@ -16,6 +16,8 @@ import { getServerStatusLabel } from '@/lib/orderVocabulary'
 import { showToast } from '@/components/ui/ToastContainer'
 // R21 Phase 3: โหลดล้มเหลวห้ามโชว์เป็น "ข้อมูลว่าง" — ต้องมี banner + ปุ่มลองใหม่
 import { LoadErrorBanner } from '@/components/ui/LoadErrorBanner'
+// R51: แชตออเดอร์ ลูกค้า↔ร้าน (component เดียวกับฝั่งไรเดอร์/แอดมิน — ไม่มี logic ซ้ำ)
+import { OrderChatPanel } from '@/components/messages/OrderChatPanel'
 
 const PAYMENT_LABEL: Record<string, string> = {
   pending: 'รอชำระ',
@@ -144,6 +146,11 @@ export function OrdersPage() {
                   )}
                 </div>
               </div>
+              {/* R51: แชตกับร้าน — thread ผูกออเดอร์ · poll 10 วิ · m182 */}
+              <details className="mt-2" data-testid={`order-chat-details-${o.order_number}`}>
+                <summary className="cursor-pointer text-sm text-brand-accent select-none">💬 แชตร้าน — ถามรายละเอียดออเดอร์นี้</summary>
+                <OrderChatPanel orderNumber={o.order_number} role="customer" />
+              </details>
             </li>
           )
         })}

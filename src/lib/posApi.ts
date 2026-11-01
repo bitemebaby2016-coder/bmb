@@ -10,6 +10,7 @@
 // ============================================
 import { supabase } from './supabase'
 import { createOrder, OrderInput, OrderResult, OrderForm, hydrateOrderItems } from './bmbAdminApi_orders'
+import { getBusinessSettings, setBusinessSetting } from './bmbAdminApi_settings'
 
 export interface PosOrderInput {
   items: Array<{ product_id: string; quantity: number; options?: Record<string, any>; special_request?: string }>
@@ -74,6 +75,57 @@ export async function createPosOrder(input: PosOrderInput): Promise<PosOrderResu
     client_submit_key: input.client_submit_key ?? undefined,
   }
   return await createOrder(orderInput) as PosOrderResult | null
+}
+
+// ---------- R51: POS service categories (เปิด/ปิดแยกหมวดบริการ) ----------
+// Owner: "POS หน้าร้านเพิ่ม ทานที่ร้าน และ สั่งหน้าร้านแล้วรับกลับ · เปิดปิดแยกเฉพาะหมวดได้"
+// ทุกชนิดยังวิ่งผ่าน create_pickup_order_i (127 — engine เดิม ไม่แตะ signature)
+// + ป้ายชนิดแนบหัว special_instructions = ครัว/สติกเกอร์เห็นทันทีโดยไม่แตะ RPC
+export const POS_SERVICE_TYPES_KEY = 'pos_service_types'
+export const POS_SERVICE_META = {
+  dine_in: { label: 'ทานที่ร้าน', emoji: '🍽️' },
+  takeaway: { label: 'สั่งกลับบ้าน', emoji: '🥡' },
+  pickup: { label: 'รับที่ร้าน', emoji: '🛍️' },
+} as const
+export type PosServiceType = keyof typeof POS_SERVICE_META
+export type PosServiceFlags = Record<PosServiceType, boolean>
+/** default = เปิดครบทุกหมวด (แอดมินปิดเองได้ทีละหมวด) */
+export const DEFAULT_POS_SERVICE_FLAGS: PosServiceFlags = { dine_in: true, takeaway: true, pickup: true }
+
+export function normalizePosServiceFlags(v: unknown): PosServiceFlags {
+  const out: PosServiceFlags = { ...DEFAULT_POS_SERVICE_FLAGS }
+  if (v && typeof v === 'object' && !Array.isArray(v)) {
+    for (const k of Object.keys(POS_SERVICE_META) as PosServiceType[]) {
+      const raw = (v as Record<string, unknown>)[k]
+      if (typeof raw === 'boolean') out[k] = raw
+    }
+  }
+  return out
+}
+
+/** ป้ายชนิดบริการแนบหัว special_instructions (เช่น "ทานที่ร้าน โต๊ะ 3") */
+export function posServiceInstruction(type: PosServiceType, seat?: string): string {
+  const meta = POS_SERVICE_META[type] ?? POS_SERVICE_META.pickup
+  const seatTxt = type === 'dine_in' && seat && seat.trim() ? ` ${seat.trim()}` : ''
+  return `${meta.label}${seatTxt}`
+}
+
+export async function loadPosServiceFlags(): Promise<PosServiceFlags> {
+  try {
+    const s = await getBusinessSettings()
+    return normalizePosServiceFlags(s?.[POS_SERVICE_TYPES_KEY])
+  } catch {
+    return { ...DEFAULT_POS_SERVICE_FLAGS }
+  }
+}
+
+export async function savePosServiceFlags(flags: PosServiceFlags): Promise<{ ok: boolean; error?: string }> {
+  try {
+    const ok = await setBusinessSetting(POS_SERVICE_TYPES_KEY, normalizePosServiceFlags(flags))
+    return ok ? { ok: true } : { ok: false, error: 'setBusinessSetting คืน false (ดู console)' }
+  } catch (e) {
+    return { ok: false, error: String((e as { message?: string })?.message ?? e) }
+  }
 }
 
 // ---------- closeout / pickup handover ----------

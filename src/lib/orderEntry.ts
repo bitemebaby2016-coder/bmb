@@ -85,6 +85,11 @@ export function runOrderBuilder(opts: OrderEntryOptions): void {
         note: a.note ?? '',
       }))
     }
+    // R51: Notice รายเมนูจากกล่องโต้ตอบใส่ตะกร้า → ติดบรรทัดนั้น (checkout ยก
+    // ไปเป็น special_request = ปริ้นช่อง Menu "(...)" + คิวครัว 📝 โดยไม่ทับ addOns)
+    if (result.notice && result.notice.trim()) {
+      customizations['notice'] = result.notice.trim()
+    }
     const res = addItem(result.product, result.quantity, customizations, mode)
     if (res !== 'added') {
       const t = blockedToast(res)

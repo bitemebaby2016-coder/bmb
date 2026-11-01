@@ -242,6 +242,7 @@ export function OrderTrackPage() {
           {order.scheduled_date ? <span className="badge">วันที่จัดส่ง: {order.scheduled_date}</span> : null}
           <span className="badge">รอบ: {String(order.delivery_round_id)}</span>
           <span className="badge">ชำระเงิน: {order.payment_status}</span>
+          {order.delivery_method === 'pickup' ? <span className="badge badge-warning">🛍️ รับที่ร้าน</span> : null}
         </div>
 
         {/* M1+A5: canonical progress steps — one component, one vocabulary
@@ -253,7 +254,13 @@ export function OrderTrackPage() {
           <h3 className="font-bold text-brand-accent">{getServerStatusLabel(status, mode)}</h3>
           {status === 'pending' && <p className="text-sm text-brand-muted">กำลังรอยืนยันคำสั่งซื้อจากร้าน</p>}
           {status === 'preparing' && <p className="text-sm text-brand-muted">กำลังจัดเตรียมอาหารของคุณ</p>}
-          {status === 'ready_for_dispatch' && <p className="text-sm text-brand-muted">อาหารพร้อมส่ง รอคนส่งรับ</p>}
+          {status === 'ready_for_dispatch' && (
+            <p className="text-sm text-brand-muted">
+              {order.delivery_method === 'pickup'
+                ? 'อาหารพร้อมแล้ว — มารับที่หน้าร้าน (แสดงรหัสรับอาหาร)'
+                : 'อาหารพร้อมส่ง รอคนส่งรับ'}
+            </p>
+          )}
           {(status === 'dispatched' || status === 'in_transit' || status === 'arrived') && <p className="text-sm text-brand-muted">คนส่งกำลังเดินทาง</p>}
           {status === 'delivered' && <p className="text-sm text-brand-muted">ส่งสำเร็จ! ขอบคุณที่ใช้บริการ</p>}
           {status === 'cancelled' && <p className="text-sm text-brand-muted">ออเดอร์นี้ถูกยกเลิกแล้ว</p>}

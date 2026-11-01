@@ -116,6 +116,9 @@ export interface OrderForm {
   pickup_code?: string | null
   picked_up_at?: string | null
   handed_by?: string | null
+  // R51: หมายเหตุระดับออเดอร์ (orders.special_instructions — select('*') ส่งมาทุกแถว):
+  // ช้อนส้อม/ป้ายชนิด POS/ข้อความลูกค้า — ครัวโชว์ในช่อง 📝 + ปริ้นช่อง Notice ของสติกเกอร์
+  special_instructions?: string | null
   created_at: string
   updated_at: string
 }

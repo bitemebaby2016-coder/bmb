@@ -39,6 +39,8 @@ import {
 } from '@/lib/driverService'
 import { fetchAddressPhotoPath, getAddressPhotoUrl } from '@/lib/addressPhoto'
 import { planMultiStopRoute, googleMapsDirUrl, openMapsUrl, toPlanStops } from '@/lib/deliveryPlan'
+// R51: แชตออเดอร์ฝั่งไรเดอร์ (component เดียวกับลูกค้า/แอดมิน — เขียนผ่าน RPC m182)
+import { OrderChatPanel } from '@/components/messages/OrderChatPanel'
 import {
   enablePush,
   disablePush,
@@ -566,6 +568,13 @@ export function RiderPwaPage() {
             </div>
           )}
 
+          {/* R51: แชตออเดอร์ของงานปัจจุบัน — ไรเดอร์↔ลูกค้า↔ร้าน เธรดเดียวกัน (m182) */}
+          {activeOrder ? (
+            <div className="card" data-testid="rider-order-chat">
+              <h3 className="font-bold text-slate-800 mb-1">💬 แชตงาน {activeOrder.order_number}</h3>
+              <OrderChatPanel orderNumber={activeOrder.order_number} role="rider" />
+            </div>
+          ) : null}
           {/* R16 (Owner 2026-10-28): งานหลายใบ — เส้นทาง+จุดส่งคำนวณให้ (nearest-neighbour) + แผนที่รวมจุดส่ง */}
           {(() => {
             const activeJobs = assignments.filter((a) => ['assigned', 'accepted', 'picked_up', 'in_transit', 'arrived'].includes(String(a.assignment_status)))

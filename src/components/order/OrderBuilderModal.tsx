@@ -6,6 +6,7 @@
 import { useEffect, useState } from 'react'
 import type { Product, ProductAddon } from '@/types'
 import { useOrderBuilderStore, pickRecommendations, type AddOnChoice, type OrderBuilderResult } from '@/store/orderBuilderStore'
+import { useCartStore } from '@/store/cartStore'
 import { showToast } from '@/components/ui/ToastContainer'
 import { sortAddonsByMargin, effectiveAddonPrice } from '@/lib/addonMarginGuard'
 
@@ -20,6 +21,11 @@ export function OrderBuilderModal() {
   const [addOns, setAddOns] = useState<Record<string, AddOnSelectionState>>({})
   const [recommendedIds, setRecommendedIds] = useState<Set<string>>(new Set())
   const [recCandidates, setRecCandidates] = useState<Product[]>([])
+  // R51: Notice/หมายเหตุถึงร้าน (ต่อเมนู · ไม่บังคับ) — ผูกกับข้อมูลที่ปริ้นลงเทมเพลต
+  const [notice, setNotice] = useState('')
+  // R51: ช้อนส้อม = ระดับตะกร้า · ดีฟault "ไม่รับ" ลูกค้าติ๊กเลือกเองได้ในกล่องนี้
+  const cutlery = useCartStore((s) => s.cutlery)
+  const setCutlery = useCartStore((s) => s.setCutlery)
 
   useEffect(() => {
     if (open && product) {
@@ -27,6 +33,7 @@ export function OrderBuilderModal() {
       setAddOns({})
       setRecommendedIds(new Set())
       setRecCandidates(pickRecommendations(product, catalog))
+      setNotice('')
     }
   }, [open, product, catalog])
 
@@ -121,6 +128,7 @@ export function OrderBuilderModal() {
       recommended: Array.from(recommendedIds)
         .map((id) => recCandidates.find((c) => c.id === id))
         .filter((p) => !!p) as Product[],
+      notice: notice.trim(),
     }
     onConfirm?.(result)
     closeBuilder()
@@ -259,6 +267,27 @@ return (
             <p className="text-sm text-brand-muted">This item has no extras available.</p>
           )}
         </div>
+
+        {/* R51: Notice/หมายเหตุถึงร้าน + ช้อนส้อม (ค่าเริ่มต้นไม่รับ) */}
+        <section className="ob-section" data-testid="ob-notice-section">
+          <h4 className="ob-section-title">Notice/หมายเหตุถึงร้าน(ไม่จำเป็นต้องระบุ)</h4>
+          <textarea
+            className="input"
+            rows={2}
+            data-testid="ob-notice"
+            placeholder="ระบุรายละเอียดคำขอ(ขึ้นอยู่กับดุลพินิจของทางร้าน)"
+            value={notice}
+            onChange={(e) => setNotice(e.target.value)}
+          />
+          <label className="flex items-center gap-2 mt-3 text-sm cursor-pointer select-none" data-testid="ob-cutlery">
+            <input
+              type="checkbox"
+              checked={cutlery}
+              onChange={(e) => setCutlery(e.target.checked)}
+            />
+            <span>🧻 รับช้อนส้อม (ค่าเริ่มต้น: ไม่รับ — ติ๊กถ้าต้องการ)</span>
+          </label>
+        </section>
 
         {/* Footer */}
         <div className="ob-footer">

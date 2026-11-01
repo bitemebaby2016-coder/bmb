@@ -348,8 +348,10 @@ export function DeliveryManagement() {
   //  ready_for_dispatch ทำให้ออเดอร์ที่จ่ายเงินแล้ว (confirmed/preparing)
   //  มองไม่เห็นในบอร์ด → มอบหมาย/ประกาศไม่ได้ (ตรงที่ Owner เจอ)
   const DISPATCHABLE = ['confirmed', 'preparing', 'ready_for_dispatch']
-  const readyQ = orders.filter((o) => DISPATCHABLE.includes(o.status))
-  const enroute = orders.filter((o) => ['dispatched', 'in_transit', 'arrived', 'delivered'].includes(o.status))
+  // R51 (Owner: ออเดอร์รับที่ร้านไม่ต้องมีเรียกไรเดอร์) — pickup ไม่เข้าคิว dispatch
+  // ทั้ง readyQ/enroute: ส่งมอบหน้าเคาน์เตอร์ผ่าน POS ด้วยรหัส 6 หลัก (127) แทน
+  const readyQ = orders.filter((o) => DISPATCHABLE.includes(o.status) && o.delivery_method !== 'pickup')
+  const enroute = orders.filter((o) => ['dispatched', 'in_transit', 'arrived', 'delivered'].includes(o.status) && o.delivery_method !== 'pickup')
   const asgFor = (n: string) => assignments.find((a) => a.order_number === n)
 
   return (

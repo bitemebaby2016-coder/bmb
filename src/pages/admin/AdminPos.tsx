@@ -16,7 +16,12 @@ import { getProductsAdmin } from '@/lib/bmbAdminApi_products'
 import {
   createPosOrder, posCloseoutOrder, listPickupOrders,
   openShift, closeShift, getCurrentShift, PosOrderInput,
+  // R51: หมวดบริการหน้าร้าน (ทานที่ร้าน/สั่งกลับบ้าน/รับที่ร้าน) เปิด-ปิดแยกหมวด
+  POS_SERVICE_META, POS_SERVICE_TYPES_KEY, DEFAULT_POS_SERVICE_FLAGS,
+  loadPosServiceFlags, savePosServiceFlags, posServiceInstruction,
+  type PosServiceType, type PosServiceFlags,
 } from '@/lib/posApi'
+import { writeAuditLog } from '@/lib/auditLog'
 import type { OrderForm } from '@/lib/bmbAdminApi_orders'
 import {
   buildReceiptHtml, buildKitchenTicketHtml, printHtmlInHiddenFrame,
@@ -42,6 +47,10 @@ export function AdminPos() {
   const [customerPhone, setCustomerPhone] = useState('')
   const [paymentMethod, setPaymentMethod] = useState<'cash_on_delivery' | 'promptpay_qr' | 'credit_card'>('cash_on_delivery')
   const [notes, setNotes] = useState('')
+  // R51: ชนิดบริการหน้าร้าน — default รับที่ร้าน (พฤติกรรมเดิม) · เปิด/ปิดแยกหมวดโดยแอดมิน
+  const [serviceFlags, setServiceFlags] = useState<PosServiceFlags>(DEFAULT_POS_SERVICE_FLAGS)
+  const [serviceType, setServiceType] = useState<PosServiceType>('pickup')
+  const [seat, setSeat] = useState('')
   const [busy, setBusy] = useState(false)
   const [lastResult, setLastResult] = useState<{ order_number: string; pickup_code?: string | null; total_amount: number } | null>(null)
   const [pickupOrders, setPickupOrders] = useState<OrderForm[]>([])
@@ -57,14 +66,18 @@ export function AdminPos() {
   )
 
   const refresh = useCallback(async () => {
-    const [prods, pickups, sh] = await Promise.all([
+    const [prods, pickups, sh, svc] = await Promise.all([
       getProductsAdmin() as unknown as Promise<PosProduct[]>,
       listPickupOrders(),
       getCurrentShift(),
+      loadPosServiceFlags(),
     ])
     setProducts((prods ?? []).filter((p) => p.is_available !== false))
     setPickupOrders(pickups)
     setShift(sh)
+    setServiceFlags(svc)
+    // หมวดที่ถูกปิด = ห้ามเลือกค้างอยู่ (ดีดกลับไปหมวดแรกที่ยังเปิด)
+    setServiceType((cur) => (svc[cur] ? cur : ((Object.keys(svc) as PosServiceType[]).find((k) => svc[k]) ?? 'pickup')))
   }, [])
 
   useEffect(() => {
@@ -101,8 +114,11 @@ export function AdminPos() {
     if (!roundId) { showToast('กรุณาเลือกรอบ/ช่วงเวลารับ', 'error'); return }
     if (!customerName.trim()) { showToast('กรุณากรอกชื่อลูกค้า', 'error'); return }
     if (!shift) { showToast('กรุณาเปิดกะก่อนขาย (เงินสด)', 'warning'); return }
+    if (!serviceFlags[serviceType]) { showToast('หมวดบริการนี้ถูกปิดอยู่ — เปิดที่กล่อง "เปิด/ปิดหมวดบริการ" ก่อน', 'error'); return }
 
     setBusy(true)
+    // R51: ป้ายชนิดบริการแนบหัว special_instructions (ครัว/สติกเกอร์ Notice เห็นทันที) — engine เดิม 127
+    const serviceNote = posServiceInstruction(serviceType, seat)
     const input = {
       items: lines.map((l) => ({ product_id: l.product.id, quantity: l.quantity })),
       delivery_round_id: roundId,
@@ -110,11 +126,11 @@ export function AdminPos() {
       customer_name: customerName.trim(),
       customer_phone: customerPhone.trim(),
       payment_method: paymentMethod,
-      special_instructions: notes.trim() || undefined,
+      special_instructions: [serviceNote, notes.trim()].filter(Boolean).join(' · ') || undefined,
       order_mode: 'SAME_DAY' as const,
     }
     // POS = counter pickup (127); duplicate protection = 124 submit key ring
-    const fp = JSON.stringify({ items: input.items, round: input.delivery_round_id, name: input.customer_name, phone: input.customer_phone, pay: input.payment_method })
+    const fp = JSON.stringify({ items: input.items, round: input.delivery_round_id, name: input.customer_name, phone: input.customer_phone, pay: input.payment_method, svc: serviceType, seat: seat.trim() })
     const submitKey = submitKeys.current.keyFor(fp)
     const result = await createPosOrder({ ...input, client_submit_key: submitKey } as PosOrderInput)
     if (!result) {
@@ -159,9 +175,23 @@ export function AdminPos() {
       else showToast(`ออเดอร์สร้างแล้ว แต่ปิดการขายไม่สำเร็จ: ${close.error}`, 'warning')
     }
 
-    setLines([]); setCustomerName(''); setCustomerPhone(''); setNotes('')
+    setLines([]); setCustomerName(''); setCustomerPhone(''); setNotes(''); setSeat('')
     await refresh()
     setBusy(false)
+  }
+
+  // R51: เปิด/ปิดหมวดบริการแยกกัน (business_settings.pos_service_types — key เดียวของระบบ settings)
+  const enabledTypes = (Object.keys(POS_SERVICE_META) as PosServiceType[]).filter((k) => serviceFlags[k])
+  async function handleSaveServiceFlags(next: PosServiceFlags) {
+    setServiceFlags(next)
+    const r = await savePosServiceFlags(next)
+    if (r.ok) {
+      showToast('บันทึกหมวดบริการแล้ว', 'success')
+      void writeAuditLog({ action: 'settings_change', entity_type: 'business_settings', entity_id: POS_SERVICE_TYPES_KEY, description: 'POS service categories updated', metadata: { [POS_SERVICE_TYPES_KEY]: next } })
+    } else {
+      showToast(`บันทึกหมวดบริการไม่สำเร็จ: ${r.error ?? 'unknown'}`, 'error')
+      setServiceFlags(await loadPosServiceFlags())
+    }
   }
 
   // ---------- shift / cash ----------
@@ -271,6 +301,24 @@ export function AdminPos() {
           <div className="flex justify-between font-bold text-lg mt-3"><span>รวม</span><span className="text-brand-primary">{money(total)}</span></div>
 
           <div className="space-y-2 mt-4">
+            {/* R51: ชนิดบริการหน้าร้าน — เฉพาะหมวดที่แอดมินเปิดไว้ */}
+            <div className="flex gap-2 flex-wrap" data-testid="pos-service-types">
+              {(Object.keys(POS_SERVICE_META) as PosServiceType[]).filter((k) => serviceFlags[k]).map((k) => (
+                <button
+                  key={k}
+                  type="button"
+                  data-testid={`pos-service-${k}`}
+                  onClick={() => setServiceType(k)}
+                  className={`btn btn-sm ${serviceType === k ? 'btn-primary' : 'btn-outline'}`}
+                >
+                  {POS_SERVICE_META[k].emoji} {POS_SERVICE_META[k].label}
+                </button>
+              ))}
+              {enabledTypes.length === 0 && <span className="text-xs text-red-500">ปิดหมวดบริการไว้ทุกหมวด — เปิดอย่างน้อย 1 หมวดก่อนขาย</span>}
+            </div>
+            {serviceType === 'dine_in' && (
+              <input className="input" placeholder="โต๊ะ/ที่นั่ง (ไม่บังคับ)" value={seat} onChange={(e) => setSeat(e.target.value)} data-testid="pos-seat" />
+            )}
             <input className="input" placeholder="ชื่อลูกค้า *" value={customerName} onChange={(e) => setCustomerName(e.target.value)} />
             <input className="input" placeholder="เบอร์โทร" value={customerPhone} onChange={(e) => setCustomerPhone(e.target.value)} />
             <select className="input" value={roundId} onChange={(e) => setRoundId(e.target.value)}>
@@ -283,10 +331,10 @@ export function AdminPos() {
               <option value="credit_card">บัตรเครดิต</option>
             </select>
             <input className="input" placeholder="หมายเหตุ" value={notes} onChange={(e) => setNotes(e.target.value)} />
-            <button className="btn btn-primary w-full" disabled={busy} onClick={() => void handleSubmit()}>
-              {busy ? '⏳ กำลังส่ง...' : '✅ ขาย (รับที่ร้าน)'}
+            <button className="btn btn-primary w-full" disabled={busy || enabledTypes.length === 0} onClick={() => void handleSubmit()} data-testid="pos-submit">
+              {busy ? '⏳ กำลังส่ง...' : `✅ ขาย (${POS_SERVICE_META[serviceType].label})`}
             </button>
-            <p className="text-xs text-brand-muted">ขายผ่าน Order Hub เดิม · กันสั่งซ้ำด้วย idempotency key · ค่าจัดส่ง 0 บาท</p>
+            <p className="text-xs text-brand-muted">ขายผ่าน Order Hub เดิม · กันสั่งซ้ำด้วย idempotency key · ค่าจัดส่ง 0 บาท · ป้ายชนิดบริการแจ้งลง Notice ของใบสั่งครัว</p>
           </div>
         </div>
       </div>
@@ -320,9 +368,27 @@ export function AdminPos() {
         </div>
       )}
 
+      {/* R51: เปิด/ปิดหมวดบริการแยกกัน */}
+      <div className="card" data-testid="pos-service-settings">
+        <h3 className="font-bold text-brand-accent mb-3">🗂️ เปิด/ปิดหมวดบริการ (แยกแต่ละหมวด)</h3>
+        <div className="flex gap-3 flex-wrap">
+          {(Object.keys(POS_SERVICE_META) as PosServiceType[]).map((k) => (
+            <label key={k} className="flex items-center gap-2 text-sm cursor-pointer select-none" data-testid={`pos-flag-${k}`}>
+              <input
+                type="checkbox"
+                checked={serviceFlags[k]}
+                onChange={(e) => void handleSaveServiceFlags({ ...serviceFlags, [k]: e.target.checked })}
+              />
+              <span>{POS_SERVICE_META[k].emoji} {POS_SERVICE_META[k].label}</span>
+            </label>
+          ))}
+        </div>
+        <p className="text-xs text-brand-muted mt-2">หมวดที่ปิด = ไม่โชว์ในแผงขายด้านบน · ทุกชนิดยังผ่าน Order Hub เดิม (รับที่ร้าน + รหัส 6 หลัก)</p>
+      </div>
+
       {/* Pickup handover queue */}
       <div className="card">
-        <h3 className="font-bold text-brand-accent mb-3">🥤 คิวรับที่ร้าน (ยืนยันรหัส 6 หลัก)</h3>
+        <h3 className="font-bold text-brand-accent mb-3">🥤 คิวรับที่ร้าน/ส่งมอบหน้าเคาน์เตอร์ (ยืนยันรหัส 6 หลัก)</h3>
         {pickupOrders.map((o) => (
           <div key={o.order_number} className="flex flex-wrap items-center gap-3 py-2 border-b border-brand-border">
             <span className="font-bold">#{o.order_number}</span>
