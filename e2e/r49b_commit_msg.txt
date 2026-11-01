@@ -1,0 +1,14 @@
+fix R49: ลบ import ซ้ำใน CheckoutPage (resolveAddOnLines/getBusinessSettings มีของเดิม) + เพิ่ม test
+checkout/cart asserts + TEST_PACK §S.2.1 (S-10..S-19 DoD) + แก้จำนวน test ในเอกสาร (6)
+
+- ต้นตอ: commit 33e9478 (push แล้ว) มี tsc error TS2300 duplicate identifier 2 ตัว — สาเหตุ =
+  CheckoutPage import resolveAddOnLines (เดิมบรรทัด 28) + getBusinessSettings (เดิมบรรทัด 38)
+  อยู่แล้ว · รอบเพิ่ม guard ใส่ import ซ้ำ → ลบเฉพาะบรรทัดที่ซ้ำ เก็บ addonMarginGuard import
+- r49AddonMargin += it: guardrail รับ ampPolicy.maxDiscountPct · addon-margin-guard/-ok testids ·
+  CartPage {showCrossSell} + AddonCrossSellStrip (ครบ 6 ข้อ)
+- TEST_PACK §S.2.1 = S-10 (idempotency query) · S-11 (สถานะส่งครั้งเดียว) · S-12 (popup
+  claymation) · S-13 (reminder_days) · S-14 (abandoned cart) · S-15..S-18 (แอดมินกฎกำไร/โปร/
+  cross-sell/guard) · S-19 (apply r49 ALL_PASS · ledger 181)
+- docs: work-state/MASTER = แก้จำนวน r49 test เป็น 6 (ความถูกต้องของเอกสาร)
+
+gates: vitest 6 ไฟล์ 68/68 (r49 6 ข้อ) · tsc 0 (หลังแก้ duplicate) · lint OK (516+1476)

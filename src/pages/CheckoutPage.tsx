@@ -43,10 +43,9 @@ import { roundBookability, roundStatusLabel, roundCutoffLabel } from '@/lib/deli
 import { normalizePromoCode } from '@/lib/promotionClient'
 // R21 Phase 2 (Owner 2026-10-29): เพดานส่วนลดรวม คูปอง+แต้ม+referral ≤ 15% ของยอดสินค้า
 import { evaluateDiscountGuardrail, evaluateDiscountStacking } from '@/lib/discountGuardrail'
-// R49 — Add-on Margin Rules: policy (แอดมินตั้ง) + Margin Protection Guard + ที่อยู่แอดออนจากของเดิม
-import { resolveAddOnLines } from '@/lib/addonDisplay'
+// R49 — Add-on Margin Rules: policy (แอดมินตั้ง) + Margin Protection Guard
+// (resolveAddOnLines + getBusinessSettings = import ของเดิมบรรทัด 28/38 — ห้ามซ้ำ)
 import { normalizeAddonMarginPolicy, evaluateAddonDiscountGuard, DEFAULT_ADDON_MARGIN_POLICY } from '@/lib/addonMarginGuard'
-import { getBusinessSettings } from '@/lib/bmbAdminApi_settings'
 import { CouponBox, revalidateCouponForSubmit } from '@/components/CouponBox'
 import { ReferralBox, revalidateReferralForSubmit } from '@/components/ReferralBox'
 import { claimReferralCode, describeReferralClaim } from '@/lib/referralClient'
