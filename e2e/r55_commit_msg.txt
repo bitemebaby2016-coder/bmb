@@ -1,0 +1,9 @@
+docs(R55): ปิดเซสชัน — เปิดงาน R55 (ขนาดโลโก้ FB ไม่เท่ากัน) + handoff 2026-11-02 + evidence scripts
+
+- AI_WORK_STATE: บล็อก 🔴 R55 (คำสั่ง Owner ถ้อยคำจริง + หลักฐานวัด + NEXT EXACT ACTION 5 ขั้น)
+- BMB_MASTER_STATUS: entry R55 (OPEN)
+- docs/BMB_HANDOFF_NEXT_SESSION_2026-11-02.md: brief แชทหน้าเต็ม (ตาราง mtime/.dimensions + ขั้นตอน + backlog + กติกาเครื่องมือ)
+- evidence: e2e/r54_logo_size.cjs (webp header dims 17 ไฟล์ — ทุกโลโก้ square) + e2e/r54_ftimes.cjs
+  (FB logo.webp mtime 2026-11-02T05:05Z = ไฟล์ใหม่ Owner ใน commit 8ca9ea8 · Messenger 01-11 = Owner เปลี่ยนเอง)
+
+R55 ยังไม่แก้ (Owner สั่งปิดเซสชัน) — ทำต่อแชทหน้า: playwright canvas bbox → normalize FB logo.webp → verify → gates
