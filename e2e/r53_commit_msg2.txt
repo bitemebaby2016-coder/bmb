@@ -1,0 +1,5 @@
+docs(R53): ledger update — commit 192d8c9 pushed · Contract Tests SUCCESS · CI in_progress at single check
+
+- AI_WORK_STATE: R53 header + N5 line = facts (push 7edc371..192d8c9 · run 41389593215 in_progress ตอนเช็ค ไม่ poll)
+- BMB_MASTER_STATUS: R53 entry = commit/CI facts
+- e2e/r53_ci_probe.cjs = single-check probe (public API ไม่ใช้ token)
