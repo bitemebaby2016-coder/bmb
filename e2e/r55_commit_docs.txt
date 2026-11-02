@@ -1,0 +1,9 @@
+docs(R55): ปิดเซสชัน — อัปเดต ledger ทั้ง 3 ไฟล์ + handoff แชทหน้า (CI check + Owner test checklist)
+
+- AI_WORK_STATE.md: บล็อกบนสุด = สถานะปิดเซสชัน (commit c08c93f push · CI in_progress/NO_FAILED_RUN)
+  · smoke 2 โมเดล = OK (seedream 2048² · qwen 2368×1776 = 4:3) · gates ปิดเซสชัน (tsc 0 · lint 520+1528 · vitest 142+51)
+  · NEXT = ① CI probe ครั้งเดียว ② Owner ทดสอบ production 8 ข้อ ③ feedback ใหม่ = R56
+- docs/BMB_MASTER_STATUS.md: entry R55 หางสถานะ = ทุกอย่างเสร็จ/CI รอเช็ค
+- docs/BMB_HANDOFF_NEXT_SESSION_2026-11-02.md: เขียนใหม่ — ① CI probe ครั้งเดียว ② checklist ทดสอบ production
+  8 ข้อ ③ สรุป R55 + evidence ④ backlog + กติกาเครื่องมือ (Start-Process >30s · vision อ่านภาพ · shrink.ps1 · sha256)
+- เคลียร์ stage: ลบ e2e/tmp_r55_rev_*.png + evidence PNG ชั่วคราว (regen ได้จาก script)
