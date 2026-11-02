@@ -125,6 +125,7 @@ export function getHomeReviews(products: Product[]): HomeReview[] {
       dateLabel: r.dateLabel,
       relatedProduct: productMap.get(r.productId),
       relatedProductName: r.foodName,
+      image: r.image,
       visible: true,
     }))
 }

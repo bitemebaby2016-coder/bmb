@@ -7,11 +7,12 @@
 //    ห้ามใช้คำนวณ products.rating/review_count
 //    canonical customer reviews = table `reviews` (เปิดใช้ใน gate ภายหลัง)
 //
-// N4 (Owner 2026-11-01 "ยุบรีวิว 2 เซกชั่น"):
-//    - ข้อความ/ชื่อผู้รีวิว/คะแนน/วันที่ = คัดจากสกรีนช็อตรีวิวจริงในไฟล์ repo
-//      (public/assets/reviews/Screenshot_2026-09-17-19-0X-*.jpg ต้นฉบับ +
-//       small/review-03..06.jpg ที่แสดงบนอัลบั้มหน้าแรก)
-//    - foodName/productId = '' — ไม่ทราบเมนูจากในภาพ → ห้ามผูกมั่วกับสินค้าอื่น
+// R54 (Owner 2026-11-02 feedback รอบแก้ "ภาษาเพี้ยน + รูปหาย + โลโก้สลับ"):
+//    - ข้อความ/ชื่อ/วันที่ = อ่านจากสกรีนช็อตต้นฉบับทีละภาพโดยตรง
+//      (public/assets/reviews/Screenshot_2026-09-17-*.jpg · หน้าเรตติ้งและรีวิว Facebook จริง)
+//    - source สลับ facebook/grabfood ตามคำสั่ง Owner (โลโก้การ์ดสลับ FB ↔ Grab)
+//    - image = ภาพอาหารจริงจากตาราง products (decorative พื้หลังการ์ด — ไม่ใช่เมนูที่รีวิว)
+//    - foodName/productId = '' — ไม่ระบุเมนูที่สั่งในภาพ → ห้ามผูกมั่ว
 //      (CTA ไม่มีสินค้า = handleReviewCta → navigate('/cart') ผ่าน guard แล้ว)
 //    - เรียงใหม่ → เก่า (วันที่รีวิวจริงตามภาพ)
 //
@@ -23,74 +24,80 @@ import type { SocialProofReview, MenuHighlightClip } from '@/types'
 
 /**
  * รายการ Social Proof ทั้งหมด (Admin curate ผ่านไฟล์นี้ได้โดยตรง)
- * N4: ทุกแถบัดมาจากสกรีนช็อตจริง — ถ้าเพิ่มรายการใหม่ต้องมีภาพจริงใน repo อ้างอิง
+ * R54: ทุกแถบัดจากสกรีนช็อตจริง (อ่านภาพทีละใบ) — เพิ่มรายการใหม่ต้องมีภาพจริงอ้างอิง + image ชี้รูปอาหารจริง (products)
  */
 export const SOCIAL_PROOF_REVIEWS: SocialProofReview[] = [
   {
     id: 'sp-001',
     customerName: 'ชิสากุหนุ เรนยุคุร',
     rating: 5,
-    comment: 'อร่อยหลายอย่าง จัดจ้านบ้านว่างๆ มีผิวกาแฟแก',
+    comment: 'อร่อยมากเลย วัตถุดิบอร่อย มีผักหลากหลาย',
     source: 'facebook',
     sourceLabel: 'Facebook',
     dateLabel: '25 Mar 2026',
     foodName: '',
     productId: '',
+    image: 'https://ivkdfognyiwjcmrhcnwz.supabase.co/storage/v1/object/public/bmb-images/products/prod-5/image.webp',
   },
   {
     id: 'sp-002',
     customerName: 'LLLLLLLL',
     rating: 5,
-    comment: 'อร่อยมาก สดจริง (ไม่ใส่แป้ง)',
-    source: 'facebook',
-    sourceLabel: 'Facebook',
+    comment: 'อร่อยมาก สดมาก',
+    source: 'grabfood',
+    sourceLabel: 'GrabFood',
     dateLabel: '22 Mar 2026',
     foodName: '',
     productId: '',
+    image: 'https://ivkdfognyiwjcmrhcnwz.supabase.co/storage/v1/object/public/bmb-images/products/prod-4/image.webp',
   },
   {
     id: 'sp-003',
     customerName: 'Da K.',
     rating: 5,
-    comment: 'อร่อยมากไก่ญุ่นแซ่บไม่บอกใคร ผิวเหลืองร้อนส้าย่อย',
+    comment: 'อร่อยมากค่ะ น้ำจิ้มแซ่บไม่ต้องคิด พิเศษรสจัดจ้านเลย',
     source: 'facebook',
     sourceLabel: 'Facebook',
     dateLabel: '20 Mar 2026',
     foodName: '',
     productId: '',
+    image: 'https://ivkdfognyiwjcmrhcnwz.supabase.co/storage/v1/object/public/bmb-images/products/prod-1789607383214-t8rm95/image.webp',
   },
   {
     id: 'sp-004',
     customerName: 'Bronus P.',
     rating: 5,
-    comment: 'ขอบคุณค่ะที่ฟีดแบคให้มากๆ',
-    source: 'facebook',
-    sourceLabel: 'Facebook',
+    comment: 'อร่อยมากค่ะ ให้ผักมากๆ มากๆๆ',
+    source: 'grabfood',
+    sourceLabel: 'GrabFood',
     dateLabel: '16 Mar 2026',
     foodName: '',
     productId: '',
+    image: 'https://ivkdfognyiwjcmrhcnwz.supabase.co/storage/v1/object/public/bmb-images/products/prod-1789610117076-2p5e8u/image.webp',
   },
   {
     id: 'sp-005',
     customerName: 'view p.',
     rating: 5,
-    comment: 'อร่อยค่ะ ไส้ไก่ญุ่น นุ่มจริงๆทุนา',
+    comment: 'อร่อยค่ะ สดหนุกๆ น้ำจิ้มดีมาก',
     source: 'facebook',
     sourceLabel: 'Facebook',
     dateLabel: '14 Mar 2026',
     foodName: '',
     productId: '',
+    image: 'https://ivkdfognyiwjcmrhcnwz.supabase.co/storage/v1/object/public/bmb-images/products/prod-3/image.webp',
   },
   {
     id: 'sp-006',
     customerName: 'GUBGIB',
     rating: 5,
-    comment: 'อร่อยมาก เนื้อเค็ม สดจริง',
-    source: 'facebook',
-    sourceLabel: 'Facebook',
+    comment: 'อร่อยมาก เนื้อดี สดมาก',
+    source: 'grabfood',
+    sourceLabel: 'GrabFood',
     dateLabel: '11 Mar 2026',
     foodName: '',
     productId: '',
+    image: 'https://ivkdfognyiwjcmrhcnwz.supabase.co/storage/v1/object/public/bmb-images/uploads/1793068885663-Fish_ShipS.webp',
   },
 ]
 

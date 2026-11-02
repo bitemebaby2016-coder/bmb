@@ -735,6 +735,8 @@ export interface SocialProofReview {
   dateLabel: string;           // e.g. "2 สัปดาห์ที่แล้ว"
   foodName: string;            // อะไรของร้านที่ลูกค้าสั่ง
   productId: string;           // deep link → real product (products.id)
+  /** R54 (Owner "รูปประกอบรีวิวหาย"): ภาพอาหารจริงสำหับพื้หลังการ์ด — ตกแต่งเท่านั้น ไม่ผูก deep link */
+  image?: string;
 }
 
 export interface MenuHighlightClip {

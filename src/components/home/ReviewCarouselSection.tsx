@@ -5,13 +5,11 @@
 //
 // N4 (Owner 2026-11-01 "ยุบรีวิว 2 เซกชั่น — ซ้ำสองเซกชั่น"):
 //   เซกชั่น "📸 รีวิวจริงจากลูกค้า" รวมเป็นที่เดียว:
-//   ① หัวข้อ + คารูเซลข้อความรีวิว (คัดจากสกรีนช็อตจริง — socialProofReviews)
-//   ② อัลบั้มรูปสกรีนช็อตจริง 32 ใบ (ย้ายมาจาก ReviewGallerySection —
-//      คงคลาส review-gallery* + lightbox + showAll เดิมทุกประการ)
+//   ① หัวข้อ + คารูเซลข้อความรีวิว (ข้อความคัดจากภาพจริง · โลโก้ FB/Grab สลับตาม Owner R54)
+//   ② อัลบั้มรูปสกรีนช็อตจริง 32 ใบ — เปิดจากปุ่ม "ดูทั้งหมด" (modal + lightbox · ไม่โชว์ inline)
 // ============================================
 
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
 import type { HomeReview, Product, OrderMode } from '@/types'
 import { CustomerReviewCard } from '@/components/CustomerReviewCard'
 import { HorizontalCarousel } from './HorizontalCarousel'
@@ -25,12 +23,12 @@ interface ReviewCarouselSectionProps {
   onReviewCta?: (review: HomeReview) => void
 }
 
-// PERF (เดิมจาก ReviewGallerySection): render 12 thumbs ก่อน — ที่เหลือกดดูต่อ (DOM เบา)
-const INITIAL_COUNT = 12
+// N4-R54 (Owner 2026-11-02 feedback): อัลบั้มไม่โชว์ inline — เปิดจากปุ่ม "ดูทั้งหมด" (modal + lightbox)
+//   คงคลาส review-gallery* + behavior คลิกดูรูป/ปิด ไว้ทุกประการ
 
 export function ReviewCarouselSection({ reviews, products, onReviewCta }: ReviewCarouselSectionProps) {
   const [open, setOpen] = useState<string | null>(null)
-  const [showAll, setShowAll] = useState(false)
+  const [albumOpen, setAlbumOpen] = useState(false)
   const productMap = new Map((products || []).map((p) => [p.id, p]))
   const items = reviews.map((r) => {
     const product = productMap.get(r.relatedProduct?.id ?? '') ?? r.relatedProduct
@@ -46,6 +44,7 @@ export function ReviewCarouselSection({ reviews, products, onReviewCta }: Review
           source: r.source,
           sourceLabel: r.sourceLabel,
           dateLabel: r.dateLabel,
+          image: r.image,
           foodName: r.relatedProductName ?? '',
           productId: r.relatedProduct?.id ?? '',
         }}
@@ -56,8 +55,6 @@ export function ReviewCarouselSection({ reviews, products, onReviewCta }: Review
       />
     )
   })
-
-  const visiblePhotos = showAll ? REAL_REVIEW_PHOTOS : REAL_REVIEW_PHOTOS.slice(0, INITIAL_COUNT)
 
   return (
     <section className="mb-10 scroll-mt-20" aria-labelledby="home-reviews-heading">
@@ -75,7 +72,7 @@ export function ReviewCarouselSection({ reviews, products, onReviewCta }: Review
             aria-hidden="true"
           />
         </h2>
-        <Link to="/reviews" className="text-sm text-brand-primary font-medium hover:underline">ดูทั้งหมด →</Link>
+        <button type="button" onClick={() => setAlbumOpen(true)} className="text-sm text-brand-primary font-medium hover:underline" data-testid="reviews-see-all-album">ดูทั้งหมด →</button>
       </div>
       <h3 className="sr-only">รีวิวจากลูกค้าจริง</h3>
       {items.length > 0 && (
@@ -87,58 +84,59 @@ export function ReviewCarouselSection({ reviews, products, onReviewCta }: Review
         />
       )}
 
-      {/* N4: อัลบั้มรูปสกรีนช็อตจริง (ย้ายมาจาก ReviewGallerySection — คงคลาส/behavior เดิม) */}
-      {REAL_REVIEW_PHOTOS.length > 0 && (
-        <div className="mt-4">
-          <div className="flex items-center justify-between mb-2">
-            <p className="text-sm font-medium text-brand-accent">รูปรีวิวจริงจากลูกค้า</p>
-            <span className="text-sm text-brand-muted">{REAL_REVIEW_PHOTOS.length} รูป</span>
-          </div>
-          <div className="review-gallery" role="list">
-            {visiblePhotos.map((p) => (
-              <button
-                key={p.src}
-                type="button"
-                role="listitem"
-                className="review-gallery-item"
-                onClick={() => setOpen(p.src)}
-                aria-label={p.alt}
-              >
-                <img
-                  src={p.src}
-                  alt={p.alt}
-                  loading="lazy"
-                  decoding="async"
-                  width={640}
-                  height={800}
-                  className="review-gallery-img"
-                />
-              </button>
-            ))}
-          </div>
-          {!showAll && REAL_REVIEW_PHOTOS.length > INITIAL_COUNT && (
-            <button
-              type="button"
-              className="btn btn-outline btn-sm mt-3"
-              onClick={() => setShowAll(true)}
-            >
-              แสดงรีวิวทั้งหมด {REAL_REVIEW_PHOTOS.length} รูป ↓
-            </button>
-          )}
-          {open && (
-            <div
-              className="review-gallery-lightbox"
-              role="dialog"
-              aria-modal="true"
-              aria-label="รูปรีวิวขยาย"
-              onClick={() => setOpen(null)}
-            >
-              <img src={open} alt="รีวิวจริงจากลูกค้า (ขยาย)" className="review-gallery-full" loading="eager" />
-              <button type="button" className="review-gallery-close" onClick={() => setOpen(null)} aria-label="ปิดรูป">
+      {/* N4-R54: อัลบั้มไม่โชว์ inline — modal เปิดจากปุ่ม "ดูทั้งหมด" ข้างหัวข้อ (Owner 2026-11-02) */}
+      {albumOpen && (
+        <div
+          className="review-album-modal"
+          role="dialog"
+          aria-modal="true"
+          aria-label="อัลบั้มรูปรีวิวจริงจากลูกค้า"
+          onClick={() => setAlbumOpen(false)}
+        >
+          <div className="review-album-panel" onClick={(e) => e.stopPropagation()}>
+            <div className="review-album-head">
+              <p className="text-sm font-medium text-brand-accent">อัลบั้มรูปรีวิวจริงจากลูกค้า ({REAL_REVIEW_PHOTOS.length} รูป)</p>
+              <button type="button" className="review-album-close" onClick={() => setAlbumOpen(false)} aria-label="ปิดอัลบั้ม">
                 ✕
               </button>
             </div>
-          )}
+            <div className="review-gallery" role="list">
+              {REAL_REVIEW_PHOTOS.map((p) => (
+                <button
+                  key={p.src}
+                  type="button"
+                  role="listitem"
+                  className="review-gallery-item"
+                  onClick={() => setOpen(p.src)}
+                  aria-label={p.alt}
+                >
+                  <img
+                    src={p.src}
+                    alt={p.alt}
+                    loading="lazy"
+                    decoding="async"
+                    width={640}
+                    height={800}
+                    className="review-gallery-img"
+                  />
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+      {open && (
+        <div
+          className="review-gallery-lightbox"
+          role="dialog"
+          aria-modal="true"
+          aria-label="รูปรีวิวขยาย"
+          onClick={() => setOpen(null)}
+        >
+          <img src={open} alt="รีวิวจริงจากลูกค้า (ขยาย)" className="review-gallery-full" loading="eager" />
+          <button type="button" className="review-gallery-close" onClick={() => setOpen(null)} aria-label="ปิดรูป">
+            ✕
+          </button>
         </div>
       )}
     </section>

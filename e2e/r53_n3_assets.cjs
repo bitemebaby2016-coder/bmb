@@ -2,7 +2,7 @@
 const fs = require('fs')
 const path = require('path')
 const PUB = path.join(__dirname, '..', 'public')
-const refs = ['/Facebook Logo.webp', '/Messenger logo.webp', '/line logo.webp']
+const refs = ['/FB logo.webp', '/Messenger logo.webp', '/line logo.webp', '/Grab Food Logo.webp']
 for (const r of refs) {
   const ok = fs.existsSync(path.join(PUB, r.slice(1)))
   console.log(ok ? 'EXISTS' : 'MISSING', r)

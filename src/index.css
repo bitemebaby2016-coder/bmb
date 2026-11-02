@@ -829,6 +829,27 @@ p { color: var(--color-brand-text-secondary); }
 }
 .store-strip.is-closed .store-strip-dot { background: #EF4444; box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.18); }
 
+/* R54 (Owner 2026-11-02): ไฟสถานะบรรทัด Same-Day — เขียวกระพริบเมื่อเปิดรับตามเวลาที่ตั้ง · แดงนิ่งเมื่อปิด */
+@keyframes stripDotBlink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+.strip-line-dot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  margin-right: 6px;
+  vertical-align: middle;
+}
+.strip-line-dot.is-open { background: #10B981; box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.18); animation: stripDotBlink 1.2s ease-in-out infinite; }
+.strip-line-dot.is-closed { background: #EF4444; box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.18); }
+@media (prefers-reduced-motion: reduce) { .strip-line-dot.is-open { animation: none; } }
+
+/* R54: อัลบั้มรีวิวจริง 32 ใบ — เปิดจากปุ่ม "ดูทั้งหมด" ของเซกชั่น 📸 รีวิวจริงจากลูกค้า (ไม่โชว์ inline) */
+.review-album-modal { position: fixed; inset: 0; z-index: 80; background: rgba(17, 24, 39, 0.72); display: flex; align-items: center; justify-content: center; padding: 16px; }
+.review-album-panel { background: #fff; border-radius: 16px; width: min(1080px, 100%); max-height: min(86vh, 900px); overflow: auto; padding: 14px; }
+.review-album-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; position: sticky; top: -14px; background: #fff; padding: 10px 0 8px; margin-bottom: 8px; z-index: 1; }
+.review-album-close { border: 0; background: #fee2e2; color: #b91c1c; width: 32px; height: 32px; border-radius: 999px; font-size: 15px; line-height: 1; cursor: pointer; flex-shrink: 0; }
+.review-album-close:hover { background: #fecaca; }
+
 /* Horizontal Carousel — frameless floating arrows overlay the whole section + images */
 .hc { position: relative; }
 .hc-track {

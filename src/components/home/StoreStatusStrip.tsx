@@ -51,7 +51,7 @@ export function StoreStatusStrip({ status }: { status: StoreStatus }) {
         {/* N1 บรรทัด 2: หัวข้อ จองล่วงหน้า/📅Pre-Order + เนื้อหาสด (รอบส่ง + เวลาออกส่ง + ชื่อรอบ + วัน + ปิดรับ) · ไม่ truncate */}
         <p className="text-sm sm:text-base font-bold" data-testid="strip-preorder">🛵 จองล่วงหน้า/📅Pre-Order : {preOrderLine}</p>
         {/* N1 บรรทัด 3: หัวข้อ ส่งวันนี้/⚡Same-Day — ไม่ผูก Round = จัดส่งทันทีหลังครัวปรุงเสร็จ (ไม่มีวงเล็บ) */}
-        <p className="text-sm sm:text-base font-bold" data-testid="strip-sameday">🛵 ส่งวันนี้/⚡Same-Day : {sameDayLine}</p>
+        <p className="text-sm sm:text-base font-bold" data-testid="strip-sameday"><span className={`strip-line-dot ${sameDayOpen ? 'is-open' : 'is-closed'}`} aria-hidden="true" />🛵 ส่งวันนี้/⚡Same-Day : {sameDayLine}</p>
       </div>
     </div>
   )

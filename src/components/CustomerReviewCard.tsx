@@ -27,7 +27,7 @@ interface CustomerReviewCardProps {
 }
 
 const SOURCE_LOGO: Partial<Record<SocialProofReview['source'], string>> = {
-  facebook: '/Facebook Logo.webp',
+  facebook: '/FB logo.webp',
   grabfood: '/Grab Food Logo.webp',
 }
 
@@ -41,7 +41,7 @@ const SOURCE_COLOR: Record<SocialProofReview['source'], string> = {
 const FALLBACK_EMOJI = '🍜'
 
 export function CustomerReviewCard({ review, product, mode, deepLinkTo, ctaLabel, onCta }: CustomerReviewCardProps) {
-  const imageUrl = product?.image_url ?? ''
+  const imageUrl = review.image || product?.image_url || ''
   const isAvailable = Boolean(product?.is_available)
   const label = ctaLabel ?? (mode === 'pre-order' ? '📅 จองเมนูนี้' : '🛒 สั่งเมนูนี้')
 

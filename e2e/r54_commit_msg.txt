@@ -1,0 +1,14 @@
+R54: แก้ feedback Owner 5 ข้อ (เทสต์ production) — strip ไฟกระพริบ + ไบ๊ DB หายจริง + โลโก้ FB ใหม่ + รีวิวรอบแก้
+
+1) Strip บรรทัด Same-Day มีไฟเขียวกระพริบสถานะจริง (strip-line-dot + keyframes stripDotBlink 1.2s · แดงนิ่งเมื่อปิด · prefers-reduced-motion guard) — ข้อความ 3 บรรทัดคงเดิมตาม Owner
+2) DB business_settings: r53_dbfix.cjs (SERVICE ROLE) PATCH theater_daily_copy แทน "ไบ๊" ทุก form ตาม brandName REPLACEMENTS -> re-GET VERIFY_ALL_CLEAN 20/20 rows
+3) โลโก้ FB: socialLinks + CustomerReviewCard ชี้ /FB logo.webp (ไฟล์ 3D ใหม่ใน public) — r34Contracts/r53_n3_assets ปรับตาม · Messenger คงเดิม
+4) รีวิวรอบแก้ (socialProofReviews + ReviewCarouselSection + CustomerReviewCard + types):
+   - ข้อความถูกทั้ง 6 = อ่านสกรีนช็อตต้นฉบับใหม่ทีละใบ (ภาพใหญ่ย่อผ่าน r53_shrink.ps1) — ชิสากุหนุ/LLLLLLLL/Da K./Bronus P./view p./GUBGIB 5 ดาว
+   - รูปประกอบกลับมา: SocialProofReview.image (ใหม่) = ภาพอาหารจริงจาก products 6 URL · productId คง '' (ไม่ผูกเมนูมั่ว · CTA -> /cart)
+   - โลโก้การ์ดสลับ FB <-> Grab ตาม Owner (source/sourceLabel คู่ facebook/grabfood)
+   - อัลบั้ม 32 ใบไม่โชว์ inline: ปุ่ม "ดูทั้งหมด" เปิด modal review-album-modal (grid + lightbox + ปิดได้) — แทน Link /reviews
+   - index.css: strip-line-dot + review-album-modal/panel/head/close
+5) Gates: tsc 0 · lint OK (eslint + brandNameGuard 520 + languageSanity 1508) · vitest 2 ชุด = 13 ไฟล์ 124 tests PASSED
+
+Evidence: e2e/r53_dbfix.cjs · r53_n2_dbcheck · r53_n3_assets · r53_products.cjs · r53_shrink.ps1 · tmp_r53_a/b/c.jpg

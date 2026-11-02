@@ -48,7 +48,7 @@ export interface SocialLinkItem {
 
 /** ลำดับแสดงผล + ไอคอนของปุ่มโซเชียล (ใช้ทั้ง Footer/หน้าติดต่อ) */
 const NETWORK_META: Array<{ network: SocialNetwork; label: string; icon: string; img?: string; imgClass?: string }> = [
-  { network: 'facebook', label: 'Facebook', icon: '📘', img: '/Facebook Logo.webp' },
+  { network: 'facebook', label: 'Facebook', icon: '📘', img: '/FB logo.webp' },
   { network: 'messenger', label: 'Messenger', icon: '💬', img: '/Messenger logo.webp' },
   { network: 'line', label: 'LINE', icon: '💚', img: '/line logo.webp' },
   { network: 'instagram', label: 'Instagram', icon: '📸' },
