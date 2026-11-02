@@ -24,6 +24,42 @@ export interface FloatingBannerPromo {
   to?: string
 }
 
+/** R58 (Owner 2026-11-02): เลือกภาพเจน "ด้านการตลาด/โปรโมชั่น (ไม่ใช่รูปเมนู)" จาก image_urls/URL เดียว
+ *  - ต้องอยู่ใน ai-generated/ · ห้ามหมวด menu · ห้าม _disabled · เอาใบสุดท้ายที่ใช้ได้ (ใหม่สุดตอน insert) */
+export function pickMarketingAiImage(images: unknown): string {
+  const list = Array.isArray(images)
+    ? images
+    : typeof images === 'string' && images.trim()
+      ? [images]
+      : []
+  const ok = list.filter((u): u is string =>
+    typeof u === 'string' &&
+    u.includes('/ai-generated/') &&
+    !u.includes('/ai-generated/menu/') &&
+    !u.includes('/_disabled/'),
+  )
+  return ok[ok.length - 1] || ''
+}
+
+/** R58: มาสคอตต่อโพส — สลับตามลำดับโพสไม่ให้ซ้ำกัน (Owner: "โพสของมาสคอตต้องสลับไม่ซ้ำกัน") */
+export const MASCOT_ROTATION = [
+  '/assets/mascot/bite_recommend.webp',
+  '/assets/mascot/bite_pointing.webp',
+  '/assets/mascot/bite_shopping.webp',
+  '/assets/mascot/bite_cooking.webp',
+] as const
+
+/** pure — รูปมาสคอตสำหรับลำดับโพสที่ pos (mod ยาวรายการ · การ์ดติดกันไม่ซ้ำกัน) */
+export function mascotForPosition(pos: number): string {
+  const i = Math.abs(Number.isFinite(pos) ? Math.trunc(pos) : 0) % MASCOT_ROTATION.length
+  return MASCOT_ROTATION[i]
+}
+
+/** pure — มุมของรูปที่วางมาสคอตต่อโพส (0=ขวาล่าง 1=ซ้ายล่าง 2=ขวาบน 3=ซ้ายบน) */
+export function mascotCornerForPosition(pos: number): number {
+  return Math.abs(Number.isFinite(pos) ? Math.trunc(pos) : 0) % 4
+}
+
 function dismissKey(id: string): string {
   return 'bmb_banner_dismiss_' + id
 }
@@ -68,6 +104,37 @@ export function FloatingAdBanners({ promos, notice }: { promos: FloatingBannerPr
   // R50: "ประกาศล่าสุด" ย้ายจากหน้าจอส่วนล่างขึ้นมาอยู่รวมกับโปรโมชั่นที่นี่
   // (rpc เดิมกับ MarketingFeedSection · newest-first · ล้มเหลว/ว่าง = เงียบ zero-fake)
   const [announcements, setAnnouncements] = useState<FloatingBannerPromo[]>([])
+  // R58 (Owner): ไม่มีภาพเฉพาะการ์ด/ไม่ได้ตั้งโฆษณาลอย = ดึงภาพเจนโปรโมต/กิจกรรม
+  // (bmb-images/ai-generated/{promo,festival} — ไม่ใช่รูปเมนู) มาสลับโชว์แทนมาสคอต (anon list ได้ — policy bmb_images_public_read)
+  const [albumImgs, setAlbumImgs] = useState<string[]>([])
+
+  useEffect(() => {
+    let alive = true
+    void (async () => {
+      try {
+        const { supabase } = await import('@/lib/supabase')
+        const found: Array<{ url: string; at: string }> = []
+        for (const prefix of ['ai-generated/promo', 'ai-generated/festival']) {
+          const { data, error } = await supabase.storage.from('bmb-images').list(prefix, { limit: 60 })
+          if (error || !Array.isArray(data)) continue
+          for (const f of data) {
+            if (!f?.name || typeof f.name !== 'string') continue
+            if (/\.(jpe?g|png|webp|avif)$/i.test(f.name)) {
+              found.push({
+                url: supabase.storage.from('bmb-images').getPublicUrl(`${prefix}/${f.name}`).data.publicUrl,
+                at: String((f as { created_at?: string }).created_at || ''),
+              })
+            }
+          }
+        }
+        if (alive && found.length > 0) {
+          found.sort((a, b) => b.at.localeCompare(a.at)) // ใหม่สุดก่อน
+          setAlbumImgs(found.map((f) => f.url))
+        }
+      } catch { /* zero-fake — ดึงไม่ได้ = การ์ดใช้ภาพตัวเอง/โฆษณาลอย/มาสคอตเดิม */ }
+    })()
+    return () => { alive = false }
+  }, [])
 
   useEffect(() => {
     let alive = true
@@ -77,11 +144,13 @@ export function FloatingAdBanners({ promos, notice }: { promos: FloatingBannerPr
         const { data, error } = await supabase.rpc('marketing_feed_posts', { p_limit: 3 })
         if (alive && !error && Array.isArray(data)) {
           setAnnouncements(
-            (data as Array<{ id: string; title: string; body: string | null }>).slice(0, 2).map((p) => ({
+            (data as Array<{ id: string; title: string; body: string | null; image_urls?: unknown }>).slice(0, 2).map((p) => ({
               id: 'ann-' + p.id,
               title: '📣 ' + (p.title || 'ประกาศจากร้าน'),
               description: (p.body || '').slice(0, 140) || undefined,
               to: '/promotions',
+              // R58: ภาพเจนการตลาด/โปรโมชั่นของโพสนี้เอง (ไม่ใช่รูปเมนู) = โชว์แทนตัวมาสคอต
+              image: pickMarketingAiImage(p.image_urls),
             })),
           )
         }
@@ -92,6 +161,9 @@ export function FloatingAdBanners({ promos, notice }: { promos: FloatingBannerPr
 
   // ประกาศ (ใหม่ก่อน) + โปรโมชั่น → ตัด dismissed → สูงสุด 2 (นับรวม)
   const merged = [...announcements, ...(promos || [])]
+  // R58: ลำดับโพสใน merged (ก่อนตัด dismissed) = ตำแหน่งไว้เลือกรูปมาสคอต/มุม/ภาพอัลบั้ม
+  // → การ์ดติดกันได้มาสคนคนละตัวและมุมคนละมุม (Owner: "สลับไม่ซ้ำกัน")
+  const positionOf = new Map(merged.map((p, i) => [p.id, i]))
   // max 2 banners; skip already-dismissed ones (state + sessionStorage)
   const visible = pickVisibleBannerPromos(merged, dismissedIds)
   const visibleKey = visible.map((p) => p.id).join(',')
@@ -121,13 +193,21 @@ export function FloatingAdBanners({ promos, notice }: { promos: FloatingBannerPr
       <div className="flad-backdrop" onClick={() => visible.forEach((p) => dismiss(p.id))} />
 
       <div className="flad-stack">
-        {visible.map((promo) => (
+        {visible.map((promo) => {
+          // R58 (Owner): ภาพการตลาด/โปรโมชั่นที่เจน (ไม่ใช่รูปเมนู) โชว์แทนตัวมาสคอต —
+          // ลำดับ: ภาพเฉพาะโพส → โฆษณาลอยที่ตั้งไว้ → อัลบั้ม ai-generated/{promo,festival} (สลับตามลำดับ)
+          const pos = positionOf.get(promo.id) ?? 0
+          const mediaSrc = promo.image || floatImg || (albumImgs.length > 0 ? albumImgs[pos % albumImgs.length] : '')
+          // "ยุบตัวมาสคอตเป็นตัวเล็กไปอยู่ด้านมุมต่าง ๆ ของรูป" + สลับไม่ซ้ำตามลำดับโพส
+          const mascotSrc = mascotForPosition(pos)
+          const mascotCorner = mascotCornerForPosition(pos)
+          return (
           <div key={promo.id} className="flad-card" data-testid="floating-ad-banner">
           <div className="flad-media">
-            {(promo.image || floatImg) ? (
+            {mediaSrc ? (
               <>
                 <img
-                  src={promo.image || floatImg}
+                  src={mediaSrc}
                   alt=""
                   loading="lazy"
                   onError={(e) => {
@@ -141,16 +221,15 @@ export function FloatingAdBanners({ promos, notice }: { promos: FloatingBannerPr
                     }
                   }}
                 />
-                {/* R55: "เอามาสคอตไปประกอบรูป" — รูปที่ยังไม่มีลายน้ำมาสคอตติดมา → ประกอบน้อง Bite ทับมุมรูป
-                    (ภาพ wm-* มีมาสคอตในไฟล์อยู่แล้ว = ไม่ซ้ำ) */}
-                {!String(promo.image || floatImg).includes('/wm-') && (
-                  <img src="/assets/mascot/bite_recommend.webp" alt="" loading="lazy" className="flad-mascot-composed" data-testid="floating-ad-mascot" />
+                {/* R55+R58: น้อง Bite ตัวเล็กทับมุมรูป — รูป wm-* มีมาสคอตในไฟล์อยู่แล้ว = ไม่ซ้ำ */}
+                {!mediaSrc.includes('/wm-') && (
+                  <img src={mascotSrc} alt="" loading="lazy" className={`flad-mascot-composed flad-mascot-pos-${mascotCorner}`} data-testid="floating-ad-mascot" />
                 )}
               </>
             ) : (
               <div className="flad-media flad-media-fallback" aria-hidden="true">
-                {/* ช่องสื่อว่าง → ใส่มาสคอตน้อง Bite ทับ gradient ส้ม ไม่ทิ้งบล็อกเปล่า */}
-                <img src="/assets/mascot/bite_ready.webp" alt="" loading="lazy" className="flad-fallback-mascot" />
+                {/* ช่องสื่อว่าง (ยังไม่มีภาพโปรโมตเลย) → มาสคอตคนละตัวตามลำดับโพส ไม่ทิ้งบล็อกเปล่า */}
+                <img src={mascotSrc} alt="" loading="lazy" className="flad-fallback-mascot" />
               </div>
             )}
           </div>
@@ -178,7 +257,8 @@ export function FloatingAdBanners({ promos, notice }: { promos: FloatingBannerPr
             ✕
           </button>
         </div>
-      ))}
+          )
+        })}
       </div>
     </div>
   )

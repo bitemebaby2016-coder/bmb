@@ -1,0 +1,25 @@
+R58: การ์ดประกาศใช้ภาพเจนแทนมาสคอต (มุมสลับไม่ซ้ำ) + AI พรีออเดอร์ผูกปฎิทินจริง + อัลบั้ม AI probe
+
+Owner 2026-11-02 (ต่อจาก R57 — ทดสอบคอมเมนต์ตอบโพส = ถูกต้อง):
+1) การ์ดประกาศ (FloatingAdBanners) — ภาพเจนด้านการตลาด/โปรโมชั่น (ไม่ใช่รูปเมนู)
+   โชว์แทนตัวมาสคอต:
+   - announcement ผูก image ของโพสเองผ่าน pickMarketingAiImage(image_urls)
+     (เฉพาะ ai-generated · ห้ามหมวด menu · ห้าม _disabled)
+   - ลำดับ: ภาพโพส -> floating_ad_image -> อัลบั้ม ai-generated/{promo,festival}
+     (ดึงอัตโนมัติ — anon list ได้จาก policy bmb_images_public_read)
+   - มาสคอตย่อตัวเล็ก (CSS 72% -> 46%) + สลับมุม 4 มุม flad-mascot-pos-0..3
+     + MASCOT_ROTATION 4 รูป ตามลำดับโพสใน merged (การ์ดติดกันไม่ซ้ำกัน)
+   - รูป wm- ข้าม (มีมาสคอตในไฟล์แล้ว) · fallback ไม่มีภาพ = มาสคอตก็สลับตามลำดับ
+2) พรีออเดอร์ผูกวันปฎิทินสั่งจริง + เมนูยังไม่ลงปฎิทิน = "เปิดจองล่วงหน้าเร็ว ๆ นี้":
+   - getShopContext (EF ร่วม reply+generator) ดึง menu_schedule (published >= วันนี้)
+     -> ฉีด MENU CALENDAR (รวมชื่อเมนูตามวัน) + PRE-ORDER DATE RULES
+   - กติกา: วัน/เดือนต้องมาจาก MENU CALENDAR เท่านั้น · ชื่อไม่อยู่ในปฎิทิน
+     = "เปิดจองล่วงหน้าเร็ว ๆ นี้" (ห้ามบอกวัน/ห้ามบอกจองได้แล้ว) · ดึงไม่ได้ = ห้ามเดา
+   - products select += id (join ชื่อ) · MAX_CHARS 4000 -> 5000
+3) อัลบั้มภาพ AI จริง = probe LIVE (e2e/r58_album_probe.json):
+   bucket bmb-images -> ai-generated/<menu|promo|festival>/ (+ ไฟล์เก่า 3 ใบที่รูต)
+
+tests: ใหม่ r58PreorderCalendar 5 ข้อ · r43Contracts MAX_CHARS ปรับ 5000
+gates: FULL 200/200 files · 1991/1991 tests 0 fail · tsc 0 · lint OK (525+1542)
+  · esbuild 0 x3 · DEPLOY_social-ai-worker_OK + DEPLOY_social-post-worker_OK
+EF ขึ้น production แล้ว · เว็บขึ้นผ่าน CI/Pages จาก main

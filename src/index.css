@@ -1089,18 +1089,22 @@ p { color: var(--color-brand-text-secondary); }
   margin: 4% auto 0;
   display: block;
 }
-/* R55: มาสคอตประกอบบนรูปโฆษณาลอย (เอามาสคอตไปประกอบรูป — Owner 2026-11-02)
-   ทับมุมขวาล่างของ media · contain ไม่ยืด · ไม่รับคลิก */
+/* R55+R58: มาสคอตประกอบบนรูปโฆษณาลอย — R58 "ยุบตัวเล็ก + สลับมุมตามลำดับโพส"
+   0=ขวาล่าง · 1=ซ้ายล่าง · 2=ขวาบน · 3=ซ้ายบน (class flad-mascot-pos-<n>) */
 .flad-media img.flad-mascot-composed {
   position: absolute;
   right: 4px;
   bottom: 0;
   width: auto;
-  height: 72%;
+  height: 46%;
   object-fit: contain;
   pointer-events: none;
   filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.35));
 }
+.flad-media img.flad-mascot-pos-0 { right: 4px; bottom: 0; left: auto; top: auto; }
+.flad-media img.flad-mascot-pos-1 { left: 4px; bottom: 0; right: auto; top: auto; }
+.flad-media img.flad-mascot-pos-2 { right: 4px; top: 4px; bottom: auto; left: auto; }
+.flad-media img.flad-mascot-pos-3 { left: 4px; top: 4px; bottom: auto; right: auto; }
 .flad-body { flex: 1; min-width: 0; }
 .flad-title {
   font-weight: 800;

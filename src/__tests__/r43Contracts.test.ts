@@ -96,6 +96,7 @@ describe('R43 B4 — buildStoreStatusLines (mirror สถานะร้าน�
     expect(shopCtxSrc).toMatch(/\/rest\/v1\/delivery_rounds/)
     expect(shopCtxSrc).toMatch(/STORE STATUS \(สด/)
     expect(shopCtxSrc).toMatch(/buildStoreStatusLines\(rounds/)
-    expect(shopCtxSrc).toMatch(/MAX_CHARS = 4000/)
+    // R43 ยก 2400→4000 · R58 ยก 4000→5000 (กัน MENU CALENDAR โดนตัดท้าย)
+    expect(shopCtxSrc).toMatch(/MAX_CHARS = 5000/)
   })
 })

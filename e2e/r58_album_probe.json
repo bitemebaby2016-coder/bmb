@@ -1,0 +1,81 @@
+{
+  "ran_at": "2026-11-02T15:25:54.726Z",
+  "folders": [
+    {
+      "folder": "ai-generated/gen-mvx48rh6-ajw6.jpg",
+      "files": 1,
+      "latest": "2026-11-01 00:52:54.170095+00"
+    },
+    {
+      "folder": "ai-generated/gen-mvxckfpp-eyjy.jpg",
+      "files": 1,
+      "latest": "2026-11-01 04:45:55.757806+00"
+    },
+    {
+      "folder": "ai-generated/menu",
+      "files": 1,
+      "latest": "2026-11-02 12:03:04.361113+00"
+    },
+    {
+      "folder": "ai-generated/wm-mvxgm0xj-drq0.png",
+      "files": 1,
+      "latest": "2026-11-01 06:39:14.30634+00"
+    }
+  ],
+  "samples": [
+    {
+      "name": "ai-generated/menu/wm-mvz7m6yg-zoui.png",
+      "created_at": "2026-11-02 12:03:04.361113+00",
+      "bytes": 5861023
+    },
+    {
+      "name": "ai-generated/wm-mvxgm0xj-drq0.png",
+      "created_at": "2026-11-01 06:39:14.30634+00",
+      "bytes": 1814126
+    },
+    {
+      "name": "ai-generated/gen-mvxckfpp-eyjy.jpg",
+      "created_at": "2026-11-01 04:45:55.757806+00",
+      "bytes": 176908
+    },
+    {
+      "name": "ai-generated/gen-mvx48rh6-ajw6.jpg",
+      "created_at": "2026-11-01 00:52:54.170095+00",
+      "bytes": 120144
+    }
+  ],
+  "policies": [
+    {
+      "policyname": "bmb_images_public_read",
+      "cmd": "SELECT",
+      "roles": [
+        "public"
+      ],
+      "qual": "(bucket_id = 'bmb-images'::text)"
+    },
+    {
+      "policyname": "bmb_images_authenticated_upload",
+      "cmd": "INSERT",
+      "roles": [
+        "authenticated"
+      ],
+      "qual": null
+    },
+    {
+      "policyname": "bmb_images_admin_update",
+      "cmd": "UPDATE",
+      "roles": [
+        "authenticated"
+      ],
+      "qual": "((bucket_id = 'bmb-images'::text) AND (( SELECT profiles.role\n   FROM profiles\n  WHERE (profiles.id = auth.uid())) = 'admin'::text))"
+    },
+    {
+      "policyname": "bmb_images_admin_delete",
+      "cmd": "DELETE",
+      "roles": [
+        "authenticated"
+      ],
+      "qual": "((bucket_id = 'bmb-images'::text) AND (( SELECT profiles.role\n   FROM profiles\n  WHERE (profiles.id = auth.uid())) = 'admin'::text))"
+    }
+  ]
+}

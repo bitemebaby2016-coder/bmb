@@ -64,7 +64,8 @@ export const REPLY_CONTINUITY_RULES = [
 // --- cache ~5 นาที: ไม่ต้องยิง DB ทุกข้อความ ---
 const CACHE_MS = 5 * 60_000
 // R43 B4: +STORE STATUS (สด) บรรทัดใหม่ → ยกเพดานไม่ให้ตัดท้าย (MENU/status โดนตัด = ตอบผิดอีก)
-const MAX_CHARS = 4000
+// R58: +MENU CALENDAR (ปฎิทินเมนูจริง) → ยก 4000→5000 (ปฏิทินโดนตัด = AI เดาวันพรีออเดอร์ผิด)
+const MAX_CHARS = 5000
 let cache: { at: number; text: string } | null = null
 
 async function restGet(sbUrl: string, serviceKey: string, path: string): Promise<any[] | null> {
@@ -280,6 +281,45 @@ export function buildStoreStatusLines(
 }
 
 /**
+ * R58 (Owner 2026-11-02 — "พรีออเดอร์ให้ผูกวันปฏิทินสั่งจริง ส่วนเมนูที่ยังไม่ลงปฏิทิน
+ * ให้ใช้เป็น 'เปิดจองล่วงหน้าเร็ว ๆ นี้'"): บรรทัดปฎิทินเมนูจริง (menu_schedule published)
+ * + กติกาบังคับ สำหรับ prompt AI ทุกช่องทาง (reply + generator — ใช้ getShopContext ชุดเดียว)
+ * rows = null → ดึงไม่ได้ (ZERO-FAKE: ห้ามเดา) · [] → ยังไม่มีเมนูลงปฎิทิน
+ */
+export function buildMenuCalendarLines(
+  rows: Array<{ scheduled_date?: string | null; product_name?: string | null }> | null,
+  _now: Date = new Date(),
+): string[] {
+  const head = 'MENU CALENDAR (ปฎิทินเมนูจริงจาก menu_schedule — วันจองล่วงหน้า/พรีออเดอร์ต้องอ้างจากนี้เท่านั้น):'
+  const rule = [
+    'PRE-ORDER DATE RULES (กติกาวันจองล่วงหน้า):',
+    '- วัน/เดือนของพรีออเดอร์ต้องมาจาก MENU CALENDAR ข้างบนเท่านั้น — ห้ามเดาวันเอง ห้ามเดาเดือนที่ไม่มีในปฎิทิน',
+    '- เมนูที่ชื่อไม่อยู่ใน MENU CALENDAR = ยังไม่ลงปฎิทิน → ให้พูดว่า "เปิดจองล่วงหน้าเร็ว ๆ นี้" เท่านั้น — ห้ามบอกวันที่ ห้ามบอกว่าจองได้แล้วตอนนี้',
+    '- ถ้าปฎิทินดึงไม่ได้ = ห้ามยืนยันวันพรีออเดอร์ใด ๆ ให้บอกตามจริงว่าเช็คปฎิทินไม่ได้ในตอนนี้ แล้วชวนดูที่ biteme-baby.com/shop',
+  ].join('\n')
+  if (rows === null) {
+    return [head, '  - ดึงข้อมูลปฎิทินเมนูไม่ได้ในตอนนี้', rule]
+  }
+  const byDate = new Map<string, string[]>()
+  for (const r of rows) {
+    const day = String(r.scheduled_date || '').slice(0, 10)
+    const name = String(r.product_name || '').trim()
+    if (!day || !name) continue
+    if (!byDate.has(day)) byDate.set(day, [])
+    byDate.get(day)!.push(name)
+  }
+  const lines = [head]
+  if (byDate.size === 0) {
+    lines.push('  - (ยังไม่มีเมนูลงปฎิทิน — เมนูทั้งหมดยังไม่ลงปฎิทิน)')
+  } else {
+    for (const day of [...byDate.keys()].sort()) {
+      lines.push(`  - ${day}: ${byDate.get(day)!.join(', ')}`)
+    }
+  }
+  return [lines.join('\n'), rule]
+}
+
+/**
  * สร้างข้อความบริบทร้านจริงจาก DB (เมนูขายได้/หมด + โปรโมชัน + ตั้งค่าร้าน)
  * + ข้อมูลติดต่อ — คืน '' เมื่อดึงไม่ได้เลย (ผู้ใช้ prompt จะบอกตามจริงแทนมโน)
  */
@@ -289,9 +329,10 @@ export async function getShopContext(
 ): Promise<string> {
   if (!opts.force && cache && Date.now() - cache.at < CACHE_MS) return cache.text
 
-  const [products, categories, promotions, settings, rounds] = await Promise.all([
+  const bkkToday = new Date(Date.now() + 7 * 3_600_000).toISOString().slice(0, 10)
+  const [products, categories, promotions, settings, rounds, schedule] = await Promise.all([
     restGet(deps.sbUrl, deps.serviceKey,
-      '/rest/v1/products?select=name,price,category_id,is_available,is_featured&order=sort_order.asc&limit=120'),
+      '/rest/v1/products?select=id,name,price,category_id,is_available,is_featured&order=sort_order.asc&limit=120'),
     restGet(deps.sbUrl, deps.serviceKey,
       '/rest/v1/product_categories?select=id,name&order=sort_order.asc&limit=40'),
     restGet(deps.sbUrl, deps.serviceKey,
@@ -301,9 +342,12 @@ export async function getShopContext(
     // R43 B4: รอบจัดส่งจริง → คำนวณ STORE STATUS (สด) (mirror เว็บ · ห้ามตอบจากเวลา static)
     restGet(deps.sbUrl, deps.serviceKey,
       '/rest/v1/delivery_rounds?select=status,display_name,cutoff_time,pre_order_cutoff,delivery_start,delivery_end,max_capacity,current_count,scheduled_date,round_key&order=scheduled_date.asc&limit=40'),
+    // R58: ปฎิทินเมนูจริง (published, วันนี้เป็นต้นไป) → วันพรีออเดอร์ต้องผูกวันจริง
+    restGet(deps.sbUrl, deps.serviceKey,
+      `/rest/v1/menu_schedule?select=scheduled_date,product_id&is_published=eq.true&scheduled_date=gte.${bkkToday}&order=scheduled_date.asc&limit=200`),
   ])
 
-  const anyData = products || categories || promotions || settings || rounds
+  const anyData = products || categories || promotions || settings || rounds || schedule
   if (!anyData) {
     cache = { at: Date.now(), text: '' }
     return ''
@@ -340,6 +384,19 @@ export async function getShopContext(
   }
   if (unavailable.length > 0) {
     lines.push('MENU หมดวันนี้ (ห้ามบอกว่าสั่งได้): ' + unavailable.map((p: any) => p.name).join(', '))
+  }
+
+  // R58 (Owner): ปฎิทินเมนูจริง → วันพรีออเดอร์ผูกวันจริง + เมนูยังไม่ลงปฎิทิน = "เปิดจองล่วงหน้าเร็ว ๆ นี้"
+  {
+    const nameById = new Map<string, string>()
+    for (const p of products || []) nameById.set(String(p.id), String(p.name))
+    const rowsWithNames = schedule === null
+      ? null
+      : (schedule as Array<{ scheduled_date?: string | null; product_id?: string | null }>).map((r) => ({
+          scheduled_date: r.scheduled_date,
+          product_name: nameById.get(String(r.product_id || '')) || null,
+        }))
+    lines.push(...buildMenuCalendarLines(rowsWithNames, new Date()))
   }
 
   if (promotions && promotions.length > 0) {
