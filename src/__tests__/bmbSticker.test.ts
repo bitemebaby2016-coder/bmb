@@ -74,6 +74,18 @@ describe('สติกเกอร์ BMB 40×60 — แบบฟอร์มต
     expect(printSrc).toContain('-webkit-text-stroke: 0.35px #000')
   })
 
+  it('R59 (Owner): แถว ทานที่ร้าน/สั่งกลับบ้าน/รับที่ร้าน = เท่าหัวข้อ Pre-Order/Same Day · ใหญ่สุดตามวัด + [PAID] ใหญ่ขึ้น + stroke ชั้นเดียว', async () => {
+    const html = await buildBmbStickerHtml(baseOrder)
+    // ทั้งสองแถว = 9px (เท่ากัน · ใหญ่สุดที่พอดี 145px — หลักฐาน e2e/r59_sticker_fit.json: svc@9=142.98 · @10 ล้น)
+    expect(html).toContain('.opts.mode { font-size: 9px; }')
+    expect(html).toContain('.opts.svc { font-size: 9px; }')
+    // แถว [PAID] = 7px (ใหญ่สุดที่พอดี: @7=140.75 ✓ · @7.8=154.8 ล้น) — วงกลม ○/● ใหญ่ขึ้นตามแถว
+    expect(html).toContain('.paid { display: flex; margin: .3px 0; font-size: 7px;')
+    // stroke = rule เดียว `.sheet *` (ครอบค่าที่ AI พิม + หัวข้อจากแบบ Owner พร้อมกัน) — ห้ามมี rule stroke ซ้ำ
+    expect(html.match(/-webkit-text-stroke/g) || []).toHaveLength(1)
+    expect(html).toContain('paint-order: stroke fill')
+  })
+
   it('escapes HTML ของลูกค้า + ไม่มีบรรทัดราคาบนสติกเกอร์', async () => {
     const html = await buildBmbStickerHtml(baseOrder)
     expect(html).not.toContain('<script>')

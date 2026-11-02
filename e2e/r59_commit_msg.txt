@@ -1,0 +1,33 @@
+R59: เพิ่มเมนูเลือกรูปจากภาพเจน+ย่ออัตโนมัติ + สติกเกอร์ฟอนต์/วงกลมใหญ่สุด + test suite §T (ปิดเซสชัน)
+
+Owner 2026-11-02 (ต่อจาก R58 · 2 งาน + อัปเดตเอกสาร/ปิดเซสชัน):
+1) เพิ่มเมนู — บราวซ์ภาพที่เจน (ai-generated) เลือกใช้ได้ + ชี้ไฟล์เข้าคลัง
+   + ลดขนาดอัตโนมัติเมื่อเลือกมาใช้:
+   - bmbAdminApi_media: downscaleImageFile (canvas · EXIF imageOrientation:'from-image'
+     · maxSide 1024 · jpeg q0.82 · คืนไฟล์เดิมถ้าเล็กรอบแล้ว · GIF ไม่แตะ
+     · decode ไม่ได้ = zero-fake คืนเดิม) + listAiAlbumFiles
+     (ai-generated/{menu,promo,festival} + ไฟล์รูต · เรียงใหม่ · ไม่รวม _disabled)
+   - AdminProducts: ปุ่ม product-ai-browse -> พาเนล product-ai-album
+     (product-ai-pick-*) -> fetch ไฟล์จริง -> ย่อ -> uploadProductImage
+     -> image_url ชี้ไฟล์ใน storage + toast ยืนยัน
+   - ทางไฟล์/กล้องก็ย่อก่อน validate (รูปเจน 5.8MB ไม่โดน reject ที่ 5MB)
+   - เปิดพาเนล = auto-scroll (rule 12.3)
+2) สติกเกอร์ 40×60 — ตัวอักษร/วงกลมใหญ่สุดเท่าที่จะใหญ่ได้
+   (วัดจริง e2e/r59_sticker_fit.cjs/.json — ไม่เดา):
+   - HTML: .opts.mode 7.8->9px · .opts.svc 5.4->9px (เท่ากัน = หัวข้อ
+     Pre-Order/Same Day · svc@9 = 142.98/145px · combined scrollH 221=221 ไม่ล้น)
+     · .paid 6->7px (140.75 ✓ · @7.8 ล้น)
+   - PNG: mode 20->26 · svc 16->26 (เท่ากัน · sp3@26 = 432.83/440 ✓ · @27 ล้น)
+     · paid 17->20 (421.5 ✓) · ระยะบรรทัด 27->32 / 30->34 (ไม่ทับกัน)
+   - วงกลม ○/● ใหญ่ขึ้นตามแถว (svc +67%)
+   - stroke: ข้อมูลที่ AI พิม + หัวข้อแบบ Owner = rule เดียว R51 .sheet * อยู่แล้ว
+     -> comment ยืนยัน + test บังคับ -webkit-text-stroke ปรากฏครั้งเดียว (ไม่ซ้ำ)
+3) test suite: docs/BMB_PRODUCTION_TEST_PACK.md += §T (T-A..T-E · 20 ข้อ รวม R56-R59)
+   = รายการทดสอบรวม production ให้ Owner รันทั้งหมดหลังเปิดแชทใหม่
++ AI_WORK_STATE.md / docs/BMB_MASTER_STATUS.md บล็อก R59
+
+tests: ใหม่ r59AdminMenuAi 2 · bmbSticker += R59 (12) · stickerPng += R59 (18)
+gates: FULL รอบ2 = 201/201 files · 1995/1995 tests · 0 error
+  (รอบ1 มี flaky post-teardown 1 = เดี่ยว x2 + full ซ้ำ สะอาด)
+  · tsc 0 · lint OK (brandNameGuard 526 + languageSanity 1551)
+  · ไม่แตะ EF -> ไม่ต้อง deploy (งานเว็บล้วน)

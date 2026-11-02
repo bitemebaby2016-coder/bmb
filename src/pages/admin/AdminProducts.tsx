@@ -4,7 +4,7 @@ import { showToast } from '@/components/ui/ToastContainer'
 import { getProducts, createProduct, updateProduct, archiveProduct, restoreProduct, getCategories, getCategoriesAdmin, createCategory, updateCategory, archiveCategory, restoreCategory, deleteCategory, deleteProduct } from '@/lib/bmbAdminApi_products'
 import { ToggleSwitch } from '@/components/admin/ToggleSwitch'
 import { HomePopularManager } from '@/components/admin/HomePopularManager'
-import { uploadProductImage, validateImageFile } from '@/lib/bmbAdminApi_media'
+import { uploadProductImage, validateImageFile, downscaleImageFile, listAiAlbumFiles, PRODUCT_IMAGE_MAX_SIDE, type AiAlbumFile } from '@/lib/bmbAdminApi_media'
 import { slugifyCategory, blankCategoryForm } from '@/lib/adminUi'
 import { customerVisibilityIssue, CUSTOMER_VISIBILITY_LABEL } from '@/lib/catalogStructure'
 // R21 Phase 3: โหลดเมนูไม่สำเร็จต้องฟ้อง (ห้ามโชว์หน้าเปล่าเหมือนไม่มีเมนู)
@@ -56,6 +56,9 @@ export function AdminProducts() {
   const formRef = useRef<HTMLDivElement>(null)
   const catFormRef = useRef<HTMLDivElement>(null)
   const movePanelRef = useRef<HTMLDivElement>(null)
+  // R59 (Owner): บราวซ์ภาพที่เจนจากหน้าเพิ่ม/แก้เมนู + เลือกใช้ = ชี้ไฟล์เข้าคลัง + ลดขนาดอัตโนมัติ
+  const [aiAlbum, setAiAlbum] = useState<AiAlbumFile[] | null>(null) // null = ยังไม่กดเปิด
+  const aiPanelRef = useRef<HTMLDivElement>(null)
   // จิ้มปุ่ม "แก้ไข/เพิ่ม" → ฟอร์มเปิด = เด้งขึ้นไปรับงานทันที (ไม่ปล่อยให้เลื่อนเอง)
   useEffect(() => {
     if (showAddForm) formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
@@ -85,23 +88,59 @@ export function AdminProducts() {
 
   // ✅ CAT-03: canonical image flow — Storage bmb-images → media_assets →
   // products.image_url = public URL. No new Base64 (migration contract §6/§7).
+  // R59: ทุกรูปที่เลือก/อัปโหลดผ่าน "ย่ออัตโนมัติก่อนใช้" (downscaleImageFile) — รูปเจน 2048²/5.8MB เข้าการ์ดได้จริง
   async function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     if (!file) return
-    const v = validateImageFile(file)
+    const sized = await downscaleImageFile(file)
+    const v = validateImageFile(sized)
     if (!v.ok) {
       showToast('รูปไม่ผ่านเงื่อนไข: ' + v.error, 'error')
       e.target.value = ''
       return
     }
-    const res = await uploadProductImage(file)
+    const res = await uploadProductImage(sized)
     if (!res.ok || !res.url) {
       showToast('อัปโหลดไม่สำเร็จ: ' + (res.error || ''), 'error')
       e.target.value = ''
       return
     }
     setFormData({ ...formData, image_url: res.url })
+    if (sized !== file) showToast('ลดขนาดรูปอัตโนมัติ (กว้างสุด ' + PRODUCT_IMAGE_MAX_SIDE + 'px) แล้วบันทึกเข้าคลังภาพ', 'success')
     e.target.value = ''
+  }
+
+  // R59: เปิด/ปิดบราวซ์ภาพที่เจน (ครั้งแรก = ดึงรายการจาก storage) — rule 12.3 เลื่อนไปที่พาเนลทันที
+  async function handleAiBrowse() {
+    if (aiAlbum) { setAiAlbum(null); return }
+    const files = await listAiAlbumFiles()
+    setAiAlbum(files)
+    requestAnimationFrame(() => aiPanelRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' }))
+  }
+
+  // R59: เลือกรูปจากคลัง = ดึงไฟล์จริง → ย่ออัตโนมัติ → อัปโหลดเข้าคลัง (ชี้ image_url ที่ไฟล์ใน storage)
+  async function handleAiPick(item: AiAlbumFile) {
+    try {
+      const res = await fetch(item.url)
+      if (!res.ok) throw new Error('HTTP ' + res.status)
+      const blob = await res.blob()
+      const src = new File([blob], item.name, { type: blob.type || 'image/png' })
+      const small = await downscaleImageFile(src)
+      const up = await uploadProductImage(small, formData.name || 'menu')
+      if (!up.ok || !up.url) {
+        showToast('ใช้รูปไม่สำเร็จ: ' + (up.error || ''), 'error')
+        return
+      }
+      setFormData({ ...formData, image_url: up.url })
+      showToast(
+        small !== src
+          ? 'เลือกรูป + ลดขนาดอัตโนมัติ (กว้างสุด ' + PRODUCT_IMAGE_MAX_SIDE + 'px) แล้วบันทึกเข้าคลังภาพ'
+          : 'เลือกรูปเป็นรูปเมนูแล้ว (ชี้ไฟล์ในคลังภาพ)',
+        'success',
+      )
+    } catch (err) {
+      showToast('เปิดรูปจากคลังไม่สำเร็จ: ' + (err as Error).message, 'error')
+    }
   }
 
   async function handleAddProduct() {
@@ -403,10 +442,48 @@ export function AdminProducts() {
                     data-testid="product-image-camera"
                   />
                 </label>
+                {/* R59 (Owner): เลือกรูปจากภาพที่เจน (ai-generated) — ชี้ไฟล์เข้าคลัง + ย่ออัตโนมัติ */}
+                <button
+                  type="button"
+                  className="btn btn-outline btn-sm"
+                  onClick={() => void handleAiBrowse()}
+                  data-testid="product-ai-browse"
+                >
+                  🖼 เลือกจากรูปที่เจน (AI)
+                </button>
                 {formData.image_url && (
                   <button onClick={() => setFormData({ ...formData, image_url: '' })} className="btn btn-outline text-sm text-red-500">✖ Remove image</button>
                 )}
               </div>
+              {aiAlbum !== null && (
+                <div
+                  ref={aiPanelRef}
+                  className="mt-3 border border-brand-border rounded-xl p-3 bg-white"
+                  data-testid="product-ai-album"
+                >
+                  <p className="text-xs text-brand-muted mb-2">
+                    คลังภาพที่เจน (bmb-images/ai-generated/) — กดเลือกเพื่อลดขนาดอัตโนมัติ (กว้างสุด {PRODUCT_IMAGE_MAX_SIDE}px) แล้วใช้เป็นรูปเมนู
+                  </p>
+                  {aiAlbum.length === 0 ? (
+                    <p className="text-sm text-brand-muted">ยังไม่มีรูปในคลัง — เจนรูปก่อนที่ AI Studio (แท็บการตลาด)</p>
+                  ) : (
+                    <div className="grid grid-cols-4 sm:grid-cols-6 gap-2">
+                      {aiAlbum.map((a) => (
+                        <button
+                          key={a.path}
+                          type="button"
+                          className="border border-brand-border rounded-lg overflow-hidden hover:ring-2 hover:ring-brand-primary"
+                          onClick={() => void handleAiPick(a)}
+                          data-testid={`product-ai-pick-${a.name}`}
+                          title={a.name}
+                        >
+                          <img src={a.url} alt={a.name} className="w-full h-16 object-cover" loading="lazy" />
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
               {formData.image_url && (
                 <div className="flex items-center gap-2 mt-2">
                   <input

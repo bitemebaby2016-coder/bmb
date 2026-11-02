@@ -68,6 +68,27 @@ describe('stickerDrawList — layout บนผืน 472×709 (40×60 @300dpi)',
     expect(src).not.toMatch(/if \(op\.size[^)]*\)\s*ctx\.strokeText/)
   })
 
+  it('R59 (Owner): mode/svc = เท่ากัน 26px (ใหญ่สุดตามวัด — วงกลมใหญ่ขึ้นตาม) · paid = 20 · ระยะบรรทัดไม่ทับกัน', () => {
+    const ops = stickerDrawList(order)
+    const find = (needle: string) => ops.find((o): o is Extract<StickerOp, { kind: 'text' }> => o.kind === 'text' && o.text.includes(needle))
+    const mode = find('Pre-Order')
+    const svc = find('ทานที่ร้าน')
+    const paid = ops.find((o): o is Extract<StickerOp, { kind: 'text' }> => o.kind === 'text' && o.text.startsWith('[PAID]'))
+    expect(mode).toBeTruthy()
+    expect(svc).toBeTruthy()
+    expect(paid).toBeTruthy()
+    // เท่ากัน (Owner: svc = หัวข้อ) + ใหญ่สุดที่ row ยาวสุด (svc) ยังพอดี 440px (วัด 432.83 @26 · @27 = 449.48 ล้น — e2e/r59_sticker_fit.json)
+    expect(mode!.size).toBe(26)
+    expect(svc!.size).toBe(26)
+    // [PAID] ใหญ่สุดที่พอดี (421.52 @20 · @21 = 442.6 ล้น)
+    expect(paid!.size).toBe(20)
+    // ระยะ mode→svc / svc→บรรทัดถัดไป ต้อง ≥ ขนาดฟอนต์ (ไม่งั้นหัวแถวชนท้ายแถว)
+    expect(svc!.y - mode!.y).toBeGreaterThanOrEqual(26)
+    const orderId = find('ORDER ID')
+    expect(orderId).toBeTruthy()
+    expect(orderId!.y - svc!.y).toBeGreaterThanOrEqual(26)
+  })
+
   it('เมนูเกิน 3 รายการ = ตัด … · ทุกพิกัดอยู่ในขอบ (ไม่ล้นใบ)', () => {
     const many: PrintOrderData = {
       ...order,

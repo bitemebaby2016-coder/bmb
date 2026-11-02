@@ -333,8 +333,10 @@ export async function buildBmbStickerHtml(o: PrintOrderData, at: Date | number =
   hr.rule { border: 0; border-top: 1.6px solid #000; margin: 1.2px 0; flex: 0 0 auto; }
   .dtrow { display: flex; justify-content: space-between; margin: .4px 0; font-size: 7.8px; flex: 0 0 auto; }
   .opts { display: flex; justify-content: center; gap: 5px; margin: .4px 0; white-space: nowrap; flex: 0 0 auto; }
-  .opts.mode { font-size: 7.8px; }
-  .opts.svc { font-size: 5.4px; }
+  /* R59 (Owner): หัวข้อ Pre-Order/Same Day + บรรทัด ทานที่ร้าน/สั่งกลับบ้าน/รับที่ร้าน = เท่ากัน · ใหญ่สุดเท่าที่จะใหญ่ได้
+     = 9px (วัดจริง e2e/r59_sticker_fit.json: svc@9 = 142.98/145px · combined mode+svc9+paid7 = scrollH 221 = 221 ไม่ล้น · @10 ล้น) */
+  .opts.mode { font-size: 9px; }
+  .opts.svc { font-size: 9px; }
   .f { display: flex; margin: .3px 0; font-size: 7.5px; flex: 0 0 auto; }
   .f b { font-weight: 700; }
   /* คอลัมน์ป้าย 15.5mm — ป้ายชิดซ้าย ':' ชิดขวา (colon ตรงแนวทุกแถว) ค่าเริ่มหลังป้าย */
@@ -343,7 +345,8 @@ export async function buildBmbStickerHtml(o: PrintOrderData, at: Date | number =
   .f > span { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; }
   .f.nat b { flex: 0 0 auto; margin-right: 2px; }
   .sec { font-size: 8px; font-weight: 700; margin: .8px 0 .4px; flex: 0 0 auto; }
-  .paid { display: flex; margin: .3px 0; font-size: 6px; white-space: nowrap; flex: 0 0 auto; }
+  /* R59: แถว [PAID] ใหญ่สุดที่พอดี = 7px (วัด: @7 = 140.75/145 ✓ · @7.8 = 154.8 ล้น) — วงกลม ○/● ใหญ่ขึ้นตามแถว */
+  .paid { display: flex; margin: .3px 0; font-size: 7px; white-space: nowrap; flex: 0 0 auto; }
   .paid b { font-weight: 700; margin-right: 3px; }
   .paid span { margin-right: 5px; }
   /* QR ผูกขอบล่างหน้า (margin-top:auto) — เนื้อบนเลื่อนด้วย offset แล้วก็ยังขอบล่าง */
@@ -354,7 +357,9 @@ export async function buildBmbStickerHtml(o: PrintOrderData, at: Date | number =
   .scan { font-weight: 800; font-size: 8.4px; letter-spacing: .1px; white-space: nowrap; }
   .ty { font-family: 'Brush Script MT', Georgia, cursive; font-style: italic; font-size: 7px; margin-top: 1.5px; }
   /* R51 (Owner: ตัวอักษรเป็นตัวหนา/จางทั้งใบ — โดยเฉพาะตัวเล็ก + รายละเอียดลูกค้า):
-     stroke ทุกตัวอักษร (สีเดียวกับ fill = หนาขึ้น ไม่เปลี่ยนสี) ผ่านทั้ง dialog และ QZ */
+     stroke ทุกตัวอักษร (สีเดียวกับ fill = หนาขึ้น ไม่เปลี่ยนสี) ผ่านทั้ง dialog และ QZ
+     R59 (Owner): "ใส่สโตรคให้สำหรับข้อมูลที่เอไอพิมด้วย · หัวข้อต้นแบบจากเทมเพลต Owner ใส่สโตรคให้แล้วไม่ต้องใส่ซ้ำ"
+     = กฎ .sheet * ตัวนี้ครอบ "ค่าหลัง : ทุกช่อง (AI พิม)" และหัวข้อพร้อมกัน ชั้นเดียว — ไม่เพิ่ม rule ซ้ำที่ไหน */
   .sheet, .sheet * { -webkit-text-stroke: 0.35px #000; paint-order: stroke fill; }
   </style></head><body>
   <div class="sheet">

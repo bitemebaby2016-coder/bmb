@@ -1,0 +1,213 @@
+{
+  "base": {
+    "sheetW": 145,
+    "sheetH": 221,
+    "sheetScrollH": 221,
+    "svc": 89.78,
+    "mode": 87.59,
+    "paid": 123.22,
+    "svcFont": "5.4px",
+    "modeFont": "7.8px",
+    "paidFont": "6px"
+  },
+  "svcModeSizes": {
+    "9": {
+      "sheetW": 145,
+      "sheetH": 221,
+      "sheetScrollH": 221,
+      "svc": 142.98,
+      "mode": 100.31,
+      "paid": 123.22,
+      "svcFont": "9px",
+      "modeFont": "9px",
+      "paidFont": "6px"
+    },
+    "7.8": {
+      "sheetW": 145,
+      "sheetH": 221,
+      "sheetScrollH": 221,
+      "svc": 125.25,
+      "mode": 87.59,
+      "paid": 123.22,
+      "svcFont": "7.8px",
+      "modeFont": "7.8px",
+      "paidFont": "6px"
+    },
+    "8.2": {
+      "sheetW": 145,
+      "sheetH": 221,
+      "sheetScrollH": 221,
+      "svc": 131.16,
+      "mode": 91.84,
+      "paid": 123.22,
+      "svcFont": "8.2px",
+      "modeFont": "8.2px",
+      "paidFont": "6px"
+    },
+    "8.6": {
+      "sheetW": 145,
+      "sheetH": 221,
+      "sheetScrollH": 221,
+      "svc": 137.06,
+      "mode": 96.06,
+      "paid": 123.22,
+      "svcFont": "8.6px",
+      "modeFont": "8.6px",
+      "paidFont": "6px"
+    }
+  },
+  "paidSizes": {
+    "7": {
+      "sheetW": 145,
+      "sheetH": 221,
+      "sheetScrollH": 221,
+      "svc": 89.78,
+      "mode": 87.59,
+      "paid": 140.75,
+      "svcFont": "5.4px",
+      "modeFont": "7.8px",
+      "paidFont": "7px"
+    },
+    "6.2": {
+      "sheetW": 145,
+      "sheetH": 221,
+      "sheetScrollH": 221,
+      "svc": 89.78,
+      "mode": 87.59,
+      "paid": 126.72,
+      "svcFont": "5.4px",
+      "modeFont": "7.8px",
+      "paidFont": "6.2px"
+    },
+    "6.4": {
+      "sheetW": 145,
+      "sheetH": 221,
+      "sheetScrollH": 221,
+      "svc": 89.78,
+      "mode": 87.59,
+      "paid": 130.22,
+      "svcFont": "5.4px",
+      "modeFont": "7.8px",
+      "paidFont": "6.4px"
+    },
+    "6.6": {
+      "sheetW": 145,
+      "sheetH": 221,
+      "sheetScrollH": 221,
+      "svc": 89.78,
+      "mode": 87.59,
+      "paid": 133.75,
+      "svcFont": "5.4px",
+      "modeFont": "7.8px",
+      "paidFont": "6.6px"
+    },
+    "7.8": {
+      "sheetW": 145,
+      "sheetH": 221,
+      "sheetScrollH": 221,
+      "svc": 89.78,
+      "mode": 87.59,
+      "paid": 154.8,
+      "svcFont": "5.4px",
+      "modeFont": "7.8px",
+      "paidFont": "7.8px"
+    }
+  },
+  "svcTight": {
+    "gap5_ls0": {
+      "sheetW": 145,
+      "sheetH": 221,
+      "sheetScrollH": 221,
+      "svc": 125.25,
+      "mode": 87.59,
+      "paid": 123.22,
+      "svcFont": "7.8px",
+      "modeFont": "7.8px",
+      "paidFont": "6px"
+    },
+    "gap3_ls0": {
+      "sheetW": 145,
+      "sheetH": 221,
+      "sheetScrollH": 221,
+      "svc": 121.25,
+      "mode": 87.59,
+      "paid": 123.22,
+      "svcFont": "7.8px",
+      "modeFont": "7.8px",
+      "paidFont": "6px"
+    },
+    "gap2_ls-0.2px": {
+      "sheetW": 145,
+      "sheetH": 221,
+      "sheetScrollH": 221,
+      "svc": 113.84,
+      "mode": 87.59,
+      "paid": 123.22,
+      "svcFont": "7.8px",
+      "modeFont": "7.8px",
+      "paidFont": "6px"
+    },
+    "gap1_ls-0.3px": {
+      "sheetW": 145,
+      "sheetH": 221,
+      "sheetScrollH": 221,
+      "svc": 109.14,
+      "mode": 87.59,
+      "paid": 123.22,
+      "svcFont": "7.8px",
+      "modeFont": "7.8px",
+      "paidFont": "6px"
+    },
+    "gap0_ls-0.4px": {
+      "sheetW": 145,
+      "sheetH": 221,
+      "sheetScrollH": 221,
+      "svc": 104.44,
+      "mode": 87.59,
+      "paid": 123.22,
+      "svcFont": "7.8px",
+      "modeFont": "7.8px",
+      "paidFont": "6px"
+    }
+  },
+  "combined": {
+    "sheetW": 145,
+    "sheetH": 221,
+    "sheetScrollH": 221,
+    "svc": 142.98,
+    "mode": 100.31,
+    "paid": 140.75,
+    "svcFont": "9px",
+    "modeFont": "9px",
+    "paidFont": "7px"
+  },
+  "png": {
+    "avail": 440,
+    "widths": {
+      "svc_sp3@16": 266.36,
+      "svc_tight@16": 246.36,
+      "mode@16": 184.39,
+      "paid@16": 337.22,
+      "svc_sp3@20": 332.95,
+      "svc_tight@20": 307.95,
+      "mode@20": 230.49,
+      "paid@20": 421.52,
+      "svc_sp3@24": 399.54,
+      "svc_tight@24": 369.54,
+      "mode@24": 276.59,
+      "paid@24": 505.83,
+      "svc_sp3@25": 416.19,
+      "svc_tight@25": 384.94,
+      "mode@25": 288.11,
+      "paid@25": 526.9,
+      "svc_sp3@26": 432.83,
+      "svc_tight@26": 400.33,
+      "mode@26": 299.63,
+      "paid@26": 547.98,
+      "svc_sp3@27": 449.48,
+      "svc_tight@27": 415.73,
+      "mode@27": 311.16,
+      "paid@27": 569.06
+    }
+  }
+}

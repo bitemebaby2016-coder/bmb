@@ -123,6 +123,96 @@ export async function uploadProductImage(file: File, alt = ''): Promise<ProductI
 }
 
 // ============================================
+// R59 (Owner 2026-11-02): "รูปที่เจน → เลือกใช้จากหน้าเพิ่มเมนู (ชี้ไฟล์เข้าคลัง) +
+//   ลดขนาดอัตโนมัติเมื่อเลือกมาใช้" — จุดเดียวของฝั่งเมนู (web only · ไม่แตะ EF)
+// ============================================
+
+/** ขอบยาวสุดของรูปเมนูที่ใช้จริง (รูปเจน = 2048² 5.8MB — ย่อลงก่อนใช้ = การ์ด/แคตตาลอกโหลดเร็ว) */
+export const PRODUCT_IMAGE_MAX_SIDE = 1024
+export const PRODUCT_IMAGE_QUALITY = 0.82
+/** ≤ 2MB + ยาวสุด ≤ maxSide = พอใช้แล้ว ไม่ย่อซ้ำ (กันงานฟรี) */
+export const PRODUCT_IMAGE_ALREADY_OK_BYTES = 2 * 1024 * 1024
+
+/**
+ * ย่อรูปอัตโนมัติก่อนใช้เป็นรูปเมนู — canvas (EXIF ถูกผ่าน imageOrientation:'from-image' · mirror driverService)
+ * คืน "ไฟล์เดิม" เมื่อเล็กรอบแล้ว / เป็น GIF (ห้ามทำลายแอนิเมชัน) / decode ไม่ได้ (ให้ validate ต่อเอง — zero-fake ไม่ทิ้งรูป)
+ */
+export async function downscaleImageFile(
+  file: File,
+  maxSide: number = PRODUCT_IMAGE_MAX_SIDE,
+  quality: number = PRODUCT_IMAGE_QUALITY,
+): Promise<File> {
+  if (file.type === 'image/gif') return file
+  let bmp: ImageBitmap | null = null
+  try {
+    bmp = await createImageBitmap(file, { imageOrientation: 'from-image' })
+  } catch { bmp = null }
+  if (!bmp) return file
+  try {
+    const longest = Math.max(bmp.width, bmp.height)
+    if (longest <= maxSide && file.size <= PRODUCT_IMAGE_ALREADY_OK_BYTES) return file
+    const scale = Math.min(1, maxSide / longest)
+    const w = Math.max(1, Math.round(bmp.width * scale))
+    const h = Math.max(1, Math.round(bmp.height * scale))
+    const canvas = document.createElement('canvas')
+    canvas.width = w
+    canvas.height = h
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return file
+    ctx.drawImage(bmp, 0, 0, w, h)
+    const blob: Blob | null = await new Promise((resolve) => canvas.toBlob((b) => resolve(b), 'image/jpeg', quality))
+    if (!blob) return file
+    const base = file.name.replace(/\.[^.]+$/, '') || 'menu'
+    return new File([blob], `${base}-${w}.jpg`, { type: 'image/jpeg', lastModified: Date.now() })
+  } catch {
+    return file
+  } finally {
+    bmp.close?.()
+  }
+}
+
+export interface AiAlbumFile {
+  name: string
+  url: string
+  path: string
+}
+
+/**
+ * รายการภาพที่เจน (bmb-images/ai-generated/<menu|promo|festival> + ไฟล์เดิมชั้นรูต)
+ * เรียงใหม่ก่อน · ไม่รวม _disabled — หน้าเพิ่มเมนูใช้เปิดบราวซ์ให้เลือก (ชี้ URL ตรง storage)
+ */
+export async function listAiAlbumFiles(): Promise<AiAlbumFile[]> {
+  try {
+    const s = supabase.storage.from(MEDIA_BUCKET)
+    const out: AiAlbumFile[] = []
+    for (const kind of ['menu', 'promo', 'festival']) {
+      const { data, error } = await s.list(`ai-generated/${kind}`, {
+        limit: 60,
+        sortBy: { column: 'created_at', order: 'desc' },
+      })
+      if (error || !data) continue
+      for (const f of data) {
+        if (!f.name || f.name.startsWith('.')) continue
+        const p = `ai-generated/${kind}/${f.name}`
+        out.push({ name: f.name, path: p, url: s.getPublicUrl(p).data.publicUrl })
+      }
+    }
+    const { data: root } = await s.list('ai-generated', {
+      limit: 60,
+      sortBy: { column: 'created_at', order: 'desc' },
+    })
+    for (const f of root || []) {
+      if (!f.name || f.name.startsWith('.') || f.id == null) continue // id=null = โฟลเดอร์
+      const p = `ai-generated/${f.name}`
+      out.push({ name: f.name, path: p, url: s.getPublicUrl(p).data.publicUrl })
+    }
+    return out
+  } catch {
+    return [] // list ไม่ได้ = โชว์ "ยังไม่มีรูป" (ไม่เดา ไม่ fallback รูปอื่น)
+  }
+}
+
+// ============================================
 // CAT-03A helpers — Base64 data-URL parsing (migration contract §7)
 // ============================================
 

@@ -96,13 +96,14 @@ export function stickerDrawList(o: PrintOrderData, offsetY = 0, faceH = STICKER_
   ops.push({ kind: 'text', x: M + 244, y, text: 'TIME :', size: 20, weight: 700 })
   ops.push({ kind: 'text', x: M + 322, y, text: f.time, size: 20 })
   y += 28
-  // ○ Pre-Order  ○ Same Day
-  ops.push({ kind: 'text', x: cx, y, text: `${mark(f.modePreOrder)} Pre-Order   ${mark(f.modeSameDay)} Same Day`, size: 20, align: 'center' })
-  y += 27
-  // ○ ทานที่ร้าน  ○ สั่งกลับบ้าน  ○ รับที่ร้าน (แถวแน่น — ฟอนต์เล็กกว่าแถวอื่น เหมือนแบบ Owner)
+  // ○ Pre-Order  ○ Same Day — R59: ใหญ่สุดเท่าที่จะใหญ่ได้ (วัด e2e/r59_sticker_fit.json: 26 = max ที่ svc row ยังพอดี 440px)
+  ops.push({ kind: 'text', x: cx, y, text: `${mark(f.modePreOrder)} Pre-Order   ${mark(f.modeSameDay)} Same Day`, size: 26, align: 'center' })
+  // ระยะบรรทัดต้อง ≥ ขนาดฟอนต์ (26) — ไม่งั้นหัวแถว svc ทับท้ายแถว mode
+  y += 32
+  // ○ ทานที่ร้าน  ○ สั่งกลับบ้าน  ○ รับที่ร้าน — R59 (Owner): เท่ากับหัวข้อ Pre-Order/Same Day (=26) · วงกลมใหญ่ขึ้นตาม
   const svcTxt = STICKER_SERVICE_KEYS.map((k) => `${mark(f.service === k)} ${STICKER_SERVICE_LABELS[k]}`).join('   ')
-  ops.push({ kind: 'text', x: cx, y, text: svcTxt, size: 16, align: 'center' })
-  y += 30
+  ops.push({ kind: 'text', x: cx, y, text: svcTxt, size: 26, align: 'center' })
+  y += 34
   // ORDER ID : …
   ops.push({ kind: 'text', x: M, y, text: 'ORDER ID', size: 20, weight: 700 })
   ops.push({ kind: 'text', x: colonX, y, text: ':', size: 20, weight: 700 })
@@ -143,9 +144,9 @@ export function stickerDrawList(o: PrintOrderData, offsetY = 0, faceH = STICKER_
   ops.push({ kind: 'text', x: M, y, text: '[ TOTAL NET ] :', size: 20, weight: 700 })
   ops.push({ kind: 'text', x: M + 200, y, text: `${f.totalNet} THB`, size: 20 })
   y += 28
-  // [PAID] : ○ B/T  ○ QR PROMPTPAY  ○ COD
+  // [PAID] : ○ B/T  ○ QR PROMPTPAY  ○ COD — R59: ใหญ่สุดที่พอดี = 20 (วัด: 421.5/440 ✓ · @21 = 442.6 ล้น)
   const paidTxt = `[PAID] : ${STICKER_PAID_OPTIONS.map((p) => `${mark(f.paid === p.key)} ${p.label}`).join('   ')}`
-  ops.push({ kind: 'text', x: M, y, text: paidTxt, size: 17, weight: 700 })
+  ops.push({ kind: 'text', x: M, y, text: paidTxt, size: 20, weight: 700 })
   y += 22
 
   // R41: เลื่อนเฉพาะ "เนื้อหาส่วนบน" ลงตาม offset — หน้าคงที่ (pageH = face)
