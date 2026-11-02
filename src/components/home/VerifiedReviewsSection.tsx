@@ -7,6 +7,7 @@
 import { Link } from 'react-router-dom'
 import type { VerifiedCustomerReview, Product } from '@/types'
 import { CustomerReviewCard } from '@/components/CustomerReviewCard'
+import { MascotBadge } from '@/components/MascotBadge'
 
 interface VerifiedReviewsSectionProps {
   reviews: VerifiedCustomerReview[]
@@ -76,6 +77,7 @@ export function VerifiedReviewsSection({ reviews, products }: VerifiedReviewsSec
         <h2 id="verified-reviews-heading" className="text-xl font-display font-bold text-brand-accent flex items-center gap-2">
           <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-emerald-100 text-emerald-700 text-sm font-bold">✓</span>
           รีวิวจากลูกค้าที่สั่งซื้อจริง
+            <MascotBadge pose="thumbsup" size="sm" alt="น้อง Bite รีวิวสั่งซื้อจริง" className="section-float-mascot" />
         </h2>
       </div>
       

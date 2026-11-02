@@ -220,16 +220,22 @@ export function getStoreStatusFromRounds(rounds: Array<{
         return String(a.delivery_start ?? '').localeCompare(String(b.delivery_start ?? ''))
       })[0] ?? null
   const preOrderLine = (() => {
-    // R13 (Owner 2026-10-28): บอกลูกค้า "รอบไหนของวันไหน" — ชื่อรอบ + วันที่ DD/MM/YYYY + ปิดรอบ
-    // R18 (Owner 2026-10-29): เปลี่ยน copy เป็น "เปิดรับ พรีออเดอร์ : จองล่วงหน้า รอบ <ชื่อรอบ> <วันที่>
-    // (ปิดรอบ HH:MM)" — รอบยังต้องเป็นรอบถัดไปที่สั่งได้เท่าเดิม (nextPre filter ไม่แตะ)
+    // R13/R18: กรอบ รอบ+วัน+ปิดรับคงเดิม (nextPre filter ไม่แตะ)
+    // R52 (Owner 2026-11-01): หัวข้อ/ไอคอนอยู่ฝั่ง strip — body ล้วน:
+    //   `รอบส่งถัดไป <เวลาออกส่ง AM/PM> <วัน DD/MM/YYYY> (ปิดรับ HH:MM AM/PM)`
+    //   แสดง "เวลาเดินทางออกส่ง" (delivery_start → 7:00 AM) แทนชื่อรอบ ("เช้า") ตามคำสั่ง Owner
     const day = nextPre ? String(nextPre.scheduled_date ?? '').slice(0, 10) : ''
     const dateLabel = /^\d{4}-\d{2}-\d{2}$/.test(day)
       ? `${day.slice(8, 10)}/${day.slice(5, 7)}/${day.slice(0, 4)}`
       : ''
+    // เวลาออกส่งจริง (ไม่ pad ชั่วโมง = 7:00 AM) · fallback ชื่อรอบถ้ารอบเก่าไม่มีเวลา
+    const depart =
+      nextPre && nextPre.delivery_start
+        ? fmtAmPm(String(nextPre.delivery_start)).replace(/^0/, '')
+        : nextPre?.display_name || 'รอบถัดไป'
     return nextPre
-      ? `🛵 จองล่วงหน้า : รอบส่งถัดไป ${nextPre.display_name || 'รอบถัดไป'}${dateLabel ? ` ${dateLabel}` : ''} (ปิดรับ ${fmtAmPm(roundCutoffLabel(nextPre, 'PRE_ORDER', 2))})`
-      : '🛵 จองล่วงหน้า : ปิดรับแล้ว — ยังไม่เปิดรอบถัดไป'
+      ? `รอบส่งถัดไป ${depart}${dateLabel ? ` ${dateLabel}` : ''} (ปิดรับ ${fmtAmPm(roundCutoffLabel(nextPre, 'PRE_ORDER', 2))})`
+      : 'ปิดรับแล้ว — ยังไม่เปิดรอบถัดไป'
   })()
 
   const bookable = todayRows.filter(
@@ -260,13 +266,13 @@ export function getStoreStatusFromRounds(rounds: Array<{
     const upcoming = sorted.find((r) => windowOf(r).start > hour) ?? null
     const current = inWindow ?? upcoming ?? sorted[0]
     const hasWindowNow = Boolean(inWindow)
-    // R44 (Owner 2026-11-01) บรรทัดที่ 3: ในหน้าต่างส่ง = "จัดส่งทันที" ·
-    // ยังไม่ถึงรอบ = "เริ่มส่ง HH:MM AM" · นอกหน้าต่างทั้งหมดแต่ยังเปิดรับ = "จัดส่งทันที" (ครัวปรุงเสร็จส่งเลย)
+    // R44/R52 (Owner 2026-11-01) บรรทัดที่ 3: ในหน้าต่างส่ง = "จัดส่งทันทีหลังปรุงเสร็จ" (R52 copy) ·
+    // ยังไม่ถึงรอบ = "เริ่มส่ง HH:MM AM" · นอกหน้าต่างทั้งหมดแต่ยังเปิดรับ = ส่งเลยหลังปรุงเสร็จ
     const sameDayLine = hasWindowNow
-      ? 'จัดส่งทันที'
+      ? 'จัดส่งทันทีหลังปรุงเสร็จ'
       : upcoming && upcoming.delivery_start
         ? `เริ่มส่ง ${fmtAmPm(String(upcoming.delivery_start))}`
-        : 'จัดส่งทันที'
+        : 'จัดส่งทันทีหลังปรุงเสร็จ'
     return {
       isOpen: true,
       state: 'open',

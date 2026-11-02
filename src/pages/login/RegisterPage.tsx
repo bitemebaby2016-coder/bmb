@@ -4,6 +4,7 @@ import { signUpWithEmail } from '@/store/authStore'
 import { readSocialNext } from '@/lib/socialLogin'
 import { showToast } from '@/components/ui/ToastContainer'
 import { writeAuditLog } from '@/lib/auditLog'
+import { MascotBadge } from '@/components/MascotBadge'
 
 export function RegisterPage() {
   const navigate = useNavigate()
@@ -89,7 +90,9 @@ export function RegisterPage() {
     <div className="min-h-screen bg-brand-bg flex items-center justify-center p-4">
       <div className="max-w-md w-full">
         <div className="text-center mb-8">
-          <div className="text-6xl mb-4">🧡</div>
+          <div className="mb-4 flex justify-center">
+            <MascotBadge pose="greeting" size="lg" alt="น้อง Bite ต้อนรับ" loading="eager" />
+          </div>
           <h1 className="text-4xl font-bold text-brand-accent font-display">Bite Me Baby</h1>
           <p className="text-brand-muted mt-2">มากกว่าคำว่าอร่อย</p>
         </div>

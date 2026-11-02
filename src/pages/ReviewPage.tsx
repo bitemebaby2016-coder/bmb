@@ -6,6 +6,7 @@ import { getVerifiedReviewsByProduct } from '@/lib/reviewApi'
 // R21d backlog: โหลดรีวิวไม่สำเร็จต้องฟ้อง (ห้ามโชว์ "No reviews yet." ปลอม)
 import { LoadErrorBanner } from '@/components/ui/LoadErrorBanner'
 import type { VerifiedCustomerReview } from '@/types'
+import { MascotBadge } from '@/components/MascotBadge'
 
 export function ReviewPage() {
   const { productId } = useParams()
@@ -50,7 +51,9 @@ export function ReviewPage() {
     <div className='max-w-4xl mx-auto px-4 py-6'>
       <h1 className='text-3xl font-bold text-brand-accent mb-6'>Reviews</h1>
       <section className='mb-10'>
-        <h2 className='text-xl font-display font-bold text-emerald-700 mb-4 flex items-center gap-2'><span className='w-8 h-8 rounded-full bg-emerald-100 text-emerald-700 font-bold inline-flex items-center justify-center'>{'\u2713'}</span>Verified Customer Reviews</h2>
+        <h2 className='text-xl font-display font-bold text-emerald-700 mb-4 flex items-center gap-2'><span className='w-8 h-8 rounded-full bg-emerald-100 text-emerald-700 font-bold inline-flex items-center justify-center'>{'\u2713'}</span>Verified Customer Reviews
+            <MascotBadge pose="thumbsup" size="sm" alt="น้อง Bite การันตีรีวิวจริง" className="section-float-mascot" />
+        </h2>
         {loading ? <p>Loading reviews...</p> : loadError ? (
           <div className='card py-4 text-center'>
             <LoadErrorBanner message={loadError} onRetry={() => setRetryKey((n) => n + 1)} testId="review-load-error" />
@@ -66,7 +69,9 @@ export function ReviewPage() {
       </section>
       <section className='mb-10'>
         {/* R50: ยุบเซ็กชั่นรีวิวของหน้าแรก + หน้านี้เป็นหัวข้อเดียวตามคำสั่ง Owner + อัลบั้มรูปจริง */}
-        <h2 className='text-xl font-display font-bold text-brand-accent mb-2'>📸 รีวิวจริงจากลูกค้า</h2>
+        <h2 className='text-xl font-display font-bold text-brand-accent flex items-center gap-2 mb-2'>📸 รีวิวจริงจากลูกค้า
+            <MascotBadge pose="eating" size="sm" alt="น้อง Bite รูปรีวิวจากลูกค้า" className="section-float-mascot" />
+        </h2>
         <p className='text-sm text-brand-muted mb-3'>รีวิวและรูปจริงจากลูกค้าที่สั่งผ่านระบบ</p>
         {/* อัลบั้มรูปรีวิวจริง (verified reviews ที่มีรูป) — ของเดิมเก็บผ่าน reviews.photo_url */}
         {verifiedReviews.filter((rv: any) => rv.photo_url).length > 0 && (
@@ -81,7 +86,9 @@ export function ReviewPage() {
         <p className='text-sm text-brand-muted'>ข้อความรีวิวจริงแสดงที่หน้าแรกหัวข้อ 📸 รีวิวจริงจากลูกค้า และรายการverified ด้านบน</p>
       </section>
       <section className='mb-10'>
-        <h2 className='text-xl font-display font-bold text-brand-accent mb-3'>Admin Portfolio</h2>
+        <h2 className='text-xl font-display font-bold text-brand-accent flex items-center gap-2 mb-3'>Admin Portfolio
+            <MascotBadge pose="award" size="sm" alt="น้อง Bite ผลงาน" className="section-float-mascot" />
+        </h2>
         {portfolio.length > 0 ? (
           <div className='grid grid-cols-3 gap-3'>
             {portfolio.map((item: any) => (

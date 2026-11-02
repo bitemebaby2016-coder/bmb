@@ -15,6 +15,7 @@ import {
   MIN_PASSWORD_LENGTH,
 } from '@/lib/authRecovery'
 import { showToast } from '@/components/ui/ToastContainer'
+import { MascotBadge } from '@/components/MascotBadge'
 
 type Phase = 'checking' | 'ready' | 'done' | 'no-session'
 
@@ -73,7 +74,9 @@ export function ResetPasswordPage() {
     <div className="min-h-screen bg-brand-bg flex items-center justify-center p-4">
       <div className="max-w-md w-full">
         <div className="text-center mb-8">
-          <div className="text-6xl mb-4">🧡</div>
+          <div className="mb-4 flex justify-center">
+            <MascotBadge pose="greeting" size="lg" alt="น้อง Bite ต้อนรับ" loading="eager" />
+          </div>
           <h1 className="text-4xl font-bold text-brand-accent font-display">Bite Me Baby</h1>
           <p className="text-brand-muted mt-2">ตั้งรหัสผ่านใหม่</p>
         </div>

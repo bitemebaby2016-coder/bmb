@@ -10,6 +10,7 @@ import { signInWithFacebook, signInWithSocial, consumeSocialCallbackError, descr
 // P4 — Passkey / WebAuthn
 import { signInWithPasskey, describePasskeyError, isPasskeySupported } from '@/lib/passkeyLogin'
 import { writeAuditLog } from '@/lib/auditLog'
+import { MascotBadge } from '@/components/MascotBadge'
 
 // จำข้อมูล Quick login ครั้งเดียวใช้ตลอด (localStorage — รอบหน้ากรอกให้อัตโนมัติ)
 const QUICK_PROFILE_KEY = 'bmb_quick_profile'
@@ -298,7 +299,9 @@ return (
       <div className="max-w-md w-full">
         {/* Logo */}
         <div className="text-center mb-8">
-          <div className="text-6xl mb-4">🧡</div>
+          <div className="mb-4 flex justify-center">
+            <MascotBadge pose="greeting" size="lg" alt="น้อง Bite ต้อนรับ" loading="eager" />
+          </div>
           <h1 className="text-4xl font-bold text-brand-accent font-display">Bite Me Baby</h1>
           <p className="text-brand-muted mt-2">More than just delicious food</p>
         </div>

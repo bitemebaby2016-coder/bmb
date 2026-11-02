@@ -1,17 +1,15 @@
 // ============================================
 // Bite Me Baby — Admin Hubs (R4: ยุบรวมหน้าจอแอดมินที่ฟีเจอร์ซ้ำ/ใกล้เคียง)
 // ============================================
-// Owner directive 2026-10-23: "หน้าจอแอดมินมีฟีเจอร์คล้ายกันและซ้ำซ้อน
-// อะไรโลจิกเหมือนหรือใกล้เคียงกันให้ยุบรวม"
-// กลยุทธ์: compose หน้าเดิมไว้ใต้ Hub เดียวเป็นแท็บ — component เดิมไม่ถูก
-// แก้ไข (logic เหมือนเดิมทุกประการ) · เส้นทางเดิม (/admin/payment-exceptions
-// ฯลฯ) ยังเปิดได้จาก URL ตรง (bookmark ไม่ตาย) แต่ถูกถอดออกจากเมนู
-//   OrdersHub    = ออเดอร์ + การชำระเงิน (exception triage ชุดเดียวกับ bmbAdminApi_orders)
-//   DeliveryHub  = จัดส่ง + เส้นทางจัดส่ง (orders + driverService ชุดเดียวกัน)
-//   SettingsHub  = ตั้งค่าร้าน + เครื่องพิมพ์ + มาสคอต (settings forms ชุดเดียวกัน)
+// Owner directive 2026-10-23: อะไรโลจิกเหมือน/ใกล้เคียงกันให้ยุบรวม
+// กลยุทธ์: compose หน้าเดิมใต้ Hub เดียวเป็นแท็บ — logic ไม่เปลี่ยนทุกประการ
+// · เส้นทางเดิมยังเปิดได้จาก URL ตรง (bookmark ไม่ตาย)
+//   OrdersHub = ออเดอร์+ชำระเงิน · DeliveryHub = จัดส่ง+เส้นทาง
+//   SettingsHub = ตั้งค่าร้าน+เครื่องพิมพ์+มาสคอต
+// R52 (12.3): คลิกแท็บ → smooth-scroll ไปยัง hub-content
 // ============================================
 
-import { useState, type ReactNode } from 'react'
+import { useRef, useState, type ReactNode } from 'react'
 import { AdminOrders } from '@/pages/admin/AdminOrders'
 import { AdminPaymentExceptions } from '@/pages/admin/AdminPaymentExceptions'
 import { AdminProducts } from '@/pages/admin/AdminProducts'
@@ -49,6 +47,8 @@ function HubShell({ title, tabs, storageKey }: { title: string; tabs: HubTab[]; 
     }
   })
   const current = tabs.find((t) => t.key === active) ?? tabs[0]
+  // R52 rule 12.3: คลิกแท็บ → scroll ไปกล่องเนื้อหา
+  const contentRef = useRef<HTMLDivElement>(null)
   return (
     <div data-testid={`admin-hub-${storageKey}`}>
       <div className="flex flex-wrap items-center gap-2 mb-4">
@@ -61,6 +61,7 @@ function HubShell({ title, tabs, storageKey }: { title: string; tabs: HubTab[]; 
             onClick={() => {
               setActive(t.key)
               try { localStorage.setItem(storageKey, t.key) } catch { /* private mode */ }
+              contentRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
             }}
             className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
               t.key === current.key
@@ -73,7 +74,9 @@ function HubShell({ title, tabs, storageKey }: { title: string; tabs: HubTab[]; 
           </button>
         ))}
       </div>
-      {current.render()}
+      <div ref={contentRef} data-testid="hub-content">
+        {current.render()}
+      </div>
     </div>
   )
 }
@@ -97,7 +100,7 @@ export function DeliveryHub() {
       title="การจัดการขนส่ง"
       storageKey="bmb-hub-delivery"
       tabs={[
-        // D2 (Owner 2026-10-25): ศูนย์ขนส่งเดียว — แท็บแยกตามหน้าที่จริง ใช้ logic/API เดิมทั้งหมด
+        // D2 (2026-10-25): ศูนย์ขนส่งเดียว — ใช้ logic/API เดิมทั้งหมด
         { key: 'rounds', label: 'รอบจัดส่ง & แพทเทิร์น', icon: '🕒', render: () => <AdminRounds /> },
         { key: 'availability', label: 'ความพร้อมรับออเดอร์', icon: '✅', render: () => <TransportAvailabilityBoard /> },
         { key: 'dispatch', label: 'จัดส่ง/มอบหมายงาน', icon: '🛵', render: () => <DeliveryManagement /> },
@@ -122,9 +125,7 @@ export function SettingsHub() {
   )
 }
 
-// ---- R5 (Owner 2026-10-23): ยุบรวมระลอก 2 ----
-//   MenuHub = เมนู/สินค้า + ตารางเมนูรอบพิเศษ (menu_schedule 7 วัน/14 เมนู — ชุดเดียวกัน)
-//   OrgHub  = องค์กร/ร้านค้า + แบรนด์ (tenancy/white-label control plane ชุดเดียวกัน)
+// ---- R5 (2026-10-23): ยุบรวมระลอก 2 — MenuHub / OrgHub (ชุดข้อมูลเดิม) ----
 
 export function MenuHub() {
   return (

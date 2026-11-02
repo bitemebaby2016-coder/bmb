@@ -159,7 +159,8 @@ describe('storeStatus — ตรรกะเปิด/ปิดร้านจ�
     const s = currentStoreStatus(new Date('2026-10-14T07:36:00Z'))
     expect(s.isOpen).toBe(true) // เซมเดย์สั่งได้ตลอด (Q1/148)
     expect(s.state).toBe('open')
-    expect(s.preOrderLine).toContain('พรุ่งนี้เที่ยง')
+    // R52 strip contract: ไม่ใช่ชื่อรอบ — ชี้รอบอนาคตด้วยเวลาส่งจริง (see storeStatusWindow/r44StatusStrip)
+    expect(s.preOrderLine).toMatch(/^รอบส่งถัดไป/)
     expect(s.preOrderLine).toContain('ปิดรับ 09:00 AM')
   })
 

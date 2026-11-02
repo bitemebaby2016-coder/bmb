@@ -39,11 +39,12 @@ describe('R13 — แถบสถานะ: รูปแบบใหม่ + บ
     ]
     const s = getStoreStatusFromRounds([...closedToday, ...tomorrow] as never, atBkk('2026-10-28T10:00:00+07:00'))
     expect(s.state).toBe('preorder_only')
-    // R44 (Owner 2026-11-01): รูปแบบใหม่ "🛵 จองล่วงหน้า : รอบส่งถัดไป …" (แทน R18/R25 "เปิดรับออเดอร์ Pre-Order / …")
-    expect(s.preOrderLine).toContain('🛵 จองล่วงหน้า : รอบส่งถัดไป')
+    // R52 (Owner 2026-11-01): body ใหม่ "รอบส่งถัดไป <เวลาออกส่งจริง> …" (หัวข้อ/ไอคอนอยู่ฝั่ง strip)
+    expect(s.preOrderLine).toMatch(/^รอบส่งถัดไป /)
     expect(s.preOrderLine).not.toContain('พรีออเดอร์: เปิดรับออเดอร์')
     expect(s.preOrderLine).not.toContain('พรีออเดอร์: เปิดรับออเดอร์')
-    expect(s.preOrderLine).toContain('เช้า')
+    expect(s.preOrderLine).toContain('6:00 AM') // R52: delivery_start 06:00 → เวลาออกส่งจริง
+    expect(s.preOrderLine).not.toContain('เช้า') // R52: ชื่อรอบห้ามโชว์
     expect(s.preOrderLine).toContain('29/10/2026')
     expect(s.preOrderLine).toMatch(/\(ปิดรับ \d{2}:\d{2} (AM|PM)\)/)
   })

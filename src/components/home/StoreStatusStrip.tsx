@@ -25,12 +25,13 @@ export function StoreStatusStrip({ status }: { status: StoreStatus }) {
   useEffect(() => {
     void getStoreStatusCopy()
   }, [])
-  // R44 (Owner 2026-11-01 "แสดงสถานะ 3 บรรทัด"):
-  //   ① ไฟสถานะเปิด-ปิด แจ้งทั้ง Pre-Order และ Same-Day ในบรรทัดเดียว
-  //   ② สถานะขนส่ง Pre-Order (บรรทัดสด 🛵 · ปิดรับ = fallback default แก้ผ่านคีย์ได้)
-  //   ③ สถานะขนส่ง Same-Day (ในเวลาทำการ = "จัดส่งทันที" · ยังไม่ถึงรอบ = "เริ่มส่ง HH:MM AM")
+  // R44/R52 (Owner 2026-11-01 "แสดงสถานะ 3 บรรทัด" · copy ใหม่ตาม R52):
+  //   1) ไฟสถานะเปิด-ปิด แจ้งทั้ง Pre-Order และ Same-Day ในบรรทัดเดียว
+  //   2) `📅 Pre-Order / จองล่วงหน้า : 🛵 <เนื้อหาสด>` — หัวข้อใน strip · body = รอบส่งถัดไป + เวลาออกส่งจริง
+  //      ปิดรับ = fallback default แก้ผ่านคีย์ store_status_copy ได้
+  //   3) `⚡ Same-Day / ส่งวันนี้ : 🛵 จัดส่งทันทีหลังปรุงเสร็จ` (ยังไม่ถึงรอบ = "เริ่มส่ง HH:MM AM")
   const preOrderLine = preOrderLineWithCopy(status.preOrderLine) ?? DEFAULT_STORE_STATUS_COPY.preOrderClosed
-  const sameDayLine = status.sameDayLine ?? (sameDayOpen ? 'จัดส่งทันที' : 'ปิดรับแล้ว')
+  const sameDayLine = status.sameDayLine ?? (sameDayOpen ? 'จัดส่งทันทีหลังปรุงเสร็จ' : 'ปิดรับแล้ว')
   return (
     <div
       className={`store-strip ${status.isOpen ? 'is-open' : 'is-closed'}`}
@@ -45,11 +46,11 @@ export function StoreStatusStrip({ status }: { status: StoreStatus }) {
         <p className="text-sm sm:text-base font-bold" data-testid="strip-status-lights">
           {preOrderOpen ? '🟢' : '🔴'} เปิดรับออเดอร์ จองล่วงหน้า/Pre-Order 📅{preOrderOpen ? '' : ' ปิดรับแล้ว'} — {sameDayOpen ? '🟢' : '🔴'} เปิดรับออเดอร์ รอบวันนี้/Same-Day ⚡{sameDayOpen ? '' : ' ปิดรับแล้ว'}
         </p>
-        {/* R50 บรรทัด ②: พรีออเดอร์ + ไอคอนปฏิทิน (ข้อมูลสด R18/R25 เดิม) · ไม่ truncate */}
-        <p className="text-sm sm:text-base font-bold" data-testid="strip-preorder">🛵 📅 จองล่วงหน้า : {preOrderLine}</p>
-        {/* R50 บรรทัด ③: เซมเดย์ + ไอคอนสายฟ้า — ในหน้าต่างส่ง/เวลาทำการ = จัดส่งทันที */}
+        {/* R52 บรรทัด 2: หัวข้อ Pre-Order/จองล่วงหน้า + เนื้อหาสด (เวลาออกส่งจริง ไม่ใช่ชื่อรอบ) · label อยู่ strip · ไม่ truncate */}
+        <p className="text-sm sm:text-base font-bold" data-testid="strip-preorder">📅 Pre-Order / จองล่วงหน้า : 🛵 {preOrderLine}</p>
+        {/* R52 บรรทัด 3: หัวข้อ Same-Day/ส่งวันนี้ — ในหน้าต่างส่ง = จัดส่งทันทีหลังปรุงเสร็จ */}
         <p className="text-sm sm:text-base font-bold" data-testid="strip-sameday">
-          🛵 ⚡ รอบวันนี้/Same-Day : {sameDayLine}
+          ⚡ Same-Day / ส่งวันนี้ : 🛵 {sameDayLine}
         </p>
       </div>
     </div>

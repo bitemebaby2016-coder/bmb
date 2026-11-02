@@ -303,7 +303,7 @@ export function AdminSettings() {
           <div className="card" data-testid="store-status-copy-config">
             <p className="text-xs text-brand-muted mb-2">
               แก้ข้อความแถบสถานะร้านได้เอง 4 บรรทัด — <strong>ไฟ 🟢/🔴 สองบรรทัดยังเปิด/ปิดอัตโนมัติจากรอบจริงเสมอ</strong>{' '}
-              (เปลี่ยนจากที่นี่ไม่ได้) · ป้ายพรีออเดอร์ &quot;เปิดรับ … รอบ … (ปิดรอบ …)&quot; เป็นข้อมูลสดก็แก้ตรงนี้ไม่ได้{' '}
+              (เปลี่ยนจากที่นี่ไม่ได้) · ป้าย &quot;📅 Pre-Order / จองล่วงหน้า : … รอบส่งถัดไป …&quot; เป็นข้อมูลสดก็แก้ตรงนี้ไม่ได้{' '}
               (คีย์ <code>store_status_copy</code> · ผู้ชมเห็น ≤7 นาที หรือ reload)
             </p>
             <label className="text-xs flex flex-col gap-1">

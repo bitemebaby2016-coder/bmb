@@ -6,6 +6,7 @@
 
 import { useState } from 'react'
 import { REAL_REVIEW_PHOTOS } from '@/lib/realReviews'
+import { MascotBadge } from '@/components/MascotBadge'
 
 // PERF: render 12 thumbs in the DOM first — the rest are one click away.
 // Cuts ~25 nodes x nested elements from initial Style&Layout work.
@@ -21,8 +22,9 @@ export function ReviewGallerySection() {
   return (
     <section className="mb-10 scroll-mt-20" aria-labelledby="home-review-gallery-heading">
       <div className="flex items-center justify-between mb-2">
-        <h2 id="home-review-gallery-heading" className="text-xl font-display font-bold text-brand-accent">
+        <h2 id="home-review-gallery-heading" className="text-xl font-display font-bold text-brand-accent flex items-center gap-2">
           📸 รีวิวจริงจากลูกค้า
+            <MascotBadge pose="eating" size="sm" alt="น้อง Bite ดูอัลบั้มรีวิวจริง" className="section-float-mascot" />
         </h2>
         <span className="text-sm text-brand-muted">{REAL_REVIEW_PHOTOS.length} รีวิว</span>
       </div>

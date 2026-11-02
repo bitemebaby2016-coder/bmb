@@ -1,6 +1,7 @@
 // ============================================
 // Bite Me Baby — Admin Mascot Settings (ADM-07)
 // Admin changes mascot art per role without changing code (mascot_overrides).
+// R52: เพิ่ม testid สำหรับ test lock (mascot-refresh / mascot-alt-* / mascot-save-*)
 // ============================================
 
 import { useEffect, useState } from 'react'
@@ -40,7 +41,14 @@ export function MascotSettingsPage() {
     <div className="max-w-3xl mx-auto px-4 py-6 space-y-4">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-brand-accent">🦖 Mascot Self-Service</h1>
-        <button className="btn btn-outline text-sm" onClick={() => void refresh()}>🔄</button>
+        <button
+          className="btn btn-outline text-sm"
+          data-testid="mascot-refresh"
+          aria-label="รีเฟชรายการมาสคอต"
+          onClick={() => void refresh()}
+        >
+          🔄
+        </button>
       </div>
       <p className="text-sm text-slate-500">
         วาง Media URL (จาก Admin Media Library ใน bucket <code>bmb-images</code>) ต่อบทบาทมาสคอต — หน้าเว็บใช้รูปใหม่ทันทีโดยไม่ต้องแก้ code
@@ -62,8 +70,14 @@ export function MascotSettingsPage() {
               placeholder="Alt text (optional)"
               value={form[role]?.alt ?? ''}
               onChange={(e) => setForm((p) => ({ ...p, [role]: { ...(p[role] ?? { url: '' }), alt: e.target.value } }))}
+              data-testid={`mascot-alt-${role}`}
             />
-            <button className="btn btn-primary text-xs w-full" disabled={saving === role} onClick={() => void save(role)}>
+            <button
+              className="btn btn-primary text-xs w-full"
+              disabled={saving === role}
+              data-testid={`mascot-save-${role}`}
+              onClick={() => void save(role)}
+            >
               {saving === role ? 'บันทึก…' : '💾 บันทึก'}
             </button>
           </GlassCard>

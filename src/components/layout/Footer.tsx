@@ -162,7 +162,7 @@ export function Footer() {
             >
               {/* R34 (Owner): โลโก้จริงจาก public/ (Facebook/LINE) — ไม่มีรูป = ใช้ emoji เดิม */}
               {social.img ? (
-                <img src={social.img} alt="" loading="lazy" decoding="async" className="w-6 h-6 object-contain" />
+                <img src={social.img} alt="" loading="lazy" decoding="async" className={`w-6 h-6 object-contain ${social.imgClass ?? ''}`} />
               ) : (
                 social.icon
               )}

@@ -279,7 +279,9 @@ export function MenuPage() {
       {buildHeadingGroups(ordered, categories).map(({ category, products: catProducts }, gi) => (
         <section key={category.id} className="mb-8" aria-labelledby={`catsec-${gi}`}>
           <div className="mb-6">
-            <h3 id={`catsec-${gi}`} className="font-semibold text-brand-accent mb-2">{category.icon ? `${category.icon} ` : ''}{category.name}</h3>
+            <h3 id={`catsec-${gi}`} className="font-semibold text-brand-accent flex items-center gap-2 mb-2">{category.icon ? `${category.icon} ` : ''}{category.name}
+            <MascotBadge pose="menu" size="sm" alt={`น้อง Bite หมวด ${category.name}`} className="section-float-mascot" />
+            </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {catProducts.map((product) => {
                 // Owner 2026-10-27: ปุ่มของการ์ดตัดสินจาก "ป้ายปฏิทิน" (scheduledDate)

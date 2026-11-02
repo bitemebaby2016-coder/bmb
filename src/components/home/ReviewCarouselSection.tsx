@@ -8,6 +8,7 @@ import { Link } from 'react-router-dom'
 import type { HomeReview, Product, OrderMode } from '@/types'
 import { CustomerReviewCard } from '@/components/CustomerReviewCard'
 import { HorizontalCarousel } from './HorizontalCarousel'
+import { MascotBadge } from '@/components/MascotBadge'
 
 interface ReviewCarouselSectionProps {
   reviews: HomeReview[]
@@ -49,6 +50,9 @@ export function ReviewCarouselSection({ reviews, products, onReviewCta }: Review
     <section className="mb-10 scroll-mt-20" aria-labelledby="home-reviews-heading">
       <div className="flex items-center justify-between mb-2">
         <h2 id="home-reviews-heading" className="text-xl font-display font-bold text-brand-accent flex items-center gap-2">
+          {/* R50 (Owner 2026-11-01): ยุบรวม + ชื่อใหม่ = รีวิวจริงจากลูกค้า */}
+          <span>📸 รีวิวจริงจากลูกค้า</span>
+            <MascotBadge pose="reviewing" size="sm" alt="น้อง Bite อ่านรีวิวจริง" className="section-float-mascot" />
           <img
             src="/Logo_Sticker_Circle.webp"
             alt=""
@@ -57,8 +61,6 @@ export function ReviewCarouselSection({ reviews, products, onReviewCta }: Review
             className="review-float-logo"
             aria-hidden="true"
           />
-          {/* R50 (Owner 2026-11-01): ยุบรวม + ชื่อใหม่ = รีวิวจริงจากลูกค้า */}
-          <span>📸 รีวิวจริงจากลูกค้า</span>
         </h2>
         <Link to="/reviews" className="text-sm text-brand-primary font-medium hover:underline">ดูทั้งหมด →</Link>
       </div>

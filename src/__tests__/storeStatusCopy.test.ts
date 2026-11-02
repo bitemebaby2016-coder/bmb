@@ -79,8 +79,9 @@ describe('N1 — default copy ต้องตรงกับข้อควา�
       at(`${TODAY}T04:00:00+07:00`),
     )
     expect(live.preOrderLine).not.toBe(DEFAULT_STORE_STATUS_COPY.preOrderClosed)
-    // R44 (Owner 2026-11-01): รูปแบบใหม่ "🛵 จองล่วงหน้า : รอบส่งถัดไป …" (แทน R25 "เปิดรับออเดอร์ Pre-Order / …")
-    expect(live.preOrderLine).toMatch(/🛵 จองล่วงหน้า : รอบส่งถัดไป/)
+    // R52: รูปแบบใหม่ — body = "รอบส่งถัดไป <เวลาออกส่งจริง> …" (หัวข้อ/ไอคอนอยู่ฝั่ง strip)
+    expect(live.preOrderLine).toMatch(/^รอบส่งถัดไป /)
+    expect(live.preOrderLine).toContain('6:00 AM') // delivery_start 06:00 → เวลาออกส่งจริง
   })
 })
 

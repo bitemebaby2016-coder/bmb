@@ -645,6 +645,17 @@ p { color: var(--color-brand-text-secondary); }
   filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.22));
 }
 
+/* R52: ทุกมาสคอตขยับได้ — idle bob อ่อน ๆ เฉพาะ badge ปกติ
+   (ท่าที่มี animation ของตัวเองอยู่แล้ว: mini wobble · section floatLogo · point nudge · animate-float — ไม่โดนทับ) */
+.mascot-badge:not(.mascot-mini):not(.section-float-mascot):not(.mascot-point-cta):not(.animate-float) {
+  animation: mascotIdle 3.8s ease-in-out infinite;
+}
+
+@keyframes mascotIdle {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-4px); }
+}
+
 .mascot-badge--sm { width: 52px; height: 52px; }
 .mascot-badge--md { width: 72px; height: 72px; }
 .mascot-badge--lg { width: 104px; height: 104px; }

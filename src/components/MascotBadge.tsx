@@ -59,7 +59,7 @@ const POSE_ASSETS: Record<MascotPose, PoseAsset> = {
   closed:    { src: '/assets/mascot/bite_closed.webp', fallback: '/mascot_Bite_Main.webp' },
 }
 
-const POSE_LABELS: Record<MascotPose, string> = {
+export const POSE_LABELS: Record<MascotPose, string> = {
   greeting: 'ทักทายต้อนรับ',
   heart: 'มินิฮาร์ท',
   thumbsup: 'ยกนิ้วโป้งการันตี',
@@ -84,6 +84,11 @@ const POSE_LABELS: Record<MascotPose, string> = {
   waiting: 'รอคิว',
   sad: 'เสียใจด้วยนะ',
   closed: 'ร้านปิดแล้ว',
+}
+
+/** path รูปเริ่มต้นของแต่ละท่า (Admin MascotSettings ใช้แสดง "ค่าเริ่มต้น") */
+export function mascotDefaultSrc(pose: MascotPose): string {
+  return POSE_ASSETS[pose].src
 }
 
 export function MascotBadge({ pose, size = 'sm', alt, className = '', loading = 'lazy' }: MascotBadgeProps) {

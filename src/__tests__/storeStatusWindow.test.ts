@@ -55,12 +55,13 @@ describe('L-6 — แถบสถานะตามเวลา/รอบจร�
     expect(s.isOpen).toBe(true)
     expect(s.state).toBe('preorder_only')
     expect(s.message).toContain('จองล่วงหน้า')
-    expect(s.preOrderLine).toContain('รอบวันที่ 27')
+    expect(s.preOrderLine).toContain('11:00 AM') // R52: เวลาออกส่งจริงแทนชื่อรอบ
+    expect(s.preOrderLine).not.toContain('รอบวันที่ 27')
     expect(s.preOrderLine).not.toContain('ปิดรับแล้ว')
     // R13 (Owner 2026-10-28): บอก "รอบไหนของวันไหน" — วันที่ DD/MM/YYYY + ปิดรอบ
     expect(s.preOrderLine).toContain('27/10/2026')
-    // R25 (Owner 2026-10-30): copy ใหม่ "เปิดรับออเดอร์ Pre-Order / จองล่วงหน้า : รอบส่ง … (ปิดรับ HH:MM AM/PM)" — ยังชี้รอบถัดไป
-    expect(s.preOrderLine).toMatch(/จองล่วงหน้า : รอบส่ง/)
+    // R52 (Owner 2026-11-01): body = "รอบส่งถัดไป <เวลาออกส่งจริง> … (ปิดรับ HH:MM AM/PM)" — หัวข้อ/ไอคอนอยู่ฝั่ง strip
+    expect(s.preOrderLine).toMatch(/^รอบส่งถัดไป /)
     expect(s.preOrderLine).toMatch(/\(ปิดรับ \d{2}:\d{2} (AM|PM)\)/)
   })
 

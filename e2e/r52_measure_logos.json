@@ -1,0 +1,23 @@
+[
+  {
+    "file": "Facebook Logo.webp",
+    "bytes": 1874,
+    "w": 160,
+    "h": 160,
+    "chunk": "VP8X"
+  },
+  {
+    "file": "Messenger logo.webp",
+    "bytes": 6082,
+    "w": 300,
+    "h": 300,
+    "chunk": "VP8X"
+  },
+  {
+    "file": "line logo.webp",
+    "bytes": 2284,
+    "w": 160,
+    "h": 160,
+    "chunk": "VP8X"
+  }
+]
