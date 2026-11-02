@@ -1,0 +1,1 @@
+docs(R58): บันทึก commit ea2182f + gates + EF deploy ทั้ง 2 ตัว
