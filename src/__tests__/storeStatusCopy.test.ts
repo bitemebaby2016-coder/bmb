@@ -79,9 +79,11 @@ describe('N1 — default copy ต้องตรงกับข้อควา�
       at(`${TODAY}T04:00:00+07:00`),
     )
     expect(live.preOrderLine).not.toBe(DEFAULT_STORE_STATUS_COPY.preOrderClosed)
-    // R52: รูปแบบใหม่ — body = "รอบส่งถัดไป <เวลาออกส่งจริง> …" (หัวข้อ/ไอคอนอยู่ฝั่ง strip)
-    expect(live.preOrderLine).toMatch(/^รอบส่งถัดไป /)
-    expect(live.preOrderLine).toContain('6:00 AM') // delivery_start 06:00 → เวลาออกส่งจริง
+    // N1: รูปแบบใหม่ — body = "รอบส่ง <6.00 AM> <ชื่อรอบ> <วัน> …" (หัวข้อ/ไอคอนอยู่ฝั่ง strip)
+    expect(live.preOrderLine).toMatch(/^รอบส่ง /)
+    expect(live.preOrderLine).not.toContain('รอบส่งถัดไป')
+    expect(live.preOrderLine).toContain('6.00 AM') // delivery_start 06:00 → ไม่ pad ชั่วโมง + จุดคั่นนาที
+    expect(live.preOrderLine).toContain('เช้า') // N1: display_name ของรอบจริงโชว์ (ทับ R52 "ห้ามโชว์ชื่อรอบ")
   })
 })
 

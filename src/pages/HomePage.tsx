@@ -31,7 +31,6 @@ import { HomeProductCard } from '@/components/home/HomeProductCard'
 import { PromotionStrip } from '@/components/home/PromotionStrip'
 import { VerifiedReviewsSection } from '@/components/home/VerifiedReviewsSection'
 import { ReviewCarouselSection } from '@/components/home/ReviewCarouselSection'
-import { ReviewGallerySection } from '@/components/home/ReviewGallerySection'
 import { MarketingFeedSection } from '@/components/home/MarketingFeedSection'
 import { CategorySections } from '@/components/home/CategorySections'
 import { FloatingCart, StickyCartBar } from '@/components/home/FloatingCart'
@@ -520,8 +519,8 @@ export function HomePage() {
       {/* 6. Social Proof Review Carousel */}
       <ReviewCarouselSection reviews={reviews} products={products} onReviewCta={handleReviewCta} />
 
-      {/* 6b. Real customer review photo gallery (lazy) — R34: mount ของจริง 32 ใบ (เดิมมี comment แต่ไม่ได้ render) */}
-      <ReviewGallerySection />
+      {/* N4 (Owner 2026-11-01): ยุบรีวิว 2 เซกชั่น — อัลบั้มรูปสกรีนช็อตย้ายเข้าไปใน
+          ReviewCarouselSection (เซกชั่นเดียว "📸 รีวิวจริงจากลูกค้า") แล้ว — ห้าม render ซ้ำ */}
       {/* R50 (Owner 2026-11-01): ไม่แสดงเซ็กชั่นประกาศล่าสุดด้านล่าง — ย้ายขึ้น FloatingAdBanners
           รวมกับโปรโมชั่น (สูงสุด 2 · กดปิดได้) และเก็บรวมที่หน้า 🎟️ โปรโมชั่น ข่าวสาร และ กิจกรรม */}
       {false && <MarketingFeedSection />}

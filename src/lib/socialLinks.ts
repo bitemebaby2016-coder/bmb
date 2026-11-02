@@ -41,14 +41,14 @@ export interface SocialLinkItem {
   icon: string
   /** R34: โลโก้รูปจริงจาก public/ (มี = ใช้ <img> แทน emoji) */
   img?: string
-  /** R52: คลาสเสริมปรับขนาด/จัดตำแหน่งให้เท่ากัน (เช่น facebook scale-90) */
+  /** N3: คลาสเสริมปรับขนาด/จัดตำแหน่ง — ปกติเว้นว่าง (ทุกปุ่มเท่ากันด้วย w-6 h-6 ของ Footer) */
   imgClass?: string
   href: string
 }
 
 /** ลำดับแสดงผล + ไอคอนของปุ่มโซเชียล (ใช้ทั้ง Footer/หน้าติดต่อ) */
 const NETWORK_META: Array<{ network: SocialNetwork; label: string; icon: string; img?: string; imgClass?: string }> = [
-  { network: 'facebook', label: 'Facebook', icon: '📘', img: '/Facebook Logo.webp', imgClass: 'scale-90' },
+  { network: 'facebook', label: 'Facebook', icon: '📘', img: '/Facebook Logo.webp' },
   { network: 'messenger', label: 'Messenger', icon: '💬', img: '/Messenger logo.webp' },
   { network: 'line', label: 'LINE', icon: '💚', img: '/line logo.webp' },
   { network: 'instagram', label: 'Instagram', icon: '📸' },

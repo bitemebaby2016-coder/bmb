@@ -3,7 +3,7 @@
 // รูปรีวิวจริงจากลูกค้า (Grab/Google/รูปส่วนตัว) — ย่อแล้วเก็บที่
 // public/assets/reviews/small/review-NN.jpg (640px, q58 — สคริปต์
 // scripts/compressReviews.ps1) ต้นฉบับเต็มอยู่ใน public/assets/reviews/
-// แสดงผลโดย ReviewGallerySection (lazy — ไม่กระทบ LCP)
+// แสดงผลโดย ReviewCarouselSection (N4 ยุบรีวิว 2 เซกชั่น — lazy ไม่กระทบ LCP)
 // ============================================
 
 export interface RealReviewPhoto {

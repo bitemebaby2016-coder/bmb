@@ -7,6 +7,14 @@
 //    ห้ามใช้คำนวณ products.rating/review_count
 //    canonical customer reviews = table `reviews` (เปิดใช้ใน gate ภายหลัง)
 //
+// N4 (Owner 2026-11-01 "ยุบรีวิว 2 เซกชั่น"):
+//    - ข้อความ/ชื่อผู้รีวิว/คะแนน/วันที่ = คัดจากสกรีนช็อตรีวิวจริงในไฟล์ repo
+//      (public/assets/reviews/Screenshot_2026-09-17-19-0X-*.jpg ต้นฉบับ +
+//       small/review-03..06.jpg ที่แสดงบนอัลบั้มหน้าแรก)
+//    - foodName/productId = '' — ไม่ทราบเมนูจากในภาพ → ห้ามผูกมั่วกับสินค้าอื่น
+//      (CTA ไม่มีสินค้า = handleReviewCta → navigate('/cart') ผ่าน guard แล้ว)
+//    - เรียงใหม่ → เก่า (วันที่รีวิวจริงตามภาพ)
+//
 // แสดงผลบน HomePage (ReviewCarouselSection — label ระบุชัดว่า testimonial)
 // @see docs/COMPONENT_SPEC_UI.md §12 CustomerReviewCard + Glassmorphism Spec
 // ============================================
@@ -15,76 +23,74 @@ import type { SocialProofReview, MenuHighlightClip } from '@/types'
 
 /**
  * รายการ Social Proof ทั้งหมด (Admin curate ผ่านไฟล์นี้ได้โดยตรง)
- * productId ต้องตรงกับ products.id จริงในฐานข้อมูล (ดู supabase-migration.sql seed)
- * - prod-1..prod-4 = Same-day Menu
- * - prod-5..prod-6 = Pre-order Menu (เมนูโหวต)
+ * N4: ทุกแถบัดมาจากสกรีนช็อตจริง — ถ้าเพิ่มรายการใหม่ต้องมีภาพจริงใน repo อ้างอิง
  */
 export const SOCIAL_PROOF_REVIEWS: SocialProofReview[] = [
   {
     id: 'sp-001',
-    customerName: 'แจน',
+    customerName: 'ชิสากุหนุ เรนยุคุร',
     rating: 5,
-    comment: 'ผัดไทยกุ้งสดอร่อยมากค่ะ เส้นนุ่ม ๆ กุ้งสด ส่งถึงบ้านร้อน ๆ เลย',
-    source: 'grabfood',
-    sourceLabel: 'GrabFood',
-    dateLabel: '1 สัปดาห์ที่แล้ว',
-    foodName: 'ผัดไทยกุ้งสด',
-    productId: 'prod-1',
+    comment: 'อร่อยหลายอย่าง จัดจ้านบ้านว่างๆ มีผิวกาแฟแก',
+    source: 'facebook',
+    sourceLabel: 'Facebook',
+    dateLabel: '25 Mar 2026',
+    foodName: '',
+    productId: '',
   },
   {
     id: 'sp-002',
-    customerName: 'พี่ตู่',
+    customerName: 'LLLLLLLL',
     rating: 5,
-    comment: 'ข้าวหมูทอดกระเทียมหอมมาก กระเทียมกรุบ ๆ ฟีลมาก เหมาะกับมื้อเที่ยงสุด ๆ',
+    comment: 'อร่อยมาก สดจริง (ไม่ใส่แป้ง)',
     source: 'facebook',
     sourceLabel: 'Facebook',
-    dateLabel: '2 สัปดาห์ที่แล้ว',
-    foodName: 'ข้าวหมูทอดกระเทียม',
-    productId: 'prod-2',
+    dateLabel: '22 Mar 2026',
+    foodName: '',
+    productId: '',
   },
   {
     id: 'sp-003',
-    customerName: 'มาร์ค',
-    rating: 4,
-    comment: 'แกงเขียวหวานไก่เข้มข้นดี หอมกะทิ ราคาคุ้มค่า ไว้จะสั่งซ้ำครับ',
+    customerName: 'Da K.',
+    rating: 5,
+    comment: 'อร่อยมากไก่ญุ่นแซ่บไม่บอกใคร ผิวเหลืองร้อนส้าย่อย',
     source: 'facebook',
     sourceLabel: 'Facebook',
-    dateLabel: '2 สัปดาห์ที่แล้ว',
-    foodName: 'แกงเขียวหวานไก่',
-    productId: 'prod-3',
+    dateLabel: '20 Mar 2026',
+    foodName: '',
+    productId: '',
   },
   {
     id: 'sp-004',
-    customerName: 'นุ้ย',
-    rating: 4,
-    comment: 'กาแฟเย็นหอมมันดีจริง ขวดแน่นหนาไม่หกตอนส่ง บริการดีมาก',
-    source: 'grabfood',
-    sourceLabel: 'GrabFood',
-    dateLabel: '3 สัปดาห์ที่แล้ว',
-    foodName: 'กาแฟเย็น',
-    productId: 'prod-4',
+    customerName: 'Bronus P.',
+    rating: 5,
+    comment: 'ขอบคุณค่ะที่ฟีดแบคให้มากๆ',
+    source: 'facebook',
+    sourceLabel: 'Facebook',
+    dateLabel: '16 Mar 2026',
+    foodName: '',
+    productId: '',
   },
   {
     id: 'sp-005',
-    customerName: 'เต้ย',
+    customerName: 'view p.',
     rating: 5,
-    comment: 'โหวตเมนูต้มยำกุ้งไปแล้ว อร่อยสมใจมาก รอรอบหน้าสั่งอีกแน่นอน',
+    comment: 'อร่อยค่ะ ไส้ไก่ญุ่น นุ่มจริงๆทุนา',
     source: 'facebook',
     sourceLabel: 'Facebook',
-    dateLabel: '1 เดือนที่แล้ว',
-    foodName: 'ต้มยำกุ้งสด',
-    productId: 'prod-5',
+    dateLabel: '14 Mar 2026',
+    foodName: '',
+    productId: '',
   },
   {
     id: 'sp-006',
-    customerName: 'ฟ้า',
+    customerName: 'GUBGIB',
     rating: 5,
-    comment: 'ผัดไทยทะเลจองล่วงหน้าได้ง่ายมาก พอวันส่งก็มาส่งตรงเวลา แนะนำเลย',
-    source: 'grabfood',
-    sourceLabel: 'GrabFood',
-    dateLabel: '1 เดือนที่แล้ว',
-    foodName: 'ผัดไทยทะเล',
-    productId: 'prod-6',
+    comment: 'อร่อยมาก เนื้อเค็ม สดจริง',
+    source: 'facebook',
+    sourceLabel: 'Facebook',
+    dateLabel: '11 Mar 2026',
+    foodName: '',
+    productId: '',
   },
 ]
 

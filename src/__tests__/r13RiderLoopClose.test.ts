@@ -30,7 +30,7 @@ describe('R13 — แถบสถานะ: รูปแบบใหม่ + บ
     expect(s.message).toBe('เปิดรับออเดอร์ Same-Day / ส่งวันนี้ : รอบส่ง ทันทีหลังครัวปรุงเสร็จ')
   })
 
-  it('Pre-Order = "เปิดรับออเดอร์ Pre-Order / จองล่วงหน้า : รอบส่ง" + รอบถัดไป + วันที่ DD/MM/YYYY + (ปิดรับ HH:MM AM/PM)', () => {
+  it('Pre-Order = "รอบส่ง <6.00 AM> เช้า <วัน DD/MM/YYYY> (ปิดรับ HH:MM AM/PM)" — N1 body (หัวข้อ/ไอคอนอยู่ฝั่ง strip)', () => {
     const closedToday = [
       { status: 'closed', display_name: 'เช้า', delivery_start: '06:00', delivery_end: '09:00', scheduled_date: TODAY },
     ]
@@ -39,12 +39,12 @@ describe('R13 — แถบสถานะ: รูปแบบใหม่ + บ
     ]
     const s = getStoreStatusFromRounds([...closedToday, ...tomorrow] as never, atBkk('2026-10-28T10:00:00+07:00'))
     expect(s.state).toBe('preorder_only')
-    // R52 (Owner 2026-11-01): body ใหม่ "รอบส่งถัดไป <เวลาออกส่งจริง> …" (หัวข้อ/ไอคอนอยู่ฝั่ง strip)
-    expect(s.preOrderLine).toMatch(/^รอบส่งถัดไป /)
+    // N1 (Owner 2026-11-01): body ใหม่ "รอบส่ง <6.00 AM> เช้า <วัน> …" — ทับ R52 ("ห้ามโชว์ชื่อรอบ") ตาม conflict ในแฮนด์ออฟ
+    expect(s.preOrderLine).toMatch(/^รอบส่ง /)
+    expect(s.preOrderLine).not.toContain('รอบส่งถัดไป')
     expect(s.preOrderLine).not.toContain('พรีออเดอร์: เปิดรับออเดอร์')
-    expect(s.preOrderLine).not.toContain('พรีออเดอร์: เปิดรับออเดอร์')
-    expect(s.preOrderLine).toContain('6:00 AM') // R52: delivery_start 06:00 → เวลาออกส่งจริง
-    expect(s.preOrderLine).not.toContain('เช้า') // R52: ชื่อรอบห้ามโชว์
+    expect(s.preOrderLine).toContain('6.00 AM') // N1: delivery_start 06:00 → ไม่ pad + จุดคั่นนาที
+    expect(s.preOrderLine).toContain('เช้า') // N1: display_name ของรอบจริงโชว์ตามสเปก (ทับ not.toContain('เช้า') ของ R52)
     expect(s.preOrderLine).toContain('29/10/2026')
     expect(s.preOrderLine).toMatch(/\(ปิดรับ \d{2}:\d{2} (AM|PM)\)/)
   })

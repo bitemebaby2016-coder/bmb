@@ -1,0 +1,13 @@
+R53: รับแฮนด์ออฟ ADDENDUM — ทำ N1-N4 เสร็จ + N5 gates เขียว
+
+- N1: Strip copy ใหม่ 3 บรรทัด (ไอคอนหลังคำไทย · รอบส่ง 7.00 AM จุด+ชื่อรอบ+วัน dynamic · เซมเดย์ไม่ผูก Round ไม่มีวงเล็บ)
+  - StoreStatusStrip + homeProviders (preOrderLine/sameDayLine) · conflict r13RiderLoopClose ทับตาม spec ใหม่
+  - แก้ test 5 ไฟล์ (r44/storeStatusCopy/storeStatusWindow/r13/mascotClosed) · ชุด strip 8 ไฟล์ = 87/87
+- N2: สแกน "ไบ๊" display copy ใน src/+supabase/ = 0 จุด (e2e/r53_n2_scan.cjs)
+  - TTS pronunciation (speakable/speakableText) KEEP = เปลี่ยนไม่ได้ · DB theater_daily_copy ยังมี "ไบ๊" (mon-1) → Owner แอดมินกด save ใหม่ทับ (e2e/r53_n2_dbcheck.cjs READ-ONLY)
+- N3: ลบ FB imgClass scale-90 (socialLinks) → ทุกปุ่ม w-6 h-6 object-contain เท่ากัน · โลโก้ 3 ไฟล์ EXISTS (e2e/r53_n3_assets.cjs)
+- N4: ยุบรีวิว 2 เซกชั่นหัวข้อซ้ำ — อัลบั้มรูป 32 ใบย้ายเข้า ReviewCarouselSection · ลบ ReviewGallerySection (component+render)
+  - ข้อความรีวิว 6 รายการคัดจากสกรีนช็อตจริง (socialProofReviews · foodName/productId='' ไม่ผูกเมนูมั่ว · CTA guard -> /cart)
+  - r34Contracts ปรับตาม N4 · ชุด N4 = 6 ไฟล์ 59/59
+- Gates: tsc --noEmit 0 · npm run lint OK (eslint + brandNameGuard 520 + languageSanity 1505) · vitest รวม 24 ไฟล์ 210 tests PASSED
+- Docs: AI_WORK_STATE บล็อก R53 · BMB_MASTER_STATUS R53 · e2e/r53_*.cjs evidence scripts

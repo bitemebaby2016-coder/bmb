@@ -6,6 +6,7 @@ import { describe, it, expect } from 'vitest'
 import fs from 'node:fs'
 import path from 'node:path'
 import homeSrc from '../pages/HomePage.tsx?raw'
+import carouselSrc from '../components/home/ReviewCarouselSection.tsx?raw'
 import roundsSrc from '../pages/admin/AdminRounds.tsx?raw'
 import footerSrc from '../components/layout/Footer.tsx?raw'
 import marketingSrc from '../pages/admin/AdminMarketing.tsx?raw'
@@ -43,8 +44,11 @@ describe('R34 · หน้าแรก = หัวข้อแอดมิน + 
     expect(out.map((p) => p.id)).toEqual(['on-cal'])
   })
 
-  it('อัลบั้มรีวิวจริง mount บนหน้าแรก + รายชื่อ = ไฟล์จริง 32 ใบ (ไม่มีรูปผี 404)', () => {
-    expect(homeSrc).toContain('<ReviewGallerySection')
+  it('อัลบั้มรีวิวจริง mount บนหน้าแรก (N4: รวมใน ReviewCarouselSection — ห้าม render ซ้ำ) + รายชื่อ = ไฟล์จริง 32 ใบ (ไม่มีรูปผี 404)', () => {
+    expect(homeSrc).toContain('<ReviewCarouselSection')
+    expect(homeSrc).not.toContain('<ReviewGallerySection') // N4: ยุบรีวิว 2 เซกชั่นแล้ว
+    expect(carouselSrc).toContain('REAL_REVIEW_PHOTOS') // อัลบั้มอยู่ในเซกชั่นเดียวกับคารูเซล
+    expect(carouselSrc).toContain('review-gallery')
     expect(REAL_REVIEW_PHOTOS.length).toBe(32)
     const dir = path.resolve(__dirname, '../../public/assets/reviews/small')
     const onDisk = fs.readdirSync(dir).filter((f) => f.endsWith('.jpg')).sort()

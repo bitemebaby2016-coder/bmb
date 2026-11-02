@@ -221,20 +221,25 @@ export function getStoreStatusFromRounds(rounds: Array<{
       })[0] ?? null
   const preOrderLine = (() => {
     // R13/R18: กรอบ รอบ+วัน+ปิดรับคงเดิม (nextPre filter ไม่แตะ)
-    // R52 (Owner 2026-11-01): หัวข้อ/ไอคอนอยู่ฝั่ง strip — body ล้วน:
-    //   `รอบส่งถัดไป <เวลาออกส่ง AM/PM> <วัน DD/MM/YYYY> (ปิดรับ HH:MM AM/PM)`
-    //   แสดง "เวลาเดินทางออกส่ง" (delivery_start → 7:00 AM) แทนชื่อรอบ ("เช้า") ตามคำสั่ง Owner
+    // N1 (Owner 2026-11-01 Strip copy รอบ 3): body ล้วน หัวข้อ/ไอคอนอยู่ฝั่ง strip:
+    //   `รอบส่ง <เวลาออกส่ง 7.00 AM> <ชื่อรอบ เช้า> <วัน DD/MM/YYYY> (ปิดรับ HH:MM AM/PM)`
+    //   · เวลา/ชื่อรอบ/วันที่/ปิดรับ = dynamic จาก delivery_rounds รอบถัดไปจริง (ห้าม hardcode)
+    //   · เวลาออกส่ง = delivery_start ไม่ pad ชั่วโมง + จุดคั่นนาที (7.00 AM ตามสเปก Owner)
+    //   · ชื่อรอบ = display_name ของรอบจริง (เช้า/เที่ยง/เย็น) — แสดงต่อท้ายเวลาเมื่อมี
     const day = nextPre ? String(nextPre.scheduled_date ?? '').slice(0, 10) : ''
     const dateLabel = /^\d{4}-\d{2}-\d{2}$/.test(day)
       ? `${day.slice(8, 10)}/${day.slice(5, 7)}/${day.slice(0, 4)}`
       : ''
-    // เวลาออกส่งจริง (ไม่ pad ชั่วโมง = 7:00 AM) · fallback ชื่อรอบถ้ารอบเก่าไม่มีเวลา
+    // เวลาออกส่งจริงรูปแบบ 7.00 AM (ไม่ pad ชั่วโมง · จุดคั่นนาที) · รอบเก่าไม่มีเวลา = fallback ชื่อรอบ
     const depart =
       nextPre && nextPre.delivery_start
-        ? fmtAmPm(String(nextPre.delivery_start)).replace(/^0/, '')
+        ? fmtAmPm(String(nextPre.delivery_start)).replace(/^0/, '').replace(':', '.')
         : nextPre?.display_name || 'รอบถัดไป'
+    // ชื่อรอบต่อท้ายเวลา (ข้ามเมื่อ depart ใช้ชื่อรอบเป็น fallback อยู่แล้ว = กันซ้ำ)
+    const roundLabel =
+      nextPre && nextPre.delivery_start && nextPre.display_name ? ` ${nextPre.display_name}` : ''
     return nextPre
-      ? `รอบส่งถัดไป ${depart}${dateLabel ? ` ${dateLabel}` : ''} (ปิดรับ ${fmtAmPm(roundCutoffLabel(nextPre, 'PRE_ORDER', 2))})`
+      ? `รอบส่ง ${depart}${roundLabel}${dateLabel ? ` ${dateLabel}` : ''} (ปิดรับ ${fmtAmPm(roundCutoffLabel(nextPre, 'PRE_ORDER', 2))})`
       : 'ปิดรับแล้ว — ยังไม่เปิดรอบถัดไป'
   })()
 
@@ -266,13 +271,9 @@ export function getStoreStatusFromRounds(rounds: Array<{
     const upcoming = sorted.find((r) => windowOf(r).start > hour) ?? null
     const current = inWindow ?? upcoming ?? sorted[0]
     const hasWindowNow = Boolean(inWindow)
-    // R44/R52 (Owner 2026-11-01) บรรทัดที่ 3: ในหน้าต่างส่ง = "จัดส่งทันทีหลังปรุงเสร็จ" (R52 copy) ·
-    // ยังไม่ถึงรอบ = "เริ่มส่ง HH:MM AM" · นอกหน้าต่างทั้งหมดแต่ยังเปิดรับ = ส่งเลยหลังปรุงเสร็จ
-    const sameDayLine = hasWindowNow
-      ? 'จัดส่งทันทีหลังปรุงเสร็จ'
-      : upcoming && upcoming.delivery_start
-        ? `เริ่มส่ง ${fmtAmPm(String(upcoming.delivery_start))}`
-        : 'จัดส่งทันทีหลังปรุงเสร็จ'
+    // N1 (Owner 2026-11-01 Strip copy รอบ 3): เซมเดย์ไม่ผูกรอบส่งใด ๆ — คงประโยคเดียวทุกช่วงเวลา
+    // (ห้ามมีคำในวงเล็บ/เวลาของรอบ — branch "เริ่มส่ง HH:MM AM" ถูกถอดออกจากสเปกแล้ว)
+    const sameDayLine = 'จัดส่งทันทีหลังครัวปรุงเสร็จ'
     return {
       isOpen: true,
       state: 'open',
