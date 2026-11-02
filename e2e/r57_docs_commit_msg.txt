@@ -1,0 +1,5 @@
+docs(R57): บันทึก commit 755fa85 + gates + EF deploy
+
+- AI_WORK_STATE: NEXT ① = commit 755fa85 push แล้ว (aa316d0..755fa85)
+- gates รอบ R57: FULL 199/199 files · 1986/1986 tests 0 fail · tsc 0
+  · lint OK (524+1538) · esbuild worker 0 · EF DEPLOY_social-ai-worker_OK
