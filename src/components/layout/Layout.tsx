@@ -84,7 +84,9 @@ export function Layout({ children, hideBottomNav = false, activeSection = 'home'
       return
     }
     let cancelled = false
-    void (async () => {
+    let addedTotal = 0
+    let toasted = false // กัน toast ซ้ำตอน retry
+    const runAdd = async (isRetry: boolean) => {
       try {
         const t0 = Date.now()
         while (!useCartStore.getState().isHydrated && Date.now() - t0 < 4000) {
@@ -103,16 +105,27 @@ export function Layout({ children, hideBottomNav = false, activeSection = 'home'
         }
         if (cancelled) return
         if (added > 0) {
+          addedTotal += added
           showToast('เปิดรายการที่สรุปไว้ให้แล้ว 🛒 ' + added + ' รายการ — เช็คเอาท์หรือเพิ่มเมนูต่อได้เลย', 'success')
           useCartStore.getState().setCheckoutOpen(true)
-        } else if (missing > 0) {
+        } else if (missing > 0 && !toasted) {
+          toasted = true
           showToast('รายการจากลิงก์หาไม่เจอในเมนูปัจจุบัน — เลือกเมนูใหม่ได้ที่หน้าร้าน', 'warning')
         }
       } catch {
-        if (!cancelled) showToast('เปิดรายการจากลิงก์ไม่สำเร็จ — สั่งใหม่ได้ที่หน้าร้าน', 'warning')
+        if (!cancelled && !toasted) {
+          toasted = true
+          showToast('เปิดรายการจากลิงก์ไม่สำเร็จ — สั่งใหม่ได้ที่หน้าร้าน', 'warning')
+        }
       }
-    })()
-    return () => { cancelled = true }
+    }
+    void runAdd(false)
+    // R57 (Owner 2026-11-02): เคส FB in-app เปิดหน้าก่อน hydration/catalog ทัน = ตะกร้าว่าง
+    // → ลองซ้ำ 1 ครั้งหลัง 700ms ถ้ายังไม่มีรายการไหนถูกเพิ่ม (มีแล้ว = ไม่ทับของเดิม)
+    const cartRetryTimer = setTimeout(() => {
+      if (!cancelled && addedTotal === 0) void runAdd(true)
+    }, 700)
+    return () => { cancelled = true; clearTimeout(cartRetryTimer) }
   }, [])
 
   // Header hide-on-scroll — listen on the ACTUAL scroll container (`main` has

@@ -35,12 +35,16 @@ describe('R46 — แบนเนอร์ในเว็บ: FB in-app = แจ
     expect(isInAppBrowser('Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/131.0.0.0 Safari/537.36')).toBe(false)
   })
 
-  it('แบนเนอร์มี testids + ปุ่มยืนยันเปิดเอง + dismiss จำใน localStorage + Layout เรียกใช้', () => {
+  it('แบนเนอร์ R57 = บังคับภายนอก (ไม่มีปุ่มอยู่ที่นี่ต่อ) + Layout เรียกใช้', () => {
     expect(noticeSrc).toContain('data-testid="inapp-browser-notice"')
     expect(noticeSrc).toContain('data-testid="inapp-open-external"')
-    expect(noticeSrc).toContain('data-testid="inapp-stay"')
-    expect(noticeSrc).toContain("localStorage.setItem(DISMISS_KEY, '1')")
+    // Owner 2026-11-02 "ห้ามใช้บราวเซอร์ของเฟซ" → ปุ่มอยู่ที่นี่ต่อ/dismiss = ถูกถอดออก
+    expect(noticeSrc).not.toContain('data-testid="inapp-stay"')
+    expect(noticeSrc).not.toContain('DISMISS_KEY')
     expect(noticeSrc).toContain('เปิดในเบราว์เซอร์')
+    // Android = redirect อัตโนมัติด้วย intent:// (บังคับ ไม่ใช่แค่แจ้ง)
+    expect(noticeSrc).toContain('externalBrowserIntentUrl')
+    expect(noticeSrc).toContain('window.location.replace(intent)')
     expect(layoutSrc).toContain('<InAppBrowserNotice />')
     expect(layoutSrc).toContain("import { InAppBrowserNotice } from './InAppBrowserNotice'")
   })
