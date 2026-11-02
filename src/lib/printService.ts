@@ -22,6 +22,13 @@
 //   - ไม่ confirm ซ้ำถ้ามี dialog เปิดอยู่
 // ============================================
 import { supabase } from './supabase'
+import {
+  stickerFormFields,
+  STICKER_SERVICE_LABELS,
+  STICKER_PAID_OPTIONS,
+  type StickerServiceKey,
+  type StickerPaidKey,
+} from './stickerForm'
 
 export type PrintJobType = 'receipt' | 'kitchen_ticket'
 export type PrintJobStatus = 'requested' | 'sent' | 'acknowledged' | 'printed' | 'failed'
@@ -52,6 +59,8 @@ export interface PrintOrderData {
   payment_method?: string
   payment_status?: string
   delivery_method?: string
+  /** R56: ที่อยู่ส่ง — ช่อง "Add :" ของแบบฟอร์มสติกเกอร์ใหม่ */
+  delivery_address?: string
   pickup_code?: string | null
   order_mode?: string
   scheduled_date?: string | null
@@ -263,18 +272,28 @@ ${o.special_instructions ? `<hr><div class="item">หมายเหตุรว
 
 // ============================================================
 // R27 (Owner 2026-10-30) — เทมเพลตสติกเกอร์ BMB 40×60 (ใบเสร็จ + ครัว = ใบเดียวกัน)
+// R56 (Owner 2026-11-02) — เปลี่ยนแบบฟอร์มใหม่ตามภาพที่แนบ (ขนาด 40×60 เดิม)
 // ============================================================
 // แบบจากที่ Owner วาดในแอป Nimbot (Templates-BmB · กระดาษ TT40*60-125transparent):
-//   BITE ME BABY · " MORE THAN DELLICIOUS " · เส้นคั่น · Order id / Date / Menu / Notice
-//   · CUSTOMER / Tel. ☎ · QR + SCAN FOR MORE + ข้อความไทย + Thank You for love !
-// "เวลาใช้พิมรายละเอียดเฉพาะหลัง : เท่านั้น" = ป้ายซ้ายฝังตายในเทมเพลต ค่าทางขวา
-// อ่านจากแบบฟอร์มออเดอร์จริง (buildPrintOrderData) — ไม่มีบรรทัดราคาในใบ (รายละเอียด
-// การซื้ออยู่หลัง QR = biteme-baby.com) · QR สร้างฝั่ง client ด้วย qrcode (fallback = URL ตรง)
+//   BITE ME BABY · " More Than Dellicious " · เส้นคั่น
+//   Date : …            TIME : …
+//   ○ Pre-Order  ○ Same Day
+//   ○ ทานที่ร้าน  ○ สั่งกลับบ้าน  ○ รับที่ร้าน
+//   ORDER ID : … · ORDER LIST : … (ต่อ ": …" ได้ 2 บรรทัด) · NOTICE : …
+//   [ DELIVERY / CUSTOMER ] · Attn : ชื่อ (โทร) · Add : ที่อยู่
+//   [ TOTAL NET ] : … THB · [PAID] : ○ B/T  ○ QR PROMPTPAY  ○ COD
+//   QR + SCAN FOR MORE + Thank You for love !
+// "เวลาใช้พิมรายละเอียดเฉพาะหลัง : เท่านั้น" = ป้ายซ้ายฝังตาย ค่าทางขวาอ่านจากแบบฟอร์ม
+// จริง · ทุกช่องคำนวณจาก stickerFormFields (จุดเดียวกับ PNG ทาง Bluetooth — สองทางตรงกัน)
+// · QR สร้างฝั่ง client ด้วย qrcode (fallback = URL ตรง)
 export const BMB_STICKER_W_MM = 40
 export const BMB_STICKER_H_MM = 60
 const STICKER_QR_URL = 'https://biteme-baby.com'
+/** วงกลมติ๊ก/ไม่ติ๊ก — ● = อันที่ตรงกับออเดอร์นี้ (แบบ Owner วาดทุกช่องเป็น ○ ไว้ก่อน) */
+const CIRCLE_ON = '●'
+const CIRCLE_OFF = '○'
 
-export async function buildBmbStickerHtml(o: PrintOrderData): Promise<string> {
+export async function buildBmbStickerHtml(o: PrintOrderData, at: Date | number = Date.now()): Promise<string> {
   let qrImg = ''
   try {
     const QR = await import('qrcode')
@@ -286,14 +305,19 @@ export async function buildBmbStickerHtml(o: PrintOrderData): Promise<string> {
     })
   } catch { /* offline/พัง = โชว์ URL ตรงในช่อง QR ยังพิมพ์ได้ */ }
 
-  const menuParts = o.items.slice(0, 3).map((it) => {
-    const note = it.special_request ? ` (${escapeHtml(it.special_request)})` : ''
-    return `${escapeHtml(it.product_name)} x${Number(it.quantity)}${note}`
-  })
-  if (o.items.length > 3) menuParts.push('…')
-  const menu = menuParts.length > 0 ? menuParts.join('<br>') : '-'
-  const notice = (o.special_instructions || '').trim() || '-'
-  const date = formatThaiDateTime(o.created_at) || '-'
+  // at = เวลาพิมพ์ (default now — Date/TIME บนใบ = เวลาตอนพิมพ์ตามกติกา Owner ทั้ง HTML และ PNG)
+  const f = stickerFormFields(o, at)
+  const markMode = (on: boolean) => (on ? CIRCLE_ON : CIRCLE_OFF)
+  const markSvc = (k: StickerServiceKey) => (f.service === k ? CIRCLE_ON : CIRCLE_OFF)
+  const markPaid = (k: StickerPaidKey) => (f.paid === k ? CIRCLE_ON : CIRCLE_OFF)
+  // บรรทัดแรกหลัง "ORDER LIST :" · บรรทัดต่อไปหลัง ":" (ตรงแบบ Owner — ':' ชิดซ้าย)
+  const orderList = f.orderListLines
+    .map((ln, i) =>
+      i === 0
+        ? `<div class="f col"><b>ORDER LIST<i>:</i></b><span>${escapeHtml(ln)}</span></div>`
+        : `<div class="f col cont"><b>:</b><span>${escapeHtml(ln)}</span></div>`,
+    )
+    .join('')
   const qrBlock = qrImg
     ? `<img src="${qrImg}" alt="QR">`
     : `<div class="ph">${STICKER_QR_URL.replace('https://', '')}</div>`
@@ -301,47 +325,59 @@ export async function buildBmbStickerHtml(o: PrintOrderData): Promise<string> {
   return `<!doctype html><html lang="th"><head><meta charset="utf-8"><title>สติกเกอร์ ${escapeHtml(o.order_number)}</title><style>
   @page { size: ${BMB_STICKER_W_MM}mm ${BMB_STICKER_H_MM}mm; margin: 0.8mm; }
   * { box-sizing: border-box; }
-  body { margin: 0; font-family: 'Tahoma', 'Leelawadee UI', sans-serif; font-size: 8.2px; color: #000; line-height: 1.22; }
+  body { margin: 0; font-family: 'Tahoma', 'Leelawadee UI', sans-serif; font-size: 7.5px; color: #000; line-height: 1.16; }
   /* R28: clamp ต่อสติกเกอร์ 1 ใบ — ของล้น = ตัดทิ้ง ไม่ดันไปหน้า 2 (Owner: ปริ้นออกมาเป็น 2 หน้า) */
-  .sheet { width: 38.4mm; height: 58.4mm; overflow: hidden; }
-  .brand { text-align: center; font-size: 12px; font-weight: 800; letter-spacing: .3px; margin: 0; }
-  .tag { text-align: center; font-family: Georgia, 'Times New Roman', serif; font-style: italic; font-size: 6.5px; letter-spacing: 1px; margin: 1px 0 1.5px; }
-  hr.rule { border: 0; border-top: 1.2px solid #000; margin: 1.5px 0; }
-  .f { display: block; margin: .5px 0; font-size: 8.2px; }
-  .menu { font-size: 7.8px; margin: .5px 0 0 1px; }
-  .cust { margin-top: 1.5px; font-size: 8.6px; font-weight: 700; }
-  .telrow { margin: .5px 0 0 5mm; font-size: 8.6px; font-weight: 700; }
-  .qrwrap { display: flex; gap: 1.2mm; align-items: center; margin-top: 1.5px; }
-  .qrwrap img { width: 12.5mm; height: 12.5mm; display: block; }
-  .qrwrap .ph { width: 12.5mm; height: 12.5mm; border: 1px dashed #000; display: flex; align-items: center; justify-content: center; font-size: 5.5px; text-align: center; word-break: break-all; }
+  .sheet { width: 38.4mm; height: 58.4mm; overflow: hidden; display: flex; flex-direction: column; }
+  .brand { text-align: center; font-size: 12px; font-weight: 800; letter-spacing: .3px; margin: 0; flex: 0 0 auto; }
+  .tag { text-align: center; font-family: Georgia, 'Times New Roman', serif; font-style: italic; font-size: 6.6px; letter-spacing: 1px; margin: 1px 0 1.5px; flex: 0 0 auto; }
+  hr.rule { border: 0; border-top: 1.6px solid #000; margin: 1.2px 0; flex: 0 0 auto; }
+  .dtrow { display: flex; justify-content: space-between; margin: .4px 0; font-size: 7.8px; flex: 0 0 auto; }
+  .opts { display: flex; justify-content: center; gap: 5px; margin: .4px 0; white-space: nowrap; flex: 0 0 auto; }
+  .opts.mode { font-size: 7.8px; }
+  .opts.svc { font-size: 5.4px; }
+  .f { display: flex; margin: .3px 0; font-size: 7.5px; flex: 0 0 auto; }
+  .f b { font-weight: 700; }
+  /* คอลัมน์ป้าย 15.5mm — ป้ายชิดซ้าย ':' ชิดขวา (colon ตรงแนวทุกแถว) ค่าเริ่มหลังป้าย */
+  .f.col b { flex: 0 0 15.5mm; display: flex; justify-content: space-between; }
+  .f.col b i { font-style: normal; }
+  .f > span { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; }
+  .f.nat b { flex: 0 0 auto; margin-right: 2px; }
+  .sec { font-size: 8px; font-weight: 700; margin: .8px 0 .4px; flex: 0 0 auto; }
+  .paid { display: flex; margin: .3px 0; font-size: 6px; white-space: nowrap; flex: 0 0 auto; }
+  .paid b { font-weight: 700; margin-right: 3px; }
+  .paid span { margin-right: 5px; }
+  /* QR ผูกขอบล่างหน้า (margin-top:auto) — เนื้อบนเลื่อนด้วย offset แล้วก็ยังขอบล่าง */
+  .qrwrap { display: flex; gap: 1.2mm; align-items: center; margin-top: auto; padding-top: 1.5px; flex: 0 0 auto; }
+  .qrwrap img { width: 12mm; height: 12mm; display: block; }
+  .qrwrap .ph { width: 12mm; height: 12mm; border: 1px dashed #000; display: flex; align-items: center; justify-content: center; font-size: 5px; text-align: center; word-break: break-all; }
   .qrtext { flex: 1; text-align: center; min-width: 0; }
-  .scan { font-weight: 800; font-size: 8.5px; letter-spacing: .1px; white-space: nowrap; }
-  .qrtext .t { font-size: 6.2px; line-height: 1.15; margin-top: .5px; }
-  .ty { font-family: 'Brush Script MT', Georgia, cursive; font-style: italic; font-size: 7.5px; margin-top: 1px; }
+  .scan { font-weight: 800; font-size: 8.4px; letter-spacing: .1px; white-space: nowrap; }
+  .ty { font-family: 'Brush Script MT', Georgia, cursive; font-style: italic; font-size: 7px; margin-top: 1.5px; }
   /* R51 (Owner: ตัวอักษรเป็นตัวหนา/จางทั้งใบ — โดยเฉพาะตัวเล็ก + รายละเอียดลูกค้า):
      stroke ทุกตัวอักษร (สีเดียวกับ fill = หนาขึ้น ไม่เปลี่ยนสี) ผ่านทั้ง dialog และ QZ */
   .sheet, .sheet * { -webkit-text-stroke: 0.35px #000; paint-order: stroke fill; }
   </style></head><body>
   <div class="sheet">
   <p class="brand">BITE ME BABY</p>
-  <p class="tag">" MORE THAN DELLICIOUS "</p>
+  <p class="tag">" More Than Dellicious "</p>
   <hr class="rule">
-  <span class="f"><b>Order id  :</b> ${escapeHtml(o.order_number)}</span>
-  <span class="f"><b>Date      :</b> ${escapeHtml(date)}</span>
-  <span class="f"><b>Menu      :</b></span>
-  <div class="menu">${menu}</div>
-  <span class="f"><b>Notice    :</b> ${escapeHtml(notice)}</span>
+  <div class="dtrow"><span><b>Date :</b> ${escapeHtml(f.date)}</span><span><b>TIME :</b> ${escapeHtml(f.time)}</span></div>
+  <div class="opts mode"><span>${markMode(f.modePreOrder)} Pre-Order</span><span>${markMode(f.modeSameDay)} Same Day</span></div>
+  <div class="opts svc"><span>${markSvc('dine_in')} ${STICKER_SERVICE_LABELS.dine_in}</span><span>${markSvc('takeaway')} ${STICKER_SERVICE_LABELS.takeaway}</span><span>${markSvc('pickup')} ${STICKER_SERVICE_LABELS.pickup}</span></div>
+  <div class="f col"><b>ORDER ID<i>:</i></b><span>${escapeHtml(f.orderId)}</span></div>
+  ${orderList}
+  <div class="f col"><b>NOTICE<i>:</i></b><span>${escapeHtml(f.notice)}</span></div>
   <hr class="rule">
-  <div class="cust">CUSTOMER : ${escapeHtml(o.customer_name ?? '-')}</div>
-  <div class="telrow">Tel. ☎ : ${escapeHtml(o.customer_phone ?? '-')}</div>
+  <div class="sec">[ DELIVERY / CUSTOMER ]</div>
+  <div class="f nat"><b>Attn :</b><span>${escapeHtml(f.attn)}</span></div>
+  <div class="f nat"><b>Add :</b><span>${escapeHtml(f.add)}</span></div>
   <hr class="rule">
+  <div class="f nat"><b>[ TOTAL NET ] :</b><span>${escapeHtml(f.totalNet)} THB</span></div>
+  <div class="paid"><b>[PAID] :</b>${STICKER_PAID_OPTIONS.map((p) => `<span>${markPaid(p.key)} ${p.label}</span>`).join('')}</div>
   <div class="qrwrap">
     ${qrBlock}
     <div class="qrtext">
       <div class="scan">SCAN FOR MORE</div>
-      <div class="t">รายละเอียดการซื้อ</div>
-      <div class="t">สแกนสมาชิกเพื่อสะสมแต้ม</div>
-      <div class="t">รับรางวัลจำนวนมาก</div>
       <div class="ty">Thank You for love !</div>
     </div>
   </div>
@@ -628,6 +664,8 @@ export interface PrintableOrder {
   payment_method?: string | null
   payment_status?: string | null
   delivery_method?: string | null
+  /** R56: ที่อยู่ส่ง (แถว orders select '*' มีคอลัมนี้อยู่แล้ว) */
+  delivery_address?: string | null
   pickup_code?: string | null
   order_mode?: string | null
   scheduled_date?: string | null
@@ -662,6 +700,7 @@ export function buildPrintOrderData(order: PrintableOrder): PrintOrderData {
     payment_method: order.payment_method ?? undefined,
     payment_status: order.payment_status ?? undefined,
     delivery_method: order.delivery_method ?? undefined,
+    delivery_address: order.delivery_address ?? '',
     pickup_code: order.pickup_code ?? null,
     order_mode: order.order_mode ?? undefined,
     scheduled_date: order.scheduled_date ?? null,

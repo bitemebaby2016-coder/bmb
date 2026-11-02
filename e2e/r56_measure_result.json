@@ -1,0 +1,26 @@
+{
+  "at": "2026-11-02T13:24:55.720Z",
+  "oneItem": {
+    "sheetClientH": 221,
+    "sheetScrollH": 221,
+    "qrwrapTop": 174,
+    "qrwrapBottom": 221,
+    "lastContentBottom": 134,
+    "scanVisible": true,
+    "tyVisible": true,
+    "qrVisible": true,
+    "contentOverlapsQr": false
+  },
+  "eightItems": {
+    "sheetClientH": 221,
+    "sheetScrollH": 221,
+    "qrwrapTop": 174,
+    "qrwrapBottom": 221,
+    "lastContentBottom": 153,
+    "scanVisible": true,
+    "tyVisible": true,
+    "qrVisible": true,
+    "contentOverlapsQr": false
+  },
+  "ALL_PASS": true
+}

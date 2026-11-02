@@ -1,0 +1,61 @@
+<!doctype html><html lang="th"><head><meta charset="utf-8"><title>สติกเกอร์ BMB-20261102-0001</title><style>
+  @page { size: 40mm 60mm; margin: 0.8mm; }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: 'Tahoma', 'Leelawadee UI', sans-serif; font-size: 7.5px; color: #000; line-height: 1.16; }
+  /* R28: clamp ต่อสติกเกอร์ 1 ใบ — ของล้น = ตัดทิ้ง ไม่ดันไปหน้า 2 (Owner: ปริ้นออกมาเป็น 2 หน้า) */
+  .sheet { width: 38.4mm; height: 58.4mm; overflow: hidden; display: flex; flex-direction: column; }
+  .brand { text-align: center; font-size: 12px; font-weight: 800; letter-spacing: .3px; margin: 0; flex: 0 0 auto; }
+  .tag { text-align: center; font-family: Georgia, 'Times New Roman', serif; font-style: italic; font-size: 6.6px; letter-spacing: 1px; margin: 1px 0 1.5px; flex: 0 0 auto; }
+  hr.rule { border: 0; border-top: 1.6px solid #000; margin: 1.2px 0; flex: 0 0 auto; }
+  .dtrow { display: flex; justify-content: space-between; margin: .4px 0; font-size: 7.8px; flex: 0 0 auto; }
+  .opts { display: flex; justify-content: center; gap: 5px; margin: .4px 0; white-space: nowrap; flex: 0 0 auto; }
+  .opts.mode { font-size: 7.8px; }
+  .opts.svc { font-size: 5.4px; }
+  .f { display: flex; margin: .3px 0; font-size: 7.5px; flex: 0 0 auto; }
+  .f b { font-weight: 700; }
+  /* คอลัมน์ป้าย 15.5mm — ป้ายชิดซ้าย ':' ชิดขวา (colon ตรงแนวทุกแถว) ค่าเริ่มหลังป้าย */
+  .f.col b { flex: 0 0 15.5mm; display: flex; justify-content: space-between; }
+  .f.col b i { font-style: normal; }
+  .f > span { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; }
+  .f.nat b { flex: 0 0 auto; margin-right: 2px; }
+  .sec { font-size: 8px; font-weight: 700; margin: .8px 0 .4px; flex: 0 0 auto; }
+  .paid { display: flex; margin: .3px 0; font-size: 6px; white-space: nowrap; flex: 0 0 auto; }
+  .paid b { font-weight: 700; margin-right: 3px; }
+  .paid span { margin-right: 5px; }
+  /* QR ผูกขอบล่างหน้า (margin-top:auto) — เนื้อบนเลื่อนด้วย offset แล้วก็ยังขอบล่าง */
+  .qrwrap { display: flex; gap: 1.2mm; align-items: center; margin-top: auto; padding-top: 1.5px; flex: 0 0 auto; }
+  .qrwrap img { width: 12mm; height: 12mm; display: block; }
+  .qrwrap .ph { width: 12mm; height: 12mm; border: 1px dashed #000; display: flex; align-items: center; justify-content: center; font-size: 5px; text-align: center; word-break: break-all; }
+  .qrtext { flex: 1; text-align: center; min-width: 0; }
+  .scan { font-weight: 800; font-size: 8.4px; letter-spacing: .1px; white-space: nowrap; }
+  .ty { font-family: 'Brush Script MT', Georgia, cursive; font-style: italic; font-size: 7px; margin-top: 1.5px; }
+  /* R51 (Owner: ตัวอักษรเป็นตัวหนา/จางทั้งใบ — โดยเฉพาะตัวเล็ก + รายละเอียดลูกค้า):
+     stroke ทุกตัวอักษร (สีเดียวกับ fill = หนาขึ้น ไม่เปลี่ยนสี) ผ่านทั้ง dialog และ QZ */
+  .sheet, .sheet * { -webkit-text-stroke: 0.35px #000; paint-order: stroke fill; }
+  </style></head><body>
+  <div class="sheet">
+  <p class="brand">BITE ME BABY</p>
+  <p class="tag">" More Than Dellicious "</p>
+  <hr class="rule">
+  <div class="dtrow"><span><b>Date :</b> 2/11/2569</span><span><b>TIME :</b> 20:21</span></div>
+  <div class="opts mode"><span>○ Pre-Order</span><span>● Same Day</span></div>
+  <div class="opts svc"><span>○ ทานที่ร้าน</span><span>● สั่งกลับบ้าน</span><span>○ รับที่ร้าน</span></div>
+  <div class="f col"><b>ORDER ID<i>:</i></b><span>BMB-20261102-0001</span></div>
+  <div class="f col"><b>ORDER LIST<i>:</i></b><span>สปาเกตตี้ผัดพริกแห้งกุ้ง1 x2</span></div><div class="f col cont"><b>:</b><span>สปาเกตตี้ผัดพริกแห้งกุ้ง2 x2</span></div><div class="f col cont"><b>:</b><span>สปาเกตตี้ผัดพริกแห้งกุ้ง3 x2 …</span></div>
+  <div class="f col"><b>NOTICE<i>:</i></b><span>ไม่ใส่ถุง ขอซอสเพิ่ม แยกห่อ ขอบคุณครับ ไม่เอาช้อนส้อม เพิ่มไข่ดาว</span></div>
+  <hr class="rule">
+  <div class="sec">[ DELIVERY / CUSTOMER ]</div>
+  <div class="f nat"><b>Attn :</b><span>สมชาย ใจดี (0812345678)</span></div>
+  <div class="f nat"><b>Add :</b><span>99 ถนนมหาราช แขวงท่าแชน อำเภอเมือง จันทบุรี 22000</span></div>
+  <hr class="rule">
+  <div class="f nat"><b>[ TOTAL NET ] :</b><span>100.00 THB</span></div>
+  <div class="paid"><b>[PAID] :</b><span>● B/T</span><span>○ QR PROMPTPAY</span><span>○ COD</span></div>
+  <div class="qrwrap">
+    <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAPAAAADwCAYAAAA+VemSAAAAAklEQVR4AewaftIAAAVXSURBVO3BUaokRxAEQY9k7n/lkGBh9dm1UGpNPrlZgKLf2nJLEm5py2ZJONGWJ0nQL4OktQZJaw2S1hokrTVIWmuQtNYgaa1B0lqDpLU+HGrLZkl4W1ueJOFEEt7WlidJ+FZt2SwJTwZJaw2S1hokrTVIWmuQtNYgaa1B0lqDpLUGSWt9uCwJb2rL25Jwoi23tOVEEp605W1t+UZJeFtbbhkkrTVIWmuQtNYgaa1B0lqDpLUGSWsNktb6oP9UW25qy5Mk6GcYJK01SFprkLTWIGmtQdJag6S1BklrDZLWGiSt9UErJOEbteVEEk60RecGSWsNktYaJK01SFprkLTWIGmtQdJag6S1PlzWFt3Xlm+UhBNt+UZt2WyQtNYgaa1B0lqDpLUGSWsNktYaJK01SFprkLTWh0NJ0H1JONGWE0l40pYTSXjSlhNJONGWW5Lw0w2S1hokrTVIWmuQtNYgaa1B0lqDpLUGSWsNktb6tEX/nbacSMKJtnyjttzSFv0ySFprkLTWIGmtQdJag6S1BklrDZLWGiStFaAcaMuJJGzWlp8uCSfa8iQJJ9pySxI2a8stg6S1BklrDZLWGiStNUhaa5C01iBprUHSWoOktdK/cSAJJ9pySxJuacuJJDxpyy1J+FZtuSUJJ9pySxKetOVtSTjRlieDpLUGSWsNktYaJK01SFprkLTWIGmtQdJaAcqBtrwtCW9ry5uScKItJ5KwWVvelISb2vIkCbcMktYaJK01SFprkLTWIGmtQdJag6S1BklrDZLWClAOtOWWJJxoy5MknGjLLUk40ZZbknBLW25Jwrdqy2ZJeDJIWmuQtNYgaa1B0lqDpLUGSWsNktYaJK01SForQHlZW25Jwk1tuSUJP11bbkrCLW15koQTbTmRhDcNktYaJK01SFprkLTWIGmtQdJag6S1BklrffifaMstSXhbW/RLW04k4UlbTiThRFueJOFEW54MktYaJK01SFprkLTWIGmtQdJag6S1BklrDZLWClAOtOVtSXhbW75REt7WlidJ0D/a8iQJtwyS1hokrTVIWmuQtNYgaa1B0lqDpLUGSWt9uCwJT9rytracSMItbXmShJvacksS3taWJ0l4W1tuacuJJDwZJK01SFprkLTWIGmtQdJag6S1BklrDZLWGiStFaAcaMuJJPx0bXlbEk605UkS9GfaciIJT9pyyyBprUHSWoOktQZJaw2S1hokrTVIWmuQtNYgaa30b+iPJOFEW54k4URbTiThlrY8ScJNbXlTEm5qy5sGSWsNktYaJK01SFprkLTWIGmtQdJag6S1AhT91pZbknBLW25Jwi1tOZGEE215koQTbXmShBNtOZGENw2S1hokrTVIWmuQtNYgaa1B0lqDpLUGSWsNktb6cKgtmyXhliScaMvbkvCkLSeS8I3a8rYknGjLkyScaMuTQdJag6S1BklrDZLWGiStNUhaa5C01iBprQ+XJeFNbdGfScItSbgpCd+oLSeScEsSngyS1hokrTVIWmuQtNYgaa1B0lqDpLUGSWsNktb6oH9NEp605aa2PEnCiba8LQm3tOVJEk4k4RsNktYaJK01SFprkLTWIGmtQdJag6S1BklrDZLW+qB/TVueJOFtbTmRhCdtOZGEE215U1tOJOGWtpxIwpNB0lqDpLUGSWsNktYaJK01SFprkLTWIGmtD5e15adryy1tOZGEE215UxJuSsJmbXnTIGmtQdJag6S1BklrDZLWGiStNUhaa5C01iBprQBFv7XlSRJuacuJJNzSlm+VBJ0bJK01SFprkLTWIGmtQdJag6S1BklrDZLW+gu8HnHSEh3lPgAAAABJRU5ErkJggg==" alt="QR">
+    <div class="qrtext">
+      <div class="scan">SCAN FOR MORE</div>
+      <div class="ty">Thank You for love !</div>
+    </div>
+  </div>
+  </div>
+  </body></html>

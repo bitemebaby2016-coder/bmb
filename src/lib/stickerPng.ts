@@ -2,6 +2,16 @@
 // ทาง Web Bluetooth รับ "รูป" (fetch → rasterize ในไลบรารี) → วาดเทมเพลตเป็นภาพแทน HTML
 // layout = pure stickerDrawList (test ได้โดยไม่ต้องมี canvas) + executor (jsdom ไม่มี ctx → throw)
 import type { PrintOrderData } from './printService'
+import {
+  stickerFormFields,
+  STICKER_SERVICE_LABELS,
+  STICKER_SERVICE_KEYS,
+  STICKER_PAID_OPTIONS,
+} from './stickerForm'
+
+/** วงกลมติ๊ก/ไม่ติ๊ก — ● = อันที่ตรงกับออเดอร์นี้ (แบบ Owner วาดทุกช่องเป็น ○ ไว้ก่อน) */
+const CIRCLE_ON = '●'
+const CIRCLE_OFF = '○'
 
 export const STICKER_PX_W = 472 // 40mm @300dpi
 export const STICKER_PX_H = 709 // 60mm @300dpi
@@ -59,7 +69,7 @@ export type StickerOp =
 
 /** layout ล้วน = สะท้อน buildBmbStickerHtml (ป้ายซ้ายฝังตาย · ค่าจากแบบฟอร์ม) · คุมขอบ 472×pageH
  *  R33: offsetY ≠ 0 = เลื่อนทุก op แนวตั้ง (บวก=ลง) · พื้นหลังขาว = เต็มหน้าเสมอ (รวมแถบขาวส่วนที่ offset เติบโต/ว่าง) */
-export function stickerDrawList(o: PrintOrderData, offsetY = 0, faceH = STICKER_PX_H): StickerOp[] {
+export function stickerDrawList(o: PrintOrderData, offsetY = 0, faceH = STICKER_PX_H, at: Date | number = Date.now()): StickerOp[] {
   const off = clampFeedOffset(offsetY)
   const face = clampFaceHeight(faceH)
   // R41: หน้า = หน้าดวงเท่านั้น (faceH = ความสูงหน้า/ระยะฟีดต่อใบ) — offset ไม่ต่อบนหน้า/ไม่ยืดหน้าอีก
@@ -67,71 +77,78 @@ export function stickerDrawList(o: PrintOrderData, offsetY = 0, faceH = STICKER_
   const ops: StickerOp[] = []
   const cx = STICKER_PX_W / 2
   const W = STICKER_PX_W
+  // R56: ทุกช่องมาจาก stickerFormFields (จุดเดียวกับ HTML) — ป้ายซ้ายคงตาย ค่าจริงหลัง ":"
+  // at = เวลาพิมพ์ (default now — Date/TIME = เวลาตอนพิมพ์ กติกา Owner "POS ไม่มีเวลาเวลารอบส่ง")
+  const f = stickerFormFields(o, at)
+  const mark = (on: boolean) => (on ? CIRCLE_ON : CIRCLE_OFF)
+  // คอลัมน์ค่า = 15.5mm (ตรงกับ .f.col ฝั่ง HTML) — ป้ายชิดซ้าย · ':' ชิดขวาของคอลัมน์
+  const colX = M + 170
+  const colonX = colX - 9
 
   ops.push({ kind: 'text', x: cx, y: M + 30, text: 'BITE ME BABY', size: 34, weight: 800, align: 'center' })
-  ops.push({ kind: 'text', x: cx, y: M + 58, text: '" MORE THAN DELLICIOUS "', size: 16, align: 'center', family: 'Georgia', italic: true })
+  ops.push({ kind: 'text', x: cx, y: M + 58, text: '" More Than Dellicious "', size: 16, align: 'center', family: 'Georgia', italic: true })
   ops.push({ kind: 'line', x1: M, y1: M + 72, x2: W - M, y2: M + 72, w: 2 })
 
   let y = M + 104
-  const rows: Array<[string, string]> = [
-    ['Order id :', o.order_number],
-    ['Date :', o.created_at ? new Date(o.created_at).toLocaleString('th-TH', { timeZone: 'Asia/Bangkok', dateStyle: 'short', timeStyle: 'short' }) : '-'],
-  ]
-  for (const [label, value] of rows) {
-    ops.push({ kind: 'text', x: M, y, text: label, size: 22, weight: 700 })
-    ops.push({ kind: 'text', x: M + 148, y, text: value, size: 22 })
-    y += 30
-  }
-  // R35 (Owner 2026-10-31): ค่าของ Menu/Notice เริ่มหลัง ':' บน "บรรทัดเดียวกับป้าย"
-  // — Menu ≤ 2 บรรทัด · Notice ≤ 2 บรรทัด (ตัดที่ 24 อักขระ/บรรทัด · เกินบรรทัดสุดท้าย = เติม '…')
-  const valX = M + 148
-  const segs = o.items.slice(0, 3).map((it) => `${it.product_name} x${it.quantity}${it.special_request ? ' (' + it.special_request + ')' : ''}`)
-  if (o.items.length > 3) segs.push('…')
-  const menuLines: string[] = []
-  let cur = ''
-  let si = 0
-  for (; si < segs.length; si++) {
-    const cand = cur ? `${cur} · ${segs[si]}` : segs[si]
-    if (!cur || cand.length <= 24) { cur = cand; continue }
-    menuLines.push(cur)
-    if (menuLines.length === 2) break
-    cur = segs[si]
-  }
-  if (menuLines.length < 2) {
-    if (cur) menuLines.push(cur)
-    if (si < segs.length && menuLines.length) menuLines[menuLines.length - 1] += ' …'
-  } else if (si < segs.length) {
-    menuLines[1] = `${menuLines[1]} …`
-  }
-  if (!menuLines.length) menuLines.push('-')
-  ops.push({ kind: 'text', x: M, y, text: 'Menu :', size: 22, weight: 700 })
-  ops.push({ kind: 'text', x: valX, y, text: menuLines[0], size: 20 })
-  if (menuLines[1]) ops.push({ kind: 'text', x: valX, y: y + 26, text: menuLines[1], size: 20 })
-  y += 26 * (menuLines[1] ? 2 : 1) + 4
-  const noticeRaw = (o.special_instructions || '').trim() || '-'
-  const noticeLines: string[] = []
-  if (noticeRaw.length <= 24) noticeLines.push(noticeRaw)
-  else {
-    const sp = noticeRaw.slice(0, 24).lastIndexOf(' ')
-    const cut = sp > 8 ? sp : 24
-    noticeLines.push(noticeRaw.slice(0, cut))
-    const rest = noticeRaw.slice(cut).trim()
-    noticeLines.push(rest.length > 24 ? rest.slice(0, 23) + '…' : rest)
-  }
-  ops.push({ kind: 'text', x: M, y, text: 'Notice :', size: 22, weight: 700 })
-  ops.push({ kind: 'text', x: valX, y, text: noticeLines[0], size: 20 })
-  if (noticeLines[1]) ops.push({ kind: 'text', x: valX, y: y + 26, text: noticeLines[1], size: 20 })
-  y += 26 * (noticeLines[1] ? 2 : 1) + 4
-
+  // Date : …            TIME : …
+  ops.push({ kind: 'text', x: M, y, text: 'Date :', size: 20, weight: 700 })
+  ops.push({ kind: 'text', x: M + 84, y, text: f.date, size: 20 })
+  ops.push({ kind: 'text', x: M + 244, y, text: 'TIME :', size: 20, weight: 700 })
+  ops.push({ kind: 'text', x: M + 322, y, text: f.time, size: 20 })
+  y += 28
+  // ○ Pre-Order  ○ Same Day
+  ops.push({ kind: 'text', x: cx, y, text: `${mark(f.modePreOrder)} Pre-Order   ${mark(f.modeSameDay)} Same Day`, size: 20, align: 'center' })
+  y += 27
+  // ○ ทานที่ร้าน  ○ สั่งกลับบ้าน  ○ รับที่ร้าน (แถวแน่น — ฟอนต์เล็กกว่าแถวอื่น เหมือนแบบ Owner)
+  const svcTxt = STICKER_SERVICE_KEYS.map((k) => `${mark(f.service === k)} ${STICKER_SERVICE_LABELS[k]}`).join('   ')
+  ops.push({ kind: 'text', x: cx, y, text: svcTxt, size: 16, align: 'center' })
+  y += 30
+  // ORDER ID : …
+  ops.push({ kind: 'text', x: M, y, text: 'ORDER ID', size: 20, weight: 700 })
+  ops.push({ kind: 'text', x: colonX, y, text: ':', size: 20, weight: 700 })
+  ops.push({ kind: 'text', x: colX, y, text: f.orderId, size: 20 })
+  y += 28
+  // ORDER LIST : … (ต่อ ": …" ได้ 2 บรรทัด — บรรทัดต่อ ':' ชิดซ้ายตามแบบ)
+  f.orderListLines.forEach((ln, i) => {
+    if (i === 0) {
+      ops.push({ kind: 'text', x: M, y, text: 'ORDER LIST', size: 20, weight: 700 })
+      ops.push({ kind: 'text', x: colonX, y, text: ':', size: 20, weight: 700 })
+    } else {
+      ops.push({ kind: 'text', x: M, y, text: ':', size: 20, weight: 700 })
+    }
+    ops.push({ kind: 'text', x: colX, y, text: ln, size: 19 })
+    y += 26
+  })
+  // NOTICE : …
+  ops.push({ kind: 'text', x: M, y, text: 'NOTICE', size: 20, weight: 700 })
+  ops.push({ kind: 'text', x: colonX, y, text: ':', size: 20, weight: 700 })
+  ops.push({ kind: 'text', x: colX, y, text: f.notice, size: 19 })
+  y += 16
   ops.push({ kind: 'line', x1: M, y1: y, x2: W - M, y2: y, w: 2 })
   y += 30
-  ops.push({ kind: 'text', x: M, y, text: `CUSTOMER : ${o.customer_name || '-'}`, size: 23, weight: 700 })
-  y += 30
-  ops.push({ kind: 'text', x: M + 60, y, text: `Tel. : ${o.customer_phone || '-'}`, size: 23, weight: 700 })
-  y += 14
+  // [ DELIVERY / CUSTOMER ]
+  ops.push({ kind: 'text', x: M, y, text: '[ DELIVERY / CUSTOMER ]', size: 21, weight: 700 })
+  y += 28
+  // Attn : ชื่อ (โทรศัพท์)
+  ops.push({ kind: 'text', x: M, y, text: 'Attn :', size: 20, weight: 700 })
+  ops.push({ kind: 'text', x: M + 86, y, text: f.attn, size: 20 })
+  y += 28
+  // Add : ที่อยู่
+  ops.push({ kind: 'text', x: M, y, text: 'Add :', size: 20, weight: 700 })
+  ops.push({ kind: 'text', x: M + 74, y, text: f.add, size: 20 })
+  y += 16
   ops.push({ kind: 'line', x1: M, y1: y, x2: W - M, y2: y, w: 2 })
+  y += 30
+  // [ TOTAL NET ] : … THB
+  ops.push({ kind: 'text', x: M, y, text: '[ TOTAL NET ] :', size: 20, weight: 700 })
+  ops.push({ kind: 'text', x: M + 200, y, text: `${f.totalNet} THB`, size: 20 })
+  y += 28
+  // [PAID] : ○ B/T  ○ QR PROMPTPAY  ○ COD
+  const paidTxt = `[PAID] : ${STICKER_PAID_OPTIONS.map((p) => `${mark(f.paid === p.key)} ${p.label}`).join('   ')}`
+  ops.push({ kind: 'text', x: M, y, text: paidTxt, size: 17, weight: 700 })
+  y += 22
 
-  // R41: เลื่อนเฉพาะ "เนื้อหาส่วนบน" (header → เส้นใต้ Tel) ลงตาม offset — หน้าคงที่ (pageH = face)
+  // R41: เลื่อนเฉพาะ "เนื้อหาส่วนบน" ลงตาม offset — หน้าคงที่ (pageH = face)
   // บล็อก QR (ด้านล่างนี้) ผูกขอบล่างหน้าเอง = ไม่ถูกเลื่อน → ไม่ล้น/ไม่ข้ามดวงจาก offset
   if (off !== 0) {
     for (const op of ops) {
@@ -140,20 +157,17 @@ export function stickerDrawList(o: PrintOrderData, offsetY = 0, faceH = STICKER_
     }
   }
 
-  // บล็อก QR + ข้อความ (bottom) — ผูกขอบล่างหน้าจริง: min(ขอบล่างหน้า, เส้น Tel ที่เลื่อนแล้ว + 40)
-  const qrSize = 197
-  // R35 (Owner): ลดช่วงเส้น Tel → QR · R41: ฝั่ง fluid บวก offset (เนื้อบนเลื่อนลง) แต่ขอบล่าง "ห้ามเกิน face"
-  const qrY = Math.min(face - M - qrSize, y + 40 + off)
+  // บล็อก QR + ข้อความ (bottom) — ผูกขอบล่างหน้าจริง + ย่อขนาดเองให้พอดีใต้เนื้อหา
+  // (หน้าสั้น/offset ใหญ่ = QR เล็กลงแทนที่จะทับข้อความ · ไม่มีบรรทัดไทยใต้ QR ตามแบบใหม่)
+  const contentBottom = y + off
+  const avail = face - 2 * M - contentBottom - 12
+  const qrSize = Math.max(110, Math.min(150, Math.round(avail)))
+  const qrY = face - M - qrSize
   ops.push({ kind: 'qr', x: M, y: qrY, size: qrSize })
   const tx = M + qrSize + 12
   const mid = tx + (W - tx - M) / 2
-  ops.push({ kind: 'text', x: mid, y: qrY + 34, text: 'SCAN FOR MORE', size: 24, weight: 800, align: 'center' })
-  let ty = qrY + 66
-  for (const t of ['รายละเอียดการซื้อ', 'สแกนสมาชิกเพื่อสะสมแต้ม', 'รับรางวัลจำนวนมาก']) {
-    ops.push({ kind: 'text', x: mid, y: ty, text: t, size: 17, align: 'center' })
-    ty += 26
-  }
-  ops.push({ kind: 'text', x: mid, y: ty + 26, text: 'Thank You for love !', size: 22, align: 'center', family: 'Georgia', italic: true })
+  ops.push({ kind: 'text', x: mid, y: qrY + Math.round(qrSize * 0.42), text: 'SCAN FOR MORE', size: 24, weight: 800, align: 'center' })
+  ops.push({ kind: 'text', x: mid, y: qrY + Math.round(qrSize * 0.8), text: 'Thank You for love !', size: 20, align: 'center', family: 'Georgia', italic: true })
 
   // พื้นหลัง = ปิดท้าย (วาดใต้ทุกอย่างตามลำดับ array → ต้องอยู่หน้าสุด) เต็มหน้า (R41: pageH = face คงที่)
   return [{ kind: 'rect', x: 0, y: 0, w: STICKER_PX_W, h: pageH, fill: '#ffffff' }, ...ops]

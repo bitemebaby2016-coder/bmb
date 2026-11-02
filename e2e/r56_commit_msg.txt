@@ -1,0 +1,19 @@
+R56: มิเกรชั่น = ไม่มีค้าง (ตรวจ live 182=182) + แบบฟอร์มสติกเกอร์ใหม่ตามภาพ Owner
+
+- จุดแปลงเดียว src/lib/stickerForm.ts (pure): HTML (QZ/dialog) + PNG (Bluetooth)
+  อ่านชุดค่าเดียวกันเสมอ → สองทางพิมพ์ตรงกันเสมอ (มี test บังคับ)
+- Date/TIME = เวลาปัจจุบันตอนพิมพ์ใบเสมอ (POS ไม่มีเวลาเวลารอบส่ง)
+  stickerFormFields / buildBmbStickerHtml / stickerDrawList รับ at (default = now)
+- [PAID] แสดงครบ B/T + QR PROMPTPAY + COD เสมอ + ติ๊กจาก payment_method จริงทุกค่า:
+  promptpay_qr -> QR PROMPTPAY, cash_on_delivery -> COD, credit_card/bank_transfer -> B/T
+  (แก้ที่ PAID_METHOD_TO_OPTION จุดเดียว)
+- วงกลม = ประเภทออเดอร์ 5 แบบตามที่ Owner ยืนยัน
+  (Pre-Order, Same Day, ทานที่ร้าน, สั่งกลับบ้าน, รับที่ร้าน)
+- ORDER LIST ≤3 บรรทัดต่อ, NOTICE 1 บรรทัด, Add = delivery_address,
+  QR ผูกขอบล่าง, @page 40x60 + stroke R51 คงเดิม, auto-print เดิมทุกประการ
+- มิเกรชั่น: e2e/r56MigParity.cjs ยิง query production ตรง ๆ → ไม่มีค้าง (182 = 182)
+  (r21fMigParity ตัวเก่าอ่าน snapshot เก่า = หลักฐานปลอมเรื่อง 174-182 ค้าง)
+- gates: FULL vitest 198/198 files · 1977/1977 tests 0 fail (e2e/r56b_vitest_full.log)
+  tsc 0 (e2e/r56b_tsc.log) · lint OK (e2e/r56b_lint2.log)
+  Chromium layout ALL_PASS (e2e/r56_measure_result.json · r56_sticker_one/many.html)
+- ทดสอบ: Owner อนุมัติ commit+push แล้ว จะทดสอบบน production เอง

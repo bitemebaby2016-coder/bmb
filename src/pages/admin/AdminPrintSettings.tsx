@@ -65,7 +65,13 @@ export function AdminPrintSettings() {
       customer_name: 'ทดสอบเครื่องพิมพ์',
       customer_phone: '08x-xxx-xxxx',
       items: [{ product_name: 'เมนูตัวอย่าง', quantity: 1, unit_price: 0, special_request: 'ไม่เผ็ด' }],
-      total_amount: 0,
+      subtotal: 0,
+      total_amount: 129,
+      // R56: แบบฟอร์มใหม่มีช่อง Date/TIME · หมวดบริการ · ที่อยู่ · TOTAL NET · [PAID] — ใส่ให้ครบทุกช่อง
+      order_mode: 'SAME_DAY',
+      payment_method: 'promptpay_qr',
+      delivery_method: 'self_delivery',
+      delivery_address: '123 ถนนสุขุมวิท แขวงคลองเตย เขตคลองเตย กรุงเทพฯ',
       special_instructions: 'ทดสอบพิมพ์สติกเกอร์ 40x60',
     }
   }

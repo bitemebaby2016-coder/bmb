@@ -1,6 +1,6 @@
 // ============================================
-// Bite Me Baby — R35 contracts (Owner 2026-10-31)
-// 1) สติกเกอร์: ค่า Menu/Notice หลัง ':' บรรทัดเดียวกัน (≤2/≤2) · ช่วง Tel→QR แคบ
+// Bite Me Baby — R35 contracts (Owner 2026-10-31) · R56 (2026-11-02) ปรับส่วนสติกเกอร์ตามแบบฟอร์มใหม่
+// 1) สติกเกอร์ (R56): ค่า ORDER LIST/NOTICE หลัง ':' คอลัมน์เดียวกัน (≤3/1 บรรทัด) · QR ผูกขอบล่างหน้า
 // 2) /menu?tab=pre-order: ชิปรอบ (เที่ยง/เช้า ซ้ำ ๆ) ถูกถอดออกจาก banner ("ในวงเล็บไม่ต้องแสดง")
 // 3) showcase พรีออเดอร์: วันใกล้วันปัจจุบันขึ้นก่อน (หน้าแรก + /menu)
 // ============================================
@@ -21,36 +21,41 @@ const order: PrintOrderData = {
   special_instructions: 'ไม่ใส่ถุง ขอซอสเพิ่ม แยกห่อ ขอบคุณครับ ไม่เอาช้อนส้อม',
 }
 
-describe('R35 · สติกเกอร์ — Menu/Notice หลัง ":" บรรทัดเดียวกัน + ช่วง Tel→QR แคบ', () => {
-  it('source ใช้ valX (คอลัมน์ค่าร่วม) + qrY ผูก min(ขอบหน้า, เส้น Tel+40) — ไม่ใช่ face−M−qrSize ตรง ๆ', () => {
-    expect(stickerSrc).toContain('const valX = M + 148')
-    expect(stickerSrc).toContain("text: 'Menu :', size: 22, weight: 700")
-    expect(stickerSrc).toContain('x: valX, y, text: menuLines[0]')
-    expect(stickerSrc).toContain('x: valX, y, text: noticeLines[0]')
-    // R41: + off (fluid บวกชดเชย) — ขอบล่างหน้าคงที่ min() ตัวแรกเท่าเดิม
-    expect(stickerSrc).toContain('const qrY = Math.min(face - M - qrSize, y + 40 + off)')
-    expect(stickerSrc).not.toMatch(/qrY = face - M - qrSize\b/)
+describe('R56 · สติกเกอร์ — ค่าหลัง ":" คอลัมน์เดียวกัน (ORDER LIST ≤3 / NOTICE =1) + QR ผูกขอบล่าง', () => {
+  it('source: ใช้ stickerFormFields (จุดเดียวกับ HTML) + คอลัมน์ค่า colX + QR ผูกขอบล่างหน้า', () => {
+    // จุดแปลงเดียว = สองทางพิมพ์ (HTML + PNG) อ่านชุดค่าเดียวกันเสมอ
+    expect(stickerSrc).toContain('const f = stickerFormFields(o, at)')
+    expect(stickerSrc).toContain('const colX = M + 170')
+    expect(stickerSrc).toContain("text: 'ORDER LIST', size: 20, weight: 700")
+    expect(stickerSrc).toContain('x: colX, y, text: ln, size: 19')
+    expect(stickerSrc).toContain('x: colX, y, text: f.notice, size: 19')
+    // บล็อกต่อของ ORDER LIST = ':' ชิดซ้าย (x = M) ตามแบบ Owner
+    expect(stickerSrc).toContain("x: M, y, text: ':', size: 20, weight: 700")
+    // R56: QR = ผูกขอบล่างหน้าจริง + ย่อขนาดเองให้พอดีใต้เนื้อหา (แทนสูตร Tel+40 แบบเก่า)
+    expect(stickerSrc).toContain('const qrY = face - M - qrSize')
+    expect(stickerSrc).toContain('const qrSize = Math.max(110, Math.min(150, Math.round(avail)))')
+    expect(stickerSrc).not.toContain('const valX = M + 148')
   })
 
-  it('pure: notice ยาว 2 บรรทัดหลัง double-colon · QR ห่างจากเส้น Tel ≤40px · ไม่ล้นหน้า 709', () => {
+  it('pure: ค่า ORDER LIST/NOTICE อยู่คอลัมน์ x=186 บรรทัดแรก y เดียวกับป้าย · NOTICE = 1 บรรทัด · QR ไม่ล้น 709', () => {
     const ops = stickerDrawList(order)
     const lab = (s: string) => ops.find((o) => o.kind === 'text' && o.text === s) as Extract<StickerOp, { kind: 'text' }> | undefined
-    const menuLab = lab('Menu :')
-    const noticeLab = lab('Notice :')
-    expect(menuLab && noticeLab).toBeTruthy()
-    // ค่า Menu/Notice อยู่คอลัมน์ x=164 (หลัง ':') และบรรทัดแรก y เดียวกับป้าย
-    const valsAt164 = ops.filter((o): o is Extract<StickerOp, { kind: 'text' }> => o.kind === 'text' && o.x === 164)
-    expect(valsAt164.length).toBeGreaterThanOrEqual(2)
-    expect(valsAt164.some((v) => v.y === menuLab!.y)).toBe(true)
-    expect(valsAt164.some((v) => v.y === noticeLab!.y)).toBe(true)
-    // notice ยาว = มีค่า 2 บรรทัด (y ต่างกัน 26px)
-    const noticeVals = valsAt164.filter((v) => v.y >= noticeLab!.y && v.y < noticeLab!.y + 60)
-    expect(noticeVals.length).toBe(2)
-    // ช่วงเส้นใต้ Tel → QR ≤ 40px
-    const tel = ops.find((o) => o.kind === 'text' && o.text.startsWith('Tel.')) as Extract<StickerOp, { kind: 'text' }>
+    const listLab = lab('ORDER LIST')
+    const noticeLab = lab('NOTICE')
+    expect(listLab && noticeLab).toBeTruthy()
+    // ค่า ORDER LIST/NOTICE อยู่คอลัมน์ x=186 (หลัง ':') และบรรทัดแรก y เดียวกับป้าย
+    const valsAt186 = ops.filter((o): o is Extract<StickerOp, { kind: 'text' }> => o.kind === 'text' && o.x === 186)
+    expect(valsAt186.length).toBeGreaterThanOrEqual(3) // ORDER ID + ORDER LIST + NOTICE
+    expect(valsAt186.some((v) => v.y === listLab!.y)).toBe(true)
+    expect(valsAt186.some((v) => v.y === noticeLab!.y)).toBe(true)
+    // R56: notice ยาว = ยังเป็นบรรทัดเดียว (แบบใหม่ไม่ต่อบรรทัดใต้ป้าย)
+    const noticeVals = valsAt186.filter((v) => v.y >= noticeLab!.y && v.y < noticeLab!.y + 40)
+    expect(noticeVals.length).toBe(1)
+    // QR ผูกขอบล่างหน้า + เริ่มหลังแถวสุดท้าย [PAID] — ไม่ล้นหน้า
+    const paid = ops.find((o): o is Extract<StickerOp, { kind: 'text' }> => o.kind === 'text' && o.text.startsWith('[PAID] :'))
     const qr = ops.find((o) => o.kind === 'qr') as Extract<StickerOp, { kind: 'qr' }>
-    const telLineY = tel.y + 14
-    expect(qr.y - telLineY).toBeLessThanOrEqual(40)
+    expect(qr.y + qr.size).toBe(STICKER_PX_H - 16)
+    expect(qr.y).toBeGreaterThanOrEqual((paid?.y ?? 0) + 22)
     expect(qr.y + qr.size).toBeLessThanOrEqual(STICKER_PX_H)
   })
 })

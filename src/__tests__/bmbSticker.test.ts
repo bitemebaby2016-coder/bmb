@@ -26,27 +26,44 @@ const baseOrder: PrintOrderData = {
 }
 
 describe('สติกเกอร์ BMB 40×60 — แบบฟอร์มตามที่ Owner วาด (Templates-BmB)', () => {
-  it('มีป้ายซ้ายครบทุกช่อง + ค่าอ่านจากแบบฟอร์ม (หลัง : เท่านั้น)', async () => {
+  it('R56: ป้ายครบทุกช่องตามแบบฟอร์มใหม่ + ค่าอ่านจากแบบฟอร์ม (แทนตัวอย่างหลัง :)', async () => {
     const html = await buildBmbStickerHtml(baseOrder)
     expect(html).toContain('BITE ME BABY')
-    expect(html).toContain('MORE THAN DELLICIOUS')
-    for (const label of ['Order id', 'Date', 'Menu', 'Notice', 'CUSTOMER', 'Tel.', 'SCAN FOR MORE', 'Thank You for love']) {
+    expect(html).toContain('More Than Dellicious')
+    for (const label of [
+      'Date :', 'TIME :', 'Pre-Order', 'Same Day',
+      'ทานที่ร้าน', 'สั่งกลับบ้าน', 'รับที่ร้าน',
+      'ORDER ID', 'ORDER LIST', 'NOTICE', '[ DELIVERY / CUSTOMER ]',
+      'Attn :', 'Add :', '[ TOTAL NET ] :', '[PAID] :',
+      'B/T', 'QR PROMPTPAY', 'COD',
+      'SCAN FOR MORE', 'Thank You for love',
+    ]) {
       expect(html, `label "${label}"`).toContain(label)
     }
-    // ค่าจากแบบฟอร์ม
+    // ค่าจากแบบฟอร์ม (แทนตัวอย่างในแบบ)
     expect(html).toContain('BMB-20261030-0007')
     expect(html).toContain('ข้าวมันไก่')
     expect(html).toContain('x2')
     expect(html).toContain('ไม่ใส่น้ำแข็ง')
     expect(html).toContain('ไม่เผ็ด')
     expect(html).toContain('0812345678')
-    // บล็อก QR ข้อความไทยตรงแบบ
-    expect(html).toContain('รายละเอียดการซื้อ')
-    expect(html).toContain('สแกนสมาชิกเพื่อสะสมแต้ม')
-    expect(html).toContain('รับรางวัลจำนวนมาก')
+    expect(html).toContain('THB')
+    // แบบใหม่ (ตามภาพ Owner) = ไม่มี 3 บรรทัดไทยใต้ QR เหมือนแบบเก่า
+    expect(html).not.toContain('รายละเอียดการซื้อ')
     expect(BMB_STICKER_W_MM).toBe(40)
     expect(BMB_STICKER_H_MM).toBe(60)
     expect(html).toContain('40mm 60mm')
+  })
+
+  it('R56 (Owner): Date/TIME = เวลา ณ ตอนพิมพ์ (POS ไม่มีเวลาเวลารอบส่ง) — ไม่ใช่ created_at ของออเดอร์', async () => {
+    const at = new Date('2026-11-05T09:07:00+07:00')
+    const html = await buildBmbStickerHtml(baseOrder, at) // created_at ของ baseOrder = 30 ต.ค. 2569
+    expect(html).toContain('09:07')
+    expect(html).toContain('11/2569')
+    expect(html).not.toContain('30/10/2569')
+    // ไม่ส่ง at (production/ปุ่มทดสอบ) = default เวลาปัจจุบันตอนเรียก
+    const live = await buildBmbStickerHtml(baseOrder)
+    expect(live).toContain(new Date().toLocaleDateString('th-TH', { timeZone: 'Asia/Bangkok' }))
   })
 
   it('R51: stroke ทุกตัวอักษรใน HTML template (กันตัวหนา) — text-stroke ระดับ .sheet * ทั้งใบ', async () => {
@@ -76,14 +93,14 @@ describe('สติกเกอร์ BMB 40×60 — แบบฟอร์มต
     expect(html).toContain('height: 58.4mm')
     expect(html).toContain('overflow: hidden')
     expect(html).toContain('white-space: nowrap') // "SCAN FOR MORE" บรรทัดเดียว
-    // เมนู > 3 รายการ → ตัด + …
+    // เมนู > 3 รายการ → ORDER LIST ต่อสูงสุด 3 บรรทัด แล้วตัดด้วย … (รายการถัดไปไม่ถูกแสดง)
     const many = await buildBmbStickerHtml({
       ...baseOrder,
       items: Array.from({ length: 8 }, (_, i) => ({ product_name: `เมนู${i + 1}`, quantity: 1, unit_price: 0 })),
     })
     expect(many).toContain('เมนู1')
     expect(many).toContain('เมนู3')
-    expect(many).not.toContain('เมนู4')
+    expect(many).not.toContain('เมนู7')
     expect(many).toContain('…')
   })
 
