@@ -98,8 +98,10 @@ describe('R34 → R47 — รูปเมนูใช้ภาพจริงเ
     expect(marketingSrc).toContain("genKind === 'menu' && !reference")
     expect(marketingSrc).not.toContain('สร้างภาพ AI เฉพาะป้ายโปรโมต/เทศกาลเท่านั้น')
     expect(imageGenSrc).toContain('IMAGE_MODEL_CANDIDATES')
-    expect(imageGenSrc).toContain('google/gemini-3.1-flash-image')
-    // โมเดลร้างที่เคยทำ image-gen พัง (R32 error) ต้องออกจาก default
+    // R55 (Owner 2026-11-02): default = โมเดลตามคำสั่ง (หลัก seedream-5-0-flash · รอง qwen-image-2.1-pro)
+    expect(imageGenSrc).toContain('bytedance-seed/seedream-5-0-flash')
+    expect(imageGenSrc).toContain('qwen/qwen-image-2.1-pro')
+    // โมเดลร้าง/หมดเครดิต (402) ที่เคยทำ image-gen พัง ต้องออกจาก default
     expect(imageGenSrc).not.toContain('google/gemini-2.5-flash-image-preview')
     expect(imageGenSrc).not.toContain('google/gemini-2.0-flash-preview-image-generation')
   })

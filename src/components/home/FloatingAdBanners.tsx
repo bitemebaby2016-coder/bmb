@@ -50,6 +50,21 @@ export function pickVisibleBannerPromos(
 
 export function FloatingAdBanners({ promos, notice }: { promos: FloatingBannerPromo[]; notice?: string }) {
   const [dismissedIds, setDismissedIds] = useState<Set<string>>(new Set())
+  // R55 (Owner 2026-11-02): ภาพโปรโมตที่แอดมินเจน/เลือกไว้ใน AI Studio (business_settings.floating_ad_image)
+  //   = แทนมาสคอตในโฆษณาลอย · แอดมินบราวซ์เลือกจากอัลบั้ม (ปุ่ม "ตั้งเป็นโฆษณาลอย") · ว่าง = เดิมตามรูปโปรโมชั่น/มาสคอต
+  const [floatImg, setFloatImg] = useState('')
+  useEffect(() => {
+    let alive = true
+    void (async () => {
+      try {
+        const { supabase } = await import('@/lib/supabase')
+        const { data, error } = await supabase.from('business_settings').select('value').eq('key', 'floating_ad_image').maybeSingle()
+        const v = (data as { value?: unknown } | null)?.value
+        if (alive && !error && typeof v === 'string' && v) setFloatImg(v)
+      } catch { /* zero-fake — ไม่มีค่า = ใช้_behavior เดิม */ }
+    })()
+    return () => { alive = false }
+  }, [])
   // R50: "ประกาศล่าสุด" ย้ายจากหน้าจอส่วนล่างขึ้นมาอยู่รวมกับโปรโมชั่นที่นี่
   // (rpc เดิมกับ MarketingFeedSection · newest-first · ล้มเหลว/ว่าง = เงียบ zero-fake)
   const [announcements, setAnnouncements] = useState<FloatingBannerPromo[]>([])
@@ -109,17 +124,29 @@ export function FloatingAdBanners({ promos, notice }: { promos: FloatingBannerPr
         {visible.map((promo) => (
           <div key={promo.id} className="flad-card" data-testid="floating-ad-banner">
           <div className="flad-media">
-            {promo.image ? (
-              <img
-                src={promo.image}
-                alt=""
-                loading="lazy"
-                onError={(e) => {
-                  // promo.image ชี้ไฟล์ที่ไม่มีแล้ว (เช่น mock banner เดิม) → แสดง branded fallback
-                  const el = e.currentTarget as HTMLImageElement
-                  if (!el.dataset.fbk) { el.dataset.fbk = '1'; el.style.display = 'none'; el.parentElement?.classList.add('flad-media-fallback') }
-                }}
-              />
+            {(promo.image || floatImg) ? (
+              <>
+                <img
+                  src={promo.image || floatImg}
+                  alt=""
+                  loading="lazy"
+                  onError={(e) => {
+                    // media ชี้ไฟล์ที่ไม่มีแล้ว → branded fallback (และตัด mascot ประกอบออกด้วย)
+                    const el = e.currentTarget as HTMLImageElement
+                    if (!el.dataset.fbk) {
+                      el.dataset.fbk = '1'
+                      el.style.display = 'none'
+                      el.parentElement?.classList.add('flad-media-fallback')
+                      el.parentElement?.querySelector('.flad-mascot-composed')?.remove()
+                    }
+                  }}
+                />
+                {/* R55: "เอามาสคอตไปประกอบรูป" — รูปที่ยังไม่มีลายน้ำมาสคอตติดมา → ประกอบน้อง Bite ทับมุมรูป
+                    (ภาพ wm-* มีมาสคอตในไฟล์อยู่แล้ว = ไม่ซ้ำ) */}
+                {!String(promo.image || floatImg).includes('/wm-') && (
+                  <img src="/assets/mascot/bite_recommend.webp" alt="" loading="lazy" className="flad-mascot-composed" data-testid="floating-ad-mascot" />
+                )}
+              </>
             ) : (
               <div className="flad-media flad-media-fallback" aria-hidden="true">
                 {/* ช่องสื่อว่าง → ใส่มาสคอตน้อง Bite ทับ gradient ส้ม ไม่ทิ้งบล็อกเปล่า */}

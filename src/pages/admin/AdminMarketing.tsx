@@ -43,6 +43,33 @@ const STATUS_CLS: Record<string, string> = {
 const isGenImage = (u: string) => u.includes('/ai-generated/')
 
 // R47 (Owner): เลือกมาสคอตลายน้ำอัตโนมัติตามประเภทภาพที่เจน (pure — test เรียกตรง)
+// R55 (Owner 2026-11-02): ตรวจคุณภาพภาพเจนก่อนใช้ — "เบี้ยวเละเทะ ขนาดไม่ตรง" ห้ามใช้แทนอัตโนมัติ
+export type GenQa = { ok: boolean; warn?: string; w: number; h: number }
+/** หมวดภาพที่ AI Studio เจนได้ (แยกอัลบั้มตามหมวด — Owner R55) */
+export const KIND_PRESETS_KEYS = ['menu', 'promo', 'festival']
+/** ขนาดกรอบเมนูที่ใช้ได้จริง = 1:1 (โมเดลมักออกสี่เหลี่ยม) หรือ 4:3 (กรอบการ์ดเมนู) · tolerance 12%
+ *  ค่าอื่น (แนวตั้งยาว/ผิดรูป) = "ขนาดไม่ตรง" → ห้ามใช้แทนอัตโนมัติ (Owner R55) · ความละเอียดขั้นต่ำ 512px */
+export const MENU_ASPECTS = [1, 4 / 3, 3 / 4]
+export async function checkGenQuality(url: string, kind: string): Promise<GenQa> {
+  try {
+    const res = await fetch(url)
+    if (!res.ok) return { ok: true, w: 0, h: 0 } // อ่านไม่ได้ = ไม่ฟันธง (คงสิทธิ์แอดมินตัดสินเอง)
+    const bmp = await createImageBitmap(await res.blob())
+    const w = bmp.width
+    const h = bmp.height
+    bmp.close?.()
+    if (Math.min(w, h) < 512) return { ok: false, w, h, warn: `ความละเอียด ${w}×${h} ต่ำเกินไป` }
+    if (kind === 'menu') {
+      const ar = w / h
+      const fits = MENU_ASPECTS.some((t) => Math.abs(ar - t) / t <= 0.12)
+      if (!fits) return { ok: false, w, h, warn: `สัดส่วน ${w}×${h} ไม่ตรงกรอบเมนู (1:1 หรือ 4:3) — เบี้ยว/ขนาดไม่ตรง` }
+    }
+    return { ok: true, w, h }
+  } catch {
+    return { ok: true, w: 0, h: 0 }
+  }
+}
+
 export function autoMascotForKind(kind: string): string {
   if (kind === 'menu') return 'bite_menu'
   if (kind === 'festival') return 'bite_award'
@@ -89,18 +116,73 @@ export function AdminMarketing() {
   }
   const [genBusy, setGenBusy] = useState(false)
   // R40 (Owner: "ให้มีตัวแสดงสถานะ + พรีวิวรูปที่สร้าง + รู้ว่าสร้างเสร็จหรือยัง ไปอยู่อัลบั้มเดียวกันแยกโฟลเดอร์")
-  const [genStatus, setGenStatus] = useState<{ phase: 'idle' | 'running' | 'ok' | 'fail'; detail?: string; url?: string; model?: string }>({ phase: 'idle' })
-  const [aiAlbum, setAiAlbum] = useState<Array<{ name: string; url: string }>>([])
+  // R55: + qa (ตรวจขนาด/สัดส่วน — "เบี้ยว/ขนาดไม่ตรง" ต้องเห็นก่อนกดใช้ · ห้ามใช้แทนอัตโนมัติ)
+  const [genStatus, setGenStatus] = useState<{ phase: 'idle' | 'running' | 'ok' | 'fail'; detail?: string; url?: string; model?: string; qa?: GenQa }>({ phase: 'idle' })
+  // R55 (Owner: "แยกภาพที่เจนออกมาเป็นคนละอัลบั้มตามหมวดหมู่ที่ให้เจน")
+  // = โฟลเดอร์ ai-generated/<kind>/ · ปิดใช้งาน = ย้ายไป ai-generated/_disabled/<kind>/ (ย้ายกลับได้)
+  const AI_ALBUM_KINDS = ['menu', 'promo', 'festival'] as const
+  type AiAlbumItem = { name: string; url: string; path: string; kind: string; disabled: boolean }
+  const [aiAlbum, setAiAlbum] = useState<AiAlbumItem[]>([])
+  const [aiAlbumTab, setAiAlbumTab] = useState<'all' | 'menu' | 'promo' | 'festival' | 'disabled' | 'legacy'>('all')
   const loadAiAlbum = useCallback(async () => {
     try {
-      const { data, error } = await supabase.storage.from('bmb-images').list('ai-generated', { limit: 60, sortBy: { column: 'created_at', order: 'desc' } })
-      if (error || !data) return
-      setAiAlbum(data
-        .filter((f) => f.name && !f.name.startsWith('.'))
-        .map((f) => ({ name: f.name, url: supabase.storage.from('bmb-images').getPublicUrl(`ai-generated/${f.name}`).data.publicUrl })))
+      const s = supabase.storage.from('bmb-images')
+      const out: AiAlbumItem[] = []
+      for (const kind of AI_ALBUM_KINDS) {
+        for (const [dir, disabled] of [
+          [`ai-generated/${kind}`, false],
+          [`ai-generated/_disabled/${kind}`, true],
+        ] as Array<[string, boolean]>) {
+          const { data, error } = await s.list(dir, { limit: 60, sortBy: { column: 'created_at', order: 'desc' } })
+          if (error || !data) continue
+          for (const f of data) {
+            if (!f.name || f.name.startsWith('.')) continue
+            const p = `${dir}/${f.name}`
+            out.push({ name: f.name, path: p, kind, disabled, url: s.getPublicUrl(p).data.publicUrl })
+          }
+        }
+      }
+      // ไฟล์เดิม (R40-R54 เจนไว้ที่ root ai-generated/) — ยังโชว์ได้ในแท็บ "รุ่นก่อน"
+      const { data: root } = await s.list('ai-generated', { limit: 60, sortBy: { column: 'created_at', order: 'desc' } })
+      for (const f of root || []) {
+        if (!f.name || f.name.startsWith('.') || f.id == null) continue // id=null = โฟลเดอร์ (ข้าม)
+        const p = `ai-generated/${f.name}`
+        out.push({ name: f.name, path: p, kind: 'legacy', disabled: false, url: s.getPublicUrl(p).data.publicUrl })
+      }
+      setAiAlbum(out)
     } catch { /* เงียบ — list ไม่ได้ = โชว์ข้อความว่ายังไม่มีภาพย */ }
   }, [])
   useEffect(() => { void loadAiAlbum() }, [loadAiAlbum])
+  const visibleAiAlbum = aiAlbum.filter((a) => (aiAlbumTab === 'all' ? !a.disabled : aiAlbumTab === 'disabled' ? a.disabled : aiAlbumTab === 'legacy' ? a.kind === 'legacy' : a.kind === aiAlbumTab))
+  // R55 (Owner: "ภาพที่เกี่ยวกับโปรโมชั่น/กิจกรรม → ไปแทนมาสคอตในโฟลตติ้งโฆษณา (เอามาสคอตไปประกอบรูป)
+  //   มีบราวซ์ให้เลือกได้") = เลือกรูปจากอัลบั้ม → บันทึก business_settings.floating_ad_image
+  const [floatingAdImage, setFloatingAdImage] = useState('')
+  useEffect(() => {
+    void (async () => {
+      try {
+        const { data } = await supabase.from('business_settings').select('value').eq('key', 'floating_ad_image').maybeSingle()
+        const v = (data as { value?: unknown } | null)?.value
+        if (typeof v === 'string') setFloatingAdImage(v)
+      } catch { /* เงียบ — ยังไม่ได้ตั้งค่า */ }
+    })()
+  }, [])
+  async function toggleFloatingAd(url: string) {
+    try {
+      const next = floatingAdImage === url ? '' : url
+      const ok = await setBusinessSetting('floating_ad_image', next)
+      if (!ok) throw new Error('save failed')
+      setFloatingAdImage(next)
+      showToast(
+        next
+          ? 'ตั้งภาพนี้เป็นโฆษณาลอย (Floating Ad) แล้ว — จะโชว์พร้อมน้อง Bite ประกอบบนรูปที่หน้าแรก'
+          : 'เลิกใช้ภาพนี้เป็นโฆษณาลอยแล้ว (กลับเป็นมาสคอตตามเดิม)',
+        'success',
+      )
+      flashTo('mk-ai-album')
+    } catch (err) {
+      showToast('บันทึกโฆษณาลอยไม่สำเร็จ: ' + String((err as Error)?.message || err).slice(0, 100), 'error')
+    }
+  }
 
   const [ruleFreq, setRuleFreq] = useState(3)
   const [ruleStart, setRuleStart] = useState('10:00')
@@ -297,9 +379,10 @@ export function AdminMarketing() {
         flashTo('mk-gen-status')
         showToast('สร้างภาพไม่สำเร็จ: ' + detail, 'error')
       } else {
-        // R47 (Owner): "เจนซ้อนหลายภาพได้" — เจนสำเร็จ = ต่อท้ายชุดภาพ (ไม่แทนที่) ·
-        // ประกบลายน้ำแบรนด์ (โลโก้จริง + มาสคอต) ทุกรูป → อัปไฟล์ wm แล้วลบไฟล์ต้นฉบับออก (เหลือแค่รูปลายน้ำ)
-        // (R44 คงเดิม: ตอน "สร้างโพสต์" ยังใช้ภาพเจนรูปสุดท้ายรูปเดียว — submit กรอง genOnes)
+        // R47: ประกบลายน้ำแบรนด์ (โลโก้จริง + มาสคอต) → อัปไฟล์ wm (ลงโฟลเดอร์หมวดเดิม) แล้วลบต้นฉบับ
+        // R55 (Owner 2026-11-02): "ภาพที่เจนมาพอไปอยู่ในเมนูแล้วเบี้ยวเละเทะ ขนาดไม่ตรง
+        //   ห้ามเลือกมาใช้แทนโดยอัตโนมัติ" → ไม่ต่อชุดภาพอัตโนมัติ + ตรวจคุณภาพโชว์ให้เห็น
+        //   การใช้ = แอดมินกด "ใช้" เองจากอัลบั้มเท่านั้น
         const wmUrl = await applyBrandWatermark(data.url, genKind, wmMascot)
         if (wmUrl !== data.url) {
           try {
@@ -308,13 +391,18 @@ export function AdminMarketing() {
               const p = data.url.slice(data.url.indexOf(marker) + marker.length).split('?')[0]
               await supabase.storage.from('bmb-images').remove([decodeURIComponent(p)])
             }
-          } catch { /* ลบต้นฉบับไม่ได้ = ไม่เป็นไร (มีปุ่มลบใน strip อยู่แล้ว) */ }
+          } catch { /* ลบต้นฉบับไม่ได้ = ไม่เป็นไร (มีปุ่มลบในอัลบั้มอยู่แล้ว) */ }
         }
-        setImages((prev) => [...prev, wmUrl])
-        setGenStatus({ phase: 'ok', url: wmUrl, model: data.model })
-        await loadAiAlbum() // ภาพใหม่เข้าอัลบั้ม bmb-images/ai-generated ทันที
-        flashTo('mk-images-strip')
-        showToast('✅ สร้างภาพสำเร็จ + ประกบลายน้ำแบรนด์แล้ว — ต่อท้ายชุดภาพ (เจนซ้อนเพิ่มได้เรื่อย ๆ · กด ✕ ลบรูปได้ทั้งรายการและไฟล์จริง)', 'success')
+        const qa = await checkGenQuality(wmUrl, genKind)
+        setGenStatus({ phase: 'ok', url: wmUrl, model: data.model, qa })
+        await loadAiAlbum() // ภาพใหม่เข้าอัลบั้มตามหมวดทันที
+        flashTo('mk-gen-status')
+        showToast(
+          qa.ok
+            ? '✅ สร้างภาพสำเร็จ + ประกบลายน้ำแล้ว — อยู่ในอัลบั้มตามหมวด (ไม่แนบเข้าชุดอัตโนมัติ · กด "ใช้" เองเมื่อต้องการ)'
+            : `⚠️ สร้างภาพสำเร็จ แต่ ${qa.warn} — ระบบไม่เลือกใช้แทนให้อัตโนมัติ (ตรวจดูก่อน แล้วกด "ใช้" เองถ้า OK)`,
+          qa.ok ? 'success' : 'warning',
+        )
       }
     } catch (e) {
       const msg = String(e).slice(0, 160)
@@ -353,7 +441,40 @@ export function AdminMarketing() {
     }
   }
 
-  // ================= R47 ลายน้ำแบรนด์บนทุกภาพเจน =================
+  /** R55 (Owner: "เจนออกมาแล้วให้มีปุ่มกดปิดหรือเอามาใช้หรือลบภาพนั้นๆ ได้เอง")
+   *  ปิด/เปิด = ย้ายไฟล์จริงระหว่าง ai-generated/<kind>/ ↔ ai-generated/_disabled/<kind>/ (ข้ามเครื่องก็ยังอยู่) */
+  async function toggleAiImage(item: AiAlbumItem) {
+    try {
+      const s = supabase.storage.from('bmb-images')
+      const to = item.disabled
+        ? `ai-generated/${item.kind}/${item.name}`
+        : `ai-generated/_disabled/${item.kind}/${item.name}`
+      const { error } = await s.move(item.path, to)
+      if (error) throw error
+      await loadAiAlbum()
+      showToast(
+        item.disabled ? 'เปิดใช้งานภาพนี้กลับแล้ว' : 'ปิดภาพนี้แล้ว — ไม่ถูกนำไปใช้กับงานใด ๆ (กด "เปิด" ได้ทุกเมื่อ)',
+        'success',
+      )
+    } catch (err) {
+      showToast('สลับสถานะภาพไม่สำเร็จ: ' + String((err as Error)?.message || err).slice(0, 100), 'error')
+    }
+  }
+
+  /** R55: ปุ่มลบที่อัลบั้ม — ลบไฟล์จริง + เอาออกจากชุดภาพถ้ามี */
+  async function deleteAiImage(item: AiAlbumItem) {
+    try {
+      const { error } = await supabase.storage.from('bmb-images').remove([item.path])
+      if (error) throw error
+      setImages((prev) => prev.filter((x) => x !== item.url))
+      await loadAiAlbum()
+      showToast('ลบรูปออกจากอัลบั้ม + ลบไฟล์จริงจากคลังภาพแล้ว', 'success')
+    } catch (err) {
+      showToast('ลบรูปไม่สำเร็จ: ' + String((err as Error)?.message || err).slice(0, 100), 'error')
+    }
+  }
+
+  // ================= R47 ลายน้ำแบรนด์บนทุกภาพที่เจน =================
   // Owner: "เจนภาพ ต้องประกบลายน้ำของ brand เอง ใช้โลโก้แบรนด์จริง + มาสคอตโพสที่เหมาะสม
   //          อัตโนมัติ · ให้จำพร้อมสำหรับเจนทุกภาพ"
   // ทำฝั่ง client ด้วย canvas (บันทึกจริงลง bmb-images/ai-generated/ · ไม่พึ่ง EF ฝั่งเดียว)
@@ -419,7 +540,8 @@ export function AdminMarketing() {
       ctx.restore()
       const blob = await new Promise<Blob | null>((r) => canvas.toBlob(r, 'image/png'))
       if (!blob) return srcUrl
-      const path = `ai-generated/wm-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}.png`
+      // R55: wm ลงโฟลเดอร์หมวดเดียวกับไฟล์ต้นฉบับ (แยกอัลบั้มตามหมวดหมู่)
+      const path = `ai-generated/${KIND_PRESETS_KEYS.includes(kind) ? kind : 'menu'}/wm-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}.png`
       const { error } = await supabase.storage.from('bmb-images').upload(path, blob, { contentType: 'image/png', upsert: false })
       if (error) return srcUrl
       return supabase.storage.from('bmb-images').getPublicUrl(path).data.publicUrl
@@ -581,7 +703,7 @@ export function AdminMarketing() {
                 onChange={(e) => void handleBrowseImage(e)}
               />
             </div>
-            <p className="text-xs text-brand-muted mt-2">รูปเมนู = ภาพจริงจากแคตตาลอก (จิ้มเมนูใน Planner) หรือ <b>ไฟล์จากเครื่อง (browse)</b> — แนบไว้แล้วใช้เป็น<b>ต้นแบบไดคัท</b>ตอนเจนภาพเมนูได้ · เจนซ้อนหลายภาพได้เรื่อย ๆ (กด ✕ ลบรูป = ลบจริงทั้งรายการและไฟล์) · ทุกภาพเจนถูก<b>ประกบลายน้ำแบรนด์</b> (โลโก้จริง + มาสคอต) อัตโนมัติ · ข้อความโปรโมตบนภาพเขียนตามรายละเอียดหัวข้อ/เนื้อหาโพสต์</p>
+            <p className="text-xs text-brand-muted mt-2">รูปเมนู = ภาพจริงจากแคตตาลอก (จิ้มเมนูใน Planner) หรือ <b>ไฟล์จากเครื่อง (browse)</b> — แนบไว้แล้วใช้เป็น<b>ต้นแบบไดคัท</b>ตอนเจนภาพเมนูได้ · <b>เจนได้แม้ไม่มีภาพตัวอย่าง</b> (ระบบใช้รายละเอียดหัวข้อ/เนื้อหาโพสต์เป็นโจทย์) · ภาพที่เจน<b>ไม่ถูกแนบ/เลือกใช้อัตโนมัติ</b> — กด "ใช้" เองจากอัลบั้ม · ทุกภาพถูก<b>ประกบลายน้ำแบรนด์</b> (โลโก้จริง + มาสคอต) อัตโนมัติ</p>
             {/* R40: ตัวแสดงสถานะการเจน + พรีวิวผลลัพธ์ (Owner: "สร้างแล้วภาพไปไหน สร้างเสร็จหรือเปล่า") */}
             {genStatus.phase !== 'idle' && (
               <div
@@ -593,7 +715,10 @@ export function AdminMarketing() {
                   <span>⏳ <b>กำลังสร้างภาพ…</b> (วนโมเดลตามลำดับ — อาจใช้ 10–40 วินาที) · โจทย์: {genSubject.trim() || title.trim() || '—'} · ภาพอ้างอิง: {images.length ? 'มี (ภาพล่าสุดในชุด)' : 'ไม่มี'}</span>
                 )}
                 {genStatus.phase === 'ok' && (
-                  <span>✅ <b>สร้างสำเร็จ</b>{genStatus.model ? ` · โมเดล ${genStatus.model}` : ''} — บันทึกอัลบั้ม <code>bmb-images/ai-generated/</code> + แนบเข้าชุดภาพแล้ว (ดูพรีวิวด้านล่าง)</span>
+                  <span>✅ <b>สร้างสำเร็จ</b>{genStatus.model ? ` · โมเดล ${genStatus.model}` : ''} — บันทึกอัลบั้มตามหมวด + ไม่แนบเข้าชุดอัตโนมัติ{genStatus.qa && genStatus.qa.w ? ` · ขนาด ${genStatus.qa.w}×${genStatus.qa.h}px` : ''}</span>
+                )}
+                {genStatus.phase === 'ok' && genStatus.qa && !genStatus.qa.ok && (
+                  <span className="block mt-1 text-amber-700" data-testid="mk-gen-qa-warn">⚠️ {genStatus.qa.warn} — <b>ระบบไม่เลือกใช้แทนให้อัตโนมัติ</b> ตรวจภาพก่อน แล้วกด "ใช้" เองถ้าผ่าน</span>
                 )}
                 {genStatus.phase === 'fail' && (<span>❌ <b>สร้างไม่สำเร็จ:</b> {genStatus.detail}</span>)}
               </div>
@@ -629,18 +754,73 @@ export function AdminMarketing() {
                 )}
               </div>
             )}
-            {/* R40: อัลบั้มภาพ AI (โฟลเดอร์แยกในอัลบั้มเดิม) — ข้ามหน้า/รีเฟรชก็ยังอยู่ · จิ้ม = เลือกใช้ */}
+            {/* R40: อัลบั้มภาพ AI · R55: แยกตามหมวด (tabs) + ปุ่มต่อรูป = ใช้ / ปิด-เปิด / ลบ */}
             <div className="mt-3" data-testid="mk-ai-album">
-              <p className="text-xs font-semibold text-brand-accent mb-1">🗂️ อัลบั้มภาพที่ AI สร้าง (<code>bmb-images/ai-generated/</code>) — จิ้มรูปเพื่อเลือกใช้</p>
-              {aiAlbum.length === 0 ? (
-                <p className="text-xs text-brand-muted">ยังไม่มีภาพในอัลบั้ม — สร้างภาพสำเร็จครั้งแรกจะขึ้นที่นี่ทันที (ภาพที่เจนก่อนหน้ายังอยู่โฟลเดอร์เดิม <code>site-assets/marketing/</code> ไม่ขึ้นในอัลบั้มนี้)</p>
+              <p className="text-xs font-semibold text-brand-accent mb-1">🗂️ อัลบั้มภาพที่ AI สร้าง (<code>bmb-images/ai-generated/&lt;หมวด&gt;/</code>) — เลือกหมวด แล้วกดปุ่มบนรูปได้เอง</p>
+              <div className="flex flex-wrap gap-1 mb-2" data-testid="mk-ai-album-tabs">
+                {([
+                  ['all', '🟢 ใช้งานได้'],
+                  ['menu', '🍽️ เมนู'],
+                  ['promo', '📣 โปรโมต'],
+                  ['festival', '🎉 เทศกาล'],
+                  ['disabled', '⚪ ปิดใช้งาน'],
+                  ['legacy', '📁 รุ่นก่อน'],
+                ] as Array<['all' | 'menu' | 'promo' | 'festival' | 'disabled' | 'legacy', string]>).map(([k, label]) => (
+                  <button
+                    key={k}
+                    type="button"
+                    onClick={() => setAiAlbumTab(k)}
+                    className={`px-2 py-1 rounded-lg text-xs font-medium border ${aiAlbumTab === k ? 'bg-brand-primary text-white border-brand-primary' : 'bg-brand-surface border-brand-border text-brand-accent'}`}
+                    data-testid={`mk-ai-tab-${k}`}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+              {visibleAiAlbum.length === 0 ? (
+                <p className="text-xs text-brand-muted">ยังไม่มีภาพในหมวดนี้ — สร้างภาพสำเร็จจะขึ้นทันทีในหมวดที่เลือกเจน</p>
               ) : (
-                <div className="flex flex-wrap gap-2">
-                  {aiAlbum.map((a) => (
-                    <button key={a.name} type="button" className="relative" title={a.name} onClick={() => pickAiImage(a.url)} data-testid={`mk-ai-pick-${a.name}`}>
-                      <img src={a.url} alt={a.name} className="w-20 h-20 object-cover rounded-lg border border-brand-border hover:ring-2 hover:ring-brand-primary" />
-                      <span className="absolute bottom-0 inset-x-0 text-[9px] bg-black/50 text-white rounded-b-lg">เลือกใช้</span>
-                    </button>
+                <div className="flex flex-wrap gap-2" data-testid="mk-ai-album-grid">
+                  {visibleAiAlbum.map((a) => (
+                    <div
+                      key={a.path}
+                      className={`relative w-24 rounded-lg border overflow-hidden ${a.disabled ? 'opacity-50 border-brand-border' : 'border-brand-border'}`}
+                      data-testid={`mk-ai-item-${a.name}`}
+                    >
+                      <img src={a.url} alt={a.name} className="w-full h-20 object-cover" />
+                      <div className="flex text-[9px] leading-none">
+                        <button
+                          type="button"
+                          className="flex-1 bg-brand-primary text-white py-1"
+                          onClick={() => pickAiImage(a.url)}
+                          data-testid={`mk-ai-pick-${a.name}`}
+                          title="ใช้รูปนี้เป็นภาพโพสต์"
+                        >ใช้</button>
+                        <button
+                          type="button"
+                          className="flex-1 bg-amber-500 text-white py-1"
+                          onClick={() => void toggleAiImage(a)}
+                          data-testid={`mk-ai-toggle-${a.name}`}
+                          title={a.disabled ? 'เปิดใช้งานรูปนี้อีกครั้ง' : 'ปิดรูปนี้ — ไม่ให้ระบบนำไปใช้'}
+                        >{a.disabled ? 'เปิด' : 'ปิด'}</button>
+                        <button
+                          type="button"
+                          className="flex-1 bg-red-500 text-white py-1"
+                          onClick={() => void deleteAiImage(a)}
+                          data-testid={`mk-ai-del-${a.name}`}
+                          title="ลบรูปนี้ออกจากอัลบั้ม (ลบไฟล์จริง)"
+                        >ลบ</button>
+                      </div>
+                      {(a.kind === 'promo' || a.kind === 'festival') && !a.disabled && (
+                        <button
+                          type="button"
+                          className={`w-full text-[9px] py-1 ${floatingAdImage === a.url ? 'bg-purple-600 text-white' : 'bg-purple-100 text-purple-700'}`}
+                          onClick={() => void toggleFloatingAd(a.url)}
+                          data-testid={`mk-ai-floatad-${a.name}`}
+                          title="ใช้รูปนี้เป็นโฆษณาลอย (แทนมาสคอต) — กดอีกครั้งเพื่อเลิกใช้"
+                        >{floatingAdImage === a.url ? '✓ เป็นโฆษณาลอย' : '📌 ตั้งเป็นโฆษณาลอย'}</button>
+                      )}
+                    </div>
                   ))}
                 </div>
               )}

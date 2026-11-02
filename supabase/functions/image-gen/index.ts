@@ -18,14 +18,15 @@ const SERVICE = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || ''
 // (Supabase secret: BMB_OPENROUTER_API_KEY) "แยกจาก dev" — BMB ก่อน · fallback dev กันดับ
 const OPENROUTER_KEY = Deno.env.get('BMB_OPENROUTER_API_KEY') || Deno.env.get('OPENROUTER_API_KEY') || ''
 const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions'
-// โมเดลสร้างภาพ — env `IMAGE_GEN_MODELS` (comma-separated) · fallback หลายชื่อ
+// โมเดลสร้างภาพ — env `IMAGE_GEN_MODELS` (comma-separated) · fallback = ค่าเริ่มต้นด้านล่าง
+// R55 (Owner 2026-11-02): ใช้คีย์ `BMB_openrouter_api_key` (ด้านบน) + โมเดลตามคำสั่ง:
+//   หลัก = ByteDance Seed: Seedream 5.0 Flash (`bytedance-seed/seedream-5-0-flash` — ผ่าน chat ✓)
+//   รอง  = Qwen: Qwen Image 2.1 Pro (`qwen/qwen-image-2.1-pro` — "image generation model"
+//           ต้องใช้ /api/v1/images endpoint เท่านั้น → images API มาก่อน (A) ตามเดิม ✓)
+//   (พิสูจน์แล้วด้วย probe จริง: e2e/r55_model_ids.cjs — seedream=HTTP 200 · qwen=404 บอกให้ใช้ /images)
 // R32: โมเดลเดิมชื่อเดียวโดน retiring ของ OpenRouter = ตายทั้งฟีเจอร์ → วนลองทีละชื่อจนมีรูป
-// R41 (Owner 2026-10-31 "ยังติด gemini"): attempts จริงจาก production พิสูจน์ว่า
-//   ID คู่แรก (qwen image / bytedance seedream) = "not a valid model ID" / 404 no endpoint → ถอดทั้งคู่
-//   (ชื่อที่ Owner เคยเห็น = ไม่ตรงทะเบียน) · list ใหม่ = "เฉพาะโมเดลที่ /api/v1/models ยืนยัน
-//   output_modalities=image จริง 12 ตัว" (e2e/r41_models_probe.cjs) เรียงถูก→แพง
 const IMAGE_MODEL_CANDIDATES = (Deno.env.get('IMAGE_GEN_MODELS') || Deno.env.get('IMAGE_GEN_MODEL') ||
-  'google/gemini-3.1-flash-lite-image,google/gemini-3.1-flash-image,google/gemini-2.5-flash-image,openai/gpt-5-image-mini,openai/gpt-5.4-image-2,google/gemini-3-pro-image')
+  'bytedance-seed/seedream-5-0-flash,qwen/qwen-image-2.1-pro')
   .split(',').map((s) => s.trim()).filter(Boolean)
 
 function corsHeaders(): Record<string, string> {
@@ -48,8 +49,10 @@ function json(body: unknown, status = 200): Response {
 //   · ถ้ามีรูปเมนูตัวอย่างแนบ (reference_image_url) = เอามาเป็นต้นแบบไดคัท/จัดวางประกอบ
 //   · ข้อความโปรโมตบนภาพ ต้องเขียนตามรายละเอียดที่ให้มา (subject/note = หัวข้อ+เนื้อหาโพสต์)
 const KIND_PRESETS: Record<string, (subject: string, note: string) => string> = {
+  // R55 (Owner 2026-11-02): "ต้องเจนเมนูอาหารได้แม้ไม่มีตัวอย่าง — ใช้ข้อมูลจากรายละเอียด
+  //   เนื้อหาเข้าร่วมสร้างด้วย" → ไม่ต้องมีภาพตัวอย่าง สร้างจาก subject+note ได้ทันที
   menu: (subject, note) =>
-    `ภาพเมนูอาหาร "${subject}" สำหรับร้านของหวาน Bite Me Baby — ภาพเมนูน่ากิน มุม 45 องศา แสงธรรมชาตินุ่ม พื้นหลังสะอาด ถ้ามีภาพเมนูตัวอย่างแนบมาให้ใช้เป็นต้นแบบไดคัท/จัดวางให้เห็นเมนูชัดเจนตรงกับต้นแบบ${note ? ` · ข้อความ/รายละเอียดเพิ่มเติมบนภาพต้องเขียนตรงตามนี้: ${note}` : ''}`,
+    `ภาพเมนูอาหาร "${subject}" สำหรับร้านของหวาน Bite Me Baby — ภาพเมนูน่ากิน มุม 45 องศา แสงธรรมชาตินุ่ม พื้นหลังสะอาด จาน/ชามเด่นชัด ไม่บิดงอ ไม่เบี้ยว สัดส่วนจานสมจริง อัตราส่วนภาพ 4:3 เต็มกรอบ ไม่เว้นขอบเยอะ ไม่ต้องมีภาพตัวอย่างก็สร้างได้ — ใช้รายละเอียดต่อไปนี้เป็นข้อมูลหลักในการรังสรรค์ภาพ: ชื่อเมนู "${subject}"${note ? ` · รายละเอียด/เนื้อหาที่ต้องใช้ประกอบ: ${note}` : ''} · ถ้ามีภาพเมนูตัวอย่างแนบมาให้ใช้เป็นต้นแบบไดคัท/จัดวางให้เห็นเมนูชัดเจนตรงกับต้นแบบ`,
   promo: (subject, note) =>
     `ป้ายโปรโมต "${subject}" สำหรับร้านของหวาน Bite Me Baby — ดีไซน์ดึงดูด สีสดใส จุดเด่นที่ข้อเสนอ${note ? ` · ข้อความโปรโมตบนภาพต้องตรงกับรายละเอียดนี้เป๊ะ: ${note}` : ' · เขียนข้อความโปรโมตสั้น ๆ ตรงกับหัวข้อที่ให้มา'} · ถ้ามีภาพอ้างอิงแนบ ให้ใช้เป็นองค์ประกอบประกอบป้าย`,
   festival: (subject, note) =>
@@ -201,7 +204,10 @@ if (req.method === 'OPTIONS') return new Response('ok', { status: 200, headers: 
   const ext = mime.includes('jpeg') ? 'jpg' : 'png'
   // R40 (Owner: "ให้ไปอยู่ในอัลบั้มเดียวกันแยกโฟลเดอร์") — เดิม site-assets/marketing = เห็นที่อื่นยาก
   // → bmb-images/ai-generated/ = อัลบั้มเดียวกับภาพแคตตาลอก/browse แยกโฟลเดอร์ชัดเจน (list ได้จาก UI)
-  const objectPath = `ai-generated/gen-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}.${ext}`
+  // R55 (Owner): "แยกภาพที่เจนออกมาเป็นคนละอัลบั้มตามหมวดหมู่ที่ให้เจน"
+  // → ai-generated/<kind>/ (menu | promo | festival) — อัลบั้มแยกตามหมวดตามคำสั่ง
+  const safeKind = KIND_PRESETS[kind] ? kind : 'menu'
+  const objectPath = `ai-generated/${safeKind}/gen-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}.${ext}`
   try {
     let bytes: Uint8Array
     if (isDataUrl) {
@@ -225,7 +231,7 @@ if (req.method === 'OPTIONS') return new Response('ok', { status: 200, headers: 
   }
 
   const publicUrl = `${SB_URL}/storage/v1/object/public/bmb-images/${objectPath}`
-  return json({ ok: true, url: publicUrl, kind, style, prompt, model: usedModel, attempts, folder: 'ai-generated' })
+  return json({ ok: true, url: publicUrl, kind, style, prompt, model: usedModel, attempts, folder: `ai-generated/${safeKind}` })
   } catch (e) {
     // R40: error ทุกกรณีต้องเป็น JSON ที่ client อ่านได้ — เดิม crash = body ว่าง → Owner เห็นแค่ "non-2xx" ไม่รู้เหตุ
     return json({ error: 'ERR_UNCAUGHT', detail: String(e instanceof Error ? e.message : e).slice(0, 300) }, 500)

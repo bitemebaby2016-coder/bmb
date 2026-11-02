@@ -1,9 +1,31 @@
-docs(R55): ปิดเซสชัน — เปิดงาน R55 (ขนาดโลโก้ FB ไม่เท่ากัน) + handoff 2026-11-02 + evidence scripts
+R55: ปิดครบทุกข้อตามคำสั่ง Owner — โลโก้ยืนยันปิด + รีวิวภาษาจริง/ผูกเมนูจริง + AI Studio ใหม่ + โฆษณาลอย + /shop
 
-- AI_WORK_STATE: บล็อก 🔴 R55 (คำสั่ง Owner ถ้อยคำจริง + หลักฐานวัด + NEXT EXACT ACTION 5 ขั้น)
-- BMB_MASTER_STATUS: entry R55 (OPEN)
-- docs/BMB_HANDOFF_NEXT_SESSION_2026-11-02.md: brief แชทหน้าเต็ม (ตาราง mtime/.dimensions + ขั้นตอน + backlog + กติกาเครื่องมือ)
-- evidence: e2e/r54_logo_size.cjs (webp header dims 17 ไฟล์ — ทุกโลโก้ square) + e2e/r54_ftimes.cjs
-  (FB logo.webp mtime 2026-11-02T05:05Z = ไฟล์ใหม่ Owner ใน commit 8ca9ea8 · Messenger 01-11 = Owner เปลี่ยนเอง)
+1) โลโก้ FB (Owner ยืนยัน "หายแล้ว"): วัดยืนยัน — extent FB 0.911/LINE 0.891/Messenger 0.955 (เท่ากัน)
+   · production = local byte-identical (sha256) · box uniform ทุกจุดวัดจาก production DOM
+   · footer 24x24 + badge 15x15 · ไม่แก้ไฟล์/โค้ด (e2e/r55_alpha_bbox|overlay|prod_shot|prod_file.cjs)
+2) ภาษาเพี้ยนในรีวิว: อ่านทวนทุกภาพต้นฉบับด้วย vision model (e2e/r55_vision_reviews.cjs · 24+9+32 ภาพ)
+   → socialProofReviews.ts: ชื่อ "ชิสากุหนุ เรนยุคุร" = ผิด → "ชุติกาญจน์ เจริญฤทธิ์" (25 Mar)
+   · ข้อความจริงทั้ง 6 (LLLLLLLL/Da K./Bronus P./view p./GUBGIB) · GUBGIB 11 Mar → 6 Apr 2026
+   · เรียงใหม่→เก่า (sp-006 บนสุด)
+3) รีวิวมีรูป+ลิ้งเมนูจริง: productId/foodName ผูก products จริง 6/6 ที่เป็นเจ้าของรูป
+   (HTTP 200 ทุกใบ · e2e/r55_review_imgs.cjs) → CTA เพิ่มเมนูจริงเข้าตะกร้า
+4) AI Studio (image-gen EF DEPLOYED + secret ตั้งแล้ว):
+   - โมเดลตามคำสั่ง: หลัก bytedance-seed/seedream-5-0-flash · รอง qwen/qwen-image-2.1-pro
+     (ID พิสูจน์ e2e/r55_model_ids.cjs · smoke จริง: seedream 2048x2048 · qwen 2368x1776 = 4:3)
+   - เจนเมนูได้แม้ไม่มีภาพต้นแบบ (prompt ใช้ subject+note เป็นโจทย์ + บอก 4:3)
+   - อัลบั้มแยกหมวด: ai-generated/<kind>/{menu,promo,festival} (ทั้งไฟล์ต้นฉบับและ wm)
+   - ปุ่มต่อรูปที่อัลบั้ม: ใช้ / ปิด-เปิด (ย้ายไฟล์จริง ↔ _disabled/<kind>/) / ลบ
+   - ห้ามใช้แทนอัตโนมัติ: ถอด auto-append + checkGenQuality (1:1/4:3 ±12% · min 512px)
+     ไม่ผ่าน = mk-gen-qa-warn (ระบบไม่ฟันธงแทนแอดมิน)
+5) โฆษณาลอย: ปุ่ม mk-ai-floatad-* (แท็บ promo/festival) → business_settings.floating_ad_image
+   · FloatingAdBanners ใช้ภาพนั้นแทนมาสคอต + ประกอบน้อง Bite บนรูป (.flad-mascot-composed
+   — รูป wm- มีมาสคอตในไฟล์แล้วไม่ซ้ำ · ไม่มีค่า = เดิม)
+6) ล็อกอินกดโลโก้/หน้าแรก → /shop: Header logo to={customer ? '/shop' : '/'} (BottomNav มีแล้ว R50)
 
-R55 ยังไม่แก้ (Owner สั่งปิดเซสชัน) — ทำต่อแชทหน้า: playwright canvas bbox → normalize FB logo.webp → verify → gates
+contract tests 5 ไฟล์ปรับตาม directive ใหม่ (โมเดล+อัลบั้ม+no-auto-use)
+gates: npx tsc --noEmit = 0 · npm run lint = OK (eslint 0 + brandNameGuard 520 + languageSanity 1528)
+       vitest 6 ชุด = 142 tests PASSED (mediaFlow+r34 · r40/r41/r47/r44/socialAi/floating ·
+       uiTapScroll/adminShell/storefront/homePreOrder/uiTech/preOrderLock · adminSettings/brandName/seo/homePopular/categorySections)
+
+evidence: e2e/r55_*.cjs (alpha_bbox · overlay · prod_shot · prod_file · model_ids · model_smoke
+          vision_reviews · review_imgs · badchar) + r55_compare_px.png · r55_overlay.png

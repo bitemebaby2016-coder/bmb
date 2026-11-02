@@ -57,7 +57,9 @@ const riderIdentity = useRiderIdentity()
     <Fragment>
       <header className="relative z-50 bg-brand-surface border-b border-brand-border glass-surface">
       <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
-        <Link to="/" className="flex items-center gap-2">
+        {/* R55 (Owner 2026-11-02): "ถ้าเคยล็อกอินอยู่แล้ว กดหน้าแรกหรือกดโลโก้ให้ส่งไปที่/shop เลย
+            ไม่ต้องไปแลนดิ้งโฮมใหม่" — guest คงไป / (landing) เดิม */}
+        <Link to={customer ? '/shop' : '/'} className="flex items-center gap-2" data-testid="header-logo-link">
           <img src="/Head Logo.webp" alt="Bite Me Baby" width={40} height={40} className="rounded-lg object-cover" />
           <span className="font-display font-bold text-brand-accent text-xl">Bite Me Baby</span>
         </Link>

@@ -28,7 +28,9 @@ describe('R47 — ยุบสองเซคชั่นเป็นใบเ�
   it('PostForm ยุบเข้าใบเดียวกับเครื่องมือภาพ (mk-studio-merged) + strip มีปุ่ม ✕ ลบไฟล์จริง', () => {
     expect(marketingSrc).toContain('data-testid="mk-studio-merged"')
     expect(marketingSrc).toContain('สองเซคชั่นของหน้าเอไอสตูดิโอ ยุบรวมกัน')
-    expect(marketingSrc).toContain('setImages((prev) => [...prev, wmUrl])')
+    // R55 (Owner): ห้ามเลือกภาพเจนใช้แทนอัตโนมัติ — ไม่ append เข้าชุด (ต้องกด "ใช้ เองจากอัลบั้ม)
+    expect(marketingSrc).not.toContain('setImages((prev) => [...prev, wmUrl])')
+    expect(marketingSrc).toContain('checkGenQuality(wmUrl, genKind)')
     expect(marketingSrc).toContain('data-testid={`mk-img-del-${images.indexOf(u)}`}')
     expect(marketingSrc).toContain(".from('bmb-images').remove([path])")
     expect(marketingSrc).toContain('ลบรูปออกจากชุดภาพ + ลบไฟล์จริงจากคลังภาพแล้ว')

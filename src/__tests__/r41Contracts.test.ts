@@ -53,12 +53,12 @@ describe('R41-1 · m178 = time-based ย้ายเข้า DB (ไม่พ�
 })
 
 describe('R41-2 · image-gen = ทะเบียนโมเดลจริง + images API + parse ทุกรูปทรง', () => {
-  it('รายการโมเดล = เฉพาะ output=image ที่ทะเบียนยืนยัน (qwen/seedream ผิดจริง = ถอดแล้ว)', () => {
-    expect(imgSrc).toContain('google/gemini-3.1-flash-lite-image')
-    expect(imgSrc).toContain('openai/gpt-5-image-mini')
-    expect(imgSrc).not.toContain('qwen/qwen-image-3')
-    expect(imgSrc).not.toContain('seedream-5-0-flash')
-    expect(imgSrc).not.toContain('gemini-nano-banana-2.1') // ไม่อยู่ใน list สั้น — ทะเบียนมี แต่ถอดออกจาก default แล้ว (env ตั้งเองได้)
+  it('รายการโมเดล = ตามคำสั่ง Owner R55 (หลัก Seedream 5.0 Flash · รอง Qwen Image 2.1 Pro — พิสูจน์ด้วย r55_model_ids)', () => {
+    expect(imgSrc).toContain('bytedance-seed/seedream-5-0-flash') // probe = HTTP 200 ผ่าน chat
+    expect(imgSrc).toContain('qwen/qwen-image-2.1-pro') // probe = 404 "ใช้ /api/v1/images" = มีจริง
+    expect(imgSrc).not.toContain('qwen/qwen-image-3') // ID รุ่นเก่า = ไม่ valid
+    expect(imgSrc).not.toContain('google/gemini-3.1-flash-lite-image') // 402 insufficient credits — ถอดตามคำสั่ง
+    expect(imgSrc).not.toContain('gemini-nano-banana-2.1')
   })
 
   it('EF: images API ก่อน (text-only) + chat fallback + pickImage รวมทุกรูปทรง (b64_json/source base64)', () => {

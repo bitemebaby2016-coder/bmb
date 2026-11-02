@@ -61,7 +61,11 @@ describe('R40-2 · image-gen — สถานะ + พรีวิว + อั�
     expect(mkSrc).toContain('data-testid="mk-gen-result"')
     expect(mkSrc).toContain('พรีวิวผลลัพธ์ล่าสุด')
     expect(mkSrc).toContain('data-testid="mk-ai-album"')
-    expect(mkSrc).toContain(".from('bmb-images').list('ai-generated'")
+    // R55: อัลบั้มแยกตามหมวด (ai-generated/<kind>/ + _disabled) + ปุ่มต่อรูป ใช้/ปิด/ลบ
+    expect(mkSrc).toContain('ai-generated/_disabled/')
+    expect(mkSrc).toContain('visibleAiAlbum')
+    expect(mkSrc).toContain('toggleAiImage')
+    expect(mkSrc).toContain('deleteAiImage')
     expect(mkSrc).toContain('function pickAiImage(url: string)')
     expect(mkSrc).toContain('await loadAiAlbum()')
     expect(mkSrc).toContain('setGenStatus({ phase: \'running\' })')
@@ -73,11 +77,11 @@ describe('R40-2 · image-gen — สถานะ + พรีวิว + อั�
     expect(mkSrc).toContain('.slice(0, 180)')
   })
 
-  it('EF: อัปโหลดเข้า bmb-images/ai-generated (อัลบั้มเดียวกัน โฟลเดอร์แยก) + error ทุกกรณี = JSON (ERR_UNCAUGHT)', () => {
-    expect(imgSrc).toContain('`ai-generated/gen-')
+  it('EF: อัปโหลดเข้า bmb-images/ai-generated/<kind>/ (อัลบั้มแยกตามหมวด — R55) + error ทุกกรณี = JSON (ERR_UNCAUGHT)', () => {
+    expect(imgSrc).toContain('`ai-generated/${safeKind}/gen-')
     expect(imgSrc).toContain('/storage/v1/object/bmb-images/')
     expect(imgSrc).toContain('/storage/v1/object/public/bmb-images/')
-    expect(imgSrc).toContain("folder: 'ai-generated'")
+    expect(imgSrc).toContain('folder: `ai-generated/${safeKind}`')
     expect(imgSrc).toContain("'ERR_UNCAUGHT'")
     expect(imgSrc).toContain('try {') // wrap ครอบ handler — crash = json ไม่ใช่ body ว่าง
   })

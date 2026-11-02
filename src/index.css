@@ -1076,6 +1076,7 @@ p { color: var(--color-brand-text-secondary); }
   border-radius: 12px;
   overflow: hidden;
   flex-shrink: 0;
+  position: relative; /* anchor มาสคอตประกอบบนรูป (R55) */
   /* โชว์สติกเกอร์โลโก้แบรนด์ทับ gradient ส้ม เมื่อ promo ไม่มีรูป (หรือรูปเสีย) */
   background: url('/Logo_Sticker_Circle.webp') center / cover no-repeat, linear-gradient(135deg, #FF5E1E, #FBBF24);
 }
@@ -1087,6 +1088,18 @@ p { color: var(--color-brand-text-secondary); }
   object-fit: contain;
   margin: 4% auto 0;
   display: block;
+}
+/* R55: มาสคอตประกอบบนรูปโฆษณาลอย (เอามาสคอตไปประกอบรูป — Owner 2026-11-02)
+   ทับมุมขวาล่างของ media · contain ไม่ยืด · ไม่รับคลิก */
+.flad-media img.flad-mascot-composed {
+  position: absolute;
+  right: 4px;
+  bottom: 0;
+  width: auto;
+  height: 72%;
+  object-fit: contain;
+  pointer-events: none;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.35));
 }
 .flad-body { flex: 1; min-width: 0; }
 .flad-title {

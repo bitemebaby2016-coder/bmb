@@ -15,9 +15,16 @@ describe('R44 — ภาพเจนใช้รูปเดียวตอน�
     expect(marketingSrc).toContain('const postImages = genOnes.length > 0 ? [genOnes[genOnes.length - 1]] : images')
     expect(marketingSrc).toContain('image_urls: postImages')
   })
-  it('R47 เจนซ้อนหลายภาพ = ต่อท้ายชุดภาพ (append) + ปุ่มลบจริง · pick ยังแทนรูปเดิม + คำใบ้ใน strip', () => {
-    // R47 (Owner): "เจนซ้อนหลายภาพได้แต่ต้องมีปุ่มให้ลบภาพที่เจนแล้วลบจริงด้วย"
-    expect(marketingSrc).toContain('setImages((prev) => [...prev, wmUrl])')
+  it('R55 "ห้ามเลือกใช้แทนอัตโนมัติ" — ไม่ append เข้าชุด + ตรวจคุณภาพ + ปุ่ม ใช้/ปิด/ลบ ที่อัลบั้ม', () => {
+    // R55 (Owner 2026-11-02): "ภาพที่เจนมาพอไปอยู่ในเมนูแล้วเบี้ยวเละเทะ ขนาดไม่ตรง
+    //   ห้ามเลือกมาใช้แทนโดยอัตโนมัติ" → เจนแล้วอยู่ที่อัลบั้มเท่านั้น (ไม่ต่อชุดภาพอัตโนมัติ)
+    expect(marketingSrc).not.toContain('setImages((prev) => [...prev, wmUrl])')
+    expect(marketingSrc).toContain('checkGenQuality(wmUrl, genKind)')
+    expect(marketingSrc).toContain('data-testid="mk-gen-qa-warn"')
+    // ปุ่มต่อรูป: ใช้ (pickAiImage) · ปิด/เปิด (toggleAiImage = ย้ายไฟล์จริง) · ลบ (deleteAiImage)
+    expect(marketingSrc).toContain('data-testid={`mk-ai-pick-${a.name}`}')
+    expect(marketingSrc).toContain('data-testid={`mk-ai-toggle-${a.name}`}')
+    expect(marketingSrc).toContain('data-testid={`mk-ai-del-${a.name}`}')
     expect(marketingSrc).toContain('data-testid={`mk-img-del-${images.indexOf(u)}`}')
     expect(marketingSrc).toContain('handleRemoveImage')
     expect(marketingSrc).toContain(".from('bmb-images').remove([path])")
