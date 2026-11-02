@@ -1,0 +1,4 @@
+docs(R54): ledger update — AI_WORK_STATE block R54 + BMB_MASTER_STATUS entry R54 (commit 8ca9ea8 pushed)
+
+- AI_WORK_STATE: R54 block ใหม่ (5 ข้อ feedback + gates + evidence) · R53 demote เป็น "สถานะก่อนหน้า"
+- BMB_MASTER_STATUS: entry R54 แทรกก่อน R53
