@@ -1,0 +1,26 @@
+{
+ "sha": "6012720",
+ "probedAt": "2026-11-03T20:58:01.978Z",
+ "workflowRuns": [],
+ "checkRuns": [
+  {
+   "name": "Migrations + SQL contracts (ephemeral PG)",
+   "status": "in_progress",
+   "conclusion": null,
+   "html_url": "https://github.com/bitemebaby2016-coder/bmb/actions/runs/41717275179/job/126200474968"
+  },
+  {
+   "name": "Test + Lint + Build",
+   "status": "in_progress",
+   "conclusion": null,
+   "html_url": "https://github.com/bitemebaby2016-coder/bmb/actions/runs/41717274966/job/126200470709"
+  },
+  {
+   "name": "Cloudflare Pages",
+   "status": "in_progress",
+   "conclusion": null,
+   "html_url": "https://github.com/bitemebaby2016-coder/bmb/runs/126200467117"
+  }
+ ],
+ "note": "ONE-SHOT probe — status/conclusion may be in_progress; do NOT re-poll this SHA"
+}
