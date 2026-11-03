@@ -56,6 +56,7 @@ import {
   submitNewOrder,
   buildIntakeLine,
   buildCartSummaryFooter,
+  scopeCatalogToPost,
 } from '../_shared/socialOrderIntake.ts'
 // R57: บริบทโพสต์ต้นทางของคอมเมนต์ (Owner: ตอบข้อมูลจริงตามโพสและตามเว็บ)
 import { extractSourcePostId, fetchPostMessage } from '../_shared/socialPostContext.ts'
@@ -382,10 +383,16 @@ async function fetchRecentThread(ev: SocialEventRow): Promise<string> {
  *  (046 spine) → resolve real round → submitNewOrder (canonical RPC, idempotent
  *  by event id). ไม่ชัดเจน/ไม่ครบ = ไม่สั่ง ให้ถามใน reply (ถามก่อน ห้ามเดา).
  *  ผลสำเร็จ/ล้มเหลวรายงานโดย buildIntakeLine (ระบบเขียน) — ห้ามเคลมก่อนระบบยืนยัน. */
-async function runOrderIntake(ev: SocialEventRow, userMsg: string, mode: 'message' | 'comment'): Promise<{ footer: string; note: string; summaryNames: string[] }> {
+async function runOrderIntake(ev: SocialEventRow, userMsg: string, mode: 'message' | 'comment', postMsg = ''): Promise<{ footer: string; note: string; summaryNames: string[] }> {
   const none = { footer: '', note: '', summaryNames: [] as string[] }
   try {
-    const ex = await aiCall('social_reply_draft', ORDER_EXTRACT_SYSTEM, userMsg)
+    // R64/C-6 (Owner: "สั่งใต้โพสบะหมี่ไก่ย่างแต่เอไอสรุปเป็นเมนูอื่น — ใช้เฉพาะ MENU ของโพสต์นี้"):
+    // ดึง catalog ก่อนแล้วจำกัด scope ตามโพสต์ต้นทาง → extractor ได้บรรทัดกติกา + match แค่เมนูที่โพสต์เสนอ
+    const prods0 = await rest('GET', '/rest/v1/products?select=id,name,is_available&archived=eq.false&limit=300')
+    const catalog0 = (prods0.status === 200 && Array.isArray(prods0.j)) ? prods0.j : []
+    const { allowed, scopeLine } = scopeCatalogToPost(catalog0, postMsg)
+
+    const ex = await aiCall('social_reply_draft', ORDER_EXTRACT_SYSTEM + scopeLine, userMsg)
     if (!ex.ok || !ex.text) return none
     const parsed = parseStructuredOutput(ex.text, ORDER_EXTRACT_SCHEMA)
     if (!parsed.ok) return none
@@ -395,10 +402,8 @@ async function runOrderIntake(ev: SocialEventRow, userMsg: string, mode: 'messag
     if (!x.wants_order) return none
     // Real catalog match — ห้ามเดาสินค้าแทนลูกค้า (§4) — R27: ย้ายขึ้นมาก่อนการยืนยัน
     // เพื่อให้ "สรุปรายการ + ลิงก์ตะกร้าพร้อมเช็คเอาท์" ได้ทั้งยืนยัน/ยังไม่ยืนยัน
-    // และทั้งคอมเมนต์สาธารณะ/ข้อความส่วนตัว
-    const prods = await rest('GET', '/rest/v1/products?select=id,name,is_available&archived=eq.false&limit=300')
-    const catalog = (prods.status === 200 && Array.isArray(prods.j)) ? prods.j : []
-    const m = matchOrderItems(catalog, x.items)
+    // และทั้งคอมเมนต์สาธารณะ/ข้อความส่วนตัว — R64: จับกับ allowed (เมนูของโพสต์นี้) ไม่ใช่ catalog กว้าง
+    const m = matchOrderItems(allowed, x.items)
     if (m.matched.length === 0) {
       return { footer: '', note: 'จับคู่เมนูไม่ได้ — ให้ถามชื่อเมนูที่ถูกต้องจากลูกค้า ห้ามเดาสินค้าแทน', summaryNames: [] }
     }
@@ -556,7 +561,8 @@ async function processEvent(ev: SocialEventRow): Promise<{ id: string; result: s
   if (classification.intent === 'order_request') {
     // R27: ทั้งคอมเมนต์และข้อความ — สรุปรายการได้ + แนบลิงก์ตะกร้าพร้อมเช็คเอาท์
     // (คอมเมนต์สาธารณะ = extract+match เฉย ๆ ไม่สร้างออเดอร์เอง — §5.1 คงเดิม)
-    const intake = await runOrderIntake(ev, userMsg, ev.event_type === 'message' ? 'message' : 'comment')
+    // R64: ส่ง postMsg ไปจำกัดเมนู (ใช้เฉพาะ MENU ของโพสต์นี้ — deferred C-6 #1)
+    const intake = await runOrderIntake(ev, userMsg, ev.event_type === 'message' ? 'message' : 'comment', postMsg)
     intakeFooter = intake.footer
     intakeSummaryNames = intake.summaryNames
     // R57: intake ไม่ได้สรุป (extract ไม่ผ่าน/ข้อมูลไม่ครบ) → ห้ามปล่อยให้โมเดลเดาสรุปเอง

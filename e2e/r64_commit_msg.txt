@@ -1,0 +1,48 @@
+R64: fix 6 reported defects — floating promo slot · FB in-app bar always · push gate+reconcile ·
+social-AI post-menu scope (deferred #1, EF deployed) · print driver diagnosis · gates+pack §R64
+
+- A print "เสียงรับแต่ไม่ออก" = Windows driver GONE (evidence, not app bug): queue
+  Nimbot B1Pro_BmB = Generic/Text Only + COM3; queue B1 Pro-I808030310 removed;
+  pnputil has only Niimbot mbedserial (oem24) — no print driver; print_settings
+  qzEnabled→qzPrinterName=Nimbot B1Pro_BmB → QZ pixel through Text Only = beeps,
+  no paper (same as documented r40 case). Fix = 30s diagnosis guide added in
+  AdminPrintSettings (check driver, reinstall Nimbot, interim use Bluetooth path
+  which bypasses Windows queue). Evidence: e2e/r64_printer_probe.txt, r64_drivers.txt,
+  r64_pnp.txt, r64PrintSettings-result.json
+- B Notice/PWA no alerts = 3 facts: push_subscriptions 2 rows customer_id=NULL
+  (orphaned Oct 23) → dispatcher hasPushSub always false → outbox all line/mock
+  (probe-proven); notification_prefs empty (non-blocking, default true); Owner
+  enabled push on /login while logged OUT → register_push_subscription (JWT) failed.
+  Fixes: PushPermissionPrompt never shows without session (waits for login);
+  AuthSessionSync auto re-registers (enablePush idempotent) on SIGNED_IN when
+  permission already granted — devices that pressed Allow on /login self-heal
+  after login. in-app Notice rows only exist on real events (latest Nov 1-2, all
+  read) → Owner retest = place order as CUSTOMER account (admin has no customers
+  row — push/notice target customers by design)
+- C AI FB summary wrong dish (บะหมี่ไก่ย่าง → เคาหยก) = deferred C-6 #1 "ใช้เฉพาะ
+  MENU ของโพสต์นี้" → implemented: scopeCatalogToPost() pure helper (shared
+  socialOrderIntake) filters catalog to menus present in source post + injects
+  scope rule into ORDER_EXTRACT_SYSTEM; worker fetches catalog first → scope →
+  extract → matchOrderItems(allowed,...) — comment naming a dish NOT in the post
+  = unmatched → system asks (never guesses); post without menu names keeps old
+  full-catalog behavior (zero-fake). EF social-ai-worker DEPLOYED
+  (e2e/r64_deploy_social.log) · esbuild 0 · tests 24/24 (+4 scope cases)
+- D floating promo image never visible = announcements filled both slots:
+  production render probe (e2e/r64FloatingRender.cjs) on /shop fresh context =
+  2 cards both "แนะนำ บะหมี่ไก่ย่างเทริากิ" (feed) → HALLOWEEN promo (is_banner,
+  is_active, banner_image 200/82KB, created today) crowded out; query/mapping
+  verified intact (select *, image: r.banner_image). Fix = mergeBannerFeed()
+  interleaves a0,p0,a1,p1 so newest announcement + newest promo always pair
+  (cap 2 + dismissed unchanged) · floatingAdBanners tests 7/7 (+3)
+- E/F FB link did not open external browser / flow stuck in FB webview:
+  InAppBrowserNotice fired location.replace(intent) then returned WITHOUT showing
+  the bar — FB WebView silently swallows intent:// → nothing happened at all.
+  Fix = setShow(true) BEFORE the intent attempt always (success = page leaves;
+  failure = bar + button ready for gesture retry); cart/checkout continues in
+  Chrome after tapping the bar. r46LinkOut tests 5/5
+- Gates: tsc 0 · targeted batches 45/45 + 6/6 · esbuild OK (social-ai-worker) ·
+  full suite = see e2e/r64_vitest_full.log · build = e2e/r64_build.log
+- Docs: AI_WORK_STATE R64 block · pack §R64 retest table (6 rows) · reconciliation
+  C-6 #1 moved from DEFERRED to DONE (5 remain)
+- NOT claimed: Owner hardware driver reinstall · Owner runtime retest §R64 ·
+  no COMPLETE/PRODUCTION READY

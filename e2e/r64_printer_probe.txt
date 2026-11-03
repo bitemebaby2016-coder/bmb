@@ -1,0 +1,27 @@
+=== PRINTERS ===
+
+Name                          DriverName                        PrinterStatus PortName                                                                                                                          
+----                          ----------                        ------------- --------                                                                                                                          
+OneNote for Windows 10        Microsoft Software Printer Driver        Normal Microsoft.Office.OneNote_16001.14326.22594.0_x64__8wekyb3d8bbwe_microsoft.onenoteim_S-1-5-21-3200362921-3147015668-3369925732-1001
+Nimbot B1Pro_BmB              Generic / Text Only                      Normal COM3:                                                                                                                             
+Microsoft XPS Document Writer Microsoft XPS Document Writer v4         Normal PORTPROMPT:                                                                                                                       
+Microsoft Print to PDF        Microsoft Print To PDF                   Normal PORTPROMPT:                                                                                                                       
+Fax                           Microsoft Shared Fax Driver              Normal SHRFAX:                                                                                                                           
+Adobe PDF                     Adobe PDF Converter                      Normal Documents\*.pdf                                                                                                                   
+
+
+
+=== JOBS Nimbot B1Pro_BmB ===
+
+=== JOBS B1 Pro-I808030310 ===
+
+=== LAST PrintService EVENTS (45m) ===
+eventlog unavailable: No events were found that match the specified selection criteria.
+=== PRINTER PORTS (Nimbot) ===
+
+Name   Description                  PrinterDriver
+----   -----------                  -------------
+USB001 Virtual printer port for USB              
+
+
+

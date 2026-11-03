@@ -158,7 +158,7 @@
 | **C-3** | **อนุมัติให้ดำเนินการ** = Rebuild + Deploy + Production Retest — เหตุผล: ตั้ง API key ใน Cloudflare อย่างเดียวไม่ยืนยันว่า build ล่าสุดเอา key ไปใช้แล้ว | ตรวจ Git และ Build configuration **ก่อน** → Rebuild → Deploy → ทดสอบ Production ทั้ง 3 ฝั่ง (ลูกค้า/แอดมิน/ไรเดอร์) | **DECIDED** → PHASE 4 |
 | **C-4** | **อนุมัติรวม PHASE 8** — **ห้ามตัดรายการทดสอบออก**เพียงเพราะ AI ไม่มีอุปกรณ์/บัญชีจริง · ต้องเก็บรายการทั้งหมด: FB จริง T-A1/A2/A3/A6 · Android T-A4 · iOS T-A5 · เครื่องพิมพ์จริง T-D/T-E · Payment slip/POD/Push/SMS = CAP-10/11/13/14 | Developer เตรียมขั้นตอนทดสอบ + ข้อมูลที่จำเป็นให้ครบก่อนส่ง Owner · **Owner เป็นผู้ทดสอบจริงและส่งผลกลับ — ห้าม AI อ้างว่าผ่านแทน Owner** | **DECIDED** → PHASE 8 = เตรียมอย่างเดียว |
 | **C-5** | **PRESERVE stash** `local-edits-before-sync-2026-09-21` — เมื่อปิด Closure หลักแล้ว จึงแยกตรวจ Stash เป็นงานเฉพาะ | ต้องตรวจเนื้อหาและผลกระทบ **ก่อน**ตัดสินใจ (ยังห้ามแตะจนกว่าจะถึงงานนั้น) | **DECIDED** = PRESERVE → งานเฉพาะหลัง closure |
-| **C-6** | **Deferred ทั้ง 6 รายการออกจาก Closure** → ลงทะเบียนเป็น Backlog พร้อมสถานะ **DEFERRED อย่างเป็นทางการ** — **ไม่ใช่ COMPLETE และไม่ใช่ FIXED** | เมื่อเปิดร้านและผ่าน Production Acceptance แล้ว จึงจัดลำดับความสำคัญใหม่ | **DEFERRED** ทั้ง 6: Social AI rule · cart re-add 700ms · review submit UI · ประกาศ list `/promotions` · theater copy seed · PSID/LINE |
+| **C-6** | **Deferred ทั้ง 6 รายการออกจาก Closure** → ลงทะเบียนเป็น Backlog พร้อมสถานะ **DEFERRED อย่างเป็นทางการ** — **ไม่ใช่ COMPLETE และไม่ใช่ FIXED** | เมื่อเปิดร้านและผ่าน Production Acceptance แล้ว จึงจัดลำดับความสำคัญใหม่ | **DEFERRED** เหลือ 5: cart re-add 700ms · review submit UI · ประกาศ list `/promotions` · theater copy seed · PSID/LINE · *(อัปเดต R64 2026-11-03: **Social AI rule "ใช้เฉพาะ MENU ของโพสต์นี้" = Owner สั่งทำแล้ว → implement + EF deploy แล้ว** — ไม่นับ deferred)* |
 
 > **ไม่พบ CONFLICT ฝั่ง business rules:** pricing/cutoff/quota/discount-cap/order-state ในโค้ดกับ canonical
 > (BMB_MASTER_STATUS CAP matrix) ตรงกัน — 15% cap · same-day no-cutoff · two-cutoffs = มี migration + test ตรงกันทุกฝั่ง
@@ -213,7 +213,7 @@
 | `onAuthStateChange` = 0 จุดใน src (QA N3 · P1) | **MISSING (ตาม QA)** | `BMB_QA_REVIEW_2026-10-29.md` | AI รอบถัด + Owner ยืนยัน scope |
 | Google Maps key = จำกัด HTTP referrer ใน Google Cloud | **OWNER-ONLY** | QA P1 — ทำในคอนโซล Google | Owner |
 | external providers (Grab/Lineman/Foodpanda) | **DEFERRED (ของเดิม · รอ credentials/closure)** | `delivery_policy.external_methods_enabled=[]` | Owner |
-| Backlog 6 ข้อ (Social AI rule · cart re-add · review submit · ประกาศ list · theater seed · PSID/LINE) | **DEFERRED (มติ C-6)** | §3.1 C-6 | หลังเปิดร้าน |
+| Backlog 6 ข้อ (Social AI rule · cart re-add · review submit · ประกาศ list · theater seed · PSID/LINE) | **DEFERRED 5 เหลือ (มติ C-6)** — Social AI rule = **ทำแล้ว R64 (EF deploy)** | §3.1 C-6 | หลังเปิดร้าน |
 | Stash `local-edits-before-sync-2026-09-21` | **PRESERVE (มติ C-5) = งานเฉพาะหลัง closure** | `git stash list` | AI งานเฉพาะ |
 | N2 (เทียบ `BMB_BACKEND_AI_PART_1` กับต้นฉบับ) · L-11 (LED = รอนิยาม) | **NOT STARTED / OWNER INPUT** | handoff 2026-10-30 | Owner/AI ตามมติ |
 | ผลทดสอบ Owner ทั้งหมด (N-A..N-G · RL-DEFECT · B2 · C7/C8 · §F..§L) | **OWNER-ONLY runtime** | test pack ทุก § | Owner |

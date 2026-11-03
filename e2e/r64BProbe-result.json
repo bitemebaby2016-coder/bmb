@@ -1,0 +1,40 @@
+{
+  "at": "2026-11-03T11:55:25.457Z",
+  "checks": [
+    {
+      "label": "feed_published",
+      "status": 404,
+      "rows": {
+        "code": "PGRST205",
+        "details": null,
+        "hint": "Perhaps you meant the table 'public.marketing_posts'",
+        "message": "Could not find the table 'public.marketing_feed_posts' in the schema cache"
+      }
+    },
+    {
+      "label": "push_subs",
+      "status": 200,
+      "rows": [
+        {
+          "id": "push- ###########-7178f2",
+          "customer_id": null,
+          "failure_count": 0,
+          "last_success_at": null,
+          "created_at": "2026-10-23T00:07:11.025823+00:00"
+        },
+        {
+          "id": "push- ###########-440377",
+          "customer_id": null,
+          "failure_count": 0,
+          "last_success_at": null,
+          "created_at": "2026-10-23T07:04:35.523939+00:00"
+        }
+      ]
+    },
+    {
+      "label": "notif_prefs",
+      "status": 200,
+      "rows": []
+    }
+  ]
+}

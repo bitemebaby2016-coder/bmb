@@ -1,0 +1,22 @@
+{
+  "at": "2026-11-03T11:52:56.677Z",
+  "url": "https://biteme-baby.com/shop",
+  "cards": [
+    {
+      "title": "📣 แนะนำ บะหมี่ไก่ย่างเทริยากิ",
+      "img": "https://ivkdfognyiwjcmrhcnwz.supabase.co/storage/v1/object/public/bmb-images/ai-generated/promo/wm-mw0kxlfc-bqjh.png",
+      "mascot": null,
+      "fallbackClass": false
+    },
+    {
+      "title": "📣 แนะนำ บะหมี่ไก่ย่างเทริยากิ",
+      "img": "https://ivkdfognyiwjcmrhcnwz.supabase.co/storage/v1/object/public/bmb-images/ai-generated/promo/gen-mw0fjct1-x944.png",
+      "mascot": "/assets/mascot/bite_pointing.webp",
+      "fallbackClass": false
+    }
+  ],
+  "bannerCount": 2,
+  "hasHalloween": false,
+  "imageLoaded": false,
+  "shot": "e2e/screenshots/r64_floating_shop.png"
+}

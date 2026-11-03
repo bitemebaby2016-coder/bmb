@@ -10,6 +10,7 @@ import workerSrc from '../../supabase/functions/social-ai-worker/index.ts?raw'
 import {
   semanticOrderExtract,
   matchOrderItems,
+  scopeCatalogToPost,
   buildIntakeLine,
   ORDER_EXTRACT_SCHEMA,
   type SubmitOrderResult,
@@ -43,6 +44,38 @@ describe('ORDER_EXTRACT_SCHEMA — structured extraction ผ่าน validator 
   it('missing field / wrong enum → fail closed', () => {
     expect(parseStructuredOutput(JSON.stringify(extract({ unclear: undefined })), ORDER_EXTRACT_SCHEMA as never).ok).toBe(false)
     expect(parseStructuredOutput(JSON.stringify(extract({ order_mode: 'DELIVER_NOW' })), ORDER_EXTRACT_SCHEMA as never).ok).toBe(false)
+  })
+})
+
+describe('R64 scopeCatalogToPost — ใช้เฉพาะ MENU ของโพสต์นี้ (deferred C-6 #1)', () => {
+  const cat = [
+    { id: 'p1', name: 'บะหมี่ไก่ย่างเทริยากิ' },
+    { id: 'p2', name: 'ข้าวหมูกรอบ' },
+    { id: 'p3', name: 'เคาหยก' },
+  ]
+  it('โพสต์ระบุเมนู → allowed = เฉพาะเมนูนั้น + scopeLine บังคับใช้', () => {
+    const r = scopeCatalogToPost(cat, 'วันนี้แนะนำ บะหมี่ไก่ย่างเทริยากิ อร่อยมาก 79 บาท')
+    expect(r.allowed.map((p) => p.id)).toEqual(['p1'])
+    expect(r.scopeLine).toContain('บะหมี่ไก่ย่างเทริยากิ')
+    expect(r.scopeLine).toContain('ห้ามพิมพ์/เดาเมนูอื่น')
+  })
+  it('โพสต์ไม่มีข้อความ/ไม่ระบุเมนูไหน = catalog เดิม + scopeLine ว่าง (ไม่ตัดช่องทางสั่ง)', () => {
+    expect(scopeCatalogToPost(cat, '')).toEqual({ allowed: cat, scopeLine: '' })
+    expect(scopeCatalogToPost(cat, 'เปิดร้านแล้ววันนี้ 9 โมง')).toEqual({ allowed: cat, scopeLine: '' })
+  })
+  it('เมนูที่โพสต์ไม่ได้เสนอ = ตกจาก allowed (คอมเมนต์พิมพ์เมนูอื่น → unmatched → ระบบถาม ไม่เดา)', () => {
+    const r = scopeCatalogToPost(cat, 'บะหมี่ไก่ย่างเทริยากิ เท่านั้น')
+    expect(r.allowed.map((p) => p.id)).toEqual(['p1'])
+    const m = matchOrderItems(r.allowed, [{ name: 'เคาหยก', quantity: 1 }])
+    expect(m.matched).toHaveLength(0)
+    expect(m.unmatched).toEqual(['เคาหยก'])
+  })
+  it('worker ต่อ postMsg เข้า runOrderIntake + ใช้ scope ก่อน match (source contract)', () => {
+    expect(workerSrc).toContain('scopeCatalogToPost(catalog0, postMsg)')
+    expect(workerSrc).toMatch(/runOrderIntake\(ev, userMsg, ev\.event_type[\s\S]{0,80}postMsg\)/)
+    expect(workerSrc).toContain('matchOrderItems(allowed, x.items)')
+    // extractor ได้บรรทัดกติกาของโพสต์นี้
+    expect(workerSrc).toContain('ORDER_EXTRACT_SYSTEM + scopeLine')
   })
 })
 

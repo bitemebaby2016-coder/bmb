@@ -45,8 +45,12 @@ export function InAppBrowserNotice() {
         try { sessionStorage.setItem(EXT_REDIRECT_KEY, '1') } catch { /* */ }
         const intent = externalBrowserIntentUrl(window.location.href)
         if (intent) {
+          // R64 (Owner: "ลิ้งที่กดต่อไปไม่ได้เปิดบราวเซอร์นอก"): โชว์แถบก่อนยิง intent เสมอ —
+          // FB WebView บางรุ่นกลืน intent:// เงียบ ๆ (ไม่ throw ไม่ navigate) = เดิมค้างไม่มีอะไรขึ้นเลย
+          // ถ้า intent สำเร็จ = หน้าเปลี่ยนเอง (แถบไม่ทันเห็น) · ล้มเหลว = แถบ+ปุ่มพร้อมให้กดซ้ำด้วย gesture
+          setShow(true)
           window.location.replace(intent) // บังคับออกนอก FB → Chrome (Owner: ห้ามใช้เบราว์เซอร์ของเฟซ)
-          return // ถ้า intent ล้ม (ไม่มี Chrome) = fallback กลับมาในแท็บเดิม → โชว์แถบด้านล่าง
+          return
         }
       }
     }

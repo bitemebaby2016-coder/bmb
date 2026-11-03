@@ -1,0 +1,33 @@
+{
+  "at": "2026-11-03T12:03:05.829Z",
+  "status": 200,
+  "rows": [
+    {
+      "key": "print_settings",
+      "value": {
+        "printers": [
+          {
+            "id": "prn-1793347427350-xivr",
+            "label": "Nimbot B1Pro",
+            "model": "nimbot_b1pro",
+            "active": true,
+            "paperWidthMm": 50
+          }
+        ],
+        "qzEnabled": true,
+        "paperWidthMm": 58,
+        "qzPrinterName": "Nimbot B1Pro_BmB",
+        "stickerDensity": 2,
+        "stickerFaceHPx": 660,
+        "autoPrintKitchen": true,
+        "autoPrintReceipt": true,
+        "kitchenPrinterId": "prn-1793347427350-xivr",
+        "receiptPrinterId": "prn-1793347427350-xivr",
+        "stickerOffsetYPx": 70,
+        "autoPrintStickers": true,
+        "kitchenPrinterName": "",
+        "receiptPrinterName": ""
+      }
+    }
+  ]
+}

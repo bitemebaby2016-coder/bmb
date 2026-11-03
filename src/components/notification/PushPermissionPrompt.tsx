@@ -9,6 +9,7 @@
 
 import { useEffect, useState } from 'react'
 import { enablePush, getPushPermissionState } from '@/lib/notifications/notificationManager'
+import { useAuthStore } from '@/store/authStore'
 import { showToast } from '@/components/ui/ToastContainer'
 
 const DISMISS_KEY = 'bmb:push-prompt-dismissed-at'
@@ -31,15 +32,22 @@ function markDismissed(): void {
 export function PushPermissionPrompt() {
   const [show, setShow] = useState(false)
   const [busy, setBusy] = useState(false)
+  // R64 (Owner: กด "เปิดการแจ้งเตือน" บนหน้า /login = ล็อกอินไม่อยู่ → register ล้ม → ไม่มี push เลย):
+  // ห้ามเด้งบนหน้าที่ยังไม่มี session — รอจนล็อกอินแล้ว (register ใช้ JWT ของลูกค้า)
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
 
   useEffect(() => {
+    if (!isAuthenticated) {
+      setShow(false)
+      return
+    }
     if (!shouldShow()) return
     // รอให้หน้าโหลดนิ่งก่อน — ไม่เด้งทันทีที่เข้าเว็บ (natural prompt)
     const t = window.setTimeout(() => {
       if (getPushPermissionState() === 'default') setShow(true)
     }, 6000)
     return () => window.clearTimeout(t)
-  }, [])
+  }, [isAuthenticated])
 
   if (!show) return null
 

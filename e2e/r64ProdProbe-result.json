@@ -1,0 +1,298 @@
+{
+  "at": "2026-11-03T11:36:28.181Z",
+  "checks": [
+    {
+      "label": "print_jobs_recent",
+      "status": 200,
+      "rows": [
+        {
+          "id": "pj-BMB-20261101-548-kitchen_ticket",
+          "order_number": "BMB-20261101-548",
+          "job_type": "kitchen_ticket",
+          "status": "sent",
+          "printer_id": null,
+          "attempts": 1,
+          "last_error": null,
+          "requested_at": "2026-11-02T00:43:17.570606+00:00",
+          "printed_at": null
+        },
+        {
+          "id": "pj-BMB-20261101-170-kitchen_ticket",
+          "order_number": "BMB-20261101-170",
+          "job_type": "kitchen_ticket",
+          "status": "sent",
+          "printer_id": null,
+          "attempts": 1,
+          "last_error": null,
+          "requested_at": "2026-11-01T10:10:11.211268+00:00",
+          "printed_at": null
+        },
+        {
+          "id": "pj-BMB-20261101-170-receipt",
+          "order_number": "BMB-20261101-170",
+          "job_type": "receipt",
+          "status": "sent",
+          "printer_id": null,
+          "attempts": 1,
+          "last_error": null,
+          "requested_at": "2026-11-01T09:53:41.240136+00:00",
+          "printed_at": null
+        },
+        {
+          "id": "pj-BMB-20261101-548-receipt",
+          "order_number": "BMB-20261101-548",
+          "job_type": "receipt",
+          "status": "sent",
+          "printer_id": null,
+          "attempts": 1,
+          "last_error": null,
+          "requested_at": "2026-11-01T09:46:14.287931+00:00",
+          "printed_at": null
+        },
+        {
+          "id": "pj-BMB-20261101-218-kitchen_ticket",
+          "order_number": "BMB-20261101-218",
+          "job_type": "kitchen_ticket",
+          "status": "sent",
+          "printer_id": null,
+          "attempts": 1,
+          "last_error": null,
+          "requested_at": "2026-11-01T04:09:24.359653+00:00",
+          "printed_at": null
+        },
+        {
+          "id": "pj-BMB-20261101-218-receipt",
+          "order_number": "BMB-20261101-218",
+          "job_type": "receipt",
+          "status": "requested",
+          "printer_id": null,
+          "attempts": 0,
+          "last_error": null,
+          "requested_at": "2026-11-01T04:08:31.820949+00:00",
+          "printed_at": null
+        },
+        {
+          "id": "pj-BMB-20261101-782-kitchen_ticket",
+          "order_number": "BMB-20261101-782",
+          "job_type": "kitchen_ticket",
+          "status": "requested",
+          "printer_id": null,
+          "attempts": 0,
+          "last_error": null,
+          "requested_at": "2026-11-01T01:24:20.529663+00:00",
+          "printed_at": null
+        },
+        {
+          "id": "pj-BMB-20261101-782-receipt",
+          "order_number": "BMB-20261101-782",
+          "job_type": "receipt",
+          "status": "sent",
+          "printer_id": null,
+          "attempts": 1,
+          "last_error": null,
+          "requested_at": "2026-11-01T01:23:50.989162+00:00",
+          "printed_at": null
+        }
+      ]
+    },
+    {
+      "label": "notifications_recent",
+      "status": 200,
+      "rows": [
+        {
+          "id": "notif-1793618171885-61c04",
+          "customer_id": "ffd42918-e5c8-4d3b-89c4-8dc8b70c0383",
+          "title": "ออเดอร์ถูกยกเลิก",
+          "message": "#BMB-20261101-548 — ออเดอร์ถูกยกเลิก",
+          "is_read": true,
+          "notification_type": "ORDER_CANCELLED",
+          "category": "Transactional",
+          "created_at": "2026-11-02T11:16:11.694649+00:00"
+        },
+        {
+          "id": "evt-ord-BMB-20261101-548-confirmed",
+          "customer_id": "ffd42918-e5c8-4d3b-89c4-8dc8b70c0383",
+          "title": "ยืนยันออเดอร์",
+          "message": "ออเดอร์ BMB-20261101-548 ได้รับการยืนยันแล้ว",
+          "is_read": true,
+          "notification_type": "ORDER_CONFIRMED",
+          "category": "Transactional",
+          "created_at": "2026-11-02T01:54:46.609563+00:00"
+        },
+        {
+          "id": "notif-1793580197707-0cc4e",
+          "customer_id": "ffd42918-e5c8-4d3b-89c4-8dc8b70c0383",
+          "title": "ยืนยันออเดอร์แล้ว",
+          "message": "#BMB-20261101-548 — ยืนยันออเดอร์แล้ว",
+          "is_read": true,
+          "notification_type": "ORDER_CONFIRMED",
+          "category": "Transactional",
+          "created_at": "2026-11-02T00:43:17.570606+00:00"
+        },
+        {
+          "id": "auto-stale-BMB-20261101-548",
+          "customer_id": null,
+          "title": "ออเดอร์ค้าง pending",
+          "message": "ออเดอร์ BMB-20261101-548 (ลูกค้า: Phananee porn) ยัง pending นานเกิน 120 นาที — ตรวจสอบที่ห้องครัว/แอดมิน",
+          "is_read": true,
+          "notification_type": "automation",
+          "category": "Transactional",
+          "created_at": "2026-11-01T14:24:20.308285+00:00"
+        },
+        {
+          "id": "evt-ord-BMB-20261101-548-pending",
+          "customer_id": "ffd42918-e5c8-4d3b-89c4-8dc8b70c0383",
+          "title": "รับออเดอร์แล้ว",
+          "message": "ออเดอร์ BMB-20261101-548 ของคุณได้รับเรียบร้อยแล้ว",
+          "is_read": true,
+          "notification_type": "ORDER_CREATED",
+          "category": "Transactional",
+          "created_at": "2026-11-01T14:24:07.47976+00:00"
+        },
+        {
+          "id": "evt-ord-BMB-20261101-170-pending",
+          "customer_id": "ffd42918-e5c8-4d3b-89c4-8dc8b70c0383",
+          "title": "รับออเดอร์แล้ว",
+          "message": "ออเดอร์ BMB-20261101-170 ของคุณได้รับเรียบร้อยแล้ว",
+          "is_read": true,
+          "notification_type": "ORDER_CREATED",
+          "category": "Transactional",
+          "created_at": "2026-11-01T14:24:06.155928+00:00"
+        },
+        {
+          "id": "evt-ord-BMB-20261101-170-confirmed",
+          "customer_id": "ffd42918-e5c8-4d3b-89c4-8dc8b70c0383",
+          "title": "ยืนยันออเดอร์",
+          "message": "ออเดอร์ BMB-20261101-170 ได้รับการยืนยันแล้ว",
+          "is_read": true,
+          "notification_type": "ORDER_CONFIRMED",
+          "category": "Transactional",
+          "created_at": "2026-11-01T14:24:05.716306+00:00"
+        },
+        {
+          "id": "evt-ord-BMB-20261101-170-preparing",
+          "customer_id": "ffd42918-e5c8-4d3b-89c4-8dc8b70c0383",
+          "title": "กำลังเตรียมอาหาร",
+          "message": "ออเดอร์ BMB-20261101-170 กำลังเตรียมอาหาร",
+          "is_read": true,
+          "notification_type": "ORDER_PREPARING",
+          "category": "Transactional",
+          "created_at": "2026-11-01T14:24:04.488066+00:00"
+        }
+      ]
+    },
+    {
+      "label": "outbox_recent",
+      "status": 200,
+      "rows": [
+        {
+          "event_key": "ntf-notif-1793618171885-61c04",
+          "status": "mock",
+          "channel": "line",
+          "attempts": 0,
+          "last_error": null,
+          "created_at": "2026-11-02T11:20:01.818038+00:00"
+        },
+        {
+          "event_key": "ntf-evt-ord-BMB-20261101-548-confirmed",
+          "status": "mock",
+          "channel": "line",
+          "attempts": 0,
+          "last_error": null,
+          "created_at": "2026-11-02T01:55:02.564128+00:00"
+        },
+        {
+          "event_key": "ntf-notif-1793580197707-0cc4e",
+          "status": "mock",
+          "channel": "line",
+          "attempts": 0,
+          "last_error": null,
+          "created_at": "2026-11-02T00:45:05.222773+00:00"
+        },
+        {
+          "event_key": "ntf-evt-ord-BMB-20261101-170-ready_for_dispatch",
+          "status": "mock",
+          "channel": "line",
+          "attempts": 0,
+          "last_error": null,
+          "created_at": "2026-11-01T14:25:02.580447+00:00"
+        },
+        {
+          "event_key": "ntf-evt-ord-BMB-20261101-170-preparing",
+          "status": "mock",
+          "channel": "line",
+          "attempts": 0,
+          "last_error": null,
+          "created_at": "2026-11-01T14:25:02.480496+00:00"
+        },
+        {
+          "event_key": "ntf-evt-ord-BMB-20261101-170-confirmed",
+          "status": "mock",
+          "channel": "line",
+          "attempts": 0,
+          "last_error": null,
+          "created_at": "2026-11-01T14:25:02.376313+00:00"
+        },
+        {
+          "event_key": "ntf-evt-ord-BMB-20261101-170-pending",
+          "status": "mock",
+          "channel": "line",
+          "attempts": 0,
+          "last_error": null,
+          "created_at": "2026-11-01T14:25:02.288533+00:00"
+        },
+        {
+          "event_key": "ntf-evt-ord-BMB-20261101-548-pending",
+          "status": "mock",
+          "channel": "line",
+          "attempts": 0,
+          "last_error": null,
+          "created_at": "2026-11-01T14:25:02.14197+00:00"
+        }
+      ]
+    },
+    {
+      "label": "push_subscriptions_count",
+      "status": 200
+    },
+    {
+      "label": "promotions_recent",
+      "status": 200,
+      "rows": [
+        {
+          "id": "promo-1793702768692-899",
+          "name": "HALLOWEEN FESTIVAL",
+          "is_active": true,
+          "is_banner": true,
+          "banner_image": "https://ivkdfognyiwjcmrhcnwz.supabase.co/storage/v1/object/public/bmb-images/uploads/1793702736595-Hallow.webp",
+          "banner_mascot": "/assets/mascot/bite_recommend.webp",
+          "start_date": "2026-11-03",
+          "end_date": "2026-11-04",
+          "created_at": "2026-11-03T10:46:08.691+00:00"
+        },
+        {
+          "id": "promo-welcome-banner",
+          "name": "Welcome special - 10% off",
+          "is_active": true,
+          "is_banner": true,
+          "banner_image": null,
+          "banner_mascot": null,
+          "start_date": null,
+          "end_date": null,
+          "created_at": "2026-09-20T03:51:47.597506+00:00"
+        }
+      ]
+    },
+    {
+      "label": "printers",
+      "status": 404,
+      "rows": {
+        "code": "PGRST205",
+        "details": null,
+        "hint": "Perhaps you meant the table 'public.drivers'",
+        "message": "Could not find the table 'public.printers' in the schema cache"
+      }
+    }
+  ],
+  "pushSubscriptionCount": 2
+}

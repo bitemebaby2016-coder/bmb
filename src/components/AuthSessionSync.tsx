@@ -42,6 +42,18 @@ export function AuthSessionSync() {
         const u = user
         // defer: supabase.auth ยังถือ lock อยู่ใน callback (ดูหัวไฟล์)
         setTimeout(() => useAuthStore.getState().syncFromAuthUser(u), 0)
+        // R64 (Owner: "PWA ไม่มีเตือน"): permission ถูกกดไว้ก่อนล็อกอิน (เช่น บนหน้า /login)
+        // = subscription ยังไม่เคย register ด้วย JWT → หลังเข้าสู่ระบบ register ซ้ำเสมอ
+        // (enablePush = idempotent — upsert ตาม endpoint ไม่สร้างแถวซ้ำ · เงียบทุกกรณี)
+        setTimeout(() => {
+          try {
+            if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+              void import('@/lib/pushService')
+                .then((m) => m.enablePush('customer'))
+                .catch(() => { /* push ไม่ใช่เงื่อนไขการใช้งาน */ })
+            }
+          } catch { /* */ }
+        }, 300)
       }
       if (action.refreshRole) {
         setTimeout(() => void useAuthStore.getState().refreshRole(), 0)

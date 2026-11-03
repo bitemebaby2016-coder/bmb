@@ -86,6 +86,23 @@ export function pickVisibleBannerPromos(
 // AI-CLEANUP: mock banner asset removed — banners without a creative render a
 // branded CSS gradient placeholder instead (dynamic promo data from DB only).
 
+/** R64 (Owner 2026-11-03: "รูปไม่เข้ามาที่โฟลตติ้ง"): สลับชนิด Announcement ↔ Promo —
+ *  เดิม `[...,announcements, ...promos]` + slice(0,2) = ประกาศ 2 ใบเต็มโควตา → โปรโมชั่น
+ *  (รวมรูปที่แอดมินอัปโหลด) ถูกเบียดออกจนไม่เห็นเลย · ใหม่ = a0,p0,a1,p1… (ใหม่สุดทั้งคู่
+ *  แสดงคู่กันเสมอ · cap 2 + dismissed = เดิม) */
+export function mergeBannerFeed(
+  announcements: FloatingBannerPromo[],
+  promos: FloatingBannerPromo[],
+): FloatingBannerPromo[] {
+  const out: FloatingBannerPromo[] = []
+  const n = Math.max(announcements.length, promos.length)
+  for (let i = 0; i < n; i++) {
+    if (announcements[i]) out.push(announcements[i])
+    if (promos[i]) out.push(promos[i])
+  }
+  return out
+}
+
 export function FloatingAdBanners({ promos, notice }: { promos: FloatingBannerPromo[]; notice?: string }) {
   const [dismissedIds, setDismissedIds] = useState<Set<string>>(new Set())
   // R55 (Owner 2026-11-02): ภาพโปรโมตที่แอดมินเจน/เลือกไว้ใน AI Studio (business_settings.floating_ad_image)
@@ -161,8 +178,9 @@ export function FloatingAdBanners({ promos, notice }: { promos: FloatingBannerPr
     return () => { alive = false }
   }, [])
 
-  // ประกาศ (ใหม่ก่อน) + โปรโมชั่น → ตัด dismissed → สูงสุด 2 (นับรวม)
-  const merged = [...announcements, ...(promos || [])]
+  // ประกาศ (ใหม่ก่อน) + โปรโมชั่น → สลับชนิด a0,p0,a1,p1… (R64: ประกาศห้ามเต็มโควตา 2 ใบ
+  // จนโปรโมชั่น/รูปที่แอดมินอัปโหลดไม่เห็นเลย) → ตัด dismissed → สูงสุด 2 (นับรวม)
+  const merged = mergeBannerFeed(announcements, promos || [])
   // R58: ลำดับโพสใน merged (ก่อนตัด dismissed) = ตำแหน่งไว้เลือกรูปมาสคอต/มุม/ภาพอัลบั้ม
   // → การ์ดติดกันได้มาสคนคนละตัวและมุมคนละมุม (Owner: "สลับไม่ซ้ำกัน")
   const positionOf = new Map(merged.map((p, i) => [p.id, i]))

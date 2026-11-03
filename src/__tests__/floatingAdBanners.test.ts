@@ -4,7 +4,7 @@
 // ============================================
 
 import { describe, it, expect, beforeEach } from 'vitest'
-import { pickVisibleBannerPromos, type FloatingBannerPromo } from '@/components/home/FloatingAdBanners'
+import { pickVisibleBannerPromos, mergeBannerFeed, type FloatingBannerPromo } from '@/components/home/FloatingAdBanners'
 
 const p = (id: string): FloatingBannerPromo => ({ id, title: `Promo ${id}` })
 
@@ -41,5 +41,27 @@ describe('pickVisibleBannerPromos — D03', () => {
     expect(out).toHaveLength(2)
     expect(out.map((x) => x.id)).toEqual(['a', 'b'])
     expect(pickVisibleBannerPromos([], new Set())).toEqual([])
+  })
+})
+
+// R64 (Owner: "รูปไม่เข้ามาที่โฟลตติ้ง"): ประกาศ 2 ใบห้ามเต็มโควตาจนโปรโมชั่นไม่เห็น
+describe('R64 · mergeBannerFeed — สลับชนิด ประกาศ ↔ โปรโมชั่น (promo ได้เห็นเสมอ)', () => {
+  it('a0,p0,a1,p1 — slice(2) หลัง merge = ประกาศใหม่สุด + โปรโมชั่นใหม่สุด คู่กัน', () => {
+    const ann = [p('ann1'), p('ann2')]
+    const promo = [p('hal'), p('welcome')]
+    const merged = mergeBannerFeed(ann, promo)
+    expect(merged.map((x) => x.id)).toEqual(['ann1', 'hal', 'ann2', 'welcome'])
+    // เดิม (announcements รวมก้อน) = ['ann1','ann2'] → promo หายทั้งคู่ — ตอนนี้ promo เข้าคิว
+    expect(pickVisibleBannerPromos(merged, new Set()).map((x) => x.id)).toEqual(['ann1', 'hal'])
+  })
+  it('ฝั่งเดียวหมด = คงลำดับเดิม · ฝั่งว่าง = ใช้ของอีกฝั่งล้วน', () => {
+    expect(mergeBannerFeed([p('a1'), p('a2')], []).map((x) => x.id)).toEqual(['a1', 'a2'])
+    expect(mergeBannerFeed([], [p('p1'), p('p2')]).map((x) => x.id)).toEqual(['p1', 'p2'])
+    expect(mergeBannerFeed([], [])).toEqual([])
+  })
+  it('promo โดน dismiss = ประกาศถัดไปแทรกแทน (ไม่ทิ้งช่อง)', () => {
+    const merged = mergeBannerFeed([p('ann1')], [p('hal')])
+    const visible = pickVisibleBannerPromos(merged, new Set(['hal']))
+    expect(visible.map((x) => x.id)).toEqual(['ann1'])
   })
 })

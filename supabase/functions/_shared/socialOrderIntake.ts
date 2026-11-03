@@ -111,6 +111,28 @@ export function semanticOrderExtract(raw: unknown): OrderExtractCheck {
   }
   return { ok: true, value: out }
 }
+// ---------- R64 (Owner: "สรุปผิดเมนู — ใช้เฉพาะ MENU ของโพสต์นี้", deferred C-6 #1 เปิดทำ) ----------
+// โพสต์ต้นทางระบุเมนู → จำกัดตัวเลือกจับคู่ + คำสั่ง extractor ให้ตอบเฉพาะเมนูนั้น
+// (คอมเมนต์พิมพ์เมนูนอกโพสต์ = unmatched → ระบบถาม ห้ามเดาเมนูอื่นแทน)
+// โพสต์ไม่ระบุเมนูไหนเลย / ดึงข้อความไม่ได้ = คงพฤติกรรมเดิม (catalog กว้าง — zero-fake ไม่ตัดช่องทางสั่ง)
+
+/** pure — คัด catalog ให้เหลือเฉพาะเมนูที่ปรากฏในข้อความโพสต์ต้นทาง + บรรทัดกติกาสำหรับ extractor */
+export function scopeCatalogToPost<T extends { name: string }>(
+  catalog: T[],
+  postMessage: string,
+): { allowed: T[]; scopeLine: string } {
+  const norm = (s: string) => s.toLowerCase().replace(/\s+/g, '')
+  const postNorm = norm(String(postMessage || ''))
+  if (!postNorm) return { allowed: catalog, scopeLine: '' }
+  const allowed = catalog.filter((p) => p && typeof p.name === 'string' && p.name && postNorm.includes(norm(p.name)))
+  if (allowed.length === 0) return { allowed: catalog, scopeLine: '' }
+  const scopeLine =
+    '\nกติกาเฉพาะคอมเมนต์นี้: เมนูที่สั่งได้มีเฉพาะในโพสต์ต้นทาง — ' +
+    allowed.map((p) => p.name).join(' · ') +
+    ' (ใช้เฉพาะเมนูเหล่านี้ ห้ามพิมพ์/เดาเมนูอื่นนอกเหนือจากนี้)'
+  return { allowed, scopeLine }
+}
+
 // ---------- Catalog matching (real products only — ห้ามเดาสินค้าแทนลูกค้า) ----------
 
 export interface CatalogProduct {
