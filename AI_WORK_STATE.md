@@ -22,12 +22,12 @@
 > - ✅ **PHASE 7 — git closure:** commit **`b1a3b92`** (131 files = 99R+7M+25A · stage เฉพาะ path · `git diff --cached` ตรวจแล้ว · **SECRET_HITS=0** `r62PreCommit.cjs`) · **push แล้ว** `22e2b1b..b1a3b92` · HEAD == origin/main · stash `local-edits-before-sync-2026-09-21` ยังอยู่ · CI ของ `b1a3b92` probe ครั้งเดียว = **CI #734 in_progress** (ห้าม poll → ยืน success รอบถัด)
 > - ✅ **PHASE 8 — Owner test pack ฉบับเดียว + closure report:** `BMB_PRODUCTION_TEST_PACK.md` += **§MAP (old→new Test ID) + §RG (role guide ฉบับเต็ม)** (94KB→132KB) · role guide MOVE → `docs/archive/` (**รวม 100 ไฟล์ MOVE · 0 DELETE แล้ว**) · pointer fix 14 บรรทัดใน kept docs (`r62PtrFix.cjs` · history ใน AI_WORK_STATE/changelog = ไม่ย้อนแก้ตามกติกา) · **`docs/BMB_WHOLE_FINAL_PRODUCTION_CLOSURE_REPORT.md` = สร้างแล้ว** (§2 บอกชัดว่ายังไม่เสร็จอะไร)
 > - ⏭️ **NEXT EXACT ACTION (แชทหน้า):**
->   1. **ยืนยัน CI ของ `b1a3b92`** = success (probe ครั้งเดียว · CI #734 + Contract #308 — ถ้า FAIL = อ่าน log → แก้ → gates → commit ใหม่)
+>   1. **ยืนยัน CI ของ 2 commits ปิดงาน** (probe ครั้งเดียวต่อ SHA · ห้าม poll): **`b1a3b92`** = CI #734 + Contract #308 · **`b900c61` (HEAD ล่าสุด · push `b1a3b92..b900c61` แล้ว)** = Contract #309 in_progress ณ 06:06Z — ตอน probe = **ไม่มี run แดง** · ถ้า FAIL = อ่าน log → แก้ → gates → commit ใหม่
 >   2. **vitest full รอบปิด (หลัง PHASE 8 merge/pointer fixes)** = ต้อง 202/2005 0 fail (`node e2e/r62tail.cjs e2e/r62_vitest_full.log 12`)
 >   3. **lint รอบปิด** หลัง doc ใหม่ (closure report + pointer fix) = `npm run lint` → OK
 >   4. commit+push รอบ PHASE 8 (เฉพาะ path · ตรวจ `git diff --cached` · secret scan ด้วย `e2e/r62PreCommit.cjs`)
 >   5. **ส่งงาน Owner:** ตอบ **C-1..C-6** (`docs/BMB_REQUIREMENT_RECONCILIATION.md` §3) + รัน `docs/BMB_PRODUCTION_TEST_PACK.md` (§0 → §MAP → ขั้น A..K → §RG §16 เกณฑ์ปิด)
-> - ⚠️ **กติกาคงเหลือ:** ห้าม `git add -A` · MOVE ห้าม DELETE · conflict = รายงานห้ามเงียบ · ห้ามแตะ business rules/migrations/secrets โดยไม่ขอ Owner · **ห้ามประกาศ COMPLETE/PRODUCTION READY จนกว่า §RG §16 ครบ + evidence ทุกข้อ** · SHA ปัจจุบัน = `b1a3b92` (โค้ดเปลี่ยน = บันทึกใหม่ + recheck)
+> - ⚠️ **กติกาคงเหลือ:** ห้าม `git add -A` · MOVE ห้าม DELETE · conflict = รายงานห้ามเงียบ · ห้ามแตะ business rules/migrations/secrets โดยไม่ขอ Owner · **ห้ามประกาศ COMPLETE/PRODUCTION READY จนกว่า §RG §16 ครบ + evidence ทุกข้อ** · SHA ปัจจุบัน = **`b900c61`** (HEAD · == origin/main · โค้ดเปลี่ยน = บันทึกใหม่ + recheck)
 > - 🧭 **ยังไม่ได้ทำ/รอ Owner:** C-1..C-6 · runtime tests อุปกรณ์/บัญชีจริงทั้งหมด · CI `b1a3b92` · backlog C-6 (Social AI rule/cart re-add/review UI/ประกาศ/theater seed/PSID-LINE)
 > 
 > ## 🟢 สถานะปิดเซสชันก่อนหน้า — 2026-11-03 (R62 · PHASE 0 เท่านั้น — ฉบับเต็มไว้อ้างอิง)
