@@ -5,6 +5,9 @@
 // สร้างแจ้งเตือนตะกร้าทิ้ง 15-30 นาทีได้ — TELEMETRY เท่านั้น:
 //   * ไม่แตะราคา/คูปอง/ออเดอร์ · ไม่ blocking · error = เงียบ (ไม่ toast ขัดใจช้อปปิ้ง)
 //   * throttle 60 วินาที/ครั้ง · ตะกร้าว่าง = mark converted (หยุดสแกน)
+//   * GUEST = ไม่ยิง (R63): m180 ไม่มี GRANT/RLS ให้ anon INSERT → ทุกครั้ง = 401 (42501)
+//     (พิสูจน์จริง: e2e/r63Cart401Probe.cjs → anon=401 · admin/auth=201) · dispatcher ก็
+//     "guest = skip ไม่แกล้งยิง" อยู่แล้ว → telemetry นี้มีไว้สำหรับลูกค้าที่ล็อกอินเท่านั้น
 // ============================================
 
 import { useCartStore } from '@/store/cartStore'
@@ -31,8 +34,11 @@ export async function syncCartSessionNow(): Promise<void> {
     const count = state.items.reduce((s, i) => s + i.quantity, 0)
     const { supabase } = await import('./supabase')
     const uid = (await supabase.auth.getSession()).data.session?.user?.id ?? null
+    // R63: guest ไม่มีสิทธิ์เขียน (m180 = TO authenticated เท่านั้น) → ข้ามก่อน upsert
+    // เพื่อไม่ให้ console ฟ้อง 401 ทุกครั้งที่เปิดหน้าโดยยังไม่ล็อกอิน
+    if (!uid) return
     let customerId: string | null = null
-    if (uid) {
+    {
       const { data } = await supabase.from('customers').select('id').eq('user_id', uid).maybeSingle()
       customerId = (data as { id?: string } | null)?.id ?? null
     }

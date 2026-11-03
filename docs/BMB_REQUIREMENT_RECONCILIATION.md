@@ -147,6 +147,19 @@
 | **C-5** | **Stash `local-edits-before-sync-2026-09-21` (9 ไฟล์ +4291/−499 · README/docs/e2e/sql-contract/m020)** | ยัง PRESERVE อยู่ · เจ้าของ/ชะตากรรมไม่ทราบ | ยืนยัน: ปล่อยทิ้งไว้ / แตกออกมาตรวจ / ลบ (ห้ามแตะจนกว่าจะสั่ง) |
 | **C-6** | **Backlog ที่ยังไม่ได้แตะ (ไม่ใช่ regression — ของเดิมค้าง)** | ① Social AI rule "ใช้เฉพาะ MENU ของโพสต์นี้" ② cart re-add 700ms (R61 แก้ decode แล้ว — เคสยังเจอไหมต้อง Owner ยืนยัน) ④ review submit UI ⑤ ประกาศ list ใน `/promotions` ⑥ theater copy seed · PSID/LINE | เลือกว่ารอบ closure นี้ปิดข้อไหนบ้าง หรือ defer ทั้งหมดเป็นงานหลังเปิดร้าน (บันทึกเป็น DEFERRED อย่างเป็นทางการ) |
 
+### §3.1 OWNER DECISIONS — มติ 2026-11-03 (ตอบครบ C-1..C-6 · ถือเป็น requirement ที่ผูกทุกฝั่ง)
+
+> บันทึกตามคำสั่ง Owner verbatim — **ห้ามตีความขยาย/ห้ามเงียบ** · เงื่อนไขทุกข้อ = checklist ที่ AI ต้องทำให้ครบก่อนปิดข้อนั้น
+
+| # | มติ Owner | เงื่อนไข / ข้อบังคับ | สถานะ |
+|---|---|---|---|
+| **C-1** | **อนุมัติคงว่างแบบมีเงื่อนไข** — เลือกให้ `menu_rules`/`stop_conditions` คงว่างตามเดิม ใช้ค่าหลัก `window`/`cooldown`/`frequency`/`content_mix` · เหตุผล: ไม่สร้างกฎเพิ่มโดยไม่มีความต้องการทางธุรกิจ · ค่าหลักมีอยู่แล้วตามหลักฐาน · การปล่อยว่าง = ระบบใช้ fallback ที่กำหนดไว้จริง ไม่ใช่ขาด configuration | ① ตรวจโค้ดว่า empty configuration ถูกจัดการอย่างไร ② ทดสอบว่าไม่ทำให้ระบบเลือกเมนูผิด/หยุดทำงาน ③ บันทึกความหมายของ empty configuration ในเอกสาร ④ ปิด L-12 ได้ | **DECIDED** → เงื่อนไข = PHASE 3 |
+| **C-2** | **อนุมัติขอบเขตแบบควบคุม** — ยอมรับขอบเขตโค้ดปัจจุบัน แต่เรียกความสามารถให้ตรงความจริง: ระบบทำงานอัตโนมัติในส่วนที่มีอยู่ (เลือกเวลา + จัดตารางตามกฎ) · **Auto-approve = ได้เฉพาะผ่านปุ่มอนุมัติตามกฎ** · **ห้าม AI อนุมัติเนื้อหาเอง** · **ห้ามเพิ่ม Meta publish/write path โดยพลการ** · การเผยแพร่ต้องผ่านกระบวนการอนุมัติที่มีอยู่ | **Full Auto-publishing: อนุมัติหลังจาก Owner approval** — ตอนนี้แมนนวลทำได้แล้ว · Full auto-publish รูปแบบเต็ม = ให้ Owner approval และเพิ่ม security/permission gate ที่จำเป็นตามหลักการก่อน ค่อยทำ | **DECIDED** = scope คงเดิม · งานเต็มรูปแบบ = DEFERRED ถึง Owner approval |
+| **C-3** | **อนุมัติให้ดำเนินการ** = Rebuild + Deploy + Production Retest — เหตุผล: ตั้ง API key ใน Cloudflare อย่างเดียวไม่ยืนยันว่า build ล่าสุดเอา key ไปใช้แล้ว | ตรวจ Git และ Build configuration **ก่อน** → Rebuild → Deploy → ทดสอบ Production ทั้ง 3 ฝั่ง (ลูกค้า/แอดมิน/ไรเดอร์) | **DECIDED** → PHASE 4 |
+| **C-4** | **อนุมัติรวม PHASE 8** — **ห้ามตัดรายการทดสอบออก**เพียงเพราะ AI ไม่มีอุปกรณ์/บัญชีจริง · ต้องเก็บรายการทั้งหมด: FB จริง T-A1/A2/A3/A6 · Android T-A4 · iOS T-A5 · เครื่องพิมพ์จริง T-D/T-E · Payment slip/POD/Push/SMS = CAP-10/11/13/14 | Developer เตรียมขั้นตอนทดสอบ + ข้อมูลที่จำเป็นให้ครบก่อนส่ง Owner · **Owner เป็นผู้ทดสอบจริงและส่งผลกลับ — ห้าม AI อ้างว่าผ่านแทน Owner** | **DECIDED** → PHASE 8 = เตรียมอย่างเดียว |
+| **C-5** | **PRESERVE stash** `local-edits-before-sync-2026-09-21` — เมื่อปิด Closure หลักแล้ว จึงแยกตรวจ Stash เป็นงานเฉพาะ | ต้องตรวจเนื้อหาและผลกระทบ **ก่อน**ตัดสินใจ (ยังห้ามแตะจนกว่าจะถึงงานนั้น) | **DECIDED** = PRESERVE → งานเฉพาะหลัง closure |
+| **C-6** | **Deferred ทั้ง 6 รายการออกจาก Closure** → ลงทะเบียนเป็น Backlog พร้อมสถานะ **DEFERRED อย่างเป็นทางการ** — **ไม่ใช่ COMPLETE และไม่ใช่ FIXED** | เมื่อเปิดร้านและผ่าน Production Acceptance แล้ว จึงจัดลำดับความสำคัญใหม่ | **DEFERRED** ทั้ง 6: Social AI rule · cart re-add 700ms · review submit UI · ประกาศ list `/promotions` · theater copy seed · PSID/LINE |
+
 > **ไม่พบ CONFLICT ฝั่ง business rules:** pricing/cutoff/quota/discount-cap/order-state ในโค้ดกับ canonical
 > (BMB_MASTER_STATUS CAP matrix) ตรงกัน — 15% cap · same-day no-cutoff · two-cutoffs = มี migration + test ตรงกันทุกฝั่ง
 
@@ -167,3 +180,42 @@
 
 > **ยังไม่ประกาศ COMPLETE/PRODUCTION READY** — evidence ระดับ RUNTIME หลายข้อ (C-3/C-4) ยังไม่มี
 > · PHASE 3–8 ยังไม่ได้ทำ ณ เวลาเขียนเอกสารนี้
+
+---
+
+## §5 OWNER DIRECTIVES ใหม่ (2026-11-03 รอบมติ — นอกเหนือจาก C-1..C-6)
+
+| # | คำสั่ง | ขอบเขต | สถานะ |
+|---|---|---|---|
+| **IMG-1** | **ทุกภาพที่ระบบเอามาใช้ = ลดขนาดอัตโนมัติให้เหมาะกับเว็บ** · **ภาพที่ทำไปแล้วก็ต้องแก้ด้วย** (ภาพเก่าที่อัปโหลด/เจนไว้แล้วต้องถูกลดขนาดด้วย) | ทุก path ที่ภาพเข้าระบบ (อัปโหลดแอดมิน · image-gen EF · storage เดิม) | **NEW REQ** → ทำในรอบนี้ |
+| **PHASE-ORDER** | ลำดับงานที่สั่ง: ① PHASE 2 Owner Decision (ข้อนี้เอง) → ② PHASE 3 CAP-22 Closure → ③ PHASE 4 CAP-18 Maps → ④ PHASE 5–7 Remaining Closure (แยก IMPLEMENTED/DEPLOYED/RUNTIME VERIFIED/MISSING — **ไม่ถือว่า C-1..C-6 ครอบคลุมงานทั้งหมดของ BMB**) → ⑤ PHASE 8 Owner Production Test Pack (รวม runtime-bound tests ฉบับเดียว + เตรียมขั้นตอน/หลักฐานให้ Owner ทำได้จริง) → ⑥ FINAL CLOSURE (หลัง Owner ทดสอบ: แก้ Failed → regression → ทำความสะอาดเอกสาร → git → commit/push → HEAD = origin/main) | ทั้งโครงการ | **IN PROGRESS** |
+| **CONSOLE-1** | ผลตรวจ Console หน้า `/shop` (ภาพแนบ Owner): **Driver `driver_login` 400 + `ERR_NOT_A_DRIVER` = ไม่แก้** (บัญชีแอดมินไม่มีแถว `drivers` — พฤติกรรมปกติตามการออกแบบ F-06 · Owner ยืนยันเอง) · **401 `?on_conflict=id` = ต้องแก้** → หาแหล่งที่มาแล้ว = `cart_sessions` guest upsert (m180 ไม่มี GRANT/policy ให้ anon) · **probe production** `e2e/r63Cart401Probe.cjs` = anon **401/42501 reproduces** · admin **201** → แก้ฝั่ง client = guest ไม่ยิง (ไม่แตะ security/migration) | console noise | **FIXED (R63)** |
+| **IMAGE-FLOAT-1** | รายงานผลทดสอบ: **ภาพ genie การตลาดขึ้น floating ได้** (FloatingAdBanners ภาพ+มาสคอตประกอบ) | R58 ① feature | **CONFIRMED by Owner test** |
+
+---
+
+## §6 PHASE 5–7 — REMAINING WORK LEDGER (ทั้งโครงการ · taxonomy ชัดเจน)
+
+> คำสั่ง Owner: "ตรวจสอบงานที่ยังไม่ปิดในโครงการทั้งหมด แยก IMPLEMENTED / DEPLOYED / RUNTIME VERIFIED / MISSING ให้ชัดเจน · **ไม่ถือว่า C-1..C-6 ครอบคลุมงานทั้งหมดของ BMB**"
+> สถานะ ณ 2026-11-03 (สรุปจาก §2 audit A–L + master backlog + test pack) — taxonomy: `IMPLEMENTED` (โค้ดมี) · `DEPLOYED` (apply/deploy มีหลักฐาน) · `RUNTIME VERIFIED` (ตรวจบน production แล้ว) · `MISSING/NOT RUN` · `DEFERRED` (มติ C-6) · `OWNER-ONLY`
+
+| งาน (นอกเหนือ C-1..C-6) | taxonomy | evidence / จุดตรวจ | ต่อไปใคร |
+|---|---|---|---|
+| Migration ledger/parity 183 | **DEPLOYED + RUNTIME VERIFIED** | `e2e/r56MigParity-result.json` ALL_PASS (live) | — |
+| CI ของ 3 commits ปิดงาน (`b1a3b92`/`b900c61`/`c3e5a4f` + HEAD รอบนี้) | **NOT RUN / รอ probe** | GitHub Actions REST (probe ครั้งเดียวต่อ SHA) | แชทถัดไป/Owner |
+| Runtime tests อุปกรณ์/บัญชีจริง (T-A* · T-D/T-E · CAP-10/11/13/14 · maps visual) | **NOT RUN (OWNER-ONLY)** | `BMB_PRODUCTION_TEST_PACK.md` §C4 map + §0 → §RG §16 | **Owner รันเอง** |
+| IMG-1: ภาพค้างใน `bmb-images` ย่อให้เสร็จ | **IN PROGRESS (รอบนี้)** | `e2e/r63ImageSweep-audit-*.json` + apply evidence | AI (รอบนี้) |
+| EF image-gen output size (เจนใหม่ = ใหญ่เท่าโมเดลคืนมา) | **IMPLEMENTED (ปัจจุบัน = ไม่มีการย่อฝั่ง EF)** | `image-gen/index.ts` ไม่ resize · audit dims บอกว่าต้องแก้ไหม | AI (ตัดสินจาก audit) |
+| SMS runtime (CAP-14) | **IMPLEMENTED + DEPLOYED · RUNTIME NOT RUN** | `smsTransport` tests + THSMS live 2026-10-07 (เก่า) · ขั้นใหม่ S-10 | Owner (S-10) |
+| Web push runtime (CAP-13) | **IMPLEMENTED · RUNTIME NOT RUN** | `pushTransport` tests · ขั้น S-7 | Owner |
+| D-1 (โต้ตอบบนเว็บ/BLK-6) · D-2 (โมเดล image-gen list) | **รอตัดสินใจ** (คนละชุดกับ C-1..C-6) | Test Pack §N.3 | Owner |
+| Quality ค้าง (as any ~222 · `location.reload` PromotionsPage · raw fetch Google key 5 จุด) | **IMPLEMENTED (known debt)** | QA review 2026-10-29 §3.8/3.9 | AI รอบถัด (ไม่ blocker) |
+| `onAuthStateChange` = 0 จุดใน src (QA N3 · P1) | **MISSING (ตาม QA)** | `BMB_QA_REVIEW_2026-10-29.md` | AI รอบถัด + Owner ยืนยัน scope |
+| Google Maps key = จำกัด HTTP referrer ใน Google Cloud | **OWNER-ONLY** | QA P1 — ทำในคอนโซล Google | Owner |
+| external providers (Grab/Lineman/Foodpanda) | **DEFERRED (ของเดิม · รอ credentials/closure)** | `delivery_policy.external_methods_enabled=[]` | Owner |
+| Backlog 6 ข้อ (Social AI rule · cart re-add · review submit · ประกาศ list · theater seed · PSID/LINE) | **DEFERRED (มติ C-6)** | §3.1 C-6 | หลังเปิดร้าน |
+| Stash `local-edits-before-sync-2026-09-21` | **PRESERVE (มติ C-5) = งานเฉพาะหลัง closure** | `git stash list` | AI งานเฉพาะ |
+| N2 (เทียบ `BMB_BACKEND_AI_PART_1` กับต้นฉบับ) · L-11 (LED = รอนิยาม) | **NOT STARTED / OWNER INPUT** | handoff 2026-10-30 | Owner/AI ตามมติ |
+| ผลทดสอบ Owner ทั้งหมด (N-A..N-G · RL-DEFECT · B2 · C7/C8 · §F..§L) | **OWNER-ONLY runtime** | test pack ทุก § | Owner |
+
+> **สรุปความจริง:** C-1..C-6 ตอบได้เฉพาะ *conflict ที่ขึ้น §3 เท่านั้น* — งานในตารางนี้ยังแยกสถานะชัดเจนว่าเหลืออะไร/ใครทำต่อ · **ห้ามตีความว่า "ครบ"**

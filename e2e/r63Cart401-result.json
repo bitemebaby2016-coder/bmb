@@ -1,0 +1,90 @@
+{
+  "date": "2026-11-03T07:08:05.462Z",
+  "target": "https://ivkdfognyiwjcmrhcnwz.supabase.co/rest/v1/cart_sessions",
+  "tests": [
+    {
+      "name": "anon-upsert-401-reproduced",
+      "pass": true,
+      "detail": "status=401 body={\"code\":\"42501\",\"details\":null,\"hint\":\"Grant the required privileges to the current role with: GRANT INSERT ON public.cart_sessions TO anon;\",\"message\":\"permiss"
+    },
+    {
+      "name": "admin-upsert-allowed",
+      "pass": true,
+      "detail": "status=201 body=null"
+    }
+  ],
+  "productionSample": {
+    "status": 200,
+    "rows": [
+      {
+        "id": "r63-probe-admin-1793689685462",
+        "status": "active",
+        "customer_id": null,
+        "updated_at": "2026-11-03T07:08:06.75+00:00"
+      },
+      {
+        "id": "csx-mvys499b-gawk14",
+        "status": "converted",
+        "customer_id": "dddf4b57-405f-4852-a985-76d8d52b1b72",
+        "updated_at": "2026-11-03T06:24:37.58+00:00"
+      },
+      {
+        "id": "csx-mw02vvpb-iz7hmh",
+        "status": "converted",
+        "customer_id": "d6c57b8d-93fa-46d8-9ac8-4d6d2ccbf974",
+        "updated_at": "2026-11-03T02:38:23.994+00:00"
+      },
+      {
+        "id": "csx-mw02kriu-37fka0",
+        "status": "converted",
+        "customer_id": "d6c57b8d-93fa-46d8-9ac8-4d6d2ccbf974",
+        "updated_at": "2026-11-03T02:29:46.098+00:00"
+      },
+      {
+        "id": "csx-mw02fdcp-6n72l9",
+        "status": "converted",
+        "customer_id": "d6c57b8d-93fa-46d8-9ac8-4d6d2ccbf974",
+        "updated_at": "2026-11-03T02:25:52.566+00:00"
+      },
+      {
+        "id": "csx-mw02c4w2-xhthe9",
+        "status": "converted",
+        "customer_id": "d6c57b8d-93fa-46d8-9ac8-4d6d2ccbf974",
+        "updated_at": "2026-11-03T02:23:20.919+00:00"
+      },
+      {
+        "id": "csx-mw029nwh-i1lsjl",
+        "status": "converted",
+        "customer_id": "d6c57b8d-93fa-46d8-9ac8-4d6d2ccbf974",
+        "updated_at": "2026-11-03T02:20:56.99+00:00"
+      },
+      {
+        "id": "csx-mw028hcp-o7cmko",
+        "status": "converted",
+        "customer_id": "d6c57b8d-93fa-46d8-9ac8-4d6d2ccbf974",
+        "updated_at": "2026-11-03T02:20:02.255+00:00"
+      },
+      {
+        "id": "csx-mw026r0n-cry77a",
+        "status": "converted",
+        "customer_id": "d6c57b8d-93fa-46d8-9ac8-4d6d2ccbf974",
+        "updated_at": "2026-11-03T02:18:42.388+00:00"
+      },
+      {
+        "id": "csx-mw0209dk-cqfisq",
+        "status": "converted",
+        "customer_id": "d6c57b8d-93fa-46d8-9ac8-4d6d2ccbf974",
+        "updated_at": "2026-11-03T02:13:38.584+00:00"
+      }
+    ]
+  },
+  "recentByStatus": {
+    "active": 1,
+    "converted": 9
+  },
+  "cleanup": {
+    "remaining": 0,
+    "adminUpsertStatus": "201"
+  },
+  "allPass": true
+}

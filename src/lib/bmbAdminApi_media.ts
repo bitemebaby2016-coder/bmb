@@ -37,10 +37,13 @@ export async function uploadMediaAsset(
   kind: MediaAssetRow['kind'],
   alt = '',
 ): Promise<MediaAssetRow | null> {
-  const path = `uploads/${Date.now()}-${sanitizeName(file.name)}`
+  // IMG-1 (Owner 2026-11-03): ทุกภาพที่ระบบเอามาใช้ = ย่ออัตโนมัติก่อนขึ้นคลัง
+  // (idempotent — ไฟล์ที่ย่อแล้ว/เล็กพอ = คืนเดิม · GIF/decode ไม่ได้ = zero-fake คืนเดิม)
+  const sized = await downscaleImageFile(file)
+  const path = `uploads/${Date.now()}-${sanitizeName(sized.name)}`
   const { data: up, error: upErr } = await supabase.storage
     .from(MEDIA_BUCKET)
-    .upload(path, file, { cacheControl: '3600', upsert: false })
+    .upload(path, sized, { cacheControl: '3600', upsert: false })
   if (upErr || !up) { console.error('[uploadMediaAsset] storage error:', upErr); return null }
 
   const { data: urlData } = supabase.storage.from(MEDIA_BUCKET).getPublicUrl(path)
@@ -303,14 +306,16 @@ export async function uploadRegisteredAsset(
   alt: string,
   opts: UploadAssetOptions = {},
 ): Promise<RegistryAssetRow | null> {
-  const v = validateImageFile(file)
+  // IMG-1: ย่อก่อน validate — รูปใหญ่ (เช่น 5.8MB เจน) จะผ่าน 5MB cap หลังย่อ (แบบ T-C3)
+  const sized = await downscaleImageFile(file)
+  const v = validateImageFile(sized)
   if (!v.ok) return null
   const { data: user } = await supabase.auth.getUser()
   const callerTenant = await getCallerTenantId()
-  const path = `uploads/${Date.now()}-${sanitizeName(file.name)}`
+  const path = `uploads/${Date.now()}-${sanitizeName(sized.name)}`
   const { data: up, error: upErr } = await supabase.storage
     .from(MEDIA_BUCKET)
-    .upload(path, file, { cacheControl: '3600', upsert: false })
+    .upload(path, sized, { cacheControl: '3600', upsert: false })
   if (upErr || !up) { console.error('[uploadRegisteredAsset] storage error:', upErr); return null }
   const { data: urlData } = supabase.storage.from(MEDIA_BUCKET).getPublicUrl(path)
   const id = `media-${Date.now()}-${Math.floor(Math.random() * 10000)}`

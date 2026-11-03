@@ -8,6 +8,7 @@
 // ============================================
 
 import { supabase } from './supabase'
+import { downscaleImageFile } from './bmbAdminApi_media'
 
 export const ADDRESS_PHOTO_BUCKET = 'address-photos'
 export const ADDRESS_PHOTO_MAX_BYTES = 10 * 1024 * 1024 // รับไม่เกิน 10MB
@@ -22,11 +23,13 @@ export interface AddressPhotoUpload {
 export async function uploadAddressPhoto(file: File, userTag: string): Promise<AddressPhotoUpload> {
   if (!file.type.startsWith('image/')) return { ok: false, error: 'ไฟล์ต้องเป็นรูปภาพ' }
   if (file.size > ADDRESS_PHOTO_MAX_BYTES) return { ok: false, error: 'รูปใหญ่เกิน 10MB — ลองถ่ายใหม่หรือย่อรูปก่อน' }
-  const safeName = (file.name || 'photo.jpg').replace(/[^\w.-]/g, '_').slice(-40)
+  // IMG-1: ย่ออัตโนมัติก่อนขึ้นคลัง — 1600px/q0.85 (พอให้ไรเดอร์อ่านบ้านเลขที่/ป้ายได้ชัด)
+  const sized = await downscaleImageFile(file, 1600, 0.85)
+  const safeName = (sized.name || 'photo.jpg').replace(/[^\w.-]/g, '_').slice(-40)
   const folder = String(userTag || 'guest').replace(/[^\w-]/g, '')
   const path = `${folder}/${Date.now()}-${safeName}`
-  const { error } = await supabase.storage.from(ADDRESS_PHOTO_BUCKET).upload(path, file, {
-    contentType: file.type || 'image/jpeg',
+  const { error } = await supabase.storage.from(ADDRESS_PHOTO_BUCKET).upload(path, sized, {
+    contentType: sized.type || 'image/jpeg',
     upsert: false,
   })
   if (error) {

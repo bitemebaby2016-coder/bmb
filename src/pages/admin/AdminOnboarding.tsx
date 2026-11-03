@@ -15,6 +15,7 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '@/lib/supabase'
 import { createTenant } from '@/lib/adminTenantApi'
+import { downscaleImageFile } from '@/lib/bmbAdminApi_media'
 import { showToast } from '@/components/ui/ToastContainer'
 
 /** slug จากร้าน (a-z0-9- · ไม่เกิน 40) — pure, export เพื่อให้ test เรียกตรง ๆ */
@@ -50,9 +51,11 @@ export function AdminOnboarding() {
   async function uploadLogo(): Promise<string> {
     if (!logoFile) return logoUrl.trim()
     try {
-      const ext = (logoFile.name.split('.').pop() || 'png').toLowerCase()
+      // IMG-1: ย่ออัตโนมัติก่อนขึ้นคลัง (โลโก้เล็กอยู่แล้ว = ส่วนใหญ่คืนไฟล์เดิม)
+      const sized = await downscaleImageFile(logoFile)
+      const ext = (sized.name.split('.').pop() || 'png').toLowerCase()
       const path = `brands/${finalSlug || 'store'}/logo-${Date.now()}.${ext}`
-      const { error: upErr } = await supabase.storage.from('bmb-images').upload(path, logoFile, { upsert: true })
+      const { error: upErr } = await supabase.storage.from('bmb-images').upload(path, sized, { upsert: true, contentType: sized.type || undefined })
       if (upErr) throw upErr
       const { data } = supabase.storage.from('bmb-images').getPublicUrl(path)
       return data?.publicUrl || logoUrl.trim()

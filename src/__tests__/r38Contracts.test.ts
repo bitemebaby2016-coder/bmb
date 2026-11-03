@@ -67,7 +67,10 @@ describe('R38 · AI Studio: browse ไฟล์รูปเมนู → ชุ�
     expect(marketingSrc).toContain('mk-browse-image')
     expect(marketingSrc).toContain('mk-browse-input')
     expect(marketingSrc).toContain('async function handleBrowseImage')
-    expect(marketingSrc).toContain("storage.from('bmb-images').upload(path, file")
+    // IMG-1 (Owner 2026-11-03 — requirement เปลี่ยน: ทุกภาพที่ระบบเอามาใช้ = ลดขนาดอัตโนมัติ):
+    // เดิม assert `.upload(path, file` (raw) → ตอนนี้บังคับย่อ ก่อน upload (เข้มขึ้น ไม่ใช่อ่อนลง)
+    expect(marketingSrc).toContain('const sized = await downscaleImageFile(file)')
+    expect(marketingSrc).toContain("storage.from('bmb-images').upload(path, sized")
     expect(marketingSrc).toContain('setImages((prev) => [...prev, url])')
     expect(marketingSrc).toContain('type="file"')
     expect(marketingSrc).toContain('accept="image/*"')

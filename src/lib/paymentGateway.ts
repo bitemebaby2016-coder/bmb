@@ -26,6 +26,7 @@
 
 import { supabase } from './supabase'
 import { isOmiseConfigured, OMISE_CHECKOUT_FUNCTION } from './omise'
+import { downscaleImageFile } from './bmbAdminApi_media'
 
 export type PaymentProvider = 'stripe' | 'omise' | 'promptpay' | 'cod'
 export type PaymentStatus = 'pending' | 'processing' | 'completed' | 'failed' | 'refunded' | 'expired'
@@ -327,10 +328,12 @@ export async function uploadPaymentSlip(orderNumber: string, file: File): Promis
     return { success: false, error: 'ERR_NOT_AUTHENTICATED' }
   }
   const uid = userData.user.id
-  const ext = (file.name.split('.').pop() || 'jpg').toLowerCase().replace(/[^a-z0-9]/g, '') || 'jpg'
+  // IMG-1: ย่ออัตโนมัติก่อนขึ้นคลัง — 1600px/q0.85 (สูงกว่าเมนูทั่วไป = ตัวอักษรบนสลิปยังอ่านออก)
+  const sized = await downscaleImageFile(file, 1600, 0.85)
+  const ext = (sized.name.split('.').pop() || 'jpg').toLowerCase().replace(/[^a-z0-9]/g, '') || 'jpg'
   const path = `${uid}/${orderNumber}-${Date.now()}.${ext}`
-  const { error } = await supabase.storage.from('payment-slips').upload(path, file, {
-    contentType: file.type || 'image/jpeg',
+  const { error } = await supabase.storage.from('payment-slips').upload(path, sized, {
+    contentType: sized.type || 'image/jpeg',
     upsert: false,
   })
   if (error) {

@@ -20,6 +20,7 @@ import { listContentApprovals, reviewContent, type ContentApprovalRow } from '@/
 import { autoScheduleApprovedPosts } from '@/lib/marketingAutoSchedule'
 import { flashTo } from '@/lib/uiFlash'
 import { getBusinessSettings, setBusinessSetting } from '@/lib/bmbAdminApi_settings'
+import { downscaleImageFile, PRODUCT_IMAGE_MAX_SIDE } from '@/lib/bmbAdminApi_media'
 
 type Tab = 'overview' | 'planner' | 'studio' | 'approval' | 'calendar' | 'rules' | 'analytics' | 'ai'
 const TABS: Array<{ id: Tab; label: string }> = [
@@ -322,15 +323,22 @@ export function AdminMarketing() {
     if (file.size > 10 * 1024 * 1024) { showToast('ไฟล์ต้องไม่เกิน 10MB', 'error'); return }
     setBrowseBusy(true)
     try {
-      const safe = (file.name || 'image.png').replace(/[^\w.-]+/g, '_').slice(-60)
+      // IMG-1: ย่ออัตโนมัติก่อนขึ้นคลัง (เหมือนรูปเมนู — 1024px/q0.82 · เล็กพอ = คืนเดิม)
+      const sized = await downscaleImageFile(file)
+      const safe = (sized.name || 'image.png').replace(/[^\w.-]+/g, '_').slice(-60)
       const path = `marketing/browse-${Date.now()}-${safe}`
-      const { error } = await supabase.storage.from('bmb-images').upload(path, file, { contentType: file.type, upsert: false })
+      const { error } = await supabase.storage.from('bmb-images').upload(path, sized, { contentType: sized.type, upsert: false })
       if (error) throw error
       const { data } = supabase.storage.from('bmb-images').getPublicUrl(path)
       const url = data?.publicUrl
       if (!url) throw new Error('no public url')
       setImages((prev) => [...prev, url])
-      showToast('แนบรูปจากไฟล์เข้าชุดภาพของโพสต์แล้ว — ใช้ร่วมกับภาพ AI/แคตตาลอกได้เลย', 'success')
+      showToast(
+        sized !== file
+          ? `แนบรูปจากไฟล์ + ลดขนาดอัตโนมัติ (กว้างสุด ${PRODUCT_IMAGE_MAX_SIDE}px) เข้าชุดภาพของโพสต์แล้ว`
+          : 'แนบรูปจากไฟล์เข้าชุดภาพของโพสต์แล้ว — ใช้ร่วมกับภาพ AI/แคตตาลอกได้เลย',
+        'success',
+      )
       flashTo('mk-images-strip')
     } catch (err) {
       showToast('อัปโหลดรูปไม่สำเร็จ: ' + String((err as Error)?.message || err).slice(0, 120), 'error')

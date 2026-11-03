@@ -1,0 +1,287 @@
+{
+  "mode": "audit",
+  "ran_at": "2026-11-03T08:30:06.796Z",
+  "bucket": "bmb-images",
+  "files": [
+    {
+      "path": "uploads/1791351301557-__________________.webp",
+      "before": {
+        "w": 500,
+        "h": 500,
+        "bytes": 39348
+      },
+      "action": "ok_small"
+    },
+    {
+      "path": "uploads/1791769580084-coming_soon.webp",
+      "before": {
+        "w": 500,
+        "h": 500,
+        "bytes": 40790
+      },
+      "action": "ok_small"
+    },
+    {
+      "path": "uploads/1791769635840-coming_soon.webp",
+      "before": {
+        "w": 500,
+        "h": 500,
+        "bytes": 40790
+      },
+      "action": "ok_small"
+    },
+    {
+      "path": "uploads/1791940233004-____________.webp",
+      "before": {
+        "w": 500,
+        "h": 500,
+        "bytes": 212614
+      },
+      "action": "ok_small"
+    },
+    {
+      "path": "uploads/1791986237094-________.webp",
+      "before": {
+        "w": 500,
+        "h": 500,
+        "bytes": 97612
+      },
+      "action": "ok_small"
+    },
+    {
+      "path": "uploads/1791986816478-________________.webp",
+      "before": {
+        "w": 500,
+        "h": 500,
+        "bytes": 83548
+      },
+      "action": "ok_small"
+    },
+    {
+      "path": "uploads/1791940305412-_____________________.webp",
+      "before": {
+        "w": 500,
+        "h": 500,
+        "bytes": 221596
+      },
+      "action": "ok_small"
+    },
+    {
+      "path": "uploads/1791958203680-_______________.webp",
+      "before": {
+        "w": 500,
+        "h": 500,
+        "bytes": 104134
+      },
+      "action": "ok_small"
+    },
+    {
+      "path": "uploads/1792810186870-_______________________.webp",
+      "before": {
+        "w": 500,
+        "h": 500,
+        "bytes": 22050
+      },
+      "action": "ok_small"
+    },
+    {
+      "path": "uploads/1791956868177-________________.webp",
+      "before": {
+        "w": 500,
+        "h": 500,
+        "bytes": 235994
+      },
+      "action": "ok_small"
+    },
+    {
+      "path": "uploads/1792850014777-________________.webp",
+      "before": {
+        "w": 500,
+        "h": 500,
+        "bytes": 28334
+      },
+      "action": "ok_small"
+    },
+    {
+      "path": "uploads/1793068885663-Fish_ShipS.webp",
+      "before": {
+        "w": 500,
+        "h": 500,
+        "bytes": 13618
+      },
+      "action": "ok_small"
+    },
+    {
+      "path": "uploads/1793068842463-_______.webp",
+      "before": {
+        "w": 500,
+        "h": 500,
+        "bytes": 17732
+      },
+      "action": "ok_small"
+    },
+    {
+      "path": "uploads/1793370531753-coming_soon.webp",
+      "before": {
+        "w": 500,
+        "h": 500,
+        "bytes": 40790
+      },
+      "action": "ok_small"
+    },
+    {
+      "path": "uploads/1792401770524-the_strategist.png",
+      "before": {
+        "w": 300,
+        "h": 380,
+        "bytes": 202716
+      },
+      "action": "ok_small"
+    },
+    {
+      "path": "uploads/1791940186286-___________________.webp",
+      "before": {
+        "w": 500,
+        "h": 500,
+        "bytes": 213280
+      },
+      "action": "ok_small"
+    },
+    {
+      "path": "uploads/1791987871280-_________.webp",
+      "before": {
+        "w": 500,
+        "h": 500,
+        "bytes": 16918
+      },
+      "action": "ok_small"
+    },
+    {
+      "path": "uploads/1793370619955-coming_soon.webp",
+      "before": {
+        "w": 500,
+        "h": 500,
+        "bytes": 40790
+      },
+      "action": "ok_small"
+    },
+    {
+      "path": "uploads/1793370674538-coming_soon.webp",
+      "before": {
+        "w": 500,
+        "h": 500,
+        "bytes": 40790
+      },
+      "action": "ok_small"
+    },
+    {
+      "path": "uploads/1792810242837-__________________.webp",
+      "before": {
+        "w": 500,
+        "h": 500,
+        "bytes": 14718
+      },
+      "action": "ok_small"
+    },
+    {
+      "path": "uploads/1793370720135-coming_soon.webp",
+      "before": {
+        "w": 500,
+        "h": 500,
+        "bytes": 40790
+      },
+      "action": "ok_small"
+    },
+    {
+      "path": "uploads/1793370776379-coming_soon.webp",
+      "before": {
+        "w": 500,
+        "h": 500,
+        "bytes": 40790
+      },
+      "action": "ok_small"
+    },
+    {
+      "path": "uploads/1793370812572-coming_soon.webp",
+      "before": {
+        "w": 500,
+        "h": 500,
+        "bytes": 40790
+      },
+      "action": "ok_small"
+    },
+    {
+      "path": "uploads/1793370906022-coming_soon.webp",
+      "before": {
+        "w": 500,
+        "h": 500,
+        "bytes": 40790
+      },
+      "action": "ok_small"
+    },
+    {
+      "path": "uploads/1793370853219-coming_soon.webp",
+      "before": {
+        "w": 500,
+        "h": 500,
+        "bytes": 40790
+      },
+      "action": "ok_small"
+    },
+    {
+      "path": "uploads/1793371028483-coming_soon.webp",
+      "before": {
+        "w": 500,
+        "h": 500,
+        "bytes": 40790
+      },
+      "action": "ok_small"
+    },
+    {
+      "path": "uploads/1791940354190-______________.webp",
+      "before": {
+        "w": 500,
+        "h": 500,
+        "bytes": 224644
+      },
+      "action": "ok_small"
+    },
+    {
+      "path": "uploads/1793671876233-gen-mw01e0o9-b6su-1024.jpg",
+      "before": {
+        "w": 1024,
+        "h": 685,
+        "bytes": 203334
+      },
+      "action": "ok_small"
+    },
+    {
+      "path": "uploads/1793370968108-coming_soon.webp",
+      "before": {
+        "w": 500,
+        "h": 500,
+        "bytes": 40790
+      },
+      "action": "ok_small"
+    },
+    {
+      "path": "uploads/1793672020400-tmp_tC3_big-1024.jpg",
+      "before": {
+        "w": 1024,
+        "h": 1024,
+        "bytes": 584847
+      },
+      "action": "would_downscale"
+    }
+  ],
+  "totals": {
+    "scanned": 30,
+    "over": 1,
+    "skipped": 29,
+    "done": 0,
+    "before": 0,
+    "after": 0,
+    "listed": 30
+  },
+  "reasons": {}
+}

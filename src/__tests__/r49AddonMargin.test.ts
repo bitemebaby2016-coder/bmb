@@ -82,3 +82,21 @@ describe('R49-1 · addonMarginGuard = pure Profit Weight (promo/ต้นทุ�
   })
 })
 // MARKER_R49_B
+
+describe('R63 · cartSessionSync = guest ห้ามยิง (แก้ console 401 ?on_conflict=id)', () => {
+  it('guard !uid อยู่ก่อน upsert · authed path คงเดิม · init จาก main.tsx ยังอยู่', () => {
+    expect(cartSyncSrc).toContain('if (!uid) return')
+    // ลำดับสำคัญ: ต้อง check ก่อนจึงจะถึง upsert (กันย้อนลำดับในอนาคต)
+    expect(cartSyncSrc.indexOf('if (!uid) return')).toBeGreaterThanOrEqual(0)
+    expect(cartSyncSrc.indexOf('if (!uid) return')).toBeLessThan(cartSyncSrc.indexOf('.upsert('))
+    // เส้นทางล็อกอิน = เดิมทุกประการ (upsert + onConflict id + customers lookup)
+    expect(cartSyncSrc).toContain('.upsert(')
+    expect(cartSyncSrc).toContain("{ onConflict: 'id' }")
+    expect(cartSyncSrc).toContain("from('customers').select('id')")
+    // บันทึก evidence probe ไว้ใน comment ของไฟล์ (production: anon=401/admin=201)
+    expect(cartSyncSrc).toContain('r63Cart401Probe')
+    // init ไม่ถูกถอดออกจาก main
+    expect(mainSrc).toContain('initCartSessionSync()')
+  })
+})
+// MARKER_R49_B

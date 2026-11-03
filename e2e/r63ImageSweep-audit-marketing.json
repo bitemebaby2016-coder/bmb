@@ -1,0 +1,35 @@
+{
+  "mode": "audit",
+  "ran_at": "2026-11-03T08:05:47.938Z",
+  "bucket": "bmb-images",
+  "files": [
+    {
+      "path": "marketing/browse-1793416453595-_.webp",
+      "before": {
+        "w": 500,
+        "h": 500,
+        "bytes": 22050
+      },
+      "action": "ok_small"
+    },
+    {
+      "path": "marketing/browse-1793418638484-_.webp",
+      "before": {
+        "w": 500,
+        "h": 500,
+        "bytes": 224644
+      },
+      "action": "ok_small"
+    }
+  ],
+  "totals": {
+    "scanned": 2,
+    "over": 0,
+    "skipped": 2,
+    "done": 0,
+    "before": 0,
+    "after": 0,
+    "listed": 2
+  },
+  "reasons": {}
+}

@@ -1,0 +1,32 @@
+{
+  "mode": "apply",
+  "ran_at": "2026-11-03T08:57:21.622Z",
+  "bucket": "bmb-images",
+  "files": [
+    {
+      "path": "uploads/1793672020400-tmp_tC3_big-1024.jpg",
+      "before": {
+        "w": 1024,
+        "h": 1024,
+        "bytes": 584847
+      },
+      "action": "downscaled",
+      "after": {
+        "w": 1024,
+        "h": 1024,
+        "bytes": 552942
+      }
+    }
+  ],
+  "totals": {
+    "scanned": 1,
+    "over": 1,
+    "skipped": 0,
+    "done": 1,
+    "before": 584847,
+    "after": 552942,
+    "fromAudit": 1,
+    "listed": 1
+  },
+  "reasons": {}
+}

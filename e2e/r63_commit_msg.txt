@@ -1,0 +1,38 @@
+R63: Owner decisions C-1..C-6 recorded · L-12 closed · IMG-1 auto-resize (client+EF+sweep
+-20.7MB) · console 401 fix · C-4 pack map 16/16 · gates 2013/2013
+
+- PHASE 2: reconciliation §3.1 = C-1..C-6 DECIDED (Owner verbatim + conditions) ·
+  §5 directives (IMG-1 / PHASE-ORDER / CONSOLE-1 / IMAGE-FLOAT-1) · master CAP-18
+  (C-3 approved) + CAP-22 renamed to true scope (C-2) + N-3 · pack D-3 decided
+- PHASE 3 (CAP-22 closure): no code path reads menu_rules/stop_conditions (planner =
+  window/cooldown/frequency only; admin page display-only) -> empty config uses core
+  rules, cannot mis-select menus · L-12 CLOSED · marketingAutoSchedule tests 14/14
+  (+ L-12 describe; contract strips // comments before not.toContain)
+- PHASE 4 (Maps): local .env* has no VITE_GOOGLE_MAPS_API_KEY (CF build env) · prod
+  bundle probe e2e/r44_maps_bundle_probe.json: /assets/googleMaps-CPdTUqpa.js contains
+  AIza key (missing-msg hit = source string false positive) · visual retest x3 sides = Owner
+- PHASE 5-7: reconciliation §6 REMAINING WORK LEDGER (IMPLEMENTED/DEPLOYED/RUNTIME
+  VERIFIED/MISSING/DEFERRED/OWNER-ONLY) - C-1..C-6 does NOT cover whole project
+- PHASE 8 (C-4): pack += §C4 runtime map (CAP-10/11/13/14 + T-A*/T-D/T-E with prep
+  data) + S-10 real-SMS row (SMS was 0 hits before) · r63PackC4Check = 16/16 missing=[]
+- Console: driver 400 ERR_NOT_A_DRIVER = accepted (Owner) · 401 ?on_conflict=id
+  reproduced via r63Cart401Probe (anon=401/42501, admin=201, cleanup 0) -> root cause =
+  cart_sessions guest upsert (m180 grants authenticated only) -> client fix: skip when
+  no session (no migration/security change) · r49 + R63 guard test = 6/6
+- IMG-1 (all images auto-resize; fix already-made ones): downscaleImageFile (1024/q0.82;
+  slip+address 1600/q0.85) wired into 6 raw paths: uploadMediaAsset,
+  uploadRegisteredAsset (before validate), AdminMarketing browse, addressPhoto,
+  paymentGateway slip, AdminOnboarding logo · r63ImageResize = 5/5 · storage sweep
+  (e2e/r63ImageSweep.cjs pure-JS dims + Playwright canvas, same-path upsert): audit
+  over=4/44 -> apply done 4/4 saved 20.76MB (evidence r63ImageSweep-apply-*.json) ·
+  evidence buckets (payment-slips/address-photos/pod-photos) untouched by design
+- EF image-gen: images API now requests size=1024x1024 with 400/422 no-size fallback
+  (behavior can only stay same or improve) · esbuild OK · DEPLOYED · smoke PASS
+  (200 [images-api], attempts=[] = qwen accepted size param)
+- r38Contracts browse-upload contract updated for IMG-1 (asserts downscale then
+  upload(path, sized) — strengthened, not weakened)
+- Gates (2 rounds): tsc 0 · lint OK x2 (brand 528 · languageSanity 1571) · vitest FULL
+  203/203 files · 2013/2013 tests 0 fail (r63_vitest_full2.log VITEST_EXIT=0) ·
+  build 0 (precache 149)
+- NOT done here (waiting): Owner runs pack §0→§MAP→A..K→§C4→§RG §16 · CI probe of
+  this HEAD (next session, one probe) · maps bundle re-probe after CF rebuild

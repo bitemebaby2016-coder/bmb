@@ -18,6 +18,12 @@
 //   1. ไม่แตะ approval — "อนุมัติ" ยังเป็นหน้าที่คนเสมอ
 //   2. ไม่มี publish path ใหม่ — ระบบโพสต์ยังเป็น marketing_publish worker ตัวเดิม
 //   3. ห้ามเลือกโพสต์ที่ไม่ใช่ 'approved' — server ก็เช็กซ้ำอยู่แล้ว (defense in depth)
+//
+// L-12 / C-1 (มติ Owner 2026-11-03): `marketing_rules.menu_rules` / `stop_conditions`
+//   = **ตั้งใจว่าง** (ค่า `{}` ตาม DEFAULT) — ไม่มี code path ไหนอ่านสองฟิลด์นี้เพื่อ
+//   ตัดสินใจ (planner ใช้เฉพาะ publishing_window / cooldown_hours / frequency_per_week ·
+//   หน้าแอดมินแค่ display JSON.stringify) → empty = ใช้ค่าหลักตามเดิม ไม่เลือกเมนูผิด
+//   ไม่หยุดทำงาน · evidence: `src/__tests__/marketingAutoSchedule.test.ts` describe L-12
 // ============================================
 
 import {

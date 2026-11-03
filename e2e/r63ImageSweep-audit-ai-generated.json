@@ -1,0 +1,64 @@
+{
+  "mode": "audit",
+  "ran_at": "2026-11-03T08:29:11.330Z",
+  "bucket": "bmb-images",
+  "files": [
+    {
+      "path": "ai-generated/gen-mvx48rh6-ajw6.jpg",
+      "before": {
+        "w": 1024,
+        "h": 1024,
+        "bytes": 120144
+      },
+      "action": "ok_small"
+    },
+    {
+      "path": "ai-generated/gen-mvxckfpp-eyjy.jpg",
+      "before": {
+        "w": 1024,
+        "h": 1024,
+        "bytes": 176908
+      },
+      "action": "ok_small"
+    },
+    {
+      "path": "ai-generated/promo/gen-mw01d1oo-wk1y.png",
+      "before": {
+        "w": 2736,
+        "h": 1536,
+        "bytes": 6784991
+      },
+      "action": "would_downscale"
+    },
+    {
+      "path": "ai-generated/promo/gen-mw01e0o9-b6su.png",
+      "before": {
+        "w": 2512,
+        "h": 1680,
+        "bytes": 6850575
+      },
+      "action": "would_downscale"
+    },
+    {
+      "path": "ai-generated/festival/wm-mvzzcnap-gfpg.png",
+      "before": {
+        "w": 2048,
+        "h": 2048,
+        "bytes": 7725390
+      },
+      "action": "would_downscale"
+    }
+  ],
+  "totals": {
+    "scanned": 6,
+    "over": 3,
+    "skipped": 3,
+    "done": 0,
+    "before": 0,
+    "after": 0,
+    "listed": 6
+  },
+  "reasons": {
+    "ext:emptyfolderplaceholder": 1
+  }
+}

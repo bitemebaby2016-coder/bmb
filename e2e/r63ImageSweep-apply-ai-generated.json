@@ -1,0 +1,60 @@
+{
+  "mode": "apply",
+  "ran_at": "2026-11-03T08:55:49.038Z",
+  "bucket": "bmb-images",
+  "files": [
+    {
+      "path": "ai-generated/promo/gen-mw01d1oo-wk1y.png",
+      "before": {
+        "w": 2736,
+        "h": 1536,
+        "bytes": 6784991
+      },
+      "action": "downscaled",
+      "after": {
+        "w": 1024,
+        "h": 575,
+        "bytes": 190097
+      }
+    },
+    {
+      "path": "ai-generated/festival/wm-mvzzcnap-gfpg.png",
+      "before": {
+        "w": 2048,
+        "h": 2048,
+        "bytes": 7725390
+      },
+      "action": "downscaled",
+      "after": {
+        "w": 1024,
+        "h": 1024,
+        "bytes": 238270
+      }
+    },
+    {
+      "path": "ai-generated/promo/gen-mw01e0o9-b6su.png",
+      "before": {
+        "w": 2512,
+        "h": 1680,
+        "bytes": 6850575
+      },
+      "action": "downscaled",
+      "after": {
+        "w": 1024,
+        "h": 685,
+        "bytes": 203334
+      }
+    }
+  ],
+  "totals": {
+    "scanned": 3,
+    "over": 3,
+    "skipped": 0,
+    "done": 3,
+    "before": 21360956,
+    "after": 631701,
+    "fromAudit": 3,
+    "listed": 3
+  },
+  "reasons": {}
+}

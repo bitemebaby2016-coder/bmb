@@ -157,12 +157,23 @@ if (req.method === 'OPTIONS') return new Response('ok', { status: 200, headers: 
         // (A) images API — text-only เท่านั้น (ภาพอ้างอิง = chat path ที่ model รับ input image)
         if (pass === 'text-only') {
           try {
-            const ir = await fetch('https://openrouter.ai/api/v1/images/generations', {
-              method: 'POST',
-              headers: { Authorization: `Bearer ${OPENROUTER_KEY}`, 'Content-Type': 'application/json' },
-              body: JSON.stringify({ model, prompt, n: 1 }),
-            })
-            const ij = await ir.json().catch(() => null)
+            // IMG-1 (Owner 2026-11-03 "ทุกภาพที่ระบบเอามาใช้ = ลดขนาดอัตโนมัติ"): ขอลดตั้งแต่ต้นทาง
+            // size=1024x1024 (พอเหมาะกับเว็บ) — ถ้า provider ไม่รับ parameter (400/422)
+            // = retry โดยไม่ส่ง size → พฤติกรรมเดิมเป๊ะ ไม่มีทางแย่กว่าเดิม
+            const callImages = async (body: Record<string, unknown>) => {
+              const r = await fetch('https://openrouter.ai/api/v1/images/generations', {
+                method: 'POST',
+                headers: { Authorization: `Bearer ${OPENROUTER_KEY}`, 'Content-Type': 'application/json' },
+                body: JSON.stringify(body),
+              })
+              const j = await r.json().catch(() => null)
+              return { r, j }
+            }
+            let { r: ir, j: ij } = await callImages({ model, prompt, n: 1, size: '1024x1024' })
+            if (!ir.ok && (ir.status === 400 || ir.status === 422)) {
+              attempts.push(`${model}:size_param_unsupported${ir.status}`)
+              ;({ r: ir, j: ij } = await callImages({ model, prompt, n: 1 }))
+            }
             const iu = ir.ok ? pickImage(ij) : ''
             if (iu) { dataUrl = iu; usedModel = `${model} [images-api]`; break outer }
             const imsg = ((ij as { error?: { message?: string } } | null)?.error?.message) || ''

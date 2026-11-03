@@ -171,3 +171,38 @@ describe('CAP-22 contract — ไม่มี publish/approve path ใหม่ 
     expect(mkSrc).toContain('scheduleMarketingPost(id, new Date(when).toISOString())')
   })
 })
+
+// L-12 / C-1 (มติ Owner 2026-11-03): menu_rules/stop_conditions = "ตั้งใจว่าง"
+describe('L-12 · empty menu_rules/stop_conditions = ตั้งใจว่าง (fallback ค่าหลัก ไม่เลือกเมนูผิด)', () => {
+  it('rules ที่มี menu_rules/stop_conditions = {} → planSchedule ยังทำงานด้วยค่าหลักปกติ', () => {
+    const rulesEmptyExtras = {
+      frequency_per_week: 5,
+      publishing_window: { start: '09:00', end: '20:00' },
+      cooldown_hours: 4,
+      menu_rules: {},
+      stop_conditions: {},
+    }
+    const plan = planSchedule({
+      posts: [post({ id: 'empty-ok' })],
+      rules: rulesEmptyExtras as never,
+      nowUtcMs: NOW,
+    })
+    expect(plan).toHaveLength(1)
+    const t = Date.parse(plan[0].iso)
+    expect(t).toBeGreaterThan(NOW)
+    const hourBkk = (new Date(plan[0].iso).getUTCHours() + 7) % 24
+    expect(hourBkk).toBeGreaterThanOrEqual(9) // อยู่ในหน้าต่างหลัก = ค่าหลักถูกใช้จริง
+    expect(hourBkk).toBeLessThan(20)
+  })
+
+  it('planner ไม่มี code path อ่านสองฟิลด์นี้เลย (ห้ามเพิ่มภายหลังโดยไม่ขอ Owner)', () => {
+    // เฉพาะ executable code — บรรทัด comment // ได้รับอนุญาตให้กล่าวถึง (เงื่อนไข ③ = บันทึกความหมาย)
+    const codeOnly = autoSrc
+      .split(/\r?\n/)
+      .filter((l) => !l.trim().startsWith('//'))
+      .join('\n')
+    expect(codeOnly).not.toContain('menu_rules')
+    expect(codeOnly).not.toContain('stop_conditions')
+    expect(codeOnly).toContain('FALLBACK_RULES') // fallback ค่าหลักมีจริงเมื่อไม่มีแถว rules
+  })
+})
