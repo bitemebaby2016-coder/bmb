@@ -1,0 +1,28 @@
+R60: รัน §T production test pack บน biteme-baby.com (ไม่แตะโค้ดสินค้า)
+
+1) ตัวรัน + หลักฐาน (อ่านอย่างเดียว/ทดสอบล้วน):
+   - e2e/tProdProbe.cjs — Playwright fresh context ต่อช่วง (hard-refresh
+     equivalent) · --only= สไลซ์รัน (ข้อจำกัดคำสั่ง 30s/ครั้งของเทอร์มินัล)
+   - e2e/tProdMerge.cjs — รวมผลทุกสไลซ์ → tProdProbe_results_all.json
+   - ผลรวม 17 รายการ + สไลซ์ 5 ไฟล์ + ภาพ e2e/screenshots/t*.png 7 ใบ
+   - e2e/tmp_adminlogin/tmp_decode/tmp_deploycheck/tmp_cartencode.cjs
+     = หลักฐานประกอบ defect (GoTrue 400 · production bundle · encode ถูก)
+
+2) DEFECT §T-1 (T-A4 · HIGH · ยังไม่แก้ตามคำสั่ง "fail = จด defect"):
+   - Layout.tsx ส่ง raw (= ค่า ?cart) เข้า readCartParam ที่รอ query string
+     เต็ม → decodeCartParam(null) → ลิงก์ /shop?cart= ฟ้อง "ลิงก์ไม่สมบูรณ์"
+     + ตะกร้าว่างทุกครั้ง (production จริง · เห็นใน bundle index-CyFclIea.js)
+   - unit test กลบทด: cartDeepLink.test.ts ฉีด '?cart='+raw เอง (PASS)
+     แต่ Layout ไม่ได้ฉีด → unit PASS / production FAIL
+   - ทางแก้ (รอบถัดไป): Layout เรียก decodeCartParam(raw) + test แบบที่เรียกจริง
+
+3) BLOCKER §T-2: test admin = GoTrue HTTP 400 invalid_credentials
+   → T-C1..C3 BLOCKED รอ Owner รีเซ็ตรหัส · T-C4 SKIPPED (ทางเลือก)
+
+4) ผล其余: PASS = T-B1 + T-B3(fallback) · N/A = T-B2(wm-*) + T-B3 ·
+   PARTIAL = T-A5 + T-A4android (ระดับ render · ต้องเครื่องจริง) ·
+   BLOCKED = T-A1/2/3/6 (ไม่มีบัญชี FB) + T-D1..4 + T-E1/E2 (ไม่มีเครื่องพิมพ์)
+   · §T มี 19 แถว (เอกสารเขียน "20 ข้อ" = DOC DRIFT เล็กน้อย)
+
+5) เอกสาร: AI_WORK_STATE.md (บล็อก R60) + docs/BMB_MASTER_STATUS.md (บรรทัด R60)
+   · gates: node --check + eslint ไฟล์ใหม่ = 0 · ไม่ deploy (ไม่แตะโค้ดสินค้า/EF)

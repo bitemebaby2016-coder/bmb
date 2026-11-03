@@ -1,0 +1,75 @@
+{
+  "startedAt": "2026-11-03T01:05:37.981Z",
+  "base": "https://biteme-baby.com",
+  "note": "fresh browser context per section = no cache/cookies (hard-refresh equivalent)",
+  "items": [
+    {
+      "id": "T-A5",
+      "status": "PARTIAL",
+      "detail": "notice แสดง=true · ปุ่มเปิดนอก=true · ปุ่ม \"อยู่ที่นี่ต่อ\"=false (ต้อง=false) · ⚠️ บังคับ Safari จริงบน iPhone = ต้องทดสอบบนเครื่องจริง (device)",
+      "shots": [
+        "d:\\A PROJECT\\Bite Me Baby\\e2e\\screenshots\\tA5_ios_inapp.png"
+      ]
+    },
+    {
+      "id": "T-A1",
+      "status": "BLOCKED",
+      "detail": "ต้องคอมเมนต์ใต้โพส FB จริง + รอ bot ตอบ — ไม่มีบัญชี Facebook ในเครื่องนี้",
+      "shots": []
+    },
+    {
+      "id": "T-A2",
+      "status": "BLOCKED",
+      "detail": "ต้องถามพรีออเดอร์ใน FB จริง + เทียบวันกับ /menu — ไม่มีบัญชี Facebook",
+      "shots": []
+    },
+    {
+      "id": "T-A3",
+      "status": "BLOCKED",
+      "detail": "ต้องถามเมนูยังไม่ลงปฎิทินใน FB จริง — ไม่มีบัญชี Facebook",
+      "shots": []
+    },
+    {
+      "id": "T-A6",
+      "status": "BLOCKED",
+      "detail": "ต้องดูโพสที่ bot สร้าง/ตอบล่าสุดใน FB — ไม่มีบัญชี Facebook",
+      "shots": []
+    },
+    {
+      "id": "T-D1",
+      "status": "BLOCKED",
+      "detail": "ต้องพิมพ์จริงทาง QZ dialog — ไม่มีเครื่องพิมพ์ (render-level วัดแล้วใน e2e/r59_sticker_fit.json)",
+      "shots": []
+    },
+    {
+      "id": "T-D2",
+      "status": "BLOCKED",
+      "detail": "ต้องพิมพ์จริงทาง Bluetooth (Niimbot) — ไม่มีอุปกรณ์",
+      "shots": []
+    },
+    {
+      "id": "T-D3",
+      "status": "BLOCKED",
+      "detail": "ต้องดู stroke บนใบจริง — render-level มีใน r59_sticker_fit.json (ไม่ใช่ใบจริง)",
+      "shots": []
+    },
+    {
+      "id": "T-D4",
+      "status": "BLOCKED",
+      "detail": "ต้องพิมพ์จริง 1 ใบ — ไม่มีเครื่องพิมพ์",
+      "shots": []
+    },
+    {
+      "id": "T-E1",
+      "status": "BLOCKED",
+      "detail": "ต้องดูใบเสร็จ/ใบครัวใบจริง (Date/TIME ตอนพิมพ์ + ติ๊ก ●) — ไม่มีเครื่องพิมพ์",
+      "shots": []
+    },
+    {
+      "id": "T-E2",
+      "status": "BLOCKED",
+      "detail": "ต้องออเดอร์จ่ายบัตรเครดิต + ใบจริง — ไม่มีเครื่องพิมพ์/ไม่สร้างออเดอร์จริง",
+      "shots": []
+    }
+  ]
+}
