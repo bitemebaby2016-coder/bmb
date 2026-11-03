@@ -1,12 +1,12 @@
 {
-  "startedAt": "2026-11-03T01:05:18.806Z",
+  "startedAt": "2026-11-03T02:17:01.252Z",
   "base": "https://biteme-baby.com",
   "note": "fresh browser context per section = no cache/cookies (hard-refresh equivalent)",
   "items": [
     {
       "id": "T-A4(cart)",
-      "status": "FAIL",
-      "detail": "ตะกร้าว่าง! prod={\"id\":\"prod-5\",\"name\":\"ลุยสวนหมู+กุ้ง\"} · stored= · toastLive=\"{\"message\":\"ลิงก์รายการในแชทไม่สมบูรณ์หรือเสียหาย — เปิดรายการให้ไม่ได้ เลือกเมนูใหม่ที่หน้าร้านได้เลย\",\"type\":\"warning\"}\" · urlStripped=true · products REST status=200,200 · pageErr= · DIAG={\"search0\":\"?cart=eyJ2IjoxLCJpdGVtcyI6W3siaWQiOiJwcm9kLTUiLCJxIjoxfV19\",\"searchNow\":\"\",\"raw\":\"eyJ2IjoxLCJpdGVtcyI6W3siaWQiOiJwcm9kLTUiLCJxIjoxfV19\",\"dec\":\"{\\\"v\\\":1,\\\"items\\\":[{\\\"id\\\":\\\"prod-5\\\",\\\"q\\\":1}]}\",\"err\":\"\"}",
+      "status": "PARTIAL",
+      "detail": "ตะกร้าเต็มจากลิงก์จริง: ลุยสวนหมู+กุ้ง (prod-5) · toastLive=\"{\"message\":\"เปิดรายการที่สรุปไว้ให้แล้ว 🛒 1 รายการ — เช็คเอาท์หรือเพิ่มเมนูต่อได้เลย\",\"type\":\"success\"}\" · URL strip แล้ว=true · ⚠️ กระโดด Chrome จากแอป FB = ต้องทดสอบบนมือถือจริง (device)",
       "shots": [
         "d:\\A PROJECT\\Bite Me Baby\\e2e\\screenshots\\tA4_cartlink.png"
       ]

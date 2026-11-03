@@ -1,0 +1,46 @@
+{
+  "at": "2026-11-03T02:36:32.715Z",
+  "promoResponses": [
+    {
+      "status": 200,
+      "url": "https://ivkdfognyiwjcmrhcnwz.supabase.co/rest/v1/promotions?select=*&order=created_at.desc",
+      "count": 1,
+      "sample": {
+        "id": "promo-welcome-banner",
+        "is_banner": true,
+        "is_active": true
+      }
+    },
+    {
+      "status": 200,
+      "url": "rhcnwz.supabase.co/rest/v1/promotions?select=id,name,is_banner,is_active&is_banner=eq.true",
+      "count": 1,
+      "sample": {
+        "id": "promo-welcome-banner",
+        "is_banner": true,
+        "is_active": true
+      }
+    }
+  ],
+  "cards": [
+    "📣 เทศกาลฮัลโลวีน",
+    "📣 เทศกลาฮัลโลวีน"
+  ],
+  "hasOverlay": true,
+  "restDirect": {
+    "status": 200,
+    "rows": [
+      {
+        "id": "promo-welcome-banner",
+        "active": true
+      }
+    ]
+  },
+  "dismissedKeys": [],
+  "cardsAfterDismiss": [],
+  "dismissedKeys2": [
+    "bmb_banner_dismiss_ann-mk-mvzzaz6y-b27u",
+    "bmb_banner_dismiss_promo-welcome-banner",
+    "bmb_banner_dismiss_ann-mk-mvzzf73i-u7fu"
+  ]
+}

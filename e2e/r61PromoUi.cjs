@@ -91,40 +91,91 @@ function finish(out, pass, noteText) {
     out.steps.push({ step: 'compose_preview', imgs: composedImgs })
     await page.screenshot({ path: path.join(SHOTS, 'tPromo_composed.png') })
 
-    // กรอก + บันทึกจริง (test data — ล้างเองท้ายขั้นตอน)
+    // กรอก + บันทึกจริง (test data — ล้างเองท้ายขั้นตอน) · เปิดเป็นแบนเนอร์หน้าแรกเพื่อตรวจฝั่งลูกค้าด้วย
     const NAME = 'TEST-R61 โปรโมชั่นทดสอบ (ล้างอัตโนมัติ)'
     await page.fill('input[placeholder="ชื่อโปรโมชั่น *"]', NAME)
+    const bannerCb = page.locator('label', { hasText: 'แสดงเป็นแบนเนอร์หน้าแรก' }).locator('input[type="checkbox"]')
+    if (await bannerCb.count()) await bannerCb.first().check()
     page.on('dialog', (d) => d.accept())
     await page.getByRole('button', { name: /บันทึก/ }).first().click()
     await page.waitForTimeout(3000)
     out.steps.push({ step: 'saved', formClosed: (await page.locator('input[placeholder="ชื่อโปรโมชั่น *"]').count()) === 0 })
     await page.screenshot({ path: path.join(SHOTS, 'tPromo_saved.png') })
 
-    // ตรวจ DB: banner_image + banner_mascot ถูกบันทึกจริง
-    const S = readSecrets()
+    // ตรวจ DB: banner_image + banner_mascot ถูกบันทึกจริง (ใช้ S ตัวเดียวกับตอน login)
     const rows = await (await fetch(SB + '/rest/v1/promotions?select=id,name,banner_image,banner_mascot,is_banner&name=eq.' + encodeURIComponent(NAME), {
-      headers: { apikey: 'sb_publishable_Q7AHrjSYOrysDjxS9_ZB-g_NMmytLOH', Authorization: 'Bearer ' + S.SUPABASE_SERVICE_ROLE_KEY },
+      headers: { apikey: S.SUPABASE_SERVICE_ROLE_KEY, Authorization: 'Bearer ' + S.SUPABASE_SERVICE_ROLE_KEY },
     })).json().catch(() => [])
     const row = Array.isArray(rows) ? rows[0] : null
     out.dbRow = row || null
     const dbOk = !!(row && row.banner_image && row.banner_mascot && row.banner_mascot.includes('/assets/mascot/'))
 
-    // ล้าง: ลบโปรโมชั่นทดสอบออก (confirm dialog = accept แล้ว)
+    // ลิงก์ฝั่งลูกค้า (dynamic): เปิด /shop → การ์ดลอยต้องใช้ "ภาพ + มาสคอต" ที่เพิ่งประกอบ
+    // (การ์ดสูงสุด 2/รอบ + dismissed เก็บใน sessionStorage → ปิดการ์ดอื่นแล้ว reload ซ้ำจนการ์ดทดสอบขึ้น)
     if (row) {
-      const card = page.locator('.card', { hasText: NAME })
-      await card.getByRole('button', { name: /ลบ/ }).first().click()
-      await page.waitForTimeout(2000)
-      const rows2 = await (await fetch(SB + '/rest/v1/promotions?select=id&name=eq.' + encodeURIComponent(NAME), {
-        headers: { apikey: 'sb_publishable_Q7AHrjSYOrysDjxS9_ZB-g_NMmytLOH', Authorization: 'Bearer ' + S.SUPABASE_SERVICE_ROLE_KEY },
-      })).json().catch(() => [])
-      out.cleanupDeleted = Array.isArray(rows2) && rows2.length === 0
-      out.steps.push({ step: 'cleanup', deleted: out.cleanupDeleted })
+      const page2 = await ctx.newPage()
+      await page2.goto(BASE + '/shop', { waitUntil: 'domcontentloaded', timeout: 25000 })
+      await page2.waitForTimeout(8000) // รอ loadData (products/rounds/promos) + RPC ประกาศ
+      // diag: โปรโมชั่น is_banner ที่ client อ่านได้จริง (anon RLS) + การ์ดที่โชว์แต่ละรอบ
+      out.homeDiag = { bannerPromos: await page2.evaluate(async () => {
+        const r = await fetch('https://ivkdfognyiwjcmrhcnwz.supabase.co/rest/v1/promotions?select=id,name,is_banner,is_active,created_at&is_banner=eq.true&order=created_at.asc', {
+          headers: { apikey: 'sb_publishable_Q7AHrjSYOrysDjxS9_ZB-g_NMmytLOH' },
+        })
+        return (await r.json()).map((x) => ({ id: x.id, name: String(x.name).slice(0, 40), active: x.is_active, created: x.created_at }))
+      }).catch((e) => 'ERR ' + e.message), roundTitles: [] }
+      let hasBanner = false
+      let mediaSrc = ''
+      let mascotSrc = ''
+      // สำคัญ: เช็ค "ก่อน" กดปิดทุกครั้ง + ปิดทีละใบ (ไล่คิว) — เคสพลาดคือกดปิดทีละหลายใบจนการ์ดทดสอบโดนปิดทิ้งไปด้วย
+      for (let round = 0; round < 6 && !hasBanner; round++) {
+        if (round > 0) {
+          const closeBtn = page2.locator('[data-testid="floating-ad-close"]').first()
+          if (await closeBtn.count()) {
+            await closeBtn.click().catch(() => {})
+            await page2.waitForTimeout(2000)
+          } else {
+            await page2.waitForTimeout(2000)
+          }
+        }
+        const titles = await page2.locator('[data-testid="floating-ad-banner"] .flad-title').allInnerTexts().catch(() => [])
+        out.homeDiag.roundTitles.push(titles.map((t) => t.slice(0, 40)))
+        const cardLoc = page2.locator('[data-testid="floating-ad-banner"]', { hasText: 'TEST-R61' })
+        hasBanner = (await cardLoc.count()) > 0
+        if (hasBanner) {
+          mediaSrc = (await cardLoc.first().locator('.flad-media > img').first().getAttribute('src').catch(() => '')) || ''
+          mascotSrc = (await cardLoc.first().locator('[data-testid="floating-ad-mascot"]').getAttribute('src').catch(() => '')) || ''
+        }
+      }
+      await page2.screenshot({ path: path.join(SHOTS, 'tPromo_home.png') }).catch(() => {})
+      out.homeRender = { hasBanner, mediaSrc: String(mediaSrc).slice(0, 140), mascotSrc }
+      out.steps.push({ step: 'home_render', hasBanner, mascotSrc: out.homeRender.mascotSrc })
+      await page2.close()
     }
 
+    // ล้าง: ลบผ่าน UI (พิสูจน์ปุ่มลบ) + กวาดซ้ำด้วย REST ให้หมด (รวมแถวที่ค้างจากรันก่อน)
+    const card = page.locator('.card', { hasText: NAME })
+    if (await card.count()) {
+      await card.getByRole('button', { name: /ลบ/ }).first().click()
+      await page.waitForTimeout(1500)
+    }
+    const delRes = await fetch(SB + '/rest/v1/promotions?name=eq.' + encodeURIComponent(NAME), {
+      method: 'DELETE',
+      headers: { apikey: S.SUPABASE_SERVICE_ROLE_KEY, Authorization: 'Bearer ' + S.SUPABASE_SERVICE_ROLE_KEY },
+    })
+    out.cleanupHttp = delRes.status
+    const rows2 = await (await fetch(SB + '/rest/v1/promotions?select=id&name=eq.' + encodeURIComponent(NAME), {
+      headers: { apikey: S.SUPABASE_SERVICE_ROLE_KEY, Authorization: 'Bearer ' + S.SUPABASE_SERVICE_ROLE_KEY },
+    })).json().catch(() => [])
+    out.cleanupDeleted = Array.isArray(rows2) && rows2.length === 0
+    out.steps.push({ step: 'cleanup', deleted: out.cleanupDeleted, http: delRes.status, remaining: Array.isArray(rows2) ? rows2.length : -1 })
+
     await browser.close()
+    const homeOk = !!(out.homeRender && out.homeRender.hasBanner &&
+      String(out.homeRender.mascotSrc || '').includes('bite_pointing'))
     const pass = Object.values(controls).every(Boolean) && String(bannerVal).includes('/storage/') &&
-      composedImgs >= 2 && dbOk && out.cleanupDeleted !== false
-    return finish(out, pass, 'controls=' + Object.values(controls).filter(Boolean).length + '/8 · db=' + dbOk + ' · cleanup=' + out.cleanupDeleted)
+      composedImgs >= 2 && dbOk && out.cleanupDeleted === true && homeOk
+    return finish(out, pass, 'controls=' + Object.values(controls).filter(Boolean).length + '/9 · db=' + dbOk +
+      ' · home=' + homeOk + ' · cleanup=' + out.cleanupDeleted)
   } catch (e) {
     out.error = String(e && e.message || e).slice(0, 400)
     try { await browser.close() } catch { /* */ }

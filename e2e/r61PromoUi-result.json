@@ -1,0 +1,90 @@
+{
+  "at": "2026-11-03T02:38:09.488Z",
+  "steps": [
+    {
+      "step": "controls",
+      "ok": true
+    },
+    {
+      "step": "pick_from_album",
+      "albumCount": 5,
+      "bannerVal": "https://ivkdfognyiwjcmrhcnwz.supabase.co/storage/v1/object/public/bmb-images/ai-generated/promo/gen-mw01e0o9-b6su.png"
+    },
+    {
+      "step": "compose_preview",
+      "imgs": 2
+    },
+    {
+      "step": "saved",
+      "formClosed": true
+    },
+    {
+      "step": "home_render",
+      "hasBanner": true,
+      "mascotSrc": "/assets/mascot/bite_pointing.webp"
+    },
+    {
+      "step": "cleanup",
+      "deleted": true,
+      "http": 204,
+      "remaining": 0
+    }
+  ],
+  "controls": {
+    "promo-banner-album": true,
+    "promo-mascot-album": true,
+    "promo-mascot-file": true,
+    "promo-compose-preview": true,
+    "promo-mascot-std-0": true,
+    "promo-mascot-std-1": true,
+    "promo-mascot-std-2": true,
+    "promo-mascot-std-3": true,
+    "banner_file_input": true
+  },
+  "dbRow": {
+    "id": "promo-1793673498412-674",
+    "name": "TEST-R61 โปรโมชั่นทดสอบ (ล้างอัตโนมัติ)",
+    "banner_image": "https://ivkdfognyiwjcmrhcnwz.supabase.co/storage/v1/object/public/bmb-images/ai-generated/promo/gen-mw01e0o9-b6su.png",
+    "banner_mascot": "/assets/mascot/bite_pointing.webp",
+    "is_banner": true
+  },
+  "homeDiag": {
+    "bannerPromos": [
+      {
+        "id": "promo-welcome-banner",
+        "name": "Welcome special - 10% off",
+        "active": true,
+        "created": "2026-09-20T03:51:47.597506+00:00"
+      },
+      {
+        "id": "promo-1793673498412-674",
+        "name": "TEST-R61 โปรโมชั่นทดสอบ (ล้างอัตโนมัติ)",
+        "active": true,
+        "created": "2026-11-03T02:38:18.412+00:00"
+      }
+    ],
+    "roundTitles": [
+      [
+        "📣 เทศกาลฮัลโลวีน",
+        "📣 เทศกลาฮัลโลวีน"
+      ],
+      [
+        "📣 เทศกลาฮัลโลวีน",
+        "Welcome special - 10% off"
+      ],
+      [
+        "Welcome special - 10% off",
+        "TEST-R61 โปรโมชั่นทดสอบ (ล้างอัตโนมัติ)"
+      ]
+    ]
+  },
+  "homeRender": {
+    "hasBanner": true,
+    "mediaSrc": "https://ivkdfognyiwjcmrhcnwz.supabase.co/storage/v1/object/public/bmb-images/ai-generated/promo/gen-mw01e0o9-b6su.png",
+    "mascotSrc": "/assets/mascot/bite_pointing.webp"
+  },
+  "cleanupHttp": 204,
+  "cleanupDeleted": true,
+  "ALL_PASS": true,
+  "note": "controls=9/9 · db=true · home=true · cleanup=true"
+}

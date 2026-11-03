@@ -1,0 +1,9 @@
+docs(R61): ผลยืนยัน production ทั้ง 4 งาน + ledger R61
+
+- AI_WORK_STATE.md (บล็อก R61) + docs/BMB_MASTER_STATUS.md (บรรทัด R61)
+- หลักฐานเพิ่ม: r61PromoUi-result.json = ALL_PASS (controls 9/9 → DB banner_image+
+  banner_mascot → การ์ดลอยบน /shop พร้อมภาพ+มาสคอตที่ประกอบ → ล้างหมด remaining 0)
+- r61HomeDiag(-result).json = วิเคราะห์คิวการ์ด (ประกาศ 2 → ประกาศ+Welcome → Welcome+TEST)
+- r61DeployCheck.cjs = เช็ค deployed bundle (index-DhgTRq0j.js)
+- tProdProbe_results_T-A4cart.json อัปเดตหลัง fix: ตะกร้าเต็ม + toast สำเร็จ (§T-1 ปิด)
+- ภาพ: tPromo_form/composed/saved/home.png, tHomeDiag.png, tA4_cartlink.png (ใหม่)
