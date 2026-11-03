@@ -1,0 +1,1 @@
+docs(R61): บันทึกหลักฐาน CI (bacb02f = success ทั้ง 2 checks) + ตัวเช็ค CI
