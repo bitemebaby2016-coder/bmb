@@ -1,0 +1,1 @@
+R65: CI one-shot probe evidence (6012720 = 3 checks in_progress, no red) + work-state ledger
