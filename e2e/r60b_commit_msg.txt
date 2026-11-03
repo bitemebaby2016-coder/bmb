@@ -1,0 +1,5 @@
+docs(R60): ปรับสถานะ §T ให้ตรงหลักฐาน
+
+- T-B3 = OBSERVED(fallback) ไม่ใช่ PASS (ภาพหลักฐานรอบแรกถูกแทนโดยรอบสุดท้าย)
+- นับ BLOCKED = 13 แถว + SKIPPED 1 (T-C4) — ตรงกับ 19 แถวจริงของ §T
+- อัปเดต AI_WORK_STATE.md (บล็อก R60) + docs/BMB_MASTER_STATUS.md (บรรทัด R60)
