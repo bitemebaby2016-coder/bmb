@@ -146,6 +146,11 @@ export function CheckoutPage() {
   const [paymentMethod, setPaymentMethod] = useState<'promptpay_qr' | 'cash_on_delivery' | 'credit_card'>('promptpay_qr')
   // ✅ 127 pickup fulfillment: 'delivery' (เดิม) | 'pickup' (รับที่ร้าน, ค่าส่ง 0)
   const [fulfillment, setFulfillment] = useState<'delivery' | 'pickup'>('delivery')
+  // R65 (Owner 2026-11-03): นอกเวลาเปิดร้าน + pickup = กรณีพิเศษที่ "ลูกค้าแจ้งเป็น notice"
+  // ตอนสั่ง → ติ๊กยืนยันก่อนส่ง + แนบเข้า special_instructions (พิมพ์ช่อง Notice สติกเกอร์)
+  const [pickupOutsideAck, setPickupOutsideAck] = useState(false)
+  // บังคับโชว์ช่องยืนยันเมื่อ submit แล้วเจอว่านอกเวลาแต่ UI ยังไม่ทัน re-render
+  const [pickupOutsideUi, setPickupOutsideUi] = useState(false)
   // CR-2 P0: delivery point = candidate until the customer confirms it.
   // Trusted prefill ONLY (saved provenance gps/manual); kitchen/IP never pre-fill.
   const [deliveryAddress, setDeliveryAddress] = useState<{
@@ -245,6 +250,26 @@ export function CheckoutPage() {
       setSelectedRoundId((prev) => {
         const isToday = scheduledDate === todayStr()
         const opts = { isToday, mode: orderMode, preOrderCutoffHours: cutoffHours, shopHoursMs: hoursToMs(shopHours), operatingHours }
+        // R65 (Owner 2026-11-03): pickup SAME_DAY = ไม่ผูกกับรอบ — เลือกตาม
+        // "เวลาปัจจุบัน" (ดีฟอลต์รอบสำหรับพิมพ์สติกเกอร์) · เกทเดียวที่ยังกัน =
+        // ความจุ (server engine คง gates ครบ) · ไม่สน shop-hours/round-key
+        // (server 184 ข้ามให้เฉพาะธุรกรรม pickup) · PRE_ORDER ยังใช้ rules เดิม
+        if (fulfillment === 'pickup' && orderMode !== 'PRE_ORDER') {
+          const notFull = (r: DeliveryRoundRow) =>
+            !(Number(r.max_capacity) > 0 && Number(r.current_count) >= Number(r.max_capacity))
+          const prevPickup = list.find((r) => r.id === prev)
+          if (prevPickup && notFull(prevPickup)) return prevPickup.id
+          const nowPickup = new Date()
+          const nowMinPickup = nowPickup.getHours() * 60 + nowPickup.getMinutes()
+          const inWindow = list.find((r) => {
+            if (!notFull(r)) return false
+            const [sh, sm] = String(r.delivery_start).slice(0, 5).split(':').map(Number)
+            const [eh, em] = String(r.delivery_end).slice(0, 5).split(':').map(Number)
+            return nowMinPickup >= sh * 60 + sm && nowMinPickup <= eh * 60 + em
+          })
+          if (inWindow) return inWindow.id
+          return list.find(notFull)?.id ?? ''
+        }
         const prevRow = list.find((r) => r.id === prev)
         if (prevRow && roundBookability(prevRow, opts) === 'open') return prev
         // Owner 2026-10-19: same-day "จัดส่งทันที" — เลือกรอบที่เวลาปัจจุบันอยู่ใน
@@ -262,7 +287,8 @@ export function CheckoutPage() {
       })
     })()
     return () => { active = false }
-  }, [scheduledDate, customer, orderMode, cutoffHours, shopHours, operatingHours])
+    // R65: fulfillment เป็น deps — สลับ delivery↔pickup ต้องเลือกใหม่ตาม rules ของฝั่งนั้น
+  }, [scheduledDate, customer, orderMode, cutoffHours, shopHours, operatingHours, fulfillment])
 
   // ✅ CAT-02: canonical published menu schedule for the selected PRE_ORDER date.
   // DISPLAY MIRROR ONLY — server (trg_menu_gate, migration 039) re-decides at order time.
@@ -510,11 +536,21 @@ export function CheckoutPage() {
     // SYNC (Owner 2026-10-26 "ปิด 20:00 แต่ 22:55 ยังสั่งเซมเดย์ได้"): เซมเดย์นอก
     // เวลาเปิดร้าน (business_settings.hours) หรือปิดโหมดใน operating_hours = สั่งไม่ได้
     // (mirror ของ server trg_shop_hours ใหม่ — server ยังตัดสินซ้ำตอน INSERT)
+    // R65: ตรวจ "นอกเวลาเปิดร้าน" ครั้งเดียวต่อ submit — ใช้ทั้ง gate และ notice
+    const hmSubmit = hoursToMs(shopHours)
+    const nowSubmit = bangkokMsOfDay(Date.now())
+    const outsideShopHours = hmSubmit !== null && nowSubmit !== null && !withinShopHours(nowSubmit, hmSubmit)
     if (orderMode === 'SAME_DAY') {
-      const hm = hoursToMs(shopHours)
-      const nowMs = bangkokMsOfDay(Date.now())
-      if (hm && !withinShopHours(nowMs, hm)) {
+      // R65 (Owner 2026-11-03): delivery นอกเวลายังบล็อกเหมือนเดิม · pickup ผ่านได้
+      // เป็นกรณีพิเศษเมื่อลูกค้าติ๊กยืนยัน notice ("รับนอกเวลาเปิดร้าน")
+      if (outsideShopHours && fulfillment !== 'pickup') {
         showToast(`ร้านปิดแล้วตามเวลาที่แอดมินตั้ง (เปิด ${shopHours?.open}–${shopHours?.close}) — เปิดใหม่ตามเวลา หรือสั่งจองล่วงหน้า`, 'error')
+        setIsProcessing(false)
+        return
+      }
+      if (outsideShopHours && fulfillment === 'pickup' && !pickupOutsideAck) {
+        showToast('อยู่นอกเวลาเปิดร้าน — รับได้เป็นกรณีพิเศษ กรุณาติ๊กยืนยัน "รับนอกเวลาเปิดร้าน" ก่อนสั่งซื้อ', 'error')
+        setPickupOutsideUi(true) // บังคับโชว์ช่องยืนยัน (กัน UI ค้างไม่ re-render)
         setIsProcessing(false)
         return
       }
@@ -531,7 +567,9 @@ export function CheckoutPage() {
     // 148 (Owner 2026-10-24): SAME_DAY = ไม่มีปิดรอบใด ๆ → bookability 'cutoff_passed'
     // เกิดขึ้นได้เฉพาะ PRE_ORDER เท่านั้น (บล็อกด้านล่างจึงเหลือผลเฉพาะโหมดจองล่วงหน้า)
     const selectedRound = rounds.find(r => r.id === selectedRoundId)
-    if (selectedRound) {
+    // R65: pickup SAME_DAY ไม่ผูกกับรอบ → ข้าม bookability gate (cutoff/window/shop_closed)
+    const pickupRoundFree = fulfillment === 'pickup' && orderMode !== 'PRE_ORDER'
+    if (selectedRound && !pickupRoundFree) {
       const bookability = roundBookability(selectedRound, {
         isToday: scheduledDate === today,
         mode: orderMode,
@@ -551,12 +589,12 @@ export function CheckoutPage() {
         setIsProcessing(false)
         return
       }
-      // Quota check — prevent ordering when round is full
-      if (selectedRound.current_count >= selectedRound.max_capacity) {
-        showToast('รอบจัดส่งนี้เต็มแล้ว กรุณาเลือกรอบอื่น', 'error')
-        setIsProcessing(false)
-        return
-      }
+    }
+    // Quota check — ทั้ง delivery และ pickup (server engine กันซ้ำอยู่แล้ว)
+    if (selectedRound && selectedRound.current_count >= selectedRound.max_capacity) {
+      showToast('รอบจัดส่งนี้เต็มแล้ว กรุณาเลือกรอบอื่น', 'error')
+      setIsProcessing(false)
+      return
     }
 
     // ✅ WAVE 2B: stale-cart guard — product disabled/mode-restricted AFTER it
@@ -666,7 +704,12 @@ export function CheckoutPage() {
       delivery_round_id: selectedRoundId,
       // R51: ช้อนส้อม — ดีฟault ไม่รับ · ลูกค้าติ๊กในกล่องโต้ตอบใส่ตะกร้า
       // → แจ้งลงช่อง Notice ของสติกเกอร์ (special_instructions ช่องเดิมของระบบ)
-      special_instructions: useCartStore.getState().cutlery ? 'รับช้อนส้อม' : '',
+      // R65: pickup นอกเวลาเปิดร้าน = ลูกค้าติ๊กยืนยันเป็น notice → แนบเข้า
+      // special_instructions ชุดเดียวกัน (พิมพ์ช่อง Notice สติกเกอร์ + คิวครัวเห็น)
+      special_instructions: [
+        useCartStore.getState().cutlery ? 'รับช้อนส้อม' : '',
+        fulfillment === 'pickup' && orderMode === 'SAME_DAY' && pickupOutsideAck && outsideShopHours ? 'รับนอกเวลาเปิดร้าน' : '',
+      ].filter(Boolean).join(' · '),
       // ✅ 127: pickup => dedicated canonical path (create_pickup_order_i, fee=0)
       delivery_method: fulfillment === 'pickup' ? 'pickup' : 'self_delivery',
       // Owner 2026-10-27: พรีออเดอร์ต้องมีที่อยู่ไม่ว่าง (server
@@ -935,6 +978,16 @@ export function CheckoutPage() {
 
   const selectedRound = rounds.find((r) => r.id === selectedRoundId) ?? null
 
+  // R65: "อยู่นอกเวลาเปิดร้าน" สำหรับ pickup SAME_DAY — ใช้ตอน render (banner/ช่อง
+  // ยืนยัน) · submit gate คำนวณใหม่จาก Date.now() ทุกครั้ง (กัน UI ค้าง) ·
+  // ไม่มีข้อมูล hours / parse ไม่ได้ = ถือว่าเปิด (ZERO-FAKE ตรง withinShopHours)
+  const shopHoursMsNow = hoursToMs(shopHours)
+  const pickupOutsideNow =
+    fulfillment === 'pickup' &&
+    orderMode === 'SAME_DAY' &&
+    shopHoursMsNow !== null &&
+    !withinShopHours(bangkokMsOfDay(Date.now()), shopHoursMsNow)
+
   return (
     <div className="max-w-4xl mx-auto px-4 py-6">
       <div className="flex items-center justify-between mb-6">
@@ -1006,9 +1059,31 @@ export function CheckoutPage() {
       )}
 
       <div className="card mb-6">
-        <h3 className="font-bold text-brand-accent mb-4">{orderMode === 'PRE_ORDER' ? '🚚 รอบการจัดส่ง' : '🛵 จัดส่งทันที'}</h3>
+        <h3 className="font-bold text-brand-accent mb-4">
+          {orderMode === 'PRE_ORDER' ? '🚚 รอบการจัดส่ง' : fulfillment === 'pickup' ? '🛍️ รับที่ร้าน' : '🛵 จัดส่งทันที'}
+        </h3>
         {orderMode !== 'PRE_ORDER' ? (
-          selectedRound ? (
+          fulfillment === 'pickup' ? (
+            // R65 (Owner 2026-11-03): pickup ไม่ผูกกับรอบ — ผูกกับเวลาเปิดร้าน +
+            // ระบบกำหนดรอบตามเวลาปัจจุบันอัตโนมัติ (ดีฟอลต์รอบสำหรับพิมพ์สติกเกอร์)
+            selectedRound ? (
+              <div data-testid="pickup-hours-card" className="p-3 rounded-lg border-2 border-brand-primary bg-orange-50">
+                <div className="font-medium text-slate-900">รับได้ตลอดเวลาเปิดร้าน{shopHours ? ` ${shopHours.open}–${shopHours.close}` : ''} — ไม่ต้องเลือกรอบ</div>
+                <div className="text-xs text-slate-600 mt-1">
+                  ระบบกำหนดช่วงเวลารับอัตโนมัติตามเวลาปัจจุบัน · ออก <b>รหัสรับอาหาร</b> ตอนรับ (ค่าจัดส่ง 0 บาท)
+                </div>
+                {pickupOutsideNow && (
+                  <div className="text-xs text-amber-800 mt-1" data-testid="pickup-outside-banner">
+                    ⏳ อยู่นอกเวลาเปิดร้าน — สั่งได้เป็นกรณีพิเศษ กรุณายืนยันด้านล่างก่อนสั่งซื้อ
+                  </div>
+                )}
+              </div>
+            ) : (
+              <p className="text-sm text-brand-muted" data-testid="no-rounds">
+                ยังไม่มีรอบเปิดรับวันนี้ — แอดมินปิดรอบไว้ทุกรอบ ไม่สามารถสั่งได้
+              </p>
+            )
+          ) : selectedRound ? (
             <div data-testid="same-day-auto-round" className="p-3 rounded-lg border-2 border-brand-primary bg-orange-50">
               <div className="font-medium text-slate-900">จัดส่งทันที — ระบบเลือกรอบจัดส่งให้อัตโนมัติ</div>
               <div className="text-xs text-slate-600 mt-1">
@@ -1090,7 +1165,20 @@ export function CheckoutPage() {
         </div>
         {fulfillment === 'pickup' && (
           <div className="mt-3 text-sm text-slate-700 bg-orange-50 border border-orange-200 rounded-lg p-3" data-testid="pickup-hint">
-            รับอาหารที่หน้าร้านตามช่วงเวลาที่เลือก — ระบบจะออก <b>รหัสรับอาหาร</b> ให้แสดงตอนรับ (ค่าจัดส่ง 0 บาท)
+            รับอาหารที่หน้าร้านได้ตลอดเวลาเปิดร้าน{shopHours ? ` ${shopHours.open}–${shopHours.close}` : ''} — ไม่ต้องเลือกรอบ ระบบจะออก <b>รหัสรับอาหาร</b> ให้แสดงตอนรับ (ค่าจัดส่ง 0 บาท)
+            {(pickupOutsideNow || pickupOutsideUi) && (
+              <label className="mt-2 flex items-start gap-2 cursor-pointer" data-testid="pickup-outside-ack-row">
+                <input
+                  type="checkbox"
+                  className="mt-0.5 w-4 h-4"
+                  checked={pickupOutsideAck}
+                  onChange={(e) => setPickupOutsideAck(e.target.checked)}
+                />
+                <span>
+                  นอกเวลาเปิดร้าน — ขอรับอาหารเป็นกรณีพิเศษ (ระบบจะแจ้งร้านในหมายเหตุออเดอร์)
+                </span>
+              </label>
+            )}
           </div>
         )}
       </div>
@@ -1361,7 +1449,7 @@ export function CheckoutPage() {
         disabled={isProcessing || !selectedRoundId || !discountGuard.allowed || !stackGuard.allowed}
         className="btn btn-primary w-full text-lg py-4 disabled:opacity-50 disabled:cursor-not-allowed"
       >
-        {isProcessing ? '⏳ กำลังยืนยัน...' : !stackGuard.allowed ? '⚠️ ใช้คูปองร่วมกับแต้มไม่ได้ — เลือกอย่างใดอย่างหนึ่ง' : !discountGuard.allowed ? '⚠️ ส่วนลดเกินเพดาน 15% — ลดส่วนลดก่อน' : !selectedRoundId ? (rounds.length > 0 ? '⚠️ ยังไม่มีรอบที่เปิดรับสำหรับวันนี้' : '⚠️ เลือกรอบจัดส่งก่อน') : `✅ ยืนยันสั่งซื้อ${orderMode === 'PRE_ORDER' ? ' (จองล่วงหน้า)' : ''}`}
+        {isProcessing ? '⏳ กำลังยืนยัน...' : !stackGuard.allowed ? '⚠️ ใช้คูปองร่วมกับแต้มไม่ได้ — เลือกอย่างใดอย่างหนึ่ง' : !discountGuard.allowed ? '⚠️ ส่วนลดเกินเพดาน 15% — ลดส่วนลดก่อน' : !selectedRoundId ? (fulfillment === 'pickup' ? (rounds.length > 0 ? '⚠️ รอบวันนี้เต็มทุกรอบ' : '⚠️ แอดมินปิดรับออเดอร์วันนี้แล้ว') : (rounds.length > 0 ? '⚠️ ยังไม่มีรอบที่เปิดรับสำหรับวันนี้' : '⚠️ เลือกรอบจัดส่งก่อน')) : `✅ ยืนยันสั่งซื้อ${orderMode === 'PRE_ORDER' ? ' (จองล่วงหน้า)' : ''}`}
       </button>
     </div>
   )

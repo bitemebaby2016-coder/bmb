@@ -1,0 +1,17 @@
+R65: pickup binds to shop hours, not rounds (Owner directive)
+
+- Migration 184: create_pickup_order_i sets transaction-local GUC
+  app.pickup_order; enforce_shop_hours skips pickup; enforce_operating_hours
+  skips round-key toggles only (mode-level kill-switches still enforced).
+  Engine gates (round status/date/capacity/menu/pre-order) untouched.
+- CheckoutPage: pickup SAME_DAY auto-select = capacity + current-time window
+  (no shop-hours/round gate); outside-hours pickup requires customer ack and
+  appends "รับนอกเวลาเปิดร้าน" to special_instructions (sticker Notice);
+  delivery outside-hours block unchanged; fulfillment added to round effect deps.
+- Contract e2e/contracts_184_pickup_outside_hours.sql (G0-G5, ROLLBACK) +
+  CI step in contract-tests.yml (greps R65_184_RESULTS).
+- Behavioral test r65PickupHoursNotRounds (5/5) + r51 string assertions.
+- Probes r65Rounds/r65b-r65g (read-only diagnosis evidence).
+
+Gates: vitest 204 files/2025 tests 0 fail · build EXITCODE=0 · SECRET_HITS=0.
+Note: migration 184 awaits Owner `__apply 184__` (production not applied yet).

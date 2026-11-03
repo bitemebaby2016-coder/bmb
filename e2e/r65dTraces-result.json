@@ -1,0 +1,241 @@
+{
+  "at": "2026-11-03T14:56:26.245Z",
+  "cartSessions": {
+    "s": 200,
+    "j": [
+      {
+        "id": "csx-mw0b15l6-zyzag1",
+        "status": "converted",
+        "customer_id": "dddf4b57-405f-4852-a985-76d8d52b1b72",
+        "created_at": "2026-11-03T10:11:56.587869+00:00",
+        "updated_at": "2026-11-03T14:09:38.465+00:00"
+      },
+      {
+        "id": "csx-mw02vvpb-iz7hmh",
+        "status": "converted",
+        "customer_id": "d6c57b8d-93fa-46d8-9ac8-4d6d2ccbf974",
+        "created_at": "2026-11-03T02:38:14.098746+00:00",
+        "updated_at": "2026-11-03T02:38:23.994+00:00"
+      },
+      {
+        "id": "csx-mw02kriu-37fka0",
+        "status": "converted",
+        "customer_id": "d6c57b8d-93fa-46d8-9ac8-4d6d2ccbf974",
+        "created_at": "2026-11-03T02:29:36.040414+00:00",
+        "updated_at": "2026-11-03T02:29:46.098+00:00"
+      },
+      {
+        "id": "csx-mw02fdcp-6n72l9",
+        "status": "converted",
+        "customer_id": "d6c57b8d-93fa-46d8-9ac8-4d6d2ccbf974",
+        "created_at": "2026-11-03T02:25:25.807262+00:00",
+        "updated_at": "2026-11-03T02:25:52.566+00:00"
+      },
+      {
+        "id": "csx-mw02c4w2-xhthe9",
+        "status": "converted",
+        "customer_id": "d6c57b8d-93fa-46d8-9ac8-4d6d2ccbf974",
+        "created_at": "2026-11-03T02:22:52.834727+00:00",
+        "updated_at": "2026-11-03T02:23:20.919+00:00"
+      },
+      {
+        "id": "csx-mw029nwh-i1lsjl",
+        "status": "converted",
+        "customer_id": "d6c57b8d-93fa-46d8-9ac8-4d6d2ccbf974",
+        "created_at": "2026-11-03T02:20:57.127963+00:00",
+        "updated_at": "2026-11-03T02:20:56.99+00:00"
+      },
+      {
+        "id": "csx-mw028hcp-o7cmko",
+        "status": "converted",
+        "customer_id": "d6c57b8d-93fa-46d8-9ac8-4d6d2ccbf974",
+        "created_at": "2026-11-03T02:20:02.378563+00:00",
+        "updated_at": "2026-11-03T02:20:02.255+00:00"
+      },
+      {
+        "id": "csx-mw026r0n-cry77a",
+        "status": "converted",
+        "customer_id": "d6c57b8d-93fa-46d8-9ac8-4d6d2ccbf974",
+        "created_at": "2026-11-03T02:18:42.518666+00:00",
+        "updated_at": "2026-11-03T02:18:42.388+00:00"
+      },
+      {
+        "id": "csx-mw0209dk-cqfisq",
+        "status": "converted",
+        "customer_id": "d6c57b8d-93fa-46d8-9ac8-4d6d2ccbf974",
+        "created_at": "2026-11-03T02:13:38.722545+00:00",
+        "updated_at": "2026-11-03T02:13:38.584+00:00"
+      },
+      {
+        "id": "csx-mw01w2xn-94my1e",
+        "status": "converted",
+        "customer_id": "d6c57b8d-93fa-46d8-9ac8-4d6d2ccbf974",
+        "created_at": "2026-11-03T02:10:24.471272+00:00",
+        "updated_at": "2026-11-03T02:10:24.288+00:00"
+      }
+    ]
+  },
+  "audit": {
+    "s": 200,
+    "j": [
+      {
+        "action": "automation.execution",
+        "entity_type": "automation",
+        "entity_id": "marketing_publish",
+        "description": "automation marketing_publish succeeded",
+        "created_at": "2026-11-03T14:55:06.825189+00:00"
+      },
+      {
+        "action": "automation.execution",
+        "entity_type": "automation",
+        "entity_id": "marketing_publish",
+        "description": "automation marketing_publish succeeded",
+        "created_at": "2026-11-03T14:50:09.660682+00:00"
+      },
+      {
+        "action": "automation.execution",
+        "entity_type": "automation",
+        "entity_id": "marketing_publish",
+        "description": "automation marketing_publish succeeded",
+        "created_at": "2026-11-03T14:45:08.377126+00:00"
+      },
+      {
+        "action": "automation.execution",
+        "entity_type": "automation",
+        "entity_id": "marketing_publish",
+        "description": "automation marketing_publish succeeded",
+        "created_at": "2026-11-03T14:40:09.214382+00:00"
+      },
+      {
+        "action": "automation.execution",
+        "entity_type": "automation",
+        "entity_id": "marketing_publish",
+        "description": "automation marketing_publish succeeded",
+        "created_at": "2026-11-03T14:35:08.158859+00:00"
+      },
+      {
+        "action": "automation.execution",
+        "entity_type": "automation",
+        "entity_id": "marketing_publish",
+        "description": "automation marketing_publish succeeded",
+        "created_at": "2026-11-03T14:30:10.388187+00:00"
+      },
+      {
+        "action": "automation.execution",
+        "entity_type": "automation",
+        "entity_id": "marketing_publish",
+        "description": "automation marketing_publish succeeded",
+        "created_at": "2026-11-03T14:25:07.398515+00:00"
+      },
+      {
+        "action": "automation.execution",
+        "entity_type": "automation",
+        "entity_id": "marketing_publish",
+        "description": "automation marketing_publish succeeded",
+        "created_at": "2026-11-03T14:20:07.72467+00:00"
+      },
+      {
+        "action": "automation.execution",
+        "entity_type": "automation",
+        "entity_id": "marketing_publish",
+        "description": "automation marketing_publish succeeded",
+        "created_at": "2026-11-03T14:15:09.95647+00:00"
+      },
+      {
+        "action": "automation.execution",
+        "entity_type": "automation",
+        "entity_id": "marketing_publish",
+        "description": "automation marketing_publish succeeded",
+        "created_at": "2026-11-03T14:10:08.925797+00:00"
+      },
+      {
+        "action": "automation.execution",
+        "entity_type": "automation",
+        "entity_id": "marketing_publish",
+        "description": "automation marketing_publish succeeded",
+        "created_at": "2026-11-03T14:05:08.428706+00:00"
+      },
+      {
+        "action": "automation.execution",
+        "entity_type": "automation",
+        "entity_id": "marketing_publish",
+        "description": "automation marketing_publish succeeded",
+        "created_at": "2026-11-03T14:00:10.632307+00:00"
+      },
+      {
+        "action": "social.comment_poll",
+        "entity_type": "marketing_post",
+        "entity_id": "poll",
+        "description": "comment poll: {\"ok\":true,\"page_id\":\"862940416913026\",\"posts\":10,\"seen\":10,\"inserted\":0,\"duplicate\":10,\"unbound\":0,\"kicked\":0}",
+        "created_at": "2026-11-03T14:00:10.601295+00:00"
+      },
+      {
+        "action": "automation.execution",
+        "entity_type": "automation",
+        "entity_id": "marketing_publish",
+        "description": "automation marketing_publish succeeded",
+        "created_at": "2026-11-03T13:55:07.970755+00:00"
+      },
+      {
+        "action": "automation.execution",
+        "entity_type": "automation",
+        "entity_id": "marketing_publish",
+        "description": "automation marketing_publish succeeded",
+        "created_at": "2026-11-03T13:50:08.461382+00:00"
+      },
+      {
+        "action": "automation.execution",
+        "entity_type": "automation",
+        "entity_id": "marketing_publish",
+        "description": "automation marketing_publish succeeded",
+        "created_at": "2026-11-03T13:45:08.641801+00:00"
+      },
+      {
+        "action": "user_login",
+        "entity_type": "user",
+        "entity_id": "siamportal18@gmail.com",
+        "description": "siamportal18@gmail.com - login success",
+        "created_at": "2026-11-03T13:41:32.572058+00:00"
+      },
+      {
+        "action": "automation.execution",
+        "entity_type": "automation",
+        "entity_id": "marketing_publish",
+        "description": "automation marketing_publish succeeded",
+        "created_at": "2026-11-03T13:40:11.836507+00:00"
+      },
+      {
+        "action": "automation.execution",
+        "entity_type": "automation",
+        "entity_id": "marketing_publish",
+        "description": "automation marketing_publish succeeded",
+        "created_at": "2026-11-03T13:35:13.85922+00:00"
+      },
+      {
+        "action": "automation.execution",
+        "entity_type": "automation",
+        "entity_id": "marketing_publish",
+        "description": "automation marketing_publish succeeded",
+        "created_at": "2026-11-03T13:30:10.655118+00:00"
+      }
+    ]
+  },
+  "submissions": {
+    "s": 403,
+    "j": {
+      "code": "42501",
+      "details": null,
+      "hint": "Grant the required privileges to the current role with: GRANT SELECT ON public.order_submissions TO service_role;",
+      "message": "permission denied for table order_submissions"
+    }
+  },
+  "notices": {
+    "s": 400,
+    "j": {
+      "code": "42703",
+      "details": null,
+      "hint": null,
+      "message": "column notifications.event_key does not exist"
+    }
+  }
+}

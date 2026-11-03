@@ -1,0 +1,289 @@
+{
+  "at": "2026-11-03T15:13:26.499Z",
+  "eveningArchived": {
+    "s": 200,
+    "j": [
+      {
+        "id": "round-20261101-evening",
+        "scheduled_date": "2026-11-01",
+        "status": "closed",
+        "archived": false
+      },
+      {
+        "id": "round-20261102-evening",
+        "scheduled_date": "2026-11-02",
+        "status": "closed",
+        "archived": false
+      },
+      {
+        "id": "round-20261103-evening",
+        "scheduled_date": "2026-11-03",
+        "status": "closed",
+        "archived": false
+      },
+      {
+        "id": "round-20261104-evening",
+        "scheduled_date": "2026-11-04",
+        "status": "closed",
+        "archived": false
+      },
+      {
+        "id": "round-20261105-evening",
+        "scheduled_date": "2026-11-05",
+        "status": "closed",
+        "archived": false
+      },
+      {
+        "id": "round-20261106-evening",
+        "scheduled_date": "2026-11-06",
+        "status": "closed",
+        "archived": false
+      },
+      {
+        "id": "round-20261107-evening",
+        "scheduled_date": "2026-11-07",
+        "status": "closed",
+        "archived": false
+      },
+      {
+        "id": "round-20261108-evening",
+        "scheduled_date": "2026-11-08",
+        "status": "closed",
+        "archived": false
+      },
+      {
+        "id": "round-20261109-evening",
+        "scheduled_date": "2026-11-09",
+        "status": "closed",
+        "archived": false
+      },
+      {
+        "id": "round-20261110-evening",
+        "scheduled_date": "2026-11-10",
+        "status": "closed",
+        "archived": false
+      },
+      {
+        "id": "round-20261111-evening",
+        "scheduled_date": "2026-11-11",
+        "status": "closed",
+        "archived": false
+      },
+      {
+        "id": "round-20261112-evening",
+        "scheduled_date": "2026-11-12",
+        "status": "closed",
+        "archived": false
+      },
+      {
+        "id": "round-20261113-evening",
+        "scheduled_date": "2026-11-13",
+        "status": "closed",
+        "archived": false
+      },
+      {
+        "id": "round-20261114-evening",
+        "scheduled_date": "2026-11-14",
+        "status": "closed",
+        "archived": false
+      },
+      {
+        "id": "round-20261115-evening",
+        "scheduled_date": "2026-11-15",
+        "status": "closed",
+        "archived": false
+      },
+      {
+        "id": "round-20261116-evening",
+        "scheduled_date": "2026-11-16",
+        "status": "closed",
+        "archived": false
+      },
+      {
+        "id": "round-20261117-evening",
+        "scheduled_date": "2026-11-17",
+        "status": "closed",
+        "archived": false
+      },
+      {
+        "id": "round-20261118-evening",
+        "scheduled_date": "2026-11-18",
+        "status": "closed",
+        "archived": false
+      },
+      {
+        "id": "round-20261119-evening",
+        "scheduled_date": "2026-11-19",
+        "status": "closed",
+        "archived": false
+      },
+      {
+        "id": "round-20261120-evening",
+        "scheduled_date": "2026-11-20",
+        "status": "closed",
+        "archived": false
+      },
+      {
+        "id": "round-20261121-evening",
+        "scheduled_date": "2026-11-21",
+        "status": "closed",
+        "archived": false
+      },
+      {
+        "id": "round-20261122-evening",
+        "scheduled_date": "2026-11-22",
+        "status": "closed",
+        "archived": false
+      }
+    ]
+  },
+  "auditOct30": {
+    "s": 200,
+    "j": [
+      {
+        "action": "settings_change",
+        "entity_id": "round-20261024-evening",
+        "description": "auto-close ปิดรอบ \"เย็น\" (2026-10-24) : active -> closed (วันจัดส่งผ่านไปแล้ว)",
+        "created_at": "2026-10-30T14:16:49.900221+00:00"
+      },
+      {
+        "action": "settings_change",
+        "entity_id": "round-20261024-evening",
+        "description": "รอบส่ง \"เย็น\" (2026-10-24) : closed → active",
+        "created_at": "2026-10-30T14:16:49.901116+00:00"
+      },
+      {
+        "action": "settings_change",
+        "entity_id": "round-20261102-evening",
+        "description": "รอบส่ง \"เย็น\" (2026-11-02) : active → closed",
+        "created_at": "2026-10-30T14:17:08.044976+00:00"
+      },
+      {
+        "action": "settings_change",
+        "entity_id": "round-20261103-evening",
+        "description": "รอบส่ง \"เย็น\" (2026-11-03) : active → closed",
+        "created_at": "2026-10-30T14:17:11.516125+00:00"
+      },
+      {
+        "action": "settings_change",
+        "entity_id": "round-20261104-evening",
+        "description": "รอบส่ง \"เย็น\" (2026-11-04) : active → closed",
+        "created_at": "2026-10-30T14:17:20.142536+00:00"
+      },
+      {
+        "action": "settings_change",
+        "entity_id": "round-20261105-evening",
+        "description": "รอบส่ง \"เย็น\" (2026-11-05) : active → closed",
+        "created_at": "2026-10-30T14:17:24.290398+00:00"
+      },
+      {
+        "action": "settings_change",
+        "entity_id": "round-20261106-evening",
+        "description": "รอบส่ง \"เย็น\" (2026-11-06) : active → closed",
+        "created_at": "2026-10-30T14:17:29.450133+00:00"
+      },
+      {
+        "action": "settings_change",
+        "entity_id": "round-20261107-evening",
+        "description": "รอบส่ง \"เย็น\" (2026-11-07) : active → closed",
+        "created_at": "2026-10-30T14:17:33.213172+00:00"
+      },
+      {
+        "action": "settings_change",
+        "entity_id": "round-20261108-evening",
+        "description": "รอบส่ง \"เย็น\" (2026-11-08) : active → closed",
+        "created_at": "2026-10-30T14:19:29.37933+00:00"
+      },
+      {
+        "action": "settings_change",
+        "entity_id": "round-20261109-evening",
+        "description": "รอบส่ง \"เย็น\" (2026-11-09) : active → closed",
+        "created_at": "2026-10-30T14:19:33.813376+00:00"
+      },
+      {
+        "action": "settings_change",
+        "entity_id": "round-20261110-evening",
+        "description": "รอบส่ง \"เย็น\" (2026-11-10) : active → closed",
+        "created_at": "2026-10-30T14:19:40.935824+00:00"
+      },
+      {
+        "action": "settings_change",
+        "entity_id": "round-20261111-evening",
+        "description": "รอบส่ง \"เย็น\" (2026-11-11) : active → closed",
+        "created_at": "2026-10-30T14:19:44.77225+00:00"
+      },
+      {
+        "action": "settings_change",
+        "entity_id": "round-20261112-evening",
+        "description": "รอบส่ง \"เย็น\" (2026-11-12) : active → closed",
+        "created_at": "2026-10-30T14:19:49.07991+00:00"
+      },
+      {
+        "action": "settings_change",
+        "entity_id": "round-20261113-evening",
+        "description": "รอบส่ง \"เย็น\" (2026-11-13) : active → closed",
+        "created_at": "2026-10-30T14:19:55.673746+00:00"
+      },
+      {
+        "action": "settings_change",
+        "entity_id": "round-20261114-evening",
+        "description": "รอบส่ง \"เย็น\" (2026-11-14) : active → closed",
+        "created_at": "2026-10-30T14:19:59.49264+00:00"
+      },
+      {
+        "action": "settings_change",
+        "entity_id": "round-20261115-evening",
+        "description": "รอบส่ง \"เย็น\" (2026-11-15) : active → closed",
+        "created_at": "2026-10-30T14:20:04.115857+00:00"
+      },
+      {
+        "action": "settings_change",
+        "entity_id": "round-20261116-evening",
+        "description": "รอบส่ง \"เย็น\" (2026-11-16) : active → closed",
+        "created_at": "2026-10-30T14:20:23.735876+00:00"
+      },
+      {
+        "action": "settings_change",
+        "entity_id": "round-20261117-evening",
+        "description": "รอบส่ง \"เย็น\" (2026-11-17) : active → closed",
+        "created_at": "2026-10-30T14:20:29.400599+00:00"
+      },
+      {
+        "action": "settings_change",
+        "entity_id": "round-20261118-evening",
+        "description": "รอบส่ง \"เย็น\" (2026-11-18) : active → closed",
+        "created_at": "2026-10-30T14:20:34.724471+00:00"
+      },
+      {
+        "action": "settings_change",
+        "entity_id": "round-20261119-evening",
+        "description": "รอบส่ง \"เย็น\" (2026-11-19) : active → closed",
+        "created_at": "2026-10-30T14:20:38.824065+00:00"
+      },
+      {
+        "action": "settings_change",
+        "entity_id": "round-20261120-evening",
+        "description": "รอบส่ง \"เย็น\" (2026-11-20) : active → closed",
+        "created_at": "2026-10-30T14:20:42.246094+00:00"
+      },
+      {
+        "action": "settings_change",
+        "entity_id": "round-20261121-evening",
+        "description": "รอบส่ง \"เย็น\" (2026-11-21) : active → closed",
+        "created_at": "2026-10-30T14:20:45.827035+00:00"
+      },
+      {
+        "action": "settings_change",
+        "entity_id": "round-20261122-evening",
+        "description": "รอบส่ง \"เย็น\" (2026-11-22) : active → closed",
+        "created_at": "2026-10-30T14:20:49.186757+00:00"
+      },
+      {
+        "action": "settings_change",
+        "entity_id": "round-20261101-evening",
+        "description": "รอบส่ง \"เย็น\" (2026-11-01) : active → closed",
+        "created_at": "2026-10-30T14:43:05.975279+00:00"
+      }
+    ]
+  }
+}

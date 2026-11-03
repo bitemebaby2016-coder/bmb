@@ -1,0 +1,61 @@
+{
+  "at": "2026-11-03T14:58:04.584Z",
+  "ordersAll": {
+    "s": 200,
+    "j": [
+      {
+        "order_number": "BMB-20261101-170",
+        "delivery_method": "pickup",
+        "status": "ready_for_dispatch",
+        "created_at": "2026-11-01T09:53:41.240136+00:00"
+      },
+      {
+        "order_number": "BMB-20261101-548",
+        "delivery_method": "pickup",
+        "status": "cancelled",
+        "created_at": "2026-11-01T09:46:14.287931+00:00"
+      },
+      {
+        "order_number": "BMB-20261101-218",
+        "delivery_method": "self_delivery",
+        "status": "delivered",
+        "created_at": "2026-11-01T04:08:31.820949+00:00"
+      },
+      {
+        "order_number": "BMB-20261101-782",
+        "delivery_method": "self_delivery",
+        "status": "delivered",
+        "created_at": "2026-11-01T01:23:50.989162+00:00"
+      },
+      {
+        "order_number": "PO-20261031-564",
+        "delivery_method": "self_delivery",
+        "status": "delivered",
+        "created_at": "2026-10-31T00:48:57.745313+00:00"
+      }
+    ]
+  },
+  "ordersToday": {
+    "s": 200,
+    "j": []
+  },
+  "pi": {
+    "s": 200,
+    "j": []
+  },
+  "cartOne": {
+    "s": 200,
+    "j": [
+      {
+        "id": "csx-mw0b15l6-zyzag1",
+        "customer_id": "dddf4b57-405f-4852-a985-76d8d52b1b72",
+        "items_count": 0,
+        "total_amount": 0,
+        "status": "converted",
+        "notified_at": null,
+        "created_at": "2026-11-03T10:11:56.587869+00:00",
+        "updated_at": "2026-11-03T14:09:38.465+00:00"
+      }
+    ]
+  }
+}

@@ -1,0 +1,37 @@
+{
+  "at": "2026-11-03T14:39:52.341Z",
+  "settingsStatus": 200,
+  "settings": [
+    {
+      "key": "hours",
+      "value": {
+        "open": "8:00",
+        "close": "20:00"
+      }
+    },
+    {
+      "key": "operating_hours",
+      "value": {
+        "midday_open": true,
+        "evening_open": true,
+        "morning_open": true,
+        "same_day_open": true,
+        "pre_order_open": true
+      }
+    },
+    {
+      "key": "order_policy",
+      "value": {
+        "daily_quota": 100,
+        "cutoff_hours": 2,
+        "reminder_days": 1,
+        "preorder_max_days": 15,
+        "max_items_per_order": 50,
+        "pre_order_lead_days": 7,
+        "cancel_window_minutes": 5
+      }
+    }
+  ],
+  "ordersStatus": 200,
+  "orders": []
+}

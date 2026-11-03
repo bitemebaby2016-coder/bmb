@@ -1,0 +1,306 @@
+{
+  "at": "2026-11-03T13:56:11.554Z",
+  "status": 200,
+  "rows": [
+    {
+      "id": "round-20261103-morning",
+      "scheduled_date": "2026-11-03",
+      "status": "active",
+      "cutoff_time": "05:00:00",
+      "delivery_start": "07:00:00",
+      "delivery_end": "09:00:00",
+      "max_capacity": 20,
+      "current_count": 0
+    },
+    {
+      "id": "round-20261103-midday",
+      "scheduled_date": "2026-11-03",
+      "status": "active",
+      "cutoff_time": "09:00:00",
+      "delivery_start": "11:00:00",
+      "delivery_end": "15:00:00",
+      "max_capacity": 30,
+      "current_count": 0
+    },
+    {
+      "id": "round-20261103-evening",
+      "scheduled_date": "2026-11-03",
+      "status": "closed",
+      "cutoff_time": "16:00:00",
+      "delivery_start": "18:00:00",
+      "delivery_end": "20:00:00",
+      "max_capacity": 25,
+      "current_count": 0
+    },
+    {
+      "id": "round-20261104-morning",
+      "scheduled_date": "2026-11-04",
+      "status": "active",
+      "cutoff_time": "05:00:00",
+      "delivery_start": "07:00:00",
+      "delivery_end": "09:00:00",
+      "max_capacity": 20,
+      "current_count": 0
+    },
+    {
+      "id": "round-20261104-midday",
+      "scheduled_date": "2026-11-04",
+      "status": "active",
+      "cutoff_time": "09:00:00",
+      "delivery_start": "11:00:00",
+      "delivery_end": "15:00:00",
+      "max_capacity": 30,
+      "current_count": 0
+    },
+    {
+      "id": "round-20261104-evening",
+      "scheduled_date": "2026-11-04",
+      "status": "closed",
+      "cutoff_time": "16:00:00",
+      "delivery_start": "18:00:00",
+      "delivery_end": "20:00:00",
+      "max_capacity": 25,
+      "current_count": 0
+    },
+    {
+      "id": "round-20261105-morning",
+      "scheduled_date": "2026-11-05",
+      "status": "active",
+      "cutoff_time": "05:00:00",
+      "delivery_start": "07:00:00",
+      "delivery_end": "09:00:00",
+      "max_capacity": 20,
+      "current_count": 0
+    },
+    {
+      "id": "round-20261105-midday",
+      "scheduled_date": "2026-11-05",
+      "status": "active",
+      "cutoff_time": "09:00:00",
+      "delivery_start": "11:00:00",
+      "delivery_end": "15:00:00",
+      "max_capacity": 30,
+      "current_count": 0
+    },
+    {
+      "id": "round-20261105-evening",
+      "scheduled_date": "2026-11-05",
+      "status": "closed",
+      "cutoff_time": "16:00:00",
+      "delivery_start": "18:00:00",
+      "delivery_end": "20:00:00",
+      "max_capacity": 25,
+      "current_count": 0
+    },
+    {
+      "id": "round-20261106-morning",
+      "scheduled_date": "2026-11-06",
+      "status": "active",
+      "cutoff_time": "05:00:00",
+      "delivery_start": "07:00:00",
+      "delivery_end": "09:00:00",
+      "max_capacity": 20,
+      "current_count": 0
+    },
+    {
+      "id": "round-20261106-midday",
+      "scheduled_date": "2026-11-06",
+      "status": "active",
+      "cutoff_time": "09:00:00",
+      "delivery_start": "11:00:00",
+      "delivery_end": "15:00:00",
+      "max_capacity": 30,
+      "current_count": 0
+    },
+    {
+      "id": "round-20261106-evening",
+      "scheduled_date": "2026-11-06",
+      "status": "closed",
+      "cutoff_time": "16:00:00",
+      "delivery_start": "18:00:00",
+      "delivery_end": "20:00:00",
+      "max_capacity": 25,
+      "current_count": 0
+    },
+    {
+      "id": "round-20261107-morning",
+      "scheduled_date": "2026-11-07",
+      "status": "active",
+      "cutoff_time": "05:00:00",
+      "delivery_start": "07:00:00",
+      "delivery_end": "09:00:00",
+      "max_capacity": 20,
+      "current_count": 0
+    },
+    {
+      "id": "round-20261107-midday",
+      "scheduled_date": "2026-11-07",
+      "status": "active",
+      "cutoff_time": "09:00:00",
+      "delivery_start": "11:00:00",
+      "delivery_end": "15:00:00",
+      "max_capacity": 30,
+      "current_count": 0
+    },
+    {
+      "id": "round-20261107-evening",
+      "scheduled_date": "2026-11-07",
+      "status": "closed",
+      "cutoff_time": "16:00:00",
+      "delivery_start": "18:00:00",
+      "delivery_end": "20:00:00",
+      "max_capacity": 25,
+      "current_count": 0
+    },
+    {
+      "id": "round-20261108-morning",
+      "scheduled_date": "2026-11-08",
+      "status": "active",
+      "cutoff_time": "05:00:00",
+      "delivery_start": "07:00:00",
+      "delivery_end": "09:00:00",
+      "max_capacity": 20,
+      "current_count": 0
+    },
+    {
+      "id": "round-20261108-midday",
+      "scheduled_date": "2026-11-08",
+      "status": "active",
+      "cutoff_time": "09:00:00",
+      "delivery_start": "11:00:00",
+      "delivery_end": "15:00:00",
+      "max_capacity": 30,
+      "current_count": 0
+    },
+    {
+      "id": "round-20261108-evening",
+      "scheduled_date": "2026-11-08",
+      "status": "closed",
+      "cutoff_time": "16:00:00",
+      "delivery_start": "18:00:00",
+      "delivery_end": "20:00:00",
+      "max_capacity": 25,
+      "current_count": 0
+    },
+    {
+      "id": "round-20261109-morning",
+      "scheduled_date": "2026-11-09",
+      "status": "active",
+      "cutoff_time": "05:00:00",
+      "delivery_start": "07:00:00",
+      "delivery_end": "09:00:00",
+      "max_capacity": 20,
+      "current_count": 0
+    },
+    {
+      "id": "round-20261109-midday",
+      "scheduled_date": "2026-11-09",
+      "status": "active",
+      "cutoff_time": "09:00:00",
+      "delivery_start": "11:00:00",
+      "delivery_end": "15:00:00",
+      "max_capacity": 30,
+      "current_count": 0
+    },
+    {
+      "id": "round-20261109-evening",
+      "scheduled_date": "2026-11-09",
+      "status": "closed",
+      "cutoff_time": "16:00:00",
+      "delivery_start": "18:00:00",
+      "delivery_end": "20:00:00",
+      "max_capacity": 25,
+      "current_count": 0
+    },
+    {
+      "id": "round-20261110-morning",
+      "scheduled_date": "2026-11-10",
+      "status": "active",
+      "cutoff_time": "05:00:00",
+      "delivery_start": "07:00:00",
+      "delivery_end": "09:00:00",
+      "max_capacity": 20,
+      "current_count": 0
+    },
+    {
+      "id": "round-20261110-midday",
+      "scheduled_date": "2026-11-10",
+      "status": "active",
+      "cutoff_time": "09:00:00",
+      "delivery_start": "11:00:00",
+      "delivery_end": "15:00:00",
+      "max_capacity": 30,
+      "current_count": 0
+    },
+    {
+      "id": "round-20261110-evening",
+      "scheduled_date": "2026-11-10",
+      "status": "closed",
+      "cutoff_time": "16:00:00",
+      "delivery_start": "18:00:00",
+      "delivery_end": "20:00:00",
+      "max_capacity": 25,
+      "current_count": 0
+    },
+    {
+      "id": "round-20261111-morning",
+      "scheduled_date": "2026-11-11",
+      "status": "active",
+      "cutoff_time": "05:00:00",
+      "delivery_start": "07:00:00",
+      "delivery_end": "09:00:00",
+      "max_capacity": 20,
+      "current_count": 0
+    },
+    {
+      "id": "round-20261111-midday",
+      "scheduled_date": "2026-11-11",
+      "status": "active",
+      "cutoff_time": "09:00:00",
+      "delivery_start": "11:00:00",
+      "delivery_end": "15:00:00",
+      "max_capacity": 30,
+      "current_count": 0
+    },
+    {
+      "id": "round-20261111-evening",
+      "scheduled_date": "2026-11-11",
+      "status": "closed",
+      "cutoff_time": "16:00:00",
+      "delivery_start": "18:00:00",
+      "delivery_end": "20:00:00",
+      "max_capacity": 25,
+      "current_count": 0
+    },
+    {
+      "id": "round-20261112-morning",
+      "scheduled_date": "2026-11-12",
+      "status": "active",
+      "cutoff_time": "05:00:00",
+      "delivery_start": "07:00:00",
+      "delivery_end": "09:00:00",
+      "max_capacity": 20,
+      "current_count": 0
+    },
+    {
+      "id": "round-20261112-midday",
+      "scheduled_date": "2026-11-12",
+      "status": "active",
+      "cutoff_time": "09:00:00",
+      "delivery_start": "11:00:00",
+      "delivery_end": "15:00:00",
+      "max_capacity": 30,
+      "current_count": 0
+    },
+    {
+      "id": "round-20261112-evening",
+      "scheduled_date": "2026-11-12",
+      "status": "closed",
+      "cutoff_time": "16:00:00",
+      "delivery_start": "18:00:00",
+      "delivery_end": "20:00:00",
+      "max_capacity": 25,
+      "current_count": 0
+    }
+  ]
+}

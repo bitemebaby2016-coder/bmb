@@ -1,0 +1,322 @@
+{
+  "at": "2026-11-03T15:04:49.880Z",
+  "evenings": {
+    "s": 200,
+    "j": [
+      {
+        "id": "round-20261101-evening",
+        "scheduled_date": "2026-11-01",
+        "status": "closed",
+        "updated_at": "2026-10-30T14:43:05.689619+00:00",
+        "created_at": "2026-10-25T15:32:54.865859+00:00"
+      },
+      {
+        "id": "round-20261102-evening",
+        "scheduled_date": "2026-11-02",
+        "status": "closed",
+        "updated_at": "2026-10-30T14:17:07.83976+00:00",
+        "created_at": "2026-10-25T15:32:55.211521+00:00"
+      },
+      {
+        "id": "round-20261103-evening",
+        "scheduled_date": "2026-11-03",
+        "status": "closed",
+        "updated_at": "2026-10-30T14:17:11.339794+00:00",
+        "created_at": "2026-10-25T15:32:55.585458+00:00"
+      },
+      {
+        "id": "round-20261104-evening",
+        "scheduled_date": "2026-11-04",
+        "status": "closed",
+        "updated_at": "2026-10-30T14:17:19.973976+00:00",
+        "created_at": "2026-10-25T15:32:55.934703+00:00"
+      },
+      {
+        "id": "round-20261105-evening",
+        "scheduled_date": "2026-11-05",
+        "status": "closed",
+        "updated_at": "2026-10-30T14:17:24.125953+00:00",
+        "created_at": "2026-10-25T15:32:56.285335+00:00"
+      },
+      {
+        "id": "round-20261106-evening",
+        "scheduled_date": "2026-11-06",
+        "status": "closed",
+        "updated_at": "2026-10-30T14:17:29.276072+00:00",
+        "created_at": "2026-10-25T15:32:56.615228+00:00"
+      },
+      {
+        "id": "round-20261107-evening",
+        "scheduled_date": "2026-11-07",
+        "status": "closed",
+        "updated_at": "2026-10-30T14:17:33.053021+00:00",
+        "created_at": "2026-10-25T15:32:56.939662+00:00"
+      },
+      {
+        "id": "round-20261108-evening",
+        "scheduled_date": "2026-11-08",
+        "status": "closed",
+        "updated_at": "2026-10-30T14:19:29.162505+00:00",
+        "created_at": "2026-10-25T15:32:57.27701+00:00"
+      },
+      {
+        "id": "round-20261109-evening",
+        "scheduled_date": "2026-11-09",
+        "status": "closed",
+        "updated_at": "2026-10-30T14:19:33.642807+00:00",
+        "created_at": "2026-10-25T15:32:57.6312+00:00"
+      },
+      {
+        "id": "round-20261110-evening",
+        "scheduled_date": "2026-11-10",
+        "status": "closed",
+        "updated_at": "2026-10-30T14:19:40.767176+00:00",
+        "created_at": "2026-10-25T15:32:57.965918+00:00"
+      },
+      {
+        "id": "round-20261111-evening",
+        "scheduled_date": "2026-11-11",
+        "status": "closed",
+        "updated_at": "2026-10-30T14:19:44.605832+00:00",
+        "created_at": "2026-10-25T15:32:58.320776+00:00"
+      },
+      {
+        "id": "round-20261112-evening",
+        "scheduled_date": "2026-11-12",
+        "status": "closed",
+        "updated_at": "2026-10-30T14:19:48.902286+00:00",
+        "created_at": "2026-10-25T15:32:58.671671+00:00"
+      },
+      {
+        "id": "round-20261113-evening",
+        "scheduled_date": "2026-11-13",
+        "status": "closed",
+        "updated_at": "2026-10-30T14:19:55.495032+00:00",
+        "created_at": "2026-10-25T15:32:59.053654+00:00"
+      },
+      {
+        "id": "round-20261114-evening",
+        "scheduled_date": "2026-11-14",
+        "status": "closed",
+        "updated_at": "2026-10-30T14:19:59.321374+00:00",
+        "created_at": "2026-10-25T15:32:59.402257+00:00"
+      },
+      {
+        "id": "round-20261115-evening",
+        "scheduled_date": "2026-11-15",
+        "status": "closed",
+        "updated_at": "2026-10-30T14:20:03.94909+00:00",
+        "created_at": "2026-10-25T15:32:59.737277+00:00"
+      },
+      {
+        "id": "round-20261116-evening",
+        "scheduled_date": "2026-11-16",
+        "status": "closed",
+        "updated_at": "2026-10-30T14:20:23.563348+00:00",
+        "created_at": "2026-10-25T15:33:00.299504+00:00"
+      },
+      {
+        "id": "round-20261117-evening",
+        "scheduled_date": "2026-11-17",
+        "status": "closed",
+        "updated_at": "2026-10-30T14:20:29.216013+00:00",
+        "created_at": "2026-10-25T15:33:01.007839+00:00"
+      },
+      {
+        "id": "round-20261118-evening",
+        "scheduled_date": "2026-11-18",
+        "status": "closed",
+        "updated_at": "2026-10-30T14:20:34.547641+00:00",
+        "created_at": "2026-10-25T15:33:01.928444+00:00"
+      },
+      {
+        "id": "round-20261119-evening",
+        "scheduled_date": "2026-11-19",
+        "status": "closed",
+        "updated_at": "2026-10-30T14:20:38.650718+00:00",
+        "created_at": "2026-10-25T15:33:02.475415+00:00"
+      },
+      {
+        "id": "round-20261120-evening",
+        "scheduled_date": "2026-11-20",
+        "status": "closed",
+        "updated_at": "2026-10-30T14:20:42.057721+00:00",
+        "created_at": "2026-10-25T15:33:02.820573+00:00"
+      },
+      {
+        "id": "round-20261121-evening",
+        "scheduled_date": "2026-11-21",
+        "status": "closed",
+        "updated_at": "2026-10-30T14:20:45.643116+00:00",
+        "created_at": "2026-10-25T15:33:03.178524+00:00"
+      },
+      {
+        "id": "round-20261122-evening",
+        "scheduled_date": "2026-11-22",
+        "status": "closed",
+        "updated_at": "2026-10-30T14:20:48.994766+00:00",
+        "created_at": "2026-10-25T15:33:03.518165+00:00"
+      }
+    ]
+  },
+  "morning": {
+    "s": 200,
+    "j": [
+      {
+        "id": "round-20261101-morning",
+        "scheduled_date": "2026-11-01",
+        "status": "closed",
+        "updated_at": "2026-11-02T11:16:11.694649+00:00"
+      },
+      {
+        "id": "round-20261102-morning",
+        "scheduled_date": "2026-11-02",
+        "status": "closed",
+        "updated_at": "2026-11-03T00:54:27.113183+00:00"
+      },
+      {
+        "id": "round-20261103-morning",
+        "scheduled_date": "2026-11-03",
+        "status": "active",
+        "updated_at": "2026-10-25T15:32:55.585458+00:00"
+      },
+      {
+        "id": "round-20261104-morning",
+        "scheduled_date": "2026-11-04",
+        "status": "active",
+        "updated_at": "2026-10-25T15:32:55.934703+00:00"
+      },
+      {
+        "id": "round-20261105-morning",
+        "scheduled_date": "2026-11-05",
+        "status": "active",
+        "updated_at": "2026-10-25T15:32:56.285335+00:00"
+      }
+    ]
+  },
+  "auditRounds": {
+    "s": 200,
+    "j": [
+      {
+        "action": "settings_change",
+        "entity_id": "round-20261022-evening",
+        "description": "ลบรอบถาวร round-20261022-evening (ไม่มีออเดอร์/ข้อมูลอ้างอิง)",
+        "created_at": "2026-11-03T00:54:40.450784+00:00"
+      },
+      {
+        "action": "settings_change",
+        "entity_id": "round-20261020-evening",
+        "description": "ลบรอบถาวร round-20261020-evening (ไม่มีออเดอร์/ข้อมูลอ้างอิง)",
+        "created_at": "2026-11-03T00:54:36.171602+00:00"
+      },
+      {
+        "action": "settings_change",
+        "entity_id": "round-20261019-midday",
+        "description": "ลบรอบถาวร round-20261019-midday (ไม่มีออเดอร์/ข้อมูลอ้างอิง)",
+        "created_at": "2026-11-03T00:54:34.677541+00:00"
+      },
+      {
+        "action": "settings_change",
+        "entity_id": "round-20261102-midday",
+        "description": "auto-close ปิดรอบ \"เที่ยง\" (2026-11-02) : active -> closed (วันจัดส่งผ่านไปแล้ว)",
+        "created_at": "2026-11-03T00:54:27.113183+00:00"
+      },
+      {
+        "action": "settings_change",
+        "entity_id": "round-20261102-morning",
+        "description": "auto-close ปิดรอบ \"เช้า \" (2026-11-02) : active -> closed (วันจัดส่งผ่านไปแล้ว)",
+        "created_at": "2026-11-03T00:54:27.113183+00:00"
+      },
+      {
+        "action": "settings_change",
+        "entity_id": "round-20261101-morning",
+        "description": "auto-close ปิดรอบ \"เช้า \" (2026-11-01) : active -> closed (วันจัดส่งผ่านไปแล้ว)",
+        "created_at": "2026-11-02T00:45:06.774708+00:00"
+      },
+      {
+        "action": "settings_change",
+        "entity_id": "round-20261101-midday",
+        "description": "auto-close ปิดรอบ \"เที่ยง\" (2026-11-01) : active -> closed (วันจัดส่งผ่านไปแล้ว)",
+        "created_at": "2026-11-02T00:45:06.774708+00:00"
+      },
+      {
+        "action": "settings_change",
+        "entity_id": "round-20261031-morning",
+        "description": "auto-close ปิดรอบ \"เช้า \" (2026-10-31) : active -> closed (วันจัดส่งผ่านไปแล้ว)",
+        "created_at": "2026-11-01T00:41:03.145648+00:00"
+      },
+      {
+        "action": "settings_change",
+        "entity_id": "round-20261031-midday",
+        "description": "auto-close ปิดรอบ \"เที่ยง\" (2026-10-31) : active -> closed (วันจัดส่งผ่านไปแล้ว)",
+        "created_at": "2026-11-01T00:41:03.145648+00:00"
+      },
+      {
+        "action": "settings_change",
+        "entity_id": "round-20261030-midday",
+        "description": "auto-close ปิดรอบ \"เที่ยง\" (2026-10-30) : active -> closed (วันจัดส่งผ่านไปแล้ว)",
+        "created_at": "2026-10-31T00:47:44.915079+00:00"
+      },
+      {
+        "action": "settings_change",
+        "entity_id": "round-20261030-morning",
+        "description": "auto-close ปิดรอบ \"เช้า \" (2026-10-30) : active -> closed (วันจัดส่งผ่านไปแล้ว)",
+        "created_at": "2026-10-31T00:47:44.915079+00:00"
+      },
+      {
+        "action": "settings_change",
+        "entity_id": "round-20261030-midday",
+        "description": "auto-close ปิดรอบ \"เที่ยง\" (2026-10-30) : active -> closed (วันจัดส่งผ่านไปแล้ว)",
+        "created_at": "2026-10-31T00:47:44.874158+00:00"
+      },
+      {
+        "action": "settings_change",
+        "entity_id": "round-20261030-morning",
+        "description": "auto-close ปิดรอบ \"เช้า \" (2026-10-30) : active -> closed (วันจัดส่งผ่านไปแล้ว)",
+        "created_at": "2026-10-31T00:47:44.874158+00:00"
+      },
+      {
+        "action": "settings_change",
+        "entity_id": "round-20261030-morning",
+        "description": "auto-close ปิดรอบ \"เช้า \" (2026-10-30) : active -> closed (วันจัดส่งผ่านไปแล้ว)",
+        "created_at": "2026-10-31T00:47:44.757234+00:00"
+      },
+      {
+        "action": "settings_change",
+        "entity_id": "round-20261030-midday",
+        "description": "auto-close ปิดรอบ \"เที่ยง\" (2026-10-30) : active -> closed (วันจัดส่งผ่านไปแล้ว)",
+        "created_at": "2026-10-31T00:47:44.757234+00:00"
+      },
+      {
+        "action": "settings_change",
+        "entity_id": "round-20261101-evening",
+        "description": "รอบส่ง \"เย็น\" (2026-11-01) : active → closed",
+        "created_at": "2026-10-30T14:43:05.975279+00:00"
+      },
+      {
+        "action": "settings_change",
+        "entity_id": "round-20261122-evening",
+        "description": "รอบส่ง \"เย็น\" (2026-11-22) : active → closed",
+        "created_at": "2026-10-30T14:20:49.186757+00:00"
+      },
+      {
+        "action": "settings_change",
+        "entity_id": "round-20261121-evening",
+        "description": "รอบส่ง \"เย็น\" (2026-11-21) : active → closed",
+        "created_at": "2026-10-30T14:20:45.827035+00:00"
+      },
+      {
+        "action": "settings_change",
+        "entity_id": "round-20261120-evening",
+        "description": "รอบส่ง \"เย็น\" (2026-11-20) : active → closed",
+        "created_at": "2026-10-30T14:20:42.246094+00:00"
+      },
+      {
+        "action": "settings_change",
+        "entity_id": "round-20261119-evening",
+        "description": "รอบส่ง \"เย็น\" (2026-11-19) : active → closed",
+        "created_at": "2026-10-30T14:20:38.824065+00:00"
+      }
+    ]
+  }
+}

@@ -469,6 +469,22 @@ jobs:
           fi
           echo "Contract 163 OK — accept->dispatched · check-in->arrived (geofence) · POD+geo auto-close"
 
+      - name: Contract 184 — pickup hours-not-rounds + outside-hours notice (ROLLBACK)
+        run: |
+          set +e
+          out=$(psql -v ON_ERROR_STOP=1 -f e2e/contracts_184_pickup_outside_hours.sql 2>&1); rc=$?
+          printf '%s\n' "$out"
+          if [ $rc -ne 0 ]; then
+            msg=$(printf '%s\n' "$out" | grep -m1 'ERROR:' || echo "rc=$rc")
+            echo "::error file=e2e/contracts_184_pickup_outside_hours.sql::$msg"
+            exit 1
+          fi
+          if ! printf '%s' "$out" | grep -q 'R65_184_RESULTS'; then
+            echo "::error file=e2e/contracts_184_pickup_outside_hours.sql::R65_184_RESULTS NOTICE missing"
+            exit 1
+          fi
+          echo "Contract 184 OK — pickup binds to shop hours (not rounds) · outside-hours notice · mode/engine gates intact"
+
       # ---------------------------------------------------------------------------
       # W-2 (B-2) — legacy contracts 7 ตัว กลับเข้า gate (Owner สั่ง "ปิดด้วย" 2026-10-26)
       # เงื่อนไขที่ทำก่อน push นี้ (กติกา handoff §W-2): ทั้ง 7 ไฟล์ EXIT=0 บน replay ท้องถิ่น

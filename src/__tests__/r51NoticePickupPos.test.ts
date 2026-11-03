@@ -61,12 +61,19 @@ describe('R51 ① Notice/หมายเหตุ + ช้อนส้อม ใ
     expect(useCartStore.getState().cutlery).toBe(false)
   })
 
-  it('Checkout: notice ยกเป็น special_request (options ไม่พก notice) + ช้อนส้อม → special_instructions', () => {
+  it('Checkout: notice ยกเป็น special_request (options ไม่พก notice) + ช้อนส้อม/notice นอกเวลา → special_instructions', () => {
     expect(checkoutSrc).toContain('const { notice: lineNotice, ...restOptions }')
     expect(checkoutSrc).toContain('special_request: trimmedNotice')
-    expect(checkoutSrc).toContain("special_instructions: useCartStore.getState().cutlery ? 'รับช้อนส้อม' : ''")
+    // R65: special_instructions เป็น array join — ช้อนส้อม (R51 เดิม) + นอกเวลา pickup (R65)
+    expect(checkoutSrc).toContain("useCartStore.getState().cutlery ? 'รับช้อนส้อม' : ''")
+    expect(checkoutSrc).toContain("fulfillment === 'pickup' && orderMode === 'SAME_DAY' && pickupOutsideAck && outsideShopHours ? 'รับนอกเวลาเปิดร้าน' : ''")
     expect(checkoutSrc).toContain("delivery_method: fulfillment === 'pickup' ? 'pickup' : 'self_delivery'")
     expect(checkoutSrc).toContain('data-testid="fulfillment-pickup"')
+    // R65: pickup = ไม่ผูกกับรอบ — auto-select แยก branch + ข้าม bookability gate
+    expect(checkoutSrc).toContain("if (fulfillment === 'pickup' && orderMode !== 'PRE_ORDER')")
+    expect(checkoutSrc).toContain('const pickupRoundFree = fulfillment === \'pickup\' && orderMode !== \'PRE_ORDER\'')
+    expect(checkoutSrc).toContain('data-testid="pickup-hours-card"')
+    expect(checkoutSrc).toContain('data-testid="pickup-outside-ack-row"')
   })
 })
 
