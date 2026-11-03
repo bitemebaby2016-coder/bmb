@@ -1,0 +1,37 @@
+R62 PHASE 1-7: whole-project audit + reconciliation + SEO fix + canonical doc reconcile + archive MOVE (no delete)
+
+PHASE 1 (audit 12 groups A-L, evidence-based):
+- e2e/r62Inventory.cjs/-result.json: repo inventory (186 migrations/EF 24/admin 30/204 test files)
+- e2e/r62GroupProbe.cjs/-result.json: 129/129 key source files present across A-L
+- e2e/r62EvidenceCheck.cjs: R61/R59/R49 evidence files still on disk
+- parity LIVE: local 183 = ledger 183 ALL_PASS (e2e/r56MigParity-result.json 2026-11-03)
+- CI of HEAD 22e2b1b = CI #733 success + Contract #307 success (GitHub REST API)
+
+PHASE 2 (Owner-approved):
+- docs/BMB_REQUIREMENT_RECONCILIATION.md: audit A-L with status taxonomy
+  + CONFLICT C-1..C-6 awaiting Owner decision + DOC DRIFT D-1..D-6
+
+PHASE 3 (verified code fix - no business rules):
+- src/lib/seo.ts += getResetPasswordMeta/getTrackIndexMeta/getTalkToBiteMeta/getVoiceDemoMeta
+- src/App.tsx SEO block += 4 missing routes (audit e2e/r62SeoAuditV2.cjs: missing 6 -> 2 redirects exempt)
+- src/__tests__/seo.test.ts += 2 tests (30/30 pass)
+
+PHASE 4 (canonical reconcile, no fake backfill):
+- docs/BMB_MASTER_STATUS.md: stale B-2 BLOCKED row + "2 blockers left" note -> closed status
+  (N-2/W-2 + LIVE parity evidence) + real CI numbers for bacb02f/22e2b1b in 9.0 note
+- docs/BMB_PRODUCTION_TEST_PACK.md: section T "20 items" -> real 19 rows (D-4)
+
+PHASE 5 (inventory map + MOVE, NO DELETE):
+- docs/BMB_DOCUMENT_INVENTORY_AND_ARCHIVE_MAP.md: full inventory + keep/block/move lists
+- e2e/r62DocRefs.cjs/-result.json: dependency scan of 1,552 code files (43 refs)
+- KEEP root 7 (incl G6/G7 contracts = test ?raw imports, G10 = migration 118 comment)
+- MOVE 99 files via git mv = 99 renames, 0 deletes (root 49 -> docs/archive/root_reports/)
+
+PHASE 6 gates (all green, ran twice - before and after MOVE):
+- tsc --noEmit = 0 (e2e/r62_tsc.log 0 bytes)
+- lint OK (r62_lint.log/lint2/lint3 - brandNameGuard 527 + languageSanity 1552)
+- vitest FULL = 202/202 files, 2005/2005 tests, 0 fail (e2e/r62_vitest_full.log)
+- vite build OK (r62_build.log - PWA precache 149 entries)
+
+Pre-commit: 129 files staged explicitly (7M+23A+99R) - no git add -A - SECRET_HITS=0
+(e2e/r62PreCommit.cjs)

@@ -1,0 +1,24 @@
+{
+ "seoBlockLine": 216,
+ "renderBlockLine": 254,
+ "seoPathCount": 31,
+ "renderPathCount": 67,
+ "missingSeoCount": 2,
+ "missingSeo": [
+  {
+   "path": "/profile/orders",
+   "line": 270
+  },
+  {
+   "path": "/ai-chat",
+   "line": 298
+  }
+ ],
+ "seoOnlyCount": 1,
+ "seoOnly": [
+  {
+   "path": "/admin/*",
+   "line": 239
+  }
+ ]
+}

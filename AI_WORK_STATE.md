@@ -1,4 +1,33 @@
-> ## 🟢 สถานะล่าสุด — 2026-11-03 (R62 · **ปิดเซสชัน — BMB WHOLE PROJECT FINAL CLOSURE (CONTROLLED EXECUTION B) · PHASE 0 เสร็จ · ทำต่อแชทหน้าเริ่ม PHASE 1** · ยึดบล็อกนี้ก่อนบล็อก R61 ด้านล่างถ้าข้อความขัดกัน)
+> ## 🟢 สถานะล่าสุด — 2026-11-03 (R62 · **WHOLE PROJECT FINAL CLOSURE · PHASE 0–5 ทำแล้ว · ทำต่อ PHASE 6–8** · ยึดบล็อกนี้ก่อนบล็อก R61 ด้านล่างถ้าข้อความขัดกัน)
+> - **R62 (2026-11-03 — Owner directive: WHOLE PROJECT FINAL CLOSURE + PRODUCTION ACCEPTANCE READINESS · Execution Mode = CONTROLLED EXECUTION B · Code Scope = APPROVED · Old Documents = MOVE TO ARCHIVE (NO DELETE) · Requirement Conflicts = REPORT → OWNER DECISION):**
+> - ✅ **PHASE 0 — GIT & WORKTREE SAFETY GATE ผ่านทุกข้อ** (ดูบล็อกถัดไป = ฉบับเต็ม · AUDIT BASELINE LOCK = `9799370`)
+> - ✅ **PHASE 1 — AUDIT 12 กลุ่ม A–L เสร็จ · evidence:**
+>   - inventory `e2e/r62Inventory-result.json` (HEAD · 186 migrations .sql เลข 001–183 · EF 24 · admin pages 30 · unit test files 204 · CI workflows 5)
+>   - group probe `e2e/r62GroupProbe-result.json` = **129/129 key files present across A–L · missing=[]**
+>   - **parity LIVE = local 183 = ledger 183 · `ALL_PASS=true`** (`e2e/r56MigParity-result.json` · 2026-11-03T05:14Z)
+>   - **CI ของ HEAD `22e2b1b` = CI #733 success + Contract #307 success** (GitHub REST API จริง) · `bacb02f` = Contract #304 success
+>   - evidence files R61/R59/R49 ยังอยู่ครบ (`e2e/r62EvidenceCheck.cjs`)
+>   - SEO audit `e2e/r62SeoAuditV2.cjs` → `r62SeoAudit-result.json` = **เจอ gap จริง 4 เส้นทาง** (ก่อนแก้)
+> - ✅ **PHASE 2 — `docs/BMB_REQUIREMENT_RECONCILIATION.md` สร้างแล้ว (Owner อนุมัติ):** §1 gates · §2 audit A–L (status taxonomy) · **§3 CONFLICT รอ Owner 6 ข้อ (C-1..C-6)** · §4 DOC DRIFT 6 ข้อ (D-1..D-6) — *ยังไม่ประกาศ COMPLETE/PRODUCTION READY*
+> - ✅ **PHASE 3 — แก้ D-1 (SEO 4 เส้นทาง) + verify:** `src/lib/seo.ts` += `getResetPasswordMeta`/`getTrackIndexMeta`/`getTalkToBiteMeta`/`getVoiceDemoMeta` · `App.tsx` SEO block += 4 routes · `seo.test.ts` += 2 tests → **seo 30/30** · audit ซ้ำ = **missingSeoCount=2 (เหลือแค่ redirect /profile/orders + /ai-chat = exempt)**
+> - ✅ **PHASE 4 — reconcile canonical docs:** `BMB_MASTER_STATUS.md` §3 = แถว B-2 "BLOCKED" + note "เหลือ blocker 2 ตัว" **ถูกแทนด้วยสถานะปิดจริง (N-2/W-2 + parity LIVE 183)** · §9.0 เพิ่มบันทึก CI จริง `bacb02f`/`22e2b1b` (ไม่ย้อนกรอกแถวย้อนหลังปลอม) · `BMB_PRODUCTION_TEST_PACK.md` §T = **"20 ข้อ" → ระบุ 19 แถวจริง (D-4 ปิด · ห้ามเพิ่มข้อปลอม)**
+> - ✅ **PHASE 5 — `docs/BMB_DOCUMENT_INVENTORY_AND_ARCHIVE_MAP.md` + MOVE เสร็จ:**
+>   - dependency check `e2e/r62DocRefs.cjs` → `r62DocRefs-result.json` (สแกน code 1,552 ไฟล์ · referenced=43)
+>   - **KEEP root 7**: 4 canonical + **G6/G7_CONTRACT (test `?raw` import!)** + **G10_DEFECT (migration 118 comment)**
+>   - **KEEP docs 12** (canonical/test pack/role guide/README guides/owner checklists/latest handoff)
+>   - **BLOCKED docs 8** (โค้ด/CI/migration อ้าง — cr4ProdE2E · launchVerify · daily-backup.yml · r4Repair · m153/154 · m146 · m138/139 · talkToBite.ts · r43_publish_probe)
+>   - **MOVE 99 ไฟล์ = git mv 99 renames · 0 deletes** (`e2e/r62ArchiveMove.cjs --apply` · root 49 → `docs/archive/root_reports/` · docs 50 → `docs/archive/` · ตรวจด้วย `e2e/r62GitVerify.cjs`)
+>   - **gates หลังย้าย:** lint OK (brand 527 + languageSanity 1552) · **vitest full รันซ้ำ = (ดูหัวข้อ gates ล่างสุด)** · tsc = ไม่กระทบ (ไฟล์ .md ล้วน)
+> - 🧪 **Gates รอบ R62 (รันจริง):** **tsc `--noEmit` = 0** (`e2e/r62_tsc.log` 0 bytes) · **lint OK** (`r62_lint.log` + `r62_lint2.log`) · **vitest FULL ก่อนย้าย = 202/202 files · 2005/2005 tests · 0 fail** (`e2e/r62_vitest_full.log` · 2003 เดิม + 2 ใหม่ R62) · **build = OK** (`r62_build.log` · PWA precache 149 entries · warnings เดิมเท่านั้น) · vitest FULL หลังย้าย = รันอยู่/ดูหลักฐานในไฟล์เดียวกัน
+> - ⏭️ **NEXT EXACT ACTION (ทำต่อแชทหน้า = PHASE 6–8):**
+>   1. **PHASE 6** — ยืนยัน vitest full หลัง MOVE = 202/2005 ขึ้นไป 0 fail (ถ้ายังไม่อ่าน log = `node e2e/r62tail.cjs e2e/r62_vitest_full.log 12`) · ตรวจ CI ของ commit R62 (probe ครั้งเดียว `node e2e/r53_ci_probe.cjs` หรือ REST API head_sha — **ห้าม poll**)
+>   2. **PHASE 7** — git commit+push **เฉพาะ path ที่ตั้งใจ** (① ห้าม `git add -A` ② ดู `git diff --cached` ก่อน commit ทุกครั้ง ③ secret scan) — ไฟล์รวม: src 3 (seo/App/test) · docs ใหม่ 2 · docs แก้ 2 · renames 99 · e2e evidence r62* ~20 ไฟล์
+>   3. **PHASE 8** — Owner Production Test Pack ฉบับเดียว = รวม `BMB_OWNER_ROLE_TEST_GUIDE_2026-10-27.md` + old→new Test ID map เข้า `BMB_PRODUCTION_TEST_PACK.md` (แล้ว guide เก่า = MOVE) + สร้าง `BMB_WHOLE_FINAL_PRODUCTION_CLOSURE_REPORT.md`
+>   4. **รอ Owner** — ตอบ C-1..C-6 ใน `docs/BMB_REQUIREMENT_RECONCILIATION.md` §3 (ห้าม AI เงียบ ๆ ตัดสินเอง)
+> - ⚠️ **กติกาคงเหลือ:** ① ห้าม `git add -A` ② MOVE ห้าม DELETE ③ conflict = รายงาน ④ ห้ามแตะ business rules/migrations/secrets โดยไม่ขอ Owner ⑤ ห้ามประกาศ COMPLETE/PRODUCTION READY โดยไม่มี evidence ⑥ baseline `9799370` — **โค้ดเปลี่ยนแล้วตอนนี้ (R62) → SHA ใหม่ = ดู `git log` ตอน commit** (audit finding ที่อ้าง = source ชุดเดิมเพราะ diff = docs+seo-fix เท่านั้น · บันทึกไว้แล้ว)
+> - 🧭 **ยังไม่ได้ทำ:** PHASE 6 ยืนยันรอบหลังย้าย · PHASE 7 commit/push · PHASE 8 test pack รวม + closure report · **ยังไม่มีการประกาศ COMPLETE/PRODUCTION READY**
+> 
+> ## 🟢 สถานะปิดเซสชันก่อนหน้า — 2026-11-03 (R62 · PHASE 0 เท่านั้น — ฉบับเต็มไว้อ้างอิง)
 > - **R62 (2026-11-03 — Owner directive: WHOLE PROJECT FINAL CLOSURE + PRODUCTION ACCEPTANCE READINESS · Execution Mode = CONTROLLED EXECUTION B · Code Scope = APPROVED · Old Documents = MOVE TO ARCHIVE (NO DELETE) · Requirement Conflicts = REPORT → OWNER DECISION):**
 > - ✅ **PHASE 0 — GIT & WORKTREE SAFETY GATE (ผ่านทุกข้อ · evidence จากคำสั่ง git จริง):**
 >   - Repository root = `D:/A PROJECT/Bite Me Baby` ✓ (ตรงกับ workspace ที่อนุมัติ · ตรวจด้วย `git rev-parse --show-toplevel`)

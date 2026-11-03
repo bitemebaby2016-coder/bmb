@@ -355,3 +355,49 @@ export function getLoginMeta(): SEOMeta {
     ogImage: SITE_CONFIG.ogImage, url: seoUrl('/login'), schema: {}
   }
 }
+
+// ===========================================
+// R62 PHASE 3 (D-1) — เส้นทางที่ SEO block ไม่เคยลงทะเบียน
+// (audit: e2e/r62SeoAuditV2.cjs → missingSeo 4 เส้นทางจริง
+//  หลังหัก redirect /profile/orders + /ai-chat)
+// ===========================================
+
+/** /reset-password — หน้าตั้งรหัสผ่านใหม่จากลิงก์อีเมล (canonical ตัวเอง) */
+export function getResetPasswordMeta(): SEOMeta {
+  return {
+    title: `ตั้งรหัสผ่านใหม่ | ${SITE_CONFIG.name}`,
+    description: `ตั้งรหัสผ่านใหม่สำหรับบัญชี ${SITE_CONFIG.name}`,
+    keywords: [...SITE_CONFIG.keywords, 'reset password', 'ตั้งรหัสผ่านใหม่'],
+    ogImage: SITE_CONFIG.ogImage, url: seoUrl('/reset-password'), schema: {}
+  }
+}
+
+/** /track (เปล่า) — หน้ากรอกเลขติดตามออเดอร์ · canonical ตัวเอง (คนละหน้ากับ /track/:orderNumber) */
+export function getTrackIndexMeta(): SEOMeta {
+  return {
+    title: `ติดตามออเดอร์ | ${SITE_CONFIG.name}`,
+    description: `ติดตามสถานะออเดอร์ของคุณแบบเรียลไทม์ | ${SITE_CONFIG.name}`,
+    keywords: [...SITE_CONFIG.keywords, 'tracking', 'order tracking', 'ติดตามออเดอร์'],
+    ogImage: SITE_CONFIG.ogImage, url: seoUrl('/track'), schema: {}
+  }
+}
+
+/** /talk-to-bite — ผู้ช่วยสั่งอาหาร AI (canonical ตัวเอง · / ชี้หน้าแรกตามเดิม) */
+export function getTalkToBiteMeta(): SEOMeta {
+  return {
+    title: `Talk To Bite — ผู้ช่วยสั่งอาหาร AI | ${SITE_CONFIG.name}`,
+    description: `คุยกับผู้ช่วย AI ของ ${SITE_CONFIG.name} ดูเมนู แนะนำอาหาร และสั่งได้ทันทีในแชท`,
+    keywords: [...SITE_CONFIG.keywords, 'AI', 'chat', 'ผู้ช่วยสั่งอาหาร'],
+    ogImage: SITE_CONFIG.ogImage, url: seoUrl('/talk-to-bite'), schema: {}
+  }
+}
+
+/** /voice-demo — หน้าเดโมเสียง (Behind ProtectedRoute — meta ไว้กัน title ว่างตอนผู้ใช้เปิด) */
+export function getVoiceDemoMeta(): SEOMeta {
+  return {
+    title: `Voice Demo | ${SITE_CONFIG.name}`,
+    description: `เดโมระบบสั่งอาหารด้วยเสียงของ ${SITE_CONFIG.name}`,
+    keywords: [...SITE_CONFIG.keywords, 'voice', 'demo', 'สั่งอาหารด้วยเสียง'],
+    ogImage: SITE_CONFIG.ogImage, url: seoUrl('/voice-demo'), schema: {}
+  }
+}

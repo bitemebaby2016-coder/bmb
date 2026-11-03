@@ -188,26 +188,26 @@
 
 ---
 
-## 3. Engineering backlog — ปิด 5/5 + **B-6 ปิดแล้ว** · งานค้าง = UI 5 ข้อ + legacy 6 functions
+## 3. Engineering backlog — ปิด 5/5 + **B-6 ปิดแล้ว** · งานค้าง = ~~UI 5 ข้อ + legacy 6 functions~~ **ปิดหมดแล้ว (ดู §3.1 N-4 + 159 DROP)**
 
 > คำสั่ง Owner 2026-10-26 "ปิดให้หมดโดยสมบูรณ์" → B-1/B-3/B-4/B-5 ปิดรอบที่ 2 ·
 > **B-2 ปิดรอบที่ 3** (ซ่อมครบ 7 ไฟล์บน replay ท้องถิ่น **ก่อน** เพิ่ม step กลับ CI · CI #577/#151 = success) ·
 > **B-6 (P0) ปิดรอบที่ 3** (apply 157+158 แล้ว + guest เห็นเมนูจริง) ·
-> **งานค้างตอนนี้ = UI 5 ข้อ + legacy functions 6 ตัว (รอ Owner เลือก)**
+> **งานค้างตอนนี้ = ~~UI 5 ข้อ~~ (N-4 ปิดครบ 9/9) + ~~legacy functions 6 ตัว~~ (159 DROP APPLIED) → เหลือเฉพาะ runtime verify §L-RT + งาน Owner §7**
 
 | # | งาน (สถานะก่อนรอบนี้) | ผล | หลักฐาน |
 |---|---|---|---|
 | **B-1** | `orderTimeline.test.ts` flaky ตอนรันชุดใหญ่ (4 เคส) | render + flush ข้างใน `act()` ให้รอ React commit จริง — **assertion ทุกตัวคงเดิม ไม่มี skip/ลดข้อกำหนด** | `src/__tests__/orderTimeline.test.ts` (มี comment ระบุ B-1 FIX) · vitest ทั้งชุดเขียว |
-| **B-2** | legacy contract 7 ตัว อยู่นอก CI | **BLOCKED — ลองแล้ว 2 ครั้ง (กติกา 0.9: หยุด)** · ครั้งที่ 1 เพิ่ม step ใน CI = **ล้มเหลวทั้ง 7 ไฟล์** (Contract Tests #147 failure) · ครั้งที่ 2 ซ่อมตามหลักฐาน + ตรวจด้วย replay ท้องถิ่น = **ยังเขียวแค่ 1/7 (029)** → rollback ทั้งหมดเพื่อคืน main เป็นเขียว | **หลักฐาน:** annotations ของ run `40266375919` (7 error บรรทัด) + `D:\tmp\legacy_local.log` / `legacy_local2.log` (ผลรัน 7 ไฟล์ 2 รอบ) · ** blocker:** fixture ต้องมี auth user/role จริง · signature/geometry/ACL drift ตาม migration ยุคใหม่ → ต้องซ่อมบน DB session ที่ verify ได้ หรือ **ปลดระเบียบอย่างเป็นทางการ**โดยชี้ว่า 123/124/146/147/148/149 คือ contract ยุคใหม่ของ domain เดียวกัน (**รอ Owner เลือก (ก) หรือ (ข)**) |
+| **B-2** | legacy contract 7 ตัว อยู่นอก CI | ~~BLOCKED — ลองแล้ว 2 ครั้ง~~ → **ปิดรอบที่ 3 (N-2/W-2 · 2026-10-26): ซ่อมครบ 7 ไฟล์บน replay ท้องถิ่นก่อนเพิ่ม step กลับ CI → 7/7 EXIT=0** (ครั้งที่ 1 ล้ม #147 · ครั้งที่ 2 เขียว 1/7 → rollback → รอบสุดท้ายซ่อมแล้วเขียวหมด) | **หลักฐานปิด:** CI **#577/#151 = success** + บรรทัด `Legacy contracts OK — 7/7` (test pack A2) · `e2e/w2-contracts_*.log` 7/7 · *บทเรียน: fixture ต้องมี auth user/role จริง + ทน signature/ACL drift ตาม migration ยุคใหม่* |
 | **B-3** | CAP-21 ระบบจำลูกค้า/เจาะกลุ่มอัตโนมัติ (MISSING) | สร้าง `src/lib/customerIntelligence.ts` + ต่อ `/admin/customers` (แถบสรุป + คอลัมน์กลุ่ม) · **คำนวณอัตโนมัติ ไม่มีช่องให้แอดมินตั้ง** | `src/__tests__/customerIntelligence.test.ts` (11 เคส) |
 | **B-4** | CAP-22 AI เลือกเวลา/โพสอัตโนมัติ (DEFERRED) | สร้าง `src/lib/marketingAutoSchedule.ts` (เลือกเวลาจาก marketing_rules จริง) + ปุ่มในแท็บปฏิทิน · **คงกติกา: ห้าม auto-approve · ไม่มี publish path ใหม่** | `src/__tests__/marketingAutoSchedule.test.ts` (12 เคส + CNT-01/G7 contract) |
 | **B-5** | runtime จริงของ CAP-10/11/13/14/18 | **ส่งมอบเป็นชุดทดสอบเดียวให้ Owner รันบน production** | **`docs/BMB_PRODUCTION_TEST_PACK.md`** (ขั้น A–K ครบทุก checklist ที่เคยกระจาย) |
 
-> **ยังเหลือ engineering blocker 2 ตัว — "เหลือ Owner อย่างเดียว" ยังไม่เป็นจริง (Owner 2026-10-26):**
-> **(1) B-2 = BLOCKED** (legacy contract 7 ตัว · สั่งใหม่ให้ปิดในแชทถัดไป) ·
-> **(2) schema parity fresh-replay vs production = UNVERIFIED** (อนุมัติแล้วแต่ยังไม่รัน) —
-> ปิด/พิสูจน์ทั้งสองข้อนี้ก่อน จึงค่อยพูดได้ว่าเหลือแต่งาน Owner ·
-> Owner acceptance ที่รันได้แล้ว = §7 → `docs/BMB_PRODUCTION_TEST_PACK.md`
+> ~~**ยังเหลือ engineering blocker 2 ตัว**~~ — **ปิดทั้ง 2 ข้อแล้ว (2026-10-26 รอบที่ 3 · R62 reconcile 2026-11-03):**
+> ~~**(1) B-2 = BLOCKED**~~ → **ปิด (N-2/W-2)**: 7/7 EXIT=0 บน replay ท้องถิ่น · step กลับ CI · `Legacy contracts OK — 7/7` (CI #577/#151) ·
+> ~~**(2) schema parity fresh-replay vs production = UNVERIFIED**~~ → **ปิด (N-1/W-1)**: `REPLAY_ALL_GREEN 157/157` + parity รันแล้ว
+> (`e2e/w1-parity-report-2026-10-26.md`) · **parity LIVE 2026-11-03 = local 183 = ledger 183 · ALL_PASS** (`e2e/r56MigParity-result.json`) —
+> งานที่เหลือ = runtime ที่ต้องใช้เครื่อง/อุปกรณ์จริง → §7 `docs/BMB_PRODUCTION_TEST_PACK.md` + CONFLICT ใน `docs/BMB_REQUIREMENT_RECONCILIATION.md`
 
 ---
 
@@ -425,7 +425,10 @@
 | 54 | (docs commit รอบนี้ — SHA ดู `git log`) | docs: กรอก §9.0 แถว 52-53 (ผล CI ของ 4eab695/2124138) | ตรวจรอบถัดไป | ตรวจรอบถัดไป |
 
 > อ่านจาก GitHub Actions REST API จริง (`?head_sha=<full SHA>` — เครื่องนี้ไม่มี `gh`) ·
-> **ห้ามอ้างเลข run จาก §9.4/§9.6 โดยไม่เทียบกับตารางนี้** (§9.4 = รายละเอียดรอบ 1 · §9.6 = รายละเอียดรอบ 2)
+> **ห้ามอ้างเลข run จาก §9.4/§9.6 โดยไม่เทียบกับตารางนี้** (§9.4 = รายละเอียดรอบ 1 · §9.6 = รายละเอียดรอบ 2) ·
+> **R62 (2026-11-03) ตรวจ CI ของ SHA ล่าสุดจริง:** `bacb02f` (code R61) = Contract **#304 success** + 2/2 checks success ·
+> `22e2b1b` (HEAD) = **CI #733 success + Contract #307 success** (GitHub REST API · ตารางนี้ยังไม่ย้อนกรอกแถว R55–R62 —
+> ดูผลจริงด้วย `GET /repos/bitemebaby2016-coder/bmb/actions/runs?head_sha=<full SHA>` · แถว 33–54 ที่เขียน "ตรวจรอบถัดไป" = รอกรอกเมื่อมีการตรวจ)
 
 ### 9.8 บทเรียนรอบ Contract Tests #152 (ห้ามลืม)
 

@@ -9,7 +9,7 @@ import { AdminNav } from './components/admin/AdminNav'
 // Bite / AI accessibility lives in BottomNav ('Bite' → /ai-chat) + BiteHero quick actions (UI v5)
 import { SeoHelmet, TrackOrderSeo, ReviewDetailSeo, PaymentSeo } from './components/SeoHelmet'
 import { MascotBadge } from './components/MascotBadge'
-import { getHomeMeta, getShopMeta, getMenuMeta, getCartMeta, getCheckoutMeta, getOrdersMeta, getNotificationsMeta, getReviewsMeta, getAboutMeta, getFaqMeta, getBlogMeta, getContactMeta, getPrivacyMeta, getTermsMeta, getPromotionsMeta, getRewardsMeta, getVoteMeta, getRandomMenuMeta, getShareMeta, getViralMeta, getProfileMeta, getAdminMeta, getLoginMeta } from './lib/seo'
+import { getHomeMeta, getShopMeta, getMenuMeta, getCartMeta, getCheckoutMeta, getOrdersMeta, getNotificationsMeta, getReviewsMeta, getAboutMeta, getFaqMeta, getBlogMeta, getContactMeta, getPrivacyMeta, getTermsMeta, getPromotionsMeta, getRewardsMeta, getVoteMeta, getRandomMenuMeta, getShareMeta, getViralMeta, getProfileMeta, getAdminMeta, getLoginMeta, getResetPasswordMeta, getTrackIndexMeta, getTalkToBiteMeta, getVoiceDemoMeta } from './lib/seo'
 import { BrandProvider } from './components/BrandProvider'
 import { subscribeSeoSettings, getSeoSettingsVersion } from './lib/seoSettings'
 import { subscribeSocialLinks, getSocialVersion } from './lib/socialLinks'
@@ -244,6 +244,11 @@ export default function App() {
         <Route path="/notifications" element={<SeoHelmet seo={getNotificationsMeta()} />} />
         <Route path="/reviews" element={<SeoHelmet seo={getReviewsMeta()} />} />
         <Route path="/reviews/:productId" element={<ReviewDetailSeo />} />
+        {/* R62 D-1 — เส้นทางที่ SEO block เคยขาด (audit e2e/r62SeoAuditV2.cjs) */}
+        <Route path="/reset-password" element={<SeoHelmet seo={getResetPasswordMeta()} />} />
+        <Route path="/track" element={<SeoHelmet seo={getTrackIndexMeta()} />} />
+        <Route path="/talk-to-bite" element={<SeoHelmet seo={getTalkToBiteMeta()} />} />
+        <Route path="/voice-demo" element={<SeoHelmet seo={getVoiceDemoMeta()} />} />
       </Routes>
       
       <Routes>

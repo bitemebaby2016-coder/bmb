@@ -1,0 +1,32 @@
+{
+  "gitHead": "22e2b1b50cd4399f2d0488b5716a6b9f82b03d79",
+  "gitStatusPorcelain": "?? e2e/r62Inventory.cjs",
+  "stash": "stash@{0}: On main: local-edits-before-sync-2026-09-21",
+  "unitTestFiles": 204,
+  "e2eFiles": 1297,
+  "migrationsSql": 186,
+  "migrationsMax": 183,
+  "edgeFunctions": 24,
+  "adminPages": 30,
+  "workers": 1,
+  "docRootReports": 52,
+  "docsCount": 70,
+  "docsArchiveCount": 2,
+  "ciWorkflows": [
+    "automation-scheduler.yml",
+    "ci.yml",
+    "contract-tests.yml",
+    "daily-backup.yml",
+    "sheets-sync.yml"
+  ],
+  "recentCommits": [
+    "22e2b1b docs(R62): PHASE 0 safety gate + audit baseline lock 9799370 + handoff WHOLE PROJECT FINAL CLOSURE",
+    "9799370 docs(R61): บันทึกหลักฐาน CI (bacb02f = success ทั้ง 2 checks) + ตัวเช็ค CI",
+    "91c4593 docs(R61): ผลยืนยัน production ทั้ง 4 งาน + ledger R61",
+    "bacb02f R61: ปิดงาน 4 ข้อตามคำสั่ง Owner (§T-1 · สลับโมเดล · ฟีเจอร์โปรโมชั่น+มาสคอต · §T-2 admin)",
+    "2cdbc90 docs(R60): ปรับสถานะ §T ให้ตรงหลักฐาน",
+    "bf9afd0 R60: รัน §T production test pack บน biteme-baby.com (ไม่แตะโค้ดสินค้า)",
+    "5e5d42a docs(R59): บันทึก commit cac5358 + gates ปิดเซสชัน",
+    "cac5358 R59: เพิ่มเมนูเลือกรูปจากภาพเจน+ย่ออัตโนมัติ + สติกเกอร์ฟอนต์/วงกลมใหญ่สุด + test suite §T (ปิดเซสชัน)"
+  ]
+}

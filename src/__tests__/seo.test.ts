@@ -14,6 +14,10 @@ import {
   getReviewsMeta,
   getReviewDetailMeta,
   getPaymentMeta,
+  getResetPasswordMeta,
+  getTrackIndexMeta,
+  getTalkToBiteMeta,
+  getVoiceDemoMeta,
 } from '@/lib/seo'
 import { faqs } from '@/lib/faqContent'
 import { getSeoSettingsSync, setSeoSettingsLive, DEFAULT_SEO_SETTINGS, resetSeoSettingsCache } from '@/lib/seoSettings'
@@ -251,5 +255,28 @@ describe('App.tsx SEO route wiring — source contract (regression guard)', () =
 
   it('ProtectedRoute forwards the intended path as login state (returnTo)', () => {
     expect(appSource).toContain('state={{ from: location.pathname + location.search }}')
+  })
+
+  it('R62 D-1: SEO block registers the 4 routes that were missing (/reset-password, /track, /talk-to-bite, /voice-demo)', () => {
+    // audit เดิมพบ missingSeo=6 หัก 2 redirect (/profile/orders, /ai-chat) = 4 เส้นทางจริง
+    expect(appSource).toContain('path="/reset-password" element={<SeoHelmet seo={getResetPasswordMeta()} />}')
+    expect(appSource).toContain('path="/track" element={<SeoHelmet seo={getTrackIndexMeta()} />}')
+    expect(appSource).toContain('path="/talk-to-bite" element={<SeoHelmet seo={getTalkToBiteMeta()} />}')
+    expect(appSource).toContain('path="/voice-demo" element={<SeoHelmet seo={getVoiceDemoMeta()} />}')
+  })
+
+  it('R62 D-1: new meta builders deterministic + canonical ชี้เส้นทางตัวเอง', () => {
+    const cases = [
+      [getResetPasswordMeta(), '/reset-password'],
+      [getTrackIndexMeta(), '/track'],
+      [getTalkToBiteMeta(), '/talk-to-bite'],
+      [getVoiceDemoMeta(), '/voice-demo'],
+    ] as const
+    for (const [m, path] of cases) {
+      expect(m.url).toBe('https://biteme-baby.com' + path)
+      expect(m.title).toContain(SITE_CONFIG.name)
+      expect(m.description.length).toBeGreaterThan(0)
+    }
+    expect(JSON.stringify(getTalkToBiteMeta())).toBe(JSON.stringify(getTalkToBiteMeta()))
   })
 })

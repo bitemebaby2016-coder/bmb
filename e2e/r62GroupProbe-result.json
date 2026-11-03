@@ -1,0 +1,542 @@
+{
+ "A_customer_pwa": [
+  {
+   "f": "src/pages/HomePage.tsx",
+   "ok": true
+  },
+  {
+   "f": "src/pages/MenuPage.tsx",
+   "ok": true
+  },
+  {
+   "f": "src/pages/CartPage.tsx",
+   "ok": true
+  },
+  {
+   "f": "src/pages/CheckoutPage.tsx",
+   "ok": true
+  },
+  {
+   "f": "src/pages/OrdersPage.tsx",
+   "ok": true
+  },
+  {
+   "f": "src/pages/OrderTrackPage.tsx",
+   "ok": true
+  },
+  {
+   "f": "src/pages/ProfilePage.tsx",
+   "ok": true
+  },
+  {
+   "f": "src/pages/RewardsPage.tsx",
+   "ok": true
+  },
+  {
+   "f": "src/pages/PromotionsPage.tsx",
+   "ok": true
+  },
+  {
+   "f": "src/sw.ts",
+   "ok": true
+  },
+  {
+   "f": "src/lib/cartDeepLink.ts",
+   "ok": true
+  },
+  {
+   "f": "src/lib/cartPersistence.ts",
+   "ok": true
+  },
+  {
+   "f": "src/lib/notificationService.ts",
+   "ok": true
+  },
+  {
+   "f": "src/lib/pushService.ts",
+   "ok": true
+  }
+ ],
+ "B_product_ordering": [
+  {
+   "f": "src/lib/orderEntry.ts",
+   "ok": true
+  },
+  {
+   "f": "src/lib/orderStateMachine.ts",
+   "ok": true
+  },
+  {
+   "f": "src/lib/orderPolicy.ts",
+   "ok": true
+  },
+  {
+   "f": "src/lib/availabilityEngine.ts",
+   "ok": true
+  },
+  {
+   "f": "src/lib/bmbMenuSchedule.ts",
+   "ok": true
+  },
+  {
+   "f": "src/lib/preOrderQueue.ts",
+   "ok": true
+  },
+  {
+   "f": "src/lib/discountGuardrail.ts",
+   "ok": true
+  },
+  {
+   "f": "src/lib/addonMarginGuard.ts",
+   "ok": true
+  },
+  {
+   "f": "src/lib/marginCalc.ts",
+   "ok": true
+  },
+  {
+   "f": "src/pages/admin/AdminProducts.tsx",
+   "ok": true
+  },
+  {
+   "f": "src/pages/admin/AdminRounds.tsx",
+   "ok": true
+  }
+ ],
+ "C_payment": [
+  {
+   "f": "src/lib/paymentGateway.ts",
+   "ok": true
+  },
+  {
+   "f": "src/lib/omise.ts",
+   "ok": true
+  },
+  {
+   "f": "src/lib/paymentExceptions.ts",
+   "ok": true
+  },
+  {
+   "f": "src/lib/guestCheckout.ts",
+   "ok": true
+  },
+  {
+   "f": "supabase/functions/omise-webhook/index.ts",
+   "ok": true
+  },
+  {
+   "f": "supabase/functions/stripe-webhook/index.ts",
+   "ok": true
+  },
+  {
+   "f": "supabase/functions/omise-refund/index.ts",
+   "ok": true
+  },
+  {
+   "f": "supabase/functions/stripe-refund/index.ts",
+   "ok": true
+  },
+  {
+   "f": "supabase/functions/create-checkout/index.ts",
+   "ok": true
+  },
+  {
+   "f": "supabase/functions/omise-checkout/index.ts",
+   "ok": true
+  },
+  {
+   "f": "supabase/functions/guest-checkout-session/index.ts",
+   "ok": true
+  },
+  {
+   "f": "supabase/migrations/133_payment_slip_upload.sql",
+   "ok": true
+  },
+  {
+   "f": "supabase/migrations/172_discount_cap_15pct.sql",
+   "ok": true
+  }
+ ],
+ "D_admin": [
+  {
+   "f": "src/pages/admin/AdminDashboard.tsx",
+   "ok": true
+  },
+  {
+   "f": "src/pages/admin/AdminOrders.tsx",
+   "ok": true
+  },
+  {
+   "f": "src/pages/admin/AdminSettings.tsx",
+   "ok": true
+  },
+  {
+   "f": "src/pages/admin/AdminPromotions.tsx",
+   "ok": true
+  },
+  {
+   "f": "src/pages/admin/AdminMarketing.tsx",
+   "ok": true
+  },
+  {
+   "f": "src/pages/admin/DeliveryManagement.tsx",
+   "ok": true
+  },
+  {
+   "f": "src/pages/admin/InventoryPage.tsx",
+   "ok": true
+  },
+  {
+   "f": "src/pages/admin/AdminReports.tsx",
+   "ok": true
+  },
+  {
+   "f": "src/pages/admin/AdminPrintSettings.tsx",
+   "ok": true
+  },
+  {
+   "f": "src/pages/admin/RouteOptimizationPage.tsx",
+   "ok": true
+  },
+  {
+   "f": "src/pages/admin/AuditLogPage.tsx",
+   "ok": true
+  }
+ ],
+ "E_staff_kitchen": [
+  {
+   "f": "src/pages/admin/AdminKitchen.tsx",
+   "ok": true
+  },
+  {
+   "f": "src/pages/admin/AdminPos.tsx",
+   "ok": true
+  },
+  {
+   "f": "src/lib/kitchenService.ts",
+   "ok": true
+  },
+  {
+   "f": "src/lib/kitchenQueueView.ts",
+   "ok": true
+  },
+  {
+   "f": "src/lib/posApi.ts",
+   "ok": true
+  },
+  {
+   "f": "src/lib/printService.ts",
+   "ok": true
+  },
+  {
+   "f": "src/lib/stickerPng.ts",
+   "ok": true
+  },
+  {
+   "f": "supabase/migrations/019_kitchen_core.sql",
+   "ok": true
+  },
+  {
+   "f": "supabase/migrations/054_kitchen_ready_to_make_gate.sql",
+   "ok": true
+  },
+  {
+   "f": "supabase/migrations/129_pos_staff_shift.sql",
+   "ok": true
+  },
+  {
+   "f": "supabase/migrations/167_kitchen_batch_loop_fix.sql",
+   "ok": true
+  }
+ ],
+ "F_rider_delivery": [
+  {
+   "f": "src/pages/RiderPwaPage.tsx",
+   "ok": true
+  },
+  {
+   "f": "src/lib/driverService.ts",
+   "ok": true
+  },
+  {
+   "f": "src/lib/riderPositionApi.ts",
+   "ok": true
+  },
+  {
+   "f": "src/lib/deliveryRouter.ts",
+   "ok": true
+  },
+  {
+   "f": "src/lib/routeOptimization.ts",
+   "ok": true
+  },
+  {
+   "f": "src/lib/dispatchFallback.ts",
+   "ok": true
+  },
+  {
+   "f": "supabase/migrations/135_dispatch_offers.sql",
+   "ok": true
+  },
+  {
+   "f": "supabase/migrations/136_driver_location_history.sql",
+   "ok": true
+  },
+  {
+   "f": "supabase/migrations/168_multi_job_rider_route.sql",
+   "ok": true
+  },
+  {
+   "f": "supabase/migrations/174_customer_rider_position.sql",
+   "ok": true
+  }
+ ],
+ "G_inventory_finance": [
+  {
+   "f": "src/pages/admin/AdminRecipes.tsx",
+   "ok": true
+  },
+  {
+   "f": "src/lib/bmbAdminApi_inventory.ts",
+   "ok": true
+  },
+  {
+   "f": "supabase/migrations/026_inventory_aggregate_fix.sql",
+   "ok": true
+  },
+  {
+   "f": "supabase/migrations/130_finance_reports.sql",
+   "ok": true
+  },
+  {
+   "f": "supabase/migrations/170_product_cost_margin_fields.sql",
+   "ok": true
+  },
+  {
+   "f": "supabase/migrations/181_addon_margin_rules.sql",
+   "ok": true
+  }
+ ],
+ "H_automation_notifications": [
+  {
+   "f": "supabase/functions/cron-tick/index.ts",
+   "ok": true
+  },
+  {
+   "f": "supabase/functions/queue-dispatcher/index.ts",
+   "ok": true
+  },
+  {
+   "f": "supabase/functions/queue-enqueue/index.ts",
+   "ok": true
+  },
+  {
+   "f": "supabase/functions/automation-worker/index.ts",
+   "ok": true
+  },
+  {
+   "f": "supabase/functions/notification-dispatcher/index.ts",
+   "ok": true
+  },
+  {
+   "f": "supabase/functions/push-send/index.ts",
+   "ok": true
+  },
+  {
+   "f": "supabase/functions/sms-send/index.ts",
+   "ok": true
+  },
+  {
+   "f": "supabase/functions/otp-send/index.ts",
+   "ok": true
+  },
+  {
+   "f": "src/lib/notificationLinks.ts",
+   "ok": true
+  },
+  {
+   "f": "src/lib/cartSessionSync.ts",
+   "ok": true
+  },
+  {
+   "f": "supabase/migrations/179_notification_hub.sql",
+   "ok": true
+  },
+  {
+   "f": "supabase/migrations/180_cart_sessions_reminder.sql",
+   "ok": true
+  },
+  {
+   "f": ".github/workflows/automation-scheduler.yml",
+   "ok": true
+  }
+ ],
+ "I_security_backend": [
+  {
+   "f": "supabase/migrations/005_secure_rls_policies.sql",
+   "ok": true
+  },
+  {
+   "f": "supabase/migrations/006_rls_hardening_auth.sql",
+   "ok": true
+  },
+  {
+   "f": "supabase/migrations/041_driver_identity_jwt_binding.sql",
+   "ok": true
+  },
+  {
+   "f": "supabase/migrations/046_channel_identity_foundation.sql",
+   "ok": true
+  },
+  {
+   "f": "supabase/migrations/146_role_foundation.sql",
+   "ok": true
+  },
+  {
+   "f": "supabase/migrations/147_role_rls_matrix.sql",
+   "ok": true
+  },
+  {
+   "f": "supabase/migrations/157_anon_policy_role_scoping.sql",
+   "ok": true
+  },
+  {
+   "f": "supabase/migrations/158_align_grants_and_rls.sql",
+   "ok": true
+  },
+  {
+   "f": "src/lib/auditLog.ts",
+   "ok": true
+  },
+  {
+   "f": "src/lib/authRecovery.ts",
+   "ok": true
+  },
+  {
+   "f": "src/lib/authSessionSync.ts",
+   "ok": true
+  }
+ ],
+ "J_ai": [
+  {
+   "f": "supabase/functions/ai-proxy/index.ts",
+   "ok": true
+  },
+  {
+   "f": "supabase/functions/image-gen/index.ts",
+   "ok": true
+  },
+  {
+   "f": "supabase/functions/social-ai-worker/index.ts",
+   "ok": true
+  },
+  {
+   "f": "supabase/functions/social-post-worker/index.ts",
+   "ok": true
+  },
+  {
+   "f": "supabase/functions/social-publish-worker/index.ts",
+   "ok": true
+  },
+  {
+   "f": "supabase/functions/voice-tts/index.ts",
+   "ok": true
+  },
+  {
+   "f": "src/lib/aiService.ts",
+   "ok": true
+  },
+  {
+   "f": "src/lib/aiGuardrails.ts",
+   "ok": true
+  },
+  {
+   "f": "src/lib/talkToBite.ts",
+   "ok": true
+  },
+  {
+   "f": "src/lib/marketingAutoSchedule.ts",
+   "ok": true
+  },
+  {
+   "f": "src/pages/admin/AdminAiStudio.tsx",
+   "ok": true
+  },
+  {
+   "f": "src/pages/TalkToBiteHomePage.tsx",
+   "ok": true
+  }
+ ],
+ "K_infra_migrations": [
+  {
+   "f": "supabase/migrations/183_promo_banner_mascot.sql",
+   "ok": true
+  },
+  {
+   "f": ".github/workflows/ci.yml",
+   "ok": true
+  },
+  {
+   "f": ".github/workflows/contract-tests.yml",
+   "ok": true
+  },
+  {
+   "f": ".github/workflows/daily-backup.yml",
+   "ok": true
+  },
+  {
+   "f": ".github/workflows/sheets-sync.yml",
+   "ok": true
+  },
+  {
+   "f": "scripts/dbBackup.mjs",
+   "ok": true
+  },
+  {
+   "f": "docker-compose.yml",
+   "ok": true
+  },
+  {
+   "f": "Dockerfile",
+   "ok": true
+  },
+  {
+   "f": "workers/tenant-proxy",
+   "ok": true
+  },
+  {
+   "f": "vitest.config.ts",
+   "ok": true
+  },
+  {
+   "f": "playwright.config.ts",
+   "ok": true
+  }
+ ],
+ "L_quality": [
+  {
+   "f": "src/__tests__",
+   "ok": true
+  },
+  {
+   "f": "e2e",
+   "ok": true
+  },
+  {
+   "f": "eslint.config.js",
+   "ok": true
+  },
+  {
+   "f": "scripts/brandNameGuard.cjs",
+   "ok": true
+  },
+  {
+   "f": "src/test-setup.ts",
+   "ok": true
+  },
+  {
+   "f": "lighthouse",
+   "ok": true
+  }
+ ]
+}

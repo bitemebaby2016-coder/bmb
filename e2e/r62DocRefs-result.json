@@ -1,0 +1,402 @@
+{
+ "at": "2026-11-03T05:42:46.946Z",
+ "rootDocCount": 52,
+ "docsMdCount": 230,
+ "scannedCodeFiles": 1552,
+ "referenced": {
+  "docs/BMB_R3_ENGINEERING_CLOSURE_2026-10-23.md": [
+   "d:/A PROJECT/Bite Me Baby/.github/workflows/daily-backup.yml",
+   "d:/A PROJECT/Bite Me Baby/e2e/r4Repair841205.cjs"
+  ],
+  "docs/archive/legacy_reports/BMB_MASTER_EXECUTION_PLAN_2026-09-24.md": [
+   "d:/A PROJECT/Bite Me Baby/e2e/acceptance_pre_order_m1.sql",
+   "d:/A PROJECT/Bite Me Baby/e2e/acceptance_same_day_m1.sql"
+  ],
+  "docs/BMB_OWNER_ROLE_TEST_GUIDE_2026-10-27.md": [
+   "d:/A PROJECT/Bite Me Baby/e2e/backlogAudit-settings-sync-2026-10-27.json",
+   "d:/A PROJECT/Bite Me Baby/e2e/r62EvidenceCheck.cjs"
+  ],
+  "docs/archive/legacy_reports/BMB_PRE01_OWNER_DECISION_GATE_2026-09-24.md": [
+   "d:/A PROJECT/Bite Me Baby/e2e/contracts_038_pre_order_policy.sql",
+   "d:/A PROJECT/Bite Me Baby/supabase/migrations/038_pre_order_policy_enforcement.sql"
+  ],
+  "docs/BMB_CUSTOMER_JOURNEY_RECOVERY_GATE_2026-10-10.md": [
+   "d:/A PROJECT/Bite Me Baby/e2e/cr4ProdE2E.cjs"
+  ],
+  "BMB_G6_CONTRACT.md": [
+   "d:/A PROJECT/Bite Me Baby/e2e/g6RuntimeProbe.cjs",
+   "d:/A PROJECT/Bite Me Baby/src/__tests__/g6g7OrderBoundary.test.ts",
+   "d:/A PROJECT/Bite Me Baby/supabase/functions/social-ai-worker/index.ts"
+  ],
+  "docs/BMB_FINAL_LAUNCH_CLOSURE_HANDOFF.md": [
+   "d:/A PROJECT/Bite Me Baby/e2e/launchVerify.cjs"
+  ],
+  "BMB_G10_DEFECT_117_FC_ROLLBACK.md": [
+   "d:/A PROJECT/Bite Me Baby/e2e/m118BuildFromLive.cjs",
+   "d:/A PROJECT/Bite Me Baby/supabase/migrations/118_restore_fc_gates_after_117.sql"
+  ],
+  "docs/archive/legacy_reports/BMB_00_REPOSITORY_REALITY.md": [
+   "d:/A PROJECT/Bite Me Baby/e2e/master-reality-freeze.json"
+  ],
+  "docs/archive/legacy_reports/BMB_01_ACTUAL_ARCHITECTURE.md": [
+   "d:/A PROJECT/Bite Me Baby/e2e/master-reality-freeze.json"
+  ],
+  "docs/archive/legacy_reports/BMB_02_EDGE_FUNCTION_PRODUCTION_AUDIT.md": [
+   "d:/A PROJECT/Bite Me Baby/e2e/master-reality-freeze.json"
+  ],
+  "docs/archive/legacy_reports/BMB_02_MIGRATION_DRIFT.md": [
+   "d:/A PROJECT/Bite Me Baby/e2e/master-reality-freeze.json"
+  ],
+  "docs/archive/legacy_reports/BMB_02_ORDER_SPINE_PRODUCTION.md": [
+   "d:/A PROJECT/Bite Me Baby/e2e/master-reality-freeze.json"
+  ],
+  "docs/archive/legacy_reports/BMB_02_PRODUCTION_DATABASE_REALITY.md": [
+   "d:/A PROJECT/Bite Me Baby/e2e/master-reality-freeze.json"
+  ],
+  "docs/archive/legacy_reports/BMB_02_RLS_PRODUCTION_AUDIT.md": [
+   "d:/A PROJECT/Bite Me Baby/e2e/master-reality-freeze.json"
+  ],
+  "docs/archive/legacy_reports/BMB_02_RPC_PRODUCTION_AUDIT.md": [
+   "d:/A PROJECT/Bite Me Baby/e2e/master-reality-freeze.json"
+  ],
+  "docs/archive/legacy_reports/BMB_03_CUSTOMER_E2E_AUDIT.md": [
+   "d:/A PROJECT/Bite Me Baby/e2e/master-reality-freeze.json"
+  ],
+  "docs/archive/legacy_reports/BMB_04_ADMIN_CLOUD_KITCHEN_AUDIT.md": [
+   "d:/A PROJECT/Bite Me Baby/e2e/master-reality-freeze.json"
+  ],
+  "docs/archive/legacy_reports/BMB_05_OPERATIONAL_REALITY_AUDIT.md": [
+   "d:/A PROJECT/Bite Me Baby/e2e/master-reality-freeze.json"
+  ],
+  "docs/archive/legacy_reports/BMB_06_AI_AUTOMATION_INTEGRATION_REALITY.md": [
+   "d:/A PROJECT/Bite Me Baby/e2e/master-reality-freeze.json"
+  ],
+  "docs/BMB_HANDOFF_NEXT_SESSION_2026-10-31.md": [
+   "d:/A PROJECT/Bite Me Baby/e2e/r43_publish_probe.cjs"
+  ],
+  "docs/archive/legacy_reports/AI_ENTRYPOINT.md": [
+   "d:/A PROJECT/Bite Me Baby/e2e/r62DocRefs.cjs"
+  ],
+  "docs/archive/legacy_reports/AI_WORK_STATE.md": [
+   "d:/A PROJECT/Bite Me Baby/e2e/r62DocRefs.cjs"
+  ],
+  "docs/archive/legacy_reports/UNIVERSAL_MASTER_AI_RULES.md": [
+   "d:/A PROJECT/Bite Me Baby/e2e/r62DocRefs.cjs"
+  ],
+  "BMB_PRODUCTION_MASTER_STATUS.md": [
+   "d:/A PROJECT/Bite Me Baby/e2e/r62EvidenceCheck.cjs"
+  ],
+  "docs/03_ADMIN_USER_GUIDE.md": [
+   "d:/A PROJECT/Bite Me Baby/e2e/r62EvidenceCheck.cjs",
+   "README.md"
+  ],
+  "docs/BMB_PRODUCTION_TEST_PACK.md": [
+   "d:/A PROJECT/Bite Me Baby/e2e/r62EvidenceCheck.cjs"
+  ],
+  "docs/BMB_REQUIREMENT_RECONCILIATION.md": [
+   "d:/A PROJECT/Bite Me Baby/e2e/r62EvidenceCheck.cjs"
+  ],
+  "docs/archive/legacy_reports/COMPONENT_SPEC_UI.md": [
+   "d:/A PROJECT/Bite Me Baby/src/components/CustomerReviewCard.tsx",
+   "d:/A PROJECT/Bite Me Baby/src/components/LazyVideo.tsx",
+   "d:/A PROJECT/Bite Me Baby/src/components/MascotBadge.tsx",
+   "d:/A PROJECT/Bite Me Baby/src/index.css",
+   "d:/A PROJECT/Bite Me Baby/src/lib/socialProofReviews.ts",
+   "d:/A PROJECT/Bite Me Baby/src/pages/MenuPage.tsx",
+   "d:/A PROJECT/Bite Me Baby/src/types/index.ts"
+  ],
+  "docs/archive/legacy_reports/SECURITY_REMEDIATION_PLAN.md": [
+   "d:/A PROJECT/Bite Me Baby/src/lib/supabase.ts"
+  ],
+  "docs/BMB_SAME_DAY_PRE_ORDER_REGRESSION_MATRIX.md": [
+   "d:/A PROJECT/Bite Me Baby/src/lib/talkToBite.ts"
+  ],
+  "BMB_G7_CONTRACT.md": [
+   "d:/A PROJECT/Bite Me Baby/src/__tests__/g6g7OrderBoundary.test.ts",
+   "d:/A PROJECT/Bite Me Baby/supabase/functions/social-post-worker/index.ts"
+  ],
+  "docs/archive/legacy_reports/BMB_W4E1_READ_PATH_HARDENING.md": [
+   "d:/A PROJECT/Bite Me Baby/src/__tests__/ordersPaged.test.ts"
+  ],
+  "docs/archive/legacy_reports/BMB_W5_H1_SECURITY_PATCH.md": [
+   "d:/A PROJECT/Bite Me Baby/src/__tests__/w5h1Tracking.test.ts"
+  ],
+  "docs/archive/legacy_reports/DATABASE_SECURITY_AUDIT.md": [
+   "d:/A PROJECT/Bite Me Baby/supabase/migrations/006_rls_hardening_auth.sql"
+  ],
+  "docs/archive/legacy_reports/RLS_MATRIX.md": [
+   "d:/A PROJECT/Bite Me Baby/supabase/migrations/006_rls_hardening_auth.sql"
+  ],
+  "docs/archive/legacy_reports/ORDER_SPINE_DESIGN.md": [
+   "d:/A PROJECT/Bite Me Baby/supabase/migrations/023_canonical_order_domain.sql",
+   "d:/A PROJECT/Bite Me Baby/supabase/migrations/024_round_lifecycle_and_preorder_migration.sql",
+   "d:/A PROJECT/Bite Me Baby/supabase/migrations/025_canonical_order_rpc.sql",
+   "d:/A PROJECT/Bite Me Baby/supabase/migrations/026_inventory_aggregate_fix.sql",
+   "d:/A PROJECT/Bite Me Baby/supabase/migrations/027_kitchen_canonical_batch.sql",
+   "d:/A PROJECT/Bite Me Baby/supabase/migrations/028_phase3a_operational_guarantees.sql"
+  ],
+  "docs/BMB_RECOVERY_PLAN_2026-10-23.md": [
+   "d:/A PROJECT/Bite Me Baby/supabase/migrations/138_payment_intents_read_authority.sql",
+   "d:/A PROJECT/Bite Me Baby/supabase/migrations/139_pod_policies_trusted_helper.sql"
+  ],
+  "docs/BMB_ROLE_PERMISSION_AI_AUDIT_2026-10-24.md": [
+   "d:/A PROJECT/Bite Me Baby/supabase/migrations/146_role_foundation.sql"
+  ],
+  "docs/BMB_GROWTH_REWARDS_INVENTORY_2026-10-25.md": [
+   "d:/A PROJECT/Bite Me Baby/supabase/migrations/153_promotion_campaign_controls.sql",
+   "d:/A PROJECT/Bite Me Baby/supabase/migrations/154_referral_program.sql"
+  ],
+  "docs/01_SYSTEM_ARCHITECTURE.md": [
+   "README.md"
+  ],
+  "docs/02_API_INTEGRATIONS.md": [
+   "README.md"
+  ],
+  "docs/04_DEPLOYMENT_RUNBOOK.md": [
+   "README.md"
+  ]
+ },
+ "unreferencedRoot": [
+  "BMB_ADMIN_AUDIT_2026-10-07.md",
+  "BMB_ADMIN_GAP_SURVEY.md",
+  "BMB_ASSET_ADMIN_MAP.md",
+  "BMB_B1_FIX_REPORT.md",
+  "BMB_CURRENT_PRODUCTION_CLOSURE_BASELINE.md",
+  "BMB_FOOD_THEATER_REPORT_2026-10-08.md",
+  "BMB_FULL_PRODUCTION_INTEGRITY_CLOSURE_REPORT.md",
+  "BMB_G10_FINAL_REPORT.md",
+  "BMB_G2RV_PROPOSALS.md",
+  "BMB_G3_FINAL_REPORT.md",
+  "BMB_G4_IMPLEMENTATION_REPORT.md",
+  "BMB_G4_PRODUCTION_CONNECTION_REPORT.md",
+  "BMB_G4_READINESS_REVIEW.md",
+  "BMB_G5_AI_ROUTING_AUDIT.md",
+  "BMB_G5_FINAL_REPORT.md",
+  "BMB_G6_FINAL_REPORT.md",
+  "BMB_G6_WORKLOG.md",
+  "BMB_G7_FINAL_REPORT.md",
+  "BMB_G7_S4_R2_RUNTIME_REPORT.md",
+  "BMB_G7_S4_RUNTIME_REPORT.md",
+  "BMB_G7_WORKLOG.md",
+  "BMB_G8_S0_AUTOMATION_AUDIT.md",
+  "BMB_G8_S1_ARCHITECTURE_DECISION.md",
+  "BMB_G8_S2_QUEUE_RUNTIME_REPORT.md",
+  "BMB_G8_S3_CUTOVER_PREPARATION.md",
+  "BMB_G8_S4_QUEUE_DISPATCHER_RUNTIME_REPORT.md",
+  "BMB_G8_S5_CONTROLLED_CUTOVER_RUNTIME_REPORT.md",
+  "BMB_G8_S5_FINAL_REPORT.md",
+  "BMB_G8_S5_HANDOFF_NEXT_CHAT.md",
+  "BMB_G8_S5_ROOT_CAUSE_DIAGNOSTIC.md",
+  "BMB_G8_T1_TRANSPORT_DECISION_AUDIT.md",
+  "BMB_G8_T2_SECURE_ENQUEUE_TRANSPORT_RUNTIME_REPORT.md",
+  "BMB_G9_CONTRACT.md",
+  "BMB_G9_FINAL_REPORT.md",
+  "BMB_G9_NONMETA_OWNER_REVIEW.md",
+  "BMB_GATE2_ASSET_BRAND_CONTROL_REPORT.md",
+  "BMB_HANDOFF_CHAT_THEME_UIUX_2026-10-09.md",
+  "BMB_HANDOFF_UXUI_2026-10-08.md",
+  "BMB_MIGRATION_REPLAYABILITY_AUDIT.md",
+  "BMB_OPEN_ITEMS_OWNER_TESTS_2026-10-08.md",
+  "BMB_OPEN_SHOP_ACCEPTANCE_HANDOFF.md",
+  "BMB_POST_G2_SECURITY_REMEDIATION_REPORT.md",
+  "BMB_SOCIAL_AI_ASSET_INVENTORY.md",
+  "BMB_SOCIAL_AI_NEXT_GATE_AUDIT.md",
+  "BMB_TALK_TO_BITE_CONTEXT.md",
+  "BMB_TALK_TO_BITE_STATUS.md",
+  "BMB_UNIFIED_DESIGN_SYSTEM_REPORT_2026-10-10.md",
+  "BMB_W23_SMS_DELIVERY_DIAGNOSTIC.md"
+ ],
+ "unreferencedDocs": [
+  "docs/05_FIX_LOG_2026-10-01_TENANT_ID_103.md",
+  "docs/06_FEATURE_LOG_2026-10-01_VOICE_AI.md",
+  "docs/07_FIX_LOG_2026-10-01_SECTION_TWO_TIER.md",
+  "docs/11_UX_ENHANCEMENTS_2026-10-14.md",
+  "docs/BMB_ACCEPTANCE_PREPARATION_2026-10-14.md",
+  "docs/BMB_ACCEPTANCE_RUNBOOK_2026-10-16.md",
+  "docs/BMB_ADMIN_CONSOLIDATION_HANDOFF.md",
+  "docs/BMB_ADMIN_LEGACY_DUPLICATION_AUDIT_2026-10-24.md",
+  "docs/BMB_ADMIN_LEGACY_DUPLICATION_AUDIT_REPORT_2026-10-24.md",
+  "docs/BMB_BACKEND_AI_PART_1.md",
+  "docs/BMB_BACKEND_CAPABILITY_CLOSURE_2026-10-19.md",
+  "docs/BMB_CLOSURE_EXECUTION_REPORT_2026-10-16.md",
+  "docs/BMB_CLOSURE_WAVE4.md",
+  "docs/BMB_CONSOLIDATED_CLOSURE_GAP_AUDIT_2026-10-15.md",
+  "docs/BMB_E2E_PRODUCTION_ACCEPTANCE_PLAN_2026-10-24.md",
+  "docs/BMB_FINAL_PRODUCTION_CLOSURE_REPORT.md",
+  "docs/BMB_GATE1_PREFLIGHT_GATE3_RELEASE_EVIDENCE_2026-10-14.md",
+  "docs/BMB_GROWTH_REWARDS_REQUIREMENTS_2026-10-25.md",
+  "docs/BMB_HANDOFF_AI_AUTOMOTION_AUDIT_2026-10-07.md",
+  "docs/BMB_HANDOFF_MASTER_2026-10-22.md",
+  "docs/BMB_HANDOFF_NEXT_SESSION_2026-10-26.md",
+  "docs/BMB_HANDOFF_NEXT_SESSION_2026-10-27.md",
+  "docs/BMB_HANDOFF_NEXT_SESSION_2026-10-27B.md",
+  "docs/BMB_HANDOFF_NEXT_SESSION_2026-10-28.md",
+  "docs/BMB_HANDOFF_NEXT_SESSION_2026-10-29.md",
+  "docs/BMB_HANDOFF_NEXT_SESSION_2026-10-30.md",
+  "docs/BMB_HANDOFF_NEXT_SESSION_2026-11-01.md",
+  "docs/BMB_HANDOFF_NEXT_SESSION_2026-11-02.md",
+  "docs/BMB_MASTER_STATUS.md",
+  "docs/BMB_MASTER_TEST_CHECKLIST_2026-10-28.md",
+  "docs/BMB_OPENING_READINESS_MASTER.md",
+  "docs/BMB_OWNER_LAUNCH_CHECKLIST.md",
+  "docs/BMB_OWNER_PREP_R16_D6_MIGRATIONS_2026-10-25.md",
+  "docs/BMB_OWNER_PRODUCTION_TEST_CHECKLIST_2026-10-19.md",
+  "docs/BMB_OWNER_STATUS_REPORT_2026-10-25.md",
+  "docs/BMB_P0_ADMIN_MENU_CART_EVIDENCE_2026-10-14.md",
+  "docs/BMB_QA_REVIEW_2026-10-29.md",
+  "docs/BMB_R5_PRE_ORDER_SEPARATION_2026-10-23.md",
+  "docs/BMB_REAL_ACCOUNT_VERIFICATION.md",
+  "docs/BMB_RIDER_E2E_CLOSURE_2026-10-20.md",
+  "docs/BMB_ROUND_MODEL_ONE_PAGER_2026-10-24.md",
+  "docs/BMB_SAME_DAY_PRE_ORDER_CHECKPOINT.md",
+  "docs/BMB_SAME_DAY_PRE_ORDER_EVIDENCE_LOG.md",
+  "docs/BMB_SAME_DAY_PRE_ORDER_MASTER_PLAN.md",
+  "docs/BMB_SAME_DAY_PRE_ORDER_PHASE_CONTRACTS.md",
+  "docs/BMB_STALE_CONTRACTS8_EVIDENCE_2026-10-25.md",
+  "docs/BMB_STATUS_CLOSURE_2026-10-09.md",
+  "docs/BMB_STATUS_VERIFIED_2026-10-17.md",
+  "docs/BMB_UPGRADE_LOG_2026-10-29.md",
+  "docs/BMB_UX_FIX_HANDOFF_2026-10-15.md",
+  "docs/BMB_WAVE2_M1_AND_READINESS.md",
+  "docs/BMB_WAVE5A_HANDOFF.md",
+  "docs/BMB_WAVE5B_HANDOFF.md",
+  "docs/BMB_WAVE5B_OWNER_DECISION_REVIEW.md",
+  "docs/BMB_WAVE5B_OWNER_REVIEW_PACK.md",
+  "docs/archive/INDEX_2026-10-26.md",
+  "docs/archive/legacy_reports/ADMIN_GAP_MAP.md",
+  "docs/archive/legacy_reports/ADMIN_GUIDE_TH.md",
+  "docs/archive/legacy_reports/AI_EXTENSIONS_HANDOFF.md",
+  "docs/archive/legacy_reports/AUTHORIZATION_AUDIT.md",
+  "docs/archive/legacy_reports/AUTOMATION_ARCHITECTURE.md",
+  "docs/archive/legacy_reports/BITEBABY_BLUEPRINT_REFACTOR_2026-09-20.md",
+  "docs/archive/legacy_reports/BiteMeBaby_ADMIN_GUIDE_TH.md",
+  "docs/archive/legacy_reports/BITEMEBABY_AI_SESSION_CONTRACT.md",
+  "docs/archive/legacy_reports/BiteMeBaby_API.md",
+  "docs/archive/legacy_reports/BiteMeBaby_ARCHITECTURE.md",
+  "docs/archive/legacy_reports/BITEMEBABY_CLOSURE_WORK_PLAN.md",
+  "docs/archive/legacy_reports/BiteMeBaby_DEPLOYMENT.md",
+  "docs/archive/legacy_reports/BiteMeBaby_GAP_ANALYSIS.md",
+  "docs/archive/legacy_reports/BiteMeBaby_GAP_ANALYSIS_IMPLEMENTATION_PLAN.md",
+  "docs/archive/legacy_reports/BiteMeBaby_IMPLEMENTATION_ROADMAP.md",
+  "docs/archive/legacy_reports/BITEMEBABY_MASTER_PRODUCT_SPEC_CLOSURE_BOOK.md",
+  "docs/archive/legacy_reports/BITEMEBABY_PRODUCT_REALITY_MAP.md",
+  "docs/archive/legacy_reports/BiteMeBaby_REALITY_MAP.md",
+  "docs/archive/legacy_reports/BiteMeBaby_TARGET_PRODUCT_SPEC.md",
+  "docs/archive/legacy_reports/BiteMeBaby_USER_GUIDE.md",
+  "docs/archive/legacy_reports/BMB_100_PERCENT_CLOSURE_BOOK.md",
+  "docs/archive/legacy_reports/BMB_ADMIN_MENU_CATALOG_AUDIT.md",
+  "docs/archive/legacy_reports/BMB_ADMIN_MENU_CATALOG_OWNER_DECISIONS.md",
+  "docs/archive/legacy_reports/BMB_CAT01_REPORT.md",
+  "docs/archive/legacy_reports/BMB_CAT02_REPORT.md",
+  "docs/archive/legacy_reports/BMB_CAT03A_IMPLEMENT_REPORT.md",
+  "docs/archive/legacy_reports/BMB_CAT03A_MEDIA_MIGRATION_CONTRACT.md",
+  "docs/archive/legacy_reports/BMB_CAT03_REPORT.md",
+  "docs/archive/legacy_reports/BMB_CAT_WL_00_REPORT.md",
+  "docs/archive/legacy_reports/BMB_CHANNEL_IDENTITY_FOUNDATION_EVIDENCE.md",
+  "docs/archive/legacy_reports/BMB_CHANNEL_IDENTITY_FOUNDATION_HANDOFF.md",
+  "docs/archive/legacy_reports/BMB_CURRENT_STATE_2026-09-20.md",
+  "docs/archive/legacy_reports/BMB_DEEP_PRODUCT_LOGIC_AUDIT_2026-09-22.md",
+  "docs/archive/legacy_reports/BMB_DR_RUNBOOK.md",
+  "docs/archive/legacy_reports/BMB_F14_HANDOFF.md",
+  "docs/archive/legacy_reports/BMB_F14_OMNICHANNEL_SCHEMA_EVIDENCE.md",
+  "docs/archive/legacy_reports/BMB_HANDOFF_NEXT_SESSION_2026-10-06.md",
+  "docs/archive/legacy_reports/BMB_HANDOFF_NEXT_SESSION_2026-10-07.md",
+  "docs/archive/legacy_reports/BMB_HANDOFF_NEXT_SESSION_2026-10-16.md",
+  "docs/archive/legacy_reports/BMB_HANDOFF_NEXT_SESSION_2026-10-17-EVE.md",
+  "docs/archive/legacy_reports/BMB_HANDOFF_NEXT_SESSION_2026-10-17-PM.md",
+  "docs/archive/legacy_reports/BMB_HANDOFF_NEXT_SESSION_2026-10-17.md",
+  "docs/archive/legacy_reports/BMB_HANDOFF_NEXT_SESSION_2026-10-24.md",
+  "docs/archive/legacy_reports/BMB_HANDOFF_NEXT_SESSION_2026-10-25.md",
+  "docs/archive/legacy_reports/BMB_HANDOFF_STEP3B2A.md",
+  "docs/archive/legacy_reports/BMB_M1_CLOSURE_EVIDENCE_2026-09-24.md",
+  "docs/archive/legacy_reports/BMB_MASTER_OBJECTIVE_RECONCILIATION_2026-09-24.md",
+  "docs/archive/legacy_reports/BMB_MASTER_PRODUCT_SPEC.md",
+  "docs/archive/legacy_reports/BMB_MASTER_REALITY_FREEZE.md",
+  "docs/archive/legacy_reports/BMB_MASTER_REALITY_GAP_MAP.md",
+  "docs/archive/legacy_reports/BMB_MASTER_REQUIREMENT_RECONCILIATION_2026-09-23.md",
+  "docs/archive/legacy_reports/BMB_OPEN_SHOP_DEPENDENCY_MATRIX.md",
+  "docs/archive/legacy_reports/BMB_OWNER_DECISIONS_LOCKED.md",
+  "docs/archive/legacy_reports/BMB_OWNER_DECISION_PACK.md",
+  "docs/archive/legacy_reports/BMB_OWNER_EXECUTION_CHECKLIST_TH_2026-09-24.md",
+  "docs/archive/legacy_reports/BMB_PRODUCTION_CLOSURE_MASTER.md",
+  "docs/archive/legacy_reports/BMB_PWA_100_GATE_EVIDENCE_2026-09-21.md",
+  "docs/archive/legacy_reports/BMB_REVIEW_CLOSURE_REPORT.md",
+  "docs/archive/legacy_reports/BMB_REVIEW_DUPLICATION_AUDIT.md",
+  "docs/archive/legacy_reports/BMB_SESSION_HANDOFF.md",
+  "docs/archive/legacy_reports/BMB_SESSION_HANDOFF_2026-10-14_PREOPENING.md",
+  "docs/archive/legacy_reports/BMB_STEP1_REAL_CODE_CLOSURE_AUDIT.md",
+  "docs/archive/legacy_reports/BMB_STEP2_COMMERCE_INTEGRITY_IMPLEMENTATION.md",
+  "docs/archive/legacy_reports/BMB_STEP2_CT04_CLOSURE_REPORT.md",
+  "docs/archive/legacy_reports/BMB_STEP2_CT_HARDSTOP_REPORT.md",
+  "docs/archive/legacy_reports/BMB_STEP2_DEPLOY_CHECKPOINT.md",
+  "docs/archive/legacy_reports/BMB_STEP2_FINAL_CLOSURE_REPORT.md",
+  "docs/archive/legacy_reports/BMB_STEP2_FINAL_GATE_REPORT.md",
+  "docs/archive/legacy_reports/BMB_STEP3B2A_ORDERS_CONTROL.md",
+  "docs/archive/legacy_reports/BMB_STEP3B2B_PREORDER_QUEUE_CONTROL.md",
+  "docs/archive/legacy_reports/BMB_STEP3B2C_KITCHEN_CONTROL.md",
+  "docs/archive/legacy_reports/BMB_STEP3B2C_READY_TO_MAKE_CONTRACT.md",
+  "docs/archive/legacy_reports/BMB_STEP3B2D_DISPATCH_CONTROL.md",
+  "docs/archive/legacy_reports/BMB_STEP3B2E_PAYMENT_EXCEPTIONS.md",
+  "docs/archive/legacy_reports/BMB_STEP3B_OPERATIONAL_CORE_AUDIT.md",
+  "docs/archive/legacy_reports/BMB_STEP3_ADMIN_COMMAND_CENTER_AUDIT.md",
+  "docs/archive/legacy_reports/BMB_STEP3_GAP_REGISTER.md",
+  "docs/archive/legacy_reports/BMB_STORAGE_PLATFORM_BLOCKER.md",
+  "docs/archive/legacy_reports/BMB_TEN01_AUDIT.md",
+  "docs/archive/legacy_reports/BMB_TEN02_CLOSURE_REPORT.md",
+  "docs/archive/legacy_reports/BMB_TEN02_IMPLEMENTATION_CONTRACT.md",
+  "docs/archive/legacy_reports/BMB_TEN03_IMPLEMENTATION_CONTRACT.md",
+  "docs/archive/legacy_reports/BMB_TEN04_IMPLEMENTATION_CONTRACT.md",
+  "docs/archive/legacy_reports/BMB_TEN05_IMPLEMENTATION_CONTRACT.md",
+  "docs/archive/legacy_reports/BMB_TENANCY_OWNER_DECISION_CONTRACT.md",
+  "docs/archive/legacy_reports/BMB_W3A_AI_GATEWAY_EVIDENCE.md",
+  "docs/archive/legacy_reports/BMB_W3A_HANDOFF.md",
+  "docs/archive/legacy_reports/BMB_W3B_HANDOFF.md",
+  "docs/archive/legacy_reports/BMB_W3B_NATIVE_AUTOMATION_EVIDENCE.md",
+  "docs/archive/legacy_reports/BMB_W3C_EXTERNAL_EVIDENCE.md",
+  "docs/archive/legacy_reports/BMB_W3C_EXTERNAL_HANDOFF.md",
+  "docs/archive/legacy_reports/BMB_W3C_HANDOFF.md",
+  "docs/archive/legacy_reports/BMB_W3C_OMNICHANNEL_EVIDENCE.md",
+  "docs/archive/legacy_reports/BMB_W3D_HANDOFF.md",
+  "docs/archive/legacy_reports/BMB_W3D_NOTIFICATIONS_EVIDENCE.md",
+  "docs/archive/legacy_reports/BMB_W3E1A_SCHEDULER_AUDIT.md",
+  "docs/archive/legacy_reports/BMB_W3E1_SCHEDULER_AUDIT.md",
+  "docs/archive/legacy_reports/BMB_W3E1_SCHEDULER_GATE.md",
+  "docs/archive/legacy_reports/BMB_W3E2_OPERATIONS_REPORT.md",
+  "docs/archive/legacy_reports/BMB_W3E3_BACKUP_DR_AUDIT.md",
+  "docs/archive/legacy_reports/BMB_W3E4_OPERATIONS_FINAL_GATE.md",
+  "docs/archive/legacy_reports/BMB_W3E_OPERATIONS_AUDIT.md",
+  "docs/archive/legacy_reports/BMB_W4B_PLACEHOLDER_EF_AUDIT.md",
+  "docs/archive/legacy_reports/BMB_W4C_REALTIME_AUDIT.md",
+  "docs/archive/legacy_reports/BMB_W4D_TODO_MARKER_AUDIT.md",
+  "docs/archive/legacy_reports/BMB_W4E_ARCHITECTURE_DEBT_AUDIT.md",
+  "docs/archive/legacy_reports/BMB_W4_READINESS_ARCHITECTURE_DEBT_AUDIT.md",
+  "docs/archive/legacy_reports/BMB_W5_3_PHYSICAL_DELIVERY_PILOT_SPEC.md",
+  "docs/archive/legacy_reports/BMB_W5_FINAL_PRODUCTION_READINESS_REPORT.md",
+  "docs/archive/legacy_reports/BMB_W5_H2_TEST_ORDER_E2E.md",
+  "docs/archive/legacy_reports/BMB_W5_PRODUCTION_PRODUCT_READINESS_AUDIT.md",
+  "docs/archive/legacy_reports/BMB_W5_TEST_ARTIFACT_CLEANUP_AUDIT.md",
+  "docs/archive/legacy_reports/BMB_WAVE_1_REMEDIATION_REPORT.md",
+  "docs/archive/legacy_reports/BMB_WAVE_2_HANDOFF.md",
+  "docs/archive/legacy_reports/BMB_WAVE_2_PRODUCTION_APPLY_EVIDENCE.md",
+  "docs/archive/legacy_reports/BMB_WAVE_2_REMEDIATION_REPORT.md",
+  "docs/archive/legacy_reports/BMB_WHITE_LABEL_ARCHITECTURE_GAPS.md",
+  "docs/archive/legacy_reports/BMB_WHITE_LABEL_READINESS_AUDIT.md",
+  "docs/archive/legacy_reports/BMB_WHITE_LABEL_TENANCY_ARCHITECTURE.md",
+  "docs/archive/legacy_reports/BMB_WHITE_LABEL_TENANCY_DATA_MATRIX.md",
+  "docs/archive/legacy_reports/DATA_AUTHORITY_MAP.md",
+  "docs/archive/legacy_reports/EXPERIMENT_CHECKLIST.md",
+  "docs/archive/legacy_reports/HANDOFF_2026-09-20_ADDONS_BANNER_SEO_TH.md",
+  "docs/archive/legacy_reports/IMPLEMENTATION_PLAN.md",
+  "docs/archive/legacy_reports/MASTER_PLAN.md",
+  "docs/archive/legacy_reports/PHASE_C_TRUSTED_BACKEND_FORENSIC.md",
+  "docs/archive/legacy_reports/PWA_CANONICAL_ORDER_CONSUMER_AUDIT.md",
+  "docs/archive/legacy_reports/REAL_CODEBASE_AUDIT.md",
+  "docs/archive/legacy_reports/RECONCILIATION_REPORT.md",
+  "docs/archive/legacy_reports/RLS_MATRIX_v1_phaseB_baseline.md",
+  "docs/archive/legacy_reports/STATUS_TRACKER.md",
+  "docs/archive/legacy_reports/STRIPE_WEBHOOK_PRELIVE_AUDIT.md",
+  "docs/archive/legacy_reports/SUPABASE_SETUP.md",
+  "docs/archive/legacy_reports/TEN_06_HANDOFF.md",
+  "docs/archive/legacy_reports/_temp_recon.md"
+ ]
+}
