@@ -1,0 +1,21 @@
+{
+  "at": "2026-11-03T01:46:13.616Z",
+  "file": "183_promo_banner_mascot.sql",
+  "steps": [
+    {
+      "action": "applied",
+      "detail": "[]"
+    },
+    {
+      "action": "ledger_recorded",
+      "detail": "[]"
+    }
+  ],
+  "precheck": "[{\"version\":\"182\",\"name\":\"182_order_messages.sql\"},{\"version\":\"181\",\"name\":\"181_addon_margin_rules\"},{\"version\":\"180\",\"name\":\"180_cart_sessions_reminder\"}]",
+  "reload": "[]",
+  "verify": {
+    "column": "[{\"column_name\":\"banner_mascot\"}]",
+    "ledgerTop": "[{\"version\":\"183\",\"name\":\"183_promo_banner_mascot.sql\"},{\"version\":\"182\",\"name\":\"182_order_messages.sql\"},{\"version\":\"181\",\"name\":\"181_addon_margin_rules\"}]"
+  },
+  "ALL_PASS": true
+}

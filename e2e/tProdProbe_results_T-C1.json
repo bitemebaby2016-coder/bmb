@@ -1,12 +1,26 @@
 {
-  "startedAt": "2026-11-03T01:07:29.092Z",
+  "startedAt": "2026-11-03T01:55:57.599Z",
   "base": "https://biteme-baby.com",
   "note": "fresh browser context per section = no cache/cookies (hard-refresh equivalent)",
   "items": [
     {
-      "id": "T-C",
-      "status": "BLOCKED(creds)",
-      "detail": "login ไม่ผ่าน → https://biteme-baby.com/login · toast=\"\" · body=\"Bite Me Baby เมนู โปรโมชั่น โหวตเมนู สุ่มเมนู ธีม: สว่าง (Light Minimal) ☀️ เข้าสู่ระบบ Bite Me Baby More than just delicious food 📧 อีเมล / รหัสผ่าน ⚡ เข้าสู่ระบบด่วน อีเมลหรือรหัสผ่านไม่ถูกต้อง — ถ้าลืมรหัสผ่าน ให้เจ้าของร้านกด \"Send password recovery\" ที่ Supabase Dashboard → Authentication → Us\" · ยืนยันตรงกับ GoTrue password grant = HTTP 400 invalid_credentials (e2e/tmp_adminlogin.cjs) — รหัสผ่าน test admin ใน supabase/secrets.local.env ใช้กับ production ไม่ได้แล้ว → ต้องให้ Owner รีเซ็ตก่อนรัน T-C1..C3 ได้",
+      "id": "T-C1",
+      "status": "PASS",
+      "detail": "พาเนลเปิด=1 · ใน viewport=true · scrollY 173→641 · รูปในคลัง=4 · panelText=\"คลังภาพที่เจน (bmb-images/ai-generated/) — กดเลือกเพื่อลดขนาดอัตโนมัติ (กว้างสุด 1024px) แล้วใช้เป็นรูปเมนู\"",
+      "shots": [
+        "d:\\A PROJECT\\Bite Me Baby\\e2e\\screenshots\\tC1_ai_album.png"
+      ]
+    },
+    {
+      "id": "T-C4",
+      "status": "SKIPPED",
+      "detail": "ข้อ (ทางเลือก) = เจนรูปที่ AI Studio ก่อนกลับมา T-C1 — งดทำโดยไม่สั่ง (SKIPPED ≠ PASS)",
+      "shots": []
+    },
+    {
+      "id": "T-C-note",
+      "status": "INFO",
+      "detail": "ไม่ได้กด \"บันทึกเมนู\" → products ไม่ถูกแก้ · แต่มีไฟล์ใหม่ใน storage จากการทดสอบ (downscale ของรูปเจน + ไฟล์ทดสอบ)",
       "shots": []
     },
     {

@@ -8,7 +8,8 @@ import { showToast } from '@/components/ui/ToastContainer'
 import { getPromotionsAdmin, upsertPromotion, deletePromotion, togglePromotion, attachPromotionScope, type PromotionRow } from '@/lib/bmbAdminApi_promotions'
 import { submitContentForApproval } from '@/lib/contentApproval'
 import { validatePromotionForm } from '@/lib/promotionClient'
-import { uploadMediaAsset } from '@/lib/bmbAdminApi_media'
+import { uploadMediaAsset, listAiAlbumFiles, type AiAlbumFile } from '@/lib/bmbAdminApi_media'
+import { MASCOT_ROTATION } from '@/components/home/FloatingAdBanners'
 import { getProducts } from '@/lib/bmbAdminApi_products'
 
 const EMPTY_FORM = {
@@ -23,6 +24,8 @@ const EMPTY_FORM = {
   is_active: true,
   is_banner: false,
   banner_image: '',
+  // R61 (Owner 2026-11-03): มาสคอตที่แอดมินประกอบเอง (เครื่อง/คลังภาพ/มาตรฐาน 4 ท่า)
+  banner_mascot: '',
   // ---- [G&R 153] คอลัมน์แคมเปญ ----
   stackable: false,
   applies_to: 'all_products' as 'all_products' | 'specific_products',
@@ -38,6 +41,10 @@ export function AdminPromotions() {
   const [editing, setEditing] = useState<PromotionRow | null>(null)
   const [form, setForm] = useState({ ...EMPTY_FORM })
   const [uploading, setUploading] = useState(false)
+  // R61: คลังภาพ AI ("basket") สำหรับแนบรูป/เลือกมาสคอต + การอัปโหลดมาสคอต
+  const [albumPanel, setAlbumPanel] = useState<null | 'image' | 'mascot'>(null)
+  const [album, setAlbum] = useState<AiAlbumFile[] | null>(null)
+  const [mascotUploading, setMascotUploading] = useState(false)
   const formRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -76,6 +83,7 @@ export function AdminPromotions() {
       is_active: promo.is_active,
       is_banner: promo.is_banner || false,
       banner_image: promo.banner_image || '',
+      banner_mascot: promo.banner_mascot || '',
       stackable: promo.stackable ?? false,
       applies_to: promo.applies_to ?? 'all_products',
       max_discount_amount:
@@ -117,6 +125,8 @@ export function AdminPromotions() {
       is_active: v.is_active,
       is_banner: v.is_banner,
       banner_image: v.banner_image || null,
+      // R61: มาสคอตที่แอดมินประกอบเอง (validatePromotionForm ไม่รู้จักฟิลด์นี้ → อ่านจาก form ตรง ๆ)
+      banner_mascot: form.banner_mascot || null,
       // ---- [G&R 153] คอลัมน์แคมเปญ + scope (upsertPromotion คุม scope ให้เอง) ----
       stackable: v.stackable ?? false,
       applies_to: v.applies_to ?? 'all_products',
@@ -182,6 +192,44 @@ export function AdminPromotions() {
       }
     } finally {
       setUploading(false)
+    }
+  }
+
+  // ---- R61 (Owner 2026-11-03): แนบรูป/มาสคอต — จากเครื่อง หรือจากคลังภาพ AI ("basket") + ประกอบเอง ----
+  /** เปิด/ปิดคลังภาพ — target = จะเอาไปเป็น "รูปแบนเนอร์" หรือ "มาสคอต" */
+  async function handleBrowseAlbum(target: 'image' | 'mascot') {
+    if (albumPanel === target) { setAlbumPanel(null); return }
+    if (!album) {
+      const files = await listAiAlbumFiles()
+      setAlbum(files)
+      if (files.length === 0) showToast('ยังไม่มีภาพในคลังภาพ AI — เจนรูปที่ AI Studio ก่อน หรืออัปโหลดจากเครื่อง', 'warning')
+    }
+    setAlbumPanel(target)
+    requestAnimationFrame(() => document.getElementById('promo-album-panel')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' }))
+  }
+
+  function pickFromAlbum(url: string) {
+    if (albumPanel === 'mascot') {
+      setForm((f) => ({ ...f, banner_mascot: url }))
+      showToast('ตั้งมาสคอตจากคลังภาพแล้ว — ดูตัวอย่างประกอบด้านล่าง', 'success')
+    } else {
+      setForm((f) => ({ ...f, banner_image: url }))
+      showToast('ใช้ภาพจากคลังภาพเป็นรูปแบนเนอร์แล้ว', 'success')
+    }
+  }
+
+  async function handleUploadMascot(file: File) {
+    setMascotUploading(true)
+    try {
+      const asset = await uploadMediaAsset(file, 'mascot', form.name || 'mascot')
+      if (asset?.url) {
+        setForm((f) => ({ ...f, banner_mascot: asset.url }))
+        showToast('อัปโหลดมาสคอตสำเร็จ — ดูตัวอย่างประกอบด้านล่าง', 'success')
+      } else {
+        showToast('อัปโหลดมาสคอตไม่สำเร็จ — ลองใหม่ หรือเลือกจากคลังภาพได้', 'error')
+      }
+    } finally {
+      setMascotUploading(false)
     }
   }
 
@@ -292,6 +340,7 @@ export function AdminPromotions() {
               placeholder="ลิงก์รูปแบนเนอร์ (ไม่บังคับ)"
               value={form.banner_image}
               onChange={(e) => setForm({ ...form, banner_image: e.target.value })}
+              data-testid="promo-banner-image-url"
             />
             <div className="flex items-center gap-2">
               <input
@@ -302,16 +351,110 @@ export function AdminPromotions() {
                 onChange={(e) => {
                   const f = e.target.files?.[0]
                   if (f) void handleUploadBanner(f)
+                  e.target.value = ''
                 }}
               />
               {uploading && <span className="text-sm text-brand-muted">กำลังอัปโหลดรูป…</span>}
             </div>
-            {form.banner_image && (
-              <div className="col-span-2">
-                <p className="text-xs text-brand-muted mb-1">รูปที่จะใช้:</p>
-                <img src={form.banner_image} alt="ตัวอย่างรูปแบนเนอร์" className="h-24 rounded-lg object-cover border border-brand-border" />
+
+            {/* R61 (Owner 2026-11-03): แนบรูป/มาสคอต = จากเครื่อง | จากคลังภาพ AI (basket) | มาตรฐาน + ประกอบเอง */}
+            <div className="col-span-2 rounded-xl border border-brand-border p-3 space-y-3" data-testid="promo-attach-panel">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="text-xs font-semibold text-brand-muted">🖼 ภาพแบนเนอร์:</span>
+                <button
+                  type="button"
+                  className="btn btn-outline btn-sm"
+                  onClick={() => void handleBrowseAlbum('image')}
+                  data-testid="promo-banner-album"
+                >
+                  📁 เลือกจากคลังภาพ AI
+                </button>
+                <span className="text-xs text-brand-muted">หรือแนบไฟล์จากเครื่อง / วางลิงก์ในช่องด้านบน</span>
               </div>
-            )}
+
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="text-xs font-semibold text-brand-muted">🎭 มาสคอต:</span>
+                {MASCOT_ROTATION.map((src, i) => (
+                  <button
+                    key={src}
+                    type="button"
+                    onClick={() => setForm((f) => ({ ...f, banner_mascot: src }))}
+                    data-testid={`promo-mascot-std-${i}`}
+                    className={`rounded-lg border p-0.5 ${form.banner_mascot === src ? 'border-brand-primary ring-2 ring-brand-primary/60' : 'border-brand-border'}`}
+                    title={`มาสคอตมาตรฐานท่า ${i + 1}`}
+                  >
+                    <img src={src} alt="" className="h-10 w-10 object-contain" />
+                  </button>
+                ))}
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="input w-56"
+                  aria-label="อัปโหลดมาสคอตจากเครื่อง"
+                  data-testid="promo-mascot-file"
+                  onChange={(e) => {
+                    const f = e.target.files?.[0]
+                    if (f) void handleUploadMascot(f)
+                    e.target.value = ''
+                  }}
+                />
+                <button
+                  type="button"
+                  className="btn btn-outline btn-sm"
+                  onClick={() => void handleBrowseAlbum('mascot')}
+                  data-testid="promo-mascot-album"
+                >
+                  📁 จากคลังภาพ AI
+                </button>
+                {form.banner_mascot && (
+                  <button
+                    type="button"
+                    className="btn btn-outline btn-sm"
+                    onClick={() => setForm((f) => ({ ...f, banner_mascot: '' }))}
+                    data-testid="promo-mascot-clear"
+                  >
+                    ✕ ไม่ใช้มาสคอต
+                  </button>
+                )}
+                {mascotUploading && <span className="text-sm text-brand-muted">กำลังอัปโหลดมาสคอต…</span>}
+              </div>
+
+              {/* คลังภาพ AI ("basket") — กดเลือกแล้วใส่ตามปุ่มที่เปิด (ภาพแบนเนอร์ หรือ มาสคอต) */}
+              {albumPanel && (
+                <div className="rounded-lg border border-brand-border p-2" id="promo-album-panel" data-testid="promo-album-panel">
+                  <p className="text-xs text-brand-muted mb-2">
+                    คลังภาพ AI (bmb-images/ai-generated) — กดเลือกเพื่อใช้เป็น <b>{albumPanel === 'mascot' ? 'มาสคอต' : 'รูปแบนเนอร์'}</b>
+                  </p>
+                  {album && album.length > 0 ? (
+                    <div className="grid grid-cols-4 gap-2 max-h-56 overflow-y-auto">
+                      {album.map((a, i) => (
+                        <button
+                          key={a.path}
+                          type="button"
+                          onClick={() => pickFromAlbum(a.url)}
+                          data-testid={`promo-album-pick-${i}`}
+                          className="rounded border border-brand-border p-1 hover:border-brand-primary"
+                          title={a.name}
+                        >
+                          <img src={a.url} alt={a.name} className="h-16 w-full rounded object-cover" loading="lazy" />
+                        </button>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-xs text-brand-muted">{album && album.length === 0 ? 'ยังไม่มีภาพในคลัง — เจนที่ AI Studio แล้วกลับมาเลือกใหม่' : 'กำลังโหลดคลังภาพ…'}</p>
+                  )}
+                </div>
+              )}
+
+              {/* ตัวอย่างประกอบ = ใช้คลาสชุดเดียวกับการ์ดหน้าแรก (เห็นตรงกันเป๊ะ) */}
+              <div data-testid="promo-compose-preview">
+                <p className="text-xs text-brand-muted mb-1">ตัวอย่างประกอบ (แบบเดียวกับหน้าแรก):</p>
+                <div className="flad-media">
+                  {form.banner_image && <img src={form.banner_image} alt="ตัวอย่างรูปแบนเนอร์" />}
+                  {form.banner_mascot && <img src={form.banner_mascot} alt="" className="flad-mascot-composed flad-mascot-pos-0" />}
+                </div>
+              </div>
+            </div>
           </div>
           <div className="flex gap-3 mt-4">
             <button onClick={handleSave} className="btn btn-success">💾 บันทึก</button>

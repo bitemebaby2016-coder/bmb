@@ -19,14 +19,13 @@ const SERVICE = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || ''
 const OPENROUTER_KEY = Deno.env.get('BMB_OPENROUTER_API_KEY') || Deno.env.get('OPENROUTER_API_KEY') || ''
 const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions'
 // โมเดลสร้างภาพ — env `IMAGE_GEN_MODELS` (comma-separated) · fallback = ค่าเริ่มต้นด้านล่าง
-// R55 (Owner 2026-11-02): ใช้คีย์ `BMB_openrouter_api_key` (ด้านบน) + โมเดลตามคำสั่ง:
-//   หลัก = ByteDance Seed: Seedream 5.0 Flash (`bytedance-seed/seedream-5-0-flash` — ผ่าน chat ✓)
-//   รอง  = Qwen: Qwen Image 2.1 Pro (`qwen/qwen-image-2.1-pro` — "image generation model"
-//           ต้องใช้ /api/v1/images endpoint เท่านั้น → images API มาก่อน (A) ตามเดิม ✓)
-//   (พิสูจน์แล้วด้วย probe จริง: e2e/r55_model_ids.cjs — seedream=HTTP 200 · qwen=404 บอกให้ใช้ /images)
+// R61 (Owner 2026-11-03 — สั่งสลับลำดับ): **หลัก = Qwen Image 2.1 Pro (`qwen/qwen-image-2.1-pro` ใช้ก่อน)**
+//   รอง  = ByteDance Seed: Seedream 5.0 Flash (`bytedance-seed/seedream-5-0-flash`)
+//   (ทั้งคู่พิสูจน์ด้วย probe จริงแล้ว: e2e/r55_model_ids.cjs + r55_smoke.log — qwen ผ่าน images API · seedream ผ่าน chat)
+//   ⚠️ ถ้ามี secret `IMAGE_GEN_MODELS` ค่า env จะ override default → ต้องตั้ง secret ลำดับเดียวกันด้วย
 // R32: โมเดลเดิมชื่อเดียวโดน retiring ของ OpenRouter = ตายทั้งฟีเจอร์ → วนลองทีละชื่อจนมีรูป
 const IMAGE_MODEL_CANDIDATES = (Deno.env.get('IMAGE_GEN_MODELS') || Deno.env.get('IMAGE_GEN_MODEL') ||
-  'bytedance-seed/seedream-5-0-flash,qwen/qwen-image-2.1-pro')
+  'qwen/qwen-image-2.1-pro,bytedance-seed/seedream-5-0-flash')
   .split(',').map((s) => s.trim()).filter(Boolean)
 
 function corsHeaders(): Record<string, string> {

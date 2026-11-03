@@ -70,7 +70,9 @@ export function cartShareUrl(items: Array<{ id: string; q: number }>, origin = '
   return enc ? `${origin}/shop?cart=${enc}` : `${origin}/shop`
 }
 
-/** ดึงค่า `cart` จาก query string (/Layout ใช้ตัดค่าแล้ว strip ออกจาก address bar) */
+/** ดึงค่า `cart` จาก query string เต็ม (`?cart=...`)
+ *  ⚠️ R61: ถ้าได้ "ค่า" มาแล้ว (เช่น `searchParams.get('cart')`) ต้องใช้ `decodeCartParam(value)` ตรง ๆ —
+ *  ห้ามส่งค่าเปล่า ๆ เข้าฟังก์ชันนี้ (มันจะทำ `?`+value แล้วหาคีย์ `cart` ไม่เจอ = null เสมอ) */
 export function readCartParam(search: string): CartDeepItem[] | null {
   try {
     const params = new URLSearchParams(search.startsWith('?') ? search : `?${search}`)

@@ -1,0 +1,35 @@
+R61: ปิดงาน 4 ข้อตามคำสั่ง Owner (§T-1 · สลับโมเดล · ฟีเจอร์โปรโมชั่น+มาสคอต · §T-2 admin)
+
+1) §T-1 (HIGH) ซ่อม — /shop?cart= ใช้ไม่ได้ 100%:
+   - Layout.tsx เรียก decodeCartParam(raw) ตรง ๆ (เดิม readCartParam(raw) ที่รอ
+     query string → decodeCartParam(null) ทุกครั้ง → ฟ้อง "ลิงก์ไม่สมบูรณ์" + ตะกร้าว่าง)
+   - cartDeepLink.ts แจ้งเตือนใน jsdoc ห้ามส่งค่าเปล่า ๆ เข้า readCartParam
+   - tests: cartDeepLink เพิ่มเคสเรียก "แบบที่ Layout เรียกจริง" + contract ห้าม
+     ใช้ readCartParam(raw) · r43Contracts ปรับ wiring (guard ว่าง→ฟ้อง คงเดิม)
+   - evidence: e2e/tProdProbe_results_T-*.json (ก่อนแก้) + T-A4 รันซ้ำหลัง deploy
+
+2) สลับโมเดล image-gen (qwen ใช้ก่อน seedream):
+   - image-gen/index.ts default = 'qwen/qwen-image-2.1-pro,bytedance-seed/seedream-5-0-flash'
+   - secret IMAGE_GEN_MODELS (ลำดับใหม่) + IMAGE_GEN_MODEL (singular ปรับ qwen) + EF deploy
+   - tests r34/r41/socialAiContinuity บังคับลำดับเป๊ะ
+   - RUNTIME PASS: e2e/r61ImageGenSmoke-result.json → model=qwen/qwen-image-2.1-pro [images-api]
+
+3) /admin/promotions — ภาพ+มาสคอต "ประกอบเอง":
+   - migration 183 (promotions.banner_mascot) — apply บน production แล้ว
+     (e2e/r61Apply183-result.json ALL_PASS + ledger 183)
+   - AdminPromotions: ภาพ = ลิงก์/ไฟล์จากเครื่อง/เลือกจากคลังภาพ AI (basket) ·
+     มาสคอต = มาตรฐาน 4 ท่า/อัปโหลดจากเครื่อง/จากคลังภาพ/ล้าง · พรีวิวประกอบ
+     ด้วยคลาสชุดเดียวกับหน้าแรก (promo-attach-panel / promo-album-panel /
+     promo-mascot-std-* / promo-compose-preview)
+   - HomePage ส่งต่อ mascot → FloatingAdBanners ใช้ promo.mascot ก่อน
+     (ว่าง = สลับตามลำดับโพสเดิม · wm- ข้ามตามเดิมเว้นแต่คนเลือกเอง)
+   - ใหม่: src/__tests__/r61Contracts.test.ts (9 ข้อ)
+
+4) §T-2 — test admin จากเมลจริงฟุตเตอร์ (admin@biteme-baby.com):
+   - e2e/r61AdminReset.cjs = reset password + promote_to_full_admin + เก็บ secrets +
+     verify login 200/role=admin → e2e/r61AdminReset-result.json ALL_PASS=true
+   - §T รันใหม่: T-C1 = PASS (production) · T-C2/C3 = e2e/r61_tc2.log, r61_tprod_*.log
+
+Gates: tsc 0 · eslint 0 (ไฟล์ที่แตะ) · brandNameGuard 0 · vitest targeted รันผ่านทุกชุด +
+      full suite รันผ่าน schtasks (e2e/r61_vitest_full.log · รันครั้งแรกเจอบั๊กจริง 1 จุด =
+      r43Contracts อ้าง wiring เก่า → แก้ contract แล้วรันซ้ำ)

@@ -1,0 +1,12 @@
+{
+  "at": "2026-11-03T01:55:37.725Z",
+  "email": "admin@biteme-baby.com",
+  "loginStatus": 200,
+  "status": 200,
+  "body": "{\"ok\":true,\"url\":\"https://ivkdfognyiwjcmrhcnwz.supabase.co/storage/v1/object/public/bmb-images/ai-generated/promo/gen-mw01e0o9-b6su.png\",\"kind\":\"promo\",\"style\":\"poster\",\"prompt\":\"ป้ายโปรโมต \\\"ทดสอบระบบ R61\\\" สำหรับร้านของหวาน Bite Me Baby — ดีไซน์ดึงดูด สีสดใส จุดเด่นที่ข้อเสนอ · ข้อความโปรโมตบนภาพต้องตรงกับรายละเอียดนี้เป๊ะ: สลับโมเดล qwen ใช้ก่อน · ถ้ามีภาพอ้างอิงแนบ ให้ใช้เป็นองค์ประกอบประกอบป้าย — สไตล์กราฟิกป้ายโฆษณา รูปทรงหนา คอนทราสต์สูง ดูทันสมัย\",\"model\":\"qwen/qwen-image-2.1-pro [images-api]\",\"attempts\":[],\"folder\":\"ai-generated/promo\"}",
+  "model": "qwen/qwen-image-2.1-pro [images-api]",
+  "attempts": [],
+  "hasImage": true,
+  "ALL_PASS": true,
+  "note": "image-gen OK"
+}

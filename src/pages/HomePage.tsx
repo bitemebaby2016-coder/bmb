@@ -191,6 +191,8 @@ export function HomePage() {
       description: String(r.description || ''),
       coupon: r.code,
       image: r.banner_image,
+      // R61: มาสคอตที่แอดมินประกอบเองใน /admin/promotions (ว่าง = FloatingAdBanners สลับตามลำดับโพส)
+      mascot: r.banner_mascot || undefined,
     }))
   const storeStatus = getStoreStatusFromRounds(rounds, new Date(), {
     shopHoursMs: hoursToMs(shopHours),

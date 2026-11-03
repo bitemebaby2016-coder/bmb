@@ -47,6 +47,19 @@ describe('cartDeepLink (เว็บ)', () => {
     expect(readCartParam('?cart=' + raw)).toEqual([{ id: 'p1', q: 3 }])
     expect(readCartParam('?x=1')).toBeNull()
   })
+
+  // R61 (§T-1): เรียก "แบบที่ Layout เรียกจริง" — ค่าที่หลุดจาก searchParams.get('cart')
+  // ต้องถอดได้ด้วย decodeCartParam โดยตรง (round-trip ข้างบนผ่านไม่ได้ช่วยถ้าคนเรียกส่งชั้นผิด)
+  it('FIXED §T-1: ค่าจาก searchParams.get(\'cart\') → decodeCartParam ตรง ๆ ถอดได้ (เคส production ที่พัง)', () => {
+    const items = [{ id: 'prod-5', q: 1 }, { id: 'prod-9', q: 2 }]
+    const url = cartShareUrl(items)
+    const raw = new URL(url).searchParams.get('cart') ?? ''
+    expect(raw).not.toContain('?') // ค่าจาก URL ต้องไม่มี '?' — ใครเอาไปเข้า readCartParam = พัง (bug เดิม)
+    expect(decodeCartParam(raw)).toEqual(items)
+    // ของบูม/ค่าว่างยังต้องเป็น null เหมือนเดิม (ห้ามเดา)
+    expect(decodeCartParam(null)).toBeNull()
+    expect(decodeCartParam('%%%')).toBeNull()
+  })
 })
 
 describe('EF buildCartLink / footer (mirror ต้องตรงกับเว็บ)', () => {
@@ -70,7 +83,9 @@ describe('EF buildCartLink / footer (mirror ต้องตรงกับเว
 
 describe('Layout — ?cart= deep-link wiring', () => {
   it('อ่านค่า แล้ว strip ออกจาก URL เติมลงตะกร้า + เปิดแผง (source contract)', () => {
-    expect(layoutSrc).toContain("readCartParam(raw)")
+    // R61 (§T-1): ต้องถอดค่าด้วย decodeCartParam — ห้ามใช้ readCartParam(raw) (รอ query string = null ทุกครั้ง)
+    expect(layoutSrc).toContain('decodeCartParam(raw)')
+    expect(layoutSrc).not.toContain('readCartParam(raw)')
     expect(layoutSrc).toMatch(/searchParams\.delete\('cart'\)/)
     expect(layoutSrc).toMatch(/addItem\(p, it\.q, \{\}, 'SAME_DAY'\)/)
     expect(layoutSrc).toMatch(/setCheckoutOpen\(true\)/)

@@ -18,6 +18,8 @@ export interface PromotionRow {
   is_active: boolean
   is_banner?: boolean
   banner_image?: string | null
+  /** R61 (2026-11-03): มาสคอตที่แอดมินเลือกเอง (เครื่อง/คลังภาพ AI/มาตรฐาน) — ว่าง = FloatingAdBanners สลับตามลำดับโพส */
+  banner_mascot?: string | null
   // ---- G&R stage 1 (migration 153) — คอลัมน์แคมเปญ ----
   /** ซ้อนกับสิทธิ์อื่นได้ (false = เลือกข้อเสนอเดียว) — การ combine กับแต้มถูกบังคับตอน Loyalty stage */
   stackable?: boolean

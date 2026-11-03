@@ -1,0 +1,37 @@
+{
+  "at": "2026-11-03T01:46:04.429Z",
+  "email": "admin@biteme-baby.com",
+  "steps": [
+    {
+      "step": "reset_password",
+      "status": 200,
+      "uid": "d6c57b8d-93fa-46d8-9ac8-4d6d2ccbf974"
+    },
+    {
+      "step": "promote_to_full_admin",
+      "status": 201,
+      "detail": "[{\"r\":{\"ok\":true,\"role\":\"admin\",\"email\":\"admin@biteme-baby.com\",\"is_owner\":true}}]"
+    },
+    {
+      "step": "saved_secrets",
+      "file": "supabase/secrets.local.env",
+      "keys": [
+        "BMB_TEST_ADMIN_EMAIL",
+        "BMB_TEST_ADMIN_PASSWORD"
+      ]
+    }
+  ],
+  "action": "reset_existing",
+  "uid": "d6c57b8d-93fa-46d8-9ac8-4d6d2ccbf974",
+  "verify": {
+    "loginStatus": 200,
+    "profile": [
+      {
+        "role": "admin",
+        "is_owner": true,
+        "is_active": true
+      }
+    ]
+  },
+  "ALL_PASS": true
+}

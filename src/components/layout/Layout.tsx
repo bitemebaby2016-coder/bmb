@@ -13,7 +13,7 @@ import { PushPermissionPrompt } from '../notification/PushPermissionPrompt'
 import { useCartStore } from '@/store/cartStore'
 import { referralCodeFromSearch } from '@/lib/referralClient'
 import { affiliateCodeFromSearch, saveAffiliateClaimCode } from '@/lib/engagementClient'
-import { readCartParam } from '@/lib/cartDeepLink'
+import { decodeCartParam } from '@/lib/cartDeepLink'
 import { showToast } from '../ui/ToastContainer'
 
 interface LayoutProps {
@@ -76,7 +76,10 @@ export function Layout({ children, hideBottomNav = false, activeSection = 'home'
       url.searchParams.delete('cart')
       window.history.replaceState(null, '', url.pathname + url.search + url.hash)
     } catch { /* URL แปลก ๆ = ปล่อยตามเดิม */ }
-    const items = readCartParam(raw)
+    // R61 fix (§T-1): raw = "ค่า" ของ ?cart= — ต้องถอดด้วย decodeCartParam ตรง ๆ
+    // (เดิมส่งเข้า readCartParam ที่รอ query string เต็ม → ทำ decodeCartParam(null) ทุกครั้ง
+    //  → ลิงก์ตะกร้าจากโซเชียลฟ้อง "ลิงก์ไม่สมบูรณ์" + ตะกร้าว่าง 100% · evidence e2e/tProdProbe_results_T-A4cart.json)
+    const items = decodeCartParam(raw)
     if (!items || items.length === 0) {
       // R43 B6 (Owner 2026-10-31): decode-fail เคย return เงียบ → ลูกค้าเห็นตะกร้าว่าง
       // ไม่ทราบสาเหตุ (ภาพ 7-8) → ห้ามเงียบ ต้องบอกสาเหตุ + ทางออกเสมอ

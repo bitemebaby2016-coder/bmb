@@ -1,0 +1,134 @@
+// ============================================
+// R61 — dynamic probe ฟีเจอร์ใหม่ /admin/promotions บน production จริง
+//   ① เปิดฟอร์มสร้าง → ตรวจ controls (ภาพจากเครื่อง/คลังภาพ · มาสคอต 4 ท่า/เครื่อง/คลัง · พรีวิวประกอบ)
+//   ② เลือกรูปจากคลังภาพ + เลือกมาสคอตมาตรฐาน → สร้างโปรโมชั่นจริง
+//   ③ ตรวจ DB: banner_image + banner_mascot ถูกบันทึก → ④ ล้าง (ลบโปรโมชั่นทดสอบ)
+// evidence → e2e/r61PromoUi-result.json + e2e/screenshots/tPromo_*.png
+// ============================================
+'use strict'
+const fs = require('fs')
+const path = require('path')
+
+const ROOT = path.resolve(__dirname, '..')
+const SHOTS = path.join(ROOT, 'e2e', 'screenshots')
+fs.mkdirSync(SHOTS, { recursive: true })
+const OUT = path.join(ROOT, 'e2e', 'r61PromoUi-result.json')
+const BASE = 'https://biteme-baby.com'
+const SB = 'https://ivkdfognyiwjcmrhcnwz.supabase.co'
+const LOG = path.join(ROOT, 'e2e', 'r61PromoUi.log')
+
+function readSecrets() {
+  const out = {}
+  for (const p of [path.join(ROOT, '.env.local'), path.join(ROOT, 'supabase', 'secrets.local.env')]) {
+    try {
+      for (const line of fs.readFileSync(p, 'utf8').split(/\r?\n/)) {
+        const m = line.match(/^\s*([A-Z0-9_]+)\s*=\s*(.*)\s*$/)
+        if (m && m[2] && !line.trim().startsWith('#')) out[m[1]] = m[2]
+      }
+    } catch { /* */ }
+  }
+  return out
+}
+
+function note(s) { try { fs.appendFileSync(LOG, s + '\n') } catch { /* */ } console.log(s) }
+
+function finish(out, pass, noteText) {
+  out.ALL_PASS = pass
+  out.note = noteText
+  fs.writeFileSync(OUT, JSON.stringify(out, null, 2))
+  note('R61_PROMO_UI ALL_PASS=' + pass + ' — ' + noteText)
+  process.exit(pass ? 0 : 1)
+}
+
+;(async () => {
+  const { chromium } = require('playwright')
+  const S = readSecrets()
+  const out = { at: new Date().toISOString(), steps: [] }
+  const browser = await chromium.launch({ headless: true })
+  try {
+    const ctx = await browser.newContext({ viewport: { width: 1366, height: 900 } })
+    const page = await ctx.newPage()
+
+    // login
+    await page.goto(BASE + '/login', { waitUntil: 'domcontentloaded', timeout: 25000 })
+    await page.waitForSelector('input[type="email"]', { timeout: 20000 })
+    await page.fill('input[type="email"]', S.BMB_TEST_ADMIN_EMAIL)
+    await page.fill('input[type="password"]', S.BMB_TEST_ADMIN_PASSWORD)
+    await page.click('button[type="submit"]')
+    let ok = false
+    for (let i = 0; i < 25 && !ok; i++) { await page.waitForTimeout(400); ok = !page.url().includes('/login') }
+    if (!ok) { out.error = 'login failed'; await browser.close(); return finish(out, false, 'login failed') }
+
+    // เปิดฟอร์มสร้าง
+    await page.goto(BASE + '/admin/promotions', { waitUntil: 'domcontentloaded', timeout: 25000 })
+    await page.getByRole('button', { name: /สร้างโปรโมชั่นใหม่/ }).first().click({ timeout: 15000 })
+    await page.waitForSelector('[data-testid="promo-attach-panel"]', { timeout: 15000 })
+    const controls = {}
+    for (const id of ['promo-banner-album', 'promo-mascot-album', 'promo-mascot-file', 'promo-compose-preview']) {
+      controls[id] = (await page.locator('[data-testid="' + id + '"]').count()) > 0
+    }
+    for (let i = 0; i < 4; i++) controls['promo-mascot-std-' + i] = (await page.locator('[data-testid="promo-mascot-std-' + i + '"]').count()) > 0
+    controls['banner_file_input'] = (await page.locator('input[aria-label="เลือกรูปแบนเนอร์จากเครื่อง"]').count()) > 0
+    out.controls = controls
+    out.steps.push({ step: 'controls', ok: Object.values(controls).every(Boolean) })
+    await page.screenshot({ path: path.join(SHOTS, 'tPromo_form.png') })
+    if (!Object.values(controls).every(Boolean)) { await browser.close(); return finish(out, false, 'controls missing: ' + JSON.stringify(controls)) }
+
+    // เลือกรูปจากคลังภาพ
+    await page.fill('[data-testid="promo-banner-image-url"]', '')
+    await page.click('[data-testid="promo-banner-album"]')
+    await page.waitForSelector('[data-testid="promo-album-pick-0"]', { timeout: 15000 })
+    const albumCount = await page.locator('[data-testid^="promo-album-pick-"]').count()
+    await page.click('[data-testid="promo-album-pick-0"]')
+    await page.waitForTimeout(500)
+    const bannerVal = await page.locator('[data-testid="promo-banner-image-url"]').inputValue()
+    out.steps.push({ step: 'pick_from_album', albumCount, bannerVal: String(bannerVal).slice(0, 140) })
+
+    // เลือกมาสคอตมาตรฐานท่า 2
+    await page.click('[data-testid="promo-mascot-std-1"]')
+    await page.waitForTimeout(300)
+    const composedImgs = await page.locator('[data-testid="promo-compose-preview"] img').count()
+    out.steps.push({ step: 'compose_preview', imgs: composedImgs })
+    await page.screenshot({ path: path.join(SHOTS, 'tPromo_composed.png') })
+
+    // กรอก + บันทึกจริง (test data — ล้างเองท้ายขั้นตอน)
+    const NAME = 'TEST-R61 โปรโมชั่นทดสอบ (ล้างอัตโนมัติ)'
+    await page.fill('input[placeholder="ชื่อโปรโมชั่น *"]', NAME)
+    page.on('dialog', (d) => d.accept())
+    await page.getByRole('button', { name: /บันทึก/ }).first().click()
+    await page.waitForTimeout(3000)
+    out.steps.push({ step: 'saved', formClosed: (await page.locator('input[placeholder="ชื่อโปรโมชั่น *"]').count()) === 0 })
+    await page.screenshot({ path: path.join(SHOTS, 'tPromo_saved.png') })
+
+    // ตรวจ DB: banner_image + banner_mascot ถูกบันทึกจริง
+    const S = readSecrets()
+    const rows = await (await fetch(SB + '/rest/v1/promotions?select=id,name,banner_image,banner_mascot,is_banner&name=eq.' + encodeURIComponent(NAME), {
+      headers: { apikey: 'sb_publishable_Q7AHrjSYOrysDjxS9_ZB-g_NMmytLOH', Authorization: 'Bearer ' + S.SUPABASE_SERVICE_ROLE_KEY },
+    })).json().catch(() => [])
+    const row = Array.isArray(rows) ? rows[0] : null
+    out.dbRow = row || null
+    const dbOk = !!(row && row.banner_image && row.banner_mascot && row.banner_mascot.includes('/assets/mascot/'))
+
+    // ล้าง: ลบโปรโมชั่นทดสอบออก (confirm dialog = accept แล้ว)
+    if (row) {
+      const card = page.locator('.card', { hasText: NAME })
+      await card.getByRole('button', { name: /ลบ/ }).first().click()
+      await page.waitForTimeout(2000)
+      const rows2 = await (await fetch(SB + '/rest/v1/promotions?select=id&name=eq.' + encodeURIComponent(NAME), {
+        headers: { apikey: 'sb_publishable_Q7AHrjSYOrysDjxS9_ZB-g_NMmytLOH', Authorization: 'Bearer ' + S.SUPABASE_SERVICE_ROLE_KEY },
+      })).json().catch(() => [])
+      out.cleanupDeleted = Array.isArray(rows2) && rows2.length === 0
+      out.steps.push({ step: 'cleanup', deleted: out.cleanupDeleted })
+    }
+
+    await browser.close()
+    const pass = Object.values(controls).every(Boolean) && String(bannerVal).includes('/storage/') &&
+      composedImgs >= 2 && dbOk && out.cleanupDeleted !== false
+    return finish(out, pass, 'controls=' + Object.values(controls).filter(Boolean).length + '/8 · db=' + dbOk + ' · cleanup=' + out.cleanupDeleted)
+  } catch (e) {
+    out.error = String(e && e.message || e).slice(0, 400)
+    try { await browser.close() } catch { /* */ }
+    return finish(out, false, 'ERROR ' + out.error)
+  }
+})().catch((e) => { note('PROMO_UI_FATAL ' + String(e).slice(0, 300)); process.exit(1) })
+

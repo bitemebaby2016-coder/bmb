@@ -104,9 +104,8 @@ describe('คีย์ OpenRouter ใหม่ — BMB_OPENROUTER_API_KEY + fall
     })
   }
 
-  it('image-gen candidates = ตามคำสั่ง Owner R55 (seedream-5-0-flash หลัก · qwen-image-2.1-pro รอง — พิสูจน์แล้ว r55_model_ids)', () => {
-    expect(imgGenSrc).toContain('bytedance-seed/seedream-5-0-flash')
-    expect(imgGenSrc).toContain('qwen/qwen-image-2.1-pro')
+  it('image-gen candidates = ตามคำสั่ง Owner R61 (สลับลำดับ: qwen-image-2.1-pro ใช้ก่อน · seedream-5-0-flash รอง)', () => {
+    expect(imgGenSrc).toContain("'qwen/qwen-image-2.1-pro,bytedance-seed/seedream-5-0-flash'")
     expect(imgGenSrc).not.toContain('qwen/qwen-image-3')
     expect(imgGenSrc).not.toContain('google/gemini-3.1-flash-lite-image') // 402 insufficient credits — ถอดแล้ว
   })

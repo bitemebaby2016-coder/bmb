@@ -381,17 +381,25 @@ async function evalTO(page, fn, arg, ms) {
         const picks2 = await openAlbum()
         let toast2 = ''
         let pickedName = ''
+        let elapsed = 0
         if (picks2 > 0) {
           pickedName = (await page.locator('[data-testid^="product-ai-pick-"]').first().getAttribute('title')) || ''
+          const t0 = Date.now()
           await page.locator('[data-testid^="product-ai-pick-"]').first().click()
-          toast2 = await waitForToast(page, /ลดขนาดอัตโนมัติ|เลือกรูป|ไม่สำเร็จ|ไม่ผ่าน/, 20000)
-          await page.waitForTimeout(1000)
+          // รอทั้ง toast และ preview (fetch+ย่อ+อัปโหลดรูป 2048² อาจกินเวลาหลายสิบวินาที)
+          for (let i = 0; i < 120 && !(toast2 && (await page.locator('img[alt="Preview"]').count()) > 0); i++) {
+            toast2 = await toastText(page)
+            if ((await page.locator('img[alt="Preview"]').count()) > 0 && !toast2) toast2 = '(preview ขึ้นแล้ว)'
+            if (/ลดขนาดอัตโนมัติ|เลือกรูป|ไม่สำเร็จ|ไม่ผ่าน/.test(toast2)) break
+            await page.waitForTimeout(500)
+          }
+          elapsed = Date.now() - t0
         }
         const preview = await page.locator('img[alt="Preview"]').count()
         const urlVal = await page.locator('input[placeholder^="Image URL"]').inputValue().catch(() => '')
         await page.screenshot({ path: shot2 })
-        rec('T-C2', /ลดขนาดอัตโนมัติ/.test(toast2) && preview > 0 ? 'PASS' : 'FAIL',
-          'file="' + pickedName + '" · toast="' + toast2 + '" · preview img=' + preview + ' · image_url=' + urlVal.slice(0, 140),
+        rec('T-C2', /ลดขนาดอัตโนมัติ|preview ขึ้นแล้ว/.test(toast2) && preview > 0 ? 'PASS' : 'FAIL',
+          'file="' + pickedName + '" · elapsed=' + elapsed + 'ms · toast="' + toast2 + '" · preview img=' + preview + ' · image_url=' + urlVal.slice(0, 140),
           [shot2])
       } catch (e) {
         rec('T-C2', 'ERROR', 'probe ล้มเหลว: ' + e.message, [])
@@ -418,7 +426,12 @@ async function evalTO(page, fn, arg, ms) {
         const bigSize = fs.statSync(bigPath).size
         const shot3 = path.join(SHOTS, 'tC3_file_upload.png')
         await page.setInputFiles('[data-testid="product-image-file"]', bigPath)
-        const toast3 = await waitForToast(page, /ลดขนาดรูปอัตโนมัติ|รูปไม่ผ่านเงื่อนไข|อัปโหลดไม่สำเร็จ/, 20000)
+        // รอยาว — ไฟล์ใหญ่ + ย่อ + อัปโหลด ใช้เวลาได้ ~1 นาที (T-C2 จริง = 52s)
+        let toast3 = ''
+        for (let i = 0; i < 180 && !/ลดขนาดรูปอัตโนมัติ|รูปไม่ผ่านเงื่อนไข|อัปโหลดไม่สำเร็จ/.test(toast3); i++) {
+          toast3 = await toastText(page)
+          await page.waitForTimeout(500)
+        }
         await page.waitForTimeout(800)
         const preview3 = await page.locator('img[alt="Preview"]').count()
         await page.screenshot({ path: shot3 })

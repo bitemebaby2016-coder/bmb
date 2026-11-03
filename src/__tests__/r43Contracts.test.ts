@@ -43,7 +43,8 @@ describe('R43 B1 — ปุ่มตั้งเวลา gate approval (ห้�
 
 describe('R43 B6 — /shop?cart= decode-fail ห้ามเงียบ', () => {
   it('Layout: items null/ว่าง → showToast บอกสาเหตุก่อน return (ไม่ใช่ return เปล่า)', () => {
-    expect(layoutSrc).toMatch(/const items = readCartParam\(raw\)/)
+    // R61 (§T-1 ซ่อม): wiring เปลี่ยนเป็น decodeCartParam(raw) — guard "ว่าง → ฟ้อง ห้ามเงียบ" คงเดิมทุกประการ
+    expect(layoutSrc).toMatch(/const items = decodeCartParam\(raw\)/)
     expect(layoutSrc).toMatch(/if \(!items \|\| items\.length === 0\) \{/)
     expect(layoutSrc).toMatch(/ลิงก์รายการในแชทไม่สมบูรณ์/)
   })

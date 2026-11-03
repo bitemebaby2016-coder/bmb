@@ -22,6 +22,8 @@ export interface FloatingBannerPromo {
   image?: string
   /** R50: ลิงก์จริงต่อรายการ (ค่าเริ่มต้น = /promotions) */
   to?: string
+  /** R61 (2026-11-03): มาสคอตที่แอดมินเลือกเองใน /admin/promotions — ว่าง = สลับตามลำดับโพส (เดิม) */
+  mascot?: string
 }
 
 /** R58 (Owner 2026-11-02): เลือกภาพเจน "ด้านการตลาด/โปรโมชั่น (ไม่ใช่รูปเมนู)" จาก image_urls/URL เดียว
@@ -200,6 +202,8 @@ export function FloatingAdBanners({ promos, notice }: { promos: FloatingBannerPr
           const mediaSrc = promo.image || floatImg || (albumImgs.length > 0 ? albumImgs[pos % albumImgs.length] : '')
           // "ยุบตัวมาสคอตเป็นตัวเล็กไปอยู่ด้านมุมต่าง ๆ ของรูป" + สลับไม่ซ้ำตามลำดับโพส
           const mascotSrc = mascotForPosition(pos)
+          // R61: แอดมินประกอบมาสคอตของโปรโมชั่นนั้นเอง (เครื่อง/คลังภาพ/มาตรฐาน) → ใช้ของโปรโมชั่นก่อน
+          const promoMascot = promo.mascot || mascotSrc
           const mascotCorner = mascotCornerForPosition(pos)
           return (
           <div key={promo.id} className="flad-card" data-testid="floating-ad-banner">
@@ -221,15 +225,17 @@ export function FloatingAdBanners({ promos, notice }: { promos: FloatingBannerPr
                     }
                   }}
                 />
-                {/* R55+R58: น้อง Bite ตัวเล็กทับมุมรูป — รูป wm-* มีมาสคอตในไฟล์อยู่แล้ว = ไม่ซ้ำ */}
-                {!mediaSrc.includes('/wm-') && (
-                  <img src={mascotSrc} alt="" loading="lazy" className={`flad-mascot-composed flad-mascot-pos-${mascotCorner}`} data-testid="floating-ad-mascot" />
+                {/* R55+R58: น้อง Bite ตัวเล็กทับมุมรูป — รูป wm-* มีมาสคอตในไฟล์อยู่แล้ว = ไม่ซ้ำ
+                    R61: เว้นแต่แอดมิน "ประกอบเอง" (promo.mascot) = คนเลือกเอง ต้องโชว์ตามที่เลือก */}
+                {(promo.mascot || !mediaSrc.includes('/wm-')) && (
+                  <img src={promoMascot} alt="" loading="lazy" className={`flad-mascot-composed flad-mascot-pos-${mascotCorner}`} data-testid="floating-ad-mascot" />
                 )}
               </>
             ) : (
               <div className="flad-media flad-media-fallback" aria-hidden="true">
-                {/* ช่องสื่อว่าง (ยังไม่มีภาพโปรโมตเลย) → มาสคอตคนละตัวตามลำดับโพส ไม่ทิ้งบล็อกเปล่า */}
-                <img src={mascotSrc} alt="" loading="lazy" className="flad-fallback-mascot" />
+                {/* ช่องสื่อว่าง (ยังไม่มีภาพโปรโมตเลย) → มาสคอตคนละตัวตามลำดับโพส ไม่ทิ้งบล็อกเปล่า
+                    R61: ถ้าแอดมินตั้งมาสคอตของโปรโมชั่นไว้ = ใช้ของโปรโมชั่น */}
+                <img src={promoMascot} alt="" loading="lazy" className="flad-fallback-mascot" />
               </div>
             )}
           </div>
