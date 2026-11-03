@@ -1,0 +1,1 @@
+chore(R63): record image-gen smoke evidence (post-deploy 200 size-accepted) + cleanup run flags 
