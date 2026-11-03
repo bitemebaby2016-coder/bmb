@@ -7,7 +7,7 @@
 
 Baseline: repo `D:/A PROJECT/Bite Me Baby` · branch `main` · origin/main = `4e0453eb385166c36c23f416d7345ac19d3a42db` · HEAD (local) = `8075f5d` (4 commits: `06a697b`/`7f808ce`/`34385c7`/`8075f5d`)
 รอบงานนี้: 2026-10-14 (Owner Master Directive — Unified Catalog + Cart + Checkout + W5C) · ต่อเนื่อง 2026-10-14 (Owner mandate: loop ต่อจนผ่าน gate — อัปเดตเอกสาร/commit/push อนุญาตแล้ว; production data mutation = gate แยก)
-**อัปเดตรอบต่อเนื่อง:** Gate 1 admin preflight = DONE (หลักฐาน `docs/BMB_GATE1_PREFLIGHT_GATE3_RELEASE_EVIDENCE_2026-10-14.md`) · Gate 2 Option A = **EXECUTED** (4 UPDATE rows ตามมติ Owner — ผลตรวจครบใน evidence doc §2) · Gate 3 release review = PASS · Gate 4 push+deploy = DONE · Gate 5 smoke = PASS 9/9
+**อัปเดตรอบต่อเนื่อง:** Gate 1 admin preflight = DONE (หลักฐาน `docs/archive/BMB_GATE1_PREFLIGHT_GATE3_RELEASE_EVIDENCE_2026-10-14.md`) · Gate 2 Option A = **EXECUTED** (4 UPDATE rows ตามมติ Owner — ผลตรวจครบใน evidence doc §2) · Gate 3 release review = PASS · Gate 4 push+deploy = DONE · Gate 5 smoke = PASS 9/9
 
 ---
 
@@ -49,9 +49,9 @@ Baseline: repo `D:/A PROJECT/Bite Me Baby` · branch `main` · origin/main = `4e
 > **สถานะ:** Owner เลือก Option A เป็นแผนหลัก (ห้ามถาม A/B ซ้ำ) · ต้องมี read-only preflight ตรงกับแผนก่อนรันจริง
 > **Preflight ฝั่ง products (ทำแล้ว 2026-10-14, anon REST = มุมมองลูกค้า):** โครงสร้างตรงแผน (cat-1 = 5 สินค้า, cat-2 = 1 สินค้า, ทั้ง 6 `is_available=true`)
 > **แต่พบ plan drift:** ID จริง 2 ตัวมี suffix (`prod-1789607383214-t8rm95`, `prod-1789610117076-2p5e8u`) — ตารางล่าง = ID จริงที่ต้องใช้เท่านั้น
-> **Preflight ฐานะ admin (ทำแล้ว 2026-10-14 รอบต่อเนื่อง — หลักฐาน `docs/BMB_GATE1_PREFLIGHT_GATE3_RELEASE_EVIDENCE_2026-10-14.md`):** cat-1 `is_active=false` / cat-2 `archived=false` ตรง hard pre-check ✓ · 6 สินค้าตรงแผน ✓ · `count(products cat-2)=1` ✓ · **baseline order_items 6 สินค้า = 141 แถว** (orders ตาราง = 206, order_items ตาราง = 203)
+> **Preflight ฐานะ admin (ทำแล้ว 2026-10-14 รอบต่อเนื่อง — หลักฐาน `docs/archive/BMB_GATE1_PREFLIGHT_GATE3_RELEASE_EVIDENCE_2026-10-14.md`):** cat-1 `is_active=false` / cat-2 `archived=false` ตรง hard pre-check ✓ · 6 สินค้าตรงแผน ✓ · `count(products cat-2)=1` ✓ · **baseline order_items 6 สินค้า = 141 แถว** (orders ตาราง = 206, order_items ตาราง = 203)
 > **แต่พบ drift เพิ่ม 2 จุด (ค่าจริงต่างจากแผน):** DRIFT-A = ชื่อหมวดจริง 'ส่งวันนี้ / Same Day' / 'จองล่วงหน้า / พรีออเดอร์' (ไม่ใช่ 'จานเดียว'/'ข้าว' ตาม seed) · DRIFT-B = มีสินค้าที่ 7 `prod-w3c-test-pre` (is_available=false) อยู่ใน cat-1 → ตัวเลขหลังรัน "cat-1 = 6" จะเป็น 7 ตามจริง (ลูกค้าไม่เห็นตัวนี้)
-> **ดังนั้น: Gate 2 = EXECUTED แล้ว 2026-10-14 (Owner ยืนยัน drift + สั่ง execute):** ทำจริง **4 UPDATE rows** (U1 cat-1 is_active · U2 prod-3 → cat-1 · U3 cat-2 archived · U4 prod-w3c-test-pre archived ตามมติ) · 0 DELETE · after-verify ครบ — cat-1 active รับ 6 สินค้าขายได้ (แถวรวม 7 = ตรง DRIFT-B) · cat-2 archived · order_items 141 แถวเท่า baseline · ลูกค้าเห็น 5 หมวด/6 สินค้า ทั้ง anon RLS + UI จริง (รายละเอียด + rollback: `docs/BMB_GATE1_PREFLIGHT_GATE3_RELEASE_EVIDENCE_2026-10-14.md` §2)
+> **ดังนั้น: Gate 2 = EXECUTED แล้ว 2026-10-14 (Owner ยืนยัน drift + สั่ง execute):** ทำจริง **4 UPDATE rows** (U1 cat-1 is_active · U2 prod-3 → cat-1 · U3 cat-2 archived · U4 prod-w3c-test-pre archived ตามมติ) · 0 DELETE · after-verify ครบ — cat-1 active รับ 6 สินค้าขายได้ (แถวรวม 7 = ตรง DRIFT-B) · cat-2 archived · order_items 141 แถวเท่า baseline · ลูกค้าเห็น 5 หมวด/6 สินค้า ทั้ง anon RLS + UI จริง (รายละเอียด + rollback: `docs/archive/BMB_GATE1_PREFLIGHT_GATE3_RELEASE_EVIDENCE_2026-10-14.md` §2)
 
 **หลักฐานจริง (anon read = มุมมองลูกค้า, 2026-10-14):** หมวดที่ลูกค้าเห็น 4 = `cat-3` เมนูสุขภาพ, `cat-4` เครื่องดื่ม (sort 1), `cat-5` ของทานเล่น/ผลไม้, `cat-1790830853978` สินค้าสำเร็จรูป
 **ที่หายไป:** `cat-1` 'จานเดียว' 🍜 และ `cat-2` 'ข้าว' 🍚 (ชื่อจาก seed 001/004 — แถวจริงถูก RLS `is_active` บัง ต้องตรวจด้วย query ฝั่งแอดมิน) — สินค้า 6 ตัว (`is_available=true` ทั้งหมด) ผูกอยู่ = **หายจากหน้าลูกค้าทั้งที่พร้อมขาย**
@@ -136,7 +136,7 @@ FROM products p WHERE p.category_id IN ('cat-1','cat-2');
 | `src/__tests__/cartEntryPoints.test.ts` | 6 tests — entry points + refetch + revalidate |
 | `docs/BMB_OPENING_READINESS_MASTER.md` | เอกสารฉบับนี้ |
 
-(ก่อนหน้านี้รอบ P0 เดียวกัน: save guard/visibility badge/MenuPage gate/resolveContextChange — หลักฐาน `docs/BMB_P0_ADMIN_MENU_CART_EVIDENCE_2026-10-14.md`)
+(ก่อนหน้านี้รอบ P0 เดียวกัน: save guard/visibility badge/MenuPage gate/resolveContextChange — หลักฐาน `docs/archive/BMB_P0_ADMIN_MENU_CART_EVIDENCE_2026-10-14.md`)
 
 ## 5. Tests + evidence (ทุกคำสั่งรันจริง 2026-10-14)
 
@@ -150,7 +150,7 @@ FROM products p WHERE p.category_id IN ('cat-1','cat-2');
 | `e2e/ci/local_stack_replica.sh` (docker postgres:16, isolated) | **HARNESS_EXIT=0 · ALL_GREEN** ×2 รอบ — 001-123 applied clean · CONTRACT 124 ALL PASSED · cleanup 0/0 · scenario1/R5/R6a/R6b PASS |
 | live browser E2E (menu→cart→checkout / admin save→refetch) | **NOT RUN** — ไม่มี non-prod instance (§6/§8) |
 
-**หลักฐานสนับสนุน:** `docs/BMB_P0_ADMIN_MENU_CART_EVIDENCE_2026-10-14.md` (root cause + live anon evidence) · `docs/BMB_WAVE5B_OWNER_DECISION_REVIEW.md` (W5C review) · `docs/BMB_SAME_DAY_PRE_ORDER_EVIDENCE_LOG.md` (EV-032/33) · `docs/BMB_GATE1_PREFLIGHT_GATE3_RELEASE_EVIDENCE_2026-10-14.md` (Gate 1 preflight + Gate 3 release review — รอบต่อเนื่อง)
+**หลักฐานสนับสนุน:** `docs/archive/BMB_P0_ADMIN_MENU_CART_EVIDENCE_2026-10-14.md` (root cause + live anon evidence) · `docs/archive/BMB_WAVE5B_OWNER_DECISION_REVIEW.md` (W5C review) · `docs/archive/BMB_SAME_DAY_PRE_ORDER_EVIDENCE_LOG.md` (EV-032/33) · `docs/archive/BMB_GATE1_PREFLIGHT_GATE3_RELEASE_EVIDENCE_2026-10-14.md` (Gate 1 preflight + Gate 3 release review — รอบต่อเนื่อง)
 
 **Re-run รอบต่อเนื่อง 2026-10-14 (Gate 3 — รันจริงซ้ำบนเครื่อง dev):** `npm test` **972/972 exit 0** · `npx tsc --noEmit` **exit 0** · `npm run lint` **exit 0** (1 warning เดิม + brandNameGuard OK 356 ไฟล์) · `npm run build` **exit 0** (precache 144 entries → `dist/assets/index-B7d67ygF.js`)
 
@@ -183,7 +183,7 @@ FROM products p WHERE p.category_id IN ('cat-1','cat-2');
 ## 8. อัปเดตสถานะรวม 2026-10-15 (post UX-fix pass — สำรวจของค้างทั้งโปรเจค)
 
 **ปิดไปแล้วรอบนี้ (Owner อนุญาต commit/push 2026-10-15):**
-- UX fix 2026-10-15 A–F ครบ (รวมช่อง "เมนูวันนี้" → "เมนูยอดนิยม" · ปฏิทิน `ScheduleDateBadge` มาตรฐานเดียว · วันจัดส่งผูก `menu_schedule` จริง · หมวดสองชั้นเหมือนกันทุกหน้า · ปุ่มเดียวต่อการ์ด) — รายละเอียด `docs/BMB_UX_FIX_HANDOFF_2026-10-15.md` §6
+- UX fix 2026-10-15 A–F ครบ (รวมช่อง "เมนูวันนี้" → "เมนูยอดนิยม" · ปฏิทิน `ScheduleDateBadge` มาตรฐานเดียว · วันจัดส่งผูก `menu_schedule` จริง · หมวดสองชั้นเหมือนกันทุกหน้า · ปุ่มเดียวต่อการ์ด) — รายละเอียด `docs/archive/BMB_UX_FIX_HANDOFF_2026-10-15.md` §6
 - commit `d52f9a2` (fix(ux) 20 ไฟล์) + `9d4f747` (chore(assets+evidence) 32 ไฟล์ — ของค้าง session 2026-10-14: ภาพย้ายโฟลเดอร์ `same day`/`pre-order`, e2e evidence launch/cr4, baseline re-audit) → push แล้ว = auto-deploy production
 - Regression ปัจจุบัน: `npx tsc --noEmit` 0 · `npm test` **98 ไฟล์ / 1,017 เทสต์** (972 เดิม + ใหม่ 10 + เดิมที่นับเพิ่ม) · build 0 · lint 0 (**warning `homeSectionModeCta.test.ts` เก็บแล้ว — §5 เดิมอ้างว่ายังมี = stale**) · Playwright 3 viewports 39/39
 - **§6 ข้อ 1 (cat-1/cat-2) = stale** — ปิดแล้ว: Gate 2 Option A EXECUTED 2026-10-14 (4 UPDATE rows, after-verify ครบ — §3/หลักฐาน Gate doc)

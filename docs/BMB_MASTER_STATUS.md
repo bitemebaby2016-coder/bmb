@@ -360,6 +360,10 @@
 - index ของเอกสารที่ย้าย = `docs/archive/INDEX_2026-10-26.md`
 - ไม่มีการแก้วันที่/สถานะในรายงานย้อนหลัง — ทุกฉบับคงสภาพเป็น "รายงาน ณ วันนั้น"
 - หลักฐาน apply migration / audit / incident / security / acceptance **ไม่ถูกลบ** ทุกฉบับยังอยู่ครบ
+- **R62 (2026-11-03): archive รอบใหญ่ = 100 ไฟล์ถูก MOVE** (99 ใน `b1a3b92` + role guide 1 ไฟล์) —
+  root reports 49 → `docs/archive/root_reports/` · docs point-in-time 51 → `docs/archive/` ·
+  **inventory + dependency check + แผนผังเก่า→ใหม่ = `docs/BMB_DOCUMENT_INVENTORY_AND_ARCHIVE_MAP.md`**
+  (สแกน code 1,552 ไฟล์ · KEEP/BLOCKED/MOVE แยกชัด · **0 ไฟล์ถูกลบ** · เปลี่ยนหัวข้อ §9.0 ไม่ย้อนแก้แถว changelog ประวัติ)
 
 ---
 

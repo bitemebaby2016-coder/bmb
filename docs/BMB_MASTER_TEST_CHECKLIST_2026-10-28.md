@@ -3,8 +3,8 @@
 > จัดทำ 2026-10-28 · รวมทุกข้อที่ **ยังไม่มี evidence ผ่าน** จากทุกฉบับ
 > (R9 · R10 · R11 · R12a/b/c · R13 · RT-HOURS · B2 · C7/C8 · settings-sync · role guide · §F-I/L-10/L-11)
 > canonical state = `AI_WORK_STATE.md` บนสุด + `docs/BMB_MASTER_STATUS.md` · ถ้าขัดกันให้ถือไฟล์นั้น + โค้ดจริง
-> ต้นฉบับรายละเอียด: `docs/BMB_HANDOFF_NEXT_SESSION_2026-10-27.md` (R9/R10) ·
-> `docs/BMB_HANDOFF_NEXT_SESSION_2026-10-27B.md` §4 (R11-R13) · `docs/BMB_OWNER_ROLE_TEST_GUIDE_2026-10-27.md` (บท/§15/§16)
+> ต้นฉบับรายละเอียด: `docs/archive/BMB_HANDOFF_NEXT_SESSION_2026-10-27.md` (R9/R10) ·
+> `docs/archive/BMB_HANDOFF_NEXT_SESSION_2026-10-27B.md` §4 (R11-R13) · **บท/§15/§16 = รวมอยู่ใน `docs/BMB_PRODUCTION_TEST_PACK.md` §RG** (แยก `BMB_OWNER_ROLE_TEST_GUIDE_2026-10-27.md` ย้ายเข้า `docs/archive/` แล้ว · R62 PHASE 8)
 
 ---
 
@@ -120,7 +120,7 @@
 | 2-5 | คูปอง retry อัตโนมัติ | apply คูปองครั้งแรก fail (เน็ต) → retry เอง | ☐ |
 | 2-6 | สถานะแยกป้าย sameday/preorder | ตะกร้า/หน้าสถานะแยก 2 ป้ายชัดเจน | ☐ |
 | 2-7 | data flip 14 สินค้า | สินค้านอกตาราง 14 ตัว = โชว์ `⚡ สั่งทันที` จริงในเมนู | ☐ |
-| 2-8 | `docs/BMB_BACKEND_AI_PART_1.md` | Owner อ่าน/ยืนยันเนื้อหา (เทียบต้นฉบับท่าน) | ✅ ผ่าน · รอปรับปรุงเพิ่ม (Owner) |
+| 2-8 | `docs/archive/BMB_BACKEND_AI_PART_1.md` | Owner อ่าน/ยืนยันเนื้อหา (เทียบต้นฉบับท่าน) | ✅ ผ่าน · รอปรับปรุงเพิ่ม (Owner) |
 
 ---
 
@@ -173,7 +173,7 @@
 
 ---
 
-## 6. P2 — Role guide (สรุปย่อ · รายละเอียด = `BMB_OWNER_ROLE_TEST_GUIDE_2026-10-27.md` บท 1–12)
+## 6. P2 — Role guide (สรุปย่อ · รายละเอียด = `docs/BMB_PRODUCTION_TEST_PACK.md` §RG (เดิม `BMB_OWNER_ROLE_TEST_GUIDE_2026-10-27.md` บท 1–12 · ย้ายเข้า archive แล้ว))
 
 - [ ] login ทุก role ครบ (owner/admin/kitchen/delivery/finance/marketing/pos/support/auditor/rider ตามที่ท่านมี)
 - [ ] แต่ละ role: เห็นเฉพาะสิทธิ์ตัวเอง · ปุ่มที่ไม่มีสิทธิ์ = ไม่มี/กดไม่ได้ (support/auditor เน้น = read-only จริง)

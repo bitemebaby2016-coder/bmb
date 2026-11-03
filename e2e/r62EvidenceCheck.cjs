@@ -9,7 +9,7 @@ const runtime = [
   'e2e/w6Apply157158-record.json', 'e2e/w1-parity-2026-10-26.json',
 ];
 const docsToCheck = [
-  'docs/BMB_PRODUCTION_TEST_PACK.md', 'docs/BMB_OWNER_ROLE_TEST_GUIDE_2026-10-27.md',
+  'docs/BMB_PRODUCTION_TEST_PACK.md', 'docs/archive/BMB_OWNER_ROLE_TEST_GUIDE_2026-10-27.md',
   'docs/BMB_PRODUCTION_MASTER_STATUS.md', 'docs/03_ADMIN_USER_GUIDE.md',
   'README.md', 'docs/BMB_DOCUMENT_INVENTORY_AND_ARCHIVE_MAP.md',
   'docs/BMB_REQUIREMENT_RECONCILIATION.md', 'BMB_REQUIREMENT_RECONCILIATION.md',

@@ -1,0 +1,27 @@
+R62 PHASE 8: single Owner test pack (role guide merged + ID map) + final closure report + pointer fixes
+
+PHASE 8 deliverables:
+- docs/BMB_PRODUCTION_TEST_PACK.md: += MAP (old->new Test ID map from master
+  checklist + role guide IDs) + RG (full role guide text, headings prefixed
+  "RG.") -> single pack file 94KB -> 132KB; pointers updated to archive paths
+- MOVE docs/BMB_OWNER_ROLE_TEST_GUIDE_2026-10-27.md -> docs/archive/ (git mv;
+  total archive moves now 100 files, 0 deletes)
+- docs/BMB_WHOLE_FINAL_PRODUCTION_CLOSURE_REPORT.md (NEW): honest closure report
+  - PHASE 0-8 done with evidence, explicit "NOT production ready" section
+  (C-1..C-6 awaiting Owner, runtime tests NOT RUN, CI of this commit pending)
+- docs/BMB_MASTER_STATUS.md: section 8 += R62 archive round note (100 MOVE/0 DELETE)
+- docs/BMB_MASTER_TEST_CHECKLIST_2026-10-28.md: role-guide pointers -> pack section RG
+- docs/BMB_DOCUMENT_INVENTORY_AND_ARCHIVE_MAP.md: KEEP row marks guide as moved
+- docs/BMB_REQUIREMENT_RECONCILIATION.md: untouched this round (D-1..D-4 already
+  closed in previous commit; D-5/D-6 remain as planned)
+- AI_WORK_STATE.md: R62 block -> PHASE 0-8 done, next = CI confirm + Owner C-1..C-6
+- e2e/r62MergePack.cjs + r62PtrCheck.cjs + r62PtrFix.cjs (merge/verify/fix scripts)
+- e2e/r62EvidenceCheck.cjs: role-guide path -> archive (post-move)
+
+Pointer policy: operational kept-docs rewritten to archive paths (14 lines);
+AI_WORK_STATE history + section 9.0 changelog rows NOT rewritten (point-in-time
+records per doc rule); "moved" notes intentionally keep the old filename.
+
+Gates: lint4 OK (brandNameGuard 527 + languageSanity 1556) + vitest full after
+PHASE 8 (see e2e/r62_vitest_full.log summary line) + tsc unchanged (docs only).
+Pre-commit staged explicitly, no git add -A.
