@@ -1,0 +1,21 @@
+{
+  "at": "2026-11-04T16:25:09.230Z",
+  "local": {
+    "entry": "/assets/index-CAbcs2Aq.js",
+    "reactVendor": "/assets/react-vendor-Cg2Z0Rye.js",
+    "css": "/assets/index-DAzf96Hh.css",
+    "title": null
+  },
+  "status": 200,
+  "prodSize": 4038,
+  "prod": {
+    "entry": "/assets/index-CqoH-YOB.js",
+    "reactVendor": "/assets/react-vendor-Cg2Z0Rye.js",
+    "css": "/assets/index-CxjV_wZG.css",
+    "title": null
+  },
+  "entryMatch": false,
+  "vendorMatch": true,
+  "cssMatch": false,
+  "verdict": "PRODUCTION_DIFFERS_FROM_LOCAL_BUILD"
+}

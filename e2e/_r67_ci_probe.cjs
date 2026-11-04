@@ -21,7 +21,7 @@
   }
   console.log(JSON.stringify(out, null, 1))
   require('fs').writeFileSync(require('path').join(__dirname, '_r67_ci_probe.json'), JSON.stringify(out, null, 2))
-  const ours = runs.filter((x) => ['c26c143', '2a7e29d'].includes(String(x.head_sha).slice(0, 7)))
+  const ours = runs.filter((x) => ['c26c143', '2a7e29d', '4bdc2f8', '01e5802', '7b817d7'].includes(String(x.head_sha).slice(0, 7)))
   const bad = ours.some((x) => x.conclusion === 'failure' || x.conclusion === 'cancelled')
   const pending = ours.some((x) => x.status !== 'completed')
   console.log(ours.length === 0 ? 'CI_NO_OUR_RUNS' : bad ? 'CI_FAIL' : pending ? 'CI_PENDING' : 'CI_ALL_GREEN')

@@ -1,0 +1,12 @@
+{
+  "at": "2026-11-04T16:26:26.977Z",
+  "markers": {
+    "new_faq": true,
+    "old_footer": false,
+    "new_footer_guard": true,
+    "chat_timeout": false
+  },
+  "entry": "/assets/index-CqoH-YOB.js",
+  "entrySize": 238376,
+  "verdict": "R67_CODE_IS_LIVE"
+}

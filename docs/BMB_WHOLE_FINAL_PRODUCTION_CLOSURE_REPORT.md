@@ -58,6 +58,7 @@
 | Chat-Hang ของ AI Waiter | **ปิดแล้ว + พิสูจน์สด**: ส่งข้อความ → คำตอบจริงใน 3.3 วิ · input ปลดล็อก (ไม่ค้าง) | `e2e/_r67_chat_live.json` |
 | SEO routes | ครบ (รวม `/orders` `/notifications` `/track/:orderNumber` = dynamic param จริง ไม่มี literal `:orderNumber`) | `src/__tests__/r67Contracts.test.ts` · `seo.test.ts` 30/30 |
 | FAQ + ตัวเลขโปรโมชั่น | ไม่มีตัวเลข hardcode (รอบ/แต้ม/รางวัล/เบอร์) · Footer ส่งฟรี = แสดงเฉพาะเมื่อ server enforce จริง (ค่าจริง 199) | `src/lib/faqContent.ts` · `src/components/layout/Footer.tsx` |
+| **Production จริง (`biteme-baby.com`)** | **เสิร์ฟโค้ด R67 แล้ว (verified 2026-11-04 16:25 ICT)** — ข้อความ FAQ ใหม่อยู่ใน entry · ข้อความเก่า `ส่งฟรีเมื่อครบ ฿200` หายไปแล้ว · `react-vendor-Cg2Z0Rye.js` = ชิ้นเดียวกับ build ท้องถิ่น · **react-router สำเน้เดียว (`nav=1 loc=1`)** = บั๊กหน้าแรกค้างไม่กลับมา | `e2e/_close_prodcode.json` · `e2e/_close_prodvendor.json` · `e2e/_close_prodver.json` |
 
 ### §5.1 รายการที่ยังไม่เสร็จ — **ห้ามตีความว่าปิดแล้ว**
 
