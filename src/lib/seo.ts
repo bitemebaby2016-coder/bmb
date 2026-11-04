@@ -1,5 +1,5 @@
 import type { SEOMeta } from '@/types'
-import { faqs } from './faqContent'
+import { getFaqs } from './faqContent'
 import { KITCHEN_LAT, KITCHEN_LNG } from '@/config/kitchenLocation'
 import { getCachedSocialLinks } from './socialLinks'
 import { getSeoSettingsSync, DEFAULT_SEO_SETTINGS } from './seoSettings'
@@ -183,7 +183,7 @@ export function getFaqMeta(): SEOMeta {
     schema: {
       '@context': 'https://schema.org',
       '@type': 'FAQPage',
-      mainEntity: faqs.map((f) => ({
+      mainEntity: getFaqs().map((f) => ({
         '@type': 'Question',
         name: f.q,
         acceptedAnswer: { '@type': 'Answer', text: f.a },
@@ -399,5 +399,16 @@ export function getVoiceDemoMeta(): SEOMeta {
     description: `เดโมระบบสั่งอาหารด้วยเสียงของ ${SITE_CONFIG.name}`,
     keywords: [...SITE_CONFIG.keywords, 'voice', 'demo', 'สั่งอาหารด้วยเสียง'],
     ogImage: SITE_CONFIG.ogImage, url: seoUrl('/voice-demo'), schema: {}
+  }
+}
+
+/** /rider — หน้างานไรเดอร์ (PWA · ผู้ใช้ทั่วไปเปิดได้ · canonical ตัวเอง)
+ *  R67-T3: ปิดช่องว่างสุดท้ายของ SEO route matrix — ทุกหน้ามี meta ครบแล้ว */
+export function getRiderMeta(): SEOMeta {
+  return {
+    title: `งานจัดส่ง (ไรเดอร์) | ${SITE_CONFIG.name}`,
+    description: `หน้างานจัดส่งสำหรับไรเดอร์ของ ${SITE_CONFIG.name} — ดูงาน เส้นทาง และอัปเดตสถานะจัดส่ง`,
+    keywords: [...SITE_CONFIG.keywords, 'rider', 'delivery', 'ไรเดอร์', 'งานจัดส่ง'],
+    ogImage: SITE_CONFIG.ogImage, url: seoUrl('/rider'), schema: {}
   }
 }

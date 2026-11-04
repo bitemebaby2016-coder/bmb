@@ -1,0 +1,10 @@
+{
+  "timestamp": "2026-11-04T09:24:20.516Z",
+  "url": "http://localhost:4174/login",
+  "emailVisible": true,
+  "bodySample": "\n    Bite Me Babyเมนูโปรโมชั่นโหวตเมนูสุ่มเมนูธีม: สว่าง (Light Minimal)☀️เข้าสู่ระบบBite Me BabyMore than just delicious food📧 อีเมล / รหัสผ่าน⚡ เข้าสู่ระบบด่วนอีเมลรหัสผ่านลืมรหัสผ่าน?เข้าสู่ระบบยังไม่มีบัญชี? สมัครสมาชิกGเข้าสู่ระบบด้วย GoogleLเข้าสู่ระบบด้วย LINEเข้าสู่ระบบด้วย Facebookการยืนยันผ่าน Facebook เป็นการยืนยันตัวตนเท่านั้น ไม่เกี่ยวข้องกับการชำระเงินเข้าสู่ระบบด้วย Passkeyใช้ Face / Touch ID / ล็อกหน้าจอของเครื่องคุณ — ไม่ต้องจำรหัสผ่าน← กลับหน้าแรก🍽️ Bite Me Baby — Cloud Kitch",
+  "consoleMsgs": [
+    "verbose: [DOM] Input elements should have autocomplete attributes (suggested: \"current-password\"): (More info: https://goo.gl/9p2vKq) %o"
+  ],
+  "pageErrors": []
+}

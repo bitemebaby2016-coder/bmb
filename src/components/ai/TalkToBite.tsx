@@ -93,6 +93,19 @@ function nextId(): string {
 const FALLBACK_GREETING =
   'สวัสดีครับ ผมBite พนักงานเสิร์ฟของBite Me Baby 🍊 วันนี้อยากกินอะไรดีครับ?'
 
+// R67 Chat-hang close (README §10.4): ทุก query ในเส้นทางส่งข้อความต้อง time-box —
+// เน็ตค้าง = promise ไม่ settle = typing ติดถาวร (ปุ่มส่ง disable ตลอดกาล).
+// เกินเวลานี้ reject เข้า catch/finally เดิมทันที (ข้อความไทยเดิม + typing รีเซ็ต)
+const CHAT_QUERY_TIMEOUT_MS = 15000
+function withDeadline<T>(promise: PromiseLike<T>, ms: number = CHAT_QUERY_TIMEOUT_MS): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error('chat_query_timeout')), ms)
+    promise.then(
+      (value) => { clearTimeout(timer); resolve(value) },
+      (err) => { clearTimeout(timer); reject(err) },
+    )
+  })
+}
 export function TalkToBite({ mode = 'overlay', initialPhase = 'landing', landingClose = true, onClose }: TalkToBiteProps) {
   const navigate = useNavigate()
   const customer = useAuthStore((s) => s.customer)
@@ -241,7 +254,7 @@ export function TalkToBite({ mode = 'overlay', initialPhase = 'landing', landing
     setTyping(true)
     try {
       const { getProducts: load } = await import('@/lib/bmbAdminApi_products')
-      const products = pickTopAvailable(await load(), 3)
+      const products = pickTopAvailable(await withDeadline(load()), 3)
       if (products.length === 0) {
         pushAssistant('วันนี้ยังไม่มีเมนูที่สั่งได้ครับ แนะนำลองแวะมาอีกที หรือดูที่หน้าเมนูแทนครับ 🙏')
       } else {
@@ -263,7 +276,7 @@ export function TalkToBite({ mode = 'overlay', initialPhase = 'landing', landing
     setTyping(true)
     try {
       const { getProducts: load } = await import('@/lib/bmbAdminApi_products')
-      const products = pickTopAvailable(await load(), 3)
+      const products = pickTopAvailable(await withDeadline(load()), 3)
       if (products.length === 0) {
         pushAssistant('วันนี้ยังไม่มีเมนูขายได้ครับ เดี๋ยวแวะมาอีกทีนะครับ 🙏')
       } else {
@@ -286,7 +299,7 @@ export function TalkToBite({ mode = 'overlay', initialPhase = 'landing', landing
     setTyping(true)
     try {
       const { getProducts: load } = await import('@/lib/bmbAdminApi_products')
-      const products = pickFavoriteProducts(await load(), favoriteCats, 3)
+      const products = pickFavoriteProducts(await withDeadline(load()), favoriteCats, 3)
       if (products.length === 0) {
         pushAssistant('ยังไม่เจอหมวดของโปรดเลยครับ ขอแนะนำเมนูขายดีแทนนะครับ 🙏')
       } else {
@@ -313,7 +326,7 @@ export function TalkToBite({ mode = 'overlay', initialPhase = 'landing', landing
     setTyping(true)
     try {
       const { getProducts: load } = await import('@/lib/bmbAdminApi_products')
-      const products = pickTopAvailable(await load(), 12)
+      const products = pickTopAvailable(await withDeadline(load()), 12)
       if (products.length === 0) {
         say('วันนี้ยังไม่มีเมนูที่สั่งได้ครับ แนะนำลองแวะมาอีกที หรือดูที่หน้าเมนูแทนครับ 🙏')
       } else {
@@ -338,10 +351,10 @@ export function TalkToBite({ mode = 'overlay', initialPhase = 'landing', landing
     if (!requireAuth()) return
     setTyping(true)
     try {
-      const [orders, catalog] = await Promise.all([
+      const [orders, catalog] = await withDeadline(Promise.all([
         getOrdersByCustomer(customer!.id),
         (await import('@/lib/bmbAdminApi_products')).getProducts(),
-      ])
+      ]))
       if (!orders || orders.length === 0) {
         pushAssistant('ยังไม่มีประวัติออเดอร์ที่ร้านนี้เลยครับ อยากให้ Bite แนะนำเมนูแทนไหมครับ? 🍊')
         setBiteState('IDLE')
@@ -381,7 +394,7 @@ export function TalkToBite({ mode = 'overlay', initialPhase = 'landing', landing
     if (!requireAuth()) return
     setTyping(true)
     try {
-      const orders = await getOrdersByCustomer(customer!.id)
+      const orders = await withDeadline(getOrdersByCustomer(customer!.id))
       if (!orders || orders.length === 0) {
         pushAssistant('ยังไม่มีออเดอร์ที่ร้านนี้เลยครับ อยากให้ Bite แนะนำเมนูแทนไหมครับ? 🍊')
         setBiteState('IDLE')
@@ -532,10 +545,10 @@ export function TalkToBite({ mode = 'overlay', initialPhase = 'landing', landing
     const intent = parseOrderIntent(text)
     if (!intent.likeBefore || !customer?.id) return false
     try {
-      const [orders, catalog] = await Promise.all([
+      const [orders, catalog] = await withDeadline(Promise.all([
         getOrdersByCustomer(customer.id),
         (await import('@/lib/bmbAdminApi_products')).getProducts(),
-      ])
+      ]))
       if (!orders || orders.length === 0) {
         pushAssistant('ยังไม่มีออเดอร์เก่าเลยครับ อยากให้แนะนำเมนูแทนไหมครับ? 🍊')
         setBiteState('IDLE')
@@ -717,6 +730,12 @@ export function TalkToBite({ mode = 'overlay', initialPhase = 'landing', landing
           (เดิม "เข้าสู่ร้าน" เป็นลิงก์ตัวหนังสือจาง และไม่มีปุ่มล็อกอิน/ปุ่มไรเดอร์เลย)
           ปุ่มไรเดอร์แสดงเฉพาะบัญชีที่เซิร์ฟเวอร์ยืนยันแล้ว (useRiderIdentity) */}
       <div className="px-6 pb-8 pt-2 flex flex-wrap items-center justify-center gap-3">
+        <div className="relative inline-block">
+          <MascotBadge pose="pointing" size="sm" alt="Bite the mascot pointing at the order menu button" className="mascot-point-cta" loading="eager" />
+          <button type="button" onClick={() => navigate('/menu')} className="btn btn-outline px-6 py-2.5 rounded-full text-sm font-medium" data-testid="home-menu-cta">
+            🍽️ ดูเมนูทั้งหมด
+          </button>
+        </div>
         <button type="button" onClick={() => navigate('/shop')} className="btn btn-primary px-6 py-2.5 rounded-full text-sm font-medium shadow" data-testid="ttb-enter-store">
           🛍️ เข้าสู่ร้าน →
         </button>

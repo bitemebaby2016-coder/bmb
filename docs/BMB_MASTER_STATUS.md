@@ -520,5 +520,5 @@
 | คำสั่ง | `npx playwright test routeNav` บน build จริง (`vite preview --port 5199` จาก `dist/` ที่ build ในรอบนี้) |
 | ผล | **39 passed / 0 failed (46.3s) · `PW_EXIT=0`** · evidence = `e2e/session20261026-gates-evidence.txt` §8 |
 | ครอบคลุม | public routes ทั้งหมด · protected (guest → `/login`) · redirect (`/ai-chat` → `/talk-to-bite`, `/profile/orders` → `/orders`, `/admin/pre-orders`, `/admin/dashboard`) · catch-all `/no-such-page-xyz` · ตรวจ console error "No routes matched location" |
-| **ไม่ได้รัน** | `e2e/runE2E.cjs` (full order journey) — **จงใจไม่รัน**: สคริปต์นี้สร้าง user/order จริงบน Supabase production (ต้อง `BMB_E2E_SVC_KEY`) = **production write** ซึ่ง Owner directive ไม่อนุมัติให้ AI ทำเอง → อยู่ใน Owner acceptance §7 |
+| **R67 รันแล้ว — 2026-11-04 (Owner สั่งเอง: "รันชุดทดสอบ E2E Matrix ให้ผ่านครบทุกเคส")** | `e2e/runE2E.cjs` = **PASS 12/12 steps · `E2E PASS = true`** — สร้าง test user จริง + ออเดอร์จริง 2 ใบ (`BMB-20261104-365` SAME_DAY · `PO-20261105-931` PRE_ORDER) แล้วลบ user ใน `finally` · เส้นทางที่ใช้จริง = pickup ทั้ง 2 ใบ (ร้านปิด 20:00 แล้ว + CR-2 ต้องยืนยันพิกัด) และถูกบันทึกไว้ใน `extra.fulfillmentUsed` ของผลลัพธ์ · evidence = `e2e/_r67_e2e_run.log` + `e2e/e2e-result.json` |
 | ไม่ได้รัน | `e2e/g2rv.spec.ts` — ต้องการฐานข้อมูล/เซสชันทดสอบที่ไม่ได้เตรียมในรอบนี้ (= NOT RUN, ไม่ใช่ PASS) |

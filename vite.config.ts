@@ -72,6 +72,9 @@ export default defineConfig({
       // point the package at a no-op stub instead of shipping ~100KB of Phoenix.
       '@supabase/realtime-js': join(__dirname, 'src/lib/stubs/realtimeStub.ts'),
     },
+    // R67 boot-crash fix: force a SINGLE react instance across CJS/ESM interop
+    // (two copies = zustand hook reads a dispatcher the renderer never sets).
+    dedupe: ['react', 'react-dom', 'react/jsx-runtime', 'react/jsx-dev-runtime'],
   },
   server: {
     // TUNNEL (Owner 2026-10-08): เปิดให้เครื่องภายนอก (มือถือคนละวงเน็ต)

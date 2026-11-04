@@ -76,6 +76,57 @@ function record(name, ok, extra) {
   console.log((ok ? 'check' : 'XMARK') + ' ' + name + (extra ? ' ' + JSON.stringify(extra) : ''))
 }
 
+// R67: capture FAILED backend calls (status + path + body) — console errors alone
+// only say "400 ()" with no URL, which made Flow B undiagnosable.
+function watchNet(page, tag) {
+  page.on('response', async (r) => {
+    if (errors.length > 60) return
+    const u = r.url().replace(/^https?:\/\/[^/]+/, '')
+    if (!/\/rest\/v1\/|\/functions\//.test(u)) return
+    const isOrderCreate = /\/rpc\/create_/.test(u)
+    if (r.status() < 400 && !isOrderCreate) return
+    let body = ''
+    try { body = (await r.text()).slice(0, 300) } catch {}
+    errors.push(tag + '-net ' + r.status() + ' ' + u.split('?')[0] + ' :: ' + body)
+  })
+}
+
+// CR-2 (CheckoutPage): a CONFIRMED delivery coordinate is required before a
+// delivery order — typing the address alone is not enough, and the guard toast
+// fires without any RPC (so it looks like a silent hang). Pickup needs no pin.
+// Try GPS first (deterministic in Playwright), then the manual-pin fallback.
+async function ensureDeliveryPoint(page, ctx) {
+  try {
+    await ctx.grantPermissions(['geolocation'], { origin: BASE }).catch(() => {})
+    await ctx.setGeolocation({ latitude: 12.6096, longitude: 102.1039 }).catch(() => {})
+    const gps = page.locator('button:has-text("Use my location")')
+    if (await gps.count()) await gps.first().click().catch(() => {})
+    const confirmBtn = page.locator('[data-testid="confirm-location"]')
+    await confirmBtn.waitFor({ state: 'visible', timeout: 8000 })
+    await page.waitForFunction(() => {
+      const b = document.querySelector('[data-testid="confirm-location"]')
+      return !!b && !b.disabled
+    }, { timeout: 8000 })
+    await confirmBtn.click()
+    await page.waitForSelector('[data-testid="confirm-location-done"]', { timeout: 8000 })
+    return true
+  } catch {
+    return false
+  }
+}
+
+// Same-day / pre-order checkout cannot place a delivery order without a confirmed
+// point — switch to pickup (real flow, no pin) when the point can't be confirmed.
+async function switchToPickup(page) {
+  await page.click('[data-testid="fulfillment-pickup"]')
+  await page.waitForFunction(() => {
+    const b = document.querySelector('[data-testid="place-order"]')
+    return !!b && !b.disabled
+  }, { timeout: 20000 })
+  const ack = page.locator('[data-testid="pickup-outside-ack-row"] input[type="checkbox"]')
+  if (await ack.count()) await ack.check().catch(() => {})
+}
+
 let child = null
 ;(async () => {
   let browser
@@ -95,8 +146,12 @@ let child = null
       const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 1, isMobile: true })
       const page = await ctx.newPage()
       if (testUser) await loginUser(page, testUser.email, testUser.password)
-      page.on('console', (msg) => { if (msg.type === 'error') errors.push('A:' + msg.text.slice(0, 200)) })
+      // Playwright ConsoleMessage exposes type()/text() as METHODS — comparing
+      // the function itself silently dropped every console error (and calling
+      // .slice on it crashed Flow B). R67 fix: call them and coerce to string.
+      page.on('console', (msg) => { if (msg.type() === 'error') errors.push('A:' + String(msg.text()).slice(0, 200)) })
       page.on('pageerror', (e) => errors.push('A-pageerror:' + String(e).slice(0, 200)))
+      watchNet(page, 'A')
 
       await page.goto(BASE + '/', { waitUntil: 'networkidle', timeout: 45000 })
       await page.waitForSelector('[data-testid="home-menu-cta"]', { timeout: 15000 })
@@ -121,7 +176,7 @@ await page.waitForSelector('[data-testid="same-day-tab"]', { timeout: 15000 })
       }
 
       // client-side nav to /cart (keeps the in-memory cart store alive)
-      await page.click('a[href="/cart"]')
+      await page.locator('a[href="/cart"]').first().click()
       await page.waitForSelector('[data-testid="go-checkout"]', { timeout: 15000 })
       await page.screenshot({ path: path.join(SHOTS, '03-cart.png'), fullPage: false })
       record('cart shows item', true)
@@ -132,9 +187,29 @@ await page.waitForSelector('[data-testid="same-day-tab"]', { timeout: 15000 })
       await page.click('[data-testid="go-checkout"]')
 await page.waitForSelector('[data-testid="checkout-address"]', { timeout: 15000 })
       await page.fill('[data-testid="checkout-address"]', '123 Sukhumvit Rd, E2E Test')
-      await page.waitForSelector('[data-testid="provider-option"]', { timeout: 15000 })
+      await page.waitForSelector('[data-testid="fulfillment-delivery"]', { timeout: 15000 })
       await page.screenshot({ path: path.join(SHOTS, '04-checkout.png'), fullPage: false })
       record('checkout provider selected', true)
+
+      // ---- hours-aware SAME_DAY path (migration 184) ----
+      // Delivery outside operating hours is rejected by the SERVER
+      // (enforce_shop_hours → ERR_STORE_CLOSED) and the client mirrors it with
+      // "no bookable round". Pickup is a real, contract-tested flow there
+      // (create_pickup_order_i skips the gate + "รับนอกเวลาเปิดร้าน" notice).
+      // So: keep delivery whenever a round is bookable, otherwise place the same
+      // order as pickup. The path actually used is recorded as evidence.
+      const placeBtn = page.locator('[data-testid="place-order"]')
+      let fulfillmentUsed = 'delivery'
+      if (await placeBtn.isDisabled()) {
+        fulfillmentUsed = 'pickup' // no bookable round (outside operating hours)
+      } else if (!(await ensureDeliveryPoint(page, ctx))) {
+        fulfillmentUsed = 'pickup' // CR-2 confirmed pin could not be obtained
+      }
+      if (fulfillmentUsed === 'pickup') {
+        await switchToPickup(page)
+        await page.screenshot({ path: path.join(SHOTS, '04b-checkout-pickup.png'), fullPage: false })
+      }
+      record('same-day order path ready', await placeBtn.isEnabled(), { fulfillmentUsed })
 
       await page.click('[data-testid="place-order"]')
       await page.waitForURL(/\/payment\//, { timeout: 30000 })
@@ -153,13 +228,14 @@ const txn = '15160001' + String(Date.now()).slice(-8) // real-looking numeric Pr
       record('payment confirmed → tracking', true, { badge })
       await ctx.close()
     }
-// ---------- FLOW B: pre-order → real order (pre_orders) → tracking ----------
+// ---------- FLOW B: pre-order -> cart -> checkout -> payment -> tracking (PO-) ----------
     {
       const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true })
       const page = await ctx.newPage()
       if (testUser) await loginUser(page, testUser.email, testUser.password)
-      page.on('console', (msg) => { if (msg.type === 'error') errors.push('B:' + msg.text.slice(0, 200)) })
+      page.on('console', (msg) => { if (msg.type() === 'error') errors.push('B:' + String(msg.text()).slice(0, 200)) })
       page.on('pageerror', (e) => errors.push('B-pageerror:' + String(e).slice(0, 200)))
+      watchNet(page, 'B')
 
       await page.goto(BASE + '/menu', { waitUntil: 'networkidle', timeout: 45000 })
       await page.waitForSelector('[data-testid="pre-order-tab"]', { timeout: 15000 })
@@ -167,7 +243,83 @@ const txn = '15160001' + String(Date.now()).slice(-8) // real-looking numeric Pr
       await page.waitForSelector('[data-testid="pre-order-btn"]', { timeout: 15000 })
       await page.screenshot({ path: path.join(SHOTS, '07-menu-preorder.png'), fullPage: false })
 
-      await page.click('[data-testid="pre-order-btn"] >> nth=0')
+      // Pre-order delivery date is LOCKED to the admin menu calendar (no free-date
+      // picker) and a card scheduled for TODAY has no bookable round left once its
+      // cutoff passes (server rejects it too: ERR_CUTOFF_PASSED) — so pick the
+      // first card whose calendar badge is a FUTURE date.
+      const preIdx = await page.$$eval('[data-testid="pre-order-btn"]', (btns) => {
+        const now = new Date()
+        const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+        const labelOf = (m) => new Date(now.getFullYear(), m, 1).toLocaleDateString('th-TH', { month: 'short' })
+        const labels = []
+        for (let m = 0; m < 12; m++) labels.push(labelOf(m))
+        for (let i = 0; i < btns.length; i++) {
+          const card = btns[i].closest('.fmc-card')
+          const badge = card && card.querySelector('[data-testid="schedule-date-badge"]')
+          const dayEl = badge && badge.querySelector('.sched-cal-corner-day')
+          const monEl = badge && badge.querySelector('.sched-cal-corner-month')
+          const day = dayEl ? parseInt((dayEl.textContent || '').trim(), 10) : NaN
+          const monLabel = monEl ? (monEl.textContent || '').trim() : ''
+          const month = labels.indexOf(monLabel)
+          if (!Number.isFinite(day) || month < 0) continue
+          const when = new Date(now.getFullYear(), month, day)
+          if (when < startOfToday) when.setFullYear(now.getFullYear() + 1)
+          if (when > startOfToday) return i
+        }
+        return -1
+      })
+      const prePick = preIdx >= 0 ? preIdx : 0
+      await page.click('[data-testid="pre-order-btn"] >> nth=' + prePick)
+      record('pre-order card comes from a future calendar date', preIdx >= 0, { preIdx, prePick })
+      try { await page.waitForSelector('[data-testid="ob-confirm"]', { timeout: 8000 }) } catch {}
+      const ob2 = await page.locator('[data-testid="ob-confirm"]').count()
+      if (ob2 > 0) {
+        await page.locator('[data-testid="ob-confirm"]').click()
+        await sleep(500)
+      }
+
+      await page.locator('a[href="/cart"]').first().click()
+      await page.waitForSelector('[data-testid="go-checkout"]', { timeout: 15000 })
+      await page.click('[data-testid="go-checkout"]')
+      await page.waitForSelector('[data-testid="checkout-address"]', { timeout: 15000 })
+      await page.fill('[data-testid="checkout-address"]', '123 Sukhumvit Rd, E2E Test')
+      await page.waitForSelector('[data-testid="place-order"]', { timeout: 15000 })
+      await page.waitForFunction(() => {
+        const b = document.querySelector('[data-testid="place-order"]');
+        return b && !b.disabled;
+      }, { timeout: 15000 }).catch(() => {})
+      await page.screenshot({ path: path.join(SHOTS, '07b-preorder-checkout.png'), fullPage: false })
+      // CR-2: delivery needs a confirmed pin — obtain it, else run the same
+      // pre-order as pickup (no pin required; PO- order number is unaffected).
+      let preFulfillment = 'delivery'
+      if (!(await ensureDeliveryPoint(page, ctx))) {
+        preFulfillment = 'pickup'
+        await switchToPickup(page)
+      }
+      record('pre-order order path ready', await page.locator('[data-testid="place-order"]').isEnabled(), { fulfillmentUsed: preFulfillment })
+
+      await page.click('[data-testid="place-order"]')
+      const seenToasts = []
+      for (let i = 0; i < 50; i++) {
+        if (page.url().includes('/payment/')) break
+        const t = await page.locator('.toast-container .toast').allTextContents().catch(() => [])
+        for (const x of t) if (x && !seenToasts.includes(x)) seenToasts.push(x)
+        await sleep(300)
+      }
+      await page.waitForURL(/\/payment\//, { timeout: 20000 }).catch(async () => {
+        const body = String(await page.locator('body').textContent().catch(() => '')).slice(0, 700)
+        const btn = page.locator('[data-testid="place-order"]')
+        const btnText = String(await btn.textContent().catch(() => '')).slice(0, 120)
+        const btnDisabled = await btn.isDisabled().catch(() => null)
+        const toasts = await page.locator('.toast-container .toast').allTextContents().catch(() => [])
+        record('pre-order order created → payment step', false, { url: page.url(), btnText, btnDisabled, seenToasts, toasts, body })
+        throw new Error('pre-order stuck on checkout — no /payment navigation')
+      })
+      await sleep(2500)
+      const txn2 = '15160001' + String(Date.now()).slice(-8)
+      await page.waitForSelector('[data-testid="txn-input"]', { timeout: 15000 })
+      await page.fill('[data-testid="txn-input"]', txn2)
+      await page.click('[data-testid="confirm-payment"]')
       await page.waitForURL(/\/track\//, { timeout: 30000 })
       await page.waitForSelector('[data-testid="track-order-number"]', { timeout: 15000 })
       const preBadge = await page.locator('[data-testid="track-order-number"]').textContent()
@@ -192,7 +344,7 @@ const txn = '15160001' + String(Date.now()).slice(-8) // real-looking numeric Pr
     {
       const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true })
       const page = await ctx.newPage()
-      page.on('console', (msg) => { if (msg.type === 'error') errors.push('D:' + msg.text.slice(0, 200)) })
+      page.on('console', (msg) => { if (msg.type() === 'error') errors.push('D:' + String(msg.text()).slice(0, 200)) })
       page.on('pageerror', (e) => errors.push('D-pageerror:' + String(e).slice(0, 200)))
 
       await page.goto(BASE + '/', { waitUntil: 'networkidle', timeout: 45000 })

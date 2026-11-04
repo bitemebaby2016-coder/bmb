@@ -1,0 +1,118 @@
+{
+  "byDate": {
+    "2026-11-04": [
+      "prod-1793370728049-b1uqeg@ANY",
+      "prod-1793370681553-cd6ol7@ANY"
+    ],
+    "2026-11-05": [
+      "prod-1793370625449-zzn457@ANY",
+      "prod-1792810253606-0x3ycg@ANY"
+    ],
+    "2026-11-06": [
+      "prod-1793370402489-0listy@ANY",
+      "prod-1793370474689-bbj9jy@ANY"
+    ],
+    "2026-11-07": [
+      "prod-1793370474689-bbj9jy@ANY",
+      "prod-1793370548177-oilfxi@ANY"
+    ]
+  },
+  "total": 8,
+  "roundsByDate": {
+    "2026-11-04": [
+      "midday:active",
+      "evening:closed",
+      "morning:active"
+    ],
+    "2026-11-05": [
+      "midday:active",
+      "evening:closed",
+      "morning:active"
+    ],
+    "2026-11-06": [
+      "morning:active",
+      "evening:closed",
+      "midday:active"
+    ],
+    "2026-11-07": [
+      "morning:active",
+      "midday:active",
+      "evening:closed"
+    ],
+    "2026-11-08": [
+      "midday:active",
+      "evening:closed",
+      "morning:active"
+    ],
+    "2026-11-09": [
+      "morning:active",
+      "evening:closed",
+      "midday:active"
+    ],
+    "2026-11-10": [
+      "evening:closed",
+      "morning:active",
+      "midday:active"
+    ],
+    "2026-11-11": [
+      "midday:active",
+      "morning:active",
+      "evening:closed"
+    ],
+    "2026-11-12": [
+      "midday:active",
+      "morning:active",
+      "evening:closed"
+    ],
+    "2026-11-13": [
+      "morning:active",
+      "midday:active",
+      "evening:closed"
+    ],
+    "2026-11-14": [
+      "evening:closed",
+      "midday:active",
+      "morning:active"
+    ],
+    "2026-11-15": [
+      "evening:closed",
+      "morning:active",
+      "midday:active"
+    ],
+    "2026-11-16": [
+      "midday:active",
+      "evening:closed",
+      "morning:active"
+    ],
+    "2026-11-17": [
+      "evening:closed",
+      "morning:active",
+      "midday:active"
+    ],
+    "2026-11-18": [
+      "midday:active",
+      "morning:active",
+      "evening:closed"
+    ],
+    "2026-11-19": [
+      "morning:active",
+      "evening:closed",
+      "midday:active"
+    ],
+    "2026-11-20": [
+      "evening:closed",
+      "morning:active",
+      "midday:active"
+    ],
+    "2026-11-21": [
+      "morning:active",
+      "evening:closed",
+      "midday:active"
+    ],
+    "2026-11-22": [
+      "midday:active",
+      "evening:closed",
+      "morning:active"
+    ]
+  }
+}

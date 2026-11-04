@@ -1,0 +1,11 @@
+{
+  "timestamp": "2026-11-04T08:35:45.301Z",
+  "url": "http://localhost:4175/login",
+  "bodyLen": 32,
+  "events": [
+    {
+      "kind": "pageerror",
+      "stack": "TypeError: Cannot read properties of null (reading 'useCallback')\n    at e.useCallback (http://localhost:4175/assets/react-vendor-DLS49qVy.js:11:44974)\n    at m (http://localhost:4175/assets/state-vendor-gNW87BoF.js:1:1088)\n    at n (http://localhost:4175/assets/state-vendor-gNW87BoF.js:1:1230)\n    at cc (http://localhost:4175/assets/index-ulWufhxi.js:30:12177)\n    at wo (http://localhost:4175/assets/react-vendor-DLS49qVy.js:8:47524)\n    at gc (http://localhost:4175/assets/react-vendor-DLS49qVy.js:8:69978)\n    at Nc (http://localhost:4175/assets/react-vendor-DLS49qVy.js:8:80236)\n    at Mu (http://localhost:4175/assets/react-vendor-DLS49qVy.js:8:115586)\n    at ku (http://localhost:4175/assets/react-vendor-DLS49qVy.js:8:114669)\n    at Ou (http://localhost:4175/assets/react-vendor-DLS49qVy.js:8:114508)"
+    }
+  ]
+}

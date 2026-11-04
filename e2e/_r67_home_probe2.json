@@ -1,0 +1,6 @@
+{
+  "timestamp": "2026-11-04T13:22:27.236Z",
+  "detailText": "",
+  "bodySample": "\n    {\"@context\":\"https://schema.org\",\"@graph\":[{\"@type\":\"Restaurant\",\"@id\":\"https://biteme-baby.com/#restaurant\",\"name\":\"Bite Me Baby\",\"url\":\"https://biteme-baby.com/\",\"image\":\"https://biteme-baby.com/og-image.png\",\"servesCuisine\":[\"Thai\",\"Asian\"],\"priceRange\":\"$$\",\"currenciesAccepted\":\"THB\",\"paymentAccepted\":\"QR PromptPay, Cash\",\"address\":{\"@type\":\"PostalAddress\",\"streetAddress\":\"ในตัวเมืองจันทบุรี\",\"addressLocality\":\"Chanthaburi\",\"addressRegion\":\"Chanthaburi\",\"postalCode\":\"22000\",\"addressCountry\":\"TH\"},\"geo\":{\"@type\":\"GeoCoordinates\",\"latitude\":12.615659,\"longitude\":102.098063},\"openingHour",
+  "events": []
+}

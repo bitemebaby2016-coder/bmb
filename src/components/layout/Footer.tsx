@@ -176,7 +176,9 @@ export function Footer() {
             © 2026 Bite Me Baby Cloud Kitchen • เมืองจันทบุรี • สงวนลิขสิทธิ์
           </p>
           <p className="text-xs text-brand-muted mt-2">
-            จัดส่งอาหาร • ส่งฟรีเมื่อครบ ฿200 • Same-day & Pre-order • AI Assistant 24/7 • {SHOP_CONTACT.hours}
+            {/* R67-T4: ตัวเลขโปรต้องมาจาก delivery_policy (hydrated) — ห้ามพิมพ์ ฿200
+                ตายตัว (threshold จริง 199) และห้ามสัญญา "ส่งฟรี" ถ้า server ยังไม่ enforce */}
+            จัดส่งอาหาร{freeShippingActive ? ` • ส่งฟรีเมื่อครบ ฿${delivery.freeShippingThreshold}` : ''} • Same-day & Pre-order • AI Assistant 24/7 • {SHOP_CONTACT.hours}
           </p>
         </div>
       </div>

@@ -1,11 +1,17 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 
-import { faqs } from '@/lib/faqContent'
+import { buildFaqs } from '@/lib/faqContent'
+import { usePlatformConfig } from '@/config/platformConfig'
+import { getShopHours } from '@/lib/shopHours'
 
 
 export function FaqPage() {
   const [openIndex, setOpenIndex] = useState<number | null>(null)
+  // R67-T4: คำตอบ FAQ สร้างจากค่าจริงของระบบ (PlatformConfig + shopHours) ทุกครั้งที่
+  // render — ค่า backend เปลี่ยน (ค่าส่ง/ส่งฟรี/เวลา) → หน้านี้ปรับเองอัตโนมัติ
+  const delivery = usePlatformConfig().delivery
+  const faqs = buildFaqs({ delivery, shopHours: getShopHours() })
 
   return (
     <div className="max-w-3xl mx-auto px-4 py-8">

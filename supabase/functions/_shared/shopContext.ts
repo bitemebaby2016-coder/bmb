@@ -22,7 +22,7 @@ export interface ShopContextDeps {
 export const SHOP_FACTS_TH = [
   'ชื่อร้าน: Bite Me Baby (Cloud Kitchen) · จันทบุรี',
   'ที่อยู่: เมืองจันทบุรี',
-  'โทรศัพท์: 094 2649269 · อีเมล: admin@biteme-baby.com',
+  'โทรศัพท์: 082 6096995 · อีเมล: admin@biteme-baby.com',
   'เวลาเปิดร้าน: ทุกวัน 07:00-20:00 น. (Open Daily 7.00 am. - 20.00 pm.)',
   'สั่งอาหาร: biteme-baby.com/shop · ติดตามออเดอร์: biteme-baby.com/track',
   'การส่ง: Same-day (รอบส่งเช้า/กลางวัน/เย็น) และ Pre-order (สั่งล่วงหน้า)',

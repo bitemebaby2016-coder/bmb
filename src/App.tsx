@@ -9,7 +9,7 @@ import { AdminNav } from './components/admin/AdminNav'
 // Bite / AI accessibility lives in BottomNav ('Bite' → /ai-chat) + BiteHero quick actions (UI v5)
 import { SeoHelmet, TrackOrderSeo, ReviewDetailSeo, PaymentSeo } from './components/SeoHelmet'
 import { MascotBadge } from './components/MascotBadge'
-import { getHomeMeta, getShopMeta, getMenuMeta, getCartMeta, getCheckoutMeta, getOrdersMeta, getNotificationsMeta, getReviewsMeta, getAboutMeta, getFaqMeta, getBlogMeta, getContactMeta, getPrivacyMeta, getTermsMeta, getPromotionsMeta, getRewardsMeta, getVoteMeta, getRandomMenuMeta, getShareMeta, getViralMeta, getProfileMeta, getAdminMeta, getLoginMeta, getResetPasswordMeta, getTrackIndexMeta, getTalkToBiteMeta, getVoiceDemoMeta } from './lib/seo'
+import { getHomeMeta, getShopMeta, getMenuMeta, getCartMeta, getCheckoutMeta, getOrdersMeta, getNotificationsMeta, getReviewsMeta, getAboutMeta, getFaqMeta, getBlogMeta, getContactMeta, getPrivacyMeta, getTermsMeta, getPromotionsMeta, getRewardsMeta, getVoteMeta, getRandomMenuMeta, getShareMeta, getViralMeta, getProfileMeta, getAdminMeta, getLoginMeta, getResetPasswordMeta, getTrackIndexMeta, getTalkToBiteMeta, getVoiceDemoMeta, getRiderMeta } from './lib/seo'
 import { BrandProvider } from './components/BrandProvider'
 import { subscribeSeoSettings, getSeoSettingsVersion } from './lib/seoSettings'
 import { subscribeSocialLinks, getSocialVersion } from './lib/socialLinks'
@@ -249,6 +249,7 @@ export default function App() {
         <Route path="/track" element={<SeoHelmet seo={getTrackIndexMeta()} />} />
         <Route path="/talk-to-bite" element={<SeoHelmet seo={getTalkToBiteMeta()} />} />
         <Route path="/voice-demo" element={<SeoHelmet seo={getVoiceDemoMeta()} />} />
+        <Route path="/rider" element={<SeoHelmet seo={getRiderMeta()} />} />
       </Routes>
       
       <Routes>

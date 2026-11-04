@@ -1,0 +1,129 @@
+{
+  "timestamp": "2026-11-04T13:32:30.792Z",
+  "userId": "3ce8ec2b-3068-4ccb-a0c2-cf588146c504",
+  "afterLoginUrl": "http://localhost:4182/",
+  "url": "http://localhost:4182/checkout",
+  "placeOrder": "⚠️ ยังไม่มีรอบที่เปิดรับสำหรับวันนี้",
+  "placeOrderDisabled": true,
+  "noRounds": 1,
+  "autoRoundText": "",
+  "pickupOutsideAck": 0,
+  "bodySnippet": "\n    Bite Me Babyเมนูโปรโมชั่นโหวตเมนูสุ่มเมนูธีม: สว่าง (Light Minimal)☀️🔔eออก1🛒 Checkout← กลับตะกร้า🔥 สั่งซื้อวันนี้ (Same-day)🛵 สั่งวันนี้ = จัดส่งทันที ระบบเลือกไรเดอร์ให้อัตโนมัติ🛵 จัดส่งทันทียังไม่มีรอบที่เปิดรับสำหรับวันนี้ — ลองใหม่ภายหลัง หรือสั่งแบบจองล่วงหน้า🛵 วิธีรับสินค้าจัดส่งถึงที่ค่าจัดส่งตามระยะทางรับที่ร้านค่าจัดส่งฟรี · รับตามช่วงเวลาที่เลือก📍 ที่อยู่จัดส่ง📍 Use my location (GPS)ยังไม่มีตำแหน่งจัดส่ง — กด GPS หรือปักหมุดบนแผนที่ด้านล่าง⚠️ แผนที่ยังไม่พร้อมใช้งาน (โหลด Google Maps ไม่สำเร็จ) — กรุณาระบุพิกัดเองด้านล่าง หรือใช้ปุ่ม GPSใช้พิกัดนี้📸 รูปที่อยู่/หน้าบ้าน (ช่วยให้ไรเดอร์หาเจอ — ไม่บังคับ)📷 ถ่ายรูป🖼️ แนบรูปจากเครื่อง✅ ยืนยันตำแหน่งจัดส่งนี้ยังไม่มีพิกัด — กรอกช่องพิกัดด้านบนแล้วกด “ใช้พิกัดนี้” หรือกด 📍 GPSตรวจสอบจุดจัดส่งกรุณาเลือกที่อยู่หรือปักหมุดแผนที่เพื่อตรวจสอบค่าจัดส่ง🛵 ช่องทางจัดส่งBite Me Baby Delivery (ระบบเลือกช่องทางให้)เซิร์ฟเวอร์คำน",
+  "net": [
+    {
+      "url": "/rest/v1/business_settings?select=value&key=eq.social_links",
+      "status": 200,
+      "body": "[{\"value\":{\"line\": \"https://line.me/ti/p/QFD3bSMFN9\", \"tiktok\": \"\", \"line_id\": \"bitemebaby2016\", \"youtube\": \"\", \"facebook\": \"https://web.facebook.com/profile.php?id=61586146030943\", \"instagram\": \"\", \"messenger\": \"https://m.me/61586146030943\"}}]"
+    },
+    {
+      "url": "/rest/v1/business_settings?select=value&key=eq.seo",
+      "status": 200,
+      "body": "[{\"value\":{\"tagline\": \"สั่งอาหารจัดส่งเมืองจันทบุรี รัศมี 5 กม.\", \"description\": \"ร้านอาหารไทยจัดส่งถึงบ้านในรัศมี 5 กม. จากตัวเมืองจันทบุรี ให้บริการรอบเช้า กลางวัน เย็น ส่งด้วยรถไฟฟ้าอัจฉริยะ\"}}]"
+    },
+    {
+      "url": "/rest/v1/business_settings?select=*",
+      "status": 200,
+      "body": "[{\"key\":\"loyalty_policy\",\"value\":{\"tier_gold_min\": 4000, \"tiers_enabled\": true, \"window_months\": 12, \"points_enabled\": true, \"points_per_baht\": 20, \"tier_silver_min\": 1500, \"tier_platinum_min\": 8000, \"earn_qualify_status\": \"delivered\"},\"created_at\":\"2026-10-25T15:51:36.211585+00:00\",\"updated_at\":\"2026-10-30T01:32:37.483+00:00\",\"tenant_id\":\"tenant-bmb-001\",\"branch_id\":null}, \n {\"key\":\"spin_policy\",\"value\":{\"enabled\": false, \"daily_limit\": 1, \"points_per_spin\": 5},\"created_at\":\"2026-10-26T00:28:26"
+    },
+    {
+      "url": "/rest/v1/business_settings?select=key%2Cvalue&key=in.%28hours%2Coperating_hours%2Cstore_master_open%29",
+      "status": 200,
+      "body": "[{\"key\":\"hours\",\"value\":{\"open\": \"8:00\", \"close\": \"20:00\"}}, \n {\"key\":\"operating_hours\",\"value\":{\"midday_open\": true, \"evening_open\": true, \"morning_open\": true, \"same_day_open\": true, \"pre_order_open\": true}}, \n {\"key\":\"store_master_open\",\"value\":{\"open\": true}}]"
+    },
+    {
+      "url": "/rest/v1/delivery_rounds?select=*&archived=eq.false&order=scheduled_date.asc",
+      "status": 200,
+      "body": "[{\"id\":\"round-20261104-morning\",\"round_key\":\"morning\",\"display_name\":\"เช้า \",\"cutoff_time\":\"05:00:00\",\"delivery_start\":\"07:00:00\",\"delivery_end\":\"09:00:00\",\"max_capacity\":20,\"current_count\":0,\"date\":\"2026-11-04\",\"scheduled_date\":\"2026-11-04\",\"name\":\"morning\",\"status\":\"active\",\"created_at\":\"2026-10-25T15:32:55.934703+00:00\",\"updated_at\":\"2026-10-25T15:32:55.934703+00:00\",\"tenant_id\":\"tenant-bmb-001\",\"branch_id\":\"branch-tenant-bmb-001-main\",\"pre_order_cutoff\":\"05:00:00\",\"archived\":false}, \n {\"id\":"
+    },
+    {
+      "url": "/rest/v1/business_settings?select=value&key=eq.social_links",
+      "status": 200,
+      "body": "[{\"value\":{\"line\": \"https://line.me/ti/p/QFD3bSMFN9\", \"tiktok\": \"\", \"line_id\": \"bitemebaby2016\", \"youtube\": \"\", \"facebook\": \"https://web.facebook.com/profile.php?id=61586146030943\", \"instagram\": \"\", \"messenger\": \"https://m.me/61586146030943\"}}]"
+    },
+    {
+      "url": "/rest/v1/business_settings?select=key%2Cvalue&key=in.%28hours%2Coperating_hours%2Cstore_master_open%29",
+      "status": 200,
+      "body": "[{\"key\":\"hours\",\"value\":{\"open\": \"8:00\", \"close\": \"20:00\"}}, \n {\"key\":\"operating_hours\",\"value\":{\"midday_open\": true, \"evening_open\": true, \"morning_open\": true, \"same_day_open\": true, \"pre_order_open\": true}}, \n {\"key\":\"store_master_open\",\"value\":{\"open\": true}}]"
+    },
+    {
+      "url": "/rest/v1/business_settings?select=key%2Cvalue&key=in.%28hours%2Coperating_hours%2Cstore_master_open%29",
+      "status": 200,
+      "body": "[{\"key\":\"hours\",\"value\":{\"open\": \"8:00\", \"close\": \"20:00\"}}, \n {\"key\":\"operating_hours\",\"value\":{\"midday_open\": true, \"evening_open\": true, \"morning_open\": true, \"same_day_open\": true, \"pre_order_open\": true}}, \n {\"key\":\"store_master_open\",\"value\":{\"open\": true}}]"
+    },
+    {
+      "url": "/rest/v1/business_settings?select=value&key=eq.seo",
+      "status": 200,
+      "body": "[{\"value\":{\"tagline\": \"สั่งอาหารจัดส่งเมืองจันทบุรี รัศมี 5 กม.\", \"description\": \"ร้านอาหารไทยจัดส่งถึงบ้านในรัศมี 5 กม. จากตัวเมืองจันทบุรี ให้บริการรอบเช้า กลางวัน เย็น ส่งด้วยรถไฟฟ้าอัจฉริยะ\"}}]"
+    },
+    {
+      "url": "/rest/v1/business_settings?select=*",
+      "status": 200,
+      "body": "[{\"key\":\"loyalty_policy\",\"value\":{\"tier_gold_min\": 4000, \"tiers_enabled\": true, \"window_months\": 12, \"points_enabled\": true, \"points_per_baht\": 20, \"tier_silver_min\": 1500, \"tier_platinum_min\": 8000, \"earn_qualify_status\": \"delivered\"},\"created_at\":\"2026-10-25T15:51:36.211585+00:00\",\"updated_at\":\"2026-10-30T01:32:37.483+00:00\",\"tenant_id\":\"tenant-bmb-001\",\"branch_id\":null}, \n {\"key\":\"spin_policy\",\"value\":{\"enabled\": false, \"daily_limit\": 1, \"points_per_spin\": 5},\"created_at\":\"2026-10-26T00:28:26"
+    },
+    {
+      "url": "/rest/v1/business_settings?select=value&key=eq.social_links",
+      "status": 200,
+      "body": "[{\"value\":{\"line\": \"https://line.me/ti/p/QFD3bSMFN9\", \"tiktok\": \"\", \"line_id\": \"bitemebaby2016\", \"youtube\": \"\", \"facebook\": \"https://web.facebook.com/profile.php?id=61586146030943\", \"instagram\": \"\", \"messenger\": \"https://m.me/61586146030943\"}}]"
+    },
+    {
+      "url": "/rest/v1/business_settings?select=key%2Cvalue&key=in.%28hours%2Coperating_hours%2Cstore_master_open%29",
+      "status": 200,
+      "body": "[{\"key\":\"hours\",\"value\":{\"open\": \"8:00\", \"close\": \"20:00\"}}, \n {\"key\":\"operating_hours\",\"value\":{\"midday_open\": true, \"evening_open\": true, \"morning_open\": true, \"same_day_open\": true, \"pre_order_open\": true}}, \n {\"key\":\"store_master_open\",\"value\":{\"open\": true}}]"
+    },
+    {
+      "url": "/rest/v1/delivery_rounds?select=*&archived=eq.false&order=scheduled_date.asc",
+      "status": 200,
+      "body": "[{\"id\":\"round-20261104-morning\",\"round_key\":\"morning\",\"display_name\":\"เช้า \",\"cutoff_time\":\"05:00:00\",\"delivery_start\":\"07:00:00\",\"delivery_end\":\"09:00:00\",\"max_capacity\":20,\"current_count\":0,\"date\":\"2026-11-04\",\"scheduled_date\":\"2026-11-04\",\"name\":\"morning\",\"status\":\"active\",\"created_at\":\"2026-10-25T15:32:55.934703+00:00\",\"updated_at\":\"2026-10-25T15:32:55.934703+00:00\",\"tenant_id\":\"tenant-bmb-001\",\"branch_id\":\"branch-tenant-bmb-001-main\",\"pre_order_cutoff\":\"05:00:00\",\"archived\":false}, \n {\"id\":"
+    },
+    {
+      "url": "/rest/v1/business_settings?select=*",
+      "status": 200,
+      "body": "[{\"key\":\"loyalty_policy\",\"value\":{\"tier_gold_min\": 4000, \"tiers_enabled\": true, \"window_months\": 12, \"points_enabled\": true, \"points_per_baht\": 20, \"tier_silver_min\": 1500, \"tier_platinum_min\": 8000, \"earn_qualify_status\": \"delivered\"},\"created_at\":\"2026-10-25T15:51:36.211585+00:00\",\"updated_at\":\"2026-10-30T01:32:37.483+00:00\",\"tenant_id\":\"tenant-bmb-001\",\"branch_id\":null}, \n {\"key\":\"spin_policy\",\"value\":{\"enabled\": false, \"daily_limit\": 1, \"points_per_spin\": 5},\"created_at\":\"2026-10-26T00:28:26"
+    },
+    {
+      "url": "/rest/v1/business_settings?select=*",
+      "status": 200,
+      "body": "[{\"key\":\"loyalty_policy\",\"value\":{\"tier_gold_min\": 4000, \"tiers_enabled\": true, \"window_months\": 12, \"points_enabled\": true, \"points_per_baht\": 20, \"tier_silver_min\": 1500, \"tier_platinum_min\": 8000, \"earn_qualify_status\": \"delivered\"},\"created_at\":\"2026-10-25T15:51:36.211585+00:00\",\"updated_at\":\"2026-10-30T01:32:37.483+00:00\",\"tenant_id\":\"tenant-bmb-001\",\"branch_id\":null}, \n {\"key\":\"spin_policy\",\"value\":{\"enabled\": false, \"daily_limit\": 1, \"points_per_spin\": 5},\"created_at\":\"2026-10-26T00:28:26"
+    },
+    {
+      "url": "/rest/v1/rpc/auto_close_expired_rounds",
+      "status": 200,
+      "body": "0"
+    },
+    {
+      "url": "/rest/v1/business_settings?select=*",
+      "status": 200,
+      "body": "[{\"key\":\"loyalty_policy\",\"value\":{\"tier_gold_min\": 4000, \"tiers_enabled\": true, \"window_months\": 12, \"points_enabled\": true, \"points_per_baht\": 20, \"tier_silver_min\": 1500, \"tier_platinum_min\": 8000, \"earn_qualify_status\": \"delivered\"},\"created_at\":\"2026-10-25T15:51:36.211585+00:00\",\"updated_at\":\"2026-10-30T01:32:37.483+00:00\",\"tenant_id\":\"tenant-bmb-001\",\"branch_id\":null}, \n {\"key\":\"spin_policy\",\"value\":{\"enabled\": false, \"daily_limit\": 1, \"points_per_spin\": 5},\"created_at\":\"2026-10-26T00:28:26"
+    },
+    {
+      "url": "/rest/v1/rpc/auto_close_expired_rounds",
+      "status": 200,
+      "body": "0"
+    },
+    {
+      "url": "/rest/v1/rpc/ensure_rounds_for_date",
+      "status": 200,
+      "body": "{\"ok\": true, \"date\": \"2026-11-04\", \"rounds\": [{\"id\": \"round-20261104-morning\", \"status\": \"active\", \"round_key\": \"morning\", \"cutoff_time\": \"05:00:00\", \"delivery_end\": \"09:00:00\", \"display_name\": \"เช้า \", \"max_capacity\": 20, \"current_count\": 0, \"delivery_start\": \"07:00:00\", \"scheduled_date\": \"2026-11-04\", \"pre_order_cutoff\": \"05:00:00\"}, {\"id\": \"round-20261104-midday\", \"status\": \"active\", \"round_key\": \"midday\", \"cutoff_time\": \"09:00:00\", \"delivery_end\": \"15:00:00\", \"display_name\": \"เที่ยง\", \"max_c"
+    },
+    {
+      "url": "/rest/v1/rpc/ensure_rounds_for_date",
+      "status": 200,
+      "body": "{\"ok\": true, \"date\": \"2026-11-04\", \"rounds\": [{\"id\": \"round-20261104-morning\", \"status\": \"active\", \"round_key\": \"morning\", \"cutoff_time\": \"05:00:00\", \"delivery_end\": \"09:00:00\", \"display_name\": \"เช้า \", \"max_capacity\": 20, \"current_count\": 0, \"delivery_start\": \"07:00:00\", \"scheduled_date\": \"2026-11-04\", \"pre_order_cutoff\": \"05:00:00\"}, {\"id\": \"round-20261104-midday\", \"status\": \"active\", \"round_key\": \"midday\", \"cutoff_time\": \"09:00:00\", \"delivery_end\": \"15:00:00\", \"display_name\": \"เที่ยง\", \"max_c"
+    },
+    {
+      "url": "/rest/v1/delivery_rounds?select=*&scheduled_date=eq.2026-11-04&archived=eq.false&order=delivery_start.asc",
+      "status": 200,
+      "body": "[{\"id\":\"round-20261104-morning\",\"round_key\":\"morning\",\"display_name\":\"เช้า \",\"cutoff_time\":\"05:00:00\",\"delivery_start\":\"07:00:00\",\"delivery_end\":\"09:00:00\",\"max_capacity\":20,\"current_count\":0,\"date\":\"2026-11-04\",\"scheduled_date\":\"2026-11-04\",\"name\":\"morning\",\"status\":\"active\",\"created_at\":\"2026-10-25T15:32:55.934703+00:00\",\"updated_at\":\"2026-10-25T15:32:55.934703+00:00\",\"tenant_id\":\"tenant-bmb-001\",\"branch_id\":\"branch-tenant-bmb-001-main\",\"pre_order_cutoff\":\"05:00:00\",\"archived\":false}, \n {\"id\":"
+    },
+    {
+      "url": "/rest/v1/delivery_rounds?select=*&scheduled_date=eq.2026-11-04&archived=eq.false&order=delivery_start.asc",
+      "status": 200,
+      "body": "[{\"id\":\"round-20261104-morning\",\"round_key\":\"morning\",\"display_name\":\"เช้า \",\"cutoff_time\":\"05:00:00\",\"delivery_start\":\"07:00:00\",\"delivery_end\":\"09:00:00\",\"max_capacity\":20,\"current_count\":0,\"date\":\"2026-11-04\",\"scheduled_date\":\"2026-11-04\",\"name\":\"morning\",\"status\":\"active\",\"created_at\":\"2026-10-25T15:32:55.934703+00:00\",\"updated_at\":\"2026-10-25T15:32:55.934703+00:00\",\"tenant_id\":\"tenant-bmb-001\",\"branch_id\":\"branch-tenant-bmb-001-main\",\"pre_order_cutoff\":\"05:00:00\",\"archived\":false}, \n {\"id\":"
+    }
+  ],
+  "events": [
+    "console: Failed to load resource: the server responded with a status of 403 ()",
+    "console: Failed to load resource: the server responded with a status of 400 ()",
+    "console: Failed to load resource: the server responded with a status of 400 ()"
+  ]
+}
