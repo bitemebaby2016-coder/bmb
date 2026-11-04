@@ -1,0 +1,11 @@
+docs: close R66 session (A/B/C verified) + register R67 scope (4 items) + accept admin v2.1 atomic rules
+
+- AI_WORK_STATE: session-close block (top) — verified state per real code (HEAD 9019b48,
+  migration 185 applied ALL_PASS 9/9, behavior contractPass+zeroPollution, parity 185,
+  gates tsc=0/vitest 205 files 2036 tests/lint=0) + accepted admin's UNIVERSAL v2.1 §1.0
+  (Atomic Tasks / No Placeholders / stop at file-function boundary) + AI_ENTRYPOINT v1.1
+- AI_WORK_STATE: new R67 block — 4-item scope for next session (Onboarding Wizard completion,
+  Payouts tab under /admin/finance, E-Receipt tab in /admin/orders, Multi-Channel Fallback
+  Alerts via queue-*), strict rules (no new sidebar menus → tabs only, no duplication,
+  Clean & Minimal UI, tsc+lint 0/0), R66-D carried over
+- docs/BMB_MASTER_STATUS: R66 canonical block (A/B/C full detail + evidence + gates)
