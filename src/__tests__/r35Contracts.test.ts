@@ -1,6 +1,7 @@
 // ============================================
-// Bite Me Baby — R35 contracts (Owner 2026-10-31) · R56 (2026-11-02) ปรับส่วนสติกเกอร์ตามแบบฟอร์มใหม่
-// 1) สติกเกอร์ (R56): ค่า ORDER LIST/NOTICE หลัง ':' คอลัมน์เดียวกัน (≤3/1 บรรทัด) · QR ผูกขอบล่างหน้า
+// Bite Me Baby — R35 contracts (Owner 2026-10-31) · R56 (2026-11-02) ปรับตามแบบฟอร์มใหม่
+// · R66 (2026-11-04): ORDER LIST = block 4 แถวคงที่ · QR เว้นขอบล่าง ~5% (STICKER_BOTTOM_PCT)
+// 1) สติกเกอร์: ค่า ORDER LIST/NOTICE หลัง ':' คอลัมน์เดียวกัน (≤4/1 บรรทัด) · QR ผูกขอบล่าง −5%
 // 2) /menu?tab=pre-order: ชิปรอบ (เที่ยง/เช้า ซ้ำ ๆ) ถูกถอดออกจาก banner ("ในวงเล็บไม่ต้องแสดง")
 // 3) showcase พรีออเดอร์: วันใกล้วันปัจจุบันขึ้นก่อน (หน้าแรก + /menu)
 // ============================================
@@ -8,7 +9,7 @@ import { describe, it, expect } from 'vitest'
 import stickerSrc from '../lib/stickerPng.ts?raw'
 import menuSrc from '../pages/MenuPage.tsx?raw'
 import homeSrc from '../pages/HomePage.tsx?raw'
-import { stickerDrawList, STICKER_PX_H, type StickerOp } from '@/lib/stickerPng'
+import { stickerDrawList, STICKER_PX_H, STICKER_BOTTOM_PCT, type StickerOp } from '@/lib/stickerPng'
 import type { PrintOrderData } from '@/lib/printService'
 
 const order: PrintOrderData = {
@@ -21,8 +22,8 @@ const order: PrintOrderData = {
   special_instructions: 'ไม่ใส่ถุง ขอซอสเพิ่ม แยกห่อ ขอบคุณครับ ไม่เอาช้อนส้อม',
 }
 
-describe('R56 · สติกเกอร์ — ค่าหลัง ":" คอลัมน์เดียวกัน (ORDER LIST ≤3 / NOTICE =1) + QR ผูกขอบล่าง', () => {
-  it('source: ใช้ stickerFormFields (จุดเดียวกับ HTML) + คอลัมน์ค่า colX + QR ผูกขอบล่างหน้า', () => {
+describe('R56+R66 · สติกเกอร์ — ค่าหลัง ":" คอลัมน์เดียวกัน (block 4 แถว) + QR เว้นขอบล่าง 5%', () => {
+  it('source: ใช้ stickerFormFields (จุดเดียวกับ HTML) + คอลัมน์ค่า colX + QR ผูกขอบล่าง −5%', () => {
     // จุดแปลงเดียว = สองทางพิมพ์ (HTML + PNG) อ่านชุดค่าเดียวกันเสมอ
     expect(stickerSrc).toContain('const f = stickerFormFields(o, at)')
     expect(stickerSrc).toContain('const colX = M + 170')
@@ -31,9 +32,10 @@ describe('R56 · สติกเกอร์ — ค่าหลัง ":" ค�
     expect(stickerSrc).toContain('x: colX, y, text: f.notice, size: 19')
     // บล็อกต่อของ ORDER LIST = ':' ชิดซ้าย (x = M) ตามแบบ Owner
     expect(stickerSrc).toContain("x: M, y, text: ':', size: 20, weight: 700")
-    // R56: QR = ผูกขอบล่างหน้าจริง + ย่อขนาดเองให้พอดีใต้เนื้อหา (แทนสูตร Tel+40 แบบเก่า)
-    expect(stickerSrc).toContain('const qrY = face - M - qrSize')
-    expect(stickerSrc).toContain('const qrSize = Math.max(110, Math.min(150, Math.round(avail)))')
+    // R66: QR = ผูกขอบล่างหน้า − 5% + ย่อเอง 70..150 ให้พอดีใต้เนื้อหา (แทนสูตร Tel+40 แบบเก่า)
+    expect(stickerSrc).toContain('const qrY = face - bottomReserve - qrSize')
+    expect(stickerSrc).toContain('const qrSize = Math.max(70, Math.min(150, Math.round(avail)))')
+    expect(stickerSrc).toContain('const bottomReserve = Math.round(face * STICKER_BOTTOM_PCT)')
     expect(stickerSrc).not.toContain('const valX = M + 148')
   })
 
@@ -48,13 +50,13 @@ describe('R56 · สติกเกอร์ — ค่าหลัง ":" ค�
     expect(valsAt186.length).toBeGreaterThanOrEqual(3) // ORDER ID + ORDER LIST + NOTICE
     expect(valsAt186.some((v) => v.y === listLab!.y)).toBe(true)
     expect(valsAt186.some((v) => v.y === noticeLab!.y)).toBe(true)
-    // R56: notice ยาว = ยังเป็นบรรทัดเดียว (แบบใหม่ไม่ต่อบรรทัดใต้ป้าย)
+    // notice ยาว = ยังเป็นบรรทัดเดียว (ไม่ต่อบรรทัดใต้ป้าย)
     const noticeVals = valsAt186.filter((v) => v.y >= noticeLab!.y && v.y < noticeLab!.y + 40)
     expect(noticeVals.length).toBe(1)
-    // QR ผูกขอบล่างหน้า + เริ่มหลังแถวสุดท้าย [PAID] — ไม่ล้นหน้า
+    // R66: QR จบเหนือขอบล่าง ~5% + เริ่มหลังแถวสุดท้าย [PAID] — ไม่ล้น/ไม่ทับ
     const paid = ops.find((o): o is Extract<StickerOp, { kind: 'text' }> => o.kind === 'text' && o.text.startsWith('[PAID] :'))
     const qr = ops.find((o) => o.kind === 'qr') as Extract<StickerOp, { kind: 'qr' }>
-    expect(qr.y + qr.size).toBe(STICKER_PX_H - 16)
+    expect(qr.y + qr.size).toBe(STICKER_PX_H - Math.round(STICKER_PX_H * STICKER_BOTTOM_PCT))
     expect(qr.y).toBeGreaterThanOrEqual((paid?.y ?? 0) + 22)
     expect(qr.y + qr.size).toBeLessThanOrEqual(STICKER_PX_H)
   })

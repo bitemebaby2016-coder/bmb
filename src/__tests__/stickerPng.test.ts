@@ -1,8 +1,9 @@
 // ============================================
 // Bite Me Baby — R30 tests: stickerDrawList (layout pure) + ขอบ 472×709
+// · R66 (2026-11-04): noStroke 3 คำ · block ORDER LIST 4 แถว · QR เว้นขอบล่าง 5% · ช่องไฟ ROW คงที่
 // ============================================
 import { describe, it, expect } from 'vitest'
-import { stickerDrawList, calibrationDrawList, clampFeedOffset, clampFaceHeight, stickerPageHeight, STICKER_PX_W, STICKER_PX_H, type StickerOp } from '@/lib/stickerPng'
+import { stickerDrawList, calibrationDrawList, clampFeedOffset, clampFaceHeight, stickerPageHeight, STICKER_PX_W, STICKER_PX_H, STICKER_BOTTOM_PCT, type StickerOp } from '@/lib/stickerPng'
 import type { PrintOrderData } from '@/lib/printService'
 import stickerSrc from '@/lib/stickerPng.ts?raw'
 
@@ -57,17 +58,6 @@ describe('stickerDrawList — layout บนผืน 472×709 (40×60 @300dpi)',
     expect(t).toContain('น้ำชา x2 (ไม่หวาน)')
     expect(t).toContain('BMB-20261030-0042')
   })
-
-  it('R51: rasterize stroke ทุกตัวอักษร (กันตัวหนา) — strokeText+fillText ทุก op พร้อม lineJoin/lineCap มน', () => {
-    const src = stickerSrc
-    expect(src).toContain('ctx.strokeText(op.text, op.x, op.y)')
-    expect(src).toContain('ctx.fillText(op.text, op.x, op.y)')
-    expect(src).toContain("ctx.lineJoin = 'round'")
-    expect(src).toContain('ctx.lineWidth = Math.max(1, Math.round(op.size / 14))')
-    // stroke ต้องครอบคลุมทุก text op (รวม CUSTOMER/ตัวเล็ก) — ไม่มี guard ตัดทิ้งเฉพาะบางช่อง
-    expect(src).not.toMatch(/if \(op\.size[^)]*\)\s*ctx\.strokeText/)
-  })
-
   it('R59 (Owner): mode/svc = เท่ากัน 26px (ใหญ่สุดตามวัด — วงกลมใหญ่ขึ้นตาม) · paid = 20 · ระยะบรรทัดไม่ทับกัน', () => {
     const ops = stickerDrawList(order)
     const find = (needle: string) => ops.find((o): o is Extract<StickerOp, { kind: 'text' }> => o.kind === 'text' && o.text.includes(needle))
@@ -87,20 +77,30 @@ describe('stickerDrawList — layout บนผืน 472×709 (40×60 @300dpi)',
     const orderId = find('ORDER ID')
     expect(orderId).toBeTruthy()
     expect(orderId!.y - svc!.y).toBeGreaterThanOrEqual(26)
+    // R66: ช่องไฟระหว่างบรรทัดเท่ากัน = ROW คงที่ 30px ทุกแถวข้อความ (ยกเว้นหัวแบรนด์)
+    expect(mode!.y - find('Date :')!.y).toBe(30)
+    expect(svc!.y - mode!.y).toBe(30)
+    expect(orderId!.y - svc!.y).toBe(30)
   })
 
-  it('เมนูเกิน 3 รายการ = ตัด … · ทุกพิกัดอยู่ในขอบ (ไม่ล้นใบ)', () => {
+  it('R66: เนื้อหาเกิน 4 บรรทัด = ตัด … · ทุกพิกัดอยู่ในขอบ (ไม่ล้นใบ)', () => {
     const many: PrintOrderData = {
       ...order,
       items: Array.from({ length: 7 }, (_, i) => ({ product_name: 'เมนู' + (i + 1), quantity: 1, unit_price: 10 })),
     }
     const ops = stickerDrawList(many)
     const t = texts(ops)
+    // 7 รายการ = 4 แถวพอ (ไหลต่อเนื่อง ~2 รายการ/แถว — ไม่ใช่ 1 รายการ 1 บรรทัด)
     expect(t.some((x) => x.startsWith('เมนู1'))).toBe(true)
-    expect(t.some((x) => x.startsWith('เมนู3'))).toBe(true)
-    expect(t.some((x) => x.startsWith('เมนู4'))).toBe(false)
-    // R35: เมนู ≤2 บรรทัดหลัง ':' → '…' ถูกต่อท้ายบรรทัดที่ 2 (ไม่ใช่บรรทัดเดี่ยวเหมือนเดิม)
-    expect(t.some((x) => x.includes('…'))).toBe(true)
+    expect(t.some((x) => x.startsWith('เมนู7'))).toBe(true)
+    // เกิน 4 บรรทัด = ตัดด้วย … (รายการถัดไปไม่ถูกแสดง)
+    const over = stickerDrawList({
+      ...order,
+      items: Array.from({ length: 11 }, (_, i) => ({ product_name: 'เมนู' + (i + 1), quantity: 1, unit_price: 10 })),
+    })
+    const ot = texts(over)
+    expect(ot.some((x) => x.includes('…'))).toBe(true)
+    expect(ot.some((x) => x.startsWith('เมนู9'))).toBe(false)
 
     for (const op of ops) {
       if (op.kind === 'text') {
@@ -119,7 +119,6 @@ describe('stickerDrawList — layout บนผืน 472×709 (40×60 @300dpi)',
     expect(qr!.y).toBeGreaterThan(300)
   })
 })
-
 describe('R33 — clampFeedOffset / stickerPageHeight (ชดเชยฟีด)', () => {
   it('clamp: ปัดเป็นจำนวนเต็ม · ขอบ −40..300 · NaN/undefined → 0', () => {
     expect(clampFeedOffset(0)).toBe(0)
@@ -159,15 +158,15 @@ describe('R34 — clampFaceHeight / หน้า = ความสูงหน�
     expect(stickerPageHeight(0, 500)).toBe(640) // clamp ขอบล่าง
   })
 
-  it('R56/R41 offset=60: เนื้อบนเลื่อนลง 60 · QR ผูกขอบล่างหน้า (face−M−qrSize · ย่อเอง 110..150) · ไม่เลย face · bg = face', () => {
+  it('R56/R41/R66 offset=60: เนื้อบนเลื่อนลง 60 · QR ผูกขอบล่างหน้า (face−5%−qrSize · ย่อเอง 70..150) · ไม่เลย face · bg = face', () => {
     const ops = stickerDrawList(order, 60, 709)
     const qr = ops.find((o) => o.kind === 'qr')
     const head = ops.find((o): o is Extract<StickerOp, { kind: 'text' }> => o.kind === 'text' && o.text === 'BITE ME BABY')
     // หัวเลื่อนลง 60 (y = 16+30+60)
     expect(head?.y).toBe(16 + 30 + 60)
-    // R56: QR ผูกขอบล่างหน้าเสมอ + ย่อขนาดเองให้พอดีใต้เนื้อหา (มีทางไม่มีทางล้นหน้า)
-    expect(qr && qr.kind === 'qr' ? qr.y + qr.size : -1).toBe(709 - 16)
-    expect(qr && qr.kind === 'qr' ? qr.size : -1).toBeGreaterThanOrEqual(110)
+    // R66: QR จบเหนือขอบล่าง ~5% (bottomReserve) + ย่อขนาดเองให้พอดีใต้เนื้อหา
+    expect(qr && qr.kind === 'qr' ? qr.y + qr.size : -1).toBe(709 - Math.round(709 * STICKER_BOTTOM_PCT))
+    expect(qr && qr.kind === 'qr' ? qr.size : -1).toBeGreaterThanOrEqual(70) // min 70: กันทับเนื้อหาเมื่อ offset ใหญ่
     expect(qr && qr.kind === 'qr' ? qr.size : -1).toBeLessThanOrEqual(150)
     const bg = ops[0]
     expect(bg.kind === 'rect' && bg.h).toBe(709)
@@ -180,11 +179,11 @@ describe('R34 — clampFaceHeight / หน้า = ความสูงหน�
     }
   })
 
-  it('stickerDrawList faceH=660: QR ผูกขอบล่าง 660−16 (ย่อให้พอดีใต้เนื้อหา) · ทุก op ≤ หน้า · bg = 660', () => {
+  it('stickerDrawList faceH=660: QR ผูกขอบล่าง 660−5% (ย่อให้พอดีใต้เนื้อหา) · ทุก op ≤ หน้า · bg = 660', () => {
     const ops = stickerDrawList(order, 0, 660)
     const qr = ops.find((o) => o.kind === 'qr')
     const paid = ops.find((o): o is Extract<StickerOp, { kind: 'text' }> => o.kind === 'text' && o.text.startsWith('[PAID] :'))
-    expect(qr && qr.kind === 'qr' ? qr.y + qr.size : -1).toBe(660 - 16)
+    expect(qr && qr.kind === 'qr' ? qr.y + qr.size : -1).toBe(660 - Math.round(660 * STICKER_BOTTOM_PCT))
     // QR ไม่ทับเนื้อหา (เริ่มหลังแถว [PAID] + ระยะห่าง)
     expect(qr && qr.kind === 'qr' ? qr.y : -1).toBeGreaterThanOrEqual((paid?.y ?? 0) + 22)
     const bg = ops[0]
@@ -209,7 +208,7 @@ describe('R34 — clampFaceHeight / หน้า = ความสูงหน�
 })
 
 describe('R33 — stickerDrawList(offset) ทุก op เลื่อนเท่ากัน · bg = เต็มหน้าใหม่', () => {
-  it('R41/R56 offset +80 = เนื้อบนลง 80px (text/lines) · QR ยังผูกขอบล่างหน้า (ไม่ดันเกินขอบ) · bg = 709 คงที่', () => {
+  it('R41/R56/R66 offset +80 = เนื้อบนลง 80px (text/lines) · QR ผูกขอบล่างหน้า −5% (ไม่ดันเกินขอบ) · bg = 709 คงที่', () => {
     const base = stickerDrawList(order)
     const moved = stickerDrawList(order, 80)
     expect(moved).toHaveLength(base.length)
@@ -220,9 +219,9 @@ describe('R33 — stickerDrawList(offset) ทุก op เลื่อนเท�
     const qrIdx = base.findIndex((o) => o.kind === 'qr')
     const baseQr = base[qrIdx]
     const movedQr = moved[qrIdx]
-    // R56: QR ผูกขอบล่างหน้าเสมอ (face − M − qrSize ที่ย่อเอง 110..150) — offset ไม่ดัน QR เกินขอบ
-    expect(baseQr.kind === 'qr' ? baseQr.y + baseQr.size : -1).toBe(709 - 16)
-    expect(movedQr.kind === 'qr' ? movedQr.y + movedQr.size : -1).toBe(709 - 16)
+    // R66: QR จบเหนือขอบล่าง ~5% เสมอ (face − bottomReserve · qrSize ย่อเอง 70..150) — offset ไม่ดัน QR เกินขอบ
+    expect(baseQr.kind === 'qr' ? baseQr.y + baseQr.size : -1).toBe(709 - Math.round(709 * STICKER_BOTTOM_PCT))
+    expect(movedQr.kind === 'qr' ? movedQr.y + movedQr.size : -1).toBe(709 - Math.round(709 * STICKER_BOTTOM_PCT))
     for (let i = 1; i < base.length; i++) {
       const a = base[i]
       const b = moved[i]
@@ -306,9 +305,26 @@ describe('R33 — calibrationDrawList (ใบวัดฟีด)', () => {
     expect(calibrationDrawList().some((o) => o.kind === 'qr')).toBe(false)
   })
 })
+describe('R51+R66 — stroke: ทุก op ยกเว้น 3 คำ noStroke (Owner: ไม่ต้องใส่สโตรค)', () => {
+  it('source: strokeText ทุก op + guard = noStroke เท่านั้น (ไม่ใช่ size) · fill ทุกตัวเสมอ', () => {
+    const src = stickerSrc
+    expect(src).toContain('if (op.noStroke !== true) ctx.strokeText(op.text, op.x, op.y)')
+    expect(src).toContain('ctx.fillText(op.text, op.x, op.y)')
+    expect(src).toContain("ctx.lineJoin = 'round'")
+    expect(src).toContain('ctx.lineWidth = Math.max(1, Math.round(op.size / 14))')
+    // stroke ยังครอบทุก text op ที่ไม่ได้ยกเว้น — ห้าม guard ด้วยขนาด
+    expect(src).not.toMatch(/if \(op\.size[^)]*\)\s*ctx\.strokeText/)
+    // R66: 3 คำที่ Owner สั่ง "ไม่ต้องใส่สโตรค" = flag noStroke: true เฉพาะคำเหล่านั้น
+    const flagged = stickerDrawList(order)
+      .filter((o): o is Extract<StickerOp, { kind: 'text' }> => o.kind === 'text' && o.noStroke === true)
+      .map((o) => o.text)
+      .sort()
+    expect(flagged).toEqual(['BITE ME BABY', 'SCAN FOR MORE', '[ DELIVERY / CUSTOMER ]'].sort())
+  })
+})
 
-describe('R56 — ORDER LIST/NOTICE หลัง ":" คอลัมน์เดียวกัน (≤3/1 บรรทัด) · QR ผูกขอบล่าง', () => {
-  it('ค่า ORDER LIST/NOTICE เริ่ม x=186 บน y เดียวกับป้าย · ORDER LIST ≤ 3 บรรทัด · NOTICE = 1 บรรทัด', () => {
+describe('R56+R66 — ORDER LIST/NOTICE หลัง ":" คอลัมน์เดียวกัน (block 4 แถวคงที่) · QR เว้นขอบล่าง 5%', () => {
+  it('ค่า ORDER LIST/NOTICE เริ่ม x=186 บน y เดียวกับป้าย · block = 4 แถวคงที่ (120px) · NOTICE = 1 บรรทัด', () => {
     const ops = stickerDrawList(order)
     const lab = (s: string) => ops.find((o): o is Extract<StickerOp, { kind: 'text' }> => o.kind === 'text' && o.text === s)
     const listLab = lab('ORDER LIST')
@@ -319,9 +335,11 @@ describe('R56 — ORDER LIST/NOTICE หลัง ":" คอลัมน์เด
     const colX = 16 + 170 // คอลัมน์ค่า = 15.5mm (ตรง .f.col ฝั่ง HTML)
     const listVals = ops.filter((o): o is Extract<StickerOp, { kind: 'text' }> => o.kind === 'text' && o.x === colX && o.y >= listY && o.y < noticeY)
     expect(listVals.length).toBeGreaterThanOrEqual(1)
-    expect(listVals.length).toBeLessThanOrEqual(3) // label 1 + ต่อ 2 = ตามแบบ
+    expect(listVals.length).toBeLessThanOrEqual(4) // R66: label 1 + เนื้อหาต่อ 3 (สูงสุด 4 แถว)
     expect(listVals.some((v) => v.y === listY)).toBe(true) // ค่าบรรทัดแรก = บรรทัดเดียวกับป้าย
-    // บรรทัดต่อของ ORDER LIST = ':' ชิดซ้าย (x=M) ตามแบบ Owner
+    // R66: block คงที่เสมอ = 4 แถว × ROW(30) — NOTICE เริ่มที่ listY+120 แม้รายการน้อย (เว้นว่าง 3 บรรทัด)
+    expect(noticeY - listY).toBe(120)
+    // บรรทัดต่อของ ORDER LIST = ':' ชิดซ้าย (x=M) — เฉพาะแถวที่มีค่า (แถวว่างไม่มี ':' ไม่มีค่า)
     const contColons = ops.filter((o): o is Extract<StickerOp, { kind: 'text' }> => o.kind === 'text' && o.text === ':' && o.x === 16 && o.y > listY && o.y < noticeY)
     expect(contColons.length).toBe(listVals.length - 1)
     // NOTICE = 1 บรรทัดเท่านั้น (แบบใหม่ไม่ต่อบรรทัดใต้ป้าย)
@@ -330,7 +348,7 @@ describe('R56 — ORDER LIST/NOTICE หลัง ":" คอลัมน์เด
     expect(noticeVals.some((v) => v.y === noticeY)).toBe(true)
   })
 
-  it('notice ยาว = ยังเป็นบรรทัดเดียว (ไม่ต่อบรรทัด) · QR ผูกขอบล่าง ไม่ล้นขอบล่างหน้า', () => {
+  it('notice ยาว = ยังเป็นบรรทัดเดียว (ไม่ต่อบรรทัด) · QR จบเหนือขอบล่าง ~5% ไม่ล้น', () => {
     const long: PrintOrderData = { ...order, special_instructions: 'ไม่ใส่ถุง ขอซอสเพิ่ม แยกห่อ ขอบคุณครับ ไม่เอาช้อนส้อม' }
     const ops = stickerDrawList(long)
     const noticeLab = ops.find((o): o is Extract<StickerOp, { kind: 'text' }> => o.kind === 'text' && o.text === 'NOTICE')
@@ -339,9 +357,9 @@ describe('R56 — ORDER LIST/NOTICE หลัง ":" คอลัมน์เด
     expect(noticeVals.length).toBe(1)
     const paid = ops.find((o): o is Extract<StickerOp, { kind: 'text' }> => o.kind === 'text' && o.text.startsWith('[PAID] :'))
     const qr = ops.find((o) => o.kind === 'qr')
-    // QR เริ่มหลังแถวสุดท้าย ([PAID]) และจบที่ขอบล่างหน้าพอดี — ไม่ล้น
+    // QR เริ่มหลังแถวสุดท้าย ([PAID]) และจบเหนือขอบล่าง ~5% — ไม่ล้น
     expect(qr && qr.kind === 'qr' ? qr.y : -1).toBeGreaterThanOrEqual((paid?.y ?? 0) + 22)
-    expect(qr && qr.kind === 'qr' ? qr.y + qr.size : -1).toBe(STICKER_PX_H - 16)
+    expect(qr && qr.kind === 'qr' ? qr.y + qr.size : -1).toBe(STICKER_PX_H - Math.round(STICKER_PX_H * STICKER_BOTTOM_PCT))
     expect(qr && qr.kind === 'qr' ? qr.y + qr.size : 999).toBeLessThanOrEqual(STICKER_PX_H)
   })
 })

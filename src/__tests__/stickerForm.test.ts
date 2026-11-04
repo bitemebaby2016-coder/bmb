@@ -1,5 +1,6 @@
 // ============================================
 // Bite Me Baby — R56 tests: stickerForm (แปลงออเดอร์ → ช่องแบบฟอร์มสติกเกอร์)
+// · R66 (2026-11-04): ORDER LIST ≤ 4 บรรทัด (block ป้าย + เว้นว่าง 3) · เนื้อหาไหลต่อเนื่อง
 // จุดเดียวที่ HTML (printService) กับ PNG (stickerPng) อ่านร่วมกัน ⇒ สองทางพิมพ์ตรงกัน
 // ============================================
 import { describe, it, expect } from 'vitest'
@@ -42,7 +43,7 @@ describe('R56 — stickerForm: แปลงออเดอร์เป็นช�
     expect(detectStickerPaid({ ...base, payment_method: 'promptpay_qr' })).toBe('promptpay_qr')
     expect(detectStickerPaid({ ...base, payment_method: 'cash_on_delivery' })).toBe('cash_on_delivery')
     expect(detectStickerPaid({ ...base, payment_method: 'bank_transfer' })).toBe('bank_transfer')
-    // Owner: "ต้องใส่ข้อมูลให้ครบทุกอัน ... ลิงก์จากรายละเอียดจริง" ⇒ ทุกค่าใน enum DB
+    // Owner: "ต้องใส่ข้อมูลให้ครบทุกอัน ... ลิงก์จากรายละเอียจจริง" ⇒ ทุกค่าใน enum DB
     // (promptpay_qr | credit_card | cash_on_delivery) ต้องมีช่อง = ใบเสร็จติ๊กครบเสมอ ไม่เว้นวรรคเปล่า
     expect(detectStickerPaid({ ...base, payment_method: 'credit_card' })).toBe('bank_transfer')
     expect(detectStickerPaid({ ...base, payment_method: 'CREDIT_CARD' })).toBe('bank_transfer')
@@ -110,16 +111,19 @@ describe('R56 — stickerForm: แปลงออเดอร์เป็นช�
     expect(f.modePreOrder).toBe(false)
     expect(f.modeSameDay).toBe(false)
   })
-
-  it('packStickerLines: ≤ 3 บรรทัด · เกิน = ตัดด้วย … · ว่าง = -', () => {
+  it('packStickerLines: ≤ 4 บรรทัด (R66: block ป้าย + เว้นว่าง 3) · เกิน = ตัดด้วย … · ว่าง = -', () => {
     expect(packStickerLines([])).toEqual(['-'])
     expect(packStickerLines(['เมนู1 x1'])).toEqual(['เมนู1 x1'])
-    // สั้นทุกตัว = รวมเป็นบรรทัดเดียว
+    // สั้นทุกตัว = รวมเป็นบรรทัดเดียว (ไหลต่อเนื่อง ไม่ใช่ 1 รายการ 1 บรรทัด)
     expect(packStickerLines(['a x1', 'b x1'])).toEqual(['a x1 · b x1'])
     const many = packStickerLines(Array.from({ length: 8 }, (_, i) => `เมนู${i + 1} x1`))
-    expect(many).toHaveLength(3)
-    expect(many[2]).toContain('…')
-    expect(many.join(' ')).not.toContain('เมนู8')
+    expect(many).toHaveLength(4) // R66: สูงสุด 4 แถว (ป้าย 1 + เว้นว่าง 3)
+    expect(many.join(' ')).toContain('เมนู8') // 8 รายการ = 4 แถวพอ (ไม่ถูกตัด)
     expect(many[0].startsWith('เมนู1')).toBe(true)
+    // เกิน 4 แถว = ตัด … ท้ายแถวสุดท้าย (รายการถัดไปไม่ถูกแสดง)
+    const over = packStickerLines(Array.from({ length: 11 }, (_, i) => `เมนู${i + 1} x1`))
+    expect(over).toHaveLength(4)
+    expect(over[3]).toContain('…')
+    expect(over.join(' ')).not.toContain('เมนู9')
   })
 })

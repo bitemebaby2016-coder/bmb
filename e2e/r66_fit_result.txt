@@ -1,0 +1,3 @@
+R66_FIT allPass=true {"noOverflow":true,"blanksReserved":true,"equalMargins":true,"bottomGapGe2mm":true}
+scrollH=222/222 blanks=[13.91,13.92] bottomGapPx=8.31
+EXITCODE=0 

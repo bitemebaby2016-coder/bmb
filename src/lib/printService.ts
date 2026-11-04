@@ -20,6 +20,11 @@
 //   - บังคับให้ print() ยิงแค่ครั้งเดียวต่อ frame (ไม่ setTimeout ซ้ำ)
 //   - frame ถูกลบหลัง afterprint event (ไม่ใช่ setTimeout)
 //   - ไม่ confirm ซ้ำถ้ามี dialog เปิดอยู่
+// R66 (2026-11-04) — จัดรูปแบบเทมเพลตสติกเกอร์ (Owner directive ทั้งข้อ):
+//   - ไม่ใส่สโตรค 3 คำ: BITE ME BABY (.brand) · [ DELIVERY / CUSTOMER ] (.sec) · SCAN FOR MORE (.scan)
+//   - ORDER LIST = block คงที่ 4 แถว (ป้าย + เว้นว่าง 3) — เนื้อหาไหลต่อเนื่อง ไม่ใช่ 1 รายการ 1 บรรทัด
+//   - ช่องไฟระหว่างบรรทัดเท่ากัน (margin .4px ทุกแถว · line-height คงที่ทั้งใบ)
+//   - เว้นว่างด้านล่าง ~5% (padding-bottom 2.2mm + @page 0.6mm) · แถวว่าง ORDER LIST ดูดพื้นที่ว่างเอง (ไม่แย่ง QR)
 // ============================================
 import { supabase } from './supabase'
 import {
@@ -80,7 +85,7 @@ export interface PrinterSettings {
   // R34 (Owner 2026-10-30 — "ยังข้ามดวง"): ความสูงหน้าดวงจริง (px @300dpi) — 709 = 40×60 มาตรฐาน
   // ถ้าใบวัดฟีดโชว์เส้นขอบล่างเลยขอบดวงจริง = หน้าสั้นกว่า 709 → ใส่ค่าที่วัดได้ (QR ผูกขอบล่างอัตโนมัติ)
   stickerFaceHPx?: number
-  // R51 (Owner: "สั่งพิม เครื่องส่งเสียงยืนยัน แต่ปริ้นไม่ออก"): ความเข้มหัวฉีด Bluetooth 1-5
+  // R51 (Owner: "สั่งพิม เคร... (density): 1-5 — ค่า default 3 = ค่าเดิมไม่เปลี่ยนพฤติกรรม)
   // (default 3 = ค่าเดิมไม่เปลี่ยนพฤติกรรม) — กระดาษจาง/ไม่ยอมออก = ลองเพิ่มเป็น 4-5 ที่แผง Bluetooth
   stickerDensity?: number
   paperWidthMm: number
@@ -95,7 +100,6 @@ export interface PrinterSettings {
   /** ชื่อเครื่องพิมพ์ตามที่ QZ/OS รายงาน (สติกเกอร์ใบเสร็จ+ครัวใช้เครื่องเดียวกัน) */
   qzPrinterName?: string
 }
-
 /** โมเดลที่ระบบมี preset ให้ (Nimbot B1Pro = เครื่องที่ร้านใช้อยู่ตอนนี้) */
 export type PrinterModel = 'nimbot_b1pro' | 'thermal_80' | 'thermal_58' | 'other'
 
@@ -174,7 +178,6 @@ const FULFILLMENT_LABELS: Record<string, string> = {
   linemen_rider: 'Lineman',
   foodpanda_rider: 'foodpanda',
 }
-
 function itemsRowsHtml(items: PrintOrderLine[]): string {
   return items
     .map((it) => {
@@ -252,7 +255,6 @@ ${pickupBlock}
 <div class="center sub">ขอบคุณที่อุดหนุน Bite Me Baby</div>
 </body></html>`
 }
-
 /** Kitchen ticket — item-focused, no prices (pure builder, unit-tested). */
 export function buildKitchenTicketHtml(o: PrintOrderData, paperWidthMm = 80): string {
   const items = o.items
@@ -273,13 +275,14 @@ ${o.special_instructions ? `<hr><div class="item">หมายเหตุรว
 // ============================================================
 // R27 (Owner 2026-10-30) — เทมเพลตสติกเกอร์ BMB 40×60 (ใบเสร็จ + ครัว = ใบเดียวกัน)
 // R56 (Owner 2026-11-02) — เปลี่ยนแบบฟอร์มใหม่ตามภาพที่แนบ (ขนาด 40×60 เดิม)
+// R66 (Owner 2026-11-04) — จัดรูปแบบเทมเพลต (ดูหัวไฟล์)
 // ============================================================
 // แบบจากที่ Owner วาดในแอป Nimbot (Templates-BmB · กระดาษ TT40*60-125transparent):
 //   BITE ME BABY · " More Than Dellicious " · เส้นคั่น
 //   Date : …            TIME : …
 //   ○ Pre-Order  ○ Same Day
 //   ○ ทานที่ร้าน  ○ สั่งกลับบ้าน  ○ รับที่ร้าน
-//   ORDER ID : … · ORDER LIST : … (ต่อ ": …" ได้ 2 บรรทัด) · NOTICE : …
+//   ORDER ID : … · ORDER LIST : … (R66: block 4 แถวคงที่ — ป้าย + เว้นว่าง 3 · เนื้อหาไหลต่อเนื่อง)
 //   [ DELIVERY / CUSTOMER ] · Attn : ชื่อ (โทร) · Add : ที่อยู่
 //   [ TOTAL NET ] : … THB · [PAID] : ○ B/T  ○ QR PROMPTPAY  ○ COD
 //   QR + SCAN FOR MORE + Thank You for love !
@@ -292,6 +295,8 @@ const STICKER_QR_URL = 'https://biteme-baby.com'
 /** วงกลมติ๊ก/ไม่ติ๊ก — ● = อันที่ตรงกับออเดอร์นี้ (แบบ Owner วาดทุกช่องเป็น ○ ไว้ก่อน) */
 const CIRCLE_ON = '●'
 const CIRCLE_OFF = '○'
+/** R66: ORDER LIST = ป้าย 1 แถว + เว้นว่างต่อ 3 บรรทัด (block คงที่ 4 แถวเสมอ — PNG ฝั่งเดียวกัน) */
+const STICKER_OL_ROWS = 4
 
 export async function buildBmbStickerHtml(o: PrintOrderData, at: Date | number = Date.now()): Promise<string> {
   let qrImg = ''
@@ -310,57 +315,69 @@ export async function buildBmbStickerHtml(o: PrintOrderData, at: Date | number =
   const markMode = (on: boolean) => (on ? CIRCLE_ON : CIRCLE_OFF)
   const markSvc = (k: StickerServiceKey) => (f.service === k ? CIRCLE_ON : CIRCLE_OFF)
   const markPaid = (k: StickerPaidKey) => (f.paid === k ? CIRCLE_ON : CIRCLE_OFF)
-  // บรรทัดแรกหลัง "ORDER LIST :" · บรรทัดต่อไปหลัง ":" (ตรงแบบ Owner — ':' ชิดซ้าย)
-  const orderList = f.orderListLines
-    .map((ln, i) =>
-      i === 0
-        ? `<div class="f col"><b>ORDER LIST<i>:</i></b><span>${escapeHtml(ln)}</span></div>`
-        : `<div class="f col cont"><b>:</b><span>${escapeHtml(ln)}</span></div>`,
-    )
-    .join('')
+  // R66 (Owner): ORDER LIST = block คงที่ 4 แถว (ป้าย + เว้นว่าง 3) — เนื้อหาไหลต่อเนื่อง
+  //   จาก packStickerLines (ไม่ใช่ 1 รายการ 1 บรรทัด) · แถวว่าง = olblank (ยืด/หดดูดพื้นที่ว่างเอง
+  //   → ไม่แย่ง QR และไม่ให้ bottom เยอะเกินไป)
+  const olRows: string[] = []
+  for (let i = 0; i < STICKER_OL_ROWS; i++) {
+    const ln = f.orderListLines[i] ?? ''
+    if (i === 0) {
+      olRows.push(`<div class="f col"><b>ORDER LIST<i>:</i></b><span>${ln ? escapeHtml(ln) : '&nbsp;'}</span></div>`)
+    } else if (ln) {
+      olRows.push(`<div class="f col cont"><b>:</b><span>${escapeHtml(ln)}</span></div>`)
+    } else {
+      olRows.push(`<div class="f col cont olblank"><b>&nbsp;</b><span>&nbsp;</span></div>`)
+    }
+  }
+  const orderList = olRows.join('')
   const qrBlock = qrImg
     ? `<img src="${qrImg}" alt="QR">`
     : `<div class="ph">${STICKER_QR_URL.replace('https://', '')}</div>`
 
   return `<!doctype html><html lang="th"><head><meta charset="utf-8"><title>สติกเกอร์ ${escapeHtml(o.order_number)}</title><style>
-  @page { size: ${BMB_STICKER_W_MM}mm ${BMB_STICKER_H_MM}mm; margin: 0.8mm; }
+  @page { size: ${BMB_STICKER_W_MM}mm ${BMB_STICKER_H_MM}mm; margin: 0.6mm; }
   * { box-sizing: border-box; }
-  body { margin: 0; font-family: 'Tahoma', 'Leelawadee UI', sans-serif; font-size: 7.5px; color: #000; line-height: 1.16; }
+  body { margin: 0; font-family: 'Tahoma', 'Leelawadee UI', sans-serif; font-size: 7.5px; color: #000; line-height: 1.1; }
   /* R28: clamp ต่อสติกเกอร์ 1 ใบ — ของล้น = ตัดทิ้ง ไม่ดันไปหน้า 2 (Owner: ปริ้นออกมาเป็น 2 หน้า) */
-  .sheet { width: 38.4mm; height: 58.4mm; overflow: hidden; display: flex; flex-direction: column; }
-  .brand { text-align: center; font-size: 12px; font-weight: 800; letter-spacing: .3px; margin: 0; flex: 0 0 auto; }
-  .tag { text-align: center; font-family: Georgia, 'Times New Roman', serif; font-style: italic; font-size: 6.6px; letter-spacing: 1px; margin: 1px 0 1.5px; flex: 0 0 auto; }
-  hr.rule { border: 0; border-top: 1.6px solid #000; margin: 1.2px 0; flex: 0 0 auto; }
+  /* R66: padding-bottom 2.2mm + @page 0.6mm = เว้นว่างด้านล่าง ~5% ตามคำสั่ง Owner */
+  .sheet { width: 38.8mm; height: 58.8mm; padding-bottom: 2.2mm; overflow: hidden; display: flex; flex-direction: column; }
+  .brand { text-align: center; font-size: 11.5px; font-weight: 800; letter-spacing: .3px; margin: 0; flex: 0 0 auto; }
+  .tag { text-align: center; font-family: Georgia, 'Times New Roman', serif; font-style: italic; font-size: 6.6px; letter-spacing: 1px; margin: .3px 0 .5px; flex: 0 0 auto; }
+  hr.rule { border: 0; border-top: 1.4px solid #000; margin: .7px 0; flex: 0 0 auto; }
+  /* R66: ช่องไฟระหว่างบรรทัดเท่ากัน — margin .4px ทุกแถว (line-height คงที่จาก body) */
   .dtrow { display: flex; justify-content: space-between; margin: .4px 0; font-size: 7.8px; flex: 0 0 auto; }
   .opts { display: flex; justify-content: center; gap: 5px; margin: .4px 0; white-space: nowrap; flex: 0 0 auto; }
   /* R59 (Owner): หัวข้อ Pre-Order/Same Day + บรรทัด ทานที่ร้าน/สั่งกลับบ้าน/รับที่ร้าน = เท่ากัน · ใหญ่สุดเท่าที่จะใหญ่ได้
      = 9px (วัดจริง e2e/r59_sticker_fit.json: svc@9 = 142.98/145px · combined mode+svc9+paid7 = scrollH 221 = 221 ไม่ล้น · @10 ล้น) */
   .opts.mode { font-size: 9px; }
   .opts.svc { font-size: 9px; }
-  .f { display: flex; margin: .3px 0; font-size: 7.5px; flex: 0 0 auto; }
+  .f { display: flex; margin: .4px 0; font-size: 7.5px; flex: 0 0 auto; }
   .f b { font-weight: 700; }
   /* คอลัมน์ป้าย 15.5mm — ป้ายชิดซ้าย ':' ชิดขวา (colon ตรงแนวทุกแถว) ค่าเริ่มหลังป้าย */
   .f.col b { flex: 0 0 15.5mm; display: flex; justify-content: space-between; }
   .f.col b i { font-style: normal; }
   .f > span { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; }
   .f.nat b { flex: 0 0 auto; margin-right: 2px; }
-  .sec { font-size: 8px; font-weight: 700; margin: .8px 0 .4px; flex: 0 0 auto; }
-  /* R59: แถว [PAID] ใหญ่สุดที่พอดี = 7px (วัด: @7 = 140.75/145 ✓ · @7.8 = 154.8 ล้น) — วงกลม ○/● ใหญ่ขึ้นตามแถว */
-  .paid { display: flex; margin: .3px 0; font-size: 7px; white-space: nowrap; flex: 0 0 auto; }
+  /* R66: แถวว่างของ ORDER LIST = จองพื้นที่ 3 บรรทัด · ยืด/หดเองตามพื้นที่ว่าง (ไม่แย่ง QR ไม่ล้น) */
+  .f.olblank { flex: 1 1 auto; min-height: 3px; margin: 0; }
+  .sec { font-size: 8px; font-weight: 700; margin: .4px 0; flex: 0 0 auto; }
+  /* R59: แถว [PAID] ใหญ่สุดที่พอดี = 7px (วัด: @7 = 140.75/145px ✓ · @7.8 ล้น) */
+  .paid { display: flex; margin: .4px 0; font-size: 7px; white-space: nowrap; flex: 0 0 auto; }
   .paid b { font-weight: 700; margin-right: 3px; }
   .paid span { margin-right: 5px; }
-  /* QR ผูกขอบล่างหน้า (margin-top:auto) — เนื้อบนเลื่อนด้วย offset แล้วก็ยังขอบล่าง */
-  .qrwrap { display: flex; gap: 1.2mm; align-items: center; margin-top: auto; padding-top: 1.5px; flex: 0 0 auto; }
+  /* QR ต่อจากเนื้อหา — R66: ไม่ใช้ margin-top:auto (แถวว่าง ORDER LIST ดูดพื้นที่ว่างเอง) */
+  .qrwrap { display: flex; gap: 1.2mm; align-items: center; margin-top: .6px; padding-top: .4px; flex: 0 0 auto; }
   .qrwrap img { width: 12mm; height: 12mm; display: block; }
   .qrwrap .ph { width: 12mm; height: 12mm; border: 1px dashed #000; display: flex; align-items: center; justify-content: center; font-size: 5px; text-align: center; word-break: break-all; }
   .qrtext { flex: 1; text-align: center; min-width: 0; }
   .scan { font-weight: 800; font-size: 8.4px; letter-spacing: .1px; white-space: nowrap; }
   .ty { font-family: 'Brush Script MT', Georgia, cursive; font-style: italic; font-size: 7px; margin-top: 1.5px; }
   /* R51 (Owner: ตัวอักษรเป็นตัวหนา/จางทั้งใบ — โดยเฉพาะตัวเล็ก + รายละเอียดลูกค้า):
-     stroke ทุกตัวอักษร (สีเดียวกับ fill = หนาขึ้น ไม่เปลี่ยนสี) ผ่านทั้ง dialog และ QZ
+     stroke ทุกตัวอักษร (สีเดียวกับ fill = หนาขึ้น ไม่เปลี่ยนสี) ผ่านทั้ง dialog และ QZ ชั้นเดียว
      R59 (Owner): "ใส่สโตรคให้สำหรับข้อมูลที่เอไอพิมด้วย · หัวข้อต้นแบบจากเทมเพลต Owner ใส่สโตรคให้แล้วไม่ต้องใส่ซ้ำ"
-     = กฎ .sheet * ตัวนี้ครอบ "ค่าหลัง : ทุกช่อง (AI พิม)" และหัวข้อพร้อมกัน ชั้นเดียว — ไม่เพิ่ม rule ซ้ำที่ไหน */
-  .sheet, .sheet * { -webkit-text-stroke: 0.35px #000; paint-order: stroke fill; }
+     R66 (Owner 2026-11-04): "Bite me baby · DELIVERY/CUSTOMER · SCAN FOR MORE ไม่ต้องใส่สโตรค"
+     = ยกเว้น .brand / .sec / .scan — ที่เหลือ (ค่าทุกช่องที่เอไอพิม + หัวข้ออื่น) stroke เหมือนเดิม ชั้นเดียว */
+  .sheet *:not(.brand):not(.sec):not(.scan) { -webkit-text-stroke: 0.35px #000; paint-order: stroke fill; }
   </style></head><body>
   <div class="sheet">
   <p class="brand">BITE ME BABY</p>
@@ -389,7 +406,6 @@ export async function buildBmbStickerHtml(o: PrintOrderData, at: Date | number =
   </div>
   </body></html>`
 }
-
 // ---------- print execution (browser fallback) ----------
 
 /** Opens a hidden iframe and triggers the browser print dialog. Returns the
@@ -490,7 +506,6 @@ export async function markPrintJob(jobId: string, status: PrintJobStatus, error?
   }
   return true
 }
-
 /** Full auto-print pass for one order: render + print every pending job of the
  *  given type. Returns per-job results — the ORDER itself is never affected by
  *  print failures (print is an async side-effect, order is the source of truth). */
@@ -596,7 +611,6 @@ export function createPrinterDef(input: {
     active: true,
   }
 }
-
 /** เพิ่ม/แก้ไขเครื่องพิมพ์ (id เดิม = แทนที่แถวเดิม) */
 export function upsertPrinter(settings: PrinterSettings, def: PrinterDef): PrinterSettings {
   const list = [...(settings.printers ?? [])]
@@ -669,7 +683,7 @@ export interface PrintableOrder {
   payment_method?: string | null
   payment_status?: string | null
   delivery_method?: string | null
-  /** R56: ที่อยู่ส่ง (แถว orders select '*' มีคอลัมนี้อยู่แล้ว) */
+  /** R56: ที่อยู่ส่ง (แถว orders select '*' มีคอลัมน์อยู่แล้ว) */
   delivery_address?: string | null
   pickup_code?: string | null
   order_mode?: string | null

@@ -1,0 +1,10 @@
+R66: sticker template reformat (Owner directive) — no-stroke 3 words · ORDER LIST 4-row block · equal line spacing · bottom ~5%
+
+- BITE ME BABY / [ DELIVERY / CUSTOMER ] / SCAN FOR MORE = ไม่ใส่สโตรค (PNG noStroke flag + HTML :not(.brand):not(.sec):not(.scan) rule เดียว)
+- ORDER LIST = block คงที่ 4 แถว (ป้าย + เว้นว่าง 3) · เนื้อหาไหลต่อเนื่อง packStickerLines maxLines 4 (ไม่ใช่ 1 รายการ 1 บรรทัด) · แถวว่าง HTML = olblank flex ดูด/ยืดพื้นที่เอง
+- ช่องไฟระหว่างบรรทัดเท่ากัน: PNG ROW=30 ทุกแถว · HTML margin .4px ทุกแถว + line-height 1.1
+- เว้นว่างด้านล่าง ~5%: PNG bottomReserve = face×5% (709→35px, QR จบที่ 674 เสมอทุก offset) · HTML sheet 58.8mm padding-bottom 2.2mm + @page 0.6mm
+- QR min 70px (กันทับเนื้อหาเมื่อ offset ใหญ่ · bottom-bound คงที่)
+
+Tests (Owner-directed spec changes — เปลี่ยน assertion ตามสเปกใหม่ ไม่ได้อ่อนข้อ): stickerForm 8 · stickerPng 18 · bmbSticker 12 · r35Contracts 5 = 43/43
+Evidence: e2e/r66_sticker_fit.json (allPass=true: noOverflow 222/222 · blanks 13.91px×2 · equalMargins · bottomGap 8.31px≈5%) · e2e/r66_fit_result.txt

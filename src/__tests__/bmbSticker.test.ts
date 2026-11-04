@@ -1,5 +1,6 @@
 // ============================================
 // Bite Me Baby — R27 unit tests: สติกเกอร์ BMB 40×60 (ใบเสร็จ+ครัว = ใบเดียวกัน)
+// · R66 (2026-11-04): ไม่ใส่สโตรค 3 คำ (.brand/.sec/.scan) · ORDER LIST block 4 แถว · sheet 58.8mm
 // ============================================
 import { describe, it, expect } from 'vitest'
 import {
@@ -65,25 +66,28 @@ describe('สติกเกอร์ BMB 40×60 — แบบฟอร์มต
     const live = await buildBmbStickerHtml(baseOrder)
     expect(live).toContain(new Date().toLocaleDateString('th-TH', { timeZone: 'Asia/Bangkok' }))
   })
-
-  it('R51: stroke ทุกตัวอักษรใน HTML template (กันตัวหนา) — text-stroke ระดับ .sheet * ทั้งใบ', async () => {
+  it('R51+R66: stroke ทุกตัวอักษรยกเว้น 3 คำที่ Owner สั่งไม่ใส่ (.brand/.sec/.scan) — rule เดียว', async () => {
     const html = await buildBmbStickerHtml(baseOrder)
     expect(html).toContain('-webkit-text-stroke: 0.35px #000')
-    expect(html).toContain('.sheet, .sheet *')
-    // source contract: อยู่ใน buildBmbStickerHtml (ใช้ทั้ง QZ + dialog)
+    // R66 (Owner 2026-11-04): "Bite me baby , DELIVERY/CUSTOMER, SCAN FOR MORE ไม่ต้องใส่สโตรค"
+    expect(html).toContain('.sheet *:not(.brand):not(.sec):not(.scan)')
+    expect(html).not.toContain('.sheet, .sheet *') // เลิกครอบ .brand/.sec/.scan
+    // source contract: อยู่ใน buildBmbStickerHtml (ใช้ทั้ง QZ + dialog) — stroke ชั้นเดียว ห้ามซ้ำ
     expect(printSrc).toContain('-webkit-text-stroke: 0.35px #000')
+    expect(html.match(/-webkit-text-stroke/g) || []).toHaveLength(1)
+    expect(html).toContain('paint-order: stroke fill')
   })
 
-  it('R59 (Owner): แถว ทานที่ร้าน/สั่งกลับบ้าน/รับที่ร้าน = เท่าหัวข้อ Pre-Order/Same Day · ใหญ่สุดตามวัด + [PAID] ใหญ่ขึ้น + stroke ชั้นเดียว', async () => {
+  it('R59+R66: แถว ทานที่ร้าน/สั่งกลับบ้าน/รับที่ร้าน = เท่าหัวข้อ Pre-Order/Same Day · ใหญ่สุดตามวัด + [PAID] + ช่องไฟเท่ากัน', async () => {
     const html = await buildBmbStickerHtml(baseOrder)
     // ทั้งสองแถว = 9px (เท่ากัน · ใหญ่สุดที่พอดี 145px — หลักฐาน e2e/r59_sticker_fit.json: svc@9=142.98 · @10 ล้น)
     expect(html).toContain('.opts.mode { font-size: 9px; }')
     expect(html).toContain('.opts.svc { font-size: 9px; }')
     // แถว [PAID] = 7px (ใหญ่สุดที่พอดี: @7=140.75 ✓ · @7.8=154.8 ล้น) — วงกลม ○/● ใหญ่ขึ้นตามแถว
-    expect(html).toContain('.paid { display: flex; margin: .3px 0; font-size: 7px;')
-    // stroke = rule เดียว `.sheet *` (ครอบค่าที่ AI พิม + หัวข้อจากแบบ Owner พร้อมกัน) — ห้ามมี rule stroke ซ้ำ
-    expect(html.match(/-webkit-text-stroke/g) || []).toHaveLength(1)
-    expect(html).toContain('paint-order: stroke fill')
+    expect(html).toContain('.paid { display: flex; margin: .4px 0; font-size: 7px;')
+    // R66: ช่องไฟระหว่างบรรทัดเท่ากัน — margin .4px ทุกแถว (.dtrow/.opts/.f/.sec/.paid)
+    expect(html).toContain('/* R66: ช่องไฟระหว่างบรรทัดเท่ากัน — margin .4px ทุกแถว')
+    expect((html.match(/margin: \.4px 0/g) || []).length).toBeGreaterThanOrEqual(5)
   })
 
   it('escapes HTML ของลูกค้า + ไม่มีบรรทัดราคาบนสติกเกอร์', async () => {
@@ -98,24 +102,32 @@ describe('สติกเกอร์ BMB 40×60 — แบบฟอร์มต
     expect(html).toMatch(/data:image\/|biteme-baby\.com/)
   })
 
-  it('R28: ล้น = ตัดในใบ .sheet ไม่ดันหน้า 2 · SCAN FOR MORE ไม่ wrap · เมนูเกิน 3 รายการ = …', async () => {
+  it('R28+R66: ล้น = ตัดในใบ .sheet (58.8mm) ไม่ดันหน้า 2 · SCAN ไม่ wrap · ORDER LIST block 4 แถวคงที่', async () => {
     const html = await buildBmbStickerHtml(baseOrder)
-    // clamp ต่อใบ (สูง 58.4mm ใน @page 60mm) — ของล้นถูกตัด ไม่ใช่หน้า 2
+    // clamp ต่อใบ (สูง 58.8mm ใน @page 60mm — R66: เว้นล่าง 2.2mm + margin .6mm) — ของล้นถูกตัด ไม่ใช่หน้า 2
     expect(html).toContain('.sheet')
-    expect(html).toContain('height: 58.4mm')
+    expect(html).toContain('height: 58.8mm')
+    expect(html).toContain('padding-bottom: 2.2mm') // R66: เว้นว่างด้านล่าง ~5%
     expect(html).toContain('overflow: hidden')
     expect(html).toContain('white-space: nowrap') // "SCAN FOR MORE" บรรทัดเดียว
-    // เมนู > 3 รายการ → ORDER LIST ต่อสูงสุด 3 บรรทัด แล้วตัดด้วย … (รายการถัดไปไม่ถูกแสดง)
+    // R66: ORDER LIST = block 4 แถวคงที่ — baseOrder (2 รายการ → 2 แถว) เหลือแถวว่าง olblank จองไว้
+    expect(html).toContain('olblank')
+    expect((html.match(/olblank/g) || []).length).toBeGreaterThanOrEqual(1)
+    // 8 รายการ = 4 แถวเต็ม (ไหลต่อเนื่อง ไม่ใช่ 1 รายการ 1 บรรทัด) — แสดงครบ
     const many = await buildBmbStickerHtml({
       ...baseOrder,
       items: Array.from({ length: 8 }, (_, i) => ({ product_name: `เมนู${i + 1}`, quantity: 1, unit_price: 0 })),
     })
     expect(many).toContain('เมนู1')
-    expect(many).toContain('เมนู3')
-    expect(many).not.toContain('เมนู7')
-    expect(many).toContain('…')
+    expect(many).toContain('เมนู8')
+    // เกิน 4 แถว = ตัดด้วย … (รายการถัดไปไม่ถูกแสดง)
+    const over = await buildBmbStickerHtml({
+      ...baseOrder,
+      items: Array.from({ length: 11 }, (_, i) => ({ product_name: `เมนู${i + 1}`, quantity: 1, unit_price: 0 })),
+    })
+    expect(over).toContain('…')
+    expect(over).not.toContain('เมนู9')
   })
-
   it('ทั้งใบเสร็จและใบสั่งครัว = buildBmbStickerHtml ผ่าน printViaTransport (source contract)', () => {
     expect(printSrc).toMatch(/await buildBmbStickerHtml\(payload\)/)
     expect(printSrc).toMatch(/const sticker = await buildBmbStickerHtml\(order\)/)

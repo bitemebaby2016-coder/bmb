@@ -1,10 +1,11 @@
 // ============================================
 // Bite Me Baby — R56: แปลงออเดอร์ → ช่องแบบฟอร์มสติกเกอร์ 40×60
+// R66 (Owner 2026-11-04): ORDER LIST เว้นว่างในฟอร์ม 3 บรรทัด · เนื้อหาต่อเนื่องจนล้นแถว
 // ============================================
 // แบบฟอร์มใหม่ตามที่ Owner วาดในแอป Nimbot (Templates-BmB · TT40*60-125transparent):
 //   BITE ME BABY · " More Than Dellicious " · เส้นคั่น
 //   Date : …  TIME : … · ○ Pre-Order ○ Same Day · ○ ทานที่ร้าน ○ สั่งกลับบ้าน ○ รับที่ร้าน
-//   ORDER ID : … · ORDER LIST : … (ต่อ ": …" ได้ 2 บรรทัด) · NOTICE : …
+//   ORDER ID : … · ORDER LIST : … (ต่อ ": …" ได้ 3 บรรทัดใต้ป้าย — R66) · NOTICE : …
 //   [ DELIVERY / CUSTOMER ] · Attn : ชื่อ (โทร) · Add : ที่อยู่
 //   [ TOTAL NET ] : … THB · [PAID] : ○ B/T ○ QR PROMPTPAY ○ COD
 //   QR + SCAN FOR MORE + Thank You for love !
@@ -17,6 +18,11 @@
 //      ⇒ Date/TIME = เวลา ณ ตอนพิมพ์ (default = now · ไม่อ่าน created_at/scheduled_date)
 //   ⇒ "การจ่ายเงิน BT / QR Promptpay / COD ต้องใส่ข้อมูลให้ครบทุกอัน ... ลิงก์จากรายละเอียดจริงของลูกค้า"
 //      ⇒ แสดงครบทั้ง 3 ช่องเสมอ + ติ๊ก ● จาก payment_method จริง (ทุกค่าใน DB มีช่องของตัวเอง)
+//
+// กติกา Owner (2026-11-04 — R66):
+//   ⇒ "ORDER LIST เว้นว่างในฟอร์มเทมเพลตเพิ่มเป็น 3 บรรทัด ถ้ามีหลายรายการให้เอไอพิมต่อยาว
+//      จนล้นต่อบรรทัด ไม่ต้องพิม 1 รายการ 1 บรรทัด" = block คงที่ 4 แถว (ป้าย + เว้นว่าง 3)
+//      เนื้อหา pack ต่อเนื่อง (ของเดิม pack แบบ flow อยู่แล้ว — เพิ่ม maxLines 3→4 + จองแถวว่างคงที่)
 //
 // โมดูลนี้ = จุดเดียวที่ "แปลง" → HTML (printService) และ PNG (stickerPng)
 //   ใช้ชุดค่าเดียวกัน ⇒ สองทางพิมพ์ตรงกันเสมอ (มี test บังคับ)
@@ -54,9 +60,13 @@ const PAID_METHOD_TO_OPTION: Record<string, StickerPaidKey> = {
   cod: 'cash_on_delivery',
 }
 
-/** บรรทัด ORDER LIST: รวมสูงสุด 3 บรรทัด (label 1 + ต่อ 2 — ตามแบบ) */
+/**
+ * R66 (Owner): "ORDER LIST เว้นว่างในฟอร์มเทมเพลตเพิ่มเป็น 3 บรรทัด"
+ * ⇒ block คงที่ 4 แถว = ป้าย 1 (มีค่าบรรทัดแรก) + เว้นว่าง/ค่า ต่ออีก 3 แถว
+ * เนื้อหาไหลต่อเนื่อง (~24 อักขระ/แถว · " · " คั่น) — ไม่ใช่ 1 รายการ 1 บรรทัด
+ */
 const ORDER_LIST_PER_LINE = 24
-const ORDER_LIST_MAX_LINES = 3
+const ORDER_LIST_MAX_LINES = 4
 
 export interface StickerFormFields {
   date: string
@@ -66,18 +76,17 @@ export interface StickerFormFields {
   /** หมวดบริการที่ต้องติ๊ก ● — null = ไม่มีข้อมูล (ไม่ติ๊กวงกลมไหน) */
   service: StickerServiceKey | null
   orderId: string
-  /** ค่าช่อง ORDER LIST — 1..3 บรรทัด (ว่าง = ['-']) · บรรทัดแรกหลัง "ORDER LIST :" ที่เหลือหลัง ":" */
+  /** ค่าช่อง ORDER LIST — 1..4 บรรทัด (ว่าง = ['-']) · แถวแรกหลัง "ORDER LIST :" ที่เหลือหลัง ":" */
   orderListLines: string[]
   notice: string
   /** "ชื่อลูกค้า (0812345678)" */
   attn: string
   add: string
-  /** ยอดสุทธิ 2 ตำแหน่ง (ไม่ใส่สกุล — แบบฟอร์มต่อ " THB" เอง) */
+  /** ยอดสุทธิ 2 ตำแหน่ง (1,234.50) */
   totalNet: string
   /** วิธีชำระที่ตรงกับ 1 ใน 3 ช่อง — null = ไม่อยู่ในช่องแบบ (เช่น credit_card) */
   paid: StickerPaidKey | null
 }
-
 /**
  * Date/TIME บนใบ = "เวลาปัจจุบัน ณ ตอนพิมพ์ใบเสร็จ" (Owner: "POS เวลารอบส่งไม่มีนะ ใช้เป็นดีฟอลต์
  * เวลาปัจจุบันลงเวลาพิมพ์ใบเสร็จ") ⇒ ไม่อ่าน created_at/scheduled_date · default = now
@@ -92,7 +101,7 @@ function dateParts(at: Date | number): { date: string; time: string } {
   }
 }
 
-/** ต่อรายการเป็นบรรทัด ≤ perLine อักขระ · สูงสุด maxLines · เกิน = ตัดด้วย '…' */
+/** ต่อรายการเป็นบรรทัด ≤ perLine อักขระ · สูงสุด maxLines (R66 = 4) · เกิน = ตัดด้วย '…' */
 export function packStickerLines(
   segs: string[],
   perLine = ORDER_LIST_PER_LINE,

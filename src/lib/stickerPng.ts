@@ -1,4 +1,7 @@
 // Bite Me Baby — R30: วาดสติกเกอร์ 40×60 เป็น PNG (canvas · 300dpi = 472×709)
+// R66 (Owner 2026-11-04): ช่องไฟระหว่างบรรทัดเท่ากัน (ROW คงที่) · ORDER LIST = block 4 แถวคงที่
+//   (ป้าย + เว้นว่าง 3) · ไม่ใส่สโตรค 3 คำ: BITE ME BABY · [ DELIVERY / CUSTOMER ] · SCAN FOR MORE
+//   · เว้นว่างด้านล่าง ~5% ของหน้า (QR จบเหนือขอบล่าง 5% — "เหลือที่ว่างด้านล่าง 15%→5%")
 // ทาง Web Bluetooth รับ "รูป" (fetch → rasterize ในไลบรารี) → วาดเทมเพลตเป็นภาพแทน HTML
 // layout = pure stickerDrawList (test ได้โดยไม่ต้องมี canvas) + executor (jsdom ไม่มี ctx → throw)
 import type { PrintOrderData } from './printService'
@@ -16,6 +19,12 @@ const CIRCLE_OFF = '○'
 export const STICKER_PX_W = 472 // 40mm @300dpi
 export const STICKER_PX_H = 709 // 60mm @300dpi
 const M = 16 // margin ~1.35mm
+/** R66: ช่องไฟระหว่างบรรทัดเท่ากัน — ระยะแนวตั้งคงที่ทุกแถวข้อความ (px @300dpi) */
+const ROW = 30
+/** R66: เว้นว่างด้านล่าง ~5% ของความสูงหน้า (709 → 35px ≈ 3 มม.) ตามคำสั่ง Owner "15%→5%" */
+export const STICKER_BOTTOM_PCT = 0.05
+/** R66: ORDER LIST = ป้าย 1 แถว + เว้นว่างต่อ 3 บรรทัด (block คงที่ 4 แถวเสมอ) */
+const ORDER_LIST_ROWS = 4
 
 /**
  * R33 (Owner: "พิมไม่ตรง/ข้ามดวง"): clamp ชดเชยฟีดแนวตั้ง (px @300dpi)
@@ -60,15 +69,15 @@ export function stickerPageHeight(offsetY: number, faceH = STICKER_PX_H): number
   void offsetY
   return clampFaceHeight(faceH)
 }
-
 export type StickerOp =
-  | { kind: 'text'; x: number; y: number; text: string; size: number; weight?: number | string; align?: 'left' | 'center' | 'right'; family?: string; italic?: boolean }
+  | { kind: 'text'; x: number; y: number; text: string; size: number; weight?: number | string; align?: 'left' | 'center' | 'right'; family?: string; italic?: boolean; /** R66: true = ไม่ใส่สโตรค (Owner ระบุ 3 คำ) */ noStroke?: boolean }
   | { kind: 'line'; x1: number; y1: number; x2: number; y2: number; w?: number }
   | { kind: 'rect'; x: number; y: number; w: number; h: number; fill?: string }
   | { kind: 'qr'; x: number; y: number; size: number }
 
 /** layout ล้วน = สะท้อน buildBmbStickerHtml (ป้ายซ้ายฝังตาย · ค่าจากแบบฟอร์ม) · คุมขอบ 472×pageH
- *  R33: offsetY ≠ 0 = เลื่อนทุก op แนวตั้ง (บวก=ลง) · พื้นหลังขาว = เต็มหน้าเสมอ (รวมแถบขาวส่วนที่ offset เติบโต/ว่าง) */
+ *  R33: offsetY ≠ 0 = เลื่อนทุก op แนวตั้ง (บวก=ลง) · พื้นหลังขาว = เต็มหน้าเสมอ
+ *  R66: ช่องไฟ ROW คงที่ทุกแถว · ORDER LIST block 4 แถวคงที่ · QR จบเหนือขอบล่าง 5% */
 export function stickerDrawList(o: PrintOrderData, offsetY = 0, faceH = STICKER_PX_H, at: Date | number = Date.now()): StickerOp[] {
   const off = clampFeedOffset(offsetY)
   const face = clampFaceHeight(faceH)
@@ -78,79 +87,78 @@ export function stickerDrawList(o: PrintOrderData, offsetY = 0, faceH = STICKER_
   const cx = STICKER_PX_W / 2
   const W = STICKER_PX_W
   // R56: ทุกช่องมาจาก stickerFormFields (จุดเดียวกับ HTML) — ป้ายซ้ายคงตาย ค่าจริงหลัง ":"
-  // at = เวลาพิมพ์ (default now — Date/TIME = เวลาตอนพิมพ์ กติกา Owner "POS ไม่มีเวลาเวลารอบส่ง")
   const f = stickerFormFields(o, at)
   const mark = (on: boolean) => (on ? CIRCLE_ON : CIRCLE_OFF)
   // คอลัมน์ค่า = 15.5mm (ตรงกับ .f.col ฝั่ง HTML) — ป้ายชิดซ้าย · ':' ชิดขวาของคอลัมน์
   const colX = M + 170
   const colonX = colX - 9
 
-  ops.push({ kind: 'text', x: cx, y: M + 30, text: 'BITE ME BABY', size: 34, weight: 800, align: 'center' })
+  // R66 (Owner): ไม่ใส่สโตรค 3 คำ — BITE ME BABY · [ DELIVERY / CUSTOMER ] · SCAN FOR MORE = fill อย่างเดียว
+  ops.push({ kind: 'text', x: cx, y: M + 30, text: 'BITE ME BABY', size: 34, weight: 800, align: 'center', noStroke: true })
   ops.push({ kind: 'text', x: cx, y: M + 58, text: '" More Than Dellicious "', size: 16, align: 'center', family: 'Georgia', italic: true })
   ops.push({ kind: 'line', x1: M, y1: M + 72, x2: W - M, y2: M + 72, w: 2 })
 
-  let y = M + 104
+  // R66: ทุกแถวข้อความห่างกันคงที่ ROW = ช่องไฟระหว่างบรรทัดเท่ากันทั้งใบ
+  let y = M + 102 // 118 = ใต้เส้นคั่น (88) + ROW
   // Date : …            TIME : …
   ops.push({ kind: 'text', x: M, y, text: 'Date :', size: 20, weight: 700 })
   ops.push({ kind: 'text', x: M + 84, y, text: f.date, size: 20 })
   ops.push({ kind: 'text', x: M + 244, y, text: 'TIME :', size: 20, weight: 700 })
   ops.push({ kind: 'text', x: M + 322, y, text: f.time, size: 20 })
-  y += 28
-  // ○ Pre-Order  ○ Same Day — R59: ใหญ่สุดเท่าที่จะใหญ่ได้ (วัด e2e/r59_sticker_fit.json: 26 = max ที่ svc row ยังพอดี 440px)
+  y += ROW
+  // ○ Pre-Order  ○ Same Day — R59: ใหญ่สุดเท่าที่จะใหญ่ได้ (26 = max ที่ svc row ยังพอดี 440px)
   ops.push({ kind: 'text', x: cx, y, text: `${mark(f.modePreOrder)} Pre-Order   ${mark(f.modeSameDay)} Same Day`, size: 26, align: 'center' })
-  // ระยะบรรทัดต้อง ≥ ขนาดฟอนต์ (26) — ไม่งั้นหัวแถว svc ทับท้ายแถว mode
-  y += 32
-  // ○ ทานที่ร้าน  ○ สั่งกลับบ้าน  ○ รับที่ร้าน — R59 (Owner): เท่ากับหัวข้อ Pre-Order/Same Day (=26) · วงกลมใหญ่ขึ้นตาม
+  y += ROW
+  // ○ ทานที่ร้าน  ○ สั่งกลับบ้าน  ○ รับที่ร้าน — R59 = 26 เท่าหัวข้อ
   const svcTxt = STICKER_SERVICE_KEYS.map((k) => `${mark(f.service === k)} ${STICKER_SERVICE_LABELS[k]}`).join('   ')
   ops.push({ kind: 'text', x: cx, y, text: svcTxt, size: 26, align: 'center' })
-  y += 34
+  y += ROW
   // ORDER ID : …
   ops.push({ kind: 'text', x: M, y, text: 'ORDER ID', size: 20, weight: 700 })
   ops.push({ kind: 'text', x: colonX, y, text: ':', size: 20, weight: 700 })
   ops.push({ kind: 'text', x: colX, y, text: f.orderId, size: 20 })
-  y += 28
-  // ORDER LIST : … (ต่อ ": …" ได้ 2 บรรทัด — บรรทัดต่อ ':' ชิดซ้ายตามแบบ)
-  f.orderListLines.forEach((ln, i) => {
+  y += ROW
+  // R66 (Owner): ORDER LIST = block คงที่ 4 แถว (ป้าย + เว้นว่าง 3) — เนื้อหาไหลต่อเนื่องจาก
+  //   packStickerLines (ไม่ใช่ 1 รายการ 1 บรรทัด) · แถวว่าง = ไม่ push อะไร (จองที่ด้วย y += ROW เสมอ)
+  for (let i = 0; i < ORDER_LIST_ROWS; i++) {
+    const ln = f.orderListLines[i] ?? ''
     if (i === 0) {
       ops.push({ kind: 'text', x: M, y, text: 'ORDER LIST', size: 20, weight: 700 })
       ops.push({ kind: 'text', x: colonX, y, text: ':', size: 20, weight: 700 })
-    } else {
+    } else if (ln) {
       ops.push({ kind: 'text', x: M, y, text: ':', size: 20, weight: 700 })
     }
-    ops.push({ kind: 'text', x: colX, y, text: ln, size: 19 })
-    y += 26
-  })
+    if (ln) ops.push({ kind: 'text', x: colX, y, text: ln, size: 19 })
+    y += ROW
+  }
   // NOTICE : …
   ops.push({ kind: 'text', x: M, y, text: 'NOTICE', size: 20, weight: 700 })
   ops.push({ kind: 'text', x: colonX, y, text: ':', size: 20, weight: 700 })
   ops.push({ kind: 'text', x: colX, y, text: f.notice, size: 19 })
-  y += 16
-  ops.push({ kind: 'line', x1: M, y1: y, x2: W - M, y2: y, w: 2 })
-  y += 30
-  // [ DELIVERY / CUSTOMER ]
-  ops.push({ kind: 'text', x: M, y, text: '[ DELIVERY / CUSTOMER ]', size: 21, weight: 700 })
-  y += 28
+  y += ROW
+  // เส้นคั่นกลางช่องว่างระหว่างแถว (ไม่เบียดช่องไฟ)
+  ops.push({ kind: 'line', x1: M, y1: y - 15, x2: W - M, y2: y - 15, w: 2 })
+  // [ DELIVERY / CUSTOMER ] — R66: ไม่ใส่สโตรค (Owner ระบุ)
+  ops.push({ kind: 'text', x: M, y, text: '[ DELIVERY / CUSTOMER ]', size: 21, weight: 700, noStroke: true })
+  y += ROW
   // Attn : ชื่อ (โทรศัพท์)
   ops.push({ kind: 'text', x: M, y, text: 'Attn :', size: 20, weight: 700 })
   ops.push({ kind: 'text', x: M + 86, y, text: f.attn, size: 20 })
-  y += 28
+  y += ROW
   // Add : ที่อยู่
   ops.push({ kind: 'text', x: M, y, text: 'Add :', size: 20, weight: 700 })
   ops.push({ kind: 'text', x: M + 74, y, text: f.add, size: 20 })
-  y += 16
-  ops.push({ kind: 'line', x1: M, y1: y, x2: W - M, y2: y, w: 2 })
-  y += 30
+  y += ROW
+  ops.push({ kind: 'line', x1: M, y1: y - 15, x2: W - M, y2: y - 15, w: 2 })
   // [ TOTAL NET ] : … THB
   ops.push({ kind: 'text', x: M, y, text: '[ TOTAL NET ] :', size: 20, weight: 700 })
   ops.push({ kind: 'text', x: M + 200, y, text: `${f.totalNet} THB`, size: 20 })
-  y += 28
-  // [PAID] : ○ B/T  ○ QR PROMPTPAY  ○ COD — R59: ใหญ่สุดที่พอดี = 20 (วัด: 421.5/440 ✓ · @21 = 442.6 ล้น)
+  y += ROW
+  // [PAID] : ○ B/T  ○ QR PROMPTPAY  ○ COD — R59: ใหญ่สุดที่พอดี = 20 (วัด: 421.5/440 ✓)
   const paidTxt = `[PAID] : ${STICKER_PAID_OPTIONS.map((p) => `${mark(f.paid === p.key)} ${p.label}`).join('   ')}`
   ops.push({ kind: 'text', x: M, y, text: paidTxt, size: 20, weight: 700 })
-  y += 22
 
   // R41: เลื่อนเฉพาะ "เนื้อหาส่วนบน" ลงตาม offset — หน้าคงที่ (pageH = face)
-  // บล็อก QR (ด้านล่างนี้) ผูกขอบล่างหน้าเอง = ไม่ถูกเลื่อน → ไม่ล้น/ไม่ข้ามดวงจาก offset
   if (off !== 0) {
     for (const op of ops) {
       if (op.kind === 'line') { op.y1 += off; op.y2 += off }
@@ -158,22 +166,23 @@ export function stickerDrawList(o: PrintOrderData, offsetY = 0, faceH = STICKER_
     }
   }
 
-  // บล็อก QR + ข้อความ (bottom) — ผูกขอบล่างหน้าจริง + ย่อขนาดเองให้พอดีใต้เนื้อหา
-  // (หน้าสั้น/offset ใหญ่ = QR เล็กลงแทนที่จะทับข้อความ · ไม่มีบรรทัดไทยใต้ QR ตามแบบใหม่)
-  const contentBottom = y + off
-  const avail = face - 2 * M - contentBottom - 12
-  const qrSize = Math.max(110, Math.min(150, Math.round(avail)))
-  const qrY = face - M - qrSize
+  // บล็อก QR + ข้อความ (bottom) — R66: จบเหนือขอบล่าง ~5% ของหน้า ("ใช้ให้เต็มที่ … เหลือ ~5% พอ")
+  // qrY + qrSize = face − bottomReserve "เสมอ" (ขอบล่างคงที่ทุก offset/face — min 70 กันทับเนื้อหาเมื่อ offset ใหญ่)
+  const contentBottom = y + 16 + off // y = แถว [PAID] (baseline) + ใต้ baseline เล็กน้อย (+ offset ที่เลื่อนไปแล้ว)
+  const bottomReserve = Math.round(face * STICKER_BOTTOM_PCT)
+  const avail = face - bottomReserve - contentBottom - 8
+  const qrSize = Math.max(70, Math.min(150, Math.round(avail)))
+  const qrY = face - bottomReserve - qrSize
   ops.push({ kind: 'qr', x: M, y: qrY, size: qrSize })
   const tx = M + qrSize + 12
   const mid = tx + (W - tx - M) / 2
-  ops.push({ kind: 'text', x: mid, y: qrY + Math.round(qrSize * 0.42), text: 'SCAN FOR MORE', size: 24, weight: 800, align: 'center' })
+  // R66: SCAN FOR MORE = ไม่ใส่สโตรค (Owner ระบุ)
+  ops.push({ kind: 'text', x: mid, y: qrY + Math.round(qrSize * 0.42), text: 'SCAN FOR MORE', size: 24, weight: 800, align: 'center', noStroke: true })
   ops.push({ kind: 'text', x: mid, y: qrY + Math.round(qrSize * 0.8), text: 'Thank You for love !', size: 20, align: 'center', family: 'Georgia', italic: true })
 
   // พื้นหลัง = ปิดท้าย (วาดใต้ทุกอย่างตามลำดับ array → ต้องอยู่หน้าสุด) เต็มหน้า (R41: pageH = face คงที่)
   return [{ kind: 'rect', x: 0, y: 0, w: STICKER_PX_W, h: pageH, fill: '#ffffff' }, ...ops]
 }
-
 /**
  * R33 — ใบวัดฟีด (calibration ruler): เส้นขีดทุก 20px + ป้าย px/mm ทุก 100px
  * พิมพ์ด้วย offset = เสมอ 0 (วัดค่า raw ของเครื่อง) → "เส้นไหนตรงขอบบนดวงจริง = ค่าชดเชยฟีดที่ต้องใส่"
@@ -244,14 +253,13 @@ async function rasterizeOps(ops: StickerOp[], pageH: number): Promise<string> {
       const style = op.italic ? 'italic ' : ''
       const weight = op.weight != null ? String(op.weight) : 'normal'
       ctx.font = `${style}${weight} ${op.size}px ${op.family || 'Tahoma'}, sans-serif`
-      // R51 (Owner: "ข้อความตัวเล็กที่ไม่ได้ stroke … ทุกตัวอักษรเป็นตัวหนาหมด"):
-      // stroke ทุก op (รวมตัวเล็ก + บรรทัด CUSTOMER/รายละเอียดลูกค้า) ก่อนทับด้วย fill —
-      // เส้นหนาขึ้น ~size/14 px คมชัดบนหัวฉีดความร้อน ไม่จาง/เป็นฝ้า
+      // R51 (Owner: "ข้อความตัวเล็ก ... ทุกตัวอักษรเป็นตัวหนาหมด"): stroke ทุก op ก่อนทับ fill — หนาขึ้น ~size/14
+      // R66 (Owner 2026-11-04): ยกเว้น 3 คำที่สั่ง "ไม่ต้องใส่สโตรค" = noStroke (BITE ME BABY · [ DELIVERY / CUSTOMER ] · SCAN FOR MORE)
       ctx.lineJoin = 'round'
       ctx.lineCap = 'round'
       ctx.strokeStyle = '#000'
       ctx.lineWidth = Math.max(1, Math.round(op.size / 14))
-      ctx.strokeText(op.text, op.x, op.y)
+      if (op.noStroke !== true) ctx.strokeText(op.text, op.x, op.y)
       ctx.fillText(op.text, op.x, op.y)
     } else if (op.kind === 'qr') {
       if (qrImg && qrImg.naturalWidth > 0) {

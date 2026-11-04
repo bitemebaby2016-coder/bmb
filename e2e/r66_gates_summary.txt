@@ -1,0 +1,4 @@
+[2m Test Files [22m [1m[32m204 passed[39m[22m[90m (204)[39m
+[2m      Tests [22m [1m[32m2025 passed[39m[22m[90m (2025)[39m
+TSC_EXIT=0 
+LINT_EXIT=0 

@@ -1,0 +1,18 @@
+{
+  "sheetH": 222,
+  "sheetScrollH": 222,
+  "overflow": false,
+  "blankRowHeights": [
+    13.91,
+    13.92
+  ],
+  "qrBottomGapPx": 8.31,
+  "equalMargins": true,
+  "pass": {
+    "noOverflow": true,
+    "blanksReserved": true,
+    "equalMargins": true,
+    "bottomGapGe2mm": true
+  },
+  "allPass": true
+}
