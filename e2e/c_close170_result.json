@@ -1,0 +1,46 @@
+{
+  "at": "2026-11-04T04:38:53.661Z",
+  "after": [
+    {
+      "order_number": "BMB-20261101-170",
+      "status": "delivered",
+      "payment_status": "paid",
+      "pickup_code": "395021",
+      "picked_up_at": "2026-11-04 04:38:04.39594+00",
+      "handed_by": "dddf4b57-405f-4852-a985-76d8d52b1b72",
+      "updated_at": "2026-11-04 04:38:04.39594+00"
+    }
+  ],
+  "audit": [
+    {
+      "action": "order_status_change",
+      "entity_type": "order",
+      "description": "order status ready_for_dispatch -> delivered",
+      "created_at": "2026-11-04 04:38:04.39594+00"
+    },
+    {
+      "action": "order_status_change",
+      "entity_type": "order",
+      "description": "kitchen: BMB-20261101-170 → ready_for_dispatch",
+      "created_at": "2026-11-01 10:27:38.180617+00"
+    },
+    {
+      "action": "order_status_change",
+      "entity_type": "order",
+      "description": "[BMB] order #BMB-20261101-170 status changed \"preparing\" -> \"ready_for_dispatch\"",
+      "created_at": "2026-11-01 10:27:37.742661+00"
+    },
+    {
+      "action": "order_status_change",
+      "entity_type": "order",
+      "description": "order status preparing -> ready_for_dispatch",
+      "created_at": "2026-11-01 10:27:37.338958+00"
+    },
+    {
+      "action": "order_status_change",
+      "entity_type": "order",
+      "description": "kitchen: BMB-20261101-170 → preparing",
+      "created_at": "2026-11-01 10:10:37.974482+00"
+    }
+  ]
+}

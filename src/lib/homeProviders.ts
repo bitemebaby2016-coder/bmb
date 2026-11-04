@@ -38,6 +38,7 @@ import type {
   AvailabilityState,
 } from '@/types'
 import { SOCIAL_PROOF_REVIEWS } from './socialProofReviews'
+import { masterClosedStatus } from './storeMaster'
 import { sameDayEligible, preorderEligible } from './talkToBite'
 import { roundBookability, roundCutoffLabel, roundCutoffMs } from './deliveryRoundStatus'
 import { bangkokMsOfDay } from './bangkokTime'
@@ -164,7 +165,13 @@ export function getStoreStatusFromRounds(rounds: Array<{
   operatingHours?: Record<string, boolean | undefined> | null
   /** ป้ายเวลาปิดจริงสำหรับ UI (เช่น '20:00') */
   hoursClose?: string
+  /** MASTER (migration 185): false = ปิดร้านแม้รอบ/เวลาบอกเปิด · null/undefined = ยังไม่รู้ → ไม่บัง */
+  masterOpen?: boolean | null
 }): StoreStatus {
+  // MASTER เหนือกฎทั้งหมด (Owner R66-B) — ตรวจก่อนรอบ/เวลา/cutoff ใด ๆ
+  if (opts?.masterOpen === false) {
+    return masterClosedStatus()
+  }
   const live = (rounds || []).filter((r) => {
     const s = String(r.status || '').toLowerCase()
     return s === 'active' || s === 'open'

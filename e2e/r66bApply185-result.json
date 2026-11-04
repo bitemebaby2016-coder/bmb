@@ -1,0 +1,37 @@
+{
+  "at": "2026-11-04T06:42:45.457Z",
+  "file": "185_admin_switches_master_category.sql",
+  "steps": [
+    {
+      "action": "applied",
+      "detail": "[]"
+    },
+    {
+      "action": "ledger_recorded",
+      "detail": "[]"
+    }
+  ],
+  "precheck": "[{\"version\":\"185\",\"name\":\"185_admin_switches_master_category.sql\"},{\"version\":\"184\",\"name\":\"184_pickup_hours_not_rounds.sql\"},{\"version\":\"183\",\"name\":\"183_promo_banner_mascot.sql\"}]",
+  "pre_trg": "[{\"n\":2}]",
+  "reload": "[]",
+  "verify": {
+    "seed": "[{\"value\":{\"open\":true}}]",
+    "columns": "[{\"column_name\":\"allow_pre_order\",\"is_nullable\":\"NO\",\"column_default\":\"true\"},{\"column_name\":\"allow_same_day\",\"is_nullable\":\"NO\",\"column_default\":\"true\"}]",
+    "fns": "[{\"proname\":\"store_master_is_open\",\"prosecdef\":true,\"reads_key\":true,\"master_msg\":false,\"cat_msg\":false},{\"proname\":\"trg_order_items_category_mode\",\"prosecdef\":true,\"reads_key\":false,\"master_msg\":false,\"cat_msg\":true},{\"proname\":\"trg_orders_master_gate\",\"prosecdef\":true,\"reads_key\":false,\"master_msg\":true,\"cat_msg\":false}]",
+    "triggers": "[{\"tbl\":\"orders\",\"tgname\":\"trg_orders_master_gate\",\"is_before_insert\":true},{\"tbl\":\"order_items\",\"tgname\":\"trg_order_items_category_mode\",\"is_before_insert\":true}]",
+    "grant": "[{\"anon_can_call\":true,\"auth_can_call\":true}]",
+    "ledgerTop": "[{\"version\":\"185\",\"name\":\"185_admin_switches_master_category.sql\"},{\"version\":\"184\",\"name\":\"184_pickup_hours_not_rounds.sql\"},{\"version\":\"183\",\"name\":\"183_promo_banner_mascot.sql\"}]"
+  },
+  "ALL_PASS": true,
+  "checks": {
+    "seedOpenTrue": true,
+    "columns2": true,
+    "fns3": true,
+    "definer3": true,
+    "markers": true,
+    "triggersBEFOREInsert": true,
+    "trgTables": true,
+    "grantExec": true,
+    "ledger185": true
+  }
+}

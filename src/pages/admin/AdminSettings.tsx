@@ -12,12 +12,14 @@ import { THEATER_DAILY_COPY_KEY, THEATER_DAILY_COPY_STARTER } from '@/lib/theate
 import { SEO_SETTINGS_KEY, getSeoSettings, type SeoSettings } from '@/lib/seoSettings'
 import { STORE_STATUS_COPY_KEY, getStoreStatusCopy, setStoreStatusCopyLive, type StoreStatusCopy } from '@/lib/storeStatusCopy'
 import { supabase } from '@/lib/supabase'
+import { ToggleSwitch } from '@/components/admin/ToggleSwitch'
 // R21f: validate เวลาเปิด/ปิดของ "เวลาสาขา" ก่อน mirror ไป business_settings.hours
 import { parseHHMM } from '@/lib/shopHoursLogic'
 
 // C1/Q8 (audit D1 — "1 เรื่อง = 1 ที่"): key ที่มีฟอร์มเฉพาะทาง — generic editor
 // (JSON/JsonForm + Save All) ห้ามโชว์/ห้ามเขียน กันพิมพ์ค่าเสียแบบ 22P02 ซ้ำ
-const TYPED_FORM_KEYS = new Set<string>([SOCIAL_LINKS_SETTING_KEY, SEO_SETTINGS_KEY, STORE_STATUS_COPY_KEY, 'order_policy'])
+// R66-B: store_master_open มีฟอร์มสวิตช์เฉพาะ (Master Switch ด้านล่าง) — generic ห้ามเขียน
+const TYPED_FORM_KEYS = new Set<string>([SOCIAL_LINKS_SETTING_KEY, SEO_SETTINGS_KEY, STORE_STATUS_COPY_KEY, 'order_policy', 'store_master_open'])
 
 export function AdminSettings() {
   const [settings, setSettings] = useState<Record<string, any>>({})
@@ -70,8 +72,20 @@ export function AdminSettings() {
     showToast(allOk ? 'All settings saved' : 'Some settings failed', allOk ? 'success' : 'error')
     await load()
   }
-
-  // Add a key to the EXISTING key/value editor (nothing persists until Save).
+// R66-B — MASTER STORE SWITCH (business_settings.store_master_open · migration 185)
+  // false = ปิดร้านทั้งระบบ (server gate บล็อก INSERT ออเดอร์ใหม่ทุกช่องทาง · เหนือกฎเวลา/รอบ/สถานะสินค้า)
+  // ค่าอื่น/หายไป = เปิดร้าน (ZERO-FAKE — แถวเดิม/ค่าเริ่มต้นไม่โดนผลกระทบ)
+  async function handleToggleMaster(open: boolean) {
+    setSettings({ ...settings, store_master_open: open }) // optimistic — เด้ง UI ทันที
+    const ok = await setBusinessSetting('store_master_open', open)
+    showToast(
+      ok ? (open ? 'เปิดร้าน (Master) แล้ว — รับออเดอร์ทุกช่องทางตามปกติ' : 'ปิดร้าน (Master) แล้ว — ออเดอร์ใหม่ทุกช่องทางจะถูกบล็อกทันที')
+         : 'บันทึก Master Switch ไม่สำเร็จ — ลองใหม่',
+      ok ? 'success' : 'error',
+    )
+    await load()
+  }
+// Add a key to the EXISTING key/value editor (nothing persists until Save).
   // theater_daily_copy gets the 7-day starter template prefilled for review.
   function handleAddKey() {
     const key = newKey.trim()
@@ -126,8 +140,7 @@ export function AdminSettings() {
       await load()
     }
   }
-
-  // ลิงก์โซเชียล/LINE — แอดมินใส่เองได้ทีหลัง (คีย์ business_settings: social_links)
+// ลิงก์โซเชียล/LINE — แอดมินใส่เองได้ทีหลัง (คีย์ business_settings: social_links)
   // D-02 (R2.1): ฟอร์มนี้คือ "ทางบันทึกเดียว" ของ social_links — generic editor
   // ด้านบนถูกตัด key นี้ออกแล้ว (แก้ที่หนึ่งแล้วอีกที่เขียนทับ = บั๊กที่ Owner เจอ)
   async function saveSocials() {
@@ -236,9 +249,27 @@ export function AdminSettings() {
           </p>
         </div>
       )}
-
-      {/* ===== FINAL CONFIG CLOSURE: canonical นอก business_settings (RLS admin manage) ===== */}
+{/* ===== FINAL CONFIG CLOSURE: canonical นอก business_settings (RLS admin manage) ===== */}
       <div className="space-y-4 mt-8" data-testid="admin-config-external">
+        {/* R66-B (Owner): MASTER สวิตช์เปิด/ปิดร้านทั้งระบบ — เหนือกฎทั้งหมด (migration 185) */}
+        <h2 className="text-xl font-bold text-brand-accent">🛑 Master Switch (เปิด/ปิดร้านทั้งระบบ)</h2>
+        <div className="card" data-testid="store-master-switch">
+          <div className="flex items-center justify-between gap-3">
+            <div className="text-sm">
+              <div className="font-semibold">เปิดร้าน (Master Open)</div>
+              <div className="text-xs text-brand-muted">
+                ปิด = ออเดอร์ใหม่ทุกช่องทางถูกบล็อกทันที (หน้าแรก/เมนู/ตะกร้า/POS) — เหนือกฎเวลา เปิด-ปิด รอบ และสถานะสินค้า · ออเดอร์/งานที่วิ่งอยู่แล้วไม่กระทบ · ค่าเริ่มต้น = เปิด (ZERO-FAKE)
+              </div>
+            </div>
+            <ToggleSwitch
+              checked={settings.store_master_open !== false}
+              onChange={(v) => void handleToggleMaster(v)}
+              label={settings.store_master_open !== false ? 'เปิดร้าน' : 'ปิดร้าน'}
+              testId="store-master-open-toggle"
+            />
+          </div>
+        </div>
+
         <h2 className="text-xl font-bold text-brand-accent">📱 โซเชียล & LINE (แสดงในฟุตเตอร์)</h2>
         {socials && (
           <div className="card" data-testid="social-links-config">
@@ -268,8 +299,7 @@ export function AdminSettings() {
             <button onClick={() => void saveSocials()} className="btn btn-success text-sm mt-2">💾 บันทึกลิงก์โซเชียล</button>
           </div>
         )}
-
-        <h2 className="text-xl font-bold text-brand-accent">🔎 SEO / คำโปรยเว็บ</h2>
+<h2 className="text-xl font-bold text-brand-accent">🔎 SEO / คำโปรยเว็บ</h2>
         {seoCopy && (
           <div className="card" data-testid="seo-copy-config">
             <p className="text-xs text-brand-muted mb-2">
@@ -303,7 +333,7 @@ export function AdminSettings() {
           <div className="card" data-testid="store-status-copy-config">
             <p className="text-xs text-brand-muted mb-2">
               แก้ข้อความแถบสถานะร้านได้เอง 4 บรรทัด — <strong>ไฟ 🟢/🔴 สองบรรทัดยังเปิด/ปิดอัตโนมัติจากรอบจริงเสมอ</strong>{' '}
-              (เปลี่ยนจากที่นี่ไม่ได้) · ป้าย &quot;📅 Pre-Order / จองล่วงหน้า : … รอบส่งถัดไป …&quot; เป็นข้อมูลสดก็แก้ตรงนี้ไม่ได้{' '}
+              (เปลี่ยนจากที่นี่ไม่ได้) · ป้าย "📅 Pre-Order / จองล่วงหน้า : … รอบส่งถัดไป …" เป็นข้อมูลสดก็แก้ตรงนี้ไม่ได้{' '}
               (คีย์ <code>store_status_copy</code> · ผู้ชมเห็น ≤7 นาที หรือ reload)
             </p>
             <label className="text-xs flex flex-col gap-1">
@@ -345,8 +375,7 @@ export function AdminSettings() {
             <button onClick={() => void saveStatusCopy()} className="btn btn-success text-sm mt-2">💾 บันทึกข้อความแถบสถานะ</button>
           </div>
         )}
-
-        <h2 className="text-xl font-bold text-brand-accent">🚚 ค่าส่ง/โซน (อยู่ที่ศูนย์ขนส่ง)</h2>
+<h2 className="text-xl font-bold text-brand-accent">🚚 ค่าส่ง/โซน (อยู่ที่ศูนย์ขนส่ง)</h2>
         <div className="card text-sm" data-testid="zones-moved">
           จัดการค่าส่งตามระยะ (delivery_zones) ทั้งหมดที่{' '}
           <Link to="/admin/delivery?tab=fees" className="text-brand-primary font-semibold">การขนส่ง → แท็บค่าส่ง/โซน</Link>
@@ -402,7 +431,7 @@ function JsonForm({ value, onChange }: { value: any; onChange: (v: any) => void 
             onChange={(e) => {
               const next = { ...value }
               const raw = e.target.value
-              next[k] = /^-?\d+(\.\d+)?$/.test(raw) ? Number(raw) : raw
+              next[k] = /^-?\d+(\.\d+)?$/.test(raw) ? Number(e.target.value) : e.target.value
               onChange(next)
             }}
           />

@@ -1,0 +1,20 @@
+R66-B: admin switches — master store open/close > all rules + per-category SAME_DAY/PRE_ORDER (migration 185)
+
+- migration 185 (APPLIED + verified on production): seed business_settings.store_master_open
+  (default open) · product_categories.allow_same_day/allow_pre_order (NOT NULL default true,
+  additive) · store_master_is_open() SECURITY DEFINER reader (ZERO-FAKE) · trg_orders_master_gate
+  BEFORE INSERT orders -> ERR_STORE_CLOSED (all channels, updates untouched) ·
+  trg_order_items_category_mode BEFORE INSERT order_items -> ERR_CATEGORY_MODE_NOT_ALLOWED
+- client: storeMaster.ts (4-form parse) · shopHours loads masterOpen · getStoreStatusFromRounds
+  checks master FIRST (above rounds/hours/cutoff) · HomePage threads masterOpen ·
+  per-product switch = products.is_available (existing, Owner-confirmed single switch)
+- admin UI: AdminSettings Master Switch card (store-master-open-toggle, TYPED_FORM_KEYS blocks
+  generic writer) · AdminProducts 2 category toggles (allow-sameday/allow-preorder) + payloads ·
+  bmbAdminApi_products CategoryForm/create/update flags · ProductCategory type fields
+- tests: new r66AdminSwitches.test.ts (11: unit + migration contract + source contracts) ·
+  extended TYPED_FORM_KEYS expectations in adminSettingsTypedKeys/r12SeoAdminCopy/socialAiContinuity
+- gates: tsc EXITCODE=0 · vitest 205 files/2036 tests all pass · lint (eslint+brandNameGuard+
+  languageSanity) EXITCODE=0
+- evidence: e2e/r66bApply185-result.json ALL_PASS=9/9 · e2e/r66bBehavior185-result.json
+  contractPass+zeroPollution (G0-G6) · r56MigParity ALL_PASS local=ledger=185
+- method note: file edits via whole-file overwrite / line-assert scripts (no match-replace loops)

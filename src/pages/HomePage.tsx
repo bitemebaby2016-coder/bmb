@@ -54,6 +54,7 @@ import type { VerifiedCustomerReview, Product, ProductCategory, SameDayOrderPayl
 import { preOrderEntryPath, saleModeOfCategory, withPreOrderTab } from '@/lib/catalogStructure'
 import { scrollToSectionOrTop } from '@/lib/scrollTo'
 import { hoursToMs } from '@/lib/shopHoursLogic'
+import { parseStoreMasterOpen } from '@/lib/storeMaster'
 import { MascotBadge } from '@/components/MascotBadge'
 
 // ⚡ The Food Theater stage is code-split (aiServerMemory chain); it renders
@@ -91,6 +92,7 @@ export function HomePage() {
   // อ่านจาก business_settings (แอดมินแก้ได้ที่หน้าแอดมิน ไม่ต้อง deploy)
   const [shopHours, setShopHours] = useState<{ open: string; close: string } | null>(null)
   const [operatingHours, setOperatingHours] = useState<Record<string, boolean> | null>(null)
+  const [masterOpen, setMasterOpen] = useState<boolean | null>(null)
   // R21 Phase 3: โหลดล้มเหลว ≠ ร้านไม่มีเมนู + key สำหรับกด "ลองใหม่"
   const [loadError, setLoadError] = useState('')
   const [reloadKey, setReloadKey] = useState(0)
@@ -133,6 +135,7 @@ export function HomePage() {
               setShopHours({ open: sh.open, close: sh.close })
             }
             setOperatingHours((settings?.operating_hours ?? null) as Record<string, boolean> | null)
+            setMasterOpen(parseStoreMasterOpen(settings?.store_master_open))
           } catch { /* ใช้ค่า default ต่อไป */ }
         })()
         // ปฏิทินมุมการ์ด: วันจัดส่งจริงจาก menu_schedule (fire-and-forget — ไม่ขวางหน้า)
@@ -198,6 +201,7 @@ export function HomePage() {
     shopHoursMs: hoursToMs(shopHours),
     operatingHours,
     hoursClose: shopHours?.close,
+    masterOpen,
   })
 
   const handleSameDay = (payload: SameDayOrderPayload) => {

@@ -253,7 +253,7 @@ export function AdminProducts() {
   function openCategoryForm(cat?: ProductCategory) {
     if (cat) {
       setEditingCat(cat)
-      setCatForm({ name: cat.name, icon: cat.icon, sort_order: cat.sort_order, is_active: cat.is_active })
+      setCatForm({ name: cat.name, icon: cat.icon, sort_order: cat.sort_order, is_active: cat.is_active, allow_same_day: cat.allow_same_day ?? true, allow_pre_order: cat.allow_pre_order ?? true })
     } else {
       setEditingCat(null)
       setCatForm(blankCategoryForm())
@@ -267,11 +267,11 @@ export function AdminProducts() {
     const maxSort = adminCats.reduce((m, c) => Math.max(m, c.sort_order || 0), 0)
     const sortOrder = editingCat ? (catForm.sort_order || maxSort) : (catForm.sort_order > 0 ? catForm.sort_order : maxSort + 1)
     if (editingCat) {
-      const ok = await updateCategory(editingCat.id, { name, icon: catForm.icon, sort_order: sortOrder, is_active: catForm.is_active })
+      const ok = await updateCategory(editingCat.id, { name, icon: catForm.icon, sort_order: sortOrder, is_active: catForm.is_active, allow_same_day: catForm.allow_same_day, allow_pre_order: catForm.allow_pre_order })
       if (!ok) { showToast('บันทึกหัวข้อเมนูไม่สำเร็จ', 'error'); return }
       showToast('อัปเดตหัวข้อเมนูแล้ว!', 'success')
     } else {
-      const ok = await createCategory({ name, slug: slugifyCategory(name), icon: catForm.icon, sort_order: sortOrder, is_active: catForm.is_active })
+      const ok = await createCategory({ name, slug: slugifyCategory(name), icon: catForm.icon, sort_order: sortOrder, is_active: catForm.is_active, allow_same_day: catForm.allow_same_day, allow_pre_order: catForm.allow_pre_order })
       if (!ok) { showToast('เพิ่มหัวข้อเมนูไม่สำเร็จ', 'error'); return }
       showToast('เพิ่มหัวข้อเมนูสำเร็จ!', 'success')
     }
@@ -576,6 +576,23 @@ export function AdminProducts() {
                   onChange={(v) => setCatForm({ ...catForm, is_active: v })}
                   label="แสดงหัวข้อนี้"
                   testId="category-active-toggle"
+                />
+              </div>
+              {/* migration 185 — สวิตช์แอดมิน per-category: เปิด/ปิดรับออเดอร์ต่อโหมด */}
+              <div className="flex items-center">
+                <ToggleSwitch
+                  checked={catForm.allow_same_day}
+                  onChange={(v) => setCatForm({ ...catForm, allow_same_day: v })}
+                  label="รับออเดอร์ SAME_DAY"
+                  testId="category-allow-sameday-toggle"
+                />
+              </div>
+              <div className="flex items-center">
+                <ToggleSwitch
+                  checked={catForm.allow_pre_order}
+                  onChange={(v) => setCatForm({ ...catForm, allow_pre_order: v })}
+                  label="รับออเดอร์ PRE_ORDER"
+                  testId="category-allow-preorder-toggle"
                 />
               </div>
             </div>

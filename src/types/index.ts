@@ -55,6 +55,9 @@ export interface ProductCategory {
   is_active: boolean;
   menu_section_id?: string | null; // migration 055 — section this category belongs to (Menu → Section → Category)
   archived?: boolean;              // migration 055 — soft archive
+  /** migration 185 — สวิตช์แอดมิน per-category (default true = แถวเดิมไม่กระทบ) */
+  allow_same_day?: boolean;        // เปิดรับโหมด SAME_DAY
+  allow_pre_order?: boolean;       // เปิดรับโหมด PRE_ORDER
 }
 
 // migration 055 (CAT-01) — Menu → Section level (tenant-owned catalog, TEN-D01=A)

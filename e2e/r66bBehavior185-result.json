@@ -1,0 +1,15 @@
+{
+  "at": "2026-11-04T06:43:05.657Z",
+  "file": "e2e/contracts_185_admin_switches.sql",
+  "status": 201,
+  "response": "[{\"set_config\":\"{\\\"sub\\\":\\\"00000000-0000-4000-8000-000000ce0185\\\",\\\"role\\\":\\\"authenticated\\\"}\"}]",
+  "contractPass": true,
+  "pollution": {
+    "orders0900": "[{\"n\":0}]",
+    "contractAuthUser": "[{\"n\":0}]",
+    "masterRestored": "[{\"value\":{\"open\":true}}]",
+    "flagsRestored": "[{\"n\":0}]"
+  },
+  "zeroPollution": true,
+  "ALL_PASS": true
+}

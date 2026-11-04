@@ -1,0 +1,43 @@
+{
+  "at": "2026-11-04T04:34:30.848Z",
+  "target": [
+    {
+      "order_number": "BMB-20261101-170",
+      "status": "ready_for_dispatch",
+      "payment_status": "paid",
+      "payment_method": "promptpay_qr",
+      "delivery_method": "pickup",
+      "pickup_code": "395021",
+      "picked_up_at": null,
+      "handed_by": null,
+      "subtotal": "217.00",
+      "discount_amount": "21.70",
+      "delivery_fee": "0.00",
+      "total_amount": "195.30",
+      "customer_name": "Phananee porn",
+      "customer_phone": "0846576540",
+      "created_at": "2026-11-01 09:53:41.240136+00",
+      "updated_at": "2026-11-01 10:27:37.338958+00"
+    }
+  ],
+  "siblings": [
+    {
+      "order_number": "BMB-20261101-548",
+      "status": "cancelled",
+      "payment_status": "pending",
+      "delivery_method": "pickup",
+      "pickup_code": "610041",
+      "picked_up_at": null,
+      "created_at": "2026-11-01 09:46:14.287931+00"
+    },
+    {
+      "order_number": "BMB-20261101-170",
+      "status": "ready_for_dispatch",
+      "payment_status": "paid",
+      "delivery_method": "pickup",
+      "pickup_code": "395021",
+      "picked_up_at": null,
+      "created_at": "2026-11-01 09:53:41.240136+00"
+    }
+  ]
+}

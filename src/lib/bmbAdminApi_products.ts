@@ -230,6 +230,9 @@ export interface CategoryForm {
   icon: string
   sort_order: number
   is_active: boolean
+  /** migration 185 — สวิตช์แอดมิน per-category (undefined = true) */
+  allow_same_day?: boolean
+  allow_pre_order?: boolean
 }
 
 export async function getCategories(): Promise<ProductCategory[]> {
@@ -250,13 +253,14 @@ export async function getCategoriesAdmin(): Promise<ProductCategory[]> {
   return (data || []) as ProductCategory[]
 }
 
-export async function createCategory(data: { id?: string; name: string; slug: string; icon: string; sort_order: number; is_active: boolean; menu_section_id?: string | null }): Promise<ProductCategory | null> {
-  const { data: result, error } = await supabase.from('product_categories').insert({ id: data.id || `cat-${Date.now()}`, name: data.name, slug: data.slug, icon: data.icon, sort_order: data.sort_order, is_active: data.is_active, menu_section_id: data.menu_section_id ?? null, tenant_id: resolveAdminTenantId() }).select().single()
+export async function createCategory(data: { id?: string; name: string; slug: string; icon: string; sort_order: number; is_active: boolean; menu_section_id?: string | null; allow_same_day?: boolean; allow_pre_order?: boolean }): Promise<ProductCategory | null> {
+  const { data: result, error } = await supabase.from('product_categories').insert({ id: data.id || `cat-${Date.now()}`, name: data.name, slug: data.slug, icon: data.icon, sort_order: data.sort_order, is_active: data.is_active, menu_section_id: data.menu_section_id ?? null, allow_same_day: data.allow_same_day ?? true, allow_pre_order: data.allow_pre_order ?? true, tenant_id: resolveAdminTenantId() }).select().single()
   if (error) { console.error('[createCategory] Error:', error); return null }
   return result as ProductCategory
 }
 
-export async function updateCategory(id: string, data: Partial<{ name: string; icon: string; sort_order: number; is_active: boolean; menu_section_id: string | null }>): Promise<ProductCategory | null> {
+// migration 185 — เพิ่ม allow_same_day/allow_pre_order (สวิตช์แอดมิน per-category)
+export async function updateCategory(id: string, data: Partial<{ name: string; icon: string; sort_order: number; is_active: boolean; menu_section_id: string | null; allow_same_day: boolean; allow_pre_order: boolean }>): Promise<ProductCategory | null> {
   const { data: result, error } = await supabase.from('product_categories').update(data).eq('id', id).select().single()
   if (error) { console.error('[updateCategory] Error:', error); return null }
   return result as ProductCategory
