@@ -19,7 +19,9 @@ vi.mock('@/lib/supabase', async () => {
 import { supabase } from '@/lib/supabase'
 import { setMenuSchedule, publishMenuSchedule, getScheduleForDateAdmin, getPublishedScheduleForDate, mirrorPreOrderScheduleGate, getScheduleForWeek, isoWeekRange, summarizeWeek, checkPublishReady, checkModeEligibility, type EligibilityItem } from '@/lib/bmbMenuSchedule'
 
-const TOMORROW = new Date(Date.now() + 86400000).toISOString().slice(0, 10)
+// canonical business dates = BKK (UTC+7): ห้ามใช้ UTC-tomorrow — mock cutoff
+// (delivery_start 06:00 − 2ชม.) = (UTC+1d) 21:00 UTC → red ช่วง 21:00–24:00 UTC (CI e684d87 พังบรรทัด 197)
+const TOMORROW = new Date(Date.now() + 86400000 + 7 * 3_600_000).toISOString().slice(0, 10)
 
 beforeEach(async () => {
   await (supabase as any).__reset?.()

@@ -49,7 +49,9 @@ UPDATE public.promotions SET max_discount_amount = 15 WHERE id = 'c153-c';
 UPDATE public.promotions SET usage_limit = 1 WHERE id = 'c153-u';
 UPDATE public.promotions SET applies_to = 'specific_products' WHERE id = 'c153-b';
 INSERT INTO public.promotions (id, name, code, discount_type, discount_value, min_order_amount, is_active, end_date) VALUES
-  ('c153-e', 'GEXP', 'GREXP', 'percentage', 10, 0, true, (now() AT TIME ZONE 'Asia/Bangkok')::date - 1);
+  -- fixed วันที่ในอดีต = expired ภายใต้ทุกการตีความ timezone ของ CURRENT_DATE (UTC)
+  -- (fixture เดิม = BKK_date-1 เทียบ CURRENT_DATE ตอนรันช่วง 17:00–24:00 UTC → สองค่าเท่ากัน = ไม่ expired = G2 พัง)
+  ('c153-e', 'GEXP', 'GREXP', 'percentage', 10, 0, true, DATE '2020-01-01');
 INSERT INTO public.promotion_products (promotion_id, product_id) VALUES ('c153-b', 'c153-pa');
 DO $$
 DECLARE

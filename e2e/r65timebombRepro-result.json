@@ -1,0 +1,21 @@
+{
+  "at": "2026-11-04T01:48:40.897Z",
+  "observations": {
+    "b1_old_pass_at_unit_pass": true,
+    "b1_old_fail_at_unit_fail": true,
+    "b1_new_pass_at_unit_pass": true,
+    "b1_new_pass_at_unit_fail": true,
+    "b2_old_fail_at_c153_fail": true,
+    "b2_old_pass_at_c153_pass": true,
+    "b2_new_pass_at_c153_fail": true,
+    "b2_new_pass_at_c153_pass": true
+  },
+  "sweep72h": {
+    "samples": 72,
+    "b1OldFails": 6,
+    "b1NewFails": 0,
+    "b2OldFails": 21,
+    "b2NewFails": 0
+  },
+  "ALL_PASS": true
+}

@@ -25,8 +25,10 @@ vi.mock('@/lib/supabase', async () => {
 import { supabase } from '@/lib/supabase'
 
 const TOMORROW = () => {
-  const d = new Date()
-  d.setDate(d.getDate() + 1)
+  // canonical business dates = BKK (UTC+7) — ห้ามพึ่ง local TZ ของเครื่องรัน
+  // (CI = UTC → getDate()+1 = UTC-tomorrow → mock cutoff ผ่านหลัง 21:00 UTC = CI แดง)
+  const d = new Date(Date.now() + 7 * 3_600_000)
+  d.setUTCDate(d.getUTCDate() + 1)
   return d.toISOString().slice(0, 10)
 }
 

@@ -1,0 +1,33 @@
+{
+  "at": "2026-11-04T01:19:57.147Z",
+  "file": "184_pickup_hours_not_rounds.sql",
+  "steps": [
+    {
+      "action": "applied",
+      "detail": "[]"
+    },
+    {
+      "action": "ledger_recorded",
+      "detail": "[]"
+    }
+  ],
+  "precheck": "[{\"version\":\"184\",\"name\":\"184_pickup_hours_not_rounds.sql\"},{\"version\":\"183\",\"name\":\"183_promo_banner_mascot.sql\"},{\"version\":\"182\",\"name\":\"182_order_messages.sql\"}]",
+  "pre_guc": "[{\"proname\":\"create_pickup_order_i\",\"has_guc\":true},{\"proname\":\"enforce_operating_hours\",\"has_guc\":true},{\"proname\":\"enforce_shop_hours\",\"has_guc\":true}]",
+  "reload": "[]",
+  "verify": {
+    "fnGuc": "[{\"proname\":\"create_pickup_order_i\",\"has_guc\":true,\"mode_gate_still_there\":false},{\"proname\":\"enforce_operating_hours\",\"has_guc\":true,\"mode_gate_still_there\":true},{\"proname\":\"enforce_shop_hours\",\"has_guc\":true,\"mode_gate_still_there\":false}]",
+    "triggers": "[{\"tgname\":\"trg_operating_hours\",\"tgenabled\":\"O\",\"is_before_insert\":true},{\"tgname\":\"trg_shop_hours\",\"tgenabled\":\"O\",\"is_before_insert\":true}]",
+    "signature": "[{\"rp\":\"create_pickup_order_i(jsonb,text,text,text,text,text,text,text,date,text,text,text)\"}]",
+    "grant": "[{\"authenticated_can_call\":true}]",
+    "ledgerTop": "[{\"version\":\"184\",\"name\":\"184_pickup_hours_not_rounds.sql\"},{\"version\":\"183\",\"name\":\"183_promo_banner_mascot.sql\"},{\"version\":\"182\",\"name\":\"182_order_messages.sql\"}]"
+  },
+  "ALL_PASS": true,
+  "checks": {
+    "gucFns": 3,
+    "modeGateIntact": true,
+    "triggersBeforeInsert": true,
+    "signature12Args": true,
+    "grantAuthenticated": true,
+    "ledger184": true
+  }
+}

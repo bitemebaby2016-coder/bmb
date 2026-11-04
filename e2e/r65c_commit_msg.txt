@@ -1,0 +1,43 @@
+R65: apply 184 to production (ALL_PASS) + fix 4 latent CI time bombs (BKK/UTC fixture TZ)
+
+Apply 184 (Owner command):
+- e2e/r65Apply184.cjs (Management API, r61 pattern) -> ALL_PASS 6/6:
+  3 fn bodies carry app.pickup_order GUC, mode gate intact, 2 BEFORE INSERT
+  triggers, 12-arg signature pin, GRANT authenticated, ledger top=184,
+  re-run = already_in_ledger. Evidence: r65Apply184-result.json
+- e2e/r65Behavior184.cjs runs contracts_184 (BEGIN..ROLLBACK) on production
+  -> contractPass=true + zeroPollution=true (G0-G5 pass, 0 leftover rows,
+  hours restored). Evidence: r65Behavior184-result.json
+- Contract 184 fixture: force-activate today's rounds inside the tx (prod
+  rounds admin-closed; ROLLBACK keeps it pollution-free)
+- Parity: local 184 = ledger 184, missing/extra [] (r56MigParity)
+
+CI red on 6012720/e684d87 = latent time bombs, NOT 184 (contract 184 step
+never ran — job died earlier at Contract 153). 9 unit failures across 3 files
++ Contract 153 G2 — all fixture-timezone bugs vs canonical BKK dates:
+- B1 menuScheduleGate.test.ts: TOMORROW = UTC+1d -> mock cutoff
+  (delivery_start 06:00 - 2h) = (UTC+1d) 21:00 UTC -> fails 21:00-24:00 UTC
+  (04:00-07:00 BKK). CI proof: passed 20:57:58Z (6012720), failed 21:03:48Z
+  (e684d87). Fix = BKK-tomorrow (+86400000+7*3600000).
+- B1a menuSchedule.test.ts:22 — same UTC+1d constant, same cutoff path
+  (CI failed line 197) — same fix.
+- B1b canonicalOrderFlow.test.ts TOMORROW(): setDate(getDate()+1) uses LOCAL
+  date -> BKK machine fine, CI (=UTC) = UTC-tomorrow -> same cutoff bomb
+  (CI failed lines 121/138). Fix = BKK-tomorrow via UTC getters on +7h base
+  (machine-independent).
+  Assertions in all three untouched; targeted run after fixes = 49/49 PASS.
+- B2 contracts_153 G2: expired-promo fixture end_date = BKK_date-1 compared
+  to CURRENT_DATE (UTC, migration 153:244) -> "yesterday BKK" = "today UTC"
+  during 17:00-24:00 UTC (00:00-07:00 BKK) -> promo wrongly valid ->
+  "expired promo should be 0, got 10.00". Proof: R64 push 12:53 UTC passed,
+  R65 push 20:57 UTC failed. Fix = DATE '2020-01-01' (expired under every
+  TZ interpretation); assertion unchanged.
+- Repro e2e/r65timebombRepro.cjs = ALL_PASS: 8/8 observations match real CI
+  timestamps; 72h sweep = old formulas fail 6h (B1) + 21h (B2), fixed = 0.
+  Evidence: r65timebombRepro-result.json
+- Sibling scans (86400000 / setDate / ::date - 1) complete: remaining
+  ::date - 1 contract fixtures (038/140/141/144/147/148) are BKK-vs-BKK =
+  safe in every window (all passed inside the 17:00-24:00 UTC danger window).
+
+Gates: targeted 49/49 (3 fixed files) + menuScheduleGate 6/6 + full
+vitest/build evidence r65b_* · parity 184=184 · AI_WORK_STATE updated.

@@ -1,0 +1,14 @@
+{
+  "at": "2026-11-04T01:19:46.703Z",
+  "file": "e2e/contracts_184_pickup_outside_hours.sql",
+  "status": 201,
+  "response": "[{\"set_config\":\"{\\\"sub\\\":\\\"00000000-0000-4000-8000-000000ce0184\\\",\\\"role\\\":\\\"authenticated\\\"}\"}]",
+  "contractPass": true,
+  "pollution": {
+    "orders0900": "[{\"n\":0}]",
+    "contractAuthUser": "[{\"n\":0}]",
+    "hoursRestored": "[{\"open\":\"8:00\",\"close\":\"20:00\"}]"
+  },
+  "zeroPollution": true,
+  "ALL_PASS": true
+}

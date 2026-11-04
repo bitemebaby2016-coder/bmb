@@ -41,6 +41,11 @@ DECLARE
 BEGIN
   -- ===== FIXTURES =====
   PERFORM public.ensure_rounds_for_date(v_today);
+  -- production รอบวันนี้อาจถูก admin ปิดไว้ → force-active ใน tx นี้ (ROLLBACK ตอนท้าย ไม่มีมลพิษ)
+  -- ต้องมี round active จริงเพื่อให้ engine ผ่าน round-status gate ไปถึง trigger ที่กำลังทดสอบ
+  UPDATE public.delivery_rounds
+     SET status = 'active'
+   WHERE scheduled_date = v_today AND archived = false AND status <> 'active';
   -- capacity deterministic (template อาจต่ำกว่า 2 ที่ G2+G3b สร้าง) — rollback ตอนท้าย
   UPDATE public.delivery_rounds
      SET current_count = 0, max_capacity = GREATEST(max_capacity, 10)
