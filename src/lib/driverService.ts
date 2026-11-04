@@ -84,7 +84,11 @@ export async function driverLogin(): Promise<DriverRecord | null> {
   if (!session) return null
   const { data, error } = await supabase.rpc('driver_login')
   if (error) {
-    console.warn('[Driver] driver_login failed:', error.message)
+    // R68 (console noise): ERR_NOT_A_DRIVER = คำตอบปกติของบัญชีที่ไม่ใช่ไรเดอร์
+    // (useRiderIdentity ใช้ผลนี้ซ่อนปุ่ม /rider) — ห้าม warn ทุกครั้งที่เปิดหน้า
+    if (!/ERR_NOT_A_DRIVER/i.test(String(error.message ?? ''))) {
+      console.warn('[Driver] driver_login failed:', error.message)
+    }
     return null
   }
   return (data as unknown as { driver: DriverRecord }).driver ?? null

@@ -29,6 +29,12 @@ import {
   PrintOrderData, PrintJobRow,
 } from '@/lib/printService'
 import { SubmitKeyRing } from '@/lib/orderSubmitKey'
+import { Link } from 'react-router-dom'
+import { useAuthStore } from '@/store/authStore'
+import { ADMIN_NAV_ITEMS, navGroupsForRole } from '@/lib/adminUi'
+import { ensureShopConfigLoaded, getShopConfig, getShopHours, subscribeShopConfig } from '@/lib/shopHours'
+import { withinShopHours } from '@/lib/shopHoursLogic'
+import { getShiftCashSummary, type ShiftCashSummary } from '@/lib/posApi'
 
 interface PosProduct { id: string; name: string; price: number; is_available?: boolean }
 interface PosLine { product: PosProduct; quantity: number }
@@ -36,6 +42,20 @@ interface PosRound { id: string; display_name: string; round_key?: string; cutof
 
 function money(n: number): string {
   return '฿' + Number(n ?? 0).toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+}
+
+// R66-D: เวลา "จริง" ของร้าน (ปฏิทินกรุงเทพ) — ใช้เช็กว่าเลยเวลาเปิดปิดร้านหรือยัง
+function bkkMsOfDay(d: Date): number {
+  return (((d.getTime() + 7 * 3_600_000) % 86_400_000) + 86_400_000) % 86_400_000
+}
+
+// R66-D: ความยาวเปิดกะแบบ realtime (h:mm:ss) — นับจากเวลาเปิดกะจริงถึง "ตอนนี้"
+function elapsedText(fromIso: string, nowMs: number): string {
+  const diff = Math.max(0, nowMs - new Date(fromIso).getTime())
+  const h = Math.floor(diff / 3_600_000)
+  const m = Math.floor((diff % 3_600_000) / 60_000)
+  const s = Math.floor((diff % 60_000) / 1000)
+  return `${h}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
 }
 
 export function AdminPos() {
@@ -59,6 +79,17 @@ export function AdminPos() {
   const [countedCash, setCountedCash] = useState('')
   const [printJobs, setPrintJobs] = useState<PrintJobRow[]>([])
   const submitKeys = useRef(new SubmitKeyRing())
+  // R66-D: นาฬิกากะ/เวลาเปิดร้านแบบสด + ยอดเงินสดระหว่างกะ (ค่าจริงเท่านั้น)
+  const [nowMs, setNowMs] = useState(() => Date.now())
+  const [cashSummary, setCashSummary] = useState<ShiftCashSummary | null>(null)
+  const role = useAuthStore((s) => s.role)
+  // dynamic links = ทางลัดไปหน้าจริงของระบบ — ดูจาก nav ชุดเดิม (ไม่สร้างเมนูใหม่)
+  // กรองด้วยสิทธิ์ role เดียวกับ AdminNav (pos เห็นเฉพาะของที่ตัวเองเข้าได้)
+  const quickLinks = useMemo(() => {
+    const wanted = ['/admin', '/admin/orders', '/admin/customers', '/admin/reports']
+    const allowed = new Set(navGroupsForRole(role).flatMap((g) => g.items.map((i) => i.to)))
+    return ADMIN_NAV_ITEMS.filter((i) => wanted.includes(i.to) && allowed.has(i.to))
+  }, [role])
 
   const total = useMemo(
     () => lines.reduce((s, l) => s + Number(l.product.price) * l.quantity, 0),
@@ -95,6 +126,38 @@ export function AdminPos() {
     })()
   }, [refresh])
 
+  // R66-D ①: นาฬิกากะเดินจริงทุก 1 วิ + โหลด/รีเฟรชค่าเปิดปิดร้านจริงจาก business_settings
+  useEffect(() => {
+    const t = window.setInterval(() => setNowMs(Date.now()), 1000)
+    return () => window.clearInterval(t)
+  }, [])
+  useEffect(() => {
+    void ensureShopConfigLoaded()
+    return subscribeShopConfig(() => setNowMs(Date.now()))
+  }, [])
+
+  // R66-D ②: ยอดเงินสดระหว่างกะ (เปิดกะใหม่ + ทุก 20 วิ) — ดึงไม่ได้ = บอกว่าดึงไม่ได้
+  const reloadCashSummary = useCallback(async (openedAt?: string | null) => {
+    if (!openedAt) { setCashSummary(null); return }
+    setCashSummary(await getShiftCashSummary(openedAt))
+  }, [])
+  const openedAt = shift?.opened_at ?? null
+  useEffect(() => {
+    if (!openedAt) { setCashSummary(null); return }
+    void reloadCashSummary(openedAt)
+    const t = window.setInterval(() => { if (!document.hidden) void reloadCashSummary(openedAt) }, 20_000)
+    return () => window.clearInterval(t)
+  }, [openedAt, reloadCashSummary])
+
+  // R66-D: เลยเวลาเปิดปิดร้านจริงหรือยัง (null = โหลดค่าไม่สำเร็จ → ห้ามเดา = ไม่เตือน)
+  const shopCfg = getShopConfig()
+  const hours = getShopHours()
+  const pastHours = shopCfg?.shopHoursMs
+    ? !withinShopHours(bkkMsOfDay(new Date(nowMs)), shopCfg.shopHoursMs)
+    : false
+  const masterClosed = shopCfg?.masterOpen === false
+  const closeLabel = hours ? `${hours.open}–${hours.close}` : ''
+
   function addLine(p: PosProduct) {
     setLines((prev) => {
       const hit = prev.find((l) => l.product.id === p.id)
@@ -115,6 +178,14 @@ export function AdminPos() {
     if (!customerName.trim()) { showToast('กรุณากรอกชื่อลูกค้า', 'error'); return }
     if (!shift) { showToast('กรุณาเปิดกะก่อนขาย (เงินสด)', 'warning'); return }
     if (!serviceFlags[serviceType]) { showToast('หมวดบริการนี้ถูกปิดอยู่ — เปิดที่กล่อง "เปิด/ปิดหมวดบริการ" ก่อน', 'error'); return }
+    // R66-D: เตือนตามเวลาเปิดปิดร้าน "จริง" ก่อนขาย (server ยังเป็นคนตัดสิน INSERT — ที่นี่คือประตูหน้าร้าน)
+    if (pastHours) {
+      const okSell = window.confirm(
+        `${closeLabel || 'เวลาเปิดร้าน'} ผ่านไปแล้ว — เวลาจริง ${new Date(nowMs).toLocaleTimeString('th-TH')} น. ` +
+        'จะขายกรณีพิเศษต่อไหม? (ถ้าหมดวันแล้วให้กด "ปิดกะ + กระทบยอด")',
+      )
+      if (!okSell) return
+    }
 
     setBusy(true)
     // R51: ป้ายชนิดบริการแนบหัว special_instructions (ครัว/สติกเกอร์ Notice เห็นทันที) — engine เดิม 127
@@ -171,8 +242,10 @@ export function AdminPos() {
     // cash counter sale: close out immediately (legal transitions + paid)
     if (paymentMethod === 'cash_on_delivery') {
       const close = await posCloseoutOrder(result.order_number, true)
-      if (close.ok) showToast(`ปิดการขาย #${result.order_number} — รับชำระแล้ว`, 'success')
-      else showToast(`ออเดอร์สร้างแล้ว แต่ปิดการขายไม่สำเร็จ: ${close.error}`, 'warning')
+      if (close.ok) {
+        showToast(`ปิดการขาย #${result.order_number} — รับชำระแล้ว`, 'success')
+        void reloadCashSummary(shift?.opened_at)
+      } else showToast(`ออเดอร์สร้างแล้ว แต่ปิดการขายไม่สำเร็จ: ${close.error}`, 'warning')
     }
 
     setLines([]); setCustomerName(''); setCustomerPhone(''); setNotes(''); setSeat('')
@@ -220,7 +293,7 @@ export function AdminPos() {
       return
     }
     const r = await posCloseoutOrder(o.order_number, true)
-    if (r.ok) { showToast(`ส่งมอบออเดอร์ #${o.order_number} เรียบร้อย`, 'success'); await refresh() }
+    if (r.ok) { showToast(`ส่งมอบออเดอร์ #${o.order_number} เรียบร้อย`, 'success'); await refresh(); void reloadCashSummary(shift?.opened_at) }
     else showToast(`ส่งมอบไม่สำเร็จ: ${r.error}`, 'error')
   }
 
@@ -255,14 +328,49 @@ export function AdminPos() {
     <div className="space-y-6">
       <h1 className="text-2xl font-bold text-brand-accent">🧾 Web POS — ขายหน้าร้าน</h1>
 
+      {/* R66-D: dynamic links — ทางลัดไปหน้าจริงของระบบ (ได้จาก nav ชุดเดิม · role-filter) */}
+      <div className="flex flex-wrap gap-2" data-testid="pos-quick-links">
+        {quickLinks.map((l) => (
+          <Link key={l.to} to={l.to} className="btn btn-outline btn-sm" data-testid={`pos-link-${l.to}`}>
+            {l.icon} {l.label}
+          </Link>
+        ))}
+      </div>
+
+      {/* R66-D: เตือนตามเวลาเปิดปิดร้านจริง / สวิตช์ Master — พร้อมบอกให้ปิดกะให้ตรงเวลา */}
+      {(pastHours || masterClosed) && (
+        <div className="card border-2 border-red-300 bg-red-50" data-testid="pos-after-hours-banner">
+          <b className="text-red-700">
+            ⏰ {masterClosed ? 'ร้านถูกปิดจากสวิตช์ Master ของแอดมิน' : `เลยเวลาเปิดร้าน ${closeLabel} แล้ว`} — เวลาจริง{' '}
+            <span data-testid="pos-banner-clock">{new Date(nowMs).toLocaleTimeString('th-TH')}</span> น.
+          </b>
+          <p className="text-sm text-slate-700 mt-1">
+            {shift
+              ? 'ยังเปิดกะอยู่ → กด "ปิดกะ + กระทบยอด" เพื่อปิดกะของวันนี้ให้ตรงเวลาจริง'
+              : 'ไม่มีกะเปิดค้างอยู่ — ขายใหม่ต้องเปิดกะก่อน'}
+          </p>
+        </div>
+      )}
+
       {/* Shift bar */}
       <div className="card">
         <h3 className="font-bold text-brand-accent mb-3">💵 กะเงินสด</h3>
         {shift ? (
           <div className="flex flex-wrap items-center gap-3">
-            <span className="badge badge-success">เปิดกะอยู่ · เงินต้น {money(shift.opening_cash)} · {new Date(shift.opened_at).toLocaleString('th-TH')}</span>
+            <span className="badge badge-success" data-testid="pos-shift-open">เปิดกะอยู่</span>
+            <span className="text-sm text-slate-700">🕐 เวลาจริง <b data-testid="pos-live-clock">{new Date(nowMs).toLocaleTimeString('th-TH')}</b></span>
+            <span className="text-sm text-slate-700">⏱️ เปิดกะมา <b data-testid="pos-shift-elapsed">{elapsedText(shift.opened_at, nowMs)}</b></span>
+            <span className="text-sm text-slate-700">เงินต้น {money(shift.opening_cash)} · เปิด {new Date(shift.opened_at).toLocaleString('th-TH')}</span>
+            <span className="text-sm text-slate-700" data-testid="pos-shift-cash">
+              {cashSummary === null
+                ? '💵 ยอดเงินสดระหว่างกะ: กำลังโหลด…'
+                : cashSummary.ok
+                  ? `💵 เงินสดระหว่างกะ ${money(cashSummary.cashTotal)} (${cashSummary.orderCount} ออเดอร์) · คาดปิดกะ ${money(shift.opening_cash + cashSummary.cashTotal)}`
+                  : '💵 ดึงยอดเงินสดไม่ได้ — ยอดจริง server คำนวณตอนปิดกะ'}
+            </span>
             <input type="number" min="0" step="0.01" placeholder="เงินสดที่นับได้" value={countedCash} onChange={(e) => setCountedCash(e.target.value)} className="input w-40" />
-            <button className="btn btn-outline" onClick={() => void handleCloseShift()}>ปิดกะ + กระทบยอด</button>
+            <button className={`btn ${pastHours ? 'btn-danger' : 'btn-outline'}`} onClick={() => void handleCloseShift()} data-testid="pos-close-shift">ปิดกะ + กระทบยอด</button>
+            <Link to="/admin/reports" className="btn btn-outline btn-sm" data-testid="pos-link-close-day">📊 รายงาน/ปิดวัน</Link>
           </div>
         ) : (
           <div className="flex flex-wrap items-center gap-3">
@@ -352,6 +460,7 @@ export function AdminPos() {
           <div className="flex gap-2 mb-3">
             <button className="btn btn-outline" onClick={() => void manualPrint(lastResult.order_number, 'receipt')}>พิมพ์ใบเสร็จซ้ำ</button>
             <button className="btn btn-outline" onClick={() => void manualPrint(lastResult.order_number, 'kitchen_ticket')}>พิมพ์คิวครัวซ้ำ</button>
+            <Link to="/admin/orders" className="btn btn-outline" data-testid="pos-link-last-order">📦 เปิดหน้าออเดอร์</Link>
           </div>
           <div className="space-y-1">
             {printJobs.map((j) => (
@@ -395,6 +504,7 @@ export function AdminPos() {
             <span className="text-sm">{o.customer_name}</span>
             <span className="badge badge-warning">{o.status}</span>
             <span className="text-sm text-brand-muted">{money(o.total_amount)} · {o.payment_method}</span>
+            <Link to={`/admin/orders?status=${encodeURIComponent(o.status)}`} className="btn btn-outline btn-sm" data-testid={`pos-link-order-${o.order_number}`}>ดูในหน้าออเดอร์</Link>
             <button className="btn btn-primary btn-sm" onClick={() => void handleHandover(o)}>ส่งมอบ (ตรวจรหัส)</button>
           </div>
         ))}

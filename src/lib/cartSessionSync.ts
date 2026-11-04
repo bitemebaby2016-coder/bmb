@@ -15,16 +15,20 @@ import { useCartStore } from '@/store/cartStore'
 const SESSION_KEY = 'bmb-cart-session-v1'
 const THROTTLE_MS = 60_000
 
-function sessionId(): string {
+// R68 (console noise 42501): key ต่อ "ผู้ใช้" — อีกบัญชีที่ใช้เครื่องเดียวกันได้ id คนละอัน
+// จึงไม่ upsert ทับแถวของอีกบัญชี (RLS cart_sessions_update_own ปฏิเสธ = 403/42501)
+// หลักฐานเดิม r63Cart401Probe.cjs: anon=401 · authed=201 — แถวของตัวเองอัปเดตได้ปกติ
+function sessionId(uid: string): string {
+  const key = SESSION_KEY + ':' + uid
   try {
-    let id = localStorage.getItem(SESSION_KEY)
+    let id = localStorage.getItem(key)
     if (!id) {
-      id = 'csx-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8)
-      localStorage.setItem(SESSION_KEY, id)
+      id = 'csx-' + uid.slice(0, 8) + '-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8)
+      localStorage.setItem(key, id)
     }
     return id
   } catch {
-    return 'csx-' + Date.now().toString(36)
+    return 'csx-' + uid.slice(0, 8) + '-' + Date.now().toString(36)
   }
 }
 
@@ -42,14 +46,15 @@ export async function syncCartSessionNow(): Promise<void> {
       const { data } = await supabase.from('customers').select('id').eq('user_id', uid).maybeSingle()
       customerId = (data as { id?: string } | null)?.id ?? null
     }
-    await supabase.from('cart_sessions').upsert({
-      id: sessionId(),
+    const res = await supabase.from('cart_sessions').upsert({
+      id: sessionId(uid),
       customer_id: customerId,
       items_count: count,
       total_amount: Math.round((Number(state.subtotal) || 0) * 100) / 100,
       status: count === 0 ? 'converted' : 'active',
       updated_at: new Date().toISOString(),
     }, { onConflict: 'id' })
+    if (res?.error) return // telemetry เท่านั้น — error = เงียบ ห้าม log ขึ้น console
   } catch { /* telemetry เท่านั้น — ล้มก็ไม่กระทบอะไร */ }
 }
 

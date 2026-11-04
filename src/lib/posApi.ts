@@ -139,6 +139,33 @@ export async function posCloseoutOrder(orderNumber: string, markPaid = true): Pr
   return { ok: true, status: (data as any)?.status }
 }
 
+// ---------- R66-D: ยอดเงินสดระหว่างกะ (realtime mirror — ห้ามมีค่าปลอม) ----------
+// window ตรงกับ close_shift (129): payment_status='paid' AND updated_at >= opened_at
+// server ยังคำนวณยอดจริงตอนปิดกะ — ที่นี่แค่โชว์ยอดสดระหว่างทาง · ดึงไม่ได้ = ok:false
+
+export interface ShiftCashSummary {
+  ok: boolean
+  orderCount: number
+  cashTotal: number
+  error?: string
+}
+
+export async function getShiftCashSummary(openedAt: string): Promise<ShiftCashSummary> {
+  const { data, error } = await supabase
+    .from('orders')
+    .select('total_amount')
+    .eq('payment_method', 'cash_on_delivery')
+    .eq('payment_status', 'paid')
+    .gte('updated_at', openedAt)
+  if (error) return { ok: false, orderCount: 0, cashTotal: 0, error: error.message }
+  const rows = (data ?? []) as Array<{ total_amount: number | null }>
+  return {
+    ok: true,
+    orderCount: rows.length,
+    cashTotal: Math.round(rows.reduce((s, r) => s + Number(r.total_amount ?? 0), 0) * 100) / 100,
+  }
+}
+
 /** Pickup orders awaiting handover (pending..ready_for_dispatch). */
 export async function listPickupOrders(): Promise<OrderForm[]> {
   const { data, error } = await supabase

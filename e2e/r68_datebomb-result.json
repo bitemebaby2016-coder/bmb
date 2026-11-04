@@ -1,0 +1,9 @@
+{
+  "utc_now": "2026-11-04T17:16:36.812Z",
+  "ict_now": "2026-11-05T00:16:36.812+07:00",
+  "TOMORROW_formula": "2026-11-06",
+  "DAY2_formula": "2026-11-06",
+  "COLLIDE": true,
+  "day9": "2026-11-13",
+  "note": "TOMORROW = now+31h · DAY2 = now+48h · ห่างกัน 17h → ตรงกันเมื่อ now.time+7h เกิน 24h (UTC >= 17:00)"
+}

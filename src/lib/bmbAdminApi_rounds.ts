@@ -235,6 +235,8 @@ export async function ensureRoundsForDate(date: string): Promise<boolean> {
   } catch {
     /* bookkeeping only — order gate ฝั่ง server ยังกันของจริง */
   }
+  // R68 (console noise): '' = ยังไม่เลือกวัน → ห้ามยิง RPC (400/22007 date "")
+  if (!date) return false
   try {
     const { error } = await supabase.rpc('ensure_rounds_for_date', { p_date: date })
     if (error) {
@@ -251,6 +253,8 @@ export async function ensureRoundsForDate(date: string): Promise<boolean> {
 /** Active (bookable) rounds for a date — only `status='active'` rows can be used
  * by the canonical create RPC (025: anything else → ERR_ROUND_CLOSED). */
 export async function getActiveRoundsForDate(date: string): Promise<DeliveryRoundRow[]> {
+  // R68 (console noise): '' = ยังไม่เลือกวัน → คืน [] ทันที (กัน 400 /delivery_rounds date "")
+  if (!date) return []
   const { data, error } = await supabase
     .from('delivery_rounds')
     .select('*')

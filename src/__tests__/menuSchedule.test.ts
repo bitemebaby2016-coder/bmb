@@ -68,7 +68,10 @@ describe('CAT-02 · customer read scope (anon-safe published-only)', () => {
     expect(await getPublishedScheduleForDate(TOMORROW)).toHaveLength(0) // draft invisible
     await publishMenuSchedule(TOMORROW, true)
     expect(await getPublishedScheduleForDate(TOMORROW)).toHaveLength(2)
-    expect(await getPublishedScheduleForDate(new Date(Date.now() + 2 * 86400000).toISOString().slice(0, 10))).toHaveLength(0)
+    // R68 time bomb: ห้ามคำนวณวันแยกจาก TOMORROW (now+48h == now+31h ช่วง UTC >= 17:00 → วันเดียวกัน = แดง)
+  const noRowsDay = new Date(Date.parse(TOMORROW + 'T00:00:00Z') + 86400000).toISOString().slice(0, 10)
+  expect(noRowsDay).not.toBe(TOMORROW)
+  expect(await getPublishedScheduleForDate(noRowsDay)).toHaveLength(0)
   })
 })
 

@@ -57,8 +57,12 @@ verify_jwt = false
 # social-ai-worker: G6 classify + reply DRAFT for social comment events.
 # Called by automation-scheduler (GH Actions) / owner probe with shared token —
 # same auth pattern as automation-worker (platform JWT + x-automation-token).
+# R68 (2026-11-04): ค่านี้เคยหายออกจากไฟล์ (duplicate-verify_jwt fix) ทำให้
+# `functions deploy` ปล่อย verify_jwt = false → ตั้งกลับเป็น true ให้ตรง comment +
+# ผู้เรียกทั้ง 2 ราย (channel-webhook · social-publish-worker) ส่ง Bearer SERVICE_KEY อยู่แล้ว
 [functions.social-ai-worker]
 enabled = true
+verify_jwt = true
 # queue-enqueue: G8-T2 trusted enqueue TRANSPORT (Owner D06 = OPTION A).
 # Called by GitHub Actions with the EXISTING AUTOMATION_TOKEN secret (no new secret).
 # verify_jwt = true (same platform layer as automation-worker).

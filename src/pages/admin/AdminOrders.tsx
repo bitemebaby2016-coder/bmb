@@ -60,13 +60,18 @@ const STATUS_FILTERS = [
 
 export function AdminOrders() {
   const [orders, setOrders] = useState<OrderForm[]>([])
-  const [filterStatus, setFilterStatus] = useState('all')
   // STEP 3B-2A: SAME_DAY / PRE_ORDER is a server-side filter (Phase D display only —
   // the pre-order queue/cutoff/capacity workflow itself belongs to 3B-2B).
   // Phase 4 (RC-6): preset จาก URL (?mode=PRE_ORDER|SAME_DAY) — redirect ของหน้าแยก
   // bookmark เก่า (/admin/pre-orders) ชี้มานี่ → ยังเห็นเฉพาะ PRE_ORDER โดยไม่ต้องมีหน้าแยก
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
+  // R66-D: preset ?status= — dynamic link จาก Web POS (คิวส่งมอบ/ออเดอร์ล่าสุด)
+  // เปิดหน้าออเดอร์ตรงสถานะที่กดมาทันที (ค่าที่ไม่อยู่ใน STATUS_FILTERS = 'all')
+  const [filterStatus, setFilterStatus] = useState(() => {
+    const s = searchParams.get('status')
+    return s && STATUS_FILTERS.some((f) => f.key === s) ? s : 'all'
+  })
   const [filterMode, setFilterMode] = useState<'all' | 'SAME_DAY' | 'PRE_ORDER'>(() => {
     const p = searchParams.get('mode')
     return p === 'SAME_DAY' || p === 'PRE_ORDER' ? p : 'all'

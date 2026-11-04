@@ -72,7 +72,9 @@ describe('CAT-02 · order-time gate via canonical create_order path (mock mirror
   })
 
   it('R5/141: menu product ผูกวันอื่น → ERR_PRODUCT_NOT_ON_MENU (วันถูกกำหนดโดยปฏิทินแอดมิน)', async () => {
-    const dayAfter = new Date(Date.now() + 2 * 86400000).toISOString().slice(0, 10)
+    // R68 time bomb: ห้ามคำนวณวันแยกจาก TOMORROW (now+48h == now+31h ช่วง UTC >= 17:00 → วันเดียวกัน)
+    const dayAfter = new Date(Date.parse(TOMORROW + 'T00:00:00Z') + 86400000).toISOString().slice(0, 10)
+    expect(dayAfter).not.toBe(TOMORROW)
     const r = (supabase as any).__tables.delivery_rounds.find((x: any) => x.id === 'round-1')
     r.scheduled_date = dayAfter
     r.date = dayAfter

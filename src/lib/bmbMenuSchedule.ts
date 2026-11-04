@@ -164,6 +164,8 @@ export function checkModeEligibility(
 // ---------- Customer (published rows only — anon-safe via 056 policy) ----------
 
 export async function getPublishedScheduleForDate(scheduledDate: string): Promise<MenuScheduleRow[]> {
+  // R68 (console noise): วันที่ยังไม่ถูกเลือก ('') = ห้ามยิง server (400/22007 date "")
+  if (!scheduledDate) return []
   const { data, error } = await supabase.from('menu_schedule').select('*').eq('scheduled_date', scheduledDate).eq('is_published', true)
   if (error) { console.error('[getPublishedScheduleForDate] Error:', error); return [] }
   return (data || []) as MenuScheduleRow[]

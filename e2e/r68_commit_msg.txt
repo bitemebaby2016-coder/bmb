@@ -1,0 +1,4 @@
+R68: ปิดงานค้าง §5.2 ครบ 4 ข้อ — R66-D ปิดกะ POS ตามเวลาจริง + dynamic links ทุกปุ่ม · test coverage pos_closeout_order/handleHandover = 22 ตัว (เดิม 0) · deploy EF shopContext ทั้ง social-ai-worker v72 + social-post-worker v66 (เบอร์ 082 6096995) + ตั้ง verify_jwt กลับเป็น true · ปิด console noise 3 ตัวที่ต้นทาง (driver_login ERR_NOT_A_DRIVER · cart_sessions 42501 · query date "" 22007) · ซ่อม date fixture time bomb 2 ตัว (assertion คงเดิม 100%) · Owner test pack = §R68 12 ข้อ
+
+gates: tsc=0 · lint=0 · vitest 207 files/2,075 tests/0 fail · build=0 (e2e/r68_gates2.log + e2e/r68_gates.log)
+evidence: e2e/r68_eflist.json (EF versions) · e2e/r68_datebomb-result.json (fixture collision proof)

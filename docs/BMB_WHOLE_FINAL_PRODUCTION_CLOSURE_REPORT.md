@@ -65,15 +65,15 @@
 | รายการ | สถานะ | ใครปิด |
 |---|---|---|
 | ทุกข้อใน §2 (CONFLICT C-1..C-6 · runtime ด้วยอุปกรณ์/บัญชีจริง · backlog 6 ตัว) | **ยังคงเดิม ไม่เปลี่ยน** | Owner / แชทหน้า |
-| **R66-D** = ปิดกะ POS ตามเวลาจริง + dynamic links ทุกปุ่ม POS | **ยังไม่เริ่ม** | แชทหน้า |
-| test coverage `pos_closeout_order` / `handleHandover` | **ยัง 0 test** | แชทหน้า |
-| deploy edge function `shopContext` (เบอร์ร้าน `082 6096995` แก้ใน repo แล้ว) | **ยังไม่ deploy** → production ยังแสดง `094 2649269` | แชทหน้า |
-| console noise 3 ตัวใน E2E (`driver_login ERR_NOT_A_DRIVER` · `cart_sessions` RLS 42501 · query `date ""` 22007) | ยังไม่แก้ — ไม่กระทบ steps (pass = steps เท่านั้น) | แชทหน้า |
-| Owner live production test เริ่มจากหน้าแชท | **รอ Owner รัน** (ขั้นตรวจ = `BMB_PRODUCTION_TEST_PACK.md` §R67) | Owner |
+| **R66-D** = ปิดกะ POS ตามเวลาจริง + dynamic links ทุกปุ่ม POS | **ทำแล้ว (R68 · Owner ยืนยัน "ทั้งสองแบบ")** — นาฬิกากะ/ยอดสด/ป้ายเตือนเลยเวลา+ถามยืนยัน · ทางลัด role-filter + `/admin/orders?status=` preset · **ขั้นตรวจ = TEST_PACK §R68.1–§R68.2** | Owner รัน §R68 |
+| test coverage `pos_closeout_order` / `handleHandover` | **มีแล้ว 22 test** (`src/__tests__/r68PosCloseoutHandover.test.ts` — client wrapper · SQL contract 129 · handleHandover · R66-D · console noise 3) | เสร็จแล้ว (r68 gates) |
+| deploy edge function `shopContext` (เบอร์ร้าน `082 6096995` แก้ใน repo แล้ว) | **deploy แล้ว (R68)** — `social-ai-worker` v72 · `social-post-worker` v66 · ทั้งคู่ upload `_shared/shopContext.ts` แล้ว · `social-ai-worker.verify_jwt` ตั้งกลับเป็น `true` ตาม config (ผู้เรียกทั้ง 2 ส่ง Bearer SERVICE อยู่แล้ว) — evidence `e2e/r68_eflist.json` | Owner ตรวจ §R68.4 |
+| console noise 3 ตัวใน E2E (`driver_login ERR_NOT_A_DRIVER` · `cart_sessions` RLS 42501 · query `date ""` 22007) | **แก้ที่ต้นทางแล้ว (R68)** — ไม่ได้ปิด assertion · **ยังต้องพิสูจน์บน E2E/production รอบถัดไป** · ขั้นตรวจ Owner = §R68.3 | Owner รัน §R68.3 + E2E รอบถัดไป |
+| Owner live production test เริ่มจากหน้าแชท | **รอ Owner รัน** — ขั้นตรวจ = `BMB_PRODUCTION_TEST_PACK.md` **§R67 (7 ข้อ · เริ่มที่แชท) + §R68 (12 ข้อ · POS/console/เบอร์ EF)** | Owner |
 
 ### §5.2 ลำดับงานที่โอนไปแชทหน้า (handoff)
 
 1. **Owner ทดสอบ live production เริ่มที่หน้าแชท** (`/` → Talk to Bite) ตาม `docs/BMB_PRODUCTION_TEST_PACK.md` §R67
 2. เจอ symptom ใด = จดหลักฐาน (ภาพ / console / network) → ทีมแก้แบบ two-try (Attempt 1+2 เท่านั้น)
-3. งานค้างเรียงลำดับ: R66-D → test coverage POS handover → deploy `shopContext` → console noise 3 ตัว
+3. ~~งานค้างเรียงลำดับ: R66-D → test coverage POS handover → deploy `shopContext` → console noise 3 ตัว~~ = **ปิดครบทั้ง 4 ข้อใน R68 แล้ว** (เหลือ Owner รัน §R67 + §R68 บน production จริง + E2E รอบถัดไปพิสูจน์ console noise)
 4. ห้ามยกเลิก/ตัดข้อทดสอบใน §2/§RG ของ test pack เพื่อให้ดูผ่าน (anti-gaming)
