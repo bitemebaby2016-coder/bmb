@@ -1,0 +1,16 @@
+{
+  "at": "2026-11-04T17:39:04.966Z",
+  "base": "https://biteme-baby.com",
+  "html": {
+    "status": 200
+  },
+  "jsChecked": 15,
+  "markers": {},
+  "details": [
+    "chunk AdminOrders-903coC3l.js http=200 len=4038 looksLikeHtml=true",
+    "chunk AdminPos-S3n49J2-.js http=200 len=4038 looksLikeHtml=true"
+  ],
+  "assets_found": 15,
+  "scanned": 15,
+  "allFound": false
+}

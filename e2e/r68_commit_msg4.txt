@@ -1,0 +1,1 @@
+docs(R68): ปิดเซส — ledger ตรงไปตรงมาว่า 2 อย่างยัง UNVERIFIED (CI ของ fix = queued ตอน probe · production ยังไม่มี chunk AdminPos ใหม่) + evidence prod probe/brand guard
