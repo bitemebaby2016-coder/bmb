@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-11-04T15:17:55.734Z",
+  "timestamp": "2026-11-04T16:07:07.303Z",
   "base": "http://localhost:4173",
   "steps": [
     {
@@ -35,7 +35,7 @@
       "name": "order created → payment step",
       "ok": true,
       "extra": {
-        "url": "http://localhost:4173/payment/BMB-20261104-365",
+        "url": "http://localhost:4173/payment/BMB-20261104-612",
         "txnVisible": 1,
         "hasNotFound": false
       }
@@ -44,7 +44,7 @@
       "name": "payment confirmed → tracking",
       "ok": true,
       "extra": {
-        "badge": "#BMB-20261104-365"
+        "badge": "#BMB-20261104-612"
       }
     },
     {
@@ -66,7 +66,7 @@
       "name": "pre-order real order → tracking",
       "ok": true,
       "extra": {
-        "badge": "#PO-20261105-931"
+        "badge": "#PO-20261105-685"
       }
     },
     {
@@ -92,8 +92,8 @@
     "A-net 400 /rest/v1/rpc/driver_login :: {\"code\":\"P0001\",\"details\":null,\"hint\":null,\"message\":\"ERR_NOT_A_DRIVER: no driver record is linked to this account (admin provisioning required)\"}",
     "A:Failed to load resource: the server responded with a status of 403 ()",
     "A-net 403 /rest/v1/cart_sessions :: {\"code\":\"42501\",\"details\":null,\"hint\":null,\"message\":\"new row violates row-level security policy for table \\\"cart_sessions\\\"\"}",
-    "A-net 200 /rest/v1/rpc/create_pickup_order_i :: {\"id\": \"ord-1793805401015-8cf6fe\", \"status\": \"pending\", \"subtotal\": 79.00, \"branch_id\": \"branch-tenant-bmb-001-main\", \"duplicate\": false, \"order_mode\": \"SAME_DAY\", \"tax_amount\": 0, \"pickup_code\": \"160343\", \"service_fee\": 0, \"customer_ref\": \"98dba8b1-a024-447f-8639-bd022dc98388\", \"delivery_fee\": 0, \"",
-    "A-net 200 /rest/v1/rpc/create_payment_intent_record :: {\"id\": \"pi- ###########-79ed19\", \"amount\": 79, \"method\": \"promptpay_qr\", \"status\": \"pending\", \"idempotent\": false, \"order_number\": \"BMB-20261104-365\"}",
+    "A-net 200 /rest/v1/rpc/create_pickup_order_i :: {\"id\": \"ord-1793808350930-6ab2b2\", \"status\": \"pending\", \"subtotal\": 79.00, \"branch_id\": \"branch-tenant-bmb-001-main\", \"duplicate\": false, \"order_mode\": \"SAME_DAY\", \"tax_amount\": 0, \"pickup_code\": \"750275\", \"service_fee\": 0, \"customer_ref\": \"db2d3906-3bde-405c-bfca-91876959e7e1\", \"delivery_fee\": 0, \"",
+    "A-net 200 /rest/v1/rpc/create_payment_intent_record :: {\"id\": \"pi- ###########-3bda83\", \"amount\": 79, \"method\": \"promptpay_qr\", \"status\": \"pending\", \"idempotent\": false, \"order_number\": \"BMB-20261104-612\"}",
     "B:Failed to load resource: the server responded with a status of 400 ()",
     "B-net 400 /rest/v1/rpc/driver_login :: {\"code\":\"P0001\",\"details\":null,\"hint\":null,\"message\":\"ERR_NOT_A_DRIVER: no driver record is linked to this account (admin provisioning required)\"}",
     "B:Failed to load resource: the server responded with a status of 403 ()",
@@ -106,8 +106,8 @@
     "B:Failed to load resource: the server responded with a status of 400 ()",
     "B:[getActiveRoundsForDate] Error: {code: 22007, details: null, hint: null, message: invalid input syntax for type date: \"\"}",
     "B-net 400 /rest/v1/delivery_rounds :: {\"code\":\"22007\",\"details\":null,\"hint\":null,\"message\":\"invalid input syntax for type date: \\\"\\\"\"}",
-    "B-net 200 /rest/v1/rpc/create_pickup_order_i :: {\"id\": \"ord-1793805448183-a6a1d4\", \"status\": \"pending\", \"subtotal\": 79.00, \"branch_id\": \"branch-tenant-bmb-001-main\", \"duplicate\": false, \"order_mode\": \"PRE_ORDER\", \"tax_amount\": 0, \"pickup_code\": \"402108\", \"service_fee\": 0, \"customer_ref\": \"98dba8b1-a024-447f-8639-bd022dc98388\", \"delivery_fee\": 0, ",
-    "B-net 200 /rest/v1/rpc/create_payment_intent_record :: {\"id\": \"pi- ###########-2090da\", \"amount\": 79, \"method\": \"promptpay_qr\", \"status\": \"pending\", \"idempotent\": false, \"order_number\": \"PO-20261105-931\"}"
+    "B-net 200 /rest/v1/rpc/create_pickup_order_i :: {\"id\": \"ord-1793808400595-29bd78\", \"status\": \"pending\", \"subtotal\": 79.00, \"branch_id\": \"branch-tenant-bmb-001-main\", \"duplicate\": false, \"order_mode\": \"PRE_ORDER\", \"tax_amount\": 0, \"pickup_code\": \"908277\", \"service_fee\": 0, \"customer_ref\": \"db2d3906-3bde-405c-bfca-91876959e7e1\", \"delivery_fee\": 0, ",
+    "B-net 200 /rest/v1/rpc/create_payment_intent_record :: {\"id\": \"pi- ###########-edb469\", \"amount\": 79, \"method\": \"promptpay_qr\", \"status\": \"pending\", \"idempotent\": false, \"order_number\": \"PO-20261105-685\"}"
   ],
   "pass": true
 }

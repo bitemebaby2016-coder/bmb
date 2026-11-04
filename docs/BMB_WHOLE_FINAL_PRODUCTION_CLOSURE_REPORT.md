@@ -41,3 +41,38 @@
 2. `docs/` ที่มีวันที่ในชื่อ = รายงาน ณ วันนั้น · ห้ามย้อนแก้ (เปลี่ยนได้เฉพาะ pointer ที่เส้นทางย้าย)
 3. Conflict ทุกข้อ = เอกสาร `BMB_REQUIREMENT_RECONCILIATION.md` §3 → **รอ Owner เท่านั้น**
 4. ถ้าโค้ดเปลี่ยนจาก `b1a3b92` → บันทึก SHA ใหม่ + recheck finding ที่กระทบ
+
+---
+
+## §5 — อัปเดตสถานะจริงหลัง R63–R67 (2026-11-04 · ปิดเซส + โอนงานค้างไปแชทหน้า)
+
+> อัปเดตตามคำสั่ง Owner 2026-11-04 · **ยังคงไม่ประกาศ COMPLETE / PRODUCTION READY** (§3 ยังใช้อยู่ทุกข้อ)
+> · หลักฐานทุกบรรทัด = รันจริงบนเครื่องนี้ ไม่ได้อ้างจากเอกสารเก่า
+
+| เรื่อง | สถานะจริง ณ 2026-11-04 | evidence |
+|---|---|---|
+| HEAD / push | `c26c143` (R67 code) + `2a7e29d` + `4bdc2f8` (docs) push แล้ว · SECRET_HITS=0 | `git log --oneline -4` · `e2e/r62PreCommit.cjs` |
+| CI ของ `c26c143` | **success ทั้ง 2 workflow** (`CI` + `Contract Tests (isolated PostgreSQL)`) | `e2e/_r67_ci_probe.json` |
+| Gates ปิดเซส | **tsc=0 · lint=0 · vitest FULL 206 files / 2,053 tests / 0 fail · build=0** | `e2e/_close_gates.log` |
+| E2E Matrix (order journey จริง) | **PASS 12/12** · ออเดอร์จริง 2 ใบ `BMB-20261104-365` + `PO-20261105-931` · test user ลบใน finally | `e2e/e2e-result.json` |
+| Chat-Hang ของ AI Waiter | **ปิดแล้ว + พิสูจน์สด**: ส่งข้อความ → คำตอบจริงใน 3.3 วิ · input ปลดล็อก (ไม่ค้าง) | `e2e/_r67_chat_live.json` |
+| SEO routes | ครบ (รวม `/orders` `/notifications` `/track/:orderNumber` = dynamic param จริง ไม่มี literal `:orderNumber`) | `src/__tests__/r67Contracts.test.ts` · `seo.test.ts` 30/30 |
+| FAQ + ตัวเลขโปรโมชั่น | ไม่มีตัวเลข hardcode (รอบ/แต้ม/รางวัล/เบอร์) · Footer ส่งฟรี = แสดงเฉพาะเมื่อ server enforce จริง (ค่าจริง 199) | `src/lib/faqContent.ts` · `src/components/layout/Footer.tsx` |
+
+### §5.1 รายการที่ยังไม่เสร็จ — **ห้ามตีความว่าปิดแล้ว**
+
+| รายการ | สถานะ | ใครปิด |
+|---|---|---|
+| ทุกข้อใน §2 (CONFLICT C-1..C-6 · runtime ด้วยอุปกรณ์/บัญชีจริง · backlog 6 ตัว) | **ยังคงเดิม ไม่เปลี่ยน** | Owner / แชทหน้า |
+| **R66-D** = ปิดกะ POS ตามเวลาจริง + dynamic links ทุกปุ่ม POS | **ยังไม่เริ่ม** | แชทหน้า |
+| test coverage `pos_closeout_order` / `handleHandover` | **ยัง 0 test** | แชทหน้า |
+| deploy edge function `shopContext` (เบอร์ร้าน `082 6096995` แก้ใน repo แล้ว) | **ยังไม่ deploy** → production ยังแสดง `094 2649269` | แชทหน้า |
+| console noise 3 ตัวใน E2E (`driver_login ERR_NOT_A_DRIVER` · `cart_sessions` RLS 42501 · query `date ""` 22007) | ยังไม่แก้ — ไม่กระทบ steps (pass = steps เท่านั้น) | แชทหน้า |
+| Owner live production test เริ่มจากหน้าแชท | **รอ Owner รัน** (ขั้นตรวจ = `BMB_PRODUCTION_TEST_PACK.md` §R67) | Owner |
+
+### §5.2 ลำดับงานที่โอนไปแชทหน้า (handoff)
+
+1. **Owner ทดสอบ live production เริ่มที่หน้าแชท** (`/` → Talk to Bite) ตาม `docs/BMB_PRODUCTION_TEST_PACK.md` §R67
+2. เจอ symptom ใด = จดหลักฐาน (ภาพ / console / network) → ทีมแก้แบบ two-try (Attempt 1+2 เท่านั้น)
+3. งานค้างเรียงลำดับ: R66-D → test coverage POS handover → deploy `shopContext` → console noise 3 ตัว
+4. ห้ามยกเลิก/ตัดข้อทดสอบใน §2/§RG ของ test pack เพื่อให้ดูผ่าน (anti-gaming)
