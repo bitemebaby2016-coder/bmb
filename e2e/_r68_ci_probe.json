@@ -1,0 +1,71 @@
+{
+  "at": "2026-11-04T17:19:46.927Z",
+  "status": 200,
+  "total": 3011,
+  "runs": [
+    {
+      "head_sha": "cd099bc",
+      "name": "Contract Tests (isolated PostgreSQL)",
+      "status": "completed",
+      "conclusion": "failure",
+      "event": "push",
+      "html_url": "https://github.com/bitemebaby2016-coder/bmb/actions/runs/41876373101"
+    },
+    {
+      "head_sha": "cd099bc",
+      "name": "CI",
+      "status": "in_progress",
+      "conclusion": null,
+      "event": "push",
+      "html_url": "https://github.com/bitemebaby2016-coder/bmb/actions/runs/41876372905"
+    },
+    {
+      "head_sha": "17995fb",
+      "name": "automation-scheduler",
+      "status": "completed",
+      "conclusion": "success",
+      "event": "schedule",
+      "html_url": "https://github.com/bitemebaby2016-coder/bmb/actions/runs/41874985811"
+    },
+    {
+      "head_sha": "17995fb",
+      "name": "Contract Tests (isolated PostgreSQL)",
+      "status": "completed",
+      "conclusion": "success",
+      "event": "push",
+      "html_url": "https://github.com/bitemebaby2016-coder/bmb/actions/runs/41868207352"
+    },
+    {
+      "head_sha": "17995fb",
+      "name": "CI",
+      "status": "completed",
+      "conclusion": "success",
+      "event": "push",
+      "html_url": "https://github.com/bitemebaby2016-coder/bmb/actions/runs/41868207021"
+    },
+    {
+      "head_sha": "8cce2a3",
+      "name": "Contract Tests (isolated PostgreSQL)",
+      "status": "completed",
+      "conclusion": "success",
+      "event": "push",
+      "html_url": "https://github.com/bitemebaby2016-coder/bmb/actions/runs/41867944230"
+    },
+    {
+      "head_sha": "8cce2a3",
+      "name": "CI",
+      "status": "completed",
+      "conclusion": "success",
+      "event": "push",
+      "html_url": "https://github.com/bitemebaby2016-coder/bmb/actions/runs/41867944187"
+    },
+    {
+      "head_sha": "7b817d7",
+      "name": "CI",
+      "status": "completed",
+      "conclusion": "success",
+      "event": "push",
+      "html_url": "https://github.com/bitemebaby2016-coder/bmb/actions/runs/41866564702"
+    }
+  ]
+}

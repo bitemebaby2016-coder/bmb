@@ -1,0 +1,6 @@
+R68 fix: contract 154 — ตั้ง session TZ = BKK ก่อน BEGIN (CURRENT_DATE ของ promotion_apply_rules = UTC แต่คูปอง referral สร้างด้วยวันที่ BKK → รันช่วง 17:00–24:00 UTC = คนละวัน = G6 ได้ 0 แทน 15)
+
+- assertion คงเดิม 100% (ยัง expect 15) — แก้เฉพาะ timezone ที่สองฝั่งเทียบกัน
+- บรรทัด comment ในไฟล์อธิบายครบ + อ้าง contract 153 ที่เคยแก้ class เดียวกัน
+- evidence ต้นเหตุ: e2e/_r68_ci_ann.json (check-run annotation ของ cd099bc)
+- DEFECT ฝั่ง production รอ Owner (ต้องใช้ migration): promotion_apply_rules ใช้ CURRENT_DATE(UTC) เทียบ start_date วันที่ BKK → คูปอง referral ใช้ไม่ได้ 00:00–07:00 น. — จดใน AI_WORK_STATE บล็อก R68

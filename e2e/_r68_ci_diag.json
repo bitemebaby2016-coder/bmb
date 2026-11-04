@@ -1,0 +1,26 @@
+{
+  "at": "2026-11-04T17:20:14.668Z",
+  "run": "41876373101",
+  "jobs_status": 200,
+  "jobs_total": 1,
+  "jobs": [
+    {
+      "name": "Migrations + SQL contracts (ephemeral PG)",
+      "status": "completed",
+      "conclusion": "failure",
+      "steps": [
+        {
+          "n": "Contract 154 — G&R stage 2 referral (identity · 3 ระดับ · qualify/reverse ledger) (ROLLBACK)",
+          "c": "failure",
+          "num": 30
+        }
+      ]
+    }
+  ],
+  "annotations": [],
+  "ann_raw": {
+    "message": "Not Found",
+    "documentation_url": "https://docs.github.com/rest",
+    "status": "404"
+  }
+}

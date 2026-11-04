@@ -20,6 +20,15 @@
 --       (à¹„à¸¡à¹ˆà¸­à¸­à¸à¸ˆà¸™à¸à¸§à¹ˆà¸²à¹à¸­à¸”à¸¡à¸´à¸™ approve) Â· approve â†’ à¸­à¸­à¸à¸ˆà¸£à¸´à¸‡ 2 à¹ƒà¸š
 -- ============================================
 
+-- R68 (2026-11-05 · CI แดงรอบ 00:19 ICT — evidence e2e/_r68_ci_ann.json):
+--   promotion_apply_rules (m181) เทียบ start_date <= CURRENT_DATE (= วันที่ตาม session TZ · CI = UTC)
+--   แต่คูปอง referral ถูกสร้างด้วยวันที่ BKK (m154: v_today = now() AT TIME ZONE 'Asia/Bangkok')
+--   → รันช่วง 17:00–24:00 UTC (00:00–07:00 ICT) = คนละวัน → start_date > CURRENT_DATE → คูปองยังไม่เริ่ม
+--     → G6 ได้ 0 แทน 15 ("issued coupon on 100 should discount 15 (172 cap)")
+--   (contract 153 เคยเจอ class เดียวกัน — ดู comment บรรทัด 52-53 ของไฟล์นั้น)
+--   แก้ = ตั้ง session TZ ของ contract นี้เป็น BKK ให้สองฝั่งเทียบวันที่เดียวกัน — assertion คงเดิม 100%
+SET timezone = 'Asia/Bangkok';
+
 BEGIN;
 RESET ROLE;
 

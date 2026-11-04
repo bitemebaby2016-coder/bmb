@@ -1,0 +1,59 @@
+{
+  "at": "2026-11-04T17:24:23.044Z",
+  "http": 200,
+  "total": 3,
+  "checks": [
+    {
+      "name": "Cloudflare Pages",
+      "status": "completed",
+      "conclusion": "success",
+      "id": 126737199245,
+      "summary": "<table><tr><td><strong>Latest commit:</strong> </td><td>\n<code>cd099bc</code>\n</td></tr>\n<tr><td><strong>Status:</strong></td><td>&nbsp;✅&nbsp; Deploy successful!</td></tr>\n<tr><td><strong>Preview URL:</strong></td><td>\n<a href='https://340b9fdd.bitemebaby.pages.dev'>https://340b9fdd.bitemebaby.pages.dev</a>\n</td></tr>\n</table>\n\n[View logs](https://dash.cloudflare.com/?to=/b89501b69eef20998a9d3dae480c52af/pages/view/bitemebaby/340b9fdd-231e-490e-a030-5426b2cbc4fb)\n",
+      "title": "Deployed successfully",
+      "annotations": []
+    },
+    {
+      "name": "Migrations + SQL contracts (ephemeral PG)",
+      "status": "completed",
+      "conclusion": "failure",
+      "id": 126736761151,
+      "summary": "",
+      "title": "",
+      "annotations": [
+        {
+          "level": "warning",
+          "path": ".github",
+          "line": 2,
+          "msg": "Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/"
+        },
+        {
+          "level": "failure",
+          "path": ".github",
+          "line": 38,
+          "msg": "Process completed with exit code 1."
+        },
+        {
+          "level": "failure",
+          "path": "e2e/contracts_154_referral_program.sql",
+          "line": 0,
+          "msg": "psql:e2e/contracts_154_referral_program.sql:428: ERROR:  G6 FAIL: issued coupon on 100 should discount 15 (172 cap)"
+        },
+        {
+          "level": "notice",
+          "path": ".github",
+          "line": 1,
+          "msg": "\"The ubuntu-latest label will migrate to Ubuntu 26 beginning October 19, 2026. For more information, see https://github.com/actions/runner-images/issues/14748\""
+        }
+      ]
+    },
+    {
+      "name": "Test + Lint + Build",
+      "status": "completed",
+      "conclusion": "success",
+      "id": 126736759343,
+      "summary": "",
+      "title": "",
+      "annotations": []
+    }
+  ]
+}
