@@ -1,0 +1,46 @@
+{
+  "at": "2026-11-05T15:30:53.165Z",
+  "steps": [
+    {
+      "step": "admin_login",
+      "status": 200
+    },
+    {
+      "step": "list_open",
+      "count": 1
+    }
+  ],
+  "cancelled": [
+    {
+      "order_number": "PO-20261106-336",
+      "from_status": "confirmed",
+      "http": 200,
+      "resp": {
+        "ok": true,
+        "note": "order was paid — refund via stripe-refund EF is an admin follow-up",
+        "status": "cancelled",
+        "order_mode": "PRE_ORDER",
+        "order_number": "PO-20261106-336",
+        "previous_status": "confirmed",
+        "capacity_released": true,
+        "inventory_restored": true
+      }
+    }
+  ],
+  "skipped": [],
+  "failed": [],
+  "open_before": [
+    {
+      "order_number": "PO-20261106-336",
+      "status": "confirmed",
+      "payment_status": "paid",
+      "payment_method": "promptpay_qr",
+      "order_mode": "PRE_ORDER",
+      "scheduled_date": "2026-11-06",
+      "customer_name": "Siam Portal Customer",
+      "created_at": "2026-11-05T13:02:44.925298+00:00"
+    }
+  ],
+  "remaining_open": [],
+  "verified": true
+}
