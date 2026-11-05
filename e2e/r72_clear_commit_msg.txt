@@ -1,0 +1,6 @@
+R72-clear: ล้างออเดอร์ค้างทั้งรายการ (Owner อนุมัติ) + เครียล์สเตจปิดเซสชัน เริ่มทดสอบใหม่
+
+- _r72_clear_all.cjs: ปิดทุกออเดอร์ non-terminal ผ่าน cancel_order RPC (canonical — audit + คืนสต็อก + ปล่อยที่นั่งรอบ + ปิด assignment) — รอบนี้มีค้าง 1 ใบ (PO-20261106-336 พรีออเดอร์ทดสอบ) = ยกเลิกแล้ว
+- _r72_clear_all_result.json: verify re-read = 0 เหลือ (VERIFIED=true)
+- เครียล์สเตจ: ลบไฟล์ temp เซสชันเก่าในเวิร์กสเปซ ($null/arrived/.probe_css.txt/logs) + ไม่มี schtasks/temp ค้าง
+- baseline สดของเซสชันทดสอบใหม่: vitest แชท+แจ้งเตือน 51/51 เขียว
