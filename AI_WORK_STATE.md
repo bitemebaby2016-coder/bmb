@@ -1,3 +1,21 @@
+> ## 🟢 สถานะล่าสุด — 2026-11-05 17:12 (R69-N4c · สถานะฝั่งลูกค้า "รับที่ร้าน" · **ปิดเซสชั่นแล้ว · รอ Owner ทดสอบ live** · ยึดบล็อกนี้ก่อนทุกบล็อกด้านล่าง)
+> ### WORK STATE (ตาม .clinerules)
+> - **Task ID:** R69-N4c (คำสั่งปิดงาน: "เฉพาะของรับที่ร้าน การแสดงสถานะให้สิ้นสุดที่ พร้อมส่ง แต่เปลี่ยนคำว่าพร้อมส่งเป็น พร้อมรับที่ร้าน และ ส่งสำเร็จเป็น รับสินค้าแล้ว (เริ่มจัดส่ง กำลังเดินทาง ถึงปลายทาง ไม่ต้องมีแสดง)")
+> - **Status:** CODE_CLOSED / PENDING_LIVE_TEST
+> - **Objective:** หน้าฝั่งลูกค้าของออเดอร์ "รับที่ร้าน" — ไทม์ไลน์/สถานะจบที่ขั้น "พร้อมส่ง"(ป้ายใหม่ "พร้อมรับที่ร้าน") · สถานะจบงาน "ส่งสำเร็จ" แสดงเป็น "รับสินค้าแล้ว" · 3 สถานะเส้นทางจัดส่งไม่แสดงทุกหน้า
+> - **Completed:**
+>   - **ต้นเหตุที่ Owner เห็นศัพท์จัดส่งบน pickup:** `OrderTimeline` เรียก `getServerStatusLabel(step, mode)` **ไม่ส่ง fulfillment** (N-4 มี prop แต่ step label ไม่ได้ใช้) + chain แสดงครบ 8 ขั้นทุก fulfillment
+>   - **`OrderTimeline`:** `PICKUP_FORWARD_CHAIN` = 4 ขั้น (pending→confirmed→preparing→**ready_for_dispatch**) — dispatched/in_transit/arrived/**delivered** ไม่ render เป็นแถว (ไทม์ไลน์ "สิ้นสุดที่พร้อมส่ง" ตามคำสั่ง) · step label ส่ง `fulfillment` แล้ว · สถานะที่เกินขั้นสุดท้าย = ไฮไลต์ครบทั้ง 4 ขั้น
+>   - **`PICKUP_STATUS_LABEL_TH`:** `ready_for_dispatch: 'พร้อมรับที่ร้าน'` (ตามคำสั่งเป๊ะ) · `delivered: 'รับสินค้าแล้ว'` (เป๊ะ) · dispatched/in_transit/arrived = collapse เป็น 'พร้อมรับที่ร้าน' (กันป้ายหลุดศัพท์จัดส่งถ้าข้อมูลเก่าค้าง)
+>   - **ทุกจุดแสดงสถานะฝั่งลูกค้าใช้ pickup vocab** (detect `delivery_method === 'pickup'`): `OrderTrackPage` การ์ดสถานะ (เดิม ✓) + helper จบงาน = "รับสินค้าแล้ว!" · `OrdersPage` chip รายการ · `TalkToBite` บรรทัดสถานะในแชต
+>   - **เส้นทางจัดส่ง (delivery) คงเดิมทุกประการ** — 8 ขั้น + ป้ายเดิม (assert คุมไว้)
+> - **Verified (รันจริง):** `orderTimeline` 10/10 (เดิม 6 + N-4c ใหม่ 4) + `statusTruthMatrix` 5/5 · **full gates `_r69n_gates.log`: TSC 0 · LINT 0 · VITEST **207/207 ไฟล์ · 2099/2099 ข้อ** · BUILD 0** · `r62PreCommit` = `SECRET_HITS: []` · commit **`bf81526`** → `main` = `PUSH_DONE` (web ขึ้น live ผ่าน CI/Pages)
+> - **Failed:** — (บั๊กตัวเอง 1 รอบ = filter แรกไม่ตัด `delivered` (5 ขั้น ≠ สัญญา "จบที่พร้อมส่ง") → แก้+รันซ้ำเขียวก่อน push)
+> - **Blocked/UNVERIFIED:** รอ Owner เทสต์ live (ดู Next) · N-7 PWA/Notice + R67-7/R68-3/R68-4 = ค้างตามรอบก่อน
+> - **Files Changed (N-4c):** `src/lib/orderVocabulary.ts` · `src/components/customer/OrderTimeline.tsx` · `src/pages/OrdersPage.tsx` · `src/pages/OrderTrackPage.tsx` · `src/components/ai/TalkToBite.tsx` · `src/__tests__/orderTimeline.test.ts` (+4 ข้อ) · `e2e/_r69n_commit.cjs` (commit msg)
+> - **Tests / Commands Run:** vitest orderTimeline+statusTruthMatrix 15/15 · `_r69n_gates.cmd` → `_r69n_gates.log` (2099/2099) · chain `_r69n_commit.cjs` → `_r69n_commit.log` = `PUSH_DONE`
+> - **Known Risks:** (1) "รับสินค้าแล้ว" โชว์ที่**การ์ดสถานะ/รายการออเดอร์/แชต** — ไม่เป็นแถวในไทม์ไลน์ (ยึด "ให้สิ้นสุดที่ พร้อมส่ง") — ถ้า Owner อยากให้เป็นแถวสุดท้ายของไทม์ไลน์ด้วย = แก้ 1 บรรทัด (เติม `delivered` กลับใน `PICKUP_FORWARD_CHAIN`) (2) ข้อมูลเก่า pickup ค้าง dispatched/in_transit/arrived = chip collapse เป็น 'พร้อมรับที่ร้าน'
+> - **Next Exact Action:** **Owner เทสต์ live** ① ออเดอร์รับที่ร้าน → หน้าติดตาม = ไทม์ไลน์ 4 ขั้น จบที่ "พร้อมรับที่ร้าน" ② ทุกหน้าไม่มีคำ เริ่มจัดส่ง/กำลังเดินทาง/ถึงปลายทาง ③ ส่งมอบที่ POS → สถานะ "รับสินค้าแล้ว" ④ อยากปรับให้ "รับสินค้าแล้ว" เป็นแถวไทม์ไลน์ = แจ้งได้เลย (1 บรรทัด) · **เซสชั่นปิดแล้ว — รอทดสอบ live แชทหน้า**
 > ## 🟢 สถานะล่าสุด — 2026-11-05 ค่ำ (R69 · **งานชุด N-1..N-9 = ปิดโค้ดครบ · Phase A+B เสร็จ+verified ก่อนหน้า** · ยึดบล็อกนี้ก่อนทุกบล็อกด้านล่าง)
 > ### WORK STATE (ตาม .clinerules)
 > - **Task ID:** R69 (Phase A+B เสร็จ+verified → **ชุด N-1..N-9 เสร็จโค้ด+เทสต์** → เหลือปิด gates + push → Owner เทสต์ live)
