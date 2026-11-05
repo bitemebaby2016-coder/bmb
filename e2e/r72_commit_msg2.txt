@@ -1,0 +1,7 @@
+R72-B: tests + docs + evidence ปิดงาน — test pack §R72 (8 ข้อ) เตรียมทดสอบ live
+
+- src/__tests__/r72NotifyDedupDelivery.test.ts (8 ข้อ): contract m188 (id เดียวกับ worker + ON CONFLICT + evt-pay namespace) · m189 (fallback accept + guard คงอยู่) · links DRIVER_* → /admin/delivery · เด้งไม่มี document.hidden gate · การ์ดโปรเช็กวันที่ · คิวครัวข้ามวัน
+- r71RiderChatBell.test.ts ปรับตาม R72 (ถอด RiderBell = กระดิ่งมุมจอเดียว)
+- docs/BMB_PRODUCTION_TEST_PACK.md §R72 = R72-1..R72-8 + หมายเหตุโค้ดคูปอง HALLOW10
+- AI_WORK_STATE.md + BMB_MASTER_STATUS.md = สถานะ R72 (root causes + บทเรียน apply/verify)
+- e2e evidence: _r72Apply188_189.cjs/result (verify เช็กค่าจริง) · _r72_smoke.cjs/json (dedup + claim fallback 5/5) · _r72_probe/diag + gates logs (TSC 0 · LINT 0 · VIT 210/2124 · BUILD 0)
