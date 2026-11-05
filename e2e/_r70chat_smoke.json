@@ -1,0 +1,18 @@
+{
+  "at": "2026-11-05T11:45:01.987Z",
+  "checks": {
+    "ran": true,
+    "a_msg_inserted_then_cleaned": true,
+    "b_no_echo_zero": true,
+    "c_admin_sees_both_two": true,
+    "d_rider_guard": true,
+    "a_send_ok": true,
+    "b_send_ok": true
+  },
+  "lookup": {
+    "customerUser": "[{\"id\":\"23cbe150-e5f4-4a37-a969-02e2db8df395\",\"user_id\":\"23cbe150-e5f4-4a37-a969-02e2db8df395\"}]"
+  },
+  "sqlResult": "[{\"smoke\":{\"b_no_echo\":0,\"d_rider_guard\":\"ERR_FORBIDDEN\",\"a_leftover_rows\":2,\"c_admin_sees_both\":2}}]",
+  "cleanup": "[]",
+  "ALL_PASS": true
+}

@@ -1,0 +1,6 @@
+R70-B: PWA/ปุ่ม "เปิดการแจ้งเตือน" ใช้งานได้จริง — ลบจุดที่ bell แย่ง native permission prompt + auto-heal granted-but-unsubscribed
+
+- root cause (จาก production probe): NotificationDropdown mount แล้วเรียก requestPermission() เอง = native dialog เด้งสุ่ม → พอ permission != 'default' PushPermissionPrompt จะไม่มีวันโผล่ + "อนุญาต" โดยไม่ subscribe/register = push ไม่มีทางทำงานจริง (ตรงกับที่ Owner บอก "ไม่เห็นมาเคยมีใช้งานได้")
+- NotificationDropdown: ลบ requestBrowserPermission() ตอน mount + ใช้ beep กลาง lib/notifBeep (เลิก duplicate)
+- PushPermissionPrompt: auto-heal กรณี granted แต่ยังไม่มี subscription (subscribe+register เงียบ + toast) · gate เฉพาะ role ลูกค้า (แอดมินไม่มี customers row ตามดีไซน์ · ไรเดอร์มีสวิตช์ของตัวเองที่ /rider) · error copy บอกทางแก้ (ERR_PUSH_DISABLED/ERR_NO_VAPID_KEY/ERR_NO_SERVICE_WORKER)
+- production ยืนยันแล้วว่า push_config.enabled=true · VAPID/EF env ครบ · เคย web_push sent จริง = ที่เหลือคือ subscription ของอุปกรณ์ซึ่ง flow ใหม่จัดการให้

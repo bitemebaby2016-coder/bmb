@@ -1,0 +1,5 @@
+R70-A: แชต ลูกค้า/ไรเดอร์/แอดมิน สมบูรณ์ — m183 แจ้งเตือนข้อความผ่านตาราง notifications เดิม (กระดิ่ง+push ครบทุกฝั่ง) + กล่องข้อความครบทุกหน้า (track/orders/rider per-job) + แจ้งข้อความใหม่ในแผงแชต (เสียง/ป้าย/browser notification)
+
+- migration 183 (APPLIED production ALL_PASS + behavior smoke 7/7): send_order_message v2 — แอดมิน/ไรเดอร์→ลูกค้า = แถว notifications customer-owned (dispatcher ntf- → push เดิม) · ลูกค้า/ไรเดอร์→แอดมิน = แถว customer_id NULL (กระดิ่งแอดมินเท่านั้น · builder ข้าม = ไม่ push ผิดฝั่ง · พิสูจน์แล้วว่าลูกค้าไม่เห็น echo) · notifications.customer_id DROP NOT NULL
+- OrderTrackPage: การ์ดแชตลูกค้า (ทางเข้าจากแจ้งเตือน — เดิมไม่มีแชตเลย) · OrdersPage: details open (เดิมพับ = ที่มา "ไม่มีกล่องข้อความ") · RiderPwaPage: แชตรายงานทุกงาน + activeOrder เดิมคงอยู่
+- OrderChatPanel: จับข้อความใหม่จากอีกฝั่ง = เสียง (lib/notifBeep กลาง) + ป้าย "มีข้อความใหม่" + browser notification เมื่อหน้าไม่โฟกัส

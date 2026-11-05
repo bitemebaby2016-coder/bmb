@@ -1,0 +1,198 @@
+{
+  "at": "2026-11-05T10:55:34.960Z",
+  "checks": [
+    {
+      "label": "order_messages_recent",
+      "status": 200,
+      "rows": [
+        {
+          "id": "omsg-1793874711652-a51c",
+          "order_number": "BMB-20261105-896",
+          "sender_role": "admin",
+          "body": "สัวดีค่ะ",
+          "created_at": "2026-11-05T10:31:51.639901+00:00"
+        },
+        {
+          "id": "omsg-1793845218852-eb56",
+          "order_number": "BMB-20261101-548",
+          "sender_role": "admin",
+          "body": "ส่งสลิปให้ด้วยครับ มันแคนเซิ่ลไม่ได้",
+          "created_at": "2026-11-05T02:20:18.705895+00:00"
+        }
+      ]
+    },
+    {
+      "label": "msg_outbox",
+      "status": 200,
+      "rows": []
+    },
+    {
+      "label": "push_subscriptions",
+      "status": 400,
+      "rows": {
+        "code": "42703",
+        "details": null,
+        "hint": null,
+        "message": "column push_subscriptions.audience does not exist"
+      }
+    },
+    {
+      "label": "push_config_setting",
+      "status": 200,
+      "rows": [
+        {
+          "key": "push_config",
+          "value": {
+            "enabled": true,
+            "vapid_subject": "mailto:admin@biteme-baby.com",
+            "vapid_public_key": "BMwKuaU1rBMs6w-7GAxocIdxLcvMyQmRoClMZyzn3ClB7c8rJi3Wl83rSf6UzkKiyfG4L_0fQnV2KbfpKYkFLJE"
+          }
+        }
+      ]
+    },
+    {
+      "label": "get_push_config",
+      "status": 200,
+      "rows": {
+        "enabled": true,
+        "vapid_subject": "mailto:admin@biteme-baby.com",
+        "vapid_public_key": "BMwKuaU1rBMs6w-7GAxocIdxLcvMyQmRoClMZyzn3ClB7c8rJi3Wl83rSf6UzkKiyfG4L_0fQnV2KbfpKYkFLJE"
+      }
+    },
+    {
+      "label": "notifications_sample",
+      "status": 200,
+      "rows": [
+        {
+          "id": "evt-ord-BMB-20261105-896-pending",
+          "customer_id": "23cbe150-e5f4-4a37-a969-02e2db8df395",
+          "user_id": null,
+          "notification_type": "ORDER_CREATED",
+          "category": "Transactional",
+          "title": "รับออเดอร์แล้ว"
+        },
+        {
+          "id": "evt-ord-BMB-20261105-896-confirmed",
+          "customer_id": "23cbe150-e5f4-4a37-a969-02e2db8df395",
+          "user_id": null,
+          "notification_type": "ORDER_CONFIRMED",
+          "category": "Transactional",
+          "title": "ยืนยันออเดอร์"
+        },
+        {
+          "id": "evt-ord-BMB-20261105-896-preparing",
+          "customer_id": "23cbe150-e5f4-4a37-a969-02e2db8df395",
+          "user_id": null,
+          "notification_type": "ORDER_PREPARING",
+          "category": "Transactional",
+          "title": "กำลังเตรียมอาหาร"
+        },
+        {
+          "id": "evt-ord-BMB-20261105-896-ready_for_dispatch",
+          "customer_id": "23cbe150-e5f4-4a37-a969-02e2db8df395",
+          "user_id": null,
+          "notification_type": "ORDER_READY",
+          "category": "Transactional",
+          "title": "อาหารพร้อมแล้ว"
+        },
+        {
+          "id": "evt-ord-BMB-20261105-896-delivered",
+          "customer_id": "23cbe150-e5f4-4a37-a969-02e2db8df395",
+          "user_id": null,
+          "notification_type": "ORDER_DELIVERED",
+          "category": "Transactional",
+          "title": "จัดส่งสำเร็จ"
+        }
+      ]
+    },
+    {
+      "label": "business_settings_all_keys",
+      "status": 200,
+      "rows": [
+        {
+          "key": "loyalty_policy"
+        },
+        {
+          "key": "spin_policy"
+        },
+        {
+          "key": "social_links"
+        },
+        {
+          "key": "seo"
+        },
+        {
+          "key": "print_settings"
+        },
+        {
+          "key": "affiliate_policy"
+        },
+        {
+          "key": "promotion_policy"
+        },
+        {
+          "key": "referral_policy"
+        },
+        {
+          "key": "order_pattern"
+        },
+        {
+          "key": "notification_channels"
+        },
+        {
+          "key": "theater_daily_copy"
+        },
+        {
+          "key": "push_config"
+        },
+        {
+          "key": "hours"
+        },
+        {
+          "key": "operating_hours"
+        },
+        {
+          "key": "store_master_open"
+        },
+        {
+          "key": "delivery_policy"
+        },
+        {
+          "key": "kitchen_location"
+        },
+        {
+          "key": "order_policy"
+        },
+        {
+          "key": "addon_margin_policy"
+        },
+        {
+          "key": "home_popular_menu"
+        },
+        {
+          "key": "site_copy"
+        }
+      ]
+    },
+    {
+      "label": "push_send_diag",
+      "status": 200,
+      "rows": {
+        "ok": true,
+        "module": {
+          "webpushResolved": true,
+          "hasSetVapidDetails": true,
+          "hasSendNotification": true
+        },
+        "env": {
+          "SUPABASE_URL": true,
+          "SERVICE_ROLE": true,
+          "AUTOMATION_TOKEN": true,
+          "VAPID_PUBLIC_KEY": true,
+          "VAPID_PRIVATE_KEY": true,
+          "VAPID_SUBJECT": true
+        }
+      }
+    }
+  ]
+}

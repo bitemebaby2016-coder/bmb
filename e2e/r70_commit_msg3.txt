@@ -1,0 +1,6 @@
+R70-C: tests + docs + evidence ปิดงานชุดแชต/PWA — test pack §R70 (10 ข้อ) เตรียมรับการทดสอบ live
+
+- src/__tests__/r70ChatNotifyPwa.test.ts (10 ข้อ): contract m183 (แจ้งสองทิศทาง + ไม่เขียน outbox ตรง + validate เดิม) · ทุกหน้ามีกล่องข้อความ (track/orders/rider) · beep/badge/browser notification · bell ไม่แย่ง native prompt · auto-heal + role gate
+- docs/BMB_PRODUCTION_TEST_PACK.md §R70 = R70-1..R70-10 ขั้นทดสอบ live ให้ Owner + หมายเหตุเทคนิค (dispatcher <=5 นาที · ผู้เยี่ยมชมไม่มีแชตตาม RLS)
+- AI_WORK_STATE.md + BMB_MASTER_STATUS.md = สถานะ R70 (root cause จาก probe · m183 APPLIED+smoke 7/7 · ความเสี่ยง/งานต่อ)
+- e2e evidence: _r70Apply183.cjs/result (ledger 183) · _r70chat_smoke.cjs/json (behavior net-zero) · _r70_probe/_r70b_probe (read-only probes) · _r70_gates.cmd + logs

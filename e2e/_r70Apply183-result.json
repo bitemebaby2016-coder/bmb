@@ -1,0 +1,30 @@
+{
+  "at": "2026-11-05T11:14:37.333Z",
+  "steps": [
+    {
+      "v": "183",
+      "action": "applied+recorded",
+      "apply": "[]",
+      "rec": "[]"
+    }
+  ],
+  "precheck": {
+    "ledgerTop": "[{\"version\":\"185\",\"name\":\"185_admin_switches_master_category.sql\"},{\"version\":\"184\",\"name\":\"184_pickup_hours_not_rounds.sql\"},{\"version\":\"183\",\"name\":\"183_promo_banner_mascot.sql\"}]",
+    "notifNullable": "[{\"is_nullable\":\"YES\"}]"
+  },
+  "reload": "[]",
+  "verify": {
+    "ledgerTop": "[{\"version\":\"185\",\"name\":\"185_admin_switches_master_category.sql\"},{\"version\":\"184\",\"name\":\"184_pickup_hours_not_rounds.sql\"},{\"version\":\"183\",\"name\":\"183_promo_banner_mascot.sql\"},{\"version\":\"182\",\"name\":\"182_order_messages.sql\"},{\"version\":\"181\",\"name\":\"181_addon_margin_rules\"}]",
+    "fn": "[{\"proname\":\"send_order_message\",\"prosecdef\":true}]",
+    "notifNullable": "[{\"is_nullable\":\"YES\"}]",
+    "fnBodyHasNotify": "[{\"has_msgn\":true,\"has_notif_insert\":true,\"has_legacy_enqueue\":false}]"
+  },
+  "checks": {
+    "ledger_183": true,
+    "fn_security_definer": true,
+    "customer_id_nullable": true,
+    "uses_notifications_insert": true,
+    "uses_msgn_id": true
+  },
+  "ALL_PASS": true
+}

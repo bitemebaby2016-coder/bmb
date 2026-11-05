@@ -1,0 +1,287 @@
+{
+  "at": "2026-11-05T11:54:20.826Z",
+  "checks": [
+    {
+      "label": "outbox_any",
+      "status": 200,
+      "rows": [
+        {
+          "event_key": "ntf-evt-ord-BMB-20261105-896-delivered",
+          "status": "mock",
+          "channel": "line",
+          "customer_id": "23cbe150-e5f4-4a37-a969-02e2db8df395",
+          "created_at": "2026-11-05T10:40:04.351436+00:00",
+          "has_endpoint": false,
+          "has_keys": false
+        },
+        {
+          "event_key": "ntf-evt-ord-BMB-20261105-896-ready_for_dispatch",
+          "status": "mock",
+          "channel": "line",
+          "customer_id": "23cbe150-e5f4-4a37-a969-02e2db8df395",
+          "created_at": "2026-11-05T10:40:04.145528+00:00",
+          "has_endpoint": false,
+          "has_keys": false
+        },
+        {
+          "event_key": "ntf-evt-ord-BMB-20261105-896-preparing",
+          "status": "mock",
+          "channel": "line",
+          "customer_id": "23cbe150-e5f4-4a37-a969-02e2db8df395",
+          "created_at": "2026-11-05T10:40:03.006331+00:00",
+          "has_endpoint": false,
+          "has_keys": false
+        },
+        {
+          "event_key": "ntf-evt-ord-BMB-20261105-896-confirmed",
+          "status": "mock",
+          "channel": "line",
+          "customer_id": "23cbe150-e5f4-4a37-a969-02e2db8df395",
+          "created_at": "2026-11-05T10:40:02.944453+00:00",
+          "has_endpoint": false,
+          "has_keys": false
+        },
+        {
+          "event_key": "ntf-evt-ord-BMB-20261105-896-pending",
+          "status": "mock",
+          "channel": "line",
+          "customer_id": "23cbe150-e5f4-4a37-a969-02e2db8df395",
+          "created_at": "2026-11-05T10:40:02.776874+00:00",
+          "has_endpoint": false,
+          "has_keys": false
+        },
+        {
+          "event_key": "ntf-notif-1793874655015-ca785",
+          "status": "mock",
+          "channel": "line",
+          "customer_id": "23cbe150-e5f4-4a37-a969-02e2db8df395",
+          "created_at": "2026-11-05T10:35:03.254303+00:00",
+          "has_endpoint": false,
+          "has_keys": false
+        },
+        {
+          "event_key": "ntf-ntf-plt-a517766d42b4",
+          "status": "mock",
+          "channel": "line",
+          "customer_id": "23cbe150-e5f4-4a37-a969-02e2db8df395",
+          "created_at": "2026-11-05T10:35:03.142659+00:00",
+          "has_endpoint": false,
+          "has_keys": false
+        },
+        {
+          "event_key": "msg-omsg-1793874711652-a51c",
+          "status": "mock",
+          "channel": "line",
+          "customer_id": "23cbe150-e5f4-4a37-a969-02e2db8df395",
+          "created_at": "2026-11-05T10:31:51.639901+00:00",
+          "has_endpoint": false,
+          "has_keys": false
+        },
+        {
+          "event_key": "ntf-notif-1793871137447-b41ab",
+          "status": "sent",
+          "channel": "web_push",
+          "customer_id": "23cbe150-e5f4-4a37-a969-02e2db8df395",
+          "created_at": "2026-11-05T09:35:02.083963+00:00",
+          "has_endpoint": false,
+          "has_keys": false
+        },
+        {
+          "event_key": "ntf-notif-1793871143198-7831d",
+          "status": "sent",
+          "channel": "web_push",
+          "customer_id": "23cbe150-e5f4-4a37-a969-02e2db8df395",
+          "created_at": "2026-11-05T09:35:02.043288+00:00",
+          "has_endpoint": false,
+          "has_keys": false
+        },
+        {
+          "event_key": "ntf-notif-1793871149934-03a5d",
+          "status": "sent",
+          "channel": "web_push",
+          "customer_id": "23cbe150-e5f4-4a37-a969-02e2db8df395",
+          "created_at": "2026-11-05T09:35:01.940265+00:00",
+          "has_endpoint": false,
+          "has_keys": false
+        },
+        {
+          "event_key": "ntf-notif-1793870702768-208c4",
+          "status": "sent",
+          "channel": "web_push",
+          "customer_id": "23cbe150-e5f4-4a37-a969-02e2db8df395",
+          "created_at": "2026-11-05T09:30:03.518673+00:00",
+          "has_endpoint": false,
+          "has_keys": false
+        },
+        {
+          "event_key": "ntf-notif-1793870583501-94656",
+          "status": "sent",
+          "channel": "web_push",
+          "customer_id": "23cbe150-e5f4-4a37-a969-02e2db8df395",
+          "created_at": "2026-11-05T09:25:02.035648+00:00",
+          "has_endpoint": false,
+          "has_keys": false
+        },
+        {
+          "event_key": "ntf-notif-1793850302013-28403",
+          "status": "mock",
+          "channel": "line",
+          "customer_id": "98dba8b1-a024-447f-8639-bd022dc98388",
+          "created_at": "2026-11-05T03:50:03.867819+00:00",
+          "has_endpoint": false,
+          "has_keys": false
+        },
+        {
+          "event_key": "ntf-notif-1793850302457-372d2",
+          "status": "mock",
+          "channel": "line",
+          "customer_id": "db2d3906-3bde-405c-bfca-91876959e7e1",
+          "created_at": "2026-11-05T03:50:03.810145+00:00",
+          "has_endpoint": false,
+          "has_keys": false
+        },
+        {
+          "event_key": "ntf-ntf-plt-2064f3b8af91",
+          "status": "mock",
+          "channel": "line",
+          "customer_id": "d523a810-94a5-45dc-97ec-c3bad1d3cb7f",
+          "created_at": "2026-11-05T03:50:03.507139+00:00",
+          "has_endpoint": false,
+          "has_keys": false
+        },
+        {
+          "event_key": "ntf-notif-1793850302923-36d55",
+          "status": "mock",
+          "channel": "line",
+          "customer_id": "d523a810-94a5-45dc-97ec-c3bad1d3cb7f",
+          "created_at": "2026-11-05T03:50:03.392839+00:00",
+          "has_endpoint": false,
+          "has_keys": false
+        },
+        {
+          "event_key": "ntf-notif-1793850547898-5f877",
+          "status": "mock",
+          "channel": "line",
+          "customer_id": "98dba8b1-a024-447f-8639-bd022dc98388",
+          "created_at": "2026-11-05T03:50:03.188122+00:00",
+          "has_endpoint": false,
+          "has_keys": false
+        },
+        {
+          "event_key": "ntf-notif-1793850574258-2e132",
+          "status": "mock",
+          "channel": "line",
+          "customer_id": "db2d3906-3bde-405c-bfca-91876959e7e1",
+          "created_at": "2026-11-05T03:50:03.037967+00:00",
+          "has_endpoint": false,
+          "has_keys": false
+        },
+        {
+          "event_key": "ntf-notif-1793850300281-39e23",
+          "status": "mock",
+          "channel": "line",
+          "customer_id": "78af600a-e414-4d3a-8fe7-9b30cd7e3d08",
+          "created_at": "2026-11-05T03:45:02.837097+00:00",
+          "has_endpoint": false,
+          "has_keys": false
+        }
+      ]
+    },
+    {
+      "label": "order_896",
+      "status": 200,
+      "rows": [
+        {
+          "order_number": "BMB-20261105-896",
+          "customer_id": "23cbe150-e5f4-4a37-a969-02e2db8df395",
+          "customer_ref": "23cbe150-e5f4-4a37-a969-02e2db8df395",
+          "delivery_method": "pickup",
+          "status": "delivered",
+          "has_endpoint": false,
+          "has_keys": false
+        }
+      ]
+    },
+    {
+      "label": "push_subs_all",
+      "status": 200,
+      "rows": [
+        {
+          "id": "push- ###########-5c1b09",
+          "customer_id": "dddf4b57-405f-4852-a985-76d8d52b1b72",
+          "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36",
+          "failure_count": 0,
+          "last_success_at": null,
+          "last_failure_at": null,
+          "created_at": "2026-11-05T09:14:58.050238+00:00",
+          "updated_at": "2026-11-05T10:30:17.242085+00:00",
+          "driver_id": null,
+          "has_endpoint": true,
+          "has_keys": true
+        },
+        {
+          "id": "push- ###########-20d236",
+          "customer_id": "dddf4b57-405f-4852-a985-76d8d52b1b72",
+          "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36",
+          "failure_count": 0,
+          "last_success_at": null,
+          "last_failure_at": null,
+          "created_at": "2026-11-05T01:04:02.842137+00:00",
+          "updated_at": "2026-11-05T01:04:02.842137+00:00",
+          "driver_id": null,
+          "has_endpoint": true,
+          "has_keys": true
+        },
+        {
+          "id": "push- ###########-77e033",
+          "customer_id": "dddf4b57-405f-4852-a985-76d8d52b1b72",
+          "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36",
+          "failure_count": 0,
+          "last_success_at": null,
+          "last_failure_at": null,
+          "created_at": "2026-11-04T00:59:03.088441+00:00",
+          "updated_at": "2026-11-05T00:55:05.55916+00:00",
+          "driver_id": null,
+          "has_endpoint": true,
+          "has_keys": true
+        },
+        {
+          "id": "push- ###########-440377",
+          "customer_id": null,
+          "user_agent": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Mobile Safari/537.36",
+          "failure_count": 0,
+          "last_success_at": null,
+          "last_failure_at": null,
+          "created_at": "2026-10-23T07:04:35.523939+00:00",
+          "updated_at": "2026-10-23T07:04:35.523939+00:00",
+          "driver_id": "drv- ###########-60bc",
+          "has_endpoint": true,
+          "has_keys": true
+        },
+        {
+          "id": "push- ###########-7178f2",
+          "customer_id": null,
+          "user_agent": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Mobile Safari/537.36",
+          "failure_count": 0,
+          "last_success_at": null,
+          "last_failure_at": null,
+          "created_at": "2026-10-23T00:07:11.025823+00:00",
+          "updated_at": "2026-10-23T00:07:11.025823+00:00",
+          "driver_id": "drv- ###########-60bc",
+          "has_endpoint": true,
+          "has_keys": true
+        }
+      ]
+    },
+    {
+      "label": "drivers",
+      "status": 400,
+      "rows": {
+        "code": "42703",
+        "details": null,
+        "hint": null,
+        "message": "column drivers.is_active does not exist"
+      }
+    }
+  ]
+}
