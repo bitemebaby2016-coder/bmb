@@ -1,0 +1,115 @@
+{
+  "at": "2026-11-05T00:23:04.091Z",
+  "sha": "a39d842",
+  "http": 200,
+  "total": 10,
+  "checks": [
+    {
+      "name": "every-5-minutes",
+      "id": 126941252709,
+      "status": "completed",
+      "conclusion": "skipped",
+      "annotations": []
+    },
+    {
+      "name": "hourly-marketing",
+      "id": 126941249998,
+      "status": "completed",
+      "conclusion": "success",
+      "annotations": []
+    },
+    {
+      "name": "hourly-low-stock",
+      "id": 126941249631,
+      "status": "completed",
+      "conclusion": "success",
+      "annotations": []
+    },
+    {
+      "name": "hourly-low-stock",
+      "id": 126919045558,
+      "status": "completed",
+      "conclusion": "skipped",
+      "annotations": []
+    },
+    {
+      "name": "every-5-minutes",
+      "id": 126919042517,
+      "status": "completed",
+      "conclusion": "success",
+      "annotations": []
+    },
+    {
+      "name": "hourly-marketing",
+      "id": 126919042247,
+      "status": "completed",
+      "conclusion": "success",
+      "annotations": []
+    },
+    {
+      "name": "sync",
+      "id": 126913847506,
+      "status": "completed",
+      "conclusion": "success",
+      "annotations": []
+    },
+    {
+      "name": "Cloudflare Pages",
+      "id": 126748744547,
+      "status": "completed",
+      "conclusion": "success",
+      "annotations": []
+    },
+    {
+      "name": "Migrations + SQL contracts (ephemeral PG)",
+      "id": 126748250653,
+      "status": "completed",
+      "conclusion": "failure",
+      "annotations": [
+        {
+          "level": "warning",
+          "path": ".github",
+          "line": 2,
+          "msg": "Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/"
+        },
+        {
+          "level": "failure",
+          "path": ".github",
+          "line": 181,
+          "msg": "Process completed with exit code 1."
+        },
+        {
+          "level": "failure",
+          "path": ".github",
+          "line": 180,
+          "msg": "Legacy contracts failed: 2/7"
+        },
+        {
+          "level": "failure",
+          "path": "e2e/contracts_019_kitchen.sql",
+          "line": 0,
+          "msg": "psql:e2e/contracts_019_kitchen.sql:98: ERROR:  SKIP no open round with capacity for today"
+        },
+        {
+          "level": "failure",
+          "path": "e2e/contracts_017_018.sql",
+          "line": 0,
+          "msg": "psql:e2e/contracts_017_018.sql:98: ERROR:  ERR_SCHEDULED_DATE_INVALID"
+        },
+        {
+          "level": "notice",
+          "path": ".github",
+          "line": 1,
+          "msg": "\"The ubuntu-latest label will migrate to Ubuntu 26 beginning October 19, 2026. For more information, see https://github.com/actions/runner-images/issues/14748\""
+        }
+      ]
+    },
+    {
+      "name": "Test + Lint + Build",
+      "id": 126748248290,
+      "status": "completed",
+      "conclusion": "success",
+      "annotations": []
+    }
+  ]
+}

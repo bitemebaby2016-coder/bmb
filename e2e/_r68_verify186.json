@@ -1,0 +1,20 @@
+{
+  "at": "2026-11-05T00:42:38.596Z",
+  "project": "ivkdfognyiwjcmrhcnwz",
+  "http": 201,
+  "raw": "[{\"proname\":\"create_order_with_items\",\"has_bkk\":true,\"bkk_start_gate\":true,\"still_current_date\":false},{\"proname\":\"promotion_apply_rules\",\"has_bkk\":true,\"bkk_start_gate\":true,\"still_current_date\":false}]",
+  "rows": [
+    {
+      "proname": "create_order_with_items",
+      "has_bkk": true,
+      "bkk_start_gate": true,
+      "still_current_date": false
+    },
+    {
+      "proname": "promotion_apply_rules",
+      "has_bkk": true,
+      "bkk_start_gate": true,
+      "still_current_date": false
+    }
+  ]
+}

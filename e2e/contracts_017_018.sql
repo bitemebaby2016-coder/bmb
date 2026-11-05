@@ -3,6 +3,14 @@
 -- ALL tests run inside a transaction that ROLLS BACK — zero production writes persist.
 -- Must pass AFTER:  supabase db push   (migrations 017 + 018)
 -- ============================================
+--
+-- R68 (2026-11-05 · CI แดงรอบ 00:19 ICT — evidence e2e/_r68_ci_ann2.json):
+--   `ERR_SCHEDULED_DATE_INVALID` ช่วง 17:00–24:00 UTC = time bomb วันที่ class เดียวกับ contract 154:
+--   server gate ของ 141/143/148/153 ใช้ v_today = (now() AT TIME ZONE 'Asia/Bangkok')::date แต่ contract
+--   เลือก round ด้วย `scheduled_date > CURRENT_DATE` (session TZ ของ CI = UTC) → คนละวันช่วง 00:00–07:00 ICT
+--   → แก้ = ตั้ง session TZ ของ contract เป็น BKK ให้สองฝั่งเทียบวันที่เดียวกัน — assertion คงเดิม 100%
+SET timezone = 'Asia/Bangkok';
+
 BEGIN;
 
 -- helper assertion: raise on failure

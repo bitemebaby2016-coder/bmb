@@ -1,0 +1,10 @@
+R68-CI: ซ่อม Contract Tests 2 ไฟล์ที่เหลือ (time bomb วันที่ UTC/BKK class เดียวกับ 154) + migration 186 ซ่อมคูปองฝั่ง production ตามที่ Owner สั่ง
+
+- contracts_017_018.sql / contracts_019_kitchen.sql: SET timezone = 'Asia/Bangkok' ก่อน BEGIN
+  (gate จริง = 025:581 p_scheduled_date <= v_today โดย v_today เป็นวันที่ BKK — assertion คงเดิม 100%)
+- supabase/migrations/186_promotion_date_bkk.sql (ใหม่): promotion_apply_rules (181) +
+  create_order_with_items (173) VERBATIM เปลี่ยนเฉพาะ date gate → (now() AT TIME ZONE 'Asia/Bangkok')::date
+- apply เข้า production แล้วผ่าน Management API (HTTP 201) + พิสูจน์ DB จริง:
+  ทั้งสองฟังก์ชัน bkk_start_gate=true · still_current_date=false
+  evidence: e2e/_r68_apply186.json · e2e/_r68_verify186.json
+- AI_WORK_STATE: บล็อก R68-CI ใหม่ (ผล CI รอบ a39d842 · สถานะ UNVERIFIED ที่เหลือ)

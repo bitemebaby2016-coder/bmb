@@ -1,8 +1,35 @@
 {
-  "at": "2026-11-04T17:24:23.044Z",
+  "at": "2026-11-05T00:21:19.434Z",
   "http": 200,
-  "total": 3,
+  "total": 6,
   "checks": [
+    {
+      "name": "hourly-low-stock",
+      "status": "completed",
+      "conclusion": "skipped",
+      "id": 126741169235,
+      "summary": "",
+      "title": "",
+      "annotations": []
+    },
+    {
+      "name": "every-5-minutes",
+      "status": "completed",
+      "conclusion": "success",
+      "id": 126741167847,
+      "summary": "",
+      "title": "",
+      "annotations": []
+    },
+    {
+      "name": "hourly-marketing",
+      "status": "completed",
+      "conclusion": "success",
+      "id": 126741167311,
+      "summary": "",
+      "title": "",
+      "annotations": []
+    },
     {
       "name": "Cloudflare Pages",
       "status": "completed",

@@ -3,6 +3,14 @@
 -- ALL tests run inside a transaction that ROLLS BACK — zero production writes persist.
 -- Must pass AFTER:  supabase db push   (migration 019)
 -- ============================================
+--
+-- R68 (2026-11-05 · CI แดงรอบ 00:19 ICT — evidence e2e/_r68_ci_ann2.json):
+--   `SKIP no open round with capacity for today` = time bomb วันที่ class เดียวกับ contract 154:
+--   round fixture ถูก seed ด้วยวันที่ BKK แต่ contract หา round ด้วย `scheduled_date = CURRENT_DATE`
+--   (session TZ ของ CI = UTC) → ช่วง 17:00–24:00 UTC (00:00–07:00 ICT) = คนละวัน = หาไม่เจอ
+--   → แก้ = ตั้ง session TZ ของ contract เป็น BKK — assertion คงเดิม 100%
+SET timezone = 'Asia/Bangkok';
+
 BEGIN;
 
 -- W-2 (B-2): fixture แอดมิน — 019's create_production_batch ตรวจ is_admin()/is_staff()

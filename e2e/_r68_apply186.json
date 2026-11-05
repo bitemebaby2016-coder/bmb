@@ -1,0 +1,10 @@
+{
+  "at": "2026-11-05T00:42:18.359Z",
+  "file": "supabase/migrations/186_promotion_date_bkk.sql",
+  "project": "ivkdfognyiwjcmrhcnwz",
+  "sql_bytes": 27525,
+  "sql_has_begin": true,
+  "http": 201,
+  "response": "[]",
+  "ok": true
+}
