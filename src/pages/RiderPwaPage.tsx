@@ -41,6 +41,8 @@ import { fetchAddressPhotoPath, getAddressPhotoUrl } from '@/lib/addressPhoto'
 import { planMultiStopRoute, googleMapsDirUrl, openMapsUrl, toPlanStops } from '@/lib/deliveryPlan'
 // R51: แชตออเดอร์ฝั่งไรเดอร์ (component เดียวกับลูกค้า/แอดมิน — เขียนผ่าน RPC m182)
 import { OrderChatPanel } from '@/components/messages/OrderChatPanel'
+// R71 (Owner 2026-11-05 "ฝั่งไดร์เวอร์ไม่มีแจ้งเตือน"): กระดิ่งแจ้งเตือนฝั่งไรเดอร์ (m187)
+import { RiderBell } from '@/components/notification/RiderBell'
 import {
   enablePush,
   disablePush,
@@ -517,6 +519,8 @@ export function RiderPwaPage() {
                 </p>
               </div>
               <div className="flex gap-2 flex-wrap">
+                {/* R71: กระดิ่งแจ้งเตือน (ข้อความจากลูกค้า/ร้าน — m187 เข้าตาราง notifications ของไรเดอร์เอง) */}
+                <RiderBell />
                 <button className="btn btn-outline text-xs" disabled={loading} onClick={() => void refresh()} data-testid="rider-refresh">
                   {loading ? '⏳ กำลังโหลด…' : '🔄 รีเฟรชงานของฉัน'}
                 </button>
@@ -822,9 +826,9 @@ export function RiderPwaPage() {
                       </button>
                     )}
                   </div>
-                  {/* R70 (Owner "ไรเดอร์ไม่มีกล่องข้อความโต้ตอบ"): แชตรายงาน —
-                      ตอบลูกค้า/ร้านได้ทุกงานจากหน้ารายการ โดยไม่ต้องเปิดงานก่อน (m183) */}
-                  <details className="mt-2" data-testid={`rider-job-chat-${a.order_number}`}>
+                  {/* R70/R71 (Owner "ไรเดอร์ไม่มีกล่องข้อความโต้ตอบ/โต้ตอบไม่ได้"): แชตรายงาน —
+                      เปิดกางค้างให้เห็นช่องพิมพ์ทันทีทุกงาน (เดิมพับ = ดูเหมือนไม่มีแชต) · ตอบลูกค้า/ร้านได้โดยไม่ต้องเปิดงาน (m187) */}
+                  <details open className="mt-2" data-testid={`rider-job-chat-${a.order_number}`}>
                     <summary className="cursor-pointer text-xs text-brand-accent select-none">💬 แชตงานนี้ (ลูกค้า/ร้าน)</summary>
                     <OrderChatPanel orderNumber={a.order_number} role="rider" />
                   </details>

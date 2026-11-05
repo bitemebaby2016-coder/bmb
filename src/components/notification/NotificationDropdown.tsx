@@ -13,6 +13,9 @@ const icons: Record<string, string> = {
   system: '⚙️',
   loyalty: '💰',
   referral: '👥',
+  // R71: แถวข้อความแชต (m187 notification_type=ORDER_MESSAGE · title มี 💬 นำอยู่แล้ว)
+  order_message: '💬',
+  ORDER_MESSAGE: '💬',
 }
 
 const SOUND_KEY = 'bmb:notif-sound'
@@ -72,7 +75,21 @@ export function NotificationDropdown() {
       const seen = seenRef.current ?? (seenRef.current = new Set())
       const fresh = rows.filter((r) => !r.is_read && !seen.has(r.id))
       rows.forEach((r) => seen.add(r.id))
-      if (fresh.length > 0 && soundRef.current) playNotifBeep()
+      if (fresh.length > 0 && soundRef.current) {
+        playNotifBeep()
+        // R71 (Owner "กระดิ่งเตือนจริง"): เด้ง notification บนเดสก์ท็อปด้วยเมื่อหน้าไม่ได้โฟกัส
+        // (granted เท่านั้น — ไม่เด้งขอสิทธิ์เอง)
+        try {
+          if (
+            typeof document !== 'undefined' && document.hidden &&
+            typeof window !== 'undefined' && 'Notification' in window &&
+            Notification.permission === 'granted'
+          ) {
+            const last = fresh[fresh.length - 1]
+            new Notification(last.title, { body: last.message, icon: '/favicon.svg', tag: 'bmb-bell' })
+          }
+        } catch { /* private mode / policy — เงียบไว้ */ }
+      }
       hydrateServerNotifications(rows)
     }
     void tick()
@@ -144,9 +161,10 @@ export function NotificationDropdown() {
                     setOpen(false)
                     if (target) navigate(target)
                     if (n.is_read) return
-                    // Server-durable rows (evt-*/auto-*) persist "read" via RLS; local-only rows stay local.
-                    if (n.id.startsWith('evt-') || n.id.startsWith('auto-')) void markServerAsRead(n.id)
-                    else useNotificationStore.getState().markAsRead(n.id)
+                    // R71 (Owner "กระดิ่งเตือนจริง"): เดิม persist "อ่านแล้ว" เฉพาะ evt-*/auto-* =
+                    // แถว msgn-*/notif-* (ข้อความ/ออเดอร์) ถูกมาร์กเฉพาะในเครื่อง → ป้ายแดงกลับมาทุก reload —
+                    // markServerAsRead ปลอดภัยกับทุกแถว (แถว local-only = server update 0 แถว + มาร์กในเครื่องตามเดิม)
+                    void markServerAsRead(n.id)
                   }}
                   className={`w-full text-left p-3 transition-colors ${
                     n.is_read ? 'bg-white hover:bg-gray-50' : 'bg-orange-50 hover:bg-orange-100'
