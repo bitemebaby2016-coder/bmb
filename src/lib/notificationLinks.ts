@@ -36,6 +36,12 @@ const ADMIN_DELIVERY_TYPES = [
   'ORDER_IN_TRANSIT',
   'ORDER_ARRIVED',
   'ORDER_DELIVERED',
+  // R72 (Owner "เส้นทางแจ้งเตือนของการจัดส่งหายไปอีกแล้ว"): แถวแจ้งสายจัดส่งจาก
+  // automation-worker (evt-drv-*) + pickup handover ต้องเด้งไปหน้าจัดส่งด้วย
+  'DRIVER_ASSIGNED',
+  'DRIVER_ACCEPTED',
+  'DRIVER_PICKED_UP',
+  'ORDER_PICKED_UP',
 ]
 
 /**

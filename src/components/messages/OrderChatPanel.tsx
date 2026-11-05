@@ -18,12 +18,13 @@ interface Props {
   role: ChatRole
 }
 
-/** แจ้งเตือนเบราว์เซอร์เมื่อหน้าไม่ได้โฟกัส (granted เท่านั้น — ไม่เด้งขอสิทธิ์เอง) */
+/** แจ้งเตือนเบราว์เซอร์ทุกครั้งที่มีข้อความใหม่ (granted เท่านั้น — ไม่เด้งขอสิทธิ์เอง)
+ *  R72 (Owner "เด้งตอนเปิดแอพด้วย"): เดิมเด้งเฉพาะตอนหน้าไม่โฟกัส = ตอนนั่งทดสอบอยู่ไม่เคยเห็น
+ *  → เด้งทั้งตอนเปิดแอปอยู่และตอนสลับแอป */
 function notifyBrowser(title: string, body: string): void {
   try {
     if (typeof window === 'undefined' || !('Notification' in window)) return
     if (Notification.permission !== 'granted') return
-    if (typeof document !== 'undefined' && !document.hidden) return
     new Notification(title, { body, icon: '/favicon.svg', tag: 'bmb-chat' })
   } catch {
     /* private mode / policy — เงียบไว้ */

@@ -48,7 +48,14 @@ export function AdminKitchen() {
       const activeRounds = await listRoundsForDate(date)
       setRounds(activeRounds)
       const pipe = await getKitchenPipelineOrders()
-      setPipeline(pipe.filter((o) => (o.scheduled_date || date) === date || o.order_mode !== 'PRE_ORDER'))
+      // R72 (Owner "สถานะหลังยืนยันรอบจัดส่งไม่เดินต่อ"): เดิมกรอบวันที่ที่เลือก = พรีออเดอร์
+      // ของวันถัดไป (เช่น ยืนยันรอบส่งพรุ่งนี้) ไม่ขึ้นในคิวครัว = หาปุ่ม "เริ่มทำ" ไม่เจอ →
+      // สถานะค้างที่ confirmed — เปิดให้พรีออเดอร์ที่รอเข้าครัว (confirmed/preparing/ready)
+      // ขึ้นทุกวันที่ พร้อมป้ายวันส่งเสมอ
+      setPipeline(pipe.filter((o) =>
+        (o.scheduled_date || date) === date ||
+        (o.order_mode === 'PRE_ORDER' && ['confirmed', 'preparing', 'ready_for_dispatch'].includes(String(o.status))),
+      ))
     } catch (e) {
       console.error('[AdminKitchen] Load failed:', e)
       setLoadError('โหลดคิวครัวไม่สำเร็จ — ตรวจสอบการเชื่อมต่อแล้วกด "ลองใหม่" (ข้อมูลด้านล่างอาจล้าสมัย)')

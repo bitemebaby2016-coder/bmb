@@ -77,11 +77,10 @@ export function NotificationDropdown() {
       rows.forEach((r) => seen.add(r.id))
       if (fresh.length > 0 && soundRef.current) {
         playNotifBeep()
-        // R71 (Owner "กระดิ่งเตือนจริง"): เด้ง notification บนเดสก์ท็อปด้วยเมื่อหน้าไม่ได้โฟกัส
-        // (granted เท่านั้น — ไม่เด้งขอสิทธิ์เอง)
+        // R71/R72 (Owner "กระดิ่งเตือนจริง"/"เด้งตอนเปิดแอพด้วย"): เด้ง notification บนเดสก์ท็อป
+        // ทุกครั้งที่มีรายการใหม่ ทั้งตอนเปิดแอปอยู่และตอนหน้าไม่โฟกัส (granted เท่านั้น — ไม่เด้งขอสิทธิ์เอง)
         try {
           if (
-            typeof document !== 'undefined' && document.hidden &&
             typeof window !== 'undefined' && 'Notification' in window &&
             Notification.permission === 'granted'
           ) {

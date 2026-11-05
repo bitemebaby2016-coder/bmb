@@ -54,6 +54,7 @@ import type { VerifiedCustomerReview, Product, ProductCategory, SameDayOrderPayl
 import { preOrderEntryPath, saleModeOfCategory, withPreOrderTab } from '@/lib/catalogStructure'
 import { scrollToSectionOrTop } from '@/lib/scrollTo'
 import { hoursToMs } from '@/lib/shopHoursLogic'
+import { bangkokDateKey } from '@/lib/promotionClient'
 import { parseStoreMasterOpen } from '@/lib/storeMaster'
 import { MascotBadge } from '@/components/MascotBadge'
 
@@ -185,8 +186,19 @@ export function HomePage() {
     const matchesCategory = !activeCategory || item.category_id === activeCategory
     return matchesSearch && matchesCategory
   })
+  // R72 (Owner "โปรโมชั่นคูปองที่แอดมินสร้างเองใหม่ ทำให้ใช้ในหน้าเช็คเอาท์"): การ์ดโปรหน้าร้าน
+  // ต้องเคารพช่วงวันที่แบบเดียวกับ dropdown คูปอง (เดิมไม่เช็ก = คูปองหมดอายุยังถูกโฆษณา
+  // แต่กดใช้ที่เช็คเอาท์ไม่ได้) — เพิ่มโปรภายหลัง = ขึ้นอัตโนมัติทั้งการ์ดและคูปอง
+  const todayKey = bangkokDateKey()
   const bannerPromos: FloatingBannerPromo[] = (promoRows || [])
     .filter((r) => r.is_banner === true && r.is_active !== false)
+    .filter((r) => {
+      const s = String(r.start_date || '').slice(0, 10)
+      const e = String(r.end_date || '').slice(0, 10)
+      if (s && todayKey < s) return false
+      if (e && todayKey > e) return false
+      return true
+    })
     .sort((a, b) => String(a.created_at || '').localeCompare(String(b.created_at || '')))
     .map((r) => ({
       id: String(r.id),

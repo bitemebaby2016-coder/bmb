@@ -41,8 +41,8 @@ import { fetchAddressPhotoPath, getAddressPhotoUrl } from '@/lib/addressPhoto'
 import { planMultiStopRoute, googleMapsDirUrl, openMapsUrl, toPlanStops } from '@/lib/deliveryPlan'
 // R51: แชตออเดอร์ฝั่งไรเดอร์ (component เดียวกับลูกค้า/แอดมิน — เขียนผ่าน RPC m182)
 import { OrderChatPanel } from '@/components/messages/OrderChatPanel'
-// R71 (Owner 2026-11-05 "ฝั่งไดร์เวอร์ไม่มีแจ้งเตือน"): กระดิ่งแจ้งเตือนฝั่งไรเดอร์ (m187)
-import { RiderBell } from '@/components/notification/RiderBell'
+// R72 (Owner "แจ้งเตือนไรเดอร์มีซ้ำ"): ถอด RiderBell ออก — /rider มีกระดิ่งมุมจอ (Header) อยู่แล้ว
+// กระดิ่งสองตัว = เตือนซ้ำสองทาง (เสียง+ป้าย+เดสก์ท็อป) · ใช้กระดิ่งมุมจอเดียวทุก role
 import {
   enablePush,
   disablePush,
@@ -519,8 +519,6 @@ export function RiderPwaPage() {
                 </p>
               </div>
               <div className="flex gap-2 flex-wrap">
-                {/* R71: กระดิ่งแจ้งเตือน (ข้อความจากลูกค้า/ร้าน — m187 เข้าตาราง notifications ของไรเดอร์เอง) */}
-                <RiderBell />
                 <button className="btn btn-outline text-xs" disabled={loading} onClick={() => void refresh()} data-testid="rider-refresh">
                   {loading ? '⏳ กำลังโหลด…' : '🔄 รีเฟรชงานของฉัน'}
                 </button>
