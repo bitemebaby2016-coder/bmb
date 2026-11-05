@@ -47,7 +47,7 @@ async function main() {
     process.exit(1)
   }
   // 3) commit + push
-  out(sh('git commit -m "R69: close N-1..N-9 (pickup path, strip, coupon tz, print transports, sticker overlap) + auto-cancel phase B"').slice(0, 500))
+  out(sh('git commit -m "R69-N4c: pickup status display - timeline ends at ready step, done label, hide transit steps (customer surfaces)"').slice(0, 500))
   out(sh('git push').slice(0, 500))
   out('PUSH_DONE')
 }

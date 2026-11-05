@@ -25,6 +25,16 @@ const FORWARD_CHAIN: readonly ServerOrderStatus[] = SERVER_ORDER_STATUSES.filter
   (s) => s !== 'cancelled' && s !== 'failed',
 )
 
+/**
+ * N-4c (Owner 2026-11-05): เส้นทาง "รับที่ร้าน" จบที่ ready_for_dispatch (พร้อมรับที่ร้าน)
+ * — dispatched/in_transit/arrived (เริ่มจัดส่ง/กำลังเดินทาง/ถึงปลายทาง) = "ไม่ต้องมีแสดง"
+ * เพราะ pickup ไม่เรียกไรเดอร์ · สถานะ delivered = ป้าย "รับสินค้าแล้ว" (โชว์ที่การ์ดสถานะ)
+ * ส่วนไทม์ไลน์แสดงครบถึงขั้นสุดท้าย = พร้อมรับที่ร้าน
+ */
+const PICKUP_FORWARD_CHAIN: readonly ServerOrderStatus[] = FORWARD_CHAIN.filter(
+  (s) => s !== 'dispatched' && s !== 'in_transit' && s !== 'arrived' && s !== 'delivered',
+)
+
 const STEP_ICONS: Record<ServerOrderStatus, string> = {
   pending: '⏳',
   confirmed: '✅',
@@ -69,22 +79,26 @@ export function OrderTimeline({ status, mode = 'SAME_DAY', fulfillment = 'delive
     )
   }
 
-  const activeIdx = FORWARD_CHAIN.indexOf(status);
+  const chain = fulfillment === 'pickup' ? PICKUP_FORWARD_CHAIN : FORWARD_CHAIN
+  // N-4c: pickup — สถานะที่อยู่หลังขั้นสุดท้ายที่แสดง (delivered หรือ 3 สถานะที่ "ไม่ต้องมีแสดง")
+  // = ผ่านครบทุกขั้น (ชี้ขั้นสุดท้าย) · terminal abort (cancelled/failed) return ไปแล้วข้างบน
+  let activeIdx = chain.indexOf(status);
+  if (activeIdx === -1) activeIdx = chain.length - 1
   return (
     <div className="mb-6" data-testid="order-timeline">
       <div className="flex items-center justify-between relative">
         <div className="absolute top-6 left-0 right-0 h-1 bg-brand-border z-0"></div>
         <div
           className="absolute top-6 left-0 h-1 w-full bg-brand-primary z-0 origin-left transition-transform duration-500"
-          style={{ transform: `scaleX(${Math.min(100, (activeIdx / (FORWARD_CHAIN.length - 1)) * 100) / 100})` }}
+          style={{ transform: `scaleX(${Math.min(100, (activeIdx / (chain.length - 1)) * 100) / 100})` }}
         ></div>
-        {FORWARD_CHAIN.map((step, index) => (
+        {chain.map((step, index) => (
           <div key={step} className="relative z-10 flex flex-col items-center">
             <div className={`w-12 h-12 rounded-full flex items-center justify-center text-xl ${index <= activeIdx ? 'bg-brand-primary text-white' : 'bg-brand-border text-brand-muted'}`}>
               {STEP_ICONS[step]}
             </div>
             <span data-testid="order-timeline-step" className={`text-xs mt-2 text-center ${index <= activeIdx ? 'text-brand-primary font-bold' : 'text-brand-muted'}`}>
-              {getServerStatusLabel(step, mode)}
+              {getServerStatusLabel(step, mode, fulfillment)}
             </span>
           </div>
         ))}

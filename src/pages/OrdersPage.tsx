@@ -123,7 +123,7 @@ export function OrdersPage() {
                   <p className="font-bold text-brand-accent">#{o.order_number}</p>
                   <p className="text-sm text-brand-muted">
                     <span className="badge badge-info mr-1">{mode === 'PRE_ORDER' ? '📅 จองล่วงหน้า' : '🔥 วันนี้'}</span>
-                    {getServerStatusLabel(String(o.status), mode)}
+                    {getServerStatusLabel(String(o.status), mode, o.delivery_method === 'pickup' ? 'pickup' : 'delivery')}
                     {' · '}{PAYMENT_LABEL[o.payment_status] || o.payment_status}
                     {mode === 'PRE_ORDER' && o.scheduled_date ? ` · รับวันที่ ${o.scheduled_date}` : ''}
                     {' · '}{Number(o.total_amount).toFixed(2)} ฿

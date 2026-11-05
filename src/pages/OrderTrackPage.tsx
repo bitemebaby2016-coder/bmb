@@ -283,7 +283,7 @@ export function OrderTrackPage() {
           {(status === 'dispatched' || status === 'in_transit' || status === 'arrived') && (
             <p className="text-sm text-brand-muted">{isPickup ? 'รอรับอาหารที่หน้าร้าน' : 'คนส่งกำลังเดินทาง'}</p>
           )}
-          {status === 'delivered' && <p className="text-sm text-brand-muted">{isPickup ? 'รับอาหารเรียบร้อย! ขอบคุณที่ใช้บริการ' : 'ส่งสำเร็จ! ขอบคุณที่ใช้บริการ'}</p>}
+          {status === 'delivered' && <p className="text-sm text-brand-muted">{isPickup ? 'รับสินค้าแล้ว! ขอบคุณที่ใช้บริการ' : 'ส่งสำเร็จ! ขอบคุณที่ใช้บริการ'}</p>}
           {status === 'cancelled' && <p className="text-sm text-brand-muted">ออเดอร์นี้ถูกยกเลิกแล้ว</p>}
           {status === 'failed' && <p className="text-sm text-brand-muted">{isPickup ? 'ส่งมอบไม่สำเร็จ — ติดต่อร้านได้เลย' : 'ออเดอร์นี้ไม่สำเร็จ — ติดต่อร้านได้เลย'}</p>}
         </div>

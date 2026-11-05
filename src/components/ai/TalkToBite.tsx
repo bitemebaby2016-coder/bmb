@@ -402,7 +402,7 @@ export function TalkToBite({ mode = 'overlay', initialPhase = 'landing', landing
         return
       }
       const recent = [...orders].slice(0, 5)
-      const lines = recent.map((o) => `• ${o.order_number} — ${getServerStatusLabel(String(o.status), (o.order_mode ?? 'SAME_DAY') as OrderMode)}`)
+      const lines = recent.map((o) => `• ${o.order_number} — ${getServerStatusLabel(String(o.status), (o.order_mode ?? 'SAME_DAY') as OrderMode, o.delivery_method === 'pickup' ? 'pickup' : 'delivery')}`)
       pushAssistant(`ออเดอร์ล่าสุดของคุณ (${Math.min(orders.length, 5)}/${orders.length}) ที่ยังเข้าถึงได้:\n${lines.join('\n')}`)
       setBiteState('IDLE')
     } catch {

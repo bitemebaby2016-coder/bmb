@@ -185,16 +185,18 @@ export function getServerStatusLabel(server: string, mode: OrderMode = 'SAME_DAY
 
 /**
  * N-4 (Owner 2026-11-05 · R69): ป้ายสถานะเส้นทาง "รับที่ร้าน" — คนละคำกับ "จัดส่ง"
- * ทับเฉพาะสถานะที่ต่างจริง (ส่วนที่เหลือใช้ป้ายเดิมตาม mode) · เส้นทาง pickup ไม่ผ่าน
- * dispatched/in_transit/arrived (ไม่เรียกไรเดอร์ — POS ส่งมอบที่หน้าร้าน) แต่ map ไว้
- * กันป้ายหลุดเป็นศัพท์จัดส่งถ้าข้อมูลเก่าค้าง
+ * N-4c (Owner 2026-11-05 รอบบ่าย): "การแสดงสถานะให้สิ้นสุดที่ พร้อมส่ง แต่เปลี่ยนคำว่า
+ * พร้อมส่งเป็น พร้อมรับที่ร้าน และ ส่งสำเร็จเป็น รับสินค้าแล้ว (เริ่มจัดส่ง กำลังเดินทาง
+ * ถึงปลายทาง ไม่ต้องมีแสดง)" — dispatched/in_transit/arrived = ไม่ render เป็นขั้นใน
+ * OrderTimeline (pickup chain จบที่ ready_for_dispatch) · map ทับเป็น "พร้อมรับที่ร้าน"
+ * กันป้ายหลุดเป็นศัพท์จัดส่งถ้าข้อมูลเก่าค้าง (chip เท่านั้น)
  */
 export const PICKUP_STATUS_LABEL_TH: Partial<Record<ServerOrderStatus, string>> = {
-  ready_for_dispatch: 'พร้อมรับที่หน้าร้าน',
-  dispatched: 'ส่งมอบที่หน้าร้าน',
-  in_transit: 'รอรับที่หน้าร้าน',
-  arrived: 'ถึงหน้าร้าน',
-  delivered: 'รับอาหารเรียบร้อย',
+  ready_for_dispatch: 'พร้อมรับที่ร้าน',
+  dispatched: 'พร้อมรับที่ร้าน',
+  in_transit: 'พร้อมรับที่ร้าน',
+  arrived: 'พร้อมรับที่ร้าน',
+  delivered: 'รับสินค้าแล้ว',
   failed: 'ส่งมอบไม่สำเร็จ',
 }
 

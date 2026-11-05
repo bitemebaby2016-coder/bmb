@@ -16,6 +16,7 @@ import { OrderTimeline } from '@/components/customer/OrderTimeline'
 import {
   SERVER_ORDER_STATUSES,
   SERVER_STATUS_LABEL_TH,
+  getServerStatusLabel,
 } from '@/lib/orderVocabulary'
 
 declare global {
@@ -29,12 +30,12 @@ beforeAll(() => {
 // B-1 FIX (2026-10-26): เดิม mount+setTimeout(0) — ตอนรันชุดใหญ่ React ยัง commit ไม่เสร็จ ทำให้
 // 4 เคส fail เป็นระยะ (รันตัวไฟล์เดียวผ่านตลอด) → render + flush ข้างใน act() ให้รอ commit จริง
 //  Assertions ทุกตัวคงเดิมทั้งหมด (ไม่มีการลด/ข้าม แม้แต่ข้อเดียว — เปลี่ยนแค่วิธีรอผล)
-async function renderTimeline(status: string) {
+async function renderTimeline(status: string, fulfillment: 'delivery' | 'pickup' = 'delivery') {
   const container = document.createElement('div')
   document.body.appendChild(container)
   const root = createRoot(container)
   await act(async () => {
-    root.render(h(OrderTimeline, { status }))
+    root.render(h(OrderTimeline, { status, fulfillment }))
   })
   return { container, root }
 }
@@ -95,5 +96,62 @@ describe('OrderTimeline (M1) — ขับจาก enum จริง + label �
     const { container } = await renderTimeline('mystery_status')
     expect(container.textContent).toContain('mystery_status')
     expect(stepLabels(container)).toHaveLength(0)
+  })
+})
+// ============================================
+// N-4c (Owner 2026-11-05 รอบบ่าย) — โหมด "รับที่ร้าน"
+// "การแสดงสถานะให้สิ้นสุดที่ พร้อมส่ง แต่เปลี่ยนคำว่าพร้อมส่งเป็น พร้อมรับที่ร้าน
+//  และ ส่งสำเร็จเป็น รับสินค้าแล้ว (เริ่มจัดส่ง กำลังเดินทาง ถึงปลายทาง ไม่ต้องมีแสดง)"
+// ============================================
+describe('N-4c — pickup: ไทม์ไลน์จบที่ "พร้อมรับที่ร้าน" + ป้ายจบงาน "รับสินค้าแล้ว"', () => {
+  const FORBIDDEN = ['เริ่มจัดส่ง', 'กำลังเดินทาง', 'ถึงปลายทาง', 'ส่งสำเร็จ', 'พร้อมส่ง']
+
+  it('pickup = 4 ขั้น จบที่ พร้อมรับที่ร้าน (คำเก่า "พร้อมส่ง" ไม่แสดง)', async () => {
+    const { container } = await renderTimeline('pending', 'pickup')
+    const labels = stepLabels(container)
+    expect(labels).toHaveLength(4)
+    expect(labels[labels.length - 1]).toBe('พร้อมรับที่ร้าน')
+    for (const w of FORBIDDEN) expect(labels.join(' ')).not.toContain(w)
+  })
+
+  it('pickup สถานะ delivered = ไทม์ไลน์ครบทุกขั้น (ยังจบที่พร้อมรับที่ร้าน) + ป้ายสถานะ = รับสินค้าแล้ว', async () => {
+    const { container } = await renderTimeline('delivered', 'pickup')
+    const labels = stepLabels(container)
+    expect(labels).toHaveLength(4)
+    expect(labels[labels.length - 1]).toBe('พร้อมรับที่ร้าน')
+    for (const n of Array.from(container.querySelectorAll('[data-testid="order-timeline-step"]'))) {
+      expect(n.className).toContain('font-bold') // ผ่านครบ = ไฮไลต์ทุกขั้น
+    }
+    expect(getServerStatusLabel('delivered', 'SAME_DAY', 'pickup')).toBe('รับสินค้าแล้ว')
+    expect(getServerStatusLabel('delivered', 'PRE_ORDER', 'pickup')).toBe('รับสินค้าแล้ว')
+  })
+
+  it('3 สถานะเส้นทางจัดส่ง (dispatched/in_transit/arrived) = ไม่แสดงเป็นขั้น + ป้าย collapse เป็นพร้อมรับที่ร้าน', async () => {
+    for (const s of ['dispatched', 'in_transit', 'arrived'] as const) {
+      const { container } = await renderTimeline(s, 'pickup')
+      const labels = stepLabels(container)
+      expect(labels).toHaveLength(4)
+      expect(getServerStatusLabel(s, 'SAME_DAY', 'pickup')).toBe('พร้อมรับที่ร้าน')
+      for (const w of FORBIDDEN) expect(container.textContent ?? '').not.toContain(w)
+    }
+  })
+
+  it('pickup ทุกสถานะ = ไม่มีคำ เริ่มจัดส่ง/กำลังเดินทาง/ถึงปลายทาง หลุดมาแสดง (รวม terminal)', async () => {
+    for (const s of SERVER_ORDER_STATUSES) {
+      const { container } = await renderTimeline(s, 'pickup')
+      const text = container.textContent ?? ''
+      for (const w of ['เริ่มจัดส่ง', 'กำลังเดินทาง', 'ถึงปลายทาง']) expect(text).not.toContain(w)
+    }
+    // terminal pickup: failed = ส่งมอบไม่สำเร็จ (ไม่ใช่ศัพท์จัดส่ง)
+    const f = await renderTimeline('failed', 'pickup')
+    expect(f.container.textContent).toContain('ส่งมอบไม่สำเร็จ')
+    // ป้ายพร้อมส่ง (delivery) ต้องไม่หลุดใน pickup + ป้าย ready ของ pickup = ตามคำสั่ง Owner เป๊ะ
+    expect(getServerStatusLabel('ready_for_dispatch', 'SAME_DAY', 'pickup')).toBe('พร้อมรับที่ร้าน')
+    expect(getServerStatusLabel('ready_for_dispatch', 'PRE_ORDER', 'pickup')).toBe('พร้อมรับที่ร้าน')
+    // เส้นทางจัดส่ง (delivery) คงเดิมทุกประการ — 8 ขั้น + ป้ายเดิม
+    const d = await renderTimeline('ready_for_dispatch', 'delivery')
+    expect(stepLabels(d.container)).toHaveLength(8)
+    expect(stepLabels(d.container)[3]).toBe('พร้อมส่ง')
+    expect(stepLabels(d.container)[7]).toBe('ส่งสำเร็จ')
   })
 })
