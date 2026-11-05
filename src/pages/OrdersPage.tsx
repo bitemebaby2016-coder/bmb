@@ -146,8 +146,8 @@ export function OrdersPage() {
                   )}
                 </div>
               </div>
-              {/* R51: แชตกับร้าน — thread ผูกออเดอร์ · poll 10 วิ · m182 */}
-              <details className="mt-2" data-testid={`order-chat-details-${o.order_number}`}>
+              {/* R51: แชตกับร้าน — thread ผูกออเดอร์ · poll 10 วิ · m182/183 · เปิดเผยเห็นชัด (R70) */}
+              <details className="mt-2" open data-testid={`order-chat-details-${o.order_number}`}>
                 <summary className="cursor-pointer text-sm text-brand-accent select-none">💬 แชตร้าน — ถามรายละเอียดออเดอร์นี้</summary>
                 <OrderChatPanel orderNumber={o.order_number} role="customer" />
               </details>

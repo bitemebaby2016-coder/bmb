@@ -822,6 +822,12 @@ export function RiderPwaPage() {
                       </button>
                     )}
                   </div>
+                  {/* R70 (Owner "ไรเดอร์ไม่มีกล่องข้อความโต้ตอบ"): แชตรายงาน —
+                      ตอบลูกค้า/ร้านได้ทุกงานจากหน้ารายการ โดยไม่ต้องเปิดงานก่อน (m183) */}
+                  <details className="mt-2" data-testid={`rider-job-chat-${a.order_number}`}>
+                    <summary className="cursor-pointer text-xs text-brand-accent select-none">💬 แชตงานนี้ (ลูกค้า/ร้าน)</summary>
+                    <OrderChatPanel orderNumber={a.order_number} role="rider" />
+                  </details>
                 </GlassCard>
               ))}
                   {/* R38: อัลบั้มประวัติ — งานส่งสำเร็จที่เกิน 3 ล่าสุด (พับไว้ เปิดดูได้) */}

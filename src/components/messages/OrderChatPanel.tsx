@@ -10,10 +10,24 @@ import {
   listOrderMessages, sendOrderMessage, chatComposeGuard,
   CHAT_ROLE_LABELS, CHAT_POLL_MS, type ChatRole, type OrderMessageRow,
 } from '@/lib/orderMessages'
+// R70 (Owner 2026-11-05 "ไม่มีแจ้งเตือนข้อความ"): เสียงสั้นเมื่อมีข้อความใหม่จากอีกฝั่ง
+import { playNotifBeep } from '@/lib/notifBeep'
 
 interface Props {
   orderNumber: string
   role: ChatRole
+}
+
+/** แจ้งเตือนเบราว์เซอร์เมื่อหน้าไม่ได้โฟกัส (granted เท่านั้น — ไม่เด้งขอสิทธิ์เอง) */
+function notifyBrowser(title: string, body: string): void {
+  try {
+    if (typeof window === 'undefined' || !('Notification' in window)) return
+    if (Notification.permission !== 'granted') return
+    if (typeof document !== 'undefined' && !document.hidden) return
+    new Notification(title, { body, icon: '/favicon.svg', tag: 'bmb-chat' })
+  } catch {
+    /* private mode / policy — เงียบไว้ */
+  }
 }
 
 export function OrderChatPanel({ orderNumber, role }: Props) {
@@ -21,7 +35,10 @@ export function OrderChatPanel({ orderNumber, role }: Props) {
   const [draft, setDraft] = useState('')
   const [busy, setBusy] = useState(false)
   const [err, setErr] = useState('')
+  const [newCount, setNewCount] = useState(0)
   const listRef = useRef<HTMLDivElement | null>(null)
+  // id ที่เห็นแล้ว (โหลดรอบแรก = ไม่นับเป็น "ข้อความใหม่")
+  const seenRef = useRef<Set<string> | null>(null)
 
   async function load(silent = false) {
     const r = await listOrderMessages(orderNumber)
@@ -29,12 +46,30 @@ export function OrderChatPanel({ orderNumber, role }: Props) {
       if (!silent) setErr(r.error || 'โหลดข้อความไม่สำเร็จ')
       return
     }
-    setRows(r.rows ?? [])
+    const incoming = r.rows ?? []
+    // R70: จับข้อความใหม่จาก "อีกฝั่ง" ที่เข้ามาระหว่าง poll — เสียง + badge + browser notification
+    if (seenRef.current) {
+      const fresh = incoming.filter((m) => !seenRef.current!.has(m.id) && m.sender_role !== role)
+      if (fresh.length > 0) {
+        setNewCount((n) => n + fresh.length)
+        playNotifBeep()
+        const last = fresh[fresh.length - 1]
+        notifyBrowser(
+          `💬 ข้อความใหม่จาก${CHAT_ROLE_LABELS[last.sender_role]}`,
+          `${orderNumber}: ${last.body.slice(0, 120)}`,
+        )
+      }
+    }
+    seenRef.current = new Set(incoming.map((m) => m.id))
+    setRows(incoming)
     setErr('')
   }
 
   useEffect(() => {
     let alive = true
+    // เปลี่ยนออเดอร์ = รีเซ็ตสถานะแจ้งเตือนของ thread เดิม
+    seenRef.current = null
+    setNewCount(0)
     void (async () => { if (alive) await load() })()
     const t = window.setInterval(() => { void load(true) }, CHAT_POLL_MS)
     return () => { alive = false; window.clearInterval(t) }
@@ -44,6 +79,12 @@ export function OrderChatPanel({ orderNumber, role }: Props) {
     const el = listRef.current
     if (el) el.scrollTop = el.scrollHeight
   }, [rows.length])
+
+  function jumpToLatest() {
+    const el = listRef.current
+    if (el) el.scrollTop = el.scrollHeight
+    setNewCount(0)
+  }
 
   async function handleSend() {
     if (busy) return
@@ -55,6 +96,7 @@ export function OrderChatPanel({ orderNumber, role }: Props) {
     if (!r.ok) { setErr(r.error || 'ส่งข้อความไม่สำเร็จ'); return }
     setDraft('')
     setErr('')
+    setNewCount(0)
     await load(true)
   }
 
@@ -90,6 +132,16 @@ export function OrderChatPanel({ orderNumber, role }: Props) {
           )
         })}
       </div>
+      {newCount > 0 && (
+        <button
+          type="button"
+          onClick={jumpToLatest}
+          className="w-full mt-1 text-xs rounded-full border border-brand-primary text-brand-primary bg-brand-primary/10 py-1"
+          data-testid="order-chat-new-pill"
+        >
+          💬 มีข้อความใหม่ {newCount} ข้อความ — แตะเพื่อเลื่อนลงไปดู
+        </button>
+      )}
       {err && <p className="text-xs text-red-500 mt-1" data-testid="order-chat-error">{err}</p>}
       <div className="flex gap-2 mt-2">
         <input

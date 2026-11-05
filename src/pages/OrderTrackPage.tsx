@@ -21,6 +21,10 @@ import { getOrderRiderPosition, type RiderPosition } from '@/lib/riderPositionAp
 import { RiderMiniMap } from '@/components/rider/RiderMiniMap'
 // N-4/N-8 (Owner 2026-11-05): หน้าติดตามเส้นทาง "รับที่ร้าน" — ตำแหน่งร้าน/รูปหน้าร้าน
 import { getStoreFront, getStoreLocation, storeDirectionsUrl, type StoreFrontInfo, type StoreLocation } from '@/lib/storeFront'
+// R70 (Owner 2026-11-05 "ลูกค้า … ไม่มีกล่องข้อความโต้ตอบ"): แชตออเดอร์บนหน้าติดตาม
+// (หน้าที่ลูกค้าเปิดจากแจ้งเตือน/ใช้จริงระหว่างรอลูกค้า — thread เดียวกับ Orders/POS/ไรเดอร์)
+import { OrderChatPanel } from '@/components/messages/OrderChatPanel'
+import { useAuthStore } from '@/store/authStore'
 
 // R21f: ระหว่างสถานะเหล่านี้ = คนส่งกำลังออกมา → ดึงพิกัดทุก 12 วิ (READ-ONLY)
 const RIDER_VISIBLE_STATUSES = new Set(['dispatched', 'in_transit', 'arrived'])
@@ -34,6 +38,8 @@ const REFRESH_MS = 20000 // READ-ONLY polling cadence (never mutates status)
 export function OrderTrackPage() {
   const { orderNumber } = useParams()
   const navigate = useNavigate()
+  // R70: แชตหน้าติดตามแสดงเฉพาะผู้ล็อกอิน (RLS แชต = เจ้าของ/ไรเดอร์/แอดมิน)
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
   const [numInput, setNumInput] = useState('')
   const [order, setOrder] = useState<OrderForm | null>(null)
   const [intents, setIntents] = useState<Array<Record<string, any>>>([])
@@ -405,6 +411,17 @@ export function OrderTrackPage() {
           ) : null}
         </div>
       </div>
+
+      {/* R70 (Owner "ลูกค้า … ไม่มีกล่องข้อความโต้ตอบ"): แชตออเดอร์บนหน้าติดตาม —
+          thread เดียวกับ OrdersPage/POS/ไรเดอร์ (m183 แจ้งเตือนครบทุกฝั่ง) ·
+          แสดงเฉพาะผู้ล็อกอิน (ผู้เยี่ยมชมยืนยันด้วยเบอร์ = ยังไม่มีตัวตนฝั่ง RLS แชต) */}
+      {isAuthenticated && (
+        <div className="card mt-6" data-testid="track-order-chat">
+          <h3 className="font-bold text-brand-accent mb-2">💬 แชตกับร้าน/ไรเดอร์</h3>
+          <p className="text-xs text-brand-muted mb-2">ถาม-ตอบรายละเอียดออเดอร์นี้ได้เลย — ร้าน/ไรเดอร์ตอบกลับในแชตนี้</p>
+          <OrderChatPanel orderNumber={order.order_number} role="customer" />
+        </div>
+      )}
 
       {/* Rating prompt — only when the SERVER says delivered */}
       {status === 'delivered' && (
