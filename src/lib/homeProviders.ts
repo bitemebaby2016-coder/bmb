@@ -148,6 +148,16 @@ function fmtAmPm(hhmm: string): string {
  * authority (007/025/118) — the old `status === 'open'` filter matched NOTHING
  * in production and silently forced the mock fallback. 'open' is still accepted
  * for legacy/test rows. */
+/**
+ * N-2 (Owner 2026-11-05): บรรทัด ③ ของ strip = `เริ่มส่ง (HH:MM–HH:MM)` — เวลาในวงเล็บคือ
+ * เวลาเปิด-ปิดร้านที่แอดมินตั้งใน business_settings.hours (ไม่ hardcode · ไม่ผูกกับรอบส่ง)
+ * คืน null เมื่อยังไม่มีข้อมูลเวลา → caller ใช้ copy เดิมเป็น fallback (ไม่เดา)
+ */
+export function sameDayLineFromHours(hoursOpen?: string, hoursClose?: string): string | null {
+  if (!hoursOpen || !hoursClose) return null
+  return `เริ่มส่ง (${hoursOpen}–${hoursClose})`
+}
+
 export function getStoreStatusFromRounds(rounds: Array<{
   status?: string
   display_name?: string
@@ -165,6 +175,8 @@ export function getStoreStatusFromRounds(rounds: Array<{
   operatingHours?: Record<string, boolean | undefined> | null
   /** ป้ายเวลาปิดจริงสำหรับ UI (เช่น '20:00') */
   hoursClose?: string
+  /** N-2 (Owner 2026-11-05): เวลาเปิดร้าน (เช่น '08:00') — คู่กับ hoursClose ใช้สร้าง "เริ่มส่ง (HH:MM–HH:MM)" */
+  hoursOpen?: string
   /** MASTER (migration 185): false = ปิดร้านแม้รอบ/เวลาบอกเปิด · null/undefined = ยังไม่รู้ → ไม่บัง */
   masterOpen?: boolean | null
 }): StoreStatus {
@@ -182,7 +194,7 @@ export function getStoreStatusFromRounds(rounds: Array<{
       state: 'closed',
       sameDayOpen: false,
       preOrderOpen: false,
-      sameDayLine: 'ปิดรับแล้ว',
+      sameDayLine: sameDayLineFromHours(opts?.hoursOpen, opts?.hoursClose) ?? 'ปิดรับแล้ว',
       message: 'ยังไม่เปิดรับออเดอร์ — ไม่มีรอบจัดส่งที่เปิดรับอยู่',
     }
   }
@@ -279,9 +291,9 @@ export function getStoreStatusFromRounds(rounds: Array<{
     const upcoming = sorted.find((r) => windowOf(r).start > hour) ?? null
     const current = inWindow ?? upcoming ?? sorted[0]
     const hasWindowNow = Boolean(inWindow)
-    // N1 (Owner 2026-11-01 Strip copy รอบ 3): เซมเดย์ไม่ผูกรอบส่งใด ๆ — คงประโยคเดียวทุกช่วงเวลา
-    // (ห้ามมีคำในวงเล็บ/เวลาของรอบ — branch "เริ่มส่ง HH:MM AM" ถูกถอดออกจากสเปกแล้ว)
-    const sameDayLine = 'จัดส่งทันทีหลังครัวปรุงเสร็จ'
+    // N2-REV (Owner 2026-11-05 · ทับ N1 R53): บรรทัด ③ = `เริ่มส่ง (HH:MM–HH:MM)` จากเวลาเปิด-ปิดร้าน
+    // ที่แอดมินตั้ง (ไม่ hardcode · ไม่ผูกเวลาของรอบ) — ไม่มีข้อมูลเวลา = fallback ประโยคเดิม
+    const sameDayLine = sameDayLineFromHours(opts?.hoursOpen, opts?.hoursClose) ?? 'จัดส่งทันทีหลังครัวปรุงเสร็จ'
     return {
       isOpen: true,
       state: 'open',
@@ -292,6 +304,7 @@ export function getStoreStatusFromRounds(rounds: Array<{
       // ไม่ต้องรอรอบพรีออเดอร์/ไม่ผูกเวลาส่งของรอบ → ไม่ส่ง deliveryWindowLabel
       deliveryWindowLabel: undefined,
       hoursClose: opts?.hoursClose,
+      hoursOpen: opts?.hoursOpen,
       // ที่นั่ง/ความจุ = ของรอบที่อยู่ในหน้าต่างตอนนี้เท่านั้น (ไม่งั้นตัวเลขปลอม)
       capacityPct:
         hasWindowNow && Number(current.max_capacity) > 0
@@ -314,7 +327,7 @@ export function getStoreStatusFromRounds(rounds: Array<{
       state: 'preorder_only',
       sameDayOpen: false,
       preOrderOpen: nextPre !== null,
-      sameDayLine: 'ปิดรับแล้ว',
+      sameDayLine: sameDayLineFromHours(opts?.hoursOpen, opts?.hoursClose) ?? 'ปิดรับแล้ว',
       message: 'เปิดรับออเดอร์จองล่วงหน้า — รอบวันนี้ปิดรับแล้ว',
       preOrderLine,
     }
@@ -324,7 +337,7 @@ export function getStoreStatusFromRounds(rounds: Array<{
     state: 'closed',
     sameDayOpen: false,
     preOrderOpen: nextPre !== null,
-    sameDayLine: 'ปิดรับแล้ว',
+    sameDayLine: sameDayLineFromHours(opts?.hoursOpen, opts?.hoursClose) ?? 'ปิดรับแล้ว',
     message: 'ยังไม่เปิดรับออเดอร์ — ไม่มีรอบจัดส่งที่เปิดรับอยู่',
     preOrderLine,
   }

@@ -9,6 +9,7 @@ import {
   evaluateCoupon,
   validatePromotionForm,
   utcDateKey,
+  bangkokDateKey,
   type PromotionFormValues,
 } from '@/lib/promotionClient'
 import type { PromotionRow } from '@/lib/bmbAdminApi_promotions'
@@ -193,5 +194,30 @@ describe('cartStore recalculate — real promotions only', () => {
 describe('utcDateKey', () => {
   it('formats YYYY-MM-DD', () => {
     expect(utcDateKey(today)).toBe('2026-10-18')
+  })
+})
+
+describe('N-8 (Owner 2026-11-05) — วันที่คูปองเทียบแบบไทย (คู่ server m186) · คูปองที่เพิ่งตั้งต้องใช้ได้ทุกช่วงเวลา', () => {
+  it('bangkokDateKey: ช่วง 00:00–06:59 น. ไทย (UTC ยังเป็นเมื่อวาน) → ได้วันที่ไทยของวันนี้', () => {
+    const at = new Date('2026-11-04T18:00:00Z') // = 2026-11-05 01:00 น. ไทย
+    expect(utcDateKey(at)).toBe('2026-11-04') // เดิม (UTC) = ยังติดเมื่อวาน
+    expect(bangkokDateKey(at)).toBe('2026-11-05')
+  })
+  it('คูปอง start_date = วันนี้(ไทย) → ผ่าน evaluation แม้ UTC date ยังเป็นเมื่อวาน (บั๊กเดิมคูปองใหม่ไม่ขึ้น dropdown)', () => {
+    const at = new Date('2026-11-04T18:00:00Z') // ไทย 2026-11-05 01:00
+    const r = evaluateCoupon([row({ start_date: '2026-11-05' })], 'SAVE10', 500, at)
+    expect(r.ok).toBe(true)
+  })
+  it('end_date เมื่อวาน(ไทย) → expired จริง ไม่ปล่อยเกินช่วง', () => {
+    const at = new Date('2026-11-04T18:00:00Z') // ไทย 2026-11-05
+    const r = evaluateCoupon([row({ end_date: '2026-11-04' })], 'SAVE10', 500, at)
+    expect(r.ok).toBe(false)
+    if (!r.ok) expect(r.reason).toBe('expired')
+  })
+  it('start_date พรุ่งนี้(ไทย) → not_started (ยังไม่ปล่อยก่อนเวลา)', () => {
+    const at = new Date('2026-11-04T18:00:00Z') // ไทย 2026-11-05
+    const r = evaluateCoupon([row({ start_date: '2026-11-06' })], 'SAVE10', 500, at)
+    expect(r.ok).toBe(false)
+    if (!r.ok) expect(r.reason).toBe('not_started')
   })
 })

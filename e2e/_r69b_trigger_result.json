@@ -1,0 +1,33 @@
+{
+  "at": "2026-11-05T05:45:56.190Z",
+  "steps": [
+    {
+      "step": "enqueue",
+      "http": 200,
+      "json": {
+        "ok": true,
+        "result": "ENQUEUED",
+        "id": "sched-orders_stale_pending-manual-r69b-verify-1"
+      },
+      "raw": "{\"ok\":true,\"result\":\"ENQUEUED\",\"id\":\"sched-orders_stale_pending-manual-r69b-verify-1\"}"
+    },
+    {
+      "step": "dispatch",
+      "http": 200,
+      "json": {
+        "claimed": 1,
+        "results": [
+          {
+            "id": "sched-orders_stale_pending-manual-r69b-verify-1",
+            "workerHttp": 200,
+            "workerStatus": "succeeded",
+            "queueResult": "SUCCEEDED",
+            "finalStatus": "succeeded",
+            "attempts": 1
+          }
+        ]
+      },
+      "raw": "{\"claimed\":1,\"results\":[{\"id\":\"sched-orders_stale_pending-manual-r69b-verify-1\",\"workerHttp\":200,\"workerStatus\":\"succeeded\",\"queueResult\":\"SUCCEEDED\",\"finalStatus\":\"succeeded\",\"attempts\":1}]}"
+    }
+  ]
+}

@@ -61,7 +61,12 @@ const ALLOWED: Record<string, { worker: string; build: (p: Record<string, unknow
       const maxAge = Number(p.maxAgeMinutes)
       if (!Number.isInteger(maxAge) || maxAge < 1 || maxAge > 10080) return 'maxAgeMinutes must be integer 1..10080'
       // customerNamePrefix is TEST DATA ONLY — deliberately NOT accepted in scheduler path (S3 §4)
-      return { maxAgeMinutes: maxAge }
+      // R69 auto-cancel: optional cancelAfterMinutes — 0/absent = off (notify-only = legacy shape
+      // preserved exactly); 1..10080 = threshold forwarded to worker. Transport forwards only —
+      // cancel criteria + canonical RPC cancel_order stay enforced in automation-worker.
+      const cancelAfter = p.cancelAfterMinutes === undefined ? 0 : Number(p.cancelAfterMinutes)
+      if (!Number.isInteger(cancelAfter) || cancelAfter < 0 || cancelAfter > 10080) return 'cancelAfterMinutes must be integer 0..10080'
+      return cancelAfter > 0 ? { maxAgeMinutes: maxAge, cancelAfterMinutes: cancelAfter } : { maxAgeMinutes: maxAge }
     },
   },
   inventory_low_stock: {

@@ -52,6 +52,8 @@ import { claimReferralCode, describeReferralClaim } from '@/lib/referralClient'
 import { claimAffiliate, takeAffiliateClaimCode, describeAffiliateClaim } from '@/lib/engagementClient'
 import { getTrustedGpsLocation } from '@/lib/locationLogin'
 import { DeliveryMapPicker } from '@/components/delivery/DeliveryMapPicker'
+// N-8 (Owner 2026-11-05): เส้นทาง "รับที่ร้าน" — ตำแหน่งร้าน/รูปหน้าร้านแทนที่อยู่จัดส่ง
+import { getStoreFront, getStoreLocation, storeDirectionsUrl, type StoreFrontInfo, type StoreLocation } from '@/lib/storeFront'
 import type { OrderMode } from '@/config/platformConfig'
 
 function todayStr(): string {
@@ -151,6 +153,21 @@ export function CheckoutPage() {
   const [pickupOutsideAck, setPickupOutsideAck] = useState(false)
   // บังคับโชว์ช่องยืนยันเมื่อ submit แล้วเจอว่านอกเวลาแต่ UI ยังไม่ทัน re-render
   const [pickupOutsideUi, setPickupOutsideUi] = useState(false)
+  // N-8: ข้อมูลหน้าร้านสำหรับโหมด "รับที่ร้าน" (โหลดเฉพาะตอนเลือก pickup · READ-ONLY)
+  const [storeFront, setStoreFront] = useState<StoreFrontInfo>({ description: '', photos: [] })
+  const [storeLoc, setStoreLoc] = useState<StoreLocation | null>(null)
+  useEffect(() => {
+    if (fulfillment !== 'pickup') return
+    let alive = true
+    void Promise.all([getStoreFront(), getStoreLocation()]).then(([f, l]) => {
+      if (!alive) return
+      setStoreFront(f)
+      setStoreLoc(l)
+    })
+    return () => {
+      alive = false
+    }
+  }, [fulfillment])
   // CR-2 P0: delivery point = candidate until the customer confirms it.
   // Trusted prefill ONLY (saved provenance gps/manual); kitchen/IP never pre-fill.
   const [deliveryAddress, setDeliveryAddress] = useState<{
@@ -1183,6 +1200,37 @@ export function CheckoutPage() {
         )}
       </div>
 
+      {/* N-8 (Owner 2026-11-05): รับที่ร้าน = "ตำแหน่งร้าน" (ค่าที่แอดมินตั้ง) + รูปหน้าร้าน/รายละเอียด
+          + ปุ่มแผนที่นำทางมาร้าน — ซ่อนที่อยู่จัดส่ง/แผนที่ปักหมุด/ตรวจสอบจุดจัดส่ง (ศัพท์ "จัดส่ง" ห้ามโผล่) */}
+      {fulfillment === 'pickup' ? (() => {
+        const dirUrl = storeLoc ? storeDirectionsUrl(storeLoc) : null
+        return (
+          <div className="card mb-6" data-testid="pickup-store-card">
+            <h3 className="font-bold text-brand-accent mb-4">📍 ตำแหน่งร้าน</h3>
+            {storeFront.photos.length > 0 && (
+              <div className="flex gap-2 overflow-x-auto mb-3" data-testid="pickup-store-photos">
+                {storeFront.photos.map((u) => (
+                  <img key={u} src={u} alt="หน้าร้าน" className="w-28 h-20 object-cover rounded-lg border shrink-0" />
+                ))}
+              </div>
+            )}
+            {storeFront.description && (
+              <p className="text-sm text-slate-700 mb-2" data-testid="pickup-store-desc">{storeFront.description}</p>
+            )}
+            <div className="text-sm text-slate-700 mb-3" data-testid="pickup-store-address">
+              🏪 {storeLoc?.address || 'รับอาหารที่หน้าร้าน (เคาน์เตอร์ส่งมอบ)'}
+            </div>
+            {dirUrl ? (
+              <a href={dirUrl} target="_blank" rel="noopener" className="btn btn-primary btn-sm" data-testid="pickup-store-directions">
+                🗺️ แผนที่นำทางมาร้าน
+              </a>
+            ) : (
+              <p className="text-xs text-brand-muted">แอดมินยังไม่ได้ตั้งพิกัดร้าน — เปิดแอปแผนที่แล้วค้นหาชื่อร้านได้เลย</p>
+            )}
+          </div>
+        )
+      })() : (
+        <>
       {/* Delivery Address */}
       <div className="card mb-6">
         <h3 className="font-bold text-brand-accent mb-4">📍 ที่อยู่จัดส่ง</h3>
@@ -1289,17 +1337,30 @@ export function CheckoutPage() {
           }
         />
       </div>
+        </>
+      )}
 
-      {/* Delivery method — server decides tier/fee; client shows the quote */}
+      {/* Delivery method — server decides tier/fee; client shows the quote (N-8: รับที่ร้าน = โชว์ "รับที่ร้าน") */}
       <div className="card mb-6">
-        <h3 className="font-bold text-brand-accent mb-4">🛵 ช่องทางจัดส่ง</h3>
+        <h3 className="font-bold text-brand-accent mb-4">{fulfillment === 'pickup' ? '🛍️ รับที่ร้าน' : '🛵 ช่องทางจัดส่ง'}</h3>
         <div className="flex items-start gap-3 p-3 rounded-lg border-2 border-brand-primary bg-orange-50">
           <div className="flex-1">
             {/* พื้นครีม → ตัวอักษรเข้มเสมอ (เดิมใช้สีธีม ทำให้ขาวบนขาวใน dark mode) */}
-            <div className="font-medium text-slate-900">Bite Me Baby Delivery (ระบบเลือกช่องทางให้)</div>
-            <div className="text-xs text-slate-600">
-              เซิร์ฟเวอร์คำนวณระยะทาง ช่องทาง และค่าส่งจริงตอนสร้างออเดอร์
-            </div>
+            {fulfillment === 'pickup' ? (
+              <>
+                <div className="font-medium text-slate-900">รับที่ร้าน (ไม่เรียกไรเดอร์)</div>
+                <div className="text-xs text-slate-600">
+                  รับอาหารที่หน้าร้านตามเวลาเปิดร้าน — แสดงรหัสรับอาหารตอนรับ (ค่าจัดส่ง 0 บาท)
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="font-medium text-slate-900">Bite Me Baby Delivery (ระบบเลือกช่องทางให้)</div>
+                <div className="text-xs text-slate-600">
+                  เซิร์ฟเวอร์คำนวณระยะทาง ช่องทาง และค่าส่งจริงตอนสร้างออเดอร์
+                </div>
+              </>
+            )}
           </div>
           <div className="text-right">
             {(() => {

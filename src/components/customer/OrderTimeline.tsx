@@ -43,9 +43,11 @@ export interface OrderTimelineProps {
   status: string
   /** Owner 2026-10-27: ป้ายสถานะแยกชุด sameday/preorder (default = SAME_DAY) */
   mode?: OrderMode
+  /** N-4 (Owner 2026-11-05): ป้ายสถานะแยกเส้นทาง จัดส่ง vs รับที่ร้าน (default = delivery) */
+  fulfillment?: 'delivery' | 'pickup'
 }
 
-export function OrderTimeline({ status, mode = 'SAME_DAY' }: OrderTimelineProps) {
+export function OrderTimeline({ status, mode = 'SAME_DAY', fulfillment = 'delivery' }: OrderTimelineProps) {
   if (!isServerOrderStatus(status)) {
     // Unknown enum value — show what the server sent, never invent a step.
     return (
@@ -55,7 +57,7 @@ export function OrderTimeline({ status, mode = 'SAME_DAY' }: OrderTimelineProps)
     )
   }
 
-  const label = getServerStatusLabel(status, mode)
+  const label = getServerStatusLabel(status, mode, fulfillment)
 
   // Terminal aborts render as an end card — no fabricated progress bar.
   if (status === 'cancelled' || status === 'failed') {

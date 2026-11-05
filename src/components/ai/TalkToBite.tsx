@@ -46,6 +46,7 @@ import { defaultBackground } from '@/lib/backgrounds'
 import { applyTheme, cycleTheme, getTheme, THEME_LABELS, type ThemeName } from '@/lib/theme'
 import { getServerStatusLabel } from '@/lib/orderVocabulary'
 import { hydrateMemoryFromServer } from '@/lib/aiServerMemory'
+import { normalizeBrandNames } from '@/lib/brandName'
 import type { Product } from '@/types'
 import {
   applyOrderModify,
@@ -829,7 +830,7 @@ export function TalkToBite({ mode = 'overlay', initialPhase = 'landing', landing
                       : 'bg-brand-bg border border-brand-border text-brand-text'
                   }`}
                 >
-                  {m.content}
+                  {normalizeBrandNames(m.content)}
                 </div>
               </div>
             )
@@ -840,7 +841,7 @@ export function TalkToBite({ mode = 'overlay', initialPhase = 'landing', landing
             // not a generic chat transcript. Same canonical add path.
             return (
               <div key={m.id} className="space-y-2" data-testid="ttb-products">
-                <p className="text-xs text-brand-muted">{m.intro}</p>
+                <p className="text-xs text-brand-muted">{normalizeBrandNames(m.intro)}</p>
                 <div className="theater-strip" role="list" aria-label="เมนูที่ Bite นำเสนอ">
                   {m.products.map((p) => (
                     <div key={p.id} role="listitem">
@@ -869,7 +870,7 @@ export function TalkToBite({ mode = 'overlay', initialPhase = 'landing', landing
           }
           return (
             <div key={m.id} className="card bg-brand-surface p-3 space-y-2">
-              <p className="text-sm text-brand-text">{m.intro}</p>
+              <p className="text-sm text-brand-text">{normalizeBrandNames(m.intro)}</p>
               <ul className="space-y-1">
                 {m.draft.map((d) => (
                   <li key={d.product.id} className="flex flex-col gap-0.5 text-sm">

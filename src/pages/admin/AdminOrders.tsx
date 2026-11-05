@@ -677,7 +677,13 @@ export function AdminOrders() {
                 </button>
               )}
               <Link to="/admin/kitchen" className="btn btn-outline text-sm">🍳 ไป Kitchen</Link>
-              <Link to={`/admin/delivery?focus=${order.order_number}`} className="btn btn-outline text-sm">🛵 ไป Dispatch</Link>
+              {/* N-5 (Owner 2026-11-05): ออเดอร์ "รับที่ร้าน" = ปลายทางส่งมอบคือ POS หน้าร้านเท่านั้น
+                  — ห้ามชี้ศูนย์ขนส่ง/มอบงานไรเดอร์ (ทุกทางเข้า: การ์ดออเดอร์ + แจ้งเตือน) */}
+              {order.delivery_method === 'pickup' ? (
+                <Link to="/admin/pos" className="btn btn-outline text-sm" data-testid={`go-pos-${order.order_number}`}>🛍️ ไป POS (ส่งมอบหน้าร้าน)</Link>
+              ) : (
+                <Link to={`/admin/delivery?focus=${order.order_number}`} className="btn btn-outline text-sm">🛵 ไป Dispatch</Link>
+              )}
 
               {/* R21 (Owner 2026-10-29): เลือกพิมพ์เองต่อออเดอร์ — ใช้เทมเพลตเดิมของระบบ */}
               <button

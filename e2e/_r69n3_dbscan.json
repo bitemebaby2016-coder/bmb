@@ -1,0 +1,27 @@
+{
+  "at": "2026-11-05T06:30:21.662Z",
+  "tables": {
+    "theater_daily_copy": {
+      "error": "http 404 {\"code\":\"PGRST205\",\"details\":null,\"hint\":null,\"message\":\"Could not find the table 'public.theater_daily_copy' in the sch"
+    },
+    "business_settings": {
+      "rows": 21,
+      "hits": []
+    },
+    "seo_settings": {
+      "error": "http 404 {\"code\":\"PGRST205\",\"details\":null,\"hint\":\"Perhaps you meant the table 'public.business_settings'\",\"message\":\"Could not f"
+    },
+    "faq_items": {
+      "error": "http 404 {\"code\":\"PGRST205\",\"details\":null,\"hint\":\"Perhaps you meant the table 'public.order_items'\",\"message\":\"Could not find th"
+    },
+    "announcements": {
+      "error": "http 404 {\"code\":\"PGRST205\",\"details\":null,\"hint\":\"Perhaps you meant the table 'public.social_events'\",\"message\":\"Could not find "
+    },
+    "marketing_templates": {
+      "error": "http 404 {\"code\":\"PGRST205\",\"details\":null,\"hint\":\"Perhaps you meant the table 'public.marketing_rules'\",\"message\":\"Could not fin"
+    },
+    "notification_templates": {
+      "error": "http 404 {\"code\":\"PGRST205\",\"details\":null,\"hint\":\"Perhaps you meant the table 'public.notification_prefs'\",\"message\":\"Could not "
+    }
+  }
+}

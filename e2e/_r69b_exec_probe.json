@@ -1,0 +1,95 @@
+[
+  {
+    "id": "auto-exec-sched-orders_stale_pending-manual-r69b-verify-1",
+    "action": "automation.execution",
+    "entity_id": "orders_stale_pending",
+    "description": "automation orders_stale_pending succeeded",
+    "metadata": {
+      "job": "orders_stale_pending",
+      "errors": [],
+      "status": "succeeded",
+      "results": {
+        "auto_cancel": {
+          "blocked": [],
+          "cancelled": [],
+          "candidates": 0
+        },
+        "orders_stale_pending": {
+          "found": 0,
+          "notified": [],
+          "already_notified": []
+        }
+      },
+      "event_id": "sched-orders_stale_pending-manual-r69b-verify-1",
+      "finished_at": "2026-11-05T05:46:03.612Z",
+      "execution_id": "a4fe362b-d87b-4a97-8955-c021e6c8c09b"
+    },
+    "created_at": "2026-11-05T05:46:03.933455+00:00"
+  },
+  {
+    "id": "auto-exec-sched-orders_stale_pending-gh-stale-20261105t0256",
+    "action": "automation.execution",
+    "entity_id": "orders_stale_pending",
+    "description": "automation orders_stale_pending succeeded",
+    "metadata": {
+      "job": "orders_stale_pending",
+      "errors": [],
+      "status": "succeeded",
+      "results": {
+        "orders_stale_pending": {
+          "found": 9,
+          "notified": [],
+          "already_notified": [
+            "BMB-20261104-133",
+            "BMB-20261104-447",
+            "BMB-20261104-765",
+            "BMB-20261104-933",
+            "BMB-20261104-905",
+            "BMB-20261104-365",
+            "PO-20261105-931",
+            "BMB-20261104-612",
+            "PO-20261105-685"
+          ]
+        }
+      },
+      "event_id": "sched-orders_stale_pending-gh-stale-20261105t0256",
+      "finished_at": "2026-11-05T02:56:09.942Z",
+      "execution_id": "805d9f2f-0ed5-489f-b43f-1bd16335093e"
+    },
+    "created_at": "2026-11-05T02:56:10.051312+00:00"
+  },
+  {
+    "id": "auto-exec-sched-orders_stale_pending-gh-stale-20261104t2248",
+    "action": "automation.execution",
+    "entity_id": "orders_stale_pending",
+    "description": "automation orders_stale_pending succeeded",
+    "metadata": {
+      "job": "orders_stale_pending",
+      "errors": [],
+      "status": "succeeded",
+      "results": {
+        "orders_stale_pending": {
+          "found": 10,
+          "notified": [
+            "BMB-20261104-612",
+            "PO-20261105-685"
+          ],
+          "already_notified": [
+            "BMB-20261104-995",
+            "BMB-20261104-133",
+            "BMB-20261104-447",
+            "BMB-20261104-765",
+            "BMB-20261104-933",
+            "BMB-20261104-905",
+            "BMB-20261104-365",
+            "PO-20261105-931"
+          ]
+        }
+      },
+      "event_id": "sched-orders_stale_pending-gh-stale-20261104t2248",
+      "finished_at": "2026-11-04T22:48:54.477Z",
+      "execution_id": "14da96de-a398-42aa-bd1e-cb098fc820e5"
+    },
+    "created_at": "2026-11-04T22:48:54.572493+00:00"
+  }
+]

@@ -21,6 +21,7 @@ import { RouteOptimizationPage } from '@/pages/admin/RouteOptimizationPage'
 import { AdminSettings } from '@/pages/admin/AdminSettings'
 import { AdminPrintSettings } from '@/pages/admin/AdminPrintSettings'
 import { MascotSettingsPage } from '@/pages/admin/MascotSettingsPage'
+import { StoreFrontSettingsPage } from '@/pages/admin/StoreFrontSettingsPage'
 import { AdminRounds } from '@/pages/admin/AdminRounds'
 import { DeliveryZonesPanel } from '@/components/admin/DeliveryZonesPanel'
 import { TransportAvailabilityBoard } from '@/components/admin/TransportAvailabilityBoard'
@@ -120,6 +121,8 @@ export function SettingsHub() {
         { key: 'store', label: 'ตั้งค่าร้าน/สาขา', icon: '⚙️', render: () => <AdminSettings /> },
         { key: 'print', label: 'เครื่องพิมพ์', icon: '🖨️', render: () => <AdminPrintSettings /> },
         { key: 'mascot', label: 'มาสคอต', icon: '🤖', render: () => <MascotSettingsPage /> },
+        // N-8 (Owner 2026-11-05): แท็บหน้าร้าน — รูป+รายละเอียดร้านสำหรับเส้นทาง "รับที่ร้าน"
+        { key: 'storefront', label: 'หน้าร้าน', icon: '🏪', render: () => <StoreFrontSettingsPage /> },
       ]}
     />
   )

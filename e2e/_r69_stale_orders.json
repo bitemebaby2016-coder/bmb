@@ -1,0 +1,17 @@
+[
+  {
+    "id": "ord-1793800265156-7c9388",
+    "order_number": "BMB-20261104-133",
+    "status": "pending",
+    "payment_status": "pending",
+    "payment_method": "promptpay_qr",
+    "order_mode": "SAME_DAY",
+    "delivery_method": "pickup",
+    "customer_id": "78af600a-e414-4d3a-8fe7-9b30cd7e3d08",
+    "customer_name": "e2e1793800219913@bmb.test",
+    "total_amount": 79,
+    "created_at": "2026-11-04T13:51:05.045515+00:00",
+    "updated_at": "2026-11-04T13:51:05.045515+00:00",
+    "pickup_code": "876917"
+  }
+]

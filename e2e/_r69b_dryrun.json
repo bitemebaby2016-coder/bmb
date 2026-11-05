@@ -1,0 +1,7 @@
+{
+  "at": "2026-11-05T05:42:22.061Z",
+  "cutoff": "2026-11-04T17:42:20.470Z",
+  "criteria": "status=pending & payment_status=pending & payment_method!=cash_on_delivery & created_at<2026-11-04T17:42:20.470Z",
+  "count": 0,
+  "rows": []
+}

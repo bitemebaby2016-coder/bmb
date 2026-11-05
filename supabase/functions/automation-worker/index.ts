@@ -31,6 +31,20 @@
 // Jobs:
 //   orders_stale_pending  — orders stuck in pending longer than maxAgeMinutes
 //                           (optional customerNamePrefix: TEST DATA ONLY)
+//                           R69 (2026-11-05): opt-in auto-cancel phase — when the
+//                           caller passes cancelAfterMinutes > 0, ALSO cancel orders
+//                           pending+unpaid older than that threshold. STRICT rules:
+//                           - cancellation goes ONLY through canonical RPC cancel_order
+//                             (authz/capacity/inventory/audit in ONE transaction) —
+//                             direct orders UPDATE/DELETE stays forbidden (contract above)
+//                           - RPC needs an admin session → AUTO_CANCEL_ADMIN_EMAIL/
+//                             AUTO_CANCEL_ADMIN_PASSWORD secrets (password grant);
+//                             missing config = recorded error, NEVER silent
+//                           - criteria: status=pending AND payment_status=pending AND
+//                             payment_method != cash_on_delivery (COD stays open until
+//                             delivered) AND created_at < now - cancelAfterMinutes
+//                           - blocked results (e.g. PRE_ORDER past cutoff — Owner rule
+//                             038 Q2/A "flat rule, both roles") are RECORDED, never forced
 //   inventory_low_stock   — products.stock below threshold (display value;
 //                           notification only — no authority change)
 //   notification_dispatch — W3-D canonical-event notification dispatch:
@@ -164,7 +178,28 @@ async function notifyOnce(
   return 'failed:' + ins.status + ':' + JSON.stringify(ins.j).slice(0, 200)
 }
 
-async function runOrdersStalePending(ctx: Ctx, p: { maxAgeMinutes?: number; customerNamePrefix?: string }): Promise<void> {
+/**
+ * R69 auto-cancel: obtain an ADMIN session for RPC cancel_order.
+ * cancel_order checks is_admin() → auth.uid() → service_role key CANNOT call it
+ * (proven in production: e2e/_r69_clear_run.cjs uses this same password grant).
+ * Returns null when secrets are not configured (caller records the skip as an error).
+ */
+async function adminJwt(): Promise<string | null> {
+  const email = Deno.env.get('AUTO_CANCEL_ADMIN_EMAIL') || ''
+  const password = Deno.env.get('AUTO_CANCEL_ADMIN_PASSWORD') || ''
+  const anon = Deno.env.get('SUPABASE_ANON_KEY') || ''
+  if (!email || !password || !anon) return null
+  const r = await fetch(`${SB_URL}/auth/v1/token?grant_type=password`, {
+    method: 'POST',
+    headers: { apikey: anon, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, password }),
+  })
+  if (!r.ok) return null
+  const j = await r.json().catch(() => ({} as Record<string, unknown>))
+  return typeof j.access_token === 'string' ? (j.access_token as string) : null
+}
+
+async function runOrdersStalePending(ctx: Ctx, p: { maxAgeMinutes?: number; customerNamePrefix?: string; cancelAfterMinutes?: number }): Promise<void> {
   const maxAge = Math.max(1, Math.min(60 * 24 * 7, p.maxAgeMinutes ?? 120))
   const cutoff = new Date(Date.now() - maxAge * 60_000).toISOString()
   let path = `/rest/v1/orders?select=order_number,customer_name,created_at&status=eq.pending&created_at=lt.${encodeURIComponent(cutoff)}&limit=100`
@@ -184,6 +219,50 @@ async function runOrdersStalePending(ctx: Ctx, p: { maxAgeMinutes?: number; cust
     ;(r === 'created' ? created : dup).push(o.order_number)
   }
   ctx.results.orders_stale_pending = { found: orders.length, notified: created, already_notified: dup }
+
+  // ---- R69 auto-cancel phase (opt-in: cancelAfterMinutes > 0 · เงื่อนไขดูหัวไฟล์) ----
+  const cancelAfter = Math.floor(p.cancelAfterMinutes ?? 0)
+  if (cancelAfter <= 0) return
+  const cancelCutoff = new Date(Date.now() - cancelAfter * 60_000).toISOString()
+  const cq = await rest(
+    SERVICE,
+    'GET',
+    `/rest/v1/orders?select=order_number,order_mode,created_at&status=eq.pending&payment_status=eq.pending` +
+      `&payment_method=neq.cash_on_delivery&created_at=lt.${encodeURIComponent(cancelCutoff)}&limit=100`,
+  )
+  if (cq.status !== 200) throw new Error('auto_cancel orders read failed: ' + cq.status)
+  const candidates: Array<{ order_number: string; order_mode: string }> = cq.j || []
+  const cancelled: string[] = []
+  const blocked: Array<{ order_number: string; error: string }> = []
+  if (candidates.length > 0) {
+    const jwt = await adminJwt()
+    if (!jwt) {
+      ctx.errors.push('auto_cancel: admin credentials not configured (AUTO_CANCEL_ADMIN_* / SUPABASE_ANON_KEY)')
+      ctx.results.auto_cancel = { candidates: candidates.length, cancelled, blocked, configured: false }
+      return
+    }
+    for (const o of candidates) {
+      const r = await fetch(`${SB_URL}/rest/v1/rpc/cancel_order`, {
+        method: 'POST',
+        headers: { apikey: SERVICE, Authorization: 'Bearer ' + jwt, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          p_order_number: o.order_number,
+          p_reason: `auto-cancel: pending+unpaid > ${cancelAfter} min (R69)`,
+        }),
+      })
+      const t = await r.text()
+      let j: Record<string, unknown> | null = null
+      try { j = JSON.parse(t) } catch { /* keep null */ }
+      if (r.status === 200 && j && j.ok !== false) {
+        cancelled.push(o.order_number)
+      } else {
+        // business block (เช่น PRE_ORDER หลัง cutoff = กติกา 038 Q2/A) = บันทึก ห้าม force
+        blocked.push({ order_number: o.order_number, error: `http ${r.status} ${t.slice(0, 200)}` })
+        if (r.status === 401 || r.status === 403) ctx.errors.push('auto_cancel auth failed: http ' + r.status)
+      }
+    }
+  }
+  ctx.results.auto_cancel = { candidates: candidates.length, cancelled, blocked }
 }
 
 async function runInventoryLowStock(ctx: Ctx, p: { stockThreshold?: number }): Promise<void> {
@@ -653,7 +732,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
 
   let payload: {
     job?: string; eventId?: string; maxAgeMinutes?: number; customerNamePrefix?: string; stockThreshold?: number;
-    lookbackMinutes?: number; limit?: number
+    lookbackMinutes?: number; limit?: number; cancelAfterMinutes?: number
   }
   try { payload = await req.json() } catch { return json({ error: 'invalid json' }, 400) }
 

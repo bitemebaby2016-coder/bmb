@@ -15,6 +15,8 @@ import {
   containsWrongMascotName,
   mascotNameRule,
 } from '@/lib/brandName'
+// N-3 (Owner 2026-11-05): source contract — จุดแสดงผลแชทต้องผ่าน sanitizer
+import talkSrc from '../components/ai/TalkToBite.tsx?raw'
 
 describe('brand name — canonical spelling (Owner rule อัปเดต 2026-11-01 R50: ทับศัพท์ Bite)', () => {
   it('mascot is Bite and brand is Bite Me Baby — ทับศัพท์อังกฤษเท่านั้น (ไบ๊ ถูกแทนที่หมด)', () => {
@@ -73,5 +75,18 @@ describe('brand name — mascotNameRule prompt', () => {
     expect(rule).toContain('Bite Me Baby')
     expect(rule).toContain('บั๊บ')
     expect(rule).toContain('บิท')
+  })
+})
+
+describe('N-3 (Owner 2026-11-05) — จุดแสดงผลแชทต้องผ่าน sanitizer (ล้าง "ไบ๊" ที่เหลือก่อนขึ้นจอ)', () => {
+  it('TalkToBite render ทุกจุด (content + intro) ผ่าน normalizeBrandNames', () => {
+    expect(talkSrc).toContain("from '@/lib/brandName'")
+    expect(talkSrc).toContain('normalizeBrandNames(m.content)')
+    expect(talkSrc).toContain('normalizeBrandNames(m.intro)')
+  })
+  it('ข้อความ AI ที่หลุด "ไบ๊"/"ไบ๊มีเบบี้" มา = แสดงเป็น Bite / Bite Me Baby เสมอ', () => {
+    expect(normalizeBrandNames('ให้ ไบ๊ ช่วยแนะนำเมนูนะครับ')).toBe('ให้ Bite ช่วยแนะนำเมนูนะครับ')
+    expect(normalizeBrandNames('สวัสดีจาก ไบ๊มีเบบี้ ครับ')).toContain('Bite Me Baby')
+    expect(containsWrongMascotName(normalizeBrandNames('ผม ไบ๊ ครับ'))).toBe(false)
   })
 })

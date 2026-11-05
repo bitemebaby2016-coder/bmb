@@ -56,6 +56,7 @@ export function currentStoreStatus(now: Date = new Date()): StoreStatus {
   return getStoreStatusFromRounds(publishedRounds, now, {
     ...cfg,
     hoursClose: getShopHours()?.close,
+    hoursOpen: getShopHours()?.open,
   })
 }
 

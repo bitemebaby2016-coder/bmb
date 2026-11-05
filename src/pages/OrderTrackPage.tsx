@@ -19,6 +19,8 @@ import { OrderTimeline } from '@/components/customer/OrderTimeline'
 // R21f (Owner): หน้าลูกค้าเห็นตำแหน่งไรเดอร์ระหว่างส่ง — RPC m174 + แผนที่เดิมของไรเดอร์
 import { getOrderRiderPosition, type RiderPosition } from '@/lib/riderPositionApi'
 import { RiderMiniMap } from '@/components/rider/RiderMiniMap'
+// N-4/N-8 (Owner 2026-11-05): หน้าติดตามเส้นทาง "รับที่ร้าน" — ตำแหน่งร้าน/รูปหน้าร้าน
+import { getStoreFront, getStoreLocation, storeDirectionsUrl, type StoreFrontInfo, type StoreLocation } from '@/lib/storeFront'
 
 // R21f: ระหว่างสถานะเหล่านี้ = คนส่งกำลังออกมา → ดึงพิกัดทุก 12 วิ (READ-ONLY)
 const RIDER_VISIBLE_STATUSES = new Set(['dispatched', 'in_transit', 'arrived'])
@@ -45,6 +47,22 @@ export function OrderTrackPage() {
   const [viaRpc, setViaRpc] = useState(false)
   // R21f: ตำแหน่งไรเดอร์ (null = ยังไม่มี/ไม่ใช่ของฉัน — หน้าไม่พัง)
   const [riderPos, setRiderPos] = useState<RiderPosition | null>(null)
+  // N-4/N-8: ออเดอร์รับที่ร้าน = โชว์ตำแหน่งร้าน/หน้าร้าน (คนละหน้าติดตามกับ "จัดส่ง")
+  const [storeFront, setStoreFront] = useState<StoreFrontInfo>({ description: '', photos: [] })
+  const [storeLoc, setStoreLoc] = useState<StoreLocation | null>(null)
+  const isPickup = order?.delivery_method === 'pickup'
+  useEffect(() => {
+    if (!isPickup) return
+    let alive = true
+    void Promise.all([getStoreFront(), getStoreLocation()]).then(([f, l]) => {
+      if (!alive) return
+      setStoreFront(f)
+      setStoreLoc(l)
+    })
+    return () => {
+      alive = false
+    }
+  }, [isPickup])
 
   const statusNow = order ? String(order.status) : ''
   const riderVisible = Boolean(orderNumber) && RIDER_VISIBLE_STATUSES.has(statusNow)
@@ -239,21 +257,22 @@ export function OrderTrackPage() {
 
         <div className="flex flex-wrap items-center gap-2 mb-4 text-sm">
           <span className="badge badge-info">{mode === 'PRE_ORDER' ? '📅 จองล่วงหน้า' : '🔥 วันนี้'}</span>
-          {order.scheduled_date ? <span className="badge">วันที่จัดส่ง: {order.scheduled_date}</span> : null}
+          {order.scheduled_date ? <span className="badge">{isPickup ? 'วันที่รับ' : 'วันที่จัดส่ง'}: {order.scheduled_date}</span> : null}
           <span className="badge">รอบ: {String(order.delivery_round_id)}</span>
           <span className="badge">ชำระเงิน: {order.payment_status}</span>
           {order.delivery_method === 'pickup' ? <span className="badge badge-warning">🛍️ รับที่ร้าน</span> : null}
         </div>
 
         {/* M1+A5: canonical progress steps — one component, one vocabulary
-            (Owner 2026-10-27: ป้ายสถานะบอกทั้ง sameday/preorder — ส่ง mode เข้าไปด้วย) */}
-        <OrderTimeline status={status} mode={mode} />
+            (Owner 2026-10-27: ป้ายสถานะบอกทั้ง sameday/preorder — ส่ง mode เข้าไปด้วย ·
+             N-4 2026-11-05: แยกเส้นทาง จัดส่ง vs รับที่ร้าน ด้วย fulfillment) */}
+        <OrderTimeline status={status} mode={mode} fulfillment={isPickup ? 'pickup' : 'delivery'} />
 
         {/* Current status — strictly what the server says */}
         <div className="bg-brand-bg p-4 rounded-xl mb-4" data-testid="track-status">
-          <h3 className="font-bold text-brand-accent">{getServerStatusLabel(status, mode)}</h3>
+          <h3 className="font-bold text-brand-accent">{getServerStatusLabel(status, mode, isPickup ? 'pickup' : 'delivery')}</h3>
           {status === 'pending' && <p className="text-sm text-brand-muted">กำลังรอยืนยันคำสั่งซื้อจากร้าน</p>}
-          {status === 'preparing' && <p className="text-sm text-brand-muted">กำลังจัดเตรียมอาหารของคุณ</p>}
+          {status === 'preparing' && <p className="text-sm text-brand-muted">{isPickup ? 'กำลังจัดเตรียมอาหารของคุณที่หน้าร้าน' : 'กำลังจัดเตรียมอาหารของคุณ'}</p>}
           {status === 'ready_for_dispatch' && (
             <p className="text-sm text-brand-muted">
               {order.delivery_method === 'pickup'
@@ -261,11 +280,49 @@ export function OrderTrackPage() {
                 : 'อาหารพร้อมส่ง รอคนส่งรับ'}
             </p>
           )}
-          {(status === 'dispatched' || status === 'in_transit' || status === 'arrived') && <p className="text-sm text-brand-muted">คนส่งกำลังเดินทาง</p>}
-          {status === 'delivered' && <p className="text-sm text-brand-muted">ส่งสำเร็จ! ขอบคุณที่ใช้บริการ</p>}
+          {(status === 'dispatched' || status === 'in_transit' || status === 'arrived') && (
+            <p className="text-sm text-brand-muted">{isPickup ? 'รอรับอาหารที่หน้าร้าน' : 'คนส่งกำลังเดินทาง'}</p>
+          )}
+          {status === 'delivered' && <p className="text-sm text-brand-muted">{isPickup ? 'รับอาหารเรียบร้อย! ขอบคุณที่ใช้บริการ' : 'ส่งสำเร็จ! ขอบคุณที่ใช้บริการ'}</p>}
           {status === 'cancelled' && <p className="text-sm text-brand-muted">ออเดอร์นี้ถูกยกเลิกแล้ว</p>}
-          {status === 'failed' && <p className="text-sm text-brand-muted">ออเดอร์นี้ไม่สำเร็จ — ติดต่อร้านได้เลย</p>}
+          {status === 'failed' && <p className="text-sm text-brand-muted">{isPickup ? 'ส่งมอบไม่สำเร็จ — ติดต่อร้านได้เลย' : 'ออเดอร์นี้ไม่สำเร็จ — ติดต่อร้านได้เลย'}</p>}
         </div>
+
+        {/* N-4/N-8: ออเดอร์รับที่ร้าน = หน้าติดตามคนละชุดกับ "จัดส่ง" — รหัสรับอาหาร +
+            ตำแหน่งร้าน (ที่แอดมินตั้ง) + รูปหน้าร้าน/รายละเอียด + ปุ่มแผนที่นำทางมาร้าน */}
+        {isPickup && (() => {
+          const dirUrl = storeLoc ? storeDirectionsUrl(storeLoc) : null
+          const code = String((order as unknown as { pickup_code?: string }).pickup_code || '')
+          return (
+            <div className="bg-brand-bg p-4 rounded-xl mb-4" data-testid="track-pickup-store">
+              <h3 className="font-bold text-brand-accent mb-2">🛍️ รับที่ร้าน</h3>
+              {code && (
+                <div className="mb-2">
+                  <div className="text-xs text-brand-muted">รหัสรับอาหาร (แสดงที่หน้าร้าน)</div>
+                  <div className="text-3xl font-bold tracking-[0.3em] text-slate-900" data-testid="track-pickup-code">{code}</div>
+                </div>
+              )}
+              {storeFront.photos.length > 0 && (
+                <div className="flex gap-2 overflow-x-auto mb-2" data-testid="track-store-photos">
+                  {storeFront.photos.map((u) => (
+                    <img key={u} src={u} alt="หน้าร้าน" className="w-24 h-16 object-cover rounded-lg border shrink-0" />
+                  ))}
+                </div>
+              )}
+              {storeFront.description && (
+                <p className="text-sm text-slate-700 mb-1" data-testid="track-store-desc">{storeFront.description}</p>
+              )}
+              <div className="text-sm text-slate-700 mb-2" data-testid="track-store-address">
+                🏪 {storeLoc?.address || 'รับอาหารที่หน้าร้าน (เคาน์เตอร์ส่งมอบ)'}
+              </div>
+              {dirUrl && (
+                <a href={dirUrl} target="_blank" rel="noopener" className="btn btn-primary btn-sm" data-testid="track-store-directions">
+                  🗺️ แผนที่นำทางมาร้าน
+                </a>
+              )}
+            </div>
+          )
+        })()}
 
         {/* paid-cancelled ≠ refunded: refund is a separate admin operation */}
         {paidCancelled && (
@@ -319,16 +376,17 @@ export function OrderTrackPage() {
             <span>{new Date(order.created_at).toLocaleDateString('th-TH')}</span>
           </div>
           <div className="flex justify-between">
-            <span className="text-brand-muted">วันที่จัดส่ง</span>
+            <span className="text-brand-muted">{isPickup ? 'วันที่รับ' : 'วันที่จัดส่ง'}</span>
             <span>{order.scheduled_date || new Date(order.created_at).toLocaleDateString('th-TH')}</span>
           </div>
           <div className="flex justify-between">
-            <span className="text-brand-muted">รอบจัดส่ง</span>
+            <span className="text-brand-muted">{isPickup ? 'รอบอ้างอิง' : 'รอบจัดส่ง'}</span>
             <span>{String(order.delivery_round_id)}</span>
           </div>
           <div className="flex justify-between">
-            <span className="text-brand-muted">วิธีจัดส่ง</span>
-            <span>{order.delivery_method || 'self_delivery'}</span>
+            <span className="text-brand-muted">{isPickup ? 'วิธีรับ' : 'วิธีจัดส่ง'}</span>
+            {/* N-8: ช่องทางที่ระบบเลือก = แสดง "รับที่ร้าน" ไม่โชว์ค่า raw delivery_method */}
+            <span>{isPickup ? 'รับที่ร้าน' : (order.delivery_method || 'self_delivery')}</span>
           </div>
           {(order.items || []).map((item, i) => (
             <div key={item.product_id + '-' + i} className="flex justify-between">

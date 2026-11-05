@@ -256,6 +256,8 @@ describe('T-G5-16: AI output is never business authority', () => {
     expect(aiToolCallingSrc).not.toMatch(/create_order|update_order|delete_|transition_|record_payment|refund/)
   })
 
+  // 2026-11-05: timeout 15s (จาก 5s default) — dynamic import + 10 calls กิน ~1.3s เดี่ยว ๆ แต่เคย
+  // ชน 5s ตอน full-suite parallel load (_r69n_gates 15:19) — assert ชุดเดิมทุกตัว ไม่แตะตรรกะ
   it('no mutation tool is reachable via executeToolCall', async () => {
     const { executeToolCall } = await import('@/lib/aiToolCalling')
     const mutationNames = [
@@ -267,7 +269,7 @@ describe('T-G5-16: AI output is never business authority', () => {
       const r = await executeToolCall(name, {})
       expect(r.success, `${name} must not execute`).toBe(false)
     }
-  })
+  }, 15000)
 })
 
 // ---------- T-G5-17: social tasks stay client-dormant (D5-05 + G7 D-G7-A) ----------

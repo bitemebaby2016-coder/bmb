@@ -88,3 +88,30 @@ describe('resolveNotificationRoute — เส้นทางตาม role (ท�
     expect(resolveNotificationRoute({ notification_type: 'ORDER_DELIVERED' }, 'kitchen')).toBe('/admin/delivery')
   })
 })
+
+describe('N-5 (Owner 2026-11-05) — ออเดอร์ "รับที่ร้าน" = แอดมิน/ทีมร้านไป POS ไม่ใช่ศูนย์ขนส่ง', () => {
+  it('data.delivery_method=pickup / fulfillment=pickup → /admin/pos ทุกประเภทงาน (รวม delivery-type)', () => {
+    expect(
+      resolveNotificationRoute({ notification_type: 'ORDER_DISPATCHED', body: '#PO-20261105-1 — x', data: { delivery_method: 'pickup' } }, 'admin'),
+    ).toBe('/admin/pos')
+    expect(
+      resolveNotificationRoute({ notification_type: 'ORDER_DELIVERED', body: '#BMB-20261105-2 — x', data: { fulfillment: 'pickup' } }, 'kitchen'),
+    ).toBe('/admin/pos')
+  })
+  it('ข้อความระบุ "มารับที่หน้าร้าน/รับที่ร้าน" + มีเลขออเดอร์ → /admin/pos', () => {
+    expect(resolveNotificationRoute({ message: 'ออเดอร์ #PO-20261105-3 พร้อมให้มารับที่หน้าร้าน' }, 'admin')).toBe('/admin/pos')
+    expect(resolveNotificationRoute({ title: 'ออเดอร์รับที่ร้าน', body: '#BMB-20261105-4 รอรับที่ร้าน' }, 'owner')).toBe('/admin/pos')
+  })
+  it('data บอก pickup แม้ไม่มีเลขออเดอร์ → ยังไป POS (ไม่หลุดไป dispatch)', () => {
+    expect(resolveNotificationRoute({ notification_type: 'ORDER_DISPATCHED', data: { delivery_method: 'pickup' } }, 'admin')).toBe('/admin/pos')
+  })
+  it('ข้อความมี "รับที่ร้าน" แต่ไม่มีเลขออเดอร์ (เช่นประกาศ/โปรฯ) = เส้นทางเดิม ไม่เดา', () => {
+    expect(resolveNotificationRoute({ notification_type: 'ORDER_DISPATCHED', message: 'โปรรับที่ร้านฟรีค่าส่ง' }, 'admin')).toBe('/admin/delivery')
+  })
+  it('ออเดอร์จัดส่งปกติ = เส้นทางเดิมไม่เปลี่ยน (/admin/delivery?focus=<order>)', () => {
+    expect(resolveNotificationRoute({ notification_type: 'ORDER_DISPATCHED', body: '#PO-20261105-5 ออกส่งแล้ว' }, 'admin')).toBe('/admin/delivery?focus=PO-20261105-5')
+  })
+  it('ลูกค้า: pickup = ยังไป /track/<order> ของตัวเองตามเดิม', () => {
+    expect(resolveNotificationRoute({ message: '#PO-20261105-6 พร้อมรับที่ร้าน', data: { delivery_method: 'pickup' } }, 'customer')).toBe('/track/PO-20261105-6')
+  })
+})

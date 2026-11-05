@@ -919,6 +919,8 @@ export interface StoreStatus {
   preOrderOpen?: boolean
   /** SYNC (Owner 2026-10-26): เวลาปิดร้านจาก business_settings.hours (เช่น '20:00') — โชว์แทนคำว่า "ปิดร้าน" เฉย ๆ */
   hoursClose?: string
+  /** N-2 (Owner 2026-11-05): เวลาเปิดร้านจาก business_settings.hours (เช่น '08:00') — ใช้สร้างบรรทัด "เริ่มส่ง (HH:MM–HH:MM)" */
+  hoursOpen?: string
 }
 
 export interface QuickAction {

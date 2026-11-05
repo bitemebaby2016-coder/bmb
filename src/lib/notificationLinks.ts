@@ -51,7 +51,16 @@ export function resolveNotificationRoute(
 
   if (role === 'rider') return '/rider'
 
+  // N-5 (Owner 2026-11-05): ออเดอร์ "รับที่ร้าน" = ปลายทางของแอดมิน/ทีมร้านคือ POS หน้าร้าน
+  // เท่านั้น (ไม่ใช่ศูนย์ขนส่ง/มอบงานไรเดอร์) — รู้ว่าเป็น pickup จาก data ที่แนบมา หรือ
+  // ข้อความแจ้งเตือนที่ระบุ "รับที่ร้าน/รับหน้าร้าน" (สัญญาณที่มีจริงใน notification ปัจจุบัน)
+  const pickupSignal =
+    n.data?.delivery_method === 'pickup' ||
+    n.data?.fulfillment === 'pickup' ||
+    (orderNo != null && /รับที่ร้าน|รับหน้าร้าน|มารับที่/i.test(`${n.title ?? ''} ${n.body ?? ''} ${n.message ?? ''}`))
+
   if (role && role !== 'customer') {
+    if (pickupSignal) return '/admin/pos'
     // admin-capable + specialist roles (146) — หน้าทำงานตามประเภทงาน
     if (ADMIN_KITCHEN_TYPES.includes(type)) return '/admin/kitchen'
     // R21 (Owner ask #1): ทีมครัวกดแจ้งเตือนออเดอร์ใหม่/ยืนยันแล้ว → คิวครัวทันที

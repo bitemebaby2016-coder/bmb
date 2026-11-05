@@ -44,13 +44,13 @@ export function StoreStatusStrip({ status }: { status: StoreStatus }) {
       <div className="min-w-0">
         {/* R12 (Owner 2026-10-28): คำในวงเล็บไม่ต้องแสดง — บรรทัด (ไม่มีปิดรอบ · สั่งได้ถึง · เหลือที่นั่ง) ถอดออกแล้ว
             (ข้อมูลเดิมเคยอยู่บรรทัด status: ไม่มีปิดรอบ (สั่งได้ถึง HH:MM) · เหลือที่นั่ง N% — ระบุว่าไม่แสดง) */}
-        {/* N1 บรรทัด ①: ไฟสองสาย + ไอคอนหลังคำไทย (📅 = พรีออเดอร์ · ⚡ = เซมเดย์) */}
+        {/* N1 บรรทัด ① (N-1 REV 2026-11-05): คำสถานะต้องตรงกับสีไฟเสมอ — เปิด=🟢+คำว่า "เปิดรับ" · ปิด=🔴+คำว่า "ปิดรับแล้ว" */}
         <p className="text-sm sm:text-base font-bold" data-testid="strip-status-lights">
-          {preOrderOpen ? '🟢' : '🔴'} เปิดรับออเดอร์ จองล่วงหน้า/📅Pre-Order{preOrderOpen ? '' : ' ปิดรับแล้ว'} — {sameDayOpen ? '🟢' : '🔴'} เปิดรับออเดอร์ ส่งวันนี้/⚡Same-Day{sameDayOpen ? '' : ' ปิดรับแล้ว'}
+          {preOrderOpen ? '🟢' : '🔴'} {preOrderOpen ? 'เปิดรับออเดอร์' : 'ปิดรับแล้ว'} จองล่วงหน้า/📅Pre-Order — {sameDayOpen ? '🟢' : '🔴'} {sameDayOpen ? 'เปิดรับออเดอร์' : 'ปิดรับแล้ว'} ส่งวันนี้/⚡Same-Day
         </p>
         {/* N1 บรรทัด 2: หัวข้อ จองล่วงหน้า/📅Pre-Order + เนื้อหาสด (รอบส่ง + เวลาออกส่ง + ชื่อรอบ + วัน + ปิดรับ) · ไม่ truncate */}
         <p className="text-sm sm:text-base font-bold" data-testid="strip-preorder">🛵 จองล่วงหน้า/📅Pre-Order : {preOrderLine}</p>
-        {/* N1 บรรทัด 3: หัวข้อ ส่งวันนี้/⚡Same-Day — ไม่ผูก Round = จัดส่งทันทีหลังครัวปรุงเสร็จ (ไม่มีวงเล็บ) */}
+        {/* N1 บรรทัด 3 (N-2 REV 2026-11-05): เนื้อหา = เริ่มส่ง (HH:MM–HH:MM) จากเวลาเปิด-ปิดร้านที่แอดมินตั้ง — ไม่ hardcode */}
         <p className="text-sm sm:text-base font-bold" data-testid="strip-sameday"><span className={`strip-line-dot ${sameDayOpen ? 'is-open' : 'is-closed'}`} aria-hidden="true" />🛵 ส่งวันนี้/⚡Same-Day : {sameDayLine}</p>
       </div>
     </div>

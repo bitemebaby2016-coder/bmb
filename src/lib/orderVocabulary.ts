@@ -177,9 +177,25 @@ export const SERVER_STATUS_LABEL_TH: Record<ServerOrderStatus, string> = {
   failed: 'ส่งไม่สำเร็จ',
 }
 
-export function getServerStatusLabel(server: string, mode: OrderMode = 'SAME_DAY'): string {
+export function getServerStatusLabel(server: string, mode: OrderMode = 'SAME_DAY', fulfillment: 'delivery' | 'pickup' = 'delivery'): string {
   if (!isServerOrderStatus(server)) return server
-  return mode === 'PRE_ORDER' ? SERVER_STATUS_LABEL_TH_PRE_ORDER[server] : SERVER_STATUS_LABEL_TH[server]
+  const base = mode === 'PRE_ORDER' ? SERVER_STATUS_LABEL_TH_PRE_ORDER[server] : SERVER_STATUS_LABEL_TH[server]
+  return fulfillment === 'pickup' ? (PICKUP_STATUS_LABEL_TH[server] ?? base) : base
+}
+
+/**
+ * N-4 (Owner 2026-11-05 · R69): ป้ายสถานะเส้นทาง "รับที่ร้าน" — คนละคำกับ "จัดส่ง"
+ * ทับเฉพาะสถานะที่ต่างจริง (ส่วนที่เหลือใช้ป้ายเดิมตาม mode) · เส้นทาง pickup ไม่ผ่าน
+ * dispatched/in_transit/arrived (ไม่เรียกไรเดอร์ — POS ส่งมอบที่หน้าร้าน) แต่ map ไว้
+ * กันป้ายหลุดเป็นศัพท์จัดส่งถ้าข้อมูลเก่าค้าง
+ */
+export const PICKUP_STATUS_LABEL_TH: Partial<Record<ServerOrderStatus, string>> = {
+  ready_for_dispatch: 'พร้อมรับที่หน้าร้าน',
+  dispatched: 'ส่งมอบที่หน้าร้าน',
+  in_transit: 'รอรับที่หน้าร้าน',
+  arrived: 'ถึงหน้าร้าน',
+  delivered: 'รับอาหารเรียบร้อย',
+  failed: 'ส่งมอบไม่สำเร็จ',
 }
 
 /**

@@ -99,7 +99,7 @@ jobs:
             -H "Content-Type: application/json" \
             -H "apikey: sb_publishable_Q7AHrjSYOrysDjxS9_ZB-g_NMmytLOH" \
             -H "x-automation-token: $TOKEN" \
-            -d "{\"job\":\"orders_stale_pending\",\"ref\":\"$EV\",\"params\":{\"maxAgeMinutes\":120}}") || {
+            -d "{\"job\":\"orders_stale_pending\",\"ref\":\"$EV\",\"params\":{\"maxAgeMinutes\":120,\"cancelAfterMinutes\":720}}") || {
             echo "::error::orders_stale_pending enqueue HTTP failed"; exit 1; }
           echo "$RESP" | node -e '
             let s=""; process.stdin.on("data",d=>s+=d).on("end",()=>{

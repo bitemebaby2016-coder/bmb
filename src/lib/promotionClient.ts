@@ -26,9 +26,21 @@ export function normalizePromoCode(code: string | null | undefined): string {
   return (code ?? '').trim().toUpperCase()
 }
 
-/** YYYY-MM-DD in UTC — mirrors Postgres CURRENT_DATE (Supabase runs UTC). */
+/** YYYY-MM-DD in UTC — ใช้เทียบค่า date แบบ UTC ล้วนเท่านั้น (ห้ามเทียบกับ DATE column ของ server) */
 export function utcDateKey(d: Date = new Date()): string {
   return d.toISOString().slice(0, 10)
+}
+
+/**
+ * YYYY-MM-DD ตามเวลาไทย (UTC+7) — mirror ฝั่ง server หลัง m186 (R68):
+ * promotion_apply_rules / create_order_with_items เทียบ start_date/end_date กับ
+ * `(now() AT TIME ZONE 'Asia/Bangkok')::date` แล้ว → client ต้องเทียบด้วยวันที่เดียวกัน
+ * บั๊กเดิม (N-8 "โค้ดคูปองที่ตั้งใหม่"): ใช้ UTC date → คูปองที่เพิ่งตั้ง (start_date =
+ * วันนี้) ถูกตัดออกจาก dropdown/evaluation ช่วง 00:00–06:59 น. ไทย และ evaluation
+ * คลาดกับ server (คนละวัน) — class เดียวกับที่ CI เคยแดงรอบ R68
+ */
+export function bangkokDateKey(d: Date = new Date()): string {
+  return new Date(d.getTime() + 7 * 3_600_000).toISOString().slice(0, 10)
 }
 
 // ---------- server-mirror discount math ----------
@@ -115,8 +127,8 @@ export function evaluateCoupon(
 
   if (promo.is_active === false) return { ok: false, reason: 'inactive', promo }
 
-  // DATE columns vs CURRENT_DATE (string compare on YYYY-MM-DD is exact).
-  const todayKey = utcDateKey(today)
+  // DATE columns vs (now() AT TIME ZONE 'Asia/Bangkok')::date — server truth หลัง m186
+  const todayKey = bangkokDateKey(today)
   if (promo.start_date && promo.start_date > todayKey) {
     return { ok: false, reason: 'not_started', promo }
   }
@@ -170,7 +182,9 @@ export async function listAvailableCoupons(today: Date = new Date()): Promise<Pr
     .select('*')
     .order('created_at', { ascending: false })
   if (error) return []
-  const todayKey = utcDateKey(today)
+  // N-8: วันที่แบบไทย (คู่กับ m186) — คูปองที่เพิ่งตั้ง (start_date = วันนี้) ต้องขึ้นใน
+  // dropdown ทุกช่วงเวลา ไม่ใช่หายช่วง 00:00–06:59 น. ไทย (บั๊กเดิมใช้ UTC date)
+  const todayKey = bangkokDateKey(today)
   return (data || []).filter((r) => {
     const code = normalizePromoCode(r.code)
     if (!code) return false

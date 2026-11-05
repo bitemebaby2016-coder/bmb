@@ -34,6 +34,9 @@ import {
   type StickerServiceKey,
   type StickerPaidKey,
 } from './stickerForm'
+// N-6/N-9 (Owner 2026-11-05): Bluetooth ตรง (Niimbot) — เส้นทางพิมพ์สติกเกอร์ที่ออกจริง
+import { niimbotSupported, niimbotPrintSticker } from './niimbotBt'
+import { renderStickerPng } from './stickerPng'
 
 export type PrintJobType = 'receipt' | 'kitchen_ticket'
 export type PrintJobStatus = 'requested' | 'sent' | 'acknowledged' | 'printed' | 'failed'
@@ -99,6 +102,10 @@ export interface PrinterSettings {
   qzEnabled?: boolean
   /** ชื่อเครื่องพิมพ์ตามที่ QZ/OS รายงาน (สติกเกอร์ใบเสร็จ+ครัวใช้เครื่องเดียวกัน) */
   qzPrinterName?: string
+  /** N-6/N-9 (Owner 2026-11-05): พิมพ์สติกเกอร์ผ่าน Bluetooth ตรง (Niimbot) ก่อน QZ/dialog —
+   * เส้นทางเดียวกับที่พิมพ์ออกจริง (R64 พิสูจน์: QZ เข้าคิว Windows ไดรเวอร์พัง = "เข้าคิวแต่ไม่ออก")
+   * default true = ลองบลูทูธก่อนเมื่อเบราว์เซอร์รองรับ · ยังไม่จับคู่/ล้ม = ตก QZ/dialog ตามเดิม */
+  bluetoothDirect?: boolean
 }
 /** โมเดลที่ระบบมี preset ให้ (Nimbot B1Pro = เครื่องที่ร้านใช้อยู่ตอนนี้) */
 export type PrinterModel = 'nimbot_b1pro' | 'thermal_80' | 'thermal_58' | 'other'
@@ -143,6 +150,7 @@ export const DEFAULT_PRINTER_SETTINGS: PrinterSettings = {
   receiptPrinterId: null,
   kitchenPrinterId: null,
   qzEnabled: false,
+  bluetoothDirect: true,
   qzPrinterName: '',
 }
 
@@ -449,7 +457,24 @@ async function printViaTransport(
   settings: PrinterSettings,
   role: PrinterRole,
   jobName: string,
+  order?: PrintOrderData,
 ): Promise<'sent' | 'failed'> {
+  // N-6/N-9 (Owner 2026-11-05): Bluetooth ตรง (Niimbot) = เส้นทางที่พิมพ์ออกจริง (R64:
+  // QZ เข้าคิว Windows ที่ไดรเวอร์พัง = "เข้าคิวแต่ไม่ออก") — ลองก่อนเมื่อเปิดใช้ + มีข้อมูล
+  // ออเดอร์ + เบราว์เซอร์รองรับ · ยังไม่จับคู่/ล้ม = ตกไป QZ/dialog ตามเดิม (ไม่ทำให้ทางเดิมหาย)
+  if (settings.bluetoothDirect !== false && order && niimbotSupported()) {
+    try {
+      const png = await renderStickerPng(order, settings.stickerOffsetYPx ?? 0, settings.stickerFaceHPx ?? 709)
+      await niimbotPrintSticker(png, {
+        offsetY: settings.stickerOffsetYPx ?? 0,
+        faceH: settings.stickerFaceHPx ?? 709,
+        density: settings.stickerDensity ?? 3,
+      })
+      return 'sent'
+    } catch (e) {
+      console.warn('[printViaTransport] Bluetooth direct failed — fallback to QZ/dialog:', e)
+    }
+  }
   if (settings.qzEnabled && settings.qzPrinterName) {
     try {
       const qz = await import('./qzTray')
@@ -519,7 +544,7 @@ export async function runAutoPrint(order: PrintOrderData, type: PrintJobType, se
   const html = await buildBmbStickerHtml(order)
   const results: Array<{ jobId: string; status: PrintJobStatus }> = []
   for (const job of jobs) {
-    const outcome = await printViaTransport(html, settings, type === 'receipt' ? 'receipt' : 'kitchen', `${type}-${order.order_number}`)
+    const outcome = await printViaTransport(html, settings, type === 'receipt' ? 'receipt' : 'kitchen', `${type}-${order.order_number}`, order)
     if (outcome === 'sent') {
       await markPrintJob(job.id, 'sent')
       results.push({ jobId: job.id, status: 'sent' })
@@ -559,7 +584,7 @@ export async function runAutoPrintPair(
     rHtml && kHtml
       ? rHtml.replace('</body>', `<div style="page-break-after:always"></div>${bodyInner(kHtml)}</body>`)
       : rHtml || kHtml
-  const outcome = await printViaTransport(combined, settings, 'receipt', 'pair-' + order.order_number)
+  const outcome = await printViaTransport(combined, settings, 'receipt', 'pair-' + order.order_number, order)
   for (const job of jobs) {
     if (outcome === 'sent') {
       await markPrintJob(job.id, 'sent')
@@ -756,7 +781,7 @@ export async function printOrderTicket(
   const payload = buildPrintOrderData(order)
   // R27 (Owner): ใบเสร็จ + ใบสั่งครัว = สติกเกอร์ BMB 40×60 ใบเดียวกัน (แบบฟอร์มเดียวทั้งสองบทบาท)
   const html = await buildBmbStickerHtml(payload)
-  const outcome = await printViaTransport(html, settings, type === 'receipt' ? 'receipt' : 'kitchen', `sticker-${order.order_number}`)
+  const outcome = await printViaTransport(html, settings, type === 'receipt' ? 'receipt' : 'kitchen', `sticker-${order.order_number}`, payload)
 
   if (jobId) {
     if (outcome === 'sent') await markPrintJob(jobId, 'sent')

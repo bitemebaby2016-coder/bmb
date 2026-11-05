@@ -166,13 +166,26 @@ export function stickerDrawList(o: PrintOrderData, offsetY = 0, faceH = STICKER_
     }
   }
 
-  // บล็อก QR + ข้อความ (bottom) — R66: จบเหนือขอบล่าง ~5% ของหน้า ("ใช้ให้เต็มที่ … เหลือ ~5% พอ")
-  // qrY + qrSize = face − bottomReserve "เสมอ" (ขอบล่างคงที่ทุก offset/face — min 70 กันทับเนื้อหาเมื่อ offset ใหญ่)
+  // บล็อก QR + ข้อความ (bottom) — R66: จบที่ขอบล่าง ~5% ของหน้า (bottomReserve)
+  // N-6c (Owner 2026-11-05 "ปริ้นทับซ้อนกัน ตรง PAID / QR CODE SCAN FOR MORE"):
+  // เดิม min 70 บังคับขนาด QR จน top ไต่ขึ้น "ทับ" แถว [PAID]/เนื้อหาเมื่อ offset ดันเนื้อหาลง
+  // → ตรรกะใหม่ (เรียงตามลำดับความสำคัญ): ① ห้ามทับเนื้อหาเด็ดขาด ② ผูกขอบล่างตาม R66
+  //    เมื่อพื้นที่พอ ③ พื้นที่ไม่พอ = ย่อ QR ก่อน (ต่ำสุด 55 = ยังสแกนได้) ④ ยังไม่พออีก =
+  //    ลงใต้เนื้อหา (ยอมติด/เลยขอบล่าง แทนทับตัวอักษร)
   const contentBottom = y + 16 + off // y = แถว [PAID] (baseline) + ใต้ baseline เล็กน้อย (+ offset ที่เลื่อนไปแล้ว)
   const bottomReserve = Math.round(face * STICKER_BOTTOM_PCT)
-  const avail = face - bottomReserve - contentBottom - 8
-  const qrSize = Math.max(70, Math.min(150, Math.round(avail)))
-  const qrY = face - bottomReserve - qrSize
+  const QR_MIN_SCANNABLE = 55
+  let qrSize = Math.min(150, Math.max(70, Math.round(face - bottomReserve - contentBottom - 8)))
+  let qrY = face - bottomReserve - qrSize
+  if (qrY < contentBottom + 6) {
+    const fit = Math.round(face - bottomReserve - (contentBottom + 6))
+    if (fit >= QR_MIN_SCANNABLE) {
+      qrSize = fit
+      qrY = face - bottomReserve - qrSize
+    } else {
+      qrY = contentBottom + 6
+    }
+  }
   ops.push({ kind: 'qr', x: M, y: qrY, size: qrSize })
   const tx = M + qrSize + 12
   const mid = tx + (W - tx - M) / 2

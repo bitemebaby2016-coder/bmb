@@ -28,6 +28,9 @@ import {
   fetchPrintJobs, markPrintJob, loadPrinterSettings, runAutoPrintPair,
   PrintOrderData, PrintJobRow,
 } from '@/lib/printService'
+// N-9 (Owner 2026-11-05): สติกเกอร์ Bluetooth อัตโนมัติหลังขาย POS (เส้นทางเดียวกับหน้าออเดอร์)
+import { stickerRollForOrder, printStickerRoll, describeStickerRollError } from '@/lib/stickerQueue'
+import { niimbotSupported } from '@/lib/niimbotBt'
 import { SubmitKeyRing } from '@/lib/orderSubmitKey'
 import { Link } from 'react-router-dom'
 import { useAuthStore } from '@/store/authStore'
@@ -235,6 +238,22 @@ export function AdminPos() {
       }
       await runAutoPrintPair(printData, settings)
       setPrintJobs(await fetchPrintJobs(result.order_number))
+      // N-9 (Owner 2026-11-05): สติกเกอร์ 1 ดวง/ชิ้น ผ่าน Bluetooth ตรง อัตโนมัติหลังขาย
+      // (เส้นทางเดียวกับปุ่ม "รับออเดอร์" ที่หน้าออเดอร์ · สวิตช์ autoPrintStickers ปิด = ข้ามพร้อมบอกสาเหตุ)
+      if (settings.autoPrintStickers) {
+        if (niimbotSupported()) {
+          const roll = stickerRollForOrder(printData)
+          void printStickerRoll(roll, {
+            offsetY: settings.stickerOffsetYPx ?? 0,
+            faceH: settings.stickerFaceHPx ?? 709,
+            density: settings.stickerDensity ?? 3,
+          })
+            .then(() => showToast(`✅ สติกเกอร์ ${roll.length} ใบ (Bluetooth) — เครื่องยืนยันครบแล้ว`, 'success'))
+            .catch((e) => showToast('พิมพ์สติกเกอร์อัตโนมัติไม่สำเร็จ: ' + describeStickerRollError(e), 'warning'))
+        } else {
+          showToast('ข้ามพิมพ์สติกเกอร์อัตโนมัติ: เบราว์เซอร์นี้ไม่รองรับ Web Bluetooth — เปิดด้วย Chrome/Edge (https)', 'warning')
+        }
+      }
     } catch (e) {
       console.warn('[POS] auto-print failed (order unaffected):', e)
     }

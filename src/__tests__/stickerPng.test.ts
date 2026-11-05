@@ -219,9 +219,17 @@ describe('R33 — stickerDrawList(offset) ทุก op เลื่อนเท�
     const qrIdx = base.findIndex((o) => o.kind === 'qr')
     const baseQr = base[qrIdx]
     const movedQr = moved[qrIdx]
-    // R66: QR จบเหนือขอบล่าง ~5% เสมอ (face − bottomReserve · qrSize ย่อเอง 70..150) — offset ไม่ดัน QR เกินขอบ
+    // R66: QR ผูกขอบล่าง (face − bottomReserve) เมื่อพื้นที่พอ — base (offset 0) คงสัญญานี้
     expect(baseQr.kind === 'qr' ? baseQr.y + baseQr.size : -1).toBe(709 - Math.round(709 * STICKER_BOTTOM_PCT))
-    expect(movedQr.kind === 'qr' ? movedQr.y + movedQr.size : -1).toBe(709 - Math.round(709 * STICKER_BOTTOM_PCT))
+    // N-6c (Owner 2026-11-05 · ทับ R66 "ติดขอบล่างเสมอ"): offset ดันเนื้อหาลงมา = QR
+    // ห้ามทับเนื้อหาเด็ดขาด — ย่อ/เลื่อนลงใต้เนื้อหา (top ของ QR ต้องอยู่ใต้แถว [PAID])
+    if (movedQr.kind === 'qr') {
+      const movedPaid = moved.find(
+        (o): o is Extract<StickerOp, { kind: 'text' }> => o.kind === 'text' && o.text.startsWith('[PAID]'),
+      )
+      expect(movedPaid).toBeTruthy()
+      expect(movedQr.y).toBeGreaterThanOrEqual(movedPaid!.y)
+    }
     for (let i = 1; i < base.length; i++) {
       const a = base[i]
       const b = moved[i]
@@ -361,5 +369,37 @@ describe('R56+R66 — ORDER LIST/NOTICE หลัง ":" คอลัมน์�
     expect(qr && qr.kind === 'qr' ? qr.y : -1).toBeGreaterThanOrEqual((paid?.y ?? 0) + 22)
     expect(qr && qr.kind === 'qr' ? qr.y + qr.size : -1).toBe(STICKER_PX_H - Math.round(STICKER_PX_H * STICKER_BOTTOM_PCT))
     expect(qr && qr.kind === 'qr' ? qr.y + qr.size : 999).toBeLessThanOrEqual(STICKER_PX_H)
+  })
+})
+
+describe('N-6c (Owner 2026-11-05) — QR ห้ามทับเนื้อหา ([PAID]/ORDER LIST) ทุกความสูงเนื้อหา/offset', () => {
+  const QR_BLOCK_TEXTS = new Set(['SCAN FOR MORE', 'Thank You for love !'])
+  function contentBottomOf(ops: StickerOp[]): number {
+    const texts = ops.filter(
+      (o): o is Extract<StickerOp, { kind: 'text' }> => o.kind === 'text' && !QR_BLOCK_TEXTS.has(o.text),
+    )
+    return Math.max(...texts.map((t) => t.y + 16))
+  }
+  it('qrY อยู่ใต้เนื้อหาล่างสุดเสมอ — ทุกจำนวนชิ้น × offset (บั๊กเดิม: min 70 ดัน QR ขึ้นทับแถว [PAID])', () => {
+    for (const n of [1, 4, 8]) {
+      for (const off of [0, 20, 40, -20]) {
+        const big: PrintOrderData = {
+          ...order,
+          items: Array.from({ length: n }, (_, i) => ({ product_name: `เมนูทดสอบ ${i + 1}`, quantity: 2, unit_price: 10 })),
+          special_instructions: 'หมายเหตุยาวเพื่อทดสอบการทับซ้อน '.repeat(4),
+        }
+        const ops = stickerDrawList(big, off, STICKER_PX_H)
+        const qr = ops.find((o): o is Extract<StickerOp, { kind: 'qr' }> => o.kind === 'qr')
+        expect(qr, `n=${n} off=${off} ต้องมี QR`).toBeTruthy()
+        expect(qr!.y, `n=${n} off=${off} qrY ทับเนื้อหา`).toBeGreaterThanOrEqual(contentBottomOf(ops) - 1)
+      }
+    }
+  })
+  it('แถว [PAID] ไม่ถูก QR ทับ: qrY ต่ำกว่า baseline [PAID] เสมอ', () => {
+    const ops = stickerDrawList(order, 40, STICKER_PX_H)
+    const paid = ops.find((o): o is Extract<StickerOp, { kind: 'text' }> => o.kind === 'text' && o.text.startsWith('[PAID]'))
+    const qr = ops.find((o): o is Extract<StickerOp, { kind: 'qr' }> => o.kind === 'qr')
+    expect(paid && qr).toBeTruthy()
+    expect(qr!.y).toBeGreaterThan(paid!.y)
   })
 })

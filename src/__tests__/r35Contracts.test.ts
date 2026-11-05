@@ -1,7 +1,7 @@
 // ============================================
 // Bite Me Baby — R35 contracts (Owner 2026-10-31) · R56 (2026-11-02) ปรับตามแบบฟอร์มใหม่
-// · R66 (2026-11-04): ORDER LIST = block 4 แถวคงที่ · QR เว้นขอบล่าง ~5% (STICKER_BOTTOM_PCT)
-// 1) สติกเกอร์: ค่า ORDER LIST/NOTICE หลัง ':' คอลัมน์เดียวกัน (≤4/1 บรรทัด) · QR ผูกขอบล่าง −5%
+// · R66 (2026-11-04): ORDER LIST = block 4 แถวคงที่ · N-6c (2026-11-05): QR ห้ามทับเนื้อหา (ย่อ ≥55 ก่อน)
+// 1) สติกเกอร์: ค่า ORDER LIST/NOTICE หลัง ':' คอลัมน์เดียวกัน (≤4/1 บรรทัด) · QR ห้ามทับ [PAID]/เนื้อหา (N-6c)
 // 2) /menu?tab=pre-order: ชิปรอบ (เที่ยง/เช้า ซ้ำ ๆ) ถูกถอดออกจาก banner ("ในวงเล็บไม่ต้องแสดง")
 // 3) showcase พรีออเดอร์: วันใกล้วันปัจจุบันขึ้นก่อน (หน้าแรก + /menu)
 // ============================================
@@ -32,10 +32,13 @@ describe('R56+R66 · สติกเกอร์ — ค่าหลัง ":" �
     expect(stickerSrc).toContain('x: colX, y, text: f.notice, size: 19')
     // บล็อกต่อของ ORDER LIST = ':' ชิดซ้าย (x = M) ตามแบบ Owner
     expect(stickerSrc).toContain("x: M, y, text: ':', size: 20, weight: 700")
-    // R66: QR = ผูกขอบล่างหน้า − 5% + ย่อเอง 70..150 ให้พอดีใต้เนื้อหา (แทนสูตร Tel+40 แบบเก่า)
-    expect(stickerSrc).toContain('const qrY = face - bottomReserve - qrSize')
-    expect(stickerSrc).toContain('const qrSize = Math.max(70, Math.min(150, Math.round(avail)))')
+    // N-6c (R66 contract ใหม่ 2026-11-05 — เดิม "QR ผูกขอบล่างล้วน min 70" = ต้นเหตุทับ [PAID]):
+    //   ① ห้ามทับเนื้อหาเด็ดขาด ② ผูกขอบล่าง −5% เมื่อพื้นที่พอ ③ ย่อ QR (≥55) ก่อน ④ ค่อยลงใต้เนื้อหา
+    expect(stickerSrc).toContain('const contentBottom = y + 16 + off')
     expect(stickerSrc).toContain('const bottomReserve = Math.round(face * STICKER_BOTTOM_PCT)')
+    expect(stickerSrc).toContain('const QR_MIN_SCANNABLE = 55')
+    expect(stickerSrc).toContain('let qrY = face - bottomReserve - qrSize')
+    expect(stickerSrc).toContain('if (qrY < contentBottom + 6)')
     expect(stickerSrc).not.toContain('const valX = M + 148')
   })
 

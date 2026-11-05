@@ -201,6 +201,7 @@ export function HomePage() {
     shopHoursMs: hoursToMs(shopHours),
     operatingHours,
     hoursClose: shopHours?.close,
+    hoursOpen: shopHours?.open,
     masterOpen,
   })
 

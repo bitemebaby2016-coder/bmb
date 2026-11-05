@@ -2,7 +2,8 @@
 // Bite Me Baby — R44/N1 tests (Owner 2026-11-01 Strip copy รอบ 3): แถบสถานะหน้าแรก 3 บรรทัด
 //   1) ไฟสถานะเปิด-ปิด แจ้งทั้ง Pre-Order และ Same-Day ในบรรทัดเดียว (ไอคอนหลังคำไทย)
 //   2) 🛵 จองล่วงหน้า/📅Pre-Order : รอบส่ง <เวลาออกส่ง 7.00 AM> <ชื่อรอบ> <วัน> (ปิดรับ …) — label ใน strip · body ใน provider
-//   3) 🛵 ส่งวันนี้/⚡Same-Day : จัดส่งทันทีหลังครัวปรุงเสร็จ (ไม่ผูกรอบส่งใด ๆ · ไม่มีวงเล็บ) · ปิดรับแล้ว
+//   3) 🛵 ส่งวันนี้/⚡Same-Day : เริ่มส่ง (HH:MM–HH:MM) จากเวลาเปิด-ปิดร้านที่แอดมินตั้ง (N-2 REV 2026-11-05)
+//      — ไม่มีข้อมูลเวลา = fallback จัดส่งทันทีหลังครัวปรุงเสร็จ / ปิดรับแล้ว
 // ============================================
 
 import { describe, it, expect } from 'vitest'
@@ -34,7 +35,7 @@ describe('R44 — บรรทัด ③ สถานะขนส่ง Same-Day
     const s = getStoreStatusFromRounds(todayRounds as never, atIctl(TODAY, '10:00'))
     expect(s.sameDayOpen).toBe(true)
     expect(s.sameDayLine).toBe('จัดส่งทันทีหลังครัวปรุงเสร็จ')
-    expect(s.sameDayLine).not.toContain('เริ่มส่ง') // branch ผูกเวลาของรอบถูกถอดออกจากสเปกแล้ว
+    expect(s.sameDayLine).not.toContain('เริ่มส่ง') // N-2: ไม่ส่งข้อมูลเวลาเปิด-ปิดร้าน → fallback ข้อความเดิม (ห้ามเดาเวลา)
     expect(s.sameDayLine).not.toContain('(')
     expect(s.sameDayLine).not.toContain('รอบ')
   })
@@ -70,8 +71,10 @@ describe('R44 — StoreStatusStrip source (3 บรรทัด)', () => {
   it('บรรทัด ① ไฟรวมสองสายในบรรทัดเดียว (preOrderOpen/sameDayOpen แยกสีได้จริง · ไอคอนหลังคำไทย)', () => {
     expect(stripSrc).toContain('data-testid="strip-status-lights"')
     // N1 (Owner 2026-11-01): ไอคอนอยู่หลังคำไทย — จองล่วงหน้า/📅Pre-Order · ส่งวันนี้/⚡Same-Day
-    expect(stripSrc).toContain('เปิดรับออเดอร์ จองล่วงหน้า/📅Pre-Order')
-    expect(stripSrc).toContain('เปิดรับออเดอร์ ส่งวันนี้/⚡Same-Day')
+    // N-1 REV (Owner 2026-11-05): คำสถานะต้องคู่กับสีไฟเสมอ — เขียวคู่ "เปิดรับออเดอร์" · แดงคู่ "ปิดรับแล้ว"
+    expect(stripSrc).toContain("{preOrderOpen ? 'เปิดรับออเดอร์' : 'ปิดรับแล้ว'} จองล่วงหน้า/📅Pre-Order")
+    expect(stripSrc).toContain("{sameDayOpen ? 'เปิดรับออเดอร์' : 'ปิดรับแล้ว'} ส่งวันนี้/⚡Same-Day")
+    expect(stripSrc).not.toContain("{preOrderOpen ? '' : ' ปิดรับแล้ว'}") // รูปแบบเก่า (เปิดรับ + ไฟแดง) ถูกถอดแล้ว
     expect(stripSrc).not.toContain('จองล่วงหน้า/Pre-Order 📅') // label R50 ถูกแทนแล้ว
     expect(stripSrc).not.toContain('รอบวันนี้/Same-Day') // label เก่าถูกแทนทั้งบรรทัด
     expect(stripSrc).toContain("preOrderOpen ? '🟢' : '🔴'")
@@ -91,5 +94,42 @@ describe('R44 — StoreStatusStrip source (3 บรรทัด)', () => {
     expect(stripSrc).toContain('จัดส่งทันทีหลังครัวปรุงเสร็จ') // fallback ของ strip (ครัว = คำใหม่ N1)
     expect(stripSrc).not.toMatch(/opacity-80/)
     expect((stripSrc.match(/text-sm sm:text-base font-bold/g) || []).length).toBeGreaterThanOrEqual(3)
+  })
+})
+
+describe('N-2 (Owner 2026-11-05) — บรรทัด ③ "เริ่มส่ง (HH:MM–HH:MM)" จากเวลาเปิด-ปิดร้านที่แอดมินตั้ง', () => {
+  const HOURS = { hoursOpen: '08:00', hoursClose: '20:00' }
+  it('open + มีข้อมูลเวลา → "เริ่มส่ง (08:00–20:00)" (ไม่ hardcode · ห้ามใช้เวลาของรอบ)', () => {
+    const s = getStoreStatusFromRounds(todayRounds as never, atIctl(TODAY, '12:00'), HOURS)
+    expect(s.sameDayLine).toBe('เริ่มส่ง (08:00–20:00)')
+    expect(s.sameDayLine).not.toContain('11:00')
+    expect(s.sameDayLine).not.toContain('รอบ')
+  })
+  it('preorder_only + มีข้อมูลเวลา → ยังคง "เริ่มส่ง (08:00–20:00)" (แทน "ปิดรับแล้ว")', () => {
+    const closedToday = todayRounds.map((r) => ({ ...r, status: 'closed' }))
+    const s = getStoreStatusFromRounds([...closedToday, tomorrowRound] as never, atIctl(TODAY, '10:00'), HOURS)
+    expect(s.state).toBe('preorder_only')
+    expect(s.sameDayLine).toBe('เริ่มส่ง (08:00–20:00)')
+  })
+  it('ไม่มีรอบเลย + มีข้อมูลเวลา → "เริ่มส่ง (08:00–20:00)"', () => {
+    const s = getStoreStatusFromRounds([] as never, atIctl(TODAY, '10:00'), HOURS)
+    expect(s.sameDayLine).toBe('เริ่มส่ง (08:00–20:00)')
+  })
+  it('ขาดเวลาเปิดหรือเวลาปิด → fallback ข้อความเดิม (ห้ามเดาเวลา)', () => {
+    const o = getStoreStatusFromRounds(todayRounds as never, atIctl(TODAY, '12:00'), { hoursOpen: '08:00' })
+    expect(o.sameDayLine).toBe('จัดส่งทันทีหลังครัวปรุงเสร็จ')
+    const c = getStoreStatusFromRounds([] as never, atIctl(TODAY, '10:00'), { hoursClose: '20:00' })
+    expect(c.sameDayLine).toBe('ปิดรับแล้ว')
+  })
+  it('เวลาในวงเล็บ = ตาม business_settings ที่ส่งเข้ามาจริง (ไม่ตรึง 08:00–20:00)', () => {
+    const s = getStoreStatusFromRounds(todayRounds as never, atIctl(TODAY, '12:00'), { hoursOpen: '09:30', hoursClose: '21:15' })
+    expect(s.sameDayLine).toBe('เริ่มส่ง (09:30–21:15)')
+  })
+  it('sameDayLineFromHours สร้างบรรทัดตามสเปก + คืน null เมื่อข้อมูลไม่ครบ', async () => {
+    const { sameDayLineFromHours } = await import('@/lib/homeProviders')
+    expect(sameDayLineFromHours('08:00', '20:00')).toBe('เริ่มส่ง (08:00–20:00)')
+    expect(sameDayLineFromHours('08:00', undefined)).toBeNull()
+    expect(sameDayLineFromHours(undefined, '20:00')).toBeNull()
+    expect(sameDayLineFromHours('', '')).toBeNull()
   })
 })

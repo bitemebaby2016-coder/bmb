@@ -1,0 +1,342 @@
+{
+  "at": "2026-11-05T03:44:57.242Z",
+  "steps": [
+    {
+      "step": "admin_login",
+      "status": 200
+    },
+    {
+      "step": "list_open",
+      "count": 10
+    }
+  ],
+  "cancelled": [
+    {
+      "order_number": "BMB-20261104-133",
+      "http": 200,
+      "resp": {
+        "ok": true,
+        "note": "no payment captured",
+        "status": "cancelled",
+        "order_mode": "SAME_DAY",
+        "order_number": "BMB-20261104-133",
+        "previous_status": "pending",
+        "capacity_released": true,
+        "inventory_restored": false
+      }
+    },
+    {
+      "order_number": "BMB-20261104-447",
+      "http": 200,
+      "resp": {
+        "ok": true,
+        "note": "no payment captured",
+        "status": "cancelled",
+        "order_mode": "SAME_DAY",
+        "order_number": "BMB-20261104-447",
+        "previous_status": "pending",
+        "capacity_released": true,
+        "inventory_restored": false
+      }
+    },
+    {
+      "order_number": "BMB-20261104-765",
+      "http": 200,
+      "resp": {
+        "ok": true,
+        "note": "no payment captured",
+        "status": "cancelled",
+        "order_mode": "SAME_DAY",
+        "order_number": "BMB-20261104-765",
+        "previous_status": "pending",
+        "capacity_released": true,
+        "inventory_restored": false
+      }
+    },
+    {
+      "order_number": "BMB-20261104-933",
+      "http": 200,
+      "resp": {
+        "ok": true,
+        "note": "no payment captured",
+        "status": "cancelled",
+        "order_mode": "SAME_DAY",
+        "order_number": "BMB-20261104-933",
+        "previous_status": "pending",
+        "capacity_released": true,
+        "inventory_restored": false
+      }
+    },
+    {
+      "order_number": "BMB-20261104-905",
+      "http": 200,
+      "resp": {
+        "ok": true,
+        "note": "no payment captured",
+        "status": "cancelled",
+        "order_mode": "SAME_DAY",
+        "order_number": "BMB-20261104-905",
+        "previous_status": "pending",
+        "capacity_released": true,
+        "inventory_restored": false
+      }
+    },
+    {
+      "order_number": "BMB-20261104-365",
+      "http": 200,
+      "resp": {
+        "ok": true,
+        "note": "no payment captured",
+        "status": "cancelled",
+        "order_mode": "SAME_DAY",
+        "order_number": "BMB-20261104-365",
+        "previous_status": "pending",
+        "capacity_released": true,
+        "inventory_restored": false
+      }
+    },
+    {
+      "order_number": "BMB-20261104-612",
+      "http": 200,
+      "resp": {
+        "ok": true,
+        "note": "no payment captured",
+        "status": "cancelled",
+        "order_mode": "SAME_DAY",
+        "order_number": "BMB-20261104-612",
+        "previous_status": "pending",
+        "capacity_released": true,
+        "inventory_restored": false
+      }
+    }
+  ],
+  "delivered": [
+    {
+      "order_number": "BMB-20261104-995",
+      "http": 200,
+      "resp": {
+        "ok": true,
+        "to": "delivered",
+        "from": "ready_for_dispatch",
+        "inventory": null,
+        "order_number": "BMB-20261104-995"
+      }
+    }
+  ],
+  "skipped": [],
+  "failed": [],
+  "open_before": [
+    {
+      "order_number": "BMB-20261104-133",
+      "status": "pending",
+      "payment_status": "pending",
+      "payment_method": "promptpay_qr",
+      "delivery_method": "pickup",
+      "customer_name": "e2e1793800219913@bmb.test",
+      "order_mode": "SAME_DAY",
+      "created_at": "2026-11-04T13:51:05.045515+00:00"
+    },
+    {
+      "order_number": "BMB-20261104-447",
+      "status": "pending",
+      "payment_status": "pending",
+      "payment_method": "promptpay_qr",
+      "delivery_method": "pickup",
+      "customer_name": "e2e1793803973102@bmb.test",
+      "order_mode": "SAME_DAY",
+      "created_at": "2026-11-04T14:53:11.758882+00:00"
+    },
+    {
+      "order_number": "BMB-20261104-765",
+      "status": "pending",
+      "payment_status": "pending",
+      "payment_method": "promptpay_qr",
+      "delivery_method": "pickup",
+      "customer_name": "e2e1793804323981@bmb.test",
+      "order_mode": "SAME_DAY",
+      "created_at": "2026-11-04T14:59:03.340354+00:00"
+    },
+    {
+      "order_number": "BMB-20261104-933",
+      "status": "pending",
+      "payment_status": "pending",
+      "payment_method": "promptpay_qr",
+      "delivery_method": "pickup",
+      "customer_name": "e2e1793804715099@bmb.test",
+      "order_mode": "SAME_DAY",
+      "created_at": "2026-11-04T15:05:33.40176+00:00"
+    },
+    {
+      "order_number": "BMB-20261104-905",
+      "status": "pending",
+      "payment_status": "pending",
+      "payment_method": "promptpay_qr",
+      "delivery_method": "pickup",
+      "customer_name": "e2e1793804980568@bmb.test",
+      "order_mode": "SAME_DAY",
+      "created_at": "2026-11-04T15:09:54.698938+00:00"
+    },
+    {
+      "order_number": "BMB-20261104-365",
+      "status": "pending",
+      "payment_status": "pending",
+      "payment_method": "promptpay_qr",
+      "delivery_method": "pickup",
+      "customer_name": "e2e1793805385622@bmb.test",
+      "order_mode": "SAME_DAY",
+      "created_at": "2026-11-04T15:16:40.900701+00:00"
+    },
+    {
+      "order_number": "PO-20261105-931",
+      "status": "pending",
+      "payment_status": "pending",
+      "payment_method": "promptpay_qr",
+      "delivery_method": "pickup",
+      "customer_name": "e2e1793805385622@bmb.test",
+      "order_mode": "PRE_ORDER",
+      "created_at": "2026-11-04T15:17:28.122988+00:00"
+    },
+    {
+      "order_number": "BMB-20261104-612",
+      "status": "pending",
+      "payment_status": "pending",
+      "payment_method": "promptpay_qr",
+      "delivery_method": "pickup",
+      "customer_name": "e2e1793808334405@bmb.test",
+      "order_mode": "SAME_DAY",
+      "created_at": "2026-11-04T16:05:50.814522+00:00"
+    },
+    {
+      "order_number": "PO-20261105-685",
+      "status": "pending",
+      "payment_status": "pending",
+      "payment_method": "promptpay_qr",
+      "delivery_method": "pickup",
+      "customer_name": "e2e1793808334405@bmb.test",
+      "order_mode": "PRE_ORDER",
+      "created_at": "2026-11-04T16:06:40.519298+00:00"
+    },
+    {
+      "order_number": "BMB-20261104-995",
+      "status": "ready_for_dispatch",
+      "payment_status": "paid",
+      "payment_method": "promptpay_qr",
+      "delivery_method": "pickup",
+      "customer_name": "e2e1793799538202@bmb.test",
+      "order_mode": "SAME_DAY",
+      "created_at": "2026-11-04T13:39:15.414312+00:00"
+    }
+  ],
+  "remaining_open": [
+    {
+      "order_number": "PO-20261105-931",
+      "status": "pending",
+      "payment_status": "pending",
+      "customer_name": "e2e1793805385622@bmb.test"
+    },
+    {
+      "order_number": "PO-20261105-685",
+      "status": "pending",
+      "payment_status": "pending",
+      "customer_name": "e2e1793808334405@bmb.test"
+    }
+  ],
+  "verified": true,
+  "round2": {
+    "at": "2026-11-05T04:03:05.483Z",
+    "steps": [
+      {
+        "step": "admin_login",
+        "status": 200
+      }
+    ],
+    "failed_marked": [
+      {
+        "order_number": "PO-20261105-931",
+        "http": 200,
+        "from": "failed",
+        "idempotent": true
+      },
+      {
+        "order_number": "PO-20261105-685",
+        "http": 200,
+        "from": "failed",
+        "idempotent": true
+      }
+    ],
+    "audit": [
+      {
+        "order_number": "PO-20261105-931",
+        "http": 409
+      },
+      {
+        "order_number": "PO-20261105-685",
+        "http": 409
+      }
+    ],
+    "failed": [],
+    "remaining_open": [],
+    "targets_state": [
+      {
+        "order_number": "PO-20261105-931",
+        "status": "failed",
+        "payment_status": "pending"
+      },
+      {
+        "order_number": "PO-20261105-685",
+        "status": "failed",
+        "payment_status": "pending"
+      }
+    ],
+    "audit_rows": [
+      {
+        "id": "alog-r69-fail-PO-20261105-685",
+        "action": "test_data_cleanup",
+        "entity_id": "PO-20261105-685",
+        "metadata": {
+          "batch": "R69",
+          "reason": "ERR_CANCEL_AFTER_CUTOFF — cancel ถูกกติกา 038 Q2/A ห้ามทุกบทบาท → Owner สั่ง failed",
+          "category": "test_data",
+          "order_mode": "PRE_ORDER",
+          "from_status": "pending",
+          "payment_status": "pending"
+        }
+      },
+      {
+        "id": "alog-r69-fail-PO-20261105-931",
+        "action": "test_data_cleanup",
+        "entity_id": "PO-20261105-931",
+        "metadata": {
+          "batch": "R69",
+          "reason": "ERR_CANCEL_AFTER_CUTOFF — cancel ถูกกติกา 038 Q2/A ห้ามทุกบทบาท → Owner สั่ง failed",
+          "category": "test_data",
+          "order_mode": "PRE_ORDER",
+          "from_status": "pending",
+          "payment_status": "pending"
+        }
+      }
+    ],
+    "verified": true
+  },
+  "categories": {
+    "cancelled": [
+      "BMB-20261104-133",
+      "BMB-20261104-447",
+      "BMB-20261104-765",
+      "BMB-20261104-933",
+      "BMB-20261104-905",
+      "BMB-20261104-365",
+      "BMB-20261104-612"
+    ],
+    "delivered": [
+      "BMB-20261104-995"
+    ],
+    "failed_test_data": [
+      "PO-20261105-931",
+      "PO-20261105-685"
+    ],
+    "skipped": [],
+    "errors": []
+  },
+  "round1_errors": []
+}
