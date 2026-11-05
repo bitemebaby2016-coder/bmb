@@ -1,0 +1,31 @@
+{
+  "at": "2026-11-05T14:40:51.142Z",
+  "steps": [
+    {
+      "v": "188",
+      "action": "applied+recorded",
+      "apply": "[]"
+    },
+    {
+      "v": "189",
+      "action": "applied+recorded",
+      "apply": "[]"
+    }
+  ],
+  "reload": "[]",
+  "hallow": "[]",
+  "verify": {
+    "fn188": "[{\"dedup_id\":true,\"on_conflict\":true,\"pay_ns\":true}]",
+    "fn189": "[{\"fallback\":true,\"guard_kept\":true}]",
+    "hallow": "[{\"code\":\"HALLOW10\",\"is_active\":true,\"start_date\":\"2026-11-03\",\"end_date\":\"2026-11-30\"}]",
+    "ledger": "[{\"version\":\"189\",\"name\":\"189_claim_offer_accept_fallback.sql\"},{\"version\":\"188\",\"name\":\"188_order_notification_dedup.sql\"},{\"version\":\"187\",\"name\":\"187_order_message_rider_notifications.sql\"}]"
+  },
+  "checks": {
+    "hook_dedup_id": true,
+    "hook_on_conflict": true,
+    "claim_fallback": true,
+    "hallow_extended": true,
+    "ledger_188_189": true
+  },
+  "ALL_PASS": true
+}

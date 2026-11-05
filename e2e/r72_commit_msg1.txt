@@ -1,0 +1,9 @@
+R72: ซ่อมแจ้งเตือนซ้ำ + เด้งตอนเปิดแอพ + คูปองเช็คเอาท์ + เส้นทางจัดส่ง + ไรเดอร์รับงานไม่ได้
+
+- m188 (APPLIED + smoke 5/5): แจ้งเตือนออเดอร์ซ้ำ 2 เท่า = trigger m161 (id notif-<ts>-<rand>) กับ automation-worker (id evt-ord-<order>-<status>) คนละ id → trigger ใช้ id เดียวกับ worker + ON CONFLICT DO NOTHING = เหตุการณ์เดียว = แถวเดียว (แถวชำระเงินแยก evt-pay- namespace)
+- m189 (APPLIED + smoke: accepted จริง): รับงานไม่ได้ = แอดมิน "มอบหมาย" แล้วไรเดอร์กด "รับงานประกาศ" เด้ง ERR_OFFER_NOT_AVAILABLE (m163 guard) → fallback assignment 'assigned' ของตัวเอง = ทำงานเท่า accept
+- กระดิ่งไรเดอร์ซ้ำ: ถอด RiderBell (กระดิ่งมุมจอ Header ซ้อนอยู่แล้ว) = กระดิ่งเดียวทุก role บอกเรื่องข้อความครบ ร้าน/ไรเดอร์/ลูกค้า
+- เด้งตอนเปิดแอพ: ปลด document.hidden gate (NotificationDropdown + OrderChatPanel) = เด้งเดสก์ท็อปทุกครั้งทั้งตอนเปิดแอป/สลับแอป
+- notificationLinks: เพิ่ม DRIVER_ASSIGNED/ACCEPTED/PICKED_UP + ORDER_PICKED_UP → /admin/delivery?focus= (เส้นทางแจ้งเตือนจัดส่ง)
+- คูปอง: โค้ดจริง HALLOW10 หมดอายุ 11-04 → ต่ออายุถึง 2026-11-30 (data) + การ์ดโปรหน้าร้านเช็กช่วงวันที่แบบ dropdown (โปรเพิ่มทีหลังขึ้นอัตโนมัติ)
+- สถานะค้างหลังยืนยันรอบ: คิวครัวโชว์พรีออเดอร์รอเข้าครัวทุกวันที่ (เดิมกรอบวันที่ = หาปุ่มเริ่มทำไม่เจอ)

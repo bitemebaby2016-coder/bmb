@@ -1,3 +1,23 @@
+> ## 🟢 สถานะล่าสุด — 2026-11-05 ดึก (R72 · **แจ้งเตือนไม่ซ้ำ + เด้งตอนเปิดแอพ + คูปองเช็คเอาท์ + เส้นทางจัดส่ง + รับงานไม่ได้** · ยึดบล็อกนี้ก่อนทุกบล็อกด้านล่าง)
+> ### WORK STATE (ตาม .clinerules)
+> - **Task ID:** R72 (Owner หลังทดสอบ §R71: "เด้งตอนเปิดแอพด้วย · แจ้งเตือนไรเดอร์มีซ้ำ · มุมจอต้องบอกเรื่องข้อความทุกฝั่ง · คูปองแอดมิน (HALLOWEEN10) ใช้ที่เช็คเอาท์ได้+เพิ่มทีหลังอัตโนมัติ · เซมเดย์นอกเวลา error ถูกต้อง · เส้นทางแจ้งเตือนจัดส่งหายไปอีก+สถานะหลังยืนยันรอบไม่เดินต่อ · ไรเดอร์รับงานไม่ได้")
+> - **Status:** CODE_CLOSED / PENDING_LIVE_TEST (test pack §R72 = 8 ข้อ)
+> - **Root causes ที่แก้ (มีหลักฐาน production ทุกข้อ):**
+>   - **แจ้งเตือนซ้ำ 2 เท่า**: m161 trigger (id `notif-<ts>-<rand>`) + automation-worker (id `evt-ord-<order>-<status>`) เขียนคนละ id เหตุการณ์เดียวกัน → **m188**: trigger ใช้ id เดียวกับ worker + `ON CONFLICT (id) DO NOTHING` (smoke: เขียน 1 แถว · worker ซ้ำชน id ไม่เพิ่มแถว · เปลี่ยนสถานะซ้ำ = ไม่เพิ่มแถว)
+>   - **กระดิ่งไรเดอร์ซ้ำ**: /rider มีกระดิ่งมุมจอ (Header) อยู่แล้ว + RiderBell (R71) = ซ้อน 2 ตัว → ถอด RiderBell (เหลือกระดิ่งมุมจอเดียว — ตรงข้อ 3 "มุมจอต้องบอกเรื่องข้อความทุกฝั่ง")
+>   - **เด้งตอนเปิดแอพ**: เดิม browser notification มี `document.hidden` gate (เด้งเฉพาะตอนสลับแอป = ตอนทดสอบไม่เคยเห็น) → เด้งทุกครั้งทั้งกระดิ่งและแชต
+>   - **คูปอง**: โค้ดจริง = `HALLOW10` (ไม่ใช่ HALLOWEEN10) + `end_date=2026-11-04` หมดอายุ = ไม่ขึ้น dropdown · การ์ดโปรหน้าร้านไม่เช็กวันที่ = โฆษณาคูปองหมดอายุ → ต่ออายุถึง 2026-11-30 (data) + การ์ดโปรเช็กช่วงวันที่แบบ dropdown (โปรเพิ่มทีหลัง = ขึ้นอัตโนมัติ)
+>   - **สถานะไม่เดินต่อหลังยืนยันรอบ**: ขั้นถัดไป (เริ่มทำ/preparing) อยู่ที่คิวครัว แต่พรีออเดอร์วันถัดไปไม่ขึ้นในคิว (กรอบวันที่) → AdminKitchen โชว์พรีออเดอร์รอเข้าครัวทุกวันที่
+>   - **เส้นทางแจ้งเตือนจัดส่งหายไป**: แถว `DRIVER_ASSIGNED/ACCEPTED/PICKED_UP` ไม่อยู่ใน delivery-route map → ตกไป /admin/orders → เพิ่มเข้า `/admin/delivery?focus=`
+>   - **ไรเดอร์รับงานไม่ได้**: แอดมิน "มอบหมาย" แล้วไรเดอร์กด "รับงานประกาศ" = m163 guard เด้ง ERR_OFFER_NOT_AVAILABLE → **m189 fallback**: assignment 'assigned' ของตัวเอง = ทำงานเท่า accept (smoke: ok + accepted จริง)
+> - **Completed:** migrations **188 + 189 APPLIED production** (`_r72Apply-result.json` ALL_PASS 5/5 แบบเช็กค่าจริง) · smoke `_r72_smoke.json` 5/5 · data HALLOW10 ต่ออายุ · UI: NotificationDropdown/OrderChatPanel เด้งเสมอ · notificationLinks +DRIVER_* · HomePage การ์ดโปรเช็กวันที่ · AdminKitchen คิวข้ามวัน · ถอด RiderBell
+> - **Verified:** vitest targeted 51/51 (r72 8 + r71 7 + r70 10 + r51 7 + notificationLinks 19) · full gates (`_r72_gates.log`) = ดูท้ายบล็อก
+> - **Failed:** (บทเรียนตัวเอง) apply รอบแรก "สำเร็จ" ปลอม — (ก) เศษบรรทัดค้างจาก insert_line ทำให้ batch พัง (ข) verify เช็กชื่อ key ไม่เช็กค่า (`v.includes('dedup_id')` = true เสมอ) → แก้เป็น regex ค่าจริง + error check ต้อง response ขึ้นต้น `[` · รอบสองพิสูจน์ซ้ำด้วย prosrc + smoke จริง
+> - **Blocked/UNVERIFIED:** รอ Owner เทสต์ §R72 (8 ข้อ) · push ตอนปิดแอปของไรเดอร์ (ข้อความ) = follow-up เดิม
+> - **Files Changed:** `supabase/migrations/188_order_notification_dedup.sql` (ใหม่) · `189_claim_offer_accept_fallback.sql` (ใหม่) · `src/lib/notificationLinks.ts` · `src/components/notification/NotificationDropdown.tsx` · `src/components/messages/OrderChatPanel.tsx` · `src/pages/RiderPwaPage.tsx` (ถอด RiderBell) · `src/components/notification/RiderBell.tsx` (ลบ) · `src/pages/HomePage.tsx` · `src/pages/admin/AdminKitchen.tsx` · `src/__tests__/r72NotifyDedupDelivery.test.ts` (ใหม่) + ปรับ `r71RiderChatBell.test.ts` · `docs/BMB_PRODUCTION_TEST_PACK.md` (§R72) · e2e `_r72*`
+> - **Tests / Commands Run:** vitest 51 ข้อเขียว · `node e2e/_r72Apply188_189.cjs` (FORCE re-apply) ALL_PASS · `node e2e/_r72_smoke.cjs` 5/5 · gates ผ่าน schtasks (BMB_R72_GATES)
+> - **Known Risks:** (1) แจ้งเตือนเหตุการณ์เดียวกันซ้ำสองสถานะ (เช่น preparing→confirmed→preparing) จะไม่สร้างแถวซ้ำ (id เดิม) — ยอมรับได้ตามดีไซน์ idempotent (2) โค้ดคูปอง DB = HALLOW10 ถ้า Owner อยากได้ HALLOWEEN10 ให้แก้ที่ /admin/promotions (3) ระบบ errors: SW-register/useNavigate เก่าค้างใน system_errors — งานติดตามต่างหาก
+> - **Next Exact Action:** **Owner เทสต์ live ตาม §R72 (R72-1..R72-8)** — จุดเน้น: แจ้งเตือนไม่ซ้ำ (R72-1/3) · เด้งตอนเปิดแอพ (R72-2) · คูปองขึ้นที่เช็คเอาท์ (R72-5) · คิวครัวเดินต่อ (R72-6) · รับงานได้ทุกปุ่ม (R72-7) · FAIL = จดในไฟล์นี้ → ทีมแก้ two-try รอบถัดไป
 > ## 🟢 สถานะล่าสุด — 2026-11-05 ค่ำ (R71 · **ซ่อมฝั่งไดร์เวอร์: ส่งข้อความได้จริง + กระดิ่งเตือนจริง** · ยึดบล็อกนี้ก่อนทุกบล็อกด้านล่าง)
 > ### WORK STATE (ตาม .clinerules)
 > - **Task ID:** R71 (Owner หลังทดสอบ live รอบแรก: "ลูกค้าเห็นแชตโต้ตอบได้ ฝั่งไดร์เวอร์ไม่มีแจ้งเตือนไม่มีหน้าต่างแชทโต้ตอบไม่ได้ทำให้ถูกต้อง (ถ้ามีแล้วไม่ต้องทำ บอกตำแหน่ง) กระดิ่งเตือนจริง")

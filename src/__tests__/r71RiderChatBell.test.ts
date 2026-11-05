@@ -5,11 +5,11 @@
 // กระดิ่งเตือนจริง" — Source-contract tests (pattern r70/r51)
 // Root cause ที่แก้: m183 ใช้ id 'msgn-'||v_id ซ้ำกันสองแถว → ไรเดอร์ส่ง (เขียน 2 แถว) =
 // unique violation → rollback ทั้งก้อน = ส่งไม่ได้จริง + ไม่มีแถวรอรับของไรเดอร์เลย
+// R72: ถอด RiderBell (กระดิ่งซ้ำกับมุมจอ) — เหลือกระดิ่งมุมจอเดียวทุก role
 import { describe, it, expect } from 'vitest'
 
 import mig187 from '../../supabase/migrations/187_order_message_rider_notifications.sql?raw'
 import riderSrc from '@/pages/RiderPwaPage.tsx?raw'
-import riderBellSrc from '@/components/notification/RiderBell.tsx?raw'
 import bellSrc from '@/components/notification/NotificationDropdown.tsx?raw'
 
 describe('R71 m187 — send_order_message v3: id แยกผู้รับ (ห้ามชน) + แจ้งไรเดอร์', () => {
@@ -39,41 +39,27 @@ describe('R71 m187 — send_order_message v3: id แยกผู้รับ (�
   })
 })
 
-describe('R71 กระดิ่งฝั่งไรเดอร์ (RiderBell) — เตือนจริง: เสียง + ป้าย + browser + อ่านแล้ว', () => {
-  it('RiderBell: poll แถวของตัวเอง + เสียง + ป้ายแดง + browser notification ตอนหน้าไม่โฟกัส', () => {
-    expect(riderBellSrc).toContain('export function RiderBell()')
-    expect(riderBellSrc).toContain("import { playNotifBeep } from '@/lib/notifBeep'")
-    expect(riderBellSrc).toContain('playNotifBeep()')
-    expect(riderBellSrc).toContain('data-testid="rider-bell-badge"')
-    expect(riderBellSrc).toContain('document.hidden')
-    expect(riderBellSrc).toContain("Notification.permission === 'granted'")
+describe('R71/R72 กระดิ่งฝั่งไรเดอร์ = กระดิ่งมุมจอเดียว (ไม่ซ้ำ)', () => {
+  it('RiderPwaPage: ไม่มีกระดิ่งซ้ำ (RiderBell ถูกถอดออกแล้ว) — ใช้กระดิ่งมุมจอ Header', () => {
+    expect(riderSrc).not.toContain("import { RiderBell }")
+    expect(riderSrc).not.toContain('<RiderBell')
   })
 
-  it('RiderBell: อ่านทั้งหมดแล้ว = server-authoritative (markAllNotificationsRead)', () => {
-    expect(riderBellSrc).toContain('markAllNotificationsRead')
-    expect(riderBellSrc).toContain('data-testid="rider-bell-markall"')
-    expect(riderBellSrc).toContain('data-testid="rider-bell-list"')
-  })
-
-  it('RiderPwaPage: ติดตั้ง RiderBell + แชตรายงานทุกงานเปิดกางค้าง (details open)', () => {
-    expect(riderSrc).toContain("import { RiderBell } from '@/components/notification/RiderBell'")
-    expect(riderSrc).toContain('<RiderBell />')
+  it('RiderPwaPage: แชตรายงานทุกงานเปิดกางค้าง (details open) + แชตงานปัจจุบันคงอยู่', () => {
     expect(riderSrc).toContain('<details open className="mt-2" data-testid={`rider-job-chat-${a.order_number}`}>')
-    // contract เดิม (r51/r70) — ห้ามหาย
     expect(riderSrc).toContain('OrderChatPanel orderNumber={activeOrder.order_number} role="rider"')
     expect(riderSrc).toContain('OrderChatPanel orderNumber={a.order_number} role="rider"')
   })
 })
 
-describe('R71 กระดิ่งเดิม "เตือนจริง" — มาร์กอ่านฝั่ง server ทุกแถว + เด้งเดสก์ท็อป', () => {
+describe('R71 กระดิ่งเดิม "เตือนจริง" — มาร์กอ่านฝั่ง server + เด้งเดสก์ท็อป', () => {
   it('กดรายการ = markServerAsRead ทุกแถว (เดิมเฉพาะ evt-*/auto-* = ป้ายแดงกลับมาทุก reload)', () => {
     expect(bellSrc).toContain('void markServerAsRead(n.id)')
     expect(bellSrc).not.toContain("n.id.startsWith('evt-') || n.id.startsWith('auto-')")
   })
 
-  it('มีเสียง + เด้ง browser notification เมื่อหน้าไม่โฟกัส + ไอคอนข้อความ', () => {
+  it('มีเสียง + เด้ง browser notification + ไอคอนข้อความ', () => {
     expect(bellSrc).toContain('playNotifBeep()')
-    expect(bellSrc).toContain('document.hidden')
     expect(bellSrc).toContain("Notification.permission === 'granted'")
     expect(bellSrc).toContain("ORDER_MESSAGE: '💬'")
   })

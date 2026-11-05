@@ -1,0 +1,13 @@
+{
+  "at": "2026-11-05T14:41:34.106Z",
+  "sqlResult": "[{\"smoke\":{\"a_status_rows\":2,\"a_hook_created_one\":1,\"b_assignment_status\":\"accepted\",\"b_claim_fallback_ok\":true,\"a_worker_dup_collapsed\":1}}]",
+  "cleanup": "[]",
+  "checks": {
+    "hook_created_one": true,
+    "worker_dup_collapsed_one": true,
+    "status_rows_two": true,
+    "claim_fallback_ok": true,
+    "assignment_accepted": true
+  },
+  "ALL_PASS": true
+}
