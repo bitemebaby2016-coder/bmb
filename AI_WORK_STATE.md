@@ -1,3 +1,26 @@
+> ## 🟢 สถานะล่าสุด — 2026-11-05 ค่ำ (R71 · **ซ่อมฝั่งไดร์เวอร์: ส่งข้อความได้จริง + กระดิ่งเตือนจริง** · ยึดบล็อกนี้ก่อนทุกบล็อกด้านล่าง)
+> ### WORK STATE (ตาม .clinerules)
+> - **Task ID:** R71 (Owner หลังทดสอบ live รอบแรก: "ลูกค้าเห็นแชตโต้ตอบได้ ฝั่งไดร์เวอร์ไม่มีแจ้งเตือนไม่มีหน้าต่างแชทโต้ตอบไม่ได้ทำให้ถูกต้อง (ถ้ามีแล้วไม่ต้องทำ บอกตำแหน่ง) กระดิ่งเตือนจริง")
+> - **Status:** CODE_CLOSED / PENDING_LIVE_TEST (test pack §R71 = 7 ข้อ + §R70 เดิม)
+> - **Objective:** ฝั่งไดร์เวอร์ต้อง (1) เห็นหน้าต่างแชท/โต้ตอบได้จริง (2) มีแจ้งเตือนข้อความจริง (3) กระดิ่งทุกฝั่ง "เตือนจริง" (เสียง+ป้าย+เดสก์ท็อป+มาร์กอ่านลง server)
+> - **Root cause ที่แก้ (พิสูจน์แล้ว):**
+>   - **m183 ใช้ id `'msgn-'||v_id` ซ้ำกันสองแถว** (ลูกค้า+แอดมิน) — `notifications.id` เป็น **PRIMARY KEY** → เมื่อ **ไรเดอร์ส่ง** (ต้องเขียนทั้งสองแถว) = unique violation ตัวที่สอง → โดน handler ชั้นนอก → **ROLLBACK ทั้งก้อน (รวม order_messages)** = "ไรเดอร์โต้ตอบไม่ได้" จริง — ลูกค้า/แอดมินส่งได้เพราะเขียนแถวเดียว (ตรงกับที่ Owner เห็นทุกประการ · ก่อนหน้านี้ไม่มีเคส rider-send ใน smoke)
+>   - ไม่มีแถวรอรับของไรเดอร์ใน notifications เลย = ไม่มีทางรู้ว่ามีข้อความใหม่
+>   - /rider ไม่มี Header = ไม่มีกระดิ่ง · แชตรายงานในรายการงานเป็น `<details>` พับ = ดูเหมือน "ไม่มีหน้าต่างแชท"
+>   - กระดิ่งเดิม: มาร์กอ่านเฉพาะ id evt-*/auto-* → แถว msgn-*/notif-* ป้ายแดงกลับมาทุก reload + ไม่เด้งเดสก์ท็อปเมื่อหน้าไม่โฟกัส
+> - **Completed:**
+>   - **migration `187_order_message_rider_notifications.sql` APPLIED production (`_r71Apply187-result.json` ALL_PASS 5/5 · ledger 187)** — `send_order_message` v3: id แยก suffix ต่อผู้รับ (`-c` ลูกค้า / `-a` แอดมิน / `-r` ไรเดอร์ = ห้ามชน) + **แจ้งไรเดอร์** (แถว `user_id = drivers.user_id` ของงานล่าสุดที่ไม่ cancel/decline · RLS own = กระดิ่ง /rider เห็นของตัวเอง) + แยกชื่อผู้ส่ง (จากไรเดอร์/จากร้าน/จากลูกค้า) + BEST-EFFORT/validation เดิมครบ
+>   - **behavior smoke บน production 6/6** (`_r71_smoke.json` · assignment จริง drv-…-60bc/BMB-20261101-218): ① ไรเดอร์ส่ง = ok:true (เคสที่เคยพัง) ② แอดมิน/ลูกค้าส่ง = มีแถวรอรับไรเดอร์ ③ ไรเดอร์เห็นเฉพาะของตัวเอง 2 แถว (ไม่เห็น echo) ④ ลูกค้าเห็นของตัวเอง 2 แถว ⑤ สร้างครบ 6 แถวตามเมทริกซ์ ⑥ เก็บกวาด net-zero
+>   - **`RiderBell` ใหม่** (`src/components/notification/RiderBell.tsx`) — กระดิ่ง /rider: poll 20 วิ + เสียง + ป้ายแดง + browser notification ตอนหน้าไม่โฟกัส + "อ่านทั้งหมดแล้ว" (server) · ติดตั้งที่แถบปุ่มบนสุดของ `/rider`
+>   - **`RiderPwaPage`**: แชตรายงานทุกงาน `<details open>` (เห็นช่องพิมพ์ทันที) + RiderBell
+>   - **`NotificationDropdown` "กระดิ่งเตือนจริง"**: มาร์กอ่าน `markServerAsRead` ทุกแถว (ป้ายไม่กลับมา) + เด้งเดสก์ท็อปเมื่อหน้าไม่โฟกัส + ไอคอน 💬 แถวข้อความ
+> - **Verified:** vitest targeted **31/31** (`_r71_vit1.log` = r71 8 + r70 10 + r51 7 + r49 6) · m187 apply ALL_PASS · smoke 6/6 · full gates (`_r71_gates.log`) = ดู Verified ท้ายบล็อก
+> - **Failed:** — (บั๊กตัวเองรอบนี้: ตอนแรก smoke ตั้ง expected ผิด 5 แถว → ตรวจเมทริกซ์ซ้ำ = 6 แถว แล้วแก้ก่อนรันจริง)
+> - **Blocked/UNVERIFIED:** รอ Owner เทสต์ §R71 (7 ข้อ) · push ตอนปิดแอปของไรเดอร์ (งานใหม่ = ของเดิม R66-A2 · ข้อความแชต = แจ้ง in-app/เบราว์เซอร์ตามดีไซน์ — ถ้าจะให้ push ข้อความตอนปิดแอป = ต้องต่อยอด dispatcher คีย์ด้วย user/audience = follow-up)
+> - **Files Changed:** `supabase/migrations/187_order_message_rider_notifications.sql` (ใหม่) · `src/components/notification/RiderBell.tsx` (ใหม่) · `src/pages/RiderPwaPage.tsx` · `src/components/notification/NotificationDropdown.tsx` · `src/__tests__/r71RiderChatBell.test.ts` (ใหม่) · `docs/BMB_PRODUCTION_TEST_PACK.md` (§R71) · `e2e/_r71Apply187.cjs`·`_r71_smoke.cjs`·`_r71_gates.cmd` (+result/json/log)
+> - **Tests / Commands Run:** vitest 31 ข้อ 4 ไฟล์เขียว · `node e2e/_r71Apply187.cjs` ALL_PASS · `node e2e/_r71_smoke.cjs` 6/6 · gates ผ่าน schtasks detached (งาน BMB_R71_GATES)
+> - **Known Risks:** (1) แถวแจ้งไรเดอร์ = in-app เท่านั้น (customer_id NULL = dispatcher ข้ามตาม design) — push ตอนปิดแอป = follow-up (2) แจ้งไรเดอร์เฉพาะงานที่มี assignment ไม่ cancel/decline — pickup ไม่มี assignment = ไม่มีแถวรอรับ (ถูกต้อง) (3) เครื่องมือทดสอบ: background process ถูกเก็บกวาดเมื่อจบ tool call → ใช้ schtasks + `call npx` (ขาด `call` = chain ขาด) ตามที่จดไว้ใน `_r70_patchxml.cjs`/`_r71_gates.cmd`
+> - **Next Exact Action:** **Owner เทสต์ live ตาม §R71 (R71-1..R71-7)** — จุดเน้น: ไรเดอร์ส่งข้อความได้จริง (R71-2) · กระดิ่ง /rider เด้ง+เสียง (R71-3/4) · ป้ายไม่กลับมาหลัง reload (R71-5) · FAIL = จดในไฟล์นี้ → ทีมแก้ two-try รอบถัดไป
 > ## 🟢 สถานะล่าสุด — 2026-11-05 ค่ำ (R70 · **แชต ลูกค้า/ไรเดอร์/แอดมิน สมบูรณ์ + PWA/Push prompt ซ่อม root cause** · ยึดบล็อกนี้ก่อนทุกบล็อกด้านล่าง)
 > ### WORK STATE (ตาม .clinerules)
 > - **Task ID:** R70 (คำสั่ง Owner: "ระบบแชทระหว่าง แอดมิน ลูกค้า ไรเด้อร์ ไม่สมบูรณ์ ลูกค้าและไรเดอร์ไม่มีกล่องข้อความโต้ตอบไม่มีแจ้งเตือนข้อความ ทำให้สมบูรณ์ตามเหมาะสม · ระบบ pwa และแจ้งเตือนให้เปิดแจ้งเตือนไม่เห็นมาเคยมีใช้งานได้ · ปิดตามงาน อัปเดตสถานะเอกสาร คอมมิททีละชุด เตรียมรับการทดสอบบน live")

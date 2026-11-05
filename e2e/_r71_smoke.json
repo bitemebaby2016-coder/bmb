@@ -1,0 +1,17 @@
+{
+  "at": "2026-11-05T12:38:36.472Z",
+  "checks": {
+    "a_rider_send_ok": true,
+    "b_admin_send_ok": true,
+    "c_customer_send_ok": true,
+    "d_rider_sees_2": true,
+    "e_customer_sees_2": true,
+    "total_rows_6": true
+  },
+  "lookup": {
+    "orderCustomer": "[{\"customer_id\":\"3cf44a5b-af0c-4ecd-976d-1d87efde9b29\",\"uid\":\"3cf44a5b-af0c-4ecd-976d-1d87efde9b29\"}]"
+  },
+  "sqlResult": "[{\"smoke\":{\"a_rider_send_ok\":true,\"b_admin_send_ok\":true,\"c_customer_send_ok\":true,\"total_rows_created\":6,\"d_rider_sees_own_only\":2,\"e_customer_sees_own_only\":2}}]",
+  "cleanup": "[]",
+  "ALL_PASS": true
+}

@@ -1,0 +1,6 @@
+R71-B: tests + docs + evidence ปิดงานซ่อมฝั่งไดร์เวอร์ — test pack §R71 (7 ข้อ) เตรียมทดสอบ live
+
+- src/__tests__/r71RiderChatBell.test.ts (8 ข้อ): contract m187 (id แยก suffix + แจ้งไรเดอร์ + ห้าม id ซ้ำ) · RiderBell (เสียง/ป้าย/browser/อ่านแล้ว server) · แชตรายงานเปิดกาง · กระดิ่งเดิมมาร์กอ่าน server + เด้งเดสก์ท็อป
+- docs/BMB_PRODUCTION_TEST_PACK.md §R71 = R71-1..R71-7 + ตำแหน่งของที่มีอยู่แล้ว (ตามคำสั่ง Owner)
+- AI_WORK_STATE.md + BMB_MASTER_STATUS.md = สถานะ R71 (root cause id ชน · smoke 6/6 · ความเสี่ยง/งานต่อ)
+- e2e evidence: _r71Apply187.cjs/result (ledger 187) · _r71_smoke.cjs/json (rider-send + notify matrix) · _r71_gates.cmd + logs (TSC 0 · LINT 0 · VIT 209/2117 · BUILD 0)

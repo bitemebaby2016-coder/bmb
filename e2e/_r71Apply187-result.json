@@ -1,0 +1,28 @@
+{
+  "at": "2026-11-05T12:37:13.515Z",
+  "steps": [
+    {
+      "v": "187",
+      "action": "applied+recorded",
+      "apply": "[]",
+      "rec": "[]"
+    }
+  ],
+  "precheck": {
+    "ledgerTop": "[{\"version\":\"185\",\"name\":\"185_admin_switches_master_category.sql\"},{\"version\":\"184\",\"name\":\"184_pickup_hours_not_rounds.sql\"},{\"version\":\"183\",\"name\":\"183_promo_banner_mascot.sql\"}]"
+  },
+  "reload": "[]",
+  "verify": {
+    "ledgerTop": "[{\"version\":\"187\",\"name\":\"187_order_message_rider_notifications.sql\"},{\"version\":\"185\",\"name\":\"185_admin_switches_master_category.sql\"},{\"version\":\"184\",\"name\":\"184_pickup_hours_not_rounds.sql\"},{\"version\":\"183\",\"name\":\"183_promo_banner_mascot.sql\"},{\"version\":\"182\",\"name\":\"182_order_messages.sql\"}]",
+    "fn": "[{\"proname\":\"send_order_message\",\"prosecdef\":true}]",
+    "fnBody": "[{\"has_c\":true,\"has_r\":true,\"has_rider_uid\":true,\"has_notif_insert\":true,\"has_a_suffix\":true}]"
+  },
+  "checks": {
+    "ledger_187": true,
+    "fn_security_definer": true,
+    "has_rider_uid": true,
+    "has_a_suffix": true,
+    "uses_notifications_insert": true
+  },
+  "ALL_PASS": true
+}

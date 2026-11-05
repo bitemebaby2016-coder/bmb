@@ -1,0 +1,6 @@
+R71: ซ่อมฝั่งไดร์เวอร์ — ไรเดอร์ส่งข้อความได้จริง (m183 ใช้ id ซ้ำ = unique violation → rollback) + แจ้งไรเดอร์ + กระดิ่ง /rider + กระดิ่งเดิมเตือนจริง
+
+- m187 (APPLIED production ALL_PASS + smoke 6/6 บน assignment จริง): send_order_message v3 — id แจ้งแยก suffix ต่อผู้รับ (-c/-a/-r = ห้ามชน · เดิม 'msgn-'||v_id ซ้ำสองแถว = ไรเดอร์ส่งพังทั้งก้อน) + แจ้งไรเดอร์เมื่อแอดมิน/ลูกค้าส่ง (user_id = drivers.user_id · RLS own = กระดิ่ง /rider) + แยกชื่อผู้ส่ง
+- RiderBell ใหม่: กระดิ่ง /rider (poll 20 วิ + เสียง + ป้ายแดง + browser notification ตอนหน้าไม่โฟกัส + อ่านทั้งหมดแล้ว server-authoritative)
+- RiderPwaPage: แชตรายงานทุกงาน details open (เห็นช่องพิมพ์ทันที — เดิมพับ = ดูเหมือนไม่มีแชต) + ติดตั้ง RiderBell
+- NotificationDropdown: มาร์กอ่าน markServerAsRead ทุกแถว (เดิมเฉพาะ evt-*/auto-* = ป้ายแดงกลับมาทุก reload) + เด้งเดสก์ท็อปตอนหน้าไม่โฟกัส + ไอคอน 💬
