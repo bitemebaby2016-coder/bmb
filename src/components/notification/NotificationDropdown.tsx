@@ -4,6 +4,8 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useAuthStore } from '@/store/authStore'
 import { getMyNotifications } from '@/lib/notificationService'
 import { resolveNotificationRoute } from '@/lib/notificationLinks'
+// R70: เสียงเตือนกลาง (เดิม define ในไฟล์นี้ — ย้ายไป lib/notifBeep เพื่อใช้ร่วมกับแชต)
+import { playNotifBeep } from '@/lib/notifBeep'
 
 const icons: Record<string, string> = {
   order_update: '📦',
@@ -14,29 +16,6 @@ const icons: Record<string, string> = {
 }
 
 const SOUND_KEY = 'bmb:notif-sound'
-
-/** R10 (Owner 2026-10-27): เสียงแจ้งเตือนสั้น 2 โน้ต (WebAudio — ไม่ต้องโหลดไฟล์) */
-function playNotifBeep() {
-  try {
-    const Ctx = (window as unknown as { AudioContext?: typeof AudioContext; webkitAudioContext?: typeof AudioContext }).AudioContext
-      ?? (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext
-    if (!Ctx) return
-    const ctx = new Ctx()
-    const osc = ctx.createOscillator()
-    const gain = ctx.createGain()
-    osc.type = 'sine'
-    osc.frequency.value = 880
-    gain.gain.value = 0.07
-    osc.connect(gain)
-    gain.connect(ctx.destination)
-    osc.start()
-    osc.frequency.setValueAtTime(1174, ctx.currentTime + 0.12)
-    osc.stop(ctx.currentTime + 0.28)
-    osc.onended = () => void ctx.close()
-  } catch {
-    /* audio ไม่พร้อม (เบราว์เซอร์/policy) — เงียบไว้ */
-  }
-}
 
 export function NotificationDropdown() {
   const notifications = useNotificationStore((s) => s.notifications)
@@ -66,9 +45,11 @@ export function NotificationDropdown() {
   }
 
   useEffect(() => {
-    // ✅ GAP CLOSURE: Request browser notification permission on mount
-    useNotificationStore.getState().requestBrowserPermission()
-
+    // R70 (Owner "ระบบ pwa และแจ้งเตือนให้เปิดแจ้งเตือน ไม่เห็นมาเคยมีใช้งานได้"):
+    // เดิม mount นี้ไปเรียก requestPermission() เอง = native dialog
+    // เด้งสุ่มหน้า → ถ้าผู้ใช้กด Block/เคยตอบไปแล้ว PushPermissionPrompt (ซึ่งโชว์เฉพาะ
+    // permission 'default') จะไม่มีวันโผล่ และ "อนุญาต" โดยไม่มี subscription =
+    // push ใช้งานไม่ได้จริง — ปล่อยให้ PushPermissionPrompt/ปุ่มตั้งค่าจัดการทั้งหมด
     // W3-D: hydrate durable server notifications once (RLS own rows only).
     if (isAuthenticated && !hydrated) {
       setHydrated(true)
