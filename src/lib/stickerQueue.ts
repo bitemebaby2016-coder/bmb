@@ -6,6 +6,7 @@
 // แต่ 1 สติกเกอร์ = 1 ชิ้น (จำนวน 2 = 2 ใบ) แม้ออเดอร์/ลูกค้าเดียวกัน · resolve = เครื่องยืนยันครบ
 // ============================================
 import type { PrintOrderData } from './printService'
+import { fetchCustomerChatNotes } from './printService'
 import { renderStickerPng } from './stickerPng'
 import { niimbotPrintStickers, describeNiimbotError, niimbotSupported } from './niimbotBt'
 
@@ -37,6 +38,10 @@ export async function printStickerRoll(roll: PrintOrderData[], opts?: StickerPri
   if (!niimbotSupported()) {
     throw new Error('อุปกรณ์/เบราว์เซอร์นี้ไม่รองรับ Web Bluetooth — เปิดหน้าแอดมินด้วย Chrome/Edge (https) เท่านั้น')
   }
+  // R73: NOTICE ต้องมีข้อความลูกค้าจากลิงก์จริง — ดึงโน้ตแชตครั้งเดียวต่อ roll แล้วใส่ทุกใบ
+  const first = roll[0]
+  const notes = first && first.customerMessages == null ? await fetchCustomerChatNotes(first.order_number) : ''
+  if (notes) roll = roll.map((p) => (p.customerMessages == null ? { ...p, customerMessages: notes } : p))
   const off = opts?.offsetY ?? 0
   const faceH = opts?.faceH
   const pngs: string[] = []

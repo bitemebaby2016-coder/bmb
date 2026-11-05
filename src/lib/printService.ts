@@ -73,6 +73,9 @@ export interface PrintOrderData {
   order_mode?: string
   scheduled_date?: string | null
   special_instructions?: string | null
+  /** R73: ข้อความแชตจากลูกค้า (order_messages · เติมตอนพิมพ์โดย withCustomerChatNotes)
+   *  → รวมเข้าช่อง NOTICE (collectOrderNotices) — ทั้ง HTML และ PNG */
+  customerMessages?: string | null
 }
 
 export interface PrinterSettings {
@@ -531,12 +534,43 @@ export async function markPrintJob(jobId: string, status: PrintJobStatus, error?
   }
   return true
 }
+/**
+ * R73 (Owner 2026-11-05: "Notice ต้องพิมพ์จากลิงก์จริงของลูกค้ามาปริ้นด้วย"):
+ * ดึงข้อความแชตที่ "ลูกค้า" พิมพ์จากลิงก์จริงของตน (order_messages.sender_role='customer')
+ * มารวมเป็นโน้ตสำหรับช่อง NOTICE ของสติกเกอร์ — ล้มเหลว = คืน '' (การพิมพ์เดินหน้าต่อเสมอ)
+ */
+export async function fetchCustomerChatNotes(orderNumber: string): Promise<string> {
+  try {
+    const { data, error } = await supabase
+      .from('order_messages')
+      .select('body, sender_role')
+      .eq('order_number', orderNumber)
+      .order('created_at', { ascending: true })
+      .limit(200)
+    if (error || !data) return ''
+    return data
+      .filter((m) => m.sender_role === 'customer' && String(m.body || '').trim())
+      .map((m) => String(m.body).trim())
+      .join(' · ')
+  } catch {
+    return ''
+  }
+}
+
+/** เติมโน้ตแชตลูกค้าลง payload ก่อน render (ข้ามถ้ามีอยู่แล้ว) — เรียกในทุกเส้นทางพิมพ์จริง */
+export async function withCustomerChatNotes(order: PrintOrderData): Promise<PrintOrderData> {
+  if (order.customerMessages != null) return order
+  return { ...order, customerMessages: (await fetchCustomerChatNotes(order.order_number)) || null }
+}
+
 /** Full auto-print pass for one order: render + print every pending job of the
  *  given type. Returns per-job results — the ORDER itself is never affected by
  *  print failures (print is an async side-effect, order is the source of truth). */
 export async function runAutoPrint(order: PrintOrderData, type: PrintJobType, settings: PrinterSettings): Promise<Array<{ jobId: string; status: PrintJobStatus }>> {
   if (type === 'receipt' && !settings.autoPrintReceipt) return []
   if (type === 'kitchen_ticket' && !settings.autoPrintKitchen) return []
+  // R73: NOTICE ต้องมีข้อความลูกค้าจากลิงก์จริง — เติมโน้ตแชตก่อน render ทุกใบ
+  order = await withCustomerChatNotes(order)
   const jobs = (await fetchPrintJobs(order.order_number)).filter(
     (j) => j.job_type === type && (j.status === 'requested' || j.status === 'failed'),
   )
@@ -568,6 +602,8 @@ export async function runAutoPrintPair(
   const wantReceipt = settings.autoPrintReceipt
   const wantKitchen = settings.autoPrintKitchen
   if (!wantReceipt && !wantKitchen) return results
+  // R73: NOTICE ต้องมีข้อความลูกค้าจากลิงก์จริง — เติมโน้ตแชตก่อน render
+  order = await withCustomerChatNotes(order)
   const jobs = (await fetchPrintJobs(order.order_number))
     .filter((j) => (j.job_type === 'receipt' && wantReceipt) || (j.job_type === 'kitchen_ticket' && wantKitchen))
     .filter((j) => j.status === 'requested' || j.status === 'failed')
@@ -778,7 +814,7 @@ export async function printOrderTicket(
     console.warn('[printOrderTicket] enqueue failed (printing continues):', e)
   }
 
-  const payload = buildPrintOrderData(order)
+  const payload = await withCustomerChatNotes(buildPrintOrderData(order))
   // R27 (Owner): ใบเสร็จ + ใบสั่งครัว = สติกเกอร์ BMB 40×60 ใบเดียวกัน (แบบฟอร์มเดียวทั้งสองบทบาท)
   const html = await buildBmbStickerHtml(payload)
   const outcome = await printViaTransport(html, settings, type === 'receipt' ? 'receipt' : 'kitchen', `sticker-${order.order_number}`, payload)

@@ -77,3 +77,27 @@
 2. เจอ symptom ใด = จดหลักฐาน (ภาพ / console / network) → ทีมแก้แบบ two-try (Attempt 1+2 เท่านั้น)
 3. ~~งานค้างเรียงลำดับ: R66-D → test coverage POS handover → deploy `shopContext` → console noise 3 ตัว~~ = **ปิดครบทั้ง 4 ข้อใน R68 แล้ว** (เหลือ Owner รัน §R67 + §R68 บน production จริง + E2E รอบถัดไปพิสูจน์ console noise)
 4. ห้ามยกเลิก/ตัดข้อทดสอบใน §2/§RG ของ test pack เพื่อให้ดูผ่าน (anti-gaming)
+
+---
+
+## §6 — อัปเดตสถานะจริงหลัง R68–R73 (2026-11-05 · ปิดเซส + โอนงานค้างไปแชทหน้า รอบ 2)
+
+> อัปเดตตามคำสั่ง Owner 2026-11-05 (รอบเช้า–ดึก 2) · **ยังคงไม่ประกาศ COMPLETE / PRODUCTION READY** (§3 ใช้อยู่ทุกข้อ)
+> · หลักฐานทุกบรรทัด = รันจริงบนเครื่องนี้ · รอบใหญ่ R69–R72 = แจ้งเตือน/แชต/PWA/คูปอง/จัดส่ง/รับงาน (ดู `AI_WORK_STATE.md` + `BMB_MASTER_STATUS.md` รายรอบ)
+
+| เรื่อง | สถานะจริง ณ 2026-11-05 ดึก 2 | evidence |
+|---|---|---|
+| แชต 3 ฝั่ง (ลูกค้า/ร้าน/ไรเดอร์) | **ใช้งานได้จริง** — m182/183/187 (`send_order_message` v3 · แจ้งครบทุกผู้รับ) · smoke บน production 6/6 (รวมเคส rider-send ที่เคย rollback) | `e2e/_r71_smoke.json` · `_r71Apply187-result.json` |
+| แจ้งเตือน/กระดิ่ง | **m188 dedup** (trigger ใช้ id เดียวกับ worker = 1 แถว/เหตุการณ์ · smoke 5/5) · กระดิ่งมุมจอเดียวทุก role · เด้งเดสก์ท็อปทุกครั้งรวมตอนเปิดแอป | `e2e/_r72Apply-result.json` · `_r72_smoke.json` |
+| PWA push | `PushPermissionPrompt` auto-heal + role gating · ถอด `Notification.requestPermission()` ที่ bell (ต้นเหตุ prompt ตาย) | test pack §R70 · vitest r70 10 ข้อ |
+| คูปอง/จัดส่ง/รับงาน | `HALLOW10` ต่ออายุถึง 30 พ.ย. 69 · คิวครัวข้ามวัน · DRIVER_* → `/admin/delivery` · **m189** claim→accept fallback (smoke: accepted จริง) | `_r72_smoke.json` · migrations 188/189 |
+| **สติกเกอร์ (R73 · คำสั่งรอบนี้)** | **① ช่องไฟ 15 บรรทัดก่อน QR เท่ากัน** (grid Δ30 ทุกบรรทัด) **② เส้นคั่นไม่ทับอักษร** (ย้ายกลางช่องว่าง — เดิมเส้น 2 ทับ delivery · เส้น 3 ทับ total) **③ NOTICE พิมพ์ข้อมูลจากลิงก์จริงของลูกค้า** (`collectOrderNotices` = special_instructions + แชตลูกค้า + โน้ตรายเมนู · เติมทุกเส้นทางพิมพ์) | `src/__tests__/r73StickerLayoutNotice.test.ts` 8 ข้อ · sticker suite 59/59 |
+| ออเดอร์ค้าง + เครียล์สเตจ (คำสั่ง Owner) | **ล้างแล้ว verified 0 เหลือ** (`cancel_order` canonical · `_r72_clear_all_result.json`) · เวิร์กสเปซ/temp/task เก็บกวาดแล้ว | `e2e/_r72_clear_all.cjs` |
+| Gates รอบ R73 | **tsc=0 · lint=0 · vitest FULL 0 fail · build=0** (`e2e/_r73_gates.log`) | `_r73_gates.log` |
+
+### §6.1 ลำดับงานที่โอนไปแชทหน้า (handoff · คำสั่ง "ไปทดสอบ live ที่แชทหน้า")
+
+1. **Owner ทดสอบ live เริ่มที่หน้าแชท** — ชุดแชต §R70/R71 (พิมพ์โต้ตอบ 3 ฝั่ง + กระดิ่งมุมจอ) → ต่อด้วย **§R73 (6 ข้อ · สติกเกอร์: ช่องไฟ/เส้นคั่น/NOTICE)** → §R72 ที่เหลือ
+2. เจอ symptom = จดหลักฐาน (ภาพ/ข้อความ) → ทีมแก้ two-try (Attempt 1+2 เท่านั้น)
+3. follow-up ค้าง: push ตอนปิดแอปของไรเดอร์ (dispatcher คีย์ด้วย user/audience) · CONFLICT C-1..C-6 (§2) · backlog เดิม
+4. ห้ามยกเลิก/ตัดข้อทดสอบใน §2/§RG ของ test pack เพื่อให้ดูผ่าน (anti-gaming)

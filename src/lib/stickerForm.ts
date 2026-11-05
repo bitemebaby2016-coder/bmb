@@ -154,6 +154,32 @@ export function detectStickerPaid(o: PrintOrderData): StickerPaidKey | null {
 }
 
 /**
+ * R73 (Owner 2026-11-05: "Notice ต้องพิมพ์จากลิงก์จริงของลูกค้ามาปริ้นด้วย — ตอนนี้ไม่ปริ้น notice"):
+ * ช่อง NOTICE ต้องรวม "ข้อความลูกค้า" ทุกแหล่งจากข้อมูลจริงของออเดอร์ —
+ *   ① orders.special_instructions (ช้อนส้อม/ป้าย POS/ยืนยันพิเศษ — ช่องเดิมของระบบ)
+ *   ② ข้อความแชตที่ลูกค้าพิมพ์จากลิงก์จริง (order_messages.sender_role='customer' → customerMessages
+ *      ที่เส้นทางพิมพ์เติมให้ก่อน render · ดู withCustomerChatNotes ใน printService)
+ *   ③ หมายเหตุรายเมนูจากกล่องโต้ตอบใส่ตะกร้า (special_request / customizations.notice —
+ *      เดิมโชว์เฉพาะในช่อง ORDER LIST "()" = NOTICE ว่างเสมอสำหรับออเดอร์ลูกค้า)
+ * ข้อความซ้ำ = แสดงครั้งเดียว · ว่างทุกแหล่ง = '-'
+ * จุดเดียวกับ HTML (printService) และ PNG (stickerPng) — สองทางพิมพ์ตรงกันเสมอ
+ */
+export function collectOrderNotices(o: PrintOrderData): string {
+  const parts: string[] = []
+  const push = (v: unknown) => {
+    const t = typeof v === 'string' ? v.trim() : ''
+    if (t && !parts.includes(t)) parts.push(t)
+  }
+  push(o.special_instructions)
+  for (const seg of String(o.customerMessages || '').split(' · ')) push(seg)
+  for (const it of o.items || []) {
+    push(it.special_request)
+    push((it.customizations ?? {})['notice'])
+  }
+  return parts.join(' · ') || '-'
+}
+
+/**
  * @param at เวลาพิมพ์ (default = เวลาปัจจุบัน) — Date/TIME บนใบ = เวลาตอนพิมพ์ตามกติกา Owner
  *          (POS ไม่มีเวลาเวลารอบส่ง → ไม่อ่าน created_at/scheduled_date)
  */
@@ -175,7 +201,9 @@ export function stickerFormFields(o: PrintOrderData, at: Date | number = Date.no
     service: detectStickerService(o),
     orderId: o.order_number || '-',
     orderListLines: packStickerLines(segs),
-    notice: (o.special_instructions || '').trim() || '-',
+    // R73: ช่อง NOTICE = ข้อความลูกค้าทุกแหล่งจากลิงก์จริง (ไม่ใช่แค่ special_instructions —
+    // เดิมออเดอร์ลูกค้า NOTICE ว่างเสมอเพราะโน้ตรายเมนู/แชตไม่เคยไหลเข้าช่องนี้)
+    notice: collectOrderNotices(o),
     attn: name || phone ? `${name || '-'}${phone ? ` (${phone})` : ''}` : '-',
     add: (o.delivery_address || '').trim() || '-',
     totalNet: Number.isFinite(total)

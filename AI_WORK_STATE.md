@@ -1,4 +1,19 @@
-> ## 🟢 สถานะล่าสุด — 2026-11-05 ดึก (R72 · **แจ้งเตือนไม่ซ้ำ + เด้งตอนเปิดแอพ + คูปองเช็คเอาท์ + เส้นทางจัดส่ง + รับงานไม่ได้** · ยึดบล็อกนี้ก่อนทุกบล็อกด้านล่าง)
+> ## 🟢 สถานะล่าสุด — 2026-11-05 ดึก 2 (R73 · **สติกเกอร์: ช่องไฟ 15 บรรทัดเท่ากัน + เส้นคั่นไม่ทับอักษร + NOTICE จากลิงก์จริงของลูกค้า** · ยึดบล็อกนี้ก่อนทุกบล็อกด้านล่าง)
+> ### WORK STATE (ตาม .clinerules)
+> - **Task ID:** R73 (Owner: "จัดระเบียบช่องไฟระหว่างบรรทัดของดวงสติ้กเกอร์ใหม่ 15 บรรทัดก่อน qr code ให้เท่ากัน เส้นแบ่งอย่าทับอักษร ตอนนี้เส้นที่สองทับ delivery เส้นที่ 3 ทับ total และ Notice ต้องพิมพ์จากลิงก์จริงของลูกค้ามาปริ้นด้วย ตอนนี้ไม่ปริ้น notice")
+> - **Status:** CODE_CLOSED / PENDING_LIVE_TEST (test pack §R73 = 6 ข้อ)
+> - **Root causes ที่แก้ (พิสูจน์จากโค้ดทุกข้อ — layout วาดด้วยพิกัดคงที่ใน `stickerPng.ts`):**
+>   - **ช่องไฟไม่เท่ากัน**: ตารางแถวเดิม brand M+30 → tag M+58 → Date M+102 (Δ28/Δ44) แล้วค่อย Δ30 = 15 บรรทัดก่อน QR ไม่เข้าจังหวะเดียว → **R73 grid**: ทุกบรรทัด baseline ห่างกันคงที่ ROW=30 (brand M+30 · tag M+60 · Date M+90 … [PAID] M+480 = 16 baseline / ใต้ brand 15 บรรทัด)
+>   - **เส้นคั่นทับอักษร**: เส้น 2/3 วาดที่ `y−15` = กลางตัวอักษรแถวถัดไป (สูง 20–21px · band [y−size, y]) = ทับ `[ DELIVERY / CUSTOMER ]` และ `[ TOTAL NET ]` ตรงเป๊ะ → ย้ายเป็นกลางช่องว่าง `nextY − nextSize − 2` (เส้น 1 = M+68 · เส้น 2 = DELIVERY.y−23 · เส้น 3 = TOTAL.y−22) — test บังคับไม่มีเส้นคร่อม band ตัวอักษรใด
+>   - **NOTICE ไม่ปริ้นของลูกค้า**: `notice` รับเฉพาะ `orders.special_instructions` — โน้ตจริงของลูกค้าจากลิงก์ (special_request / customizations.notice จากกล่องโต้ตอบใส่ตะกร้า) + ข้อความแชต (order_messages) ไม่เคยเข้าช่องนี้ = ใบจริงพิมพ์ `NOTICE : -` เสมอ → **`collectOrderNotices`** (จุดเดียว HTML+PNG): special_instructions + ข้อความแชตลูกค้า + โน้ตรายเมนู (dedup · ว่าง = '-') + **`withCustomerChatNotes`** เติมโน้ตแชตในทุก executor (runAutoPrint/runAutoPrintPair/printOrderTicket/printStickerRoll — ดึง `order_messages.sender_role='customer'` ก่อน render)
+> - **Completed:** `src/lib/stickerPng.ts` (grid + เส้นคั่น) · `src/lib/stickerForm.ts` (`collectOrderNotices`) · `src/lib/printService.ts` (`customerMessages` field + `fetchCustomerChatNotes`/`withCustomerChatNotes` + wire 3 executor) · `src/lib/stickerQueue.ts` (wire คิว BT) · tests `r73StickerLayoutNotice.test.ts` 8 ข้อ (ช่องไฟ Δ30 ทุก offset · เส้นไม่ทับตัวอักษร · NOTICE รวม/dedup/fallback · source contract)
+> - **Verified:** sticker suite 59/59 เขียว (r73 8 + contract เดิม stickerPng/stickerForm/bmbSticker/r35/r41 = **ไม่แตะสัญญาเดิม**) · full gates (`e2e/_r73_gates.log`) = ดู Verified ท้ายบล็อก
+> - **Failed:** — (เทสต์ r73 รอบแรก fail 3 = expectation ตัวเอง: แถวว่าง ORDER LIST ไม่มี text op ให้นับ + fixture dedup — แก้เทสต์ ไม่ใช่แก้โค้ด)
+> - **Blocked/UNVERIFIED:** รอ Owner เทสต์ §R73 (6 ข้อ) · push ตอนปิดแอปของไรเดอร์ = follow-up เดิม
+> - **Files Changed:** `src/lib/stickerPng.ts` · `src/lib/stickerForm.ts` · `src/lib/printService.ts` · `src/lib/stickerQueue.ts` · `src/__tests__/r73StickerLayoutNotice.test.ts` (ใหม่) · `docs/BMB_PRODUCTION_TEST_PACK.md` (§R73) · e2e `_r73_gates.cmd` + probes
+> - **Tests / Commands Run:** vitest sticker suite 59/59 · full gates ผ่าน schtasks (BMB_R73_GATES)
+> - **Known Risks:** (1) NOTICE 1 บรรทัด (nowrap ตัดท้ายตามดีไซน์เดิม) — ข้อความรวมยาว = ถูกตัดด้วยเครื่องหมายเดิมของแถว (2) โน้ตแชต = ข้อความ ณ ตอนพิมพ์ (กดพิมพ์ซ้ำ = ได้ข้อความใหม่สุด)
+> - **Next Exact Action:** **Owner เทสต์ live ตาม §R73 (R73-1..R73-6)** — เริ่มที่แชทหน้าจอตามคำสั่ง ("ไปทดสอบ live ที่แชทหน้า") — จุดเน้น: ช่องไฟเท่ากันทั้ง 15 บรรทัด (R73-1) · เส้นไม่ทับ delivery/total (R73-2) · NOTICE มีโน้ต/แชตลูกค้าจริง (R73-3/4) · สองทางพิมพ์ตรงกัน (R73-5) · FAIL = จดในไฟล์นี้ → ทีมแก้ two-try รอบถัดไป
 > ### WORK STATE (ตาม .clinerules)
 > - **Task ID:** R72 (Owner หลังทดสอบ §R71: "เด้งตอนเปิดแอพด้วย · แจ้งเตือนไรเดอร์มีซ้ำ · มุมจอต้องบอกเรื่องข้อความทุกฝั่ง · คูปองแอดมิน (HALLOWEEN10) ใช้ที่เช็คเอาท์ได้+เพิ่มทีหลังอัตโนมัติ · เซมเดย์นอกเวลา error ถูกต้อง · เส้นทางแจ้งเตือนจัดส่งหายไปอีก+สถานะหลังยืนยันรอบไม่เดินต่อ · ไรเดอร์รับงานไม่ได้")
 > - **Status:** CODE_CLOSED / PENDING_LIVE_TEST (test pack §R72 = 8 ข้อ)

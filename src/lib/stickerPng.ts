@@ -95,11 +95,12 @@ export function stickerDrawList(o: PrintOrderData, offsetY = 0, faceH = STICKER_
 
   // R66 (Owner): ไม่ใส่สโตรค 3 คำ — BITE ME BABY · [ DELIVERY / CUSTOMER ] · SCAN FOR MORE = fill อย่างเดียว
   ops.push({ kind: 'text', x: cx, y: M + 30, text: 'BITE ME BABY', size: 34, weight: 800, align: 'center', noStroke: true })
-  ops.push({ kind: 'text', x: cx, y: M + 58, text: '" More Than Dellicious "', size: 16, align: 'center', family: 'Georgia', italic: true })
-  ops.push({ kind: 'line', x1: M, y1: M + 72, x2: W - M, y2: M + 72, w: 2 })
+  ops.push({ kind: 'text', x: cx, y: M + 60, text: '" More Than Dellicious "', size: 16, align: 'center', family: 'Georgia', italic: true })
+  ops.push({ kind: 'line', x1: M, y1: M + 68, x2: W - M, y2: M + 68, w: 2 })
 
-  // R66: ทุกแถวข้อความห่างกันคงที่ ROW = ช่องไฟระหว่างบรรทัดเท่ากันทั้งใบ
-  let y = M + 102 // 118 = ใต้เส้นคั่น (88) + ROW
+  // R73 (Owner 2026-11-05): ทุกบรรทัดก่อน QR ห่างกันคงที่ ROW=30 ทุกแถว (brand → [PAID]
+  //   เข้าตารางเดียวกัน · เดิม tag/Date เริ่มนอกจังหวะ = ช่องไฟไม่เท่ากัน)
+  let y = M + 90 // Date (แถวที่ 3 ของตาราง — brand M+30 · tag M+60 · Date M+90)
   // Date : …            TIME : …
   ops.push({ kind: 'text', x: M, y, text: 'Date :', size: 20, weight: 700 })
   ops.push({ kind: 'text', x: M + 84, y, text: f.date, size: 20 })
@@ -136,8 +137,9 @@ export function stickerDrawList(o: PrintOrderData, offsetY = 0, faceH = STICKER_
   ops.push({ kind: 'text', x: colonX, y, text: ':', size: 20, weight: 700 })
   ops.push({ kind: 'text', x: colX, y, text: f.notice, size: 19 })
   y += ROW
-  // เส้นคั่นกลางช่องว่างระหว่างแถว (ไม่เบียดช่องไฟ)
-  ops.push({ kind: 'line', x1: M, y1: y - 15, x2: W - M, y2: y - 15, w: 2 })
+  // เส้นคั่น 2 — R73: กลางช่องว่างก่อน [ DELIVERY / CUSTOMER ] (size 21)
+  //   (เดิม y−15 = ตกลงกลางตัวอักษรแถวถัดไป = ทับคำว่า delivery)
+  ops.push({ kind: 'line', x1: M, y1: y - 21 - 2, x2: W - M, y2: y - 21 - 2, w: 2 })
   // [ DELIVERY / CUSTOMER ] — R66: ไม่ใส่สโตรค (Owner ระบุ)
   ops.push({ kind: 'text', x: M, y, text: '[ DELIVERY / CUSTOMER ]', size: 21, weight: 700, noStroke: true })
   y += ROW
@@ -149,7 +151,9 @@ export function stickerDrawList(o: PrintOrderData, offsetY = 0, faceH = STICKER_
   ops.push({ kind: 'text', x: M, y, text: 'Add :', size: 20, weight: 700 })
   ops.push({ kind: 'text', x: M + 74, y, text: f.add, size: 20 })
   y += ROW
-  ops.push({ kind: 'line', x1: M, y1: y - 15, x2: W - M, y2: y - 15, w: 2 })
+  // เส้นคั่น 3 — R73: กลางช่องว่างก่อน [ TOTAL NET ] (size 20)
+  //   (เดิม y−15 = ตกลงกลางตัวอักษรแถวถัดไป = ทับคำว่า total)
+  ops.push({ kind: 'line', x1: M, y1: y - 20 - 2, x2: W - M, y2: y - 20 - 2, w: 2 })
   // [ TOTAL NET ] : … THB
   ops.push({ kind: 'text', x: M, y, text: '[ TOTAL NET ] :', size: 20, weight: 700 })
   ops.push({ kind: 'text', x: M + 200, y, text: `${f.totalNet} THB`, size: 20 })

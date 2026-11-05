@@ -1,0 +1,8 @@
+R73: สติกเกอร์ — ช่องไฟ 15 บรรทัดเท่ากัน + เส้นคั่นไม่ทับอักษร + NOTICE จากลิงก์จริงของลูกค้า
+
+- stickerPng.ts: grid ใหม่ baseline ห่างกันคงที่ ROW=30 ทุกบรรทัด (brand M+30 · tag M+60 · Date M+90 .. [PAID] M+480 = ใต้ brand 15 บรรทัดก่อน QR) — เดิมหัวตารางนอกจังหวะ Δ28/Δ44 = ช่องไฟไม่เท่ากัน
+- stickerPng.ts: เส้นคั่น 3 เส้นย้ายกลางช่องว่างระหว่างแถว (nextY − nextSize − 2) — เดิมวาด y−15 = กลางตัวอักษรแถวถัดไป = เส้น 2 ทับ [ DELIVERY / CUSTOMER ] · เส้น 3 ทับ [ TOTAL NET ] (Owner ระบุตรงเป๊ะ)
+- stickerForm.ts: collectOrderNotices — ช่อง NOTICE รวมข้อความลูกค้าจากลิงก์จริงทุกแหล่ง: orders.special_instructions + ข้อความแชต (order_messages.sender_role='customer') + หมายเหตุรายเมนู (special_request/customizations.notice) · dedup · ว่าง = '-' (เดิมรับเฉพาะ special_instructions = ใบจริงพิมพ์ "NOTICE : -" เสมอ)
+- printService.ts: customerMessages field + fetchCustomerChatNotes/withCustomerChatNotes + เติมโน้ตแชตใน runAutoPrint/runAutoPrintPair/printOrderTicket · stickerQueue.ts: เติมในคิว BT (ดึงครั้งเดียวต่อ roll)
+- tests: r73StickerLayoutNotice.test.ts 8 ข้อ (Δ30 ทุก offset · เส้นไม่คร่อม band ตัวอักษร · NOTICE รวม/dedup/fallback · source contract) — sticker suite 59/59 + contract เดิมไม่แตะ · full gates tsc/lint/vitest(211 files·2133 tests)/build = 0
+- docs: AI_WORK_STATE (บล็อก R73) · MASTER_STATUS · TEST_PACK §R73 (6 ข้อ) · CLOSURE_REPORT §6
