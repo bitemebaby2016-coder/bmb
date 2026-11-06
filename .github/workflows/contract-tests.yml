@@ -528,6 +528,16 @@ jobs:
           fi
           echo "Legacy contracts OK — 7/7 (017_018 · 019 · 020 · 021 · 022 · 029 · 033)"
 
+      - name: Contract 190 (BKK date gates — R73e UTC/BKK time-bomb guard)
+        run: |
+          out=$(psql -v ON_ERROR_STOP=1 -f e2e/contracts_190_bkk_date_gates.sql 2>&1); rc=$?
+          printf '%s\n' "$out"
+          if [ $rc -ne 0 ]; then
+            msg=$(printf '%s\n' "$out" | grep -m1 'ERROR:' || echo "rc=$rc")
+            echo "::error file=e2e/contracts_190_bkk_date_gates.sql::$msg"
+            exit 1
+          fi
+
 # ---------------------------------------------------------------------------
 # B-2 — legacy contract 7 ตัว (017_018/019/020/021/022/029/033) = CLOSED (W-2 · 2026-10-26)
 # ประวัติ: ความพยายาม 1 (commit 3a2c9f7) = ล้มเหลวทั้ง 7 (Contract Tests #147) ·
