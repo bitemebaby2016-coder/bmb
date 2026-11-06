@@ -4,14 +4,16 @@
 // ห้ามแก้ไขออเดอร์เดิม · ห้ามเคลมสำเร็จก่อนระบบยืนยัน · ไม่ชัดเจน = ถามก่อน
 // ============================================
 
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 import intakeSrc from '../../supabase/functions/_shared/socialOrderIntake.ts?raw'
 import workerSrc from '../../supabase/functions/social-ai-worker/index.ts?raw'
+import channelWebhookSrc from '../../supabase/functions/channel-webhook/index.ts?raw'
 import {
   semanticOrderExtract,
   matchOrderItems,
   scopeCatalogToPost,
   buildIntakeLine,
+  submitNewOrder,
   ORDER_EXTRACT_SCHEMA,
   type SubmitOrderResult,
 } from '../../supabase/functions/_shared/socialOrderIntake.ts'
@@ -190,5 +192,82 @@ describe('worker wiring — intake เฉพาะช่องทางส่ว
   })
   it('idempotency: submit ด้วย event id เสมอ (webhook retry ไม่สร้างซ้ำ)', () => {
     expect(workerSrc).toMatch(/externalRef: ev\.event_id/)
+  })
+})
+
+describe('R74 — parse dictionary จากข้อความจริง: ออปชันไม่ใช่เมนู + note ไหลเข้าออเดอร์', () => {
+  it('ออปชัน/การปรุงใน item.note = ไม่หลุดเป็นเมนู + คงข้อความลูกค้าไว้ (semantic)', () => {
+    const r = semanticOrderExtract(extract({
+      items: [{ name: 'ผัดไทย', quantity: 2, note: 'ไม่เผ็ด เพิ่มไข่ดาว' }],
+    }))
+    const v = val(r)
+    expect(v.items).toHaveLength(1)
+    expect(v.items[0].name).toBe('ผัดไทย')
+    expect(v.items[0].note).toBe('ไม่เผ็ด เพิ่มไข่ดาว')
+  })
+  it('matchOrderItems พก note ต่อเข้า MatchedItem (ชื่อจับคู่จาก catalog จริงเท่านั้น)', () => {
+    const m = matchOrderItems(
+      [{ id: 'p1', name: 'ผัดไทย' }],
+      [{ name: 'ผัดไทย', quantity: 2, note: 'ไม่เผ็ด' }],
+    )
+    expect(m.matched).toEqual([{ product_id: 'p1', name: 'ผัดไทย', quantity: 2, note: 'ไม่เผ็ด' }])
+    expect(m.unmatched).toEqual([])
+  })
+  it('source contract: extractor สั่งออปชันไม่เป็นเมนู + จำนวนภาษาพูด + ยืนยันตามหลังสนทนา', () => {
+    expect(intakeSrc).toMatch(/ห้ามใส่เป็น item เด็ดขาด/)
+    expect(intakeSrc).toMatch(/ที่นึง/)
+    expect(intakeSrc).toMatch(/เมนูนี้/)
+    expect(intakeSrc).toMatch(/ดึงรายการที่ลูกค้ากำลังยืนยันจากบทสนทนา/)
+  })
+  it('source contract: worker ส่ง customizations.notice (คีย์เดียวกับ collectOrderNotices ฝั่งเว็บ)', () => {
+    expect(workerSrc).toMatch(/customizations: \{ notice: i\.note \}/)
+  })
+  it('ห้ามใช้พิกัด fallback เก่า (10.7016) ใน EF ฝั่ง intake/webhook — ใช้ resolveKitchenPoint แทน', () => {
+    expect(intakeSrc).not.toMatch(/10\.7016/)
+    expect(channelWebhookSrc).not.toMatch(/10\.7016/)
+    expect(intakeSrc).toMatch(/resolveKitchenPoint/)
+    expect(channelWebhookSrc).toMatch(/resolveKitchenPoint/)
+    expect(intakeSrc).toMatch(/p_dropoff_latitude: input\.dropoff\?\.latitude \?\? kitchenPoint\.latitude/)
+    expect(channelWebhookSrc).toMatch(/p_dropoff_latitude: order\.dropoff_latitude \?\? kitchenPoint\.latitude/)
+  })
+})
+
+describe('R74 submitNewOrder — ไม่มี GPS = ใช้พิกัดครัว (server authority) + พก customizations', () => {
+  it('body ที่ยิงเข้า canonical RPC: dropoff = พิกัดครัวจาก business_settings + customizations ของบรรทัด + idempotent ref', async () => {
+    const calls: Array<{ url: string; body: Record<string, unknown> }> = []
+    vi.stubGlobal('fetch', vi.fn(async (url: string, init?: { body?: string }) => {
+      const u = String(url)
+      if (u.includes('business_settings')) {
+        return new Response(JSON.stringify([{ value: { latitude: 12.615659, longitude: 102.098063 } }]), { status: 200 })
+      }
+      calls.push({ url: u, body: JSON.parse(String(init?.body || '{}')) })
+      return new Response(JSON.stringify({ order_number: 'BMB-20261106-77', duplicate: false }), { status: 200 })
+    }))
+    try {
+      const res = await submitNewOrder('https://sb.test', 'svc', {
+        items: [{ product_id: 'p1', quantity: 2, customizations: { notice: 'ไม่เผ็ด เพิ่มไข่ดาว' } }],
+        roundId: 'round-1',
+        orderMode: 'SAME_DAY',
+        scheduledDate: null,
+        customerName: 'R74',
+        customerPhone: '',
+        address: 'ที่อยู่ทดสอบ',
+        sourceChannel: 'MESSENGER',
+        externalRef: 'msg-r74-x',
+        customerRef: 'uid-x',
+      })
+      expect(res.ok).toBe(true)
+      expect(res.order_number).toBe('BMB-20261106-77')
+      const b = calls[0].body as any
+      expect(calls[0].url).toContain('/rest/v1/rpc/create_order_with_items')
+      // ไม่มี GPS จากลูกค้า → ใช้พิกัดครัว (12.615659, 102.098063 — m134) ไม่ใช่ค่าเก่า/ไม่ใช่ null
+      expect(b.p_dropoff_latitude).toBe(12.615659)
+      expect(b.p_dropoff_longitude).toBe(102.098063)
+      expect(b.p_items).toEqual([{ product_id: 'p1', quantity: 2, customizations: { notice: 'ไม่เผ็ด เพิ่มไข่ดาว' } }])
+      expect(b.p_external_ref_id).toBe('msg-r74-x')
+      expect(b.p_source_channel).toBe('MESSENGER')
+    } finally {
+      vi.unstubAllGlobals()
+    }
   })
 })

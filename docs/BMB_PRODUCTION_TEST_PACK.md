@@ -1035,4 +1035,32 @@ SELECT public.set_user_role('<UUID-AUDITOR>'::uuid,   'auditor');
 | OMNI-4 | ปรับ parse dictionary จากข้อความจริงที่เจอ (สำเนียง/ศัพท์ร้าน) | parse ผ่านทุกตัวอย่างที่เจอ | จดตัวอย่างข้อความ + ผล |
 | OMNI-5 | ทดสอบ+ปรับปรุงซ้ำจนครบ (Meta + LINE เมื่อได้ Test User) | ทุกช่องทางได้ draft → ยืนยัน ครบ | evidence รวม |
 
+### §R74-OMNI ผลทดสอบจริง (R74 · 2026-11-06 · หลักฐานใต้ `e2e/_r74_*`)
+
+> **กติกา "ห้าม auto-order" — Owner ตัดสินใจ ณ แชทนี้ (แบบ ก):** ข้อความสั่งชัดเจนครบในข้อความเดียว = ยืนยันในตัว (G6) → สร้างออเดอร์ทันที + ลิงก์ชำระเงิน · ข้อความไม่ชัดเจน/ลังเล (เช่น "ขอคิดก่อน") = draft cart เท่านั้น **ห้ามสร้างออเดอร์** — ยืนยันพฤติกรรมแล้วด้วย B1/B2/B4 (ไม่มีออเดอร์ก่อนลูกค้ายืนยันทุกเคส)
+
+| # | ขั้น | ผลจริง | evidence |
+|---|---|---|---|
+| OMNI-1 | ตรวจ env + Meta Test User | **ผ่าน (มีข้อค้นพบ)** — key ครบ channel-webhook/worker (จดชื่อ key เท่านั้น ไม่มีค่าลับ) · LINE keys ไม่มี (ตามที่ Owner ยกเว้น) · **ข้อค้นพบ: `META_USER_ACCESS_TOKEN` (Test User) ใช้ไม่ได้แล้ว** (Graph code 190 "user logged out" · หมดอายุ 2026-10-06) · `SUPABASE_ACCESS_TOKEN` (Management PAT) = 401 | `e2e/_r74_omni_env.json` |
+| OMNI-2 | ยิง webhook จริงซ้ำ | **ผ่านทั้งชุด** — handshake ✓ · raw NL message → intake แถวใหม่ (INSERTED) ✓ · **ยิงซ้ำข้อความเดิม = ไม่สร้างแถวซ้ำ** ✓ · structured order → ออเดอร์จริง + tag `source_channel`/`external_ref_id` ✓ · ยิงซ้ำ = `duplicate:true` ไม่สร้างออเดอร์ซ้ำ ✓ · **`order_submissions` (m124):** submit ด้วย `p_client_submit_key` + replay key เดิม = ออเดอร์เดิม/ไม่สร้างซ้ำ (นับแถวตรงไม่ได้เพราะ mgmt PAT หมดอายุ — replay คืน order เดิม = อ่านแถว ledger สำเร็จ = หลักฐานแถวมีจริง) | `e2e/_r74_omni_flow.json` (16/19) |
+| OMNI-3 | NL parse → draft cart → ลูกค้ายืนยัน | **ผ่านชั้น parse/draft/no-auto-order (2 ชั้น)** — ① live (EF จริง): แชททั่วไป=ไม่มีออเดอร์ ✓ · สั่ง+ออปชันยังไม่ยืนยัน=**ไม่สร้างออเดอร์ (no auto-order)** ✓ · คอมเมนต์สาธารณะ=ไม่สร้างออเดอร์ ✓ ② NL harness (LLM จริง + prompt ที่แก้): **7/7** — ออปชันไม่หลุดเป็นเมนู (เข้า note) · ยืนยันตามหลังสนทนา = ดึงรายการจาก thread + confirmed ✓ · "เมนูนี้" → ชื่อเมนูจริง · หลายเมนูติดกัน = แยก item · สั่งกว้าง ๆ = ไม่เดาเมนู · **"ยืนยัน→ออเดอร์จริง" บน EF ที่ deploy อยู่ = ยังไม่ผ่าน** (prompt เก่า + บั๊กพิกัด — โค้ดแก้แล้ว/unit ผ่าน 79/79 · รอ deploy) | `e2e/_r74_omni_flow.json` + `e2e/_r74_nl_parse.json` (7/7) |
+| OMNI-4 | ปรับ parse dictionary จากข้อความจริง | **ทำแล้ว** — ① extractor (`ORDER_EXTRACT_SCHEMA`+prompt): เพิ่ม `item.note` (ออปชัน "ไม่เผ็ด/เพิ่มไข่ดาว" ไม่ใช่เมนู — จากเคสจริง B2) + จำนวนภาษาพูด ("ที่นึง/กล่องนึง/รับ 1 ที่") + "เมนูนี้/อันนี้" ตามโพสต์ + ยืนยันตามหลังสนทนา + แยกหลายเมนูติดกัน (corpus จริง) · ② note ไหลเข้า `customizations.notice` = คีย์เดียวกับช่อง NOTICE สติกเกอร์ (R73) · ③ dictionary ฝั่งเว็บ (VOCAB_RULES) — ข้อความจริงไม่มีตัวไหนพลาด = ล็อกด้วย test จาก corpus จริง 6 ข้อ | tests 79/79 · `socialOrderIntake.test.ts` (30) · `talkToBite.test.ts` (49) |
+| OMNI-5 | ทดสอบ+ปรับปรุงซ้ำจนครบ | **วนซ้ำหลายรอบ (ไม่ละเมิด two-try — คนละจุดที่แก้)** · ช่องทาง Meta (signed delivery จริงเข้า endpoint production) = intake→parse→draft ครบ · **LINE = ยังไม่ได้ทำ (ติดเครเดนเชี่ยน LINE API — ตามคำสั่งยกเว้น)** · Meta Test User live = ติด token หมดอายุ (OMNI-1) | `_r74_omni_flow.json` · `_r74_nl_parse.json` |
+
+**Gates รอบ R74 (โค้ดปัจจุบัน):** `tsc=0` · `eslint=0` · `vitest run` **212/212 ไฟล์ผ่านทั้งหมด** (รวม test ใหม่ 16 ข้อ) · `vite build=0` — `e2e/_r74_gates.log` · `e2e/_r74_vit_full.log`
+
+#### ข้อค้นพบสำคัญ (จดตามจริง — ห้ามปิดเงียบ)
+
+1. **Production bug ที่เจอ + แก้แล้ว (รอ EF deploy):** fallback พิกัดเก่า `(10.7016, 102.1429)` ใน `socialOrderIntake.ts`/`channel-webhook/index.ts` **ไม่ใช่พิกัดครัวจริง** (ครัวจริง = `business_settings.kitchen_location` = 12.6157, 102.098 — m134) → **ทุกออเดอร์จากช่องทาง social ที่ลูกค้าไม่ได้พก GPS โดน `SELF_DELIVERY_EXCEEDS_5KM_LIMIT` (วัดได้ 212 กม.) = สั่งผ่าน social ไม่ได้จริงมาตลอด** (พิสูจน์ live: A3 รอบแรก = order=none + audit โชว์ error นี้) · คลาสเดียวกับที่ Owner สั่งแก้ฝั่งเว็บไปแล้ว 2026-10-19 (`src/config/kitchenLocation.ts`) แต่ฝั่ง EF ยังค้าง · **วิธีแก้ = `resolveKitchenPoint()` อ่าน `business_settings.kitchen_location` (server authority · fallback ค่าเดียวกับ m134) ใช้เมื่อไม่มี GPS** — convention เดียวกับเว็บ (`quickLoginCoords` source:'kitchen') · ข้อจำกัด server: RPC บังคับมีพิกัด self_delivery ตั้งแต่ m025 (`ERR_MISSING_DELIVERY_COORDS` — ส่ง null ไม่ได้ ยืนยันด้วย A6 รอบสอง) · แก้ `socialOrderIntake.ts` + `channel-webhook/index.ts` + `social-ai-worker/index.ts` (customizations.notice) · **verify แล้ว: A6-kitchen-fallback = สร้างออเดอร์สำเร็จด้วยพิกัดครัวจริง + unit 79/79 + NL harness 7/7**
+2. **DOC DRIFT (ชื่อตาราง):** raw message จาก webhook จริงเข้า **`social_events`** (UNIQUE(platform,event_id) = idempotent) ไม่ใช่ `order_submissions` ตามแผนเดิม — `order_submissions` = ledger ของ web-submit (`create_order_with_items_i` + `p_client_submit_key` · m124) · ช่องทาง social ใช้ `orders.external_ref_id` unique (m043) เป็น idempotency · ทดสอบทั้งสองชั้นแล้วใน OMNI-2
+3. **Token หมดอายุ 2 ตัว (นอกเหนือที่ Owner ยกเว้น):** ① `META_USER_ACCESS_TOKEN` (Test User) = session หลุด/หมดอายุ 2026-10-06 ② `SUPABASE_ACCESS_TOKEN` (Management PAT) = 401 → กระทบ **deploy EF ไม่ได้** + นับแถว `order_submissions` ผ่าน Management API ไม่ได้ (ชดเชยด้วย replay semantics แล้ว) — **Owner ออก token ใหม่ทั้งสอง**
+4. **draft cart link (`/shop?cart=`) ทำงานจริง** (B2b ผ่านบางรอบบน prompt เก่า) แต่ LLM บน prompt เก่าไม่เสถียร (บางรอบจับ "ไข่ดาว" เป็นเมนูจน draft หาย) — prompt ใหม่แก้แล้ว (harness 7/7)
+
+#### งานที่เหลือปิด §R74-OMNI (นอกเหนือ Owner ทดสอบ live)
+
+1. **Owner ออก Supabase Management PAT ใหม่** (แทน `SUPABASE_ACCESS_TOKEN` ใน `.env.local`) → `node e2e\_r74DeployFns.cjs` (deploy `channel-webhook` + `social-ai-worker`) → `node e2e\_r74OmniFlow.cjs` ซ้ำ = คาด B2b/B3/B3b เขียว (โค้ด+unit+harness ผ่านแล้ว)
+2. **Owner ออก Meta Test User token ใหม่** (login ใหม่ → แทน `META_USER_ACCESS_TOKEN`) แล้วทดสอบ live ตาม OMNI-5
+3. **LINE API credentials** (คำสั่ง Owner: ยกเว้น — ภายนอก)
+4. **เครเดนเชี่ยนขนส่งภายนอก** (คำสั่ง Owner: ยกเว้น — ภายนอก)
+
 

@@ -1,0 +1,146 @@
+{
+  "date": "2026-11-06T11:18:56.863Z",
+  "target": "https://ivkdfognyiwjcmrhcnwz.supabase.co/functions/v1/channel-webhook",
+  "tests": [
+    {
+      "name": "setup-round-product",
+      "pass": true,
+      "detail": "round=round-r74-20261106 date=2026-11-06 cutoff=23:59:00 product=ลุยสวนหมู+กุ้ง"
+    },
+    {
+      "name": "A0-verification-handshake",
+      "pass": true,
+      "detail": "status=200"
+    },
+    {
+      "name": "A1-raw-message-intake",
+      "pass": true,
+      "detail": "status=200 ingest=INSERTED errors=[]"
+    },
+    {
+      "name": "A1b-raw-message-row",
+      "pass": true,
+      "detail": "row={\"event_id\":\"msg-r74a-1793963936863\",\"status\":\"SUCCEEDED\",\"content\":\"สวัสดีค่ะ ขอดูเมนูหน่อยค่ะ\"}"
+    },
+    {
+      "name": "A2-refire-idempotent",
+      "pass": true,
+      "detail": "dup=true rows=1"
+    },
+    {
+      "name": "A3-structured-order-created",
+      "pass": true,
+      "detail": "order=BMB-20261106-891 res={\"status\":200,\"body\":{\"order_number\":\"BMB-20261106-891\",\"duplicate\":false}}"
+    },
+    {
+      "name": "A3b-order-row-tagged",
+      "pass": true,
+      "detail": "rows=1"
+    },
+    {
+      "name": "A4-order-refire-idempotent",
+      "pass": true,
+      "detail": "dup=true rows=1"
+    },
+    {
+      "name": "A5-login",
+      "pass": true,
+      "detail": "customer jwt status=200"
+    },
+    {
+      "name": "A5-ledger-submit",
+      "pass": true,
+      "detail": "order=BMB-20261106-191 status=200"
+    },
+    {
+      "name": "A5b-ledger-replay-idempotent",
+      "pass": true,
+      "detail": "replay=BMB-20261106-191 ledger_rows=unverified (mgmt PAT หมดอายุ — replay คืน order เดิม = อ่านแถว ledger สำเร็จ)"
+    },
+    {
+      "name": "A6-kitchen-fallback-accepted",
+      "pass": true,
+      "detail": "kitchen=12.615659,102.098063 order=BMB-20261106-732 res={\"id\":\"ord-1793963955699-7a333d\",\"status\":\"pending\",\"subtotal\":79,\"branch_id\":\"branch-tenant-bmb-001-main\",\"duplicate\":false,\"order_mode\":\"SAME_DAY\",\"tax_amount"
+    },
+    {
+      "name": "B1-chit-chat-no-order",
+      "pass": true,
+      "detail": "order_rows=0 status=SUCCEEDED reply=yes"
+    },
+    {
+      "name": "B2-no-auto-order",
+      "pass": true,
+      "detail": "order_rows=0 (ห้ามมีออเดอร์ก่อนลูกค้ายืนยัน)"
+    },
+    {
+      "name": "B2b-draft-cart-link",
+      "pass": false,
+      "detail": "reply=ได้เลยครับคุณลูกค้า! 🥢 ลุยสวนหมู+กุ้ง 2 ที่ ไม่เผ็ด — จดไว้แล้วนะครับ ส่วนไข่ดาวนี่ผมไม่เจอในเมนูนะครับ รบกวนดูชื่อเมนู"
+    },
+    {
+      "name": "B3-confirm-creates-order",
+      "pass": false,
+      "detail": "order_rows=0 order=undefined reply=เยี่ยมเลยครับคุณลูกค้า! 🎉 ยืนยันสั่งลุยสวนหมู+กุ้ง 2 ที่ ไม่เผ็ดนะครับ ส่วนไข่ดาวยังไม่เจอในเมนูครั"
+    },
+    {
+      "name": "B3b-confirm-refire-idempotent",
+      "pass": false,
+      "detail": "dup=true rows=0"
+    },
+    {
+      "name": "B4-comment-no-order",
+      "pass": true,
+      "detail": "order_rows=0 reply=yes"
+    },
+    {
+      "name": "C-cleanup-orders-cancelled",
+      "pass": true,
+      "detail": "cancelled 3/3"
+    }
+  ],
+  "orders": [
+    {
+      "order_number": "BMB-20261106-891",
+      "why": "A3-structured"
+    },
+    {
+      "order_number": "BMB-20261106-191",
+      "why": "A5-ledger"
+    },
+    {
+      "order_number": "BMB-20261106-732",
+      "why": "A6-kitchen-fallback"
+    }
+  ],
+  "corpus": [
+    {
+      "step": "A1",
+      "text": "สวัสดีค่ะ ขอดูเมนูหน่อยค่ะ",
+      "ai_reply": "สวัสดีครับคุณลูกค้า ยินดีต้อนรับเข้าสู่ Bite Me Baby จันทบุรีเลยครับ! 🎉 เมนูของเรามีให้เลือกเยอะแยะเลยครับ ทั้งไก่ทอดอินโด, แซลมอนย่างเกลือ, ข้าวหมูผัดกิมจิ หร"
+    },
+    {
+      "step": "B1",
+      "text": "สวัสดีค่ะ วันนี้มีเมนูอะไรน่ากินบ้างคะ",
+      "ai_reply": "สวัสดีครับคุณลูกค้า! วันนี้ร้านเรามีเมนูเด็ดๆ เยอะเลยครับ แต่ตอนนี้ปิดรับออเดอร์วันนี้แล้วนะครับ 😅 แต่ไม่ต้องเสียใจนะครับ เพราะเรามีเมนูพรีออเดอร์ให้เลือกจองล่วงหน้าได้เลย! เช่น 🐟 แซลมอนย่างเกลือ+มั"
+    },
+    {
+      "step": "B2",
+      "text": "เอาลุยสวนหมู+กุ้ง 2 ที่ ไม่เผ็ด เพิ่มไข่ดาวด้วยค่ะ ขอคิดก่อนนะ",
+      "ai_reply": "ได้เลยครับคุณลูกค้า! 🥢 ลุยสวนหมู+กุ้ง 2 ที่ ไม่เผ็ด — จดไว้แล้วนะครับ ส่วนไข่ดาวนี่ผมไม่เจอในเมนูนะครับ รบกวนดูชื่อเมนูที่ biteme-baby.com/shop อีกทีนะครับ พอคิดดีแล้วกดสั่งได้เลยครับ 😊"
+    },
+    {
+      "step": "B3",
+      "text": "ตกลงค่ะ ยืนยัน สั่งเลยค่ะ",
+      "ai_reply": "เยี่ยมเลยครับคุณลูกค้า! 🎉 ยืนยันสั่งลุยสวนหมู+กุ้ง 2 ที่ ไม่เผ็ดนะครับ ส่วนไข่ดาวยังไม่เจอในเมนูครับ รบกวนเช็คที่ biteme-baby.com/shop อีกทีนะครับ พอเลือกครบแล้วกดไปหน้า biteme-baby.com/checkout เพื่"
+    },
+    {
+      "step": "B4",
+      "text": "เอาลุยสวนหมู+กุ้ง 2 ที่ค่ะ",
+      "ai_reply": "สวัสดีครับคุณลูกค้า! Bite รับออเดอร์แล้วนะครับ — ลุยสวนหมู+กุ้ง 2 ที่ จัดมาให้เลยครับ 🥟✨ ตอนนี้ร้านปิดรับออเดอร์วันนี้แล้วนะครับ แต่สามารถกดสั่งจองล่วงหน้า (Pre-Order) ได้เลยที่ biteme-baby.com/shop "
+    }
+  ],
+  "orders_cancelled": 3,
+  "pass": false,
+  "pass_count": 16,
+  "total": 19
+}

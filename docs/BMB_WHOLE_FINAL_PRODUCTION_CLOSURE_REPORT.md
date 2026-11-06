@@ -126,3 +126,15 @@
 4. **ขั้น 4 (แชทหน้า):** ปรับ parse dictionary จากข้อความจริงที่เจอ (สำเนียง/ศัพท์ร้าน)
 5. **ขั้น 5 (แชทหน้า):** ทดสอบ+ปรับปรุงซ้ำจนครบ (Meta + LINE เมื่อได้ Test User) → จดหลักฐานที่ test pack **§R74-OMNI**
 6. **คู่มือทดสอบ =** `docs/BMB_PRODUCTION_TEST_PACK.md` **§R73h (วันเกิด/consent + TTB) + §R74-OMNI** · ห้ามยกเลิก/ตัดข้อทดสอบ (anti-gaming)
+
+### §7.2 — R74-OMNI (2026-11-06 ค่ำ · ทำขั้น 3–5 ที่โอนมา = ผลจริง)
+
+| เรื่อง | สถานะจริง | evidence |
+|---|---|---|
+| ยิง webhook จริงซ้ำ (OMNI-2) | **ผ่านทั้งชุด** — intake แถวใหม่+ยิงซ้ำไม่ซ้ำ · order idempotent · `order_submissions` (m124) submit+replay = 1 ออเดอร์ | `e2e/_r74_omni_flow.json` (16/19) |
+| NL parse→draft→ยืนยัน (OMNI-3) | **ผ่าน 2 ชั้น** — live EF: no-auto-order ครบทุกเคส (B1/B2/B4) + NL harness (LLM จริง+prompt ใหม่) **7/7** · "ยืนยัน→ออเดอร์จริง" บน EF เก่า = ยังไม่ผ่าน (โค้ดแก้แล้ว/unit+harness ผ่าน · รอ deploy) | `_r74_nl_parse.json` |
+| parse dictionary (OMNI-4) | **ปรับจากข้อความจริงแล้ว** — item.note (ออปชันไม่เป็นเมนู) + qty ภาษาพูด + "เมนูนี้" + ยืนยันตามหลังสนทนา + note→`customizations.notice` | tests 79/79 |
+| Production bug ที่เจอ (ใหม่) | **ออเดอร์ social ไม่มี GPS โดน 5KM gate ทุกใบ (fallback พิกัดเก่า)** → แก้ `resolveKitchenPoint()` (ค่าจาก `business_settings.kitchen_location`) — verify แล้ว A6/unit/harness | flow json + tests |
+| Token ที่ตาย (ใหม่ 2 ตัว) | `SUPABASE_ACCESS_TOKEN` (mgmt PAT · deploy EF ไม่ได้) + `META_USER_ACCESS_TOKEN` (Test User หมดอายุ 2026-10-06) — **Owner ออกใหม่** | `e2e/_r74_omni_env.json` |
+| กติกา no-auto-order | **Owner ตัดสินใจแบบ ก ณ แชทนี้** — สั่งชัดเจนในข้อความเดียว = ยืนยันในตัว · ไม่ชัดเจน = draft เท่านั้น (ยืนยันพฤติกรรมแล้ว) | test pack §R74-OMNI |
+| Gates รอบ R74 | tsc=0 · lint=0 · **vitest 212/212 ไฟล์** · build=0 | `e2e/_r74_gates.log` |

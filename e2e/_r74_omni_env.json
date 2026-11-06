@@ -1,0 +1,341 @@
+{
+  "date": "2026-11-06T08:58:41.162Z",
+  "note": "R74-OMNI OMNI-1 · key NAMES only — ค่าลับไม่ถูกบันทึก/commit",
+  "env_keys": {
+    ".env.local": [
+      "VITE_VOICE_SERVER_TTS",
+      "VITE_SUPABASE_URL",
+      "VITE_SUPABASE_ANON_KEY",
+      "VITE_OPENROUTER_MODEL",
+      "NEXT_PUBLIC_GOOGLE_MAPS_API_KEY",
+      "VITE_GOOGLE_MAPS_API_KEY",
+      "SUPABASE_ACCESS_TOKEN",
+      "VITE_STRIPE_PUBLISHABLE_KEY",
+      "VERIFY_TOKEN",
+      "CHANNEL_WEBHOOK_VERIFY_TOKEN",
+      "CHANNEL_WEBHOOK_APP_SECRET",
+      "CLOUDFLARE_API_TOKEN",
+      "CLOUDFLARE_ACCOUNT_ID",
+      "STRIPE_WEBHOOK_SECRET",
+      "STRIPE_SECRET_KEY",
+      "VITE_GOOGLE_MAPS_MAP_ID",
+      "META_APP_ID",
+      "META_APP_SECRET",
+      "LIVE_STRIPE_PUBLISHABLE_KEY",
+      "BMB_LIVE_STRIPE_SECRET_KEY",
+      "LIVE_STRIPE_WEBHOOK_SECRET",
+      "META_USER_ACCESS_TOKEN",
+      "VITE_STRIPE_PUBLISHABLE_KEY_LIVE",
+      "META_PAGE_ID",
+      "META_PAGE_ACCESS_TOKEN",
+      "THSMS_API_KEY",
+      "THSMS_SENDER_NAME",
+      "THSMS_MESSAGE_TYPE",
+      "OMISE_PUBLISHED_API_KEY_TEST_MODE",
+      "OMISE_SECRET_API_KEY_TEST_MODE",
+      "OMISE_WEBHOOK_SECRET_API_KEY_TEST_MODE",
+      "BMB_openrouter_api_key",
+      "VITE_MAPBOX_ACCESS_TOKEN",
+      "VITE_MAPBOX_STYLE_URL",
+      "GITHUB_TOKEN_BMB",
+      "GOOGLE_OAUTH_CLIENT_ID",
+      "GOOGLE_OAUTH_CLIENT_SECRET"
+    ],
+    "supabase/secrets.local.env": [
+      "OPENROUTER_API_KEY",
+      "SUPABASE_SERVICE_ROLE_KEY",
+      "STRIPE_SECRET_KEY",
+      "STRIPE_WEBHOOK_SECRET",
+      "BMB_TEST_ADMIN_EMAIL",
+      "BMB_TEST_ADMIN_PASSWORD",
+      "BMB_TEST_CUSTOMER_PASSWORD",
+      "BMB_TEST_DRIVER_PASSWORD",
+      "BMB_TEST_DRIVER2_PASSWORD",
+      "AUTOMATION_TOKEN",
+      "CHANNEL_WEBHOOK_APP_SECRET",
+      "CHANNEL_WEBHOOK_VERIFY_TOKEN",
+      "OMISE_SECRET_API_KEY_TEST_MODE",
+      "OMISE_WEBHOOK_SECRET_API_KEY_TEST_MODE"
+    ]
+  },
+  "meta": {
+    "user_token_ok": false,
+    "user_id": null,
+    "user_name": null,
+    "user_token_error": {
+      "code": 190,
+      "type": "OAuthException",
+      "message": "Error validating access token: The session is invalid because the user logged out."
+    },
+    "user_token_debug": {
+      "valid": false,
+      "type": "USER",
+      "app_id": "1737887467512190",
+      "expires_at": "2026-10-06T05:00:00.000Z",
+      "scopes": [
+        "pages_show_list",
+        "ads_management",
+        "ads_read",
+        "business_management",
+        "pages_messaging",
+        "pages_read_engagement",
+        "pages_manage_metadata",
+        "pages_read_user_content",
+        "pages_manage_posts",
+        "pages_manage_engagement",
+        "public_profile"
+      ]
+    },
+    "app_roles": [
+      {
+        "role": "administrators",
+        "user": "122113643529511016"
+      },
+      {
+        "role": "administrators",
+        "user": "10243213188644091"
+      },
+      {
+        "role": "testers",
+        "user": "29357714477203433"
+      }
+    ],
+    "testers_present": true,
+    "page_posts": [
+      {
+        "id": "862940416913026_122146577841204867",
+        "created_time": "2026-11-05T16:30:13+0000"
+      },
+      {
+        "id": "862940416913026_122146306869204867",
+        "created_time": "2026-11-03T11:10:09+0000"
+      },
+      {
+        "id": "862940416913026_122146306107204867",
+        "created_time": "2026-11-03T11:05:08+0000"
+      }
+    ]
+  },
+  "corpus": [
+    {
+      "platform": "FACEBOOK",
+      "event_type": "comment",
+      "content": "สั่งใหม่ เอาแบที่โพสที่นึงส่งลิ้งให้ด้วย"
+    },
+    {
+      "platform": "FACEBOOK",
+      "event_type": "comment",
+      "content": "เอาแบบนี้ที่นึงใส่ตะกร้าให้ด้วย"
+    },
+    {
+      "platform": "FACEBOOK",
+      "event_type": "comment",
+      "content": "แล้วเมนูนี้คืออะไรสั่งยังไง ยังส่งอยู่รึเปล่า"
+    },
+    {
+      "platform": "FACEBOOK",
+      "event_type": "comment",
+      "content": "เมนูนี้คือ ะไรแล้วขายยังไง ตอนนี้สั่งได้ไหม"
+    },
+    {
+      "platform": "FACEBOOK",
+      "event_type": "comment",
+      "content": "BITE ME BABY - Main Page TH ไม่ใช่ ในโพสเป็นเคาหยกไม่ใช่เหรอ"
+    },
+    {
+      "platform": "FACEBOOK",
+      "event_type": "comment",
+      "content": "BITE ME BABY - Main Page TH เอาเมนูนี้กล่องนึง ใส่ตะกร้าไว้เลย จะตามไปจ่ายเงิน"
+    },
+    {
+      "platform": "FACEBOOK",
+      "event_type": "comment",
+      "content": "น่าอร่อยมาก ส่งได้ไหม สั่งยังไง"
+    },
+    {
+      "platform": "MESSENGER",
+      "event_type": "message",
+      "content": "มาถึงแล้วแจ้งรับอาหารที่ไหนคะ"
+    },
+    {
+      "platform": "MESSENGER",
+      "event_type": "message",
+      "content": "ได้ค่ะ"
+    },
+    {
+      "platform": "MESSENGER",
+      "event_type": "message",
+      "content": "ในตะกร้าไม่เห็นมีเมนูที่สั่งไว้เลยค่ะ"
+    },
+    {
+      "platform": "MESSENGER",
+      "event_type": "message",
+      "content": "ถูกต้องค่ะเช็คเอาได้เลย ชำระเงินเลยไหมคะไปรับได้ประมาณกี่โมง"
+    },
+    {
+      "platform": "MESSENGER",
+      "event_type": "message",
+      "content": "เป็นเมี่ยงแซลมอนได้ค่ะ"
+    },
+    {
+      "platform": "MESSENGER",
+      "event_type": "message",
+      "content": "อยากได้ แซลมอนมันฝรั่งพริกหวานสปาเก็ตตี้กุ้งพริกแห้ง ชาพีชค่ะ"
+    },
+    {
+      "platform": "MESSENGER",
+      "event_type": "message",
+      "content": "ต้องการไปรับที่ร้าน"
+    },
+    {
+      "platform": "MESSENGER",
+      "event_type": "message",
+      "content": "สั่งอาหารค่ะ"
+    },
+    {
+      "platform": "MESSENGER",
+      "event_type": "message",
+      "content": "เริ่มต้นใช้งาน"
+    },
+    {
+      "platform": "FACEBOOK",
+      "event_type": "comment",
+      "content": "BITE ME BABY - Main Page TH แซลมอนมันฝรั่งพริกหวานค่ะ"
+    },
+    {
+      "platform": "FACEBOOK",
+      "event_type": "comment",
+      "content": "รับ 1 ที่ค่ะ"
+    },
+    {
+      "platform": "FACEBOOK",
+      "event_type": "comment",
+      "content": "เอาเมนูนี้เลยที่นึง ใส่ตะกร้าส่งลิ้งมาได้เลย"
+    },
+    {
+      "platform": "FACEBOOK",
+      "event_type": "comment",
+      "content": "สวยงาม\nสั่งเลยได้ไหม"
+    }
+  ],
+  "checks": {
+    "channel_webhook": [
+      {
+        "key": "CHANNEL_WEBHOOK_APP_SECRET",
+        "present": true,
+        "matches": [
+          "CHANNEL_WEBHOOK_APP_SECRET",
+          "CHANNEL_WEBHOOK_APP_SECRET"
+        ]
+      },
+      {
+        "key": "CHANNEL_WEBHOOK_VERIFY_TOKEN",
+        "present": true,
+        "matches": [
+          "CHANNEL_WEBHOOK_VERIFY_TOKEN",
+          "CHANNEL_WEBHOOK_VERIFY_TOKEN"
+        ]
+      }
+    ],
+    "meta": [
+      {
+        "key": "META_APP_ID",
+        "present": true,
+        "matches": [
+          "META_APP_ID"
+        ]
+      },
+      {
+        "key": "META_APP_SECRET",
+        "present": true,
+        "matches": [
+          "META_APP_SECRET"
+        ]
+      },
+      {
+        "key": "META_USER_ACCESS_TOKEN",
+        "present": true,
+        "matches": [
+          "META_USER_ACCESS_TOKEN"
+        ]
+      },
+      {
+        "key": "META_PAGE_ID",
+        "present": true,
+        "matches": [
+          "META_PAGE_ID"
+        ]
+      },
+      {
+        "key": "META_PAGE_ACCESS_TOKEN",
+        "present": true,
+        "matches": [
+          "META_PAGE_ACCESS_TOKEN"
+        ]
+      }
+    ],
+    "worker": [
+      {
+        "key": "AUTOMATION_TOKEN",
+        "present": true,
+        "matches": [
+          "AUTOMATION_TOKEN"
+        ]
+      },
+      {
+        "key": "SUPABASE_SERVICE_ROLE_KEY",
+        "present": true,
+        "matches": [
+          "SUPABASE_SERVICE_ROLE_KEY"
+        ]
+      },
+      {
+        "key": "OPENROUTER_API_KEY",
+        "present": true,
+        "matches": [
+          "BMB_openrouter_api_key",
+          "OPENROUTER_API_KEY"
+        ]
+      }
+    ],
+    "line": [
+      {
+        "key": "LINE_CHANNEL_SECRET",
+        "present": false,
+        "matches": []
+      },
+      {
+        "key": "LINE_CHANNEL_ACCESS_TOKEN",
+        "present": false,
+        "matches": []
+      },
+      {
+        "key": "LINE_LOGIN_CHANNEL_ID",
+        "present": false,
+        "matches": []
+      }
+    ],
+    "external_delivery": [
+      {
+        "key": "GRAB",
+        "present": false,
+        "matches": []
+      },
+      {
+        "key": "LINEMAN",
+        "present": false,
+        "matches": []
+      },
+      {
+        "key": "SHIPPING",
+        "present": false,
+        "matches": []
+      },
+      {
+        "key": "DELIVERY_PROVIDER",
+        "present": false,
+        "matches": []
+      }
+    ]
+  }
+}

@@ -27,6 +27,9 @@ const APP_SECRET = Deno.env.get('CHANNEL_WEBHOOK_APP_SECRET') || ''
 const VERIFY_TOKEN = Deno.env.get('CHANNEL_WEBHOOK_VERIFY_TOKEN') || ''
 const AUTOMATION = Deno.env.get('AUTOMATION_TOKEN') || ''
 
+// R74: พิกัดครัว (server authority) สำหรับออเดอร์ช่องทางที่ไม่ได้พก GPS
+import { resolveKitchenPoint } from '../_shared/socialOrderIntake.ts'
+
 function json(body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body), {
     status,
@@ -290,13 +293,17 @@ async function processEntry(obj: string, entry: any, ctx: Ctx) {
   if (!customerRef) return
 
   if (order && Array.isArray(order.items)) {
+    const kitchenPoint = await resolveKitchenPoint(SB_URL, SERVICE)
     const res = await restNoKey('POST', '/rest/v1/rpc/create_order_with_items', {
       p_items: order.items,
       p_delivery_round_id: order.delivery_round_id || null,
       p_delivery_method: order.delivery_method || 'self_delivery',
       p_delivery_address: order.delivery_address || 'ไม่ได้ระบุที่อยู่ (channel intake)',
-      p_dropoff_latitude: order.dropoff_latitude ?? 10.7016,
-      p_dropoff_longitude: order.dropoff_longitude ?? 102.1429,
+      // R74: ไม่มี GPS = ใช้พิกัดครัวตาม convention เว็บ (quickLoginCoords "source: kitchen")
+      // — RPC บังคับมีพิกัด (ERR_MISSING_DELIVERY_COORDS) · fallback เก่าไม่ใช่ครัวจริง
+      // ทำให้ทุกออเดอร์ช่องทางนี้โดน SELF_DELIVERY_EXCEEDS_5KM_LIMIT
+      p_dropoff_latitude: order.dropoff_latitude ?? kitchenPoint.latitude,
+      p_dropoff_longitude: order.dropoff_longitude ?? kitchenPoint.longitude,
       p_customer_name: order.customer_name || extUser,
       p_customer_phone: order.customer_phone || '',
       p_payment_method: order.payment_method || 'promptpay_qr',

@@ -4,7 +4,7 @@
 
 - **Production:** https://biteme-baby.com (Cloudflare Pages auto-deploy จาก branch `main`)
 - **Repo:** `D:\A PROJECT\Bite Me Baby` → `github.com:bitemebaby2016-coder/bmb`
-- **สถานะ (อัปเดต 2026-11-06 · R73h):** ระบบหลัก + AI Waiter + CRM automation ถึง production แล้ว — **ยังไม่เปิดรับออร์เดอร์จริงจนกว่าจะปิดเงื่อนไข §10** · ตัวเลข gate ล่าสุดให้ดูจาก CI เสมอ ห้ามเชื่อตัวเลขในเอกสารโดยไม่รันเอง
+- **สถานะ (อัปเดต 2026-11-06 · R74-OMNI):** ระบบหลัก + AI Waiter + CRM automation + omnichannel ขั้น 3–5 ถึง production แล้ว — **ยังไม่เปิดรับออร์เดอร์จริงจนกว่าจะปิดเงื่อนไข §10** · ตัวเลข gate ล่าสุดให้ดูจาก CI เสมอ ห้ามเชื่อตัวเลขในเอกสารโดยไม่รันเอง
 - ⚠️ `bitemebaby-5f7.pages.dev` = build เก่าค้าง (stale) — ห้ามใช้ตรวจงาน visual/behavior
 
 ## 1. BITE ME BABY คืออะไร (จากโค้ดจริง)
@@ -147,7 +147,7 @@ npm run preview             # เสิร์ฟ dist ที่ build แล้�
 1. **Owner ทดสอบจริงบน production:** บัตร Omise (TEST card บนเบราว์เซอร์จริง) · GPS/delivery matrix · ชุด §R73h (วันเกิด/consent + Talk to Bite) + §R67–§R73 ที่ค้าง — เริ่มจากหน้าแชท
 2. **CONFLICT C-1..C-6** (`docs/BMB_REQUIREMENT_RECONCILIATION.md` §3) — รอ Owner ตัดสินใจ
 3. **Runtime tests ด้วยอุปกรณ์/บัญชีจริง** ใน test pack §T (T-A1..A6 · T-D/T-E · CAP-10/11/13/14/18) — ยัง NOT RUN
-4. **Omnichannel Meta/LINE (ขั้น 3–5):** env/secret + Test User **มีใน local env แล้ว** · เคยยิง webhook ผ่าน SMS ถึง `order_submissions` แล้ว (token อยู่ใน env local) — เหลือ ทดสอบ NL parse → draft cart → ปรับ parse dictionary = **ทำในแชทถัดไป** (แผน = test pack §R74-OMNI)
+4. **Omnichannel Meta/LINE (ขั้น 3–5):** ขั้น 3–5 ทำแล้ว (R74-OMNI — ยิง webhook จริงซ้ำ idempotent ผ่าน · NL parse→draft→ยืนยัน ผ่าน 2 ชั้น (no auto-order ยืนยันแล้ว · NL harness 7/7) · parse dictionary ปรับจากข้อความจริง · แก้บั๊กพิกัด EF ที่ทำให้ออเดอร์ social ไม่มี GPS สั่งไม่ได้) — **เหลือปิด: ① deploy EF (ติด `SUPABASE_ACCESS_TOKEN` หมดอายุ → ออกใหม่แล้วรัน `node e2e\_r74DeployFns.cjs`) ② Meta Test User token ใหม่ (ตัวเก่าหมดอายุ) ③ LINE API + ขนส่งภายนอก (ตามคำสั่งยกเว้น)** — ผลจริง = test pack §R74-OMNI
 5. **ที่ปิดแล้ว (อัปเดต 2026-11-06):** E2E order journey 12/12 (R67) · chat-hang ปิดแล้ว · SEO routes ครบแล้ว · Production DB audit ผ่านรอบ R62–R68 · UTC-vs-BKK time-bomb class ปิดแล้ว (m190–193 + guard ใน CI) — **ไม่ต้องทำซ้ำ**
 
 ## 11. เอกสารประกอบ + กติกาการทำงานของ repo

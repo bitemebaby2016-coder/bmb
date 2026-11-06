@@ -341,6 +341,34 @@ describe('R73f — canonical customization vocabulary ↔ Thai (audit gap: custo
   })
 })
 
+describe('R74 — parse dictionary lock จากข้อความลูกค้าจริง (social_events corpus 2026-11-06)', () => {
+  // ข้อความจริงจาก order intake ของลูกค้า (อ้างอิง e2e/_r74_omni_env.json corpus) —
+  // ล็อกพฤติกรรม dictionary ไม่ให้ถอย + ยืนยันว่าข้อความจริงไม่ถูกตีเป็นออปชันมั่ว
+  it('ข้อความสั่งจริง "เอาเมนูนี้เลยที่นึง ใส่ตะกร้าส่งลิ้งมาได้เลย" = ไม่มีออปชันปลอม', () => {
+    expect(extractCustomizers('เอาเมนูนี้เลยที่นึง ใส่ตะกร้าส่งลิ้งมาได้เลย')).toEqual([])
+    expect(parseOrderIntent('เอาเมนูนี้เลยที่นึง ใส่ตะกร้าส่งลิ้งมาได้เลย').likeBefore).toBe(false)
+  })
+  it('ข้อความจริง "เอาแบบนี้ที่นึงใส่ตะกร้าให้ด้วย" / "รับ 1 ที่ค่ะ" = ไม่มีออปชันปลอม', () => {
+    expect(extractCustomizers('เอาแบบนี้ที่นึงใส่ตะกร้าให้ด้วย')).toEqual([])
+    expect(extractCustomizers('รับ 1 ที่ค่ะ')).toEqual([])
+  })
+  it('ข้อความทดสอบจริง B2 "เอา… 2 ที่ ไม่เผ็ด เพิ่มไข่ดาวด้วยค่ะ ขอคิดก่อนนะ" = extra_egg + spicy:None', () => {
+    const out = extractCustomizers('เอาลุยสวนหมู+กุ้ง 2 ที่ ไม่เผ็ด เพิ่มไข่ดาวด้วยค่ะ ขอคิดก่อนนะ')
+    expect(out.map((c) => c.key)).toEqual(['extra_egg', 'spicy'])
+    expect(out.map((c) => c.value)).toEqual([true, 'None'])
+    expect(parseOrderIntent('เอาลุยสวนหมู+กุ้ง 2 ที่ ไม่เผ็ด เพิ่มไข่ดาวด้วยค่ะ ขอคิดก่อนนะ').likeBefore).toBe(false)
+  })
+  it('สำเนียง/ศัพท์ร้านที่เจอในแชต: "ไม่เผ็ดเลย" "เผ็ดน้อยหน่อย" "ไม่ใส่น้ำแข็งเลย" จับได้ตาม canonical', () => {
+    expect(extractCustomizers('ไม่เผ็ดเลย')).toEqual([{ key: 'spicy', value: 'None', note: 'ไม่เผ็ด' }])
+    expect(extractCustomizers('เผ็ดน้อยหน่อย')).toEqual([{ key: 'spicy', value: 'Mild', note: 'เผ็ดน้อย' }])
+    expect(extractCustomizers('ไม่ใส่น้ำแข็งเลย')).toEqual([{ key: 'no_ice', value: true, note: 'ไม่น้ำแข็ง' }])
+  })
+  it('"สั่งเหมือนเดิม" เวอร์ชันลูกค้าพิมพ์จริง ("สั่งเหมือนเดิมเลยจ้า") = likeBefore', () => {
+    expect(parseOrderIntent('สั่งเหมือนเดิมเลยจ้า').likeBefore).toBe(true)
+    expect(parseOrderIntent('เอาแบบเดิม').likeBefore).toBe(false) // ไม่มีในวลีจริง = ไม่เดา
+  })
+})
+
 describe('R73f — order-again carries the real customizations/notes of past lines', () => {
   const catalog = [product('p1', 'ส้มตำ', 45), product('p2', 'ไก่ทอด', 60)]
 

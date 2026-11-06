@@ -453,7 +453,13 @@ async function runOrderIntake(ev: SocialEventRow, userMsg: string, mode: 'messag
       return { footer: '', note: 'ไม่มีรอบส่งเปิดรับสำหรับ ' + targetDate + ' — แจ้งตามจริงและให้ลูกค้าเลือกวัน/รอบอื่น', summaryNames: [] }
     }
     const res = await submitNewOrder(SB_URL, SERVICE, {
-      items: m.matched.map((i) => ({ product_id: i.product_id, quantity: i.quantity })),
+      items: m.matched.map((i) => ({
+        product_id: i.product_id,
+        quantity: i.quantity,
+        // R74: ออปชัน/การปรุงที่ลูกค้าพิมพ์ → customizations.notice (ไหลเข้าช่อง NOTICE
+        // ของสติกเกอร์ผ่าน collectOrderNotices — คีย์เดียวกับฝั่งเว็บ)
+        ...(i.note ? { customizations: { notice: i.note } } : {}),
+      })),
       roundId: round.id,
       orderMode: x.order_mode === 'PRE_ORDER' ? 'PRE_ORDER' : 'SAME_DAY',
       scheduledDate: x.order_mode === 'PRE_ORDER' ? x.scheduled_date : null,

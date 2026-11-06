@@ -1,0 +1,44 @@
+{
+  "date": "2026-11-06T11:18:29.402Z",
+  "harness": "R74 NL parse (LLM จริง · prompt จริง · catalog จริง)",
+  "tests": [
+    {
+      "name": "setup-catalog",
+      "pass": true,
+      "detail": "p1=ลุยสวนหมู+กุ้ง p2=เมี่ยงหมู+กุ้ง "
+    },
+    {
+      "name": "B2-options-not-items-no-confirm",
+      "pass": true,
+      "detail": "model=deepseek/deepseek-v4-flash items=[{\"name\":\"ลุยสวนหมู+กุ้ง\",\"quantity\":2,\"note\":\"ไม่เผ็ด เพิ่มไข่ดาว\"}] confirmed=false mode=SAME_DAY unclear=- matched=[\"ลุยสวนหมู+กุ้ง x2 [ไม่เผ็ด เพิ่มไข่ดาว]\"]"
+    },
+    {
+      "name": "B3-confirm-pulls-thread-items",
+      "pass": true,
+      "detail": "model=deepseek/deepseek-v4-flash items=[{\"name\":\"ลุยสวนหมู+กุ้ง\",\"quantity\":2,\"note\":\"ไม่เผ็ด เพิ่มไข่ดาว\"}] confirmed=true mode=SAME_DAY unclear=- matched=[\"ลุยสวนหมู+กุ้ง x2 [ไม่เผ็ด เพิ่มไข่ดาว]\"]"
+    },
+    {
+      "name": "C-corpus-menu-nay-qty-colloquial",
+      "pass": true,
+      "detail": "model=deepseek/deepseek-v4-flash items=[{\"name\":\"ลุยสวนหมู+กุ้ง\",\"quantity\":1}] confirmed=false mode=SAME_DAY unclear=ลูกค้าบอก 'เมนูนี้' แต่ไม่ระบุชื่อเมนูชัดเจน ต้องเดาจากกติกาโพสต์ว่าเป็นลุยสวนหมู+กุ้ง และยังไม่ยืนยันการสั่ง matched=[\"ลุยสวนหมู+กุ้ง x1\"]"
+    },
+    {
+      "name": "D-corpus-runon-split",
+      "pass": true,
+      "detail": "model=deepseek/deepseek-v4-flash items=[{\"name\":\"ลุยสวนหมู+กุ้ง\",\"quantity\":1},{\"name\":\"เมี่ยงหมู+กุ้ง\",\"quantity\":1},{\"name\":\"ชาพีช\",\"quantity\":1}] confirmed=false mode=SAME_DAY unclear=- matched=[\"ลุยสวนหมู+กุ้ง x1\",\"เมี่ยงหมู+กุ้ง  x1\"]"
+    },
+    {
+      "name": "E-bare-intent-no-invented-items",
+      "pass": true,
+      "detail": "model=deepseek/deepseek-v4-flash items=[] confirmed=false mode=UNSURE unclear=ลูกค้าบอกว่าสั่งอาหาร แต่ไม่ได้ระบุเมนู จำนวน และรายละเอียดอื่น ๆ matched=[]"
+    },
+    {
+      "name": "F-qty-colloquial-nueng",
+      "pass": true,
+      "detail": "model=deepseek/deepseek-v4-flash items=[{\"name\":\"ลุยสวนหมู+กุ้ง\",\"quantity\":1}] confirmed=false mode=PRE_ORDER unclear=- matched=[\"ลุยสวนหมู+กุ้ง x1\"]"
+    }
+  ],
+  "pass": true,
+  "pass_count": 7,
+  "total": 7
+}
