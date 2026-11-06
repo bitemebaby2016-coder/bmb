@@ -139,6 +139,12 @@ export interface OrderLikeItem {
   product_id?: string
   product_name?: string
   quantity?: number
+  /** Real customizations ที่บันทึกไว้ใน order_items.customizations (jsonb) ของออเดอร์จริง */
+  customizations?: Record<string, any>
+  /** Real note ที่ลูกค้าเคยสั่งไว้ (order_items.note) */
+  note?: string
+  /** Real special request ของบรรทัดเดิม (order_items.special_request) */
+  special_request?: string
 }
 
 export interface OrderLike {
@@ -189,7 +195,14 @@ export function resolveOrderAgainFromOrder(
     const name = item?.product_name || 'รายการ'
     const product = item?.product_id ? byId.get(item.product_id) : undefined
     if (product && product.is_available && !product.archived) {
-      draft.push({ product, quantity })
+      // R73f: พก customizations/หมายเหตุ ของบรรทัดเดิมต่อเข้า draft ด้วย
+      // (audit gap: "Order-again เอาเฉพาะ product+qty → ต่อ customizations เก่าเข้า draft line")
+      const carriedCfg =
+        item?.customizations && typeof item.customizations === 'object' && Object.keys(item.customizations).length > 0
+          ? item.customizations
+          : undefined
+      const carriedNote = String(item?.note || item?.special_request || '').trim() || undefined
+      draft.push({ product, quantity, customizations: carriedCfg, note: carriedNote })
       total += (Number(product.price) || 0) * quantity
     } else {
       unavailable.push({ name, requested: quantity })
@@ -238,6 +251,31 @@ function matchThaiWord(text: string, prefix: string): string | null {
   return m ? m[1] : null
 }
 
+// ---------------------------------------------------------------------------
+// Canonical customization vocabulary (audit 2026-10-07 gap: "ตาราง canonical
+// keys ↔ Thai (extra_egg/spicy/mild/hot/no_ice) แบบที่ kitchenControl คาด
+// {extra_egg:true, spicy:'Mild'}") — เฉพาะวลีที่มีหลักฐานค่าในระบบ (คีย์ใน
+// talkToBite/kitchenControl.test + ระดับ Mild/Hot ใน audit) เท่านั้น
+// วลีอื่น fallback เป็น note เท่าที่ผู้ใช้พิมพ์จริงตามเดิม (ไม่ invent)
+// ---------------------------------------------------------------------------
+interface VocabRule {
+  re: RegExp
+  key: string
+  value: string | boolean
+  note: string
+}
+
+// ลำดับสำคัญ: วลีเฉพาะต้องมาก่อนวลีกว้างเสมอ (เช่น "เผ็ดน้อย" ก่อน "เผ็ด")
+// โดยแต่ละ rule จะ strip วลีที่จับได้ทิ้งก่อนถึง rule ถัดไป
+const VOCAB_RULES: VocabRule[] = [
+  { re: /เพิ่ม\s*ไข่|ไข่\s*เพิ่ม/g, key: 'extra_egg', value: true, note: 'เพิ่มไข่' },
+  { re: /เผ็ด\s*น้อย|ไม่ค่อย\s*เผ็ด/g, key: 'spicy', value: 'Mild', note: 'เผ็ดน้อย' },
+  { re: /ไม่\s*เผ็ด/g, key: 'spicy', value: 'None', note: 'ไม่เผ็ด' },
+  { re: /เผ็ด\s*มาก|เผ็ด\s*จัด|เผ็ดๆ/g, key: 'spicy', value: 'Hot', note: 'เผ็ด' },
+  { re: /ไม่\s*(?:ใส่)?\s*น้ำแข็ง/g, key: 'no_ice', value: true, note: 'ไม่น้ำแข็ง' },
+  { re: /เผ็ด/g, key: 'spicy', value: 'Hot', note: 'เผ็ด' },
+]
+
 /**
  * Scan free-text Thai for "customize my dish" flags. Returns deduplicated
  * customizers (``note`` map key) in the order they appear. Each phrase is a
@@ -245,20 +283,31 @@ function matchThaiWord(text: string, prefix: string): string | null {
  * verbatim, never invented. Falls back to an empty list when none are present.
  */
 export function extractCustomizers(text: string): Customizer[] {
-  const t = String(text || '')
   const out: Customizer[] = []
   const seen = new Set<string>()
-  const push = (note: string) => {
+  const push = (key: string, value: string | boolean, note: string) => {
     if (seen.has(note)) return
     seen.add(note)
-    out.push({ key: 'note', value: note, note })
+    out.push({ key, value, note })
   }
-  const add = matchThaiWord(t, 'เพิ่ม') || matchThaiWord(t, 'เพิ่ม')
-  if (add) push(`เพิ่ม ${add}`)
-  const none = matchThaiWord(t, 'ไม่')
-  if (none) push(`ไม่ ${none}`)
-  const omit = matchThaiWord(t, 'ไม่ใส่')
-  if (omit) push(`ไม่ใส่ ${omit}`)
+  // 1) canonical vocabulary ก่อน (เฉพาะวลีที่มีตารางค่ารองรับ) — strip วลีที่จับได้ทิ้ง
+  let rest = String(text || '')
+  for (const rule of VOCAB_RULES) {
+    rest = rest.replace(rule.re, () => {
+      push(rule.key, rule.value, rule.note)
+      return ' '
+    })
+  }
+  // 2) generic fallback (เดิม): "เพิ่ม X / ไม่ใส่ X / ไม่ X" → note ตามที่ผู้ใช้พิมพ์จริง
+  //    (เฉพาะก่อนกว้าง + strip ที่จับแล้ว — กัน "ไม่ใส่ X" หลุดเข้าทั้ง 2 branch = 2 โน้ต)
+  const add = matchThaiWord(rest, 'เพิ่ม')
+  if (add) push('note', `เพิ่ม ${add}`, `เพิ่ม ${add}`)
+  rest = rest.replace(/เพิ่ม\s*[\u0E00-\u0E7F]{2,}/, ' ')
+  const omit = matchThaiWord(rest, 'ไม่ใส่')
+  if (omit) push('note', `ไม่ใส่ ${omit}`, `ไม่ใส่ ${omit}`)
+  rest = rest.replace(/ไม่ใส่\s*[\u0E00-\u0E7F]{2,}/, ' ')
+  const none = matchThaiWord(rest, 'ไม่')
+  if (none) push('note', `ไม่ ${none}`, `ไม่ ${none}`)
   return out
 }
 
@@ -272,11 +321,12 @@ export function attachCustomizersToDraft(
   if (!draft || draft.length === 0) return draft
   if (targetProductId && !draft.some((d) => d.product.id === targetProductId)) targetProductId = undefined
   const target = (targetProductId ? draft.find((d) => d.product.id === targetProductId) : undefined) ?? draft[0]
-  const cfg: Record<string, any> = {}
-  const notes: string[] = []
+  const cfg: Record<string, any> = { ...(target.customizations ?? {}) }
+  const notes: string[] = target.note ? [target.note] : []
   for (const c of customizers) {
-    const prev = cfg[c.key]
-    cfg[c.key] = prev === undefined ? c.value : Array.isArray(prev) ? prev.concat(c.value) : [prev, c.value]
+    // ค่าใหม่แทนที่ค่าเดิมของ key เดียวกัน (เช่น "เผ็ดน้อย" → "เผ็ด" = ระดับล่าสุดชนะ)
+    // — ไม่ต่อเป็น array: level/flag ต้องมีค่าเดียวเสมอ (ค่าหลายชิ้น = มากับ c.value อยู่แล้ว)
+    cfg[c.key] = c.value
     if (!notes.includes(c.note)) notes.push(c.note)
   }
   const note = notes.join('、')

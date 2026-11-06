@@ -14,6 +14,7 @@ import {
   bitePoseForState,
   buildBiteGreeting,
   chatStatusLabel,
+  extractCustomizers,
   getGreetingIndex,
   isBiteState,
   parseOrderIntent,
@@ -304,5 +305,93 @@ describe('parseOrderIntent / applyOrderModify (NL order like-a-human)', () => {
 
   it('parseOrderIntent exposes an empty customizers array when no flags are present', () => {
     expect(parseOrderIntent('hello').customizers).toEqual([])
+  })
+})
+
+describe('R73f — canonical customization vocabulary ↔ Thai (audit gap: customize mapping)', () => {
+  it('maps "เพิ่มไข่" family to extra_egg:true (shape kitchenControl expects)', () => {
+    expect(extractCustomizers('เพิ่มไข่')).toEqual([{ key: 'extra_egg', value: true, note: 'เพิ่มไข่' }])
+    expect(extractCustomizers('ไข่เพิ่ม')).toEqual([{ key: 'extra_egg', value: true, note: 'เพิ่มไข่' }])
+  })
+
+  it('maps spice phrases to the canonical spicy levels (None/Mild/Hot)', () => {
+    expect(extractCustomizers('เผ็ดน้อย')).toEqual([{ key: 'spicy', value: 'Mild', note: 'เผ็ดน้อย' }])
+    expect(extractCustomizers('ไม่เผ็ด')).toEqual([{ key: 'spicy', value: 'None', note: 'ไม่เผ็ด' }])
+    expect(extractCustomizers('เผ็ดมาก')).toEqual([{ key: 'spicy', value: 'Hot', note: 'เผ็ด' }])
+    expect(extractCustomizers('เอาเผ็ด')).toEqual([{ key: 'spicy', value: 'Hot', note: 'เผ็ด' }])
+  })
+
+  it('maps "ไม่น้ำแข็ง" family to no_ice:true', () => {
+    expect(extractCustomizers('ไม่น้ำแข็ง')).toEqual([{ key: 'no_ice', value: true, note: 'ไม่น้ำแข็ง' }])
+    expect(extractCustomizers('ไม่ใส่น้ำแข็ง')).toEqual([{ key: 'no_ice', value: true, note: 'ไม่น้ำแข็ง' }])
+  })
+
+  it('handles combined phrases in one utterance (order preserved, one key each)', () => {
+    const out = extractCustomizers('เพิ่มไข่ ไม่เผ็ด ไม่น้ำแข็ง')
+    expect(out.map((c) => c.key)).toEqual(['extra_egg', 'spicy', 'no_ice'])
+    expect(out.map((c) => c.value)).toEqual([true, 'None', true])
+  })
+
+  it('falls back to the plain note key outside the vocabulary (never invented)', () => {
+    expect(extractCustomizers('เพิ่มผักชี')).toEqual([{ key: 'note', value: 'เพิ่ม ผักชี', note: 'เพิ่ม ผักชี' }])
+    expect(extractCustomizers('ไม่ใส่หอม')).toEqual([{ key: 'note', value: 'ไม่ใส่ หอม', note: 'ไม่ใส่ หอม' }])
+    expect(extractCustomizers('อร่อยมาก')).toEqual([])
+  })
+})
+
+describe('R73f — order-again carries the real customizations/notes of past lines', () => {
+  const catalog = [product('p1', 'ส้มตำ', 45), product('p2', 'ไก่ทอด', 60)]
+
+  it('draft lines carry customizations + note from the past order', () => {
+    const res = resolveOrderAgainFromOrder(
+      {
+        items: [
+          {
+            product_id: 'p1',
+            product_name: 'ส้มตำ',
+            quantity: 2,
+            customizations: { extra_egg: true, spicy: 'Mild', addOns: [{ addonId: 'a1', selections: ['ปกติ'] }] },
+            special_request: 'ไม่ใส่ถั่ว',
+          },
+          { product_id: 'p2', product_name: 'ไก่ทอด', quantity: 1 },
+        ],
+      },
+      catalog,
+    )
+    const p1 = res.draft.find((d) => d.product.id === 'p1')
+    expect(p1?.customizations).toEqual({ extra_egg: true, spicy: 'Mild', addOns: [{ addonId: 'a1', selections: ['ปกติ'] }] })
+    expect(p1?.note).toBe('ไม่ใส่ถั่ว')
+    const p2 = res.draft.find((d) => d.product.id === 'p2')
+    expect(p2?.customizations).toBeUndefined()
+    expect(p2?.note).toBeUndefined()
+  })
+
+  it('keeps note from item.note when special_request is absent', () => {
+    const res = resolveOrderAgainFromOrder(
+      { items: [{ product_id: 'p1', product_name: 'ส้มตำ', quantity: 1, note: 'เผ็ดน้อย' }] },
+      catalog,
+    )
+    expect(res.draft[0].note).toBe('เผ็ดน้อย')
+    expect(res.draft[0].customizations).toBeUndefined()
+  })
+
+  it('attachCustomizersToDraft merges new flags into the carried map (new wins)', () => {
+    const res = resolveOrderAgainFromOrder(
+      {
+        items: [
+          {
+            product_id: 'p1',
+            product_name: 'ส้มตำ',
+            quantity: 1,
+            customizations: { extra_egg: true, spicy: 'Mild' },
+            note: 'ของเดิม',
+          },
+        ],
+      },
+      catalog,
+    )
+    const out = attachCustomizersToDraft(res.draft, [{ key: 'spicy', value: 'Hot', note: 'เผ็ด' }], 'p1')
+    expect(out[0].customizations).toEqual({ extra_egg: true, spicy: 'Hot' })
+    expect(out[0].note).toBe('ของเดิม、เผ็ด')
   })
 })
