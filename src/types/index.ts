@@ -232,6 +232,10 @@ export interface Customer {
   total_spent: number;
   created_at: string;
   updated_at: string;
+  /** วันเกิด YYYY-MM-DD (เก็บวัน/เดือน สำหรับ CRM อวยพร — m192 · nullable = ยังไม่กรอก) */
+  birthday?: string | null;
+  /** ยินยอมรับข้อความ CRM in-app (m193 · default false = ไม่รับ) */
+  crm_consent?: boolean;
 }
 
 export interface CustomerAddress {

@@ -20,10 +20,12 @@ import {
   isPasskeySupported,
   type PasskeyInfo,
 } from '@/lib/passkeyLogin'
+import { fetchMyCrmProfile, saveMyCrmProfile, validateBirthday } from '@/lib/customerProfile'
 
 export function ProfilePage() {
   const riderIdentity = useRiderIdentity()
   const customer = useAuthStore((s) => s.customer)
+  const setCustomer = useAuthStore((s) => s.setCustomer)
 
   // P4 — รายการ passkey ที่ผูกกับบัญชีนี้ (โหลดครั้งเดียวตอนเปิดหน้า)
   const [passkeys, setPasskeys] = useState<PasskeyInfo[]>([])
@@ -35,6 +37,11 @@ export function ProfilePage() {
   // [G&R 156] Creator Affiliate — โค้ด/สถิติจริงจากเซิร์ฟเวอร์ (แต้มล้วน ไม่มีเงินสด)
   const [aff, setAff] = useState<AffiliateStatus | null>(null)
   const [affLoaded, setAffLoaded] = useState(false)
+  // R73g — วันเกิด + ความยินยอมรับข้อความ CRM (m192/m193 · default = ยังไม่ยินยอม)
+  const [bday, setBday] = useState('')
+  const [crmConsent, setCrmConsent] = useState(false)
+  const [crmLoaded, setCrmLoaded] = useState(false)
+  const [crmSaving, setCrmSaving] = useState(false)
   useEffect(() => {
     if (!customer) return
     let active = true
@@ -68,6 +75,19 @@ export function ProfilePage() {
     let active = true
     void listPasskeys().then((r) => {
       if (active && r.ok) setPasskeys(r.items)
+    })
+    return () => { active = false }
+  }, [customer])
+  useEffect(() => {
+    if (!customer) return
+    let active = true
+    void fetchMyCrmProfile().then((p) => {
+      if (!active) return
+      if (p) {
+        setBday(p.birthday || '')
+        setCrmConsent(p.crm_consent)
+      }
+      setCrmLoaded(true)
     })
     return () => { active = false }
   }, [customer])
@@ -230,6 +250,66 @@ export function ProfilePage() {
             <span className="ml-auto text-brand-muted">→</span>
           </div>
         </Link>
+      </div>
+
+      {/* R73g — วันเกิด & ความยินยอม CRM: กรอกวัน/เดือน รับคำอวยพรในเดือนเกิด
+          (m192/m193 · crm_birthday_scan/crm_winback_scan จะส่งเฉพาะคนที่ยินยอม · ปิดได้ทุกเมื่อ) */}
+      <div className="card mt-6" data-testid="profile-crm">
+        <div className="flex items-center gap-2 mb-1">
+          <span className="text-xl">🎂</span>
+          <h3 className="font-bold text-brand-accent">วันเกิด & ข้อความพิเศษ</h3>
+        </div>
+        <p className="text-sm text-brand-muted mb-4">
+          บอกวันเกิดไว้ แล้ว Bite จะส่งคำอวยพรให้ในเดือนเกิด (ข้อความในแอป) — ระบบจะส่งเฉพาะเมื่อคุณยินยอมเท่านั้น
+        </p>
+        <div className="flex flex-wrap items-end gap-3">
+          <label className="text-sm">
+            <div className="text-brand-muted mb-1">วันเกิด</div>
+            <input
+              type="date"
+              value={bday}
+              max={new Date().toISOString().slice(0, 10)}
+              onChange={(e) => setBday(e.target.value)}
+              className="input"
+              data-testid="crm-birthday-input"
+            />
+          </label>
+          <label className="flex items-center gap-2 text-sm pb-2">
+            <input
+              type="checkbox"
+              checked={crmConsent}
+              onChange={(e) => setCrmConsent(e.target.checked)}
+              data-testid="crm-consent-toggle"
+            />
+            ยินยอมรับข้อความอวยพร/สิทธิพิเศษในเดือนเกิด
+          </label>
+          <button
+            type="button"
+            disabled={crmSaving || !crmLoaded}
+            onClick={() => {
+              void (async () => {
+                const invalid = validateBirthday(bday)
+                if (invalid) {
+                  showToast(invalid, 'error')
+                  return
+                }
+                setCrmSaving(true)
+                const r = await saveMyCrmProfile({ birthday: bday || null, crm_consent: crmConsent })
+                setCrmSaving(false)
+                if (!r.ok) {
+                  showToast(r.error || 'บันทึกไม่สำเร็จ — ลองใหม่อีกครั้ง', 'error')
+                  return
+                }
+                showToast('บันทึกวันเกิดและการตั้งค่าแล้ว 🎂', 'success')
+                if (customer) setCustomer({ ...customer, birthday: bday || null, crm_consent: crmConsent })
+              })()
+            }}
+            className="btn btn-primary btn-sm"
+            data-testid="crm-save"
+          >
+            {crmSaving ? 'กำลังบันทึก…' : 'บันทึก'}
+          </button>
+        </div>
       </div>
 
       {/* P4 — Passkey / WebAuthn

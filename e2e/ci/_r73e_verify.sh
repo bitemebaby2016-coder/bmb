@@ -19,7 +19,7 @@ export PGUSER=postgres PGDATABASE=bmb_contract
 cd /tmp/w || { echo NO_WORKDIR; exit 1; }
 
 echo "===== R73E STAGE 1: apply migrations 190-192 ====="
-for f in 190_bkk_promo_gates_core.sql 191_kitchen_date_bkk.sql 192_crm_automation_and_sales_stats.sql; do
+for f in 190_bkk_promo_gates_core.sql 191_kitchen_date_bkk.sql 192_crm_automation_and_sales_stats.sql 193_customers_crm_consent.sql; do
   psql -X -v ON_ERROR_STOP=1 -f "/tmp/w/supabase/migrations/$f" || { echo "APPLY_FAIL $f"; exit 1; }
   echo "APPLY_OK $f"
 done
@@ -93,10 +93,15 @@ BEGIN;
 INSERT INTO public.customers (id, user_id, full_name, phone) VALUES
   ('crm-t-a', NULL, 'ลูกค้าเก่า', '0800000001'),
   ('crm-t-b', NULL, 'ลูกค้าใหม่', '0800000002');
-UPDATE public.customers SET birthday = (now() AT TIME ZONE 'Asia/Bangkok')::date WHERE id = 'crm-t-a';
+UPDATE public.customers SET birthday = (now() AT TIME ZONE 'Asia/Bangkok')::date, crm_consent = true WHERE id = 'crm-t-a';
+UPDATE public.customers SET crm_consent = true WHERE id = 'crm-t-b';
+-- m193: ลูกค้า C = วันเกิดวันนี้ + เคยสั่งนานแล้ว แต่ "ไม่ยินยอม" = ห้ามได้รับข้อความใด ๆ
+INSERT INTO public.customers (id, user_id, full_name, phone, birthday, crm_consent) VALUES
+  ('crm-t-c', NULL, 'ลูกค้าไม่ยินยอม', '0800000003', (now() AT TIME ZONE 'Asia/Bangkok')::date, false);
 INSERT INTO public.orders (id, order_number, customer_id, customer_name, customer_phone, status, total_amount, created_at) VALUES
   ('crm-o-old', 'CRM-T-OLD', 'crm-t-a', 'ลูกค้าเก่า', '0800000001', 'delivered', 100, now() - interval '60 days'),
-  ('crm-o-new', 'CRM-T-NEW', 'crm-t-b', 'ลูกค้าใหม่', '0800000002', 'delivered', 120, now() - interval '2 days');
+  ('crm-o-new', 'CRM-T-NEW', 'crm-t-b', 'ลูกค้าใหม่', '0800000002', 'delivered', 120, now() - interval '2 days'),
+  ('crm-o-old-c', 'CRM-T-OLD-C', 'crm-t-c', 'ลูกค้าไม่ยินยอม', '0800000003', 'delivered', 90, now() - interval '60 days');
 INSERT INTO public.order_items (id, order_id, product_id, product_name, quantity, unit_price)
 SELECT 'crm-oi-1', 'crm-o-new', p.id, p.name, 2, 45 FROM public.products p LIMIT 1;
 
@@ -119,6 +124,17 @@ BEGIN
   b2 := public.crm_birthday_scan(50);
   IF (b2 ->> 'notified')::int <> 0 THEN RAISE EXCEPTION 'CRM_BIRTHDAY_DEDUP_FAIL: %', b2; END IF;
   RAISE NOTICE 'CRM_BIRTHDAY_OK % / dedupe %', b1, b2;
+
+  -- m193: consent filter — winback ต้องเจอแค่คนยินยอม (crm-t-a · t-c มีออเดอร์เก่าเท่ากัน)
+  IF (w1 ->> 'candidates')::int <> 1 THEN
+    RAISE EXCEPTION 'CRM_WINBACK_CONSENT_FILTER_FAIL candidates=% (ต้องเป็น 1 = เฉพาะคนยินยอม)', (w1 ->> 'candidates');
+  END IF;
+  SELECT count(*) INTO n FROM public.notifications
+   WHERE customer_id = 'crm-t-c' AND notification_type IN ('crm_winback', 'crm_birthday');
+  IF n <> 0 THEN
+    RAISE EXCEPTION 'CRM_CONSENT_FILTER_FAIL: ลูกค้าไม่ยินยอมได้รับข้อความ % ครั้ง', n;
+  END IF;
+  RAISE NOTICE 'CRM_CONSENT_FILTER_OK non-consented customer skipped (winback+birthday)';
 
   s := public.crm_segment_summary(45);
   IF (s ->> 'customers_total') IS NULL OR (s ->> 'customers_total')::int < 2 THEN
