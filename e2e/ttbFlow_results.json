@@ -1,0 +1,42 @@
+{
+  "at": "2026-11-06T05:15:05.253Z",
+  "base": "https://biteme-baby.com",
+  "steps": [
+    {
+      "n": 1,
+      "name": "landing /talk-to-bite renders (greeting + CTA)",
+      "ok": true,
+      "ms": 1892,
+      "detail": "greeting=“ยินดีต้อนรับครับ ผมBiteจากBite Me Baby 🍊 จะให้ช่วยเลือกเมน"
+    },
+    {
+      "n": 2,
+      "name": "quick action เปิดแชท + เมนูทำงาน (ttb-products หรือ fallback ว่าง)",
+      "ok": true,
+      "ms": 1724,
+      "detail": "menu cards visible"
+    },
+    {
+      "n": 3,
+      "name": "help: \"สั่งยังไงครับ\" ตอบตรง (deterministic · ไม่ผ่าน LLM)",
+      "ok": true,
+      "ms": 2262,
+      "detail": "help answer: วิธีสั่งครับ"
+    },
+    {
+      "n": 4,
+      "name": "help: \"ติดตามออเดอร์หน่อย\" ชี้ทาง /track จริง",
+      "ok": true,
+      "ms": 1922,
+      "detail": "help answer mentions /track"
+    },
+    {
+      "n": 5,
+      "name": "help: \"คูปองใช้ยังไง\" ตอบเรื่องโค้ดส่วนลด (ไม่โปรยโปรโมชันปลอม)",
+      "ok": true,
+      "ms": 2506,
+      "detail": "coupon help ok · no fake promo"
+    }
+  ],
+  "pass": true
+}
