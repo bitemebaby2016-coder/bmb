@@ -138,3 +138,11 @@
 | Token (แก้ตามคำทัก Owner 2026-11-06) | คีย์ที่ใช้ทุกวัน **ผ่านครบ** (page token never-expire · `sb_secret_`/`sb_publishable_` · ขนส่ง LINE MAN/Grab/Google Routes ใน `.env`) · ที่ fail จริง 2 ตัว = `SUPABASE_ACCESS_TOKEN` (`sbp_` mgmt PAT · 401 · กระทบเฉพาะ deploy EF) + `META_USER_ACCESS_TOKEN` (Test User · `debug_token` ยืนยันหมดอายุ 2026-10-06) | `e2e/_r74Env2.cjs` · `scripts/metaTokenDebug.mjs` |
 | กติกา no-auto-order | **Owner ตัดสินใจแบบ ก ณ แชทนี้** — สั่งชัดเจนในข้อความเดียว = ยืนยันในตัว · ไม่ชัดเจน = draft เท่านั้น (ยืนยันพฤติกรรมแล้ว) | test pack §R74-OMNI |
 | Gates รอบ R74 | tsc=0 · lint=0 · **vitest 212/212 ไฟล์** · build=0 | `e2e/_r74_gates.log` |
+
+### §7.3 — งานที่โอนไปแชทหน้า (R74-OMNI · คำสั่งปิดเซส "ยกงานทดสอบ live ทั้งหมดไปแชทหน้า")
+
+> **คีย์ที่ถูก "ยกเลิก" (Owner สั่ง · จำไว้):** `META_USER_ACCESS_TOKEN` + `SUPABASE_ACCESS_TOKEN` (`sbp_`) — **ใช้คีย์ที่ใช้ได้เสมอ: `META_PAGE_ACCESS_TOKEN` + `sb_secret_`/`sb_publishable_`**
+
+1. **deploy EF (`channel-webhook` + `social-ai-worker` ตัวแก้) — ค้างอย่างเปิดเผย:** คำสั่ง "deploy ให้ด้วย" ทำไม่สำเร็จ — ลองครบแล้วทุกเส้นทาง (mgmt API/CLI 401 · คีย์โปรเจกต์ management ไม่รับ · ไม่มี login cache · workflows ไม่มี deploy path) — เมื่อมี Management auth ใหม่ → `node e2e\_r74DeployFns.cjs` คำสั่งเดียวจบ → `node e2e\_r74OmniFlow.cjs` ซ้ำ = คาด B2b/B3/B3b เขียว
+2. **Meta Test User live chat (OMNI-5) ด้วย `META_PAGE_ACCESS_TOKEN`** (คีย์ที่ใช้ได้ · Owner ยืนยันทดสอบได้)
+3. **Owner ทดสอบ live ทั้งหมด** ตาม test pack §R73h/§R74-OMNI/§RG → จดหลักฐาน (anti-gaming)

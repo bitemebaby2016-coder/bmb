@@ -1056,10 +1056,12 @@ SELECT public.set_user_role('<UUID-AUDITOR>'::uuid,   'auditor');
 3. **Token (แก้ความเข้าใจผิด 2026-11-06 ค่ำ · ตามคำทัก Owner "ใช้ทุกวัน ดูดี ๆ ที่ env local"):** ของที่ระบบใช้ทุกวัน **ไม่มีอะไรหมดอายุ** — `META_PAGE_ACCESS_TOKEN` = long-lived page token `expires_at=never` (`scripts/metaTokenDebug.mjs` · `is_valid=true` · pages_messaging ครบ) · `sb_publishable_`/`sb_secret_` = 200 ปกติ · ขนส่ง LINE MAN/Grab/Google Routes มีใน `.env` · **ที่ fail จริง 2 ตัวเป็นคนละตัวที่ไม่ได้ใช้ประจำวัน**: `META_USER_ACCESS_TOKEN` = Test User token (Meta `debug_token`: หมดอายุ **2026-10-06T05:00Z** · "user logged out" 190/467) และ `SUPABASE_ACCESS_TOKEN` (`sbp_` Management PAT) = 401 "Invalid access token" — ไม่มีโค้ดใน repo ใช้ทั้งคู่ · **impact จริงแค่: deploy EF ผ่าน Management API + บททดสอบ live chat กับ Meta Test User** (กระทบ 0 กับ production/งานประจำวัน)
 4. **draft cart link (`/shop?cart=`) ทำงานจริง** (B2b ผ่านบางรอบบน prompt เก่า) แต่ LLM บน prompt เก่าไม่เสถียร (บางรอบจับ "ไข่ดาว" เป็นเมนูจน draft หาย) — prompt ใหม่แก้แล้ว (harness 7/7)
 
-#### งานที่เหลือปิด §R74-OMNI (นอกเหนือ Owner ทดสอบ live)
+#### งานที่โอนไปแชทหน้า (คำสั่งปิดเซส 2026-11-06 ค่ำ: "ยกงานทดสอบ live ทั้งหมดไปแชทหน้า")
 
-1. **deploy EF (จุดเดียวที่ยังติด mgmt auth):** `SUPABASE_ACCESS_TOKEN` (`sbp_` PAT ใน `.env.local`) ใช้ไม่ได้จริง (401 — ไม่กระทบงานประจำวัน เพราะระบบใช้ `sb_secret_`/`sb_publishable_`) — ต้องใช้ Management auth ที่ทำงานได้ (PAT ใหม่ หรือ deploy ผ่าน Supabase dashboard/CLI) แล้วรัน `node e2e\_r74DeployFns.cjs` → `node e2e\_r74OmniFlow.cjs` ซ้ำ = คาด B2b/B3/B3b เขียว (โค้ด+unit+harness ผ่านแล้ว)
-2. **Meta Test User live chat (OMNI-5):** user token หมดอายุจริง (Meta `debug_token` ยืนยัน · "user logged out" 2026-10-06) — Test User login ใหม่แล้วทดสอบต่อ · **ไม่กระทบช่องทางจริง** (ระบบใช้ `META_PAGE_ACCESS_TOKEN` ที่ never-expire)
-3. **LINE/ขนส่ง = ไม่ใช่งานค้าง** (แก้ตามคำทัก Owner): **LINE MAN + Grab + Google Routes มีใน `.env`** ต่อกับ `src/lib/providers/*` ใช้ได้เลย — ส่วนที่ยังไม่มีคือ **LINE Messaging API (ช่องทางแชท LINE OA)** ถ้าจะเปิดช่องทางนี้ค่อยขอ key (นอกเหนือขอบเขตปัจจุบัน)
+> **คีย์ที่ถูก "ยกเลิก" (Owner สั่ง ณ แชทนี้ · จำไว้ · ห้ามใช้ซ้ำ):** `META_USER_ACCESS_TOKEN` (Test User · หมดอายุ 2026-10-06) + `SUPABASE_ACCESS_TOKEN` (`sbp_` mgmt PAT) — **ใช้คีย์ที่ใช้ได้เสมอ: `META_PAGE_ACCESS_TOKEN` + `sb_secret_`/`sb_publishable_`**
+
+1. **deploy EF (`channel-webhook` + `social-ai-worker` ตัวแก้) — ค้างอย่างเปิดเผย** (คำสั่ง "deploy ให้ด้วย" ทำไม่สำเร็จ): ลองครบแล้วทุกเส้นทาง (mgmt API/CLI 401 "Invalid access token" · คีย์โปรเจกต์ management ไม่รับ "JWT could not be decoded" · ไม่มี CLI login cache · workflows ไม่มี deploy path · ไม่มี EF รับ deploy) — เมื่อมี Management auth ใหม่ (PAT ใหม่ / `supabase login` / dashboard) → `node e2e\_r74DeployFns.cjs` คำสั่งเดียวจบ → `node e2e\_r74OmniFlow.cjs` ซ้ำ = คาด B2b/B3/B3b เขียว (โค้ด+unit+harness ผ่านแล้ว)
+2. **Meta Test User live chat (OMNI-5): ใช้ `META_PAGE_ACCESS_TOKEN` (คีย์ที่ใช้ได้ · Owner ยืนยันว่า live chat ทดสอบได้)** — คีย์ `META_USER_ACCESS_TOKEN` ยกเลิกแล้ว ห้ามใช้
+3. **Owner ทดสอบ live ทั้งหมด** ตาม §R73h/§R74-OMNI/§RG → จดหลักฐานลง test pack (anti-gaming) · LINE/ขนส่ง = มีใน `.env` แล้ว (LINE MAN + Grab + Google Routes · `src/lib/providers/*`)
 
 
