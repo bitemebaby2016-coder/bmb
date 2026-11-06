@@ -18,16 +18,17 @@ if [ $base_rc -ne 0 ]; then echo "R73E_BASE_FAIL rc=$base_rc"; exit 1; fi
 export PGUSER=postgres PGDATABASE=bmb_contract
 cd /tmp/w || { echo NO_WORKDIR; exit 1; }
 
-echo "===== R73E STAGE 1: apply migration 190 ====="
-psql -X -v ON_ERROR_STOP=1 -f /tmp/w/supabase/migrations/190_bkk_promo_gates_core.sql || { echo APPLY190_FAIL; exit 1; }
-echo "APPLY190_OK"
+echo "===== R73E STAGE 1: apply migrations 190-192 ====="
+for f in 190_bkk_promo_gates_core.sql 191_kitchen_date_bkk.sql 192_crm_automation_and_sales_stats.sql; do
+  psql -X -v ON_ERROR_STOP=1 -f "/tmp/w/supabase/migrations/$f" || { echo "APPLY_FAIL $f"; exit 1; }
+  echo "APPLY_OK $f"
+done
 
-echo "===== R73E STAGE 2: prosrc audit — public fns still using CURRENT_DATE ====="
-psql -X -Atc "SELECT proname FROM pg_proc WHERE prosrc ILIKE '%CURRENT_DATE%' AND pronamespace = 'public'::regnamespace ORDER BY 1"
-echo "(expected residue = kitchen display fns only: create_production_batch/get_kitchen_summary/kitchen_queue — report-only scope)"
-bad=$(psql -X -Atc "SELECT count(*) FROM pg_proc WHERE prosrc ILIKE '%CURRENT_DATE%' AND pronamespace = 'public'::regnamespace AND proname IN ('create_order_with_items','create_order_with_items_i','create_order_with_items_core','create_pre_order_with_items','create_pickup_order_i','promotion_apply_rules')")
-if [ "$bad" != "0" ]; then echo "PROSRC_AUDIT_FAIL order/promo fns=$bad"; exit 1; fi
-echo "PROSRC_AUDIT_OK order_promo_utc=0"
+echo "===== R73E STAGE 2: UTC date class audit (pg_get_functiondef · body + defaults · whole public schema) ====="
+psql -X -Atc "SELECT proname FROM pg_proc WHERE pronamespace = 'public'::regnamespace AND pg_get_functiondef(oid) ILIKE '%CURRENT_DATE%' ORDER BY 1"
+bad=$(psql -X -Atc "SELECT count(*) FROM pg_proc WHERE pronamespace = 'public'::regnamespace AND pg_get_functiondef(oid) ILIKE '%CURRENT_DATE%'")
+if [ "$bad" != "0" ]; then echo "PROSRC_AUDIT_FAIL utc_residue=$bad"; exit 1; fi
+echo "PROSRC_AUDIT_OK utc_class_residue=0 (body + arg defaults · pg_get_functiondef)"
 else
 export PGUSER=postgres PGDATABASE=bmb_contract
 cd /tmp/w || { echo NO_WORKDIR; exit 1; }
@@ -84,6 +85,69 @@ SQL
 rc=$?
 if [ $rc -ne 0 ]; then echo "NIGHTSIM_FAIL rc=$rc"; exit 1; fi
 echo "NIGHTSIM_OK"
+
+echo "===== R73E STAGE 3.5: CRM automation behavioral (winback/birthday/segments/sales stats) ====="
+psql -X -v ON_ERROR_STOP=1 <<SQL
+BEGIN;
+-- fixtures (rollback ภายหลัง): ลูกค้า A = เคยสั่งนานมาแล้ว + วันนี้วันเกิด · ลูกค้า B = เพิ่งสั่ง
+INSERT INTO public.customers (id, user_id, full_name, phone) VALUES
+  ('crm-t-a', NULL, 'ลูกค้าเก่า', '0800000001'),
+  ('crm-t-b', NULL, 'ลูกค้าใหม่', '0800000002');
+UPDATE public.customers SET birthday = (now() AT TIME ZONE 'Asia/Bangkok')::date WHERE id = 'crm-t-a';
+INSERT INTO public.orders (id, order_number, customer_id, customer_name, customer_phone, status, total_amount, created_at) VALUES
+  ('crm-o-old', 'CRM-T-OLD', 'crm-t-a', 'ลูกค้าเก่า', '0800000001', 'delivered', 100, now() - interval '60 days'),
+  ('crm-o-new', 'CRM-T-NEW', 'crm-t-b', 'ลูกค้าใหม่', '0800000002', 'delivered', 120, now() - interval '2 days');
+INSERT INTO public.order_items (id, order_id, product_id, product_name, quantity, unit_price)
+SELECT 'crm-oi-1', 'crm-o-new', p.id, p.name, 2, 45 FROM public.products p LIMIT 1;
+
+DO \$\$
+DECLARE
+  w1 jsonb; w2 jsonb; b1 jsonb; b2 jsonb; s jsonb; k jsonb; n integer; ms integer;
+BEGIN
+  w1 := public.crm_winback_scan(45, 50);
+  IF NOT (w1 ->> 'ok')::boolean OR (w1 ->> 'candidates')::int < 1 OR (w1 ->> 'notified')::int < 1 THEN
+    RAISE EXCEPTION 'CRM_WINBACK_FAIL first run: %', w1;
+  END IF;
+  w2 := public.crm_winback_scan(45, 50);
+  IF (w2 ->> 'notified')::int <> 0 OR (w2 ->> 'deduped')::int < 1 THEN
+    RAISE EXCEPTION 'CRM_WINBACK_DEDUP_FAIL second run: %', w2;
+  END IF;
+  RAISE NOTICE 'CRM_WINBACK_OK % / dedupe %', w1, w2;
+
+  b1 := public.crm_birthday_scan(50);
+  IF (b1 ->> 'notified')::int < 1 THEN RAISE EXCEPTION 'CRM_BIRTHDAY_FAIL first run: %', b1; END IF;
+  b2 := public.crm_birthday_scan(50);
+  IF (b2 ->> 'notified')::int <> 0 THEN RAISE EXCEPTION 'CRM_BIRTHDAY_DEDUP_FAIL: %', b2; END IF;
+  RAISE NOTICE 'CRM_BIRTHDAY_OK % / dedupe %', b1, b2;
+
+  s := public.crm_segment_summary(45);
+  IF (s ->> 'customers_total') IS NULL OR (s ->> 'customers_total')::int < 2 THEN
+    RAISE EXCEPTION 'CRM_SEGMENTS_FAIL: %', s;
+  END IF;
+  RAISE NOTICE 'CRM_SEGMENTS_OK %', s;
+
+  SELECT count(*) INTO ms FROM public.menu_sales_stats(30);
+  IF ms < 1 THEN RAISE EXCEPTION 'MENU_SALES_STATS_FAIL rows=%', ms; END IF;
+  RAISE NOTICE 'MENU_SALES_STATS_OK products_with_sales=%', ms;
+
+  SELECT count(*) INTO n FROM public.notifications WHERE notification_type IN ('crm_winback','crm_birthday') AND category = 'Marketing';
+  IF n < 2 THEN RAISE EXCEPTION 'CRM_NOTIFY_ROWS_FAIL n=%', n; END IF;
+
+  -- kill-switch: business_settings ปิด = scan ข้าม
+  DELETE FROM public.business_settings WHERE key = 'crm_automation';
+  INSERT INTO public.business_settings (key, value) VALUES ('crm_automation', '{"enabled": false}'::jsonb);
+  k := public.crm_winback_scan(45, 50);
+  IF (k ->> 'skipped') IS DISTINCT FROM 'disabled_by_settings' THEN
+    RAISE EXCEPTION 'CRM_KILLSWITCH_FAIL: %', k;
+  END IF;
+  RAISE NOTICE 'CRM_KILLSWITCH_OK %', k;
+END
+\$\$;
+ROLLBACK;
+SQL
+rc=$?
+if [ $rc -ne 0 ]; then echo "CRM_SIM_FAIL rc=$rc"; exit 1; fi
+echo "CRM_SIM_OK"
 
 echo "===== R73E STAGE 4: contract 190 (BKK date gates guard) ====="
 psql -X -v ON_ERROR_STOP=1 -f e2e/contracts_190_bkk_date_gates.sql || { echo CONTRACT190_FAIL; exit 1; }
