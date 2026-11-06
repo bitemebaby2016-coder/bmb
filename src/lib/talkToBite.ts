@@ -131,6 +131,40 @@ export function pickTopAvailable(products: Product[], count = 3): Product[] {
 }
 
 // ---------------------------------------------------------------------------
+// Real-based trend ranking (audit gap: "Recommendation → เพิ่ม real-based
+// ('คนซื้ออะไรช่วงนี้') จากออเดอร์จริง") — เรียงตามจำนวนขายจาก menu_sales_stats
+// (m192 · orders จริง · ไม่มี PII/ไม่มียอดเงิน) · tie-break = featured → ชื่อ
+// (pattern เดิม) · ไม่มีข้อมูลขาย = fallback pickTopAvailable (ไม่ปลอมข้อมูล)
+// ---------------------------------------------------------------------------
+export interface SalesStat {
+  product_id: string
+  sold_count: number
+}
+
+export function pickTrendingProducts(
+  products: Product[],
+  sales: SalesStat[] | null | undefined,
+  count = 3,
+): Product[] {
+  if (!Array.isArray(sales) || sales.length === 0) return pickTopAvailable(products, count)
+  const soldBy = new Map<string, number>()
+  for (const s of sales) {
+    if (!s || !s.product_id) continue
+    soldBy.set(String(s.product_id), (soldBy.get(String(s.product_id)) || 0) + (Number(s.sold_count) || 0))
+  }
+  const sellable = (products || []).filter(
+    (p) => p.is_available && !p.archived && deriveOrderMode(p) !== null,
+  )
+  const ranked = [...sellable].sort((a, b) => {
+    const d = (soldBy.get(b.id) || 0) - (soldBy.get(a.id) || 0)
+    if (d !== 0) return d
+    if (!!a.is_featured !== !!b.is_featured) return a.is_featured ? -1 : 1
+    return a.name.localeCompare(b.name, 'th')
+  })
+  return ranked.slice(0, Math.max(0, count))
+}
+
+// ---------------------------------------------------------------------------
 // Order-again draft — translate a REAL past order into a cart draft using the
 // CURRENT catalog (price + availability authority). No fabricated items.
 // ---------------------------------------------------------------------------
@@ -331,6 +365,65 @@ export function attachCustomizersToDraft(
   }
   const note = notes.join('、')
   return draft.map((d) => (d === target ? { ...d, customizations: cfg, note: note || d.note } : d))
+}
+
+// ---------------------------------------------------------------------------
+// Contextual in-app help (audit gap: "User Guide & Onboarding → contextual help")
+// deterministic · ตอบจากเนื้อหาคู่มือ/หน้าเว็บจริงเท่านั้น (ไม่เดา) · ทำงานออฟไลน์
+// ก่อน LLM เสมอ (ไม่ต้องรอ network) · คำถามนอกตาราง = ผ่านไปให้ LLM ตามเดิม
+// ---------------------------------------------------------------------------
+export interface HelpTopic {
+  /** คำสำคัญ (ไทย) ที่ใช้จับคำถาม — ตรงคำเดียวก็พอ */
+  keys: string[]
+  title: string
+  answer: string
+}
+
+export const HELP_TOPICS: HelpTopic[] = [
+  {
+    keys: ['สั่งยังไง', 'วิธีสั่ง', 'สั่งอาหารยังไง', 'สั่งซื้อยังไง'],
+    title: 'วิธีสั่งอาหาร',
+    answer:
+      'วิธีสั่งครับ: ① กด "เมนูทั้งหมด" หรือพิมพ์ชื่อเมนูที่อยากได้ ② กดปุ่ม 🛒 บนเมนูเพื่อเพิ่มลงตะกร้า ③ เปิดตะกร้า ตรวจรายการ แล้วกดยืนยัน ④ เลือกรับเองที่ร้าน/จัดส่ง แล้วชำระตามวิธีที่แสดงครับ 🍊',
+  },
+  {
+    keys: ['ติดตามออเดอร์', 'เช็กสถานะ', 'ออเดอร์ถึงไหน', 'ตามออเดอร์'],
+    title: 'ติดตามออเดอร์',
+    answer:
+      'ติดตามได้ 2 ทางครับ: ① พิมพ์เลขออเดอร์ (เช่น BMB-20261106-123) ในแชทนี้ ② เปิดหน้าติดตามออเดอร์ (/track) แล้วใส่เลขกับเบอร์โทรครับ',
+  },
+  {
+    keys: ['คูปอง', 'ส่วนลด', 'โค้ดส่วนลด'],
+    title: 'คูปอง/ส่วนลด',
+    answer:
+      'ใส่โค้ดส่วนลดในช่อง "โค้ดส่วนลด" ตอนอยู่ที่ตะกร้าก่อนยืนยันออเดอร์ครับ ถ้าโค้ดหมดอายุหรือยังไม่ถึงวัน ระบบจะแจ้งสถานะให้ทราบตรง ๆ ครับ 🏷️',
+  },
+  {
+    keys: ['แต้ม', 'สมาชิก', 'สะสมแต้ม'],
+    title: 'แต้มสมาชิก',
+    answer: 'แต้มสะสมจะเพิ่มจากออเดอร์ที่สำเร็จครับ ดูแต้มและประวัติได้ที่หน้าบัญชีของคุณครับ ⭐',
+  },
+  {
+    keys: ['เพิ่มสินค้า', 'สินค้าใหม่', 'แก้เมนู'],
+    title: 'เพิ่ม/แก้เมนู (แอดมิน)',
+    answer:
+      'สำหรับแอดมิน: เปิดแถบแอดมิน (/admin) → หน้าจัดการเมนู → เพิ่มหรือแก้ไขสินค้าแล้วกดบันทึก เมนูจะขึ้นหน้าเว็บตามเวลาที่ตั้งไว้ครับ',
+  },
+  {
+    keys: ['สต็อก', 'วัตถุดิบ', 'ของใกล้หมด'],
+    title: 'สต็อก/วัตถุดิบ',
+    answer:
+      'ดูสต็อกและวัตถุดิบได้ที่หน้าคลังในแถบแอดมิน (/admin) ครับ ระบบหักสต๊อกอัตโนมัติเมื่อยืนยันออเดอร์ และมีแจ้งเตือนเมื่อของใกล้หมดครับ 📦',
+  },
+]
+
+export function matchHelpTopic(text: string): HelpTopic | null {
+  const t = String(text || '').toLowerCase()
+  if (!t) return null
+  for (const topic of HELP_TOPICS) {
+    if (topic.keys.some((k) => t.includes(k.toLowerCase()))) return topic
+  }
+  return null
 }
 
 // ---------------------------------------------------------------------------

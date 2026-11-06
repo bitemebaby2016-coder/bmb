@@ -56,8 +56,10 @@ import {
   chatStatusLabel,
   getGreetingIndex,
   parseOrderIntent,
+  matchHelpTopic,
   pickFavoriteProducts,
   pickTopAvailable,
+  pickTrendingProducts,
   resolveOrderAgainFromOrder,
   type Customizer,
   type DraftLine,
@@ -270,18 +272,21 @@ export function TalkToBite({ mode = 'overlay', initialPhase = 'landing', landing
     }
   }
 
-  // 🔥 เมนูขายดีวันนี้ — real featured/available picks (proxy for best sellers)
+  // 🔥 เมนูขายดีช่วงนี้ — real sales ranking (m192 menu_sales_stats จากออเดอร์จริง)
+  //    ถ้า RPC ยังไม่พร้อม/พัง = fallback featured picks แบบเดิม (ไม่ปลอมข้อมูล)
   async function handleBestSellers() {
     setBiteState('RECOMMENDING')
-    pushAssistant('ขายดีวันนี้จากของจริงครับ Bite เอามาให้เลย 🔥')
     setTyping(true)
     try {
-      const { getProducts: load } = await import('@/lib/bmbAdminApi_products')
-      const products = pickTopAvailable(await withDeadline(load()), 3)
+      const { getProducts: load, getMenuSalesStats } = await import('@/lib/bmbAdminApi_products')
+      const [catalog, sales] = await withDeadline(Promise.all([load(), getMenuSalesStats(30)]))
+      const real = (sales || []).length > 0
+      const products = real ? pickTrendingProducts(catalog, sales, 3) : pickTopAvailable(catalog, 3)
+      pushAssistant(real ? 'ขายดีช่วงนี้จากออเดอร์จริงครับ Bite เอามาให้เลย 🔥' : 'ขายดีวันนี้จากของจริงครับ Bite เอามาให้เลย 🔥')
       if (products.length === 0) {
         pushAssistant('วันนี้ยังไม่มีเมนูขายได้ครับ เดี๋ยวแวะมาอีกทีนะครับ 🙏')
       } else {
-        push({ kind: 'products', id: nextId(), intro: 'เมนูขายดีวันนี้ รีบจองกันก่อนหมด:', products })
+        push({ kind: 'products', id: nextId(), intro: real ? 'เมนูที่คนสั่งเยอะช่วงนี้ครับ:' : 'เมนูขายดีวันนี้ รีบจองกันก่อนหมด:', products })
       }
       setBiteState('IDLE')
     } catch {
@@ -525,6 +530,13 @@ export function TalkToBite({ mode = 'overlay', initialPhase = 'landing', landing
       // NL order intent first ("เอาของเมื่อวาน แต่เปลี่ยนน้ำเป็นชาเขียว") — if handled,
       // we stay in Talk to Bite and show a real order-again/modified draft.
       if (await tryOrderIntent(text)) return
+      // R73g: contextual help (deterministic · จากเนื้อหาคู่มือ/หน้าเว็บจริง) — ตอบตรง ไม่ต้องรอ LLM
+      const help = matchHelpTopic(text)
+      if (help) {
+        pushAssistant(help.answer)
+        setBiteState('IDLE')
+        return
+      }
       // Context pipe — the Floating Bite / page context stored by openChat()
       // rides along as runtimeContext (existing aiService parameter, no new engine).
       const uiContext = useBiteAIStore.getState().fullContext

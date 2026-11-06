@@ -120,6 +120,26 @@ export async function getFeaturedProducts(): Promise<Product[]> {
   return (data || []) as Product[]
 }
 
+export interface MenuSalesStat {
+  product_id: string
+  sold_count: number
+}
+
+// R73g: ยอดขายจริงต่อสินค้า (m192 menu_sales_stats · หน้าต่าง N วัน · ไม่มี PII/ไม่มียอดเงิน)
+// คืน [] เมื่อ RPC ไม่พร้อม/มีปัญหา = caller fallback ไป heuristic เดิม (ไม่ปลอมข้อมูล)
+export async function getMenuSalesStats(days = 30): Promise<MenuSalesStat[]> {
+  try {
+    const { data, error } = await supabase.rpc('menu_sales_stats', { p_days: days })
+    if (error || !Array.isArray(data)) return []
+    return data.map((r: { product_id?: string; sold_count?: number }) => ({
+      product_id: String(r?.product_id ?? ''),
+      sold_count: Number(r?.sold_count) || 0,
+    }))
+  } catch {
+    return []
+  }
+}
+
 export async function createProduct(data: ProductForm): Promise<Product | null> {
   const productData = {
     // Unique even for rapid consecutive creations (Date.now() alone can

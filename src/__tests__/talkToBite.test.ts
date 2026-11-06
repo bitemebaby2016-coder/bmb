@@ -17,9 +17,11 @@ import {
   extractCustomizers,
   getGreetingIndex,
   isBiteState,
+  matchHelpTopic,
   parseOrderIntent,
   pickFavoriteProducts,
   pickTopAvailable,
+  pickTrendingProducts,
   resolveOrderAgainFromOrder,
   sumDraftTotal,
 } from '@/lib/talkToBite'
@@ -393,5 +395,56 @@ describe('R73f — order-again carries the real customizations/notes of past lin
     const out = attachCustomizersToDraft(res.draft, [{ key: 'spicy', value: 'Hot', note: 'เผ็ด' }], 'p1')
     expect(out[0].customizations).toEqual({ extra_egg: true, spicy: 'Hot' })
     expect(out[0].note).toBe('ของเดิม、เผ็ด')
+  })
+})
+
+describe('R73g — pickTrendingProducts (real sales ranking) + matchHelpTopic (contextual help)', () => {
+  const catalog = [
+    product('t1', 'ส้มตำ', 45, { is_featured: true }),
+    product('t2', 'ไก่ทอด', 60),
+    product('t3', 'ข้าวเหนียว', 15),
+    product('t4', 'ของหมด', 20, { is_available: false }),
+  ]
+
+  it('ranks by real sold counts from menu_sales_stats', () => {
+    const out = pickTrendingProducts(
+      catalog,
+      [
+        { product_id: 't2', sold_count: 9 },
+        { product_id: 't3', sold_count: 3 },
+      ],
+      3,
+    )
+    expect(out.map((p) => p.id)).toEqual(['t2', 't3', 't1'])
+  })
+
+  it('falls back to pickTopAvailable when no sales data (never fabricates)', () => {
+    const out = pickTrendingProducts(catalog, [], 3)
+    expect(out.map((p) => p.id).sort()).toEqual(['t1', 't2', 't3'])
+    expect(pickTrendingProducts(catalog, null, 2)).toHaveLength(2)
+  })
+
+  it('tie-break = featured first (zero-sales items still eligible)', () => {
+    const out = pickTrendingProducts(catalog, [{ product_id: 'zzz', sold_count: 1 }], 3)
+    expect(out[0]?.id).toBe('t1')
+  })
+
+  it('never ranks unavailable/archived items even with sales', () => {
+    const out = pickTrendingProducts(catalog, [{ product_id: 't4', sold_count: 99 }], 5)
+    expect(out.some((p) => p.id === 't4')).toBe(false)
+  })
+
+  it('matchHelpTopic answers real how-to questions and ignores the rest', () => {
+    expect(matchHelpTopic('สั่งยังไงครับ')?.title).toBe('วิธีสั่งอาหาร')
+    expect(matchHelpTopic('คูปองใช้ยังไง')?.title).toBe('คูปอง/ส่วนลด')
+    expect(matchHelpTopic('ติดตามออเดอร์หน่อย')?.title).toBe('ติดตามออเดอร์')
+    expect(matchHelpTopic('วันนี้อากาศดีเนอะ')).toBeNull()
+    expect(matchHelpTopic('')).toBeNull()
+  })
+
+  it('help answers stay factual (no fake promos/discounts)', () => {
+    const t = matchHelpTopic('ส่วนลดมีอะไรบ้าง')
+    expect(t?.answer).toContain('โค้ดส่วนลด')
+    expect(t?.answer).not.toMatch(/ฟรี|ลด\s*\d+%/)
   })
 })
