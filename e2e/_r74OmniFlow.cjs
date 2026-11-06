@@ -53,7 +53,7 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
 // Management API read-only query (order_submissions ถูก REVOKE ทุก role — ต้องใช้ช่องนี้)
 const MGMT_TOKENS = []
 for (const l of fs.readFileSync(path.join(process.cwd(), '.env.local'), 'utf8').split(/\r?\n/)) {
-  const m = l.match(/^\s*(SUPABASE_ACCESS_TOKEN)\s*=\s*(.*)\s*$/)
+  const m = l.match(/^\s*(bmb_PAT_SUPABASE_ACCESS_TOKEN|SUPABASE_ACCESS_TOKEN)\s*=\s*(.*)\s*$/)
   if (m && !l.trim().startsWith('#') && m[2]) MGMT_TOKENS.push(m[2])
 }
 async function mgmtQ(sql) {

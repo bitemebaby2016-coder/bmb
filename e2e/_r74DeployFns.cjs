@@ -6,11 +6,11 @@ const path = require('path')
 const { spawnSync } = require('child_process')
 const ROOT = path.resolve(__dirname, '..')
 // handoff rule 10: .env.local มีหลาย SUPABASE_ACCESS_TOKEN — ใช้แถวล่าสุดก่อน (reverse)
-const TOKENS = [...fs.readFileSync(path.join(ROOT, '.env.local'), 'utf8')
-  .split(/\r?\n/)
-  .map((l) => l.match(/^SUPABASE_ACCESS_TOKEN=(.*)$/))
-  .filter(Boolean)
-  .map((m) => m[1].trim())].reverse()
+// R74-OMNI s2 (Owner 2026-11-06 ดึก): คีย์ใหม่ = PAT ชื่อในแดชบอร์ด "bmb_PAT_SUPABASE_ACCESS_TOKEN"
+//   รองรับทั้งแถว bmb_PAT_SUPABASE_ACCESS_TOKEN= และ SUPABASE_ACCESS_TOKEN= (ค่าถูกแทนที่ด้วย PAT ใหม่แล้ว — ค่า sbp_ เดิมที่ยกเลิกไม่อยู่ในไฟล์แล้ว)
+const ENV_LINES = fs.readFileSync(path.join(ROOT, '.env.local'), 'utf8').split(/\r?\n/)
+const pick = (name) => [...ENV_LINES.map((l) => l.match(new RegExp('^' + name + '=(.*)$'))).filter(Boolean).map((m) => m[1].trim())].reverse()
+const TOKENS = [...pick('bmb_PAT_SUPABASE_ACCESS_TOKEN'), ...pick('SUPABASE_ACCESS_TOKEN')]
 if (TOKENS.length === 0) { console.log('NO_SUPABASE_ACCESS_TOKEN'); process.exit(1) }
 for (const NAME of (process.argv[2] ? [process.argv[2]] : ['channel-webhook', 'social-ai-worker'])) {
   let deployed = false
