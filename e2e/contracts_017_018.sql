@@ -48,6 +48,20 @@ BEGIN
    WHERE status IN ('active','open','scheduled') AND current_count < max_capacity
      AND scheduled_date > CURRENT_DATE   -- W-2: ต้องเป็นรอบอนาคต (gate 141/142/143 = scheduled_date >= วันนี้ + cutoff)
    ORDER BY scheduled_date ASC, id ASC LIMIT 1;
+  IF NOT FOUND THEN
+    -- R73b (2026-11-06 · CI แดง 00:18 ICT — evidence e2e/_r73_ci_ann.json): time bomb วันที่
+    --   คลาส R68 ที่เหลืออยู่อีกท่อ — seed 095 สร้างรอบพรุ่งนี้ด้วย v_date = CURRENT_DATE + 1 ใน
+    --   session TZ = UTC ของ CI → รันช่วง 00:00–07:00 ICT (17:00–24:00 UTC) = วัน BKK ล้ำหน้า
+    --   วัน UTC 1 วัน → "รอบพรุ่งนี้ UTC" = "วันนี้ BKK" = ไม่ผ่าน > CURRENT_DATE (BKK) → SKIP
+    --   ทั้งที่ระบบจริงปกติ (gate 025: p_scheduled_date <= v_today(BKK) + lead_days 1 = ต้องอนาคต)
+    --   → แก้ = เติม fixture รอบ "พรุ่งนี้ BKK" ด้วย ensure_rounds_for_date ของระบบเองใน txn นี้
+    --   (ROLLBACK ท้ายไฟล์) — ทุกเวลาที่รันได้ fixture ผ่าน gate เดียวกัน — assertion คงเดิม 100%
+    PERFORM public.ensure_rounds_for_date((now() AT TIME ZONE 'Asia/Bangkok')::date + 1);
+    SELECT * INTO v_round FROM public.delivery_rounds
+     WHERE status IN ('active','open','scheduled') AND current_count < max_capacity
+       AND scheduled_date > CURRENT_DATE
+     ORDER BY scheduled_date ASC, id ASC LIMIT 1;
+  END IF;
   IF NOT FOUND THEN RAISE EXCEPTION 'SKIP no future open round with capacity'; END IF;
 
   -- W-2 (B-2): fixture เมนูปฏิทินของรอบนั้น — gate ของ 142/153 กำหนดว่า PRE_ORDER

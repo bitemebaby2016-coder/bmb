@@ -1,0 +1,6 @@
+R73b: ซ่อม CI Contract Tests (1/7 = 017/018) — time bomb รอบ seed UTC vs วัน BKK + fixture พรุ่งนี้ BKK + verify night-state 7/7
+
+- root cause (annotation จริง e2e/_r73_ci_ann.json): contracts_017_018.sql:106 SKIP no future open round with capacity — 095 seed รอบพรุ่งนี้ด้วย v_date = CURRENT_DATE + 1 (session TZ = UTC) แต่สัญญาเทียบ scheduled_date > CURRENT_DATE (TZ = BKK หลัง R68) → รันช่วง 00:00–07:00 ICT = วัน BKK ล้ำวัน UTC 1 วัน = ไม่มีรอบอนาคตให้เลือก (R73 push 00:18 น. = ในหน้าต่างระเบิด) — ระบบจริงปกติ (gate 025 = ต้องอนาคต + lead_days 1)
+- fix: contracts_017_018.sql fallback PERFORM public.ensure_rounds_for_date((now() AT TIME ZONE 'Asia/Bangkok')::date + 1) ใน txn ที่ ROLLBACK อยู่แล้ว — assertion คงเดิม 100% · ไม่แตะ migration history/โค้ดผลิตภัณฑ์
+- verify (Docker postgres:16 replay เลียนแบบ CI · e2e/_r73_verify_progress.log): repro error จริง EXIT=3 (future_rounds=0) · แก้แล้ว PASS ทั้ง night (EXIT=0) และ normal (EXIT=0) · legacy batch 7/7 = R73_VERIFY_ALL_GREEN
+- docs: AI_WORK_STATE (บล็อก R73b) · MASTER_STATUS (R73b) — รอ probe CI 1 ครั้ง + Owner เทสต์ §R73 บน live
