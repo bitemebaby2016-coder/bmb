@@ -135,6 +135,6 @@
 | NL parse→draft→ยืนยัน (OMNI-3) | **ผ่าน 2 ชั้น** — live EF: no-auto-order ครบทุกเคส (B1/B2/B4) + NL harness (LLM จริง+prompt ใหม่) **7/7** · "ยืนยัน→ออเดอร์จริง" บน EF เก่า = ยังไม่ผ่าน (โค้ดแก้แล้ว/unit+harness ผ่าน · รอ deploy) | `_r74_nl_parse.json` |
 | parse dictionary (OMNI-4) | **ปรับจากข้อความจริงแล้ว** — item.note (ออปชันไม่เป็นเมนู) + qty ภาษาพูด + "เมนูนี้" + ยืนยันตามหลังสนทนา + note→`customizations.notice` | tests 79/79 |
 | Production bug ที่เจอ (ใหม่) | **ออเดอร์ social ไม่มี GPS โดน 5KM gate ทุกใบ (fallback พิกัดเก่า)** → แก้ `resolveKitchenPoint()` (ค่าจาก `business_settings.kitchen_location`) — verify แล้ว A6/unit/harness | flow json + tests |
-| Token ที่ตาย (ใหม่ 2 ตัว) | `SUPABASE_ACCESS_TOKEN` (mgmt PAT · deploy EF ไม่ได้) + `META_USER_ACCESS_TOKEN` (Test User หมดอายุ 2026-10-06) — **Owner ออกใหม่** | `e2e/_r74_omni_env.json` |
+| Token (แก้ตามคำทัก Owner 2026-11-06) | คีย์ที่ใช้ทุกวัน **ผ่านครบ** (page token never-expire · `sb_secret_`/`sb_publishable_` · ขนส่ง LINE MAN/Grab/Google Routes ใน `.env`) · ที่ fail จริง 2 ตัว = `SUPABASE_ACCESS_TOKEN` (`sbp_` mgmt PAT · 401 · กระทบเฉพาะ deploy EF) + `META_USER_ACCESS_TOKEN` (Test User · `debug_token` ยืนยันหมดอายุ 2026-10-06) | `e2e/_r74Env2.cjs` · `scripts/metaTokenDebug.mjs` |
 | กติกา no-auto-order | **Owner ตัดสินใจแบบ ก ณ แชทนี้** — สั่งชัดเจนในข้อความเดียว = ยืนยันในตัว · ไม่ชัดเจน = draft เท่านั้น (ยืนยันพฤติกรรมแล้ว) | test pack §R74-OMNI |
 | Gates รอบ R74 | tsc=0 · lint=0 · **vitest 212/212 ไฟล์** · build=0 | `e2e/_r74_gates.log` |
