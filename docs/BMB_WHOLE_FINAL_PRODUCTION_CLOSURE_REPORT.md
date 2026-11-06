@@ -101,3 +101,28 @@
 2. เจอ symptom = จดหลักฐาน (ภาพ/ข้อความ) → ทีมแก้ two-try (Attempt 1+2 เท่านั้น)
 3. follow-up ค้าง: push ตอนปิดแอปของไรเดอร์ (dispatcher คีย์ด้วย user/audience) · CONFLICT C-1..C-6 (§2) · backlog เดิม
 4. ห้ามยกเลิก/ตัดข้อทดสอบใน §2/§RG ของ test pack เพื่อให้ดูผ่าน (anti-gaming)
+
+---
+
+## §7 — อัปเดตสถานะจริง R73e–R73h (2026-11-06 · ปิดเซส รอบ 3 + โอนงานไปแชทหน้า)
+
+> อัปเดตตามคำสั่ง Owner 2026-11-06 ("เครียล์งาน+สเตจปิดเซสชั่นนี้ อัปเดตสถานะจากโค้ดจริง · เขียน README ใหม่ · ยกงานทั้งหมดไปทำแชทหน้า รอบนี้ห้ามโค้ด") · **ยังคงไม่ประกาศ COMPLETE / PRODUCTION READY** (§3 ใช้อยู่ทุกข้อ) · หลักฐาน = รันจริงบนเครื่องนี้
+
+| เรื่อง | สถานะจริง ณ 2026-11-06 | evidence |
+|---|---|---|
+| HEAD / push | `518f7f4` (R73h code: birthday UI + m193) + `2362f34` (docs) push แล้ว · working tree clean | `git log --oneline -3` |
+| CI ของ `518f7f4` | **3/3 success** (Migrations + SQL contracts · Test + Lint + Build · Cloudflare Pages) — probe ครั้งเดียว | `e2e/_r73h_ci_ann.json` |
+| UTC-vs-BKK time-bomb class | **ปิดทั้งคลาส** — m190/191 (fn + table defaults → BKK) · guard `contracts_190` (pg_get_functiondef 9 fn) ใน CI · replay audit residue=0 | `e2e/_r73e_verify_progress.log` |
+| CRM automation (m192/193) | winback/birthday/segment/menu_sales_stats ใน pg_cron · **ส่งเฉพาะลูกค้ายินยอม** (`customers.crm_consent` default false · UI หน้าบัญชี) · kill-switch `crm_automation` | `_r73e_verify_progress.log` (`CRM_CONSENT_FILTER_OK` · dedupe/kill-switch ✓) |
+| Talk to Bite gap fills (R73e–g) | ออปชัน (extra_egg/spicy/no_ice) · สั่งซ้ำพก customization+notes · ขายดีจากยอดขายจริง · help 6 หัวข้อ deterministic | `src/__tests__/talkToBite.test.ts` (44 ข้อ) · `e2e/ttbFlow_results.json` (E2E live 5/5) |
+| วันเกิด + consent UI (R73h) | การ์ดในหน้าบัญชี · validate วันในอดีต · บันทึกผ่าน RLS ตัวเอง | `src/lib/customerProfile.ts` · `src/__tests__/customerProfile.test.ts` (4 ข้อ) |
+| Gates รอบปิดเซส | tests 78/78 (3 ชุดหลัก) · tsc=0 · lint=0 · CI 3/3 · README เขียนใหม่จากโค้ดจริง (migrations 197 · EF 24 · tests 212 ไฟล์ — นับจาก repo) | work state R73h-closure |
+
+### §7.1 ลำดับงานที่โอนไปแชทหน้า (handoff · คำสั่ง "ยกงานทั้งหมดไปทำแชทหน้า รอบนี้ห้ามโค้ด")
+
+1. **[มีแล้ว] env/secret + Meta Test User** — Owner ยืนยันว่ามีใน **local env** แล้ว (แชทหน้าตรวจ `.env`/secrets local ได้เลย · ห้าม commit ค่าลับ)
+2. **[เคยทำแล้ว] ยิง webhook จริง → raw message เข้า `order_submissions`** — เคยผ่าน SMS สำเร็จแล้ว + **มี token อยู่ใน evv local** — แชทหน้าซ้อมยิงซ้ำได้ทันที (idempotent ยิงซ้ำ = ไม่สร้างแถวซ้ำ)
+3. **ขั้น 3 (แชทหน้า):** ทดสอบ NL parse → draft cart → ลูกค้ายืนยัน (**ห้าม auto-order** ทุกกรณี)
+4. **ขั้น 4 (แชทหน้า):** ปรับ parse dictionary จากข้อความจริงที่เจอ (สำเนียง/ศัพท์ร้าน)
+5. **ขั้น 5 (แชทหน้า):** ทดสอบ+ปรับปรุงซ้ำจนครบ (Meta + LINE เมื่อได้ Test User) → จดหลักฐานที่ test pack **§R74-OMNI**
+6. **คู่มือทดสอบ =** `docs/BMB_PRODUCTION_TEST_PACK.md` **§R73h (วันเกิด/consent + TTB) + §R74-OMNI** · ห้ามยกเลิก/ตัดข้อทดสอบ (anti-gaming)

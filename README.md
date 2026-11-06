@@ -4,7 +4,7 @@
 
 - **Production:** https://biteme-baby.com (Cloudflare Pages auto-deploy จาก branch `main`)
 - **Repo:** `D:\A PROJECT\Bite Me Baby` → `github.com:bitemebaby2016-coder/bmb`
-- **สถานะ:** ระบบหลักถึง production แล้ว — แต่การเปิดรับออร์เดอร์จริงยังมีเงื่อนไขต้องปิดก่อน (§10) และตัวเลข gate ล่าสุดให้ดูจาก CI เสมอ ห้ามเชื่อตัวเลขในเอกสารโดยไม่รันเอง
+- **สถานะ (อัปเดต 2026-11-06 · R73h):** ระบบหลัก + AI Waiter + CRM automation ถึง production แล้ว — **ยังไม่เปิดรับออร์เดอร์จริงจนกว่าจะปิดเงื่อนไข §10** · ตัวเลข gate ล่าสุดให้ดูจาก CI เสมอ ห้ามเชื่อตัวเลขในเอกสารโดยไม่รันเอง
 - ⚠️ `bitemebaby-5f7.pages.dev` = build เก่าค้าง (stale) — ห้ามใช้ตรวจงาน visual/behavior
 
 ## 1. BITE ME BABY คืออะไร (จากโค้ดจริง)
@@ -45,6 +45,8 @@
 - **Talk to Bite:** state machine ใน `src/lib/talkToBite.ts` + `aiService.ts` (SSE ผ่าน `ai-proxy` EF), guardrails/ความจำฝั่งเซิร์ฟเวอร์ (`aiGuardrails`, `aiServerMemory`, `aiDbContext`)
 - **เสียง:** Web Speech API th-TH + EF `voice-tts` (`aiVoice.ts`)
 - **Food Theater (`/shop`):** `FoodTheater.tsx` + `TheaterCards.tsx` — ring carousel แบบ scroll-snap (ปุ่ม ลูกศร swipe คีย์บอร์ด), เหตุผลแนะนำบนการ์ดมาจากสัญญาณจริงเท่านั้น (`theaterReasons`: ❤️ favorite จาก memory, 🍗 คู่กับตะกร้า, ✨ เมื่อ `created_at` ยืนยัน, ⏱️ `prep_minutes`, 🔥 `is_featured`) และ **copy หมุนเวียน 7 วัน** (`theaterDailyCopy.ts` — §9)
+- **Talk to Bite (รอบ R73e–g):** จดจำออปชันอาหาร (ไข่ดาว/เผ็ด/ไม่ใส่น้ำแข็ง ฯลฯ) เข้าตะกร้า/ออเดอร์จริง · สั่งซ้ำ "เหมือนเดิม" พก customization + โน้ตมาด้วย · "ขายดีช่วงนี้" จัดอันดับจากยอดขายจริง 30 วัน (ไม่มีข้อมูล = ไม่แต่งเรื่อง) · คำถามช่วยเหลือ 6 หัวข้อตอบ deterministic ก่อนถึง LLM · E2E probe `e2e/ttbFlow.cjs` = 5/5 บน production (`e2e/ttbFlow_results.json`)
+- **CRM automation (m192/193):** winback (หายไป 45 วัน) + birthday (ตามวัน BKK) ส่งแจ้งเตือน in-app **เฉพาะลูกค้าที่กดยินยอม** (`customers.crm_consent` — เก็บผ่านการ์ด "วันเกิด & ข้อความพิเศษ" ในหน้าบัญชี) · kill-switch `business_settings['crm_automation']`
 
 ## 5. ฟีเจอร์ที่มีจริงและสถานะ
 
@@ -52,21 +54,25 @@
 |---|---|---|
 | สั่งซื้อ same-day + pre-order + รอบจัดส่ง | `CheckoutPage`, RPCs/migrations | ใช้งานใน production |
 | ชำระเงิน 3 ช่องทาง (Omise/QR/COD + Stripe fallback) | `paymentGateway.ts`, EF `omise-*`/`stripe-*` | **บัตร Omise รอ Owner ทดสอบ TEST card ก่อนเปิดจริง** |
-| AI แชท/เสียง | EF `ai-proxy`, `aiService`, `aiVoice` | ใช้งานได้; chat-hang ยังค้างใน backlog |
+| AI แชท/เสียง | EF `ai-proxy`, `aiService`, `aiVoice` | ใช้งานได้ + gap fills R73e–g (ออปชัน/สั่งซ้ำ/ขายดี/help) · chat-hang ปิดแล้ว (R67) |
 | Food Theater + copy 7 วัน | `FoodTheater`, `theaterDailyCopy` | ใหม่ — ผ่าน unit tests + gates |
 | Admin หลายสาขา + RLS | `src/pages/admin/*` (26 หน้า) | ใช้งานใน production |
 | Delivery zones/ค่าส่ง/ETA/Driver | `deliveryRouter`, `routeOptimization`, `googleMaps` | ระบบจริง; **GPS matrix รอ Owner ทดสอบ** |
 | Queue dispatch + automation/social workers | EF `queue-*`, `automation-*`, `social-*` | deploy แล้ว |
 | PWA (manifest/offline) | `vite-plugin-pwa`, `public/` | เปิดใช้ |
-| E2E production matrix | `e2e/` | **ยัง 0/10 — เงื่อนไขก่อนเปิดร้าน (§10)** |
+| CRM automation + consent (m192/193) | RPC `crm_*`, `customerProfile.ts`, ProfilePage | pg_cron อัตโนมัติ · **ส่งเฉพาะคนยินยอม** |
+| BKK date guard (m190–193) | `e2e/contracts_190_bkk_date_gates.sql` ใน CI | class `CURRENT_DATE` ปิดแล้ว · guard 9 fn |
+| Social omnichannel (Meta/LINE) | m043–048/124, `socialOrderIntake`, `channel-webhook` | foundation พร้อม · ขั้น 3–5 (parse→draft cart→ปรับ dictionary) = **แชทถัดไป** |
+| E2E / probes | `e2e/` (ttbFlow, order matrix R67) | order journey 12/12 + TTB 5/5 แล้ว · เงื่อนไขก่อนเปิดร้าน = §10 |
 
 ## 6. สถาปัตยกรรมและ tech stack (ตรวจจากไฟล์จริง)
 
 - **Frontend:** React 19 + TypeScript 5.9 + Vite 8 + Tailwind 4 + `vite-plugin-pwa` · routing `react-router-dom` 7 · meta/JSON-LD `react-helmet-async` · state `zustand` (`store/` + `stores/`)
-- **Backend:** Supabase — Postgres + RLS 2 ชั้น, migrations 123 ไฟล์ (`supabase/migrations/`), Edge Functions 18 ตัว + `_shared` (`ai-proxy`, `omise-*`, `stripe-*`, `create-checkout`, `queue-*`, `sms-send`, `push-send`, `voice-tts`, `channel-webhook`, social/automation workers)
+- **Backend:** Supabase — Postgres + RLS 2 ชั้น, migrations 197 ไฟล์ (`supabase/migrations/` 001–193), Edge Functions 24 ตัว + `_shared` (`ai-proxy`, `omise-*`, `stripe-*`, `create-checkout`, `queue-*`, `sms-send`, `push-send`, `voice-tts`, `channel-webhook`, social/automation workers)
 - **การจ่ายเงิน:** Omise (บัตร, server-side charge + 3-D Secure) · QR PromptPay + เงินสดปลายทาง ผ่าน payment intent + admin confirm · Stripe = fallback เก่า
 - **CI/CD:** `.github/workflows/ci.yml` — push `main`/PR → `npm ci` → lint → test → build (Node 24) · deploy = Cloudflare Pages auto-deploy จาก `main`
-- **Testing:** Vitest (unit, pure logic เป็นหลัก) + Playwright (probes/e2e scripts ใน `e2e/`)
+- **Testing:** Vitest (unit, pure logic เป็นหลัก · 212 ไฟล์) + Playwright (probes/e2e scripts ใน `e2e/`)
+- **Contract testing:** `.github/workflows/contract-tests.yml` — replay ทุก migration บน ephemeral Postgres + legacy contracts 7/7 + BKK-date class guard (`contracts_190` ตรวจ body+defaults ด้วย `pg_get_functiondef`) + nightly-sim
 
 ```
 Browser (PWA) ──► Supabase (Postgres + RLS) ◄── Edge Functions (queue/social/sms…)
@@ -78,7 +84,7 @@ Browser (PWA) ──► Supabase (Postgres + RLS) ◄── Edge Functions (queu
 
 ```
 ├── src/
-│   ├── lib/            # service layer ~95 ไฟล์ (จุดเดียวที่แตะ DB/AI/payment)
+│   ├── lib/            # service layer ~100 ไฟล์ (จุดเดียวที่แตะ DB/AI/payment)
 │   │   ├── ai/         # context builder (branch/catalog/rounds, TTL cache)
 │   │   ├── theater*    # theaterGeometry/Reasons/Editorial/DailyCopy (pure)
 │   │   └── faqContent  # คำถาม FAQ ไฟล์เดียวทั้งหน้าเว็บและ JSON-LD
@@ -86,10 +92,10 @@ Browser (PWA) ──► Supabase (Postgres + RLS) ◄── Edge Functions (queu
 │   ├── pages/          # 27 หน้าสาธารณะ + pages/admin/ อีก 26 หน้า
 │   ├── store/ stores/  # zustand stores (cart/auth/bite-ai/…)
 │   ├── hooks/ config/ types/ assets/
-│   └── __tests__/      # Vitest 68 ไฟล์
+│   └── __tests__/      # Vitest 212 ไฟล์
 ├── supabase/
-│   ├── migrations/     # 123 ไฟล์ (schema + RLS + seed)
-│   └── functions/      # 18 Edge Functions + _shared
+│   ├── migrations/     # 197 ไฟล์ (schema + RLS + seed · 001–193)
+│   └── functions/      # 24 Edge Functions + _shared
 ├── public/             # sitemap.xml, robots.txt, PWA assets, รูปภาพ
 ├── docs/               # 01–04 (เอกสารหลัก) + log/รายงานย่อย + archive/
 ├── e2e/                # Playwright spec + probes/acceptance scripts
@@ -108,6 +114,8 @@ npm run lint                # eslint .
 npm run build               # tsc + vite build (production PWA)
 npm run preview             # เสิร์ฟ dist ที่ build แล้ว
 ```
+
+**Verify harness (DB replay + behavioral · ใช้ก่อน push งาน DB):** `e2e\ci\_r73e_verify.bat` (Windows · เปิด Docker Desktop ก่อน) หรือ `e2e/ci/_r73e_verify.sh` ใน container `postgres:16` — replay ทุก migration 001–193 + night-sim (ข้ามเที่ยงคืน UTC/BKK) + CRM behavioral (consent filter/dedupe/kill-switch) + legacy contracts 7/7
 
 **ตัวแปร environment (ชื่อ — ไม่ใส่ค่าจริงในเอกสาร):**
 
@@ -134,14 +142,13 @@ npm run preview             # เสิร์ฟ dist ที่ build แล้�
 
 ## 10. สถานะและงานที่ต้องปิดก่อนเปิดร้านจริง
 
-ยัง **ไม่** ถือว่าพร้อมรับออร์เดอร์จริงจนกว่าจะปิดรายการเหล่านี้ (รายละเอียด/เกณฑ์/ผู้รับผิดชอบ อยู่ในรายงาน Launch Readiness ล่าสุด):
+ยัง **ไม่** ถือว่าพร้อมรับออร์เดอร์จริงจนกว่าจะปิดรายการเหล่านี้ (เกณฑ์ปิดจริง = [`docs/BMB_PRODUCTION_TEST_PACK.md`](docs/BMB_PRODUCTION_TEST_PACK.md) §RG/§16 + ข้อด้านล่าง):
 
-1. **Owner ทดสอบจริง:** บัตร Omise (TEST card บนเบราว์เซอร์จริง) และ GPS/delivery matrix
-2. **Production E2E matrix** — ยัง 0/10 ต้องผ่านครบก่อนเปิด
-3. **Production DB audit** (aggregate/EF probe) — รอ Owner approval
-4. **Chat-hang** ของ `mascotService` (timeout) — ต้องปิดก่อนใช้แชทจริงในงานจริง
-5. **SEO route metadata ไม่ครบ** — `App.tsx` มี SEO entry 24 เส้นทาง ขาด `/orders`, `/notifications`, `/reviews`, `/reviews/:productId` (เดิมมี static fallback ผิด ๆ ใน index.html คอยบัง — ตอนนี้ถูกเอาออกแล้ว หน้าเหล่านี้จึง "ไม่มี meta" จนกว่าจะเพิ่ม entry) และ `/track/:orderNumber` ได้ canonical/title เป็น string literal `:orderNumber` — ต้องแก้ที่ SEO Routes block + `bitemebaby-5f7.pages.dev` stale ต้องระบุ/ลบจาก Dashboard
-6. ข้อความ FAQ เดิมมีตัวอักษรภาษาไทยบางจุดผิดรูป (ของเก่า) — รอ Owner ตรวจแก้, คำกล่าวอ้างราคา/โปรโมชั่นใน FAQ (`฿30` คูปอง, รหัสโปร) ต้องยืนยันกับระบบจริงก่อนพึ่งพา
+1. **Owner ทดสอบจริงบน production:** บัตร Omise (TEST card บนเบราว์เซอร์จริง) · GPS/delivery matrix · ชุด §R73h (วันเกิด/consent + Talk to Bite) + §R67–§R73 ที่ค้าง — เริ่มจากหน้าแชท
+2. **CONFLICT C-1..C-6** (`docs/BMB_REQUIREMENT_RECONCILIATION.md` §3) — รอ Owner ตัดสินใจ
+3. **Runtime tests ด้วยอุปกรณ์/บัญชีจริง** ใน test pack §T (T-A1..A6 · T-D/T-E · CAP-10/11/13/14/18) — ยัง NOT RUN
+4. **Omnichannel Meta/LINE (ขั้น 3–5):** env/secret + Test User **มีใน local env แล้ว** · เคยยิง webhook ผ่าน SMS ถึง `order_submissions` แล้ว (token อยู่ใน env local) — เหลือ ทดสอบ NL parse → draft cart → ปรับ parse dictionary = **ทำในแชทถัดไป** (แผน = test pack §R74-OMNI)
+5. **ที่ปิดแล้ว (อัปเดต 2026-11-06):** E2E order journey 12/12 (R67) · chat-hang ปิดแล้ว · SEO routes ครบแล้ว · Production DB audit ผ่านรอบ R62–R68 · UTC-vs-BKK time-bomb class ปิดแล้ว (m190–193 + guard ใน CI) — **ไม่ต้องทำซ้ำ**
 
 ## 11. เอกสารประกอบ + กติกาการทำงานของ repo
 
@@ -151,6 +158,9 @@ npm run preview             # เสิร์ฟ dist ที่ build แล้�
 | [docs/02_API_INTEGRATIONS.md](docs/02_API_INTEGRATIONS.md) | Webhooks, Edge Functions, delivery providers |
 | [docs/03_ADMIN_USER_GUIDE.md](docs/03_ADMIN_USER_GUIDE.md) | คู่มือ Admin Dashboard |
 | [docs/04_DEPLOYMENT_RUNBOOK.md](docs/04_DEPLOYMENT_RUNBOOK.md) | Env, Supabase secrets, cutover |
+| [docs/BMB_PRODUCTION_TEST_PACK.md](docs/BMB_PRODUCTION_TEST_PACK.md) | **ชุดทดสอบเดียวที่ใช้ปิดงานบน production** (§RG/§16/§R67–R74-OMNI) |
+| [docs/BMB_MASTER_STATUS.md](docs/BMB_MASTER_STATUS.md) | สถานะรวมรายรอบ (ล่าสุด R73h) |
+| [docs/BMB_WHOLE_FINAL_PRODUCTION_CLOSURE_REPORT.md](docs/BMB_WHOLE_FINAL_PRODUCTION_CLOSURE_REPORT.md) | รายงานปิดงาน + handoff รายรอบ (ล่าสุด §7) |
 
 **กติกาที่ห้ามละเมิด:**
 
