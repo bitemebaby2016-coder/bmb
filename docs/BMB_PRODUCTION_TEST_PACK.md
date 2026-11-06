@@ -1064,4 +1064,15 @@ SELECT public.set_user_role('<UUID-AUDITOR>'::uuid,   'auditor');
 2. **Meta Test User live chat (OMNI-5): ใช้ `META_PAGE_ACCESS_TOKEN` (คีย์ที่ใช้ได้ · Owner ยืนยันว่า live chat ทดสอบได้)** — คีย์ `META_USER_ACCESS_TOKEN` ยกเลิกแล้ว ห้ามใช้
 3. **Owner ทดสอบ live ทั้งหมด** ตาม §R73h/§R74-OMNI/§RG → จดหลักฐานลง test pack (anti-gaming) · LINE/ขนส่ง = มีใน `.env` แล้ว (LINE MAN + Grab + Google Routes · `src/lib/providers/*`)
 
+#### ผลการรับช่วงต่อ (R74-OMNI session 2 · 2026-11-06 ดึก · คำสั่ง "ทำงานตามกฏ ปิดให้พร้อมรอทดสอบlive")
+
+| # | งานที่โอนมา | ผลจริง | evidence |
+|---|---|---|---|
+| 1 | deploy EF (channel-webhook + social-ai-worker) | **ยังติด Management auth — ลองใหม่พร้อมหลักฐานใหม่แล้ว:** Owner เปิด Docker Desktop ให้ (เงื่อนไข bundle ของ CLI `functions deploy`) → รัน `node e2e\_r74DeployRun.cmd` (detached + log ผ่าน fs) = **401 "Invalid access token" จาก management API ทั้ง 2 ฟังก์ชัน** = ตัวปิดกั้นคือ **auth ไม่ใช่ Docker** (CLI เช็ค list functions ก่อนถึงขั้น bundle) · ตรวจทั้งเครื่องแล้วไม่มี auth ใหม่ (ไม่มี CLI login cache / env var / PAT ซ่อนใน key อื่น · `.env.local` ไม่เปลี่ยนตั้งแต่ 30 ต.ค.) — **ต้อง PAT ใหม่ / `supabase login` / Owner deploy เองใน dashboard** แล้ว `node e2e\_r74DeployFns.cjs` คำสั่งเดียวจบ | `e2e\_r74_deploy.log` |
+| 2 | Meta Test User live chat (OMNI-5) | **ติด provisioning — ไม่มี Test User ให้ทดสอบด้วย:** `GET /{app}/accounts/test-users` (app token จาก META_APP_ID/SECRET) = **0 ตัว** · thread ของเพจ = **3 thread เป็นลูกค้าจริงทั้งหมด** ("ผู้ใช้ Facebook" สั่งอาหารจริง 1 พ.ย. · "Siam Portal" สั่งจริง 31 ต.ค. · "Phichayapron Khuansuwan" นัดรับจริง มี.ค.) → **ไม่ส่งข้อความถึงใครทั้งสิ้น (ห้ามแตะลูกค้าจริง)** · สร้างเครื่องมือพร้อมรัน **`e2e\_r74Omni5Live.cjs`** (DRY-RUN default · บังคับ `--psid` + `--confirm-name` ต้องตรงกับ thread · blocklist ชื่อลูกค้าจริง · `--fire` = ส่งจริงจากเพจ (หลักฐาน Graph message_id) + ฉีด signed webhook เข้า pipeline จริง + ตรวจ no-auto-order/confirm/idempotent + cleanup) — **รอ provision Test User (Meta App Dashboard → Roles → Test Users) + ทักเพจ ≥1 ข้อความ แล้วรันคำสั่งเดียว** | `e2e\_r74_omni5_threads_redacted.json` (ฉบับ commit · raw ที่มีเนื้อหาแชทลูกค้าจริงเก็บบนเครื่องเท่านั้น `_r74_omni5_{recon,ident,threads}.json`) |
+| 3 | DB readiness (Docker verify harness ตาม README) | **ผ่าน — `R73E_VERIFY_ALL_GREEN`** (replay 001–193 APPLY_OK รวม m190–193 · NIGHTSIM_OK · CRM_CONSENT_FILTER_OK · CRM_KILLSWITCH_OK · legacy 0/7) | `e2e\_r73e_verify.log` |
+
+> **สรุปสถานะปิดแชท = พร้อมรอทดสอบ live:** งานฝั่ง AI ที่ทำได้โดยไม่ต้องแตะลูกค้าจริง/ไม่ต้องใช้คีย์ยกเลิก = ครบแล้ว · 2 จุดค้างเปิดเผย = ① deploy EF (รอ Management auth) ② OMNI-5 (รอ Test User) — ทั้งคู่มีคำสั่งเดียวจบพร้อมรัน · ถัดไป = Owner เทสต์ live ตาม §R73h/§R74-OMNI/§RG แล้วจดหลักฐานที่นี่ (anti-gaming)
+
+
 

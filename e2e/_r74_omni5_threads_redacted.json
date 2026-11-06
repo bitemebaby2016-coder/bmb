@@ -1,0 +1,11 @@
+{
+  "date": "2026-11-06T14:40:00.000Z",
+  "note": "ฉบับ redacted สำหรับ commit — ไฟล์เต็ม (มีข้อความลูกค้าจริง) เก็บบนเครื่องเท่านั้น ไม่เข้า git เพื่อ privacy · บทสรุปเพื่อใช้เป็น safety blocklist",
+  "threads": [
+    { "name": "ผู้ใช้ Facebook", "updated": "2026-11-01", "verdict": "REAL_CUSTOMER", "markers": ["สั่งเมนูจริง 3 รายการ+ราคาจริง", "ถามช่องทางชำระเงิน", "ถามจุดรับอาหาร"] },
+    { "name": "Siam Portal", "updated": "2026-10-31", "verdict": "REAL_CUSTOMER", "markers": ["โพสต์ข้อความสั่งอาหาร+ที่อยู่ส่งจริง", "Facebook สร้างแชทจากคอมเมนต์โพสต์"] },
+    { "name": "Phichayapron Khuansuwan", "updated": "2026-03-30", "verdict": "REAL_CUSTOMER", "markers": ["นัดจุดรับ/ส่งจริง พระยาตรัง"] }
+  ],
+  "conclusion": "ไม่มี Test User thread · ทั้ง 3 thread = ลูกค้าจริง = ห้ามส่งข้อความทดสอบถึงทั้ง 3 ราย (ใช้เป็น blocklist ใน _r74Omni5Live.cjs)",
+  "test_users_in_app": 0
+}
