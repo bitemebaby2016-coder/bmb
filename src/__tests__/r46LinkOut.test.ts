@@ -35,18 +35,20 @@ describe('R46 — แบนเนอร์ในเว็บ: FB in-app = แจ
     expect(isInAppBrowser('Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/131.0.0.0 Safari/537.36')).toBe(false)
   })
 
-  it('แบนเนอร์ R57 = บังคับภายนอก (ไม่มีปุ่มอยู่ที่นี่ต่อ) + Layout เรียกใช้', () => {
+  it('แบนเนอร์ = บังคับภายนอก + ปุ่มปิดป๊อปอัพ (R77) + Layout เรียกใช้', () => {
     expect(noticeSrc).toContain('data-testid="inapp-browser-notice"')
     expect(noticeSrc).toContain('data-testid="inapp-open-external"')
-    // Owner 2026-11-02 "ห้ามใช้บราวเซอร์ของเฟซ" → ปุ่มอยู่ที่นี่ต่อ/dismiss = ถูกถอดออก
+    // Owner 2026-11-02 "ห้ามใช้บราวเซอร์ของเฟซ" → ปุ่ม "อยู่ที่นี่ต่อ" ยังไม่มี (ปุ่มปิด R77 = คนละอัน)
     expect(noticeSrc).not.toContain('data-testid="inapp-stay"')
-    expect(noticeSrc).not.toContain('DISMISS_KEY')
+    // R77 (Owner: "ใส่ปุ่มปิดป้อบอัพเพิ่ม"): ปุ่มปิด (X) + จำการปิดต่อแท็บ
+    expect(noticeSrc).toContain('data-testid="inapp-close"')
+    expect(noticeSrc).toContain('NOTICE_DISMISS_KEY')
     expect(noticeSrc).toContain('เปิดในเบราว์เซอร์')
-    // Android = พยายามเปิด intent:// แบบไม่ทำลายหน้า (R76: ห้าม location.replace —
-    // FB WebView ที่ไม่รู้จัก intent:// = ERR_UNKNOWN_URL_SCHEME กลืนทั้งหน้า = ลิงก์พังทุกลิงก์)
+    // Android = <a href={intent}> เฟรมเดียว (R76/R77: ห้าม location.replace/window.open กับ intent://)
     expect(noticeSrc).toContain('externalBrowserIntentUrl')
     expect(noticeSrc).not.toContain('window.location.replace(intent)')
-    expect(noticeSrc).toContain('window.open(intent')
+    expect(noticeSrc).not.toContain('window.open(intent')
+    expect(noticeSrc).toContain('href={intentUrl}')
     expect(layoutSrc).toContain('<InAppBrowserNotice />')
     expect(layoutSrc).toContain("import { InAppBrowserNotice } from './InAppBrowserNotice'")
   })

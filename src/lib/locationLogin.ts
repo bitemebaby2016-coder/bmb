@@ -115,7 +115,7 @@ export async function getGpsLocation(): Promise<{ latitude: number; longitude: n
  * caller can send the customer to the map pin flow instead of silently using
  * an approximate (wrong) point. Used by the checkout delivery flow.
  */
-export function getTrustedGpsLocation(timeoutMs = 10_000): Promise<{ latitude: number; longitude: number } | null> {
+export function getTrustedGpsLocation(timeoutMs = 25_000): Promise<{ latitude: number; longitude: number } | null> {
   return new Promise((resolve) => {
     try {
       const geo = (navigator as Navigator & { geolocation?: BrowserGeolocation }).geolocation

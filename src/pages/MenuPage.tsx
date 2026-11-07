@@ -3,12 +3,13 @@
 // @see docs/COMPONENT_SPEC_UI.md v1.1 spec
 // ============================================
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import type { Product, ProductCategory, SameDayOrderPayload, PreOrderPayload, AvailabilityState, OrderMode } from '@/types'
 import { getProducts, getCategories } from '@/lib/bmbAdminApi_products'
 import { buildHeadingGroups, headingChips, menuTabItems } from '@/lib/catalogStructure'
 import { getProductScheduleMap, type ProductScheduleMap } from '@/lib/productSchedule'
+import { formatThaiDate } from '@/components/home/ScheduleDateBadge'
 import { useCartStore } from '@/store/cartStore'
 import { showToast } from '@/components/ui/ToastContainer'
 // R21 Phase 3: เน็ตหลุดต้องฟ้องว่า "โหลดเมนูไม่สำเร็จ" (ห้ามปล่อยหน้าเปล่าเหมือนไม่มีเมนู)
@@ -121,6 +122,14 @@ export function MenuPage() {
   // ✓ Owner 2026-10-18: เลือกหัวข้อไหน = โชว์ครบทุกจานในหัวข้อนั้น — แท็บโหมดกรองเฉพาะมุม
   // "ทั้งหมด" เท่านั้น (เดิมกรองซ้อนสองชั้น ทำให้กดหัวข้อ "จองล่วงหน้า / พรีออเดอร์"
   // แล้วเจอของไม่ครบ = งานซ้ำสองระบบแย่งกันกรอง)
+  // R77 (Owner: "เมนูพรีออเดอร์ที่เลยรอบส่งของวันปัจจุบันไม่ต้องแสดงแล้ว ... ให้ขึ้น โชว์ 7 วันที่มีเมนูแล้ว"):
+  // วันเมนู = ค่าป้ายวัน (scheduleMap — วันถัดไปที่ยังไม่เลยรอบ) · เรียงใกล้สุด ตัดโชว์ 7 วัน
+  // · เลือกวัน = กรองเฉพาะเมนูวันนั้น (วันเดียวกับป้ายมุมการ์ดที่ checkout ใช้ล็อกวัน — ไม่ขัด R5)
+  // · เมนูที่ไม่มีวัน/เลยรอบ = ไม่มีใน map → ใช้กฎ "ยังไม่ลงปฏิทิน" เดิมต่อโดยอัตโนมัติ
+  const menuDays = useMemo(() => [...new Set(Object.values(scheduleMap))].sort().slice(0, 7), [scheduleMap])
+  const [preOrderDay, setPreOrderDay] = useState('')
+  const activeDay = preOrderDay && menuDays.includes(preOrderDay) ? preOrderDay : (menuDays[0] ?? '')
+
   const filtered = products.filter((p) => {
     const isCalendar = !!scheduleMap[p.id] // Owner 2026-10-27: พรีออเดอร์ = เมนูตาราง (menu_schedule)
     const matchCat = selectedCategory === 'all' || String(p.category_id) === selectedCategory
@@ -130,6 +139,8 @@ export function MenuPage() {
       // เมนูปฏิทิน (ตรงกับหน้าเมนูตารางแอดมิน) · แท็บวันนี้ = เมนูสั่งทันทีที่เหลือ
       if (menuTab === 'same-day' && isCalendar) return false
       if (menuTab === 'pre-order' && !isCalendar) return false
+      // R77: แท็บจองล่วงหน้า = เฉพาะเมนูของวันที่เลือก (ดูได้ทีละวันจาก 7 วันเมนูด้านบน)
+      if (menuTab === 'pre-order' && activeDay && scheduleMap[p.id] !== activeDay) return false
     }
     return !p.archived && p.name.toLowerCase().includes(searchQuery.toLowerCase())
   })
@@ -271,6 +282,23 @@ export function MenuPage() {
               {/* R35 (Owner: "ในวงเล็บไม่ต้องแสดง") — ชิปรอบ (เที่ยง/เช้า/เย็น ซ้ำ ๆ ทุกวัน) ถูกถอดออกจาก banner */}
             </div>
           </div>
+        </div>
+      )}
+
+      {/* R77 (Owner: "ให้ขึ้น โชว์ 7 วันที่มีเมนูแล้ว"): แถบเลือกวันเมนู — วันถัดไปที่มีเมนูในปฏิทิน (สูงสุด 7 วัน) */}
+      {menuTab === 'pre-order' && selectedCategory === 'all' && menuDays.length > 0 && (
+        <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar mb-6" data-testid="preorder-day-strip">
+          {menuDays.map((d) => (
+            <button
+              key={d}
+              type="button"
+              data-testid="preorder-day-chip"
+              onClick={() => setPreOrderDay(d)}
+              className={`px-4 py-2 rounded-full font-medium whitespace-nowrap transition-all ${activeDay === d ? 'bg-brand-primary text-white shadow-md' : 'bg-white text-brand-accent hover:bg-orange-50'}`}
+            >
+              📅 {formatThaiDate(d)}
+            </button>
+          ))}
         </div>
       )}
 

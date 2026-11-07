@@ -32,6 +32,7 @@ import { haversineDistanceKm } from '@/lib/deliveryRouter'
 import { KITCHEN_POINT } from '@/config/kitchenLocation'
 import { getPublishedScheduleForDate, mirrorPreOrderScheduleGate, checkModeEligibility, type MenuScheduleRow } from '@/lib/bmbMenuSchedule'
 import { getProductScheduleMap, resolveMenuBoundDate, type ProductScheduleMap } from '@/lib/productSchedule'
+import { isInAppBrowser } from '@/components/layout/InAppBrowserNotice'
 import { fetchServerDeliveryFee, feeUiState, summaryFeeState } from '@/lib/deliveryFeeApi'
 import { bangkokMsOfDay } from '@/lib/bangkokTime'
 import { hoursToMs, withinShopHours } from '@/lib/shopHoursLogic'
@@ -393,7 +394,14 @@ export function CheckoutPage() {
     try {
       const loc = await getTrustedGpsLocation()
       if (!loc) {
-        showToast('📍 ไม่สามารถระบุตำแหน่งจาก GPS ได้ — กรุณาปักหมุดบนแผนที่หรือกรอกพิกัดเอง', 'error')
+        // R77 (Owner: "ลิ้งที่มาจากเฟซบุ๊คกด use my location แล้ว เออเร่อ ไม่สามารถระบุตำแหน่งได้"):
+        // เบราว์เซอร์ในแอป (FB/IG/LINE) บล็อก GPS = บอกทางออกชัด ๆ + พาไปปักหมุดแผนที่ด้านล่าง
+        if (isInAppBrowser(navigator.userAgent)) {
+          showToast('📍 เบราว์เซอร์ของ Facebook ใช้ GPS ไม่ได้ — แตะ ⋮/แชร์ (มุมขวาบน) → เปิดในเบราว์เซอร์ภายนอก แล้วลองใหม่ หรือปักหมุดบนแผนที่ด้านล่างได้เลย', 'error')
+        } else {
+          showToast('📍 ไม่สามารถระบุตำแหน่งจาก GPS ได้ — กรุณาปักหมุดบนแผนที่หรือกรอกพิกัดเอง', 'error')
+        }
+        document.getElementById('checkout-map-picker')?.scrollIntoView?.({ behavior: 'smooth', block: 'center' })
         return
       }
       setDeliveryAddress((a) => ({ ...a, latitude: loc.latitude, longitude: loc.longitude, source: 'gps', provenance: 'gps', confirmed: true }))
@@ -1256,11 +1264,14 @@ export function CheckoutPage() {
         </div>
 
         {/* CR-2 P1: visible map + draggable/clickable marker + manual fallback */}
-        <DeliveryMapPicker
-          latitude={deliveryAddress.latitude}
-          longitude={deliveryAddress.longitude}
-          onPick={handleMapPick}
-        />
+        {/* R77: id สำหรับ GPS ล้ม = เลื่อนลงมาปักหมุดเองได้ทันที */}
+        <div id="checkout-map-picker" className="scroll-mt-24">
+          <DeliveryMapPicker
+            latitude={deliveryAddress.latitude}
+            longitude={deliveryAddress.longitude}
+            onPick={handleMapPick}
+          />
+        </div>
         {/* R10 (Owner 2026-10-27): ปุ่มถ่ายรูป/แนบรูป "ที่อยู่ลูกค้า" — อยู่หลังปุ่มใช้พิกัด
             ก่อนปุ่มยืนยันตำแหน่งจัดส่ง · รูปนี้จะติดไปกับออเดอร์ให้ไรเดอร์เห็นหน้าบ้าน */}
         <div className="mt-3 rounded-xl border border-dashed border-brand-primary/30 p-3">

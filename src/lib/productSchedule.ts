@@ -14,6 +14,8 @@
 // ============================================
 
 import { supabase } from './supabase'
+import { roundBookability, type RoundTimeInfo } from './deliveryRoundStatus'
+import { getActiveRoundsForDate } from './bmbAdminApi_rounds'
 
 export interface ProductScheduleRow {
   product_id: string
@@ -34,15 +36,19 @@ export function bangkokTodayISO(utcMs: number = Date.now()): string {
  * map product_id → วันจัดส่งถัดไปจากแถว menu_schedule (pure)
  * - เฉพาะ is_published = true (แถว draft ห้ามโชว์)
  * - เฉพาะ scheduled_date >= today (วันผ่านไปแล้ว = ไม่โชว์ป้าย)
+ * - R77 (Owner: "เมนูพรีออเดอร์ที่เลยรอบส่งของวันปัจจุบันไม่ต้องแสดงแล้ว"):
+ *   opts.todayPassed = true → วันนี้ที่เลยรอบส่งแล้ว = ถือว่าผ่านไปแล้วเท่ากัน
+ *   (ผล = เมนูวนไปโชว์วันถัดไปที่ยังไม่เลยรอบ — ตามสัญญา R5 "วนใช้รอบถัดไปได้")
  * - หลายวันต่อสินค้า = วันที่ใกล้ที่สุด (next delivery day)
  */
-export function pickNextScheduleDates(rows: ProductScheduleRow[], today: string): ProductScheduleMap {
+export function pickNextScheduleDates(rows: ProductScheduleRow[], today: string, opts?: { todayPassed?: boolean }): ProductScheduleMap {
   const map: ProductScheduleMap = {}
   for (const r of rows || []) {
     if (!r || typeof r.product_id !== 'string' || !r.product_id) continue
     if (!r.is_published) continue
     const d = r.scheduled_date
     if (typeof d !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(d) || d < today) continue
+    if (opts?.todayPassed && d === today) continue // R77: วันนี้ที่เลยรอบแล้ว = ไม่โชว์
     const prev = map[r.product_id]
     if (!prev || d < prev) map[r.product_id] = d
   }
@@ -69,7 +75,14 @@ export async function getProductScheduleMap(nowMs: number = Date.now()): Promise
       console.error('[getProductScheduleMap] Error:', error)
       return cache?.map ?? {}
     }
-    const map = pickNextScheduleDates((data || []) as ProductScheduleRow[], today)
+    // R77: วันนี้ที่ "เลยรอบส่ง" แล้ว = ไม่โชว์ (อ่านรอบส่งวันนี้แบบ read-only —
+    // โหลดรอบไม่ได้ = โชว์ตามปกติ ไม่เดา/ไม่บล็อก)
+    let todayPassed = false
+    try {
+      const rounds = await getActiveRoundsForDate(today)
+      todayPassed = isPreOrderDayPassed(today, rounds as RoundTimeInfo[], { nowUtcMs: nowMs, today })
+    } catch { todayPassed = false }
+    const map = pickNextScheduleDates((data || []) as ProductScheduleRow[], today, { todayPassed })
     cache = { atMs: nowMs, map }
     return map
   } catch (err) {
@@ -111,4 +124,33 @@ export function resolveMenuBoundDate(
  */
 export function isMenuDateArchived(dateISO: string, today: string = bangkokTodayISO()): boolean {
   return typeof dateISO === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(dateISO) && dateISO < today
+}
+
+/**
+ * R77 (Owner 2026-11-07 "เมนูพรีออเดอร์ที่เลยรอบส่งของวันปัจจุบันไม่ต้องแสดงแล้ว (ยังมีอยู่ในเมนูยอดนิยม)
+ *  ... ถ้าจะเอาไม่มีรอบขึ้นโชว์ ให้อยู่ในกฏยังไม้ลงปฏิทินแบบเดิม"): วันเมนู "เลยรอบ" =
+ * - วันก่อนวันนี้ (archive เดิม) · หรือวันนี้ที่รอบส่ง PRE_ORDER ปิดรับ/หมดเวลาจัดส่งแล้ว "ทุกรอบ"
+ *   (mirror roundBookability แบบวัน — เฉพาะ cutoff_passed/window_passed ที่นับว่า "เลยรอบ")
+ * - วันนี้ที่ไม่มีรอบส่งเลย = ไม่มีของให้ส่งวันนี้ = ให้ไปอยู่ในสถานะ "ยังไม่ลงปฏิทิน" (map ไม่มีค่า →
+ *   หน้าเมนู/เมนูยอดนิยมใช้กฎ "ยังไม่ลงปฏิทิน" เดิมต่อโดยอัตโนมัติ — ไม่สร้างกติกาใหม่)
+ * Unknown/invalid times = ยังไม่ถือว่าเลยรอบ (ZERO-FAKE — server ตัดสินซ้ำตอนสั่งจริง)
+ */
+export function isPreOrderDayPassed(
+  dateISO: string,
+  rounds: RoundTimeInfo[],
+  opts: { nowUtcMs?: number; today?: string; preOrderCutoffHours?: number } = {},
+): boolean {
+  const today = opts.today ?? bangkokTodayISO(opts.nowUtcMs ?? Date.now())
+  if (dateISO < today) return true
+  if (dateISO > today) return false
+  if (!rounds || rounds.length === 0) return true
+  return rounds.every((r) => {
+    const b = roundBookability(r, {
+      isToday: true,
+      mode: 'PRE_ORDER',
+      nowUtcMs: opts.nowUtcMs,
+      preOrderCutoffHours: opts.preOrderCutoffHours ?? 2,
+    })
+    return b === 'cutoff_passed' || b === 'window_passed'
+  })
 }

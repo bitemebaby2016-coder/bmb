@@ -10,10 +10,10 @@ const noticeSrc = read('src/components/layout/InAppBrowserNotice.tsx')
 const aiSrc = read('supabase/functions/social-ai-worker/index.ts')
 
 describe('R76 ① — หน้าเว็บจากลิงก์เฟซต้องไม่พัง: ห้ามนำทางหน้าปัจจุบันไป intent://', () => {
-  it('InAppBrowserNotice = window.open แบบไม่ทำลายหน้า + ไม่มี window.location.replace(intent)', () => {
+  it('InAppBrowserNotice = <a href={intent}> เฟรมเดียว (R77) + ไม่มี location.replace/window.open(intent)', () => {
     expect(noticeSrc).not.toContain('window.location.replace(intent)')
-    expect(noticeSrc).toContain('function openIntentSafely')
-    expect(noticeSrc).toContain('window.open(intent')
+    expect(noticeSrc).not.toContain('window.open(intent')
+    expect(noticeSrc).toContain('href={intentUrl}')
     // เครื่องที่เปิดอัตโนมัติไม่ได้ = ต้องมีทางรอด = วิธีเปิดด้วยเมนู ⋮
     expect(noticeSrc).toContain('เปิดในเบราว์เซอร์')
     expect(noticeSrc).toContain('externalBrowserIntentUrl')

@@ -111,17 +111,17 @@ describe('R57 ③ — ลิงก์จาก Facebook = บังคับเ�
     expect(externalBrowserIntentUrl('ไม่ใช่ url')).toBeNull()
   })
 
-  it('notice: Android พยายามเปิดภายนอกครั้งเดียว/แท็บ (กัน loop · ไม่ทำลายหน้า) + ไม่มีปุ่มอยู่ที่นี่ต่อ', () => {
-    expect(noticeSrc).toContain('sessionStorage.getItem(EXT_REDIRECT_KEY)')
-    expect(noticeSrc).toContain("sessionStorage.setItem(EXT_REDIRECT_KEY, '1')")
+  it('notice: ปุ่มเปิดภายนอก = <a href={intent}> เฟรมเดียว + ปุ่มปิดป๊อปอัพ (R77) + ไม่มีปุ่มอยู่ที่นี่ต่อ', () => {
+    expect(noticeSrc).toContain('sessionStorage.getItem(NOTICE_DISMISS_KEY)')
+    expect(noticeSrc).toContain("sessionStorage.setItem(NOTICE_DISMISS_KEY, '1')")
     expect(noticeSrc).toContain('/Android/i.test(navigator.userAgent)')
-    // R76 (Owner "อาการเดิมเลย"): ห้ามนำทางหน้าปัจจุบันไป intent:// — FB WebView บางเครื่อง
-    // โหลด intent:// ไม่เป็น = ERR_UNKNOWN_URL_SCHEME กลืนทั้งหน้า → ใช้ window.open แบบไม่ทำลายหน้า
+    // R76/R77: ห้ามนำทางหน้าปัจจุบันไป intent:// และห้าม window.open(intent) (หน้า error/ไม่เด้ง)
     expect(noticeSrc).not.toContain('window.location.replace(intent)')
-    expect(noticeSrc).toContain('window.open(intent')
-    // ปุ่ม/กลไก "อยู่ที่นี่ต่อ" ถูกถอดออกทั้งหมด (Owner ห้ามใช้เบราว์เซอร์ของเฟซ)
+    expect(noticeSrc).not.toContain('window.open(intent')
+    expect(noticeSrc).toContain('href={intentUrl}')
+    // ปุ่ม "อยู่ที่นี่ต่อ" ยังไม่มี (Owner ห้ามใช้เบราว์เซอร์ของเฟซ) — ปุ่มปิด R77 = คนละอัน
     expect(noticeSrc).not.toContain('data-testid="inapp-stay"')
-    expect(noticeSrc).not.toContain('DISMISS_KEY')
+    expect(noticeSrc).toContain('data-testid="inapp-close"')
     expect(noticeSrc).toContain('ห้ามเปิดในเบราว์เซอร์ของ Facebook')
   })
 })
