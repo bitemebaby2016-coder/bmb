@@ -1,20 +1,14 @@
 // ============================================
-// Bite Me Baby — InAppBrowserNotice (R46 → R57 → R76 → R77 · Owner 2026-11-02 / 2026-11-07)
+// Bite Me Baby — InAppBrowserNotice (R46 → R57 → R76 → R77 → R79 · Owner 2026-11-02 / 11-07)
 // Owner: "กดตามลิ้งจากเฟซบุ๊คไปให้ใช้บราวเซอร์ภายนอก ห้ามใช้บราวเซอร์ของเฟซ"
-// เดิม R46 = แจ้ง + ให้ผู้ใช้ยืนยันเอง (ปุ่ม "อยู่ที่นี่ต่อ") → R57 = "ห้ามใช้" :
-//   Android (FB in-app) = พยายามเปิด Chrome ภายนอกอัตโนมัติ (1 ครั้ง/แท็บ)
-//   iOS (FB in-app) = แถบบังคับวิธีเปิด (JS ข้ามแอปไม่ได้)
-// R76 (Owner: "อาการเดิมเลย" — ลิงก์แตะแล้วขึ้นหน้าเว็บไม่พร้อมใช้งาน):
-//   FB WebView บางเครื่องไม่รู้จัก intent:// → ถ้านำทาง "หน้าปัจจุบัน" ไป intent://
-//   (window.location.replace) = net::ERR_UNKNOWN_URL_SCHEME กลืนทั้งหน้า = ลิงก์ใช้ไม่ได้ทุกลิงก์
-//   → R76 = ห้ามนำทางหน้าปัจจุบันไป intent:// เด็ดขาด
-// R77 (Owner: "ใส่ปุ่มปิดป้อบอัพเพิ่ม... ลิ้งต่อที่กดจากเปิดบราวเซอร์ภายนอกเออเร่อใช้ไม่ได้"):
-//   - ปุ่มเดิมเรียก window.open กับค่า intent:// = ขึ้นหน้า error/ไม่เด้งอะไรเลย → เปลี่ยนเป็น
-//     <a href={intent}> นำทาง "เฟรมเดียว" ด้วย gesture จริง (WebView ที่รู้จัก intent://
-//     = เด้ง Chrome ทันที · ไม่รู้จัก = หน้า error แต่กด ← ย้อนกลับได้ ไม่หายถาวร)
-//   - ห้ามยิง intent อัตโนมัติตอนโหลดหน้า (กันหน้า error เด้งเอง) + ห้าม window.open กับค่า intent
-//   - เพิ่มปุ่มปิดป๊อปอัพ (X) ตามคำสั่ง Owner — จำการปิดต่อแท็บ (sessionStorage)
-//   + แถบบอกวิธีเปิดภายนอกด้วยเมนู ⋮ (ทางที่ใช้ได้ทุกเครื่อง) เสมอ
+// R76: ห้ามนำทางหน้าปัจจุบันไป intent:// (ERR_UNKNOWN_URL_SCHEME กินทั้งหน้า)
+// R77: ปุ่มเปิด = <a href={intent}> เฟรมเดียว + ปุ่มปิด ✕ + แถบเมนู ⋮
+// R79 (Owner: "สำคัญ — ทำให้ป๊อปอัพเปิดบราวเซอร์ภายนอกจากเม้นเอไอในแชต ต่อออกได้จริง"):
+//   ผลทดสอบ 7 พ.ย. = ปุ่ม intent "เออเร่อ" + ⋮/แชร์ "เปิดต่อไปที่บราวเซอร์ภายนอกไม่ได้"
+//   (FB WebView เครื่อง Owner บล็อกทุกช่อง) → Smart Escape กดครั้งเดียวได้ทุกช่อง:
+//   ① คัดลอก URL อัตโนมัติ (ทางออกจริง: เปิด Chrome → วาง) ② navigator.share ถ้าเครื่องมี
+//   ③ แผง guide 3 ขั้น + ปุ่มคัดลอกซ้ำ ④ ปุ่มรอง <a href={intent}> เฉพาะเครื่องที่รับ intent
+//   ห้ามนำทางหน้าปัจจุบันไป intent · ห้าม window.open กับ intent · ห้ามยิง intent อัตโนมัติ
 // ตรวจด้วย UA (FBAN/FBAV/FB_IAB/FBIANV/IG/LINE)
 // ============================================
 import { useEffect, useState } from 'react'
@@ -46,13 +40,15 @@ export const NOTICE_DISMISS_KEY = 'bmb:inapp-notice-dismissed'
 export function InAppBrowserNotice() {
   const [show, setShow] = useState(false)
   const [intentUrl, setIntentUrl] = useState<string | null>(null)
+  const [guideOpen, setGuideOpen] = useState(false)
+  const [copied, setCopied] = useState(false)
   useEffect(() => {
     if (typeof navigator === 'undefined') return
     if (!isInAppBrowser(navigator.userAgent)) return
     let dismissed = false
     try { dismissed = sessionStorage.getItem(NOTICE_DISMISS_KEY) === '1' } catch { /* */ }
     if (dismissed) return
-    // Android = ปุ่มเปิดภายนอกด้วย intent:// ผ่าน <a href> เฟรมเดียว · iOS = ปุ่ม best-effort
+    // Android = เก็บ intent ไว้เป็นปุ่มรองใน guide (เครื่องที่ WebView รับ intent = เด้ง Chrome จริง)
     if (/Android/i.test(navigator.userAgent)) {
       setIntentUrl(externalBrowserIntentUrl(window.location.href))
     }
@@ -62,13 +58,46 @@ export function InAppBrowserNotice() {
   const closeNotice = () => {
     try { sessionStorage.setItem(NOTICE_DISMISS_KEY, '1') } catch { /* */ }
     setShow(false)
+    setGuideOpen(false)
   }
 
-  const openExternalIos = () => {
-    // iOS = ข้ามแอปด้วย JS ไม่ได้ — เปิดแท็บใหม่ best-effort แล้วให้ใช้เมนู ⋮ ตามคำแนะนำ
+  /** R79: คัดลอก URL ปัจจุบัน — clipboard API ก่อน · fallback textarea+execCommand (Safari/FB WebView) */
+  const copyUrl = async (): Promise<boolean> => {
+    const url = window.location.href
     try {
-      window.open(window.location.href, '_blank', 'noopener,noreferrer')
-    } catch { /* popup block = ผู้ใช้ใช้เมนู ⋮/แชร์ ตามคำแนะนำ */ }
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(url)
+        return true
+      }
+    } catch { /* หลุดไป fallback ด้านล่าง */ }
+    try {
+      const ta = document.createElement('textarea')
+      ta.value = url
+      ta.setAttribute('readonly', '')
+      ta.style.position = 'fixed'
+      ta.style.opacity = '0'
+      document.body.appendChild(ta)
+      ta.select()
+      const ok = document.execCommand('copy')
+      document.body.removeChild(ta)
+      return ok
+    } catch { return false }
+  }
+
+  /**
+   * R79 — Smart Escape (คำสั่ง Owner "ทำให้ป๊อปอัพเปิดบราวเซอร์ภายนอก...ต่อออกได้จริง"):
+   * เครื่อง Owner = intent error + ⋮ ก็ไม่ออก (FB WebView บล็อก) → กดครั้งเดียวได้ทุกช่องพร้อมกัน:
+   * ① คัดลอกลิงก์เสมอ (ทางออกจริง: เปิด Chrome → วาง) ② navigator.share ถ้ามี (share sheet จริง)
+   * ③ เปิดแผง guide วิธีใช้ Chrome — ห้ามนำทางหน้าปัจจุบันไป intent เด็ดขาด (R76 = กินทั้งหน้า)
+   */
+  const handleOpenExternal = async () => {
+    const ok = await copyUrl()
+    setCopied(ok)
+    setGuideOpen(true)
+    const nav = navigator as Navigator & { share?: (data?: ShareData) => Promise<void> }
+    if (nav.share) {
+      try { await nav.share({ title: 'Bite Me Baby', url: window.location.href }) } catch { /* user cancel = guide ยังค้างให้ใช้ต่อ */ }
+    }
   }
 
   if (!show) return null
@@ -94,21 +123,56 @@ export function InAppBrowserNotice() {
         </button>
       </div>
       <p className="text-[11px] text-brand-muted leading-snug mb-2">
-        เว็บนี้<b>ห้ามเปิดในเบราว์เซอร์ของ Facebook</b> (แคชเก่า/บล็อกแผนที่·GPS) — กดปุ่มด้านล่างเพื่อเปิดภายนอก ถ้าไม่เด้ง ให้แตะ <b>⋮/แชร์ (มุมขวาบน) → เปิดในเบราว์เซอร์</b> แล้วเลือก Chrome/Safari (ถ้ากดปุ่มแล้วขึ้นหน้า error = กดปุ่ม ← ย้อนกลับ แล้วใช้เมนู ⋮ แทน)
+        เว็บนี้<b>ห้ามเปิดในเบราว์เซอร์ของ Facebook</b> (แคชเก่า/บล็อกแผนที่·GPS) — กดปุ่มด้านล่าง เราจะ<b>คัดลอกลิงก์ให้เลย</b> พร้อมวิธีเปิด Chrome ที่ใช้ได้จริง (กด ✕ เมื่อไหร่ก็ได้)
       </p>
       <div className="flex items-center gap-2">
-        {intentUrl ? (
-          // R77: <a href> เฟรมเดียว = ทางเดียวที่ WebView ซึ่งรู้จัก intent:// จะเด้ง Chrome ได้จริง
-          // (ไม่ใช้ window.open — ได้หน้า error/ไม่เด้งตามที่ Owner รายงาน) · ไม่มี target=_blank
-          <a href={intentUrl} className="btn btn-primary btn-xs" data-testid="inapp-open-external">
-            🌐 เปิดในเบราว์เซอร์ภายนอก
-          </a>
-        ) : (
-          <button type="button" className="btn btn-primary btn-xs" onClick={openExternalIos} data-testid="inapp-open-external">
-            🌐 เปิดในเบราว์เซอร์ภายนอก
-          </button>
-        )}
+        <button
+          type="button"
+          onClick={handleOpenExternal}
+          className="btn btn-primary btn-xs"
+          data-testid="inapp-open-external"
+        >
+          🌐 เปิดในเบราว์เซอร์ภายนอก
+        </button>
       </div>
+      {guideOpen && (
+        <div className="mt-2 rounded-lg border border-brand-primary/50 bg-white/80 p-2" data-testid="inapp-guide">
+          <p className="text-[11px] font-semibold text-brand-accent" data-testid="inapp-guide-status">
+            {copied
+              ? '📋 คัดลอกลิงก์แล้ว — เปิด Chrome แล้ววาง = ออกนอกแอปเฟซได้จริง'
+              : '📋 คัดลอกไม่สำเร็จ — กดปุ่ม "คัดลอกลิงก์" ด้านล่างอีกครั้ง'}
+          </p>
+          <ol className="mt-1 list-decimal pl-4 text-[11px] text-brand-muted leading-snug">
+            <li>ออกจากแอปเฟซ → เปิดแอป <b>Chrome</b></li>
+            <li>วางลิงก์ในช่องค้นหา = เข้าเว็บภายนอกทันที (ใช้งานต่อได้ทุกหน้า)</li>
+            <li>ทางเลือก: ⋮/แชร์ (มุมขวาบน) → เปิดในเบราว์เซอร์ ถ้าเมนูขึ้น</li>
+          </ol>
+          <div className="mt-2 flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              onClick={() => { void copyUrl().then(setCopied) }}
+              className="btn btn-outline btn-xs"
+              data-testid="inapp-copy"
+            >
+              📋 คัดลอกลิงก์
+            </button>
+            {intentUrl && (
+              // ปุ่มรอง: เครื่องที่ WebView รับ intent:// = เด้ง Chrome จริง (เฟรมเดียว · ห้าม window.open)
+              <a href={intentUrl} className="btn btn-primary btn-xs" data-testid="inapp-open-try">
+                ⚡ ลองเปิดเลย (เครื่องที่รองรับ)
+              </a>
+            )}
+            <button
+              type="button"
+              onClick={() => setGuideOpen(false)}
+              className="btn btn-ghost btn-xs"
+              data-testid="inapp-guide-close"
+            >
+              ปิดคำแนะนำ
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
