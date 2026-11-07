@@ -1,3 +1,42 @@
+> ## 🔴 SESSION CLOSE / HANDOVER (2026-11-07 · R78 · "ทำงานตามกฏต่อ ปิดให้หมด — owner รอทดสอบบนlive")
+> ### WORK STATE (ตาม .clinerules)
+> - **Task ID:** R78 (ปิดงานค้าง R77 · เตรียม live ให้ Owner ทดสอบ)
+> - **Status:** **CLOSED — ไม่มีงานโค้ดค้างที่ agent ทำได้เหลือ · live = R77 ครบ · DB สะอาด · CI เขียวทุก SHA R75–R77 · เหลือ Owner เทสต์มือถือ 15 ข้อ (TEST PACK ด้านล่าง)**
+> - **สิ่งที่ปิดรอบนี้ (ทุกข้อมีหลักฐาน):**
+>   ① **ปุ่ม "🌐 เปิดในเบราว์เซอร์ภายนอก" = Owner เลือก "คงไว้"** (คำสั่ง: *"ไม่ต้องเอาออก มีปุ่มกากบาทไว้ให้ปิดพอ"*) → คง `<a href={intent}>` R77 + ปุ่มปิด ✕ + แถบบอกเมนู ⋮ ตามเดิม · **ไม่แก้โค้ด** · pending "ทางเลือกรอบหน้า รอ Owner สั่ง" = ลงเอย (ค) · (ถ้าวันหลังอยากได้แบบ (ก) คัดลอกลิงก์+วิธีเปิด Chrome = สั่งได้ เปลี่ยนนิดเดียว)
+>   ② **CI = เขียวทุก SHA (GitHub Actions API · evidence `e2e/_r78_ci_runs.json` · ALL_GREEN=true):** `9f63b24` CI #42351981663 + Contract #42351981684 success · `918675d` CI #42357380668 + Contract #42357380734 + automation-scheduler #42361905393/#42362042928 success · `9db6664` CI #42364453845 + Contract #42364453834 success · `d420951` CI #42365923184 + Contract #42365923213 success (ตรงรูป Owner เขียว ✅) — failure เดียวใน 80 รันล่าสุด = `d48f83c` Contract #42073385855 (5 พ.ย. · เก่ากว่า R75 · ถูกแทนที่แล้ว) · **ปิด pending "CI ของ 9db6664"**
+>   ③ **OMNI flow probe รอบ 18:19 น. = 19/19 ALL PASS** (คำสั่ง "3 ทำด้วย" · ร้านเปิด · evidence `e2e/_r74_omni_flow.json` pass_count=19 + `_r74_omni_flow.log`): B3 ยืนยัน → ออเดอร์จริง `BMB-20261107-126` · B3b ยิงซ้ำ idempotent · B4 คอมเมนต์ไม่สร้างออเดอร์ · C ยกเลิกเทสต์ 4/4
+>   ④ **live deploy check = 4/4 ALL_PASS** (`e2e/_r78_live_check.json`): HTTP 200 · shared assets **19/19 byte-identical** (มีแค่ index-*.js/css คนละ hash = env chain ข้ามเครื่อง — **ไม่ใช่ของเก่า**) · **R77 markers ครบใน 102 chunks**: `inapp-close` · `bmb:inapp-notice-dismissed` · `preorder-day-strip` · `preorder-day-chip` · `inapp-open-external` · ข้อความ "เบราว์เซอร์ของ Facebook ใช้ GPS ไม่ได้" → **live = R77 ปัจจุบันจริง**
+>   ⑤ **DB สะอาดก่อน Owner เทสต์** (คำสั่งเดิม "เครียล์ให้ด้วย"): dry-run ก่อน (`e2e\_r78CleanDry.cmd`) → fire (`e2e\_r78CleanFire.cmd`) = ลบออเดอร์เทสต์ 4 + children 17 แถว + probe round 1 + social_events 6 + customers 4 + identities 3 + notifications/outbox 12 + auth `qa-r74-cust` (backup `_r74_cleanup_backup.json` LOCAL ONLY · ห้าม commit) → **CLEANUP_DONE + RESIDUE_DONE** · leftover **0 ทุกตาราง** · **orders = 16 = ลูกค้าจริงทั้งหมด** (ไม่แตะ) · cart_sessions เก่า 16 = คงเดิม (รอ Owner ตัดสินตามเดิม)
+> - **Verified:** `_r78_ci_runs.json` = ALL_GREEN 4 SHA · `_r74_omni_flow.json` = 19/19 · `_r78_live_check.json` = 4/4 · `_r74_clean.log` = CLEANUP_DONE · `_r74_residue.log` = RESIDUE_DONE · `node e2e\_r74CleanSweep.cjs` (หลัง fire) = leftover 0 + orders 16 · **src/ ไม่แตะเลย** (โค้ด = HEAD `d420951` ที่ CI เขียวอยู่แล้ว)
+> - **Failed:** — (หมายเหตุเครื่องมือ: `.cmd` detached redirect stdout ยังเขียน log ไม่ได้ = บทเรียน R74 เดิม → `_r78_live_check.log`/`_r78_sweep_*.log`/`_r78_inv.log` ว่าง = **ไม่ใช่ fail ของงาน** — evidence อยู่ในไฟล์ที่ script เขียนเองทุกตัว)
+> - **Blocked/UNVERIFIED (ไม่ใช่งานค้างรอบนี้):** ① **Owner เทสต์มือถือจริงบน live 15 ข้อ TEST PACK = เหลืออย่างเดียว** ② OMNI-5 = ค้างตามคำสั่งเดิม (รอ Meta Test User) ③ kitchen UTC defaults = รอ Owner สั่ง migration ④ CRM/omnichannel gap matrix = รอ credentials
+> - **Files Changed:** docs+evidence เท่านั้น — บล็อกนี้ · `docs/BMB_MASTER_STATUS.md` (บล็อก R78 + §9.0 แถว 57-61) · ใหม่ `e2e/_r78CiRuns.cjs` · `_r78LiveCheck.cjs` · `_r78CleanDry.cmd` · `_r78CleanFire.cmd` · `_r78LiveRun.cmd` · evidence `_r78_ci_runs.json` · `_r78_live_check.json` · `_r74_omni_flow.json` (รอบ 18:19) — **src/ ไม่แตะ → lint รันก่อน push เสมอ**
+> - **Tests/Commands Run:** `node e2e\_r78CiRuns.cjs` · `_r74FlowRun.cmd` (launch) → 19/19 · `_r78LiveRun.cmd` (launch) → 4/4 · `_r78CleanDry.cmd` → `_r78CleanFire.cmd` → `node e2e\_r74CleanSweep.cjs` (verify 0) · `npm run lint` (ก่อน push)
+> - **Known Risks:** (1) hash index-*.js/css ข้ามเครื่อง = normal (env define) — เช็กด้วย markers อย่าเหมาว่าของเก่า (2) Tailwind scan .md → CSS/entry hash เปลี่ยนทุกครั้งแก้เอกสาร (ไม่ break อะไร) (3) vitest เต็ม/build = ไม่ได้รันซ้ำ (src ไม่เปลี่ยน) — CI หลัง push = ตัวแทน
+> - **Next Exact Action:** Owner เทสต์ live ตาม TEST PACK ด้านล่าง → รายงานผลที่แชทนี้
+> ### TEST PACK (Owner เทสต์บน live — รายงานผลที่แชทนี้)
+> **A. ลิงก์จากเฟซ (R75+R76+R77)**
+> 1. แตะลิงก์จากคอมเมนต์/โพสต์ในแอปเฟซ → หน้าเว็บ**โหลดทันที** (ไม่ใช่หน้า error) + มีป๊อปอัพแถบล่าง
+> 2. กด **✕** ปิดป๊อปอัพ → ปิดได้ + ไม่เด้งซ้ำในแท็บเดิม
+> 3. ปุ่ม 🌐 เปิดในเบราว์เซอร์ภายนอก → เด้ง Chrome = ผ่าน · ถ้าเออเร่อ = กด ✕ ปิดได้ (**Owner เลือกคงไว้** = ตามการตัดสินใจ · ทางหลักใช้ข้อ 4)
+> 4. เมนู **⋮/แชร์ (มุมขวาบน) → เปิดในเบราว์เซอร์** → เลือก Chrome/Safari = เปิดได้เสมอ (ทางหลัก)
+> 5. ลิงก์ในคอมเมนต์/คำตอบ (ร้าน · ตะกร้า `?cart=`) = https:// สีน้ำเงิน แตะได้ เปิดถูกหน้า
+> **B. แจ้งเตือนลูกค้า (R76)**
+> 6. คอมเมนต์ใต้โพสต์ → เอไอตอบใต้คอมเมนต์**และ**ลูกค้าได้ข้อความใน Messenger ("🔔 แจ้งเตือน:…")
+> 7. ทักเพจ → เอไอตอบใน Messenger = แจ้งเตือนตามปกติ
+> 8. ลิงก์ในคำตอบแตะได้ทั้งจากคอมเมนต์และ Messenger
+> **C. GPS (R77)**
+> 9. checkout จากลิงก์เฟซ → Use my location → GPS มา = เติมที่อยู่อัตโนมัติ / ไม่มา = ข้อความบอกทางออก + เลื่อนลงแผนที่ปักหมุดให้เอง
+> 10. ปักหมุดบนแผนที่เอง/กรอกพิกัด → สั่งซื้อต่อได้
+> **D. เมนูพรีออเดอร์ (R77)**
+> 11. แท็บ "จองล่วงหน้า" = เห็นแถบ **📅 7 วันที่มีเมนู** + เลือกวันแล้วเมนูเปลี่ยนตามวัน
+> 12. เมนูเลยรอบส่งของวันปัจจุบัน = หายจากหน้าเมนู**และ**เมนูยอดนิยม
+> 13. เมนูยังไม่ลงปฏิทิน = ยังติดป้าย "ยังไม่ลงปฏิทินรอบถัดไป" แบบเดิม
+> **E. ของเดิมต้องไม่พัง**
+> 14. สั่งซื้อ same-day / pre-order ปกติ = ผ่านทั้ง flow (เลือกรอบ → ชำระเงิน)
+> 15. ลิงก์ตะกร้าจากคำตอบเอไอ = เปิดตะกร้าถูกต้อง เพิ่มเมนูต่อได้
+> - งานที่รออนุมัติเฉย ๆ (ไม่เกี่ยวกับเทสต์รอบนี้) = OMNI-5 · kitchen UTC migration · CRM credentials — เซสต์นี้ไม่แตะโค้ด (src/ คง HEAD `d420951`)
 > ## 🔴 SESSION CLOSE / HANDOVER (2026-11-07 · "ปุ่มเปิดภายนอก = ปุ่มกากบาทปิดป๊อปอัพ / เปิดบราวเซอร์ภายนอกลิ้งยังเออเร่อ / 7 วันโอเค / เครียล์ปิดเซสชั่น บันทึกงานผ่าน+ค้าง ไปทดสอบทั้งหมด ห้ามโค้ด")
 > ### งานที่ผ่านแล้ว (DONE — ทดสอบแล้ว/ยืนยันแล้ว)
 > - **R75** (commit `9f63b24`) — ลิงก์ที่เอไอสร้างทุกท่อ = https:// URL ที่แตะได้จริง (normalize + แก้ prompt + POST_CTA_FOOTER มี URL จริง) · deploy 3 EF · live 8/8

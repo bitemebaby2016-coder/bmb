@@ -1,0 +1,162 @@
+{
+  "at": "2026-11-07T11:28:47.214Z",
+  "live": "https://biteme-baby.com",
+  "checks": [
+    {
+      "name": "live-http-200",
+      "pass": true,
+      "detail": "status=200"
+    },
+    {
+      "name": "asset-sets-structural-equal",
+      "pass": true,
+      "detail": "only_local=[\"assets/index-I0aivDXn.js\",\"assets/index-DLrtZyN7.css\"] only_live=[\"assets/index-BisrxXP1.js\",\"assets/index-CKb7hd6Y.css\"]"
+    },
+    {
+      "name": "shared-assets-byte-identical",
+      "pass": true,
+      "detail": "19/19 identical · diffs=[]"
+    },
+    {
+      "name": "r77-markers-in-live-bundle",
+      "pass": true,
+      "detail": "chunks=102 {\"inapp_close\":true,\"notice_dismiss_key\":true,\"preorder_strip\":true,\"preorder_chip\":true,\"inapp_open_external\":true,\"gps_fb_blocked\":true}"
+    }
+  ],
+  "local_assets": [
+    "assets/index-I0aivDXn.js",
+    "assets/rolldown-runtime-Dd_uD5pT.js",
+    "assets/react-vendor-Cg2Z0Rye.js",
+    "assets/state-vendor-CXrbV_Ro.js",
+    "assets/supabase-vendor-OACgMRo1.js",
+    "assets/supabase-FeAyQTpS.js",
+    "assets/bmbAdminApi_promotions-B7Rbycxt.js",
+    "assets/promotionClient-BwCyhp-s.js",
+    "assets/addonDisplay-5L4ToLUz.js",
+    "assets/ToastContainer-Brp212zG.js",
+    "assets/scrollTo-9fTR3zvT.js",
+    "assets/catalogStructure-BlDZj9sS.js",
+    "assets/socialLinks-CKpU2TYv.js",
+    "assets/orderPolicy-DSALs-zr.js",
+    "assets/platformConfig-CZfHJ8vW.js",
+    "assets/bangkokTime-Cc1vJqoT.js",
+    "assets/shopHoursLogic-DHLIvP0c.js",
+    "assets/bmbStorage-CuSoL-ax.js",
+    "assets/auditLog-BmctSqWx.js",
+    "assets/bmbAdminApi_settings-CiMskJY0.js",
+    "assets/index-DLrtZyN7.css"
+  ],
+  "live_assets": [
+    "assets/index-BisrxXP1.js",
+    "assets/rolldown-runtime-Dd_uD5pT.js",
+    "assets/react-vendor-Cg2Z0Rye.js",
+    "assets/state-vendor-CXrbV_Ro.js",
+    "assets/supabase-vendor-OACgMRo1.js",
+    "assets/supabase-FeAyQTpS.js",
+    "assets/bmbAdminApi_promotions-B7Rbycxt.js",
+    "assets/promotionClient-BwCyhp-s.js",
+    "assets/addonDisplay-5L4ToLUz.js",
+    "assets/ToastContainer-Brp212zG.js",
+    "assets/scrollTo-9fTR3zvT.js",
+    "assets/catalogStructure-BlDZj9sS.js",
+    "assets/socialLinks-CKpU2TYv.js",
+    "assets/orderPolicy-DSALs-zr.js",
+    "assets/platformConfig-CZfHJ8vW.js",
+    "assets/bangkokTime-Cc1vJqoT.js",
+    "assets/shopHoursLogic-DHLIvP0c.js",
+    "assets/bmbStorage-CuSoL-ax.js",
+    "assets/auditLog-BmctSqWx.js",
+    "assets/bmbAdminApi_settings-CiMskJY0.js",
+    "assets/index-CKb7hd6Y.css"
+  ],
+  "assets": [
+    {
+      "asset": "assets/rolldown-runtime-Dd_uD5pT.js",
+      "match": "IDENTICAL"
+    },
+    {
+      "asset": "assets/react-vendor-Cg2Z0Rye.js",
+      "match": "IDENTICAL"
+    },
+    {
+      "asset": "assets/state-vendor-CXrbV_Ro.js",
+      "match": "IDENTICAL"
+    },
+    {
+      "asset": "assets/supabase-vendor-OACgMRo1.js",
+      "match": "IDENTICAL"
+    },
+    {
+      "asset": "assets/supabase-FeAyQTpS.js",
+      "match": "IDENTICAL"
+    },
+    {
+      "asset": "assets/bmbAdminApi_promotions-B7Rbycxt.js",
+      "match": "IDENTICAL"
+    },
+    {
+      "asset": "assets/promotionClient-BwCyhp-s.js",
+      "match": "IDENTICAL"
+    },
+    {
+      "asset": "assets/addonDisplay-5L4ToLUz.js",
+      "match": "IDENTICAL"
+    },
+    {
+      "asset": "assets/ToastContainer-Brp212zG.js",
+      "match": "IDENTICAL"
+    },
+    {
+      "asset": "assets/scrollTo-9fTR3zvT.js",
+      "match": "IDENTICAL"
+    },
+    {
+      "asset": "assets/catalogStructure-BlDZj9sS.js",
+      "match": "IDENTICAL"
+    },
+    {
+      "asset": "assets/socialLinks-CKpU2TYv.js",
+      "match": "IDENTICAL"
+    },
+    {
+      "asset": "assets/orderPolicy-DSALs-zr.js",
+      "match": "IDENTICAL"
+    },
+    {
+      "asset": "assets/platformConfig-CZfHJ8vW.js",
+      "match": "IDENTICAL"
+    },
+    {
+      "asset": "assets/bangkokTime-Cc1vJqoT.js",
+      "match": "IDENTICAL"
+    },
+    {
+      "asset": "assets/shopHoursLogic-DHLIvP0c.js",
+      "match": "IDENTICAL"
+    },
+    {
+      "asset": "assets/bmbStorage-CuSoL-ax.js",
+      "match": "IDENTICAL"
+    },
+    {
+      "asset": "assets/auditLog-BmctSqWx.js",
+      "match": "IDENTICAL"
+    },
+    {
+      "asset": "assets/bmbAdminApi_settings-CiMskJY0.js",
+      "match": "IDENTICAL"
+    }
+  ],
+  "r77_markers": {
+    "inapp_close": true,
+    "notice_dismiss_key": true,
+    "preorder_strip": true,
+    "preorder_chip": true,
+    "inapp_open_external": true,
+    "gps_fb_blocked": true
+  },
+  "chunks_scanned": 102,
+  "pass": true,
+  "pass_count": 4,
+  "total": 4
+}

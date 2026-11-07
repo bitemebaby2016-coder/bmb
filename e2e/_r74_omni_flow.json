@@ -1,11 +1,11 @@
 {
-  "date": "2026-11-07T02:00:57.379Z",
+  "date": "2026-11-07T11:18:47.901Z",
   "target": "https://ivkdfognyiwjcmrhcnwz.supabase.co/functions/v1/channel-webhook",
   "tests": [
     {
       "name": "setup-round-product",
       "pass": true,
-      "detail": "round=round-20261107-midday date=2026-11-07 cutoff=09:00:00 product=ลุยสวนหมู+กุ้ง"
+      "detail": "round=round-r74-20261107 date=? cutoff=? product=ลุยสวนหมู+กุ้ง"
     },
     {
       "name": "A0-verification-handshake",
@@ -20,7 +20,7 @@
     {
       "name": "A1b-raw-message-row",
       "pass": true,
-      "detail": "row={\"event_id\":\"msg-r74a-1794016857378\",\"status\":\"SUCCEEDED\",\"content\":\"สวัสดีค่ะ ขอดูเมนูหน่อยค่ะ\"}"
+      "detail": "row={\"event_id\":\"msg-r74a-1794050327900\",\"status\":\"SUCCEEDED\",\"content\":\"สวัสดีค่ะ ขอดูเมนูหน่อยค่ะ\"}"
     },
     {
       "name": "A2-refire-idempotent",
@@ -30,7 +30,7 @@
     {
       "name": "A3-structured-order-created",
       "pass": true,
-      "detail": "order=BMB-20261107-324 res={\"status\":200,\"body\":{\"order_number\":\"BMB-20261107-324\",\"duplicate\":false}}"
+      "detail": "order=BMB-20261107-506 res={\"status\":200,\"body\":{\"order_number\":\"BMB-20261107-506\",\"duplicate\":false}}"
     },
     {
       "name": "A3b-order-row-tagged",
@@ -50,17 +50,17 @@
     {
       "name": "A5-ledger-submit",
       "pass": true,
-      "detail": "order=BMB-20261107-747 status=200"
+      "detail": "order=BMB-20261107-147 status=200"
     },
     {
       "name": "A5b-ledger-replay-idempotent",
       "pass": true,
-      "detail": "replay=BMB-20261107-747 ledger_rows=1"
+      "detail": "replay=BMB-20261107-147 ledger_rows=1"
     },
     {
       "name": "A6-kitchen-fallback-accepted",
       "pass": true,
-      "detail": "kitchen=12.615659,102.098063 order=BMB-20261107-487 res={\"id\":\"ord-1794016879675-6b5cea\",\"status\":\"pending\",\"subtotal\":79,\"branch_id\":\"branch-tenant-bmb-001-main\",\"duplicate\":false,\"order_mode\":\"SAME_DAY\",\"tax_amount"
+      "detail": "kitchen=12.615659,102.098063 order=BMB-20261107-220 res={\"id\":\"ord-1794050353619-579b94\",\"status\":\"pending\",\"subtotal\":79,\"branch_id\":\"branch-tenant-bmb-001-main\",\"duplicate\":false,\"order_mode\":\"SAME_DAY\",\"tax_amount"
     },
     {
       "name": "B1-chit-chat-no-order",
@@ -80,7 +80,7 @@
     {
       "name": "B3-confirm-creates-order",
       "pass": true,
-      "detail": "order_rows=1 order=BMB-20261107-471 reply=เย้! จัดไปเลยครับคุณลูกค้า 🎉 สรุปออเดอร์นะครับ:\n\n🍽 ลุยสวนหมู+กุ้ง 2 ที่ (ไม่เผ็ด)\n🍳 ไข่ดาวเพิ่ม 2"
+      "detail": "order_rows=1 order=BMB-20261107-126 reply=เย้! ยืนยันแล้วครับคุณลูกค้า 🎉\n\nรายการที่สั่ง:\n- ลุยสวนหมู+กุ้ง 2 ที่ (ไม่เผ็ด) + ไข่ดาว 2 ฟอง\n- รอ"
     },
     {
       "name": "B3b-confirm-refire-idempotent",
@@ -100,19 +100,19 @@
   ],
   "orders": [
     {
-      "order_number": "BMB-20261107-324",
+      "order_number": "BMB-20261107-506",
       "why": "A3-structured"
     },
     {
-      "order_number": "BMB-20261107-747",
+      "order_number": "BMB-20261107-147",
       "why": "A5-ledger"
     },
     {
-      "order_number": "BMB-20261107-487",
+      "order_number": "BMB-20261107-220",
       "why": "A6-kitchen-fallback"
     },
     {
-      "order_number": "BMB-20261107-471",
+      "order_number": "BMB-20261107-126",
       "why": "B3-confirm"
     }
   ],
@@ -120,27 +120,27 @@
     {
       "step": "A1",
       "text": "สวัสดีค่ะ ขอดูเมนูหน่อยค่ะ",
-      "ai_reply": "สวัสดีครับคุณลูกค้า ยินดีต้อนรับสู่ Bite Me Baby จันทบุรีเลยครับ! 🍽️ วันนี้มีเมนูเด็ดๆ เยอะแยะเลย ทั้งไก่ทอดอินโด, แซลมอนย่างเกลือ, สามชั้นตุ๋นผักกาดดอง หรือจะ"
+      "ai_reply": "สวัสดีครับคุณลูกค้า! ยินดีต้อนรับเข้าสู่ Bite Me Baby จันทบุรีเลยครับ 😊 เมนูของเรามีให้เลือกเยอะแยะเลยครับ ทั้งไก่ทอดอินโด, ข้าวหมูผัดกิมจิ, สุกี้แห้งกุ้ง, แซล"
     },
     {
       "step": "B1",
       "text": "สวัสดีค่ะ วันนี้มีเมนูอะไรน่ากินบ้างคะ",
-      "ai_reply": "สวัสดีครับคุณลูกค้า! วันนี้ Bite ขอแนะนำเมนูส่งวันนี้ (Same Day) อร่อยๆ เลยนะครับ มี เมี่ยงแซลม่อน 79฿, สปาเกตตี้ผัดพริกแห้งกุ้ง 99฿, และ ข้าวลาบอกไก่+ไข่ต้ม 69฿ อิ่มคุ้มทุกจานเลยครับ หรือถ้าอยากจองล่"
+      "ai_reply": "สวัสดีครับคุณลูกค้า! วันนี้ Bite มีเมนูเด็ดๆ ทั้งแบบส่งวันนี้และจองล่วงหน้าเลยครับ 🎉\n\n📦 **ส่งวันนี้ (Same Day):**\n- เมี่ยงแซลม่อน 79฿\n- สปาเกตตี้ผัดพริกแห้งกุ้ง 99฿\n- ข้าวลาบอกไก่+ไข่ต้ม 69฿\n\n📅 **จ"
     },
     {
       "step": "B2",
       "text": "เอาลุยสวนหมู+กุ้ง 2 ที่ ไม่เผ็ด เพิ่มไข่ดาวด้วยค่ะ ขอคิดก่อนนะ",
-      "ai_reply": "ได้เลยครับคุณลูกค้า! สรุปให้ดูนะครับ: ลุยสวนหมู+กุ้ง 2 ที่ (ไม่เผ็ด) + ไข่ดาวเพิ่ม 2 ฟอง รวม 158฿ + ค่าไข่ดาวตามเว็บครับ 🍳 อร่อยแน่นอน ลุยสวนหมู+กุ้งเป็นเมนูแนะนำเลยนะครับ ทานแล้วสดชื่นมาก! คิดได้เมื"
+      "ai_reply": "ได้เลยครับคุณลูกค้า! ลุยสวนหมู+กุ้ง 2 ที่ ไม่เผ็ด เพิ่มไข่ดาว 2 ฟอง ราคา 79×2 = 158 บาท + ไข่ดาวจานละ 10 บาท (ถ้ามี) รวมประมาณ 178 บาทครับ 🥟✨\n\nถ้าคิดเสร็จแล้ว กดสั่งที่ https://biteme-baby.com/shop เ"
     },
     {
       "step": "B3",
       "text": "ตกลงค่ะ ยืนยัน สั่งเลยค่ะ",
-      "ai_reply": "เย้! จัดไปเลยครับคุณลูกค้า 🎉 สรุปออเดอร์นะครับ:\n\n🍽 ลุยสวนหมู+กุ้ง 2 ที่ (ไม่เผ็ด)\n🍳 ไข่ดาวเพิ่ม 2 ฟอง\n\nรวม 158฿ + ค่าไข่ดาวตามเว็บครับ\n\nรอบส่งเช้าวันนี้ (07:00-09:00) ทันนะครับ กดไปดูรายการแล้วชำระ"
+      "ai_reply": "เย้! ยืนยันแล้วครับคุณลูกค้า 🎉\n\nรายการที่สั่ง:\n- ลุยสวนหมู+กุ้ง 2 ที่ (ไม่เผ็ด) + ไข่ดาว 2 ฟอง\n- รอบส่งเช้า 07:00–09:00 น. วันที่ 2026-11-07\n\nกรุณากดไปที่ https://biteme-baby.com/checkout เพื่อเลือกช"
     },
     {
       "step": "B4",
       "text": "เอาลุยสวนหมู+กุ้ง 2 ที่ค่ะ",
-      "ai_reply": "สวัสดีครับ! ขอบคุณที่สนใจเมนูลุยสวนหมู+กุ้ง 2 ที่นะครับ 🥢✨ เมนูนี้เป็นตัวเลือกเด็ดมาก ๆ เลยครับ อยากให้ออเดอร์เป๊ะ ๆ ฝากกดสั่งผ่านเว็บ biteme-baby.com/shop เลยนะครับ จะมีระบบจัดการให้สะดวกขึ้น หรือถ้"
+      "ai_reply": "สวัสดีครับคุณลูกค้า! Bite รับออเดอร์แล้วนะครับ — ลุยสวนหมู+กุ้ง 2 ที่ ราคา 79 บาท/ที่ รวม 158 บาท กดเข้าไปเช็คเอาท์หรือเพิ่มเมนูต่อได้เลยที่ https://biteme-baby.com/shop หรือถ้าสะดวกทัก Inbox มาคุยราย"
     }
   ],
   "orders_cancelled": 4,
