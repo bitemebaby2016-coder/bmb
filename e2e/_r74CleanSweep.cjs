@@ -36,9 +36,11 @@ const esc = (s) => "'" + String(s).replace(/'/g, "''") + "'"
   const idList = ids.map(esc).join(',')
   const numList = nums.map(esc).join(',')
   console.log('sweep targets: ' + nums.length + ' orders / ' + ids.length + ' ids')
+  const empty = nums.length === 0
+  if (empty) console.log('ไม่มีออเดอร์เทสต์ใน inventory — ข้ามการกวาด/เช็ค (0 targets)')
 
   // 1) child ที่ผูกด้วย order_id (ตารางเหล่านี้เคยนับได้เฉพาะ order_id = order_items เป็นต้น)
-  for (const t of ['order_items', 'affiliate_attributions', 'points_ledger', 'production_batch_items', 'referral_attributions', 'referral_rewards']) {
+  for (const t of empty ? [] : ['order_items', 'affiliate_attributions', 'points_ledger', 'production_batch_items', 'referral_attributions', 'referral_rewards']) {
     const before = ((await q('select count(*)::int as n from ' + t + ' where order_id in (' + idList + ')')) || [])[0]
     const n = before ? before.n : 'ERR'
     if (FIRE && Number(n) > 0) {
@@ -50,7 +52,7 @@ const esc = (s) => "'" + String(s).replace(/'/g, "''") + "'"
     }
   }
   // 2) ยืนยันซ้ำว่าไม่มีแถวเทสต์หลงเหลือในตารางหลัก
-  for (const [t, c, list] of [
+  for (const [t, c, list] of empty ? [] : [
     ['orders', 'order_number', numList], ['order_status_history', 'order_number', numList], ['order_submissions', 'order_number', numList],
     ['payment_intents', 'order_number', numList], ['print_jobs', 'order_number', numList], ['points_ledger', 'order_number', numList],
   ]) {
@@ -59,7 +61,7 @@ const esc = (s) => "'" + String(s).replace(/'/g, "''") + "'"
   }
   // 3) นับซากเทสต์อื่น ๆ (รายงานอย่างเดียว — ยังไม่ลบ)
   const ev = ((await q("select count(*)::int as n from social_events where event_id like 'msg-r74%' or event_id like 'r74cmt%' or sender_id like 'r74-sim-%'")) || [])[0]
-  const cust = ((await q("select count(*)::int as n from customers where customer_name ~* '(ทดสอบ|r74 test|e2e[0-9]|wave2|dummy)' or email ~* '^e2e|^qa-'")) || [])[0]
+  const cust = ((await q("select count(*)::int as n from customers where full_name ~* '(ทดสอบ|r74 test|e2e[0-9]|wave2|dummy)' or email ~* '^e2e|^qa-'")) || [])[0]
   const users = ((await q("select count(*)::int as n from auth.users where email ~* '^e2e[0-9]|^qa-r74'")) || [])[0]
   const carts = ((await q("select count(*)::int as n from cart_sessions where created_at < now() - interval '3 days'")) || [])[0]
   const total = ((await q('select count(*)::int as n from orders')) || [])[0]

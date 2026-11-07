@@ -40,7 +40,8 @@ async function q(sql) {
   const tests = inv.classified.filter((c) => c.test)
   const nums = tests.map((c) => c.order_number)
   console.log('test orders to remove: ' + nums.length)
-  if (nums.length !== 26) { console.log('ABORT: expect 26 test orders, got ' + nums.length); process.exit(1) }
+  if (nums.length === 0) { console.log('no test orders — ไม่มีอะไรต้องลบ'); return }
+  if (nums.length > 200) { console.log('ABORT: too many test candidates (' + nums.length + ') — ตรวจสอบ inventory ก่อน'); process.exit(1) }
   const numList = nums.map((n) => "'" + n.replace(/'/g, "''") + "'").join(',')
   // id ของออเดอร์เทสต์ (order_items ฯลฯ ผูกด้วย order_id = 'ord-...' ไม่ใช่เลขที่ออเดอร์)
   const ordRows0 = (await q('select id, order_number from orders where order_number in (' + numList + ')')) || []
