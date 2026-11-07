@@ -453,9 +453,11 @@ describe('G7-24/25 G5 + G6 regression', () => {
     // G6 worker never gained publish capability
     // Owner 2026-10-16: G6 worker may send validated replies only (comment
     // reply + Messenger send) — page token env-only; no other Graph surface.
+    // R76 (Owner 2026-11-07 "ต้องมีแจ้งเตือนเฟซบุ้คให้ลูกค้าด้วย"): เพิ่ม surface ที่ 3 =
+    // /{comment_id}/private_replies (แจ้งเตือนลูกค้าเข้า Messenger · validated text เดิม)
     expect(g6WorkerSrc).toMatch(/Deno\.env\.get\('META_PAGE_ACCESS_TOKEN'\)/)
     const g6GraphUrls = [...g6WorkerSrc.matchAll(/https:\/\/graph\.facebook\.com\/v21\.0\/[^'"`]+/g)].map((m) => m[0])
-    for (const u of g6GraphUrls) expect(u).toMatch(/\$\{[^}]+\}\/(comments|messages)$/)
+    for (const u of g6GraphUrls) expect(u).toMatch(/\$\{[^}]+\}\/(comments|messages|private_replies)$/)
   })
   it('G6 contract columns untouched: no migration in G7 (022/109 sources intact in repo)', () => {
     expect(migration022).toMatch(/CREATE TABLE IF NOT EXISTS public\.content_approvals/)

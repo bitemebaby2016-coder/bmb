@@ -1,0 +1,109 @@
+{
+  "date": "2026-11-07T08:38:05.017Z",
+  "tests": [
+    {
+      "name": "R76-comment-reply-generated",
+      "pass": true,
+      "detail": "status=SUCCEEDED len=186"
+    },
+    {
+      "name": "R76-comment-no-broken-links",
+      "pass": true,
+      "detail": "none"
+    },
+    {
+      "name": "R76-comment-has-clickable-https",
+      "pass": true,
+      "detail": "https=https://biteme-baby.com/shop"
+    },
+    {
+      "name": "R76-comment-reply-sent-on-fb",
+      "pass": true,
+      "detail": "reply_status=sent provider=122146787583204867_28958369087154528"
+    },
+    {
+      "name": "R76-comment-notify-pipeline-ran",
+      "pass": true,
+      "detail": "dm_reply_id=(absent) dm_error=http_400:Unsupported post request. Object with ID '122146787583204867_2574481629737283' does not exist, canno"
+    },
+    {
+      "name": "R76-message-reply-generated",
+      "pass": true,
+      "detail": "status=SUCCEEDED len=254"
+    },
+    {
+      "name": "R76-message-no-broken-links",
+      "pass": true,
+      "detail": "none"
+    },
+    {
+      "name": "R76-message-has-clickable-https",
+      "pass": true,
+      "detail": "https=https://biteme-baby.com/shop"
+    },
+    {
+      "name": "R76-cleanup-no-orders",
+      "pass": true,
+      "detail": "order_rows=0"
+    },
+    {
+      "name": "R76-cleanup-rows-deleted",
+      "pass": true,
+      "detail": "left=0"
+    },
+    {
+      "name": "R76-cleanup-fb-objects-deleted",
+      "pass": true,
+      "detail": "{\"reply\":200,\"comment\":200,\"post\":200}"
+    }
+  ],
+  "cases": [
+    {
+      "label": "comment",
+      "eventId": "122146787583204867_2574481629737283",
+      "status": "SUCCEEDED",
+      "reply_status": "sent",
+      "reply_provider_id": "122146787583204867_28958369087154528",
+      "flags": {
+        "dm_reply_id": "(absent)",
+        "dm_error": "http_400:Unsupported post request. Object with ID '122146787583204867_2574481629737283' does not exist, canno"
+      },
+      "reply": "สุกี้แห้งกุ้งน่ากินใช่ไหมล่ะครับ 😋 จานนี้เส้นกรุบ ๆ กุ้งเด้ง ๆ น้ำจิ้มโบราณหอม ๆ สั่งง่ายมากครับ — กดสั่งตรงที่ https://biteme-baby.com/shop เลยครับ หรือทัก Inbox มา Bite ช่วยได้เลยครับ",
+      "links": [
+        {
+          "kind": "https",
+          "tok": "https://biteme-baby.com/shop"
+        }
+      ]
+    },
+    {
+      "label": "message",
+      "eventId": "msg-r76-sim-msg-1794040684888",
+      "status": "SUCCEEDED",
+      "reply_status": "failed",
+      "reply_provider_id": null,
+      "flags": {
+        "dm_reply_id": "(absent)",
+        "dm_error": "(absent)"
+      },
+      "reply": "สวัสดีครับผม Bite พนักงานเสิร์ฟร้าน Bite Me Baby จันทบุรีครับ ร้านเราเปิดทุกวัน 07:00-20:00 น. เลยครับ ตอนนี้ก็เปิดรับออเดอร์อยู่ครับ สั่งผ่านเว็บ https://biteme-baby.com/shop ได้เลยนะครับ หรือถ้าอยากคุยรายละเอียดเพิ่ม ทักมาได้เลยครับ สั่งเลยมั้ยครับ? 😊",
+      "links": [
+        {
+          "kind": "https",
+          "tok": "https://biteme-baby.com/shop"
+        }
+      ]
+    }
+  ],
+  "objects": {
+    "postId": "862940416913026_122146787583204867",
+    "realCmtId": "122146787583204867_2574481629737283",
+    "deleted": {
+      "reply": 200,
+      "comment": 200,
+      "post": 200
+    }
+  },
+  "pass_count": 11,
+  "total": 11
+}

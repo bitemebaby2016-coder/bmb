@@ -1,0 +1,22 @@
+{
+  "tool": "r76-private-reply-shape",
+  "ts": "2026-11-07T08:22:41.628Z",
+  "safety": "fake comment id only + read-only GET",
+  "fake_post": {
+    "http": 400,
+    "error": {
+      "message": "Unsupported post request. Object with ID '1234567890123456_9999999999999999' does not exist, cannot be loaded due to missing permissions, or does not support this operation. Please read the Graph API documentation at https://developers.facebook.com/docs/graph-api",
+      "type": "GraphMethodException",
+      "code": 100,
+      "error_subcode": 33,
+      "fbtrace_id": "AfowTzQ5PlzzhjiTzmlGCiY"
+    }
+  },
+  "real_comment": {
+    "http": 200,
+    "sender": null,
+    "can_reply_privately": true,
+    "can_comment": true,
+    "error": null
+  }
+}

@@ -111,11 +111,14 @@ describe('R57 ③ — ลิงก์จาก Facebook = บังคับเ�
     expect(externalBrowserIntentUrl('ไม่ใช่ url')).toBeNull()
   })
 
-  it('notice: Android redirect อัตโนมัติครั้งเดียว/แท็บ (กัน loop) + ไม่มีปุ่มอยู่ที่นี่ต่อ', () => {
+  it('notice: Android พยายามเปิดภายนอกครั้งเดียว/แท็บ (กัน loop · ไม่ทำลายหน้า) + ไม่มีปุ่มอยู่ที่นี่ต่อ', () => {
     expect(noticeSrc).toContain('sessionStorage.getItem(EXT_REDIRECT_KEY)')
     expect(noticeSrc).toContain("sessionStorage.setItem(EXT_REDIRECT_KEY, '1')")
     expect(noticeSrc).toContain('/Android/i.test(navigator.userAgent)')
-    expect(noticeSrc).toContain('window.location.replace(intent)')
+    // R76 (Owner "อาการเดิมเลย"): ห้ามนำทางหน้าปัจจุบันไป intent:// — FB WebView บางเครื่อง
+    // โหลด intent:// ไม่เป็น = ERR_UNKNOWN_URL_SCHEME กลืนทั้งหน้า → ใช้ window.open แบบไม่ทำลายหน้า
+    expect(noticeSrc).not.toContain('window.location.replace(intent)')
+    expect(noticeSrc).toContain('window.open(intent')
     // ปุ่ม/กลไก "อยู่ที่นี่ต่อ" ถูกถอดออกทั้งหมด (Owner ห้ามใช้เบราว์เซอร์ของเฟซ)
     expect(noticeSrc).not.toContain('data-testid="inapp-stay"')
     expect(noticeSrc).not.toContain('DISMISS_KEY')

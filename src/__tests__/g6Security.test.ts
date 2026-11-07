@@ -160,13 +160,16 @@ describe('G6-16..18 reply draft boundary', () => {
 
 // ---------- G6-19/20: bounded Meta write / social_post_draft remains blocked ----------
 describe('G6-19/20 Meta boundary + reserved task', () => {
-  it('G6-19v2 (Owner 2026-10-16 full-auto): outbound limited to comment reply + Messenger send of validated text', () => {
+  it('G6-19v2 (Owner 2026-10-16 full-auto · R76 2026-11-07): outbound limited to comment reply + Messenger send + comment private reply of validated text', () => {
     expect(workerSrc).toMatch(/Deno\.env\.get\('META_PAGE_ACCESS_TOKEN'\)/)
     expect(codeOnly).not.toMatch(/access_token[=:]/)
     expect(codeOnly).not.toMatch(/graph\.meta\.com/)
     const graphUrls = [...workerSrc.matchAll(/https:\/\/graph\.facebook\.com\/v21\.0\/[^'"`]+/g)].map((m) => m[0])
     expect(graphUrls.length).toBeGreaterThan(0)
-    for (const u of graphUrls) expect(u).toMatch(/\$\{[^}]+\}\/(comments|messages)$/)
+    // R76 (Owner: "เวลาเอไอตอบโพสหรือข้อความ ต้องมีแจ้งเตือนเฟซบุ้คให้ลูกค้าด้วย"): เพิ่ม
+    // surface ที่ 3 = /{comment_id}/private_replies (แจ้งเตือนลูกค้าเข้า Messenger ·
+    // validated text เดิมเท่านั้น · ยัง anchored ที่ท้าย URL = ห้ามปลายทางอื่นหลุดเข้ามา)
+    for (const u of graphUrls) expect(u).toMatch(/\$\{[^}]+\}\/(comments|messages|private_replies)$/)
     expect(workerSrc).toMatch(/reply_status: 'sent'/)
     expect(workerSrc).toMatch(/reply_status: 'failed'/)
     // send step still writes no business authority fields

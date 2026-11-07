@@ -321,10 +321,11 @@ async function markFailed(id: string, attempts: number, reason: string) {
   })
 }
 
-/** AUTO-SEND (Owner 2026-10-16 full-auto): exactly two Graph endpoints —
- *  comment reply + Messenger send — of the VALIDATED draft text only.
+/** AUTO-SEND (Owner 2026-10-16 full-auto): Graph endpoints — comment reply +
+ *  Messenger send + (R76) comment private reply (แจ้งเตือนลูกค้าเข้า Messenger) —
+ *  of the VALIDATED draft text only.
  *  Page token is env-only (META_PAGE_ACCESS_TOKEN), never caller-supplied. */
-async function sendReply(ev: SocialEventRow, text: string): Promise<{ ok: boolean; providerId?: string; reason?: string }> {
+async function sendReply(ev: SocialEventRow, text: string): Promise<{ ok: boolean; providerId?: string; reason?: string; dmId?: string | null; dmError?: string | null }> {
   if (!META_PAGE) return { ok: false, reason: 'no_page_token' }
   try {
     if (ev.platform === 'MESSENGER') {
@@ -337,7 +338,8 @@ async function sendReply(ev: SocialEventRow, text: string): Promise<{ ok: boolea
       })
       const j: any = await r.json().catch(() => null)
       if (!r.ok || !j || !j.message_id) return { ok: false, reason: 'http_' + r.status }
-      return { ok: true, providerId: String(j.message_id) }
+      // ข้อความ Messenger = แจ้งเตือนเฟซ/เมสเซนเจอร์ฝั่งลูกค้าโดยธรรมชาติ (dmId = message id เดียวกัน)
+      return { ok: true, providerId: String(j.message_id), dmId: String(j.message_id), dmError: null }
     }
     const r = await fetch(`https://graph.facebook.com/v21.0/${ev.event_id}/comments`, {
       method: 'POST',
@@ -347,7 +349,27 @@ async function sendReply(ev: SocialEventRow, text: string): Promise<{ ok: boolea
     })
     const j: any = await r.json().catch(() => null)
     if (!r.ok || !j || !j.id) return { ok: false, reason: 'http_' + r.status }
-    return { ok: true, providerId: String(j.id) }
+    // R76 (Owner: "เวลาเอไอตอบโพสหรือข้อความ ต้องมีแจ้งเตือนเฟซบุ้คให้ลูกค้าด้วย"):
+    // ตอบใต้คอมเมนต์สาธารณะแล้ว → ส่ง private reply เข้า Messenger ของลูกค้า
+    // = แจ้งเตือนเฟซ/เมสเซนเจอร์เสมอ (Graph: POST /{comment_id}/private_replies ·
+    //   ได้ 1 ครั้ง/คอมเมนต์ · best-effort — เฟซปฏิเสธแล้วไม่ล้มคำตอบหลัก ·
+    //   เก็บ dm_reply_id/dm_error ลง ai_guardrail_flags เป็นหลักฐาน)
+    let dmId: string | null = null
+    let dmError: string | null = null
+    try {
+      const rp = await fetch(`https://graph.facebook.com/v21.0/${ev.event_id}/private_replies`, {
+        method: 'POST',
+        headers: { Authorization: 'Bearer ' + META_PAGE, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: ('🔔 แจ้งเตือน: ระบบตอบกลับคอมเมนต์ของคุณแล้วครับ — รายละเอียดเดียวกันนี้อยู่ใต้โพสต์:\n\n' + text).slice(0, 1800) }),
+        signal: AbortSignal.timeout(15000),
+      })
+      const jp: any = await rp.json().catch(() => null)
+      if (rp.ok && jp && jp.id) dmId = String(jp.id)
+      else dmError = 'http_' + rp.status + ':' + String((jp && jp.error && jp.error.message) || 'no_id').slice(0, 100)
+    } catch (e) {
+      dmError = String(e).slice(0, 100)
+    }
+    return { ok: true, providerId: String(j.id), dmId, dmError }
   } catch (e) {
     return { ok: false, reason: String(e).slice(0, 80) }
   }
@@ -504,7 +526,7 @@ async function fallbackIntakeReply(ev: SocialEventRow, footer: string, reason: s
     ai_model: null,
     ai_reply_text: footerText,
     ai_validated: true,
-    ai_guardrail_flags: { fallback: reason.slice(0, 120) },
+    ai_guardrail_flags: { fallback: reason.slice(0, 120), dm_reply_id: sent.dmId || null, dm_error: sent.dmError || null },
     status: 'SUCCEEDED',
     processed_at: stamp,
     last_attempt_at: stamp,
@@ -701,6 +723,8 @@ async function processEvent(ev: SocialEventRow): Promise<{ id: string; result: s
     reply_provider_id: sent.providerId,
     reply_attempted_at: stamp,
     last_error: null,
+    // R76: หลักฐานการแจ้งเตือนฝั่งลูกค้า (private reply สำหรับคอมเมนต์ · message id สำหรับ Messenger)
+    ai_guardrail_flags: { ...flags, dm_reply_id: sent.dmId || null, dm_error: sent.dmError || null },
   })
   usage(ev.event_id, 'social_reply_send', draft.model || '-', 'sent')
   return { id: ev.id, result: 'succeeded', detail: `intent=${classification.intent} sent=true` }

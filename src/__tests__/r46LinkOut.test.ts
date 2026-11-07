@@ -42,9 +42,11 @@ describe('R46 — แบนเนอร์ในเว็บ: FB in-app = แจ
     expect(noticeSrc).not.toContain('data-testid="inapp-stay"')
     expect(noticeSrc).not.toContain('DISMISS_KEY')
     expect(noticeSrc).toContain('เปิดในเบราว์เซอร์')
-    // Android = redirect อัตโนมัติด้วย intent:// (บังคับ ไม่ใช่แค่แจ้ง)
+    // Android = พยายามเปิด intent:// แบบไม่ทำลายหน้า (R76: ห้าม location.replace —
+    // FB WebView ที่ไม่รู้จัก intent:// = ERR_UNKNOWN_URL_SCHEME กลืนทั้งหน้า = ลิงก์พังทุกลิงก์)
     expect(noticeSrc).toContain('externalBrowserIntentUrl')
-    expect(noticeSrc).toContain('window.location.replace(intent)')
+    expect(noticeSrc).not.toContain('window.location.replace(intent)')
+    expect(noticeSrc).toContain('window.open(intent')
     expect(layoutSrc).toContain('<InAppBrowserNotice />')
     expect(layoutSrc).toContain("import { InAppBrowserNotice } from './InAppBrowserNotice'")
   })
