@@ -24,6 +24,10 @@
 //   SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, AUTOMATION_TOKEN
 // ============================================
 
+// R75 (Owner: "ลิ้งที่เอไอสร้างใช้ไม่ได้เลยสักลิ้ง"): ข้อความโพสต์/footer ที่ส่งขึ้น Facebook
+// ต้องมีเฉพาะลิงก์ https:// URL เต็มรูปแบบที่แตะได้จริงเสมอ
+import { normalizeAiTextLinks } from '../_shared/socialLinkFormat.ts'
+
 const SB_URL = Deno.env.get('SUPABASE_URL') || ''
 const SERVICE = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || ''
 const TOKEN = Deno.env.get('AUTOMATION_TOKEN') || ''
@@ -105,14 +109,15 @@ async function publishToFeed(pageId: string, message: string, imageUrls: string[
 const POST_CTA_FOOTER = [
   '🛒 สั่งใต้โพสนี้ได้เลย — คอมเมนต์ใต้โพสได้',
   '💬 หรือทักไปสั่งใน Messenger',
-  '🌐 สั่งต่อที่เว็บ biteme-baby.com/shop',
+  '🌐 สั่งต่อที่เว็บ https://biteme-baby.com/shop',
   '✅ ปิดการขายผ่านช่องทางไหนก็ได้ — ทีมจัดรายการใส่ตะกร้าเตรียมไว้ให้พร้อม',
-  '🔗 ลิงก์เปิดเว็บภายนอก Facebook — แตะเพื่อยืนยันเปิดในเบราว์เซอร์ของคุณ',
+  '🔗 ลิงก์เปิดเว็บภายนอก Facebook — แตะเพื่อยืนยันเปิดในเบราว์เซอร์ของคุณ: https://biteme-baby.com/shop',
 ].join('\n')
 
-/** ต่อท้าย footer บังคับ (idempotent — ซ้ำถ้าเนื้อหามีอยู่แล้ว) */
+/** ต่อท้าย footer บังคับ (idempotent — ซ้ำถ้าเนื้อหามีอยู่แล้ว)
+ *  R75: ลิงก์ทั้งหมดในเนื้อหา (รวม body จาก AI) ถูก normalize เป็น https:// URL เต็มรูปแบบเสมอ */
 function withPostCta(text: string): string {
-  const base = String(text ?? '').trimEnd()
+  const base = normalizeAiTextLinks(String(text ?? '')).trimEnd()
   if (base.includes('ปิดการขายผ่านช่องทางไหนก็ได้')) return base
   return base ? `${base}\n\n—\n${POST_CTA_FOOTER}` : POST_CTA_FOOTER
 }

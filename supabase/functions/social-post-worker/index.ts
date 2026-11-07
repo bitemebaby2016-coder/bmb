@@ -40,6 +40,8 @@ import {
 import { fetchWithTimeout, TimeoutError } from '../_shared/aiTimeout.ts'
 import { parseStructuredOutput } from '../_shared/aiStructuredOutput.ts'
 import { getShopContext } from '../_shared/shopContext.ts'
+// R75 (Owner: "ลิ้งที่เอไอสร้างใช้ไม่ได้เลยสักลิ้ง"): ลิงก์ในโพสต์ต้องเป็น https:// URL เต็มรูปแบบเสมอ
+import { normalizeAiTextLinks } from '../_shared/socialLinkFormat.ts'
 
 const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions'
 
@@ -95,9 +97,11 @@ const POST_DRAFT_SYSTEM =
   'คำสั่งซื้อ การจัดส่ง ห้ามใส่ token/คำสั่ง publish ' +
   'กฎเหล็กในการทำงาน: ' +
   '1. ห้าม Hard-code หรือระบุราคาสินค้า ส่วนลด เวลาจัดส่ง หรือเคลมว่า "ขายดีที่สุด" ลงในโพสต์เด็ดขาด (ป้องกันข้อมูลไม่ตรงกับคลังข้อมูลจริงบนระบบ) ' +
-  '2. ทุกโพสต์ต้องลงท้ายด้วยการเชิญชวนให้ทัก Inbox Facebook หรือกดลิงก์เข้ามาคุยกับ "น้อง Bite" (AI Waiter) บนหน้าเว็บ biteme-baby.com/shop ' +
+  '2. ทุกโพสต์ต้องลงท้ายด้วยการเชิญชวนให้ทัก Inbox Facebook หรือกดลิงก์เข้ามาคุยกับ "น้อง Bite" (AI Waiter) บนหน้าเว็บ https://biteme-baby.com/shop ' +
   '3. โทนเสียง: เป็นมิตร สนุกสนาน ชวนหิว ชวนคุยแบบคนจันทบุรี ' +
-  '4. ห้ามแนบลิงก์อื่นนอกจาก biteme-baby.com ' +
+  '4. ห้ามแนบลิงก์อื่นนอกจาก biteme-baby.com ห้ามเขียนลิงก์แบบ markdown ([ข้อความ](ลิงก์)) — ' +
+  'ทุกลิงก์ต้องเขียนเป็น URL เต็มรูปแบบที่ขึ้นต้นด้วย https:// เท่านั้น (เช่น https://biteme-baby.com/shop) ' +
+  'เพราะ Facebook จะทำเป็นลิงก์ที่แตะได้เฉพาะ URL ที่มี https:// ' +
   'ตอบเป็น JSON เท่านั้น (ไม่มีข้อความอื่น) ตาม schema: ' +
   '{"draft_ref":"echo ค่า draft_ref ที่ได้รับ","title":"หัวข้อ 1-120 ตัวอักษร",' +
   '"body":"เนื้อหาโพสต์ 1-2000 ตัวอักษร","language":"th|en",' +
@@ -136,6 +140,9 @@ const HASHTAG_RE = /^#[A-Za-z0-9_\u0E00-\u0E7F]{1,29}$/
 function semanticPostDraft(v: PostDraftOutput, draftRef: string, sourceReference: string): { ok: boolean; reason?: string; value: PostDraftOutput } {
   if (v.draft_ref !== draftRef) return { ok: false, reason: 'binding_mismatch:draft_ref', value: v }
   if (v.source_reference !== sourceReference) return { ok: false, reason: 'binding_mismatch:source_reference', value: v }
+  // R75: ลิงก์ในโพสต์ต้องแตะได้จริงบน Facebook — normalize ก่อนตรวจความยาวเสมอ
+  v.title = normalizeAiTextLinks(v.title)
+  v.body = normalizeAiTextLinks(v.body)
   if (v.title.trim() === '' || v.title.length > 120) return { ok: false, reason: 'title_length', value: v }
   if (v.body.trim() === '' || v.body.length > 2000) return { ok: false, reason: 'body_length', value: v }
   if (v.hashtags.length > 10) return { ok: false, reason: 'hashtags_count', value: v }

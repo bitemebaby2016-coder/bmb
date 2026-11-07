@@ -40,7 +40,9 @@ describe('R44 — footer บังคับคู่โพสทุกครั�
     expect(publishSrc).toContain('POST_CTA_FOOTER')
     expect(publishSrc).toContain('🛒 สั่งใต้โพสนี้ได้เลย')
     expect(publishSrc).toContain('💬 หรือทักไปสั่งใน Messenger')
-    expect(publishSrc).toContain('🌐 สั่งต่อที่เว็บ biteme-baby.com/shop')
+    // R75 (Owner 2026-11-07: "ลิ้งที่เอไอสร้างใช้ไม่ได้เลยสักลิ้ง") — ลิงก์ต้องเป็น https:// URL
+    // เต็มรูปแบบ (แตะได้จริงบน Facebook) — เดิม hard-code โดเมนเปล่า = ตัวบั๊กเอง
+    expect(publishSrc).toContain('🌐 สั่งต่อที่เว็บ https://biteme-baby.com/shop')
     expect(publishSrc).toContain('✅ ปิดการขายผ่านช่องทางไหนก็ได้')
     expect(publishSrc).toContain('🔗 ลิงก์เปิดเว็บภายนอก Facebook — แตะเพื่อยืนยันเปิดในเบราว์เซอร์ของคุณ')
     expect(publishSrc).toContain('function withPostCta(text: string): string')

@@ -1,0 +1,75 @@
+{
+  "date": "2026-11-07T07:30:28.446Z",
+  "cases": [
+    {
+      "label": "comment",
+      "eventId": "r75-sim-cmt-1794036628445",
+      "status": "SUCCEEDED",
+      "reply_status": "failed",
+      "reply": "ขอบคุณครับที่ชมว่าสุกี้แห้งกุ้งน่ากิน! 😋 เมนูนี้มีให้สั่งวันนี้รอบส่งเช้าหะ หรือจะพรีออเดอร์ล่วงหน้าก็ได้ครับ สั่งง่ายๆเลยที่ https://biteme-baby.com/shop เลยครับ หรือทัก Inbox มาได้เลยนะครับ Bite ช่วยได้เต็มที่ครับ",
+      "links": [
+        {
+          "kind": "https",
+          "tok": "https://biteme-baby.com/shop"
+        }
+      ]
+    },
+    {
+      "label": "message",
+      "eventId": "msg-r75-sim-msg-1794036628445",
+      "status": "SUCCEEDED",
+      "reply_status": "failed",
+      "reply": "สวัสดีครับคุณลูกค้า! ร้าน Bite Me Baby เปิดทุกวัน 07:00-20:00 น. จ้า สั่งได้ผ่านเว็บ https://biteme-baby.com/shop เลยนะ หรือถอยหลังดูเมนูแล้วก๊อปไปสั่งก็ได้ครับ มีรอบส่งเช้า เที่ยง เย็น แถมสั่งล่วงหน้าได้ด้วยนะ สั่งเลยครับ!",
+      "links": [
+        {
+          "kind": "https",
+          "tok": "https://biteme-baby.com/shop"
+        }
+      ]
+    }
+  ],
+  "tests": [
+    {
+      "name": "R75-comment-reply-generated",
+      "pass": true,
+      "detail": "status=SUCCEEDED len=216"
+    },
+    {
+      "name": "R75-comment-no-broken-links",
+      "pass": true,
+      "detail": "none"
+    },
+    {
+      "name": "R75-comment-has-clickable-https",
+      "pass": true,
+      "detail": "https=https://biteme-baby.com/shop"
+    },
+    {
+      "name": "R75-message-reply-generated",
+      "pass": true,
+      "detail": "status=SUCCEEDED len=223"
+    },
+    {
+      "name": "R75-message-no-broken-links",
+      "pass": true,
+      "detail": "none"
+    },
+    {
+      "name": "R75-message-has-clickable-https",
+      "pass": true,
+      "detail": "https=https://biteme-baby.com/shop"
+    },
+    {
+      "name": "R75-cleanup-no-orders",
+      "pass": true,
+      "detail": "order_rows=0"
+    },
+    {
+      "name": "R75-cleanup-rows-deleted",
+      "pass": true,
+      "detail": "left=0"
+    }
+  ],
+  "pass_count": 8,
+  "total": 8
+}
