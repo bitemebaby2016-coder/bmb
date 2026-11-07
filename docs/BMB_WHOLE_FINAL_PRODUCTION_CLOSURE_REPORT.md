@@ -146,3 +146,34 @@
 1. **deploy EF (`channel-webhook` + `social-ai-worker` ตัวแก้) — ค้างอย่างเปิดเผย:** คำสั่ง "deploy ให้ด้วย" ทำไม่สำเร็จ — ลองครบแล้วทุกเส้นทาง (mgmt API/CLI 401 · คีย์โปรเจกต์ management ไม่รับ · ไม่มี login cache · workflows ไม่มี deploy path) — เมื่อมี Management auth ใหม่ → `node e2e\_r74DeployFns.cjs` คำสั่งเดียวจบ → `node e2e\_r74OmniFlow.cjs` ซ้ำ = คาด B2b/B3/B3b เขียว
 2. **Meta Test User live chat (OMNI-5) ด้วย `META_PAGE_ACCESS_TOKEN`** (คีย์ที่ใช้ได้ · Owner ยืนยันทดสอบได้)
 3. **Owner ทดสอบ live ทั้งหมด** ตาม test pack §R73h/§R74-OMNI/§RG → จดหลักฐาน (anti-gaming)
+
+## §8 — R74-OMNI session 3 (2026-11-07 · OMNI flow 19/19 ALL PASS + แก้บั๊ก shopContext rounds window + คู่มือสอน Owner + Key Registry)
+
+> อัปเดตตามคำสั่ง Owner 2026-11-07 ("1 ร้านเปิดแล้ว รันสคริปด้วย 2 ok 3 รอคนใหม่ลงทะเบียนผู้พัฒนาก่อนถึงทดสอบให้ · อัปเดตเอกสารรวมเอกสารนี้ · บันทึกเรื่อง key · สอน owner ทำรายการทดสอบที่ค้างทั้งหมดตามเอกสาร") · **ยังคงไม่ประกาศ COMPLETE / PRODUCTION READY** (§3 ใช้อยู่ทุกข้อ) · หลักฐาน = รันจริงบนเครื่องนี้
+
+| เรื่อง | สถานะจริง ณ 2026-11-07 | evidence |
+|---|---|---|
+| OMNI flow (OMNI-2+3+4) | **`R74 OMNI FLOW: 19/19 ALL PASS` บน production จริง** (รอบ 4 · 09:04) — "ยืนยัน → ออเดอร์จริง" (B3) = `BMB-20261107-471` (2 ที่ ไม่เผ็ด + ไข่ดาว x2) + B3b idempotent + **no-auto-order** B1/B2/B4 + A-suite ครบ (intake/idempotent/structured/ledger/kitchen-fallback) + A5b `ledger_rows=1` + cleanup 4/4 | `e2e/_r74_omni_flow.json` (รอบ 19/19) |
+| production bug ใหม่ที่เจอรอบนี้ | **`shopContext.getShopContext()` query `delivery_rounds` ไม่กรองวันที่** (`scheduled_date.asc&limit=40` → หน้าต่าง 40 แถวแรก = รอบ 23 ต.ค.–5 พ.ย. ปิดหมด · ตารางมี 92 แถว) → ไม่เห็นรอบวันนี้ → STORE STATUS = "ปิดรับรอบวันนี้" ทั้งที่ร้านเปิด (`same_day_open=true`) → LLM/extractor เข้าใจผิด → **ลูกค้ายืนยันสั่งแล้วไม่สร้างออเดอร์** — **แก้แล้ว** (กรอง `scheduled_date>=วันนี้` แบบบรรทัด menu_schedule + เก็บ null-date) + deploy **3 ฟังก์ชัน** (เพิ่ม `social-post-worker` ที่ใช้ shopContext เดียวกัน) + verify 19/19 | `supabase/functions/_shared/shopContext.ts` · `_r74_gates2.log` · `_r74_deploy.log` |
+| deploy EF | **3/3 ฟังก์ชัน** (channel-webhook + social-ai-worker + social-post-worker · exit=0) ด้วยคีย์ `bmb_PAT_SUPABASE_ACCESS_TOKEN` (PAT ใหม่ที่ Owner วางใน `.env.local` 2026-11-06 22:05) | `e2e/_r74_deploy.log` |
+| Gates รอบปิด | **tsc=0 · lint=0 · vitest 212 ไฟล์ / 2,162 tests / 0 fail · build=0** | `e2e/_r74_gates2.log` |
+| คู่มือสอน Owner | **test pack §R75** — เดินรายการทดสอบที่ค้างทั้งหมด = ชุด ก (§R73h 7 ข้อ) + ชุด ข (§R74-OMNI 8 ข้อ) + ชุด ค (§RG role walk + RG·13) + วิธีจดหลักฐาน (anti-gaming) | `docs/BMB_PRODUCTION_TEST_PACK.md` §R75 |
+| งานที่ค้าง (โอนต่อ) | ① **OMNI-5 live chat = รอคนใหม่ลงทะเบียนผู้พัฒนาก่อน (คำสั่ง Owner)** → เมื่อพร้อม: provision Meta Test User + ทักเพจ ≥1 ข้อความ → `node e2e\_r74Omni5Live.cjs --psid <PSID> --confirm-name <ชื่อ> --fire` ② **Owner เทสต์ live ตาม §R75** แล้วจดหลักฐานใน test pack | test pack §R75 |
+
+### §8.1 — Key Registry (บันทึกเรื่อง key ตามคำสั่ง Owner · **ชื่อ+สถานะเท่านั้น — ห้ามลงค่าลับในไฟล์/แชท**)
+
+| คีย์ (ชื่อ) | สถานะ | ใช้ทำอะไร / หมายเหตุ |
+|---|---|---|
+| `META_PAGE_ACCESS_TOKEN` | **ใช้ได้** | page token ยาว (never-expire · `debug_token` verified) — ใช้ทุกวัน (ตอบแชท/ส่งข้อความ/Graph send) |
+| `sb_publishable_` / `sb_secret_` (Supabase API) | **ใช้ได้** | anon/service ของโปรเจกต์ — ใช้ทุกวัน (verified 200) |
+| `bmb_PAT_SUPABASE_ACCESS_TOKEN` (Supabase Management PAT · ค่าอยู่แถว `SUPABASE_ACCESS_TOKEN` ใน `.env.local`) | **ใช้ได้** | deploy EF + mgmt query (ledger `order_submissions`) — Owner ให้มา 2026-11-06 22:05 |
+| `CHANNEL_WEBHOOK_APP_SECRET` + `CHANNEL_WEBHOOK_VERIFY_TOKEN` | **ใช้ได้** | HMAC-SHA256 sign webhook ทดสอบเข้า pipeline จริง |
+| `BMB_openrouter_api_key` | **ใช้ได้** | LLM (extract/reply) |
+| `BMB_LIVE_STRIPE_SECRET_KEY` / `BMB_TEST_STRIPE_SECRET_KEY` | **ใช้ได้** | จ่ายเงิน (live/test) |
+| `BMB_GOOGLE_MAPS_*` (browser/server) | **ใช้ได้** | แผนที่/geocode |
+| `GITHUB_TOKEN_BMB` | **ใช้ได้** | CI/Actions |
+| ขนส่ง `LINE MAN` / `Grab` / `Google Routes` (ใน `.env`) | **ใช้ได้** | คีย์ขนส่งที่ใช้ทุกวัน (`src/lib/providers/*`) |
+| `META_USER_ACCESS_TOKEN` | **ยกเลิก — ห้ามใช้ซ้ำ** | Test User token หมดอายุ 2026-10-06 (`debug_token`: user logged out 190/467) |
+| `SUPABASE_ACCESS_TOKEN` ค่า `sbp_` เดิม (ก่อน 2026-11-06 22:05) | **ยกเลิก — ห้ามใช้ซ้ำ** | Management PAT ตาย (401 "Invalid access token") — ค่าถูกแทนที่ด้วย PAT ใหม่แล้ว |
+
+> **กติกา key (บันทึกไว้เป็น policy):** ① ค่าลับ **ไม่เข้า git / ไม่พิมพ์ในแชท** (ชื่อหรือ masked เท่านั้น) ② คีย์ที่ยกเลิก/ตาย = **ห้าม reuse** · คีย์ใหม่ตั้งชื่อคนละชื่อกับคีย์เก่า (บทเรียน `bmb_PAT_SUPABASE_ACCESS_TOKEN` vs `SUPABASE_ACCESS_TOKEN` ค่า sbp_ เดิม) ③ คีย์ที่ระบบใช้ทุกวัน = ไม่เคยหมดอายุ (verified 2026-11-06: page token + sb keys ผ่าน 200 ทุกตัว · คีย์ที่ตาย = คนละตัวที่ไม่ได้ใช้ประจำวัน)

@@ -12,7 +12,7 @@ const ENV_LINES = fs.readFileSync(path.join(ROOT, '.env.local'), 'utf8').split(/
 const pick = (name) => [...ENV_LINES.map((l) => l.match(new RegExp('^' + name + '=(.*)$'))).filter(Boolean).map((m) => m[1].trim())].reverse()
 const TOKENS = [...pick('bmb_PAT_SUPABASE_ACCESS_TOKEN'), ...pick('SUPABASE_ACCESS_TOKEN')]
 if (TOKENS.length === 0) { console.log('NO_SUPABASE_ACCESS_TOKEN'); process.exit(1) }
-for (const NAME of (process.argv[2] ? [process.argv[2]] : ['channel-webhook', 'social-ai-worker'])) {
+for (const NAME of (process.argv[2] ? [process.argv[2]] : ['channel-webhook', 'social-ai-worker', 'social-post-worker'])) {
   let deployed = false
   for (const AT of TOKENS) {
     const r = spawnSync('npx', ['--no-install', 'supabase', 'functions', 'deploy', NAME, '--project-ref', 'ivkdfognyiwjcmrhcnwz'], {

@@ -340,8 +340,11 @@ export async function getShopContext(
     restGet(deps.sbUrl, deps.serviceKey,
       '/rest/v1/business_settings?select=key,value&limit=40'),
     // R43 B4: รอบจัดส่งจริง → คำนวณ STORE STATUS (สด) (mirror เว็บ · ห้ามตอบจากเวลา static)
+    // R74 (บั๊กที่เจอ 2026-11-07: query เดิมไม่กรองวันที่ → limit=40 ได้แต่แถวเก่าปิดหมด
+    //   ไม่เห็นรอบวันนี้ → LLM ตอบ "ปิดรับรอบวันนี้" ทั้งที่ร้านเปิด · ลูกค้ายืนยันสั่งแล้วไม่สร้างออเดอร์):
+    //   กรองวันนี้เป็นต้นไปแบบเดียวกับ menu_schedule ด้านล่าง + เก็บแถวไม่มีวันที่ไว้ตามตรรกะเดิม (todayRows)
     restGet(deps.sbUrl, deps.serviceKey,
-      '/rest/v1/delivery_rounds?select=status,display_name,cutoff_time,pre_order_cutoff,delivery_start,delivery_end,max_capacity,current_count,scheduled_date,round_key&order=scheduled_date.asc&limit=40'),
+      `/rest/v1/delivery_rounds?select=status,display_name,cutoff_time,pre_order_cutoff,delivery_start,delivery_end,max_capacity,current_count,scheduled_date,round_key&or=(scheduled_date.gte.${bkkToday},scheduled_date.is.null)&order=scheduled_date.asc&limit=40`),
     // R58: ปฎิทินเมนูจริง (published, วันนี้เป็นต้นไป) → วันพรีออเดอร์ต้องผูกวันจริง
     restGet(deps.sbUrl, deps.serviceKey,
       `/rest/v1/menu_schedule?select=scheduled_date,product_id&is_published=eq.true&scheduled_date=gte.${bkkToday}&order=scheduled_date.asc&limit=200`),
