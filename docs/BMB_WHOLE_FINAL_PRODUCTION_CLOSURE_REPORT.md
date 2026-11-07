@@ -177,3 +177,13 @@
 | `SUPABASE_ACCESS_TOKEN` ค่า `sbp_` เดิม (ก่อน 2026-11-06 22:05) | **ยกเลิก — ห้ามใช้ซ้ำ** | Management PAT ตาย (401 "Invalid access token") — ค่าถูกแทนที่ด้วย PAT ใหม่แล้ว |
 
 > **กติกา key (บันทึกไว้เป็น policy):** ① ค่าลับ **ไม่เข้า git / ไม่พิมพ์ในแชท** (ชื่อหรือ masked เท่านั้น) ② คีย์ที่ยกเลิก/ตาย = **ห้าม reuse** · คีย์ใหม่ตั้งชื่อคนละชื่อกับคีย์เก่า (บทเรียน `bmb_PAT_SUPABASE_ACCESS_TOKEN` vs `SUPABASE_ACCESS_TOKEN` ค่า sbp_ เดิม) ③ คีย์ที่ระบบใช้ทุกวัน = ไม่เคยหมดอายุ (verified 2026-11-06: page token + sb keys ผ่าน 200 ทุกตัว · คีย์ที่ตาย = คนละตัวที่ไม่ได้ใช้ประจำวัน)
+
+### §8.2 — test-data cleanup (2026-11-07 · คำสั่ง Owner "ออเดอร์ทดสอบที่เอไอทุกตัวทำค้างไว้ แดชบอร์ดรกมาก เครียล์ให้ด้วย")
+
+| เรื่อง | ผลจริง | evidence |
+|---|---|---|
+| สำรวจ (read-only) | orders ทั้งหมด 42 ใบ = **เทสต์ 26** (probe R74 15 + E2E matrix 4 พ.ย. 11) / **ลูกค้าจริง 16** — จำแนกด้วยหลายสัญญาณ (ext_ref `msg-r74*` · ชื่อเทสต์ · บัญชีเทสต์ · probe-round) | `e2e/_r74_cleanup_inventory.json` (LOCAL · PII · ไม่เข้า git) |
+| ลบออเดอร์เทสต์ | **26 ใบ + child 134 แถว** (order_items 26 · order_status_history 55 · order_submissions 14 · payment_intents 10 · points_ledger 2 · print_jobs 27) + test round `round-r74-20261106` → **orders เหลือ 16 = ของลูกค้าจริงทั้งหมด (delivered 13 + cancelled 3) · leftover 0 ทุกตาราง** | `e2e/_r74_clean.log` (CLEANUP_DONE) · `_r74CleanSweep.cjs` |
+| ลบซากเทสต์อื่น | social_events 58 (`msg-r74*`/`r74cmt`/`r74-sim`) + customer_channel_identities 29 + customers เทสต์ 42 + notifications/notification_outbox 77×2 + auth users เทสต์ 13 (`e2e*`/`qa-r74`) — **เก็บบัญชี harness admin/qa หลักไว้** · recheck 0 ทุกรายการ | `e2e/_r74_residue.log` (RESIDUE_DONE) |
+| ไม่แตะ (ตั้งใจ) | ออเดอร์/ข้อมูลลูกค้าจริง 16 ใบ + 3 รายจริง · `cart_sessions` เก่า 16 แถว (ปนลูกค้าจริงได้ · รอ Owner ตัดสิน) · ออเดอร์ประวัติ/replay = ข้อมูลจริง | inventory diff |
+| เครื่องมือรอบถัดไป | `_r74CleanInv.cjs` → `_r74CleanRun.cjs --fire` → `_r74CleanSweep.cjs` → `_r74CleanResidue.cjs --fire` (DRY-RUN default + backup + ผูกหลักฐานก่อนลบ) | `e2e/_r74Clean*.cjs` |
