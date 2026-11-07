@@ -37,6 +37,8 @@ vi.mock('@/lib/bmbAdminApi_orders', () => ({
   getOrderStatusHistory: vi.fn(),
   getOrderAuditTrail: vi.fn(),
   getRoundsByIds: m.getRoundsByIds,
+  // Owner 2026-11-07: date scope — แท็บเดือน (ไม่มีเดือนสมมติในเทสต์นี้)
+  getOrderMonthKeys: vi.fn(async () => []),
 }))
 
 vi.mock('@/lib/bmbAdminApi_products', () => ({ getProductsAdmin: m.getProductsAdmin }))

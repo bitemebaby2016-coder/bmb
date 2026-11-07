@@ -7,6 +7,7 @@ import { showToast } from '@/components/ui/ToastContainer'
 import {
   getOrdersPaged, updateOrderStatus, confirmOfflinePayment, rejectOfflinePayment, stripeRefundOrder, cancelOrder,
   getDeliveryAssignmentsFor, getOrderStatusHistory, getOrderAuditTrail, getRoundsByIds, getOrder,
+  getOrderMonthKeys,
 } from '@/lib/bmbAdminApi_orders'
 // R21 (Owner 2026-10-29): พิมพ์ใบสั่งอาหารเข้าครัว/ใบเสร็จจากเทมเพลตเดิมของระบบ
 import {
@@ -25,6 +26,8 @@ import {
   orderModeBadge, paymentStateBadge, deliveryStateBadge, fulfillmentBadge,
   isCancellable,
 } from '@/lib/adminOrderDisplay'
+// Owner 2026-11-07: date scope — "ทุกโหมด = วันปัจจุบันเท่านั้น" + แท็บเดือน (อดีต) แถวเดียวกับ mode chips
+import { dateScopeForToday, dateScopeForMonth, monthChipLabel } from '@/lib/orderDateScope'
 import {
   groupPreOrders, roundCapacityState, roundCutoffState, isPaymentException,
 } from '@/lib/preOrderQueue'
@@ -76,6 +79,10 @@ export function AdminOrders() {
     const p = searchParams.get('mode')
     return p === 'SAME_DAY' || p === 'PRE_ORDER' ? p : 'all'
   })
+  // Owner 2026-11-07: date scope — default "วันนี้เท่านั้น" (ทุกโหมด) + แท็บเดือนสำหรับออเดอร์อดีต
+  // (กดแท็บเดือนที่ active อยู่ซ้ำ = กลับ "วันนี้" · ใช้ร่วมกับ status/mode filter ได้ทุกชุด)
+  const [scope, setScope] = useState<{ kind: 'today' } | { kind: 'month'; month: string }>({ kind: 'today' })
+  const [monthKeys, setMonthKeys] = useState<string[]>([])
   const [productById, setProductById] = useState<Record<string, Product>>({})
   // W4-A: server-side pagination — avoids loading the full orders table on every visit.
   const [page, setPage] = useState(0)
@@ -110,6 +117,10 @@ export function AdminOrders() {
 
   const loadOrders = useCallback(async (p: number = page, status: string = filterStatus, mode: 'all' | 'SAME_DAY' | 'PRE_ORDER' = filterMode) => {
     setLoadError('')
+    // Owner 2026-11-07: date scope — "วันนี้" (default) หรือเดือนที่กดจากแท็บ (union สองเงื่อนไข
+    // scheduled/created ในชั้น API · ห้ามซ่อนออเดอร์จริง) + แท็บเดือน refresh ทุกโหลด
+    const dateScope = scope.kind === 'today' ? dateScopeForToday() : dateScopeForMonth(scope.month)
+    setMonthKeys(await getOrderMonthKeys())
     const res = await getOrdersPaged({
       page: p,
       pageSize: PAGE_SIZE,
@@ -117,6 +128,7 @@ export function AdminOrders() {
       // RC-1 / Phase 3: mode filter ต้องเป็น server-side — ส่ง `orderMode` เข้า query จริง
       // (bmbAdminApi_orders.ts:147 ทำ .eq('order_mode', ...) อยู่แล้ว) — 'all' = ไม่กรอง
       orderMode: mode === 'all' ? undefined : mode,
+      dateScope,
       
       // TEN-07: filter by active admin branch context\n      branchId: useAdminTenantContextStore.getState().activeBranchId || undefined,
     })
@@ -182,7 +194,7 @@ export function AdminOrders() {
     const map: Record<string, Product> = {}
     for (const p of products || []) map[p.id] = p
     setProductById(map)
-  }, [page, filterStatus, filterMode])
+  }, [page, filterStatus, filterMode, scope])
 
   useEffect(() => {
     loadOrders()
@@ -202,6 +214,15 @@ export function AdminOrders() {
   }
   function changeMode(mode: 'all' | 'SAME_DAY' | 'PRE_ORDER') {
     setFilterMode(mode)
+    setPage(0)
+  }
+  // Owner 2026-11-07: เลือกสโคปวัน/เดือน — กดแท็บเดือนที่ active อยู่ซ้ำ = กลับ "วันนี้"
+  function changeScope(next: { kind: 'today' } | { kind: 'month'; month: string }) {
+    if (next.kind === 'month' && scope.kind === 'month' && scope.month === next.month) {
+      setScope({ kind: 'today' })
+    } else {
+      setScope(next)
+    }
     setPage(0)
   }
   function changePage(p: number) {
@@ -447,7 +468,9 @@ export function AdminOrders() {
       </div>
 
       {/* STEP 3B-2A GAP-A4: SAME_DAY / PRE_ORDER distinguishable at filter level (display only) */}
-      <div className="flex gap-2 mb-6">
+      {/* Owner 2026-11-07: บรรทัดเดียวกัน = สโคปวัน/เดือน — "วันนี้" (default · ทุกโหมดแสดงเฉพาะ
+          วันปัจจุบัน) + แท็บเดือนสำหรับ "ออเดอร์อดีต" (กดแท็บเดือนที่ active ซ้ำ = กลับวันนี้) */}
+      <div className="flex flex-wrap gap-2 mb-6 items-center" data-testid="admin-orders-scope-row">
         {([
           { key: 'all', label: 'All modes' },
           { key: 'SAME_DAY', label: '⚡ SAME_DAY' },
@@ -461,6 +484,30 @@ export function AdminOrders() {
             }`}
           >
             {mode.label}
+          </button>
+        ))}
+        <span className="text-brand-muted px-1 select-none" aria-hidden="true">|</span>
+        <button
+          type="button"
+          data-testid="scope-today"
+          onClick={() => changeScope({ kind: 'today' })}
+          className={`px-4 py-2 rounded-full font-medium whitespace-nowrap transition-all text-sm ${
+            scope.kind === 'today' ? 'bg-brand-primary text-white' : 'bg-brand-surface text-brand-accent hover:bg-brand-bg'
+          }`}
+        >
+          🗓 วันนี้
+        </button>
+        {monthKeys.map((k) => (
+          <button
+            key={k}
+            type="button"
+            data-testid={`scope-month-${k}`}
+            onClick={() => changeScope({ kind: 'month', month: k })}
+            className={`px-4 py-2 rounded-full font-medium whitespace-nowrap transition-all text-sm ${
+              scope.kind === 'month' && scope.month === k ? 'bg-brand-primary text-white' : 'bg-brand-surface text-brand-accent hover:bg-brand-bg'
+            }`}
+          >
+            {monthChipLabel(k)}
           </button>
         ))}
       </div>
@@ -760,6 +807,12 @@ export function AdminOrders() {
         <div className="text-center py-12">
           <div className="text-6xl mb-4">📋</div>
           <h3 className="text-xl font-bold text-brand-accent">No orders found</h3>
+          {/* Owner 2026-11-07: default = วันนี้เท่านั้น — จอว่างต้องบอกทางไปแท็บเดือน ไม่ให้เข้าใจผิดว่าออเดอร์หาย */}
+          <p className="text-sm text-brand-muted mt-2">
+            {scope.kind === 'today'
+              ? 'วันนี้ยังไม่มีออเดอร์ในสโคปนี้ — ดูออเดอร์อดีตได้จากแท็บเดือน (เช่น พ.ย. 2026) บนแถบด้านบน'
+              : `ยังไม่มีออเดอร์ในเดือน ${monthChipLabel(scope.month)} (เมื่อรวมกับตัวกรองสถานะ/โหมดปัจจุบัน)`}
+          </p>
         </div>
       )}
 
@@ -771,7 +824,7 @@ export function AdminOrders() {
           className="px-3 py-1 rounded-lg border disabled:opacity-40"
         >← ก่อนหน้า</button>
         <span className="text-xs text-brand-muted">
-          หน้า {page + 1} · ทั้งหมด {total} ออเดอร์
+          หน้า {page + 1} · ทั้งหมด {total} ออเดอร์ · สโคป: {scope.kind === 'today' ? 'วันนี้' : monthChipLabel(scope.month)}
         </span>
         <button
           disabled={(page + 1) * PAGE_SIZE >= total}

@@ -13,6 +13,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import React, { act } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
 import type { OrderForm } from '@/lib/bmbAdminApi_orders'
+import { localDateStr } from '@/lib/orderDateScope'
 
 // React 19: ต้องเปิด flag นี้ก่อนใช้ act() ใน test environment
 ;(globalThis as Record<string, unknown>).IS_REACT_ACT_ENVIRONMENT = true
@@ -41,6 +42,8 @@ vi.mock('@/lib/bmbAdminApi_orders', () => ({
   getOrderStatusHistory: m.getOrderStatusHistory,
   getOrderAuditTrail: m.getOrderAuditTrail,
   getRoundsByIds: m.getRoundsByIds,
+  // Owner 2026-11-07: แท็บเดือน (date scope) — 1 เดือนสมมติเพื่อเทสต์การสลับสโคป
+  getOrderMonthKeys: vi.fn(async () => ['2026-10']),
 }))
 
 vi.mock('@/lib/bmbAdminApi_products', () => ({
@@ -217,6 +220,46 @@ describe('AdminOrders — mode filter wiring (Phase 3 / RC-1 / INV-11)', () => {
     expect(allCount).toBe(2)
     expect(poCount).toBe(1)
     expect(poCount).not.toBe(allCount)
+  })
+})
+
+// Owner 2026-11-07: "ทุกโหมดแสดงเฉพาะวันปัจจุบัน" (default = วันนี้) + แท็บเดือน (อดีต)
+describe('AdminOrders — date scope wiring (Owner 2026-11-07)', () => {
+  it('โหลดแรก = สโคปวันนี้ (scheduled วันนี้ · created 24 ชม. ตั้งแต่เที่ยงคืน)', async () => {
+    await mount()
+    const args = lastCallArgs()
+    expect(args.dateScope).toBeTruthy()
+    expect(args.dateScope.scheduledFrom).toBe(localDateStr(new Date()))
+    expect(args.dateScope.scheduledTo).toBe(args.dateScope.scheduledFrom)
+    const from = new Date(args.dateScope.createdFrom)
+    const to = new Date(args.dateScope.createdTo)
+    expect(from.getHours()).toBe(0)
+    expect(to.getTime() - from.getTime()).toBe(24 * 60 * 60 * 1000)
+  })
+
+  it('กดแท็บเดือน ต.ค. 2026 → dateScope = 2026-10-01..31 · กดซ้ำ = กลับวันนี้', async () => {
+    await mount()
+    await clickModeButton('ต.ค. 2026')
+    let args = lastCallArgs()
+    expect(args.dateScope.scheduledFrom).toBe('2026-10-01')
+    expect(args.dateScope.scheduledTo).toBe('2026-10-31')
+    await clickModeButton('ต.ค. 2026') // toggle กลับ
+    args = lastCallArgs()
+    expect(args.dateScope.scheduledFrom).toBe(localDateStr(new Date()))
+    expect(args.dateScope.scheduledTo).toBe(localDateStr(new Date()))
+  })
+
+  it('date scope ใช้ร่วมกับ mode filter ได้ (เดือน + PRE_ORDER คงทั้งคู่ · ปุ่มวันนี้ไม่ reset mode)', async () => {
+    await mount()
+    await clickModeButton('ต.ค. 2026')
+    await clickModeButton('📅 PRE_ORDER')
+    const args = lastCallArgs()
+    expect(args.orderMode).toBe('PRE_ORDER')
+    expect(args.dateScope.scheduledFrom).toBe('2026-10-01')
+    await clickModeButton('🗓 วันนี้')
+    const args2 = lastCallArgs()
+    expect(args2.orderMode).toBe('PRE_ORDER')
+    expect(args2.dateScope.scheduledFrom).toBe(localDateStr(new Date()))
   })
 })
 

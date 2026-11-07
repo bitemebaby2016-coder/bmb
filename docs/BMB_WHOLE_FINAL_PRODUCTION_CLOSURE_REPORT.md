@@ -188,3 +188,14 @@
 | ไม่แตะ (ตั้งใจ) | ออเดอร์/ข้อมูลลูกค้าจริง 16 ใบ + 3 รายจริง · `cart_sessions` เก่า 16 แถว (ปนลูกค้าจริงได้ · รอ Owner ตัดสิน) · ออเดอร์ประวัติ/replay = ข้อมูลจริง | inventory diff |
 | เครื่องมือรอบถัดไป | `_r74CleanInv.cjs` → `_r74CleanRun.cjs --fire` → `_r74CleanSweep.cjs` → `_r74CleanResidue.cjs --fire` (DRY-RUN default + backup + ผูกหลักฐานก่อนลบ) | `e2e/_r74Clean*.cjs` |
 | re-run (2026-11-07 คำสั่ง "เครียล์ข้อมูลเทสต์") | ทุกอย่าง 0 = สะอาด · **เจอ+ลบตกหล่นเพิ่ม 1 ชุด** (customer `e2ec…` + auth user คู่ · 4 พ.ย. ช่วง E2E — ที่ query คอลัมน์ผิดพลาดไปก่อนหน้า) เช็คอ้างอิงทุกตาราง = 0 ก่อนลบ · แก้เครื่องมือ generic (0-target / `full_name`) | `_r74CleanSweep` รอบสุดท้าย = 0 ทุกรายการ · orders 16 |
+| ลบออเดอร์จริงตามใบสั่ง (2026-11-07 · "อนุมัติลบออเดอร์จริง -548 กรณีพิเศษ ลูกค้าไม่ได้แนบแต่ส่งของไปแล้ว ลบเลย ถ้าลบไม่ได้ให้ย้ายไปแท็บ cancel") | `BMB-20261101-548` (Phananee porn · ค้าง `pay=pending`) ลบครบต้น+กิ่ง = orders 1 + child 11 (items 3 · messages 1 · history 3 · submissions 1 · intents 1 · print_jobs 2) → verify ทุกตาราง 0 · **orders เหลือ 15 = ลูกค้าจริงทั้งหมด** · fallback cancel ไม่ถูกใช้ (ลบสำเร็จ) · เครื่องมือ `_r74DelOne.cjs` (DRY-RUN + backup + fallback cancel_order) | `_r74_delone.log` + `_r74_cleanup_backup_delone.json` (LOCAL) |
+
+### §8.3 — UI หน้า Manage Orders: date scope + แท็บเดือน (2026-11-07 · คำสั่ง Owner "All modes ให้แสดงเฉพาะวันปัจจุบันเท่านั้น · บรรทัดเดียวกันให้เพิ่มแท็บแสดงออเดอร์อดีตแยกเป็นเดือน")
+
+| เรื่อง | ผลจริง | evidence |
+|---|---|---|
+| "วันนี้เท่านั้น" (default ทุกโหมด) | แถว mode chips เดิมมี **"🗓 วันนี้"** (default) — `getOrdersPaged({ dateScope })` กรอง union `scheduled_date ∈ วันนี้` OR `created_at ∈ วันนี้` (**ไม่ซ่อน**พรีออเดอร์ถึงกำหนดวันนี้/ออเดอร์ใหม่วันนี้ = บทเรียน D-07) | `src/lib/orderDateScope.ts` · `adminOrdersModeFilter.test.ts` (3 wiring) |
+| แท็บเดือน (อดีต) | บรรทัดเดียวกัน: **แท็บเดือนจากข้อมูลจริง** (union เดือน `scheduled_date`/`created_at` · เรียงใหม่→เก่า · เดือนไม่มีออเดอร์ไม่ขึ้นแท็บ) · กด = ดูเดือนนั้น · **กดซ้ำ = กลับวันนี้** · ใช้ร่วม status/mode ได้ · pagination บอก "สโคป: …" | `orderMonthKeys()` · tests `orderDateScope.test.ts` (5) |
+| จอว่างไม่หลอก | "No orders found" + ข้อความชี้ทางไปแท็บเดือน (default วันนี้อาจว่างได้ตามจริง) | `AdminOrders.tsx` empty-state |
+| gates | **TSC=0 · LINT=0 · VITEST 213 files/2,170 tests 0 fail · BUILD=0** | `e2e/_r74_gates2.log` |
+| คู่มือ Owner | test pack **§R75.4 ชุด ง** (5 ข้อ) | `docs/BMB_PRODUCTION_TEST_PACK.md` |

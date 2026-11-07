@@ -1,4 +1,5 @@
-// R74-OMNI s3 — gates wrap: รัน vitest + build เต็ม เขียน log ผ่าน fs (บทเรียน cmd redirect ตัดที่ช่องว่าง)
+// R74-OMNI s3 — gates wrap: รัน tsc + lint + vitest + build เต็ม เขียน log ผ่าน fs
+// (บทเรียน cmd redirect ตัดที่ช่องว่าง) · R74 s6: เพิ่ม TSC/LINT ตาม gates 4 ตัวของโครงการ
 'use strict'
 const fs = require('fs')
 const path = require('path')
@@ -10,14 +11,14 @@ const out = (s) => { try { fs.appendFileSync(LOG, s + '\n') } catch {} ; console
 
 fs.writeFileSync(LOG, 'GATES_START ' + new Date().toISOString() + '\n')
 
-for (const [label, cmd] of [['VITEST', 'npm run -s test'], ['BUILD', 'npm run -s build']]) {
+for (const [label, cmd] of [['TSC', 'npx tsc --noEmit'], ['LINT', 'npm run -s lint'], ['VITEST', 'npm run -s test'], ['BUILD', 'npm run -s build']]) {
   out('== ' + label + ' ==')
   const r = spawnSync(process.env.ComSpec || 'cmd.exe', ['/c', cmd], { cwd: ROOT, encoding: 'utf8', maxBuffer: 32 * 1024 * 1024 })
   if (r.error) out('  SPAWN_ERROR ' + String(r.error))
   const text = (r.stdout || '') + (r.stderr || '')
   // log เฉพาะบรรทัดสรุป/FAIL — log เต็มอยู่ใน vitest output ที่ตัดทิ้งได้
   for (const line of text.split(/\r?\n/)) {
-    if (/Test Files|Tests |FAIL|✓ vitest|built in|error TS|✗|failed/i.test(line)) out('  ' + line.trim())
+    if (/Test Files|Tests |FAIL|✓ vitest|built in|error TS|✗|failed|problems?/i.test(line)) out('  ' + line.trim())
   }
   out('== ' + label + ' exit=' + r.status)
 }

@@ -9,6 +9,8 @@ import { extractIdempotencyErrorCode, payloadFingerprint } from './orderSubmitKe
 // (มี PaymentConfirmResult + ถูกใช้โดย paymentStateMachine test ตรง ๆ) — ไม่มี cycle
 // (paymentGateway ไม่ import ไฟล์นี้ · ทั้งคู่เรียก RPC เดียวกัน confirm_offline_payment)
 import { confirmOfflinePayment as confirmOfflinePaymentCanonical } from './paymentGateway'
+// Owner 2026-11-07: date scope ของหน้า Manage Orders (วันนี้เท่านั้น + แท็บเดือน) — PURE helpers
+import { orderMonthKeys, type OrderDateScope } from './orderDateScope'
 
 // P0-4 SPLIT (2026-09-18):
 //   OrderInput  — client payload (INPUT ONLY, no financial authority)
@@ -171,7 +173,9 @@ export async function hydrateOrderItems(orders: OrderForm[]): Promise<OrderForm[
 // W4-A: paged order fetch for Admin (server-side filter + range) — canonical data untouched.
 // `getOrders()` is preserved unchanged for existing callers.
 // STEP 3B-2A: optional orderMode filter (SAME_DAY / PRE_ORDER) — server-side eq.
-export async function getOrdersPaged(opts: { page: number; pageSize?: number; status?: string; orderMode?: 'SAME_DAY' | 'PRE_ORDER'; branchId?: string }): Promise<{ orders: OrderForm[]; total: number }> {
+// Owner 2026-11-07: optional dateScope (default "วันนี้เท่านั้น" ที่หน้า + แท็บเดือนสำหรับอดีต) —
+// union สองเงื่อนไข scheduled_date/created_at (ดู orderDateScope.ts · ห้ามซ่อนออเดอร์จริง D-07)
+export async function getOrdersPaged(opts: { page: number; pageSize?: number; status?: string; orderMode?: 'SAME_DAY' | 'PRE_ORDER'; branchId?: string; dateScope?: OrderDateScope }): Promise<{ orders: OrderForm[]; total: number }> {
   const pageSize = Math.max(1, Math.min(100, opts.pageSize ?? 25))
   const page = Math.max(0, opts.page)
   const from = page * pageSize
@@ -181,6 +185,14 @@ export async function getOrdersPaged(opts: { page: number; pageSize?: number; st
   
   // STEP 3B-2A: optional orderMode filter (SAME_DAY / PRE_ORDER) — server-side eq.
   if (opts.orderMode) q = q.eq('order_mode', opts.orderMode)
+  // Owner 2026-11-07: date scope — OR สองเงื่อนไข (scheduled_date อยู่ในช่วง / created_at อยู่ในช่วง)
+  if (opts.dateScope) {
+    const s = opts.dateScope
+    q = q.or(
+      `and(scheduled_date.gte.${s.scheduledFrom},scheduled_date.lte.${s.scheduledTo}),` +
+      `and(created_at.gte."${s.createdFrom}",created_at.lt."${s.createdTo}")`,
+    )
+  }
   // TEN-07: optional branch isolation — filter orders by active branch context
   // D-07 (R1.5, 2026-10-23): ห้ามซ่อนออเดอร์จริง — ออเดอร์ที่ยังไม่ผูกสาขา
   // (branch_id NULL = สร้างจาก checkout ที่ round ไม่มี branch/resolve ไม่สำเร็จ)
@@ -190,6 +202,18 @@ export async function getOrdersPaged(opts: { page: number; pageSize?: number; st
   if (error) { console.error('[getOrdersPaged] Error:', error); return { orders: [], total: 0 } }
   const orders = await hydrateOrderItems((data || []) as OrderForm[])
   return { orders, total: count ?? orders.length }
+}
+
+// Owner 2026-11-07: แท็บเดือน (ออเดอร์อดีต) — อ่านเฉพาะ 2 คอลัมน์เพื่อคำนวณเดือนที่มีออเดอร์
+// (เรียงใหม่→เก่า · limit 5000 ล่าสุดเพียงพอสำหรับการเรียกดูย้อนหลังของร้าน)
+export async function getOrderMonthKeys(limit = 5000): Promise<string[]> {
+  const { data, error } = await supabase
+    .from('orders')
+    .select('scheduled_date, created_at')
+    .order('created_at', { ascending: false })
+    .limit(limit)
+  if (error) { console.error('[getOrderMonthKeys] Error:', error); return [] }
+  return orderMonthKeys((data || []) as Array<{ scheduled_date?: string | null; created_at: string }>)
 }
 
 export async function getOrders(): Promise<OrderForm[]> {
