@@ -199,3 +199,14 @@
 | จอว่างไม่หลอก | "No orders found" + ข้อความชี้ทางไปแท็บเดือน (default วันนี้อาจว่างได้ตามจริง) | `AdminOrders.tsx` empty-state |
 | gates | **TSC=0 · LINT=0 · VITEST 213 files/2,170 tests 0 fail · BUILD=0** | `e2e/_r74_gates2.log` |
 | คู่มือ Owner | test pack **§R75.4 ชุด ง** (5 ข้อ) | `docs/BMB_PRODUCTION_TEST_PACK.md` |
+
+### §8.4 — image-gen ERR_FORBIDDEN fix + ทดสอบ automation ทั้งโซ่ (2026-11-07 · คำสั่ง Owner "ทดสอบระบบออโต้เมชั่น ตั้งแต่โพสบนเฟซ เคยเจนรูปได้ ทำไมเออเร่อแล้ว")
+
+| เรื่อง | ผลจริง | evidence |
+|---|---|---|
+| Root cause ERR_FORBIDDEN | `image-gen` EF `isAdmin()` query `profiles?select=role` **ไม่ filter ตัวเอง** + policy `profiles_public_read` (qual=true · มีตั้งแต่ 001) คืน 49 แถว → `rows[0].role` = 'customer' (แถวแรกตามลำดับ heap — เคยผ่านเพราะแถวแรกเคยเป็นแอดมินตัวแรก · heap reorder หลังเครียล์ข้อมูลเทสต์ = เริ่มพัง) → เช็ค `=== 'admin'` อย่างเดียว (ไม่ตรง canonical `is_admin()` = admin/owner) | ผลวินิจฉัย live (probe ชั่วคราว · ลบแล้ว): rows[0].role='customer' ทั้งที่ตัวเอง admin · own-row filter = 'admin' |
+| แก้ + deploy | filter `id=eq.<jwt.sub>` (แถวตัวเองชัวร์) + รับ role ตาม migration 146 (`admin`/`owner`) · deploy `image-gen` (exit=0) | `_r74_deploy.log` |
+| ยิงจริงหลังแก้ | **HTTP 200 ok:true** · `qwen/qwen-image-2.1-pro [images-api]` · attempts=[] (ติดตั้งแต่โมเดลแรก) · ไฟล์จริง `ai-generated/promo/gen-mw5y3wl2-6f03.png` | `_r74_imggen_live.log` |
+| ทดสอบ automation ทั้งโซ่ | ① flow probe รอบ 5 = **19/19** (webhook โพสต์/คอมเมนต์/ข้อความ → AI → draft/no-auto-order/ยืนยัน=ออเดอร์จริง + idempotency) ② `poll_comments` = posts 10/seen 9/**duplicate 9 · inserted 0** (AI ตอบคอมเมนต์อัตโนมัติ · ไม่ตอบซ้ำ) ③ `social-post-worker` สร้าง draft จริง `g7cap-r74s7draftmw5yqi9k` (เข้าคิว Approval — design D-G7-A: worker ห้าม publish เอง = รอคนกดอนุมัติ แล้วระบบโพสต์ขึ้นเฟซอัตโนมัติ) | `_r74_omni_flow.json` (pass_count 19) · `_r74_socialpost_live.log` |
+| เครียล์ test data รอบ 5 | orders 4 + child 17 + test round + social_events 6 + notifications/outbox 12 + customers 4 + identities 3 + auth qa-r74-cust → ตรวจซ้ำ **0 ทุกตาราง · orders 15 = ลูกค้าจริง** | `_r74_cleanup_inventory.json` |
+| บทเรียน (key/infra notes) | (1) แพทเทิร์น `rows[0]` จาก query ไม่ filter = บั๊กซ่อนใต้ RLS กว้าง — ทุกจุดเช็ค role ต้อง filter ตัวเอง/ใช้ RPC (2) **`GET /v1/projects/{ref}/secrets` คืนค่า `AUTOMATION_TOKEN` ไม่ตรงกับที่ EF เห็นจริง** (คีย์ local ใน `e2e/wave2Lib` = ตรง) — ห้ามใช้ค่า mgmt API ยิงเรียก worker (3) `social-post-worker` ต้องส่งทั้ง `Authorization` (platform verify_jwt) + `x-automation-token` (EF gate) | `_r74_socialpost_live.log` (401 สองแบบ) |

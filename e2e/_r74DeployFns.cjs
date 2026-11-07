@@ -9,6 +9,11 @@ const ROOT = path.resolve(__dirname, '..')
 // R74-OMNI s2 (Owner 2026-11-06 ดึก): คีย์ใหม่ = PAT ชื่อในแดชบอร์ด "bmb_PAT_SUPABASE_ACCESS_TOKEN"
 //   รองรับทั้งแถว bmb_PAT_SUPABASE_ACCESS_TOKEN= และ SUPABASE_ACCESS_TOKEN= (ค่าถูกแทนที่ด้วย PAT ใหม่แล้ว — ค่า sbp_ เดิมที่ยกเลิกไม่อยู่ในไฟล์แล้ว)
 const ENV_LINES = fs.readFileSync(path.join(ROOT, '.env.local'), 'utf8').split(/\r?\n/)
+// R74-OMNI s7: เขียน log ผ่าน fs ด้วย (รัน detached ได้ — บทเรียน cmd redirect ตัดที่ช่องว่าง)
+const DEPLOY_LOG = path.join(__dirname, '_r74_deploy.log')
+fs.writeFileSync(DEPLOY_LOG, 'DEPLOY_START ' + new Date().toISOString() + '\n')
+const _log = console.log.bind(console)
+console.log = (...a) => { try { fs.appendFileSync(DEPLOY_LOG, a.join(' ') + '\n') } catch {} ; _log(...a) }
 const pick = (name) => [...ENV_LINES.map((l) => l.match(new RegExp('^' + name + '=(.*)$'))).filter(Boolean).map((m) => m[1].trim())].reverse()
 const TOKENS = [...pick('bmb_PAT_SUPABASE_ACCESS_TOKEN'), ...pick('SUPABASE_ACCESS_TOKEN')]
 if (TOKENS.length === 0) { console.log('NO_SUPABASE_ACCESS_TOKEN'); process.exit(1) }

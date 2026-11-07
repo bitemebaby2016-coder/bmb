@@ -65,14 +65,26 @@ const STYLE_MODIFIERS: Record<string, string> = {
   poster: 'สไตล์กราฟิกป้ายโฆษณา รูปทรงหนา คอนทราสต์สูง ดูทันสมัย',
 }
 
+// R74-OMNI s7 (2026-11-07 · แก้ ERR_FORBIDDEN ตอนเจนภาพ — Owner "เคยเจนรูปได้ ทำไมเออเร่อ"):
+//   เดิม query `profiles?select=role` ไม่ filter ตัวเอง + policy `profiles_public_read`
+//   (SELECT USING=true · มีตั้งแต่ migration 001) คืน "ทุกแถว" → `rows[0]` = แถวแรกตาม
+//   ลำดับ physical ของ heap (สุ่ม · มัก 'customer' 46/49) = แอดมินจริงก็โดน ERR_FORBIDDEN
+//   (ที่เคยผ่าน = แถวแรกเคยเป็นแอดมินตัวแรกสุด — heap reorder หลังลบข้อมูลเทสต์แล้วพัง)
+//   → filter `id = sub ของ JWT` (แถวตัวเองชัวร์) + รับ role ตาม canonical `is_admin()`
+//   (migration 146) = role IN ('admin','owner') ไม่ใช่เท่ากับ 'admin' อย่างเดียว
 async function isAdmin(jwt: string): Promise<boolean> {
   try {
-    const res = await fetch(`${SB_URL}/rest/v1/profiles?select=role`, {
+    const payload = jwt.split('.')[1] || ''
+    const b64 = payload.replace(/-/g, '+').replace(/_/g, '/')
+    const claims = JSON.parse(atob(b64 + '='.repeat((4 - (b64.length % 4)) % 4))) as { sub?: string }
+    const sub = String(claims.sub || '')
+    if (!sub) return false
+    const res = await fetch(`${SB_URL}/rest/v1/profiles?select=role&id=eq.${encodeURIComponent(sub)}`, {
       headers: { apikey: SERVICE, Authorization: `Bearer ${jwt}` },
     })
     if (!res.ok) return false
     const rows = (await res.json()) as Array<{ role?: string | null }>
-    return rows.length > 0 && rows[0].role === 'admin'
+    return rows.length > 0 && (rows[0].role === 'admin' || rows[0].role === 'owner')
   } catch {
     return false
   }

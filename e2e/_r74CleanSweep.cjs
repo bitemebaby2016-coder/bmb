@@ -70,6 +70,6 @@ const esc = (s) => "'" + String(s).replace(/'/g, "''") + "'"
   console.log('customers test rows: ' + (cust ? cust.n : 'ERR/n/a'))
   console.log('auth test users (e2e*/qa-r74): ' + (users ? users.n : 'ERR/n/a'))
   console.log('cart_sessions older than 3 days: ' + (carts ? carts.n : 'ERR/n/a'))
-  console.log('orders total now: ' + (total ? total.n : 'ERR') + ' (ต้อง = 16 ของลูกค้าจริง)')
+  console.log('orders total now: ' + (total ? total.n : 'ERR') + ' (ต้อง = 15 ของลูกค้าจริง — ลบ 548 ตามใบสั่ง Owner 2026-11-07)')
   console.log('SWEEP_' + (FIRE ? 'DONE' : 'DRYRUN'))
 })().catch((e) => { console.error('FATAL ' + String((e && e.stack) || e).slice(0, 800)); process.exit(1) })
