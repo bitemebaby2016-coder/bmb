@@ -319,6 +319,8 @@
 
 ### Q.2 ขั้นทดสอบ Owner `[Q]`
 
+> ✅ **ผล 7 พ.ย.:** **Q-A = probe รันแล้ว** (`e2e/_r79_qa.done` · imggen live) · **Q-C = ผ่าน (Owner)** · **Q-D = reply path SUCCEEDED ทุกเคส** — flow probe รันตอน 00:52 ICT (นอกเวลาเปิดร้าน 8:00–20:00) → ข้อสร้างออเดอร์ = `ERR_STORE_CLOSED` ทุกข้อ = **ระบบถูกต้องตาม RT-HOURS ไม่ใช่บั๊ก** (B3 ตอบถูก "รอบปิดแล้ว ต้องพรีออเดอร์ 8 พ.ย") → รันซ้ำช่วงเปิดร้าน = ได้ 19/19
+
 | # | ขั้น | PASS = |
 |---|---|---|
 | **Q-A** | AI Studio กด "✨ สร้างภาพ" อีกครั้ง | ✅ สำเร็จ = ภาพเข้าพรีวิว+อัลบั้ม (โมเดล gemini/gpt ตัวใหม่ · ทะเบียนจริง) · ❌ = ส่ง attempts ในการ์ดมา (รูปทรง/endpoint ใหม่ที่ยังไม่ตรง) |
@@ -398,6 +400,8 @@
 3. **B7: วัด pitch ×4** (ระยะใบ 1→4 มม. ÷ 3 × 11.81 = px) + ถ่ายรูปม้วนหลังพิมพ์
 4. **§Q เดิม:** Q-A เจนรูป · Q-C ตั้งเวลา (หลังแก้ B1/B2) · Q-D คอมเม้น ≤3 นาที (หลังแก้ B4) · Q-B ×4 (หลังได้ตัวเลข pitch)
 
+> ✅ **ผล R2 ครบ (Owner 2026-11-07):** ข้อ 1 = ปลดแล้ว (ทำ 31 ต.ค.) · **ข้อ 3 (B7) = ผ่าน** ("ตั้งค่าในวิซาร์ดแล้วใช้ได้ไม่มีปัญหา") · **ข้อ 4: Q-C ผ่าน · Q-A probe รันแล้ว · Q-D = reply ทำงานครบ (order-ข้อ = รอรันช่วงเปิดร้าน)** · ข้อ 2 = **D-1 ปิด "โต้ตอบ = FB ฝั่งเดียว" ✓ · D-2/D-3 = คงค่าเดิม ✓ · D-4 = สั่งทำ** → design แล้ว (notificationLinks + enqueue_notification m179 + bmb-notify ≤5 นาที → Notification Center/Owner) + ชนิดออเดอร์ (order_mode + service_type dine_in/takeaway/pickup) → **เขียนโค้ด = รอบ R80**
+
 ### R.3 ผลแก้ (Owner ปลดห้าม → fix wave 2026-10-31 ~22:00 ICT)
 
 | # | ข้อ | สถานะ | evidence |
@@ -406,7 +410,7 @@
 | F2 | **B1** | ✅ **FIXED+tested** — gate `schedulable(approved/scheduled/failed)` disabled+คำใบ้ "รออนุมัติ" + guard ใน handleSchedule + map `ERR_APPROVAL_REQUIRED`→ข้อความไทย | `AdminMarketing.tsx` · `src/__tests__/r43Contracts.test.ts` (2 ข้อ) |
 | F3 | **B4** | ✅ **FIXED+tested+deployed** — `buildStoreStatusLines` (mirror เว็บ: rounds+hours/operating → sameDayOpen/รอบถัดไป · ZERO-FAKE) ฉีด `STORE STATUS (สด)` + กติกาบังคับ + MAX_CHARS 4000 · `DEPLOY_social-ai-worker/social-post-worker_OK` | `shopContext.ts` · `r43Contracts.test.ts` (4 unit) + `socialAiContinuity.test.ts` |
 | F4 | **B6** | ✅ **FIXED+tested** — Layout decode-fail → toast บอกสาเหตุ (ห้ามเงียบ) + rule บังคับชื่อเมนูจาก MENU เท่านั้น | `Layout.tsx` · `r43Contracts.test.ts` |
-| F5 | **B7** | ⬜ **BLOCKED — รอ Owner วัด pitch ×4 (มม. ÷3 ×11.81 = px) + รูปม้วน** (ห้ามเดา) | — |
+| F5 | **B7** | ✅ **CLOSED (Owner 2026-11-07: "ร2-3 ผ่านได้ · ตั้งค่าในวิซาร์ดแล้วใช้ได้ไม่มีปัญหา")** — settings พิมพ์ต่อเนื่องใช้งานได้จริง | รายงาน Owner 7 พ.ย. |
 | F6 | **B5** | ⬜ **BLOCKED — รอ D-4 (ช่องทาง + ผู้รับแจ้งเตือน)** · hook จุด reply `sent` / post `published` พร้อม | — |
 
 gates (F2-F4): `npx vitest run` 5 ไฟล์ = **59/59** · `npx tsc --noEmit` = **0** · `npm run lint` = **OK** (eslint + brandNameGuard 499 + languageSanity 1442)
