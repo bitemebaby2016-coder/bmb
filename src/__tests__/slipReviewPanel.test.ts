@@ -120,4 +120,12 @@ describe('R1.2 · SlipReviewPanel — บอกเหตุผลชัดเม
     // ปุ่ม reject ของออเดอร์ยกเลิกต้องไม่มีให้กดเลย (นับปุ่ม = ของ live 1 ชุด)
     expect(container.querySelectorAll('[data-testid="slip-reject-BMB-CX-1"]')).toHaveLength(0)
   })
+
+  it('R86 (Owner: "หน้าต่างตรวจสลิปที่เคยมีหายไป"): ค้าง 0 = หน้าต่างแผงยังอยู่ + บอกสถานะว่าง', async () => {
+    // เดิม return null เมื่อค้าง 0 → พอกรอง cancelled ออกหมด แผงหายทั้งบาน
+    await renderPanel([], {})
+    expect(container.querySelector('[data-testid="slip-review-panel"]')).not.toBeNull()
+    expect(container.querySelector('[data-testid="slip-review-empty"]')).not.toBeNull()
+    expect(container.querySelectorAll('[data-testid="slip-review-item"]')).toHaveLength(0)
+  })
 })

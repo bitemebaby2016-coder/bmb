@@ -38,6 +38,7 @@ import { fetchServerDeliveryFee, feeUiState, summaryFeeState } from '@/lib/deliv
 import { bangkokMsOfDay } from '@/lib/bangkokTime'
 import { hoursToMs, withinShopHours } from '@/lib/shopHoursLogic'
 import { getBusinessSettings } from '@/lib/bmbAdminApi_settings'
+import { isCodEnabled } from '@/lib/codToggle'
 import { resolvePublicBranch } from '@/lib/brandResolver'
 import { getProducts } from '@/lib/bmbAdminApi_products'
 import { revalidateWithCatalog, reportToToastMessage } from '@/lib/cartPersistence'
@@ -148,6 +149,9 @@ export function CheckoutPage() {
   const [shopHours, setShopHours] = useState<{ open: string; close: string } | null>(null)
   const [operatingHours, setOperatingHours] = useState<Record<string, boolean> | null>(null)
   const [paymentMethod, setPaymentMethod] = useState<'promptpay_qr' | 'cash_on_delivery' | 'credit_card'>('promptpay_qr')
+  // R86 (Owner 2026-11-08: "ระบบจ่ายเงิน ซ่อนแบบ COD ไว้") — default = ซ่อน
+  // (false ตั้งแต่ first paint · เปิดแสดงเมื่อ business_settings.cod_enabled.enabled = true)
+  const [codEnabled, setCodEnabled] = useState(false)
   // ✅ 127 pickup fulfillment: 'delivery' (เดิม) | 'pickup' (รับที่ร้าน, ค่าส่ง 0)
   const [fulfillment, setFulfillment] = useState<'delivery' | 'pickup'>('delivery')
   // R65 (Owner 2026-11-03): นอกเวลาเปิดร้าน + pickup = กรณีพิเศษที่ "ลูกค้าแจ้งเป็น notice"
@@ -386,6 +390,7 @@ export function CheckoutPage() {
       const sh = (s?.hours ?? null) as { open?: string; close?: string } | null
       if (sh && typeof sh.open === 'string' && typeof sh.close === 'string') setShopHours({ open: sh.open, close: sh.close })
       setOperatingHours((s?.operating_hours ?? null) as Record<string, boolean> | null)
+      setCodEnabled(isCodEnabled(s))
     })()
   }, [])
 
@@ -1424,13 +1429,15 @@ export function CheckoutPage() {
               <div className="text-sm text-brand-muted">ปลอดภัยผ่าน 3D Secure — ตัดเงินหลังจากยืนยันสั่งซื้อ</div>
             </div>
           </label>
-          <label className="flex items-center gap-3 p-3 rounded-lg border-2 border-brand-border cursor-pointer hover:border-brand-primary transition-colors">
-            <input type="radio" name="payment" value="cash_on_delivery" checked={paymentMethod === 'cash_on_delivery'} onChange={(e) => setPaymentMethod(e.target.value as any)} className="w-5 h-5" />
-            <div>
-              <div className="font-medium">เงินสดปลายทางตอนรับของ</div>
-              <div className="text-sm text-brand-muted">จ่ายตอนรับของ</div>
-            </div>
-          </label>
+          {codEnabled && (
+            <label className="flex items-center gap-3 p-3 rounded-lg border-2 border-brand-border cursor-pointer hover:border-brand-primary transition-colors" data-testid="pay-cod">
+              <input type="radio" name="payment" value="cash_on_delivery" checked={paymentMethod === 'cash_on_delivery'} onChange={(e) => setPaymentMethod(e.target.value as any)} className="w-5 h-5" />
+              <div>
+                <div className="font-medium">เงินสดปลายทางตอนรับของ</div>
+                <div className="text-sm text-brand-muted">จ่ายตอนรับของ</div>
+              </div>
+            </label>
+          )}
         </div>
       </div>
 

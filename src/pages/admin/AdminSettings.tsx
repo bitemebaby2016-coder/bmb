@@ -13,13 +13,14 @@ import { SEO_SETTINGS_KEY, getSeoSettings, type SeoSettings } from '@/lib/seoSet
 import { STORE_STATUS_COPY_KEY, getStoreStatusCopy, setStoreStatusCopyLive, type StoreStatusCopy } from '@/lib/storeStatusCopy'
 import { supabase } from '@/lib/supabase'
 import { ToggleSwitch } from '@/components/admin/ToggleSwitch'
+import { isCodEnabled } from '@/lib/codToggle'
 // R21f: validate เวลาเปิด/ปิดของ "เวลาสาขา" ก่อน mirror ไป business_settings.hours
 import { parseHHMM } from '@/lib/shopHoursLogic'
 
 // C1/Q8 (audit D1 — "1 เรื่อง = 1 ที่"): key ที่มีฟอร์มเฉพาะทาง — generic editor
 // (JSON/JsonForm + Save All) ห้ามโชว์/ห้ามเขียน กันพิมพ์ค่าเสียแบบ 22P02 ซ้ำ
 // R66-B: store_master_open มีฟอร์มสวิตช์เฉพาะ (Master Switch ด้านล่าง) — generic ห้ามเขียน
-const TYPED_FORM_KEYS = new Set<string>([SOCIAL_LINKS_SETTING_KEY, SEO_SETTINGS_KEY, STORE_STATUS_COPY_KEY, 'order_policy', 'store_master_open'])
+const TYPED_FORM_KEYS = new Set<string>([SOCIAL_LINKS_SETTING_KEY, SEO_SETTINGS_KEY, STORE_STATUS_COPY_KEY, 'order_policy', 'store_master_open', 'cod_enabled'])
 
 export function AdminSettings() {
   const [settings, setSettings] = useState<Record<string, any>>({})
@@ -81,6 +82,19 @@ export function AdminSettings() {
     showToast(
       ok ? (open ? 'เปิดร้าน (Master) แล้ว — รับออเดอร์ทุกช่องทางตามปกติ' : 'ปิดร้าน (Master) แล้ว — ออเดอร์ใหม่ทุกช่องทางจะถูกบล็อกทันที')
          : 'บันทึก Master Switch ไม่สำเร็จ — ลองใหม่',
+      ok ? 'success' : 'error',
+    )
+    await load()
+  }
+// R86 (Owner 2026-11-08: "ระบบจ่ายเงิน ซ่อนแบบ COD ไว้ ให้แอดมิน กดเปิดปิด COD ได้")
+  // business_settings.cod_enabled = { enabled } · default = ซ่อน (ZERO-FAKE) ·
+  // ทางอ่านเดียว = isCodEnabled() ที่ CheckoutPage (ลูกค้า) + AdminPos (หน้าร้าน)
+  async function handleToggleCod(on: boolean) {
+    setSettings({ ...settings, cod_enabled: { enabled: on } }) // optimistic — เด้ง UI ทันที
+    const ok = await setBusinessSetting('cod_enabled', { enabled: on })
+    showToast(
+      ok ? (on ? 'เปิด COD แล้ว — ลูกค้า/POS เห็นวิธีชำระ "เงินสดปลายทาง" ทันที' : 'ซ่อน COD แล้ว — ลูกค้า/POS จะไม่เห็นเงินสดปลายทาง')
+         : 'บันทึก COD switch ไม่สำเร็จ — ลองใหม่',
       ok ? 'success' : 'error',
     )
     await load()
@@ -266,6 +280,24 @@ export function AdminSettings() {
               onChange={(v) => void handleToggleMaster(v)}
               label={settings.store_master_open !== false ? 'เปิดร้าน' : 'ปิดร้าน'}
               testId="store-master-open-toggle"
+            />
+          </div>
+        </div>
+
+        {/* R86 (Owner 2026-11-08): COD เปิด/ปิดเองได้ — default ซ่อน (ZERO-FAKE ไม่เดาเปิด) */}
+        <div className="card" data-testid="cod-switch">
+          <div className="flex items-center justify-between gap-3">
+            <div className="text-sm">
+              <div className="font-semibold">💵 เงินสดปลายทาง (COD)</div>
+              <div className="text-xs text-brand-muted">
+                ปิด = ซ่อนวิธีชำระเงิน COD จากหน้าเช็คเอาท์ของลูกค้าและหน้า POS ทันที · เปิด = แสดงกลับ · ค่าเริ่มต้น = ซ่อน · ออเดอร์ COD เดิม/งานที่วิ่งอยู่ไม่กระทบ
+              </div>
+            </div>
+            <ToggleSwitch
+              checked={isCodEnabled(settings)}
+              onChange={(v) => void handleToggleCod(v)}
+              label={isCodEnabled(settings) ? 'เปิด COD' : 'ซ่อน COD'}
+              testId="cod-enabled-toggle"
             />
           </div>
         </div>

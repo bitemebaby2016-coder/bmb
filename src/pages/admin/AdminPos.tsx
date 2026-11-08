@@ -38,6 +38,8 @@ import { ADMIN_NAV_ITEMS, navGroupsForRole } from '@/lib/adminUi'
 import { ensureShopConfigLoaded, getShopConfig, getShopHours, subscribeShopConfig } from '@/lib/shopHours'
 import { withinShopHours } from '@/lib/shopHoursLogic'
 import { getShiftCashSummary, type ShiftCashSummary } from '@/lib/posApi'
+import { getBusinessSettings } from '@/lib/bmbAdminApi_settings'
+import { isCodEnabled } from '@/lib/codToggle'
 
 interface PosProduct { id: string; name: string; price: number; is_available?: boolean }
 interface PosLine { product: PosProduct; quantity: number }
@@ -69,6 +71,12 @@ export function AdminPos() {
   const [customerName, setCustomerName] = useState('')
   const [customerPhone, setCustomerPhone] = useState('')
   const [paymentMethod, setPaymentMethod] = useState<'cash_on_delivery' | 'promptpay_qr' | 'credit_card'>('cash_on_delivery')
+  // R86 (Owner: "ซ่อนแบบ COD ไว้ ให้แอดมิน กดเปิดปิด COD ได้") — default = ซ่อน
+  const [codEnabled, setCodEnabled] = useState(false)
+  // COD ถูกซ่อนอยู่ = ห้ามค้างค่าวิธีชำระที่เลือกไม่ได้ — ดีดกลับ PromptPay ทันที
+  useEffect(() => {
+    if (!codEnabled && paymentMethod === 'cash_on_delivery') setPaymentMethod('promptpay_qr')
+  }, [codEnabled, paymentMethod])
   const [notes, setNotes] = useState('')
   // R51: ชนิดบริการหน้าร้าน — default รับที่ร้าน (พฤติกรรมเดิม) · เปิด/ปิดแยกหมวดโดยแอดมิน
   const [serviceFlags, setServiceFlags] = useState<PosServiceFlags>(DEFAULT_POS_SERVICE_FLAGS)
@@ -100,12 +108,14 @@ export function AdminPos() {
   )
 
   const refresh = useCallback(async () => {
-    const [prods, pickups, sh, svc] = await Promise.all([
+    const [prods, pickups, sh, svc, bset] = await Promise.all([
       getProductsAdmin() as unknown as Promise<PosProduct[]>,
       listPickupOrders(),
       getCurrentShift(),
       loadPosServiceFlags(),
+      getBusinessSettings(),
     ])
+    setCodEnabled(isCodEnabled(bset))
     setProducts((prods ?? []).filter((p) => p.is_available !== false))
     setPickupOrders(pickups)
     setShift(sh)
@@ -453,7 +463,7 @@ export function AdminPos() {
               {rounds.map((r) => <option key={r.id} value={r.id}>{r.display_name || r.round_key} ({String(r.delivery_start).slice(0, 5)}–{String(r.delivery_end).slice(0, 5)})</option>)}
             </select>
             <select className="input" value={paymentMethod} onChange={(e) => setPaymentMethod(e.target.value as typeof paymentMethod)}>
-              <option value="cash_on_delivery">เงินสด (ปิดการขายทันที)</option>
+              {codEnabled && <option value="cash_on_delivery">เงินสด (ปิดการขายทันที)</option>}
               <option value="promptpay_qr">PromptPay QR</option>
               <option value="credit_card">บัตรเครดิต</option>
             </select>

@@ -34,7 +34,22 @@ export function SlipReviewPanel({ orders, intentsByOrder, onConfirmPayment, onRe
   // ฝั่งต้นทางใน AdminOrders.loadOrders — filter ซ้ำที่นี่เพื่อกันทุก caller)
   const pending = orders.filter((o) => o.payment_status === 'pending' && o.status !== 'cancelled')
 
-  if (pending.length === 0) return null
+  // R86 (Owner 2026-11-08: "ขั้นตอนการตรวจสลิปกับหน้าต่างตรวจสลิปที่เคยมีหายไป") —
+  // เดิม return null เมื่อค้าง 0 = พอ D1 กรองออเดอร์ cancelled ออกหมด แผง "หายทั้งบาน"
+  // → คงหัวหน้าต่างไว้เสมอ + บอกสถานะว่าง รายการใหม่โผล่เองทันทีที่มีเงินเข้ารอตรวจ
+  if (pending.length === 0) {
+    return (
+      <div className="card mb-4" data-testid="slip-review-panel">
+        <div className="flex items-center justify-between gap-2 font-bold text-brand-accent" data-testid="slip-review-toggle">
+          <span>🧾 ตรวจการชำระเงิน/สลิป (0)</span>
+          <span className="text-xs text-brand-muted">ไม่มีรายการค้างตรวจ</span>
+        </div>
+        <p className="mt-2 text-xs text-brand-muted" data-testid="slip-review-empty">
+          ไม่มีออเดอร์รอตรวจสลิปในตอนนี้ — ออเดอร์ที่โอนแล้วรอตรวจจะขึ้นรายการที่นี่ทันที
+        </p>
+      </div>
+    )
+  }
 
   return (
     <div className="card mb-4" data-testid="slip-review-panel">

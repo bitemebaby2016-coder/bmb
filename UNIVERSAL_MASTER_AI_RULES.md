@@ -650,8 +650,29 @@ SECTION 15: CHAT & TOOL EXECUTION GOVERNANCE (กติกาเหล็กส�
 
 
 ===============================================================================
-FINAL PRINCIPLE
+SECTION 16: TEST DATA HYGIENE (กติกาทดสอบ — ของที่ AI สร้างต้อง "ลบ" ไม่ใช่แค่ cancel)
 ===============================================================================
+
+16.1 AI TEST ORDERS MUST BE DELETED AFTER USE
+    - ออเดอร์/ข้อมูลทดสอบที่ AI หรือสคริปต์อัตโนมัติสร้างขึ้นเพื่อทดสอบ — เมื่อ "ใช้เสร็จ"
+      แล้วต้องลบทิ้งจาก DB ทันที (hard-delete ทั้งตารางลูก: order_items · payment_intents ·
+      order_status_history · delivery_assignments · print_jobs ฯลฯ) ห้ามปล่อยค้างในหน้ารวมออเดอร์
+    - "แคนเซิ่ลแล้ว" ไม่เท่ากับ "ลบ" — cancel ปิดสถานะแต่แถวยังค้างจอ = มั่วรกจอ ผิดกฏ
+    - เหตุผล (Owner 2026-11-08): "ออเดอร์ทดสอบจากเอไอไม่ใช่ของจริง สร้างเสร็จใช้เสร็จให้ลบเลย
+      อย่าทิ้งไว้มั่วรกจอ จำไว้เป็นกฏด้วย"
+
+16.2 VERIFY BEFORE DELETE (ห้ามลบของจริง)
+    - ก่อนลบต้อง list รายการจริงจาก DB แล้วยืนยันว่าเป็นของทดสอบ (ชื่อ/เบอร์/เวลาสร้าง-ยกเลิก/
+      รูปแบบเลขที่ออเดอร์) — ถ้าไม่แน่ใจ ถาม Owner ก่อน ห้ามเดา
+    - ทำแล้ว: R86 (2026-11-08) — ลบ 5 ใบของวันนี้ (R74 Test ×3 · Social customer · Siam Portal 471)
+      พร้อมลูกทุกตาราง · หลักฐาน `e2e/_r86_delete_test_orders.cjs` (pre-check + verify = 0 ทุกตาราง)
+
+16.3 MIGRATIONS MUST BE CHECKED AGAINST LIVE DB
+    - ก่อนสรุปว่า migration ตัวไหน "ยังไม่ทำ" ต้อง probe ของจริง (marker จากเนื้อไฟล์)
+      แล้ว apply + บันทึกลง `supabase_migrations.schema_migrations` เสมอ (manual apply ไม่บันทึกให้)
+    - ทำแล้ว: R86 — 190 (มีแล้วแต่ไม่มีใน history → บันทึก) · 191/192/193 (ยังไม่ทำ → apply + verify)
+
+
 
     BUILD THE PRODUCT — DO NOT BUILD THE APPEARANCE OF COMPLETION.
 

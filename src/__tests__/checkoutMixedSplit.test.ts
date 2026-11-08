@@ -80,7 +80,8 @@ vi.mock('@/lib/deliveryFeeApi', () => ({
   feeUiState: vi.fn(() => ({ label: '', cls: '', tone: '', detail: '' })),
   summaryFeeState: vi.fn(() => ({ feeLabel: '', feeValue: '', totalSuffix: '', exact: true })),
 }))
-vi.mock('@/lib/bmbAdminApi_settings', () => ({ getBusinessSettings: vi.fn(async () => ({})) }))
+// R86: default = COD ซ่อน (cod_enabled ขาด = ปิด) — test ที่ใช้เงินสดปลายทางต้อง "เปิด" ก่อน
+vi.mock('@/lib/bmbAdminApi_settings', () => ({ getBusinessSettings: vi.fn(async () => ({ cod_enabled: { enabled: true } })) }))
 vi.mock('@/lib/brandResolver', () => ({ resolvePublicBranch: vi.fn(async () => null) }))
 vi.mock('@/lib/bmbAdminApi_products', () => ({ getProducts: vi.fn(async () => []) }))
 vi.mock('@/lib/cartPersistence', () => ({

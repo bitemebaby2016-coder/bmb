@@ -77,8 +77,8 @@
 | R82/R82g (หน้าต่างรอบ/lead 2 ชม./roundLines/แจ้งเตือน 2 ทาง) | ✅ โค้ด+gates+deploy 4 fn แล้ว (08 พ.ย. 04:41Z) — **เหลือ retest live = RT-1** |
 | ลบออเดอร์ทดสอบ 4 ใบ | ฝั่ง AI **ข้ามตามคำสั่ง Owner** → **Owner กดยกเลิกเองที่ `/admin/orders`** (ดูงานบ้าน) |
 
-> **งานบ้าน — ออเดอร์ทดสอบ 4 ใบ: ปิดครบทุกชั้นแล้ว (R83 แผง + R84 โค้ด + R85 APPLIED ลง PROD):** `BMB-20261108-484` (Social ฿166) + `BMB-20261108-850/613/767` (R74 Test ฿87)
-> เดิม = `cancelled` แต่ payment_status ค้าง `pending` (pill ⏳ pending โกหก) → **R83 (`d305dc7`): แผงกรอง `status='cancelled'`** · **R84 (`5573d2b`): โค้ด `void` + badge/label ทุกหน้า** · **R85 (2026-11-08 · Owner อนุมัติ): migration 194+195 ถูก apply ลง production แล้ว ผ่าน Management API (PAT `.env.local`) — verify จริง: enum มี `void` · 4 ใบ = `payment_status 'void'` ทั้งหมด · stale = 0 · `cancel_order` มี void-close (หลักฐาน `e2e/_r85_apply.log`)** → **เหลือ retest อย่างเดียว: hard reload → 4 ใบต้องโชว์ `🚫 void (ยกเลิก ไม่เก็บเงิน)` ไม่ใช่ `⏳ pending` · แผงไม่มี 4 ใบ · ไม่มี toast error**
+> **งานบ้าน — ออเดอร์ทดสอบ = "ลบทิ้งแล้ว" (R86 · Owner: สร้างเสร็จใช้เสร็จให้ลบเลย — กฏ §16):** `BMB-20261108-484/850/613/767` + `BMB-20261108-471` (Siam Portal) **ถูก hard-delete จาก DB ทั้ง 5 ใบ + ลูกทุกตาราง (verify = 0) — หน้ารวมต้อง "ว่าง"** → `e2e/_r86_delete_test_orders.cjs`
+> **สิ่งที่ต้อง retest รอบนี้ (R86):** ① `/admin/orders` ว่าง + **หน้าต่างตรวจสลิปกลับมา** (ค้าง 0 = โชว์ "ไม่มีรายการค้างตรวจ" — เดิม return null หายทั้งบาน) ② `/admin/settings` มีสวิตช์ **COD** (ค่าเริ่มต้น = ซ่อน → checkout/POS ไม่เห็นเงินสดปลายทาง · กดเปิด = กลับมาทันที) ③ `/shop` เวที theater **ไม่โชว์เมนูพรีออเดอร์ที่เลยรอบ/ไม่มีรอบถัดไป** ④ D1 ยืนยันจากภาพ Owner 16:04 = pill `void` แสดงจริงทั้ง 2 ใบ ✓ · **mig 190–193 ตรวจแล้ว: 190 มีอยู่แล้ว · 191/192/193 apply + verify แล้ว · history = 190–195 ครบ**
 
 ---
 

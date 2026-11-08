@@ -21,7 +21,8 @@ import { useCartStore } from '@/store/cartStore'
 import { useAuthStore } from '@/store/authStore'
 import { useBiteAIStore } from '@/stores/useBiteAIStore'
 import { MascotBadge } from '@/components/MascotBadge'
-import { pickTopAvailable, deriveOrderMode } from '@/lib/talkToBite'
+import { deriveOrderMode } from '@/lib/talkToBite'
+import { pickTheaterStage } from '@/lib/theaterStage'
 import { recommendReason } from '@/lib/theaterReasons'
 import { theaterPosFor, clampIndex } from '@/lib/theaterGeometry'
 import { resolveTheaterEditorial, THEATER_EDITORIAL_DEFAULTS } from '@/lib/theaterEditorial'
@@ -98,7 +99,10 @@ export function FoodTheater({ products, schedule = {}, onCustomize, onPreOrder }
   }, [customer?.id])
 
   // Real sellable picks — deterministic featured-first ordering (no fabrication).
-  const picks = useMemo(() => pickTopAvailable(products, PICK_COUNT), [products])
+  // R86 (Owner 2026-11-08: "เมนูที่เลยรอบไปแล้วไม่ต้องเอาขึ้นเธียเตอร์") —
+  // pre-order-only ที่ไม่มีรอบถัดไปในปฏิทิน (เลยรอบแล้ว/ยังไม่ลง) ห้ามขึ้นเวที —
+  // mirror กติกา L-8 ที่ add()/customize() block อยู่แล้ว (schedule map กรองวันเลยรอบด้วย R77)
+  const picks = useMemo(() => pickTheaterStage(products, schedule, PICK_COUNT), [products, schedule])
   // What the stage renders — daily copy → admin editorial → defaults (pure chain).
   const stage = useMemo(
     () => resolveStageCopy(editorial, dailyCopy, picks.length),
