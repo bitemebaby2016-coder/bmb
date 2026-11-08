@@ -1,5 +1,5 @@
 {
-  "date": "2026-11-07T17:57:39.071Z",
+  "date": "2026-11-08T01:16:53.811Z",
   "target": "https://ivkdfognyiwjcmrhcnwz.supabase.co/functions/v1/channel-webhook",
   "tests": [
     {
@@ -20,7 +20,7 @@
     {
       "name": "A1b-raw-message-row",
       "pass": true,
-      "detail": "row={\"event_id\":\"msg-r74a-1794074259070\",\"status\":\"SUCCEEDED\",\"content\":\"สวัสดีค่ะ ขอดูเมนูหน่อยค่ะ\"}"
+      "detail": "row={\"event_id\":\"msg-r74a-1794100613809\",\"status\":\"SUCCEEDED\",\"content\":\"สวัสดีค่ะ ขอดูเมนูหน่อยค่ะ\"}"
     },
     {
       "name": "A2-refire-idempotent",
@@ -29,18 +29,18 @@
     },
     {
       "name": "A3-structured-order-created",
-      "pass": false,
-      "detail": "order=none res={\"status\":400,\"body\":{\"code\":\"P0001\",\"details\":null,\"hint\":null,\"message\":\"ERR_STORE_CLOSED: ร้านปิดแล้วตามเวลาที่แอดมินตั้ง (8:00–20:00) น.\"}}"
+      "pass": true,
+      "detail": "order=BMB-20261108-767 res={\"status\":200,\"body\":{\"order_number\":\"BMB-20261108-767\",\"duplicate\":false}}"
     },
     {
       "name": "A3b-order-row-tagged",
-      "pass": false,
-      "detail": "rows=0"
+      "pass": true,
+      "detail": "rows=1"
     },
     {
       "name": "A4-order-refire-idempotent",
-      "pass": false,
-      "detail": "dup=false rows=0"
+      "pass": true,
+      "detail": "dup=true rows=1"
     },
     {
       "name": "A5-login",
@@ -49,18 +49,18 @@
     },
     {
       "name": "A5-ledger-submit",
-      "pass": false,
-      "detail": "order=none status=400"
+      "pass": true,
+      "detail": "order=BMB-20261108-613 status=200"
     },
     {
       "name": "A5b-ledger-replay-idempotent",
-      "pass": false,
-      "detail": "replay=undefined ledger_rows=0"
+      "pass": true,
+      "detail": "replay=BMB-20261108-613 ledger_rows=1"
     },
     {
       "name": "A6-kitchen-fallback-accepted",
-      "pass": false,
-      "detail": "kitchen=12.615659,102.098063 order=none res={\"code\":\"P0001\",\"details\":null,\"hint\":null,\"message\":\"ERR_STORE_CLOSED: ร้านปิดแล้วตามเวลาที่แอดมินตั้ง (8:00–20:00) น.\"}"
+      "pass": true,
+      "detail": "kitchen=12.615659,102.098063 order=BMB-20261108-850 res={\"id\":\"ord-1794100631208-53684a\",\"status\":\"pending\",\"subtotal\":79,\"branch_id\":\"branch-tenant-bmb-001-main\",\"duplicate\":false,\"order_mode\":\"SAME_DAY\",\"tax_amount"
     },
     {
       "name": "B1-chit-chat-no-order",
@@ -79,13 +79,13 @@
     },
     {
       "name": "B3-confirm-creates-order",
-      "pass": false,
-      "detail": "order_rows=0 order=undefined reply=รับทราบครับคุณลูกค้า — ลุยสวนหมู+กุ้ง 2 ที่ ไม่เผ็ด เพิ่มไข่ดาว 2 ฟอง ใช่ไหมครับ? แต่รอบวันนี้ปิดรับ"
+      "pass": true,
+      "detail": "order_rows=1 order=BMB-20261108-484 reply=รับทราบครับคุณลูกค้า! 🎉 ยืนยันออเดอร์ลุยสวนหมู+กุ้ง 2 ที่ ไม่เผ็ด พร้อมไข่ดาวเพิ่ม รอบเช้าวันนี้ (0"
     },
     {
       "name": "B3b-confirm-refire-idempotent",
-      "pass": false,
-      "detail": "dup=true rows=0"
+      "pass": true,
+      "detail": "dup=true rows=1"
     },
     {
       "name": "B4-comment-no-order",
@@ -95,39 +95,56 @@
     {
       "name": "C-cleanup-orders-cancelled",
       "pass": true,
-      "detail": "cancelled 0/0"
+      "detail": "cancelled 4/4"
     }
   ],
-  "orders": [],
+  "orders": [
+    {
+      "order_number": "BMB-20261108-767",
+      "why": "A3-structured"
+    },
+    {
+      "order_number": "BMB-20261108-613",
+      "why": "A5-ledger"
+    },
+    {
+      "order_number": "BMB-20261108-850",
+      "why": "A6-kitchen-fallback"
+    },
+    {
+      "order_number": "BMB-20261108-484",
+      "why": "B3-confirm"
+    }
+  ],
   "corpus": [
     {
       "step": "A1",
       "text": "สวัสดีค่ะ ขอดูเมนูหน่อยค่ะ",
-      "ai_reply": "สวัสดีครับคุณลูกค้า ยินดีต้อนรับเข้าสู่ร้าน Bite Me Baby จันทบุรีเลยครับ! 🎉 เมนูของเรามีให้เลือกเยอะแยะเลยครับ ทั้งไก่ทอดอินโด 79฿, ยำสลัดถั่วลูกไก่ 🥑 79฿, ข้"
+      "ai_reply": "สวัสดีครับคุณลูกค้า ยินดีต้อนรับเข้าสู่ Bite Me Baby จันทบุรีเลยครับ! 🎉 เมนูของเรามีทั้งจานเด็ดและเมนูสุขภาพให้เลือกเพียบเลยครับ ลองดูได้ที่ https://biteme-bab"
     },
     {
       "step": "B1",
       "text": "สวัสดีค่ะ วันนี้มีเมนูอะไรน่ากินบ้างคะ",
-      "ai_reply": "สวัสดีครับคุณลูกค้า ยินดีต้อนรับเข้าสู่ Bite Me Baby จันทบุรีเลยครับ วันนี้รอบส่งวันนี้ปิดรับแล้วนะครับ แต่เรายังเปิดรับพรีออเดอร์สำหรับวันพรุ่งนี้ (8 พ.ย.) มีเมนูเด็ดอย่าง 🍗 ไก่ทอดอินโด 79฿ และ 🍤 ส"
+      "ai_reply": "สวัสดีครับคุณลูกค้า! วันนี้ Bite ขอแนะนำเมนูเด็ดที่พร้อมเสิร์ฟวันนี้เลยครับ 🎉 มีทั้งเมี่ยงแซลม่อน 79฿, สปาเกตตี้ผัดพริกแห้งกุ้ง 99฿, และข้าวลาบอกไก่+ไข่ต้ม 69฿ อร่อยทุกจานเลยครับ! หรือถ้าอยากลองเมนูพ"
     },
     {
       "step": "B2",
       "text": "เอาลุยสวนหมู+กุ้ง 2 ที่ ไม่เผ็ด เพิ่มไข่ดาวด้วยค่ะ ขอคิดก่อนนะ",
-      "ai_reply": "รับทราบครับคุณลูกค้า — ลุยสวนหมู+กุ้ง 2 ที่ ไม่เผ็ด เพิ่มไข่ดาว 2 ฟอง ใช่ไหมครับ? ถ้าถูกต้องกดเพิ่มลงตะกร้าที่ https://biteme-baby.com/shop แล้วใส่หมายเหตุ \"ไม่เผ็ด\" ตอนเช็คเอาท์ได้เลยครับ หรือถ้ายังไ"
+      "ai_reply": "รับทราบครับคุณลูกค้า! ลุยสวนหมู+กุ้ง 2 ที่ ไม่เผ็ด พร้อมไข่ดาวเพิ่ม ราคารวม 158+? บาท (ไข่ดาว ราคาตามเว็บนะครับ) 🥬✨ สะดวกเมื่อไหร่กดสั่งที่ https://biteme-baby.com/shop เลยครับ หรือถ้าอยากดูรายการก่อ"
     },
     {
       "step": "B3",
       "text": "ตกลงค่ะ ยืนยัน สั่งเลยค่ะ",
-      "ai_reply": "รับทราบครับคุณลูกค้า — ลุยสวนหมู+กุ้ง 2 ที่ ไม่เผ็ด เพิ่มไข่ดาว 2 ฟอง ใช่ไหมครับ? แต่รอบวันนี้ปิดรับแล้วนะครับ 😅 เมนูนี้ยังไม่ลงปฏิทินพรีออเดอร์ครับ เปิดจองล่วงหน้าเร็ว ๆ นี้ครับ ถ้าพร้อมสั่งกดที่ ht"
+      "ai_reply": "รับทราบครับคุณลูกค้า! 🎉 ยืนยันออเดอร์ลุยสวนหมู+กุ้ง 2 ที่ ไม่เผ็ด พร้อมไข่ดาวเพิ่ม รอบเช้าวันนี้ (07:00-09:00 น.) ครับ กรุณากดไปที่ https://biteme-baby.com/checkout เพื่อตรวจสอบรายการและเลือกชำระเงิน"
     },
     {
       "step": "B4",
       "text": "เอาลุยสวนหมู+กุ้ง 2 ที่ค่ะ",
-      "ai_reply": "สวัสดีครับคุณลูกค้า! Bite รับออเดอร์เลยนะครับ — ลุยสวนหมู+กุ้ง 2 ที่ ใช่ไหมครับ? เมนูนี้แซ่บเว่อร์เลยนะครับ 🥬🦐 กดสั่งต่อที่เว็บเลยครับ https://biteme-baby.com/shop แล้วกดเพิ่มลงตะกร้าได้เลยนะครับ หร"
+      "ai_reply": "ได้เลยครับคุณ! ลุยสวนหมู+กุ้ง 2 ที่ ถูกต้องนะครับ จานเด็ดของเราทำจากหมูสับเห็ดหอมกับกุ้งสด ๆ อ่ะ จัมโบ ๆ เลยครับ 🦐🐷 ถ้าพร้อมเช็คเอาท์หรืออยากเพิ่มอะไรต่อ กดเข้าไปดูในเว็บเลยนะครับ https://biteme-bab"
     }
   ],
-  "orders_cancelled": 0,
-  "pass": false,
-  "pass_count": 11,
+  "orders_cancelled": 4,
+  "pass": true,
+  "pass_count": 19,
   "total": 19
 }

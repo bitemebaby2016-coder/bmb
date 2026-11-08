@@ -320,6 +320,7 @@
 ### Q.2 ขั้นทดสอบ Owner `[Q]`
 
 > ✅ **ผล 7 พ.ย.:** **Q-A = probe รันแล้ว** (`e2e/_r79_qa.done` · imggen live) · **Q-C = ผ่าน (Owner)** · **Q-D = reply path SUCCEEDED ทุกเคส** — flow probe รันตอน 00:52 ICT (นอกเวลาเปิดร้าน 8:00–20:00) → ข้อสร้างออเดอร์ = `ERR_STORE_CLOSED` ทุกข้อ = **ระบบถูกต้องตาม RT-HOURS ไม่ใช่บั๊ก** (B3 ตอบถูก "รอบปิดแล้ว ต้องพรีออเดอร์ 8 พ.ย") → รันซ้ำช่วงเปิดร้าน = ได้ 19/19
+> ✅ **ยืนยันแล้ว (8 พ.ย. 08:18 ICT · ร้านเปิด):** flow probe รันซ้ำ = **19/19 ALL PASS** (pass_count 19 · ไม่มี `ERR_STORE_CLOSED` · ไม่มี `"pass": false`) → **Q-D = ปิด ผ่าน**
 
 | # | ขั้น | PASS = |
 |---|---|---|
@@ -400,7 +401,7 @@
 3. **B7: วัด pitch ×4** (ระยะใบ 1→4 มม. ÷ 3 × 11.81 = px) + ถ่ายรูปม้วนหลังพิมพ์
 4. **§Q เดิม:** Q-A เจนรูป · Q-C ตั้งเวลา (หลังแก้ B1/B2) · Q-D คอมเม้น ≤3 นาที (หลังแก้ B4) · Q-B ×4 (หลังได้ตัวเลข pitch)
 
-> ✅ **ผล R2 ครบ (Owner 2026-11-07):** ข้อ 1 = ปลดแล้ว (ทำ 31 ต.ค.) · **ข้อ 3 (B7) = ผ่าน** ("ตั้งค่าในวิซาร์ดแล้วใช้ได้ไม่มีปัญหา") · **ข้อ 4: Q-C ผ่าน · Q-A probe รันแล้ว · Q-D = reply ทำงานครบ (order-ข้อ = รอรันช่วงเปิดร้าน)** · ข้อ 2 = **D-1 ปิด "โต้ตอบ = FB ฝั่งเดียว" ✓ · D-2/D-3 = คงค่าเดิม ✓ · D-4 = สั่งทำ** → design แล้ว (notificationLinks + enqueue_notification m179 + bmb-notify ≤5 นาที → Notification Center/Owner) + ชนิดออเดอร์ (order_mode + service_type dine_in/takeaway/pickup) → **เขียนโค้ด = รอบ R80**
+> ✅ **ผล R2 ครบ (Owner 2026-11-07):** ข้อ 1 = ปลดแล้ว (ทำ 31 ต.ค.) · **ข้อ 3 (B7) = ผ่าน** ("ตั้งค่าในวิซาร์ดแล้วใช้ได้ไม่มีปัญหา") · **ข้อ 4: Q-C ผ่าน · Q-A probe รันแล้ว · Q-D = reply ทำงานครบ (order-ข้อ = รอรันช่วงเปิดร้าน)** · ข้อ 2 = **D-1 ปิด "โต้ตอบ = FB ฝั่งเดียว" ✓ · D-2/D-3 = คงค่าเดิม ✓ · D-4 = สั่งทำ** → design แล้ว (notificationLinks + enqueue_notification m179 + bmb-notify ≤5 นาที → Notification Center/Owner) + ชนิดออเดอร์ (order_mode + service_type dine_in/takeaway/pickup) → **R80 เสร็จแล้ว (8 พ.ย.): `_shared/notificationLinks.ts` + เรียก 2 จุด social-ai-worker + post-published ใน automation-worker + `service_type`/labels/buildIntakeLine + grounding rule + test r80 9 ตัว — gates 4/4 (vitest 2,209 tests / 0 fail)**
 
 ### R.3 ผลแก้ (Owner ปลดห้าม → fix wave 2026-10-31 ~22:00 ICT)
 

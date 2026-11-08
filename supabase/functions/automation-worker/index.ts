@@ -604,6 +604,9 @@ async function runNotificationDispatch(ctx: Ctx, p: { lookbackMinutes?: number; 
 //   · สำเร็จ = บันทึก provider_post_id + published_at · ล้ม = เก็บ error +
 //     attempts (retry รอบถัดไป) · โพสต์ที่ไม่มี approval = ห้ามยิงเด็ดขาด
 // ============================================
+// R80 · D-4: import จุดเชื่อมแจ้งเตือนแอดมิน (m179 outbox → bmb-notify → Notification Center)
+import { enqueueAdminAlert } from '../_shared/notificationLinks.ts'
+
 async function runMarketingPublish(ctx: Ctx, p: { limit?: number }) {
   const limit = Math.min(Math.max(Number(p.limit) || 10, 1), 50)
   const nowIso = new Date().toISOString()
@@ -669,6 +672,13 @@ async function runMarketingPublish(ctx: Ctx, p: { limit?: number }) {
           publish_attempts: row.publish_attempts + 1,
           updated_at: new Date().toISOString(),
         })
+        // R80 · D-4: เอไอโพสขึ้น Facebook แล้ว → แจ้งทีมแอดมิน (side-channel — ล้มเหลวห้ามกระทบ publish)
+        void enqueueAdminAlert(SB_URL, SERVICE, {
+          eventKey: 'marketing-post-published-' + row.id,
+          title: '📣 เอไอโพสต์ลง Facebook แล้ว',
+          body: 'โพสต์ ' + row.id + ' ขึ้น Facebook แล้ว (provider: ' + (meta?.post_id || '-') + ')',
+          category: 'Marketing',
+        }).catch(() => { /* แจ้งเตือนล้มเหลว = เงียบไว้ */ })
       } else {
         // retry รอบถัดไป — โพสต์จริงไม่เกิดถ้าไม่ ok (ไม่โพสต์ซ้ำ)
         failed++

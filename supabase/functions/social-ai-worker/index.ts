@@ -58,6 +58,7 @@ import {
   buildCartSummaryFooter,
   scopeCatalogToPost,
 } from '../_shared/socialOrderIntake.ts'
+import { enqueueAdminAlert } from '../_shared/notificationLinks.ts'
 // R57: บริบทโพสต์ต้นทางของคอมเมนต์ (Owner: ตอบข้อมูลจริงตามโพสและตามเว็บ)
 import { extractSourcePostId, fetchPostMessage } from '../_shared/socialPostContext.ts'
 // R75 (Owner: "ลิ้งที่เอไอสร้างใช้ไม่ได้เลยสักลิ้ง"): ลิงก์ทุกตัวในคำตอบต้องเป็น https:// URL
@@ -169,6 +170,7 @@ const REPLY_GROUNDING_RULES = [
   '- ชื่อเมนู เวลาเปิดร้าน สถานะรอบส่ง ต้องมาจาก "ข้อมูลร้านจริง (DATA)" เท่านั้น — ห้ามแต่งชื่อเมนูใหม่ ห้ามเดาราคา ห้ามจำจากโพสเก่า',
   '- ถ้ามีบรรทัด "สถานะระบบบันทึกรายการ (DATA)" ให้สรุปชื่อเมนูและจำนวนตามนั้นเป๊ะ ๆ ห้ามแก้ ห้ามเพิ่ม ห้ามลด ห้ามเติมรายการที่ลูกค้าไม่ได้สั่ง',
   '- ถ้าไม่มีบรรทัดนั้น ห้ามสร้าง/เดารายการสั่งซื้อเอง — ถามรายการจากลูกค้าก่อน แล้วชวนสั่งผ่าน https://biteme-baby.com/shop',
+  '- เมื่อพูดถึง \"ประเภทออเดอร์\" (ส่งวันนี้/พรีออเดอร์ · ทานที่ร้าน/สั่งกลับบ้าน/รับที่ร้าน) ต้องตรงกับข้อมูลจากระบบที่แนบมา/ที่ลูกค้าระบุเท่านั้น — ห้ามเดา ถ้าไม่ชัดเจนให้ถามลูกค้าเพิ่ม',
 ].join('\n')
 
 interface ClassifiedOutput {
@@ -499,7 +501,7 @@ async function runOrderIntake(ev: SocialEventRow, userMsg: string, mode: 'messag
       externalRef: ev.event_id, // idempotent — webhook/queue retry ไม่สร้างซ้ำ
       customerRef: id.customer_ref,
     })
-    const line = buildIntakeLine(res)
+    const line = buildIntakeLine(res, undefined, { orderMode: x.order_mode, serviceType: x.service_type })
     usage(ev.event_id, 'social_reply_draft', '-', res.ok ? 'intake_created' : 'intake_failed', { duplicate: !!res.duplicate })
     return {
       // R27+R57: ทุกเคสแนบลิงก์ตะกร้าสรุปของ "รายการชุดเดียวกับที่สรุป" (Owner 2026-11-02:
@@ -513,6 +515,22 @@ async function runOrderIntake(ev: SocialEventRow, userMsg: string, mode: 'messag
     }
   } catch {
     return { footer: '', note: 'intake error — ห้ามพูดว่ารับออเดอร์สำเร็จ ให้ชวนสั่งต่อผ่านหน้าร้าน https://biteme-baby.com/checkout', summaryNames: [] }
+  }
+}
+
+/** R80 · D-4 (Owner 2026-11-07): แจ้งทีมแอดมินเมื่อเอ_aiตอบสำเร็จ — ฝั่งเดียวข้างนอก:
+ *  try/catch กลืนทุกกรณี + เรียกด้วย void = ความล้มเหลวของแจ้งเตือนห้ามกระทบการตอบ */
+async function notifyOwnerAiReply(ev: SocialEventRow): Promise<void> {
+  try {
+    const kind = ev.platform === 'messenger' ? '💬 ข้อความ Messenger' : '🤖 คอมเมนต์ Facebook'
+    await enqueueAdminAlert(SB_URL, SERVICE, {
+      eventKey: 'social-ai-reply-' + ev.event_id,
+      title: 'เอไอตอบ' + kind + 'แล้ว',
+      body: (ev.content || '').slice(0, 120) || '(ไม่มีข้อความ)',
+      category: 'Operational',
+    })
+  } catch {
+    // D-4: แจ้งเตือนล้มเหลว = เงียบไว้ — ไม่กระทบ reply flow
   }
 }
 
@@ -535,6 +553,7 @@ async function fallbackIntakeReply(ev: SocialEventRow, footer: string, reason: s
     reply_attempted_at: stamp,
     last_error: sent.ok ? null : 'META_SEND:' + String(sent.reason || 'error').slice(0, 100),
   })
+  if (sent.ok) void notifyOwnerAiReply(ev)
   usage(ev.event_id, 'social_reply_send', '-', 'intake_fallback')
   return { id: ev.id, result: 'succeeded', detail: 'intake_fallback:' + reason.slice(0, 60) + ' sent=' + sent.ok }
 }
@@ -726,6 +745,7 @@ async function processEvent(ev: SocialEventRow): Promise<{ id: string; result: s
     // R76: หลักฐานการแจ้งเตือนฝั่งลูกค้า (private reply สำหรับคอมเมนต์ · message id สำหรับ Messenger)
     ai_guardrail_flags: { ...flags, dm_reply_id: sent.dmId || null, dm_error: sent.dmError || null },
   })
+  void notifyOwnerAiReply(ev)
   usage(ev.event_id, 'social_reply_send', draft.model || '-', 'sent')
   return { id: ev.id, result: 'succeeded', detail: `intent=${classification.intent} sent=true` }
 }
