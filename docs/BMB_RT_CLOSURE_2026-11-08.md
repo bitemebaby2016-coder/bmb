@@ -12,7 +12,8 @@
 |---|---|---|
 | ✅ PASS | 16 ข้อ | RT-1.1/1.2/1.3 · RT-2.1 · RT-3.1/3.2/3.3/3.5/3.6/3.7 · RT-5.2 · §T-B(3) · §T-C(4) · §T-D(4) · §T-E(2) · CAP-10 |
 | ✅ PASS ใหม่ | 1 รายการ | **OMNI-5 ผ่านบน live = ปลด BLOCKED** (เดิมรอลงทะเบียนผู้พัฒนา) — follow-up: ตรวจสอบ "รายการใหม่" ที่ AI แจ้งให้ตรงจริง |
-| ❌ FAIL | 4 ข้อ | **RT-3.4 = D1** · **RT-5.1 = D2** (บางส่วน: ราคา/เมนูถูก คำตอบรอบส่งผิด) · **RT-5.3 = D3** · **RT-5.4 = D2+D4** |
+| ❌ FAIL ค้าง | 3 ข้อ | **RT-5.1 = D2** (บางส่วน: ราคา/เมนูถูก คำตอบรอบส่งผิด) · **RT-5.3 = D3** · **RT-5.4 = D2+D4** |
+| 🔧 D1 = FIXED | 1 ข้อ (RT-3.4) | แก้แล้ว R83 · commit `d305dc7` push · gates 4/4 (tsc·lint·vitest 220·build) — **เหลือ retest live หลัง auto-deploy** |
 | ⏳ DEFERRED | 1 ข้อ | **RT-1.4** — Owner: "ติดไว้ตอนปิดร้าน" → รันช่วงก่อน 08:00 / หลัง 20:00 |
 | ⏳ ยังไม่รัน | 4 กลุ่ม | RT-4.1–4.7 · RT-5.5–5.7 · RT-6.1–6.4 · §T-A(6) · CAP-11/14 + CAP 7·8·13·16·17·19 |
 
@@ -20,7 +21,7 @@
 
 | ID | ข้อ | ปัญหา | หลักฐานโค้ดที่ verify แล้ว | แนวทางแก้ |
 |---|---|---|---|---|
-| **D1** | RT-3.4 | ออเดอร์ทดสอบ 4 ใบ cancel แล้วยังค้างแผง "รายการชำระเงิน/สลิป (4)" · ไม่มีปุ่มล้าง · ปฏิเสธสลิปขึ้น `ERR_ORDER_CLOSED: cannot reject payment on a closed order` | `supabase/migrations/162_admin_reject_payment.sql:25` = `RAISE EXCEPTION` (guard ตั้งใจออกแบบ) เรียกผ่าน RPC `admin_reject_payment` (`src/lib/bmbAdminApi_orders.ts:463`) | UI: กรองออเดอร์สถานะปิด/cancelled ออกจากแผง หรือเพิ่มปุ่ม "ล้างออกจากรายการ" · **ห้ามอ่อนแอ guard DB** |
+| **D1** ✅ FIXED | RT-3.4 | ~~ออเดอร์ 4 ใบ cancel แล้วยังค้างแผง + ปฏิเสธสลิปขึ้น `ERR_ORDER_CLOSED: cannot reject payment on a closed order`~~ → **แก้แล้ว R83** | guard `supabase/migrations/162_admin_reject_payment.sql:25` = `RAISE EXCEPTION` (คงเดิม ไม่ทำให้อ่อน) · โค้ดที่แก้: `src/pages/admin/AdminOrders.tsx` (review filter) + `src/components/admin/SlipReviewPanel.tsx` | **ทำแล้ว:** กรอง `status='cancelled'` ออกทั้งต้นทาง+ตัวแผง (`delivered` คงอยู่ = COD) · เทสต์ใหม่ 2 ข้อ · gates 4/4 · commit `d305dc7` push → **เหลือ retest live (hard reload → แผงไม่มี 4 ใบ)** |
 | **D2** | RT-5.1 · RT-5.4 | คำตอบแชทเรื่องส่งยังผิด — สั่ง SAME_DAY กลับบอก/อ้างรอบส่ง (จริง = ส่งได้ตลอดเวลาที่ร้านเปิด · ไม่มีรอบ) · PRE_ORDER ที่เลยรอบไปแล้วยังพูดถึงรอบนั้น | `_shared/orderWindow.ts` + `socialOrderIntake.ts:258` ("SAME_DAY คงเดิม m148: ไม่มีปิดรอบ") + tests `r82OrderWindow` 21 ข้อ / `roundsSameDayNoCutoff` = โค้ดมีกติกาแล้ว แต่คำตอบจริงยังผิด | เจาะ prompt/สาย intake ของ **แชต (DM)** ว่าเข้าบล็อก ORDER WINDOW จริงไหม + ตรวจข้อความตอบจริง · อาจต้อง enforce structured field แทนให้โมเดลเขียนเอง |
 | **D3** | RT-5.3 | ยืนยันแล้วได้เลข BMB จริง + ลิงก์จริง แต่ **จำนวนผิด** (สั่ง 2 ที่) | structured extraction จำนวน (`socialOrderIntake.ts` schema `qty`) | ตรวจ field จำนวนก่อนสร้างออเดอร์จริง + โน้ตออเดอร์ |
 | **D4** | RT-5.4 | ลิงก์ในแชท **ไม่ยอมเปิดบราวเซอร์ภายนอกจริง** (ยังเปิด in-app) | — (งานฝั่ง client link handling · อ้าง R57) | ตรวจ target/deep-link ของลิงก์ในข้อความแชท |
@@ -28,16 +29,17 @@
 
 ## 3. งานบ้าน/ของค้าง
 
-- **ออเดอร์ทดสอบ 4 ใบ** `BMB-20261108-484/850/613/767` = cancel แล้วแต่ยังค้างแผง → **ติด D1** (Owner ลองกดเองแล้วไม่มีปุ่ม/โดน guard · ห้ามกดซ้ำจนกว่าแก้)
+- **ออเดอร์ทดสอบ 4 ใบ** `BMB-20261108-484/850/613/767` = cancel แล้วแต่ค้างแผง → **D1 = แก้แล้ว (R83 · `d305dc7` push · แผงจะกรองออเดอร์ `cancelled` ออก) — เหลือ retest live: hard reload → แผงต้องไม่มี 4 ใบ + ไม่มี toast `ERR_ORDER_CLOSED`**
 - **ออเดอร์จาก RT-5.3 (ยืนยันแล้วจำนวนผิด)** = **ยังไม่มีใครยืนยันว่า cancel แล้ว** → เช็กที่ `/admin/orders` + DB แล้ว cancel ก่อนรอบถัดไป (กติกาข้อ 4 ของ test pack)
 - **RT-1.4** = รอช่วงปิดร้าน
 - **ห้ามพูดว่า "ปิดครบทุกลูป"** — RT-8 (เกณฑ์ปิด 6 ข้อ) ยังไม่ครบ เพราะมี FAIL ค้าง + ข้อค้างรัน
 
 ## 4. ขั้นถัดไป (ตามลำดับ)
 
-1. **แชทหน้า:** รับ D1–D4 ทำ two-try (แนะนำลำดับ: D2 → D3 → D4 → D1) · D5 = enhancement ทำพร้อมกันได้
-2. **Owner:** รัน RT-1.4 ตอนปิดร้าน · ต่อคิว RT-4 → RT-5.5–5.7 → RT-6 → §T-A → CAP ที่เหลือ
-3. **หลังแก้ D1–D4:** retest RT-3.4 + RT-5.1/5.3/5.4 แล้วอัพเดท test pack ใหม่
+1. **Owner/แอดมิน:** retest **RT-3.4** หลัง auto-deploy (hard reload Ctrl+Shift+R → `/admin/orders` → แผงตรวจสลิปไม่มี 4 ใบค้าง · ไม่มี toast `ERR_ORDER_CLOSED`)
+2. **แชทหน้า:** รับ **D2 → D3 → D4** ทำ two-try · D5 = enhancement ทำพร้อมกันได้ (**D1 = ปิดแล้ว**)
+3. **Owner:** รัน RT-1.4 ตอนปิดร้าน · ต่อคิว RT-4 → RT-5.5–5.7 → RT-6 → §T-A → CAP ที่เหลือ
+4. **หลังแก้ D2–D4:** retest RT-5.1/5.3/5.4 แล้วอัพเดท test pack ใหม่
 
 ---
 *จัดทำ: AI (RT-INTAKE) · 2026-11-08 · evidence ชี้กลับไปที่ test pack + `AI_WORK_STATE.md` บล็อก SESSION ACTIVE*
