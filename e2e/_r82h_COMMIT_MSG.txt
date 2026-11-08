@@ -1,0 +1,16 @@
+docs(R82h): session close — remain-tests live doc, A2 pass, work state closed
+
+- สร้าง docs/BMB_REMAIN_TESTS_LIVE_2026-11-08.md = เอกสาร "remain test" ฉบับใหม่
+  (รายการเดียวที่ต้องรันต่อ): RT-1 retest R82g รอบ 2 · RT-2 Q-B พิมพ์ต่อเนื่อง ·
+  RT-3 ชุด ง (Manage Orders + จบโซ่โพสต์) · RT-4 ชุด ก R73h · RT-5 ชุด ข OMNI live ·
+  RT-6 ชุด ค §RG เดินทุก role · RT-7 §T+CAP · RT-8 เกณฑ์ปิด §RG·16
+  + หัวข้อ "ปิดแล้ว ห้ามรันซ้ำ" (A2/Q-A/Q-C/Q-D/B7/R43/L-12/D-1..3/OMNI 19/19)
+  + งานบ้าน: Owner ยกเลิกออเดอร์ทดสอบ 4 ใบเองที่ /admin/orders (ข้ามการลบฝั่ง AI)
+- TEST PACK: ปักหมุดหัวไฟล์ชี้เอกสาร remain ฉบับใหม่ + สรุปปิดแล้ว
+- AI_WORK_STATE: SESSION CLOSED (A2 ผ่าน · ไม่ fire ลบออเดอร์ · กติกา 1 call/response
+  ส่งต่อแชทหน้า · next = รัน RT-1..8 จากเอกสารใหม่)
+- e2e/_r82h_probe.cjs + _r82h_evidence.json: probe READ-ONLY พิสูจน์เลขจริง
+  BMB-20261108-484/850/613/767 (tail-match 4/4 · cancelled · ฿166+฿87×3)
+- e2e/_r82h_cleanOrders.cjs: แก้ TARGET_NUMBERS ปี 20261108 + คอลัมน์
+  external_ref -> external_ref_id (เดิมทำ query fail = 0/4) — DRY-RUN เท่านั้น ไม่ --fire
+- e2e/_r82_cat.cjs: helper cat+บรรทัด (ใช้ตอน read tool คืน placeholder)

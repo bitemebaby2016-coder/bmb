@@ -1,0 +1,241 @@
+{
+  "probed_at": "2026-11-08T05:24:01.971Z",
+  "note": "READ-ONLY R82h",
+  "orders_columns": [
+    {
+      "column_name": "id"
+    },
+    {
+      "column_name": "order_number"
+    },
+    {
+      "column_name": "customer_id"
+    },
+    {
+      "column_name": "customer_name"
+    },
+    {
+      "column_name": "customer_phone"
+    },
+    {
+      "column_name": "delivery_round_id"
+    },
+    {
+      "column_name": "customer_ref"
+    },
+    {
+      "column_name": "status"
+    },
+    {
+      "column_name": "delivery_method"
+    },
+    {
+      "column_name": "pickup_latitude"
+    },
+    {
+      "column_name": "pickup_longitude"
+    },
+    {
+      "column_name": "dropoff_latitude"
+    },
+    {
+      "column_name": "dropoff_longitude"
+    },
+    {
+      "column_name": "dropoff_detail"
+    },
+    {
+      "column_name": "is_outside_self_zone"
+    },
+    {
+      "column_name": "subtotal"
+    },
+    {
+      "column_name": "delivery_fee"
+    },
+    {
+      "column_name": "service_fee"
+    },
+    {
+      "column_name": "discount_amount"
+    },
+    {
+      "column_name": "tax_amount"
+    },
+    {
+      "column_name": "total_amount"
+    },
+    {
+      "column_name": "payment_status"
+    },
+    {
+      "column_name": "payment_method"
+    },
+    {
+      "column_name": "special_instructions"
+    },
+    {
+      "column_name": "created_at"
+    },
+    {
+      "column_name": "updated_at"
+    },
+    {
+      "column_name": "order_mode"
+    },
+    {
+      "column_name": "scheduled_date"
+    },
+    {
+      "column_name": "source_channel"
+    },
+    {
+      "column_name": "external_ref_id"
+    },
+    {
+      "column_name": "branch_id"
+    },
+    {
+      "column_name": "pickup_code"
+    },
+    {
+      "column_name": "picked_up_at"
+    },
+    {
+      "column_name": "handed_by"
+    },
+    {
+      "column_name": "delivery_address"
+    },
+    {
+      "column_name": "address_photo_url"
+    }
+  ],
+  "orders_latest10": [
+    {
+      "id": "ord-1794100666096-e7012d",
+      "order_number": "BMB-20261108-484",
+      "customer_ref": "ea7d16ce-9904-44cc-9d5a-4d39e014dfc4",
+      "status": "cancelled",
+      "order_mode": "SAME_DAY",
+      "total_amount": "166.00",
+      "created_at": "2026-11-08 01:17:46.052595+00"
+    },
+    {
+      "id": "ord-1794100631208-53684a",
+      "order_number": "BMB-20261108-850",
+      "customer_ref": "7ef115f0-ef6c-4d35-be78-e312361a64ac",
+      "status": "cancelled",
+      "order_mode": "SAME_DAY",
+      "total_amount": "87.00",
+      "created_at": "2026-11-08 01:17:11.184203+00"
+    },
+    {
+      "id": "ord-1794100629409-770af6",
+      "order_number": "BMB-20261108-613",
+      "customer_ref": "7ef115f0-ef6c-4d35-be78-e312361a64ac",
+      "status": "cancelled",
+      "order_mode": "SAME_DAY",
+      "total_amount": "87.00",
+      "created_at": "2026-11-08 01:17:09.393075+00"
+    },
+    {
+      "id": "ord-1794100626818-e27a5e",
+      "order_number": "BMB-20261108-767",
+      "customer_ref": "6f2b325f-4a93-4198-b15f-99f115da2724",
+      "status": "cancelled",
+      "order_mode": "SAME_DAY",
+      "total_amount": "87.00",
+      "created_at": "2026-11-08 01:17:06.695673+00"
+    },
+    {
+      "id": "ord-1794056194811-ddcc61",
+      "order_number": "PO-20261108-845",
+      "customer_ref": "23cbe150-e5f4-4a37-a969-02e2db8df395",
+      "status": "ready_for_dispatch",
+      "order_mode": "PRE_ORDER",
+      "total_amount": "87.00",
+      "created_at": "2026-11-07 12:56:34.703241+00"
+    },
+    {
+      "id": "ord-1794055840305-8520c0",
+      "order_number": "PO-20261108-503",
+      "customer_ref": "5119ee60-41de-4a1f-8dfa-0645a59cde37",
+      "status": "ready_for_dispatch",
+      "order_mode": "PRE_ORDER",
+      "total_amount": "166.00",
+      "created_at": "2026-11-07 12:50:40.177046+00"
+    },
+    {
+      "id": "ord-1794043234154-aceb8d",
+      "order_number": "BMB-20261107-197",
+      "customer_ref": "23cbe150-e5f4-4a37-a969-02e2db8df395",
+      "status": "ready_for_dispatch",
+      "order_mode": "SAME_DAY",
+      "total_amount": "79.00",
+      "created_at": "2026-11-07 09:20:33.983443+00"
+    },
+    {
+      "id": "ord-1793883765046-b3cb9c",
+      "order_number": "PO-20261106-336",
+      "customer_ref": "23cbe150-e5f4-4a37-a969-02e2db8df395",
+      "status": "cancelled",
+      "order_mode": "PRE_ORDER",
+      "total_amount": "79.10",
+      "created_at": "2026-11-05 13:02:44.925298+00"
+    },
+    {
+      "id": "ord-1793870583415-17bec4",
+      "order_number": "BMB-20261105-896",
+      "customer_ref": "23cbe150-e5f4-4a37-a969-02e2db8df395",
+      "status": "delivered",
+      "order_mode": "SAME_DAY",
+      "total_amount": "71.10",
+      "created_at": "2026-11-05 09:23:03.248895+00"
+    },
+    {
+      "id": "ord-1793841627650-e18fa1",
+      "order_number": "BMB-20261105-135",
+      "customer_ref": "23cbe150-e5f4-4a37-a969-02e2db8df395",
+      "status": "delivered",
+      "order_mode": "SAME_DAY",
+      "total_amount": "89.10",
+      "created_at": "2026-11-05 01:20:27.498555+00"
+    }
+  ],
+  "match_by_tail": [
+    {
+      "id": "ord-1794100666096-e7012d",
+      "order_number": "BMB-20261108-484",
+      "customer_ref": "ea7d16ce-9904-44cc-9d5a-4d39e014dfc4",
+      "status": "cancelled",
+      "total_amount": "166.00",
+      "created_at": "2026-11-08 01:17:46.052595+00"
+    },
+    {
+      "id": "ord-1794100631208-53684a",
+      "order_number": "BMB-20261108-850",
+      "customer_ref": "7ef115f0-ef6c-4d35-be78-e312361a64ac",
+      "status": "cancelled",
+      "total_amount": "87.00",
+      "created_at": "2026-11-08 01:17:11.184203+00"
+    },
+    {
+      "id": "ord-1794100629409-770af6",
+      "order_number": "BMB-20261108-613",
+      "customer_ref": "7ef115f0-ef6c-4d35-be78-e312361a64ac",
+      "status": "cancelled",
+      "total_amount": "87.00",
+      "created_at": "2026-11-08 01:17:09.393075+00"
+    },
+    {
+      "id": "ord-1794100626818-e27a5e",
+      "order_number": "BMB-20261108-767",
+      "customer_ref": "6f2b325f-4a93-4198-b15f-99f115da2724",
+      "status": "cancelled",
+      "total_amount": "87.00",
+      "created_at": "2026-11-08 01:17:06.695673+00"
+    }
+  ],
+  "match_test_cust": null
+}
