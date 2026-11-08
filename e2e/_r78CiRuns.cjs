@@ -7,7 +7,7 @@
 'use strict'
 const fs = require('fs')
 const path = require('path')
-const SHAS = ['9f63b24', '918675d', '9db6664', 'd420951']
+const SHAS = ['834df11', '4d91432', 'dcc0c71', 'a16668c'] // R79/R79b/R80 (อัปเดต R80)
 
 fetch('https://api.github.com/repos/bitemebaby2016-coder/bmb/actions/runs?per_page=80')
   .then((r) => r.json())
