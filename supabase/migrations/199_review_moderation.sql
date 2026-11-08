@@ -44,6 +44,14 @@ DROP POLICY IF EXISTS customers_update_own_review ON public.reviews;
 DROP POLICY IF EXISTS customers_insert_own_review ON public.reviews;
 DROP POLICY IF EXISTS public_read_approved_reviews ON public.reviews;
 DROP POLICY IF EXISTS customers_read_own_reviews ON public.reviews;
+-- legacy duplicates 4 ตัว (เจอตอน verify — RLS PERMISSIVE = OR กัน → ตัวเก่า bypass moderation):
+--   reviews_anon_read / reviews_public_read = อ่าน is_verified โดยไม่ดู status → pending รั่ว
+--   reviews_own_update = ลูกค้าแก้ status ตัวเองเป็น approved ได้
+--   reviews_own_insert = แทรก status='approved' ตรงได้ (customer_id IS NULL ก็ผ่าน)
+DROP POLICY IF EXISTS reviews_anon_read ON public.reviews;
+DROP POLICY IF EXISTS reviews_public_read ON public.reviews;
+DROP POLICY IF EXISTS reviews_own_update ON public.reviews;
+DROP POLICY IF EXISTS reviews_own_insert ON public.reviews;
 
 CREATE POLICY public_read_approved_reviews ON public.reviews
   FOR SELECT TO public
@@ -182,6 +190,13 @@ BEGIN
                  WHERE schemaname = 'public' AND tablename = 'reviews'
                    AND policyname = 'public_read_approved_reviews') THEN
     RAISE EXCEPTION 'ERR_R88_MODERATION_POLICY_MISSING';
+  END IF;
+  -- legacy หละหลวมต้องหายไปหมด (ถ้ายังอยู่ = pending รั่ว / ลูกค้า self-approve ได้)
+  IF EXISTS (SELECT 1 FROM pg_policies
+             WHERE schemaname = 'public' AND tablename = 'reviews'
+               AND policyname IN ('reviews_anon_read', 'reviews_public_read',
+                                  'reviews_own_update', 'reviews_own_insert')) THEN
+    RAISE EXCEPTION 'ERR_R88_LEGACY_POLICY_STILL_PRESENT';
   END IF;
   RAISE NOTICE 'R88 review moderation ready: columns + approved-only RLS + RPCs (new reviews = pending until admin approves)';
 END $$;
