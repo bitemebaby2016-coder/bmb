@@ -73,6 +73,10 @@ BEGIN
   END IF;
 
   -- state transition (allow-list re-checked by guard trigger) → capacity release via trigger
+  UPDATE public.orders
+     SET status = 'cancelled', updated_at = NOW()
+   WHERE order_number = p_order_number;
+
   -- R84 (Owner 2026-11-08): ปิดสถานะชำระเงินให้ซื่อสัตย์ — ยกเลิกแล้ว = ไม่มีอะไร
   -- ให้รอ (เดิมคอลัมน์ค้าง 'pending' = pill ⏳ pending โกหกในหน้า Manage Orders)
   IF v_order.payment_status = 'pending'
@@ -165,6 +169,3 @@ BEGIN
   RAISE NOTICE 'migration 195: closed stale pending payment as void for % order(s)', v_n;
 END $$;
 
-  UPDATE public.orders
-     SET status = 'cancelled', updated_at = NOW()
-   WHERE order_number = p_order_number;
