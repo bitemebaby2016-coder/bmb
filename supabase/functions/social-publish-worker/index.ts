@@ -111,7 +111,7 @@ const POST_CTA_FOOTER = [
   '💬 หรือทักไปสั่งใน Messenger',
   '🌐 สั่งต่อที่เว็บ https://biteme-baby.com/shop',
   '✅ ปิดการขายผ่านช่องทางไหนก็ได้ — ทีมจัดรายการใส่ตะกร้าเตรียมไว้ให้พร้อม',
-  '🔗 ลิงก์เปิดเว็บภายนอก Facebook — แตะเพื่อยืนยันเปิดในเบราว์เซอร์ของคุณ: https://biteme-baby.com/shop',
+  '🔗 ลิงก์เปิดเว็บภายนอก Facebook — เปิดไม่ออก? กดคัดลอกลิงก์ในแถบที่ขึ้น แล้ววางใน Chrome/Safari: https://biteme-baby.com/shop',
 ].join('\n')
 
 /** ต่อท้าย footer บังคับ (idempotent — ซ้ำถ้าเนื้อหามีอยู่แล้ว)

@@ -53,6 +53,18 @@
 > **Defect ใหม่รอบนี้ (จด `AI_WORK_STATE.md`):** ① **A3/A4 = เปิดบราว์เซอร์ภายนอกไม่ออก** (FB WebView เครื่อง Owner บล็อก intent + ⋮ → **งานหลัก R79 = ปุ่ม Smart Escape ต่อออกได้จริง**) ② **B6 = แจ้งเตือนคอมเมนต์ไม่ถึงคนตอบโพสต์** (R76 private reply — สอบกลับรอบหน้า) ③ **C9 = GPS ใน FB = ข้อจำกัด platform** (ทางออก = ปักหมุดเอง ✓)
 > **D-1 ตัดสินแล้ว (Owner 2026-11-07):** **"โต้ตอบ = FB ฝั่งเดียว"** — feed หน้าเว็บ = read-only ถาวร · ไลก์/คอมเม้นอยู่ที่ Facebook (social-ai ตอบ) · **BLK-6 ปิด = OPEN QUESTION หมด** · D-2 = คง list โมเดล 7 ชื่อ · D-3 = คงว่าง (C-1 เดิม) · **D-4 = สั่งทำ** (แจ้งเตือนเมื่อบอตโพสต์/ตอบ — ปลดบล็อก B5)
 
+> ## 🔧 R81 — แก้แล้ว 2026-11-08 (evidence-first · เหลือ Owner ทดสอบ live: A2 + B1 + B7)
+> **Evidence production READ-ONLY (`e2e/_r81_a1_evidence.json` · `_r81_a1b` · `_r81_a1c`):**
+> - **B6/H2 ยืนยัน:** `private_replies` = `http_400 Unsupported post request. Object with ID … does not exist` **5/5 แถวคอมเมนต์จริง** (ทั้งที่คำตอบสาธารณะต่อ comment id เดียวกัน = `reply_status=sent`) → **DM ของเฟซตาย = สาเหตุที่แจ้งเตือนไม่ถึงลูกค้า**
+> - **H3 ไม่ยืนยัน:** แถว `failed` 14 แถว = **test residue `r74cmt-*`** (id ไม่ใช่ของเฟซ · ไม่ใช่ลูกค้าจริง) · คอมเมนต์จริง 5/5 = sent
+> - **H1 = เสริมช่องทาง control ได้ 100%:** web push ของ biteme (วงจร m179 `enqueue_notification` → cron bmb-notify ≤5 นาที)
+> **สิ่งที่แก้ (code):** ① `social-ai-worker` = error ของเฟซเป็น structured (`fbReason`) · กันซ้ำ DM 1/คอมเมนต์ (`dm_attempted_at`) · **web push ลูกค้า** (resolve `customer_channel_identities` → `customers.id` → `enqueue_notification` · บันทึก `flags.push_notify`) · **admin alert ทันทีเมื่อตอบสาธารณะ fail** (`social-reply-fail-`) ② Smart Escape = ปุ่มเดียว คัดลอก+guide · **ห้าม auto-share** (share = ปุ่ม `📤 แชร์/ส่งต่อ` กดเอง) · **ลบปุ่ม intent ทิ้งทั้งหมด** · guide ตาม platform (iOS=Safari · Android=Chrome + ปุ่ม `target=_blank`) ③ debug capture `?r81debug=1` (UA+ผลกดปุ่ม → localStorage/console) ④ in-app = ซ่อนปุ่ม GPS + toast บอก "แตะเลือกบนแผนที่/พิมพ์ค้นหา" + ช่องพิมพ์ค้นหาที่อยู่ในกล่องแผนที่ ⑤ footer 2 จุดเลิกสัญญา "แตะแล้วยืนยันเปิด"
+> **ทดสอบโดย Owner (live · Ctrl+Shift+R 1 ครั้ง):**
+> **A2 (B6) — คอมเมนต์จากบัญชีลูกค้าจริง:** ① เห็นคำตอบใต้คอมเมนต์ ② ลูกค้าที่ผูกบัญชี biteme = ได้ **web push / Notification Center "🔔 Bite ตอบคอมเมนต์ของคุณแล้ว" ≤5 นาที** ③ จดภาพ+เวลา · (ส่วน ⚠️ DM Messenger ยังคง fail = ฝั่งเฟซ — ดู `flags.dm_error` รายแถบ)
+> **B1 (A3/A4) — debug capture:** เปิด `https://biteme-baby.com/?r81debug=1` หนเดียวใน FB แล้วกดปุ่มทีละปุ่ม (ปุ่มหลัก · คัดลอก · แชร์/ส่งต่อ · เปิดในแท็บใหม่ · ปิด) → ส่ง screenshot console หรือค่า `localStorage['bmb:r81-debug-log']` มาให้ทีม
+> **B7 (A3/A4/C9) — acceptance 2 เครื่อง:** ① กดปุ่มเดียว = ได้ลิงก์ + guide ขึ้น 1 ครั้ง · ไม่มี share surprise ② **ไม่มีปุ่มไหนกดแล้ว error** (ปุ่ม intent ถูกลบหมดแล้ว) ③ ออกจาก FB ได้จริง ≤3 ขั้นตาม guide ④ ใน FB: ปักหมุด/พิมพ์ค้นหาที่อยู่ใช้ได้ · ไม่มีปุ่ม GPS ให้กดผิด · ใน Chrome: GPS ทำงาน
+> **กติกาคงเดิม (ห้ามพลาดซ้ำ):** ห้าม nav หน้าปัจจุบันไป intent/unknown scheme (R76) · ห้าม auto intent (R77) · ห้าม auto share (R79) — ทุก action ต้องไม่มีทางพังหน้า
+
 ## A. CI / gate ของ SHA ล่าสุด `[R]`
 
 | # | ขั้น | PASS = |

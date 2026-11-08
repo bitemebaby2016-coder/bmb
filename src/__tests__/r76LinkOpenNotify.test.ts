@@ -10,14 +10,15 @@ const noticeSrc = read('src/components/layout/InAppBrowserNotice.tsx')
 const aiSrc = read('supabase/functions/social-ai-worker/index.ts')
 
 describe('R76 ① — หน้าเว็บจากลิงก์เฟซต้องไม่พัง: ห้ามนำทางหน้าปัจจุบันไป intent://', () => {
-  it('InAppBrowserNotice = <a href={intent}> เฟรมเดียว (R77) + ไม่มี location.replace/window.open(intent)', () => {
+  it('R81: ไม่มีปุ่ม intent บน UI อีกแล้ว (ลบตามหลักฐาน R79 = error บนเครื่อง Owner) + ไม่มี location.replace/window.open(intent)', () => {
     expect(noticeSrc).not.toContain('window.location.replace(intent)')
     expect(noticeSrc).not.toContain('window.open(intent')
-    expect(noticeSrc).toContain('href={intentUrl}')
+    expect(noticeSrc).not.toContain('href={intentUrl}')
+    expect(noticeSrc).not.toContain('inapp-open-try')
     // เครื่องที่เปิดอัตโนมัติไม่ได้ = ต้องมีทางรอด = วิธีเปิดด้วยเมนู ⋮
     expect(noticeSrc).toContain('เปิดในเบราว์เซอร์')
     expect(noticeSrc).toContain('externalBrowserIntentUrl')
-    // intent:// ต้องมากับ fallback URL เต็ม https:// เสมอ (ไม่ใช่โดเมนเปล่า)
+    // intent:// helper เดิมคงไว้ให้ test r57 คุม — ต้องมากับ fallback URL เต็ม https:// เสมอ (ไม่ใช่โดเมนเปล่า)
     const intent = noticeSrc.includes('s.browser_fallback_url=${encodeURIComponent(href)}')
     expect(intent).toBe(true)
   })

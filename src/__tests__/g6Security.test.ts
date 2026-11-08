@@ -80,12 +80,22 @@ const codeOnly = workerSrc.split('\n').filter((l) => !l.trim().startsWith('//'))
 
 // ---------- G6-09 (revised Owner 2026-10-17 §3): create-only intake; mutation impossible ----------
 describe('G6-09 order boundary: create-only via shared intake, mutation impossible', () => {
-  it('worker has no order/payment/inventory/delivery mutation surface', () => {
+  it('worker REST surface: PATCH = social_events เท่านั้น · GET = social_events + identity/customer (R81 notify resolve) — ห้ามแตะ order/payment/inventory/delivery', () => {
     // ห้ามแก้ไข/ยกเลิก/เปลี่ยนแปลงออเดอร์เดิม — create ผ่าน shared intake เท่านั้น (§3)
     expect(codeOnly).not.toMatch(/create_order|record_payment|confirm_offline_payment|transition_order_status|mark_payment_failed|cancel_order|refund|update_order|delete_order|inventory|delivery_assignments|assign_driver/)
-    const patched = [...codeOnly.matchAll(/rest\('(PATCH|GET|POST)',\s*`([^`]+)`/g)].map((m) => m[2])
-    expect(patched.length).toBeGreaterThan(0)
-    for (const p of patched) expect(p).toContain('social_events')
+    const calls = [...codeOnly.matchAll(/rest\('(PATCH|GET|POST)',\s*`([^`]+)`/g)].map((m) => ({ verb: m[1], path: m[2] }))
+    expect(calls.length).toBeGreaterThan(0)
+    for (const c of calls) {
+      if (c.verb === 'PATCH') expect(c.path).toContain('social_events')
+      // R81 (Owner สั่งแจ้งเตือนลูกค้า): GET อนุญาตเฉพาะ identity/customer เพื่อ resolve customer_id
+      // ของ web push — ยังคงห้าม path ที่แตะ authority ออเดอร์/เงิน/สต็อก/ไรเดอร์เด็ดขาด
+      else expect(c.path).toMatch(/social_events|customer_channel_identities|customers/)
+      expect(c.path).not.toMatch(/orders|payments|inventory|delivery_assignments|drivers/)
+    }
+    // POST ที่เป็น backtick path = ต้องไม่มี (ปัจจุบัน enqueue_notification ใช้ string ปกติ — ดูด้านล่าง)
+    expect(calls.filter((c) => c.verb === 'POST').length).toBe(0)
+    // R81: ทางเดียวที่ worker ยิงคือ notification outbox (enqueue_notification) — ไม่ใช่ business authority
+    expect(codeOnly).toContain("/rest/v1/rpc/enqueue_notification")
   })
   it('worker creates NEW orders ONLY via the shared create-only intake (delegated, never inline)', () => {
     expect(workerSrc).toMatch(/submitNewOrder/)

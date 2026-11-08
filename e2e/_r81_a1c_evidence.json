@@ -1,0 +1,211 @@
+{
+  "tool": "r81-a1c-graph-readonly",
+  "ts": "2026-11-08T02:11:23.313Z",
+  "safety": "GET only — no POST/delete",
+  "rows": [
+    {
+      "event_id": "122146808163204867_2594868544361448",
+      "reply_status": "sent",
+      "last_error": "(absent)",
+      "dm_error": "http_400:Unsupported post request. Object with ID '122146808163204867_2594868544361448' does not exist, canno",
+      "graph_http": 400,
+      "graph_error": "(#100) Tried accessing nonexisting field (type)",
+      "from": null,
+      "parent": null
+    },
+    {
+      "event_id": "r74cmt-1794100613809",
+      "reply_status": "failed",
+      "last_error": "META_SEND:http_400",
+      "dm_error": "(absent)",
+      "graph_http": 400,
+      "graph_error": "Unsupported get request. Object with ID 'r74cmt-1794100613809' does not exist, cannot be loaded due to missing permissions, or does not supp",
+      "from": null,
+      "parent": null
+    },
+    {
+      "event_id": "r74cmt-1794074269443",
+      "reply_status": "failed",
+      "last_error": "META_SEND:http_400",
+      "dm_error": "(absent)",
+      "graph_http": 400,
+      "graph_error": "Unsupported get request. Object with ID 'r74cmt-1794074269443' does not exist, cannot be loaded due to missing permissions, or does not supp",
+      "from": null,
+      "parent": null
+    },
+    {
+      "event_id": "r74cmt-1794074256614",
+      "reply_status": "failed",
+      "last_error": "META_SEND:http_400",
+      "dm_error": "(absent)",
+      "graph_http": 400,
+      "graph_error": "Unsupported get request. Object with ID 'r74cmt-1794074256614' does not exist, cannot be loaded due to missing permissions, or does not supp",
+      "from": null,
+      "parent": null
+    },
+    {
+      "event_id": "r74cmt-1794074261611",
+      "reply_status": "failed",
+      "last_error": "META_SEND:http_400",
+      "dm_error": "(absent)",
+      "graph_http": 400,
+      "graph_error": "Unsupported get request. Object with ID 'r74cmt-1794074261611' does not exist, cannot be loaded due to missing permissions, or does not supp",
+      "from": null,
+      "parent": null
+    },
+    {
+      "event_id": "r74cmt-1794074266993",
+      "reply_status": "failed",
+      "last_error": "META_SEND:http_400",
+      "dm_error": "(absent)",
+      "graph_http": 400,
+      "graph_error": "Unsupported get request. Object with ID 'r74cmt-1794074266993' does not exist, cannot be loaded due to missing permissions, or does not supp",
+      "from": null,
+      "parent": null
+    },
+    {
+      "event_id": "r74cmt-1794074251197",
+      "reply_status": "failed",
+      "last_error": "META_SEND:http_400",
+      "dm_error": "(absent)",
+      "graph_http": 400,
+      "graph_error": "Unsupported get request. Object with ID 'r74cmt-1794074251197' does not exist, cannot be loaded due to missing permissions, or does not supp",
+      "from": null,
+      "parent": null
+    },
+    {
+      "event_id": "r74cmt-1794074253560",
+      "reply_status": "failed",
+      "last_error": "META_SEND:http_400",
+      "dm_error": "(absent)",
+      "graph_http": 400,
+      "graph_error": "Unsupported get request. Object with ID 'r74cmt-1794074253560' does not exist, cannot be loaded due to missing permissions, or does not supp",
+      "from": null,
+      "parent": null
+    },
+    {
+      "event_id": "r74cmt-1794074259070",
+      "reply_status": "failed",
+      "last_error": "META_SEND:http_400",
+      "dm_error": "(absent)",
+      "graph_http": 400,
+      "graph_error": "Unsupported get request. Object with ID 'r74cmt-1794074259070' does not exist, cannot be loaded due to missing permissions, or does not supp",
+      "from": null,
+      "parent": null
+    },
+    {
+      "event_id": "r74cmt-1794074264099",
+      "reply_status": "failed",
+      "last_error": "META_SEND:http_400",
+      "dm_error": "(absent)",
+      "graph_http": 400,
+      "graph_error": "Unsupported get request. Object with ID 'r74cmt-1794074264099' does not exist, cannot be loaded due to missing permissions, or does not supp",
+      "from": null,
+      "parent": null
+    },
+    {
+      "event_id": "r74cmt-1794073958318",
+      "reply_status": "failed",
+      "last_error": "META_SEND:http_400",
+      "dm_error": "(absent)",
+      "graph_http": 400,
+      "graph_error": "Unsupported get request. Object with ID 'r74cmt-1794073958318' does not exist, cannot be loaded due to missing permissions, or does not supp",
+      "from": null,
+      "parent": null
+    },
+    {
+      "event_id": "r74cmt-1794073951565",
+      "reply_status": "failed",
+      "last_error": "META_SEND:http_400",
+      "dm_error": "(absent)",
+      "graph_http": 400,
+      "graph_error": "Unsupported get request. Object with ID 'r74cmt-1794073951565' does not exist, cannot be loaded due to missing permissions, or does not supp",
+      "from": null,
+      "parent": null
+    },
+    {
+      "event_id": "r74cmt-1794073954987",
+      "reply_status": "failed",
+      "last_error": "META_SEND:http_400",
+      "dm_error": "(absent)",
+      "graph_http": 400,
+      "graph_error": "Unsupported get request. Object with ID 'r74cmt-1794073954987' does not exist, cannot be loaded due to missing permissions, or does not supp",
+      "from": null,
+      "parent": null
+    },
+    {
+      "event_id": "r74cmt-1794073948192",
+      "reply_status": "failed",
+      "last_error": "META_SEND:http_400",
+      "dm_error": "(absent)",
+      "graph_http": 400,
+      "graph_error": "Unsupported get request. Object with ID 'r74cmt-1794073948192' does not exist, cannot be loaded due to missing permissions, or does not supp",
+      "from": null,
+      "parent": null
+    },
+    {
+      "event_id": "r74cmt-1794073934589",
+      "reply_status": "failed",
+      "last_error": "META_SEND:http_400",
+      "dm_error": "(absent)",
+      "graph_http": 400,
+      "graph_error": "Unsupported get request. Object with ID 'r74cmt-1794073934589' does not exist, cannot be loaded due to missing permissions, or does not supp",
+      "from": null,
+      "parent": null
+    },
+    {
+      "event_id": "122146818321204867_2026020268802725",
+      "reply_status": "sent",
+      "last_error": "(absent)",
+      "dm_error": "http_400:Unsupported post request. Object with ID '122146818321204867_2026020268802725' does not exist, canno",
+      "graph_http": 400,
+      "graph_error": "(#100) Tried accessing nonexisting field (type)",
+      "from": null,
+      "parent": null
+    },
+    {
+      "event_id": "122146783965204867_29895341886735575",
+      "reply_status": "sent",
+      "last_error": "(absent)",
+      "dm_error": "http_400:Unsupported post request. Object with ID '122146783965204867_29895341886735575' does not exist, cann",
+      "graph_http": 400,
+      "graph_error": "(#100) Tried accessing nonexisting field (type)",
+      "from": null,
+      "parent": null
+    },
+    {
+      "event_id": "122146783965204867_1653834623101916",
+      "reply_status": "(absent)",
+      "last_error": "(absent)",
+      "dm_error": "(absent)",
+      "graph_http": 400,
+      "graph_error": "(#100) Tried accessing nonexisting field (type)",
+      "from": null,
+      "parent": null
+    },
+    {
+      "event_id": "122146783965204867_1651691296443309",
+      "reply_status": "sent",
+      "last_error": "(absent)",
+      "dm_error": "http_400:Unsupported post request. Object with ID '122146783965204867_1651691296443309' does not exist, canno",
+      "graph_http": 400,
+      "graph_error": "(#100) Tried accessing nonexisting field (type)",
+      "from": null,
+      "parent": null
+    },
+    {
+      "event_id": "122146783965204867_1917786456053346",
+      "reply_status": "sent",
+      "last_error": "(absent)",
+      "dm_error": "http_400:Unsupported post request. Object with ID '122146783965204867_1917786456053346' does not exist, canno",
+      "graph_http": 400,
+      "graph_error": "(#100) Tried accessing nonexisting field (type)",
+      "from": null,
+      "parent": null
+    }
+  ],
+  "tally": {
+    "http400:(#100) Tried accessing nonexisting field (type)": 6,
+    "http400:Unsupported get request. Object with ID 'r74cmt-17": 14
+  }
+}

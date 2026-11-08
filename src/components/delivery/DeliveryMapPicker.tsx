@@ -8,7 +8,7 @@
 // ============================================
 
 import { useEffect, useRef, useState } from 'react'
-import { loadGoogleMapsJS, isGoogleMapsConfigured, getGoogleMapId, getGoogleMapsLoadError } from '@/lib/googleMaps'
+import { loadGoogleMapsJS, isGoogleMapsConfigured, getGoogleMapId, getGoogleMapsLoadError, geocodeAddress } from '@/lib/googleMaps'
 import { KITCHEN_LAT, KITCHEN_LNG } from '@/store/locationStore'
 
 export interface DeliveryMapPickerProps {
@@ -43,6 +43,18 @@ export function DeliveryMapPicker({ latitude, longitude, onPick }: DeliveryMapPi
   // R44 T10 (Owner: "ใช้พิกัดกดแล้วเงียบ") — ฟีดแบ็กใต้ช่องพิกัด:
   // ว่าง/ผิด = แดงบอกวิธีแก้ · ถูก = เขียวบอกว่ารับพิกัดแล้ว (รอขั้นถัดไปกดยืนยันด้านล่าง)
   const [manualMsg, setManualMsg] = useState<{ ok: boolean; text: string } | null>(null)
+  // R81-B5: ค้นหาที่อยู่ด้วยข้อความ — ทำงานใน FB WebView ได้ (ไม่พึ่ง GPS ที่ถูกบล็อก)
+  const [addrQuery, setAddrQuery] = useState('')
+  const [addrMsg, setAddrMsg] = useState<{ ok: boolean; text: string } | null>(null)
+
+  async function handleSearchAddress() {
+    const q = addrQuery.trim()
+    if (!q) { setAddrMsg({ ok: false, text: 'พิมพ์ที่อยู่หรือถนนที่ต้องการค้นหาก่อน' }); return }
+    const g = await geocodeAddress(q)
+    if (!g) { setAddrMsg({ ok: false, text: 'หาที่อยู่นี้ไม่เจอ — พิมพ์ใหม่ให้เจาะจงขึ้น หรือกรอกพิกัดเองด้านล่าง' }); return }
+    onPickRef.current(g.lat, g.lng)
+    setAddrMsg({ ok: true, text: `✓ เจอ: ${g.formattedAddress} — ปักหมุดให้แล้ว ตรวจสอบบนแผนที่แล้วยืนยันด้านล่างต่อ` })
+  }
 
   // Load SDK once + create the map (kitchen = MAP REFERENCE center only).
   useEffect(() => {
@@ -110,6 +122,35 @@ export function DeliveryMapPicker({ latitude, longitude, onPick }: DeliveryMapPi
 
   return (
     <div className="mb-3" data-testid="delivery-map-picker">
+      {/* R81-B5 (Owner C9: GPS ใน FB = platform block): ค้นหาที่อยู่ด้วยข้อความ = ใช้ได้ใน FB WebView */}
+      <div className="flex items-center gap-2 mb-2" data-testid="map-address-search">
+        <input
+          type="text"
+          value={addrQuery}
+          onChange={(e) => setAddrQuery(e.target.value)}
+          placeholder="พิมพ์ค้นหาที่อยู่ เช่น ถนนสุขุมวิท ซอย 21"
+          className="input input-sm flex-1"
+          aria-label="ค้นหาที่อยู่จัดส่ง"
+          data-testid="map-address-input"
+        />
+        <button
+          type="button"
+          className="btn btn-outline btn-sm"
+          data-testid="map-address-go"
+          onClick={() => { void handleSearchAddress() }}
+        >
+          ค้นหา
+        </button>
+      </div>
+      {addrMsg && (
+        <p
+          className={`text-xs font-medium mb-2 ${addrMsg.ok ? 'text-emerald-600' : 'text-red-600'}`}
+          role={addrMsg.ok ? 'status' : 'alert'}
+          data-testid="map-address-msg"
+        >
+          {addrMsg.text}
+        </p>
+      )}
       {/* Owner 2026-10-17 (แก้ "แผนที่ซ้ำ/ค้าง"): เดิม canvas เปล่า h-64 แสดงค้าง
           ทับกับกล่อง fallback ตอน Maps โหลดไม่สำเร็จ → ดูเหมือนแผนที่ 2 อัน
           — แสดง canvas เฉพาะตอน loading/ready เท่านั้น */}

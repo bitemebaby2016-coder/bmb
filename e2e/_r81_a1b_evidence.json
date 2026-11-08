@@ -1,0 +1,218 @@
+{
+  "tool": "r81-a1b-notify-reasons",
+  "ts": "2026-11-08T02:09:20.691Z",
+  "safety": "READ-ONLY",
+  "rows": [
+    {
+      "event_id": "122146808163204867_2594868544361448",
+      "sender": null,
+      "status": "SUCCEEDED",
+      "attempts": 0,
+      "reply_status": "sent",
+      "last_error": "(absent)",
+      "dm_reply_id": null,
+      "dm_error": "http_400:Unsupported post request. Object with ID '122146808163204867_2594868544361448' does not exist, canno"
+    },
+    {
+      "event_id": "r74cmt-1794100613809",
+      "sender": null,
+      "status": "SUCCEEDED",
+      "attempts": 0,
+      "reply_status": "failed",
+      "last_error": "META_SEND:http_400",
+      "dm_reply_id": "(absent)",
+      "dm_error": "(absent)"
+    },
+    {
+      "event_id": "r74cmt-1794074269443",
+      "sender": null,
+      "status": "SUCCEEDED",
+      "attempts": 0,
+      "reply_status": "failed",
+      "last_error": "META_SEND:http_400",
+      "dm_reply_id": "(absent)",
+      "dm_error": "(absent)"
+    },
+    {
+      "event_id": "r74cmt-1794074256614",
+      "sender": null,
+      "status": "SUCCEEDED",
+      "attempts": 0,
+      "reply_status": "failed",
+      "last_error": "META_SEND:http_400",
+      "dm_reply_id": "(absent)",
+      "dm_error": "(absent)"
+    },
+    {
+      "event_id": "r74cmt-1794074261611",
+      "sender": null,
+      "status": "SUCCEEDED",
+      "attempts": 0,
+      "reply_status": "failed",
+      "last_error": "META_SEND:http_400",
+      "dm_reply_id": "(absent)",
+      "dm_error": "(absent)"
+    },
+    {
+      "event_id": "r74cmt-1794074266993",
+      "sender": null,
+      "status": "SUCCEEDED",
+      "attempts": 0,
+      "reply_status": "failed",
+      "last_error": "META_SEND:http_400",
+      "dm_reply_id": "(absent)",
+      "dm_error": "(absent)"
+    },
+    {
+      "event_id": "r74cmt-1794074251197",
+      "sender": null,
+      "status": "SUCCEEDED",
+      "attempts": 0,
+      "reply_status": "failed",
+      "last_error": "META_SEND:http_400",
+      "dm_reply_id": "(absent)",
+      "dm_error": "(absent)"
+    },
+    {
+      "event_id": "r74cmt-1794074253560",
+      "sender": null,
+      "status": "SUCCEEDED",
+      "attempts": 0,
+      "reply_status": "failed",
+      "last_error": "META_SEND:http_400",
+      "dm_reply_id": "(absent)",
+      "dm_error": "(absent)"
+    },
+    {
+      "event_id": "r74cmt-1794074259070",
+      "sender": null,
+      "status": "SUCCEEDED",
+      "attempts": 0,
+      "reply_status": "failed",
+      "last_error": "META_SEND:http_400",
+      "dm_reply_id": "(absent)",
+      "dm_error": "(absent)"
+    },
+    {
+      "event_id": "r74cmt-1794074264099",
+      "sender": null,
+      "status": "SUCCEEDED",
+      "attempts": 0,
+      "reply_status": "failed",
+      "last_error": "META_SEND:http_400",
+      "dm_reply_id": "(absent)",
+      "dm_error": "(absent)"
+    },
+    {
+      "event_id": "r74cmt-1794073958318",
+      "sender": null,
+      "status": "SUCCEEDED",
+      "attempts": 0,
+      "reply_status": "failed",
+      "last_error": "META_SEND:http_400",
+      "dm_reply_id": "(absent)",
+      "dm_error": "(absent)"
+    },
+    {
+      "event_id": "r74cmt-1794073951565",
+      "sender": null,
+      "status": "SUCCEEDED",
+      "attempts": 0,
+      "reply_status": "failed",
+      "last_error": "META_SEND:http_400",
+      "dm_reply_id": "(absent)",
+      "dm_error": "(absent)"
+    },
+    {
+      "event_id": "r74cmt-1794073954987",
+      "sender": null,
+      "status": "SUCCEEDED",
+      "attempts": 0,
+      "reply_status": "failed",
+      "last_error": "META_SEND:http_400",
+      "dm_reply_id": "(absent)",
+      "dm_error": "(absent)"
+    },
+    {
+      "event_id": "r74cmt-1794073948192",
+      "sender": null,
+      "status": "SUCCEEDED",
+      "attempts": 0,
+      "reply_status": "failed",
+      "last_error": "META_SEND:http_400",
+      "dm_reply_id": "(absent)",
+      "dm_error": "(absent)"
+    },
+    {
+      "event_id": "r74cmt-1794073934589",
+      "sender": null,
+      "status": "SUCCEEDED",
+      "attempts": 0,
+      "reply_status": "failed",
+      "last_error": "META_SEND:http_400",
+      "dm_reply_id": "(absent)",
+      "dm_error": "(absent)"
+    },
+    {
+      "event_id": "122146818321204867_2026020268802725",
+      "sender": null,
+      "status": "SUCCEEDED",
+      "attempts": 0,
+      "reply_status": "sent",
+      "last_error": "(absent)",
+      "dm_reply_id": null,
+      "dm_error": "http_400:Unsupported post request. Object with ID '122146818321204867_2026020268802725' does not exist, canno"
+    },
+    {
+      "event_id": "122146783965204867_29895341886735575",
+      "sender": null,
+      "status": "SUCCEEDED",
+      "attempts": 0,
+      "reply_status": "sent",
+      "last_error": "(absent)",
+      "dm_reply_id": null,
+      "dm_error": "http_400:Unsupported post request. Object with ID '122146783965204867_29895341886735575' does not exist, cann"
+    },
+    {
+      "event_id": "122146783965204867_1653834623101916",
+      "sender": null,
+      "status": "DUPLICATE",
+      "attempts": 0,
+      "reply_status": "(absent)",
+      "last_error": "(absent)",
+      "dm_reply_id": "(absent)",
+      "dm_error": "(absent)"
+    },
+    {
+      "event_id": "122146783965204867_1651691296443309",
+      "sender": null,
+      "status": "SUCCEEDED",
+      "attempts": 0,
+      "reply_status": "sent",
+      "last_error": "(absent)",
+      "dm_reply_id": null,
+      "dm_error": "http_400:Unsupported post request. Object with ID '122146783965204867_1651691296443309' does not exist, canno"
+    },
+    {
+      "event_id": "122146783965204867_1917786456053346",
+      "sender": null,
+      "status": "SUCCEEDED",
+      "attempts": 0,
+      "reply_status": "sent",
+      "last_error": "(absent)",
+      "dm_reply_id": null,
+      "dm_error": "http_400:Unsupported post request. Object with ID '122146783965204867_1917786456053346' does not exist, canno"
+    }
+  ],
+  "last_error_tally": {
+    "(absent)": 6,
+    "META_SEND:http_400": 14
+  },
+  "dm_error_tally": {
+    "http_400:Unsupported post request. Object with ID '122146808163204867_2594868544361448' does not exist, canno": 1,
+    "http_400:Unsupported post request. Object with ID '122146818321204867_2026020268802725' does not exist, canno": 1,
+    "http_400:Unsupported post request. Object with ID '122146783965204867_29895341886735575' does not exist, cann": 1,
+    "http_400:Unsupported post request. Object with ID '122146783965204867_1651691296443309' does not exist, canno": 1,
+    "http_400:Unsupported post request. Object with ID '122146783965204867_1917786456053346' does not exist, canno": 1
+  }
+}

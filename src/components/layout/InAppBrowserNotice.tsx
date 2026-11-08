@@ -1,17 +1,22 @@
 // ============================================
-// Bite Me Baby — InAppBrowserNotice (R46 → R57 → R76 → R77 → R79 · Owner 2026-11-02 / 11-07)
+// Bite Me Baby — InAppBrowserNotice (R46 → R57 → R76 → R77 → R79 → R81 · Owner 2026-11-08)
 // Owner: "กดตามลิ้งจากเฟซบุ๊คไปให้ใช้บราวเซอร์ภายนอก ห้ามใช้บราวเซอร์ของเฟซ"
 // R76: ห้ามนำทางหน้าปัจจุบันไป intent:// (ERR_UNKNOWN_URL_SCHEME กินทั้งหน้า)
-// R77: ปุ่มเปิด = <a href={intent}> เฟรมเดียว + ปุ่มปิด ✕ + แถบเมนู ⋮
-// R79 (Owner: "สำคัญ — ทำให้ป๊อปอัพเปิดบราวเซอร์ภายนอกจากเม้นเอไอในแชต ต่อออกได้จริง"):
-//   ผลทดสอบ 7 พ.ย. = ปุ่ม intent "เออเร่อ" + ⋮/แชร์ "เปิดต่อไปที่บราวเซอร์ภายนอกไม่ได้"
-//   (FB WebView เครื่อง Owner บล็อกทุกช่อง) → Smart Escape กดครั้งเดียวได้ทุกช่อง:
-//   ① คัดลอก URL อัตโนมัติ (ทางออกจริง: เปิด Chrome → วาง) ② navigator.share ถ้าเครื่องมี
-//   ③ แผง guide 3 ขั้น + ปุ่มคัดลอกซ้ำ ④ ปุ่มรอง <a href={intent}> เฉพาะเครื่องที่รับ intent
-//   ห้ามนำทางหน้าปัจจุบันไป intent · ห้าม window.open กับ intent · ห้ามยิง intent อัตโนมัติ
+// R81-B2 — Smart Escape ออกแบบใหม่ตามหลักฐาน 6 รอบ (เปลี่ยนเป้าหมายให้ถูก: FB WebView
+//   ไม่มีทาง force-escape ด้วย JS — สู้ platform ไม่ได้ = แก้ไม่หายสักที):
+//   ① ปุ่มเดียว = คัดลอกลิงก์ + แผง guide 3 ขั้น — **ห้าม auto-share**
+//      (R79 รัน navigator.share อัตโนมัติ = "กดเปิดภายนอกกลายเป็นแชร์" ที่ Owner เจอ)
+//   ② **ลบปุ่ม intent "ลองเปิดเลย" ทิ้งทั้งหมด** (หลักฐาน R79: เครื่อง Owner กด = error
+//      แต่ปุ่มยังอยู่ → Owner กดซ้ำ = error ซ้ำ)
+//   ③ share = ปุ่มที่สองชื่อชัด — เรียกเฉพาะผู้ใช้กดเอง · ④ guide ต่างกันตาม platform
+//   ⑤ Android มีปุ่ม "เปิดในแท็บใหม่" (target=_blank — ไม่มีทางพาหน้าปัจจุบันไป error)
+// R81-B1 — debug capture (เปิดด้วย ?r81debug=1 หนเดียว): เก็บ UA + ผลกดปุ่มลง localStorage
+//   + console = หลักฐานให้ทีมแก้ตามข้อเท็จจริง (บทเรียน 6 รอบที่แก้ blind)
+// กติกาคงเดิม: ห้าม nav หน้าปัจจุบันไป intent/unknown scheme · ห้าม auto intent · ห้าม auto share
 // ตรวจด้วย UA (FBAN/FBAV/FB_IAB/FBIANV/IG/LINE)
 // ============================================
 import { useEffect, useState } from 'react'
+import { r81Capture, r81Platform } from '@/lib/r81DebugCapture'
 
 /** Pure — ตรวจว่าเป็นเบราว์เซอร์ในแอป Facebook/Instagram/Line (export ให้ test เรียกตรง)
  *  UA จริงขึ้นรูปแบบ [FBAN/…] [FB_IAB] (FB_IAB ไม่มี / ตามหลัง — ห้ามผูก slash) */
@@ -24,7 +29,8 @@ export function isInAppBrowser(ua: string): boolean {
  *  Android intent URL: intent://<host+path>?<query>#Intent;scheme=https;package=com.android.chrome;
  *  s.browser_fallback_url=<เดิม>;end — ถ้าไม่มี Chrome จะเด้งกลับมาที่ URL เดิม (แล้วโชว์แถบ)
  *  คืน null เมื่อ href ไม่ใช่ https (http/relative = ห้ามยิง intent)
- *  R76/R77: ใช้กับ <a href> เท่านั้น — ห้าม window.location / window.open กับค่านี้เด็ดขาด
+ *  R81: คงไว้เป็น pure helper ที่มี test คุม (r57) — **ไม่ได้ผูกกับปุ่มใด ๆ อีกแล้ว**
+ *  (R79 ใส่ปุ่ม intent บน UI = error บนเครื่อง Owner → ถูกลบออกตามคำสั่ง R81-B2)
  */
 export function externalBrowserIntentUrl(href: string): string | null {
   let u: URL
@@ -39,24 +45,26 @@ export const NOTICE_DISMISS_KEY = 'bmb:inapp-notice-dismissed'
 
 export function InAppBrowserNotice() {
   const [show, setShow] = useState(false)
-  const [intentUrl, setIntentUrl] = useState<string | null>(null)
   const [guideOpen, setGuideOpen] = useState(false)
   const [copied, setCopied] = useState(false)
+  // R81-B3/B4: ข้อความ guide ต่างกันตาม platform จริงของเครื่อง · pageUrl = ปุ่มเปิดแท็บใหม่
+  const [platform, setPlatform] = useState<'ios' | 'android' | 'other'>('other')
+  const [pageUrl, setPageUrl] = useState('')
   useEffect(() => {
     if (typeof navigator === 'undefined') return
     if (!isInAppBrowser(navigator.userAgent)) return
     let dismissed = false
     try { dismissed = sessionStorage.getItem(NOTICE_DISMISS_KEY) === '1' } catch { /* */ }
     if (dismissed) return
-    // Android = เก็บ intent ไว้เป็นปุ่มรองใน guide (เครื่องที่ WebView รับ intent = เด้ง Chrome จริง)
-    if (/Android/i.test(navigator.userAgent)) {
-      setIntentUrl(externalBrowserIntentUrl(window.location.href))
-    }
+    setPlatform(r81Platform(navigator.userAgent))
+    setPageUrl(window.location.href)
+    r81Capture('notice_shown', navigator.userAgent)
     setShow(true)
   }, [])
 
   const closeNotice = () => {
     try { sessionStorage.setItem(NOTICE_DISMISS_KEY, '1') } catch { /* */ }
+    r81Capture('notice_closed')
     setShow(false)
     setGuideOpen(false)
   }
@@ -85,19 +93,25 @@ export function InAppBrowserNotice() {
   }
 
   /**
-   * R79 — Smart Escape (คำสั่ง Owner "ทำให้ป๊อปอัพเปิดบราวเซอร์ภายนอก...ต่อออกได้จริง"):
-   * เครื่อง Owner = intent error + ⋮ ก็ไม่ออก (FB WebView บล็อก) → กดครั้งเดียวได้ทุกช่องพร้อมกัน:
-   * ① คัดลอกลิงก์เสมอ (ทางออกจริง: เปิด Chrome → วาง) ② navigator.share ถ้ามี (share sheet จริง)
-   * ③ เปิดแผง guide วิธีใช้ Chrome — ห้ามนำทางหน้าปัจจุบันไป intent เด็ดขาด (R76 = กินทั้งหน้า)
+   * R81-B2 — ปุ่มหลัก: คัดลอกลิงก์ + เปิดแผง guide เท่านั้น
+   *  ห้าม auto-share (บทเรียน R79) · ห้ามนำทางหน้าปัจจุบันไป intent (บทเรียน R76)
+   *  ไม่มีปุ่ม intent บน UI อีกแล้ว (บทเรียน R79: error บนเครื่อง Owner)
    */
   const handleOpenExternal = async () => {
     const ok = await copyUrl()
     setCopied(ok)
     setGuideOpen(true)
+    r81Capture('copy_and_guide', ok ? 'copied' : 'copy_failed')
+  }
+
+  /** R81-B2: share = ปุ่มที่สองชื่อชัด — เรียกเฉพาะผู้ใช้กดเองเท่านั้น (ห้าม auto-share) */
+  const handleShare = async () => {
     const nav = navigator as Navigator & { share?: (data?: ShareData) => Promise<void> }
-    if (nav.share) {
-      try { await nav.share({ title: 'Bite Me Baby', url: window.location.href }) } catch { /* user cancel = guide ยังค้างให้ใช้ต่อ */ }
-    }
+    if (!nav.share) { r81Capture('share', 'unsupported'); return }
+    try {
+      await nav.share({ title: 'Bite Me Baby', url: window.location.href })
+      r81Capture('share', 'shared')
+    } catch { r81Capture('share', 'user_cancel_or_error') }
   }
 
   if (!show) return null
@@ -123,7 +137,7 @@ export function InAppBrowserNotice() {
         </button>
       </div>
       <p className="text-[11px] text-brand-muted leading-snug mb-2">
-        เว็บนี้<b>ห้ามเปิดในเบราว์เซอร์ของ Facebook</b> (แคชเก่า/บล็อกแผนที่·GPS) — กดปุ่มด้านล่าง เราจะ<b>คัดลอกลิงก์ให้เลย</b> พร้อมวิธีเปิด Chrome ที่ใช้ได้จริง (กด ✕ เมื่อไหร่ก็ได้)
+        เว็บนี้<b>ห้ามเปิดในเบราว์เซอร์ของ Facebook</b> (แคชเก่า/บล็อกแผนที่·GPS) — กดปุ่มด้านล่าง เราจะ<b>คัดลอกลิงก์ให้เลย</b> พร้อมวิธีเปิดภายนอกที่ใช้ได้จริงบนเครื่องคุณ (กด ✕ เมื่อไหร่ก็ได้)
       </p>
       <div className="flex items-center gap-2">
         <button
@@ -132,34 +146,59 @@ export function InAppBrowserNotice() {
           className="btn btn-primary btn-xs"
           data-testid="inapp-open-external"
         >
-          🌐 เปิดในเบราว์เซอร์ภายนอก
+          🌐 เปิดในเบราว์เซอร์ภายนอก (คัดลอกลิงก์ให้แล้ว)
         </button>
       </div>
       {guideOpen && (
         <div className="mt-2 rounded-lg border border-brand-primary/50 bg-white/80 p-2" data-testid="inapp-guide">
           <p className="text-[11px] font-semibold text-brand-accent" data-testid="inapp-guide-status">
             {copied
-              ? '📋 คัดลอกลิงก์แล้ว — เปิด Chrome แล้ววาง = ออกนอกแอปเฟซได้จริง'
+              ? '📋 คัดลอกลิงก์แล้ว — ทำตาม 3 ขั้นด้านล่าง = ออกจากแอปเฟซได้จริง'
               : '📋 คัดลอกไม่สำเร็จ — กดปุ่ม "คัดลอกลิงก์" ด้านล่างอีกครั้ง'}
           </p>
           <ol className="mt-1 list-decimal pl-4 text-[11px] text-brand-muted leading-snug">
-            <li>ออกจากแอปเฟซ → เปิดแอป <b>Chrome</b></li>
-            <li>วางลิงก์ในช่องค้นหา = เข้าเว็บภายนอกทันที (ใช้งานต่อได้ทุกหน้า)</li>
-            <li>ทางเลือก: ⋮/แชร์ (มุมขวาบน) → เปิดในเบราว์เซอร์ ถ้าเมนูขึ้น</li>
+            {platform === 'ios' ? (
+              <>
+                <li>กดปุ่ม <b>📋 คัดลอกลิงก์</b> แล้วออกจากแอปเฟซ</li>
+                <li>เปิดแอป <b>Safari</b> → วางในช่องค้นหา = เข้าเว็บภายนอกทันที</li>
+                <li>ทางเลือก: ⋮ (มุมขวาบน) → เปิดในเบราว์เซอร์ ถ้าเมนูขึ้น</li>
+              </>
+            ) : (
+              <>
+                <li>ออกจากแอปเฟซ → เปิดแอป <b>Chrome</b></li>
+                <li>วางลิงก์ในช่องค้นหา = เข้าเว็บภายนอกทันที (ใช้งานต่อได้ทุกหน้า)</li>
+                <li>ทางเลือก: ⋮/แชร์ (มุมขวาบน) → เปิดในเบราว์เซอร์ ถ้าเมนูขึ้น</li>
+              </>
+            )}
           </ol>
           <div className="mt-2 flex flex-wrap items-center gap-2">
             <button
               type="button"
-              onClick={() => { void copyUrl().then(setCopied) }}
+              onClick={() => { void copyUrl().then(setCopied); r81Capture('copy_button', window.location.href) }}
               className="btn btn-outline btn-xs"
               data-testid="inapp-copy"
             >
               📋 คัดลอกลิงก์
             </button>
-            {intentUrl && (
-              // ปุ่มรอง: เครื่องที่ WebView รับ intent:// = เด้ง Chrome จริง (เฟรมเดียว · ห้าม window.open)
-              <a href={intentUrl} className="btn btn-primary btn-xs" data-testid="inapp-open-try">
-                ⚡ ลองเปิดเลย (เครื่องที่รองรับ)
+            <button
+              type="button"
+              onClick={() => { void handleShare() }}
+              className="btn btn-outline btn-xs"
+              data-testid="inapp-share"
+            >
+              📤 แชร์/ส่งต่อ
+            </button>
+            {platform === 'android' && pageUrl && (
+              // R81-B3: target=_blank = เปิดแท็บใหม่เท่านั้น — ไม่มีทางพาหน้าปัจจุบันไป error
+              <a
+                href={pageUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn btn-primary btn-xs"
+                data-testid="inapp-open-tab"
+                onClick={() => r81Capture('open_tab', pageUrl)}
+              >
+                ↗ เปิดในแท็บใหม่
               </a>
             )}
             <button

@@ -114,11 +114,12 @@ describe('R57 ③ — ลิงก์จาก Facebook = บังคับเ�
   it('notice: ปุ่มเปิดภายนอก = <a href={intent}> เฟรมเดียว + ปุ่มปิดป๊อปอัพ (R77) + ไม่มีปุ่มอยู่ที่นี่ต่อ', () => {
     expect(noticeSrc).toContain('sessionStorage.getItem(NOTICE_DISMISS_KEY)')
     expect(noticeSrc).toContain("sessionStorage.setItem(NOTICE_DISMISS_KEY, '1')")
-    expect(noticeSrc).toContain('/Android/i.test(navigator.userAgent)')
+    expect(noticeSrc).toContain('r81Platform(navigator.userAgent)')
     // R76/R77: ห้ามนำทางหน้าปัจจุบันไป intent:// และห้าม window.open(intent) (หน้า error/ไม่เด้ง)
     expect(noticeSrc).not.toContain('window.location.replace(intent)')
     expect(noticeSrc).not.toContain('window.open(intent')
-    expect(noticeSrc).toContain('href={intentUrl}')
+    // R81: ปุ่ม intent ถูกลบหมด — ไม่มี href={intentUrl} บน UI อีกแล้ว
+    expect(noticeSrc).not.toContain('href={intentUrl}')
     // ปุ่ม "อยู่ที่นี่ต่อ" ยังไม่มี (Owner ห้ามใช้เบราว์เซอร์ของเฟซ) — ปุ่มปิด R77 = คนละอัน
     expect(noticeSrc).not.toContain('data-testid="inapp-stay"')
     expect(noticeSrc).toContain('data-testid="inapp-close"')

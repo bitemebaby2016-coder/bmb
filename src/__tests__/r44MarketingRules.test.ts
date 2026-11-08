@@ -44,7 +44,7 @@ describe('R44 — footer บังคับคู่โพสทุกครั�
     // เต็มรูปแบบ (แตะได้จริงบน Facebook) — เดิม hard-code โดเมนเปล่า = ตัวบั๊กเอง
     expect(publishSrc).toContain('🌐 สั่งต่อที่เว็บ https://biteme-baby.com/shop')
     expect(publishSrc).toContain('✅ ปิดการขายผ่านช่องทางไหนก็ได้')
-    expect(publishSrc).toContain('🔗 ลิงก์เปิดเว็บภายนอก Facebook — แตะเพื่อยืนยันเปิดในเบราว์เซอร์ของคุณ')
+    expect(publishSrc).toContain('🔗 ลิงก์เปิดเว็บภายนอก Facebook — เปิดไม่ออก? กดคัดลอกลิงก์ในแถบที่ขึ้น แล้ววางใน Chrome/Safari')
     expect(publishSrc).toContain('function withPostCta(text: string): string')
     expect(publishSrc).toContain("base.includes('ปิดการขายผ่านช่องทางไหนก็ได้')")
   })

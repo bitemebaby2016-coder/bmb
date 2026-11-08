@@ -17,11 +17,11 @@ describe('R46 — แจ้งว่าลิงก์เปิดเว็บ�
   it('buildCartSummaryFooter ต่อท้ายบรรทัดแจ้งลิงก์นอก FB + ลิงก์ /shop?cart= ยังครบ', () => {
     expect(intakeSrc).toContain('buildCartSummaryFooter')
     expect(intakeSrc).toContain('shop?cart=')
-    expect(intakeSrc).toContain('ภายนอก Facebook — แตะแล้วยืนยันเพื่อเปิดในเบราว์เซอร์ของคุณได้เลย')
+    expect(intakeSrc).toContain('ภายนอก Facebook — ถ้าแตะแล้วยังค้างอยู่ในเฟซ ให้กดคัดลอกลิงก์ในแถบที่ขึ้น')
   })
 
   it('POST_CTA_FOOTER = 5 ข้อ (ข้อใหม่แจ้งลิงก์นอก) + idempotent marker เดิม', () => {
-    expect(publishSrc).toContain('🔗 ลิงก์เปิดเว็บภายนอก Facebook — แตะเพื่อยืนยันเปิดในเบราว์เซอร์ของคุณ')
+    expect(publishSrc).toContain('🔗 ลิงก์เปิดเว็บภายนอก Facebook — เปิดไม่ออก? กดคัดลอกลิงก์ในแถบที่ขึ้น แล้ววางใน Chrome/Safari')
     expect(publishSrc).toContain("base.includes('ปิดการขายผ่านช่องทางไหนก็ได้')")
     expect(publishSrc.match(/พับ|สั่งใต้โพสนี้|Messenger|biteme-baby.com\/shop|ปิดการขายผ่านช่องทางไหนก็ได้|ภายนอก Facebook/g)!.length).toBeGreaterThanOrEqual(5)
   })
@@ -44,11 +44,11 @@ describe('R46 — แบนเนอร์ในเว็บ: FB in-app = แจ
     expect(noticeSrc).toContain('data-testid="inapp-close"')
     expect(noticeSrc).toContain('NOTICE_DISMISS_KEY')
     expect(noticeSrc).toContain('เปิดในเบราว์เซอร์')
-    // Android = <a href={intent}> เฟรมเดียว (R76/R77: ห้าม location.replace/window.open กับ intent://)
+    // R81: pure helper คงไว้ (test r57 คุม) แต่ "ไม่มีปุ่ม intent บน UI" อีกแล้ว
     expect(noticeSrc).toContain('externalBrowserIntentUrl')
     expect(noticeSrc).not.toContain('window.location.replace(intent)')
     expect(noticeSrc).not.toContain('window.open(intent')
-    expect(noticeSrc).toContain('href={intentUrl}')
+    expect(noticeSrc).not.toContain('href={intentUrl}')
     expect(layoutSrc).toContain('<InAppBrowserNotice />')
     expect(layoutSrc).toContain("import { InAppBrowserNotice } from './InAppBrowserNotice'")
   })

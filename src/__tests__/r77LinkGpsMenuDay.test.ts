@@ -14,15 +14,18 @@ const menuSrc = read('src/pages/MenuPage.tsx')
 const locSrc = read('src/lib/locationLogin.ts')
 
 describe('R77 ① — ป๊อปอัพเปิดเบราว์เซอร์ภายนอก: ปุ่มปิด + ปุ่มต้องไม่ error', () => {
-  it('ปุ่มปิด (X) จำการปิดต่อแท็บ + ปุ่มเปิด = <a href={intent}> (ไม่ใช้ window.open(intent))', () => {
+  it('ปุ่มปิด (X) จำการปิดต่อแท็บ + R81: ไม่มีปุ่ม intent บน UI (ลบแล้ว — ห้าม window.open/intent nav)', () => {
     expect(noticeSrc).toContain('data-testid="inapp-close"')
     expect(noticeSrc).toContain('NOTICE_DISMISS_KEY')
-    expect(noticeSrc).toContain('href={intentUrl}')
+    expect(noticeSrc).not.toContain('href={intentUrl}')
     expect(noticeSrc).not.toContain('window.open(intent')
     expect(noticeSrc).not.toContain('window.location.replace(intent)')
     // ห้ามยิง intent อัตโนมัติตอนโหลดหน้า (กันหน้า error เด้งเอง)
     expect(noticeSrc).not.toContain('openIntentSafely')
     expect(noticeSrc).not.toContain('EXT_REDIRECT_KEY')
+    // R81-B5: in-app = ซ่อนปุ่ม GPS (กดแล้ว error = อาการ Owner) + ทางออก = แผนที่/ค้นหา
+    expect(checkoutSrc).toContain('{!isInApp && (')
+    expect(checkoutSrc).toContain('พิมพ์ค้นหาที่อยู่')
   })
 })
 

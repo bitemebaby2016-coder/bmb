@@ -323,11 +323,25 @@ async function markFailed(id: string, attempts: number, reason: string) {
   })
 }
 
+/** R81-A3: เหตุผล Graph แบบ structured — ต้องเก็บ "ข้อความ error จริงของเฟซ" ด้วย
+ *  (evidence A1b: เดิมมีแค่ http_400 อ่านไม่ออกว่าเฟซปฏิเสธเพราะอะไร → แก้ blind ซ้ำแล้วซ้ำเล่า) */
+function fbReason(status: number, j: unknown): string {
+  const e = (j as { error?: { message?: string; code?: number } } | null)?.error
+  const msg = e?.message || 'no_body'
+  return `http_${status}:${msg.slice(0, 120)}${e?.code ? ' (code ' + e.code + ')' : ''}`
+}
+
 /** AUTO-SEND (Owner 2026-10-16 full-auto): Graph endpoints — comment reply +
  *  Messenger send + (R76) comment private reply (แจ้งเตือนลูกค้าเข้า Messenger) —
  *  of the VALIDATED draft text only.
- *  Page token is env-only (META_PAGE_ACCESS_TOKEN), never caller-supplied. */
-async function sendReply(ev: SocialEventRow, text: string): Promise<{ ok: boolean; providerId?: string; reason?: string; dmId?: string | null; dmError?: string | null }> {
+ *  Page token is env-only (META_PAGE_ACCESS_TOKEN), never caller-supplied.
+ *  R81-A3 (evidence A1b 2026-11-08): opts.skipDm = กันซ้ำ private_replies 1 ครั้ง/คอมเมนต์ ·
+ *  dmTried = หลักฐานว่าจริง ๆ ยิงไปแล้ว (ใช้เขียน dm_attempted_at ใน flags) */
+async function sendReply(
+  ev: SocialEventRow,
+  text: string,
+  opts: { skipDm?: boolean } = {},
+): Promise<{ ok: boolean; providerId?: string; reason?: string; dmId?: string | null; dmError?: string | null; dmTried?: boolean }> {
   if (!META_PAGE) return { ok: false, reason: 'no_page_token' }
   try {
     if (ev.platform === 'MESSENGER') {
@@ -339,7 +353,7 @@ async function sendReply(ev: SocialEventRow, text: string): Promise<{ ok: boolea
         signal: AbortSignal.timeout(15000),
       })
       const j: any = await r.json().catch(() => null)
-      if (!r.ok || !j || !j.message_id) return { ok: false, reason: 'http_' + r.status }
+      if (!r.ok || !j || !j.message_id) return { ok: false, reason: fbReason(r.status, j) }
       // ข้อความ Messenger = แจ้งเตือนเฟซ/เมสเซนเจอร์ฝั่งลูกค้าโดยธรรมชาติ (dmId = message id เดียวกัน)
       return { ok: true, providerId: String(j.message_id), dmId: String(j.message_id), dmError: null }
     }
@@ -350,7 +364,7 @@ async function sendReply(ev: SocialEventRow, text: string): Promise<{ ok: boolea
       signal: AbortSignal.timeout(15000),
     })
     const j: any = await r.json().catch(() => null)
-    if (!r.ok || !j || !j.id) return { ok: false, reason: 'http_' + r.status }
+    if (!r.ok || !j || !j.id) return { ok: false, reason: fbReason(r.status, j) }
     // R76 (Owner: "เวลาเอไอตอบโพสหรือข้อความ ต้องมีแจ้งเตือนเฟซบุ้คให้ลูกค้าด้วย"):
     // ตอบใต้คอมเมนต์สาธารณะแล้ว → ส่ง private reply เข้า Messenger ของลูกค้า
     // = แจ้งเตือนเฟซ/เมสเซนเจอร์เสมอ (Graph: POST /{comment_id}/private_replies ·
@@ -358,20 +372,29 @@ async function sendReply(ev: SocialEventRow, text: string): Promise<{ ok: boolea
     //   เก็บ dm_reply_id/dm_error ลง ai_guardrail_flags เป็นหลักฐาน)
     let dmId: string | null = null
     let dmError: string | null = null
-    try {
-      const rp = await fetch(`https://graph.facebook.com/v21.0/${ev.event_id}/private_replies`, {
-        method: 'POST',
-        headers: { Authorization: 'Bearer ' + META_PAGE, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: ('🔔 แจ้งเตือน: ระบบตอบกลับคอมเมนต์ของคุณแล้วครับ — รายละเอียดเดียวกันนี้อยู่ใต้โพสต์:\n\n' + text).slice(0, 1800) }),
-        signal: AbortSignal.timeout(15000),
-      })
-      const jp: any = await rp.json().catch(() => null)
-      if (rp.ok && jp && jp.id) dmId = String(jp.id)
-      else dmError = 'http_' + rp.status + ':' + String((jp && jp.error && jp.error.message) || 'no_id').slice(0, 100)
-    } catch (e) {
-      dmError = String(e).slice(0, 100)
+    let dmTried = false
+    if (opts.skipDm) {
+      // R81-A3: เคยยิง private_replies ไปแล้วรอบก่อน (มี dm_attempted_at ใน flags) = ห้ามซ้ำ
+      dmError = 'skipped_already_attempted'
+    } else {
+      dmTried = true
+      try {
+        const rp = await fetch(`https://graph.facebook.com/v21.0/${ev.event_id}/private_replies`, {
+          method: 'POST',
+          headers: { Authorization: 'Bearer ' + META_PAGE, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message: ('🔔 แจ้งเตือน: ระบบตอบกลับคอมเมนต์ของคุณแล้วครับ — รายละเอียดเดียวกันนี้อยู่ใต้โพสต์:\n\n' + text).slice(0, 1800) }),
+          signal: AbortSignal.timeout(15000),
+        })
+        const jp: any = await rp.json().catch(() => null)
+        if (rp.ok && jp && jp.id) dmId = String(jp.id)
+        // evidence A1b: ทุกแถวคืน "Unsupported post request. Object with ID … does not exist"
+        // (คำตอบสาธารณะต่อ comment id เดียวกันกลับสำเร็จ) → ฝั่งเฟซ = endpoint ตาย ไม่ใช่ของเรา
+        else dmError = fbReason(rp.status, jp)
+      } catch (e) {
+        dmError = String(e).slice(0, 100)
+      }
     }
-    return { ok: true, providerId: String(j.id), dmId, dmError }
+    return { ok: true, providerId: String(j.id), dmId, dmError, dmTried }
   } catch (e) {
     return { ok: false, reason: String(e).slice(0, 80) }
   }
@@ -389,6 +412,8 @@ interface SocialEventRow {
   /** แถว payload ดิบจาก social_events — มี post_id ต้นทางของคอมเมนต์ (R57 ใช้ดึงโพสต์จริง) */
   payload: unknown
   attempts: number
+  /** R81-A3: flags เดิมของแถว (อ่าน dm_attempted_at เพื่อกันซ้ำ private_replies 1 ครั้ง/คอมเมนต์) */
+  ai_guardrail_flags?: Record<string, unknown> | null
 }
 /** Recent thread (same sender+page) — conversation continuity DATA for the draft. */
 async function fetchRecentThread(ev: SocialEventRow): Promise<string> {
@@ -534,26 +559,79 @@ async function notifyOwnerAiReply(ev: SocialEventRow): Promise<void> {
   }
 }
 
+/** R81 · B6 (Owner 2026-11-08 "แจ้งเตือนจากเพจไม่ส่งถึงลูกค้า"):
+ *  evidence A1b พิสูจน์แล้วว่า private_replies ของเฟซตาย (http_400 "Object … does not exist"
+ *  ทุกแถว) → ช่องทางแจ้งเตือนที่เรา control ได้ 100% = web push ของ biteme เอง
+ *  (reuse วงจร m179: enqueue_notification → notification_outbox → cron bmb-notify ≤5 นาที)
+ *  ผู้รับ = customer_id ของลูกค้าคนนั้น (resolve จาก customer_channel_identities · ไม่เดา)
+ *  ห้ามกระทบ reply flow — wrap try/catch เสมอ · คืน outcome เพื่อบันทึกใน flags (รายงานสถานะ) */
+async function notifyCustomerAiReply(
+  ev: SocialEventRow,
+  replyText: string,
+): Promise<{ outcome: string }> {
+  try {
+    if (ev.platform !== 'FACEBOOK' || !ev.sender_id) return { outcome: 'skip_not_comment' }
+    const ident = await rest(
+      'GET',
+      `/rest/v1/customer_channel_identities?channel=eq.${encodeURIComponent(ev.platform)}&external_user_id=${encodeURIComponent(ev.sender_id)}&select=customer_ref&limit=1`,
+    )
+    const ref = ident.status === 200 && Array.isArray(ident.j) && ident.j[0] ? String(ident.j[0].customer_ref || '') : ''
+    if (!ref) return { outcome: 'unresolved_identity' }
+    const cust = await rest('GET', `/rest/v1/customers?user_id=eq.${encodeURIComponent(ref)}&select=id&limit=1`)
+    const customerId = cust.status === 200 && Array.isArray(cust.j) && cust.j[0] ? String(cust.j[0].id || '') : ''
+    if (!customerId) return { outcome: 'unresolved_customer' }
+    const q = await rest('POST', '/rest/v1/rpc/enqueue_notification', {
+      p_event_key: `ai-comment-reply-${ev.event_id}`.slice(0, 200),
+      p_customer_id: customerId,
+      p_category: 'Transactional',
+      p_title: '🔔 Bite ตอบคอมเมนต์ของคุณแล้ว',
+      p_body: replyText.slice(0, 300),
+      p_url: 'https://biteme-baby.com',
+    })
+    const j = q.j as { ok?: boolean; inserted?: boolean; error?: string } | null
+    if (!j) return { outcome: 'enqueue_http_' + q.status }
+    if (j.ok === false) return { outcome: 'enqueue_error:' + String(j.error || 'unknown').slice(0, 60) }
+    return { outcome: j.inserted ? 'queued' : 'duplicate' }
+  } catch (e) {
+    return { outcome: 'error:' + String(e).slice(0, 60) }
+  }
+}
+
 /** Draft ไม่ผ่าน/ไม่ได้ แต่ระบบบันทึกรายการไว้แล้ว — ส่งบรรทัดระบบ (สร้างจากผล
  *  บริการจริงโดย buildIntakeLine) อย่างน้อยไม่เงียบหาย และไม่เกินจริง. */
 async function fallbackIntakeReply(ev: SocialEventRow, footer: string, reason: string): Promise<{ id: string; result: string; detail?: string }> {
   const stamp = new Date().toISOString()
   const footerText = normalizeAiTextLinks(footer) // R75: ลิงก์ต้องแตะได้จริงเสมอ
-  const sent = await sendReply(ev, footerText)
+  // R81-A3: เดิมสาย fallback ไม่มีหลักฐานกันซ้ำ → อ่าน flags เดิม + รายงานสถานะเหมือนสายปกติ
+  const priorFlags = (ev.ai_guardrail_flags || {}) as Record<string, unknown>
+  const sent = await sendReply(ev, footerText, { skipDm: !!priorFlags.dm_attempted_at })
+  const dmStamp = sent.dmTried ? stamp : (priorFlags.dm_attempted_at ? String(priorFlags.dm_attempted_at) : null)
+  const notify = sent.ok && ev.event_type === 'comment' && !sent.dmId && ev.platform === 'FACEBOOK'
+    ? await notifyCustomerAiReply(ev, footerText)
+    : { outcome: sent.dmId ? 'dm_ok' : 'not_applicable' }
   await rest('PATCH', `/rest/v1/social_events?id=eq.${encodeURIComponent(ev.id)}`, {
     ai_model: null,
     ai_reply_text: footerText,
     ai_validated: true,
-    ai_guardrail_flags: { fallback: reason.slice(0, 120), dm_reply_id: sent.dmId || null, dm_error: sent.dmError || null },
+    ai_guardrail_flags: { fallback: reason.slice(0, 120), dm_reply_id: sent.dmId || null, dm_error: sent.dmError || null, dm_attempted_at: dmStamp, push_notify: notify.outcome },
     status: 'SUCCEEDED',
     processed_at: stamp,
     last_attempt_at: stamp,
     reply_status: sent.ok ? 'sent' : 'failed',
     reply_provider_id: sent.ok ? sent.providerId : null,
     reply_attempted_at: stamp,
-    last_error: sent.ok ? null : 'META_SEND:' + String(sent.reason || 'error').slice(0, 100),
+    last_error: sent.ok ? null : 'META_SEND:' + String(sent.reason || 'error').slice(0, 200),
   })
   if (sent.ok) void notifyOwnerAiReply(ev)
+  else {
+    // H3 → alert เมื่อตอบสาธารณะไม่สำเร็จ (ห้ามเงียบ — เจ้าของต้องเห็นทุกเคสที่ลูกค้าไม่เห็นคำตอบ)
+    void enqueueAdminAlert(SB_URL, SERVICE, {
+      eventKey: 'social-reply-fail-' + ev.event_id,
+      title: 'เอ_aiตอบคอมเมนต์ไม่สำเร็จ',
+      body: (ev.content || '').slice(0, 80) + ' · ' + String(sent.reason || 'error').slice(0, 120),
+      category: 'Operational',
+    })
+  }
   usage(ev.event_id, 'social_reply_send', '-', 'intake_fallback')
   return { id: ev.id, result: 'succeeded', detail: 'intake_fallback:' + reason.slice(0, 60) + ' sent=' + sent.ok }
 }
@@ -726,24 +804,42 @@ async function processEvent(ev: SocialEventRow): Promise<{ id: string; result: s
     return { id: ev.id, result: 'succeeded', detail: `intent=${classification.intent} requires_human_review=${requiresHumanReview} sent=false` }
   }
   // --- AUTO-SEND step (Owner 2026-10-16): send the validated text now ---
-  const sent = await sendReply(ev, finalText)
+  // R81-A3 (evidence A1b 2026-11-08): flags.dm_attempted_at = เคยยิง private_replies แล้ว → ห้ามซ้ำ (1/คอมเมนต์)
+  const priorFlags = (ev.ai_guardrail_flags || {}) as Record<string, unknown>
+  const sent = await sendReply(ev, finalText, { skipDm: !!priorFlags.dm_attempted_at })
   const stamp = new Date().toISOString()
+  const dmStamp = sent.dmTried ? stamp : (priorFlags.dm_attempted_at ? String(priorFlags.dm_attempted_at) : null)
   if (!sent.ok) {
     await rest('PATCH', `/rest/v1/social_events?id=eq.${encodeURIComponent(ev.id)}`, {
       reply_status: 'failed',
       reply_attempted_at: stamp,
-      last_error: 'META_SEND:' + String(sent.reason || 'error').slice(0, 100),
+      last_error: 'META_SEND:' + String(sent.reason || 'error').slice(0, 200),
+      // R81-A3: สถานะแจ้งเตือนพร้อมเหตุผล structured (evidence probe อ่านต่อได้ — ห้ามหายเงียบ)
+      ai_guardrail_flags: { ...flags, dm_reply_id: sent.dmId || null, dm_error: sent.dmError || null, dm_attempted_at: dmStamp },
+    })
+    // H3 → alert ทันที: ตอบสาธารณะไม่สำเร็จ = ลูกค้าไม่เห็นคำตอบอะไรเลย (Owner R81 สั่งให้รายงาน)
+    void enqueueAdminAlert(SB_URL, SERVICE, {
+      eventKey: 'social-reply-fail-' + ev.event_id,
+      title: 'เอ_aiตอบคอมเมนต์ไม่สำเร็จ',
+      body: (ev.content || '').slice(0, 80) + ' · ' + String(sent.reason || 'error').slice(0, 120),
+      category: 'Operational',
     })
     usage(ev.event_id, 'social_reply_send', draft.model || '-', 'send_failed')
     return { id: ev.id, result: 'succeeded', detail: `intent=${classification.intent} sent=failed` }
   }
+  // H1 → ช่องทางแจ้งเตือนที่เรา control ได้ 100%: DM ของเฟซตาย (A1b = http_400 ทุกแถว)
+  //      → เสริม web push ลูกค้าผ่าน m179 enqueue_notification (ผู้รับ = customer_id จริง)
+  const notify = ev.event_type === 'comment' && !sent.dmId && ev.platform === 'FACEBOOK'
+    ? await notifyCustomerAiReply(ev, finalText)
+    : { outcome: sent.dmId ? 'dm_ok' : 'not_applicable' }
   await rest('PATCH', `/rest/v1/social_events?id=eq.${encodeURIComponent(ev.id)}`, {
     reply_status: 'sent',
     reply_provider_id: sent.providerId,
     reply_attempted_at: stamp,
     last_error: null,
     // R76: หลักฐานการแจ้งเตือนฝั่งลูกค้า (private reply สำหรับคอมเมนต์ · message id สำหรับ Messenger)
-    ai_guardrail_flags: { ...flags, dm_reply_id: sent.dmId || null, dm_error: sent.dmError || null },
+    // R81: + dm_attempted_at (กันซ้ำ 1/คอมเมนต์) + push_notify (ผล web push — รายงานสถานะ)
+    ai_guardrail_flags: { ...flags, dm_reply_id: sent.dmId || null, dm_error: sent.dmError || null, dm_attempted_at: dmStamp, push_notify: notify.outcome },
   })
   void notifyOwnerAiReply(ev)
   usage(ev.event_id, 'social_reply_send', draft.model || '-', 'sent')
@@ -773,10 +869,10 @@ Deno.serve(async (req: Request): Promise<Response> => {
   const singleEventId = payload.event_id
 
   // --- claim candidates: RECEIVED comment/message events (oldest first) ---
-  let selectPath = `/rest/v1/social_events?status=eq.RECEIVED&event_type=in.(comment,message)&order=received_at.asc&limit=${limit}&select=id,event_id,platform,event_type,sender_id,sender_name,page_id,content,payload,attempts`
+  let selectPath = `/rest/v1/social_events?status=eq.RECEIVED&event_type=in.(comment,message)&order=received_at.asc&limit=${limit}&select=id,event_id,platform,event_type,sender_id,sender_name,page_id,content,payload,attempts,ai_guardrail_flags`
   if (singleEventId) {
     // single-event mode (probe/ops/auto-trigger): event_id must still be RECEIVED
-    selectPath = `/rest/v1/social_events?event_id=eq.${encodeURIComponent(singleEventId)}&status=eq.RECEIVED&event_type=in.(comment,message)&select=id,event_id,platform,event_type,sender_id,sender_name,page_id,content,payload,attempts`
+    selectPath = `/rest/v1/social_events?event_id=eq.${encodeURIComponent(singleEventId)}&status=eq.RECEIVED&event_type=in.(comment,message)&select=id,event_id,platform,event_type,sender_id,sender_name,page_id,content,payload,attempts,ai_guardrail_flags`
   }
   const sel = await rest('GET', selectPath)
   if (sel.status !== 200) return json({ error: 'db_select_failed', status: sel.status }, 502)
