@@ -21,7 +21,7 @@
 
 | ID | ข้อ | ปัญหา | หลักฐานโค้ดที่ verify แล้ว | แนวทางแก้ |
 |---|---|---|---|---|
-| **D1** ✅ FIXED | RT-3.4 | ~~ออเดอร์ 4 ใบ cancel แล้วยังค้างแผง + ปฏิเสธสลิปขึ้น `ERR_ORDER_CLOSED: cannot reject payment on a closed order`~~ → **แก้แล้ว R83** | guard `supabase/migrations/162_admin_reject_payment.sql:25` = `RAISE EXCEPTION` (คงเดิม ไม่ทำให้อ่อน) · โค้ดที่แก้: `src/pages/admin/AdminOrders.tsx` (review filter) + `src/components/admin/SlipReviewPanel.tsx` | **ทำแล้ว:** กรอง `status='cancelled'` ออกทั้งต้นทาง+ตัวแผง (`delivered` คงอยู่ = COD) · เทสต์ใหม่ 2 ข้อ · gates 4/4 · commit `d305dc7` push → **เหลือ retest live (hard reload → แผงไม่มี 4 ใบ)** |
+| **D1** ✅ FIXED 2 ชั้น | RT-3.4 | ~~ออเดอร์ 4 ใบ cancel แล้วยังค้างแผง + ปฏิเสธสลิปขึ้น `ERR_ORDER_CLOSED`~~ → **R83 = แก้แผง (`d305dc7`) · R84 = ปิดสถานะชำระจริงด้วย `void` (`5573d2b`)** | guard `162_admin_reject_payment.sql:25` คงเดิม ไม่ทำให้อ่อน · โค้ดที่แก้: `AdminOrders.tsx` + `SlipReviewPanel.tsx` (R83) · **mig 194/195 + `adminOrderDisplay`/`paymentExceptions`/label 4 หน้า (R84)** | **ทำแล้ว:** กรอง `status='cancelled'` ออกจากแผง · เพิ่ม `payment_status='void'` + `cancel_order` ปิดอัตโนมัติ + backfill 4 ใบ · เทสต์ใหม่ 5 ข้อ · gates 4/4 · push แล้ว → **เหลือ: Owner รัน SQL 194→195 ใน SQL Editor + retest (4 ใบต้องโชว์ void ไม่ใช่ pending)** |
 | **D2** | RT-5.1 · RT-5.4 | คำตอบแชทเรื่องส่งยังผิด — สั่ง SAME_DAY กลับบอก/อ้างรอบส่ง (จริง = ส่งได้ตลอดเวลาที่ร้านเปิด · ไม่มีรอบ) · PRE_ORDER ที่เลยรอบไปแล้วยังพูดถึงรอบนั้น | `_shared/orderWindow.ts` + `socialOrderIntake.ts:258` ("SAME_DAY คงเดิม m148: ไม่มีปิดรอบ") + tests `r82OrderWindow` 21 ข้อ / `roundsSameDayNoCutoff` = โค้ดมีกติกาแล้ว แต่คำตอบจริงยังผิด | เจาะ prompt/สาย intake ของ **แชต (DM)** ว่าเข้าบล็อก ORDER WINDOW จริงไหม + ตรวจข้อความตอบจริง · อาจต้อง enforce structured field แทนให้โมเดลเขียนเอง |
 | **D3** | RT-5.3 | ยืนยันแล้วได้เลข BMB จริง + ลิงก์จริง แต่ **จำนวนผิด** (สั่ง 2 ที่) | structured extraction จำนวน (`socialOrderIntake.ts` schema `qty`) | ตรวจ field จำนวนก่อนสร้างออเดอร์จริง + โน้ตออเดอร์ |
 | **D4** | RT-5.4 | ลิงก์ในแชท **ไม่ยอมเปิดบราวเซอร์ภายนอกจริง** (ยังเปิด in-app) | — (งานฝั่ง client link handling · อ้าง R57) | ตรวจ target/deep-link ของลิงก์ในข้อความแชท |
@@ -36,10 +36,11 @@
 
 ## 4. ขั้นถัดไป (ตามลำดับ)
 
-1. **Owner/แอดมิน:** retest **RT-3.4** หลัง auto-deploy (hard reload Ctrl+Shift+R → `/admin/orders` → แผงตรวจสลิปไม่มี 4 ใบค้าง · ไม่มี toast `ERR_ORDER_CLOSED`)
-2. **แชทหน้า:** รับ **D2 → D3 → D4** ทำ two-try · D5 = enhancement ทำพร้อมกันได้ (**D1 = ปิดแล้ว**)
-3. **Owner:** รัน RT-1.4 ตอนปิดร้าน · ต่อคิว RT-4 → RT-5.5–5.7 → RT-6 → §T-A → CAP ที่เหลือ
-4. **หลังแก้ D2–D4:** retest RT-5.1/5.3/5.4 แล้วอัพเดท test pack ใหม่
+1. **Owner: รัน SQL ใน Supabase SQL Editor** — `supabase/migrations/194_payment_status_void_enum.sql` **ก่อน** → แล้ว `195_close_payment_on_cancel.sql` (คนละครั้ง · 195 backfill 4 ใบเป็น `void` + RAISE NOTICE นับจำนวน)
+2. **Owner/แอดมิน:** retest **RT-3.4** — hard reload Ctrl+Shift+R → `/admin/orders` → 4 ใบต้องโชว์ `🚫 void (ยกเลิก ไม่เก็บเงิน)` ไม่ใช่ `⏳ pending` · แผงตรวจสลิปไม่มี 4 ใบค้าง · ไม่มี toast `ERR_ORDER_CLOSED`
+3. **แชทหน้า:** รับ **D2 → D3 → D4** ทำ two-try · D5 = enhancement ทำพร้อมกันได้ (**D1 = ปิดแล้วทั้งแผงและสถานะชำระ**)
+4. **Owner:** รัน RT-1.4 ตอนปิดร้าน · ต่อคิว RT-4 → RT-5.5–5.7 → RT-6 → §T-A → CAP ที่เหลือ
+5. **หลังแก้ D2–D4:** retest RT-5.1/5.3/5.4 แล้วอัพเดท test pack ใหม่
 
 ---
 *จัดทำ: AI (RT-INTAKE) · 2026-11-08 · evidence ชี้กลับไปที่ test pack + `AI_WORK_STATE.md` บล็อก SESSION ACTIVE*

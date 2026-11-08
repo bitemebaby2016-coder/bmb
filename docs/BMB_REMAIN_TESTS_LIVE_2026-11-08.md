@@ -77,8 +77,8 @@
 | R82/R82g (หน้าต่างรอบ/lead 2 ชม./roundLines/แจ้งเตือน 2 ทาง) | ✅ โค้ด+gates+deploy 4 fn แล้ว (08 พ.ย. 04:41Z) — **เหลือ retest live = RT-1** |
 | ลบออเดอร์ทดสอบ 4 ใบ | ฝั่ง AI **ข้ามตามคำสั่ง Owner** → **Owner กดยกเลิกเองที่ `/admin/orders`** (ดูงานบ้าน) |
 
-> **งานบ้าน — ออเดอร์ทดสอบ 4 ใบ: แก้ที่ตัวแผงแล้ว (R83 · 2026-11-08):** `BMB-20261108-484` (Social ฿166) + `BMB-20261108-850/613/767` (R74 Test ฿87)
-> สถานะ = `cancelled` (payment_status ยังค้าง `pending`) → เดิมค้างแผง "รายการชำระเงิน/สลิป (4)" + ปฏิเสธสลิปโดน `ERR_ORDER_CLOSED` = **D1 (RT-3.4)** → **แก้แล้ว (commit `d305dc7` push · gates 4/4): แผงกรองออเดอร์ `status='cancelled'` ออกทั้งต้นทาง `AdminOrders` + `SlipReviewPanel` (guard DB `162_admin_reject_payment.sql:25` คงเดิม ห้ามทำให้อ่อน)** → **retest = hard reload ที่ `/admin/orders` หลัง deploy ต้องไม่เห็น 4 ใบในแผง + ไม่มี toast error**
+> **งานบ้าน — ออเดอร์ทดสอบ 4 ใบ: แก้ที่ตัวแผงแล้ว (R83) + ปิดสถานะชำระจริงด้วย `void` (R84):** `BMB-20261108-484` (Social ฿166) + `BMB-20261108-850/613/767` (R74 Test ฿87)
+> สถานะ = `cancelled` (payment_status ยังค้าง `pending` = pill ⏳ pending โกหก) → **R83 (`d305dc7`): แผงกรองออเดอร์ `status='cancelled'` ออกจากแผงตรวจสลิป** · **R84 (`5573d2b`): เพิ่มค่า `payment_status='void'` (mig 194) + `cancel_order` ปิดเป็น void อัตโนมัติ + backfill 4 ใบ (mig 195) + badge/label ทุกหน้าแสดง `🚫 void (ยกเลิก ไม่เก็บเงิน)`** — **⚠️ ต้อง Owner รัน SQL เองใน Supabase SQL Editor: `194_payment_status_void_enum.sql` → `195_close_payment_on_cancel.sql` (คนละครั้ง)** → **retest: hard reload → 4 ใบต้องโชว์ void ไม่ใช่ pending · แผงไม่มี 4 ใบ · ไม่มี toast error**
 
 ---
 
