@@ -2,7 +2,9 @@
 import { useParams, Link } from 'react-router-dom'
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
-import { getVerifiedReviewsByProduct, submitVerifiedReview } from '@/lib/reviewApi'
+import { loadReviewsFeed, submitVerifiedReview } from '@/lib/reviewApi'
+// R88 (D6c): อัลบั้มรูป = รูปจริงลูกค้าจริงในโปรเจกต์ (public/assets/reviews — ไม่ใช่ placeholder)
+import { REAL_REVIEW_PHOTOS } from '@/lib/realReviews'
 // R87: ฟอร์มเขียนรีวิวจริง — สิทธิ์ = ออเดอร์ delivered จริงของลูกค้า (ไม่ใช่ฟอร์มปลอม)
 import { getOrdersByCustomer } from '@/lib/bmbAdminApi_orders'
 import { useAuthStore } from '@/store/authStore'
@@ -32,16 +34,20 @@ export function ReviewPage() {
 
   useEffect(() => {
     async function loadReviews() {
-      if (!productId) return
       setLoadError('')
-      try { setVerifiedReviews(await getVerifiedReviewsByProduct(productId)) }
-      catch (e) {
+      try {
+        // R88/D6a: ทั้งหน้ารวม (ไม่มี productId) และหน้าเมนู (มี productId) ต้อง "จบโหลด" เสมอ
+        // — เดิม path ไม่มี productId = return ก่อน setLoading(false) → ค้าง "Loading reviews..." ถาวร
+        // + ไม่มี path โหลดฟีดทั้งหน้า → verified list/อัลบั้มว่างเป็นระบบ
+        setVerifiedReviews(await loadReviewsFeed(productId))
+      } catch (e) {
         console.error('ReviewPage error:', e)
         setLoadError('โหลดรีวิวไม่สำเร็จ — ตรวจสอบการเชื่อมต่อแล้วกด "ลองใหม่"')
+      } finally {
+        setLoading(false)
       }
-      finally { setLoading(false) }
     }
-    loadReviews()
+    void loadReviews()
   }, [productId, retryKey])
 
   // AI-CLEANUP: portfolio images come from the real Admin Portfolio (M094)
@@ -93,10 +99,11 @@ export function ReviewPage() {
     })
     setSubmitting(false)
     if (r.success) {
-      showToast('บันทึกรีวิวแล้ว — ขอบคุณที่รีวิวจากประสบการณ์จริง ⭐', 'success')
+      // R88 (Owner): รีวิวใหม่ = เข้าคิวให้แอดมินอนุมัติก่อนขึ้นเว็บ (ไม่แสดงทันที)
+      showToast('ส่งรีวิวแล้ว — อยู่ในคิวให้แอดมินอนุมัติก่อนแสดงบนเว็บ ⭐', 'success')
       setSubmitted(true)
       setComment('')
-      setRetryKey((n) => n + 1) // โหลดรายการรีวิวใหม่ทันที (ข้อมูลจริงจาก DB)
+      setRetryKey((n) => n + 1) // โหลดรายการใหม่ทันที (ของตัวเองเห็นผ่าน RLS แม้ยัง pending)
     } else {
       showToast('บันทึกรีวิวไม่สำเร็จ: ' + (r.error || 'ลองใหม่อีกครั้ง'), 'error')
     }
@@ -130,7 +137,10 @@ export function ReviewPage() {
             </p>
           ) : submitted || verifiedReviews.some((r: any) => r.customer_id === customer.id) ? (
             <p className='text-sm text-emerald-700' data-testid='review-already'>
-              คุณรีวิวเมนูนี้ไปแล้ว — ขอบคุณที่แชร์ประสบการณ์ ⭐
+              {/* R88: pending ≠ ขึ้นเว็บแล้ว — บอกสถานะคิวอนุมัติให้ชัด */}
+              {submitted || verifiedReviews.some((r: any) => r.customer_id === customer.id && (r.status ?? 'approved') === 'pending')
+                ? 'รีวิวของคุณถูกส่งแล้ว — อยู่ในคิวให้แอดมินอนุมัติก่อนแสดงบนเว็บ ⭐'
+                : 'คุณรีวิวเมนูนี้ไปแล้ว — ขอบคุณที่แชร์ประสบการณ์ ⭐'}
             </p>
           ) : (
             <div className='space-y-3'>
@@ -187,6 +197,12 @@ export function ReviewPage() {
           <div key={review.id} className='card p-4 mb-3 border-l-4 border-emerald-500'>
             <div className='flex justify-between'><span className='font-medium'>{review.customer_name}</span><span>{'\\u2B50'.repeat(Math.round(review.rating))}</span></div>
             <p className='mt-2 text-sm'>{review.comment}</p>
+            {/* R88 (Owner: "แอดมิน...ตอบได้") — คำตอบจากร้านแสดงใต้รีวิว */}
+            {review.reply && (
+              <div className='mt-2 rounded-lg border border-brand-border bg-brand-bg p-2 text-sm' data-testid='review-reply'>
+                <span className='font-medium text-brand-accent'>🏪 ร้านค้าตอบ:</span> {review.reply}
+              </div>
+            )}
             {review.order_number && <Link to='/orders' className='text-xs text-brand-primary mt-2 block'>Order #{review.order_number.slice(0,8)}</Link>}
             <span className='text-xs text-emerald-600 mt-1 block'>Verified Purchase {'\u2713'}</span>
           </div>)) : productId ? <div className='card bg-gray-50 text-center py-8'><p className='text-brand-muted'>No reviews yet.</p></div>
@@ -198,12 +214,14 @@ export function ReviewPage() {
             <MascotBadge pose="eating" size="sm" alt="น้อง Bite รูปรีวิวจากลูกค้า" className="section-float-mascot" />
         </h2>
         <p className='text-sm text-brand-muted mb-3'>รีวิวและรูปจริงจากลูกค้าที่สั่งผ่านระบบ</p>
-        {/* อัลบั้มรูปรีวิวจริง (verified reviews ที่มีรูป) — ของเดิมเก็บผ่าน reviews.photo_url */}
-        {verifiedReviews.filter((rv: any) => rv.photo_url).length > 0 && (
+        {/* R88/D6c (Owner 2026-11-08: "ใช้รูปจริงในโปรเจกต์ + Owner อัปโหลด/ลบเองภายหลัง"):
+            อัลบั้มรูปจริง = ไฟล์จริงในโปรเจกต์ public/assets/reviews/small 32 ใบ (รูปลูกค้าจริง)
+            — เดิมกรอง reviews.photo_url ซึ่ง "คอลัมน์ไม่มีจริง" ใน schema → ว่างถาวร */}
+        {REAL_REVIEW_PHOTOS.length > 0 && (
           <div className='grid grid-cols-3 gap-3 mb-4' data-testid='review-photo-album'>
-            {verifiedReviews.filter((rv: any) => rv.photo_url).map((rv: any) => (
-              <a key={rv.id} href={rv.photo_url} target='_blank' rel='noreferrer' className='aspect-square rounded-lg overflow-hidden bg-gray-100'>
-                <img src={rv.photo_url} alt={`รีวิวของ ${rv.customer_name}`} loading='lazy' className='w-full h-full object-cover' />
+            {REAL_REVIEW_PHOTOS.map((photo) => (
+              <a key={photo.src} href={photo.src} target='_blank' rel='noreferrer' className='aspect-square rounded-lg overflow-hidden bg-gray-100'>
+                <img src={photo.src} alt={photo.alt} loading='lazy' className='w-full h-full object-cover' />
               </a>
             ))}
           </div>
@@ -223,7 +241,8 @@ export function ReviewPage() {
             ))}
           </div>
         ) : (
-          <div className='card bg-gray-50 text-center py-8'><p className='text-brand-muted'>ผลงานล่าสุดกำลังจะมาเร็ว ๆ นี้</p></div>
+          // R88/D6c: ตารางจริง (admin_portfolio_items) = 0 แถว — รอ Owner อัปโหลดเองผ่านแอดมิน (M094)
+          <div className='card bg-gray-50 text-center py-8'><p className='text-brand-muted'>ยังไม่มีผลงานในอัลบั้ม — เพิ่มรูปได้ที่หน้าแอดมิน (เมนู &quot;ผลงาน&quot;) แล้วรูปจะขึ้นที่นี่ทันที</p></div>
         )}
       </section>
     </div>

@@ -978,6 +978,10 @@ export interface VerifiedCustomerReview {
   branch_id: string | null
   is_verified: true // always true — comes from actual purchase
   created_at: string
+  // R88 (m199): คิวอนุมัติรีวิว — pending = ยังไม่ขึ้นเว็บ · approved = สาธารณะเห็น · rejected = ถูกปัดตก
+  status?: 'pending' | 'approved' | 'rejected'
+  reply?: string | null // R88: คำตอบจากร้าน (แอดมินตอบ)
+  replied_at?: string | null
 }
 
 /** Admin portfolio item (migration 094) */

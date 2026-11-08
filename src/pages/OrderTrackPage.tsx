@@ -428,7 +428,24 @@ export function OrderTrackPage() {
         <div className="card mt-6 bg-gradient-to-r from-yellow-50 to-orange-50 text-center">
           <MascotBadge pose="bye" size="lg" alt="Bite the mascot waving goodbye - thank you" className="mx-auto mb-2" loading="eager" />
           <h3 className="font-bold text-brand-accent mb-2">รีวิวประสบการณ์ของคุณ</h3>
-          <Link to="/reviews" className="btn btn-primary">ไปเขียนรีวิว</Link>
+          {/* R88/D6d: ลิงก์ไปหน้ารีวิวของ "เมนูในออเดอร์นี้" จริง (ฟอร์มผูกออเดอร์ delivered นี้) —
+              ไม่ใช่ /reviews หน้าเปล่า · ไม่มีรายการ = ไปหน้ารวม (โหลดฟีดทั้งหน้าแล้ว) */}
+          {(order.items || []).length > 0 ? (
+            <div className="flex flex-wrap justify-center gap-2">
+              {(order.items || []).map((item, i) => (
+                <Link
+                  key={item.product_id + '-review-' + i}
+                  to={`/reviews/${item.product_id}`}
+                  className="btn btn-primary btn-sm"
+                  data-testid={`track-review-link-${item.product_id}`}
+                >
+                  ✍️ รีวิว {item.product_name}
+                </Link>
+              ))}
+            </div>
+          ) : (
+            <Link to="/reviews" className="btn btn-primary">ไปเขียนรีวิว</Link>
+          )}
         </div>
       )}
     </div>

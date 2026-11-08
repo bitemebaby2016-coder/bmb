@@ -81,6 +81,8 @@ const AdminErrorsPage = lazy(() => import('./pages/admin/AdminErrorsPage').then(
 // D1: MascotSettingsPage/AdminPaymentExceptions/AdminPrintSettings lazy ถูกถอด (ใช้ใน AdminHubs ตรง ๆ)
 const AdminMarketing = lazy(() => import('./pages/admin/AdminMarketing').then(m => ({ default: m.AdminMarketing })))
 const AdminPortfolioPage = lazy(() => import('./pages/admin/AdminPortfolio').then(m => ({ default: m.AdminPortfolioPage })))
+// R88/D6f: คิวอนุมัติรีวิวจากลูกค้า (แอดมิน อนุมัติ/ปัดตก/ตอบกลับ/ลบ)
+const AdminReviewsPage = lazy(() => import('./pages/admin/AdminReviews').then(m => ({ default: m.AdminReviewsPage })))
 // C7/Q5: AdminAiStudio ถูกรวมเป็นแท็บใน AdminMarketing (แท็บ 'ai') — ไม่มี lazy route แล้ว
 // BACKEND-CAPABILITY-CLOSURE-2026-10-19: Web POS + Finance reports + Printer settings
 const AdminPos = lazy(() => import('./pages/admin/AdminPos').then(m => ({ default: m.AdminPos })))
@@ -343,6 +345,8 @@ export default function App() {
         
         {/* CAT-04: Admin Portfolio / Past Works */}
         <Route path="/admin/portfolio" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminNav><AdminPortfolioPage /></AdminNav></Layout></AdminRoute></Suspense>} />
+        {/* R88/D6f: คิวอนุมัติรีวิว (Owner: "ให้แอดมินอนุมัติก่อนและลบได้ตอบได้") */}
+        <Route path="/admin/reviews" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminNav><AdminReviewsPage /></AdminNav></Layout></AdminRoute></Suspense>} />
         {/* AI-EXT: Admin AI Content Studio */}
         <Route path="/admin/ai-studio" element={<Navigate to="/admin/marketing?tab=ai" replace />} />
         {/* Catch all */}

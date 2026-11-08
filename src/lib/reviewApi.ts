@@ -59,3 +59,17 @@ export async function submitVerifiedReview(params: { order_number: string; produ
   if (error) return { success: false, error: error.message }
   return { success: true, reviewId: data?.review_id }
 }
+
+// R88 (D6a/D6b): โหลดฟีดรีวิวให้ "หน้ารวม /reviews" (ไม่มี productId) และหน้าเมนู (มี productId)
+// — ต่างจาก getVerifiedReviewsByProduct ตรงที่ "โยน error ให้ caller" (R21d: โหลดล้มเหลว
+// ต้องฟ้อง ≠ โชว์ empty state ปลอม) · RLS ฝั่ง DB คัดให้เอง: approved ทั้งหมด + ของตัวเอง
+export async function loadReviewsFeed(productId?: string, limit = 100): Promise<VerifiedCustomerReview[]> {
+  let query = supabase.from('reviews').select('*')
+  if (productId) query = query.eq('product_id', productId)
+  const { data, error } = await query.order('created_at', { ascending: false }).limit(limit)
+  if (error) {
+    console.error('[loadReviewsFeed] Error:', error)
+    throw new Error(error.message)
+  }
+  return (data || []) as VerifiedCustomerReview[]
+}

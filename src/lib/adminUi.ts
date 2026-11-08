@@ -54,6 +54,8 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
       { to: '/admin/notifications', label: 'การแจ้งเตือน', icon: '\uD83D\uDD14' },
       { to: '/admin/media', label: 'คลังรูปภาพ', icon: '\uD83D\uDDBC\uFE0F' },
       { to: '/admin/portfolio', label: 'ผลงาน', icon: '\uD83D\uDDBC\uFE0F' },
+      // R88/D6f (Owner: "ให้แอดมินอนุมัติก่อนและลบได้ตอบได้") — คิวอนุมัติรีวิวจากลูกค้า
+      { to: '/admin/reviews', label: 'อนุมัติรีวิว', icon: '⭐' },
     ],
   },
   {
