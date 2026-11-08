@@ -16,6 +16,7 @@ import adminPageSrc from '../pages/admin/AdminReviews.tsx?raw'
 import adminUiSrc from '../lib/adminUi.ts?raw'
 import appSrc from '../App.tsx?raw'
 import migSrc from '../../supabase/migrations/199_review_moderation.sql?raw'
+import mig200Src from '../../supabase/migrations/200_reviews_id_default.sql?raw'
 
 describe('R88-① D6a: /reviews หน้ารวม (ไม่มี productId) ต้องจบโหลด + โหลดฟีดทั้งหน้า', () => {
   it('ไม่มี early-return กลางคัน — path ไม่มี productId ต้องผ่าน finally setLoading(false)', () => {
@@ -110,6 +111,15 @@ describe('R88-⑤ m199: ซ่อมดริฟต์คอลัมน์ + mo
     expect(migSrc).toContain("p_order_number, p_branch_id, v_product_name, 'pending'")
     expect(migSrc).toContain('ERR_R88_REVIEW_COLUMNS_MISSING')
     expect(migSrc).toContain('COMMIT;')
+  })
+})
+
+describe('R88-⑤b D9: reviews.id = text NOT NULL ไม่มี default → submit insert ล้มเหลว (retest ⑨ ~22:34 น.)', () => {
+  it('m200 ตั้ง default สร้าง id สไตล์ rev-<ms>-<suffix> + verify block + COMMIT — กติกา m198/m199 คงเดิม', () => {
+    expect(mig200Src).toContain('ALTER COLUMN id SET DEFAULT')
+    expect(mig200Src).toContain("'rev-'")
+    expect(mig200Src).toContain('ERR_R88_REVIEW_ID_DEFAULT_MISSING')
+    expect(mig200Src).toContain('COMMIT;')
   })
 })
 
