@@ -274,3 +274,31 @@ const PO_ORDER = makeOrder({
 
 let container: HTMLDivElement
 let root: Root
+
+// ============================================
+// D1 (RT-3.4 · 2026-11-08): ออเดอร์ cancel แล้วแต่ payment_status ยังค้าง pending
+// (เคสจริง 4 ใบ BMB-20261108-484/850/613/767) — ต้องไม่เข้าแผงตรวจสลิป เพราะ
+// server guard 162 (`ERR_ORDER_CLOSED: cannot reject payment on a closed order`)
+// ทำให้กด "ปฏิเสธสลิป" ไม่ได้อยู่ดี → เดิม = แผงค้าง + กดแล้ว error (ห้ามอ่อนแอ
+// guard DB → แก้ที่ UI กรองสถานะปิดออก)
+// ============================================
+describe('AdminOrders — D1: แผงตรวจสลิปตัดออเดอร์ cancelled ออก (RT-3.4)', () => {
+  it('review set มี 2 ใบ (1 cancelled + 1 confirmed) → แผงนับ (1) · เลข cancelled ไม่โผล่', async () => {
+    const { getPaymentExceptionOrders } = await import('@/lib/paymentExceptions')
+    vi.mocked(getPaymentExceptionOrders).mockResolvedValue([
+      makeOrder({ id: 'o-cx', order_number: 'BMB-CX-1', status: 'cancelled' }),
+      makeOrder({ id: 'o-live', order_number: 'BMB-LIVE-1', status: 'confirmed' }),
+    ])
+    await mount()
+    const toggle = container.querySelector('[data-testid="slip-review-toggle"]') as HTMLButtonElement
+    expect(toggle, 'แผงตรวจสลิปต้องโผล่เพราะมีรายการรอตรวจจริง 1 ใบ').toBeTruthy()
+    expect(toggle.textContent).toContain('(1)') // 2 ใบ − cancelled 1 ใบ = 1
+    await act(async () => { toggle.click() })
+    await flush()
+    const items = container.querySelectorAll('[data-testid="slip-review-item"]')
+    expect(items).toHaveLength(1)
+    expect(container.textContent).toContain('BMB-LIVE-1')
+    expect(container.textContent).not.toContain('BMB-CX-1')
+    expect(container.querySelectorAll('[data-testid="slip-reject-BMB-CX-1"]')).toHaveLength(0)
+  })
+})

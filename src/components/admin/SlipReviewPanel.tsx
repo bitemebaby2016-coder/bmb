@@ -2,7 +2,9 @@
 // Bite Me Baby — SlipReviewPanel (A2 · 2026-10-22 · R1.2/D-04 2026-10-23)
 // ============================================
 // "แผงตรวจสลิปเดียว" — the ONE place where offline-payment verification happens.
-// Lists EVERY order awaiting payment check (payment_status='pending') — NOT tied
+// Lists EVERY order awaiting payment check (payment_status='pending', excluding
+// status='cancelled' = D1 RT-3.4 2026-11-08 — ปิดเคสแล้ว/server guard 162 ไม่ให้กด)
+// — NOT tied
 // to the page/status/mode/branch filters of AdminOrders (D-04: ออเดอร์ที่ถูก
 // ตัวกรอง/branch บัง ต้องไม่หายจากแผงตรวจเงิน) — shows the evidence via
 // SlipThumb (M5: intents passed in from the parent's single read path) and hosts
@@ -27,7 +29,10 @@ export function SlipReviewPanel({ orders, intentsByOrder, onConfirmPayment, onRe
   onRejectPayment: (orderNumber: string) => void
 }) {
   const [open, setOpen] = useState(false)
-  const pending = orders.filter((o) => o.payment_status === 'pending')
+  // D1 (RT-3.4 · 2026-11-08): ออเดอร์ status='cancelled' = ปิดเคสแล้ว — กดยืนยัน/ปฏิเสธ
+  // ไม่ได้จริง (server guard 162 `ERR_ORDER_CLOSED`) → ห้ามค้างในแผง (mirror guard
+  // ฝั่งต้นทางใน AdminOrders.loadOrders — filter ซ้ำที่นี่เพื่อกันทุก caller)
+  const pending = orders.filter((o) => o.payment_status === 'pending' && o.status !== 'cancelled')
 
   if (pending.length === 0) return null
 

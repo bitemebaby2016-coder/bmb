@@ -106,4 +106,18 @@ describe('R1.2 · SlipReviewPanel — บอกเหตุผลชัดเม
     expect(container.textContent).toContain('S-5')
     expect(container.textContent).not.toContain('S-6')
   })
+
+  it('D1 (RT-3.4): ออเดอร์ cancelled ที่ payment_status ยังค้าง pending — ไม่โผล่ในแผง (server guard 162 ไม่ให้กด)', async () => {
+    // จำลองออเดอร์ 4 ใบสถานะ cancel แล้วแต่ payment_status ยังค้าง — เดิมขึ้นแผงถาวร
+    // กด "ปฏิเสธสลิป" = ERR_ORDER_CLOSED (bypass ไม่ได้ ห้ามอ่อนแอ guard DB → แก้ที่ UI)
+    const cancelled = order({ order_number: 'BMB-CX-1', status: 'cancelled' })
+    const live = order({ order_number: 'BMB-LIVE-1', status: 'confirmed' })
+    await renderPanel([cancelled, live], {})
+    const items = container.querySelectorAll('[data-testid="slip-review-item"]')
+    expect(items).toHaveLength(1)
+    expect(container.textContent).toContain('BMB-LIVE-1')
+    expect(container.textContent).not.toContain('BMB-CX-1')
+    // ปุ่ม reject ของออเดอร์ยกเลิกต้องไม่มีให้กดเลย (นับปุ่ม = ของ live 1 ชุด)
+    expect(container.querySelectorAll('[data-testid="slip-reject-BMB-CX-1"]')).toHaveLength(0)
+  })
 })

@@ -164,7 +164,14 @@ export function AdminOrders() {
     // payment_status='pending' ทั้งหมด (getPaymentExceptionOrders = read-only,
     // RLS admin scope) แล้วเติม intents ของชุดนี้เข้า map เดิม (ยังเป็น
     // query เดียวต่อหน้า — แยกเป็นครั้งที่สองเฉพาะเมื่อมีรายการใหม่ให้ตรวจ)
-    const review = (await getPaymentExceptionOrders()).filter((o) => o.payment_status === 'pending')
+    // D1 (RT-3.4 · 2026-11-08): ตัดออเดอร์ status='cancelled' ออก — สถานะปิด
+    // กระทำอะไรไม่ได้จริง (ปฏิเสธสลิป = guard 162 `ERR_ORDER_CLOSED` ·
+    // ยืนยันชำระ = ไม่มีผลกับออเดอร์ยกเลิก) แต่ payment_status ยังค้าง 'pending'
+    // → เคยโผล่แผงถาวร + กดปุ่มแล้ว error โดน guard · delivered คงอยู่ (COD
+    // ยืนยันเงินสดต้องผ่านแผงนี้)
+    const review = (await getPaymentExceptionOrders()).filter(
+      (o) => o.payment_status === 'pending' && o.status !== 'cancelled',
+    )
     setReviewOrders(review)
     const reviewNumbers = review.map((o) => o.order_number).filter((n) => !imap[n])
     if (reviewNumbers.length > 0) {
