@@ -185,17 +185,27 @@ export function ReviewPage() {
         </div>
       )}
 
-      <section className='mb-10'>
-        <h2 className='text-xl font-display font-bold text-emerald-700 mb-4 flex items-center gap-2'><span className='w-8 h-8 rounded-full bg-emerald-100 text-emerald-700 font-bold inline-flex items-center justify-center'>{'\u2713'}</span>Verified Customer Reviews
+      <section className='mb-10' data-testid='review-real-section'>
+        {/* R89 (Owner ~23:40 น.): "Verified Customer Reviews" + "📸 รีวิวจริงจากลูกค้า" = หมวดเดียวกัน
+            → ยุบเป็นหัวข้อเดียว · ใหม่สุดขึ้นก่อน (feed = created_at desc) · การ์ดมีโลโก้+ดาว แบบ Grab/FB */}
+        <h2 className='text-xl font-display font-bold text-brand-accent flex items-center gap-2 mb-2'>📸 รีวิวจริงจากลูกค้า
             <MascotBadge pose="thumbsup" size="sm" alt="น้อง Bite การันตีรีวิวจริง" className="section-float-mascot" />
         </h2>
+        <p className='text-sm text-brand-muted mb-3'>รีวิวและรูปจริงจากลูกค้าที่สั่งผ่านระบบ — ใหม่สุดแสดงก่อน · รีวิวใหม่ขึ้นเว็บหลังแอดมินอนุมัติ</p>
         {loading ? <p>Loading reviews...</p> : loadError ? (
           <div className='card py-4 text-center'>
             <LoadErrorBanner message={loadError} onRetry={() => setRetryKey((n) => n + 1)} testId="review-load-error" />
           </div>
         ) : verifiedReviews.length > 0 ? verifiedReviews.map((review: any) => (
           <div key={review.id} className='card p-4 mb-3 border-l-4 border-emerald-500'>
-            <div className='flex justify-between'><span className='font-medium'>{review.customer_name}</span><span>{'\\u2B50'.repeat(Math.round(review.rating))}</span></div>
+            {/* R89: การ์ดรีวิว = โลโก้ Bite Me Baby + ดาวจริง (เดิมหนีเป็นข้อความ \\u2B50 — แก้เป็น ⭐) */}
+            <div className='flex items-center justify-between gap-2 flex-wrap'>
+              <span className='flex items-center gap-2 font-medium'>
+                <img src='/Logo_Sticker_Circle.webp' alt='Bite Me Baby' width={28} height={28} loading='lazy' className='rounded-full object-cover' data-testid='review-brand-logo' />
+                {review.customer_name}
+              </span>
+              <span aria-label={`${review.rating} ดาว`} data-testid='review-card-stars'>{'⭐'.repeat(Math.round(review.rating))}</span>
+            </div>
             <p className='mt-2 text-sm'>{review.comment}</p>
             {/* R88 (Owner: "แอดมิน...ตอบได้") — คำตอบจากร้านแสดงใต้รีวิว */}
             {review.reply && (
@@ -204,20 +214,14 @@ export function ReviewPage() {
               </div>
             )}
             {review.order_number && <Link to='/orders' className='text-xs text-brand-primary mt-2 block'>Order #{review.order_number.slice(0,8)}</Link>}
-            <span className='text-xs text-emerald-600 mt-1 block'>Verified Purchase {'\u2713'}</span>
+            <span className='text-xs text-emerald-600 mt-1 block'>Verified Purchase ✓</span>
           </div>)) : productId ? <div className='card bg-gray-50 text-center py-8'><p className='text-brand-muted'>No reviews yet.</p></div>
         : <div className='card bg-gray-50 text-center py-8'><p className='text-brand-muted'>No reviews yet. Waiting for real customer reviews.</p></div>}
+        {/* R88/D8 marker คงไว้ (live check): รูปจริง 32 ใบ = เซคชัน Admin Portfolio ด้านล่าง */}
+        <p className='text-sm text-brand-muted mt-3'>รีวิวและรูปจริงจากลูกค้าที่สั่งผ่านระบบ · <b>รูปจริง 32 ใบดูได้ที่เซคชัน Admin Portfolio ด้านล่าง</b></p>
       </section>
-      <section className='mb-10'>
-        {/* R50: ยุบเซ็กชั่นรีวิวของหน้าแรก + หน้านี้เป็นหัวข้อเดียวตามคำสั่ง Owner + อัลบั้มรูปจริง */}
-        <h2 className='text-xl font-display font-bold text-brand-accent flex items-center gap-2 mb-2'>📸 รีวิวจริงจากลูกค้า
-            <MascotBadge pose="eating" size="sm" alt="น้อง Bite รูปรีวิวจากลูกค้า" className="section-float-mascot" />
-        </h2>
-        <p className='text-sm text-brand-muted mb-3'>รีวิวและรูปจริงจากลูกค้าที่สั่งผ่านระบบ</p>
-        {/* R88/D8 (Owner 2026-11-08 ~21:30 น.: "รูปมีจริงแต่อยู่ผิดที่ → ต้องไปอยู่เซคชัน Admin Portfolio"):
-            อัลบั้มรูปจริง 32 ใบ (public/assets/reviews/small) ถูก "ย้าย" ลงไปเซคชัน Admin Portfolio ด้านล่าง */}
-        <p className='text-sm text-brand-muted'>ข้อความรีวิวจริงแสดงที่หน้าแรกหัวข้อ 📸 รีวิวจริงจากลูกค้า และรายการverified ด้านบน · <b>รูปจริง 32 ใบดูได้ที่เซคชัน Admin Portfolio ด้านล่าง</b></p>
-      </section>
+      {/* R89: เซคชันซ้ำ ("รีวิวจากลูกค้าที่สั่งซื้อจริง" + "📸 รีวิวจริงจากลูกค้า") ถูกยุบเข้าหัวข้อเดียว
+          "📸 รีวิวจริงจากลูกค้า" ด้านบนแล้ว (Owner: "มันคือหมวดเดียวกัน") — รูปจริงอยู่ใน Admin Portfolio ด้านล่าง */}
       <section className='mb-10'>
         <h2 className='text-xl font-display font-bold text-brand-accent flex items-center gap-2 mb-3'>Admin Portfolio
             <MascotBadge pose="award" size="sm" alt="น้อง Bite ผลงาน" className="section-float-mascot" />

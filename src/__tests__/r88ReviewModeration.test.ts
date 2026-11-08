@@ -123,6 +123,21 @@ describe('R88-⑤b D9: reviews.id = text NOT NULL ไม่มี default → su
   })
 })
 
+describe('R89 (Owner 2026-11-08 ~23:40 น.): ยุบ 2 เซคชันเป็นหัวข้อเดียว + การ์ดมีโลโก้/ดาว', () => {
+  it('"Verified Customer Reviews" + "📸 รีวิวจริงจากลูกค้า" = หัวข้อเดียว · การ์ดมีโลโก้ Bite Me Baby + ดาวจริง · ฟอร์มดาวเดิมคงไว้ · feed ใหม่สุดก่อน', () => {
+    expect(reviewPageSrc).toContain('📸 รีวิวจริงจากลูกค้า')
+    expect(reviewPageSrc).not.toContain('Verified Customer Reviews') // ยุบหัวข้อซ้ำแล้ว (Owner: "หมวดเดียวกัน")
+    expect(reviewPageSrc).toContain("data-testid='review-brand-logo'")
+    expect(reviewPageSrc).toContain('/Logo_Sticker_Circle.webp')
+    expect(reviewPageSrc).toContain("'⭐'.repeat(") // ดาวจริงใน JSX
+    expect(reviewPageSrc).not.toContain('u2B50') // ห้ามหนีดาวแบบเก่าค้างเป็นข้อความ (ภาพ retest 23:37)
+    expect(reviewPageSrc).toContain("data-testid='review-star-picker'") // ดาวในฟอร์ม = มีแล้ว ไม่สร้างใหม่
+    expect(reviewApiSrc).toContain("order('created_at', { ascending: false })") // ใหม่สุดขึ้นก่อน
+    expect(reviewPageSrc).toContain('รูปจริง 32 ใบดูได้ที่เซคชัน Admin Portfolio') // marker D8/live-check คงไว้
+    expect(reviewPageSrc.indexOf('>Admin Portfolio')).toBeGreaterThan(-1)
+  })
+})
+
 describe('R88-⑥ D6f: หน้าแอดมิน /admin/reviews = คิวอนุมัติ (อนุมัติ/ปัดตก/ตอบ/ลบ)', () => {
   it('route + nav มี /admin/reviews (ทั้งคู่ — menu ชี้ path ที่มีจริง)', () => {
     expect(appSrc).toContain('path="/admin/reviews"')
