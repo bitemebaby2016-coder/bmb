@@ -77,8 +77,8 @@
 | R82/R82g (หน้าต่างรอบ/lead 2 ชม./roundLines/แจ้งเตือน 2 ทาง) | ✅ โค้ด+gates+deploy 4 fn แล้ว (08 พ.ย. 04:41Z) — **เหลือ retest live = RT-1** |
 | ลบออเดอร์ทดสอบ 4 ใบ | ฝั่ง AI **ข้ามตามคำสั่ง Owner** → **Owner กดยกเลิกเองที่ `/admin/orders`** (ดูงานบ้าน) |
 
-> **งานบ้าน — ออเดอร์ทดสอบ 4 ใบ: แก้ที่ตัวแผงแล้ว (R83) + ปิดสถานะชำระจริงด้วย `void` (R84):** `BMB-20261108-484` (Social ฿166) + `BMB-20261108-850/613/767` (R74 Test ฿87)
-> สถานะ = `cancelled` (payment_status ยังค้าง `pending` = pill ⏳ pending โกหก) → **R83 (`d305dc7`): แผงกรองออเดอร์ `status='cancelled'` ออกจากแผงตรวจสลิป** · **R84 (`5573d2b`): เพิ่มค่า `payment_status='void'` (mig 194) + `cancel_order` ปิดเป็น void อัตโนมัติ + backfill 4 ใบ (mig 195) + badge/label ทุกหน้าแสดง `🚫 void (ยกเลิก ไม่เก็บเงิน)`** — **⚠️ ต้อง Owner รัน SQL เองใน Supabase SQL Editor: `194_payment_status_void_enum.sql` → `195_close_payment_on_cancel.sql` (คนละครั้ง)** → **retest: hard reload → 4 ใบต้องโชว์ void ไม่ใช่ pending · แผงไม่มี 4 ใบ · ไม่มี toast error**
+> **งานบ้าน — ออเดอร์ทดสอบ 4 ใบ: ปิดครบทุกชั้นแล้ว (R83 แผง + R84 โค้ด + R85 APPLIED ลง PROD):** `BMB-20261108-484` (Social ฿166) + `BMB-20261108-850/613/767` (R74 Test ฿87)
+> เดิม = `cancelled` แต่ payment_status ค้าง `pending` (pill ⏳ pending โกหก) → **R83 (`d305dc7`): แผงกรอง `status='cancelled'`** · **R84 (`5573d2b`): โค้ด `void` + badge/label ทุกหน้า** · **R85 (2026-11-08 · Owner อนุมัติ): migration 194+195 ถูก apply ลง production แล้ว ผ่าน Management API (PAT `.env.local`) — verify จริง: enum มี `void` · 4 ใบ = `payment_status 'void'` ทั้งหมด · stale = 0 · `cancel_order` มี void-close (หลักฐาน `e2e/_r85_apply.log`)** → **เหลือ retest อย่างเดียว: hard reload → 4 ใบต้องโชว์ `🚫 void (ยกเลิก ไม่เก็บเงิน)` ไม่ใช่ `⏳ pending` · แผงไม่มี 4 ใบ · ไม่มี toast error**
 
 ---
 
