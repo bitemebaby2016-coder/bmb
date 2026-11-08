@@ -101,6 +101,13 @@ describe('3B-2A · payment state display', () => {
     expect(paymentStateBadge('failed').cls).toBe('badge-danger')
     expect(paymentStateBadge('paid').cls).toBe('badge-success')
   })
+  it('R84: void (ยกเลิก ไม่เก็บเงิน) — ต้องแยกจาก pending ชัดเจน (ห้ามโชว์ ⏳ pending บนออเดอร์ cancel)', () => {
+    const b = paymentStateBadge('void')
+    expect(b.label).toContain('void')
+    expect(b.label).toContain('ยกเลิก')
+    expect(b.cls).not.toBe('badge-warning') // pending = badge-warning → void ห้ามเหมือนกัน
+    expect(paymentStateBadge('void').label).not.toContain('pending')
+  })
   it('missing/unknown payment status does not crash the card', () => {
     expect(paymentStateBadge(null).label).toContain('no payment')
     expect(paymentStateBadge('weird').label).toBe('weird')

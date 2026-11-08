@@ -523,7 +523,7 @@ export function DeliveryManagement() {
                       <span className={'badge ' + ab.cls}>{ab.label}</span>
                       {a?.driver_id ? <span className="badge badge-info">👤 {driverName(a.driver_id)}</span> : null}
                       {o.order_mode ? <span className="badge badge-primary">{o.order_mode}</span> : null}
-                      {o.payment_status ? <span className={'badge ' + (o.payment_status === 'paid' ? 'badge-success' : 'badge-warning')}>{o.payment_status}</span> : null}
+                      {o.payment_status ? <span className={'badge ' + (o.payment_status === 'paid' ? 'badge-success' : o.payment_status === 'void' ? 'badge-primary' : 'badge-warning')}>{o.payment_status === 'void' ? 'ยกเลิก (ไม่เก็บเงิน)' : o.payment_status}</span> : null}
                     </div>
                     <span className="text-xs text-brand-muted flex items-center gap-1">
                       {o.customer_ref && photoByUser[o.customer_ref] ? (

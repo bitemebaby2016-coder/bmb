@@ -21,7 +21,7 @@ import { showToast } from '@/components/ui/ToastContainer'
 
 const SECTION_ORDER: PaymentExceptionKind[] = [
   'WEBHOOK_MISMATCH', 'MISSING_INTENT', 'STALE_UNPAID', 'PENDING_UNPAID', 'PROCESSING',
-  'INTENT_FAILED', 'PARTIAL_REFUND', 'REFUNDED', 'OK_COD_AWAITED', 'OK_PAID',
+  'INTENT_FAILED', 'PARTIAL_REFUND', 'REFUNDED', 'OK_COD_AWAITED', 'OK_VOID', 'OK_PAID',
 ]
 const SECTION_TITLE: Record<PaymentExceptionKind, string> = {
   WEBHOOK_MISMATCH: '⚠ Webhook mismatch (ต้องตรวจ)',
@@ -33,6 +33,9 @@ const SECTION_TITLE: Record<PaymentExceptionKind, string> = {
   PARTIAL_REFUND: '↩️ Partial Refund',
   REFUNDED: '↩️ Refund',
   OK_COD_AWAITED: '💵 COD (รอเก็บตอนส่ง — ปกติ)',
+  // R84 (2026-11-08): ยกเลิกแล้วไม่เก็บเงิน — ปกติจะไม่เข้าหน้านี้ด้วย
+  // (getPaymentExceptionOrders กรอง pending/refund/partially_refunded) แต่ต้องครบตาม type
+  OK_VOID: '🚫 Void (ยกเลิก ไม่เก็บเงิน)',
   OK_PAID: '✅ Paid (อ้างอิง)',
 }
 

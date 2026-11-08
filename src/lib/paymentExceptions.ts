@@ -9,6 +9,7 @@
 //     key, ledger in payment_intents.metadata.refunded_total_minor)
 // Canonical vocabulary (REAL schema — migration 001 CHECK + prod data):
 //   orders.payment_status  ∈ pending | paid | refund | partially_refunded
+//                          | void (mig 194 — ยกเลิกแล้ว ไม่เก็บเงิน · mig 195 ตั้งตอน cancel)
 //   orders.payment_method  ∈ promptpay_qr | credit_card | cash_on_delivery
 //   payment_intents.status ∈ pending | processing | completed | failed
 //                          | refunded | partially_refunded
@@ -30,6 +31,7 @@ export const STALE_UNPAID_HOURS = 24
 export type PaymentExceptionKind =
   | 'OK_PAID'
   | 'OK_COD_AWAITED'
+  | 'OK_VOID'
   | 'PENDING_UNPAID'
   | 'STALE_UNPAID'
   | 'PROCESSING'
@@ -42,6 +44,8 @@ export type PaymentExceptionKind =
 export const PAYMENT_EXCEPTION_META: Record<PaymentExceptionKind, { label: string; cls: string; attention: boolean }> = {
   OK_PAID: { label: '✅ paid', cls: 'badge-success', attention: false },
   OK_COD_AWAITED: { label: '💵 COD — รอเก็บเงินตอนส่ง', cls: 'badge-info', attention: false },
+  // R84 (Owner 2026-11-08): ยกเลิกแล้วไม่เก็บเงิน = ปิดแล้ว ไม่ต้องสนใจ (attention:false)
+  OK_VOID: { label: '🚫 void — ยกเลิก ไม่เก็บเงิน', cls: 'badge-primary', attention: false },
   PENDING_UNPAID: { label: '⏳ pending — รอชำระ', cls: 'badge-warning', attention: true },
   STALE_UNPAID: { label: '⚠ ค้างชำระ >24ชม.', cls: 'badge-danger', attention: true },
   PROCESSING: { label: '🔄 processing', cls: 'badge-info', attention: true },
@@ -84,6 +88,9 @@ export function classifyPaymentException(
   if (ps === 'refund') return meta('REFUNDED')
   if (ps === 'partially_refunded') return meta('PARTIAL_REFUND')
   if (ps === 'paid') return meta('OK_PAID')
+  // R84 (Owner 2026-11-08): void = ยกเลิกแล้วปิดชำระ — ต้องแยกก่อนเข้าบล็อก
+  // 'pending' ด้านล่าง มิฉะนั้นจะโดนจัดเป็น MISSING_INTENT/STALE_UNPAID (attention)
+  if (ps === 'void') return meta('OK_VOID')
   // ps === 'pending' (canonical remaining state)
   if (latest?.status === 'completed') return meta('WEBHOOK_MISMATCH') // intent สำเร็จ แต่ order ยัง pending → inconsistency
   if (latest?.status === 'processing') return meta('PROCESSING')
@@ -161,6 +168,11 @@ export interface PaymentConfirmability {
 }
 
 export function paymentConfirmability(o: OrderForm, intents: PaymentIntentLite[]): PaymentConfirmability {
+  // R84 (Owner 2026-11-08): ยกเลิกแล้ว/ปิดชำระแล้ว = ไม่มีทางยืนยันได้อีก — บอกชัด
+  // (server: 162 guard ปฏิเสธออเดอร์ปิดด้วย ERR_ORDER_CLOSED อยู่แล้ว)
+  if (o.status === 'cancelled' || o.payment_status === 'void') {
+    return { confirmable: false, reason: 'ออเดอร์ยกเลิกแล้ว — ปิดการชำระเงินเป็น void (ไม่มีเงินเข้า) ไม่ต้องยืนยัน' }
+  }
   const method = (o.payment_method || '').trim()
   if (o.payment_status === 'paid') {
     return { confirmable: false, reason: 'ชำระเงินแล้ว — ไม่ต้องยืนยันซ้ำ' }

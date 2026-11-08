@@ -26,6 +26,8 @@ const PAYMENT_LABEL: Record<string, string> = {
   failed: 'ชำระไม่สำเร็จ',
   refund: 'คืนเงินแล้ว',
   partially_refunded: 'คืนเงินบางส่วน',
+  // R84 (2026-11-08): ยกเลิกแล้วไม่เก็บเงิน — ห้ามโชว์เป็น "รอชำระ"
+  void: 'ยกเลิก (ไม่เก็บเงิน)',
 }
 
 export function OrdersPage() {

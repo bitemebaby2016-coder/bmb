@@ -75,7 +75,10 @@ export function orderModeBadge(mode?: string | null, scheduledDate?: string | nu
 // ---------------------------------------------------------------------------
 // 3. Payment states — display of the canonical payment vocabulary
 // ---------------------------------------------------------------------------
-export const PAYMENT_STATES = ['pending', 'processing', 'paid', 'failed', 'partially_refunded', 'refunded'] as const
+// R84 (Owner 2026-11-08 · RT-3.4 follow-up D1): 'void' = ยกเลิกแล้ว ไม่เก็บเงิน
+// (ค่าจริงเพิ่มผ่าน migration 194 · cancel_order ตั้งให้ใน 195 — แทนที่ pending
+// ที่ค้างโกหกบนออเดอร์ cancel แล้ว)
+export const PAYMENT_STATES = ['pending', 'processing', 'paid', 'failed', 'partially_refunded', 'refunded', 'void'] as const
 
 export const PAYMENT_STATE_BADGES: Record<string, { label: string; cls: string }> = {
   pending: { label: '⏳ pending', cls: 'badge-warning' },
@@ -84,6 +87,7 @@ export const PAYMENT_STATE_BADGES: Record<string, { label: string; cls: string }
   failed: { label: '❌ failed', cls: 'badge-danger' },
   partially_refunded: { label: '↩️ partially_refunded', cls: 'badge-warning' },
   refunded: { label: '↩️ refunded', cls: 'badge-danger' },
+  void: { label: '🚫 void (ยกเลิก ไม่เก็บเงิน)', cls: 'badge-primary' },
 }
 
 export function paymentStateBadge(paymentStatus?: string | null): { label: string; cls: string } {

@@ -265,7 +265,7 @@ export function OrderTrackPage() {
           <span className="badge badge-info">{mode === 'PRE_ORDER' ? '📅 จองล่วงหน้า' : '🔥 วันนี้'}</span>
           {order.scheduled_date ? <span className="badge">{isPickup ? 'วันที่รับ' : 'วันที่จัดส่ง'}: {order.scheduled_date}</span> : null}
           <span className="badge">รอบ: {String(order.delivery_round_id)}</span>
-          <span className="badge">ชำระเงิน: {order.payment_status}</span>
+          <span className="badge">ชำระเงิน: {order.payment_status === 'void' ? 'void — ยกเลิก (ไม่เก็บเงิน)' : order.payment_status}</span>
           {order.delivery_method === 'pickup' ? <span className="badge badge-warning">🛍️ รับที่ร้าน</span> : null}
         </div>
 

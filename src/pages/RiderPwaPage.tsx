@@ -636,7 +636,7 @@ export function RiderPwaPage() {
               </div>
               <p className="text-sm text-slate-600 mb-2">
                 สถานะ: {STATUS_LABEL[activeOrder.assignment_status] ?? activeOrder.assignment_status}
-                {' · '}ชำระ: {activeOrder.payment_status === 'paid' ? '✅ แล้ว' : `⏳ ${activeOrder.payment_status}`}
+                {' · '}ชำระ: {activeOrder.payment_status === 'paid' ? '✅ แล้ว' : activeOrder.payment_status === 'void' ? '🚫 ยกเลิก (ไม่เก็บเงิน)' : `⏳ ${activeOrder.payment_status}`}
               </p>
               <ul className="text-sm text-slate-700 mb-2">
                 {activeOrder.items.map((it) => (

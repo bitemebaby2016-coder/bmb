@@ -102,6 +102,19 @@ describe('3B-2E · classifyPaymentException — Owner §12 matrix (canonical sta
     const r = classifyPaymentException(order({ order_number: 'P11', payment_method: 'cash_on_delivery', created_at: stale }), [], NOW)
     expect(r.kind).toBe('OK_COD_AWAITED')
   })
+  it('R84: payment_status=void (ยกเลิกแล้วไม่เก็บเงิน) → OK_VOID ไม่ต้องสนใจ ห้ามตกบล็อก pending', () => {
+    const noIntent = classifyPaymentException(order({ order_number: 'P12', payment_status: 'void' }), [], NOW)
+    expect(noIntent.kind).toBe('OK_VOID')
+    expect(noIntent.attention).toBe(false)
+    // void + intent processing ค้าง — ก็ยัง OK_VOID (ปิดแล้ว ไม่ใช่งานที่ต้องทำ)
+    const withIntent = classifyPaymentException(
+      order({ order_number: 'P13', payment_status: 'void', payment_method: 'promptpay_qr' }),
+      [intent({ order_number: 'P13', status: 'processing' })],
+      NOW,
+    )
+    expect(withIntent.kind).toBe('OK_VOID')
+    expect(withIntent.attention).toBe(false)
+  })
   it('groupPaymentExceptions buckets by kind', () => {
     const rows = [
       { order: order({ order_number: 'G1', payment_status: 'paid' }), kind: 'OK_PAID' as const },
@@ -204,6 +217,17 @@ describe('R1.2 · paymentConfirmability — mirror เงื่อนไข conf
     const r = paymentConfirmability(order({ order_number: 'C7', payment_method: 'credit_card' }), [])
     expect(r.confirmable).toBe(false)
     expect(r.reason).toContain('webhook')
+  })
+  it('R84: cancelled หรือ payment_status=void = ยืนยันไม่ได้เสมอ (แม้มี intent processing ก็ตาม)', () => {
+    const cancelled = paymentConfirmability(
+      order({ order_number: 'C8', status: 'cancelled', payment_method: 'promptpay_qr' }),
+      [intent({ order_number: 'C8', method: 'promptpay_qr', status: 'processing' })],
+    )
+    expect(cancelled.confirmable).toBe(false)
+    expect(cancelled.reason).toContain('ยกเลิกแล้ว')
+    const voided = paymentConfirmability(order({ order_number: 'C9', payment_status: 'void' }), [])
+    expect(voided.confirmable).toBe(false)
+    expect(voided.reason).toContain('void')
   })
 })
 
