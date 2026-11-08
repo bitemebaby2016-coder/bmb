@@ -214,19 +214,9 @@ export function ReviewPage() {
             <MascotBadge pose="eating" size="sm" alt="น้อง Bite รูปรีวิวจากลูกค้า" className="section-float-mascot" />
         </h2>
         <p className='text-sm text-brand-muted mb-3'>รีวิวและรูปจริงจากลูกค้าที่สั่งผ่านระบบ</p>
-        {/* R88/D6c (Owner 2026-11-08: "ใช้รูปจริงในโปรเจกต์ + Owner อัปโหลด/ลบเองภายหลัง"):
-            อัลบั้มรูปจริง = ไฟล์จริงในโปรเจกต์ public/assets/reviews/small 32 ใบ (รูปลูกค้าจริง)
-            — เดิมกรอง reviews.photo_url ซึ่ง "คอลัมน์ไม่มีจริง" ใน schema → ว่างถาวร */}
-        {REAL_REVIEW_PHOTOS.length > 0 && (
-          <div className='grid grid-cols-3 gap-3 mb-4' data-testid='review-photo-album'>
-            {REAL_REVIEW_PHOTOS.map((photo) => (
-              <a key={photo.src} href={photo.src} target='_blank' rel='noreferrer' className='aspect-square rounded-lg overflow-hidden bg-gray-100'>
-                <img src={photo.src} alt={photo.alt} loading='lazy' className='w-full h-full object-cover' />
-              </a>
-            ))}
-          </div>
-        )}
-        <p className='text-sm text-brand-muted'>ข้อความรีวิวจริงแสดงที่หน้าแรกหัวข้อ 📸 รีวิวจริงจากลูกค้า และรายการverified ด้านบน</p>
+        {/* R88/D8 (Owner 2026-11-08 ~21:30 น.: "รูปมีจริงแต่อยู่ผิดที่ → ต้องไปอยู่เซคชัน Admin Portfolio"):
+            อัลบั้มรูปจริง 32 ใบ (public/assets/reviews/small) ถูก "ย้าย" ลงไปเซคชัน Admin Portfolio ด้านล่าง */}
+        <p className='text-sm text-brand-muted'>ข้อความรีวิวจริงแสดงที่หน้าแรกหัวข้อ 📸 รีวิวจริงจากลูกค้า และรายการverified ด้านบน · <b>รูปจริง 32 ใบดูได้ที่เซคชัน Admin Portfolio ด้านล่าง</b></p>
       </section>
       <section className='mb-10'>
         <h2 className='text-xl font-display font-bold text-brand-accent flex items-center gap-2 mb-3'>Admin Portfolio
@@ -241,8 +231,15 @@ export function ReviewPage() {
             ))}
           </div>
         ) : (
-          // R88/D6c: ตารางจริง (admin_portfolio_items) = 0 แถว — รอ Owner อัปโหลดเองผ่านแอดมิน (M094)
-          <div className='card bg-gray-50 text-center py-8'><p className='text-brand-muted'>ยังไม่มีผลงานในอัลบั้ม — เพิ่มรูปได้ที่หน้าแอดมิน (เมนู &quot;ผลงาน&quot;) แล้วรูปจะขึ้นที่นี่ทันที</p></div>
+          // R88/D8 (Owner ~21:30: "ต้องไปอยู่เซคชัน Admin Portfolio") — รูปจริง 32 ใบ
+          // จาก public/assets/reviews/small แสดงที่นี่เมื่อยังไม่มีรูปอัปโหลดเองผ่านแอดมิน (M094)
+          <div className='grid grid-cols-3 gap-3 mb-4' data-testid='review-photo-album'>
+            {REAL_REVIEW_PHOTOS.map((photo) => (
+              <a key={photo.src} href={photo.src} target='_blank' rel='noreferrer' className='aspect-square rounded-lg overflow-hidden bg-gray-100'>
+                <img src={photo.src} alt={photo.alt} loading='lazy' className='w-full h-full object-cover' />
+              </a>
+            ))}
+          </div>
         )}
       </section>
     </div>

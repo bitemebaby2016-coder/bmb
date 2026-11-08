@@ -55,7 +55,17 @@ export async function getVerifiedReviewsForProducts(productIds: string[], limit 
 }
 
 export async function submitVerifiedReview(params: { order_number: string; product_id: string; rating: number; comment: string; branch_id?: string }): Promise<{ success: boolean; reviewId?: string; error?: string }> {
-  const { data, error } = await supabase.rpc('submit_verified_review', params)
+  // D7 fix (R88 · 2026-11-08 ~21:30 — PGRST202 "Could not find the function ... (comment, order_number, ...)"):
+  // PostgREST จับคู่ RPC ตาม "ชื่อ parameter จริงใน DB" = p_ prefix (probe6: signature จริง =
+  // p_order_number, p_product_id, p_rating, p_comment, p_branch_id DEFAULT NULL) — เดิมส่งชื่อเปล่า
+  // → resolve ไม่เจอ → ต้องแมปชื่อก่อนยิง
+  const { data, error } = await supabase.rpc('submit_verified_review', {
+    p_order_number: params.order_number,
+    p_product_id: params.product_id,
+    p_rating: params.rating,
+    p_comment: params.comment,
+    ...(params.branch_id ? { p_branch_id: params.branch_id } : {}), // DEFAULT NULL = ไม่ส่งก็ได้
+  })
   if (error) return { success: false, error: error.message }
   return { success: true, reviewId: data?.review_id }
 }

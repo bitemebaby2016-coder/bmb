@@ -55,13 +55,29 @@ describe('R88-② D6b/f: หลังส่ง = คิวรออนุมั�
   })
 })
 
-describe('R88-③ D6c: อัลบั้มรูป = รูปจริงในโปรเจกต์ (ไม่ใช่คอลัมน์ที่ไม่มีจริง)', () => {
-  it('ใช้ REAL_REVIEW_PHOTOS + เก็บ testid เดิม (uiTechnicalLabels) — เลิกกรอง reviews.photo_url', () => {
+describe('R88-⑨ D7: submit ต้องยิงด้วยชื่อ parameter จริงใน DB (p_ prefix) — fix PGRST202', () => {
+  it('reviewApi แมป payload เป็น p_order_number/p_product_id/p_rating/p_comment (probe6: signature จริง 5 args + p_branch_id DEFAULT NULL)', () => {
+    expect(reviewApiSrc).toContain('p_order_number:')
+    expect(reviewApiSrc).toContain('p_product_id:')
+    expect(reviewApiSrc).toContain('p_rating:')
+    expect(reviewApiSrc).toContain('p_comment:')
+    expect(reviewApiSrc).toContain('p_branch_id:')
+    // ห้ามส่ง object ชื่อเปล่าเข้า rpc อีก (ต้นตอ PGRST202 รอบค่ำ 21:25 น.)
+    expect(reviewApiSrc).not.toMatch(/rpc\('submit_verified_review',\s*params\)/)
+  })
+})
+
+describe('R88-③ D6c/D8: รูปจริง 32 ใบ = ต้องอยู่ในเซคชัน Admin Portfolio (Owner 2026-11-08 ~21:30)', () => {
+  it('อัลบั้ม (testid เดิม) อยู่ "หลัง" หัวข้อ >Admin Portfolio — ย้ายออกจากเซคชันรีวิว + ยังใช้ไฟล์จริงไม่ใช่ photo_url', () => {
     expect(reviewPageSrc).toContain("import { REAL_REVIEW_PHOTOS } from '@/lib/realReviews'")
-    expect(reviewPageSrc).toContain("data-testid='review-photo-album'")
     expect(reviewPageSrc).not.toContain('rv.photo_url')
-    expect(reviewPageSrc).toContain('ยังไม่มีผลงานในอัลบั้ม')
     expect(reviewPageSrc).toContain('📸 รีวิวจริงจากลูกค้า')
+    expect(reviewPageSrc).not.toContain('ยังไม่มีผลงานในอัลบั้ม') // empty state ถูกแทนด้วยรูปจริงแล้ว
+    const headingIdx = reviewPageSrc.indexOf('>Admin Portfolio')
+    const albumIdx = reviewPageSrc.indexOf("data-testid='review-photo-album'")
+    expect(headingIdx).toBeGreaterThan(-1)
+    expect(albumIdx).toBeGreaterThan(-1)
+    expect(albumIdx).toBeGreaterThan(headingIdx) // D8: อัลบั้มอยู่ในเซคชัน Admin Portfolio
   })
 })
 

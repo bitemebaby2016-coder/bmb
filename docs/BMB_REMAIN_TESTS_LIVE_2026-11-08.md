@@ -52,7 +52,7 @@
 | CAP-11 POD กล้องมือถือ | ✅ **PASS (Owner อนุมัติปิดงาน 2026-11-08 ค่ำ)** | "ผ่านแล้ว อนุมัติปิดงาน" → ปิดข้อ |
 | CAP-14 SMS · CAP 7·8·13·16·17·19 | ⏳ ยังไม่รัน | รอบค่ำไม่มีคำยืนยันเลขข้อ → คงรอ Owner ยืนยัน (§2 MASTER_STATUS) |
 | **OMNI-5 (Meta Test User ทักเพจจริง)** | ✅ **PASS (ปลด BLOCKED แล้ว)** | "บน live ผ่านแล้ว" · follow-up: **ตรวจสอบรายการใหม่ให้ตรงจริง** (เฝ้าดูคำตอบ/เมนูใหม่ที่ AI แจ้ง) |
-| RT-8 เกณฑ์ปิดงาน 6 ข้อ | ❌ **ยังไม่ครบ — ห้ามปิด** | FAIL ค้าง: D2 (SAME_DAY) · D4 · D5 · §T-A · **D7** · **D8** · D6 ยังไม่ปิด · ยังไม่รัน: RT-4 · RT-HOURS · RT-6.1 (ยกเว้น E1 waived) · RT-6.2 · RT-6.3 · RT-6.4B2 · CAP-14+7/8/13/16/17/19 → **ห้ามพูดว่าปิดครบทุกลูป** |
+| RT-8 เกณฑ์ปิดงาน 6 ข้อ | ❌ **ยังไม่ครบ — ห้ามปิด** | FAIL ค้าง: D2 (SAME_DAY) · D4 · D5 · §T-A · D7/D8 = 🔧 แก้แล้ว **รอรีเทสต์ ⑦⑨⑩** · ยังไม่รัน: RT-4 · RT-HOURS · RT-6.1 (ยกเว้น E1 waived) · RT-6.2 · RT-6.3 · RT-6.4B2 · CAP-14+7/8/13/16/17/19 → **ห้ามพูดว่าปิดครบทุกลูป** |
 
 ### Defect ใหม่รอบนี้ (detail ใน `AI_WORK_STATE.md` · two-try แชทหน้า)
 
@@ -64,8 +64,8 @@
 | **D4** | RT-5.4 | 🔴 **open — รอบค่ำ: ยัง FAIL** ทั้ง DM และคอมเมนต์ยังเปิด in-app (บราวเซอร์แมสเซนเจอร์/เฟซ ≠ Chrome/Safari ภายนอก · ภาพ 20:56–21:14 น.) → next try: target/deep-link (อ้าง R57) |
 | **D5** | RT-3.6 (คำขอ) | 🔴 **open — รอบค่ำ: ยัง FAIL** ("ผิด" ตาม Owner) — โพสต์ต้องลงรายละเอียด: พรีออเดอร์ = วันไหน/รอบไหน · เซมเดย์ = ส่งได้ตลอดเวลาช่วงร้านเปิด |
 | **D6** | R87 retest ล้ม → R88 | 🔴 **open (ครึ่งทาง)** — R88 ทำแล้ว (m199 APPLIED + live 5/5 + gates 4/4) · **รอบค่ำ: ⑦ PASS (+สร้าง D8) · ⑧ บางส่วน (ทางเข้าผ่าน · เขียนรีวิวไม่ได้ = D7) · ⑨ FAIL = D7 · ⑩ ยังไม่รัน** → ปิดเมื่อ D7 แก้ + ⑨⑩ ผ่าน |
-| **D7 (ใหม่)** | R88-⑨ | 🔴 ส่งรีวิวล้มเหลว — toast แดง (ภาพ 21:25 น.): `Could not find the function public.submit_verified_review(comment, order_number, product_id, rating) in the schema cache` → **client ส่ง 4 args (ไม่มี `branch_id`)** แต่ `submit_verified_review` ใน DB = **5 args** → PostgREST resolve ไม่ได้ (PGRST202) → fix = probe `pg_proc.proargnames` แล้วจูน args ฝั่ง `reviewApi.submitVerifiedReview` ให้ตรง — **two-try ยังไม่เริ่ม** |
-| **D8 (ใหม่)** | R88-⑦ | 🔴 รูปจริง 32 ใบ (`public/assets/reviews/small`) **อยู่ผิดที่** — Owner: **ต้องไปอยู่เซคชัน "Admin Portfolio"** (ตอนนี้อยู่ที่อัลบั้มรีวิว · เซคชัน Admin Portfolio โชว์ empty state) → fix = แสดงรูปจริงในเซคชัน Admin Portfolio |
+| **D7 (ใหม่)** | R88-⑨ | 🔧 **แก้แล้ว (two-try #1 · ~21:45 น. · gates 4/4 = tsc 0 · lint 0 · vitest 2,281/2,281 · build 0)** — ต้นตอ (probe6): PostgREST จับคู่ RPC ตามชื่อ parameter จริง `p_*` — client เดิมส่ง `comment/order_number/product_id/rating` → `PGRST202 schema cache` → แก้ = `reviewApi.submitVerifiedReview` แมปเป็น `p_order_number/p_product_id/p_rating/p_comment` (+`p_branch_id` เมื่อมี · DEFAULT NULL ไม่บังคับ) — **เหลือ: Owner รีเทสต์ ⑨ แล้วต่อ ⑩** |
+| **D8 (ใหม่)** | R88-⑦ | 🔧 **แก้แล้ว (~21:45 น. · gates 4/4)** — ย้ายอัลบั้มรูปจริง 32 ใบ (`public/assets/reviews/small`) **เข้าเซคชัน Admin Portfolio** (testid `review-photo-album` ย้ายตาม · เซคชันรีวิวเหลือบรรทัดชี้ทาง) — **เหลือ: Owner รีเทสต์ ⑦** |
 | **D6** | R87 retest ล้ม (หน้ารีวิว 2026-11-08 ~18:00) | 🔴 *ดูสถานะปัจจุบัน = แถว D6 ใหม่ด้านบน (อัปเดตหลังรอบค่ำ)* |
 
 ---
