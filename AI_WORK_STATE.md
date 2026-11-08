@@ -1,3 +1,20 @@
+## 🔴 SESSION ACTIVE (2026-11-08 บ่าย · RT-INTAKE — "รับผล Owner รอบ RT-1..7 · บันทึก test pack + closure report")
+### WORK STATE (ตาม .clinerules)
+> - **Task ID:** RT-INTAKE 2026-11-08 บ่าย (บันทึกผลทดสอบ live จากผล Owner + ภาพแนบ)
+> - **Status:** **INTAKE DONE — ผลบันทึกลง `docs/BMB_REMAIN_TESTS_LIVE_2026-11-08.md` ครบแล้ว (ตารางผลรายข้อ + D1–D5)**
+>   **PASS 16 ข้อ:** RT-1.1/1.2/1.3 · RT-2.1 · RT-3.1/3.2/3.3/3.5/3.6/3.7 · RT-5.2 · §T-B(3) · §T-C(4) · §T-D(4) · §T-E(2) · CAP-10 · **OMNI-5 (ปลด BLOCKED → ผ่านบน live)**
+>   **FAIL 4 ข้อ → defect D1–D4 (ด้านล่าง)** · RT-5.1 = บางส่วน (ราคา/เมนูถูก · คำตอบรอบส่งผิด = D2) · **DEFERRED:** RT-1.4 (Owner: "ติดไว้ตอนปิดร้าน")
+>   **ยังไม่รัน (≠ PASS):** RT-4.1–4.7 · RT-5.5–5.7 · RT-6.1–6.4 · §T-A(6) · CAP-11/14 + CAP 7·8·13·16·17·19 → **RT-8 เกณฑ์ปิด = ยังไม่ครบ ห้ามปิดงาน**
+> - **Defect ใหม่ (two-try แชทหน้า · evidence = ผล Owner 13:25–13:28 น.):**
+>   **D1 (RT-3.4):** ออเดอร์ทดสอบ 4 ใบ `BMB-20261108-484/850/613/767` (cancel แล้ว) ยังค้างแผง "รายการชำระเงิน/สลิป (4)" · ไม่มีปุ่มล้าง · ปุ่มปฏิเสธสลิป = `ERR_ORDER_CLOSED: cannot reject payment on a closed order` — **verify โค้ดแล้ว:** guard มาจาก `supabase/migrations/162_admin_reject_payment.sql:25` (`RAISE EXCEPTION`) ผ่าน RPC `admin_reject_payment` (`bmbAdminApi_orders.ts:463`) → แก้ฝั่ง UI: กรองออเดอร์สถานะปิด/cancelled ออกจากแผง หรือเพิ่มปุ่ม "ล้างออกจากรายการ" · **ห้ามอ่อนแอ guard DB**
+>   **D2 (RT-5.1 · RT-5.4):** คำตอบแชท/โซเชียลเรื่องรอบส่งยังผิด — สั่ง SAME_DAY ไม่ต้อง/ห้ามบอกรอบส่ง ("ส่งได้ตลอดเวลาที่ร้านเปิด") · PRE_ORDER ห้ามอ้างรอบที่เลยไปแล้ว — **verify โค้ดแล้ว:** มี `_shared/orderWindow.ts` + `socialOrderIntake.ts:258` ("SAME_DAY คงเดิม m148: ไม่มีปิดรอบ") + tests `r82OrderWindow`(21 ข้อ)/`roundsSameDayNoCutoff` ผ่านหมด → คำตอบผิดทั้งที่โค้ดมีกติกา = เจาะ prompt/สาย intake ของแชต (DM) ว่าเข้าบล็อก ORDER WINDOW จริงไหม + ตรวจข้อความที่โมเดลตอบ
+>   **D3 (RT-5.3):** ยืนยันแล้วสร้างเลขจริง+ลิงก์จริง แต่ **จำนวนผิด** (สั่ง 2 ที่) → ตรวจ structured extraction `qty` ใน `socialOrderIntake.ts` + โน้ตออเดอร์ที่สร้าง
+>   **D4 (RT-5.4):** ลิงก์ชำระเงิน/ลิงก์ในแชท **ไม่เปิดบราวเซอร์ภายนอกจริง** (ยังเปิด in-app webview) → ตรวจ target/deep-link ของลิงก์ในข้อความ (อ้าง R57 Android→Chrome / iPhone→Safari)
+>   **D5 (คำขอ RT-3.6 · enhancement ไม่ใช่บั๊ก):** เวลาสร้างโพสต์ให้ลงรายละเอียดในโพสต์ด้วยว่าเป็น **พรีออเดอร์ของวันไหน/รอบส่งไหน** หรือเป็น **เซมเดย์ที่ส่งได้ตลอดเวลาช่วงร้านเปิด** (mirror กติกาเว็บ strip copy R53)
+> - **Blocked:** RT-1.4 = รอช่วงปิดร้าน (ก่อน 08:00 / หลัง 20:00) · งานบ้านออเดอร์ 4 ใบ = ติด D1 (Owner ลองกดเองแล้ว ไม่มีปุ่ม/โดน guard) · **ออเดอร์จาก RT-5.3 = ยังไม่มีใครยืนยันว่า cancel แล้ว** (เช็ก `/admin/orders` + DB ก่อนรอบถัดไป) · RT-8 ปิดไม่ได้จนกว่า D1–D4 แก้+verify และข้อค้างรันครบ
+> - **ทำแล้วรอบนี้:** อ่าน bootstrap ครบ (AI_ENTRYPOINT → UNIVERSAL_RULES §15 ใหม่ → WORK_STATE → MASTER_STATUS) · `git status -sb` = `main...origin/main` sync (ไฟล์แก้ = docs รอบนี้ · `UNIVERSAL_MASTER_AI_RULES.md` §15 = แก้ค้างก่อนหน้า ยังไม่ commit · untracked `.done`/backup = artifact ตั้งใจ ไม่แตะ) · verify โค้ด 3 จุดตาม D1/D2 ด้านบน · บันทึกผล test pack + closure report `docs/BMB_RT_CLOSURE_2026-11-08.md`
+> - **Next Exact Action:** ① แชทหน้า: รับ D1–D4 ทำ two-try (เรียงตาม D2 = คำตอบผิดหน้าลูกค้า → D3 → D4 → D1) ② Owner: รัน RT-1.4 ตอนปิดร้าน + คิวค้าง RT-4 · RT-5.5–5.7 · RT-6 · §T-A · CAP ที่เหลือ ③ งานบ้านออเดอร์ 4 ใบ = รอ D1 แก้ก่อน (ห้ามให้ Owner กดซ้ำ)
+
 ## ✅ SESSION CLOSED (2026-11-08 · R82/R82g — "A2 ผ่าน · ข้ามลบออเดอร์ · สร้างเอกสาร remain test ฉบับใหม่")
 ### WORK STATE (ตาม .clinerules)
 > - **Task ID:** R82/R82g (แจ้งเตือนถึงเครื่องลูกค้า + หน้าต่างรอบ/เลยคัทออฟทางโซเชียล) + session close
