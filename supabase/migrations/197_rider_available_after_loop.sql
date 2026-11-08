@@ -89,7 +89,10 @@ BEGIN
   IF v_order_status NOT IN ('cancelled', 'failed', 'delivered') THEN
     PERFORM set_config('app.delivery_sync_order', p_order_number, true);
     v_hop_from := v_order_status;
-    LOOP
+    -- (WHILE boundary = ห้ามหล่น — เทียบ m168: วนจนถึง v_target เท่านั้น · ถ้าไร้เงื่อนไข
+    --  เมื่อถึง 'delivered' จะวนต่อ -> NULL -> ERR_DELIVERY_SYNC_BLOCKED — คือบั๊ก R87
+    --  ที่ CI contract 163 จับได้ + prod เสียชั่วคราว ~40 นาทีจนถึง R87b fix)
+    WHILE v_hop_from <> v_target LOOP
       v_hop_to := CASE v_hop_from
                     WHEN 'ready_for_dispatch' THEN 'dispatched'
                     WHEN 'dispatched'         THEN 'in_transit'

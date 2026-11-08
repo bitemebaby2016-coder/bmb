@@ -36,6 +36,9 @@ describe('R87-② ไรเดอร์: ปิดลูปแล้วต้อ
     expect(riderMigSrc).toContain('backfill: คืน')
     expect(riderMigSrc).toContain("SET status = 'available', updated_at = NOW()")
   })
+  it('R87b regression: hop loop ต้องผูก bound `WHILE v_hop_from <> v_target` (ไร้ bound = วนถึง delivered แล้ว RAISE — บั๊กที่ CI contract 163 จับได้ + prod เสียชั่วคราว)', () => {
+    expect(riderMigSrc).toContain('WHILE v_hop_from <> v_target LOOP')
+  })
 })
 
 describe('R87-③ ระบบรีวิวทั้งเส้น = จริง ไม่มีม็อก/เพลสโฮลเดอร์/ฮาร์ดโค้ด', () => {
