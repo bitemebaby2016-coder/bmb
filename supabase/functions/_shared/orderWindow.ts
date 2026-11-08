@@ -201,18 +201,46 @@ export function assessProductWindows(
   for (const id of productIds) {
     const rows = scheduleRows.filter((r) => r.product_id === id)
     if (rows.length > 0) {
-      const todayPassed = isPreOrderDayPassed(today, todayRounds, { nowUtcMs: utcMs, today })
-      const next = pickNextScheduleDates(rows, today, { todayPassed })[id] || null
-      if (next) {
-        const dayRounds = rounds.filter((r) => String(r.scheduled_date || '').slice(0, 10) === next)
-        const cutoffs = dayRounds.map(roundPreOrderCutoffMs).filter((t): t is number => t !== null).sort((a, b) => b - a)
-        const cutoffLabel = cutoffs.length > 0 ? new Date(cutoffs[0] + 7 * 3_600_000).toISOString().slice(11, 16) : null
+      // R82g (Owner 2026-11-08 retest B8/B9): "อย่าใช้รอบส่งบอกลูกค้า — พรีออเดอร์สั่งได้จนคัทออฟ
+      //   (lead 2 ชม.) ของรอบที่ยังเปิดเท่านั้น · แอดมินปิดรอบ (เย็น=ปิด) = เมนูวันนั้นสั่งไม่ได้"
+      //   → scan วันจากแถวปฎิทินเอง (ascending ≥ วันนี้) · ต่อวัน:
+      //   - ไม่มีแถวรอบวันนั้น: วันอนาคต = bookable (ZERO-FAKE mirror R77) · วันนี้ = ข้าม (mirror isPreOrderDayPassed)
+      //   - ทุกรอบของวันไม่ผ่าน isRoundPreOrderOpen (ปิด/เต็ม/เลย cutoff/หมดหน้าต่าง) = ข้ามวันนี้ ไปวันถัดไป
+      //   - ป้าย "ปิดรับ" = max cutoff ใน "รอบที่ยังเปิด" เท่านั้น — ห้ามเอา 16:00 ของรอบเย็นปิดมาโชว์
+      const candDates = [...new Set(
+        rows
+          .map((r) => String(r.scheduled_date || '').slice(0, 10))
+          .filter((d) => /^\d{4}-\d{2}-\d{2}$/.test(d) && d >= today),
+      )].sort()
+      let chosen: { date: string; label: string | null } | null = null
+      for (const d of candDates) {
+        const dayRounds = rounds.filter((r) => String(r.scheduled_date || '').slice(0, 10) === d)
+        if (dayRounds.length === 0) {
+          if (d > today) { chosen = { date: d, label: null }; break } // ไม่มีข้อมูลรอบอนาคต = ห้ามบล็อก (ZERO-FAKE)
+          continue // วันนี้ไม่มีรอบ = ผ่าน (mirror isPreOrderDayPassed: [] = true)
+        }
+        const openRounds = dayRounds.filter((r) => isRoundPreOrderOpen(r, utcMs))
+        if (openRounds.length === 0) continue // รอบถูกแอดมินปิด/เลย cutoff ทั้งวัน = ยังไม่ใช่วันนี้
+        const cutoffs = openRounds
+          .map(roundPreOrderCutoffMs)
+          .filter((t): t is number => t !== null)
+          .sort((a, b) => b - a)
+        const label = cutoffs.length > 0
+          ? new Date(cutoffs[0] + 7 * 3_600_000).toISOString().slice(11, 16)
+          : null
+        chosen = { date: d, label }
+        break
+      }
+      if (chosen) {
         out.push({
           product_id: id,
           orderable: true,
           reason: 'pre_order_bookable',
-          nextDate: next,
-          detail: `พรีออเดอร์ได้สำหรับวัน ${next}` + (cutoffLabel ? ` (ปิดรับ ${cutoffLabel} น.)` : ''),
+          nextDate: chosen.date,
+          detail: `พรีออเดอร์ได้สำหรับวัน ${chosen.date}` +
+            (chosen.label
+              ? ` (ปิดรับ ${chosen.label} น. ของวันนั้น — คิดจากรอบที่ยังเปิดเท่านั้น · แอดมินปิดรอบ = รอบนั้นสั่งไม่ได้)`
+              : ' (ยังจองได้ — ดูเวลาปิดรับของรอบที่เลือกที่หน้าร้าน)'),
         })
         continue
       }
@@ -267,7 +295,11 @@ export function buildOrderWindowPrompt(
     '- RULE (Owner 2026-11-08): เมื่อลูกค้าถามเมนูพรีออเดอร์ที่เลยรอบไปแล้ว → ตอบตามจริงว่า "ปิดรับแล้ว" ' +
     '(บอกปิดรับกี่โมงของวันนั้น) แล้วแนะนำเมนูอื่นที่ยังสั่งได้บนเว็บเท่านั้น = เมนูเซมเดย์ที่ยังเปิด + ' +
     'เมนูพรีออเดอร์วันถัดไปในปฎิทิน · ห้ามแนบ/อ้างลิงก์ตะกร้าของเมนูที่เลยรอบ · ' +
-    'ทุกคำตอบที่พูดถึง เวลา/รอบ/การจัดส่ง ต้องระบุ ประเภทออเดอร์ ให้ถูก: "ส่งวันนี้ (Same Day)" หรือ "พรีออเดอร์ (Pre-Order)"'
+    'ทุกคำตอบที่พูดถึง เวลา/รอบ/การจัดส่ง ต้องระบุ ประเภทออเดอร์ ให้ถูก: "ส่งวันนี้ (Same Day)" หรือ "พรีออเดอร์ (Pre-Order)" · ' +
+    'RULE เพิ่ม (Owner retest 2026-11-08 B8/B9): ห้ามยกเวลาคัทออฟ/รอบส่งของ "รอบอื่น" หรือ "รอบที่แอดมินปิดแล้ว" มาบอกลูกค้า — ' +
+    'เวลาปิดรับพรีออเดอร์ที่ถูก = ของรอบที่ยังเปิด (ทุกวันนี้ = ก่อนเวลาส่ง 2 ชม. · เช่น เที่ยงส่ง 11:00 = ปิดรับ 09:00) · ' +
+    'รอบที่ status=closed (เช่น รอบเย็นปิด) = เมนูรอบนั้นสั่งไม่ได้ ห้ามบอกว่ายังสั่งได้ถึงเวลาของรอบนั้น · ' +
+    'SAME_DAY = ไม่มีปิดรอบตามรอบส่ง (บอกแค่ยังสั่งส่งวันนี้ได้/ไม่ได้ตามเวลาเปิด-ปิดร้าน)'
   if (!rounds || !scheduleRows) {
     return (
       '\n\n--- ORDER WINDOW (ดึงข้อมูลรอบ/ปฎิทินไม่ได้ — ZERO-FAKE) ---\n' +
@@ -282,12 +314,15 @@ export function buildOrderWindowPrompt(
         const label = r.display_name || r.round_key || 'รอบ'
         const win = `${r.delivery_start || '—'}-${r.delivery_end || '—'}`
         const st = roundIsActive(r) ? (roundHasCapacity(r) ? 'เปิด' : 'เต็ม') : 'ปิด'
-        const cutoff = roundPreOrderCutoffMs(r)
-        const cutoffTxt = cutoff === null
-          ? 'ไม่มีข้อมูลปิดรับพรีออเดอร์ (ห้ามเดา)'
-          : (utcMs > cutoff
-              ? `ปิดรับพรีออเดอร์แล้ว (${new Date(cutoff + 7 * 3_600_000).toISOString().slice(11, 16)} น.)`
-              : `ปิดรับพรีออเดอร์ ${new Date(cutoff + 7 * 3_600_000).toISOString().slice(11, 16)} น.`)
+        // R82g: รอบที่แอดมินปิด = ห้ามโชว์เวลาคัทออฟของรอบนั้น (ขัดกฎ Owner "ห้ามใช้รอบส่งบอกลูกค้า")
+        const cutoff = roundIsActive(r) ? roundPreOrderCutoffMs(r) : null
+        const cutoffTxt = !roundIsActive(r)
+          ? 'ปิดรับพรีออเดอร์แล้ว (แอดมินปิดรอบนี้ — ห้ามอ้างเวลาของรอบนี้)'
+          : cutoff === null
+            ? 'ไม่มีข้อมูลปิดรับพรีออเดอร์ (ห้ามเดา)'
+            : (utcMs > cutoff
+                ? `ปิดรับพรีออเดอร์แล้ว (${new Date(cutoff + 7 * 3_600_000).toISOString().slice(11, 16)} น.)`
+                : `ปิดรับพรีออเดอร์ ${new Date(cutoff + 7 * 3_600_000).toISOString().slice(11, 16)} น.`)
         return `  · ${label} ${win} น. = สถานะ ${st} · ${cutoffTxt}`
       }).join('\n')
     : '  · ไม่มีรอบจัดส่งวันนี้'

@@ -195,3 +195,45 @@ describe('R82 · source contracts — intake gate + prompt + resolveActiveRound 
     expect(shopCtxSrc).toContain('ต้องระบุ ประเภทออเดอร์')
   })
 })
+describe('R82g (Owner retest 2026-11-08 B8/B9) — ป้าย "ปิดรับ" นับเฉพาะรอบที่ยังเปิด · รอบเย็นปิด = ห้ามอ้าง', () => {
+  // production reality (e2e/_r82g_evidence.json): รอบเย็น status=closed ทุกวันที่ · pre_order_cutoff 16:00
+  // บั๊กเดิม = detail เอา max cutoff ของ "ทุกรอบ" → AI บอกลูกค้า "ปิดรับ 16:00" ทั้งที่รอบนั้นปิดแล้ว
+  const DAY9: WindowRound[] = [
+    round({ scheduled_date: '2026-11-09', round_key: 'morning', display_name: 'เช้า', pre_order_cutoff: '05:00:00', cutoff_time: '05:00:00', delivery_start: '07:00:00', delivery_end: '09:00:00' }),
+    round({ scheduled_date: '2026-11-09', round_key: 'midday', display_name: 'เที่ยง', pre_order_cutoff: '09:00:00', cutoff_time: '09:00:00' }),
+    round({ scheduled_date: '2026-11-09', round_key: 'evening', display_name: 'เย็น', status: 'closed', pre_order_cutoff: '16:00:00', cutoff_time: '16:00:00', delivery_start: '18:00:00', delivery_end: '20:00:00' }),
+  ]
+  const KIMCHI: WindowProduct = { id: 'prod-kimchi', name: 'ข้าวหน้าหมูผัดกิมจิ', is_available: true }
+  const BY_K = new Map([[KIMCHI.id, KIMCHI]])
+
+  it('ป้ายปิดรับ = ของรอบที่ยังเปิดเท่านั้น (09:00) — ห้ามโชว์ 16:00 ของรอบเย็นปิด + บอกว่าแอดมินปิดรอบ', () => {
+    const rows: WindowScheduleRow[] = [{ product_id: KIMCHI.id, scheduled_date: '2026-11-09', is_published: true }]
+    const [s] = assessProductWindows([KIMCHI.id], rows, DAY9, BY_K, { nowUtcMs: NOW })
+    expect(s.orderable).toBe(true)
+    expect(s.nextDate).toBe('2026-11-09')
+    expect(s.detail).toContain('ปิดรับ 09:00 น.')
+    expect(s.detail).not.toContain('16:00')
+    expect(s.detail).toContain('แอดมินปิดรอบ')
+  })
+
+  it('วันอนาคตที่ทุรอบถูกแอดมินปิด = ไม่ใช่วันสั่งได้ → pre_order_day_passed + ห้ามแนบลิงก์ตะกร้า', () => {
+    const allClosed = DAY9.map((r) => ({ ...r, status: 'closed' }))
+    const rows: WindowScheduleRow[] = [{ product_id: 'prod-closed-day', scheduled_date: '2026-11-09', is_published: true }]
+    const byId = new Map([['prod-closed-day', { id: 'prod-closed-day', name: 'เมนูวันปิด', is_available: true } as WindowProduct]])
+    const [s] = assessProductWindows(['prod-closed-day'], rows, allClosed, byId, { nowUtcMs: NOW })
+    expect(s.orderable).toBe(false)
+    expect(s.reason).toBe('pre_order_day_passed')
+    expect(s.detail).toContain('ห้ามแนบลิงก์ตะกร้า')
+  })
+
+  it('prompt: เส้นรอบเย็น (ปิดวันนี้) = "แอดมินปิดรอบนี้" ไม่มี 16:00 · RULE ใหม่ของ Owner มาครบ', () => {
+    const block = buildOrderWindowPrompt(SCHEDULE, ALL_ROUNDS, PRODUCTS, { nowUtcMs: NOW })
+    const eveningLine = block.split('\n').find((l) => l.startsWith('  · เย็น')) || ''
+    expect(eveningLine).toContain('สถานะ ปิด')
+    expect(eveningLine).toContain('แอดมินปิดรอบนี้')
+    expect(eveningLine).not.toContain('16:00')
+    expect(block).toContain('ห้ามยกเวลาคัทออฟ')
+    expect(block).toContain('เที่ยงส่ง 11:00 = ปิดรับ 09:00')
+    expect(block).toContain('SAME_DAY = ไม่มีปิดรอบตามรอบส่ง')
+  })
+})

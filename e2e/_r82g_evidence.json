@@ -1,0 +1,1551 @@
+{
+  "probed_at": "2026-11-08T04:19:12.378Z",
+  "note": "READ-ONLY R82g",
+  "events_since_deploy": {
+    "status": 200,
+    "body": [
+      {
+        "id": "sev-eef2eeda-4e0e-4b86-a633-627596e16330",
+        "created_at": "2026-11-08T04:02:34.063338+00:00",
+        "event_type": "message",
+        "platform": "MESSENGER",
+        "sender_id": "28680684258210089",
+        "sender_name": null,
+        "content": "แล้วข้าวหน้าหมูผัดกิมจิล่ะ",
+        "reply_status": "sent",
+        "last_error": null,
+        "ai_reply_text": "อ้าว ข้าวหมูผัดกิมจิ 🥢 79฿ จานเด็ดเลยครับพี่! แต่เมนูนี้เป็นพรีออเดอร์นะครับ ต้องสั่งล่วงหน้าสำหรับวัน 12 พ.ย. ปิดรับ 16:00 น. ส่วนวันนี้รอบเที่ยง 11:00-15:00 น. ยังรับออเดอร์ส่งวันนี้ครับ มีเมนูเซมเดย์อย่างเมี่ยงแซลม่อน 79฿ หรือสปาเกตตี้ผัดพริกแห้งกุ้ง 99฿ ก็เด็ดไม่แพ้ครับ สนใจเมนูไหนบอก Bite ได้เลย หรือกดสั่งตรงที่ https://biteme-baby.com/shop เลยครับ 🍽️",
+        "ai_guardrail_flags": {
+          "reply": {
+            "tone": "friendly",
+            "language": "th",
+            "draft_text": "อ้าว ข้าวหมูผัดกิมจิ 🥢 79฿ จานเด็ดเลยครับพี่! แต่เมนูนี้เป็นพรีออเดอร์นะครับ ต้องสั่งล่วงหน้าสำหรับวัน 12 พ.ย. ปิดรับ 16:00 น. ส่วนวันนี้รอบเที่ยง 11:00-15:00 น. ยังรับออเดอร์ส่งวันนี้ครับ มีเมนูเซมเดย์อย่างเมี่ยงแซลม่อน 79฿ หรือสปาเกตตี้ผัดพริกแห้งกุ้ง 99฿ ก็เด็ดไม่แพ้ครับ สนใจเมนูไหนบอก Bite ได้เลย หรือกดสั่งตรงที่ https://biteme-baby.com/shop เลยครับ 🍽️",
+            "safety_flags": [
+              "none"
+            ],
+            "source_event_id": "msg-m_h8boB_GbE4Ng7_H-8TXWhNAtyZwH9bSeaqQLOAJV45X2BCeA7j13acVp1IWAdOWKdO7CdETuWCz5ouGLREuNXg",
+            "requires_human_review": false
+          },
+          "dm_error": null,
+          "dm_reply_id": "m_J7FvyX2lWbkJl-v3iWUUVdAtyZwH9bSeaqQLOAJV45W6cPyDOJfgR0b-O8nOYRH3RnoY58Mz117SpARVsrb0CA",
+          "push_notify": "queued",
+          "review_status": "auto_published",
+          "classification": {
+            "intent": "question",
+            "reason": "ลูกค้าถามถึงเมนูข้าวหน้าหมูผัดกิมจิ ซึ่งเป็นคำถามเกี่ยวกับเมนูที่มีหรือไม่",
+            "urgency": "low",
+            "sentiment": "neutral",
+            "confidence": 0.95,
+            "safety_flags": [
+              "none"
+            ],
+            "requires_human_review": false
+          },
+          "dm_attempted_at": null,
+          "requires_human_review": false
+        }
+      },
+      {
+        "id": "sev-f5e1ddde-5f94-4fc2-a43c-235edbd0b2f5",
+        "created_at": "2026-11-08T03:57:50.473446+00:00",
+        "event_type": "message",
+        "platform": "MESSENGER",
+        "sender_id": "28680684258210089",
+        "sender_name": null,
+        "content": "พรุ่งนี้มีอะไรกิน",
+        "reply_status": "sent",
+        "last_error": null,
+        "ai_reply_text": "พรุ่งนี้ (9 พ.ย.) มีเมนูพรีออเดอร์เด็ด ๆ ครับพี่! 🍽️ ชุดน้ำพริกตาแดง หมูแดดเดียว 79฿ กับ ข้าวหน้าปลาทอดลุยสวน 🐟 79฿ สั่งล่วงหน้าได้ถึง 16:00 น. นะครับ หรือถ้าอยากกินวันนี้ รอบเที่ยง 11:00-15:00 น. ยังรับออเดอร์ส่งวันนี้ด้วยครับ สนใจเมนูไหนบอก Bite ได้เลย หรือกดสั่งตรงที่ https://biteme-baby.com/shop เลยครับ 😋",
+        "ai_guardrail_flags": {
+          "reply": {
+            "tone": "friendly",
+            "language": "th",
+            "draft_text": "พรุ่งนี้ (9 พ.ย.) มีเมนูพรีออเดอร์เด็ด ๆ ครับพี่! 🍽️ ชุดน้ำพริกตาแดง หมูแดดเดียว 79฿ กับ ข้าวหน้าปลาทอดลุยสวน 🐟 79฿ สั่งล่วงหน้าได้ถึง 16:00 น. นะครับ หรือถ้าอยากกินวันนี้ รอบเที่ยง 11:00-15:00 น. ยังรับออเดอร์ส่งวันนี้ด้วยครับ สนใจเมนูไหนบอก Bite ได้เลย หรือกดสั่งตรงที่ https://biteme-baby.com/shop เลยครับ 😋",
+            "safety_flags": [
+              "none"
+            ],
+            "source_event_id": "msg-m_IkFCp-5PrNBjtwctJW-1N9AtyZwH9bSeaqQLOAJV45VTm3g0hxv8fd6HGc5No3H0MZxYsteSdDDnmZnBLMVEfA",
+            "requires_human_review": false
+          },
+          "dm_error": null,
+          "dm_reply_id": "m_NjNnzQxBuitlf46dQ3mxCNAtyZwH9bSeaqQLOAJV45UdMzH9wPVmKlsNTz4pmGIms28IyVyD-Bcx3vwYh-zycg",
+          "push_notify": "queued",
+          "review_status": "auto_published",
+          "classification": {
+            "intent": "question",
+            "reason": "ลูกค้าถามถึงเมนูในวันพรุ่งนี้ เป็นคำถามทั่วไป",
+            "urgency": "low",
+            "sentiment": "neutral",
+            "confidence": 0.95,
+            "safety_flags": [
+              "none"
+            ],
+            "requires_human_review": false
+          },
+          "dm_attempted_at": null,
+          "requires_human_review": false
+        }
+      },
+      {
+        "id": "sev-c2fc2146-e8b0-4bab-8b22-5ef1ed6bf783",
+        "created_at": "2026-11-08T03:57:32.188246+00:00",
+        "event_type": "message",
+        "platform": "MESSENGER",
+        "sender_id": "28680684258210089",
+        "sender_name": null,
+        "content": "ถ้าสั่งในนีล่ะ",
+        "reply_status": "sent",
+        "last_error": null,
+        "ai_reply_text": "สั่งในแชทนี้ได้เลยครับพี่ บอกเมนูที่อยากได้มาได้เลย Bite ช่วยสรุปให้ แต่ต้องกดยืนยันออเดอร์ที่เว็บ https://biteme-baby.com/shop นะครับ พี่สนใจเมนูไหนล่ะครับ เช่น ยำสลัดถั่วลูกไก่ 79฿ หรือแซลมอนย่างเกลือ 79฿ ก็เด็ดทั้งนั้นเลยครับ 🍽️",
+        "ai_guardrail_flags": {
+          "reply": {
+            "tone": "friendly",
+            "language": "th",
+            "draft_text": "สั่งในแชทนี้ได้เลยครับพี่ บอกเมนูที่อยากได้มาได้เลย Bite ช่วยสรุปให้ แต่ต้องกดยืนยันออเดอร์ที่เว็บ https://biteme-baby.com/shop นะครับ พี่สนใจเมนูไหนล่ะครับ เช่น ยำสลัดถั่วลูกไก่ 79฿ หรือแซลมอนย่างเกลือ 79฿ ก็เด็ดทั้งนั้นเลยครับ 🍽️",
+            "safety_flags": [
+              "none"
+            ],
+            "source_event_id": "msg-m_O479GarIr8ejhKQKU2QPedAtyZwH9bSeaqQLOAJV45W1DZub5NYsoNQ21H6w8RWKRLhMz-G4axOBC81SfX9v2w",
+            "requires_human_review": true
+          },
+          "dm_error": null,
+          "dm_reply_id": "m_xRf4GHucdIVWw3jZb2o-g9AtyZwH9bSeaqQLOAJV45XtQUj8kJSxTK72GcOEoY1Y0EVbcPbVrdm8RWESgqfVEQ",
+          "push_notify": "queued",
+          "review_status": "auto_published",
+          "classification": {
+            "intent": "order_request",
+            "reason": "ลูกค้าสอบถามซ้ำเกี่ยวกับการสั่งในแชท แสดงความต้องการสั่งอาหาร",
+            "urgency": "normal",
+            "sentiment": "neutral",
+            "confidence": 0.85,
+            "safety_flags": [
+              "none"
+            ],
+            "requires_human_review": true
+          },
+          "dm_attempted_at": null,
+          "requires_human_review": true
+        }
+      },
+      {
+        "id": "sev-4d3f9699-6c65-4d4b-8375-cca36e77702a",
+        "created_at": "2026-11-08T03:56:54.657188+00:00",
+        "event_type": "comment",
+        "platform": "FACEBOOK",
+        "sender_id": "28680684258210089",
+        "sender_name": null,
+        "content": "ตอนนี้ยังสั่งได้ไหม",
+        "reply_status": "sent",
+        "last_error": null,
+        "ai_reply_text": "รับทราบครับพี่ ขอโทษที่ตอบซ้ำไปหน่อยนะครับ 🙏 ตอนนี้เมนูที่พี่ถามถึงคือเมนูไหนเหรอครับ? พี่บอกชื่อเมนูมาได้เลยนะ Bite เช็คให้ว่ายังสั่งได้หรือไม่ แล้วจัดตะกร้าให้ใหม่ครับ หรือถ้าสะดวกทัก Inbox มาได้เลยครับ สั่งต่อที่เว็บ https://biteme-baby.com/shop ก็ได้ครับ",
+        "ai_guardrail_flags": {
+          "reply": {
+            "tone": "friendly",
+            "language": "th",
+            "draft_text": "รับทราบครับพี่ ขอโทษที่ตอบซ้ำไปหน่อยนะครับ 🙏 ตอนนี้เมนูที่พี่ถามถึงคือเมนูไหนเหรอครับ? พี่บอกชื่อเมนูมาได้เลยนะ Bite เช็คให้ว่ายังสั่งได้หรือไม่ แล้วจัดตะกร้าให้ใหม่ครับ หรือถ้าสะดวกทัก Inbox มาได้เลยครับ สั่งต่อที่เว็บ https://biteme-baby.com/shop ก็ได้ครับ",
+            "safety_flags": [
+              "none"
+            ],
+            "source_event_id": "122146818321204867_1650376813388873",
+            "requires_human_review": true
+          },
+          "dm_error": "http_400:Unsupported post request. Object with ID '122146818321204867_1650376813388873' does not exist, cannot be loaded due to m (code 100)",
+          "dm_reply_id": null,
+          "push_notify": "queued",
+          "review_status": "auto_published",
+          "classification": {
+            "intent": "order_request",
+            "reason": "ลูกค้าถามซ้ำว่ายังสั่งเมนูได้หรือไม่ แสดงความต้องการสั่งอาหาร",
+            "urgency": "normal",
+            "sentiment": "neutral",
+            "confidence": 0.95,
+            "safety_flags": [
+              "none"
+            ],
+            "requires_human_review": true
+          },
+          "dm_attempted_at": "2026-11-08T03:57:07.614Z",
+          "requires_human_review": true
+        }
+      }
+    ]
+  },
+  "outbox_since_0300": {
+    "status": 200,
+    "body": [
+      {
+        "id": "obx-87c42fe944b635b67e3e",
+        "event_key": "ai-message-reply-msg-m_h8boB_GbE4Ng7_H-8TXWhNAtyZwH9bSeaqQLOAJV45X2BCeA7j13acVp1IWAdOWKdO7CdETuWCz5ouGLREuNXg",
+        "customer_id": "23cbe150-e5f4-4a37-a969-02e2db8df395",
+        "category": "Transactional",
+        "title": "💬 Bite ตอบข้อความของคุณแล้ว",
+        "body": "อ้าว ข้าวหมูผัดกิมจิ 🥢 79฿ จานเด็ดเลยครับพี่! แต่เมนูนี้เป็นพรีออเดอร์นะครับ ต้องสั่งล่วงหน้าสำหรับวัน 12 พ.ย. ปิดรับ 16:00 น. ส่วนวันนี้รอบเที่ยง 11:00-15:00 น. ยังรับออเดอร์ส่งวันนี้ครับ มีเมนูเซมเดย์อย่างเมี่ยงแซลม่อน 79฿ หรือสปาเกตตี้ผัดพริกแห้งกุ้ง 99฿ ก็เด็ดไม่แพ้ครับ สนใจเมนูไหนบอก Bite ได้เ",
+        "url": "https://biteme-baby.com",
+        "status": "sent",
+        "channel": "web_push",
+        "attempts": 1,
+        "next_attempt_at": "2026-11-08T04:02:41.685885+00:00",
+        "claimed_at": null,
+        "last_error": null,
+        "created_at": "2026-11-08T04:02:41.685885+00:00",
+        "updated_at": "2026-11-08T04:05:06.844582+00:00"
+      },
+      {
+        "id": "obx-be0b3ed64ae163300756",
+        "event_key": "ai-message-reply-msg-m_IkFCp-5PrNBjtwctJW-1N9AtyZwH9bSeaqQLOAJV45VTm3g0hxv8fd6HGc5No3H0MZxYsteSdDDnmZnBLMVEfA",
+        "customer_id": "23cbe150-e5f4-4a37-a969-02e2db8df395",
+        "category": "Transactional",
+        "title": "💬 Bite ตอบข้อความของคุณแล้ว",
+        "body": "พรุ่งนี้ (9 พ.ย.) มีเมนูพรีออเดอร์เด็ด ๆ ครับพี่! 🍽️ ชุดน้ำพริกตาแดง หมูแดดเดียว 79฿ กับ ข้าวหน้าปลาทอดลุยสวน 🐟 79฿ สั่งล่วงหน้าได้ถึง 16:00 น. นะครับ หรือถ้าอยากกินวันนี้ รอบเที่ยง 11:00-15:00 น. ยังรับออเดอร์ส่งวันนี้ด้วยครับ สนใจเมนูไหนบอก Bite ได้เลย หรือกดสั่งตรงที่ https://biteme-baby.com/sh",
+        "url": "https://biteme-baby.com",
+        "status": "sent",
+        "channel": "web_push",
+        "attempts": 1,
+        "next_attempt_at": "2026-11-08T03:57:57.704913+00:00",
+        "claimed_at": null,
+        "last_error": null,
+        "created_at": "2026-11-08T03:57:57.704913+00:00",
+        "updated_at": "2026-11-08T04:00:09.955732+00:00"
+      },
+      {
+        "id": "obx-114f6e04bc4f851fecf2",
+        "event_key": "ai-message-reply-msg-m_O479GarIr8ejhKQKU2QPedAtyZwH9bSeaqQLOAJV45W1DZub5NYsoNQ21H6w8RWKRLhMz-G4axOBC81SfX9v2w",
+        "customer_id": "23cbe150-e5f4-4a37-a969-02e2db8df395",
+        "category": "Transactional",
+        "title": "💬 Bite ตอบข้อความของคุณแล้ว",
+        "body": "สั่งในแชทนี้ได้เลยครับพี่ บอกเมนูที่อยากได้มาได้เลย Bite ช่วยสรุปให้ แต่ต้องกดยืนยันออเดอร์ที่เว็บ https://biteme-baby.com/shop นะครับ พี่สนใจเมนูไหนล่ะครับ เช่น ยำสลัดถั่วลูกไก่ 79฿ หรือแซลมอนย่างเกลือ 79฿ ก็เด็ดทั้งนั้นเลยครับ 🍽️",
+        "url": "https://biteme-baby.com",
+        "status": "sent",
+        "channel": "web_push",
+        "attempts": 1,
+        "next_attempt_at": "2026-11-08T03:57:46.379468+00:00",
+        "claimed_at": null,
+        "last_error": null,
+        "created_at": "2026-11-08T03:57:46.379468+00:00",
+        "updated_at": "2026-11-08T04:00:08.741795+00:00"
+      },
+      {
+        "id": "obx-488b2a99c1da1c8ae830",
+        "event_key": "ai-comment-reply-122146818321204867_1650376813388873",
+        "customer_id": "23cbe150-e5f4-4a37-a969-02e2db8df395",
+        "category": "Transactional",
+        "title": "🔔 Bite ตอบคอมเมนต์ของคุณแล้ว",
+        "body": "รับทราบครับพี่ ขอโทษที่ตอบซ้ำไปหน่อยนะครับ 🙏 ตอนนี้เมนูที่พี่ถามถึงคือเมนูไหนเหรอครับ? พี่บอกชื่อเมนูมาได้เลยนะ Bite เช็คให้ว่ายังสั่งได้หรือไม่ แล้วจัดตะกร้าให้ใหม่ครับ หรือถ้าสะดวกทัก Inbox มาได้เลยครับ สั่งต่อที่เว็บ https://biteme-baby.com/shop ก็ได้ครับ",
+        "url": "https://biteme-baby.com",
+        "status": "sent",
+        "channel": "web_push",
+        "attempts": 1,
+        "next_attempt_at": "2026-11-08T03:57:10.085069+00:00",
+        "claimed_at": null,
+        "last_error": null,
+        "created_at": "2026-11-08T03:57:10.085069+00:00",
+        "updated_at": "2026-11-08T04:00:10.46219+00:00"
+      }
+    ]
+  },
+  "push_subs_siamportal": {
+    "status": 200,
+    "body": [
+      {
+        "id": "push- ###########-403abb",
+        "customer_id": "23cbe150-e5f4-4a37-a969-02e2db8df395",
+        "endpoint": "https://fcm.googleapis.com/fcm/send/dL-FaSdxA40:APA91bGHqNm4i4hC777flm_M2UbXTZg-lk2sb5jbRXdlzO6t1QJTQ3KRV-x8d3w_aiGN-jtyM_zUwc1Fv2vvxg6e9vyRfQ8glkGmo4xcBsfZrPxVJqH-E3T8E_E6m-545lvHBypC3Fw8",
+        "p256dh": "BHPV5BtMCvgycfNlUzY_TYmeC-owM0i5O5fWDNmdMk-CzZ7dWf4PKc4cPhDBvZZJ4BpbA95gh-aKUAWKn7deSOA",
+        "auth_secret": "7S2hHfD3IFSVxCACM_p8yw",
+        "user_agent": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36",
+        "failure_count": 0,
+        "last_success_at": "2026-11-08T04:05:06.562452+00:00",
+        "last_failure_at": null,
+        "created_at": "2026-11-07T12:54:45.347446+00:00",
+        "updated_at": "2026-11-08T04:05:06.562452+00:00",
+        "driver_id": null
+      }
+    ]
+  },
+  "push_subs_recent_all": {
+    "status": 200,
+    "body": [
+      {
+        "customer_id": "23cbe150-e5f4-4a37-a969-02e2db8df395",
+        "created_at": "2026-11-07T12:54:45.347446+00:00",
+        "updated_at": "2026-11-08T04:05:06.562452+00:00",
+        "user_agent": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36"
+      },
+      {
+        "customer_id": "5119ee60-41de-4a1f-8dfa-0645a59cde37",
+        "created_at": "2026-11-07T04:55:16.960248+00:00",
+        "updated_at": "2026-11-08T03:16:16.75356+00:00",
+        "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36"
+      },
+      {
+        "customer_id": "dddf4b57-405f-4852-a985-76d8d52b1b72",
+        "created_at": "2026-11-07T04:49:54.30708+00:00",
+        "updated_at": "2026-11-08T01:08:09.520528+00:00",
+        "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36"
+      },
+      {
+        "customer_id": "5119ee60-41de-4a1f-8dfa-0645a59cde37",
+        "created_at": "2026-11-07T04:55:16.170715+00:00",
+        "updated_at": "2026-11-07T12:55:11.127404+00:00",
+        "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36"
+      },
+      {
+        "customer_id": "dddf4b57-405f-4852-a985-76d8d52b1b72",
+        "created_at": "2026-11-07T03:04:53.427756+00:00",
+        "updated_at": "2026-11-07T04:49:02.771158+00:00",
+        "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36"
+      },
+      {
+        "customer_id": "dddf4b57-405f-4852-a985-76d8d52b1b72",
+        "created_at": "2026-11-07T02:31:30.319974+00:00",
+        "updated_at": "2026-11-07T02:31:30.319974+00:00",
+        "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36"
+      },
+      {
+        "customer_id": "dddf4b57-405f-4852-a985-76d8d52b1b72",
+        "created_at": "2026-11-07T02:31:30.027446+00:00",
+        "updated_at": "2026-11-07T02:31:30.027446+00:00",
+        "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36"
+      },
+      {
+        "customer_id": "dddf4b57-405f-4852-a985-76d8d52b1b72",
+        "created_at": "2026-11-05T09:14:58.050238+00:00",
+        "updated_at": "2026-11-06T08:21:35.736857+00:00",
+        "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36"
+      },
+      {
+        "customer_id": "dddf4b57-405f-4852-a985-76d8d52b1b72",
+        "created_at": "2026-11-05T01:04:02.842137+00:00",
+        "updated_at": "2026-11-05T01:04:02.842137+00:00",
+        "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36"
+      },
+      {
+        "customer_id": "dddf4b57-405f-4852-a985-76d8d52b1b72",
+        "created_at": "2026-11-04T00:59:03.088441+00:00",
+        "updated_at": "2026-11-05T00:55:05.55916+00:00",
+        "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36"
+      }
+    ]
+  },
+  "identity_psid": {
+    "status": 200,
+    "body": [
+      {
+        "id": "1d2aeb31-0e5e-4dac-930c-bdd2d7e69987",
+        "channel": "FACEBOOK",
+        "external_user_id": "28680684258210089",
+        "customer_ref": "23cbe150-e5f4-4a37-a969-02e2db8df395",
+        "display_name": "Owner test device",
+        "created_at": "2026-11-08T03:50:13.007356+00:00",
+        "updated_at": "2026-11-08T03:50:13.007356+00:00"
+      }
+    ]
+  },
+  "all_identities_facebook": {
+    "status": 200,
+    "body": [
+      {
+        "id": "1d2aeb31-0e5e-4dac-930c-bdd2d7e69987",
+        "channel": "FACEBOOK",
+        "external_user_id": "28680684258210089",
+        "customer_ref": "23cbe150-e5f4-4a37-a969-02e2db8df395",
+        "created_at": "2026-11-08T03:50:13.007356+00:00"
+      },
+      {
+        "id": "b9785847-b7be-416f-8c66-42047667bbad",
+        "channel": "FACEBOOK",
+        "external_user_id": "28977803305239616",
+        "customer_ref": "7f6ae3f2-8c51-4fe2-9617-a189e043a0e2",
+        "created_at": "2026-11-01T08:38:58.556527+00:00"
+      },
+      {
+        "id": "ac13aeca-92d2-4dc3-8075-86ee01a7dd70",
+        "channel": "FACEBOOK",
+        "external_user_id": "r74-sim-cmt-1794073934589",
+        "customer_ref": "9d364b4d-8492-4572-95d7-5c1ab5b83602",
+        "created_at": "2026-11-07T17:53:06.482177+00:00"
+      },
+      {
+        "id": "95add527-100a-4c71-b3b9-e7c810bb0566",
+        "channel": "FACEBOOK",
+        "external_user_id": "r74-sim-cmt-1794073948192",
+        "customer_ref": "f1a11f5b-fd45-48bf-aef4-701db740a4cb",
+        "created_at": "2026-11-07T17:53:10.579794+00:00"
+      },
+      {
+        "id": "24e56218-ddba-452a-96a7-a2f1ff74ee7b",
+        "channel": "FACEBOOK",
+        "external_user_id": "r74-sim-cmt-1794073951565",
+        "customer_ref": "e494f1cc-5733-4230-8e0f-1613059c6e25",
+        "created_at": "2026-11-07T17:53:17.462132+00:00"
+      },
+      {
+        "id": "5b163800-721a-477b-985c-2a8509d3a465",
+        "channel": "FACEBOOK",
+        "external_user_id": "r74-sim-cmt-1794073954987",
+        "customer_ref": "99e2fe67-7e0f-46a6-8b40-88cf1ec4d4c4",
+        "created_at": "2026-11-07T17:53:16.948239+00:00"
+      },
+      {
+        "id": "21b1154e-3ce0-4df4-8911-d8583299e5fe",
+        "channel": "FACEBOOK",
+        "external_user_id": "r74-sim-cmt-1794073958318",
+        "customer_ref": "9e1c7fca-7789-4074-b27f-30d99434504d",
+        "created_at": "2026-11-07T17:53:30.360705+00:00"
+      },
+      {
+        "id": "cde4e52d-0c75-48c5-92bd-1062ce67dacf",
+        "channel": "FACEBOOK",
+        "external_user_id": "r74-sim-cmt-1794074251197",
+        "customer_ref": "82953346-b246-42b0-9f1a-56328178eddb",
+        "created_at": "2026-11-07T17:58:26.15545+00:00"
+      },
+      {
+        "id": "d3b8045e-4218-4399-ba60-97759494bc80",
+        "channel": "FACEBOOK",
+        "external_user_id": "r74-sim-cmt-1794074253560",
+        "customer_ref": "5fbbe7ec-8656-48c1-931e-a46dbeda123c",
+        "created_at": "2026-11-07T17:58:25.960589+00:00"
+      },
+      {
+        "id": "fa5f4994-e5d6-4560-b3f0-98337d6f46ce",
+        "channel": "FACEBOOK",
+        "external_user_id": "r74-sim-cmt-1794074256614",
+        "customer_ref": "e64c8e13-1173-49f5-b736-72a150182c22",
+        "created_at": "2026-11-07T17:58:31.044713+00:00"
+      },
+      {
+        "id": "c3c14169-2baa-4dc5-899e-5cef19aaea2f",
+        "channel": "FACEBOOK",
+        "external_user_id": "r74-sim-cmt-1794074259070",
+        "customer_ref": "8fb731bf-f9af-4fcc-a1ab-4165a026d606",
+        "created_at": "2026-11-07T17:58:25.823202+00:00"
+      },
+      {
+        "id": "ad650ac8-9cb2-49bc-b88c-f0fb6ebd89a1",
+        "channel": "FACEBOOK",
+        "external_user_id": "r74-sim-cmt-1794074261611",
+        "customer_ref": "b41a6da0-3975-4d31-9163-5603f24523b4",
+        "created_at": "2026-11-07T17:58:29.21123+00:00"
+      },
+      {
+        "id": "91a3f7ef-d86e-4009-a3b3-23eacae88548",
+        "channel": "FACEBOOK",
+        "external_user_id": "r74-sim-cmt-1794074264099",
+        "customer_ref": "9583d5ca-e29b-4467-99ff-003ef22b93f3",
+        "created_at": "2026-11-07T17:58:24.834242+00:00"
+      },
+      {
+        "id": "d14a2934-d903-462a-bf19-2c8cbfd2d639",
+        "channel": "FACEBOOK",
+        "external_user_id": "r74-sim-cmt-1794074266993",
+        "customer_ref": "f6ebfce0-1d48-4e26-9838-b30a9a1bf8f2",
+        "created_at": "2026-11-07T17:58:26.550593+00:00"
+      },
+      {
+        "id": "f2c68783-7ec0-45f0-b487-b2feb7f7d939",
+        "channel": "FACEBOOK",
+        "external_user_id": "r74-sim-cmt-1794074269443",
+        "customer_ref": "16ee3fbc-e1c9-4e72-a912-0431fcd4a5b3",
+        "created_at": "2026-11-07T17:58:31.05783+00:00"
+      },
+      {
+        "id": "ff0e27bf-8b82-4081-87ba-9767cc642f5f",
+        "channel": "FACEBOOK",
+        "external_user_id": "r74-sim-cmt-1794100613809",
+        "customer_ref": "774afd9d-a45d-4d3e-b8f2-6dbe31f243da",
+        "created_at": "2026-11-08T01:17:55.211695+00:00"
+      },
+      {
+        "id": "b035768b-f872-4594-b06e-4667a20727de",
+        "channel": "FACEBOOK",
+        "external_user_id": "r75-sim-cmt-user-1794036345969",
+        "customer_ref": "8f4def17-e87e-4544-8c9b-2e49ae287826",
+        "created_at": "2026-11-07T07:25:48.480634+00:00"
+      },
+      {
+        "id": "c205a2c9-c01e-4ca7-9936-f87aadad341d",
+        "channel": "FACEBOOK",
+        "external_user_id": "r75-sim-cmt-user-1794036628445",
+        "customer_ref": "514c79a7-2504-485f-a45d-b8fc3344a6f0",
+        "created_at": "2026-11-07T07:30:31.386731+00:00"
+      },
+      {
+        "id": "ce5f92e3-3799-46a6-9549-9a3c400d11f9",
+        "channel": "FACEBOOK",
+        "external_user_id": "r76-sim-cmt-user-1794040500228",
+        "customer_ref": "1e334fd8-a6ce-4671-887c-ec22d44121d6",
+        "created_at": "2026-11-07T08:35:10.519519+00:00"
+      },
+      {
+        "id": "93b469c7-d629-4c8e-b480-d5f30d90d0ec",
+        "channel": "FACEBOOK",
+        "external_user_id": "r76-sim-cmt-user-1794040684888",
+        "customer_ref": "f466c7ee-f5c6-4fda-89f0-4e5428295d7a",
+        "created_at": "2026-11-07T08:38:11.643884+00:00"
+      }
+    ]
+  },
+  "business_settings": {
+    "status": 200,
+    "body": [
+      {
+        "key": "loyalty_policy",
+        "value": {
+          "tier_gold_min": 4000,
+          "tiers_enabled": true,
+          "window_months": 12,
+          "points_enabled": true,
+          "points_per_baht": 20,
+          "tier_silver_min": 1500,
+          "tier_platinum_min": 8000,
+          "earn_qualify_status": "delivered"
+        },
+        "created_at": "2026-10-25T15:51:36.211585+00:00",
+        "updated_at": "2026-10-30T01:32:37.483+00:00",
+        "tenant_id": "tenant-bmb-001",
+        "branch_id": null
+      },
+      {
+        "key": "spin_policy",
+        "value": {
+          "enabled": false,
+          "daily_limit": 1,
+          "points_per_spin": 5
+        },
+        "created_at": "2026-10-26T00:28:26.27907+00:00",
+        "updated_at": "2026-10-30T01:32:56.58+00:00",
+        "tenant_id": "tenant-bmb-001",
+        "branch_id": null
+      },
+      {
+        "key": "social_links",
+        "value": {
+          "line": "https://line.me/ti/p/QFD3bSMFN9",
+          "tiktok": "",
+          "line_id": "bitemebaby2016",
+          "youtube": "",
+          "facebook": "https://web.facebook.com/profile.php?id=61586146030943",
+          "instagram": "",
+          "messenger": "https://m.me/61586146030943"
+        },
+        "created_at": "2026-10-18T15:40:59.21852+00:00",
+        "updated_at": "2026-10-28T00:38:55.669321+00:00",
+        "tenant_id": "tenant-bmb-001",
+        "branch_id": null
+      },
+      {
+        "key": "seo",
+        "value": {
+          "tagline": "สั่งอาหารจัดส่งเมืองจันทบุรี รัศมี 5 กม.",
+          "description": "ร้านอาหารไทยจัดส่งถึงบ้านในรัศมี 5 กม. จากตัวเมืองจันทบุรี ให้บริการรอบเช้า กลางวัน เย็น ส่งด้วยรถไฟฟ้าอัจฉริยะ"
+        },
+        "created_at": "2026-10-28T02:15:28.731362+00:00",
+        "updated_at": "2026-10-28T02:15:28.731362+00:00",
+        "tenant_id": "tenant-bmb-001",
+        "branch_id": null
+      },
+      {
+        "key": "print_settings",
+        "value": {
+          "printers": [
+            {
+              "id": "prn-1793347427350-xivr",
+              "label": "Nimbot B1Pro",
+              "model": "nimbot_b1pro",
+              "active": true,
+              "paperWidthMm": 50
+            }
+          ],
+          "qzEnabled": true,
+          "paperWidthMm": 58,
+          "qzPrinterName": "Nimbot B1Pro_BmB",
+          "stickerDensity": 2,
+          "stickerFaceHPx": 670,
+          "autoPrintKitchen": true,
+          "autoPrintReceipt": true,
+          "kitchenPrinterId": "prn-1793347427350-xivr",
+          "receiptPrinterId": "prn-1793347427350-xivr",
+          "stickerOffsetYPx": 70,
+          "autoPrintStickers": true,
+          "kitchenPrinterName": "",
+          "receiptPrinterName": ""
+        },
+        "created_at": "2026-10-30T01:54:08.211299+00:00",
+        "updated_at": "2026-11-05T00:53:23.035+00:00",
+        "tenant_id": "tenant-bmb-001",
+        "branch_id": null
+      },
+      {
+        "key": "affiliate_policy",
+        "value": {
+          "enabled": true,
+          "monthly_cap": 1000,
+          "qualify_status": "delivered",
+          "points_per_qualified_order": 10
+        },
+        "created_at": "2026-10-26T00:28:26.27907+00:00",
+        "updated_at": "2026-10-30T01:33:51.244+00:00",
+        "tenant_id": "tenant-bmb-001",
+        "branch_id": null
+      },
+      {
+        "key": "promotion_policy",
+        "value": {
+          "budget_percent": 15,
+          "promotions_enabled": true
+        },
+        "created_at": "2026-10-25T12:20:01.074882+00:00",
+        "updated_at": "2026-10-30T01:32:21.372+00:00",
+        "tenant_id": "tenant-bmb-001",
+        "branch_id": null
+      },
+      {
+        "key": "referral_policy",
+        "value": {
+          "enabled": true,
+          "qualify_status": "delivered",
+          "share_base_url": "",
+          "min_order_amount": 0,
+          "claim_window_hours": 72,
+          "friend_reward_baht": 20,
+          "coupon_validity_days": 30,
+          "referrer_monthly_cap": 20,
+          "referrer_reward_baht": 10
+        },
+        "created_at": "2026-10-25T14:30:46.134295+00:00",
+        "updated_at": "2026-10-30T01:32:24.116+00:00",
+        "tenant_id": "tenant-bmb-001",
+        "branch_id": null
+      },
+      {
+        "key": "order_pattern",
+        "value": {
+          "rounds": [
+            {
+              "round_key": "morning",
+              "cutoff_time": "05:00",
+              "delivery_end": "09:00",
+              "display_name": "เช้า ",
+              "max_capacity": 20,
+              "delivery_start": "07:00",
+              "pre_order_cutoff": "05:00"
+            },
+            {
+              "round_key": "midday",
+              "cutoff_time": "09:00",
+              "delivery_end": "15:00",
+              "display_name": "เที่ยง",
+              "max_capacity": 30,
+              "delivery_start": "11:00",
+              "pre_order_cutoff": "09:00"
+            },
+            {
+              "round_key": "evening",
+              "cutoff_time": "16:00",
+              "delivery_end": "20:00",
+              "display_name": "เย็น",
+              "max_capacity": 25,
+              "delivery_start": "18:00",
+              "pre_order_cutoff": "16:00"
+            }
+          ]
+        },
+        "created_at": "2026-10-24T04:41:48.59612+00:00",
+        "updated_at": "2026-10-30T14:16:45.72+00:00",
+        "tenant_id": "tenant-bmb-001",
+        "branch_id": null
+      },
+      {
+        "key": "notification_channels",
+        "value": {
+          "line": false,
+          "push": true,
+          "lineMode": "mock",
+          "messenger": true
+        },
+        "created_at": "2026-11-01T06:15:03.536237+00:00",
+        "updated_at": "2026-11-01T06:15:03.536237+00:00",
+        "tenant_id": "tenant-bmb-001",
+        "branch_id": null
+      },
+      {
+        "key": "theater_daily_copy",
+        "value": {
+          "days": {
+            "fri": [
+              {
+                "id": "fri-1",
+                "headline": "เปรียบเทียบเมนูและราคาก่อนตัดสินใจ",
+                "published": true,
+                "subheadline": "ดูภาพ ราคา และป้ายแนะนำของแต่ละจาน ในหน้าเดียว"
+              }
+            ],
+            "mon": [
+              {
+                "id": "mon-1",
+                "headline": "วันนี้อยากกินอะไรดี? ให้Biteช่วยสำรวจเมนู",
+                "published": true,
+                "subheadline": "เลื่อนดูเมนูที่Biteเลือกมาให้ แล้วแตะการ์ดที่ใช่ได้เลย",
+                "recommendation_label": "เริ่มจากเมนูพร้อมขายวันนี้"
+              }
+            ],
+            "sat": [
+              {
+                "id": "sat-1",
+                "headline": "ลองดูเมนูที่มีให้เลือกวันนี้",
+                "published": true,
+                "subheadline": "เลื่อนดูเมนูพร้อมขายวันนี้ แล้วแตะที่อยากกินได้เลย"
+              }
+            ],
+            "sun": [
+              {
+                "id": "sun-1",
+                "headline": "สงสัยเรื่องเมนูหรือการสั่ง? ถามBiteได้เลย",
+                "published": true,
+                "subheadline": "ถามได้ตั้งแต่เรื่องเมนู ไปจนถึงวิธีสั่งและติดตามออเดอร์"
+              }
+            ],
+            "thu": [
+              {
+                "id": "thu-1",
+                "headline": "เลือกเมนูที่ใช่ แล้วไปต่อได้ง่ายขึ้น",
+                "published": true,
+                "subheadline": "แตะเพิ่มลงตะกร้า หรือกดปรับแต่ง แล้วสั่งต่อได้เลย"
+              }
+            ],
+            "tue": [
+              {
+                "id": "tue-1",
+                "headline": "ยังเลือกไม่ถูก ให้Biteช่วยแนะนำ",
+                "published": true,
+                "subheadline": "ป้ายบนการ์ดมาจากรสนิยมและเมนูในตะกร้าของคุณจริงๆ ลองดูได้เลย",
+                "recommendation_label": "ดูป้ายแนะนำบนการ์ด"
+              }
+            ],
+            "wed": [
+              {
+                "id": "wed-1",
+                "headline": "มื้อถัดไปอยากได้รสชาติแบบไหน?",
+                "published": true,
+                "subheadline": "เลือกแนวที่ใช่ แล้วให้Biteจัดเมนูมาให้"
+              }
+            ]
+          },
+          "enabled": true
+        },
+        "created_at": "2026-10-13T00:05:51.421926+00:00",
+        "updated_at": "2026-10-24T03:24:15.505+00:00",
+        "tenant_id": "tenant-bmb-001",
+        "branch_id": null
+      },
+      {
+        "key": "push_config",
+        "value": {
+          "enabled": true,
+          "vapid_subject": "mailto:admin@biteme-baby.com",
+          "vapid_public_key": "BMwKuaU1rBMs6w-7GAxocIdxLcvMyQmRoClMZyzn3ClB7c8rJi3Wl83rSf6UzkKiyfG4L_0fQnV2KbfpKYkFLJE"
+        },
+        "created_at": "2026-10-05T14:48:19.727109+00:00",
+        "updated_at": "2026-10-24T03:24:14.859+00:00",
+        "tenant_id": "tenant-bmb-001",
+        "branch_id": null
+      },
+      {
+        "key": "hours",
+        "value": {
+          "open": "8:00",
+          "close": "20:00"
+        },
+        "created_at": "2026-09-18T12:53:20.871659+00:00",
+        "updated_at": "2026-10-24T03:24:15.152+00:00",
+        "tenant_id": "tenant-bmb-001",
+        "branch_id": null
+      },
+      {
+        "key": "operating_hours",
+        "value": {
+          "midday_open": true,
+          "evening_open": true,
+          "morning_open": true,
+          "same_day_open": true,
+          "pre_order_open": true
+        },
+        "created_at": "2026-09-25T00:51:42.862081+00:00",
+        "updated_at": "2026-10-24T03:24:15.314+00:00",
+        "tenant_id": "tenant-bmb-001",
+        "branch_id": null
+      },
+      {
+        "key": "store_master_open",
+        "value": {
+          "open": true
+        },
+        "created_at": "2026-11-04T06:42:07.731011+00:00",
+        "updated_at": "2026-11-04T06:42:07.731011+00:00",
+        "tenant_id": "tenant-bmb-001",
+        "branch_id": null
+      },
+      {
+        "key": "delivery_policy",
+        "value": {
+          "currency": "THB",
+          "min_order": 0,
+          "tier2_markup_pct": 12,
+          "bite_drive_enabled": true,
+          "bite_drive_radius_km": 3,
+          "free_shipping_threshold": 199,
+          "external_methods_enabled": [],
+          "allow_external_within_radius": false
+        },
+        "created_at": "2026-09-18T12:53:20.871659+00:00",
+        "updated_at": "2026-10-24T03:24:15.687+00:00",
+        "tenant_id": "tenant-bmb-001",
+        "branch_id": null
+      },
+      {
+        "key": "kitchen_location",
+        "value": {
+          "latitude": 12.615659,
+          "longitude": 102.098063
+        },
+        "created_at": "2026-09-18T12:53:20.871659+00:00",
+        "updated_at": "2026-10-24T03:24:15.851+00:00",
+        "tenant_id": "tenant-bmb-001",
+        "branch_id": null
+      },
+      {
+        "key": "order_policy",
+        "value": {
+          "daily_quota": 100,
+          "cutoff_hours": 2,
+          "reminder_days": 1,
+          "preorder_max_days": 15,
+          "max_items_per_order": 50,
+          "pre_order_lead_days": 7,
+          "cancel_window_minutes": 5
+        },
+        "created_at": "2026-09-22T01:52:30.894476+00:00",
+        "updated_at": "2026-11-01T07:03:29.853899+00:00",
+        "tenant_id": "tenant-bmb-001",
+        "branch_id": null
+      },
+      {
+        "key": "addon_margin_policy",
+        "value": {
+          "enabled": true,
+          "max_discount_pct": 15,
+          "cross_sell_enabled": true,
+          "main_dish_required": false,
+          "min_addon_margin_pct": 0
+        },
+        "created_at": "2026-11-01T07:03:33.985775+00:00",
+        "updated_at": "2026-11-01T07:03:33.985775+00:00",
+        "tenant_id": "tenant-bmb-001",
+        "branch_id": null
+      },
+      {
+        "key": "home_popular_menu",
+        "value": {
+          "title": "เมนูยอดนิยม",
+          "showCount": 10,
+          "autoRotate": true,
+          "productIds": [],
+          "disabledIds": []
+        },
+        "created_at": "2026-10-27T00:26:54.285377+00:00",
+        "updated_at": "2026-10-27T00:26:52.766+00:00",
+        "tenant_id": "tenant-bmb-001",
+        "branch_id": null
+      }
+    ]
+  },
+  "order_policy_table": {
+    "status": 404,
+    "body": "{\"code\":\"PGRST205\",\"details\":null,\"hint\":\"Perhaps you meant the table 'public.order_items'\",\"message\":\"Could not find the table 'public.order_policy' in the schema cache\"}"
+  },
+  "order_policy_view": {
+    "status": 404,
+    "body": "{\"code\":\"PGRST205\",\"details\":null,\"hint\":\"Perhaps you meant the table 'public.order_items'\",\"message\":\"Could not find the table 'public.order_policy_current' in the schema cache\"}"
+  },
+  "rounds_today_onwards": {
+    "status": 200,
+    "body": [
+      {
+        "id": "round-20261108-morning",
+        "round_key": "morning",
+        "display_name": "เช้า ",
+        "cutoff_time": "05:00:00",
+        "delivery_start": "07:00:00",
+        "delivery_end": "09:00:00",
+        "max_capacity": 20,
+        "current_count": 2,
+        "date": "2026-11-08",
+        "scheduled_date": "2026-11-08",
+        "name": "morning",
+        "status": "active",
+        "created_at": "2026-10-25T15:32:57.27701+00:00",
+        "updated_at": "2026-11-08T01:18:07.701457+00:00",
+        "tenant_id": "tenant-bmb-001",
+        "branch_id": "branch-tenant-bmb-001-main",
+        "pre_order_cutoff": "05:00:00",
+        "archived": false
+      },
+      {
+        "id": "round-20261108-midday",
+        "round_key": "midday",
+        "display_name": "เที่ยง",
+        "cutoff_time": "09:00:00",
+        "delivery_start": "11:00:00",
+        "delivery_end": "15:00:00",
+        "max_capacity": 30,
+        "current_count": 0,
+        "date": "2026-11-08",
+        "scheduled_date": "2026-11-08",
+        "name": "midday",
+        "status": "active",
+        "created_at": "2026-10-25T15:32:57.27701+00:00",
+        "updated_at": "2026-11-08T01:18:07.463651+00:00",
+        "tenant_id": "tenant-bmb-001",
+        "branch_id": "branch-tenant-bmb-001-main",
+        "pre_order_cutoff": "09:00:00",
+        "archived": false
+      },
+      {
+        "id": "round-20261108-evening",
+        "round_key": "evening",
+        "display_name": "เย็น",
+        "cutoff_time": "16:00:00",
+        "delivery_start": "18:00:00",
+        "delivery_end": "20:00:00",
+        "max_capacity": 25,
+        "current_count": 0,
+        "date": "2026-11-08",
+        "scheduled_date": "2026-11-08",
+        "name": "evening",
+        "status": "closed",
+        "created_at": "2026-10-25T15:32:57.27701+00:00",
+        "updated_at": "2026-10-30T14:19:29.162505+00:00",
+        "tenant_id": "tenant-bmb-001",
+        "branch_id": "branch-tenant-bmb-001-main",
+        "pre_order_cutoff": "16:00:00",
+        "archived": false
+      },
+      {
+        "id": "round-20261109-morning",
+        "round_key": "morning",
+        "display_name": "เช้า ",
+        "cutoff_time": "05:00:00",
+        "delivery_start": "07:00:00",
+        "delivery_end": "09:00:00",
+        "max_capacity": 20,
+        "current_count": 0,
+        "date": "2026-11-09",
+        "scheduled_date": "2026-11-09",
+        "name": "morning",
+        "status": "active",
+        "created_at": "2026-10-25T15:32:57.6312+00:00",
+        "updated_at": "2026-10-25T15:32:57.6312+00:00",
+        "tenant_id": "tenant-bmb-001",
+        "branch_id": "branch-tenant-bmb-001-main",
+        "pre_order_cutoff": "05:00:00",
+        "archived": false
+      },
+      {
+        "id": "round-20261109-midday",
+        "round_key": "midday",
+        "display_name": "เที่ยง",
+        "cutoff_time": "09:00:00",
+        "delivery_start": "11:00:00",
+        "delivery_end": "15:00:00",
+        "max_capacity": 30,
+        "current_count": 0,
+        "date": "2026-11-09",
+        "scheduled_date": "2026-11-09",
+        "name": "midday",
+        "status": "active",
+        "created_at": "2026-10-25T15:32:57.6312+00:00",
+        "updated_at": "2026-10-30T14:19:37.428811+00:00",
+        "tenant_id": "tenant-bmb-001",
+        "branch_id": "branch-tenant-bmb-001-main",
+        "pre_order_cutoff": "09:00:00",
+        "archived": false
+      },
+      {
+        "id": "round-20261109-evening",
+        "round_key": "evening",
+        "display_name": "เย็น",
+        "cutoff_time": "16:00:00",
+        "delivery_start": "18:00:00",
+        "delivery_end": "20:00:00",
+        "max_capacity": 25,
+        "current_count": 0,
+        "date": "2026-11-09",
+        "scheduled_date": "2026-11-09",
+        "name": "evening",
+        "status": "closed",
+        "created_at": "2026-10-25T15:32:57.6312+00:00",
+        "updated_at": "2026-10-30T14:19:33.642807+00:00",
+        "tenant_id": "tenant-bmb-001",
+        "branch_id": "branch-tenant-bmb-001-main",
+        "pre_order_cutoff": "16:00:00",
+        "archived": false
+      },
+      {
+        "id": "round-20261110-morning",
+        "round_key": "morning",
+        "display_name": "เช้า ",
+        "cutoff_time": "05:00:00",
+        "delivery_start": "07:00:00",
+        "delivery_end": "09:00:00",
+        "max_capacity": 20,
+        "current_count": 0,
+        "date": "2026-11-10",
+        "scheduled_date": "2026-11-10",
+        "name": "morning",
+        "status": "active",
+        "created_at": "2026-10-25T15:32:57.965918+00:00",
+        "updated_at": "2026-10-25T15:32:57.965918+00:00",
+        "tenant_id": "tenant-bmb-001",
+        "branch_id": "branch-tenant-bmb-001-main",
+        "pre_order_cutoff": "05:00:00",
+        "archived": false
+      },
+      {
+        "id": "round-20261110-midday",
+        "round_key": "midday",
+        "display_name": "เที่ยง",
+        "cutoff_time": "09:00:00",
+        "delivery_start": "11:00:00",
+        "delivery_end": "15:00:00",
+        "max_capacity": 30,
+        "current_count": 0,
+        "date": "2026-11-10",
+        "scheduled_date": "2026-11-10",
+        "name": "midday",
+        "status": "active",
+        "created_at": "2026-10-25T15:32:57.965918+00:00",
+        "updated_at": "2026-10-30T14:19:42.829729+00:00",
+        "tenant_id": "tenant-bmb-001",
+        "branch_id": "branch-tenant-bmb-001-main",
+        "pre_order_cutoff": "09:00:00",
+        "archived": false
+      },
+      {
+        "id": "round-20261110-evening",
+        "round_key": "evening",
+        "display_name": "เย็น",
+        "cutoff_time": "16:00:00",
+        "delivery_start": "18:00:00",
+        "delivery_end": "20:00:00",
+        "max_capacity": 25,
+        "current_count": 0,
+        "date": "2026-11-10",
+        "scheduled_date": "2026-11-10",
+        "name": "evening",
+        "status": "closed",
+        "created_at": "2026-10-25T15:32:57.965918+00:00",
+        "updated_at": "2026-10-30T14:19:40.767176+00:00",
+        "tenant_id": "tenant-bmb-001",
+        "branch_id": "branch-tenant-bmb-001-main",
+        "pre_order_cutoff": "16:00:00",
+        "archived": false
+      },
+      {
+        "id": "round-20261111-morning",
+        "round_key": "morning",
+        "display_name": "เช้า ",
+        "cutoff_time": "05:00:00",
+        "delivery_start": "07:00:00",
+        "delivery_end": "09:00:00",
+        "max_capacity": 20,
+        "current_count": 0,
+        "date": "2026-11-11",
+        "scheduled_date": "2026-11-11",
+        "name": "morning",
+        "status": "active",
+        "created_at": "2026-10-25T15:32:58.320776+00:00",
+        "updated_at": "2026-10-25T15:32:58.320776+00:00",
+        "tenant_id": "tenant-bmb-001",
+        "branch_id": "branch-tenant-bmb-001-main",
+        "pre_order_cutoff": "05:00:00",
+        "archived": false
+      },
+      {
+        "id": "round-20261111-midday",
+        "round_key": "midday",
+        "display_name": "เที่ยง",
+        "cutoff_time": "09:00:00",
+        "delivery_start": "11:00:00",
+        "delivery_end": "15:00:00",
+        "max_capacity": 30,
+        "current_count": 0,
+        "date": "2026-11-11",
+        "scheduled_date": "2026-11-11",
+        "name": "midday",
+        "status": "active",
+        "created_at": "2026-10-25T15:32:58.320776+00:00",
+        "updated_at": "2026-10-30T14:19:47.124844+00:00",
+        "tenant_id": "tenant-bmb-001",
+        "branch_id": "branch-tenant-bmb-001-main",
+        "pre_order_cutoff": "09:00:00",
+        "archived": false
+      },
+      {
+        "id": "round-20261111-evening",
+        "round_key": "evening",
+        "display_name": "เย็น",
+        "cutoff_time": "16:00:00",
+        "delivery_start": "18:00:00",
+        "delivery_end": "20:00:00",
+        "max_capacity": 25,
+        "current_count": 0,
+        "date": "2026-11-11",
+        "scheduled_date": "2026-11-11",
+        "name": "evening",
+        "status": "closed",
+        "created_at": "2026-10-25T15:32:58.320776+00:00",
+        "updated_at": "2026-10-30T14:19:44.605832+00:00",
+        "tenant_id": "tenant-bmb-001",
+        "branch_id": "branch-tenant-bmb-001-main",
+        "pre_order_cutoff": "16:00:00",
+        "archived": false
+      },
+      {
+        "id": "round-20261112-morning",
+        "round_key": "morning",
+        "display_name": "เช้า ",
+        "cutoff_time": "05:00:00",
+        "delivery_start": "07:00:00",
+        "delivery_end": "09:00:00",
+        "max_capacity": 20,
+        "current_count": 0,
+        "date": "2026-11-12",
+        "scheduled_date": "2026-11-12",
+        "name": "morning",
+        "status": "active",
+        "created_at": "2026-10-25T15:32:58.671671+00:00",
+        "updated_at": "2026-10-25T15:32:58.671671+00:00",
+        "tenant_id": "tenant-bmb-001",
+        "branch_id": "branch-tenant-bmb-001-main",
+        "pre_order_cutoff": "05:00:00",
+        "archived": false
+      },
+      {
+        "id": "round-20261112-midday",
+        "round_key": "midday",
+        "display_name": "เที่ยง",
+        "cutoff_time": "09:00:00",
+        "delivery_start": "11:00:00",
+        "delivery_end": "15:00:00",
+        "max_capacity": 30,
+        "current_count": 0,
+        "date": "2026-11-12",
+        "scheduled_date": "2026-11-12",
+        "name": "midday",
+        "status": "active",
+        "created_at": "2026-10-25T15:32:58.671671+00:00",
+        "updated_at": "2026-10-30T14:19:52.781795+00:00",
+        "tenant_id": "tenant-bmb-001",
+        "branch_id": "branch-tenant-bmb-001-main",
+        "pre_order_cutoff": "09:00:00",
+        "archived": false
+      },
+      {
+        "id": "round-20261112-evening",
+        "round_key": "evening",
+        "display_name": "เย็น",
+        "cutoff_time": "16:00:00",
+        "delivery_start": "18:00:00",
+        "delivery_end": "20:00:00",
+        "max_capacity": 25,
+        "current_count": 0,
+        "date": "2026-11-12",
+        "scheduled_date": "2026-11-12",
+        "name": "evening",
+        "status": "closed",
+        "created_at": "2026-10-25T15:32:58.671671+00:00",
+        "updated_at": "2026-10-30T14:19:48.902286+00:00",
+        "tenant_id": "tenant-bmb-001",
+        "branch_id": "branch-tenant-bmb-001-main",
+        "pre_order_cutoff": "16:00:00",
+        "archived": false
+      },
+      {
+        "id": "round-20261113-morning",
+        "round_key": "morning",
+        "display_name": "เช้า ",
+        "cutoff_time": "05:00:00",
+        "delivery_start": "07:00:00",
+        "delivery_end": "09:00:00",
+        "max_capacity": 20,
+        "current_count": 0,
+        "date": "2026-11-13",
+        "scheduled_date": "2026-11-13",
+        "name": "morning",
+        "status": "active",
+        "created_at": "2026-10-25T15:32:59.053654+00:00",
+        "updated_at": "2026-10-25T15:32:59.053654+00:00",
+        "tenant_id": "tenant-bmb-001",
+        "branch_id": "branch-tenant-bmb-001-main",
+        "pre_order_cutoff": "05:00:00",
+        "archived": false
+      },
+      {
+        "id": "round-20261113-midday",
+        "round_key": "midday",
+        "display_name": "เที่ยง",
+        "cutoff_time": "09:00:00",
+        "delivery_start": "11:00:00",
+        "delivery_end": "15:00:00",
+        "max_capacity": 30,
+        "current_count": 0,
+        "date": "2026-11-13",
+        "scheduled_date": "2026-11-13",
+        "name": "midday",
+        "status": "active",
+        "created_at": "2026-10-25T15:32:59.053654+00:00",
+        "updated_at": "2026-10-30T14:19:57.86633+00:00",
+        "tenant_id": "tenant-bmb-001",
+        "branch_id": "branch-tenant-bmb-001-main",
+        "pre_order_cutoff": "09:00:00",
+        "archived": false
+      },
+      {
+        "id": "round-20261113-evening",
+        "round_key": "evening",
+        "display_name": "เย็น",
+        "cutoff_time": "16:00:00",
+        "delivery_start": "18:00:00",
+        "delivery_end": "20:00:00",
+        "max_capacity": 25,
+        "current_count": 0,
+        "date": "2026-11-13",
+        "scheduled_date": "2026-11-13",
+        "name": "evening",
+        "status": "closed",
+        "created_at": "2026-10-25T15:32:59.053654+00:00",
+        "updated_at": "2026-10-30T14:19:55.495032+00:00",
+        "tenant_id": "tenant-bmb-001",
+        "branch_id": "branch-tenant-bmb-001-main",
+        "pre_order_cutoff": "16:00:00",
+        "archived": false
+      },
+      {
+        "id": "round-20261114-morning",
+        "round_key": "morning",
+        "display_name": "เช้า ",
+        "cutoff_time": "05:00:00",
+        "delivery_start": "07:00:00",
+        "delivery_end": "09:00:00",
+        "max_capacity": 20,
+        "current_count": 0,
+        "date": "2026-11-14",
+        "scheduled_date": "2026-11-14",
+        "name": "morning",
+        "status": "active",
+        "created_at": "2026-10-25T15:32:59.402257+00:00",
+        "updated_at": "2026-10-25T15:32:59.402257+00:00",
+        "tenant_id": "tenant-bmb-001",
+        "branch_id": "branch-tenant-bmb-001-main",
+        "pre_order_cutoff": "05:00:00",
+        "archived": false
+      },
+      {
+        "id": "round-20261114-midday",
+        "round_key": "midday",
+        "display_name": "เที่ยง",
+        "cutoff_time": "09:00:00",
+        "delivery_start": "11:00:00",
+        "delivery_end": "15:00:00",
+        "max_capacity": 30,
+        "current_count": 0,
+        "date": "2026-11-14",
+        "scheduled_date": "2026-11-14",
+        "name": "midday",
+        "status": "active",
+        "created_at": "2026-10-25T15:32:59.402257+00:00",
+        "updated_at": "2026-10-30T14:20:02.015987+00:00",
+        "tenant_id": "tenant-bmb-001",
+        "branch_id": "branch-tenant-bmb-001-main",
+        "pre_order_cutoff": "09:00:00",
+        "archived": false
+      },
+      {
+        "id": "round-20261114-evening",
+        "round_key": "evening",
+        "display_name": "เย็น",
+        "cutoff_time": "16:00:00",
+        "delivery_start": "18:00:00",
+        "delivery_end": "20:00:00",
+        "max_capacity": 25,
+        "current_count": 0,
+        "date": "2026-11-14",
+        "scheduled_date": "2026-11-14",
+        "name": "evening",
+        "status": "closed",
+        "created_at": "2026-10-25T15:32:59.402257+00:00",
+        "updated_at": "2026-10-30T14:19:59.321374+00:00",
+        "tenant_id": "tenant-bmb-001",
+        "branch_id": "branch-tenant-bmb-001-main",
+        "pre_order_cutoff": "16:00:00",
+        "archived": false
+      },
+      {
+        "id": "round-20261115-morning",
+        "round_key": "morning",
+        "display_name": "เช้า ",
+        "cutoff_time": "05:00:00",
+        "delivery_start": "07:00:00",
+        "delivery_end": "09:00:00",
+        "max_capacity": 20,
+        "current_count": 0,
+        "date": "2026-11-15",
+        "scheduled_date": "2026-11-15",
+        "name": "morning",
+        "status": "active",
+        "created_at": "2026-10-25T15:32:59.737277+00:00",
+        "updated_at": "2026-10-25T15:32:59.737277+00:00",
+        "tenant_id": "tenant-bmb-001",
+        "branch_id": "branch-tenant-bmb-001-main",
+        "pre_order_cutoff": "05:00:00",
+        "archived": false
+      },
+      {
+        "id": "round-20261115-midday",
+        "round_key": "midday",
+        "display_name": "เที่ยง",
+        "cutoff_time": "09:00:00",
+        "delivery_start": "11:00:00",
+        "delivery_end": "15:00:00",
+        "max_capacity": 30,
+        "current_count": 0,
+        "date": "2026-11-15",
+        "scheduled_date": "2026-11-15",
+        "name": "midday",
+        "status": "active",
+        "created_at": "2026-10-25T15:32:59.737277+00:00",
+        "updated_at": "2026-10-30T14:20:06.74766+00:00",
+        "tenant_id": "tenant-bmb-001",
+        "branch_id": "branch-tenant-bmb-001-main",
+        "pre_order_cutoff": "09:00:00",
+        "archived": false
+      },
+      {
+        "id": "round-20261115-evening",
+        "round_key": "evening",
+        "display_name": "เย็น",
+        "cutoff_time": "16:00:00",
+        "delivery_start": "18:00:00",
+        "delivery_end": "20:00:00",
+        "max_capacity": 25,
+        "current_count": 0,
+        "date": "2026-11-15",
+        "scheduled_date": "2026-11-15",
+        "name": "evening",
+        "status": "closed",
+        "created_at": "2026-10-25T15:32:59.737277+00:00",
+        "updated_at": "2026-10-30T14:20:03.94909+00:00",
+        "tenant_id": "tenant-bmb-001",
+        "branch_id": "branch-tenant-bmb-001-main",
+        "pre_order_cutoff": "16:00:00",
+        "archived": false
+      },
+      {
+        "id": "round-20261116-morning",
+        "round_key": "morning",
+        "display_name": "เช้า ",
+        "cutoff_time": "05:00:00",
+        "delivery_start": "07:00:00",
+        "delivery_end": "09:00:00",
+        "max_capacity": 20,
+        "current_count": 0,
+        "date": "2026-11-16",
+        "scheduled_date": "2026-11-16",
+        "name": "morning",
+        "status": "active",
+        "created_at": "2026-10-25T15:33:00.299504+00:00",
+        "updated_at": "2026-10-25T15:33:00.299504+00:00",
+        "tenant_id": "tenant-bmb-001",
+        "branch_id": "branch-tenant-bmb-001-main",
+        "pre_order_cutoff": "05:00:00",
+        "archived": false
+      },
+      {
+        "id": "round-20261116-midday",
+        "round_key": "midday",
+        "display_name": "เที่ยง",
+        "cutoff_time": "09:00:00",
+        "delivery_start": "11:00:00",
+        "delivery_end": "15:00:00",
+        "max_capacity": 30,
+        "current_count": 0,
+        "date": "2026-11-16",
+        "scheduled_date": "2026-11-16",
+        "name": "midday",
+        "status": "active",
+        "created_at": "2026-10-25T15:33:00.299504+00:00",
+        "updated_at": "2026-10-30T14:20:27.698676+00:00",
+        "tenant_id": "tenant-bmb-001",
+        "branch_id": "branch-tenant-bmb-001-main",
+        "pre_order_cutoff": "09:00:00",
+        "archived": false
+      },
+      {
+        "id": "round-20261116-evening",
+        "round_key": "evening",
+        "display_name": "เย็น",
+        "cutoff_time": "16:00:00",
+        "delivery_start": "18:00:00",
+        "delivery_end": "20:00:00",
+        "max_capacity": 25,
+        "current_count": 0,
+        "date": "2026-11-16",
+        "scheduled_date": "2026-11-16",
+        "name": "evening",
+        "status": "closed",
+        "created_at": "2026-10-25T15:33:00.299504+00:00",
+        "updated_at": "2026-10-30T14:20:23.563348+00:00",
+        "tenant_id": "tenant-bmb-001",
+        "branch_id": "branch-tenant-bmb-001-main",
+        "pre_order_cutoff": "16:00:00",
+        "archived": false
+      },
+      {
+        "id": "round-20261117-morning",
+        "round_key": "morning",
+        "display_name": "เช้า ",
+        "cutoff_time": "05:00:00",
+        "delivery_start": "07:00:00",
+        "delivery_end": "09:00:00",
+        "max_capacity": 20,
+        "current_count": 0,
+        "date": "2026-11-17",
+        "scheduled_date": "2026-11-17",
+        "name": "morning",
+        "status": "active",
+        "created_at": "2026-10-25T15:33:01.007839+00:00",
+        "updated_at": "2026-10-25T15:33:01.007839+00:00",
+        "tenant_id": "tenant-bmb-001",
+        "branch_id": "branch-tenant-bmb-001-main",
+        "pre_order_cutoff": "05:00:00",
+        "archived": false
+      },
+      {
+        "id": "round-20261117-midday",
+        "round_key": "midday",
+        "display_name": "เที่ยง",
+        "cutoff_time": "09:00:00",
+        "delivery_start": "11:00:00",
+        "delivery_end": "15:00:00",
+        "max_capacity": 30,
+        "current_count": 0,
+        "date": "2026-11-17",
+        "scheduled_date": "2026-11-17",
+        "name": "midday",
+        "status": "active",
+        "created_at": "2026-10-25T15:33:01.007839+00:00",
+        "updated_at": "2026-10-30T14:20:32.258688+00:00",
+        "tenant_id": "tenant-bmb-001",
+        "branch_id": "branch-tenant-bmb-001-main",
+        "pre_order_cutoff": "09:00:00",
+        "archived": false
+      },
+      {
+        "id": "round-20261117-evening",
+        "round_key": "evening",
+        "display_name": "เย็น",
+        "cutoff_time": "16:00:00",
+        "delivery_start": "18:00:00",
+        "delivery_end": "20:00:00",
+        "max_capacity": 25,
+        "current_count": 0,
+        "date": "2026-11-17",
+        "scheduled_date": "2026-11-17",
+        "name": "evening",
+        "status": "closed",
+        "created_at": "2026-10-25T15:33:01.007839+00:00",
+        "updated_at": "2026-10-30T14:20:29.216013+00:00",
+        "tenant_id": "tenant-bmb-001",
+        "branch_id": "branch-tenant-bmb-001-main",
+        "pre_order_cutoff": "16:00:00",
+        "archived": false
+      }
+    ]
+  },
+  "schedule_today_onwards": {
+    "status": 200,
+    "body": [
+      {
+        "product_id": "prod-1793370974354-hd4fxf",
+        "scheduled_date": "2026-11-08",
+        "delivery_round_key": null
+      },
+      {
+        "product_id": "prod-1793370548177-oilfxi",
+        "scheduled_date": "2026-11-08",
+        "delivery_round_key": null
+      },
+      {
+        "product_id": "prod-1793371035971-aiewrq",
+        "scheduled_date": "2026-11-09",
+        "delivery_round_key": null
+      },
+      {
+        "product_id": "prod-1793370625449-zzn457",
+        "scheduled_date": "2026-11-09",
+        "delivery_round_key": null
+      },
+      {
+        "product_id": "prod-1793370911594-35ci5w",
+        "scheduled_date": "2026-11-10",
+        "delivery_round_key": null
+      },
+      {
+        "product_id": "prod-1793371035971-aiewrq",
+        "scheduled_date": "2026-11-10",
+        "delivery_round_key": null
+      },
+      {
+        "product_id": "prod-1793371126826-gbxoz3",
+        "scheduled_date": "2026-11-11",
+        "delivery_round_key": null
+      },
+      {
+        "product_id": "prod-1791940138411-az27q5",
+        "scheduled_date": "2026-11-11",
+        "delivery_round_key": null
+      },
+      {
+        "product_id": "prod-1793370474689-bbj9jy",
+        "scheduled_date": "2026-11-12",
+        "delivery_round_key": null
+      },
+      {
+        "product_id": "prod-1793370780561-zfg8jf",
+        "scheduled_date": "2026-11-12",
+        "delivery_round_key": null
+      },
+      {
+        "product_id": "prod-1791940362962-on44by",
+        "scheduled_date": "2026-11-13",
+        "delivery_round_key": null
+      },
+      {
+        "product_id": "prod-1793370819276-n1prau",
+        "scheduled_date": "2026-11-13",
+        "delivery_round_key": null
+      },
+      {
+        "product_id": "prod-3",
+        "scheduled_date": "2026-11-14",
+        "delivery_round_key": null
+      },
+      {
+        "product_id": "prod-1791940362962-on44by",
+        "scheduled_date": "2026-11-14",
+        "delivery_round_key": null
+      }
+    ]
+  }
+}
