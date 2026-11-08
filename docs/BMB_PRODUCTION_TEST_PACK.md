@@ -63,6 +63,7 @@
 > **A2 (B6) — คอมเมนต์จากบัญชีลูกค้าจริง:** ① เห็นคำตอบใต้คอมเมนต์ ② ลูกค้าที่ผูกบัญชี biteme = ได้ **web push / Notification Center "🔔 Bite ตอบคอมเมนต์ของคุณแล้ว" ≤5 นาที** ③ จดภาพ+เวลา · (ส่วน ⚠️ DM Messenger ยังคง fail = ฝั่งเฟซ — ดู `flags.dm_error` รายแถบ)
 > **B1 (A3/A4) — debug capture:** เปิด `https://biteme-baby.com/?r81debug=1` หนเดียวใน FB แล้วกดปุ่มทีละปุ่ม (ปุ่มหลัก · คัดลอก · แชร์/ส่งต่อ · เปิดในแท็บใหม่ · ปิด) → ส่ง screenshot console หรือค่า `localStorage['bmb:r81-debug-log']` มาให้ทีม
 > **B7 (A3/A4/C9) — acceptance 2 เครื่อง:** ① กดปุ่มเดียว = ได้ลิงก์ + guide ขึ้น 1 ครั้ง · ไม่มี share surprise ② **ไม่มีปุ่มไหนกดแล้ว error** (ปุ่ม intent ถูกลบหมดแล้ว) ③ ออกจาก FB ได้จริง ≤3 ขั้นตาม guide ④ ใน FB: ปักหมุด/พิมพ์ค้นหาที่อยู่ใช้ได้ · ไม่มีปุ่ม GPS ให้กดผิด · ใน Chrome: GPS ทำงาน
+> **Deploy (2026-11-08 02:46Z):** EF 4 ฟังก์ชัน deploy แล้ว — `social-ai-worker` (A3) · `social-publish-worker` (B6 footer) · `channel-webhook` + `social-post-worker` (bundle `_shared/socialOrderIntake` ตัวเดียวกัน) — **exit=0 ทุกตัว** (`e2e/_r81_deploy.log`) + smoke `POST social-ai-worker` = **HTTP 200 boot_ok** (`e2e/_r81_smoke.json` · ใช้ event_id ปลอม ไม่แตะลูกค้า) · frontend = git push → auto-deploy → **ของใหม่ขึ้น live ครบแล้ว**
 > **กติกาคงเดิม (ห้ามพลาดซ้ำ):** ห้าม nav หน้าปัจจุบันไป intent/unknown scheme (R76) · ห้าม auto intent (R77) · ห้าม auto share (R79) — ทุก action ต้องไม่มีทางพังหน้า
 
 ## A. CI / gate ของ SHA ล่าสุด `[R]`
