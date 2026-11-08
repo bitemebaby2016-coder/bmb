@@ -9,6 +9,7 @@ import type { Product, ProductCategory, SameDayOrderPayload, PreOrderPayload, Av
 import { getProducts, getCategories } from '@/lib/bmbAdminApi_products'
 import { buildHeadingGroups, headingChips, menuTabItems } from '@/lib/catalogStructure'
 import { getProductScheduleMap, type ProductScheduleMap } from '@/lib/productSchedule'
+import { getVerifiedReviewsForProducts } from '@/lib/reviewApi'
 import { formatThaiDate } from '@/components/home/ScheduleDateBadge'
 import { useCartStore } from '@/store/cartStore'
 import { showToast } from '@/components/ui/ToastContainer'
@@ -30,6 +31,8 @@ export function MenuPage() {
   const [categories, setCategories] = useState<ProductCategory[]>([])
   // วันจัดส่งจริงจาก menu_schedule (UX fix 2026-10-15 — ไม่ใช้ products.scheduled_date)
   const [scheduleMap, setScheduleMap] = useState<ProductScheduleMap>({})
+  // R87: คะแนทรีวิวจริงต่อเมนู (ตาราง reviews · fire-and-forget เหมือน schedule — ล้มเหลว = ไม่โชว์ ไม่เดา)
+  const [reviewSummaryById, setReviewSummaryById] = useState<Record<string, { count: number; avg: number }>>({})
   // R21 Phase 3: โหลดล้มเหลว ≠ ไม่มีเมนู + key สำหรับกด "ลองใหม่"
   const [loadError, setLoadError] = useState('')
   const [reloadKey, setReloadKey] = useState(0)
@@ -101,6 +104,22 @@ export function MenuPage() {
         setCategories(cats)
         // ปฏิทินมุมการ์ด: วันจัดส่งจริงจาก menu_schedule (fire-and-forget — ไม่ขวางหน้า)
         void getProductScheduleMap().then(setScheduleMap).catch(() => setScheduleMap({}))
+        // R87: คะแนทรีวิวจริงจากการ์ดเมนู (verified reviews — batch · ไม่มีรีวิว = ไม่โชว์)
+        void getVerifiedReviewsForProducts(products.map((p) => p.id), 500)
+          .then((rvs) => {
+            const m: Record<string, { count: number; avg: number }> = {}
+            for (const r of rvs) {
+              const id = (r as { product_id?: string }).product_id
+              if (!id) continue
+              const e = m[id] ?? { count: 0, avg: 0 }
+              e.count += 1
+              e.avg += Number(r.rating || 0)
+              m[id] = e
+            }
+            for (const k of Object.keys(m)) m[k].avg = Math.round((m[k].avg / m[k].count) * 10) / 10
+            setReviewSummaryById(m)
+          })
+          .catch(() => undefined)
       } catch (err) {
         console.error('[MenuPage] Load error:', err)
         setLoadError('โหลดเมนูไม่สำเร็จ — ตรวจสอบการเชื่อมต่ออินเทอร์เน็ตแล้วกด "ลองใหม่"')
@@ -330,6 +349,7 @@ export function MenuPage() {
                     availability={product.is_available ? 'available' : 'sold_out'}
                     scheduledDate={schedDate}
                     preorderExpired={preorderExpired}
+                    reviewSummary={reviewSummaryById[product.id]}
                     onSameDayOrder={handleSameDay}
                     onPreOrder={handlePreOrder}
                   />

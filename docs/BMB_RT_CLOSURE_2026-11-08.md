@@ -39,7 +39,7 @@
 1. ~~Owner รัน SQL 194→195 ใน SQL Editor~~ → **ทำแทนแล้ว (R85 · Owner อนุมัติ): apply ลง production ผ่าน Management API + verify ผ่านครบ** (`e2e/_r85_apply.log`)
 2. **Owner/แอดมิน:** retest **RT-3.4** — hard reload Ctrl+Shift+R → `/admin/orders` → 4 ใบต้องโชว์ `🚫 void (ยกเลิก ไม่เก็บเงิน)` ไม่ใช่ `⏳ pending` · แผงตรวจสลิปไม่มี 4 ใบค้าง · ไม่มี toast `ERR_ORDER_CLOSED`
 3. **แชทหน้า:** รับ **D2 → D3 → D4** ทำ two-try · D5 = enhancement ทำพร้อมกันได้ (**D1 = ปิดแล้วทั้งแผงและสถานะชำระ + DB applied**)
-3b. **Owner retest งาน R86:** `/admin/orders` ว่าง (ทดสอบ 5 ใบถูกลบ) + หน้าต่างตรวจสลิปกลับมา (empty state) · `/admin/settings` สวิตช์ COD (default ซ่อน) · `/shop` theater ไม่โชว์เมนูเลยรอบ · **mig 190–193 = applied + verified แล้ว (history ครบ 190–195) — ไม่ต้องทำอะไรเพิ่ม**
+3b. **Owner retest งาน R86+R87:** `/admin/orders` ว่าง (ทดสอบทั้งหมดถูกลบ — Siam Portal 10 ใบด้วย) + หน้าต่างตรวจสลิปกลับมา (empty state) · `/admin/settings` สวิตช์ COD (default ซ่อน) · `/shop` theater ไม่โชว์เมนูเลยรอบ · **แคนเซิ่ล → แจ้งลูกค้า** · **ไรเดอร์ปิดลูป → ว่าง** · **เมนูมีลิงก์เขียนรีวิวจริง + ลิงก์ระบบแต้ม** · **mig 190–193/197/198 = applied + verified (history ครบ 190–198) — ไม่ต้องทำอะไรเพิ่ม**
 4. **Owner:** รัน RT-1.4 ตอนปิดร้าน · ต่อคิว RT-4 → RT-5.5–5.7 → RT-6 → §T-A → CAP ที่เหลือ
 5. **หลังแก้ D2–D4:** retest RT-5.1/5.3/5.4 แล้วอัพเดท test pack ใหม่
 

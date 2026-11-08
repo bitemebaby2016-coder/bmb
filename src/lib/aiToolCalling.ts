@@ -8,7 +8,7 @@ import { supabase } from './supabase'
 import type { Product } from '@/types'
 import { getProducts, getProduct } from './bmbAdminApi_products'
 import { getOrder } from './bmbAdminApi_orders'
-import { getReviews, getAverageRating } from './reviewApi'
+import { getVerifiedReviewsByProduct } from './reviewApi'
 import { getCategories } from './bmbAdminApi_products'
 import { MODEL_A_FALLBACK, resolveModelA } from './aiModels'
 import { BITE_PERSONA_TH } from './bitePersona'
@@ -115,8 +115,12 @@ export async function executeToolCall(toolName: string, args: Record<string, any
       return { success: true, data: product }
     }
     case 'get_reviews': {
-      const reviews = getReviews(args.product_id)
-      const averageRating = getAverageRating(args.product_id)
+      // R87 (Owner 2026-11-08: "ระบบรีวิวทั้งเส้น... ห้ามมีม็อกอัพเพลสโฮลเดอร์ฮาร์ดโค้ด") —
+      // รีวิวจริงจากตาราง reviews เท่านั้น (เดิมอ่าน localStorage = คำตอบปลอมแก่ลูกค้า)
+      const reviews = await getVerifiedReviewsByProduct(args.product_id)
+      const averageRating = reviews.length
+        ? Math.round((reviews.reduce((s, r) => s + Number(r.rating || 0), 0) / reviews.length) * 10) / 10
+        : 0
       return { success: true, data: { reviews, averageRating } }
     }
     case 'get_categories': {

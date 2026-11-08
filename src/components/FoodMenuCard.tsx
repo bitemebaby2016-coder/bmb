@@ -7,6 +7,7 @@
 // ============================================
 
 import type { Product, ProductCategory, SameDayOrderPayload, PreOrderPayload, AvailabilityState, OrderMode } from '@/types'
+import { Link } from 'react-router-dom'
 import { MascotBadge } from '@/components/MascotBadge'
 import { ScheduleDateBadge } from '@/components/home/ScheduleDateBadge'
 
@@ -24,6 +25,9 @@ interface FoodMenuCardProps {
   scheduledDate?: string
   /** Owner 2026-10-19: พรีออเดอร์ที่เลยวัน/เกินรอบไปแล้ว → แสตมป์ out of stock + ปิดปุ่มจอง */
   preorderExpired?: boolean
+  /** R87 (Owner 2026-11-08: "ลิงก์จริงที่เมนู"): คะแนทรีวิวจริงจากตาราง reviews
+   *  (MenuPage คำนวณจาก getVerifiedReviewsForProducts — ไม่มีค่า = ไม่โชว์ ไม่เดา) */
+  reviewSummary?: { count: number; avg: number }
 }
 
 const AVAIL = {
@@ -35,7 +39,7 @@ const AVAIL = {
   delivery_unavailable: 'ส่งไม่ถึงตอนนี้'
 } as const
 
-export function FoodMenuCard({ product, category, availability, onSameDayOrder, onPreOrder, scheduledDate, preorderExpired = false }: FoodMenuCardProps) {
+export function FoodMenuCard({ product, category, availability, onSameDayOrder, onPreOrder, scheduledDate, preorderExpired = false, reviewSummary }: FoodMenuCardProps) {
   const imageUrl = product.image_url ?? ''
   const avail = availability as keyof typeof AVAIL
   const isAvail = availability === 'available' || availability === 'limited'
@@ -127,6 +131,17 @@ export function FoodMenuCard({ product, category, availability, onSameDayOrder, 
             ⏱ เตรียม {prep} นาที
           </span>
         </div>
+
+        {/* R87: คะแนทรีวิวจริง (ตาราง reviews) — ลิงก์ไปหน้ารีวิว/เขียนรีวิวของเมนูนี้ */}
+        {reviewSummary && reviewSummary.count > 0 && (
+          <Link
+            to={`/reviews/${product.id}`}
+            className="text-xs text-brand-accent font-medium hover:underline"
+            data-testid={`card-review-link-${product.id}`}
+          >
+            ⭐ {reviewSummary.avg.toFixed(1)} · {reviewSummary.count} รีวิว
+          </Link>
+        )}
       </div>
 
       {/* ============================================ */}
@@ -156,6 +171,14 @@ export function FoodMenuCard({ product, category, availability, onSameDayOrder, 
             </p>
           </>
         ) : null}
+        {/* R87 (Owner: "ลูกค้าต้องไปเขียนรีวิวได้ที่เมนู — ลิงก์จริง ไม่ใช่ม็อก"): เขียนรีวิวเมนูนี้ */}
+        <Link
+          to={`/reviews/${product.id}`}
+          className="w-full text-center text-xs font-medium text-brand-accent border border-brand-border rounded-xl py-2 hover:bg-brand-bg transition-all"
+          data-testid={`write-review-${product.id}`}
+        >
+          ⭐ เขียนรีวิวเมนูนี้
+        </Link>
       </div>
     </div>
   )

@@ -11,6 +11,9 @@ import { extractIdempotencyErrorCode, payloadFingerprint } from './orderSubmitKe
 import { confirmOfflinePayment as confirmOfflinePaymentCanonical } from './paymentGateway'
 // Owner 2026-11-07: date scope ของหน้า Manage Orders (วันนี้เท่านั้น + แท็บเดือน) — PURE helpers
 import { orderMonthKeys, type OrderDateScope } from './orderDateScope'
+// R87 (Owner 2026-11-08: "ยกเลิกแล้วให้แจ้งเตือนลูกค้าด้วย") — enqueue แจ้งเตือนลูกค้า
+// รายออเดอร์หลัง cancel สำเร็จ (notificationManager = ทาง emit เดียวของ outbox · ไม่มี cycle)
+import { emitNotification } from './notifications/notificationManager'
 
 // P0-4 SPLIT (2026-09-18):
 //   OrderInput  — client payload (INPUT ONLY, no financial authority)
@@ -499,7 +502,7 @@ export async function cancelOrder(orderNumber: string, reason: string = ''): Pro
     return { success: false, error: r.error.message }
   }
   const data = (r.data ?? {}) as Record<string, any>
-  return {
+  const result: CancelOrderResult = {
     success: data.ok !== false,
     idempotent: data.idempotent === true,
     order_number: data.order_number ?? orderNumber,
@@ -510,6 +513,32 @@ export async function cancelOrder(orderNumber: string, reason: string = ''): Pro
     inventory_restored: data.inventory_restored === true,
     note: data.note,
   }
+  // R87 (Owner 2026-11-08: "ยกเลิกแล้วให้แจ้งเตือนลูกค้าด้วย") — ทุกเส้นทางแคนเซิ่ล
+  // (แอดมิน Manage Orders / ลูกค้า OrdersPage / OrderTrack) วิ่งผ่าน fn นี้ทั้งหมด →
+  // หลังยกเลิกสำเร็จ = best-effort แจ้งลูกค้าเจ้าของออเดอร์ 1 ราย (idempotent ราย key)
+  // แจ้งไม่ได้ = ไม่ทำให้การยกเลิกล้ม — log เฉย ๆ (การยกเลิกเกิดจริงแล้วที่ server)
+  if (result.success) {
+    try {
+      const { data: row } = await supabase
+        .from('orders')
+        .select('customer_id')
+        .eq('order_number', result.order_number!)
+        .maybeSingle()
+      if (row?.customer_id) {
+        await emitNotification({
+          key: `ord-${result.order_number}-cancelled`,
+          customerId: row.customer_id,
+          title: '🚫 ออเดอร์ถูกยกเลิก',
+          body: `ออเดอร์ ${result.order_number} ถูกยกเลิก${reason ? ` · เหตุผล: ${reason}` : ''} — ดูรายละเอียดในหน้าออเดอร์ของคุณ`,
+          category: 'Transactional',
+          url: '/orders',
+        })
+      }
+    } catch (e) {
+      console.warn('[cancelOrder] customer notify skipped (cancel stands):', String((e as Error)?.message || e).slice(0, 120))
+    }
+  }
+  return result
 }
 
 // W4-E-1 (D1): the orders-table getDashboardStats() duplicate was removed —

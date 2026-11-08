@@ -2,7 +2,11 @@
 import { useParams, Link } from 'react-router-dom'
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
-import { getVerifiedReviewsByProduct } from '@/lib/reviewApi'
+import { getVerifiedReviewsByProduct, submitVerifiedReview } from '@/lib/reviewApi'
+// R87: ฟอร์มเขียนรีวิวจริง — สิทธิ์ = ออเดอร์ delivered จริงของลูกค้า (ไม่ใช่ฟอร์มปลอม)
+import { getOrdersByCustomer } from '@/lib/bmbAdminApi_orders'
+import { useAuthStore } from '@/store/authStore'
+import { showToast } from '@/components/ui/ToastContainer'
 // R21d backlog: โหลดรีวิวไม่สำเร็จต้องฟ้อง (ห้ามโชว์ "No reviews yet." ปลอม)
 import { LoadErrorBanner } from '@/components/ui/LoadErrorBanner'
 import type { VerifiedCustomerReview } from '@/types'
@@ -16,6 +20,15 @@ export function ReviewPage() {
   // R21d: โหลดล้มเหลว ≠ ยังไม่มีรีวิว + key สำหรับกดลองใหม่
   const [loadError, setLoadError] = useState('')
   const [retryKey, setRetryKey] = useState(0)
+  // R87 (Owner 2026-11-08: "ลูกค้าต้องไปเขียนรีวิวได้... ลิงก์จริง + ลิงก์ระบบแต้ม"):
+  // ฟอร์มเขียนรีวิว — เงื่อนไขสิทธิ์จริงทั้งหมด (login + ออเดอร์ delivered ของตัวเองที่มีเมนูนี้)
+  const customer = useAuthStore((s) => s.customer)
+  const [rating, setRating] = useState(5)
+  const [comment, setComment] = useState('')
+  const [eligibleOrder, setEligibleOrder] = useState<string | null>(null)
+  const [eligChecked, setEligChecked] = useState(false)
+  const [submitting, setSubmitting] = useState(false)
+  const [submitted, setSubmitted] = useState(false)
 
   useEffect(() => {
     async function loadReviews() {
@@ -47,9 +60,121 @@ export function ReviewPage() {
     })()
   }, [])
 
+  // R87: เช็กสิทธิ์รีวิวจากออเดอร์จริง — เฉพาะออเดอร์ status='delivered' ของลูกค้า
+  // ที่มีเมนูนี้ในรายการ · ไม่ผ่านเงื่อนไข = ไม่มีปุ่มส่ง (ห้ามมีฟอร์มปลอมส่งได้ทุกคน)
+  useEffect(() => {
+    setEligChecked(false)
+    setSubmitted(false)
+    if (!customer?.id || !productId) { setEligibleOrder(null); setEligChecked(true); return }
+    void (async () => {
+      try {
+        const orders = await getOrdersByCustomer(customer.id)
+        const hit = orders.find(
+          (o) => o.status === 'delivered' && (o.items || []).some((it) => it.product_id === productId),
+        )
+        setEligibleOrder(hit?.order_number ?? null)
+      } catch {
+        setEligibleOrder(null)
+      } finally {
+        setEligChecked(true)
+      }
+    })()
+  }, [customer?.id, productId])
+
+  // R87: ส่งรีวิวจริงผ่าน RPC submit_verified_review (m099 — server ตรวจ ownership เอง)
+  async function handleSubmitReview() {
+    if (!eligibleOrder || !productId || submitting) return
+    setSubmitting(true)
+    const r = await submitVerifiedReview({
+      order_number: eligibleOrder,
+      product_id: productId,
+      rating,
+      comment: comment.trim(),
+    })
+    setSubmitting(false)
+    if (r.success) {
+      showToast('บันทึกรีวิวแล้ว — ขอบคุณที่รีวิวจากประสบการณ์จริง ⭐', 'success')
+      setSubmitted(true)
+      setComment('')
+      setRetryKey((n) => n + 1) // โหลดรายการรีวิวใหม่ทันที (ข้อมูลจริงจาก DB)
+    } else {
+      showToast('บันทึกรีวิวไม่สำเร็จ: ' + (r.error || 'ลองใหม่อีกครั้ง'), 'error')
+    }
+  }
+
   return (
     <div className='max-w-4xl mx-auto px-4 py-6'>
       <h1 className='text-3xl font-bold text-brand-accent mb-6'>Reviews</h1>
+
+      {/* R87 (Owner 2026-11-08): ฟอร์มเขียนรีวิวจริง + ลิงก์ระบบแต้ม (Rewards)
+          เงื่อนไขทั้งหมด = ข้อมูลจริง (login · ออเดอร์ delivered ของตัวเองที่มีเมนูนี้)
+          ไม่มี mock: ส่งผ่าน RPC submit_verified_review เท่านั้น (m099) */}
+      {productId && (
+        <div className='card mb-6 border-2 border-amber-200 bg-amber-50' data-testid='review-write-form'>
+          <div className='flex items-center justify-between gap-2 mb-3 flex-wrap'>
+            <h2 className='font-bold text-brand-accent'>✍️ เขียนรีวิวเมนูนี้</h2>
+            <Link to='/rewards' className='text-sm font-medium text-brand-primary hover:underline' data-testid='review-rewards-link'>
+              🎁 ดูแต้มสะสมของฉัน (ระบบ Rewards)
+            </Link>
+          </div>
+          {!customer ? (
+            <p className='text-sm text-brand-muted' data-testid='review-need-login'>
+              <Link to='/login' className='text-brand-primary underline'>เข้าสู่ระบบ</Link> ก่อนเขียนรีวิว — รีวิวผูกกับออเดอร์จริงของคุณ
+            </p>
+          ) : !eligChecked ? (
+            <p className='text-sm text-brand-muted'>⏳ กำลังตรวจสิทธิ์รีวิวจากออเดอร์ของคุณ…</p>
+          ) : !eligibleOrder ? (
+            <p className='text-sm text-brand-muted' data-testid='review-no-eligible'>
+              รีวิวได้เฉพาะเมนูที่คุณสั่งและได้รับแล้ว (ส่งมอบเสร็จ) — เมนูนี้ยังไม่มีออเดอร์ที่ผ่านเงื่อนไขของคุณ ·{' '}
+              <Link to='/menu' className='text-brand-primary underline'>กลับไปที่เมนู</Link>
+            </p>
+          ) : submitted || verifiedReviews.some((r: any) => r.customer_id === customer.id) ? (
+            <p className='text-sm text-emerald-700' data-testid='review-already'>
+              คุณรีวิวเมนูนี้ไปแล้ว — ขอบคุณที่แชร์ประสบการณ์ ⭐
+            </p>
+          ) : (
+            <div className='space-y-3'>
+              <div className='flex items-center gap-1' data-testid='review-star-picker'>
+                {[1, 2, 3, 4, 5].map((n) => (
+                  <button
+                    key={n}
+                    type='button'
+                    aria-label={`${n} ดาว`}
+                    onClick={() => setRating(n)}
+                    className={`text-2xl transition-transform ${n <= rating ? '' : 'opacity-30 grayscale'}`}
+                    data-testid={`review-star-${n}`}
+                  >
+                    ⭐
+                  </button>
+                ))}
+                <span className='text-xs text-brand-muted ml-2'>{rating} ดาว</span>
+              </div>
+              <textarea
+                className='input w-full'
+                rows={3}
+                maxLength={500}
+                placeholder='รสชาติ/บริการ/ความคุ้มค่า — เขียนจากประสบการณ์จริงของคุณ'
+                value={comment}
+                onChange={(e) => setComment(e.target.value)}
+                data-testid='review-comment'
+              />
+              <div className='flex items-center justify-between gap-2 flex-wrap'>
+                <span className='text-xs text-brand-muted'>ยืนยันด้วยออเดอร์ {eligibleOrder.slice(0, 14)}… (verified ✓)</span>
+                <button
+                  type='button'
+                  onClick={() => void handleSubmitReview()}
+                  disabled={submitting}
+                  className='btn btn-primary text-sm disabled:opacity-50'
+                  data-testid='review-submit'
+                >
+                  {submitting ? '⏳ กำลังบันทึก…' : '✅ ส่งรีวิว'}
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
       <section className='mb-10'>
         <h2 className='text-xl font-display font-bold text-emerald-700 mb-4 flex items-center gap-2'><span className='w-8 h-8 rounded-full bg-emerald-100 text-emerald-700 font-bold inline-flex items-center justify-center'>{'\u2713'}</span>Verified Customer Reviews
             <MascotBadge pose="thumbsup" size="sm" alt="น้อง Bite การันตีรีวิวจริง" className="section-float-mascot" />

@@ -20,6 +20,9 @@ export interface NotifyEventInput {
   body?: string
   category?: NotifyEventCategory
   url?: string
+  /** R87 (Owner 2026-11-08: "ยกเลิกแล้วให้แจ้งเตือนลูกค้าด้วย") — เจาะจงลูกค้า 1 ราย
+   *  (ขาด = ของเดิม = event รวม channel · server กระจายตาม identity ของ customer นั้น) */
+  customerId?: string | null
 }
 
 export interface ChannelFlags {
@@ -73,7 +76,7 @@ export async function emitNotification(ev: NotifyEventInput): Promise<{ ok: bool
   try {
     const { data, error } = await supabase.rpc('enqueue_notification', {
       p_event_key: ev.key,
-      p_customer_id: null,
+      p_customer_id: ev.customerId ?? null,
       p_category: ev.category || 'Transactional',
       p_title: ev.title,
       p_body: ev.body || '',
