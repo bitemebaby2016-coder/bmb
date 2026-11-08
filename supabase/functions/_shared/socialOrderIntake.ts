@@ -21,6 +21,8 @@
 // ---------- Order extraction (structured AI output — DATA, never instruction) ----------
 
 import type { SchemaSpec } from './aiStructuredOutput.ts'
+// R82: เช็ค cutoff/window ของรอบพรีออเดอร์แบบเดียวกับเว็บ (mirror roundBookability PRE_ORDER)
+import { isRoundPreOrderOpen } from './orderWindow.ts'
 
 export interface ExtractedItem {
   name: string
@@ -251,11 +253,14 @@ export interface RoundPick {
 
 /** First ACTIVE round of `date` that still has capacity — null when none.
  *  The create RPC re-validates cutoff/capacity server-side (025); this only
- *  avoids submitting a doomed order and lets the reply state the real state. */
+ *  avoids submitting a doomed order and lets the reply state the real state.
+ *  R82 (Owner 2026-11-08): mode 'PRE_ORDER' = กรองรอบที่เลย pre_order_cutoff/
+ *  หน้าต่างส่งแล้วออกด้วย (mirror เว็บ) — SAME_DAY คงเดิม (m148: ไม่มีปิดรอบ) */
 export async function resolveActiveRound(
   sbUrl: string,
   serviceKey: string,
   date: string,
+  mode: 'SAME_DAY' | 'PRE_ORDER' = 'SAME_DAY',
 ): Promise<RoundPick | null> {
   try {
     const r = await fetch(
@@ -265,7 +270,10 @@ export async function resolveActiveRound(
       { headers: { apikey: serviceKey, Authorization: 'Bearer ' + serviceKey, 'Content-Type': 'application/json' } },
     )
     const rows: any[] = r.ok ? await r.json().catch(() => []) : []
-    const open = (rows || []).find((x) => Number(x.current_count ?? 0) < Number(x.max_capacity ?? 0))
+    const withCap = (rows || []).filter((x) => Number(x.current_count ?? 0) < Number(x.max_capacity ?? 0))
+    const open = mode === 'PRE_ORDER'
+      ? withCap.find((x) => isRoundPreOrderOpen({ ...x, scheduled_date: date }, Date.now()))
+      : withCap[0]
     if (!open) return null
     const time = `${String(open.delivery_start || '').slice(0, 5)}–${String(open.delivery_end || '').slice(0, 5)}`
     return { id: String(open.id), label: `${open.display_name || open.id} (${time})` }

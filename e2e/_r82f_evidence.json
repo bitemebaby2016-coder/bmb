@@ -1,0 +1,112 @@
+{
+  "tool": "r82f-schedule-scope",
+  "ts": "2026-11-08T03:19:07.850Z",
+  "mode": "READ_ONLY",
+  "summary": {
+    "schedule_rows": 53,
+    "schedule_products_distinct": 24,
+    "schedule_products_published": 22,
+    "products_total": 35,
+    "products_with_schedule": [
+      "ลุยสวนหมู+กุ้ง",
+      "ปลาแจ่ว",
+      "เต้าหู้ย่างผักสามสี",
+      "Fish & Ships",
+      "ข้าวผัดปลาแดดเดียวตาแดง",
+      "แกงคั่วชะอมไข่เป็ด",
+      "กุ้งมันฝรั่งผัดเนย",
+      "สเต๊กเต้าหู้",
+      "กุ้งบ้อคโคลี่ผักสามสี",
+      "สเต็กปลาดอลลี่",
+      "🥢 ข้าวหมูผัดกิมจิ",
+      "🍤 สุกี้แห้งกุ้ง พร้อมน้ำจิ้มสูตรโบราณ",
+      "ข้าวหน้าปลาทอดลุยสวน 🐟",
+      "เมี่ยงอกไก่ ",
+      "เมี่ยงแซลมอน",
+      "บะหมี่ไก่ย่างเทริยากิ",
+      "ยำสลัดถั่วลูกไก่ 🥑",
+      "กุ้งมันม่วง ผักรวม เสิร์ฟพร้อมพอนซึ",
+      "🍗 ไก่ทอดอินโด",
+      "ชุดน้ำพริกตาแดง หมูแดดเดียว",
+      "ปลาต้มผักกาดดองเสฉวน (ซวนช่ายหยุย)",
+      "🐟 แซลมอนย่างเกลือ+มันฝรั่งและพริกหวาน",
+      "สามชั้นตุ๋นผักกาดดอง (เคาหยก)"
+    ],
+    "products_without_schedule": [
+      "เมี่ยงหมู+กุ้ง ",
+      "coming soon",
+      "coming soon",
+      "ลุยสวนหมูสับเห็ดหอม",
+      "ชาไทยพีช",
+      "ชาไทยแบล็คมินท์",
+      "ชาไทยนมสด",
+      "ข้าวลาบอกไก่+ไข่ต้ม",
+      "สปาเกตตี้ผัดพริกแห้งกุ้ง",
+      "เมี่ยงแซลม่อน",
+      "ข้าวกุ้งผัดพริกเกลือ",
+      "ข้าวหน้าแกงเขียวหวานไก่กรอบ"
+    ],
+    "sample_rows": [
+      {
+        "product_id": "prod-1791940362962-on44by",
+        "scheduled_date": "2026-10-24",
+        "is_published": true
+      },
+      {
+        "product_id": "prod-1791940314331-p4j9pb",
+        "scheduled_date": "2026-10-24",
+        "is_published": true
+      },
+      {
+        "product_id": "prod-6",
+        "scheduled_date": "2026-10-26",
+        "is_published": false
+      },
+      {
+        "product_id": "prod-1791351373122-0iurqr",
+        "scheduled_date": "2026-10-26",
+        "is_published": false
+      },
+      {
+        "product_id": "prod-1791940362962-on44by",
+        "scheduled_date": "2026-10-26",
+        "is_published": false
+      },
+      {
+        "product_id": "prod-1792810253606-0x3ycg",
+        "scheduled_date": "2026-10-25",
+        "is_published": true
+      },
+      {
+        "product_id": "prod-1792810209302-zt44z4",
+        "scheduled_date": "2026-10-25",
+        "is_published": true
+      },
+      {
+        "product_id": "prod-1791940138411-az27q5",
+        "scheduled_date": "2026-10-19",
+        "is_published": true
+      },
+      {
+        "product_id": "prod-1791940362962-on44by",
+        "scheduled_date": "2026-10-19",
+        "is_published": true
+      },
+      {
+        "product_id": "prod-1791940314331-p4j9pb",
+        "scheduled_date": "2026-10-20",
+        "is_published": true
+      },
+      {
+        "product_id": "prod-1791940238979-5a09mv",
+        "scheduled_date": "2026-10-20",
+        "is_published": true
+      },
+      {
+        "product_id": "prod-3",
+        "scheduled_date": "2026-10-28",
+        "is_published": true
+      }
+    ]
+  }
+}

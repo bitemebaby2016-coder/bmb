@@ -1,0 +1,8 @@
+{
+  "tool": "r82-ef-smoke",
+  "ts": "2026-11-08T03:30:37.349Z",
+  "safety": "fake event_id = ไม่มีแถวให้ประมวลผล",
+  "http": 200,
+  "body": "{\"processed\":0,\"results\":[],\"note\":\"no RECEIVED social events\"}",
+  "boot_ok": true
+}

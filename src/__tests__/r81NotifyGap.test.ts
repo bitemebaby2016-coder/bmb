@@ -33,16 +33,23 @@ describe('R81-A3 · H2 — structured error + กันซ้ำ private_replies
 })
 
 describe('R81-A3 · H1 — web push ลูกค้าผ่าน m179 enqueue_notification (control ได้ 100%)', () => {
-  it('resolve customer_id จริงจาก customer_channel_identities → customers.id — ไม่เดา', () => {
+  it('resolve customer_id จริงจาก customer_channel_identities → customers.id — ไม่เดา (R82: แก้บั๊ก eq.)', () => {
     expect(aiSrc).toContain('async function notifyCustomerAiReply(')
-    expect(aiSrc).toContain('customer_channel_identities?channel=eq.')
+    // R82 evidence (e2e/_r81c_evidence.json): ของเดิมไม่มี `eq.` → PostgREST 400 PGRST100
+    // "failed to parse filter" → unresolved_identity ปลอม ทั้งที่ identity มีจริง 1 แถว
+    expect(aiSrc).toContain('customer_channel_identities?external_user_id=eq.')
+    // PSID ตัวเดียวกันทั้งคอมเมนต์/แชต (page-scoped) → หาแบบไม่ผูก channel
+    expect(aiSrc).toContain('&channel=in.(FACEBOOK,MESSENGER)')
     expect(aiSrc).toContain('/rest/v1/customers?user_id=eq.')
+    // R82: เช็คเครื่องที่รับได้ก่อน — ไม่มี subscription = ห้ามยัด outbox (รายงานตรง ๆ)
+    expect(aiSrc).toContain('push_subscriptions?customer_id=eq.')
+    expect(aiSrc).toContain("'no_subscription'")
   })
-  it('ยิง enqueue_notification (event_key idempotent · Transactional) เฉพาะคอมเมนต์ที่ DM ว่าง', () => {
+  it('ยิง enqueue_notification (event_key idempotent · Transactional) ทั้งคอมเมนต์และแชต (R82: เครื่องต้องดังทั้ง 2 ทาง)', () => {
     expect(aiSrc).toContain('/rest/v1/rpc/enqueue_notification')
-    expect(aiSrc).toContain('p_event_key: `ai-comment-reply-${ev.event_id}`')
+    expect(aiSrc).toContain("isMessage ? 'ai-message-reply' : 'ai-comment-reply'")
     expect(aiSrc).toContain("p_category: 'Transactional'")
-    expect(aiSrc).toContain("const notify = ev.event_type === 'comment' && !sent.dmId")
+    expect((aiSrc.match(/ev\.event_type === 'comment' \|\| ev\.event_type === 'message'/g) || []).length).toBeGreaterThanOrEqual(2)
   })
   it('รายงานสถานะลง flags.push_notify ทั้งสายปกติและสาย fallback', () => {
     expect((aiSrc.match(/push_notify: notify\.outcome/g) || []).length).toBeGreaterThanOrEqual(2)

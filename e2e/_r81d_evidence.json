@@ -1,0 +1,371 @@
+{
+  "tool": "r81d-device-link",
+  "ts": "2026-11-08T03:08:21.360Z",
+  "mode": "READ_ONLY",
+  "cust_A": {
+    "status": 200,
+    "j": [
+      {
+        "id": "5845e479-88ad-4616-a271-497c07f88794",
+        "user_id": "5845e479-88ad-4616-a271-497c07f88794",
+        "full_name": "Customer",
+        "phone": null,
+        "email": "ext-28680684258210089@channels.bmb.internal",
+        "created_at": "2026-10-30T06:00:20.681632+00:00"
+      }
+    ],
+    "raw": "[{\"id\":\"5845e479-88ad-4616-a271-497c07f88794\",\"user_id\":\"5845e479-88ad-4616-a271-497c07f88794\",\"full_name\":\"Customer\",\"phone\":null,\"email\":\"ext-28680684258210089@channels.bmb.internal\",\"created_at\":\"2026-10-30T06:00:20.681632+00:00\"}]"
+  },
+  "cust_B": {
+    "status": 200,
+    "j": [
+      {
+        "id": "dddf4b57-405f-4852-a985-76d8d52b1b72",
+        "user_id": "dddf4b57-405f-4852-a985-76d8d52b1b72",
+        "full_name": "ADMIN_BMB",
+        "phone": "0817847992",
+        "email": "bitemebaby2016@gmail.com",
+        "created_at": "2026-10-20T02:02:45.947451+00:00"
+      }
+    ],
+    "raw": "[{\"id\":\"dddf4b57-405f-4852-a985-76d8d52b1b72\",\"user_id\":\"dddf4b57-405f-4852-a985-76d8d52b1b72\",\"full_name\":\"ADMIN_BMB\",\"phone\":\"0817847992\",\"email\":\"bitemebaby2016@gmail.com\",\"created_at\":\"2026-10-20T02:02:45.947451+00:00\"}]"
+  },
+  "identity_A": {
+    "status": 200,
+    "j": [
+      {
+        "channel": "FACEBOOK",
+        "external_user_id": "28680684258210089",
+        "display_name": null,
+        "created_at": "2026-10-30T06:00:21.040726+00:00"
+      }
+    ],
+    "raw": "[{\"channel\":\"FACEBOOK\",\"external_user_id\":\"28680684258210089\",\"display_name\":null,\"created_at\":\"2026-10-30T06:00:21.040726+00:00\"}]"
+  },
+  "identity_B": {
+    "status": 200,
+    "j": [],
+    "raw": "[]"
+  },
+  "all_subscriptions": {
+    "status": 200,
+    "j": [
+      {
+        "id": "push- ###########-403abb",
+        "customer_id": "23cbe150-e5f4-4a37-a969-02e2db8df395",
+        "driver_id": null,
+        "user_agent": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36",
+        "last_success_at": "2026-11-07T13:05:08.227946+00:00",
+        "last_failure_at": null,
+        "failure_count": 0,
+        "created_at": "2026-11-07T12:54:45.347446+00:00"
+      },
+      {
+        "id": "push- ###########-ab2873",
+        "customer_id": "5119ee60-41de-4a1f-8dfa-0645a59cde37",
+        "driver_id": null,
+        "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36",
+        "last_success_at": "2026-11-07T12:55:10.790748+00:00",
+        "last_failure_at": null,
+        "failure_count": 0,
+        "created_at": "2026-11-07T04:55:16.960248+00:00"
+      },
+      {
+        "id": "push- ###########-c70c2b",
+        "customer_id": "5119ee60-41de-4a1f-8dfa-0645a59cde37",
+        "driver_id": null,
+        "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36",
+        "last_success_at": "2026-11-07T12:55:07.689247+00:00",
+        "last_failure_at": "2026-11-07T12:55:11.127404+00:00",
+        "failure_count": 3,
+        "created_at": "2026-11-07T04:55:16.170715+00:00"
+      },
+      {
+        "id": "push- ###########-b95dbb",
+        "customer_id": "dddf4b57-405f-4852-a985-76d8d52b1b72",
+        "driver_id": null,
+        "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36",
+        "last_success_at": null,
+        "last_failure_at": null,
+        "failure_count": 0,
+        "created_at": "2026-11-07T04:49:54.30708+00:00"
+      },
+      {
+        "id": "push- ###########-79f2a6",
+        "customer_id": "dddf4b57-405f-4852-a985-76d8d52b1b72",
+        "driver_id": null,
+        "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36",
+        "last_success_at": null,
+        "last_failure_at": null,
+        "failure_count": 0,
+        "created_at": "2026-11-07T03:04:53.427756+00:00"
+      },
+      {
+        "id": "push- ###########-e85ff5",
+        "customer_id": "dddf4b57-405f-4852-a985-76d8d52b1b72",
+        "driver_id": null,
+        "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36",
+        "last_success_at": null,
+        "last_failure_at": null,
+        "failure_count": 0,
+        "created_at": "2026-11-07T02:31:30.319974+00:00"
+      },
+      {
+        "id": "push- ###########-be1e04",
+        "customer_id": "dddf4b57-405f-4852-a985-76d8d52b1b72",
+        "driver_id": null,
+        "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36",
+        "last_success_at": null,
+        "last_failure_at": null,
+        "failure_count": 0,
+        "created_at": "2026-11-07T02:31:30.027446+00:00"
+      },
+      {
+        "id": "push- ###########-5c1b09",
+        "customer_id": "dddf4b57-405f-4852-a985-76d8d52b1b72",
+        "driver_id": null,
+        "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36",
+        "last_success_at": null,
+        "last_failure_at": null,
+        "failure_count": 0,
+        "created_at": "2026-11-05T09:14:58.050238+00:00"
+      },
+      {
+        "id": "push- ###########-20d236",
+        "customer_id": "dddf4b57-405f-4852-a985-76d8d52b1b72",
+        "driver_id": null,
+        "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36",
+        "last_success_at": null,
+        "last_failure_at": null,
+        "failure_count": 0,
+        "created_at": "2026-11-05T01:04:02.842137+00:00"
+      },
+      {
+        "id": "push- ###########-77e033",
+        "customer_id": "dddf4b57-405f-4852-a985-76d8d52b1b72",
+        "driver_id": null,
+        "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36",
+        "last_success_at": null,
+        "last_failure_at": null,
+        "failure_count": 0,
+        "created_at": "2026-11-04T00:59:03.088441+00:00"
+      },
+      {
+        "id": "push- ###########-440377",
+        "customer_id": null,
+        "driver_id": "drv- ###########-60bc",
+        "user_agent": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Mobile Safari/537.36",
+        "last_success_at": null,
+        "last_failure_at": null,
+        "failure_count": 0,
+        "created_at": "2026-10-23T07:04:35.523939+00:00"
+      },
+      {
+        "id": "push- ###########-7178f2",
+        "customer_id": null,
+        "driver_id": "drv- ###########-60bc",
+        "user_agent": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Mobile Safari/537.36",
+        "last_success_at": null,
+        "last_failure_at": null,
+        "failure_count": 0,
+        "created_at": "2026-10-23T00:07:11.025823+00:00"
+      }
+    ],
+    "raw": "[{\"id\":\"push- ###########-403abb\",\"customer_id\":\"23cbe150-e5f4-4a37-a969-02e2db8df395\",\"driver_id\":null,\"user_agent\":\"Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36\",\"last_success_at\":\"2026-11-07T13:05:08.227946+00:00\",\"last_failure_at\":null,"
+  },
+  "all_identities_count": {
+    "status": 200,
+    "j": [
+      {
+        "id": "c2633a92-2c8f-4532-8262-6ec616bdf87a"
+      }
+    ],
+    "raw": "[{\"id\":\"c2633a92-2c8f-4532-8262-6ec616bdf87a\"}]"
+  },
+  "customer_emails": {
+    "status": 200,
+    "j": [
+      {
+        "id": "774afd9d-a45d-4d3e-b8f2-6dbe31f243da",
+        "email": "ext-r74-sim-cmt-1794100613809@channels.bmb.internal",
+        "full_name": "Customer",
+        "phone": null
+      },
+      {
+        "id": "ea7d16ce-9904-44cc-9d5a-4d39e014dfc4",
+        "email": "ext-r74-nl-1794100613809@channels.bmb.internal",
+        "full_name": "Customer",
+        "phone": null
+      },
+      {
+        "id": "6f2b325f-4a93-4198-b15f-99f115da2724",
+        "email": "ext-r74-sim-ord-1794100613809@channels.bmb.internal",
+        "full_name": "Customer",
+        "phone": null
+      },
+      {
+        "id": "09de05ec-492a-408d-880b-475b5b5d7d0d",
+        "email": "ext-r74-sim-1794100613809@channels.bmb.internal",
+        "full_name": "Customer",
+        "phone": null
+      },
+      {
+        "id": "16ee3fbc-e1c9-4e72-a912-0431fcd4a5b3",
+        "email": "ext-r74-sim-cmt-1794074269443@channels.bmb.internal",
+        "full_name": "Customer",
+        "phone": null
+      },
+      {
+        "id": "e64c8e13-1173-49f5-b736-72a150182c22",
+        "email": "ext-r74-sim-cmt-1794074256614@channels.bmb.internal",
+        "full_name": "Customer",
+        "phone": null
+      },
+      {
+        "id": "b41a6da0-3975-4d31-9163-5603f24523b4",
+        "email": "ext-r74-sim-cmt-1794074261611@channels.bmb.internal",
+        "full_name": "Customer",
+        "phone": null
+      },
+      {
+        "id": "f6ebfce0-1d48-4e26-9838-b30a9a1bf8f2",
+        "email": "ext-r74-sim-cmt-1794074266993@channels.bmb.internal",
+        "full_name": "Customer",
+        "phone": null
+      },
+      {
+        "id": "82953346-b246-42b0-9f1a-56328178eddb",
+        "email": "ext-r74-sim-cmt-1794074251197@channels.bmb.internal",
+        "full_name": "Customer",
+        "phone": null
+      },
+      {
+        "id": "5fbbe7ec-8656-48c1-931e-a46dbeda123c",
+        "email": "ext-r74-sim-cmt-1794074253560@channels.bmb.internal",
+        "full_name": "Customer",
+        "phone": null
+      },
+      {
+        "id": "8fb731bf-f9af-4fcc-a1ab-4165a026d606",
+        "email": "ext-r74-sim-cmt-1794074259070@channels.bmb.internal",
+        "full_name": "Customer",
+        "phone": null
+      },
+      {
+        "id": "9583d5ca-e29b-4467-99ff-003ef22b93f3",
+        "email": "ext-r74-sim-cmt-1794074264099@channels.bmb.internal",
+        "full_name": "Customer",
+        "phone": null
+      },
+      {
+        "id": "3a818052-7ecc-430f-973f-410d6a4e4faf",
+        "email": "ext-r74-nl-1794074269443@channels.bmb.internal",
+        "full_name": "Customer",
+        "phone": null
+      },
+      {
+        "id": "466a93ab-d46b-4b6f-945f-f93b4c62a985",
+        "email": "ext-r74-nl-1794074266993@channels.bmb.internal",
+        "full_name": "Customer",
+        "phone": null
+      },
+      {
+        "id": "23df71d8-d2f7-44ea-b63c-f035bdcaf55d",
+        "email": "ext-r74-nl-1794074264099@channels.bmb.internal",
+        "full_name": "Customer",
+        "phone": null
+      },
+      {
+        "id": "558f1542-9c75-4740-a930-66a6417b9b49",
+        "email": "ext-r74-sim-ord-1794074269443@channels.bmb.internal",
+        "full_name": "Customer",
+        "phone": null
+      },
+      {
+        "id": "fc2e71f3-22c1-4c3d-9904-13a530152e0c",
+        "email": "ext-r74-nl-1794074261611@channels.bmb.internal",
+        "full_name": "Customer",
+        "phone": null
+      },
+      {
+        "id": "499dae58-c0da-4f6f-8654-4d27db220c90",
+        "email": "ext-r74-sim-ord-1794074266993@channels.bmb.internal",
+        "full_name": "Customer",
+        "phone": null
+      },
+      {
+        "id": "60d5d0b2-fc7e-4b43-9ca5-4db9a0e1085d",
+        "email": "ext-r74-nl-1794074253560@channels.bmb.internal",
+        "full_name": "Customer",
+        "phone": null
+      },
+      {
+        "id": "0e0da367-27a5-496d-b110-d183a6bb5ea4",
+        "email": "ext-r74-nl-1794074251197@channels.bmb.internal",
+        "full_name": "Customer",
+        "phone": null
+      },
+      {
+        "id": "4ab37461-eaef-4c6f-b9ff-b1f9f4327b4f",
+        "email": "ext-r74-nl-1794074259070@channels.bmb.internal",
+        "full_name": "Customer",
+        "phone": null
+      },
+      {
+        "id": "966b2831-7e07-4e37-8d84-575046d50b89",
+        "email": "ext-r74-sim-ord-1794074264099@channels.bmb.internal",
+        "full_name": "Customer",
+        "phone": null
+      },
+      {
+        "id": "817b2936-f1c1-4f0c-ab3d-db0ae75837e5",
+        "email": "ext-r74-nl-1794074256614@channels.bmb.internal",
+        "full_name": "Customer",
+        "phone": null
+      },
+      {
+        "id": "7cd64840-3853-4574-bfda-a3bfe45d501a",
+        "email": "ext-r74-sim-ord-1794074261611@channels.bmb.internal",
+        "full_name": "Customer",
+        "phone": null
+      },
+      {
+        "id": "e2b57073-82d8-4298-9f1f-6eae7d4e7eaa",
+        "email": "ext-r74-sim-1794074269443@channels.bmb.internal",
+        "full_name": "Customer",
+        "phone": null
+      },
+      {
+        "id": "daf0818e-38a6-4f80-a0ae-7922fc8111b5",
+        "email": "ext-r74-sim-ord-1794074259070@channels.bmb.internal",
+        "full_name": "Customer",
+        "phone": null
+      },
+      {
+        "id": "ed197a1c-bce2-451d-af99-ae6ec2c6f456",
+        "email": "ext-r74-sim-ord-1794074253560@channels.bmb.internal",
+        "full_name": "Customer",
+        "phone": null
+      },
+      {
+        "id": "535ba933-e711-4f8d-aa6d-bea99ffeab2b",
+        "email": "ext-r74-sim-1794074266993@channels.bmb.internal",
+        "full_name": "Customer",
+        "phone": null
+      },
+      {
+        "id": "5e94de4e-b990-4dd9-9703-edf9e70c8cd6",
+        "email": "ext-r74-sim-ord-1794074256614@channels.bmb.internal",
+        "full_name": "Customer",
+        "phone": null
+      },
+      {
+        "id": "18de093c-662c-491b-9b21-da97977eb4f4",
+        "email": "ext-r74-sim-1794074264099@channels.bmb.internal",
+        "full_name": "Customer",
+        "phone": null
+      }
+    ],
+    "raw": "[{\"id\":\"774afd9d-a45d-4d3e-b8f2-6dbe31f243da\",\"email\":\"ext-r74-sim-cmt-1794100613809@channels.bmb.internal\",\"full_name\":\"Customer\",\"phone\":null}, \n {\"id\":\"ea7d16ce-9904-44cc-9d5a-4d39e014dfc4\",\"email\":\"ext-r74-nl-1794100613809@channels.bmb.internal\",\"full_name\":\"Customer\",\"phone\":null}, \n {\"id\":\"6f2"
+  }
+}

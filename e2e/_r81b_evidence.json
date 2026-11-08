@@ -1,0 +1,4334 @@
+{
+  "tool": "r81b-live-evidence",
+  "ts": "2026-11-08T03:06:17.559Z",
+  "mode": "READ_ONLY_GET",
+  "events_recent": [
+    {
+      "event_id": "122146808163204867_2160520538188778",
+      "event_type": "comment",
+      "platform": "FACEBOOK",
+      "sender_id": "28680684258210089",
+      "content": "เมนูนนี้ยังสั่งได้ไหม",
+      "reply_status": "sent",
+      "reply_provider_id": "122146808163204867_1170684672284723",
+      "ai_reply_text": "ได้เลยครับพี่ 🍗 ไก่ทอดอินโดยังสั่งได้อยู่ครับ จัดให้เลย 1 ที่ กดลิงก์นี้เปิดตะกร้าดูแล้วเช็คเอาท์หรือเพิ่มเมนูอื่นต่อได้เลยครับ https://biteme-baby.com/shop?cart=eyJ2IjoxLCJpdGVtcyI6W3siaWQiOiJwcm9kLTE3OTMzNzA2MjU0NDktenpuNDU3IiwicSI6MX1dfQ ถ้าลิงก์มีปัญหาทัก Inbox มาได้เลยนะครับ Bite ช่วยดูให้",
+      "ai_guardrail_flags": {
+        "reply": {
+          "tone": "friendly",
+          "language": "th",
+          "draft_text": "ได้เลยครับพี่ 🍗 ไก่ทอดอินโดยังสั่งได้อยู่ครับ จัดให้เลย 1 ที่ กดลิงก์นี้เปิดตะกร้าดูแล้วเช็คเอาท์หรือเพิ่มเมนูอื่นต่อได้เลยครับ https://biteme-baby.com/shop?cart=eyJ2IjoxLCJpdGVtcyI6W3siaWQiOiJwcm9kLTE3OTMzNzA2MjU0NDktenpuNDU3IiwicSI6MX1dfQ ถ้าลิงก์มีปัญหาทัก Inbox มาได้เลยนะครับ Bite ช่วยดูให้",
+          "safety_flags": [
+            "none"
+          ],
+          "source_event_id": "122146808163204867_2160520538188778",
+          "requires_human_review": false
+        },
+        "dm_error": "http_400:Unsupported post request. Object with ID '122146808163204867_2160520538188778' does not exist, cannot be loaded due to m (code 100)",
+        "dm_reply_id": null,
+        "push_notify": "unresolved_identity",
+        "review_status": "auto_published",
+        "classification": {
+          "intent": "question",
+          "reason": "ลูกค้าถามว่าเมนูไก่ทอดอินโดยังสั่งได้หรือไม่ เป็นคำถามซ้ำที่เคยตอบไปแล้ว",
+          "urgency": "normal",
+          "sentiment": "neutral",
+          "confidence": 0.95,
+          "safety_flags": [
+            "none"
+          ],
+          "requires_human_review": false
+        },
+        "dm_attempted_at": "2026-11-08T02:58:17.553Z",
+        "requires_human_review": false
+      },
+      "last_error": null,
+      "status": "SUCCEEDED",
+      "created_at": "2026-11-08T02:58:05.46628+00:00",
+      "processed_at": "2026-11-08T02:58:13.431+00:00"
+    },
+    {
+      "event_id": "msg-m_ahsXoKhqNswMQyF8sMwR5dAtyZwH9bSeaqQLOAJV45W-nWzfL_SCp4YdxD6ZaFwv6hxNpuRdzR7miK2vdNtpTA",
+      "event_type": "message",
+      "platform": "MESSENGER",
+      "sender_id": "28680684258210089",
+      "content": "ส่งไหม",
+      "reply_status": "sent",
+      "reply_provider_id": "m_H_780iS1unSXqgkYkL_NAdAtyZwH9bSeaqQLOAJV45VRATMzRYa0Hz-UTGYYxmS7x7cbJwAWuS2-q3E_BHyA1w",
+      "ai_reply_text": "ส่งครับ ส่งวันนี้ได้เลย! รอบเช้าป่ายไปแล้ว แต่รอบเที่ยง 11:00-15:00 น. ยังรับออเดอร์อยู่ครับ สั่งเลยที่ https://biteme-baby.com/shop แล้วเลือกเมนูที่ชอบได้เลยครับ 🚴‍♂️🍽️",
+      "ai_guardrail_flags": {
+        "reply": {
+          "tone": "friendly",
+          "language": "th",
+          "draft_text": "ส่งครับ ส่งวันนี้ได้เลย! รอบเช้าป่ายไปแล้ว แต่รอบเที่ยง 11:00-15:00 น. ยังรับออเดอร์อยู่ครับ สั่งเลยที่ https://biteme-baby.com/shop แล้วเลือกเมนูที่ชอบได้เลยครับ 🚴‍♂️🍽️",
+          "safety_flags": [
+            "none"
+          ],
+          "source_event_id": "msg-m_ahsXoKhqNswMQyF8sMwR5dAtyZwH9bSeaqQLOAJV45W-nWzfL_SCp4YdxD6ZaFwv6hxNpuRdzR7miK2vdNtpTA",
+          "requires_human_review": false
+        },
+        "dm_error": null,
+        "dm_reply_id": "m_H_780iS1unSXqgkYkL_NAdAtyZwH9bSeaqQLOAJV45VRATMzRYa0Hz-UTGYYxmS7x7cbJwAWuS2-q3E_BHyA1w",
+        "push_notify": "dm_ok",
+        "review_status": "auto_published",
+        "classification": {
+          "intent": "question",
+          "reason": "ลูกค้าถามซ้ำว่าส่งไหม ต้องการข้อมูลการจัดส่ง ไม่มีอารมณ์เชิงลบหรือเร่งด่วน",
+          "urgency": "low",
+          "sentiment": "neutral",
+          "confidence": 0.85,
+          "safety_flags": [
+            "none"
+          ],
+          "requires_human_review": false
+        },
+        "dm_attempted_at": null,
+        "requires_human_review": false
+      },
+      "last_error": null,
+      "status": "SUCCEEDED",
+      "created_at": "2026-11-08T02:50:45.721131+00:00",
+      "processed_at": "2026-11-08T02:50:55.856+00:00"
+    },
+    {
+      "event_id": "msg-m_LUZbf_QHqrLq1hqbsfqtQtAtyZwH9bSeaqQLOAJV45U_BOKVG0aUObPhvXi1IDb9DNYFoUNfGVI36Bc8ZX9qnA",
+      "event_type": "message",
+      "platform": "MESSENGER",
+      "sender_id": "28680684258210089",
+      "content": "มีอะไรแนะนำมั่ง",
+      "reply_status": "sent",
+      "reply_provider_id": "m_z-c7v3lix1wB1QPsYXB3ydAtyZwH9bSeaqQLOAJV45XbkolidwJc038hS-lwY1mVGFfU6YHBybGSkDOwd11ubA",
+      "ai_reply_text": "มีหลายเมนูเด็ดเลยครับพี่! 🍽️ ขอแนะนำเมนูยอดนิยมของเราเลยนะครับ — 🥑 ยำสลัดถั่วลูกไก่ 79฿, 🐟 แซลมอนย่างเกลือ+มันฝรั่งและพริกหวาน 79฿, สามชั้นตุ๋นผักกาดดอง (เคาหยก) 79฿, และ Fish & Ships 79฿ อร่อยทุกจานเลยครับ! หรือถ้าชอบแนวสุขภาพก็มีลุยสวนหมู+กุ้ง 79฿ อีกนะครับ สนใจเมนูไหนบอก Bite ได้เลย เดี๋ยวช่วยสรุปให้ แล้วกดสั่งที่ https://biteme-baby.com/shop ได้เลยครับ 😋",
+      "ai_guardrail_flags": {
+        "reply": {
+          "tone": "friendly",
+          "language": "th",
+          "draft_text": "มีหลายเมนูเด็ดเลยครับพี่! 🍽️ ขอแนะนำเมนูยอดนิยมของเราเลยนะครับ — 🥑 ยำสลัดถั่วลูกไก่ 79฿, 🐟 แซลมอนย่างเกลือ+มันฝรั่งและพริกหวาน 79฿, สามชั้นตุ๋นผักกาดดอง (เคาหยก) 79฿, และ Fish & Ships 79฿ อร่อยทุกจานเลยครับ! หรือถ้าชอบแนวสุขภาพก็มีลุยสวนหมู+กุ้ง 79฿ อีกนะครับ สนใจเมนูไหนบอก Bite ได้เลย เดี๋ยวช่วยสรุปให้ แล้วกดสั่งที่ https://biteme-baby.com/shop ได้เลยครับ 😋",
+          "safety_flags": [
+            "none"
+          ],
+          "source_event_id": "msg-m_LUZbf_QHqrLq1hqbsfqtQtAtyZwH9bSeaqQLOAJV45U_BOKVG0aUObPhvXi1IDb9DNYFoUNfGVI36Bc8ZX9qnA",
+          "requires_human_review": false
+        },
+        "dm_error": null,
+        "dm_reply_id": "m_z-c7v3lix1wB1QPsYXB3ydAtyZwH9bSeaqQLOAJV45XbkolidwJc038hS-lwY1mVGFfU6YHBybGSkDOwd11ubA",
+        "push_notify": "dm_ok",
+        "review_status": "auto_published",
+        "classification": {
+          "intent": "question",
+          "reason": "ลูกค้าถามหาเมนูแนะนำ ซึ่งเป็นคำถามทั่วไป ไม่มีสัญญาณเร่งด่วนหรือความเสี่ยง",
+          "urgency": "low",
+          "sentiment": "neutral",
+          "confidence": 0.9,
+          "safety_flags": [
+            "none"
+          ],
+          "requires_human_review": false
+        },
+        "dm_attempted_at": null,
+        "requires_human_review": false
+      },
+      "last_error": null,
+      "status": "SUCCEEDED",
+      "created_at": "2026-11-08T02:50:42.054625+00:00",
+      "processed_at": "2026-11-08T02:50:51.57+00:00"
+    },
+    {
+      "event_id": "msg-m_Om_lTonx7nfnJc2HZL0kDNAtyZwH9bSeaqQLOAJV45Ujhj3IZnN5mvHkIXdRsL_TXFJQE9QxP0PZqn6aBoLWIQ",
+      "event_type": "message",
+      "platform": "MESSENGER",
+      "sender_id": "28680684258210089",
+      "content": "ในนี้สั่งได้ไหม",
+      "reply_status": "sent",
+      "reply_provider_id": "m_Xix6scY1Yym0DONez7mTxdAtyZwH9bSeaqQLOAJV45WVtHWuPyGp-imgAU4JjWbh3kA0uMG5kCx3v9eahm8TNA",
+      "ai_reply_text": "สั่งในแชทนี้ได้เลยครับ พี่บอกเมนูที่อยากได้มาได้เลย Bite ช่วยสรุปให้ แต่ต้องกดยืนยันออเดอร์ที่เว็บ https://biteme-baby.com/shop นะครับ เดี๋ยวพี่อยากได้เมนูไหนล่ะครับ 🍽️",
+      "ai_guardrail_flags": {
+        "reply": {
+          "tone": "friendly",
+          "language": "th",
+          "draft_text": "สั่งในแชทนี้ได้เลยครับ พี่บอกเมนูที่อยากได้มาได้เลย Bite ช่วยสรุปให้ แต่ต้องกดยืนยันออเดอร์ที่เว็บ biteme-baby.com/shop นะครับ เดี๋ยวพี่อยากได้เมนูไหนล่ะครับ 🍽️",
+          "safety_flags": [
+            "none"
+          ],
+          "source_event_id": "msg-m_Om_lTonx7nfnJc2HZL0kDNAtyZwH9bSeaqQLOAJV45Ujhj3IZnN5mvHkIXdRsL_TXFJQE9QxP0PZqn6aBoLWIQ",
+          "requires_human_review": false
+        },
+        "dm_error": null,
+        "dm_reply_id": "m_Xix6scY1Yym0DONez7mTxdAtyZwH9bSeaqQLOAJV45WVtHWuPyGp-imgAU4JjWbh3kA0uMG5kCx3v9eahm8TNA",
+        "push_notify": "dm_ok",
+        "review_status": "auto_published",
+        "classification": {
+          "intent": "question",
+          "reason": "ลูกค้าถามซ้ำว่าสั่งในแชทได้ไหม หลังจากพนักงานตอบไปแล้วว่าต้องสั่งผ่านเว็บ",
+          "urgency": "low",
+          "sentiment": "neutral",
+          "confidence": 0.95,
+          "safety_flags": [
+            "none"
+          ],
+          "requires_human_review": false
+        },
+        "dm_attempted_at": null,
+        "requires_human_review": false
+      },
+      "last_error": null,
+      "status": "SUCCEEDED",
+      "created_at": "2026-11-08T02:49:28.406579+00:00",
+      "processed_at": "2026-11-08T02:49:37.046+00:00"
+    },
+    {
+      "event_id": "122146808163204867_2594868544361448",
+      "event_type": "comment",
+      "platform": "FACEBOOK",
+      "sender_id": "28680684258210089",
+      "content": "ไก่ทอดอันนี้ ที่นึงครับ ยังสั่งได้ไหม",
+      "reply_status": "sent",
+      "reply_provider_id": "122146808163204867_1700912998377132",
+      "ai_reply_text": "ได้เลยครับพี่ 🍗 ไก่ทอดอินโด 1 ที่ จัดให้เลยครับ กดลิงก์นี้เปิดตะกร้าดูแล้วเช็คเอาท์หรือเพิ่มเมนูอื่นต่อได้เลยครับ https://biteme-baby.com/shop?cart=eyJ2IjoxLCJpdGVtcyI6W3siaWQiOiJwcm9kLTE3OTMzNzA2MjU0NDktenpuNDU3IiwicSI6MX1dfQ ถ้าลิงก์มีปัญหาทัก Inbox มาได้เลยนะครับ Bite ช่วยดูให้",
+      "ai_guardrail_flags": {
+        "reply": {
+          "tone": "friendly",
+          "language": "th",
+          "draft_text": "ได้เลยครับพี่ 🍗 ไก่ทอดอินโด 1 ที่ จัดให้เลยครับ กดลิงก์นี้เปิดตะกร้าดูแล้วเช็คเอาท์หรือเพิ่มเมนูอื่นต่อได้เลยครับ https://biteme-baby.com/shop?cart=eyJ2IjoxLCJpdGVtcyI6W3siaWQiOiJwcm9kLTE3OTMzNzA2MjU0NDktenpuNDU3IiwicSI6MX1dfQ ถ้าลิงก์มีปัญหาทัก Inbox มาได้เลยนะครับ Bite ช่วยดูให้",
+          "safety_flags": [
+            "none"
+          ],
+          "source_event_id": "122146808163204867_2594868544361448",
+          "requires_human_review": true
+        },
+        "dm_error": "http_400:Unsupported post request. Object with ID '122146808163204867_2594868544361448' does not exist, canno",
+        "dm_reply_id": null,
+        "review_status": "auto_published",
+        "classification": {
+          "intent": "order_request",
+          "reason": "ลูกค้าสนใจสินค้าจากโพสต์และต้องการสั่งซื้อ",
+          "urgency": "normal",
+          "sentiment": "positive",
+          "confidence": 0.95,
+          "safety_flags": [
+            "none"
+          ],
+          "requires_human_review": true
+        },
+        "requires_human_review": true
+      },
+      "last_error": null,
+      "status": "SUCCEEDED",
+      "created_at": "2026-11-08T01:37:40.385187+00:00",
+      "processed_at": "2026-11-08T01:37:54.575+00:00"
+    },
+    {
+      "event_id": "r74cmt-1794100613809",
+      "event_type": "comment",
+      "platform": "FACEBOOK",
+      "sender_id": "r74-sim-cmt-1794100613809",
+      "content": "เอาลุยสวนหมู+กุ้ง 2 ที่ค่ะ",
+      "reply_status": "failed",
+      "reply_provider_id": null,
+      "ai_reply_text": "ได้เลยครับคุณ! ลุยสวนหมู+กุ้ง 2 ที่ ถูกต้องนะครับ จานเด็ดของเราทำจากหมูสับเห็ดหอมกับกุ้งสด ๆ อ่ะ จัมโบ ๆ เลยครับ 🦐🐷 ถ้าพร้อมเช็คเอาท์หรืออยากเพิ่มอะไรต่อ กดเข้าไปดูในเว็บเลยนะครับ https://biteme-baby.com/shop\n\n🛒 สรุปรายการของคุณ (ลุยสวนหมู+กุ้ง x2) เปิดดูบนเว็บได้เลยครับ — กดลิงก์นี้เพื่อดูตะกร้า เช็คเอาท์ หรือเพิ่มเมนูต่อได้เลย: https://biteme-baby.com/shop?cart=eyJ2IjoxLCJpdGVtcyI6W3siaWQiOiJwcm9kLTUiLCJxIjoyfV19\n🔗 ลิงก์เปิดเว็บ https://biteme-baby.com ภายนอก Facebook — แตะแล้วยืนยันเพื่อเปิดในเบราว์เซอร์ของคุณได้เลย",
+      "ai_guardrail_flags": {
+        "reply": {
+          "tone": "friendly",
+          "language": "th",
+          "draft_text": "ได้เลยครับคุณ! ลุยสวนหมู+กุ้ง 2 ที่ ถูกต้องนะครับ จานเด็ดของเราทำจากหมูสับเห็ดหอมกับกุ้งสด ๆ อ่ะ จัมโบ ๆ เลยครับ 🦐🐷 ถ้าพร้อมเช็คเอาท์หรืออยากเพิ่มอะไรต่อ กดเข้าไปดูในเว็บเลยนะครับ https://biteme-baby.com/shop",
+          "safety_flags": [
+            "none"
+          ],
+          "source_event_id": "r74cmt-1794100613809",
+          "requires_human_review": true
+        },
+        "review_status": "auto_published",
+        "classification": {
+          "intent": "order_request",
+          "reason": "ลูกค้าสั่งอาหาร 'เอาลุยสวนหมู+กุ้ง 2 ที่' อย่างชัดเจน",
+          "urgency": "normal",
+          "sentiment": "neutral",
+          "confidence": 0.95,
+          "safety_flags": [
+            "none"
+          ],
+          "requires_human_review": true
+        },
+        "requires_human_review": true
+      },
+      "last_error": "META_SEND:http_400",
+      "status": "SUCCEEDED",
+      "created_at": "2026-11-08T01:17:54.37599+00:00",
+      "processed_at": "2026-11-08T01:18:02.709+00:00"
+    },
+    {
+      "event_id": "msg-r74e-1794100613809",
+      "event_type": "message",
+      "platform": "MESSENGER",
+      "sender_id": "r74-nl-1794100613809",
+      "content": "ตกลงค่ะ ยืนยัน สั่งเลยค่ะ",
+      "reply_status": "failed",
+      "reply_provider_id": null,
+      "ai_reply_text": "รับทราบครับคุณลูกค้า! 🎉 ยืนยันออเดอร์ลุยสวนหมู+กุ้ง 2 ที่ ไม่เผ็ด พร้อมไข่ดาวเพิ่ม รอบเช้าวันนี้ (07:00-09:00 น.) ครับ กรุณากดไปที่ https://biteme-baby.com/checkout เพื่อตรวจสอบรายการและเลือกชำระเงินได้เลยครับ Bite รอเสิร์ฟความอร่อยนะฮะ! 😊\n\n✅ บันทึกรายการของคุณแล้วครับ เลขที่ออเดอร์ BMB-20261108-484 — ชำระเงินและติดตามสถานะได้ที่ https://biteme-baby.com/payment/BMB-20261108-484\n🛒 สรุปรายการของคุณ (ลุยสวนหมู+กุ้ง x2) เปิดดูบนเว็บได้เลยครับ — กดลิงก์นี้เพื่อดูตะกร้า เช็คเอาท์ หรือเพิ่มเมนูต่อได้เลย: https://biteme-baby.com/shop?cart=eyJ2IjoxLCJpdGVtcyI6W3siaWQiOiJwcm9kLTUiLCJxIjoyfV19\n🔗 ลิงก์เปิดเว็บ https://biteme-baby.com ภายนอก Facebook — แตะแล้วยืนยันเพื่อเปิดในเบราว์เซอร์ของคุณได้เลย",
+      "ai_guardrail_flags": {
+        "reply": {
+          "tone": "friendly",
+          "language": "th",
+          "draft_text": "รับทราบครับคุณลูกค้า! 🎉 ยืนยันออเดอร์ลุยสวนหมู+กุ้ง 2 ที่ ไม่เผ็ด พร้อมไข่ดาวเพิ่ม รอบเช้าวันนี้ (07:00-09:00 น.) ครับ กรุณากดไปที่ https://biteme-baby.com/checkout เพื่อตรวจสอบรายการและเลือกชำระเงินได้เลยครับ Bite รอเสิร์ฟความอร่อยนะฮะ! 😊",
+          "safety_flags": [
+            "none"
+          ],
+          "source_event_id": "msg-r74e-1794100613809",
+          "requires_human_review": true
+        },
+        "review_status": "auto_published",
+        "classification": {
+          "intent": "order_request",
+          "reason": "ลูกค้ายืนยันคำสั่งซื้ออย่างชัดเจน",
+          "urgency": "normal",
+          "sentiment": "positive",
+          "confidence": 0.95,
+          "safety_flags": [
+            "none"
+          ],
+          "requires_human_review": true
+        },
+        "requires_human_review": true
+      },
+      "last_error": "META_SEND:http_400",
+      "status": "SUCCEEDED",
+      "created_at": "2026-11-08T01:17:41.85752+00:00",
+      "processed_at": "2026-11-08T01:17:48.426+00:00"
+    },
+    {
+      "event_id": "msg-r74d-1794100613809",
+      "event_type": "message",
+      "platform": "MESSENGER",
+      "sender_id": "r74-nl-1794100613809",
+      "content": "เอาลุยสวนหมู+กุ้ง 2 ที่ ไม่เผ็ด เพิ่มไข่ดาวด้วยค่ะ ขอคิดก่อนนะ",
+      "reply_status": "failed",
+      "reply_provider_id": null,
+      "ai_reply_text": "รับทราบครับคุณลูกค้า! ลุยสวนหมู+กุ้ง 2 ที่ ไม่เผ็ด พร้อมไข่ดาวเพิ่ม ราคารวม 158+? บาท (ไข่ดาว ราคาตามเว็บนะครับ) 🥬✨ สะดวกเมื่อไหร่กดสั่งที่ https://biteme-baby.com/shop เลยครับ หรือถ้าอยากดูรายการก่อนก็เช็คได้ที่ https://biteme-baby.com/checkout ครับ Bite รอรับออเดอร์นะฮะ! 😊\n\n🛒 สรุปรายการของคุณ (ลุยสวนหมู+กุ้ง x2) เปิดดูบนเว็บได้เลยครับ — กดลิงก์นี้เพื่อดูตะกร้า เช็คเอาท์ หรือเพิ่มเมนูต่อได้เลย: https://biteme-baby.com/shop?cart=eyJ2IjoxLCJpdGVtcyI6W3siaWQiOiJwcm9kLTUiLCJxIjoyfV19\n🔗 ลิงก์เปิดเว็บ https://biteme-baby.com ภายนอก Facebook — แตะแล้วยืนยันเพื่อเปิดในเบราว์เซอร์ของคุณได้เลย",
+      "ai_guardrail_flags": {
+        "reply": {
+          "tone": "friendly",
+          "language": "th",
+          "draft_text": "รับทราบครับคุณลูกค้า! ลุยสวนหมู+กุ้ง 2 ที่ ไม่เผ็ด พร้อมไข่ดาวเพิ่ม ราคารวม 158+? บาท (ไข่ดาว ราคาตามเว็บนะครับ) 🥬✨ สะดวกเมื่อไหร่กดสั่งที่ https://biteme-baby.com/shop เลยครับ หรือถ้าอยากดูรายการก่อนก็เช็คได้ที่ https://biteme-baby.com/checkout ครับ Bite รอรับออเดอร์นะฮะ! 😊",
+          "safety_flags": [
+            "none"
+          ],
+          "source_event_id": "msg-r74d-1794100613809",
+          "requires_human_review": true
+        },
+        "review_status": "auto_published",
+        "classification": {
+          "intent": "order_request",
+          "reason": "ลูกค้าสั่งเมนูลุยสวนหมู+กุ้ง 2 ที่ ไม่เผ็ด เพิ่มไข่ดาว แต่ยังขอคิดก่อน ยังไม่ยืนยันคำสั่งซื้อ",
+          "urgency": "normal",
+          "sentiment": "neutral",
+          "confidence": 0.9,
+          "safety_flags": [
+            "none"
+          ],
+          "requires_human_review": true
+        },
+        "requires_human_review": true
+      },
+      "last_error": "META_SEND:http_400",
+      "status": "SUCCEEDED",
+      "created_at": "2026-11-08T01:17:23.404535+00:00",
+      "processed_at": "2026-11-08T01:17:30.78+00:00"
+    },
+    {
+      "event_id": "msg-r74c-1794100613809",
+      "event_type": "message",
+      "platform": "MESSENGER",
+      "sender_id": "r74-nl-1794100613809",
+      "content": "สวัสดีค่ะ วันนี้มีเมนูอะไรน่ากินบ้างคะ",
+      "reply_status": "failed",
+      "reply_provider_id": null,
+      "ai_reply_text": "สวัสดีครับคุณลูกค้า! วันนี้ Bite ขอแนะนำเมนูเด็ดที่พร้อมเสิร์ฟวันนี้เลยครับ 🎉 มีทั้งเมี่ยงแซลม่อน 79฿, สปาเกตตี้ผัดพริกแห้งกุ้ง 99฿, และข้าวลาบอกไก่+ไข่ต้ม 69฿ อร่อยทุกจานเลยครับ! หรือถ้าอยากลองเมนูพรีออเดอร์ก็มีไก่ทอดอินโดกับสุกี้แห้งกุ้งให้จองล่วงหน้าวันที่ 8 พ.ย. นี้ครับ สนใจเมนูไหนลองดูเพิ่มเติมที่ https://biteme-baby.com/shop แล้วสั่งเลยครับ 😊",
+      "ai_guardrail_flags": {
+        "reply": {
+          "tone": "friendly",
+          "language": "th",
+          "draft_text": "สวัสดีครับคุณลูกค้า! วันนี้ Bite ขอแนะนำเมนูเด็ดที่พร้อมเสิร์ฟวันนี้เลยครับ 🎉 มีทั้งเมี่ยงแซลม่อน 79฿, สปาเกตตี้ผัดพริกแห้งกุ้ง 99฿, และข้าวลาบอกไก่+ไข่ต้ม 69฿ อร่อยทุกจานเลยครับ! หรือถ้าอยากลองเมนูพรีออเดอร์ก็มีไก่ทอดอินโดกับสุกี้แห้งกุ้งให้จองล่วงหน้าวันที่ 8 พ.ย. นี้ครับ สนใจเมนูไหนลองดูเพิ่มเติมที่ https://biteme-baby.com/shop แล้วสั่งเลยครับ 😊",
+          "safety_flags": [
+            "none"
+          ],
+          "source_event_id": "msg-r74c-1794100613809",
+          "requires_human_review": false
+        },
+        "review_status": "auto_published",
+        "classification": {
+          "intent": "question",
+          "reason": "ลูกค้าทักทายและสอบถามเมนูประจำวัน แสดงความสนใจเชิงบวก ไม่มีประเด็นเร่งด่วนหรือความเสี่ยง",
+          "urgency": "low",
+          "sentiment": "positive",
+          "confidence": 0.95,
+          "safety_flags": [
+            "none"
+          ],
+          "requires_human_review": false
+        },
+        "requires_human_review": false
+      },
+      "last_error": "META_SEND:http_400",
+      "status": "SUCCEEDED",
+      "created_at": "2026-11-08T01:17:11.48039+00:00",
+      "processed_at": "2026-11-08T01:17:17.694+00:00"
+    },
+    {
+      "event_id": "msg-r74b-1794100613809",
+      "event_type": "message",
+      "platform": "MESSENGER",
+      "sender_id": "r74-sim-ord-1794100613809",
+      "content": "{\"order\":{\"items\":[{\"product_id\":\"prod-5\",\"quantity\":1}],\"delivery_round_id\":\"round-20261108-midday\",\"delivery_method\":\"self_delivery\",\"delivery_address\":\"R74 TEST address\",\"dropoff_latitude\":12.618659000000001,\"dropoff_longitude\":102.101063,\"customer_name\":\"R74 Test Structured\",\"customer_phone\":\"0990000074\",\"payment_method\":\"promptpay_qr\"}}",
+      "reply_status": "failed",
+      "reply_provider_id": null,
+      "ai_reply_text": "สวัสดีครับคุณลูกค้า R74! Bite ได้รับข้อมูลคำสั่งซื้อของคุณแล้วนะครับ แต่ระบบยังจับคู่เมนูจากรหัสสินค้าไม่ได้เลย ขอถามหน่อยครับว่าอยากสั่งเมนูอะไรครับ? พอได้ชื่อเมนูแล้ว Bite จะช่วยสรุปให้ แล้วพาไปกดสั่งที่ https://biteme-baby.com/shop ต่อเลยครับ 😊",
+      "ai_guardrail_flags": {
+        "reply": {
+          "tone": "friendly",
+          "language": "th",
+          "draft_text": "สวัสดีครับคุณลูกค้า R74! Bite ได้รับข้อมูลคำสั่งซื้อของคุณแล้วนะครับ แต่ระบบยังจับคู่เมนูจากรหัสสินค้าไม่ได้เลย ขอถามหน่อยครับว่าอยากสั่งเมนูอะไรครับ? พอได้ชื่อเมนูแล้ว Bite จะช่วยสรุปให้ แล้วพาไปกดสั่งที่ https://biteme-baby.com/shop ต่อเลยครับ 😊",
+          "safety_flags": [
+            "none"
+          ],
+          "source_event_id": "msg-r74b-1794100613809",
+          "requires_human_review": true
+        },
+        "review_status": "auto_published",
+        "classification": {
+          "intent": "order_request",
+          "reason": "ลูกค้าส่งข้อมูลคำสั่งซื้อแบบมีโครงสร้าง ระบุสินค้า รอบจัดส่ง ที่อยู่ และชำระเงินผ่าน PromptPay QR",
+          "urgency": "normal",
+          "sentiment": "neutral",
+          "confidence": 0.95,
+          "safety_flags": [
+            "none"
+          ],
+          "requires_human_review": true
+        },
+        "requires_human_review": true
+      },
+      "last_error": "META_SEND:http_400",
+      "status": "SUCCEEDED",
+      "created_at": "2026-11-08T01:17:04.745602+00:00",
+      "processed_at": "2026-11-08T01:17:12.155+00:00"
+    },
+    {
+      "event_id": "msg-r74a-1794100613809",
+      "event_type": "message",
+      "platform": "MESSENGER",
+      "sender_id": "r74-sim-1794100613809",
+      "content": "สวัสดีค่ะ ขอดูเมนูหน่อยค่ะ",
+      "reply_status": "failed",
+      "reply_provider_id": null,
+      "ai_reply_text": "สวัสดีครับคุณลูกค้า ยินดีต้อนรับเข้าสู่ Bite Me Baby จันทบุรีเลยครับ! 🎉 เมนูของเรามีทั้งจานเด็ดและเมนูสุขภาพให้เลือกเพียบเลยครับ ลองดูได้ที่ https://biteme-baby.com/shop เลยครับ มีทั้งไก่ทอดอินโด แกงเขียวหวานไก่กรอบ หรือแซลมอนย่างเกลือ อร่อยทุกจานเลยครับ สนใจเมนูไหนบอก Bite ได้เลยนะครับ 😊",
+      "ai_guardrail_flags": {
+        "reply": {
+          "tone": "friendly",
+          "language": "th",
+          "draft_text": "สวัสดีครับคุณลูกค้า ยินดีต้อนรับเข้าสู่ Bite Me Baby จันทบุรีเลยครับ! 🎉 เมนูของเรามีทั้งจานเด็ดและเมนูสุขภาพให้เลือกเพียบเลยครับ ลองดูได้ที่ https://biteme-baby.com/shop เลยครับ มีทั้งไก่ทอดอินโด แกงเขียวหวานไก่กรอบ หรือแซลมอนย่างเกลือ อร่อยทุกจานเลยครับ สนใจเมนูไหนบอก Bite ได้เลยนะครับ 😊",
+          "safety_flags": [
+            "none"
+          ],
+          "source_event_id": "msg-r74a-1794100613809",
+          "requires_human_review": false
+        },
+        "review_status": "auto_published",
+        "classification": {
+          "intent": "question",
+          "reason": "ลูกค้าทักทายและขอดูเมนู เป็นคำถามทั่วไป",
+          "urgency": "low",
+          "sentiment": "neutral",
+          "confidence": 0.95,
+          "safety_flags": [
+            "none"
+          ],
+          "requires_human_review": false
+        },
+        "requires_human_review": false
+      },
+      "last_error": "META_SEND:http_400",
+      "status": "SUCCEEDED",
+      "created_at": "2026-11-08T01:16:55.895257+00:00",
+      "processed_at": "2026-11-08T01:17:01.917+00:00"
+    },
+    {
+      "event_id": "r74cmt-1794074269443",
+      "event_type": "comment",
+      "platform": "FACEBOOK",
+      "sender_id": "r74-sim-cmt-1794074269443",
+      "content": "เอาลุยสวนหมู+กุ้ง 2 ที่ค่ะ",
+      "reply_status": "failed",
+      "reply_provider_id": null,
+      "ai_reply_text": "สวัสดีครับคุณลูกค้า! Bite เองครับ 😊 ขอบคุณที่สั่งนะ — ลุยสวนหมู+กุ้ง 2 ที่ ใช่ไหมครับ? เดี๋ยวผมจัดให้เลยนะ แต่เพื่อความสะดวกและเช็ครายการให้เป๊ะ ๆ รบกวนกดสั่งผ่านเว็บตรงนี้เลยครับ https://biteme-baby.com/shop แล้วกดเช็คเอาท์ได้เลย หรือถ้าอยากเพิ่มอะไรเพิ่มเติมก็บอกได้เลยครับ 😋\n\n🛒 สรุปรายการของคุณ (ลุยสวนหมู+กุ้ง x2) เปิดดูบนเว็บได้เลยครับ — กดลิงก์นี้เพื่อดูตะกร้า เช็คเอาท์ หรือเพิ่มเมนูต่อได้เลย: https://biteme-baby.com/shop?cart=eyJ2IjoxLCJpdGVtcyI6W3siaWQiOiJwcm9kLTUiLCJxIjoyfV19\n🔗 ลิงก์เปิดเว็บ https://biteme-baby.com ภายนอก Facebook — แตะแล้วยืนยันเพื่อเปิดในเบราว์เซอร์ของคุณได้เลย",
+      "ai_guardrail_flags": {
+        "reply": {
+          "tone": "friendly",
+          "language": "th",
+          "draft_text": "สวัสดีครับคุณลูกค้า! Bite เองครับ 😊 ขอบคุณที่สั่งนะ — ลุยสวนหมู+กุ้ง 2 ที่ ใช่ไหมครับ? เดี๋ยวผมจัดให้เลยนะ แต่เพื่อความสะดวกและเช็ครายการให้เป๊ะ ๆ รบกวนกดสั่งผ่านเว็บตรงนี้เลยครับ https://biteme-baby.com/shop แล้วกดเช็คเอาท์ได้เลย หรือถ้าอยากเพิ่มอะไรเพิ่มเติมก็บอกได้เลยครับ 😋",
+          "safety_flags": [
+            "none"
+          ],
+          "source_event_id": "r74cmt-1794074269443",
+          "requires_human_review": true
+        },
+        "review_status": "auto_published",
+        "classification": {
+          "intent": "order_request",
+          "reason": "ลูกค้าสั่งอาหาร 'เอาลุยสวนหมู+กุ้ง 2 ที่' เป็นคำสั่งซื้อที่ชัดเจน",
+          "urgency": "normal",
+          "sentiment": "neutral",
+          "confidence": 0.95,
+          "safety_flags": [
+            "none"
+          ],
+          "requires_human_review": true
+        },
+        "requires_human_review": true
+      },
+      "last_error": "META_SEND:http_400",
+      "status": "SUCCEEDED",
+      "created_at": "2026-11-07T17:58:30.435417+00:00",
+      "processed_at": "2026-11-07T17:58:36.066+00:00"
+    },
+    {
+      "event_id": "r74cmt-1794074256614",
+      "event_type": "comment",
+      "platform": "FACEBOOK",
+      "sender_id": "r74-sim-cmt-1794074256614",
+      "content": "เอาลุยสวนหมู+กุ้ง 2 ที่ค่ะ",
+      "reply_status": "failed",
+      "reply_provider_id": null,
+      "ai_reply_text": "สวัสดีครับคุณลูกค้า! 🙏 ขอบคุณที่สั่งนะครับ อยากได้ลุยสวนหมู+กุ้ง 2 ที่ใช่ไหมครับ? รายการน่ากินมากเลยครับ 😋 แต่ตรงนี้เป็นคอมเมนต์สาธารณะนะครับ รบกวนคุณทัก Inbox หรือกดสั่งที่เว็บเลยนะครับ จะเช็ครายการและสั่งได้สะวกกว่าเยอะเลยครับ https://biteme-baby.com/shop ขอบคุณครับ 🙏\n\n🛒 สรุปรายการของคุณ (ลุยสวนหมู+กุ้ง x2) เปิดดูบนเว็บได้เลยครับ — กดลิงก์นี้เพื่อดูตะกร้า เช็คเอาท์ หรือเพิ่มเมนูต่อได้เลย: https://biteme-baby.com/shop?cart=eyJ2IjoxLCJpdGVtcyI6W3siaWQiOiJwcm9kLTUiLCJxIjoyfV19\n🔗 ลิงก์เปิดเว็บ https://biteme-baby.com ภายนอก Facebook — แตะแล้วยืนยันเพื่อเปิดในเบราว์เซอร์ของคุณได้เลย",
+      "ai_guardrail_flags": {
+        "reply": {
+          "tone": "friendly",
+          "language": "th",
+          "draft_text": "สวัสดีครับคุณลูกค้า! 🙏 ขอบคุณที่สั่งนะครับ อยากได้ลุยสวนหมู+กุ้ง 2 ที่ใช่ไหมครับ? รายการน่ากินมากเลยครับ 😋 แต่ตรงนี้เป็นคอมเมนต์สาธารณะนะครับ รบกวนคุณทัก Inbox หรือกดสั่งที่เว็บเลยนะครับ จะเช็ครายการและสั่งได้สะวกกว่าเยอะเลยครับ https://biteme-baby.com/shop ขอบคุณครับ 🙏",
+          "safety_flags": [
+            "none"
+          ],
+          "source_event_id": "r74cmt-1794074256614",
+          "requires_human_review": true
+        },
+        "review_status": "auto_published",
+        "classification": {
+          "intent": "order_request",
+          "reason": "ลูกค้าสั่งอาหาร เอาลุยสวนหมู+กุ้ง 2 ที่",
+          "urgency": "normal",
+          "sentiment": "neutral",
+          "confidence": 0.95,
+          "safety_flags": [
+            "none"
+          ],
+          "requires_human_review": true
+        },
+        "requires_human_review": true
+      },
+      "last_error": "META_SEND:http_400",
+      "status": "SUCCEEDED",
+      "created_at": "2026-11-07T17:58:30.422515+00:00",
+      "processed_at": "2026-11-07T17:58:36.416+00:00"
+    },
+    {
+      "event_id": "r74cmt-1794074261611",
+      "event_type": "comment",
+      "platform": "FACEBOOK",
+      "sender_id": "r74-sim-cmt-1794074261611",
+      "content": "เอาลุยสวนหมู+กุ้ง 2 ที่ค่ะ",
+      "reply_status": "failed",
+      "reply_provider_id": null,
+      "ai_reply_text": "สวัสดีครับคุณลูกค้า! ขอบคุณที่สนใจลุยสวนหมู+กุ้งนะครับ 🥗✨ รายการที่คุณสั่งคือ ลุยสวนหมู+กุ้ง 2 ที่ ครับ — ถูกต้องมั้ยครับ? ถ้าพร้อมเช็คเอาท์หรือเพิ่มเมนูอื่น กดเลยที่ https://biteme-baby.com/shop เลยครับ หรือทัก Inbox สะดวกกว่ามั้ยครับ? 😊\n\n🛒 สรุปรายการของคุณ (ลุยสวนหมู+กุ้ง x2) เปิดดูบนเว็บได้เลยครับ — กดลิงก์นี้เพื่อดูตะกร้า เช็คเอาท์ หรือเพิ่มเมนูต่อได้เลย: https://biteme-baby.com/shop?cart=eyJ2IjoxLCJpdGVtcyI6W3siaWQiOiJwcm9kLTUiLCJxIjoyfV19\n🔗 ลิงก์เปิดเว็บ https://biteme-baby.com ภายนอก Facebook — แตะแล้วยืนยันเพื่อเปิดในเบราว์เซอร์ของคุณได้เลย",
+      "ai_guardrail_flags": {
+        "reply": {
+          "tone": "friendly",
+          "language": "th",
+          "draft_text": "สวัสดีครับคุณลูกค้า! ขอบคุณที่สนใจลุยสวนหมู+กุ้งนะครับ 🥗✨ รายการที่คุณสั่งคือ ลุยสวนหมู+กุ้ง 2 ที่ ครับ — ถูกต้องมั้ยครับ? ถ้าพร้อมเช็คเอาท์หรือเพิ่มเมนูอื่น กดเลยที่ https://biteme-baby.com/shop เลยครับ หรือทัก Inbox สะดวกกว่ามั้ยครับ? 😊",
+          "safety_flags": [
+            "none"
+          ],
+          "source_event_id": "r74cmt-1794074261611",
+          "requires_human_review": true
+        },
+        "review_status": "auto_published",
+        "classification": {
+          "intent": "order_request",
+          "reason": "ลูกค้าสั่งรายการอาหาร 'เอาลุยสวนหมู+กุ้ง 2 ที่' อย่างชัดเจน",
+          "urgency": "normal",
+          "sentiment": "neutral",
+          "confidence": 0.95,
+          "safety_flags": [
+            "none"
+          ],
+          "requires_human_review": true
+        },
+        "requires_human_review": true
+      },
+      "last_error": "META_SEND:http_400",
+      "status": "SUCCEEDED",
+      "created_at": "2026-11-07T17:58:28.425309+00:00",
+      "processed_at": "2026-11-07T17:58:36.495+00:00"
+    },
+    {
+      "event_id": "r74cmt-1794074266993",
+      "event_type": "comment",
+      "platform": "FACEBOOK",
+      "sender_id": "r74-sim-cmt-1794074266993",
+      "content": "เอาลุยสวนหมู+กุ้ง 2 ที่ค่ะ",
+      "reply_status": "failed",
+      "reply_provider_id": null,
+      "ai_reply_text": "สวัสดีครับคุณลูกค้า! Bite รับออเดอร์แล้วนะครับ — ลุยสวนหมู+กุ้ง 2 ที่ ใช่เลยครับ เมนูนี้เด็ดมากกก 🥗✨ ถ้าพร้อมเช็คเอาท์หรืออยากเพิ่มเมนูอื่นต่อ กดเลยที่ https://biteme-baby.com/shop เลยครับ หรือทัก Inbox สะดวกกว่าก็ได้นะฮะ 🚀\n\n🛒 สรุปรายการของคุณ (ลุยสวนหมู+กุ้ง x2) เปิดดูบนเว็บได้เลยครับ — กดลิงก์นี้เพื่อดูตะกร้า เช็คเอาท์ หรือเพิ่มเมนูต่อได้เลย: https://biteme-baby.com/shop?cart=eyJ2IjoxLCJpdGVtcyI6W3siaWQiOiJwcm9kLTUiLCJxIjoyfV19\n🔗 ลิงก์เปิดเว็บ https://biteme-baby.com ภายนอก Facebook — แตะแล้วยืนยันเพื่อเปิดในเบราว์เซอร์ของคุณได้เลย",
+      "ai_guardrail_flags": {
+        "reply": {
+          "tone": "friendly",
+          "language": "th",
+          "draft_text": "สวัสดีครับคุณลูกค้า! Bite รับออเดอร์แล้วนะครับ — ลุยสวนหมู+กุ้ง 2 ที่ ใช่เลยครับ เมนูนี้เด็ดมากกก 🥗✨ ถ้าพร้อมเช็คเอาท์หรืออยากเพิ่มเมนูอื่นต่อ กดเลยที่ https://biteme-baby.com/shop เลยครับ หรือทัก Inbox สะดวกกว่าก็ได้นะฮะ 🚀",
+          "safety_flags": [
+            "none"
+          ],
+          "source_event_id": "r74cmt-1794074266993",
+          "requires_human_review": true
+        },
+        "review_status": "auto_published",
+        "classification": {
+          "intent": "order_request",
+          "reason": "ลูกค้าสั่งรายการอาหาร 'ลุยสวนหมู+กุ้ง' จำนวน 2 ที่",
+          "urgency": "normal",
+          "sentiment": "neutral",
+          "confidence": 0.95,
+          "safety_flags": [
+            "none"
+          ],
+          "requires_human_review": true
+        },
+        "requires_human_review": true
+      },
+      "last_error": "META_SEND:http_400",
+      "status": "SUCCEEDED",
+      "created_at": "2026-11-07T17:58:25.711422+00:00",
+      "processed_at": "2026-11-07T17:58:32.007+00:00"
+    }
+  ],
+  "identities": [
+    {
+      "channel": "FACEBOOK",
+      "external_user_id": "r74-sim-cmt-1794100613809",
+      "customer_ref": "774afd9d-a45d-4d3e-b8f2-6dbe31f243da",
+      "display_name": null,
+      "created_at": "2026-11-08T01:17:55.211695+00:00"
+    },
+    {
+      "channel": "MESSENGER",
+      "external_user_id": "r74-nl-1794100613809",
+      "customer_ref": "ea7d16ce-9904-44cc-9d5a-4d39e014dfc4",
+      "display_name": null,
+      "created_at": "2026-11-08T01:17:12.154752+00:00"
+    },
+    {
+      "channel": "MESSENGER",
+      "external_user_id": "r74-sim-ord-1794100613809",
+      "customer_ref": "6f2b325f-4a93-4198-b15f-99f115da2724",
+      "display_name": null,
+      "created_at": "2026-11-08T01:17:06.427471+00:00"
+    },
+    {
+      "channel": "MESSENGER",
+      "external_user_id": "r74-sim-1794100613809",
+      "customer_ref": "09de05ec-492a-408d-880b-475b5b5d7d0d",
+      "display_name": null,
+      "created_at": "2026-11-08T01:16:57.546602+00:00"
+    },
+    {
+      "channel": "FACEBOOK",
+      "external_user_id": "r74-sim-cmt-1794074269443",
+      "customer_ref": "16ee3fbc-e1c9-4e72-a912-0431fcd4a5b3",
+      "display_name": null,
+      "created_at": "2026-11-07T17:58:31.05783+00:00"
+    },
+    {
+      "channel": "FACEBOOK",
+      "external_user_id": "r74-sim-cmt-1794074256614",
+      "customer_ref": "e64c8e13-1173-49f5-b736-72a150182c22",
+      "display_name": null,
+      "created_at": "2026-11-07T17:58:31.044713+00:00"
+    },
+    {
+      "channel": "FACEBOOK",
+      "external_user_id": "r74-sim-cmt-1794074261611",
+      "customer_ref": "b41a6da0-3975-4d31-9163-5603f24523b4",
+      "display_name": null,
+      "created_at": "2026-11-07T17:58:29.21123+00:00"
+    },
+    {
+      "channel": "FACEBOOK",
+      "external_user_id": "r74-sim-cmt-1794074266993",
+      "customer_ref": "f6ebfce0-1d48-4e26-9838-b30a9a1bf8f2",
+      "display_name": null,
+      "created_at": "2026-11-07T17:58:26.550593+00:00"
+    },
+    {
+      "channel": "FACEBOOK",
+      "external_user_id": "r74-sim-cmt-1794074251197",
+      "customer_ref": "82953346-b246-42b0-9f1a-56328178eddb",
+      "display_name": null,
+      "created_at": "2026-11-07T17:58:26.15545+00:00"
+    },
+    {
+      "channel": "FACEBOOK",
+      "external_user_id": "r74-sim-cmt-1794074253560",
+      "customer_ref": "5fbbe7ec-8656-48c1-931e-a46dbeda123c",
+      "display_name": null,
+      "created_at": "2026-11-07T17:58:25.960589+00:00"
+    },
+    {
+      "channel": "FACEBOOK",
+      "external_user_id": "r74-sim-cmt-1794074259070",
+      "customer_ref": "8fb731bf-f9af-4fcc-a1ab-4165a026d606",
+      "display_name": null,
+      "created_at": "2026-11-07T17:58:25.823202+00:00"
+    },
+    {
+      "channel": "FACEBOOK",
+      "external_user_id": "r74-sim-cmt-1794074264099",
+      "customer_ref": "9583d5ca-e29b-4467-99ff-003ef22b93f3",
+      "display_name": null,
+      "created_at": "2026-11-07T17:58:24.834242+00:00"
+    },
+    {
+      "channel": "MESSENGER",
+      "external_user_id": "r74-nl-1794074269443",
+      "customer_ref": "3a818052-7ecc-430f-973f-410d6a4e4faf",
+      "display_name": null,
+      "created_at": "2026-11-07T17:58:03.048626+00:00"
+    },
+    {
+      "channel": "MESSENGER",
+      "external_user_id": "r74-nl-1794074266993",
+      "customer_ref": "466a93ab-d46b-4b6f-945f-f93b4c62a985",
+      "display_name": null,
+      "created_at": "2026-11-07T17:58:00.855383+00:00"
+    },
+    {
+      "channel": "MESSENGER",
+      "external_user_id": "r74-nl-1794074264099",
+      "customer_ref": "23df71d8-d2f7-44ea-b63c-f035bdcaf55d",
+      "display_name": null,
+      "created_at": "2026-11-07T17:57:58.736706+00:00"
+    },
+    {
+      "channel": "MESSENGER",
+      "external_user_id": "r74-sim-ord-1794074269443",
+      "customer_ref": "558f1542-9c75-4740-a930-66a6417b9b49",
+      "display_name": null,
+      "created_at": "2026-11-07T17:57:58.263857+00:00"
+    },
+    {
+      "channel": "MESSENGER",
+      "external_user_id": "r74-nl-1794074261611",
+      "customer_ref": "fc2e71f3-22c1-4c3d-9904-13a530152e0c",
+      "display_name": null,
+      "created_at": "2026-11-07T17:57:57.626768+00:00"
+    },
+    {
+      "channel": "MESSENGER",
+      "external_user_id": "r74-sim-ord-1794074266993",
+      "customer_ref": "499dae58-c0da-4f6f-8654-4d27db220c90",
+      "display_name": null,
+      "created_at": "2026-11-07T17:57:56.038507+00:00"
+    },
+    {
+      "channel": "MESSENGER",
+      "external_user_id": "r74-nl-1794074253560",
+      "customer_ref": "60d5d0b2-fc7e-4b43-9ca5-4db9a0e1085d",
+      "display_name": null,
+      "created_at": "2026-11-07T17:57:54.988592+00:00"
+    },
+    {
+      "channel": "MESSENGER",
+      "external_user_id": "r74-nl-1794074251197",
+      "customer_ref": "0e0da367-27a5-496d-b110-d183a6bb5ea4",
+      "display_name": null,
+      "created_at": "2026-11-07T17:57:54.80925+00:00"
+    },
+    {
+      "channel": "MESSENGER",
+      "external_user_id": "r74-nl-1794074259070",
+      "customer_ref": "4ab37461-eaef-4c6f-b9ff-b1f9f4327b4f",
+      "display_name": null,
+      "created_at": "2026-11-07T17:57:54.80005+00:00"
+    },
+    {
+      "channel": "MESSENGER",
+      "external_user_id": "r74-sim-ord-1794074264099",
+      "customer_ref": "966b2831-7e07-4e37-8d84-575046d50b89",
+      "display_name": null,
+      "created_at": "2026-11-07T17:57:53.115762+00:00"
+    },
+    {
+      "channel": "MESSENGER",
+      "external_user_id": "r74-nl-1794074256614",
+      "customer_ref": "817b2936-f1c1-4f0c-ab3d-db0ae75837e5",
+      "display_name": null,
+      "created_at": "2026-11-07T17:57:52.219324+00:00"
+    },
+    {
+      "channel": "MESSENGER",
+      "external_user_id": "r74-sim-ord-1794074261611",
+      "customer_ref": "7cd64840-3853-4574-bfda-a3bfe45d501a",
+      "display_name": null,
+      "created_at": "2026-11-07T17:57:52.16398+00:00"
+    },
+    {
+      "channel": "MESSENGER",
+      "external_user_id": "r74-sim-1794074269443",
+      "customer_ref": "e2b57073-82d8-4298-9f1f-6eae7d4e7eaa",
+      "display_name": null,
+      "created_at": "2026-11-07T17:57:50.954735+00:00"
+    },
+    {
+      "channel": "MESSENGER",
+      "external_user_id": "r74-sim-ord-1794074259070",
+      "customer_ref": "daf0818e-38a6-4f80-a0ae-7922fc8111b5",
+      "display_name": null,
+      "created_at": "2026-11-07T17:57:49.869676+00:00"
+    },
+    {
+      "channel": "MESSENGER",
+      "external_user_id": "r74-sim-ord-1794074253560",
+      "customer_ref": "ed197a1c-bce2-451d-af99-ae6ec2c6f456",
+      "display_name": null,
+      "created_at": "2026-11-07T17:57:49.775293+00:00"
+    },
+    {
+      "channel": "MESSENGER",
+      "external_user_id": "r74-sim-1794074266993",
+      "customer_ref": "535ba933-e711-4f8d-aa6d-bea99ffeab2b",
+      "display_name": null,
+      "created_at": "2026-11-07T17:57:48.777511+00:00"
+    },
+    {
+      "channel": "MESSENGER",
+      "external_user_id": "r74-sim-ord-1794074256614",
+      "customer_ref": "5e94de4e-b990-4dd9-9703-edf9e70c8cd6",
+      "display_name": null,
+      "created_at": "2026-11-07T17:57:46.532759+00:00"
+    },
+    {
+      "channel": "MESSENGER",
+      "external_user_id": "r74-sim-1794074264099",
+      "customer_ref": "18de093c-662c-491b-9b21-da97977eb4f4",
+      "display_name": null,
+      "created_at": "2026-11-07T17:57:45.690416+00:00"
+    },
+    {
+      "channel": "MESSENGER",
+      "external_user_id": "r74-sim-1794074261611",
+      "customer_ref": "ec7fa966-6f8a-4a40-9cde-fa93fafd3b51",
+      "display_name": null,
+      "created_at": "2026-11-07T17:57:44.465959+00:00"
+    },
+    {
+      "channel": "MESSENGER",
+      "external_user_id": "r74-sim-ord-1794074251197",
+      "customer_ref": "c41078ea-1ff1-49db-ad17-86a4b8adad0c",
+      "display_name": null,
+      "created_at": "2026-11-07T17:57:43.552083+00:00"
+    },
+    {
+      "channel": "MESSENGER",
+      "external_user_id": "r74-sim-1794074259070",
+      "customer_ref": "cf425390-f713-4d16-915c-8bef254cc271",
+      "display_name": null,
+      "created_at": "2026-11-07T17:57:42.129098+00:00"
+    },
+    {
+      "channel": "MESSENGER",
+      "external_user_id": "r74-sim-1794074256614",
+      "customer_ref": "7a8da23f-4da8-40e2-902b-b6da248ecbf1",
+      "display_name": null,
+      "created_at": "2026-11-07T17:57:38.279797+00:00"
+    },
+    {
+      "channel": "MESSENGER",
+      "external_user_id": "r74-sim-1794074253560",
+      "customer_ref": "67782a83-307f-41ec-82f3-8aa68babb4dd",
+      "display_name": null,
+      "created_at": "2026-11-07T17:57:36.08018+00:00"
+    },
+    {
+      "channel": "MESSENGER",
+      "external_user_id": "r74-sim-1794074251197",
+      "customer_ref": "d0dac859-041a-47cf-a45e-869b46b55337",
+      "display_name": null,
+      "created_at": "2026-11-07T17:57:34.51947+00:00"
+    },
+    {
+      "channel": "FACEBOOK",
+      "external_user_id": "r74-sim-cmt-1794073958318",
+      "customer_ref": "9e1c7fca-7789-4074-b27f-30d99434504d",
+      "display_name": null,
+      "created_at": "2026-11-07T17:53:30.360705+00:00"
+    },
+    {
+      "channel": "FACEBOOK",
+      "external_user_id": "r74-sim-cmt-1794073951565",
+      "customer_ref": "e494f1cc-5733-4230-8e0f-1613059c6e25",
+      "display_name": null,
+      "created_at": "2026-11-07T17:53:17.462132+00:00"
+    },
+    {
+      "channel": "FACEBOOK",
+      "external_user_id": "r74-sim-cmt-1794073954987",
+      "customer_ref": "99e2fe67-7e0f-46a6-8b40-88cf1ec4d4c4",
+      "display_name": null,
+      "created_at": "2026-11-07T17:53:16.948239+00:00"
+    },
+    {
+      "channel": "FACEBOOK",
+      "external_user_id": "r74-sim-cmt-1794073948192",
+      "customer_ref": "f1a11f5b-fd45-48bf-aef4-701db740a4cb",
+      "display_name": null,
+      "created_at": "2026-11-07T17:53:10.579794+00:00"
+    },
+    {
+      "channel": "FACEBOOK",
+      "external_user_id": "r74-sim-cmt-1794073934589",
+      "customer_ref": "9d364b4d-8492-4572-95d7-5c1ab5b83602",
+      "display_name": null,
+      "created_at": "2026-11-07T17:53:06.482177+00:00"
+    },
+    {
+      "channel": "MESSENGER",
+      "external_user_id": "r74-nl-1794073958318",
+      "customer_ref": "4e40f51c-eec6-4439-a89f-a2b335860ae7",
+      "display_name": null,
+      "created_at": "2026-11-07T17:52:52.099887+00:00"
+    },
+    {
+      "channel": "MESSENGER",
+      "external_user_id": "r74-nl-1794073954987",
+      "customer_ref": "f93b9107-d148-4362-b757-18b9f4f40d78",
+      "display_name": null,
+      "created_at": "2026-11-07T17:52:49.394812+00:00"
+    },
+    {
+      "channel": "MESSENGER",
+      "external_user_id": "r74-sim-ord-1794073958318",
+      "customer_ref": "daf93456-7a91-48ac-a135-e94783823d44",
+      "display_name": null,
+      "created_at": "2026-11-07T17:52:47.406443+00:00"
+    },
+    {
+      "channel": "MESSENGER",
+      "external_user_id": "r74-nl-1794073951565",
+      "customer_ref": "690f73be-2aef-4466-9288-860e470c08c8",
+      "display_name": null,
+      "created_at": "2026-11-07T17:52:46.168015+00:00"
+    },
+    {
+      "channel": "MESSENGER",
+      "external_user_id": "r74-sim-ord-1794073954987",
+      "customer_ref": "61141706-8fd1-45fa-82f5-9c31430fc599",
+      "display_name": null,
+      "created_at": "2026-11-07T17:52:44.709556+00:00"
+    },
+    {
+      "channel": "MESSENGER",
+      "external_user_id": "r74-nl-1794073948192",
+      "customer_ref": "82edbbb4-9d55-4994-9659-8939daa02d79",
+      "display_name": null,
+      "created_at": "2026-11-07T17:52:44.228509+00:00"
+    },
+    {
+      "channel": "MESSENGER",
+      "external_user_id": "r74-sim-ord-1794073951565",
+      "customer_ref": "2d490492-7bfe-4bb8-8b9c-20e1fac7766b",
+      "display_name": null,
+      "created_at": "2026-11-07T17:52:41.210049+00:00"
+    },
+    {
+      "channel": "MESSENGER",
+      "external_user_id": "r74-nl-1794073934589",
+      "customer_ref": "24c67fa8-2989-4a92-834d-b359b756b356",
+      "display_name": null,
+      "created_at": "2026-11-07T17:52:40.362084+00:00"
+    },
+    {
+      "channel": "MESSENGER",
+      "external_user_id": "r74-sim-1794073958318",
+      "customer_ref": "dcca889b-9bb4-4e68-9be3-7d0b62f50eb8",
+      "display_name": null,
+      "created_at": "2026-11-07T17:52:40.107005+00:00"
+    },
+    {
+      "channel": "MESSENGER",
+      "external_user_id": "r74-sim-ord-1794073948192",
+      "customer_ref": "b1cf1b42-3182-48c5-b05f-ca56bb7d89ea",
+      "display_name": null,
+      "created_at": "2026-11-07T17:52:38.421747+00:00"
+    },
+    {
+      "channel": "MESSENGER",
+      "external_user_id": "r74-sim-1794073954987",
+      "customer_ref": "6c4ed159-d3e8-47e2-a60a-32d85c06c426",
+      "display_name": null,
+      "created_at": "2026-11-07T17:52:36.51234+00:00"
+    },
+    {
+      "channel": "MESSENGER",
+      "external_user_id": "r74-sim-1794073951565",
+      "customer_ref": "8503ec68-2209-471a-ae4b-3661fa641fe9",
+      "display_name": null,
+      "created_at": "2026-11-07T17:52:33.221286+00:00"
+    },
+    {
+      "channel": "MESSENGER",
+      "external_user_id": "r74-sim-1794073948192",
+      "customer_ref": "a1210cb6-cd8a-4da6-bc2b-fcd575b948d4",
+      "display_name": null,
+      "created_at": "2026-11-07T17:52:30.407934+00:00"
+    },
+    {
+      "channel": "MESSENGER",
+      "external_user_id": "r74-sim-ord-1794073934589",
+      "customer_ref": "82270df9-b32c-4ebc-9f9f-f97db89e3814",
+      "display_name": null,
+      "created_at": "2026-11-07T17:52:27.540874+00:00"
+    },
+    {
+      "channel": "MESSENGER",
+      "external_user_id": "r74-sim-1794073934589",
+      "customer_ref": "b881f932-6f0e-4835-8601-43390f4a359f",
+      "display_name": null,
+      "created_at": "2026-11-07T17:52:19.105796+00:00"
+    },
+    {
+      "channel": "MESSENGER",
+      "external_user_id": "r74-nl-1794050327900",
+      "customer_ref": "dd0f5e68-d271-4153-b8c7-344465d3eddb",
+      "display_name": null,
+      "created_at": "2026-11-07T11:19:15.661229+00:00"
+    },
+    {
+      "channel": "MESSENGER",
+      "external_user_id": "r76-sim-msg-user-1794040684888",
+      "customer_ref": "d3a1c50b-96d4-4d20-aaa0-a48538e302ec",
+      "display_name": null,
+      "created_at": "2026-11-07T08:38:12.943951+00:00"
+    },
+    {
+      "channel": "FACEBOOK",
+      "external_user_id": "r76-sim-cmt-user-1794040684888",
+      "customer_ref": "f466c7ee-f5c6-4fda-89f0-4e5428295d7a",
+      "display_name": null,
+      "created_at": "2026-11-07T08:38:11.643884+00:00"
+    },
+    {
+      "channel": "MESSENGER",
+      "external_user_id": "r76-sim-msg-user-1794040500228",
+      "customer_ref": "4fe24712-1915-491d-a433-17cac8432a38",
+      "display_name": null,
+      "created_at": "2026-11-07T08:35:12.155679+00:00"
+    },
+    {
+      "channel": "FACEBOOK",
+      "external_user_id": "r76-sim-cmt-user-1794040500228",
+      "customer_ref": "1e334fd8-a6ce-4671-887c-ec22d44121d6",
+      "display_name": null,
+      "created_at": "2026-11-07T08:35:10.519519+00:00"
+    },
+    {
+      "channel": "MESSENGER",
+      "external_user_id": "r75-sim-msg-user-1794036628445",
+      "customer_ref": "dd7c9670-a16c-42ec-bdfb-9e721bf6f6b0",
+      "display_name": null,
+      "created_at": "2026-11-07T07:30:33.137438+00:00"
+    },
+    {
+      "channel": "FACEBOOK",
+      "external_user_id": "r75-sim-cmt-user-1794036628445",
+      "customer_ref": "514c79a7-2504-485f-a45d-b8fc3344a6f0",
+      "display_name": null,
+      "created_at": "2026-11-07T07:30:31.386731+00:00"
+    },
+    {
+      "channel": "MESSENGER",
+      "external_user_id": "r75-sim-msg-user-1794036345969",
+      "customer_ref": "4155ef9d-01e4-4a52-8ee5-203c930668cb",
+      "display_name": null,
+      "created_at": "2026-11-07T07:25:49.922818+00:00"
+    },
+    {
+      "channel": "FACEBOOK",
+      "external_user_id": "r75-sim-cmt-user-1794036345969",
+      "customer_ref": "8f4def17-e87e-4544-8c9b-2e49ae287826",
+      "display_name": null,
+      "created_at": "2026-11-07T07:25:48.480634+00:00"
+    },
+    {
+      "channel": "MESSENGER",
+      "external_user_id": "r74-nl-1794028344827",
+      "customer_ref": "248f5b04-aa3f-4a4e-af53-5689d97746c5",
+      "display_name": null,
+      "created_at": "2026-11-07T05:12:51.333107+00:00"
+    },
+    {
+      "channel": "MESSENGER",
+      "external_user_id": "r74-nl-1794016857378",
+      "customer_ref": "f54b61d0-d611-46d1-8820-423713551424",
+      "display_name": null,
+      "created_at": "2026-11-07T02:01:20.79129+00:00"
+    },
+    {
+      "channel": "MESSENGER",
+      "external_user_id": "r74-nl-1794014851006",
+      "customer_ref": "5cdcbdd2-983c-4ddf-b773-3fb5d7a800ce",
+      "display_name": null,
+      "created_at": "2026-11-07T01:27:49.548713+00:00"
+    },
+    {
+      "channel": "MESSENGER",
+      "external_user_id": "r74-nl-1793979215929",
+      "customer_ref": "f535bdd2-c7b3-45a0-9aa8-151b46e120d7",
+      "display_name": null,
+      "created_at": "2026-11-06T15:34:06.655846+00:00"
+    },
+    {
+      "channel": "MESSENGER",
+      "external_user_id": "r74-nl-1793963936863",
+      "customer_ref": "58f25e63-f9dd-49e7-93bb-ce2123eda6a6",
+      "display_name": null,
+      "created_at": "2026-11-06T11:19:16.886495+00:00"
+    },
+    {
+      "channel": "MESSENGER",
+      "external_user_id": "r74-nl-1793963462772",
+      "customer_ref": "f5ea5bc2-4bf8-4517-958a-518dbe408761",
+      "display_name": null,
+      "created_at": "2026-11-06T11:11:27.876245+00:00"
+    },
+    {
+      "channel": "MESSENGER",
+      "external_user_id": "r74-nl-1793961299902",
+      "customer_ref": "a9338496-a2ee-44bf-b608-4db48af14947",
+      "display_name": null,
+      "created_at": "2026-11-06T10:35:16.17318+00:00"
+    },
+    {
+      "channel": "MESSENGER",
+      "external_user_id": "r74-nl-1793961111829",
+      "customer_ref": "15eab624-1a09-4f26-97db-aace77f48537",
+      "display_name": null,
+      "created_at": "2026-11-06T10:32:07.908411+00:00"
+    },
+    {
+      "channel": "MESSENGER",
+      "external_user_id": "r74-nl-1793961047373",
+      "customer_ref": "52ea42bf-c5fa-49f2-a9ba-6eb0aff7bf16",
+      "display_name": null,
+      "created_at": "2026-11-06T10:31:05.90616+00:00"
+    },
+    {
+      "channel": "MESSENGER",
+      "external_user_id": "r74-nl-1793960839463",
+      "customer_ref": "74f3c2ce-f472-4bc9-8b66-19cc8ea3de71",
+      "display_name": null,
+      "created_at": "2026-11-06T10:27:43.646596+00:00"
+    },
+    {
+      "channel": "MESSENGER",
+      "external_user_id": "r74-nl-1793956500953",
+      "customer_ref": "e6b1568a-5511-4dfc-9f77-46f699520cdd",
+      "display_name": null,
+      "created_at": "2026-11-06T09:15:25.191373+00:00"
+    },
+    {
+      "channel": "FACEBOOK",
+      "external_user_id": "28977803305239616",
+      "customer_ref": "7f6ae3f2-8c51-4fe2-9617-a189e043a0e2",
+      "display_name": null,
+      "created_at": "2026-11-01T08:38:58.556527+00:00"
+    },
+    {
+      "channel": "FACEBOOK",
+      "external_user_id": "28680684258210089",
+      "customer_ref": "5845e479-88ad-4616-a271-497c07f88794",
+      "display_name": null,
+      "created_at": "2026-10-30T06:00:21.040726+00:00"
+    }
+  ],
+  "customers_sample": [
+    {
+      "id": "b881f932-6f0e-4835-8601-43390f4a359f",
+      "user_id": "b881f932-6f0e-4835-8601-43390f4a359f",
+      "full_name": "Customer",
+      "phone": null,
+      "email": "ext-r74-sim-1794073934589@channels.bmb.internal",
+      "address": null,
+      "loyalty_points": 0,
+      "created_at": "2026-11-07T17:52:18.838226+00:00",
+      "updated_at": "2026-11-07T17:52:18.838226+00:00",
+      "default_latitude": null,
+      "default_longitude": null,
+      "default_address_detail": null,
+      "delivery_photo_url": null,
+      "delivery_photo_path": null,
+      "referral_code": null,
+      "referred_by": null
+    },
+    {
+      "id": "82270df9-b32c-4ebc-9f9f-f97db89e3814",
+      "user_id": "82270df9-b32c-4ebc-9f9f-f97db89e3814",
+      "full_name": "Customer",
+      "phone": null,
+      "email": "ext-r74-sim-ord-1794073934589@channels.bmb.internal",
+      "address": null,
+      "loyalty_points": 0,
+      "created_at": "2026-11-07T17:52:27.371489+00:00",
+      "updated_at": "2026-11-07T17:52:27.371489+00:00",
+      "default_latitude": null,
+      "default_longitude": null,
+      "default_address_detail": null,
+      "delivery_photo_url": null,
+      "delivery_photo_path": null,
+      "referral_code": null,
+      "referred_by": null
+    }
+  ],
+  "push_subscriptions_sample": [
+    {
+      "id": "push- ###########-7178f2",
+      "customer_id": null,
+      "endpoint": "https://fcm.googleapis.com/fcm/send/dkPzYAnxPYU:APA91bFDYxm2OBBoGHdvKt0z9u6wdzQat_s3e7am4yeE55xu2Ek7xHgzwuW5VQ-CzYeLHxr0z5P72h8jInsji8twvaWf1v6U9SxLxcDqFbuOwUbzdy6GKB0fdeovyBdKqWxwytfcEr9g",
+      "p256dh": "BHnF0eZpbzZtJNktzpiRnKC_FmexRX0Q9x5RrAlbCSK2F4OOfDCPkkrZZ6Xx4aVoQBM-Zt9dAcqc8sQTbqO8XTQ",
+      "auth_secret": "PAig2ExoTKNPYodVKru2Aw",
+      "user_agent": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Mobile Safari/537.36",
+      "failure_count": 0,
+      "last_success_at": null,
+      "last_failure_at": null,
+      "created_at": "2026-10-23T00:07:11.025823+00:00",
+      "updated_at": "2026-10-23T00:07:11.025823+00:00",
+      "driver_id": "drv- ###########-60bc"
+    },
+    {
+      "id": "push- ###########-440377",
+      "customer_id": null,
+      "endpoint": "https://fcm.googleapis.com/fcm/send/fiETYxFuP10:APA91bGUIIDCXjhJPFUAUXUG7kR29cntTyFUgfoKLBm4Zc-EDVlgejtP79qPyuCINvgeX5DuSjYAjkO36DRB7ZoUPX5CO90R72TtAOFVsqgrCRSrlbyRF140QiKlC29cdmLguqu1Omw7",
+      "p256dh": "BDFy73VmF8Yqy6r-XBTUg8bGoUbLAvQCGk6qfZk-j0-mrxJU9T3g7UdSO0o6Po9_tE7xOQ9pDveUXqYMV8kW5vE",
+      "auth_secret": "T19YSzRRDCY8AIgmbEFkHw",
+      "user_agent": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Mobile Safari/537.36",
+      "failure_count": 0,
+      "last_success_at": null,
+      "last_failure_at": null,
+      "created_at": "2026-10-23T07:04:35.523939+00:00",
+      "updated_at": "2026-10-23T07:04:35.523939+00:00",
+      "driver_id": "drv- ###########-60bc"
+    },
+    {
+      "id": "push- ###########-77e033",
+      "customer_id": "dddf4b57-405f-4852-a985-76d8d52b1b72",
+      "endpoint": "https://fcm.googleapis.com/fcm/send/c0zIJUkDgRA:APA91bF74es954uXXDnqOsWqcNW-C9VPTPhntx_IKj4QuJAoh9S4vwVFi9lpmfiBtOm7QrR6USr3N-STdzBq-w5N1JgsTA4v6udp5w4TI7PBjmwB1pGN8E4hOT7kPL1qxE3oSU1y-Cqm",
+      "p256dh": "BDb4ge33WrgBQcQ6xBwELkYmYtXa1LfhTToG3s8RJYQf93c7MN2PON4j4xl_ZkprewJjh9kRu5hFQlZNNnqUGwM",
+      "auth_secret": "5dOvmMmYzuWWzrdjnolSPQ",
+      "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36",
+      "failure_count": 0,
+      "last_success_at": null,
+      "last_failure_at": null,
+      "created_at": "2026-11-04T00:59:03.088441+00:00",
+      "updated_at": "2026-11-05T00:55:05.55916+00:00",
+      "driver_id": null
+    },
+    {
+      "id": "push- ###########-20d236",
+      "customer_id": "dddf4b57-405f-4852-a985-76d8d52b1b72",
+      "endpoint": "https://fcm.googleapis.com/fcm/send/fqcEaJSZZBU:APA91bG_tHNTc9gUkGp61zR5QCelF5z0n3CeES9C4rvQYU9h_fYj2iOEJWXXphdGJkZVaqLSdvg5sjjAG--F7r4W_UytTrHtpgo3WdtXCibLFEkrIjWaXWnL5YofF_Ty6thSyVTR2Sx0",
+      "p256dh": "BLt3sD0pPrDrlqen0PrtPulpmuB94F38ak5yS4-njN96v2JrWhFS5cmUtXAmaczIt1-Jki694lxzl6p_Z5ZPNSY",
+      "auth_secret": "rHe5VJ7RXRgYOe3ZEcH92w",
+      "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36",
+      "failure_count": 0,
+      "last_success_at": null,
+      "last_failure_at": null,
+      "created_at": "2026-11-05T01:04:02.842137+00:00",
+      "updated_at": "2026-11-05T01:04:02.842137+00:00",
+      "driver_id": null
+    },
+    {
+      "id": "push- ###########-5c1b09",
+      "customer_id": "dddf4b57-405f-4852-a985-76d8d52b1b72",
+      "endpoint": "https://fcm.googleapis.com/fcm/send/dcFAghEtxKU:APA91bHYKYUISGTrF3pTRXZL3LVda0DzhjVcPpnhiAN5GJdC7jxUJgA-GXXdq3ML6MxSiMj_w8Eb3KaOQ-GHOFIDW-jVgJyz5_BOcU6JeEGEQ1xjEjzKvt4symGI-uRpWqKReNG7-FZ3",
+      "p256dh": "BFmcr_6wmXmwIy0_x4M5ZjvCfrKPdzRll7PSmhe-VysmsnItX0tUSH8jJmeMQLh6_zq0ckd4rJzhnma7KStLg_o",
+      "auth_secret": "rMi28R5uAjZa1lPIQzePmA",
+      "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36",
+      "failure_count": 0,
+      "last_success_at": null,
+      "last_failure_at": null,
+      "created_at": "2026-11-05T09:14:58.050238+00:00",
+      "updated_at": "2026-11-06T08:21:35.736857+00:00",
+      "driver_id": null
+    }
+  ],
+  "outbox_recent": [
+    {
+      "id": "obx-1d2e27620cb16de15070",
+      "event_key": "ntf-evt-ord-BMB-20261108-767-pending",
+      "customer_id": "6f2b325f-4a93-4198-b15f-99f115da2724",
+      "category": "Transactional",
+      "title": "รับออเดอร์แล้ว",
+      "body": "มีออเดอร์เข้ามา — เลขที่ #BMB-20261108-767 · ขอบคุณที่สั่ง Bite Me Baby",
+      "url": "/notifications",
+      "status": "mock",
+      "channel": "line",
+      "attempts": 0,
+      "next_attempt_at": "2026-11-08T01:20:04.332434+00:00",
+      "claimed_at": null,
+      "last_error": null,
+      "created_at": "2026-11-08T01:20:04.332434+00:00",
+      "updated_at": "2026-11-08T01:20:07.797589+00:00"
+    },
+    {
+      "id": "obx-4ae18af77d6d1ff0682f",
+      "event_key": "ntf-evt-ord-BMB-20261108-613-pending",
+      "customer_id": "7ef115f0-ef6c-4d35-be78-e312361a64ac",
+      "category": "Transactional",
+      "title": "รับออเดอร์แล้ว",
+      "body": "มีออเดอร์เข้ามา — เลขที่ #BMB-20261108-613 · ขอบคุณที่สั่ง Bite Me Baby",
+      "url": "/notifications",
+      "status": "mock",
+      "channel": "line",
+      "attempts": 0,
+      "next_attempt_at": "2026-11-08T01:20:04.293954+00:00",
+      "claimed_at": null,
+      "last_error": null,
+      "created_at": "2026-11-08T01:20:04.293954+00:00",
+      "updated_at": "2026-11-08T01:20:06.96036+00:00"
+    },
+    {
+      "id": "obx-d1020c3a1455cdb8c0d5",
+      "event_key": "ntf-evt-ord-BMB-20261108-850-pending",
+      "customer_id": "7ef115f0-ef6c-4d35-be78-e312361a64ac",
+      "category": "Transactional",
+      "title": "รับออเดอร์แล้ว",
+      "body": "มีออเดอร์เข้ามา — เลขที่ #BMB-20261108-850 · ขอบคุณที่สั่ง Bite Me Baby",
+      "url": "/notifications",
+      "status": "mock",
+      "channel": "line",
+      "attempts": 0,
+      "next_attempt_at": "2026-11-08T01:20:04.261427+00:00",
+      "claimed_at": null,
+      "last_error": null,
+      "created_at": "2026-11-08T01:20:04.261427+00:00",
+      "updated_at": "2026-11-08T01:20:06.107815+00:00"
+    },
+    {
+      "id": "obx-58fe67d466a1b9b91bda",
+      "event_key": "ntf-evt-ord-BMB-20261108-484-pending",
+      "customer_id": "ea7d16ce-9904-44cc-9d5a-4d39e014dfc4",
+      "category": "Transactional",
+      "title": "รับออเดอร์แล้ว",
+      "body": "มีออเดอร์เข้ามา — เลขที่ #BMB-20261108-484 · ขอบคุณที่สั่ง Bite Me Baby",
+      "url": "/notifications",
+      "status": "mock",
+      "channel": "line",
+      "attempts": 0,
+      "next_attempt_at": "2026-11-08T01:20:04.222214+00:00",
+      "claimed_at": null,
+      "last_error": null,
+      "created_at": "2026-11-08T01:20:04.222214+00:00",
+      "updated_at": "2026-11-08T01:20:08.424899+00:00"
+    },
+    {
+      "id": "obx-8c6acea5121f06790ceb",
+      "event_key": "ntf-evt-ord-BMB-20261108-767-cancelled",
+      "customer_id": "6f2b325f-4a93-4198-b15f-99f115da2724",
+      "category": "Transactional",
+      "title": "ออเดอร์ถูกยกเลิก",
+      "body": "#BMB-20261108-767 — ออเดอร์ถูกยกเลิก",
+      "url": "/notifications",
+      "status": "mock",
+      "channel": "line",
+      "attempts": 0,
+      "next_attempt_at": "2026-11-08T01:20:04.180451+00:00",
+      "claimed_at": null,
+      "last_error": null,
+      "created_at": "2026-11-08T01:20:04.180451+00:00",
+      "updated_at": "2026-11-08T01:20:06.72043+00:00"
+    },
+    {
+      "id": "obx-e828b03bbaa9f6776e59",
+      "event_key": "ntf-evt-ord-BMB-20261108-613-cancelled",
+      "customer_id": "7ef115f0-ef6c-4d35-be78-e312361a64ac",
+      "category": "Transactional",
+      "title": "ออเดอร์ถูกยกเลิก",
+      "body": "#BMB-20261108-613 — ออเดอร์ถูกยกเลิก",
+      "url": "/notifications",
+      "status": "mock",
+      "channel": "line",
+      "attempts": 0,
+      "next_attempt_at": "2026-11-08T01:20:04.146574+00:00",
+      "claimed_at": null,
+      "last_error": null,
+      "created_at": "2026-11-08T01:20:04.146574+00:00",
+      "updated_at": "2026-11-08T01:20:07.245368+00:00"
+    },
+    {
+      "id": "obx-7a61050042e9f603dea7",
+      "event_key": "ntf-evt-ord-BMB-20261108-850-cancelled",
+      "customer_id": "7ef115f0-ef6c-4d35-be78-e312361a64ac",
+      "category": "Transactional",
+      "title": "ออเดอร์ถูกยกเลิก",
+      "body": "#BMB-20261108-850 — ออเดอร์ถูกยกเลิก",
+      "url": "/notifications",
+      "status": "mock",
+      "channel": "line",
+      "attempts": 0,
+      "next_attempt_at": "2026-11-08T01:20:04.101326+00:00",
+      "claimed_at": null,
+      "last_error": null,
+      "created_at": "2026-11-08T01:20:04.101326+00:00",
+      "updated_at": "2026-11-08T01:20:08.15395+00:00"
+    },
+    {
+      "id": "obx-9e89698b3411ca22ba40",
+      "event_key": "ntf-evt-ord-BMB-20261108-484-cancelled",
+      "customer_id": "ea7d16ce-9904-44cc-9d5a-4d39e014dfc4",
+      "category": "Transactional",
+      "title": "ออเดอร์ถูกยกเลิก",
+      "body": "#BMB-20261108-484 — ออเดอร์ถูกยกเลิก",
+      "url": "/notifications",
+      "status": "mock",
+      "channel": "line",
+      "attempts": 0,
+      "next_attempt_at": "2026-11-08T01:20:04.002051+00:00",
+      "claimed_at": null,
+      "last_error": null,
+      "created_at": "2026-11-08T01:20:04.002051+00:00",
+      "updated_at": "2026-11-08T01:20:08.334473+00:00"
+    },
+    {
+      "id": "obx-fd97af833b46b30865d8",
+      "event_key": "ntf-evt-ord-PO-20261108-845-pending",
+      "customer_id": "23cbe150-e5f4-4a37-a969-02e2db8df395",
+      "category": "Transactional",
+      "title": "รับออเดอร์แล้ว",
+      "body": "มีออเดอร์เข้ามา — เลขที่ #PO-20261108-845 · ขอบคุณที่สั่ง Bite Me Baby",
+      "url": "/notifications",
+      "status": "sent",
+      "channel": "web_push",
+      "attempts": 2,
+      "next_attempt_at": "2026-11-07T13:02:17.699303+00:00",
+      "claimed_at": null,
+      "last_error": null,
+      "created_at": "2026-11-07T13:00:03.996549+00:00",
+      "updated_at": "2026-11-07T13:05:07.72991+00:00"
+    },
+    {
+      "id": "obx-47bf3c0083cd7217b6b6",
+      "event_key": "ntf-evt-pay-PO-20261108-845-paid",
+      "customer_id": "23cbe150-e5f4-4a37-a969-02e2db8df395",
+      "category": "Transactional",
+      "title": "ยืนยันการชำระเงินแล้ว",
+      "body": "ได้รับการชำระเงินของ #PO-20261108-845 แล้ว",
+      "url": "/notifications",
+      "status": "sent",
+      "channel": "web_push",
+      "attempts": 2,
+      "next_attempt_at": "2026-11-07T13:02:17.817019+00:00",
+      "claimed_at": null,
+      "last_error": null,
+      "created_at": "2026-11-07T13:00:03.934949+00:00",
+      "updated_at": "2026-11-07T13:05:08.270256+00:00"
+    },
+    {
+      "id": "obx-78b1cfea7961fe8dcf86",
+      "event_key": "ntf-evt-ord-PO-20261108-845-confirmed",
+      "customer_id": "23cbe150-e5f4-4a37-a969-02e2db8df395",
+      "category": "Transactional",
+      "title": "ยืนยันออเดอร์แล้ว",
+      "body": "#PO-20261108-845 — ยืนยันออเดอร์แล้ว",
+      "url": "/notifications",
+      "status": "sent",
+      "channel": "web_push",
+      "attempts": 2,
+      "next_attempt_at": "2026-11-07T13:02:17.514193+00:00",
+      "claimed_at": null,
+      "last_error": null,
+      "created_at": "2026-11-07T13:00:03.832727+00:00",
+      "updated_at": "2026-11-07T13:05:06.383517+00:00"
+    },
+    {
+      "id": "obx-9ccfc6fecbd4a6d7207e",
+      "event_key": "ntf-evt-ord-PO-20261108-845-preparing",
+      "customer_id": "23cbe150-e5f4-4a37-a969-02e2db8df395",
+      "category": "Transactional",
+      "title": "กำลังเตรียมอาหาร",
+      "body": "#PO-20261108-845 — กำลังเตรียมอาหาร",
+      "url": "/notifications",
+      "status": "sent",
+      "channel": "web_push",
+      "attempts": 1,
+      "next_attempt_at": "2026-11-07T13:00:03.499376+00:00",
+      "claimed_at": null,
+      "last_error": null,
+      "created_at": "2026-11-07T13:00:03.499376+00:00",
+      "updated_at": "2026-11-07T13:00:17.287801+00:00"
+    },
+    {
+      "id": "obx-9cca5c391bd7e6e48677",
+      "event_key": "ntf-evt-ord-PO-20261108-845-ready_for_dispatch",
+      "customer_id": "23cbe150-e5f4-4a37-a969-02e2db8df395",
+      "category": "Transactional",
+      "title": "อาหารพร้อมแล้ว",
+      "body": "#PO-20261108-845 — อาหารพร้อมแล้ว",
+      "url": "/notifications",
+      "status": "sent",
+      "channel": "web_push",
+      "attempts": 2,
+      "next_attempt_at": "2026-11-07T13:02:17.609362+00:00",
+      "claimed_at": null,
+      "last_error": null,
+      "created_at": "2026-11-07T13:00:03.031909+00:00",
+      "updated_at": "2026-11-07T13:05:07.081079+00:00"
+    },
+    {
+      "id": "obx-249ebf660f5c34d13570",
+      "event_key": "ntf-evt-ord-PO-20261108-503-pending",
+      "customer_id": "5119ee60-41de-4a1f-8dfa-0645a59cde37",
+      "category": "Transactional",
+      "title": "รับออเดอร์แล้ว",
+      "body": "มีออเดอร์เข้ามา — เลขที่ #PO-20261108-503 · ขอบคุณที่สั่ง Bite Me Baby",
+      "url": "/notifications",
+      "status": "sent",
+      "channel": "web_push",
+      "attempts": 1,
+      "next_attempt_at": "2026-11-07T12:55:05.021377+00:00",
+      "claimed_at": null,
+      "last_error": null,
+      "created_at": "2026-11-07T12:55:05.021377+00:00",
+      "updated_at": "2026-11-07T12:55:09.536626+00:00"
+    },
+    {
+      "id": "obx-a0f722352b8576340371",
+      "event_key": "ntf-evt-ord-PO-20261108-503-confirmed",
+      "customer_id": "5119ee60-41de-4a1f-8dfa-0645a59cde37",
+      "category": "Transactional",
+      "title": "ยืนยันออเดอร์แล้ว",
+      "body": "#PO-20261108-503 — ยืนยันออเดอร์แล้ว",
+      "url": "/notifications",
+      "status": "sent",
+      "channel": "web_push",
+      "attempts": 1,
+      "next_attempt_at": "2026-11-07T12:55:04.889531+00:00",
+      "claimed_at": null,
+      "last_error": null,
+      "created_at": "2026-11-07T12:55:04.889531+00:00",
+      "updated_at": "2026-11-07T12:55:07.945317+00:00"
+    },
+    {
+      "id": "obx-dc10845ae2f2ebd3f422",
+      "event_key": "ntf-evt-pay-PO-20261108-503-paid",
+      "customer_id": "5119ee60-41de-4a1f-8dfa-0645a59cde37",
+      "category": "Transactional",
+      "title": "ยืนยันการชำระเงินแล้ว",
+      "body": "ได้รับการชำระเงินของ #PO-20261108-503 แล้ว",
+      "url": "/notifications",
+      "status": "sent",
+      "channel": "web_push",
+      "attempts": 1,
+      "next_attempt_at": "2026-11-07T12:55:04.30038+00:00",
+      "claimed_at": null,
+      "last_error": null,
+      "created_at": "2026-11-07T12:55:04.30038+00:00",
+      "updated_at": "2026-11-07T12:55:07.124923+00:00"
+    },
+    {
+      "id": "obx-d06248e393596007abc6",
+      "event_key": "ntf-evt-ord-PO-20261108-503-preparing",
+      "customer_id": "5119ee60-41de-4a1f-8dfa-0645a59cde37",
+      "category": "Transactional",
+      "title": "กำลังเตรียมอาหาร",
+      "body": "#PO-20261108-503 — กำลังเตรียมอาหาร",
+      "url": "/notifications",
+      "status": "sent",
+      "channel": "web_push",
+      "attempts": 1,
+      "next_attempt_at": "2026-11-07T12:55:04.225445+00:00",
+      "claimed_at": null,
+      "last_error": null,
+      "created_at": "2026-11-07T12:55:04.225445+00:00",
+      "updated_at": "2026-11-07T12:55:11.16315+00:00"
+    },
+    {
+      "id": "obx-542b847387351e002161",
+      "event_key": "ntf-evt-ord-PO-20261108-503-ready_for_dispatch",
+      "customer_id": "5119ee60-41de-4a1f-8dfa-0645a59cde37",
+      "category": "Transactional",
+      "title": "อาหารพร้อมแล้ว",
+      "body": "#PO-20261108-503 — อาหารพร้อมแล้ว",
+      "url": "/notifications",
+      "status": "sent",
+      "channel": "web_push",
+      "attempts": 1,
+      "next_attempt_at": "2026-11-07T12:55:03.787763+00:00",
+      "claimed_at": null,
+      "last_error": null,
+      "created_at": "2026-11-07T12:55:03.787763+00:00",
+      "updated_at": "2026-11-07T12:55:10.271792+00:00"
+    },
+    {
+      "id": "obx-171c63ea3a2112887a02",
+      "event_key": "ntf-evt-ord-BMB-20261107-197-confirmed",
+      "customer_id": "23cbe150-e5f4-4a37-a969-02e2db8df395",
+      "category": "Transactional",
+      "title": "ยืนยันออเดอร์แล้ว",
+      "body": "#BMB-20261107-197 — ยืนยันออเดอร์แล้ว",
+      "url": "/notifications",
+      "status": "mock",
+      "channel": "line",
+      "attempts": 0,
+      "next_attempt_at": "2026-11-07T11:40:03.779805+00:00",
+      "claimed_at": null,
+      "last_error": null,
+      "created_at": "2026-11-07T11:40:03.779805+00:00",
+      "updated_at": "2026-11-07T11:40:06.609254+00:00"
+    },
+    {
+      "id": "obx-59e6fa13dfc6b580326a",
+      "event_key": "ntf-evt-pay-BMB-20261107-197-paid",
+      "customer_id": "23cbe150-e5f4-4a37-a969-02e2db8df395",
+      "category": "Transactional",
+      "title": "ยืนยันการชำระเงินแล้ว",
+      "body": "ได้รับการชำระเงินของ #BMB-20261107-197 แล้ว",
+      "url": "/notifications",
+      "status": "mock",
+      "channel": "line",
+      "attempts": 0,
+      "next_attempt_at": "2026-11-07T11:40:03.475009+00:00",
+      "claimed_at": null,
+      "last_error": null,
+      "created_at": "2026-11-07T11:40:03.475009+00:00",
+      "updated_at": "2026-11-07T11:40:06.758123+00:00"
+    },
+    {
+      "id": "obx-33d572992189a00e8126",
+      "event_key": "ntf-evt-ord-BMB-20261107-197-preparing",
+      "customer_id": "23cbe150-e5f4-4a37-a969-02e2db8df395",
+      "category": "Transactional",
+      "title": "กำลังเตรียมอาหาร",
+      "body": "#BMB-20261107-197 — กำลังเตรียมอาหาร",
+      "url": "/notifications",
+      "status": "mock",
+      "channel": "line",
+      "attempts": 0,
+      "next_attempt_at": "2026-11-07T11:40:03.223116+00:00",
+      "claimed_at": null,
+      "last_error": null,
+      "created_at": "2026-11-07T11:40:03.223116+00:00",
+      "updated_at": "2026-11-07T11:40:06.66858+00:00"
+    },
+    {
+      "id": "obx-e1aa12f9a0119499b1f6",
+      "event_key": "ntf-evt-ord-BMB-20261107-197-ready_for_dispatch",
+      "customer_id": "23cbe150-e5f4-4a37-a969-02e2db8df395",
+      "category": "Transactional",
+      "title": "อาหารพร้อมแล้ว",
+      "body": "#BMB-20261107-197 — อาหารพร้อมแล้ว",
+      "url": "/notifications",
+      "status": "mock",
+      "channel": "line",
+      "attempts": 0,
+      "next_attempt_at": "2026-11-07T11:40:03.07178+00:00",
+      "claimed_at": null,
+      "last_error": null,
+      "created_at": "2026-11-07T11:40:03.07178+00:00",
+      "updated_at": "2026-11-07T11:40:06.489804+00:00"
+    },
+    {
+      "id": "obx-bb647b01c05a1e8cd091",
+      "event_key": "ntf-evt-ord-BMB-20261107-126-pending",
+      "customer_id": "dd0f5e68-d271-4153-b8c7-344465d3eddb",
+      "category": "Transactional",
+      "title": "รับออเดอร์แล้ว",
+      "body": "มีออเดอร์เข้ามา — เลขที่ #BMB-20261107-126 · ขอบคุณที่สั่ง Bite Me Baby",
+      "url": "/notifications",
+      "status": "mock",
+      "channel": "line",
+      "attempts": 0,
+      "next_attempt_at": "2026-11-07T11:20:05.353905+00:00",
+      "claimed_at": null,
+      "last_error": null,
+      "created_at": "2026-11-07T11:20:05.353905+00:00",
+      "updated_at": "2026-11-07T11:20:07.598474+00:00"
+    },
+    {
+      "id": "obx-9b4d83cc53fd9d8369fa",
+      "event_key": "ntf-evt-ord-BMB-20261107-126-cancelled",
+      "customer_id": "dd0f5e68-d271-4153-b8c7-344465d3eddb",
+      "category": "Transactional",
+      "title": "ออเดอร์ถูกยกเลิก",
+      "body": "#BMB-20261107-126 — ออเดอร์ถูกยกเลิก",
+      "url": "/notifications",
+      "status": "mock",
+      "channel": "line",
+      "attempts": 0,
+      "next_attempt_at": "2026-11-07T11:20:04.348001+00:00",
+      "claimed_at": null,
+      "last_error": null,
+      "created_at": "2026-11-07T11:20:04.348001+00:00",
+      "updated_at": "2026-11-07T11:20:07.206557+00:00"
+    },
+    {
+      "id": "obx-6234a8a35468eb679901",
+      "event_key": "ntf-evt-ord-BMB-20261107-197-pending",
+      "customer_id": "23cbe150-e5f4-4a37-a969-02e2db8df395",
+      "category": "Transactional",
+      "title": "รับออเดอร์แล้ว",
+      "body": "มีออเดอร์เข้ามา — เลขที่ #BMB-20261107-197 · ขอบคุณที่สั่ง Bite Me Baby",
+      "url": "/notifications",
+      "status": "mock",
+      "channel": "line",
+      "attempts": 0,
+      "next_attempt_at": "2026-11-07T09:25:02.56864+00:00",
+      "claimed_at": null,
+      "last_error": null,
+      "created_at": "2026-11-07T09:25:02.56864+00:00",
+      "updated_at": "2026-11-07T09:25:03.537427+00:00"
+    },
+    {
+      "id": "obx-2063cbdc05728755d031",
+      "event_key": "ntf-evt-ord-BMB-20261107-171-pending",
+      "customer_id": "248f5b04-aa3f-4a4e-af53-5689d97746c5",
+      "category": "Transactional",
+      "title": "รับออเดอร์แล้ว",
+      "body": "มีออเดอร์เข้ามา — เลขที่ #BMB-20261107-171 · ขอบคุณที่สั่ง Bite Me Baby",
+      "url": "/notifications",
+      "status": "mock",
+      "channel": "line",
+      "attempts": 0,
+      "next_attempt_at": "2026-11-07T05:15:03.990639+00:00",
+      "claimed_at": null,
+      "last_error": null,
+      "created_at": "2026-11-07T05:15:03.990639+00:00",
+      "updated_at": "2026-11-07T05:15:05.563356+00:00"
+    },
+    {
+      "id": "obx-c604d8614791f08b026a",
+      "event_key": "ntf-evt-ord-BMB-20261107-171-cancelled",
+      "customer_id": "248f5b04-aa3f-4a4e-af53-5689d97746c5",
+      "category": "Transactional",
+      "title": "ออเดอร์ถูกยกเลิก",
+      "body": "#BMB-20261107-171 — ออเดอร์ถูกยกเลิก",
+      "url": "/notifications",
+      "status": "mock",
+      "channel": "line",
+      "attempts": 0,
+      "next_attempt_at": "2026-11-07T05:15:02.543152+00:00",
+      "claimed_at": null,
+      "last_error": null,
+      "created_at": "2026-11-07T05:15:02.543152+00:00",
+      "updated_at": "2026-11-07T05:15:05.943001+00:00"
+    },
+    {
+      "id": "obx-112ab98638e42dfb6418",
+      "event_key": "ntf-evt-ord-BMB-20261107-471-pending",
+      "customer_id": "f54b61d0-d611-46d1-8820-423713551424",
+      "category": "Transactional",
+      "title": "รับออเดอร์แล้ว",
+      "body": "มีออเดอร์เข้ามา — เลขที่ #BMB-20261107-471 · ขอบคุณที่สั่ง Bite Me Baby",
+      "url": "/notifications",
+      "status": "mock",
+      "channel": "line",
+      "attempts": 0,
+      "next_attempt_at": "2026-11-07T02:05:04.013214+00:00",
+      "claimed_at": null,
+      "last_error": null,
+      "created_at": "2026-11-07T02:05:04.013214+00:00",
+      "updated_at": "2026-11-07T02:05:06.453833+00:00"
+    },
+    {
+      "id": "obx-b80eb765a4580dffef28",
+      "event_key": "ntf-evt-ord-BMB-20261107-471-cancelled",
+      "customer_id": "f54b61d0-d611-46d1-8820-423713551424",
+      "category": "Transactional",
+      "title": "ออเดอร์ถูกยกเลิก",
+      "body": "#BMB-20261107-471 — ออเดอร์ถูกยกเลิก",
+      "url": "/notifications",
+      "status": "mock",
+      "channel": "line",
+      "attempts": 0,
+      "next_attempt_at": "2026-11-07T02:05:03.426273+00:00",
+      "claimed_at": null,
+      "last_error": null,
+      "created_at": "2026-11-07T02:05:03.426273+00:00",
+      "updated_at": "2026-11-07T02:05:06.065445+00:00"
+    },
+    {
+      "id": "obx-996b72693bd5255aff1d",
+      "event_key": "ntf-evt-ord-PO-20261106-336-confirmed",
+      "customer_id": "23cbe150-e5f4-4a37-a969-02e2db8df395",
+      "category": "Transactional",
+      "title": "ยืนยันออเดอร์",
+      "body": "ออเดอร์ PO-20261106-336 ได้รับการยืนยันแล้ว",
+      "url": "/notifications",
+      "status": "mock",
+      "channel": "line",
+      "attempts": 0,
+      "next_attempt_at": "2026-11-05T18:20:02.875808+00:00",
+      "claimed_at": null,
+      "last_error": null,
+      "created_at": "2026-11-05T18:20:02.875808+00:00",
+      "updated_at": "2026-11-05T18:20:07.5421+00:00"
+    },
+    {
+      "id": "obx-6314eb1901029a1cf1b3",
+      "event_key": "ntf-evt-ord-PO-20261106-336-pending",
+      "customer_id": "23cbe150-e5f4-4a37-a969-02e2db8df395",
+      "category": "Transactional",
+      "title": "รับออเดอร์แล้ว",
+      "body": "ออเดอร์ PO-20261106-336 ของคุณได้รับเรียบร้อยแล้ว",
+      "url": "/notifications",
+      "status": "mock",
+      "channel": "line",
+      "attempts": 0,
+      "next_attempt_at": "2026-11-05T18:20:02.578538+00:00",
+      "claimed_at": null,
+      "last_error": null,
+      "created_at": "2026-11-05T18:20:02.578538+00:00",
+      "updated_at": "2026-11-05T18:20:07.488827+00:00"
+    },
+    {
+      "id": "obx-cb952b29307825c244be",
+      "event_key": "ntf-evt-ord-PO-20261106-336-cancelled",
+      "customer_id": "23cbe150-e5f4-4a37-a969-02e2db8df395",
+      "category": "Transactional",
+      "title": "ออเดอร์ถูกยกเลิก",
+      "body": "#PO-20261106-336 — ออเดอร์ถูกยกเลิก",
+      "url": "/notifications",
+      "status": "mock",
+      "channel": "line",
+      "attempts": 2,
+      "next_attempt_at": "2026-11-05T15:44:07.095978+00:00",
+      "claimed_at": null,
+      "last_error": null,
+      "created_at": "2026-11-05T15:35:02.343716+00:00",
+      "updated_at": "2026-11-05T15:45:07.39862+00:00"
+    },
+    {
+      "id": "obx-15f8b3006a2fc4e64eac",
+      "event_key": "ntf-msgn-omsg-1793892284405-6797-c",
+      "customer_id": "23cbe150-e5f4-4a37-a969-02e2db8df395",
+      "category": "Operational",
+      "title": "💬 ข้อความใหม่จากร้าน",
+      "body": "#PO-20261106-336 — ไรเด้อร เห็นมั้ย",
+      "url": "/notifications",
+      "status": "mock",
+      "channel": "line",
+      "attempts": 3,
+      "next_attempt_at": "2026-11-05T15:43:06.458181+00:00",
+      "claimed_at": null,
+      "last_error": null,
+      "created_at": "2026-11-05T15:25:02.669591+00:00",
+      "updated_at": "2026-11-05T15:45:07.459375+00:00"
+    },
+    {
+      "id": "obx-f5d018b27351a8516af6",
+      "event_key": "ntf-notif-1793883765128-f1dc5",
+      "customer_id": "23cbe150-e5f4-4a37-a969-02e2db8df395",
+      "category": "Transactional",
+      "title": "รับออเดอร์แล้ว",
+      "body": "มีออเดอร์เข้ามา — เลขที่ #PO-20261106-336 · ขอบคุณที่สั่ง Bite Me Baby",
+      "url": "/notifications",
+      "status": "sent",
+      "channel": "web_push",
+      "attempts": 1,
+      "next_attempt_at": "2026-11-05T13:05:04.539444+00:00",
+      "claimed_at": null,
+      "last_error": null,
+      "created_at": "2026-11-05T13:05:04.539444+00:00",
+      "updated_at": "2026-11-05T13:05:08.015377+00:00"
+    },
+    {
+      "id": "obx-90a445e935fd19d791cc",
+      "event_key": "ntf-notif-1793883846715-e230c",
+      "customer_id": "23cbe150-e5f4-4a37-a969-02e2db8df395",
+      "category": "Transactional",
+      "title": "ยืนยันออเดอร์แล้ว",
+      "body": "#PO-20261106-336 — ยืนยันออเดอร์แล้ว",
+      "url": "/notifications",
+      "status": "sent",
+      "channel": "web_push",
+      "attempts": 1,
+      "next_attempt_at": "2026-11-05T13:05:04.437965+00:00",
+      "claimed_at": null,
+      "last_error": null,
+      "created_at": "2026-11-05T13:05:04.437965+00:00",
+      "updated_at": "2026-11-05T13:05:08.55287+00:00"
+    },
+    {
+      "id": "obx-4b08bf23ba9ecbcd20fc",
+      "event_key": "ntf-notif-1793883846571-6df32",
+      "customer_id": "23cbe150-e5f4-4a37-a969-02e2db8df395",
+      "category": "Transactional",
+      "title": "ยืนยันการชำระเงินแล้ว",
+      "body": "ได้รับการชำระเงินของ #PO-20261106-336 แล้ว",
+      "url": "/notifications",
+      "status": "sent",
+      "channel": "web_push",
+      "attempts": 1,
+      "next_attempt_at": "2026-11-05T13:05:04.288105+00:00",
+      "claimed_at": null,
+      "last_error": null,
+      "created_at": "2026-11-05T13:05:04.288105+00:00",
+      "updated_at": "2026-11-05T13:05:07.396671+00:00"
+    },
+    {
+      "id": "obx-99edd9258124f4aec437",
+      "event_key": "ntf-msgn-omsg-1793880580313-7698",
+      "customer_id": "23cbe150-e5f4-4a37-a969-02e2db8df395",
+      "category": "Operational",
+      "title": "💬 ข้อความใหม่จากร้าน",
+      "body": "#BMB-20261105-896 — ร้านจ้าา",
+      "url": "/notifications",
+      "status": "sent",
+      "channel": "web_push",
+      "attempts": 1,
+      "next_attempt_at": "2026-11-05T12:10:03.145138+00:00",
+      "claimed_at": null,
+      "last_error": null,
+      "created_at": "2026-11-05T12:10:03.145138+00:00",
+      "updated_at": "2026-11-05T12:10:07.685489+00:00"
+    },
+    {
+      "id": "obx-92c56c6eaac654163ca4",
+      "event_key": "ntf-msgn-omsg-1793880594896-fc5e",
+      "customer_id": "23cbe150-e5f4-4a37-a969-02e2db8df395",
+      "category": "Operational",
+      "title": "💬 ข้อความใหม่จากร้าน",
+      "body": "#BMB-20261105-896 — ไรเดอร์อยู่ไหน",
+      "url": "/notifications",
+      "status": "sent",
+      "channel": "web_push",
+      "attempts": 1,
+      "next_attempt_at": "2026-11-05T12:10:02.924789+00:00",
+      "claimed_at": null,
+      "last_error": null,
+      "created_at": "2026-11-05T12:10:02.924789+00:00",
+      "updated_at": "2026-11-05T12:10:08.326493+00:00"
+    },
+    {
+      "id": "obx-b117f936f42dec5883c4",
+      "event_key": "ntf-evt-ord-BMB-20261105-896-delivered",
+      "customer_id": "23cbe150-e5f4-4a37-a969-02e2db8df395",
+      "category": "Transactional",
+      "title": "จัดส่งสำเร็จ",
+      "body": "ออเดอร์ BMB-20261105-896 จัดส่งสำเร็จ ขอบคุณที่ใช้บริการ",
+      "url": "/notifications",
+      "status": "mock",
+      "channel": "line",
+      "attempts": 0,
+      "next_attempt_at": "2026-11-05T10:40:04.351436+00:00",
+      "claimed_at": null,
+      "last_error": null,
+      "created_at": "2026-11-05T10:40:04.351436+00:00",
+      "updated_at": "2026-11-05T10:40:06.925344+00:00"
+    },
+    {
+      "id": "obx-45da2b07b16d29004c45",
+      "event_key": "ntf-evt-ord-BMB-20261105-896-ready_for_dispatch",
+      "customer_id": "23cbe150-e5f4-4a37-a969-02e2db8df395",
+      "category": "Transactional",
+      "title": "อาหารพร้อมแล้ว",
+      "body": "ออเดอร์ BMB-20261105-896 พร้อมส่ง/รับแล้ว",
+      "url": "/notifications",
+      "status": "mock",
+      "channel": "line",
+      "attempts": 0,
+      "next_attempt_at": "2026-11-05T10:40:04.145528+00:00",
+      "claimed_at": null,
+      "last_error": null,
+      "created_at": "2026-11-05T10:40:04.145528+00:00",
+      "updated_at": "2026-11-05T10:40:06.991481+00:00"
+    },
+    {
+      "id": "obx-ce8521263950badc1fe1",
+      "event_key": "ntf-evt-ord-BMB-20261105-896-preparing",
+      "customer_id": "23cbe150-e5f4-4a37-a969-02e2db8df395",
+      "category": "Transactional",
+      "title": "กำลังเตรียมอาหาร",
+      "body": "ออเดอร์ BMB-20261105-896 กำลังเตรียมอาหาร",
+      "url": "/notifications",
+      "status": "mock",
+      "channel": "line",
+      "attempts": 0,
+      "next_attempt_at": "2026-11-05T10:40:03.006331+00:00",
+      "claimed_at": null,
+      "last_error": null,
+      "created_at": "2026-11-05T10:40:03.006331+00:00",
+      "updated_at": "2026-11-05T10:40:06.659436+00:00"
+    },
+    {
+      "id": "obx-b23e6fcd9d9548691cff",
+      "event_key": "ntf-evt-ord-BMB-20261105-896-confirmed",
+      "customer_id": "23cbe150-e5f4-4a37-a969-02e2db8df395",
+      "category": "Transactional",
+      "title": "ยืนยันออเดอร์",
+      "body": "ออเดอร์ BMB-20261105-896 ได้รับการยืนยันแล้ว",
+      "url": "/notifications",
+      "status": "mock",
+      "channel": "line",
+      "attempts": 0,
+      "next_attempt_at": "2026-11-05T10:40:02.944453+00:00",
+      "claimed_at": null,
+      "last_error": null,
+      "created_at": "2026-11-05T10:40:02.944453+00:00",
+      "updated_at": "2026-11-05T10:40:06.853757+00:00"
+    },
+    {
+      "id": "obx-68d28ffd82ad964d4853",
+      "event_key": "ntf-evt-ord-BMB-20261105-896-pending",
+      "customer_id": "23cbe150-e5f4-4a37-a969-02e2db8df395",
+      "category": "Transactional",
+      "title": "รับออเดอร์แล้ว",
+      "body": "ออเดอร์ BMB-20261105-896 ของคุณได้รับเรียบร้อยแล้ว",
+      "url": "/notifications",
+      "status": "mock",
+      "channel": "line",
+      "attempts": 0,
+      "next_attempt_at": "2026-11-05T10:40:02.776874+00:00",
+      "claimed_at": null,
+      "last_error": null,
+      "created_at": "2026-11-05T10:40:02.776874+00:00",
+      "updated_at": "2026-11-05T10:40:06.788112+00:00"
+    },
+    {
+      "id": "obx-a7a521a5ffe878ffc47d",
+      "event_key": "ntf-notif-1793874655015-ca785",
+      "customer_id": "23cbe150-e5f4-4a37-a969-02e2db8df395",
+      "category": "Transactional",
+      "title": "จัดส่งสำเร็จ",
+      "body": "#BMB-20261105-896 — จัดส่งสำเร็จ",
+      "url": "/notifications",
+      "status": "mock",
+      "channel": "line",
+      "attempts": 1,
+      "next_attempt_at": "2026-11-05T10:37:07.10077+00:00",
+      "claimed_at": null,
+      "last_error": null,
+      "created_at": "2026-11-05T10:35:03.254303+00:00",
+      "updated_at": "2026-11-05T10:40:07.06065+00:00"
+    },
+    {
+      "id": "obx-2eafaabdc7aae82974b4",
+      "event_key": "ntf-ntf-plt-a517766d42b4",
+      "customer_id": "23cbe150-e5f4-4a37-a969-02e2db8df395",
+      "category": "Transactional",
+      "title": "⭐ ได้รับแต้มสะสม",
+      "body": "+1422 แต้ม จากออเดอร์ BMB-20261105-896 — ดูแต้มและระดับสมาชิกได้ที่หน้า \"รางวัลและแต้ม\"",
+      "url": "/notifications",
+      "status": "mock",
+      "channel": "line",
+      "attempts": 1,
+      "next_attempt_at": "2026-11-05T10:37:07.634514+00:00",
+      "claimed_at": null,
+      "last_error": null,
+      "created_at": "2026-11-05T10:35:03.142659+00:00",
+      "updated_at": "2026-11-05T10:40:07.119235+00:00"
+    },
+    {
+      "id": "obx-c5389ab480c3f1d42abd",
+      "event_key": "msg-omsg-1793874711652-a51c",
+      "customer_id": "23cbe150-e5f4-4a37-a969-02e2db8df395",
+      "category": "Operational",
+      "title": "💬 ข้อความใหม่จากร้าน",
+      "body": "สัวดีค่ะ",
+      "url": "/orders",
+      "status": "mock",
+      "channel": "line",
+      "attempts": 1,
+      "next_attempt_at": "2026-11-05T10:37:06.348731+00:00",
+      "claimed_at": null,
+      "last_error": null,
+      "created_at": "2026-11-05T10:31:51.639901+00:00",
+      "updated_at": "2026-11-05T10:40:07.202341+00:00"
+    },
+    {
+      "id": "obx-a763b8ed57a3791ed635",
+      "event_key": "ntf-notif-1793871137447-b41ab",
+      "customer_id": "23cbe150-e5f4-4a37-a969-02e2db8df395",
+      "category": "Transactional",
+      "title": "ยืนยันการชำระเงินแล้ว",
+      "body": "ได้รับการชำระเงินของ #BMB-20261105-896 แล้ว",
+      "url": "/notifications",
+      "status": "sent",
+      "channel": "web_push",
+      "attempts": 1,
+      "next_attempt_at": "2026-11-05T09:35:02.083963+00:00",
+      "claimed_at": null,
+      "last_error": null,
+      "created_at": "2026-11-05T09:35:02.083963+00:00",
+      "updated_at": "2026-11-05T09:35:05.048933+00:00"
+    },
+    {
+      "id": "obx-568a2715e21b5121dd88",
+      "event_key": "ntf-notif-1793871143198-7831d",
+      "customer_id": "23cbe150-e5f4-4a37-a969-02e2db8df395",
+      "category": "Transactional",
+      "title": "กำลังเตรียมอาหาร",
+      "body": "#BMB-20261105-896 — กำลังเตรียมอาหาร",
+      "url": "/notifications",
+      "status": "sent",
+      "channel": "web_push",
+      "attempts": 1,
+      "next_attempt_at": "2026-11-05T09:35:02.043288+00:00",
+      "claimed_at": null,
+      "last_error": null,
+      "created_at": "2026-11-05T09:35:02.043288+00:00",
+      "updated_at": "2026-11-05T09:35:04.468011+00:00"
+    },
+    {
+      "id": "obx-544568d78c23e50af48d",
+      "event_key": "ntf-notif-1793871149934-03a5d",
+      "customer_id": "23cbe150-e5f4-4a37-a969-02e2db8df395",
+      "category": "Transactional",
+      "title": "อาหารพร้อมแล้ว",
+      "body": "#BMB-20261105-896 — อาหารพร้อมแล้ว",
+      "url": "/notifications",
+      "status": "sent",
+      "channel": "web_push",
+      "attempts": 1,
+      "next_attempt_at": "2026-11-05T09:35:01.940265+00:00",
+      "claimed_at": null,
+      "last_error": null,
+      "created_at": "2026-11-05T09:35:01.940265+00:00",
+      "updated_at": "2026-11-05T09:35:05.379248+00:00"
+    },
+    {
+      "id": "obx-e9174ab1b584200d3e75",
+      "event_key": "ntf-notif-1793870702768-208c4",
+      "customer_id": "23cbe150-e5f4-4a37-a969-02e2db8df395",
+      "category": "Transactional",
+      "title": "ยืนยันออเดอร์แล้ว",
+      "body": "#BMB-20261105-896 — ยืนยันออเดอร์แล้ว",
+      "url": "/notifications",
+      "status": "sent",
+      "channel": "web_push",
+      "attempts": 1,
+      "next_attempt_at": "2026-11-05T09:30:03.518673+00:00",
+      "claimed_at": null,
+      "last_error": null,
+      "created_at": "2026-11-05T09:30:03.518673+00:00",
+      "updated_at": "2026-11-05T09:30:07.885879+00:00"
+    },
+    {
+      "id": "obx-14c7f2c043bedc52e593",
+      "event_key": "ntf-notif-1793870583501-94656",
+      "customer_id": "23cbe150-e5f4-4a37-a969-02e2db8df395",
+      "category": "Transactional",
+      "title": "รับออเดอร์แล้ว",
+      "body": "มีออเดอร์เข้ามา — เลขที่ #BMB-20261105-896 · ขอบคุณที่สั่ง Bite Me Baby",
+      "url": "/notifications",
+      "status": "sent",
+      "channel": "web_push",
+      "attempts": 1,
+      "next_attempt_at": "2026-11-05T09:25:02.035648+00:00",
+      "claimed_at": null,
+      "last_error": null,
+      "created_at": "2026-11-05T09:25:02.035648+00:00",
+      "updated_at": "2026-11-05T09:25:05.819368+00:00"
+    },
+    {
+      "id": "obx-cc98bf5b974aa787bfed",
+      "event_key": "ntf-evt-ord-BMB-20261105-135-delivered",
+      "customer_id": "23cbe150-e5f4-4a37-a969-02e2db8df395",
+      "category": "Transactional",
+      "title": "จัดส่งสำเร็จ",
+      "body": "ออเดอร์ BMB-20261105-135 จัดส่งสำเร็จ ขอบคุณที่ใช้บริการ",
+      "url": "/notifications",
+      "status": "mock",
+      "channel": "line",
+      "attempts": 0,
+      "next_attempt_at": "2026-11-05T03:00:06.986776+00:00",
+      "claimed_at": null,
+      "last_error": null,
+      "created_at": "2026-11-05T03:00:06.986776+00:00",
+      "updated_at": "2026-11-05T03:00:10.531197+00:00"
+    },
+    {
+      "id": "obx-9d439d091f1920885409",
+      "event_key": "ntf-evt-ord-BMB-20261105-135-ready_for_dispatch",
+      "customer_id": "23cbe150-e5f4-4a37-a969-02e2db8df395",
+      "category": "Transactional",
+      "title": "อาหารพร้อมแล้ว",
+      "body": "ออเดอร์ BMB-20261105-135 พร้อมส่ง/รับแล้ว",
+      "url": "/notifications",
+      "status": "mock",
+      "channel": "line",
+      "attempts": 0,
+      "next_attempt_at": "2026-11-05T03:00:06.883346+00:00",
+      "claimed_at": null,
+      "last_error": null,
+      "created_at": "2026-11-05T03:00:06.883346+00:00",
+      "updated_at": "2026-11-05T03:00:10.484004+00:00"
+    },
+    {
+      "id": "obx-50fb1b6dfbcfde9f4652",
+      "event_key": "ntf-evt-ord-BMB-20261105-135-preparing",
+      "customer_id": "23cbe150-e5f4-4a37-a969-02e2db8df395",
+      "category": "Transactional",
+      "title": "กำลังเตรียมอาหาร",
+      "body": "ออเดอร์ BMB-20261105-135 กำลังเตรียมอาหาร",
+      "url": "/notifications",
+      "status": "mock",
+      "channel": "line",
+      "attempts": 0,
+      "next_attempt_at": "2026-11-05T03:00:06.674896+00:00",
+      "claimed_at": null,
+      "last_error": null,
+      "created_at": "2026-11-05T03:00:06.674896+00:00",
+      "updated_at": "2026-11-05T03:00:10.438494+00:00"
+    },
+    {
+      "id": "obx-261afc5b7a4cb7ddbf35",
+      "event_key": "ntf-evt-ord-BMB-20261105-135-confirmed",
+      "customer_id": "23cbe150-e5f4-4a37-a969-02e2db8df395",
+      "category": "Transactional",
+      "title": "ยืนยันออเดอร์",
+      "body": "ออเดอร์ BMB-20261105-135 ได้รับการยืนยันแล้ว",
+      "url": "/notifications",
+      "status": "mock",
+      "channel": "line",
+      "attempts": 0,
+      "next_attempt_at": "2026-11-05T03:00:06.576562+00:00",
+      "claimed_at": null,
+      "last_error": null,
+      "created_at": "2026-11-05T03:00:06.576562+00:00",
+      "updated_at": "2026-11-05T03:00:10.577711+00:00"
+    },
+    {
+      "id": "obx-1801a0fe923ba8041dbb",
+      "event_key": "ntf-evt-ord-BMB-20261105-135-pending",
+      "customer_id": "23cbe150-e5f4-4a37-a969-02e2db8df395",
+      "category": "Transactional",
+      "title": "รับออเดอร์แล้ว",
+      "body": "ออเดอร์ BMB-20261105-135 ของคุณได้รับเรียบร้อยแล้ว",
+      "url": "/notifications",
+      "status": "mock",
+      "channel": "line",
+      "attempts": 0,
+      "next_attempt_at": "2026-11-05T03:00:06.524716+00:00",
+      "claimed_at": null,
+      "last_error": null,
+      "created_at": "2026-11-05T03:00:06.524716+00:00",
+      "updated_at": "2026-11-05T03:00:10.377448+00:00"
+    },
+    {
+      "id": "obx-67768d81dcc02c57615f",
+      "event_key": "msg-omsg-1793845218852-eb56",
+      "customer_id": "ffd42918-e5c8-4d3b-89c4-8dc8b70c0383",
+      "category": "Operational",
+      "title": "💬 ข้อความใหม่จากร้าน",
+      "body": "ส่งสลิปให้ด้วยครับ มันแคนเซิ่ลไม่ได้",
+      "url": "/orders",
+      "status": "mock",
+      "channel": "line",
+      "attempts": 0,
+      "next_attempt_at": "2026-11-05T02:20:18.705895+00:00",
+      "claimed_at": null,
+      "last_error": null,
+      "created_at": "2026-11-05T02:20:18.705895+00:00",
+      "updated_at": "2026-11-05T02:25:07.367529+00:00"
+    },
+    {
+      "id": "obx-9c038ed3b252e526c17d",
+      "event_key": "ntf-ntf-plt-aecc0dd5f98f",
+      "customer_id": "23cbe150-e5f4-4a37-a969-02e2db8df395",
+      "category": "Transactional",
+      "title": "⭐ ได้รับแต้มสะสม",
+      "body": "+1782 แต้ม จากออเดอร์ BMB-20261105-135 — ดูแต้มและระดับสมาชิกได้ที่หน้า \"รางวัลและแต้ม\"",
+      "url": "/notifications",
+      "status": "mock",
+      "channel": "line",
+      "attempts": 0,
+      "next_attempt_at": "2026-11-05T01:30:04.353713+00:00",
+      "claimed_at": null,
+      "last_error": null,
+      "created_at": "2026-11-05T01:30:04.353713+00:00",
+      "updated_at": "2026-11-05T01:30:10.13954+00:00"
+    },
+    {
+      "id": "obx-93b0f9d6751a2c74f1b3",
+      "event_key": "ntf-notif-1793842011073-4acb0",
+      "customer_id": "23cbe150-e5f4-4a37-a969-02e2db8df395",
+      "category": "Transactional",
+      "title": "จัดส่งสำเร็จ",
+      "body": "#BMB-20261105-135 — จัดส่งสำเร็จ",
+      "url": "/notifications",
+      "status": "mock",
+      "channel": "line",
+      "attempts": 0,
+      "next_attempt_at": "2026-11-05T01:30:03.596212+00:00",
+      "claimed_at": null,
+      "last_error": null,
+      "created_at": "2026-11-05T01:30:03.596212+00:00",
+      "updated_at": "2026-11-05T01:30:10.083875+00:00"
+    },
+    {
+      "id": "obx-9868050ca94d65c8039d",
+      "event_key": "ntf-notif-1793841627715-69c04",
+      "customer_id": "23cbe150-e5f4-4a37-a969-02e2db8df395",
+      "category": "Transactional",
+      "title": "รับออเดอร์แล้ว",
+      "body": "มีออเดอร์เข้ามา — เลขที่ #BMB-20261105-135 · ขอบคุณที่สั่ง Bite Me Baby",
+      "url": "/notifications",
+      "status": "mock",
+      "channel": "line",
+      "attempts": 0,
+      "next_attempt_at": "2026-11-05T01:25:02.80529+00:00",
+      "claimed_at": null,
+      "last_error": null,
+      "created_at": "2026-11-05T01:25:02.80529+00:00",
+      "updated_at": "2026-11-05T01:25:04.021186+00:00"
+    }
+  ],
+  "notifications_recent": [
+    {
+      "id": "evt-ord-BMB-20261108-484-cancelled",
+      "customer_id": "ea7d16ce-9904-44cc-9d5a-4d39e014dfc4",
+      "title": "ออเดอร์ถูกยกเลิก",
+      "message": "#BMB-20261108-484 — ออเดอร์ถูกยกเลิก",
+      "is_read": false,
+      "notification_type": "ORDER_CANCELLED",
+      "created_at": "2026-11-08T01:18:07.701457+00:00",
+      "category": "Transactional",
+      "user_id": "ea7d16ce-9904-44cc-9d5a-4d39e014dfc4"
+    },
+    {
+      "id": "evt-ord-BMB-20261108-850-cancelled",
+      "customer_id": "7ef115f0-ef6c-4d35-be78-e312361a64ac",
+      "title": "ออเดอร์ถูกยกเลิก",
+      "message": "#BMB-20261108-850 — ออเดอร์ถูกยกเลิก",
+      "is_read": false,
+      "notification_type": "ORDER_CANCELLED",
+      "created_at": "2026-11-08T01:18:07.463651+00:00",
+      "category": "Transactional",
+      "user_id": "7ef115f0-ef6c-4d35-be78-e312361a64ac"
+    },
+    {
+      "id": "evt-ord-BMB-20261108-613-cancelled",
+      "customer_id": "7ef115f0-ef6c-4d35-be78-e312361a64ac",
+      "title": "ออเดอร์ถูกยกเลิก",
+      "message": "#BMB-20261108-613 — ออเดอร์ถูกยกเลิก",
+      "is_read": false,
+      "notification_type": "ORDER_CANCELLED",
+      "created_at": "2026-11-08T01:18:07.208324+00:00",
+      "category": "Transactional",
+      "user_id": "7ef115f0-ef6c-4d35-be78-e312361a64ac"
+    },
+    {
+      "id": "evt-ord-BMB-20261108-767-cancelled",
+      "customer_id": "6f2b325f-4a93-4198-b15f-99f115da2724",
+      "title": "ออเดอร์ถูกยกเลิก",
+      "message": "#BMB-20261108-767 — ออเดอร์ถูกยกเลิก",
+      "is_read": false,
+      "notification_type": "ORDER_CANCELLED",
+      "created_at": "2026-11-08T01:18:06.946896+00:00",
+      "category": "Transactional",
+      "user_id": "6f2b325f-4a93-4198-b15f-99f115da2724"
+    },
+    {
+      "id": "evt-ord-BMB-20261108-484-pending",
+      "customer_id": "ea7d16ce-9904-44cc-9d5a-4d39e014dfc4",
+      "title": "รับออเดอร์แล้ว",
+      "message": "มีออเดอร์เข้ามา — เลขที่ #BMB-20261108-484 · ขอบคุณที่สั่ง Bite Me Baby",
+      "is_read": false,
+      "notification_type": "ORDER_CREATED",
+      "created_at": "2026-11-08T01:17:46.052595+00:00",
+      "category": "Transactional",
+      "user_id": "ea7d16ce-9904-44cc-9d5a-4d39e014dfc4"
+    },
+    {
+      "id": "evt-ord-BMB-20261108-850-pending",
+      "customer_id": "7ef115f0-ef6c-4d35-be78-e312361a64ac",
+      "title": "รับออเดอร์แล้ว",
+      "message": "มีออเดอร์เข้ามา — เลขที่ #BMB-20261108-850 · ขอบคุณที่สั่ง Bite Me Baby",
+      "is_read": false,
+      "notification_type": "ORDER_CREATED",
+      "created_at": "2026-11-08T01:17:11.184203+00:00",
+      "category": "Transactional",
+      "user_id": "7ef115f0-ef6c-4d35-be78-e312361a64ac"
+    },
+    {
+      "id": "evt-ord-BMB-20261108-613-pending",
+      "customer_id": "7ef115f0-ef6c-4d35-be78-e312361a64ac",
+      "title": "รับออเดอร์แล้ว",
+      "message": "มีออเดอร์เข้ามา — เลขที่ #BMB-20261108-613 · ขอบคุณที่สั่ง Bite Me Baby",
+      "is_read": false,
+      "notification_type": "ORDER_CREATED",
+      "created_at": "2026-11-08T01:17:09.393075+00:00",
+      "category": "Transactional",
+      "user_id": "7ef115f0-ef6c-4d35-be78-e312361a64ac"
+    },
+    {
+      "id": "evt-ord-BMB-20261108-767-pending",
+      "customer_id": "6f2b325f-4a93-4198-b15f-99f115da2724",
+      "title": "รับออเดอร์แล้ว",
+      "message": "มีออเดอร์เข้ามา — เลขที่ #BMB-20261108-767 · ขอบคุณที่สั่ง Bite Me Baby",
+      "is_read": false,
+      "notification_type": "ORDER_CREATED",
+      "created_at": "2026-11-08T01:17:06.695673+00:00",
+      "category": "Transactional",
+      "user_id": "6f2b325f-4a93-4198-b15f-99f115da2724"
+    },
+    {
+      "id": "evt-ord-PO-20261108-845-ready_for_dispatch",
+      "customer_id": "23cbe150-e5f4-4a37-a969-02e2db8df395",
+      "title": "อาหารพร้อมแล้ว",
+      "message": "#PO-20261108-845 — อาหารพร้อมแล้ว",
+      "is_read": false,
+      "notification_type": "ORDER_READY",
+      "created_at": "2026-11-07T12:58:15.550912+00:00",
+      "category": "Transactional",
+      "user_id": "23cbe150-e5f4-4a37-a969-02e2db8df395"
+    },
+    {
+      "id": "evt-ord-PO-20261108-845-preparing",
+      "customer_id": "23cbe150-e5f4-4a37-a969-02e2db8df395",
+      "title": "กำลังเตรียมอาหาร",
+      "message": "#PO-20261108-845 — กำลังเตรียมอาหาร",
+      "is_read": false,
+      "notification_type": "ORDER_PREPARING",
+      "created_at": "2026-11-07T12:57:55.017447+00:00",
+      "category": "Transactional",
+      "user_id": "23cbe150-e5f4-4a37-a969-02e2db8df395"
+    },
+    {
+      "id": "evt-ord-PO-20261108-845-confirmed",
+      "customer_id": "23cbe150-e5f4-4a37-a969-02e2db8df395",
+      "title": "ยืนยันออเดอร์แล้ว",
+      "message": "#PO-20261108-845 — ยืนยันออเดอร์แล้ว",
+      "is_read": false,
+      "notification_type": "ORDER_CONFIRMED",
+      "created_at": "2026-11-07T12:57:47.586823+00:00",
+      "category": "Transactional",
+      "user_id": "23cbe150-e5f4-4a37-a969-02e2db8df395"
+    },
+    {
+      "id": "evt-pay-PO-20261108-845-paid",
+      "customer_id": "23cbe150-e5f4-4a37-a969-02e2db8df395",
+      "title": "ยืนยันการชำระเงินแล้ว",
+      "message": "ได้รับการชำระเงินของ #PO-20261108-845 แล้ว",
+      "is_read": false,
+      "notification_type": "PAYMENT_CONFIRMED",
+      "created_at": "2026-11-07T12:57:47.586823+00:00",
+      "category": "Transactional",
+      "user_id": "23cbe150-e5f4-4a37-a969-02e2db8df395"
+    },
+    {
+      "id": "evt-ord-PO-20261108-845-pending",
+      "customer_id": "23cbe150-e5f4-4a37-a969-02e2db8df395",
+      "title": "รับออเดอร์แล้ว",
+      "message": "มีออเดอร์เข้ามา — เลขที่ #PO-20261108-845 · ขอบคุณที่สั่ง Bite Me Baby",
+      "is_read": true,
+      "notification_type": "ORDER_CREATED",
+      "created_at": "2026-11-07T12:56:34.703241+00:00",
+      "category": "Transactional",
+      "user_id": "23cbe150-e5f4-4a37-a969-02e2db8df395"
+    },
+    {
+      "id": "evt-ord-PO-20261108-503-ready_for_dispatch",
+      "customer_id": "5119ee60-41de-4a1f-8dfa-0645a59cde37",
+      "title": "อาหารพร้อมแล้ว",
+      "message": "#PO-20261108-503 — อาหารพร้อมแล้ว",
+      "is_read": false,
+      "notification_type": "ORDER_READY",
+      "created_at": "2026-11-07T12:52:17.789448+00:00",
+      "category": "Transactional",
+      "user_id": "5119ee60-41de-4a1f-8dfa-0645a59cde37"
+    },
+    {
+      "id": "evt-ord-PO-20261108-503-preparing",
+      "customer_id": "5119ee60-41de-4a1f-8dfa-0645a59cde37",
+      "title": "กำลังเตรียมอาหาร",
+      "message": "#PO-20261108-503 — กำลังเตรียมอาหาร",
+      "is_read": false,
+      "notification_type": "ORDER_PREPARING",
+      "created_at": "2026-11-07T12:52:08.138245+00:00",
+      "category": "Transactional",
+      "user_id": "5119ee60-41de-4a1f-8dfa-0645a59cde37"
+    },
+    {
+      "id": "evt-pay-PO-20261108-503-paid",
+      "customer_id": "5119ee60-41de-4a1f-8dfa-0645a59cde37",
+      "title": "ยืนยันการชำระเงินแล้ว",
+      "message": "ได้รับการชำระเงินของ #PO-20261108-503 แล้ว",
+      "is_read": false,
+      "notification_type": "PAYMENT_CONFIRMED",
+      "created_at": "2026-11-07T12:51:40.501173+00:00",
+      "category": "Transactional",
+      "user_id": "5119ee60-41de-4a1f-8dfa-0645a59cde37"
+    },
+    {
+      "id": "evt-ord-PO-20261108-503-confirmed",
+      "customer_id": "5119ee60-41de-4a1f-8dfa-0645a59cde37",
+      "title": "ยืนยันออเดอร์แล้ว",
+      "message": "#PO-20261108-503 — ยืนยันออเดอร์แล้ว",
+      "is_read": false,
+      "notification_type": "ORDER_CONFIRMED",
+      "created_at": "2026-11-07T12:51:40.501173+00:00",
+      "category": "Transactional",
+      "user_id": "5119ee60-41de-4a1f-8dfa-0645a59cde37"
+    },
+    {
+      "id": "evt-ord-PO-20261108-503-pending",
+      "customer_id": "5119ee60-41de-4a1f-8dfa-0645a59cde37",
+      "title": "รับออเดอร์แล้ว",
+      "message": "มีออเดอร์เข้ามา — เลขที่ #PO-20261108-503 · ขอบคุณที่สั่ง Bite Me Baby",
+      "is_read": true,
+      "notification_type": "ORDER_CREATED",
+      "created_at": "2026-11-07T12:50:40.177046+00:00",
+      "category": "Transactional",
+      "user_id": "5119ee60-41de-4a1f-8dfa-0645a59cde37"
+    },
+    {
+      "id": "evt-ord-BMB-20261107-197-ready_for_dispatch",
+      "customer_id": "23cbe150-e5f4-4a37-a969-02e2db8df395",
+      "title": "อาหารพร้อมแล้ว",
+      "message": "#BMB-20261107-197 — อาหารพร้อมแล้ว",
+      "is_read": false,
+      "notification_type": "ORDER_READY",
+      "created_at": "2026-11-07T11:36:07.35728+00:00",
+      "category": "Transactional",
+      "user_id": "23cbe150-e5f4-4a37-a969-02e2db8df395"
+    },
+    {
+      "id": "evt-ord-BMB-20261107-197-preparing",
+      "customer_id": "23cbe150-e5f4-4a37-a969-02e2db8df395",
+      "title": "กำลังเตรียมอาหาร",
+      "message": "#BMB-20261107-197 — กำลังเตรียมอาหาร",
+      "is_read": false,
+      "notification_type": "ORDER_PREPARING",
+      "created_at": "2026-11-07T11:35:51.279312+00:00",
+      "category": "Transactional",
+      "user_id": "23cbe150-e5f4-4a37-a969-02e2db8df395"
+    },
+    {
+      "id": "evt-pay-BMB-20261107-197-paid",
+      "customer_id": "23cbe150-e5f4-4a37-a969-02e2db8df395",
+      "title": "ยืนยันการชำระเงินแล้ว",
+      "message": "ได้รับการชำระเงินของ #BMB-20261107-197 แล้ว",
+      "is_read": false,
+      "notification_type": "PAYMENT_CONFIRMED",
+      "created_at": "2026-11-07T11:35:34.820755+00:00",
+      "category": "Transactional",
+      "user_id": "23cbe150-e5f4-4a37-a969-02e2db8df395"
+    },
+    {
+      "id": "evt-ord-BMB-20261107-197-confirmed",
+      "customer_id": "23cbe150-e5f4-4a37-a969-02e2db8df395",
+      "title": "ยืนยันออเดอร์แล้ว",
+      "message": "#BMB-20261107-197 — ยืนยันออเดอร์แล้ว",
+      "is_read": false,
+      "notification_type": "ORDER_CONFIRMED",
+      "created_at": "2026-11-07T11:35:34.820755+00:00",
+      "category": "Transactional",
+      "user_id": "23cbe150-e5f4-4a37-a969-02e2db8df395"
+    },
+    {
+      "id": "evt-ord-BMB-20261107-126-cancelled",
+      "customer_id": "dd0f5e68-d271-4153-b8c7-344465d3eddb",
+      "title": "ออเดอร์ถูกยกเลิก",
+      "message": "#BMB-20261107-126 — ออเดอร์ถูกยกเลิก",
+      "is_read": true,
+      "notification_type": "ORDER_CANCELLED",
+      "created_at": "2026-11-07T11:19:56.146432+00:00",
+      "category": "Transactional",
+      "user_id": "dd0f5e68-d271-4153-b8c7-344465d3eddb"
+    },
+    {
+      "id": "evt-ord-BMB-20261107-126-pending",
+      "customer_id": "dd0f5e68-d271-4153-b8c7-344465d3eddb",
+      "title": "รับออเดอร์แล้ว",
+      "message": "มีออเดอร์เข้ามา — เลขที่ #BMB-20261107-126 · ขอบคุณที่สั่ง Bite Me Baby",
+      "is_read": true,
+      "notification_type": "ORDER_CREATED",
+      "created_at": "2026-11-07T11:19:37.980232+00:00",
+      "category": "Transactional",
+      "user_id": "dd0f5e68-d271-4153-b8c7-344465d3eddb"
+    },
+    {
+      "id": "evt-ord-BMB-20261107-197-pending",
+      "customer_id": "23cbe150-e5f4-4a37-a969-02e2db8df395",
+      "title": "รับออเดอร์แล้ว",
+      "message": "มีออเดอร์เข้ามา — เลขที่ #BMB-20261107-197 · ขอบคุณที่สั่ง Bite Me Baby",
+      "is_read": true,
+      "notification_type": "ORDER_CREATED",
+      "created_at": "2026-11-07T09:20:33.983443+00:00",
+      "category": "Transactional",
+      "user_id": "23cbe150-e5f4-4a37-a969-02e2db8df395"
+    },
+    {
+      "id": "evt-ord-BMB-20261107-171-cancelled",
+      "customer_id": "248f5b04-aa3f-4a4e-af53-5689d97746c5",
+      "title": "ออเดอร์ถูกยกเลิก",
+      "message": "#BMB-20261107-171 — ออเดอร์ถูกยกเลิก",
+      "is_read": true,
+      "notification_type": "ORDER_CANCELLED",
+      "created_at": "2026-11-07T05:13:43.734297+00:00",
+      "category": "Transactional",
+      "user_id": "248f5b04-aa3f-4a4e-af53-5689d97746c5"
+    },
+    {
+      "id": "evt-ord-BMB-20261107-171-pending",
+      "customer_id": "248f5b04-aa3f-4a4e-af53-5689d97746c5",
+      "title": "รับออเดอร์แล้ว",
+      "message": "มีออเดอร์เข้ามา — เลขที่ #BMB-20261107-171 · ขอบคุณที่สั่ง Bite Me Baby",
+      "is_read": true,
+      "notification_type": "ORDER_CREATED",
+      "created_at": "2026-11-07T05:13:20.204969+00:00",
+      "category": "Transactional",
+      "user_id": "248f5b04-aa3f-4a4e-af53-5689d97746c5"
+    },
+    {
+      "id": "evt-ord-BMB-20261107-471-cancelled",
+      "customer_id": "f54b61d0-d611-46d1-8820-423713551424",
+      "title": "ออเดอร์ถูกยกเลิก",
+      "message": "#BMB-20261107-471 — ออเดอร์ถูกยกเลิก",
+      "is_read": true,
+      "notification_type": "ORDER_CANCELLED",
+      "created_at": "2026-11-07T02:02:10.605104+00:00",
+      "category": "Transactional",
+      "user_id": "f54b61d0-d611-46d1-8820-423713551424"
+    },
+    {
+      "id": "evt-ord-BMB-20261107-471-pending",
+      "customer_id": "f54b61d0-d611-46d1-8820-423713551424",
+      "title": "รับออเดอร์แล้ว",
+      "message": "มีออเดอร์เข้ามา — เลขที่ #BMB-20261107-471 · ขอบคุณที่สั่ง Bite Me Baby",
+      "is_read": true,
+      "notification_type": "ORDER_CREATED",
+      "created_at": "2026-11-07T02:01:48.710618+00:00",
+      "category": "Transactional",
+      "user_id": "f54b61d0-d611-46d1-8820-423713551424"
+    },
+    {
+      "id": "evt-ord-PO-20261106-336-pending",
+      "customer_id": "23cbe150-e5f4-4a37-a969-02e2db8df395",
+      "title": "รับออเดอร์แล้ว",
+      "message": "ออเดอร์ PO-20261106-336 ของคุณได้รับเรียบร้อยแล้ว",
+      "is_read": true,
+      "notification_type": "ORDER_CREATED",
+      "created_at": "2026-11-05T18:16:54.930989+00:00",
+      "category": "Transactional",
+      "user_id": null
+    },
+    {
+      "id": "evt-ord-PO-20261106-336-confirmed",
+      "customer_id": "23cbe150-e5f4-4a37-a969-02e2db8df395",
+      "title": "ยืนยันออเดอร์",
+      "message": "ออเดอร์ PO-20261106-336 ได้รับการยืนยันแล้ว",
+      "is_read": true,
+      "notification_type": "ORDER_CONFIRMED",
+      "created_at": "2026-11-05T18:16:54.10526+00:00",
+      "category": "Transactional",
+      "user_id": null
+    },
+    {
+      "id": "evt-ord-PO-20261106-336-cancelled",
+      "customer_id": "23cbe150-e5f4-4a37-a969-02e2db8df395",
+      "title": "ออเดอร์ถูกยกเลิก",
+      "message": "#PO-20261106-336 — ออเดอร์ถูกยกเลิก",
+      "is_read": true,
+      "notification_type": "ORDER_CANCELLED",
+      "created_at": "2026-11-05T15:30:55.384742+00:00",
+      "category": "Transactional",
+      "user_id": "23cbe150-e5f4-4a37-a969-02e2db8df395"
+    },
+    {
+      "id": "msgn-omsg-1793892284405-6797-c",
+      "customer_id": "23cbe150-e5f4-4a37-a969-02e2db8df395",
+      "title": "💬 ข้อความใหม่จากร้าน",
+      "message": "#PO-20261106-336 — ไรเด้อร เห็นมั้ย",
+      "is_read": true,
+      "notification_type": "ORDER_MESSAGE",
+      "created_at": "2026-11-05T15:24:44.321047+00:00",
+      "category": "Operational",
+      "user_id": null
+    },
+    {
+      "id": "msgn-omsg-1793892284405-6797-r",
+      "customer_id": null,
+      "title": "💬 ข้อความใหม่จากร้าน",
+      "message": "#PO-20261106-336 — ไรเด้อร เห็นมั้ย",
+      "is_read": true,
+      "notification_type": "ORDER_MESSAGE",
+      "created_at": "2026-11-05T15:24:44.321047+00:00",
+      "category": "Operational",
+      "user_id": "091c3306-ef59-43f3-a754-2f0b1e490326"
+    },
+    {
+      "id": "notif-1793883846715-e230c",
+      "customer_id": "23cbe150-e5f4-4a37-a969-02e2db8df395",
+      "title": "ยืนยันออเดอร์แล้ว",
+      "message": "#PO-20261106-336 — ยืนยันออเดอร์แล้ว",
+      "is_read": true,
+      "notification_type": "ORDER_CONFIRMED",
+      "created_at": "2026-11-05T13:04:06.501627+00:00",
+      "category": "Transactional",
+      "user_id": "23cbe150-e5f4-4a37-a969-02e2db8df395"
+    },
+    {
+      "id": "notif-1793883846571-6df32",
+      "customer_id": "23cbe150-e5f4-4a37-a969-02e2db8df395",
+      "title": "ยืนยันการชำระเงินแล้ว",
+      "message": "ได้รับการชำระเงินของ #PO-20261106-336 แล้ว",
+      "is_read": true,
+      "notification_type": "PAYMENT_CONFIRMED",
+      "created_at": "2026-11-05T13:04:06.501627+00:00",
+      "category": "Transactional",
+      "user_id": "23cbe150-e5f4-4a37-a969-02e2db8df395"
+    },
+    {
+      "id": "notif-1793883765128-f1dc5",
+      "customer_id": "23cbe150-e5f4-4a37-a969-02e2db8df395",
+      "title": "รับออเดอร์แล้ว",
+      "message": "มีออเดอร์เข้ามา — เลขที่ #PO-20261106-336 · ขอบคุณที่สั่ง Bite Me Baby",
+      "is_read": true,
+      "notification_type": "ORDER_CREATED",
+      "created_at": "2026-11-05T13:02:44.925298+00:00",
+      "category": "Transactional",
+      "user_id": "23cbe150-e5f4-4a37-a969-02e2db8df395"
+    },
+    {
+      "id": "msgn-omsg-1793883151946-19af-a",
+      "customer_id": null,
+      "title": "💬 ข้อความใหม่จากลูกค้า",
+      "message": "#BMB-20261105-896 — 55555",
+      "is_read": true,
+      "notification_type": "ORDER_MESSAGE",
+      "created_at": "2026-11-05T12:52:31.908098+00:00",
+      "category": "Operational",
+      "user_id": null
+    },
+    {
+      "id": "msgn-omsg-1793883149993-c156-a",
+      "customer_id": null,
+      "title": "💬 ข้อความใหม่จากลูกค้า",
+      "message": "#BMB-20261105-896 — อ๋อรับที่ร้าน",
+      "is_read": true,
+      "notification_type": "ORDER_MESSAGE",
+      "created_at": "2026-11-05T12:52:29.940744+00:00",
+      "category": "Operational",
+      "user_id": null
+    },
+    {
+      "id": "msgn-omsg-1793883040110-5aaa-a",
+      "customer_id": null,
+      "title": "💬 ข้อความใหม่จากลูกค้า",
+      "message": "#BMB-20261105-896 — ไรเด้อรมายัง",
+      "is_read": true,
+      "notification_type": "ORDER_MESSAGE",
+      "created_at": "2026-11-05T12:50:40.091387+00:00",
+      "category": "Operational",
+      "user_id": null
+    }
+  ],
+  "rounds_today": [
+    {
+      "id": "round-20261108-morning",
+      "round_key": "morning",
+      "display_name": "เช้า ",
+      "cutoff_time": "05:00:00",
+      "delivery_start": "07:00:00",
+      "delivery_end": "09:00:00",
+      "max_capacity": 20,
+      "current_count": 2,
+      "date": "2026-11-08",
+      "scheduled_date": "2026-11-08",
+      "name": "morning",
+      "status": "active",
+      "created_at": "2026-10-25T15:32:57.27701+00:00",
+      "updated_at": "2026-11-08T01:18:07.701457+00:00",
+      "tenant_id": "tenant-bmb-001",
+      "branch_id": "branch-tenant-bmb-001-main",
+      "pre_order_cutoff": "05:00:00",
+      "archived": false
+    },
+    {
+      "id": "round-20261108-midday",
+      "round_key": "midday",
+      "display_name": "เที่ยง",
+      "cutoff_time": "09:00:00",
+      "delivery_start": "11:00:00",
+      "delivery_end": "15:00:00",
+      "max_capacity": 30,
+      "current_count": 0,
+      "date": "2026-11-08",
+      "scheduled_date": "2026-11-08",
+      "name": "midday",
+      "status": "active",
+      "created_at": "2026-10-25T15:32:57.27701+00:00",
+      "updated_at": "2026-11-08T01:18:07.463651+00:00",
+      "tenant_id": "tenant-bmb-001",
+      "branch_id": "branch-tenant-bmb-001-main",
+      "pre_order_cutoff": "09:00:00",
+      "archived": false
+    },
+    {
+      "id": "round-20261108-evening",
+      "round_key": "evening",
+      "display_name": "เย็น",
+      "cutoff_time": "16:00:00",
+      "delivery_start": "18:00:00",
+      "delivery_end": "20:00:00",
+      "max_capacity": 25,
+      "current_count": 0,
+      "date": "2026-11-08",
+      "scheduled_date": "2026-11-08",
+      "name": "evening",
+      "status": "closed",
+      "created_at": "2026-10-25T15:32:57.27701+00:00",
+      "updated_at": "2026-10-30T14:19:29.162505+00:00",
+      "tenant_id": "tenant-bmb-001",
+      "branch_id": "branch-tenant-bmb-001-main",
+      "pre_order_cutoff": "16:00:00",
+      "archived": false
+    }
+  ],
+  "rounds_future": [
+    {
+      "id": "round-20261108-morning",
+      "round_key": "morning",
+      "display_name": "เช้า ",
+      "status": "active",
+      "scheduled_date": "2026-11-08",
+      "cutoff_time": "05:00:00",
+      "pre_order_cutoff": "05:00:00",
+      "delivery_start": "07:00:00",
+      "delivery_end": "09:00:00",
+      "current_count": 2,
+      "max_capacity": 20
+    },
+    {
+      "id": "round-20261108-midday",
+      "round_key": "midday",
+      "display_name": "เที่ยง",
+      "status": "active",
+      "scheduled_date": "2026-11-08",
+      "cutoff_time": "09:00:00",
+      "pre_order_cutoff": "09:00:00",
+      "delivery_start": "11:00:00",
+      "delivery_end": "15:00:00",
+      "current_count": 0,
+      "max_capacity": 30
+    },
+    {
+      "id": "round-20261108-evening",
+      "round_key": "evening",
+      "display_name": "เย็น",
+      "status": "closed",
+      "scheduled_date": "2026-11-08",
+      "cutoff_time": "16:00:00",
+      "pre_order_cutoff": "16:00:00",
+      "delivery_start": "18:00:00",
+      "delivery_end": "20:00:00",
+      "current_count": 0,
+      "max_capacity": 25
+    },
+    {
+      "id": "round-20261109-morning",
+      "round_key": "morning",
+      "display_name": "เช้า ",
+      "status": "active",
+      "scheduled_date": "2026-11-09",
+      "cutoff_time": "05:00:00",
+      "pre_order_cutoff": "05:00:00",
+      "delivery_start": "07:00:00",
+      "delivery_end": "09:00:00",
+      "current_count": 0,
+      "max_capacity": 20
+    },
+    {
+      "id": "round-20261109-midday",
+      "round_key": "midday",
+      "display_name": "เที่ยง",
+      "status": "active",
+      "scheduled_date": "2026-11-09",
+      "cutoff_time": "09:00:00",
+      "pre_order_cutoff": "09:00:00",
+      "delivery_start": "11:00:00",
+      "delivery_end": "15:00:00",
+      "current_count": 0,
+      "max_capacity": 30
+    },
+    {
+      "id": "round-20261109-evening",
+      "round_key": "evening",
+      "display_name": "เย็น",
+      "status": "closed",
+      "scheduled_date": "2026-11-09",
+      "cutoff_time": "16:00:00",
+      "pre_order_cutoff": "16:00:00",
+      "delivery_start": "18:00:00",
+      "delivery_end": "20:00:00",
+      "current_count": 0,
+      "max_capacity": 25
+    },
+    {
+      "id": "round-20261110-morning",
+      "round_key": "morning",
+      "display_name": "เช้า ",
+      "status": "active",
+      "scheduled_date": "2026-11-10",
+      "cutoff_time": "05:00:00",
+      "pre_order_cutoff": "05:00:00",
+      "delivery_start": "07:00:00",
+      "delivery_end": "09:00:00",
+      "current_count": 0,
+      "max_capacity": 20
+    },
+    {
+      "id": "round-20261110-midday",
+      "round_key": "midday",
+      "display_name": "เที่ยง",
+      "status": "active",
+      "scheduled_date": "2026-11-10",
+      "cutoff_time": "09:00:00",
+      "pre_order_cutoff": "09:00:00",
+      "delivery_start": "11:00:00",
+      "delivery_end": "15:00:00",
+      "current_count": 0,
+      "max_capacity": 30
+    },
+    {
+      "id": "round-20261110-evening",
+      "round_key": "evening",
+      "display_name": "เย็น",
+      "status": "closed",
+      "scheduled_date": "2026-11-10",
+      "cutoff_time": "16:00:00",
+      "pre_order_cutoff": "16:00:00",
+      "delivery_start": "18:00:00",
+      "delivery_end": "20:00:00",
+      "current_count": 0,
+      "max_capacity": 25
+    },
+    {
+      "id": "round-20261111-morning",
+      "round_key": "morning",
+      "display_name": "เช้า ",
+      "status": "active",
+      "scheduled_date": "2026-11-11",
+      "cutoff_time": "05:00:00",
+      "pre_order_cutoff": "05:00:00",
+      "delivery_start": "07:00:00",
+      "delivery_end": "09:00:00",
+      "current_count": 0,
+      "max_capacity": 20
+    },
+    {
+      "id": "round-20261111-midday",
+      "round_key": "midday",
+      "display_name": "เที่ยง",
+      "status": "active",
+      "scheduled_date": "2026-11-11",
+      "cutoff_time": "09:00:00",
+      "pre_order_cutoff": "09:00:00",
+      "delivery_start": "11:00:00",
+      "delivery_end": "15:00:00",
+      "current_count": 0,
+      "max_capacity": 30
+    },
+    {
+      "id": "round-20261111-evening",
+      "round_key": "evening",
+      "display_name": "เย็น",
+      "status": "closed",
+      "scheduled_date": "2026-11-11",
+      "cutoff_time": "16:00:00",
+      "pre_order_cutoff": "16:00:00",
+      "delivery_start": "18:00:00",
+      "delivery_end": "20:00:00",
+      "current_count": 0,
+      "max_capacity": 25
+    },
+    {
+      "id": "round-20261112-morning",
+      "round_key": "morning",
+      "display_name": "เช้า ",
+      "status": "active",
+      "scheduled_date": "2026-11-12",
+      "cutoff_time": "05:00:00",
+      "pre_order_cutoff": "05:00:00",
+      "delivery_start": "07:00:00",
+      "delivery_end": "09:00:00",
+      "current_count": 0,
+      "max_capacity": 20
+    },
+    {
+      "id": "round-20261112-midday",
+      "round_key": "midday",
+      "display_name": "เที่ยง",
+      "status": "active",
+      "scheduled_date": "2026-11-12",
+      "cutoff_time": "09:00:00",
+      "pre_order_cutoff": "09:00:00",
+      "delivery_start": "11:00:00",
+      "delivery_end": "15:00:00",
+      "current_count": 0,
+      "max_capacity": 30
+    },
+    {
+      "id": "round-20261112-evening",
+      "round_key": "evening",
+      "display_name": "เย็น",
+      "status": "closed",
+      "scheduled_date": "2026-11-12",
+      "cutoff_time": "16:00:00",
+      "pre_order_cutoff": "16:00:00",
+      "delivery_start": "18:00:00",
+      "delivery_end": "20:00:00",
+      "current_count": 0,
+      "max_capacity": 25
+    },
+    {
+      "id": "round-20261113-evening",
+      "round_key": "evening",
+      "display_name": "เย็น",
+      "status": "closed",
+      "scheduled_date": "2026-11-13",
+      "cutoff_time": "16:00:00",
+      "pre_order_cutoff": "16:00:00",
+      "delivery_start": "18:00:00",
+      "delivery_end": "20:00:00",
+      "current_count": 0,
+      "max_capacity": 25
+    },
+    {
+      "id": "round-20261113-morning",
+      "round_key": "morning",
+      "display_name": "เช้า ",
+      "status": "active",
+      "scheduled_date": "2026-11-13",
+      "cutoff_time": "05:00:00",
+      "pre_order_cutoff": "05:00:00",
+      "delivery_start": "07:00:00",
+      "delivery_end": "09:00:00",
+      "current_count": 0,
+      "max_capacity": 20
+    },
+    {
+      "id": "round-20261113-midday",
+      "round_key": "midday",
+      "display_name": "เที่ยง",
+      "status": "active",
+      "scheduled_date": "2026-11-13",
+      "cutoff_time": "09:00:00",
+      "pre_order_cutoff": "09:00:00",
+      "delivery_start": "11:00:00",
+      "delivery_end": "15:00:00",
+      "current_count": 0,
+      "max_capacity": 30
+    },
+    {
+      "id": "round-20261114-evening",
+      "round_key": "evening",
+      "display_name": "เย็น",
+      "status": "closed",
+      "scheduled_date": "2026-11-14",
+      "cutoff_time": "16:00:00",
+      "pre_order_cutoff": "16:00:00",
+      "delivery_start": "18:00:00",
+      "delivery_end": "20:00:00",
+      "current_count": 0,
+      "max_capacity": 25
+    },
+    {
+      "id": "round-20261114-morning",
+      "round_key": "morning",
+      "display_name": "เช้า ",
+      "status": "active",
+      "scheduled_date": "2026-11-14",
+      "cutoff_time": "05:00:00",
+      "pre_order_cutoff": "05:00:00",
+      "delivery_start": "07:00:00",
+      "delivery_end": "09:00:00",
+      "current_count": 0,
+      "max_capacity": 20
+    },
+    {
+      "id": "round-20261114-midday",
+      "round_key": "midday",
+      "display_name": "เที่ยง",
+      "status": "active",
+      "scheduled_date": "2026-11-14",
+      "cutoff_time": "09:00:00",
+      "pre_order_cutoff": "09:00:00",
+      "delivery_start": "11:00:00",
+      "delivery_end": "15:00:00",
+      "current_count": 0,
+      "max_capacity": 30
+    },
+    {
+      "id": "round-20261115-evening",
+      "round_key": "evening",
+      "display_name": "เย็น",
+      "status": "closed",
+      "scheduled_date": "2026-11-15",
+      "cutoff_time": "16:00:00",
+      "pre_order_cutoff": "16:00:00",
+      "delivery_start": "18:00:00",
+      "delivery_end": "20:00:00",
+      "current_count": 0,
+      "max_capacity": 25
+    },
+    {
+      "id": "round-20261115-morning",
+      "round_key": "morning",
+      "display_name": "เช้า ",
+      "status": "active",
+      "scheduled_date": "2026-11-15",
+      "cutoff_time": "05:00:00",
+      "pre_order_cutoff": "05:00:00",
+      "delivery_start": "07:00:00",
+      "delivery_end": "09:00:00",
+      "current_count": 0,
+      "max_capacity": 20
+    },
+    {
+      "id": "round-20261115-midday",
+      "round_key": "midday",
+      "display_name": "เที่ยง",
+      "status": "active",
+      "scheduled_date": "2026-11-15",
+      "cutoff_time": "09:00:00",
+      "pre_order_cutoff": "09:00:00",
+      "delivery_start": "11:00:00",
+      "delivery_end": "15:00:00",
+      "current_count": 0,
+      "max_capacity": 30
+    },
+    {
+      "id": "round-20261116-evening",
+      "round_key": "evening",
+      "display_name": "เย็น",
+      "status": "closed",
+      "scheduled_date": "2026-11-16",
+      "cutoff_time": "16:00:00",
+      "pre_order_cutoff": "16:00:00",
+      "delivery_start": "18:00:00",
+      "delivery_end": "20:00:00",
+      "current_count": 0,
+      "max_capacity": 25
+    },
+    {
+      "id": "round-20261116-morning",
+      "round_key": "morning",
+      "display_name": "เช้า ",
+      "status": "active",
+      "scheduled_date": "2026-11-16",
+      "cutoff_time": "05:00:00",
+      "pre_order_cutoff": "05:00:00",
+      "delivery_start": "07:00:00",
+      "delivery_end": "09:00:00",
+      "current_count": 0,
+      "max_capacity": 20
+    },
+    {
+      "id": "round-20261116-midday",
+      "round_key": "midday",
+      "display_name": "เที่ยง",
+      "status": "active",
+      "scheduled_date": "2026-11-16",
+      "cutoff_time": "09:00:00",
+      "pre_order_cutoff": "09:00:00",
+      "delivery_start": "11:00:00",
+      "delivery_end": "15:00:00",
+      "current_count": 0,
+      "max_capacity": 30
+    },
+    {
+      "id": "round-20261117-evening",
+      "round_key": "evening",
+      "display_name": "เย็น",
+      "status": "closed",
+      "scheduled_date": "2026-11-17",
+      "cutoff_time": "16:00:00",
+      "pre_order_cutoff": "16:00:00",
+      "delivery_start": "18:00:00",
+      "delivery_end": "20:00:00",
+      "current_count": 0,
+      "max_capacity": 25
+    },
+    {
+      "id": "round-20261117-morning",
+      "round_key": "morning",
+      "display_name": "เช้า ",
+      "status": "active",
+      "scheduled_date": "2026-11-17",
+      "cutoff_time": "05:00:00",
+      "pre_order_cutoff": "05:00:00",
+      "delivery_start": "07:00:00",
+      "delivery_end": "09:00:00",
+      "current_count": 0,
+      "max_capacity": 20
+    },
+    {
+      "id": "round-20261117-midday",
+      "round_key": "midday",
+      "display_name": "เที่ยง",
+      "status": "active",
+      "scheduled_date": "2026-11-17",
+      "cutoff_time": "09:00:00",
+      "pre_order_cutoff": "09:00:00",
+      "delivery_start": "11:00:00",
+      "delivery_end": "15:00:00",
+      "current_count": 0,
+      "max_capacity": 30
+    },
+    {
+      "id": "round-20261118-evening",
+      "round_key": "evening",
+      "display_name": "เย็น",
+      "status": "closed",
+      "scheduled_date": "2026-11-18",
+      "cutoff_time": "16:00:00",
+      "pre_order_cutoff": "16:00:00",
+      "delivery_start": "18:00:00",
+      "delivery_end": "20:00:00",
+      "current_count": 0,
+      "max_capacity": 25
+    },
+    {
+      "id": "round-20261118-morning",
+      "round_key": "morning",
+      "display_name": "เช้า ",
+      "status": "active",
+      "scheduled_date": "2026-11-18",
+      "cutoff_time": "05:00:00",
+      "pre_order_cutoff": "05:00:00",
+      "delivery_start": "07:00:00",
+      "delivery_end": "09:00:00",
+      "current_count": 0,
+      "max_capacity": 20
+    },
+    {
+      "id": "round-20261118-midday",
+      "round_key": "midday",
+      "display_name": "เที่ยง",
+      "status": "active",
+      "scheduled_date": "2026-11-18",
+      "cutoff_time": "09:00:00",
+      "pre_order_cutoff": "09:00:00",
+      "delivery_start": "11:00:00",
+      "delivery_end": "15:00:00",
+      "current_count": 0,
+      "max_capacity": 30
+    },
+    {
+      "id": "round-20261119-evening",
+      "round_key": "evening",
+      "display_name": "เย็น",
+      "status": "closed",
+      "scheduled_date": "2026-11-19",
+      "cutoff_time": "16:00:00",
+      "pre_order_cutoff": "16:00:00",
+      "delivery_start": "18:00:00",
+      "delivery_end": "20:00:00",
+      "current_count": 0,
+      "max_capacity": 25
+    },
+    {
+      "id": "round-20261119-morning",
+      "round_key": "morning",
+      "display_name": "เช้า ",
+      "status": "active",
+      "scheduled_date": "2026-11-19",
+      "cutoff_time": "05:00:00",
+      "pre_order_cutoff": "05:00:00",
+      "delivery_start": "07:00:00",
+      "delivery_end": "09:00:00",
+      "current_count": 0,
+      "max_capacity": 20
+    },
+    {
+      "id": "round-20261119-midday",
+      "round_key": "midday",
+      "display_name": "เที่ยง",
+      "status": "active",
+      "scheduled_date": "2026-11-19",
+      "cutoff_time": "09:00:00",
+      "pre_order_cutoff": "09:00:00",
+      "delivery_start": "11:00:00",
+      "delivery_end": "15:00:00",
+      "current_count": 0,
+      "max_capacity": 30
+    },
+    {
+      "id": "round-20261120-evening",
+      "round_key": "evening",
+      "display_name": "เย็น",
+      "status": "closed",
+      "scheduled_date": "2026-11-20",
+      "cutoff_time": "16:00:00",
+      "pre_order_cutoff": "16:00:00",
+      "delivery_start": "18:00:00",
+      "delivery_end": "20:00:00",
+      "current_count": 0,
+      "max_capacity": 25
+    },
+    {
+      "id": "round-20261120-morning",
+      "round_key": "morning",
+      "display_name": "เช้า ",
+      "status": "active",
+      "scheduled_date": "2026-11-20",
+      "cutoff_time": "05:00:00",
+      "pre_order_cutoff": "05:00:00",
+      "delivery_start": "07:00:00",
+      "delivery_end": "09:00:00",
+      "current_count": 0,
+      "max_capacity": 20
+    },
+    {
+      "id": "round-20261120-midday",
+      "round_key": "midday",
+      "display_name": "เที่ยง",
+      "status": "active",
+      "scheduled_date": "2026-11-20",
+      "cutoff_time": "09:00:00",
+      "pre_order_cutoff": "09:00:00",
+      "delivery_start": "11:00:00",
+      "delivery_end": "15:00:00",
+      "current_count": 0,
+      "max_capacity": 30
+    },
+    {
+      "id": "round-20261121-evening",
+      "round_key": "evening",
+      "display_name": "เย็น",
+      "status": "closed",
+      "scheduled_date": "2026-11-21",
+      "cutoff_time": "16:00:00",
+      "pre_order_cutoff": "16:00:00",
+      "delivery_start": "18:00:00",
+      "delivery_end": "20:00:00",
+      "current_count": 0,
+      "max_capacity": 25
+    }
+  ],
+  "products": [
+    {
+      "id": "prod-5",
+      "name": "ลุยสวนหมู+กุ้ง",
+      "is_available": true,
+      "archived": false,
+      "category_id": "cat-3"
+    },
+    {
+      "id": "prod-4",
+      "name": "เมี่ยงหมู+กุ้ง ",
+      "is_available": true,
+      "archived": false,
+      "category_id": "cat-3"
+    },
+    {
+      "id": "prod-1793068854300-bnhpli",
+      "name": "ปลาแจ่ว",
+      "is_available": true,
+      "archived": false,
+      "category_id": "cat-2"
+    },
+    {
+      "id": "prod-1791940138411-az27q5",
+      "name": "เต้าหู้ย่างผักสามสี",
+      "is_available": true,
+      "archived": false,
+      "category_id": "cat-2"
+    },
+    {
+      "id": "prod-1793068894506-07k8af",
+      "name": "Fish & Ships",
+      "is_available": true,
+      "archived": false,
+      "category_id": "cat-2"
+    },
+    {
+      "id": "prod-1792810209302-zt44z4",
+      "name": "ข้าวผัดปลาแดดเดียวตาแดง",
+      "is_available": true,
+      "archived": false,
+      "category_id": "cat-2"
+    },
+    {
+      "id": "prod-1791769591910-vy5ad7",
+      "name": "coming soon",
+      "is_available": true,
+      "archived": false,
+      "category_id": "cat-5"
+    },
+    {
+      "id": "prod-1791769642687-89fvpq",
+      "name": "coming soon",
+      "is_available": true,
+      "archived": false,
+      "category_id": "cat-1790830853978"
+    },
+    {
+      "id": "prod-1792810253606-0x3ycg",
+      "name": "แกงคั่วชะอมไข่เป็ด",
+      "is_available": true,
+      "archived": false,
+      "category_id": "cat-2"
+    },
+    {
+      "id": "prod-1789952342087-ian4a1",
+      "name": "ลุยสวนหมูสับเห็ดหอม",
+      "is_available": true,
+      "archived": false,
+      "category_id": "cat-3"
+    },
+    {
+      "id": "prod-1791351373122-0iurqr",
+      "name": "กุ้งมันฝรั่งผัดเนย",
+      "is_available": true,
+      "archived": false,
+      "category_id": "cat-2"
+    },
+    {
+      "id": "prod-1791940238979-5a09mv",
+      "name": "สเต๊กเต้าหู้",
+      "is_available": true,
+      "archived": false,
+      "category_id": "cat-2"
+    },
+    {
+      "id": "prod-1791940314331-p4j9pb",
+      "name": "กุ้งบ้อคโคลี่ผักสามสี",
+      "is_available": true,
+      "archived": false,
+      "category_id": "cat-2"
+    },
+    {
+      "id": "prod-1791986253967-dwyh09",
+      "name": "ชาไทยพีช",
+      "is_available": true,
+      "archived": false,
+      "category_id": "cat-4"
+    },
+    {
+      "id": "prod-1791957617066-d06wwe",
+      "name": "ชาไทยแบล็คมินท์",
+      "is_available": true,
+      "archived": false,
+      "category_id": "cat-4"
+    },
+    {
+      "id": "prod-1791769408686-9p0qp6",
+      "name": "ชาไทยนมสด",
+      "is_available": true,
+      "archived": false,
+      "category_id": "cat-4"
+    },
+    {
+      "id": "prod-1789610117076-2p5e8u",
+      "name": "ข้าวลาบอกไก่+ไข่ต้ม",
+      "is_available": true,
+      "archived": false,
+      "category_id": "cat-1"
+    },
+    {
+      "id": "prod-1789607383214-t8rm95",
+      "name": "สปาเกตตี้ผัดพริกแห้งกุ้ง",
+      "is_available": true,
+      "archived": false,
+      "category_id": "cat-1"
+    },
+    {
+      "id": "prod-2",
+      "name": "เมี่ยงแซลม่อน",
+      "is_available": true,
+      "archived": false,
+      "category_id": "cat-1"
+    },
+    {
+      "id": "prod-1791940362962-on44by",
+      "name": "สเต็กปลาดอลลี่",
+      "is_available": true,
+      "archived": false,
+      "category_id": "cat-2"
+    },
+    {
+      "id": "prod-1",
+      "name": "ข้าวกุ้งผัดพริกเกลือ",
+      "is_available": false,
+      "archived": false,
+      "category_id": "cat-1"
+    },
+    {
+      "id": "prod-1793370474689-bbj9jy",
+      "name": "🥢 ข้าวหมูผัดกิมจิ",
+      "is_available": true,
+      "archived": false,
+      "category_id": "cat-2"
+    },
+    {
+      "id": "prod-1793370548177-oilfxi",
+      "name": "🍤 สุกี้แห้งกุ้ง พร้อมน้ำจิ้มสูตรโบราณ",
+      "is_available": true,
+      "archived": false,
+      "category_id": "cat-2"
+    },
+    {
+      "id": "prod-1793370625449-zzn457",
+      "name": "ข้าวหน้าปลาทอดลุยสวน 🐟",
+      "is_available": true,
+      "archived": false,
+      "category_id": "cat-2"
+    },
+    {
+      "id": "prod-1793370780561-zfg8jf",
+      "name": "เมี่ยงอกไก่ ",
+      "is_available": true,
+      "archived": false,
+      "category_id": "cat-2"
+    },
+    {
+      "id": "prod-1793370819276-n1prau",
+      "name": "เมี่ยงแซลมอน",
+      "is_available": true,
+      "archived": false,
+      "category_id": "cat-2"
+    },
+    {
+      "id": "prod-1793370728049-b1uqeg",
+      "name": "บะหมี่ไก่ย่างเทริยากิ",
+      "is_available": true,
+      "archived": false,
+      "category_id": "cat-2"
+    },
+    {
+      "id": "prod-1793370681553-cd6ol7",
+      "name": "ยำสลัดถั่วลูกไก่ 🥑",
+      "is_available": true,
+      "archived": false,
+      "category_id": "cat-2"
+    },
+    {
+      "id": "prod-1793370860049-j48o2a",
+      "name": "ข้าวหน้าแกงเขียวหวานไก่กรอบ",
+      "is_available": true,
+      "archived": false,
+      "category_id": "cat-2"
+    },
+    {
+      "id": "prod-1793370911594-35ci5w",
+      "name": "กุ้งมันม่วง ผักรวม เสิร์ฟพร้อมพอนซึ",
+      "is_available": true,
+      "archived": false,
+      "category_id": "cat-2"
+    },
+    {
+      "id": "prod-1793370974354-hd4fxf",
+      "name": "🍗 ไก่ทอดอินโด",
+      "is_available": true,
+      "archived": false,
+      "category_id": "cat-2"
+    },
+    {
+      "id": "prod-1793371035971-aiewrq",
+      "name": "ชุดน้ำพริกตาแดง หมูแดดเดียว",
+      "is_available": true,
+      "archived": false,
+      "category_id": "cat-2"
+    },
+    {
+      "id": "prod-3",
+      "name": "ปลาต้มผักกาดดองเสฉวน (ซวนช่ายหยุย)",
+      "is_available": true,
+      "archived": false,
+      "category_id": "cat-2"
+    },
+    {
+      "id": "prod-1793370402489-0listy",
+      "name": "🐟 แซลมอนย่างเกลือ+มันฝรั่งและพริกหวาน",
+      "is_available": true,
+      "archived": false,
+      "category_id": "cat-2"
+    },
+    {
+      "id": "prod-1793371126826-gbxoz3",
+      "name": "สามชั้นตุ๋นผักกาดดอง (เคาหยก)",
+      "is_available": true,
+      "archived": false,
+      "category_id": "cat-2"
+    }
+  ],
+  "business_channels": [
+    {
+      "key": "notification_channels",
+      "value": {
+        "line": false,
+        "push": true,
+        "lineMode": "mock",
+        "messenger": true
+      }
+    }
+  ],
+  "summary": {
+    "bangkok_today": "2026-11-08",
+    "event_count": 15,
+    "events": [
+      {
+        "event_id": "122146808163204867_2160520538188778",
+        "type": "comment",
+        "platform": "FACEBOOK",
+        "reply_status": "sent",
+        "created_at": "2026-11-08T02:58:05.46628+00:00",
+        "push_notify": "unresolved_identity",
+        "dm_error": "http_400:Unsupported post request. Object with ID '122146808163204867_2160520538188778' does not exist, cannot be loaded due to m (code 100)",
+        "dm_attempted_at": "2026-11-08T02:58:17.553Z",
+        "content": "เมนูนนี้ยังสั่งได้ไหม",
+        "reply": "ได้เลยครับพี่ 🍗 ไก่ทอดอินโดยังสั่งได้อยู่ครับ จัดให้เลย 1 ที่ กดลิงก์นี้เปิดตะกร้าดูแล้วเช็คเอาท์หรือเพิ่มเมนูอื่นต่อได้เลยครับ https://biteme-baby.com/shop?cart=eyJ2IjoxLCJpdGVtcyI6W3siaWQiOiJwcm9kLTE3OTMzNzA2MjU0NDktenpuNDU3IiwicSI6MX1dfQ ถ้าลิงก์มีปัญหาทัก Inbox มาได้เลยนะครับ Bite ช่วยดูให้"
+      },
+      {
+        "event_id": "msg-m_ahsXoKhqNswMQyF8sMwR5dAtyZwH9bSeaqQLOAJV45W-nWzfL_SCp4YdxD6ZaFwv6hxNpuRdzR7miK2vdNtpTA",
+        "type": "message",
+        "platform": "MESSENGER",
+        "reply_status": "sent",
+        "created_at": "2026-11-08T02:50:45.721131+00:00",
+        "push_notify": "dm_ok",
+        "dm_error": null,
+        "dm_attempted_at": null,
+        "content": "ส่งไหม",
+        "reply": "ส่งครับ ส่งวันนี้ได้เลย! รอบเช้าป่ายไปแล้ว แต่รอบเที่ยง 11:00-15:00 น. ยังรับออเดอร์อยู่ครับ สั่งเลยที่ https://biteme-baby.com/shop แล้วเลือกเมนูที่ชอบได้เลยครับ 🚴‍♂️🍽️"
+      },
+      {
+        "event_id": "msg-m_LUZbf_QHqrLq1hqbsfqtQtAtyZwH9bSeaqQLOAJV45U_BOKVG0aUObPhvXi1IDb9DNYFoUNfGVI36Bc8ZX9qnA",
+        "type": "message",
+        "platform": "MESSENGER",
+        "reply_status": "sent",
+        "created_at": "2026-11-08T02:50:42.054625+00:00",
+        "push_notify": "dm_ok",
+        "dm_error": null,
+        "dm_attempted_at": null,
+        "content": "มีอะไรแนะนำมั่ง",
+        "reply": "มีหลายเมนูเด็ดเลยครับพี่! 🍽️ ขอแนะนำเมนูยอดนิยมของเราเลยนะครับ — 🥑 ยำสลัดถั่วลูกไก่ 79฿, 🐟 แซลมอนย่างเกลือ+มันฝรั่งและพริกหวาน 79฿, สามชั้นตุ๋นผักกาดดอง (เคาหยก) 79฿, และ Fish & Ships 79฿ อร่อยทุกจานเลยครับ! หรือถ้าชอบแนวสุขภาพก็มีลุยสวนหมู+กุ้ง 79฿ อีกนะครับ สนใจเมนูไหนบอก Bite ได้เลย เดี๋ยวช่วยสรุปให้ แล้วกดสั่งที่ https://biteme-baby.com/shop ได้เลยครับ 😋"
+      },
+      {
+        "event_id": "msg-m_Om_lTonx7nfnJc2HZL0kDNAtyZwH9bSeaqQLOAJV45Ujhj3IZnN5mvHkIXdRsL_TXFJQE9QxP0PZqn6aBoLWIQ",
+        "type": "message",
+        "platform": "MESSENGER",
+        "reply_status": "sent",
+        "created_at": "2026-11-08T02:49:28.406579+00:00",
+        "push_notify": "dm_ok",
+        "dm_error": null,
+        "dm_attempted_at": null,
+        "content": "ในนี้สั่งได้ไหม",
+        "reply": "สั่งในแชทนี้ได้เลยครับ พี่บอกเมนูที่อยากได้มาได้เลย Bite ช่วยสรุปให้ แต่ต้องกดยืนยันออเดอร์ที่เว็บ https://biteme-baby.com/shop นะครับ เดี๋ยวพี่อยากได้เมนูไหนล่ะครับ 🍽️"
+      },
+      {
+        "event_id": "122146808163204867_2594868544361448",
+        "type": "comment",
+        "platform": "FACEBOOK",
+        "reply_status": "sent",
+        "created_at": "2026-11-08T01:37:40.385187+00:00",
+        "push_notify": null,
+        "dm_error": "http_400:Unsupported post request. Object with ID '122146808163204867_2594868544361448' does not exist, canno",
+        "dm_attempted_at": null,
+        "content": "ไก่ทอดอันนี้ ที่นึงครับ ยังสั่งได้ไหม",
+        "reply": "ได้เลยครับพี่ 🍗 ไก่ทอดอินโด 1 ที่ จัดให้เลยครับ กดลิงก์นี้เปิดตะกร้าดูแล้วเช็คเอาท์หรือเพิ่มเมนูอื่นต่อได้เลยครับ https://biteme-baby.com/shop?cart=eyJ2IjoxLCJpdGVtcyI6W3siaWQiOiJwcm9kLTE3OTMzNzA2MjU0NDktenpuNDU3IiwicSI6MX1dfQ ถ้าลิงก์มีปัญหาทัก Inbox มาได้เลยนะครับ Bite ช่วยดูให้"
+      },
+      {
+        "event_id": "r74cmt-1794100613809",
+        "type": "comment",
+        "platform": "FACEBOOK",
+        "reply_status": "failed",
+        "created_at": "2026-11-08T01:17:54.37599+00:00",
+        "push_notify": null,
+        "dm_error": null,
+        "dm_attempted_at": null,
+        "content": "เอาลุยสวนหมู+กุ้ง 2 ที่ค่ะ",
+        "reply": "ได้เลยครับคุณ! ลุยสวนหมู+กุ้ง 2 ที่ ถูกต้องนะครับ จานเด็ดของเราทำจากหมูสับเห็ดหอมกับกุ้งสด ๆ อ่ะ จัมโบ ๆ เลยครับ 🦐🐷 ถ้าพร้อมเช็คเอาท์หรืออยากเพิ่มอะไรต่อ กดเข้าไปดูในเว็บเลยนะครับ https://biteme-baby.com/shop\n\n🛒 สรุปรายการของคุณ (ลุยสวนหมู+กุ้ง x2) เปิดดูบนเว็บได้เลยครับ — กดลิงก์นี้เพื่อดูตะกร้า เช็คเอาท์ หรือเพิ่มเมนูต่อได้เลย: https://biteme-baby.com/shop?cart=eyJ2IjoxLCJpdGVtcyI6W3siaWQiOiJ"
+      },
+      {
+        "event_id": "msg-r74e-1794100613809",
+        "type": "message",
+        "platform": "MESSENGER",
+        "reply_status": "failed",
+        "created_at": "2026-11-08T01:17:41.85752+00:00",
+        "push_notify": null,
+        "dm_error": null,
+        "dm_attempted_at": null,
+        "content": "ตกลงค่ะ ยืนยัน สั่งเลยค่ะ",
+        "reply": "รับทราบครับคุณลูกค้า! 🎉 ยืนยันออเดอร์ลุยสวนหมู+กุ้ง 2 ที่ ไม่เผ็ด พร้อมไข่ดาวเพิ่ม รอบเช้าวันนี้ (07:00-09:00 น.) ครับ กรุณากดไปที่ https://biteme-baby.com/checkout เพื่อตรวจสอบรายการและเลือกชำระเงินได้เลยครับ Bite รอเสิร์ฟความอร่อยนะฮะ! 😊\n\n✅ บันทึกรายการของคุณแล้วครับ เลขที่ออเดอร์ BMB-20261108-484 — ชำระเงินและติดตามสถานะได้ที่ https://biteme-baby.com/payment/BMB-20261108-484\n🛒 สรุปรายการของค"
+      },
+      {
+        "event_id": "msg-r74d-1794100613809",
+        "type": "message",
+        "platform": "MESSENGER",
+        "reply_status": "failed",
+        "created_at": "2026-11-08T01:17:23.404535+00:00",
+        "push_notify": null,
+        "dm_error": null,
+        "dm_attempted_at": null,
+        "content": "เอาลุยสวนหมู+กุ้ง 2 ที่ ไม่เผ็ด เพิ่มไข่ดาวด้วยค่ะ ขอคิดก่อนนะ",
+        "reply": "รับทราบครับคุณลูกค้า! ลุยสวนหมู+กุ้ง 2 ที่ ไม่เผ็ด พร้อมไข่ดาวเพิ่ม ราคารวม 158+? บาท (ไข่ดาว ราคาตามเว็บนะครับ) 🥬✨ สะดวกเมื่อไหร่กดสั่งที่ https://biteme-baby.com/shop เลยครับ หรือถ้าอยากดูรายการก่อนก็เช็คได้ที่ https://biteme-baby.com/checkout ครับ Bite รอรับออเดอร์นะฮะ! 😊\n\n🛒 สรุปรายการของคุณ (ลุยสวนหมู+กุ้ง x2) เปิดดูบนเว็บได้เลยครับ — กดลิงก์นี้เพื่อดูตะกร้า เช็คเอาท์ หรือเพิ่มเมนูต่อได้เลย"
+      },
+      {
+        "event_id": "msg-r74c-1794100613809",
+        "type": "message",
+        "platform": "MESSENGER",
+        "reply_status": "failed",
+        "created_at": "2026-11-08T01:17:11.48039+00:00",
+        "push_notify": null,
+        "dm_error": null,
+        "dm_attempted_at": null,
+        "content": "สวัสดีค่ะ วันนี้มีเมนูอะไรน่ากินบ้างคะ",
+        "reply": "สวัสดีครับคุณลูกค้า! วันนี้ Bite ขอแนะนำเมนูเด็ดที่พร้อมเสิร์ฟวันนี้เลยครับ 🎉 มีทั้งเมี่ยงแซลม่อน 79฿, สปาเกตตี้ผัดพริกแห้งกุ้ง 99฿, และข้าวลาบอกไก่+ไข่ต้ม 69฿ อร่อยทุกจานเลยครับ! หรือถ้าอยากลองเมนูพรีออเดอร์ก็มีไก่ทอดอินโดกับสุกี้แห้งกุ้งให้จองล่วงหน้าวันที่ 8 พ.ย. นี้ครับ สนใจเมนูไหนลองดูเพิ่มเติมที่ https://biteme-baby.com/shop แล้วสั่งเลยครับ 😊"
+      },
+      {
+        "event_id": "msg-r74b-1794100613809",
+        "type": "message",
+        "platform": "MESSENGER",
+        "reply_status": "failed",
+        "created_at": "2026-11-08T01:17:04.745602+00:00",
+        "push_notify": null,
+        "dm_error": null,
+        "dm_attempted_at": null,
+        "content": "{\"order\":{\"items\":[{\"product_id\":\"prod-5\",\"quantity\":1}],\"delivery_round_id\":\"ro",
+        "reply": "สวัสดีครับคุณลูกค้า R74! Bite ได้รับข้อมูลคำสั่งซื้อของคุณแล้วนะครับ แต่ระบบยังจับคู่เมนูจากรหัสสินค้าไม่ได้เลย ขอถามหน่อยครับว่าอยากสั่งเมนูอะไรครับ? พอได้ชื่อเมนูแล้ว Bite จะช่วยสรุปให้ แล้วพาไปกดสั่งที่ https://biteme-baby.com/shop ต่อเลยครับ 😊"
+      },
+      {
+        "event_id": "msg-r74a-1794100613809",
+        "type": "message",
+        "platform": "MESSENGER",
+        "reply_status": "failed",
+        "created_at": "2026-11-08T01:16:55.895257+00:00",
+        "push_notify": null,
+        "dm_error": null,
+        "dm_attempted_at": null,
+        "content": "สวัสดีค่ะ ขอดูเมนูหน่อยค่ะ",
+        "reply": "สวัสดีครับคุณลูกค้า ยินดีต้อนรับเข้าสู่ Bite Me Baby จันทบุรีเลยครับ! 🎉 เมนูของเรามีทั้งจานเด็ดและเมนูสุขภาพให้เลือกเพียบเลยครับ ลองดูได้ที่ https://biteme-baby.com/shop เลยครับ มีทั้งไก่ทอดอินโด แกงเขียวหวานไก่กรอบ หรือแซลมอนย่างเกลือ อร่อยทุกจานเลยครับ สนใจเมนูไหนบอก Bite ได้เลยนะครับ 😊"
+      },
+      {
+        "event_id": "r74cmt-1794074269443",
+        "type": "comment",
+        "platform": "FACEBOOK",
+        "reply_status": "failed",
+        "created_at": "2026-11-07T17:58:30.435417+00:00",
+        "push_notify": null,
+        "dm_error": null,
+        "dm_attempted_at": null,
+        "content": "เอาลุยสวนหมู+กุ้ง 2 ที่ค่ะ",
+        "reply": "สวัสดีครับคุณลูกค้า! Bite เองครับ 😊 ขอบคุณที่สั่งนะ — ลุยสวนหมู+กุ้ง 2 ที่ ใช่ไหมครับ? เดี๋ยวผมจัดให้เลยนะ แต่เพื่อความสะดวกและเช็ครายการให้เป๊ะ ๆ รบกวนกดสั่งผ่านเว็บตรงนี้เลยครับ https://biteme-baby.com/shop แล้วกดเช็คเอาท์ได้เลย หรือถ้าอยากเพิ่มอะไรเพิ่มเติมก็บอกได้เลยครับ 😋\n\n🛒 สรุปรายการของคุณ (ลุยสวนหมู+กุ้ง x2) เปิดดูบนเว็บได้เลยครับ — กดลิงก์นี้เพื่อดูตะกร้า เช็คเอาท์ หรือเพิ่มเมนูต่อได้เ"
+      },
+      {
+        "event_id": "r74cmt-1794074256614",
+        "type": "comment",
+        "platform": "FACEBOOK",
+        "reply_status": "failed",
+        "created_at": "2026-11-07T17:58:30.422515+00:00",
+        "push_notify": null,
+        "dm_error": null,
+        "dm_attempted_at": null,
+        "content": "เอาลุยสวนหมู+กุ้ง 2 ที่ค่ะ",
+        "reply": "สวัสดีครับคุณลูกค้า! 🙏 ขอบคุณที่สั่งนะครับ อยากได้ลุยสวนหมู+กุ้ง 2 ที่ใช่ไหมครับ? รายการน่ากินมากเลยครับ 😋 แต่ตรงนี้เป็นคอมเมนต์สาธารณะนะครับ รบกวนคุณทัก Inbox หรือกดสั่งที่เว็บเลยนะครับ จะเช็ครายการและสั่งได้สะวกกว่าเยอะเลยครับ https://biteme-baby.com/shop ขอบคุณครับ 🙏\n\n🛒 สรุปรายการของคุณ (ลุยสวนหมู+กุ้ง x2) เปิดดูบนเว็บได้เลยครับ — กดลิงก์นี้เพื่อดูตะกร้า เช็คเอาท์ หรือเพิ่มเมนูต่อได้เลย: ht"
+      },
+      {
+        "event_id": "r74cmt-1794074261611",
+        "type": "comment",
+        "platform": "FACEBOOK",
+        "reply_status": "failed",
+        "created_at": "2026-11-07T17:58:28.425309+00:00",
+        "push_notify": null,
+        "dm_error": null,
+        "dm_attempted_at": null,
+        "content": "เอาลุยสวนหมู+กุ้ง 2 ที่ค่ะ",
+        "reply": "สวัสดีครับคุณลูกค้า! ขอบคุณที่สนใจลุยสวนหมู+กุ้งนะครับ 🥗✨ รายการที่คุณสั่งคือ ลุยสวนหมู+กุ้ง 2 ที่ ครับ — ถูกต้องมั้ยครับ? ถ้าพร้อมเช็คเอาท์หรือเพิ่มเมนูอื่น กดเลยที่ https://biteme-baby.com/shop เลยครับ หรือทัก Inbox สะดวกกว่ามั้ยครับ? 😊\n\n🛒 สรุปรายการของคุณ (ลุยสวนหมู+กุ้ง x2) เปิดดูบนเว็บได้เลยครับ — กดลิงก์นี้เพื่อดูตะกร้า เช็คเอาท์ หรือเพิ่มเมนูต่อได้เลย: https://biteme-baby.com/shop?cart=e"
+      },
+      {
+        "event_id": "r74cmt-1794074266993",
+        "type": "comment",
+        "platform": "FACEBOOK",
+        "reply_status": "failed",
+        "created_at": "2026-11-07T17:58:25.711422+00:00",
+        "push_notify": null,
+        "dm_error": null,
+        "dm_attempted_at": null,
+        "content": "เอาลุยสวนหมู+กุ้ง 2 ที่ค่ะ",
+        "reply": "สวัสดีครับคุณลูกค้า! Bite รับออเดอร์แล้วนะครับ — ลุยสวนหมู+กุ้ง 2 ที่ ใช่เลยครับ เมนูนี้เด็ดมากกก 🥗✨ ถ้าพร้อมเช็คเอาท์หรืออยากเพิ่มเมนูอื่นต่อ กดเลยที่ https://biteme-baby.com/shop เลยครับ หรือทัก Inbox สะดวกกว่าก็ได้นะฮะ 🚀\n\n🛒 สรุปรายการของคุณ (ลุยสวนหมู+กุ้ง x2) เปิดดูบนเว็บได้เลยครับ — กดลิงก์นี้เพื่อดูตะกร้า เช็คเอาท์ หรือเพิ่มเมนูต่อได้เลย: https://biteme-baby.com/shop?cart=eyJ2IjoxLCJpdGVt"
+      }
+    ],
+    "identity_count": 78,
+    "identity_channels": [
+      "FACEBOOK/r74-si…",
+      "MESSENGER/r74-nl…",
+      "MESSENGER/r74-si…",
+      "MESSENGER/r76-si…",
+      "FACEBOOK/r76-si…",
+      "MESSENGER/r75-si…",
+      "FACEBOOK/r75-si…",
+      "FACEBOOK/289778…",
+      "FACEBOOK/286806…"
+    ],
+    "identity_real": [
+      {
+        "ch": "MESSENGER",
+        "ext": "r76-sim-msg-…",
+        "name": null,
+        "at": "2026-11-07T08:38:12.943951+00:00"
+      },
+      {
+        "ch": "FACEBOOK",
+        "ext": "r76-sim-cmt-…",
+        "name": null,
+        "at": "2026-11-07T08:38:11.643884+00:00"
+      },
+      {
+        "ch": "MESSENGER",
+        "ext": "r76-sim-msg-…",
+        "name": null,
+        "at": "2026-11-07T08:35:12.155679+00:00"
+      },
+      {
+        "ch": "FACEBOOK",
+        "ext": "r76-sim-cmt-…",
+        "name": null,
+        "at": "2026-11-07T08:35:10.519519+00:00"
+      },
+      {
+        "ch": "MESSENGER",
+        "ext": "r75-sim-msg-…",
+        "name": null,
+        "at": "2026-11-07T07:30:33.137438+00:00"
+      },
+      {
+        "ch": "FACEBOOK",
+        "ext": "r75-sim-cmt-…",
+        "name": null,
+        "at": "2026-11-07T07:30:31.386731+00:00"
+      },
+      {
+        "ch": "MESSENGER",
+        "ext": "r75-sim-msg-…",
+        "name": null,
+        "at": "2026-11-07T07:25:49.922818+00:00"
+      },
+      {
+        "ch": "FACEBOOK",
+        "ext": "r75-sim-cmt-…",
+        "name": null,
+        "at": "2026-11-07T07:25:48.480634+00:00"
+      },
+      {
+        "ch": "FACEBOOK",
+        "ext": "289778033052…",
+        "name": null,
+        "at": "2026-11-01T08:38:58.556527+00:00"
+      },
+      {
+        "ch": "FACEBOOK",
+        "ext": "286806842582…",
+        "name": null,
+        "at": "2026-10-30T06:00:21.040726+00:00"
+      }
+    ],
+    "push_subscriptions": [
+      {
+        "keys": [
+          "id",
+          "customer_id",
+          "endpoint",
+          "p256dh",
+          "auth_secret",
+          "user_agent",
+          "failure_count",
+          "last_success_at",
+          "last_failure_at",
+          "created_at",
+          "updated_at",
+          "driver_id"
+        ],
+        "user": null,
+        "endpoint": "https://fcm.googleapis.com/fcm/send/dkPzYAnxPYU:APA91bFDYxm2",
+        "created": "2026-10-23T00:07:11.025823+00:00"
+      },
+      {
+        "keys": [
+          "id",
+          "customer_id",
+          "endpoint",
+          "p256dh",
+          "auth_secret",
+          "user_agent",
+          "failure_count",
+          "last_success_at",
+          "last_failure_at",
+          "created_at",
+          "updated_at",
+          "driver_id"
+        ],
+        "user": null,
+        "endpoint": "https://fcm.googleapis.com/fcm/send/fiETYxFuP10:APA91bGUIIDC",
+        "created": "2026-10-23T07:04:35.523939+00:00"
+      },
+      {
+        "keys": [
+          "id",
+          "customer_id",
+          "endpoint",
+          "p256dh",
+          "auth_secret",
+          "user_agent",
+          "failure_count",
+          "last_success_at",
+          "last_failure_at",
+          "created_at",
+          "updated_at",
+          "driver_id"
+        ],
+        "user": "dddf4b57-405f-4852-a985-76d8d52b1b72",
+        "endpoint": "https://fcm.googleapis.com/fcm/send/c0zIJUkDgRA:APA91bF74es9",
+        "created": "2026-11-04T00:59:03.088441+00:00"
+      },
+      {
+        "keys": [
+          "id",
+          "customer_id",
+          "endpoint",
+          "p256dh",
+          "auth_secret",
+          "user_agent",
+          "failure_count",
+          "last_success_at",
+          "last_failure_at",
+          "created_at",
+          "updated_at",
+          "driver_id"
+        ],
+        "user": "dddf4b57-405f-4852-a985-76d8d52b1b72",
+        "endpoint": "https://fcm.googleapis.com/fcm/send/fqcEaJSZZBU:APA91bG_tHNT",
+        "created": "2026-11-05T01:04:02.842137+00:00"
+      },
+      {
+        "keys": [
+          "id",
+          "customer_id",
+          "endpoint",
+          "p256dh",
+          "auth_secret",
+          "user_agent",
+          "failure_count",
+          "last_success_at",
+          "last_failure_at",
+          "created_at",
+          "updated_at",
+          "driver_id"
+        ],
+        "user": "dddf4b57-405f-4852-a985-76d8d52b1b72",
+        "endpoint": "https://fcm.googleapis.com/fcm/send/dcFAghEtxKU:APA91bHYKYUI",
+        "created": "2026-11-05T09:14:58.050238+00:00"
+      }
+    ],
+    "notifications_ai": [],
+    "push_sub_rows": 5,
+    "outbox_ai_reply": [],
+    "outbox_alerts_recent": [],
+    "round_count": 3,
+    "rounds_today": [
+      {
+        "name": "เช้า ",
+        "status": "active",
+        "start": "07:00:00",
+        "end": "09:00:00",
+        "cutoff": "05:00:00",
+        "count": 2,
+        "cap": 20
+      },
+      {
+        "name": "เที่ยง",
+        "status": "active",
+        "start": "11:00:00",
+        "end": "15:00:00",
+        "cutoff": "09:00:00",
+        "count": 0,
+        "cap": 30
+      },
+      {
+        "name": "เย็น",
+        "status": "closed",
+        "start": "18:00:00",
+        "end": "20:00:00",
+        "cutoff": "16:00:00",
+        "count": 0,
+        "cap": 25
+      }
+    ],
+    "rounds_future": [
+      {
+        "id": "round-20261108-morning",
+        "status": "active",
+        "date": "2026-11-08",
+        "cutoff": "05:00:00",
+        "start": "07:00:00",
+        "count": 2,
+        "cap": 20
+      },
+      {
+        "id": "round-20261108-midday",
+        "status": "active",
+        "date": "2026-11-08",
+        "cutoff": "09:00:00",
+        "start": "11:00:00",
+        "count": 0,
+        "cap": 30
+      },
+      {
+        "id": "round-20261108-evening",
+        "status": "closed",
+        "date": "2026-11-08",
+        "cutoff": "16:00:00",
+        "start": "18:00:00",
+        "count": 0,
+        "cap": 25
+      },
+      {
+        "id": "round-20261109-morning",
+        "status": "active",
+        "date": "2026-11-09",
+        "cutoff": "05:00:00",
+        "start": "07:00:00",
+        "count": 0,
+        "cap": 20
+      },
+      {
+        "id": "round-20261109-midday",
+        "status": "active",
+        "date": "2026-11-09",
+        "cutoff": "09:00:00",
+        "start": "11:00:00",
+        "count": 0,
+        "cap": 30
+      },
+      {
+        "id": "round-20261109-evening",
+        "status": "closed",
+        "date": "2026-11-09",
+        "cutoff": "16:00:00",
+        "start": "18:00:00",
+        "count": 0,
+        "cap": 25
+      },
+      {
+        "id": "round-20261110-morning",
+        "status": "active",
+        "date": "2026-11-10",
+        "cutoff": "05:00:00",
+        "start": "07:00:00",
+        "count": 0,
+        "cap": 20
+      },
+      {
+        "id": "round-20261110-midday",
+        "status": "active",
+        "date": "2026-11-10",
+        "cutoff": "09:00:00",
+        "start": "11:00:00",
+        "count": 0,
+        "cap": 30
+      },
+      {
+        "id": "round-20261110-evening",
+        "status": "closed",
+        "date": "2026-11-10",
+        "cutoff": "16:00:00",
+        "start": "18:00:00",
+        "count": 0,
+        "cap": 25
+      },
+      {
+        "id": "round-20261111-morning",
+        "status": "active",
+        "date": "2026-11-11",
+        "cutoff": "05:00:00",
+        "start": "07:00:00",
+        "count": 0,
+        "cap": 20
+      },
+      {
+        "id": "round-20261111-midday",
+        "status": "active",
+        "date": "2026-11-11",
+        "cutoff": "09:00:00",
+        "start": "11:00:00",
+        "count": 0,
+        "cap": 30
+      },
+      {
+        "id": "round-20261111-evening",
+        "status": "closed",
+        "date": "2026-11-11",
+        "cutoff": "16:00:00",
+        "start": "18:00:00",
+        "count": 0,
+        "cap": 25
+      },
+      {
+        "id": "round-20261112-morning",
+        "status": "active",
+        "date": "2026-11-12",
+        "cutoff": "05:00:00",
+        "start": "07:00:00",
+        "count": 0,
+        "cap": 20
+      },
+      {
+        "id": "round-20261112-midday",
+        "status": "active",
+        "date": "2026-11-12",
+        "cutoff": "09:00:00",
+        "start": "11:00:00",
+        "count": 0,
+        "cap": 30
+      },
+      {
+        "id": "round-20261112-evening",
+        "status": "closed",
+        "date": "2026-11-12",
+        "cutoff": "16:00:00",
+        "start": "18:00:00",
+        "count": 0,
+        "cap": 25
+      },
+      {
+        "id": "round-20261113-evening",
+        "status": "closed",
+        "date": "2026-11-13",
+        "cutoff": "16:00:00",
+        "start": "18:00:00",
+        "count": 0,
+        "cap": 25
+      },
+      {
+        "id": "round-20261113-morning",
+        "status": "active",
+        "date": "2026-11-13",
+        "cutoff": "05:00:00",
+        "start": "07:00:00",
+        "count": 0,
+        "cap": 20
+      },
+      {
+        "id": "round-20261113-midday",
+        "status": "active",
+        "date": "2026-11-13",
+        "cutoff": "09:00:00",
+        "start": "11:00:00",
+        "count": 0,
+        "cap": 30
+      },
+      {
+        "id": "round-20261114-evening",
+        "status": "closed",
+        "date": "2026-11-14",
+        "cutoff": "16:00:00",
+        "start": "18:00:00",
+        "count": 0,
+        "cap": 25
+      },
+      {
+        "id": "round-20261114-morning",
+        "status": "active",
+        "date": "2026-11-14",
+        "cutoff": "05:00:00",
+        "start": "07:00:00",
+        "count": 0,
+        "cap": 20
+      },
+      {
+        "id": "round-20261114-midday",
+        "status": "active",
+        "date": "2026-11-14",
+        "cutoff": "09:00:00",
+        "start": "11:00:00",
+        "count": 0,
+        "cap": 30
+      },
+      {
+        "id": "round-20261115-evening",
+        "status": "closed",
+        "date": "2026-11-15",
+        "cutoff": "16:00:00",
+        "start": "18:00:00",
+        "count": 0,
+        "cap": 25
+      },
+      {
+        "id": "round-20261115-morning",
+        "status": "active",
+        "date": "2026-11-15",
+        "cutoff": "05:00:00",
+        "start": "07:00:00",
+        "count": 0,
+        "cap": 20
+      },
+      {
+        "id": "round-20261115-midday",
+        "status": "active",
+        "date": "2026-11-15",
+        "cutoff": "09:00:00",
+        "start": "11:00:00",
+        "count": 0,
+        "cap": 30
+      },
+      {
+        "id": "round-20261116-evening",
+        "status": "closed",
+        "date": "2026-11-16",
+        "cutoff": "16:00:00",
+        "start": "18:00:00",
+        "count": 0,
+        "cap": 25
+      },
+      {
+        "id": "round-20261116-morning",
+        "status": "active",
+        "date": "2026-11-16",
+        "cutoff": "05:00:00",
+        "start": "07:00:00",
+        "count": 0,
+        "cap": 20
+      },
+      {
+        "id": "round-20261116-midday",
+        "status": "active",
+        "date": "2026-11-16",
+        "cutoff": "09:00:00",
+        "start": "11:00:00",
+        "count": 0,
+        "cap": 30
+      },
+      {
+        "id": "round-20261117-evening",
+        "status": "closed",
+        "date": "2026-11-17",
+        "cutoff": "16:00:00",
+        "start": "18:00:00",
+        "count": 0,
+        "cap": 25
+      },
+      {
+        "id": "round-20261117-morning",
+        "status": "active",
+        "date": "2026-11-17",
+        "cutoff": "05:00:00",
+        "start": "07:00:00",
+        "count": 0,
+        "cap": 20
+      },
+      {
+        "id": "round-20261117-midday",
+        "status": "active",
+        "date": "2026-11-17",
+        "cutoff": "09:00:00",
+        "start": "11:00:00",
+        "count": 0,
+        "cap": 30
+      },
+      {
+        "id": "round-20261118-evening",
+        "status": "closed",
+        "date": "2026-11-18",
+        "cutoff": "16:00:00",
+        "start": "18:00:00",
+        "count": 0,
+        "cap": 25
+      },
+      {
+        "id": "round-20261118-morning",
+        "status": "active",
+        "date": "2026-11-18",
+        "cutoff": "05:00:00",
+        "start": "07:00:00",
+        "count": 0,
+        "cap": 20
+      },
+      {
+        "id": "round-20261118-midday",
+        "status": "active",
+        "date": "2026-11-18",
+        "cutoff": "09:00:00",
+        "start": "11:00:00",
+        "count": 0,
+        "cap": 30
+      },
+      {
+        "id": "round-20261119-evening",
+        "status": "closed",
+        "date": "2026-11-19",
+        "cutoff": "16:00:00",
+        "start": "18:00:00",
+        "count": 0,
+        "cap": 25
+      },
+      {
+        "id": "round-20261119-morning",
+        "status": "active",
+        "date": "2026-11-19",
+        "cutoff": "05:00:00",
+        "start": "07:00:00",
+        "count": 0,
+        "cap": 20
+      },
+      {
+        "id": "round-20261119-midday",
+        "status": "active",
+        "date": "2026-11-19",
+        "cutoff": "09:00:00",
+        "start": "11:00:00",
+        "count": 0,
+        "cap": 30
+      },
+      {
+        "id": "round-20261120-evening",
+        "status": "closed",
+        "date": "2026-11-20",
+        "cutoff": "16:00:00",
+        "start": "18:00:00",
+        "count": 0,
+        "cap": 25
+      },
+      {
+        "id": "round-20261120-morning",
+        "status": "active",
+        "date": "2026-11-20",
+        "cutoff": "05:00:00",
+        "start": "07:00:00",
+        "count": 0,
+        "cap": 20
+      },
+      {
+        "id": "round-20261120-midday",
+        "status": "active",
+        "date": "2026-11-20",
+        "cutoff": "09:00:00",
+        "start": "11:00:00",
+        "count": 0,
+        "cap": 30
+      },
+      {
+        "id": "round-20261121-evening",
+        "status": "closed",
+        "date": "2026-11-21",
+        "cutoff": "16:00:00",
+        "start": "18:00:00",
+        "count": 0,
+        "cap": 25
+      }
+    ],
+    "fried_chicken": [
+      {
+        "id": "prod-1793370974354-hd4fxf",
+        "name": "🍗 ไก่ทอดอินโด",
+        "avail": true
+      }
+    ]
+  }
+}

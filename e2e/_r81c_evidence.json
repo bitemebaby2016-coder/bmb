@@ -1,0 +1,227 @@
+{
+  "tool": "r81c-resolve-chain",
+  "ts": "2026-11-08T03:07:34.641Z",
+  "mode": "READ_ONLY",
+  "lookup_with_eq": {
+    "status": 200,
+    "j": [
+      {
+        "customer_ref": "5845e479-88ad-4616-a271-497c07f88794",
+        "external_user_id": "28680684258210089",
+        "display_name": null
+      }
+    ],
+    "raw": "[{\"customer_ref\":\"5845e479-88ad-4616-a271-497c07f88794\",\"external_user_id\":\"28680684258210089\",\"display_name\":null}]"
+  },
+  "lookup_without_eq": {
+    "status": 400,
+    "j": {
+      "code": "PGRST100",
+      "details": "unexpected \"2\" expecting \"not\" or operator (eq, gt, ...)",
+      "hint": null,
+      "message": "\"failed to parse filter (28680684258210089)\" (line 1, column 1)"
+    },
+    "raw": "{\"code\":\"PGRST100\",\"details\":\"unexpected \\\"2\\\" expecting \\\"not\\\" or operator (eq, gt, ...)\",\"hint\":null,\"message\":\"\\\"failed to parse filter (28680684258210089)\\\" (line 1, column 1)\"}"
+  },
+  "lookup_messenger": {
+    "status": 200,
+    "j": [],
+    "raw": "[]"
+  },
+  "resolved_ref": "5845e479-88ad-4616-a271-497c07f88794",
+  "customer_raw": {
+    "status": 200,
+    "j": [
+      {
+        "id": "5845e479-88ad-4616-a271-497c07f88794",
+        "user_id": "5845e479-88ad-4616-a271-497c07f88794",
+        "full_name": "Customer",
+        "phone": null,
+        "email": "ext-28680684258210089@channels.bmb.internal",
+        "address": null,
+        "loyalty_points": 0,
+        "created_at": "2026-10-30T06:00:20.681632+00:00",
+        "updated_at": "2026-10-30T06:00:20.681632+00:00",
+        "default_latitude": null,
+        "default_longitude": null,
+        "default_address_detail": null,
+        "delivery_photo_url": null,
+        "delivery_photo_path": null,
+        "referral_code": null,
+        "referred_by": null
+      }
+    ],
+    "raw": "[{\"id\":\"5845e479-88ad-4616-a271-497c07f88794\",\"user_id\":\"5845e479-88ad-4616-a271-497c07f88794\",\"full_name\":\"Customer\",\"phone\":null,\"email\":\"ext-28680684258210089@channels.bmb.internal\",\"address\":null,\"loyalty_points\":0,\"created_at\":\"2026-10-30T06:00:20.681632+00:00\",\"updated_at\":\"2026-10-30T06:00:20.681632+00:00\",\"default_latitude\":null,\"default_longitude\":null,\"default_address_detail\":null,\"deliv"
+  },
+  "customer_id": "5845e479-88ad-4616-a271-497c07f88794",
+  "customer_cols": [
+    "id",
+    "user_id",
+    "full_name",
+    "phone",
+    "email",
+    "address",
+    "loyalty_points",
+    "created_at",
+    "updated_at",
+    "default_latitude",
+    "default_longitude",
+    "default_address_detail",
+    "delivery_photo_url",
+    "delivery_photo_path",
+    "referral_code",
+    "referred_by"
+  ],
+  "my_subscriptions": {
+    "status": 200,
+    "j": [],
+    "raw": "[]"
+  },
+  "my_outbox": {
+    "status": 200,
+    "j": [],
+    "raw": "[]"
+  },
+  "my_notifications": {
+    "status": 200,
+    "j": [],
+    "raw": "[]"
+  },
+  "replies": [
+    {
+      "at": "2026-11-08T02:58:05.46628+00:00",
+      "type": "comment",
+      "platform": "FACEBOOK",
+      "reply": "sent",
+      "push": "unresolved_identity",
+      "content": "เมนูนนี้ยังสั่งได้ไหม",
+      "text": "ได้เลยครับพี่ 🍗 ไก่ทอดอินโดยังสั่งได้อยู่ครับ จัดให้เลย 1 ที่ กดลิงก์นี้เปิดตะกร้าดูแล้วเช็คเอาท์หรือเพิ่มเมนูอื่นต่อได้เลยครับ https://biteme-baby.com/shop?cart=eyJ2IjoxLCJpdGVtcyI6W3siaWQiOiJwcm9kLTE3OTMzNzA2MjU0NDktenpuNDU3IiwicSI6MX1dfQ ถ้าลิงก์มีปัญหาทัก Inbox มาได้เลยนะครับ Bite ช่วยดูให้"
+    },
+    {
+      "at": "2026-11-08T02:50:45.721131+00:00",
+      "type": "message",
+      "platform": "MESSENGER",
+      "reply": "sent",
+      "push": "dm_ok",
+      "content": "ส่งไหม",
+      "text": "ส่งครับ ส่งวันนี้ได้เลย! รอบเช้าป่ายไปแล้ว แต่รอบเที่ยง 11:00-15:00 น. ยังรับออเดอร์อยู่ครับ สั่งเลยที่ https://biteme-baby.com/shop แล้วเลือกเมนูที่ชอบได้เลยครับ 🚴‍♂️🍽️"
+    },
+    {
+      "at": "2026-11-08T02:50:42.054625+00:00",
+      "type": "message",
+      "platform": "MESSENGER",
+      "reply": "sent",
+      "push": "dm_ok",
+      "content": "มีอะไรแนะนำมั่ง",
+      "text": "มีหลายเมนูเด็ดเลยครับพี่! 🍽️ ขอแนะนำเมนูยอดนิยมของเราเลยนะครับ — 🥑 ยำสลัดถั่วลูกไก่ 79฿, 🐟 แซลมอนย่างเกลือ+มันฝรั่งและพริกหวาน 79฿, สามชั้นตุ๋นผักกาดดอง (เคาหยก) 79฿, และ Fish & Ships 79฿ อร่อยทุกจานเลยครับ! หรือถ้าชอบแนวสุขภาพก็มีลุยสวนหมู+กุ้ง 79฿ อีกนะครับ สนใจเมนูไหนบอก Bite ได้เลย เดี๋ยวช่วยสรุปให้ แล้วกดสั่งที่ https://biteme-baby.com/shop ได้เลยครับ 😋"
+    },
+    {
+      "at": "2026-11-08T02:49:28.406579+00:00",
+      "type": "message",
+      "platform": "MESSENGER",
+      "reply": "sent",
+      "push": "dm_ok",
+      "content": "ในนี้สั่งได้ไหม",
+      "text": "สั่งในแชทนี้ได้เลยครับ พี่บอกเมนูที่อยากได้มาได้เลย Bite ช่วยสรุปให้ แต่ต้องกดยืนยันออเดอร์ที่เว็บ https://biteme-baby.com/shop นะครับ เดี๋ยวพี่อยากได้เมนูไหนล่ะครับ 🍽️"
+    },
+    {
+      "at": "2026-11-08T01:37:40.385187+00:00",
+      "type": "comment",
+      "platform": "FACEBOOK",
+      "reply": "sent",
+      "push": null,
+      "content": "ไก่ทอดอันนี้ ที่นึงครับ ยังสั่งได้ไหม",
+      "text": "ได้เลยครับพี่ 🍗 ไก่ทอดอินโด 1 ที่ จัดให้เลยครับ กดลิงก์นี้เปิดตะกร้าดูแล้วเช็คเอาท์หรือเพิ่มเมนูอื่นต่อได้เลยครับ https://biteme-baby.com/shop?cart=eyJ2IjoxLCJpdGVtcyI6W3siaWQiOiJwcm9kLTE3OTMzNzA2MjU0NDktenpuNDU3IiwicSI6MX1dfQ ถ้าลิงก์มีปัญหาทัก Inbox มาได้เลยนะครับ Bite ช่วยดูให้"
+    },
+    {
+      "at": "2026-11-08T01:17:54.37599+00:00",
+      "type": "comment",
+      "platform": "FACEBOOK",
+      "reply": "failed",
+      "push": null,
+      "content": "เอาลุยสวนหมู+กุ้ง 2 ที่ค่ะ",
+      "text": "ได้เลยครับคุณ! ลุยสวนหมู+กุ้ง 2 ที่ ถูกต้องนะครับ จานเด็ดของเราทำจากหมูสับเห็ดหอมกับกุ้งสด ๆ อ่ะ จัมโบ ๆ เลยครับ 🦐🐷 ถ้าพร้อมเช็คเอาท์หรืออยากเพิ่มอะไรต่อ กดเข้าไปดูในเว็บเลยนะครับ https://biteme-baby.com/shop\n\n🛒 สรุปรายการของคุณ (ลุยสวนหมู+กุ้ง x2) เปิดดูบนเว็บได้เลยครับ — กดลิงก์นี้เพื่อดูตะกร้า เช็คเอาท์ หรือเพิ่มเมนูต่อได้เลย: https://biteme-baby.com/shop?cart=eyJ2IjoxLCJpdGVtcyI6W3siaWQiOiJwcm9kLTUiLCJxIjoyfV19\n🔗 ลิงก์เปิดเว็บ https://biteme-baby.com ภายนอก Facebook — แตะแล้วยืนยันเพื่อเปิดในเบราว์เซอร์ของคุณได้เลย"
+    },
+    {
+      "at": "2026-11-08T01:17:41.85752+00:00",
+      "type": "message",
+      "platform": "MESSENGER",
+      "reply": "failed",
+      "push": null,
+      "content": "ตกลงค่ะ ยืนยัน สั่งเลยค่ะ",
+      "text": "รับทราบครับคุณลูกค้า! 🎉 ยืนยันออเดอร์ลุยสวนหมู+กุ้ง 2 ที่ ไม่เผ็ด พร้อมไข่ดาวเพิ่ม รอบเช้าวันนี้ (07:00-09:00 น.) ครับ กรุณากดไปที่ https://biteme-baby.com/checkout เพื่อตรวจสอบรายการและเลือกชำระเงินได้เลยครับ Bite รอเสิร์ฟความอร่อยนะฮะ! 😊\n\n✅ บันทึกรายการของคุณแล้วครับ เลขที่ออเดอร์ BMB-20261108-484 — ชำระเงินและติดตามสถานะได้ที่ https://biteme-baby.com/payment/BMB-20261108-484\n🛒 สรุปรายการของคุณ (ลุยสวนหมู+กุ้ง x2) เปิดดูบนเว็บได้เลยครับ — กดลิงก์นี้เพื่อดูตะกร้า เช็คเอาท์ หรือเพิ่มเมนูต่อได้เลย: https://biteme-baby.com/shop?cart=eyJ2IjoxLCJpdGVtcyI6W3siaWQiOiJwcm9kLTUiLCJxIjoyfV19\n🔗 ลิงก์เปิดเว็บ https://biteme-baby.com ภายนอก Facebook — แตะแล้วยืนยันเพื่อเปิดในเบราว์เซอร์ของคุณได้เลย"
+    },
+    {
+      "at": "2026-11-08T01:17:23.404535+00:00",
+      "type": "message",
+      "platform": "MESSENGER",
+      "reply": "failed",
+      "push": null,
+      "content": "เอาลุยสวนหมู+กุ้ง 2 ที่ ไม่เผ็ด เพิ่มไข่ดาวด้วยค่ะ ขอคิดก่อนนะ",
+      "text": "รับทราบครับคุณลูกค้า! ลุยสวนหมู+กุ้ง 2 ที่ ไม่เผ็ด พร้อมไข่ดาวเพิ่ม ราคารวม 158+? บาท (ไข่ดาว ราคาตามเว็บนะครับ) 🥬✨ สะดวกเมื่อไหร่กดสั่งที่ https://biteme-baby.com/shop เลยครับ หรือถ้าอยากดูรายการก่อนก็เช็คได้ที่ https://biteme-baby.com/checkout ครับ Bite รอรับออเดอร์นะฮะ! 😊\n\n🛒 สรุปรายการของคุณ (ลุยสวนหมู+กุ้ง x2) เปิดดูบนเว็บได้เลยครับ — กดลิงก์นี้เพื่อดูตะกร้า เช็คเอาท์ หรือเพิ่มเมนูต่อได้เลย: https://biteme-baby.com/shop?cart=eyJ2IjoxLCJpdGVtcyI6W3siaWQiOiJwcm9kLTUiLCJxIjoyfV19\n🔗 ลิงก์เปิดเว็บ https://biteme-baby.com ภายนอก Facebook — แตะแล้วยืนยันเพื่อเปิดในเบราว์เซอร์ของคุณได้เลย"
+    },
+    {
+      "at": "2026-11-08T01:17:11.48039+00:00",
+      "type": "message",
+      "platform": "MESSENGER",
+      "reply": "failed",
+      "push": null,
+      "content": "สวัสดีค่ะ วันนี้มีเมนูอะไรน่ากินบ้างคะ",
+      "text": "สวัสดีครับคุณลูกค้า! วันนี้ Bite ขอแนะนำเมนูเด็ดที่พร้อมเสิร์ฟวันนี้เลยครับ 🎉 มีทั้งเมี่ยงแซลม่อน 79฿, สปาเกตตี้ผัดพริกแห้งกุ้ง 99฿, และข้าวลาบอกไก่+ไข่ต้ม 69฿ อร่อยทุกจานเลยครับ! หรือถ้าอยากลองเมนูพรีออเดอร์ก็มีไก่ทอดอินโดกับสุกี้แห้งกุ้งให้จองล่วงหน้าวันที่ 8 พ.ย. นี้ครับ สนใจเมนูไหนลองดูเพิ่มเติมที่ https://biteme-baby.com/shop แล้วสั่งเลยครับ 😊"
+    },
+    {
+      "at": "2026-11-08T01:17:04.745602+00:00",
+      "type": "message",
+      "platform": "MESSENGER",
+      "reply": "failed",
+      "push": null,
+      "content": "{\"order\":{\"items\":[{\"product_id\":\"prod-5\",\"quantity\":1}],\"delivery_round_id\":\"round-20261108-midday\"",
+      "text": "สวัสดีครับคุณลูกค้า R74! Bite ได้รับข้อมูลคำสั่งซื้อของคุณแล้วนะครับ แต่ระบบยังจับคู่เมนูจากรหัสสินค้าไม่ได้เลย ขอถามหน่อยครับว่าอยากสั่งเมนูอะไรครับ? พอได้ชื่อเมนูแล้ว Bite จะช่วยสรุปให้ แล้วพาไปกดสั่งที่ https://biteme-baby.com/shop ต่อเลยครับ 😊"
+    },
+    {
+      "at": "2026-11-08T01:16:55.895257+00:00",
+      "type": "message",
+      "platform": "MESSENGER",
+      "reply": "failed",
+      "push": null,
+      "content": "สวัสดีค่ะ ขอดูเมนูหน่อยค่ะ",
+      "text": "สวัสดีครับคุณลูกค้า ยินดีต้อนรับเข้าสู่ Bite Me Baby จันทบุรีเลยครับ! 🎉 เมนูของเรามีทั้งจานเด็ดและเมนูสุขภาพให้เลือกเพียบเลยครับ ลองดูได้ที่ https://biteme-baby.com/shop เลยครับ มีทั้งไก่ทอดอินโด แกงเขียวหวานไก่กรอบ หรือแซลมอนย่างเกลือ อร่อยทุกจานเลยครับ สนใจเมนูไหนบอก Bite ได้เลยนะครับ 😊"
+    },
+    {
+      "at": "2026-11-07T17:58:30.435417+00:00",
+      "type": "comment",
+      "platform": "FACEBOOK",
+      "reply": "failed",
+      "push": null,
+      "content": "เอาลุยสวนหมู+กุ้ง 2 ที่ค่ะ",
+      "text": "สวัสดีครับคุณลูกค้า! Bite เองครับ 😊 ขอบคุณที่สั่งนะ — ลุยสวนหมู+กุ้ง 2 ที่ ใช่ไหมครับ? เดี๋ยวผมจัดให้เลยนะ แต่เพื่อความสะดวกและเช็ครายการให้เป๊ะ ๆ รบกวนกดสั่งผ่านเว็บตรงนี้เลยครับ https://biteme-baby.com/shop แล้วกดเช็คเอาท์ได้เลย หรือถ้าอยากเพิ่มอะไรเพิ่มเติมก็บอกได้เลยครับ 😋\n\n🛒 สรุปรายการของคุณ (ลุยสวนหมู+กุ้ง x2) เปิดดูบนเว็บได้เลยครับ — กดลิงก์นี้เพื่อดูตะกร้า เช็คเอาท์ หรือเพิ่มเมนูต่อได้เลย: https://biteme-baby.com/shop?cart=eyJ2IjoxLCJpdGVtcyI6W3siaWQiOiJwcm9kLTUiLCJxIjoyfV19\n🔗 ลิงก์เปิดเว็บ https://biteme-baby.com ภายนอก Facebook — แตะแล้วยืนยันเพื่อเปิดในเบราว์เซอร์ของคุณได้เลย"
+    },
+    {
+      "at": "2026-11-07T17:58:30.422515+00:00",
+      "type": "comment",
+      "platform": "FACEBOOK",
+      "reply": "failed",
+      "push": null,
+      "content": "เอาลุยสวนหมู+กุ้ง 2 ที่ค่ะ",
+      "text": "สวัสดีครับคุณลูกค้า! 🙏 ขอบคุณที่สั่งนะครับ อยากได้ลุยสวนหมู+กุ้ง 2 ที่ใช่ไหมครับ? รายการน่ากินมากเลยครับ 😋 แต่ตรงนี้เป็นคอมเมนต์สาธารณะนะครับ รบกวนคุณทัก Inbox หรือกดสั่งที่เว็บเลยนะครับ จะเช็ครายการและสั่งได้สะวกกว่าเยอะเลยครับ https://biteme-baby.com/shop ขอบคุณครับ 🙏\n\n🛒 สรุปรายการของคุณ (ลุยสวนหมู+กุ้ง x2) เปิดดูบนเว็บได้เลยครับ — กดลิงก์นี้เพื่อดูตะกร้า เช็คเอาท์ หรือเพิ่มเมนูต่อได้เลย: https://biteme-baby.com/shop?cart=eyJ2IjoxLCJpdGVtcyI6W3siaWQiOiJwcm9kLTUiLCJxIjoyfV19\n🔗 ลิงก์เปิดเว็บ https://biteme-baby.com ภายนอก Facebook — แตะแล้วยืนยันเพื่อเปิดในเบราว์เซอร์ของคุณได้เลย"
+    },
+    {
+      "at": "2026-11-07T17:58:28.425309+00:00",
+      "type": "comment",
+      "platform": "FACEBOOK",
+      "reply": "failed",
+      "push": null,
+      "content": "เอาลุยสวนหมู+กุ้ง 2 ที่ค่ะ",
+      "text": "สวัสดีครับคุณลูกค้า! ขอบคุณที่สนใจลุยสวนหมู+กุ้งนะครับ 🥗✨ รายการที่คุณสั่งคือ ลุยสวนหมู+กุ้ง 2 ที่ ครับ — ถูกต้องมั้ยครับ? ถ้าพร้อมเช็คเอาท์หรือเพิ่มเมนูอื่น กดเลยที่ https://biteme-baby.com/shop เลยครับ หรือทัก Inbox สะดวกกว่ามั้ยครับ? 😊\n\n🛒 สรุปรายการของคุณ (ลุยสวนหมู+กุ้ง x2) เปิดดูบนเว็บได้เลยครับ — กดลิงก์นี้เพื่อดูตะกร้า เช็คเอาท์ หรือเพิ่มเมนูต่อได้เลย: https://biteme-baby.com/shop?cart=eyJ2IjoxLCJpdGVtcyI6W3siaWQiOiJwcm9kLTUiLCJxIjoyfV19\n🔗 ลิงก์เปิดเว็บ https://biteme-baby.com ภายนอก Facebook — แตะแล้วยืนยันเพื่อเปิดในเบราว์เซอร์ของคุณได้เลย"
+    },
+    {
+      "at": "2026-11-07T17:58:25.711422+00:00",
+      "type": "comment",
+      "platform": "FACEBOOK",
+      "reply": "failed",
+      "push": null,
+      "content": "เอาลุยสวนหมู+กุ้ง 2 ที่ค่ะ",
+      "text": "สวัสดีครับคุณลูกค้า! Bite รับออเดอร์แล้วนะครับ — ลุยสวนหมู+กุ้ง 2 ที่ ใช่เลยครับ เมนูนี้เด็ดมากกก 🥗✨ ถ้าพร้อมเช็คเอาท์หรืออยากเพิ่มเมนูอื่นต่อ กดเลยที่ https://biteme-baby.com/shop เลยครับ หรือทัก Inbox สะดวกกว่าก็ได้นะฮะ 🚀\n\n🛒 สรุปรายการของคุณ (ลุยสวนหมู+กุ้ง x2) เปิดดูบนเว็บได้เลยครับ — กดลิงก์นี้เพื่อดูตะกร้า เช็คเอาท์ หรือเพิ่มเมนูต่อได้เลย: https://biteme-baby.com/shop?cart=eyJ2IjoxLCJpdGVtcyI6W3siaWQiOiJwcm9kLTUiLCJxIjoyfV19\n🔗 ลิงก์เปิดเว็บ https://biteme-baby.com ภายนอก Facebook — แตะแล้วยืนยันเพื่อเปิดในเบราว์เซอร์ของคุณได้เลย"
+    }
+  ]
+}

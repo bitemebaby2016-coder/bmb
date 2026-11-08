@@ -1,0 +1,154 @@
+{
+  "tool": "r81e-device-owners",
+  "ts": "2026-11-08T03:10:52.339Z",
+  "mode": "READ_ONLY",
+  "subs": {
+    "status": 200,
+    "j": [
+      {
+        "id": "push- ###########-403abb",
+        "customer_id": "23cbe150-e5f4-4a37-a969-02e2db8df395",
+        "driver_id": null,
+        "user_agent": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36",
+        "last_success_at": "2026-11-07T13:05:08.227946+00:00",
+        "failure_count": 0,
+        "created_at": "2026-11-07T12:54:45.347446+00:00"
+      },
+      {
+        "id": "push- ###########-ab2873",
+        "customer_id": "5119ee60-41de-4a1f-8dfa-0645a59cde37",
+        "driver_id": null,
+        "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36",
+        "last_success_at": "2026-11-07T12:55:10.790748+00:00",
+        "failure_count": 0,
+        "created_at": "2026-11-07T04:55:16.960248+00:00"
+      },
+      {
+        "id": "push- ###########-c70c2b",
+        "customer_id": "5119ee60-41de-4a1f-8dfa-0645a59cde37",
+        "driver_id": null,
+        "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36",
+        "last_success_at": "2026-11-07T12:55:07.689247+00:00",
+        "failure_count": 3,
+        "created_at": "2026-11-07T04:55:16.170715+00:00"
+      },
+      {
+        "id": "push- ###########-b95dbb",
+        "customer_id": "dddf4b57-405f-4852-a985-76d8d52b1b72",
+        "driver_id": null,
+        "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36",
+        "last_success_at": null,
+        "failure_count": 0,
+        "created_at": "2026-11-07T04:49:54.30708+00:00"
+      },
+      {
+        "id": "push- ###########-79f2a6",
+        "customer_id": "dddf4b57-405f-4852-a985-76d8d52b1b72",
+        "driver_id": null,
+        "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36",
+        "last_success_at": null,
+        "failure_count": 0,
+        "created_at": "2026-11-07T03:04:53.427756+00:00"
+      },
+      {
+        "id": "push- ###########-e85ff5",
+        "customer_id": "dddf4b57-405f-4852-a985-76d8d52b1b72",
+        "driver_id": null,
+        "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36",
+        "last_success_at": null,
+        "failure_count": 0,
+        "created_at": "2026-11-07T02:31:30.319974+00:00"
+      },
+      {
+        "id": "push- ###########-be1e04",
+        "customer_id": "dddf4b57-405f-4852-a985-76d8d52b1b72",
+        "driver_id": null,
+        "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36",
+        "last_success_at": null,
+        "failure_count": 0,
+        "created_at": "2026-11-07T02:31:30.027446+00:00"
+      },
+      {
+        "id": "push- ###########-5c1b09",
+        "customer_id": "dddf4b57-405f-4852-a985-76d8d52b1b72",
+        "driver_id": null,
+        "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36",
+        "last_success_at": null,
+        "failure_count": 0,
+        "created_at": "2026-11-05T09:14:58.050238+00:00"
+      },
+      {
+        "id": "push- ###########-20d236",
+        "customer_id": "dddf4b57-405f-4852-a985-76d8d52b1b72",
+        "driver_id": null,
+        "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36",
+        "last_success_at": null,
+        "failure_count": 0,
+        "created_at": "2026-11-05T01:04:02.842137+00:00"
+      },
+      {
+        "id": "push- ###########-77e033",
+        "customer_id": "dddf4b57-405f-4852-a985-76d8d52b1b72",
+        "driver_id": null,
+        "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36",
+        "last_success_at": null,
+        "failure_count": 0,
+        "created_at": "2026-11-04T00:59:03.088441+00:00"
+      },
+      {
+        "id": "push- ###########-440377",
+        "customer_id": null,
+        "driver_id": "drv- ###########-60bc",
+        "user_agent": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Mobile Safari/537.36",
+        "last_success_at": null,
+        "failure_count": 0,
+        "created_at": "2026-10-23T07:04:35.523939+00:00"
+      },
+      {
+        "id": "push- ###########-7178f2",
+        "customer_id": null,
+        "driver_id": "drv- ###########-60bc",
+        "user_agent": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Mobile Safari/537.36",
+        "last_success_at": null,
+        "failure_count": 0,
+        "created_at": "2026-10-23T00:07:11.025823+00:00"
+      }
+    ],
+    "raw": "[{\"id\":\"push- ###########-403abb\",\"customer_id\":\"23cbe150-e5f4-4a37-a969-02e2db8df395\",\"driver_id\":null,\"user_agent\":\"Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36\",\"last_success_at\":\"2026-11-07T13:05:08.227946+00:00\",\"failure_count\":0,\"crea"
+  },
+  "customers_with_subs": {
+    "status": 200,
+    "j": [
+      {
+        "id": "5119ee60-41de-4a1f-8dfa-0645a59cde37",
+        "full_name": "Self Print",
+        "phone": "0812345678",
+        "email": "selfprint.pwa@gmail.com",
+        "user_id": "5119ee60-41de-4a1f-8dfa-0645a59cde37",
+        "created_at": "2026-11-01T00:36:05.839357+00:00"
+      },
+      {
+        "id": "23cbe150-e5f4-4a37-a969-02e2db8df395",
+        "full_name": "Siam Portal Customer",
+        "phone": "0858101984",
+        "email": "siamportal18@gmail.com",
+        "user_id": "23cbe150-e5f4-4a37-a969-02e2db8df395",
+        "created_at": "2026-10-24T02:09:32.563237+00:00"
+      },
+      {
+        "id": "dddf4b57-405f-4852-a985-76d8d52b1b72",
+        "full_name": "ADMIN_BMB",
+        "phone": "0817847992",
+        "email": "bitemebaby2016@gmail.com",
+        "user_id": "dddf4b57-405f-4852-a985-76d8d52b1b72",
+        "created_at": "2026-10-20T02:02:45.947451+00:00"
+      }
+    ],
+    "raw": "[{\"id\":\"5119ee60-41de-4a1f-8dfa-0645a59cde37\",\"full_name\":\"Self Print\",\"phone\":\"0812345678\",\"email\":\"selfprint.pwa@gmail.com\",\"user_id\":\"5119ee60-41de-4a1f-8dfa-0645a59cde37\",\"created_at\":\"2026-11-01T00:36:05.839357+00:00\"}, \n {\"id\":\"23cbe150-e5f4-4a37-a969-02e2db8df395\",\"full_name\":\"Siam Portal Cus"
+  },
+  "identities_of_them": {
+    "status": 200,
+    "j": [],
+    "raw": "[]"
+  }
+}

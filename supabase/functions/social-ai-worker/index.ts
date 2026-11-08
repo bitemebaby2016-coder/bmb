@@ -64,6 +64,15 @@ import { extractSourcePostId, fetchPostMessage } from '../_shared/socialPostCont
 // R75 (Owner: "ลิ้งที่เอไอสร้างใช้ไม่ได้เลยสักลิ้ง"): ลิงก์ทุกตัวในคำตอบต้องเป็น https:// URL
 // เต็มรูปแบบก่อนบันทึก/ส่งเสมอ — Facebook ทำลิงก์ให้แตะได้เฉพาะ URL ที่มี scheme
 import { normalizeAiTextLinks } from '../_shared/socialLinkFormat.ts'
+// R82 (Owner 2026-11-08): ประเมิน "เลยรอบ/ยังสั่งได้" แบบเดียวกับเว็บ (mirror R77) +
+// บล็อก prompt แยก ประเภทออเดอร์/เวลา + กฎแนะนำเมนูเมื่อเลยรอบ
+import {
+  loadOrderWindow,
+  assessProductWindows,
+  recommendOrderableAlternatives,
+  buildOrderWindowPrompt,
+  type WindowProduct,
+} from '../_shared/orderWindow.ts'
 
 const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions'
 
@@ -476,6 +485,39 @@ async function runOrderIntake(ev: SocialEventRow, userMsg: string, mode: 'messag
     // R57: ชื่อเมนูจริงที่ระบบจับคู่ไว้ — ใช้บังคับคำตอบต้องสรุปตรงทุกรายการ (semanticDraft)
     const matchedNames = m.matched.map((i) => i.name)
 
+    // --- R82 (Owner 2026-11-08: "ไก่ทอดเลยรอบส่งของพรีออเดอร์ไปแล้ว แต่เอาไปใส่ตะกร้าให้") ---
+    // ประเมินแบบเดียวกับเว็บ (mirror R77 isPreOrderDayPassed/roundBookability):
+    //   เมนูที่เลยรอบ = ห้ามแนบลิงก์ตะกร้า + ห้ามสั่ง + ต้องแนะนำเมนูที่ยังสั่งได้แทน
+    const winData = await loadOrderWindow(SB_URL, SERVICE)
+    const productsById = new Map<string, WindowProduct>((winData?.products || []).map((p) => [p.id, p]))
+    const dataArgs = winData ? winData.schedule : null
+    const roundArgs = winData ? winData.rounds : null
+    const statuses = assessProductWindows(m.matched.map((i) => i.product_id), dataArgs, roundArgs, productsById)
+    const blocked = statuses.filter((s) => !s.orderable && s.reason !== 'data_unavailable')
+    if (blocked.length > 0) {
+      const blockedNames = blocked
+        .map((s) => productsById.get(s.product_id)?.name || s.product_id)
+        .join(', ')
+      // ทางเลือกที่ยังสั่งได้จากแคตตาล็อกที่โพสต์นี้เสนอ (Owner: แนะนำเมนูอื่นที่ยังสั่งได้บนเว็บ)
+      const altStatuses = assessProductWindows(
+        allowed.map((p) => p.id),
+        dataArgs,
+        roundArgs,
+        productsById,
+      )
+      const alts = recommendOrderableAlternatives(altStatuses, productsById, 8)
+      const altLine = alts.length > 0
+        ? 'เมนูที่ยังสั่งได้ตอนนี้: ' + alts.join(', ') + ' (สั่งผ่าน https://biteme-baby.com/shop)'
+        : 'ให้บอกตามจริงว่ารอบตอนนี้ปิดรับแล้ว แล้วชวนดูเมนูที่ยังสั่งได้ที่ https://biteme-baby.com/shop'
+      return {
+        footer: '',
+        note: 'เมนู ' + blockedNames + ' → ' + blocked.map((s) => s.detail).join(' · ') +
+          ' — ห้ามบอกว่ายังสั่งได้ ห้ามแนบลิงก์ตะกร้าของเมนูนี้ ห้ามสั่งแทนลูกค้า · ' +
+          altLine + ' · ให้ถามลูกค้าเลือกเมนูที่ยังสั่งได้แทน',
+        summaryNames: [],
+      }
+    }
+
     // คอมเมนต์สาธารณะ: ไม่สร้างออเดอร์เอง/ไม่เปิดเผยข้อมูลส่วนตัว (§5.1 คงเดิม) — สรุป + ลิงก์เท่านั้น
     if (mode === 'comment') {
       return {
@@ -504,9 +546,16 @@ async function runOrderIntake(ev: SocialEventRow, userMsg: string, mode: 'messag
     // Real round of the target date (025 re-validates cutoff/capacity server-side)
     const targetDate = x.order_mode === 'PRE_ORDER' ? x.scheduled_date : bangkokDate()
     if (x.order_mode === 'PRE_ORDER') await ensureRoundsForDate(SB_URL, SERVICE, targetDate)
-    const round = await resolveActiveRound(SB_URL, SERVICE, targetDate)
+    // R82: PRE_ORDER = เช็ค cutoff/window ของรอบด้วย (mirror เว็บ) — เลยรอบ = ไม่ยิงออเดอร์ที่ต้องโดน reject
+    const round = await resolveActiveRound(SB_URL, SERVICE, targetDate, x.order_mode === 'PRE_ORDER' ? 'PRE_ORDER' : 'SAME_DAY')
     if (!round) {
-      return { footer: '', note: 'ไม่มีรอบส่งเปิดรับสำหรับ ' + targetDate + ' — แจ้งตามจริงและให้ลูกค้าเลือกวัน/รอบอื่น', summaryNames: [] }
+      return {
+        footer: '',
+        note: 'ไม่มีรอบส่งเปิดรับสำหรับ ' + targetDate + ' — แจ้งตามจริงว่าเลยรอบ/ปิดรับแล้ว ' +
+          'แล้วแนะนำเมนูอื่นที่ยังสั่งได้บนเว็บ (เมนูเซมเดย์ที่ยังเปิด และเมนูพรีออเดอร์วันถัดไปในปฎิทิน ' +
+          'ดูได้ที่ https://biteme-baby.com/shop) ห้ามแนบลิงก์ตะกร้าของเมนูที่เลยรอบ · ห้ามสั่งแทนลูกค้า',
+        summaryNames: [],
+      }
     }
     const res = await submitNewOrder(SB_URL, SERVICE, {
       items: m.matched.map((i) => ({
@@ -564,27 +613,47 @@ async function notifyOwnerAiReply(ev: SocialEventRow): Promise<void> {
  *  ทุกแถว) → ช่องทางแจ้งเตือนที่เรา control ได้ 100% = web push ของ biteme เอง
  *  (reuse วงจร m179: enqueue_notification → notification_outbox → cron bmb-notify ≤5 นาที)
  *  ผู้รับ = customer_id ของลูกค้าคนนั้น (resolve จาก customer_channel_identities · ไม่เดา)
- *  ห้ามกระทบ reply flow — wrap try/catch เสมอ · คืน outcome เพื่อบันทึกใน flags (รายงานสถานะ) */
+ *  ห้ามกระทบ reply flow — wrap try/catch เสมอ · คืน outcome เพื่อบันทึกใน flags (รายงานสถานะ)
+ *
+ *  R82 (evidence `e2e/_r81c_evidence.json` 2026-11-08):
+ *  ① บั๊ก R81 =  query ขาด `eq.` → PostgREST `400 PGRST100 "failed to parse filter"` →
+ *     โค้ดอ่านเป็น unresolved_identity ปลอม ทั้งที่ identity มีจริง 1 แถว (พิสูจน์ side-by-side)
+ *  ② PSID ตัวเดียวกันทั้งคอมเมนต์/แชต (page-scoped) → หา identity แบบไม่ผูก channel
+ *     (แถวของ platform ปัจจุบันชนะถ้ามีหลายแถว)
+ *  ③ เช็ค push_subscriptions ก่อน — ไม่มีอุปกรณ์รับได้ = ห้ามยัด outbox (คืน `no_subscription`
+ *     ตรง ๆ เพื่อให้หลักฐานอ่านออกว่า "ไม่มีเครื่องที่จะดัง" ไม่ใช่ enqueue แล้วตายเงียบ) */
 async function notifyCustomerAiReply(
   ev: SocialEventRow,
   replyText: string,
 ): Promise<{ outcome: string }> {
   try {
-    if (ev.platform !== 'FACEBOOK' || !ev.sender_id) return { outcome: 'skip_not_comment' }
+    if ((ev.platform !== 'FACEBOOK' && ev.platform !== 'MESSENGER') || !ev.sender_id) return { outcome: 'skip_no_sender' }
     const ident = await rest(
       'GET',
-      `/rest/v1/customer_channel_identities?channel=eq.${encodeURIComponent(ev.platform)}&external_user_id=${encodeURIComponent(ev.sender_id)}&select=customer_ref&limit=1`,
+      `/rest/v1/customer_channel_identities?external_user_id=eq.${encodeURIComponent(ev.sender_id)}` +
+        '&channel=in.(FACEBOOK,MESSENGER)&select=customer_ref,channel&limit=5',
     )
-    const ref = ident.status === 200 && Array.isArray(ident.j) && ident.j[0] ? String(ident.j[0].customer_ref || '') : ''
+    const rows = ident.status === 200 && Array.isArray(ident.j)
+      ? ident.j as Array<{ customer_ref?: unknown; channel?: unknown }>
+      : []
+    const hit = rows.find((r) => String(r.channel || '') === ev.platform) || rows[0]
+    const ref = hit && hit.customer_ref ? String(hit.customer_ref) : ''
     if (!ref) return { outcome: 'unresolved_identity' }
     const cust = await rest('GET', `/rest/v1/customers?user_id=eq.${encodeURIComponent(ref)}&select=id&limit=1`)
     const customerId = cust.status === 200 && Array.isArray(cust.j) && cust.j[0] ? String(cust.j[0].id || '') : ''
     if (!customerId) return { outcome: 'unresolved_customer' }
+    const sub = await rest(
+      'GET',
+      `/rest/v1/push_subscriptions?customer_id=eq.${encodeURIComponent(customerId)}&select=id&limit=1`,
+    )
+    const hasDevice = sub.status === 200 && Array.isArray(sub.j) && sub.j.length > 0
+    if (!hasDevice) return { outcome: sub.status === 200 ? 'no_subscription' : 'sub_check_http_' + sub.status }
+    const isMessage = ev.event_type === 'message'
     const q = await rest('POST', '/rest/v1/rpc/enqueue_notification', {
-      p_event_key: `ai-comment-reply-${ev.event_id}`.slice(0, 200),
+      p_event_key: `${isMessage ? 'ai-message-reply' : 'ai-comment-reply'}-${ev.event_id}`.slice(0, 200),
       p_customer_id: customerId,
       p_category: 'Transactional',
-      p_title: '🔔 Bite ตอบคอมเมนต์ของคุณแล้ว',
+      p_title: isMessage ? '💬 Bite ตอบข้อความของคุณแล้ว' : '🔔 Bite ตอบคอมเมนต์ของคุณแล้ว',
       p_body: replyText.slice(0, 300),
       p_url: 'https://biteme-baby.com',
     })
@@ -606,9 +675,11 @@ async function fallbackIntakeReply(ev: SocialEventRow, footer: string, reason: s
   const priorFlags = (ev.ai_guardrail_flags || {}) as Record<string, unknown>
   const sent = await sendReply(ev, footerText, { skipDm: !!priorFlags.dm_attempted_at })
   const dmStamp = sent.dmTried ? stamp : (priorFlags.dm_attempted_at ? String(priorFlags.dm_attempted_at) : null)
-  const notify = sent.ok && ev.event_type === 'comment' && !sent.dmId && ev.platform === 'FACEBOOK'
+  // R82: แจ้งทั้งคอมเมนต์และแชต (Owner: "DM แชทใช้ได้แต่เครื่องลูกค้าไม่ดัง") —
+  // ผล DM ยังบันทึกใน dm_reply_id/dm_error แยกกับ push_notify เหมือนเดิม
+  const notify = sent.ok && (ev.event_type === 'comment' || ev.event_type === 'message')
     ? await notifyCustomerAiReply(ev, footerText)
-    : { outcome: sent.dmId ? 'dm_ok' : 'not_applicable' }
+    : { outcome: 'not_applicable' }
   await rest('PATCH', `/rest/v1/social_events?id=eq.${encodeURIComponent(ev.id)}`, {
     ai_model: null,
     ai_reply_text: footerText,
@@ -711,10 +782,18 @@ async function processEvent(ev: SocialEventRow): Promise<{ id: string; result: s
   // บริบทสมบูรณ์ทุกช่องทาง (Owner 2026-10-17): persona ชุดเดียวกับเว็บ/เสียง
   // + ข้อมูลร้านจริงจาก DB (ห้ามมโน) + กติกาตอบต่อเนื่อง + R57 กติกาข้อมูลจริงตามโพส/เว็บ
   const shopCtx = await getShopContext({ sbUrl: SB_URL, serviceKey: SERVICE })
+  // R82 (Owner 2026-11-08): บล็อกข้อมูล "รอบ/เวลา/ประเภทออเดอร์" สด + กฎแนะนำเมนูเมื่อเลยรอบ
+  const winData = await loadOrderWindow(SB_URL, SERVICE)
+  const orderWindowBlock = buildOrderWindowPrompt(
+    winData ? winData.schedule : null,
+    winData ? winData.rounds : null,
+    winData ? winData.products : null,
+  )
   const draftSystem =
     baseSystem + '\n\n' + BITE_PERSONA_SEGMENT + '\n\n' + REPLY_CONTINUITY_RULES + '\n\n' + REPLY_GROUNDING_RULES +
     '\n\n--- ข้อมูลร้านจริง (DATA — ตอบจากนี้เท่านั้น ห้ามมโน) ---\n' +
-    (shopCtx || 'ยังดึงข้อมูลร้านไม่ได้ในตอนนี้ — ให้บอกตามจริงว่าไม่พบข้อมูล และชวนดูเมนูที่ https://biteme-baby.com/shop')
+    (shopCtx || 'ยังดึงข้อมูลร้านไม่ได้ในตอนนี้ — ให้บอกตามจริงว่าไม่พบข้อมูล และชวนดูเมนูที่ https://biteme-baby.com/shop') +
+    orderWindowBlock
   // R57: ลองใหม่ 1 ครั้งเมื่อคำตอบไม่ผ่าน validate (parse / semantic / สรุปไม่ตรงรายการจริง)
   // — ส่งเหตุผลกลับให้โมเดลแก้ · ยังไม่ผ่านแต่ระบบมี footer จริง = ส่ง footer (ไม่เงียบหาย)
   let draft: { ok: boolean; model?: string; text?: string; status?: string; reason?: string } = { ok: false }
@@ -829,9 +908,11 @@ async function processEvent(ev: SocialEventRow): Promise<{ id: string; result: s
   }
   // H1 → ช่องทางแจ้งเตือนที่เรา control ได้ 100%: DM ของเฟซตาย (A1b = http_400 ทุกแถว)
   //      → เสริม web push ลูกค้าผ่าน m179 enqueue_notification (ผู้รับ = customer_id จริง)
-  const notify = ev.event_type === 'comment' && !sent.dmId && ev.platform === 'FACEBOOK'
+  // R82: แจ้งทั้งคอมเมนต์และแชต (Owner: "DM ตอบได้แต่เครื่องลูกค้าไม่ดัง") —
+  //      ภายในเช็ค subscription ก่อน (no_subscription = ไม่มีเครื่องรับได้ — รายงานตรง ๆ)
+  const notify = (ev.event_type === 'comment' || ev.event_type === 'message') && ev.sender_id
     ? await notifyCustomerAiReply(ev, finalText)
-    : { outcome: sent.dmId ? 'dm_ok' : 'not_applicable' }
+    : { outcome: 'not_applicable' }
   await rest('PATCH', `/rest/v1/social_events?id=eq.${encodeURIComponent(ev.id)}`, {
     reply_status: 'sent',
     reply_provider_id: sent.providerId,

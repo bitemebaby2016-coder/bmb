@@ -53,6 +53,20 @@
 > **Defect ใหม่รอบนี้ (จด `AI_WORK_STATE.md`):** ① **A3/A4 = เปิดบราว์เซอร์ภายนอกไม่ออก** (FB WebView เครื่อง Owner บล็อก intent + ⋮ → **งานหลัก R79 = ปุ่ม Smart Escape ต่อออกได้จริง**) ② **B6 = แจ้งเตือนคอมเมนต์ไม่ถึงคนตอบโพสต์** (R76 private reply — สอบกลับรอบหน้า) ③ **C9 = GPS ใน FB = ข้อจำกัด platform** (ทางออก = ปักหมุดเอง ✓)
 > **D-1 ตัดสินแล้ว (Owner 2026-11-07):** **"โต้ตอบ = FB ฝั่งเดียว"** — feed หน้าเว็บ = read-only ถาวร · ไลก์/คอมเม้นอยู่ที่ Facebook (social-ai ตอบ) · **BLK-6 ปิด = OPEN QUESTION หมด** · D-2 = คง list โมเดล 7 ชื่อ · D-3 = คงว่าง (C-1 เดิม) · **D-4 = สั่งทำ** (แจ้งเตือนเมื่อบอตโพสต์/ตอบ — ปลดบล็อก B5)
 
+> ## 🔧 R82 — แก้แล้ว 2026-11-08 (ตามผล Owner รอบที่แล้ว · เหลือ retest 3 ชุด + คำถามผูก identity)
+> **Evidence production READ-ONLY (`e2e/_r81b/_r81c/_r81d/_r81e/_r82f_evidence.json`):**
+> - **① push ไม่ถึงลูกค้า = บั๊กจริง 2 ชั้น:** R81 query ขาด `eq.` → PostgREST `400 PGRST100` → `unresolved_identity` ปลอม (มี `eq.` = เจอ identity 1 แถว · พิสูจน์ side-by-side) · **ต่อให้ผ่าน = บัญชีที่ identity ชี้ (`ext-…@channels.bmb.internal`) ไม่มี push subscription เลย** (0 แถว) → เครื่องไม่มีทางดัง · อุปกรณ์ที่สมัคร push จริง = บัญชีอื่น (Siam Portal Customer Android สำเร็จ 7 พ.ย. / Self Print / ADMIN_BMB) · สายแชตถูกข้ามไม่ยิง web push (`dm_ok`)
+> - **② ข้อมูลรอบ/เวลา/ประเภทผิด = AI ไม่เคยเช็ค cutoff:** คอมเมนต์ 09:58 BKK "ยังสั่งได้" + ลิงก์ตะกร้า ทั้งที่ cutoff รอบเที่ยง 09:00 ผ่านแล้ว (เว็บ R77 ซ่อนเมนูนั้นไปแล้ว) · `resolveActiveRound` เลือกแบบไม่ดู cutoff · prompt ไม่มีบล็อกแยก SAME_DAY vs PRE_ORDER
+> **สิ่งที่แก้ (code):** ① `notifyCustomerAiReply` = `eq.` + หา identity ไม่ผูก channel + **เช็ค subscription ก่อน** (`no_subscription` = รายงานตรง ๆ) + **แจ้งทั้งคอมเมนต์และแชต** ② **`_shared/orderWindow.ts` ใหม่** (mirror R77/R141 เป๊ะ · ZERO-FAKE) ③ `runOrderIntake` = **เมนูเลยรอบ → ไม่มีลิงก์ตะกร้า + บอกเหตุผล + แนะนำเมนูที่ยังสั่งได้** (ทั้งคอมเมนต์/แชต · กันออเดอร์โดน reject ด้วย) ④ `resolveActiveRound` mode PRE_ORDER = กรองรอบเลย cutoff · ⑤ prompt += **ORDER WINDOW สด** (ประเภทออเดอร์/เวลา/เมนูเลยรอบ vs ยังจองได้ + RULE Owner) · store status += ป้ายปิดรับพรีออเดอร์ต่อรอบ
+> **Deploy (2026-11-08 03:30Z):** EF 4 ฟังก์ชัน exit=0 (`e2e/_r82_deploy.log`) + smoke HTTP 200 boot_ok (`_r82_smoke.json`) · gates 4/4 (vitest 220 ไฟล์/2,239 tests 0 fail — `e2e/_r82_gates.log`)
+> **ทดสอบโดย Owner (live · Ctrl+Shift+R ครั้งเดียว):**
+> **A2' — แจ้งเตือนถึงเครื่อง (ต้องการคำตอบ 2 อย่าง):**
+> ① คอมเมนต์จากบัญชี FB ที่ "ผูกบัญชี biteme บนมือถือแล้ว" → **เครื่องดัง/Notification "🔔 Bite ตอบคอมเมนต์ของคุณแล้ว" ≤5 นาที** · ทีมจะดู `flags.push_notify` ประกอบ (ต้องไม่ใช่ `unresolved_identity` อีก)
+> ② ถ้าเครื่องที่ใช้ทดสอบ **log in บัญชีอะไรอยู่** ส่งชื่อ/เบอร์มา (ดูได้จากเมนูโปรไฟล์ในเว็บ) — เพราะ identity คอมเมนต์ FB ชี้บัญชี `ext-` ที่ไม่มีเครื่อง → **ทีมจะผูกให้ถ้า Owner สั่ง** (มี script รอ = DRY RUN · production write)
+> **B8' — เมนูพรีออเดอร์เลยรอบ (เคส ไก่ทอด):** คอมเมนต์สั่งเมนูพรีออเดอร์หลังหมดรอบ (หรือถาม "ยังสั่งได้ไหม") → ① คำตอบบอก **"ปิดรับแล้ว" + เวลาปิดรับจริง** ② **ไม่มีลิงก์ตะกร้าของเมนูนั้น** ③ **แนะนำเมนูอื่นที่ยังสั่งได้** (เซมเดย์ที่ยังเปิด + พรีออเดอร์วันถัดไปในปฎิทิน)
+> **B9' — ข้อมูลเวลา/ประเภทถูก:** ถามเรื่องส่ง/รอบ/เวลา → คำตอบ **แยกชัด "ส่งวันนี้ (Same Day)" vs "พรีออเดอร์ (Pre-Order)"** + เวลา/รอบตรงกับจริง · แชตตอบแล้ว = มี push ถึงเครื่องด้วย (ถ้าบัญชีผู้ส่งมี subscription)
+> **กติกาคงเดิม (ห้ามพลาดซ้ำ):** ห้าม nav ไป intent/unknown scheme (R76) · ห้าม auto intent (R77) · ห้าม auto share (R79)
+
 > ## 🔧 R81 — แก้แล้ว 2026-11-08 (evidence-first · เหลือ Owner ทดสอบ live: A2 + B1 + B7)
 > **Evidence production READ-ONLY (`e2e/_r81_a1_evidence.json` · `_r81_a1b` · `_r81_a1c`):**
 > - **B6/H2 ยืนยัน:** `private_replies` = `http_400 Unsupported post request. Object with ID … does not exist` **5/5 แถวคอมเมนต์จริง** (ทั้งที่คำตอบสาธารณะต่อ comment id เดียวกัน = `reply_status=sent`) → **DM ของเฟซตาย = สาเหตุที่แจ้งเตือนไม่ถึงลูกค้า**
