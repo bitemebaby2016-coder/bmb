@@ -20,7 +20,7 @@ import { listContentApprovals, reviewContent, type ContentApprovalRow } from '@/
 import { autoScheduleApprovedPosts } from '@/lib/marketingAutoSchedule'
 import { flashTo } from '@/lib/uiFlash'
 import { getBusinessSettings, setBusinessSetting } from '@/lib/bmbAdminApi_settings'
-import { downscaleImageFile, PRODUCT_IMAGE_MAX_SIDE } from '@/lib/bmbAdminApi_media'
+import { compressToWebLimits, PRODUCT_IMAGE_MAX_SIDE } from '@/lib/bmbAdminApi_media'
 
 type Tab = 'overview' | 'planner' | 'studio' | 'approval' | 'calendar' | 'rules' | 'analytics' | 'ai'
 const TABS: Array<{ id: Tab; label: string }> = [
@@ -324,7 +324,8 @@ export function AdminMarketing() {
     setBrowseBusy(true)
     try {
       // IMG-1: ย่ออัตโนมัติก่อนขึ้นคลัง (เหมือนรูปเมนู — 1024px/q0.82 · เล็กพอ = คืนเดิม)
-      const sized = await downscaleImageFile(file)
+      // R92 (Owner 2026-11-09): รูปที่เอามาใช้ = บังคับ 300×300 + ≤100KB อัตโนมัติ (เว็บ + supabase)
+      const sized = await compressToWebLimits(file)
       const safe = (sized.name || 'image.png').replace(/[^\w.-]+/g, '_').slice(-60)
       const path = `marketing/browse-${Date.now()}-${safe}`
       const { error } = await supabase.storage.from('bmb-images').upload(path, sized, { contentType: sized.type, upsert: false })
@@ -548,9 +549,12 @@ export function AdminMarketing() {
       ctx.restore()
       const blob = await new Promise<Blob | null>((r) => canvas.toBlob(r, 'image/png'))
       if (!blob) return srcUrl
+      // R92 (Owner 2026-11-09): บังคับ 300×300 + ≤100KB ก่อนเก็บลง supabase (ภาพเจนหลังประกบลายน้ำ)
+      const wmFile = new File([blob], `wm-${Date.now().toString(36)}.png`, { type: 'image/png', lastModified: Date.now() })
+      const sized = await compressToWebLimits(wmFile)
       // R55: wm ลงโฟลเดอร์หมวดเดียวกับไฟล์ต้นฉบับ (แยกอัลบั้มตามหมวดหมู่)
-      const path = `ai-generated/${KIND_PRESETS_KEYS.includes(kind) ? kind : 'menu'}/wm-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}.png`
-      const { error } = await supabase.storage.from('bmb-images').upload(path, blob, { contentType: 'image/png', upsert: false })
+      const path = `ai-generated/${KIND_PRESETS_KEYS.includes(kind) ? kind : 'menu'}/wm-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}${sized.name.endsWith('.jpg') ? '.jpg' : '.png'}`
+      const { error } = await supabase.storage.from('bmb-images').upload(path, sized, { contentType: sized.type, upsert: false })
       if (error) return srcUrl
       return supabase.storage.from('bmb-images').getPublicUrl(path).data.publicUrl
     } catch {

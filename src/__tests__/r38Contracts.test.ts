@@ -69,7 +69,8 @@ describe('R38 · AI Studio: browse ไฟล์รูปเมนู → ชุ�
     expect(marketingSrc).toContain('async function handleBrowseImage')
     // IMG-1 (Owner 2026-11-03 — requirement เปลี่ยน: ทุกภาพที่ระบบเอามาใช้ = ลดขนาดอัตโนมัติ):
     // เดิม assert `.upload(path, file` (raw) → ตอนนี้บังคับย่อ ก่อน upload (เข้มขึ้น ไม่ใช่อ่อนลง)
-    expect(marketingSrc).toContain('const sized = await downscaleImageFile(file)')
+    // R92 (Owner 2026-11-09): บังคับ 300×300 + ≤100KB → compressToWebLimits (แทน downscaleImageFile เดิม)
+    expect(marketingSrc).toContain('const sized = await compressToWebLimits(file)')
     expect(marketingSrc).toContain("storage.from('bmb-images').upload(path, sized")
     expect(marketingSrc).toContain('setImages((prev) => [...prev, url])')
     expect(marketingSrc).toContain('type="file"')

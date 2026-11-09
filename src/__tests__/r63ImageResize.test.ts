@@ -12,11 +12,12 @@ import marketingSrc from '../pages/admin/AdminMarketing.tsx?raw'
 describe('R63 IMG-1 · ทุก path ที่ภาพเข้าระบบย่ออัตโนมัติก่อน upload', () => {
   it('media lib = จุดกลาง: uploadMediaAsset + uploadRegisteredAsset เรียก downscale ก่อน upload (Registered = ย่อก่อน validate)', () => {
     expect(mediaSrc).toContain('export async function downscaleImageFile')
-    // uploadMediaAsset: sized ก่อน build path
-    expect(mediaSrc).toMatch(/uploadMediaAsset\([\s\S]{0,400}?const sized = await downscaleImageFile\(file\)/)
+    expect(mediaSrc).toContain('export async function compressToWebLimits') // R92: บังคับ 300×300/100KB
+    // uploadMediaAsset: sized ก่อน build path (R92 = compressToWebLimits)
+    expect(mediaSrc).toMatch(/uploadMediaAsset\([\s\S]{0,400}?const sized = await compressToWebLimits\(file\)/)
     expect(mediaSrc).toMatch(/uploadMediaAsset\([\s\S]{0,700}?\.upload\(path, sized/)
     // uploadRegisteredAsset: ย่อก่อน validate (5MB cap = ผ่านหลังย่อ แบบ T-C3)
-    expect(mediaSrc).toMatch(/uploadRegisteredAsset\([\s\S]{0,400}?const sized = await downscaleImageFile\(file\)[\s\S]{0,200}?validateImageFile\(sized\)/)
+    expect(mediaSrc).toMatch(/uploadRegisteredAsset\([\s\S]{0,400}?const sized = await compressToWebLimits\(file\)[\s\S]{0,200}?validateImageFile\(sized\)/)
     expect(mediaSrc).toMatch(/uploadRegisteredAsset\([\s\S]{0,900}?\.upload\(path, sized/)
   })
 
@@ -32,8 +33,8 @@ describe('R63 IMG-1 · ทุก path ที่ภาพเข้าระบบ
     expect(paymentSrc).not.toMatch(/uploadPaymentSlip\([\s\S]{0,700}?\.upload\(path, file,/)
   })
 
-  it('AdminMarketing browse = ย่อก่อนขึ้น marketing/ · AdminOnboarding logo = ย่อก่อนขึ้น brands/', () => {
-    expect(marketingSrc).toContain('const sized = await downscaleImageFile(file)')
+  it('AdminMarketing browse = ย่อก่อนขึ้น marketing/ (R92 = 300×300/100KB) · AdminOnboarding logo = ย่อก่อนขึ้น brands/', () => {
+    expect(marketingSrc).toContain('const sized = await compressToWebLimits(file)')
     expect(marketingSrc).toMatch(/marketing\/browse-\$\{Date\.now\(\)\}-\$\{safe\}[\s\S]{0,200}?\.upload\(path, sized/)
     expect(onboardingSrc).toContain('const sized = await downscaleImageFile(logoFile)')
     expect(onboardingSrc).toMatch(/\.upload\(path, sized/)

@@ -1,6 +1,13 @@
 ## 🔒 SESSION CLOSE 2026-11-09 — ยกทั้งหมดไปทดสอบ live · เซสชั่นใหม่รับรายการต่อ
 
 > **กติกาเซสชั่นใหม่:** อ่าน `docs/BMB_REMAIN_TESTS_LIVE_2026-11-08.md` = **รายการเดียวที่ต้องรัน** (fail = ลง defect ใหม่ที่นี่ + two-try) · สถานะโค้ด = `docs/BMB_MASTER_STATUS.md`
+## R92 (Owner 2026-11-09 — "ต่องานก่อนย้าย" 3 ข้อ)
+1. **เจนรูปไม่ได้**: สืบแล้ว — bucket `bmb-images` **ไม่ได้เปลี่ยนชื่อ** (Management API) · EF boot ปกติ · secrets ครบ → จุดต้องสงสัย = **`IMAGE_GEN_MODELS` secret** (override ลำดับโมเดล) → **รีเซ็ตเป็น default ที่ r55 probe ผ่านแล้ว** (`qwen/qwen-image-2.1-pro,bytedance-seed/seedream-5-0-flash` · POST 201 · ใช้ได้ทันที) → **Owner ลองเจนใหม่** · ถ้าอีก = ต้องการ error toast บนหน้า
+2. **วลี guide**: "เปิดในเบราว์เซอร์เริ่มต้น (Open in Browser)" → **"เปิดผ่าน Chrome หรือ Safari เพื่อการใช้งานที่สมบูรณ์ที่สุด"** (iOS+Android · InAppBrowserNotice)
+3. **บังคับรูปที่เอามาใช้ 300×300 / ≤100KB อัตโนมัติ**: ใหม่ `compressToWebLimits()` ใน bmbAdminApi_media · ใช้ 4 จุด (uploadMediaAsset · uploadRegisteredAsset · AdminMarketing browse · ภาพเจนหลัง wm ก่อนลง supabase) · ไม่แตะ 1600px (สลิป/GPS) และ 1024px (รูปเมนู)
+- **state**: code เสร็จ · gates รันอยู่ · commit msg `e2e/_r92_commit_msg.txt`
+
+
 
 ### ✅ ปิดแล้วในเซสชั่นนี้ (Owner ยืนยันผ่าน/มีหลักฐาน deploy จริง)
 - **R89b/c** ยุบ+เรียงรีวิว `/shop` — Owner เห็น `Verified Purchase` ขึ้นแล้ว (ภาพ 14:05–14:38 น.) · fix RPC `status` (`d9e975d`)

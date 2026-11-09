@@ -39,7 +39,8 @@ export async function uploadMediaAsset(
 ): Promise<MediaAssetRow | null> {
   // IMG-1 (Owner 2026-11-03): ทุกภาพที่ระบบเอามาใช้ = ย่ออัตโนมัติก่อนขึ้นคลัง
   // (idempotent — ไฟล์ที่ย่อแล้ว/เล็กพอ = คืนเดิม · GIF/decode ไม่ได้ = zero-fake คืนเดิม)
-  const sized = await downscaleImageFile(file)
+  // R92 (Owner 2026-11-09): บังคับ 300×300 + ≤100KB สำหรับรูปที่เอามาใช้ (ทั้งเว็บ + supabase)
+  const sized = await compressToWebLimits(file)
   const path = `uploads/${Date.now()}-${sanitizeName(sized.name)}`
   const { data: up, error: upErr } = await supabase.storage
     .from(MEDIA_BUCKET)
@@ -167,6 +168,66 @@ export async function downscaleImageFile(
     if (!blob) return file
     const base = file.name.replace(/\.[^.]+$/, '') || 'menu'
     return new File([blob], `${base}-${w}.jpg`, { type: 'image/jpeg', lastModified: Date.now() })
+  } catch {
+    return file
+  } finally {
+    bmp.close?.()
+  }
+}
+
+/** R92 (Owner 2026-11-09): บังคับรูปที่แอดมิน "เอามาใช้" = ไม่เกิน 300×300 px + ไม่เกิน 100KB
+ *  (ทั้งลงเว็บและเก็บใน supabase — ย่ออัตโนมัติก่อน upload เสมอ)
+ *  · ต่างจาก downscaleImageFile: บีบจนเข้าเกณฑ์จริง (quality ลงทีละ step → ย่อสัดส่วนซ้ำ)
+ *  · คืนไฟล์เดิมเมื่อ decode/GIF ไม่ได้ (zero-fake — ไม่ทิ้งรูป) */
+export const WEB_USE_MAX_SIDE = 300
+export const WEB_USE_MAX_BYTES = 100 * 1024 // 100KB (ช่วง 50–100KB ที่ Owner อนุญาต — เอาที่ปลอดภัยสุด)
+
+export async function compressToWebLimits(
+  file: File,
+  maxSide: number = WEB_USE_MAX_SIDE,
+  maxBytes: number = WEB_USE_MAX_BYTES,
+): Promise<File> {
+  if (file.type === 'image/gif') return file
+  let bmp: ImageBitmap | null = null
+  try {
+    bmp = await createImageBitmap(file, { imageOrientation: 'from-image' })
+  } catch { bmp = null }
+  if (!bmp) return file
+  try {
+    const scale = Math.min(1, maxSide / Math.max(bmp.width, bmp.height))
+    const w = Math.max(1, Math.round(bmp.width * scale))
+    const h = Math.max(1, Math.round(bmp.height * scale))
+    const canvas = document.createElement('canvas')
+    canvas.width = w
+    canvas.height = h
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return file
+    ctx.drawImage(bmp, 0, 0, w, h)
+    const enc = (q: number, cw = w, ch = h): Promise<Blob | null> =>
+      new Promise((resolve) => {
+        if (cw !== w || ch !== h) {
+          canvas.width = cw
+          canvas.height = ch
+          ctx.drawImage(bmp as ImageBitmap, 0, 0, cw, ch)
+        }
+        canvas.toBlob((b) => resolve(b), 'image/jpeg', q)
+      })
+    let quality = 0.9
+    let blob = await enc(quality)
+    while (blob && blob.size > maxBytes && quality > 0.4) {
+      quality -= 0.15
+      blob = await enc(quality)
+    }
+    // ยังใหญ่ → ย่อสัดส่วนต่อ 75% แล้วบีบซ้ำ (300→225 ยังพอใช้บนเว็บ)
+    if (blob && blob.size > maxBytes) {
+      const w2 = Math.max(1, Math.round(w * 0.75))
+      const h2 = Math.max(1, Math.round(h * 0.75))
+      blob = await enc(0.6, w2, h2)
+      if (blob && blob.size > maxBytes) blob = await enc(0.45, Math.round(w * 0.6), Math.round(h * 0.6))
+    }
+    if (!blob || blob.size > maxBytes) return file // ยังไม่ผ่าน = คืนเดิม (ไม่ทิ้งรูป — ดีกว่า upload ไม่ได้)
+    const base = file.name.replace(/\.[^.]+$/, '') || 'img'
+    return new File([blob], `${base}-web.jpg`, { type: 'image/jpeg', lastModified: Date.now() })
   } catch {
     return file
   } finally {
@@ -307,7 +368,8 @@ export async function uploadRegisteredAsset(
   opts: UploadAssetOptions = {},
 ): Promise<RegistryAssetRow | null> {
   // IMG-1: ย่อก่อน validate — รูปใหญ่ (เช่น 5.8MB เจน) จะผ่าน 5MB cap หลังย่อ (แบบ T-C3)
-  const sized = await downscaleImageFile(file)
+  // R92 (Owner 2026-11-09): บังคับ 300×300 + ≤100KB สำหรับรูปที่เอามาใช้ (asset registry)
+  const sized = await compressToWebLimits(file)
   const v = validateImageFile(sized)
   if (!v.ok) return null
   const { data: user } = await supabase.auth.getUser()
