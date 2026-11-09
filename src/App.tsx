@@ -6,6 +6,7 @@ import { isAdminCapableRole } from './lib/adminUi'
 import { Layout } from './components/layout/Layout'
 import { ErrorBoundary } from './components/ErrorBoundary'
 import { AdminNav } from './components/admin/AdminNav'
+import { InAppBrowserBanner } from '@/components/InAppBrowserBanner'
 // Bite / AI accessibility lives in BottomNav ('Bite' → /ai-chat) + BiteHero quick actions (UI v5)
 import { SeoHelmet, TrackOrderSeo, ReviewDetailSeo, PaymentSeo } from './components/SeoHelmet'
 import { MascotBadge } from './components/MascotBadge'
@@ -247,8 +248,9 @@ export default function App() {
         <Route path="/talk-to-bite" element={<SeoHelmet seo={getTalkToBiteMeta()} />} />
         <Route path="/voice-demo" element={<SeoHelmet seo={getVoiceDemoMeta()} />} />
         <Route path="/rider" element={<SeoHelmet seo={getRiderMeta()} />} />
-      </Routes>
-      
+</Routes>
+       
+      <InAppBrowserBanner>
       <Routes>
         {/* Public Routes — Home eager (LCP); the rest Suspense-wrapped lazy chunks */}
         <Route path="/" element={<Suspense fallback={<LoadingSpinner />}><Layout><TalkToBiteHomePage /></Layout></Suspense>} />
@@ -347,7 +349,8 @@ export default function App() {
         <Route path="/admin/ai-studio" element={<Navigate to="/admin/marketing-promotions?tab=studio" replace />} />
         {/* Catch all */}
         <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
+</Routes>
+      </InAppBrowserBanner>
       
       {/* Bite / AI entry moved to BottomNav ('Bite') + BiteHero quick actions (UI v5) */}
     </ErrorBoundary>
