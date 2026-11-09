@@ -5,6 +5,7 @@
 1. **ปุ่มดูรีวิวเต็มใต้ปุ่มสั่ง/จอง** (`CustomerReviewCard` CTA → `/reviews/:productId` — route มีแล้ว App.tsx:277 · `loadReviewsFeed(productId)` กรองตามเมนูจริง · ผูก `product.id` = เมนูเพิ่ม/เปลี่ยนอนาคตขึ้นเอง · style `.review-see-all` ใน index.css)
 2. **โปรโมชั่นหมดอายุไม่โชว์** — `getHomePromotionsFromRows` (homeProviders) เพิ่มกรอง `start_date/end_date` ด้วย `bangkokDateKey` (กติกาเดียวกับ `listAvailableCoupons` — วันไทย) + `is_active` · `/promotions` กรองอยู่แล้ว (`isPromoLiveNow`) ไม่แตะ
 - **state**: code เสร็จ · gates รันอยู่ (launcher ครั้งเดียว) · commit msg `e2e/_r90_commit_msg.txt`
+- **Owner retest: งาน 2 ผ่าน ("หายแล้ว") · งาน 1 "ไม่มี"** → **root cause = CSS clip** (ไม่ใช่ JS): `.review-card-3d` aspect 4/5 + `overflow:hidden` · glass `top:36%→bottom:0` ตายตัว — เนื้อหาเดิมพอดีขอบ → ปุ่มใต้ CTA ถูกตัดทั้งหมด (marker `review-see-all` อยู่ใน bundle ตาม probe จริง) → **fix**: glass `top:30%` + gap/padding กระชับ (คืน ~50px) + `.review-see-all` ย่อ + guard fallback `review.productId` · commit msg `e2e/_r90fix_commit_msg.txt`
 
 ## R89b/c + two-try + verified fix (2026-11-09 ทำแล้ว · push+deploy ครบ)
 ### 🔴 ROOT CAUSE "รีวิวอนุมัติไม่ขึ้นจริง" — แก้แล้ว รอ gates+push (2026-11-09 · Owner โกรธ "ขี้โม้ 3 รอบ" = รับผิด)

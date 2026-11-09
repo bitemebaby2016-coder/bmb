@@ -140,10 +140,11 @@ export function CustomerReviewCard({ review, product, mode, deepLinkTo, ctaLabel
 
         {/* R90 (Owner 2026-11-09): ทางเข้าใต้ปุ่มสั่ง/จอง → รีวิวเต็มของเมนูนั้น
             (หน้า /reviews/:productId = กรองตาม product_id จริง — เมนูเพิ่ม/เปลี่ยน
-            ในอนาคตขึ้นเองอัตโนมัติ เพราะผูก product.id ไม่ผูกชื่อ) */}
-        {product?.id && (
+            ในอนาคตขึ้นเองอัตโนมัติ เพราะผูก product.id ไม่ผูกชื่อ)
+            · fallback: product ยังไม่ map (products โหลดช้า/ไม่เจอ) → ใช้ review.productId ได้เลย */}
+        {(product?.id || review.productId) && (
           <Link
-            to={`/reviews/${product.id}`}
+            to={`/reviews/${product?.id ?? review.productId}`}
             className="review-see-all"
             data-testid="review-see-all"
             aria-label={`ดูรีวิวทั้งหมดของ ${review.foodName}`}
