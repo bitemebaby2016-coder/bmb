@@ -1,5 +1,21 @@
-## 🟡 R89b — แก้ "เซกชันซ้ำ" บน `/shop` เสร็จ (ถูกหน้า · 2026-11-09) · gates 4/4 · push `d7e53e4` · live = `R89B_LIVE_NEW_BUILD_OK` — **รออย่างเดียว: Owner hard reload `/shop` รีเทสต์ แล้วค่อยปิด R89**
-> อ่านบล็อกนี้เท่านั้น (บล็อก 🔴 เดิมล้าสมัยแล้ว · ห้ามถือว่า R89 ปิดจน Owner ยืนยันภาพ)
+## 🔒 SESSION CLOSE 2026-11-09 — ยกทั้งหมดไปทดสอบ live · เซสชั่นใหม่รับรายการต่อ
+
+> **กติกาเซสชั่นใหม่:** อ่าน `docs/BMB_REMAIN_TESTS_LIVE_2026-11-08.md` = **รายการเดียวที่ต้องรัน** (fail = ลง defect ใหม่ที่นี่ + two-try) · สถานะโค้ด = `docs/BMB_MASTER_STATUS.md`
+
+### ✅ ปิดแล้วในเซสชั่นนี้ (Owner ยืนยันผ่าน/มีหลักฐาน deploy จริง)
+- **R89b/c** ยุบ+เรียงรีวิว `/shop` — Owner เห็น `Verified Purchase` ขึ้นแล้ว (ภาพ 14:05–14:38 น.) · fix RPC `status` (`d9e975d`)
+- **R90 งาน 2** โปรโมชั่นหมดอายุไม่โชว์ — Owner: **"หายแล้ว"** ✅
+- **R90 งาน 1** ลิงก์ `/reviews/:productId` — Owner: **"ลิ้งไปหน้ารีวิวถูกต้อง"** ✅ (ปุ่มใต้ CTA fix CSS clip `d43d5f0`)
+- **R91** สเกลการ์ดเท่ากันทุกใบ + mobile-first — deploy แล้ว (`a62877c` · CSS proof `CARD_FULL=true`) → **รอ hard reload ยืนยัน**
+- **two-try Attempt 1** D2 (prompt SAME_DAY) · D5 (ตัดรอบ hardcode) · §T-A (retry 2.5s) — push `c9f77aa` + **EF deploy exit=0** → **รอ retest RT-5.1/5.4/3.6/§T-A**
+- **D4 วิธีใหม่** ปุ่ม `intent://` native-click + guide ⋯ Open in Browser (`d9e975d`) → **รอ retest จาก DM/คอมเมนต์**
+
+### ⏳ ที่เหลือทั้งหมด = เซสชั่นใหม่ (ตาม `BMB_REMAIN_TESTS_LIVE_2026-11-08.md`)
+- retest ข้อค้าง: D2 · D5 · §T-A · D4 · R91 (hard reload) · ปุ่มดูรีวิวใต้ CTA
+- ยังไม่รัน: RT-4 · RT-HOURS · RT-6.2 · RT-6.1 (ยกเว้น E1 = waived) · RT-6.4B2 (~11:00) · CAP-14 + CAP 7·8·13·16·17·19
+- **RT-8 = ยังห้ามปิด** · gates ทุกรอบเซสชั่นนี้ = 4/4 รันครั้งเดียวผ่านทุกครั้ง · probes = `e2e/_tt_dbcheck.cjs` · `_tt_verify2.cjs` · `_r91_probe.cjs` · `_r90fix_css.cjs`
+
+---
 
 ## R91 (Owner 2026-11-09 — "สเกลไม่เท่ากันทำให้เท่ากัน + mobile first · ลิงก์รีวิวถูกแล้ว")
 - **ลิงก์ `/reviews/:id` = Owner ยืนยันถูกต้อง** ✅ ไม่แตะ
