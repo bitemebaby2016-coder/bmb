@@ -1,4 +1,9 @@
 // ============================================
+// Bite Me Baby — InAppBrowserNotice (DEPRECATED - ใช้ InAppBrowserBanner แทน)
+// ============================================
+// ไฟล์นี้เก็บไว้เฉพาะ backward compatibility / reference
+// ใช้งานจริงอยู่ที่ src/components/InAppBrowserBanner.tsx + src/hooks/useInAppBrowser.ts
+// ============================================
 // Bite Me Baby — InAppBrowserNotice (R46 → R57 → R76 → R77 → R79 → R81 · Owner 2026-11-08)
 // Owner: "กดตามลิ้งจากเฟซบุ๊คไปให้ใช้บราวเซอร์ภายนอก ห้ามใช้บราวเซอร์ของเฟซ"
 // R76: ห้ามนำทางหน้าปัจจุบันไป intent:// (ERR_UNKNOWN_URL_SCHEME กินทั้งหน้า)

@@ -32,7 +32,6 @@ import { haversineDistanceKm } from '@/lib/deliveryRouter'
 import { KITCHEN_POINT } from '@/config/kitchenLocation'
 import { getPublishedScheduleForDate, mirrorPreOrderScheduleGate, checkModeEligibility, type MenuScheduleRow } from '@/lib/bmbMenuSchedule'
 import { getProductScheduleMap, resolveMenuBoundDate, type ProductScheduleMap } from '@/lib/productSchedule'
-import { isInAppBrowser } from '@/components/layout/InAppBrowserNotice'
 import { r81Capture } from '@/lib/r81DebugCapture'
 import { fetchServerDeliveryFee, feeUiState, summaryFeeState } from '@/lib/deliveryFeeApi'
 import { bangkokMsOfDay } from '@/lib/bangkokTime'
@@ -394,23 +393,14 @@ export function CheckoutPage() {
     })()
   }, [])
 
-  // R81-B5: in-app (FB/IG/LINE) = ซ่อนปุ่ม GPS — กดแล้ว error = อาการที่ Owner เจอ (C9 = platform block)
-  const [isInApp] = useState(() => typeof navigator !== 'undefined' && isInAppBrowser(navigator.userAgent))
-
   // CR-2 P0: TRUSTED GPS ONLY — no IP-geo, no kitchen fallback, honest toast.
   async function handleUseGps() {
     setLocating(true)
-    r81Capture('gps_tap', isInApp ? 'in_app' : 'normal_browser')
+    r81Capture('gps_tap', 'normal_browser')
     try {
       const loc = await getTrustedGpsLocation()
       if (!loc) {
-        // R77 (Owner: "ลิ้งที่มาจากเฟซบุ๊คกด use my location แล้ว เออเร่อ ไม่สามารถระบุตำแหน่งได้"):
-        // เบราว์เซอร์ในแอป (FB/IG/LINE) บล็อก GPS = บอกทางออกชัด ๆ + พาไปปักหมุดแผนที่ด้านล่าง
-        if (isInAppBrowser(navigator.userAgent)) {
-          showToast('📍 เบราว์เซอร์ของ Facebook ใช้ GPS ไม่ได้ — แตะเลือกตำแหน่งบนแผนที่ด้านล่าง หรือพิมพ์ค้นหาที่อยู่ได้เลย (ไม่ต้องออกจากเฟซ)', 'error')
-        } else {
-          showToast('📍 ไม่สามารถระบุตำแหน่งจาก GPS ได้ — กรุณาปักหมุดบนแผนที่หรือกรอกพิกัดเอง', 'error')
-        }
+        showToast('📍 ไม่สามารถระบุตำแหน่งจาก GPS ได้ — กรุณาปักหมุดบนแผนที่หรือกรอกพิกัดเอง', 'error')
         document.getElementById('checkout-map-picker')?.scrollIntoView?.({ behavior: 'smooth', block: 'center' })
         return
       }
@@ -1261,20 +1251,16 @@ export function CheckoutPage() {
           className="input mb-3"
         />
         <div className="flex items-center gap-2 flex-wrap mb-2">
-          {!isInApp && (
             <button type="button" disabled={locating} onClick={handleUseGps} className="btn btn-outline text-sm">
               {locating ? 'Locating...' : '📍 Use my location (GPS)'}
             </button>
-          )}
-          <span className="text-xs text-brand-muted" data-testid="location-status">
-            {deliveryAddress.latitude != null && deliveryAddress.longitude != null
-              ? `ตำแหน่ง: (${deliveryAddress.latitude.toFixed(4)}, ${deliveryAddress.longitude.toFixed(4)}) · แหล่งที่มา: ${
-                  deliveryAddress.source === 'gps' ? 'GPS' : deliveryAddress.source === 'manual' ? 'ปักหมุดเอง' : 'ที่บันทึกไว้'
-                }${deliveryAddress.confirmed ? ' · ✅ ยืนยันแล้ว' : ' · ⏳ ยังไม่ยืนยัน'}`
-              : isInApp
-                ? 'ยังไม่มีตำแหน่งจัดส่ง — แตะเลือกบนแผนที่ด้านล่าง หรือพิมพ์ค้นหาที่อยู่'
+            <span className="text-xs text-brand-muted" data-testid="location-status">
+              {deliveryAddress.latitude != null && deliveryAddress.longitude != null
+                ? `ตำแหน่ง: (${deliveryAddress.latitude.toFixed(4)}, ${deliveryAddress.longitude.toFixed(4)}) · แหล่งที่มา: ${
+                    deliveryAddress.source === 'gps' ? 'GPS' : deliveryAddress.source === 'manual' ? 'ปักหมุดเอง' : 'ที่บันทึกไว้'
+                  }${deliveryAddress.confirmed ? ' · ✅ ยืนยันแล้ว' : ' · ⏳ ยังไม่ยืนยัน'}`
                 : 'ยังไม่มีตำแหน่งจัดส่ง — กด GPS หรือปักหมุดบนแผนที่ด้านล่าง'}
-          </span>
+            </span>
         </div>
 
         {/* CR-2 P1: visible map + draggable/clickable marker + manual fallback */}

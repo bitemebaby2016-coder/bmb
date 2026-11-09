@@ -3,12 +3,22 @@
 // ============================================
 // ตรวจจับ Facebook In-App Browser (FB WebView) และให้ handler สำหรับเปิดลิงก์นอก
 // Native click handler เท่านั้น (ไม่ auto-redirect ตอนโหลด)
+// เพิ่ม: PWA install prompt handling
 
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
+
+// Type for BeforeInstallPromptEvent (not in standard lib.dom.d.ts)
+interface BeforeInstallPromptEvent extends Event {
+  readonly platforms: string[]
+  readonly userChoice: Promise<{ outcome: 'accepted' | 'dismissed'; platform: string }>
+  prompt(): Promise<void>
+}
 
 export function useInAppBrowser() {
   const [isFB, setIsFB] = useState(false)
   const [dismissed, setDismissed] = useState(false)
+  const [installPrompt, setInstallPrompt] = useState<BeforeInstallPromptEvent | null>(null)
+  const installPromptRef = useRef<BeforeInstallPromptEvent | null>(null)
 
   useEffect(() => {
     // ตรวจจับ FB WebView: user agent + heuristic
@@ -24,6 +34,23 @@ export function useInAppBrowser() {
       const d = localStorage.getItem('bmb:inapp:dismissed')
       setDismissed(d === '1')
     } catch { /* localStorage blocked */ }
+
+    // PWA install prompt handling
+    const handleBeforeInstallPrompt = (e: BeforeInstallPromptEvent) => {
+      e.preventDefault()
+      installPromptRef.current = e
+      setInstallPrompt(e)
+    }
+    const handleAppInstalled = () => {
+      installPromptRef.current = null
+      setInstallPrompt(null)
+    }
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt as EventListener)
+    window.addEventListener('appinstalled', handleAppInstalled)
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt as EventListener)
+      window.removeEventListener('appinstalled', handleAppInstalled)
+    }
   }, [])
 
   const dismiss = useCallback(() => {
@@ -52,5 +79,22 @@ export function useInAppBrowser() {
     }
   }, [])
 
-  return { isFB, dismissed, dismiss, openExternally }
+  const installApp = useCallback(async () => {
+    const prompt = installPromptRef.current
+    if (!prompt) return false
+    try {
+      await prompt.prompt()
+      const result = await prompt.userChoice
+      if (result.outcome === 'accepted') {
+        installPromptRef.current = null
+        setInstallPrompt(null)
+        return true
+      }
+      return false
+    } catch {
+      return false
+    }
+  }, [])
+
+  return { isFB, dismissed, dismiss, openExternally, installPrompt: installPromptRef.current, installApp, canInstall: !!installPromptRef.current }
 }
