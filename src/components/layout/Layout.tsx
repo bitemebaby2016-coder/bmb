@@ -125,10 +125,15 @@ export function Layout({ children, hideBottomNav = false, activeSection = 'home'
     void runAdd(false)
     // R57 (Owner 2026-11-02): เคส FB in-app เปิดหน้าก่อน hydration/catalog ทัน = ตะกร้าว่าง
     // → ลองซ้ำ 1 ครั้งหลัง 700ms ถ้ายังไม่มีรายการไหนถูกเพิ่ม (มีแล้ว = ไม่ทับของเดิม)
+    // §T-A Attempt 1 (Owner 2026-11-09: "?cart= ยังไม่มีสินค้าใส่ตะกร้า"): in-app cold-start ช้ากว่า 700ms
+    // → เพิ่มชั้นซ้ำที่ 2.5s (จำกัด 2 ครั้ง — ถ้ายังว่างแสดงว่าต้นทางไม่ได้ส่ง ?cart= มา ดู toast แจ้ง)
     const cartRetryTimer = setTimeout(() => {
       if (!cancelled && addedTotal === 0) void runAdd(true)
     }, 700)
-    return () => { cancelled = true; clearTimeout(cartRetryTimer) }
+    const cartRetryTimer2 = setTimeout(() => {
+      if (!cancelled && addedTotal === 0) void runAdd(true)
+    }, 2500)
+    return () => { cancelled = true; clearTimeout(cartRetryTimer); clearTimeout(cartRetryTimer2) }
   }, [])
 
   // Header hide-on-scroll — listen on the ACTUAL scroll container (`main` has

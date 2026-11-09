@@ -1,6 +1,15 @@
 ## 🟡 R89b — แก้ "เซกชันซ้ำ" บน `/shop` เสร็จ (ถูกหน้า · 2026-11-09) · gates 4/4 · push `d7e53e4` · live = `R89B_LIVE_NEW_BUILD_OK` — **รออย่างเดียว: Owner hard reload `/shop` รีเทสต์ แล้วค่อยปิด R89**
 > อ่านบล็อกนี้เท่านั้น (บล็อก 🔴 เดิมล้าสมัยแล้ว · ห้ามถือว่า R89 ปิดจน Owner ยืนยันภาพ)
 
+### ⏳ งานค้าง two-try Attempt 1 — ทำโค้ดเสร็จแล้ว · รอ gates → push → deploy EF → retest (2026-11-09)
+- **D2** (SAME_DAY ตอบผิด "รอบเดียว 11:00-15:00 น." → RT-5.1/5.4): `supabase/functions/_shared/orderWindow.ts` `buildOrderWindowPrompt` — ① rule ห้ามตอบ SAME_DAY เป็น "รอบเดียว HH:MM-HH:MM"/ห้ามยกเวลาของรอบวันนี้ ② `roundLines` ระบุ "(ใช้กับ PRE_ORDER เท่านั้น) · SAME_DAY ไม่อิงรอบนี้" ③ บรรทัดสรุป 2 ประเภท = คำตอบ SAME_DAY มาตรฐาน "ส่งได้ตลอดเวลาที่ร้านเปิด ไม่มีรอบส่ง"
+- **D5** (โพสต์ไม่ลงรายละเอียดวัน/รอบ → RT-3.6): `src/pages/admin/AdminAiStudio.tsx` `compose()` — ตัดรอบ hardcoded "เช้า 06-09 / เที่ยง 11-14 / เย็น 17-20" (zero-fake) → บรรทัดแยก เซมเดย์ (ตลอดเวลาที่ร้านเปิด) + พรีออเดอร์ (เลือกวัน+รอบเอง · ปิดรับก่อนส่ง 2 ชม.) ทั้ง template daily และ bestseller
+- **§T-A** (`?cart=` เปิดแล้วไม่มีสินค้า): `src/components/layout/Layout.tsx` — เพิ่มชั้น retry ที่ 2.5s (เดิม 700ms ครั้งเดียว = in-app cold-start ช้ากว่านั้น)
+- **D4 = ยัง open · ข้อจำกัด platform** — `InAppBrowserNotice` header อ้าง R81-B2: "FB WebView ไม่มีทาง force-escape ด้วย JS — สู้ platform ไม่ได้ (พิสูจน์ 6 รอบ)" → ตอนนี้เหลือ UX ทางออก (คัดลอกลิงก์+guide 3 ขั้น · Android มีปุ่มเปิดแท็บใหม่) — **รายงาน Owner เลือกทางต่อ** (จะยอมรับข้อจำกัด / หรือให้ลองเทคนิคใหม่เฉพาะเครื่อง)
+- deploy EF: `node e2e/_ttDeployFns.cjs` (social-ai-worker เท่านั้น · log `e2e/_tt_deploy.log`) — รัน **หลัง** gates ผ่านเท่านั้น
+- ยังไม่รันตามเดิม: RT-4 · RT-HOURS · RT-6.2 · RT-6.4B2 · CAP-14+7/8/13/16/17/19 · **RT-8 ห้ามปิด**
+
+
 ### ทำแล้วรอบนี้ (เซสชัน 2026-11-09 ต่อจากแฮนออฟ · ครบ 6 ข้อของแผน)
 1. **[อ่าน] ทำแล้ว** — `node e2e/_r88_live_check.cjs` ครั้งเดียว = `LIVE_CHECK_ALL_MARKERS_OK` (deploy ปกติ · ไม่ poll) + อ่าน `HomePage.tsx` 515–575 · `ReviewCarouselSection.tsx` · `VerifiedReviewsSection.tsx` · `CustomerReviewCard.tsx` ครบ
 2. **[ถาม Owner 1 ครั้ง] ทำแล้ว** — มติ = **(ก) รวมทั้งสองเซต** (curated + รีวิว DB ที่แอดมินอนุมัติแล้ว) ในคารูเซลเดียว
