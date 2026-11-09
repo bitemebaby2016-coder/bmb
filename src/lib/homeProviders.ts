@@ -42,6 +42,7 @@ import { masterClosedStatus } from './storeMaster'
 import { sameDayEligible, preorderEligible } from './talkToBite'
 import { roundBookability, roundCutoffLabel, roundCutoffMs } from './deliveryRoundStatus'
 import { bangkokMsOfDay } from './bangkokTime'
+import { bangkokDateKey } from './promotionClient'
 import type { ProductScheduleMap } from './productSchedule'
 
 function availabilityOf(p: Product): AvailabilityState {
@@ -344,15 +345,25 @@ export function getStoreStatusFromRounds(rounds: Array<{
 }
 
 /** Map real promotions rows → HomePromotion. ZERO-FAKE: empty rows ⇒ empty
- * strip (PromotionStrip hides itself) — never fabricated promo cards. */
+ * strip (PromotionStrip hides itself) — never fabricated promo cards.
+ * R90 (Owner 2026-11-09 "ไม่ต้องแสดงตัวที่หมดอายุไปแล้ว"): กรองช่วงวันไทย
+ *   กติกาเดียวกับ listAvailableCoupons (bangkokDateKey — ไม่ใช่ UTC) */
 export function getHomePromotionsFromRows(rows: Array<{
   id?: string
   name?: string
   description?: string
   code?: string
   is_active?: boolean
+  start_date?: string | null
+  end_date?: string | null
 }>): HomePromotion[] {
-  const active = (rows || []).filter((r) => r.is_active !== false).slice(0, 6)
+  const todayKey = bangkokDateKey()
+  const active = (rows || []).filter((r) => {
+    if (r.is_active === false) return false
+    if (r.start_date && r.start_date > todayKey) return false // ยังไม่ถึงวันเริ่ม
+    if (r.end_date && r.end_date < todayKey) return false // หมดอายุแล้ว (วันไทย)
+    return true
+  }).slice(0, 6)
   return active.map((r) => ({
     id: r.id || `promo-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
     title: r.name || 'โปรโมชั่น',

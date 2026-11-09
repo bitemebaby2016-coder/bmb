@@ -137,6 +137,20 @@ export function CustomerReviewCard({ review, product, mode, deepLinkTo, ctaLabel
           {label}
           <span aria-hidden="true" className="review-cta-arrow">→</span>
         </Link>
+
+        {/* R90 (Owner 2026-11-09): ทางเข้าใต้ปุ่มสั่ง/จอง → รีวิวเต็มของเมนูนั้น
+            (หน้า /reviews/:productId = กรองตาม product_id จริง — เมนูเพิ่ม/เปลี่ยน
+            ในอนาคตขึ้นเองอัตโนมัติ เพราะผูก product.id ไม่ผูกชื่อ) */}
+        {product?.id && (
+          <Link
+            to={`/reviews/${product.id}`}
+            className="review-see-all"
+            data-testid="review-see-all"
+            aria-label={`ดูรีวิวทั้งหมดของ ${review.foodName}`}
+          >
+            ⭐ ดูรีวิวเมนูนี้ทั้งหมด <span aria-hidden="true">→</span>
+          </Link>
+        )}
       </div>
 
       {/* Mascot pose=`peeking` — โผล่จากมุมขวาบน Glass Overlay (Mascot Pose Map §18) */}

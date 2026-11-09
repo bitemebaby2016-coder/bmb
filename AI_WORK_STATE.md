@@ -1,6 +1,12 @@
 ## 🟡 R89b — แก้ "เซกชันซ้ำ" บน `/shop` เสร็จ (ถูกหน้า · 2026-11-09) · gates 4/4 · push `d7e53e4` · live = `R89B_LIVE_NEW_BUILD_OK` — **รออย่างเดียว: Owner hard reload `/shop` รีเทสต์ แล้วค่อยปิด R89**
 > อ่านบล็อกนี้เท่านั้น (บล็อก 🔴 เดิมล้าสมัยแล้ว · ห้ามถือว่า R89 ปิดจน Owner ยืนยันภาพ)
 
+## R90 (Owner 2026-11-09 — "ทำให้ก่อน แอดมินจะรอรีเทสทั้งหมดบน live")
+1. **ปุ่มดูรีวิวเต็มใต้ปุ่มสั่ง/จอง** (`CustomerReviewCard` CTA → `/reviews/:productId` — route มีแล้ว App.tsx:277 · `loadReviewsFeed(productId)` กรองตามเมนูจริง · ผูก `product.id` = เมนูเพิ่ม/เปลี่ยนอนาคตขึ้นเอง · style `.review-see-all` ใน index.css)
+2. **โปรโมชั่นหมดอายุไม่โชว์** — `getHomePromotionsFromRows` (homeProviders) เพิ่มกรอง `start_date/end_date` ด้วย `bangkokDateKey` (กติกาเดียวกับ `listAvailableCoupons` — วันไทย) + `is_active` · `/promotions` กรองอยู่แล้ว (`isPromoLiveNow`) ไม่แตะ
+- **state**: code เสร็จ · gates รันอยู่ (launcher ครั้งเดียว) · commit msg `e2e/_r90_commit_msg.txt`
+
+## R89b/c + two-try + verified fix (2026-11-09 ทำแล้ว · push+deploy ครบ)
 ### 🔴 ROOT CAUSE "รีวิวอนุมัติไม่ขึ้นจริง" — แก้แล้ว รอ gates+push (2026-11-09 · Owner โกรธ "ขี้โม้ 3 รอบ" = รับผิด)
 - **ไม่ใช่ migration** — m199 apply แล้วพิสูจน์ด้วย Management API query จริง (`e2e/_tt_dbcheck.cjs`): column `status` มี (default pending) · RPC ทั้งสองตัวมี · มีรีวิว **approved จริง 1 ใบ** (`rev-1794155871506-c12880` · 5⭐ "ข้าวหน้าปลาทอดลุยสวน" · product `prod-1793370625449-zzn457` is_available=true) · products 36 ตัว (< slice 50 = โหลดครบ) · anon อ่าน 200
 - **บั๊กจริง = ฝั่งผม (R89b)**: RPC `get_verified_reviews_batch` RETURNS TABLE (m199 line 76-85) **ไม่มีคอลัมน์ `status`** → แถวคืน `undefined` → filter `r.status === 'approved'` กรองทิ้ง **100%** (ทั้งที่ RPC กรอง `WHERE status='approved'` อยู่แล้ว) → **แก้แล้ว**: ให้ผ่านเมื่อ `status === undefined`

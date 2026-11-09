@@ -615,6 +615,30 @@ p { color: var(--color-brand-text-secondary); }
   transform: translateX(4px);
 }
 
+/* R90: ทางเข้าใต้ปุ่มสั่ง/จอง → รีวิวเต็มของเมนู (/reviews/:productId) */
+.review-see-all {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  width: 100%;
+  margin-top: 0.4rem;
+  padding: 0.4rem 0.75rem;
+  border-radius: var(--radius-full);
+  background: rgba(255, 255, 255, 0.85);
+  border: 1px solid rgba(255, 94, 30, 0.35);
+  color: var(--color-brand-primary-dark, #c2410c);
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-decoration: none;
+  transition: transform 0.2s ease, background 0.2s ease;
+}
+
+.review-see-all:hover {
+  transform: translateY(-1px);
+  background: #fff;
+}
+
 /* --- 3D Mascot "น้อง Bite" จิ๋ว มุมล่างการ์ด --- */
 .mascot-mini {
   position: absolute;
