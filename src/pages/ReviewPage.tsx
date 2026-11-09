@@ -186,8 +186,8 @@ export function ReviewPage() {
       )}
 
       <section className='mb-10' data-testid='review-real-section'>
-        {/* R89 (Owner ~23:40 น.): "Verified Customer Reviews" + "📸 รีวิวจริงจากลูกค้า" = หมวดเดียวกัน
-            → ยุบเป็นหัวข้อเดียว · ใหม่สุดขึ้นก่อน (feed = created_at desc) · การ์ดมีโลโก้+ดาว แบบ Grab/FB */}
+        {/* R89 (Owner ~23:40 น.): สองหัวข้อรีวิวซ้ำ = หมวดเดียวกัน → ยุบเป็นหัวข้อเดียว
+            · ใหม่สุดขึ้นก่อน (feed = created_at desc) · การ์ดรีวิวมีโลโก้+ดาว แบบการ์ด Grab/FB */}
         <h2 className='text-xl font-display font-bold text-brand-accent flex items-center gap-2 mb-2'>📸 รีวิวจริงจากลูกค้า
             <MascotBadge pose="thumbsup" size="sm" alt="น้อง Bite การันตีรีวิวจริง" className="section-float-mascot" />
         </h2>
@@ -198,7 +198,7 @@ export function ReviewPage() {
           </div>
         ) : verifiedReviews.length > 0 ? verifiedReviews.map((review: any) => (
           <div key={review.id} className='card p-4 mb-3 border-l-4 border-emerald-500'>
-            {/* R89: การ์ดรีวิว = โลโก้ Bite Me Baby + ดาวจริง (เดิมหนีเป็นข้อความ \\u2B50 — แก้เป็น ⭐) */}
+            {/* R89: การ์ดรีวิวมีโลโก้ Bite Me Baby + ดาวจริง (เดิมหนีดาวเป็นข้อความ — แก้เป็น ⭐) */}
             <div className='flex items-center justify-between gap-2 flex-wrap'>
               <span className='flex items-center gap-2 font-medium'>
                 <img src='/Logo_Sticker_Circle.webp' alt='Bite Me Baby' width={28} height={28} loading='lazy' className='rounded-full object-cover' data-testid='review-brand-logo' />
