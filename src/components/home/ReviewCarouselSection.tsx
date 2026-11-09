@@ -10,7 +10,7 @@
 // ============================================
 
 import { useState } from 'react'
-import type { HomeReview, Product, OrderMode } from '@/types'
+import type { HomeReview, Product, OrderMode, VerifiedCustomerReview } from '@/types'
 import { CustomerReviewCard } from '@/components/CustomerReviewCard'
 import { HorizontalCarousel } from './HorizontalCarousel'
 import { MascotBadge } from '@/components/MascotBadge'
@@ -18,6 +18,12 @@ import { REAL_REVIEW_PHOTOS } from '@/lib/realReviews'
 
 interface ReviewCarouselSectionProps {
   reviews: HomeReview[]
+  /**
+   * R89b (Owner 2026-11-09 · มติ "ข้อ ก = รวมทั้งสองเซต"):
+   * รีวิว DB ที่แอดมินอนุมัติแล้ว — ยุบมาจาก VerifiedReviewsSection (CAT-04) ที่ /shop
+   * ให้แสดงในคารูเซลเดียวกับ curated · กรองเฉพาะ status='approved' + กันซ้ำชื่อ+ข้อความ
+   */
+  verifiedReviews?: VerifiedCustomerReview[]
   products: Product[]
   /** Preserves the existing review→cart deep-link flow (add item then navigate by mode). */
   onReviewCta?: (review: HomeReview) => void
@@ -26,7 +32,7 @@ interface ReviewCarouselSectionProps {
 // N4-R54 (Owner 2026-11-02 feedback): อัลบั้มไม่โชว์ inline — เปิดจากปุ่ม "ดูทั้งหมด" (modal + lightbox)
 //   คงคลาส review-gallery* + behavior คลิกดูรูป/ปิด ไว้ทุกประการ
 
-export function ReviewCarouselSection({ reviews, products, onReviewCta }: ReviewCarouselSectionProps) {
+export function ReviewCarouselSection({ reviews, verifiedReviews, products, onReviewCta }: ReviewCarouselSectionProps) {
   const [open, setOpen] = useState<string | null>(null)
   const [albumOpen, setAlbumOpen] = useState(false)
   const productMap = new Map((products || []).map((p) => [p.id, p]))
@@ -56,6 +62,45 @@ export function ReviewCarouselSection({ reviews, products, onReviewCta }: Review
     )
   })
 
+  // R89b (Owner ข้อ ก): รีวิว DB ที่แอดมินอนุมัติแล้ว → การ์ดใบเดียวกับ curated
+  //   · เฉพาะ status='approved' (m199: pending/rejected ไม่ขึ้นหน้าแรก)
+  //   · กันการ์ดซ้ำ: ชื่อ+ข้อความตรงกับ curated หรือรีวิวก่อนหน้า = ข้าม
+  //   · rating ปัดเป็นจำนวนเต็ม (การ์ดโชว์ดาวทั้งใบ + "<rating>.0")
+  const seenKeys = new Set(reviews.map((r) => `${r.displayName.trim()}|${r.text.trim()}`))
+  const verifiedItems = (verifiedReviews ?? [])
+    .filter((r) => r.status === 'approved' && r.rating > 0 && Boolean(r.comment))
+    .filter((r) => {
+      const key = `${(r.customer_name || '').trim()}|${(r.comment || '').trim()}`
+      if (seenKeys.has(key)) return false
+      seenKeys.add(key)
+      return true
+    })
+    .map((r) => {
+      const product = productMap.get(r.product_id)
+      const mode: OrderMode = (product?.available_preorder ?? product?.is_preorder) ? 'pre-order' : 'same-day'
+      return (
+        <CustomerReviewCard
+          key={`verified-${r.id}`}
+          review={{
+            id: `verified-${r.id}`,
+            customerName: r.customer_name,
+            rating: Math.min(5, Math.round(r.rating)),
+            comment: r.comment,
+            source: 'website',
+            sourceLabel: 'Verified Purchase',
+            dateLabel: new Date(r.created_at).toLocaleDateString('th-TH', { year: 'numeric', month: 'short', day: 'numeric' }),
+            foodName: r.product_name_display ?? product?.name ?? '',
+            productId: r.product_id,
+          }}
+          product={product}
+          mode={mode}
+          deepLinkTo={mode === 'pre-order' ? '/checkout?mode=pre-order' : '/cart?mode=same-day'}
+        />
+      )
+    })
+
+  const allItems = [...items, ...verifiedItems]
+
   return (
     <section className="mb-10 scroll-mt-20" aria-labelledby="home-reviews-heading">
       <div className="flex items-center justify-between mb-2">
@@ -75,9 +120,9 @@ export function ReviewCarouselSection({ reviews, products, onReviewCta }: Review
         <button type="button" onClick={() => setAlbumOpen(true)} className="text-sm text-brand-primary font-medium hover:underline" data-testid="reviews-see-all-album">ดูทั้งหมด →</button>
       </div>
       <h3 className="sr-only">รีวิวจากลูกค้าจริง</h3>
-      {items.length > 0 && (
+      {allItems.length > 0 && (
         <HorizontalCarousel
-          items={items}
+          items={allItems}
           aria-label="รีวิวจากลูกค้า เลื่อนได้"
           auto
           intervalMs={8000}

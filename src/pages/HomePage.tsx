@@ -29,7 +29,6 @@ import { FloatingAdBanners, type FloatingBannerPromo } from '@/components/home/F
 import { HorizontalCarousel } from '@/components/home/HorizontalCarousel'
 import { HomeProductCard } from '@/components/home/HomeProductCard'
 import { PromotionStrip } from '@/components/home/PromotionStrip'
-import { VerifiedReviewsSection } from '@/components/home/VerifiedReviewsSection'
 import { ReviewCarouselSection } from '@/components/home/ReviewCarouselSection'
 import { MarketingFeedSection } from '@/components/home/MarketingFeedSection'
 import { CategorySections } from '@/components/home/CategorySections'
@@ -535,16 +534,24 @@ export function HomePage() {
           (แยกแท็บจองล่วงหน้าอยู่ที่ /menu ตามเดิม) */}
       <CategorySections products={products} categories={categories} schedule={scheduleMap} onSameDay={handleSameDay} onPreOrder={handlePreOrder} />
 
-      {/* 6. Social Proof Review Carousel */}
-      <ReviewCarouselSection reviews={reviews} products={products} onReviewCta={handleReviewCta} />
+      {/* 6. Social Proof Review Carousel — เซกชันรีวิวเดียวของ /shop (N4 + R89b)
+          R89b (Owner 2026-11-09 · มติ "ข้อ ก = รวมทั้งสองเซต"): ยุบ CAT-04 VerifiedReviewsSection
+          เข้าคารูเซลนี้ = curated + รีวิว DB ที่แอดมินอนุมัติแล้ว ในหัวข้อ "📸 รีวิวจริงจากลูกค้า"
+          — ห้าม render เซกชันรีวิวที่ 2 ซ้ำ */}
+      <ReviewCarouselSection
+        reviews={reviews}
+        verifiedReviews={verifiedReviews}
+        products={products}
+        onReviewCta={handleReviewCta}
+      />
 
       {/* N4 (Owner 2026-11-01): ยุบรีวิว 2 เซกชั่น — อัลบั้มรูปสกรีนช็อตย้ายเข้าไปใน
           ReviewCarouselSection (เซกชั่นเดียว "📸 รีวิวจริงจากลูกค้า") แล้ว — ห้าม render ซ้ำ */}
       {/* R50 (Owner 2026-11-01): ไม่แสดงเซ็กชั่นประกาศล่าสุดด้านล่าง — ย้ายขึ้น FloatingAdBanners
           รวมกับโปรโมชั่น (สูงสุด 2 · กดปิดได้) และเก็บรวมที่หน้า 🎟️ โปรโมชั่น ข่าวสาร และ กิจกรรม */}
       {false && <MarketingFeedSection />}
-      {/* CAT-04: Verified Customer Reviews Section */}
-        <VerifiedReviewsSection reviews={verifiedReviews} products={products} />
+      {/* R89b: เดิมบรรทัดนี้ render <VerifiedReviewsSection reviews={verifiedReviews}> = เหตุผลที่ /shop
+          มี 2 เซกชันซ้ำ (ขัด N4) — verifiedReviews ยังโหลดจาก DB เหมือนเดิม ส่งเข้าคารูเซลด้านบนแทน */}
 
       {/* 7. Promotions + Shared social action */}
       <PromotionStrip promotions={promotions} />

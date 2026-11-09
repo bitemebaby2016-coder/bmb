@@ -1,5 +1,30 @@
-## 🔴 R89 — ยังปิดไม่ได้ · เซกชันซ้ำ "ยังไม่หาย" (Owner เห็นของจริง 2026-11-09 09:46 น. ที่ `/shop`) · ห้ามถือว่าเสร็จ
-> ⚠️ บรรทัดหัวไฟล์ถัดไป (เขียนตอนที่ R89 ว่า "ทำแล้ว") = **ล้าสมัย/ผิด** — อย่าถือเป็นจริง · อ่านบล็อกนี้เท่านั้น · **เซสชัน 2026-11-09 ปิดแล้ว — งานทั้งหมดทำต่อในแชทหน้า**
+## 🟡 R89b — แก้ "เซกชันซ้ำ" บน `/shop` แล้ว (ถูกหน้า · 2026-11-09) — รอ: gates สรุป + push + Owner hard reload รีเทสต์
+> อ่านบล็อกนี้เท่านั้น (บล็อก 🔴 เดิมล้าสมัยแล้ว · ห้ามถือว่า R89 ปิดจน Owner ยืนยันภาพ)
+
+### ทำแล้วรอบนี้ (เซสชัน 2026-11-09 ต่อจากแฮนออฟ · ครบ 6 ข้อของแผน)
+1. **[อ่าน] ทำแล้ว** — `node e2e/_r88_live_check.cjs` ครั้งเดียว = `LIVE_CHECK_ALL_MARKERS_OK` (deploy ปกติ · ไม่ poll) + อ่าน `HomePage.tsx` 515–575 · `ReviewCarouselSection.tsx` · `VerifiedReviewsSection.tsx` · `CustomerReviewCard.tsx` ครบ
+2. **[ถาม Owner 1 ครั้ง] ทำแล้ว** — มติ = **(ก) รวมทั้งสองเซต** (curated + รีวิว DB ที่แอดมินอนุมัติแล้ว) ในคารูเซลเดียว
+3. **[โค้ด — เฉพาะหน้า `/shop`/HomePage] ทำแล้ว** (diff = 4 ไฟล์ · ไม่แตะ `/reviews`):
+   - `src/pages/HomePage.tsx` — **ตัด render `<VerifiedReviewsSection>` (เดิมบรรทัด 547) + ตัด import** · ส่ง `verifiedReviews` เข้า `<ReviewCarouselSection>` → เหลือ **เซกชันเดียว "📸 รีวิวจริงจากลูกค้า"** (สอดคล้อง comment N4 ของ Owner บรรทัดเดิม)
+   - `src/components/home/ReviewCarouselSection.tsx` — prop `verifiedReviews?: VerifiedCustomerReview[]` · map เป็น `CustomerReviewCard` ใบเดียวกับ curated · **กรอง `status==='approved'` เท่านั้น** (m199) · กันการ์ดซ้ำ (key = ชื่อ+ข้อความ) · `rating` ปัดเป็นเต็ม · source = `website` label **"Verified Purchase"** · ปุ่ม "ดูทั้งหมด" (อัลบั้ม 32 รูป) คงเดิม · render `[...items, ...verifiedItems]`
+   - `src/components/CustomerReviewCard.tsx` — **โลโก้ `/Logo_Sticker_Circle.webp` บนหัวทุกการ์ด** (ดาว `Star.webp` 3D เดิมอยู่แล้ว)
+   - `src/index.css` — คลาส `.review-store-logo` (24px · round · drop-shadow)
+   - คงไว้: `VerifiedReviewsSection.tsx` (ไม่ถูก mount แล้ว — เก็บอ้างอิง) · `getVerifiedReviewsForProducts` (เส้น DB m099) · `/reviews` ที่ยุบแล้ว **ไม่แตะ**
+4. **[เทสต์] gates รันครั้งเดียวจบ** — `node e2e/_r89_launch_gates.cjs` (pid รันเดียว) → ผลรวม `e2e/_r88_final_gates.log` · **ผล: tsc EXIT=0 · lint EXIT=0 (brandNameGuard OK · languageSanity OK) · vitest+build ดูบรรทัด ALL_GATES_DONE ใน log ก่อน push**
+5. **[push + live check]** → **ยังไม่ได้ทำ** (ทำหลัง log = ALL_GATES_DONE) → Owner hard reload `/shop`
+6. **[คงไว้]** สแกนซ้ำด้วย `node e2e/_h_diag.cjs` = **แล้ว**: `SEC_VERIFIED_TH` เหลือแค่ `VerifiedReviewsSection.tsx` (ไม่ mount) + `ReviewPage.tsx` (หน้า `/reviews` · ไม่ใช่หน้า Owner ดู) · `SEC_PHOTO` = ที่เดียวที่ `/shop`
+
+### กติกาพฤติกรรม (บทเรียนเซสชัน 2026-11-09 — เด็ดขาด ห้ามทำซ้ำ)
+- ❌ **ห้ามยิงคำสั่งเดิมซ้ำหลายร้อยครั้ง / ห้าม poll วน** — ตรวจผลครั้งเดียว (รอ bounded ครั้งเดียว-สองครั้ง) · ถ้าไม่เสร็จ = รายงานสถานะแล้วรอ
+- ❌ **ห้ามรันคำสั่ง/เทสต์ของไฟล์ที่ไม่มีจริง** (เคยพลาด `productDetailCta.test.ts` วน ~200 ครั้ง)
+- ❌ **ห้ามแก้ผิดหน้า** — R89 รอบเช้าแก้ `/reviews` (ReviewPage) ทั้งที่ภาพ Owner = `/shop` (HomePage)
+- ✅ probe = ไฟล์ใน `e2e/` เท่านั้น · `findstr` กับไฟล์ UTF-8 มีไทย = เชื่อถือไม่ได้ → ใช้ node probe (`e2e/_h_diag.cjs` รันซ้ำได้)
+- ⚠️ **การแก้ไฟล์: ห้ามยิง editor หลายอันพร้อมกันใน response เดียว** (รอบนี้พิสูจน์แล้ว — batch ใหญ่พังเป็น failed edits + แก้เกินขอบเขต ต้อง `git checkout -- src/...` ทิ้งทั้งหมดแล้วทำใหม่ทีละจุด) · shell รอบนี้ **รับ double-quote ไม่ได้** (ส่งเป็น `\"`) → ใช้ PowerShell แบบไม่ใช้ quote / `findstr` แบบ `/c:` + ไม่ quote
+- ✅ งานค้างเดิม: two-try **D2 → D4 → D5 → §T-A** · RT-4 · RT-HOURS · RT-6.2 · RT-6.4B2 · CAP-14+7/8/13/16/17/19 · **RT-8 ยังห้ามปิด** · D6/D7/D8/D9 = ปิดแล้ว (คงเดิม)
+
+
+## ⬜ (เก่า — ล้าสมัย · อย่าถือเป็นจริง) R89 — ยังปิดไม่ได้ · เซกชันซ้ำ "ยังไม่หาย" (Owner เห็นของจริง 2026-11-09 09:46 น. ที่ `/shop`) · ห้ามถือว่าเสร็จ
+> ⚠️ บล็อกนี้ถูกแทนที่ด้วยบล็อก 🟡 ด้านบนแล้ว · อ่านบล็อกบนเท่านั้น · **เซสชัน 2026-11-09 ปิดแล้ว — งานทั้งหมดทำต่อในแชทหน้า**
 
 ### ต้นตอ (สืบแล้ว 2026-11-09 ~09:50 น. · อ่านอย่างเดียว ไม่แตะโค้ด · evidence = `e2e/_h_diag.cjs` node-probe)
 - **ภาพ Owner = URL `biteme-baby.com/shop` = `pages/HomePage.tsx`** — R89 รอบนี้ดันไปแก้ `src/pages/ReviewPage.tsx` (หน้า `/reviews`) = **ผิดหน้า**

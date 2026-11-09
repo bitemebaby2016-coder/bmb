@@ -67,18 +67,31 @@ export function CustomerReviewCard({ review, product, mode, deepLinkTo, ctaLabel
       {/* Glassmorphism Overlay — รีวิวจริงจาก Facebook / GrabFood */}
       <div className="review-card-glass">
         <div className="flex items-center justify-between gap-2">
-          <span className="review-source-badge">
-            {SOURCE_LOGO[review.source] && (
-              <img
-                src={SOURCE_LOGO[review.source]}
-                alt=""
-                loading="lazy"
-                decoding="async"
-                className="review-source-logo"
-              />
-            )}
-            <span style={{ color: SOURCE_COLOR[review.source] }}>{review.sourceLabel}</span>
-          </span>
+          <div className="flex items-center gap-2 min-w-0">
+            {/* R89b (Owner 2026-11-09): โลโก้ร้านบนทุกการ์ดรีวิว — curated + Verified Purchase ใบเดียวกัน */}
+            <img
+              src="/Logo_Sticker_Circle.webp"
+              alt=""
+              width={24}
+              height={24}
+              loading="lazy"
+              decoding="async"
+              className="review-store-logo"
+              aria-hidden="true"
+            />
+            <span className="review-source-badge">
+              {SOURCE_LOGO[review.source] && (
+                <img
+                  src={SOURCE_LOGO[review.source]}
+                  alt=""
+                  loading="lazy"
+                  decoding="async"
+                  className="review-source-logo"
+                />
+              )}
+              <span style={{ color: SOURCE_COLOR[review.source] }}>{review.sourceLabel}</span>
+            </span>
+          </div>
           <span className="review-date">{review.dateLabel}</span>
         </div>
 

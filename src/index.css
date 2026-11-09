@@ -1014,6 +1014,17 @@ p { color: var(--color-brand-text-secondary); }
   50%      { transform: translateY(-7px) rotate(6deg) scale(1.05); }
 }
 
+/* R89b — โลโก้ร้านเล็กมุมการ์ดรีวิว (ทุกการ์ด = โลโก้ + ดาว 3D จริง) */
+.review-store-logo {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+  border-radius: 50%;
+  flex-shrink: 0;
+  pointer-events: none;
+  filter: drop-shadow(0 2px 4px rgba(146, 64, 14, 0.28));
+}
+
 /* Floating mascot accent on section headings (drinks / snacks / etc.) */
 .section-float-mascot {
   width: 34px;
