@@ -893,7 +893,18 @@ p { color: var(--color-brand-text-secondary); }
 }
 .hc-track::-webkit-scrollbar { display: none; }
 .hc-track:focus-visible { outline: 3px solid rgba(255, 94, 30, 0.4); outline-offset: 2px; border-radius: 12px; }
-.hc-slide { scroll-snap-align: start; flex-shrink: 0; width: min(78vw, 250px); }
+/* R91 (Owner "สเกลไม่เท่ากัน = ทำให้เท่ากัน + mobile first"):
+   - slide ตายตัวทุก breakpoint · การ์ด = เต็ม slide เสมอ (กัน content ดันกว้าง)
+   - mobile first: จอเล็ก = min(78vw, 250px) (~65-70% จอ + peek ใบถัดไป) · ≥768px = 250px คงที่ */
+.hc-slide {
+  scroll-snap-align: start;
+  flex: 0 0 auto;
+  width: min(78vw, 250px);
+}
+.hc-slide > .review-card-3d { width: 100%; }
+@media (min-width: 768px) {
+  .hc-slide { width: 250px; }
+}
 /* Frameless arrows: no border / no background / no frame — float over cards & images. */
 .hc-nav {
   position: absolute;

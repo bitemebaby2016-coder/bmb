@@ -1,6 +1,12 @@
 ## 🟡 R89b — แก้ "เซกชันซ้ำ" บน `/shop` เสร็จ (ถูกหน้า · 2026-11-09) · gates 4/4 · push `d7e53e4` · live = `R89B_LIVE_NEW_BUILD_OK` — **รออย่างเดียว: Owner hard reload `/shop` รีเทสต์ แล้วค่อยปิด R89**
 > อ่านบล็อกนี้เท่านั้น (บล็อก 🔴 เดิมล้าสมัยแล้ว · ห้ามถือว่า R89 ปิดจน Owner ยืนยันภาพ)
 
+## R91 (Owner 2026-11-09 — "สเกลไม่เท่ากันทำให้เท่ากัน + mobile first · ลิงก์รีวิวถูกแล้ว")
+- **ลิงก์ `/reviews/:id` = Owner ยืนยันถูกต้อง** ✅ ไม่แตะ
+- **สเกล**: probe ดึง CSS จริง (`e2e/_r91_probe.cjs`) = `.hc-slide` ตายตัว `min(78vw,250px)` ไม่มี override — แต่การ์ดไม่มี width บังคับ → **ทำแข็ง**: `.hc-slide` = `flex:0 0 auto` + width ตายตัว (mobile `min(78vw,250px)` + peek · ≥768px = 250px) + `.hc-slide > .review-card-3d { width:100% }` (การ์ดเท่า slide เสมอ กัน content ดันกว้าง)
+- **state**: code เสร็จ · gates รันอยู่ · commit msg `e2e/_r91_commit_msg.txt`
+
+## R90 (Owner 2026-11-09 — "ทำให้ก่อน แอดมินจะรอรีเทสทั้งหมดบน live")
 ## R90 (Owner 2026-11-09 — "ทำให้ก่อน แอดมินจะรอรีเทสทั้งหมดบน live")
 1. **ปุ่มดูรีวิวเต็มใต้ปุ่มสั่ง/จอง** (`CustomerReviewCard` CTA → `/reviews/:productId` — route มีแล้ว App.tsx:277 · `loadReviewsFeed(productId)` กรองตามเมนูจริง · ผูก `product.id` = เมนูเพิ่ม/เปลี่ยนอนาคตขึ้นเอง · style `.review-see-all` ใน index.css)
 2. **โปรโมชั่นหมดอายุไม่โชว์** — `getHomePromotionsFromRows` (homeProviders) เพิ่มกรอง `start_date/end_date` ด้วย `bangkokDateKey` (กติกาเดียวกับ `listAvailableCoupons` — วันไทย) + `is_active` · `/promotions` กรองอยู่แล้ว (`isPromoLiveNow`) ไม่แตะ
