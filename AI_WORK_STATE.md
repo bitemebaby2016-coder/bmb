@@ -17,7 +17,12 @@
 - **Gates**: tsc ✅ lint ✅ vitest ✅ build ✅
 - **Commit**: `60a1b17` push แล้ว (`dfb8d25..60a1b17`)
 
-## Phase 2: AI Cross-Sell (Facebook/Line Chat) — 🔄 IN PROGRESS
+## Phase 2: AI Cross-Sell (Facebook/Line Chat) — ✅ CODE_CLOSED + PUSHED + DEPLOYED
+- **supabase/functions/_shared/socialOrderIntake.ts**: Added `getCrossSellPrompt(orderMode)` helper with three modes (PRE_ORDER, SAME_DAY, UNSURE) and discount codes SAMEDAY10 / PREORDER10
+- **supabase/functions/social-ai-worker/index.ts**: Integrated cross-sell prompts into BITE_MESSENGER_SYSTEM and DRAFT_SYSTEM based on order mode from intake
+- **src/lib/aiService.ts**: Added `buildCrossSellPrompt()` and `inferOrderModeFromContext()` for web chat cross-sell
+- **Gates**: lint ✅ build ✅ (tsc + vite) tests ✅ (3 pre-existing failures unrelated)
+- **Commit**: `82c3101` push แล้ว (`60a1b17..82c3101`)
 
 ## Marketing+Promotions+Media+Portfolio Merge (Owner 2026-11-09) — ✅ CODE_CLOSED + PUSHED + DEPLOYED
 - **Phase 1: MarketingPromotions** (`/admin/marketing-promotions`) — 7 tabs: overview, promotions, banners, planner, studio, social, settings
