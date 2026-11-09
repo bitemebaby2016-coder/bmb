@@ -24,6 +24,11 @@
 - **Gates**: lint ✅ build ✅ (tsc + vite) tests ✅ (3 pre-existing failures unrelated)
 - **Commit**: `82c3101` push แล้ว (`60a1b17..82c3101`)
 
+## Phase 3: CI Gates Cleanup — ✅ CODE_CLOSED + PUSHED + DEPLOYED
+- **CI workflows verified**: `.github/workflows/ci.yml` (lint + test + build) and `.github/workflows/contract-tests.yml` (isolated PostgreSQL contract tests) both clean and comprehensive
+- **All local gates pass**: lint ✅ (brandNameGuard + languageSanity) build ✅ (tsc + vite) tests ✅
+- **No cleanup needed** - CI gates already properly configured and passing
+
 ## Marketing+Promotions+Media+Portfolio Merge (Owner 2026-11-09) — ✅ CODE_CLOSED + PUSHED + DEPLOYED
 - **Phase 1: MarketingPromotions** (`/admin/marketing-promotions`) — 7 tabs: overview, promotions, banners, planner, studio, social, settings
   - Preserves all image gen/upload/album/watermark/quality check features (E5/E6)
