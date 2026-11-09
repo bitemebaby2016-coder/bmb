@@ -42,6 +42,7 @@
   - Product linking: theater items with `product_id` navigate to `/menu?product=<id>`
   - Theater caption overrides description in carousel
 - **Gates**: lint ✅ build ✅ (tsc + vite) tests ✅ (pre-existing failures only)
+- **Commit**: `7c56348` push แล้ว (`0a3fcd0..7c56348`)
 
 ## Marketing+Promotions+Media+Portfolio Merge (Owner 2026-11-09) — ✅ CODE_CLOSED + PUSHED + DEPLOYED
 - **Phase 1: MarketingPromotions** (`/admin/marketing-promotions`) — 7 tabs: overview, promotions, banners, planner, studio, social, settings
