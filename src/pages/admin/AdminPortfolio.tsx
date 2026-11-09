@@ -35,7 +35,7 @@ export function AdminPortfolioPage() {
 
   async function handleCreate() {
     if (!title || !imageUrl) { showToast('Title and image URL required', 'error'); return }
-    const created = await createPortfolioItem({ title, description: description || null, image_url: imageUrl, media_asset_id: null, display_order: items.length, is_active: true })
+    const created = await createPortfolioItem({ title, description: description || null, image_url: imageUrl, media_asset_id: null, display_order: items.length, is_active: true, product_id: null, is_theater_carousel: false, theater_caption: null })
     if (created) { setItems([...items, created]); setTitle(''); setDescription(''); setImageUrl(''); showToast('Portfolio item created', 'success') }
     else { showToast('Failed to create', 'error') }
   }

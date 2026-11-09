@@ -16,10 +16,11 @@ import {
   type RegistryAssetRow,
 } from '@/lib/bmbAdminApi_media'
 import { getAllPortfolioItems, createPortfolioItem, updatePortfolioItem, togglePortfolioItem, deletePortfolioItem } from '@/lib/bmbAdminApi_portfolio'
+import { getProducts } from '@/lib/bmbAdminApi_products'
 import { uploadMediaAsset as uploadMediaAssetFn, validateImageFile } from '@/lib/bmbAdminApi_media'
 // R21d backlog: โหลด portfolio ไม่สำเร็จต้องฟ้อง + ลองใหม่ (เดิม catch เฉย ๆ = หน้าเปล่าเงย)
 import { LoadErrorBanner } from '@/components/ui/LoadErrorBanner'
-import type { AdminPortfolioItem } from '@/types'
+import type { AdminPortfolioItem, Product } from '@/types'
 import { AdminAssetAudit } from '@/pages/admin/AdminAssetAudit'
 
 const KIND_LABEL: Record<string, string> = {
@@ -31,7 +32,7 @@ const KIND_LABEL: Record<string, string> = {
   portfolio: 'ผลงาน',
 }
 
-type Tab = 'library' | 'portfolio' | 'audit' | 'registry'
+type Tab = 'library' | 'portfolio' | 'theater' | 'audit' | 'registry'
 
 export function AdminMediaPortfolio() {
   const [tab, setTab] = useState<Tab>(() =>
@@ -40,15 +41,19 @@ export function AdminMediaPortfolio() {
   const [assets, setAssets] = useState<MediaAssetRow[]>([])
   const [registry, setRegistry] = useState<RegistryAssetRow[]>([])
   const [portfolioItems, setPortfolioItems] = useState<AdminPortfolioItem[]>([])
+  const [products, setProducts] = useState<Product[]>([])
   const [uploading, setUploading] = useState(false)
   const [kind, setKind] = useState<MediaAssetRow['kind']>('image')
   const [alt, setAlt] = useState('')
   const [assetKey, setAssetKey] = useState('')
   // Portfolio form state
-  const [portfolioForm, setPortfolioForm] = useState({ title: '', description: '', imageUrl: '', displayOrder: 0, isActive: true })
+  const [portfolioForm, setPortfolioForm] = useState({ title: '', description: '', imageUrl: '', displayOrder: 0, isActive: true, productId: '', isTheaterCarousel: false, theaterCaption: '' })
   // Media picker state
   const [mediaPickerOpen, setMediaPickerOpen] = useState(false)
   const [mediaPickerFilter, setMediaPickerFilter] = useState<'all' | 'image'>('image')
+  // Product picker state
+  const [productPickerOpen, setProductPickerOpen] = useState(false)
+  const [productSearch, setProductSearch] = useState('')
   // R21d: โหลด portfolio ไม่สำเร็จต้องฟ้อง (toast อย่างเดียวหายไปเมื่อปิด)
   const [portfolioLoadError, setPortfolioLoadError] = useState('')
   const [mediaLoadError, setMediaLoadError] = useState('')
@@ -78,9 +83,19 @@ export function AdminMediaPortfolio() {
     }
   }
 
+  const loadProducts = async () => {
+    try {
+      const items = await getProducts()
+      setProducts(items)
+    } catch (e) {
+      console.error('[AdminMediaPortfolio] loadProducts failed:', e)
+    }
+  }
+
   useEffect(() => {
     void loadMedia()
     void loadPortfolio()
+    void loadProducts()
   }, [])
 
   async function handleToggleActive(asset: RegistryAssetRow) {
@@ -118,10 +133,20 @@ export function AdminMediaPortfolio() {
   // Portfolio CRUD
   async function handleCreatePortfolio() {
     if (!portfolioForm.title || !portfolioForm.imageUrl) { showToast('Title and image URL required', 'error'); return }
-    const created = await createPortfolioItem({ title: portfolioForm.title, description: portfolioForm.description || null, image_url: portfolioForm.imageUrl, media_asset_id: null, display_order: portfolioForm.displayOrder, is_active: portfolioForm.isActive })
+    const created = await createPortfolioItem({ 
+      title: portfolioForm.title, 
+      description: portfolioForm.description || null, 
+      image_url: portfolioForm.imageUrl, 
+      media_asset_id: null, 
+      display_order: portfolioForm.displayOrder, 
+      is_active: portfolioForm.isActive,
+      product_id: portfolioForm.productId || null,
+      is_theater_carousel: portfolioForm.isTheaterCarousel,
+      theater_caption: portfolioForm.theaterCaption || null,
+    })
     if (created) {
       setPortfolioItems([...portfolioItems, created])
-      setPortfolioForm({ title: '', description: '', imageUrl: '', displayOrder: 0, isActive: true })
+      setPortfolioForm({ title: '', description: '', imageUrl: '', displayOrder: 0, isActive: true, productId: '', isTheaterCarousel: false, theaterCaption: '' })
       showToast('เพิ่มผลงานแล้ว', 'success')
     } else { showToast('เพิ่มผลงานไม่สำเร็จ', 'error') }
   }
@@ -148,7 +173,22 @@ export function AdminMediaPortfolio() {
     showToast('เลือกภาพจากคลังแล้ว', 'success')
   }
 
+  function openProductPicker() {
+    setProductSearch('')
+    setProductPickerOpen(true)
+  }
+
+  function pickProductForTheater(product: Product) {
+    setPortfolioForm((f) => ({ ...f, productId: product.id, title: f.title || product.name, imageUrl: f.imageUrl || product.image_url || '' }))
+    setProductPickerOpen(false)
+    showToast(`เลือกเมนู "${product.name}" แล้ว`, 'success')
+  }
+
   const filteredAssets = mediaPickerFilter === 'all' ? assets : assets.filter((a) => a.kind === 'image')
+  const filteredProducts = products.filter((p) =>
+    p.name.toLowerCase().includes(productSearch.toLowerCase()) ||
+    p.description?.toLowerCase().includes(productSearch.toLowerCase())
+  )
 
   return (
     <div className="p-6 max-w-7xl mx-auto">
@@ -159,6 +199,7 @@ export function AdminMediaPortfolio() {
         {([
           ['library', '🗂 คลังรูปภาพ'],
           ['portfolio', '🖼 ผลงาน/พอร์ตโฟลิโอ'],
+          ['theater', '🎭 Theater Carousel'],
           ['audit', '🔍 ตรวจรูปสินค้า'],
           ['registry', '🗂 Asset Registry'],
         ] as const).map(([k, label]) => (
@@ -277,6 +318,51 @@ export function AdminMediaPortfolio() {
         </div>
       )}
 
+      {tab === 'theater' && (
+        <div className="space-y-4">
+          <div className="card p-6 mb-6">
+            <h3 className="font-bold text-brand-accent mb-4">เพิ่มรายการ Theater Carousel ใหม่</h3>
+            <p className="text-sm text-brand-muted mb-4">รายการที่ตั้งค่า is_theater_carousel = true จะแสดงในโหมด Auto-play บนหน้า /shop</p>
+            <div className="grid grid-cols-2 gap-4">
+              <input className="border rounded px-3 py-2" placeholder="ชื่อ/คำอธิบายสั้น *" value={portfolioForm.title} onChange={(e) => setPortfolioForm({ ...portfolioForm, title: e.target.value })} />
+              <div>
+                <label className="block text-sm font-medium text-brand-muted mb-1">รูปภาพ</label>
+                <div className="flex flex-wrap items-center gap-2">
+                  <input className="border rounded px-3 py-2 flex-1" placeholder="Image URL (หรือเลือกจากคลังรูปภาพ)" value={portfolioForm.imageUrl} onChange={(e) => setPortfolioForm({ ...portfolioForm, imageUrl: e.target.value })} />
+                  <button type="button" className="btn btn-outline" onClick={openMediaPicker}>📁 เลือกจากคลัง</button>
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-brand-muted mb-1">ลิงก์เมนู (Product)</label>
+                <div className="flex flex-wrap items-center gap-2">
+                  <input className="border rounded px-3 py-2 flex-1 font-mono text-xs" placeholder="Product ID (เลือกจากคลังเมนู)" value={portfolioForm.productId} onChange={(e) => setPortfolioForm({ ...portfolioForm, productId: e.target.value })} readOnly />
+                  <button type="button" className="btn btn-outline" onClick={openProductPicker}>🍽 เลือกเมนู</button>
+                </div>
+              </div>
+              <textarea className="border rounded px-3 py-2 col-span-2" placeholder="คำอธิบายสำหรับ Theater (ใช้แทน description ใน carousel)" rows={2} value={portfolioForm.theaterCaption} onChange={(e) => setPortfolioForm({ ...portfolioForm, theaterCaption: e.target.value })} />
+              <div className="grid grid-cols-3 gap-4 col-span-2">
+                <input type="number" className="border rounded px-3 py-2" placeholder="ลำดับแสดง" value={portfolioForm.displayOrder} onChange={(e) => setPortfolioForm({ ...portfolioForm, displayOrder: Number(e.target.value) })} />
+                <label className="flex items-center gap-2"><input type="checkbox" checked={portfolioForm.isActive} onChange={(e) => setPortfolioForm({ ...portfolioForm, isActive: e.target.checked })} /> เปิดใช้งาน</label>
+                <label className="flex items-center gap-2"><input type="checkbox" checked={portfolioForm.isTheaterCarousel} onChange={(e) => setPortfolioForm({ ...portfolioForm, isTheaterCarousel: e.target.checked })} /> 🎭 Theater Carousel</label>
+              </div>
+            </div>
+            <button className="btn btn-primary mt-4" onClick={handleCreatePortfolio}>เพิ่มรายการ Theater</button>
+          </div>
+
+          {portfolioItems.filter(i => i.is_theater_carousel).map((item) => (
+            <div key={item.id} className="card p-4 flex items-center gap-4 border-l-4 border-brand-primary">
+              <img src={item.image_url} alt={item.title} className="w-20 h-20 object-cover rounded" />
+              <div className="flex-1 min-w-0"><h4 className="font-bold truncate">{item.title}</h4>
+                <p className="text-sm text-brand-muted">{item.theater_caption || item.description || 'No description'}</p>
+                <span className={`text-xs px-2 py-1 rounded ${item.is_active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>{item.is_active ? 'Active' : 'Inactive'} | Order: {item.display_order}</span>
+                {item.product_id && <span className="ml-2 text-xs px-2 py-1 bg-blue-50 text-blue-700 border border-blue-200 rounded">🔗 Product: {item.product_id.slice(0, 8)}…</span>}</div>
+              <div className="flex gap-2"><button className="btn btn-sm" onClick={() => handleTogglePortfolio(item.id, !item.is_active)}>{item.is_active ? 'Disable' : 'Enable'}</button><button className="btn btn-danger btn-sm" onClick={() => handleDeletePortfolio(item.id)}>Delete</button></div>
+            </div>
+          ))}
+          {portfolioItems.filter(i => i.is_theater_carousel).length === 0 && <p className="text-center py-12 text-brand-muted">ยังไม่มีรายการ Theater Carousel — กดปุ่ม "เพิ่มรายการ Theater" ด้านบนได้เลยค่ะ</p>}
+        </div>
+      )}
+
       {tab === 'audit' && <AdminAssetAudit />}
 
       {tab === 'registry' && (
@@ -305,6 +391,31 @@ export function AdminMediaPortfolio() {
                   {filteredAssets.map((a) => (
                     <button key={a.id} type="button" onClick={() => pickMediaForPortfolio(a)} className="aspect-square bg-gray-100 rounded-lg border border-brand-border overflow-hidden hover:border-brand-primary transition-colors">
                       {a.url ? <img src={a.url} alt={a.alt || 'media'} className="w-full h-full object-cover" /> : <span className="text-3xl">🎬</span>}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Product Picker Modal for Theater */}
+      {productPickerOpen && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={() => setProductPickerOpen(false)}>
+          <div className="card max-w-3xl w-full max-h-[80vh] overflow-hidden" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between p-4 border-b border-brand-border"><h3 className="font-bold text-brand-accent">🍽 เลือกเมนูสำหรับ Theater Carousel</h3><button className="btn btn-outline" onClick={() => setProductPickerOpen(false)}>✕ ปิด</button></div>
+            <div className="p-2 border-b border-brand-border"><input type="text" className="input border rounded px-3 py-2 w-full" placeholder="ค้นหาเมนู..." value={productSearch} onChange={(e) => setProductSearch(e.target.value)} /></div>
+            <div className="p-4 max-h-96 overflow-y-auto">
+              {filteredProducts.length === 0 ? <p className="text-center py-8 text-brand-muted">ไม่พบเมนูที่ตรงกัน</p> : (
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                  {filteredProducts.map((p) => (
+                    <button key={p.id} type="button" onClick={() => pickProductForTheater(p)} className="card p-3 text-left hover:border-brand-primary transition-colors border border-brand-border">
+                      <div className="aspect-square bg-gray-100 rounded-lg overflow-hidden mb-2 flex items-center justify-center">
+                        {p.image_url ? <img src={p.image_url} alt={p.name} className="w-full h-full object-cover" /> : <span className="text-2xl">🍽</span>}
+                      </div>
+                      <div className="font-medium text-sm truncate">{p.name}</div>
+                      <div className="text-xs text-brand-muted">฿{Number(p.price) || 0}</div>
                     </button>
                   ))}
                 </div>

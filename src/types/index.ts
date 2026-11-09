@@ -984,7 +984,7 @@ export interface VerifiedCustomerReview {
   replied_at?: string | null
 }
 
-/** Admin portfolio item (migration 094) */
+/** Admin portfolio item (migration 094, extended 201 for theater carousel) */
 export interface AdminPortfolioItem {
   id: string
   title: string
@@ -995,6 +995,10 @@ export interface AdminPortfolioItem {
   is_active: boolean
   created_at: string
   updated_at: string
+  // Theater carousel fields (migration 201)
+  product_id: string | null
+  is_theater_carousel: boolean
+  theater_caption: string | null
 }
 
 /** Homepage configuration settings (admin-configurable catalog display) */

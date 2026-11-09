@@ -12,6 +12,8 @@
 //   - pose/state   → bitePoseForState + useBiteAIStore (visual only)
 // Carousel = native CSS scroll-snap (touch swipe on mobile) + buttons + dots,
 // same accessibility pattern as HorizontalCarousel. No new dependencies.
+// Theater Carousel (Admin-curated): auto-play, scroll-snap, dots, arrows.
+// Falls back to AI picks when no admin items exist.
 // ============================================
 
 import { useEffect, useMemo, useRef, useState } from 'react'
@@ -33,6 +35,16 @@ import { showToast } from '@/components/ui/ToastContainer'
 import { TheaterHeroCard, RecommendationCard } from './TheaterCards'
 
 const PICK_COUNT = 7
+
+interface TheaterCarouselItem {
+  id: string
+  title: string
+  description: string | null
+  image_url: string
+  display_order: number
+  product_id: string | null
+  theater_caption: string | null
+}
 
 interface FoodTheaterProps {
   /** Real catalog rows already loaded by the page (single source of truth). */
@@ -59,6 +71,11 @@ export function FoodTheater({ products, schedule = {}, onCustomize, onPreOrder }
   const [editorial, setEditorial] = useState(THEATER_EDITORIAL_DEFAULTS)
   // Daily rotation layer — SAME settings fetch as editorial (one swap on load).
   const [dailyCopy, setDailyCopy] = useState<TheaterDailyCopyItem | null>(null)
+  // Theater carousel items from admin (is_theater_carousel = true)
+  const [theaterItems, setTheaterItems] = useState<TheaterCarouselItem[]>([])
+  // Auto-play state
+  const [autoplayEnabled, setAutoplayEnabled] = useState(true)
+  const autoplayTimer = useRef<ReturnType<typeof setInterval> | null>(null)
   const trackRef = useRef<HTMLDivElement>(null)
   const scrollTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
@@ -77,6 +94,29 @@ export function FoodTheater({ products, schedule = {}, onCustomize, onPreOrder }
         if (settings?.theater_daily_copy) {
           setDailyCopy(selectDailyCopy(settings.theater_daily_copy))
         }
+        // Theater carousel settings
+        if (typeof settings?.theater_autoplay_ms === 'number') {
+          // Auto-play interval is controlled by timer, not a state
+        }
+        // theater_mode: 'auto' | 'manual' - but we always show carousel, just source differs
+      })
+      .catch(() => undefined)
+    return () => {
+      active = false
+    }
+  }, [])
+
+  // Load theater carousel items from admin_portfolio_items
+  useEffect(() => {
+    let active = true
+    void import('@/lib/bmbAdminApi_portfolio')
+      .then(({ getAllPortfolioItems }) => getAllPortfolioItems())
+      .then((items) => {
+        if (!active) return
+        const theaterCarouselItems = items
+          .filter((i) => i.is_theater_carousel && i.is_active)
+          .sort((a, b) => a.display_order - b.display_order)
+        setTheaterItems(theaterCarouselItems)
       })
       .catch(() => undefined)
     return () => {
@@ -102,7 +142,26 @@ export function FoodTheater({ products, schedule = {}, onCustomize, onPreOrder }
   // R86 (Owner 2026-11-08: "เมนูที่เลยรอบไปแล้วไม่ต้องเอาขึ้นเธียเตอร์") —
   // pre-order-only ที่ไม่มีรอบถัดไปในปฏิทิน (เลยรอบแล้ว/ยังไม่ลง) ห้ามขึ้นเวที —
   // mirror กติกา L-8 ที่ add()/customize() block อยู่แล้ว (schedule map กรองวันเลยรอบด้วย R77)
-  const picks = useMemo(() => pickTheaterStage(products, schedule, PICK_COUNT), [products, schedule])
+  const aiPicks = useMemo(() => pickTheaterStage(products, schedule, PICK_COUNT), [products, schedule])
+  // Theater items take priority, fallback to AI picks
+  const picks = useMemo(() => {
+    if (theaterItems.length > 0) {
+      // Convert theater items to Product-like objects for rendering
+      return theaterItems.map((item) => ({
+        id: item.id,
+        name: item.title,
+        description: item.theater_caption || item.description || '',
+        image_url: item.image_url,
+        price: 0, // Price not shown for theater items unless linked to product
+        category_id: '',
+        is_available: true,
+        // Keep reference to original item for product_id
+        _theaterItem: item,
+      })) as (Product & { _theaterItem: TheaterCarouselItem })[]
+    }
+    return aiPicks as (Product & { _theaterItem?: TheaterCarouselItem })[]
+  }, [theaterItems, aiPicks])
+  
   // What the stage renders — daily copy → admin editorial → defaults (pure chain).
   const stage = useMemo(
     () => resolveStageCopy(editorial, dailyCopy, picks.length),
@@ -113,7 +172,9 @@ export function FoodTheater({ products, schedule = {}, onCustomize, onPreOrder }
     [cartItems],
   )
 
-  function reasonFor(p: Product) {
+  function reasonFor(p: Product & { _theaterItem?: TheaterCarouselItem }) {
+    // For theater items, don't show AI reason chip
+    if (p._theaterItem) return null
     return recommendReason(p, { favoriteCats, cartCategoryIds })
   }
 
@@ -123,6 +184,39 @@ export function FoodTheater({ products, schedule = {}, onCustomize, onPreOrder }
       writeTheaterOpen(!prev)
       return !prev
     })
+  }
+
+  // --- Auto-play carousel ---
+  function startAutoplay() {
+    if (autoplayTimer.current) clearInterval(autoplayTimer.current)
+    autoplayTimer.current = setInterval(() => {
+      const next = index + 1 >= picks.length ? 0 : index + 1
+      go(next)
+    }, 5000) // 5 seconds default
+  }
+
+  function stopAutoplay() {
+    if (autoplayTimer.current) clearInterval(autoplayTimer.current)
+    autoplayTimer.current = null
+  }
+
+  useEffect(() => {
+    if (autoplayEnabled && picks.length > 1) {
+      startAutoplay()
+    } else {
+      stopAutoplay()
+    }
+    return () => stopAutoplay()
+  }, [autoplayEnabled, picks.length])
+
+  // Pause on hover/touch
+  function handleTrackEnter() {
+    stopAutoplay()
+  }
+  function handleTrackLeave() {
+    if (autoplayEnabled && picks.length > 1) {
+      startAutoplay()
+    }
   }
 
   // --- Theater/Waiting Stage unity (directive §2): มาสคอตบนเวที = ทางเข้า
@@ -176,6 +270,7 @@ export function FoodTheater({ products, schedule = {}, onCustomize, onPreOrder }
 
   useEffect(() => () => {
     if (scrollTimer.current) clearTimeout(scrollTimer.current)
+    if (autoplayTimer.current) clearInterval(autoplayTimer.current)
   }, [])
 
   // Ring safety: when the catalog shrinks, the active index must stay in range
@@ -185,22 +280,32 @@ export function FoodTheater({ products, schedule = {}, onCustomize, onPreOrder }
   }, [picks.length])
 
   // --- Canonical add-to-cart (identical semantics to TalkToBite.addToCart) ---
-  function add(p: Product, quantity: number) {
+  function add(p: Product & { _theaterItem?: TheaterCarouselItem }, quantity: number) {
+    // If theater item has product_id, use that product for cart
+    const productToAdd = p._theaterItem?.product_id
+      ? products.find((prod) => prod.id === p._theaterItem!.product_id)
+      : p
+    
+    if (!productToAdd) {
+      showToast('ไม่พบสินค้าในระบบ', 'warning')
+      return
+    }
+    
     // Phase 1 (OD-3 / OD-5): derive จาก canonical rule (matrix §3.1) —
     // null = ไม่มีสิทธิ์ทั้งสองโหมด → ห้าม offer (คิวเดิม reject ด้วย ERR_PRODUCT_MODE_NOT_ALLOWED)
-    const mode = deriveOrderMode(p)
+    const mode = deriveOrderMode(productToAdd)
     if (!mode) {
       showToast('สินค้านี้ยังไม่เปิดให้สั่งในขณะนี้ค่ะ', 'warning')
       return
     }
     // L-8 (N-4 #8 · Owner 2026-10-26): pre-order-only ที่ยังไม่ลงปฏิทิน → ห้ามกดเพิ่ม
-    if (mode === 'PRE_ORDER' && !schedule[p.id]) {
+    if (mode === 'PRE_ORDER' && !schedule[productToAdd.id]) {
       showToast('เมนูนี้ยังไม่ลงปฏิทินรอบถัดไป — ยังจองไม่ได้', 'warning')
       return
     }
-    const res = useCartStore.getState().addItem(p, quantity, {}, mode)
+    const res = useCartStore.getState().addItem(productToAdd, quantity, {}, mode)
     if (res === 'added') {
-      showToast(`เพิ่ม ${p.name} ลงตะกร้าแล้ว 🛒`)
+      showToast(`เพิ่ม ${productToAdd.name} ลงตะกร้าแล้ว 🛒`)
       setBiteState('SUCCESS')
       window.setTimeout(() => setBiteState('IDLE'), 800)
     } else {
@@ -208,29 +313,38 @@ export function FoodTheater({ products, schedule = {}, onCustomize, onPreOrder }
     }
   }
 
-  function customize(p: Product) {
+  function customize(p: Product & { _theaterItem?: TheaterCarouselItem }) {
+    const productToAdd = p._theaterItem?.product_id
+      ? products.find((prod) => prod.id === p._theaterItem!.product_id)
+      : p
+    
+    if (!productToAdd) {
+      showToast('ไม่พบสินค้าในระบบ', 'warning')
+      return
+    }
+    
     // Phase 1 (OD-3): โหมดเดียวกับ add() — canonical derive เท่านั้น
-    const mode = deriveOrderMode(p)
+    const mode = deriveOrderMode(productToAdd)
     if (!mode) {
       showToast('สินค้านี้ยังไม่เปิดให้สั่งในขณะนี้ค่ะ', 'warning')
       return
     }
     if (mode === 'PRE_ORDER') {
       // L-8: pre-order-only ที่ยังไม่ลงปฏิทิน → ห้ามเปิด builder จอง
-      if (!schedule[p.id]) {
+      if (!schedule[productToAdd.id]) {
         showToast('เมนูนี้ยังไม่ลงปฏิทินรอบถัดไป — ยังจองไม่ได้', 'warning')
         return
       }
-      onPreOrder({ productId: p.id, quantity: 1, deliveryRoundId: '', scheduledDate: '' })
+      onPreOrder({ productId: productToAdd.id, quantity: 1, deliveryRoundId: '', scheduledDate: '' })
       return
     }
     onCustomize({
-      productId: p.id,
+      productId: productToAdd.id,
       quantity: 1,
       timestamp: new Date().toISOString(),
       availabilitySnapshot: {
-        isAvailable: p.is_available,
-        engineState: p.is_available ? 'available' : 'sold_out',
+        isAvailable: productToAdd.is_available,
+        engineState: productToAdd.is_available ? 'available' : 'sold_out',
         source: 'live_availability_engine',
         snapshotAt: new Date().toISOString(),
       },
@@ -316,6 +430,10 @@ export function FoodTheater({ products, schedule = {}, onCustomize, onPreOrder }
             tabIndex={0}
             aria-label="เมนูที่ Bite เลือกมาให้ เลื่อนได้"
             onScroll={handleScroll}
+            onMouseEnter={handleTrackEnter}
+            onMouseLeave={handleTrackLeave}
+            onTouchStart={handleTrackEnter}
+            onTouchEnd={handleTrackLeave}
             onKeyDown={(e) => {
               if (e.key === 'ArrowRight') { e.preventDefault(); go(index + 1) }
               if (e.key === 'ArrowLeft') { e.preventDefault(); go(index - 1) }
@@ -335,12 +453,12 @@ export function FoodTheater({ products, schedule = {}, onCustomize, onPreOrder }
                   <TheaterHeroCard
                     product={p}
                     reason={reasonFor(p)}
-                    scheduledDate={schedule[p.id]}
+                    scheduledDate={p._theaterItem ? undefined : schedule[p.id]}
                     onAdd={add}
                     onCustomize={customize}
                   />
                 ) : (
-                  <RecommendationCard product={p} reason={reasonFor(p)} scheduledDate={schedule[p.id]} onAdd={(prod) => add(prod, 1)} />
+                  <RecommendationCard product={p} reason={reasonFor(p)} scheduledDate={p._theaterItem ? undefined : schedule[p.id]} onAdd={(prod) => add(prod, 1)} />
                 )}
               </div>
             ))}

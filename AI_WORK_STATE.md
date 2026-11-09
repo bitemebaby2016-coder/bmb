@@ -29,6 +29,20 @@
 - **All local gates pass**: lint ✅ (brandNameGuard + languageSanity) build ✅ (tsc + vite) tests ✅
 - **No cleanup needed** - CI gates already properly configured and passing
 
+## Phase 4: Food Theater Carousel (Admin-Curated Auto-Play) — ✅ CODE_CLOSED + PUSHED + DEPLOYED
+- **Migration 201**: Extended `admin_portfolio_items` with `product_id`, `is_theater_carousel`, `theater_caption` + indexes
+- **AdminMediaPortfolio.tsx**: Added "🎭 Theater Carousel" tab with:
+  - Form for theater items (title, image URL from media picker, product picker, theater caption, display order, active toggle, theater carousel flag)
+  - Product picker modal (searchable, shows product image/name/price)
+  - List view filtered to theater carousel items with product link indicator
+- **FoodTheater.tsx**: Auto-play carousel with:
+  - Priority: Admin theater items (is_theater_carousel=true) → fallback to AI picks
+  - Auto-play every 5s, pauses on hover/touch
+  - Scroll-snap + prev/next arrows + dots (a11y)
+  - Product linking: theater items with `product_id` navigate to `/menu?product=<id>`
+  - Theater caption overrides description in carousel
+- **Gates**: lint ✅ build ✅ (tsc + vite) tests ✅ (pre-existing failures only)
+
 ## Marketing+Promotions+Media+Portfolio Merge (Owner 2026-11-09) — ✅ CODE_CLOSED + PUSHED + DEPLOYED
 - **Phase 1: MarketingPromotions** (`/admin/marketing-promotions`) — 7 tabs: overview, promotions, banners, planner, studio, social, settings
   - Preserves all image gen/upload/album/watermark/quality check features (E5/E6)
