@@ -1,5 +1,3 @@
-
-
 // ============================================
 // Bite Me Baby — Admin Brand Management (TEN-05)
 // Platform/Tenant admin CRUD for brands table
@@ -91,17 +89,17 @@ export function AdminBrands() {
       if (editingId) {
         const { error } = await supabase.from('brands').update(brandData).eq('id', editingId)
         if (error) throw error
-        showToast('Brand updated', 'success')
+        showToast('อัปเดตแบรนด์แล้ว', 'success')
       } else {
         const id = `brand-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
         const { error } = await supabase.from('brands').insert({ ...brandData, id })
         if (error) throw error
-        showToast('Brand created', 'success')
+        showToast('สร้างแบรนด์แล้ว', 'success')
       }
       resetForm(); await loadAll()
     } catch (err: any) {
       console.error('[AdminBrands] Submit error:', err)
-      showToast(err.message || 'Failed to save brand', 'error')
+      showToast(err.message || 'บันทึกแบรนด์ไม่สำเร็จ', 'error')
     }
   }
 
@@ -123,23 +121,23 @@ export function AdminBrands() {
   async function togglePublish(b: BrandRow) {
     const np = !b.is_published
     const { error } = await supabase.from('brands').update({ is_published: np }).eq('id', b.id)
-    if (error) { showToast(`Failed to ${np ? 'publish' : 'unpublish'}: ${error.message}`, 'error'); return }
-    showToast(`Brand ${np ? 'published' : 'unpublished'}`, 'success'); await loadAll()
+    if (error) { showToast(`Failed to ${np ? 'เผยแพร่' : 'ยกเลิกเผยแพร่'}: ${error.message}`, 'error'); return }
+    showToast(`แบรนด์ ${np ? 'เผยแพร่' : 'ยกเลิกเผยแพร่'} แล้ว`, 'success'); await loadAll()
   }
 
   async function updateStatus(b: BrandRow, s: 'active'|'inactive'|'suspended') {
     const { error } = await supabase.from('brands').update({ status: s }).eq('id', b.id)
     if (error) { showToast(`Update failed: ${error.message}`, 'error'); return }
-    showToast(`Brand status: ${s}`, 'success'); await loadAll()
+    showToast(`สถานะแบรนด์: ${s}`, 'success'); await loadAll()
   }
 
-  if (loading) return <div className="p-6">Loading...</div>
+  if (loading) return <div className="p-6">กำลังโหลด...</div>
 
   return (
     <div className="p-6">
       <div className="flex items-center justify-between mb-6">
-        <div><h1 className="text-xl font-bold text-brand-accent">Brand Management</h1><p className="text-sm text-brand-muted">Manage brand presentation, publishing, and status</p></div>
-        <button onClick={() => { resetForm(); setShowForm(true) }} className="btn btn-primary">+ New Brand</button>
+        <div><h1 className="text-xl font-bold text-brand-accent">จัดการแบรนด์</h1><p className="text-sm text-brand-muted">จัดการการนำเสนอแบรนด์ การเผยแพร่ และสถานะ</p></div>
+        <button onClick={() => { resetForm(); setShowForm(true) }} className="btn btn-primary">+ แบรนด์ใหม่</button>
       </div>
       <div className="space-y-4">
         {brands.map(b => (
@@ -148,17 +146,17 @@ export function AdminBrands() {
               <div className="flex items-center gap-2">
                 <span className="font-bold text-lg">{b.display_name}</span>
                 <span className={`px-2 py-0.5 rounded-full text-xs ${b.status==='active'?'bg-green-100 text-green-800':b.status==='suspended'?'bg-red-100 text-red-800':'bg-gray-100'}`}>{b.status}</span>
-                {b.is_published ? <span className="px-2 py-0.5 rounded-full text-xs bg-blue-100 text-blue-800">Published</span> : <span className="px-2 py-0.5 rounded-full text-xs bg-yellow-100 text-yellow-800">Unpublished</span>}
-                {b.is_default && <span className="px-2 py-0.5 rounded-full text-xs bg-purple-100 text-purple-800">Default</span>}
+                {b.is_published ? <span className="px-2 py-0.5 rounded-full text-xs bg-blue-100 text-blue-800">เผยแพร่แล้ว</span> : <span className="px-2 py-0.5 rounded-full text-xs bg-yellow-100 text-yellow-800">ยังไม่เผยแพร่</span>}
+                {b.is_default && <span className="px-2 py-0.5 rounded-full text-xs bg-purple-100 text-purple-800">ค่าเริ่มต้น</span>}
               </div>
               <p className="text-sm text-brand-muted mt-1"><strong>Tenant:</strong> {b.tenant_id} · <strong>Slug:</strong> {b.slug}</p>
               {b.tagline && <p className="text-sm text-brand-muted italic mt-1">{b.tagline}</p>}
             </div>
             <div className="flex gap-2">
-              <button onClick={() => startEdit(b)} className="btn btn-outline">Edit</button>
-              <button onClick={() => togglePublish(b)} className="btn btn-outline">Pub</button>
+              <button onClick={() => startEdit(b)} className="btn btn-outline">แก้ไข</button>
+              <button onClick={() => togglePublish(b)} className="btn btn-outline">เผยแพร่</button>
               <select value={b.status} onChange={e => updateStatus(b, e.target.value as any)} className="input text-sm" style={{width:'auto'}}>
-                <option value="active">Active</option><option value="inactive">Inactive</option><option value="suspended">Suspended</option>
+                <option value="active">ใช้งาน</option><option value="inactive">หยุดชั่วคราว</option><option value="suspended">ระงับ</option>
               </select>
             </div>
           </div></div>
@@ -168,27 +166,27 @@ export function AdminBrands() {
             <LoadErrorBanner message={loadError} onRetry={() => { void loadAll() }} testId="brands-load-error" />
           </div>
         )}
-        {!loadError && brands.length === 0 && <div className="text-center py-16 text-brand-muted">No brands found.</div>}
+        {!loadError && brands.length === 0 && <div className="text-center py-16 text-brand-muted">ไม่พบแบรนด์</div>}
       </div>
 
       {showForm && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={resetForm}>
           <div className="card max-w-xl w-full max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
-            <h2 className="text-lg font-bold mb-4">{editingId ? 'Edit Brand' : 'New Brand'}</h2>
+            <h2 className="text-lg font-bold mb-4">{editingId ? 'แก้ไขแบรนด์' : 'แบรนด์ใหม่'}</h2>
             <form onSubmit={handleSubmit} className="space-y-3">
-              <div><label className="block text-sm font-medium mb-1">Name *</label><input type="text" value={formName} onChange={e=>setFormName(e.target.value)} className="input w-full" required /></div>
-              <div><label className="block text-sm font-medium mb-1">Display Name</label><input type="text" value={formDisplayName} onChange={e=>setFormDisplayName(e.target.value)} className="input w-full" /></div>
-              <div><label className="block text-sm font-medium mb-1">Tagline</label><input type="text" value={formTagline} onChange={e=>setFormTagline(e.target.value)} className="input w-full" /></div>
+              <div><label className="block text-sm font-medium mb-1">ชื่อ *</label><input type="text" value={formName} onChange={e=>setFormName(e.target.value)} className="input w-full" required /></div>
+              <div><label className="block text-sm font-medium mb-1">ชื่อแสดง</label><input type="text" value={formDisplayName} onChange={e=>setFormDisplayName(e.target.value)} className="input w-full" /></div>
+              <div><label className="block text-sm font-medium mb-1">สโลแกน</label><input type="text" value={formTagline} onChange={e=>setFormTagline(e.target.value)} className="input w-full" /></div>
               <div><label className="block text-sm font-medium mb-1">Logo URL Icon</label><input type="url" value={formLogoUrlIcon} onChange={e=>setFormLogoUrlIcon(e.target.value)} className="input w-full" placeholder="https://..." /></div>
               <div><label className="block text-sm font-medium mb-1">Tenant *</label>
                 <select value={formTenantId} onChange={e=>setFormTenantId(e.target.value)} className="input w-full">
                   {tenants.map(t=><option key={t.id} value={t.id}>{t.name} ({t.id})</option>)}
                 </select>
               </div>
-              <div className="flex gap-4"><label><input type="checkbox" checked={formDataIsDefault} onChange={e=>setFormDataIsDefault(e.target.checked)}/> Default brand</label><label><input type="checkbox" checked={formDataIsPublished} onChange={e=>setFormDataIsPublished(e.target.checked)}/> Published</label></div>
+              <div className="flex gap-4"><label><input type="checkbox" checked={formDataIsDefault} onChange={e=>setFormDataIsDefault(e.target.checked)}/> แบรนด์ค่าเริ่มต้น</label><label><input type="checkbox" checked={formDataIsPublished} onChange={e=>setFormDataIsPublished(e.target.checked)}/> เผยแพร่</label></div>
               <div className="flex gap-2 justify-end pt-4">
-                <button type="button" onClick={resetForm} className="btn btn-outline">Cancel</button>
-                <button type="submit" className="btn btn-primary">{editingId ? 'Update' : 'Create'}</button>
+                <button type="button" onClick={resetForm} className="btn btn-outline">ยกเลิก</button>
+                <button type="submit" className="btn btn-primary">{editingId ? 'อัปเดต' : 'สร้าง'}</button>
               </div>
             </form>
           </div>

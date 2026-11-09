@@ -75,27 +75,27 @@ export function RouteOptimizationPage() {
   return (
     <div className="max-w-7xl mx-auto px-4 py-6">
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-3xl font-bold text-brand-accent">🗺️ Route Optimization</h1>
-        <Link to="/admin" className="btn btn-outline">← Back to Dashboard</Link>
+        <h1 className="text-3xl font-bold text-brand-accent">🗺️ วางแผนเส้นทาง</h1>
+        <Link to="/admin" className="btn btn-outline">← กลับแดชบอร์ด</Link>
       </div>
 
       {/* Summary Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
         <div className="card bg-brand-surface">
-          <div className="text-sm text-brand-muted">Routes</div>
+          <div className="text-sm text-brand-muted">เส้นทาง</div>
           <div className="text-3xl font-bold text-brand-primary">{summary.totalRoutes}</div>
         </div>
         <div className="card bg-brand-surface">
-          <div className="text-sm text-brand-muted">Total Orders</div>
+          <div className="text-sm text-brand-muted">ออเดอร์ทั้งหมด</div>
           <div className="text-3xl font-bold text-brand-primary">{summary.totalOrders}</div>
         </div>
         <div className="card bg-brand-surface">
-          <div className="text-sm text-brand-muted">Total Distance</div>
+          <div className="text-sm text-brand-muted">ระยะทางรวม</div>
           <div className="text-3xl font-bold text-brand-accent">{summary.totalDistance.toFixed(1)} km</div>
         </div>
         <div className="card bg-brand-surface">
-          <div className="text-sm text-brand-muted">Est. Time</div>
-          <div className="text-3xl font-bold text-brand-accent">{summary.estimatedTotalTime} min</div>
+          <div className="text-sm text-brand-muted">เวลาประมาณ</div>
+          <div className="text-3xl font-bold text-brand-accent">{summary.estimatedTotalTime} นาที</div>
         </div>
       </div>
 
@@ -126,13 +126,13 @@ export function RouteOptimizationPage() {
                   <div className="flex items-center gap-3">
                     <div className="w-12 h-12 bg-brand-primary rounded-full flex items-center justify-center text-white font-bold text-lg">🛵</div>
                     <div>
-                      <h3 className="font-bold text-lg text-brand-accent">{driver?.name || 'Unknown'}</h3>
+                      <h3 className="font-bold text-lg text-brand-accent">{driver?.name || 'ไม่ทราบ'}</h3>
                       <p className="text-sm text-brand-muted">งานที่ถือ: {route.orders.length} · โหลด {driver?.current_load ?? 0}/{driver?.max_capacity ?? '—'}</p>
                     </div>
                   </div>
                   <div className="text-right">
                     <div className="font-bold text-brand-primary">{route.total_distance.toFixed(1)} km</div>
-                    <div className="text-sm text-brand-muted">{route.estimated_time} min</div>
+                    <div className="text-sm text-brand-muted">{route.estimated_time} นาที</div>
                   </div>
                 </div>
                 <div className="space-y-2">
@@ -159,7 +159,7 @@ export function RouteOptimizationPage() {
 
       {/* Drivers Status — E2: ไรเดอร์จริงจากตาราง drivers (list_drivers RPC 037) */}
       <div className="mt-8">
-        <h2 className="text-xl font-bold text-brand-accent mb-4">Driver Status (ไรเดอร์จริง)</h2>
+        <h2 className="text-xl font-bold text-brand-accent mb-4">สถานะไรเดอร์ (ไรเดอร์จริง)</h2>
         {driverRows.length === 0 ? (
           <div className="card text-center py-8 text-brand-muted" data-testid="route-no-drivers">
             ยังไม่มีไรเดอร์ที่ลงทะเบียน/ผูกบัญชี — เพิ่มและผูกบัญชีได้ที่หน้า Delivery Management
@@ -173,13 +173,13 @@ export function RouteOptimizationPage() {
                   <div>
                     <div className="font-bold">{driver.driver_name}</div>
                     <div className={`text-sm ${driver.status === 'available' ? 'text-green-600' : driver.status === 'busy' ? 'text-yellow-600' : 'text-gray-600'}`}>
-                      {driver.status === 'available' ? 'Available' : driver.status === 'busy' ? 'On Delivery' : driver.status}
+                      {driver.status === 'available' ? 'พร้อมงาน' : driver.status === 'busy' ? 'กำลังส่ง' : driver.status}
                     </div>
                   </div>
                 </div>
                 <div className="text-sm text-brand-muted">
                   งานที่ถืออยู่: {driver.active_assignments}/{driver.max_capacity ?? '—'}
-                  {driver.last_active && <div>ออนไลน์ล่าสุด: {new Date(driver.last_active).toLocaleString()}</div>}
+                  {driver.last_active && <div>ออนไลน์ล่าสุด: {new Date(driver.last_active).toLocaleString('th-TH')}</div>}
                 </div>
               </div>
             ))}
@@ -189,12 +189,12 @@ export function RouteOptimizationPage() {
 
       {/* Zone Info */}
       <div className="mt-8 card bg-blue-50 border-2 border-blue-200">
-        <h3 className="font-bold text-blue-900 mb-2">📍 Delivery Zone Info</h3>
+        <h3 className="font-bold text-blue-900 mb-2">📍 ข้อมูลโซนจัดส่ง</h3>
         <div className="grid grid-cols-2 gap-4 text-sm text-blue-800">
-          <div><strong>Kitchen:</strong> {KITCHEN_LAT}, {KITCHEN_LNG} (Chanthaburi)</div>
+          <div><strong>ครัว:</strong> {KITCHEN_LAT}, {KITCHEN_LNG} (จันทบุรี)</div>
           <div><strong>รัศมีบริการ:</strong> {radiusKm != null ? `${radiusKm} km (branches.service_radius_km)` : '— (ยังไม่ได้ตั้งค่า)'}</div>
-          <div><strong>Distance Formula:</strong> Haversine</div>
-          <div><strong>Algorithm:</strong> Nearest Neighbor</div>
+          <div><strong>สูตรระยะทาง:</strong> Haversine</div>
+          <div><strong>อัลกอริทึม:</strong> Nearest Neighbor</div>
         </div>
       </div>
 

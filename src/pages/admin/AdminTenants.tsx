@@ -43,13 +43,13 @@ export function AdminTenants() {
     try {
       if (editingId != null) {
         const r = await updateTenant(editingId, {name:n||undefined,slug:s||undefined,status:(formStatus==='active'?undefined:formStatus)})
-        if(r.ok){ showToast('Tenant updated','success'); resetForm(); await loadAll() }
+        if(r.ok){ showToast('อัปเดต tenant แล้ว','success'); resetForm(); await loadAll() }
         else { showToast(String(r.error||'Update failed'),'error') }
       } else {
         const r = await createTenant(n, s)
         if(r.ok && r.tenant != null){
           setActiveTenant(r.tenant.id)
-          showToast('Created '+String(r.tenant.name),'success')
+          showToast('สร้าง '+String(r.tenant.name),'success')
           resetForm(); await loadAll()
         } else { showToast(String(r.error||'Create failed'),'error') }
       }
@@ -65,15 +65,14 @@ export function AdminTenants() {
 
   function startEdit(t: TenantRow): void { setEditingId(t.id); setFormName(t.name); setFormSlug(t.slug); setFormStatus(t.status); setShowForm(true) }
   function resetForm(): void { setShowForm(false); setEditingId(null); setFormName(''); setFormSlug(''); setFormStatus('active') }
-  
-  async function selectFor(id: string): Promise<void> { setActiveTenant(id); showToast('Switched to tenant context','success') }
-  
-
+   
+  async function selectFor(id: string): Promise<void> { setActiveTenant(id); showToast('สลับบริบท tenant แล้ว','success') }
+   
 
   return (
     <div className="p-6">
-      <div className="flex items-center justify-between mb-6"><h1 className="text-xl font-bold text-brand-text">Tenant Management</h1><button onClick={()=>setShowForm(true)} className="btn btn-primary" disabled={!isAdminScopePlatform}>+ Create Tenant</button></div>
-      {activeTenantId && <div className="mb-4 p-3 rounded-lg bg-brand-primary/5 border border-brand-primary/20"><span className="text-xs font-semibold text-brand-primary">Active Context:</span>{' '}<span className="text-sm">{tenants.find(x=>x.id===activeTenantId)?.name || activeTenantId}</span></div>}
+      <div className="flex items-center justify-between mb-6"><h1 className="text-xl font-bold text-brand-text">จัดการ Tenant</h1><button onClick={()=>setShowForm(true)} className="btn btn-primary" disabled={!isAdminScopePlatform}>+ สร้าง Tenant</button></div>
+      {activeTenantId && <div className="mb-4 p-3 rounded-lg bg-brand-primary/5 border border-brand-primary/20"><span className="text-xs font-semibold text-brand-primary">บริบทที่ใช้งาน:</span>{' '}<span className="text-sm">{tenants.find(x=>x.id===activeTenantId)?.name || activeTenantId}</span></div>}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {tenants.map(t=>(
           <div key={t.id} className={'card p-4 '+((t.id===activeTenantId?'border-2 border-brand-primary':''))}>
@@ -82,8 +81,8 @@ export function AdminTenants() {
               <span className={'px-2 py-0.5 rounded-full text-xs '+(t.status==='active'?'bg-green-100 text-green-700':t.status==='inactive'?'bg-yellow-100 text-yellow-700':'bg-red-100 text-red-700')}>{t.status}</span>
             </div>
             <div className="flex gap-2 mt-3">
-              <button onClick={()=>selectFor(t.id)} className="btn btn-outline btn-sm">Select</button>
-              {isAdminScopePlatform && <><button onClick={()=>startEdit(t)} className="btn btn-outline btn-sm">Edit</button><button onClick={()=>handleToggle(t)} className={'btn btn-sm '+(t.status==='active'?'btn-warning':'btn-success')}>{t.status==='active'?'Deactivate':'Activate'}</button></>}
+              <button onClick={()=>selectFor(t.id)} className="btn btn-outline btn-sm">เลือก</button>
+              {isAdminScopePlatform && <><button onClick={()=>startEdit(t)} className="btn btn-outline btn-sm">แก้ไข</button><button onClick={()=>handleToggle(t)} className={'btn btn-sm '+(t.status==='active'?'btn-warning':'btn-success')}>{t.status==='active'?'ปิดใช้งาน':'เปิดใช้งาน'}</button></>}
             </div>
           </div>
         ))}
@@ -92,17 +91,17 @@ export function AdminTenants() {
             <LoadErrorBanner message={loadError} onRetry={() => { void loadAll() }} testId="tenants-load-error" />
           </div>
         )}
-        {tenants.length===0&&!loading&&!loadError&&<div className="col-span-full text-center py-16 text-brand-muted">No tenants found.</div>}
+        {tenants.length===0&&!loading&&!loadError&&<div className="col-span-full text-center py-16 text-brand-muted">ไม่พบ tenant</div>}
       </div>
       {showForm && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={resetForm}>
           <div className="card max-w-md w-full" onClick={e=>e.stopPropagation()}>
-            <h2 className="text-lg font-bold mb-4">{editingId?'Edit Tenant':'New Tenant'}</h2>
+            <h2 className="text-lg font-bold mb-4">{editingId?'แก้ไข Tenant':'Tenant ใหม่'}</h2>
             <form onSubmit={handleSubmit} className="space-y-3">
-              <div><label className="block text-sm font-medium mb-1">Name *</label><input type="text" value={formName} onChange={e=>setFormName(e.target.value)} className="input w-full" required /></div>
+              <div><label className="block text-sm font-medium mb-1">ชื่อ *</label><input type="text" value={formName} onChange={e=>setFormName(e.target.value)} className="input w-full" required /></div>
               <div><label className="block text-sm font-medium mb-1">Slug *</label><input type="text" value={formSlug} onChange={e=>setFormSlug(e.target.value)} className="input w-full" required /></div>
-              {editingId!=null && <div><label className="block text-sm font-medium mb-1">Status</label><select value={formStatus} onChange={e=>setFormStatus(e.target.value as 'active'|'inactive'|'suspended')} className="input w-full"><option value="active">Active</option><option value="inactive">Inactive</option><option value="suspended">Suspended</option></select></div>}
-              <div className="flex gap-2 justify-end pt-4"><button type="button" onClick={resetForm} className="btn btn-outline">Cancel</button><button type="submit" className="btn btn-primary">{editingId?'Update':'Create'}</button></div>
+              {editingId!=null && <div><label className="block text-sm font-medium mb-1">สถานะ</label><select value={formStatus} onChange={e=>setFormStatus(e.target.value as 'active'|'inactive'|'suspended')} className="input w-full"><option value="active">ใช้งาน</option><option value="inactive">หยุดชั่วคราว</option><option value="suspended">ระงับ</option></select></div>}
+              <div className="flex gap-2 justify-end pt-4"><button type="button" onClick={resetForm} className="btn btn-outline">ยกเลิก</button><button type="submit" className="btn btn-primary">{editingId?'อัปเดต':'สร้าง'}</button></div>
             </form>
           </div>
         </div>
@@ -110,4 +109,3 @@ export function AdminTenants() {
     </div>
   )
 }
-

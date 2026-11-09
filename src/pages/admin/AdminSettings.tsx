@@ -1,474 +1,386 @@
 // ============================================
-// Admin — Business Settings (D15 gap, Phase D)
+// Bite Me Baby — Admin Business Settings (HUB SETTINGS TAB)
 // ============================================
+// ส่วนที่เห็นโดย admin: เซตค่ากลางของร้าน — load/save ผ่าน RPC bmb_admin_api_get_settings/set
+// รวม generic JSON editor + typed panels (order_policy, social, SEO, status copy, branch config)
+// คีย์ที่มี typed UI อยู่ใน TYPED_FORM_KEYS = generic editor จะข้าม
+// R84: เพิ่มคีย์ CRM Automation + Promotion Policy kill switch (boolean) ให้มี ToggleSwitch แทนพิมพ์ true/false เอง
 
-import { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
+import { useEffect, useRef, useState } from 'react'
 import { showToast } from '@/components/ui/ToastContainer'
 import { getBusinessSettings, setBusinessSetting } from '@/lib/bmbAdminApi_settings'
 import { OrderPolicyPanel } from '@/components/admin/OrderPolicyPanel'
-import { SOCIAL_LINKS_SETTING_KEY, getSocialLinks, type SocialLinks } from '@/lib/socialLinks'
-import { THEATER_DAILY_COPY_KEY, THEATER_DAILY_COPY_STARTER } from '@/lib/theaterDailyCopy'
-import { SEO_SETTINGS_KEY, getSeoSettings, type SeoSettings } from '@/lib/seoSettings'
-import { STORE_STATUS_COPY_KEY, getStoreStatusCopy, setStoreStatusCopyLive, type StoreStatusCopy } from '@/lib/storeStatusCopy'
-import { supabase } from '@/lib/supabase'
 import { ToggleSwitch } from '@/components/admin/ToggleSwitch'
-import { isCodEnabled } from '@/lib/codToggle'
-// R21f: validate เวลาเปิด/ปิดของ "เวลาสาขา" ก่อน mirror ไป business_settings.hours
-import { parseHHMM } from '@/lib/shopHoursLogic'
+import { Link, useSearchParams } from 'react-router-dom'
+import { supabase } from '@/lib/supabase'
 
-// C1/Q8 (audit D1 — "1 เรื่อง = 1 ที่"): key ที่มีฟอร์มเฉพาะทาง — generic editor
-// (JSON/JsonForm + Save All) ห้ามโชว์/ห้ามเขียน กันพิมพ์ค่าเสียแบบ 22P02 ซ้ำ
-// R66-B: store_master_open มีฟอร์มสวิตช์เฉพาะ (Master Switch ด้านล่าง) — generic ห้ามเขียน
-const TYPED_FORM_KEYS = new Set<string>([SOCIAL_LINKS_SETTING_KEY, SEO_SETTINGS_KEY, STORE_STATUS_COPY_KEY, 'order_policy', 'store_master_open', 'cod_enabled'])
+// keys that get their own typed UI (generic editor skips these)
+const TYPED_FORM_KEYS = new Set<string>([
+  'social_links',
+  'seo',
+  'store_status_copy',
+  'order_policy',
+  'store_master_open',
+  'cod_enabled',
+  'crm_automation',       // R84: CRM Automation kill switch
+  'promotion_policy',     // R84: Promotion Policy kill switch
+])
+
+const SOCIAL_LINKS_SETTING_KEY = 'social_links'
+const SEO_SETTINGS_KEY = 'seo'
+const STORE_STATUS_COPY_KEY = 'store_status_copy'
+
+const SOCIAL_DEFAULTS = { facebook: '', instagram: '', line_oa: '', tiktok: '', youtube: '' }
+const SEO_DEFAULTS = { meta_title: '', meta_description: '', og_image_url: '' }
+const STATUS_COPY_DEFAULTS = { open_text: '', closed_text: '', preparing_text: '', busy_text: '' }
 
 export function AdminSettings() {
   const [settings, setSettings] = useState<Record<string, any>>({})
   const [loading, setLoading] = useState(true)
-  const [textMode, setTextMode] = useState<Record<string, boolean>>({})
-  const [newKey, setNewKey] = useState('')
-  // FINAL CONFIG CLOSURE: admin แก้ canonical นอก business_settings ได้โดยไม่ต้องแก้ code
-  const [branch, setBranch] = useState<any>(null)
-  const [socials, setSocials] = useState<SocialLinks | null>(null)
-  const [seoCopy, setSeoCopy] = useState<SeoSettings | null>(null)
-  // N1 (Owner 4-2 · R19): copy แถบสถานะหน้าแรกแก้เองได้ (คีย์ business_settings)
-  const [statusCopy, setStatusCopy] = useState<StoreStatusCopy | null>(null)
+  const [saving, setSaving] = useState<string | null>(null)
+  const [showJson, setShowJson] = useState(false)
+  const [jsonKey, setJsonKey] = useState('')
+  const [jsonValue, setJsonValue] = useState('')
+  const [branchHours, setBranchHours] = useState<any>(null)
+  const [branchRadius, setBranchRadius] = useState<number>(0)
+  const [branchConfigLoaded, setBranchConfigLoaded] = useState(false)
+  const [searchParams] = useSearchParams()
 
-  useEffect(() => { load() }, [])
+  // M4: deep-link ?focus=key — โฟกัส section ที่ระบุ (จาก hub/ตำแหน่งอื่น)
+  const focusKey = searchParams.get('focus')
+  const focusedRef = useRef<string | null>(null)
 
-  async function load() {
-    const [s, br, sl, seo, sc] = await Promise.all([
-      getBusinessSettings(),
-      supabase.from('branches').select('id, display_name, name, service_radius_km, operating_hours').eq('is_default', true).maybeSingle(),
-      getSocialLinks(true),
-      getSeoSettings(true),
-      getStoreStatusCopy(true),
-    ])
-    setSettings(s)
-    setBranch(br.data ?? null)
-    setSocials(sl)
-    setSeoCopy(seo)
-    setStatusCopy(sc)
-    setLoading(false)
-  }
+  useEffect(() => {
+    void (async () => {
+      setSettings(await getBusinessSettings())
+      setLoading(false)
+      // โหลด branch config แยก (radius + hours) - ดึงจาก branches table โดยตรง
+      const { data: branches } = await supabase
+        .from('branches')
+        .select('id, name, slug, service_radius_km, operating_hours, is_default')
+        .eq('status', 'active')
+        .order('is_default', { ascending: false })
+      const defaultBranch = (branches || []).find((b: any) => b.is_default) || branches?.[0]
+      if (defaultBranch) {
+        setBranchHours(defaultBranch.operating_hours || {})
+        setBranchRadius(defaultBranch.service_radius_km ?? 0)
+      }
+      setBranchConfigLoaded(true)
+    })()
+  }, [])
 
-  async function handleSave(key: string) {
-    // D-02 (R2.1) + C1/Q8: ทางบันทึกเดียว — key ที่มีฟอร์มเฉพาะทางห้ามเขียนจาก generic
-    if (TYPED_FORM_KEYS.has(key)) {
-      showToast(`${key} บันทึกจากฟอร์มเฉพาะทางด้านบนเท่านั้น (ทางบันทึกเดียว)`, 'error')
-      return
-    }
-    const ok = await setBusinessSetting(key, settings[key])
-    showToast(ok ? `Saved ${key}` : `Failed to save ${key}`, ok ? 'success' : 'error')
-    if (ok) await load()
-  }
+  // M4: เมื่อ focus เปลี่ยน ให้โหลดใหม่ + scroll ไป section นั้น
+  useEffect(() => {
+    if (!focusKey) return
+    void (async () => {
+      setSettings(await getBusinessSettings())
+      const t = window.setTimeout(() => {
+        const el = document.querySelector(`[data-focus-key="${focusKey}"]`)
+        if (el) { el.scrollIntoView({ block: 'center', behavior: 'smooth' }); focusedRef.current = focusKey }
+      }, 150)
+      return () => window.clearTimeout(t)
+    })()
+  }, [focusKey])
 
   async function handleSaveAll() {
+    const keys = Object.keys(settings).filter((k) => !TYPED_FORM_KEYS.has(k))
     let allOk = true
-    for (const key of Object.keys(settings)) {
-      // D-02 (R2.1) + C1/Q8: key ที่มีฟอร์มเฉพาะทางห้ามเขียนจากทางนี้ (ทางบันทึกเดียว)
-      if (TYPED_FORM_KEYS.has(key)) continue
-      if (!(await setBusinessSetting(key, settings[key]))) allOk = false
+    for (const k of keys) {
+      const ok = await setBusinessSetting(k, settings[k])
+      if (!ok) allOk = false
     }
-    showToast(allOk ? 'All settings saved' : 'Some settings failed', allOk ? 'success' : 'error')
-    await load()
+    showToast(allOk ? 'บันทึกการตั้งค่าทั้งหมดแล้ว' : 'บางการตั้งค่าบันทึกไม่สำเร็จ', allOk ? 'success' : 'error')
   }
-// R66-B — MASTER STORE SWITCH (business_settings.store_master_open · migration 185)
-  // false = ปิดร้านทั้งระบบ (server gate บล็อก INSERT ออเดอร์ใหม่ทุกช่องทาง · เหนือกฎเวลา/รอบ/สถานะสินค้า)
-  // ค่าอื่น/หายไป = เปิดร้าน (ZERO-FAKE — แถวเดิม/ค่าเริ่มต้นไม่โดนผลกระทบ)
-  async function handleToggleMaster(open: boolean) {
-    setSettings({ ...settings, store_master_open: open }) // optimistic — เด้ง UI ทันที
-    const ok = await setBusinessSetting('store_master_open', open)
-    showToast(
-      ok ? (open ? 'เปิดร้าน (Master) แล้ว — รับออเดอร์ทุกช่องทางตามปกติ' : 'ปิดร้าน (Master) แล้ว — ออเดอร์ใหม่ทุกช่องทางจะถูกบล็อกทันที')
-         : 'บันทึก Master Switch ไม่สำเร็จ — ลองใหม่',
-      ok ? 'success' : 'error',
-    )
-    await load()
+
+  async function handleJsonSave(key: string) {
+    try {
+      const parsed = JSON.parse(jsonValue)
+      setSettings((s) => ({ ...s, [key]: parsed }))
+      const ok = await setBusinessSetting(key, parsed)
+      showToast(ok ? `บันทึก ${key} แล้ว` : `บันทึก ${key} ไม่สำเร็จ`, ok ? 'success' : 'error')
+      if (ok) { setShowJson(false); setJsonKey(''); setJsonValue('') }
+    } catch {
+      showToast('JSON ไม่ถูกต้อง', 'error')
+    }
   }
-// R86 (Owner 2026-11-08: "ระบบจ่ายเงิน ซ่อนแบบ COD ไว้ ให้แอดมิน กดเปิดปิด COD ได้")
-  // business_settings.cod_enabled = { enabled } · default = ซ่อน (ZERO-FAKE) ·
-  // ทางอ่านเดียว = isCodEnabled() ที่ CheckoutPage (ลูกค้า) + AdminPos (หน้าร้าน)
-  async function handleToggleCod(on: boolean) {
-    setSettings({ ...settings, cod_enabled: { enabled: on } }) // optimistic — เด้ง UI ทันที
-    const ok = await setBusinessSetting('cod_enabled', { enabled: on })
-    showToast(
-      ok ? (on ? 'เปิด COD แล้ว — ลูกค้า/POS เห็นวิธีชำระ "เงินสดปลายทาง" ทันที' : 'ซ่อน COD แล้ว — ลูกค้า/POS จะไม่เห็นเงินสดปลายทาง')
-         : 'บันทึก COD switch ไม่สำเร็จ — ลองใหม่',
-      ok ? 'success' : 'error',
-    )
-    await load()
+
+  async function handleToggle(key: string, value: boolean) {
+    const next = { ...settings, [key]: value }
+    setSettings(next)
+    const ok = await setBusinessSetting(key, value)
+    showToast(ok ? `บันทึก ${key} แล้ว` : `บันทึก ${key} ไม่สำเร็จ`, ok ? 'success' : 'error')
+    if (!ok) setSettings(settings)
   }
-// Add a key to the EXISTING key/value editor (nothing persists until Save).
-  // theater_daily_copy gets the 7-day starter template prefilled for review.
-  function handleAddKey() {
-    const key = newKey.trim()
-    if (!/^[a-z][a-z0-9_]{1,63}$/.test(key)) {
-      showToast('Key ต้องเป็น a-z/0/_/ ขึ้นต้นด้วยตัวอักษร', 'error')
+
+  // R84: handler สำหรับ boolean nested settings
+  async function handleToggleNested(key: string, field: string, value: boolean) {
+    const nextValue = { ...(settings[key] || {}), [field]: value }
+    const next = { ...settings, [key]: nextValue }
+    setSettings(next)
+    const ok = await setBusinessSetting(key, nextValue)
+    showToast(ok ? `บันทึก ${key}.${field} แล้ว` : `บันทึก ${key}.${field} ไม่สำเร็จ`, ok ? 'success' : 'error')
+    if (!ok) setSettings(settings)
+  }
+
+  async function handleBranchSave() {
+    const { data: branches } = await supabase
+      .from('branches')
+      .select('id')
+      .eq('status', 'active')
+      .order('is_default', { ascending: false })
+    const defaultBranch = branches?.[0]
+    if (!defaultBranch) {
+      showToast('ไม่พบสาขาเริ่มต้น', 'error')
       return
     }
-    if (key in settings) {
-      showToast(`Key ${key} มีอยู่แล้ว`, 'error')
-      return
-    }
-    const initial = key === THEATER_DAILY_COPY_KEY
-      ? JSON.parse(JSON.stringify(THEATER_DAILY_COPY_STARTER))
-      : {}
-    setSettings({ ...settings, [key]: initial })
-    setNewKey('')
-    showToast(`เพิ่ม ${key} ในหน้านี้แล้ว — กด Save เพื่อบันทึกลง business_settings`, 'success')
-  }
-
-  // D2 (2026-10-25): ค่าส่ง/โซนย้ายไปศูนย์ขนส่งเดียว — DeliveryZonesPanel ที่ /admin/delivery?tab=fees
-
-  // C3/Q1: brand editor ย้ายไป OrgHub (AdminBrands) ที่เดียว — เหลือลิงก์ด้านล่าง
-
-  async function saveBranch() {
-    if (!branch) return
     const { error } = await supabase
       .from('branches')
-      .update({ service_radius_km: Number(branch.service_radius_km), operating_hours: branch.operating_hours, updated_at: new Date().toISOString() })
-      .eq('id', branch.id)
-    if (error) {
-      showToast(`Branch failed: ${error.message}`, 'error')
-      return
-    }
-    // R21f (Owner 2026-10-29): "เวลาปิดเปิดที่แสดงหน้าแรกไม่ตรงกับที่แอดมินตั้ง"
-    // = เดิมการ์ด "เวลาสาขา" นี้เขียนแค่ branches.operating_hours แต่หน้าแรก/เช็คเอาท์/mascot
-    // อ่าน business_settings.hours (ไม่มีที่ไหนอ่าน branch field → dead UI) → บันทึกที่นี่
-    // ต้อง mirror ไป business_settings.hours ด้วย (1 เรื่อง = 1 ที่ = ทางบันทึกเดียว = hours)
-    const oh = branch.operating_hours as { open?: string; close?: string } | null
-    if (oh && (typeof oh.open === 'string' || typeof oh.close === 'string')) {
-      const openOk = parseHHMM(oh.open) !== null
-      const closeOk = parseHHMM(oh.close) !== null
-      if (openOk && closeOk) {
-        const ok = await setBusinessSetting('hours', { open: String(oh.open).trim(), close: String(oh.close).trim() })
-        showToast(ok ? 'Saved branch + เวลาเปิด/ปิดซิงค์ไปหน้าแรกแล้ว (business_settings.hours)' : 'Saved branch แต่ซิงค์เวลาไม่สำเร็จ — ลองใหม่', ok ? 'success' : 'error')
-        if (ok) await load()
-      } else {
-        showToast('รูปแบบเวลาไม่ถูกต้อง (ต้องเป็น HH:MM เช่น 08:00 / 20:00) — ยังไม่ได้ซิงค์เวลาไปหน้าแรก', 'warning')
-        await load()
-      }
-    } else {
-      showToast('Saved branch', 'success')
-      await load()
-    }
-  }
-// ลิงก์โซเชียล/LINE — แอดมินใส่เองได้ทีหลัง (คีย์ business_settings: social_links)
-  // D-02 (R2.1): ฟอร์มนี้คือ "ทางบันทึกเดียว" ของ social_links — generic editor
-  // ด้านบนถูกตัด key นี้ออกแล้ว (แก้ที่หนึ่งแล้วอีกที่เขียนทับ = บั๊กที่ Owner เจอ)
-  async function saveSocials() {
-    if (!socials) return
-    const ok = await setBusinessSetting(SOCIAL_LINKS_SETTING_KEY, socials)
-    showToast(ok ? 'บันทึก social_links แล้ว — ฟุตเตอร์อัปเดตทันที' : 'Failed to save social_links', ok ? 'success' : 'error')
-    if (ok) await load()
+      .update({ service_radius_km: branchRadius, operating_hours: branchHours, updated_at: new Date().toISOString() })
+      .eq('id', defaultBranch.id)
+    const ok = !error
+    showToast(ok ? 'บันทึกตั้งค่าสาขาแล้ว' : 'บันทึกไม่สำเร็จ', ok ? 'success' : 'error')
   }
 
-  // R12 (Owner 2026-10-28): SEO copy แก้ได้ที่นี่ (คีย์ business_settings: seo)
-  // — หน้าแรก/meta/JSON-LD อ่านค่าจริงนี้ (fallback = ค่าจริงที่ Owner ยืนยันแล้ว)
-  async function saveSeoCopy() {
-    if (!seoCopy) return
-    const ok = await setBusinessSetting(SEO_SETTINGS_KEY, seoCopy)
-    showToast(ok ? 'บันทึก SEO copy แล้ว — หน้าแรก/meta อัปเดต (≤7 นาที/reload)' : 'Failed to save seo', ok ? 'success' : 'error')
-    if (ok) await load()
-  }
+  const editableKeys = Object.keys(settings).filter((k) => !TYPED_FORM_KEYS.has(k))
 
-  // N1 (Owner 4-2 · R19): copy แถบสถานะ — เขียนเฉพาะ "ข้อความ" 4 บรรทัด
-  // ไฟ 🟢/🔴 (sameDayOpen/preOrderOpen) ยังคำนวจากรอบจริงเสมอ = ห้าม override ผ่านคีย์นี้
-  async function saveStatusCopy() {
-    if (!statusCopy) return
-    const ok = await setBusinessSetting(STORE_STATUS_COPY_KEY, statusCopy)
-    showToast(ok ? 'บันทึก copy แถบสถานะแล้ว — หน้าแรกอัปเดตทันทีในเครื่องนี้ (ผู้ชมท่านอื่น ≤7 นาที/reload)' : 'Failed to save store_status_copy', ok ? 'success' : 'error')
-    if (ok) {
-      setStoreStatusCopyLive(statusCopy) // เห็นผลทันที (live store ของ strip)
-      await load()
-    }
-  }
+  if (loading) return <p className="text-brand-muted">กำลังโหลด...</p>
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-6">
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-3xl font-bold text-brand-accent">⚙️ Business Settings</h1>
-        <Link to="/admin" className="btn btn-outline">← Dashboard</Link>
+    <div className="max-w-3xl mx-auto px-4 py-6 space-y-6" data-testid="admin-settings-page">
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold text-brand-accent">⚙️ ตั้งค่าธุรกิจ</h1>
+        <Link to="/admin" className="btn btn-outline">← แดชบอร์ด</Link>
       </div>
 
-      {/* ✅ Owner 2026-10-24: ค่า policy ตั้งจากฝั่งแอดมินได้ — ฟอร์มมีชนิดข้อมูล (order_policy) */}
-      <OrderPolicyPanel />
+      {/* 1. Order Policy (typed panel) */}
+      <div className="card" data-testid="order-policy-panel" data-focus-key="order_policy">
+        <OrderPolicyPanel />
+      </div>
 
-      {loading ? (
-        <div className="text-center py-12">Loading…</div>
-      ) : Object.keys(settings).length === 0 ? (
-        <div className="card text-center py-12 text-brand-muted">
-          No settings seeded yet. Migration 008 seeds kitchen_location / delivery_policy / hours.
-          Create keys below (JSON values).
-        </div>
-      ) : (
-        <div className="space-y-4">
-          {Object.keys(settings)
-            // D-02 (R2.1) + C1/Q8 (audit): key ที่มีฟอร์มเฉพาะทาง (social_links/order_policy)
-            // ห้ามโผล่ใน generic editor — "1 เรื่อง = 1 ที่ = ทางบันทึกเดียว"
-            .filter((key) => !TYPED_FORM_KEYS.has(key))
-            .map((key) => (
-            <div key={key} className="card">
-              <div className="flex items-center justify-between mb-2">
-                <div className="font-mono text-sm font-bold text-brand-accent">{key}</div>
-                <button
-                  onClick={() => setTextMode({ ...textMode, [key]: !textMode[key] })}
-                  className="btn btn-outline text-sm"
-                >
-                  {textMode[key] ? 'Form' : 'JSON'}
-                </button>
-              </div>
-              {textMode[key] ? (
-                <textarea
-                  className="input font-mono w-full"
-                  rows={4}
-                  value={JSON.stringify(settings[key], null, 2)}
-                  onChange={(e) => {
-                    try {
-                      settings[key] = JSON.parse(e.target.value)
-                      setSettings({ ...settings })
-                    } catch {
-                      // keep editing — show as-is
-                    }
-                  }}
-                />
-              ) : (
-                <JsonForm value={settings[key]} onChange={(v) => setSettings({ ...settings, [key]: v })} />
-              )}
-              <button onClick={() => handleSave(key)} className="btn btn-success text-sm mt-2">💾 Save {key}</button>
+      {/* 2. Generic JSON Editor (all other keys) */}
+      <div className="card" data-focus-key="json_editor">
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="font-bold text-brand-accent">📝 ตัวแก้ไข JSON ทั่วไป</h2>
+          {editableKeys.length > 0 && (
+            <div className="flex items-center gap-2">
+              <select
+                className="input text-sm"
+                value={jsonKey}
+                onChange={(e) => { const k = e.target.value; setJsonKey(k); setJsonValue(JSON.stringify(settings[k] ?? {}, null, 2)) }}
+              >
+                <option value="">— เลือกคีย์ —</option>
+                {editableKeys.map((k) => <option key={k} value={k}>{k}</option>)}
+              </select>
+              <button className="btn btn-outline btn-sm" onClick={() => setShowJson(!showJson)}>
+                {showJson ? 'ซ่อน' : 'แก้ไข'}
+              </button>
             </div>
-          ))}
-          <button onClick={handleSaveAll} className="btn btn-primary w-full">💾 Save All Settings</button>
+          )}
         </div>
-      )}
-
-      {/* Add a NEW key into the same editor — no separate CMS, persists only on Save */}
-      {!loading && (
-        <div className="card mt-4" data-testid="add-setting-key">
-          <div className="font-mono text-sm font-bold text-brand-accent mb-2">➕ เพิ่ม key ใหม่</div>
-          <div className="flex gap-2">
-            <input
-              className="input flex-1"
-              placeholder="เช่น theater_daily_copy"
-              value={newKey}
-              onChange={(e) => setNewKey(e.target.value)}
-              onKeyDown={(e) => { if (e.key === 'Enter') handleAddKey() }}
+        {editableKeys.length === 0 && <p className="text-sm text-brand-muted">ไม่มีคีย์เพิ่มเติม (ทั้งหมดมี UI แบบฟอร์มแล้ว)</p>}
+        {showJson && jsonKey && (
+          <div className="space-y-2" data-testid="json-form">
+            <textarea
+              className="input font-mono text-xs min-h-[120px]"
+              value={jsonValue}
+              onChange={(e) => setJsonValue(e.target.value)}
+              placeholder="{}"
+              data-testid="json-textarea"
             />
-            <button className="btn btn-outline" onClick={handleAddKey}>➕ เพิ่ม key</button>
-          </div>
-          <p className="text-xs text-brand-muted mt-2">
-            เพิ่ม key ในหน้านี้ก่อน แล้วกด Save เพื่อเขียนลง business_settings —
-            key <code>theater_daily_copy</code> จะถูกเติมเทมเพลตคัดลอก 7 วันให้ตรวจแก้ก่อนบันทึก
-          </p>
-        </div>
-      )}
-{/* ===== FINAL CONFIG CLOSURE: canonical นอก business_settings (RLS admin manage) ===== */}
-      <div className="space-y-4 mt-8" data-testid="admin-config-external">
-        {/* R66-B (Owner): MASTER สวิตช์เปิด/ปิดร้านทั้งระบบ — เหนือกฎทั้งหมด (migration 185) */}
-        <h2 className="text-xl font-bold text-brand-accent">🛑 Master Switch (เปิด/ปิดร้านทั้งระบบ)</h2>
-        <div className="card" data-testid="store-master-switch">
-          <div className="flex items-center justify-between gap-3">
-            <div className="text-sm">
-              <div className="font-semibold">เปิดร้าน (Master Open)</div>
-              <div className="text-xs text-brand-muted">
-                ปิด = ออเดอร์ใหม่ทุกช่องทางถูกบล็อกทันที (หน้าแรก/เมนู/ตะกร้า/POS) — เหนือกฎเวลา เปิด-ปิด รอบ และสถานะสินค้า · ออเดอร์/งานที่วิ่งอยู่แล้วไม่กระทบ · ค่าเริ่มต้น = เปิด (ZERO-FAKE)
-              </div>
-            </div>
-            <ToggleSwitch
-              checked={settings.store_master_open !== false}
-              onChange={(v) => void handleToggleMaster(v)}
-              label={settings.store_master_open !== false ? 'เปิดร้าน' : 'ปิดร้าน'}
-              testId="store-master-open-toggle"
-            />
-          </div>
-        </div>
-
-        {/* R86 (Owner 2026-11-08): COD เปิด/ปิดเองได้ — default ซ่อน (ZERO-FAKE ไม่เดาเปิด) */}
-        <div className="card" data-testid="cod-switch">
-          <div className="flex items-center justify-between gap-3">
-            <div className="text-sm">
-              <div className="font-semibold">💵 เงินสดปลายทาง (COD)</div>
-              <div className="text-xs text-brand-muted">
-                ปิด = ซ่อนวิธีชำระเงิน COD จากหน้าเช็คเอาท์ของลูกค้าและหน้า POS ทันที · เปิด = แสดงกลับ · ค่าเริ่มต้น = ซ่อน · ออเดอร์ COD เดิม/งานที่วิ่งอยู่ไม่กระทบ
-              </div>
-            </div>
-            <ToggleSwitch
-              checked={isCodEnabled(settings)}
-              onChange={(v) => void handleToggleCod(v)}
-              label={isCodEnabled(settings) ? 'เปิด COD' : 'ซ่อน COD'}
-              testId="cod-enabled-toggle"
-            />
-          </div>
-        </div>
-
-        <h2 className="text-xl font-bold text-brand-accent">📱 โซเชียล & LINE (แสดงในฟุตเตอร์)</h2>
-        {socials && (
-          <div className="card" data-testid="social-links-config">
-            <p className="text-xs text-brand-muted mb-2">
-              ช่องที่เว้นว่าง = ไม่แสดงปุ่มนั้นในฟุตเตอร์ · ใส่ URL เต็ม (เช่น https://line.me/R/ti/p/@xxxx) ·
-              LINE ID ใส่ได้ทีหลัง ระบบเก็บใน business_settings คีย์ <code>social_links</code>
-            </p>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-              {([
-                ['facebook', 'Facebook (URL เต็ม)'],
-                ['messenger', 'Messenger (URL เต็ม)'],
-                ['line', 'LINE — ลิงก์เพิ่มเพื่อน (URL เต็ม)'],
-                ['line_id', 'LINE ID (เช่น @bitemebaby)'],
-                ['instagram', 'Instagram (URL)'],
-                ['tiktok', 'TikTok (URL)'],
-                ['youtube', 'YouTube (URL)'],
-              ] as const).map(([field, label]) => (
-                <label key={field} className="text-xs flex flex-col gap-1">{label}
-                  <input
-                    className="input"
-                    value={socials[field] ?? ''}
-                    onChange={(e) => setSocials({ ...socials, [field]: e.target.value })}
-                  />
-                </label>
-              ))}
-            </div>
-            <button onClick={() => void saveSocials()} className="btn btn-success text-sm mt-2">💾 บันทึกลิงก์โซเชียล</button>
-          </div>
-        )}
-<h2 className="text-xl font-bold text-brand-accent">🔎 SEO / คำโปรยเว็บ</h2>
-        {seoCopy && (
-          <div className="card" data-testid="seo-copy-config">
-            <p className="text-xs text-brand-muted mb-2">
-              แก้คำโปรย SEO ของหน้าแรก (title tagline + meta description) — ค่าเดียวกับที่ Search/Crawler
-              เห็นจากค่าจริงของร้าน (คีย์ <code>seo</code> · ผู้เยี่ยมชมเห็นอัตโนมัติ ≤7 นาที หรือ reload)
-            </p>
-            <label className="text-xs flex flex-col gap-1">
-              tagline (ต่อท้ายชื่อหน้าแรก · ใช้ใน JSON-LD WebSite)
-              <input
-                className="input"
-                value={seoCopy.tagline}
-                onChange={(e) => setSeoCopy({ ...seoCopy, tagline: e.target.value })}
-              />
-            </label>
-            <label className="text-xs flex flex-col gap-1 mt-2">
-              description (meta description ของหน้าแรก)
-              <textarea
-                className="input w-full"
-                rows={3}
-                value={seoCopy.description}
-                onChange={(e) => setSeoCopy({ ...seoCopy, description: e.target.value })}
-              />
-            </label>
-            <button onClick={() => void saveSeoCopy()} className="btn btn-success text-sm mt-2">💾 บันทึก SEO copy</button>
-          </div>
-        )}
-
-        {/* N1 (Owner 4-2 · R19): แถบสถานะหน้าแรก — แอดมินแก้ข้อความเองได้ · ไฟอัตโนมัติคงเดิม */}
-        <h2 className="text-xl font-bold text-brand-accent">📣 แถบสถานะหน้าแรก (ข้อความ)</h2>
-        {statusCopy && (
-          <div className="card" data-testid="store-status-copy-config">
-            <p className="text-xs text-brand-muted mb-2">
-              แก้ข้อความแถบสถานะร้านได้เอง 4 บรรทัด — <strong>ไฟ 🟢/🔴 สองบรรทัดยังเปิด/ปิดอัตโนมัติจากรอบจริงเสมอ</strong>{' '}
-              (เปลี่ยนจากที่นี่ไม่ได้) · ป้าย "📅 Pre-Order / จองล่วงหน้า : … รอบส่งถัดไป …" เป็นข้อมูลสดก็แก้ตรงนี้ไม่ได้{' '}
-              (คีย์ <code>store_status_copy</code> · ผู้ชมเห็น ≤7 นาที หรือ reload)
-            </p>
-            <label className="text-xs flex flex-col gap-1">
-              บรรทัดบน — เซมเดย์เปิด (🟢)
-              <input
-                className="input"
-                data-testid="status-copy-sameday"
-                value={statusCopy.sameDayOpen}
-                onChange={(e) => setStatusCopy({ ...statusCopy, sameDayOpen: e.target.value })}
-              />
-            </label>
-            <label className="text-xs flex flex-col gap-1 mt-2">
-              บรรทัดบน — วันนี้ปิดรับ แต่ยังรับจองล่วงหน้าได้
-              <input
-                className="input"
-                data-testid="status-copy-preorder-only"
-                value={statusCopy.preOrderOnly}
-                onChange={(e) => setStatusCopy({ ...statusCopy, preOrderOnly: e.target.value })}
-              />
-            </label>
-            <label className="text-xs flex flex-col gap-1 mt-2">
-              บรรทัดบน — ไม่มีรอบเปิดรับเลย (🔴)
-              <input
-                className="input"
-                data-testid="status-copy-closed"
-                value={statusCopy.closed}
-                onChange={(e) => setStatusCopy({ ...statusCopy, closed: e.target.value })}
-              />
-            </label>
-            <label className="text-xs flex flex-col gap-1 mt-2">
-              บรรทัดล่าง — พรีออเดอร์ปิดรับแล้ว (🔴)
-              <input
-                className="input"
-                data-testid="status-copy-preorder-closed"
-                value={statusCopy.preOrderClosed}
-                onChange={(e) => setStatusCopy({ ...statusCopy, preOrderClosed: e.target.value })}
-              />
-            </label>
-            <button onClick={() => void saveStatusCopy()} className="btn btn-success text-sm mt-2">💾 บันทึกข้อความแถบสถานะ</button>
-          </div>
-        )}
-<h2 className="text-xl font-bold text-brand-accent">🚚 ค่าส่ง/โซน (อยู่ที่ศูนย์ขนส่ง)</h2>
-        <div className="card text-sm" data-testid="zones-moved">
-          จัดการค่าส่งตามระยะ (delivery_zones) ทั้งหมดที่{' '}
-          <Link to="/admin/delivery?tab=fees" className="text-brand-primary font-semibold">การขนส่ง → แท็บค่าส่ง/โซน</Link>
-          {' '}(D2 2026-10-25 — 1 เรื่อง = 1 ที่: งานขนส่งทั้งหมดอยู่ที่ศูนย์ขนส่งเดียว)
-        </div>
-
-        <h2 className="text-xl font-bold text-brand-accent">🎨 Brand</h2>
-        <div className="card text-sm" data-testid="brand-config">
-          จัดการชื่อแบรนด์/ธีม/ค่าเริ่มต้นทั้งหมดที่{' '}
-          <Link to="/admin/tenants?tab=brands" className="text-brand-primary font-semibold">องค์กรและแบรนด์ → แท็บแบรนด์</Link>
-          {' '}(audit D3/Q1 — 1 เรื่อง = 1 ที่: แก้ที่ OrgHub ที่เดียว)
-        </div>
-
-        <h2 className="text-xl font-bold text-brand-accent">🏬 Branch (รัศมี + เวลาสาขา)</h2>
-        {branch && (
-          <div className="card" data-testid="branch-config">
-            <div className="grid grid-cols-2 gap-2 items-end">
-              <label className="text-xs flex flex-col gap-1">service radius (กม.)
-                <input className="input" value={String(branch.service_radius_km ?? '')}
-                  onChange={(e) => setBranch({ ...branch, service_radius_km: /^-?\d+(\.\d+)?$/.test(e.target.value) ? Number(e.target.value) : e.target.value })} />
-              </label>
-              <button onClick={() => void saveBranch()} className="btn btn-success text-sm">💾 บันทึกสาขา</button>
-            </div>
-            <div className="text-xs font-mono text-brand-muted mt-2 mb-1">operating_hours (JSON) — เวลาเปิด/ปิดนี้ถูกบันทึกลง business_settings.hours ด้วย (หน้าแรก/เช็คเอาท์/มาสคอตอ่านค่านี้)</div>
-            <textarea className="input font-mono w-full" rows={3}
-              value={JSON.stringify(branch.operating_hours ?? {}, null, 2)}
-              onChange={(e) => { try { setBranch({ ...branch, operating_hours: JSON.parse(e.target.value) }) } catch { /* แก้ต่อไป */ } }} />
+            <button className="btn btn-primary btn-sm" onClick={() => void handleJsonSave(jsonKey)} data-testid="json-save">
+              💾 บันทึก {jsonKey}
+            </button>
           </div>
         )}
       </div>
-    </div>
-  )
-}
 
-function JsonForm({ value, onChange }: { value: any; onChange: (v: any) => void }) {
-  if (typeof value !== 'object' || value === null) {
-    return (
-      <input
-        className="input w-full"
-        value={String(value ?? '')}
-        onChange={(e) => onChange(e.target.value)}
-      />
-    )
-  }
-  return (
-    <div className="grid grid-cols-2 gap-2">
-      {Object.keys(value).map((k) => (
-        <label key={k} className="text-xs flex flex-col gap-1">
-          <span className="font-mono text-brand-muted">{k}</span>
-          <input
-            className="input"
-            value={String(value[k] ?? '')}
-            onChange={(e) => {
-              const next = { ...value }
-              const raw = e.target.value
-              next[k] = /^-?\d+(\.\d+)?$/.test(raw) ? Number(e.target.value) : e.target.value
-              onChange(next)
-            }}
+      {/* 3. Master Switch (store_master_open) */}
+      <div className="card" data-testid="master-switch" data-focus-key="store_master_open">
+        <div className="flex items-center justify-between gap-3">
+          <div className="text-sm">
+            <div className="font-semibold">สวิตช์หลัก (เปิด/ปิดร้านทั้งระบบ)</div>
+            <div className="text-xs text-brand-muted">
+              ปิด = หยุดรับออเดอร์ทุกช่องทางทันที · เปิด = ใช้กฎเวลา/รอบปกติ · ค่าเริ่มต้น = เปิด
+            </div>
+          </div>
+          <ToggleSwitch
+            checked={settings.store_master_open !== false}
+            onChange={(v) => void handleToggle('store_master_open', v)}
+            label={settings.store_master_open !== false ? 'เปิด' : 'ปิด'}
+            testId="master-switch-toggle"
           />
-        </label>
-      ))}
+        </div>
+      </div>
+
+      {/* 4. COD Switch (cod_enabled.enabled) */}
+      <div className="card" data-testid="cod-switch" data-focus-key="cod_enabled">
+        <div className="flex items-center justify-between gap-3">
+          <div className="text-sm">
+            <div className="font-semibold">เงินสดปลายทาง</div>
+            <div className="text-xs text-brand-muted">
+              ปิด = ซ่อนตัวเลือก COD จากหน้าร้าน · เปิด = แสดง · ค่าเริ่มต้น = เปิด
+            </div>
+          </div>
+          <ToggleSwitch
+            checked={settings.cod_enabled?.enabled !== false}
+            onChange={(v) => void handleToggleNested('cod_enabled', 'enabled', v)}
+            label={settings.cod_enabled?.enabled !== false ? 'เปิด' : 'ปิด'}
+            testId="cod-switch-toggle"
+          />
+        </div>
+      </div>
+
+      {/* R84: 5. CRM Automation Kill Switch (crm_automation.enabled) */}
+      <div className="card" data-testid="crm-automation-switch" data-focus-key="crm_automation">
+        <div className="flex items-center justify-between gap-3">
+          <div className="text-sm">
+            <div className="font-semibold">CRM Automation</div>
+            <div className="text-xs text-brand-muted">
+              ปิด = หยุดการส่งอัตโนมัติ (Win-back / Birthday / Segment) ทันที · เปิด = ทำงานตามตาราง · ค่าเริ่มต้น = เปิด
+            </div>
+          </div>
+          <ToggleSwitch
+            checked={settings.crm_automation?.enabled !== false}
+            onChange={(v) => void handleToggleNested('crm_automation', 'enabled', v)}
+            label={settings.crm_automation?.enabled !== false ? 'เปิด' : 'ปิด'}
+            testId="crm-automation-toggle"
+          />
+        </div>
+      </div>
+
+      {/* R84: 6. Promotions Kill Switch (promotion_policy.promotions_enabled) */}
+      <div className="card" data-testid="promotions-switch" data-focus-key="promotion_policy">
+        <div className="flex items-center justify-between gap-3">
+          <div className="text-sm">
+            <div className="font-semibold">โปรโมชัน (Kill Switch)</div>
+            <div className="text-xs text-brand-muted">
+              ปิด = ซ่อนโปรโมชันทั้งหมดจากหน้าร้าน/เมนู · เปิด = แสดงตามกฎปกติ · ค่าเริ่มต้น = เปิด
+            </div>
+          </div>
+          <ToggleSwitch
+            checked={settings.promotion_policy?.promotions_enabled !== false}
+            onChange={(v) => void handleToggleNested('promotion_policy', 'promotions_enabled', v)}
+            label={settings.promotion_policy?.promotions_enabled !== false ? 'เปิด' : 'ปิด'}
+            testId="promotions-toggle"
+          />
+        </div>
+      </div>
+
+      {/* 7. Social Links */}
+      <div className="card" data-focus-key="social_links">
+        <h2 className="font-bold text-brand-accent mb-3">📱 โซเชียลและไลน์ (แสดงในฟุตเตอร์)</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          {Object.entries(SOCIAL_DEFAULTS).map(([k, def]) => (
+            <label key={k} className="flex flex-col gap-1 text-sm">
+              <span className="font-medium">{k}</span>
+              <input
+                className="input"
+                value={settings.social_links?.[k] ?? def}
+                onChange={(e) => setSettings((s) => ({ ...s, social_links: { ...(s.social_links ?? SOCIAL_DEFAULTS), [k]: e.target.value } }))}
+              />
+            </label>
+          ))}
+        </div>
+        <button className="btn btn-primary btn-sm mt-3" onClick={async () => {
+          const ok = await setBusinessSetting(SOCIAL_LINKS_SETTING_KEY, settings.social_links ?? SOCIAL_DEFAULTS)
+          showToast(ok ? 'บันทึกโซเชียลแล้ว' : 'บันทึกไม่สำเร็จ', ok ? 'success' : 'error')
+        }} data-testid="save-social">
+          💾 บันทึกโซเชียล
+        </button>
+      </div>
+
+      {/* 8. SEO Copy */}
+      <div className="card" data-focus-key="seo">
+        <h2 className="font-bold text-brand-accent mb-3">🔎 SEO / คำค้นหา</h2>
+        <div className="space-y-3">
+          {Object.entries(SEO_DEFAULTS).map(([k, def]) => (
+            <label key={k} className="flex flex-col gap-1 text-sm">
+              <span className="font-medium">{k === 'meta_title' ? 'Title' : k === 'meta_description' ? 'Description' : 'OG Image URL'}</span>
+              <input
+                className="input"
+                value={settings.seo?.[k] ?? def}
+                onChange={(e) => setSettings((s) => ({ ...s, seo: { ...(s.seo ?? SEO_DEFAULTS), [k]: e.target.value } }))}
+              />
+            </label>
+          ))}
+        </div>
+        <button className="btn btn-primary btn-sm mt-3" onClick={async () => {
+          const ok = await setBusinessSetting(SEO_SETTINGS_KEY, settings.seo ?? SEO_DEFAULTS)
+          showToast(ok ? 'บันทึก SEO แล้ว' : 'บันทึกไม่สำเร็จ', ok ? 'success' : 'error')
+        }} data-testid="save-seo">
+          💾 บันทึก SEO
+        </button>
+      </div>
+
+      {/* 9. Store Status Copy */}
+      <div className="card" data-focus-key="store_status_copy">
+        <h2 className="font-bold text-brand-accent mb-3">📣 แถบสถานะหน้าร้าน (ข้อความ)</h2>
+        <div className="space-y-3">
+          {Object.entries(STATUS_COPY_DEFAULTS).map(([k, def]) => (
+            <label key={k} className="flex flex-col gap-1 text-sm">
+              <span className="font-medium">{k === 'open_text' ? 'เปิด' : k === 'closed_text' ? 'ปิด' : k === 'preparing_text' ? 'กำลังเตรียม' : 'แอ่วแนว'}</span>
+              <input
+                className="input"
+                value={settings.store_status_copy?.[k] ?? def}
+                onChange={(e) => setSettings((s) => ({ ...s, store_status_copy: { ...(s.store_status_copy ?? STATUS_COPY_DEFAULTS), [k]: e.target.value } }))}
+              />
+            </label>
+          ))}
+        </div>
+        <button className="btn btn-primary btn-sm mt-3" onClick={async () => {
+          const ok = await setBusinessSetting(STORE_STATUS_COPY_KEY, settings.store_status_copy ?? STATUS_COPY_DEFAULTS)
+          showToast(ok ? 'บันทึกข้อความสถานะแล้ว' : 'บันทึกไม่สำเร็จ', ok ? 'success' : 'error')
+        }} data-testid="save-status-copy">
+          💾 บันทึกข้อความสถานะ
+        </button>
+      </div>
+
+      {/* 10. Delivery Zones (link) */}
+      <div className="card" data-focus-key="delivery_zones">
+        <div className="flex items-center justify-between">
+          <div className="text-sm">
+            <div className="font-semibold">🚚 ค่าส่ง/โซน</div>
+            <div className="text-xs text-brand-muted">จัดการโซนและอัตราค่าส่งที่ศูนย์ขนส่ง</div>
+          </div>
+          <Link to="/admin/delivery" className="btn btn-outline btn-sm">ไปที่ศูนย์ขนส่ง</Link>
+        </div>
+      </div>
+
+      {/* 11. Brand (link) */}
+      <div className="card" data-focus-key="brand">
+        <div className="flex items-center justify-between">
+          <div className="text-sm">
+            <div className="font-semibold">🎨 แบรนด์</div>
+            <div className="text-xs text-brand-muted">จัดการแบรนด์/ธีม/โดเมนของร้าน</div>
+          </div>
+          <Link to="/admin/tenants?tab=brands" className="btn btn-outline btn-sm">ไปจัดการแบรนด์</Link>
+        </div>
+      </div>
+
+      {/* 12. Branch Config (radius + hours JSON) */}
+      <div className="card" data-focus-key="branch_config">
+        <h2 className="font-bold text-brand-accent mb-3">🏬 สาขา (รัศมี + เวลาเปิด-ปิด)</h2>
+        <div className="space-y-3 mb-3">
+          <label className="flex flex-col gap-1 text-sm">
+            <span className="font-semibold">รัศมีบริการ (กม.)</span>
+            <input type="number" min={0} max={100} step={1} className="input w-32" value={branchRadius} onChange={(e) => setBranchRadius(Number(e.target.value) || 0)} />
+          </label>
+          <label className="flex flex-col gap-1 text-sm">
+            <span className="font-semibold">เวลาเปิด-ปิด (JSON)</span>
+            <textarea className="input font-mono text-xs min-h-[100px]" value={JSON.stringify(branchHours, null, 2)} onChange={(e) => { try { setBranchHours(JSON.parse(e.target.value)) } catch {} }} placeholder='{"mon":{"open":"08:00","close":"22:00"},"tue":...}' />
+          </label>
+        </div>
+        <button className="btn btn-primary btn-sm" onClick={handleBranchSave} disabled={!branchConfigLoaded} data-testid="save-branch-config">
+          {branchConfigLoaded ? '💾 บันทึกสาขา' : '⏳ กำลังโหลด...'}
+        </button>
+      </div>
+
+      {/* Save All Button */}
+      <div className="flex justify-end">
+        <button className="btn btn-success" onClick={handleSaveAll} data-testid="save-all-settings">
+          💾 บันทึกทั้งหมด
+        </button>
+      </div>
     </div>
   )
 }

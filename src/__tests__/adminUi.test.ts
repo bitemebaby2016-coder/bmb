@@ -63,13 +63,20 @@ describe('adminUi — admin navigation catalogue', () => {
   })
 })
 
-describe('adminUi — ADMIN_NAV_GROUPS (sidebar grouping, single nav set)', () => {
+describe('adminUi — ADMIN_NAV_GROUPS (sidebar grouping, single nav set) — consolidated to 3 groups', () => {
   it('flattening the groups yields exactly ADMIN_NAV_ITEMS (no lost or duplicated menu)', async () => {
     const { ADMIN_NAV_GROUPS, ADMIN_NAV_ITEMS } = await import('@/lib/adminUi')
     const flat = ADMIN_NAV_GROUPS.flatMap((g) => g.items)
     expect(flat.length).toBe(ADMIN_NAV_ITEMS.length)
     expect(new Set(flat.map((i) => i.to)).size).toBe(flat.length) // no duplicates inside groups
     expect(new Set(flat.map((i) => i.to))).toEqual(new Set(ADMIN_NAV_ITEMS.map((i) => i.to)))
+  })
+
+  it('has exactly 3 groups: operations, customers, settings', async () => {
+    const { ADMIN_NAV_GROUPS } = await import('@/lib/adminUi')
+    expect(ADMIN_NAV_GROUPS.length).toBe(3)
+    const ids = ADMIN_NAV_GROUPS.map((g) => g.id)
+    expect(ids).toEqual(['operations', 'customers', 'settings'])
   })
 
   it('every group has an id, a label and at least one item', async () => {
@@ -83,6 +90,49 @@ describe('adminUi — ADMIN_NAV_GROUPS (sidebar grouping, single nav set)', () =
     }
   })
 
+  it('operations group contains dashboard, orders, pos, kitchen, recipes, products, promotions, marketing', async () => {
+    const { ADMIN_NAV_GROUPS } = await import('@/lib/adminUi')
+    const ops = ADMIN_NAV_GROUPS.find(g => g.id === 'operations')
+    expect(ops).toBeTruthy()
+    const paths = ops!.items.map(i => i.to)
+    expect(paths).toContain('/admin')
+    expect(paths).toContain('/admin/orders')
+    expect(paths).toContain('/admin/pos')
+    expect(paths).toContain('/admin/kitchen')
+    expect(paths).toContain('/admin/recipes')
+    expect(paths).toContain('/admin/products')
+    expect(paths).toContain('/admin/promotions')
+    expect(paths).toContain('/admin/marketing')
+  })
+
+  it('customers group contains customers, notifications, media, portfolio, reviews', async () => {
+    const { ADMIN_NAV_GROUPS } = await import('@/lib/adminUi')
+    const cust = ADMIN_NAV_GROUPS.find(g => g.id === 'customers')
+    expect(cust).toBeTruthy()
+    const paths = cust!.items.map(i => i.to)
+    expect(paths).toContain('/admin/customers')
+    expect(paths).toContain('/admin/notifications')
+    expect(paths).toContain('/admin/media')
+    expect(paths).toContain('/admin/portfolio')
+    expect(paths).toContain('/admin/reviews')
+  })
+
+  it('settings group contains inventory, reports, delivery, audit-log, errors, settings, tenants, onboarding, billing', async () => {
+    const { ADMIN_NAV_GROUPS } = await import('@/lib/adminUi')
+    const sys = ADMIN_NAV_GROUPS.find(g => g.id === 'settings')
+    expect(sys).toBeTruthy()
+    const paths = sys!.items.map(i => i.to)
+    expect(paths).toContain('/admin/inventory')
+    expect(paths).toContain('/admin/reports')
+    expect(paths).toContain('/admin/delivery')
+    expect(paths).toContain('/admin/audit-log')
+    expect(paths).toContain('/admin/errors')
+    expect(paths).toContain('/admin/settings')
+    expect(paths).toContain('/admin/tenants')
+    expect(paths).toContain('/admin/onboarding')
+    expect(paths).toContain('/admin/billing')
+  })
+
   it('every grouped route is registered in App.tsx (menu never points at a dead path)', async () => {
     const { ADMIN_NAV_ITEMS } = await import('@/lib/adminUi')
     const app = (await import('../App.tsx?raw')).default
@@ -91,6 +141,7 @@ describe('adminUi — ADMIN_NAV_GROUPS (sidebar grouping, single nav set)', () =
     }
   })
 })
+
 describe('PHASE 6 — category CRUD via admin API (Supabase mock)', () => {
   beforeEach(() => {
     (supabase as any).__reset?.()

@@ -15,6 +15,16 @@ function cycleLabel(row: BillingRow): string {
   return row.billing_cycle === 'yearly' ? 'รายปี' : 'รายเดือน'
 }
 
+function statusLabel(status: string): string {
+  switch (status) {
+    case 'active': return 'ใช้งาน'
+    case 'past_due': return 'เกินกำหนด'
+    case 'canceled': return 'ยกเลิก'
+    case 'trialing': return 'ทดลองใช้'
+    default: return status
+  }
+}
+
 export function AdminBilling() {
   const [rows, setRows] = useState<BillingRow[]>([])
   const [loadError, setLoadError] = useState('')

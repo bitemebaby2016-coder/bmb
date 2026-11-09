@@ -18,29 +18,18 @@ export interface AdminNavGroup {
  * Grouped navigation for the desktop Sidebar / mobile drawer (single nav set).
  * Invariant (asserted in tests): flatten(groups) === ADMIN_NAV_ITEMS (same set,
  * every item exactly once) — groups are presentation only, never a second menu.
+ * Consolidated to 3 groups: operations, customers, settings
  */
 export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
   {
-    id: 'overview',
-    label: '\u0E2A\u0E33\u0E01\u0E2D\u0E1A',
+    id: 'operations',
+    label: 'ดำเนินงาน',
     items: [
       { to: '/admin', label: 'ภาพรวม', icon: '\uD83D\uDCCA' },
-    ],
-  },
-  {
-    id: 'orders',
-    label: '\u0E2D\u0E2D\u0E40\u0E14\u0E2D\u0E23\u0E4C \u0E41\u0E25\u0E30 \u0E04\u0E38\u0E13',
-    items: [
       { to: '/admin/orders', label: 'ออเดอร์', icon: '\uD83D\uDCE6' },
       { to: '/admin/pos', label: 'POS หน้าร้าน', icon: '🧾' },
       { to: '/admin/kitchen', label: 'ครัว/ผลิต', icon: '\uD83C\uDF73' },
       { to: '/admin/recipes', label: 'สูตรอาหาร', icon: '\uD83E\uDDEA' },
-    ],
-  },
-  {
-    id: 'menu',
-    label: '\u0E40\u0E21\u0E19\u0E39 \u0E41\u0E25\u0E30 \u0E1D\u0E23\u0E21\u0E2D\u0E1A\u0E1E\u0E34\u0E40\u0E28\u0E29',
-    items: [
       { to: '/admin/products', label: 'เมนูและตารางเมนู', icon: '\uD83C\uDF7D\uFE0F' },
       { to: '/admin/promotions', label: 'โปรโมชั่น', icon: '\uD83C\uDF81' },
       { to: '/admin/marketing', label: 'การตลาด', icon: '\uD83D\uDCE3' },
@@ -48,19 +37,18 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
   },
   {
     id: 'customers',
-    label: '\u0E25\u0E38\u0E01\u0E04\u0E19\u0E16\u0E32 \u0E41\u0E25\u0E30 \u0E04\u0E27\u0E19\u0E40\u0E17\u0E1E\u0E19\u0E31\u0E14',
+    label: 'ลูกค้าและเนื้อหา',
     items: [
       { to: '/admin/customers', label: 'ลูกค้า', icon: '\uD83D\uDC65' },
       { to: '/admin/notifications', label: 'การแจ้งเตือน', icon: '\uD83D\uDD14' },
       { to: '/admin/media', label: 'คลังรูปภาพ', icon: '\uD83D\uDDBC\uFE0F' },
       { to: '/admin/portfolio', label: 'ผลงาน', icon: '\uD83D\uDDBC\uFE0F' },
-      // R88/D6f (Owner: "ให้แอดมินอนุมัติก่อนและลบได้ตอบได้") — คิวอนุมัติรีวิวจากลูกค้า
       { to: '/admin/reviews', label: 'อนุมัติรีวิว', icon: '⭐' },
     ],
   },
   {
-    id: 'system',
-    label: '\u0E23\u0E30\u0E1A \u0E41\u0E25\u0E30 \u0E15\u0E23\u0E27\u0E08\u0E2A\u0E2D\u0E1A',
+    id: 'settings',
+    label: 'ตั้งค่าระบบ',
     items: [
       { to: '/admin/inventory', label: 'สต็อกวัตถุดิบ', icon: '\uD83E\uDD55' },
       { to: '/admin/reports', label: 'รายงานการเงิน', icon: '📊' },
@@ -69,13 +57,13 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
       { to: '/admin/errors', label: 'ปัญหาระบบ', icon: '\uD83E\uDE79' },
       { to: '/admin/settings', label: 'ตั้งค่าร้าน', icon: '\u2699\uFE0F' },
       { to: '/admin/tenants', label: 'องค์กรและแบรนด์', icon: '\uD83C\uDFE2' },
-      { to: '/admin/onboarding', label: 'เปิดร้านใหม่ (Wizard)', icon: '✨' },
-      { to: '/admin/billing', label: 'งวดบริการ (Billing)', icon: '💳' },
+      { to: '/admin/onboarding', label: 'เปิดร้านใหม่ (วิซาร์ด)', icon: '✨' },
+      { to: '/admin/billing', label: 'งวดบริการ (การเรียกเก็บเงิน)', icon: '💳' },
     ],
   },
 ]
 
-/** Master admin navigation — DERIVED จาก groups (audit D10: single source · flatten invariant) */
+/** Master admin navigation — DERIVED FROM groups (audit D10: single source · flatten invariant) */
 export const ADMIN_NAV_ITEMS: AdminNavItem[] = ADMIN_NAV_GROUPS.flatMap((g) => g.items)
 
 /** Whether the header / bottom nav should show the Admin link. */
@@ -104,6 +92,7 @@ export function isAdminCapableRole(role: string | null | undefined): boolean {
  * 146 — per-role nav (presentation only — RLS ยังเป็นประตูจริง):
  *   ไม่มี allowlist (owner/admin/staff/auditor/developer/unknown) = ทุกกลุ่ม
  *   specialist/pos/support = เฉพาะกลุ่มที่เกี่ยวข้อง
+ * Updated for 3-group structure
  */
 const ROLE_NAV_ALLOW: Record<string, string[]> = {
   pos: ['/admin', '/admin/orders', '/admin/pos', '/admin/customers', '/admin/reports'],
@@ -145,4 +134,3 @@ export function isImageSourceValid(source: string | null | undefined): boolean {
 export function blankCategoryForm() {
   return { name: '', icon: '\uD83C\uDF7D\uFE0F', sort_order: 0, is_active: true, allow_same_day: true, allow_pre_order: true }
 }
-

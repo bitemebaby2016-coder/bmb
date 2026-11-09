@@ -204,138 +204,138 @@ export function AdminRounds() {
       {/* ---- (1) แพทเทิร์นรอบของทุกวัน + (2) รอบรายวัน = แท็บเดียว (Q3) ---- */}
       {tab === 'manage' && (
         <>
-      <div className="card mb-6" data-testid="round-pattern-panel">
-        <h2 className="text-xl font-bold text-brand-accent mb-1">📋 แพทเทิร์นรอบประจำวัน (ทุกวันใช้ชุดเดียวกัน)</h2>
-      <p className="text-sm text-brand-muted mb-4">
-        ค่านี้คือต้นแบบของรอบทุกวัน (ทั้งพรีออเดอร์และเซมเดย์) — แก้ที่นี่ที่เดียว แล้วกด "สร้าง/ซ่อมรอบ 30 วัน"
-        · <b>เซมเดย์ไม่มีปิดรอบ</b> — วิ่งปกติตั้งแต่ร้านเปิดถึงปิด (148) · ไม่มีช่องปิดรอบเดิม/ช่องปิดรอบเซมเดย์ในฟอร์มนี้อีก (D5 2026-10-25)
-        · ปิดรอบมีทางเดียวคือ <b>ปรับของพรีออเดอร์</b> (ช่องว่าง = ใช้กฎรวม ก่อนส่ง X ชม.)
-        · <b>ลำดับกันชน (audit D2):</b> ปิดรอบต่อรอบ (ช่อง "ปรับของพรีออเดอร์") ทับ{' '}
-        <Link to="/admin/settings?tab=store">กฎรวม cutoff_hours (นโยบายสั่งซื้อ)</Link> — ว่าง = ใช้กฎรวมนั้น
-      </p>
-        <div className="space-y-3">
-          {pattern.map((p, idx) => (
-            <div key={p.round_key} className="grid grid-cols-2 lg:grid-cols-6 gap-3 items-end">
-              <label className="text-sm">ชื่อรอบ
-                <input className="input mt-1" value={p.display_name}
-                  data-testid={`pattern-name-${p.round_key}`}
-                  onChange={(e) => {
-                    const next = [...pattern]
-                    next[idx] = { ...p, display_name: e.target.value }
-                    setPattern(next)
-                  }} />
-              </label>
-              {/* D5 (Owner 2026-10-25 ไม่ผ่านเกณฑ์เดิม): ช่องปิดรอบเดิม (legacy cutoff field)
-                  ถูกถอดออกจากฟอร์มนี้จริง — ปิดรอบมีเฉพาะพรีออเดอร์ (ช่องด้านล่าง) ·
-                  ค่า cutoff_time ใน data ยังคงเดิมไว้ (ไม่แตะ production values) */}
-              <label className="text-sm">ปรับของพรีออเดอร์
-                <input type="time" className="input mt-1" value={p.pre_order_cutoff}
-                  data-testid={`pattern-preorder-cutoff-${p.round_key}`}
-                  title="ว่าง = ใช้กฎเดิม (ปิดรอบ X ชม. ก่อนเวลาส่ง)"
-                  placeholder="ตามกฎ"
-                  onChange={(e) => {
-                    const next = [...pattern]
-                    next[idx] = { ...p, pre_order_cutoff: e.target.value }
-                    setPattern(next)
-                  }} />
-              </label>
-              <label className="text-sm">เริ่มส่ง
-                <input type="time" className="input mt-1" value={p.delivery_start}
-                  onChange={(e) => {
-                    const next = [...pattern]
-                    next[idx] = { ...p, delivery_start: e.target.value }
-                    setPattern(next)
-                  }} />
-              </label>
-              <label className="text-sm">สิ้นสุด
-                <input type="time" className="input mt-1" value={p.delivery_end}
-                  onChange={(e) => {
-                    const next = [...pattern]
-                    next[idx] = { ...p, delivery_end: e.target.value }
-                    setPattern(next)
-                  }} />
-              </label>
-              <label className="text-sm">ความจุ
-                <input type="number" className="input mt-1" value={p.max_capacity} min={1}
-                  onChange={(e) => {
-                    const next = [...pattern]
-                    next[idx] = { ...p, max_capacity: Number(e.target.value) }
-                    setPattern(next)
-                  }} />
-              </label>
-              <div className="text-xs text-brand-muted pb-2">{p.round_key}</div>
-            </div>
-          ))}
+        <div className="card mb-6" data-testid="round-pattern-panel">
+          <h2 className="text-xl font-bold text-brand-accent mb-1">📋 แพทเทิร์นรอบประจำวัน (ทุกวันใช้ชุดเดียวกัน)</h2>
+        <p className="text-sm text-brand-muted mb-4">
+          ค่านี้คือต้นแบบของรอบทุกวัน (ทั้งพรีออเดอร์และเซมเดย์) — แก้ที่นี่ที่เดียว แล้วกด "สร้าง/ซ่อมรอบ 30 วัน"
+          · <b>เซมเดย์ไม่มีปิดรอบ</b> — วิ่งปกติตั้งแต่ร้านเปิดถึงปิด (148) · ไม่มีช่องปิดรอบเดิม/ช่องปิดรอบเซมเดย์ในฟอร์มนี้อีก (D5 2026-10-25)
+          · ปิดรอบมีทางเดียวคือ <b>ปรับของพรีออเดอร์</b> (ช่องว่าง = ใช้กฎรวม ก่อนส่ง X ชม.)
+          · <b>ลำดับกันชน (audit D2):</b> ปิดรอบต่อรอบ (ช่อง "ปรับของพรีออเดอร์") ทับ{' '}
+          <Link to="/admin/settings?tab=store">กฎรวม cutoff_hours (นโยบายสั่งซื้อ)</Link> — ว่าง = ใช้กฎรวมนั้น
+        </p>
+          <div className="space-y-3">
+            {pattern.map((p, idx) => (
+              <div key={p.round_key} className="grid grid-cols-2 lg:grid-cols-6 gap-3 items-end">
+                <label className="text-sm">ชื่อรอบ
+                  <input className="input mt-1" value={p.display_name}
+                    data-testid={`pattern-name-${p.round_key}`}
+                    onChange={(e) => {
+                      const next = [...pattern]
+                      next[idx] = { ...p, display_name: e.target.value }
+                      setPattern(next)
+                    }} />
+                </label>
+                {/* D5 (Owner 2026-10-25 ไม่ผ่านเกณฑ์เดิม): ช่องปิดรอบเดิม (legacy cutoff field)
+                    ถูกถอดออกจากฟอร์มนี้จริง — ปิดรอบมีเฉพาะพรีออเดอร์ (ช่องด้านล่าง) ·
+                    ค่า cutoff_time ใน data ยังคงเดิมไว้ (ไม่แตะ production values) */}
+                <label className="text-sm">ปรับของพรีออเดอร์
+                  <input type="time" className="input mt-1" value={p.pre_order_cutoff}
+                    data-testid={`pattern-preorder-cutoff-${p.round_key}`}
+                    title="ว่าง = ใช้กฎเดิม (ปิดรอบ X ชม. ก่อนเวลาส่ง)"
+                    placeholder="ตามกฎ"
+                    onChange={(e) => {
+                      const next = [...pattern]
+                      next[idx] = { ...p, pre_order_cutoff: e.target.value }
+                      setPattern(next)
+                    }} />
+                </label>
+                <label className="text-sm">เริ่มส่ง
+                  <input type="time" className="input mt-1" value={p.delivery_start}
+                    onChange={(e) => {
+                      const next = [...pattern]
+                      next[idx] = { ...p, delivery_start: e.target.value }
+                      setPattern(next)
+                    }} />
+                </label>
+                <label className="text-sm">สิ้นสุด
+                  <input type="time" className="input mt-1" value={p.delivery_end}
+                    onChange={(e) => {
+                      const next = [...pattern]
+                      next[idx] = { ...p, delivery_end: e.target.value }
+                      setPattern(next)
+                    }} />
+                </label>
+                <label className="text-sm">ความจุ
+                  <input type="number" className="input mt-1" value={p.max_capacity} min={1}
+                    onChange={(e) => {
+                      const next = [...pattern]
+                      next[idx] = { ...p, max_capacity: Number(e.target.value) }
+                      setPattern(next)
+                    }} />
+                </label>
+                <div className="text-xs text-brand-muted pb-2">{p.round_key}</div>
+              </div>
+            ))}
+          </div>
+          <div className="flex flex-wrap gap-3 mt-4">
+            <button onClick={() => void handleSavePattern()} disabled={savingPattern} className="btn btn-success" data-testid="save-round-pattern">
+              {savingPattern ? 'กำลังบันทึก…' : 'บันทึกแพทเทิร์น'}
+            </button>
+            <button onClick={() => void handleEnsureAll()} disabled={busy !== null} className="btn btn-outline" data-testid="ensure-rounds-30d">
+              {busy === 'all' ? 'กำลังสร้าง…' : 'สร้าง/ซ่อมรอบ 30 วันข้างหน้าตามแพทเทิร์น'}
+            </button>
+          </div>
         </div>
-        <div className="flex flex-wrap gap-3 mt-4">
-          <button onClick={() => void handleSavePattern()} disabled={savingPattern} className="btn btn-success" data-testid="save-round-pattern">
-            {savingPattern ? 'กำลังบันทึก…' : 'บันทึกแพทเทิร์น'}
-          </button>
-          <button onClick={() => void handleEnsureAll()} disabled={busy !== null} className="btn btn-outline" data-testid="ensure-rounds-30d">
-            {busy === 'all' ? 'กำลังสร้าง…' : 'สร้าง/ซ่อมรอบ 30 วันข้างหน้าตามแพทเทิร์น'}
-          </button>
-        </div>
-      </div>
 
-      {/* ---- (2) รอบรายวัน (จัดกลุ่มตามวัน — ไม่ใช่การ์ดซ้ำยาวเหยียด) ---- */}
-      <h2 className="text-xl font-bold text-brand-accent mb-3">📅 รอบรายวัน (หน้าต่าง {dayWindow} วัน)</h2>
-      {/* R34: เลือกหน้าต่าง 7/14 วัน + toggle ดูวันผ่าน/นอกหน้าต่าง (ค่าเริ่มต้น = ซ่อน = กระชับ) */}
-      <div className="flex flex-wrap items-center gap-2 mb-3 text-sm" data-testid="rounds-window-bar">
-        <span className="text-brand-muted">แสดง:</span>
-        <button type="button" onClick={() => setDayWindow(7)} className={`btn text-xs ${dayWindow === 7 ? 'btn-primary' : 'btn-outline'}`} data-testid="rounds-window-7">7 วัน</button>
-        <button type="button" onClick={() => setDayWindow(14)} className={`btn text-xs ${dayWindow === 14 ? 'btn-primary' : 'btn-outline'}`} data-testid="rounds-window-14">14 วัน</button>
-        <button type="button" onClick={() => setShowPast((v) => !v)} className="btn btn-outline text-xs" data-testid="rounds-show-past">
-          {showPast ? 'ซ่อน' : 'ดู'} วันที่ผ่านมา ({pastDates.length})
-        </button>
-        {beyondDates.length > 0 && (
-          <button type="button" onClick={() => setShowBeyond((v) => !v)} className="btn btn-outline text-xs" data-testid="rounds-show-beyond">
-            {showBeyond ? 'ซ่อน' : 'ดู'} นอกหน้าต่าง ({beyondDates.length})
+        {/* ---- (2) รอบรายวัน (จัดกลุ่มตามวัน — ไม่ใช่การ์ดซ้ำยาวเหยียด) ---- */}
+        <h2 className="text-xl font-bold text-brand-accent mb-3">📅 รอบรายวัน (หน้าต่าง {dayWindow} วัน)</h2>
+        {/* R34: เลือกหน้าต่าง 7/14 วัน + toggle ดูวันผ่าน/นอกหน้าต่าง (ค่าเริ่มต้น = ซ่อน = กระชับ) */}
+        <div className="flex flex-wrap items-center gap-2 mb-3 text-sm" data-testid="rounds-window-bar">
+          <span className="text-brand-muted">แสดง:</span>
+          <button type="button" onClick={() => setDayWindow(7)} className={`btn text-xs ${dayWindow === 7 ? 'btn-primary' : 'btn-outline'}`} data-testid="rounds-window-7">7 วัน</button>
+          <button type="button" onClick={() => setDayWindow(14)} className={`btn text-xs ${dayWindow === 14 ? 'btn-primary' : 'btn-outline'}`} data-testid="rounds-window-14">14 วัน</button>
+          <button type="button" onClick={() => setShowPast((v) => !v)} className="btn btn-outline text-xs" data-testid="rounds-show-past">
+            {showPast ? 'ซ่อน' : 'ดู'} วันที่ผ่านมา ({pastDates.length})
           </button>
+          {beyondDates.length > 0 && (
+            <button type="button" onClick={() => setShowBeyond((v) => !v)} className="btn btn-outline text-xs" data-testid="rounds-show-beyond">
+              {showBeyond ? 'ซ่อน' : 'ดู'} นอกหน้าต่าง ({beyondDates.length})
+            </button>
+          )}
+        </div>
+        {inWindowDates.length === 0 && !loadError && (
+          <p className="text-sm text-brand-muted mb-3" data-testid="rounds-window-empty">ไม่มีรอบในหน้าต่างนี้ — กด "สร้าง/ซ่อมรอบ 30 วัน" ด้านบนเพื่อสร้างตามแพทเทิร์น</p>
         )}
-      </div>
-      {inWindowDates.length === 0 && !loadError && (
-        <p className="text-sm text-brand-muted mb-3" data-testid="rounds-window-empty">ไม่มีรอบในหน้าต่างนี้ — กด "สร้าง/ซ่อมรอบ 30 วัน" ด้านบนเพื่อสร้างตามแพทเทิร์น</p>
-      )}
-      <div className="space-y-4">
-        {visibleDates.map((date) => {
-          const dayRounds = (byDate.get(date) || []).slice()
-            .sort((a, b) => String(a.delivery_start).localeCompare(String(b.delivery_start)))
-          return (
-            <div key={date} className="card" data-testid={`round-day-${date}`}>
-              <div className="flex items-center justify-between mb-3">
-                <div className="font-bold text-brand-accent">{date}</div>
-                <button onClick={() => void handleApplyDay(date)} disabled={busy !== null} className="btn btn-outline text-sm">
-                  {busy === date ? 'กำลังซ่อม…' : 'ซ่อมตามแพทเทิร์น'}
-                </button>
-              </div>
-              <div className="space-y-2">
-                {dayRounds.map((r) => (
-                  <div key={r.id} className="flex flex-wrap items-center gap-3 rounded-lg border border-brand-border p-2">
-                    <div className="min-w-0 flex-1">
-                      <div className="font-medium text-slate-800">{r.display_name || r.round_key || r.id}</div>
-                      <div className="text-xs text-brand-muted">
-                        ส่ง {String(r.delivery_start).slice(0, 5)}–{String(r.delivery_end).slice(0, 5)}
-                        {' '}· เซมเดย์ไม่มีปิดรอบ (เปิด–ปิดร้าน)
-                        {' '}· พรีออเดอร์ {r.pre_order_cutoff ? String(r.pre_order_cutoff).slice(0, 5) : 'ตามกฎ'}
-                        {' '}· {r.current_count}/{r.max_capacity}
+        <div className="space-y-4">
+          {visibleDates.map((date) => {
+            const dayRounds = (byDate.get(date) || []).slice()
+              .sort((a, b) => String(a.delivery_start).localeCompare(String(b.delivery_start)))
+            return (
+              <div key={date} className="card" data-testid={`round-day-${date}`}>
+                <div className="flex items-center justify-between mb-3">
+                  <div className="font-bold text-brand-accent">{date}</div>
+                  <button onClick={() => void handleApplyDay(date)} disabled={busy !== null} className="btn btn-outline text-sm">
+                    {busy === date ? 'กำลังซ่อม…' : 'ซ่อมตามแพทเทิร์น'}
+                  </button>
+                </div>
+                <div className="space-y-2">
+                  {dayRounds.map((r) => (
+                    <div key={r.id} className="flex flex-wrap items-center gap-3 rounded-lg border border-brand-border p-2">
+                      <div className="min-w-0 flex-1">
+                        <div className="font-medium text-slate-800">{r.display_name || r.round_key || r.id}</div>
+                        <div className="text-xs text-brand-muted">
+                          ส่ง {String(r.delivery_start).slice(0, 5)}–{String(r.delivery_end).slice(0, 5)}
+                          {' '}· เซมเดย์ไม่มีปิดรอบ (เปิด–ปิดร้าน)
+                          {' '}· พรีออเดอร์ {r.pre_order_cutoff ? String(r.pre_order_cutoff).slice(0, 5) : 'ตามกฎ'}
+                          {' '}· {r.current_count}/{r.max_capacity}
+                        </div>
                       </div>
+                      <ToggleSwitch
+                        checked={r.status === 'active'}
+                        onChange={() => void handleStatus(r, nextRoundStatus(r.status))}
+                        label={r.status === 'active' ? 'เปิดรับ' : 'ปิดรับ'}
+                        testId={`round-active-${r.id}`}
+                      />
+                      <button onClick={() => void handleResetCapacity(r)} className="btn btn-outline text-xs">⟳ รีเซ็ตจำนวน</button>
+                      <button onClick={() => void handleArchive(r)} className="btn btn-outline text-xs" data-testid={`round-archive-${r.id}`}>📦 เก็บ</button>
+                      <button onClick={() => void handleDelete(r)} className="btn btn-danger text-xs" data-testid={`round-delete-${r.id}`}>🗑 ลบ</button>
                     </div>
-                    <ToggleSwitch
-                      checked={r.status === 'active'}
-                      onChange={() => void handleStatus(r, nextRoundStatus(r.status))}
-                      label={r.status === 'active' ? 'เปิดรับ' : 'ปิดรับ'}
-                      testId={`round-active-${r.id}`}
-                    />
-                    <button onClick={() => void handleResetCapacity(r)} className="btn btn-outline text-xs">⟳ รีเซ็ตจำนวน</button>
-                    <button onClick={() => void handleArchive(r)} className="btn btn-outline text-xs" data-testid={`round-archive-${r.id}`}>📦 เก็บ</button>
-                    <button onClick={() => void handleDelete(r)} className="btn btn-danger text-xs" data-testid={`round-delete-${r.id}`}>🗑 ลบ</button>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
-            </div>
-          )
-        })}
-      </div>
+            )
+          })}
+        </div>
 
         </>
       )}
