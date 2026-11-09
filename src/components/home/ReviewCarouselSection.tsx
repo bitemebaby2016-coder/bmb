@@ -16,6 +16,10 @@ import { HorizontalCarousel } from './HorizontalCarousel'
 import { MascotBadge } from '@/components/MascotBadge'
 import { REAL_REVIEW_PHOTOS } from '@/lib/realReviews'
 
+// R89c (Owner 2026-11-09 · มติ "ขึ้นก่อนสุด"): จำนวนรีวิวอนุมัติสูงสุดที่โชว์ — ใหม่อนุมัติขึ้นก่อน
+// เกินนี้ของเก่าถูกแทนที่ออกเรื่อย (ไม่ใช่เรียงตาม rating เหมือนเดิม)
+const VERIFIED_FEED_MAX = 10
+
 interface ReviewCarouselSectionProps {
   reviews: HomeReview[]
   /**
@@ -75,6 +79,9 @@ export function ReviewCarouselSection({ reviews, verifiedReviews, products, onRe
       seenKeys.add(key)
       return true
     })
+    .slice()
+    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+    .slice(0, VERIFIED_FEED_MAX)
     .map((r) => {
       const product = productMap.get(r.product_id)
       const mode: OrderMode = (product?.available_preorder ?? product?.is_preorder) ? 'pre-order' : 'same-day'
@@ -95,11 +102,27 @@ export function ReviewCarouselSection({ reviews, verifiedReviews, products, onRe
           product={product}
           mode={mode}
           deepLinkTo={mode === 'pre-order' ? '/checkout?mode=pre-order' : '/cart?mode=same-day'}
+          onCta={() =>
+            // R89c (Owner "จิ้มสั่งเมนูนั้นได้"): ยิงเส้น handleReviewCta เดียวกับ curated
+            // (deriveOrderMode + schedule check + addItem + navigate — ไม่ใช่แค่ลิงก์เปล่า)
+            onReviewCta?.({
+              id: `verified-${r.id}`,
+              displayName: r.customer_name,
+              rating: Math.min(5, Math.round(r.rating)),
+              text: r.comment,
+              source: 'website',
+              sourceLabel: 'Verified Purchase',
+              dateLabel: '',
+              relatedProduct: product,
+              relatedProductName: r.product_name_display ?? product?.name ?? '',
+              visible: true,
+            })
+          }
         />
       )
     })
 
-  const allItems = [...items, ...verifiedItems]
+  const allItems = [...verifiedItems, ...items] // R89c: รีวิวอนุมัติใหม่ขึ้นก่อนสุด (มติ Owner)
 
   return (
     <section className="mb-10 scroll-mt-20" aria-labelledby="home-reviews-heading">

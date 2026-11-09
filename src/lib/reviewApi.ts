@@ -39,7 +39,9 @@ export async function getVerifiedReviewsForProducts(productIds: string[], limit 
   } catch(e) {}
   const results: VerifiedCustomerReview[] = []
   for (const pid of productIds.slice(0, 20)) {
-    const res = await supabase.from('reviews').select('*').eq('product_id', pid).order('rating', { ascending: false }).limit(10)
+    // R89c (Owner 2026-11-09: "รีวิวที่อนุมัติใหม่ เปลี่ยนแทนของเก่า + อัพเดทแทนไปเรื่อย"):
+    //   เดิม .order('rating') = รีวิวใหม่ rating ต่ำกว่าจะหลุดจาก top-10 ของสินค้า → เปลี่ยนเป็นใหม่สุดก่อน
+    const res = await supabase.from('reviews').select('*').eq('product_id', pid).order('created_at', { ascending: false }).limit(10)
     if (res.error) {
       // AI-FIX: 401/403 = ยังไม่มีสิทธิ์อ่าน (grant/policy ยังไม่ apply) — หยุดทันที
       // ไม่สแปมยิงทีละสินค้าจน Console เต็ม error
