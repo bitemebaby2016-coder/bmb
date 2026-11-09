@@ -57,6 +57,8 @@ import {
   buildIntakeLine,
   buildCartSummaryFooter,
   scopeCatalogToPost,
+  getCrossSellPrompt,
+  type OrderMode,
 } from '../_shared/socialOrderIntake.ts'
 import { enqueueAdminAlert } from '../_shared/notificationLinks.ts'
 // R57: บริบทโพสต์ต้นทางของคอมเมนต์ (Owner: ตอบข้อมูลจริงตามโพสและตามเว็บ)
@@ -448,8 +450,8 @@ async function fetchRecentThread(ev: SocialEventRow): Promise<string> {
  *  (046 spine) → resolve real round → submitNewOrder (canonical RPC, idempotent
  *  by event id). ไม่ชัดเจน/ไม่ครบ = ไม่สั่ง ให้ถามใน reply (ถามก่อน ห้ามเดา).
  *  ผลสำเร็จ/ล้มเหลวรายงานโดย buildIntakeLine (ระบบเขียน) — ห้ามเคลมก่อนระบบยืนยัน. */
-async function runOrderIntake(ev: SocialEventRow, userMsg: string, mode: 'message' | 'comment', postMsg = ''): Promise<{ footer: string; note: string; summaryNames: string[] }> {
-  const none = { footer: '', note: '', summaryNames: [] as string[] }
+async function runOrderIntake(ev: SocialEventRow, userMsg: string, mode: 'message' | 'comment', postMsg = ''): Promise<{ footer: string; note: string; summaryNames: string[]; orderMode: OrderMode }> {
+  const none = { footer: '', note: '', summaryNames: [] as string[], orderMode: 'UNSURE' as OrderMode }
   try {
     // R64/C-6 (Owner: "สั่งใต้โพสบะหมี่ไก่ย่างแต่เอไอสรุปเป็นเมนูอื่น — ใช้เฉพาะ MENU ของโพสต์นี้"):
     // ดึง catalog ก่อนแล้วจำกัด scope ตามโพสต์ต้นทาง → extractor ได้บรรทัดกติกา + match แค่เมนูที่โพสต์เสนอ
@@ -470,13 +472,14 @@ async function runOrderIntake(ev: SocialEventRow, userMsg: string, mode: 'messag
     // และทั้งคอมเมนต์สาธารณะ/ข้อความส่วนตัว — R64: จับกับ allowed (เมนูของโพสต์นี้) ไม่ใช่ catalog กว้าง
     const m = matchOrderItems(allowed, x.items)
     if (m.matched.length === 0) {
-      return { footer: '', note: 'จับคู่เมนูไม่ได้ — ให้ถามชื่อเมนูที่ถูกต้องจากลูกค้า ห้ามเดาสินค้าแทน', summaryNames: [] }
+      return { footer: '', note: 'จับคู่เมนูไม่ได้ — ให้ถามชื่อเมนูที่ถูกต้องจากลูกค้า ห้ามเดาสินค้าแทน', summaryNames: [], orderMode: 'UNSURE' }
     }
     if (m.unmatched.length > 0) {
       return {
         footer: '',
         note: 'มีเมนูที่จับคู่ไม่ได้: ' + m.unmatched.join(', ') + ' — ให้ถามชื่อเมนูที่ถูกต้องก่อน ห้ามเดา/ห้ามสั่งแทน',
         summaryNames: [],
+        orderMode: 'UNSURE',
       }
     }
     // R27: ลิงก์ตะกร้าสรุป (ระบบเป็นคนเขียน) — กดเปิดบนเว็บ เช็คเอาท์/เพิ่มเมนูต่อได้เอง
@@ -515,6 +518,7 @@ async function runOrderIntake(ev: SocialEventRow, userMsg: string, mode: 'messag
           ' — ห้ามบอกว่ายังสั่งได้ ห้ามแนบลิงก์ตะกร้าของเมนูนี้ ห้ามสั่งแทนลูกค้า · ' +
           altLine + ' · ให้ถามลูกค้าเลือกเมนูที่ยังสั่งได้แทน',
         summaryNames: [],
+        orderMode: 'UNSURE',
       }
     }
 
@@ -526,6 +530,7 @@ async function runOrderIntake(ev: SocialEventRow, userMsg: string, mode: 'messag
           'แล้วอ้างถึงลิงก์ตะกร้าในท้ายข้อความจากระบบ เพื่อให้กดเปิดบนเว็บ เช็คเอาท์หรือเพิ่มเมนูต่อได้เอง ' +
           'ห้ามเปิดเผยข้อมูลส่วนตัวในคอมเมนต์',
         summaryNames: matchedNames,
+        orderMode: x.order_mode === 'PRE_ORDER' ? 'PRE_ORDER' : 'SAME_DAY',
       }
     }
     if (!x.confirmed) {
@@ -534,6 +539,7 @@ async function runOrderIntake(ev: SocialEventRow, userMsg: string, mode: 'messag
         note: 'รายการยังไม่ได้รับการยืนยัน (' + (x.unclear || 'ข้อมูลไม่ครบ') + ') — ให้ถามยืนยันเมนู/จำนวน/รายละเอียดกับลูกค้า ห้ามสั่งแทนลูกค้า ห้ามพูดว่ารับออเดอร์แล้ว' +
           ' · ลิงก์ตะกร้าสรุปท้ายข้อความจากระบบ = เปิดดูรายการ เช็คเอาท์ หรือเพิ่มเมนูต่อได้เองบนเว็บ — ให้กล่าวถึงด้วย',
         summaryNames: matchedNames,
+        orderMode: x.order_mode === 'PRE_ORDER' ? 'PRE_ORDER' : 'SAME_DAY',
       }
     }
     // Identity (046 customer_channel_identities — ใช้ร่วมกับ channel-webhook; ไม่เดาว่าเป็นลูกค้าคนเดียวกัน §5)
@@ -541,7 +547,7 @@ async function runOrderIntake(ev: SocialEventRow, userMsg: string, mode: 'messag
       ? await resolveOrCreateChannelIdentity(SB_URL, SERVICE, ev.platform, ev.sender_id)
       : { customer_ref: null, provisioned: false }
     if (!id.customer_ref) {
-      return { footer: '', note: 'ยังผูกบัญชีลูกค้าไม่ได้ — ให้ชวนลูกค้าสั่งต่อผ่านหน้าร้าน https://biteme-baby.com/checkout', summaryNames: [] }
+      return { footer: '', note: 'ยังผูกบัญชีลูกค้าไม่ได้ — ให้ชวนลูกค้าสั่งต่อผ่านหน้าร้าน https://biteme-baby.com/checkout', summaryNames: [], orderMode: 'UNSURE' }
     }
     // Real round of the target date (025 re-validates cutoff/capacity server-side)
     const targetDate = x.order_mode === 'PRE_ORDER' ? x.scheduled_date : bangkokDate()
@@ -555,6 +561,7 @@ async function runOrderIntake(ev: SocialEventRow, userMsg: string, mode: 'messag
           'แล้วแนะนำเมนูอื่นที่ยังสั่งได้บนเว็บ (เมนูเซมเดย์ที่ยังเปิด และเมนูพรีออเดอร์วันถัดไปในปฎิทิน ' +
           'ดูได้ที่ https://biteme-baby.com/shop) ห้ามแนบลิงก์ตะกร้าของเมนูที่เลยรอบ · ห้ามสั่งแทนลูกค้า',
         summaryNames: [],
+        orderMode: 'UNSURE',
       }
     }
     const res = await submitNewOrder(SB_URL, SERVICE, {
@@ -586,9 +593,10 @@ async function runOrderIntake(ev: SocialEventRow, userMsg: string, mode: 'messag
         ? 'ระบบบันทึกรายการแล้ว (ดูเลขที่ในบรรทัดท้ายข้อความจากระบบ) — รอบ: ' + round.label + ' วันที่ ' + targetDate + ' — ให้ลูกค้าตรวจรายการและชำระเงินผ่านลิงก์ ห้ามพูดว่าชำระเงินสำเร็จ ห้ามแต่งเลขที่ออเดอร์เอง · ลิงก์ตะกร้าท้ายข้อความช่วยเปิดดูรายการ/เพิ่มเมนูต่อได้เอง — กล่าวถึงด้วย'
         : 'ระบบยังไม่ได้บันทึกรายการ — ห้ามพูดว่ารับออเดอร์สำเร็จ ให้ชวนลูกค้าสั่งต่อผ่านหน้าร้าน https://biteme-baby.com/checkout · ลิงก์ตะกร้าท้ายข้อความจากระบบใช้เปิดดู/เช็คเอาท์/เพิ่มเมนูต่อได้เอง — ให้กล่าวถึงด้วย',
       summaryNames: matchedNames,
+      orderMode: x.order_mode === 'PRE_ORDER' ? 'PRE_ORDER' : 'SAME_DAY',
     }
   } catch {
-    return { footer: '', note: 'intake error — ห้ามพูดว่ารับออเดอร์สำเร็จ ให้ชวนสั่งต่อผ่านหน้าร้าน https://biteme-baby.com/checkout', summaryNames: [] }
+    return { footer: '', note: 'intake error — ห้ามพูดว่ารับออเดอร์สำเร็จ ให้ชวนสั่งต่อผ่านหน้าร้าน https://biteme-baby.com/checkout', summaryNames: [], orderMode: 'UNSURE' }
   }
 }
 
@@ -762,6 +770,7 @@ async function processEvent(ev: SocialEventRow): Promise<{ id: string; result: s
   let intakeFooter = ''
   let intakeNote = ''
   let intakeSummaryNames: string[] = []
+  let intakeOrderMode: OrderMode = 'UNSURE'
   if (classification.intent === 'order_request') {
     // R27: ทั้งคอมเมนต์และข้อความ — สรุปรายการได้ + แนบลิงก์ตะกร้าพร้อมเช็คเอาท์
     // (คอมเมนต์สาธารณะ = extract+match เฉย ๆ ไม่สร้างออเดอร์เอง — §5.1 คงเดิม)
@@ -769,10 +778,14 @@ async function processEvent(ev: SocialEventRow): Promise<{ id: string; result: s
     const intake = await runOrderIntake(ev, userMsg, ev.event_type === 'message' ? 'message' : 'comment', postMsg)
     intakeFooter = intake.footer
     intakeSummaryNames = intake.summaryNames
+    intakeOrderMode = intake.orderMode
     // R57: intake ไม่ได้สรุป (extract ไม่ผ่าน/ข้อมูลไม่ครบ) → ห้ามปล่อยให้โมเดลเดาสรุปเอง
     intakeNote = intake.note ||
       'ระบบยังสรุปรายการให้ไม่ได้ในตอนนี้ — ห้ามสร้าง/เดารายการสั่งซื้อเอง ให้ถามรายการที่อยากสั่ง (เมนูและจำนวน) ก่อน แล้วชวนสั่งผ่าน https://biteme-baby.com/shop'
   }
+
+  // --- Cross-Sell Prompt (Owner 2026-11-09) ---
+  const crossSellPrompt = getCrossSellPrompt(intakeOrderMode)
 
   // --- Task 2: social_reply_draft (persona by surface: Messenger = น้อง Bite
   //     conversational waiter; Facebook comments = marketing reply + CTA) ---
@@ -793,7 +806,8 @@ async function processEvent(ev: SocialEventRow): Promise<{ id: string; result: s
     baseSystem + '\n\n' + BITE_PERSONA_SEGMENT + '\n\n' + REPLY_CONTINUITY_RULES + '\n\n' + REPLY_GROUNDING_RULES +
     '\n\n--- ข้อมูลร้านจริง (DATA — ตอบจากนี้เท่านั้น ห้ามมโน) ---\n' +
     (shopCtx || 'ยังดึงข้อมูลร้านไม่ได้ในตอนนี้ — ให้บอกตามจริงว่าไม่พบข้อมูล และชวนดูเมนูที่ https://biteme-baby.com/shop') +
-    orderWindowBlock
+    orderWindowBlock +
+    crossSellPrompt
   // R57: ลองใหม่ 1 ครั้งเมื่อคำตอบไม่ผ่าน validate (parse / semantic / สรุปไม่ตรงรายการจริง)
   // — ส่งเหตุผลกลับให้โมเดลแก้ · ยังไม่ผ่านแต่ระบบมี footer จริง = ส่ง footer (ไม่เงียบหาย)
   let draft: { ok: boolean; model?: string; text?: string; status?: string; reason?: string } = { ok: false }

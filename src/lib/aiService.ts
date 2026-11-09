@@ -139,6 +139,11 @@ function buildSystemMessage(
   if (dbContext) {
     content += `\n\n--- RESTAURANT DATA FROM DATABASE (authoritative, answer only from this) ---\n${dbContext}`
   }
+  // Cross-sell prompt based on order mode from context
+  const orderMode = inferOrderModeFromContext(runtimeContext)
+  if (orderMode !== 'UNSURE') {
+    content += buildCrossSellPrompt(orderMode)
+  }
   if (voiceMode) {
     content += VOICE_MODE_DIRECTIVE
   }
@@ -403,6 +408,37 @@ export function resetConversation(): void {
 // Get current conversation history (for display)
 export function getConversationHistory(): Message[] {
   return conversationHistory.slice(1); // Remove system message from display
+}
+
+// ============================================
+// Cross-Sell Prompts for Web Chat (Owner 2026-11-09)
+// ============================================
+export type OrderMode = 'SAME_DAY' | 'PRE_ORDER' | 'UNSURE'
+
+export function buildCrossSellPrompt(orderMode: OrderMode, postUrl = 'https://biteme-baby.com/shop'): string {
+  switch (orderMode) {
+    case 'PRE_ORDER':
+      return `\n\n--- CROSS-SELL (Owner directive) ---\nลูกค้าสั่ง Pre-Order (จองล่วงหน้า) — ให้แนะนำเพิ่ม:\n"นอกจากเมนูที่จองล่วงหน้ากลับ เรายังมีเมนูส่งวันนี้ (Same-Day) ที่ส่งได้ทันทีวันนี้ครับ\nเพิ่มไปด้วยได้เลย — ใช้โค้ด SAMEDAY10 ได้ลด 10% สำหรับเมนู Same-Day นะครับ\nดูเมนูส่งวันนี้ได้ที่ ${postUrl}"`
+
+    case 'SAME_DAY':
+      return `\n\n--- CROSS-SELL (Owner directive) ---\nลูกค้าสั่ง Same-Day (ส่งวันนี้) — ให้แนะนำเพิ่ม:\n"ถ้าอยากจองล่วงหน้าสำหรับวันพรุ่งนี้/วันอื่น ก็มีเมนู Pre-Order ครับ\nจองล่วงหน้าได้เลย — ใช้โค้ด PREORDER10 ได้ลด 10% สำหรับเมนู Pre-Order\nดูเมนูจองล่วงหน้าได้ที่ ${postUrl}"`
+
+    case 'UNSURE':
+    default:
+      return `\n\n--- CROSS-SELL (Owner directive) ---\nลูกค้ายังไม่ระบุชัดเจน — ให้ถามและแนะนำทั้งสอง:\n"คุณต้องการส่งวันนี้ (Same-Day) หรือจองล่วงหน้า (Pre-Order) ครับ?\n- Same-Day: ส่งได้ทันทีวันนี้ ใช้โค้ด SAMEDAY10 ลด 10%\n- Pre-Order: จองล่วงหน้าวันที่ต้องการ ใช้โค้ด PREORDER10 ลด 10%\nดูทั้งสองที่ ${postUrl}"`
+  }
+}
+
+export function inferOrderModeFromContext(runtimeContext?: string): OrderMode {
+  if (!runtimeContext) return 'UNSURE'
+  const ctx = runtimeContext.toLowerCase()
+  if (ctx.includes('pre-order') || ctx.includes('pre_order') || ctx.includes('preorder') || ctx.includes('พรีออเดอร์') || ctx.includes('จองล่วงหน้า')) {
+    return 'PRE_ORDER'
+  }
+  if (ctx.includes('same-day') || ctx.includes('same_day') || ctx.includes('sameday') || ctx.includes('ส่งวันนี้') || ctx.includes('เซมเดย์')) {
+    return 'SAME_DAY'
+  }
+  return 'UNSURE'
 }
 
 // AI Recommendation Engine (ML-powered)

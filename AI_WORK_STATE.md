@@ -1,21 +1,23 @@
-## 🔒 SESSION CLOSE 2026-11-09 (รอบ 5 · In-App Browser FB WebView Workaround เสร็จ+push) — ทดสอบ live ครั้งต่อไป · เซสชั่นใหม่รับรายการต่อ
+## 🔒 SESSION CLOSE 2026-11-09 (รอบ 6 · Phase 1 In-App Browser เสร็จ+push → เริ่ม Phase 2 AI Cross-Sell) — ทดสอบ live ครั้งต่อไป · เซสชั่นใหม่รับรายการต่อ
 
 > **กติกาเซสชั่นใหม่:** อ่าน **`docs/BMB_REMAIN_TESTS_LIVE_2026-11-09.md`** = **รายการเดียวที่ต้องรัน** (ฉบับ 11-08 ถูกแทนที่แล้ว · เก็บเฉพาะที่ปิดไม่ได้: BLOCKED เครดิต OpenRouter + OMNI-5 · retest D2/D5/§T-A/D4/R91/R92-G/R92-S · ยังไม่รัน RT-4/RT-HOURS/RT-6.x/CAP) · fail = ลง defect ใหม่ที่นี่ + two-try · สถานะโค้ด = `docs/BMB_MASTER_STATUS.md`
 
-## In-App Browser FB WebView Workaround (Owner 2026-11-09) — ✅ CODE_CLOSED + PUSHED + DEPLOYED
-- **src/hooks/useInAppBrowser.ts**: Detect FB WebView (UA: FBAV/FB_IAB/FBAN/FBBV + viewport heuristic), dismissed state (localStorage 7 days), native click handler for external links
-  - Android: `intent://` URL scheme → เปิด Chrome โดยตรง (ต้องเป็น native click)
+## Phase 1: In-App Browser FB WebView Workaround + PWA Install (Owner 2026-11-09) — ✅ CODE_CLOSED + PUSHED + DEPLOYED
+- **src/hooks/useInAppBrowser.ts**: Detect FB WebView (UA: FBAV/FB_IAB/FBAN/FBBV + viewport heuristic), dismissed state (localStorage 7 days), native click handler for external links + PWA install prompt
+  - Android: `intent://` URL scheme → เปิด Chrome โดยตรง (native `<a>` click)
   - iOS: clipboard copy + guide alert "กด ⋯ → เปิดใน Safari"
   - Desktop/อื่นๆ: `window.open`
-- **src/components/InAppBrowserBanner.tsx**: Banner UI + dismiss + CTA ใหญ่
-  - แสดงเมื่อ `isFB && !dismissed`
-  - ปุ่ม "เปิดใน Chrome / Safari" → native click → `openExternally()`
-  - ปุ่ม "เข้าใจแล้ว" → dismiss + localStorage 7 วัน
-- **src/App.tsx**: Wrap main Routes ด้วย `<InAppBrowserBanner>`
-  - แสดงบนทุก public page เมื่ออยู่ใน FB WebView
-  - ไม่กระทบ admin routes
+  - **PWA**: `beforeinstallprompt` handler + `installApp()` + `canInstall` state
+- **src/components/InAppBrowserBanner.tsx**: Banner UI + dismiss + CTA ใหญ่ + ปุ่มติดตั้งแอป
+  - ใช้ `<a href={intentUrl}>` สำหรับ Android (native click) แทน `window.location.href`
+  - ปุ่ม "ติดตั้งแอป" แสดงเมื่อ `canInstall` true
+  - Dismiss + localStorage 7 วัน
+- **src/pages/CheckoutPage.tsx**: ลบ `InAppBrowserNotice` duplicate, ใช้ toast ธรรมดา
+- **src/components/layout/InAppBrowserNotice.tsx**: เพิ่ม deprecation comment
 - **Gates**: tsc ✅ lint ✅ vitest ✅ build ✅
-- **Commit**: `dfb8d25` push แล้ว (`cbcd777..dfb8d25`)
+- **Commit**: `60a1b17` push แล้ว (`dfb8d25..60a1b17`)
+
+## Phase 2: AI Cross-Sell (Facebook/Line Chat) — 🔄 IN PROGRESS
 
 ## Marketing+Promotions+Media+Portfolio Merge (Owner 2026-11-09) — ✅ CODE_CLOSED + PUSHED + DEPLOYED
 - **Phase 1: MarketingPromotions** (`/admin/marketing-promotions`) — 7 tabs: overview, promotions, banners, planner, studio, social, settings

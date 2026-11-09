@@ -503,3 +503,25 @@ export function buildCartSummaryFooter(items: CartSummaryItem[], site = 'https:/
     : '🛒 สรุปรายการของคุณเปิดดูบนเว็บได้เลยครับ — '
   return `${head}กดลิงก์นี้เพื่อดูตะกร้า เช็คเอาท์ หรือเพิ่มเมนูต่อได้เลย: ${link}\n🔗 ลิงก์เปิดเว็บ biteme-baby.com ภายนอก Facebook — ถ้าแตะแล้วยังค้างอยู่ในเฟซ ให้กดคัดลอกลิงก์ในแถบที่ขึ้น แล้ววางใน Chrome/Safari ได้เลย`
 }
+
+// ============================================
+// Cross-Sell Prompts for AI (Owner 2026-11-09)
+// ============================================
+// Pre-Order → แนะนำ Same-Day + โค้ดลด SAMEDAY10
+// Same-Day → แนะนำ Pre-Order + โค้ดลด PREORDER10
+
+export type OrderMode = 'SAME_DAY' | 'PRE_ORDER' | 'UNSURE'
+
+export function getCrossSellPrompt(orderMode: OrderMode, postUrl = 'https://biteme-baby.com/shop'): string {
+  switch (orderMode) {
+    case 'PRE_ORDER':
+      return `\n\n--- CROSS-SELL (Owner directive) ---\nลูกค้าสั่ง Pre-Order (จองล่วงหน้า) — ให้แนะนำเพิ่ม:\n"นอกจากเมนูที่จองล่วงหน้ากลับ เรายังมีเมนูส่งวันนี้ (Same-Day) ที่ส่งได้ทันทีวันนี้ครับ\nเพิ่มไปด้วยได้เลย — ใช้โค้ด SAMEDAY10 ได้ลด 10% สำหรับเมนู Same-Day นะครับ\nดูเมนูส่งวันนี้ได้ที่ ${postUrl}"`
+
+    case 'SAME_DAY':
+      return `\n\n--- CROSS-SELL (Owner directive) ---\nลูกค้าสั่ง Same-Day (ส่งวันนี้) — ให้แนะนำเพิ่ม:\n"ถ้าอยากจองล่วงหน้าสำหรับวันพรุ่งนี้/วันอื่น ก็มีเมนู Pre-Order ครับ\nจองล่วงหน้าได้เลย — ใช้โค้ด PREORDER10 ได้ลด 10% สำหรับเมนู Pre-Order\nดูเมนูจองล่วงหน้าได้ที่ ${postUrl}"`
+
+    case 'UNSURE':
+    default:
+      return `\n\n--- CROSS-SELL (Owner directive) ---\nลูกค้ายังไม่ระบุชัดเจน — ให้ถามและแนะนำทั้งสอง:\n"คุณต้องการส่งวันนี้ (Same-Day) หรือจองล่วงหน้า (Pre-Order) ครับ?\n- Same-Day: ส่งได้ทันทีวันนี้ ใช้โค้ด SAMEDAY10 ลด 10%\n- Pre-Order: จองล่วงหน้าวันที่ต้องการ ใช้โค้ด PREORDER10 ลด 10%\nดูทั้งสองที่ ${postUrl}"`
+  }
+}
