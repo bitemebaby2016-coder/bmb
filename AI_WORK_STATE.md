@@ -1,4 +1,4 @@
-## 🟡 R89b — แก้ "เซกชันซ้ำ" บน `/shop` แล้ว (ถูกหน้า · 2026-11-09) — รอ: gates สรุป + push + Owner hard reload รีเทสต์
+## 🟡 R89b — แก้ "เซกชันซ้ำ" บน `/shop` เสร็จ (ถูกหน้า · 2026-11-09) · gates 4/4 · push `d7e53e4` · live = `R89B_LIVE_NEW_BUILD_OK` — **รออย่างเดียว: Owner hard reload `/shop` รีเทสต์ แล้วค่อยปิด R89**
 > อ่านบล็อกนี้เท่านั้น (บล็อก 🔴 เดิมล้าสมัยแล้ว · ห้ามถือว่า R89 ปิดจน Owner ยืนยันภาพ)
 
 ### ทำแล้วรอบนี้ (เซสชัน 2026-11-09 ต่อจากแฮนออฟ · ครบ 6 ข้อของแผน)
@@ -10,8 +10,8 @@
    - `src/components/CustomerReviewCard.tsx` — **โลโก้ `/Logo_Sticker_Circle.webp` บนหัวทุกการ์ด** (ดาว `Star.webp` 3D เดิมอยู่แล้ว)
    - `src/index.css` — คลาส `.review-store-logo` (24px · round · drop-shadow)
    - คงไว้: `VerifiedReviewsSection.tsx` (ไม่ถูก mount แล้ว — เก็บอ้างอิง) · `getVerifiedReviewsForProducts` (เส้น DB m099) · `/reviews` ที่ยุบแล้ว **ไม่แตะ**
-4. **[เทสต์] gates รันครั้งเดียวจบ** — `node e2e/_r89_launch_gates.cjs` (pid รันเดียว) → ผลรวม `e2e/_r88_final_gates.log` · **ผล: tsc EXIT=0 · lint EXIT=0 (brandNameGuard OK · languageSanity OK) · vitest+build ดูบรรทัด ALL_GATES_DONE ใน log ก่อน push**
-5. **[push + live check]** → **ยังไม่ได้ทำ** (ทำหลัง log = ALL_GATES_DONE) → Owner hard reload `/shop`
+4. **[เทสต์] gates รันครั้งเดียวจบ ✅** — `node e2e/_r89_launch_gates.cjs` → **ผลรวม `e2e/_r88_final_gates.log`: tsc EXIT=0 · lint EXIT=0 (brandNameGuard OK · languageSanity OK) · vitest EXIT=0 · build EXIT=0 = 4/4** · `dist/index.html` build 11:23:57 · ไม่มี `GATE_FAILED` (หมายเหตุ: marker `ALL_GATES_DONE` หายเพราะบั๊ก `log.end()+process.exit(0)` ในสคริปต์เดิม — ใช้ EXIT ของแต่ละ gate เป็นหลักฐาน)
+5. **[push + live check] ✅** — commit **`d7e53e4`** push แล้ว (`51820d4..d7e53e4`) · live check ครั้งที่ 2 = **`R89B_LIVE_NEW_BUILD_OK`** (asset `index-2ss6MhDh.js` · มี `review-store-logo` · ไม่มี `verified-reviews-heading`) — **เหลือ: Owner hard reload `/shop` ยืนยันเห็นหัวข้อเดียว + โลโก้/ดาว แล้วค่อยปิด R89**
 6. **[คงไว้]** สแกนซ้ำด้วย `node e2e/_h_diag.cjs` = **แล้ว**: `SEC_VERIFIED_TH` เหลือแค่ `VerifiedReviewsSection.tsx` (ไม่ mount) + `ReviewPage.tsx` (หน้า `/reviews` · ไม่ใช่หน้า Owner ดู) · `SEC_PHOTO` = ที่เดียวที่ `/shop`
 
 ### กติกาพฤติกรรม (บทเรียนเซสชัน 2026-11-09 — เด็ดขาด ห้ามทำซ้ำ)
