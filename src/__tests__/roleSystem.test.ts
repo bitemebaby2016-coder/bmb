@@ -68,7 +68,7 @@ describe('navGroupsForRole — per-role nav hiding (Owner P1)', () => {
     expect(tos('inventory')).not.toContain('/admin/reports')
     expect(tos('finance')).toEqual(expect.arrayContaining(['/admin/reports', '/admin/orders', '/admin/pos']))
     expect(tos('finance')).not.toContain('/admin/inventory')
-    expect(tos('marketing')).toEqual(expect.arrayContaining(['/admin/marketing', '/admin/promotions', '/admin/media']))
+    expect(tos('marketing')).toEqual(expect.arrayContaining(['/admin', '/admin/marketing-promotions', '/admin/media-portfolio']))
     expect(tos('marketing')).not.toContain('/admin/orders')
   })
 

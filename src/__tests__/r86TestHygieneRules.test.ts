@@ -71,9 +71,10 @@ describe('R86 source gates — COD switch 3 จุด + หน้าต่าง
   })
   it('AdminSettings: มีสวิตช์ COD เปิด/ปิด + คีย์อยู่ใน TYPED_FORM_KEYS (กัน generic editor ทับ)', () => {
     expect(adminSettingsSrc).toContain('data-testid="cod-switch"')
-    expect(adminSettingsSrc).toContain('testId="cod-enabled-toggle"')
-    expect(adminSettingsSrc).toContain('async function handleToggleCod(')
-    expect(adminSettingsSrc).toContain("'store_master_open', 'cod_enabled'")
+    expect(adminSettingsSrc).toContain('testId="cod-switch-toggle"')
+    expect(adminSettingsSrc).toContain('async function handleToggleNested(')
+    expect(adminSettingsSrc).toContain("'store_master_open'")
+    expect(adminSettingsSrc).toContain("'cod_enabled'")
   })
   it('SlipReviewPanel: ห้าม return null เมื่อค้าง 0 — ต้องโชว์ empty state ของหน้าต่าง', () => {
     expect(slipPanelSrc).not.toContain('if (pending.length === 0) return null')

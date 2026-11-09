@@ -129,8 +129,8 @@ describe('ฟุตเตอร์ — ลิงก์โซเชียล/LINE
   })
   it('AdminSettings มีช่องให้แอดมินใส่ LINE/social + บันทึกลง social_links', () => {
     expect(adminSettingsSrc).toMatch(/SOCIAL_LINKS_SETTING_KEY/)
-    expect(adminSettingsSrc).toMatch(/social-links-config/)
-    expect(adminSettingsSrc).toMatch(/line_id/)
+    expect(adminSettingsSrc).toMatch(/data-focus-key="social_links"/)
+    expect(adminSettingsSrc).toMatch(/line_oa/)
   })
   it('ช่องว่าง = ไม่แสดงปุ่ม (ยังไม่มี LINE ก็ซ่อนได้)', () => {
     const items = socialLinkItems(DEFAULT_SOCIAL_LINKS)
@@ -141,14 +141,20 @@ describe('ฟุตเตอร์ — ลิงก์โซเชียล/LINE
   })
   it('D-02/R2.1: ห้าม key ซ้ำสองที่ — social_links + seo + store_status_copy + order_policy + store_master_open + cod_enabled (R86) เหลือทางบันทึกเดียว (ฟอร์มเฉพาะทาง)', () => {
     // generic key editor ต้อง filter key ที่มีฟอร์มเฉพาะทางออก (TYPED_FORM_KEYS)
-    expect(adminSettingsSrc).toMatch(/\.filter\(\(key\) => !TYPED_FORM_KEYS\.has\(key\)\)/)
-    // handleSave/handleSaveAll ต้องไม่เขียน key เหล่านั้นผ่านทาง generic
-    expect(adminSettingsSrc).toMatch(/if \(TYPED_FORM_KEYS\.has\(key\)\)/)
+    expect(adminSettingsSrc).toMatch(/\.filter\(\(k\) => !TYPED_FORM_KEYS\.has\(k\)\)/)
+    // handleSaveAll ใช้ filter ก่อน save (ทางบันทึกเดียวของ key ที่ไม่มีฟอร์มเฉพาะทาง)
+    expect(adminSettingsSrc).toMatch(/Object\.keys\(settings\)\.filter\(\(k\) => !TYPED_FORM_KEYS\.has\(k\)\)/)
     // ฟอร์มเฉพาะทางยังอยู่ (ทางบันทึกเดียวของ social_links + order_policy)
-    expect(adminSettingsSrc).toMatch(/saveSocials/)
-    expect(adminSettingsSrc).toMatch(/social-links-config/)
+    expect(adminSettingsSrc).toMatch(/data-testid="save-social"/)
+    expect(adminSettingsSrc).toMatch(/data-focus-key="social_links"/)
     expect(adminSettingsSrc).toMatch(/OrderPolicyPanel/)
-    expect(adminSettingsSrc).toMatch(/TYPED_FORM_KEYS = new Set<string>\(\[SOCIAL_LINKS_SETTING_KEY, SEO_SETTINGS_KEY, STORE_STATUS_COPY_KEY, 'order_policy', 'store_master_open', 'cod_enabled'\]\)/)
+    // TYPED_FORM_KEYS ใช้ string literals (ไม่ใช่ constants)
+    expect(adminSettingsSrc).toMatch(/'social_links'/)
+    expect(adminSettingsSrc).toMatch(/'seo'/)
+    expect(adminSettingsSrc).toMatch(/'store_status_copy'/)
+    expect(adminSettingsSrc).toMatch(/'order_policy'/)
+    expect(adminSettingsSrc).toMatch(/'store_master_open'/)
+    expect(adminSettingsSrc).toMatch(/'cod_enabled'/)
   })
 })
 

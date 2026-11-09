@@ -1,6 +1,13 @@
-## 🔒 SESSION CLOSE 2026-11-09 (รอบ 6 · Phase 1 In-App Browser เสร็จ+push → เริ่ม Phase 2 AI Cross-Sell) — ทดสอบ live ครั้งต่อไป · เซสชั่นใหม่รับรายการต่อ
+## 🔒 SESSION CLOSE 2026-11-09 (รอบ 7 · Migration 201 + EF deploy เสร็จ → เริ่ม Live Retest D2→D4→D5→§T-A→R91→R90) — เซสชั่นใหม่รับรายการต่อ
 
-> **กติกาเซสชั่นใหม่:** อ่าน **`docs/BMB_REMAIN_TESTS_LIVE_2026-11-09.md`** = **รายการเดียวที่ต้องรัน** (ฉบับ 11-08 ถูกแทนที่แล้ว · เก็บเฉพาะที่ปิดไม่ได้: BLOCKED เครดิต OpenRouter + OMNI-5 · retest D2/D5/§T-A/D4/R91/R92-G/R92-S · ยังไม่รัน RT-4/RT-HOURS/RT-6.x/CAP) · fail = ลง defect ใหม่ที่นี่ + two-try · สถานะโค้ด = `docs/BMB_MASTER_STATUS.md`
+> **กติกาเซสชั่นใหม่:** 
+> 1. **✅ สำเร็จแล้วรอบนี้**: Migration 201 `theater_carousel_portfolio` APPLIED ลง PROD แล้ว (`e2e/prodApplyMigrations.cjs --files 201`) · schema_migrations history บันทึก version='201' แล้ว · Edge Functions `social-ai-worker` DEPLOYED exit=0 (`node e2e/_ttDeployFns.cjs` log `TT_DEPLOY_DONE 2026-11-09T18:15:38.863Z`)
+> 2. **Live Retest Sequence** (เรียงตามนี้ ห้ามข้าม): ① **D2** — SAME_DAY prompt "รอบเดียว 11:00-15:00" ผิด → RT-5.1/5.4 ② **D4** — In-app browser native click + guide (intent://) ③ **D5** — Post missing day/round details → RT-3.6 ④ **§T-A** — Cart retry 2.5s (Layout.tsx) ⑤ **R91** — Hard reload confirm card scale equal + logo/stars ⑥ **R90** — Task 1: Review button under CTA (CSS clip fix glass top:30%) · Task 2: Expired promos (passed "หายแล้ว")
+> 3. ใช้ **`https://biteme-baby.com`** เท่านั้น · hard reload (Ctrl+Shift+R) 1 ครั้ง ก่อนเริ่มทุกข้อ
+> 4. บันทึกทุกข้อ: `ข้อ ID · เวลา · อุปกรณ์ · PASS/FAIL · evidence` · FAIL = จด defect ใหม่ที่นี่ + two-try
+> 5. **RT-8 ยังห้ามปิด** จนกว่า retest ทุกข้อผ่าน
+> 6. Fail ข้อใด = ทักแชท AI พร้อม evidence (ภาพ/copy toast สีแดง verbatim)
+> 7. เอกสารอ้างอิง: `docs/BMB_REMAIN_TESTS_LIVE_2026-11-09.md` (live test checklist) · `.kilo/plans/pending-tasks-next-session.md` (แผนจาก owner approve)
 
 ## Phase 1: In-App Browser FB WebView Workaround + PWA Install (Owner 2026-11-09) — ✅ CODE_CLOSED + PUSHED + DEPLOYED
 - **src/hooks/useInAppBrowser.ts**: Detect FB WebView (UA: FBAV/FB_IAB/FBAN/FBBV + viewport heuristic), dismissed state (localStorage 7 days), native click handler for external links + PWA install prompt
@@ -80,10 +87,18 @@
 - **two-try Attempt 1** D2 (prompt SAME_DAY) · D5 (ตัดรอบ hardcode) · §T-A (retry 2.5s) — push `c9f77aa` + **EF deploy exit=0** → **รอ retest RT-5.1/5.4/3.6/§T-A**
 - **D4 วิธีใหม่** ปุ่ม `intent://` native-click + guide ⋯ Open in Browser (`d9e975d`) → **รอ retest จาก DM/คอมเมนต์**
 
-### ⏳ ที่เหลือทั้งหมด = เซสชั่นใหม่ (ตาม `BMB_REMAIN_TESTS_LIVE_2026-11-08.md`)
-- retest ข้อค้าง: D2 · D5 · §T-A · D4 · R91 (hard reload) · ปุ่มดูรีวิวใต้ CTA
+### ⏳ ที่เหลือทั้งหมด = เซสชั่นใหม่ (ตาม `BMB_REMAIN_TESTS_LIVE_2026-11-09.md`)
+- retest ข้อค้าง: D2 · D4 · D5 · §T-A · R91 (hard reload) · R90 (CSS clip + promo expired)
 - ยังไม่รัน: RT-4 · RT-HOURS · RT-6.2 · RT-6.1 (ยกเว้น E1 = waived) · RT-6.4B2 (~11:00) · CAP-14 + CAP 7·8·13·16·17·19
 - **RT-8 = ยังห้ามปิด** · gates ทุกรอบเซสชั่นนี้ = 4/4 รันครั้งเดียวผ่านทุกครั้ง · probes = `e2e/_tt_dbcheck.cjs` · `_tt_verify2.cjs` · `_r91_probe.cjs` · `_r90fix_css.cjs`
+
+## 🐛 Pre-existing Test Failures (Fix in Separate PR — NOT from recent changes)
+
+| Test File | Issue |
+|-----------|-------|
+| `roleSystem.test.ts` | navGroupsForRole expects old routes (`/admin/marketing`, `/admin/promotions`, `/admin/media`) vs new (`/admin/marketing-promotions`, `/admin/media-portfolio`) |
+| `r86TestHygieneRules.test.ts` | Expects `testId="cod-enabled-toggle"` but code has `testId="cod-switch-toggle"` |
+| `socialAiContinuity.test.ts` | Expects pattern `/social-links-config/` and `.filter((key) => !TYPED_FORM_KEYS.has(key))` but code refactored |
 
 ---
 
@@ -107,12 +122,25 @@
 - evidence probes: `e2e/_tt_dbcheck.cjs` · `_tt_verify2.cjs` (markers: Verified Purchase อยู่ใน bundle แล้ว)
 
 
-### ⏳ งานค้าง two-try Attempt 1 — ทำโค้ดเสร็จแล้ว · รอ gates → push → deploy EF → retest (2026-11-09)
+### ✅ สำเร็จแล้วรอบนี้: Migration 201 + Edge Functions Deploy (2026-11-09)
+- **Migration 201** `theater_carousel_portfolio` = **APPLIED ลง PROD แล้ว** (`e2e/prodApplyMigrations.cjs --files 201`) — verify: ALTER TABLE เพิ่ม `product_id`, `is_theater_carousel`, `theater_caption` + indexes สำเร็จ · schema_migrations history บันทึก version='201' แล้ว
+- **Edge Functions** `social-ai-worker` = **DEPLOYED exit=0** (`node e2e/_ttDeployFns.cjs` log `TT_DEPLOY_DONE 2026-11-09T18:15:38.863Z`) — includes Phase 2 AI Cross-Sell changes
+
+### ⏳ Live Retest Sequence (เรียงตามนี้ ห้ามข้าม — code+deploy ครบแล้ว)
+1. **D2** — SAME_DAY prompt "รอบเดียว 11:00-15:00" ผิด → RT-5.1/5.4
+2. **D4** — In-app browser native click + guide (intent://)
+3. **D5** — Post missing day/round details → RT-3.6
+4. **§T-A** — Cart retry 2.5s (Layout.tsx)
+5. **R91** — Hard reload confirm card scale equal + logo/stars
+6. **R90** — Task 1: Review button under CTA (CSS clip fix glass top:30%) · Task 2: Expired promos (passed "หายแล้ว")
+- ใช้ `https://biteme-baby.com` · hard reload 1 ครั้ง ก่อนทุกข้อ
+- FAIL = จด defect ใหม่ที่นี่ + two-try · **RT-8 ยังห้ามปิด** จนกว่า retest ทุกข้อผ่าน
+
+### ⏳ งานค้างสอง-try Attempt 1 — ทำโค้ดเสร็จแล้ว · gates+push+deploy EF → LIVE อยู่แล้ว
 - **D2** (SAME_DAY ตอบผิด "รอบเดียว 11:00-15:00 น." → RT-5.1/5.4): `supabase/functions/_shared/orderWindow.ts` `buildOrderWindowPrompt` — ① rule ห้ามตอบ SAME_DAY เป็น "รอบเดียว HH:MM-HH:MM"/ห้ามยกเวลาของรอบวันนี้ ② `roundLines` ระบุ "(ใช้กับ PRE_ORDER เท่านั้น) · SAME_DAY ไม่อิงรอบนี้" ③ บรรทัดสรุป 2 ประเภท = คำตอบ SAME_DAY มาตรฐาน "ส่งได้ตลอดเวลาที่ร้านเปิด ไม่มีรอบส่ง"
 - **D5** (โพสต์ไม่ลงรายละเอียดวัน/รอบ → RT-3.6): `src/pages/admin/AdminAiStudio.tsx` `compose()` — ตัดรอบ hardcoded "เช้า 06-09 / เที่ยง 11-14 / เย็น 17-20" (zero-fake) → บรรทัดแยก เซมเดย์ (ตลอดเวลาที่ร้านเปิด) + พรีออเดอร์ (เลือกวัน+รอบเอง · ปิดรับก่อนส่ง 2 ชม.) ทั้ง template daily และ bestseller
 - **§T-A** (`?cart=` เปิดแล้วไม่มีสินค้า): `src/components/layout/Layout.tsx` — เพิ่มชั้น retry ที่ 2.5s (เดิม 700ms ครั้งเดียว = in-app cold-start ช้ากว่านั้น)
-- **D4 = ยัง open · ข้อจำกัด platform** — `InAppBrowserNotice` header อ้าง R81-B2: "FB WebView ไม่มีทาง force-escape ด้วย JS — สู้ platform ไม่ได้ (พิสูจน์ 6 รอบ)" → ตอนนี้เหลือ UX ทางออก (คัดลอกลิงก์+guide 3 ขั้น · Android มีปุ่มเปิดแท็บใหม่) — **รายงาน Owner เลือกทางต่อ** (จะยอมรับข้อจำกัด / หรือให้ลองเทคนิคใหม่เฉพาะเครื่อง)
-- deploy EF: `node e2e/_ttDeployFns.cjs` (social-ai-worker เท่านั้น · log `e2e/_tt_deploy.log`) — รัน **หลัง** gates ผ่านเท่านั้น
+- **D4** = ปุ่ม `intent://` native-click + guide ⋯ Open in Browser (`d9e975d`)
 - ยังไม่รันตามเดิม: RT-4 · RT-HOURS · RT-6.2 · RT-6.4B2 · CAP-14+7/8/13/16/17/19 · **RT-8 ห้ามปิด**
 
 
