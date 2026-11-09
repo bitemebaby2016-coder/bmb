@@ -72,7 +72,11 @@ export function ReviewCarouselSection({ reviews, verifiedReviews, products, onRe
   //   · rating ปัดเป็นจำนวนเต็ม (การ์ดโชว์ดาวทั้งใบ + "<rating>.0")
   const seenKeys = new Set(reviews.map((r) => `${r.displayName.trim()}|${r.text.trim()}`))
   const verifiedItems = (verifiedReviews ?? [])
-    .filter((r) => r.status === 'approved' && r.rating > 0 && Boolean(r.comment))
+    // ROOT CAUSE FIX (2026-11-09 — พิสูจน์จาก m199 line 76-85): RPC get_verified_reviews_batch
+    //   RETURNS TABLE "ไม่มีคอลัมน์ status" → แถวคืนมา = undefined → เดิมเช็ก === 'approved'
+    //   กรองทิ้งหมด 100% = การ์ด verified ไม่ขึ้น (ทั้งที่ RPC กรอง WHERE status='approved'
+    //   อยู่แล้วตั้งแต่ต้น) → ให้ผ่านเมื่อ field ไม่ถูกคืน (undefined) · ถ้าคืนมาก็เช็กตามเดิม
+    .filter((r) => (r.status === undefined || r.status === 'approved') && r.rating > 0 && Boolean(r.comment))
     .filter((r) => {
       const key = `${(r.customer_name || '').trim()}|${(r.comment || '').trim()}`
       if (seenKeys.has(key)) return false

@@ -1,6 +1,13 @@
 ## 🟡 R89b — แก้ "เซกชันซ้ำ" บน `/shop` เสร็จ (ถูกหน้า · 2026-11-09) · gates 4/4 · push `d7e53e4` · live = `R89B_LIVE_NEW_BUILD_OK` — **รออย่างเดียว: Owner hard reload `/shop` รีเทสต์ แล้วค่อยปิด R89**
 > อ่านบล็อกนี้เท่านั้น (บล็อก 🔴 เดิมล้าสมัยแล้ว · ห้ามถือว่า R89 ปิดจน Owner ยืนยันภาพ)
 
+### 🔴 ROOT CAUSE "รีวิวอนุมัติไม่ขึ้นจริง" — แก้แล้ว รอ gates+push (2026-11-09 · Owner โกรธ "ขี้โม้ 3 รอบ" = รับผิด)
+- **ไม่ใช่ migration** — m199 apply แล้วพิสูจน์ด้วย Management API query จริง (`e2e/_tt_dbcheck.cjs`): column `status` มี (default pending) · RPC ทั้งสองตัวมี · มีรีวิว **approved จริง 1 ใบ** (`rev-1794155871506-c12880` · 5⭐ "ข้าวหน้าปลาทอดลุยสวน" · product `prod-1793370625449-zzn457` is_available=true) · products 36 ตัว (< slice 50 = โหลดครบ) · anon อ่าน 200
+- **บั๊กจริง = ฝั่งผม (R89b)**: RPC `get_verified_reviews_batch` RETURNS TABLE (m199 line 76-85) **ไม่มีคอลัมน์ `status`** → แถวคืน `undefined` → filter `r.status === 'approved'` กรองทิ้ง **100%** (ทั้งที่ RPC กรอง `WHERE status='approved'` อยู่แล้ว) → **แก้แล้ว**: ให้ผ่านเมื่อ `status === undefined`
+- **D4 = ทำวิธีใหม่ตาม action plan Owner แล้ว**: ปุ่ม `<a href="intent://...">` native user-click "เปิดใน Chrome โดยตรง" (s.browser_fallback_url กันพัง) + guide วลี "⋯ จุดสามจุด → เปิดในเบราว์เซอร์เริ่มต้น (Open in Browser)" · **ห้าม auto-redirect ตามเดิม**
+- evidence probes: `e2e/_tt_dbcheck.cjs` · `_tt_verify2.cjs` (markers: Verified Purchase อยู่ใน bundle แล้ว)
+
+
 ### ⏳ งานค้าง two-try Attempt 1 — ทำโค้ดเสร็จแล้ว · รอ gates → push → deploy EF → retest (2026-11-09)
 - **D2** (SAME_DAY ตอบผิด "รอบเดียว 11:00-15:00 น." → RT-5.1/5.4): `supabase/functions/_shared/orderWindow.ts` `buildOrderWindowPrompt` — ① rule ห้ามตอบ SAME_DAY เป็น "รอบเดียว HH:MM-HH:MM"/ห้ามยกเวลาของรอบวันนี้ ② `roundLines` ระบุ "(ใช้กับ PRE_ORDER เท่านั้น) · SAME_DAY ไม่อิงรอบนี้" ③ บรรทัดสรุป 2 ประเภท = คำตอบ SAME_DAY มาตรฐาน "ส่งได้ตลอดเวลาที่ร้านเปิด ไม่มีรอบส่ง"
 - **D5** (โพสต์ไม่ลงรายละเอียดวัน/รอบ → RT-3.6): `src/pages/admin/AdminAiStudio.tsx` `compose()` — ตัดรอบ hardcoded "เช้า 06-09 / เที่ยง 11-14 / เย็น 17-20" (zero-fake) → บรรทัดแยก เซมเดย์ (ตลอดเวลาที่ร้านเปิด) + พรีออเดอร์ (เลือกวัน+รอบเอง · ปิดรับก่อนส่ง 2 ชม.) ทั้ง template daily และ bestseller

@@ -161,13 +161,13 @@ export function InAppBrowserNotice() {
               <>
                 <li>กดปุ่ม <b>📋 คัดลอกลิงก์</b> แล้วออกจากแอปเฟซ</li>
                 <li>เปิดแอป <b>Safari</b> → วางในช่องค้นหา = เข้าเว็บภายนอกทันที</li>
-                <li>ทางเลือก: ⋮ (มุมขวาบน) → เปิดในเบราว์เซอร์ ถ้าเมนูขึ้น</li>
+                <li>ทางเลือกที่เสถียร 100%: กด <b>⋯ (จุดสามจุด มุมบนขวา)</b> → เลือก <b>"เปิดในเบราว์เซอร์เริ่มต้น" (Open in Browser)</b></li>
               </>
             ) : (
               <>
                 <li>ออกจากแอปเฟซ → เปิดแอป <b>Chrome</b></li>
                 <li>วางลิงก์ในช่องค้นหา = เข้าเว็บภายนอกทันที (ใช้งานต่อได้ทุกหน้า)</li>
-                <li>ทางเลือก: ⋮/แชร์ (มุมขวาบน) → เปิดในเบราว์เซอร์ ถ้าเมนูขึ้น</li>
+                <li>ทางเลือกที่เสถียร 100%: กด <b>⋯ (จุดสามจุด มุมบนขวา)</b> → เลือก <b>"เปิดในเบราว์เซอร์เริ่มต้น" (Open in Browser)</b></li>
               </>
             )}
           </ol>
@@ -188,6 +188,20 @@ export function InAppBrowserNotice() {
             >
               📤 แชร์/ส่งต่อ
             </button>
+            {platform === 'android' && pageUrl && externalBrowserIntentUrl(pageUrl) && (
+              // D4 NEW WAY (Owner 2026-11-09 action plan): intent ผ่าน "คลิกของผู้ใช้" เท่านั้น —
+              //   ต่างจาก JS auto-redirect (location.replace) ที่ R76/R81 พิสูจน์ว่าถูกบล็อก/พังหน้า
+              //   · <a href> _native click_ = WebView ส่งต่อให้ system resolver → Chrome
+              //   · s.browser_fallback_url = ไม่มี Chrome → กลับ URL เดิม ไม่มีทางพาหน้าไป error
+              <a
+                href={externalBrowserIntentUrl(pageUrl) as string}
+                className="btn btn-primary btn-xs"
+                data-testid="inapp-open-chrome"
+                onClick={() => r81Capture('open_chrome_intent', pageUrl)}
+              >
+                🌐 เปิดใน Chrome โดยตรง
+              </a>
+            )}
             {platform === 'android' && pageUrl && (
               // R81-B3: target=_blank = เปิดแท็บใหม่เท่านั้น — ไม่มีทางพาหน้าปัจจุบันไป error
               <a
