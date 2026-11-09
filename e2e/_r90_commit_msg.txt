@@ -1,0 +1,16 @@
+R90: ปุ่มดูรีวิวเต็มใต้ปุ่มสั่ง/จอง + โปรโมชั่นหมดอายุไม่โชว์
+
+งาน 1 — ทางเข้ารีวิวเต็มของเมนู:
+- CustomerReviewCard: เพิ่ม Link ใต้ปุ่ม CTA (สั่งเมนูนี้/จองเมนูนี้) → /reviews/:productId
+  = หน้ารีวิวกรองตาม product_id จริง (route มีอยู่แล้ว App.tsx:277 · loadReviewsFeed(productId))
+  · ผูก product.id = เมนูเพิ่ม/เปลี่ยนในอนาคตขึ้นเองอัตโนมัติ (ไม่ผูกชื่อ)
+  · แสดงเฉพาะเมื่อมี product (verified/curated ที่แมปกับ catalog จริง)
+- index.css: .review-see-all (pill รองใต้ CTA ปุ่มใหญ่)
+
+งาน 2 — โปรโมชั่นหมดอายุ:
+- homeProviders.getHomePromotionsFromRows: กรอง start_date/end_date ด้วย bangkokDateKey
+  (กติกาเดียวกับ listAvailableCoupons — วันไทย ไม่ใช่ UTC) + is_active
+  · เดิมกรองแค่ is_active → แถบที่ end_date ผ่านแล้วยังขึ้น strip /shop
+- /promotions หน้าหลักกรองอยู่แล้ว (isPromoLiveNow — ไม่แตะ)
+
+- gates 4/4 รันครั้งเดียว

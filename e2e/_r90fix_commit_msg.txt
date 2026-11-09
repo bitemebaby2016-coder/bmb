@@ -1,0 +1,15 @@
+R90 fix: ปุ่มดูรีวิวถูก clip ไม่แสดง (Owner retest "1 ไม่มี")
+
+ROOT CAUSE (พิสูจน์จาก CSS จริง):
+- .review-card-3d = aspect-ratio 4/5 + overflow:hidden · .review-card-glass
+  absolute top:36%→bottom:0 (ตายตัว) — เนื้อหาเดิม (header+stars+comment+
+  customer+CTA) พอดีขอบพอดี → ปุ่ม see-all ใต้ CTA ถูก clip ทิ้งทั้งหมด
+  (JS marker อยู่ใน bundle = ตาม probe แต่ element โดน overflow ตัด)
+
+FIX:
+- index.css: glass top 36%→30% (คืน ~26px) + gap 0.55→0.4rem + padding กระชับ
+  (คืนรวม ~50px = พอสำหรับปุ่ม) · .review-see-all ย่อ (padding 0.3rem · font 0.72rem)
+- CustomerReviewCard: guard (product?.id || review.productId) — fallback ใช้
+  review.productId เมื่อ productMap ยังไม่เจอ (products โหลดช้า/ไม่ match)
+
+- gates 4/4 รันครั้งเดียว

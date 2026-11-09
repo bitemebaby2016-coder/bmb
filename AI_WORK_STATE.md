@@ -1,6 +1,14 @@
-## 🔒 SESSION CLOSE 2026-11-09 (รอบ 2 · R92 เสร็จ+push) — ยกทั้งหมดไปทดสอบ live · เซสชั่นใหม่รับรายการต่อ
+## 🔒 SESSION CLOSE 2026-11-09 (รอบ 3 · Admin Menu Consolidation เสร็จ+push) — ทดสอบ live ครั้งต่อไป · เซสชั่นใหม่รับรายการต่อ
 
 > **กติกาเซสชั่นใหม่:** อ่าน **`docs/BMB_REMAIN_TESTS_LIVE_2026-11-09.md`** = **รายการเดียวที่ต้องรัน** (ฉบับ 11-08 ถูกแทนที่แล้ว · เก็บเฉพาะที่ปิดไม่ได้: BLOCKED เครดิต OpenRouter + OMNI-5 · retest D2/D5/§T-A/D4/R91/R92-G/R92-S · ยังไม่รัน RT-4/RT-HOURS/RT-6.x/CAP) · fail = ลง defect ใหม่ที่นี่ + two-try · สถานะโค้ด = `docs/BMB_MASTER_STATUS.md`
+
+## Admin Menu Consolidation (Owner 2026-11-09) — ✅ CODE_CLOSED + PUSHED + DEPLOYED
+- **Menu Consolidation**: 5 กลุ่ม → 3 กลุ่ม (operations, customers, settings) · role allowlist อัปเดตครบ · ไอคอน/label ไทยทุกตัว
+- **Thai Labels 100%**: AdminSettings, AdminPrintSettings, MascotSettingsPage, AdminTenants, AdminBrands, DeliveryManagement, RouteOptimizationPage, AdminRounds, AdminBilling, AdminOnboarding — ทุก label/button/toast เป็นภาษาไทย (JSON/URL/API คงไว้เพราะศัพท์สากล)
+- **ToggleSwitch สำหรับ Boolean Settings**: เพิ่ม crm_automation.enabled (Kill Switch CRM) + promotion_policy.promotions_enabled (Kill Switch โปรโมชัน) แทนการพิมพ์ true/false ใน JSON editor · ใช้ pattern เดียวกับ store_master_open / cod_enabled
+- **Tests**: adminUi.test.ts อัปเดตครบ 18 tests ผ่าน · tsc/lint/vitest/build = 4/4 gates ผ่าน
+- **Commit**: `b6dc74f` push แล้ว (`6484656..b6dc74f`)
+
 ## R92 (Owner 2026-11-09 — "ต่องานก่อนย้าย" 3 ข้อ) — ✅ CODE_CLOSED + PUSHED + DEPLOYED
 1. **เจนรูปไม่ได้ → ต้นตอจริง = เครดิต OpenRouter หมด** (error toast จริงบนหน้า `/admin/marketing` 18:36 น.: `qwen/qwen-image-2.1-pro:images402 Insufficient credits` + `bytedance-seed/seedream-5-0-flash:images402 Insufficient credits` · `chat404` ตามมา = fallback ไม่ใช่ต้นตอ) · ที่สืบ/ทำแล้ว: bucket `bmb-images` ไม่ได้เปลี่ยนชื่อ (Management API) · EF boot ปกติ · secrets ครบ · **`IMAGE_GEN_MODELS` รีเซ็ตเป็น default ที่ r55 ผ่านแล้ว** (`qwen/qwen-image-2.1-pro,bytedance-seed/seedream-5-0-flash` · POST 201 — พิสูจน์โดย error ไล่ครบทั้ง 2 โมเดล) → **เหลือ Owner เติมเครดิต** https://openrouter.ai/settings/credits แล้วเจนใหม่ (= ข้อ IMG-GEN ใน remain doc)
 2. **วลี guide**: "เปิดในเบราว์เซอร์เริ่มต้น (Open in Browser)" → **"เปิดผ่าน Chrome หรือ Safari เพื่อการใช้งานที่สมบูรณ์ที่สุด"** (iOS+Android · InAppBrowserNotice) — **live proof: `R92_GUIDE_NEW=true` · `R92_GUIDE_OLD_GONE=true`**

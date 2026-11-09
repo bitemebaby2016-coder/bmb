@@ -50,14 +50,18 @@ describe('adminUi — category heading slug + image source validation', () => {
 })
 
 describe('adminUi — admin navigation catalogue', () => {
-  it('covers dashboard, products, media and content approvals', async () => {
+  it('covers dashboard, products, media-portfolio and content approvals', async () => {
     const { ADMIN_NAV_ITEMS } = await import('@/lib/adminUi')
     const paths = ADMIN_NAV_ITEMS.map((i) => i.to)
     expect(paths).toContain('/admin')
     expect(paths).toContain('/admin/products')
-    expect(paths).toContain('/admin/media')
-    expect(paths).toContain('/admin/marketing') // C5/Q3: approval inbox ย้ายเข้าการตลาด (เดิม /admin/content-approvals)
-    expect(paths).not.toContain('/admin/content-approvals') // ถูกตัดจากเมนู — redirect ไป marketing?tab=approval
+    expect(paths).toContain('/admin/media-portfolio')
+    expect(paths).toContain('/admin/marketing-promotions') // merged marketing + promotions
+    expect(paths).not.toContain('/admin/media')
+    expect(paths).not.toContain('/admin/promotions')
+    expect(paths).not.toContain('/admin/marketing')
+    expect(paths).not.toContain('/admin/portfolio')
+    expect(paths).not.toContain('/admin/content-approvals') // ถูกตัดจากเมนู — redirect ไป marketing-promotions?tab=approval
     expect(new Set(paths).size).toBe(paths.length)
     expect(paths.every((p) => p.startsWith('/admin'))).toBe(true)
   })
@@ -90,7 +94,7 @@ describe('adminUi — ADMIN_NAV_GROUPS (sidebar grouping, single nav set) — co
     }
   })
 
-  it('operations group contains dashboard, orders, pos, kitchen, recipes, products, promotions, marketing', async () => {
+  it('operations group contains dashboard, orders, pos, kitchen, recipes, products, marketing-promotions', async () => {
     const { ADMIN_NAV_GROUPS } = await import('@/lib/adminUi')
     const ops = ADMIN_NAV_GROUPS.find(g => g.id === 'operations')
     expect(ops).toBeTruthy()
@@ -101,20 +105,22 @@ describe('adminUi — ADMIN_NAV_GROUPS (sidebar grouping, single nav set) — co
     expect(paths).toContain('/admin/kitchen')
     expect(paths).toContain('/admin/recipes')
     expect(paths).toContain('/admin/products')
-    expect(paths).toContain('/admin/promotions')
-    expect(paths).toContain('/admin/marketing')
+    expect(paths).toContain('/admin/marketing-promotions')
+    expect(paths).not.toContain('/admin/promotions')
+    expect(paths).not.toContain('/admin/marketing')
   })
 
-  it('customers group contains customers, notifications, media, portfolio, reviews', async () => {
+  it('customers group contains customers, notifications, media-portfolio, reviews', async () => {
     const { ADMIN_NAV_GROUPS } = await import('@/lib/adminUi')
     const cust = ADMIN_NAV_GROUPS.find(g => g.id === 'customers')
     expect(cust).toBeTruthy()
     const paths = cust!.items.map(i => i.to)
     expect(paths).toContain('/admin/customers')
     expect(paths).toContain('/admin/notifications')
-    expect(paths).toContain('/admin/media')
-    expect(paths).toContain('/admin/portfolio')
+    expect(paths).toContain('/admin/media-portfolio')
     expect(paths).toContain('/admin/reviews')
+    expect(paths).not.toContain('/admin/media')
+    expect(paths).not.toContain('/admin/portfolio')
   })
 
   it('settings group contains inventory, reports, delivery, audit-log, errors, settings, tenants, onboarding, billing', async () => {

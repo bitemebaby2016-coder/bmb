@@ -1,0 +1,1 @@
+R79: ปุ่มป๊อปอัพ Smart Escape ต่อออกได้จริง — กดปุ่มเดียว = คัดลอกลิงก์อัตโนมัติ + navigator.share (ถ้ามี) + แผง guide 3 ขั้น เปิด Chrome แล้ววาง + ปุ่มรอง intent เครื่องที่รองรับ (ห้าม error หน้า) + บันทึกผล Owner 7 พ.ย. ทุกชุด A-E และ §B-§T + D-1 ตัดสิน โต้ตอบ FB ฝั่งเดียว (BLK-6 ปิด) + D-4 สั่งทำ + test r79 ใหม่ + gates 4/4 (tsc 0 · lint 0 · vitest full 0 fail · build 0)

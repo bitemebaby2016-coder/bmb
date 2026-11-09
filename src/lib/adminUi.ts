@@ -31,8 +31,7 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
       { to: '/admin/kitchen', label: 'ครัว/ผลิต', icon: '\uD83C\uDF73' },
       { to: '/admin/recipes', label: 'สูตรอาหาร', icon: '\uD83E\uDDEA' },
       { to: '/admin/products', label: 'เมนูและตารางเมนู', icon: '\uD83C\uDF7D\uFE0F' },
-      { to: '/admin/promotions', label: 'โปรโมชั่น', icon: '\uD83C\uDF81' },
-      { to: '/admin/marketing', label: 'การตลาด', icon: '\uD83D\uDCE3' },
+      { to: '/admin/marketing-promotions', label: 'การตลาดและโปรโมชั่น', icon: '📈' },
     ],
   },
   {
@@ -41,8 +40,7 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
     items: [
       { to: '/admin/customers', label: 'ลูกค้า', icon: '\uD83D\uDC65' },
       { to: '/admin/notifications', label: 'การแจ้งเตือน', icon: '\uD83D\uDD14' },
-      { to: '/admin/media', label: 'คลังรูปภาพ', icon: '\uD83D\uDDBC\uFE0F' },
-      { to: '/admin/portfolio', label: 'ผลงาน', icon: '\uD83D\uDDBC\uFE0F' },
+      { to: '/admin/media-portfolio', label: 'คลังรูปภาพและผลงาน', icon: '\uD83D\uDDBC\uFE0F' },
       { to: '/admin/reviews', label: 'อนุมัติรีวิว', icon: '⭐' },
     ],
   },
@@ -92,14 +90,14 @@ export function isAdminCapableRole(role: string | null | undefined): boolean {
  * 146 — per-role nav (presentation only — RLS ยังเป็นประตูจริง):
  *   ไม่มี allowlist (owner/admin/staff/auditor/developer/unknown) = ทุกกลุ่ม
  *   specialist/pos/support = เฉพาะกลุ่มที่เกี่ยวข้อง
- * Updated for 3-group structure
+ * Updated for 3-group structure with merged pages
  */
 const ROLE_NAV_ALLOW: Record<string, string[]> = {
   pos: ['/admin', '/admin/orders', '/admin/pos', '/admin/customers', '/admin/reports'],
   kitchen: ['/admin', '/admin/orders', '/admin/kitchen', '/admin/recipes', '/admin/delivery', '/admin/products'],
   inventory: ['/admin', '/admin/inventory', '/admin/products'],
   finance: ['/admin', '/admin/reports', '/admin/orders', '/admin/pos'],
-  marketing: ['/admin', '/admin/marketing', '/admin/promotions', '/admin/media', '/admin/portfolio'],
+  marketing: ['/admin', '/admin/marketing-promotions', '/admin/media-portfolio'],
   support: ['/admin', '/admin/orders', '/admin/customers', '/admin/notifications'],
 }
 

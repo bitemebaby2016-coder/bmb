@@ -1,0 +1,276 @@
+{
+  "at": "2026-11-07T03:42:30.430Z",
+  "note": "LOCAL ONLY backup ก่อนลบออเดอร์ตามใบสั่ง Owner · ห้าม commit",
+  "order_numbers": [
+    "BMB-20261101-548"
+  ],
+  "order_ids": [
+    "ord-1793526374404-029d8d"
+  ],
+  "tables": {
+    "order_items.order_id": [
+      {
+        "id": "oi-ord-1793526374404-029d8d-1",
+        "order_id": "ord-1793526374404-029d8d",
+        "product_id": "prod-2",
+        "product_name": "เมี่ยงแซลม่อน",
+        "quantity": 1,
+        "unit_price": "79.00",
+        "customizations": {
+          "addOnTotal": 0
+        },
+        "special_request": "",
+        "item_total": "79.00",
+        "created_at": "2026-11-01 09:46:14.287931+00"
+      },
+      {
+        "id": "oi-ord-1793526374404-029d8d-2",
+        "order_id": "ord-1793526374404-029d8d",
+        "product_id": "prod-1791986253967-dwyh09",
+        "product_name": "ชาไทยพีช",
+        "quantity": 1,
+        "unit_price": "39.00",
+        "customizations": {
+          "addOnTotal": 0
+        },
+        "special_request": "",
+        "item_total": "39.00",
+        "created_at": "2026-11-01 09:46:14.287931+00"
+      },
+      {
+        "id": "oi-ord-1793526374404-029d8d-3",
+        "order_id": "ord-1793526374404-029d8d",
+        "product_id": "prod-1789607383214-t8rm95",
+        "product_name": "สปาเกตตี้ผัดพริกแห้งกุ้ง",
+        "quantity": 1,
+        "unit_price": "99.00",
+        "customizations": {
+          "addOnTotal": 0
+        },
+        "special_request": "",
+        "item_total": "99.00",
+        "created_at": "2026-11-01 09:46:14.287931+00"
+      }
+    ],
+    "order_messages.order_number": [
+      {
+        "id": "omsg-1793845218852-eb56",
+        "order_number": "BMB-20261101-548",
+        "sender_role": "admin",
+        "sender_id": "dddf4b57-405f-4852-a985-76d8d52b1b72",
+        "driver_id": null,
+        "body": "ส่งสลิปให้ด้วยครับ มันแคนเซิ่ลไม่ได้",
+        "created_at": "2026-11-05 02:20:18.705895+00"
+      }
+    ],
+    "order_status_history.order_number": [
+      {
+        "id": "osh-1793526374488-064997e7",
+        "order_number": "BMB-20261101-548",
+        "from_status": null,
+        "to_status": "pending",
+        "changed_at": "2026-11-01 09:46:14.287931+00",
+        "actor_type": "CUSTOMER",
+        "actor_id": "ffd42918-e5c8-4d3b-89c4-8dc8b70c0383",
+        "reason": null,
+        "metadata": {
+          "source": "order_status_trigger",
+          "order_id": "ord-1793526374404-029d8d",
+          "operation": "INSERT"
+        }
+      },
+      {
+        "id": "osh-1793580197734-4538feb8",
+        "order_number": "BMB-20261101-548",
+        "from_status": "pending",
+        "to_status": "confirmed",
+        "changed_at": "2026-11-02 00:43:17.570606+00",
+        "actor_type": "ADMIN",
+        "actor_id": "dddf4b57-405f-4852-a985-76d8d52b1b72",
+        "reason": null,
+        "metadata": {
+          "source": "order_status_trigger",
+          "order_id": "ord-1793526374404-029d8d",
+          "operation": "UPDATE"
+        }
+      },
+      {
+        "id": "osh-1793618171894-d3199a7a",
+        "order_number": "BMB-20261101-548",
+        "from_status": "confirmed",
+        "to_status": "cancelled",
+        "changed_at": "2026-11-02 11:16:11.694649+00",
+        "actor_type": "ADMIN",
+        "actor_id": "dddf4b57-405f-4852-a985-76d8d52b1b72",
+        "reason": null,
+        "metadata": {
+          "source": "order_status_trigger",
+          "order_id": "ord-1793526374404-029d8d",
+          "operation": "UPDATE"
+        }
+      }
+    ],
+    "order_submissions.order_number": [
+      {
+        "client_submit_key": "CK-36cff510-2f92-4bcf-87a2-6eedcb137814",
+        "owner_key": "ffd42918-e5c8-4d3b-89c4-8dc8b70c0383|",
+        "payload_fingerprint": "53d4b5e96e9c322f48c107a3960c7a15",
+        "result": {
+          "id": "ord-1793526374404-029d8d",
+          "status": "pending",
+          "subtotal": 217,
+          "branch_id": "branch-tenant-bmb-001-main",
+          "duplicate": false,
+          "order_mode": "SAME_DAY",
+          "tax_amount": 0,
+          "service_fee": 0,
+          "customer_ref": "ffd42918-e5c8-4d3b-89c4-8dc8b70c0383",
+          "delivery_fee": 8,
+          "order_number": "BMB-20261101-548",
+          "total_amount": 203.3,
+          "payment_method": "promptpay_qr",
+          "payment_status": "pending",
+          "scheduled_date": "2026-11-01",
+          "source_channel": "WEB",
+          "discount_amount": 21.7,
+          "external_ref_id": null,
+          "delivery_round_id": "round-20261101-morning"
+        },
+        "order_number": "BMB-20261101-548",
+        "created_at": "2026-11-01 09:46:14.287931+00"
+      }
+    ],
+    "orders.order_number": [
+      {
+        "id": "ord-1793526374404-029d8d",
+        "order_number": "BMB-20261101-548",
+        "customer_id": "ffd42918-e5c8-4d3b-89c4-8dc8b70c0383",
+        "customer_name": "Phananee porn",
+        "customer_phone": "0846576540",
+        "delivery_round_id": "round-20261101-morning",
+        "customer_ref": "ffd42918-e5c8-4d3b-89c4-8dc8b70c0383",
+        "status": "cancelled",
+        "delivery_method": "pickup",
+        "pickup_latitude": null,
+        "pickup_longitude": null,
+        "dropoff_latitude": "12.6156590",
+        "dropoff_longitude": "102.0980630",
+        "dropoff_detail": "รับที่ร้าน (Pickup)",
+        "is_outside_self_zone": false,
+        "subtotal": "217.00",
+        "delivery_fee": "0.00",
+        "service_fee": "0.00",
+        "discount_amount": "21.70",
+        "tax_amount": "0.00",
+        "total_amount": "195.30",
+        "payment_status": "pending",
+        "payment_method": "promptpay_qr",
+        "special_instructions": "",
+        "created_at": "2026-11-01 09:46:14.287931+00",
+        "updated_at": "2026-11-02 11:16:11.694649+00",
+        "order_mode": "SAME_DAY",
+        "scheduled_date": "2026-11-01",
+        "source_channel": "WEB",
+        "external_ref_id": null,
+        "branch_id": "branch-tenant-bmb-001-main",
+        "pickup_code": "610041",
+        "picked_up_at": null,
+        "handed_by": null,
+        "delivery_address": "",
+        "address_photo_url": null
+      }
+    ],
+    "payment_intents.order_number": [
+      {
+        "id": "pi- ###########-b943b1",
+        "order_number": "BMB-20261101-548",
+        "amount": "195.30",
+        "currency": "thb",
+        "status": "pending",
+        "method": "promptpay_qr",
+        "provider": "promptpay",
+        "client_secret": null,
+        "payment_intent_id": null,
+        "receipt_url": null,
+        "metadata": {
+          "providerId": "self_delivery",
+          "providerName": "Bite Me Baby (self delivery)"
+        },
+        "created_at": "2026-11-01 09:46:15.022606+00",
+        "updated_at": "2026-11-01 09:46:15.022606+00",
+        "completed_at": null,
+        "failure_reason": null,
+        "slip_path": null,
+        "slip_uploaded_at": null
+      }
+    ],
+    "print_jobs.order_number": [
+      {
+        "id": "pj-BMB-20261101-548-receipt",
+        "order_number": "BMB-20261101-548",
+        "job_type": "receipt",
+        "status": "sent",
+        "printer_id": null,
+        "attempts": 1,
+        "last_error": null,
+        "requested_by": "ffd42918-e5c8-4d3b-89c4-8dc8b70c0383",
+        "requested_at": "2026-11-01 09:46:14.287931+00",
+        "updated_at": "2026-11-03 10:18:00.698854+00",
+        "printed_at": null
+      },
+      {
+        "id": "pj-BMB-20261101-548-kitchen_ticket",
+        "order_number": "BMB-20261101-548",
+        "job_type": "kitchen_ticket",
+        "status": "sent",
+        "printer_id": null,
+        "attempts": 1,
+        "last_error": null,
+        "requested_by": "dddf4b57-405f-4852-a985-76d8d52b1b72",
+        "requested_at": "2026-11-02 00:43:17.570606+00",
+        "updated_at": "2026-11-03 10:18:15.978531+00",
+        "printed_at": null
+      }
+    ],
+    "orders": [
+      {
+        "id": "ord-1793526374404-029d8d",
+        "order_number": "BMB-20261101-548",
+        "customer_id": "ffd42918-e5c8-4d3b-89c4-8dc8b70c0383",
+        "customer_name": "Phananee porn",
+        "customer_phone": "0846576540",
+        "delivery_round_id": "round-20261101-morning",
+        "customer_ref": "ffd42918-e5c8-4d3b-89c4-8dc8b70c0383",
+        "status": "cancelled",
+        "delivery_method": "pickup",
+        "pickup_latitude": null,
+        "pickup_longitude": null,
+        "dropoff_latitude": "12.6156590",
+        "dropoff_longitude": "102.0980630",
+        "dropoff_detail": "รับที่ร้าน (Pickup)",
+        "is_outside_self_zone": false,
+        "subtotal": "217.00",
+        "delivery_fee": "0.00",
+        "service_fee": "0.00",
+        "discount_amount": "21.70",
+        "tax_amount": "0.00",
+        "total_amount": "195.30",
+        "payment_status": "pending",
+        "payment_method": "promptpay_qr",
+        "special_instructions": "",
+        "created_at": "2026-11-01 09:46:14.287931+00",
+        "updated_at": "2026-11-02 11:16:11.694649+00",
+        "order_mode": "SAME_DAY",
+        "scheduled_date": "2026-11-01",
+        "source_channel": "WEB",
+        "external_ref_id": null,
+        "branch_id": "branch-tenant-bmb-001-main",
+        "pickup_code": "610041",
+        "picked_up_at": null,
+        "handed_by": null,
+        "delivery_address": "",
+        "address_photo_url": null
+      }
+    ]
+  }
+}

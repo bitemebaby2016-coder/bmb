@@ -1,0 +1,6 @@
+session-close-2026-11-09: docs work-state + master + remain — ยกทั้งหมดไปทดสอบ live
+
+- AI_WORK_STATE: บล็อก SESSION CLOSE (ปิดแล้ว/รอ retest/ยังไม่รัน + probes)
+- BMB_MASTER_STATUS: Next = session close + รายการคงเหลือ
+- BMB_REMAIN_TESTS_LIVE: หัวข้อ SESSION CLOSE — เซสชั่นใหม่รับรายการนี้เท่านั้น
+- งาน code ทุกชิ้น push+deploy แล้ว (d9e975d / c9f77aa / d43d5f0 / a62877c / 313fbe0)

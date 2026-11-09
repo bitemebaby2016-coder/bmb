@@ -1,0 +1,11 @@
+R91: การ์ดรีวิวสเกลเท่ากันทุกใบ + mobile-first (Owner "สเกลไม่เท่ากัน")
+
+- evidence (e2e/_r91_probe.cjs ดึง CSS bundle จริง): rule ปัจจุบัน
+  .hc-slide = min(78vw,250px) ตายตัว ไม่มี override — แต่การ์ดไม่มี width
+  บังคับ (ปล่อย auto) → ทำแข็ง:
+  · .hc-slide = flex:0 0 auto + width ตายตัว (mobile: min(78vw,250px) ~65-70% จอ
+    + peek ใบถัดไป · ≥768px = 250px คงที่)
+  · .hc-slide > .review-card-3d { width:100% } = การ์ดเท่า slide เสมอ
+    (กัน content ดันกว้างผิดปกติ)
+- ลิงก์หน้ารีวิว = Owner ยืนยัน "ถูกต้อง" แล้ว ✅ (ไม่แตะ)
+- gates 4/4 รันครั้งเดียว

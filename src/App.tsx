@@ -61,11 +61,11 @@ const OrgHub = lazy(() => import('./components/admin/AdminHubs').then(m => ({ de
 const AdminOnboarding = lazy(() => import('./pages/admin/AdminOnboarding').then(m => ({ default: m.AdminOnboarding })))
 // [Task 2] Billing — หน้าดูงวดบริการร้านพาร์ทเนอร์ (billing_subscriptions · m175)
 const AdminBilling = lazy(() => import('./pages/admin/AdminBilling').then(m => ({ default: m.AdminBilling })))
-const AdminPromotions = lazy(() => import('./pages/admin/AdminPromotions').then(m => ({ default: m.AdminPromotions })))
-// D2 (2026-10-25): AdminRounds เป็นแท็บใน DeliveryHub (/admin/delivery?tab=rounds) — ไม่มี route ตรงแล้ว
+// Merged: Marketing + Promotions + Media + Portfolio
+const AdminMarketingPromotions = lazy(() => import('./pages/admin/AdminMarketingPromotions').then(m => ({ default: m.AdminMarketingPromotions })))
+const AdminMediaPortfolio = lazy(() => import('./pages/admin/AdminMediaPortfolio').then(m => ({ default: m.AdminMediaPortfolio })))
 const AdminCustomers = lazy(() => import('./pages/admin/AdminCustomers').then(m => ({ default: m.AdminCustomers })))
 const AdminSettings = lazy(() => import('./pages/admin/AdminSettings').then(m => ({ default: m.AdminSettings })))
-const AdminMedia = lazy(() => import('./pages/admin/AdminMedia').then(m => ({ default: m.AdminMedia })))
 // C7/Q4: AdminAssetAudit ถูกรวมเป็นแท็บใน AdminMedia (?tab=audit) — ไม่มี lazy route แล้ว
 
 // Lazy loaded: Protected pages (4 pages)
@@ -78,16 +78,11 @@ const VoiceDemoPage = lazy(() => import('./pages/VoiceDemoPage').then(m => ({ de
 const RiderPwaPage = lazy(() => import('./pages/RiderPwaPage').then(m => ({ default: m.RiderPwaPage })))
 const NotificationCenterPage = lazy(() => import('./pages/NotificationCenterPage').then(m => ({ default: m.NotificationCenterPage })))
 const AdminErrorsPage = lazy(() => import('./pages/admin/AdminErrorsPage').then(m => ({ default: m.AdminErrorsPage })))
-// D1: MascotSettingsPage/AdminPaymentExceptions/AdminPrintSettings lazy ถูกถอด (ใช้ใน AdminHubs ตรง ๆ)
-const AdminMarketing = lazy(() => import('./pages/admin/AdminMarketing').then(m => ({ default: m.AdminMarketing })))
-const AdminPortfolioPage = lazy(() => import('./pages/admin/AdminPortfolio').then(m => ({ default: m.AdminPortfolioPage })))
 // R88/D6f: คิวอนุมัติรีวิวจากลูกค้า (แอดมิน อนุมัติ/ปัดตก/ตอบกลับ/ลบ)
 const AdminReviewsPage = lazy(() => import('./pages/admin/AdminReviews').then(m => ({ default: m.AdminReviewsPage })))
-// C7/Q5: AdminAiStudio ถูกรวมเป็นแท็บใน AdminMarketing (แท็บ 'ai') — ไม่มี lazy route แล้ว
 // BACKEND-CAPABILITY-CLOSURE-2026-10-19: Web POS + Finance reports + Printer settings
 const AdminPos = lazy(() => import('./pages/admin/AdminPos').then(m => ({ default: m.AdminPos })))
 const AdminReports = lazy(() => import('./pages/admin/AdminReports').then(m => ({ default: m.AdminReports })))
-// D1: AdminPrintSettings lazy ถูกถอดแล้วด้านบน (ใช้ใน AdminHubs)
 
 // Lazy loaded: Info pages (6 pages)
 const AboutPage = lazy(() => import('./pages/AboutPage').then(m => ({ default: m.AboutPage })))
@@ -316,22 +311,25 @@ export default function App() {
         <Route path="/admin/kitchen" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminNav><AdminKitchen /></AdminNav></Layout></AdminRoute></Suspense>} />
         <Route path="/admin/recipes" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminNav><AdminRecipes /></AdminNav></Layout></AdminRoute></Suspense>} />
 
-        <Route path="/admin/content-approvals" element={<Navigate to="/admin/marketing?tab=approval" replace />} />
+        <Route path="/admin/content-approvals" element={<Navigate to="/admin/marketing-promotions?tab=social" replace />} />
         <Route path="/admin/audit-log" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminNav><AuditLogPage /></AdminNav></Layout></AdminRoute></Suspense>} />
-        <Route path="/admin/asset-audit" element={<Navigate to="/admin/media?tab=audit" replace />} />
+        <Route path="/admin/asset-audit" element={<Navigate to="/admin/media-portfolio?tab=audit" replace />} />
 <Route path="/admin/payment-exceptions" element={<Navigate to="/admin/orders?tab=payment" replace />} />
-        <Route path="/admin/marketing" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminNav><AdminMarketing /></AdminNav></Layout></AdminRoute></Suspense>} />
-            <Route path="/admin/notifications" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminNav><AdminNotificationsPage /></AdminNav></Layout></AdminRoute></Suspense>} />
+        <Route path="/admin/marketing-promotions" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminNav><AdminMarketingPromotions /></AdminNav></Layout></AdminRoute></Suspense>} />
+        <Route path="/admin/media-portfolio" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminNav><AdminMediaPortfolio /></AdminNav></Layout></AdminRoute></Suspense>} />
+        <Route path="/admin/notifications" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminNav><AdminNotificationsPage /></AdminNav></Layout></AdminRoute></Suspense>} />
         <Route path="/admin/delivery" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminNav><DeliveryHub /></AdminNav></Layout></AdminRoute></Suspense>} />
         <Route path="/admin/route-optimization" element={<Navigate to="/admin/delivery?tab=routes" replace />} />
-        <Route path="/admin/promotions" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminNav><AdminPromotions /></AdminNav></Layout></AdminRoute></Suspense>} />
+        <Route path="/admin/promotions" element={<Navigate to="/admin/marketing-promotions?tab=promotions" replace />} />
+        <Route path="/admin/marketing" element={<Navigate to="/admin/marketing-promotions" replace />} />
         <Route path="/admin/rounds" element={<Navigate to="/admin/delivery?tab=rounds" replace />} />
         <Route path="/admin/customers" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminNav><AdminCustomers /></AdminNav></Layout></AdminRoute></Suspense>} />
         <Route path="/admin/settings" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminNav><SettingsHub /></AdminNav></Layout></AdminRoute></Suspense>} />
         <Route path="/admin/pos" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminNav><AdminPos /></AdminNav></Layout></AdminRoute></Suspense>} />
         <Route path="/admin/reports" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminNav><AdminReports /></AdminNav></Layout></AdminRoute></Suspense>} />
         <Route path="/admin/print-settings" element={<Navigate to="/admin/settings?tab=print" replace />} />
-        <Route path="/admin/media" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminNav><AdminMedia /></AdminNav></Layout></AdminRoute></Suspense>} />
+        <Route path="/admin/media" element={<Navigate to="/admin/media-portfolio?tab=library" replace />} />
+        <Route path="/admin/portfolio" element={<Navigate to="/admin/media-portfolio?tab=portfolio" replace />} />
         <Route path="/admin/errors" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminNav><AdminErrorsPage /></AdminNav></Layout></AdminRoute></Suspense>} />
         <Route path="/admin/mascot" element={<Navigate to="/admin/settings?tab=mascot" replace />} />
         
@@ -343,12 +341,10 @@ export default function App() {
         <Route path="/admin/onboarding" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminNav><AdminOnboarding /></AdminNav></Layout></AdminRoute></Suspense>} />
         <Route path="/admin/billing" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminNav><AdminBilling /></AdminNav></Layout></AdminRoute></Suspense>} />
         
-        {/* CAT-04: Admin Portfolio / Past Works */}
-        <Route path="/admin/portfolio" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminNav><AdminPortfolioPage /></AdminNav></Layout></AdminRoute></Suspense>} />
         {/* R88/D6f: คิวอนุมัติรีวิว (Owner: "ให้แอดมินอนุมัติก่อนและลบได้ตอบได้") */}
         <Route path="/admin/reviews" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminNav><AdminReviewsPage /></AdminNav></Layout></AdminRoute></Suspense>} />
         {/* AI-EXT: Admin AI Content Studio */}
-        <Route path="/admin/ai-studio" element={<Navigate to="/admin/marketing?tab=ai" replace />} />
+        <Route path="/admin/ai-studio" element={<Navigate to="/admin/marketing-promotions?tab=studio" replace />} />
         {/* Catch all */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

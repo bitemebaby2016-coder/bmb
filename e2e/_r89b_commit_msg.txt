@@ -1,0 +1,8 @@
+R89b: /shop เหลือเซกชันรีวิวเดียว — ยุบ VerifiedReviewsSection เข้า ReviewCarouselSection (มติ Owner ข้อ ก รวมทั้งสองเซต)
+
+- HomePage.tsx (/shop): ตัด render + import VerifiedReviewsSection ออก (ขัด comment N4) · ส่ง verifiedReviews เข้า ReviewCarouselSection
+- ReviewCarouselSection.tsx: prop verifiedReviews → CustomerReviewCard ใบเดียวกับ curated · กรอง status=approved เท่านั้น · กันการ์ดซ้ำ (ชื่อ+ข้อความ) · คงปุ่มดูทั้งหมด + อัลบั้ม 32 รูป
+- CustomerReviewCard.tsx + index.css: โลโก้ /Logo_Sticker_Circle.webp บนหัวทุกการ์ด (ดาว Star.webp 3D เดิมอยู่แล้ว)
+- VerifiedReviewsSection.tsx / หน้า /reviews: ไม่แตะ (ตามแฮนออฟ)
+- gates 4/4 รันครั้งเดียว: tsc 0 · lint 0 · vitest 0 · build 0 (e2e/_r88_final_gates.log · dist 11:23:57)
+- docs: AI_WORK_STATE บล็อก 🟡 · BMB_MASTER_STATUS · BMB_REMAIN_TESTS_LIVE_2026-11-08

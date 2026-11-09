@@ -1,0 +1,35 @@
+      <section className='mb-10' data-testid='review-real-section'>
+        {/* R89 (Owner ~23:40 น.): สองหัวข้อรีวิวซ้ำ = หมวดเดียวกัน → ยุบเป็นหัวข้อเดียว
+            · ใหม่สุดขึ้นก่อน (feed = created_at desc) · การ์ดรีวิวมีโลโก้+ดาว แบบการ์ด Grab/FB */}
+        <h2 className='text-xl font-display font-bold text-brand-accent flex items-center gap-2 mb-2'>📸 รีวิวจริงจากลูกค้า
+            <MascotBadge pose="thumbsup" size="sm" alt="น้อง Bite การันตีรีวิวจริง" className="section-float-mascot" />
+        </h2>
+        <p className='text-sm text-brand-muted mb-3'>รีวิวและรูปจริงจากลูกค้าที่สั่งผ่านระบบ — ใหม่สุดแสดงก่อน · รีวิวใหม่ขึ้นเว็บหลังแอดมินอนุมัติ</p>
+        {loading ? <p>Loading reviews...</p> : loadError ? (
+          <div className='card py-4 text-center'>
+            <LoadErrorBanner message={loadError} onRetry={() => setRetryKey((n) => n + 1)} testId="review-load-error" />
+          </div>
+        ) : verifiedReviews.length > 0 ? verifiedReviews.map((review: any) => (
+          <div key={review.id} className='card p-4 mb-3 border-l-4 border-emerald-500'>
+            {/* R89: การ์ดรีวิวมีโลโก้ Bite Me Baby + ดาวจริง (เดิมหนีดาวเป็นข้อความ — แก้เป็น ⭐) */}
+            <div className='flex items-center justify-between gap-2 flex-wrap'>
+              <span className='flex items-center gap-2 font-medium'>
+                <img src='/Logo_Sticker_Circle.webp' alt='Bite Me Baby' width={28} height={28} loading='lazy' className='rounded-full object-cover' data-testid='review-brand-logo' />
+                {review.customer_name}
+              </span>
+              <span aria-label={`${review.rating} ดาว`} data-testid='review-card-stars'>{'⭐'.repeat(Math.round(review.rating))}</span>
+            </div>
+            <p className='mt-2 text-sm'>{review.comment}</p>
+            {/* R88 (Owner: "แอดมิน...ตอบได้") — คำตอบจากร้านแสดงใต้รีวิว */}
+            {review.reply && (
+              <div className='mt-2 rounded-lg border border-brand-border bg-brand-bg p-2 text-sm' data-testid='review-reply'>
+                <span className='font-medium text-brand-accent'>🏪 ร้านค้าตอบ:</span> {review.reply}
+              </div>
+            )}
+            {review.order_number && <Link to='/orders' className='text-xs text-brand-primary mt-2 block'>Order #{review.order_number.slice(0,8)}</Link>}
+            <span className='text-xs text-emerald-600 mt-1 block'>Verified Purchase ✓</span>
+          </div>)) : productId ? <div className='card bg-gray-50 text-center py-8'><p className='text-brand-muted'>No reviews yet.</p></div>
+        : <div className='card bg-gray-50 text-center py-8'><p className='text-brand-muted'>No reviews yet. Waiting for real customer reviews.</p></div>}
+        {/* R88/D8 marker คงไว้ (live check): รูปจริง 32 ใบ = เซคชัน Admin Portfolio ด้านล่าง */}
+        <p className='text-sm text-brand-muted mt-3'>รีวิวและรูปจริงจากลูกค้าที่สั่งผ่านระบบ · <b>รูปจริง 32 ใบดูได้ที่เซคชัน Admin Portfolio ด้านล่าง</b></p>
+      </section>

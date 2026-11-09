@@ -1,0 +1,21 @@
+R92: image-gen รีเซ็ต IMAGE_GEN_MODELS + วลี guide ใหม่ + บังคับรูป 300x300/100KB
+
+งาน 1 — เจนรูปไม่ได้ (สืบแล้วไม่เดา):
+- bucket bmb-images ยังอยู่ชื่อเดิม (Management API: id=name=bmb-images public) = ไม่เกี่ยวชื่อ bucket
+- EF image-gen boot ปกติ (401 มาตรฐาน) · secrets ครบ (BMB_OPENROUTER_API_KEY / OPENROUTER_API_KEY)
+- จุดต้องสงสัย = IMAGE_GEN_MODELS secret (override ลำดับโมเดล — ถ้าค่าผิด = เจนตายทั้งฟีเจอร์ แบบ R32)
+  → รีเซ็ตเป็น default ที่ r55 probe ผ่านแล้ว: qwen/qwen-image-2.1-pro,bytedance-seed/seedream-5-0-flash
+  (POST secrets http=201 · ใช้ได้ทันที ไม่ต้อง deploy)
+
+งาน 2 — วลี guide D4 (Owner สั่งเปลี่ยน):
+- InAppBrowserNotice: "เปิดในเบราว์เซอร์เริ่มต้น (Open in Browser)" → "เปิดผ่าน Chrome หรือ Safari
+  เพื่อการใช้งานที่สมบูรณ์ที่สุด" (iOS + Android)
+
+งาน 3 — บังคับขนาดรูปที่เอามาใช้ (Owner: 300x300 px · 50-100KB · อัตโนมัติทั้งเว็บ+supabase):
+- bmbAdminApi_media: ใหม่ compressToWebLimits(file, 300px, 100KB) — canvas + quality loop →
+  ย่อสัดส่วนซ้ำจนเข้าเกณฑ์ · GIF/decode ไม่ได้ = คืนเดิม (zero-fake ไม่ทิ้งรูป)
+- ใช้ 4 จุด: uploadMediaAsset (asset/หน้าร้าน/แบนเนอร์) · uploadRegisteredAsset (registry)
+  · AdminMarketing browse · AdminMarketing ภาพเจนหลังประกบลายน้ำ (ก่อนลง bmb-images)
+- ไม่แตะ: addressPhoto/paymentGateway (1600px) · uploadProductImage รูปเมนู (1024px)
+
+- gates 4/4 รันครั้งเดียว

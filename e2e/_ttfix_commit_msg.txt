@@ -1,0 +1,19 @@
+FIX verified ไม่ขึ้นจริง (root cause) + D4 วิธีใหม่ตาม action plan Owner
+
+VERIFIED CARDS ไม่ขึ้น (Owner hard reload แล้วยังไม่เห็น):
+- root cause (พิสูจน์จาก m199 line 76-85): RPC get_verified_reviews_batch
+  RETURNS TABLE "ไม่มีคอลัมน์ status" → แถวคืนมา r.status = undefined
+  → filter เดิม r.status === 'approved' กรองทิ้งหมด 100%
+  (ทั้งที่ RPC กรอง WHERE status='approved' อยู่แล้วตั้งแต่ต้น)
+- แก้: ให้ผ่านเมื่อ status === undefined (RPC กรองแล้ว) · ถ้า field ถูกคืนมาก็เช็กตามเดิม
+- evidence: e2e/_tt_dbcheck.cjs + _tt_verify2.cjs — m199 apply แล้ว (column+RPC มีจริง)
+  · มีรีวิว approved จริง 1 ใบ (prod-1793370625449-zzn457 ข้าวหน้าปลาทอดลุยสวน · is_available=true)
+  · products 36 ตัว (<50 = โหลดครบ) · bundle มี Verified Purchase + review-store-logo แล้ว
+
+D4 NEW WAY (Owner action plan 2026-11-09):
+- InAppBrowserNotice: เพิ่มปุ่ม "เปิดใน Chrome โดยตรง" = <a href="intent://..."> native user-click
+  (ต่างจาก JS auto-redirect ที่ R76/R81 พิสูจน์ว่าถูกบล็อก) · s.browser_fallback_url กันพังหน้า
+- guide: ปรับคำเป็น "⋯ จุดสามจุดมุมบนขวา → เปิดในเบราว์เซอร์เริ่มต้น (Open in Browser)" = เสถียร 100%
+- คงกติกา: ห้าม auto-redirect onload · ห้าม nav หน้าปัจจุบันไป intent
+
+- gates 4/4 รันครั้งเดียว (e2e/_r88_final_gates.log)

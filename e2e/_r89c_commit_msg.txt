@@ -1,0 +1,12 @@
+R89c: /shop — รีวิวอนุมัติใหม่ขึ้นก่อนสุด + ทับแทนของเก่าเรียงลำดับเสมอ + จิ้มสั่งได้จริง
+
+มติ Owner 2026-11-09 "ขึ้นก่อนสุด · ใช้รูปลิ้งจากเมนูจริง · จิ้มสั่งเมนูนั้นได้ · ทยอยให้รีวิวใหม่ทับแทนของเก่าเรียงลำดับเสมอ":
+
+- ReviewCarouselSection.tsx:
+  - allItems = [verifiedItems, ...items] — รีวิวอนุมัติขึ้นก่อนสุดของคารูเซล
+  - sort created_at desc + slice(0, VERIFIED_FEED_MAX=10) — ใหม่อนุมัติเข้าแทน ของเก่าโดนตัดออกเรื่อย
+  - onCta ของการ์ด verified ยิง handleReviewCta เดียวกับ curated (deriveOrderMode + schedule check + addItem + navigate) = จิ้มสั่งเมนูได้จริง
+  - รูป = product.image_url (ภาพเมนูจริง) เดิมอยู่แล้ว
+- reviewApi.ts: fallback query .order('rating') -> .order('created_at', desc) — รีวิวใหม่ rating ต่ำไม่หลุด top-10 ของสินค้า
+- คงเดิม: filter status='approved' (ผ่านแอดมินอนุมัติ) · โลโก้ BMB + ดาว Star.webp · dedupe ชื่อ+ข้อความ
+- gates 4/4 รันครั้งเดียว: tsc 0 · lint 0 · vitest 0 · build 0 (e2e/_r88_final_gates.log)
