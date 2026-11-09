@@ -1,11 +1,11 @@
-## 🔒 SESSION CLOSE 2026-11-09 — ยกทั้งหมดไปทดสอบ live · เซสชั่นใหม่รับรายการต่อ
+## 🔒 SESSION CLOSE 2026-11-09 (รอบ 2 · R92 เสร็จ+push) — ยกทั้งหมดไปทดสอบ live · เซสชั่นใหม่รับรายการต่อ
 
-> **กติกาเซสชั่นใหม่:** อ่าน `docs/BMB_REMAIN_TESTS_LIVE_2026-11-08.md` = **รายการเดียวที่ต้องรัน** (fail = ลง defect ใหม่ที่นี่ + two-try) · สถานะโค้ด = `docs/BMB_MASTER_STATUS.md`
-## R92 (Owner 2026-11-09 — "ต่องานก่อนย้าย" 3 ข้อ)
-1. **เจนรูปไม่ได้**: สืบแล้ว — bucket `bmb-images` **ไม่ได้เปลี่ยนชื่อ** (Management API) · EF boot ปกติ · secrets ครบ → จุดต้องสงสัย = **`IMAGE_GEN_MODELS` secret** (override ลำดับโมเดล) → **รีเซ็ตเป็น default ที่ r55 probe ผ่านแล้ว** (`qwen/qwen-image-2.1-pro,bytedance-seed/seedream-5-0-flash` · POST 201 · ใช้ได้ทันที) → **Owner ลองเจนใหม่** · ถ้าอีก = ต้องการ error toast บนหน้า
-2. **วลี guide**: "เปิดในเบราว์เซอร์เริ่มต้น (Open in Browser)" → **"เปิดผ่าน Chrome หรือ Safari เพื่อการใช้งานที่สมบูรณ์ที่สุด"** (iOS+Android · InAppBrowserNotice)
-3. **บังคับรูปที่เอามาใช้ 300×300 / ≤100KB อัตโนมัติ**: ใหม่ `compressToWebLimits()` ใน bmbAdminApi_media · ใช้ 4 จุด (uploadMediaAsset · uploadRegisteredAsset · AdminMarketing browse · ภาพเจนหลัง wm ก่อนลง supabase) · ไม่แตะ 1600px (สลิป/GPS) และ 1024px (รูปเมนู)
-- **state**: code เสร็จ · gates รันอยู่ · commit msg `e2e/_r92_commit_msg.txt`
+> **กติกาเซสชั่นใหม่:** อ่าน **`docs/BMB_REMAIN_TESTS_LIVE_2026-11-09.md`** = **รายการเดียวที่ต้องรัน** (ฉบับ 11-08 ถูกแทนที่แล้ว · เก็บเฉพาะที่ปิดไม่ได้: BLOCKED เครดิต OpenRouter + OMNI-5 · retest D2/D5/§T-A/D4/R91/R92-G/R92-S · ยังไม่รัน RT-4/RT-HOURS/RT-6.x/CAP) · fail = ลง defect ใหม่ที่นี่ + two-try · สถานะโค้ด = `docs/BMB_MASTER_STATUS.md`
+## R92 (Owner 2026-11-09 — "ต่องานก่อนย้าย" 3 ข้อ) — ✅ CODE_CLOSED + PUSHED + DEPLOYED
+1. **เจนรูปไม่ได้ → ต้นตอจริง = เครดิต OpenRouter หมด** (error toast จริงบนหน้า `/admin/marketing` 18:36 น.: `qwen/qwen-image-2.1-pro:images402 Insufficient credits` + `bytedance-seed/seedream-5-0-flash:images402 Insufficient credits` · `chat404` ตามมา = fallback ไม่ใช่ต้นตอ) · ที่สืบ/ทำแล้ว: bucket `bmb-images` ไม่ได้เปลี่ยนชื่อ (Management API) · EF boot ปกติ · secrets ครบ · **`IMAGE_GEN_MODELS` รีเซ็ตเป็น default ที่ r55 ผ่านแล้ว** (`qwen/qwen-image-2.1-pro,bytedance-seed/seedream-5-0-flash` · POST 201 — พิสูจน์โดย error ไล่ครบทั้ง 2 โมเดล) → **เหลือ Owner เติมเครดิต** https://openrouter.ai/settings/credits แล้วเจนใหม่ (= ข้อ IMG-GEN ใน remain doc)
+2. **วลี guide**: "เปิดในเบราว์เซอร์เริ่มต้น (Open in Browser)" → **"เปิดผ่าน Chrome หรือ Safari เพื่อการใช้งานที่สมบูรณ์ที่สุด"** (iOS+Android · InAppBrowserNotice) — **live proof: `R92_GUIDE_NEW=true` · `R92_GUIDE_OLD_GONE=true`**
+3. **บังคับรูปที่เอามาใช้ 300×300 / ≤100KB อัตโนมัติ**: ใหม่ `compressToWebLimits()` ใน bmbAdminApi_media · ใช้ 4 จุด (uploadMediaAsset · uploadRegisteredAsset · AdminMarketing browse · ภาพเจนหลัง wm ก่อนลง supabase) · ไม่แตะ 1600px (สลิป/GPS) และ 1024px (รูปเมนู) · test อัปเดตแล้ว (`r63ImageResize` + `r38Contracts`)
+- **state**: gates รอบ 2 = **4/4 (tsc 0 · lint 0 · vitest 0 · build 0)** · commit **`e65f6bf` push แล้ว** (`eed1be8..e65f6bf`) · live = `assets/index-UE2i45rJ.js` → **`TT_LIVE_FRONTEND_OK`** · เหลือ retest บนจอจริง 3 ข้อ (IMG-GEN เติมเครดิต · R92-G guide ในแอป · R92-S อัปโหลดรูปใหญ่) ตาม `BMB_REMAIN_TESTS_LIVE_2026-11-09.md`
 
 
 

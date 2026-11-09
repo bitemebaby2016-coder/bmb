@@ -1,0 +1,8 @@
+session-close-2026-11-09-r92: remain doc ฉบับ 09 (คงเฉพาะปิดไม่ได้) + work-state ปิด R92
+
+- docs/BMB_REMAIN_TESTS_LIVE_2026-11-09.md = ใหม่: เฉพาะที่ยังปิดไม่ได้
+  · BLOCKED: IMG-GEN = เครดิต OpenRouter หมด (images402 qwen+seedream · Owner เติมที่ openrouter.ai/settings/credits) · OMNI-5 = รอลงทะเบียน Dev Meta
+  · retest บน live (โค้ด deploy แล้ว): D2 · D5 · §T-A · D4 · R91 · R92-G guide · R92-S 300x300/100KB
+  · ยังไม่รัน: RT-4 · RT-HOURS · RT-6.1 (ยกเว้น E1) · RT-6.2 · RT-6.4B2 · CAP-14+7/8/13/16/17/19 · RT-8 ห้ามปิด
+- docs/BMB_REMAIN_TESTS_LIVE_2026-11-08.md = ป้ายถูกแทนที่ (ชี้ไปฉบับ 09)
+- AI_WORK_STATE.md = SESSION CLOSE รอบ 2: R92 CODE_CLOSED+PUSHED+DEPLOYED (e65f6bf · TT_LIVE_FRONTEND_OK) · ต้นตอ image-gen = 402 credits
