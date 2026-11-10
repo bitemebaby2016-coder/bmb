@@ -10,14 +10,13 @@ import { getBusinessSettings, setBusinessSetting } from '@/lib/bmbAdminApi_setti
 import { PromotionsTab as PromotionsTabComponent } from '@/components/admin/PromotionsTab'
 import { MarketingOverviewTab } from '@/components/admin/MarketingOverviewTab'
 import { PlannerTab } from '@/components/admin/PlannerTab'
-import { AiStudioTab } from '@/components/admin/AiStudioTab'
 import { SocialTab } from '@/components/admin/SocialTab'
 import { BannersTab as BannersTabComponent } from '@/components/admin/BannersTab'
 import { SettingsTab } from '@/components/admin/SettingsTab'
 import { ApprovalHistoryTab } from '@/components/admin/ApprovalHistoryTab'
 import { ContentTab } from '@/components/admin/ContentTab'
 
-type Tab = 'overview' | 'promotions' | 'banners' | 'planner' | 'studio' | 'social' | 'settings' | 'approvals' | 'content'
+type Tab = 'overview' | 'promotions' | 'banners' | 'planner' | 'social' | 'settings' | 'approvals' | 'content'
 
 const TABS: Array<{ id: Tab; label: string }> = [
   { id: 'overview', label: '📈 ภาพรวม' },
@@ -25,7 +24,6 @@ const TABS: Array<{ id: Tab; label: string }> = [
   { id: 'promotions', label: '🎁 โปรโมชั่น/ส่วนลด' },
   { id: 'banners', label: '🏠 แบนเนอร์/โปรโมท' },
   { id: 'planner', label: '🗓️ Planner' },
-  { id: 'studio', label: '🎨 AI Studio' },
   { id: 'social', label: '📱 โซเชียล/ตารางโพสต์' },
   { id: 'approvals', label: '🛡️ อนุมัติ/ประวัติ' },
   { id: 'settings', label: '⚙️ กติกา/ตั้งค่า' },
@@ -111,8 +109,6 @@ export function AdminMarketingPromotions() {
           onTabChange={(t: string) => setTab(t as Tab)}
         />
       )}
-
-      {tab === 'studio' && <AiStudioTab />}
 
       {tab === 'social' && (
         <SocialTab

@@ -345,8 +345,8 @@ export default function App() {
         
         {/* R88/D6f: คิวอนุมัติรีวิว (Owner: "ให้แอดมินอนุมัติก่อนและลบได้ตอบได้") */}
         <Route path="/admin/reviews" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminNav><AdminReviewsPage /></AdminNav></Layout></AdminRoute></Suspense>} />
-        {/* AI-EXT: Admin AI Content Studio */}
-        <Route path="/admin/ai-studio" element={<Navigate to="/admin/marketing-promotions?tab=studio" replace />} />
+        {/* AI-EXT: Admin AI Content Studio (redirect to Content tab) */}
+        <Route path="/admin/ai-studio" element={<Navigate to="/admin/marketing-promotions?tab=content" replace />} />
         {/* Catch all */}
         <Route path="*" element={<Navigate to="/" replace />} />
 </Routes>
