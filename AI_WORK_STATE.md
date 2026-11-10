@@ -51,6 +51,14 @@
 - **Gates**: lint ✅ build ✅ (tsc + vite) tests ✅ (pre-existing failures only)
 - **Commit**: `7c56348` push แล้ว (`0a3fcd0..7c56348`)
 
+## Theater Carousel Simplification (2026-11-10) — ✅ CODE_CLOSED + PUSHED + DEPLOYED
+- **FoodTheater.tsx**: Simplified to 2 modes only — Admin Curated (manual, display_order) → Daily Random (deterministic per day from available products)
+- **Removed**: `theater_editorial`, `theater_daily_copy`, `theater_autoplay_ms` settings, `business_settings` fetch, `resolveTheaterEditorial`, `resolveStageCopy`, `selectDailyCopy` imports
+- **Added**: `getDailyTheaterPicks()` with `simpleHash()` + `shuffleWithSeed()` — filters out unavailable + pre-order expired (no schedule map)
+- **Admin UI unchanged**: `/admin/media-portfolio` → Tab "🎭 Theater Carousel" (product picker, drag-drop reorder, active toggle)
+- **Gates**: lint ✅ build ✅ (tsc + vite) tests ✅ (44/44 fixed tests pass)
+- **Commit**: pushed to origin/main
+
 ## Marketing+Promotions+Media+Portfolio Merge (Owner 2026-11-09) — ✅ CODE_CLOSED + PUSHED + DEPLOYED
 - **Phase 1: MarketingPromotions** (`/admin/marketing-promotions`) — 7 tabs: overview, promotions, banners, planner, studio, social, settings
   - Preserves all image gen/upload/album/watermark/quality check features (E5/E6)
