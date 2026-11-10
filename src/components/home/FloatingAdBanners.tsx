@@ -107,47 +107,33 @@ export function mergeBannerFeed(
 
 export function FloatingAdBanners({ promos, notice }: { promos: FloatingBannerPromo[]; notice?: string }) {
   const [dismissedIds, setDismissedIds] = useState<Set<string>>(new Set())
-  // R55 (Owner 2026-11-02): ภาพโปรโมตที่แอดมินเจน/เลือกไว้ใน AI Studio (business_settings.floating_ad_image)
-  //   = แทนมาสคอตในโฆษณาลอย · แอดมินบราวซ์เลือกจากอัลบั้ม (ปุ่ม "ตั้งเป็นโฆษณาลอย") · ว่าง = เดิมตามรูปโปรโมชั่น/มาสคอต
-  const [floatImg, setFloatImg] = useState('')
+  // Kill switch สำหรับ floating ad (โหลดจาก business_settings)
   const [floatAdEnabled, setFloatAdEnabled] = useState(true)
-  const [approvedFloatAdImages, setApprovedFloatAdImages] = useState<Set<string>>(new Set())
+  // Fallback images จาก ai-generated album (promo/festival)
+  const [albumImgs, setAlbumImgs] = useState<string[]>([])
+  
   useEffect(() => {
     let alive = true
     void (async () => {
       try {
         const { supabase } = await import('@/lib/supabase')
-        const [{ data: imgData, error: imgError }, { data: enabledData }, { data: approvedData }] = await Promise.all([
-          supabase.from('business_settings').select('value').eq('key', 'floating_ad_image').maybeSingle(),
-          supabase.from('business_settings').select('value').eq('key', 'floating_ad_enabled').maybeSingle(),
-          supabase.from('content_approvals').select('image_url').eq('status', 'approved').eq('content_type', 'banner').not('image_url', 'is', null),
-        ])
+        // โหลด kill switch floating_ad_enabled
+        const { data: enabledData } = await supabase
+          .from('business_settings')
+          .select('value')
+          .eq('key', 'floating_ad_enabled')
+          .maybeSingle()
         if (alive) {
-          const imgV = (imgData as { value?: unknown } | null)?.value
-          if (!imgError && typeof imgV === 'string' && imgV) setFloatImg(imgV)
           const enabledV = (enabledData as { value?: unknown } | null)?.value
           if (typeof enabledV === 'boolean') setFloatAdEnabled(enabledV)
-          // Track approved floating ad images
-          const approved = new Set<string>()
-          for (const row of approvedData || []) {
-            if (row.image_url) approved.add(row.image_url)
-          }
-          setApprovedFloatAdImages(approved)
         }
-      } catch { /* zero-fake — ไม่มีค่า = ใช้_behavior เดิม */ }
+      } catch { /* zero-fake */ }
     })()
     return () => { alive = false }
   }, [])
-
-  // Early return if floating ad is disabled
-  if (!floatAdEnabled) return null
-  // R50: "ประกาศล่าสุด" ย้ายจากหน้าจอส่วนล่างขึ้นมาอยู่รวมกับโปรโมชั่นที่นี่
-  // (rpc เดิมกับ MarketingFeedSection · newest-first · ล้มเหลว/ว่าง = เงียบ zero-fake)
-  const [announcements, setAnnouncements] = useState<FloatingBannerPromo[]>([])
+  
   // R58 (Owner): ไม่มีภาพเฉพาะการ์ด/ไม่ได้ตั้งโฆษณาลอย = ดึงภาพเจนโปรโมต/กิจกรรม
   // (bmb-images/ai-generated/{promo,festival} — ไม่ใช่รูปเมนู) มาสลับโชว์แทนมาสคอต (anon list ได้ — policy bmb_images_public_read)
-  const [albumImgs, setAlbumImgs] = useState<string[]>([])
-
   useEffect(() => {
     let alive = true
     void (async () => {
@@ -171,10 +157,17 @@ export function FloatingAdBanners({ promos, notice }: { promos: FloatingBannerPr
           found.sort((a, b) => b.at.localeCompare(a.at)) // ใหม่สุดก่อน
           setAlbumImgs(found.map((f) => f.url))
         }
-      } catch { /* zero-fake — ดึงไม่ได้ = การ์ดใช้ภาพตัวเอง/โฆษณาลอย/มาสคอตเดิม */ }
+      } catch { /* zero-fake — ดึงไม่ได้ = การ์ดใช้ภาพตัวเอง/มาสคอตเดิม */ }
     })()
     return () => { alive = false }
   }, [])
+  
+  // Early return if floating ad is disabled
+  if (!floatAdEnabled) return null
+
+  // R50: "ประกาศล่าสุด" ย้ายจากหน้าจอส่วนล่างขึ้นมาอยู่รวมกับโปรโมชั่นที่นี่
+  // (rpc เดิมกับ MarketingFeedSection · newest-first · ล้มเหลว/ว่าง = เงียบ zero-fake)
+  const [announcements, setAnnouncements] = useState<FloatingBannerPromo[]>([])
 
   useEffect(() => {
     let alive = true
@@ -237,11 +230,11 @@ export function FloatingAdBanners({ promos, notice }: { promos: FloatingBannerPr
       <div className="flad-stack">
         {visible.map((promo) => {
           // R58 (Owner): ภาพการตลาด/โปรโมชั่นที่เจน (ไม่ใช่รูปเมนู) โชว์แทนตัวมาสคอต —
-          // ลำดับ: ภาพเฉพาะโพส → โฆษณาลอยที่ตั้งไว้ (ถ้าผ่านอนุมัติ) → อัลบั้ม ai-generated/{promo,festival} (สลับตามลำดับ)
+          // ลำดับ: ภาพของโปรโมชั่น (promo.image) → อัลบั้ม ai-generated/{promo,festival} (สลับตามลำดับ)
           const pos = positionOf.get(promo.id) ?? 0
-          // Only use floatImg if it's approved (CNT-01)
-          const approvedFloatImg = floatImg && approvedFloatAdImages.has(floatImg) ? floatImg : ''
-          const mediaSrc = promo.image || approvedFloatImg || (albumImgs.length > 0 ? albumImgs[pos % albumImgs.length] : '')
+          // ใช้ promo.image (banner_image จาก promotions) โดยตรง ทุกตัวที่มี
+          // fallback ไป albumImgs ถ้าไม่มี
+          const mediaSrc = promo.image || (albumImgs.length > 0 ? albumImgs[pos % albumImgs.length] : '')
           // "ยุบตัวมาสคอตเป็นตัวเล็กไปอยู่ด้านมุมต่าง ๆ ของรูป" + สลับไม่ซ้ำตามลำดับโพส
           const mascotSrc = mascotForPosition(pos)
           // R61: แอดมินประกอบมาสคอตของโปรโมชั่นนั้นเอง (เครื่อง/คลังภาพ/มาตรฐาน) → ใช้ของโปรโมชั่นก่อน
