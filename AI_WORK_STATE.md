@@ -67,6 +67,21 @@
 **Deploy**: pushed → auto-deploy → live check `LIVE_CHECK_ALL_MARKERS_OK` (asset `index-DqI71-Tx.js`)
 **Next**: Owner hard reload `https://biteme-baby.com` verify ทุกข้อ → ค่อยดำเนิน Live Retest D2, D5, §T-A, R91, R92-G, R92-S
 
+## 🔧 FIX 2026-11-10 (Session ต่อเนื่อง 3): Merge AiStudioTab → ContentTab — ลบโค้ดซ้ำ
+**ปัญหา**: Owner รายงาน "Ai Studio กับสร้างเนื้อหา ซ้ำซ้อนกัน"
+**Root Cause**: `AiStudioTab.tsx` มีโค้ด AI Generation + Album **เกือบเหมือน ContentTab ทุกอย่าง** (genKind, genStyle, genSubject, genNote, wmMascot, aiAlbum, checkGenQuality, autoMascotForKind, KIND_PRESETS_KEYS, MENU_ASPECTS, MASCOT_ROTATION, album UI tabs/grid/buttons) — แต่ ContentTab มีฟังก์ชัน **ครบกว่า** (Post/Promo/Banner forms, Floating Ad settings, CNT-01 approval)
+**Comment ใน AiStudioTab**: "Post creation moved to ContentTab, Floating Ad moved to ContentTab" แต่ **โค้ด AI Generation ไม่ได้ลบออก**
+
+**แก้ไขแล้ว (commit `6cf0615`)**:
+1. **ลบ `AiStudioTab.tsx` ทั้งไฟล์** (168 lines) — ไม่มีฟังก์ชันเฉพาะตัวที่ ContentTab ไม่มี
+2. **AdminMarketingPromotions.tsx**: ลบ `import AiStudioTab`, ลบ tab `studio` ออกจาก `Tab` type + `TABS` array
+3. **App.tsx**: อัปเดต redirect `/admin/ai-studio` → `/admin/marketing-promotions?tab=content` (เดิมไป tab=studio)
+4. **ContentTab** คงฟังก์ชันครบ: AI Generation + Album + Post/Promo/Banner forms + Floating Ad (kill switch, sources filter, badge) + CNT-01 approval
+
+**Gates**: lint ✅ tsc ✅ build ✅ adminNavFeedback.test.ts ✅ (redirect ถูกต้อง)
+**Deploy**: pushed → auto-deploy → live check `LIVE_CHECK_ALL_MARKERS_OK`
+**Next**: Owner hard reload `https://biteme-baby.com` → เข้า `/admin/marketing-promotions` → แท็บ `📝 สร้างเนื้อหา` → verify AI Generation + Album + Forms + Floating Ad settings ทำงานครบ
+
 ## 🔒 SESSION CLOSE 2026-11-09 (รอบ 7 · Migration 201 + EF deploy เสร็จ → เริ่ม Live Retest D2→D4→D5→§T-A→R91→R90) — เซสชั่นใหม่รับรายการต่อ
 
 > **กติกาเซสชั่นใหม่:**
