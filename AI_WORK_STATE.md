@@ -34,6 +34,39 @@
 **Gates ผ่าน**: lint ✅ tsc ✅ build ✅
 **Deploy**: pushed → auto-deploy → live check `LIVE_CHECK_ALL_MARKERS_OK` (asset `index-sG26qJQJ.js`)
 
+## 🔧 FIX 2026-11-10 (Session ต่อเนื่อง 2): Floating Ad Multiple + Sources Filter + Badge — 4 Phases
+**Owner requirement**: "โชว์บน Chrome Desktop + FB In-App Browser, มี 3 โฟลตติ้งพร้อมกัน, เลือกได้ตามประเภท, เลือกรูป external/Supabase ได้, badge มุมขอบมีสี"
+
+**Phase 1 — ลบ isFB Gate (commit `83f6610`)**:
+- `HomePage.tsx`: ลบ `useInAppBrowser` import, `const { isFB }`, `&& isFB` condition
+- Floating ads โชว์บน **ทุก browser** (Chrome Desktop, Mobile, FB In-App)
+
+**Phase 2 — ใช้ promo.image ทุกตัว (commit `3b87afb`)**:
+- `FloatingAdBanners.tsx`: ลบ `floatImg` single override + `approvedFloatAdImages` state + useEffect โหลดจาก business_settings
+- เก็บ `floatAdEnabled` (kill switch) + `albumImgs` (fallback) ไว้
+- เปลี่ยน `mediaSrc`: ใช้ `promo.image` (banner_image จาก promotions) โดยตรงทุกตัวที่มี
+- Promotions ที่ `is_banner=true` + active + วันที่ถูกต้อง + ผ่านอนุมัติ → ขึ้นได้สูงสุด 3 อัน ตามลำดับวันที่สร้าง (ใหม่ก่อน)
+
+**Phase 3 — Category/Type Filter (commit `40ea357`)**:
+- `ContentTab.tsx`: เพิ่ม state `floatingAdSources` + load/save `floating_ad_sources` ใน business_settings
+- `ContentTab.tsx`: เพิ่ม UI multi-select checkbox 3 แหล่ง:
+  1. 🎁 โปรโมชั่น (`is_banner=true`) 2. 📣 ประกาศ/โพสต์ 3. ✅ แบนเนอร์อนุมัติแล้ว
+- `FloatingAdBanners.tsx`: รับ `sources` prop + load `floating_ad_sources` จาก business_settings
+- `FloatingAdBanners.tsx`: กรอง announcements ตาม sources (ไม่มี 'announcements' → ไม่โหลด RPC)
+- `HomePage.tsx`: เพิ่ม `floatingAdSources` state + load from settings
+- `HomePage.tsx`: กรอง `bannerPromos` (promotions) ตาม sources (`promotions` ต้องอยู่ใน sources)
+- `HomePage.tsx`: ส่ง `sources` prop ไป `FloatingAdBanners`
+
+**Phase 4 — Badge มุมขอบมีสี (commit `96be07f`)**:
+- `FloatingAdBanners.tsx`: เพิ่ม badge มุมขวาบน (top-right) บนแต่ละการ์ด
+- ประกาศ (ann- prefix): badge สีส้ม `📣 ประกาศ` (bg-amber-500)
+- โปรโมชั่น: badge สีหลัก `🎁 โปรโมชั่น` (bg-brand-primary)
+- ตำแหน่ง: absolute top-2 right-2 z-10 พร้อม data-testid
+
+**Gates ทุก Phase**: lint ✅ tsc ✅ build ✅
+**Deploy**: pushed → auto-deploy → live check `LIVE_CHECK_ALL_MARKERS_OK` (asset `index-DqI71-Tx.js`)
+**Next**: Owner hard reload `https://biteme-baby.com` verify ทุกข้อ → ค่อยดำเนิน Live Retest D2, D5, §T-A, R91, R92-G, R92-S
+
 ## 🔒 SESSION CLOSE 2026-11-09 (รอบ 7 · Migration 201 + EF deploy เสร็จ → เริ่ม Live Retest D2→D4→D5→§T-A→R91→R90) — เซสชั่นใหม่รับรายการต่อ
 
 > **กติกาเซสชั่นใหม่:**
