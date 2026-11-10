@@ -76,7 +76,7 @@ function getDailyTheaterPicks(products: Product[], schedule: Record<string, stri
   const seed = simpleHash(today)
   const eligible = products.filter((p) => {
     if (!p.is_available) return false
-    if (p.order_mode === 'PRE_ORDER' && !schedule[p.id]) return false
+    if (p.available_preorder && !schedule[p.id]) return false
     return true
   })
   return shuffleWithSeed(eligible, seed).slice(0, count)
