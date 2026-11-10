@@ -1,3 +1,4 @@
+﻿
 // ============================================
 // Bite Me Baby — BITE FOOD THEATER (/shop hero stage)
 // ============================================
@@ -5,7 +6,7 @@
 // the Visual Theater command) with a food-first stage:
 //   AI Waiter Stage (Bite mascot + line)  ×  Menu Theater (2.5D food cards)
 // REUSE ONLY — no second ordering engine:
-//   - picks        → pickTopAvailable (existing pure helper, real catalog)
+//   - picks        → pickTheaterStage / getDailyTheaterPicks (pure helpers, real catalog)
 //   - reason chip  → recommendReason  (real memory/cart/product signals)
 //   - quick add    → canonical cartStore.addItem (mode + isolation)
 //   - customize    → OrderBuilder (existing detail/toppings surface)
@@ -13,7 +14,7 @@
 // Carousel = native CSS scroll-snap (touch swipe on mobile) + buttons + dots,
 // same accessibility pattern as HorizontalCarousel. No new dependencies.
 // Theater Carousel (Admin-curated): auto-play, scroll-snap, dots, arrows.
-// Falls back to AI picks when no admin items exist.
+// Priority: Admin items (is_theater_carousel=true) → Daily random from available products.
 // ============================================
 
 import { useEffect, useMemo, useRef, useState } from 'react'
@@ -24,11 +25,8 @@ import { useAuthStore } from '@/store/authStore'
 import { useBiteAIStore } from '@/stores/useBiteAIStore'
 import { MascotBadge } from '@/components/MascotBadge'
 import { deriveOrderMode } from '@/lib/talkToBite'
-import { pickTheaterStage } from '@/lib/theaterStage'
 import { recommendReason } from '@/lib/theaterReasons'
 import { theaterPosFor, clampIndex } from '@/lib/theaterGeometry'
-import { resolveTheaterEditorial, THEATER_EDITORIAL_DEFAULTS } from '@/lib/theaterEditorial'
-import { selectDailyCopy, resolveStageCopy, type TheaterDailyCopyItem } from '@/lib/theaterDailyCopy'
 import { readTheaterOpen, writeTheaterOpen } from '@/lib/theaterPreferences'
 import { hydrateMemoryFromServer } from '@/lib/aiServerMemory'
 import { showToast } from '@/components/ui/ToastContainer'
@@ -47,14 +45,42 @@ interface TheaterCarouselItem {
 }
 
 interface FoodTheaterProps {
-  /** Real catalog rows already loaded by the page (single source of truth). */
   products: Product[]
-  /** L-8: ProductScheduleMap ของหน้าแรก — ใช้บล็อก pre-order-only ที่ยังไม่ลงปฏิทิน */
   schedule?: Record<string, string>
-  /** Open the existing OrderBuilder (detail + toppings + companions). */
   onCustomize: (payload: SameDayOrderPayload) => void
-  /** Pre-order variant → existing OrderBuilder pre-order path. */
   onPreOrder: (payload: PreOrderPayload) => void
+}
+
+function simpleHash(str: string): number {
+  let hash = 0
+  for (let i = 0; i < str.length; i++) {
+    const char = str.charCodeAt(i)
+    hash = ((hash << 5) - hash) + char
+    hash |= 0
+  }
+  return Math.abs(hash)
+}
+
+function shuffleWithSeed<T>(array: T[], seed: number): T[] {
+  const arr = [...array]
+  let state = seed
+  for (let i = arr.length - 1; i > 0; i--) {
+    state = (state * 1664525 + 1013904223) >>> 0
+    const j = state % (i + 1)
+    ;[arr[i], arr[j]] = [arr[j], arr[i]]
+  }
+  return arr
+}
+
+function getDailyTheaterPicks(products: Product[], schedule: Record<string, string>, count: number): Product[] {
+  const today = new Date().toISOString().split('T')[0]
+  const seed = simpleHash(today)
+  const eligible = products.filter((p) => {
+    if (!p.is_available) return false
+    if (p.order_mode === 'PRE_ORDER' && !schedule[p.id]) return false
+    return true
+  })
+  return shuffleWithSeed(eligible, seed).slice(0, count)
 }
 
 export function FoodTheater({ products, schedule = {}, onCustomize, onPreOrder }: FoodTheaterProps) {
@@ -65,48 +91,13 @@ export function FoodTheater({ products, schedule = {}, onCustomize, onPreOrder }
   const openChat = useBiteAIStore((s) => s.openChat)
   const [favoriteCats, setFavoriteCats] = useState<string[]>([])
   const [index, setIndex] = useState(0)
-  // directive §2 — "เปิด/ปิด Theater ได้": preference รายเครื่อง (default = เปิด)
-  // ปิดแล้วหน้าร้านปกติ (/shop sections + /menu) ใช้ได้เสมอ — ไม่ใช่ business state
   const [theaterOpen, setTheaterOpen] = useState(() => readTheaterOpen())
-  const [editorial, setEditorial] = useState(THEATER_EDITORIAL_DEFAULTS)
-  // Daily rotation layer — SAME settings fetch as editorial (one swap on load).
-  const [dailyCopy, setDailyCopy] = useState<TheaterDailyCopyItem | null>(null)
-  // Theater carousel items from admin (is_theater_carousel = true)
   const [theaterItems, setTheaterItems] = useState<TheaterCarouselItem[]>([])
-  // Auto-play state
   const [autoplayEnabled, setAutoplayEnabled] = useState(true)
   const autoplayTimer = useRef<ReturnType<typeof setInterval> | null>(null)
   const trackRef = useRef<HTMLDivElement>(null)
   const scrollTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  // Admin-editable copy — EXISTING `business_settings` keys `theater_editorial`
-  // (base copy) + `theater_daily_copy` (7-day rotation), edited via AdminSettings.
-  // Missing/unreadable → today's honest defaults (null daily = fallback chain).
-  useEffect(() => {
-    let active = true
-    void import('@/lib/bmbAdminApi_settings')
-      .then(({ getBusinessSettings }) => getBusinessSettings())
-      .then((settings) => {
-        if (!active) return
-        if (settings?.theater_editorial) {
-          setEditorial(resolveTheaterEditorial(settings.theater_editorial))
-        }
-        if (settings?.theater_daily_copy) {
-          setDailyCopy(selectDailyCopy(settings.theater_daily_copy))
-        }
-        // Theater carousel settings
-        if (typeof settings?.theater_autoplay_ms === 'number') {
-          // Auto-play interval is controlled by timer, not a state
-        }
-        // theater_mode: 'auto' | 'manual' - but we always show carousel, just source differs
-      })
-      .catch(() => undefined)
-    return () => {
-      active = false
-    }
-  }, [])
-
-  // Load theater carousel items from admin_portfolio_items
   useEffect(() => {
     let active = true
     void import('@/lib/bmbAdminApi_portfolio')
@@ -119,12 +110,9 @@ export function FoodTheater({ products, schedule = {}, onCustomize, onPreOrder }
         setTheaterItems(theaterCarouselItems)
       })
       .catch(() => undefined)
-    return () => {
-      active = false
-    }
+    return () => { active = false }
   }, [])
 
-  // Verified server memory only — same source TalkToBite uses for ❤️ favorites.
   useEffect(() => {
     if (!customer?.id) return
     let active = true
@@ -133,66 +121,58 @@ export function FoodTheater({ products, schedule = {}, onCustomize, onPreOrder }
         if (active && mem?.favorite_categories) setFavoriteCats(mem.favorite_categories)
       })
       .catch(() => undefined)
-    return () => {
-      active = false
-    }
+    return () => { active = false }
   }, [customer?.id])
 
-  // Real sellable picks — deterministic featured-first ordering (no fabrication).
-  // R86 (Owner 2026-11-08: "เมนูที่เลยรอบไปแล้วไม่ต้องเอาขึ้นเธียเตอร์") —
-  // pre-order-only ที่ไม่มีรอบถัดไปในปฏิทิน (เลยรอบแล้ว/ยังไม่ลง) ห้ามขึ้นเวที —
-  // mirror กติกา L-8 ที่ add()/customize() block อยู่แล้ว (schedule map กรองวันเลยรอบด้วย R77)
-  const aiPicks = useMemo(() => pickTheaterStage(products, schedule, PICK_COUNT), [products, schedule])
-  // Theater items take priority, fallback to AI picks
   const picks = useMemo(() => {
     if (theaterItems.length > 0) {
-      // Convert theater items to Product-like objects for rendering
       return theaterItems.map((item) => ({
         id: item.id,
         name: item.title,
         description: item.theater_caption || item.description || '',
         image_url: item.image_url,
-        price: 0, // Price not shown for theater items unless linked to product
+        price: 0,
         category_id: '',
         is_available: true,
-        // Keep reference to original item for product_id
         _theaterItem: item,
       })) as (Product & { _theaterItem: TheaterCarouselItem })[]
     }
-    return aiPicks as (Product & { _theaterItem?: TheaterCarouselItem })[]
-  }, [theaterItems, aiPicks])
-  
-  // What the stage renders — daily copy → admin editorial → defaults (pure chain).
-  const stage = useMemo(
-    () => resolveStageCopy(editorial, dailyCopy, picks.length),
-    [editorial, dailyCopy, picks.length],
-  )
+    return getDailyTheaterPicks(products, schedule, PICK_COUNT) as (Product & { _theaterItem?: TheaterCarouselItem })[]
+  }, [theaterItems, products, schedule])
+
+  const defaultHeadline = 'Bite เลือกเมนูมาให้แล้ววันนี้'
+  const defaultSubheadline = 'เลื่อนดูเมนูที่ Bite คัดสรรมาให้ · กดเพิ่มได้เลย'
+  const defaultCtaLabel = 'ดูเมนูทั้งหมด'
+  const defaultKicker = '🍽️ Bite Food Theater'
+
+  const stage = useMemo(() => ({
+    headline: defaultHeadline,
+    subheadline: defaultSubheadline,
+    ctaLabel: defaultCtaLabel,
+    kicker: defaultKicker,
+    recommendationLabel: '',
+  }), [])
+
   const cartCategoryIds = useMemo(
     () => cartItems.map((i) => i.product.category_id).filter(Boolean),
     [cartItems],
   )
 
   function reasonFor(p: Product & { _theaterItem?: TheaterCarouselItem }) {
-    // For theater items, don't show AI reason chip
     if (p._theaterItem) return null
     return recommendReason(p, { favoriteCats, cartCategoryIds })
   }
 
-  // --- Theater on/off (directive §2) — ปิดได้โดยไม่กระทบการซื้อผ่านหน้าร้านปกติ ---
   function toggleTheater() {
-    setTheaterOpen((prev) => {
-      writeTheaterOpen(!prev)
-      return !prev
-    })
+    setTheaterOpen((prev) => { writeTheaterOpen(!prev); return !prev })
   }
 
-  // --- Auto-play carousel ---
   function startAutoplay() {
     if (autoplayTimer.current) clearInterval(autoplayTimer.current)
     autoplayTimer.current = setInterval(() => {
       const next = index + 1 >= picks.length ? 0 : index + 1
       go(next)
-    }, 5000) // 5 seconds default
+    }, 5000)
   }
 
   function stopAutoplay() {
@@ -201,37 +181,22 @@ export function FoodTheater({ products, schedule = {}, onCustomize, onPreOrder }
   }
 
   useEffect(() => {
-    if (autoplayEnabled && picks.length > 1) {
-      startAutoplay()
-    } else {
-      stopAutoplay()
-    }
+    if (autoplayEnabled && picks.length > 1) { startAutoplay() } else { stopAutoplay() }
     return () => stopAutoplay()
   }, [autoplayEnabled, picks.length])
 
-  // Pause on hover/touch
-  function handleTrackEnter() {
-    stopAutoplay()
-  }
+  function handleTrackEnter() { stopAutoplay() }
   function handleTrackLeave() {
-    if (autoplayEnabled && picks.length > 1) {
-      startAutoplay()
-    }
+    if (autoplayEnabled && picks.length > 1) { startAutoplay() }
   }
 
-  // --- Theater/Waiting Stage unity (directive §2): มาสคอตบนเวที = ทางเข้า
-  //     Talk to Bite ชุดเดียวกับ Floating Bite (openChat → TalkToBite overlay
-  //     ตัวเดียวที่ BiteMascot mount ไว้) — บริบทส่งเฉพาะสถานะจริง (route + ตะกร้า) ---
   function chatWithBite() {
     const count = cartItems.reduce((s, i) => s + i.quantity, 0)
-    const context = `ลูกค้าอยู่หน้า /shop (Bite Food Theater) · มีของในตะกร้า ${count} รายการ`
+    const context = 'ลูกค้าอยู่หน้า /shop (Bite Food Theater) · มีของในตะกร้า ' + count + ' รายการ'
     openChat(context)
     setBiteState('WELCOME')
   }
 
-
-  // --- Carousel: native scroll-snap + buttons + dots (HorizontalCarousel pattern) ---
-  /** Snap step = current slide width + the live CSS gap (stays correct if CSS changes). */
   function stepWidth(el: HTMLElement): number {
     const slide = el.querySelector('[data-slide]') as HTMLElement | null
     if (!slide) return 1
@@ -257,11 +222,6 @@ export function FoodTheater({ products, schedule = {}, onCustomize, onPreOrder }
     if (scrollTimer.current) clearTimeout(scrollTimer.current)
     scrollTimer.current = setTimeout(() => {
       const step = stepWidth(el)
-      // Snap-align correction: Chromium resolves a programmatic smooth-scroll target against
-      // the slides' TRANSFORMED snap areas, so a jump starting from the ring "deep" state
-      // (visual center sits +33px off layout) lands past the exact step multiple and is never
-      // re-snapped afterwards. Track padding is symmetric, so the true snap position is always
-      // i*step — nudge back first, then derive the index from the corrected offset.
       const desired = Math.round(el.scrollLeft / step) * step
       if (Math.abs(el.scrollLeft - desired) > 1) el.scrollLeft = desired
       setIndex(Math.max(0, Math.min(picks.length - 1, Math.round(el.scrollLeft / step))))
@@ -273,68 +233,35 @@ export function FoodTheater({ products, schedule = {}, onCustomize, onPreOrder }
     if (autoplayTimer.current) clearInterval(autoplayTimer.current)
   }, [])
 
-  // Ring safety: when the catalog shrinks, the active index must stay in range
-  // so a center card always exists (picks recompute from real products).
   useEffect(() => {
     setIndex((prev) => clampIndex(prev, picks.length))
   }, [picks.length])
 
-  // --- Canonical add-to-cart (identical semantics to TalkToBite.addToCart) ---
   function add(p: Product & { _theaterItem?: TheaterCarouselItem }, quantity: number) {
-    // If theater item has product_id, use that product for cart
     const productToAdd = p._theaterItem?.product_id
       ? products.find((prod) => prod.id === p._theaterItem!.product_id)
       : p
-    
-    if (!productToAdd) {
-      showToast('ไม่พบสินค้าในระบบ', 'warning')
-      return
-    }
-    
-    // Phase 1 (OD-3 / OD-5): derive จาก canonical rule (matrix §3.1) —
-    // null = ไม่มีสิทธิ์ทั้งสองโหมด → ห้าม offer (คิวเดิม reject ด้วย ERR_PRODUCT_MODE_NOT_ALLOWED)
+    if (!productToAdd) { showToast('ไม่พบสินค้าในระบบ', 'warning'); return }
     const mode = deriveOrderMode(productToAdd)
-    if (!mode) {
-      showToast('สินค้านี้ยังไม่เปิดให้สั่งในขณะนี้ค่ะ', 'warning')
-      return
-    }
-    // L-8 (N-4 #8 · Owner 2026-10-26): pre-order-only ที่ยังไม่ลงปฏิทิน → ห้ามกดเพิ่ม
-    if (mode === 'PRE_ORDER' && !schedule[productToAdd.id]) {
-      showToast('เมนูนี้ยังไม่ลงปฏิทินรอบถัดไป — ยังจองไม่ได้', 'warning')
-      return
-    }
+    if (!mode) { showToast('สินค้านี้ยังไม่เปิดให้สั่งในขณะนี้ค่ะ', 'warning'); return }
+    if (mode === 'PRE_ORDER' && !schedule[productToAdd.id]) { showToast('เมนูนี้ยังไม่ลงปฏิทินรอบถัดไป — ยังจองไม่ได้', 'warning'); return }
     const res = useCartStore.getState().addItem(productToAdd, quantity, {}, mode)
     if (res === 'added') {
-      showToast(`เพิ่ม ${productToAdd.name} ลงตะกร้าแล้ว 🛒`)
+      showToast('เพิ่ม ' + productToAdd.name + ' ลงตะกร้าแล้ว 🛒')
       setBiteState('SUCCESS')
       window.setTimeout(() => setBiteState('IDLE'), 800)
-    } else {
-      showToast('เพิ่มไม่ได้ในตอนนี้ กรุณาลองใหม่ครับ', 'warning')
-    }
+    } else { showToast('เพิ่มไม่ได้ในตอนนี้ กรุณาลองใหม่ครับ', 'warning') }
   }
 
   function customize(p: Product & { _theaterItem?: TheaterCarouselItem }) {
     const productToAdd = p._theaterItem?.product_id
       ? products.find((prod) => prod.id === p._theaterItem!.product_id)
       : p
-    
-    if (!productToAdd) {
-      showToast('ไม่พบสินค้าในระบบ', 'warning')
-      return
-    }
-    
-    // Phase 1 (OD-3): โหมดเดียวกับ add() — canonical derive เท่านั้น
+    if (!productToAdd) { showToast('ไม่พบสินค้าในระบบ', 'warning'); return }
     const mode = deriveOrderMode(productToAdd)
-    if (!mode) {
-      showToast('สินค้านี้ยังไม่เปิดให้สั่งในขณะนี้ค่ะ', 'warning')
-      return
-    }
+    if (!mode) { showToast('สินค้านี้ยังไม่เปิดให้สั่งในขณะนี้ค่ะ', 'warning'); return }
     if (mode === 'PRE_ORDER') {
-      // L-8: pre-order-only ที่ยังไม่ลงปฏิทิน → ห้ามเปิด builder จอง
-      if (!schedule[productToAdd.id]) {
-        showToast('เมนูนี้ยังไม่ลงปฏิทินรอบถัดไป — ยังจองไม่ได้', 'warning')
-        return
-      }
+      if (!schedule[productToAdd.id]) { showToast('เมนูนี้ยังไม่ลงปฏิทินรอบถัดไป — ยังจองไม่ได้', 'warning'); return }
       onPreOrder({ productId: productToAdd.id, quantity: 1, deliveryRoundId: '', scheduledDate: '' })
       return
     }
@@ -355,108 +282,38 @@ export function FoodTheater({ products, schedule = {}, onCustomize, onPreOrder }
   const cartCount = cartItems.reduce((sum, i) => sum + i.quantity, 0)
 
   return (
-    <section className="theater-stage" aria-label="Bite Food Theater" data-testid="food-theater">
-      {/* AI waiter stage header */}
-      <div className="theater-head">
-        <div className="min-w-0 flex-1">
-          <p className="theater-kicker">{editorial.kicker}</p>
-          <h2 className="theater-title" data-testid="theater-title">
-            {stage.headline}
-          </h2>
-          {stage.recommendationLabel && (
-            <p className="theater-daily-rec" data-testid="theater-daily-rec">{stage.recommendationLabel}</p>
-          )}
+    <section className='theater-stage' aria-label='Bite Food Theater' data-testid='food-theater'>
+      <div className='theater-head'>
+        <div className='min-w-0 flex-1'>
+          <p className='theater-kicker'>{stage.kicker}</p>
+          <h2 className='theater-title' data-testid='theater-title'>{stage.headline}</h2>
+          {stage.recommendationLabel && <p className='theater-daily-rec' data-testid='theater-daily-rec'>{stage.recommendationLabel}</p>}
         </div>
-        <button
-          type="button"
-          onClick={() => navigate('/cart')}
-          className="theater-cart-btn"
-          aria-label={`ดูตะกร้า${cartCount > 0 ? ` (${cartCount} รายการ)` : ''}`}
-          data-testid="theater-cart"
-        >
-          🛒{cartCount > 0 ? ` ${cartCount}` : ''}
-        </button>
-        {/* เปิด/ปิด Theater (directive §2) — ปิดแล้วยังซื้อผ่านหน้าร้านปกติได้ */}
-        <button
-          type="button"
-          onClick={toggleTheater}
-          className="theater-cart-btn"
-          aria-expanded={theaterOpen}
-          aria-label={theaterOpen ? 'ปิดโรงละคร' : 'เปิดโรงละคร'}
-          data-testid="theater-toggle"
-        >
-          {theaterOpen ? '✕' : '🎭'}
-        </button>
+        <button type='button' onClick={() => navigate('/cart')} className='theater-cart-btn' aria-label={'ดูตะกร้า' + (cartCount > 0 ? ' (' + cartCount + ' รายการ)' : '')} data-testid='theater-cart'>🛒{cartCount > 0 ? ' ' + cartCount : ''}</button>
+        <button type='button' onClick={toggleTheater} className='theater-cart-btn' aria-expanded={theaterOpen} aria-label={theaterOpen ? 'ปิดโรงละคร' : 'เปิดโรงละคร'} data-testid='theater-toggle'>{theaterOpen ? '✕' : '🎭'}</button>
       </div>
 
-      {/* โรงละครปิดอยู่ — เหลือแถบสั้น + ทางเข้าหน้าร้านปกติ (ซื้อได้ตามปกติ) */}
       {!theaterOpen ? (
-        <div className="theater-empty" data-testid="theater-closed">
-          <p className="text-sm text-[var(--theater-fg-muted)]">
-            ปิดโรงละครอยู่ — เลือกซื้อผ่านหน้าร้านปกติได้เลยครับ
-          </p>
-          <div className="flex flex-wrap items-center justify-center gap-2">
-            <button type="button" className="btn btn-primary" onClick={toggleTheater} data-testid="theater-reopen">
-              🎭 เปิดโรงละคร
-            </button>
-            <button type="button" className="btn btn-outline" onClick={() => navigate('/menu')} data-testid="theater-closed-menu">
-              {editorial.menuCta}
-            </button>
+        <div className='theater-empty' data-testid='theater-closed'>
+          <p className='text-sm text-[var(--theater-fg-muted)]'>ปิดโรงละครอยู่ — เลือกซื้อผ่านหน้าร้านปกติได้เลยครับ</p>
+          <div className='flex flex-wrap items-center justify-center gap-2'>
+            <button type='button' className='btn btn-primary' onClick={toggleTheater} data-testid='theater-reopen'>🎭 เปิดโรงละคร</button>
+            <button type='button' className='btn btn-outline' onClick={() => navigate('/menu')} data-testid='theater-closed-menu'>{stage.ctaLabel}</button>
           </div>
         </div>
       ) : picks.length === 0 ? (
-        <div className="theater-empty" data-testid="theater-empty">
-          <button
-            type="button"
-            onClick={chatWithBite}
-            className="theater-greeting-mascot-btn"
-            aria-label="คุยกับน้อง Bite"
-            data-testid="theater-mascot-chat"
-          >
-            <MascotBadge pose="cooking" size="lg" alt="Bite กำลังเตรียมเมนู — แตะเพื่อคุย" />
-          </button>
-          <p className="text-sm text-[var(--theater-fg-muted)]">{editorial.emptyBody}</p>
-          <button type="button" className="btn btn-primary" onClick={() => navigate('/menu')}>
-            {editorial.menuCta}
-          </button>
+        <div className='theater-empty' data-testid='theater-empty'>
+          <button type='button' onClick={chatWithBite} className='theater-greeting-mascot-btn' aria-label='คุยกับน้อง Bite' data-testid='theater-mascot-chat'><MascotBadge pose='cooking' size='lg' alt='Bite กำลังเตรียมเมนู — แตะเพื่อคุย' /></button>
+          <p className='text-sm text-[var(--theater-fg-muted)]'>ยังไม่มีเมนูให้แสดงในขณะนี้</p>
+          <button type='button' className='btn btn-primary' onClick={() => navigate('/menu')}>{stage.ctaLabel}</button>
         </div>
       ) : (
         <>
-          {/* MENU THEATER — scroll-snap carousel: hero + side cards in depth */}
-          <div
-            ref={trackRef}
-            className="theater-track"
-            role="list"
-            tabIndex={0}
-            aria-label="เมนูที่ Bite เลือกมาให้ เลื่อนได้"
-            onScroll={handleScroll}
-            onMouseEnter={handleTrackEnter}
-            onMouseLeave={handleTrackLeave}
-            onTouchStart={handleTrackEnter}
-            onTouchEnd={handleTrackLeave}
-            onKeyDown={(e) => {
-              if (e.key === 'ArrowRight') { e.preventDefault(); go(index + 1) }
-              if (e.key === 'ArrowLeft') { e.preventDefault(); go(index - 1) }
-            }}
-            data-testid="theater-track"
-          >
+          <div ref={trackRef} className='theater-track' role='list' tabIndex={0} aria-label='เมนูที่ Bite เลือกมาให้ เลื่อนได้' onScroll={handleScroll} onMouseEnter={handleTrackEnter} onMouseLeave={handleTrackLeave} onTouchStart={handleTrackEnter} onTouchEnd={handleTrackLeave} onKeyDown={(e) => { if (e.key === 'ArrowRight') { e.preventDefault(); go(index + 1) } if (e.key === 'ArrowLeft') { e.preventDefault(); go(index - 1) } }} data-testid='theater-track'>
             {picks.map((p, i) => (
-              <div
-                key={p.id}
-                data-slide
-                data-pos={theaterPosFor(i, index, picks.length)}
-                role="listitem"
-                className={`theater-slide${i === index ? ' theater-slide--active' : ''}`}
-                aria-hidden={i === index ? undefined : true}
-              >
+              <div key={p.id} data-slide data-pos={theaterPosFor(i, index, picks.length)} role='listitem' className={'theater-slide' + (i === index ? ' theater-slide--active' : '')} aria-hidden={i === index ? undefined : true}>
                 {i === index ? (
-                  <TheaterHeroCard
-                    product={p}
-                    reason={reasonFor(p)}
-                    scheduledDate={p._theaterItem ? undefined : schedule[p.id]}
-                    onAdd={add}
-                    onCustomize={customize}
-                  />
+                  <TheaterHeroCard product={p} reason={reasonFor(p)} scheduledDate={p._theaterItem ? undefined : schedule[p.id]} onAdd={add} onCustomize={customize} />
                 ) : (
                   <RecommendationCard product={p} reason={reasonFor(p)} scheduledDate={p._theaterItem ? undefined : schedule[p.id]} onAdd={(prod) => add(prod, 1)} />
                 )}
@@ -464,85 +321,33 @@ export function FoodTheater({ products, schedule = {}, onCustomize, onPreOrder }
             ))}
           </div>
 
-          {/* prev / dots / next */}
-          <div className="theater-controls">
-            <button
-              type="button"
-              className="theater-nav"
-              onClick={() => go(index - 1)}
-              disabled={index === 0}
-              aria-label="เมนูก่อนหน้า"
-              data-testid="theater-prev"
-            >
-              ‹
-            </button>
-            <div className="theater-dots" role="tablist" aria-label="สไลด์เมนู">
+          <div className='theater-controls'>
+            <button type='button' className='theater-nav' onClick={() => go(index - 1)} disabled={index === 0} aria-label='เมนูก่อนหน้า' data-testid='theater-prev'>‹</button>
+            <div className='theater-dots' role='tablist' aria-label='สไลด์เมนู'>
               {picks.map((p, i) => (
-                <button
-                  key={p.id}
-                  type="button"
-                  role="tab"
-                  aria-selected={i === index}
-                  aria-label={`ไปเมนูที่ ${i + 1}: ${p.name}`}
-                  className={`theater-dot${i === index ? ' theater-dot--active' : ''}`}
-                  onClick={() => go(i)}
-                  data-testid={`theater-dot-${i}`}
-                />
+                <button key={p.id} type='button' role='tab' aria-selected={i === index} aria-label={'ไปเมนูที่ ' + (i + 1) + ': ' + p.name} className={'theater-dot' + (i === index ? ' theater-dot--active' : '')} onClick={() => go(i)} data-testid={'theater-dot-' + i} />
               ))}
             </div>
-            <button
-              type="button"
-              className="theater-nav"
-              onClick={() => go(index + 1)}
-              disabled={index >= picks.length - 1}
-              aria-label="เมนูถัดไป"
-              data-testid="theater-next"
-            >
-              ›
-            </button>
+            <button type='button' className='theater-nav' onClick={() => go(index + 1)} disabled={index >= picks.length - 1} aria-label='เมนูถัดไป' data-testid='theater-next'>›</button>
           </div>
 
-          {/* Stage floor — Bite ยืนบนเวทีพร้อม bubble: แตะ = เปิด Talk to Bite
-              ชุดเดียวกับ Floating Bite (Theater/Waiting Stage unity — directive §2) */}
-          <div className="theater-greeting" data-testid="theater-greeting">
-            <button
-              type="button"
-              onClick={chatWithBite}
-              className="theater-greeting-mascot-btn"
-              aria-label="คุยกับน้อง Bite"
-              data-testid="theater-mascot-chat"
-            >
-              <MascotBadge pose="recommend" size="md" alt="Bite กำลังแนะนำเมนู — แตะเพื่อคุย" loading="eager" className="theater-greeting-mascot" />
+          <div className='theater-greeting' data-testid='theater-greeting'>
+            <button type='button' onClick={chatWithBite} className='theater-greeting-mascot-btn' aria-label='คุยกับน้อง Bite' data-testid='theater-mascot-chat'>
+              <MascotBadge pose='recommend' size='md' alt='Bite กำลังแนะนำเมนู — แตะเพื่อคุย' loading='eager' className='theater-greeting-mascot' />
             </button>
-            <p className="theater-greeting-bubble" data-testid="theater-subheadline">{stage.subheadline}</p>
+            <p className='theater-greeting-bubble' data-testid='theater-subheadline'>{stage.subheadline}</p>
           </div>
 
-          {/* Daily/editorial CTA — same destination as the empty-state menu button */}
-          <button
-            type="button"
-            className="btn btn-outline theater-menu-cta"
-            onClick={() => navigate('/menu')}
-            data-testid="theater-menu-cta"
-          >
-            {stage.ctaLabel}
-          </button>
+          <button type='button' className='btn btn-outline theater-menu-cta' onClick={() => navigate('/menu')} data-testid='theater-menu-cta'>{stage.ctaLabel}</button>
 
-          {/* Side picks — tap to bring one forward */}
           {others.length > 0 && (
-            <div className="theater-others" role="list" aria-label="อื่นที่ Bite เลือกมาให้">
+            <div className='theater-others' role='list' aria-label='อื่นที่ Bite เลือกมาให้'>
               {others.slice(0, 3).map((p) => (
-                <button
-                  key={p.id}
-                  type="button"
-                  role="listitem"
-                  className="theater-other-chip"
-                  onClick={() => go(picks.indexOf(p))}
-                  data-testid="theater-other-chip"
-                >
-                  {p.image_url ? <img src={p.image_url} alt="" loading="lazy" decoding="async" /> : <span className="theater-other-fallback" aria-hidden="true">🍽️</span>}
-                  <span className="min-w-0 text-left">
-                    <span className="block text-xs font-bold text-[var(--theater-fg)] truncate">{p.name}</span>
-                    <span className="block text-[11px] text-[var(--theater-price)]">฿{Number(p.price) || 0}</span>
+                <button key={p.id} type='button' role='listitem' className='theater-other-chip' onClick={() => go(picks.indexOf(p))} data-testid='theater-other-chip'>
+                  {p.image_url ? <img src={p.image_url} alt='' loading='lazy' decoding='async' /> : <span className='theater-other-fallback' aria-hidden='true'>🍽️</span>}
+                  <span className='min-w-0 text-left'>
+                    <span className='block text-xs font-bold text-[var(--theater-fg)] truncate'>{p.name}</span>
+                    <span className='block text-[11px] text-[var(--theater-price)]'>฿{Number(p.price) || 0}</span>
                   </span>
                 </button>
               ))}
@@ -553,4 +358,3 @@ export function FoodTheater({ products, schedule = {}, onCustomize, onPreOrder }
     </section>
   )
 }
-
