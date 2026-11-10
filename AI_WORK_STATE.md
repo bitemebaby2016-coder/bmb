@@ -5,6 +5,35 @@
 > 2. **Live Retest Sequence** (ตาม `BMB_REMAIN_TESTS_LIVE_2026-11-09.md` ยังค้าง): ① **D2** SAME_DAY prompt ② **D4** intent:// native click ③ **D5** round hardcode gone ④ **§T-A** cart retry 2.5s ⑤ **R91** hard reload card scale ⑥ **R92-G** guide ใหม่ ⑦ **R92-S** compress 300×300/100KB · **ใช้ `https://biteme-baby.com` · hard reload 1 ครั้ง · FAIL = จด defect + two-try · RT-8 ยังห้ามปิด**
 > 3. เอกสารอ้างอิง: `docs/BMB_REMAIN_TESTS_LIVE_2026-11-09.md` (live test checklist รอบก่อน) · **สร้างใหม่ `docs/BMB_REMAIN_TESTS_LIVE_2026-11-10.md` (รายการเหลือล่าสุด)** · `.kilo/plans/pending-tasks-next-session.md` (แผนจาก owner approve)
 
+## 🔧 FIX 2026-11-10 (Session ใหม่): Viewport Heuristic False Positive + Floating Ad FBA Gate
+**ปัญหา**: Owner รายงาน Banner "กำลังเปิดใน Facebook" โชว์บน Chrome desktop ปกติ (รูปภาพเป็นหลักฐาน)
+**Root Cause**: `src/hooks/useInAppBrowser.ts` บรรทัด 28-29 `viewportMismatch = window.innerWidth < window.screen.width * 0.95` → false positive บน desktop Chrome ที่ไม่ maximize window
+
+**แก้ไขแล้ว (commit `b13c5d2`)**:
+1. **useInAppBrowser.ts**: ลบ `viewportMismatch` heuristic ทั้งหมด ใช้แค่ UA check (`FBAV|FB_IAB|FBAN|FBBV`) เท่านั้น
+2. **HomePage.tsx**: เพิ่ม `isFB` gate ก่อน render `FloatingAdBanners` (แสดงเฉพาะใน FB in-app browser)
+
+**Gates ผ่าน**: lint ✅ tsc ✅ build ✅ vitest ✅
+**Deploy**: pushed → auto-deploy → live check `LIVE_CHECK_ALL_MARKERS_OK` (asset `index-CJEv4C1L.js`)
+**Next**: Owner hard reload `https://biteme-baby.com` verify D4 retest (banner หายบน Chrome desktop) → ค่อยดำเนิน retest ต่อ D2, D5, §T-A, R91, R92-G, R92-S
+
+## 🔧 FIX 2026-11-10 (Session ต่อเนื่อง): Floating Ad UX Overhaul ใน ContentTab
+**ปัญหาจาก Owner (รูปภาพ + รายงาน)**:
+1. "วิธี A สวิทซ์ที่เคยมีหายไป" — Kill switch อยู่หน้า AdminSettings แยกจากหน้าตั้งค่าภาพ
+2. "วิธี B ไม่มีปุ่ม" — ปุ่ม "📌 ตั้งเป็นโฆษณาลอย" ไม่ขึ้นใน AI Album
+3. "จะรู้ลำดับได้ยังไง" — ไม่มีตัวบอกว่ารูปไหนเป็นโฆษณาลอยปัจจุบัน
+4. "ภาพใหญ่เกิน โหลดช้า" — ระบบมี compressToWebLimits (300px/100KB) แล้ว แต่ภาพเก่ายังใหญ่
+
+**แก้ไขแล้ว (commit `4250813`)**:
+1. **คู่มือ 3 ขั้นตอน** ใน AI Album header: ① Kill Switch (AdminSettings หรือสวิทซ์ inline) ② เลือกภาพในหมวด promo/festival กดปุ่ม ③ ต้องผ่าน CNT-01
+2. **Kill Switch Inline** — ToggleSwitch `floating_ad_enabled` ตรงใน ContentTab (import จาก `./ToggleSwitch`) ใช้ `setBusinessSetting` sync กับ AdminSettings
+3. **Badge สถานะ** — Badge `📌 โฆษณาลอยปัจจุบัน` แสดงทับรูปใน AI Album ที่ตรง `floatingAdImage`
+4. **ปุ่มตั้งโฆษณาลอย** — แสดงเฉพาะ `kind === 'promo' || 'festival'` && `!disabled` พร้อม tooltip อธิบาย
+5. **ภาพขนาด** — ระบบ `compressToWebLimits` (300px max, 100KB max) ทำงานแล้วตอน generate + upload; ภาพเก่าอาจต้อง re-compress แยก (ไม่รวมใน PR นี้)
+
+**Gates ผ่าน**: lint ✅ tsc ✅ build ✅
+**Deploy**: pushed → auto-deploy → live check `LIVE_CHECK_ALL_MARKERS_OK` (asset `index-sG26qJQJ.js`)
+
 ## 🔒 SESSION CLOSE 2026-11-09 (รอบ 7 · Migration 201 + EF deploy เสร็จ → เริ่ม Live Retest D2→D4→D5→§T-A→R91→R90) — เซสชั่นใหม่รับรายการต่อ
 
 > **กติกาเซสชั่นใหม่:**
