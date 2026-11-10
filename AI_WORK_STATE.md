@@ -1,9 +1,11 @@
-## 🔒 SESSION CLOSE 2026-11-10 (รอบ 8 · Floating Ad + Promotion Banner Settings เสร็จ · รอ Live Retest ตาม 11-09) — เซสชั่นใหม่รับรายการต่อ
+## 🔒 SESSION CLOSE 2026-11-10 (รอบ 8 · Floating Ad + Promotion Banner Settings เสร็จ · รอ Live Retest ตาม 11-09) — **DEPLOYED ครบ 5 Commits · WAITING LIVE RETEST FROM OWNER**
 
-> **กติกาเซสชั่นใหม่:**
-> 1. **✅ สำเร็จแล้วรอบนี้**: Floating Ad / Promotion Banner Settings **CODE_CLOSED + PUSHED + DEPLOYED** — `floating_ad_enabled` Kill Switch (AdminSettings) + max cards 2→3 + real links (href=/menu?coupon=CODE) + image upload/browse (Supabase album + external URL) + CNT-01 approve/reject wired + onBannerChange reloads
-> 2. **Live Retest Sequence** (ตาม `BMB_REMAIN_TESTS_LIVE_2026-11-09.md` ยังค้าง): ① **D2** SAME_DAY prompt ② **D4** intent:// native click ③ **D5** round hardcode gone ④ **§T-A** cart retry 2.5s ⑤ **R91** hard reload card scale ⑥ **R92-G** guide ใหม่ ⑦ **R92-S** compress 300×300/100KB · **ใช้ `https://biteme-baby.com` · hard reload 1 ครั้ง · FAIL = จด defect + two-try · RT-8 ยังห้ามปิด**
-> 3. เอกสารอ้างอิง: `docs/BMB_REMAIN_TESTS_LIVE_2026-11-09.md` (live test checklist รอบก่อน) · **สร้างใหม่ `docs/BMB_REMAIN_TESTS_LIVE_2026-11-10.md` (รายการเหลือล่าสุด)** · `.kilo/plans/pending-tasks-next-session.md` (แผนจาก owner approve)
+> **สถานะ ณ 2026-11-10 15:30:** ทุกการแก้ไข **CODE_CLOSED + PUSHED + DEPLOYED** ครบแล้ว · Gates 4/4 ผ่าน (lint ✅ tsc ✅ build ✅ vitest ✅) · Live Check `LIVE_CHECK_ALL_MARKERS_OK` (asset `index-Bh_24aFF.js`) · **Owner ต้อง Hard Reload `https://biteme-baby.com` แล้วรัน Live Retest ต่อ**
+
+> **กติกาเซสชั่นใหม่ (ถ้ามี):**
+> 1. **✅ สำเร็จแล้วรอบนี้**: Floating Ad Multiple + Sources Filter + Badge + AiStudioTab Merge + Viewport Fix — **CODE_CLOSED + PUSHED + DEPLOYED** ครบ
+> 2. **Live Retest Sequence** (ตาม `docs/BMB_REMAIN_TESTS_LIVE_2026-11-10.md` อัปเดตแล้ว): ① **D2** SAME_DAY prompt ② **D5** round hardcode gone ③ **§T-A** cart retry 2.5s ④ **D4** intent:// native click ⑤ **R91** hard reload card scale ⑥ **R92-G** guide ใหม่ ⑦ **R92-S** compress 300×300/100KB · **ใช้ `https://biteme-baby.com` · hard reload 1 ครั้ง · FAIL = จด defect + two-try · RT-8 ยังห้ามปิด**
+> 3. เอกสารอ้างอิง: `docs/BMB_REMAIN_TESTS_LIVE_2026-11-10.md` (อัปเดตแล้ว — รายการที่เหลือ + ที่ปิดแล้ว) · `AI_WORK_STATE.md` (ไฟล์นี้)
 
 ## 🔧 FIX 2026-11-10 (Session ใหม่): Viewport Heuristic False Positive + Floating Ad FBA Gate
 **ปัญหา**: Owner รายงาน Banner "กำลังเปิดใน Facebook" โชว์บน Chrome desktop ปกติ (รูปภาพเป็นหลักฐาน)
