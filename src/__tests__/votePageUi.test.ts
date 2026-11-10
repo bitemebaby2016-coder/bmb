@@ -45,8 +45,12 @@ async function mount(products: Product[]) {
     root!.render(React.createElement(VotePage))
     await Promise.resolve()
   })
-  await act(async () => { await new Promise((r) => setTimeout(r, 0)) })
+  await act(async () => { vi.advanceTimersByTimeAsync(0) })
 }
+
+beforeEach(() => {
+  vi.useFakeTimers()
+})
 
 afterEach(async () => {
   if (root) { await act(async () => { root!.unmount() }) }
@@ -54,6 +58,8 @@ afterEach(async () => {
   root = null
   container = null
   vi.clearAllMocks()
+  vi.useRealTimers()
+  vi.clearAllTimers()
 })
 
 describe('L-5 source — ภาษาไทยถูกต้อง (พิมพ์ผิดเดิมต้องหายไป)', () => {

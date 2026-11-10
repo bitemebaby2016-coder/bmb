@@ -135,9 +135,7 @@ function LocationProbe() {
 
 async function flush() {
   await act(async () => {
-    await new Promise((r) => setTimeout(r, 0))
-    await new Promise((r) => setTimeout(r, 0))
-    await new Promise((r) => setTimeout(r, 0))
+    vi.advanceTimersByTimeAsync(0)
   })
 }
 
@@ -175,6 +173,7 @@ async function mount(initialEntry: string, lines: Array<{ product: Product; line
 }
 
 beforeEach(() => {
+  vi.useFakeTimers()
   vi.clearAllMocks()
   lastPath = '/'
   m.listRoundsForDate.mockResolvedValue([round])
@@ -188,6 +187,8 @@ afterEach(async () => {
   })
   container.remove()
   useAuthStore.setState({ customer: null, isAuthenticated: false })
+  vi.useRealTimers()
+  vi.clearAllTimers()
 })
 
 describe('R5c — order mode derives from the cart (no mode switch)', () => {

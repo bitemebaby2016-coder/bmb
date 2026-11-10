@@ -120,10 +120,7 @@ let root: Root
 
 async function flush() {
   await act(async () => {
-    await new Promise((r) => setTimeout(r, 0))
-    await new Promise((r) => setTimeout(r, 0))
-    await new Promise((r) => setTimeout(r, 0))
-    await new Promise((r) => setTimeout(r, 0))
+    vi.advanceTimersByTimeAsync(0)
   })
 }
 
@@ -175,6 +172,7 @@ async function clickSubmit(paymentValue?: string) {
 }
 
 beforeEach(() => {
+  vi.useFakeTimers()
   vi.clearAllMocks()
   m.listRoundsForDate.mockResolvedValue([round])
   m.getPublishedScheduleForDate.mockResolvedValue([])
@@ -189,6 +187,8 @@ afterEach(async () => {
   })
   container.remove()
   useAuthStore.setState({ customer: null, isAuthenticated: false })
+  vi.useRealTimers()
+  vi.clearAllTimers()
 })
 
 describe('R5c — mixed cart (menu + general) = ONE order, never split', () => {

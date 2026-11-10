@@ -80,8 +80,7 @@ let root: Root
 
 async function flush() {
   await act(async () => {
-    await new Promise((r) => setTimeout(r, 0))
-    await new Promise((r) => setTimeout(r, 0))
+    vi.advanceTimersByTimeAsync(0)
   })
 }
 
@@ -102,6 +101,7 @@ async function mount(entry: string) {
 }
 
 beforeEach(() => {
+  vi.useFakeTimers()
   vi.clearAllMocks()
   m.getOrdersPaged.mockImplementation(async (opts: { orderMode?: 'SAME_DAY' | 'PRE_ORDER' }) => ({
     orders: opts.orderMode === 'PRE_ORDER' ? [PO_ORDER] : [],
@@ -117,6 +117,8 @@ afterEach(async () => {
     root.unmount()
   })
   container.remove()
+  vi.useRealTimers()
+  vi.clearAllTimers()
 })
 
 function firstCallMode(): 'SAME_DAY' | 'PRE_ORDER' | undefined {

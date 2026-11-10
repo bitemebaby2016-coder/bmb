@@ -146,10 +146,7 @@ let root: Root
 
 async function flush() {
   await act(async () => {
-    await new Promise((r) => setTimeout(r, 0))
-    await new Promise((r) => setTimeout(r, 0))
-    await new Promise((r) => setTimeout(r, 0))
-    await new Promise((r) => setTimeout(r, 0))
+    vi.advanceTimersByTimeAsync(0)
   })
 }
 
@@ -197,6 +194,7 @@ const placeOrder = () => $('[data-testid="place-order"]') as HTMLButtonElement |
 const pickupButton = () => $('[data-testid="fulfillment-pickup"]')
 
 beforeEach(() => {
+  vi.useFakeTimers()
   vi.clearAllMocks()
   m.listRoundsForDate.mockResolvedValue([round])
   m.getPublishedScheduleForDate.mockResolvedValue([])
@@ -214,6 +212,8 @@ afterEach(async () => {
   })
   container.remove()
   useAuthStore.setState({ customer: null, isAuthenticated: false })
+  vi.useRealTimers()
+  vi.clearAllTimers()
 })
 
 describe('R65 ① delivery นอกเวลาเปิดร้าน = ไม่มีรอบให้เลือก (พฤติกรรมเดิมคงไว้)', () => {

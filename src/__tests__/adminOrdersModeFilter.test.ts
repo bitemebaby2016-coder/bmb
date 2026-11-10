@@ -100,8 +100,7 @@ const SD_ORDER = makeOrder({ id: 'o-sd', order_number: 'BMB-SD-1', order_mode: '
 
 async function flush() {
   await act(async () => {
-    await new Promise((r) => setTimeout(r, 0))
-    await new Promise((r) => setTimeout(r, 0))
+    vi.advanceTimersByTimeAsync(0)
   })
 }
 
@@ -136,6 +135,7 @@ function lastCallArgs() {
 }
 
 beforeEach(() => {
+  vi.useFakeTimers()
   vi.clearAllMocks()
   // ข้อมูล mock: SAME_DAY = BMB-SD-1 · PRE_ORDER = BMB-PO-1 · ไม่กรอง = ทั้งคู่
   // PRE_ORDER ตั้ง total > PAGE_SIZE เพื่อให้ปุ่ม "ถัดไป" ใช้งานได้ (test pagination)
@@ -155,6 +155,8 @@ afterEach(async () => {
     root.unmount()
   })
   container.remove()
+  vi.useRealTimers()
+  vi.clearAllTimers()
 })
 
 describe('AdminOrders — mode filter wiring (Phase 3 / RC-1 / INV-11)', () => {

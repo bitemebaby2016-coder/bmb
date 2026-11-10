@@ -42,8 +42,7 @@ let root: Root
 
 async function flush() {
   await act(async () => {
-    await new Promise((r) => setTimeout(r, 0))
-    await new Promise((r) => setTimeout(r, 0))
+    vi.advanceTimersByTimeAsync(0)
   })
 }
 
@@ -61,11 +60,16 @@ async function renderPanel(orders: OrderForm[], intentsByOrder: Record<string, P
   return { onConfirmPayment }
 }
 
-beforeEach(() => { vi.clearAllMocks() })
+beforeEach(() => {
+  vi.useFakeTimers()
+  vi.clearAllMocks()
+})
 
 afterEach(async () => {
   await act(async () => { root.unmount() })
   container.remove()
+  vi.useRealTimers()
+  vi.clearAllTimers()
 })
 
 describe('R1.2 · SlipReviewPanel — บอกเหตุผลชัดเมื่อยืนยันไม่ได้ (D-04)', () => {

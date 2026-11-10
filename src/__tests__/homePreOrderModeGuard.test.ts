@@ -134,9 +134,7 @@ let capturedCb: BuilderCb | null = null
 
 async function flush() {
   await act(async () => {
-    await new Promise((r) => setTimeout(r, 0))
-    await new Promise((r) => setTimeout(r, 0))
-    await new Promise((r) => setTimeout(r, 0))
+    vi.advanceTimersByTimeAsync(0)
   })
 }
 
@@ -172,6 +170,7 @@ function resetCart() {
 }
 
 beforeEach(() => {
+  vi.useFakeTimers()
   vi.clearAllMocks()
   resetCart()
   capturedCb = null
@@ -194,6 +193,8 @@ afterEach(async () => {
   })
   container.remove()
   resetCart()
+  vi.useRealTimers()
+  vi.clearAllTimers()
 })
 
 describe('HomePage.handlePreOrder — R5c: ตะกร้าเดียว ไม่สลับโหมด ไม่ล้างตะกร้า', () => {

@@ -38,8 +38,7 @@ let root: Root
 
 async function flush() {
   await act(async () => {
-    await new Promise((r) => setTimeout(r, 0))
-    await new Promise((r) => setTimeout(r, 0))
+    vi.advanceTimersByTimeAsync(0)
   })
 }
 
@@ -65,6 +64,7 @@ async function renderThumb(props: {
 }
 
 beforeEach(() => {
+  vi.useFakeTimers()
   vi.clearAllMocks()
   m.getPaymentSlipSignedUrl.mockResolvedValue(null)
 })
@@ -72,6 +72,8 @@ beforeEach(() => {
 afterEach(async () => {
   await act(async () => { root.unmount() })
   container.remove()
+  vi.useRealTimers()
+  vi.clearAllTimers()
 })
 
 describe('A7(ก.) — SlipThumb ไม่มี "—" เงียบ: ทุกกรณีมีสถานะชัดเจน', () => {
