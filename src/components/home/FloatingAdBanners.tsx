@@ -22,6 +22,8 @@ export interface FloatingBannerPromo {
   image?: string
   /** R50: ลิงก์จริงต่อรายการ (ค่าเริ่มต้น = /promotions) */
   to?: string
+  /** Real link for coupon-aware navigation (e.g., /menu?coupon=CODE) */
+  href?: string
   /** R61 (2026-11-03): มาสคอตที่แอดมินเลือกเองใน /admin/promotions — ว่าง = สลับตามลำดับโพส (เดิม) */
   mascot?: string
 }
@@ -73,14 +75,14 @@ function isDismissed(id: string): boolean {
 }
 
 // D03: deterministic selection — filter dismissed promos, KEEP INPUT ORDER
-// (R50: รายการ = ประกาศล่าสุด (ใหม่ก่อน) ตามด้วยโปรโมชั่น — ต้องนับเป็น "ล่าสุดไม่เกิน 2")
+// (R50: รายการ = ประกาศล่าสุด (ใหม่ก่อน) ตามด้วยโปรโมชั่น — ต้องนับเป็น "ล่าสุดไม่เกิน 3")
 export function pickVisibleBannerPromos(
   promos: FloatingBannerPromo[],
   dismissed: ReadonlySet<string>,
 ): FloatingBannerPromo[] {
   return [...(promos || [])]
     .filter((p) => p.id && !dismissed.has(p.id) && !isDismissed(p.id))
-    .slice(0, 2)
+    .slice(0, 3)
 }
 
 // AI-CLEANUP: mock banner asset removed — banners without a creative render a
@@ -108,18 +110,29 @@ export function FloatingAdBanners({ promos, notice }: { promos: FloatingBannerPr
   // R55 (Owner 2026-11-02): ภาพโปรโมตที่แอดมินเจน/เลือกไว้ใน AI Studio (business_settings.floating_ad_image)
   //   = แทนมาสคอตในโฆษณาลอย · แอดมินบราวซ์เลือกจากอัลบั้ม (ปุ่ม "ตั้งเป็นโฆษณาลอย") · ว่าง = เดิมตามรูปโปรโมชั่น/มาสคอต
   const [floatImg, setFloatImg] = useState('')
+  const [floatAdEnabled, setFloatAdEnabled] = useState(true)
   useEffect(() => {
     let alive = true
     void (async () => {
       try {
         const { supabase } = await import('@/lib/supabase')
-        const { data, error } = await supabase.from('business_settings').select('value').eq('key', 'floating_ad_image').maybeSingle()
-        const v = (data as { value?: unknown } | null)?.value
-        if (alive && !error && typeof v === 'string' && v) setFloatImg(v)
+        const [{ data: imgData, error: imgError }, { data: enabledData }] = await Promise.all([
+          supabase.from('business_settings').select('value').eq('key', 'floating_ad_image').maybeSingle(),
+          supabase.from('business_settings').select('value').eq('key', 'floating_ad_enabled').maybeSingle(),
+        ])
+        if (alive) {
+          const imgV = (imgData as { value?: unknown } | null)?.value
+          if (!imgError && typeof imgV === 'string' && imgV) setFloatImg(imgV)
+          const enabledV = (enabledData as { value?: unknown } | null)?.value
+          if (typeof enabledV === 'boolean') setFloatAdEnabled(enabledV)
+        }
       } catch { /* zero-fake — ไม่มีค่า = ใช้_behavior เดิม */ }
     })()
     return () => { alive = false }
   }, [])
+
+  // Early return if floating ad is disabled
+  if (!floatAdEnabled) return null
   // R50: "ประกาศล่าสุด" ย้ายจากหน้าจอส่วนล่างขึ้นมาอยู่รวมกับโปรโมชั่นที่นี่
   // (rpc เดิมกับ MarketingFeedSection · newest-first · ล้มเหลว/ว่าง = เงียบ zero-fake)
   const [announcements, setAnnouncements] = useState<FloatingBannerPromo[]>([])
@@ -163,11 +176,12 @@ export function FloatingAdBanners({ promos, notice }: { promos: FloatingBannerPr
         const { data, error } = await supabase.rpc('marketing_feed_posts', { p_limit: 3 })
         if (alive && !error && Array.isArray(data)) {
           setAnnouncements(
-            (data as Array<{ id: string; title: string; body: string | null; image_urls?: unknown }>).slice(0, 2).map((p) => ({
+            (data as Array<{ id: string; title: string; body: string | null; image_urls?: unknown }>).slice(0, 3).map((p) => ({
               id: 'ann-' + p.id,
               title: '📣 ' + (p.title || 'ประกาศจากร้าน'),
               description: (p.body || '').slice(0, 140) || undefined,
               to: '/promotions',
+              href: '/promotions',
               // R58: ภาพเจนการตลาด/โปรโมชั่นของโพสนี้เอง (ไม่ใช่รูปเมนู) = โชว์แทนตัวมาสคอต
               image: pickMarketingAiImage(p.image_urls),
             })),
@@ -264,7 +278,7 @@ export function FloatingAdBanners({ promos, notice }: { promos: FloatingBannerPr
               {promo.coupon && (
                 <span className="flad-coupon" data-testid="floating-ad-coupon">รหัสส่วนลด: {promo.coupon}</span>
               )}
-              <Link to={promo.to || '/promotions'} className="flad-cta">ดูดีลเลย →</Link>
+              <Link to={promo.href || promo.to || '/promotions'} className="flad-cta">ดูดีลเลย →</Link>
             </div>
             {/* อักษรเตือนใต้แคมเปญ */}
             {(notice ?? DEFAULT_AD_NOTICE).trim() && (

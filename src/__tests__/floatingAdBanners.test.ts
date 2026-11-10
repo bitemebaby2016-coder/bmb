@@ -1,6 +1,7 @@
 // ============================================
 // Bite Me Baby — Floating Ad Banners selection tests (Owner D03)
 // Deterministic ordering + per-promo SESSION dismissal.
+// Max visible cards = 3 (2026-11-10: เพิ่มจาก 2 เป็น 3 ตาม requirement โฆษณาลอย/แบนเนอร์)
 // ============================================
 
 import { describe, it, expect, beforeEach } from 'vitest'
@@ -16,9 +17,9 @@ describe('pickVisibleBannerPromos — D03', () => {
   it('R50: keeps INPUT order (ใหม่สุดก่อน) ไม่ re-sort ตาม id + ตัด dismissed', () => {
     const input = [p('c'), p('a'), p('b')]
     const out = pickVisibleBannerPromos(input, new Set())
-    expect(out.map((x) => x.id)).toEqual(['c', 'a'])
+    expect(out.map((x) => x.id)).toEqual(['c', 'a', 'b'])
     // reversed input → คงลำดับ input (ประกาศล่าสุดของ rpc ต้องมาก่อนเสมอ)
-    expect(pickVisibleBannerPromos([p('b'), p('c'), p('a')], new Set()).map((x) => x.id)).toEqual(['b', 'c'])
+    expect(pickVisibleBannerPromos([p('b'), p('c'), p('a')], new Set()).map((x) => x.id)).toEqual(['b', 'c', 'a'])
   })
 
   it('skips promos dismissed in the current session (state and sessionStorage)', () => {
@@ -36,23 +37,23 @@ describe('pickVisibleBannerPromos — D03', () => {
     expect(pickVisibleBannerPromos(reshuffled, new Set()).map((x) => x.id)).toEqual(['z', 'y'])
   })
 
-  it('keeps the existing max-2 slice and filters rows without an id', () => {
+  it('keeps the existing max-3 slice and filters rows without an id', () => {
     const out = pickVisibleBannerPromos([p('a'), p('b'), p('c'), { id: '', title: 'no id' }], new Set())
-    expect(out).toHaveLength(2)
-    expect(out.map((x) => x.id)).toEqual(['a', 'b'])
+    expect(out).toHaveLength(3)
+    expect(out.map((x) => x.id)).toEqual(['a', 'b', 'c'])
     expect(pickVisibleBannerPromos([], new Set())).toEqual([])
   })
 })
 
 // R64 (Owner: "รูปไม่เข้ามาที่โฟลตติ้ง"): ประกาศ 2 ใบห้ามเต็มโควตาจนโปรโมชั่นไม่เห็น
 describe('R64 · mergeBannerFeed — สลับชนิด ประกาศ ↔ โปรโมชั่น (promo ได้เห็นเสมอ)', () => {
-  it('a0,p0,a1,p1 — slice(2) หลัง merge = ประกาศใหม่สุด + โปรโมชั่นใหม่สุด คู่กัน', () => {
+  it('a0,p0,a1,p1 — slice(3) หลัง merge = ประกาศใหม่สุด + โปรโมชั่นใหม่สุด คู่กัน', () => {
     const ann = [p('ann1'), p('ann2')]
     const promo = [p('hal'), p('welcome')]
     const merged = mergeBannerFeed(ann, promo)
     expect(merged.map((x) => x.id)).toEqual(['ann1', 'hal', 'ann2', 'welcome'])
     // เดิม (announcements รวมก้อน) = ['ann1','ann2'] → promo หายทั้งคู่ — ตอนนี้ promo เข้าคิว
-    expect(pickVisibleBannerPromos(merged, new Set()).map((x) => x.id)).toEqual(['ann1', 'hal'])
+    expect(pickVisibleBannerPromos(merged, new Set()).map((x) => x.id)).toEqual(['ann1', 'hal', 'ann2'])
   })
   it('ฝั่งเดียวหมด = คงลำดับเดิม · ฝั่งว่าง = ใช้ของอีกฝั่งล้วน', () => {
     expect(mergeBannerFeed([p('a1'), p('a2')], []).map((x) => x.id)).toEqual(['a1', 'a2'])

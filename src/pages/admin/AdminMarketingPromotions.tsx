@@ -105,8 +105,9 @@ export function AdminMarketingPromotions() {
     }
   }
 
-  function handleBannerChange(bannerImage: string, bannerMascot: string) {
-    console.log('[BannerChange]', { bannerImage, bannerMascot })
+  function handleBannerChange(_bannerImage: string, _bannerMascot: string) {
+    // Reload promotions to keep UI in sync (floating ad image / banner image / mascot changes)
+    void load()
   }
 
   if (loading) return <p className="text-brand-muted text-sm p-4">กำลังโหลดข้อมูลจริง…</p>

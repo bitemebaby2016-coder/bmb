@@ -24,6 +24,7 @@ const TYPED_FORM_KEYS = new Set<string>([
   'cod_enabled',
   'crm_automation',       // R84: CRM Automation kill switch
   'promotion_policy',     // R84: Promotion Policy kill switch
+  'floating_ad_enabled',  // Floating Ad kill switch
 ])
 
 const SOCIAL_LINKS_SETTING_KEY = 'social_links'
@@ -262,6 +263,24 @@ export function AdminSettings() {
             onChange={(v) => void handleToggleNested('promotion_policy', 'promotions_enabled', v)}
             label={settings.promotion_policy?.promotions_enabled !== false ? 'เปิด' : 'ปิด'}
             testId="promotions-toggle"
+          />
+        </div>
+      </div>
+
+      {/* Floating Ad Kill Switch */}
+      <div className="card" data-testid="floating-ad-switch" data-focus-key="floating_ad_enabled">
+        <div className="flex items-center justify-between gap-3">
+          <div className="text-sm">
+            <div className="font-semibold">โฆษณาลอย (Floating Ad)</div>
+            <div className="text-xs text-brand-muted">
+              ปิด = ซ่อนโฆษณาลอยทั้งหมดจากหน้าแรก · เปิด = แสดงตามที่ตั้งค่าไว้
+            </div>
+          </div>
+          <ToggleSwitch
+            checked={settings.floating_ad_enabled !== false}
+            onChange={(v) => void handleToggle('floating_ad_enabled', v)}
+            label={settings.floating_ad_enabled !== false ? 'เปิด' : 'ปิด'}
+            testId="floating-ad-toggle"
           />
         </div>
       </div>

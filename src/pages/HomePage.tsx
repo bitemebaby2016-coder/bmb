@@ -93,6 +93,7 @@ export function HomePage() {
   const [shopHours, setShopHours] = useState<{ open: string; close: string } | null>(null)
   const [operatingHours, setOperatingHours] = useState<Record<string, boolean> | null>(null)
   const [masterOpen, setMasterOpen] = useState<boolean | null>(null)
+  const [floatingAdEnabled, setFloatingAdEnabled] = useState<boolean>(true)
   // R21 Phase 3: โหลดล้มเหลว ≠ ร้านไม่มีเมนู + key สำหรับกด "ลองใหม่"
   const [loadError, setLoadError] = useState('')
   const [reloadKey, setReloadKey] = useState(0)
@@ -136,6 +137,7 @@ export function HomePage() {
             }
             setOperatingHours((settings?.operating_hours ?? null) as Record<string, boolean> | null)
             setMasterOpen(parseStoreMasterOpen(settings?.store_master_open))
+            setFloatingAdEnabled(settings?.floating_ad_enabled !== false)
           } catch { /* ใช้ค่า default ต่อไป */ }
         })()
         // ปฏิทินมุมการ์ด: วันจัดส่งจริงจาก menu_schedule (fire-and-forget — ไม่ขวางหน้า)
@@ -205,6 +207,8 @@ export function HomePage() {
       description: String(r.description || ''),
       coupon: r.code,
       image: r.banner_image,
+      // Real link: point to /menu with coupon code so discount applies
+      href: r.code ? `/menu?coupon=${encodeURIComponent(r.code)}` : '/menu',
       // R61: มาสคอตที่แอดมินประกอบเองใน /admin/promotions (ว่าง = FloatingAdBanners สลับตามลำดับโพส)
       mascot: r.banner_mascot || undefined,
     }))
@@ -464,8 +468,10 @@ export function HomePage() {
           </div>
       </section>
 
-      {/* 2c. Floating ad banners — max 2 overlay cards, dismissible per promo (sessionStorage, D03) */}
-      <FloatingAdBanners promos={bannerPromos} notice={siteCopy.adNotice} />
+      {/* 2c. Floating ad banners — max 3 overlay cards, dismissible per promo (sessionStorage, D03) */}
+      {masterOpen !== false && floatingAdEnabled && (
+        <FloatingAdBanners promos={bannerPromos} notice={siteCopy.adNotice} />
+      )}
 
       {/* 2d. เดิม = แบนเนอร์ CTA พรีออเดอร์ลอยเหนือหน้า — Owner (2026-10-25): ย้ายไปแสดง
           "เฉพาะตอนเปิดแท็บ 📅 พรีออเดอร์" ในหมวดพรีออเดอร์ (ด้านล่าง) — แท็บ/หน้าอื่นไม่แสดง */}
