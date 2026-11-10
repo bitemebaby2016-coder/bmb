@@ -111,20 +111,28 @@ export function FloatingAdBanners({ promos, notice }: { promos: FloatingBannerPr
   //   = แทนมาสคอตในโฆษณาลอย · แอดมินบราวซ์เลือกจากอัลบั้ม (ปุ่ม "ตั้งเป็นโฆษณาลอย") · ว่าง = เดิมตามรูปโปรโมชั่น/มาสคอต
   const [floatImg, setFloatImg] = useState('')
   const [floatAdEnabled, setFloatAdEnabled] = useState(true)
+  const [approvedFloatAdImages, setApprovedFloatAdImages] = useState<Set<string>>(new Set())
   useEffect(() => {
     let alive = true
     void (async () => {
       try {
         const { supabase } = await import('@/lib/supabase')
-        const [{ data: imgData, error: imgError }, { data: enabledData }] = await Promise.all([
+        const [{ data: imgData, error: imgError }, { data: enabledData }, { data: approvedData }] = await Promise.all([
           supabase.from('business_settings').select('value').eq('key', 'floating_ad_image').maybeSingle(),
           supabase.from('business_settings').select('value').eq('key', 'floating_ad_enabled').maybeSingle(),
+          supabase.from('content_approvals').select('image_url').eq('status', 'approved').eq('content_type', 'banner').not('image_url', 'is', null),
         ])
         if (alive) {
           const imgV = (imgData as { value?: unknown } | null)?.value
           if (!imgError && typeof imgV === 'string' && imgV) setFloatImg(imgV)
           const enabledV = (enabledData as { value?: unknown } | null)?.value
           if (typeof enabledV === 'boolean') setFloatAdEnabled(enabledV)
+          // Track approved floating ad images
+          const approved = new Set<string>()
+          for (const row of approvedData || []) {
+            if (row.image_url) approved.add(row.image_url)
+          }
+          setApprovedFloatAdImages(approved)
         }
       } catch { /* zero-fake — ไม่มีค่า = ใช้_behavior เดิม */ }
     })()
@@ -229,9 +237,11 @@ export function FloatingAdBanners({ promos, notice }: { promos: FloatingBannerPr
       <div className="flad-stack">
         {visible.map((promo) => {
           // R58 (Owner): ภาพการตลาด/โปรโมชั่นที่เจน (ไม่ใช่รูปเมนู) โชว์แทนตัวมาสคอต —
-          // ลำดับ: ภาพเฉพาะโพส → โฆษณาลอยที่ตั้งไว้ → อัลบั้ม ai-generated/{promo,festival} (สลับตามลำดับ)
+          // ลำดับ: ภาพเฉพาะโพส → โฆษณาลอยที่ตั้งไว้ (ถ้าผ่านอนุมัติ) → อัลบั้ม ai-generated/{promo,festival} (สลับตามลำดับ)
           const pos = positionOf.get(promo.id) ?? 0
-          const mediaSrc = promo.image || floatImg || (albumImgs.length > 0 ? albumImgs[pos % albumImgs.length] : '')
+          // Only use floatImg if it's approved (CNT-01)
+          const approvedFloatImg = floatImg && approvedFloatAdImages.has(floatImg) ? floatImg : ''
+          const mediaSrc = promo.image || approvedFloatImg || (albumImgs.length > 0 ? albumImgs[pos % albumImgs.length] : '')
           // "ยุบตัวมาสคอตเป็นตัวเล็กไปอยู่ด้านมุมต่าง ๆ ของรูป" + สลับไม่ซ้ำตามลำดับโพส
           const mascotSrc = mascotForPosition(pos)
           // R61: แอดมินประกอบมาสคอตของโปรโมชั่นนั้นเอง (เครื่อง/คลังภาพ/มาตรฐาน) → ใช้ของโปรโมชั่นก่อน

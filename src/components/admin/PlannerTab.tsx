@@ -5,37 +5,12 @@ import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { showToast } from '@/components/ui/ToastContainer'
 import { bestSellerProducts } from '@/lib/adminMarketing'
-import { PostForm, PostFormImperativeHandle } from './PostForm'
 
 interface PlannerTabProps {
   onTabChange: (tab: string) => void
-  postFormRef: React.RefObject<PostFormImperativeHandle>
-  postTitle: string
-  postBodyText: string
-  postContentType: 'post' | 'promotion' | 'banner' | 'announcement'
-  postImages: string[]
-  setPostTitle: (v: string) => void
-  setPostBodyText: (v: string) => void
-  setPostContentType: (v: 'post' | 'promotion' | 'banner' | 'announcement') => void
-  setPostImages: (v: string[]) => void
-  postSaving: boolean
-  onCreatePost: () => void
 }
 
-export function PlannerTab({
-  onTabChange,
-  postFormRef,
-  postTitle,
-  postBodyText,
-  postContentType,
-  postImages,
-  setPostTitle,
-  setPostBodyText,
-  setPostContentType,
-  setPostImages,
-  postSaving,
-  onCreatePost,
-}: PlannerTabProps) {
+export function PlannerTab({ onTabChange }: PlannerTabProps) {
   const [sellers, setSellers] = useState<Array<{ product_id: string; product_name: string; units: number }>>([])
   const [catalog, setCatalog] = useState<Array<{ id: string; name: string; price: number | null; is_preorder?: boolean; available_preorder?: boolean; available_same_day?: boolean; image_url?: string | null }>>([])
   const [loading, setLoading] = useState(true)
@@ -53,30 +28,22 @@ export function PlannerTab({
 
   useEffect(() => { void load() }, [])
 
+  if (loading) return <p className="text-brand-muted text-sm">กำลังโหลดข้อมูลจริง…</p>
+
   return (
-    <div className="space-y-3">
+    <div className="space-y-4">
+      <h2 className="font-bold text-brand-accent mb-2">🗓️ Planner — สินค้าขายดี / แคตตาลอก</h2>
+      <p className="text-xs text-brand-muted mb-4">จิ้มสินค้าจากแคตตาลอกเพื่อนำไปใช้เป็น "ต้นแบบไดคัท" ตอนเจนภาพเมนู (AI Studio) ได้</p>
+
       <div className="card">
-        <h2 className="font-bold text-brand-accent mb-2">🏆 สินค้าขายดีจริง (จาก order_items)</h2>
-        {sellers.length === 0 ? (
-          <p className="text-sm text-brand-muted">ยังไม่มีข้อมูลการขาย — รายการจะโผล่เมื่อมีออเดอร์จริง</p>
-        ) : (
+        <h3 className="font-bold text-brand-accent mb-3">🏆 สินค้าขายดีจริง (จาก order_items)</h3>
+        {sellers.length === 0 ? <p className="text-sm text-brand-muted">ยังไม่มีข้อมูลการขาย — รายการจะโผล่เมื่อมีออเดอร์จริง</p> : (
           <ul className="space-y-1">
             {sellers.map((s) => (
               <li key={s.product_id} className="flex items-center justify-between text-sm">
                 <span>{s.product_name}</span>
                 <span className="flex items-center gap-2">
                   <span className="badge badge-info">{s.units} ชิ้น</span>
-                  <button
-                    className="btn btn-outline text-xs"
-                    onClick={() => {
-                      postFormRef.current?.setTitle?.('แนะนำ ' + s.product_name)
-                      postFormRef.current?.setBodyText?.('วันนี้ขอแนะนำ ' + s.product_name + ' เมนูขายดีของเรา')
-                      postFormRef.current?.setGenSubject?.(s.product_name)
-                      onTabChange('studio')
-                    }}
-                  >
-                    ใช้ทำโพสต์
-                  </button>
                 </span>
               </li>
             ))}
@@ -84,50 +51,25 @@ export function PlannerTab({
         )}
       </div>
 
-      {/* R32: จิ้มเลือกจากเมนูทั้งหมด (พรีออเดอร์ + เซมเดย์) */}
-      <div className="card" data-testid="mk-product-picker">
-        <h2 className="font-bold text-brand-accent mb-2">🍽️ เลือกจากเมนูทั้งหมด (พรีออเดอร์ + เซมเดย์)</h2>
-        {catalog.length === 0 ? (
-          <p className="text-sm text-brand-muted">ยังไม่มีสินค้าที่เปิดขาย — เพิ่มในหน้าสินค้าก่อน</p>
-        ) : (
-          <div className="flex flex-wrap gap-2">
-            {catalog.map((p) => {
-              const preorder = p.is_preorder && !(p.available_same_day ?? false)
-              return (
-                <button
-                  key={p.id}
-                  className="btn btn-outline text-xs"
-                  data-testid={`mk-pick-${p.id}`}
-                  onClick={() => {
-                    postFormRef.current?.setTitle?.(`แนะนำ ${p.name}`)
-                    postFormRef.current?.setBodyText?.(`วันนี้ขอแนะนำ ${p.name}${p.price != null ? ` ฿${Number(p.price).toFixed(0)}` : ''}`)
-                    postFormRef.current?.setGenSubject?.(p.name)
-                    postFormRef.current?.setImages?.(p.image_url ? [p.image_url] : [])
-                    if (p.image_url) showToast('แนบรูปเมนูจริงเป็นต้นแบบให้แล้ว — เจนภาพเมนู/โปรโมตด้วยรูปนี้ประกอบได้เลย', 'success')
-                    onTabChange('studio')
-                  }}
-                >
-                  {preorder ? '⏳ ' : '⚡ '}{p.name}{p.price != null ? ` ฿${Number(p.price).toFixed(0)}` : ''} <span className="text-brand-muted">{preorder ? '(พรีออเดอร์)' : '(เซมเดย์)'}</span>
-                </button>
-              )
-            })}
+      <div className="card">
+        <h3 className="font-bold text-brand-accent mb-3">📦 แคตตาลอกสินค้าพร้อมขาย</h3>
+        <p className="text-xs text-brand-muted mb-3">คลิกเพื่อนำไปเป็นต้นแบบไดคัท (AI Studio) หรือสร้างโปรโมชั่น/แบนเนอร์</p>
+        {catalog.length === 0 ? <p className="text-sm text-brand-muted">ยังไม่มีสินค้า</p> : (
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+            {catalog.map((p) => (
+              <div key={p.id} className="card p-3 text-center group cursor-pointer border-brand-border hover:border-brand-primary transition" onClick={() => { showToast(`เลือก "${p.name}" แล้ว — ไปที่ AI Studio เพื่อเจนภาพเมนู`, 'info'); }} data-testid={`planner-product-${p.id}`}>
+                {p.image_url ? <img src={p.image_url} alt={p.name} className="w-full h-24 object-cover rounded-lg mb-2" /> : <div className="w-full h-24 flex items-center justify-center text-3xl mb-2">🍽️</div>}
+                <p className="font-medium text-sm truncate">{p.name}</p>
+                <p className="text-xs text-brand-muted">฿{p.price ?? 0}</p>
+                <div className="flex flex-wrap justify-center gap-1 mt-2">
+                  {p.is_preorder && <span className="badge badge-info text-[9px]">พรีออเดอร์</span>}
+                  {p.available_same_day && <span className="badge badge-success text-[9px]">ส่งวันนี้</span>}
+                </div>
+              </div>
+            ))}
           </div>
         )}
       </div>
-
-      <PostForm
-        ref={postFormRef}
-        title={postTitle}
-        setTitle={setPostTitle}
-        bodyText={postBodyText}
-        setBodyText={setPostBodyText}
-        contentType={postContentType}
-        setContentType={setPostContentType}
-        images={postImages}
-        setImages={setPostImages}
-        saving={postSaving}
-        onSubmit={onCreatePost}
-      />
     </div>
   )
 }

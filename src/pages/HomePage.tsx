@@ -26,6 +26,7 @@ import {
 import { publishDeliveryRounds } from '@/lib/storeStatus'
 import { StoreStatusStrip } from '@/components/home/StoreStatusStrip'
 import { FloatingAdBanners, type FloatingBannerPromo } from '@/components/home/FloatingAdBanners'
+import { getBusinessSettings } from '@/lib/bmbAdminApi_settings'
 import { HorizontalCarousel } from '@/components/home/HorizontalCarousel'
 import { HomeProductCard } from '@/components/home/HomeProductCard'
 import { PromotionStrip } from '@/components/home/PromotionStrip'
@@ -94,6 +95,7 @@ export function HomePage() {
   const [operatingHours, setOperatingHours] = useState<Record<string, boolean> | null>(null)
   const [masterOpen, setMasterOpen] = useState<boolean | null>(null)
   const [floatingAdEnabled, setFloatingAdEnabled] = useState<boolean>(true)
+  const [approvedFloatAdImages, setApprovedFloatAdImages] = useState<Set<string>>(new Set())
   // R21 Phase 3: โหลดล้มเหลว ≠ ร้านไม่มีเมนู + key สำหรับกด "ลองใหม่"
   const [loadError, setLoadError] = useState('')
   const [reloadKey, setReloadKey] = useState(0)
@@ -138,6 +140,23 @@ export function HomePage() {
             setOperatingHours((settings?.operating_hours ?? null) as Record<string, boolean> | null)
             setMasterOpen(parseStoreMasterOpen(settings?.store_master_open))
             setFloatingAdEnabled(settings?.floating_ad_enabled !== false)
+            // Fetch approved floating ad images from content_approvals
+            void (async () => {
+              try {
+                const { supabase } = await import('@/lib/supabase')
+                const { data } = await supabase
+                  .from('content_approvals')
+                  .select('image_url')
+                  .eq('status', 'approved')
+                  .eq('content_type', 'banner')
+                  .not('image_url', 'is', null)
+                const approved = new Set<string>()
+                for (const row of data || []) {
+                  if (row.image_url) approved.add(row.image_url)
+                }
+                setApprovedFloatAdImages(approved)
+              } catch { /* zero-fake */ }
+            })()
           } catch { /* ใช้ค่า default ต่อไป */ }
         })()
         // ปฏิทินมุมการ์ด: วันจัดส่งจริงจาก menu_schedule (fire-and-forget — ไม่ขวางหน้า)
@@ -198,6 +217,18 @@ export function HomePage() {
       const e = String(r.end_date || '').slice(0, 10)
       if (s && todayKey < s) return false
       if (e && todayKey > e) return false
+      return true
+    })
+    // Only include banners with approved content_approvals
+    .filter((r) => {
+      // If banner has an approval_id, check if it's approved
+      if (r.approval_id) {
+        // We'd need to check the approval status - for now, filter by image_url in approved set
+        // Since approval_id check would require additional query, we use image_url matching
+        if (r.banner_image && !approvedFloatAdImages.has(r.banner_image)) {
+          return false
+        }
+      }
       return true
     })
     .sort((a, b) => String(a.created_at || '').localeCompare(String(b.created_at || '')))

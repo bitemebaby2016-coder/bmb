@@ -1,11 +1,11 @@
 // ============================================
-// Bite Me Baby — Social Tab (Approval + Calendar + Auto-schedule)
+// Bite Me Baby — Social Tab (Calendar + Auto-schedule only)
+// Approval queue moved to ApprovalHistoryTab
 // ============================================
 import { useCallback, useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { showToast } from '@/components/ui/ToastContainer'
 import { listMarketingPosts, scheduleMarketingPost, type MarketingPostRow } from '@/lib/adminMarketing'
-import { listContentApprovals, reviewContent, type ContentApprovalRow } from '@/lib/contentApproval'
 import { autoScheduleApprovedPosts } from '@/lib/marketingAutoSchedule'
 import { flashTo } from '@/lib/uiFlash'
 
@@ -16,38 +16,15 @@ const STATUS_CLS: Record<string, string> = {
 
 export interface SocialTabProps {
   posts: MarketingPostRow[]
-  approvals: ContentApprovalRow[]
   setPosts: (posts: MarketingPostRow[]) => void
-  setApprovals: (approvals: ContentApprovalRow[]) => void
   load: () => Promise<void>
 }
 
-export function SocialTab({ posts, approvals, setPosts, setApprovals, load }: SocialTabProps) {
+export function SocialTab({ posts, setPosts, load }: SocialTabProps) {
   const [whenByPost, setWhenByPost] = useState<Record<string, string>>({})
   const [autoBusy, setAutoBusy] = useState(false)
 
   const schedulable = (status: string) => status === 'approved' || status === 'scheduled' || status === 'failed'
-
-  async function handleApprove(id: string) {
-    const ok = await reviewContent(id, 'approved')
-    if (ok) {
-      await supabase.from('marketing_posts').update({ status: 'approved' }).eq('approval_id', id)
-      showToast('อนุมัติแล้ว — พร้อมตั้งเวลาเผยแพร่', 'success')
-      await load()
-      flashTo(`mk-aprow-${id}`)
-    } else showToast('อนุมัติไม่สำเร็จ', 'error')
-  }
-
-  async function handleReject(id: string) {
-    const note = window.prompt('เหตุผลที่ปฏิเสธ (บันทึกลง audit):', '') ?? ''
-    const ok = await reviewContent(id, 'rejected', note)
-    if (ok) {
-      await supabase.from('marketing_posts').update({ status: 'draft' }).eq('approval_id', id)
-      showToast('ปฏิเสธแล้ว — โพสต์กลับเป็นฉบับร่าง', 'success')
-      await load()
-      flashTo(`mk-aprow-${id}`)
-    } else showToast('บันทึกการตัดสินใจไม่สำเร็จ', 'error')
-  }
 
   async function handleSchedule(id: string) {
     const post = posts.find((p) => p.id === id)
@@ -83,36 +60,6 @@ export function SocialTab({ posts, approvals, setPosts, setApprovals, load }: So
 
   return (
     <div className="space-y-3">
-      {/* Approval Queue */}
-      <div className="card" data-testid="mk-approval-list">
-        <h3 className="font-bold text-brand-accent mb-3">✅ กล่องอนุมัติ</h3>
-        {approvals.length === 0 ? <p className="text-sm text-brand-muted">ยังไม่มีเนื้อหาในคิว — สร้างโพสต์จาก Planner/Studio</p> : (
-          approvals.map((a) => {
-            const linked = posts.find((p) => p.approval_id === a.id)
-            return (
-              <div key={a.id} className="card" data-testid={`mk-aprow-${a.id}`}>
-                <div className="flex items-center justify-between flex-wrap gap-2">
-                  <div>
-                    <p className="font-bold">{a.title}</p>
-                    <p className="text-sm text-brand-muted">{a.body}</p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className={STATUS_CLS[a.status] || 'badge'}>{a.status}</span>
-                    {a.status === 'pending' && (
-                      <>
-                        <button className="btn btn-primary text-xs" onClick={() => void handleApprove(a.id)} data-testid={`mk-approve-${a.id}`}>✅ อนุมัติ</button>
-                        <button className="btn btn-outline text-xs" onClick={() => void handleReject(a.id)}>✖ ปฏิเสธ</button>
-                      </>
-                    )}
-                    {linked && <span className="badge">{linked.status}</span>}
-                  </div>
-                </div>
-              </div>
-            )
-          })
-        )}
-      </div>
-
       {/* Calendar / Scheduling */}
       <div className="card" data-testid="mk-calendar">
         <h3 className="font-bold text-brand-accent mb-3">📅 ปฏิทิน / ตั้งเวลาเผยแพร่</h3>

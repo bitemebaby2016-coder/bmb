@@ -1,12 +1,11 @@
 // ============================================
 // Bite Me Baby — Admin Marketing & Promotions (Merged)
 // ============================================
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { showToast } from '@/components/ui/ToastContainer'
 import { getPromotionsAdmin, upsertPromotion, deletePromotion, togglePromotion, attachPromotionScope, type PromotionRow } from '@/lib/bmbAdminApi_promotions'
 import { listMarketingPosts, type MarketingPostRow } from '@/lib/adminMarketing'
-import { listContentApprovals, type ContentApprovalRow } from '@/lib/contentApproval'
 import { getBusinessSettings, setBusinessSetting } from '@/lib/bmbAdminApi_settings'
 import { PromotionsTab as PromotionsTabComponent } from '@/components/admin/PromotionsTab'
 import { MarketingOverviewTab } from '@/components/admin/MarketingOverviewTab'
@@ -15,17 +14,20 @@ import { AiStudioTab } from '@/components/admin/AiStudioTab'
 import { SocialTab } from '@/components/admin/SocialTab'
 import { BannersTab as BannersTabComponent } from '@/components/admin/BannersTab'
 import { SettingsTab } from '@/components/admin/SettingsTab'
-import { PostFormImperativeHandle } from '@/components/admin/PostForm'
+import { ApprovalHistoryTab } from '@/components/admin/ApprovalHistoryTab'
+import { ContentTab } from '@/components/admin/ContentTab'
 
-type Tab = 'overview' | 'promotions' | 'banners' | 'planner' | 'studio' | 'social' | 'settings'
+type Tab = 'overview' | 'promotions' | 'banners' | 'planner' | 'studio' | 'social' | 'settings' | 'approvals' | 'content'
 
 const TABS: Array<{ id: Tab; label: string }> = [
   { id: 'overview', label: '📈 ภาพรวม' },
+  { id: 'content', label: '📝 สร้างเนื้อหา' },
   { id: 'promotions', label: '🎁 โปรโมชั่น/ส่วนลด' },
   { id: 'banners', label: '🏠 แบนเนอร์/โปรโมท' },
   { id: 'planner', label: '🗓️ Planner' },
   { id: 'studio', label: '🎨 AI Studio' },
   { id: 'social', label: '📱 โซเชียล/ตารางโพสต์' },
+  { id: 'approvals', label: '🛡️ อนุมัติ/ประวัติ' },
   { id: 'settings', label: '⚙️ กติกา/ตั้งค่า' },
 ]
 
@@ -36,35 +38,17 @@ export function AdminMarketingPromotions() {
   })
   const [promotions, setPromotions] = useState<PromotionRow[]>([])
   const [posts, setPosts] = useState<MarketingPostRow[]>([])
-  const [approvals, setApprovals] = useState<ContentApprovalRow[]>([])
   const [loading, setLoading] = useState(true)
-
-  // Shared form state for posts (Planner/Studio/Social)
-  const [postTitle, setPostTitle] = useState('')
-  const [postBodyText, setPostBodyText] = useState('')
-  const [postContentType, setPostContentType] = useState<'post' | 'promotion' | 'banner' | 'announcement'>('post')
-  const [postImages, setPostImages] = useState<string[]>([])
-  const [postSaving, setPostSaving] = useState(false)
-
-  const postFormRef = useRef<PostFormImperativeHandle>({
-  setTitle: () => {},
-  setBodyText: () => {},
-  setContentType: () => {},
-  setImages: () => {},
-  setGenSubject: () => {},
-})
 
   const load = useCallback(async () => {
     setLoading(true)
     try {
-      const [promos, marketingPosts, contentApprovals] = await Promise.all([
+      const [promos, marketingPosts] = await Promise.all([
         attachPromotionScope(await getPromotionsAdmin()),
         listMarketingPosts(),
-        listContentApprovals(),
       ])
       setPromotions(promos)
       setPosts(marketingPosts)
-      setApprovals(contentApprovals)
     } catch (e) {
       showToast('โหลดข้อมูลไม่สำเร็จ: ' + String((e as Error)?.message || e).slice(0, 120), 'error')
     } finally {
@@ -86,29 +70,6 @@ export function AdminMarketingPromotions() {
       }, 200)
     }
   }, [searchParams])
-
-  async function handleCreatePost() {
-    if (!postTitle.trim()) { showToast('ใส่หัวข้อโพสต์ก่อน', 'error'); return }
-    setPostSaving(true)
-    const genOnes = postImages.filter((u) => u.includes('/ai-generated/'))
-    const postImagesFinal = genOnes.length > 0 ? [genOnes[genOnes.length - 1]] : postImages
-    const { createMarketingPost } = await import('@/lib/adminMarketing')
-    const r = await createMarketingPost({ title: postTitle.trim(), body: postBodyText, content_type: postContentType, image_urls: postImagesFinal })
-    setPostSaving(false)
-    if (r.ok) {
-      showToast('สร้างโพสต์แล้ว — ส่งเข้ากล่องอนุมัติ (คนอนุมัติเท่านั้น)', 'success')
-      setPostTitle(''); setPostBodyText(''); setPostImages([])
-      await load()
-      setTab('social')
-    } else {
-      showToast('สร้างโพสต์ไม่สำเร็จ: ' + (r.error || 'ERR_SUBMIT_FAILED'), 'error')
-    }
-  }
-
-  function handleBannerChange(_bannerImage: string, _bannerMascot: string) {
-    // Reload promotions to keep UI in sync (floating ad image / banner image / mascot changes)
-    void load()
-  }
 
   if (loading) return <p className="text-brand-muted text-sm p-4">กำลังโหลดข้อมูลจริง…</p>
 
@@ -136,61 +97,36 @@ export function AdminMarketingPromotions() {
         <PromotionsTabComponent
           promotions={promotions}
           setPromotions={setPromotions}
-          onBannerChange={handleBannerChange}
         />
       )}
 
       {tab === 'banners' && (
         <BannersTabComponent
           promotions={promotions}
-          onBannerChange={handleBannerChange}
         />
       )}
 
       {tab === 'planner' && (
         <PlannerTab
           onTabChange={(t: string) => setTab(t as Tab)}
-          postFormRef={postFormRef}
-          postTitle={postTitle}
-          postBodyText={postBodyText}
-          postContentType={postContentType}
-          postImages={postImages}
-          setPostTitle={setPostTitle}
-          setPostBodyText={setPostBodyText}
-          setPostContentType={setPostContentType}
-          setPostImages={setPostImages}
-          postSaving={postSaving}
-          onCreatePost={handleCreatePost}
         />
       )}
 
-      {tab === 'studio' && (
-        <AiStudioTab
-          postFormRef={postFormRef}
-          postTitle={postTitle}
-          postBodyText={postBodyText}
-          postContentType={postContentType}
-          postImages={postImages}
-          setPostTitle={setPostTitle}
-          setPostBodyText={setPostBodyText}
-          setPostContentType={setPostContentType}
-          setPostImages={setPostImages}
-          postSaving={postSaving}
-          onCreatePost={handleCreatePost}
-        />
-      )}
+      {tab === 'studio' && <AiStudioTab />}
 
       {tab === 'social' && (
         <SocialTab
           posts={posts}
-          approvals={approvals}
           setPosts={setPosts}
-          setApprovals={setApprovals}
           load={load}
         />
       )}
 
       {tab === 'settings' && <SettingsTab />}
+
+      {tab === 'approvals' && <ApprovalHistoryTab load={load} />}
+
+      {tab === 'content' && <ContentTab load={load} />}
     </div>
   )
 }

@@ -20,6 +20,8 @@ export interface PromotionRow {
   banner_image?: string | null
   /** R61 (2026-11-03): มาสคอตที่แอดมินเลือกเอง (เครื่อง/คลังภาพ AI/มาตรฐาน) — ว่าง = FloatingAdBanners สลับตามลำดับโพส */
   banner_mascot?: string | null
+  /** Link to content_approvals for CNT-01 approval workflow (Migration 202) */
+  approval_id?: string | null
   // ---- G&R stage 1 (migration 153) — คอลัมน์แคมเปญ ----
   /** ซ้อนกับสิทธิ์อื่นได้ (false = เลือกข้อเสนอเดียว) — การ combine กับแต้มถูกบังคับตอน Loyalty stage */
   stackable?: boolean
@@ -145,6 +147,13 @@ export async function upsertPromotion(row: PromotionRow): Promise<PromoWriteResu
 export async function deletePromotion(id: string): Promise<{ ok: boolean; error?: string }> {
   const { error } = await supabase.from('promotions').delete().eq('id', id)
   if (error) { console.error('[deletePromotion] Error:', error); return { ok: false, error: error.message } }
+  return { ok: true }
+}
+
+/** Set approval_id on a promotion (called after submitContentForApproval) */
+export async function setPromotionApprovalId(id: string, approvalId: string): Promise<{ ok: boolean; error?: string }> {
+  const { error } = await supabase.from('promotions').update({ approval_id: approvalId, updated_at: new Date().toISOString() }).eq('id', id)
+  if (error) { console.error('[setPromotionApprovalId] Error:', error); return { ok: false, error: error.message } }
   return { ok: true }
 }
 

@@ -19,6 +19,9 @@ export interface ContentApprovalRow {
   created_at: string
   image_url?: string | null
   mascot?: string | null
+  reviewer_id?: string | null
+  reviewed_at?: string | null
+  review_note?: string | null
 }
 
 /** Pure publish gate — the ONLY check content automation may use. */
@@ -52,13 +55,28 @@ export async function reviewContent(id: string, decision: ContentApprovalStatus,
   return !error
 }
 
-/** Read my submissions + admin sees all (RLS). */
-export async function listContentApprovals(): Promise<ContentApprovalRow[]> {
-  const { data, error } = await supabase
+/** Read my submissions + admin sees all (RLS). Supports status filter and pagination. */
+export async function listContentApprovals(opts?: {
+  status?: ContentApprovalStatus
+  limit?: number
+  offset?: number
+}): Promise<ContentApprovalRow[]> {
+  let query = supabase
     .from('content_approvals')
-    .select('id,content_type,title,body,status,created_by,created_at,image_url,mascot')
+    .select('id,content_type,title,body,status,created_by,created_at,image_url,mascot,reviewer_id,reviewed_at,review_note')
     .order('created_at', { ascending: false })
-    .limit(100)
+
+  if (opts?.status) {
+    query = query.eq('status', opts.status)
+  }
+  if (opts?.limit) {
+    query = query.limit(opts.limit)
+  }
+  if (opts?.offset) {
+    query = query.range(opts.offset, opts.offset + (opts.limit || 50) - 1)
+  }
+
+  const { data, error } = await query
   if (error) return []
   return (data ?? []) as ContentApprovalRow[]
 }

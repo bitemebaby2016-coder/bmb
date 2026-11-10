@@ -1,14 +1,13 @@
 // ============================================
-// Bite Me Baby — Promotions Tab (extracted from AdminPromotions.tsx)
+// Bite Me Baby — Promotions Tab (Promotion CRUD only)
+// Image upload/browse/album moved to ContentTab (สร้างเนื้อหา)
 // ============================================
 import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { showToast } from '@/components/ui/ToastContainer'
-import { getPromotionsAdmin, upsertPromotion, deletePromotion, togglePromotion, attachPromotionScope, type PromotionRow } from '@/lib/bmbAdminApi_promotions'
+import { getPromotionsAdmin, upsertPromotion, deletePromotion, togglePromotion, attachPromotionScope, setPromotionApprovalId, type PromotionRow } from '@/lib/bmbAdminApi_promotions'
 import { submitContentForApproval } from '@/lib/contentApproval'
 import { validatePromotionForm } from '@/lib/promotionClient'
-import { uploadMediaAsset, listAiAlbumFiles, type AiAlbumFile } from '@/lib/bmbAdminApi_media'
-import { MASCOT_ROTATION } from '@/components/home/FloatingAdBanners'
 import { getProducts } from '@/lib/bmbAdminApi_products'
 
 const EMPTY_FORM = {
@@ -36,19 +35,13 @@ export interface PromotionsTabProps {
   promotions: PromotionRow[]
   /** Setter for promotions to update parent state */
   setPromotions: (promos: PromotionRow[]) => void
-  /** Optional callback when banner settings change (for sync with BannersTab) */
-  onBannerChange?: (bannerImage: string, bannerMascot: string) => void
 }
 
-export function PromotionsTab({ promotions, setPromotions, onBannerChange }: PromotionsTabProps) {
+export function PromotionsTab({ promotions, setPromotions }: PromotionsTabProps) {
   const [products, setProducts] = useState<Array<{ id: string; name: string; price: number }>>([])
   const [showAddForm, setShowAddForm] = useState(false)
   const [editing, setEditing] = useState<PromotionRow | null>(null)
   const [form, setForm] = useState({ ...EMPTY_FORM })
-  const [uploading, setUploading] = useState(false)
-  const [albumPanel, setAlbumPanel] = useState<null | 'image' | 'mascot'>(null)
-  const [album, setAlbum] = useState<AiAlbumFile[] | null>(null)
-  const [mascotUploading, setMascotUploading] = useState(false)
   const formRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -132,14 +125,15 @@ export function PromotionsTab({ promotions, setPromotions, onBannerChange }: Pro
     if (row.is_banner) {
       const approvalId = await submitContentForApproval('banner', row.name, row.description || '')
       if (approvalId) {
-        showToast('บันทึกโปรโมชั่นแล้ว + ส่งแบนเนอร์เข้าคิวตรวจเนื้อหา (CNT-01) — แบนเนอร์จะขึ้นหน้าแรกเมื่อเปิดใช้งาน (แนะนำ: รอผลตรวจก่อนเปิดใช้งาน)', 'success')
+        // Persist approval_id to promotion row for traceability
+        await setPromotionApprovalId(row.id, approvalId)
+        showToast('บันทึกโปรโมชั่นแล้ว + ส่งแบนเนอร์เข้าคิวตรวจเนื้อหา (CNT-01) — แบนเนอร์จะขึ้นหน้าแรกเมื่ออนุมัติ', 'success')
       } else {
         showToast('บันทึกโปรโมชั่นแล้ว แต่ส่งเข้าคิวตรวจเนื้อหาไม่สำเร็จ — แบนเนอร์จะแสดงตามปุ่มเปิดใช้งาน (Active) เท่านั้น', 'warning')
       }
     } else {
       showToast('บันทึกโปรโมชั่นแล้ว', 'success')
     }
-    onBannerChange?.(row.banner_image || '', row.banner_mascot || '')
     setShowAddForm(false)
     setPromotions(await attachPromotionScope(await getPromotionsAdmin()))
   }
@@ -165,61 +159,6 @@ export function PromotionsTab({ promotions, setPromotions, onBannerChange }: Pro
     }
   }
 
-  async function handleUploadBanner(file: File) {
-    setUploading(true)
-    try {
-      const asset = await uploadMediaAsset(file, 'image', form.name || 'banner')
-      if (asset?.url) {
-        setForm((f) => ({ ...f, banner_image: asset.url }))
-        onBannerChange?.(asset.url, form.banner_mascot)
-        showToast('อัปโหลดรูปสำเร็จ — รูปจะใช้เป็นแบนเนอร์ตามที่ตั้งค่าไว้', 'success')
-      } else {
-        showToast('อัปโหลดรูปไม่สำเร็จ — ลองอีกครั้ง หรือวางลิงก์รูปในช่องด้านบนแทน', 'error')
-      }
-    } finally {
-      setUploading(false)
-    }
-  }
-
-  async function handleBrowseAlbum(target: 'image' | 'mascot') {
-    if (albumPanel === target) { setAlbumPanel(null); return }
-    if (!album) {
-      const files = await listAiAlbumFiles()
-      setAlbum(files)
-      if (files.length === 0) showToast('ยังไม่มีภาพในคลังภาพ AI — เจนรูปที่ AI Studio ก่อน หรืออัปโหลดจากเครื่อง', 'warning')
-    }
-    setAlbumPanel(target)
-    requestAnimationFrame(() => document.getElementById('promo-album-panel')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' }))
-  }
-
-  function pickFromAlbum(url: string) {
-    if (albumPanel === 'mascot') {
-      setForm((f) => ({ ...f, banner_mascot: url }))
-      onBannerChange?.(form.banner_image, url)
-      showToast('ตั้งมาสคอตจากคลังภาพแล้ว — ดูตัวอย่างประกอบด้านล่าง', 'success')
-    } else {
-      setForm((f) => ({ ...f, banner_image: url }))
-      onBannerChange?.(url, form.banner_mascot)
-      showToast('ใช้ภาพจากคลังภาพเป็นรูปแบนเนอร์แล้ว', 'success')
-    }
-  }
-
-  async function handleUploadMascot(file: File) {
-    setMascotUploading(true)
-    try {
-      const asset = await uploadMediaAsset(file, 'mascot', form.name || 'mascot')
-      if (asset?.url) {
-        setForm((f) => ({ ...f, banner_mascot: asset.url }))
-        onBannerChange?.(form.banner_image, asset.url)
-        showToast('อัปโหลดมาสคอตสำเร็จ — ดูตัวอย่างประกอบด้านล่าง', 'success')
-      } else {
-        showToast('อัปโหลดมาสคอตไม่สำเร็จ — ลองใหม่ หรือเลือกจากคลังภาพได้', 'error')
-      }
-    } finally {
-      setMascotUploading(false)
-    }
-  }
-
   return (
     <div className="max-w-7xl mx-auto px-4 py-6">
       <div className="flex items-center justify-between mb-6">
@@ -229,6 +168,7 @@ export function PromotionsTab({ promotions, setPromotions, onBannerChange }: Pro
 
       <div className="mb-4">
         <button onClick={openCreate} className="btn btn-primary">+ สร้างโปรโมชั่นใหม่</button>
+        <p className="text-xs text-brand-muted mt-1">💡 รูปภาพ/มาสคอตจัดการที่แท็บ "📝 สร้างเนื้อหา" ได้</p>
       </div>
 
       {showAddForm && (
@@ -324,133 +264,13 @@ export function PromotionsTab({ promotions, setPromotions, onBannerChange }: Pro
             )}
             <input
               className="input"
-              placeholder="ลิงก์รูปแบนเนอร์ (ไม่บังคับ)"
+              placeholder="ลิงก์รูปแบนเนอร์ (จัดการรูปที่แท็บ สร้างเนื้อหา)"
               value={form.banner_image}
-              onChange={(e) => {
-                setForm({ ...form, banner_image: e.target.value })
-                onBannerChange?.(e.target.value, form.banner_mascot)
-              }}
+              onChange={(e) => setForm({ ...form, banner_image: e.target.value })}
               data-testid="promo-banner-image-url"
+              readOnly
             />
-            <div className="flex items-center gap-2">
-              <input
-                type="file"
-                accept="image/*"
-                className="input"
-                aria-label="เลือกรูปแบนเนอร์จากเครื่อง"
-                onChange={(e) => {
-                  const f = e.target.files?.[0]
-                  if (f) void handleUploadBanner(f)
-                  e.target.value = ''
-                }}
-              />
-              {uploading && <span className="text-sm text-brand-muted">กำลังอัปโหลดรูป…</span>}
-            </div>
-
-            {/* R61: แนบรูป/มาสคอต = จากเครื่อง | จากคลังภาพ AI (basket) | มาตรฐาน + ประกอบเอง */}
-            <div className="col-span-2 rounded-xl border border-brand-border p-3 space-y-3" data-testid="promo-attach-panel">
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="text-xs font-semibold text-brand-muted">🖼 ภาพแบนเนอร์:</span>
-                <button
-                  type="button"
-                  className="btn btn-outline btn-sm"
-                  onClick={() => void handleBrowseAlbum('image')}
-                  data-testid="promo-banner-album"
-                >
-                  📁 เลือกจากคลังภาพ AI
-                </button>
-                <span className="text-xs text-brand-muted">หรือแนบไฟล์จากเครื่อง / วางลิงก์ในช่องด้านบน</span>
-              </div>
-
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="text-xs font-semibold text-brand-muted">🎭 มาสคอต:</span>
-                {MASCOT_ROTATION.map((src, i) => (
-                  <button
-                    key={src}
-                    type="button"
-                    onClick={() => {
-                      setForm((f) => ({ ...f, banner_mascot: src }))
-                      onBannerChange?.(form.banner_image, src)
-                    }}
-                    data-testid={`promo-mascot-std-${i}`}
-                    className={`rounded-lg border p-0.5 ${form.banner_mascot === src ? 'border-brand-primary ring-2 ring-brand-primary/60' : 'border-brand-border'}`}
-                    title={`มาสคอตมาตรฐานท่า ${i + 1}`}
-                  >
-                    <img src={src} alt="" className="h-10 w-10 object-contain" />
-                  </button>
-                ))}
-                <input
-                  type="file"
-                  accept="image/*"
-                  className="input w-56"
-                  aria-label="อัปโหลดมาสคอตจากเครื่อง"
-                  data-testid="promo-mascot-file"
-                  onChange={(e) => {
-                    const f = e.target.files?.[0]
-                    if (f) void handleUploadMascot(f)
-                    e.target.value = ''
-                  }}
-                />
-                <button
-                  type="button"
-                  className="btn btn-outline btn-sm"
-                  onClick={() => void handleBrowseAlbum('mascot')}
-                  data-testid="promo-mascot-album"
-                >
-                  📁 จากคลังภาพ AI
-                </button>
-                {form.banner_mascot && (
-                  <button
-                    type="button"
-                    className="btn btn-outline btn-sm"
-                    onClick={() => {
-                      setForm((f) => ({ ...f, banner_mascot: '' }))
-                      onBannerChange?.(form.banner_image, '')
-                    }}
-                    data-testid="promo-mascot-clear"
-                  >
-                    ✕ ไม่ใช้มาสคอต
-                  </button>
-                )}
-                {mascotUploading && <span className="text-sm text-brand-muted">กำลังอัปโหลดมาสคอต…</span>}
-              </div>
-
-              {/* คลังภาพ AI ("basket") — กดเลือกแล้วใส่ตามปุ่มที่เปิด (ภาพแบนเนอร์ หรือ มาสคอต) */}
-              {albumPanel && (
-                <div className="rounded-lg border border-brand-border p-2" id="promo-album-panel" data-testid="promo-album-panel">
-                  <p className="text-xs text-brand-muted mb-2">
-                    คลังภาพ AI (bmb-images/ai-generated) — กดเลือกเพื่อใช้เป็น <b>{albumPanel === 'mascot' ? 'มาสคอต' : 'รูปแบนเนอร์'}</b>
-                  </p>
-                  {album && album.length > 0 ? (
-                    <div className="grid grid-cols-4 gap-2 max-h-56 overflow-y-auto">
-                      {album.map((a, i) => (
-                        <button
-                          key={a.path}
-                          type="button"
-                          onClick={() => pickFromAlbum(a.url)}
-                          data-testid={`promo-album-pick-${i}`}
-                          className="rounded border border-brand-border p-1 hover:border-brand-primary"
-                          title={a.name}
-                        >
-                          <img src={a.url} alt={a.name} className="h-16 w-full rounded object-cover" loading="lazy" />
-                        </button>
-                      ))}
-                    </div>
-                  ) : (
-                    <p className="text-xs text-brand-muted">{album && album.length === 0 ? 'ยังไม่มีภาพในคลัง — เจนที่ AI Studio แล้วกลับมาเลือกใหม่' : 'กำลังโหลดคลังภาพ…'}</p>
-                  )}
-                </div>
-              )}
-
-              {/* ตัวอย่างประกอบ = ใช้คลาสชุดเดียวกับการ์ดหน้าแรก (เห็นตรงกันเป๊ะ) */}
-              <div data-testid="promo-compose-preview">
-                <p className="text-xs text-brand-muted mb-1">ตัวอย่างประกอบ (แบบเดียวกับหน้าแรก):</p>
-                <div className="flad-media">
-                  {form.banner_image && <img src={form.banner_image} alt="ตัวอย่างรูปแบนเนอร์" />}
-                  {form.banner_mascot && <img src={form.banner_mascot} alt="" className="flad-mascot-composed flad-mascot-pos-0" />}
-                </div>
-              </div>
-            </div>
+            <p className="text-xs text-brand-muted col-span-2">🖼 รูปแบนเนอร์/มาสคอตจัดการได้ที่แท็บ <b>📝 สร้างเนื้อหา</b> (อัปโหลด/เลือกจากคลังภาพ AI/ตั้งเป็น Floating Ad)</p>
           </div>
           <div className="flex gap-3 mt-4">
             <button onClick={handleSave} className="btn btn-success">💾 บันทึก</button>
@@ -484,12 +304,13 @@ export function PromotionsTab({ promotions, setPromotions, onBannerChange }: Pro
                     </span>
                   )}
                   {p.stackable && <span className="badge badge-success text-xs">🧩 ซ้อนได้</span>}
+                  {p.is_banner && <span className="badge badge-info text-xs">🏠 แบนเนอร์</span>}
                 </div>
               </div>
               <div className="text-right">
                 <span className={`badge ${p.is_active ? 'badge-success' : 'badge-warning'}`}>{p.is_active ? 'เปิดใช้งาน' : 'พักชั่วคราว'}</span>
                 {p.is_banner && (
-                  <Link to="/admin/marketing-promotions?tab=approval" className="badge badge-info text-xs" title="แบนเนอร์จะส่งเข้าคิวตรวจเนื้อหาก่อนแสดงผล">🛡️ รอตรวจเนื้อหา</Link>
+                  <Link to="/admin/marketing-promotions?tab=approvals" className="badge badge-info text-xs" title="แบนเนอร์จะส่งเข้าคิวตรวจเนื้อหาก่อนแสดงผล">🛡️ รอตรวจเนื้อหา</Link>
                 )}
                 <div className="flex gap-2 mt-1">
                   <button onClick={() => openEdit(p)} className="btn btn-outline text-sm">✏️ แก้ไข</button>
