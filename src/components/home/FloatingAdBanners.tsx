@@ -105,10 +105,20 @@ export function mergeBannerFeed(
   return out
 }
 
-export function FloatingAdBanners({ promos, notice }: { promos: FloatingBannerPromo[]; notice?: string }) {
+export function FloatingAdBanners({ 
+  promos, 
+  notice, 
+  sources = ['promotions', 'announcements', 'approved_banners']
+}: { 
+  promos: FloatingBannerPromo[]; 
+  notice?: string;
+  sources?: ('promotions' | 'announcements' | 'approved_banners')[];
+}) {
   const [dismissedIds, setDismissedIds] = useState<Set<string>>(new Set())
   // Kill switch สำหรับ floating ad (โหลดจาก business_settings)
   const [floatAdEnabled, setFloatAdEnabled] = useState(true)
+  // Floating ad sources filter (โหลดจาก business_settings หรือใช้ props)
+  const [floatAdSources, setFloatAdSources] = useState<('promotions' | 'announcements' | 'approved_banners')[]>(sources)
   // Fallback images จาก ai-generated album (promo/festival)
   const [albumImgs, setAlbumImgs] = useState<string[]>([])
   
@@ -117,20 +127,29 @@ export function FloatingAdBanners({ promos, notice }: { promos: FloatingBannerPr
     void (async () => {
       try {
         const { supabase } = await import('@/lib/supabase')
-        // โหลด kill switch floating_ad_enabled
-        const { data: enabledData } = await supabase
-          .from('business_settings')
-          .select('value')
-          .eq('key', 'floating_ad_enabled')
-          .maybeSingle()
+        // โหลด kill switch floating_ad_enabled และ sources filter
+        const [{ data: enabledData }, { data: sourcesData }] = await Promise.all([
+          supabase.from('business_settings').select('value').eq('key', 'floating_ad_enabled').maybeSingle(),
+          supabase.from('business_settings').select('value').eq('key', 'floating_ad_sources').maybeSingle(),
+        ])
         if (alive) {
           const enabledV = (enabledData as { value?: unknown } | null)?.value
           if (typeof enabledV === 'boolean') setFloatAdEnabled(enabledV)
+          const sourcesV = (sourcesData as { value?: unknown } | null)?.value
+          if (Array.isArray(sourcesV)) {
+            const validSources = sourcesV.filter((v: unknown): v is 'promotions' | 'announcements' | 'approved_banners' =>
+              v === 'promotions' || v === 'announcements' || v === 'approved_banners'
+            )
+            if (validSources.length > 0) setFloatAdSources(validSources)
+            else setFloatAdSources(sources) // fallback to props
+          } else {
+            setFloatAdSources(sources) // fallback to props
+          }
         }
       } catch { /* zero-fake */ }
     })()
     return () => { alive = false }
-  }, [])
+  }, [sources])
   
   // R58 (Owner): ไม่มีภาพเฉพาะการ์ด/ไม่ได้ตั้งโฆษณาลอย = ดึงภาพเจนโปรโมต/กิจกรรม
   // (bmb-images/ai-generated/{promo,festival} — ไม่ใช่รูปเมนู) มาสลับโชว์แทนมาสคอต (anon list ได้ — policy bmb_images_public_read)
@@ -170,6 +189,11 @@ export function FloatingAdBanners({ promos, notice }: { promos: FloatingBannerPr
   const [announcements, setAnnouncements] = useState<FloatingBannerPromo[]>([])
 
   useEffect(() => {
+    // Only load announcements if 'announcements' is in sources
+    if (!floatAdSources.includes('announcements')) {
+      setAnnouncements([])
+      return
+    }
     let alive = true
     void (async () => {
       try {
@@ -191,7 +215,7 @@ export function FloatingAdBanners({ promos, notice }: { promos: FloatingBannerPr
       } catch { /* เงียบ — ไม่มี rpc/ไม่มีโพสต์ = โชว์เฉพาะโปรโมชั่น */ }
     })()
     return () => { alive = false }
-  }, [])
+  }, [floatAdSources])
 
   // ประกาศ (ใหม่ก่อน) + โปรโมชั่น → สลับชนิด a0,p0,a1,p1… (R64: ประกาศห้ามเต็มโควตา 2 ใบ
   // จนโปรโมชั่น/รูปที่แอดมินอัปโหลดไม่เห็นเลย) → ตัด dismissed → สูงสุด 2 (นับรวม)

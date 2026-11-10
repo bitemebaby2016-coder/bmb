@@ -75,6 +75,7 @@ export function ContentTab({ load }: ContentTabProps) {
 
   const [floatingAdImage, setFloatingAdImage] = useState('')
   const [floatingAdEnabled, setFloatingAdEnabled] = useState(true)
+  const [floatingAdSources, setFloatingAdSources] = useState<('promotions' | 'announcements' | 'approved_banners')[]>(['promotions', 'announcements', 'approved_banners'])
 
   const [contentType, setContentType] = useState<'post' | 'promotion' | 'banner' | 'announcement'>('post')
   const [postTitle, setPostTitle] = useState('')
@@ -157,10 +158,16 @@ export function ContentTab({ load }: ContentTabProps) {
   useEffect(() => {
     void (async () => {
       try {
-        const { data } = await supabase.from('business_settings').select('key,value').in('key', ['floating_ad_image', 'floating_ad_enabled'])
+        const { data } = await supabase.from('business_settings').select('key,value').in('key', ['floating_ad_image', 'floating_ad_enabled', 'floating_ad_sources'])
         for (const row of data || []) {
           if (row.key === 'floating_ad_image' && typeof row.value === 'string') setFloatingAdImage(row.value)
           if (row.key === 'floating_ad_enabled' && typeof row.value === 'boolean') setFloatingAdEnabled(row.value)
+          if (row.key === 'floating_ad_sources' && Array.isArray(row.value)) {
+            const sources = row.value.filter((v: unknown): v is 'promotions' | 'announcements' | 'approved_banners' => 
+              v === 'promotions' || v === 'announcements' || v === 'approved_banners'
+            )
+            if (sources.length > 0) setFloatingAdSources(sources)
+          }
         }
       } catch { /* เงียบ */ }
     })()
@@ -685,6 +692,40 @@ export function ContentTab({ load }: ContentTabProps) {
                 label={floatingAdEnabled ? 'เปิด' : 'ปิด'}
                 testId="floating-ad-toggle-inline"
               />
+            </div>
+          </div>
+
+          {/* Floating Ad Sources Filter — เลือกแหล่งข้อมูลที่จะโชว์เป็นโฟลตติ้ง */}
+          <div className="mb-3 p-3 rounded-lg bg-brand-surface border border-brand-border" data-testid="mk-floatad-sources">
+            <div className="font-semibold text-brand-accent text-xs mb-2">📋 แหล่งข้อมูลโฟลตติ้ง (เลือกได้หลายอย่าง)</div>
+            <div className="grid grid-cols-3 gap-2 text-xs">
+              {[
+                { key: 'promotions' as const, label: '🎁 โปรโมชั่น (is_banner=true)', desc: 'จากตาราง promotions ที่ตั้ง is_banner=true' },
+                { key: 'announcements' as const, label: '📣 ประกาศ/โพสต์', desc: 'จาก marketing_feed_posts (RPC)' },
+                { key: 'approved_banners' as const, label: '✅ แบนเนอร์อนุมัติแล้ว', desc: 'จาก content_approvals ที่ผ่าน CNT-01 + set_as_floating_ad' }
+              ].map(({ key, label, desc }) => (
+                <label key={key} className="flex items-start gap-2 p-2 rounded-lg border hover:bg-brand-primary/5 transition-colors cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={floatingAdSources.includes(key)}
+                    onChange={(e) => {
+                      const next = floatingAdSources.includes(key)
+                        ? floatingAdSources.filter((s) => s !== key)
+                        : [...floatingAdSources, key]
+                      setFloatingAdSources(next)
+                      void (async () => {
+                        const ok = await setBusinessSetting('floating_ad_sources', next)
+                        if (!ok) showToast('บันทึกไม่สำเร็จ', 'error')
+                      })()
+                    }}
+                    className="mt-1 w-4 h-4 accent-brand-primary"
+                  />
+                  <div>
+                    <div className="font-medium text-brand-text">{label}</div>
+                    <div className="text-[9px] text-brand-muted">{desc}</div>
+                  </div>
+                </label>
+              ))}
             </div>
           </div>
 

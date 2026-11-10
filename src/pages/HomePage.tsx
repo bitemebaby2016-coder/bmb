@@ -95,6 +95,7 @@ export function HomePage() {
   const [operatingHours, setOperatingHours] = useState<Record<string, boolean> | null>(null)
   const [masterOpen, setMasterOpen] = useState<boolean | null>(null)
   const [floatingAdEnabled, setFloatingAdEnabled] = useState<boolean>(true)
+  const [floatingAdSources, setFloatingAdSources] = useState<('promotions' | 'announcements' | 'approved_banners')[]>(['promotions', 'announcements', 'approved_banners'])
   const [approvedFloatAdImages, setApprovedFloatAdImages] = useState<Set<string>>(new Set())
   // R21 Phase 3: โหลดล้มเหลว ≠ ร้านไม่มีเมนู + key สำหรับกด "ลองใหม่"
   const [loadError, setLoadError] = useState('')
@@ -140,6 +141,14 @@ export function HomePage() {
             setOperatingHours((settings?.operating_hours ?? null) as Record<string, boolean> | null)
             setMasterOpen(parseStoreMasterOpen(settings?.store_master_open))
             setFloatingAdEnabled(settings?.floating_ad_enabled !== false)
+            // Load floating ad sources filter
+            const sources = settings?.floating_ad_sources
+            if (Array.isArray(sources)) {
+              const validSources = sources.filter((v: unknown): v is 'promotions' | 'announcements' | 'approved_banners' =>
+                v === 'promotions' || v === 'announcements' || v === 'approved_banners'
+              )
+              if (validSources.length > 0) setFloatingAdSources(validSources)
+            }
             // Fetch approved floating ad images from content_approvals
             void (async () => {
               try {
@@ -210,7 +219,8 @@ export function HomePage() {
   // ต้องเคารพช่วงวันที่แบบเดียวกับ dropdown คูปอง (เดิมไม่เช็ก = คูปองหมดอายุยังถูกโฆษณา
   // แต่กดใช้ที่เช็คเอาท์ไม่ได้) — เพิ่มโปรภายหลัง = ขึ้นอัตโนมัติทั้งการ์ดและคูปอง
   const todayKey = bangkokDateKey()
-  const bannerPromos: FloatingBannerPromo[] = (promoRows || [])
+  const showPromotions = floatingAdSources.includes('promotions')
+  const bannerPromos: FloatingBannerPromo[] = showPromotions ? (promoRows || [])
     .filter((r) => r.is_banner === true && r.is_active !== false)
     .filter((r) => {
       const s = String(r.start_date || '').slice(0, 10)
@@ -242,7 +252,7 @@ export function HomePage() {
       href: r.code ? `/menu?coupon=${encodeURIComponent(r.code)}` : '/menu',
       // R61: มาสคอตที่แอดมินประกอบเองใน /admin/promotions (ว่าง = FloatingAdBanners สลับตามลำดับโพส)
       mascot: r.banner_mascot || undefined,
-    }))
+    })) : []
   const storeStatus = getStoreStatusFromRounds(rounds, new Date(), {
     shopHoursMs: hoursToMs(shopHours),
     operatingHours,
@@ -501,7 +511,7 @@ export function HomePage() {
 
       {/* 2c. Floating ad banners — max 3 overlay cards, dismissible per promo (sessionStorage, D03) */}
       {masterOpen !== false && floatingAdEnabled && (
-        <FloatingAdBanners promos={bannerPromos} notice={siteCopy.adNotice} />
+        <FloatingAdBanners promos={bannerPromos} notice={siteCopy.adNotice} sources={floatingAdSources} />
       )}
 
       {/* 2d. เดิม = แบนเนอร์ CTA พรีออเดอร์ลอยเหนือหน้า — Owner (2026-10-25): ย้ายไปแสดง
