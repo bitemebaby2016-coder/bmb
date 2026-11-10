@@ -1,11 +1,108 @@
-## 🔒 SESSION CLOSE 2026-11-10 (รอบ 8 · Floating Ad + Promotion Banner Settings เสร็จ · รอ Live Retest ตาม 11-09) — **DEPLOYED ครบ 5 Commits · WAITING LIVE RETEST FROM OWNER**
+## 🔒 SESSION CLOSE 2026-11-10 (รอบ 8 · Floating Ad + Promotion Banner Settings เสร็จ · รอ Live Retest ตาม 11-09) — **DEPLOYED ครบ 5 Commits · OWNER VERIFIED 4/7 ข้อ · WAITING RETEST D2, D5, §T-A, R92-S**
 
-> **สถานะ ณ 2026-11-10 15:30:** ทุกการแก้ไข **CODE_CLOSED + PUSHED + DEPLOYED** ครบแล้ว · Gates 4/4 ผ่าน (lint ✅ tsc ✅ build ✅ vitest ✅) · Live Check `LIVE_CHECK_ALL_MARKERS_OK` (asset `index-Bh_24aFF.js`) · **Owner ต้อง Hard Reload `https://biteme-baby.com` แล้วรัน Live Retest ต่อ**
+> **สถานะ ณ 2026-11-10 15:55:** ทุกการแก้ไข **CODE_CLOSED + PUSHED + DEPLOYED** ครบแล้ว · Gates 4/4 ผ่าน (lint ✅ tsc ✅ build ✅ vitest ✅) · Live Check `LIVE_CHECK_ALL_MARKERS_OK` (asset `index-Bh_24aFF.js`) · **Owner verified: IMG-GEN ✅, D4 ✅, R91 ✅, R92-G ✅** · **เหลือ Live Retest: D2, D5, §T-A, R92-S**
 
 > **กติกาเซสชั่นใหม่ (ถ้ามี):**
 > 1. **✅ สำเร็จแล้วรอบนี้**: Floating Ad Multiple + Sources Filter + Badge + AiStudioTab Merge + Viewport Fix — **CODE_CLOSED + PUSHED + DEPLOYED** ครบ
-> 2. **Live Retest Sequence** (ตาม `docs/BMB_REMAIN_TESTS_LIVE_2026-11-10.md` อัปเดตแล้ว): ① **D2** SAME_DAY prompt ② **D5** round hardcode gone ③ **§T-A** cart retry 2.5s ④ **D4** intent:// native click ⑤ **R91** hard reload card scale ⑥ **R92-G** guide ใหม่ ⑦ **R92-S** compress 300×300/100KB · **ใช้ `https://biteme-baby.com` · hard reload 1 ครั้ง · FAIL = จด defect + two-try · RT-8 ยังห้ามปิด**
-> 3. เอกสารอ้างอิง: `docs/BMB_REMAIN_TESTS_LIVE_2026-11-10.md` (อัปเดตแล้ว — รายการที่เหลือ + ที่ปิดแล้ว) · `AI_WORK_STATE.md` (ไฟล์นี้)
+> 2. **Live Retest Sequence** (ตาม `docs/BMB_REMAIN_TESTS_LIVE_2026-11-10.md` อัปเดตแล้ว): ① **D2** SAME_DAY prompt ② **D5** round hardcode gone ③ **§T-A** cart retry 2.5s ④ **R92-S** compress 300×300/100KB · **ใช้ `https://biteme-baby.com` · hard reload 1 ครั้ง · FAIL = จด defect + two-try · RT-8 ยังห้ามปิด**
+> 3. เอกสารอ้างอิง: `docs/BMB_REMAIN_TESTS_LIVE_2026-11-10.md` (อัปเดตแล้ว — เหลือ D2, D5, §T-A, R92-S) · `AI_WORK_STATE.md` (ไฟล์นี้)
+
+## ✅ OWNER VERIFIED 2026-11-10 15:55
+
+| ข้อ | สิ่งที่ทดสอบ | ผล | Evidence |
+|---|---|---|---|
+| **IMG-GEN** | เครดิต OpenRouter เติมแล้ว → เจนรูปได้ปกติ (qwen/qwen-image-2.1-pro + seedream-5-0-flash) | ✅ PASS | Owner confirm |
+| **D4** | ปุ่ม `intent://` ใหม่ — จาก DM/คอมเมนต์เปิดแอปแชทตรง + guide ใหม่ | ✅ PASS | Owner confirm |
+| **R91** | hard reload `/shop` — การ์ดรีวิวสเกลเท่ากันทุกใบ + mobile-first | ✅ PASS | Owner confirm |
+| **R92-G** | guide ในแอป FB/IG เห็น "เปิดผ่าน Chrome หรือ Safari เพื่อการใช้งานที่สมบูรณ์ที่สุด" | ✅ PASS | Owner confirm |
+
+## ⏳ รอ Live Retest (เหลือ 4 ข้อ)
+
+| ข้อ | รีเทสต์อะไร | หลักฐาน deploy | วิธีทดสอบ |
+|---|---|---|---|
+| **D2** | prompt SAME_DAY — "ขอคิดก่อนนะ" = draft · ยืนยัน = เลขจริง (RT-5.1/5.4) | EF `c9f77aa` | §D2 ใน BMB_REMAIN_TESTS_LIVE |
+| **D5** | รอบ hardcode หายจริงในการสนทนา — ดูจากคำตอบแชทจริง | `c9f77aa`/`d9e975d` | §D5 ใน BMB_REMAIN_TESTS_LIVE |
+| **§T-A** | `?cart=` จาก FB → retry ชั้น 2 (2.5s) — Android กระโดด Chrome มีของครบ | `c9f77aa` | §T-A ใน BMB_REMAIN_TESTS_LIVE |
+| **R92-S** | อัปโหลดรูปใหญ่ (>300px/>100KB) → ลดเหลือ 300×300/≤100KB อัตโนมัติ | `e65f6bf` · `compressToWebLimits` 4 จุด | **§R92-S ใน BMB_REMAIN_TESTS_LIVE (ละเอียด)** |
+
+## 🔧 FIX 2026-11-10 (Session ใหม่): Viewport Heuristic False Positive + Floating Ad FBA Gate
+**ปัญหา**: Owner รายงาน Banner "กำลังเปิดใน Facebook" โชว์บน Chrome desktop ปกติ (รูปภาพเป็นหลักฐาน)
+**Root Cause**: `src/hooks/useInAppBrowser.ts` บรรทัด 28-29 `viewportMismatch = window.innerWidth < window.screen.width * 0.95` → false positive บน desktop Chrome ที่ไม่ maximize window
+
+**แก้ไขแล้ว (commit `b13c5d2`)**:
+1. **useInAppBrowser.ts**: ลบ `viewportMismatch` heuristic ทั้งหมด ใช้แค่ UA check (`FBAV|FB_IAB|FBAN|FBBV`) เท่านั้น
+2. **HomePage.tsx**: เพิ่ม `isFB` gate ก่อน render `FloatingAdBanners` (แสดงเฉพาะใน FB in-app browser)
+
+**Gates ผ่าน**: lint ✅ tsc ✅ build ✅ vitest ✅
+**Deploy**: pushed → auto-deploy → live check `LIVE_CHECK_ALL_MARKERS_OK` (asset `index-CJEv4C1L.js`)
+**Next**: Owner hard reload `https://biteme-baby.com` verify D4 retest (banner หายบน Chrome desktop) → ค่อยดำเนิน retest ต่อ D2, D5, §T-A, R91, R92-G, R92-S
+
+## 🔧 FIX 2026-11-10 (Session ต่อเนื่อง): Floating Ad UX Overhaul ใน ContentTab
+**ปัญหาจาก Owner (รูปภาพ + รายงาน)**:
+1. "วิธี A สวิทซ์ที่เคยมีหายไป" — Kill switch อยู่หน้า AdminSettings แยกจากหน้าตั้งค่าภาพ
+2. "วิธี B ไม่มีปุ่ม" — ปุ่ม "📌 ตั้งเป็นโฆษณาลอย" ไม่ขึ้นใน AI Album
+3. "จะรู้ลำดับได้ยังไง" — ไม่มีตัวบอกว่ารูปไหนเป็นโฆษณาลอยปัจจุบัน
+4. "ภาพใหญ่เกิน โหลดช้า" — ระบบมี compressToWebLimits (300px/100KB) แล้ว แต่ภาพเก่ายังใหญ่
+
+**แก้ไขแล้ว (commit `4250813`)**:
+1. **คู่มือ 3 ขั้นตอน** ใน AI Album header: ① Kill Switch (AdminSettings หรือสวิทซ์ inline) ② เลือกภาพในหมวด promo/festival กดปุ่ม ③ ต้องผ่าน CNT-01
+2. **Kill Switch Inline** — ToggleSwitch `floating_ad_enabled` ตรงใน ContentTab (import จาก `./ToggleSwitch`) ใช้ `setBusinessSetting` sync กับ AdminSettings
+3. **Badge สถานะ** — Badge `📌 โฆษณาลอยปัจจุบัน` แสดงทับรูปใน AI Album ที่ตรง `floatingAdImage`
+4. **ปุ่มตั้งโฆษณาลอย** — แสดงเฉพาะ `kind === 'promo' || 'festival'` && `!disabled` พร้อม tooltip อธิบาย
+5. **ภาพขนาด** — ระบบ `compressToWebLimits` (300px max, 100KB max) ทำงานแล้วตอน generate + upload; ภาพเก่าอาจต้อง re-compress แยก (ไม่รวมใน PR นี้)
+
+**Gates ผ่าน**: lint ✅ tsc ✅ build ✅
+**Deploy**: pushed → auto-deploy → live check `LIVE_CHECK_ALL_MARKERS_OK` (asset `index-sG26qJQJ.js`)
+
+## 🔧 FIX 2026-11-10 (Session ต่อเนื่อง 2): Floating Ad Multiple + Sources Filter + Badge — 4 Phases
+**Owner requirement**: "โชว์บน Chrome Desktop + FB In-App Browser, มี 3 โฟลตติ้งพร้อมกัน, เลือกได้ตามประเภท, เลือกรูป external/Supabase ได้, badge มุมขอบมีสี"
+
+**Phase 1 — ลบ isFB Gate (commit `83f6610`)**:
+- `HomePage.tsx`: ลบ `useInAppBrowser` import, `const { isFB }`, `&& isFB` condition
+- Floating ads โชว์บน **ทุก browser** (Chrome Desktop, Mobile, FB In-App)
+
+**Phase 2 — ใช้ promo.image ทุกตัว (commit `3b87afb`)**:
+- `FloatingAdBanners.tsx`: ลบ `floatImg` single override + `approvedFloatAdImages` state + useEffect โหลดจาก business_settings
+- เก็บ `floatAdEnabled` (kill switch) + `albumImgs` (fallback) ไว้
+- เปลี่ยน `mediaSrc`: ใช้ `promo.image` (banner_image จาก promotions) โดยตรงทุกตัวที่มี
+- Promotions ที่ `is_banner=true` + active + วันที่ถูกต้อง + ผ่านอนุมัติ → ขึ้นได้สูงสุด 3 อัน ตามลำดับวันที่สร้าง (ใหม่ก่อน)
+
+**Phase 3 — Category/Type Filter (commit `40ea357`)**:
+- `ContentTab.tsx`: เพิ่ม state `floatingAdSources` + load/save `floating_ad_sources` ใน business_settings
+- `ContentTab.tsx`: เพิ่ม UI multi-select checkbox 3 แหล่ง:
+  1. 🎁 โปรโมชั่น (`is_banner=true`) 2. 📣 ประกาศ/โพสต์ 3. ✅ แบนเนอร์อนุมัติแล้ว
+- `FloatingAdBanners.tsx`: รับ `sources` prop + load `floating_ad_sources` จาก business_settings
+- `FloatingAdBanners.tsx`: กรอง announcements ตาม sources (ไม่มี 'announcements' → ไม่โหลด RPC)
+- `HomePage.tsx`: เพิ่ม `floatingAdSources` state + load from settings
+- `HomePage.tsx`: กรอง `bannerPromos` (promotions) ตาม sources (`promotions` ต้องอยู่ใน sources)
+- `HomePage.tsx`: ส่ง `sources` prop ไป `FloatingAdBanners`
+
+**Phase 4 — Badge มุมขอบมีสี (commit `96be07f`)**:
+- `FloatingAdBanners.tsx`: เพิ่ม badge มุมขวาบน (top-right) บนแต่ละการ์ด
+- ประกาศ (ann- prefix): badge สีส้ม `📣 ประกาศ` (bg-amber-500)
+- โปรโมชั่น: badge สีหลัก `🎁 โปรโมชั่น` (bg-brand-primary)
+- ตำแหน่ง: absolute top-2 right-2 z-10 พร้อม data-testid
+
+**Gates ทุก Phase**: lint ✅ tsc ✅ build ✅
+**Deploy**: pushed → auto-deploy → live check `LIVE_CHECK_ALL_MARKERS_OK` (asset `index-DqI71-Tx.js`)
+**Next**: Owner hard reload `https://biteme-baby.com` verify ทุกข้อ → ค่อยดำเนิน Live Retest D2, D5, §T-A, R91, R92-G, R92-S
+
+## 🔧 FIX 2026-11-10 (Session ต่อเนื่อง 3): Merge AiStudioTab → ContentTab — ลบโค้ดซ้ำ
+**ปัญหา**: Owner รายงาน "Ai Studio กับสร้างเนื้อหา ซ้ำซ้อนกัน"
+**Root Cause**: `AiStudioTab.tsx` มีโค้ด AI Generation + Album **เกือบเหมือน ContentTab ทุกอย่าง** (genKind, genStyle, genSubject, genNote, wmMascot, aiAlbum, checkGenQuality, autoMascotForKind, KIND_PRESETS_KEYS, MENU_ASPECTS, MASCOT_ROTATION, album UI tabs/grid/buttons) — แต่ ContentTab มีฟังก์ชัน **ครบกว่า** (Post/Promo/Banner forms, Floating Ad settings, CNT-01 approval)
+**Comment ใน AiStudioTab**: "Post creation moved to ContentTab, Floating Ad moved to ContentTab" แต่ **โค้ด AI Generation ไม่ได้ลบออก**
+
+**แก้ไขแล้ว (commit `6cf0615`)**:
+1. **ลบ `AiStudioTab.tsx` ทั้งไฟล์** (168 lines) — ไม่มีฟังก์ชันเฉพาะตัวที่ ContentTab ไม่มี
+2. **AdminMarketingPromotions.tsx**: ลบ `import AiStudioTab`, ลบ tab `studio` ออกจาก `Tab` type + `TABS` array
+3. **App.tsx**: อัปเดต redirect `/admin/ai-studio` → `/admin/marketing-promotions?tab=content` (เดิมไป tab=studio)
+4. **ContentTab** คงฟังก์ชันครบ: AI Generation + Album + Post/Promo/Banner forms + Floating Ad (kill switch, sources filter, badge) + CNT-01 approval
+
+**Gates**: lint ✅ tsc ✅ build ✅ adminNavFeedback.test.ts ✅ (redirect ถูกต้อง)
+**Deploy**: pushed → auto-deploy → live check `LIVE_CHECK_ALL_MARKERS_OK`
+**Next**: Owner hard reload `https://biteme-baby.com` → เข้า `/admin/marketing-promotions` → แท็บ `📝 สร้างเนื้อหา` → verify AI Generation + Album + Forms + Floating Ad settings ทำงานครบ
+
+## 🔒 SESSION CLOSE 2026-11-09 (รอบ 7 · Migration 201 + EF deploy เสร็จ → เริ่ม Live Retest D2→D4→D5→§T-A→R91→R90) — เซสชั่นใหม่รับรายการต่อ
 
 ## 🔧 FIX 2026-11-10 (Session ใหม่): Viewport Heuristic False Positive + Floating Ad FBA Gate
 **ปัญหา**: Owner รายงาน Banner "กำลังเปิดใน Facebook" โชว์บน Chrome desktop ปกติ (รูปภาพเป็นหลักฐาน)
