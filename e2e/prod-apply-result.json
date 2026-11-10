@@ -1,9 +1,9 @@
 {
-  "timestamp": "2026-11-09T18:14:35.643Z",
+  "timestamp": "2026-11-10T10:46:22.835Z",
   "ref": "ivkdfognyiwjcmrhcnwz",
   "applied": [
     {
-      "file": "201_theater_carousel_portfolio.sql",
+      "file": "202_add_approval_id_to_promotions.sql",
       "ok": true
     }
   ],
