@@ -1,11 +1,11 @@
-## 🔒 SESSION CLOSE 2026-11-10 (รอบ 8 · Floating Ad + Promotion Banner Settings เสร็จ · รอ Live Retest ตาม 11-09) — **DEPLOYED ครบ 5 Commits · OWNER VERIFIED 7/8 ข้อ · WAITING RETEST §T-A เท่านั้น**
+## 🔒 SESSION CLOSE 2026-11-10 (รอบ 8 · Floating Ad + Promotion Banner Settings เสร็จ · รอ Live Retest ตาม 11-09) — **DEPLOYED ครบ 6 Commits · Owner Verified 7/8 · Catalog Picker Deployed · Waiting §T-A**
 
-> **สถานะ ณ 2026-11-10 16:37:** ทุกการแก้ไข **CODE_CLOSED + PUSHED + DEPLOYED** ครบแล้ว · Gates 4/4 ผ่าน (lint ✅ tsc ✅ build ✅ vitest ✅) · Live Check `LIVE_CHECK_ALL_MARKERS_OK` (asset `index-Bh_24aFF.js`) · **Owner verified: IMG-GEN ✅, D4 ✅, R91 ✅, R92-G ✅, D2 ✅, D5 ✅, R92-S ✅** · **เหลือ Live Retest: §T-A เท่านั้น**
+> **สถานะ ณ 2026-11-10 17:55:** ทุกการแก้ไข **CODE_CLOSED + PUSHED + DEPLOYED** ครบแล้ว · Gates 4/4 ผ่าน (lint ✅ tsc ✅ build ✅ vitest ✅) · Live Check `LIVE_CHECK_ALL_MARKERS_OK` (asset `index-BLqUf2SU.js`) · **Owner verified: IMG-GEN ✅, D2 ✅, D4 ✅, D5 ✅, R91 ✅, R92-G ✅, R92-S ✅** · **เหลือ Live Retest: §T-A เท่านั้น** · **Catalog Picker Deployed** (เลือกจากรูปเมนู + เชื่อม approval)
 
 > **กติกาเซสชั่นใหม่ (ถ้ามี):**
-> 1. **✅ สำเร็จแล้วรอบนี้**: Floating Ad Multiple + Sources Filter + Badge + AiStudioTab Merge + Viewport Fix — **CODE_CLOSED + PUSHED + DEPLOYED** ครบ
+> 1. **✅ สำเร็จแล้วรอบนี้**: Floating Ad Multiple + Sources Filter + Badge + AiStudioTab Merge + Viewport Fix + **Catalog Picker** — **CODE_CLOSED + PUSHED + DEPLOYED** ครบ
 > 2. **Live Retest Sequence** (ตาม `docs/BMB_REMAIN_TESTS_LIVE_2026-11-10.md` อัปเดตแล้ว): ① **§T-A** cart retry 2.5s · **ใช้ `https://biteme-baby.com` · hard reload 1 ครั้ง · FAIL = จด defect + two-try · RT-8 ยังห้ามปิด**
-> 3. เอกสารอ้างอิง: `docs/BMB_REMAIN_TESTS_LIVE_2026-11-10.md` (อัปเดตแล้ว — เหลือ §T-A เท่านั้น) · `AI_WORK_STATE.md` (ไฟล์นี้)
+> 3. เอกสารอ้างอิง: `docs/BMB_REMAIN_TESTS_LIVE_2026-11-10.md` (อัปเดตแล้ว — เหลือ §T-A เท่านั้น) · `AI_WORK_STATE.md` (ไฟล์นี้) · `.kilo/plans/1794247959923-content-catalog-image-workflow.md` (แผน catalog picker)
 
 ## ✅ OWNER VERIFIED 2026-11-10 16:37
 
@@ -180,6 +180,20 @@
 **Gates**: lint ✅ tsc ✅ build ✅ adminNavFeedback.test.ts ✅ (redirect ถูกต้อง)
 **Deploy**: pushed → auto-deploy → live check `LIVE_CHECK_ALL_MARKERS_OK`
 **Next**: Owner hard reload `https://biteme-baby.com` → เข้า `/admin/marketing-promotions` → แท็บ `📝 สร้างเนื้อหา` → verify AI Generation + Album + Forms + Floating Ad settings ทำงานครบ
+
+## 🔧 FIX 2026-11-10 (Catalog Picker): เลือกรูปจากเมนู + เชื่อม approval
+**ปัญหา**: Owner ต้องการเลือกจากรูปเมนูที่มีอยู่ (catalog) เพื่อใช้เป็นรูปเนื้อหาหรือเป็นต้นแบบ AI แทนการอัปโหลดใหม่ทุกครั้ง
+
+**แก้ไขแล้ว (commit `b8ca7b0`)**:
+1. **Modal เลือกเมนู** — ใช้ `getProducts()` ตาม tenant/brand ปัจจุบัน + ค้นหาชื่อ/คำอธิบาย
+2. **Two actions**: "📷 เป็นรูปเนื้อหา" (แนบกับ post/promo/banner) / "🎨 เป็นต้นแบบ AI" (อ้างอิงเจนภาพ)
+3. **เชื่อม approval** — ส่ง `image_url` + `mascot` เข้า `submitContentForApproval` สำหรับ promotion/banner
+4. **ป้องกันลบต้นทาง** — `handleRemoveImage` detach เท่านั้นสำหรับรูปเมนู (ไม่ลบไฟล์จาก storage)
+5. **ใช้ URL เดิม** — ไม่คัดลอก/บีบอัดทับภาพสินค้า; upload/AI ใหม่ใช้ compressToWebLimits เดิม
+
+**Gates**: lint ✅ tsc ✅ build ✅
+**Deploy**: pushed → auto-deploy → `index-BLqUf2SU.js`
+**Next**: Owner ทดสอบเลือกจากรูปเมนูในหน้าสร้างเนื้อหา + verify approval ส่งรูปถูกต้อง
 
 ## 🔒 SESSION CLOSE 2026-11-09 (รอบ 7 · Migration 201 + EF deploy เสร็จ → เริ่ม Live Retest D2→D4→D5→§T-A→R91→R90) — เซสชั่นใหม่รับรายการต่อ
 
