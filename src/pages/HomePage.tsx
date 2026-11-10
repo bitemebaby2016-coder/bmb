@@ -27,7 +27,6 @@ import { publishDeliveryRounds } from '@/lib/storeStatus'
 import { StoreStatusStrip } from '@/components/home/StoreStatusStrip'
 import { FloatingAdBanners, type FloatingBannerPromo } from '@/components/home/FloatingAdBanners'
 import { getBusinessSettings } from '@/lib/bmbAdminApi_settings'
-import { useInAppBrowser } from '@/hooks/useInAppBrowser'
 import { HorizontalCarousel } from '@/components/home/HorizontalCarousel'
 import { HomeProductCard } from '@/components/home/HomeProductCard'
 import { PromotionStrip } from '@/components/home/PromotionStrip'
@@ -97,7 +96,6 @@ export function HomePage() {
   const [masterOpen, setMasterOpen] = useState<boolean | null>(null)
   const [floatingAdEnabled, setFloatingAdEnabled] = useState<boolean>(true)
   const [approvedFloatAdImages, setApprovedFloatAdImages] = useState<Set<string>>(new Set())
-  const { isFB } = useInAppBrowser()
   // R21 Phase 3: โหลดล้มเหลว ≠ ร้านไม่มีเมนู + key สำหรับกด "ลองใหม่"
   const [loadError, setLoadError] = useState('')
   const [reloadKey, setReloadKey] = useState(0)
@@ -502,7 +500,7 @@ export function HomePage() {
       </section>
 
       {/* 2c. Floating ad banners — max 3 overlay cards, dismissible per promo (sessionStorage, D03) */}
-      {masterOpen !== false && floatingAdEnabled && isFB && (
+      {masterOpen !== false && floatingAdEnabled && (
         <FloatingAdBanners promos={bannerPromos} notice={siteCopy.adNotice} />
       )}
 
