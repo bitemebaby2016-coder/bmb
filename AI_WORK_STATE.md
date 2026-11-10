@@ -1,6 +1,13 @@
+## 🔒 SESSION CLOSE 2026-11-10 (รอบ 8 · Floating Ad + Promotion Banner Settings เสร็จ · รอ Live Retest ตาม 11-09) — เซสชั่นใหม่รับรายการต่อ
+
+> **กติกาเซสชั่นใหม่:**
+> 1. **✅ สำเร็จแล้วรอบนี้**: Floating Ad / Promotion Banner Settings **CODE_CLOSED + PUSHED + DEPLOYED** — `floating_ad_enabled` Kill Switch (AdminSettings) + max cards 2→3 + real links (href=/menu?coupon=CODE) + image upload/browse (Supabase album + external URL) + CNT-01 approve/reject wired + onBannerChange reloads
+> 2. **Live Retest Sequence** (ตาม `BMB_REMAIN_TESTS_LIVE_2026-11-09.md` ยังค้าง): ① **D2** SAME_DAY prompt ② **D4** intent:// native click ③ **D5** round hardcode gone ④ **§T-A** cart retry 2.5s ⑤ **R91** hard reload card scale ⑥ **R92-G** guide ใหม่ ⑦ **R92-S** compress 300×300/100KB · **ใช้ `https://biteme-baby.com` · hard reload 1 ครั้ง · FAIL = จด defect + two-try · RT-8 ยังห้ามปิด**
+> 3. เอกสารอ้างอิง: `docs/BMB_REMAIN_TESTS_LIVE_2026-11-09.md` (live test checklist รอบก่อน) · **สร้างใหม่ `docs/BMB_REMAIN_TESTS_LIVE_2026-11-10.md` (รายการเหลือล่าสุด)** · `.kilo/plans/pending-tasks-next-session.md` (แผนจาก owner approve)
+
 ## 🔒 SESSION CLOSE 2026-11-09 (รอบ 7 · Migration 201 + EF deploy เสร็จ → เริ่ม Live Retest D2→D4→D5→§T-A→R91→R90) — เซสชั่นใหม่รับรายการต่อ
 
-> **กติกาเซสชั่นใหม่:** 
+> **กติกาเซสชั่นใหม่:**
 > 1. **✅ สำเร็จแล้วรอบนี้**: Migration 201 `theater_carousel_portfolio` APPLIED ลง PROD แล้ว (`e2e/prodApplyMigrations.cjs --files 201`) · schema_migrations history บันทึก version='201' แล้ว · Edge Functions `social-ai-worker` DEPLOYED exit=0 (`node e2e/_ttDeployFns.cjs` log `TT_DEPLOY_DONE 2026-11-09T18:15:38.863Z`)
 > 2. **Live Retest Sequence** (เรียงตามนี้ ห้ามข้าม): ① **D2** — SAME_DAY prompt "รอบเดียว 11:00-15:00" ผิด → RT-5.1/5.4 ② **D4** — In-app browser native click + guide (intent://) ③ **D5** — Post missing day/round details → RT-3.6 ④ **§T-A** — Cart retry 2.5s (Layout.tsx) ⑤ **R91** — Hard reload confirm card scale equal + logo/stars ⑥ **R90** — Task 1: Review button under CTA (CSS clip fix glass top:30%) · Task 2: Expired promos (passed "หายแล้ว")
 > 3. ใช้ **`https://biteme-baby.com`** เท่านั้น · hard reload (Ctrl+Shift+R) 1 ครั้ง ก่อนเริ่มทุกข้อ
@@ -94,9 +101,10 @@
 - **R91** สเกลการ์ดเท่ากันทุกใบ + mobile-first — deploy แล้ว (`a62877c` · CSS proof `CARD_FULL=true`) → **รอ hard reload ยืนยัน**
 - **two-try Attempt 1** D2 (prompt SAME_DAY) · D5 (ตัดรอบ hardcode) · §T-A (retry 2.5s) — push `c9f77aa` + **EF deploy exit=0** → **รอ retest RT-5.1/5.4/3.6/§T-A**
 - **D4 วิธีใหม่** ปุ่ม `intent://` native-click + guide ⋯ Open in Browser (`d9e975d`) → **รอ retest จาก DM/คอมเมนต์**
+- **Floating Ad + Promotion Banner Settings** (2026-11-10) — `floating_ad_enabled` Kill Switch (AdminSettings) + max cards 2→3 + real links (href=/menu?coupon=CODE) + image upload/browse (Supabase album + external URL) + CNT-01 approve/reject wired + onBannerChange reloads — **CODE_CLOSED + PUSHED + DEPLOYED** (`260351c`)
 
-### ⏳ ที่เหลือทั้งหมด = เซสชั่นใหม่ (ตาม `BMB_REMAIN_TESTS_LIVE_2026-11-09.md`)
-- retest ข้อค้าง: D2 · D4 · D5 · §T-A · R91 (hard reload) · R90 (CSS clip + promo expired)
+### ⏳ ที่เหลือทั้งหมด = เซสชั่นใหม่ (ตาม `BMB_REMAIN_TESTS_LIVE_2026-11-09.md` + `BMB_REMAIN_TESTS_LIVE_2026-11-10.md`)
+- retest ข้อค้าง: D2 · D4 · D5 · §T-A · R91 (hard reload) · R92-G · R92-S
 - ยังไม่รัน: RT-4 · RT-HOURS · RT-6.2 · RT-6.1 (ยกเว้น E1 = waived) · RT-6.4B2 (~11:00) · CAP-14 + CAP 7·8·13·16·17·19
 - **RT-8 = ยังห้ามปิด** · gates ทุกรอบเซสชั่นนี้ = 4/4 รันครั้งเดียวผ่านทุกครั้ง · probes = `e2e/_tt_dbcheck.cjs` · `_tt_verify2.cjs` · `_r91_probe.cjs` · `_r90fix_css.cjs`
 

@@ -1,6 +1,12 @@
-# Pending Tasks for Next Session (Owner Approved 2026-11-09 18:09)
+# Pending Tasks for Next Session (Owner Approved 2026-11-09 18:09, Updated 2026-11-10)
 
 Record of tasks to be completed in the next session. These should be merged into AI_WORK_STATE.md.
+
+---
+
+## ✅ Completed This Session (2026-11-10)
+
+- [x] **Floating Ad + Promotion Banner Settings** — `floating_ad_enabled` Kill Switch (AdminSettings) + max cards 2→3 + real links (href=/menu?coupon=CODE) + image upload/browse (Supabase album + external URL) + CNT-01 approve/reject wired + onBannerChange reloads — **CODE_CLOSED + PUSHED + DEPLOYED** (`260351c`)
 
 ---
 
@@ -11,14 +17,16 @@ Record of tasks to be completed in the next session. These should be merged into
 
 ---
 
-## 🧪 Live Retest Sequence (from BMB_REMAIN_TESTS_LIVE_2026-11-09.md)
+## 🧪 Live Retest Sequence (from BMB_REMAIN_TESTS_LIVE_2026-11-09.md + 2026-11-10.md)
 
 1. **D2** — SAME_DAY prompt incorrect "รอบเดียว 11:00-15:00" → RT-5.1/5.4
 2. **D4** — In-app browser native click + guide (intent://)
 3. **D5** — Post missing day/round details → RT-3.6
 4. **§T-A** — Cart retry 2.5s (Layout.tsx)
 5. **R91** — Hard reload confirm card scale equal + logo/stars
-6. **R90** — Task 1: Review button under CTA (CSS clip fix glass top:30%) · Task 2: Expired promos (passed "หายแล้ว")
+6. **R92-G** — Guide ใหม่ "เปิดผ่าน Chrome หรือ Safari..." (bundle proof R92_GUIDE_NEW)
+7. **R92-S** — Compress 300×300/100KB auto (code+test+deploy)
+8. **R90** — Task 1: Review button under CTA (CSS clip fix glass top:30%) · Task 2: Expired promos (passed "หายแล้ว")
 
 ---
 
