@@ -54,8 +54,8 @@ describe('R58 ① — การ์ดประกาศ: ภาพเจนก�
 
   it('source: announcements ผูก image_urls ของโพสเอง + media สลับอัลบั้ม/โฆษณาลอย + composed = มุมสลับ', () => {
     expect(fladSrc).toContain('image: pickMarketingAiImage(p.image_urls)')
-    // ลำดับ media: ภาพโพส → floating_ad_image (ถ้าผ่านอนุมัติ) → อัลบั้ม promo/festival (ไม่ใช่เมนู)
-    expect(fladSrc).toContain('const mediaSrc = promo.image || approvedFloatImg || (albumImgs.length > 0')
+    // ลำดับ media: ภาพโปรโมชั่น (promo.image) → อัลบั้ม promo/festival (ไม่ใช่เมนู)
+    expect(fladSrc).toContain('const mediaSrc = promo.image || (albumImgs.length > 0')
     expect(fladSrc).toContain("'ai-generated/promo'")
     expect(fladSrc).toContain("'ai-generated/festival'")
     // มาสคอตตัวเล็กมุมรูป = คนละตัว/คนละมุมตามลำดับโพส
