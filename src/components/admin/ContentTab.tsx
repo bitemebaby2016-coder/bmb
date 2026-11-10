@@ -10,6 +10,8 @@ import { uploadMediaAsset, listAiAlbumFiles, type AiAlbumFile, compressToWebLimi
 import { getBusinessSettings, setBusinessSetting } from '@/lib/bmbAdminApi_settings'
 import { getPromotionsAdmin, upsertPromotion, type PromotionRow } from '@/lib/bmbAdminApi_promotions'
 import { createMarketingPost } from '@/lib/adminMarketing'
+import { getProducts } from '@/lib/bmbAdminApi_products'
+import { type Product } from '@/types'
 import { flashTo } from '@/lib/uiFlash'
 import { PostForm, PostFormImperativeHandle } from './PostForm'
 import { ToggleSwitch } from './ToggleSwitch'
@@ -120,6 +122,88 @@ export function ContentTab({ load }: ContentTabProps) {
   const [uploading, setUploading] = useState(false)
   const [browseBusy, setBrowseBusy] = useState(false)
   const browseRef = useRef<HTMLInputElement | null>(null)
+
+  // Catalog picker state
+  const [catalogProducts, setCatalogProducts] = useState<Product[]>([])
+  const [catalogLoading, setCatalogLoading] = useState(false)
+  const [catalogSearch, setCatalogSearch] = useState('')
+  const [catalogModalOpen, setCatalogModalOpen] = useState(false)
+
+  // Load catalog products
+  const loadCatalogProducts = useCallback(async () => {
+    setCatalogLoading(true)
+    try {
+      const products = await getProducts()
+      setCatalogProducts(products)
+    } catch (e) {
+      console.error('[ContentTab] Catalog load error:', e)
+      showToast('โหลดรายการเมนูไม่สำเร็จ', 'error')
+    } finally {
+      setCatalogLoading(false)
+    }
+  }, [])
+
+  useEffect(() => { void loadCatalogProducts() }, [loadCatalogProducts])
+
+  // Catalog selection handler
+  async function handleCatalogSelect(product: Product, action: 'content' | 'reference') {
+    try {
+      if (!product.image_url) {
+        showToast('เมนูนี้ไม่มีภาพ — เลือกเมนูอื่น', 'warning')
+        return
+      }
+
+      if (action === 'content') {
+        // Use as content image (post/announcement)
+        if (contentType === 'post' || contentType === 'announcement') {
+          setPostImages((prev: string[]) => {
+            const next = [...prev]
+            if (!next.includes(product.image_url)) next.push(product.image_url)
+            return next
+          })
+          showToast(`แนบ "${product.name}" เข้าชุดภาพแล้ว — กดบันทึกเพื่อสร้าง${contentType === 'post' ? 'โพสต์' : 'ประกาศ'}`, 'success')
+          flashTo('mk-images-strip')
+        } else if (contentType === 'promotion') {
+          setPromoForm((f) => ({ ...f, banner_image: product.image_url }))
+          showToast(`ใช้ "${product.name}" เป็นรูปแบนเนอร์โปรโมชั่นแล้ว`, 'success')
+        } else if (contentType === 'banner') {
+          setBannerForm((f) => ({ ...f, banner_image: product.image_url }))
+          showToast(`ใช้ "${product.name}" เป็นรูปแบนเนอร์แล้ว`, 'success')
+        }
+      } else if (action === 'reference') {
+        // Use as AI reference (don't attach to content)
+        showToast(`ใช้ "${product.name}" เป็นต้นแบบ AI — เจนภาพแล้วกด "ใช้" เพื่อแทนรูป`, 'info')
+      }
+    } catch (e) {
+      console.error('[ContentTab] Catalog select error:', e)
+      showToast('เลือกเมนูไม่สำเร็จ', 'error')
+    } finally {
+      setCatalogModalOpen(false)
+    }
+  }
+
+  // Filtered catalog products
+  const filteredCatalogProducts = catalogProducts.filter((p) => {
+    if (!catalogSearch.trim()) return true
+    const search = catalogSearch.toLowerCase()
+    return p.name.toLowerCase().includes(search) || (p.description || '').toLowerCase().includes(search)
+  })
+
+  // Close catalog modal
+  function closeCatalogModal() {
+    setCatalogModalOpen(false)
+    setCatalogSearch('')
+  }
+
+  // Keyboard handler for modal close
+  useEffect(() => {
+    if (!catalogModalOpen) return
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') closeCatalogModal()
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [catalogModalOpen])
 
   // Load AI album
   const loadAiAlbum = useCallback(async () => {
@@ -315,6 +399,12 @@ export function ContentTab({ load }: ContentTabProps) {
 
   async function handleRemoveImage(url: string) {
     setPostImages((prev: string[]) => prev.filter((x: string) => x !== url))
+    // Don't delete source files for catalog product images (shared with product record)
+    const isCatalogImage = catalogProducts.some((p) => p.image_url === url)
+    if (isCatalogImage) {
+      showToast('เอาออกจากชุดภาพแล้ว (รูปเมนูจะยังคงอยู่ในฐานข้อมูล — ไม่ลบไฟล์ต้นทาง)', 'info')
+      return
+    }
     const marker = '/object/public/bmb-images/'
     if (!url.includes(marker)) { showToast('ลบรูปออกจากชุดภาพแล้ว (ไฟล์นี้ไม่ได้อยู่บนคลังภาพของเรา — ไม่มีไฟล์ต้องลบ)', 'info'); return }
     try {
@@ -421,7 +511,14 @@ export function ContentTab({ load }: ContentTabProps) {
       usage_limit: promoForm.usage_limit ?? null,
       scope_product_ids: promoForm.scope_product_ids ?? [],
     }
-    const approvalId = await submitContentForApproval('banner', promoForm.name, promoForm.description || '')
+    // Send image URL and mascot to approval submission
+    const approvalId = await submitContentForApproval(
+      'banner',
+      promoForm.name,
+      promoForm.description || '',
+      promoForm.banner_image || undefined,
+      promoForm.banner_mascot || undefined
+    )
     if (approvalId) {
       row.approval_id = approvalId
     }
@@ -449,7 +546,14 @@ export function ContentTab({ load }: ContentTabProps) {
     if (!bannerForm.title.trim()) { showToast('ใส่หัวข้อแบนเนอร์ก่อน', 'error'); return }
     if (!bannerForm.banner_image) { showToast('เลือกรูปแบนเนอร์ก่อน (อัปโหลด/เลือกจากคลัง/ลิงก์ภายนอก)', 'warning'); return }
     setBannerSaving(true)
-    const approvalId = await submitContentForApproval('banner', bannerForm.title, bannerForm.body)
+    // Send image URL and mascot to approval submission
+    const approvalId = await submitContentForApproval(
+      'banner',
+      bannerForm.title,
+      bannerForm.body,
+      bannerForm.banner_image,
+      bannerForm.banner_mascot || undefined
+    )
     setBannerSaving(false)
     if (approvalId) {
       // If set as floating ad, store the approval_id reference
@@ -590,6 +694,34 @@ export function ContentTab({ load }: ContentTabProps) {
               </button>
             )
           })}
+        </div>
+      </div>
+
+      {/* Section 1.5: Select from Menu Catalog */}
+      <div className="card p-4">
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="font-bold text-brand-accent">🍽️ เลือกรูปจากเมนู</h2>
+          <button
+            type="button"
+            className="btn btn-primary text-sm"
+            onClick={() => setCatalogModalOpen(true)}
+            data-testid="mk-catalog-picker-btn"
+          >
+            {catalogLoading ? ' กำลังโหลด…' : ' เลือกรูปจากเมนู'}
+          </button>
+        </div>
+        <p className="text-xs text-brand-muted mb-3">
+          เลือกรูปจากเมนูที่มีอยู่ — เลือก "ใช้เป็นรูปเนื้อหา" เพื่อแนบกับโพสต์/โปรโมชั่น/แบนเนอร์ หรือ "ใช้เป็นต้นแบบ AI" เพื่อใช้อ้างอิงในการเจนภาพใหม่
+        </p>
+        <div className="flex gap-2 text-xs">
+          <div className="flex items-center gap-1">
+            <span className="w-2 h-2 rounded-full bg-green-500"></span>
+            <span>ใช้เป็นรูปเนื้อหา</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <span className="w-2 h-2 rounded-full bg-blue-500"></span>
+            <span>ใช้เป็นต้นแบบ AI</span>
+          </div>
         </div>
       </div>
 
@@ -1093,6 +1225,79 @@ export function ContentTab({ load }: ContentTabProps) {
           {postSaving || promoSaving || bannerSaving ? '⏳ กำลังสร้าง…' : '🚀 สร้างและส่งตรวจ (CNT-01)'}
         </button>
       </div>
+
+      {/* Catalog Picker Modal */}
+      {catalogModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50" onClick={closeCatalogModal}>
+          <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[80vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
+            <div className="p-4 border-b border-brand-border flex items-center justify-between">
+              <h3 className="text-lg font-bold text-brand-accent">🍽️ เลือกรูปจากเมนู</h3>
+              <button type="button" onClick={closeCatalogModal} className="text-brand-muted hover:text-brand-primary text-2xl" aria-label="ปิด">×</button>
+            </div>
+            <div className="p-4 flex-1 overflow-y-auto">
+              {/* Search */}
+              <div className="mb-4">
+                <input
+                  type="text"
+                  placeholder="ค้นหาเมนู..."
+                  value={catalogSearch}
+                  onChange={(e) => setCatalogSearch(e.target.value)}
+                  className="input w-full"
+                  autoFocus
+                  data-testid="catalog-search"
+                />
+              </div>
+              {/* Product Grid */}
+              {catalogLoading ? (
+                <p className="text-center text-brand-muted py-8">กำลังโหลดรายการเมนู…</p>
+              ) : filteredCatalogProducts.length === 0 ? (
+                <p className="text-center text-brand-muted py-8">
+                  {catalogSearch ? 'ไม่พบเมนูที่ค้นหา' : 'ยังไม่มีเมนูในรายการ'}
+                </p>
+              ) : (
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                  {filteredCatalogProducts.map((product) => (
+                    <div key={product.id} className="border border-brand-border rounded-lg overflow-hidden hover:border-brand-primary transition-colors">
+                      <div className="aspect-square bg-brand-surface relative">
+                        {product.image_url ? (
+                          <img src={product.image_url} alt={product.name} className="w-full h-full object-cover" loading="lazy" />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-brand-muted text-sm">ไม่มีภาพ</div>
+                        )}
+                      </div>
+                      <div className="p-2">
+                        <p className="font-medium text-sm truncate">{product.name}</p>
+                        {product.description && <p className="text-xs text-brand-muted truncate mt-0.5">{product.description}</p>}
+                        <div className="flex gap-1 mt-2">
+                          <button
+                            type="button"
+                            className="btn btn-primary btn-sm flex-1"
+                            onClick={() => void handleCatalogSelect(product, 'content')}
+                            data-testid={`catalog-use-content-${product.id}`}
+                          >
+                            📷 เป็นรูปเนื้อหา
+                          </button>
+                          <button
+                            type="button"
+                            className="btn btn-outline btn-sm flex-1"
+                            onClick={() => void handleCatalogSelect(product, 'reference')}
+                            data-testid={`catalog-use-reference-${product.id}`}
+                          >
+                            🎨 เป็นต้นแบบ AI
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+            <div className="p-3 border-t border-brand-border text-xs text-brand-muted">
+              กด Escape หรือคลิกภายนอกเพื่อปิด • เลือก "เป็นรูปเนื้อหา" เพื่อแนบกับโพสต์/โปรโมชั่น/แบนเนอร์ • เลือก "เป็นต้นแบบ AI" เพื่อใช้อ้างอิงในการเจนภาพใหม่
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
