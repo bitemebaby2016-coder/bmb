@@ -21,13 +21,10 @@ export function useInAppBrowser() {
   const installPromptRef = useRef<BeforeInstallPromptEvent | null>(null)
 
   useEffect(() => {
-    // ตรวจจับ FB WebView: user agent + heuristic
+    // ตรวจจับ FB WebView: user agent เท่านั้น (viewport heuristic ถูกนำออกเพราะ false positive บน desktop)
     const ua = navigator.userAgent
     const fbUA = /FBAV|FB_IAB|FBAN|FBBV/i.test(ua)
-    // Heuristic: FB WebView มักมี viewport เล็กกว่า screen จริง
-    const viewportMismatch = typeof window !== 'undefined' && window.innerWidth < window.screen.width * 0.95
-    const detected = fbUA || viewportMismatch
-    setIsFB(detected)
+    setIsFB(fbUA)
 
     // โหลด dismissed state
     try {
