@@ -264,9 +264,20 @@ export function FloatingAdBanners({
           // R61: แอดมินประกอบมาสคอตของโปรโมชั่นนั้นเอง (เครื่อง/คลังภาพ/มาตรฐาน) → ใช้ของโปรโมชั่นก่อน
           const promoMascot = promo.mascot || mascotSrc
           const mascotCorner = mascotCornerForPosition(pos)
+          
+          // Badge มุมขอบมีสี — แสดงประเภทแหล่งข้อมูล
+          const isAnnouncement = promo.id.startsWith('ann-')
+          const badgeInfo = isAnnouncement
+            ? { label: '📣 ประกาศ', className: 'bg-amber-500 text-white' }
+            : { label: '🎁 โปรโมชั่น', className: 'bg-brand-primary text-white' }
+          
           return (
           <div key={promo.id} className="flad-card" data-testid="floating-ad-banner">
-          <div className="flad-media">
+            {/* Badge มุมขอบมีสี — แสดงประเภท */}
+            <div className={`absolute top-2 right-2 z-10 text-[9px] px-1.5 py-0.5 rounded font-medium ${badgeInfo.className}`} data-testid="floating-ad-badge">
+              {badgeInfo.label}
+            </div>
+            <div className="flad-media">
             {mediaSrc ? (
               <>
                 <img
