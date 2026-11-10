@@ -1,13 +1,13 @@
-## 🔒 SESSION CLOSE 2026-11-10 (รอบ 8 · Floating Ad + Promotion Banner Settings เสร็จ · รอ Live Retest ตาม 11-09) — **DEPLOYED ครบ 5 Commits · OWNER VERIFIED 4/7 ข้อ · WAITING RETEST D2, D5, §T-A, R92-S**
+## 🔒 SESSION CLOSE 2026-11-10 (รอบ 8 · Floating Ad + Promotion Banner Settings เสร็จ · รอ Live Retest ตาม 11-09) — **DEPLOYED ครบ 5 Commits · OWNER VERIFIED 7/8 ข้อ · WAITING RETEST §T-A เท่านั้น**
 
-> **สถานะ ณ 2026-11-10 15:55:** ทุกการแก้ไข **CODE_CLOSED + PUSHED + DEPLOYED** ครบแล้ว · Gates 4/4 ผ่าน (lint ✅ tsc ✅ build ✅ vitest ✅) · Live Check `LIVE_CHECK_ALL_MARKERS_OK` (asset `index-Bh_24aFF.js`) · **Owner verified: IMG-GEN ✅, D4 ✅, R91 ✅, R92-G ✅** · **เหลือ Live Retest: D2, D5, §T-A, R92-S**
+> **สถานะ ณ 2026-11-10 16:37:** ทุกการแก้ไข **CODE_CLOSED + PUSHED + DEPLOYED** ครบแล้ว · Gates 4/4 ผ่าน (lint ✅ tsc ✅ build ✅ vitest ✅) · Live Check `LIVE_CHECK_ALL_MARKERS_OK` (asset `index-Bh_24aFF.js`) · **Owner verified: IMG-GEN ✅, D4 ✅, R91 ✅, R92-G ✅, D2 ✅, D5 ✅, R92-S ✅** · **เหลือ Live Retest: §T-A เท่านั้น**
 
 > **กติกาเซสชั่นใหม่ (ถ้ามี):**
 > 1. **✅ สำเร็จแล้วรอบนี้**: Floating Ad Multiple + Sources Filter + Badge + AiStudioTab Merge + Viewport Fix — **CODE_CLOSED + PUSHED + DEPLOYED** ครบ
-> 2. **Live Retest Sequence** (ตาม `docs/BMB_REMAIN_TESTS_LIVE_2026-11-10.md` อัปเดตแล้ว): ① **D2** SAME_DAY prompt ② **D5** round hardcode gone ③ **§T-A** cart retry 2.5s ④ **R92-S** compress 300×300/100KB · **ใช้ `https://biteme-baby.com` · hard reload 1 ครั้ง · FAIL = จด defect + two-try · RT-8 ยังห้ามปิด**
-> 3. เอกสารอ้างอิง: `docs/BMB_REMAIN_TESTS_LIVE_2026-11-10.md` (อัปเดตแล้ว — เหลือ D2, D5, §T-A, R92-S) · `AI_WORK_STATE.md` (ไฟล์นี้)
+> 2. **Live Retest Sequence** (ตาม `docs/BMB_REMAIN_TESTS_LIVE_2026-11-10.md` อัปเดตแล้ว): ① **§T-A** cart retry 2.5s · **ใช้ `https://biteme-baby.com` · hard reload 1 ครั้ง · FAIL = จด defect + two-try · RT-8 ยังห้ามปิด**
+> 3. เอกสารอ้างอิง: `docs/BMB_REMAIN_TESTS_LIVE_2026-11-10.md` (อัปเดตแล้ว — เหลือ §T-A เท่านั้น) · `AI_WORK_STATE.md` (ไฟล์นี้)
 
-## ✅ OWNER VERIFIED 2026-11-10 15:55
+## ✅ OWNER VERIFIED 2026-11-10 16:37
 
 | ข้อ | สิ่งที่ทดสอบ | ผล | Evidence |
 |---|---|---|---|
@@ -15,15 +15,15 @@
 | **D4** | ปุ่ม `intent://` ใหม่ — จาก DM/คอมเมนต์เปิดแอปแชทตรง + guide ใหม่ | ✅ PASS | Owner confirm |
 | **R91** | hard reload `/shop` — การ์ดรีวิวสเกลเท่ากันทุกใบ + mobile-first | ✅ PASS | Owner confirm |
 | **R92-G** | guide ในแอป FB/IG เห็น "เปิดผ่าน Chrome หรือ Safari เพื่อการใช้งานที่สมบูรณ์ที่สุด" | ✅ PASS | Owner confirm |
+| **D2** | prompt SAME_DAY — "ขอคิดก่อนนะ" = draft · ยืนยัน = เลขจริง (RT-5.1/5.4) | ✅ PASS | Owner confirm |
+| **D5** | รอบ hardcode หายจริงในการสนทนา — ไม่มี "รอบที่ 1/2" แบบตายตัว | ✅ PASS | Owner confirm |
+| **R92-S** | อัปโหลดรูปใหญ่ (>300px/>100KB) → ลดเหลือ ≤300px / ≤100KB อัตโนมัติ (marketing, products, AI Album) | ✅ PASS | Owner confirm |
 
-## ⏳ รอ Live Retest (เหลือ 4 ข้อ)
+## ⏳ รอ Live Retest (เหลือ 1 ข้อ)
 
 | ข้อ | รีเทสต์อะไร | หลักฐาน deploy | วิธีทดสอบ |
 |---|---|---|---|
-| **D2** | prompt SAME_DAY — "ขอคิดก่อนนะ" = draft · ยืนยัน = เลขจริง (RT-5.1/5.4) | EF `c9f77aa` | §D2 ใน BMB_REMAIN_TESTS_LIVE |
-| **D5** | รอบ hardcode หายจริงในการสนทนา — ดูจากคำตอบแชทจริง | `c9f77aa`/`d9e975d` | §D5 ใน BMB_REMAIN_TESTS_LIVE |
 | **§T-A** | `?cart=` จาก FB → retry ชั้น 2 (2.5s) — Android กระโดด Chrome มีของครบ | `c9f77aa` | §T-A ใน BMB_REMAIN_TESTS_LIVE |
-| **R92-S** | อัปโหลดรูปใหญ่ (>300px/>100KB) → ลดเหลือ 300×300/≤100KB อัตโนมัติ | `e65f6bf` · `compressToWebLimits` 4 จุด | **§R92-S ใน BMB_REMAIN_TESTS_LIVE (ละเอียด)** |
 
 ## 🔧 FIX 2026-11-10 (Session ใหม่): Viewport Heuristic False Positive + Floating Ad FBA Gate
 **ปัญหา**: Owner รายงาน Banner "กำลังเปิดใน Facebook" โชว์บน Chrome desktop ปกติ (รูปภาพเป็นหลักฐาน)
