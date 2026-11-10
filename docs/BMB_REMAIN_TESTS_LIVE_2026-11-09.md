@@ -1,9 +1,9 @@
-# BMB — REMAINING TESTS ON LIVE (รายการที่ "ยังปิดไม่ได้" ณ 2026-11-09)
+# BMB — REMAINING TESTS ON LIVE (รายการที่ "ยังปิดไม่ได้" ณ 2026-11-10)
 
 > **สร้างตามคำสั่ง Owner 2026-11-09 (ปิดเซสชั่น R92):** "อัพเดทเอกสาร BMB_REMAIN_TESTS_LIVE_2026-11-09 ตามสถานะจริง (คงเหลือไว้เฉพาะที่ยังปิดไม่ได้เท่านั้น) แล้วไปทดสอบต่อแชทหน้า"
 > · **เอกสารนี้แทนที่ ฉบับ 2026-11-08 แล้ว** = รายการเดียวที่ต้องรันต่อ · **ของปิดแล้ว/มีหลักฐานผ่าน = ไม่อยู่ในนี้** (รายชื่อปิดรอบนี้ = `AI_WORK_STATE.md` บล็อก "✅ ปิดแล้วในเซสชั่นนี้")
 > · เกณฑ์ผ่านรายข้อ/วิธีทำละเอียด = `docs/BMB_PRODUCTION_TEST_PACK.md` (§RG · §T · §R74) · สถานะโค้ด = `docs/BMB_MASTER_STATUS.md`
-> · **HEAD = `e65f6bf`** (R92) · gates 4/4 (tsc/lint/vitest/build = 0) · live bundle = `assets/index-UE2i45rJ.js` (มี R90_SEE_ALL + R92_GUIDE_NEW · ไม่มีวลี guide เดิม)
+> · **HEAD = `e65f6bf`** (R92) · **Migration 201 APPLIED PROD** · **Edge Functions `social-ai-worker` DEPLOYED exit=0** · gates 4/4 (tsc/lint/vitest/build = 0) · live bundle = `assets/index-UE2i45rJ.js` (มี R90_SEE_ALL + R92_GUIDE_NEW · ไม่มีวลี guide เดิม)
 
 ### กติกา (คงเดิมทุกข้อ)
 1. ใช้ **`https://biteme-baby.com`** เท่านั้น · **hard reload (Ctrl+Shift+R) 1 ครั้ง** ก่อนเริ่ม · เปิด F12 Console ทิ้งไว้
@@ -23,7 +23,7 @@
 
 ---
 
-## ⏳ รอ retest บน live — โค้ด deploy แล้วหมด (hard reload ก่อนรันทุกข้อ)
+## ⏳ รอ retest บน live — โค้ด deploy แล้วหมด + Migration 201 APPLIED + EF DEPLOYED (hard reload ก่อนรันทุกข้อ)
 
 | ข้อ | รีเทสต์อะไร | หลักฐาน deploy |
 |---|---|---|
@@ -45,9 +45,9 @@
 
 ---
 
-## ✅ ปิดแล้วรอบ 2026-11-09 — ไม่ต้องรัน (รายละเอียด = `AI_WORK_STATE.md` บล็อก ✅)
+## ✅ ปิดแล้วรอบ 2026-11-09/10 — ไม่ต้องรัน (รายละเอียด = `AI_WORK_STATE.md` บล็อก ✅)
 
-R89b/c ยุบ+เรียงรีวิว `/shop` (Owner เห็น Verified Purchase) · R90 งาน 1 ลิงก์รีวิว + งาน 2 promo หมดอายุ ("หายแล้ว"/"ลิงก์ถูกต้อง") · two-try Attempt 1 = D2/D5/§T-A code+deploy (เหลือ retest ด้านบน) · D4 วิธีใหม่ code+deploy · R92 งาน 2 วลี guide (bundle proof) · งาน 3 บังคับ 300×300/100KB (gates+test+deploy) · งาน 1 image-gen = สืบจบ → เปลี่ยนเป็น BLOCKED เติมเครดิต (ด้านบน) · ของเดิม: D1 · D3 · D6–D9 · RT-1.4 · RT-5.5–5.7 + CAP-11 · RT-87b CI · promo หมดอายุ
+R89b/c ยุบ+เรียงรีวิว `/shop` (Owner เห็น Verified Purchase) · R90 งาน 1 ลิงก์รีวิว + งาน 2 promo หมดอายุ ("หายแล้ว"/"ลิงก์ถูกต้อง") · two-try Attempt 1 = D2/D5/§T-A code+deploy (เหลือ retest ด้านบน) · D4 วิธีใหม่ code+deploy · R92 งาน 2 วลี guide (bundle proof) · งาน 3 บังคับ 300×300/100KB (gates+test+deploy) · งาน 1 image-gen = สืบจบ → เปลี่ยนเป็น BLOCKED เติมเครดิต (ด้านบน) · ของเดิม: D1 · D3 · D6–D9 · RT-1.4 · RT-5.5–5.7 + CAP-11 · RT-87b CI · promo หมดอายุ · **Migration 201 APPLIED PROD** · **Edge Functions `social-ai-worker` DEPLOYED exit=0** · Test expectations fixed (3 pre-existing failures) · Food Theater Carousel (Admin-Curated Auto-Play) code complete
 
 ---
 
