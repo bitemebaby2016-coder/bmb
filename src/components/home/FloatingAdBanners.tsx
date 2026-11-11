@@ -282,8 +282,10 @@ export function FloatingAdBanners({
   // R58: ลำดับโพสใน merged (ก่อนตัด dismissed) = ตำแหน่งไว้เลือกรูปมาสคอต/มุม/ภาพอัลบั้ม
   // → การ์ดติดกันได้มาสคนคนละตัวและมุมคนละมุม (Owner: "สลับไม่ซ้ำกัน")
   const positionOf = new Map(merged.map((p, i) => [p.id, i]))
+  // Hard cap: merge output max 3 — dismiss แล้วก็ไม่ให้ขึ้นต่อเรื่อยๆ
+  const cappedMerged = merged.slice(0, 3)
   // max 3 banners; skip already-dismissed ones (state + sessionStorage)
-  const visible = pickVisibleBannerPromos(merged, dismissedIds)
+  const visible = pickVisibleBannerPromos(cappedMerged, dismissedIds)
   const visibleKey = visible.map((p) => p.id).join(',')
 
   function dismiss(id: string) {
