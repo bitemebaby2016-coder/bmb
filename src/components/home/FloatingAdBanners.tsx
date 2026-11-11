@@ -77,14 +77,14 @@ function isDismissed(id: string): boolean {
 }
 
 // D03: deterministic selection — filter dismissed promos, KEEP INPUT ORDER
-// (R50: รายการ = ประกาศล่าสุด (ใหม่ก่อน) ตามด้วยโปรโมชั่น — ต้องนับเป็น "ล่าสุดไม่เกิน 2")
+// (R50: รายการ = ประกาศล่าสุด (ใหม่ก่อน) ตามด้วยโปรโมชั่น — ต้องนับเป็น "ล่าสุดไม่เกิน 3")
 export function pickVisibleBannerPromos(
   promos: FloatingBannerPromo[],
   dismissed: ReadonlySet<string>,
 ): FloatingBannerPromo[] {
   return [...(promos || [])]
     .filter((p) => p.id && !dismissed.has(p.id) && !isDismissed(p.id))
-    .slice(0, 2)
+    .slice(0, 3)
 }
 
 // AI-CLEANUP: mock banner asset removed — banners without a creative render a
@@ -270,11 +270,11 @@ export function FloatingAdBanners({
   }, [floatAdSources])
 
   // ประกาศ (ใหม่ก่อน) + โปรโมชั่น + เมนูแนะนำ → สลับชนิด a0,p0,r0,a1,p1,r1… (R64: ประกาศห้ามเต็มโควตา
-  // จนโปรโมชั่น/รูปที่แอดมินอัปโหลดไม่เห็นเลย) → ตัด dismissed → สูงสุด 2 (นับรวม)
-  // Limit each source to 2 before merging to prevent huge interleaved array
-  const limitedAnnouncements = announcements.slice(0, 2)
-  const limitedPromos = (promos || []).slice(0, 2)
-  const limitedRecommended = recommendedMenus.slice(0, 2)
+  // จนโปรโมชั่น/รูปที่แอดมินอัปโหลดไม่เห็นเลย) → ตัด dismissed → สูงสุด 3 (นับรวม)
+  // Limit each source to 3 before merging
+  const limitedAnnouncements = announcements.slice(0, 3)
+  const limitedPromos = (promos || []).slice(0, 3)
+  const limitedRecommended = recommendedMenus.slice(0, 3)
   const merged = mergeBannerFeed(
     mergeBannerFeed(limitedAnnouncements, limitedPromos),
     limitedRecommended
