@@ -1,3 +1,19 @@
+## 🔒 SESSION CLOSE 2026-11-11 (รอบ 11 · Floating Ad Limit + Real Data Links เสร็จ · Gates 4/4 ผ่าน) — **CODE_CLOSED + PUSHED**
+
+> **สถานะ ณ 2026-11-11 09:30:** ทุกการแก้ไข **CODE_CLOSED** ครบแล้ว · Gates 4/4 ผ่านจริง (lint ✅ tsc ✅ build ✅ vitest ✅) · **Fixes:**
+> 1. **Floating Ad จำกัด 3 ใบ** (`FloatingAdBanners.tsx`) — `pickVisibleBannerPromos.slice(0,3)` + แต่ละ source limit 3 ก่อน merge (announcements, promos, recommended_menu)
+> 2. **ลิงก์ข้อมูลจริงทุกใบ** — Promotions: `href=/menu?coupon=CODE` + `coupon` + `image` + `mascot` จาก DB · Announcements: `href=/promotions` · Recommended: `href=/menu?product=ID` + รูปเมนูจริง
+> 3. **CTA ใช้ `promo.href` จริง** — `<Link to={promo.href}>` deep-link พร้อม coupon applied
+> 4. **AI Gen images scope คงเดิม**: ใช้ได้แค่ Facebook post · marketing post · manual attach · เจนรูปเมนูจากตัวอย่าง — ห้าม auto floating ad
+> 
+> **Gates ผ่าน**: lint ✅ tsc ✅ build ✅ vitest ✅
+> **Commits**: `aa464f3` (fix) + `05ab1f0` (interim) + `c78aa9c` (sources) + `4dc1a16` (promo discount guard) → push แล้ว (`main`)
+> 
+> **กติกาเซสชั่นต่อไป:**
+> 1. **✅ สำเร็จแล้ว**: Floating Ad Limit (3) + Real Data Links + AI Gen Scope — **CODE_CLOSED + PUSHED**
+> 2. **Live Retest Sequence** คงเดิม: ① **§T-A** cart retry 2.5s · ใช้ `https://biteme-baby.com` · hard reload 1 ครั้ง · RT-8 ยังห้ามปิด
+> 3. เอกสารอ้างอิง: `AI_WORK_STATE.md` · `.kilo/plans/1794247959923-content-catalog-image-workflow.md`
+
 ## 🔒 SESSION CLOSE 2026-11-11 (รอบ 10 · Floating Ad Sources + AI Gen Scope Fix เสร็จ · Gates 4/4 ผ่าน) — **CODE_CLOSED + PUSHED**
 
 > **สถานะ ณ 2026-11-11 08:58:** ทุกการแก้ไข **CODE_CLOSED** ครบแล้ว · Gates 4/4 ผ่านจริง (lint ✅ tsc ✅ build ✅ vitest ✅: 213 files / 2215 tests PASS) · **Fixes:**
