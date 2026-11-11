@@ -78,7 +78,7 @@ export function ContentTab({ load }: ContentTabProps) {
 
   const [floatingAdImage, setFloatingAdImage] = useState('')
   const [floatingAdEnabled, setFloatingAdEnabled] = useState(true)
-  const [floatingAdSources, setFloatingAdSources] = useState<('promotions' | 'announcements' | 'approved_banners')[]>(['promotions', 'announcements', 'approved_banners'])
+  const [floatingAdSources, setFloatingAdSources] = useState<('promotions' | 'announcements' | 'approved_banners' | 'recommended_menu')[]>(['promotions', 'announcements', 'approved_banners', 'recommended_menu'])
 
   const [contentType, setContentType] = useState<'post' | 'promotion' | 'banner' | 'announcement'>('post')
   const [postTitle, setPostTitle] = useState('')
@@ -115,7 +115,6 @@ export function ContentTab({ load }: ContentTabProps) {
     body: '',
     banner_image: '',
     banner_mascot: '',
-    set_as_floating_ad: false,
   })
   const [bannerSaving, setBannerSaving] = useState(false)
 
@@ -297,9 +296,9 @@ export function ContentTab({ load }: ContentTabProps) {
         for (const row of data || []) {
           if (row.key === 'floating_ad_image' && typeof row.value === 'string') setFloatingAdImage(row.value)
           if (row.key === 'floating_ad_enabled' && typeof row.value === 'boolean') setFloatingAdEnabled(row.value)
-          if (row.key === 'floating_ad_sources' && Array.isArray(row.value)) {
-            const sources = row.value.filter((v: unknown): v is 'promotions' | 'announcements' | 'approved_banners' => 
-              v === 'promotions' || v === 'announcements' || v === 'approved_banners'
+if (row.key === 'floating_ad_sources' && Array.isArray(row.value)) {
+            const sources = row.value.filter((v: unknown): v is 'promotions' | 'announcements' | 'approved_banners' | 'recommended_menu' =>
+              v === 'promotions' || v === 'announcements' || v === 'approved_banners' || v === 'recommended_menu'
             )
             if (sources.length > 0) setFloatingAdSources(sources)
           }
@@ -742,14 +741,10 @@ export function ContentTab({ load }: ContentTabProps) {
     )
     setBannerSaving(false)
     if (approvalId) {
-      // If set as floating ad, store the approval_id reference
-      if (bannerForm.set_as_floating_ad) {
-        await setBusinessSetting('floating_ad_image', bannerForm.banner_image)
-        showToast('สร้างแบนเนอร์แล้ว + ตั้งเป็นโฆษณาลอย (รออนุมัติ) — จะขึ้นหน้าแรกเมื่ออนุมัติ', 'success')
-      } else {
-        showToast('สร้างแบนเนอร์แล้ว — ส่งเข้าคิวตรวจเนื้อหา (CNT-01)', 'success')
-      }
-      setBannerForm({ title: '', body: '', banner_image: '', banner_mascot: '', set_as_floating_ad: false })
+      // Floating ad is now configured via sources filter (promotions/announcements/approved_banners/recommended_menu)
+      // Admin controls which sources appear in floating ad via ContentTab floatingAdSources
+      showToast('สร้างแบนเนอร์แล้ว — ส่งเข้าคิวตรวจเนื้อหา (CNT-01)', 'success')
+      setBannerForm({ title: '', body: '', banner_image: '', banner_mascot: '' })
       await load()
     } else {
       showToast('สร้างแบนเนอร์ไม่สำเร็จ', 'error')
@@ -1025,7 +1020,8 @@ export function ContentTab({ load }: ContentTabProps) {
               {[
                 { key: 'promotions' as const, label: '🎁 โปรโมชั่น (is_banner=true)', desc: 'จากตาราง promotions ที่ตั้ง is_banner=true' },
                 { key: 'announcements' as const, label: '📣 ประกาศ/โพสต์', desc: 'จาก marketing_feed_posts (RPC)' },
-                { key: 'approved_banners' as const, label: '✅ แบนเนอร์อนุมัติแล้ว', desc: 'จาก content_approvals ที่ผ่าน CNT-01 + set_as_floating_ad' }
+                { key: 'approved_banners' as const, label: '✅ แบนเนอร์อนุมัติแล้ว', desc: 'จาก content_approvals ที่ผ่าน CNT-01 + set_as_floating_ad' },
+                { key: 'recommended_menu' as const, label: '🔥 เมนูแนะนำ', desc: 'จาก popular items ที่แอดมินตั้งค่า (homePopularConfig) · ใช้รูปเมนูจริง' }
               ].map(({ key, label, desc }) => (
                 <label key={key} className="flex items-start gap-2 p-2 rounded-lg border hover:bg-brand-primary/5 transition-colors cursor-pointer">
                   <input
@@ -1387,21 +1383,6 @@ export function ContentTab({ load }: ContentTabProps) {
                 )}
               </div>
             )}
-
-            {/* Floating Ad checkbox */}
-            <label className="flex items-center gap-3 mt-4 p-3 rounded-lg border border-brand-border bg-brand-surface">
-              <input
-                type="checkbox"
-                checked={bannerForm.set_as_floating_ad}
-                onChange={(e) => setBannerForm({ ...bannerForm, set_as_floating_ad: e.target.checked })}
-                className="w-5 h-5"
-              />
-              <div>
-                <span className="font-medium">📌 ตั้งเป็นโฆษณาลอย (Floating Ad)</span>
-                <p className="text-xs text-brand-muted">ภาพนี้จะแสดงบนหน้าแรกพร้อมน้อง Bite ประกอบ (ต้องผ่านการอนุมัติ CNT-01 ก่อน)</p>
-                {floatingAdImage && <p className="text-xs text-brand-muted mt-1">ภาพปัจจุบัน: {floatingAdImage.slice(0, 60)}...</p>}
-              </div>
-            </label>
           </div>
         )}
       </div>

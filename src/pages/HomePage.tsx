@@ -95,7 +95,7 @@ export function HomePage() {
   const [operatingHours, setOperatingHours] = useState<Record<string, boolean> | null>(null)
   const [masterOpen, setMasterOpen] = useState<boolean | null>(null)
   const [floatingAdEnabled, setFloatingAdEnabled] = useState<boolean>(true)
-  const [floatingAdSources, setFloatingAdSources] = useState<('promotions' | 'announcements' | 'approved_banners')[]>(['promotions', 'announcements', 'approved_banners'])
+  const [floatingAdSources, setFloatingAdSources] = useState<('promotions' | 'announcements' | 'approved_banners' | 'recommended_menu')[]>(['promotions', 'announcements', 'approved_banners', 'recommended_menu'])
   const [approvedFloatAdImages, setApprovedFloatAdImages] = useState<Set<string>>(new Set())
   // R21 Phase 3: โหลดล้มเหลว ≠ ร้านไม่มีเมนู + key สำหรับกด "ลองใหม่"
   const [loadError, setLoadError] = useState('')
@@ -144,8 +144,8 @@ export function HomePage() {
             // Load floating ad sources filter
             const sources = settings?.floating_ad_sources
             if (Array.isArray(sources)) {
-              const validSources = sources.filter((v: unknown): v is 'promotions' | 'announcements' | 'approved_banners' =>
-                v === 'promotions' || v === 'announcements' || v === 'approved_banners'
+              const validSources = sources.filter((v: unknown): v is 'promotions' | 'announcements' | 'approved_banners' | 'recommended_menu' =>
+                v === 'promotions' || v === 'announcements' || v === 'approved_banners' || v === 'recommended_menu'
               )
               if (validSources.length > 0) setFloatingAdSources(validSources)
             }

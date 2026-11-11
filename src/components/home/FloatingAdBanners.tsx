@@ -28,6 +28,8 @@ export interface FloatingBannerPromo {
   mascot?: string
 }
 
+export type FloatingAdSource = 'promotions' | 'announcements' | 'approved_banners' | 'recommended_menu'
+
 /** R58 (Owner 2026-11-02): เลือกภาพเจน "ด้านการตลาด/โปรโมชั่น (ไม่ใช่รูปเมนู)" จาก image_urls/URL เดียว
  *  - ต้องอยู่ใน ai-generated/ · ห้ามหมวด menu · ห้าม _disabled · เอาใบสุดท้ายที่ใช้ได้ (ใหม่สุดตอน insert) */
 export function pickMarketingAiImage(images: unknown): string {
@@ -108,17 +110,17 @@ export function mergeBannerFeed(
 export function FloatingAdBanners({ 
   promos, 
   notice, 
-  sources = ['promotions', 'announcements', 'approved_banners']
+  sources = ['promotions', 'announcements', 'approved_banners', 'recommended_menu']
 }: { 
   promos: FloatingBannerPromo[]; 
   notice?: string;
-  sources?: ('promotions' | 'announcements' | 'approved_banners')[];
+  sources?: FloatingAdSource[];
 }) {
   const [dismissedIds, setDismissedIds] = useState<Set<string>>(new Set())
   // Kill switch สำหรับ floating ad (โหลดจาก business_settings)
   const [floatAdEnabled, setFloatAdEnabled] = useState(true)
   // Floating ad sources filter (โหลดจาก business_settings หรือใช้ props)
-  const [floatAdSources, setFloatAdSources] = useState<('promotions' | 'announcements' | 'approved_banners')[]>(sources)
+  const [floatAdSources, setFloatAdSources] = useState<FloatingAdSource[]>(sources)
   // Fallback images จาก ai-generated album (promo/festival)
   const [albumImgs, setAlbumImgs] = useState<string[]>([])
   
@@ -137,8 +139,8 @@ export function FloatingAdBanners({
           if (typeof enabledV === 'boolean') setFloatAdEnabled(enabledV)
           const sourcesV = (sourcesData as { value?: unknown } | null)?.value
           if (Array.isArray(sourcesV)) {
-            const validSources = sourcesV.filter((v: unknown): v is 'promotions' | 'announcements' | 'approved_banners' =>
-              v === 'promotions' || v === 'announcements' || v === 'approved_banners'
+            const validSources = sourcesV.filter((v: unknown): v is FloatingAdSource =>
+              v === 'promotions' || v === 'announcements' || v === 'approved_banners' || v === 'recommended_menu'
             )
             if (validSources.length > 0) setFloatAdSources(validSources)
             else setFloatAdSources(sources) // fallback to props
@@ -217,9 +219,61 @@ export function FloatingAdBanners({
     return () => { alive = false }
   }, [floatAdSources])
 
-  // ประกาศ (ใหม่ก่อน) + โปรโมชั่น → สลับชนิด a0,p0,a1,p1… (R64: ประกาศห้ามเต็มโควตา 2 ใบ
-  // จนโปรโมชั่น/รูปที่แอดมินอัปโหลดไม่เห็นเลย) → ตัด dismissed → สูงสุด 2 (นับรวม)
-  const merged = mergeBannerFeed(announcements, promos || [])
+  // Load recommended menu items when 'recommended_menu' is in sources
+  const [recommendedMenus, setRecommendedMenus] = useState<FloatingBannerPromo[]>([])
+
+  useEffect(() => {
+    if (!floatAdSources.includes('recommended_menu')) {
+      setRecommendedMenus([])
+      return
+    }
+    let alive = true
+    void (async () => {
+      try {
+        const { getProducts, getCategories } = await import('@/lib/bmbAdminApi_products')
+        const { parseHomePopularConfig, resolvePopularItems, toPopularHomeProduct, HOME_POPULAR_KEY } = await import('@/lib/homePopular')
+        const { getBusinessSettings } = await import('@/lib/bmbAdminApi_settings')
+        
+        const [products, categories, settings] = await Promise.all([
+          getProducts(),
+          getCategories(),
+          getBusinessSettings(),
+        ])
+        
+        const popularCfg = parseHomePopularConfig(settings?.[HOME_POPULAR_KEY])
+        const catMap = new Map(categories.map((c) => [c.id, c]))
+        
+        // Import schedule map for pre-order filtering
+        const { getProductScheduleMap } = await import('@/lib/productSchedule')
+        const scheduleMap = await getProductScheduleMap()
+        
+        const popular = resolvePopularItems(products, categories, popularCfg, undefined, scheduleMap)
+          .slice(0, 3)
+          .map((p) => toPopularHomeProduct(p, catMap.get(p.category_id), scheduleMap))
+        
+        if (alive && popular.length > 0) {
+          setRecommendedMenus(
+            popular.map((item, idx) => ({
+              id: `rec-${item.id}`,
+              title: '🔥 ' + item.name,
+              description: item.description || `ราคา ${item.price.toLocaleString()} บาท`,
+              to: '/menu',
+              href: `/menu?product=${item.id}`,
+              image: item.image,
+              // Use product's own image, not AI-generated
+            })),
+          )
+        }
+      } catch { /* zero-fake */ }
+    })()
+    return () => { alive = false }
+  }, [floatAdSources])
+
+  // ประกาศ (ใหม่ก่อน) + โปรโมชั่น + เมนูแนะนำ → สลับชนิด a0,p0,r0,a1,p1,r1…
+  const merged = mergeBannerFeed(
+    mergeBannerFeed(announcements, promos || []),
+    recommendedMenus
+  )
   // R58: ลำดับโพสใน merged (ก่อนตัด dismissed) = ตำแหน่งไว้เลือกรูปมาสคอต/มุม/ภาพอัลบั้ม
   // → การ์ดติดกันได้มาสคนคนละตัวและมุมคนละมุม (Owner: "สลับไม่ซ้ำกัน")
   const positionOf = new Map(merged.map((p, i) => [p.id, i]))
@@ -267,8 +321,11 @@ export function FloatingAdBanners({
           
           // Badge มุมขอบมีสี — แสดงประเภทแหล่งข้อมูล
           const isAnnouncement = promo.id.startsWith('ann-')
+          const isRecommended = promo.id.startsWith('rec-')
           const badgeInfo = isAnnouncement
             ? { label: '📣 ประกาศ', className: 'bg-amber-500 text-white' }
+            : isRecommended
+            ? { label: '🔥 เมนูแนะนำ', className: 'bg-red-500 text-white' }
             : { label: '🎁 โปรโมชั่น', className: 'bg-brand-primary text-white' }
           
           return (
