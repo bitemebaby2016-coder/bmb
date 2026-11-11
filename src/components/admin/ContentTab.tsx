@@ -5,11 +5,12 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { showToast } from '@/components/ui/ToastContainer'
-import { submitContentForApproval, type ContentType } from '@/lib/contentApproval'
+import { submitContentForApproval, reviewContent, listContentApprovals, type ContentType, type ContentApprovalRow, type ContentApprovalStatus } from '@/lib/contentApproval'
 import { uploadMediaAsset, listAiAlbumFiles, type AiAlbumFile, compressToWebLimits, PRODUCT_IMAGE_MAX_SIDE } from '@/lib/bmbAdminApi_media'
 import { getBusinessSettings, setBusinessSetting } from '@/lib/bmbAdminApi_settings'
 import { getPromotionsAdmin, upsertPromotion, type PromotionRow } from '@/lib/bmbAdminApi_promotions'
-import { createMarketingPost } from '@/lib/adminMarketing'
+import { createMarketingPost, listMarketingPosts, scheduleMarketingPost, type MarketingPostRow } from '@/lib/adminMarketing'
+import { autoScheduleApprovedPosts } from '@/lib/marketingAutoSchedule'
 import { getProducts } from '@/lib/bmbAdminApi_products'
 import { type Product } from '@/types'
 import { flashTo } from '@/lib/uiFlash'
@@ -130,6 +131,15 @@ export function ContentTab({ load }: ContentTabProps) {
   const [catalogModalOpen, setCatalogModalOpen] = useState(false)
   const [catalogHoveredProduct, setCatalogHoveredProduct] = useState<Product | null>(null)
 
+  // Approval Queue & Schedule Panel state
+  const [approvalItems, setApprovalItems] = useState<ContentApprovalRow[]>([])
+  const [approvalLoading, setApprovalLoading] = useState(false)
+  const [approvalTab, setApprovalTab] = useState<'pending' | 'approved' | 'rejected' | 'all'>('pending')
+  const [scheduledPosts, setScheduledPosts] = useState<MarketingPostRow[]>([])
+  const [scheduleLoading, setScheduleLoading] = useState(false)
+  const [scheduleBusyId, setScheduleBusyId] = useState<string | null>(null)
+  const [whenByPost, setWhenByPost] = useState<Record<string, string>>({})
+
   // Load catalog products
   const loadCatalogProducts = useCallback(async () => {
     setCatalogLoading(true)
@@ -145,6 +155,46 @@ export function ContentTab({ load }: ContentTabProps) {
   }, [])
 
   useEffect(() => { void loadCatalogProducts() }, [loadCatalogProducts])
+
+  // Load approval items (admin sees all, like SocialTab)
+  const loadApprovalItems = useCallback(async () => {
+    setApprovalLoading(true)
+    try {
+      let status: ContentApprovalStatus | undefined
+      if (approvalTab !== 'all') status = approvalTab
+      const data = await listContentApprovals({ status, limit: 100 })
+      setApprovalItems(data)
+    } catch {
+      showToast('โหลดคิวอนุมัติไม่สำเร็จ', 'error')
+    } finally {
+      setApprovalLoading(false)
+    }
+  }, [approvalTab])
+
+  useEffect(() => { void loadApprovalItems() }, [loadApprovalItems])
+
+  // Load scheduled posts (approved posts that can be scheduled)
+  const loadScheduledPosts = useCallback(async () => {
+    setScheduleLoading(true)
+    try {
+      const posts = await listMarketingPosts()
+      // Filter: approved posts that are not yet published
+      const schedulable = posts.filter((p) => p.status === 'approved' || p.status === 'scheduled' || p.status === 'failed')
+      setScheduledPosts(schedulable)
+    } catch {
+      showToast('โหลดโพสต์รอตั้งเวลาไม่สำเร็จ', 'error')
+    } finally {
+      setScheduleLoading(false)
+    }
+  }, [])
+
+  useEffect(() => { void loadScheduledPosts() }, [loadScheduledPosts])
+
+  // Refresh both when parent loads
+  useEffect(() => {
+    void loadApprovalItems()
+    void loadScheduledPosts()
+  }, [loadApprovalItems, loadScheduledPosts, load])
 
   // Catalog selection handler
   async function handleCatalogSelect(product: Product, action: 'content' | 'reference') {
@@ -465,6 +515,103 @@ export function ContentTab({ load }: ContentTabProps) {
     setTimeout(() => {
       void handleSubmitAll()
     }, 50)
+  }
+
+  // ===== Approval Queue Handlers =====
+  async function handleApproveApproval(id: string) {
+    try {
+      const ok = await reviewContent(id, 'approved')
+      if (ok) {
+        showToast('อนุมัติแล้ว — โพสต์พร้อมตั้งเวลาได้', 'success')
+        void loadApprovalItems()
+        void loadScheduledPosts()
+      } else {
+        showToast('อนุมัติไม่สำเร็จ', 'error')
+      }
+    } catch (e) {
+      showToast('อนุมัติไม่สำเร็จ: ' + String(e), 'error')
+    }
+  }
+
+  async function handleRejectApproval(id: string) {
+    const note = window.prompt('เหตุผลที่ปฏิเสธ (บันทึกลง audit):', '') ?? ''
+    try {
+      const ok = await reviewContent(id, 'rejected', note)
+      if (ok) {
+        showToast('ปฏิเสธแล้ว', 'success')
+        void loadApprovalItems()
+      } else {
+        showToast('บันทึกการตัดสินใจไม่สำเร็จ', 'error')
+      }
+    } catch (e) {
+      showToast('ปฏิเสธไม่สำเร็จ: ' + String(e), 'error')
+    }
+  }
+
+  async function handleRetryApproval(item: ContentApprovalRow) {
+    try {
+      const newId = await supabase.functions.invoke('submit_content_for_approval', {
+        body: {
+          p_content_type: item.content_type,
+          p_title: item.title,
+          p_body: item.body,
+          p_image_url: item.image_url ?? null,
+          p_mascot: item.mascot ?? null,
+        }
+      })
+      if (newId.error) {
+        showToast('ส่งตรวจใหม่ไม่สำเร็จ: ' + newId.error.message, 'error')
+      } else {
+        showToast('ส่งตรวจใหม่แล้ว — อยู่ในคิวรออนุมัติ', 'success')
+        void loadApprovalItems()
+      }
+    } catch (e) {
+      showToast('ส่งตรวจใหม่ไม่สำเร็จ: ' + String(e), 'error')
+    }
+  }
+
+  // ===== Schedule Panel Handlers =====
+  const schedulableStatus = (status: string) => status === 'approved' || status === 'scheduled' || status === 'failed'
+
+  async function handleSchedulePost(id: string) {
+    const post = scheduledPosts.find((p) => p.id === id)
+    if (!post || !schedulableStatus(post.status)) { showToast('โพสต์นี้ยังไม่ผ่านการอนุมัติ — อนุมัติก่อนตั้งเวลา', 'error'); return }
+    const when = whenByPost[id]
+    if (!when) { showToast('เลือกเวลาเผยแพร่ก่อน', 'error'); return }
+    setScheduleBusyId(id)
+    try {
+      const r = await scheduleMarketingPost(id, new Date(when).toISOString())
+      if (r.ok) {
+        showToast('ตั้งเวลาเผยแพร่แล้ว (ระบบจะโพสต์อัตโนมัติเมื่อถึงเวลา)', 'success')
+        void loadScheduledPosts()
+      } else {
+        const err = r.error || 'ERR_SCHEDULE_FAILED'
+        showToast(err.includes('ERR_APPROVAL_REQUIRED') ? 'ตั้งเวลาไม่สำเร็จ: โพสต์นี้ยังไม่ผ่านการอนุมัติ — อนุมัติก่อนตั้งเวลา' : 'ตั้งเวลาไม่สำเร็จ: ' + err, 'error')
+      }
+    } catch (e) {
+      showToast('ตั้งเวลาไม่สำเร็จ: ' + String(e), 'error')
+    } finally {
+      setScheduleBusyId(null)
+    }
+  }
+
+  async function handleAutoSchedulePosts() {
+    setScheduleBusyId('auto')
+    try {
+      const res = await autoScheduleApprovedPosts()
+      if (res.scheduled > 0) {
+        const preview = res.plan.slice(0, 3).map((p: { title: string; iso: string }) => `${p.title}: ${new Date(p.iso).toLocaleString('th-TH')}`).join(' · ')
+        showToast(`AI เลือกเวลาให้ ${res.scheduled} โพสต์ (ข้าม ${res.skipped})${res.failed ? ` · ล้มเหลว ${res.failed}` : ''} — ${preview}`, 'success')
+        void loadScheduledPosts()
+      } else {
+        showToast(`ยังไม่มีโพสต์ที่ตั้งเวลาให้ได้ (ข้าม ${res.skipped}) — ต้องมีโพสต์ที่อนุมัติแล้วและยังไม่มีเวลา`, 'info')
+      }
+      if (res.failed > 0) showToast('ตั้งเวลาไม่สำเร็จบางรายการ: ' + res.errors.map((e: { error: string }) => e.error).join(', '), 'error')
+    } catch (e) {
+      showToast('Auto-schedule ไม่สำเร็จ: ' + String(e), 'error')
+    } finally {
+      setScheduleBusyId(null)
+    }
   }
 
   const WM_MASCOTS: Array<{ key: string; label: string }> = [
@@ -1255,6 +1402,162 @@ export function ContentTab({ load }: ContentTabProps) {
         >
           {postSaving || promoSaving || bannerSaving ? '⏳ กำลังสร้าง…' : '🚀 สร้างและส่งตรวจ (CNT-01)'}
         </button>
+      </div>
+
+      {/* Approval Queue Panel (Unified - admin sees all like SocialTab) */}
+      <div className="card p-4 mt-4" data-testid="approval-queue-panel">
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="font-bold text-brand-accent">🛡️ คิวอนุมัติ (CNT-01)</h2>
+          <span className="text-xs text-brand-muted">Admin เห็นทั้งหมด · รีเฟรชอัตโนมัติหลังดำเนินการ</span>
+        </div>
+        <div className="flex flex-wrap gap-2 mb-3" role="tablist">
+          {(['pending', 'approved', 'rejected', 'all'] as const).map((t) => {
+            const labels = { pending: '⏳ รออนุมัติ', approved: '✅ อนุมัติแล้ว', rejected: '❌ ปัดตก', all: 'ทั้งหมด' }
+            return (
+              <button
+                key={t}
+                role="tab"
+                aria-selected={approvalTab === t}
+                onClick={() => setApprovalTab(t)}
+                className={`btn btn-sm ${approvalTab === t ? 'btn-primary' : 'btn-outline'}`}
+                data-testid={`approval-tab-${t}`}
+              >
+                {labels[t]}
+              </button>
+            )
+          })}
+        </div>
+        {approvalLoading ? (
+          <p className="text-center text-brand-muted py-4">กำลังโหลดคิวอนุมัติ…</p>
+        ) : approvalItems.length === 0 ? (
+          <p className="text-center text-brand-muted py-4">
+            {approvalTab === 'pending' ? 'ไม่มีรายการรออนุมัติ — ยอดเยี่ยม 🎉' : 'ยังไม่มีรายการในหมวดนี้'}
+          </p>
+        ) : (
+          <div className="space-y-2 max-h-96 overflow-y-auto" data-testid="approval-list">
+            {approvalItems.map((item) => (
+              <div
+                key={item.id}
+                className={`card p-3 border-l-4 ${item.status === 'pending' ? 'border-amber-400' : item.status === 'approved' ? 'border-emerald-500' : 'border-red-400'}`}
+                data-testid={`approval-item-${item.status}`}
+              >
+                <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-3">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center flex-wrap gap-2 mb-1">
+                      <span className="font-semibold">{item.title}</span>
+                      <span className={`badge ${item.status === 'pending' ? 'badge-warning' : item.status === 'approved' ? 'badge-success' : 'badge-danger'}`}>
+                        {item.status === 'pending' ? 'รออนุมัติ' : item.status === 'approved' ? 'อนุมัติแล้ว' : 'ปัดตกแล้ว'}
+                      </span>
+                      <span className="badge badge-info text-xs">{item.content_type}</span>
+                      {item.reviewed_at && (
+                        <span className="text-xs text-brand-muted">ตรวจเมื่อ: {new Date(item.reviewed_at).toLocaleString('th-TH')}</span>
+                      )}
+                    </div>
+                    <p className="text-sm text-brand-muted mb-1">{item.body}</p>
+                    <p className="text-xs text-brand-muted">
+                      สร้างโดย: {item.created_by} · {new Date(item.created_at).toLocaleString('th-TH')}
+                      {item.reviewer_id && <span> · ตรวจโดย: {item.reviewer_id}</span>}
+                      {item.review_note && <span className="block mt-1">หมายเหตุ: {item.review_note}</span>}
+                    </p>
+                    {item.image_url && (
+                      <div className="mt-2">
+                        <img src={item.image_url} alt="preview" className="w-24 h-24 object-cover rounded-lg border border-brand-border" />
+                      </div>
+                    )}
+                    {item.mascot && (
+                      <div className="mt-2">
+                        <span className="text-xs text-brand-muted">มาสคอต: </span>
+                        <img src={item.mascot} alt="mascot" className="inline w-10 h-10 object-contain" />
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex flex-wrap items-center gap-2 md:ml-4">
+                    {item.status === 'pending' && (
+                      <>
+                        <button
+                          type="button"
+                          className="btn btn-primary btn-sm"
+                          onClick={() => void handleApproveApproval(item.id)}
+                          data-testid={`approval-approve-${item.id}`}
+                        >
+                          ✅ อนุมัติ
+                        </button>
+                        <button
+                          type="button"
+                          className="btn btn-outline btn-sm"
+                          onClick={() => void handleRejectApproval(item.id)}
+                          data-testid={`approval-reject-${item.id}`}
+                        >
+                          ✖ ปฏิเสธ
+                        </button>
+                      </>
+                    )}
+                    {item.status === 'rejected' && (
+                      <button
+                        type="button"
+                        className="btn btn-primary btn-sm"
+                        onClick={() => void handleRetryApproval(item)}
+                        data-testid={`approval-retry-${item.id}`}
+                      >
+                        🔁 ส่งตรวจใหม่
+                      </button>
+                    )}
+                    {item.status === 'approved' && (
+                      <button
+                        type="button"
+                        className="btn btn-outline btn-sm"
+                        onClick={() => void handleRetryApproval(item)}
+                        data-testid={`approval-retry-${item.id}`}
+                      >
+                        🔁 ส่งตรวจใหม่ (แก้ไข)
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Schedule Panel (Unified - uses marketingAutoSchedule logic like SocialTab) */}
+      <div className="card p-4 mt-4" data-testid="schedule-panel">
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="font-bold text-brand-accent">📅 ตั้งเวลาเผยแพร่ (Unified)</h2>
+          <span className="text-xs text-brand-muted">โพสต์ที่อนุมัติแล้ว (approved) เท่านั้น · ใช้กติกาจากแท็บ ⚙️ กติกา</span>
+        </div>
+        <div className="card flex items-center justify-between flex-wrap gap-2" data-testid="mk-auto-schedule-bar">
+          <div className="text-sm text-brand-muted">
+            🤖 AI เลือกเวลาจาก <b>กติกาจริงในแท็บ "⚙️ กติกา"</b> (หน้าต่างเผยแพร่ · cooldown · เพดาน/สัปดาห์)
+            — เฉพาะโพสต์ที่อนุมัติแล้ว · การโพสต์จริงเป็นระบบอัตโนมัติรายชั่วโมงตัวเดิม
+          </div>
+          <button type="button" className="btn btn-primary text-sm" onClick={() => void handleAutoSchedulePosts()} disabled={scheduleBusyId === 'auto'} data-testid="mk-auto-schedule">
+            {scheduleBusyId === 'auto' ? '⏳ กำลังเลือกเวลา…' : '🤖 ให้ AI เลือกเวลาทั้งหมด'}
+          </button>
+        </div>
+        {scheduleLoading ? (
+          <p className="text-center text-brand-muted py-4">กำลังโหลดโพสต์รอตั้งเวลา…</p>
+        ) : scheduledPosts.filter((p) => p.status !== 'published').length === 0 ? (
+          <p className="text-sm text-brand-muted text-center py-4">ยังไม่มีโพสต์รอตั้งเวลา (ต้องอนุมัติก่อน)</p>
+        ) : (
+          <div className="space-y-2" data-testid="schedule-list">
+            {scheduledPosts.filter((p) => p.status !== 'published').map((p) => (
+              <div key={p.id} className="card flex items-center justify-between flex-wrap gap-2" data-testid={`mk-row-${p.id}`}>
+                <div>
+                  <p className="font-bold">{p.title}</p>
+                  <p className="text-xs text-brand-muted">สถานะ: <span className={`badge ${p.status === 'approved' ? 'badge-info' : p.status === 'scheduled' ? 'badge-primary' : 'badge-danger'}`}>{p.status}</span>{p.scheduled_for ? ` · ตั้งไว้ ${new Date(p.scheduled_for).toLocaleString('th-TH')}` : ''}</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <input type="datetime-local" className="input text-sm" value={whenByPost[p.id] || ''} onChange={(e) => setWhenByPost((m) => ({ ...m, [p.id]: e.target.value }))} data-testid={`mk-when-${p.id}`} />
+                  <button className="btn btn-primary text-xs" onClick={() => void handleSchedulePost(p.id)} disabled={!schedulableStatus(p.status) || scheduleBusyId === p.id} title={schedulableStatus(p.status) ? undefined : 'ยังไม่ผ่านการอนุมัติ — อนุมัติก่อนตั้งเวลา'} data-testid={`mk-schedule-${p.id}`}>
+                    {scheduleBusyId === p.id ? '⏳' : '⏰ ตั้งเวลา'}
+                  </button>
+                  {!schedulableStatus(p.status) && <span className="text-xs text-brand-muted" data-testid={`mk-schedule-hint-${p.id}`}>รออนุมัติ</span>}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Catalog Picker Modal */}
