@@ -55,3 +55,69 @@ export async function fetchPostMessage(
     return ''
   }
 }
+
+/**
+ * ดึงบริบทโพสต์ที่ user โต้ตอบล่าสุด (จาก user_post_context table)
+ * ใช้สำหรับ Messenger (message event) ที่ไม่มี post_id ใน payload
+ * TTL: 24 ชั่วโมง — หมดอายุให้ fallback ไป general shop context
+ */
+export async function fetchUserPostContext(
+  userId: string,
+  pageId: string,
+  sbUrl: string,
+  serviceKey: string,
+): Promise<string> {
+  if (!userId || !pageId) return ''
+  try {
+    const r = await fetch(`${sbUrl}/rest/v1/user_post_context?user_id=eq.${encodeURIComponent(userId)}&page_id=eq.${encodeURIComponent(pageId)}&select=post_message,updated_at&limit=1`, {
+      headers: { apikey: serviceKey, Authorization: `Bearer ${serviceKey}` },
+      signal: AbortSignal.timeout(5000),
+    })
+    if (!r.ok) return ''
+    const rows = await r.json().catch(() => [])
+    if (!Array.isArray(rows) || rows.length === 0) return ''
+    const row = rows[0]
+    // TTL check: 24 hours
+    const updated = row.updated_at ? new Date(row.updated_at).getTime() : 0
+    if (Date.now() - updated > 24 * 60 * 60 * 1000) return '' // expired
+    return row.post_message || ''
+  } catch {
+    return ''
+  }
+}
+
+/**
+ * เขียน/อัปเดตบริบทโพสต์เมื่อ user คอมเมนต์ (comment event)
+ * ใช้ upsert (merge-duplicates) เพื่อไม่ให้ error ถ้ามีแถวอยู่แล้ว
+ */
+export async function upsertUserPostContext(
+  userId: string,
+  pageId: string,
+  postId: string,
+  postMessage: string,
+  sbUrl: string,
+  serviceKey: string,
+): Promise<void> {
+  if (!userId || !pageId || !postId || !postMessage) return
+  try {
+    await fetch(`${sbUrl}/rest/v1/user_post_context`, {
+      method: 'POST',
+      headers: {
+        apikey: serviceKey,
+        Authorization: `Bearer ${serviceKey}`,
+        'Content-Type': 'application/json',
+        Prefer: 'resolution=merge-duplicates',
+      },
+      body: JSON.stringify({
+        user_id: userId,
+        page_id: pageId,
+        post_id: postId,
+        post_message: postMessage,
+        updated_at: new Date().toISOString(),
+      }),
+      signal: AbortSignal.timeout(5000),
+    })
+  } catch {
+    // Silent fail — context loss is better than blocking reply
+  }
+}

@@ -22,7 +22,7 @@ describe('R57 ① — ตอบข้อมูลจริงตามโพส�
     expect(workerSrc).toContain("from '../_shared/socialPostContext.ts'")
     expect(workerSrc).toContain('extractSourcePostId(ev.payload)')
     expect(workerSrc).toContain('fetchPostMessage(sourcePostId, META_PAGE)')
-    expect(workerSrc).toContain('โพสต์ต้นทาง (DATA — บริบทหลักของคอมเมนต์นี้)')
+    expect(workerSrc).toContain('โพสต์ที่ลูกค้าโต้ตอบล่าสุด (DATA — บริบทหลัก)')
     // payload ต้องถูก select มาด้วย (เดิมไม่มี → หา post_id ไม่ได้)
     expect(workerSrc).toMatch(/select=id,event_id,platform,event_type,sender_id,sender_name,page_id,content,payload,attempts/g)
   })
