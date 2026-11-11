@@ -64,6 +64,7 @@ const AdminOnboarding = lazy(() => import('./pages/admin/AdminOnboarding').then(
 const AdminBilling = lazy(() => import('./pages/admin/AdminBilling').then(m => ({ default: m.AdminBilling })))
 // Merged: Marketing + Promotions + Media + Portfolio
 const AdminMarketingPromotions = lazy(() => import('./pages/admin/AdminMarketingPromotions').then(m => ({ default: m.AdminMarketingPromotions })))
+const AdminMarketing = lazy(() => import('./pages/admin/AdminMarketing').then(m => ({ default: m.AdminMarketing })))
 const AdminMediaPortfolio = lazy(() => import('./pages/admin/AdminMediaPortfolio').then(m => ({ default: m.AdminMediaPortfolio })))
 const AdminCustomers = lazy(() => import('./pages/admin/AdminCustomers').then(m => ({ default: m.AdminCustomers })))
 const AdminSettings = lazy(() => import('./pages/admin/AdminSettings').then(m => ({ default: m.AdminSettings })))
@@ -313,7 +314,7 @@ export default function App() {
         <Route path="/admin/kitchen" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminNav><AdminKitchen /></AdminNav></Layout></AdminRoute></Suspense>} />
         <Route path="/admin/recipes" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminNav><AdminRecipes /></AdminNav></Layout></AdminRoute></Suspense>} />
 
-        <Route path="/admin/content-approvals" element={<Navigate to="/admin/marketing-promotions?tab=social" replace />} />
+        <Route path="/admin/content-approvals" element={<Navigate to="/admin/marketing?tab=approval" replace />} />
         <Route path="/admin/audit-log" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminNav><AuditLogPage /></AdminNav></Layout></AdminRoute></Suspense>} />
         <Route path="/admin/asset-audit" element={<Navigate to="/admin/media-portfolio?tab=audit" replace />} />
 <Route path="/admin/payment-exceptions" element={<Navigate to="/admin/orders?tab=payment" replace />} />
@@ -323,7 +324,7 @@ export default function App() {
         <Route path="/admin/delivery" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminNav><DeliveryHub /></AdminNav></Layout></AdminRoute></Suspense>} />
         <Route path="/admin/route-optimization" element={<Navigate to="/admin/delivery?tab=routes" replace />} />
         <Route path="/admin/promotions" element={<Navigate to="/admin/marketing-promotions?tab=promotions" replace />} />
-        <Route path="/admin/marketing" element={<Navigate to="/admin/marketing-promotions" replace />} />
+        <Route path="/admin/marketing" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminNav><AdminMarketing /></AdminNav></Layout></AdminRoute></Suspense>} />
         <Route path="/admin/rounds" element={<Navigate to="/admin/delivery?tab=rounds" replace />} />
         <Route path="/admin/customers" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminNav><AdminCustomers /></AdminNav></Layout></AdminRoute></Suspense>} />
         <Route path="/admin/settings" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminNav><SettingsHub /></AdminNav></Layout></AdminRoute></Suspense>} />
@@ -346,7 +347,7 @@ export default function App() {
         {/* R88/D6f: คิวอนุมัติรีวิว (Owner: "ให้แอดมินอนุมัติก่อนและลบได้ตอบได้") */}
         <Route path="/admin/reviews" element={<Suspense fallback={<LoadingSpinner />}><AdminRoute><Layout><AdminNav><AdminReviewsPage /></AdminNav></Layout></AdminRoute></Suspense>} />
         {/* AI-EXT: Admin AI Content Studio (redirect to Content tab) */}
-        <Route path="/admin/ai-studio" element={<Navigate to="/admin/marketing-promotions?tab=content" replace />} />
+        <Route path="/admin/ai-studio" element={<Navigate to="/admin/marketing?tab=studio" replace />} />
         {/* Catch all */}
         <Route path="*" element={<Navigate to="/" replace />} />
 </Routes>

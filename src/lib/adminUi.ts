@@ -31,7 +31,7 @@ export const ADMIN_NAV_GROUPS: AdminNavGroup[] = [
       { to: '/admin/kitchen', label: 'ครัว/ผลิต', icon: '\uD83C\uDF73' },
       { to: '/admin/recipes', label: 'สูตรอาหาร', icon: '\uD83E\uDDEA' },
       { to: '/admin/products', label: 'เมนูและตารางเมนู', icon: '\uD83C\uDF7D\uFE0F' },
-      { to: '/admin/marketing-promotions', label: 'การตลาดและโปรโมชั่น', icon: '📈' },
+      { to: '/admin/marketing', label: 'การตลาดและโปรโมชั่น', icon: '📈' },
     ],
   },
   {
@@ -97,7 +97,7 @@ const ROLE_NAV_ALLOW: Record<string, string[]> = {
   kitchen: ['/admin', '/admin/orders', '/admin/kitchen', '/admin/recipes', '/admin/delivery', '/admin/products'],
   inventory: ['/admin', '/admin/inventory', '/admin/products'],
   finance: ['/admin', '/admin/reports', '/admin/orders', '/admin/pos'],
-  marketing: ['/admin', '/admin/marketing-promotions', '/admin/media-portfolio'],
+  marketing: ['/admin', '/admin/marketing', '/admin/media-portfolio'],
   support: ['/admin', '/admin/orders', '/admin/customers', '/admin/notifications'],
 }
 

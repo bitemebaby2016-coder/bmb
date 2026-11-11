@@ -34,10 +34,19 @@ describe('Part C · วงจรโพสต์ = ของจริงทุก
     for (const id of ["id: 'overview'", "id: 'planner'", "id: 'studio'", "id: 'approval'", "id: 'schedule'", "id: 'rules'", "id: 'analytics'"]) {
       expect(adminMarketingPageSrc).toContain(id)
     }
-    //	tab 'ai' ถูกลบออก (ยุบรวมกับ studio แล้ว)
+    // Tab 'ai' ถูกลบออก (ยุบรวมกับ studio แล้ว)
     expect(adminMarketingPageSrc).not.toContain("id: 'ai'")
     expect(adminMarketingPageSrc).not.toContain("AdminAiStudio")
     expect(adminMarketingPageSrc).not.toContain("'calendar'")
+    // MkTab testids ใช้ template literal — เช็ค presence ของ template และ label
+    expect(adminMarketingPageSrc).toContain('mk-tab-${t.id}')
+    // ตรวจสอบ TABS array มี labels ไทย
+    expect(adminMarketingPageSrc).toContain('ตรวจ & อนุมัติ')
+    expect(adminMarketingPageSrc).toContain('ตั้งเวลาเผยแพร่')
+    expect(adminMarketingPageSrc).toContain('รายงานผล')
+    expect(adminMarketingPageSrc).toContain('ตั้งค่ากติกา')
+    expect(adminMarketingPageSrc).toContain('วางแผน & เลือกเมนู')
+    expect(adminMarketingPageSrc).toContain('สร้างโพสต์')
     expect(adminMarketingPageSrc).toContain('marketing_posts')
     expect(adminMarketingPageSrc).not.toContain('mock')
     expect(adminMarketingPageSrc).not.toContain('FAKE_')
