@@ -242,6 +242,7 @@ export function HomePage() {
       return true
     })
     .sort((a, b) => String(a.created_at || '').localeCompare(String(b.created_at || '')))
+    .slice(0, 3) // Limit to 3 most recent banners for floating ad
     .map((r) => ({
       id: String(r.id),
       title: String(r.name || 'Promotion'),
