@@ -1188,7 +1188,7 @@ p { color: var(--color-brand-text-secondary); }
   color: #1C1917;
   font-size: 13px;
   cursor: pointer;
-  z-index: 2;
+  z-index: 20;
 }
 .flad-close:hover { background: rgba(239, 68, 68, 0.85); color: #fff; }
 @keyframes fladIn {

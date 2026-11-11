@@ -128,6 +128,7 @@ export function ContentTab({ load }: ContentTabProps) {
   const [catalogLoading, setCatalogLoading] = useState(false)
   const [catalogSearch, setCatalogSearch] = useState('')
   const [catalogModalOpen, setCatalogModalOpen] = useState(false)
+  const [catalogHoveredProduct, setCatalogHoveredProduct] = useState<Product | null>(null)
 
   // Load catalog products
   const loadCatalogProducts = useCallback(async () => {
@@ -435,6 +436,20 @@ export function ContentTab({ load }: ContentTabProps) {
       await loadAiAlbum()
       showToast('ลบรูปออกจากอัลบั้ม + ลบไฟล์จริงจากคลังภาพแล้ว', 'success')
     } catch (err) { showToast('ลบรูปไม่สำเร็จ: ' + String((err as Error)?.message || err).slice(0, 100), 'error') }
+  }
+
+  function createContentFromImage(url: string) {
+    if (contentType === 'post' || contentType === 'announcement') {
+      setPostImages([url])
+      flashTo('mk-images-strip')
+      showToast(`แนบภาพเข้าชุดภาพ ${contentType === 'post' ? 'โพสต์' : 'ประกาศ'} แล้ว — กด "สร้างและส่งตรวจ" เพื่อส่ง CNT-01`, 'success')
+    } else if (contentType === 'promotion') {
+      setPromoForm((f) => ({ ...f, banner_image: url }))
+      showToast('ใช้ภาพนี้เป็นรูปแบนเนอร์โปรโมชั่นแล้ว — กดบันทึกเพื่อส่งตรวจ', 'success')
+    } else if (contentType === 'banner') {
+      setBannerForm((f) => ({ ...f, banner_image: url }))
+      showToast('ใช้ภาพนี้เป็นรูปแบนเนอร์แล้ว — กดบันทึกเพื่อส่งตรวจ', 'success')
+    }
   }
 
   const WM_MASCOTS: Array<{ key: string; label: string }> = [
@@ -875,6 +890,7 @@ export function ContentTab({ load }: ContentTabProps) {
                   <img src={a.url} alt={a.name} className="w-full h-20 object-cover" />
                   <div className="flex text-[9px] leading-none">
                     <button type="button" className="flex-1 bg-brand-primary text-white py-1" onClick={() => pickAiImage(a.url)} data-testid={`mk-ai-pick-${a.name}`} title="ใช้รูปนี้เป็นภาพโพสต์">ใช้</button>
+                    <button type="button" className="flex-1 bg-green-600 text-white py-1" onClick={() => void createContentFromImage(a.url)} data-testid={`mk-ai-create-${a.name}`} title="สร้างโพสต์/โปรโมชั่น/แบนเนอร์จากภาพนี้ (ส่งตรวจ CNT-01)">สร้างจากภาพนี้</button>
                     <button type="button" className="flex-1 bg-amber-500 text-white py-1" onClick={() => void toggleAiImage(a)} data-testid={`mk-ai-toggle-${a.name}`} title={a.disabled ? 'เปิดใช้งานรูปนี้อีกครั้ง' : 'ปิดรูปนี้ — ไม่ให้ระบบนำไปใช้'}>{a.disabled ? 'เปิด' : 'ปิด'}</button>
                     <button type="button" className="flex-1 bg-red-500 text-white py-1" onClick={() => void deleteAiImage(a)} data-testid={`mk-ai-del-${a.name}`} title="ลบรูปนี้ออกจากอัลบั้ม (ลบไฟล์จริง)">ลบ</button>
                   </div>
@@ -1229,7 +1245,7 @@ export function ContentTab({ load }: ContentTabProps) {
       {/* Catalog Picker Modal */}
       {catalogModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50" onClick={closeCatalogModal}>
-          <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[80vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
+          <div className="bg-white rounded-lg shadow-xl max-w-5xl w-full max-h-[80vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
             <div className="p-4 border-b border-brand-border flex items-center justify-between">
               <h3 className="text-lg font-bold text-brand-accent">🍽️ เลือกรูปจากเมนู</h3>
               <button type="button" onClick={closeCatalogModal} className="text-brand-muted hover:text-brand-primary text-2xl" aria-label="ปิด">×</button>
@@ -1247,7 +1263,7 @@ export function ContentTab({ load }: ContentTabProps) {
                   data-testid="catalog-search"
                 />
               </div>
-              {/* Product Grid */}
+              {/* Product Grid with Preview */}
               {catalogLoading ? (
                 <p className="text-center text-brand-muted py-8">กำลังโหลดรายการเมนู…</p>
               ) : filteredCatalogProducts.length === 0 ? (
@@ -1255,40 +1271,77 @@ export function ContentTab({ load }: ContentTabProps) {
                   {catalogSearch ? 'ไม่พบเมนูที่ค้นหา' : 'ยังไม่มีเมนูในรายการ'}
                 </p>
               ) : (
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                  {filteredCatalogProducts.map((product) => (
-                    <div key={product.id} className="border border-brand-border rounded-lg overflow-hidden hover:border-brand-primary transition-colors">
-                      <div className="aspect-square bg-brand-surface relative">
-                        {product.image_url ? (
-                          <img src={product.image_url} alt={product.name} className="w-full h-full object-cover" loading="lazy" />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center text-brand-muted text-sm">ไม่มีภาพ</div>
-                        )}
-                      </div>
-                      <div className="p-2">
-                        <p className="font-medium text-sm truncate">{product.name}</p>
-                        {product.description && <p className="text-xs text-brand-muted truncate mt-0.5">{product.description}</p>}
-                        <div className="flex gap-1 mt-2">
+                <div className="flex gap-4">
+                  {/* Grid */}
+                  <div className="flex-1 min-w-0">
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                      {filteredCatalogProducts.map((product) => (
+                        <div key={product.id} className="border border-brand-border rounded-lg overflow-hidden hover:border-brand-primary transition-colors cursor-pointer" onMouseEnter={() => setCatalogHoveredProduct(product)} onMouseLeave={() => setCatalogHoveredProduct(null)}>
+                          <div className="aspect-square bg-brand-surface relative">
+                            {product.image_url ? (
+                              <img src={product.image_url} alt={product.name} className="w-full h-full object-cover" loading="lazy" />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center text-brand-muted text-sm">ไม่มีภาพ</div>
+                            )}
+                          </div>
+                          <div className="p-2">
+                            <p className="font-medium text-sm truncate">{product.name}</p>
+                            {product.description && <p className="text-xs text-brand-muted truncate mt-0.5">{product.description}</p>}
+                            <div className="flex gap-1 mt-2">
+                              <button
+                                type="button"
+                                className="btn btn-primary btn-sm flex-1"
+                                onClick={() => void handleCatalogSelect(product, 'content')}
+                                data-testid={`catalog-use-content-${product.id}`}
+                              >
+                                📷 เป็นรูปเนื้อหา
+                              </button>
+                              <button
+                                type="button"
+                                className="btn btn-outline btn-sm flex-1"
+                                onClick={() => void handleCatalogSelect(product, 'reference')}
+                                data-testid={`catalog-use-reference-${product.id}`}
+                              >
+                                🎨 เป็นต้นแบบ AI
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  {/* Preview Panel */}
+                  {catalogHoveredProduct && catalogHoveredProduct.image_url && (
+                    <div className="w-64 flex-shrink-0" data-testid="catalog-preview-panel">
+                      <div className="bg-brand-surface rounded-lg border border-brand-border p-3 sticky top-4">
+                        <p className="text-xs font-semibold text-brand-accent mb-2">🖼️ พรีวิว</p>
+                        <div className="aspect-square bg-white rounded-md overflow-hidden mb-2">
+                          <img src={catalogHoveredProduct.image_url} alt={catalogHoveredProduct.name} className="w-full h-full object-cover" />
+                        </div>
+                        <p className="text-sm font-medium truncate">{catalogHoveredProduct.name}</p>
+                        {catalogHoveredProduct.description && <p className="text-xs text-brand-muted truncate mt-0.5">{catalogHoveredProduct.description}</p>}
+                        <div className="flex gap-1 mt-3 pt-3 border-t border-brand-border">
                           <button
                             type="button"
                             className="btn btn-primary btn-sm flex-1"
-                            onClick={() => void handleCatalogSelect(product, 'content')}
-                            data-testid={`catalog-use-content-${product.id}`}
+                            onClick={() => void handleCatalogSelect(catalogHoveredProduct, 'content')}
+                            data-testid="catalog-preview-use-content"
                           >
                             📷 เป็นรูปเนื้อหา
                           </button>
                           <button
                             type="button"
                             className="btn btn-outline btn-sm flex-1"
-                            onClick={() => void handleCatalogSelect(product, 'reference')}
-                            data-testid={`catalog-use-reference-${product.id}`}
+                            onClick={() => void handleCatalogSelect(catalogHoveredProduct, 'reference')}
+                            data-testid="catalog-preview-use-reference"
                           >
                             🎨 เป็นต้นแบบ AI
                           </button>
                         </div>
+                        <p className="text-[10px] text-brand-muted mt-2">เลื่อนเมาส์ออกเพื่อปิดพรีวิว</p>
                       </div>
                     </div>
-                  ))}
+                  )}
                 </div>
               )}
             </div>
