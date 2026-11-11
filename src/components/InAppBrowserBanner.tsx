@@ -14,7 +14,7 @@ export function InAppBrowserBanner({ children }: { children: React.ReactNode }) 
   const ua = navigator.userAgent
   const isAndroid = /Android/i.test(ua)
   const intentUrl = isAndroid
-    ? `intent://${currentUrl.replace(/^https?:\/\//, '')}#Intent;scheme=https;package=com.android.chrome;action=android.intent.action.VIEW;end`
+    ? `intent://${currentUrl.replace(/^https?:\/\//, '')}#Intent;scheme=https;package=com.android.chrome;action=android.intent.action.VIEW;s.browser_fallback_url=${encodeURIComponent(currentUrl)};end`
     : null
 
   return (
