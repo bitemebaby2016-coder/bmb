@@ -14,17 +14,31 @@ interface BeforeInstallPromptEvent extends Event {
   prompt(): Promise<void>
 }
 
+export type InAppPlatform = 'facebook' | 'line' | 'instagram' | 'other'
+
+function detectPlatform(ua: string): InAppPlatform {
+  if (/LINE\//i.test(ua)) return 'line'
+  if (/Instagram\//i.test(ua)) return 'instagram'
+  if (/FBAV|FB_IAB|FBAN|FBBV/i.test(ua)) return 'facebook'
+  return 'other'
+}
+
 export function useInAppBrowser() {
   const [isFB, setIsFB] = useState(false)
   const [dismissed, setDismissed] = useState(false)
   const [installPrompt, setInstallPrompt] = useState<BeforeInstallPromptEvent | null>(null)
   const installPromptRef = useRef<BeforeInstallPromptEvent | null>(null)
 
+  const detectedPlatform = useRef<InAppPlatform>('other')
+  const [platform, setPlatform] = useState<InAppPlatform>('other')
+
   useEffect(() => {
-    // ตรวจจับ FB WebView: user agent เท่านั้น (viewport heuristic ถูกนำออกเพราะ false positive บน desktop)
+    // ตรวจจับ FB/LINE/IG In-App Browser (UA เท่านั้น)
     const ua = navigator.userAgent
-    const fbUA = /FBAV|FB_IAB|FBAN|FBBV/i.test(ua)
+    const fbUA = /FBAV|FB_IAB|FBAN|FBBV|LINE\/|Instagram\//i.test(ua)
     setIsFB(fbUA)
+    detectedPlatform.current = detectPlatform(ua)
+    setPlatform(detectedPlatform.current)
 
     // โหลด dismissed state
     try {
@@ -67,9 +81,15 @@ export function useInAppBrowser() {
       const intent = `intent://${cleanUrl}#Intent;scheme=https;package=com.android.chrome;action=android.intent.action.VIEW;end`
       window.location.href = intent
     } else if (isIOS) {
-      // iOS: copy link + แสดง guide
+      // iOS: copy link + แสดง toast แทน alert (popup blocker บล็อก alert)
       navigator.clipboard?.writeText(url).catch(() => {})
-      alert('คัดลอกลิงก์แล้ว — กด ⋯ (สามจุด) มุมบนขวา → "เปิดใน Safari"')
+      const el = document.createElement('div')
+      el.className = 'toast border bg-blue-50 text-blue-800 border-blue-200 cursor-pointer'
+      el.style.cssText = 'position:fixed;bottom:16px;left:50%;transform:translateX(-50%);z-index:9999;padding:10px 16px;border-radius:8px;font-size:14px;box-shadow:0 2px 8px rgba(0,0,0,0.15)'
+      el.textContent = 'คัดลอกลิงก์แล้ว — กด ⋯ มุมบนขวา → "เปิดใน Safari"'
+      el.onclick = () => el.remove()
+      document.body.appendChild(el)
+      setTimeout(() => el.remove(), 4000)
     } else {
       // Desktop/อื่นๆ: เปิดแท็บใหม่
       window.open(url, '_blank')
@@ -93,5 +113,5 @@ export function useInAppBrowser() {
     }
   }, [])
 
-  return { isFB, dismissed, dismiss, openExternally, installPrompt: installPromptRef.current, installApp, canInstall: !!installPromptRef.current }
+  return { isFB, dismissed, dismiss, openExternally, installPrompt: installPromptRef.current, installApp, canInstall: !!installPromptRef.current, platform }
 }

@@ -17,6 +17,23 @@ export function InAppBrowserBanner({ children }: { children: React.ReactNode }) 
     ? `intent://${currentUrl.replace(/^https?:\/\//, '')}#Intent;scheme=https;package=com.android.chrome;action=android.intent.action.VIEW;s.browser_fallback_url=${encodeURIComponent(currentUrl)};end`
     : null
 
+  // Cart continuity: decode ?cart= param from URL search
+  const urlParams = new URLSearchParams(window.location.search)
+  const hasCartParam = urlParams.has('cart')
+  let cartItems = 0
+  if (hasCartParam) {
+    try {
+      const raw = urlParams.get('cart')!
+      const decoded = raw.replace(/-/g, '+').replace(/_/g, '/')
+      const d = JSON.parse(atob(decoded))
+      cartItems = d.items?.length || 0
+      console.log('[InAppBanner] Cart items found:', cartItems)
+    } catch {
+      console.log('[InAppBanner] Cart decode failed')
+    }
+  }
+  console.log('[InAppBanner] intentURL:', intentUrl, 'search:', window.location.search)
+
   return (
     <>
       <div
@@ -30,7 +47,16 @@ export function InAppBrowserBanner({ children }: { children: React.ReactNode }) 
             <span className="text-lg" aria-hidden="true">📱</span>
             <div>
               <p className="font-semibold">กำลังเปิดใน Facebook</p>
-              <p className="text-xs opacity-90">บางฟีเจอร์ทำงานไม่เต็ม (Push, Bluetooth, ติดตั้งแอป)</p>
+              {hasCartParam && cartItems > 0 ? (
+                <p className="text-xs opacity-90">กำลังนำรายการ {cartItems} รายการในตะกร้า ไปยัง Chrome...</p>
+              ) : hasCartParam ? (
+                <p className="text-xs opacity-90">พบ ?cart= parameter แต่ไม่สามารถอ่านสินค้าได้</p>
+              ) : (
+                <>
+                  <p className="text-xs opacity-90">บางฟีเจอร์ทำงานไม่เต็ม (Push, Bluetooth, ติดตั้งแอป)</p>
+                  <p className="text-xs opacity-90 mt-1">ลิงก์ที่มี ?cart= จากแชท AI จะเติมตะกร้าอัตโนมัติเมื่อเปิด Chrome</p>
+                </>
+              )}
             </div>
           </div>
           <div className="flex gap-2 shrink-0 flex-wrap">

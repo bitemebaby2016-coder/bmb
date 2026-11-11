@@ -4,6 +4,9 @@
 > · **HEAD = `2263b67`** (docs update) · **Latest Bundle = `assets/index-Bh_24aFF.js`** (มี Floating Ad Multiple · Sources Filter · Badge · AiStudioTab→ContentTab merge)
 > · **Migration 201 APPLIED PROD** · **Edge Functions `social-ai-worker` DEPLOYED exit=0** · gates 4/4 (tsc/lint/vitest/build = 0)
 > · **ของปิดแล้ว/มีหลักฐานผ่าน = ไม่อยู่ในนี้** (รายชื่อปิดรอบนี้ = `AI_WORK_STATE.md` บล็อก "✅ ปิดแล้วในเซสชั่นนี้")
+> 
+> **📌 อัปเดต 2026-11-11 รอบ 12:** InAppCart Continuity Plan CODE_CLOSED (working tree) — ยังไม่ได้ push/deploy → รอ owner สั่ง push แล้ว live retest
+> - Scenario A–E ในตารางด้านล่าง (รอ deploy ก่อนรัน)
 
 ## ❌ BLOCKED — ปิดไม่ได้จนกว่า Owner ทำเอง (1 ข้อ)
 
@@ -35,6 +38,23 @@
 
 ---
 
+## 🆕 รอ deploy + retest — CODE_CLOSED รอบ 12 (working tree ยังไม่ push)
+
+> InAppCart Continuity Plan 4/4 Steps เสร็จ · Gates 4/4 ผ่าน (lint/tsc/build/vitest: 213 files / 2215 tests PASS) · ไฟล์ที่แก้:
+> - `FloatingAdBanners.tsx` comment `max 2→3`
+> - `useInAppBrowser.ts` ขยาย UA LINE/IG + `InAppPlatform` type + iOS alert→toast DOM
+> - `InAppBrowserBanner.tsx` ?cart= decode + UX messages + debug logging
+
+| ข้อ | สิ่งที่ยังใหม่ (รอบ 12) | Deployed | วิธีทดสอบ (Scenarios จากแผน) |
+|---|---|---|---|
+| **Scenario A** | FB Chat มี ?cart= → banner แสดงจำนวนสินค้า → Chrome เปิด → ตะกร้ามีของครบ | ❌ ไม่ | ส่งลิงก์ `?cart=<base64>` จาก FB Messenger ให้ตัวเอง → กดลิงก์ → เห็น banner "กำลังนำรายการ X รายการในตะกร้า..." → กดเปิด Chrome → หน้าโหลด → ตะกร้ามีของครบ (retry 2.5s เดิม) ✅ PASS = Cart continuity สำเร็จ |
+| **Scenario B** | FB Chat ไม่มี ?cart= → banner แนะนำว่ามี ?cart= ถึงจะเติมตะกร้า | ❌ ไม่ | กดลิงก์ธรรมดา → เห็น banner แนะนำ "ลิงก์ที่มี ?cart= จากแชท AI จะเติมตะกร้าอัตโนมัติ" → กดเปิด Chrome → หน้าแรกเปล่าไม่มีตะกร้า ✅ PASS = ไม่พัง + แสดงข้อความแนะนำ |
+| **Scenario C** | LINE/Instagram → UA detection ผ่าน LINE\/IG \\ → banner ขึ้นปกติ | ❌ ไม่ | กดลิงก์จาก LINE/IG → เห็น orange banner (UA ผ่าน `LINE\/` หรือ `Instagram\\`) → ทำเหมือน Scenario A/B ✅ PASS = LINE/IG detection ทำงาน |
+| **Scenario D** | iOS Safari → ไม่เห็น alert popup → เห็น toast notification ด้านล่างแทน | ❌ ไม่ | กด "เปิดในเบราว์เซอร์ภายนอก" → ไม่เห็น alert pop-up → เห็น toast notification สีฟ้าด้านล่างจอ ✅ PASS = Toast แสดงแทน alert |
+| **Scenario E** | Floating Ad limit 3 ใบ → แสดงสูงสุด 3 ใบ | ❌ ไม่ | มีโปรโมชั่น > 3 ใบใน DB → เห็น floating ad แสดง 3 ใบเท่านั้น ✅ PASS = Limit ทำงานถูกต้อง |
+
+---
+
 ## 🕓 ยังไม่รันตามเดิม (ของเดิมค้างจาก 2026-11-08 — ห้ามตัด)
 
 - **RT-4** ชุด ก · **RT-HOURS** (หลัง 20:30) · **RT-6.2** (บทแอดมิน 12 คีย์) · **RT-6.1** (ยกเว้น E1 = Owner waived "ไม่ต้องทำ") · **RT-6.4B2** (~11:00 แถบสถานะ)
@@ -49,12 +69,13 @@ R89b/c ยุบ+เรียงรีวิว `/shop` (Owner เห็น Veri
 
 ---
 
-## 📋 สรุปสถานะรวม ณ 2026-11-10 16:37 (หลัง Owner verified)
+## 📋 สรุปสถานะรวม ณ 2026-11-11 รอบ 12
 
 | หมวด | สถานะ | รายละเอียด |
 |---|---|---|
 | **BLOCKED (รอ Owner)** | ⏸️ 1 ข้อ | OMNI-5 (ลงทะเบียน Meta Test User) |
-| **รอ Live Retest (โค้ด Deploy แล้ว)** | 🔄 1 ข้อ | **§T-A** (Cart retry 2.5s) |
+| **รอ Live Retest (โค้ด Deploy แล้ว)** | 🔄 1 ข้อ | **§T-A** (Cart retry 2.5s เดิม) |
+| **รอ Deploy + Live Retest (รอบ 12 CODE_CLOSED)** | 🔒 5 Scenarios | A–E (InAppBrowser banner, ?cart= decode, LINE/IG UA, iOS toast, Floating Ad limit) — อยู่แค่ working tree ยังไม่ push |
 | **✅ ปิดแล้วรอบนี้ (Owner verified)** | ✅ 7 ข้อ | IMG-GEN, D4, R91, R92-G, D2, D5, R92-S |
 | **✅ ปิดแล้วรอบนี้ (Deploy + Gates ผ่าน)** | ✅ 5 กลุ่ม | Floating Ad Multiple, Sources Filter, Badge, AiStudioTab Merge, Viewport Fix |
 | **ยังไม่รัน/ค้างจากเดิม** | ⏳ หลายข้อ | RT-4, RT-HOURS, RT-6.x, CAP-x, RT-8 |
@@ -63,10 +84,13 @@ R89b/c ยุบ+เรียงรีวิว `/shop` (Owner เห็น Veri
 
 ## 🎯 ขั้นตอนถัดไป (Owner Action)
 
-1. **Hard reload (Ctrl+Shift+R) ที่ `https://biteme-baby.com`** (ถ้ายังไม่ได้ทำครั้งนี้)
-2. **Run Live Retest ต่อ:** **§T-A เท่านั้น**
-3. **จดผล:** `§T-A · [เวลา] · [อุปกรณ์] · PASS/FAIL · สนับสนุนภาพหน้าจอ Chrome`
-4. **FAIL = ทักแชท AI ทันที** → จด `AI_WORK_STATE.md` + แจ้งแก้แบบ two-try
+1. **รอบ 12**: สั่ง commit → push → deploy แล้วค่อย live retest Scenarios A–E
+2. **Hard reload (Ctrl+Shift+R) ที่ `https://biteme-baby.com`** (สำหรับทุกข้อ)
+3. **Run Live Retest ต่อ:**
+   - ก่อน deploy รอบ 12: **§T-A เท่านั้น**
+   - หลัง deploy รอบ 12: **Scenario A, B, C, D, E + §T-A**
+4. **จดผล:** `ข้อ ID · [เวลา] · [อุปกรณ์] · PASS/FAIL · สนับสนุนภาพหน้าจอ Chrome`
+5. **FAIL = ทักแชท AI ทันที** → จด `AI_WORK_STATE.md` + แจ้งแก้แบบ two-try
 
 ---
 

@@ -1,4 +1,31 @@
-## 🔒 SESSION CLOSE 2026-11-11 (รอบ 11 · Floating Ad Limit + Real Data Links เสร็จ · Gates 4/4 ผ่าน) — **CODE_CLOSED + PUSHED**
+## 🔒 SESSION CLOSE 2026-11-11 (รอบ 12 · InAppCart Continuity Plan — 4/4 Steps เสร็จ · Gates 4/4 ผ่าน) — **CODE_CLOSED (ยังไม่ push)**
+
+> **สถานะ ณ 2026-11-11 18:15:** แผน `.kilo/plans/1794470398120-inapp-cart-continuity-plan.md` 4 ขั้นตอนครบแล้ว · Gates 4/4 ผ่าน (lint ✅ tsc ✅ build ✅ vitest ✅: 213 files / 2215 tests PASS) · **ยังไม่ได้ commit/push** — อยู่แค่ใน working tree
+> 
+> **Fixes (โค้ดจริง):**
+> 1. **FloatingAdBanners.tsx Comment Fix**: บรรทัด 5 `max 2 at once` → `max 3 at once` | บรรทัด 285 `max 2 banners` → `max 3 banners` (โค้ด slice(0,3) ถูกต้องอยู่แล้ว แค่ comment ผิด)
+> 2. **useInAppBrowser.ts UA Detection ขยาย LINE/IG**: เพิ่ม `export type InAppPlatform = 'facebook' | 'line' | 'instagram' | 'other'` + `detectPlatform()` function + hook คืนเพิ่ม `platform` state (บรรทัด 17-24, 32-41)
+> 3. **useInAppBrowser.ts iOS alert → Toast**: แทนที่ `alert()` ด้วย inline DOM toast element ที่ position fixed ด้านล่างจอ (บรรทัด 83-92) ข้อความ: "คัดลอกลิงก์แล้ว — กด ⋯ มุมบนขวา → "เปิดใน Safari""
+> 4. **InAppBrowserBanner.tsx Cart Continuity ?cart=**: อ่าน `window.location.search` → ตรวจสอบ `?cart=` param → decode base64 → นับ `items.length` → ถ้ามี cart > 0 แสดง "กำลังนำรายการ X รายการในตะกร้า ไปยัง Chrome..." → ถ้าไม่มี/decode fail แสดง "ลิงก์ที่มี ?cart= จากแชท AI จะเติมตะกร้าอัตโนมัติ" + `console.log` debug logging (บรรทัด 13-30)
+> 
+> **Files Changed (working tree — ไม่อยู่ใน remote):**
+> - `src/components/home/FloatingAdBanners.tsx` (+2 lines)
+> - `src/hooks/useInAppBrowser.ts` (+117→117 lines, UA regex ใหม่ + platform state + iOS toast DOM)
+> - `src/components/InAppBrowserBanner.tsx` (+30 lines, ?cart= decode + UX messages)
+> 
+> **Validation Scenarios ที่ต้องทดสอบหลัง deploy** (จากแผน):
+> - Scenario A: FB Chat มี ?cart= → banner แสดงจำนวนสินค้า → Chrome เปิด → ตะกร้ามีของครบ
+> - Scenario B: FB Chat ไม่มี ?cart= → banner แนะนำว่ามี ?cart= ถึงจะเติมตะกร้า
+> - Scenario C: LINE/Instagram → UA detection ผ่าน LINE\/Instagram\\ → banner ขึ้นปกติ
+> - Scenario D: iOS Safari → ไม่เห็น alert popup → เห็น toast notification ด้านล่างแทน
+> - Scenario E: Floating Ad limit 3 ใบ → แสดงสูงสุด 3 ใบ
+> 
+> **กติกาเซสชั่นต่อไป:**
+> 1. **CODE_CLOSED แต่ไม่ push** — ต้อง push + deploy แล้วค่อย live retest
+> 2. **§T-A เดิม (cart retry 2.5s `c9f77aa`)** ยังรอ live retest ต่อจากก่อนหน้า
+> 3. ใช้ `https://biteme-baby.com` · hard reload 1 ครั้ง ก่อนทุกข้อ
+
+## 🔒 SESSION CLOSE 2026-11-11 (รอบ 11 · Floating Ad Limit + Real Data Links เสร็จ · Gates 4/4 ผ่าน · **D2/D5/R92-G/R92-S CODE-DEPLOYED** · §T-A รอ Live Retest) — **CODE_CLOSED + PUSHED**
 
 > **สถานะ ณ 2026-11-11 09:30:** ทุกการแก้ไข **CODE_CLOSED** ครบแล้ว · Gates 4/4 ผ่านจริง (lint ✅ tsc ✅ build ✅ vitest ✅) · **Fixes:**
 > 1. **Floating Ad จำกัด 3 ใบ** (`FloatingAdBanners.tsx`) — `pickVisibleBannerPromos.slice(0,3)` + แต่ละ source limit 3 ก่อน merge (announcements, promos, recommended_menu)
@@ -9,9 +36,13 @@
 > **Gates ผ่าน**: lint ✅ tsc ✅ build ✅ vitest ✅
 > **Commits**: `aa464f3` (fix) + `05ab1f0` (interim) + `c78aa9c` (sources) + `4dc1a16` (promo discount guard) → push แล้ว (`main`)
 > 
+> **✅ สำเร็จแล้ว (CODE-DEPLOYED + Owner Verified 2026-11-10 16:37):**
+> - IMG-GEN, D4, R91, R92-G, **D2**, **D5**, **R92-S** — ทั้ง 7 ข้อผ่าน live test
+> - §T-A cart retry 2.5s (`Layout.tsx:131-138`) — โค้ด deploy แล้ว รอ hard reload retest
+> 
 > **กติกาเซสชั่นต่อไป:**
-> 1. **✅ สำเร็จแล้ว**: Floating Ad Limit (3) + Real Data Links + AI Gen Scope — **CODE_CLOSED + PUSHED**
-> 2. **Live Retest Sequence** คงเดิม: ① **§T-A** cart retry 2.5s · ใช้ `https://biteme-baby.com` · hard reload 1 ครั้ง · RT-8 ยังห้ามปิด
+> 1. **✅ สำเร็จแล้ว**: Floating Ad Limit (3) + Real Data Links + AI Gen Scope + **D2/D5/R92-G/R92-S** — **CODE_CLOSED + PUSHED**
+> 2. **Live Retest Sequence**: ① **§T-A** cart retry 2.5s · ใช้ `https://biteme-baby.com` · hard reload 1 ครั้ง · RT-8 ยังห้ามปิด
 > 3. เอกสารอ้างอิง: `AI_WORK_STATE.md` · `.kilo/plans/1794247959923-content-catalog-image-workflow.md`
 
 ## 🔒 SESSION CLOSE 2026-11-11 (รอบ 10 · Floating Ad Sources + AI Gen Scope Fix เสร็จ · Gates 4/4 ผ่าน) — **CODE_CLOSED + PUSHED**

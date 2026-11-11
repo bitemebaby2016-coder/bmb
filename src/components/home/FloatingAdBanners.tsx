@@ -1,7 +1,7 @@
 // ============================================
 // Bite Me Baby — Floating Ad Banners (overlay)
 // Replaces the old inline home strip: promos flagged `is_banner` float in as an
-// overlay card stack (max 2 at once, promo data pulled from the real DB rows
+// overlay card stack (max 3 at once, promo data pulled from the real DB rows
 // below the creative). Each banner has a prominent ✕ — dismissing stores the
 // promo id in sessionStorage (per-promo, D03: current session only) so it never
 // pops up again this session even when the promo query returns a different
@@ -282,7 +282,7 @@ export function FloatingAdBanners({
   // R58: ลำดับโพสใน merged (ก่อนตัด dismissed) = ตำแหน่งไว้เลือกรูปมาสคอต/มุม/ภาพอัลบั้ม
   // → การ์ดติดกันได้มาสคนคนละตัวและมุมคนละมุม (Owner: "สลับไม่ซ้ำกัน")
   const positionOf = new Map(merged.map((p, i) => [p.id, i]))
-  // max 2 banners; skip already-dismissed ones (state + sessionStorage)
+  // max 3 banners; skip already-dismissed ones (state + sessionStorage)
   const visible = pickVisibleBannerPromos(merged, dismissedIds)
   const visibleKey = visible.map((p) => p.id).join(',')
 

@@ -1,4 +1,4 @@
-# Pending Tasks for Next Session (Owner Approved 2026-11-09 18:09, Updated 2026-11-10)
+# Pending Tasks for Next Session (Owner Approved 2026-11-09 18:09, Updated 2026-11-11)
 
 Record of tasks to be completed in the next session. These should be merged into AI_WORK_STATE.md.
 
@@ -17,23 +17,19 @@ Record of tasks to be completed in the next session. These should be merged into
 
 ---
 
-## 🧪 Live Retest Sequence (from BMB_REMAIN_TESTS_LIVE_2026-11-09.md + 2026-11-10.md)
+## 🧪 Live Retest Sequence (from BMB_REMAIN_TESTS_LIVE_2026-11-10.md — Owner verified 2026-11-10 16:37)
 
-1. **D2** — SAME_DAY prompt incorrect "รอบเดียว 11:00-15:00" → RT-5.1/5.4
-2. **D4** — In-app browser native click + guide (intent://)
-3. **D5** — Post missing day/round details → RT-3.6
-4. **§T-A** — Cart retry 2.5s (Layout.tsx)
-5. **R91** — Hard reload confirm card scale equal + logo/stars
-6. **R92-G** — Guide ใหม่ "เปิดผ่าน Chrome หรือ Safari..." (bundle proof R92_GUIDE_NEW)
-7. **R92-S** — Compress 300×300/100KB auto (code+test+deploy)
-8. **R90** — Task 1: Review button under CTA (CSS clip fix glass top:30%) · Task 2: Expired promos (passed "หายแล้ว")
+**Owner verified PASS (7/7):** IMG-GEN, D4, R91, R92-G, D2, D5, R92-S — **all code-deployed, gates 4/4 green**
+
+**Remaining Live Retest (1 item):**
+- [ ] **§T-A** — Cart retry 2.5s (Layout.tsx:131-138) · hard reload `https://biteme-baby.com` · test `?cart=` from FB → Chrome jump → cart has items within 2.5s
 
 ---
 
-## 🏃 Test Suites Not Yet Run
+## 🏃 Test Suites Not Yet Run (Owner workflow — not code tasks)
 
 - [ ] RT-4 · RT-HOURS · RT-6.2 · RT-6.1 (E1 waived) · RT-6.4B2 · CAP-14 + CAP 7·8·13·16·17·19
-- [ ] **RT-8 = STILL BLOCKED** (criteria not met)
+- [ ] **RT-8 = STILL BLOCKED** (meta-rule: cannot close until RT-1..7 all pass)
 
 ---
 
@@ -49,6 +45,22 @@ These are NOT caused by recent changes:
 
 ---
 
+## 📦 Backlog — Not Live Retest (Code mostly fixed; awaiting Owner verification / separate phase)
+
+| Item | Status | Notes |
+|------|--------|-------|
+| **R88** Contract Tests | CI green 51/51 passing (`c08c93f`), `m199` applied PROD | Code complete; not part of live retest sequence |
+| **R81** Review Moderation | RPC missing `status` column → filter `undefined` fixed | Code complete; Owner retest pending (web push, Smart Escape) |
+| **R82** Chat/Web Push Identity | `eq.` fix, subscription check, `orderWindow.ts` mirror | Code complete; Owner retest pending (A2', B8', B9') |
+| **R73h/R73g** Birthday/Consent UI | `m193` consent, day/time grid | Code complete; Owner test pending |
+
+---
+
 ## 📝 Note for Next Session
 
 Update `AI_WORK_STATE.md` with the above checklist at the top (after SESSION CLOSE banner). The three test failures are pre-existing and should be fixed in a dedicated PR/phase separate from live testing work.
+
+**Key reconciliation done 2026-11-11:**
+- `AI_WORK_STATE.md` round 11 updated: D2/D5/R92-G/R92-S marked ✅ code-deployed, §T-A only pending live retest
+- `BMB_MASTER_STATUS.md` top entry updated: LIVE-TEST 2026-11-10 reflects 7/7 Owner-verified, §T-A only remaining
+- `pending-tasks-next-session.md` restructured: Live retest = §T-A only; R88/R81/R82 moved to backlog
