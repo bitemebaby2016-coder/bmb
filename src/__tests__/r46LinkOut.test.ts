@@ -1,15 +1,15 @@
 // R46 (Owner 2026-11-01) — ลิงก์นอก Facebook: แจ้งทั้งฝั่งข้อความโซเชียล + ผู้ใช้ในหน้าเว็บ
 //   + ยืนยันสถานะ "ถึงปลายทาง" = มีครบ (m163/166 + canonical timeline) + known-good 80/680
 import { describe, it, expect } from 'vitest'
-import { isInAppBrowser } from '@/components/layout/InAppBrowserNotice'
+import { isInAppBrowser, NOTICE_DISMISS_KEY } from '@/components/layout/InAppBrowserNotice'
 import fs from 'node:fs'
 import path from 'node:path'
 
 const read = (p: string) => fs.readFileSync(path.resolve(__dirname, '../..', p), 'utf8')
 const intakeSrc = read('supabase/functions/_shared/socialOrderIntake.ts')
 const publishSrc = read('supabase/functions/social-publish-worker/index.ts')
-const noticeSrc = read('src/components/layout/InAppBrowserNotice.tsx')
-const layoutSrc = read('src/components/layout/Layout.tsx')
+const bannerSrc = read('src/components/InAppBrowserBanner.tsx')
+const appSrc = read('src/App.tsx')
 const timelineSrc = read('src/components/customer/OrderTimeline.tsx')
 const vocabSrc = read('src/lib/orderVocabulary.ts')
 
@@ -35,22 +35,25 @@ describe('R46 — แบนเนอร์ในเว็บ: FB in-app = แจ
     expect(isInAppBrowser('Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/131.0.0.0 Safari/537.36')).toBe(false)
   })
 
-  it('แบนเนอร์ = บังคับภายนอก + ปุ่มปิดป๊อปอัพ (R77) + Layout เรียกใช้', () => {
-    expect(noticeSrc).toContain('data-testid="inapp-browser-notice"')
-    expect(noticeSrc).toContain('data-testid="inapp-open-external"')
-    // Owner 2026-11-02 "ห้ามใช้บราวเซอร์ของเฟซ" → ปุ่ม "อยู่ที่นี่ต่อ" ยังไม่มี (ปุ่มปิด R77 = คนละอัน)
-    expect(noticeSrc).not.toContain('data-testid="inapp-stay"')
-    // R77 (Owner: "ใส่ปุ่มปิดป้อบอัพเพิ่ม"): ปุ่มปิด (X) + จำการปิดต่อแท็บ
-    expect(noticeSrc).toContain('data-testid="inapp-close"')
-    expect(noticeSrc).toContain('NOTICE_DISMISS_KEY')
-    expect(noticeSrc).toContain('เปิดในเบราว์เซอร์')
-    // R81: pure helper คงไว้ (test r57 คุม) แต่ "ไม่มีปุ่ม intent บน UI" อีกแล้ว
-    expect(noticeSrc).toContain('externalBrowserIntentUrl')
-    expect(noticeSrc).not.toContain('window.location.replace(intent)')
-    expect(noticeSrc).not.toContain('window.open(intent')
-    expect(noticeSrc).not.toContain('href={intentUrl}')
-    expect(layoutSrc).toContain('<InAppBrowserNotice />')
-    expect(layoutSrc).toContain("import { InAppBrowserNotice } from './InAppBrowserNotice'")
+  it('แบนเนอร์ใหม่ (InAppBrowserBanner) = บังคับภายนอก + ปุ่มปิด + App เรียกใช้ wrapper', () => {
+    // New banner component (InAppBrowserBanner) replaces old InAppBrowserNotice
+    expect(bannerSrc).toContain('data-testid="inapp-banner"')
+    expect(bannerSrc).toContain('data-testid="inapp-open-external"')
+    // Owner 2026-11-02 "ห้ามใช้บราวเซอร์ของเฟซ" → ปุ่ม "อยู่ที่นี่ต่อ" ยังไม่มี
+    expect(bannerSrc).not.toContain('data-testid="inapp-stay"')
+    // R77 (Owner: "ใส่ปุ่มปิดป๊อปอัพเพิ่ม"): ปุ่มปิด (X) → ใหม่ใช้ dismiss
+    expect(bannerSrc).toContain('data-testid="inapp-dismiss"')
+    // NOTICE_DISMISS_KEY อยู่ใน InAppBrowserNotice (deprecated) — new banner ใช้ hook dismiss()
+    expect(bannerSrc).toContain('dismiss')
+    expect(bannerSrc).toContain('เปิดใน')
+    // R81: intent URL สร้างใน hook + ใช้เป็น href ของ <a> (ไม่ window.open/replace)
+    expect(bannerSrc).toContain('intentUrl')
+    expect(bannerSrc).not.toContain('window.location.replace(intent)')
+    expect(bannerSrc).not.toContain('window.open(intent')
+    expect(bannerSrc).toContain('href={intentUrl}')
+    // App.tsx wraps routes with InAppBrowserBanner
+    expect(appSrc).toContain('<InAppBrowserBanner>')
+    expect(appSrc).toContain("import { InAppBrowserBanner } from '@/components/InAppBrowserBanner'")
   })
 })
 
