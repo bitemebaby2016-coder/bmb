@@ -1,3 +1,20 @@
+## 🔒 SESSION CLOSE 2026-11-11 (รอบ 15 · R91 — Messenger escape + บริบท FB ต่อเข้า Bite AI เว็บ + ปุ่ม "Chrome / Safari" · Gates 4/4 ผ่าน) — **CODE_CLOSED + PUSHED**
+
+> **สถานะ ณ 2026-11-11 23:26:** owner live test แล้วยืนยัน: "จากเม้นใต้โพส ตามลิงก์ออกไปได้ สินค้าเข้าตะกร้าแล้ว ✅ แต่ในข้อความ (Messenger) ออกไม่ได้" + สั่ง (1) ทำให้ออกจากข้อความได้เหมือนกัน (2) บริบทจากเฟซบุ๊กต้องต่อเข้า Bite AI ของเว็บให้เหมือนกัน/ต่อเนื่อง (3) เติม "/ Safari" หลังคำว่า Chrome · Gates 4/4 ผ่านจริง (tsc ✅ lint ✅ vitest ✅ 214 files / 2224 tests PASS · build ✅) · push `e3c0be7`
+
+> **สิ่งที่แก้:**
+> 1. **`src/lib/socialHandoff.ts` (ใหม่)** — จับ "ลูกค้ามาจาก Facebook/Messenger": `detectSocialSource` (referrer+UA ผสม — Messenger UA มี `FB_IAB/MESSENGER`), `save/readSocialHandoff` (sessionStorage `bmb:social-handoff` — ล้างเมื่อปิดแท็บ, เก็บแค่ id/qty ไม่มี PII/ราคา), `buildSocialHandoffContext` (pure — ชื่อเมนูจาก cart store จริงเท่านั้น ห้ามมโน)
+> 2. **`Layout.tsx`** — หลัง decode `?cart=` สำเร็จ → saveSocialHandoff (referrer เว้นว่างใน WebView ได้ เพราะลิงก์ ?cart= เกิดจาก AI บน Meta เท่านั้น → fallback 'facebook')
+> 3. **`TalkToBite.tsx` `composeRealContext()`** — inject ประโยคต่อบทสนทนา ("ต่อจากที่คุยกันใน Messenger... ห้ามถามเมนูที่สรุปแล้วซ้ำ") เข้า runtimeContext ทุกข้อความ = Bite เว็บต่อเรื่องจาก FB/ข้อความได้ต่อเนื่อง
+> 4. **`InAppBrowserBanner.tsx`** — owner requested label: `เปิดใน Chrome` → **`เปิดใน Chrome / Safari`** + **ปุ่ม 📋 คัดลอกลิงก์** (clipboard API → textarea fallback) + แผงคำแนะนำเฉพาะทาง **`isMessengerUA`** (intent:// โดน Messenger บล็อก → ชี้เมนู ⋯ → "เปิดในเบราว์เซอร์" / แชร์→Safari) — hooks ใหม่ทั้งหมดวางก่อน early return ตามกฎ R90-hotfix
+> 5. **Tests ใหม่** — `socialHandoff.test.ts` (detect/save/read/build — 8 เคส รวมกันมโนชื่อเมนู) + r46LinkOut เสริม contract (ปุ่ม Chrome / Safari, copy-link, guide, MESSENGER)
+
+> **ข้อจำกัดที่รายงานตรง:** Messenger in-app บน iPhone ไม่มี JS ใด force-escape ได้ (พิสูจน์แล้ว 6 รอบ §R81) → เส้นทางจริง = คัดลอกลิงก์/เมนู ⋯ ของแอป ซึ่งแบนเนอร์บอกเป็นขั้นให้แล้วตอนนี้ · comment ฝั่ง FB app ใช้ intent:// ได้ (owner ยืนยันออกได้แล้ว)
+
+**Commits:** `e3c0be7` (code+tests) → docs commit ต่อท้าย · push main แล้ว — รอ deploy แล้ว owner live test ข้อความ Messenger อีกครั้ง
+
+---
+
 ## 🔒 SESSION CLOSE 2026-11-11 (รอบ 14 · R90-hotfix ลิงก์ AI จาก Facebook พังทั้งเว็บ React #310 — Gates 4/4 ผ่าน) — **CODE_CLOSED + PUSHED**
 
 > **สถานะ ณ 2026-11-11 22:55:** แก้ crash ที่ R90 ตัวก่อนก่อไว้ · Gates 4/4 ผ่านจริง (tsc ✅ lint ✅ vitest ✅: 213 files / 2216 tests PASS · build ✅) · push main แล้ว — รอ deploy แล้ว owner ทดสอบกดลิงก์จากโพสต์ FB จริง
