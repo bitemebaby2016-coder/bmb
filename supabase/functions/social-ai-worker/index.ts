@@ -55,7 +55,8 @@ import {
   bangkokDate,
   submitNewOrder,
   buildIntakeLine,
-  buildCartSummaryFooter,
+  cartFooterForMatch,
+  buildSocialSummary,
   scopeCatalogToPost,
   getCrossSellPrompt,
   type OrderMode,
@@ -476,19 +477,26 @@ async function runOrderIntake(ev: SocialEventRow, userMsg: string, mode: 'messag
     if (m.matched.length === 0) {
       return { footer: '', note: 'จับคู่เมนูไม่ได้ — ให้ถามชื่อเมนูที่ถูกต้องจากลูกค้า ห้ามเดาสินค้าแทน', summaryNames: [], orderMode: 'UNSURE' }
     }
-    if (m.unmatched.length > 0) {
-      return {
-        footer: '',
-        note: 'มีเมนูที่จับคู่ไม่ได้: ' + m.unmatched.join(', ') + ' — ให้ถามชื่อเมนูที่ถูกต้องก่อน ห้ามเดา/ห้ามสั่งแทน',
-        summaryNames: [],
-        orderMode: 'UNSURE',
-      }
-    }
-    // R27: ลิงก์ตะกร้าสรุป (ระบบเป็นคนเขียน) — กดเปิดบนเว็บ เช็คเอาท์/เพิ่มเมนูต่อได้เอง
-    const cartFooter = buildCartSummaryFooter(m.matched)
+    // R92 (Owner 2026-11-11): ลิงก์ตะกร้าติดทุก reply ที่จับคู่ได้ (ครบ/บางส่วน) — footer เดียวกัน
+    // ทั้ง comment/message/!confirmed · บางส่วน = ลิงก์เฉพาะรายการที่จับคู่ได้ + ระบบแจ้งของที่ยังไม่รวม
+    // ?s= = ประโยคสรุป "ระบบเขียนจากข้อมูลจริง" (ช่องทาง + โหมด + ชื่อ matched) — ไม่ใช่ข้อความเสรีของ AI
+    const socialSrc: 'facebook' | 'messenger' = ev.platform.toLowerCase() === 'messenger' ? 'messenger' : 'facebook'
+    const cartCtx = { src: socialSrc, t: buildSocialSummary(socialSrc, x.order_mode, m.matched) }
+    const cartFooter = cartFooterForMatch(m, undefined, cartCtx)
     const summaryNames = m.matched.map((i) => i.name + ' x' + i.quantity).join(', ')
     // R57: ชื่อเมนูจริงที่ระบบจับคู่ไว้ — ใช้บังคับคำตอบต้องสรุปตรงทุกรายการ (semanticDraft)
     const matchedNames = m.matched.map((i) => i.name)
+    if (m.unmatched.length > 0) {
+      return {
+        footer: cartFooter,
+        note: 'มีเมนูที่จับคู่ไม่ได้: ' + m.unmatched.join(', ') +
+          ' — ลิงก์ตะกร้าท้ายข้อความจากระบบรวมเฉพาะรายการที่จับคู่ได้แล้วเท่านั้น ให้กล่าวถึงด้วย ' +
+          'และถามยืนยันชื่อเมนูที่เหลือจากลูกค้าก่อน ห้ามเดา/ห้ามสั่งแทน ห้ามสรุปรายการที่ยังไม่จับคู่',
+        summaryNames: matchedNames,
+        orderMode: x.order_mode === 'PRE_ORDER' ? 'PRE_ORDER' : 'SAME_DAY',
+      }
+    }
+    // R82 window check ตามเดิม (partial ไม่ถึงจุดนี้ — return ก่อนแล้ว)
 
     // --- R82 (Owner 2026-11-08: "ไก่ทอดเลยรอบส่งของพรีออเดอร์ไปแล้ว แต่เอาไปใส่ตะกร้าให้") ---
     // ประเมินแบบเดียวกับเว็บ (mirror R77 isPreOrderDayPassed/roundBookability):

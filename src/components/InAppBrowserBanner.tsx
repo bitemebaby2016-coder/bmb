@@ -10,8 +10,10 @@
 // • อ่าน ?cart= ตอน render แรก (lazy useState — ก่อน Layout.tsx strip พารามิเตอร์)
 //   ด้วย decodeCartParam เดียวกับ Layout (ของเดิม atob raw ไม่มี padding = decode พัง)
 // • FB WebView กับ Chrome ไม่แชร์ localStorage กัน — "สะพาน" เดียวคือตัวลิงก์
-//   → intent URL / openExternally ต้องถูกสร้างใหม่พร้อม ?cart= เสมอ (ถ้า URL ปัจจุบัน
-//     ถูก strip ไปแล้ว จะใส่ค่า raw ที่เก็บไว้ตอนเข้าหน้ากลับเข้าไปก่อนเปิดออก)
+//   → ปุ่มคัดลอกต้องพา ?cart= กลับเสมอ (ถ้า URL ปัจจุบันถูก strip ไปแล้ว จะใส่ค่า raw
+//     ที่เก็บไว้ตอนเข้าหน้ากลับเข้าไปก่อนคัดลอก)
+// • R92 (Owner 2026-11-11): ลบปุ่มเปิดแบบ intent ทั้งหมด — ภาพ 3 พิสูจน์ FB Android WebView
+//   ไม่ dispatch รูปแบบนี้ = ERR_UNKNOWN_URL_SCHEME หน้าพัง (R76/R79/R81-B2) ห้ามใส่อีก
 // ============================================
 
 import { useCallback, useState } from 'react'
@@ -26,7 +28,7 @@ interface CartHandoff {
 }
 
 export function InAppBrowserBanner({ children }: { children: React.ReactNode }) {
-  const { isFB, dismissed, dismiss, openExternally, installApp, canInstall } = useInAppBrowser()
+  const { isFB, dismissed, dismiss, installApp, canInstall } = useInAppBrowser()
 
   // hooks ทั้งหมดต้องอยู่ก่อน early return (R90-hotfix — ห้ามย้ายลงไปข้างล่าง)
   // lazy initializer:รันครั้งเดียวตอน mount ซึ่ง URL ยังไม่ถูก strip โดย Layout
@@ -48,9 +50,9 @@ export function InAppBrowserBanner({ children }: { children: React.ReactNode }) 
     }
   })
 
-  const ua = navigator.userAgent
-  const isAndroid = /Android/i.test(ua)
-
+  // R92 (Owner 2026-11-11 ภาพ 3: error page ERR_UNKNOWN_URL_SCHEME จากลิงก์ intent ที่เฟสค้างไว้):
+  // FB Android WebView ไม่ dispatch รูปแบบนี้ = บทเรียน R76/R79/R81-B2 ห้ามกลับมาใส่อีกเด็ดขาด
+  // → ปุ่มหลักเดียว = คัดลอกลิงก์ (มี ?cart= เสมอ) + guide ต่อ platform — ทางเดียวที่พิสูจน์ว่าใช้ได้จริง
   // URL ส่งต่อ: ถ้า Layout strip ?cart= ไปแล้ว ให้ใส่ค่า raw ที่เก็บไว้กลับเข้ามาก่อน
   const handoffUrl = (() => {
     const current = window.location.href
@@ -63,17 +65,13 @@ export function InAppBrowserBanner({ children }: { children: React.ReactNode }) 
     }
   })()
 
-  const intentUrl = isAndroid && /^https:\/\//.test(handoffUrl)
-    ? `intent://${handoffUrl.replace(/^https:\/\//, '')}#Intent;scheme=https;package=com.android.chrome;action=android.intent.action.VIEW;s.browser_fallback_url=${encodeURIComponent(handoffUrl)};end`
-    : null
-
-  const handleOpenExternal = useCallback(() => openExternally(handoffUrl), [handoffUrl, openExternally])
-
-  // R91 (Owner 2026-11-11 "ในข้อความ ออกไม่ได้"): Messenger in-app บล็อก intent:// — เส้นทางเดียว
+  // R91 (Owner 2026-11-11 "ในข้อความ ออกไม่ได้"): Messenger in-app บล็อกลิงก์ intent — เส้นทางเดียว
   // ที่ใช้ได้จริงคือ คัดลอกลิงก์ + เปิดเบราว์เซอร์เอง (หรือเมนู ⋯ ของแอป) → ให้ปุ่มสำรองเสมอ
   const [copyState, setCopyState] = useState<'idle' | 'copied' | 'failed'>('idle')
   const [guideOpen, setGuideOpen] = useState(false)
+  const ua = navigator.userAgent
   const isMessengerUA = /MESSENGER/i.test(ua)
+  const isIOS = /iPhone|iPad/i.test(ua)
 
   const copyHandoff = useCallback(async () => {
     try {
@@ -126,32 +124,13 @@ export function InAppBrowserBanner({ children }: { children: React.ReactNode }) 
             </div>
           </div>
           <div className="flex gap-2 shrink-0 flex-wrap">
-            {intentUrl && (
-              <a
-                href={intentUrl}
-                className="bg-white text-amber-700 font-bold px-4 py-2 rounded-lg shadow"
-                data-testid="inapp-open-external"
-              >
-                เปิดใน Chrome / Safari
-              </a>
-            )}
-            {!intentUrl && (
-              <button
-                type="button"
-                className="bg-white text-amber-700 font-bold px-4 py-2 rounded-lg shadow"
-                onClick={handleOpenExternal}
-                data-testid="inapp-open-external"
-              >
-                เปิดในเบราว์เซอร์ภายนอก
-              </button>
-            )}
             <button
               type="button"
-              className={`font-bold px-4 py-2 rounded-lg shadow ${copyState === 'copied' ? 'bg-green-500 text-white' : 'bg-white/20 text-white'}`}
+              className={`font-bold px-4 py-2 rounded-lg shadow ${copyState === 'copied' ? 'bg-green-500 text-white' : 'bg-white text-amber-700'}`}
               onClick={() => void copyHandoff()}
               data-testid="inapp-copy-link"
             >
-              {copyState === 'copied' ? '✓ คัดลอกแล้ว' : '📋 คัดลอกลิงก์'}
+              {copyState === 'copied' ? '✓ คัดลอกแล้ว — วางใน Chrome / Safari' : '📋 คัดลอกลิงก์ · เปิดใน Chrome / Safari'}
             </button>
             {canInstall && (
               <button
@@ -187,16 +166,23 @@ export function InAppBrowserBanner({ children }: { children: React.ReactNode }) 
                 <>
                   <li>แตะ <b>⋯ (สามจุดมุมบนขวา)</b> ในหน้าจอ Messenger นี้</li>
                   <li>เลือก <b>“เปิดในเบราว์เซอร์”</b> (Android) หรือ <b>แชร์ → Safari</b> (iPhone)</li>
-                  <li>ถ้าไม่มีเมนูนั้น: แตะ <b>📋 คัดลอกลิงก์</b> → เปิด Chrome/Safari → วางในช่องค้นหา</li>
+                  <li>ถ้าไม่มีเมนูนั้น: เปิด Chrome/Safari → วางลิงก์ที่คัดลอกไว้</li>
+                </>
+              ) : isIOS ? (
+                <>
+                  <li>แตะปุ่ม <b>แชร์ (ช่องสี่เหลี่ยมมีลูกศรขึ้น)</b> ที่แถบล่างของแอปเฟซ</li>
+                  <li>เลือก <b>Safari</b> จากรายการแอป</li>
+                  <li>ถ้าไม่มีเมนูนั้น: เปิด Safari เอง → วางลิงก์ที่คัดลอกไว้</li>
                 </>
               ) : (
                 <>
-                  <li>เปิดแอป <b>Chrome</b> หรือ <b>Safari</b> เอง</li>
-                  <li>วางลิงก์ในช่องค้นหา = เข้าเว็บจริง (ตะกร้าที่สรุปไว้จะเติมอัตโนมัติ)</li>
-                  <li>ทางลัด: กด <b>📋 คัดลอกลิงก์</b> ด้านบนก่อน แล้วค่อยวาง</li>
+                  <li>แตะ <b>⋯ (สามจุดมุมบนขวา)</b> ของแอปเฟซ</li>
+                  <li>เลือก <b>“เปิดในเบราว์เซอร์”</b> — เปิดใน Chrome</li>
+                  <li>ถ้าไม่มีเมนูนั้น: เปิด Chrome เอง → วางลิงก์ที่คัดลอกไว้</li>
                 </>
               )}
             </ol>
+            <p className="mt-1 opacity-90">สำรองทุกเครื่อง: คัดลอกลิงก์แล้ว <b>วางใน Chrome / Safari</b> = เข้าเว็บจริงเสมอ</p>
           </div>
         )}
       </div>

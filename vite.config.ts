@@ -27,7 +27,12 @@ export default defineConfig({
       strategies: 'injectManifest',
       srcDir: 'src',
       filename: 'sw.ts',
-      injectRegister: 'auto',
+      // R92 (Owner 2026-11-11): 'manual' — ลงทะเบียนเองใน main.tsx พร้อม guard:
+      // ห้าม register SW ใน in-app browser (FB/IG/LINE) — FB WebView อัปเดต SW ไม่เสถียร
+      // = ลูกค้าค้าง build เก่า (OWNER FIX 2026-10-26 "เห็น UI เก่าค้างถาวร") → ที่นั่น
+      // unregister + clear caches เสมอ เพื่อให้เฟสโหลด build ใหม่; PWA จริงบน
+      // Chrome/Safari register ตามปกติ
+      injectRegister: 'manual',
       injectManifest: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
         maximumFileSizeToCacheInBytes: 3 * 1024 * 1024,

@@ -13,6 +13,29 @@ import { getSeoSettings } from './lib/seoSettings'
 import { getSocialLinks } from './lib/socialLinks'
 import { initCartPersistence } from './lib/cartPersistence'
 import { initCartSessionSync } from './lib/cartSessionSync'
+import { isInAppBrowser } from './components/layout/InAppBrowserNotice'
+import { registerSW } from 'virtual:pwa-register'
+
+// R92 (Owner 2026-11-11 "เว็บในเฟสโหลด build เก่า/พฤติกรรมแปลก ๆ"): ห้าม register SW
+// ใน in-app browser (FB/IG/LINE) — FB WebView อัปเดต SW ไม่เสถียร = ลูกค้าค้าง build เก่า
+// (OWNER FIX 2026-10-26 "เห็น UI เก่าค้างถาวร") → ที่นั่น = unregister + ล้าง caches ทั้งหมด
+// ให้เฟสโหลดจาก network เสมอ · PWA จริงบน Chrome/Safari = register ตามปกติ (คง offline/push)
+if (isInAppBrowser(navigator.userAgent)) {
+  void (async () => {
+    try {
+      if ('serviceWorker' in navigator) {
+        const regs = await navigator.serviceWorker.getRegistrations()
+        for (const r of regs) await r.unregister()
+      }
+      if (typeof caches !== 'undefined') {
+        const keys = await caches.keys()
+        for (const k of keys) await caches.delete(k)
+      }
+    } catch { /* ล้างไม่ได้ = โหลดตามปกติ (ไม่บล็อก render) */ }
+  })()
+} else {
+  registerSW({ immediate: true })
+}
 
 // ⚡ PERF (2026-09-17): admin seeding hashes a bcrypt password at boot, which is
 // heavy on the main thread. Defer it until after first paint / idle so LCP and

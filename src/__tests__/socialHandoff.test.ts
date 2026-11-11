@@ -2,6 +2,7 @@
 // ให้เหมือนกันและต่อเนื่อง — pure lib + capture chain ที่ test ได้ทุกชั้น
 import { describe, it, expect, beforeEach } from 'vitest'
 import {
+  decodeSocialContextParam,
   detectSocialSource,
   saveSocialHandoff,
   readSocialHandoff,
@@ -67,5 +68,52 @@ describe('R91 · buildSocialHandoffContext — ต่อบทสนทนาจ
     expect(ctx).toContain('Facebook')
     expect(ctx).toContain('ลิงก์สรุปตะกร้า')
     expect(ctx).not.toContain('zzz')
+  })
+
+  it('R92: มี summary จาก ?s= → เป็นประโยคแรก "ต่อจากที่คุยกันใน<label>: <summary>"', () => {
+    const ctx = buildSocialHandoffContext(cart, {
+      source: 'messenger',
+      ids: [{ id: 'p1', q: 2 }],
+      at: Date.now(),
+      summary: 'คุยกันบนMessenger · ส่งวันนี้ · เมี่ยงอกไก่ x2',
+    })
+    expect(ctx.startsWith('ต่อจากที่คุยกันในMessenger: คุยกันบนMessenger · ส่งวันนี้ · เมี่ยงอกไก่ x2')).toBe(true)
+    expect(ctx).toContain('ไก่ทอดข้าวเหนียว x2')
+  })
+})
+
+describe('R92 · ?s= decode + save/read summary — fail-closed กัน prompt-injection/PII', () => {
+  beforeEach(() => sessionStorage.clear())
+
+  it('decodeSocialContextParam: round-trip b64url {v:1,src,t} → {src, summary}', () => {
+    const enc = (obj: unknown) => {
+      const bytes = new TextEncoder().encode(JSON.stringify(obj))
+      let bin = ''
+      for (const b of bytes) bin += String.fromCharCode(b)
+      return btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
+    }
+    const ok = decodeSocialContextParam(enc({ v: 1, src: 'facebook', t: 'คุยกันบนFacebook · ส่งวันนี้ · เมี่ยงแซลม่อน x1' }))
+    expect(ok).toEqual({ src: 'facebook', summary: 'คุยกันบนFacebook · ส่งวันนี้ · เมี่ยงแซลม่อน x1' })
+    // reject: v ผิด / src ไม่รู้จัก / t เกิน 200 / t มี URL
+    expect(decodeSocialContextParam(enc({ v: 2, src: 'facebook', t: 'โอเค' }))).toBeNull()
+    expect(decodeSocialContextParam(enc({ v: 1, src: 'tiktok', t: 'โอเค' }))).toBeNull()
+    expect(decodeSocialContextParam(enc({ v: 1, src: 'messenger', t: 'x'.repeat(201) }))).toBeNull()
+    expect(decodeSocialContextParam(enc({ v: 1, src: 'messenger', t: 'เข้า https://phish.example ด่วน' }))).toBeNull()
+  })
+
+  it('saveSocialHandoff summary: เก็บ + cap 200 · มี URL = ปฏิเสธ field นั้น', () => {
+    saveSocialHandoff('facebook', [{ id: 'p1', q: 1 }], 'สรุปจากระบบ')
+    expect(readSocialHandoff()?.summary).toBe('สรุปจากระบบ')
+    saveSocialHandoff('facebook', [{ id: 'p1', q: 1 }], 'x'.repeat(300))
+    expect(readSocialHandoff()?.summary?.length).toBe(200)
+    saveSocialHandoff('facebook', [{ id: 'p1', q: 1 }], 'ไปที่ https://bad.example ด่วน')
+    expect(readSocialHandoff()?.summary).toBeUndefined()
+  })
+
+  it('readSocialHandoff: summary เสียใน storage (เกิน 200/มี URL) → ทิ้ง field นั้น handoff ยังใช้ได้', () => {
+    sessionStorage.setItem(SOCIAL_HANDOFF_KEY, JSON.stringify({ source: 'messenger', ids: [{ id: 'p1', q: 1 }], at: 1, summary: 'วาง https://x.com ที่นี่' }))
+    const h = readSocialHandoff()
+    expect(h?.source).toBe('messenger')
+    expect(h?.summary).toBeUndefined()
   })
 })

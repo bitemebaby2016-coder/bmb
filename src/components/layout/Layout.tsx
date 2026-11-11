@@ -13,7 +13,7 @@ import { useCartStore } from '@/store/cartStore'
 import { referralCodeFromSearch } from '@/lib/referralClient'
 import { affiliateCodeFromSearch, saveAffiliateClaimCode } from '@/lib/engagementClient'
 import { decodeCartParam } from '@/lib/cartDeepLink'
-import { detectSocialSource, saveSocialHandoff } from '@/lib/socialHandoff'
+import { decodeSocialContextParam, detectSocialSource, saveSocialHandoff } from '@/lib/socialHandoff'
 import { showToast } from '../ui/ToastContainer'
 
 interface LayoutProps {
@@ -71,6 +71,9 @@ export function Layout({ children, hideBottomNav = false, activeSection = 'home'
     if (typeof window === 'undefined') return
     const raw = new URLSearchParams(window.location.search).get('cart')
     if (!raw) return
+    // R92 (Owner 2026-11-11): จับ `?s=` (บริบทต่อเนื่อง "ระบบเขียน" จากแชท FB/Messenger)
+    // ก่อน strip ใด ๆ — decode fail = ไม่มีบริบท ไม่บล็อก flow ตะกร้า
+    const socialCtx = decodeSocialContextParam(new URLSearchParams(window.location.search).get('s'))
     // R61 fix (§T-1): raw = "ค่า" ของ ?cart= — ต้องถอดด้วย decodeCartParam ตรง ๆ
     // (เดิมส่งเข้า readCartParam ที่รอ query string เต็ม → ทำ decodeCartParam(null) ทุกครั้ง
     //  → ลิงก์ตะกร้าจากโซเชียลฟ้อง "ลิงก์ไม่สมบูรณ์" + ตะกร้าว่าง 100% · evidence e2e/tProdProbe_results_T-A4cart.json)
@@ -86,7 +89,7 @@ export function Layout({ children, hideBottomNav = false, activeSection = 'home'
     //  ผสม UA: Messenger in-app มี token FB_IAB/MESSENGER ซึ่งแยกจากแอป Facebook ธรรมดา)
     const hints = `${typeof document !== 'undefined' ? document.referrer : ''} ${typeof navigator !== 'undefined' ? navigator.userAgent : ''}`
     const socialSrc = detectSocialSource(hints)
-    saveSocialHandoff(socialSrc === 'other' ? 'facebook' : socialSrc, items)
+    saveSocialHandoff(socialSrc === 'other' ? 'facebook' : socialSrc, items, socialCtx?.summary)
     let cancelled = false
     let addedTotal = 0
     let toasted = false // กัน toast ซ้ำตอน retry
@@ -113,10 +116,12 @@ export function Layout({ children, hideBottomNav = false, activeSection = 'home'
           showToast('เปิดรายการที่สรุปไว้ให้แล้ว 🛒 ' + added + ' รายการ — เช็คเอาท์หรือเพิ่มเมนูต่อได้เลย', 'success')
           useCartStore.getState().setCheckoutOpen(true)
           // §T-A: strip ?cart= param AFTER successful cart restoration
-          // so that intent:// links from InAppBrowserBanner still have the cart param
+          // so that the copied link from InAppBrowserBanner still has the cart param
+          // R92: strip ?s= ด้วย — บริบทใช้ครั้งเดียวตอนเข้า (จับไว้ใน handoff แล้ว)
           try {
             const url = new URL(window.location.href)
             url.searchParams.delete('cart')
+            url.searchParams.delete('s')
             window.history.replaceState(null, '', url.pathname + url.search + url.hash)
           } catch { /* URL แปลก ๆ = ปล่อยตามเดิม */ }
         } else if (missing > 0 && !toasted) {

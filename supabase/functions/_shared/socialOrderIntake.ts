@@ -482,17 +482,60 @@ export function encodeCartParam(items: Array<{ id: string; q: number }>): string
   return btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
 }
 
-/** ลิงก์เปิดตะกร้าบนเว็บ — site ลงท้ายด้วย /shop?cart=<b64url> */
-export function buildCartLink(items: CartSummaryItem[], site = 'https://biteme-baby.com'): string {
+// ---------- R92 (Owner 2026-11-11): บริบทต่อเนื่องข้ามช่องทางแนบในลิงก์ `?s=` ----------
+// ข้อความสรุป "เขียนโดยระบบ" (ช่องทาง + รอบ/โหมด + ชื่อรายการ matched เท่านั้น) —
+// ไม่ใช่ข้อความเสรีของ AI (กัน prompt-injection/PII) · web อ่านฝั่งเดียว (Layout จับก่อน strip)
+
+export const SOCIAL_CONTEXT_MAX = 200
+
+export interface CartLinkContext {
+  src?: 'facebook' | 'messenger'
+  /** ประโยคสรุปจากข้อมูลจริง — ≤200 chars, ห้ามมี URL (ระบบ reject ตอน encode) */
+  t?: string
+}
+
+/** ประโยคสรุป "ระบบเป็นคนเขียน" จากข้อมูลจริงเท่านั้น (channel + mode + ชื่อ matched) */
+export function buildSocialSummary(
+  src: 'facebook' | 'messenger',
+  mode: OrderMode,
+  matched: MatchedItem[],
+): string {
+  const channel = src === 'messenger' ? 'Messenger' : 'Facebook'
+  const modeLabel = mode === 'PRE_ORDER' ? 'พรีออเดอร์' : mode === 'SAME_DAY' ? 'ส่งวันนี้' : 'ยังไม่ระบุรอบ'
+  const names = matched
+    .slice(0, 8)
+    .map((i) => `${i.name} x${i.quantity}`)
+    .join(', ')
+  const t = names ? `คุยกันบน${channel} · ${modeLabel} · ${names}` : `คุยกันบน${channel} · ${modeLabel}`
+  return t.slice(0, SOCIAL_CONTEXT_MAX)
+}
+
+/** b64url ของ {v:1, src, t} — src ไม่ใช่ fb/msgr, t ว่าง/เกิน 200/มี http = คืน '' (fail-closed) */
+export function encodeContextParam(ctx?: CartLinkContext): string {
+  if (!ctx) return ''
+  const src = ctx.src === 'messenger' || ctx.src === 'facebook' ? ctx.src : null
+  const t = typeof ctx.t === 'string' ? ctx.t.trim() : ''
+  if (!src || !t || t.length > SOCIAL_CONTEXT_MAX || /https?:\/\//i.test(t)) return ''
+  const json = JSON.stringify({ v: 1, src, t })
+  const bytes = new TextEncoder().encode(json)
+  let bin = ''
+  for (const b of bytes) bin += String.fromCharCode(b)
+  return btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
+}
+
+/** ลิงก์เปิดตะกร้าบนเว็บ — site ลงท้ายด้วย /shop?cart=<b64url>[&s=<b64url ctx>]
+ *  R92: ctx มี src/t → เติม &s= (บริบทต่อเนื่องข้ามช่องทาง — web Layout อ่านก่อน strip) */
+export function buildCartLink(items: CartSummaryItem[], site = 'https://biteme-baby.com', ctx?: CartLinkContext): string {
   const enc = encodeCartParam(items.map((i) => ({ id: i.product_id, q: i.quantity })))
   if (!enc) return site + '/shop'
-  return `${site}/shop?cart=${enc}`
+  const s = encodeContextParam(ctx)
+  return `${site}/shop?cart=${enc}${s ? '&s=' + s : ''}`
 }
 
 /** ประโยคท้ายข้อความที่ "ระบบเป็นคนเขียน" (ไม่ใช่คำแต่งของ AI) — แนบลิงก์ตะกร้าสรุป
  *  R46 (Owner 2026-11-01): แจ้งว่าลิงก์เปิดเว็บภายนอก Facebook — ผู้ใช้ยืนยันเปิดเอง */
-export function buildCartSummaryFooter(items: CartSummaryItem[], site = 'https://biteme-baby.com'): string {
-  const link = buildCartLink(items, site)
+export function buildCartSummaryFooter(items: CartSummaryItem[], site = 'https://biteme-baby.com', ctx?: CartLinkContext): string {
+  const link = buildCartLink(items, site, ctx)
   const names = items
     .filter((i) => i.name)
     .slice(0, 8)
@@ -502,6 +545,19 @@ export function buildCartSummaryFooter(items: CartSummaryItem[], site = 'https:/
     ? `🛒 สรุปรายการของคุณ (${names}) เปิดดูบนเว็บได้เลยครับ — `
     : '🛒 สรุปรายการของคุณเปิดดูบนเว็บได้เลยครับ — '
   return `${head}กดลิงก์นี้เพื่อดูตะกร้า เช็คเอาท์ หรือเพิ่มเมนูต่อได้เลย: ${link}\n🔗 ลิงก์เปิดเว็บ biteme-baby.com ภายนอก Facebook — ถ้าแตะแล้วยังค้างอยู่ในเฟซ ให้กดคัดลอกลิงก์ในแถบที่ขึ้น แล้ววางใน Chrome/Safari ได้เลย`
+}
+
+/** R92 (Owner 2026-11-11 "ลิงก์ตะกร้าต้องติดทุก reply ที่จับคู่ได้บางส่วน"): pure helper
+ *  - matched ครบ → footer เดิม (buildCartSummaryFooter)
+ *  - matched บางส่วน → footer = ลิงก์ตะกร้าของ "รายการที่จับคู่ได้เท่านั้น" + บรรทัดระบบแจ้งรายการ
+ *    ที่ยังไม่รวม (AI ต้องถามยืนยันรายการที่เหลือ ห้ามสั่งแทน) — ห้ามซ่อนลิงก์ทั้งหมดเหมือนเดิม
+ *  - matched=0 → '' (ไม่มีอะไรให้แนบ — worker ให้ AI ถามชื่อเมนูแทน) */
+export function cartFooterForMatch(m: MatchResult, site = 'https://biteme-baby.com', ctx?: CartLinkContext): string {
+  if (m.matched.length === 0) return ''
+  const footer = buildCartSummaryFooter(m.matched, site, ctx)
+  if (m.unmatched.length === 0) return footer
+  const rest = m.unmatched.slice(0, 5).join(', ')
+  return footer + `\n⚠️ รายการที่ยังจับคู่ไม่ได้ (${rest}) ยังไม่อยู่ในลิงก์ — ระบบจะรวมให้เมื่อยืนยันชื่อเมนูที่ถูกต้องแล้ว`
 }
 
 // ============================================

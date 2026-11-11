@@ -1,3 +1,33 @@
+## 🔒 SESSION CLOSE 2026-11-11 (รอบ 16 · R92 — ลิงก์โซเชียลใช้ได้จริง + บริบทเดียวกัน 3 ช่องทาง · Gates 4/4 ผ่าน) — **CODE_CLOSED + DEPLOYED**
+
+> **สถานะ ณ 2026-11-11:** แผน `.kilo/plans/1794394627389-social-link-context-plan.md` ครบทั้ง Step 0–5 · Gates 4/4 ผ่านจริง (lint ✅ tsc ✅ vitest ✅ **2234 tests PASS** · build ✅ — `e2e/_r92_gates_*.log`) · **EF `social-ai-worker` DEPLOYED exit=0** (`e2e/_r92_deploy.log`)
+
+> **Step 0 — หลักฐานจริง (READ-ONLY probe — `e2e/_r92_step0.md` + `_r92_step0.cjs` + `_r92_step0_raw.log`):**
+> ① แคตตาล็อกจริง 34 รายการสะกดถูกหมด ("เมี่ยงอกไก่/เมี่ยงแซลม่อน/เมี่ยงหมู+กุ้ง") — คำเพี้ยนในภาพ owner (`ลากลุล/ซองวัน`) ไม่มีในแคตตาล็อกเลย → **ต้นตอ = โมเดล `deepseek/deepseek-v4-flash` เขียนไทยเพี้ยนเอง** = task แยก (aiPolicy) ตามแผน ไม่แตะรอบนี้
+> ② reply ไม่มี `?cart=` ยืนยันตรง branch `unmatched>0` (worker:479-486 เดิม footer:'') — เคสจริง 15:27 "เมี่ยง**อบ**ไก่" (ลูกค้าพิมพ์ผิด) + 16:39 "ทบทวน order" → ลูกค้าได้ลิงก์ตาย /shop เปล่า
+
+> **Step 1 — ลบ intent:// ออกจากแบนเนอร์ถาวร (`src/components/InAppBrowserBanner.tsx`):**
+> ลบ `intentUrl` + `<a href={intentUrl}>` + `isAndroid` + `handleOpenExternal` + destructure `openExternally` ทั้งหมด (ภาพ 3: FB Android WebView ไม่ dispatch = ERR_UNKNOWN_URL_SCHEME — ห้ามกลับมาใส่อีก R76/R79/R81-B2) · ปุ่มหลักเดียว = **"📋 คัดลอกลิงก์ · เปิดใน Chrome / Safari"** → copy handoff URL (มี ?cart= เสมอ) + เปิดแผง guide 3 เส้นทาง (Messenger: ⋯→เบราว์เซอร์/แชร์→Safari · iOS: แชร์→Safari · Android FB: ⋯→เปิดในเบราว์เซอร์) + บรรทัดสำรองทุกเครื่อง "วางใน Chrome / Safari" · คงไว้: decodeCartParam/lazy capture ก่อน strip/handoff restore/dismiss/install-app/**hooks ก่อน early return** (R90-hotfix)
+
+> **Step 2 — ลิงก์ตะกร้าติดทุก reply ที่จับคู่ได้บางส่วน (`_shared/socialOrderIntake.ts` + `social-ai-worker`):**
+> pure helper ใหม่ **`cartFooterForMatch(m)`** — matched ครบ → footer เดิม · บางส่วน → ลิงก์เฉพาะรายการที่จับคู่ได้ + บรรทัดระบบแจ้งรายการที่ยังไม่รวม ("ยังไม่อยู่ในลิงก์ — ระบบจะรวมให้เมื่อยืนยันชื่อเมนูที่ถูกต้อง") · matched=0 → '' · worker เรียกจุดเดียวครอบทุก branch (comment/message/!confirmed) — note บังคับ AI ถามยืนยันรายการที่เหลือ ห้ามสั่งแทน
+
+> **Step 3 — บริบทแนบในลิงก์ `?s=` (server เขียน · web อ่าน):**
+> server: **`encodeContextParam`** (b64url {v:1, src:'facebook'|'messenger', t:'สรุป≤200'}) + **`buildSocialSummary`** (ระบบเขียนจากข้อมูลจริง: ช่องทาง+โหมด+ชื่อ matched · UNSURE = "ยังไม่ระบุรอบ") + `buildCartLink(items, site, ctx?)` เติม `&s=` · fail-closed: t มี URL/เกิน 200/src ไม่รู้จัก = ไม่เติม · `normalizeAiTextLinks` ไม่ตัด (มี &/= ใน char class อยู่แล้ว)
+> web: `socialHandoff.ts` — field **`summary`** + **`decodeSocialContextParam`** (reject URL/เกิน 200/src มั่ว) · `Layout.tsx` จับ `?s=` ก่อน strip → saveSocialHandoff → strip `s` พร้อม `cart` · `TalkToBite.tsx` inject ประโยคแรก **"ต่อจากที่คุยกันในMessenger: <summary>"** (summary รู้เรื่องที่คุยแม้ชื่อยังไม่อยู่ในตะกร้า — ไม่มโน)
+
+> **Step 4 — กันแคชเก่าใน in-app browser (`vite.config.ts` + `main.tsx` + `vite-env.d.ts`):**
+> `injectRegister: 'auto'` → **'manual'** + ลงทะเบียนเองใน main.tsx พร้อม guard `isInAppBrowser(navigator.userAgent)` (reuse ตัวเดิม InAppBrowserNotice — single source): **in-app = ไม่ register + unregister ทุก registration + `caches.keys()` ลบทั้งหมด** (เฟสโหลด build ใหม่เสมอ — แก้ OWNER FIX 2026-10-26 "UI เก่าค้างถาวร") · Chrome/Safari จริง = registerSW ตามปกติ (PWA/push คงเดิม)
+
+> **Step 5 — เทสต์ + gates:**
+> `r46LinkOut.test.ts` — contract ใหม่: **ห้ามมี `intent://`/`intentUrl`/`openExternally`/`inapp-open-external`** (regression guard) + ปุ่มหลัก copy มี "Chrome / Safari" + guide ครบ + R90 hooks/decodeCartParam คงเดิม · `socialOrderIntake.test.ts` — `cartFooterForMatch` 3 branch + decode cart จาก footer ตรวจว่าเมนูเพี้ยนไม่หลุดลงลิงก์ + **?s= round-trip ข้าม encode(server)↔decode(web)** + fail-closed 4 เคส + `buildSocialSummary` cap 200 · `socialHandoff.test.ts` — summary save/read/cap/reject-URL + summary เสียใน storage = ทิ้ง field ไม่พังทั้งก้อน + ประโยคแรก buildSocialHandoffContext · `socialAiContinuity.test.ts` — อัปเดต contract worker เป็น cartFooterForMatch
+
+> **Live-test checklist (owner ทดสอบต่อ — ตามแผน):** ① โพส FB → กดลิงก์ → หน้าไม่พัง → คัดลอก/⋯ เปิด Chrome → ตะกร้าเติม ② Messenger → กดลิงก์ → มี ?cart= ติด reply เมื่อจับคู่ได้ (แม้พิมพ์ชื่อเพี้ยนบางรายการ) ③ เปิด Bite AI บนเว็บ → ต้องพูดต่อจากที่คุยบน FB + รู้รายการที่สรุปไว้ (?s=) ④ ในเฟส UI ต้องเป็น build ใหม่เสมอ
+
+> **ค้าง (task แยก ตามแผน):** สะกดเพี้ยนจากโมเดล deepseek → aiPolicy ของ FB tasks (สลับโมเดล/guard) · ขอบเขตนอก: ทิศกลับ web→FB · รวม identity login↔FB sender · fuzzy-match ชื่อเมนู
+
+---
+
 ## 🔒 SESSION CLOSE 2026-11-11 (รอบ 15 · R91 — Messenger escape + บริบท FB ต่อเข้า Bite AI เว็บ + ปุ่ม "Chrome / Safari" · Gates 4/4 ผ่าน) — **CODE_CLOSED + PUSHED**
 
 > **สถานะ ณ 2026-11-11 23:26:** owner live test แล้วยืนยัน: "จากเม้นใต้โพส ตามลิงก์ออกไปได้ สินค้าเข้าตะกร้าแล้ว ✅ แต่ในข้อความ (Messenger) ออกไม่ได้" + สั่ง (1) ทำให้ออกจากข้อความได้เหมือนกัน (2) บริบทจากเฟซบุ๊กต้องต่อเข้า Bite AI ของเว็บให้เหมือนกัน/ต่อเนื่อง (3) เติม "/ Safari" หลังคำว่า Chrome · Gates 4/4 ผ่านจริง (tsc ✅ lint ✅ vitest ✅ 214 files / 2224 tests PASS · build ✅) · push `e3c0be7`

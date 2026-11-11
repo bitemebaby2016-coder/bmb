@@ -180,7 +180,8 @@ describe('R27 — บริบท+ลิงก์ตะกร้า (Owner: ป�
     expect(personaSrc).toMatch(/ต่างจังหวัด/)
   })
   it('worker: ลิงก์ตะกร้าจากระบบ + แยก mode message/comment (คอมเมนต์ไม่สร้างออเดอร์เอง)', () => {
-    expect(workerSrc).toMatch(/buildCartSummaryFooter/)
+    // R92 (Owner 2026-11-11): worker ใช้ cartFooterForMatch จุดเดียว — ลิงก์ตะกร้าติดทุก reply ที่จับคู่ได้บางส่วนด้วย
+    expect(workerSrc).toMatch(/cartFooterForMatch\(m, undefined, cartCtx\)/)
     expect(workerSrc).toMatch(/'message' \| 'comment'/)
     expect(workerSrc).toMatch(/mode === 'comment'/)
     expect(workerSrc).toMatch(/runOrderIntake\(ev, userMsg, ev\.event_type/)

@@ -14,9 +14,14 @@ import {
   scopeCatalogToPost,
   buildIntakeLine,
   submitNewOrder,
+  cartFooterForMatch,
+  buildCartLink,
+  buildSocialSummary,
+  encodeContextParam,
   ORDER_EXTRACT_SCHEMA,
   type SubmitOrderResult,
 } from '../../supabase/functions/_shared/socialOrderIntake.ts'
+import { decodeSocialContextParam } from '../../src/lib/socialHandoff.ts'
 import { parseStructuredOutput } from '../../supabase/functions/_shared/aiStructuredOutput.ts'
 import type { OrderExtractCheck } from '../../supabase/functions/_shared/socialOrderIntake.ts'
 
@@ -180,7 +185,9 @@ describe('worker wiring — intake เฉพาะช่องทางส่ว
     expect(workerSrc).toMatch(/ev\.event_type === 'message'/)
     expect(workerSrc).toMatch(/mode === 'comment'/)
     expect(workerSrc).toMatch(/ห้ามเปิดเผยข้อมูลส่วนตัวในคอมเมนต์/)
-    expect(workerSrc).toMatch(/buildCartSummaryFooter/)
+    // R92 (Owner 2026-11-11): footer ตะกร้า = cartFooterForMatch จุดเดียว (ติดทุก reply ที่จับคู่ได้บางส่วนด้วย)
+    expect(workerSrc).toMatch(/cartFooterForMatch\(m, undefined, cartCtx\)/)
+    expect(workerSrc).toMatch(/buildSocialSummary\(/)
   })
   it('มี fallback เมื่อ draft พังแต่ระบบมีผลจริงแล้ว — ไม่เงียบหาย', () => {
     expect(workerSrc).toMatch(/fallbackIntakeReply/)
@@ -269,5 +276,77 @@ describe('R74 submitNewOrder — ไม่มี GPS = ใช้พิกัด�
     } finally {
       vi.unstubAllGlobals()
     }
+  })
+})
+
+describe('R92 cartFooterForMatch — ลิงก์ตะกร้าติดทุก reply ที่จับคู่ได้บางส่วน (Owner 2026-11-11)', () => {
+  const matched = [
+    { product_id: 'p1', name: 'เมี่ยงอกไก่', quantity: 1 },
+    { product_id: 'p2', name: 'เมี่ยงแซลมอน', quantity: 2 },
+  ]
+
+  it('matched ครบ → footer เดิม (buildCartSummaryFooter — มี ?cart= + บรรทัดลิงก์ภายนอก)', () => {
+    const f = cartFooterForMatch({ matched, unmatched: [] })
+    expect(f).toContain('/shop?cart=')
+    expect(f).toContain('เมี่ยงอกไก่ x1')
+    expect(f).toContain('เมี่ยงแซลมอน x2')
+    expect(f).toContain('ภายนอก Facebook')
+    expect(f).not.toContain('ยังจับคู่ไม่ได้')
+  })
+
+  it('matched บางส่วน → footer = ลิงก์ของรายการที่จับคู่ได้เท่านั้น + ระบบแจ้งของที่ยังไม่รวม (ไม่ซ่อนลิงก์ทั้งหมด)', () => {
+    const f = cartFooterForMatch({ matched, unmatched: ['ลาบหมูเพี้ยน'] })
+    expect(f).toContain('/shop?cart=')
+    // ลิงก์มีเฉพาะรายการ matched — ของเพี้ยนไม่ถูกฝังลงตะกร้า (zero-fake)
+    expect(decodeCartFromFooter(f).map((i) => i.id)).toEqual(['p1', 'p2'])
+    expect(f).toContain('ลาบหมูเพี้ยน')
+    expect(f).toContain('ยังจับคู่ไม่ได้')
+    expect(f).toContain('ยืนยันชื่อเมนูที่ถูกต้อง')
+  })
+
+  it('matched=0 → footer ว่าง (เดิม — worker ให้ AI ถามชื่อเมนูแทน)', () => {
+    expect(cartFooterForMatch({ matched: [], unmatched: ['พิซซ่า'] })).toBe('')
+  })
+
+  /** ถอด ?cart= จาก footer — round-trip ผ่านตัวถอดฝั่งเว็บเดียวกัน (cartDeepLink mirror) */
+  function decodeCartFromFooter(footer: string): Array<{ id: string; q: number }> {
+    const enc = footer.match(/cart=([A-Za-z0-9_-]+)/)![1]
+    const padded = enc.replace(/-/g, '+').replace(/_/g, '/')
+    const bin = atob(padded + '='.repeat((4 - (padded.length % 4)) % 4))
+    const parsed = JSON.parse(new TextDecoder().decode(Uint8Array.from(bin, (c) => c.charCodeAt(0)))) as { items: Array<{ id: string; q: number }> }
+    return parsed.items
+  }
+})
+
+describe('R92 ?s= บริบทต่อเนื่องข้ามช่องทาง — encode (server) ↔ decode (web) round-trip', () => {
+  const matched = [{ product_id: 'p1', name: 'เมี่ยงอกไก่', quantity: 2 }]
+
+  it('buildCartLink + ctx → ลิงก์มี &s= · ถอดฝั่งเว็บได้ src+t ตรงกัน', () => {
+    const ctx = { src: 'messenger' as const, t: buildSocialSummary('messenger', 'SAME_DAY', matched) }
+    const link = buildCartLink(matched, 'https://biteme-baby.com', ctx)
+    expect(link).toMatch(/^https:\/\/biteme-baby\.com\/shop\?cart=[^&]+&s=[^&]+$/)
+    const s = new URL(link).searchParams.get('s')!
+    const dec = decodeSocialContextParam(s)
+    expect(dec).not.toBeNull()
+    expect(dec!.src).toBe('messenger')
+    expect(dec!.summary).toContain('คุยกันบนMessenger')
+    expect(dec!.summary).toContain('ส่งวันนี้')
+    expect(dec!.summary).toContain('เมี่ยงอกไก่ x2')
+  })
+
+  it('buildSocialSummary = ระบบเขียนจากข้อมูลจริง (channel+โหมด+ชื่อ matched) · cap 200', () => {
+    expect(buildSocialSummary('facebook', 'PRE_ORDER', matched)).toBe('คุยกันบนFacebook · พรีออเดอร์ · เมี่ยงอกไก่ x2')
+    expect(buildSocialSummary('facebook', 'UNSURE', matched)).toContain('ยังไม่ระบุรอบ')
+    const many = Array.from({ length: 20 }, (_, i) => ({ product_id: 'p' + i, name: 'เมนูยาวมากกก ' + i, quantity: 1 }))
+    expect(buildSocialSummary('messenger', 'SAME_DAY', many).length).toBeLessThanOrEqual(200)
+  })
+
+  it('fail-closed: t มี URL / เกิน 200 / src ไม่รู้จัก → &s= ไม่ถูกเติม · ฝั่งถอด = null', () => {
+    expect(encodeContextParam({ src: 'messenger', t: 'ไปที่ https://x.com ก็ได้' })).toBe('')
+    expect(encodeContextParam({ src: 'messenger', t: 'x'.repeat(201) })).toBe('')
+    expect(encodeContextParam({ src: 'tiktok' as never, t: 'โอเค' })).toBe('')
+    expect(buildCartLink(matched, 'https://biteme-baby.com', { src: 'messenger', t: 'มี https://bad.example' })).not.toContain('&s=')
+    expect(decodeSocialContextParam('บูมไม่ใช่ b64')).toBeNull()
+    expect(decodeSocialContextParam(null)).toBeNull()
   })
 })

@@ -38,19 +38,17 @@ describe('R46 — แบนเนอร์ในเว็บ: FB in-app = แจ
   it('แบนเนอร์ใหม่ (InAppBrowserBanner) = บังคับภายนอก + ปุ่มปิด + App เรียกใช้ wrapper', () => {
     // New banner component (InAppBrowserBanner) replaces old InAppBrowserNotice
     expect(bannerSrc).toContain('data-testid="inapp-banner"')
-    expect(bannerSrc).toContain('data-testid="inapp-open-external"')
+    // R92 (Owner 2026-11-11 ภาพ 3): ลบปุ่มเปิดแทน (intent/openExternally) — ปุ่มหลักเดียว = คัดลอกลิงก์
+    expect(bannerSrc).not.toContain('data-testid="inapp-open-external"')
     // Owner 2026-11-02 "ห้ามใช้บราวเซอร์ของเฟซ" → ปุ่ม "อยู่ที่นี่ต่อ" ยังไม่มี
     expect(bannerSrc).not.toContain('data-testid="inapp-stay"')
     // R77 (Owner: "ใส่ปุ่มปิดป๊อปอัพเพิ่ม"): ปุ่มปิด (X) → ใหม่ใช้ dismiss
     expect(bannerSrc).toContain('data-testid="inapp-dismiss"')
-    // NOTICE_DISMISS_KEY อยู่ใน InAppBrowserNotice (deprecated) — new banner ใช้ hook dismiss()
     expect(bannerSrc).toContain('dismiss')
-    expect(bannerSrc).toContain('เปิดใน')
-    // R81: intent URL สร้างใน hook + ใช้เป็น href ของ <a> (ไม่ window.open/replace)
-    expect(bannerSrc).toContain('intentUrl')
-    expect(bannerSrc).not.toContain('window.location.replace(intent)')
-    expect(bannerSrc).not.toContain('window.open(intent')
-    expect(bannerSrc).toContain('href={intentUrl}')
+    // R92 regression guard ใหม่: ห้ามมี intent:// กลับมาอีกเด็ดขาด (FB Android WebView ไม่ dispatch = ERR_UNKNOWN_URL_SCHEME)
+    expect(bannerSrc).not.toContain('intent://')
+    expect(bannerSrc).not.toContain('intentUrl')
+    expect(bannerSrc).not.toContain('openExternally')
     // App.tsx wraps routes with InAppBrowserBanner
     expect(appSrc).toContain('<InAppBrowserBanner>')
     expect(appSrc).toContain("import { InAppBrowserBanner } from '@/components/InAppBrowserBanner'")
@@ -70,11 +68,14 @@ describe('R46 — แบนเนอร์ในเว็บ: FB in-app = แจ
     // ต้องถอด ?cart= ด้วยฟังก์ชันเดียวกับ Layout (atob ดิบ = พังเมื่อไม่มี padding)
     expect(bannerSrc).toContain('decodeCartParam')
     expect(bannerSrc).not.toMatch(/\batob\(/)
-    // R91 (Owner): ชื่อปุ่ม "เปิดใน Chrome / Safari" + เส้นทางสำรอง Messenger (intent:// โดนบล็อกในนั้น)
-    expect(bannerSrc).toContain('เปิดใน Chrome / Safari')
+    // R92 (Owner 2026-11-11): ปุ่มหลักเดียว = คัดลอกลิงก์ · เปิดใน Chrome / Safari + แผง guide
+    // ต่อ platform (Messenger: ⋯→เบราว์เซอร์/แชร์→Safari · iOS: แชร์→Safari · สำรอง: วางลิงก์)
+    expect(bannerSrc).toContain('📋 คัดลอกลิงก์ · เปิดใน Chrome / Safari')
     expect(bannerSrc).toContain('data-testid="inapp-copy-link"')
     expect(bannerSrc).toContain('data-testid="inapp-guide"')
     expect(bannerSrc).toContain('MESSENGER')
+    expect(bannerSrc).toContain('แชร์ → Safari')
+    expect(bannerSrc).toContain('วางใน Chrome / Safari')
   })
 })
 
