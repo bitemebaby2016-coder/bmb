@@ -8,7 +8,6 @@ import { OrderBuilderModal } from '../order/OrderBuilderModal'
 import { BiteMascot } from '../ai/BiteMascot'
 import { BackgroundLayer } from './BackgroundLayer'
 import { AmbientMusicToggle } from '../audio/AmbientMusicToggle'
-import { InAppBrowserNotice } from './InAppBrowserNotice'
 import { PushPermissionPrompt } from '../notification/PushPermissionPrompt'
 import { useCartStore } from '@/store/cartStore'
 import { referralCodeFromSearch } from '@/lib/referralClient'
@@ -66,16 +65,11 @@ export function Layout({ children, hideBottomNav = false, activeSection = 'home'
 
   // [R27 · Owner 2026-10-30] Deep-link ตะกร้าจากโซเชียล: /shop?cart=<b64url>
   // → รอ persistence hydration ให้เสร็จ (กัน restore ทับ) → เติมรายการลงตะกร้า
-  // → เปิดแผงตะกร้าให้เช็คเอาท์ต่อหรือเพิ่มเมนูเอง · strip พารามิเตอร์ทันที (กัน reload ซ้ำ)
+  // → เปิดแผงตะกร้าให้เช็คเอาท์ต่อหรือเพิ่มเมนูเอง · strip พารามิเตอร์หลังเพิ่มสำเร็จ (กัน reload ซ้ำ)
   useEffect(() => {
     if (typeof window === 'undefined') return
     const raw = new URLSearchParams(window.location.search).get('cart')
     if (!raw) return
-    try {
-      const url = new URL(window.location.href)
-      url.searchParams.delete('cart')
-      window.history.replaceState(null, '', url.pathname + url.search + url.hash)
-    } catch { /* URL แปลก ๆ = ปล่อยตามเดิม */ }
     // R61 fix (§T-1): raw = "ค่า" ของ ?cart= — ต้องถอดด้วย decodeCartParam ตรง ๆ
     // (เดิมส่งเข้า readCartParam ที่รอ query string เต็ม → ทำ decodeCartParam(null) ทุกครั้ง
     //  → ลิงก์ตะกร้าจากโซเชียลฟ้อง "ลิงก์ไม่สมบูรณ์" + ตะกร้าว่าง 100% · evidence e2e/tProdProbe_results_T-A4cart.json)
@@ -111,6 +105,13 @@ export function Layout({ children, hideBottomNav = false, activeSection = 'home'
           addedTotal += added
           showToast('เปิดรายการที่สรุปไว้ให้แล้ว 🛒 ' + added + ' รายการ — เช็คเอาท์หรือเพิ่มเมนูต่อได้เลย', 'success')
           useCartStore.getState().setCheckoutOpen(true)
+          // §T-A: strip ?cart= param AFTER successful cart restoration
+          // so that intent:// links from InAppBrowserBanner still have the cart param
+          try {
+            const url = new URL(window.location.href)
+            url.searchParams.delete('cart')
+            window.history.replaceState(null, '', url.pathname + url.search + url.hash)
+          } catch { /* URL แปลก ๆ = ปล่อยตามเดิม */ }
         } else if (missing > 0 && !toasted) {
           toasted = true
           showToast('รายการจากลิงก์หาไม่เจอในเมนูปัจจุบัน — เลือกเมนูใหม่ได้ที่หน้าร้าน', 'warning')
@@ -212,8 +213,6 @@ export function Layout({ children, hideBottomNav = false, activeSection = 'home'
 
         {showBottomNav && <BottomNav />}
         <ToastContainer />
-        {/* R46 (Owner 2026-11-01): แจ้งลิงก์ออกจาก FB + ให้ผู้ใช้ยืนยันเปิดเอง (FB in-app = แคช/บล็อก) */}
-        <InAppBrowserNotice />
         {/* Ambient music player — session-persistent singleton state */}
         <AmbientMusicToggle />
         <PushPermissionPrompt />
