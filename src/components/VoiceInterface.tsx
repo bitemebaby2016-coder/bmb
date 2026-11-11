@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useAIVoice } from '@/lib/aiVoice';
-import ImagePicker from './ImagePicker';
+import { ImagePicker } from './ImagePicker';
 import './VoiceInterface.css';
 
 export const VoiceInterface: React.FC = () => {

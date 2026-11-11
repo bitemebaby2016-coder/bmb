@@ -50,7 +50,7 @@ export const ImagePicker: React.FC = () => {
         <div className="image-grid">
           {images.map((img, index) => (
             <div key={index} className="image-card">
-              <img src={previewUrl || img} alt="Preview" />
+              <img src={previewUrl && selectedImage === img ? previewUrl : URL.createObjectURL(img)} alt="Preview" />
               <div className="card-actions">
                 <button 
                   onClick={() => handleImageChange(img)}
