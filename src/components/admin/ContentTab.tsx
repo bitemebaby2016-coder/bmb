@@ -367,6 +367,15 @@ export function ContentTab({ load }: ContentTabProps) {
     if (genKind === 'menu' && !reference) {
       showToast('ยังไม่มีรูปเมนูตัวอย่างในชุดภาพ — จิ้มเมนูใน Planner หรือ browse ไฟล์เพื่อใช้เป็นต้นแบบไดคัท (ไม่แนบก็เจนจากโจทย์ข้อความได้)', 'info')
     }
+    // Promo kind: require discount detail in note to prevent AI from inventing discounts
+    if (genKind === 'promo') {
+      const hasDiscount = genNote && (genNote.includes('%') || genNote.includes('ลด') || genNote.includes('ส่วนลด') || genNote.includes('coupon') || genNote.includes('โค้ด') || genNote.includes('code') || genNote.includes('discount'));
+      if (!hasDiscount) {
+        showToast('โปรโมชั่น: โปรดระบุรายละเอียดส่วนลดในช่อง "เพิ่มเติม" (เช่น ลด 20%, โค้ด BMB20) เพื่อไม่ให้ AI เรียกส่วนลดเอง', 'warning');
+        setGenBusy(false);
+        return;
+      }
+    }
     setGenBusy(true)
     setGenStatus({ phase: 'running' })
     flashTo('mk-gen-status')
@@ -925,6 +934,11 @@ export function ContentTab({ load }: ContentTabProps) {
           </label>
           <label className="text-sm">เพิ่มเติม (ไม่บังคับ)
             <input className="input w-full" value={genNote} onChange={(e) => setGenNote(e.target.value)} placeholder="เช่น โทนเหลืองทอง" />
+            {genKind === 'promo' && (
+              <p className="text-xs text-amber-600 mt-1">
+                ⚠️ ระบุรายละเอียดส่วนลด (เช่น ลด 20%, โค้ด BMB20) — ห้ามให้ AI เรียกส่วนลดเอง
+              </p>
+            )}
           </label>
           <label className="text-sm">มาสคอตลายน้ำ (R47 — ทุกภาพเจน)
             <select className="input w-full" value={wmMascot} onChange={(e) => { setWmMascot(e.target.value); try { localStorage.setItem('bmb:wm-mascot', e.target.value); showToast('จำมาสคอตลายน้ำไว้ใช้กับทุกรูปที่เจนจากนี้แล้ว', 'success') } catch {} }} data-testid="mk-wm-mascot">
