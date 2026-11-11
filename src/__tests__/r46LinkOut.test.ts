@@ -55,6 +55,22 @@ describe('R46 — แบนเนอร์ในเว็บ: FB in-app = แจ
     expect(appSrc).toContain('<InAppBrowserBanner>')
     expect(appSrc).toContain("import { InAppBrowserBanner } from '@/components/InAppBrowserBanner'")
   })
+
+  it('R90-hotfix: hooks ทุกตัวอยู่ก่อน early return (กัน React #310) + ถอด ?cart= ด้วย decodeCartParam', () => {
+    // R90 (Owner 2026-11-11): เว็บพังทั้งหน้า #310 "Rendered more hooks" เพราะ
+    // useState/useEffect ถูกวางไว้หลัง `if (!isFB || dismissed) return` →
+    // render แรกข้าม hooks, render ถัดไปเรียกเพิ่ม = จำนวน hooks ไม่เท่ากัน
+    const earlyReturn = bannerSrc.indexOf('if (!isFB || dismissed) return')
+    expect(earlyReturn).toBeGreaterThan(-1)
+    for (const h of ['useInAppBrowser()', 'useState<CartHandoff', 'useCallback(']) {
+      const at = bannerSrc.indexOf(h)
+      expect(at, `hooks ต้องมี: ${h}`).toBeGreaterThan(-1)
+      expect(at, `hooks ต้องอยู่ก่อน early return: ${h}`).toBeLessThan(earlyReturn)
+    }
+    // ต้องถอด ?cart= ด้วยฟังก์ชันเดียวกับ Layout (atob ดิบ = พังเมื่อไม่มี padding)
+    expect(bannerSrc).toContain('decodeCartParam')
+    expect(bannerSrc).not.toMatch(/\batob\(/)
+  })
 })
 
 describe('R46 — สถานะตอนจัดส่ง: ไรเดอร์ยืนยันตำแหน่ง = "ถึงปลายทาง" (มีครบ + canonical)', () => {

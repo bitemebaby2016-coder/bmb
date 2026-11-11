@@ -1,3 +1,19 @@
+## 🔒 SESSION CLOSE 2026-11-11 (รอบ 14 · R90-hotfix ลิงก์ AI จาก Facebook พังทั้งเว็บ React #310 — Gates 4/4 ผ่าน) — **CODE_CLOSED + PUSHED**
+
+> **สถานะ ณ 2026-11-11 22:55:** แก้ crash ที่ R90 ตัวก่อนก่อไว้ · Gates 4/4 ผ่านจริง (tsc ✅ lint ✅ vitest ✅: 213 files / 2216 tests PASS · build ✅) · push main แล้ว — รอ deploy แล้ว owner ทดสอบกดลิงก์จากโพสต์ FB จริง
+
+> **ยอมรับตรงๆ (root cause):** โค้ด R90 (commit `1f50e05`) วาง `useState`/`useEffect` **หลัง** early return `if (!isFB || dismissed) return <>{children}</>` → render แรกบน Chrome ธรรมดา isFB=false = เรียก 2 hooks, พอเปิดใน FB WebView render แรกข้าม hooks หมด (0 จาก 5) แล้ว render ถัดไปเรียกเพิ่ม = **"Rendered more hooks than during the previous render" = Minified React error #310** เว็บขาวทั้งหน้าที่ลูกค้ากดลิงก์ออกมา — ตรงกับภาพ owner ส่ง (โพสต์ "ไก่ตอน" ลิงก์ ?cart= แล้วเว็บพัง)
+
+> **สิ่งที่แก้ (src/components/InAppBrowserBanner.tsx):**
+> - **hooks ทุกตัวอยู่ก่อน return ทุก branch** — กฎถาวรเขียนเป็นคอมเมนต์ห้ามย้าย
+> - เปลี่ยน useEffect → **lazy `useState` initializer**: อ่าน `?cart=` ตอน mount ครั้งเดียว *ก่อน* Layout.tsx strip พารามิเตอร์ → เก็บ `{raw, count}` + localStorage (`bmb:cart-resume`)
+> - ถอดค่าด้วย `decodeCartParam` ตัวเดียวกับ Layout (ตัวเดิม `atob` ดิบ = พังเมื่อ no-padding/`==` เพี้ยนที่ FB แปะกลับ)
+> - **handoff URL**: `intent://` (Android) และ `openExternally` (iOS/desktop) สร้างจาก URL ปัจจุบัน + **ใส่ `?cart=` กลับถ้าถูก strip ไปแล้ว** — เพราะ FB WebView กับ Chrome ไม่แชร์ localStorage กัน ลิงก์คือสะพานเดียว
+> - ลบ console.log รกใน render
+> - **regression test ใหม่** ใน `src/__tests__/r46LinkOut.test.ts`: assert hook calls อยู่ก่อน early return + ห้าม `atob(` ในแบนเนอร์ — กัน #310 กลับมาอีก
+
+---
+
 ## 🔒 SESSION CLOSE 2026-11-11 (รอบ 13 · AdminMarketing Tab Restructure — จัดลำดับการทำงานใหม่ + แก้ปัญหาอนุมัติ · Gates 4/4 ผ่าน) — **CODE_CLOSED + PUSHED**
 
 > **สถานะ ณ 2026-11-11 19:58:** แผนแก้ไข AdminMarketing/Tabs เสร็จแล้ว · Gates 4/4 ผ่านจริง (lint ✅ tsc ✅ build ✅ vitest ✅: 213 files / 2215 tests PASS) · **Commit/push ไป main แล้ว** — รอ production deploy และ owner ทดสอบ live
