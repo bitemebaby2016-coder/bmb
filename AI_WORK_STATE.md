@@ -1,3 +1,15 @@
+## 🔒 SESSION CLOSE 2026-11-11 (รอบ 9 · Voice Interface Image Picker เสร็จ · InAppBrowserNotice ลบแล้ว · Tests/Lint ผ่าน) — **CODE_CLOSED + PUSHED + DEPLOYED READY**
+
+> **สถานะ ณ 2026-11-11 05:02:** ทุกการแก้ไข **CODE_CLOSED** ครบแล้ว · Gates 4/4 ผ่าน (lint ✅ tsc ✅ build ✅ vitest ✅: 213 files / 2215 tests PASS) · **New features:**
+> 1. **ImagePicker component** (`src/components/ImagePicker.tsx` + `.css`) — เลือกรูปจากเมนู + แสดง preview + เลือกใช้เป็น "รูปเนื้อหา" หรือ "ต้นแบบ AI" + ปุ่มสร้างรูป AI (placeholder API)
+> 2. **VoiceInterface integration** (`src/components/VoiceInterface.tsx` + `.css`) — เพิ่มปุ่ม 🖼️ เปิด Image Picker panel จาก header + slide-up panel
+> 3. **InAppBrowserNotice removed** — `Layout.tsx` ไม่มี banner เดิมแล้ว (คง `InAppBrowserBanner` สีส้มบนสุดใน `App.tsx`)
+>
+> **กติกาเซสชั่นต่อไป:**
+> 1. **✅ สำเร็จแล้ว**: Image Picker + Voice Interface + Banner cleanup — **CODE_CLOSED** รอ push/deploy
+> 2. **Live Retest Sequence** คงเดิม: ① **§T-A** cart retry 2.5s · ใช้ `https://biteme-baby.com` · hard reload 1 ครั้ง · RT-8 ยังห้ามปิด
+> 3. เอกสารอ้างอิง: `AI_WORK_STATE.md` · `.kilo/plans/1794247959923-content-catalog-image-workflow.md`
+
 ## 🔒 SESSION CLOSE 2026-11-10 (รอบ 8 · Floating Ad + Promotion Banner Settings เสร็จ · รอ Live Retest ตาม 11-09) — **DEPLOYED ครบ 6 Commits · Owner Verified 7/8 · Catalog Picker Deployed · Waiting §T-A**
 
 > **สถานะ ณ 2026-11-10 17:55:** ทุกการแก้ไข **CODE_CLOSED + PUSHED + DEPLOYED** ครบแล้ว · Gates 4/4 ผ่าน (lint ✅ tsc ✅ build ✅ vitest ✅) · Live Check `LIVE_CHECK_ALL_MARKERS_OK` (asset `index-BLqUf2SU.js`) · **Owner verified: IMG-GEN ✅, D2 ✅, D4 ✅, D5 ✅, R91 ✅, R92-G ✅, R92-S ✅** · **เหลือ Live Retest: §T-A เท่านั้น** · **Catalog Picker Deployed** (เลือกจากรูปเมนู + เชื่อม approval)

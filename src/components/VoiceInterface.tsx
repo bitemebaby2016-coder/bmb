@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useAIVoice } from '@/lib/aiVoice';
+import ImagePicker from './ImagePicker';
 import './VoiceInterface.css';
 
 export const VoiceInterface: React.FC = () => {
@@ -18,6 +19,10 @@ export const VoiceInterface: React.FC = () => {
 
   const [isOpen, setIsOpen] = useState(false);
   const [textInput, setTextInput] = useState('');
+  const [showImagePicker, setShowImagePicker] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [usageType, setUsageType] = useState<'content' | 'ai-prototype'>('content');
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -44,6 +49,10 @@ export const VoiceInterface: React.FC = () => {
     } else {
       startListening();
     }
+  };
+
+  const toggleImagePicker = () => {
+    setShowImagePicker(!showImagePicker);
   };
 
   return (
@@ -77,9 +86,18 @@ export const VoiceInterface: React.FC = () => {
               {isSpeaking && <span className="status speaking">🔊 กำลังพูด...</span>}
               {!isListening && !isSpeaking && <span className="status idle">พร้อมใช้งาน</span>}
             </div>
-            <button className="voice-close" onClick={() => setIsOpen(false)} aria-label="ปิด">
-              ×
-            </button>
+            <div className="voice-header-actions">
+              <button 
+                className={`voice-image-btn ${showImagePicker ? 'active' : ''}`}
+                onClick={toggleImagePicker}
+                aria-label="เลือกรูปภาพ"
+              >
+                🖼️
+              </button>
+              <button className="voice-close" onClick={() => setIsOpen(false)} aria-label="ปิด">
+                ×
+              </button>
+            </div>
           </div>
 
           <div className="voice-messages">
@@ -147,6 +165,11 @@ export const VoiceInterface: React.FC = () => {
               </svg>
             </button>
           </div>
+        </div>
+      )}
+    {showImagePicker && (
+        <div className="image-picker-panel">
+          <ImagePicker />
         </div>
       )}
     </div>
