@@ -70,6 +70,11 @@ describe('R46 — แบนเนอร์ในเว็บ: FB in-app = แจ
     // ต้องถอด ?cart= ด้วยฟังก์ชันเดียวกับ Layout (atob ดิบ = พังเมื่อไม่มี padding)
     expect(bannerSrc).toContain('decodeCartParam')
     expect(bannerSrc).not.toMatch(/\batob\(/)
+    // R91 (Owner): ชื่อปุ่ม "เปิดใน Chrome / Safari" + เส้นทางสำรอง Messenger (intent:// โดนบล็อกในนั้น)
+    expect(bannerSrc).toContain('เปิดใน Chrome / Safari')
+    expect(bannerSrc).toContain('data-testid="inapp-copy-link"')
+    expect(bannerSrc).toContain('data-testid="inapp-guide"')
+    expect(bannerSrc).toContain('MESSENGER')
   })
 })
 

@@ -69,6 +69,37 @@ export function InAppBrowserBanner({ children }: { children: React.ReactNode }) 
 
   const handleOpenExternal = useCallback(() => openExternally(handoffUrl), [handoffUrl, openExternally])
 
+  // R91 (Owner 2026-11-11 "ในข้อความ ออกไม่ได้"): Messenger in-app บล็อก intent:// — เส้นทางเดียว
+  // ที่ใช้ได้จริงคือ คัดลอกลิงก์ + เปิดเบราว์เซอร์เอง (หรือเมนู ⋯ ของแอป) → ให้ปุ่มสำรองเสมอ
+  const [copyState, setCopyState] = useState<'idle' | 'copied' | 'failed'>('idle')
+  const [guideOpen, setGuideOpen] = useState(false)
+  const isMessengerUA = /MESSENGER/i.test(ua)
+
+  const copyHandoff = useCallback(async () => {
+    try {
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(handoffUrl)
+        setCopyState('copied')
+        setGuideOpen(true)
+        return
+      }
+    } catch { /* fall through → textarea */ }
+    try {
+      const ta = document.createElement('textarea')
+      ta.value = handoffUrl
+      ta.setAttribute('readonly', '')
+      ta.style.cssText = 'position:fixed;opacity:0'
+      document.body.appendChild(ta)
+      ta.select()
+      const ok = document.execCommand('copy')
+      document.body.removeChild(ta)
+      setCopyState(ok ? 'copied' : 'failed')
+      setGuideOpen(true)
+    } catch {
+      setCopyState('failed')
+    }
+  }, [handoffUrl])
+
   if (!isFB || dismissed) return <>{children}</>
 
   return (
@@ -101,7 +132,7 @@ export function InAppBrowserBanner({ children }: { children: React.ReactNode }) 
                 className="bg-white text-amber-700 font-bold px-4 py-2 rounded-lg shadow"
                 data-testid="inapp-open-external"
               >
-                เปิดใน Chrome
+                เปิดใน Chrome / Safari
               </a>
             )}
             {!intentUrl && (
@@ -114,6 +145,14 @@ export function InAppBrowserBanner({ children }: { children: React.ReactNode }) 
                 เปิดในเบราว์เซอร์ภายนอก
               </button>
             )}
+            <button
+              type="button"
+              className={`font-bold px-4 py-2 rounded-lg shadow ${copyState === 'copied' ? 'bg-green-500 text-white' : 'bg-white/20 text-white'}`}
+              onClick={() => void copyHandoff()}
+              data-testid="inapp-copy-link"
+            >
+              {copyState === 'copied' ? '✓ คัดลอกแล้ว' : '📋 คัดลอกลิงก์'}
+            </button>
             {canInstall && (
               <button
                 type="button"
@@ -134,6 +173,32 @@ export function InAppBrowserBanner({ children }: { children: React.ReactNode }) 
             </button>
           </div>
         </div>
+        {guideOpen && (
+          <div className="max-w-xl mx-auto mt-2 rounded-lg bg-white/15 p-2 text-xs leading-snug" data-testid="inapp-guide">
+            {copyState === 'copied' ? (
+              <p className="font-semibold mb-1">📋 คัดลอกลิงก์แล้ว — {isMessengerUA ? 'ใน Messenger แตะปุ่ม ⋯ มุมบนขวาแล้วเลือก "เปิดในเบราว์เซอร์" หรือ:' : 'เปิดเบราว์เซอร์จริงแล้ววางลิงก์:'}</p>
+            ) : copyState === 'failed' ? (
+              <p className="font-semibold mb-1">คัดลอกไม่สำเร็จ — กดปุ่ม "📋 คัดลอกลิงก์" อีกครั้ง หรือใช้เมนู ⋯ ของแอป</p>
+            ) : (
+              <p className="font-semibold mb-1">เปิดเว็บภายนอกตามขั้นนี้ครับ:</p>
+            )}
+            <ol className="list-decimal pl-5">
+              {isMessengerUA ? (
+                <>
+                  <li>แตะ <b>⋯ (สามจุดมุมบนขวา)</b> ในหน้าจอ Messenger นี้</li>
+                  <li>เลือก <b>“เปิดในเบราว์เซอร์”</b> (Android) หรือ <b>แชร์ → Safari</b> (iPhone)</li>
+                  <li>ถ้าไม่มีเมนูนั้น: แตะ <b>📋 คัดลอกลิงก์</b> → เปิด Chrome/Safari → วางในช่องค้นหา</li>
+                </>
+              ) : (
+                <>
+                  <li>เปิดแอป <b>Chrome</b> หรือ <b>Safari</b> เอง</li>
+                  <li>วางลิงก์ในช่องค้นหา = เข้าเว็บจริง (ตะกร้าที่สรุปไว้จะเติมอัตโนมัติ)</li>
+                  <li>ทางลัด: กด <b>📋 คัดลอกลิงก์</b> ด้านบนก่อน แล้วค่อยวาง</li>
+                </>
+              )}
+            </ol>
+          </div>
+        )}
       </div>
 
       <div className="h-20 lg:h-24" aria-hidden="true" />

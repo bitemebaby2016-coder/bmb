@@ -13,6 +13,7 @@ import { useCartStore } from '@/store/cartStore'
 import { referralCodeFromSearch } from '@/lib/referralClient'
 import { affiliateCodeFromSearch, saveAffiliateClaimCode } from '@/lib/engagementClient'
 import { decodeCartParam } from '@/lib/cartDeepLink'
+import { detectSocialSource, saveSocialHandoff } from '@/lib/socialHandoff'
 import { showToast } from '../ui/ToastContainer'
 
 interface LayoutProps {
@@ -80,6 +81,12 @@ export function Layout({ children, hideBottomNav = false, activeSection = 'home'
       showToast('ลิงก์รายการในแชทไม่สมบูรณ์หรือเสียหาย — เปิดรายการให้ไม่ได้ เลือกเมนูใหม่ที่หน้าร้านได้เลย', 'warning')
       return
     }
+    // R91 (Owner 2026-11-11): บันทึบริบท "มาจาก Facebook/Messenger" ต่อให้ Bite AI บนเว็บ
+    // (ลิงก์ ?cart= ถูกสร้างเฉพาะโดย AI บนแพลตฟอร์ม Meta → referrer เว้นว่างใน WebView ก็รู้ที่มา
+    //  ผสม UA: Messenger in-app มี token FB_IAB/MESSENGER ซึ่งแยกจากแอป Facebook ธรรมดา)
+    const hints = `${typeof document !== 'undefined' ? document.referrer : ''} ${typeof navigator !== 'undefined' ? navigator.userAgent : ''}`
+    const socialSrc = detectSocialSource(hints)
+    saveSocialHandoff(socialSrc === 'other' ? 'facebook' : socialSrc, items)
     let cancelled = false
     let addedTotal = 0
     let toasted = false // กัน toast ซ้ำตอน retry

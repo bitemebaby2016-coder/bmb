@@ -32,6 +32,7 @@ import { RecommendationCard } from '@/components/theater/TheaterCards'
 import { recommendReason } from '@/lib/theaterReasons'
 import { showToast } from '@/components/ui/ToastContainer'
 import { chatWithAI } from '@/lib/aiService'
+import { buildSocialHandoffContext } from '@/lib/socialHandoff'
 import { pageContextLine, sectionFromPath } from '@/lib/bitePageContext'
 import {
   getAIVoiceService,
@@ -508,6 +509,10 @@ export function TalkToBite({ mode = 'overlay', initialPhase = 'landing', landing
     if (items.length > 0) {
       parts.push('รายการในตะกร้า (ที่ลูกค้ายืนยันแล้ว): ' + items.map((i) => `${i.product.name} x${i.quantity}`).join(', '))
     }
+    // R91 (Owner 2026-11-11): ต่อบริบทจาก Facebook/Messenger — Bite เว็บต้องรู้
+    // ว่าลูกค้าคุย/สรุปอะไรไว้ก่อนกดลิงก์เข้ามา และสนทนาต่อทันที (sessionStorage ล้างเมื่อปิดแท็บ)
+    const handoff = buildSocialHandoffContext(items)
+    if (handoff) parts.push(handoff)
     return parts.join(' | ')
   }
 
