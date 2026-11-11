@@ -4,6 +4,7 @@
 // ทุกแท็บของ AdminMarketing ต่อของจริง — พฤติกรรม server พิสูจน์ใน SQL contract 137
 // (G1-G3: คนอนุมัติก่อนตั้งเวลา) แล้ว; ชุดนี้คุม client ไม่ให้เล็ดลอดของปลอม
 // NOTE: ไฟล์นี้ต้องเป็น `.ts` — vitest include pattern รับเฉพาะ .js/.ts (ไม่รับ .tsx)
+// Tab layout: overview → planner → studio → approval → schedule → rules → analytics (6 tab)
 import { describe, it, expect } from 'vitest'
 import adminMarketingSrc from '../lib/adminMarketing.ts?raw'
 import adminMarketingPageSrc from '../pages/admin/AdminMarketing.tsx?raw'
@@ -27,12 +28,16 @@ describe('Part C · วงจรโพสต์ = ของจริงทุก
     expect(contractSrc).toContain('ERR_APPROVAL_REQUIRED')
   })
 
-  it('หน้า 7 แท็บอ่าน/เขียนผ่านตารางจริง — ไม่มีข้อมูลจำลอง/ของปลอม', () => {
+  it('หน้า 6 แท็บอ่าน/เขียนผ่านตารางจริง — ไม่มีข้อมูลจำลอง/ของปลอม', () => {
     // testid สร้างจาก template `mk-tab-${t.id}` — ตรวจว่าครบทุก tab id
     expect(adminMarketingPageSrc).toContain('mk-tab-')
-    for (const id of ["id: 'overview'", "id: 'planner'", "id: 'studio'", "id: 'approval'", "id: 'calendar'", "id: 'rules'", "id: 'analytics'"]) {
+    for (const id of ["id: 'overview'", "id: 'planner'", "id: 'studio'", "id: 'approval'", "id: 'schedule'", "id: 'rules'", "id: 'analytics'"]) {
       expect(adminMarketingPageSrc).toContain(id)
     }
+    //	tab 'ai' ถูกลบออก (ยุบรวมกับ studio แล้ว)
+    expect(adminMarketingPageSrc).not.toContain("id: 'ai'")
+    expect(adminMarketingPageSrc).not.toContain("AdminAiStudio")
+    expect(adminMarketingPageSrc).not.toContain("'calendar'")
     expect(adminMarketingPageSrc).toContain('marketing_posts')
     expect(adminMarketingPageSrc).not.toContain('mock')
     expect(adminMarketingPageSrc).not.toContain('FAKE_')

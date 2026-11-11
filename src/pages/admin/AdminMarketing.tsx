@@ -1,16 +1,15 @@
 // ============================================
 // Bite Me Baby — AdminMarketing (Part C · 2026-10-22) — Control Center ของทีมการตลาด
 // ============================================
-// 7 แท็บ อ่าน/เขียนผ่านของจริงทั้งหมด (ไม่มีข้อมูลจำลอง/ของปลอม):
-//   Overview — ตัวเลขจริงจาก marketing_posts · Planner — สินค้าขายดีจริง (order_items)
-//   AI Studio — สร้างภาพจริง (image-gen EF, E5/E6) · Approval — คนอนุมัติเท่านั้น
-//   Calendar — marketing_schedule_post (server บังคับ approval) · Rules — marketing_rules
-//   Analytics — ผลเผยแพร่จริง (provider post id, error, attempts)
+// แท็บเรียงตามลำดับการทำงานจริง:
+//   Overview — ตัวเลขจริงจาก marketing_posts · วางแผน — สินค้าขายดีจริง (order_items)
+//   สร้างโพสต์ — เขียนหัวข้อ/เนื้อหา + เจนภาพจริง · ตรวจ & อนุมัติ — คนอนุมัติเท่านั้น
+//   ตั้งเวลาเผยแพร่ — marketing_schedule_post (server บังคับ approval) · ตั้งค่ากติกา — marketing_rules
+//   รายงาน — ผลเผยแพร่จริง (provider post id, error, attempts)
 // อนุมัติ != ตั้งเวลา != เผยแพร่ — แยกกันชัดเจนทุกชั้น
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { showToast } from '@/components/ui/ToastContainer'
-import { AdminAiStudio } from '@/pages/admin/AdminAiStudio'
 import {
   listMarketingPosts, createMarketingPost, scheduleMarketingPost,
   getMarketingRules, saveMarketingRules, bestSellerProducts,
@@ -22,16 +21,15 @@ import { flashTo } from '@/lib/uiFlash'
 import { getBusinessSettings, setBusinessSetting } from '@/lib/bmbAdminApi_settings'
 import { compressToWebLimits, PRODUCT_IMAGE_MAX_SIDE } from '@/lib/bmbAdminApi_media'
 
-type Tab = 'overview' | 'planner' | 'studio' | 'approval' | 'calendar' | 'rules' | 'analytics' | 'ai'
+type Tab = 'overview' | 'planner' | 'studio' | 'approval' | 'schedule' | 'rules' | 'analytics'
 const TABS: Array<{ id: Tab; label: string }> = [
   { id: 'overview', label: '📊 ภาพรวม' },
-  { id: 'planner', label: '🗓️ Planner' },
-  { id: 'studio', label: '🎨 AI Studio' },
-  { id: 'ai', label: '✍️ แคปชัน AI' },
-  { id: 'approval', label: '✅ กล่องอนุมัติ' },
-  { id: 'calendar', label: '📅 ปฏิทิน' },
-  { id: 'rules', label: '⚙️ กติกา' },
-  { id: 'analytics', label: '📈 รายงาน' },
+  { id: 'planner', label: '💡 วางแผน & เลือกเมนู' },
+  { id: 'studio', label: '✍️&🎨 สร้างโพสต์' },
+  { id: 'approval', label: '☑️ ตรวจ & อนุมัติ' },
+  { id: 'schedule', label: '⏰ ตั้งเวลาเผยแพร่' },
+  { id: 'rules', label: '⚙️ ตั้งค่ากติกา' },
+  { id: 'analytics', label: '📈 รายงานผล' },
 ]
 
 const STATUS_CLS: Record<string, string> = {
@@ -221,10 +219,10 @@ export function AdminMarketing() {
     const r = await createMarketingPost({ title: title.trim(), body: bodyText, content_type: contentType, image_urls: postImages })
     setSaving(false)
     if (r.ok) {
-      showToast('สร้างโพสต์แล้ว — ส่งเข้ากล่องอนุมัติ (คนอนุมัติเท่านั้น)', 'success')
+      showToast('สร้างโพสต์แล้ว — ส่งเข้าคิวตรวจเนื้อหา (รอคนอนุมัติ)', 'success')
       setTitle(''); setBodyText(''); setImages([])
       await load()
-      setTab('approval') // R39: เด้งไปจุดที่เพิ่งทำงาน (คิวอนุมัติ)
+      setTab('approval') // เด้งไปจุดที่เพิ่งทำงาน (คิวอนุมัติ)
       flashTo('mk-approval-list')
     } else {
       showToast('สร้างโพสต์ไม่สำเร็จ: ' + (r.error || 'ERR_SUBMIT_FAILED'), 'error')
@@ -606,8 +604,6 @@ export function AdminMarketing() {
         </div>
       )}
 
-      {tab === 'ai' && <AdminAiStudio />}
-
       {tab === 'planner' && (
         <div className="space-y-3">
           <div className="card">
@@ -671,7 +667,7 @@ export function AdminMarketing() {
       {tab === 'studio' && (
         <div className="space-y-3">
           <div className="card">
-            <h2 className="font-bold text-brand-accent mb-2">🎨 สร้างภาพโปรโมต (AI — E5/E6)</h2>
+            <h2 className="font-bold text-brand-accent mb-2">🎨 สร้างภาพโปรโมต</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <label className="text-sm">ประเภทภาพ
                 <select className="input w-full" value={genKind} onChange={(e) => setGenKind(e.target.value as typeof genKind)}>
@@ -680,7 +676,7 @@ export function AdminMarketing() {
                   <option value="menu">ภาพเมนู/อาหาร (ใช้รูปต้นแบบเป็นต้นแบบไดคัท)</option>
                 </select>
               </label>
-              <label className="text-sm">สไตล์ (E6 — 3 แนวจากโจทย์เดียวกัน)
+              <label className="text-sm">สไตล์ภาพ
                 <select className="input w-full" value={genStyle} onChange={(e) => setGenStyle(e.target.value as typeof genStyle)}>
                   <option value="realistic">ถ่ายสมจริง</option>
                   <option value="illustration">ภาพประกอบ</option>
@@ -848,25 +844,37 @@ export function AdminMarketing() {
 
       {tab === 'approval' && (
         <div className="space-y-3" data-testid="mk-approval-list">
-          {approvals.length === 0 && <p className="text-sm text-brand-muted">ยังไม่มีเนื้อหาในคิว — สร้างโพสต์จาก Planner/Studio</p>}
+          {approvals.length === 0 && <p className="text-sm text-brand-muted">ยังไม่มีเนื้อหาในคิว — สร้างโพสต์จาก Planner/Studio หรือสร้างโปรโมชั่นหน้าโปรโมชั่น</p>}
           {approvals.map((a) => {
             const linked = posts.find((p) => p.approval_id === a.id)
+            // Content type icon map — แสดงให้เห็นว่ารายการนี้มาจากส่วนไหนของระบบ
+            const typeIcon = { post: '📝', promotion: '🎁', banner: '🖼️', announcement: '📢' }
+            const typeLabel = { post: 'โพสต์ทั่วไป', promotion: 'โปรโมชั่น', banner: 'แบนเนอร์', announcement: 'ประกาศ' }
             return (
               <div key={a.id} className="card" data-testid={`mk-aprow-${a.id}`}>
                 <div className="flex items-center justify-between flex-wrap gap-2">
-                  <div>
-                    <p className="font-bold">{a.title}</p>
-                    <p className="text-sm text-brand-muted">{a.body}</p>
+                  <div className="min-w-0">
+                    <span className={`badge mr-1 ${
+                      a.content_type === 'promotion' ? 'badge-warning' :
+                      a.content_type === 'banner' ? 'badge-info' :
+                      a.content_type === 'announcement' ? 'badge-accent' : 'badge-default'
+                    }`}>{typeIcon[a.content_type] ?? '📄'} {typeLabel[a.content_type] ?? 'เนื้อหา'}</span>
+                    <p className="font-bold inline">{a.title || '(ไม่มีชื่อ)'}</p>
+                    {a.body && <p className="text-sm text-brand-muted break-all">{a.body.slice(0, 300)}</p>}
                   </div>
-                  <div className="flex items-center gap-2">
-                    <span className={STATUS_CLS[a.status] || 'badge'}>{a.status}</span>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <span className={STATUS_CLS[a.status] || 'badge'}>{a.status === 'pending' ? 'รออนุมัติ' : a.status === 'approved' ? 'อนุมัติแล้ว' : 'ปฏิเสธแล้ว'}</span>
+                    {linked && <span className="badge badge-primary text-xs">โพสต์: {linked.status}</span>}
                     {a.status === 'pending' && (
                       <>
                         <button className="btn btn-primary text-xs" onClick={() => void handleApprove(a.id)} data-testid={`mk-approve-${a.id}`}>✅ อนุมัติ</button>
                         <button className="btn btn-outline text-xs" onClick={() => void handleReject(a.id)}>✖ ปฏิเสธ</button>
                       </>
                     )}
-                    {linked && <span className="badge">{linked.status}</span>}
+                    {/* หลังอนุมัติให้ตั้งเวลาได้ทันที ไม่ต้องสลับแท็บ */}
+                    {linked?.status === 'approved' && !linked.scheduled_for && (
+                      <button className="btn btn-success text-xs" onClick={() => { setTab('schedule'); setWhenByPost(prev => ({ ...prev, [linked.id]: '' })); flashTo(`mk-row-${linked.id}`) }}>⏰ ตั้งเวลาเลย</button>
+                    )}
                   </div>
                 </div>
               </div>
@@ -875,13 +883,12 @@ export function AdminMarketing() {
         </div>
       )}
 
-      {tab === 'calendar' && (
+      {tab === 'schedule' && (
         <div className="space-y-3">
-          {/* CAP-22 (Owner 2026-10-26): ให้ AI เลือกเวลาอัตโนมัติ — เฉพาะโพสต์ที่คนอนุมัติแล้ว
-              และยังไม่มีเวลา · กติกาจาก marketing_rules จริง · ยิง RPC เดิม · ไม่มี publish path ใหม่ */}
+          {/* AI เลือกเวลาอัตโนมัติ — เฉพาะโพสต์ที่อนุมัติแล้ว */}
           <div className="card flex items-center justify-between flex-wrap gap-2" data-testid="mk-auto-schedule-bar">
             <div className="text-sm text-brand-muted">
-              🤖 AI เลือกเวลาจาก <b>กติกาจริงในแท็บ "⚙️ กติกา"</b> (หน้าต่างเผยแพร่ · cooldown · เพดาน/สัปดาห์)
+              🤖 AI เลือกเวลาจาก <b>กติกาจริงในแท็บ "⚙️ ตั้งค่ากติกา"</b> (หน้าต่างเผยแพร่ · cooldown · เพดาน/สัปดาห์)
               — เฉพาะโพสต์ที่อนุมัติแล้ว · การโพสต์จริงเป็นระบบอัตโนมัติรายชั่วโมงตัวเดิม
             </div>
             <button
@@ -901,7 +908,7 @@ export function AdminMarketing() {
                 <p className="font-bold">{p.title}</p>
                 <p className="text-xs text-brand-muted">
                   สถานะ: <span className={STATUS_CLS[p.status] || 'badge'}>{p.status}</span>
-                  {p.scheduled_for ? ` · ตั้งไว้ ${new Date(p.scheduled_for).toLocaleString('th-TH')}` : ''}
+                  {p.scheduled_for ? ` · กำหนดเผยแพร่วันที่ ${new Date(p.scheduled_for).toLocaleString('th-TH')}` : ''}
                 </p>
               </div>
               <div className="flex items-center gap-2">
@@ -949,7 +956,7 @@ export function AdminMarketing() {
                 <input type="time" className="input w-full" value={ruleEnd} onChange={(e) => setRuleEnd(e.target.value)} />
               </label>
             </div>
-            <label className="text-sm">เว้นขั้นต่ำระหว่างโพสต์ (ชม.)
+            <label className="text-sm">เว้นขั้นต่ำระหว่างโพสต์ (ชั่วโมง)
               <input type="number" min={0} max={168} className="input w-full" value={ruleCooldown} onChange={(e) => setRuleCooldown(Number(e.target.value))} />
             </label>
             <button className="btn btn-primary" onClick={() => void handleSaveRules()} data-testid="mk-save-rules">💾 บันทึกกติกา</button>

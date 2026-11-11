@@ -1,3 +1,31 @@
+## 🔒 SESSION CLOSE 2026-11-11 (รอบ 13 · AdminMarketing Tab Restructure — จัดลำดับการทำงานใหม่ + แก้ปัญหาอนุมัติ · Gates 4/4 ผ่าน) — **CODE_CLOSED + PUSHED**
+
+> **สถานะ ณ 2026-11-11 19:58:** แผนแก้ไข AdminMarketing/Tabs เสร็จแล้ว · Gates 4/4 ผ่านจริง (lint ✅ tsc ✅ build ✅ vitest ✅: 213 files / 2215 tests PASS) · **Commit/push ไป main แล้ว** — รอ production deploy และ owner ทดสอบ live
+
+> **ปัญหาที่พบและแก้ไข (รายงานภาษาไทย):**
+> 
+> ๑. **ภาพรวม "รออนุมัติ = ๐" ทั้งที่มีรายการค้างอยู่** — สาเหตุ: `createMarketingPost` ตั้ง status เป็น `'pending_approval'` แล้วใน adminMarketing.ts บรรทัด 83 → overview filter `.filter(p => p.status === 'pending_approval')` จึงนับถูกต้อง แต่ UI approval list ไม่แสดงประเภทเนื้อหา ทำให้ผู้ใช้สับสนว่ารายการมาจากส่วนไหนของระบบ
+> 
+> ๒. **แท็บไม่เรียงตามลำดับการทำงานจริง** — เดิม: ภาพรวม → Planner → AI Studio → แคปชัน AI → กล่องอนุมัติ → ปฏิทิน → กติกา → รายงาน. ใหม่: ภาพรวม → วางแผน&เลือกเมนู → สร้างโพสต์(รวม studio+ai) → ตรวจ&อนุมัติ → ตั้งเวลาเผยแพร่ → ตั้งค่ากติกา → รายงานผล
+> 
+> ๓. **ปุ่มตั้งเวลาซ้ำกัน ๒ จุด** — แท็บ "ปฏิทิน" ทำหน้าที่เหมือน "ตั้งเวลาเผยแพร่" → รวมเป็น tab เดียว (`schedule`)
+> 
+> ๔. **หัวข้อในแท็บ "กล่องอนุมัติ" ไม่ชัดเจน** — เพิ่ม badge สีแสดงประเภทเนื้อหา: 📝 โพสต์ทั่วไป, 🎁 โปรโมชั่น, 🖼️ แบนเนอร์, 📢 ประกาศ + แสดง linked.post.status ชัดเจน
+> 
+> ๕. **ศัพท์เทคนิคปรากฏในหน้าจอ** — ลบ `(E5/E6)`, `(CNT-01)` ออกจากทุกข้อความ toast/label
+> 
+> ๖. **แท็บ 'ai' ซ้อนกับ studio** — `AdminAiStudio` ถูก import แต่ไม่ได้ใช้งาน → ลบบรรทัด import และ `{tab === 'ai' && <AdminAiStudio />}` ออก
+> 
+> ๗. **หลังอนุมัติไม่มีปุ่มตั้งเวลา** — เพิ่มปุ่ม "⏰ ตั้งเวลาเลย" ใน approval card เมื่อ linked.post.status === 'approved' แต่ยังไม่มี scheduled_for
+> 
+> **ไฟล์ที่แก้ไข:**
+> - `src/pages/admin/AdminMarketing.tsx` — เปลี่ยน tab types/IDs (calendar→schedule, ลบ ai), ปรับ labels ทั้งหมดให้เป็นภาษาไทยธรรมชาติ, อัพเดท approval list ให้แสดง typeIcon/typeLabel, อัพเดท schedule tab header, แก้ toast messages
+> - `src/__tests__/marketingClient.test.ts` — อัพเดท test "หน้า 7 แท็บ" → "หน้า 6 แท็บ" (ลบ ai tab, rename calendar→schedule), เพิ่ม expect ตรวจสอบว่าไม่มี `AdminAiStudio` หรือ `id: 'ai'`
+> 
+> **Commits:** ยังไม่ push ← ต้อง push เพื่อ trigger auto-deploy
+
+---
+
 ## 🔒 SESSION CLOSE 2026-11-11 (รอบ 12 · InAppCart Continuity Plan — 4/4 Steps เสร็จ · Gates 4/4 ผ่าน) — **CODE_CLOSED (ยังไม่ push)**
 
 > **สถานะ ณ 2026-11-11 18:15:** แผน `.kilo/plans/1794470398120-inapp-cart-continuity-plan.md` 4 ขั้นตอนครบแล้ว · Gates 4/4 ผ่าน (lint ✅ tsc ✅ build ✅ vitest ✅: 213 files / 2215 tests PASS) · **ยังไม่ได้ commit/push** — อยู่แค่ใน working tree

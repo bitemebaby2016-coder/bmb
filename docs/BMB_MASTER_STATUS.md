@@ -4,7 +4,9 @@
 > (WHOLE-REPO RECONCILIATION · CODE CLOSURE · LEAN PRODUCTION ACCEPTANCE)
 > ไฟล์อื่นที่มีวันที่ในชื่อ = **รายงาน ณ วันนั้น** ห้ามใช้แทนไฟล์นี้ ถ้าขัดกันให้ถือโค้ด/หลักฐาน (DOC DRIFT)
 
-**🔒 LIVE STATE 2026-11-11 รอบ 12 (InAppCart Continuity Plan):** CODE_CLOSED — **ยังไม่ได้ push/deploy** · Gates 4/4 ผ่าน (lint/tsc/build/vitest: 213 files / 2215 tests PASS) · Fixes: FloatingAdBanners comment `max 2→3` · useInAppBrowser.ts ขยาย UA detection LINE/IG + InAppPlatform type + iOS alert→toast DOM · InAppBrowserBanner.tsx เพิ่ม ?cart= decode + UX messages (X รายการในตะกร้า/แนะนำลิงก์) + debug console.log · ยังรอ commit → push → deploy → live retest 5 Scenarios (A–E ใน BMB_REMAIN_TESTS_LIVE_2026-11-10.md)
+**🔒 LIVE STATE 2026-11-11 รอบ 13 (AdminMarketing Tab Restructure):** CODE_CLOSED + PUSHED — Gates 4/4 ผ่าน (lint/tsc/build/vitest: 213 files / 2215 tests PASS) · **แก้ไข:** เปลี่ยน tab types/IDs (`calendar`→`schedule`, ลบ `ai`): ปรับ labels ทั้งหมดเป็นภาษาไทยธรรมชาติ, approval list แสดง typeIcon/typeLabel (📝 โพสต์ทั่วไป, 🎁 โปรโมชั่น, 🖼️ แบนเนอร์, 📢 ประกาศ), schedule tab header ลบศัพท์เทคนิค E5/E6/CNT-01, อัพเดท toast messages หลังสร้างโพสต์/อนุมัติ, เพิ่มปุ่ม "⏰ ตั้งเวลาเลย" ใน approval card เมื่ออนุมัติแล้วแต่ยังไม่มี scheduled_for, test pack อัพเดท "หน้า 6 แท็บ" (ลบ ai, rename calendar→schedule) · รอ production deploy และ owner ทดสอบ live
+
+**🔒 LIVE STATE 2026-11-11 รอบ 12 (InAppCart Continuity Plan):** CODE_CLOSED — **push แล้ว + deploy เสร็จ** · Gates 4/4 ผ่าน (lint/tsc/build/vitest: 213 files / 2215 tests PASS) · Fixes: FloatingAdBanners comment `max 2→3` · useInAppBrowser.ts ขยาย UA detection LINE/IG + InAppPlatform type + iOS alert→toast DOM · InAppBrowserBanner.tsx เพิ่ม ?cart= decode + UX messages (X รายการในตะกร้า/แนะนำลิงก์) + debug console.log · **§T-A เดิม (cart retry)** ยังรอ hard reload retest บน live (`https://biteme-baby.com`)
 
 **⏳ LIVE RETEST 2026-11-11:** **§T-A เดิม (cart retry 2.5s `c9f77aa`)** ยังรอ hard reload retest บน live (`https://biteme-baby.com`) — โค้ด deploy แล้วตั้งแต่ 2026-11-10 แต่เจ้าของยังไม่ได้ retest ยืนยันผล
 
