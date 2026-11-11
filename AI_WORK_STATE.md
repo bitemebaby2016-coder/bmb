@@ -1,3 +1,19 @@
+## 🔒 SESSION CLOSE 2026-11-11 (รอบ 10 · Floating Ad Sources + AI Gen Scope Fix เสร็จ · Gates 4/4 ผ่าน) — **CODE_CLOSED + PUSHED**
+
+> **สถานะ ณ 2026-11-11 08:58:** ทุกการแก้ไข **CODE_CLOSED** ครบแล้ว · Gates 4/4 ผ่านจริง (lint ✅ tsc ✅ build ✅ vitest ✅: 213 files / 2215 tests PASS) · **Fixes:**
+> 1. **ลบ auto-set `floating_ad_image` จาก Banner form** (`ContentTab.tsx`) — ไม่ให้ AI Gen images leak เข้าเป็น floating ad อัตโนมัติ
+> 2. **เพิ่มแหล่งที่ 4: `recommended_menu`** — admin ควบคุมได้ผ่าน `floatingAdSources` (promotions, announcements, approved_banners, recommended_menu) · โหลดจาก `homePopularConfig` ใช้รูปเมนูจริง
+> 3. **AI Gen images scope ชัดเจน**: ใช้ได้แค่ Facebook post · marketing post · manual attach to promotion/banner · **เจนรูปเมนูอาหารจากตัวอย่าง** — ห้าม auto floating ad
+> 4. **FloatingAdBanners**: เพิ่ม badge `🔥 เมนูแนะนำ` สีแดงสำหรับแหล่ง recommended_menu · interleaved feed (announcements, promos, recommended)
+> 
+> **Gates ผ่าน**: lint ✅ tsc ✅ build ✅ vitest ✅
+> **Commit**: `c78aa9c` push แล้ว (`4dc1a16..c78aa9c`)
+> 
+> **กติกาเซสชั่นต่อไป:**
+> 1. **✅ สำเร็จแล้ว**: Floating Ad Sources fix + AI Gen scope clarify — **CODE_CLOSED + PUSHED**
+> 2. **Live Retest Sequence** คงเดิม: ① **§T-A** cart retry 2.5s · ใช้ `https://biteme-baby.com` · hard reload 1 ครั้ง · RT-8 ยังห้ามปิด
+> 3. เอกสารอ้างอิง: `AI_WORK_STATE.md` · `.kilo/plans/1794247959923-content-catalog-image-workflow.md`
+
 ## 🔒 SESSION CLOSE 2026-11-11 (รอบ 9 · Voice Interface Image Picker เสร็จ · InAppBrowserNotice ลบแล้ว · Gates 4/4 ผ่าน) — **CODE_CLOSED + PUSHED**
 
 > **สถานะ ณ 2026-11-11 05:25:** ทุกการแก้ไข **CODE_CLOSED** ครบแล้ว · Gates 4/4 ผ่านจริง (lint ✅ tsc ✅ build ✅ vitest ✅: 213 files / 2215 tests PASS) · **New features:**
