@@ -452,6 +452,21 @@ export function ContentTab({ load }: ContentTabProps) {
     }
   }
 
+  async function createAndSubmitFromImage(url: string) {
+    // First set the image
+    if (contentType === 'post' || contentType === 'announcement') {
+      setPostImages([url])
+    } else if (contentType === 'promotion') {
+      setPromoForm((f) => ({ ...f, banner_image: url }))
+    } else if (contentType === 'banner') {
+      setBannerForm((f) => ({ ...f, banner_image: url }))
+    }
+    // Small delay to let state update, then submit
+    setTimeout(() => {
+      void handleSubmitAll()
+    }, 50)
+  }
+
   const WM_MASCOTS: Array<{ key: string; label: string }> = [
     { key: 'auto', label: '🤖 อัตโนมัติ (เลือกตามประเภทภาพ — จำไว้ใช้ทุกครั้ง)' },
     { key: 'bite_recommend', label: '👉 น้อง Bite แนะนำ' },
@@ -890,7 +905,7 @@ export function ContentTab({ load }: ContentTabProps) {
                   <img src={a.url} alt={a.name} className="w-full h-20 object-cover" />
                   <div className="flex text-[9px] leading-none">
                     <button type="button" className="flex-1 bg-brand-primary text-white py-1" onClick={() => pickAiImage(a.url)} data-testid={`mk-ai-pick-${a.name}`} title="ใช้รูปนี้เป็นภาพโพสต์">ใช้</button>
-                    <button type="button" className="flex-1 bg-green-600 text-white py-1" onClick={() => void createContentFromImage(a.url)} data-testid={`mk-ai-create-${a.name}`} title="สร้างโพสต์/โปรโมชั่น/แบนเนอร์จากภาพนี้ (ส่งตรวจ CNT-01)">สร้างจากภาพนี้</button>
+                    <button type="button" className="flex-1 bg-green-600 text-white py-1" onClick={() => void createAndSubmitFromImage(a.url)} data-testid={`mk-ai-create-${a.name}`} title="สร้างโพสต์/โปรโมชั่น/แบนเนอร์จากภาพนี้ + ส่งตรวจ CNT-01 (ใช้ข้อมูลฟอร์มทั้งหมดที่กรอก)">สร้างและส่งตรวจ</button>
                     <button type="button" className="flex-1 bg-amber-500 text-white py-1" onClick={() => void toggleAiImage(a)} data-testid={`mk-ai-toggle-${a.name}`} title={a.disabled ? 'เปิดใช้งานรูปนี้อีกครั้ง' : 'ปิดรูปนี้ — ไม่ให้ระบบนำไปใช้'}>{a.disabled ? 'เปิด' : 'ปิด'}</button>
                     <button type="button" className="flex-1 bg-red-500 text-white py-1" onClick={() => void deleteAiImage(a)} data-testid={`mk-ai-del-${a.name}`} title="ลบรูปนี้ออกจากอัลบั้ม (ลบไฟล์จริง)">ลบ</button>
                   </div>
