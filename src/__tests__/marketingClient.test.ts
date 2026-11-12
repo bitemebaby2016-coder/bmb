@@ -8,6 +8,7 @@
 import { describe, it, expect } from 'vitest'
 import adminMarketingSrc from '../lib/adminMarketing.ts?raw'
 import adminMarketingPageSrc from '../pages/admin/AdminMarketing.tsx?raw'
+import contentApprovalSrc from '../lib/contentApproval.ts?raw'
 import imageGenSrc from '../../supabase/functions/image-gen/index.ts?raw'
 import workerSrc from '../../supabase/functions/automation-worker/index.ts?raw'
 import enqueueSrc from '../../supabase/functions/queue-enqueue/index.ts?raw'
@@ -91,5 +92,40 @@ describe('Part C · marketing_publish job = allowlist + dispatcher + worker + sc
     expect(schedulerSrc).toContain('hourly-marketing')
     expect(schedulerSrc).toContain('marketing_publish_enqueue')
     expect(schedulerSrc).toContain('marketing_publish_dispatch')
+  })
+})
+
+describe('R93 (Owner 2026-11-12) · คิวอนุมัติต้องไม่ว่างเงียบ + โพสต์รออนุมัติแก้ไข/ลบได้', () => {
+  it('contentApproval select คอลัมน์จริง reviewed_by (ของเดิม reviewer_id = คอลัมน์ไม่มีจริง → 400 เงียบ → คิวว่างหลอก)', () => {
+    // พิสูจน์ DB จริง: information_schema ไม่มี reviewer_id — มี reviewed_by (e2e/_r93_probe2.cjs)
+    expect(contentApprovalSrc).toContain('reviewed_by')
+    expect(contentApprovalSrc).not.toContain('reviewer_id')
+    // ห้ามกลืน error เงียบแบบเดิม (if (error) return [] แบบไม่ log)
+    expect(contentApprovalSrc).toMatch(/console\.warn\('\[contentApprovals\] list/)
+  })
+
+  it('adminMarketing มี ลบ (ลบคู่คิว) + บันทึกแก้ไข (โพสต์ + คิวอนุมัติ)', () => {
+    expect(adminMarketingSrc).toContain('export async function deleteMarketingPost')
+    expect(adminMarketingSrc).toContain("from('content_approvals').delete()")
+    expect(adminMarketingSrc).toContain('export async function updateMarketingPostDraft')
+    expect(adminMarketingSrc).toContain('export async function updateContentApprovalDraft')
+  })
+
+  it('หน้ามีปุ่ม ✏️ แก้ไข + 🗑 ลบ ทั้งคิวอนุมัติและแท็บตั้งเวลา — บันทึกแก้ไขยังรออนุมัติ', () => {
+    // คิวอนุมัติ: แถว pending ที่ผูกโพสต์ pending_approval
+    expect(adminMarketingPageSrc).toContain("linked.status === 'pending_approval'")
+    // แท็บตั้งเวลา: แถว pending_approval/draft (ยังไม่เผยแพร่)
+    expect(adminMarketingPageSrc).toContain("(p.status === 'pending_approval' || p.status === 'draft')")
+    // ปุ่ม + flow แก้ไข (โหลดกลับฟอร์ม → บันทึกแก้ไข → ยังรออนุมัติ)
+    expect(adminMarketingPageSrc).toContain('data-testid={`mk-edit-${p.id}`}')
+    expect(adminMarketingPageSrc).toContain('data-testid={`mk-delete-${p.id}`}')
+    expect(adminMarketingPageSrc).toContain('function startEditPost')
+    expect(adminMarketingPageSrc).toContain('async function handleSaveEditPost')
+    expect(adminMarketingPageSrc).toContain('ยังรออนุมัติเหมือนเดิม')
+    expect(adminMarketingPageSrc).toContain("editingPostId ? handleSaveEditPost() : handleCreatePost()")
+    expect(adminMarketingPageSrc).toContain('บันทึกแก้ไข (ยังรออนุมัติ)')
+    // ลบต้องผ่าน confirm (กันกดพลาด) + เคลียร์ editing ถ้าลบอันที่กำลังแก้
+    expect(adminMarketingPageSrc).toContain('window.confirm(`ลบโพสต์')
+    expect(adminMarketingPageSrc).toContain('if (editingPostId === p.id) cancelEditPost()')
   })
 })

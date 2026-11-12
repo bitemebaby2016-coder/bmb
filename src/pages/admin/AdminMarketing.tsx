@@ -12,6 +12,7 @@ import { supabase } from '@/lib/supabase'
 import { showToast } from '@/components/ui/ToastContainer'
 import {
   listMarketingPosts, createMarketingPost, scheduleMarketingPost,
+  deleteMarketingPost, updateMarketingPostDraft, updateContentApprovalDraft,
   getMarketingRules, saveMarketingRules, bestSellerProducts,
   type MarketingPostRow, type MarketingRules,
 } from '@/lib/adminMarketing'
@@ -237,6 +238,64 @@ export function AdminMarketing() {
       await load()
       flashTo(`mk-aprow-${id}`)
     } else showToast('อนุมัติไม่สำเร็จ', 'error')
+  }
+
+  // R93 (Owner 2026-11-12 "โพสที่สร้างมาแล้วรออนุมัติ ให้มีปุ่ม ลบ และกลับไปแก้ไขด้วย"):
+  // กลับไปแก้ไข = โหลดเนื้อหาจริงกลับเข้าฟอร์มสร้างโพสต์ (แท็บ studio) — บันทึกแล้ว
+  // ยังรออนุมัติเหมือนเดิม (ห้ามเลี่ยงคิว) · ลบ = ลบโพสต์ + แถวคิวอนุมัติคู่กัน
+  const [editingPostId, setEditingPostId] = useState<string | null>(null)
+
+  function startEditPost(p: MarketingPostRow) {
+    setEditingPostId(p.id)
+    setTitle(p.title)
+    setBodyText(p.body)
+    setImages(p.image_urls ?? [])
+    if (p.content_type) setContentType(p.content_type)
+    setTab('studio')
+    flashTo('mk-studio-merged')
+  }
+
+  function cancelEditPost() {
+    setEditingPostId(null)
+    setTitle(''); setBodyText(''); setImages([])
+  }
+
+  async function handleSaveEditPost() {
+    if (!editingPostId) return
+    if (!title.trim()) { showToast('ใส่หัวข้อโพสต์ก่อน', 'error'); return }
+    setSaving(true)
+    // R44: กติกาภาพเจนเดียวกับการสร้างใหม่ (รูปเจนล่าสุดอย่างเดียว)
+    const genOnes = images.filter(isGenImage)
+    const postImages = genOnes.length > 0 ? [genOnes[genOnes.length - 1]] : images
+    const post = posts.find((x) => x.id === editingPostId)
+    const r = await updateMarketingPostDraft(editingPostId, { title: title.trim(), body: bodyText, image_urls: postImages })
+    // คิวอนุมัติที่ผูกอยู่ต้องโชว์เนื้อหาใหม่ด้วย (กันคิวโชว์ของเก่า → อนุมัติของผิด)
+    if (r.ok && post?.approval_id) {
+      const r2 = await updateContentApprovalDraft(post.approval_id, { title: title.trim(), body: bodyText, imageUrl: postImages[0] })
+      if (!r2.ok) showToast('บันทึกโพสต์แล้ว แต่อัปเดตคิวอนุมัติไม่สำเร็จ: ' + (r2.error || ''), 'warning')
+    }
+    setSaving(false)
+    if (r.ok) {
+      showToast('บันทึกแก้ไขแล้ว — ยังรออนุมัติเหมือนเดิม', 'success')
+      cancelEditPost()
+      await load()
+      setTab('approval')
+      flashTo('mk-approval-list')
+    } else {
+      showToast('บันทึกแก้ไขไม่สำเร็จ: ' + (r.error || ''), 'error')
+    }
+  }
+
+  async function handleDeletePost(p: MarketingPostRow) {
+    if (!window.confirm(`ลบโพสต์ "${p.title || '(ไม่มีชื่อ)'}" ถาวร? — จะลบออกจากคิวอนุมัติด้วย (ใช้กับโพสต์ที่ยังไม่เผยแพร่เท่านั้น)`)) return
+    const r = await deleteMarketingPost(p.id, p.approval_id)
+    if (r.ok) {
+      if (editingPostId === p.id) cancelEditPost()
+      showToast('ลบโพสต์แล้ว', 'success')
+      await load()
+    } else {
+      showToast('ลบไม่สำเร็จ: ' + (r.error || ''), 'error')
+    }
   }
 
   async function handleReject(id: string) {
@@ -836,7 +895,13 @@ export function AdminMarketing() {
             {/* R47 (Owner: "สองเซคชั่นของหน้าเอไอสตูดิโอ ยุบรวมกัน") — PostForm ยุบเข้ามาในใบเดียวกับเครื่องมือภาพ
                 ไม่แยกการ์ดฟอร์มออกอีกใบ: สร้างภาพ → เห็นในชุด → เขียนโพสต์ → ส่ง จบในที่เดียว */}
             <div className="mt-4 pt-3 border-t border-brand-border" data-testid="mk-studio-merged">
-              <PostForm title={title} setTitle={setTitle} bodyText={bodyText} setBodyText={setBodyText} contentType={contentType} setContentType={setContentType} images={images} setImages={setImages} saving={saving} onSubmit={() => void handleCreatePost()} />
+              {editingPostId && (
+                <div className="mb-3 flex items-center justify-between gap-2 rounded-lg bg-amber-50 border border-amber-300 px-3 py-2 text-sm" data-testid="mk-editing-bar">
+                  <span>✏️ กำลังแก้ไขโพสต์ที่รออนุมัติ — บันทึกแล้วยังรออนุมัติเหมือนเดิม</span>
+                  <button type="button" className="btn btn-outline text-xs" onClick={cancelEditPost}>ยกเลิกการแก้ไข</button>
+                </div>
+              )}
+              <PostForm title={title} setTitle={setTitle} bodyText={bodyText} setBodyText={setBodyText} contentType={contentType} setContentType={setContentType} images={images} setImages={setImages} saving={saving} submitLabel={editingPostId ? '💾 บันทึกแก้ไข (ยังรออนุมัติ)' : undefined} onSubmit={() => void (editingPostId ? handleSaveEditPost() : handleCreatePost())} />
             </div>
           </div>
         </div>
@@ -869,6 +934,13 @@ export function AdminMarketing() {
                       <>
                         <button className="btn btn-primary text-xs" onClick={() => void handleApprove(a.id)} data-testid={`mk-approve-${a.id}`}>✅ อนุมัติ</button>
                         <button className="btn btn-outline text-xs" onClick={() => void handleReject(a.id)}>✖ ปฏิเสธ</button>
+                        {/* R93 (Owner): โพสต์ที่รออนุมัติ = แก้ไขกลับ/ลบได้จากคิวเลย */}
+                        {linked && linked.status === 'pending_approval' && (
+                          <>
+                            <button className="btn btn-outline text-xs" onClick={() => startEditPost(linked)} data-testid={`mk-edit-${linked.id}`}>✏️ แก้ไข</button>
+                            <button className="btn btn-outline text-xs text-red-600" onClick={() => void handleDeletePost(linked)} data-testid={`mk-delete-${linked.id}`}>🗑 ลบ</button>
+                          </>
+                        )}
                       </>
                     )}
                     {/* หลังอนุมัติให้ตั้งเวลาได้ทันที ไม่ต้องสลับแท็บ */}
@@ -927,6 +999,13 @@ export function AdminMarketing() {
                 >⏰ ตั้งเวลา</button>
                 {!schedulable(p.status) && (
                   <span className="text-xs text-brand-muted" data-testid={`mk-schedule-hint-${p.id}`}>รออนุมัติ</span>
+                )}
+                {/* R93 (Owner): โพสต์ที่ยังไม่เผยแพร่ (รออนุมัติ/ร่าง) = แก้ไขกลับ/ลบได้ที่นี่ด้วย */}
+                {(p.status === 'pending_approval' || p.status === 'draft') && (
+                  <>
+                    <button className="btn btn-outline text-xs" onClick={() => startEditPost(p)} data-testid={`mk-edit-${p.id}`}>✏️ แก้ไข</button>
+                    <button className="btn btn-outline text-xs text-red-600" onClick={() => void handleDeletePost(p)} data-testid={`mk-delete-${p.id}`}>🗑 ลบ</button>
+                  </>
                 )}
               </div>
             </div>
@@ -1000,6 +1079,8 @@ function PostForm(props: {
   contentType: 'post' | 'promotion' | 'banner' | 'announcement'; setContentType: (v: 'post' | 'promotion' | 'banner' | 'announcement') => void
   images: string[]; setImages: (v: string[]) => void
   saving: boolean; onSubmit: () => void
+  /** R93: ปุ่มโหมดแก้ไข (บันทึกแก้ไขโพสต์ที่รออนุมัติ) — ไม่ส่ง = ปุ่มสร้างใหม่ */
+  submitLabel?: string
 }) {
   return (
     <div className="card space-y-3">
@@ -1020,7 +1101,7 @@ function PostForm(props: {
       </label>
       {props.images.length > 0 && <p className="text-xs text-brand-muted">แนบรูปแล้ว {props.images.length} รูป</p>}
       <button className="btn btn-primary" disabled={props.saving} onClick={props.onSubmit} data-testid="mk-create-post">
-        {props.saving ? '⏳…' : '📨 สร้างโพสต์ (รอคนอนุมัติ)'}
+        {props.submitLabel ?? (props.saving ? '⏳…' : '📨 สร้างโพสต์ (รอคนอนุมัติ)')}
       </button>
     </div>
   )

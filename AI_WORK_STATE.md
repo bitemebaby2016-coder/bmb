@@ -1,3 +1,20 @@
+## 🔒 SESSION CLOSE 2026-11-12 (รอบ 17 · R93 — คิวอนุมัติว่างเงียบ → อนุมัติ/ตั้งเวลาไม่ได้ + โพสต์รออนุมัติ แก้ไข/ลบ · Gates 4/4 ผ่าน) — **CODE_CLOSED + PUSHED**
+
+> **สถานะ ณ 2026-11-12 10:41:** owner แจ้งภาพ 3 ใบ: "ภาพรวมมี 1 รออนุมัติ แต่แท็บตรวจ&อนุมัติว่าง + ตั้งเวลาโพสไม่ได้ + โพสรออนุมัติไม่มีปุ่มลบ/แก้ไข" · Gates 4/4 ผ่านจริง (lint ✅ tsc ✅ vitest ✅ **2237 tests** · build ✅ — `e2e/_r93_gates_*.log`) · push แล้ว — รอ deploy + owner live test
+
+> **Root cause (พิสูจน์ DB จริง — `e2e/_r93_probe*.cjs`):** `content_approvals` ไม่มีคอลัมน์ `reviewer_id` (มีจริง = `reviewed_by`) — `listContentApprovals()` select ชื่อผิด → PostgREST 400 **ทุกครั้ง** → `if (error) return []` กลืนเงียบ = **กล่องอนุมัติว่างเสมอ** ทั้งที่แถว pending มีจริง ("ข้าวลาบอกไก่ไข่ต้ม") → โดมิโน: อนุมัติไม่ได้ → RPC `marketing_schedule_post` (บังคับ approved ตาม G1-G3 ถูกแล้ว) จึง "ตั้งเวลาไม่ได้" — ทุกอาการจากบั๊กเดียว
+
+> **สิ่งที่แก้:**
+> 1. **`contentApproval.ts`** — select/interface: `reviewer_id` → **`reviewed_by`** + error ไม่กลืนเงียบอีก (console.warn) — regression guard ใน marketingClient.test.ts ห้ามกลับไปใช้ชื่อคอลัมน์ที่ไม่มีจริง
+> 2. **`adminMarketing.ts`** — ฟังก์ชันใหม่: `deleteMarketingPost(id, approvalId?)` (ลบโพสต์ + ลบคิวอนุมัติคู่กัน กันคิวค้าง) · `updateMarketingPostDraft` + `updateContentApprovalDraft` (บันทึกแก้ไขโพสต์ + คิวโชว์เนื้อหาใหม่ กันอนุมัติของเก่า) — RLS ผ่าน policy ที่มีอยู่ (admin write ALL ทั้ง 2 ตาราง — ไม่ต้อง migration)
+> 3. **`AdminMarketing.tsx`** — ปุ่มใหม่ **"✏️ แก้ไข"** + **"🗑 ลบ"** (มี window.confirm + ลบคู่คิว): ① แถว pending ในแท็บ "☑️ ตรวจ & อนุมัติ" ② แถว pending_approval/draft ในแท็บ "⏰ ตั้งเวลาเผยแพร่" (ครอบของที่ถูกปฏิเสธกลับเป็นร่างด้วย) · แก้ไข = โหลดเนื้อหาจริงกลับฟอร์มสร้างโพสต์ (แถบ "กำลังแก้ไข" + ยกเลิกได้) → บันทึกแล้ว **ยังรออนุมัติเหมือนเดิม** (ห้ามเลี่ยงคิว ตามกติกา อนุมัติ≠ตั้งเวลา)
+> 4. **ห้ามลบ/แก้ โพสต์ scheduled/published** — ปุ่มโผล่เฉพาะ status ยังไม่ถึงเผยแพร่
+> 5. tsc จับผู้ใช้ interface เดิม 2 จุด (`ApprovalHistoryTab.tsx`/`ContentTab.tsx` ตรวจโดย) — แก้ตาม `reviewed_by`
+
+> **Live-test checklist (owner):** ① แท็บตรวจ&อนุมัติ ต้องโชว์ "ข้าวลาบอกไก่ไข่ต้ม" (pending) + ปุ่ม อนุมัติ/ปฏิเสธ/แก้ไข/ลบ ② กดอนุมัติ → ไปแท็บตั้งเวลา → ตั้งเวลาได้จริง ③ กดแก้ไข → ฟอร์มเต็มของจริง → บันทึก → คิวโชว์ของใหม่ ยัง pending ④ กดลบ → confirm → หายจากคิว+รายการ
+
+---
+
 ## 🔒 SESSION CLOSE 2026-11-11 (รอบ 16 · R92 — ลิงก์โซเชียลใช้ได้จริง + บริบทเดียวกัน 3 ช่องทาง · Gates 4/4 ผ่าน) — **CODE_CLOSED + DEPLOYED**
 
 > **สถานะ ณ 2026-11-11:** แผน `.kilo/plans/1794394627389-social-link-context-plan.md` ครบทั้ง Step 0–5 · Gates 4/4 ผ่านจริง (lint ✅ tsc ✅ vitest ✅ **2234 tests PASS** · build ✅ — `e2e/_r92_gates_*.log`) · **EF `social-ai-worker` DEPLOYED exit=0** (`e2e/_r92_deploy.log`)

@@ -93,6 +93,46 @@ export async function scheduleMarketingPost(id: string, whenIso: string): Promis
   return { ok: true }
 }
 
+/** R93 (Owner 2026-11-12 "โพสที่รออนุมัติ ให้มีปุ่ม ลบ และกลับไปแก้ไข"): ลบโพสต์ที่
+ *  ยังไม่เผยแพร่ (pending_approval/draft) — ลบคู่ content_approvals ที่ยัง pending ด้วย
+ *  เพื่อไม่ทิ้งคิวค้าง · RLS: marketing_posts_admin_write + content_approvals_admin (is_admin) */
+export async function deleteMarketingPost(id: string, approvalId?: string | null): Promise<{ ok: boolean; error?: string }> {
+  if (approvalId) {
+    const { error: apErr } = await supabase.from('content_approvals').delete().eq('id', approvalId)
+    if (apErr) return { ok: false, error: apErr.message }
+  }
+  const { error } = await supabase.from('marketing_posts').delete().eq('id', id)
+  if (error) return { ok: false, error: error.message }
+  return { ok: true }
+}
+
+/** R93: บันทึกแก้ไขโพสต์ที่รออนุมัติ — อัปเดตเนื้อหา + อัปเดตแถวคิวอนุมัติเดิมให้ตรงกัน
+ *  (status ยัง pending_approval — แก้แล้วต้องรออนุมัติใหม่ตามกติกา ห้ามเลี่ยงคิว) */
+export async function updateMarketingPostDraft(
+  id: string,
+  input: { title: string; body: string; image_urls?: string[] },
+): Promise<{ ok: boolean; error?: string }> {
+  const { error } = await supabase
+    .from('marketing_posts')
+    .update({ title: input.title, body: input.body, image_urls: input.image_urls ?? [] })
+    .eq('id', id)
+  if (error) return { ok: false, error: error.message }
+  return { ok: true }
+}
+
+/** R93: อัปเดตแถวคิวอนุมัติที่ผูกกับโพสต์ (title/body/image_url) — ให้คิวโชว์ของใหม่จริง */
+export async function updateContentApprovalDraft(
+  approvalId: string,
+  input: { title: string; body: string; imageUrl?: string },
+): Promise<{ ok: boolean; error?: string }> {
+  const { error } = await supabase
+    .from('content_approvals')
+    .update({ title: input.title, body: input.body, image_url: input.imageUrl ?? null })
+    .eq('id', approvalId)
+  if (error) return { ok: false, error: error.message }
+  return { ok: true }
+}
+
 export async function getMarketingRules(): Promise<MarketingRules | null> {
   const { data, error } = await supabase.from('marketing_rules').select('*').eq('id', 'default').maybeSingle()
   if (error || !data) return null

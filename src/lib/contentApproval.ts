@@ -19,7 +19,9 @@ export interface ContentApprovalRow {
   created_at: string
   image_url?: string | null
   mascot?: string | null
-  reviewer_id?: string | null
+  /** คอลัมน์จริงใน DB = reviewed_by (ของเดิม select ชื่อที่ไม่มีจริง → query 400 เงียบ
+   *  = คิวอนุมัติว่างเสมอ → อนุมัติ/ตั้งเวลาไม่ได้ — R93 probe `e2e/_r93_probe2.cjs`) */
+  reviewed_by?: string | null
   reviewed_at?: string | null
   review_note?: string | null
 }
@@ -63,7 +65,7 @@ export async function listContentApprovals(opts?: {
 }): Promise<ContentApprovalRow[]> {
   let query = supabase
     .from('content_approvals')
-    .select('id,content_type,title,body,status,created_by,created_at,image_url,mascot,reviewer_id,reviewed_at,review_note')
+    .select('id,content_type,title,body,status,created_by,created_at,image_url,mascot,reviewed_by,reviewed_at,review_note')
     .order('created_at', { ascending: false })
 
   if (opts?.status) {
@@ -77,6 +79,12 @@ export async function listContentApprovals(opts?: {
   }
 
   const { data, error } = await query
-  if (error) return []
+  if (error) {
+    // R93 (Owner 2026-11-12 "กล่องอนุมัติว่างทั้งที่มีงานค้าง"): ของเดิมกลืน error เงียบ
+    // = คิวว่างหลอก บั๊กที่พบ: select ชื่อคอลัมน์ที่ไม่มีจริงในตาราง (400 ทุกครั้ง)
+    // → log ออก console เพื่อไม่ว่างแบบเงียบอีก (ห้ามกลืน error ดิบ)
+    console.warn('[contentApprovals] list ล้มเหลว —', (error as Error).message)
+    return []
+  }
   return (data ?? []) as ContentApprovalRow[]
 }

@@ -1451,7 +1451,7 @@ if (row.key === 'floating_ad_sources' && Array.isArray(row.value)) {
                     <p className="text-sm text-brand-muted mb-1">{item.body}</p>
                     <p className="text-xs text-brand-muted">
                       สร้างโดย: {item.created_by} · {new Date(item.created_at).toLocaleString('th-TH')}
-                      {item.reviewer_id && <span> · ตรวจโดย: {item.reviewer_id}</span>}
+                      {item.reviewed_by && <span> · ตรวจโดย: {item.reviewed_by}</span>}
                       {item.review_note && <span className="block mt-1">หมายเหตุ: {item.review_note}</span>}
                     </p>
                     {item.image_url && (
