@@ -245,6 +245,43 @@ export function AdminMarketing() {
   // ยังรออนุมัติเหมือนเดิม (ห้ามเลี่ยงคิว) · ลบ = ลบโพสต์ + แถวคิวอนุมัติคู่กัน
   const [editingPostId, setEditingPostId] = useState<string | null>(null)
 
+  // R93 (Owner 2026-11-12): Approval queue = แสดงเฉพาะวันนี้ + tabs (วันนี้/สัปดาห์/เดือน/ทั้งหมด)
+  type ApprovalFilter = 'today' | 'week' | 'month' | 'all'
+  const [approvalFilter, setApprovalFilter] = useState<ApprovalFilter>('today')
+
+  function getApprovalFilterRange(filter: ApprovalFilter): { start: Date; end: Date } | null {
+    const now = new Date()
+    const start = new Date(now)
+    const end = new Date(now)
+    end.setHours(23, 59, 59, 999)
+    switch (filter) {
+      case 'today':
+        start.setHours(0, 0, 0, 0)
+        return { start, end }
+      case 'week': {
+        const dayOfWeek = start.getDay() || 7
+        start.setDate(start.getDate() - dayOfWeek + 1)
+        start.setHours(0, 0, 0, 0)
+        return { start, end }
+      }
+      case 'month': {
+        start.setDate(1)
+        start.setHours(0, 0, 0, 0)
+        return { start, end }
+      }
+      case 'all':
+      default:
+        return null
+    }
+  }
+
+  function shouldShowApproval(approval: ContentApprovalRow): boolean {
+    const range = getApprovalFilterRange(approvalFilter)
+    if (!range) return true
+    const created = new Date(approval.created_at)
+    return created >= range.start && created <= range.end
+  }
+
   function startEditPost(p: MarketingPostRow) {
     setEditingPostId(p.id)
     setTitle(p.title)
@@ -909,8 +946,32 @@ export function AdminMarketing() {
 
       {tab === 'approval' && (
         <div className="space-y-3" data-testid="mk-approval-list">
-          {approvals.length === 0 && <p className="text-sm text-brand-muted">ยังไม่มีเนื้อหาในคิว — สร้างโพสต์จาก Planner/Studio หรือสร้างโปรโมชั่นหน้าโปรโมชั่น</p>}
-          {approvals.map((a) => {
+          {/* Approval filter tabs */}
+          <div className="flex gap-2 mb-3 flex-wrap">
+            {([
+              ['today', '📅 วันนี้'],
+              ['week', ' สัปดาห์นี้'],
+              ['month', '️ เดือนนี้'],
+              ['all', '📋 ทั้งหมด'],
+            ] as Array<[ApprovalFilter, string]>).map(([f, label]) => (
+              <button
+                key={f}
+                onClick={() => setApprovalFilter(f)}
+                className={`btn text-xs ${approvalFilter === f ? 'btn-primary' : 'btn-outline'}`}
+                data-testid={`mk-approval-filter-${f}`}
+              >{label}</button>
+            ))}
+          </div>
+          
+          {approvals.filter(shouldShowApproval).length === 0 && (
+            <p className="text-sm text-brand-muted">
+              {approvalFilter === 'all'
+                ? 'ยังไม่มีเนื้อหาในคิว — สร้างโพสต์จาก Planner/Studio หรือสร้างโปรโมชั่นหน้าโปรโมชั่น'
+                : `ยังไม่มีเนื้อหาในช่วง ${approvalFilter === 'today' ? 'วันนี้' : approvalFilter === 'week' ? 'สัปดาห์นี้' : approvalFilter === 'month' ? 'เดือนนี้' : 'ทั้งหมด'}`}
+            </p>
+          )}
+          
+          {approvals.filter(shouldShowApproval).map((a) => {
             const linked = posts.find((p) => p.approval_id === a.id)
             // Content type icon map — แสดงให้เห็นว่ารายการนี้มาจากส่วนไหนของระบบ
             const typeIcon = { post: '📝', promotion: '🎁', banner: '🖼️', announcement: '📢' }
@@ -934,8 +995,8 @@ export function AdminMarketing() {
                       <>
                         <button className="btn btn-primary text-xs" onClick={() => void handleApprove(a.id)} data-testid={`mk-approve-${a.id}`}>✅ อนุมัติ</button>
                         <button className="btn btn-outline text-xs" onClick={() => void handleReject(a.id)}>✖ ปฏิเสธ</button>
-                        {/* R93 (Owner): โพสต์ที่รออนุมัติ = แก้ไขกลับ/ลบได้จากคิวเลย */}
-                        {linked && linked.status === 'pending_approval' && (
+                        {/* R93 (Owner): แก้ไข/ลบได้สำหรับทุกโพสต์ที่ไม่ใช่ published */}
+                        {linked && (
                           <>
                             <button className="btn btn-outline text-xs" onClick={() => startEditPost(linked)} data-testid={`mk-edit-${linked.id}`}>✏️ แก้ไข</button>
                             <button className="btn btn-outline text-xs text-red-600" onClick={() => void handleDeletePost(linked)} data-testid={`mk-delete-${linked.id}`}>🗑 ลบ</button>
@@ -1000,8 +1061,8 @@ export function AdminMarketing() {
                 {!schedulable(p.status) && (
                   <span className="text-xs text-brand-muted" data-testid={`mk-schedule-hint-${p.id}`}>รออนุมัติ</span>
                 )}
-                {/* R93 (Owner): โพสต์ที่ยังไม่เผยแพร่ (รออนุมัติ/ร่าง) = แก้ไขกลับ/ลบได้ที่นี่ด้วย */}
-                {(p.status === 'pending_approval' || p.status === 'draft') && (
+                {/* R93 (Owner): แก้ไข/ลบได้สำหรับทุกโพสต์ที่ไม่ใช่ published */}
+                {p.status !== 'published' && (
                   <>
                     <button className="btn btn-outline text-xs" onClick={() => startEditPost(p)} data-testid={`mk-edit-${p.id}`}>✏️ แก้ไข</button>
                     <button className="btn btn-outline text-xs text-red-600" onClick={() => void handleDeletePost(p)} data-testid={`mk-delete-${p.id}`}>🗑 ลบ</button>
