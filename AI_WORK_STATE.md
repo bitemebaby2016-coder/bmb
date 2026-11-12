@@ -1,3 +1,14 @@
+## 🔒 SESSION CLOSE 2026-11-12 (รอบ 20 · Marketing Edit/Delete + Approval Filter Tabs · Gates 4/4 ผ่าน) — **CODE_CLOSED + PUSHED**
+
+> **สถานะ ณ 2026-11-12 10:45:** Owner ต้องการ ① ปุ่มแก้ไข/ลบสำหรับทุกโพสต์ที่ไม่ใช่ published (ไม่ใช่แค่ pending_approval) ② Approval queue มี filter tabs (วันนี้/สัปดาห์/เดือน/ทั้งหมด) · Gates 4/4 ผ่านจริง (lint ✅ tsc ✅ build ✅) · push `4280d67`
+
+> **สิ่งที่แก้:**
+> 1. **`src/pages/admin/AdminMarketing.tsx`** — Approval tab: เพิ่ม filter tabs (วันนี้/สัปดาห์/เดือน/ทั้งหมด) + แสดงเฉพาะตาม filter · Schedule tab: แก้ไข/ลบได้สำหรับทุกโพสต์ที่ไม่ใช่ published (approved + scheduled + pending_approval + draft) · Approval tab: แก้ไข/ลบได้สำหรับทุกโพสต์ที่ไม่ใช่ published (ไม่ใช่แค่ pending_approval)
+
+> **Live-test checklist (owner):** ① แท็บ "☑️ ตรวจ & อนุมัติ" มี filter tabs + แก้ไข/ลบได้สำหรับทุกโพสต์ ② แท็บ "⏰ ตั้งเวลาเผยแพร่" แก้ไข/ลบได้สำหรับ approved + scheduled posts ③ Filter "วันนี้" = แสดงเฉพาะวันนี้ · "สัปดาห์นี้" = สัปดาห์นี้ · "เดือนนี้" = เดือนนี้ · "ทั้งหมด" = ทุกอย่าง
+
+---
+
 ## 🔒 SESSION CLOSE 2026-11-12 (รอบ 19 · R95 — โฟลตติ้งข้อความอ่านได้ + รูปไดคัทโปร่ง · Gates 4/4 ผ่าน) — **CODE_CLOSED + PUSHED**
 
 > **สถานะ ณ 2026-11-12 12:32:** owner แจ้ง `.flad-card` ที่เราทำ `transparent` ทำให้ข้อความอ่านไม่ออก (พื้นหลังเป็นรูปหลังแบนเนอร์) · **แก้:** `.flad-card` กลับมา `#fff` (light) / `var(--color-brand-surface)` (dark) · `.flad-media` ปล่อยโปร่ง (รูปไดคัท) · Gates 4/4 ผ่าน (vitest ✅ 7 tests) · push `3f07160..f44fb09`
