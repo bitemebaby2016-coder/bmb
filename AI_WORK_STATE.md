@@ -1,3 +1,16 @@
+## 🔒 SESSION CLOSE 2026-11-12 (รอบ 21 · Marketing Tests Fix + Approval Filter Tabs · Gates 4/4 ผ่าน) — **CODE_CLOSED + PUSHED**
+
+> **สถานะ ณ 2026-11-12 11:10:** CI ล้มเพราะ vitest timeout (project ใหญ่ 214 files) + test ไม่ match behavior ใหม่ · แก้: update `marketingClient.test.ts` ให้ตรงกับ approval filter tabs + edit/delete expansion · Gates 4/4 ผ่านจริง (lint ✅ tsc ✅ build ✅ vitest ✅ 13 tests) · push `bff8228`
+
+> **สิ่งที่แก้:**
+> 1. **`src/__tests__/marketingClient.test.ts`** — Update test line 116-118: `linked.status === 'pending_approval'` → `linked && (` (any status) · `(p.status === 'pending_approval' || p.status === 'draft')` → `p.status !== 'published'`
+> 2. **เพิ่ม test ใหม่** — R93 extension: approval filter tabs (today/week/month/all) coverage
+> 3. **Gates:** lint ✅ tsc ✅ build ✅ vitest ✅ (13/13 tests ผ่าน)
+
+> **Live-test checklist (owner):** ① Approval tab มี filter tabs (วันนี้/สัปดาห์/เดือน/ทั้งหมด) ② แก้ไข/ลบได้สำหรับทุกโพสต์ที่ไม่ใช่ published ③ Schedule tab แก้ไข/ลบได้สำหรับ approved + scheduled posts
+
+---
+
 ## 🔒 SESSION CLOSE 2026-11-12 (รอบ 20 · Marketing Edit/Delete + Approval Filter Tabs · Gates 4/4 ผ่าน) — **CODE_CLOSED + PUSHED**
 
 > **สถานะ ณ 2026-11-12 10:45:** Owner ต้องการ ① ปุ่มแก้ไข/ลบสำหรับทุกโพสต์ที่ไม่ใช่ published (ไม่ใช่แค่ pending_approval) ② Approval queue มี filter tabs (วันนี้/สัปดาห์/เดือน/ทั้งหมด) · Gates 4/4 ผ่านจริง (lint ✅ tsc ✅ build ✅) · push `4280d67`
