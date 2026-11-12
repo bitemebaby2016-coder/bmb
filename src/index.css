@@ -1130,8 +1130,8 @@ p { color: var(--color-brand-text-secondary); }
   overflow: hidden;
   flex-shrink: 0;
   position: relative; /* anchor มาสคอตประกอบบนรูป (R55) */
-  /* โชว์สติกเกอร์โลโก้แบรนด์ทับ gradient ส้ม เมื่อ promo ไม่มีรูป (หรือรูปเสีย) */
-  background: url('/Logo_Sticker_Circle.webp') center / cover no-repeat, linear-gradient(135deg, #FF5E1E, #FBBF24);
+  /* R94 (Owner 2026-11-12): ปล่อยโปร่ง — รูปไดคัท (PNGโปร่ง) ไม่มีกรอบแปลก ๆ */
+  background: transparent;
 }
 .flad-media img { width: 100%; height: 100%; object-fit: cover; display: block; }
 /* มาสคอตน้อง Bite ในช่องสื่อ fallback — ไม่ทับโลโก้/gradient ทั้งช่อง */
