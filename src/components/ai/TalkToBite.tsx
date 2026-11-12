@@ -32,7 +32,7 @@ import { RecommendationCard } from '@/components/theater/TheaterCards'
 import { recommendReason } from '@/lib/theaterReasons'
 import { showToast } from '@/components/ui/ToastContainer'
 import { chatWithAI } from '@/lib/aiService'
-import { buildSocialHandoffContext } from '@/lib/socialHandoff'
+import { buildSocialHandoffContext, readSocialHandoffTimeline } from '@/lib/socialHandoff'
 import { pageContextLine, sectionFromPath } from '@/lib/bitePageContext'
 import {
   getAIVoiceService,
@@ -96,6 +96,18 @@ function nextId(): string {
 
 const FALLBACK_GREETING =
   'สวัสดีครับ ผมBite พนักงานเสิร์ฟของBite Me Baby 🍊 วันนี้อยากกินอะไรดีครับ?'
+
+/** R96 Phase 2: Extract current product ID from URL if on product page */
+function getCurrentProductIdFromURL(): string | null {
+  if (typeof window === 'undefined') return null
+  const path = window.location.pathname
+  // Check for product detail page patterns
+  const match = path.match(/\/menu\/([a-z0-9-]+)/) || path.match(/\/product\/([a-z0-9-]+)/)
+  if (match) return match[1]
+  // Check URL search params for product ID
+  const params = new URLSearchParams(window.location.search)
+  return params.get('product') || params.get('product_id')
+}
 
 // R67 Chat-hang close (README §10.4): ทุก query ในเส้นทางส่งข้อความต้อง time-box —
 // เน็ตค้าง = promise ไม่ settle = typing ติดถาวร (ปุ่มส่ง disable ตลอดกาล).
@@ -513,6 +525,28 @@ export function TalkToBite({ mode = 'overlay', initialPhase = 'landing', landing
     // ว่าลูกค้าคุย/สรุปอะไรไว้ก่อนกดลิงก์เข้ามา และสนทนาต่อทันที (sessionStorage ล้างเมื่อปิดแท็บ)
     const handoff = buildSocialHandoffContext(items)
     if (handoff) parts.push(handoff)
+    
+    // R96 Phase 2: Inject product grounding — show currently viewed product
+    const currentProductId = getCurrentProductIdFromURL()
+    if (currentProductId) {
+      parts.push(`กำลังดูผลิตภัณฑ์ ID=${currentProductId} — กรุณาตอบข้อมูลจริงเท่านั้น (ชื่อ/ราคา/สถานะจาก DB เท่านั้น)`)
+    }
+    
+    // R96 Phase 2: Include cross-channel timeline
+    const timeline = readSocialHandoffTimeline()
+    if (timeline.length > 0) {
+      const recentTimeline = timeline.slice(-3)
+      const timelineStr = recentTimeline.map(e => {
+        const timeStr = new Date(e.time).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })
+        const channelLabel = e.channel === 'facebook_post' ? 'โพสต์ FB' : 
+                            e.channel === 'facebook_comment' ? 'คอมเมนต์ FB' :
+                            e.channel === 'messenger' ? 'Messenger' : 'เว็บ'
+        const topicStr = e.topic ? ` "${e.topic}"` : ''
+        return `${channelLabel} @ ${timeStr}${topicStr}`
+      }).join(' → ')
+      parts.push(`ประวัติข้ามช่องทาง: ${timelineStr}`)
+    }
+    
     return parts.join(' | ')
   }
 

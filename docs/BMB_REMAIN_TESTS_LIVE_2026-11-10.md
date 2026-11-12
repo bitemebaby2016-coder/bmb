@@ -123,3 +123,36 @@ R89b/c ยุบ+เรียงรีวิว `/shop` (Owner เห็น Veri
 3. **FAIL = จด defect ใหม่ลง `AI_WORK_STATE.md`** (แจ้งแชทถัดไป · two-try) · **SKIPPED ≠ PASS** · **ห้ามตัดข้อทิ้ง**
 4. ห้ามใช้ข้อมูลลูกค้าจริงทดสอบ · ออเดอร์ทดสอบ = **cancel เมื่อจบ**
 5. เสร็จแต่ละกลุ่ม → ทักแชทบอก AI ให้สรุปเข้า work state + test pack
+
+---
+
+## 🆕 R95 (2026-11-12) — โฟลตติ้งข้อความอ่านได้ + รูปไดคัทโปร่ง
+
+> ** deploy แล้ว — รอ owner hard refresh**
+
+| ข้อ | สิ่งที่ยังใหม่ (รอบ 19) | Deployed | วิธีทดสอบ |
+|---|---|---|---|
+| **R95-①** | `.flad-card` พื้นหลังต้องไม่โปร่ง (ข้อความอ่านได้) | ✅ `f44fb09` | Hard Refresh (`Ctrl+Shift+R`) → โฟลตติ้ง = ข้อความอ่านได้ + พื้นหลังขาว/ธีม |
+| **R95-②** | `.flad-media` ปล่อยโปร่ง (รูปไดคัทไม่มีกรอบแปลก) | ✅ `f44fb09` | รูป PNGโปร่ง = โผล่ cleanly ไม่มี logo/gradient ทับ |
+
+---
+
+## 🆕 R96 (2026-11-12) — AI Grounding + Cross-Channel Context
+
+> **Plan — ยังไม่ deploy (Phase 1-3)**
+
+| ข้อ | สิ่งที่ยังใหม่ (รอบ 19) | Deployed | วิธีทดสอบ |
+|---|---|---|---|
+| **R96-①** | AI ตอบข้อมูลจริงจาก DB (ไม่มโน) | ❌ ยัง | ทัก "เมนูนี้ยังสั่งได้ไหม" → AI ต้องเช็ค products DB จริง (is_available, price) |
+| **R96-②** | AI รู้ context จากโพสต์/คอมเมนต์/Messenger/Web | ❌ ยัง | ทักจากคอมเมนต์โพสต์ → AI ต้องรู้ว่าลูกค้าคุยเรื่องอะไร |
+| **R96-③** | product update → AI ตอบข้อมูลใหม่ทันที | ❌ ยัง | อัปเดต price/is_available → ทัก → AI ตอบข้อมูลใหม่ (ไม่ใช่ cache เก่า) |
+
+> **Live-test checklist (owner):**
+> 1. AI ตอบข้อมูลจริงจาก DB (ไม่มโน)
+> 2. AI รู้ context จากโพสต์/คอมเมนต์/Messenger/Web
+> 3. product update → AI ตอบข้อมูลใหม่ทันที
+
+---
+
+## 📋 บันทึกผล (เทมเพลตต่อข้อ)
+`ข้อ ID · เวลา · อุปกรณ์ · PASS/FAIL/BLOCKED · Evidence (width×height/size KB / copy response / screenshot) · toast ถ้าพลาด`

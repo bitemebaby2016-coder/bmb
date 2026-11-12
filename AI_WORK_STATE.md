@@ -1,3 +1,51 @@
+## 🔒 SESSION CLOSE 2026-11-12 (รอบ 19 · R95 — โฟลตติ้งข้อความอ่านได้ + รูปไดคัทโปร่ง · Gates 4/4 ผ่าน) — **CODE_CLOSED + PUSHED**
+
+> **สถานะ ณ 2026-11-12 12:32:** owner แจ้ง `.flad-card` ที่เราทำ `transparent` ทำให้ข้อความอ่านไม่ออก (พื้นหลังเป็นรูปหลังแบนเนอร์) · **แก้:** `.flad-card` กลับมา `#fff` (light) / `var(--color-brand-surface)` (dark) · `.flad-media` ปล่อยโปร่ง (รูปไดคัท) · Gates 4/4 ผ่าน (vitest ✅ 7 tests) · push `3f07160..f44fb09`
+
+> **สิ่งที่แก้:**
+> 1. **`index.css`** — `.flad-card`: light = `#fff`, dark = `var(--color-brand-surface)` (ข้อความอ่านได้) · `.flad-media`: `background: transparent` (รูปไดคัทไม่มีกรอบแปลก) · Dark override กลับมา `var(--color-brand-surface)` (ไม่ใช่ `transparent`)
+
+> **Live-test (owner):** โฟลตติ้ง = ข้อความอ่านได้ + รูปไดคัท cleanly · Hard Refresh (`Ctrl+Shift+R`) หรือรอ deploy
+
+---
+
+## 📋 R96 PLAN: AI Grounding + Cross-Channel Context (Owner 2026-11-12)
+
+> **ปัญหาจากภาพ owner ส่ง:**
+> 1. **ข้อมูลผิด**: AI ตอบ "เมี่ยงอกไก่ ปิดรับออเดอร์แล้ว" — ต้องเช็ค products DB จริง (ภาพ 2)
+> 2. **ไม่เชื่อม context**: โพสต์ → คอมเมนต์ → Messenger → Web ไม่เชื่อมกัน (ภาพ 2-3)
+> 3. **AI มโน**: แทนจะดึงข้อมูลจริง → AI สร้างข้อมูลเอง
+
+> **แผน 3 Phase:**
+
+> **Phase 1: AI Grounding (ดึงข้อมูลจริง)**
+> - social-ai-worker: ดึง `products` real-time ก่อนตอบ (is_available, price, schedule)
+> - social_events: เก็บ `grounding_data` (product_ids, prices, schedules) + `reply_draft`
+> - guardrail: AI reply ต้อง reference `product_id` จริง (ไม่มโน)
+
+> **Phase 2: Cross-Channel Context**
+> - socialHandoff: เก็บ context จากโพสต์ → คอมเมนต์ → Messenger → Web
+> - AI runtimeContext: "ลูกค้าเคยคุยเรื่อง X บน Y ที่เวลา Z" (จาก socialHandoff + social_events)
+> - talkToBite: inject "ต่อจากที่คุยบน Facebook: ..." + product context
+
+> **Phase 3: Data Freshness**
+> - cache invalidation: product update → clear social-ai-worker cache
+> - real-time check: ก่อนตอบ AI → query DB (not cached stale data)
+
+> **เอกสารที่ต้องทำ:**
+> 1. social-ai-worker: ดึง products real-time + เก็บ grounding_data
+> 2. social_events: เพิ่มคอลัมน์ grounding_data + reply_draft
+> 3. socialHandoff: ขยายเก็บ cross-channel context
+> 4. talkToBite: inject AI context + product grounding
+> 5. guardrail: AI reply ต้อง reference product_id จริง
+
+> **Live-test checklist (owner):**
+> 1. AI ตอบข้อมูลจริงจาก DB (ไม่มโน)
+> 2. AI รู้ context จากโพสต์/คอมเมนต์/Messenger/Web
+> 3. product update → AI ตอบข้อมูลใหม่ทันที
+
+---
+
 ## 🔒 SESSION CLOSE 2026-11-12 (รอบ 18 · R94 — โฟลตติ้งโฆษณาพื้นหลังโปร่ง + สเปคขนาดรูป 3 ระดับ · Gates 4/4 ผ่าน) — **CODE_CLOSED + PUSHED**
 
 > **สถานะ ณ 2026-11-12 11:52:** owner แจ้ง ① โฟลตติ้งโฆษณาพื้นหลังเป็นรูปโลโก้อยู่ ไม่ต้องมี — ปล่อยโปร่งทะลุใช้ธีมแทน ② สเปคขนาดรูปใหม่: เจน/โพสต์ FB = 800×800/.jpg/.webp/80-150KB · เก็บ Supabase = 800×800/.webp(Q80%)/60-120KB · แสดงเว็บ = 400×400/.webp/30-100KB · Gates 4/4 ผ่านจริง (lint ✅ tsc ✅ vitest ✅ **2237 tests** · build ✅ — `e2e/_r94_gates_*.log`) · push แล้ว

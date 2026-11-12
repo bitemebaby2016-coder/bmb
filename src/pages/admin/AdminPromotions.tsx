@@ -140,15 +140,10 @@ export function AdminPromotions() {
       showToast(`บันทึกโปรโมชั่นไม่สำเร็จ: ${saved.error}`, 'error')
       return
     }
-    // CNT-01: banner content is submitted for human review (real workflow —
-    // `content_approvals` + review RPC). NOTE: customer visibility of the home
-    // banner is controlled by the Active toggle (HomePage/FloatingAdBanners read
-    // `is_banner AND is_active`) — this copy never claims an approval gate the
-    // renderer does not enforce.
     if (row.is_banner) {
       const approvalId = await submitContentForApproval('banner', row.name, row.description || '')
       if (approvalId) {
-        showToast('บันทึกโปรโมชั่นแล้ว + ส่งแบนเนอร์เข้าคิวตรวจเนื้อหา (CNT-01) — แบนเนอร์จะขึ้นหน้าแรกเมื่อเปิดใช้งาน (แนะนำ: รอผลตรวจก่อนเปิดใช้งาน)', 'success')
+        showToast('บันทึกโปรโมชั่นแล้ว + ส่งแบนเนอร์เข้าคิวตรวจเนื้อหา — แบนเนอร์จะขึ้นหน้าแรกเมื่อเปิดใช้งาน (แนะนำ: รอผลตรวจก่อนเปิดใช้งาน)', 'success')
       } else {
         showToast('บันทึกโปรโมชั่นแล้ว แต่ส่งเข้าคิวตรวจเนื้อหาไม่สำเร็จ — แบนเนอร์จะแสดงตามปุ่มเปิดใช้งาน (Active) เท่านั้น', 'warning')
       }

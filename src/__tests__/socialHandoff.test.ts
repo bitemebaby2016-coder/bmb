@@ -8,6 +8,7 @@ import {
   readSocialHandoff,
   buildSocialHandoffContext,
   SOCIAL_HANDOFF_KEY,
+  type ExtendedSocialHandoff,
 } from '@/lib/socialHandoff'
 
 describe('R91 · detectSocialSource — จำแนกแหล่งจาก referrer+UA ผสม', () => {
@@ -56,7 +57,7 @@ describe('R91 · buildSocialHandoffContext — ต่อบทสนทนาจ
   })
 
   it('handoff item ตรงกับตะกร้า → ชื่อจริง+จำนวนจากร้าน (ห้ามมโน)', () => {
-    const ctx = buildSocialHandoffContext(cart, { source: 'messenger', ids: [{ id: 'p1', q: 2 }], at: Date.now() })
+    const ctx = buildSocialHandoffContext(cart, { source: 'messenger', ids: [{ id: 'p1', q: 2 }], at: Date.now(), timeline: [] } as ExtendedSocialHandoff)
     expect(ctx).toContain('Messenger')
     expect(ctx).toContain('ไก่ทอดข้าวเหนียว x2')
     expect(ctx).toContain('ต่อบทสนทนา')
@@ -64,7 +65,7 @@ describe('R91 · buildSocialHandoffContext — ต่อบทสนทนาจ
   })
 
   it('handoff item ไม่อยู่ในตะกร้า (เมนูหาย) → ใช้ประโยคทั่วไป ไม่สร้างชื่อปลอม', () => {
-    const ctx = buildSocialHandoffContext(cart, { source: 'facebook', ids: [{ id: 'zzz', q: 1 }], at: Date.now() })
+    const ctx = buildSocialHandoffContext(cart, { source: 'facebook', ids: [{ id: 'zzz', q: 1 }], at: Date.now(), timeline: [] } as ExtendedSocialHandoff)
     expect(ctx).toContain('Facebook')
     expect(ctx).toContain('ลิงก์สรุปตะกร้า')
     expect(ctx).not.toContain('zzz')
@@ -76,7 +77,8 @@ describe('R91 · buildSocialHandoffContext — ต่อบทสนทนาจ
       ids: [{ id: 'p1', q: 2 }],
       at: Date.now(),
       summary: 'คุยกันบนMessenger · ส่งวันนี้ · เมี่ยงอกไก่ x2',
-    })
+      timeline: [],
+    } as ExtendedSocialHandoff)
     expect(ctx.startsWith('ต่อจากที่คุยกันในMessenger: คุยกันบนMessenger · ส่งวันนี้ · เมี่ยงอกไก่ x2')).toBe(true)
     expect(ctx).toContain('ไก่ทอดข้าวเหนียว x2')
   })

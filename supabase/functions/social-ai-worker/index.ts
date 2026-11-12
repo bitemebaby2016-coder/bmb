@@ -76,6 +76,13 @@ import {
   buildOrderWindowPrompt,
   type WindowProduct,
 } from '../_shared/orderWindow.ts'
+// R96 Phase 1: AI Grounding — real-time product data for preventing hallucinations
+import {
+  fetchGroundingData,
+  buildGroundingPrompt,
+  extractRelevantProductIds,
+  type GroundingProduct,
+} from '../_shared/socialGroundingData.ts'
 
 const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions'
 
@@ -686,7 +693,13 @@ async function notifyCustomerAiReply(
 
 /** Draft ไม่ผ่าน/ไม่ได้ แต่ระบบบันทึกรายการไว้แล้ว — ส่งบรรทัดระบบ (สร้างจากผล
  *  บริการจริงโดย buildIntakeLine) อย่างน้อยไม่เงียบหาย และไม่เกินจริง. */
-async function fallbackIntakeReply(ev: SocialEventRow, footer: string, reason: string): Promise<{ id: string; result: string; detail?: string }> {
+async function fallbackIntakeReply(
+  ev: SocialEventRow,
+  footer: string,
+  reason: string,
+  groundingData?: { products: GroundingProduct[]; schedules: any[] },
+  relevantProductIds?: string[],
+): Promise<{ id: string; result: string; detail?: string }> {
   const stamp = new Date().toISOString()
   const footerText = normalizeAiTextLinks(footer) // R75: ลิงก์ต้องแตะได้จริงเสมอ
   // R81-A3: เดิมสาย fallback ไม่มีหลักฐานกันซ้ำ → อ่าน flags เดิม + รายงานสถานะเหมือนสายปกติ
@@ -698,11 +711,25 @@ async function fallbackIntakeReply(ev: SocialEventRow, footer: string, reason: s
   const notify = sent.ok && (ev.event_type === 'comment' || ev.event_type === 'message')
     ? await notifyCustomerAiReply(ev, footerText)
     : { outcome: 'not_applicable' }
+
+  // R96 Phase 1: Prepare grounding data for fallback storage
+  const groundingDataForStorage = groundingData && relevantProductIds?.length
+    ? {
+        product_ids: relevantProductIds,
+        prices: Object.fromEntries(groundingData.products.filter(p => relevantProductIds.includes(p.id)).map(p => [p.id, p.price])),
+        schedules: groundingData.schedules
+          .filter(s => relevantProductIds.includes(s.product_id))
+          .map(s => ({ product_id: s.product_id, date: s.scheduled_date })),
+      }
+    : null
+
   await rest('PATCH', `/rest/v1/social_events?id=eq.${encodeURIComponent(ev.id)}`, {
     ai_model: null,
     ai_reply_text: footerText,
     ai_validated: true,
     ai_guardrail_flags: { fallback: reason.slice(0, 120), dm_reply_id: sent.dmId || null, dm_error: sent.dmError || null, dm_attempted_at: dmStamp, push_notify: notify.outcome },
+    grounding_data: groundingDataForStorage,
+    reply_draft: footerText,
     status: 'SUCCEEDED',
     processed_at: stamp,
     last_attempt_at: stamp,
@@ -740,6 +767,11 @@ async function processEvent(ev: SocialEventRow): Promise<{ id: string; result: s
     await markFailed(ev.id, ev.attempts, 'SELF_ECHO:no_reply_by_design')
     return { id: ev.id, result: 'failed', detail: 'SELF_ECHO' }
   }
+  // --- R96 Phase 1: Fetch grounding data (real-time product info) ---
+  const groundingData = await fetchGroundingData({ sbUrl: SB_URL, serviceKey: SERVICE })
+  const relevantProductIds = extractRelevantProductIds(content, groundingData.products)
+  const groundingPrompt = buildGroundingPrompt(groundingData, relevantProductIds)
+
   const thread = await fetchRecentThread(ev)
   // R57 (Owner: "ข้อมูลสรุปออเดอร์ไม่ตรงกับโพส → ต้องตอบข้อมูลจริงตามโพสและตามเว็บ"):
   // ดึงข้อความโพสต์ต้นทาง (post_id อยู่ใน payload — poll ใส่ตรง ๆ / webhook ใส่ changes[].value)
@@ -831,6 +863,7 @@ async function processEvent(ev: SocialEventRow): Promise<{ id: string; result: s
   )
   const draftSystem =
     baseSystem + '\n\n' + BITE_PERSONA_SEGMENT + '\n\n' + REPLY_CONTINUITY_RULES + '\n\n' + REPLY_GROUNDING_RULES +
+    '\n\n' + groundingPrompt +
     '\n\n--- ข้อมูลร้านจริง (DATA — ตอบจากนี้เท่านั้น ห้ามมโน) ---\n' +
     (shopCtx || 'ยังดึงข้อมูลร้านไม่ได้ในตอนนี้ — ให้บอกตามจริงว่าไม่พบข้อมูล และชวนดูเมนูที่ https://biteme-baby.com/shop') +
     orderWindowBlock +
@@ -860,18 +893,18 @@ async function processEvent(ev: SocialEventRow): Promise<{ id: string; result: s
     const reason = (draft.status === 'upstream_error' || draft.status === 'timeout' || draft.status === 'exception')
       ? 'AI_UPSTREAM:' + (draft.reason || draft.status)
       : 'AI_OUTPUT_REJECTED:' + (draft.reason || 'unknown')
-    if (intakeFooter) return fallbackIntakeReply(ev, intakeFooter, reason) // ระบบมีผลจริงแล้ว — ไม่เงียบ
+    if (intakeFooter) return fallbackIntakeReply(ev, intakeFooter, reason, groundingData, relevantProductIds) // ระบบมีผลจริงแล้ว — ไม่เงียบ
     if (reason.startsWith('AI_UPSTREAM')) { await releaseToRetryable(ev.id, ev.attempts, reason); return { id: ev.id, result: 'retryable', detail: reason } }
     await markFailed(ev.id, ev.attempts, reason)
     return { id: ev.id, result: 'failed', detail: reason }
   }
   if (!draftParsed.ok) {
-    if (intakeFooter) return fallbackIntakeReply(ev, intakeFooter, 'draft:' + draftParsed.reason)
+    if (intakeFooter) return fallbackIntakeReply(ev, intakeFooter, 'draft:' + draftParsed.reason, groundingData, relevantProductIds)
     await markFailed(ev.id, ev.attempts, 'AI_OUTPUT_REJECTED:draft:' + draftParsed.reason)
     return { id: ev.id, result: 'failed', detail: 'draft:' + draftParsed.reason }
   }
   if (!draftSem.ok) {
-    if (intakeFooter) return fallbackIntakeReply(ev, intakeFooter, 'draft:' + draftSem.reason)
+    if (intakeFooter) return fallbackIntakeReply(ev, intakeFooter, 'draft:' + draftSem.reason, groundingData, relevantProductIds)
     await markFailed(ev.id, ev.attempts, 'AI_OUTPUT_REJECTED:draft:' + draftSem.reason)
     return { id: ev.id, result: 'failed', detail: 'draft:' + draftSem.reason }
   }
@@ -886,13 +919,23 @@ async function processEvent(ev: SocialEventRow): Promise<{ id: string; result: s
   const canAutoSend = !safetyHold && !!META_PAGE && (ev.platform === 'FACEBOOK' || ev.platform === 'MESSENGER')
   const reviewStatus = canAutoSend ? 'auto_published' : 'pending_review'
 
-  // --- Persist AI state (columns from migration 109 — no schema change) ---
+  // --- Persist AI state (columns from migration 109 + R96 grounding columns) ---
   // reply_status / reply_provider_id are written ONLY by the send step below
   // (validated draft text only — never caller-supplied content).
   // ข้อความสุดท้าย = draft ที่ validate แล้ว + บรรทัดระบบจากผลบริการจริง (buildIntakeLine)
   // — ระบบเป็นคนเขียนบรรทัดยืนยันเท่านั้น AI เคลมเองใน draft ไม่ได้ (§3)
   // R75: ทุกลิงก์ในข้อความที่ส่งออกต้องเป็น https:// URL เต็มรูปแบบ (แตะได้จริงบน Facebook)
   const finalText = normalizeAiTextLinks(intakeFooter ? (draftOut.draft_text + '\n\n' + intakeFooter) : draftOut.draft_text)
+  
+  // R96 Phase 1: Prepare grounding data for storage
+  const groundingDataForStorage = {
+    product_ids: relevantProductIds,
+    prices: Object.fromEntries(groundingData.products.filter(p => relevantProductIds.includes(p.id)).map(p => [p.id, p.price])),
+    schedules: groundingData.schedules
+      .filter(s => relevantProductIds.includes(s.product_id))
+      .map(s => ({ product_id: s.product_id, date: s.scheduled_date })),
+  }
+
   const flags = {
     classification,
     reply: {
@@ -911,6 +954,8 @@ async function processEvent(ev: SocialEventRow): Promise<{ id: string; result: s
     ai_reply_text: finalText,
     ai_validated: true,
     ai_guardrail_flags: flags,
+    grounding_data: groundingDataForStorage,
+    reply_draft: finalText,
     status: 'SUCCEEDED',
     processed_at: new Date().toISOString(),
     last_attempt_at: new Date().toISOString(),
@@ -935,6 +980,7 @@ async function processEvent(ev: SocialEventRow): Promise<{ id: string; result: s
       reply_attempted_at: stamp,
       last_error: 'META_SEND:' + String(sent.reason || 'error').slice(0, 200),
       // R81-A3: สถานะแจ้งเตือนพร้อมเหตุผล structured (evidence probe อ่านต่อได้ — ห้ามหายเงียบ)
+      // R96: grounding_data + reply_draft already stored above, keep them
       ai_guardrail_flags: { ...flags, dm_reply_id: sent.dmId || null, dm_error: sent.dmError || null, dm_attempted_at: dmStamp },
     })
     // H3 → alert ทันที: ตอบสาธารณะไม่สำเร็จ = ลูกค้าไม่เห็นคำตอบอะไรเลย (Owner R81 สั่งให้รายงาน)
@@ -961,6 +1007,7 @@ async function processEvent(ev: SocialEventRow): Promise<{ id: string; result: s
     last_error: null,
     // R76: หลักฐานการแจ้งเตือนฝั่งลูกค้า (private reply สำหรับคอมเมนต์ · message id สำหรับ Messenger)
     // R81: + dm_attempted_at (กันซ้ำ 1/คอมเมนต์) + push_notify (ผล web push — รายงานสถานะ)
+    // R96: grounding_data + reply_draft already stored above
     ai_guardrail_flags: { ...flags, dm_reply_id: sent.dmId || null, dm_error: sent.dmError || null, dm_attempted_at: dmStamp, push_notify: notify.outcome },
   })
   void notifyOwnerAiReply(ev)

@@ -4,6 +4,15 @@
 > (WHOLE-REPO RECONCILIATION · CODE CLOSURE · LEAN PRODUCTION ACCEPTANCE)
 > ไฟล์อื่นที่มีวันที่ในชื่อ = **รายงาน ณ วันนั้น** ห้ามใช้แทนไฟล์นี้ ถ้าขัดกันให้ถือโค้ด/หลักฐาน (DOC DRIFT)
 
+**🔒 LIVE STATE 2026-11-12 รอบ 19 (R95 — โฟลตติ้งข้อความอ่านได้ + รูปไดคัทโปร่ง):** CODE_CLOSED + PUSHED — Gates 4/4 ผ่าน (vitest ✅ 7 tests) · **R95:** `.flad-card` พื้นหลังต้องไม่โปร่ง (ข้อความอ่านได้) · `.flad-media` ปล่อยโปร่ง (รูปไดคัท) · push `3f07160..f44fb09` · **รอ owner:** Hard Refresh (`Ctrl+Shift+R`) หรือรอ deploy
+
+** R96 PLAN: AI Grounding + Cross-Channel Context (Owner 2026-11-12)**
+> **ปัญหา:** AI ตอบข้อมูลผิด (เมี่ยงอกไก่ปิดรับ — ต้องเช็ค DB จริง) · ไม่เชื่อม context จากโพสต์/คอมเมนต์/Messenger/Web · AI มโนแทนดึงข้อมูลจริง
+> **แผน 3 Phase:**
+> - **Phase 1: AI Grounding** — social-ai-worker ดึง `products` real-time (is_available, price, schedule) · social_events เก็บ `grounding_data` + `reply_draft` · guardrail: AI reply ต้อง reference `product_id` จริง
+> - **Phase 2: Cross-Channel Context** — socialHandoff ขยายเก็บ context จากโพสต์→คอมเมนต์→Messenger→Web · AI runtimeContext: "ลูกค้าเคยคุยเรื่อง X บน Y ที่เวลา Z" · talkToBite inject "ต่อจากที่คุยบน Facebook: ..." + product context
+> - **Phase 3: Data Freshness** — cache invalidation: product update → clear social-ai-worker cache · real-time check: ก่อนตอบ AI → query DB (not cached stale data)
+
 **🔒 LIVE STATE 2026-11-12 รอบ 18 (R94 · โฟลตติ้งโฆษณาพื้นหลังโปร่ง + สเปคขนาดรูป 3 ระดับ):** CODE_CLOSED + PUSHED — Gates 4/4 ผ่าน (tsc/lint/vitest **2237 tests**/build ✓) · **R94-① โฟลตติ้งโปร่ง:** `.flad-card` background `#fff` → **`transparent`** (light + dark theme) ปล่อยธีมทะลุผ่าน · **R94-② สเปค 3 ระดับ:** `GENERATE` 800×800/.jpg/.webp/80-150KB · `STORE` 800×800/.webp(Q80%)/60-120KB · `DISPLAY` 400×400/.webp/30-100KB · `compressToWebLimits` เปลี่ยน output → **WebP** (แทน JPEG เดิม) · `WEB_USE_MAX_SIDE`/`WEB_USE_MAX_BYTES` แทนที่ด้วย `DISPLAY_*` (400×400/100KB) · **รอ owner live test:** โฟลตติ้งโปร่ง (ธีมทะลุ) · รูปย่ออัตโนมัติตามสเปค 3 ระดับ
 
 **🔒 LIVE STATE 2026-11-12 รอบ 17 (R93 · คิวอนุมัติว่างเงียบ + โพสต์รออนุมัติ แก้ไข/ลบ):** CODE_CLOSED + PUSHED — Gates 4/4 ผ่าน (tsc/lint/vitest **2237 tests**/build ✓) · **root cause พิสูจน์ DB จริง** (`e2e/_r93_probe2.cjs`): `content_approvals` ไม่มีคอลัมน์ `reviewer_id` (จริง = `reviewed_by`) — listContentApprovals select ผิด → 400 เงียบ → **กล่องอนุมัติว่างเสมอ** → อนุมัติไม่ได้ → ตั้งเวลาไม่ได้ (RPC บังคับ approved ถูกต้องตาม G1-G3) · **แก้:** ① select/interface → `reviewed_by` + ไม่กลืน error เงียบ (console.warn) ② ปุ่มใหม่ **"✏️ แก้ไข" + "🗑 ลบ"** (confirm + ลบคู่คิวอนุมัติ) ในแท็บตรวจ&อนุมัติ (แถว pending ที่ผูกโพสต์) + แท็บตั้งเวลาเผยแพร่ (pending_approval/draft) · แก้ไข = โหลดกลับฟอร์ม (แถบกำลังแก้ไข + ยกเลิกได้) บันทึกแล้ว **ยังรออนุมัติเหมือนเดิม** ห้ามเลี่ยงคิว · ห้ามลบ/แก้ scheduled/published · ฟังก์ชันใหม่ adminMarketing: deleteMarketingPost/updateMarketingPostDraft/updateContentApprovalDraft (RLS admin write มีอยู่ — ไม่ต้อง migration) · แก้ผู้ใช้ interface 2 จุด (ApprovalHistoryTab/ContentTab "ตรวจโดย") · **รอ deploy + owner live test:** คิวโชว์ "ข้าวลาบอกไก่ไข่ต้ม" → อนุมัติ → ตั้งเวลาได้จริง → แก้ไข/ลบใช้ได้
