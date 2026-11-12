@@ -112,10 +112,10 @@ describe('R93 (Owner 2026-11-12) · คิวอนุมัติต้อง�
   })
 
   it('หน้ามีปุ่ม ✏️ แก้ไข + 🗑 ลบ ทั้งคิวอนุมัติและแท็บตั้งเวลา — บันทึกแก้ไขยังรออนุมัติ', () => {
-    // คิวอนุมัติ: แถว pending ที่ผูกโพสต์ pending_approval
-    expect(adminMarketingPageSrc).toContain("linked.status === 'pending_approval'")
-    // แท็บตั้งเวลา: แถว pending_approval/draft (ยังไม่เผยแพร่)
-    expect(adminMarketingPageSrc).toContain("(p.status === 'pending_approval' || p.status === 'draft')")
+    // คิวอนุมัติ: แก้ไข/ลบได้สำหรับทุกโพสต์ที่ไม่ใช่ published (ไม่ใช่แค่ pending_approval)
+    expect(adminMarketingPageSrc).toContain("linked && (")
+    // แท็บตั้งเวลา: แก้ไข/ลบได้สำหรับทุกโพสต์ที่ไม่ใช่ published (approved + scheduled + pending_approval + draft)
+    expect(adminMarketingPageSrc).toContain("p.status !== 'published'")
     // ปุ่ม + flow แก้ไข (โหลดกลับฟอร์ม → บันทึกแก้ไข → ยังรออนุมัติ)
     expect(adminMarketingPageSrc).toContain('data-testid={`mk-edit-${p.id}`}')
     expect(adminMarketingPageSrc).toContain('data-testid={`mk-delete-${p.id}`}')
@@ -127,5 +127,21 @@ describe('R93 (Owner 2026-11-12) · คิวอนุมัติต้อง�
     // ลบต้องผ่าน confirm (กันกดพลาด) + เคลียร์ editing ถ้าลบอันที่กำลังแก้
     expect(adminMarketingPageSrc).toContain('window.confirm(`ลบโพสต์')
     expect(adminMarketingPageSrc).toContain('if (editingPostId === p.id) cancelEditPost()')
+  })
+
+  it('R93 extension (2026-11-12): Approval queue มี filter tabs (วันนี้/สัปดาห์/เดือน/ทั้งหมด)', () => {
+    // Approval filter tabs - testid ใช้ template literal `mk-approval-filter-${f}`
+    expect(adminMarketingPageSrc).toContain('mk-approval-filter-${f}')
+    // Filter labels
+    expect(adminMarketingPageSrc).toContain('📅 วันนี้')
+    expect(adminMarketingPageSrc).toContain('สัปดาห์นี้')
+    expect(adminMarketingPageSrc).toContain('เดือนนี้')
+    expect(adminMarketingPageSrc).toContain('📋 ทั้งหมด')
+    // Filter logic: shouldShowApproval function
+    expect(adminMarketingPageSrc).toContain('shouldShowApproval')
+    expect(adminMarketingPageSrc).toContain('getApprovalFilterRange')
+    // Approval filter state
+    expect(adminMarketingPageSrc).toContain('ApprovalFilter')
+    expect(adminMarketingPageSrc).toContain("approvalFilter === 'today'")
   })
 })
