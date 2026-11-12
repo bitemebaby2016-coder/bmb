@@ -1113,8 +1113,8 @@ p { color: var(--color-brand-text-secondary); }
   width: min(78vw, 640px);
   border-radius: 18px;
   overflow: hidden;
-  /* R94 (Owner 2026-11-12): ปล่อย background ว่างทะลุ ใช้ธีมแทน (ไม่ต้องขาว) */
-  background: transparent;
+  /* R95 (Owner 2026-11-12): พื้นหลังต้องไม่โปร่ง — ข้อความต้องอ่านได้ */
+  background: #fff;
   border: 1px solid rgba(255, 94, 30, 0.4);
   box-shadow: 0 14px 28px rgba(255, 94, 30, 0.25);
   animation: fladIn 0.35s ease-out;
@@ -2681,7 +2681,7 @@ html[data-theme='dark'] .site-background__scrim, html[data-theme='graphite'] .si
   .site-background__img { transform: none; }
 }
 
-/* ---- Dark Glass: ปล่อย background ว่าง (transparent) ให้ธีมทะลุผ่าน (R94 Owner 2026-11-12) ---- */
+/* ---- Dark Glass: ใช้พื้นหลังธีม (color sweep) — ข้อความต้องอ่านได้ ---- */
 html[data-theme='dark'] .home-card, html[data-theme='graphite'] .home-card,
 html[data-theme='dark'] .snack-card, html[data-theme='graphite'] .snack-card,
 html[data-theme='dark'] .drink-card, html[data-theme='graphite'] .drink-card,
@@ -2694,7 +2694,7 @@ html[data-theme='dark'] .share-card, html[data-theme='graphite'] .share-card,
 html[data-theme='dark'] .usp-item:hover, html[data-theme='graphite'] .usp-item:hover,
 html[data-theme='dark'] .trust-badge:hover, html[data-theme='graphite'] .trust-badge:hover,
 html[data-theme='dark'] .share-card:hover, html[data-theme='graphite'] .share-card:hover {
-  background: transparent;
+  background: var(--color-brand-surface);
 }
 html[data-theme='dark'] .ob-header, html[data-theme='graphite'] .ob-header { border-bottom-color: var(--color-brand-border); }
 html[data-theme='dark'] .ob-addon, html[data-theme='graphite'] .ob-addon,
